@@ -9,8 +9,8 @@ use crate::editor::bim::{BimCommand, BimModelApp};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
 /// ⏩️ Graph nodes one job step may finish.
@@ -33,7 +33,7 @@ fn ended(error: protocol::InferenceError) -> Fault {
 /// 🧵️ The retained-command shell of an [`Analysis`]: one step per call, the framework yields between steps and tells the work when the user cancelled.
 pub struct AnalyseWork {
     tool_id: &'static str,
-    owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     analysis: Option<Analysis>,
     failure:Option<protocol::InferenceWorkFailure>,
     read:Option<store::os_store::snapshot_read::SnapshotRead<ModelSnapshot>>,
@@ -41,7 +41,7 @@ pub struct AnalyseWork {
 
 impl AnalyseWork {
     /// 🏗️ The work of tool `tool_id`.
-    pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub fn new(tool_id: &'static str, owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, owner, analysis: None,failure:None,read:None }
     }
 }
@@ -53,7 +53,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for AnalyseWork {
 
     fn terminal_is_empty(&self)->bool{self.read.is_none()&&self.analysis.is_none()&&self.failure.is_none()}
 
-    fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
+    fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
         (self.analysis.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 

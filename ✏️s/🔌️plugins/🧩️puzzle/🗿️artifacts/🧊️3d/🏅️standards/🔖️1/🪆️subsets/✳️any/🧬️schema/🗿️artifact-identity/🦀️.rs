@@ -86,15 +86,15 @@ pub const PUZZLE3D_DIALECT: semio_framework_artifact_reference::Dialect = semio_
 
 /// 🗿️ The `3d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
 /// the artifact, not the app, owns its own identity.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "3d.puzzle".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D Puzzle", "3D-Puzzle"),
+        label: semio_ui_locale::LocalizedLabel::native("3D Puzzle", "3D-Puzzle"),
         source_format: "puzzle.3d".into(),
         component_kind: "puzzle3d".into(),
         dimension: "3d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Design },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::ThreeD, form: semio_plugin::MediaForm::Design },
         schema: PUZZLE_3D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
@@ -117,15 +117,15 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// on their ports, which is all a consumer ever needed. `🗄️stdio`'s own docstrings describe
 /// absorbing this kind into the shared vocabulary later — that move stays open and is not
 /// pre-empted here.
-pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn kit_catalog_artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "kit.catalog".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Kit Catalog", "Bausatzkatalog"),
+        label: semio_ui_locale::LocalizedLabel::native("Kit Catalog", "Bausatzkatalog"),
         source_format: "kit.catalog".into(),
         component_kind: "kit".into(),
         dimension: "3d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Kit, form: semio_plugin::MediaForm::Type },
         schema: "kit.catalog".into(),
         export_formats: vec![],
         import_formats: vec![],

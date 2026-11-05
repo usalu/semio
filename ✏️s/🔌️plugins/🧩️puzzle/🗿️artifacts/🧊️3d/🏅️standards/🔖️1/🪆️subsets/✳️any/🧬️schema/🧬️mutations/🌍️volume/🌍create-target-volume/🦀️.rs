@@ -33,8 +33,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create target volume \"{}\"", self.target_volume.id), &format!("Zielvolumen \"{}\" erstellen", self.target_volume.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create target volume \"{}\"", self.target_volume.id), &format!("Zielvolumen \"{}\" erstellen", self.target_volume.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.target_volume.id.clone()]

@@ -1,6 +1,6 @@
 //! 🪢️ Actual Direct clause cursors share their original wrapper's one stable prepared population.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneClose;
 fn grant() -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 512 } }
 fn retire<T: semio_framework_value::retirement::RetireOwned>(caller: &mut OriginalWorkFixture, owner: &mut Option<T>) {

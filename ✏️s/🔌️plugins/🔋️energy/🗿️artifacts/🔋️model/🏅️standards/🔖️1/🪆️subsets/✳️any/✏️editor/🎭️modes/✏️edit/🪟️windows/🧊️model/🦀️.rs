@@ -19,28 +19,28 @@ pub mod config;
 
 use crate::editor_interaction::{EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_SURFACE, ENERGY_MODEL_INTERACTION_DOMAIN};
 use crate::scene::{energy_model_scene, EnergySceneStyle,EnergySceneColors};
-use semio_framework_plugin::plugin_app_close_prelude::column;
-use semio_framework_plugin::plugin_app_close_prelude::image;
-use semio_framework_plugin::plugin_app_close_prelude::row;
-use semio_framework_plugin::plugin_app_close_prelude::text;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
-use semio_framework_plugin::plugin_app_close_prelude::HasStackLayout;
-use semio_framework_ui_contract::Label as SemanticLabel;
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
-use semio_framework_plugin::plugin_app_close_prelude::UiText;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::{LocalizedLabel,Locale};
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::plugin_app_close_prelude::column;
+use semio_plugin::plugin_app_close_prelude::image;
+use semio_plugin::plugin_app_close_prelude::row;
+use semio_plugin::plugin_app_close_prelude::text;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::plugin_app_close_prelude::HasChildren;
+use semio_plugin::plugin_app_close_prelude::HasStackLayout;
+use semio_ui_contract::Label as SemanticLabel;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
+use semio_plugin::plugin_app_close_prelude::UiText;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::BuiltNode;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::{LocalizedLabel,Locale};
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -239,14 +239,14 @@ pub fn render_with_legend(
     if let Some(window) = camera {
         scene.camera_json = window.camera.scene_camera_json();
     }
-    let node = semio_framework_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene)?;
+    let node = semio_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene)?;
     match caption {
         Some(caption) => with_caption(node, caption, bounds,locale),
         None => Ok(node),
     }
 }
 /// 🔎️ Paints each surface directly from bounded reads of the retained original result publication.
-pub fn render_indexed<S:crate::editor_results::indexed::EnergyResultSource>(model:&impl crate::scene::EnergySceneModel,interaction:&EnergyModelInteractionSnapshot,results:Option<&crate::editor_results::indexed::IndexedEnergyResults<S>>,field:crate::editor_config::ResultField,locale:semio_framework_ui_locale::Locale,camera:Option<&config::EnergyModelWindowConfig>)->UiAssemblyResult<BuiltNode>{
+pub fn render_indexed<S:crate::editor_results::indexed::EnergyResultSource>(model:&impl crate::scene::EnergySceneModel,interaction:&EnergyModelInteractionSnapshot,results:Option<&crate::editor_results::indexed::IndexedEnergyResults<S>>,field:crate::editor_config::ResultField,locale:semio_ui_locale::Locale,camera:Option<&config::EnergyModelWindowConfig>)->UiAssemblyResult<BuiltNode>{
  struct Colors<'a,S:crate::editor_results::indexed::EnergyResultSource>{results:&'a crate::editor_results::indexed::IndexedEnergyResults<S>,field:crate::editor_config::ResultField}
  impl<S:crate::editor_results::indexed::EnergyResultSource> EnergySceneColors for Colors<'_,S>{fn color(&self,id:u32)->Option<[f64;3]>{self.results.color(id,self.field)}}
  let colors=results.map(|results|Colors{results,field});let caption=results.map(|results|results.caption(field,locale));let bounds=results.map(|results|{let[low,high]=results.bounds(field);(low,high)});

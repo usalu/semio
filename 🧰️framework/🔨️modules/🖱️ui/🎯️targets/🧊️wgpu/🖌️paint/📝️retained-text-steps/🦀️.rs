@@ -3,17 +3,17 @@
 use super::*;
 
 // #region paint
-pub(super) fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList)) -> Result<(), semio_framework_ui_draw_contract::RetainedOutputError> {
+pub(super) fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList)) -> Result<(), semio_ui_draw_contract::RetainedOutputError> {
     retained_fixed_output_budgeted(draw, RETAINED_NODE_FIXED_OUTPUT_ITEMS, paint)
 }
 
-pub(super) fn retained_fixed_output_budgeted(draw: &mut DrawList, items: usize, paint: impl FnOnce(&mut DrawList)) -> Result<(), semio_framework_ui_draw_contract::RetainedOutputError> {
+pub(super) fn retained_fixed_output_budgeted(draw: &mut DrawList, items: usize, paint: impl FnOnce(&mut DrawList)) -> Result<(), semio_ui_draw_contract::RetainedOutputError> {
     draw.begin_retained_output(items, RETAINED_NODE_FIXED_OUTPUT_BYTES)?;
     paint(draw);
     draw.finish_retained_output().map(|_| ())
 }
 
-pub(super) fn retained_select_close_route(draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> Result<(), semio_framework_ui_draw_contract::RetainedOutputError> {
+pub(super) fn retained_select_close_route(draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> Result<(), semio_ui_draw_contract::RetainedOutputError> {
     if !cursor.popup_route {
         return Ok(());
     }
@@ -105,7 +105,7 @@ pub(super) fn retained_presence_step_with_selection(draw: &mut DrawList, bounds:
 }
 
 pub(super) fn retained_text_node_step(value: &str, bounds: Rect, size: f32, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
-    retained_text_node_step_weighted(value, bounds, size, color, semio_framework_ui_text::TextWeight::Regular, atlas, draw, cursor)
+    retained_text_node_step_weighted(value, bounds, size, color, semio_ui_text::TextWeight::Regular, atlas, draw, cursor)
 }
 
 /// 🅰️ [`retained_text_node_step`] at an explicit weight — the production seam for React's
@@ -113,7 +113,7 @@ pub(super) fn retained_text_node_step(value: &str, bounds: Rect, size: f32, colo
 /// (`🗣️Interpreter/🟦️.tsx:1168`) spells it; every other retained run stays `Regular`, which is the
 /// byte-identical behaviour this function had before it grew the parameter.
 #[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every retained node call site")]
-pub(super) fn retained_text_node_step_weighted(value: &str, bounds: Rect, size: f32, color: Rgba, weight: semio_framework_ui_text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
+pub(super) fn retained_text_node_step_weighted(value: &str, bounds: Rect, size: f32, color: Rgba, weight: semio_ui_text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
     match paint_retained_glyph_step_weighted(value, bounds, size, color, RetainedTextFlow::Wrap, weight, atlas, draw, &mut cursor.glyph) {
         RetainedGlyphStep::Pending => RetainedNodePaintStep::Pending,
         RetainedGlyphStep::Complete => RetainedNodePaintStep::Complete,
@@ -121,27 +121,27 @@ pub(super) fn retained_text_node_step_weighted(value: &str, bounds: Rect, size: 
     }
 }
 
-pub fn chrome_band_rect(bounds: Rect, band: semio_framework_ui_wgpu_layout::flex::ChromeBand) -> Rect {
+pub fn chrome_band_rect(bounds: Rect, band: semio_ui_wgpu_layout::flex::ChromeBand) -> Rect {
     Rect::new(bounds.x, bounds.y + band.y, bounds.w, band.height)
 }
 
-pub fn section_paint_metrics(tree: &UiTree, id: NodeId, section: &UiSectionNode, bounds: Rect, atlas: &mut FontAtlas) -> semio_framework_ui_wgpu_layout::flex::SectionFieldChromeMetrics {
+pub fn section_paint_metrics(tree: &UiTree, id: NodeId, section: &UiSectionNode, bounds: Rect, atlas: &mut FontAtlas) -> semio_ui_wgpu_layout::flex::SectionFieldChromeMetrics {
     let title_height = section.label.as_ref().map(|label| {
-        let accepted = semio_framework_ui_wgpu_mounted_layout::retained_section_title_height(tree, id);
-        accepted.max(atlas.measure_text_wrapped(label.as_str(), bounds.w.max(1.0), semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE).1)
+        let accepted = semio_ui_wgpu_mounted_layout::retained_section_title_height(tree, id);
+        accepted.max(atlas.measure_text_wrapped(label.as_str(), bounds.w.max(1.0), semio_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE).1)
     });
-    semio_framework_ui_wgpu_layout::flex::section_chrome_metrics(title_height, 0.0)
+    semio_ui_wgpu_layout::flex::section_chrome_metrics(title_height, 0.0)
 }
 
-pub fn field_paint_metrics(tree: &UiTree, id: NodeId, field: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas) -> semio_framework_ui_wgpu_layout::flex::SectionFieldChromeMetrics {
+pub fn field_paint_metrics(tree: &UiTree, id: NodeId, field: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas) -> semio_ui_wgpu_layout::flex::SectionFieldChromeMetrics {
     let control = tree.node(id).and_then(|node| node.first_child).and_then(|child| tree.accepted_layout(child));
     let description_height = field.description.as_ref().map(|description| {
         control
-            .map(|control| (control.y - semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_LINE_HEIGHT - theme.gap_standard * 2.0).max(semio_framework_ui_text::line_height(semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE)))
-            .unwrap_or_else(|| atlas.measure_text_wrapped(description, bounds.w.max(1.0), semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).1)
+            .map(|control| (control.y - semio_ui_wgpu_layout::flex::FIELD_LABEL_LINE_HEIGHT - theme.gap_standard * 2.0).max(semio_ui_text::line_height(semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE)))
+            .unwrap_or_else(|| atlas.measure_text_wrapped(description, bounds.w.max(1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).1)
     });
-    let error_height = field.error.as_ref().map(|error| atlas.measure_text_wrapped(error, bounds.w.max(1.0), semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).1);
-    semio_framework_ui_wgpu_layout::flex::field_chrome_metrics(description_height, control.map_or(0.0, |control| control.height), error_height, theme.gap_standard)
+    let error_height = field.error.as_ref().map(|error| atlas.measure_text_wrapped(error, bounds.w.max(1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).1);
+    semio_ui_wgpu_layout::flex::field_chrome_metrics(description_height, control.map_or(0.0, |control| control.height), error_height, theme.gap_standard)
 }
 
 fn retained_tree_index(len: usize, index: usize, reversed: bool) -> Option<usize> {
@@ -196,7 +196,7 @@ pub(super) fn retained_text_end_step(value: &str, mut bounds: Rect, size: f32, c
     }
 }
 
-pub(super) fn retained_tree_section_at<'a>(tree: &'a UiTreeNode, index: usize, reversed: bool) -> Option<&'a semio_framework_ui_declaration::ui::UiTreeSectionNode> {
+pub(super) fn retained_tree_section_at<'a>(tree: &'a UiTreeNode, index: usize, reversed: bool) -> Option<&'a semio_ui_declaration::ui::UiTreeSectionNode> {
     tree.sections.get(retained_tree_index(tree.sections.len(), index, reversed)?)
 }
 
@@ -218,7 +218,7 @@ fn retained_tree_item_node_at(retained: &UiTree, tree_id: NodeId, tree: &UiTreeN
         return None;
     }
     let section = retained_tree_section_at(tree, cursor.section, reversed)?;
-    let mut parent = if semio_framework_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() { tree_id } else { retained.explicit_child(tree_id, &section.id)? };
+    let mut parent = if semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() { tree_id } else { retained.explicit_child(tree_id, &section.id)? };
     let mut items = section.items.as_slice();
     for level in 0..cursor.depth {
         let item = items.get(retained_tree_index(items.len(), cursor.path[level], reversed)?)?;
@@ -232,7 +232,7 @@ pub(super) fn retained_tree_item_row(retained: &UiTree, tree_id: NodeId, tree: &
     let item = retained_tree_item_at(tree, cursor, reversed)?;
     let row_id = retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed)?;
     let open = retained.disclosure_open(row_id).unwrap_or(item.default_open.unwrap_or(false)) && item.items.as_deref().is_some_and(|items| !items.is_empty());
-    let height = semio_framework_ui_wgpu_mounted_layout::live_tree_item_height(retained, row_id, item, metrics, cursor.depth - 1);
+    let height = semio_ui_wgpu_mounted_layout::live_tree_item_height(retained, row_id, item, metrics, cursor.depth - 1);
     let row_height = metrics.for_item(item).row_height;
     let y = if reversed && open { cursor.row_y + height - row_height } else { cursor.row_y };
     Some((Rect::new(bounds.x, y, bounds.w, row_height), open))
@@ -263,11 +263,11 @@ pub(super) fn retained_control_is_bounded(control: &UiControlNode) -> bool {
 }
 
 pub(super) fn retained_tree_content_height(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
-    semio_framework_ui_wgpu_mounted_layout::retained_tree_height(retained, tree_id, tree, metrics)
+    semio_ui_wgpu_mounted_layout::retained_tree_height(retained, tree_id, tree, metrics)
 }
 
 /// 🔽️ Translates a Select's window-local popup to the exact trigger bounds this paint frame uses.
-pub(super) fn retained_select_popup_at_bounds(tree: &UiTree, id: NodeId, bounds: Rect, popup: semio_framework_ui_select_behavior::SelectPopupGeometry) -> Option<semio_framework_ui_select_behavior::SelectPopupGeometry> {
+pub(super) fn retained_select_popup_at_bounds(tree: &UiTree, id: NodeId, bounds: Rect, popup: semio_ui_select_behavior::SelectPopupGeometry) -> Option<semio_ui_select_behavior::SelectPopupGeometry> {
     let local = tree.absolute_rect(id)?;
     Some(popup.translated(bounds.x - local.x, bounds.y - local.y))
 }
@@ -289,12 +289,12 @@ pub(super) fn retained_table_header_step(
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
 ) -> RetainedNodePaintStep {
-    let Some(table) = semio_framework_ui_wgpu_mounted_layout::document_table(retained, tree_id) else { return RetainedNodePaintStep::Fault };
+    let Some(table) = semio_ui_wgpu_mounted_layout::document_table(retained, tree_id) else { return RetainedNodePaintStep::Fault };
     let header = metrics.header_height;
-    let actions = semio_framework_ui_wgpu_mounted_layout::table_actions_width_of(tree, metrics);
+    let actions = semio_ui_wgpu_mounted_layout::table_actions_width_of(tree, metrics);
     let columns = table.columns.len();
     let (label, rect) = match (table.columns.get(cursor.item), table.actions_label.as_ref()) {
-        (Some(label), _) => (label, semio_framework_ui_wgpu_layout::layout::table_column_rect(bounds.w, header, cursor.item, columns, actions, metrics)),
+        (Some(label), _) => (label, semio_ui_wgpu_layout::layout::table_column_rect(bounds.w, header, cursor.item, columns, actions, metrics)),
         (None, Some(label)) if cursor.item == columns && actions > 0.0 => (label, Rect::new(if inline.is_rtl() { 0.0 } else { bounds.w - actions }, 0.0, actions, header)),
         _ => {
             if !reversed {
@@ -333,7 +333,7 @@ pub(super) fn retained_table_cells_step(
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
 ) -> RetainedNodePaintStep {
-    let (Some(table), Some(row_id)) = (semio_framework_ui_wgpu_mounted_layout::document_table(retained, tree_id), retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed)) else {
+    let (Some(table), Some(row_id)) = (semio_ui_wgpu_mounted_layout::document_table(retained, tree_id), retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed)) else {
         return RetainedNodePaintStep::Fault;
     };
     let columns = table.columns.len();
@@ -343,11 +343,11 @@ pub(super) fn retained_table_cells_step(
         return RetainedNodePaintStep::Pending;
     }
     let materialised = retained.children(row_id).count();
-    let Some(text) = semio_framework_ui_wgpu_mounted_layout::document_table_row(retained, row_id).and_then(|props| props.cells.get(index)).filter(|_| index >= materialised) else {
+    let Some(text) = semio_ui_wgpu_mounted_layout::document_table_row(retained, row_id).and_then(|props| props.cells.get(index)).filter(|_| index >= materialised) else {
         cursor.next_part();
         return RetainedNodePaintStep::Pending;
     };
-    let column = semio_framework_ui_wgpu_layout::layout::table_column_rect(row.w, row.h, index, columns, semio_framework_ui_wgpu_mounted_layout::table_actions_width_of(tree, metrics), metrics);
+    let column = semio_ui_wgpu_layout::layout::table_column_rect(row.w, row.h, index, columns, semio_ui_wgpu_mounted_layout::table_actions_width_of(tree, metrics), metrics);
     let color = foreground_on_fill(theme, theme.text_element, item.presence.selected, item.presence.state == UiState::Previewed || item.presence.hover);
     let color = if item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
     match retained_tree_text_step(text.as_str(), Rect::new(row.x + column.x, row.y + column.y, column.w, column.h), font_size, color, inline, atlas, draw, cursor) {
@@ -363,9 +363,9 @@ pub(super) fn retained_table_cells_step(
 /// — a row whose cell hosts a draft or read-only surface is taller), a tree row's own band (its nested rows advance it themselves).
 pub(super) fn retained_tree_row_advance(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, item: &UiTreeItemNode, cursor: &RetainedNodePaintCursor, metrics: &TreeRowMetrics, reversed: bool) -> f32 {
     let band = metrics.for_item(item).row_height;
-    if semio_framework_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_none() {
+    if semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_none() {
         return band;
     }
-    retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed).map_or(band, |row| semio_framework_ui_wgpu_mounted_layout::live_tree_item_height(retained, row, item, metrics, 0))
+    retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed).map_or(band, |row| semio_ui_wgpu_mounted_layout::live_tree_item_height(retained, row, item, metrics, 0))
 }
 // #endregion paint

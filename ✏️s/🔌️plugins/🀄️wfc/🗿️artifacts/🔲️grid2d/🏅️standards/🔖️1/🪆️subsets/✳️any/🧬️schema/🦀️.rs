@@ -65,5 +65,5 @@ pub fn grid2d_artifact_schema_descriptor() -> ::semio_framework_schema_registry:
 /// `MutationDiff` algebra, so the generic `SnapshotBuilder<S, M>` is the whole construction facet;
 /// all io goes exclusively through the `io_mechanism` registry (`🚪️io/🦀️.rs`'s `io()`), never the
 /// retired `ComposerEntry` channel.
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<Grid2dSnapshot, Grid2dMutation>;
+pub type Construction = semio_plugin::app::SnapshotBuilder<Grid2dSnapshot, Grid2dMutation>;
 //#endregion 🏗️Construction

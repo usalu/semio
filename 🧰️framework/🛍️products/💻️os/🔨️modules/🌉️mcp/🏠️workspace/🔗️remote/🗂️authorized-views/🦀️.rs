@@ -1,7 +1,7 @@
 //! 🗂️ Authorized document, descriptor, package and catalog views and the descriptor cache.
 
-use semio_framework_os_kernel::os_directory::{DocumentExecutionTargetLeaseFieldsV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView};
-use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
+use semio_os_kernel::os_directory::{DocumentExecutionTargetLeaseFieldsV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView};
+use semio_os_mcp_hub_pair::binding_errors::HubBindingError;
 use std::collections::{HashMap, HashSet};
 use super::binding_limits::HUB_VERIFIED_CATALOG_MAX_DESCRIPTOR_BYTES;
 

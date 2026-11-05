@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertReinforcementGrade
         record: "InsertedReinforcementGrade",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert reinforcement grade {}", self.reinforcement_grade.id), &format!("Betonstahlsorte {} einfügen", self.reinforcement_grade.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert reinforcement grade {}", self.reinforcement_grade.id), &format!("Betonstahlsorte {} einfügen", self.reinforcement_grade.id))
     }
 }
 

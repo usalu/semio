@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "airflow-network", kind: "replace-airflow-network", record: "ReplacedAirflowNetwork" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&{
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&{
         if self.present {
             format!("Replace airflow network with {} zone nodes", self.zone_ids.len())
         } else {

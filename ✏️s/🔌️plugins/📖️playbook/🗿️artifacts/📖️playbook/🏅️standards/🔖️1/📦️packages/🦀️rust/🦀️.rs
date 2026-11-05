@@ -1,8 +1,8 @@
 //! 🔖️ v1 of `semio-s-artifact-playbook-playbook` — a path-preserving carve of the artifact root mounts.
 
 extern crate semio_framework as semio_framework;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use crate::schema::mutations::PlaybookMutation;
 pub use crate::schema::snapshot::PlaybookSnapshot;

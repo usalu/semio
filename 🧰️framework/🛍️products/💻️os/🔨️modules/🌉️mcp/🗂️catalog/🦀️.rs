@@ -10,14 +10,14 @@
 use semio_framework::manifest::kernel;
 use semio_framework::manifest;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
 use std::collections::BTreeMap;
-use semio_framework_os_mcp_schema::schema::{artifact_create_template_input_schema, capability_action_input_schema, capability_generic_input_schema, capability_generic_output_schema, compile_validator, ui_dialog_open_input_schema, validate, with_artifact_create_templates};
+use semio_os_mcp_schema::schema::{artifact_create_template_input_schema, capability_action_input_schema, capability_generic_input_schema, capability_generic_output_schema, compile_validator, ui_dialog_open_input_schema, validate, with_artifact_create_templates};
 
 #[path = "🪪️capability-identity/🦀️.rs"]
 mod capability_identity;

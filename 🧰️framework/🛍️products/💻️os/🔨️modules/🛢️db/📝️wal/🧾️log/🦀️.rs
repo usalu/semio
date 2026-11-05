@@ -19,7 +19,7 @@
 //! dependencies alongside `protocol` rather than duplicating their logic. Every other
 //! protocol-family type this crate touches comes from the `protocol` facade, per the contract.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_durability::Frontier;
 use db_ids::{ArtifactId, DbError, check_len};

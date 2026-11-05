@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
 use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ITEM;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};
 

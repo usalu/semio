@@ -1,7 +1,7 @@
 //! ⏪️ `move-nodes` history law (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING audit G1): a released equation-graph node drag
 //! is ONE relative `move-nodes` leaf; edited in history — re-offset or re-targeted — its Report replay re-applies the downstream
 //! drag onto the edited one exactly like a fresh fold of the edited log, through the cross-plugin
-//! `semio_framework_plugin::app::node_drag_history` law.
+//! `semio_plugin::app::node_drag_history` law.
 
 use crate::standards::v1::subsets::graph::schema::mutations::{create_node::CreateNode, move_nodes::MoveNodes};
 use crate::{EquationMutation, EquationSnapshot, MATH_DOCUMENT_SCHEMA};
@@ -24,5 +24,5 @@ async fn an_edited_drag_replays_its_downstream_like_a_fresh_fold() {
     }
     let log = [drag(&["alpha"], 20.0, -10.0), drag(&["alpha", "beta"], 5.0, 5.0)];
     let edits = [(0, drag(&["alpha"], -30.0, 12.5)), (0, drag(&["alpha", "beta"], 20.0, -10.0))];
-    semio_framework_plugin::app::node_drag_history::assert_node_drag_edits_replay_like_a_fresh_fold("mathematical", MATH_DOCUMENT_SCHEMA, &base, &log, &edits, fold).await;
+    semio_plugin::app::node_drag_history::assert_node_drag_edits_replay_like_a_fresh_fold("mathematical", MATH_DOCUMENT_SCHEMA, &base, &log, &edits, fold).await;
 }

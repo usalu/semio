@@ -5,7 +5,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IssuePriority, IssueStatus, Point3, SectionBox, ViewCamera};
 use semio_framework::io_schema::{Confidence, IoPayload};
 use semio_framework_deflate::zip_archive::{ZipArchive, ZipWriter};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Deserializer, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Deserializer, Serializer};
 use std::collections::BTreeSet;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::{attr, document_text, element, leaf, number};

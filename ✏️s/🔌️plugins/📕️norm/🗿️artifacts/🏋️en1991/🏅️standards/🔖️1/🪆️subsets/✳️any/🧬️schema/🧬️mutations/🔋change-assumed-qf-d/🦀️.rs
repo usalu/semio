@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedQfD where O
         record: "ChangedAssumedQfD",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed design fire load density", "Angenommenen Bemessungswert der Brandlastdichte ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed design fire load density", "Angenommenen Bemessungswert der Brandlastdichte ändern")
     }
 }
 

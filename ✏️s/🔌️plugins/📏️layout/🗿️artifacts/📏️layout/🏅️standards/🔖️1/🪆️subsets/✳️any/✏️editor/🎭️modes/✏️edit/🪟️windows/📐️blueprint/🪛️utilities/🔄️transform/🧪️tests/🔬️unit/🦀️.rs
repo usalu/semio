@@ -3,7 +3,7 @@
 //! every host abort leaves zero trace, and the persisted state round-trips through the window transient's value form.
 
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-#[allow(unused_imports)] use semio_framework_plugin::Emit;
+#[allow(unused_imports)] use semio_plugin::Emit;
 #[allow(unused_imports)] use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 #[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)] use std::sync::Arc;

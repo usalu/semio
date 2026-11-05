@@ -8,7 +8,7 @@
 //! half of the design, not parity.
 //!
 //! 🔁️ Codec provenance: the Rust SSOT is `💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️.rs`, which cannot be
-//! depended on from here — `semio-framework-os-mcp` pulls `axum` + `tokio` with the `full` feature
+//! depended on from here — `semio-os-mcp` pulls `axum` + `tokio` with the `full` feature
 //! and therefore does not build for `wasm32-unknown-unknown`, which this crate must. This file is
 //! consequently the THIRD implementation of the same byte layout (Rust SSOT, `🟦️.ts` twin, this
 //! one) and is held to the SSOT's own documented anti-drift mechanism: every row of
@@ -21,9 +21,9 @@
 //! to send back, so the browser (`🚪️host-io`) and native halves both drive it the same way the
 //! plugin bridge is driven — see the packet report for the socket wiring that is still absent.
 
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
 
 #[path = "⚙️config-and-shared-types/🦀️.rs"]
 mod config_and_shared_types;

@@ -1,6 +1,6 @@
 use crate::schema::snapshot::DeflateLevelHint;
 use crate::DeflateSnapshot;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use crate::editor::deflate::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
@@ -14,8 +14,8 @@ async fn definition_declares_an_editable_text_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_carries_the_header_fields_as_editable_text() {
     let document = DeflateSnapshot { compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fast, dict_id: Some(42), payload: vec![1, 2, 3], ..DeflateSnapshot::default() };
-    let node = render(&document, semio_framework_ui_locale::Locale::En, semio_framework_plugin::UiPublicationRevision(23)).expect("render");
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
+    let node = render(&document, semio_ui_locale::Locale::En, semio_plugin::UiPublicationRevision(23)).expect("render");
+    let scene: semio_ui_scene::TextEditorScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
     assert!(scene.buffer.contains("method=8"));
     assert!(scene.buffer.contains("windowBits=7"));
     assert!(scene.buffer.contains("levelHint=fast"));

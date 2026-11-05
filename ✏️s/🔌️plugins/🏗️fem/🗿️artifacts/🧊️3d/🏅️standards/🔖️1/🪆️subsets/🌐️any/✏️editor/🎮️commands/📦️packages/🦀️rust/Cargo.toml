@@ -24,9 +24,9 @@ semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node
 semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }

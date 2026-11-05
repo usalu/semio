@@ -1,22 +1,22 @@
 //! 📄️ Document operations, codecs, archive loads, backbone bindings and codec registration.
 
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework::kernel::{Effect, MessageEndpoint};
 use semio_framework::{Fault, FaultFrom};
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_plugin_reactor_lifecycle::life_instance_registry::{PLUGIN_RUNTIME_INSTANCE_SLOTS, PluginRuntime, RuntimeDocumentBackboneBindingV1};
-use semio_framework_plugin_plugin_program::{Plugin, PluginProgram, encode_wire_serialized};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_plugin_reactor_lifecycle::life_instance_registry::{PLUGIN_RUNTIME_INSTANCE_SLOTS, PluginRuntime, RuntimeDocumentBackboneBindingV1};
+use semio_plugin_plugin_program::{Plugin, PluginProgram, encode_wire_serialized};
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::ops_typed_operations::drive_self_waking_ready;
 use crate::ops_wire_limits::find_instance;
-use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
-use semio_framework_plugin_runtime_instances::inst_wire_frames::with_instances_mut;
+use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_plugin_runtime_instances::inst_wire_frames::with_instances_mut;
 /// 📥️ Ingests binary-encoded remote `MutationEnvelope`s (`protocol::decode_envelopes`) into
 /// the instance's document store (idempotent — duplicate mutation ids are dropped by the causal
 /// DAG / edit-id dedupe), returning one `protocol::MergeReport` per envelope for the caller
 /// (`ApplyEnvelopes`'s handler) to frame as unsolicited `AppFrame::MergeReport` frames.
-pub async fn plugin_ingest_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, mutations: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<protocol::MergeReport>, Fault> {
+pub async fn plugin_ingest_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, mutations: &[u8], identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<protocol::MergeReport>, Fault> {
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         ::semio_framework_async::poll::resolve_ready(instance.app.ingest_operations(mutations, identity, cx))
@@ -25,7 +25,7 @@ pub async fn plugin_ingest_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>
 }
 /// 📜️ Text-DSL counterpart of {@link plugin_ingest_operations}: one already-authored operation
 /// per non-blank op-text line instead of a binary `MutationEnvelope` array.
-pub async fn plugin_ingest_operations_text<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operations_text: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+pub async fn plugin_ingest_operations_text<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operations_text: &str, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         ::semio_framework_async::poll::resolve_ready(instance.app.ingest_operations_text(operations_text, identity))
@@ -46,7 +46,7 @@ pub async fn plugin_document_text<PA: PluginApp>(runtime: &PluginRuntime<PA>, in
 /// own registered apps. An editor is preferred over a viewer because only an editor's snapshot is the kind's
 /// creation authority; an ambiguous schema is refused rather than resolved by order. Nothing is constructed: the
 /// answers are the functions of the owner's type its registration recorded ([`crate::app::ArtifactCodecTableV1`]).
-fn plugin_artifact_codec<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str) -> Result<semio_framework_plugin_decl_surface::ArtifactCodecTableV1, Fault> {
+fn plugin_artifact_codec<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str) -> Result<semio_plugin_decl_surface::ArtifactCodecTableV1, Fault> {
     if artifact_schema.is_empty() || artifact_schema.len() > 256 || artifact_schema.chars().any(char::is_control) {
         return Err(plugin_internal_fault("artifact codec schema identity is empty, oversized or control-bearing"));
     }
@@ -90,10 +90,10 @@ pub async fn plugin_artifact_pack_schema_hash<PA: PluginApp>(runtime: &PluginRun
 pub fn plugin_snapshot_sqlite_schema(dialect: &str) -> Result<String, Fault> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
     let dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(dialect).map_err(|error| plugin_internal_fault(&error))?;
-    semio_framework_os_kernel::io::io_mechanism::native_snapshot_sqlite_schema(&dialect).map_err(|error| plugin_internal_fault(&error.to_string()))
+    semio_os_kernel::io::io_mechanism::native_snapshot_sqlite_schema(&dialect).map_err(|error| plugin_internal_fault(&error.to_string()))
 }
 /// 📤️ `codec.sqlite-export` executes the exact declared native snapshot provider.
-pub async fn plugin_snapshot_sqlite_export(owner: &mut semio_framework_plugin_abi::sqlite_wire::SnapshotInputOwner, native: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>, snapshot: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<semio_framework_plugin_abi::sqlite_wire::SnapshotFileResult, Fault> {
+pub async fn plugin_snapshot_sqlite_export(owner: &mut semio_plugin_abi::sqlite_wire::SnapshotInputOwner, native: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>, snapshot: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<semio_plugin_abi::sqlite_wire::SnapshotFileResult, Fault> {
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::{IoPayload,SQLITE_SNAPSHOT}};
     let input=owner.wire.as_mut().ok_or_else(||plugin_internal_fault("snapshot original request is absent"))?;
@@ -103,16 +103,16 @@ pub async fn plugin_snapshot_sqlite_export(owner: &mut semio_framework_plugin_ab
     let encoding=semio_framework::sqlite_snapshot::SnapshotEncoding::parse(&input.encoding).map_err(|error|plugin_internal_fault(error.into_message()))?;
     if matches!(encoding,semio_framework::sqlite_snapshot::SnapshotEncoding::Text)&&std::str::from_utf8(&input.payload).is_err(){return Err(plugin_internal_fault("snapshot original text is invalid UTF8"))}
     owner.payload=Some(match encoding{semio_framework::sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(std::mem::take(&mut input.payload)),semio_framework::sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(String::from_utf8(std::mem::take(&mut input.payload)).unwrap())});
-    owner.route=Some(semio_framework_os_kernel::io::io_mechanism::io_route(owner.dialect.as_ref().unwrap(),&ArtifactDialect::from(SQLITE_SNAPSHOT),1).await);
+    owner.route=Some(semio_os_kernel::io::io_mechanism::io_route(owner.dialect.as_ref().unwrap(),&ArtifactDialect::from(SQLITE_SNAPSHOT),1).await);
     let route=match owner.route.as_mut().unwrap(){Ok(route)=>&route.value,Err(error)=>{let kind=error.cause.kind;return Err(plugin_internal_fault(std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot route refused")).into_message()))}};
-    owner.hop=Some(semio_framework_os_kernel::io::io_mechanism::io_run_with_snapshot_control(route,&mut owner.payload,native,snapshot).await);
+    owner.hop=Some(semio_os_kernel::io::io_mechanism::io_run_with_snapshot_control(route,&mut owner.payload,native,snapshot).await);
     match owner.hop.as_mut().unwrap(){
-        Err(error)=>{let kind=error.cause.kind;let diagnostics=semio_framework_plugin_abi::sqlite_wire::encode_diagnostics(&error.diagnostics);let message=std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot hop refused")).into_message();Ok(semio_framework_plugin_abi::sqlite_wire::SnapshotFileResult::Rejected(semio_framework_plugin_abi::sqlite_wire::SnapshotRejection{kind,message,diagnostics}))},
-        Ok(output)=>match &mut output.value{IoPayload::Binary(bytes)=>Ok(semio_framework_plugin_abi::sqlite_wire::SnapshotFileResult::Done(semio_framework_plugin_abi::sqlite_wire::SnapshotFile{bytes:std::mem::take(bytes),diagnostics:semio_framework_plugin_abi::sqlite_wire::encode_diagnostics(&output.diagnostics)})),IoPayload::Text(_)=>Err(plugin_internal_fault("semantic SQLite export must produce binary"))},
+        Err(error)=>{let kind=error.cause.kind;let diagnostics=semio_plugin_abi::sqlite_wire::encode_diagnostics(&error.diagnostics);let message=std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot hop refused")).into_message();Ok(semio_plugin_abi::sqlite_wire::SnapshotFileResult::Rejected(semio_plugin_abi::sqlite_wire::SnapshotRejection{kind,message,diagnostics}))},
+        Ok(output)=>match &mut output.value{IoPayload::Binary(bytes)=>Ok(semio_plugin_abi::sqlite_wire::SnapshotFileResult::Done(semio_plugin_abi::sqlite_wire::SnapshotFile{bytes:std::mem::take(bytes),diagnostics:semio_plugin_abi::sqlite_wire::encode_diagnostics(&output.diagnostics)})),IoPayload::Text(_)=>Err(plugin_internal_fault("semantic SQLite export must produce binary"))},
     }
 }
 /// 📥️ `codec.sqlite-import` validates exact dialect and DDL before reconstructing native values.
-pub async fn plugin_snapshot_sqlite_import(owner: &mut semio_framework_plugin_abi::sqlite_wire::SnapshotInputOwner, native: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>, snapshot: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<semio_framework_plugin_abi::sqlite_wire::SnapshotPayloadResult, Fault> {
+pub async fn plugin_snapshot_sqlite_import(owner: &mut semio_plugin_abi::sqlite_wire::SnapshotInputOwner, native: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>, snapshot: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<semio_plugin_abi::sqlite_wire::SnapshotPayloadResult, Fault> {
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::{IoPayload,SQLITE_SNAPSHOT}};
     let input=owner.wire.as_mut().ok_or_else(||plugin_internal_fault("snapshot original request is absent"))?;
@@ -120,12 +120,12 @@ pub async fn plugin_snapshot_sqlite_import(owner: &mut semio_framework_plugin_ab
     snapshot.restrict_limits(limits).map_err(|error|plugin_internal_fault(error.into_message()))?;
     owner.dialect=Some(ArtifactDialect::parse_coordinate(&input.dialect).map_err(plugin_internal_fault)?);
     owner.payload=Some(IoPayload::Binary(std::mem::take(&mut input.payload)));
-    owner.route=Some(semio_framework_os_kernel::io::io_mechanism::io_route(&ArtifactDialect::from(SQLITE_SNAPSHOT),owner.dialect.as_ref().unwrap(),1).await);
+    owner.route=Some(semio_os_kernel::io::io_mechanism::io_route(&ArtifactDialect::from(SQLITE_SNAPSHOT),owner.dialect.as_ref().unwrap(),1).await);
     let route=match owner.route.as_mut().unwrap(){Ok(route)=>&route.value,Err(error)=>{let kind=error.cause.kind;return Err(plugin_internal_fault(std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot route refused")).into_message()))}};
-    owner.hop=Some(semio_framework_os_kernel::io::io_mechanism::io_run_with_snapshot_control(route,&mut owner.payload,native,snapshot).await);
+    owner.hop=Some(semio_os_kernel::io::io_mechanism::io_run_with_snapshot_control(route,&mut owner.payload,native,snapshot).await);
     match owner.hop.as_mut().unwrap(){
-        Err(error)=>{let kind=error.cause.kind;let diagnostics=semio_framework_plugin_abi::sqlite_wire::encode_diagnostics(&error.diagnostics);let message=std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot hop refused")).into_message();Ok(semio_framework_plugin_abi::sqlite_wire::SnapshotPayloadResult::Rejected(semio_framework_plugin_abi::sqlite_wire::SnapshotRejection{kind,message,diagnostics}))},
-        Ok(output)=>{let diagnostics=semio_framework_plugin_abi::sqlite_wire::encode_diagnostics(&output.diagnostics);Ok(semio_framework_plugin_abi::sqlite_wire::SnapshotPayloadResult::Done(match &mut output.value{IoPayload::Binary(bytes)=>semio_framework_plugin_abi::sqlite_wire::SnapshotPayload{encoding:semio_framework_plugin_abi::sqlite_wire::SnapshotEncoding::Binary,bytes:std::mem::take(bytes),diagnostics},IoPayload::Text(text)=>semio_framework_plugin_abi::sqlite_wire::SnapshotPayload{encoding:semio_framework_plugin_abi::sqlite_wire::SnapshotEncoding::Text,bytes:std::mem::take(text).into_bytes(),diagnostics}}))},
+        Err(error)=>{let kind=error.cause.kind;let diagnostics=semio_plugin_abi::sqlite_wire::encode_diagnostics(&error.diagnostics);let message=std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot hop refused")).into_message();Ok(semio_plugin_abi::sqlite_wire::SnapshotPayloadResult::Rejected(semio_plugin_abi::sqlite_wire::SnapshotRejection{kind,message,diagnostics}))},
+        Ok(output)=>{let diagnostics=semio_plugin_abi::sqlite_wire::encode_diagnostics(&output.diagnostics);Ok(semio_plugin_abi::sqlite_wire::SnapshotPayloadResult::Done(match &mut output.value{IoPayload::Binary(bytes)=>semio_plugin_abi::sqlite_wire::SnapshotPayload{encoding:semio_plugin_abi::sqlite_wire::SnapshotEncoding::Binary,bytes:std::mem::take(bytes),diagnostics},IoPayload::Text(text)=>semio_plugin_abi::sqlite_wire::SnapshotPayload{encoding:semio_plugin_abi::sqlite_wire::SnapshotEncoding::Text,bytes:std::mem::take(text).into_bytes(),diagnostics}}))},
     }
 }
 /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
@@ -137,7 +137,7 @@ pub async fn plugin_artifact_print_mirror<PA: PluginApp>(runtime: &PluginRuntime
     (plugin_artifact_codec(runtime, artifact_schema)?.print_mirror)(pack, spr).await
 }
 /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
-pub async fn plugin_artifact_apply_ops<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<store::os_store::serialization::ArtifactPackFiles, Fault> {
+pub async fn plugin_artifact_apply_ops<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<store::os_store::serialization::ArtifactPackFiles, Fault> {
     (plugin_artifact_codec(runtime, artifact_schema)?.apply_ops)(pack, spr, ops, identity).await
 }
 /// 📜️ `codec.replay-envelopes` — the hub's Check In fold for an unlinked package.
@@ -177,7 +177,7 @@ pub async fn plugin_begin_document_archive_load<PA: PluginApp>(runtime: &PluginR
 }
 /// 📊️ Advances one whole-document archive load for at most one poll wall and answers its status — the in-guest twin of
 /// `AppCommand::PollDocumentArchiveLoad`.
-pub async fn plugin_poll_document_archive_load<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
+pub async fn plugin_poll_document_archive_load<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         drive_self_waking_ready(instance.app.poll_document_archive_load(operation, identity, cx))
@@ -230,23 +230,23 @@ fn live_document_backbone_for_uri<PA: PluginApp>(runtime: &PluginRuntime<PA>, ur
     }
     Ok(None)
 }
-fn document_backbone_receipt_effect(receipt: &semio_framework_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1) -> Effect {
+fn document_backbone_receipt_effect(receipt: &semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1) -> Effect {
     Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(receipt.instance_id.to_string()) }, payload: receipt.encode() }
 }
 pub async fn plugin_handle_document_backbone_binding<PA: PluginApp>(runtime: &PluginRuntime<PA>, source_instance: &str, payload: &[u8]) -> Result<Option<Vec<Effect>>, Fault> {
-    use semio_framework_plugin_actor_host::document_backbone_binding::{decide_document_backbone_binding_v1, decode_document_backbone_binding_command_v1, DocumentBackboneBindingDecisionV1};
+    use semio_plugin_actor_host::document_backbone_binding::{decide_document_backbone_binding_v1, decode_document_backbone_binding_command_v1, DocumentBackboneBindingDecisionV1};
     let Some(command) = decode_document_backbone_binding_command_v1(payload).map_err(plugin_internal_fault)? else { return Ok(None) };
     let source_matches = source_instance.parse::<u32>().ok() == Some(command.instance_id);
     let instance_live = runtime.guest_lifetimes.try_borrow().map_err(|_| plugin_internal_fault("lifecycle authority busy"))?.get(command.instance_id).is_some_and(|slot| slot.cell.is_live());
     if !source_matches || !instance_live {
-        return Ok(Some(vec![document_backbone_receipt_effect(&semio_framework_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.instance-refused"))]));
+        return Ok(Some(vec![document_backbone_receipt_effect(&semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.instance-refused"))]));
     }
     let state = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?.get(command.instance_id).map(RuntimeDocumentBackboneBindingV1::state).unwrap_or_default();
     match decide_document_backbone_binding_v1(&state, &command) {
         DocumentBackboneBindingDecisionV1::Replay(receipt) | DocumentBackboneBindingDecisionV1::Refuse(receipt) => Ok(Some(vec![document_backbone_receipt_effect(&receipt)])),
         DocumentBackboneBindingDecisionV1::Bind(receipt) => {
             if live_document_backbone_for_uri(runtime, &command.uri)?.is_some() {
-                return Ok(Some(vec![document_backbone_receipt_effect(&semio_framework_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-collision"))]));
+                return Ok(Some(vec![document_backbone_receipt_effect(&semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-collision"))]));
             }
             let (channel, owner) = store::os_store::backbone::ActorBackboneChannelOwner::pair(&command.uri);
             let backbone = store::os_store::backbone::Backbones::Port(store::os_store::backbone::PortBackbone::with_channel(&command.uri, channel).await);
@@ -257,7 +257,7 @@ pub async fn plugin_handle_document_backbone_binding<PA: PluginApp>(runtime: &Pl
             .await;
             if attached.is_err() {
                 owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
-                return Ok(Some(vec![document_backbone_receipt_effect(&semio_framework_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.attach-refused"))]));
+                return Ok(Some(vec![document_backbone_receipt_effect(&semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.attach-refused"))]));
             }
             let rejected = {
                 let mut bindings = runtime.document_backbones.try_borrow_mut().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
@@ -280,7 +280,7 @@ pub async fn plugin_handle_document_backbone_binding<PA: PluginApp>(runtime: &Pl
             if let Some((code, owner)) = rejected {
                 let _ = plugin_detach_backbone(runtime, command.instance_id).await;
                 owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
-                return Ok(Some(vec![document_backbone_receipt_effect(&semio_framework_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, code))]));
+                return Ok(Some(vec![document_backbone_receipt_effect(&semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, code))]));
             }
             Ok(Some(vec![document_backbone_receipt_effect(&receipt)]))
         }
@@ -305,7 +305,7 @@ pub async fn plugin_handle_document_backbone_binding<PA: PluginApp>(runtime: &Pl
         }
     }
 }
-pub async fn plugin_receive_document_backbone<PA: PluginApp>(runtime: &PluginRuntime<PA>, uri: &str, payload: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<DocumentBackboneTurnOutputV1, Fault> {
+pub async fn plugin_receive_document_backbone<PA: PluginApp>(runtime: &PluginRuntime<PA>, uri: &str, payload: &[u8], identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<DocumentBackboneTurnOutputV1, Fault> {
     let (instance_id, generation, owner) = live_document_backbone_for_uri(runtime, uri)?.ok_or_else(|| plugin_internal_fault("backbone message has no exact live document binding"))?;
     owner.push_inbound(uri, payload).map_err(|error| plugin_internal_fault(error.to_string()))?;
     let (reports, conflicts) = with_instances_mut(runtime, |list| {
@@ -350,15 +350,15 @@ where
     let codec = store::native_artifact_codec::<A::Snapshot>(schema);
     let app = A::default();
     let owner = app.instance_id().await.to_string();
-    let document_bindings = vec![semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::DirectDocumentNative, owner.clone(), Some(A::DIALECT.artifact_kind.to_string()), vec![owner], Some(A::DIALECT.into()), None, &codec)];
-    let plan = semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan {
+    let document_bindings = vec![semio_os_kernel::io::ArtifactCodecBinding::from_codec(semio_os_kernel::io::ArtifactCodecBindingChannel::DirectDocumentNative, owner.clone(), Some(A::DIALECT.artifact_kind.to_string()), vec![owner], Some(A::DIALECT.into()), None, &codec)];
+    let plan = semio_os_kernel::io::ArtifactAssemblyRegistryPlan {
         document_codecs: vec![codec.clone()],
         document_bindings,
-        native_snapshots: semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(A::DIALECT.into(), codec).into_iter().collect(),
+        native_snapshots: semio_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(A::DIALECT.into(), codec).into_iter().collect(),
         ..Default::default()
     };
     let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
-    semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))
+    semio_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))
 }
 /// 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::os_store::backbone::PortBackbone`
 /// (a pure queue relayed across the wasm sandbox to the host); the host owns the real IO endpoint.

@@ -475,14 +475,14 @@ pub struct DocumentOpenPackageV1 {
     pub component_blake3: String,
     pub descriptor_byte_sha256: String,
     pub execution_protocol: DocumentExecutionProtocolV1,
-    pub component_receipt: semio_framework_plugin_component_receipt::ComponentReceiptV1,
+    pub component_receipt: semio_plugin_component_receipt::ComponentReceiptV1,
 }
 
 impl DocumentOpenPackageV1 {
     /// 🔗️ Whether the package's receipt is a valid shipped receipt naming exactly this package, its component digest and
     /// its semantic descriptor digest — the one law every plan, lease and catalog binding holds its package to.
     pub fn receipt_binds(&self) -> bool {
-        self.component_receipt.binds(semio_framework_plugin_component_receipt::ComponentProfileV1::Release, &self.plugin_id, &self.package_id, &self.component_sha256, &self.descriptor_byte_sha256).is_ok()
+        self.component_receipt.binds(semio_plugin_component_receipt::ComponentProfileV1::Release, &self.plugin_id, &self.package_id, &self.component_sha256, &self.descriptor_byte_sha256).is_ok()
     }
 }
 
@@ -685,7 +685,7 @@ impl DocumentOpenPlanV1 {
             || !valid_document_open_hash(&self.package.component_blake3)
             || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
             || !self.package.receipt_binds()
-            || self.package.execution_protocol.app_channel_version != semio_framework_os_channel::CHANNEL_VERSION
+            || self.package.execution_protocol.app_channel_version != semio_os_channel::CHANNEL_VERSION
             || !valid_document_open_hash(&self.artifact.pack_schema_hash)
             || !self.grant.read
             || !self.grant.observe

@@ -101,9 +101,9 @@ export class HomeIoSurfaceScript extends BundleScript {
     assert.deepEqual(component, parseToml(componentSource) as unknown);
     assert.equal(component.package.name, fixture.componentPackage);
     assert.deepEqual(component.lib["crate-type"], ["cdylib"]);
-    assert.deepEqual(Object.keys(component.dependencies).sort(), [fixture.libraryPackage, "semio-framework-plugin"].sort(), "the Stdio component crate links anything but its library and the plugin entry macro");
+    assert.deepEqual(Object.keys(component.dependencies).sort(), [fixture.libraryPackage, "semio-plugin"].sort(), "the Stdio component crate links anything but its library and the plugin entry macro");
     assert(!component.features, "the Stdio component crate declares features");
-    assert.match(readFileSync(join(this.root, "../../🧩️component/🦀️.rs"), "utf8"), /^semio_framework_plugin::plugin_exports!\(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, semio_hub_stdio::plugin, semio_hub_stdio::plugin::StdioApps\);$/mu);
+    assert.match(readFileSync(join(this.root, "../../🧩️component/🦀️.rs"), "utf8"), /^semio_plugin::plugin_exports!\(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, semio_hub_stdio::plugin, semio_hub_stdio::plugin::StdioApps\);$/mu);
     const selected:readonly string[] = [...fixture.directArtifacts, ...fixture.sharedCodecs].sort();
     const catalogManifestPath = join(this.root, "../../🔌️plugin/📇️catalog/📦️packages/🦀️rust/Cargo.toml");
     const catalogSource = readFileSync(catalogManifestPath, "utf8"), catalogCargo = Bun.TOML.parse(catalogSource) as any;
@@ -119,8 +119,8 @@ export class HomeIoSurfaceScript extends BundleScript {
     const spaceManifestPath = resolve(this.repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml");
     const spaceManifest = readFileSync(spaceManifestPath, "utf8");
     assert(!spaceManifest.includes("semio-hub-stdio"), "Space retains the Stdio composition dependency");
-    assert.match(spaceManifest, /^semio-framework-os\s*=\s*\{[^\n}]*\}$/mu);
-    assert(!/^semio-framework-os\s*=[^\n]*features/mu.test(spaceManifest), "Space selects an OS host feature set");
+    assert.match(spaceManifest, /^semio-os\s*=\s*\{[^\n}]*\}$/mu);
+    assert(!/^semio-os\s*=[^\n]*features/mu.test(spaceManifest), "Space selects an OS host feature set");
     const workspace = parseToml(readFileSync(join(this.repoRoot, "Cargo.toml"), "utf8")) as unknown as { workspace: { dependencies: Record<string, { package?: string } | string> } };
     const dependencyNames = (cargo: any): string[] => [cargo, ...Object.values(cargo.target ?? {})].flatMap((table: any) => Object.entries(table.dependencies ?? {}).map(([alias, value]: [string, any]) => {
       const declaration = value?.workspace === true ? workspace.workspace.dependencies[alias] : value;
@@ -161,12 +161,12 @@ export class HomeIoSurfaceScript extends BundleScript {
     const osHostManifest = readFileSync(osHostManifestPath, "utf8");
     const osHostCargo = parseToml(osHostManifest) as any;
     assert(!osHostCargo.features, "OS host declares features, so hub components compile more than one OS host unit");
-    assert(osHostCargo.target['cfg(not(all(target_arch = "wasm32", target_env = "p2")))'].dependencies["semio-framework-os-kernel"].features.includes("sync"), "OS host lost the native kernel sync transport");
+    assert(osHostCargo.target['cfg(not(all(target_arch = "wasm32", target_env = "p2")))'].dependencies["semio-os-kernel"].features.includes("sync"), "OS host lost the native kernel sync transport");
     assert(!consumers.includes(osHostManifestPath), "OS host must not select domain artifact codecs");
     assert(!osHostManifest.includes("semio-hub-stdio"), "OS host depends on Stdio");
     const osHostRoot = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
     for (const module of ["host", "backbone"]) assert.match(osHostRoot, new RegExp(`^pub mod ${module};`, "mu"));
-    for (const [module, producer] of [["codec_abi", "codec_abi"], ["instance", "instance"], ["registry", "registry"], ["workflow", "workflow"], ["media_export_raster", "media_raster"]] as const) assert.match(osHostRoot, new RegExp(`^pub use semio_framework_os_host_${producer} as ${module};`, "mu"));
+    for (const [module, producer] of [["codec_abi", "codec_abi"], ["instance", "instance"], ["registry", "registry"], ["workflow", "workflow"], ["media_export_raster", "media_raster"]] as const) assert.match(osHostRoot, new RegExp(`^pub use semio_os_host_${producer} as ${module};`, "mu"));
     const spaceRoot = resolve(this.repoRoot, "✏️s/🔌️plugins/🪐️space");
     const productionRefs = stdioWalkText(spaceRoot)
       .filter((path) => path.endsWith(".rs") && path.includes("/🗿️artifacts/🏠️home/") && !path.includes("/🧪️tests/"))

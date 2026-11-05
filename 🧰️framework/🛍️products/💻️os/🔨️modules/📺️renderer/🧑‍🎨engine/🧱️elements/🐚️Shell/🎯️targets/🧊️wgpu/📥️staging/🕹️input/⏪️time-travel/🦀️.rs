@@ -56,7 +56,7 @@ impl ShellInputState {
                 self.accessibility_focused_control_id = Some(TIME_TRAVEL_BAND_STATUS_ID.to_string());
                 true
             },
-            TimeTravelFocus::Editor => semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::visible_retained_accessibility_target(time_travel_editor_focus_node).is_some_and(|target| self.focus_retained_accessibility_target(&target, input, chrome)),
+            TimeTravelFocus::Editor => semio_renderer_wgpu_ui_engine_dump::chrome_ledger::visible_retained_accessibility_target(time_travel_editor_focus_node).is_some_and(|target| self.focus_retained_accessibility_target(&target, input, chrome)),
         };
         if moved {
             history.time_travel_focus = None;
@@ -66,7 +66,7 @@ impl ShellInputState {
     /// 🎯️ Gives one retained node the same accessibility focus a reader's focus would give it, and hands the keyboard
     /// to its window; `false` when the node's window no longer presents it.
     pub fn focus_retained_accessibility_target(&mut self, target: &ui_render::AccessibilityTarget, input: &mut InputState<ActionDescriptor>, chrome: &mut ChromeState) -> bool {
-        let Some(commands) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_accessibility_event(&target.window_id, target.window_generation, target.node_id, &target.node_key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Focus, input) else { return false };
+        let Some(commands) = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_accessibility_event(&target.window_id, target.window_generation, target.node_id, &target.node_key, semio_ui_wgpu_events::AccessibilityUiEvent::Focus, input) else { return false };
         chrome.chrome_build.note_content_focus_commands(&commands);
         self.accessibility_focused_control_id = None;
         true

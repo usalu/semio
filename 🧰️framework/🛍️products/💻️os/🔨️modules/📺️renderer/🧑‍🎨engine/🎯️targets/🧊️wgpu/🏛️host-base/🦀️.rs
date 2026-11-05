@@ -9,7 +9,7 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
-use semio_framework_ui_theme::Theme;
+use semio_ui_theme::Theme;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -27,8 +27,8 @@ use wasm_bindgen::prelude::*;
 /// `🖥️host/🧵️shard/🦀️.rs`'s own `BudgetBridge` region already uses for the REVERSE
 /// direction (`GRANT_BUDGET_DEFAULT_MAX_FRAMES`).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, original: semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> semio_framework_plugin_host::shard::grant::ShardResourceBudget {
-    semio_framework_plugin_host::shard::grant::ShardResourceBudget { fuel: budget.fuel, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames, ..original }
+pub fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, original: semio_plugin_host::shard::grant::ShardResourceBudget) -> semio_plugin_host::shard::grant::ShardResourceBudget {
+    semio_plugin_host::shard::grant::ShardResourceBudget { fuel: budget.fuel, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames, ..original }
 }
 //#endregion 🔖️ActorBudgetBridge
 
@@ -320,7 +320,7 @@ pub fn host_platform() -> semio_framework::manifest::Platform {
 /// (`navigator.language`, `"de-AT"`) folds onto the chrome's two tongues. `""` is "the host said
 /// nothing", which leaves the door unset rather than pinning a tongue nobody chose.
 pub fn host_locale_from_tag(tag: &str) -> Option<&'static str> {
-    semio_framework_ui_locale::Locale::from_language_tag(tag).ok().map(|locale| locale.as_str())
+    semio_ui_locale::Locale::from_language_tag(tag).ok().map(|locale| locale.as_str())
 }
 
 thread_local! {
@@ -608,8 +608,8 @@ pub fn boot_locks() -> WgpuBootLocks {
 
 /// 👁️✏️ The boot-resolved role, contract freeze §5 — `"viewer"`/`"editor"`, anything else is
 /// `ChromeRole::from_boot_env`'s own `editor` fallback.
-pub fn boot_app_role() -> semio_framework_ui_declaration::role_chrome::ChromeRole {
-    BOOT_DESCRIPTOR.with(|cell| semio_framework_ui_declaration::role_chrome::ChromeRole::from_boot_env(Some(cell.borrow().app_role.as_str())))
+pub fn boot_app_role() -> semio_ui_declaration::role_chrome::ChromeRole {
+    BOOT_DESCRIPTOR.with(|cell| semio_ui_declaration::role_chrome::ChromeRole::from_boot_env(Some(cell.borrow().app_role.as_str())))
 }
 //#endregion 🧭️BootDescriptor
 

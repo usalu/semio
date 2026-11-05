@@ -4,7 +4,7 @@
 //! for a semio-native dialect), the same deviation every sibling artifact's standard root carries.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
@@ -14,7 +14,7 @@ pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
 //#region 🧩️ArtifactItems2
 pub mod artifact_items_2 {
 pub use crate::schema::snapshot::WFC_BITMAP_DOCUMENT_SCHEMA;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`. A bitmap problem is genuinely two-dimensional raster media
@@ -24,7 +24,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.wfcbitmap".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("WFC Bitmap", "WFC-Bitmap"),
+        label: semio_ui_locale::LocalizedLabel::native("WFC Bitmap", "WFC-Bitmap"),
         source_format: WFC_BITMAP_DOCUMENT_SCHEMA.into(),
         component_kind: "wfcbitmap".into(),
         dimension: "2d".into(),
@@ -45,10 +45,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod artifact_items_4 {
 //#region 🔖️Declaration
 /// 🧾️ Defines `s.wfc.bitmap`'s immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.wfc.bitmap.standard.v1", "standard", "1", &[], None),
         ("s.wfc.bitmap.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.wfc.bitmap.schema.artifact", "schema", "s.wfc.bitmap", &[("schema", "s.wfc.bitmap")], None),
@@ -78,23 +78,23 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 /// 🎭️ The two app bindings every declaration of this artifact must be able to absorb.
 pub trait ArtifactApps:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::bitmap::BitmapEditor>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::bitmap::BitmapViewer>>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::bitmap::BitmapEditor>>>
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::bitmap::BitmapViewer>>>
 {
 }
 
 impl<PA> ArtifactApps for PA where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::bitmap::BitmapEditor>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::bitmap::BitmapViewer>>>
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::bitmap::BitmapEditor>>>
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::bitmap::BitmapViewer>>>
 {
 }
 
 /// 🌳️ This artifact's declaration tree root — the ONLY registration channel for schema/io/viewer/
 /// editor rows. `definition()` above is the separate capability-row channel.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<PA: ArtifactApps>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.bitmap").expect("canonical wfc bitmap kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }

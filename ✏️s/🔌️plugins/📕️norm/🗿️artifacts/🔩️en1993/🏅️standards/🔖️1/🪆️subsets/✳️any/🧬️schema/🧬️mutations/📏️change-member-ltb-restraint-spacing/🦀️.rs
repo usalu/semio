@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberLtbRestraint
         record: "ChangedMemberLtbRestraintSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Spacing of lateral restraints of the member", "Bauteil: Abstand der seitlichen Halterungen ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Spacing of lateral restraints of the member", "Bauteil: Abstand der seitlichen Halterungen ändern")
     }
 }
 

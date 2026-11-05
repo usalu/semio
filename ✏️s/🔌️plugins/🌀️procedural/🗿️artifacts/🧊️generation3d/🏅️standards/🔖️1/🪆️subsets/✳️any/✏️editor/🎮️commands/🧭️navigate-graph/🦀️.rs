@@ -21,7 +21,7 @@ use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, FlowGraphStep};
-use semio_framework_plugin::{ArtifactView, Emit, InteractionWrite};
+use semio_plugin::{ArtifactView, Emit, InteractionWrite};
 use std::collections::BTreeMap;
 
 /// 🕹️ The `graph` interaction domain and the two granularities keyboard traversal moves between —
@@ -96,8 +96,8 @@ macro_rules! graph_keyboard_command {
         pub mod $module {
             use super::{Generation3dConfig, Generation3dConfigMutation, Generation3dMutation, Generation3dSnapshot};
             use semio_framework_artifact_flow_flow::FlowGraphStep;
-            use semio_framework_os_flow::FlowEvalSession;
-            use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+            use semio_os_flow::FlowEvalSession;
+            use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
             use semio_framework_value_derive::{FromValue, ToValue};
 
             /// 🧭️ The [`FlowGraphStep`] this verb names — the one thing that differs between the four.
@@ -132,8 +132,8 @@ graph_keyboard_command!(select_downstream_node, SelectDownstreamNode, "select-do
 /// `apply_ports`; the selection-free macro path can name no port and emits nothing.
 pub mod activate_selection {
     use super::{Generation3dConfig, Generation3dConfigMutation, Generation3dMutation, Generation3dSnapshot};
-    use semio_framework_os_flow::FlowEvalSession;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+    use semio_os_flow::FlowEvalSession;
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use semio_framework_value_derive::{FromValue, ToValue};
 
     /// ⏎️ See [`super::activate_emit`].

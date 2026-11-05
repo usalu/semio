@@ -6,7 +6,7 @@ use semio_s_artifact_cad_cad_kit::{publish_engagement, reset_document_effect, sn
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_inferences::{default_document, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetActiveExample

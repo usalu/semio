@@ -10,19 +10,19 @@
 
 use crate::editor::bitmap::modes::edit::windows::input::config::BitmapInputWindowConfig;
 use crate::BitmapSnapshot;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArgSchema;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_plugin::scene_surface;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ArgSchema;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
 pub const WFC_BITMAP_WINDOW_INPUT: &str = "wfc-bitmap-input";
@@ -89,7 +89,7 @@ pub fn definition() -> WindowKindDefinition {
         icon_id: "image".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
-        utilities: vec![semio_framework_plugin::UtilityRef::new(super::utilities::brush::UTILITY_ID)],
+        utilities: vec![semio_plugin::UtilityRef::new(super::utilities::brush::UTILITY_ID)],
         interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,

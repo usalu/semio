@@ -166,7 +166,7 @@ pub struct RasterLayerPatch {
 /// `artifact_kind` matches `definition()`'s own `"s.raster.schema.artifact"` row descriptor
 /// (`"s.raster.raster"`); `standard`/`subset` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const RASTER_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.raster.raster", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const RASTER_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.raster.raster", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 /// 🆔️ Stable identity of decoded image fields, independent of every carrier encoding.
 pub fn raster_image_content_id(prefix: &str, image: &SemioImageSnapshot) -> String {

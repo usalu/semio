@@ -1,22 +1,22 @@
 //! 🔖️ Workspace persistence origin and plugin activation outcome.
 
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_plugin_host::GuestRuntimes;
+use semio_plugin_host::GuestRuntimes;
 #[cfg(not(target_arch = "wasm32"))]
 use std::path::Path;
 use std::path::PathBuf;
-use semio_framework_os_mcp_probe_document::probe_document::PROBE_SURFACE_ID;
+use semio_os_mcp_probe_document::probe_document::PROBE_SURFACE_ID;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::compiled_components::{ComponentBytes, scoped_compiled_component};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::plugin_artifact_channel::headless_open_budget;
-use semio_framework_plugin_host::GuestRuntime as _;
+use semio_plugin_host::GuestRuntime as _;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{PluginRegistryEntry, resolve_plugin_wasm_path};
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{PluginRegistryEntry, resolve_plugin_wasm_path};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_port::channel_port::ActivationScope;
+use semio_os_mcp_port::channel_port::ActivationScope;
 
 //#region 🔖️Binding
 
@@ -113,7 +113,7 @@ pub fn activate_plugin_instance(
     app_ref: &semio_framework::AppRef,
     actor_label: &str,
     plugin_ordinal: u16,
-) -> Result<(semio_framework_plugin_host::GuestInstance, PluginActivationOutcome), GatewayError> {
+) -> Result<(semio_plugin_host::GuestInstance, PluginActivationOutcome), GatewayError> {
     let wasm_path = resolve_plugin_wasm_path(repo_root, entry)?;
     let compiled = scoped_compiled_component(runtime, &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
 
@@ -123,7 +123,7 @@ pub fn activate_plugin_instance(
     let budget = headless_open_budget();
     let mut instance = semio_framework_async::block_on(runtime.instantiate(&compiled, actor, &caps, &budget)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("instantiating `{}`: {error}", entry.plugin_id)))?;
 
-    let assets = semio_framework_plugin_host::package_assets::package_file_assets(repo_root, &descriptor.assets).map_err(|message| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` package assets: {message}", entry.plugin_id)))?;
+    let assets = semio_plugin_host::package_assets::package_file_assets(repo_root, &descriptor.assets).map_err(|message| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` package assets: {message}", entry.plugin_id)))?;
     let open_event = semio_framework::kernel::Event::InstanceOpen {
         request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: u32::from(plugin_ordinal), request_sequence: 1 },
         app_id: semio_framework::kernel::AppInstanceId(app_ref.app_id.clone()),

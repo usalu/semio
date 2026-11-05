@@ -89,3 +89,37 @@ async fn icon_render_request_forwards_camera_projection() {
     assert_eq!(request["camera"]["projection"], semio_framework_pack_json::Value::from("orthographic"));
     assert_eq!(request["camera"]["zoom"], semio_framework_pack_json::Value::from(18.0));
 }
+
+#[test]
+fn icon_render_request_respects_sun_enabled_fixture() {
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/☀️sun/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("sun fixture");
+    for case in fixture["cases"].as_array().expect("sun cases") {
+        let mut snapshot = default_snapshot();
+        snapshot.scene.sun.enabled = case["enabled"].as_bool().expect("enabled");
+        snapshot.scene.sun.intensity = case["intensity"].as_f64().expect("intensity");
+        let shot = active_shot(&snapshot).expect("shot");
+        let asset = active_asset(&snapshot).expect("asset");
+        let request = semio_framework_pack_json::parse(&shooting_icon_render_request_json(&snapshot, shot, asset, &crate::ShootingCamera::default(), false), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("render request");
+        assert_eq!(request["lights"]["sunIntensity"].as_f64(), case["expected"].as_f64(), "{}", case["name"]);
+    }
+}
+
+#[test]
+fn icon_render_request_forwards_asset_transform_fixture() {
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️icon-transform/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("transform fixture");
+    for case in fixture["cases"].as_array().expect("transform cases") {
+        let mut snapshot = default_snapshot();
+        let asset = snapshot.assets.first_mut().expect("asset");
+        asset.origin = std::array::from_fn(|axis| case["transform"]["position"][axis].as_f64().expect("position"));
+        asset.orientation = Some(std::array::from_fn(|axis| case["transform"]["rotation"][axis].as_f64().expect("rotation")));
+        asset.scale = Some(std::array::from_fn(|axis| case["transform"]["scale"][axis].as_f64().expect("scale")));
+        let shot = active_shot(&snapshot).expect("shot");
+        let asset = snapshot.assets.first().expect("transformed asset");
+        let request = semio_framework_pack_json::parse(&shooting_icon_render_request_json(&snapshot, shot, asset, &crate::ShootingCamera::default(), false), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("request");
+        for field in ["position", "rotation", "scale"] {
+            for (actual, expected) in request["transform"][field].as_array().expect("request transform").iter().zip(case["transform"][field].as_array().expect("fixture transform")) {
+                assert_eq!(actual.as_f64(), expected.as_f64(), "{}", case["id"]);
+            }
+        }
+    }
+}

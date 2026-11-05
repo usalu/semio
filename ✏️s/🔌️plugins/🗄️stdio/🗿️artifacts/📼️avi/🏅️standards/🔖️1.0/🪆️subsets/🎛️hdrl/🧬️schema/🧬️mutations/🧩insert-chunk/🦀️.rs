@@ -16,8 +16,8 @@ pub struct InsertChunk {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for InsertChunk {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "chunk", kind: "insert-chunk", record: "InsertChunk" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert chunk", "Chunk einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert chunk", "Chunk einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

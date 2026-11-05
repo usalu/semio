@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeImpactActionKind w
         record: "ChangedImpactActionKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change impact kind (0 road vehicle, 1 ship, 2 forklift) of the impact action", "Anpralleinwirkung: Anprallart (0 Straßenfahrzeug, 1 Schiff, 2 Gabelstapler) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change impact kind (0 road vehicle, 1 ship, 2 forklift) of the impact action", "Anpralleinwirkung: Anprallart (0 Straßenfahrzeug, 1 Schiff, 2 Gabelstapler) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -11,14 +11,14 @@
 //! both read through `InteractionView` in `render_with_request_context`. A surface that copied them
 //! into its own transient would own two sources of truth for one fact.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Transient
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_os_kernel::DslArtifact, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation3dview.transient")]
 #[dsl(layout = "lines")]
@@ -79,8 +79,8 @@ impl pack::snapshot::ArtifactPack for Generation3dViewTransient {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dViewTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dViewTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

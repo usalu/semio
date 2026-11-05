@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-plugin-guest-contract"
+name = "semio-plugin-guest-contract"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,8 +24,8 @@ semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠�
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-job-fault-publication = { path = "../../../../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true }
+semio-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }

@@ -32,8 +32,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "palette-color", kind: "add-palette-color", record: "AddedPaletteColor" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add palette colour at {}", self.index), &format!("Palettenfarbe an {} hinzufügen", self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add palette colour at {}", self.index), &format!("Palettenfarbe an {} hinzufügen", self.index))
     }
 }
 

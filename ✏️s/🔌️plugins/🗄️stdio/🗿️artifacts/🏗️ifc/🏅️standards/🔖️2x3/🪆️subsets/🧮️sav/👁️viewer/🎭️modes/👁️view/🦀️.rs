@@ -1,9 +1,9 @@
 //! 👁️ IFC 2x3 Sav viewer — the `view` mode: a single full-pane Main window.
 
 use crate::viewer::ifc2x3_sav::modes::view::windows::main;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const IFC2X3_SAV_VIEW_MODE_ID: &str = "view";
 

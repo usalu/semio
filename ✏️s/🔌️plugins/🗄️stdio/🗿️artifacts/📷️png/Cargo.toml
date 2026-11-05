@@ -55,16 +55,16 @@ path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packag
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-schema]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-derive]

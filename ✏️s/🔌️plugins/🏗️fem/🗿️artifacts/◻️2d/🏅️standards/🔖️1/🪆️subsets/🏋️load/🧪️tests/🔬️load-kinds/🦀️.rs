@@ -1,7 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` load mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 #[path = "../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/👻️dangling-node-8d113b/🦀️.rs"]
 mod add_load_refuses_to_push_a_wind_load_at_a_node_the_frame_does_not_have;
 #[path = "../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/💨️pushes-a-wind-load-5c3f1e/🦀️.rs"]

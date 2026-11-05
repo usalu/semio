@@ -12,7 +12,7 @@
 use crate::serializers::artifacts::json::v_rfc8259::any::json_text;
 use crate::serializers::artifacts::txt::v_utf_8::any::dsl_text;
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip;
@@ -44,7 +44,7 @@ pub struct Block2dIntoZip;
 impl Serializer<Block2dSnapshot> for Block2dIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block2dSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &Block2dSnapshot, _: &ArchiveChildren, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let bytes = encode_zip(&archive_of(from)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("block2d→zip: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }

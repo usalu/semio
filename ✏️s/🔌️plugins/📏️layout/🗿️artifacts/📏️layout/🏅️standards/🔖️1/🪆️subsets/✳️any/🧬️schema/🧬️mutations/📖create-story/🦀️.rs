@@ -25,8 +25,8 @@ pub struct CreateStory {
 impl<Op> MutationKind<LayoutSnapshot, Op> for CreateStory where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_story::DeleteStory> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "story", kind: "create-story", record: "CreatedStory" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create story \"{}\"", self.story.id), &format!("Textfluss \"{}\" erstellen", self.story.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create story \"{}\"", self.story.id), &format!("Textfluss \"{}\" erstellen", self.story.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.story.id.clone()]

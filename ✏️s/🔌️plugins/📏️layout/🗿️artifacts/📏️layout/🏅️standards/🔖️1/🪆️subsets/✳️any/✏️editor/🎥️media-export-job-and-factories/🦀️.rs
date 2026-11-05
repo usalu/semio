@@ -4,7 +4,7 @@ use super::*;
 use super::export_tool_job::{OriginalExportDrawingRead,OriginalExportDrawingContext,ParentSource};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[derive(semio_framework_value::RetireOwned)]
-struct MediaSources{original:Option<store::os_store::snapshot_read::SnapshotRead<LayoutSnapshot>>,sealing:store::os_store::snapshot_read::SnapshotReadSourceStaging<LayoutSnapshot>,parent:Option<ParentSource>,children:semio_framework_plugin::app::ChildContentView,operation:semio_framework_plugin::AppOperationContext,drawings:[OriginalExportDrawingRead;2]}
+struct MediaSources{original:Option<store::os_store::snapshot_read::SnapshotRead<LayoutSnapshot>>,sealing:store::os_store::snapshot_read::SnapshotReadSourceStaging<LayoutSnapshot>,parent:Option<ParentSource>,children:semio_plugin::app::ChildContentView,operation:semio_plugin::AppOperationContext,drawings:[OriginalExportDrawingRead;2]}
 
 
 pub struct LayoutMediaExportJob {
@@ -16,7 +16,7 @@ pub struct LayoutMediaExportJob {
 }
 
 impl LayoutMediaExportJob{
- pub fn admit_original(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+ pub fn admit_original(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
   let _=cx.original_source_parent()?;if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let grant=cx.retained_grant();
   if body.is_none(){let input=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout producer lost original request"))?;let page=input.snapshot.pages.first().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"layout media requires one actual page"))?;
@@ -31,7 +31,7 @@ impl LayoutMediaExportJob{
   for index in 0..2{let bytes=if index==0{page.id.len()}else{64};let output=&mut fields[index];if output.capacity()<bytes{if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(false)}output.try_reserve_exact(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"layout original authority allocation refused"))?;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:output.capacity(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
    if output.len()<bytes{let count=(bytes-output.len()).min(grant.maximum_copy_bytes);if grant.maximum_items==0||grant.maximum_depth==0||count==0{return Ok(false)}let start=output.len();if index==0{output.extend_from_slice(&page.id.as_bytes()[start..start+count])}else{const HEX:&[u8;16]=b"0123456789abcdef";for offset in start..start+count{let value=input.canonical_base_revision[offset/2];output.push(HEX[usize::from(if offset%2==0{value>>4}else{value&15})])}}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
   }
-  let bytes=size_of::<LayoutExportJob>()+size_of::<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>()+2*size_of::<MediaSources>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+  let bytes=size_of::<LayoutExportJob>()+size_of::<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>()+2*size_of::<MediaSources>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
   let input=request.take().ok_or_else(||ValueError::invariant("request absent"))?;owner.sources=Some(ControlledRetirement::retain(MediaSources{original:Some(input.snapshot_read),sealing:Default::default(),parent:None,children:input.children,operation:input.operation_context,drawings:std::array::from_fn(|_|OriginalExportDrawingRead::new())}));let fields=&mut owner.metadata.as_mut().ok_or_else(||ValueError::invariant("metadata absent"))?.0;let page_id=String::from_utf8(std::mem::take(&mut fields[0])).map_err(|_|ValueError::invariant("layout retained page bytes are not UTF-8"))?;let revision=String::from_utf8(std::mem::take(&mut fields[1])).map_err(|_|ValueError::invariant("layout original revision is not UTF-8"))?;
   let export=LayoutExportRequest{kind:LayoutExportKind::Svg,page_id:Some(page_id),snapshot:input.snapshot,preflight_json:None,parent_document_id:input.parent_document_id,canonical_base_revision_hex:revision};
   owner.inner=Some(LayoutExportJob::from_admitted(input.operation,input.source_identity,export,input.output_chunks).with_snapshot_close_lease(input.snapshot_close).with_media_output_credit(input.output_credit));owner.completion=Some(input.completion);owner.metadata.as_mut().ok_or_else(||ValueError::invariant("metadata absent"))?.1=Some((input.tool_id,input.port));cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(false)
@@ -80,7 +80,7 @@ impl InteractiveJob for LayoutMediaExportJob{
    let sources=self.sources.as_mut().and_then(ControlledRetirement::original_mut).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost original child custody"))?;
    if sources.parent.is_none(){let birth=ParentSource::borrowed_constructor_demand::<store::os_store::snapshot_read::SnapshotRead<LayoutSnapshot>>();let demand=semio_framework_value::RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()};if cx.should_yield()||cx.retained_grant().maximum_items==0||!cx.retained_work_can_enter(demand){return Ok(None)}if sources.sealing.terminal_is_empty(){let original=sources.original.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost original snapshot read"))?;if let Err((error,original))=sources.sealing.begin(original){sources.original=Some(original);cx.consume_retained(error.retained_progress())?;return Err(error.into())}}match sources.sealing.step(&mut sources.parent,cx.retained_grant()).result{Ok(step)=>{cx.consume_retained(step.progress())?;cx.consume_fuel(1)},Err(error)=>{cx.consume_retained(error.retained_progress())?;return Err(error.into())}}return Ok(None)}
    let index=match address{semio_s_artifact_layout_layout_model::DrawingSourceAddress::Document=>0,semio_s_artifact_layout_layout_model::DrawingSourceAddress::Page(0)=>1,_=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media source differs from its captured first page").into())};
-   let parent=sources.parent.as_ref().ok_or_else(||ValueError::invariant("layout media parent absent"))?;let read=&mut sources.drawings[index];if !read.advance(parent,address,OriginalExportDrawingContext{snapshot:parent.try_borrow()?.get(),children:&sources.children,operation:semio_framework_plugin::app::vector_read::OriginalChildMemberOperation::Command(&sources.operation)},cx)?{return Ok(None)}return read.step_core(parent,address,inner,cx)
+   let parent=sources.parent.as_ref().ok_or_else(||ValueError::invariant("layout media parent absent"))?;let read=&mut sources.drawings[index];if !read.advance(parent,address,OriginalExportDrawingContext{snapshot:parent.try_borrow()?.get(),children:&sources.children,operation:semio_plugin::app::child_read::OriginalChildMemberOperation::Command(&sources.operation)},cx)?{return Ok(None)}return read.step_core(parent,address,inner,cx)
   }
   inner.step(cx)
  }
@@ -129,10 +129,10 @@ impl ToolJobFactory for LayoutMediaExportJobFactory {
         ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
     }
 
-    semio_framework_plugin::retained_command::reserved_tool_job_factory_admission!();
+    semio_plugin::retained_command::reserved_tool_job_factory_admission!();
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
     type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = &[LAYOUT_MEDIA_EXPORT_TOOL_ID];
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA;
@@ -165,10 +165,10 @@ impl ToolJobFactory for LayoutExportJobFactory {
         ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
     }
 
-    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Ok::<_, String>(LayoutExportToolJob::from_payload(operation, payload)));
+    semio_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Ok::<_, String>(LayoutExportToolJob::from_payload(operation, payload)));
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutExportJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for LayoutExportJobFactory {
     type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LAYOUT_EXPORT_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA;

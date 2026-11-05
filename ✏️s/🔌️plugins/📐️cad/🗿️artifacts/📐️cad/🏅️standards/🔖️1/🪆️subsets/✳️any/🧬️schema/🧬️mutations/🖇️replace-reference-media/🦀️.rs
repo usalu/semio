@@ -28,8 +28,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "reference", kind: "replace-reference-media", record: "ReplacedReferenceMedia" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace media of reference \"{}\"", self.reference_id), &format!("Medien von Referenz \"{}\" ersetzen", self.reference_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace media of reference \"{}\"", self.reference_id), &format!("Medien von Referenz \"{}\" ersetzen", self.reference_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone(), self.reference_id.clone()]

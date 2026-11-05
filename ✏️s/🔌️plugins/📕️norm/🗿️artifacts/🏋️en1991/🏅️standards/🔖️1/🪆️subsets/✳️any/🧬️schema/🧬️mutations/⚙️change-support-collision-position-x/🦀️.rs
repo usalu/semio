@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeSupportCollisionPo
         record: "ChangedSupportCollisionPositionX",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change support collision: Position along the bridge", "Stützenanprall: Lage entlang der Brücke ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change support collision: Position along the bridge", "Stützenanprall: Lage entlang der Brücke ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

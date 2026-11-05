@@ -20,8 +20,8 @@ pub struct RemoveFace {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveFace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "face", kind: "remove-face", record: "RemoveFace" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove face", "Fläche entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove face", "Fläche entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

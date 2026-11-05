@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeFatigueM1 where Op
         record: "ChangedFatigueM1",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Slope m₁ of the fatigue detail", "Ermüdungsdetail: Neigung m₁ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Slope m₁ of the fatigue detail", "Ermüdungsdetail: Neigung m₁ ändern")
     }
 }
 

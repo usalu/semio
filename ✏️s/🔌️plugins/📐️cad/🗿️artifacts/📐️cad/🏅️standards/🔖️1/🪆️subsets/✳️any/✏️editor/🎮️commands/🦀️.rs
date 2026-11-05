@@ -1,6 +1,6 @@
 //! 🎮️ CAD editor command handlers: camera, contributions, engagement, io, model definition, nodes, objects, references, sun, transform and utility.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 //#region 🧩️Modules
 #[path = "🎥️camera/🦀️.rs"]

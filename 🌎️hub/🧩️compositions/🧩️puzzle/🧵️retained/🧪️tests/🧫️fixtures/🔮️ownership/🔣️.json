@@ -10,7 +10,7 @@
       "leaf": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧵️retained-wiring/🦀️.rs",
       "positive": [],
       "negative": [
-        "impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory",
+        "impl semio_plugin::ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory",
         "registry.register(BoundedFirstStepCommandJobFactory"
       ]
     },
@@ -24,7 +24,7 @@
       "positive": [
         "ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint)",
         "ArtifactRetainedCommandJob::from_wire(payload, input)",
-        "checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES"
+        "checkpoint.declared_bytes() > semio_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES"
       ],
       "negative": [
         "if checkpoint.is_some() || input.declared_bytes()"
@@ -40,7 +40,7 @@
       "positive": [
         "ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint)",
         "ArtifactRetainedCommandJob::from_wire(payload, input)",
-        "checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES"
+        "checkpoint.declared_bytes() > semio_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES"
       ],
       "negative": [
         "if checkpoint.is_some() || input.declared_bytes()"

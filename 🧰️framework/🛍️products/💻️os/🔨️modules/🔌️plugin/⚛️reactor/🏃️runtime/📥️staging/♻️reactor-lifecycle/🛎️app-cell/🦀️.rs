@@ -1,12 +1,12 @@
 //! 🛎️ The per-instance app cell of the plugin runtime: host and background holds, refusals and the cell itself.
 
-use semio_framework_plugin_plugin_program::{AppInstance, PluginProgram};
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_plugin_program::{AppInstance, PluginProgram};
+use semio_plugin_decl_app::ArtifactApp;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering};
 use semio_framework::FaultFrom;
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
+use semio_plugin_reactor_app::PluginApp;
 use crate::life_cleanup_pumps::RuntimeLiveCleanupPump;
 use crate::result_publication;
 use crate::life_cleanup_vocabulary::RuntimeMaintenanceStatus;

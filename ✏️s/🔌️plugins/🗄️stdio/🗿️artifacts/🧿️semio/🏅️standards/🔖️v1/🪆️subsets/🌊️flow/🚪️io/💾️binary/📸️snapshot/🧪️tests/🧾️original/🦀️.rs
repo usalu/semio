@@ -1,6 +1,6 @@
 //! 🌊️ Exact original Flow prefix and request survive all denied close currencies.
 use semio_framework_job::{StepContext,root_cancel_token,Generation,OperationId,StepBudget};
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},RetirementDemand};
 use semio_s_artifact_stdio_semio_flow::io::binary::snapshot::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;

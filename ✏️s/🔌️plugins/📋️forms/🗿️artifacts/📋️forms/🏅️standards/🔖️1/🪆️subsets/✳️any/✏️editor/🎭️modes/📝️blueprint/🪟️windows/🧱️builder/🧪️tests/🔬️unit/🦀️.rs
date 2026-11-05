@@ -1,13 +1,13 @@
-use crate::editor::forms::config::FormsConfig;
+use crate::forms_config::FormsConfig;
 use crate::FormsSnapshot;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::forms::modes::blueprint::windows::builder::*;
 use semio_framework_test_fixtures::fixture_text;
 
 #[semio_framework_async_macros::async_test]
 async fn block_list_gestures_reach_mounted_document_commands() {
     use crate::editor::forms::{unit_tests::context, FormsCommand, FormsPlayApp};
-    use semio_framework_plugin::{artifact_app_laws, ArtifactEditor, PluginApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::{artifact_app_laws, ArtifactEditor, PluginApp, ViewModel, ViewWindowInstance};
 
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🧪️tests/🧫️fixtures/🔣️actions.json")).unwrap();
     let steps: Vec<crate::FormStep> = serde_json::from_value(fixture["initial"]["steps"].clone()).unwrap();
@@ -21,7 +21,7 @@ async fn block_list_gestures_reach_mounted_document_commands() {
         active_mode_id: Some(definition.default_mode_id.clone()),
         window_id: Some("design-test".into()),
         window_instances: vec![ViewWindowInstance { id: "design-test".into(), window_kind_id: FORMS_PLAY_WINDOW_BLUEPRINT.into() }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     for case in fixture["actions"].as_array().unwrap() {
         let action = case["action"].as_str().unwrap();
@@ -39,10 +39,10 @@ async fn block_list_gestures_reach_mounted_document_commands() {
             },
             arguments: args.into_object().unwrap().into_iter().collect(),
         };
-        let meta = semio_framework_plugin::ActionMeta { view_state: Some(view.clone()), ..artifact_app_laws::meta("local") };
+        let meta = semio_plugin::ActionMeta { view_state: Some(view.clone()), ..artifact_app_laws::meta("local") };
         let mut invocation_arguments = Some(semio_framework_value::DslValue::object(invocation.arguments.iter().map(|(name, value)| (name.clone(), value.clone()))));
         let mut invocation_fault = None;
-        artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0, &invocation.address, &mut invocation_arguments, &mut invocation_fault, Some(&definition.default_mode_id), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("manifest admits scene gesture");
+        artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0, &invocation.address, &mut invocation_arguments, &mut invocation_fault, Some(&definition.default_mode_id), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("manifest admits scene gesture");
         context::settle(&mut app).await;
         let snapshot = app.snapshot().unwrap();
         let projected = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.definition));
@@ -57,9 +57,9 @@ async fn block_list_gestures_reach_mounted_document_commands() {
 async fn renders_blueprint_builder_cards() {
     let spec = FormsSnapshot::default();
     let config = FormsConfig::default();
-    let node = render(&spec, &config, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), None).expect("blueprint surface");
-    let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint must render a semantic surface") };
-    let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
+    let node = render(&spec, &config, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), None).expect("blueprint surface");
+    let semio_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint must render a semantic surface") };
+    let scene: semio_ui_scene::BlockListScene = semio_ui_scene::decode(&props).expect("block-list payload");
     let expected = crate::as_playbook_spec(&spec);
     assert_eq!(scene.steps.len(),expected.steps.len());
     for (actual,expected) in scene.steps.iter().zip(&expected.steps) {
@@ -80,9 +80,9 @@ async fn definition_declares_the_block_list_surface_and_body_key() {
 #[test]
 fn blueprint_cards_publish_exact_forms_selection_targets() {
     let spec = crate::standards::v1::subsets::any::io::text::snapshot::default_example_spec();
-    let node = render(&spec, &FormsConfig::default(), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), Some("name")).unwrap();
-    let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint surface") };
-    let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).unwrap();
+    let node = render(&spec, &FormsConfig::default(), &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), Some("name")).unwrap();
+    let semio_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint surface") };
+    let scene: semio_ui_scene::BlockListScene = semio_ui_scene::decode(&props).unwrap();
     assert_eq!(scene.domain_id.as_deref(), Some(crate::editor::forms::support::FORMS_INTERACTION_FIELDS));
     let steps: serde_json::Value = serde_json::to_value(&scene.steps).unwrap();
     assert_eq!(steps[0]["target"], serde_json::json!({ "granularity": "section", "id": "step:contact" }));

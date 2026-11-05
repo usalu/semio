@@ -5,9 +5,9 @@ use semio_s_artifact_gis_gismap_snapshot::gis_map_inference_demands;
 
 //#region 💡️InferenceService
 /// 💡️ The single executable whole-map inference matching the declared schema family.
-pub fn gis_map_inference_service() -> semio_framework_plugin::ArtifactInferenceService {
-    semio_framework_plugin::ArtifactInferenceService::new(
-        semio_framework_plugin::ArtifactInferenceServiceMetadata {
+pub fn gis_map_inference_service() -> semio_plugin::ArtifactInferenceService {
+    semio_plugin::ArtifactInferenceService::new(
+        semio_plugin::ArtifactInferenceServiceMetadata {
             owner: "gis",
             artifact_kind: "s.gis.gismap",
             artifact_schema: "s.gis.gismap",
@@ -22,15 +22,15 @@ pub fn gis_map_inference_service() -> semio_framework_plugin::ArtifactInferenceS
 }
 
 /// 🚦️ Rejects invalid identities, cache modes, and allocation bounds before snapshot decoding.
-fn admit_gis_map_inference_request(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<usize, semio_framework_plugin::ArtifactInferenceExecutionError> {
+fn admit_gis_map_inference_request(request: &semio_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<usize, semio_plugin::ArtifactInferenceExecutionError> {
     if request.cancellation_id.trim().is_empty() {
-        return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.cancellation", "cancellation identity is required"));
+        return Err(semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.cancellation", "cancellation identity is required"));
     }
     if request.budgets.allocation_bytes == 0 || request.budgets.work_units == 0 || request.budgets.recursion_depth == 0 {
-        return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "allocation, work, and recursion budgets must be non-zero"));
+        return Err(semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "allocation, work, and recursion budgets must be non-zero"));
     }
-    if request.requested_cache_mode == semio_framework_plugin::WireArtifactInferenceCacheMode::Incremental {
-        return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.cache-mode", "gismap inference has no incremental algorithm"));
+    if request.requested_cache_mode == semio_plugin::WireArtifactInferenceCacheMode::Incremental {
+        return Err(semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.cache-mode", "gismap inference has no incremental algorithm"));
     }
     let request_bytes = request
         .policy
@@ -38,9 +38,9 @@ fn admit_gis_map_inference_request(request: &semio_framework_plugin::ArtifactInf
         .saturating_add(request.canonical_payload.len())
         .saturating_add(request.previous_state.map_or(0, <[u8]>::len))
         .saturating_add(request.dependencies.iter().fold(0usize, |total, (owner, payload)| total.saturating_add(owner.len()).saturating_add(payload.len())));
-    let allocation = usize::try_from(request.budgets.allocation_bytes).map_err(|_| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "allocation budget exceeds this runtime's address space"))?;
+    let allocation = usize::try_from(request.budgets.allocation_bytes).map_err(|_| semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "allocation budget exceeds this runtime's address space"))?;
     if request_bytes > allocation {
-        return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", format!("request consumes {request_bytes} bytes, above allocation limit {allocation}")));
+        return Err(semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", format!("request consumes {request_bytes} bytes, above allocation limit {allocation}")));
     }
     Ok(allocation)
 }
@@ -61,33 +61,33 @@ impl Drop for InferenceOutputGuard {
 
 /// ⏱️ The native GIS service with request-owned cancellation and progress at every value.
 pub fn infer_gis_map_controlled(
-    request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,
-    checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError>,
-    cx: &mut semio_framework_plugin::ArtifactInferenceStepContext<'_>,
-) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
+    request: &semio_plugin::ArtifactInferenceExecutionRequest<'_>,
+    checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_plugin::ArtifactInferenceExecutionError>,
+    cx: &mut semio_plugin::ArtifactInferenceStepContext<'_>,
+) -> Result<semio_plugin::ArtifactInferenceExecutionStep, semio_plugin::ArtifactInferenceExecutionError> {
     use crate::standards::v1::subsets::any::schema::inferences::{bounds::controlled_lon_lat_bounds, GisMapInference};
     let allocation = admit_gis_map_inference_request(request)?;
     checkpoint(0)?;
-    let snapshot = <GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|_| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.snapshot-decode", "invalid canonical map snapshot"))?;
+    let snapshot = <GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|_| semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.snapshot-decode", "invalid canonical map snapshot"))?;
     let mut work = 1u64;
     checkpoint(work)?;
     let bounds = controlled_lon_lat_bounds(&snapshot, &mut |depth| {
         if depth > request.budgets.recursion_depth || depth > 64 {
-            return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "feature nesting exceeds the bounded inference depth"));
+            return Err(semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "feature nesting exceeds the bounded inference depth"));
         }
-        work = work.checked_add(1).ok_or_else(|| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "work counter exhausted"))?;
+        work = work.checked_add(1).ok_or_else(|| semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "work counter exhausted"))?;
         if work > request.budgets.work_units {
-            return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "inference work budget exhausted"));
+            return Err(semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "inference work budget exhausted"));
         }
         checkpoint(work)
     })?;
     let inference = GisMapInference { position_count: snapshot.positions.len(), route_count: snapshot.routes.len(), region_count: snapshot.regions.len(), bounds };
-    let mut canonical_payload = InferenceOutputGuard(semio_framework_os_kernel::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&inference)));
+    let mut canonical_payload = InferenceOutputGuard(semio_os_kernel::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&inference)));
     if canonical_payload.0.len() > allocation {
-        return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "inference result exceeds allocation budget"));
+        return Err(semio_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "inference result exceeds allocation budget"));
     }
     checkpoint(work)?;
-    Ok(semio_framework_plugin::ArtifactInferenceExecution { retirement_progress: Default::default(),
+    Ok(semio_plugin::ArtifactInferenceExecution { retirement_progress: Default::default(),
         canonical_payload: Some(std::mem::take(&mut canonical_payload.0)),
         diagnostics: Vec::new(),
         validity: "valid".into(),
@@ -98,7 +98,7 @@ pub fn infer_gis_map_controlled(
 }
 
 /// 🧠️ Whole-map native entry uses the same controlled fold with its finite request budgets.
-fn infer_gis_map(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
+fn infer_gis_map(request: &semio_plugin::ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_plugin::ArtifactInferenceExecutionStep, semio_plugin::ArtifactInferenceExecutionError> {
     infer_gis_map_controlled(request, &mut |_| Ok(()), cx)
 }
 //#endregion 💡️InferenceService

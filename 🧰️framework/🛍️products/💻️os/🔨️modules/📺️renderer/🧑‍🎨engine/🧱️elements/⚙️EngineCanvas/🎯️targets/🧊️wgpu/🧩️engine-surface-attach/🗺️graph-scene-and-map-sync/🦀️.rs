@@ -6,7 +6,7 @@ use super::*;
 /// 🧮️ The evaluation half of the scene sync, kept in its own pass for the ordering React documents:
 /// `applyEvalOutputsJson` clears computing chrome, so eval is applied BEFORE `statusJson`/
 /// `computingJson`, never after.
-pub(super) fn sync_node_graph_evaluation(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &semio_framework_ui_declaration::ui::NodeGraphScene) -> bool {
+pub(super) fn sync_node_graph_evaluation(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &semio_ui_declaration::ui::NodeGraphScene) -> bool {
     let mut changed = false;
     if cache.eval_json.as_deref() != graph.eval_json.as_deref() {
         if let (NodeGraphEngine::Flow(host), Some(json)) = (&mut *engine, graph.eval_json.as_deref()) {
@@ -121,7 +121,7 @@ fn map_theme_json(theme: &Theme) -> String {
 /// lod, then layer documents, then interaction, then camera).
 ///
 /// @see `🧱️elements/🧭️TiledMapHost/🟦️.tsx`
-fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &semio_framework_ui_declaration::ui::TiledMapScene, theme: &Theme, width: u32, height: u32) -> bool {
+fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &semio_ui_declaration::ui::TiledMapScene, theme: &Theme, width: u32, height: u32) -> bool {
     let mut changed = false;
     let size_key = format!("{width}x{height}");
     if cache.size_key.as_deref() != Some(size_key.as_str()) {

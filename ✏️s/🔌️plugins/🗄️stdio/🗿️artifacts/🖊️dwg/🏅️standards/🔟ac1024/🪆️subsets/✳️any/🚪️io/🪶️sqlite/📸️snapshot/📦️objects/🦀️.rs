@@ -16,7 +16,7 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgDictionaryVariable;
 use super::number::Projection;
 use super::reader::{boolean,full_unsigned,high,low,ordinal,unsigned,Reader};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 pub fn project_placeholder(projection:&mut Projection<'_,'_>,id:i64,_:&DwgPlaceholder)->Result<(),ValueError>{projection.insert_key("dwg_placeholder",id,&[])}
 pub fn reconstruct_placeholder(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgPlaceholder,ValueError>{reader.component("dwg_placeholder",id)?;Ok(DwgPlaceholder{})}

@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::PptxComposer;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
@@ -23,13 +23,13 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
@@ -69,14 +69,14 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// zero residual `.setup()` calls.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("pptx", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(semio_s_artifact_stdio_pptx_base_descriptor::standards::v_ecma_376::subsets::base::schema::descriptor::pptx_artifact_schema_descriptor())
         .formats(formats)
         .schema_documents(semio_framework_schema_registry::ScopeSchemaExports { scope: "s.stdio.pptx", exports: &[semio_framework_schema_registry::SchemaExport { id: "xml-document", leaves: semio_s_artifact_stdio_xml::schema::XML_DOCUMENT_SCHEMA_LEAVES }] })
@@ -95,13 +95,13 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// from the same side-effect-free `subset_validator_entry_of::<V>()` constructor each subset's own
 /// `🚪️io/🦀️.rs` (module-private) `validator_entry()` calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pptx_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+fn pptx_subset_validators() -> &'static [semio_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::io::subset_validator_entry_of::<semio_s_artifact_stdio_pptx_strict::standards::v_ecma_376::subsets::strict::io::PptxStrictValidator>(),
-                semio_framework_plugin::io::subset_validator_entry_of::<semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::io::PptxTransitionalValidator>(),
+                semio_plugin::io::subset_validator_entry_of::<semio_s_artifact_stdio_pptx_strict::standards::v_ecma_376::subsets::strict::io::PptxStrictValidator>(),
+                semio_plugin::io::subset_validator_entry_of::<semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::io::PptxTransitionalValidator>(),
             ]
         })
         .as_slice()
@@ -178,7 +178,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.pptx".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Pptx", "Pptx"),
+        label: semio_ui_locale::LocalizedLabel::native("Pptx", "Pptx"),
         source_format: semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -195,10 +195,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
+    use {semio_plugin::io::register_composer_entries,semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource};
     use semio_s_artifact_stdio_pptx_strict::standards::v_ecma_376::subsets::strict::io::PptxStrictComposer;
     use semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::io::PptxTransitionalComposer;
-    use semio_framework_plugin::composer_entry_of;
+    use semio_plugin::composer_entry_of;
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

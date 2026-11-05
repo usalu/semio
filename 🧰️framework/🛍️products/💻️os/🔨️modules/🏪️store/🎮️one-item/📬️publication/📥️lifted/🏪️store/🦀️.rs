@@ -1,16 +1,16 @@
 //! 📥️ Trait impls of `🏪️store` whose trait or type belongs to `os-store-one-item-publication` (orphan rule, PLAN-OS-KERNEL-CRATES.md 7.7): lifted out of `🏪️store/🦀️.rs`.
 use std::sync::Arc;
 use crate::ArtifactStoreBatchItemAuthority;
-use semio_framework_os_store_one_item::ArtifactStoreOneItemFootprint;
-use semio_framework_os_store_one_item::ArtifactStoreOneItemGrant;
+use semio_os_store_one_item::ArtifactStoreOneItemFootprint;
+use semio_os_store_one_item::ArtifactStoreOneItemGrant;
 use crate::ArtifactStoreOneItemPreparation;
 use crate::ArtifactStoreOneItemPreparationRequest;
 use crate::ArtifactStoreWireRetirement;
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_framework_os_store_command::HistoryLane;
+use semio_os_store_command::HistoryLane;
 use crate::lifted_publication::MemberStoreOneItemWire;
 use crate::lifted_publication::MemberStoreOneItemWirePreparationFactory;
-use semio_framework_os_spr::Mutation;
+use semio_os_spr::Mutation;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;

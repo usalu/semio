@@ -10,7 +10,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "../../../../../.storybook/🧪️tests/🎭️playwright/🟦️.ts";
 
 const UNCOVERED_UI_STORY_IDS: readonly string[] = [
   "🖱️ui⚛️react-canvaspickmenu--default",

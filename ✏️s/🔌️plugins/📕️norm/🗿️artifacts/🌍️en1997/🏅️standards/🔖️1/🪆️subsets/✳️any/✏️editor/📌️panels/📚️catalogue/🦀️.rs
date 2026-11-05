@@ -4,12 +4,12 @@ use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, Catalogue
 use semio_s_artifact_norm_en1997_checks::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_artifact_norm_en1997_checks::{part_1, resolve_params, resolve_upl_params, DesignApproach};
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1997.play.catalogue";
@@ -136,11 +136,11 @@ fn bearing_n_factors_table() -> CatalogueTable {
 
 //#region 🔖️Render
 pub fn render(
-    examples: Vec<semio_framework_plugin::ExampleSource>,
-    locale: semio_framework_ui_locale::Locale,
+    examples: Vec<semio_plugin::ExampleSource>,
+    locale: semio_ui_locale::Locale,
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 //#endregion 🔖️Render

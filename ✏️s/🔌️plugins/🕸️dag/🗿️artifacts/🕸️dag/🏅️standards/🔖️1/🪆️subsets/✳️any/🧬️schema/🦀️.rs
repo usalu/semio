@@ -3,7 +3,7 @@
 use crate::{DagContentChild, DagMutation, DagNodeKind, DagPreviewContent, DagScene, DagSnapshot, IoPortSpec, SemioGraphMutation};
 use framework_schema::ArtifactSchema;
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 //#region 🔖️Artifact
 /// 🧬️ DAG document artifact state.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
@@ -89,7 +89,7 @@ pub fn dag_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 /// `DagAnalyzerAnalysis` + `derive_artifact_facets!`-generated `DagBuilder`/`DagAnalyzer`/
 /// `DagComposer` outright. All io now goes exclusively through the `io_mechanism` registry
 /// (`🚪️io/🦀️.rs`'s `io()`), replacing the old `DagComposerComposition`/`io_registry`.
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<DagSnapshot, DagMutation>;
+pub type Construction = semio_plugin::app::SnapshotBuilder<DagSnapshot, DagMutation>;
 //#endregion 🏗️Construction
 
 //#region ⚠️ Errors
@@ -298,7 +298,7 @@ pub mod artifact_items_2 {
 /// `#[artifact_schema(id = "s.dag.dag")]` on `DagArtifact`; `standard`/`subset` match this
 /// artifact's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
 /// `s.dag.dag@1/*#editor` / `s.dag.dag@1/*#viewer`.
-pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.dag.dag", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const DAG_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.dag.dag", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 }
 //#endregion 🧩️ArtifactItems2
 
@@ -310,18 +310,18 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
 
 //#region 🔖️Scene
 /// 🧸️ Composes the scene from the document's exact published `content` child (`doc.children`, design §20.15).
-pub fn dag_scene_from_children(snapshot: &DagSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<DagScene, semio_framework_plugin::Fault> {
+pub fn dag_scene_from_children(snapshot: &DagSnapshot, children: &semio_plugin::app::ChildContentView) -> Result<DagScene, semio_plugin::Fault> {
     let child_id = &snapshot.content.child_id;
-    let dialect = children.dialect("content", child_id).ok_or_else(|| semio_framework_plugin::Fault::from("dag-content-child-dialect-required"))?;
+    let dialect = children.dialect("content", child_id).ok_or_else(|| semio_plugin::Fault::from("dag-content-child-dialect-required"))?;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {
-        return Err(semio_framework_plugin::Fault::from("dag-content-child-dialect-mismatch"));
+        return Err(semio_plugin::Fault::from("dag-content-child-dialect-mismatch"));
     }
     let content = children.typed_read::<SemioGraphSnapshot>("content", child_id)?;
     Ok(dag_scene_of_content(&content))
 }
 
 /// 🧸️ [`dag_scene_from_children`] over a document view.
-pub fn dag_scene(doc: &semio_framework_plugin::ArtifactView<'_, DagSnapshot>) -> Result<DagScene, semio_framework_plugin::Fault> {
+pub fn dag_scene(doc: &semio_plugin::ArtifactView<'_, DagSnapshot>) -> Result<DagScene, semio_plugin::Fault> {
     dag_scene_from_children(doc.snapshot, &doc.children)
 }
 //#endregion 🔖️Scene
@@ -337,11 +337,11 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
 
 //#region 🔖️ChildEmit
 /// 🧬️ Publishes child `leaves` as ONE edit of the exact composed `content` child; no leaf is the empty emit.
-pub fn dag_child_emit<C, D>(snapshot: &DagSnapshot, leaves: Vec<SemioGraphMutation>) -> semio_framework_plugin::Emit<DagMutation, C, D> {
+pub fn dag_child_emit<C, D>(snapshot: &DagSnapshot, leaves: Vec<SemioGraphMutation>) -> semio_plugin::Emit<DagMutation, C, D> {
     if leaves.is_empty() {
-        return semio_framework_plugin::Emit::default();
+        return semio_plugin::Emit::default();
     }
-    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ..Default::default() }
+    semio_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ..Default::default() }
 }
 //#endregion 🔖️ChildEmit
 }
@@ -350,8 +350,8 @@ pub fn dag_child_emit<C, D>(snapshot: &DagSnapshot, leaves: Vec<SemioGraphMutati
 //#region 🧩️ArtifactItems7
 pub mod artifact_items_7 {
 use crate::{SemioGraphMutation, dag_graph_edge, dag_graph_node};
-pub use semio_framework_os_infinite_directed_presentation::DagHostSnapshotEdge;
-pub use semio_framework_os_infinite_directed_presentation::DagNodeSpec;
+pub use semio_os_infinite_directed_presentation::DagHostSnapshotEdge;
+pub use semio_os_infinite_directed_presentation::DagNodeSpec;
 use semio_s_artifact_stdio_semio_graph::{schema::snapshot::GraphEdgeId as SemioGraphEdgeId, schema::snapshot::GraphNodeId as SemioGraphNodeId, schema::snapshot::SemioGraphEdge, schema::snapshot::SemioGraphNode};
 
 //#region 🔖️ChildLeaves
@@ -412,14 +412,14 @@ impl Default for DagCamera {
     }
 }
 
-impl From<DagCamera> for semio_framework_os_infinite_directed_presentation::DagCamera {
+impl From<DagCamera> for semio_os_infinite_directed_presentation::DagCamera {
     fn from(value: DagCamera) -> Self {
         Self { x: value.x, y: value.y, zoom: value.zoom }
     }
 }
 
-impl From<semio_framework_os_infinite_directed_presentation::DagCamera> for DagCamera {
-    fn from(value: semio_framework_os_infinite_directed_presentation::DagCamera) -> Self {
+impl From<semio_os_infinite_directed_presentation::DagCamera> for DagCamera {
+    fn from(value: semio_os_infinite_directed_presentation::DagCamera) -> Self {
         Self { x: value.x, y: value.y, zoom: value.zoom }
     }
 }

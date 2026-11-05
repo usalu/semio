@@ -15,12 +15,17 @@
   ],
   "parameters": [
     {
-      "height": 3.0,
+      "height": 3,
       "radius": 0.5,
       "sides": 6
     },
     {
-      "height": 6.0,
+      "height": 6,
+      "radius": 0.75,
+      "sides": 8
+    },
+    {
+      "height": 6.5,
       "radius": 0.75,
       "sides": 8
     }

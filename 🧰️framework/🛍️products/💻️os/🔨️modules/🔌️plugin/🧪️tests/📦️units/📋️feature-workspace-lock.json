@@ -2,9 +2,9 @@
   "version": 1,
   "path": "Cargo.lock",
   "required": [
-    "semio-framework-plugin-declared-verdict",
-    "semio-framework-plugin-testing-laws",
-    "semio-framework-plugin-ownership",
-    "semio-framework-os-kernel"
+    "semio-plugin-declared-verdict",
+    "semio-plugin-testing-laws",
+    "semio-plugin-ownership",
+    "semio-os-kernel"
   ]
 }

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../../.."
-name = "semio-framework-os-infinite-directed-presentation"
+name = "semio-os-infinite-directed-presentation"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,11 +22,11 @@ semio-framework-value-derive = { path = "../../../../../../../../../../../🔨�
 semio-framework-pack-json = { path = "../../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust" }
 graph = { package = "semio-framework-graph-engine", path = "../../../../../../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-graph-dsl = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-graph-manifest = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
-ui_styling = { package = "semio-framework-ui-styling", path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }
+ui_styling = { package = "semio-ui-styling", path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = "1"

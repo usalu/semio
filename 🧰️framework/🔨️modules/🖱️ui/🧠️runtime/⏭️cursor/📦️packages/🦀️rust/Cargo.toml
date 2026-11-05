@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-runtime-reconcile-cursor"
+name = "semio-ui-runtime-reconcile-cursor"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,17 +22,17 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-ui-runtime-reconcile-primitives/testkit"]
+testkit = ["semio-ui-runtime-reconcile-primitives/testkit"]
 
 [dependencies]
-semio-framework-ui-contract-validation = { path = "../../../../🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+semio-ui-contract-validation = { path = "../../../../🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 
 semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust" }
-ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-ui-runtime-presentation = { path = "../../../🖼️presentation/📦️packages/🦀️rust" }
-semio-framework-ui-runtime-reconcile-primitives = { path = "../../../🧱️primitives/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-runtime-presentation = { path = "../../../🖼️presentation/📦️packages/🦀️rust" }
+semio-ui-runtime-reconcile-primitives = { path = "../../../🧱️primitives/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json = { version = "1.0.140" }
-semio-framework-ui-runtime-reconcile-primitives = { path = "../../../🧱️primitives/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-runtime-reconcile-primitives = { path = "../../../🧱️primitives/📦️packages/🦀️rust", features = ["testkit"] }

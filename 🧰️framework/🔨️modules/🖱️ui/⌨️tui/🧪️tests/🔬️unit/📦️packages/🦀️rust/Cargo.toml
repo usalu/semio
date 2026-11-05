@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-tui-unit-laws"
+name = "semio-ui-tui-unit-laws"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -22,16 +22,16 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-native = ["semio-framework-ui-tui-terminal/native"]
+native = ["semio-ui-tui-terminal/native"]
 
 [dependencies]
-semio-framework-ui-tui-terminal = { path = "../../../../📺️terminal/📦️packages/🦀️rust" }
+semio-ui-tui-terminal = { path = "../../../../📺️terminal/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-ui-tui-core = { path = "../../../../🧱️cell-model/📦️packages/🦀️rust" }
-semio-framework-ui-tui-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-ui-tui-frame = { path = "../../../../🏛️frame/📦️packages/🦀️rust" }
-semio-framework-ui-tui-host = { path = "../../../../🏃️host/📦️packages/🦀️rust" }
-semio-framework-ui-tui-vt = { path = "../../../../📟️vt/📦️packages/🦀️rust" }
-semio-framework-ui-tui-widgets = { path = "../../../../🧩️widgets/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-ui-tui-core = { path = "../../../../🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-ui-tui-frame = { path = "../../../../🏛️frame/📦️packages/🦀️rust" }
+semio-ui-tui-host = { path = "../../../../🏃️host/📦️packages/🦀️rust" }
+semio-ui-tui-vt = { path = "../../../../📟️vt/📦️packages/🦀️rust" }
+semio-ui-tui-widgets = { path = "../../../../🧩️widgets/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }

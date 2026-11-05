@@ -2,17 +2,17 @@
 //!
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use std::future::Future;
 use crate::docs_components::MediaTransfers;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp> MediaTransfers<A> {
     /// 🧹️ Test-only probe: whether a cancelled segmented output still waits in bounded cleanup.
@@ -60,7 +60,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unminted-extension-invocation"), "Effect::InvokeExtension carries a registry-minted request id — emit it through Emit::extension_invocations instead"));
         }
         for invocation in std::mem::take(&mut emit.extension_invocations) {
-            semio_framework_plugin_reactor_tasks::tasks_extension_continuation::queue_extension_invocation(instance, &invocation)?;
+            semio_plugin_reactor_tasks::tasks_extension_continuation::queue_extension_invocation(instance, &invocation)?;
         }
         Ok(())
     }

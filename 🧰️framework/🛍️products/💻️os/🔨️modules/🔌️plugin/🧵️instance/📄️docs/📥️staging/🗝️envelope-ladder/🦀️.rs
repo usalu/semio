@@ -2,17 +2,17 @@
 //!
 //! 🪜️ The envelope-decode frontier of one hosted app: worker jobs, returned field decoders and completed records
 //! retire one owner per turn under the caller's unchanged grant and exact per-axis quotes.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use crate::docs_components::EnvelopeJobs;
 use semio_framework::FaultFrom;
 use std::future::Future;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// 🪹️ No live decode, returned field decoder, or completed record remains.

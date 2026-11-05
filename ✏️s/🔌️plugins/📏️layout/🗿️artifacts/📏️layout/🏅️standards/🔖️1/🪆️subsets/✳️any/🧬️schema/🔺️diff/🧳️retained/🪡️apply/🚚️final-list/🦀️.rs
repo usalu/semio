@@ -1,7 +1,7 @@
 //! 🚚️ Final nested membership moves validated original rows and selected authored rows once.
 use super::super::{chained_plan::Address,keyed_plan::Origin,list_move::TypedListMove};
 use semio_s_artifact_layout_layout_model::{Frame,Layer,PageOverride,TextStyleRun,LayoutRect,LayoutBounds};
-use semio_framework_os_kernel::ApplyCapability;
+use semio_os_kernel::ApplyCapability;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{size_of,ManuallyDrop};
 /// 🕳 Allocation-free holes retain only metadata after an authored row transfers its children.

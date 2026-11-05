@@ -1,7 +1,7 @@
 //! 🔬️ tests-3 of `semio-s-artifact-forms-forms` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use crate::schema::mutations::FormMutation;
 pub use crate::playbook::PlaybookBlock as FormQuestion;
@@ -24,3 +24,5 @@ pub use semio_s_artifact_forms_forms_snapshot::{FORMS_DIALECT, FORMS_DOCUMENT_SC
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;
 pub use mirror::*;
+
+pub use semio_s_artifact_forms_forms_config::forms_config;

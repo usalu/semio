@@ -7,18 +7,18 @@ use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::views::{group_of, scale_text};
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::views::{groups, views_row};
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::{render, BODY_KEY};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
-use semio_framework_plugin::ViewModel;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::ViewModel;
+use semio_ui_locale::{Locale, Terminology};
 
 fn demo() -> (ModelSnapshot, String, Vec<String>) {
     let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
@@ -36,8 +36,8 @@ fn plan(building: &str, name: &str, kind: ViewKind, storey: &str) -> View {
 
 fn text(snapshot: &ModelSnapshot, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
-    let node = render(snapshot, &ModelInference::default(), semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &semio_framework_plugin::TreeWindows::for_body(&view, BODY_KEY)).expect("the outliner renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    let node = render(snapshot, &ModelInference::default(), semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &semio_plugin::TreeWindows::for_body(&view, BODY_KEY)).expect("the outliner renders");
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -67,7 +67,7 @@ async fn the_groups_of_a_building_follow_the_kind_then_the_level_of_the_storey_t
 async fn only_the_views_of_the_building_count_and_no_view_means_no_row() {
     let (mut snapshot, building, _) = demo();
     let windows_view = ViewModel::new(Locale::En, Terminology::Native);
-    let windows = semio_framework_plugin::TreeWindows::for_body(&windows_view, BODY_KEY);
+    let windows = semio_plugin::TreeWindows::for_body(&windows_view, BODY_KEY);
     let labels = semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&windows_view);
     assert!(groups(&snapshot, &building).is_empty());
     assert!(views_row(&windows, &snapshot, labels, &building).is_none());

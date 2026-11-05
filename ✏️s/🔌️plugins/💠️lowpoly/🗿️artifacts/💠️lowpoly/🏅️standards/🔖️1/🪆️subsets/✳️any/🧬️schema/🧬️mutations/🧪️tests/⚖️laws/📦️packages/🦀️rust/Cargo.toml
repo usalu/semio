@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-model-diff = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }

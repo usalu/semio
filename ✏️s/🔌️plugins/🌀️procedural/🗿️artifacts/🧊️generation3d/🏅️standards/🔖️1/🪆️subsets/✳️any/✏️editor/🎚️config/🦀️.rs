@@ -5,9 +5,9 @@
 //! generation selection lives here rather than under `🗿️artifacts/`, since it does not survive
 //! into the `.generation3d` document.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -102,11 +102,11 @@ pub fn next_lod_mode(current: &str) -> String {
     next_in_ladder(&GENERATION_3D_LOD_MODES, if current.is_empty() { "medium" } else { current })
 }
 
-/// 🌞️ Serialized default [`semio_framework_plugin::WorldSunConfig`] — the sun toggle/azimuth/
+/// 🌞️ Serialized default [`semio_plugin::WorldSunConfig`] — the sun toggle/azimuth/
 /// elevation/intensity display options, stored as raw JSON since `WorldSunConfig` is a framework type
 /// without a `semio_framework_dsl_record_derive::DslRecord` impl (see [`Generation3dConfig::sun`]).
 pub fn default_sun_json() -> String {
-    semio_framework_pack_json::to_json_string(&semio_framework_plugin::WorldSunConfig::default())
+    semio_framework_pack_json::to_json_string(&semio_plugin::WorldSunConfig::default())
 }
 
 //#endregion 🔖️PreviewCamera
@@ -119,7 +119,7 @@ pub fn default_sun_json() -> String {
 /// `backwards` per [`Generation3dConfigMutation`]. Selection/hover moved to the framework's own
 /// `graph` interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
 /// see `create_generation3d_app`'s `.interaction(...)` declaration.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation3dcfg")]
 #[artifact(id = "procedural.generation3dcfg")]
@@ -135,7 +135,7 @@ pub struct Generation3dConfig {
     /// 🎥️ The 3D preview viewport camera.
     #[dsl(block)]
     pub preview_camera: Generation3dPreviewCamera,
-    /// 🔐️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
+    /// 🔐️ JSON-encoded `semio_plugin::WorldSunConfig`.
     #[value(default = "default_sun_json")]
     pub sun_json: String,
     /// 🧬️ The selected generation id.
@@ -183,8 +183,8 @@ impl pack::snapshot::ArtifactPack for Generation3dConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -206,7 +206,7 @@ impl Default for Generation3dConfig {
 
 impl Generation3dConfig {
     /// 🔍️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed/legacy value.
-    pub fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
+    pub fn sun(&self) -> semio_plugin::WorldSunConfig {
         semio_framework_pack_json::from_json_str(&self.sun_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
     }
 }

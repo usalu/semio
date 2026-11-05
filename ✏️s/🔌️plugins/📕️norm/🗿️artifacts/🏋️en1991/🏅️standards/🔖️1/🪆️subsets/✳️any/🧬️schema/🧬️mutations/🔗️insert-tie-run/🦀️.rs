@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertTieRun where Op: p
         record: "InsertedTieRun",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert tie run {}", self.item.id), &format!("Zuggliedstrang {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert tie run {}", self.item.id), &format!("Zuggliedstrang {} einfügen", self.item.id))
     }
 }
 

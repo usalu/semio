@@ -1,7 +1,7 @@
 //! 🔁️ The actual public snapshot hop retains native, metadata and physical ownership together.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
-use semio_framework_os_kernel::{self as store,io_schema::*,io::{register_native_snapshot_codec,io_mechanism::{io_route,io_run_with_snapshot_control,IoRunControl}},sqlite_snapshot::*};
+use semio_os_kernel::{self as store,io_schema::*,io::{register_native_snapshot_codec,io_mechanism::{io_route,io_run_with_snapshot_control,IoRunControl}},sqlite_snapshot::*};
 use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, native_encoding::NativeEncodeProgress};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 use std::{io::Write,process::{Command,Stdio}};
@@ -74,8 +74,8 @@ impl pack::snapshot::ArtifactPack for TransferSnapshot {
  fn encode_pack_with(&self,_:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{Ok(self.0.as_bytes().to_vec())}
  fn decode_pack_with(bytes:&[u8],_:&store::PackDecodeOptions)->Result<Self,store::PackError>{std::str::from_utf8(bytes).map(|text|Self(text.to_owned())).map_err(|error|store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())))}
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TransferSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TransferSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

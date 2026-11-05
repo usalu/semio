@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-space-history"
+name = "semio-os-store-space-history"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,16 +22,16 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-space-sqlite-cells = { path = "../../../../🪐️space/🪶️sqlite/📦️packages/🦀️rust" }
-semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-space-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-space-sqlite-cells = { path = "../../../../🪐️space/🪶️sqlite/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-space-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
-semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-json-source-sink = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/🛫️encode/🫳️borrowed/📦️packages/🦀️rust" }

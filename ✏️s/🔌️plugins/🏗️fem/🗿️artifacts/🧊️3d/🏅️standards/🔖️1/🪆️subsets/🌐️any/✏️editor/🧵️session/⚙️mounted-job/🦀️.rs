@@ -132,7 +132,7 @@ fn decode_input(job: u64, input: &[u8]) -> Option<(u16, Identity)> {
 
 /// 📐️ The original request transfers its two handles into the boxed job under the framework's own original-job admission quote.
 pub(super) fn job_demands(_job: u64, input: &Option<Vec<u8>>, restored: &Option<Vec<u8>>, _cx: &StepContext<'_>) -> Result<RetainedCloneGrant, ValueError> {
-    semio_framework_plugin::reactor::jobs::original_job_admission_demands::<MountedJob>(input, restored)
+    semio_plugin::reactor::jobs::original_job_admission_demands::<MountedJob>(input, restored)
 }
 
 pub(super) fn job_admit(job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>, cx: &mut StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>, ValueError> {
@@ -150,6 +150,6 @@ pub(super) fn job_admit(job: u64, input: &mut Option<Vec<u8>>, restored: &mut Op
         }
         Ok((owner, recovery))
     })?;
-    semio_framework_plugin::reactor::jobs::admit_original_job(input, restored, cx, move |input, restored| MountedJob { shell: owner, recovery, identity, completed: false, input: Some(input), restored })
+    semio_plugin::reactor::jobs::admit_original_job(input, restored, cx, move |input, restored| MountedJob { shell: owner, recovery, identity, completed: false, input: Some(input), restored })
 }
 //#endregion 💼️MountedSession

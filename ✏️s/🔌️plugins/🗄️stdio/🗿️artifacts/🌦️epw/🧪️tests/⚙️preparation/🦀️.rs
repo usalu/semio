@@ -3,8 +3,8 @@
 #[global_allocator]
 static ORIGINAL_OWNER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
-use semio_framework_os_kernel as store;
-use semio_framework_plugin::ArtifactEditor;
+use semio_os_kernel as store;
+use semio_plugin::ArtifactEditor;
 use semio_s_artifact_stdio_epw::editor::epw::EpwEditor;
 use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::blank_epw_snapshot;
 use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::set_location::SetLocation;

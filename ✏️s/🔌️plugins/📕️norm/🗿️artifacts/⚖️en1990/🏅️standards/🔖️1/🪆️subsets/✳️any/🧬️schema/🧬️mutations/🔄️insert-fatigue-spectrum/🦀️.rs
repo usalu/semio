@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for InsertFatigueSpectrum wh
         record: "InsertedFatigueSpectrum",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert fatigue spectrum {}", self.item.id), &format!("Ermüdungskollektiv {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert fatigue spectrum {}", self.item.id), &format!("Ermüdungskollektiv {} einfügen", self.item.id))
     }
 }
 

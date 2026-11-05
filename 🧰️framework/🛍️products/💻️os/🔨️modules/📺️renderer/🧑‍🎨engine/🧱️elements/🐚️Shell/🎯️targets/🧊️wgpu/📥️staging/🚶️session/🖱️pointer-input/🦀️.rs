@@ -6,18 +6,18 @@ use super::*;
 
 //#region ShellInput
 impl<'ctx> SessionCtx<'ctx> {
-    pub fn retained_keyboard_focus(&self) -> Option<(String, semio_framework_ui_arena::NodeId)> {
+    pub fn retained_keyboard_focus(&self) -> Option<(String, semio_ui_arena::NodeId)> {
         let surface = self.chrome.chrome_build.focused_retained_surface.as_ref()?;
         let owner = window_pane_owner(surface).unwrap_or(surface);
         if !self.retained_surface_is_panel(surface) && self.windows.active_window_id.as_deref() != Some(owner) {
             return None;
         }
         let focus = self.chrome.chrome_build.content_focus.get(surface)?.as_ref()?;
-        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_has_visible_focus(surface, focus.node, &focus.key, focus.kind).then(|| (surface.clone(), focus.node))
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_has_visible_focus(surface, focus.node, &focus.key, focus.kind).then(|| (surface.clone(), focus.node))
     }
 
     pub fn retained_select_owns_keyboard(&self) -> bool {
-        self.retained_keyboard_focus().is_some_and(|(surface, node)| semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_is_select(&surface, node))
+        self.retained_keyboard_focus().is_some_and(|(surface, node)| semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_is_select(&surface, node))
     }
 }
 

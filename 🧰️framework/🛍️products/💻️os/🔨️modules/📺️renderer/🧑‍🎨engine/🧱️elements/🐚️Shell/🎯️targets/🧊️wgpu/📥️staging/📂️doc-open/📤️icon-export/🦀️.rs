@@ -6,8 +6,8 @@ use super::*;
 use std::collections::LinkedList;
 use ui_gpu::GpuContext;
 use super::{present_media_export_bytes_cancellable, shell_chrome_string, ShellDetached};
-use semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::IconExportAssetRequest;
-use semio_framework_os_renderer_wgpu_icon_host::icon_export::{IconExportFault, IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected, IconGpuPngExport, IconGpuPngRejected, IconSvgExport, IconSvgRejected};
+use semio_renderer_wgpu_icon_host::icon_export::asset::IconExportAssetRequest;
+use semio_renderer_wgpu_icon_host::icon_export::{IconExportFault, IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected, IconGpuPngExport, IconGpuPngRejected, IconSvgExport, IconSvgRejected};
 use semio_framework::kernel::IconRenderExportItem;
 use semio_framework_async::CancelToken;
 
@@ -283,7 +283,7 @@ impl IconExportBatch {
             scene.begin_close();
             match scene.close_step(cx) {
                 Ok(true)=>{},
-                Ok(false)=>return false,
+                Ok(false)=>return Ok(false),
                 Err(IconExportFault::Original(failure))=>return Err(failure),
                 Err(fault)=>{self.last_fault=Some(fault);return Ok(false);}
             }

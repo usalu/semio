@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "block-entity-layer", kind: "set-block-entity-layer", record: "SetBlockEntityLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set block entity layer", "Ebene der Blockentität setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set block entity layer", "Ebene der Blockentität setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -17,8 +17,8 @@ pub struct ChangeBeamSlabThicknessM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamSlabThicknessM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_slab_thickness_m::ChangeBeamSlabThicknessM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-slab-thickness-m", kind: "change-beam-slab-thickness-m", record: "ChangedBeamSlabThicknessM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change concrete slab thickness of the beam", "Betongurtdicke des Trägers ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change concrete slab thickness of the beam", "Betongurtdicke des Trägers ändern")
     }
 }
 

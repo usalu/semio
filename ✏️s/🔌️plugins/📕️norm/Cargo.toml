@@ -88,19 +88,19 @@ path = "../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages
 [workspace.dependencies.semio-framework-job]
 path = "../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-pack-json]
 path = "../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-schema]
 path = "../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value]
@@ -132,7 +132,7 @@ path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️
 [workspace.dependencies.semio-framework-schema-registry]
 path = "../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-locale]
+[workspace.dependencies.semio-ui-locale]
 path = "../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-contract]

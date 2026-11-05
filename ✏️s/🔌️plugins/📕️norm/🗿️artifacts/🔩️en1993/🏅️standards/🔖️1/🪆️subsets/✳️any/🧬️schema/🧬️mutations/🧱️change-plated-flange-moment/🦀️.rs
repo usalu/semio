@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedFlangeMoment
         record: "ChangedPlatedFlangeMoment",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flange moment M_f,Rd of the plated panel", "Plattenfeld: Gurtmoment M_f,Rd ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flange moment M_f,Rd of the plated panel", "Plattenfeld: Gurtmoment M_f,Rd ändern")
     }
 }
 

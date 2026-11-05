@@ -136,11 +136,11 @@ pub fn component_pivot(data: &str, mode: &str, ids: &[u32]) -> Option<[f64; 3]> 
 }
 
 /// 🚦️ Reads only current cached geometry; pending component transforms inherit their source topology.
-pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut semio_framework_os_flow::FlowEvalSession, ids: &[String], revision: Option<&[u8; 32]>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), String> {
+pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut semio_os_flow::FlowEvalSession, ids: &[String], revision: Option<&[u8; 32]>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), String> {
     let (target, _) = component_group(ids)?;
     if target.analytic.is_none() && target.index != 0 { return Err("Extract one mesh from the list before editing its components".into()); }
     semio_s_artifact_procedural_3d_model::with_host_session(snapshot, session, grant, |host, session| {
-        let pending = host.evaluate_cold_step(semio_framework_os_flow::neural::EvalStepBudget::PROBE,&|_|true).map_err(|error| error.to_string())?.into_iter().collect::<BTreeSet<_>>();
+        let pending = host.evaluate_cold_step(semio_os_flow::neural::EvalStepBudget::PROBE,&|_|true).map_err(|error| error.to_string())?.into_iter().collect::<BTreeSet<_>>();
         if let Some(source) = &target.analytic {
             if pending.contains(target.widget) { return Err("The selected geometry is still being evaluated".into()); }
             let value = host.output_channels(target.widget).and_then(|output| output.get(target.channel)).and_then(|value| value.as_dictionary()).ok_or("The selected geometry no longer exists")?;
@@ -200,7 +200,7 @@ pub struct ComponentSelection {
 
 impl ComponentSelection {
     pub fn active(&self) -> bool { matches!(self.granularity.as_str(), "vertex" | "edge" | "face") }
-    pub fn from_interaction(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> Self {
+    pub fn from_interaction(interaction: &semio_plugin::app::InteractionView<'_>) -> Self {
         Self {
             granularity: interaction.active_granularity(DOMAIN).unwrap_or("object").to_string(),
             selected: interaction.selection(DOMAIN).ids.clone(),
@@ -235,15 +235,15 @@ impl ComponentSelection {
     }
 }
 
-pub fn engagement(selection: &ComponentSelection, is_de: bool) -> semio_framework_plugin::WindowEngagement {
+pub fn engagement(selection: &ComponentSelection, is_de: bool) -> semio_plugin::WindowEngagement {
     let options = [("object", "box", "Objects", "Objekte"), ("vertex", "circle", "Vertices", "Eckpunkte"), ("edge", "minus", "Edges", "Kanten"), ("face", "square", "Faces", "Flächen")]
-        .into_iter().map(|(mode, icon, en, de)| semio_framework_plugin::WindowEngagementOption {
+        .into_iter().map(|(mode, icon, en, de)| semio_plugin::WindowEngagementOption {
             id: format!("procedural.select-{mode}"),
             label: Some(if is_de { de } else { en }.into()),
             icon_id: Some(icon.into()),
             pressed: Some(if mode == "object" { !selection.active() } else { selection.granularity == mode }),
             disabled: None,
-            action: Some(semio_s_artifact_procedural_3d_model::generation3d_action("setInteractionGranularity", Some(semio_framework_plugin::dsl_value!({"domainId": DOMAIN, "granularityId": mode})))),
+            action: Some(semio_s_artifact_procedural_3d_model::generation3d_action("setInteractionGranularity", Some(semio_plugin::dsl_value!({"domainId": DOMAIN, "granularityId": mode})))),
         }).collect();
     let analytic = component_group(&selection.selected).is_ok_and(|(target, _)| target.analytic.is_some());
     let edits: &[(&str, &str, &str)] = if analytic { match selection.granularity.as_str() {
@@ -257,19 +257,19 @@ pub fn engagement(selection: &ComponentSelection, is_de: bool) -> semio_framewor
         _ => &[],
     } };
     let actions = if component_group(&selection.selected).is_ok() {
-        edits.iter().map(|&(operation, en, de)| semio_framework_plugin::WindowEngagementPossible {
+        edits.iter().map(|&(operation, en, de)| semio_plugin::WindowEngagementPossible {
                 id: format!("procedural.{}-{operation}", if analytic { "brep" } else { "mesh" }), label: if is_de { de } else { en }.into(),
                 detail: Some(if is_de { "Danach im Inspektor einstellbar" } else { "Adjustable in the inspector afterwards" }.into()),
-                action: Some(semio_s_artifact_procedural_3d_model::generation3d_action("editMeshSelection", Some(semio_framework_plugin::dsl_value!({"operation":operation,"amount":0.1,"cuts":1,"dx":0.0,"dy":0.0,"dz":0.0,"width":0.1,"segments":1,"mergeMode":"center","tolerance":0.0001,"radius":if analytic { 0.1 } else { 1.0 },"grid":1.0,"center":[0.0,0.0,0.0],"angle":0.1,"pullDirection":[0.0,0.0,1.0],"neutralPoint":[0.0,0.0,0.0]})))),
+                action: Some(semio_s_artifact_procedural_3d_model::generation3d_action("editMeshSelection", Some(semio_plugin::dsl_value!({"operation":operation,"amount":0.1,"cuts":1,"dx":0.0,"dy":0.0,"dz":0.0,"width":0.1,"segments":1,"mergeMode":"center","tolerance":0.0001,"radius":if analytic { 0.1 } else { 1.0 },"grid":1.0,"center":[0.0,0.0,0.0],"angle":0.1,"pullDirection":[0.0,0.0,1.0],"neutralPoint":[0.0,0.0,0.0]})))),
             }).collect()
     } else { Vec::new() };
     let status = if selection.active() {
-        Some(vec![semio_framework_plugin::WindowEngagementStatus {
+        Some(vec![semio_plugin::WindowEngagementStatus {
             id: "procedural.component-selection".into(),
             text: if is_de { format!("{} ausgewählt · Geometrieauswahl bearbeiten: Strg/⌘+Umschalt+M", selection.selected.len()) } else { format!("{} selected · Edit Geometry Selection: Ctrl/⌘+Shift+M", selection.selected.len()) },
         }])
     } else { None };
-    semio_framework_plugin::WindowEngagement { session_active: Some(true), options: Some(options), input: None, control: None, controls: None, status, possible_engagements: Some(actions) }
+    semio_plugin::WindowEngagement { session_active: Some(true), options: Some(options), input: None, control: None, controls: None, status, possible_engagements: Some(actions) }
 }
 
 /// 🏷️ Exact labels are scoped to one painted source and authoring revision.

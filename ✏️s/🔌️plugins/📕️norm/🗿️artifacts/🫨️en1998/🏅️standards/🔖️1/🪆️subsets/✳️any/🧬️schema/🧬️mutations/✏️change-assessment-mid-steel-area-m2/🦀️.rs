@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentMidSteel
         record: "ChangedAssessmentMidSteelAreaM2",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Assessed element: Intermediate longitudinal steel area A_s,int (0 = none)", "Bewertetes Bauteil: Fläche der mittleren Längsbewehrung A_s,int (0 = keine) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Assessed element: Intermediate longitudinal steel area A_s,int (0 = none)", "Bewertetes Bauteil: Fläche der mittleren Längsbewehrung A_s,int (0 = keine) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-mid-steel-area-m2".into()]

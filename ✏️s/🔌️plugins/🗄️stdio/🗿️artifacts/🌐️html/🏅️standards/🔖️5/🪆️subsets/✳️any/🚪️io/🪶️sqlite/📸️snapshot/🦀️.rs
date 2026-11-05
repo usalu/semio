@@ -2,10 +2,10 @@
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::io_schema::IoError;
+use semio_os_kernel::io_schema::IoError;
 
 const TABLES: [&str; 8] = ["html_document", "html_node", "html_element", "html_text", "html_comment", "html_raw_text", "html_attribute", "html_child"];
 struct OwnedNodeMap(BTreeMap<i64,HtmlNode>);
@@ -19,7 +19,7 @@ impl Drop for OwnedChildren{fn drop(&mut self){while let Some(node)=self.0.pop()
 fn integer(value: usize) -> Result<i64, ValueError> { i64::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"HTML ordinal exceeds SQLite integer range")) }
 pub fn index(value: i64) -> Result<usize, ValueError> { usize::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"HTML ordinal must be nonnegative")) }
 fn add(value: &mut usize, amount: usize) -> Result<(), ValueError> { *value = value.checked_add(amount).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML relational size overflow"))?; Ok(()) }
-pub fn text(value: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteValue,ValueError> { semio_framework_os_kernel::sqlite_snapshot::artifact::project_text(control,value).map(SqliteValue::Text) }
+pub fn text(value: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteValue,ValueError> { semio_os_kernel::sqlite_snapshot::artifact::project_text(control,value).map(SqliteValue::Text) }
 pub fn kind(node: &HtmlNode) -> &'static str { match node { HtmlNode::Element { .. } => "element", HtmlNode::Text { .. } => "text", HtmlNode::Comment { .. } => "comment", HtmlNode::RawText { .. } => "raw_text" } }
 fn push(database: &mut SqliteDatabase, table: &str, values: Vec<SqliteValue>) -> Result<i64, ValueError> { let rows = &mut database.table_mut(table)?.rows; let id = integer(rows.len() + 1)?; let mut fields = vec![SqliteValue::Integer(id)]; fields.extend(values); rows.push(SqliteRow { rowid: id, values: fields }); Ok(id) }
 pub fn component(database: &mut SqliteDatabase, table: &str, id: i64, values: Vec<SqliteValue>) -> Result<(), ValueError> { let mut fields = vec![SqliteValue::Integer(id)]; fields.extend(values); database.table_mut(table)?.rows.push(SqliteRow { rowid: id, values: fields }); Ok(()) }
@@ -48,7 +48,7 @@ fn measure(snapshot: &HtmlSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 }
 
 impl ArtifactSqliteSnapshotHost for HtmlSnapshot {
-    fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
+    fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
         native_owner.receive::<Self,Self>(|slot,native_control,body|{
             let value=native::decode(payload,control,native_control)?;
             body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Self>(), maximum_depth: 1, ..Default::default() })?;
@@ -57,10 +57,10 @@ impl ArtifactSqliteSnapshotHost for HtmlSnapshot {
             Ok(slot.take().expect("received snapshot slot"))
         })
     }
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
     fn retire_sqlite_snapshot(self){native::retire(self)}
-    fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        use semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
+    fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
+        use semio_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
         let mut bound = NativeEncodingBound::new(control)?; bound.add(1024)?;
         if let Some(doctype) = &self.doctype { bound.repeated(doctype.len(), 4)?; }
         let mut stack = vec![&self.root]; let mut rows = 1usize;
@@ -80,12 +80,12 @@ impl ArtifactSqliteSnapshotHost for HtmlSnapshot {
         bound.finish()
     }
 
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.html"||dialect.standard!="5"{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"owned html snapshot dialect differs from its semantic standard")));}
         let row=database.table("html_document").map_err(IoError::from_value_error)?.single_row().map_err(IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(IoError::from_value_error)?!=self.schema{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"owned html document identity differs from semantic projection")));}
         let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),_=>return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"named html subset has no owned semantic validator")))};
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(IoError::from_value_error)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(IoError::from_value_error)?;Ok(semio_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
     
@@ -139,14 +139,14 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
         while let Some((id, finish)) = stack.pop() {
             if !finish { if !visited.insert(id) { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"HTML node graph contains a cycle")); } stack.push((id, true)); if let Some(ordered) = children.get(&id) { stack.extend(ordered.iter().rev().map(|(_, child)| (*child, false))); } continue; }
             control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, checked.min(total), total)?; let payload = components[&id]; let node = match nodes[&id].text(1)? {
-                "element" => { let mut attrs = Vec::new(); for (_, row) in attributes.remove(&id).unwrap_or_default() { attrs.push(HtmlAttr { name: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,row.text(3)?)?, value: row.optional_text(4)?.map(|v|semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,v)).transpose()? }); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?; } let mut child_nodes = OwnedChildren(Vec::new()); for (_, child) in children.remove(&id).unwrap_or_default() { child_nodes.push(built.remove(&child).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"HTML child was not reconstructed"))?); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?; } HtmlNode::Element { name: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(1)?)?, attributes: attrs, children: std::mem::take(&mut child_nodes.0) } },
-                "text" => HtmlNode::Text { text: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(1)?)? }, "comment" => HtmlNode::Comment { text: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(1)?)? },
-                "raw_text" => HtmlNode::RawText { parent_kind: match payload.text(1)? { "script" => RawTextKind::Script, "style" => RawTextKind::Style, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"HTML raw text parent kind is invalid")) }, text: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(2)?)? }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"HTML node kind is invalid")),
+                "element" => { let mut attrs = Vec::new(); for (_, row) in attributes.remove(&id).unwrap_or_default() { attrs.push(HtmlAttr { name: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,row.text(3)?)?, value: row.optional_text(4)?.map(|v|semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,v)).transpose()? }); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?; } let mut child_nodes = OwnedChildren(Vec::new()); for (_, child) in children.remove(&id).unwrap_or_default() { child_nodes.push(built.remove(&child).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"HTML child was not reconstructed"))?); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?; } HtmlNode::Element { name: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(1)?)?, attributes: attrs, children: std::mem::take(&mut child_nodes.0) } },
+                "text" => HtmlNode::Text { text: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(1)?)? }, "comment" => HtmlNode::Comment { text: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(1)?)? },
+                "raw_text" => HtmlNode::RawText { parent_kind: match payload.text(1)? { "script" => RawTextKind::Script, "style" => RawTextKind::Style, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"HTML raw text parent kind is invalid")) }, text: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(2)?)? }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"HTML node kind is invalid")),
             }; built.insert(id, node); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?;
         }
         if visited.len() != nodes.len() || !children.is_empty() || !attributes.is_empty() { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"HTML node graph is disconnected or cyclic")); }
         #[cfg(test)]let _late_scope=crate::standards::v5::subsets::any::io::sqlite::snapshot::lifecycle_tests::SqlLateCopyScope::enter();
-        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, total, total)?; Ok(Self { schema: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,document.text(1)?)?, doctype: document.optional_text(2)?.map(|v|semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,v)).transpose()?, root: built.remove(&root).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"HTML root was not reconstructed"))? })
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, total, total)?; Ok(Self { schema: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,document.text(1)?)?, doctype: document.optional_text(2)?.map(|v|semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,v)).transpose()?, root: built.remove(&root).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"HTML root was not reconstructed"))? })
     }
 }
 

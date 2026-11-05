@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationPRdPa wh
         record: "ChangeFoundationPRdPa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bearing resistance", "Sohldruckwiderstand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bearing resistance", "Sohldruckwiderstand ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-p-rd-pa".into()]

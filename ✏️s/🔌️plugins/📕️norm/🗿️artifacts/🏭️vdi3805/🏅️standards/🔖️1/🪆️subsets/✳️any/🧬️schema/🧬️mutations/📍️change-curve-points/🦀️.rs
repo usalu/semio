@@ -18,8 +18,8 @@ pub struct ChangeCurvePoints {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeCurvePoints where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_curve_points::ChangeCurvePoints> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "curve-points", kind: "change-curve-points", record: "ChangedCurvePoints" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace points for curve \"{}\"", self.id), &format!("Punkte für Kurve \"{}\" ersetzen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace points for curve \"{}\"", self.id), &format!("Punkte für Kurve \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

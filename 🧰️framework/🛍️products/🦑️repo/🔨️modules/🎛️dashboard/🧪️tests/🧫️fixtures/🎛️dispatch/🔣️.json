@@ -267,16 +267,16 @@
     },
     {
       "packages": [
-        "semio-framework-ui-tui-core",
-        "semio-framework-ui-tui-vt",
-        "semio-framework-ui-tui-terminal",
-        "semio-framework-ui-tui-widgets",
-        "semio-framework-ui-tui-frame",
-        "semio-framework-ui-tui-engine",
-        "semio-framework-ui-tui-host",
-        "semio-framework-ui-tui-unit-laws",
-        "semio-framework-ui-tui-vt-laws",
-        "semio-framework-ui-tui-laws"
+        "semio-ui-tui-core",
+        "semio-ui-tui-vt",
+        "semio-ui-tui-terminal",
+        "semio-ui-tui-widgets",
+        "semio-ui-tui-frame",
+        "semio-ui-tui-engine",
+        "semio-ui-tui-host",
+        "semio-ui-tui-unit-laws",
+        "semio-ui-tui-vt-laws",
+        "semio-ui-tui-laws"
       ],
       "manifests": [
         "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust/Cargo.toml",
@@ -293,7 +293,7 @@
       "extraArgs": [
         "--lib",
         "--features",
-        "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
+        "semio-ui-tui-terminal/native,semio-ui-tui-unit-laws/native"
       ],
       "workspace": "🧰️framework"
     }

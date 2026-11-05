@@ -24,8 +24,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnActionSource w
         record: "ChangedConnActionSource",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change source of the connection action", "Anschlusseinwirkung: Quelle ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change source of the connection action", "Anschlusseinwirkung: Quelle ändern")
     }
 }
 

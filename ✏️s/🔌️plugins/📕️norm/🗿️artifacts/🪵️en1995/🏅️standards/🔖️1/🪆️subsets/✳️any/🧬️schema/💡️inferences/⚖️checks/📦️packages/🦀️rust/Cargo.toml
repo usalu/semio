@@ -19,7 +19,7 @@ path = "../../🦀️.rs"
 oracle-wiring = ["dep:semio-s-plugin-norm-mechanics", "dep:serde_json", "semio-s-plugin-norm-compliance/compliance-testing"]
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1995-schema = { workspace = true }
@@ -32,9 +32,9 @@ semio-s-plugin-norm-results-config = { workspace = true, features = ["test-suppo
 semio-s-artifact-norm-en1995-schema = { workspace = true, features = ["test-support"] }
 semio-s-artifact-norm-en1995-inferences = { workspace = true, features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-norm-en1995-editor = { workspace = true }
 semio-s-artifact-norm-en1995-io = { workspace = true }

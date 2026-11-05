@@ -2,7 +2,7 @@
 
 use super::MergePolicyConfigMutation;
 use protocol::{ColdMutation, MutationKind, MutationOutcome, SemanticDescriptor};
-pub use semio_framework_os_config_merge_policy::{MergePolicyDiff, MergePolicySetting, MERGE_POLICY_CONFIG_SCHEMA};
+pub use semio_os_config_merge_policy::{MergePolicyDiff, MergePolicySetting, MERGE_POLICY_CONFIG_SCHEMA};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
@@ -26,8 +26,8 @@ impl MutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMerge
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change merge policy to \"{:?}\"", self.policy), &format!("Zusammenführungsrichtlinie auf \"{:?}\" ändern", self.policy))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change merge policy to \"{:?}\"", self.policy), &format!("Zusammenführungsrichtlinie auf \"{:?}\" ändern", self.policy))
     }
 
     fn target(&self) -> Vec<String> {

@@ -564,7 +564,7 @@ export class NativeDocumentOpenCheckScript extends BundleScript {
 }
 
 function runNativeDocumentAdmissionLaws(repoRoot: string): void {
-  const target = ["test", "-p", "semio-framework-os-kernel", "--lib", "--features", "sync,ureq"];
+  const target = ["test", "-p", "semio-os-kernel", "--lib", "--features", "sync,ureq"];
   const suffixes = [
     "native_document_admission_issues_validates_and_exchanges_exactly_once",
     "hostile_or_cancelled_plan_never_reaches_receipt_exchange",
@@ -586,7 +586,7 @@ function runNativeDocumentAdmissionLaws(repoRoot: string): void {
     runCargo([...target, matches[0]!, "--", "--exact", "--test-threads=1"], repoRoot, env);
   }
   const mcpSuffixes = ["mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority", "authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope"];
-  const mcpTarget = ["test", "-p", "semio-framework-os-mcp", "--lib"];
+  const mcpTarget = ["test", "-p", "semio-os-mcp", "--lib"];
   for (const mcpSuffix of mcpSuffixes) {
     const listed = runProbe("cargo", [...mcpTarget, mcpSuffix, "--", "--list"], { cwd: repoRoot, env, ...orchestratorBudgetOpts() });
     const matches = listed.stdout

@@ -132,9 +132,9 @@ fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
     let section_root = section_tree.root.expect("section root");
     let theme = Theme::default();
     let mut atlas = FontAtlas::shaped_default();
-    assert!(semio_framework_ui_wgpu_mounted_layout::layout_tree_now(&mut section_tree, section_root, theme, number(&["section", "width"]), 400.0));
+    assert!(semio_ui_wgpu_mounted_layout::layout_tree_now(&mut section_tree, section_root, theme, number(&["section", "width"]), 400.0));
     let section_child = section_tree.node(section_root).and_then(|node| node.first_child).expect("section child");
-    let title_bottom = section_tree.accepted_layout(section_child).expect("section child layout").y - semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_BODY_GAP;
+    let title_bottom = section_tree.accepted_layout(section_child).expect("section child layout").y - semio_ui_wgpu_layout::flex::SECTION_TITLE_BODY_GAP;
     let mut section_draw = DrawList::default();
     paint_tree(&mut section_tree, section_root, &theme, &mut atlas, None, false, &mut section_draw);
     let title_glyphs: Vec<_> = section_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01 && instance.rect[1] < title_bottom).collect();
@@ -157,16 +157,16 @@ fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
     let field_root = field_tree.root.expect("field root");
     let field_control = field_tree.node(field_root).and_then(|node| node.first_child).expect("field control");
     let mut field_atlas = FontAtlas::shaped_default();
-    assert!(semio_framework_ui_wgpu_mounted_layout::layout_tree_now(&mut field_tree, field_root, theme, number(&["field", "width"]), 400.0));
+    assert!(semio_ui_wgpu_mounted_layout::layout_tree_now(&mut field_tree, field_root, theme, number(&["field", "width"]), 400.0));
     let control_layout = field_tree.accepted_layout(field_control).expect("field control layout");
     let mut field_draw = DrawList::default();
     paint_tree(&mut field_tree, field_root, &theme, &mut field_atlas, None, false, &mut field_draw);
-    let color_matches = |instance: &&semio_framework_ui_draw_contract::UiInstance, color: semio_framework_ui_theme::Rgba| (instance.color[0] - color.r).abs() < 0.001 && (instance.color[1] - color.g).abs() < 0.001 && (instance.color[2] - color.b).abs() < 0.001;
+    let color_matches = |instance: &&semio_ui_draw_contract::UiInstance, color: semio_ui_theme::Rgba| (instance.color[0] - color.r).abs() < 0.001 && (instance.color[1] - color.g).abs() < 0.001 && (instance.color[2] - color.b).abs() < 0.001;
     let glyphs: Vec<_> = field_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).collect();
     let description: Vec<_> = glyphs.iter().copied().filter(|instance| color_matches(instance, theme.text_muted)).collect();
     let error: Vec<_> = glyphs.iter().copied().filter(|instance| color_matches(instance, theme.error)).collect();
     assert!(!description.is_empty() && !error.is_empty());
-    assert!(description.iter().all(|glyph| glyph.rect[1] >= semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_LINE_HEIGHT && glyph.rect[1] + glyph.rect[3] <= control_layout.y + 0.01));
+    assert!(description.iter().all(|glyph| glyph.rect[1] >= semio_ui_wgpu_layout::flex::FIELD_LABEL_LINE_HEIGHT && glyph.rect[1] + glyph.rect[3] <= control_layout.y + 0.01));
     assert!(error.iter().all(|glyph| glyph.rect[1] >= control_layout.y + control_layout.height + theme.gap_standard - 0.01));
 }
 
@@ -176,7 +176,7 @@ fn number_stepper_catalog_icons_match_chromiums_measured_content_boxes() {
     let geometry = law["geometry"].as_array().unwrap().iter().find(|case| case["id"] == law["icons"]["case"]).unwrap();
     let rect = |value: &serde_json::Value| Rect::new(value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32);
     let theme = Theme { stroke_hairline: geometry["border"].as_f64().unwrap() as f32, ..Theme::default() };
-    let [minus, _, plus] = semio_framework_ui_wgpu_layout::layout::number_stepper_segments(rect(&geometry["bounds"]), ui_contract::FlowInline::Ltr, theme.stroke_hairline);
+    let [minus, _, plus] = semio_ui_wgpu_layout::layout::number_stepper_segments(rect(&geometry["bounds"]), ui_contract::FlowInline::Ltr, theme.stroke_hairline);
     let icons = IconAtlas::from_packed(2, 1, vec![255; 8], vec![("minus".into(), [0.0, 0.0, 0.5, 1.0]), ("plus".into(), [0.5, 0.0, 0.5, 1.0])]);
     let mut draw = DrawList::default();
     push_stepper_icon(&mut draw, Some(&icons), "minus", minus, ui_contract::FlowInline::Ltr, &theme);

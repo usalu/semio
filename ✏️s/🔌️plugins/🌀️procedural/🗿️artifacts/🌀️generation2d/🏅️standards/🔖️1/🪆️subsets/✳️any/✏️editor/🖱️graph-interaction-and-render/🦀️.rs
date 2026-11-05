@@ -59,10 +59,10 @@ pub(super) fn generation2d_render_body(
     body_key: &str,
     doc: &ArtifactView<'_, Generation2dSnapshot>,
     cfg: &ConfigView<'_, Generation2dConfig>,
-    view_state: &semio_framework_plugin::ViewModel,
+    view_state: &semio_plugin::ViewModel,
     marks: &GraphInteractionMarks,
     session: &FlowEvalSession,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let labels = generation2d_labels(view_state);
@@ -80,17 +80,17 @@ pub(super) fn generation2d_render_body(
             config.selected_generation_id.as_deref(),
             view_state.locale,
             view_state.terminology,
-            &semio_framework_plugin::TreeWindows::for_body(view_state, generations::GENERATION2D_PLAY_BODY_GENERATIONS),
+            &semio_plugin::TreeWindows::for_body(view_state, generations::GENERATION2D_PLAY_BODY_GENERATIONS),
         ),
         form::GENERATION2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, labels),
         generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => {
             let window_config = generate_preview::config::current(cfg);
             generate_preview::render(&window_config, None, labels)
         }
-        document_panel::GENERATION2D_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::GENERATION2D_PLAY_BODY_ARTIFACT)),
-        catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE)),
+        document_panel::GENERATION2D_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels, &semio_plugin::TreeWindows::for_body(view_state, document_panel::GENERATION2D_PLAY_BODY_ARTIFACT)),
+        catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE)),
         inspection_panel::GENERATION2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+        _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     };
-    Ok(semio_framework_plugin::built_to_component_tree(rendered?))
+    Ok(semio_plugin::built_to_component_tree(rendered?))
 }

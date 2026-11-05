@@ -234,6 +234,78 @@
           ]
         }
       }
+    },
+    "CargoPreparationResolutionBatchV1": {
+      "const": {
+        "maximumBytes": 65536,
+        "maximumItems": 128
+      }
+    },
+    "CargoPreparationResolutionBatchCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "count",
+        "payload",
+        "repeat",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "payload": {
+          "type": "string"
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CargoPreparationProgramContextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "program",
+        "operation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "cargo-preparation-program"
+        },
+        "program": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "operation": {
+          "enum": [
+            "capture-program",
+            "resolve-program"
+          ]
+        }
+      }
+    },
+    "CargoPreparationDiagnosticProtocolV1": {
+      "const": {
+        "marker": "[cargo-preparation-program]",
+        "maximumCharacters": 2048
+      }
     }
   },
   "$ref": "#/$defs/CargoPreparationObservationV1"

@@ -7,8 +7,8 @@ use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::GraphEditor;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 pub const AUTOMATIC_GAP: f64 = 48.0;
@@ -34,25 +34,25 @@ fn creation_fault(message: impl Into<String>) -> Fault {
 }
 
 /// 🧯️ The source diagnostic keeps its exact reason while the UI uses a translated notice.
-pub fn source_fault(reason:semio_framework_os_flow::FlowSourceReadFailure)->Fault{Fault::new(FaultOrigin::App,FaultCode::new("generation3d.analysis.source-unavailable"),format!("original analysis source refused: {reason:?}"))}
+pub fn source_fault(reason:semio_os_flow::FlowSourceReadFailure)->Fault{Fault::new(FaultOrigin::App,FaultCode::new("generation3d.analysis.source-unavailable"),format!("original analysis source refused: {reason:?}"))}
 /// 📢️ Refreshing the selected source is an explicit action in either supported language.
-pub fn source_fault_notices()->&'static[(&'static str,semio_framework_ui_locale::LocalizedLabel)]{
- static NOTICES:std::sync::LazyLock<[(&str,semio_framework_ui_locale::LocalizedLabel);1]>=std::sync::LazyLock::new(||[("generation3d.analysis.source-unavailable",semio_framework_ui_locale::LocalizedLabel::native("The selected output changed or is unavailable. Wait for evaluation and select it again.","Die ausgewählte Ausgabe wurde geändert oder ist nicht verfügbar. Die Auswertung abwarten und erneut auswählen."))]);
+pub fn source_fault_notices()->&'static[(&'static str,semio_ui_locale::LocalizedLabel)]{
+ static NOTICES:std::sync::LazyLock<[(&str,semio_ui_locale::LocalizedLabel);1]>=std::sync::LazyLock::new(||[("generation3d.analysis.source-unavailable",semio_ui_locale::LocalizedLabel::native("The selected output changed or is unavailable. Wait for evaluation and select it again.","Die ausgewählte Ausgabe wurde geändert oder ist nicht verfügbar. Die Auswertung abwarten und erneut auswählen."))]);
  &*NOTICES
 }
 
 impl AddWidget {
     /// 🛍️ One descriptor source for catalogue activation and canvas drag.
-    pub fn from_catalogue(item: &semio_framework_os_flow::CatalogueItem) -> Self {
+    pub fn from_catalogue(item: &semio_os_flow::CatalogueItem) -> Self {
         Self { kind: item.kind.clone(), neuron_kind: item.neuron_kind.clone(), format: item.format.clone(), action: item.action.clone(), x: None, y: None, source_widget:None,source_port:None,target_port:None,source_revision:None }
     }
 
-    pub fn source_request(&self)->Result<Option<semio_framework_os_flow::FlowSourceReadRequest<'_>>,Fault>{
+    pub fn source_request(&self)->Result<Option<semio_os_flow::FlowSourceReadRequest<'_>>,Fault>{
         let fields=[self.source_widget.as_deref(),self.source_port.as_deref(),self.target_port.as_deref(),self.source_revision.as_deref()];
         if fields.iter().all(Option::is_none){return Ok(None)}
         if self.kind!="neuron"||fields.iter().any(|field|field.is_none_or(str::is_empty)){return Err(creation_fault("connected neuron creation requires the complete original source endpoint and revision"))}
         self.source_revision_bytes()?;
-        Ok(Some(semio_framework_os_flow::FlowSourceReadRequest{source_widget:fields[0].unwrap(),source_port:fields[1].unwrap(),target:semio_framework_os_flow::FlowSourceReadTarget::Port{port:fields[2].unwrap(),kind:self.neuron_kind.as_deref().ok_or_else(||creation_fault("connected creation requires a registered neuron kind"))?}}))
+        Ok(Some(semio_os_flow::FlowSourceReadRequest{source_widget:fields[0].unwrap(),source_port:fields[1].unwrap(),target:semio_os_flow::FlowSourceReadTarget::Port{port:fields[2].unwrap(),kind:self.neuron_kind.as_deref().ok_or_else(||creation_fault("connected creation requires a registered neuron kind"))?}}))
     }
 
     pub fn source_revision_bytes(&self)->Result<[u8;32],Fault>{
@@ -111,15 +111,15 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation3dSnapshot>,
 }
 
 /// 🔗️ The original retained command lends its admitted read result into one create/connect edit.
-pub fn create_connected(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:&semio_framework_os_flow::FlowCurrentOutput<'_>)->Result<Emit<Generation3dMutation,Generation3dConfigMutation>,Fault>{create(payload,doc,Some(source))}
+pub fn create_connected(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:&semio_os_flow::FlowCurrentOutput<'_>)->Result<Emit<Generation3dMutation,Generation3dConfigMutation>,Fault>{create(payload,doc,Some(source))}
 
-fn create(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:Option<&semio_framework_os_flow::FlowCurrentOutput<'_>>)->Result<Emit<Generation3dMutation,Generation3dConfigMutation>,Fault>{
+fn create(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:Option<&semio_os_flow::FlowCurrentOutput<'_>>)->Result<Emit<Generation3dMutation,Generation3dConfigMutation>,Fault>{
     let host_snapshot = &doc.snapshot.host_snapshot;
     let descriptor = payload.descriptor_json()?;
     let request=payload.source_request()?;
     if let Some(request)=request.as_ref(){let revision=payload.source_revision_bytes()?;let operation=doc.operation()?;if operation.canonical_base_revision!=revision||source.is_none_or(|source|!source.admits(request,revision,operation.operation_id,operation.generation)){return Err(creation_fault("connected creation requires the original current-source read admission"))}}
     if let Some(kind) = &payload.neuron_kind {
-        if !semio_framework_os_flow::flow_neuron_kind_info_map().contains_key(kind) && !matches!(kind.as_str(), semio_framework_artifact_flow_flow::neural::INPUT_KIND | semio_framework_artifact_flow_flow::neural::OUTPUT_KIND) {
+        if !semio_os_flow::flow_neuron_kind_info_map().contains_key(kind) && !matches!(kind.as_str(), semio_framework_artifact_flow_flow::neural::INPUT_KIND | semio_framework_artifact_flow_flow::neural::OUTPUT_KIND) {
             return Err(creation_fault(format!("unknown neuron kind: {kind}")));
         }
     }

@@ -31,7 +31,7 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "eraser-radius", kind: "change-eraser-radius", record: "ChangedEraserRadius" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         crate::schema::note_setting_label(("eraser radius", "Radiererradius"), self.new_radius.map(crate::schema::note_label_number))
     }
     fn target(&self) -> Vec<String> {

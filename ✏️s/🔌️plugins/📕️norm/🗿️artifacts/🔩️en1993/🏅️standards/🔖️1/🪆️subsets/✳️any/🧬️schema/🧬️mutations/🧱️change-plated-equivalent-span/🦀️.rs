@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedEquivalentSp
         record: "ChangedPlatedEquivalentSpan",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Equivalent span L_e of the plated panel", "Plattenfeld: Ersatzstützweite L_e ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Equivalent span L_e of the plated panel", "Plattenfeld: Ersatzstützweite L_e ändern")
     }
 }
 

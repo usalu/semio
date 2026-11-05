@@ -7,7 +7,7 @@
 //! `📓️w4-vcs-report.md` `## openQuestions`, mirrors the sequence fan-out's identical deviation).
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<A: crate::VcsApplication>() -> StandardDeclaration<A> {
@@ -28,8 +28,8 @@ use crate::{VcsApplication};
 /// per debt D1, deleted repo-wide only in W6); wiring them into this field too is real follow-up
 /// work, not required for the tree to register or for any law to hold (mirrors the stdio pilot's
 /// own documented deviation, `📓️w2-p-report.md`).
-pub fn artifact<A: VcsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: VcsApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.vcs.vcs").expect("canonical vcs.vcs kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }

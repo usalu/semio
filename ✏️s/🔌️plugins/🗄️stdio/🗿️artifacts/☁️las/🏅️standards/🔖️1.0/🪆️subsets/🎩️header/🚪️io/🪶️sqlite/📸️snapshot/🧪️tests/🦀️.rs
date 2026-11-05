@@ -1,18 +1,18 @@
 //! 🧫️ LAS semantic SQLite laws share typed vectors and independent SQLite queries with TypeScript.
-use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;
+use semio_os_kernel::sqlite_snapshot::SnapshotEncoding;
 use crate::{standards::v1_0::subsets::any::schema::snapshot::LasSnapshot, standards::v1_0::subsets::any::schema::snapshot::LasHeader, standards::v1_0::subsets::any::schema::snapshot::LasVlr, standards::v1_0::subsets::any::schema::snapshot::LasPoint};
 use semio_framework_test_fixtures::fixture_text;
-use {semio_framework_artifact_reference::ArtifactDialect, semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase, semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase};
-use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+use {semio_framework_artifact_reference::ArtifactDialect, semio_os_kernel::sqlite_snapshot::SqliteDatabase, semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase};
+use semio_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
+use semio_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{io_schema::IoError, io_schema::IoOutcome, sqlite_snapshot::SqliteRow, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::artifact::FloatColumn, sqlite_snapshot::artifact::FloatRow};
+use semio_os_kernel::{io_schema::IoError, io_schema::IoOutcome, sqlite_snapshot::SqliteRow, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::artifact::FloatColumn, sqlite_snapshot::artifact::FloatRow};
 use crate::standards::v1_0::subsets::any::io::sqlite::snapshot::{receiving};
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_0::subsets::any::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,export_sqlite_database,import_sqlite_database}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,export_sqlite_database,import_sqlite_database}};
 use std::{io::Write,process::{Command,Stdio}};
 
 pub(super)fn snapshot()->LasSnapshot{
@@ -41,7 +41,7 @@ fn sqlite_snapshot_refuses_valid_sqlite_incoherent_identity_and_child_order(){
 #[test]
 fn sqlite_snapshot_owned_coordinates_controls_and_actual_declarations(){
     let snapshot=snapshot();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();for (key,accepted) in [("acceptedDialects",true),("rejectedDialects",false)]{for row in fixture[key].as_array().unwrap(){let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};assert_eq!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_ok(),accepted);}}
-    let limits=SqliteDatabaseLimits{max_rows:1,..SqliteDatabaseLimits::default()};assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(LasSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(LasSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(<LasSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
+    let limits=SqliteDatabaseLimits{max_rows:1,..SqliteDatabaseLimits::default()};assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(LasSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(LasSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(<LasSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
     let declaration=crate::declaration(crate::definition().unwrap()).unwrap();assert_eq!(declaration.hosted_kinds().unwrap().len(),1);assert_eq!(declaration.definition().identity().as_str(),"s.stdio.las");
 }
 
@@ -74,9 +74,9 @@ fn sqlite_snapshot_large_semantic_loops_cancel_before_completion(){
 #[test]
 fn sqlite_snapshot_erased_binary_and_text_capabilities_preserve_every_native_field(){
     let snapshot=snapshot();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
-    let codec=<LasSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
+    let codec=<LasSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.las".into(),standard:"1.0".into(),subset:"*".into()};
-    for encoding in [semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text]{
+    for encoding in [semio_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,semio_os_kernel::sqlite_snapshot::SnapshotEncoding::Text]{
         let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema,&dialect,&mut Some(database.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         assert_eq!(restored,database,"actual erased native snapshot bridge must preserve typed fields independently of LAS wire encoding");
@@ -85,7 +85,7 @@ fn sqlite_snapshot_erased_binary_and_text_capabilities_preserve_every_native_fie
 
 #[test]
 fn sqlite_snapshot_las_native_encoding_preflight_admits_owned_model_and_refuses_budget_or_cancellation(){
- use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
+ use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let snapshot=LasSnapshot::default();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
@@ -97,7 +97,7 @@ fn sqlite_snapshot_las_native_encoding_preflight_admits_owned_model_and_refuses_
 
 #[test]
 fn sqlite_snapshot_las_native_encoding_preflight_bounds_escaped_text_and_cancels_borrowed_members(){
- use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
+ use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️encoding.json")).unwrap();
  let mut snapshot=LasSnapshot::default();snapshot.header.generating_software="\n\\\"".repeat(cases["largeTextBytes"].as_u64().unwrap() as usize);snapshot.points=vec![LasPoint::default();cases["workItems"].as_u64().unwrap() as usize];
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{

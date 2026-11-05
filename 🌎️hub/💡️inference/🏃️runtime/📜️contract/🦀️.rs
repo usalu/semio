@@ -88,8 +88,8 @@ pub fn reader<'a>(identity: &'a InferenceIdentityV1) -> InferenceReaderV1<'a> {
 }
 
 /// ⏱️ The fixed native inference budget every execution of the registered binding runs under.
-pub fn inference_budget() -> semio_framework_plugin::WireArtifactInferenceBudget {
-    semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: ALLOCATION_BYTES, work_units: WORK_UNIT_LIMIT, recursion_depth: RECURSION_DEPTH }
+pub fn inference_budget() -> semio_plugin::WireArtifactInferenceBudget {
+    semio_plugin::WireArtifactInferenceBudget { allocation_bytes: ALLOCATION_BYTES, work_units: WORK_UNIT_LIMIT, recursion_depth: RECURSION_DEPTH }
 }
 
 pub use binding::{GisMapAssemblyV1, GisMapClosingStoresV1, GisMapCommitHostV1, GisMapCommitIdentityV1, GisMapCommitOperationV1, GisMapDocumentStoresV1, GisMapDrawingStoreV1, GisMapJournalReceiptV1, GisMapParentSnapshotV1, GisMapParentStoreV1, GisMapRecoveryOwnerV1, GisMapValueStoreV1};

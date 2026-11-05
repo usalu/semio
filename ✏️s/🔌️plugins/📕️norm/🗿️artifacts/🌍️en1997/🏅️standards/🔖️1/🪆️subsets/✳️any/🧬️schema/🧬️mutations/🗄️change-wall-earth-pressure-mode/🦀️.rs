@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallEarthPressureM
         record: "ChangedWallEarthPressureMode",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change earth pressure mode of the retaining wall", "Erddruckmodus der Stützwand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change earth pressure mode of the retaining wall", "Erddruckmodus der Stützwand ändern")
     }
 }
 

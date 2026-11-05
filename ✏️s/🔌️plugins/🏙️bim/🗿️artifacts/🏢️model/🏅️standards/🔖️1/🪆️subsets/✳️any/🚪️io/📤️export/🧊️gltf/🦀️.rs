@@ -5,7 +5,7 @@
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 
@@ -31,7 +31,7 @@ pub struct ModelIntoGlb;
 impl Serializer<ModelSnapshot> for ModelIntoGlb {
     const INTO: Dialect = GLTF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let (bytes, notes) = export_glb(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoGlb: {message}"))))?;
         if bytes.len() > u32::MAX as usize {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ModelIntoGlb: the scene exceeds the 4 GiB limit of a binary glTF")));

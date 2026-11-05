@@ -17,8 +17,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "space-conditions", kind: "remove-space-conditions", record: "RemoveSpaceConditions" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove conditions of space \"{}\"", self.id), &format!("Bedingungen des Raums \"{}\" entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove conditions of space \"{}\"", self.id), &format!("Bedingungen des Raums \"{}\" entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

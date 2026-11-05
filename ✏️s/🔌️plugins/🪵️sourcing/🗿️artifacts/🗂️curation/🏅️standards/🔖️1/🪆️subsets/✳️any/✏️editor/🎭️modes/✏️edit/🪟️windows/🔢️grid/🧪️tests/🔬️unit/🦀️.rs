@@ -1,7 +1,7 @@
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 
 use crate::editor::sourcing::config::SourcingCurationConfig;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::sourcing::modes::edit::windows::grid::{SOURCING_CURATION_BODY_GRID, definition, render};
 use crate::editor::sourcing::modes::edit::windows::grid::config::{GridWindowConfig, GRID_INSTANCE_DISPLAY_REPRESENTATIVE, GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT};
 use crate::editor::sourcing::SourcingCurationCommand;
@@ -10,8 +10,8 @@ use crate::editor_unit_tests::context::{dispatch, new_app};
 use crate::schema::{box_parts, curation_set, filtered_stock};
 use crate::Filters;
 
-fn scene_instance_count(node: &semio_framework_plugin::BuiltNode) -> usize {
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("assemble world3d scene");
+fn scene_instance_count(node: &semio_plugin::BuiltNode) -> usize {
+    let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(node).expect("assemble world3d scene");
     serde_json::from_str::<serde_json::Value>(&scene.instances_json).unwrap().as_array().unwrap().len()
 }
 
@@ -23,7 +23,7 @@ async fn grid_instance_count_matches_curated_counts_and_normalizes_scale() {
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let window = GridWindowConfig::default();
     let node = render(&document, &cfg, &window).expect("bounded grid");
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
+    let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     assert!(filtered_stock(&document, &cfg.filters).len() > 1, "stock still has more slabs than the curated subset");
     let parts: usize = 2 * box_parts(&crate::stock_of(&document).iter().find(|kind| kind.id == "slab-clt-160").expect("stock kind").geometry).map_or(1, |parts| parts.len());
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.instances_json).unwrap().as_array().unwrap().len(), parts);
@@ -49,7 +49,7 @@ async fn representative_with_count_adds_glyph_instances() {
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let window = GridWindowConfig { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT.into() };
     let node = render(&document, &cfg, &window).expect("bounded grid");
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
+    let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     let parts: usize = box_parts(&crate::stock_of(&document).iter().find(|kind| kind.id == "slab-clt-160").expect("stock kind").geometry).map_or(1, |parts| parts.len());
     assert!(scene_instance_count(&node) > parts);
     assert!(scene.instances_json.contains("count-glyph"), "count digits are instanced geometry");
@@ -61,7 +61,7 @@ async fn grid_renders_empty_when_nothing_is_curated() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let cfg = SourcingCurationConfig::default();
     let node = render(&document, &cfg, &GridWindowConfig::default()).expect("bounded empty grid");
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
+    let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.meshes_json).unwrap().as_array().unwrap().len(), 0);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.instances_json).unwrap().as_array().unwrap().len(), 0);
 }
@@ -78,7 +78,7 @@ async fn renders_via_the_app() {
     let mut app = new_app().await;
     let object_id = "beam-glulam-gl24h";
     dispatch(&mut app, SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: object_id.into() })).await;
-    let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SOURCING_CURATION_BODY_GRID, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| semio_framework_plugin::artifact_app_laws::built_surface_scene(root).expect("assemble world3d scene")).await.expect("render");
+    let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SOURCING_CURATION_BODY_GRID, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| semio_plugin::artifact_app_laws::built_surface_scene(root).expect("assemble world3d scene")).await.expect("render");
     assert!(scene.meshes_json.contains(crate::schema::SOURCING_UNIT_BOX_MESH_ID));
     assert!(scene.instances_json.contains(object_id));
 }

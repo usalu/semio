@@ -1,7 +1,7 @@
 use crate::schema::snapshot::SemioSnapshot;
-use semio_framework_plugin::MeshWindowKit;
+use semio_plugin::MeshWindowKit;
 #[allow(unused_imports)]
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, WindowKindDefinition, WindowKit};
+use semio_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, WindowKindDefinition, WindowKit};
 use crate::viewer::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

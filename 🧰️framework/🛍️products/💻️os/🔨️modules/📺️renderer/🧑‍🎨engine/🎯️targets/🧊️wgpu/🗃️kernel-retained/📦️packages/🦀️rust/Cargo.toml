@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-os-renderer-wgpu-kernel-retained"
+name = "semio-renderer-wgpu-kernel-retained"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,15 +25,15 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
-semio-framework-ui-contract-validation = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+semio-ui-contract-validation = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-os-renderer-wgpu-kernel-protocol = { path = "../../../📡️kernel-protocol/📦️packages/🦀️rust" }
+semio-renderer-wgpu-kernel-protocol = { path = "../../../📡️kernel-protocol/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-slots = { workspace = true }
 semio-framework-job = { workspace = true }
-ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 
 [dev-dependencies]

@@ -10,16 +10,16 @@
 use crate::host::inferences::solve;
 use crate::schema::scene_internals;
 use crate::Grid3dSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind;
-use semio_framework_plugin::world3d_camera_json;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind;
+use semio_plugin::world3d_camera_json;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_plugin::WorldSunConfig;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "wfc-grid3d-view";
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: BODY_KEY.into(),
-        surface_kind: semio_framework_plugin::SurfaceKind::World3d,
+        surface_kind: semio_plugin::SurfaceKind::World3d,
         icon_id: "preview".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
@@ -70,7 +70,7 @@ pub fn render(document: &Grid3dSnapshot) -> UiAssemblyResult<BuiltNode> {
         world3d_selection_json("interactionSelect", &[], None),
         &WorldSunConfig::default(),
     );
-    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 

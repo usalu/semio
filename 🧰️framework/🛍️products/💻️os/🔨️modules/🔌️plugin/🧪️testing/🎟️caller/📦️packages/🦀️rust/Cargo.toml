@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-plugin-testing-caller"
+name = "semio-plugin-testing-caller"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

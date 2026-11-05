@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "shading", kind: "set-shading", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set shading {}", self.shading.id), &format!("Schattierung {} setzen", self.shading.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set shading {}", self.shading.id), &format!("Schattierung {} setzen", self.shading.id))
     }
 
     fn target(&self) -> Vec<String> {

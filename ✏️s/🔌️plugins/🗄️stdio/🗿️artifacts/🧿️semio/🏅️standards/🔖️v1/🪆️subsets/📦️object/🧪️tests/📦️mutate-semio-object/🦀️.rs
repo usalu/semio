@@ -17,7 +17,7 @@
 //! `s.stdio.semio.object` was the first COMPOSITE subset: alongside the composite `transform` value
 //! field (`move`/`rotate`/`scale`) it carries three optional owned CHILD slots — `brep`, `mesh` and
 //! `properties` — each an `Option<store::os_store::artifact_child::ArtifactChild<S>>` holding a two-string handle, never
-//! embedded content. `store` is this crate's PRIVATE `extern crate semio_framework_os_kernel as
+//! embedded content. `store` is this crate's PRIVATE `extern crate semio_os_kernel as
 //! store;`, unnameable from a test host, which is why every handle here is DESERIALIZED through this
 //! subset's own `decode_semio_object_snapshot_json`/`decode_semio_object_mutation_json` rather than
 //! constructed: those signatures name only `&str`/`SemioObjectSnapshot`/`SemioObjectMutation`.
@@ -52,7 +52,7 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_framework_os_kernel::apply_diff_cold;
+    use semio_os_kernel::apply_diff_cold;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio_object::schema::mutations::{diff_semio_object_mutation, inverse_semio_object_mutation, SemioObjectMutation};
     use semio_s_artifact_stdio_semio_object::io::text::mutations::decode_semio_object_mutation_json;

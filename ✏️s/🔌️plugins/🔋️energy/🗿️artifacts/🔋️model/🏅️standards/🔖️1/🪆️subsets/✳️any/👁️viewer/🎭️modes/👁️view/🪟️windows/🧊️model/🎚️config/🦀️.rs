@@ -47,8 +47,8 @@ impl pack::snapshot::ArtifactPack for EnergyModelViewerWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for EnergyModelViewerWindowConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for EnergyModelViewerWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -59,7 +59,7 @@ impl store::ConfigRecord for EnergyModelViewerWindowConfig {}
 mod mutations;
 pub use mutations::*;
 
-impl semio_framework_plugin::WindowConfigApplyMutation<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigMutation {
+impl semio_plugin::WindowConfigApplyMutation<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigMutation {
     fn exchange(self, post: &mut EnergyModelViewerWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         Ok(match self {
             Self::SetCamera(SetCamera { camera }) => Self::SetCamera(SetCamera { camera: std::mem::replace(&mut post.camera, camera) }),
@@ -74,58 +74,58 @@ impl semio_framework_plugin::WindowConfigApplyMutation<EnergyModelViewerWindowCo
 
 pub struct EnergyModelViewerWindowConfigOwner;
 
-impl semio_framework_plugin::WindowConfigOwner for EnergyModelViewerWindowConfigOwner {
+impl semio_plugin::WindowConfigOwner for EnergyModelViewerWindowConfigOwner {
     const WINDOW_KIND_ID: &'static str = super::WINDOW_KIND_ID;
     const SCHEMA: &'static str = "energy.model3dviewerwindowconfig";
     /// 📏️ A pose is seven doubles; 1 KiB is two orders of magnitude of headroom over that.
     const MAXIMUM_PUBLICATION_BYTES: usize = 1024;
     type State = EnergyModelViewerWindowConfig;
     type Mutation = EnergyModelViewerWindowConfigMutation;
-    type Edit = semio_framework_plugin::WindowConfigApplyEdit<EnergyModelViewerWindowConfig, EnergyModelViewerWindowConfigMutation>;
+    type Edit = semio_plugin::WindowConfigApplyEdit<EnergyModelViewerWindowConfig, EnergyModelViewerWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
 
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original Energy window pose birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
 
-    fn native_pair_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_plugin::window_config_native_pair_demands::<Self::State>())}
-    fn admit_native_pair(pack:&[u8],spr:&[u8],pack_limits:protocol::PackLimits,history_limits:store::os_store::codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant,output:&mut Option<Box<dyn semio_framework_plugin::WindowConfigNativePairReceiving<Self::State>>>)->Result<semio_framework_value::RetainedCloneProgress,store::os_store::codec_registry::native_snapshot::OriginalArtifactPairFailure>{semio_framework_plugin::admit_window_config_native_pair::<Self::State>(pack,spr,pack_limits,history_limits,native,grant,output)}
+    fn native_pair_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_plugin::window_config_native_pair_demands::<Self::State>())}
+    fn admit_native_pair(pack:&[u8],spr:&[u8],pack_limits:protocol::PackLimits,history_limits:store::os_store::codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant,output:&mut Option<Box<dyn semio_plugin::WindowConfigNativePairReceiving<Self::State>>>)->Result<semio_framework_value::RetainedCloneProgress,store::os_store::codec_registry::native_snapshot::OriginalArtifactPairFailure>{semio_plugin::admit_window_config_native_pair::<Self::State>(pack,spr,pack_limits,history_limits,native,grant,output)}
     fn native_operation_wire()->store::os_store::ArtifactOperationWire<Self::Mutation>{store::os_store::ArtifactOperationWire::canonical().with_original_receiving()}
 
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
-        std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+        std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new())
     }
 
-    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>()}
-    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant)}
+    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin::bounded_window_config_preparation_source_birth::<Self>()}
+    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_plugin::bounded_window_config_store_owners::<Self>(grant)}
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
+        semio_plugin::bounded_window_config_preparation_factory::<Self>()
     }
-    fn store_disposer_birth()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin::bounded_window_config_store_disposer_birth::<Self>()}
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-        semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
+    fn store_disposer_birth()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin::bounded_window_config_store_disposer_birth::<Self>()}
+    fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+        semio_plugin::bounded_window_config_store_disposer::<Self>()
     }
 }
 
 /// 🎥️ The addressed window's retained pose, or `None` while it has never been orbited — a render
 /// that reads `None` falls back to the model-derived camera plus `fit_json`'s one-shot framing.
-pub fn current<'a, C>(view: &'a semio_framework_plugin::ConfigView<'_, C>) -> Option<&'a EnergyModelViewerWindowConfig> {
+pub fn current<'a, C>(view: &'a semio_plugin::ConfigView<'_, C>) -> Option<&'a EnergyModelViewerWindowConfig> {
     view.window::<EnergyModelViewerWindowConfigOwner>()
 }
 
 /// 🪟️ Binds one config mutation to the EXACT window instance the gesture came from — a camera is
 /// per instance, so a dispatch with no addressed window, or one addressed at another window kind, is
 /// a refusal rather than a write to the wrong pane.
-pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: EnergyModelViewerWindowConfigMutation) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+pub fn addressed(view: &semio_plugin::ViewModel, mutation: EnergyModelViewerWindowConfigMutation) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
     let window_id = view
         .window_id
         .as_deref()
-        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("energy.model.3d.viewer.window-required"), "a camera change requires a concrete 3d model window"))?;
+        .ok_or_else(|| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("energy.model.3d.viewer.window-required"), "a camera change requires a concrete 3d model window"))?;
     let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
     if kind != Some(super::WINDOW_KIND_ID) {
-        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("energy.model.3d.viewer.window-kind"), "a camera change requires a 3d model window"));
+        return Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("energy.model.3d.viewer.window-kind"), "a camera change requires a 3d model window"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<EnergyModelViewerWindowConfigOwner>(window_id, mutation))
+    Ok(semio_plugin::WindowConfigMutation::of::<EnergyModelViewerWindowConfigOwner>(window_id, mutation))
 }
 
 #[cfg(test)]

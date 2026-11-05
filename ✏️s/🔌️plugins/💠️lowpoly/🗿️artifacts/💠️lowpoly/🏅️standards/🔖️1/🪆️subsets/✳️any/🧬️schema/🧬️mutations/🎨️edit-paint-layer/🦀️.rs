@@ -30,8 +30,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "paint-layer", kind: "edit-paint-layer", record: "EditedPaintLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Paint on layer {} of object \"{}\"", self.layer_index, self.object_id), &format!("Auf Ebene {} von Objekt \"{}\" malen", self.layer_index, self.object_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Paint on layer {} of object \"{}\"", self.layer_index, self.object_id), &format!("Auf Ebene {} von Objekt \"{}\" malen", self.layer_index, self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

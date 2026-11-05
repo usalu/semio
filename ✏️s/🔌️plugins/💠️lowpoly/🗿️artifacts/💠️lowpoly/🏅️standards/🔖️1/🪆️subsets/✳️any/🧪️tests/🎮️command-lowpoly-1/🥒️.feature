@@ -11,7 +11,7 @@ Feature: One representative command per group constructs and reports its manifes
   The generated Rust subject host links only `semio-repo-test-host` and the lowpoly SUT crate. Lowpoly
   therefore re-exports `ArtifactView`, `ConfigView`, `Emit`, `Fault`, and `HistoryView` from
   `semio_s_plugin_lowpoly::editor::lowpoly`, letting generated hosts construct command inputs and
-  inspect command emissions without a direct `semio_framework_plugin` dependency. This case retains
+  inspect command emissions without a direct `semio_plugin` dependency. This case retains
   catalog-shape coverage for every group and additionally dispatches `patchObject` through that public
   shim, asserting its one `RenameObject` document mutation and zero config mutations.
 

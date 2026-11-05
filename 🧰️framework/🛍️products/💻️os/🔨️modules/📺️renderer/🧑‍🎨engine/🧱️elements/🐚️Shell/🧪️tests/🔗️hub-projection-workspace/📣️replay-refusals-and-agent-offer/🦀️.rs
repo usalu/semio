@@ -62,7 +62,7 @@ fn a_space_artifact_creation_replay_names_exactly_one_offered_kind() {
         ]
     }))
     .expect("catalog fixture");
-    let choice = |kind: &semio_framework_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationKindV1| {
+    let choice = |kind: &semio_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationKindV1| {
         drive(semio_framework::manifest::encode_artifact_kind_choice(&semio_framework::manifest::ArtifactKindChoice {
             kind_id: kind.kind_id.clone(),
             schema: kind.schema.clone(),

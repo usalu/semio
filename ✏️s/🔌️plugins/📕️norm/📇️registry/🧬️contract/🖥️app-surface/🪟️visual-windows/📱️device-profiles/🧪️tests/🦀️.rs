@@ -2,9 +2,9 @@
 
 use super::*;
 use gestures::*;
-use semio_framework_plugin::{MergeMode, SelectionMethod};
-use semio_framework_plugin::{WindowLayoutChild, WindowLayoutRoot};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::{MergeMode, SelectionMethod};
+use semio_plugin::{WindowLayoutChild, WindowLayoutRoot};
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value::{FromValue, ToValue};
 use semio_s_plugin_norm_structural_scene::EntityKind;
 
@@ -214,7 +214,7 @@ fn every_layout_type_is_in_every_schema_twin() {
     }
 }
 
-fn domain() -> semio_framework_plugin::InteractionDefinition {
+fn domain() -> semio_plugin::InteractionDefinition {
     crate::viewport_interaction_definition("en1993", LocalizedLabel::native("Steel", "Stahl"), &[EntityKind::Member])
 }
 

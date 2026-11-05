@@ -3,7 +3,7 @@ use super::DetailsTestProfile;
 use super::*;
 use super::contextual_render::choice_request;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 fn source() -> IfcSnapshot {
     let typed = |text: &str| IfcValue::TypedValue(IfcTypedValue { name: "IFCLABEL".into(), items: vec![IfcValue::String(text.into())] });
     IfcSnapshot {
@@ -75,12 +75,12 @@ fn original_details_render_work_prepares_full_context_before_bounded_provider_ch
     assert!(provider.variant(&path, Locale::De, 1).unwrap().label.len() < 128);
     assert!(IfcDetailsProvider::<DetailsTestProfile>::new(&snapshot).with_contextual_enumerations(&work, 72).is_err());
     assert!(IfcDetailsProvider::<DetailsTestProfile>::new(&snapshot.clone()).with_contextual_enumerations(&work, 71).is_err());
-    fn source_choice(node: &semio_framework_ui_contract::BuiltNode) -> Option<&str> {
+    fn source_choice(node: &semio_ui_contract::BuiltNode) -> Option<&str> {
         for binding in node.bindings.iter() {
-            if let Some(semio_framework_ui_contract::UiValue::Map(arguments)) = &binding.args {
+            if let Some(semio_ui_contract::UiValue::Map(arguments)) = &binding.args {
                 for (key, value) in arguments.iter() {
                     if key.as_str() == "value" {
-                        if let semio_framework_ui_contract::UiValue::Text(value) = value {
+                        if let semio_ui_contract::UiValue::Text(value) = value {
                             if value.as_str().contains("$ifcEnumerationChoice") {
                                 return Some(value.as_str());
                             }
@@ -92,7 +92,7 @@ fn original_details_render_work_prepares_full_context_before_bounded_provider_ch
         node.children.iter().find_map(source_choice)
     }
     for locale in [Locale::En, Locale::De] {
-        let tree = editing::render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(71), locale, "test.enum#editor", &semio_framework_plugin::TreeWindows::unhosted()).unwrap();
+        let tree = editing::render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(71), locale, "test.enum#editor", &semio_plugin::TreeWindows::unhosted()).unwrap();
         let request = source_choice(&tree).expect("actual details tree must bind original enumeration choice");
         let parsed = semio_framework_pack_json::parse(request, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(semio_framework_pack_json::to_dsl_value(&parsed).get("$ifcEnumerationChoice").unwrap().get("definition").unwrap().as_u64(), Some(2));

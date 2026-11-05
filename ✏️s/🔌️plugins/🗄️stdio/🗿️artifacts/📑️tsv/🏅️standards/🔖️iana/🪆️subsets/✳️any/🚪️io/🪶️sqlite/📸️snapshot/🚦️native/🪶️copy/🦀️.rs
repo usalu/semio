@@ -1,7 +1,7 @@
 //! 🪶️ Unmounted authored SQLite mapping adds paid literal-field copies after its owning baseline.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
@@ -36,7 +36,7 @@ fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<
         }
         control.check_value_bytes(value_bytes)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
-        database.table_mut("tsv_document")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(semio_framework_os_kernel::sqlite_snapshot::artifact::project_text(control, &self.schema)?), SqliteValue::Integer(i64::from(self.trailing_newline)), SqliteValue::Text(line_ending.into())] });
+        database.table_mut("tsv_document")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(semio_os_kernel::sqlite_snapshot::artifact::project_text(control, &self.schema)?), SqliteValue::Integer(i64::from(self.trailing_newline)), SqliteValue::Text(line_ending.into())] });
         let mut record_rows = Vec::new();
         let mut field_rows = Vec::new();
         for (ordinal, record) in self.records.iter().enumerate() {
@@ -48,7 +48,7 @@ fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<
                 if (record_rows.len() + field_rows.len()) % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, record_rows.len() + field_rows.len(), total)?; }
                 let field_ordinal = i64::try_from(field_ordinal).map_err(|error|invalid(error.to_string()))?;
                 let field_id = i64::try_from(field_rows.len()).map_err(|error|invalid(error.to_string()))?.checked_add(1).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"TSV field identifier overflow"))?;
-                field_rows.push(SqliteRow { rowid: field_id, values: vec![SqliteValue::Integer(field_id), SqliteValue::Integer(record_id), SqliteValue::Integer(field_ordinal), SqliteValue::Text(semio_framework_os_kernel::sqlite_snapshot::artifact::project_text(control, field)?)] });
+                field_rows.push(SqliteRow { rowid: field_id, values: vec![SqliteValue::Integer(field_id), SqliteValue::Integer(record_id), SqliteValue::Integer(field_ordinal), SqliteValue::Text(semio_os_kernel::sqlite_snapshot::artifact::project_text(control, field)?)] });
             }
         }
         database.table_mut("tsv_record")?.rows = record_rows;
@@ -88,11 +88,11 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
                 completed += 1;
                 if completed % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, completed, total)?; }
                 if i64::try_from(index).map_err(|error|invalid(error.to_string()))? != ordinal { return Err(invalid("TSV field ordinals must be contiguous")); }
-                record_fields.push(semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, field.text(3)?)?);
+                record_fields.push(semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, field.text(3)?)?);
             }
             records.push(record_fields);
         }
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, total, total)?;
-        Ok(Self { schema: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, document.text(1)?)?, records, trailing_newline, line_ending })
+        Ok(Self { schema: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, document.text(1)?)?, records, trailing_newline, line_ending })
     }
 }

@@ -2,13 +2,13 @@
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-space-pack")]
 pub struct ImportSpacePack {}
 
 pub fn handle(_payload: &ImportSpacePack, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(121), accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false, args: None }))
+    Ok(Emit::effect(Effect::RequestFileOpen { req: semio_plugin::RequestId(121), accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false, args: None }))
 }

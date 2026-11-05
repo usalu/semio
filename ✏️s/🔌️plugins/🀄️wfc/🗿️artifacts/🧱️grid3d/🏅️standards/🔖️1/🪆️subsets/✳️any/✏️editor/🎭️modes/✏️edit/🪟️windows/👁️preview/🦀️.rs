@@ -18,17 +18,17 @@ use crate::host::inferences::solve;
 
 
 use crate::Grid3dSnapshot;
-use semio_framework_plugin::world3d_camera_json;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::WorldSunConfig;
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind;
+use semio_plugin::world3d_camera_json;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ToolRunView;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_plugin::WorldSunConfig;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind;
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
@@ -48,7 +48,7 @@ pub fn definition() -> WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: BODY_KEY.into(),
-        surface_kind: semio_framework_plugin::SurfaceKind::World3d,
+        surface_kind: semio_plugin::SurfaceKind::World3d,
         icon_id: "preview".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
@@ -175,7 +175,7 @@ pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, window_id:
         publish(window_id, document, assignments)
     };
     let status = status_json(document, satisfiable, &instances);
-    let scene = semio_framework_ui_declaration::ui::World3dScene {
+    let scene = semio_ui_declaration::ui::World3dScene {
         instances_delta_json: delta,
         status_json: Some(status),
         ..world3d_scene(
@@ -186,7 +186,7 @@ pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, window_id:
             &WorldSunConfig::default(),
         )
     };
-    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
 }
 
 /// 🩺️ The one-line verdict the window chrome shows: solved cell count against the cells the grid

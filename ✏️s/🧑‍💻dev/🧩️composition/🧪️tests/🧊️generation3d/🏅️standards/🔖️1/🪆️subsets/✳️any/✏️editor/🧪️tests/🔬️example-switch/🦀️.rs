@@ -10,8 +10,8 @@ use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS;
-use semio_framework_plugin::app::TypedOperationResultLane;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::app::TypedOperationResultLane;
+use semio_plugin::PluginApp;
 
 const EXAMPLE_SWITCH_ORDER: [&str; 8] = [
     PROCEDURAL_EXAMPLE_HEX_COLUMN,
@@ -27,7 +27,7 @@ const EXAMPLE_SWITCH_ORDER: [&str; 8] = [
 /// 🪪️ The node ids the FLOW WINDOW actually publishes — read off the rendered surface, never off the
 /// document, because the live defect is a surface that keeps the previous fixture.
 fn published_node_ids(graph: &str) -> std::collections::BTreeSet<String> {
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(graph).expect("node-graph scene decodes off the rendered flow surface");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene::<semio_plugin::NodeGraphScene>(graph).expect("node-graph scene decodes off the rendered flow surface");
     scene.nodes.iter().map(|node| node.id.clone()).collect()
 }
 
@@ -46,12 +46,12 @@ async fn set_active_example_republishes_the_flow_window_graph() {
     let (flow_view, _preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let before = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
     assert_eq!(before, authored_node_ids(PROCEDURAL_EXAMPLE_HEX_COLUMN), "the boot flow window publishes the hex-column graph");
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample published a fault lane");
     let after = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
     assert_eq!(after, authored_node_ids(PROCEDURAL_EXAMPLE_BOX_SHELL), "the flow window kept the previous example's graph");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: the whole picker roster, in one session, in order — every hop publishes ITS OWN graph and
@@ -63,7 +63,7 @@ async fn every_example_switch_publishes_its_own_graph_without_leaking_the_previo
     let (flow_view, _preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let mut previous = PROCEDURAL_EXAMPLE_HEX_COLUMN;
     for example_id in EXAMPLE_SWITCH_ORDER {
-        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": example_id }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
+        semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": example_id }).into()), &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
         let receipt = context::settle(&mut app).await;
         assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "{example_id} published a fault lane");
         let published = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
@@ -74,7 +74,7 @@ async fn every_example_switch_publishes_its_own_graph_without_leaking_the_previo
         }
         previous = example_id;
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: the SERVED dispatch — the picker's action arrives with the shell's own live view attached and
@@ -93,8 +93,8 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
         .window_transient_snapshot(&preview_view)
         .expect("preview window transient snapshot")
         .and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.clone()));
-    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the shell dispatches setActiveExample under the flow window");
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the shell dispatches setActiveExample under the flow window");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "a shell-dispatched setActiveExample published a fault lane");
     let published = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
@@ -109,7 +109,7 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
         .and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.clone()));
     assert!(after.is_some(), "the preview window published no evaluation for the switched example");
     assert_ne!(after, evaluated, "the preview window kept the PREVIOUS example's evaluation after the switch");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: the switch starts its OWN evaluation run. Before this law the gesture published `effects=0`
@@ -121,13 +121,13 @@ async fn set_active_example_starts_the_run_that_evaluates_every_attached_preview
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, _preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
-    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
     let receipt = context::settle(&mut app).await;
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries exactly one run start");
     let run = context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await;
     assert_eq!(run_windows(&run), vec![edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.to_string()], "the run must evaluate the attached preview window");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 //#region 🎨️FixtureLaw
@@ -177,16 +177,16 @@ fn example_switch_fixture() -> ExampleSwitchFixture {
 }
 
 /// 🪟️ The shell roster one row declares, plus the flow window the picker always dispatches under.
-fn example_switch_views(fixture: &ExampleSwitchFixture, attached: &[ExampleSwitchAttachedWindow]) -> (semio_framework_plugin::ViewModel, semio_framework_plugin::ViewModel) {
+fn example_switch_views(fixture: &ExampleSwitchFixture, attached: &[ExampleSwitchAttachedWindow]) -> (semio_plugin::ViewModel, semio_plugin::ViewModel) {
     let flow_kind = fixture.window_kinds.get("flow").expect("fixture flow window kind").clone();
-    let mut roster = vec![semio_framework_plugin::ViewWindowInstance { id: flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: flow_kind }];
+    let mut roster = vec![semio_plugin::ViewWindowInstance { id: flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: flow_kind }];
     for window in attached {
-        roster.push(semio_framework_plugin::ViewWindowInstance {
+        roster.push(semio_plugin::ViewWindowInstance {
             id: window.id.clone(),
             window_kind_id: fixture.window_kinds.get(&window.kind).unwrap_or_else(|| panic!("fixture window kind {}", window.kind)).clone(),
         });
     }
-    let view = semio_framework_plugin::ViewModel { window_instances: roster, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = semio_plugin::ViewModel { window_instances: roster, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let flow = view.for_window_instance(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN).expect("flow window instance");
     let first_preview = attached.first().map(|window| view.for_window_instance(&window.id).expect("preview window instance")).unwrap_or_else(|| flow.clone());
     (flow, first_preview)
@@ -197,7 +197,7 @@ fn run_windows(run: &context::PreviewRunReceipt) -> Vec<String> {
     run.hop_windows.iter().cloned().collect::<std::collections::BTreeSet<_>>().into_iter().collect()
 }
 
-fn preview_eval_text(app: &mut crate::editor_domain::editor_laws::context::Generation3dAppFixture, preview_view: &semio_framework_plugin::ViewModel) -> Option<String> {
+fn preview_eval_text(app: &mut crate::editor_domain::editor_laws::context::Generation3dAppFixture, preview_view: &semio_plugin::ViewModel) -> Option<String> {
     use semio_s_artifact_procedural_3d_mode_edit::windows::preview::transient::Generation3dPreviewWindowTransientOwner;
     app.window_transient_snapshot(preview_view).ok().flatten().and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.clone()))
 }
@@ -212,12 +212,12 @@ async fn every_example_switch_row_of_the_fixture_holds() {
     for row in &fixture.rows {
         let mut app = app_with_registry().await;
         let (flow_view, preview_view) = example_switch_views(&fixture, &row.attached);
-        let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+        let action_meta = semio_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
         context::drain_armed_flow_eval_ticks(&mut app, &flow_view).await;
         let before_eval = preview_eval_text(&mut app, &preview_view);
         let mut armed = Vec::new();
         for pick in &row.picks {
-            semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": pick }).into()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
+            semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": pick }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
             let receipt = context::settle(&mut app).await;
             assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "{}: picking {pick:?} published a fault lane", row.id);
             armed = run_windows(&context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await);
@@ -243,7 +243,7 @@ async fn every_example_switch_row_of_the_fixture_holds() {
             let authored: std::collections::BTreeSet<String> = authored.iter().cloned().collect();
             assert_eq!(expected, authored, "{}: the row's expectation disagrees with the fixture's own authored table", row.id);
         }
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 }
 //#endregion 🎨️FixtureLaw

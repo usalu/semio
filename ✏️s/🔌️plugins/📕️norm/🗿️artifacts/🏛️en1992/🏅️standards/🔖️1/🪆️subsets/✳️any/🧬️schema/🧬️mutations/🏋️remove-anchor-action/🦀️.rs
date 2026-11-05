@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for RemoveAnchorAction where
         record: "RemovedAnchorAction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove anchor action {}", self.index), &format!("Dübeleinwirkung {} entfernen", self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove anchor action {}", self.index), &format!("Dübeleinwirkung {} entfernen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.anchor_id.clone(), self.index.to_string()]

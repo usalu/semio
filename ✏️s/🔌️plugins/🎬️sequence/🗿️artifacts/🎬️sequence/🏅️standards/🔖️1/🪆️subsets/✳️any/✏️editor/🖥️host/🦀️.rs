@@ -4,10 +4,10 @@ use neural_engine::Value as NeuralValue;
 use imperative_engine::compile_to_text as imperative_compile_to_text;
 use std::collections::{BTreeMap, HashMap};
 use neural_engine::{ChannelSpec, Dictionary, Registry};
-use semio_framework_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape, dag_host_snapshot_to_wire_literal};
+use semio_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape, dag_host_snapshot_to_wire_literal};
 use infinite_board_port_directed_dag::{DagHost, would_create_cycle};
-use semio_framework_os_infinite::board::schema::layout::DagLayoutOptions;
-use semio_framework_plugin::DslValue;
+use semio_os_infinite::board::schema::layout::DagLayoutOptions;
+use semio_plugin::DslValue;
 use imperative_engine::{Executor, Path, RunResult, Step, imperative_catalogue_json, imperative_module_registry};
 use semio_framework_graph_manifest::PropertyBag;
 use crate::{SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceStep, SlotRef, StepParams};
@@ -474,7 +474,7 @@ impl SequenceHost {
 
     /// 🌳️ Recomputes visible step positions using the shared layered DAG tree layout, then rebuilds the DAG view.
     pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), SequenceCoreError> {
-        let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.dag.graph.reorganize(opts,&mut control).map_err(|e| SequenceCoreError::Dag(e.to_string()))?;
+        let mut progress=|_|true;let mut control=semio_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.dag.graph.reorganize(opts,&mut control).map_err(|e| SequenceCoreError::Dag(e.to_string()))?;
         let positions: HashMap<String, (f64, f64)> = self.dag.graph.host_snapshot.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
         for step in self.snapshot.steps.iter_mut() {
             if let Some(&(x, y)) = positions.get(&step.id) {

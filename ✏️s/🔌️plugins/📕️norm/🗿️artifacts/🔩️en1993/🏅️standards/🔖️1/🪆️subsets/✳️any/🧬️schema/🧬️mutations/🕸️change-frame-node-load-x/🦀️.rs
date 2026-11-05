@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFrameNodeLoadX whe
         record: "ChangedFrameNodeLoadX",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design load in x of the frame node", "Rahmenknoten: Bemessungslast in x ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design load in x of the frame node", "Rahmenknoten: Bemessungslast in x ändern")
     }
 }
 

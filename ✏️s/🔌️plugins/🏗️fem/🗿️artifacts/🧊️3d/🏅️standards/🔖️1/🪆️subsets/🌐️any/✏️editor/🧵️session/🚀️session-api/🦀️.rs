@@ -9,7 +9,7 @@ pub fn initialize() {
     MOUNTED.with(|registry| {
         let _ = registry.borrow().free_len;
     });
-    semio_framework_plugin::reactor::jobs::register_bounded_job_kind(FEM3D_MOUNTED_VISUAL_JOB_KIND, BoundedJobFactory { admit: job_admit, demands: job_demands });
+    semio_plugin::reactor::jobs::register_bounded_job_kind(FEM3D_MOUNTED_VISUAL_JOB_KIND, BoundedJobFactory { admit: job_admit, demands: job_demands });
 }
 
 #[cfg(test)]
@@ -30,7 +30,7 @@ pub(super) fn record_terminal(identity: Identity, kind: semio_framework_value_re
 
 pub(super) type RequestKey = semio_framework_value_registry::fixed_request_owners::ContentRequestKey;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ConsumerKey { Model, Window(semio_framework_plugin::WindowConfigAuthorityIdentity) }
+pub enum ConsumerKey { Model, Window(semio_plugin::WindowConfigAuthorityIdentity) }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct PhysicalRequestSpec { pub(super) family: u8, pub(super) namespace: u8, pub(super) index: usize }
 fn physical_parts(snapshot: &Fem3dSnapshot, request: Fem3dResultRequest) -> Option<(PhysicalRequestSpec, &str)> {
@@ -73,7 +73,7 @@ fn prepare_result_demand(registry: &mut Registry, render: AppRenderOperationCont
 }
 
 /// 🧭️ Admits physical demands from original committed window partitions under one caller turn.
-pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem3dSnapshot, windows: &semio_framework_plugin::WindowConfigOwnerRegistry, view: Option<&semio_framework_plugin::ViewModel>, grant: RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
+pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem3dSnapshot, windows: &semio_plugin::WindowConfigOwnerRegistry, view: Option<&semio_plugin::ViewModel>, grant: RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
     if render.app_instance_id == 0 || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Default::default(); }
     let progress = MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
@@ -91,11 +91,11 @@ pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem3d
         }
         Default::default()
     });
-    if progress != Default::default() { return semio_framework_plugin::MountedSnapshotReadPreparation { ready: false, progress }; }
+    if progress != Default::default() { return semio_plugin::MountedSnapshotReadPreparation { ready: false, progress }; }
     prepare_snapshot_admission(render, snapshot, grant)
 }
 
-fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem3dSnapshot, grant: RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
+fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem3dSnapshot, grant: RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
     let mut progress = RetainedCloneProgress::default();
     if render.app_instance_id == 0 || snapshot.solids.len() > MAXIMUM_REGIONS || snapshot.nodes.len() > MAXIMUM_NODES || snapshot.elements.len() > MAXIMUM_ELEMENTS || snapshot.supports.len() > MAXIMUM_SUPPORTS {
         return Default::default();
@@ -161,10 +161,10 @@ fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem3
             }
         }
     });
-    semio_framework_plugin::MountedSnapshotReadPreparation { ready, progress }
+    semio_plugin::MountedSnapshotReadPreparation { ready, progress }
 }
 
-pub fn reconcile(doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem3dSnapshot>) -> Vec<Effect> {
+pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem3dSnapshot>) -> Vec<Effect> {
     let render = doc.render_operation();
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
@@ -331,7 +331,7 @@ fn same_result_source(old: &Fem3dSnapshot, old_request: Fem3dResultRequest, new:
 }
 
 /// 🧵️ Rendering borrows completed pages; pending or stale generations never trigger a solver.
-pub fn with_result_fields<R>(render: Option<AppRenderOperationContext>, _snapshot: &Fem3dSnapshot, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, _request: Fem3dResultRequest, read: impl FnOnce(Option<Fem3dResultBorrow<'_>>) -> R) -> R {
+pub fn with_result_fields<R>(render: Option<AppRenderOperationContext>, _snapshot: &Fem3dSnapshot, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>, _request: Fem3dResultRequest, read: impl FnOnce(Option<Fem3dResultBorrow<'_>>) -> R) -> R {
     let Some(render) = render else { return read(None) };
     let shell = MOUNTED.with(|registry| {
         let registry = registry.borrow();
@@ -357,7 +357,7 @@ pub fn with_result_fields<R>(render: Option<AppRenderOperationContext>, _snapsho
 }
 
 /// 🏷️ Lends the addressed original numerical stage also published through StepContext's shared trace port.
-pub fn result_stage(render: Option<AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>) -> Option<&'static str> {
+pub fn result_stage(render: Option<AppRenderOperationContext>, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>) -> Option<&'static str> {
     let render = render?;
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
@@ -414,11 +414,11 @@ impl Fem3dResultFields for Fem3dResultBorrow<'_> {
 }
 
 impl Fem3dLiveSession for Fem3dMountedLive {
-    fn result_stage(&self, operation: Option<AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>) -> Option<&'static str> { result_stage(operation, authority) }
-    fn with_result_fields(&self, operation: Option<AppRenderOperationContext>, doc: &Fem3dSnapshot, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, request: Fem3dResultRequest, read: &mut dyn FnMut(Option<&dyn Fem3dResultFields>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    fn result_stage(&self, operation: Option<AppRenderOperationContext>, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>) -> Option<&'static str> { result_stage(operation, authority) }
+    fn with_result_fields(&self, operation: Option<AppRenderOperationContext>, doc: &Fem3dSnapshot, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>, request: Fem3dResultRequest, read: &mut dyn FnMut(Option<&dyn Fem3dResultFields>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
         with_result_fields(operation, doc, authority, request, |fields| read(fields.as_ref().map(|fields| fields as &dyn Fem3dResultFields)))
     }
-    fn with_live_visual(&self, operation: Option<AppRenderOperationContext>, build: &mut dyn FnMut(Option<&Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    fn with_live_visual(&self, operation: Option<AppRenderOperationContext>, build: &mut dyn FnMut(Option<&Fem3dPageVisualLease>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
         with_live_visual(operation, |visual| build(visual))
     }
 }

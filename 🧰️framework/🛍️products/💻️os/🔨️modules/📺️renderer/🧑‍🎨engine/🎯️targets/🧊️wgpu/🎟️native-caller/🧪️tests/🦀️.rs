@@ -3,7 +3,7 @@
 mod native_caller;
 use native_caller::{NativeFrameCaller,NativeFrameEventIssuer,NativeFrameRootPolicyV1};
 use semio_framework_job::{Generation,OperationId,OriginalCallerSourceLoan,OriginalTurnFailure,OriginalTurnPrimary};
-use semio_framework_plugin_guest_contract::original_actor_context::OriginalActorEntryFailure;
+use semio_plugin_guest_contract::original_actor_context::OriginalActorEntryFailure;
 use semio_framework_value::{RetainedCloneStep,ValueError,ValueRefusalKind};
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

@@ -1,6 +1,6 @@
 //! 🧪️ normal-model tests (🔬️board-host): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_normal_model::{BOARD_EVENT_ITEM_CAPACITY, BoardEventKind, BoardEventQueue, BoardOwnedEvent};
+use semio_os_infinite_board_normal_model::{BOARD_EVENT_ITEM_CAPACITY, BoardEventKind, BoardEventQueue, BoardOwnedEvent};
 
 #[cfg(test)]
     #[test]

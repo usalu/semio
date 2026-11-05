@@ -3,7 +3,7 @@ use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry, drain_flow_eval_ticks, render as render_body};
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 /// 🚚️ The ASSEMBLED world-3d scene a render host reads back out of the projected preview body.
 /// Since the paged-scene wave (26/09/02 P) `meshesJson`/`instancesJson`/`cameraJson` do NOT ride
@@ -11,8 +11,8 @@ use semio_framework_plugin::PluginApp;
 /// its own `paged_text_carrier` child — so scanning the projected tree for a string field named
 /// `meshesJson` finds nothing. `decode_fixture_scene_with_lanes` is the framework's own inverse
 /// (the Rust twin of the React Interpreter's `world3dSceneFromLanes`).
-fn preview_scene(projection: &str) -> semio_framework_ui_declaration::ui::World3dScene {
-    semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(projection).expect("projected preview body must decode as an assembled world-3d scene")
+fn preview_scene(projection: &str) -> semio_ui_declaration::ui::World3dScene {
+    semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(projection).expect("projected preview body must decode as an assembled world-3d scene")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -62,18 +62,18 @@ async fn the_demonstrator_boot_example_renders_a_non_empty_preview_scene() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, preview_view) = context::shell_views(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
-    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN }).into()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN }).into()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)
         .await
         .expect("the generator pane's boot dispatches setActiveExample under the flow window");
     let receipt = context::settle(&mut app).await;
-    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the boot example switch published a fault lane");
+    assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault), "the boot example switch published a fault lane");
     let run = context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await;
     assert!(run.hop_windows.iter().any(|window| window == GENERATION_3D_PLAY_WINDOW_PREVIEW), "the boot run never evaluated the preview window, got {:?}", run.hop_windows);
     let scene = preview_scene(&context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
     assert_ne!(scene.meshes_json, "[]", "the demonstrator's boot example must paint non-empty preview meshes");
     assert_ne!(scene.instances_json, "[]", "the demonstrator's boot example must paint non-empty preview instances");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: the render is a pure READ of the retained evaluation — it never evaluates anything of its
@@ -93,5 +93,5 @@ async fn the_preview_render_reads_the_retained_evaluation_instead_of_recomputing
     assert_ne!(first.meshes_json, "[]", "the driven run must leave the preview carrying meshes");
     assert_eq!(first.meshes_json, second.meshes_json, "two renders of one retained evaluation must publish the same meshes");
     assert_eq!(first.instances_json, second.instances_json, "two renders of one retained evaluation must publish the same instances");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

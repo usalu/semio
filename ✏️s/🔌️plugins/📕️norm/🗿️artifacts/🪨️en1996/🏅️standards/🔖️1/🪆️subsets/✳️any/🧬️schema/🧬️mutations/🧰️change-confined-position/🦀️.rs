@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeConfinedPosition w
         record: "ChangedConfinedPosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change confining element column position x", "Stützenlage x (Einfassungselement) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change confining element column position x", "Stützenlage x (Einfassungselement) ändern")
     }
 }
 

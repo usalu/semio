@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMasonryWallRatio w
         record: "ChangeMasonryWallRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change masonry wall area ratio", "Mauerwerkswand-Flächenanteil ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change masonry wall area ratio", "Mauerwerkswand-Flächenanteil ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-masonry-wall-ratio".into()]

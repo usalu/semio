@@ -10,7 +10,7 @@ pub struct ChangeTrussHeight { pub truss_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTrussHeight where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_truss_height::ChangeTrussHeight> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "truss-height", kind: "change-truss-height", record: "ChangedTrussHeight" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change height between the chord axes of truss {}", self.truss_id), &format!("Höhe zwischen den Gurtachsen von Truss {} ändern", self.truss_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change height between the chord axes of truss {}", self.truss_id), &format!("Höhe zwischen den Gurtachsen von Truss {} ändern", self.truss_id)) }
     fn target(&self) -> Vec<String> { vec![self.truss_id.clone()] }
 }
 

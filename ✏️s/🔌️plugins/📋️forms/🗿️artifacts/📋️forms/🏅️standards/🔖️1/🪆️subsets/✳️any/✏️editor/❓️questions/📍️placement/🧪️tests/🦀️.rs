@@ -24,8 +24,8 @@ fn question_drop_indices_match_shared_final_orders() {
 #[test]
 fn move_commands_apply_the_requested_sibling_order() {
     use crate::editor::forms::commands::move_question::{handle, MoveQuestion};
-    use crate::editor::forms::config::FormsConfig;
-    use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
+    use crate::forms_config::FormsConfig;
+    use semio_plugin::{ArtifactView, ConfigView, HistoryView};
     use protocol::{ColdMutation, Mutation};
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../❓️questions/📍️placement/🧪️tests/🧫️fixtures/🔣️drop.json")).unwrap();
     let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&vectors["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

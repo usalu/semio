@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRestLatSpringPosit
         record: "ChangedRestLatSpringPosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Lateral spring at x (0 = none) of the restraint", "Halterung: Seitliche Feder bei x (0 = keine) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Lateral spring at x (0 = none) of the restraint", "Halterung: Seitliche Feder bei x (0 = keine) ändern")
     }
 }
 

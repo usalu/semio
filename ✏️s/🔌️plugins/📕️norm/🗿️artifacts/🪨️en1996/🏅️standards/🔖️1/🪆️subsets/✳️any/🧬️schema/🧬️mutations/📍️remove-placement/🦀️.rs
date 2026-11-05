@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for RemovePlacement where Op
         record: "RemovedPlacement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove placement {}", self.id), &format!("Platzierung {} entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove placement {}", self.id), &format!("Platzierung {} entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

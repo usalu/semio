@@ -1,12 +1,12 @@
 use crate::viewer::zip::iso21320::modes::view::windows::main;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::Viewer;
 use crate::viewer::zip::iso21320::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_zip_iso21320_viewer_builds_a_definition_for_the_viewer_role() {
     let def = create_zip_iso21320_viewer();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
+    assert_eq!(def.role, semio_plugin::AppRole::Viewer);
     assert_eq!(def.dialect, ZIP_ISO21320_VIEWER_DIALECT.into());
 }
 

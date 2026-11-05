@@ -42,7 +42,7 @@ semio-hub-testing = { workspace = true }
 semio-s-artifact-gis-gismap = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
-directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
 serde_json = { workspace = true }
 semio-framework-artifact-reference = { path = "../../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }

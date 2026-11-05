@@ -1,7 +1,7 @@
 //! 🔁️ Selects the original edit once and rebuilds each visible operation view under full grants.
-use semio_framework_os_spr::{MutationMessage, MutationReplayOutcome};
-use semio_framework_os_spr::command::{FinalMessageSelection, MutationMessageLedgerRetirement, MutationMessageRetirement, ReplayMessageAccumulator};
-use semio_framework_os_spr::command::MessageCopyCursor;
+use semio_os_spr::{MutationMessage, MutationReplayOutcome};
+use semio_os_spr::command::{FinalMessageSelection, MutationMessageLedgerRetirement, MutationMessageRetirement, ReplayMessageAccumulator};
+use semio_os_spr::command::MessageCopyCursor;
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{ManuallyDrop,size_of};
 enum Phase { Select, Reserve, Visit, Copy, CloseCopy, Place, Finished }

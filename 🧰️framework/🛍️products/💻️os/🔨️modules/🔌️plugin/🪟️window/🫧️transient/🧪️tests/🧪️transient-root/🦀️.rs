@@ -6,8 +6,8 @@ use pack::snapshot::ArtifactPack;
 #[cfg(test)]
 use pack::snapshot::ArtifactDsl;
 
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
 
 /// 🧪️ A probe window-transient root.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -19,7 +19,7 @@ pub struct ProbeTransient {
 
 semio_framework_value::artifact_retire_struct!(ProbeTransient { label, count });
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: ProbeTransient,
     mutation: ProbeTransientMutation,
     diff: ProbeTransientDiff,
@@ -32,7 +32,7 @@ semio_framework_plugin::transient_root! {
     fields: { label: String, count: u32 },
 }
 
-semio_framework_plugin::window_transient_owners! {
+semio_plugin::window_transient_owners! {
     state: ProbeTransient,
     mutation: ProbeTransientMutation,
     windows: { ProbeMainOwner => "probe.main", ProbeSideOwner => "probe.side" },
@@ -99,20 +99,20 @@ fn the_footprint_is_one_item_of_the_encoded_root() {
 /// the view's own window of a declared kind, refusing a view without a window, a stale window and an undeclared kind.
 #[test]
 fn the_window_owners_register_once_and_address_the_views_own_window() {
-    let mut registry = semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry::default();
+    let mut registry = semio_plugin_window_transient::window_transient::WindowTransientOwnerRegistry::default();
     register(&mut registry).expect("every owner registers");
     assert!(register(&mut registry).is_err(), "a kind registers once");
     let window = |id: &str, kind: &str| semio_framework::ViewWindowInstance { id: id.into(), window_kind_id: kind.into() };
     let view = |window_id: Option<&str>| semio_framework::ViewModel {
         window_id: window_id.map(str::to_string),
         window_instances: vec![window("w-main", "probe.main"), window("w-side", "probe.side"), window("w-other", "other.kind")],
-        ..semio_framework::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..semio_framework::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     for (id, kind) in [("w-main", "probe.main"), ("w-side", "probe.side")] {
         let mutation = addressed(&view(Some(id)), probe()).expect("a declared window");
         assert_eq!((mutation.window_id(), mutation.window_kind_id()), (id, kind));
     }
-    let code = |result: Result<semio_framework_plugin_window_transient::window_transient::WindowTransientMutation, semio_framework::Fault>| result.err().map(|fault| fault.code.0);
+    let code = |result: Result<semio_plugin_window_transient::window_transient::WindowTransientMutation, semio_framework::Fault>| result.err().map(|fault| fault.code.0);
     assert_eq!(code(addressed(&view(None), probe())).as_deref(), Some("window-transient.window-required"));
     assert_eq!(code(addressed(&view(Some("gone")), probe())).as_deref(), Some("window-transient.window-stale"));
     assert_eq!(code(addressed(&view(Some("w-other")), probe())).as_deref(), Some("window-transient.kind-unknown"));

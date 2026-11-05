@@ -178,3 +178,48 @@ async fn i_json_mutation_inverse_sum_law_holds_for_every_leaf() {
         protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }
+
+#[test]
+fn mutation_codecs_match_neutral_fixture_and_json_oracle() {
+    use protocol::{OpBinary, OpText};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔌️codec/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let expected = &row["value"];
+        let json = serde_json::to_string(expected).unwrap();
+        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let mutation = <JsonIJsonMutation as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).unwrap();
+        let printed = mutation.print_op();
+        let payload = printed.strip_prefix(fixture["textPrefix"].as_str().unwrap()).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(payload).unwrap(), *expected);
+        assert_eq!(JsonIJsonMutation::parse_op(&printed).unwrap(), mutation);
+        let binary = mutation.encode_op().unwrap();
+        assert_eq!(&binary[..2], &[1, row["tag"].as_u64().unwrap() as u8]);
+        let hex = row["binaryHex"].as_str().unwrap();
+        let expected_bytes: Vec<u8> = hex.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+        assert_eq!(binary, expected_bytes);
+        for length in 0..expected_bytes.len() {
+            assert!(JsonIJsonMutation::decode_op(&expected_bytes[..length]).is_err());
+        }
+        let mut trailing = expected_bytes.clone();
+        trailing.push(0);
+        assert!(JsonIJsonMutation::decode_op(&trailing).is_err());
+        let mut invalid_format = expected_bytes.clone();
+        invalid_format[0] = 0;
+        assert!(JsonIJsonMutation::decode_op(&invalid_format).is_err());
+
+        let decoded = JsonIJsonMutation::decode_op(&expected_bytes).unwrap();
+        assert_eq!(decoded, mutation);
+        let decoded_json = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&decoded));
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&decoded_json).unwrap(), *expected);
+        assert!(JsonIJsonMutation::decode_op(&binary[..binary.len() - 1]).is_err());
+    }
+    for row in fixture["rejectedBinary"].as_array().unwrap() {
+        let bytes: Vec<u8> = row["binaryHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+        assert!(JsonIJsonMutation::decode_op(&bytes).is_err(), "{}", row["reason"]);
+    }
+    assert!(JsonIJsonMutation::parse_op("json-i-json-mutation {\"mutation\":\"removeMember\",\"path\":[],\"key\":\"x\",\"extra\":true}").is_err());
+    assert!(JsonIJsonMutation::decode_op(&[1, 99]).is_err());
+    assert!(JsonIJsonMutation::parse_op("json-i-json-mutation {").is_err());
+    assert!(JsonIJsonMutation::parse_op("json-mutation {}").is_err());
+    assert!(JsonIJsonMutation::parse_op("json-i-json-mutation {\"mutation\":\"removeMember\",\"mutation\":\"removeMember\",\"path\":[],\"key\":\"x\"}").is_err());
+}

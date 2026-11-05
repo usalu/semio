@@ -1,10 +1,10 @@
 use semio_framework::kernel::ActorId;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
-use semio_framework_plugin_decl_views::child_view::{ChildContentRetainers, MemberKey, MemberKeyRef, PreparedChildContentIdentity};
+use semio_plugin_decl_views::child_view::{ChildContentRetainers, MemberKey, MemberKeyRef, PreparedChildContentIdentity};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::{MemberFactory, SpaceMember};
 

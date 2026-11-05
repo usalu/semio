@@ -7,9 +7,9 @@ use std::sync::atomic::Ordering;
 use std::time::Duration;
 use std::time::Instant;
 use crate::session::{BridgeHandle, ShellConnectionId};
-use semio_framework_os_mcp_bridge_codec::bridge::GatewayToShell;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::rendezvous::{live_os_sessions, sessions_dir};
+use semio_os_mcp_bridge_codec::bridge::GatewayToShell;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::rendezvous::{live_os_sessions, sessions_dir};
 
 /// 🔌️ The late-bound `/bridge` handle. `McpServer` is built BEFORE the HTTP transport creates its
 /// `BridgeHandle` (the handle is minted from the transport's own worker pool, so hoisting its

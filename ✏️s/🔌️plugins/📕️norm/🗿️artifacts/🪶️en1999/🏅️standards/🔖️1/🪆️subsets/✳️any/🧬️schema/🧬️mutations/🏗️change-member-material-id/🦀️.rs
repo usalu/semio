@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeMemberMaterialId w
         record: "ChangedMemberMaterialId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Aluminium alloy of the member", "Bauteil: Aluminiumlegierung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Aluminium alloy of the member", "Bauteil: Aluminiumlegierung ändern")
     }
 }
 

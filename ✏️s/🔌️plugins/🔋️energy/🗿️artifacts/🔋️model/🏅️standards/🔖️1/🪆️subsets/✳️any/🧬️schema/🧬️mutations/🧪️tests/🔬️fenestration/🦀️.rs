@@ -1,6 +1,6 @@
 //! 🧪️ The `fenestration` domain's committed vectors, each held to the fixture laws through the aggregate.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mut_fenestration as fenestration_mutations;
 extern crate semio_s_artifact_energy_model_mut_fenestration_geometry as fenestration_geometry_mutations;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;

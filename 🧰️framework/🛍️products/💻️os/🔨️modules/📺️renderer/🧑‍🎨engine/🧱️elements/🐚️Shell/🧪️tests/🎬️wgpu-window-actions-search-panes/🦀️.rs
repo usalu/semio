@@ -8,9 +8,9 @@
 //! `buildActionCategoryTree`/`WindowActionPane`/`Search` sources plus one measured DOM capture of the
 //! live React shell (`🗑️generated/w13b-react-dom.json`), derived independently of this implementation.
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::actions_shell;
+use semio_renderer_wgpu_fixtures::shell::actions_shell;
 use super::*;
-use semio_framework_os_renderer_wgpu_shell_windows::section_fixtures::{engagements_fixture, engagements_section_document};
+use semio_renderer_wgpu_shell_windows::section_fixtures::{engagements_fixture, engagements_section_document};
 use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, UtilityDefinition};
 
 fn pane_fixture() -> Value {
@@ -36,7 +36,7 @@ fn dense_actions_shell() -> ShellState {
 }
 
 fn publish_dense_actions_chrome(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) -> DrawList {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     while input.retire_hit_step() {}
     shell.chrome.screen_w = 1440.0;
     shell.chrome.screen_h = 640.0;
@@ -66,7 +66,7 @@ fn actions_and_search_publish_vertical_scroll_roots() {
         WindowEngagement {
             session_active: Some(true),
             options: None,
-            input: Some(semio_framework_ui_layout::layout::WindowEngagementInput { id: Some("pane-search".into()), value: Some(String::new()), placeholder: None, disabled: None, on_change: None, on_submit: None, on_repeat_last: None, on_abort: None }),
+            input: Some(semio_ui_layout::layout::WindowEngagementInput { id: Some("pane-search".into()), value: Some(String::new()), placeholder: None, disabled: None, on_change: None, on_submit: None, on_repeat_last: None, on_abort: None }),
             control: None,
             controls: None,
             status: None,
@@ -115,12 +115,12 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
     assert!((abort.rect.h - row_height).abs() < 0.01, "the scrolled terminal row keeps its authored height: {:?}", abort.rect);
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|control| control.ends_with(first_id))), "the first row leaves the clipped viewport after scrolling");
     assert!(
-        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH && instance.rect[1] >= abort.rect.y && instance.rect[1] < abort.rect.y + abort.rect.h),
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| instance.params[2] == semio_ui_draw_contract::KIND_GLYPH && instance.rect[1] >= abort.rect.y && instance.rect[1] < abort.rect.y + abort.rect.h),
         "the normal chrome walk paints the terminal row in the same band it publishes for input"
     );
 
     let pointer = (abort.rect.x + abort.rect.w * 0.5, abort.rect.y + abort.rect.h * 0.5);
-    let _ = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let _ = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert!(shell.input.retained_hit_window(&abort).is_some(), "the terminal row remains addressed to its retained Actions body");
     let mut capture = PointerCapture::default();
     let pointer_id = ui_render::PointerId(1);
@@ -130,7 +130,7 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
     let _ = publish_dense_actions_chrome(&mut shell, &mut input);
     assert_eq!(capture.release(pointer_id), PointerHitOwner::Chrome, "the retained Actions row keeps the captured release across its repaint");
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(pointer.0, pointer.1, false, 0, &mut input, &Theme::light())).expect("scrolled Abort row release");
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), vec![terminal_id.strip_prefix("action.").expect("terminal action id")], "the painted scrolled row dispatches its own action exactly once");
     assert!(shell.input.handle_pointer_wheel(pointer.0, pointer.1, 0.0, -scroll_delta, &mut input), "reverse wheel remains owned by the retained viewport");
     let _ = publish_dense_actions_chrome(&mut shell, &mut input);
@@ -242,7 +242,7 @@ fn an_arg_carrying_row_opens_reacts_staged_form_and_refuses_execute_until_it_res
         let node = WindowActionsCtx::of(&mut shell).build_window_actions_ui("pane-top").expect("a body");
         let UiNode::Stack(stack) = &node else { panic!("stack") };
         let button = stack.children.iter().find_map(|child| if let UiNode::Button(button) = child { button.id.as_deref().is_some_and(|id| id.ends_with("execute")).then_some(button) } else { None }).expect("the Execute button");
-        matches!(button.presence.state, semio_framework_ui_layout::layout::UiState::Disabled)
+        matches!(button.presence.state, semio_ui_layout::layout::UiState::Disabled)
     };
     assert!(execute(&shell), "📝️ Execute is refused while a required argument is unstaged — React's `missing.length > 0`");
     shell.commands.stage_arg("pane-top", "openAddObjectDialog", "kind", Value::String("slab".into()));
@@ -267,7 +267,7 @@ fn an_armed_gating_utility_disables_every_app_row_but_not_the_frameworks_own() {
     let tree = stack.children.iter().find_map(|child| if let UiNode::Tree(tree) = child { Some(tree) } else { None }).expect("a tree");
     for item in tree.sections.iter().flat_map(|section| section.items.iter()) {
         let reserved = item.id == "action.undo";
-        assert_eq!(matches!(item.presence.state, semio_framework_ui_layout::layout::UiState::Disabled), !reserved, "🚦️ {} gating state", item.id);
+        assert_eq!(matches!(item.presence.state, semio_ui_layout::layout::UiState::Disabled), !reserved, "🚦️ {} gating state", item.id);
         assert_eq!(item.action.is_some(), reserved, "🚦️ {} keeps a verb only while it stays pressable", item.id);
     }
 }
@@ -281,11 +281,11 @@ fn the_search_pane_publishes_reacts_input_and_suggestion_ids() {
     let mut shell = actions_shell();
     assert!(shell.commands.build_window_search_ui("pane-top", &shell.prefs, &shell.windows).is_none(), "🔎️ an engagement with no input publishes no search body");
 
-    let possibles: Vec<semio_framework_ui_layout::layout::WindowEngagementPossible> = fixture["searchRanking"]["possibles"]
+    let possibles: Vec<semio_ui_layout::layout::WindowEngagementPossible> = fixture["searchRanking"]["possibles"]
         .as_array()
         .expect("fixture possibles")
         .iter()
-        .map(|row| semio_framework_ui_layout::layout::WindowEngagementPossible {
+        .map(|row| semio_ui_layout::layout::WindowEngagementPossible {
             id: row["id"].as_str().expect("possible id").to_string(),
             label: row["label"].as_str().expect("possible label").to_string(),
             detail: row["detail"].as_str().map(ToOwned::to_owned),
@@ -297,7 +297,7 @@ fn the_search_pane_publishes_reacts_input_and_suggestion_ids() {
         WindowEngagement {
             session_active: Some(true),
             options: None,
-            input: Some(semio_framework_ui_layout::layout::WindowEngagementInput {
+            input: Some(semio_ui_layout::layout::WindowEngagementInput {
                 id: Some("pane-engagement".into()),
                 value: Some(String::new()),
                 placeholder: None,
@@ -378,11 +378,11 @@ fn malformed_engagements_retire_the_transport_lease_and_preserve_the_last_valid_
 #[test]
 fn the_search_possibles_rank_the_way_reacts_own_scorer_does() {
     let fixture = pane_fixture();
-    let possibles: Vec<semio_framework_ui_layout::layout::WindowEngagementPossible> = fixture["searchRanking"]["possibles"]
+    let possibles: Vec<semio_ui_layout::layout::WindowEngagementPossible> = fixture["searchRanking"]["possibles"]
         .as_array()
         .expect("fixture possibles")
         .iter()
-        .map(|row| semio_framework_ui_layout::layout::WindowEngagementPossible { id: row["id"].as_str().expect("id").to_string(), label: row["label"].as_str().expect("label").to_string(), detail: row["detail"].as_str().map(ToOwned::to_owned), action: None })
+        .map(|row| semio_ui_layout::layout::WindowEngagementPossible { id: row["id"].as_str().expect("id").to_string(), label: row["label"].as_str().expect("label").to_string(), detail: row["detail"].as_str().map(ToOwned::to_owned), action: None })
         .collect();
     for case in fixture["searchRanking"]["cases"].as_array().expect("fixture cases") {
         let query = case["query"].as_str().expect("case query");
@@ -422,10 +422,10 @@ fn paired_pane_shell() -> ShellState {
         WindowEngagement {
             session_active: Some(true),
             options: None,
-            input: Some(semio_framework_ui_layout::layout::WindowEngagementInput { id: Some("pane-engagement".into()), value: Some(String::new()), placeholder: None, disabled: None, on_change: None, on_submit: None, on_repeat_last: None, on_abort: None }),
+            input: Some(semio_ui_layout::layout::WindowEngagementInput { id: Some("pane-engagement".into()), value: Some(String::new()), placeholder: None, disabled: None, on_change: None, on_submit: None, on_repeat_last: None, on_abort: None }),
             control: None,
             controls: None,
-            status: Some(vec![semio_framework_ui_layout::layout::WindowEngagementStatus { id: "pane.status".into(), text: "Ready".into() }]),
+            status: Some(vec![semio_ui_layout::layout::WindowEngagementStatus { id: "pane.status".into(), text: "Ready".into() }]),
             possible_engagements: None,
         },
     );
@@ -501,7 +501,7 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
             session_active: Some(true),
             options: None,
             input: None,
-            control: Some(semio_framework_ui_layout::layout::WindowEngagementControl::Slider {
+            control: Some(semio_ui_layout::layout::WindowEngagementControl::Slider {
                 id: None,
                 label: Some("Height".into()),
                 value: 2.0,
@@ -514,37 +514,37 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
                 on_commit: None,
             }),
             controls: Some(vec![
-                semio_framework_ui_layout::layout::WindowEngagementControl::Stepper { id: None, label: None, value: 3.0, min: None, max: None, step: Some(1.0), unit: None, disabled: None, on_change: select("setCount"), on_commit: None },
-                semio_framework_ui_layout::layout::WindowEngagementControl::Ring {
+                semio_ui_layout::layout::WindowEngagementControl::Stepper { id: None, label: None, value: 3.0, min: None, max: None, step: Some(1.0), unit: None, disabled: None, on_change: select("setCount"), on_commit: None },
+                semio_ui_layout::layout::WindowEngagementControl::Ring {
                     id: None,
                     label: None,
                     value: Some("ring.b".into()),
-                    options: vec![semio_framework_ui_layout::layout::WindowEngagementRingOption { id: "ring.a".into(), label: "A".into(), disabled: None }, semio_framework_ui_layout::layout::WindowEngagementRingOption { id: "ring.b".into(), label: "B".into(), disabled: None }],
+                    options: vec![semio_ui_layout::layout::WindowEngagementRingOption { id: "ring.a".into(), label: "A".into(), disabled: None }, semio_ui_layout::layout::WindowEngagementRingOption { id: "ring.b".into(), label: "B".into(), disabled: None }],
                     disabled: None,
                     on_select: select("pickOrb"),
                 },
-                semio_framework_ui_layout::layout::WindowEngagementControl::ToggleGroup {
+                semio_ui_layout::layout::WindowEngagementControl::ToggleGroup {
                     id: Some("granularity".into()),
                     label: None,
                     value: Some("granularity.face".into()),
                     options: vec![
-                        semio_framework_ui_layout::layout::WindowEngagementToggleGroupOption { id: "granularity.face".into(), label: "Face".into(), disabled: None },
-                        semio_framework_ui_layout::layout::WindowEngagementToggleGroupOption { id: "granularity.edge".into(), label: "Edge".into(), disabled: None },
+                        semio_ui_layout::layout::WindowEngagementToggleGroupOption { id: "granularity.face".into(), label: "Face".into(), disabled: None },
+                        semio_ui_layout::layout::WindowEngagementToggleGroupOption { id: "granularity.edge".into(), label: "Edge".into(), disabled: None },
                     ],
                     disabled: None,
                     on_select: select("setGranularity"),
                 },
-                semio_framework_ui_layout::layout::WindowEngagementControl::Select {
+                semio_ui_layout::layout::WindowEngagementControl::Select {
                     id: None,
                     label: None,
                     value: Some("m".into()),
                     placeholder: None,
-                    items: vec![semio_framework_ui_layout::layout::WindowEngagementSelectItem { id: "m".into(), value: "m".into(), label: "Metres".into() }],
+                    items: vec![semio_ui_layout::layout::WindowEngagementSelectItem { id: "m".into(), value: "m".into(), label: "Metres".into() }],
                     disabled: None,
                     on_change: select("setUnit"),
                 },
             ]),
-            status: Some(vec![semio_framework_ui_layout::layout::WindowEngagementStatus { id: "engagement-step".into(), text: "Pick a face".into() }, semio_framework_ui_layout::layout::WindowEngagementStatus { id: "engagement-hint".into(), text: "Shift to snap".into() }]),
+            status: Some(vec![semio_ui_layout::layout::WindowEngagementStatus { id: "engagement-step".into(), text: "Pick a face".into() }, semio_ui_layout::layout::WindowEngagementStatus { id: "engagement-hint".into(), text: "Shift to snap".into() }]),
             possible_engagements: None,
         },
     );
@@ -589,7 +589,7 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
     assert_eq!(args.iter().find(|(key, _)| key == "id").map(|(_, value)| value.clone()), Some(DslValue::String("granularity.face".into())), "🎯️ React's `onSelect(option.id)`");
 
     shell.windows.window_engagements.get_mut("pane-top").expect("the engagement").controls =
-        Some(vec![semio_framework_ui_layout::layout::WindowEngagementControl::ToggleGroup { id: Some("empty".into()), label: Some("Empty".into()), value: None, options: Vec::new(), disabled: None, on_select: None }]);
+        Some(vec![semio_ui_layout::layout::WindowEngagementControl::ToggleGroup { id: Some("empty".into()), label: Some("Empty".into()), value: None, options: Vec::new(), disabled: None, on_select: None }]);
     let keys = published_keys(&shell, "pane-top", false);
     assert!(!keys.iter().any(|key| key.ends_with("/empty")), "🕳️ an option-less toggle group publishes nothing at all");
 }
@@ -611,7 +611,7 @@ fn the_search_line_binds_reacts_change_submit_abort_and_repeat_moments() {
     let engagement = |session_active: bool| WindowEngagement {
         session_active: Some(session_active),
         options: None,
-        input: Some(semio_framework_ui_layout::layout::WindowEngagementInput {
+        input: Some(semio_ui_layout::layout::WindowEngagementInput {
             id: Some("pane-engagement".into()),
             value: Some(String::new()),
             placeholder: None,
@@ -707,7 +707,7 @@ fn a_press_on_an_arg_carrying_row_republishes_the_pane_with_its_staged_form() {
     let mut shell = paired_pane_shell();
     let surface = window_actions_surface_id("pane-top");
     let published = |shell: &ShellState| shell.windows.window_measures_minted.get(&surface).map(|minted| minted.0).expect("the Actions pane is published");
-    let press = || ActionDescriptor { controller_id: "framework".into(), action: "setActionExpanded".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog" }) };
+    let press = || ActionDescriptor { controller_id: "framework".into(), action: "setActionExpanded".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog" }) };
     let closed = published(&shell);
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(press())).expect("the row's own press");
     assert!(shell.docs.window_actions_documents.contains_key("pane-top") && shell.docs.window_actions_documents.contains_key("pane-perspective"), "every live pane keeps its document");
@@ -715,9 +715,9 @@ fn a_press_on_an_arg_carrying_row_republishes_the_pane_with_its_staged_form() {
     assert_ne!(opened, closed, "the press republished the pane with no refresh pass");
     let execute = form["executeId"].as_str().expect("execute").replace("{windowSegment}", &semio_framework::element_id_segment("pane-top")).replace("{actionId}", "openAddObjectDialog");
     assert!(published_keys(&shell, "pane-top", false).iter().any(|key| key.ends_with(&execute)), "and the body it published carries the staged form");
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog", "arg": "kind", "value": "beam" }) })).expect("a staged argument");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog", "arg": "kind", "value": "beam" }) })).expect("a staged argument");
     assert_ne!(published(&shell), opened, "a staged argument republishes the form");
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "resetActionArgs".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog" }) })).expect("a reset");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "resetActionArgs".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog" }) })).expect("a reset");
     assert_eq!(published(&shell), opened, "a reset republishes the untouched form");
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(press())).expect("the second press folds the form");
     assert_eq!(published(&shell), closed, "the second press republishes the folded list");

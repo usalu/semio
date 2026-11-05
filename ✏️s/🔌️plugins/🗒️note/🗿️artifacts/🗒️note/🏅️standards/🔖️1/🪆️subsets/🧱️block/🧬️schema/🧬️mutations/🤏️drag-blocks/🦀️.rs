@@ -34,13 +34,13 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "blocks", kind: "drag-blocks", record: "DraggedBlocks" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (note_label_number(self.dx), note_label_number(self.dy));
         let (en, de) = match self.ids.len() {
             1 => ("1 block".to_string(), "1 Block".to_string()),
             count => (format!("{count} blocks"), format!("{count} Blöcke")),
         };
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en})"), &format!("{de} um ({dx_de}; {dy_de}) ziehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en})"), &format!("{de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

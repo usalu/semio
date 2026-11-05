@@ -64,8 +64,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "morph-target", kind: "delete-morph-target", record: "DeletedMorphTarget" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete Morph Target", "Morphziel löschen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Delete Morph Target", "Morphziel löschen")
     }
 
     fn target(&self) -> Vec<String> {

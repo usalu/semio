@@ -11,8 +11,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change site latitude to {}°", self.new_latitude_deg), &format!("Breitengrad des Standorts auf {}° ändern", self.new_latitude_deg))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change site latitude to {}°", self.new_latitude_deg), &format!("Breitengrad des Standorts auf {}° ändern", self.new_latitude_deg))
     }
 }
 

@@ -11,11 +11,11 @@ fn footprint(mutation: &WriterMainWindowTransientMutation) -> Result<ArtifactSto
     Ok(ArtifactStoreOneItemFootprint::for_ephemeral_item(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
 }
 
-pub fn owners() -> semio_framework_plugin::WindowTransientOwnerBundle<WriterMainWindowTransient, WriterMainWindowTransientMutation> {
+pub fn owners() -> semio_plugin::WindowTransientOwnerBundle<WriterMainWindowTransient, WriterMainWindowTransientMutation> {
     let state: Arc<dyn store::ArtifactOwnedValueRetirementFactory<WriterMainWindowTransient>> = Arc::new(semio_framework_value::OwnedValueRetirementFactory::default());
     let mutation: Arc<dyn store::ArtifactOwnedValueRetirementFactory<WriterMainWindowTransientMutation>> = Arc::new(semio_framework_value::OwnedValueRetirementFactory::default());
     let preparation = Arc::new(store::ArtifactEphemeralTaskPreparationFactory::new(footprint, create_task, state.clone(), mutation.clone()));
-    semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+    semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
 }
 
 fn create_task(base: &WriterMainWindowTransient, _: &WriterMainWindowTransientMutation) -> Result<Box<dyn ArtifactEphemeralPreparationTask<WriterMainWindowTransient, WriterMainWindowTransientMutation>>, String> {

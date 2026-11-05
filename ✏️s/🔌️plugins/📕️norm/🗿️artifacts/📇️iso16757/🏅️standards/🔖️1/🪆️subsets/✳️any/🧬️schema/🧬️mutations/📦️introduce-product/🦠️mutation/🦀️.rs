@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProduct where
 
         protocol::SemanticDescriptor { verb: "insert", entity: "product", kind: "introduce-product", record: "IntroducedProduct" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create product \"{}\"", self.product.names.preferred.text), &format!("Produkt \"{}\" erstellen", self.product.names.preferred.text))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create product \"{}\"", self.product.names.preferred.text), &format!("Produkt \"{}\" erstellen", self.product.names.preferred.text))
     }
     fn target(&self) -> Vec<String> {
         vec![self.product.id.clone()]

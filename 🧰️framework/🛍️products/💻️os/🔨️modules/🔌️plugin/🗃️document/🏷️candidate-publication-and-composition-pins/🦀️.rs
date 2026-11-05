@@ -10,7 +10,7 @@ pub fn publish_document_store_candidate_if_authoritative<P, Mutation>(
     validate: impl FnOnce() -> Result<(), Fault>,
 ) -> Result<ArtifactStore<P, Mutation>, (Fault, ArtifactStore<P, Mutation>)>
 where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+    P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
     Mutation: store::StoreMutationFor<P>,
 {
     if let Err(fault) = validate() {
@@ -28,7 +28,7 @@ pub fn publish_boxed_document_store_candidate_if_authoritative<P, Mutation>(
     validate: impl FnOnce() -> Result<(), Fault>,
 ) -> Result<Box<ArtifactStore<P, Mutation>>, (Fault, Box<ArtifactStore<P, Mutation>>)>
 where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+    P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
     Mutation: store::StoreMutationFor<P>,
 {
     if let Err(fault) = validate() {

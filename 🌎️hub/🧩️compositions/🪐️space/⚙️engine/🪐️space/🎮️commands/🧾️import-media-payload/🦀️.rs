@@ -2,8 +2,8 @@
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, PendingImportSetting};
 
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-media-payload")]
@@ -24,7 +24,7 @@ pub fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, WorkflowSnaps
         let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
         let bytes = base64_codec::base64_standard_decode(base64_part).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.payload"), error.to_string()))?;
         let node = doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.node"), format!("workflow node `{node_id}` not found")))?;
-        let _imported_document = semio_framework_os::import_os_app_instance_media_kind(node, &bytes, &format_kind).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.import"), error))?;
+        let _imported_document = semio_os::import_os_app_instance_media_kind(node, &bytes, &format_kind).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.import"), error))?;
         config_mutations.push(SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: None, format: None }));
     }
     Ok(Emit::config(config_mutations))

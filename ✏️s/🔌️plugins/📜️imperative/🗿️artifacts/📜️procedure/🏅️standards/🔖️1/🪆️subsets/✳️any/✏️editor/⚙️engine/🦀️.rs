@@ -53,22 +53,22 @@ impl From<semio_framework_value::ValueError> for ImperativeCoreError {
 /// `crate::artifact_kind()` already declares (`computation.procedure`, reused
 /// verbatim as this port's `kind_id`), plus one extra output port: `result:out`, the imperative path's
 /// last `run` scope as a generic data value (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
-pub fn imperative_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn imperative_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: crate::PROCEDURE_DOCUMENT_SCHEMA.into(),
-        artifact_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Procedure },
-        ports: vec![semio_framework_plugin::MediaPortSpec {
+        artifact_media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Procedure },
+        ports: vec![semio_plugin::MediaPortSpec {
             id: "result:out".into(),
             label: "Result".into(),
-            direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            direction: semio_plugin::MediaPortDirection::Out,
+            media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Data, form: semio_plugin::MediaForm::Value },
             kind_id: Some("computation.procedure".into()),
             required: false,
             multiplicity: semio_framework::PortMultiplicity::Many,
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "computation.procedure".into(), name: "Procedure".into(), dimension: "graph".into(), component_kind: "procedure".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "computation.procedure".into(), name: "Procedure".into(), dimension: "graph".into(), component_kind: "procedure".into() },
     }
 }
 //#endregion 🔖️Io

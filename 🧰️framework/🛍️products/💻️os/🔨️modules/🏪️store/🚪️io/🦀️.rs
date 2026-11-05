@@ -6,20 +6,20 @@ pub mod operation_identity;
 pub mod text_format;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::ValueError;
-use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use semio_framework_os_vcs::VcsError;
+use semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_os_vcs::VcsError;
 use semio_framework_diagnostic::TextError;
-use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions};
-use semio_framework_os_pack::pack_rt;
+use semio_os_pack::{PackDecodeOptions, PackEncodeOptions};
+use semio_os_pack::pack_rt;
 use semio_framework_dsl_record::{RecordSpecProducer,BorrowedRecordSpecProducer};
 /// 🧩️ Public capabilities required by retained typed Store recovery.
 pub use semio_framework_dsl_record::{BorrowedDslRecord, native_encoding::FieldProjectionSource};
 pub use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_store_backbone::resolve_backbone;
+use semio_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use semio_framework_os_store_backbone::local_storage_backbone_key;
+use semio_os_store_backbone::local_storage_backbone_key;
 use crate::text_format::ArtifactTextFiles;
 #[doc(hidden)]
 pub use semio_framework_diagnostic as __diagnostic;
@@ -28,9 +28,9 @@ pub use semio_framework_pack_json as __pack_json;
 #[doc(hidden)]
 pub use semio_framework_value as __value;
 #[doc(hidden)]
-pub use semio_framework_os_pack as os_pack;
-pub use semio_framework_os_pack::PackError;
-pub use semio_framework_os_spr::{OpBinary, OpText, ProtocolError};
+pub use semio_os_pack as os_pack;
+pub use semio_os_pack::PackError;
+pub use semio_os_spr::{OpBinary, OpText, ProtocolError};
 
 /// 🏪️ Explicit OS application capabilities authored independently of snapshot encoding.
 pub trait ArtifactStoreSnapshot {
@@ -70,7 +70,7 @@ pub fn binary_reference_snapshot_codec<P:pack::snapshot::ArtifactPack>()->Artifa
  ArtifactReferenceSnapshotCodec{encode:|snapshot|snapshot.encode_pack_with(&PackEncodeOptions::default()),decode:|bytes|P::decode_pack_with(bytes,&PackDecodeOptions::default()),print_dsl:None,parse_dsl:None}
 }
 
-impl<P> semio_framework_os_vcs::io::binary::genesis::ArtifactGenesisProducer<P> for ArtifactReferenceSnapshotCodec<P>{
+impl<P> semio_os_vcs::io::binary::genesis::ArtifactGenesisProducer<P> for ArtifactReferenceSnapshotCodec<P>{
  fn encode_genesis_pack(&self,snapshot:&P)->Result<Vec<u8>,ValueError>{(self.encode)(snapshot).map_err(|error|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))}
  fn decode_genesis_pack(&self,bytes:&[u8])->Result<P,ValueError>{(self.decode)(bytes).map_err(|error|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))}
 }
@@ -94,7 +94,7 @@ pub struct ArtifactPackFiles {
 /// stand in for a whole document (media document wire, WIT `list<u8>` document hops).
 pub async fn encode_document_pack_bytes(pack: &[u8], spr: &[u8]) -> Vec<u8> {
     let mut out = Vec::new();
-    semio_framework_os_pack::write_varint_u64(&mut out, pack.len() as u64);
+    semio_os_pack::write_varint_u64(&mut out, pack.len() as u64);
     out.extend_from_slice(pack);
     out.extend_from_slice(spr);
     out
@@ -103,7 +103,7 @@ pub async fn encode_document_pack_bytes(pack: &[u8], spr: &[u8]) -> Vec<u8> {
 /// 🔌️ Inverse of `encode_document_pack_bytes`.
 pub async fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), VcsError> {
     let mut pos = 0usize;
-    let pack_len = semio_framework_os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| VcsError::Deserialize(error.to_string()))? as usize;
+    let pack_len = semio_os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| VcsError::Deserialize(error.to_string()))? as usize;
     let pack_end = pos.checked_add(pack_len).ok_or_else(|| VcsError::Deserialize("document pack bytes overflow".to_string()))?;
     if pack_end > bytes.len() {
         return Err(VcsError::Deserialize("document pack bytes truncated".to_string()));
@@ -130,7 +130,7 @@ pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Futur
 
 
 /// 📚️ Registers distinct raw-payload and complete captured-snapshot SQLite capabilities.
-pub type ArtifactSqliteSnapshotExportFile=fn(&semio_framework_artifact_reference::ArtifactDialect,&semio_framework_os_store_read::ErasedSnapshotRead,semio_framework_io_sqlite_snapshot::SnapshotEncoding,&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,&mut NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_io_schema::IoResult<Vec<u8>>;
+pub type ArtifactSqliteSnapshotExportFile=fn(&semio_framework_artifact_reference::ArtifactDialect,&semio_os_store_read::ErasedSnapshotRead,semio_framework_io_sqlite_snapshot::SnapshotEncoding,&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,&mut NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_io_schema::IoResult<Vec<u8>>;
 /// 🪆️ Receives a complete snapshot into an exact empty caller slot without creating erased backing.
 pub type ArtifactSqliteSnapshotImportFile=fn(&semio_framework_artifact_reference::ArtifactDialect,&[u8],&mut(dyn std::any::Any+Send),&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,&mut NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_io_schema::IoResult<()>;
 
@@ -214,7 +214,7 @@ pub struct ArtifactCodecReference {
     /// envelope's opaque `OpBinary` payload back into a concrete `Mutation` just long enough to
     /// print it, for schema-agnostic callers that otherwise never see a concrete op type.
     /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
-    pub edit_text_from_envelope: for<'a> fn(&'a semio_framework_os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>,
+    pub edit_text_from_envelope: for<'a> fn(&'a semio_os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>,
     /// 📱️ Host-authoritative Emit apply: (pack, spr, encode_ops_vec) -> (pack, spr, ops text).
     /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub apply_ops_binary: for<'a, 'b> fn(&'a [u8], &'a [u8], &'a [u8], &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>,
@@ -231,8 +231,8 @@ impl ArtifactCodec {
 
 #[path="💾️binary/📸️snapshot/🦀️.rs"]
 mod binary_snapshot;
-use semio_framework_os_store_space_schema::binary_mutations;
-pub use semio_framework_os_store_space_history::lifted_serialization::{ArtifactSqliteSnapshotHost};
+use semio_os_store_space_schema::binary_mutations;
+pub use semio_os_store_space_history::lifted_serialization::{ArtifactSqliteSnapshotHost};
 #[path="📝️text/📸️snapshot/🦀️.rs"]
 mod text_snapshot;
 #[path="📝️text/🧬️mutations/🦀️.rs"]

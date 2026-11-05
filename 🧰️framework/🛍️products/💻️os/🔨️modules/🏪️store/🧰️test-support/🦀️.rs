@@ -2,36 +2,36 @@
 
 #[path = "📥️lifted/🏪️store/🦀️.rs"]
 pub mod lifted_store;
-use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant};
-use semio_framework_os_store_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreEnvelopeRetirement};
-use semio_framework_os_spr::{ActorId, ArtifactId, Edit, ColdMutation, Mutation, OpBinary, OpText, SchemaId};
+use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant};
+use semio_os_store_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreEnvelopeRetirement};
+use semio_os_spr::{ActorId, ArtifactId, Edit, ColdMutation, Mutation, OpBinary, OpText, SchemaId};
 use std::sync::Arc;
-use semio_framework_os_store_canonical_json::ArtifactCanonicalJsonTree;
-use semio_framework_os_store_space_schema::{ArtifactCommand, ArtifactEnvelope, HistoryLane};
+use semio_os_store_canonical_json::ArtifactCanonicalJsonTree;
+use semio_os_store_space_schema::{ArtifactCommand, ArtifactEnvelope, HistoryLane};
 use pack::snapshot::{ArtifactDsl, ArtifactPack};
-use semio_framework_os_store_operation_wire::{ArtifactOperationText, ArtifactOperationTextNode, ArtifactPreparedOperationError, ArtifactPreparedOperationSource};
+use semio_os_store_operation_wire::{ArtifactOperationText, ArtifactOperationTextNode, ArtifactPreparedOperationError, ArtifactPreparedOperationSource};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, FromValue, SnapshotRetirementFactory, ToValue, ValueError};
-use semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication;
-use semio_framework_os_store_engine::lifted_store::ArtifactStore;
-use semio_framework_os_store_one_item_publication::batch_digest::ArtifactStoreBatchDigest;
-use semio_framework_os_store_engine_owners::lifted_store::ArtifactStoreCursorDisposer;
-use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
-use semio_framework_os_store_engine_core::lifted_store::CommandReceipt;
-use semio_framework_os_store_config::lifted_store::ConfigRecord;
-use semio_framework_os_store_engine_owners::{DocumentStoreOwners, complete_unscheduled_catalog};
-use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use semio_framework_os_store_text_io::text_format::{ParsedDocumentText, parse_document_pack, parse_document_text, print_document_pack, print_document_text};
+use semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication;
+use semio_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_store_one_item_publication::batch_digest::ArtifactStoreBatchDigest;
+use semio_os_store_engine_owners::lifted_store::ArtifactStoreCursorDisposer;
+use semio_os_store_one_item_publication::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
+use semio_os_store_text_io::ArtifactStoreSnapshot;
+use semio_os_store_engine_core::lifted_store::CommandReceipt;
+use semio_os_store_config::lifted_store::ConfigRecord;
+use semio_os_store_engine_owners::{DocumentStoreOwners, complete_unscheduled_catalog};
+use semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_os_store_text_io::text_format::{ParsedDocumentText, parse_document_pack, parse_document_text, print_document_pack, print_document_text};
 use std::marker::PhantomData;
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use serde::Serialize;
-use semio_framework_os_vcs::{VcsError, apply_mutation};
+use semio_os_vcs::{VcsError, apply_mutation};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_os_store_replay::apply_outcome;
-use semio_framework_os_store_document::create_document_envelope;
-use semio_framework_os_store_space::lifted_store::install_unscheduled_catalog;
-use semio_framework_os_store_space_member::lifted_document_materialize::materialize_document_snapshot;
-use semio_framework_os_store_command::{parse_command, print_command};
+use semio_os_store_replay::apply_outcome;
+use semio_os_store_document::create_document_envelope;
+use semio_os_store_space::lifted_store::install_unscheduled_catalog;
+use semio_os_store_space_member::lifted_document_materialize::materialize_document_snapshot;
+use semio_os_store_command::{parse_command, print_command};
 
 //#region 🧪️MutationReport
 /// 🧪️ The report every language-neutral mutation case compares against its committed specification vector. The
@@ -169,15 +169,15 @@ where
 /// 🧪️ Dispatches one command under a fixture caller-owned identity authority and returns its original cumulative receipt to the caller.
 pub async fn dispatch_test_command<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
 where
-        P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-        Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+        Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     const CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
         assert!(progress.owned_bytes <= CEILING);
         true
     };
-    let mut identity: EntityIdentityAuthority<'_> = EntityIdentityAuthority::new(CEILING, &mut observer as &mut semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("declared fixture identity authority");
+    let mut identity: EntityIdentityAuthority<'_> = EntityIdentityAuthority::new(CEILING, &mut observer as &mut semio_os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("declared fixture identity authority");
     let result = store.dispatch(command, &mut identity).await;
     drop(identity.pause().expect("original cumulative fixture identity receipt"));
     result
@@ -187,10 +187,10 @@ where
 /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
 pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
 where
-        P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_framework_os_spr::StoreState,
-        Mutation: Sync + ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState,
+        Mutation: Sync + ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
 {
-    let envelope = create_document_envelope("test/v1", "test", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = create_document_envelope("test/v1", "test", initial.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = plain_test_store(envelope).await;
     dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("apply");
     let post = store.snapshot().expect("post snapshot");
@@ -447,12 +447,12 @@ where
 /// on any technology once it implements `ArtifactDsl` + `OpText`.
 pub async fn assert_document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
 where
-    P: ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_framework_os_spr::StoreState,
-    Mutation: PartialEq + semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState,
+    Mutation: PartialEq + semio_os_spr::StoreMutationFor<P>,
 {
     let live = store.snapshot().expect("store snapshot");
     let files = print_document_text(store.envelope()).await.expect("print document text");
-    let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(&files.dsl, &files.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
+    let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(&files.dsl, &files.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
     let shared = parsed.envelope.vcs.edits.iter().map(|edit| (&edit.id, &edit.forwards, &edit.mutation_meta)).eq(store.envelope().vcs.edits.iter().map(|edit| (&edit.id, &edit.forwards, &edit.mutation_meta)));
     assert!(shared && parsed.envelope.transitions == store.envelope().transitions, "document-text round trip lost shared history");
     assert!(parsed.envelope.active_alternative_id.is_none() && parsed.envelope.viewer_checkpoint_id.is_none(), "document text hydrates to the canonical trunk tip");
@@ -486,8 +486,8 @@ where
 /// disposer — so a test store records history and closes exactly like a production member.
 pub fn plain_document_store_owners<P, Mutation>() -> DocumentStoreOwners<P, Mutation>
 where
-        P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-        Mutation: Sync + ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+        Mutation: Sync + ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
 {
     let preparation = RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<PlainAuthoringFactory<P, Mutation>>(), depth: 1 };
     let birth = DocumentStoreOwners::<P, Mutation>::source_birth_bytes::<RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer<P, Mutation>>().expect("plain test catalog source layout") + preparation.capacity_bytes;
@@ -549,10 +549,10 @@ impl<P: Send + Sync + 'static, M: OpBinary + Sync + 'static> ArtifactStoreOneIte
 /// 🧪️ A store over `envelope` carrying [`plain_document_store_owners`].
 pub async fn plain_test_store<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>) -> ArtifactStore<P, Mutation>
 where
-        P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-        Mutation: Sync + ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+        Mutation: Sync + ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
 {
-    let mut store = ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid");
+    let mut store = ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid");
     install_unscheduled_catalog(&mut store, Ok(plain_document_store_owners())).expect("test store installs its funded plain catalog");
     store
 }
@@ -561,8 +561,8 @@ where
 /// witness its `Drop` requires.
 pub fn close_plain_test_store<P, Mutation>(store: &mut ArtifactStore<P, Mutation>)
 where
-        P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-        Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+        Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     drop(store.detach_backbone().expect("a closing test store releases its backbone"));
     store.close_owned_unscheduled().expect("test store reaches its exact terminal-empty witness under its quoted owner demands");
@@ -630,18 +630,18 @@ pub fn drive_retirement(owner: &mut dyn ErasedSnapshotRetirement) -> Result<(), 
 /// diverge on the same store.
 pub async fn assert_document_pack_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
 where
-    P: ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_framework_os_spr::StoreState,
-    Mutation: PartialEq + semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState,
+    Mutation: PartialEq + semio_os_spr::StoreMutationFor<P>,
 {
     let live = store.snapshot().expect("store snapshot");
     let pack_files = print_document_pack(store.envelope()).await.expect("print document pack");
-    let parsed_pack: ParsedDocumentText<P, Mutation> = parse_document_pack(&pack_files.pack, &pack_files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
+    let parsed_pack: ParsedDocumentText<P, Mutation> = parse_document_pack(&pack_files.pack, &pack_files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
     assert_eq!(parsed_pack.snapshot, live, "document-pack round trip diverged from store snapshot");
     let viewer = (&parsed_pack.envelope.active_alternative_id, &parsed_pack.envelope.viewer_checkpoint_id);
     assert_eq!(viewer, (&store.envelope().active_alternative_id, &store.envelope().viewer_checkpoint_id), "document-pack round trip lost the viewer head");
 
     let text_files = print_document_text(store.envelope()).await.expect("print document text");
-    let parsed_text: ParsedDocumentText<P, Mutation> = parse_document_text(&text_files.dsl, &text_files.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
+    let parsed_text: ParsedDocumentText<P, Mutation> = parse_document_text(&text_files.dsl, &text_files.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
     if viewer == (&None, &None) {
         assert_eq!(parsed_pack.snapshot, parsed_text.snapshot, "document-pack path diverged from document-text path");
     }
@@ -649,9 +649,9 @@ where
     retire_parsed_document(parsed_text);
 }
 
-/// ✉️ Asserts that converting an `Edit<Mutation>` into `semio_framework_os_spr::MutationEnvelope`s
+/// ✉️ Asserts that converting an `Edit<Mutation>` into `semio_os_spr::MutationEnvelope`s
 /// (`protocol_causal`'s canonical wire/causal representation, moved from `framework/core` in CW3,
-/// via `semio_framework_os_spr::mutation_envelope_from_edit`) preserves every operation's essential facts —
+/// via `semio_os_spr::mutation_envelope_from_edit`) preserves every operation's essential facts —
 /// the causal-wire sibling of `assert_pack_round_trip`/`assert_dsl_round_trip` for the app
 /// fan-out's "pack laws" cluster.
 ///
@@ -677,7 +677,7 @@ where
     P: Clone + PartialEq + std::fmt::Debug,
     Mutation: self::Mutation<P> + ColdMutation<P> + PartialEq + std::fmt::Debug + OpBinary,
 {
-    let envelopes = semio_framework_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, document_id, schema).unwrap_or_else(|error| panic!("mutation_envelope_from_edit must succeed for a well-formed edit: {error}"));
+    let envelopes = semio_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, document_id, schema).unwrap_or_else(|error| panic!("mutation_envelope_from_edit must succeed for a well-formed edit: {error}"));
     assert_eq!(envelopes.len(), edit.forwards.len(), "one envelope must be produced per forward operation");
     for (index, envelope) in envelopes.iter().enumerate() {
         assert_eq!(envelope.document_id, *document_id, "document id did not survive the envelope conversion");
@@ -710,8 +710,8 @@ where
 /// the replay ground truth.
 pub async fn assert_live_equals_replay<P, Mutation>(store: &ArtifactStore<P, Mutation>)
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_framework_os_spr::StoreState,
-        Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState,
+        Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     let live = store.snapshot().expect("store snapshot");
     let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("replay");
@@ -736,8 +736,8 @@ pub struct ExampleAsset<'a> {
 
 /// 🪆 Subset-facing surface the integrated harness needs. Implement on a thin adapter per subset.
 pub trait SubsetRoundtripSpec {
-    type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ToValue + FromValue;
-    type Mutation: Clone + semio_framework_os_spr::ColdMutation<Self::Snapshot> + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Send + Sync + ArtifactCanonicalJsonTree + 'static;
+    type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + ToValue + FromValue;
+    type Mutation: Clone + semio_os_spr::ColdMutation<Self::Snapshot> + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Send + Sync + ArtifactCanonicalJsonTree + 'static;
     type Inference: Clone + PartialEq + std::fmt::Debug + Default;
     async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect;
     async fn fidelity() -> IoFidelityClass;

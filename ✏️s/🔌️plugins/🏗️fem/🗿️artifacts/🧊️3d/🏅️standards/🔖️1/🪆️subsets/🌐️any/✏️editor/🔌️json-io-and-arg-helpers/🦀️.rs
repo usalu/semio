@@ -63,17 +63,17 @@ pub fn fem3d_io() -> AppIo {
         ports: vec![fem3d_geometry_in_port(), fem3d_results_out_port()],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.fem".into(), name: "FEM 3D".into(), dimension: "3d".into(), component_kind: "fem3d".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "3d.fem".into(), name: "FEM 3D".into(), dimension: "3d".into(), component_kind: "fem3d".into() },
     }
 }
 
 /// 🔌️ `geometry:in` — an externally authored extruded-footprint outline (polygon-with-holes,
 /// base/height/layers), imported as a new `FemSolid`.
-pub fn fem3d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
-    semio_framework_plugin::MediaPortSpec {
+pub fn fem3d_geometry_in_port() -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
         id: "geometry:in".into(),
         label: "Geometry".into(),
-        direction: semio_framework_plugin::MediaPortDirection::In,
+        direction: semio_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
         kind_id: None,
         required: true,
@@ -83,11 +83,11 @@ pub fn fem3d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
 
 /// 🔌️ `results:out` — every load case/combination's solved `semio_s_fem_model::StaticResult`, pinned to the
 /// `computation.fem3d` artifact kind.
-pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
-    semio_framework_plugin::MediaPortSpec {
+pub fn fem3d_results_out_port() -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
         id: "results:out".into(),
         label: "Results".into(),
-        direction: semio_framework_plugin::MediaPortDirection::Out,
+        direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         kind_id: Some("computation.fem3d".into()),
         required: false,

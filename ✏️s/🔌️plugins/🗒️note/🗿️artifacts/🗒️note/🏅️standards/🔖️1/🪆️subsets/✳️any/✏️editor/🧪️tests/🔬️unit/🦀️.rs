@@ -4,16 +4,16 @@ use crate::editor::note::support::NOTE_INTERACTION_BLOCKS;
 use crate::op::NoteMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::UtilityCategory;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DslValue;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::UtilityCategory;
 #[allow(unused_imports)]
 use crate::editor::note::command_enum::args_bridge;
 #[allow(unused_imports)]
@@ -31,53 +31,53 @@ use crate::editor::note::terminology::note_play_labels;
 #[allow(unused_imports)]
 use crate::NOTE_DOCUMENT_SCHEMA;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppDefinition;
+use semio_plugin::AppDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 #[allow(unused_imports)]
@@ -89,19 +89,19 @@ use crate::editor::note::dispatch_ctx::NoteDispatchCtx;
 use crate::editor::note::support::NOTE_INTERACTION_BLOCKS;
 use crate::op::NoteMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::UtilityCategory;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DslValue;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::UtilityCategory;
     use crate::editor::note::command_enum::NoteCommand;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
     pub type NoteApp = VcsArtifactApp<EditorApp<NotePlayApp>>;
 
@@ -114,7 +114,7 @@ use semio_framework_plugin::UtilityCategory;
         App { definition: create_note_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("note", NotePlayApp, note_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("note", NotePlayApp, note_manifest_for_tests, "../..");
 
     /// 🧪️ An app instance bound to instance 1. The registry-LESS `artifact_app_laws::new_app` is
     /// unusable for this app: `VcsArtifactApp::with_registry_on_bus` joins
@@ -134,8 +134,8 @@ use semio_framework_plugin::UtilityCategory;
 
     /// 🪪️ A registry-backed app with an exact runtime identity for parallel ownership laws.
     pub async fn note_app_with_registry_id(instance_id: u32) -> OwnedNoteApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(instance_id).await;
         OwnedNoteApp(app, scope)
     }
@@ -148,12 +148,12 @@ use semio_framework_plugin::UtilityCategory;
     /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the paid app close.
-    pub struct OwnedNoteApp(pub NoteApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct OwnedNoteApp(pub NoteApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl OwnedNoteApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -184,7 +184,7 @@ use semio_framework_plugin::UtilityCategory;
                 ViewWindowInstance { id: id.into(), window_kind_id: NOTE_PLAY_WINDOW_COMPOSITE.into() },
                 ViewWindowInstance { id: NOTE_PLAY_WINDOW_NAVIGATOR.into(), window_kind_id: NOTE_PLAY_WINDOW_NAVIGATOR.into() },
             ],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         }
         .for_window_instance(id)
         .expect("Note composite test window roster")
@@ -202,10 +202,10 @@ use semio_framework_plugin::UtilityCategory;
             if !app.has_pending_typed_operations() {
                 return Ok(result);
             }
-            PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|failure| Fault::from(format!("{failure:?}")))?;
-            app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| Fault::from(format!("{failure:?}")))?;
+            PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|failure| Fault::from(format!("{failure:?}")))?;
+            app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| Fault::from(format!("{failure:?}")))?;
             if let Some(page) = app.take_typed_operation_result_page(receiver) {
-                if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
+                if page.lane == semio_plugin::app::TypedOperationResultLane::Fault {
                     return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
                 }
                 app.acknowledge_typed_operation_result(page.token)?;
@@ -229,7 +229,7 @@ use semio_framework_plugin::UtilityCategory;
     }
 
     pub async fn dispatch_with_view_for_instance(app: &mut OwnedNoteApp, command: NoteCommand, instance_id: u32, view_state: ViewModel) -> InvocationResult {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta("local", instance_id, view_state), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta("local", instance_id, view_state), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         settle(app, instance_id, result).await.expect("dispatch")
     }
 
@@ -238,7 +238,7 @@ use semio_framework_plugin::UtilityCategory;
     }
 
     pub async fn render_with_view(app: &mut OwnedNoteApp, body_key: &str, view_state: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render json")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render json")
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
@@ -250,8 +250,8 @@ use semio_framework_plugin::UtilityCategory;
     pub async fn select_blocks(app: &mut OwnedNoteApp, ids: &[&str]) {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "block", "id": format!("note-play-block:{id}") })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
-        let args = Some(semio_framework_plugin::dsl_value!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" }));
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", args, &action_meta("test", 1, composite_view(NOTE_PLAY_WINDOW_COMPOSITE)), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| Fault::from(format!("{failure:?}")));
+        let args = Some(semio_plugin::dsl_value!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" }));
+        let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", args, &action_meta("test", 1, composite_view(NOTE_PLAY_WINDOW_COMPOSITE)), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| Fault::from(format!("{failure:?}")));
         settle(app, 1, result).await.expect("interactionSelect");
     }
 
@@ -273,7 +273,7 @@ use crate::editor::note::commands::{set_grid_opacity, set_grid_spacing, set_grid
 use crate::editor::note::commands::{set_snap_enabled, set_snap_grid_spacing};
 use crate::editor::note::unit_tests::context::note_app;
 use crate::editor::note::window;
-use semio_framework_plugin::{artifact_app_laws, ActionKind as Kind, PluginApp};
+use semio_plugin::{artifact_app_laws, ActionKind as Kind, PluginApp};
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
@@ -480,13 +480,13 @@ async fn the_block_verbs_refuse_what_they_cannot_apply() {
     let block = crate::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
     let target = crate::schema::block_id(&block).to_string();
     let document = NoteSnapshot { blocks: vec![block], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
-    let history = semio_framework_plugin::HistoryView::empty();
-    let config = semio_framework_plugin::NoConfig::default();
-    let doc = semio_framework_plugin::ArtifactView::new(&document, &history);
-    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let history = semio_plugin::HistoryView::empty();
+    let config = semio_plugin::NoConfig::default();
+    let doc = semio_plugin::ArtifactView::new(&document, &history);
+    let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
     let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("block-verb-refusals", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let patch = |ids: &[&str], field: &str, value: &str| patch_blocks::PatchBlocks { block_ids: ids.iter().map(|id| (*id).to_string()).collect(), field: field.into(), value: value.into() };
-    let code = |result: Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
+    let code = |result: Result<Emit<NoteMutation, semio_plugin::NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
     assert_eq!(code(patch_blocks::handle(&patch(&["no-such-block"], "name", "x"), &doc, &cfg, &mut ctx)), "mutation.target-missing");
     assert_eq!(code(patch_blocks::handle(&patch(&[], "name", "x"), &doc, &cfg, &mut ctx)), "app.command.invalid-args");
     assert_eq!(code(patch_blocks::handle(&patch(&[&target], "rotation", "5"), &doc, &cfg, &mut ctx)), "app.command.invalid-args");
@@ -548,7 +548,7 @@ async fn blocks_interaction_domain_is_declared_topology_and_transitive_on_the_co
 async fn interaction_topology_walks_group_nesting_into_parent_links() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot();
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = NotePlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
@@ -563,7 +563,7 @@ async fn interaction_topology_walks_group_nesting_into_parent_links() {
 async fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
     let document = empty_note_snapshot();
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = NotePlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
@@ -582,9 +582,9 @@ async fn delete_selection_deletes_the_selected_blocks() {
     let block = crate::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
     let target = crate::schema::block_id(&block).to_string();
     let document = NoteSnapshot { blocks: vec![block], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: vec![target.clone()], id_owner: crate::schema::NoteIdOwner::new("delete-selection-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
-    let emit = delete_selection::handle(&delete_selection::DeleteSelection {}, &semio_framework_plugin::ArtifactView::new(&document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut ctx).expect("delete selection");
+    let emit = delete_selection::handle(&delete_selection::DeleteSelection {}, &semio_plugin::ArtifactView::new(&document, &history), &semio_plugin::ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None }, &mut ctx).expect("delete selection");
     let next = emit.artifact_mutations.iter().try_fold(document.clone(), |current, mutation| apply_note_mutation(&current, mutation)).expect("apply delete");
     assert!(next.blocks.is_empty(), "the selected block must be deleted");
 }
@@ -638,8 +638,8 @@ async fn note_empty_config_owner_exact_composite_window_cameras_isolate_and_relo
 
         let composite_a = render_with_view(&mut app, NOTE_PLAY_BODY_COMPOSITE, &view_a).await;
         let composite_b = render_with_view(&mut app, NOTE_PLAY_BODY_COMPOSITE, &view_b).await;
-        let scene_a = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::InkCanvasScene>(&composite_a).expect("window a ink canvas scene");
-        let scene_b = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::InkCanvasScene>(&composite_b).expect("window b ink canvas scene");
+        let scene_a = artifact_app_laws::decode_fixture_scene::<semio_plugin::InkCanvasScene>(&composite_a).expect("window a ink canvas scene");
+        let scene_b = artifact_app_laws::decode_fixture_scene::<semio_plugin::InkCanvasScene>(&composite_b).expect("window b ink canvas scene");
         let scene_document_a: serde_json::Value = serde_json::from_str(&scene_a.document_json).expect("window a scene document JSON");
         let scene_document_b: serde_json::Value = serde_json::from_str(&scene_b.document_json).expect("window b scene document JSON");
         assert_eq!(scene_document_a["camera"], serde_json::json!({ "x": 12.5, "y": -6.5, "zoom": 3.5 }));
@@ -676,18 +676,18 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
         drop((transient_a, transient_b));
 
         let document = app.document_pack().await.expect("document pack before reset");
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("reload document and reset window transient");
+        semio_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("reload document and reset window transient");
         let reset_a = app.window_transient_snapshot(&view_a).expect("reset window a transient").expect("reset window a owner");
         assert_eq!(reset_a.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         assert_eq!(app.window_transient_generation(&view_a).expect("reset window a generation"), Some(0));
         drop(reset_a);
 
-        let pending = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Cancelled".into() }), &semio_framework_plugin::ActionMeta { instance_id: 71_103, view_state: Some(view_a.clone()), ..artifact_app_laws::meta("cancel") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+        let pending = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Cancelled".into() }), &semio_plugin::ActionMeta { instance_id: 71_103, view_state: Some(view_a.clone()), ..artifact_app_laws::meta("cancel") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
             .await
             .expect("start retained transient command");
         assert!(pending.mutations.is_empty());
         assert!(app.has_pending_typed_operations(), "retained transient command must remain owned before publication advances");
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("replacement cancels captured transient publication authority");
+        semio_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("replacement cancels captured transient publication authority");
         let cancelled = app.window_transient_snapshot(&view_a).expect("cancelled window a transient").expect("cancelled window a owner");
         assert_eq!(cancelled.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         drop(cancelled);
@@ -701,7 +701,7 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = note_app().await;
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🧪️ The definitional regression proof: two independent instances start from the same document,
@@ -710,7 +710,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 /// faults in the `interactive-job.catalog-authority` proof join before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    artifact_app_laws::assert_two_registered_instances_converge::<semio_framework_plugin::EditorApp<NotePlayApp>, _, _, _>(
+    artifact_app_laws::assert_two_registered_instances_converge::<semio_plugin::EditorApp<NotePlayApp>, _, _, _>(
         "mem://note-convergence",
         || async { crate::editor::note::unit_tests::context::note_manifest_for_tests() },
         NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }),
@@ -718,17 +718,17 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         |app| {
             let projection = app.snapshot().expect("snapshot");
             (projection.blocks.len(), projection.grid_visible)
-        },semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        },semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_note() {
-    artifact_app_laws::assert_registered_ingest_idempotent::<semio_framework_plugin::EditorApp<NotePlayApp>, f64, _, _>(
+    artifact_app_laws::assert_registered_ingest_idempotent::<semio_plugin::EditorApp<NotePlayApp>, f64, _, _>(
         || async { crate::editor::note::unit_tests::context::note_manifest_for_tests() },
         NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }),
-        |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default(),semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }

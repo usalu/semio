@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "active-asset", kind: "set-active-asset", record: "SetActiveAsset" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&{
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&{
         match &self.asset_id {
             Some(id) => format!("Set active asset to \"{id}\""),
             None => "Clear active asset".into(),

@@ -11,7 +11,7 @@ use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_ui_locale::LabelText;
+use semio_ui_locale::LabelText;
 use std::collections::BTreeMap;
 use value_derive::{FromValue, ToValue};
 

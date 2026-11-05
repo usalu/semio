@@ -2,13 +2,13 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_layout_layout_model::set_frame_layer;
 use semio_s_artifact_layout_layout_model::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingMember, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStyleRun};

@@ -7,10 +7,10 @@
 
 use std::path::{Path, PathBuf};
 use ui_styling::appearance::AppearanceName;
-use semio_framework_ui_tui_terminal::backend::{NativeTerminal, TerminalBackend, UnicodeLevel};
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_core::geometry::Size;
-use semio_framework_ui_tui_core::theme::Theme;
+use semio_ui_tui_terminal::backend::{NativeTerminal, TerminalBackend, UnicodeLevel};
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_core::geometry::Size;
+use semio_ui_tui_core::theme::Theme;
 
 use dashboard_launcher as launcher;
 
@@ -58,7 +58,7 @@ pub fn help_text(preferences: &dashboard_preferences::Preferences) -> String {
     lines.join("\n")
 }
 
-fn present<B:TerminalBackend>(term:&mut B,tui:&mut Tui,patch:&semio_framework_ui_tui_terminal::ansi::AnsiPatch)->Result<(),dashboard_feedback::Failure>{term.present(patch,tui.cursor()).map_err(|error|dashboard_feedback::Failure::io(dashboard_feedback::Operation::Present,error))}
+fn present<B:TerminalBackend>(term:&mut B,tui:&mut Tui,patch:&semio_ui_tui_terminal::ansi::AnsiPatch)->Result<(),dashboard_feedback::Failure>{term.present(patch,tui.cursor()).map_err(|error|dashboard_feedback::Failure::io(dashboard_feedback::Operation::Present,error))}
 
 fn run_view<B:TerminalBackend>(term:&mut B,dash:&mut Dashboard,tui:&mut Tui)->Result<(),dashboard_feedback::TerminalFailure>{
     let result:Result<(),dashboard_feedback::Failure>=(||{

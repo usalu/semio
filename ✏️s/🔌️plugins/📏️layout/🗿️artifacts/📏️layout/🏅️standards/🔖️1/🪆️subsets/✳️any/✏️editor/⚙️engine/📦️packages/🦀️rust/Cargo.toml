@@ -21,9 +21,9 @@ semio-framework = { workspace = true }
 semio-framework-canvas = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 serde_json = { workspace = true }

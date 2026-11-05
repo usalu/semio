@@ -49,7 +49,7 @@ function bootstrapYieldOracle(law: BootstrapYield): void {
  * transient owner registrations (the view lanes since 2026-09-15 — there is no plugin config store),
  * their freshness guards and their incremental close, plus the accessible bilingual UI surface. */
 const ANCHORS = [
-  "semio_framework_plugin::bounded_first_step_tool_proofs!",
+  "semio_plugin::bounded_first_step_tool_proofs!",
   "factory_type:",
   "ToolExecutionContract::bounded_first_step",
   "ToolExecutionContract::resumable",
@@ -83,7 +83,7 @@ const contractPattern = (id: string): RegExp => new RegExp(`ArtifactToolPublicat
 function appOracle(app: AppAuthority, source: string): boolean {
   const ids = app.toolIdsConstants.flatMap((constant) => [...(source.match(new RegExp(`${constant}: &\\[&str\\] = &\\[([^\\]]*)\\]`, "s"))?.[1]?.matchAll(/"([^"]+)"/g) ?? [])].map((match) => match[1]!));
   const contracts = [...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes: &\[([^\]]*)\] \}/g)].map((match) => `${match[1]}:${[...match[2]!.matchAll(/ArtifactToolPublicationLane::(\w+)/g)].map((lane) => lane[1]).sort().join("+")}`);
-  const classifications = [...source.matchAll(/\.action_interactive_job\("([^"]+)", (?:semio_framework_plugin::)?InteractiveJobClassification::Migrated\)/g)].map((match) => match[1]!);
+  const classifications = [...source.matchAll(/\.action_interactive_job\("([^"]+)", (?:semio_plugin::)?InteractiveJobClassification::Migrated\)/g)].map((match) => match[1]!);
   const expected = app.routes.map(({ id }) => id);
   const authored = app.routes.filter((route) => route.frameworkInjected !== true).map(({ id }) => id);
   const reserved=[...(source.match(new RegExp(`${app.reservedToolIdsConstant}: &\\[&str\\] = &\\[([^\\]]*)\\]`,"s"))?.[1]?.matchAll(/"([^"]+)"/g)??[])].map(match=>match[1]!);
@@ -107,7 +107,7 @@ function hostileSources(app: AppAuthority, source: string): string[] {
   return [
     source.replace(contractPattern(last.id), ""),
     source.replaceAll("request.base_revision != request.authority.base_revision()", ""),
-    source.replace(`.action_interactive_job("${second.id}", semio_framework_plugin::InteractiveJobClassification::Migrated)`, ""),
+    source.replace(`.action_interactive_job("${second.id}", semio_plugin::InteractiveJobClassification::Migrated)`, ""),
     source.replace("fn register_window_config_owners(", "fn register_window_config_owners_detached("),
   ];
 }
@@ -147,6 +147,10 @@ async function provisionUnicodeShapeTables(repoRoot:string):Promise<void>{
 class TestScript extends BundleScript {
   async run(segments:string[]): Promise<void> {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any");
+    if(segments.length===0||(segments.length===1&&segments[0]==="admission")){
+      await runOwnedCommand(process.execPath,["test","--timeout","45000",join(subset,"🧬️schema/✅️validation/🧪️tests.mjs")],this.repoRoot,"draw:source-admission",45000,{env:process.env,signal:this.invocation.control.signal});
+      if(segments.length)return;
+    }
     runCmd(process.execPath,["test",join(subset,"🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts")]);
     await (await import(join(subset,"🚪️io/🖼️image/🧪️tests/🟦️.ts"))).testDrawingImageAdmission();
     const raster=join(subset,"🧬️schema/🧮️geometry/📷️raster");

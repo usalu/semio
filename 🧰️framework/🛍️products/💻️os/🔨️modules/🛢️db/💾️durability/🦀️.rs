@@ -1,6 +1,6 @@
 //! 💾 Durability class, frontier sync, and epoch fencing.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_ids::{ArtifactId, DbError};
 

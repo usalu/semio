@@ -42,7 +42,7 @@ test("Puzzle native app and brush fixtures preserve original close custody", asy
   const app = readModuleTreeSource(new URL("../../../🧪️tests/🧰️context/🦀️.rs", import.meta.url));
   const brushFiles = ["🦀️.rs", "🍓️placement-compatibility-and-fill-laws/🦀️.rs", "🥦️suggestions-run-laws/🦀️.rs"];
   const brush = (await Promise.all(brushFiles.map((file) => Promise.resolve(readModuleTreeSource(new URL(`../../../⏳️precompute/🖌️brush/🧪️tests/🔬️unit/${file}`, import.meta.url)))))).join("\n");
-  expect(app).toContain("scope: semio_framework_plugin::artifact_app_laws::OriginalFixtureScope");
+  expect(app).toContain("scope: semio_plugin::artifact_app_laws::OriginalFixtureScope");
   expect(app).toContain("pub fn close_witness(app: &mut Puzzle3dApp)");
   expect(app).not.toContain("std::mem::forget(raw)");
   expect(app).toContain("PluginApp::maintenance_step(raw, cx, loan)");

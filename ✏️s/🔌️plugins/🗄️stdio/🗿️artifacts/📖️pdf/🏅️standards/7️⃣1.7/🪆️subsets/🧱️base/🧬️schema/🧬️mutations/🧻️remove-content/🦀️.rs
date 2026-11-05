@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "content", kind: "remove-content", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove {} operators at {} on page {}", self.count, self.at, self.index), &format!("{} Operatoren an {} auf Seite {} entfernen", self.count, self.at, self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove {} operators at {} on page {}", self.count, self.at, self.index), &format!("{} Operatoren an {} auf Seite {} entfernen", self.count, self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

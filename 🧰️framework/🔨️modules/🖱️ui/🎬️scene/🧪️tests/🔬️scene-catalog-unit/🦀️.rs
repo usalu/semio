@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn typed_scene_neutral_catalog_matches_native_serde_contracts() {
-    use semio_framework_ui_scene_pack::{to_bytes, write_varint, TAG_MAP, TAG_NONE, TAG_SEQ, TAG_SOME};
+    use semio_ui_scene_pack::{to_bytes, write_varint, TAG_MAP, TAG_NONE, TAG_SEQ, TAG_SOME};
     fn packet(value: &serde_json::Value, bytes: &mut Vec<u8>) {
         match value {
             serde_json::Value::Null => bytes.push(TAG_NONE),

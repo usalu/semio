@@ -15,14 +15,14 @@
 //! were previously `widgets`-module-private); `crate::wgpu::geometry`/`crate::wgpu::input`/`crate::wgpu::text`/
 //! `crate::wgpu::theme` are the other top-level engine mods `widgets` itself also depends on.
 
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
-use semio_framework_ui_wgpu_layout::layout::tree_window_spacer_px;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_wgpu_widget_kit::{draw_icon, draw_text, measure_text_width, TreeItem, TreeSection, WidgetContext};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
+use semio_ui_wgpu_layout::layout::tree_window_spacer_px;
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::Theme;
+use semio_ui_wgpu_widget_kit::{draw_icon, draw_text, measure_text_width, TreeItem, TreeSection, WidgetContext};
 use crate::{render_widget, tree_draw_chevron, tree_draw_guides, tree_gutter_width, tree_icon_id, tree_row_collapsed, TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_ROW_HEIGHT, TREE_SECTION_GAP, TREE_TOGGLE_WIDTH};
-use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
+use semio_ui_declaration::ui::UiTreeActionPlacement;
 use std::collections::HashMap;
 
 pub fn measure_tree_sections_width<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme) -> f32 {
@@ -152,7 +152,7 @@ pub fn render_tree_section_header<E: Clone>(section: &TreeSection<E>, bounds: Re
     let gutter = Rect::new(row.x, row.y, gutter_w, row.h);
     let content = Rect::new(row.x + gutter_w, row.y, row.w - gutter_w, row.h);
     let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
-    tree_draw_chevron(ctx, chevron, gutter, semio_framework_ui_wgpu_layout::chrome::ICON_TINY);
+    tree_draw_chevron(ctx, chevron, gutter, semio_ui_wgpu_layout::chrome::ICON_TINY);
     ctx.input.register_hit(HitTarget { rect: gutter, event: None, control_id: Some(format!("section.chevron.{}", section.id)), kind: HitKind::TreeItem, drag_axis: None, drag_data: None });
     if let Some(label) = &section.label {
         let text_color = if collapsed { ctx.theme.text_muted } else { ctx.theme.text_element };
@@ -185,7 +185,7 @@ pub fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: &mut Wi
     if expandable {
         let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
         let chevron_rect = Rect::new(gutter.x + depth as f32 * TREE_INDENT_PER_LEVEL, gutter.y, TREE_TOGGLE_WIDTH, gutter.h);
-        tree_draw_chevron(ctx, chevron, chevron_rect, semio_framework_ui_wgpu_layout::chrome::SIZE_TINY);
+        tree_draw_chevron(ctx, chevron, chevron_rect, semio_ui_wgpu_layout::chrome::SIZE_TINY);
         ctx.input.register_hit(HitTarget { rect: chevron_rect, event: None, control_id: Some(format!("tree.chevron.{}", item.id)), kind: HitKind::TreeItem, drag_axis: None, drag_data: None });
     }
     if selected {

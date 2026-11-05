@@ -10,18 +10,18 @@
 mod plugin_runtime_runtime_laws;
 //#endregion 📄️DeclarationFixtureMutationMount
 //#region ⚛️ReactorFacet
-pub(crate) extern crate semio_framework_plugin_reactor_app as plugin_app;
+pub(crate) extern crate semio_plugin_reactor_app as plugin_app;
 pub mod reactor {
-    pub use semio_framework_plugin_reactor_core::*;
-    pub use semio_framework_plugin_reactor_context as original_actor_context;
-    pub use semio_framework_plugin_reactor_jobs as jobs;
-    pub use semio_framework_plugin_reactor_turn as turn;
-    pub use semio_framework_plugin_reactor_turn::turn_close_step::*;
+    pub use semio_plugin_reactor_core::*;
+    pub use semio_plugin_reactor_context as original_actor_context;
+    pub use semio_plugin_reactor_jobs as jobs;
+    pub use semio_plugin_reactor_turn as turn;
+    pub use semio_plugin_reactor_turn::turn_close_step::*;
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-    pub use semio_framework_plugin_reactor_turn::drain_task_resumes;
+    pub use semio_plugin_reactor_turn::drain_task_resumes;
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-    pub use semio_framework_plugin_reactor_wit_bridge::wit_bridge::{poll, stage_cold_pair_page, stage_command_page};
-    pub use semio_framework_plugin_reactor_turn::{last_turn_more_work_sources, poll_kernel, retained_command_ingress_occupancy, retained_extension_invocation_occupancy, TurnMoreWorkSources};
+    pub use semio_plugin_reactor_wit_bridge::wit_bridge::{poll, stage_cold_pair_page, stage_command_page};
+    pub use semio_plugin_reactor_turn::{last_turn_more_work_sources, poll_kernel, retained_command_ingress_occupancy, retained_extension_invocation_occupancy, TurnMoreWorkSources};
 }
 //#endregion ⚛️ReactorFacet
 

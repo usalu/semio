@@ -1,16 +1,16 @@
 //! 🧩 Installed remote inference codecs and revocable owner contribution lifetime.
 
 use semio_framework_async::OperationContext;
-use semio_framework_os_kernel::os_directory::DocumentScope;
-use semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1;
-use semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1;
-use semio_framework_os_kernel::os_directory::client::HttpMethod;
-use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::client::DocumentHttpPortCodeV1;
+use semio_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1;
+use semio_os_kernel::os_directory::client::HttpMethod;
+use semio_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
 use semio_framework_value::DslValue;
 use std::sync::Arc;
 use crate::hub_wire::{InferenceHubMethodV1, InferenceHubRequestV1, InferenceHubTransport, InferenceRouteErrorV1, is_hub_inference_route};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::percent_codec::percent_encode;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::percent_codec::percent_encode;
 
 /// 📦 The executable installs owner behavior; transport authority remains with the gateway.
 #[derive(Clone)]

@@ -1,9 +1,9 @@
 // #region input
 //! 🖱️ Pointer and keyboard input state for hit testing.
 
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_action::{BoundedAction, BoundedActionBatchReservation, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, QueuedActionDescriptor, RetainedStringAction, RetainedStringActionStep, RETAINED_ACTION_STRING_PAGE_BYTES};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_action::{BoundedAction, BoundedActionBatchReservation, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, QueuedActionDescriptor, RetainedStringAction, RetainedStringActionStep, RETAINED_ACTION_STRING_PAGE_BYTES};
 use std::rc::Rc;
 
 use std::collections::HashMap;
@@ -496,7 +496,7 @@ impl<E: Clone> InputState<E> {
     /// reserved — the host-side half of the admission React's runtime applies to a `UiIntent`. A
     /// caller that holds the live document passes its revision through
     /// [`crate::wgpu::BoundedActionQueue::admit_intent`] instead, which also refuses a stale one.
-    pub fn admit_intent(&mut self, intent: &semio_framework_ui_action::UiIntentCommand) -> semio_framework_ui_action::UiIntentAdmission {
+    pub fn admit_intent(&mut self, intent: &semio_ui_action::UiIntentCommand) -> semio_ui_action::UiIntentAdmission {
         self.pending_actions.admit_intent_seq(intent)
     }
 
@@ -504,35 +504,35 @@ impl<E: Clone> InputState<E> {
         self.pending_actions.reserve_batch(item_credits, byte_credits)
     }
 
-    pub fn claim_action(&mut self, byte_credits: usize) -> Result<semio_framework_ui_action::BoundedActionClaim, BoundedActionFault> {
+    pub fn claim_action(&mut self, byte_credits: usize) -> Result<semio_ui_action::BoundedActionClaim, BoundedActionFault> {
         self.pending_actions.claim(byte_credits)
     }
 
-    pub fn claim_actions(&mut self, byte_credits: &[usize]) -> Result<semio_framework_ui_action::BoundedActionClaimBatch, BoundedActionFault> {
+    pub fn claim_actions(&mut self, byte_credits: &[usize]) -> Result<semio_ui_action::BoundedActionClaimBatch, BoundedActionFault> {
         self.pending_actions.claim_batch(byte_credits)
     }
 
-    pub fn reserve_claimed_action<'a>(&'a mut self, claim: semio_framework_ui_action::BoundedActionClaim, controller_id: &str, action: &str) -> Result<semio_framework_ui_action::BoundedClaimedActionReservation<'a>, BoundedActionFault> {
+    pub fn reserve_claimed_action<'a>(&'a mut self, claim: semio_ui_action::BoundedActionClaim, controller_id: &str, action: &str) -> Result<semio_ui_action::BoundedClaimedActionReservation<'a>, BoundedActionFault> {
         self.pending_actions.reserve_claimed(claim, controller_id, action)
     }
 
-    pub fn draft_claimed_action(&self, claim: semio_framework_ui_action::BoundedActionClaim, controller_id: &str, action: &str) -> Result<semio_framework_ui_action::BoundedClaimedActionDraft, BoundedActionFault> {
+    pub fn draft_claimed_action(&self, claim: semio_ui_action::BoundedActionClaim, controller_id: &str, action: &str) -> Result<semio_ui_action::BoundedClaimedActionDraft, BoundedActionFault> {
         self.pending_actions.draft_claimed(claim, controller_id, action)
     }
 
-    pub fn publish_prepared_claimed_action(&mut self, prepared: semio_framework_ui_action::PreparedClaimedAction) -> Result<(), BoundedActionFault> {
+    pub fn publish_prepared_claimed_action(&mut self, prepared: semio_ui_action::PreparedClaimedAction) -> Result<(), BoundedActionFault> {
         self.pending_actions.publish_prepared_claimed(prepared)
     }
 
-    pub fn publish_prepared_claimed_actions(&mut self, prepared: semio_framework_ui_action::PreparedClaimedActionBatch) -> Result<(), BoundedActionFault> {
+    pub fn publish_prepared_claimed_actions(&mut self, prepared: semio_ui_action::PreparedClaimedActionBatch) -> Result<(), BoundedActionFault> {
         self.pending_actions.publish_prepared_claimed_batch(prepared)
     }
 
-    pub fn release_action_claim(&mut self, claim: semio_framework_ui_action::BoundedActionClaim) -> Result<(), BoundedActionFault> {
+    pub fn release_action_claim(&mut self, claim: semio_ui_action::BoundedActionClaim) -> Result<(), BoundedActionFault> {
         self.pending_actions.release_claim(claim)
     }
 
-    pub fn publish_action(&mut self, controller_id: &str, action: &str, byte_credits: usize, build: impl FnOnce(&mut semio_framework_ui_action::BoundedActionBuilder, &str) -> Result<(), BoundedActionFault>) -> Result<(), BoundedActionFault> {
+    pub fn publish_action(&mut self, controller_id: &str, action: &str, byte_credits: usize, build: impl FnOnce(&mut semio_ui_action::BoundedActionBuilder, &str) -> Result<(), BoundedActionFault>) -> Result<(), BoundedActionFault> {
         let text_view = self.text_view.as_str();
         let mut reservation = self.pending_actions.reserve(controller_id, action, byte_credits)?;
         build(reservation.builder(), text_view)?;
@@ -726,7 +726,7 @@ impl<E: Clone> InputState<E> {
         self.close_step_with_receipt(|_| {})
     }
 
-    pub fn close_step_with_receipt(&mut self, on_receipt: impl FnOnce(semio_framework_ui_action::ActionQueueReceipt)) -> Result<bool, ui_contract::TextEditFault> {
+    pub fn close_step_with_receipt(&mut self, on_receipt: impl FnOnce(semio_ui_action::ActionQueueReceipt)) -> Result<bool, ui_contract::TextEditFault> {
         if self.hits.close_step() {
             return Ok(false);
         }

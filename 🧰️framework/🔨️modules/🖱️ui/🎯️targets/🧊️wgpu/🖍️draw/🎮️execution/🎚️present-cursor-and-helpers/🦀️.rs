@@ -38,7 +38,7 @@ pub(super) fn address_prepared_glass_region(region: usize, len: usize) -> Result
     }
 }
 
-pub(super) fn prepared_glass_command(packet: &PreparedRenderPacket, command: usize) -> Result<&semio_framework_ui_draw_contract::GlassRegion, String> {
+pub(super) fn prepared_glass_command(packet: &PreparedRenderPacket, command: usize) -> Result<&semio_ui_draw_contract::GlassRegion, String> {
     let command = packet.command_pages().get(command).ok_or_else(|| "prepared glass command was missing".to_string())?;
     let Some(DrawMeasureCursor::Glass(region)) = command.draw_cursor() else { return Err("prepared command did not address glass".to_string()) };
     let draw = if command.packet_overlay() { packet.overlay().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { packet.draw() };
@@ -99,11 +99,11 @@ pub(super) fn prepared_draw_scalar_uses_world_encoded_attachment(cursor: DrawMea
 pub(super) enum PreparedCommandClipPiece {
     Unclipped,
     Empty,
-    Scissor(semio_framework_ui_draw_contract::ScissorRect),
+    Scissor(semio_ui_draw_contract::ScissorRect),
     Complete,
 }
 
-fn prepared_command_color_layer(draw: &semio_framework_ui_draw_contract::DrawList, cursor: DrawMeasureCursor) -> Result<Option<(usize, Option<[f32; 4]>)>, String> {
+fn prepared_command_color_layer(draw: &semio_ui_draw_contract::DrawList, cursor: DrawMeasureCursor) -> Result<Option<(usize, Option<[f32; 4]>)>, String> {
     let layer = match cursor {
         DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => Some((layer, None)),
         DrawMeasureCursor::LayerVector { layer, item, .. } if item % 3 == 2 => Some((layer, None)),
@@ -124,10 +124,10 @@ fn prepared_command_color_layer(draw: &semio_framework_ui_draw_contract::DrawLis
     Ok(layer)
 }
 
-pub(super) fn prepared_command_clip_piece(draw: &semio_framework_ui_draw_contract::DrawList, cursor: DrawMeasureCursor, piece: usize, width: f32, height: f32) -> Result<PreparedCommandClipPiece, String> {
+pub(super) fn prepared_command_clip_piece(draw: &semio_ui_draw_contract::DrawList, cursor: DrawMeasureCursor, piece: usize, width: f32, height: f32) -> Result<PreparedCommandClipPiece, String> {
     let Some((layer, viewport)) = prepared_command_color_layer(draw, cursor)? else { return Ok(PreparedCommandClipPiece::Unclipped) };
     let layer = draw.layers.get(layer).ok_or_else(|| "prepared command clip layer was stale".to_string())?;
-    let surface = semio_framework_ui_draw_contract::ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
+    let surface = semio_ui_draw_contract::ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
     let mut resolved = match layer.clip.as_ref() {
         Some(clip) => match clip.scissors.get(piece).copied() {
             Some(piece) => piece.intersect(&surface),
@@ -140,7 +140,7 @@ pub(super) fn prepared_command_clip_piece(draw: &semio_framework_ui_draw_contrac
         resolved = resolved.intersect(&scissor);
     }
     if let Some(viewport) = viewport {
-        resolved = resolved.intersect(&semio_framework_ui_draw_contract::ScissorRect { x: viewport[0].max(0.0) as u32, y: viewport[1].max(0.0) as u32, w: viewport[2].max(0.0) as u32, h: viewport[3].max(0.0) as u32 });
+        resolved = resolved.intersect(&semio_ui_draw_contract::ScissorRect { x: viewport[0].max(0.0) as u32, y: viewport[1].max(0.0) as u32, w: viewport[2].max(0.0) as u32, h: viewport[3].max(0.0) as u32 });
     }
     Ok(if resolved.w == 0 || resolved.h == 0 { PreparedCommandClipPiece::Empty } else { PreparedCommandClipPiece::Scissor(resolved) })
 }

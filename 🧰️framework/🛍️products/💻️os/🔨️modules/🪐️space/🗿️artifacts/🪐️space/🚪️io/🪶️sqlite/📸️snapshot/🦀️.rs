@@ -3,10 +3,10 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::{SpaceSnapshot,SpaceKind,SpaceVisibility,SpaceRole,SpaceUser,CollectionRef,InstalledExtension,S_SPACE_SCHEMA};
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{RowWriter,Cell}};
-use semio_framework_os_space_sqlite_cells as fields;
+use semio_os_space_sqlite_cells as fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
 pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_SPACE_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
 /// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.
@@ -22,8 +22,8 @@ fn write_rows(value:&SpaceSnapshot,total:usize,p:&mut RowWriter<'_,'_>)->Result<
   for(index,row)in value.extensions.iter().enumerate(){p.insert("space_extension",&[Cell::Integer(document),Cell::Integer(fields::ordinal(index)?),Cell::Text(&row.extension_id),Cell::Text(&row.version),Cell::Text(&row.source_uri),Cell::Text(&row.package_hash),Cell::Integer(i64::from(row.enabled))])?;p.checkpoint_total(total)?;}Ok(())}
 fn semantic(value:&SpaceSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{schema(control)?;let total=rows(value)?;control.check_rows(total)?;let mut p=RowWriter::borrowed(control,phase)?;write_rows(value,total,&mut p)?;p.finish_borrowed()}
 impl ArtifactSqliteSnapshotHost for SpaceSnapshot{
- fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
- fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
+ fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->semio_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
+ fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->semio_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
  
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<store::io::IoPayload,ValueError>{

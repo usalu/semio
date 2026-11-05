@@ -42,7 +42,7 @@ async fn semio_example_preserves_adjustment_params() {
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: layer hover/selection dispatch
 /// through the framework-injected `interactionHover`/`interactionSelect` verbs against the
-/// `"layers"` domain now (`semio-framework-plugin`'s own suite covers that generic machinery);
+/// `"layers"` domain now (`semio-plugin`'s own suite covers that generic machinery);
 /// this app's contribution is declaring the domain and binding the tree to it.
 #[semio_framework_async_macros::async_test]
 async fn document_tree_binds_the_layers_interaction_domain() {
@@ -149,11 +149,11 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
         height: Some(512),
         image_key: None,
     }];
-    let base_envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let base_envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let base_files = store::os_store::text_format::print_document_pack(&base_envelope).await.expect("print document pack");
     context::retire_raster_envelope(base_envelope);
-    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_a.0, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("load a");
-    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_b.0, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("load b");
+    semio_plugin::artifact_app_laws::load_document(&mut instance_a.0, &base_files, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("load a");
+    semio_plugin::artifact_app_laws::load_document(&mut instance_b.0, &base_files, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("load b");
     let background_id = "bg".to_string();
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://raster-convergence", "mem://raster-convergence").await;
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
@@ -162,8 +162,8 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     dispatch(&mut instance_a, RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "pixel".into() })).await;
     dispatch(&mut instance_b, RasterCommand::PatchLayer(semio_s_artifact_raster_raster_editor::commands::patch_layer::PatchLayer { layer_id: background_id, field: "name".into(), value: "Renamed By B".into() })).await;
 
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
 
     let projection_a = instance_a.snapshot().expect("projection a");
     let projection_b = instance_b.snapshot().expect("projection b");
@@ -173,10 +173,10 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     assert_eq!(layer_name(&projection_b.layers[0]), "Renamed By B", "B keeps its rename");
 
     let local = artifact_app_laws::meta("local");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
-    semio_framework_plugin::plugin_app_close_prelude::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
-    artifact_app_laws::settle_registered_typed_operation(&mut instance_a.0, local.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &local, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
+    semio_plugin::plugin_app_close_prelude::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut instance_a.0, local.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(instance_a.snapshot().expect("projection a").layers.len(), instance_b.snapshot().expect("projection b").layers.len(), "a replicated checkpoint keeps both instances converged");
 
     instance_a.detach_backbone().await.expect("a releases its backbone");
@@ -190,7 +190,7 @@ async fn ingest_operations_is_idempotent() {
     artifact_app_laws::assert_registered_ingest_idempotent::<EditorApp<RasterPlayApp>, usize, _, _>(
         || async { context::raster_app_manifest_for_tests() },
         RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "pixel".into() }),
-        |app| app.snapshot().unwrap().layers.len(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        |app| app.snapshot().unwrap().layers.len(),semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -211,7 +211,7 @@ async fn utility_registry_declares_utilities_scoped_to_the_composite_window() {
 #[semio_framework_async_macros::async_test]
 async fn raster_io_declares_image_in_out_and_export_media_covers_all_ports() {
     let projection = empty_raster_document();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
     let image_out = RasterPlayApp::export_media("image:out", &doc).expect("image:out");
     let MediaPayload::Structured { schema, json } = image_out.payload else { panic!("expected structured payload") };

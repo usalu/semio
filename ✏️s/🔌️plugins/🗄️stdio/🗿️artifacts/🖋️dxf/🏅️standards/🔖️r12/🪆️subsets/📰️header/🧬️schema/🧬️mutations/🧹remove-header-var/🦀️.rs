@@ -13,8 +13,8 @@ pub struct RemoveHeaderVar {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveHeaderVar {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "header-var", kind: "remove-header-var", record: "RemoveHeaderVar" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove header var", "Header-Variable entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove header var", "Header-Variable entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

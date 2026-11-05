@@ -7,29 +7,29 @@ use crate::viewer::grid2d::modes::view;
 use crate::viewer::grid2d::modes::view::windows::preview;
 use crate::{Grid2dMutation, Grid2dSnapshot, WFC_GRID2D_DIALECT, WFC_GRID2D_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
-use semio_framework_plugin::ViewerApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
+use semio_plugin::ViewerApp;
 
 //#region 🔖️Command
 /// 👁️ The viewer authors no verb of its own; every row here is a HOST-dispatched one it must still
@@ -134,7 +134,7 @@ impl ArtifactCommandWork<ViewerApp<Grid2dViewer>> for Grid2dViewCommandWork {
         command: &Grid2dViewCommand,
         _snapshot: &Grid2dSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Grid2dViewer>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Grid2dViewer>>>,
     ) -> Option<usize> {
         GRID2D_VIEW_TOOL_IDS.contains(&grid2d_view_command_id(command)).then_some(1)
     }
@@ -196,10 +196,10 @@ impl semio_framework::ToolJobFactory for Grid2dViewCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         grid2d_view_retained_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GRID2D_VIEW_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GRID2D_VIEW_RETAINED_RAW_BYTES, checkpoint_resume: false);
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Grid2dViewCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Grid2dViewCommandJobFactory {
     type Owner = ViewerApp<Grid2dViewer>;
     const TOOL_IDS: &'static [&'static str] = GRID2D_VIEW_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = WFC_GRID2D_DOCUMENT_SCHEMA;
@@ -231,37 +231,37 @@ impl ArtifactViewer for Grid2dViewer {
     /// answers `None`. A viewer never edits these stores, but it still owns and must release them.
 
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 👁️ The viewer boots the subset's own committed default example, so editor and viewer share
     /// one scene instead of the viewer falling back to a hardcoded empty grid.
-    fn reference_birth()->Option<fn()->Result<Grid2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Grid2dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::examples::grid2d::pipes::document())
     })}
 
@@ -269,7 +269,7 @@ impl ArtifactViewer for Grid2dViewer {
         Grid2dViewCommandJobFactory::register(registry)
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<Grid2dViewer>,
         owner_file: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.wfc.grid2d@1/*#viewer",
@@ -280,16 +280,16 @@ impl ArtifactViewer for Grid2dViewer {
         tools: ["setActiveExample", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "setCamera"]
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !GRID2D_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         let tool_id = grid2d_view_command_id(&original.command);
         if tool_id != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC grid 2D view command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC grid 2D view command does not match its exact registered tool").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, grid2d_view_command_id, GRID2D_VIEW_RETAINED_RAW_BYTES, 1, false, |request| Grid2dViewCommandWork { tool_id, consumed: false })
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, grid2d_view_command_id, GRID2D_VIEW_RETAINED_RAW_BYTES, 1, false, |request| Grid2dViewCommandWork { tool_id, consumed: false })
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -318,24 +318,24 @@ impl ArtifactViewer for Grid2dViewer {
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            preview::BODY_KEY => preview::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            preview::BODY_KEY => preview::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_grid2d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_grid2d_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(WFC_GRID2D_DIALECT)
         .document(["semio", "wfc", "grid2d"])
         .icon_id("puzzle")

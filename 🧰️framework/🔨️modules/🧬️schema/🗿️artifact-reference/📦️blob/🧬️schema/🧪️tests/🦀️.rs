@@ -1,5 +1,5 @@
 //! 📦️ Neutral durable blob identity and original controlled retirement laws.
-use semio_framework_os_store_blob_identity::BlobRef;
+use semio_os_store_blob_identity::BlobRef;
 use semio_framework_value::{FromValue,ToValue};
 
 #[test]

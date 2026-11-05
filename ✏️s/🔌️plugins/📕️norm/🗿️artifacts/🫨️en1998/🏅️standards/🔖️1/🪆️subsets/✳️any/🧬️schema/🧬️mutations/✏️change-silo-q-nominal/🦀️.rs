@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiloQNominal where
         record: "ChangeSiloQNominal",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Nominal q", "Nennwert q ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Nominal q", "Nennwert q ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-silo-q-nominal".into()]

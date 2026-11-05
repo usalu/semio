@@ -1,10 +1,10 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 
-use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;
+use semio_os_kernel::sqlite_snapshot::SnapshotEncoding;
 use crate::standards::v2_0::subsets::base::schema::snapshot::*;
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, reconstruct_text}, validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, reconstruct_text}, validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
 
 #[path="🚦️native/🦀️.rs"]
 mod native;
@@ -56,14 +56,14 @@ fn optional_bytes(present: bool, bytes: &mut BTreeMap<i64, Vec<u8>>, id: i64) ->
 
 impl ArtifactSqliteSnapshotHost for ZipSnapshot {
     fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native::preflight(self,encoding,control)}
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
     
 
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-        (|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>, ValueError> {
+        (|| -> Result<semio_os_kernel::io_schema::IoOutcome<()>, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
         if dialect.artifact_kind!="s.stdio.zip"||dialect.standard!="2.0"||!matches!(dialect.subset.as_str(),"*"|"iso21320"){return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("ZIP does not own semantic subset {}",dialect.to_coordinate())));}
         let archive=database.table("zip_archive")?.single_row()?;if archive.rowid!=1||archive.integer(0)?!=1||archive.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "ZIP semantic subset document identity disagrees with its snapshot"));}
@@ -71,7 +71,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let diagnostics=if dialect.subset=="iso21320"{crate::standards::v2_0::subsets::iso21320::schema::conformance::check_iso21320_conformance_controlled(self,control)?}else{Vec::new()};
         Ok(store::io_schema::IoOutcome{value:(),diagnostics})
     
-        })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)
+        })().map_err(semio_os_kernel::io_schema::IoError::from_value_error)
     }
 
     

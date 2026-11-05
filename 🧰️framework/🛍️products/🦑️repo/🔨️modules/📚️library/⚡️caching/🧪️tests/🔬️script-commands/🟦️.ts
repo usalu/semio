@@ -152,6 +152,7 @@ export class TestScript extends BundleScript {
       await (await import("../../📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts")).testContainerRuntimeBootstrap(this.repoRoot,this.invocation);
       return;
     }
+    if(args[0]==="wasm-outputs"){if(args.length!==1)throw Error("Expected test wasm-outputs");const {runPrivateNativeTestProcessV1}=await import("../../../🧪️testing/🌱️genuine-birth/🧫️private-workspace/🟦️.ts"),{readNativeCallerAuthorityV1}=await import("../../📦️artifacts/🟦️.ts");await runPrivateNativeTestProcessV1({original:this.invocation,control:phaseControl,codeRoot:readNativeCallerAuthorityV1(this.invocation.capabilities).codeRoot,purpose:"wgpu-wasm-outputs"});return;}
     if (args[0] === "native-dependencies") {
       if (args.length !== 1) throw new Error("Expected test native-dependencies");
       const output = environment.SEMIO_TEST_ARTIFACT_DIR;

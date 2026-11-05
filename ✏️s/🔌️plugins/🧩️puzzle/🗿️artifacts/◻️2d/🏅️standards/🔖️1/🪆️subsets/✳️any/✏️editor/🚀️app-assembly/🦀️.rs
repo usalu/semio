@@ -50,7 +50,7 @@ fn puzzle2d_flag_value_action(id: &str, category: &str, identity: ActionArgDef, 
 /// AppDefinition)` only takes the definition, `App.examples` has no seam on this builder). Flagged to
 /// the coordinator, not silently lost; see `📚️examples/🎬️demo-session` for this subset's own example
 /// facet, the likely intended replacement mechanism.
-pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_puzzle2d_app() -> semio_plugin::AppDefinition {
     Editor::builder(Puzzle2dPlayApp::DIALECT)
             .document(["semio", "puzzle", "2d"])
             .artifact_kind(crate::standards::v1::subsets::any::schema::records::artifact_kind())
@@ -103,11 +103,11 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("acceptSuggestion", puzzle2d_localized(|l| l.accept_suggestion), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
-            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_plugin::CapabilityAudience::Input)
             .action_with(puzzle2d_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
-            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementSubmit", semio_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
-            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementAbort", semio_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand") })
             .action_with(puzzle2d_internal_action("setLodModeForPane", LocalizedLabel::native("Set LOD Mode For Pane", "LOD-Modus für Bereich festlegen"), ActionKind::View))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View, "grid-3x3") })
@@ -130,7 +130,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .action_with(puzzle2d_internal_action("targetBrushSuggestions", puzzle2d_localized(|l| l.target_suggestions), ActionKind::View))
             .action_with(puzzle2d_internal_action("hoverSuggestion", puzzle2d_localized(|l| l.hover_suggestion), ActionKind::View))
-            .action_audience("hoverSuggestion", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("hoverSuggestion", semio_plugin::CapabilityAudience::Input)
             .action_with(puzzle2d_internal_action("openHandleSuggestions", puzzle2d_localized(|l| l.suggest_nodes), ActionKind::View))
             .action_with(puzzle2d_internal_action("closeHandleSuggestions", puzzle2d_localized(|l| l.close_suggestions), ActionKind::View))
             .action_with(puzzle2d_internal_action("lodScaleJson", LocalizedLabel::native("LOD Scale Json", "LOD-Skalierung-Json"), ActionKind::View))
@@ -259,7 +259,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setTargetRegionLocked", LocalizedLabel::native("Sets the given or selected target regions locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt die angegebenen oder ausgewählten Zielbereiche oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
             .action_describe("relocateTargetRegion", LocalizedLabel::native("Moves or resizes one target region to the given rectangle.", "Verschiebt oder skaliert einen Zielbereich auf das angegebene Rechteck."))
             .action_describe("openAddNodeDialog", LocalizedLabel::native("Opens the Add Node dialog to pick a node kind to place.", "Öffnet den Dialog Knoten hinzufügen, um eine zu setzende Knotenart zu wählen."))
-            .action_audience("applyBoardEvents", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("applyBoardEvents", semio_plugin::CapabilityAudience::Input)
             .action_destructive("importSnapshot")
             .action_destructive("forceLayout")
             .action_destructive("reorganize")

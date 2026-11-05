@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-sun-elevation", kind: "change-scene-sun-elevation", record: "ChangedSceneSunElevation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change sun elevation to {}", self.new_elevation), &format!("Sonnenhöhe auf {} ändern", self.new_elevation))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change sun elevation to {}", self.new_elevation), &format!("Sonnenhöhe auf {} ändern", self.new_elevation))
     }
 }
 

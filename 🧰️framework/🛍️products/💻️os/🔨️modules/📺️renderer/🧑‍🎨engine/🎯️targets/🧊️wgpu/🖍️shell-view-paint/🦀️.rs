@@ -2,24 +2,24 @@
 //!
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
-use semio_framework_os_renderer_wgpu_shell_plugins::{ShellPluginInstall, ShellPluginInstallPhase};
-use semio_framework_os_renderer_wgpu_shell_pointer::floating_panel_max_width;
-use semio_framework_os_renderer_wgpu_shell_surfaces::World3dComputeStatus;
-use semio_framework_os_renderer_wgpu_shell_windows::PanelAnchor;
-use semio_framework_os_kernel::os_directory::identity::Identity;
-use semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context;
-use semio_framework_os_renderer_wgpu_scene_state::{BlockListChromeLabels, SceneChromeLabels, VirtualFileSystemChromeLabels};
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_renderer_wgpu_shell_plugins::{ShellPluginInstall, ShellPluginInstallPhase};
+use semio_renderer_wgpu_shell_pointer::floating_panel_max_width;
+use semio_renderer_wgpu_shell_surfaces::World3dComputeStatus;
+use semio_renderer_wgpu_shell_windows::PanelAnchor;
+use semio_os_kernel::os_directory::identity::Identity;
+use semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context;
+use semio_renderer_wgpu_scene_state::{BlockListChromeLabels, SceneChromeLabels, VirtualFileSystemChromeLabels};
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
 use std::collections::HashMap;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::InputState;
-use semio_framework_ui_theme::{Level, Rgba, Theme};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_paint::{RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, paint_retained_glyph_step_flowed};
-use semio_framework_ui_declaration::utilities::UtilityNode;
-use semio_framework_ui_wgpu_widget_kit::draw_text;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::InputState;
+use semio_ui_theme::{Level, Rgba, Theme};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_paint::{RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, paint_retained_glyph_step_flowed};
+use semio_ui_declaration::utilities::UtilityNode;
+use semio_ui_wgpu_widget_kit::draw_text;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/⚓️dock-model-and-measures/🦀️.rs"]
 mod staged_view_paint__dock_model_and_measures;

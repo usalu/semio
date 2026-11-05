@@ -10,15 +10,15 @@ const HEADLESS_WORK_FUEL: u64 = 1 << 30;
 /// 🎫️ The standalone retained turn a headless gateway issues to itself for one guest turn of `wall_us`.
 #[cfg(not(target_arch = "wasm32"))]
 fn headless_budget(wall_us: u64) -> semio_framework::kernel::Budget {
-    semio_framework_plugin_host::self_issued_budget(1, semio_framework_job::default_now_us, wall_us, HEADLESS_WORK_FUEL, u64::MAX, 4096, 1 << 24, 4096).expect("headless turn budget is issued on the process clock")
+    semio_plugin_host::self_issued_budget(1, semio_framework_job::default_now_us, wall_us, HEADLESS_WORK_FUEL, u64::MAX, 4096, 1 << 24, 4096).expect("headless turn budget is issued on the process clock")
 }
 
 /// 🪪️ Runs `run` under the authoring identity a headless gateway issues to itself.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn with_headless_identity<T>(run: impl FnOnce(&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> T) -> T {
+pub(crate) fn with_headless_identity<T>(run: impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> T) -> T {
     let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("headless authoring identity admission");
+    let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
+    let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("headless authoring identity admission");
     run(&mut identity)
 }
 
@@ -102,7 +102,7 @@ pub(super) const DOCUMENT_LOAD_WALL_BUDGET: std::time::Duration = std::time::Dur
 pub(super) const INSTANCE_OPEN_WALL_BUDGET: std::time::Duration = std::time::Duration::from_secs(150);
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn shared_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, bytes: &[u8]) -> Result<semio_framework_plugin_host::CompiledHandle, GatewayError> {
+pub(crate) fn shared_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, bytes: &[u8]) -> Result<semio_plugin_host::CompiledHandle, GatewayError> {
     scoped_compiled_component(runtime, plugin_id, ComponentBytes::Held(bytes), &ActivationScope::detached())
 }
 //#endregion 🔖️ArtifactChannel

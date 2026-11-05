@@ -2,8 +2,8 @@
 
 use semio_framework_job::{InteractiveJobStep, OriginalJobReturnClaim, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
 use semio_framework_job_fault_publication::RetainedFaultPublication;
-use semio_framework_plugin::app::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactSnapshotCloseLease};
-use semio_framework_plugin::{
+use semio_plugin::app::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactSnapshotCloseLease};
+use semio_plugin::{
     ArtifactApp, ArtifactMediaExportJobRequest, ArtifactReservedJob, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, ToolExecutionContract,
 };
 use semio_framework_value::retirement::RetireOwned;
@@ -38,8 +38,8 @@ pub trait IncrementalMediaExportSpec: Send + Sync + 'static {
     fn advance(cursor: &mut Self::Cursor, snapshot: &Self::Snapshot, maximum_bytes: usize) -> Result<IncrementalMediaAdvance, Fault>;
 }
 
-pub fn playback_app_io<S: IncrementalMediaExportSpec>() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn playback_app_io<S: IncrementalMediaExportSpec>() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: S::DOCUMENT_SCHEMA.into(),
         artifact_media_type: PLAYBACK_MEDIA_TYPE,
         ports: vec![MediaPortSpec {
@@ -53,7 +53,7 @@ pub fn playback_app_io<S: IncrementalMediaExportSpec>() -> semio_framework_plugi
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: S::ARTIFACT_ID.into(), name: S::ARTIFACT_NAME.into(), dimension: "time".into(), component_kind: S::COMPONENT_KIND.into() },
+        artifact: semio_plugin::ArtifactPresentation { id: S::ARTIFACT_ID.into(), name: S::ARTIFACT_NAME.into(), dimension: "time".into(), component_kind: S::COMPONENT_KIND.into() },
     }
 }
 
@@ -202,15 +202,15 @@ impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
 
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let item=RetirementDemand{depth:1,..Default::default()};
-        if let Some(owner)=self.output_retirement.as_ref(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
+        if let Some(owner)=self.output_retirement.as_ref(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
         if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands();}
-        if self.fault.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.fault);}
-        if self.cursor.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.cursor);}
+        if self.fault.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.fault);}
+        if self.cursor.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.cursor);}
         if self.page.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.page.capacity(),depth:1,..Default::default()});}
-        if self.chunks.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.chunks);}
-        if self.pending_result.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_result)}
-        if self.completion.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion);}
-        if self.credit.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.credit);}
+        if self.chunks.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.chunks);}
+        if self.pending_result.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_result)}
+        if self.completion.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion);}
+        if self.credit.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.credit);}
         if self.snapshot.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Arc<S::Snapshot>>(),..item});}
         if let Some(lease)=self.snapshot_close.as_ref(){return Ok(if lease.terminal_is_empty(){item}else{lease.retirement_demands()});}
         if let Some(owner)=self.metadata_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(item)}else{owner.selected_demand(body)};}
@@ -221,7 +221,7 @@ impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
     fn charge(work:&mut u64,turn:RetainedWorkOutcome)->Result<RetainedCloneProgress,ValueError>{*work+=turn.work;turn.result.map(|step|step.progress())}
 
     fn close_turn(&mut self,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneProgress,ValueError>{
-        use semio_framework_plugin::plugin_app_close_prelude::store::{os_store::snapshot_read::artifact_retirement_admit_owned,os_store::snapshot_read::artifact_retirement_box_close_step};
+        use semio_plugin::plugin_app_close_prelude::store::{os_store::snapshot_read::artifact_retirement_admit_owned,os_store::snapshot_read::artifact_retirement_box_close_step};
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
         if demand==RetirementDemand::default(){return Ok(Default::default());}
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"media export close exceeds its admitted depth"));}

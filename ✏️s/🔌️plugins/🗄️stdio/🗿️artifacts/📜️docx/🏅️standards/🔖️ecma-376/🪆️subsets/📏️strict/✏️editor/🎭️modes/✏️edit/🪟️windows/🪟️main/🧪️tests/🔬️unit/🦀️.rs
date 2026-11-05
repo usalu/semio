@@ -13,7 +13,7 @@ async fn definition_declares_a_document_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_emits_one_page_per_top_level_block() {
     let document = build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: Vec::new() });
-    let stack = render(&document, semio_framework_plugin::UiPublicationRevision(23)).expect("render");
+    let stack = render(&document, semio_plugin::UiPublicationRevision(23)).expect("render");
     assert_eq!(stack.children.len(), 2);
 }
 
@@ -29,7 +29,7 @@ async fn nested_table_text_remains_editable_in_the_document_window() {
     assert_eq!(pages.iter().map(|page| page.text.as_str()).collect::<Vec<_>>(), expected.iter().flatten().map(String::as_str).collect::<Vec<_>>());
     assert!(pages.iter().all(|page| matches!(&page.arguments, Some(UiValue::Map(_)))));
     for locale in [Locale::En, Locale::De] {
-        let rendered = render_windowed(&snapshot, &TreeWindows::unhosted(), locale, semio_framework_plugin::UiPublicationRevision::default()).unwrap();
+        let rendered = render_windowed(&snapshot, &TreeWindows::unhosted(), locale, semio_plugin::UiPublicationRevision::default()).unwrap();
         assert_eq!(rendered.children.len(), 5);
     }
 }

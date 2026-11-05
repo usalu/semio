@@ -10,7 +10,7 @@ pub struct ChangeMemberSupport { pub member_id: String, pub new_value: semio_s_a
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberSupport where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_support::ChangeMemberSupport> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-support", kind: "change-member-support", record: "ChangedMemberSupport" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Support type of member {}", self.member_id), &format!("Lagerungsart von Bauteil {} ändern", self.member_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Support type of member {}", self.member_id), &format!("Lagerungsart von Bauteil {} ändern", self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
 

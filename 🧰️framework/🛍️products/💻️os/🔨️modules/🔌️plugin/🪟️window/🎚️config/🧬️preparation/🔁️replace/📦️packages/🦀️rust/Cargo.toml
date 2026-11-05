@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-plugin-window-config-replace"
+name = "semio-plugin-window-config-replace"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,5 +22,5 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

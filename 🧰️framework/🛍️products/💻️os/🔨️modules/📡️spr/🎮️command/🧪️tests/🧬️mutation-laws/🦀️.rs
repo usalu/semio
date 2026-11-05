@@ -1,6 +1,6 @@
 use protocol::{ForeignStep, ForeignTarget, MutationApplyError, MutationApplyResult, MutationDiff};
-use semio_framework_os_command::DiffRegions;
-use semio_framework_os_command::TouchedPaths;
+use semio_os_command::DiffRegions;
+use semio_os_command::TouchedPaths;
 use protocol::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use serde::{Deserialize, Serialize};
 

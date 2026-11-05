@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorFixedLength 
         record: "ChangedAnchorFixedLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Fixed length L_f of the anchor", "Anker: Verpresslänge L_f ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Fixed length L_f of the anchor", "Anker: Verpresslänge L_f ändern")
     }
 }
 

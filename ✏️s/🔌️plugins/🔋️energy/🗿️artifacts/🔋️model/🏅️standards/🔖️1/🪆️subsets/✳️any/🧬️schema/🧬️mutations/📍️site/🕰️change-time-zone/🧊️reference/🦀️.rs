@@ -11,8 +11,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change site time zone to UTC{:+}", self.new_time_zone_hours), &format!("Zeitzone des Standorts auf UTC{:+} ändern", self.new_time_zone_hours))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change site time zone to UTC{:+}", self.new_time_zone_hours), &format!("Zeitzone des Standorts auf UTC{:+} ändern", self.new_time_zone_hours))
     }
 }
 

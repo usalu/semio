@@ -2,7 +2,7 @@
 
 #[derive(Debug,semio_framework_value::RetireOwned)]
 #[value(send_only)]
-pub(super) struct AcceptanceError{pub message:String,pub original:Option<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>}
+pub(super) struct AcceptanceError{pub message:String,pub original:Option<semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>}
 
 impl AcceptanceError{pub fn context(mut self,message:String)->Self{self.message=if self.message.is_empty(){message}else{format!("{message}: {}",self.message)};self}}
 
@@ -10,13 +10,13 @@ impl From<&str> for AcceptanceError{fn from(message:&str)->Self{message.to_owned
 
 impl From<String> for AcceptanceError{fn from(message:String)->Self{Self{message,original:None}}}
 
-impl From<semio_framework_job::OriginalTurnFailure> for AcceptanceError{fn from(original:semio_framework_job::OriginalTurnFailure)->Self{semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
+impl From<semio_framework_job::OriginalTurnFailure> for AcceptanceError{fn from(original:semio_framework_job::OriginalTurnFailure)->Self{semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
 
-impl From<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> for AcceptanceError{fn from(original:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure)->Self{Self{message:String::new(),original:Some(original)}}}
+impl From<semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> for AcceptanceError{fn from(original:semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure)->Self{Self{message:String::new(),original:Some(original)}}}
 
-impl From<semio_framework::Fault> for AcceptanceError{fn from(original:semio_framework::Fault)->Self{semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
+impl From<semio_framework::Fault> for AcceptanceError{fn from(original:semio_framework::Fault)->Self{semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
 
-impl From<semio_framework_value::ValueError> for AcceptanceError{fn from(original:semio_framework_value::ValueError)->Self{semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
+impl From<semio_framework_value::ValueError> for AcceptanceError{fn from(original:semio_framework_value::ValueError)->Self{semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
 
 impl std::fmt::Display for AcceptanceError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match &self.original{Some(original)=>write!(f,"{}: {original:?}",self.message),None=>f.write_str(&self.message)}}}
 

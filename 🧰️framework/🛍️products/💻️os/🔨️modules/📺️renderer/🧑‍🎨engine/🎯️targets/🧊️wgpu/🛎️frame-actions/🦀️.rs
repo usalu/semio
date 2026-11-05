@@ -3,18 +3,18 @@
 //! 🧭️ The files WP3 staged for this crate (`wp3-tools/crate-map.json`) are mounted here from their place in the renderer tree; the renderer root re-exports this crate.
 
 extern crate infinite_canvas as infinite_world;
-use semio_framework_os_renderer_wgpu_shell_input::{PointerCapture, PointerHitOwner};
-use semio_framework_os_renderer_wgpu_shell_prefs::dispatch_refusal_discards_input_draft;
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
+use semio_renderer_wgpu_shell_input::{PointerCapture, PointerHitOwner};
+use semio_renderer_wgpu_shell_prefs::dispatch_refusal_discards_input_draft;
+use semio_renderer_wgpu_shell_state::ShellState;
 use infinite_world::world::{WorldInteractionIntent, enqueue_world3d_event, world3d_hover_is_published};
 use semio_framework_job::RetainedCloneProgress;
-use semio_framework_os_renderer_wgpu_host_base::{app_now_ms, frame_latency, log_debug};
-use semio_framework_os_renderer_wgpu_host_plumbing::input_wire;
+use semio_renderer_wgpu_host_base::{app_now_ms, frame_latency, log_debug};
+use semio_renderer_wgpu_host_plumbing::input_wire;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
+use semio_ui_theme::Theme;
 
 #[path = "../🧊️renderer/🛎️frame-actions/🦀️.rs"]
 mod frame_actions;

@@ -13,9 +13,9 @@ pub fn set_group_isolation<Op: From<SetGroupIsolation>>(layer_id:semio_framework
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetGroupIsolation where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetGroupIsolation> {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"set",entity:"group",kind:"set-group-isolation",record:"SetGroupIsolation"};
 
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {
-        if self.isolation {semio_framework_ui_locale::LocalizedLabel::native(&format!("Isolate group \"{}\"",self.layer_id),&format!("Gruppe \"{}\" isolieren",self.layer_id))}
-        else {semio_framework_ui_locale::LocalizedLabel::native(&format!("Pass group \"{}\" blending through",self.layer_id),&format!("Mischung von Gruppe \"{}\" durchreichen",self.layer_id))}
+    fn label(&self)->semio_ui_locale::LocalizedLabel {
+        if self.isolation {semio_ui_locale::LocalizedLabel::native(&format!("Isolate group \"{}\"",self.layer_id),&format!("Gruppe \"{}\" isolieren",self.layer_id))}
+        else {semio_ui_locale::LocalizedLabel::native(&format!("Pass group \"{}\" blending through",self.layer_id),&format!("Mischung von Gruppe \"{}\" durchreichen",self.layer_id))}
     }
     fn target(&self)->Vec<String> {vec![self.layer_id.to_string_owner()]}
 }

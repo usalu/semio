@@ -10,7 +10,7 @@ pub struct ChangeMemberNotchDistance { pub member_id: String, pub new_value: f64
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberNotchDistance where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_notch_distance::ChangeMemberNotchDistance> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-notchDistanceM", kind: "change-member-notch-distance", record: "ChangedMemberNotchDistance" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Notch distance x of member {}", self.member_id), &format!("Ausklinkungsabstand x von Bauteil {} ändern", self.member_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Notch distance x of member {}", self.member_id), &format!("Ausklinkungsabstand x von Bauteil {} ändern", self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
 

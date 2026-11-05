@@ -1,0 +1,54 @@
+{
+  "type": "array",
+  "minItems": 8,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "kind",
+      "key",
+      "fallback",
+      "params",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "number",
+          "vector"
+        ]
+      },
+      "key": {
+        "enum": [
+          "offset",
+          "axis",
+          "factor",
+          "angle"
+        ]
+      },
+      "fallback": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "number"
+        }
+      },
+      "params": {
+        "type": "object"
+      },
+      "expected": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

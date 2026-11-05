@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn original_declared_choice_backing_survives_posting_refusal_and_denied_retirement_axes() {
     use semio_framework_job::{OriginalConstructionDemand, admit_original_construction};
-    use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+    use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
     use semio_framework_value::retained_clone::RetainedCloneClose;
     let mut caller = OriginalWorkFixture::new();
     let stock = OriginalWorkFixture::stock();

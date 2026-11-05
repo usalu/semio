@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ReplaceElements where 
         record: "ReplacedElements",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace envelope elements", "Hüllbauteile ersetzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Replace envelope elements", "Hüllbauteile ersetzen")
     }
 }
 

@@ -32,7 +32,7 @@ fn every_shell_owned_leaf_projects_into_retained_records() {
     let shell = fixture_dock_shell();
     let dock = SessionCtx::of(&mut shell).default_dock();
     for tab_id in shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs) {
-        if tab_id == semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID {
+        if tab_id == semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID {
             assert!(dock.locate(&tab_id).is_none(), "🧾️ Hub is the route-owned overlay React opens from its footer/command, never a dock substitute");
         } else {
             assert!(dock.locate(&tab_id).is_some(), "🧾️ {tab_id} publishes a body but no anchor declares it");
@@ -62,7 +62,7 @@ fn every_shell_owned_leaf_projects_into_retained_records() {
 /// that grows a `Tree`/`Image`/`ComponentScene` fails at publication rather than painting a hole.
 #[test]
 fn the_panel_assembler_refuses_an_unprojectable_node() {
-    let node = UiNode::Image(semio_framework_ui_declaration::ui::UiImageNode { id: "x".into(), src: "y".into(), alt: None, presence: UiPresence::default(), menu: None });
+    let node = UiNode::Image(semio_ui_declaration::ui::UiImageNode { id: "x".into(), src: "y".into(), alt: None, presence: UiPresence::default(), menu: None });
     let error = panel_ui_records("framework.settings.general", &node).expect_err("an image is not projectable by this assembler");
     assert!(error.contains("image"), "the refusal names the variant: {error}");
 }
@@ -78,8 +78,8 @@ fn a_keybinding_override_remaps_a_shell_chord_and_frees_its_default() {
     overrides.insert("ui.search.toggle".to_string(), "ctrl+j".to_string());
     let table = shell_shortcut_table(&overrides);
     let accelerator = PointerModifiers { ctrl: true, ..PointerModifiers::default() };
-    let remapped = semio_framework_ui_wgpu_input::KeyAction::Char("j".into());
-    let default = semio_framework_ui_wgpu_input::KeyAction::Char("p".into());
+    let remapped = semio_ui_wgpu_input::KeyAction::Char("j".into());
+    let default = semio_ui_wgpu_input::KeyAction::Char("p".into());
     assert_eq!(shell_shortcut_for_in(&table, &remapped, &accelerator), Some(ShellShortcut::ToggleSearch), "⌨️ the override's chord opens the palette");
     assert!(is_reserved_shell_chord_in(&table, &remapped, &accelerator), "⌨️ and is reserved at its new spelling");
     assert_eq!(shell_shortcut_for_in(&table, &default, &accelerator), None, "⌨️ `mod+p` is no longer the shell's");
@@ -118,11 +118,11 @@ fn an_armed_capture_writes_the_next_chord_as_an_override() {
     let mut shell = fresh_state();
     shell.input.keybinding_capture_control_id = Some("ui.nav.up".into());
     let modifiers = PointerModifiers { ctrl: true, alt: true, shift: true, ..PointerModifiers::default() };
-    assert!(shell.input.capture_keybinding_chord(&semio_framework_ui_wgpu_input::KeyAction::ArrowUp, &modifiers, &mut shell.chrome), "⌨️ the capture consumes the event");
+    assert!(shell.input.capture_keybinding_chord(&semio_ui_wgpu_input::KeyAction::ArrowUp, &modifiers, &mut shell.chrome), "⌨️ the capture consumes the event");
     assert_eq!(shell.chrome.chrome_build.preferences.keybinding_overrides.get("ui.nav.up").map(String::as_str), Some("ctrl+alt+shift+arrowup"));
     assert_eq!(shell.input.keybinding_capture_control_id, None, "⌨️ one gesture, one write, then disarmed");
     shell.input.keybinding_capture_control_id = Some("ui.nav.back".into());
-    assert!(shell.input.capture_keybinding_chord(&semio_framework_ui_wgpu_input::KeyAction::Escape, &modifiers, &mut shell.chrome), "⌨️ Escape cancels and still consumes");
+    assert!(shell.input.capture_keybinding_chord(&semio_ui_wgpu_input::KeyAction::Escape, &modifiers, &mut shell.chrome), "⌨️ Escape cancels and still consumes");
     assert!(!shell.chrome.chrome_build.preferences.keybinding_overrides.contains_key("ui.nav.back"), "⌨️ a cancelled capture writes nothing");
 }
 
@@ -186,7 +186,7 @@ fn the_mobile_panel_flattens_every_anchor_in_anchor_order() {
     let mut shell = fixture_dock_shell();
     shell.chrome.screen_w = 1280.0;
     assert!(!shell.chrome.mobile_panel_active(), "📱️ a desktop viewport keeps the eight anchors");
-    shell.chrome.screen_w = semio_framework_os_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+    shell.chrome.screen_w = semio_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
     assert!(shell.chrome.mobile_panel_active(), "📱️ the breakpoint itself is mobile (React's `max-width: 767px` is inclusive)");
     let ids: Vec<String> = SessionCtx::of(&mut shell).mobile_panel_tabs().into_iter().map(|tab| tab.id).collect();
     let expected: Vec<String> = fixture["mobilePanelTabs"]["ids"].as_array().expect("fixture mobile ids").iter().map(|id| id.as_str().expect("id").to_string()).collect();

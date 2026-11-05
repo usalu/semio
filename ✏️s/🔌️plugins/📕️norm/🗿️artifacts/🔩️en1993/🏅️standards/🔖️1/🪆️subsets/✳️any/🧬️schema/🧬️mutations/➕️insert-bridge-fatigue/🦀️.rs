@@ -10,7 +10,7 @@ pub struct InsertBridgeFatigue { pub index: Option<usize>, pub bridge_fatigue_it
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertBridgeFatigue where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_bridge_fatigue::RemoveBridgeFatigue> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "bridge-fatigue", kind: "insert-bridge-fatigue", record: "InsertedBridgeFatigue" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bridge fatigue verification at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Ermüdungsnachweis der Brücke an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert bridge fatigue verification at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Ermüdungsnachweis der Brücke an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -52,13 +52,13 @@ pub const ISO16757_EXTENSION: &str = "iso16757";
 
 //#region 🪪️Declaration
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(semio_s_artifact_norm_iso16757_schema::iso16757_artifact_schema_descriptor())
         .inferences([semio_s_artifact_norm_iso16757_inferences::iso16757_artifact_inference_descriptor()])
         .composers(semio_s_artifact_norm_iso16757_io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp>>()
         .try_build()
 }
 

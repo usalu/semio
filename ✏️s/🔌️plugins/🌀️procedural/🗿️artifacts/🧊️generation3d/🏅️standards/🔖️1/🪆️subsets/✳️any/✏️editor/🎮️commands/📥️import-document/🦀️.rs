@@ -29,8 +29,8 @@ use semio_s_artifact_procedural_3d_io::document_io;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📏️Bounds

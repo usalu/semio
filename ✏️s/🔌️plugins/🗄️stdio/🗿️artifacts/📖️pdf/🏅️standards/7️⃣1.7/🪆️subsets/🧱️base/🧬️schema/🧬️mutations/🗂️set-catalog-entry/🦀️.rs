@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "catalog-entry", kind: "set-catalog-entry", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set catalog entry {}", self.key), &format!("Katalogeintrag {} setzen", self.key))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set catalog entry {}", self.key), &format!("Katalogeintrag {} setzen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

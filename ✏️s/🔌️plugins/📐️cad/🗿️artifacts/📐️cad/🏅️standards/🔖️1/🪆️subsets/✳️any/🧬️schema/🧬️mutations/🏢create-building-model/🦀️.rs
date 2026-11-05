@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "building-model", kind: "create-building-model", record: "CreatedBuildingModel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create building-model child {}", self.child_id), &format!("Gebäudemodell-Kind {} erstellen", self.child_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create building-model child {}", self.child_id), &format!("Gebäudemodell-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["building_model".to_string()]

@@ -2,7 +2,7 @@
 use semio_framework_value::DslValue;
 use semio_framework::ActionKind;
 use store::HistoryColumn;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 /// 🎚️ Tri-state mutations filter of the framework history panel — `All` is the default.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]

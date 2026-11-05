@@ -192,7 +192,7 @@ export class MemberHistoryInputScript extends BundleScript {
     for (const name of ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes"]) assert(nativeTests.includes(`fn ${name}`));
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub(crate) mod history;"), "retained history owner is deliberately unmounted; native coverage unavailable");
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes"] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes"] }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }
@@ -260,7 +260,7 @@ export class MemberHistoryIdScript extends BundleScript {
     assert(source.includes("fn is_complete(") && readFileSync(join(owner, "🧪️tests/🔬️unit/🦀️.rs"), "utf8").includes('fixture["completion"]'), "native completion query and exact neutral boundary binding are required");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../../🦀️.rs"), "utf8").includes("pub(crate) mod identity;"), "semantic identity decoder remains unmounted");
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [law] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-os-kernel", target: { kind: "lib" }, laws: [law] }] });
     assert.equal(receipts[0]!.assertions, 1);
   }
 }

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 12,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "present",
+      "selected",
+      "events",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "present": {
+        "type": "boolean"
+      },
+      "selected": {
+        "type": "boolean"
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "lock",
+            "select",
+            "move",
+            "admit",
+            "borrow",
+            "close",
+            "return",
+            "unlock",
+            "cancel",
+            "denied",
+            "foreign-registry",
+            "foreign-caller",
+            "foreign-decoder",
+            "foreign-selection",
+            "busy",
+            "next-actor-epoch"
+          ]
+        }
+      },
+      "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "restored",
+          "borrowed",
+          "refused",
+          "clones"
+        ],
+        "properties": {
+          "restored": {
+            "type": "boolean"
+          },
+          "borrowed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "refused": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clones": {
+            "const": 0
+          }
+        }
+      },
+      "actorEpochs": {
+        "type": "integer",
+        "minimum": 2,
+        "maximum": 8,
+        "description": "Ready read-poll epochs through the same physically retained actor caller."
+      }
+    }
+  }
+}

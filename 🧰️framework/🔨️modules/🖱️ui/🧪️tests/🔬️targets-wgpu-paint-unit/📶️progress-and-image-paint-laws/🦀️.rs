@@ -17,7 +17,7 @@ fn a_progress_bar_fills_the_fraction_the_shared_fixture_declares() {
         let component = &case["component"];
         let node = progress(component["completed"].as_f64().expect("completed"), component["total"].as_f64());
         let (track, fill) = progress_bar_rects(&node, bounds, &theme);
-        let height = semio_framework_ui_wgpu_layout::chrome::SIZE_TINY;
+        let height = semio_ui_wgpu_layout::chrome::SIZE_TINY;
         assert_eq!(track, [10.0, 20.0 + (40.0 - height) * 0.5, 300.0, height], "{}: the track spans the bounds, vertically centred", case["id"]);
         match case["fraction"].as_f64() {
             Some(fraction) => assert_eq!(fill, [track[0], track[1], 300.0 * fraction as f32, track[3]], "{}: determinate fill", case["id"]),

@@ -5,7 +5,7 @@ async fn retained_composed_replacement_fixture(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
     operation: u64,
     parent_id: &str,
-    child_count: i32, cx:&mut semio_framework_job::StepContext<'_>) -> (semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle, semio_framework_plugin_child::OwnedDocumentMemberIngress) {
+    child_count: i32, cx:&mut semio_framework_job::StepContext<'_>) -> (semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle, semio_plugin_child::OwnedDocumentMemberIngress) {
     retained_composed_replacement_fixture_at_revision(app, operation, parent_id, child_count, 0, cx).await
 }
 
@@ -14,7 +14,7 @@ async fn retained_composed_replacement_fixture_at_revision(
     operation: u64,
     parent_id: &str,
     child_count: i32,
-    parent_revision: i32, cx:&mut semio_framework_job::StepContext<'_>) -> (semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle, semio_framework_plugin_child::OwnedDocumentMemberIngress) {
+    parent_revision: i32, cx:&mut semio_framework_job::StepContext<'_>) -> (semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle, semio_plugin_child::OwnedDocumentMemberIngress) {
     let child_dialect = test_child_dialect().await;
     let parent_dialect: ArtifactDialect = ComposedParentApp::<true>::DIALECT.into();
     let child_reference = ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect.clone() };
@@ -38,7 +38,7 @@ async fn retained_composed_replacement_fixture_at_revision(
     }
     pages.seal().expect("candidate member page set");
     let request = store::MemberOpenRequest::new(operation, generation, u64::MAX, child_reference.clone(), Some(owner.clone()), pages, protocol::ActorId("actor:composition-opening-fixture".into())).admit(1).unwrap_or_else(|_| panic!("candidate member request"));
-    let ingress = semio_framework_plugin_child::OwnedDocumentMemberIngress::try_new(0, child_reference, owner, request).unwrap_or_else(|_| panic!("candidate member ingress"));
+    let ingress = semio_plugin_child::OwnedDocumentMemberIngress::try_new(0, child_reference, owner, request).unwrap_or_else(|_| panic!("candidate member ingress"));
     (handle, ingress)
 }
 
@@ -48,39 +48,39 @@ async fn composed_replacement_candidate(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
     operation: u64,
     parent_id: &str,
-    parent_revision: i32, cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle {
+    parent_revision: i32, cx:&mut semio_framework_job::StepContext<'_>) -> semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle {
     let generation = semio_framework_job::Generation(app.stores.store.generation_now());
     let child_dialect = test_child_dialect().await;
     let parent_dialect: ArtifactDialect = ComposedParentApp::<true>::DIALECT.into();
     let child_reference = ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect };
     let snapshot = ComposedParentSnapshot { slot: Some(ParentFixtureChild::new("child-1".into(), child_reference)), revision: parent_revision };
-    let mut envelope = store::os_store::document_materialize::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(parent_dialect);
-    let mut candidate = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, app.stores.store.local_actor_id().clone()).await.expect("candidate parent store");
+    let mut candidate = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, app.stores.store.local_actor_id().clone()).await.expect("candidate parent store");
     store::install_unscheduled_catalog(&mut candidate, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("candidate parent catalog installs");
-    let job = semio_framework_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
+    let job = semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
     let operation = semio_framework_job::OperationId(operation);
-    app.ingest.store_replacement_jobs.insert_admitted(operation.0, semio_framework_plugin_document_media::ActiveArtifactStoreReplacement::new(operation, generation, app.child_composition.child_content_generation, job, (cx.operation(),cx.generation())));
-    semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle { operation, generation }
+    app.ingest.store_replacement_jobs.insert_admitted(operation.0, semio_plugin_document_media::ActiveArtifactStoreReplacement::new(operation, generation, app.child_composition.child_content_generation, job, (cx.operation(),cx.generation())));
+    semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle { operation, generation }
 }
 
 /// 🎟️ The fixture lends its authored maintenance policy without deriving authority from quotes.
-fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
     app.maintenance_step(cx,COMPOSITION_MAINTENANCE_GRANT)
 }
 
 /// ♻️ Returns the complete original fixture refusal through the initiating physical recipient.
-fn close_composition_refusal(source:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure,cx:&mut semio_framework_job::StepContext<'_>){
+fn close_composition_refusal(source:semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure,cx:&mut semio_framework_job::StepContext<'_>){
  let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(source).unwrap_or_else(|_|panic!("complete original lifecycle refusal supports controlled retirement"));
- for _ in 0..semio_framework_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){return}cx.with_retained_loan(COMPOSITION_CLEANUP_GRANT,|same|semio_framework_job::close_original_retained_step(same,owner.selected_demand(COMPOSITION_CLEANUP_GRANT.maximum_copy_bytes)?,|grant|owner.step(grant))).expect("original composition refusal paid retirement");}
+ for _ in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){return}cx.with_retained_loan(COMPOSITION_CLEANUP_GRANT,|same|semio_framework_job::close_original_retained_step(same,owner.selected_demand(COMPOSITION_CLEANUP_GRANT.maximum_copy_bytes)?,|grant|owner.step(grant))).expect("original composition refusal paid retirement");}
  panic!("original composition refusal exceeded its initiating supplied turn bound")
 }
 
 async fn drive_composed_replacement_to(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
-    handle: semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle,
-    target: semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState, cx:&mut semio_framework_job::StepContext<'_>) {
+    handle: semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle,
+    target: semio_plugin_document_media::ActiveArtifactStoreReplacementState, cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..100_000 {
         if app.ingest.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == target) {
             return;
@@ -94,10 +94,10 @@ async fn drive_composed_replacement_to(
 }
 
 async fn live_composed_replacement_app() -> VcsArtifactApp<ComposedParentApp, TestMembers> {
-    let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     let dialect = test_child_dialect().await;
     let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), app.stores.store.local_actor_id().clone()).await.expect("live child");
-    app.register_child("slot", "child-1", dialect, member, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("live child publication");
+    app.register_child("slot", "child-1", dialect, member, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("live child publication");
     app
 }
 
@@ -141,10 +141,10 @@ fn close_recursive_replacement_app(app: &mut VcsArtifactApp<ComposedParentApp, R
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
             assert!(grant.maximum_copy_bytes <= 4096 && grant.maximum_release_bytes <= 4096, "original fixture body and physical grant limits remain unchanged {demand:?}");
             match { let step = app.close_step(cx,grant).expect("recursive fixture app closes under its exact grant"); let _ = app.take_constructor_receipt(); step } {
-            semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
-            semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason } => panic!("recursive fixture app close awaited input: {reason}"),
-            semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("recursive fixture app has no external owner: {reason}"),
-            semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => {
+            semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
+            semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason } => panic!("recursive fixture app close awaited input: {reason}"),
+            semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("recursive fixture app has no external owner: {reason}"),
+            semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => {
                 assert!(progress.fits(grant));
                 assert!(app.close_terminal_is_empty());
                 return;
@@ -167,7 +167,7 @@ async fn recursive_member_envelope_with_history(reference: &ArtifactRef, owner: 
     Box::pin(member.set_owner(Some(owner.clone()))).await;
     match &mut member {
         RecursiveTestMembers::Branch(store) => {
-            semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![RecursiveFixtureMutation { value }], transaction: None }, &mut identity)).await)
+            semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![RecursiveFixtureMutation { value }], transaction: None }, &mut identity)).await)
                 .expect("recursive historical member mutation");
         }
     }
@@ -225,7 +225,7 @@ async fn recursive_member_ingress(
     reference: ArtifactRef,
     owner: store::OwnerRef,
     snapshot_pack: Vec<u8>,
-) -> semio_framework_plugin_child::OwnedDocumentMemberIngress {
+) -> semio_plugin_child::OwnedDocumentMemberIngress {
     let bytes = Box::pin(recursive_member_envelope(&reference, &owner, &snapshot_pack)).await;
     let chunks = bytes.chunks(store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
     let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: bytes.len() }).expect("recursive candidate member page credits");
@@ -234,7 +234,7 @@ async fn recursive_member_ingress(
     }
     pages.seal().expect("recursive candidate member page set");
     let request = store::MemberOpenRequest::new(operation, generation, u64::MAX, reference.clone(), Some(owner.clone()), pages, protocol::ActorId("actor:composition-opening-fixture".into())).admit(1).unwrap_or_else(|_| panic!("recursive candidate member request"));
-    semio_framework_plugin_child::OwnedDocumentMemberIngress::try_new(ordinal, reference, owner, request).unwrap_or_else(|_| panic!("recursive candidate member ingress"))
+    semio_plugin_child::OwnedDocumentMemberIngress::try_new(ordinal, reference, owner, request).unwrap_or_else(|_| panic!("recursive candidate member ingress"))
 }
 
 fn recursive_archive_reference(reference: &ArtifactRef) -> protocol::DocumentArchiveArtifactRef {
@@ -252,12 +252,12 @@ async fn recursive_parent_document_files(
     dialect: ArtifactDialect,
     snapshot: ComposedParentSnapshot,
 ) -> store::os_store::serialization::ArtifactPackFiles {
-    let mut envelope = store::os_store::document_materialize::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(schema, parent_id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(schema, parent_id, snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(dialect);
-    let mut parent_store = Box::new(Box::pin(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("recursive archive parent store"));
+    let mut parent_store = Box::new(Box::pin(store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("recursive archive parent store"));
     store::install_unscheduled_catalog(&mut parent_store, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("recursive archive parent catalog installs");
     let generation = parent_store.generation_now();
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(parent_store.apply_one(
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(parent_store.apply_one(
         generation,
         RecursiveFixtureMutation { value: 7 },
         protocol::os_store::store_schema::HistoryLane::Document,

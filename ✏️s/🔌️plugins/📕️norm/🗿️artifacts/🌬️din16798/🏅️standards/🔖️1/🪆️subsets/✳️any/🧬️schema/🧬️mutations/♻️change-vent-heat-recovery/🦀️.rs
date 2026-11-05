@@ -13,8 +13,8 @@ pub struct ChangeVentHeatRecovery {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeVentHeatRecovery where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_vent_heat_recovery::ChangeVentHeatRecovery> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vent-heat-recovery", kind: "change-vent-heat-recovery", record: "ChangeVentHeatRecovery" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change heat recovery efficiency", "Wärmerückgewinnungsgrad ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change heat recovery efficiency", "Wärmerückgewinnungsgrad ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.vent_id.clone()] }
 }

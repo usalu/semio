@@ -42,7 +42,7 @@ pub struct ShellDockState {
     /// 🪟️ Host-owned tree windows of every body this shell paints — what crosses as `ViewModel.tree_windows`.
     pub tree_windows: TreeWindowScheduler,
     /// 🧠️ Per body, what the observer learned from the guest's answers (`TreeWindowServedMemoryV1`).
-    pub tree_window_served: HashMap<String, Vec<(String, semio_framework_ui_wgpu_light::tree_window::TreeWindowServedMemory)>>,
+    pub tree_window_served: HashMap<String, Vec<(String, semio_ui_wgpu_light::tree_window::TreeWindowServedMemory)>>,
     pub dock_canvas_bounds: Rect,
     /// 📐️ Separator metric captured with this frame's dock plan so later pointer resize math uses
     /// the same themed physical geometry that paint, drop targets and body publication used.
@@ -59,7 +59,7 @@ pub struct ShellDockState {
     pub dock_window_plan: Vec<(String, Rect)>,
     /// 🐛️ Last `[TRACE] ` dock-plan line, so the trace prints on CHANGE rather than once per frame.
     pub dock_plan_trace: Option<String>,
-    pub layout_override: Option<semio_framework_ui_declaration::layout::WindowLayout>,
+    pub layout_override: Option<semio_ui_declaration::layout::WindowLayout>,
     /// 📱️ The plugin hooks of the shell: device tracker, input modality, selection and the bottom sheet of the plugin's current layout choice.
     pub shell_hooks: semio_framework::ShellHookDriver,
     pub split_resize_origin: Vec<f32>,
@@ -74,7 +74,7 @@ pub struct ShellDockState {
     /// `origin: "user"` half of the roster, projected from the `os.config.ui-preferences` log and written back as
     /// `setNamedLayout` events ([`ShellState::load_persisted_named_layouts`]/[`ShellState::persist_named_layouts`]).
     /// The app's own `named_layouts` supply the `origin: "builtin"` half.
-    pub user_layouts: Vec<semio_framework_ui_declaration::layout::NamedLayout>,
+    pub user_layouts: Vec<semio_ui_declaration::layout::NamedLayout>,
     /// 📱️ The single mobile panel's own chrome — React's `mobilePanelVisible`/`mobilePanelPath`,
     /// the flattened counterpart of the eight `PanelAnchorState`s.
     pub mobile_panel_visible: bool,

@@ -1,12 +1,12 @@
 //! 🎟️ The original emitted input remains retained through lease, Window authority, mounted registry and receipt handoffs.
 use crate::dispatch_bundle::DispatchCtx;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_instance_extension::InstanceExtension;
-use semio_framework_plugin_job::original_emission::{OriginalEmissionInput,OriginalEmissionCapture,OriginalEmissionReceipt,admit_original_emission_receipt};
-use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation,original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier}};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_instance_extension::InstanceExtension;
+use semio_plugin_job::original_emission::{OriginalEmissionInput,OriginalEmissionCapture,OriginalEmissionReceipt,admit_original_emission_receipt};
+use semio_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation,original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier}};
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_framework::kernel::InvocationResult;
 use store::{MemberFactory,SpaceMember};
 impl<'ctx,A:ArtifactApp,M:store::ReferenceSpaceMember+MemberFactory+'static,X:InstanceExtension> DispatchCtx<'ctx,A,M,X>{
@@ -42,7 +42,7 @@ impl<'ctx,A:ArtifactApp,M:store::ReferenceSpaceMember+MemberFactory+'static,X:In
    7=>{
     if self.tools.original_emission_admission.as_ref().unwrap().mounted.is_none(){self.tools.original_emission_admission.as_mut().unwrap().advance_phase(7,8,cx)?;return Ok(false)}
     let source=self.tools.original_emission_admission.as_ref().unwrap();let mounted=source.mounted.as_ref().unwrap();let operation=source.operation.unwrap();let id=operation.operation.0;
-    if mounted.canonical_revision!=self.stores.store.content_revision_now()||mounted.artifact_generation!=self.stores.store.generation_now()||mounted.config_generation!=self.stores.config_store.generation_now()||mounted.draft_generation!=self.stores.draft_store.generation_now()||mounted.captured_child_content_generation!=self.child_composition.child_content_generation||!self.tools.tool_operations.can_insert(id)||self.tools.typed_operation_reservations[id as usize%semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(id){return Err(invalid("original emission publication destination or captured Store frontier changed").into())}
+    if mounted.canonical_revision!=self.stores.store.content_revision_now()||mounted.artifact_generation!=self.stores.store.generation_now()||mounted.config_generation!=self.stores.config_store.generation_now()||mounted.draft_generation!=self.stores.draft_store.generation_now()||mounted.captured_child_content_generation!=self.child_composition.child_content_generation||!self.tools.tool_operations.can_insert(id)||self.tools.typed_operation_reservations[id as usize%semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(id){return Err(invalid("original emission publication destination or captured Store frontier changed").into())}
     let receipt=OriginalEmissionReceipt::capture(operation,cx)?;let mut mounted=None;if self.tools.original_emission_admission.as_mut().unwrap().take_mounted_into(&mut mounted,cx)?{self.tools.tool_operations.insert_admitted(id,mounted.unwrap());self.tools.release_reserved_emit_slot(id);self.tools.original_emission_receipt=Some(receipt);}
    },
    8=>{

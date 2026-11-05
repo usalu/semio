@@ -9,21 +9,21 @@ use crate::schema::default_snapshot;
 use crate::viewer::procedure::modes::view;
 use crate::viewer::procedure::modes::view::windows::{main, script};
 use crate::{ProcedureSnapshot, PROCEDURE_DIALECT, PROCEDURE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::ArtifactView;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 // 🚧️ SDK GAP: `ArtifactViewer`/`Viewer`/`ViewEmit`/`Dialect` were closed by w0-f (bare-importable
 // from the crate root now); `Dialect`/`StandardId`/`SubsetId` and the window-kit types (contract
 // §2.6) are still only reachable through `app` — see the identical note in `✏️editor`'s own file.
-use semio_framework_plugin::app::{ArtifactViewer, ViewEmit, Viewer};
+use semio_plugin::app::{ArtifactViewer, ViewEmit, Viewer};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -64,14 +64,14 @@ impl ArtifactViewer for ImperativeViewer {
     type TransientMutation = NoTransientMutation;
     type Command = ImperativeViewCommand;
 
-    const DIALECT: semio_framework_plugin::app::Dialect = PROCEDURE_DIALECT;
+    const DIALECT: semio_plugin::app::Dialect = PROCEDURE_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::procedure_child_restore_projection`).
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::procedure_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<ProcedureSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<ProcedureSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_snapshot())
     })}
 
@@ -83,27 +83,27 @@ impl ArtifactViewer for ImperativeViewer {
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
-        let scene = crate::procedure_scene(doc).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("imperative.child-content", format!("{error:?}")))?;
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<ComponentTree> {
+        let scene = crate::procedure_scene(doc).map_err(|error| semio_plugin::PluginAssemblyError::new("imperative.child-content", format!("{error:?}")))?;
         (match body_key {
             main::BODY_KEY => main::render(&scene, view_state),
             script::BODY_KEY => script::render(&scene),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
         })
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_imperative_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_imperative_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(PROCEDURE_DIALECT)
         .document(["semio", "imperative"])
         .icon_id("imperative")
@@ -129,8 +129,8 @@ use crate::{ProcedureSnapshot};
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn procedure_child_restore_projection(snapshot: &ProcedureSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("procedure.child-projection"), error.to_string()))
+pub fn procedure_child_restore_projection(snapshot: &ProcedureSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("procedure.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
 }

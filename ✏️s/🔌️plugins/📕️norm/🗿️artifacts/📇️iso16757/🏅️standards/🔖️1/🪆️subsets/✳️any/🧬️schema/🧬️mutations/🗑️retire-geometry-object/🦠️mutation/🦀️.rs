@@ -16,8 +16,8 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RetireGeometryObject w
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "remove", entity: "geometryObject", kind: "retire-geometry-object", record: "RetiredGeometryObject" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(
             &format!("Delete geometry \"{}\"", self.id),
             &format!("Geometrie \"{}\" löschen", self.id),
         )

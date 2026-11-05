@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorBondStress w
         record: "ChangedAnchorBondStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ultimate skin friction τ_f of the anchor", "Anker: Grenzmantelreibung τ_f ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ultimate skin friction τ_f of the anchor", "Anker: Grenzmantelreibung τ_f ändern")
     }
 }
 

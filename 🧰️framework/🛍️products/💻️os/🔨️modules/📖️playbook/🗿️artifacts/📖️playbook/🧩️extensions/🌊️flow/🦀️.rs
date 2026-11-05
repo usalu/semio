@@ -1,6 +1,6 @@
 //! 📖️ Actual Playbook document construction from original Flow field loans.
 use crate::{PlaybookBlock,PlaybookBlockOption,PlaybookSpec,PlaybookStep,PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_framework_os_flow::forms::FlowFormProducer;
+use semio_os_flow::forms::FlowFormProducer;
     fn humanize_widget_label(id: &str) -> String {
         let mut words = Vec::new();
         let mut current = String::new();

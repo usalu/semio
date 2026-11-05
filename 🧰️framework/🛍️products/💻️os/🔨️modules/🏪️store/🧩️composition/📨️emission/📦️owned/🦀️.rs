@@ -2,20 +2,21 @@
 
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::{RetireOwned, controlled::ControlledRetirement}};
 use std::{any::Any, mem::{ManuallyDrop, size_of}};
-pub use semio_framework_os_store_one_item_publication::lifted_member_owned_batch::{BatchRetirement, SourceRetirementIssuer};
-use semio_framework_os_store_one_item_publication::lifted_member_owned_batch::{BatchAdmission};
+pub use semio_os_store_one_item_publication::lifted_member_owned_batch::{BatchRetirement, SourceRetirementIssuer};
+use semio_os_store_one_item_publication::lifted_member_owned_batch::{BatchAdmission};
 
 
 
 
 fn admit_batch_retirement<T: RetireOwned>(values: T, grant: RetainedCloneGrant) -> BatchAdmission<T> {
-    semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(values, grant).result.map(|(owner, progress)| (owner as Box<dyn BatchRetirement>, progress))
+    { let outcome=semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(values, grant); semio_framework_value::RetainedWorkOutcome{work:outcome.work,result:outcome.result.map(|(owner, progress)| (owner as Box<dyn BatchRetirement>, progress))} }
 }
 
 trait BatchOwner: Send {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn close(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn last_turn_work(&self) -> u64;
     fn terminal_is_empty(&self) -> bool;
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
@@ -28,18 +29,21 @@ struct TypedBatch<M: Send + 'static> {
     retire_source: fn(std::collections::VecDeque<M>, RetainedCloneGrant) -> BatchAdmission<std::collections::VecDeque<M>>,
     source_birth_bytes: usize,
     pub closing: bool,
+    last_work:u64,
 }
 impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
     fn as_any(&self) -> &dyn Any { self }
     fn as_any_mut(&mut self) -> &mut dyn Any { self }
     fn close(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.last_work=0;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth < self.demands(grant.maximum_copy_bytes)?.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "owned batch retirement exceeds admitted depth")); }
         self.closing = true;
         if self.values.is_some() {
             if self.birth_bytes > grant.maximum_capacity_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match (self.retire)(self.values.take().unwrap(), child) {
+            let outcome=(self.retire)(self.values.take().unwrap(), child);self.last_work=outcome.work;
+            return match outcome.result {
                 Ok((owner, progress)) => { *self.retirement = Some(owner); Ok(RetainedCloneStep::Progress(progress)) },
                 Err((error, original)) => { *self.values = Some(original); Err(error) },
             };
@@ -47,16 +51,18 @@ impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
         if let Some(retirement) = self.retirement.as_mut() {
             if !retirement.terminal_is_empty() {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                let step = retirement.step(child)?;
+                let result=retirement.step(child);self.last_work=retirement.last_turn_work();let step=result?;
                 return semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "owned batch child").map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             let bytes = size_of_val(retirement.as_ref());
             if bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            self.last_work=1;
             self.retirement.take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
         }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
+    fn last_turn_work(&self)->u64{self.last_work}
     fn terminal_is_empty(&self) -> bool { self.values.is_none() && self.retirement.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.retirement.as_ref().map_or(Ok(0), |retirement| retirement.next_copy_byte_demand()) }
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -77,7 +83,7 @@ impl<M: Send + 'static> Drop for TypedBatch<M> {
 }
 
 /// 📦️ First-party erased owner whose exact mutation type survives every refused admission.
-pub struct MemberStoreOwnedBatch { pub owner: Option<Box<dyn BatchOwner>>, owner_bytes: usize }
+pub struct MemberStoreOwnedBatch { pub owner: Option<Box<dyn BatchOwner>>, owner_bytes: usize, last_work:u64 }
 impl MemberStoreOwnedBatch {
     /// 📐️ Names the exact erased typed scaffold allocation before ownership is transferred.
     pub fn scaffold_byte_demand<M: RetireOwned>() -> usize { size_of::<TypedBatch<M>>() }
@@ -98,16 +104,16 @@ impl MemberStoreOwnedBatch {
         let owner_bytes = size_of::<TypedBatch<M>>();
         let progress = RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: owner_bytes, ..Default::default() };
         if !progress.fits(grant) { return Err((ValueError::literal(ValueRefusalKind::AllocationFailed, "member batch scaffold exceeds its admitted allocation grant"), values)); }
-        let owner = TypedBatch { values: ManuallyDrop::new(Some(values)), retirement: ManuallyDrop::new(None), birth_bytes: size_of::<ControlledRetirement<Vec<M>>>(), retire: admit_batch_retirement::<Vec<M>>, retire_source: admit_batch_retirement::<std::collections::VecDeque<M>>, source_birth_bytes: size_of::<ControlledRetirement<std::collections::VecDeque<M>>>(), closing: false };
-        Ok((Self { owner: Some(Box::new(owner)), owner_bytes }, progress))
+        let owner = TypedBatch { values: ManuallyDrop::new(Some(values)), retirement: ManuallyDrop::new(None), birth_bytes: size_of::<ControlledRetirement<Vec<M>>>(), retire: admit_batch_retirement::<Vec<M>>, retire_source: admit_batch_retirement::<std::collections::VecDeque<M>>, source_birth_bytes: size_of::<ControlledRetirement<std::collections::VecDeque<M>>>(), closing: false, last_work:0 };
+        Ok((Self { owner: Some(Box::new(owner)), owner_bytes, last_work:0 }, progress))
     }
     /// 🪪️ Admits a decoded native vocabulary using the exact issuer installed with its receiver.
-    pub fn admit_with_issuer<M: Send + 'static>(values: &mut Option<Vec<M>>, issuer: semio_framework_os_store_one_item_publication::lifted_member_owned_batch::BatchRetirementIssuer<M>, grant: RetainedCloneGrant) -> Result<Option<(Self, RetainedCloneProgress)>, ValueError> {
+    pub fn admit_with_issuer<M: Send + 'static>(values: &mut Option<Vec<M>>, issuer: semio_os_store_one_item_publication::lifted_member_owned_batch::BatchRetirementIssuer<M>, grant: RetainedCloneGrant) -> Result<Option<(Self, RetainedCloneProgress)>, ValueError> {
         let owner_bytes = size_of::<TypedBatch<M>>();
         let progress = RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: owner_bytes, ..Default::default() };
         if values.is_none() || !progress.fits(grant) || grant.maximum_depth == 0 { return Ok(None); }
-        let owner = TypedBatch { values: ManuallyDrop::new(values.take()), retirement: ManuallyDrop::new(None), birth_bytes: issuer.birth_bytes, retire: issuer.begin, retire_source: issuer.source.begin, source_birth_bytes: issuer.source.birth_bytes, closing: false };
-        Ok(Some((Self { owner: Some(Box::new(owner)), owner_bytes }, progress)))
+        let owner = TypedBatch { values: ManuallyDrop::new(values.take()), retirement: ManuallyDrop::new(None), birth_bytes: issuer.birth_bytes, retire: issuer.begin, retire_source: issuer.source.begin, source_birth_bytes: issuer.source.birth_bytes, closing: false, last_work:0 };
+        Ok(Some((Self { owner: Some(Box::new(owner)), owner_bytes, last_work:0 }, progress)))
     }
     /// 📐️ Prices only the concrete native batch shell before its original vector transfers.
     pub fn issuer_scaffold_byte_demand<M: Send + 'static>() -> usize { size_of::<TypedBatch<M>>() }
@@ -139,15 +145,19 @@ impl MemberStoreOwnedBatch {
     pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.as_ref().map_or(Ok(0), |owner| owner.next_copy_byte_demand()) }
     /// ♻️ Returns each owned allocation under its own capacity or release axis.
     pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.last_work=0;
         let Some(owner) = self.owner.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "member batch shell requires admitted depth")); }
-        if !owner.terminal_is_empty() { return owner.close(grant); }
+        if !owner.terminal_is_empty() { let result=owner.close(grant);self.last_work=owner.last_turn_work();return result; }
         let progress = RetainedCloneProgress { copied_items: 1, released_bytes: self.owner_bytes, ..Default::default() };
         if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        self.last_work=1;
         self.owner.take();
         Ok(RetainedCloneStep::Complete(progress))
     }
+    /// 🎟️ Returns actual delegated retirement work even when its result is a refusal.
+    pub fn last_turn_work(&self)->u64{self.last_work}
     pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() }
 }
 impl Drop for MemberStoreOwnedBatch {
@@ -161,7 +171,7 @@ pub struct MemberStoreOwnedBatchRequest {
     pub expected_revision: [u8; 32],
     pub actor: semio_framework_value::SharedUtf8,
     pub group_id: Option<String>,
-    pub transaction: Option<semio_framework_os_spr::TransactionRef>,
+    pub transaction: Option<semio_os_spr::TransactionRef>,
     pub mutations: MemberStoreOwnedBatch,
 }
 

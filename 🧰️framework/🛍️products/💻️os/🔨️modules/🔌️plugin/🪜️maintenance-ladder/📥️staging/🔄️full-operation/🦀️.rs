@@ -1,32 +1,32 @@
 //! 🏺️ Staged slice of the `full-operation` band of the mounted artifact instance: its `instance-ladders` members (WP6 step S0 of the instance family).
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use crate::ladder_bundle::{LadderCtx, LadderRef};
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
-use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 
 impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
- pub fn granted_mounted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+ pub fn granted_mounted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
   if self.shared().next_granted_mounted_retirement().is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let grant=cx.retained_grant();let demand=self.shared().granted_mounted_retirement_demands(grant.maximum_copy_bytes)?;
-  let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
+  let step=semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
    self.granted_mounted_retirement_original(same,actual).map(|step|(PluginLifecycleStep::Progress(step.progress()),false))
   })?;
   Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()))
  }
 
- fn granted_mounted_retirement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+ fn granted_mounted_retirement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
   let Some((index,id))=self.shared().next_granted_mounted_retirement()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
   let closing=self.close.close_started;
   if self.tools.tool_operations.get(id).unwrap().terminal_is_empty(){let d=self.tools.tool_operations.get(id).unwrap().original_frame_release_demands();if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}let original=self.tools.tool_operations.remove(id).unwrap();self.tools.operation_progress_retired|=original.progress.is_some();drop(original);self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}

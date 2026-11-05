@@ -129,7 +129,7 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜�
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{STDIO_MP3_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
@@ -137,7 +137,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.mp3".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Mp3", "Mp3"),
+        label: semio_ui_locale::LocalizedLabel::native("Mp3", "Mp3"),
         source_format: STDIO_MP3_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -184,7 +184,7 @@ pub mod artifact_items_7 {
 use crate::{native_codecs};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
@@ -196,7 +196,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub mod artifact_items_8 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }

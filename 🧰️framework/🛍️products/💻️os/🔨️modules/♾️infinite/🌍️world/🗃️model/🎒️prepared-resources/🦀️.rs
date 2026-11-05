@@ -300,7 +300,7 @@ impl World3dBuildContext {
     /// silently in preparation (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
     /// `📓️w7b-presenter-one-frame-per-boot.md` §1).
     #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path."))]
-    pub fn append_step(&mut self, input: &mut semio_framework_ui_prepared::PreparedRenderInput) -> Result<bool, World3dBuildRejected> {
+    pub fn append_step(&mut self, input: &mut semio_ui_prepared::PreparedRenderInput) -> Result<bool, World3dBuildRejected> {
         if let Some(rejected) = self.rejected.take() {
             return Err(rejected);
         }

@@ -4,19 +4,19 @@
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use crate::terminology::Block2dLabels;
 use crate::{ui_label, BLOCK2D_GRANULARITY_HANDLE, BLOCK2D_GRANULARITY_HANDLE_KIND, BLOCK2D_INTERACTION_HANDLE, BLOCK2D_PLAY_APP_ID};
-use semio_framework_ui_contract::Label;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract::Label;
+use semio_plugin::tree_item_desc;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const BLOCK2D_BODY_ARTIFACT: &str = "block2d.play.artifact";
@@ -39,16 +39,16 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 /// 🕹️ One pick row of the `handle` domain: the raw canonical target id, its `granularity`, and no
 /// binding of its own — the tree carries the single `interactionSelect` the whole panel picks through.
-fn icon_item(id: String, label: Label, description: Option<String>, icon: &str, granularity: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn icon_item(id: String, label: Label, description: Option<String>, icon: &str, granularity: &str) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut node = tree_item_desc(id, label, description)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
         props.icon = Some(ui_text(icon)?);
         props.granularity = Some(ui_text(granularity)?);
     }
     Ok(node)
 }
 
-fn ui_text(value: &str) -> semio_framework_plugin::UiAssemblyResult<UiText> {
+fn ui_text(value: &str) -> semio_plugin::UiAssemblyResult<UiText> {
     UiText::try_from_str(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "block2d tree text admission failed"))
 }
 
@@ -56,7 +56,7 @@ fn ui_text(value: &str) -> semio_framework_plugin::UiAssemblyResult<UiText> {
 /// `handleKind:{id}`/`handle:{id}` targets `Block2dPlayApp::interaction_topology` declares for the
 /// `handle` domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
-pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     PanelTreeBuilder::new("block2d-play-document")?
         .window_section_or_placeholder(
             windows,

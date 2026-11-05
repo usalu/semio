@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerMeanWindSpeed
         record: "ChangedTowerMeanWindSpeed",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Mean wind speed v_0 of the tower leg", "Turmstiel: Mittlere Windgeschwindigkeit v_0 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Mean wind speed v_0 of the tower leg", "Turmstiel: Mittlere Windgeschwindigkeit v_0 ändern")
     }
 }
 

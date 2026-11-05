@@ -1,28 +1,28 @@
 //! 🧪️ Actual original disposer body and final Box release share the neutral close corpus.
 #![cfg(test)]
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as pack;
 use semio_framework_test_fixtures::fixture_text;
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactOwnedDisposer};
-use semio_framework_plugin_instance_ladders::ladders_lifecycle_stores::{ORIGINAL_STORE_LANES, original_disposal_demands, original_disposal_step};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactOwnedDisposer};
+use semio_plugin_instance_ladders::ladders_lifecycle_stores::{ORIGINAL_STORE_LANES, original_disposal_demands, original_disposal_step};
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError};
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 
 struct OriginalDisposer { pub body:Option<ControlledRetirement<String>>, pub started:bool }
@@ -54,7 +54,7 @@ fn original_disposer_frame_has_its_own_physical_release(){
 #[test]
 fn original_transient_detach_allocates_no_replacement_and_retires_exact_frames(){
  let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(corpus["detach"]["allocated"],0);assert_eq!(corpus["detach"]["released"],0);
- let ((mut store,mut disposer),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let store=store::TransientStore::<semio_framework_plugin_decl_views::NoTransient,semio_framework_plugin_decl_views::NoTransientMutation>::default();let disposer:ArtifactDisposal<_>=Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_store_disposer());(store,disposer)});
+ let ((mut store,mut disposer),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let store=store::TransientStore::<semio_plugin_decl_views::NoTransient,semio_plugin_decl_views::NoTransientMutation>::default();let disposer:ArtifactDisposal<_>=Some(semio_plugin_decl_views::transient_retirement::no_transient_store_disposer());(store,disposer)});
  let original=store.current_root();let pointer=std::sync::Arc::as_ptr(&original);drop(original);let demand=original_disposal_demands(&disposer,&store,7).unwrap();assert_eq!(demand.capacity_bytes,0);assert_eq!(demand.release_bytes,0);
  for denied in [RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:demand.copy_bytes,maximum_depth:demand.depth,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes-1,maximum_depth:demand.depth,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_depth:0,..Default::default()}]{let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_disposal_step(&mut disposer,&mut store,denied));assert!(!result.unwrap().1);assert!(!store.detached_terminal_is_empty());let alias=store.current_root();assert_eq!(std::sync::Arc::as_ptr(&alias),pointer);drop(alias);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_depth:demand.depth,..Default::default()};let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_disposal_step(&mut disposer,&mut store,grant));let (step,ready)=result.unwrap();assert!(!ready);assert_eq!(step.progress().unwrap().copied_bytes,demand.copy_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(store.detached_terminal_is_empty());

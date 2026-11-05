@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertThermalSection whe
         record: "InsertedThermalSection",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert thermal section {}", self.item.id), &format!("Temperaturquerschnitt {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert thermal section {}", self.item.id), &format!("Temperaturquerschnitt {} einfügen", self.item.id))
     }
 }
 

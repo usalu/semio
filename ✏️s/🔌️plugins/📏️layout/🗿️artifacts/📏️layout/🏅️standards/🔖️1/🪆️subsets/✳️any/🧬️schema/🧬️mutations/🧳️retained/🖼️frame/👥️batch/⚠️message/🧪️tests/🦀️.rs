@@ -1,4 +1,4 @@
-use semio_framework_os_kernel::{MutationMessage,MutationMessageLedgerRetirement};
+use semio_os_kernel::{MutationMessage,MutationMessageLedgerRetirement};
 use crate::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
@@ -26,7 +26,7 @@ fn close(owner:&mut DynamicMessagePreparation){owner.begin_close();for _ in 0..1
 fn close_rows(rows:Vec<MutationMessage>){let mut ledger=MutationMessageLedgerRetirement::new(String::new(),rows);while !ledger.terminal_is_empty(){let d=RetirementDemand{copy_bytes:ledger.next_copy_byte_demand(),capacity_bytes:ledger.next_capacity_byte_demand(256).unwrap(),release_bytes:ledger.next_release_byte_demand().unwrap(),depth:ledger.next_depth_demand().unwrap()};ledger.close_step(grant(d)).unwrap();}}
 #[test]
 fn canonical_dynamic_rows_copy_only_original_fields_with_exact_native_receipts(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let common:serde_json::Value=serde_json::from_str(include_str!("../../../../🎚️simple/🧪️tests/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../🧳️retained/🖼️frame/👥️batch/⚠️message/🧪️tests/🔣️.json")).unwrap();let common:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../🧳️retained/🎚️simple/🧪️tests/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let event=LayoutMutation::DragFrames(crate::drag_frames::DragFrames{page_id:"fixture".into(),targets:decode(&row["original"]),dx:0.0,dy:0.0});
   for cut in std::iter::once(usize::MAX).chain(fixture["cuts"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as usize)){

@@ -63,7 +63,7 @@ impl<'ctx> PointerCtx<'ctx> {
             self.dock.toggle_window_pane_chip(&window_id, chip, &self.surfaces, &mut self.docs, &mut self.windows)?;
             return Ok(true);
         }
-        if semio_framework_ui_wgpu_controls::select::arm_select_scroll(&mut self.input.scroll_offsets, id) {
+        if semio_ui_wgpu_controls::select::arm_select_scroll(&mut self.input.scroll_offsets, id) {
             return Ok(true);
         }
         if let Some((kind, index)) = ShellPaletteKind::row_index(id) {
@@ -149,7 +149,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 self.plugins.active_example_id = Some(example_id.to_string());
                 self.input.overlay_state = OverlayState::None;
                 if let Some(controller_id) = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()) {
-                    self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "exampleId": example_id }) }).await?;
+                    self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "exampleId": example_id }) }).await?;
                 }
                 return Ok(true);
             }
@@ -257,7 +257,7 @@ impl<'ctx> PointerCtx<'ctx> {
             }
             id if id.starts_with("shell.mode.") => {
                 let mode_id = id.trim_start_matches("shell.mode.");
-                ({ let __arg0 = ActionDescriptor { controller_id: self.docs.session.as_ref().map(|s| s.app.controller_id.clone()).unwrap_or_default(), action: "setMode".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "modeId": mode_id }) }; self.as_actions().dispatch_action(__arg0) }).await?;
+                ({ let __arg0 = ActionDescriptor { controller_id: self.docs.session.as_ref().map(|s| s.app.controller_id.clone()).unwrap_or_default(), action: "setMode".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "modeId": mode_id }) }; self.as_actions().dispatch_action(__arg0) }).await?;
                 return Ok(true);
             }
             id if id.starts_with("framework.settings.appearance.") => {
@@ -376,7 +376,7 @@ impl<'ctx> PointerCtx<'ctx> {
             id if id.contains(".item.") => {
                 if let Some((select_id, value)) = id.rsplit_once(".item.") {
                     if let Some(action) = self.input.widget_maps.select_metas.get(select_id).cloned() {
-                        semio_framework_ui_wgpu_controls::select::clear_select_scroll(&mut self.input.scroll_offsets, select_id);
+                        semio_ui_wgpu_controls::select::clear_select_scroll(&mut self.input.scroll_offsets, select_id);
                         self.input.open_selects.insert(select_id.to_string(), false);
                         let args = merge_committed_args(action.args.as_ref(), semio_framework_value::DslValue::String(value.to_string()));
                         self.as_actions().dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args }).await?;
@@ -386,21 +386,21 @@ impl<'ctx> PointerCtx<'ctx> {
             }
             id if self.input.widget_maps.toggle_metas.contains_key(id) => {
                 if let Some((pressed, action)) = self.input.widget_maps.toggle_metas.get(id).cloned() {
-                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "pressed": !pressed }) }).await?;
+                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: semio_renderer_wgpu_host_base::action_args_json!({ "pressed": !pressed }) }).await?;
                     return Ok(true);
                 }
             }
             id if id.ends_with(".minus") => {
                 let base = id.trim_end_matches(".minus");
                 if let Some(meta) = self.input.widget_maps.stepper_metas.get(base).cloned() {
-                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_delta.controller_id, action: meta.on_delta.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "delta": -meta.step }) }).await?;
+                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_delta.controller_id, action: meta.on_delta.action, args: semio_renderer_wgpu_host_base::action_args_json!({ "delta": -meta.step }) }).await?;
                     return Ok(true);
                 }
             }
             id if id.ends_with(".plus") => {
                 let base = id.trim_end_matches(".plus");
                 if let Some(meta) = self.input.widget_maps.stepper_metas.get(base).cloned() {
-                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_delta.controller_id, action: meta.on_delta.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "delta": meta.step }) }).await?;
+                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_delta.controller_id, action: meta.on_delta.action, args: semio_renderer_wgpu_host_base::action_args_json!({ "delta": meta.step }) }).await?;
                     return Ok(true);
                 }
             }

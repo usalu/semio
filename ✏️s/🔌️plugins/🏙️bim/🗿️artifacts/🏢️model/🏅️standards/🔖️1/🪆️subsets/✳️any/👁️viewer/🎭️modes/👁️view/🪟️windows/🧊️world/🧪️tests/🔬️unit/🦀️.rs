@@ -1,18 +1,18 @@
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_tests_5::render::world::{scene, WorldView};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels;
 #[allow(unused_imports)]
-use semio_framework_plugin::{scene_surface, world3d_projection_measures, ActionDescriptor, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_plugin::{scene_surface, world3d_projection_measures, ActionDescriptor, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::{config, measures, definition, WINDOW_KIND_ID, BODY_KEY, render, Marks};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels;
 use crate::viewer::bim::viewer_action;
-use semio_framework_plugin::ViewModel;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::ViewModel;
+use semio_ui_locale::{Locale, Terminology};
 
 fn demo() -> ModelSnapshot {
     parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses")

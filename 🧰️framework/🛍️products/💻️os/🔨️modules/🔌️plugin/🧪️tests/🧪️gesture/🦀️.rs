@@ -6,41 +6,41 @@
 //! ended press leaves zero trace). The drive itself is pinned by the tool-machine corpus
 //! (`🧫️gesture-drive-law`: `rows`, `hostEvents`, `slots`).
 #[cfg(test)]
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::gesture_emit;
+use semio_plugin_tool_run::tool_jobs_tool_machine::gesture_emit;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::gesture_contract::GestureSlot;
+use semio_plugin_decl_views::gesture_contract::GestureSlot;
 
-use semio_framework_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, HostEvent, ToolCommandCatalog};
+use semio_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, HostEvent, ToolCommandCatalog};
 use semio_framework::kernel::{ActorId, HybridLogicalTimestamp};
-use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
-use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use semio_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
 use store::os_store::backbone::Backbone;
-use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, *};
+use semio_ui_contract::{Buildable, HasBase, HasChildren, *};
 use semio_framework_value::DslValue;
-use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
+use semio_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
 use std::future::Future;
-use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_plugin_window_kits::{LabelAxes, WindowKit};
 #[cfg(test)]
-use semio_framework_ui_locale::{Locale, Terminology};
-use semio_framework_plugin_decl_views::NoDraftMutation;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_plugin_program::PluginProgram;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
-use semio_framework_plugin_tests_06::time_travel_support_1::{TOY_HOST_EVENTS, ToyApp, ToyHistoryApp, close, fixture, head, meta, pump_until, rejected, seeded_app, seeded_mutation, text, verb};
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_ui_locale::{Locale, Terminology};
+use semio_plugin_decl_views::NoDraftMutation;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_plugin_program::PluginProgram;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_plugin_tests_06::time_travel_support_1::{TOY_HOST_EVENTS, ToyApp, ToyHistoryApp, close, fixture, head, meta, pump_until, rejected, seeded_app, seeded_mutation, text, verb};
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_testing_laws::artifact_app_laws;
-use semio_framework_plugin_actor_host as host;
-use semio_framework_plugin_time_travel as time_travel;
+use semio_plugin_testing_laws::artifact_app_laws;
+use semio_plugin_actor_host as host;
+use semio_plugin_time_travel as time_travel;
 use semio_framework::*;
 use semio_framework_tool_machine::{GesturePhase, GestureState, GestureTool, ToolAbortReason, ToolRefusal, ToolStep};
 
@@ -159,7 +159,7 @@ fn open_windows(app: &ToyApp) -> Vec<String> {
 async fn a_history_edit_ends_every_open_gesture_with_zero_trace_for_an_app_without_a_frozen_arm() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
-    let mut app = seeded_app(&fixture, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut app = seeded_app(&fixture, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     assert!(ToyHistoryApp::host_event(&HostEvent::TimeTravelFrozen { window_id: "pane-a".into() }).is_none(), "the app has no Frozen arm of its own");
     let (generation, committed, edits) = (app.stores.store.generation(), head(&app), app.edit_transactions().len());
     assert_eq!(stream(&mut app, &actor, 900, "pane-a", 40), None, "a tick publishes nothing");
@@ -172,7 +172,7 @@ async fn a_history_edit_ends_every_open_gesture_with_zero_trace_for_an_app_witho
     assert_eq!((app.stores.store.generation(), head(&app), app.edit_transactions().len()), (generation, committed.clone(), edits), "an open gesture never touches the committed document");
     TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
     let mutation = seeded_mutation(&app, 0);
-    let begun = app.handle_action("historyEditBegin", Some(&DslValue::Object(vec![("mutationId".into(), DslValue::String(mutation))])), &in_window(&actor, "pane-a"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("begin");
+    let begun = app.handle_action("historyEditBegin", Some(&DslValue::Object(vec![("mutationId".into(), DslValue::String(mutation))])), &in_window(&actor, "pane-a"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("begin");
     assert_eq!(rejected(&begun), None);
     assert_eq!(TOY_HOST_EVENTS.with(|events| events.borrow().len()), 2, "the app was told once per window and answered nothing");
     assert!(app.tool_machines.gestures().is_empty(), "the history edit ended every window's gesture");
@@ -180,9 +180,9 @@ async fn a_history_edit_ends_every_open_gesture_with_zero_trace_for_an_app_witho
     assert_eq!(stream(&mut app, &actor, 903, "pane-b", 77), None);
     assert!(app.tool_machines.gestures().is_empty(), "a tick on the frozen document opens no gesture");
     assert_eq!((app.stores.store.generation(), head(&app), app.edit_transactions().len()), (generation, committed, edits), "zero trace: no edit, no store change");
-    app.handle_action("historyEditExit", None, &in_window(&actor, "pane-a"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("exit");
+    app.handle_action("historyEditExit", None, &in_window(&actor, "pane-a"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("exit");
     let mounted_policy = app.mounted_policy;
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     close(&mut app);
 }
 
@@ -193,15 +193,15 @@ async fn a_history_edit_ends_every_open_gesture_with_zero_trace_for_an_app_witho
 async fn a_windows_host_fact_ends_only_its_own_gesture() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
-    let mut app = seeded_app(&fixture, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut app = seeded_app(&fixture, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let (generation, committed) = (app.stores.store.generation(), head(&app));
     stream(&mut app, &actor, 900, "pane-a", 40);
     stream(&mut app, &actor, 901, "pane-b", 42);
     let host = |window: &str, kind: &str| DslValue::Object(vec![(semio_framework::HOST_EVENT_ARG_WINDOW_ID.to_string(), DslValue::String(window.to_string())), (semio_framework::HOST_EVENT_ARG_KIND.to_string(), DslValue::String(kind.to_string()))]);
-    app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&host("pane-a", semio_framework::HOST_EVENT_KIND_BLUR)), &in_window(&actor, "pane-a"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("blur");
+    app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&host("pane-a", semio_framework::HOST_EVENT_KIND_BLUR)), &in_window(&actor, "pane-a"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("blur");
     assert_eq!(open_windows(&app), vec!["pane-b"], "the blur ended pane-a's gesture only");
     assert_eq!(app.rendered_snapshot().count, 42);
-    app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&host("pane-b", semio_framework::HOST_EVENT_KIND_CAPTURE_LOST)), &in_window(&actor, "pane-b"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("capture lost");
+    app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&host("pane-b", semio_framework::HOST_EVENT_KIND_CAPTURE_LOST)), &in_window(&actor, "pane-b"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("capture lost");
     assert!(app.tool_machines.gestures().is_empty());
     assert_eq!(app.rendered_snapshot().count, committed.0, "the render reads the committed document again");
     assert_eq!((app.stores.store.generation(), head(&app)), (generation, committed), "zero trace");
@@ -215,7 +215,7 @@ async fn a_windows_host_fact_ends_only_its_own_gesture() {
 async fn a_late_release_of_a_press_the_runtime_ended_leaves_zero_trace() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
-    let mut app = seeded_app(&fixture, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut app = seeded_app(&fixture, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let base = app.stores.store.content_revision_now();
     let dispatch = |app: &mut ToyApp, operation: u64, press: &str, phase: GesturePhase, value: i32| {
         let slot = app.render_ctx().admit_gesture_slot(operation, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
@@ -227,7 +227,7 @@ async fn a_late_release_of_a_press_the_runtime_ended_leaves_zero_trace() {
     assert_eq!(dispatch(&mut app, 900, "p1", GesturePhase::Stream, 40), None);
     assert_eq!(app.tool_machines.gestures().open("pane-a").map(|gesture| gesture.press.as_str()), Some("p1"), "the gesture belongs to the press that opened it");
     let blur = DslValue::Object(vec![(semio_framework::HOST_EVENT_ARG_WINDOW_ID.to_string(), DslValue::String("pane-a".into())), (semio_framework::HOST_EVENT_ARG_KIND.to_string(), DslValue::String(semio_framework::HOST_EVENT_KIND_BLUR.into()))]);
-    app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&blur), &in_window(&actor, "pane-a"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("blur");
+    app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&blur), &in_window(&actor, "pane-a"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("blur");
     assert_eq!(app.tool_machines.gestures().closed("pane-a"), Some("p1"), "the blur closed the press");
     assert_eq!(dispatch(&mut app, 901, "p1", GesturePhase::Commit, 41), None, "the late release commits nothing");
     assert_eq!(dispatch(&mut app, 902, "p1", GesturePhase::Stream, 42), None);
@@ -249,7 +249,7 @@ async fn a_late_release_of_a_press_the_runtime_ended_leaves_zero_trace() {
 async fn the_slot_follows_only_a_publishing_dispatch_admitted_on_the_gesture_it_holds() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
-    let mut app = seeded_app(&fixture, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut app = seeded_app(&fixture, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let base = app.stores.store.content_revision_now();
     let faulted = app.render_ctx().admit_gesture_slot(900, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
     faulted.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value: 7 }.into()), "seed").expect("a tick");

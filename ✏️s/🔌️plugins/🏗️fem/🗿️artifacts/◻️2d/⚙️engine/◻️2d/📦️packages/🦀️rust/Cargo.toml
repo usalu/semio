@@ -16,7 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
 semio-s-fem-analyses = { workspace = true }
 semio-s-fem-analyses-model = { workspace = true }

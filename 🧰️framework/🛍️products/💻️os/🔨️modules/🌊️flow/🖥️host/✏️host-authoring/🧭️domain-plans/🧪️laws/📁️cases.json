@@ -22,5 +22,8 @@
   },
   {
     "operation": "insertOutput"
+  },
+  {
+    "operation": "reorganize"
   }
 ]

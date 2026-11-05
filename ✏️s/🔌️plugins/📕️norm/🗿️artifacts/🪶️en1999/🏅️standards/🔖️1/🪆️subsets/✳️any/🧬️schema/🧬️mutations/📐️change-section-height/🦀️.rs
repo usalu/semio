@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSectionHeight wher
         record: "ChangedSectionHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Section depth h of the section", "Querschnitt: Profilhöhe h ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Section depth h of the section", "Querschnitt: Profilhöhe h ändern")
     }
 }
 

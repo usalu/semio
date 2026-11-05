@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-layout", kind: "set-page-layout", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set page-layout", "Seitenlayout setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set page-layout", "Seitenlayout setzen")
     }
 
     fn target(&self) -> Vec<String> {

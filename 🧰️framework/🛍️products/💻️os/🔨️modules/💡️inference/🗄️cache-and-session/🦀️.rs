@@ -211,7 +211,7 @@ impl InferenceSession {
 
     /// 🚦 Starts an update of field `F` after `diff`. The field's values move into the update; [`finish_update`](Self::finish_update) gives them back. With `reuse` an entity is carried or confirmed instead of recomputed
     /// (the caller passes whether its cache is enabled: with no cache every update is a plain recompute).
-    pub fn begin_update<P, F: InferredField<P>, D: semio_framework_os_command::DiffRegions>(&mut self, diff: &D, reuse: bool) -> FieldUpdate<F::Key, F::Value> {
+    pub fn begin_update<P, F: InferredField<P>, D: semio_os_command::DiffRegions>(&mut self, diff: &D, reuse: bool) -> FieldUpdate<F::Key, F::Value> {
         let stored = self.entries.remove(F::FIELD_ID).and_then(|entry| entry.stored.into_any().downcast::<Stored<F::Key, F::Value>>().ok()).map_or_else(Stored::empty, |stored| *stored);
         let touched = diff.touches();
         let known = stored.sound;

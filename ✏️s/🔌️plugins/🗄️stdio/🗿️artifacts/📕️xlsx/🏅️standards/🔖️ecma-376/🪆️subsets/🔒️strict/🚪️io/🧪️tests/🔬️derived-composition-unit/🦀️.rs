@@ -5,7 +5,7 @@ mod tests {
     use crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as XlsxStrictBuilder;
     use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::CODE_CONFORMANCE_ATTRIBUTE;
     use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::CODE_NAMESPACE_MISMATCH;
-    use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder as _};
+    use semio_plugin::{io::AnalyzeSource, ArtifactBuilder as _};
 
     #[semio_framework_async_macros::async_test]
     async fn conforming_builder_snapshot_composes_and_stamps_strict() {

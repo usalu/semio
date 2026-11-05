@@ -6,7 +6,7 @@
 //! here, in passing, matching the class of bug `📓️w4-sequence-report.md`'s CSV fix found).
 
 use crate::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::Dialect;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
@@ -21,7 +21,7 @@ impl Deserializer<WriterSnapshot> for TxtIntoWriter {
     /// writer document it seeds is a fresh one (`"txt-import"`), never a restoration of a prior
     /// writer document's full identity.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TxtIntoWriter: expected a text payload".to_string())));
         };

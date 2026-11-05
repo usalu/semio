@@ -78,7 +78,7 @@ fn a_failing_law_does_not_abort_the_binary_through_the_registry_guard() {
     std::panic::set_hook(previous_hook);
     assert!(outcome.is_err(), "the law under test must actually have panicked");
     assert!(
-        semio_framework_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_ok(),
+        semio_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_ok(),
         "the guard must have put the linked packs back even though the law it guarded panicked"
     );
 }

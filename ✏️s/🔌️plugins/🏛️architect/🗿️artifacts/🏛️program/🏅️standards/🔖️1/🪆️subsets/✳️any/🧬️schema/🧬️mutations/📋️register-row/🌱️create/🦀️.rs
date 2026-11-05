@@ -25,10 +25,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "register-row", kind: "create-register-row", record: "CreatedRegisterRow" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let label = self.row.key().label();
         let name = &self.row.header().name;
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create {} \"{name}\"", label.en), &format!("{} \"{name}\" erstellen", label.de))
+        semio_ui_locale::LocalizedLabel::native(&format!("Create {} \"{name}\"", label.en), &format!("{} \"{name}\" erstellen", label.de))
     }
     fn target(&self) -> Vec<String> {
         vec![self.row.header().id.0.clone()]

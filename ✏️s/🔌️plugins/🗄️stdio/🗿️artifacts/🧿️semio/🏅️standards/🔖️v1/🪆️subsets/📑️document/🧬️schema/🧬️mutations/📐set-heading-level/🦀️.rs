@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "heading-level", kind: "set-heading-level", record: "SetHeadingLevel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set heading level", "Überschriftenebene setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set heading level", "Überschriftenebene setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

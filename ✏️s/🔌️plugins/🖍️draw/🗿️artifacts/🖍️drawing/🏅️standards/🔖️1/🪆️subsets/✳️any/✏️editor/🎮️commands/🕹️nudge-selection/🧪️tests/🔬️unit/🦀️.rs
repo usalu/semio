@@ -6,13 +6,13 @@
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 #[allow(unused_imports)] use std::collections::{BTreeMap,BTreeSet};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::*;
 
 /// ⌨️ The emission of one right-nudge verb of `session`'s selection by `delta`.
 fn plan(document:&DrawingSnapshot,session:&DrawingSession,delta:[f64;2])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
-    let history=semio_framework_plugin::HistoryView::empty();
+    let history=semio_plugin::HistoryView::empty();
     nudge(&ArtifactView::with_operation(document,&history,semio_s_artifact_draw_drawing_editor::identity_test::operation()),session,"nudgeSelectionRight",delta)
 }
 
@@ -85,8 +85,8 @@ fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
     let second=plan(&source,&session,[10.0,-5.0]).unwrap();
     assert_ne!(second.transaction.expect("a second nudge is its own transaction").id,transaction.id);
     let label=<DrawingMutation as protocol::SemanticMutation<DrawingSnapshot>>::label(&first.artifact_mutations[0]);
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::En),"Drag 1 layer by (10, -5)");
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::De),"1 Ebene um (10; -5) ziehen");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native,semio_ui_locale::Locale::En),"Drag 1 layer by (10, -5)");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native,semio_ui_locale::Locale::De),"1 Ebene um (10; -5) ziehen");
 }
 
 #[test]

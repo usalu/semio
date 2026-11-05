@@ -1,6 +1,6 @@
 //! 🗂️ paid row identity and relationship frontiers for the full owner schema.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,validate_sqlite_database_schema_controlled};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,validate_sqlite_database_schema_controlled};
 pub(super) const TABLES:[(&str,usize);30]=[
 ("rewriting_document",2),("rewriting_layout",9),("rewriting_value",2),("rewriting_binding",4),("rewriting_boolean",3),("rewriting_number",5),("rewriting_string",3),("rewriting_array_element",4),("rewriting_object_member",5),("rewriting_lhs",4),("rewriting_rhs",2),("rewriting_pattern",7),("rewriting_create",4),("rewriting_merge",4),("rewriting_delete",4),("rewriting_assignment",6),("rewriting_parameter",6),("jack_document",6),("jack_camera",11),("jack_content_child",7),("jack_node_kind",4),("jack_edge_kind",4),("jack_port_kind",5),("jack_node_kind_port",4),("jack_value_type",2),("jack_value_type_list",3),("jack_value_type_schema",3),("jack_node_property",7),("jack_edge_property",7),("jack_port_property",7)];
 pub(super) fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

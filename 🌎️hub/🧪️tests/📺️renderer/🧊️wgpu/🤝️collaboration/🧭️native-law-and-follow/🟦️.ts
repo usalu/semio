@@ -103,7 +103,7 @@ export function spawnNativeLaw(options: HubCollaborationOptionsV1, law: string, 
   const path = `shell::hub_projection_workspace_tests::${law}`;
   const [command, args] = options.nativeBinary
     ? [options.nativeBinary, [path, "--exact", "--ignored", "--nocapture", "--test-threads=1"]]
-    : ["cargo", ["test", "-p", "semio-framework-os-renderer-wgpu", "--lib", "--", path, "--exact", "--ignored", "--nocapture", "--test-threads=1"]];
+    : ["cargo", ["test", "-p", "semio-renderer-wgpu", "--lib", "--", path, "--exact", "--ignored", "--nocapture", "--test-threads=1"]];
   mkdirSync(out, { recursive: true });
   const log: string[] = [];
   const child = spawn(command, args, { cwd: options.repoRoot, env, stdio: ["ignore", "pipe", "pipe"] });

@@ -2,7 +2,7 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_png_snapshot::STDIO_PNG_DOCUMENT_SCHEMA;

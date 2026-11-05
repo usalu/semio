@@ -38,7 +38,7 @@ fn selected(ctx: &Context) -> Result<(String, Json), String> {
 #[cfg(feature = "sut")]
 fn subject(ctx: &Context) -> Result<Outcome, String> {
     let (id, trace) = selected(ctx)?;
-    let actual = parse_json(&semio_framework_plugin_host::exercise_relay_lifecycle_trace(&trace.to_string())?)?;
+    let actual = parse_json(&semio_plugin_host::exercise_relay_lifecycle_trace(&trace.to_string())?)?;
     let expected = trace.get("expected").cloned().ok_or_else(|| format!("{id}: missing expected transition"))?;
     if actual != expected {
         return Err(format!("{id}: {} != {}", actual.to_string(), expected.to_string()));

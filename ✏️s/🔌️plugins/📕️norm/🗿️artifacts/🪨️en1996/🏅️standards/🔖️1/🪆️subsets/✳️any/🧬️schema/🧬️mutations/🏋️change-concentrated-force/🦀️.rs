@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeConcentratedForce 
         record: "ChangedConcentratedForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change concentrated force", "Einzellast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change concentrated force", "Einzellast ändern")
     }
 }
 

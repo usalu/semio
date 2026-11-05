@@ -28,7 +28,7 @@ fn engine_canvas_theme_json(theme: &Theme) -> String {
  * the scene otherwise).
  *
  * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `syncAll` */
-fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint: &semio_framework_ui_declaration::ui::Paint2dScene, theme: &Theme, width: u32, height: u32) -> bool {
+fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint: &semio_ui_declaration::ui::Paint2dScene, theme: &Theme, width: u32, height: u32) -> bool {
     let mut changed = false;
     let size_key = format!("{width}x{height}");
     if cache.size_key.as_deref() != Some(size_key.as_str()) {

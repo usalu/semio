@@ -7,22 +7,22 @@
 use crate::viewer::animate::modes::view;
 use crate::viewer::animate::modes::view::windows::tile_editor;
 use crate::{default_presentation_snapshot, PresentationSnapshot, ANIMATE_DIALECT, PRESENTATION_DOCUMENT_SCHEMA};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ArtifactView;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -56,7 +56,7 @@ impl ArtifactViewer for AnimatePresentationViewer {
     /// Without it every live envelope load faults with `viewer did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("animate.child-projection"), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("animate.child-projection"), error.to_string()))
     }
 
     type Snapshot = PresentationSnapshot;
@@ -79,7 +79,7 @@ impl ArtifactViewer for AnimatePresentationViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<PresentationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<PresentationSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_presentation_snapshot())
     })}
 
@@ -92,24 +92,24 @@ impl ArtifactViewer for AnimatePresentationViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<ComponentTree> {
         (match body_key {
             tile_editor::BODY_KEY => tile_editor::render(doc.snapshot),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("animate.viewer.capacity", "viewer diagnostic admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("animate.viewer.capacity", "viewer diagnostic admission failed")),
         })
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_animate_presentation_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_animate_presentation_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(ANIMATE_DIALECT)
         .document(["semio", "animate"])
         .icon_id("animate")

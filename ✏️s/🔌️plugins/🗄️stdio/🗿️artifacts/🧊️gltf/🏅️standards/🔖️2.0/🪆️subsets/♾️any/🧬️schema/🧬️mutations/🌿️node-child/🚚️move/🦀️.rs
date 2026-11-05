@@ -70,8 +70,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node-child", kind: "move-node-child", record: "MovedNodeChild" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Move Node Child", "Kindknoten verschieben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Move Node Child", "Kindknoten verschieben")
     }
 
     fn target(&self) -> Vec<String> {

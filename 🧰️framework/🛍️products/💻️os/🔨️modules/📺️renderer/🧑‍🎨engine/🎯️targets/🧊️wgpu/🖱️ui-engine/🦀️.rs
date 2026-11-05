@@ -3,7 +3,7 @@
 //! 🧭️ Native and wasm32: the dispatch of pointer, keyboard and accessibility events into the retained trees, the scene interaction step, the retained document consumer and the validation of component scene render plans. The module files keep their place in the interpreter tree and are mounted here as public modules; the `interpreter` module of the renderer is the facade over this crate and its two lower siblings.
 
 extern crate infinite_canvas as infinite_world;
-extern crate semio_framework_os_renderer_wgpu_contracts as element_contracts;
+extern crate semio_renderer_wgpu_contracts as element_contracts;
 
 #[path = "../../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🧩️retained-ui-engine/🦀️.rs"]
 pub mod retained_ui_engine;

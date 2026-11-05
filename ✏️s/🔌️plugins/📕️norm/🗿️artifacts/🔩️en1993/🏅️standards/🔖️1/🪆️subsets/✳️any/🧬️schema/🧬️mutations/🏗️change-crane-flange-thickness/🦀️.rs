@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneFlangeThickne
         record: "ChangedCraneFlangeThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flange thickness t_f of the crane runway", "Kranbahn: Gurtdicke t_f ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flange thickness t_f of the crane runway", "Kranbahn: Gurtdicke t_f ändern")
     }
 }
 

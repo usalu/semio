@@ -5,7 +5,7 @@
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::neural::Dictionary;
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
-use semio_framework_plugin::MeshData;
+use semio_plugin::MeshData;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
@@ -78,7 +78,7 @@ pub fn semio_mesh_from_mesh_data(mesh: &MeshData) -> Result<SemioMeshSnapshot, s
 
 /// 🎨️ Visits each emitted vertex's source corner inside the same geometry grouping authority.
 pub fn semio_mesh_from_mesh_data_with_sources(mesh: &MeshData, mut record: impl FnMut(Option<&str>, usize, bool) -> Result<(), semio_framework_diagnostic::TextError>) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
-    use semio_framework_plugin::{MeshAttributeDomain, MeshAttributeSemantic};
+    use semio_plugin::{MeshAttributeDomain, MeshAttributeSemantic};
     if mesh.positions.is_empty() || mesh.positions.len() % 3 != 0 || mesh.positions.len() > 300_000 || mesh.positions.iter().any(|value| !value.is_finite()) {
         return Err(io_error("generation3d export requires 1..100000 finite three-dimensional positions"));
     }
@@ -142,12 +142,12 @@ pub fn semio_mesh_from_mesh_data_with_sources(mesh: &MeshData, mut record: impl 
     Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: vec![SemioMesh { id: EXPORT_MESH_ID.into(), primitives }], materials, textures })
 }
 
-fn attribute_value(attribute: &semio_framework_plugin::MeshAttribute, domain_index: usize) -> Result<&semio_framework_value::DslValue, semio_framework_diagnostic::TextError> {
+fn attribute_value(attribute: &semio_plugin::MeshAttribute, domain_index: usize) -> Result<&semio_framework_value::DslValue, semio_framework_diagnostic::TextError> {
     attribute.value_at(domain_index).ok_or_else(|| io_error("generation3d export attribute value is out of range"))
 }
 
-fn channel_tuple(mesh: &MeshData, semantic: semio_framework_plugin::MeshAttributeSemantic, vertex: usize, corner: usize, width: usize) -> Result<Option<Vec<f64>>, semio_framework_diagnostic::TextError> {
-    use semio_framework_plugin::{MeshAttributeDomain, MeshAttributeSemantic};
+fn channel_tuple(mesh: &MeshData, semantic: semio_plugin::MeshAttributeSemantic, vertex: usize, corner: usize, width: usize) -> Result<Option<Vec<f64>>, semio_framework_diagnostic::TextError> {
+    use semio_plugin::{MeshAttributeDomain, MeshAttributeSemantic};
     let values = if let Some(attribute) = mesh.attributes.values().find(|attribute| attribute.semantic == semantic && attribute.domain != MeshAttributeDomain::Edge) {
         let index = match attribute.domain { MeshAttributeDomain::Vertex => vertex, MeshAttributeDomain::Corner if !mesh.indices.is_empty() => corner, MeshAttributeDomain::Face if !mesh.indices.is_empty() => corner / 3, _ => return Err(io_error("generation3d export surface channel has an unsupported domain")) };
         let values = attribute_value(attribute, index)?.as_array().ok_or_else(|| io_error("generation3d export surface channel is not a numeric tuple"))?;
@@ -196,7 +196,7 @@ pub fn semio_mesh_from_meshes(meshes: &[MeshData]) -> Result<SemioMeshSnapshot, 
 
 /// 🧩️ Keeps compatible authored channels and scopes material and texture identities across surfaces.
 pub fn merge_meshes(meshes: &[MeshData]) -> Result<MeshData, semio_framework_diagnostic::TextError> {
-    use semio_framework_plugin::MeshAttributeSemantic;
+    use semio_plugin::MeshAttributeSemantic;
     let first = meshes.first().ok_or_else(|| io_error("geometry merge contains no surfaces"))?;
     let mut merged = MeshData { paint_texture_base64: first.paint_texture_base64.clone(), ..MeshData::default() };
     let mut signature = None;
@@ -233,7 +233,7 @@ pub fn merge_meshes(meshes: &[MeshData]) -> Result<MeshData, semio_framework_dia
                     *id = format!("{prefix}{id}");
                 }
             }
-            if !merged.attributes.contains_key(&name) { merged.attributes.insert(name.clone(), semio_framework_plugin::MeshAttribute { domain: attribute.domain, semantic: attribute.semantic, interpolation: attribute.interpolation, values: Vec::new(), indices: Some(Vec::new()) }); }
+            if !merged.attributes.contains_key(&name) { merged.attributes.insert(name.clone(), semio_plugin::MeshAttribute { domain: attribute.domain, semantic: attribute.semantic, interpolation: attribute.interpolation, values: Vec::new(), indices: Some(Vec::new()) }); }
             let target = merged.attributes.get_mut(&name).expect("merged channel was just declared");
             let sample_offset = target.values.len() as u32;
             if target.values.len() + attribute.values.len() > 600_000 { return Err(io_error("geometry merge exceeds its channel sample capacity")); }
@@ -264,8 +264,8 @@ pub fn merge_meshes(meshes: &[MeshData]) -> Result<MeshData, semio_framework_dia
     Ok(merged)
 }
 
-fn merge_attributes(mesh: &MeshData) -> Result<semio_framework_mesh_engine::HistoryFoldIndex<String, semio_framework_plugin::MeshAttribute>, semio_framework_diagnostic::TextError> {
-    use semio_framework_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation};
+fn merge_attributes(mesh: &MeshData) -> Result<semio_framework_mesh_engine::HistoryFoldIndex<String, semio_plugin::MeshAttribute>, semio_framework_diagnostic::TextError> {
+    use semio_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation};
     let mut attributes = mesh.attributes.clone();
     for (buffer, semantic, name, width) in [(&mesh.normals, MeshAttributeSemantic::Normal, "normal", 3), (&mesh.uvs, MeshAttributeSemantic::Uv, "uv", 2), (&mesh.colors, MeshAttributeSemantic::Color, "color", if mesh.colors.len() == mesh.positions.len() / 3 * 4 { 4 } else { 3 })] {
         if buffer.is_empty() { continue; }
@@ -312,7 +312,7 @@ pub fn generation3d_mesh_from_document(doc: &semio_framework_value::DslValue, pr
 
 /// 📦️ Encodes the supplied mesh through the canonical STL grammar.
 pub fn stl_ascii_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    let stl = ::semio_framework_async::poll::resolve_ready(<semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl as semio_framework_plugin::ArtifactSerializer>::serialize(mesh))
+    let stl = ::semio_framework_async::poll::resolve_ready(<semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl as semio_plugin::ArtifactSerializer>::serialize(mesh))
         .map_err(|error| io_error(error.to_string()))?;
     Ok(semio_s_artifact_stdio_stl::engine::encode_stl_ascii(&stl).into_bytes())
 }
@@ -331,7 +331,7 @@ pub fn import_mesh_data(mesh: &MeshData) -> Result<Generation3dSnapshot, semio_f
 
 /// 🎨️ Keeps primitive seams and surface assets on editable polygon inputs.
 pub fn import_semio_mesh(snapshot: &SemioMeshSnapshot) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
-    use semio_framework_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeInterpolation, MeshAttributeSemantic, MeshTexture};
+    use semio_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeInterpolation, MeshAttributeSemantic, MeshTexture};
     let mut materials = semio_framework_mesh_engine::HistoryFoldIndex::new();
     for material in &snapshot.materials {
         let color = material.base_color;

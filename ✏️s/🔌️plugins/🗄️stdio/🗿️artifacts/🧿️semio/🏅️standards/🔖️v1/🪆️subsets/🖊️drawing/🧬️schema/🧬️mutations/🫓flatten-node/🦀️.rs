@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "flatten", entity: "node", kind: "flatten-node", record: "FlattenedNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Flatten node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} reduzieren", self.at.layer))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Flatten node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} reduzieren", self.at.layer))
     }
     fn target(&self) -> Vec<String> {
         vec![self.at.layer.to_string()]

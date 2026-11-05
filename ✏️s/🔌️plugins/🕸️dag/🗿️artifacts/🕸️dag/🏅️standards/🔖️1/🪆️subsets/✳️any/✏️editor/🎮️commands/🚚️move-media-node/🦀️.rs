@@ -4,7 +4,7 @@
 use crate::editor::dag::commands::node_graph_edit::dag_node_drag_emit;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::{DagMutation, DagSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 /// 🪪️ The verb a `moveMediaNode` tool transaction is scoped by.
 pub const MOVE_MEDIA_NODE_VERB: &str = "moveMediaNode";

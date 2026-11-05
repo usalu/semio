@@ -1,7 +1,7 @@
 //! 🛰️ The hub remote binding: state, phases, progress, observation and the binding itself.
 
 use semio_framework_async::OperationContext;
-use semio_framework_os_kernel::os_directory::{
+use semio_os_kernel::os_directory::{
     DirectoryAccessChange,
     DirectoryEventBody,
     DirectorySessionKindV1,
@@ -14,13 +14,13 @@ use semio_framework_os_kernel::os_directory::{
     MemberSpaceViewV1,
     MemberView,
 };
-use semio_framework_os_kernel::os_directory::io::binary::artifact_hash::hex_lower;
-use semio_framework_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
-use semio_framework_os_kernel::os_directory::client::{DirectoryClient, DirectoryTransport};
-use semio_framework_os_mcp_foundation::errors::GatewayError;
-use semio_framework_os_mcp_hub_pair::pair;
-use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
-use semio_framework_os_mcp_wire::notify::publish_call_progress;
+use semio_os_kernel::os_directory::io::binary::artifact_hash::hex_lower;
+use semio_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
+use semio_os_kernel::os_directory::client::{DirectoryClient, DirectoryTransport};
+use semio_os_mcp_foundation::errors::GatewayError;
+use semio_os_mcp_hub_pair::pair;
+use semio_os_mcp_hub_pair::binding_errors::HubBindingError;
+use semio_os_mcp_wire::notify::publish_call_progress;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};
@@ -271,12 +271,12 @@ impl HubRemoteBinding {
                     if lease.descriptor.byte_length != descriptor_bytes.len() as u64 || lease.descriptor.sha256 != framework_hash::sha256_hex(&descriptor_bytes) {
                         return Err(HubBindingError::InvalidResponse("execution-target selection does not match authenticated document descriptor"));
                     }
-                    let descriptor_value = semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(&descriptor_bytes)
+                    let descriptor_value = semio_os_kernel::os_pack::pack_rt::decode_wire_value(&descriptor_bytes)
                         .map_err(|_| HubBindingError::InvalidResponse("execution-target descriptor is not a canonical pack"))?;
                     let descriptor = semio_framework::PackageDescriptor::from_value(descriptor_value.clone())
                         .map_err(|_| HubBindingError::InvalidResponse("execution-target descriptor is not a package descriptor"))?;
-                    if semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor_value) != descriptor_bytes
-                        || semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value()) != descriptor_bytes
+                    if semio_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor_value) != descriptor_bytes
+                        || semio_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value()) != descriptor_bytes
                     {
                         return Err(HubBindingError::InvalidResponse("execution-target descriptor is not its exact canonical package projection"));
                     }

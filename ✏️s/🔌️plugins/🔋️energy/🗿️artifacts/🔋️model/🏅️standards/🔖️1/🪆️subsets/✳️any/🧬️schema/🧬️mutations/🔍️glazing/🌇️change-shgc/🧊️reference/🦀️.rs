@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-shgc", record: "ChangedFenestrationShgc" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change fenestration {} SHGC to {}", self.id.0, self.new_shgc), &format!("g-Wert von Fenster {} auf {} ändern", self.id.0, self.new_shgc))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change fenestration {} SHGC to {}", self.id.0, self.new_shgc), &format!("g-Wert von Fenster {} auf {} ändern", self.id.0, self.new_shgc))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,13 +1,13 @@
-use semio_framework_plugin_reactor_lifecycle::with_state as with_pending;
-use semio_framework_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn, take_turn_patch_page, turn_patch_budget_bytes};
-use semio_framework_plugin_reactor_turn_limits::{PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
+use semio_plugin_reactor_lifecycle::with_state as with_pending;
+use semio_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn, take_turn_patch_page, turn_patch_budget_bytes};
+use semio_plugin_reactor_turn_limits::{PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
 use semio_framework::kernel::UiPatch;
-use semio_framework_plugin_reactor_patches as patches;
-use semio_framework_plugin_reactor_lifecycle as pending;
-use semio_framework_plugin_reactor_turn as turn;
-use semio_framework_ui_contract as ui_contract;
+use semio_plugin_reactor_patches as patches;
+use semio_plugin_reactor_lifecycle as pending;
+use semio_plugin_reactor_turn as turn;
+use semio_ui_contract as ui_contract;
 use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt, UiTurnPatchTransfer, UiTurnPatches, UI_TURN_PATCHES_MAXIMUM, UI_TURN_PATCH_BUDGET_BYTES, UI_TURN_PATCH_OWNER_BYTES};
-use semio_framework_ui_runtime::{ComponentTree, TreeNode};
+use semio_ui_runtime::{ComponentTree, TreeNode};
 
 /// 🌲️ The cheapest admissible retained tree — this suite prices CROSSINGS and publication ORDER, not
 /// document width.
@@ -24,7 +24,7 @@ pub fn budget() -> serde_json::Value {
 }
 
 fn generous_budget() -> usize {
-    turn_patch_budget_bytes(semio_framework::kernel::Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), u64::MAX, 64, u32::MAX, 8))
+    turn_patch_budget_bytes(semio_framework::kernel::Budget::from_retained(semio_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), u64::MAX, 64, u32::MAX, 8))
 }
 
 fn retire_pending_authority(cx:&mut semio_framework_job::StepContext<'_>) {
@@ -97,7 +97,7 @@ fn settle_batched(tracker: &patches::PatchTracker, instance: u32, budget_bytes: 
         retire_pending_authority(cx);
         for (receipt, surface, revision) in acknowledgements.drain(..) {
             assert!(
-                with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"),
+                with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"),
                 "the host's acknowledgement of {surface}@{revision} must be admitted"
             );
         }
@@ -135,13 +135,13 @@ fn settle_batched(tracker: &patches::PatchTracker, instance: u32, budget_bytes: 
 /// procedural 3d React door (`📓️ui-turn-patch-batching-2026-09-15.md` §5).
 #[test]
 fn n_ready_surfaces_converge_in_two_crossings_when_their_patches_fit_the_budget() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let fixture = budget();
     let ceiling = fixture["crossingsPerBatch"].as_u64().expect("declared crossing budget") as usize;
     for count in fixture["surfaceCounts"].as_array().expect("declared surface counts").iter().map(|value| value.as_u64().expect("surface count") as usize) {
-        let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+        let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
         let instance = 70 + count as u32;
         let tracker = patches::PatchTracker::new();
         for index in 0..count {
@@ -163,10 +163,10 @@ fn n_ready_surfaces_converge_in_two_crossings_when_their_patches_fit_the_budget(
 /// byte-identically, in the same order, exactly once.
 #[test]
 fn a_refused_turn_page_returns_every_patch_to_its_own_slot_in_publication_order() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture = budget();
     let count = fixture["batchSurfaces"].as_u64().expect("declared batch surfaces") as usize;
     let instance = 79u32;
@@ -194,16 +194,16 @@ fn a_refused_turn_page_returns_every_patch_to_its_own_slot_in_publication_order(
 /// publication exactly once and in order.
 #[test]
 fn a_patch_over_the_turn_byte_budget_travels_on_the_next_turn_and_still_applies_exactly() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture = budget();
     let count = fixture["batchSurfaces"].as_u64().expect("declared batch surfaces") as usize;
     let fit = fixture["budgetPatchesThatFit"].as_u64().expect("declared budget width") as usize;
     let instance = 80u32;
     let expected = queue_external(instance, count);
-    let unit = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication").expect("queued publication");
+    let unit = with_pending(|pending| pending.borrow_mut().take_one(semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication").expect("queued publication");
     let cost = semio_framework::kernel::ui_patch_turn_bytes(&unit);
     with_pending(|pending| pending.borrow_mut().hand_back_turn(unit)).expect("probe returns to its slot");
     let mut delivered = Vec::new();
@@ -227,10 +227,10 @@ fn a_patch_over_the_turn_byte_budget_travels_on_the_next_turn_and_still_applies_
 /// than the whole budget could never leave the guest and its surface would never converge.
 #[test]
 fn the_first_ready_patch_is_admitted_whatever_the_budget_says() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture = budget();
     let instance = 81u32;
     let expected = queue_external(instance, 3);
@@ -250,7 +250,7 @@ fn the_first_ready_patch_is_admitted_whatever_the_budget_says() {
 /// `dlmalloc` granularity has to fund — and the capacity is READ OFF that ceiling, never chosen.
 #[test]
 fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     assert_eq!(UI_TURN_PATCHES_MAXIMUM, semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / UI_TURN_PATCH_OWNER_BYTES);
@@ -262,7 +262,7 @@ fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling()
         semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES
     );
     assert_eq!(UI_TURN_PATCH_BUDGET_BYTES, semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES / 4);
-    let window = |declared: usize| turn_patch_budget_bytes(semio_framework::kernel::Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 0, 0, declared as u32, 0));
+    let window = |declared: usize| turn_patch_budget_bytes(semio_framework::kernel::Budget::from_retained(semio_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 0, 0, declared as u32, 0));
     for declared in budget()["laneDeclarations"].as_array().expect("declared lane budgets").iter().map(|value| value.as_u64().expect("lane budget") as usize) {
         assert!(declared >= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES && declared <= UI_TURN_PATCH_BUDGET_BYTES, "a lane declaring {declared} B is outside the budget window");
         assert_eq!(window(declared), declared, "a lane inside the window is admitted verbatim");
@@ -287,10 +287,10 @@ fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling()
 /// 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, `abort-finalize-midrun-*.txt`, :6013 2026-09-15 17:58).
 #[test]
 fn two_queued_patches_of_one_surface_never_travel_in_the_same_turn_page() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 82u32;
     let name = format!("{instance}:framework.panel.toolRun");
     let other = format!("{instance}:surface-other");

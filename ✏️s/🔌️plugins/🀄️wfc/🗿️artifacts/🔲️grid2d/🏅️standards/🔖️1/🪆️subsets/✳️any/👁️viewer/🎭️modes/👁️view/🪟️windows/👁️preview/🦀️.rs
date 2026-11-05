@@ -6,13 +6,13 @@
 
 use crate::schema::snapshot::{Grid2dSnapshot, WfcColor, WfcPathSegment, WfcTile2d, WfcTileMedia2d};
 use crate::standards::v1::subsets::any::io::binary::snapshot::{decode_palette_indices};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -28,7 +28,7 @@ const MAX_BITMAP_PIXEL_RECTS: usize = 64;
 /// Restated rather than imported: this file must not reach into `crate::editor`.
 pub const CANVAS_ACTIONS: [&str; 6] = ["setActiveExample", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "setCamera"];
 
-fn canvas_actions() -> Vec<semio_framework_plugin::ActionDefinition> {
+fn canvas_actions() -> Vec<semio_plugin::ActionDefinition> {
     let labels = [
         ("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen")),
         ("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt")),
@@ -40,7 +40,7 @@ fn canvas_actions() -> Vec<semio_framework_plugin::ActionDefinition> {
     labels
         .into_iter()
         .map(|(id, label)| {
-            let mut action = semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, semio_framework_plugin::ActionKind::View) };
+            let mut action = semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::bounded_catalog(id, label, semio_plugin::ActionKind::View) };
             action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
             action
         })
@@ -172,6 +172,6 @@ pub fn scene(document: &Grid2dSnapshot) -> Canvas2dScene {
 }
 
 pub fn render(document: &Grid2dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene(document))
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document))
 }
 //#endregion 🔖️Render

@@ -1,5 +1,5 @@
 use crate::SOURCING_DIALECT;
-use semio_framework_plugin::{ArtifactViewer, Viewer};
+use semio_plugin::{ArtifactViewer, Viewer};
 #[allow(unused_imports)]
 use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA};
 #[allow(unused_imports)]
@@ -7,9 +7,9 @@ use crate::viewer::sourcing::modes::view;
 #[allow(unused_imports)]
 use crate::viewer::sourcing::modes::view::windows::pool;
 #[allow(unused_imports)]
-use {semio_framework_plugin::ArtifactView, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::Fault, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_plugin::ViewEmit};
+use {semio_plugin::ArtifactView, semio_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_plugin::Fault, semio_plugin::NoConfig, semio_plugin::NoConfigMutation, semio_plugin::NoPresence, semio_plugin::NoPresenceMutation, semio_plugin::NoTransient, semio_plugin::NoTransientMutation, semio_plugin::ViewEmit};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 

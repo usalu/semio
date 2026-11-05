@@ -46,12 +46,12 @@ fn decode_run<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_, '_>) 
     }
     result
 }
-fn encode_run<T>(operation: impl FnOnce(&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<T, ValueError>) -> Result<T, ValueError> {
+fn encode_run<T>(operation: impl FnOnce(&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<T, ValueError>) -> Result<T, ValueError> {
     let mut callback = |_| true;
     let mut recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
     let mut native = semio_framework_value::NativeEncodeControl::new(128 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = semio_framework_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, grant());
+    let mut owner = semio_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, grant());
     let result = operation(&mut owner);
     drop(owner);
     while native.has_retirement_owner() {
@@ -510,7 +510,7 @@ fn real_registered_owned_gltf_pack_and_glb_routes_publish_actual_native_models()
     let IoPayload::Binary(wire) = &restored.value else { panic!() };
     let graph = IfcSnapshot::decode_pack(wire).unwrap();
     assert_eq!(bounds(&graph),([.5,-.5,0.],[1.5,.5,2.],8,12));
-    let binary = semio_framework_os_kernel::io::io_schema::CARRIER_BINARY;
+    let binary = semio_os_kernel::io::io_schema::CARRIER_BINARY;
     let exporter = entries.iter().find(|e| e.from == crate::io::IFC4X3_DIALECT && e.into == binary).unwrap();
     let glb = (exporter.run)(&input, &mut control).unwrap();
     let importer = entries.iter().find(|e| e.from == binary && e.into == crate::io::IFC4X3_DIALECT).unwrap();
@@ -563,7 +563,7 @@ fn original_glb_publication_keeps_final_wire_prefix_and_capacity_refusals_in_its
     let mut recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
     let mut native = semio_framework_value::NativeEncodeControl::new(128 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = semio_framework_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, grant());
+    let mut owner = semio_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, grant());
     let error = write::encode(&target, &mut owner).unwrap_err();
     assert_eq!(error.kind, ValueRefusalKind::Canceled);
     assert!(owner.progress().retained_capacity_bytes >= expected.len());
@@ -580,7 +580,7 @@ fn original_glb_publication_keeps_final_wire_prefix_and_capacity_refusals_in_its
     native.install_retirement_recipient(&mut recipient).unwrap();
     let mut g = grant();
     g.maximum_capacity_bytes = expected.len() - 1;
-    let mut owner = semio_framework_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, g);
+    let mut owner = semio_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, g);
     let refused = write::encode(&target, &mut owner).unwrap_err();
     assert_eq!(refused.kind, ValueRefusalKind::OwnershipLimit);
     assert!(owner.progress().retained_capacity_bytes < expected.len());

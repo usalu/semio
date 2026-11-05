@@ -2,7 +2,7 @@
 
 use crate::op::NoteMutation;
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -11,6 +11,6 @@ pub struct SetSnapGridSpacing {
     pub value: f64,
 }
 
-pub fn handle(payload: &SetSnapGridSpacing, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &SetSnapGridSpacing, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_plugin::NoConfig>, _ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_plugin::NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::schema::mutations::change_snap_grid_spacing(Some(payload.value.max(1.0)))]))
 }

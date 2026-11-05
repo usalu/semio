@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-mcp-port"
+name = "semio-os-mcp-port"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -30,9 +30,9 @@ semio-framework = { workspace = true }
 semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
 semio-framework-async = { workspace = true }
 semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
-semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
+semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }

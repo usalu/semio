@@ -49,7 +49,7 @@ fn kinds_match_enum_and_catalog() {
 /// snapshot it started from, which is what makes each stamp mutation exactly invertible on its axis.
 #[test]
 fn stamping_out_of_a_class_and_back_is_the_identity() {
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
     let started = semio_s_artifact_stdio_docx_strict::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
     let mut state = started.clone();
     for mutation in stamp_conformance_class_mutations(false) {
@@ -106,7 +106,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
 /// ⚖️ Every strict kind satisfies the inverse sum law on a document, including VML and alternate content at a middle position.
 #[semio_framework_async_macros::async_test]
 async fn every_strict_kind_satisfies_the_inverse_sum_law() {
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
     let base = semio_s_artifact_stdio_docx_strict::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
     let laws = protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
     for mutation in stamp_conformance_class_mutations(false) {

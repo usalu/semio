@@ -1,0 +1,17 @@
+# Source Refusal Audit
+
+Read-only inspection of current TextEditor source-mode mapper, delivery, echo and outbox. No source edits or tests/builds started.
+
+## Required Invariants
+
+1. Mapper refusal must settle the outbox delivery and remove the refused text from echo.pending without acknowledging it as persisted. surface-state-and-delivery/🟦️.ts:133 appends pending before awaiting onAction at134. A mapper throw bypasses145 cleanup; outbox-and-scene-packets/🟦️.ts:32 releases rejected promises but provides no echo cleanup.
+2. Refusal must preserve local text for correction. Generic refuseTextEditorEditV1 removes pending and returns resync=true once none remain (edit-refusals-and-keys/🟦️.ts:10-14); surface-state:146 invokes syncSession(true), whose205-207 reinstalls scene.buffer. Simply returning an ordinary refused outcome will therefore erase the invalid local text. A source-local validation outcome requires a preserve-local branch.
+3. Neither undefined nor null is a refusal: refusalReason returns null for either (edit-refusals-and-keys:24-27), and delivery:135-137 records typing and publishes shared typing preview. Catch-and-return-undefined would incorrectly mark a rejected source edit as accepted. A local refusal must bypass typing.typed, publishTypingPreview, and trailing textSelect dispatch.
+4. Outbox remains one in-flight delivery. It records lastSent before deliver (outbox:25-27); release drains only owed changes and reads the current session then. The32771→32770 correction changes text and therefore bypasses its equality suppression. Do not recreate/reset this dispatcher on status/onAction changes, which can leave the old dispatcher draining late text (surface-state:54-60 documents that actual prior bug).
+5. Same text+selection after refusal is intentionally deduplicated because lastSent is retained. A retry policy must be explicit if needed; error UI changes alone cannot re-dispatch unchanged text. Selection-only edits can re-enter delivery and must remain refused rather than add stale pending or mark typing success.
+6. After correction, only the canonical parent-target action and captured window metadata may dispatch; no textEdit should fall through to the child controller. Host sourceOnAction:474-477 is the current mapping boundary. Invalid source must not reach onAction; valid correction must forward mapper result once.
+7. Validation feedback must describe current local source, not merely whichever old async delivery settled last. One delivery can be awaiting parent acceptance while the session changes; outbox deliberately reads latest text on drain. A stale refusal must not overwrite feedback for a newer corrected buffer. Scope feedback to source/controller/surface identity, and clear when the valid local source is accepted for dispatch.
+
+No independent dirty marker exists in this ordinary source branch: explicitDraftDirty is for the separate explicit draft lane. The critical false-saved indicators here are pending echo state and typing/shared preview calls. A refused source should remain local-only, visibly invalid, while persisted scene.buffer remains unchanged.
+
+Recommended regression observations: invalid32771 dispatch count0, exact invalid text remains visible and aria-invalid/status exposed; pending excludes refusal and typing preview stays unchanged; correction32770 dispatch count1 to exact parent/window, alert clears, pending settles on returned canonical echo, and no late outbox request restores invalid text.

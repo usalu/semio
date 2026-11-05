@@ -3,16 +3,16 @@
 use super::*;
 
 /// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d label admission failed"))
 }
 
 /// 🖱️ Bespoke row builder — every row here carries a localized (`Puzzle3dLabels`) label/icon that the
 /// declared `ActionDefinition` (English-only) cannot resolve, so each row is emitted via `Menu::item`
 /// rather than `Menu::action`. Grouping/ordering/the pre-destructive separator are still handled by
 /// `Menu::group` + the `organize_context_menu` funnel in `context_menu`.
-fn puzzle3d_context_menu_row(id: &str, label: impl Into<String>, icon: &str, action: &str, args: Option<Value>, destructive: bool) -> semio_framework_plugin::ContextMenuItemSpec {
-    semio_framework_plugin::ContextMenuItemSpec {
+fn puzzle3d_context_menu_row(id: &str, label: impl Into<String>, icon: &str, action: &str, args: Option<Value>, destructive: bool) -> semio_plugin::ContextMenuItemSpec {
+    semio_plugin::ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),
         icon: Some(icon.into()),
@@ -58,7 +58,7 @@ impl Puzzle3dContextSelection {
     /// right-click on a vortex of the selected object opens the vortex's menu, not the object's. A hit
     /// inside the current selection changes nothing — the whole selection stays the menu's subject, so
     /// "Delete (3 objects)" never silently narrows to the one row under the cursor.
-    pub fn from_surface(surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Self {
+    pub fn from_surface(surface: Option<&semio_plugin::ContextMenuSurfaceTarget>) -> Self {
         let mut out = Self::default();
         let Some(surface) = surface else {
             return out;
@@ -110,8 +110,8 @@ impl Puzzle3dContextSelection {
     }
 }
 
-pub fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dContextSelection, labels: &Puzzle3dLabels, view_state: &semio_framework_plugin::ViewModel, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::Menu;
+pub fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dContextSelection, labels: &Puzzle3dLabels, view_state: &semio_plugin::ViewModel, registry: &semio_plugin::AppActionRegistry) -> Vec<semio_plugin::ContextMenuItemSpec> {
+    use semio_plugin::Menu;
     if !selection.object_ids.is_empty() {
         let all_hidden = envelope.scene_snapshot.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
         let all_locked = envelope.scene_snapshot.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);

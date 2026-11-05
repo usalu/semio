@@ -25,7 +25,7 @@ pub struct CreateCharacterStyle {
 impl<Op> MutationKind<LayoutSnapshot, Op> for CreateCharacterStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_character_style::DeleteCharacterStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "character-style", kind: "create-character-style", record: "CreatedCharacterStyle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Create character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" erstellen", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Create character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" erstellen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

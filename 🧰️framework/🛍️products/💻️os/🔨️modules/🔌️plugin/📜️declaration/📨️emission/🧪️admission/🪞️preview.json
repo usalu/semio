@@ -1,0 +1,23 @@
+{
+  "values": [
+    3,
+    1,
+    2
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "depth"
+  ],
+  "expected": {
+    "values": [
+      3,
+      1,
+      2
+    ],
+    "sameAllocation": true,
+    "headerWork": 1,
+    "bornBytes": 0,
+    "releasedBytes": 0
+  }
+}

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointAssumedClass 
         record: "ChangedJointAssumedClass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Assumed stiffness class of the joint", "Anschluss: Angenommene Steifigkeitsklasse ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Assumed stiffness class of the joint", "Anschluss: Angenommene Steifigkeitsklasse ändern")
     }
 }
 

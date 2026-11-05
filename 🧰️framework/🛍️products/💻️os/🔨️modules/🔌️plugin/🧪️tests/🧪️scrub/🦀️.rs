@@ -3,39 +3,39 @@
 //! hands every displaced alias back for store retirement; every lane of a press rides ONE ledger step; operation tags are
 //! bounded and taken once.
 
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ScrubTag;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_tool_run::tool_jobs_tool_machine::ScrubTag;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::kernel::ActorId;
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework::kernel::HybridLogicalTimestamp;
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_tool_machine::ScrubPhase;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use serde_json::Value;
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 #[cfg(test)]
-use semio_framework_plugin_testing_laws::artifact_app_laws;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
+use semio_plugin_testing_laws::artifact_app_laws;
+use semio_ui_contract::*;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework_tool_machine::{ScrubInput, ToolAbortReason, ToolStep};
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::PressLeaf;
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_run::tool_jobs_tool_machine::PressLeaf;
+use semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
+use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
 
 #[doc(hidden)]
 pub type Runtime = ToolMachineRuntime<TestSnapshot, TestMutation, TestSnapshot, TestMutation>;

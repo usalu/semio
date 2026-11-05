@@ -22,11 +22,11 @@ async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, chann
 /// instead of producing ticks the ledger drops as stale.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_base_change_rebinds_the_running_job_so_ticks_never_carry_a_stale_identity() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
@@ -59,11 +59,11 @@ async fn tool_run_base_change_rebinds_the_running_job_so_ticks_never_carry_a_sta
 /// generation of the dispatch; an identity argument that is stale still no-ops.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_chord_actions_without_an_identity_resolve_the_live_run_and_stale_identities_still_no_op() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
@@ -97,11 +97,11 @@ async fn tool_run_chord_actions_without_an_identity_resolve_the_live_run_and_sta
 /// and its job — and a run that declares no settings reads is never reconfigured at all.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_settings_changed_fires_only_for_the_declared_settings_reads() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
@@ -137,11 +137,11 @@ async fn tool_run_settings_changed_fires_only_for_the_declared_settings_reads() 
 /// place — a raise continues and a lower retracts without any rebuild — and a base change rebinds it in place.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_reconfigure_resume_retargets_a_retargetable_job_in_place() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
@@ -177,11 +177,11 @@ async fn tool_run_reconfigure_resume_retargets_a_retargetable_job_in_place() {
 /// job reaches its checkpoint; only then does the refolded overlay replace it.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_retract_keeps_the_previous_overlay_until_the_job_reaches_its_checkpoint() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();

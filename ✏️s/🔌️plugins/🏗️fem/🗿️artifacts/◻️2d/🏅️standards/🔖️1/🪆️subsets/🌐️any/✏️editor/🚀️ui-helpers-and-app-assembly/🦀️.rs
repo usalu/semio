@@ -15,11 +15,11 @@ const FEM2D_CANVAS_UTILITIES: &[&str] = &["selectDirect", "selectMarquee", "sele
 //#region 🔖️Manifest
 /// 🩹️ One inspector patch action — internal (not in the palette; its arguments are authored by the
 /// inspector row that binds it), a document mutation on one entity.
-fn fem2d_patch_action(id: &str, label: LocalizedLabel) -> semio_framework_plugin::ActionDefinition {
-    semio_framework_plugin::ActionDefinition {
+fn fem2d_patch_action(id: &str, label: LocalizedLabel) -> semio_plugin::ActionDefinition {
+    semio_plugin::ActionDefinition {
         in_palette: false,
         args: vec![ActionArgDef::text("id", LocalizedLabel::native("Entity", "Element")).required(), ActionArgDef::text("field", LocalizedLabel::native("Field", "Feld")).required(), ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required()],
-        ..semio_framework_plugin::ActionDefinition::new(id, label, semio_framework_plugin::ActionKind::Mutation, "pencil")
+        ..semio_plugin::ActionDefinition::new(id, label, semio_plugin::ActionKind::Mutation, "pencil")
     }
 }
 
@@ -30,7 +30,7 @@ fn fem2d_patch_action(id: &str, label: LocalizedLabel) -> semio_framework_plugin
 /// `setActiveExample`'s select option below is that same `demo::ID` and why the action is `Migrated`
 /// (a `BatchOnlyPendingRewrite` classification would make the switcher a dead control). `.workflow(...)`
 /// stays dropped: `WorkflowDefinition` was deleted from framework-core, with no replacement surface.
-pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_fem2d_app() -> semio_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::FEM2D_DIALECT)
             .document(["semio", "fem", "fem2d"])
             .artifact_kind(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::document_artifact_kind())
@@ -38,8 +38,8 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .icon_id("fem-app")
             .mode(edit::MODE_ID, LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id(edit::MODE_ID)
-            .window_kind(model_window::WINDOW_KIND_ID, LocalizedLabel::native("Model", "Modell"), model_window::BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, "fem-model")
-            .window_kind(results_window::WINDOW_KIND_ID, LocalizedLabel::native("Results", "Ergebnisse"), results_window::BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, "bar-chart-3")
+            .window_kind(model_window::WINDOW_KIND_ID, LocalizedLabel::native("Model", "Modell"), model_window::BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, "fem-model")
+            .window_kind(results_window::WINDOW_KIND_ID, LocalizedLabel::native("Results", "Ergebnisse"), results_window::BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, "bar-chart-3")
             .default_layout(create_default_layout(
                 &[model_window::WINDOW_KIND_ID.into(), results_window::WINDOW_KIND_ID.into()],
                 "row",
@@ -136,8 +136,8 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .mutation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
             .action_destructive("removeSelection")
-            .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+            .action_with(semio_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_plugin::ActionKind::View, "camera"))
+            .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(
@@ -148,9 +148,9 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", semio_s_fem_app_surface::result_display_action_args())
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer-click") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), semio_framework_plugin::ActionKind::View, "mouse-pointer") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::View, "mouse-pointer") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_plugin::ActionKind::View, "mouse-pointer-click") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), semio_plugin::ActionKind::View, "mouse-pointer") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_plugin::ActionKind::View, "mouse-pointer") })
             .action_with(fem2d_patch_action("patchNode", LocalizedLabel::native("Patch Node", "Knoten ändern")))
             .action_with(fem2d_patch_action("patchElement", LocalizedLabel::native("Patch Element", "Element ändern")))
             .action_with(fem2d_patch_action("patchMaterial", LocalizedLabel::native("Patch Material", "Material ändern")))
@@ -160,7 +160,7 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(fem2d_patch_action("patchLoad", LocalizedLabel::native("Patch Load", "Last ändern")))
             .action_with(fem2d_patch_action("patchLoadCase", LocalizedLabel::native("Patch Load Case", "Lastfall ändern")))
             .action_with(fem2d_patch_action("patchCombination", LocalizedLabel::native("Patch Combination", "Kombination ändern")))
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setResultAnimation", LocalizedLabel::native("Set Result Animation", "Ergebnisanimation festlegen"), semio_framework_plugin::ActionKind::View, "play") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("setResultAnimation", LocalizedLabel::native("Set Result Animation", "Ergebnisanimation festlegen"), semio_plugin::ActionKind::View, "play") })
             .action_args("setResultAnimation", vec![
                 ActionArgDef::slider("phase", LocalizedLabel::native("Phase", "Phase"), 0.0, 1.0),
                 ActionArgDef::toggle("playing", LocalizedLabel::native("Playing", "Läuft")),
@@ -172,8 +172,8 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ]),
                 ActionArgDef::select("waveform", LocalizedLabel::native("Waveform", "Wellenform"), vec![ActionArgOption::new("ramp", LocalizedLabel::native("Ramp", "Rampe")), ActionArgOption::new("sine", LocalizedLabel::native("Sine", "Sinus"))]),
             ])
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("resultAnimationTick", LocalizedLabel::native("Result Animation Tick", "Ergebnisanimation Takt"), semio_framework_plugin::ActionKind::View, "timer") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("focusEntity", LocalizedLabel::native("Focus Entity", "Element fokussieren"), semio_framework_plugin::ActionKind::View, "focus") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("resultAnimationTick", LocalizedLabel::native("Result Animation Tick", "Ergebnisanimation Takt"), semio_plugin::ActionKind::View, "timer") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("focusEntity", LocalizedLabel::native("Focus Entity", "Element fokussieren"), semio_plugin::ActionKind::View, "focus") })
             .action_args("focusEntity", vec![ActionArgDef::text("id", LocalizedLabel::native("Entity", "Element")).required()])
             .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
             .action_interactive_job("addBar", InteractiveJobClassification::Migrated)
@@ -229,7 +229,7 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::number("sx", LocalizedLabel::native("Sx", "Sx")).required(),
                 ActionArgDef::number("sy", LocalizedLabel::native("Sy", "Sy")).required(),
             ])
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setTransformGumballFlag", LocalizedLabel::native("Set Transform Gumball Flag", "Transform-Griff festlegen"), semio_framework_plugin::ActionKind::View, "settings-2") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("setTransformGumballFlag", LocalizedLabel::native("Set Transform Gumball Flag", "Transform-Griff festlegen"), semio_plugin::ActionKind::View, "settings-2") })
             .action_args("setTransformGumballFlag", vec![
                 ActionArgDef::text("flag", LocalizedLabel::native("Flag", "Flagge")).required(),
                 ActionArgDef::toggle("pressed", LocalizedLabel::native("Pressed", "Gedrückt")),
@@ -282,7 +282,7 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("translateSelection", LocalizedLabel::native("Moves the selected nodes by dx and dy, dragging the attached elements along.", "Verschiebt die ausgewählten Knoten um dx und dy und zieht die angeschlossenen Elemente mit."))
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected nodes by the given angle around their common centre.", "Dreht die ausgewählten Knoten um den angegebenen Winkel um ihren gemeinsamen Mittelpunkt."))
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the positions of the selected nodes by sx and sy about their common centre.", "Skaliert die Positionen der ausgewählten Knoten um sx und sy um ihren gemeinsamen Mittelpunkt."))
-            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
             .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -3,12 +3,12 @@
 //! strings from here; there is deliberately no second label set anywhere in the plugin.
 
 use crate::TYPOLOGY_CATALOG;
-use semio_framework_ui_locale::{AppLabels, Locale, Terminology};
-use semio_framework_plugin::ViewModel;
+use semio_ui_locale::{AppLabels, Locale, Terminology};
+use semio_plugin::ViewModel;
 use semio_s_artifact_cad_cad_model::geometry::{CadObject, CadObjectName};
 
 //#region 🔖️Terminology
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the CAD app; one field per label makes every terminology×locale combination compile-checked.
     pub struct CadLabels {
         object: native_en "Object", native_de "Objekt", reuse_en "Building component", reuse_de "Baukomponente";
@@ -75,7 +75,7 @@ pub fn cad_is_de_locale(view_state: &ViewModel) -> bool {
 
 /// 🗣️ Resolves the active CAD label set from the OS-owned view context.
 pub fn cad_labels(view_state: &ViewModel) -> &'static CadLabels {
-    semio_framework_plugin::resolve_labels::<CadLabels>(view_state)
+    semio_plugin::resolve_labels::<CadLabels>(view_state)
 }
 
 /// 🗣️ Resolves a typology catalog entry's display label from its stable id; unknown ids fall back to the catalog's native English text or the raw id.

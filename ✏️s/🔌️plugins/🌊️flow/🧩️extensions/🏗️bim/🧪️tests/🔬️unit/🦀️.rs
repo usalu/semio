@@ -128,7 +128,7 @@ async fn evaluate_json_wall() {
     let out_json = evaluate_json(&reg, "bim.element.wall", &input_json);
     let out = semio_framework_pack_json::parse(&out_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(semio_framework_pack_json::Value::as_str), Some("wall"));
-    semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
+    semio_plugin::plugin_runtime::extension_dispose_cold().unwrap();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -145,7 +145,7 @@ async fn schema_component_round_trips_wall() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_bundle_extends_flow_and_evaluates() {
-    use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
+    use semio_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
     let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
     let flow_topic = flow_extension_topic_contribution("flow-play", "bim", "Bim", "bim", &manifest_json);

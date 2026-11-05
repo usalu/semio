@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertUpliftCase where O
         verb: "insert", entity: "uplift-case", kind: "insert-uplift-case", record: "InsertedUpliftCase",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert uplift case", "Aufschwimmfall einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert uplift case", "Aufschwimmfall einfügen")
     }
 }
 

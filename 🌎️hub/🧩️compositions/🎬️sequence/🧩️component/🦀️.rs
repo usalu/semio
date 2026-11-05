@@ -1,3 +1,3 @@
 //! 🎬️ The `sequence` plugin component: the one cdylib of `semio-hub-sequence`, holding only its entry point.
 
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, semio_hub_sequence::plugin::plugin, semio_hub_sequence::plugin::SequenceApps);
+semio_plugin::plugin_exports!(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, semio_hub_sequence::plugin::plugin, semio_hub_sequence::plugin::SequenceApps);

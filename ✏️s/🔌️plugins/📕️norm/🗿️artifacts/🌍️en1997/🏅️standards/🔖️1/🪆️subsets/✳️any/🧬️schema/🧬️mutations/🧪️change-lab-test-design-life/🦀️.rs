@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabTestDesignLife 
         record: "ChangedLabTestDesignLife",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design life t₂ of the laboratory test", "Laborversuch: Nutzungsdauer t₂ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design life t₂ of the laboratory test", "Laborversuch: Nutzungsdauer t₂ ändern")
     }
 }
 

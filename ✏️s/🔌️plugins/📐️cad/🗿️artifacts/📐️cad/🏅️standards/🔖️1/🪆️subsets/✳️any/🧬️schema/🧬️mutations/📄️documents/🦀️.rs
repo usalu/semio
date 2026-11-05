@@ -1,7 +1,7 @@
 //! 📄️ CAD child-document collection mutations: create and delete drawing and brep children.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 //#region 🧩️Modules
 #[path = "../🧊️create-brep/🦀️.rs"]

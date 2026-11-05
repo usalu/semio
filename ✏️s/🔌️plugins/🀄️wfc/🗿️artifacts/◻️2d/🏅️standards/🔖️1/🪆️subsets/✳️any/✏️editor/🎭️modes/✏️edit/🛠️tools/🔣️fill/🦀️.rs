@@ -6,13 +6,13 @@ use crate::editor::wfc2d::modes::edit::windows::preview::WFC_2D_PREVIEW_WINDOW;
 use crate::editor::wfc2d::transient::{SetSolve, Wfc2dAssignment, Wfc2dTransientMutation};
 use crate::Wfc2dSnapshot;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, StepContext};
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::RequestId;
-use semio_framework_plugin::ToolDefinition;
-use semio_framework_plugin::ToolRunJobPurpose;
-use semio_framework_plugin::ToolRunJobRequest;
+use semio_plugin::Effect;
+use semio_plugin::Fault;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::RequestId;
+use semio_plugin::ToolDefinition;
+use semio_plugin::ToolRunJobPurpose;
+use semio_plugin::ToolRunJobRequest;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy,
     ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunState, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,
@@ -512,7 +512,7 @@ enum FillPhase {
 pub struct Wfc2dFillRunJob {
     identity: ToolRunIdentity,
     writer: ToolRunTickWriter,
-    port: semio_framework_plugin::ToolRunJobPort,
+    port: semio_plugin::ToolRunJobPort,
     operation: Option<Operation>,
     phase: FillPhase,
     set_solve: Option<Vec<Wfc2dTransientMutation>>,
@@ -526,7 +526,7 @@ pub struct Wfc2dFillRunJob {
 }
 
 impl Wfc2dFillRunJob {
-    pub fn new(identity: ToolRunIdentity, snapshot: Arc<Wfc2dSnapshot>, port: semio_framework_plugin::ToolRunJobPort) -> Self {
+    pub fn new(identity: ToolRunIdentity, snapshot: Arc<Wfc2dSnapshot>, port: semio_plugin::ToolRunJobPort) -> Self {
         Self {
             identity,
             writer: ToolRunTickWriter::new(identity),
@@ -932,7 +932,7 @@ impl InteractiveJob for Wfc2dFillRunJob {
 
 //#region 🏗️Factory
 /// 🏗️ Builds the fill run job for the framework ledger.
-pub fn build_tool_run_job(request: ToolRunJobRequest<'_, semio_framework_plugin::EditorApp<crate::editor::wfc2d::Wfc2dEditor>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
+pub fn build_tool_run_job(request: ToolRunJobRequest<'_, semio_plugin::EditorApp<crate::editor::wfc2d::Wfc2dEditor>>) -> Result<Option<semio_plugin::ToolRunJob>, Fault> {
     if request.tool_id != TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
         return Ok(None);
     }

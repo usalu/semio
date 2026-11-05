@@ -5,9 +5,9 @@ use crate::schema::operations::BmpRetainedPaint;
 use crate::schema::snapshot::BmpRegion;
 use crate::schema::mutations::{BmpMutation,PaintIndexedRegion,PaintDirectRegion};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
+use semio_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
+use semio_ui_locale::LocalizedLabel;
 
 pub const INDEXED_ACTION_ID: &str = "paint-indexed-region";
 pub const DIRECT_ACTION_ID: &str = "paint-direct-region";
@@ -198,7 +198,7 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
         command: &BmpEditCommand,
         snapshot: &crate::schema::snapshot::BmpSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BmpEditor>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BmpEditor>>>,
     ) -> Option<usize> {
         let BmpEditCommand::Native(command) = command else { return None };
         let id = match command {

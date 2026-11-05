@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfCornerRadius whe
         record: "ChangedCfCornerRadius",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Inner corner radius r of the cold-formed member", "Kaltprofil: Innerer Eckradius r ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Inner corner radius r of the cold-formed member", "Kaltprofil: Innerer Eckradius r ändern")
     }
 }
 

@@ -85,7 +85,7 @@ fn every_variant_registers_an_approved_semantic_descriptor() {
 #[semio_framework_async_macros::async_test]
 async fn store_applies_widget_create() {
     let mut store = semio_s_artifact_procedural_3d_testkit::store_fixture::document_store(default_generation3d_snapshot()).await;
-    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert!(store.snapshot().expect("snapshot").host_snapshot.widgets.iter().any(|w| widget_id(w) == "note-9"));
     semio_s_artifact_procedural_3d_testkit::store_fixture::close(store);
 }
@@ -308,10 +308,10 @@ fn change_schema_round_trip_updates_schema() {
 async fn create_widget_satisfies_the_inverse_and_absorb_laws() {
     let base = default_generation3d_snapshot();
     let mutation = Generation3dMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-fresh".into(), text: String::new() } });
-    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    semio_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_snapshot.v2".into() }).diff(&base).into_parts().0;
-    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    semio_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -321,20 +321,20 @@ async fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
     base.host_snapshot.widgets.push(Widget::InputNote { id: "b".into(), text: String::new() });
     let base = base;
     let mutation = Generation3dMutation::ConnectSynapse(ConnectSynapse { index: 0, synapse: SynapseSpec { id: "e-fresh".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } });
-    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    semio_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }).diff(&base).into_parts().0;
-    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    semio_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn update_camera_satisfies_the_inverse_and_absorb_laws() {
     let base = default_generation3d_snapshot();
     let mutation = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 4.0, y: 5.0, zoom: 6.0 } });
-    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    semio_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_snapshot.v3".into() }).diff(&base).into_parts().0;
-    semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+    semio_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
 

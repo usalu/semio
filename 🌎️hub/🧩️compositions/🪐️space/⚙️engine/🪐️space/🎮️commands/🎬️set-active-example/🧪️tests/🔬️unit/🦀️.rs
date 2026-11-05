@@ -2,11 +2,11 @@
 
 use semio_hub_space_app::SpaceCommand;
 use semio_hub_space_app::unit_tests::context::studio_emit;
-use semio_framework_os::empty_workflow_snapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit};
+use semio_os::empty_workflow_snapshot;
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit};
 use semio_hub_space_commands_media::set_active_example::SetActiveExample;
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
@@ -21,7 +21,7 @@ async fn space_command_op_text_round_trips_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn open_studio_loads_created_empty_catalog_studio() {
     use semio_framework_artifact_space_space::{SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
-    use semio_framework_os::{MemoryBackbonePort, OsBackbonePorts, create_os_space};
+    use semio_os::{MemoryBackbonePort, OsBackbonePorts, create_os_space};
     use std::sync::Arc;
     let port = Arc::new(OsBackbonePorts::store(store::os_store::backbone::BackbonePorts::Memory(MemoryBackbonePort::default())));
     let owner = SpaceUser { id: "tester".into(), name: "Tester".into(), avatar: None, role: SpaceRole::Author };
@@ -73,14 +73,14 @@ async fn open_studio_loads_ephemeral_created_studio() {
     let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
     let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     use semio_s_artifact_space_home::editor::home::commands::create_studio;
-    use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
+    use semio_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
     let _home = semio_s_artifact_space_home::editor::home::HomeApp;
     let home_projection = semio_s_artifact_space_home::editor::home::HomeApp::initial_snapshot();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&home_projection, &history);
     let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
     let home_cfg = ConfigView { snapshot: &home_config, window: None };
-    let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
+    let identity = semio_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
     let create = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity, &mut authoring).expect("handle");
     let space_id = create
         .effects
@@ -104,14 +104,14 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
     let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     use semio_s_artifact_space_home::editor::home::commands::create_studio;
-    use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
+    use semio_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
     let _home = semio_s_artifact_space_home::editor::home::HomeApp;
     let home_projection = semio_s_artifact_space_home::editor::home::HomeApp::initial_snapshot();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&home_projection, &history);
     let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
     let home_cfg = ConfigView { snapshot: &home_config, window: None };
-    let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
+    let identity = semio_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
     let emit = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity, &mut authoring).expect("handle");
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "create must not download a file");
     let uri = emit

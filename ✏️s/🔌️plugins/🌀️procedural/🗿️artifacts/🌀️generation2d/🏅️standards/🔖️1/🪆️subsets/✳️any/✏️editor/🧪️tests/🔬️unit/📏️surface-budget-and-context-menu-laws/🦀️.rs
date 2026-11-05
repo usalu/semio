@@ -22,7 +22,7 @@
 #[semio_framework_async_macros::async_test]
 async fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
     use crate::app_fixture::render;
-    let bound = semio_framework_ui_contract::UI_RESIDENT_SURFACE_BYTES;
+    let bound = semio_ui_contract::UI_RESIDENT_SURFACE_BYTES;
     let mut app = app_with_registry().await;
     for body_key in GENERATION2D_BODY_KEYS {
         let rendered = render(&mut app, body_key).await;
@@ -39,8 +39,8 @@ async fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_stays_within_disclosure_budget() {
     let mut app = app_with_registry().await;
-    let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let items = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let request = semio_plugin::ContextMenuRequest { menu: semio_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
+    let items = app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     close(app);
     assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
     assert!(
@@ -55,16 +55,16 @@ async fn context_menu_stays_within_disclosure_budget() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_reads_the_framework_owned_graph_selection() {
     let mut app = app_with_registry().await;
-    let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let ids_of = |menu: &[semio_framework_plugin::ContextMenuItemSpec]| -> Vec<String> {
+    let request = semio_plugin::ContextMenuRequest { menu: semio_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
+    let ids_of = |menu: &[semio_plugin::ContextMenuItemSpec]| -> Vec<String> {
         menu.iter().flat_map(|item| std::iter::once(item.id.clone()).chain(item.children.iter().flatten().map(|child| child.id.clone()))).collect()
     };
-    let unselected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await);
+    let unselected = ids_of(&app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await);
     assert!(!unselected.iter().any(|id| id.contains("delete")), "an empty selection must not offer delete: {unselected:?}");
     context::select_graph(&mut app, "node", &["slider"]).await;
-    let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await);
+    let selected = ids_of(&app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await);
     assert!(selected.iter().any(|id| id.contains("delete")), "a live graph selection must offer the destructive delete row: {selected:?}");
-    let rows = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.into_iter().find(|item| item.id == "delete-selection").and_then(|item| item.args).expect("the delete row carries its nodeGraphEdit arguments");
+    let rows = app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.into_iter().find(|item| item.id == "delete-selection").and_then(|item| item.args).expect("the delete row carries its nodeGraphEdit arguments");
     let rows = semio_framework_tool_machine::node_graph_edit_rows(&rows).expect("the delete row speaks the shared row vocabulary");
     assert_eq!(rows, vec![semio_framework_tool_machine::NodeGraphEditRow::Delete { node_ids: vec!["slider".into()], synapse_ids: Vec::new() }], "the row names the live selection by id");
     close(app);

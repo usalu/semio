@@ -1,6 +1,6 @@
 //! 🪜️ Stdio-owned hierarchy constructors and capability grammar validation.
 
-use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactDefinitionError, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization, ArtifactMime};
+use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactDefinitionError, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization, ArtifactMime};
 
 /// 🪜️ Canonical Stdio identity grammar, authored by the specific contract owner.
 pub trait StdioArtifactIdentity: Sized {

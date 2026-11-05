@@ -15,8 +15,8 @@ pub struct SetFtyp {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetFtyp {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "ftyp", kind: "set-ftyp", record: "SetFtyp" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set ftyp", "ftyp-Box setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set ftyp", "ftyp-Box setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

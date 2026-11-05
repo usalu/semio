@@ -1,7 +1,7 @@
 use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{placeable, wall_mounted};
 #[allow(unused_imports)]
@@ -17,41 +17,41 @@ use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_desc;
+use semio_plugin::tree_item_desc;
 #[allow(unused_imports)]
-use semio_framework_plugin::ui_node_list;
+use semio_plugin::ui_node_list;
 #[allow(unused_imports)]
-use semio_framework_plugin::Buildable;
+use semio_plugin::Buildable;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasBase;
+use semio_plugin::HasBase;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LabelText;
+use semio_ui_locale::LabelText;
 use semio_s_artifact_bim_model_gestures::editor::bim::panels::families::{render, BODY_KEY, size_of, selected};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::{furnished, placed};
 use protocol::Inference;
-use semio_framework_plugin::ViewModel;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::ViewModel;
+use semio_ui_locale::{Locale, Terminology};
 
 fn text(snapshot: &ModelSnapshot, library: &[&str], locale: Locale) -> String {
     let own: Vec<String> = library.iter().map(|id| id.to_string()).collect();
     let view = ViewModel::new(locale, Terminology::Native);
     let inference = ModelInference::infer(snapshot).expect("infers");
     let node = render(snapshot, &inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &own, &TreeWindows::for_body(&view, BODY_KEY)).expect("the family browser renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 #[semio_framework_async_macros::async_test]

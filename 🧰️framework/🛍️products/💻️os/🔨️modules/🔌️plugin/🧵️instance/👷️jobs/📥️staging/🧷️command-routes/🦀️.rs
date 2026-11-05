@@ -1,26 +1,26 @@
 //! 🪣️ Staged slice of the `command-routes` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🧷️ Command routes of the mounted artifact instance: framework-reserved routes, action dispatch and command dispatch.
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
-use semio_framework_plugin_decl_app::{ArtifactApp, ArtifactCompletionFault};
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactToolCompletion, ArtifactToolCompletionValue};
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::{ArtifactApp, ArtifactCompletionFault};
+use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactToolCompletion, ArtifactToolCompletionValue};
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_job::{ChildEmissionPreviewJob, agent_lane_uncarried_fault, drive_agent_lane_preview};
-use semio_framework_plugin_instance_history::history_components::CommandHistory;
-use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReservedCommitProgress, FrameworkReservedCommitStage, PendingFrameworkReserved};
+use semio_plugin_job::{ChildEmissionPreviewJob, agent_lane_uncarried_fault, drive_agent_lane_preview};
+use semio_plugin_instance_history::history_components::CommandHistory;
+use semio_plugin_decl_emission::Emit;
+use semio_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReservedCommitProgress, FrameworkReservedCommitStage, PendingFrameworkReserved};
 use std::future::Future;
-use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_framework::kernel::InvocationResult;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
 use crate::jobs_components::{PendingReserved, ToolOperations};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp> PendingReserved<A> {
     /// 🖱️ Vortex pointermove is a storm of `interactionHover` (then a click `interactionSelect`)
@@ -105,7 +105,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         if !state.complete{state.caller.as_ref().ok_or_else(||plugin_sdk_fault("original preview caller source is absent"))?.validate_context(cx)?;}
         if state.producer_request.is_some(){
             let mut candidate=None;let result=A::build_tool_job(&mut state.producer_request,&mut candidate,cx);
-            if let Some(job)=candidate{state.producer=Some(semio_framework_plugin_job::OriginalPreviewDrive::new(job,state.config,cx));}
+            if let Some(job)=candidate{state.producer=Some(semio_plugin_job::OriginalPreviewDrive::new(job,state.config,cx));}
             match result{Err(failure)=>{state.closing=true;return Err(failure)},Ok(true)if state.producer.is_none()=>{state.closing=true;return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview producer completed without its job").into())},_=>{}}
             return Ok(None);
         }
@@ -114,15 +114,15 @@ impl<A: ArtifactApp> ToolOperations<A> {
         if !state.complete{
             let completion=state.completion.as_ref().ok_or_else(||plugin_sdk_fault("original preview completion source is absent"))?;
             match completion.take()?{
-                Some(ArtifactToolCompletionValue::Emit(emit,ephemeral))=>{let emit=emit.map_err(ArtifactCompletionFault::into_fault)?;let job=ChildEmissionPreviewJob::<A>{emit:Some(emit),ephemeral:Some(ephemeral),completion:Some(completion.clone()),retirement:None,retirement_payload:None,retirement_fault:None,rejection:None,completion_retirement:None,maximum_bytes:state.maximum_bytes,wire_mode:true,fault_publication:semio_framework_job_fault_publication::RetainedFaultPublication::new(),closing:false};state.children=Some(semio_framework_plugin_job::OriginalPreviewDrive::new(job,state.config,cx));return Ok(None)},
+                Some(ArtifactToolCompletionValue::Emit(emit,ephemeral))=>{let emit=emit.map_err(ArtifactCompletionFault::into_fault)?;let job=ChildEmissionPreviewJob::<A>{emit:Some(emit),ephemeral:Some(ephemeral),completion:Some(completion.clone()),retirement:None,retirement_payload:None,retirement_fault:None,rejection:None,completion_retirement:None,maximum_bytes:state.maximum_bytes,wire_mode:true,fault_publication:semio_framework_job_fault_publication::RetainedFaultPublication::new(),closing:false};state.children=Some(semio_plugin_job::OriginalPreviewDrive::new(job,state.config,cx));return Ok(None)},
                 Some(value@ArtifactToolCompletionValue::Download(..))=>{state.publication=Some(value);state.complete=true;},
                 None=>return Err(plugin_sdk_fault("preview producer completed without its original output").into()),
             }
         }
         if state.publication.is_none(){state.publication=state.completion.as_ref().ok_or_else(||plugin_sdk_fault("original preview completion source is absent"))?.take()?;return Ok(None)}
-        if state.completion.is_some()||state.completion_close.is_some(){let step=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut state.completion,&mut state.completion_close,cx.retained_grant())?;cx.consume_retained(step.progress())?;return Ok(None)}
-        if let Some(owner)=state.lease_close.as_mut(){let step=if owner.terminal_is_empty(){semio_framework_plugin_operation::original_lease_cursor_release(&mut state.lease_close,cx.retained_grant()).map(RetainedCloneStep::Progress)?}else{owner.close_step(&self.tool_cancellations,cx.retained_grant())?};cx.consume_retained(step.progress())?;return Ok(None)}
-        if state.lease.is_some(){let(owner,progress)=semio_framework_plugin_operation::original_lease_cursor_admit(&mut state.lease,cx.retained_grant())?;state.lease_close=owner;cx.consume_retained(progress)?;return Ok(None)}
+        if state.completion.is_some()||state.completion_close.is_some(){let step=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut state.completion,&mut state.completion_close,cx.retained_grant())?;cx.consume_retained(step.progress())?;return Ok(None)}
+        if let Some(owner)=state.lease_close.as_mut(){let step=if owner.terminal_is_empty(){semio_plugin_operation::original_lease_cursor_release(&mut state.lease_close,cx.retained_grant()).map(RetainedCloneStep::Progress)?}else{owner.close_step(&self.tool_cancellations,cx.retained_grant())?};cx.consume_retained(step.progress())?;return Ok(None)}
+        if state.lease.is_some(){let(owner,progress)=semio_plugin_operation::original_lease_cursor_admit(&mut state.lease,cx.retained_grant())?;state.lease_close=owner;cx.consume_retained(progress)?;return Ok(None)}
         if let Some(caller)=state.caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){state.caller.take();}return Ok(None)}
         if cx.retained_grant().maximum_items<2||cx.retained_grant().maximum_depth==0{return Ok(None)}
         cx.consume_retained(RetainedCloneProgress{copied_items:2,..Default::default()})?;
@@ -135,7 +135,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         }
     }
 
-    pub fn close_agent_lane_preview(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn close_agent_lane_preview(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let Some(state)=self.agent_lane_preview.as_mut()else{return Ok(PluginLifecycleStep::Complete(Default::default()))};
         if state.producer_request.is_some()||state.producer_request_retirement.is_some(){state.caller.as_ref().ok_or_else(||plugin_sdk_fault("original preview caller source is absent"))?.validate_context(cx)?;}
         if state.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return Ok(PluginLifecycleStep::Progress(Default::default()))}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.agent_lane_preview.take();return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}

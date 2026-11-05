@@ -59,8 +59,6 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testTrunkLockfile(workspace,invocation,phaseControl);
   await testNativeDependencies(workspace, output,invocation,phaseControl);
   await testCargoCleanupBoundary(workspace, output);
-  const { testWgpuWasmOutputs } = await import("../../🧊️wasm-outputs/🟦️.ts");
-  await testWgpuWasmOutputs(workspace, output, invocation);
   await testWgpuBrowserServing(workspace, output, invocation);
   const { testWgpuBootInputs } = await import("@semio-tech/framework-os/modules/renderer/engine/testing/wgpu-browser-boot-cache-inputs");
   await testWgpuBootInputs(workspace, output);

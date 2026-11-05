@@ -17,8 +17,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "curtain-panel-override", kind: "delete-curtain-panel-override", record: "DeleteCurtainPanelOverride" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete panel override \"{}\"", self.id), &format!("Paneel-Abweichung \"{}\" löschen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete panel override \"{}\"", self.id), &format!("Paneel-Abweichung \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

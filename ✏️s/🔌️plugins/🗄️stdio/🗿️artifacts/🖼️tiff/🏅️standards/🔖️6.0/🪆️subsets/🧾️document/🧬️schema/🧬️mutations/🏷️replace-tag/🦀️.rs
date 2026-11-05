@@ -22,8 +22,8 @@ pub struct ReplaceTagMutation {
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ReplaceTagMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "tag", kind: "replace-tag", record: "ReplaceTag" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace tag", "Tag ersetzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Replace tag", "Tag ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-tag".into()]

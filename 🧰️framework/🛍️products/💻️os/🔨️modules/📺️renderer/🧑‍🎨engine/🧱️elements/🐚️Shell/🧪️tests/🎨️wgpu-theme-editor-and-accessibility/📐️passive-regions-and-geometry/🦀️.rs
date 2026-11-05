@@ -2,7 +2,7 @@
 
 #[test]
 fn passive_chrome_regions_are_not_announced_as_buttons() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     with_chrome_control_names(|names| names.clear());
     let fixture = accessibility_fixture();
     let cases = fixture["passiveChrome"].as_array().unwrap();
@@ -91,7 +91,7 @@ fn theme_geometry_fixture() -> Value {
 #[test]
 fn theme_geometry_editor_commits_only_resolved_compact_lengths_and_reference_metrics() {
     let fixture = theme_geometry_fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     for case in fixture["cases"].as_array().expect("valid geometry cases") {
         shell.prefs.clear_theme_draft();
         shell.prefs.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({"section":"dom", "key":"rootRemPx", "value":case["rootRemPx"].to_string()}), &shell.chrome);
@@ -151,7 +151,7 @@ fn theme_geometry_compact_authoring_has_localized_label_and_description() {
 fn theme_geometry_metric_authoring_exposes_shared_localized_guidance() {
     let contract: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🧬️contract/🔣️.json")).expect("geometry contract");
     let bindings: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🔣️.json")).expect("geometry bindings");
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.input.set_canonical_tree_open("framework.settings.theme.metrics", true);
     for section in ["chrome", "dom", "typography"] { shell.input.set_canonical_tree_open(&format!("framework.settings.theme.metrics.{section}"), true); }
     for (locale, is_de) in [("en", false), ("de", true)] {

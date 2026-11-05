@@ -24,7 +24,7 @@ const ids = fixture.routes.map(({ id }) => id);
 if (new Set(ids).size !== 16) throw new Error("Sequence retained action fixture must own 16 unique live routes");
 
 for (const route of fixture.routes) {
-  const declaration = `.action_interactive_job("${route.id}", semio_framework_plugin::InteractiveJobClassification::${variant(route.classification)})`;
+  const declaration = `.action_interactive_job("${route.id}", semio_plugin::InteractiveJobClassification::${variant(route.classification)})`;
   if (!source.includes(declaration)) throw new Error(`Sequence source classification drifted for ${route.id}`);
 }
 
@@ -32,7 +32,7 @@ const migrated = fixture.routes.filter(({ classification }) => classification ==
 const pending = fixture.routes.filter(({ classification }) => classification === "batch-only-pending-rewrite");
 if (migrated.length !== 16 || pending.length !== 0) throw new Error("Sequence retained route disposition counts drifted");
 for (const route of migrated) {
-  if (!source.includes(`tool_id: "${route.id}", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::${variant(route.publicationLane)}]`)) throw new Error(`Sequence publication lane drifted for ${route.id}`);
+  if (!source.includes(`tool_id: "${route.id}", lanes: &[semio_plugin::ArtifactToolPublicationLane::${variant(route.publicationLane)}]`)) throw new Error(`Sequence publication lane drifted for ${route.id}`);
   const persistent = route.contract.maximumUnits === 66049;
   const maximumUnits = persistent ? "66_049" : "2";
   const outputBytes = route.publicationLane === "child" || route.id === "run" ? "65_536" : "4_096";
@@ -51,7 +51,7 @@ for (const token of ["fn build_document_store_owners()", "bounded_document_store
   if (!source.includes(token)) throw new Error(`Sequence retained Store/freshness authority is missing ${token}`);
 }
 const windowConfigSource = readFileSync(fileURLToPath(new URL("../🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🦀️.rs", editorRoot)), "utf8");
-for (const token of ["impl semio_framework_plugin::WindowConfigOwner for SequenceMainWindowConfigOwner", "fn build_one_item_preparation_factory()", "bounded_window_config_preparation_factory::<Self>()"]) {
+for (const token of ["impl semio_plugin::WindowConfigOwner for SequenceMainWindowConfigOwner", "fn build_one_item_preparation_factory()", "bounded_window_config_preparation_factory::<Self>()"]) {
   if (!windowConfigSource.includes(token)) throw new Error(`Sequence retained WindowConfig authority is missing ${token}`);
 }
 for (const token of ["SequenceReorganizeState", "self.edge += 1", "SequenceNodeGraphStage::Parse", "SequenceNodeGraphStage::Apply", "SequenceNodeGraphStage::DeleteDiscover", "SequenceNodeGraphStage::DeleteApply", "self.operations.len()", "self.delete_scan += 1", "self.operation += 1", "SequenceRunOrderStage", "frame.order.advance", "sequence-run-retire-frame", "sequence-persistent-publication-lane", "maximum_items == 0 || maximum_bytes == 0"]) {

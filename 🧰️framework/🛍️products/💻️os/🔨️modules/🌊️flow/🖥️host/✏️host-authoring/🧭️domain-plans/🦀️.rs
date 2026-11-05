@@ -1,7 +1,7 @@
 //! 🧭️ Domain authoring plans over the original borrowed Flow snapshot.
 use super::*;
 
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub struct FlowAuthoringSerials { pub widget:u64, pub synapse:u64 }
 impl Default for FlowAuthoringSerials { fn default()->Self { Self{widget:1,synapse:100} } }
 
@@ -52,20 +52,19 @@ impl FlowAuthoringPlan {
   let Widget::Neuron{input_ports,output_ports,..}=&mut widget else{unreachable!()};
   *if input{input_ports}else{output_ports}=(0..ports.len()+1).map(|slot|slot.to_string()).collect();
   let mut leaves=Vec::new();
-  for wire in &source.synapses(){let endpoint=if input{&wire.to}else{&wire.from};let port=if input{&wire.to_port}else{&wire.from_port};if endpoint==id{if let Ok(old)=port.parse::<usize>(){if old>=at{let mut wire=wire.clone();if input{wire.to_port=(old+1).to_string()}else{wire.from_port=(old+1).to_string()}leaves.push(FlowMutation::ChangeSynapse(ChangeSynapse{id:wire.id.clone(),synapse:wire}));}}}}
+  for wire in source.synapses(){let endpoint=if input{&wire.to}else{&wire.from};let port=if input{&wire.to_port}else{&wire.from_port};if endpoint==id{if let Ok(old)=port.parse::<usize>(){if old>=at{let mut wire=wire.clone();if input{wire.to_port=(old+1).to_string()}else{wire.from_port=(old+1).to_string()}leaves.push(FlowMutation::ChangeSynapse(ChangeSynapse{id:wire.id.clone(),synapse:wire}));}}}}
   leaves.push(FlowMutation::ChangeWidget(ChangeWidget{id:id.into(),widget}));Ok(leaves)
  }
 }
 
 impl FlowAuthoringPlan {
- pub fn reorganize(source:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,options:&DagLayoutOptions,control:&mut semio_framework_os_infinite::board::schema::layout::LayoutControl<'_>)->Result<Vec<FlowMutation>,FlowCoreError>{
+ pub fn reorganize(source:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,options:&DagLayoutOptions,control:&mut semio_os_infinite::board::schema::layout::LayoutControl<'_>)->Result<Vec<FlowMutation>,FlowCoreError>{
   let mut dag=DagHost::from_host_snapshot_without_layout(FlowHost::raw_dag_snapshot(source,infos));
   dag.graph.reorganize(options,control)?;
-  let entries=dag.graph.host_snapshot.nodes.iter().filter_map(|node|{
-   let layout=WidgetLayout{x:node.x,y:node.y};
-   (source.layout().get(&node.id)!=Some(&layout)).then(||FlowLayoutEntry{id:node.id.clone(),layout:Some(layout)})
-  }).collect();
-  Ok(vec![FlowMutation::ChangeLayout(ChangeLayout{entries})])
+  let mut layouts:BTreeMap<_,_>=source.layout().iter().map(|(id,layout)|(id.clone(),layout.clone())).collect();
+  layouts.extend(dag.graph.host_snapshot.nodes.iter().map(|node|(node.id.clone(),WidgetLayout{x:node.x,y:node.y})));
+  let entries:Vec<_>=layouts.into_iter().map(|(id,layout)|FlowLayoutEntry{id,layout:Some(layout)}).collect();
+  Ok(if entries.is_empty(){Vec::new()}else{vec![FlowMutation::ChangeLayout(ChangeLayout{entries})]})
  }
  pub(super) fn apply(source:&mut FlowHostSnapshot,leaves:&[FlowMutation]){
   for leaf in leaves{match leaf{
@@ -84,3 +83,4 @@ impl FlowAuthoringPlan {
 #[cfg(test)]
 #[path="🧪️laws/🦀️.rs"]
 mod laws;
+

@@ -73,6 +73,8 @@ pub(super) fn imported_geometry_handles(owner: &mut ModuleGeometryOwner, params:
 /// import/export behavior previously routed through the deleted stringly-typed `handle_action`.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Command {
+    #[dsl(key = "evaluate-embedded-flow")]
+    EvaluateEmbeddedFlow { payload_json: String, body_key: String },
     #[dsl(key = "export-solid")]
     ExportSolid { format: String },
     #[dsl(key = "import-solid")]
@@ -81,7 +83,7 @@ pub enum Command {
 
 /// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
 impl protocol::OpBinary for Command {
-    /// 🎯️ The two manifest ids this command schema owns. `app_commands!` fills this from its own rows
+    /// 🎯️ The manifest ids this command schema owns. `app_commands!` fills this from its own rows
     /// via `ToolCommandCatalog`; a HAND-WRITTEN `OpBinary` silently keeps the trait's
     /// `&["typed-command"]` fallback instead. `tool_job_registration` joins these ids against the
     /// generated `Migrated` declarations and the live concrete factories, and a join that matches

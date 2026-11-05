@@ -2,8 +2,8 @@
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_pack_json::{self as json, Value};
-use semio_framework_os::{WorkflowMutation, WorkflowParameter, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os::{WorkflowMutation, WorkflowParameter, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 use semio_hub_space_operations::parameter_entity_id;
 

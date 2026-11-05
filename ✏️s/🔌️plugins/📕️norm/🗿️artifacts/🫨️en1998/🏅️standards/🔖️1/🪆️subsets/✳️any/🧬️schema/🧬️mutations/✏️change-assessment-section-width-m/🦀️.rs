@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentSectionW
         record: "ChangeAssessmentSectionWidthM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Member section width b", "Querschnittsbreite b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Member section width b", "Querschnittsbreite b ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-section-width-m".into()]

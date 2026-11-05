@@ -13,18 +13,18 @@
 
 use super::*;
 use crate::surface_fixtures::*;
-use semio_framework_os_renderer_wgpu_engine_attach::drop_engine_surface;
+use semio_renderer_wgpu_engine_attach::drop_engine_surface;
 use infinite_world::world::{
     begin_world3d_dynamic_retirement, enqueue_world3d_event, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, world3d_dynamic_retirement_terminal_is_empty,
     World3dBuildContext, World3dSceneBridgeStep, World3dSnapshotApplyStep, World3dState, WorldCursorWakeAuthority, WorldDrawRebuildStep, WorldInteractionAuthorityStep, WorldInteractionIntent,
 };
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_layout::layout::UiPresence;
-use semio_framework_ui_scene_plane::{Board2dScene, TiledMapScene};
-use semio_framework_ui_scene_world3d::World3dScene;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::InputState;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_layout::layout::UiPresence;
+use semio_ui_scene_plane::{Board2dScene, TiledMapScene};
+use semio_ui_scene_world3d::World3dScene;
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::InputState;
 
 include!("🗃️fixtures-and-retained-map-records/🦀️.rs");
 

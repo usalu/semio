@@ -177,7 +177,11 @@ pub fn plugin_typed_owner_demand<T: semio_framework_value::retirement::RetireOwn
 }
 
 /// 🧳️ Retains an original typed owner in its controlled frame, then advances that frame under the unchanged grant.
-pub fn plugin_typed_owner_step<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn plugin_typed_owner_step<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {plugin_typed_owner_original(original,active,grant).result}
+
+/// 🎟️ Preserves actual typed-frame work on success and refusal.
+pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+ let mut work=0;let result=(||{
     use semio_framework_value::retirement::controlled::ControlledRetirement;
     let empty = RetainedCloneProgress::default();
     if active.is_none() {
@@ -187,6 +191,7 @@ pub fn plugin_typed_owner_step<T: semio_framework_value::retirement::RetireOwned
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
+        work=1;
         let value = original.take().expect("typed original was observed");
         return match ControlledRetirement::new(value) {
             Ok(owner) => {
@@ -200,12 +205,13 @@ pub fn plugin_typed_owner_step<T: semio_framework_value::retirement::RetireOwned
         };
     }
     let owner = active.as_mut().expect("typed owner frame was observed");
-    let step = owner.step(grant)?;
+    let result=owner.step(grant);work=owner.last_turn_work();let step=result?;
     semio_framework_value::retained_clone::admit_retained_clone_progress(grant, step.progress(), "typed owner retirement")?;
     if owner.terminal_is_empty() {
         *active = None;
     }
     Ok(RetainedCloneStep::Progress(step.progress()))
+})();semio_framework_value::RetainedWorkOutcome{result,work}
 }
 
 /// 📏️ Quotes the next close turn of one owned byte vector: any payload truncation, then its whole physical backing.

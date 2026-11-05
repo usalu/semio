@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "clash-set", kind: "create-clash-set", record: "CreateClashSet" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create clash set \"{}\"", self.clash_set.name), &format!("Kollisionssatz \"{}\" anlegen", self.clash_set.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create clash set \"{}\"", self.clash_set.name), &format!("Kollisionssatz \"{}\" anlegen", self.clash_set.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

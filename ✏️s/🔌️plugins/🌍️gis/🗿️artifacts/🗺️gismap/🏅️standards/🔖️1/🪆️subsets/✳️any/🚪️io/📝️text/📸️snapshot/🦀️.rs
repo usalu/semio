@@ -187,7 +187,7 @@ use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_plugin::{ArtifactSerializer}; use semio_framework_plugin::io::{io_dispatch, ErasedComposeSource, IoDirection, IoKey, IoPayload};
+use semio_plugin::{ArtifactSerializer}; use semio_plugin::io::{io_dispatch, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
@@ -254,7 +254,7 @@ use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_plugin::{ArtifactSerializer}; use semio_framework_plugin::io::{io_dispatch, ErasedComposeSource, IoDirection, IoKey, IoPayload};
+use semio_plugin::{ArtifactSerializer}; use semio_plugin::io::{io_dispatch, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;

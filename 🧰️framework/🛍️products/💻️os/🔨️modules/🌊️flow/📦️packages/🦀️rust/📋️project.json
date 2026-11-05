@@ -1,5 +1,5 @@
 {
-  "name": "semio-framework-os-flow",
+  "name": "semio-os-flow",
   "projectType": "library",
   "namedInputs": {
     "reads": [

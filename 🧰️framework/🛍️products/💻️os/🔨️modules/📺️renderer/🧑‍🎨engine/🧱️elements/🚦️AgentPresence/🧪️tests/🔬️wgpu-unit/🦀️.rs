@@ -3,7 +3,7 @@
 
 use super::*;
 use crate::agent_bridge::GatewayToShell;
-use semio_framework_ui_theme::Theme;
+use semio_ui_theme::Theme;
 
 fn presence(active: bool, label: &str) -> AgentBridgePresence {
     AgentBridgePresence { active, label: label.into(), invocation_id: None }

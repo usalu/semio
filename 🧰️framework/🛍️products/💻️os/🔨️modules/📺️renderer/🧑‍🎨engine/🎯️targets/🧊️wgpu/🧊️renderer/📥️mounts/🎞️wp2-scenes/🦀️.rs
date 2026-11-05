@@ -9,6 +9,6 @@ pub mod engine_canvas;
 #[path = "../../../../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod scenes;
 
-extern crate semio_framework_os_renderer_wgpu_canvas2d_host as canvas2d_gumball;
+extern crate semio_renderer_wgpu_canvas2d_host as canvas2d_gumball;
 
-extern crate semio_framework_os_renderer_wgpu_icon_host as icon_atlas;
+extern crate semio_renderer_wgpu_icon_host as icon_atlas;

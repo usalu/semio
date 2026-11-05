@@ -1,6 +1,7 @@
 /** 📤️ The host effects that hand a document out: media downloads, video render and icon render exports.
  *
  * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: each function is one effect arm of the `applyHostEffects` pass, moved verbatim. */
+import { runIconExportBatch } from "../../../🖼️IconRenderHost/📤️export/🟦️.ts";
 import { renderIconRequest } from "../../../🖼️IconRenderHost/🚚️request/🟦️.ts";
 import { type Effect } from "@semio-tech/framework";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
@@ -46,16 +47,17 @@ export function applyVideoRenderExportEffect({ catalog, uiLocaleRef, showTransie
   ).then(({ outcome, text }) => showTransientNoticeRef.current(text, outcome.status === "done" || outcome.status === "cancelled" ? "info" : "warning", `video-render-export.${outcome.status}`));
 }
 
-/** 🖼️ Renders each requested icon and downloads the data URL. */
-export async function applyIconRenderExportEffect({ effect }: {
+/** 🖼️ Runs image downloads as a visible cancellable host task. */
+export async function applyIconRenderExportEffect({ effect, baseSession, uiLocaleRef, showTransientNoticeRef }: Pick<ShellCoreAfterSpawnedSession, "uiLocaleRef" | "showTransientNoticeRef"> & {
   readonly effect: Extract<Effect, Readonly<Record<"iconRenderExport", unknown>>>;
+  readonly baseSession: ActiveSession;
 }) {
-  for (const item of effect.iconRenderExport.items) {
-    try {
-      const result = await renderIconRequest(item.request as Parameters<typeof renderIconRequest>[0]);
-      downloadDataUrl(item.filename, result.dataUrl);
-    } catch (error) {
-      console.error(`icon render export failed for ${item.filename}`, error);
-    }
-  }
+  await runIconExportBatch(effect.iconRenderExport.items, {
+    owner:baseSession.pluginId,
+    locale:()=>uiLocaleRef.current,
+    render:request=>renderIconRequest(request as Parameters<typeof renderIconRequest>[0]),
+    deliver:(filename,result)=>downloadDataUrl(filename,result.dataUrl),
+    yieldToHost:()=>new Promise(resolve=>setTimeout(resolve,0)),
+    announce:(text,outcome)=>showTransientNoticeRef.current(text,outcome==="failed"?"warning":"info",`icon-render-export.${outcome??"started"}`),
+  });
 }

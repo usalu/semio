@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointBeamMomentRes
         record: "ChangedJointBeamMomentResistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Beam plastic moment M_b,pl,Rd of the joint", "Anschluss: Plastisches Trägermoment M_b,pl,Rd ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Beam plastic moment M_b,pl,Rd of the joint", "Anschluss: Plastisches Trägermoment M_b,pl,Rd ändern")
     }
 }
 

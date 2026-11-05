@@ -9,21 +9,21 @@
 //! domain, it is its own `addQuestion`/`addStep` command, so the rows keep their action and their
 //! drag payload and stamp no `granularity`.
 
-use crate::editor::forms::config::FormsConfig;
+use crate::forms_config::FormsConfig;
 use crate::editor::forms::contributions::{catalogue_kinds, parse_contributions};
 use crate::editor::forms::support::forms_action;
 use semio_framework_pack_json::{object, Value};
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::tree_item_with_action_draggable;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action_draggable;
+use semio_plugin::ui_node_list;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_CATALOGUE: &str = "forms.play.catalogue";
@@ -47,25 +47,25 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 /// 🛍️ One draggable question-kind row — its own `addQuestion` command, not a domain pick.
-fn kind_row(kind: &str, label: &str, icon: &semio_framework_plugin::IconName) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn kind_row(kind: &str, label: &str, icon: &semio_plugin::IconName) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let args = crate::editor::forms::support::ui_value_map([("kind", crate::editor::forms::support::ui_value_text(kind)?)])?;
     let drag_data = object([(FORMS_QUESTION_DRAG_MIME.to_string(), Value::String(object([("kind".to_string(), Value::String(kind.to_string()))]).to_string()))]);
     let mut item = tree_item_with_action_draggable(format!("{FORMS_PLAY_CATALOGUE_ROOT}.{kind}"), label, Some(kind.to_string()), forms_action("addBlock", Some(args))?, &drag_data)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(crate::editor::forms::support::ui_text_value(icon.as_str())?);
     }
     Ok(item)
 }
 
-fn action_row(id: &str, label: &str, icon: &str, action: (semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn action_row(id: &str, label: &str, icon: &str, action: (semio_plugin::ActionId, Option<semio_plugin::UiValue>)) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut item = tree_item_with_action(id, label, None, action)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
-        props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.icon", "fixed catalogue icon admission failed"))?);
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
+        props.icon = Some(semio_plugin::UiText::try_from_str(icon).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.icon", "fixed catalogue icon admission failed"))?);
     }
     Ok(item)
 }
 
-pub fn render(config: &FormsConfig, view: &semio_framework_plugin::ViewModel, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(config: &FormsConfig, view: &semio_plugin::ViewModel, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let labels = crate::editor::forms::terminology::forms_play_labels(view);
     let contributions = parse_contributions(config);
     let kinds = catalogue_kinds(&contributions, view);

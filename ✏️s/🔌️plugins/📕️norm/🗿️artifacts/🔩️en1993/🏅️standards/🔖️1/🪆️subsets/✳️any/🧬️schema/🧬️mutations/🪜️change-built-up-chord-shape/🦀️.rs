@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpChordShape 
         record: "ChangedBuiltUpChordShape",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Chord section outline shape (sharp-corner outline for I_t and I_w of the chord) of the built-up member", "Zusammengesetzter Stab: Konturform des Gurtquerschnitts (scharfkantige Kontur für I_t und I_w des Gurts) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Chord section outline shape (sharp-corner outline for I_t and I_w of the chord) of the built-up member", "Zusammengesetzter Stab: Konturform des Gurtquerschnitts (scharfkantige Kontur für I_t und I_w des Gurts) ändern")
     }
 }
 

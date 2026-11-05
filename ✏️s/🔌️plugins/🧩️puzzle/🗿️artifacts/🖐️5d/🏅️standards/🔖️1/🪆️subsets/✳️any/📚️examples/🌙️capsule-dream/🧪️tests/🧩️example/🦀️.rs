@@ -9,7 +9,7 @@ fn dsl_asset_parses_and_round_trips() {
     let projection = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
     assert_eq!(projection.parts.len(), 2880);
     assert_eq!(projection.fasteners.len(), 2864);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
 }
 
 #[test]

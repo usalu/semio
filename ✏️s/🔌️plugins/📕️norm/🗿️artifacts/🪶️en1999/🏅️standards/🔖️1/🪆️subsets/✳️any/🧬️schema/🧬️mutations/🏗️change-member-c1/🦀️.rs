@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeMemberC1 where Op:
         record: "ChangedMemberC1",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Moment factor C₁ of the member", "Bauteil: Momentenbeiwert C₁ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Moment factor C₁ of the member", "Bauteil: Momentenbeiwert C₁ ändern")
     }
 }
 

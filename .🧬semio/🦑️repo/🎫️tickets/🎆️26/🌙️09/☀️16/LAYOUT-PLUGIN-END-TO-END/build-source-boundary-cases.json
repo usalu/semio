@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+  "consumer": ".storybook/📖️stories/🧭️coordination/🟦️.ts",
+  "boundary": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🔍️discovery/🟦️.ts",
+  "symbols": [
+    "discoverPackages",
+    "loadTaxonomy",
+    "readSemioMarkerSubTable"
+  ],
+  "excluded": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts"
+  ],
+  "retained": [
+    ".storybook/📖️stories/🧭️coordination/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts"
+  ],
+  "maximumBytes": 16777216,
+  "maximumFiles": 2048,
+  "note": "Root project data reads remain owned by the unchanged Storybook descendant route; dormant command data is not executable Source. Existing Storybook preparation behavior tests cover its actual read and scope selection.",
+  "runtimeSelection": {
+    "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧭️selection/🟦️.ts",
+    "args": [
+      "run",
+      "@semio-tech/layout-layout-rs:test"
+    ],
+    "environment": {
+      "SEMIO_BUILD_TOOL": "bazel"
+    }
+  },
+  "runtimeExcluded": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🟦️.ts"
+  ],
+  "cliEntryOwner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🏃️main/🟦️.ts"
+}

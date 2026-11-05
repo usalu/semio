@@ -10,7 +10,7 @@ pub struct ChangeMemberRestraintSpacing { pub member_id: String, pub new_value: 
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberRestraintSpacing where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_restraint_spacing::ChangeMemberRestraintSpacing> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-lateralRestraintSpacingM", kind: "change-member-restraint-spacing", record: "ChangedMemberRestraintSpacing" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Lateral restraint spacing of member {}", self.member_id), &format!("Abstand seitlicher Halterungen von Bauteil {} ändern", self.member_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Lateral restraint spacing of member {}", self.member_id), &format!("Abstand seitlicher Halterungen von Bauteil {} ändern", self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
 

@@ -48,7 +48,7 @@ async fn the_admission_bound_covers_every_schema_valid_context() {
 /// escapes payload bytes), so passing here proves the pack-encoded context passes too.
 #[semio_framework_async_macros::async_test]
 async fn a_capacity_filled_context_fits_the_bound() {
-    use semio_framework_ui_locale::{Locale, Terminology};
+    use semio_ui_locale::{Locale, Terminology};
     use crate::{TreeWindowRequest, ViewModel, ViewSessionIdentity, ViewWindowInstance};
     let identifier = || "i".repeat(VIEW_CONTEXT_IDENTIFIER_CHARS);
     let long = || "l".repeat(VIEW_CONTEXT_LONG_STRING_CHARS);
@@ -87,7 +87,7 @@ async fn contributions_are_not_a_view_context_field() {
     assert!(schema["properties"].get("contributionsJson").is_none(), "contributionsJson must not be a view-context property");
     assert!(schema["additionalProperties"].as_bool() == Some(false), "the schema must refuse any re-added long field");
     assert_eq!(VIEW_CONTEXT_LONG_STRING_FIELDS, 2, "panel state and a single embedded surface input are bounded independently");
-    let view = crate::ViewModel { panel_json: Some("p".into()), locale: semio_framework_ui_locale::Locale::En, terminology: semio_framework_ui_locale::Terminology::Native, ..crate::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = crate::ViewModel { panel_json: Some("p".into()), locale: semio_ui_locale::Locale::En, terminology: semio_ui_locale::Terminology::Native, ..crate::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let encoded = serde_json::to_string(&view).unwrap();
     assert!(!encoded.contains("contributionsJson"), "the guest projection must not emit contributionsJson: {encoded}");
     assert!(encoded.contains("panelJson"), "the guest projection still carries the one long field: {encoded}");

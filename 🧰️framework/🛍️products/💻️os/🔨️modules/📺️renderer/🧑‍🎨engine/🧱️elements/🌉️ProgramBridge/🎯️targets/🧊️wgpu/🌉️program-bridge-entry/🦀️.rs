@@ -262,7 +262,7 @@ impl ProgramBridgeEntry {
     /// `context-menu` has no defined path in the new reactor ABI (it was a synchronous
     /// `WasmPluginRuntime` export, not an `AppCommand`) — honest empty result until a packet gives it
     /// one, matching the wasm32 JS backend's own "function not exposed" fallback below.
-    pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<semio_framework_ui_declaration::ui::ContextMenuItemSpec>, ProgramFault> {
+    pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<semio_ui_declaration::ui::ContextMenuItemSpec>, ProgramFault> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => context_menu_js(handle, instance_id, &request).await.map_err(ProgramFault::from),

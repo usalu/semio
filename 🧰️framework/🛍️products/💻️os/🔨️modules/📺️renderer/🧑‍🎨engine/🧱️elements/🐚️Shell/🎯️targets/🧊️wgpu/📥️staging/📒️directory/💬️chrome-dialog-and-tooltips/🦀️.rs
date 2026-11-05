@@ -14,7 +14,7 @@ impl DirectoryState {
     /// 📄️ The two paging controls carry their own cursor as the control's VALUE, so the page they
     /// advance is exactly the window the hub issued it for.
     pub fn resolve_space_administration_control(&mut self, control_id: &str, prefs: &PrefsState) {
-                use semio_framework_os_renderer_wgpu_hub_workspace::space_administration::SPACE_ADMINISTRATION_CLOSE_CONTROL_ID;
+                use semio_renderer_wgpu_hub_workspace::space_administration::SPACE_ADMINISTRATION_CLOSE_CONTROL_ID;
         if control_id == SPACE_ADMINISTRATION_CLOSE_CONTROL_ID {
             self.close_space_administration();
             return;

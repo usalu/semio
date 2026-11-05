@@ -6,7 +6,7 @@ static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWit
 use semio_framework_test_typed_input_law as typed_input_law;
 
 use semio_framework_artifact_space_collection::{empty_collection_snapshot, CollectionFolder, CollectionMutation, CollectionSnapshot, S_COLLECTION_SCHEMA};
-use semio_framework_os_kernel::{self as store, os_store::test_support::{close_plain_test_store, dispatch_test_command}};
+use semio_os_kernel::{self as store, os_store::test_support::{close_plain_test_store, dispatch_test_command}};
 use typed_input_law::{typed_command_retirement_law, typed_input_retirement_law};
 
 fn demo_collection() -> CollectionSnapshot {
@@ -37,8 +37,8 @@ async fn a_collection_edit_applies_undoes_and_redoes_through_its_real_catalog() 
     for (label, mutation) in mutations() {
         let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<CollectionSnapshot, CollectionMutation>().unwrap_or_else(|error| panic!("{label}: the bounded catalog is funded: {error}"));
         let initial = demo_collection();
-        let envelope = store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "collection-retirement-law", initial.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-        let mut collection = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, store::os_spr::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the law collection store");
+        let envelope = store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "collection-retirement-law", initial.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut collection = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, store::os_spr::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the law collection store");
         store::install_unscheduled_catalog(&mut collection, Ok(owners)).unwrap_or_else(|_| panic!("{label}: the bounded catalog installs"));
         dispatch_test_command(&mut collection, store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await.unwrap_or_else(|error| panic!("{label}: apply: {error}"));
         let applied = collection.snapshot().expect("applied snapshot");

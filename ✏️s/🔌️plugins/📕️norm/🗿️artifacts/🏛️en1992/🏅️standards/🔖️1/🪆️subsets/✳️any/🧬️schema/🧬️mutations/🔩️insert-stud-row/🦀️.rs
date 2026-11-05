@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertStudRow where Op: 
         record: "InsertedStudRow",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert stud row {}", self.stud_row.id), &format!("Dübelreihe {} einfügen", self.stud_row.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert stud row {}", self.stud_row.id), &format!("Dübelreihe {} einfügen", self.stud_row.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

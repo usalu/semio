@@ -335,7 +335,7 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
 
 //#region Sniff
 /// 🎚️ Byte-level sniff confidence — kept local to the codec (no framework dependency here);
-/// the analyzer maps this onto `semio_framework_plugin::io::Confidence` at the layer that owns that type.
+/// the analyzer maps this onto `semio_plugin::io::Confidence` at the layer that owns that type.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SniffConfidence {
     High,

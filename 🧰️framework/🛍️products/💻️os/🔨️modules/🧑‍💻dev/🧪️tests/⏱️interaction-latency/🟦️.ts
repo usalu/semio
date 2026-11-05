@@ -1,3 +1,4 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** ⏱️ Interaction latency of the served `s` React shell: typing in the text editors and dragging on the canvases, measured
  * the way the user perceives it.
  *
@@ -22,8 +23,7 @@ import { cpus, loadavg } from "node:os";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, Locator, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 import { awaitBeacon, dismissIntroduction, kindOf, windowIds } from "../🧮️program-matrix/🟦️.ts";
 
@@ -275,10 +275,10 @@ async function measureScenario(page: Page, scenario: LatencyScenario, loadCeilin
 }
 
 /** ⏱️ Runs every scenario (optionally `only` some ids), one fresh page per scenario. */
-export async function runInteractionLatency(options: Readonly<{ baseUrl: string; only: readonly string[]; headed: boolean; signal: AbortSignal; onRow: (row: LatencyRow) => void }>): Promise<readonly LatencyRow[]> {
+export async function runInteractionLatency(repoRoot: string, options: Readonly<{ baseUrl: string; only: readonly string[]; headed: boolean; signal: AbortSignal; onRow: (row: LatencyRow) => void }>): Promise<readonly LatencyRow[]> {
   const fixture = readLatencyScenarios();
   const loadCeiling = fixture.loadCeilingPerCore * cpus().length;
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser: Browser = await chromium.launch({ headless: !options.headed, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
   const abort = (): void => void browser.close().catch(() => undefined);
@@ -341,7 +341,7 @@ export async function runInteractionLatencyCli(repoRoot: string, defaultOutDir: 
     mkdirSync(outDir, { recursive: true });
     const reportPath = join(outDir, "latency.json");
     const rows: LatencyRow[] = [];
-    await runInteractionLatency({ baseUrl, only: (flagValue(segments, "--only") ?? "").split(",").filter(Boolean), headed: segments.includes("--headed"), signal: controller.signal, onRow: (row) => {
+    await runInteractionLatency(repoRoot, { baseUrl, only: (flagValue(segments, "--only") ?? "").split(",").filter(Boolean), headed: segments.includes("--headed"), signal: controller.signal, onRow: (row) => {
       rows.push(row);
       writeFileSync(reportPath, `${JSON.stringify({ baseUrl, rows }, null, 1)}\n`);
       console.log(`[interaction-latency] ${row.status.toUpperCase()} ${row.id}: input → frame p50 ${row.frames.p50} / p95 ${row.frames.p95} ms (n ${row.frames.n}), ${row.paints.perInput} paints/input (paint p50 ${row.paints.p50Ms} ms), ${row.commits.perInput} commits/input, load ${row.load}${row.violations.length ? ` — ${row.violations.join("; ")}` : ""}`);

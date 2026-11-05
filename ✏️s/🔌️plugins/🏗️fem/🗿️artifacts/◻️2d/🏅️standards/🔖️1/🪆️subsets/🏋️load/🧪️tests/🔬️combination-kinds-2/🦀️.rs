@@ -1,7 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` combination mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 #[path = "../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops/🦀️.rs"]
 mod delete_combination_drops_the_spare_uls_combination_from_the_steel_frame;
 #[path = "../../🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/⚖️reweights/🦀️.rs"]

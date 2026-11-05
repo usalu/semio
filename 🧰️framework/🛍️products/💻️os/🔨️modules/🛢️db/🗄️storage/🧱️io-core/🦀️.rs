@@ -1,7 +1,7 @@
 //! 🧲️ Db I/O kernel core: credit ledger, page arena, task model and lost-owner parking.
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_durability::{DurabilityClass, EpochFence};
 use db_ids::{ArtifactId, DbError, GenerationId};

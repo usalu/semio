@@ -17,7 +17,7 @@ use semio_s_artifact_procedural_3d_io::document_io;
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Fault, FaultCode, FaultOrigin, ViewEmit};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Fault, FaultCode, FaultOrigin, ViewEmit};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -30,7 +30,7 @@ pub struct ExportDocument {
 /// 👁️ Reads the existing retained evaluation's prepared surfaces without reducing authored channels.
 ///
 /// 🧵️ Geometry remains owned by the supplied retained evaluation.
-pub fn retained_meshes(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>, session: &semio_framework_os_flow::FlowEvalSession) -> Result<Option<Vec<semio_framework_plugin::MeshData>>, Fault> {
+pub fn retained_meshes(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>, session: &semio_os_flow::FlowEvalSession) -> Result<Option<Vec<semio_plugin::MeshData>>, Fault> {
     semio_s_artifact_procedural_3d_preview_eval::export_meshes_from_evaluation(&doc.snapshot.host_snapshot, session, None)
         .map(Some)
         .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_IO_EXPORT), error.to_string()))
@@ -42,7 +42,7 @@ pub fn handle(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnaps
 }
 
 /// 📤️ The session-aware entry point the retained route takes.
-pub fn emit(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, meshes: Option<&[semio_framework_plugin::MeshData]>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
+pub fn emit(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, meshes: Option<&[semio_plugin::MeshData]>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     let export = (if payload.format == "txt" {
         document_io::export_document(doc.snapshot)
     } else {

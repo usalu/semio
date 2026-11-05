@@ -68,8 +68,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "buffer", kind: "delete-buffer", record: "DeletedBuffer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete Buffer", "Puffer löschen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Delete Buffer", "Puffer löschen")
     }
 
     fn target(&self) -> Vec<String> {

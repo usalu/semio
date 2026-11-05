@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileGroupCapMoment
         record: "ChangedPileGroupCapMomentX",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cap moment M_x of the pile group", "Pfahlgruppe: Moment M_x ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cap moment M_x of the pile group", "Pfahlgruppe: Moment M_x ändern")
     }
 }
 

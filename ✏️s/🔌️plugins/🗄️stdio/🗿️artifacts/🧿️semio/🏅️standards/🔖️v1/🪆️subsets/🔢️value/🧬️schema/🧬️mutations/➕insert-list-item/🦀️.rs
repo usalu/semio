@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "list-item", kind: "insert-list-item", record: "InsertListItem" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert list item", "Listenelement einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert list item", "Listenelement einfügen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -2,7 +2,7 @@
 //!
 //! Mounted by `#[path]` into integration test binaries that install `semio_framework_trace::HeapWitness` as their global allocator.
 
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{
     retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep},

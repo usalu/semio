@@ -1,9 +1,9 @@
 use semio_s_artifact_procedural_2d_model::widget_id;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use semio_s_artifact_procedural_2d_editor_panels::document::*;
 use crate::app_fixture::{app, close, render as render_body, render_with_view};
-use semio_framework_os_kernel::os_store::snapshot_read;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_os_kernel::os_store::snapshot_read;
+use semio_plugin::{TreeWindowRequest, ViewModel};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_widgets() {
@@ -46,7 +46,7 @@ fn container_of(json: &str, key: &str) -> (u64, u64, usize, Vec<String>) {
 fn widget_window(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
     ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 

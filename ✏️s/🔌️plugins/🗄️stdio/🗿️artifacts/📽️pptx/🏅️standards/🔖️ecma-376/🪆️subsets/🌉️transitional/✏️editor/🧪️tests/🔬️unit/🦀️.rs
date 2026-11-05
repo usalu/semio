@@ -3,7 +3,7 @@ use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
-use semio_framework_plugin::app::DocumentWindowKit;
+use semio_plugin::app::DocumentWindowKit;
 
 fn deck(shapes: Vec<PptxShape>) -> PptxSnapshot {
     semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
@@ -12,7 +12,7 @@ fn deck(shapes: Vec<PptxShape>) -> PptxSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn create_pptx_transitional_editor_builds_a_definition_for_the_editor_role() {
     let def = create_pptx_transitional_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, PPTX_TRANSITIONAL_EDITOR_DIALECT.into());
 }
 
@@ -54,4 +54,4 @@ async fn missing_set_page_payload_is_rejected() {
     assert!(<PptxTransitionalEditor as ArtifactEditor>::command_from_action("set-page", None, None).is_err());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio/PptxTransitionalEditor", PptxTransitionalEditor, || semio_framework_plugin::App { definition: create_pptx_transitional_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio/PptxTransitionalEditor", PptxTransitionalEditor, || semio_plugin::App { definition: create_pptx_transitional_editor(), examples: Vec::new() }, "../..");

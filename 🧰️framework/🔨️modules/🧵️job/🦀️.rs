@@ -19,6 +19,9 @@ pub use builder_supplied_page_return::RetainedPayloadBuilderSupply;
 #[path="📬️outcome/👷️worker/🦀️.rs"]
 mod original_worker_payload;
 pub use original_worker_payload::{OriginalWorkerPayload,OriginalWorkerPageReservation};
+#[path="📥️field/🔢️float/🦀️.rs"]
+mod original_float_field;
+pub use original_float_field::OriginalFloatFieldWork;
 #[path="🏭️construction/🦀️.rs"]
 mod original_construction;
 pub use original_construction::{OriginalConstructionDemand,admit_original_construction};

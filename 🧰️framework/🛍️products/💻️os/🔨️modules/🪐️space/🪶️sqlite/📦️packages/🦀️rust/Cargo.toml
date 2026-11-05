@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-space-sqlite-cells"
+name = "semio-os-space-sqlite-cells"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

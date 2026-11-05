@@ -17,8 +17,8 @@ pub struct RestoreEntities {
 impl protocol::MutationKind<StepSnapshot, StepCc3Mutation> for RestoreEntities {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entities", kind: "restore-entities", record: "RestoredEntities" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Restore entities", "Entitäten wiederherstellen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Restore entities", "Entitäten wiederherstellen")
     }
 
     fn target(&self) -> Vec<String> {

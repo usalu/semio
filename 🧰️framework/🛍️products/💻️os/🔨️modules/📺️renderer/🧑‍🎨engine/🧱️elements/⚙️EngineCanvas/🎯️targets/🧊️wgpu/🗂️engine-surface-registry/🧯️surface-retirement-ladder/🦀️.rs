@@ -25,7 +25,7 @@ enum EngineSurfaceClosePhase {
 }
 
 enum NodeGraphEngineRetirement {
-    Dag(semio_framework_os_node_graph::GraphHostRetirement),
+    Dag(semio_os_node_graph::GraphHostRetirement),
     Flow(flow::FlowHostRetirement),
 }
 
@@ -55,7 +55,7 @@ pub(super) struct EngineSurfaceRetirement {
     pub(in super::super) board_sync_cache: BoardSyncCache,
     pub(in super::super) board_pending_events: infinite_canvas::BoardEventQueue,
     pub(in super::super) board_retiring_events: Option<infinite_canvas::BoardEventQueue>,
-    pub(in super::super) board_pointer_claim: Option<semio_framework_ui_action::BoundedActionClaim>,
+    pub(in super::super) board_pointer_claim: Option<semio_ui_action::BoundedActionClaim>,
     pub(in super::super) board_pointer_controller_id: Option<String>,
     editor_source: Option<EditorHost>,
     pub(in super::super) editor_scene_pack: Option<Vec<u8>>,
@@ -158,7 +158,7 @@ impl EngineSurfaceRetirement {
         true
     }
 
-    fn close_node_graph_interaction_domain(value: &mut Option<Arc<semio_framework_ui_declaration::ui::NodeGraphInteractionDomain>>) -> bool {
+    fn close_node_graph_interaction_domain(value: &mut Option<Arc<semio_ui_declaration::ui::NodeGraphInteractionDomain>>) -> bool {
         let Some(shared) = value.as_mut() else { return false };
         let Some(domain) = Arc::get_mut(shared) else { return true };
         if retire_string_page(&mut domain.id) || retire_string_page(&mut domain.node_target_prefix) || retire_string_page(&mut domain.edge_target_prefix) || retire_string_page(&mut domain.handle_target_prefix) {
@@ -265,7 +265,7 @@ impl EngineSurfaceRetirement {
         true
     }
 
-    pub(in super::super) fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    pub(in super::super) fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
         if context.should_yield() || self.faulted {
             return false;
         }
@@ -294,7 +294,7 @@ impl EngineSurfaceRetirement {
                 if self.node_graph.is_none() {
                     if let Some(owner) = self.node_graph_source.take() {
                         self.node_graph = Some(match owner {
-                            NodeGraphEngine::Dag(owner) => NodeGraphEngineRetirement::Dag(semio_framework_os_node_graph::GraphHostRetirement::new(owner)),
+                            NodeGraphEngine::Dag(owner) => NodeGraphEngineRetirement::Dag(semio_os_node_graph::GraphHostRetirement::new(owner)),
                             NodeGraphEngine::Flow(owner) => NodeGraphEngineRetirement::Flow(flow::FlowHostRetirement::new(owner)),
                         });
                     } else {

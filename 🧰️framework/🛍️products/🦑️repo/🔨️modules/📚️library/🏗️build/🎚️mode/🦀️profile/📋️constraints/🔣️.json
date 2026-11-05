@@ -60,7 +60,7 @@
           "optLevel": "3"
         },
         {
-          "package": "semio-framework-plugin-interpreter",
+          "package": "semio-plugin-interpreter",
           "optLevel": "3"
         },
         {
@@ -122,83 +122,83 @@
       ],
       "wasm": [
         {
-          "package": "semio-framework-os-flow",
+          "package": "semio-os-flow",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-drawing",
+          "package": "semio-os-flow-drawing",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-extensions",
+          "package": "semio-os-flow-extensions",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-geometry",
+          "package": "semio-os-flow-geometry",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host",
+          "package": "semio-os-flow-host",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-core",
+          "package": "semio-os-flow-host-core",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-read",
+          "package": "semio-os-flow-host-read",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-session",
+          "package": "semio-os-flow-host-session",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-source",
+          "package": "semio-os-flow-host-source",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-mesh",
+          "package": "semio-os-flow-mesh",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-operators",
+          "package": "semio-os-flow-operators",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-vcs",
+          "package": "semio-os-flow-vcs",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm",
+          "package": "semio-os-flow-wasm",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-actions-a",
+          "package": "semio-os-flow-wasm-actions-a",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-actions-b",
+          "package": "semio-os-flow-wasm-actions-b",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-domain",
+          "package": "semio-os-flow-wasm-domain",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine",
+          "package": "semio-os-kernel-neural-engine",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-budgeted",
+          "package": "semio-os-kernel-neural-engine-budgeted",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-model",
+          "package": "semio-os-kernel-neural-engine-model",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-registry",
+          "package": "semio-os-kernel-neural-engine-registry",
           "optLevel": "2"
         },
         {
@@ -326,7 +326,7 @@
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-ui-wgpu-render",
+          "package": "semio-ui-wgpu-render",
           "optLevel": "1"
         }
       ]
@@ -448,83 +448,83 @@
       ],
       "wasm": [
         {
-          "package": "semio-framework-os-flow",
+          "package": "semio-os-flow",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-drawing",
+          "package": "semio-os-flow-drawing",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-extensions",
+          "package": "semio-os-flow-extensions",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-geometry",
+          "package": "semio-os-flow-geometry",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host",
+          "package": "semio-os-flow-host",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-core",
+          "package": "semio-os-flow-host-core",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-read",
+          "package": "semio-os-flow-host-read",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-session",
+          "package": "semio-os-flow-host-session",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-source",
+          "package": "semio-os-flow-host-source",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-mesh",
+          "package": "semio-os-flow-mesh",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-operators",
+          "package": "semio-os-flow-operators",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-vcs",
+          "package": "semio-os-flow-vcs",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm",
+          "package": "semio-os-flow-wasm",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-actions-a",
+          "package": "semio-os-flow-wasm-actions-a",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-actions-b",
+          "package": "semio-os-flow-wasm-actions-b",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-domain",
+          "package": "semio-os-flow-wasm-domain",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine",
+          "package": "semio-os-kernel-neural-engine",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-budgeted",
+          "package": "semio-os-kernel-neural-engine-budgeted",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-model",
+          "package": "semio-os-kernel-neural-engine-model",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-registry",
+          "package": "semio-os-kernel-neural-engine-registry",
           "optLevel": "2"
         },
         {
@@ -712,7 +712,7 @@
           "optLevel": "3"
         },
         {
-          "package": "semio-framework-plugin-interpreter",
+          "package": "semio-plugin-interpreter",
           "optLevel": "3"
         },
         {
@@ -774,83 +774,83 @@
       ],
       "wasm": [
         {
-          "package": "semio-framework-os-flow",
+          "package": "semio-os-flow",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-drawing",
+          "package": "semio-os-flow-drawing",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-extensions",
+          "package": "semio-os-flow-extensions",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-geometry",
+          "package": "semio-os-flow-geometry",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host",
+          "package": "semio-os-flow-host",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-core",
+          "package": "semio-os-flow-host-core",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-read",
+          "package": "semio-os-flow-host-read",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-session",
+          "package": "semio-os-flow-host-session",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-host-source",
+          "package": "semio-os-flow-host-source",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-mesh",
+          "package": "semio-os-flow-mesh",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-operators",
+          "package": "semio-os-flow-operators",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-vcs",
+          "package": "semio-os-flow-vcs",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm",
+          "package": "semio-os-flow-wasm",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-actions-a",
+          "package": "semio-os-flow-wasm-actions-a",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-actions-b",
+          "package": "semio-os-flow-wasm-actions-b",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-flow-wasm-domain",
+          "package": "semio-os-flow-wasm-domain",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine",
+          "package": "semio-os-kernel-neural-engine",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-budgeted",
+          "package": "semio-os-kernel-neural-engine-budgeted",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-model",
+          "package": "semio-os-kernel-neural-engine-model",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine-registry",
+          "package": "semio-os-kernel-neural-engine-registry",
           "optLevel": "2"
         },
         {
@@ -986,7 +986,7 @@
           "optLevel": "3"
         },
         {
-          "package": "semio-framework-plugin-interpreter",
+          "package": "semio-plugin-interpreter",
           "optLevel": "3"
         },
         {
@@ -1048,11 +1048,11 @@
       ],
       "wasm": [
         {
-          "package": "semio-framework-os-flow",
+          "package": "semio-os-flow",
           "optLevel": "2"
         },
         {
-          "package": "semio-framework-os-kernel-neural-engine",
+          "package": "semio-os-kernel-neural-engine",
           "optLevel": "2"
         },
         {

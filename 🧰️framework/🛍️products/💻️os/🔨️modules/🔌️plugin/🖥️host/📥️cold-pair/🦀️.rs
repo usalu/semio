@@ -1,11 +1,11 @@
 
-use semio_framework_plugin_guest_contract::validate_cold_page;
+use semio_plugin_guest_contract::validate_cold_page;
 
 #[cfg(test)]
 #[path = "🧪️tests/📥️cold-pair/🦀️.rs"]
 mod tests;
 use semio_framework::kernel::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairPage, ColdPairIngressStatus};
-use semio_framework_plugin_guest_contract::TurnFault;
+use semio_plugin_guest_contract::TurnFault;
 use crate::conversion::{kernel_lifetime_to_wit, wit_lifetime_to_kernel};
 use crate::wit_reactor;
 

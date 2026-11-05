@@ -8,9 +8,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -24,23 +24,23 @@ use crate::modes::edit::windows::{checks, diagrams, outliner, properties, viewpo
 use crate::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use semio_s_artifact_norm_en1997_mutations::En1997Mutation;
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::app::InteractionView;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::AppIo;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaError;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
 /// 🏷️ The scene entity kinds EN 1997 projects: one interaction granularity each.
 pub const ENTITY_KIND_SCENE_KINDS: &[semio_s_plugin_norm_structural_scene::EntityKind] = &[
     semio_s_plugin_norm_structural_scene::EntityKind::Solid,
@@ -50,7 +50,7 @@ pub const ENTITY_KIND_SCENE_KINDS: &[semio_s_plugin_norm_structural_scene::Entit
     semio_s_plugin_norm_structural_scene::EntityKind::Group,
 ];
 
-use semio_framework_plugin::app::Dialect;
+use semio_plugin::app::Dialect;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region ðï¸Constants
@@ -64,7 +64,7 @@ pub const DOCUMENT_SCHEMA: &str = "semio.norm.en1997/v1";
 //#endregion ðï¸Constants
 
 //#region ðï¸Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `En1997PlayApp::Command` â the SOLE dispatch surface for this app's own behavior, covering every
     /// action `create_en1997_app` declares. Row order IS the binary variant ordinal (appending is safe,
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
@@ -93,18 +93,18 @@ semio_framework_plugin::app_commands! {
 
 //#region ðï¸En1997PlayApp
 /// 🎪️ The "full showcase example" of the new-document palette: the document that populates every collection.
-fn full_showcase_example() -> semio_framework_plugin::ExampleSource {
-    semio_framework_plugin::ExampleSource::new("full-showcase", LocalizedLabel::native("Full showcase example", "Vollständiges Gesamtbeispiel"), semio_s_artifact_norm_en1997_io::text::snapshot::encode_en1997_dsl(&semio_s_artifact_norm_en1997_showcase::full_showcase()), "file")
+fn full_showcase_example() -> semio_plugin::ExampleSource {
+    semio_plugin::ExampleSource::new("full-showcase", LocalizedLabel::native("Full showcase example", "Vollständiges Gesamtbeispiel"), semio_s_artifact_norm_en1997_io::text::snapshot::encode_en1997_dsl(&semio_s_artifact_norm_en1997_showcase::full_showcase()), "file")
 }
 
 /// 🎪️ The "ground showcase" example of the new-document palette: the committed showcase DSL asset, the geotechnical document of the showcase asset.
-fn ground_showcase_example() -> semio_framework_plugin::ExampleSource {
-    semio_framework_plugin::ExampleSource::new("ground-showcase", LocalizedLabel::native("Ground showcase", "Baugrund-Gesamtbeispiel"), include_str!("../🖼️assets/🏘️ground-showcase/🏘️ground-showcase/🗣️.dsl.semio"), "file")
+fn ground_showcase_example() -> semio_plugin::ExampleSource {
+    semio_plugin::ExampleSource::new("ground-showcase", LocalizedLabel::native("Ground showcase", "Baugrund-Gesamtbeispiel"), include_str!("../🖼️assets/🏘️ground-showcase/🏘️ground-showcase/🗣️.dsl.semio"), "file")
 }
 
 /// 📚️ The "full catalogue example" of the new-document palette: the document with one seeded design case for every catalogue entry, so every EN1997 id is reachable from the editor.
-fn full_catalogue_example() -> semio_framework_plugin::ExampleSource {
-    semio_framework_plugin::ExampleSource::new("full-catalogue", LocalizedLabel::native("Full catalogue example", "Vollständiges Katalogbeispiel"), semio_s_artifact_norm_en1997_io::text::snapshot::encode_en1997_dsl(&semio_s_artifact_norm_en1997_checks::catalogue_demo_document()), "file")
+fn full_catalogue_example() -> semio_plugin::ExampleSource {
+    semio_plugin::ExampleSource::new("full-catalogue", LocalizedLabel::native("Full catalogue example", "Vollständiges Katalogbeispiel"), semio_s_artifact_norm_en1997_io::text::snapshot::encode_en1997_dsl(&semio_s_artifact_norm_en1997_checks::catalogue_demo_document()), "file")
 }
 
 #[derive(Default)]
@@ -112,11 +112,11 @@ pub struct En1997PlayApp;
 
 impl ArtifactEditor for En1997PlayApp {
     /// 📢️ Localized notices of the refusal and warning codes this norm app raises.
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
         semio_s_plugin_norm_app_surface::norm_fault_notices()
     }
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_norm_en1997_examples::demo::source(), semio_s_artifact_norm_en1997_examples::compliant::source(), semio_s_artifact_norm_en1997_examples::noncompliant::source()].into_iter().chain([full_catalogue_example(), full_showcase_example(), ground_showcase_example()]).collect()
     }
     type Snapshot = En1997Snapshot;
@@ -132,7 +132,7 @@ impl ArtifactEditor for En1997PlayApp {
 
     type Command = En1997Command;
 
-    fn interaction_topology(doc: &ArtifactView<'_, En1997Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+    fn interaction_topology(doc: &ArtifactView<'_, En1997Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError> {
         semio_s_plugin_norm_app_surface::live_interaction_topology::<Self>(doc.snapshot, checks::INTERACTION_DOMAIN)
     }
 
@@ -145,16 +145,16 @@ impl ArtifactEditor for En1997PlayApp {
 
     semio_s_plugin_norm_app_surface::norm_exact_store_ownership!(live);
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         En1997BoundedCommandJobFactory::register(registry)
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request, output, cx)
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<En1997PlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<En1997PlayApp>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.norm.en1997@1/*#editor",
         artifact_schema: "semio.norm.en1997/v1",
@@ -169,11 +169,11 @@ impl ArtifactEditor for En1997PlayApp {
         Some(semio_s_plugin_norm_app_surface::app_schema_descriptor())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<checks::ChecksWindowConfigOwner>()
     }
 
-    fn reference_birth()->Option<fn()->Result<En1997Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<En1997Snapshot,semio_plugin::Fault>>{Some(||{
         Ok(En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     })}
 
@@ -185,8 +185,8 @@ impl ArtifactEditor for En1997PlayApp {
         command: &En1997Command,
         doc: &ArtifactView<'_, En1997Snapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        presence: &semio_framework_plugin::PresenceView<'_, Self::Presence>,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        presence: &semio_plugin::PresenceView<'_, Self::Presence>,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
     ) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
         semio_s_plugin_norm_app_surface::live_ephemeral::<Self>(command, doc, presence, transient)
     }
@@ -203,27 +203,27 @@ impl ArtifactEditor for En1997PlayApp {
         doc: &ArtifactView<'_, En1997Snapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<En1997Mutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_plugin_norm_app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, En1997Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, En1997Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         render_body(body_key, doc, cfg, view_state, &[], &semio_s_plugin_norm_app_surface::LaneFrame::default())
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, En1997Snapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-        _cx: &mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        _cx: &mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         render_body(body_key, doc, cfg, view_state, &interaction.selection(&semio_s_plugin_norm_app_surface::interaction_domain_id(VARIANT)).ids, &semio_s_plugin_norm_app_surface::LaneFrame::of(transient.snapshot, interaction, &semio_s_plugin_norm_app_surface::interaction_domain_id(VARIANT))).map(Some).map_err(Into::into)
     }
 
@@ -243,7 +243,7 @@ impl ArtifactEditor for En1997PlayApp {
 //#endregion ðï¸En1997PlayApp
 
 //#region 🪄️LiveRender
-fn render_body(body_key: &str, doc: &ArtifactView<'_, En1997Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, picked: &[String], frame: &semio_s_plugin_norm_app_surface::LaneFrame) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+fn render_body(body_key: &str, doc: &ArtifactView<'_, En1997Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel, picked: &[String], frame: &semio_s_plugin_norm_app_surface::LaneFrame) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let live = semio_s_plugin_norm_app_surface::LiveView::<En1997Family>::with_lanes(doc.snapshot.clone(), semio_s_plugin_norm_results_config::current::<checks::ChecksWindowConfigOwner>(cfg).selected_check_index, picked, &frame.transient);
     let host = &live.host;
     let selection = &live.selection;
@@ -251,17 +251,17 @@ fn render_body(body_key: &str, doc: &ArtifactView<'_, En1997Snapshot>, cfg: &Con
     let focus = live.focus.clone();
     let worst = live.worst.as_deref();
     match body_key {
-        outliner::BODY_OUTLINER => outliner::render(host, selection, view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, outliner::BODY_OUTLINER)),
-        properties::BODY_PROPERTIES => properties::render(host, selection, view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, properties::BODY_PROPERTIES)),
+        outliner::BODY_OUTLINER => outliner::render(host, selection, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, outliner::BODY_OUTLINER)),
+        properties::BODY_PROPERTIES => properties::render(host, selection, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, properties::BODY_PROPERTIES)),
         viewport::BODY_VIEWPORT => viewport::render(host.document(), host.report(), selection, frame, view_state.locale),
-        diagrams::BODY_DIAGRAMS => diagrams::render(host.document(), host.report(), focus.as_deref().or(worst), &semio_framework_plugin::TreeWindows::for_body(view_state, diagrams::BODY_DIAGRAMS), view_state.locale),
-        checks::BODY_CHECKS => live.render_checks(&semio_framework_plugin::TreeWindows::for_body(view_state, checks::BODY_CHECKS), view_state.locale, CONTROLLER_ID, checks::INTERACTION_DOMAIN),
+        diagrams::BODY_DIAGRAMS => diagrams::render(host.document(), host.report(), focus.as_deref().or(worst), &semio_plugin::TreeWindows::for_body(view_state, diagrams::BODY_DIAGRAMS), view_state.locale),
+        checks::BODY_CHECKS => live.render_checks(&semio_plugin::TreeWindows::for_body(view_state, checks::BODY_CHECKS), view_state.locale, CONTROLLER_ID, checks::INTERACTION_DOMAIN),
         document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),
-        catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(En1997PlayApp::examples(), view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)).and_then(|panel| semio_s_plugin_norm_app_surface::with_case_browser::<semio_s_artifact_norm_en1997_checks::catalogue::En1997Cases>(panel, &host.document().cases, view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE))),
+        catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(En1997PlayApp::examples(), view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)).and_then(|panel| semio_s_plugin_norm_app_surface::with_case_browser::<semio_s_artifact_norm_en1997_checks::catalogue::En1997Cases>(panel, &host.document().cases, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE))),
         inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, selected, view_state.locale, Some(CONTROLLER_ID)),
         _ => semio_s_plugin_norm_app_surface::render_unknown_body(body_key, view_state.locale),
     }
-    .map(semio_framework_plugin::built_to_component_tree)
+    .map(semio_plugin::built_to_component_tree)
 }
 //#endregion 🪄️LiveRender
 
@@ -294,7 +294,7 @@ impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1997PlayApp {
     type ResultsWindowConfigOwner = checks::ChecksWindowConfigOwner;
 
     const TOOL_IDS: &'static [&'static str] = semio_s_plugin_norm_app_surface::NORM_EDITOR_TOOL_IDS;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = semio_s_plugin_norm_app_surface::NORM_EDITOR_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = semio_s_plugin_norm_app_surface::NORM_EDITOR_PUBLICATION_CONTRACTS;
 
     fn selected_check_window_mutation(command: &En1997Command) -> Option<semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation> {
         match command {
@@ -303,7 +303,7 @@ impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1997PlayApp {
         }
     }
 
-    fn check_focus_effects(command: &En1997Command, document: &En1997Snapshot) -> Vec<semio_framework_plugin::Effect> {
+    fn check_focus_effects(command: &En1997Command, document: &En1997Snapshot) -> Vec<semio_plugin::Effect> {
         match command {
             En1997Command::SetSelectedCheckIndex(payload) => semio_s_plugin_norm_app_surface::live_check_focus_effects::<Self>(document, payload.index, checks::INTERACTION_DOMAIN),
             _ => Vec::new(),
@@ -359,7 +359,7 @@ pub type Host = NormHost<En1997Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
-pub fn create_en1997_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_en1997_app() -> semio_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_norm_en1997_model::EN1997_DIALECT)
             .document(["semio", "norm", VARIANT])
             .artifact_kind(semio_s_artifact_norm_en1997_model::artifact_kind())
@@ -383,106 +383,106 @@ pub fn create_en1997_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)
             
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("setField", LocalizedLabel::native("Set Field", "Feld setzen"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("setField", LocalizedLabel::native("Set Field", "Feld setzen"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
-                        semio_framework_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")).required(),
+                        semio_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")).required(),
                     ]),
             )
             .action_interactive_job("setField", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("insertItem", LocalizedLabel::native("Insert Item", "Eintrag einfügen"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("insertItem", LocalizedLabel::native("Insert Item", "Eintrag einfügen"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
-                        semio_framework_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
-                        semio_framework_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")),
+                        semio_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
+                        semio_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")),
                     ]),
             )
             .action_interactive_job("insertItem", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("removeItem", LocalizedLabel::native("Remove Item", "Eintrag entfernen"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("removeItem", LocalizedLabel::native("Remove Item", "Eintrag entfernen"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
-                        semio_framework_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
+                        semio_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
                     ]),
             )
             .action_interactive_job("removeItem", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("applyRemedy", LocalizedLabel::native("Apply Remedy", "Abhilfe anwenden"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("applyRemedy", LocalizedLabel::native("Apply Remedy", "Abhilfe anwenden"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")).required(),
-                        semio_framework_plugin::ActionArgDef::index("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")).required(),
+                        semio_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")).required(),
+                        semio_plugin::ActionArgDef::index("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")).required(),
                     ]),
             )
             .action_interactive_job("applyRemedy", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("setFields", LocalizedLabel::native("Set Fields", "Felder setzen"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("setFields", LocalizedLabel::native("Set Fields", "Felder setzen"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::any("writes", LocalizedLabel::native("Writes", "Schreibvorgänge")).required(),
-                        semio_framework_plugin::ActionArgDef::any("gesture", LocalizedLabel::native("Gesture", "Geste")),
+                        semio_plugin::ActionArgDef::any("writes", LocalizedLabel::native("Writes", "Schreibvorgänge")).required(),
+                        semio_plugin::ActionArgDef::any("gesture", LocalizedLabel::native("Gesture", "Geste")),
                     ]),
             )
             .action_interactive_job("setFields", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("previewRemedy", LocalizedLabel::native("Preview Remedy", "Abhilfe vorschauen"), semio_framework_plugin::ActionKind::View)
+                semio_plugin::ActionDefinition::new_catalog("previewRemedy", LocalizedLabel::native("Preview Remedy", "Abhilfe vorschauen"), semio_plugin::ActionKind::View)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")),
-                        semio_framework_plugin::ActionArgDef::index("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")),
-                        semio_framework_plugin::ActionArgDef::index("optionIndex", LocalizedLabel::native("Option", "Variante")),
-                        semio_framework_plugin::ActionArgDef::any("insert", LocalizedLabel::native("Insert ghost", "Einfügevorschau")),
+                        semio_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")),
+                        semio_plugin::ActionArgDef::index("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")),
+                        semio_plugin::ActionArgDef::index("optionIndex", LocalizedLabel::native("Option", "Variante")),
+                        semio_plugin::ActionArgDef::any("insert", LocalizedLabel::native("Insert ghost", "Einfügevorschau")),
                     ]),
             )
             .action_interactive_job("previewRemedy", InteractiveJobClassification::Migrated)
-            .action_with(semio_framework_plugin::ActionDefinition::new("clearPreview", LocalizedLabel::native("Clear Preview", "Vorschau verwerfen"), semio_framework_plugin::ActionKind::View, "close"))
+            .action_with(semio_plugin::ActionDefinition::new("clearPreview", LocalizedLabel::native("Clear Preview", "Vorschau verwerfen"), semio_plugin::ActionKind::View, "close"))
             .action_interactive_job("clearPreview", InteractiveJobClassification::Migrated)
-            .action_with(semio_framework_plugin::ActionDefinition::new("cancelEvaluation", LocalizedLabel::native("Cancel Evaluation", "Auswertung abbrechen"), semio_framework_plugin::ActionKind::View, "close"))
+            .action_with(semio_plugin::ActionDefinition::new("cancelEvaluation", LocalizedLabel::native("Cancel Evaluation", "Auswertung abbrechen"), semio_plugin::ActionKind::View, "close"))
             .action_interactive_job("cancelEvaluation", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("evaluateUnits", LocalizedLabel::native("Evaluate Units", "Einheiten auswerten"), semio_framework_plugin::ActionKind::View)
+                semio_plugin::ActionDefinition::new_catalog("evaluateUnits", LocalizedLabel::native("Evaluate Units", "Einheiten auswerten"), semio_plugin::ActionKind::View)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::any("units", LocalizedLabel::native("Units", "Einheiten")),
-                        semio_framework_plugin::ActionArgDef::text("reason", LocalizedLabel::native("Reason", "Anlass")),
+                        semio_plugin::ActionArgDef::any("units", LocalizedLabel::native("Units", "Einheiten")),
+                        semio_plugin::ActionArgDef::text("reason", LocalizedLabel::native("Reason", "Anlass")),
                     ]),
             )
             .action_interactive_job("evaluateUnits", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("viewportAct", LocalizedLabel::native("Viewport Action", "Viewport-Aktion"), semio_framework_plugin::ActionKind::View)
+                semio_plugin::ActionDefinition::new_catalog("viewportAct", LocalizedLabel::native("Viewport Action", "Viewport-Aktion"), semio_plugin::ActionKind::View)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("action", LocalizedLabel::native("Action", "Aktion")),
-                        semio_framework_plugin::ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")),
-                        semio_framework_plugin::ActionArgDef::any("number", LocalizedLabel::native("Number", "Zahl")),
+                        semio_plugin::ActionArgDef::text("action", LocalizedLabel::native("Action", "Aktion")),
+                        semio_plugin::ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")),
+                        semio_plugin::ActionArgDef::any("number", LocalizedLabel::native("Number", "Zahl")),
                     ]),
             )
             .action_interactive_job("viewportAct", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("copyEntities", LocalizedLabel::native("Copy Entities", "Bauteile kopieren"), semio_framework_plugin::ActionKind::View)
-                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("collection", LocalizedLabel::native("Collection", "Sammlung")), semio_framework_plugin::ActionArgDef::any("ids", LocalizedLabel::native("Ids", "Kennungen"))]),
+                semio_plugin::ActionDefinition::new_catalog("copyEntities", LocalizedLabel::native("Copy Entities", "Bauteile kopieren"), semio_plugin::ActionKind::View)
+                    .with_args(vec![semio_plugin::ActionArgDef::text("collection", LocalizedLabel::native("Collection", "Sammlung")), semio_plugin::ActionArgDef::any("ids", LocalizedLabel::native("Ids", "Kennungen"))]),
             )
             .action_interactive_job("copyEntities", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("duplicateEntities", LocalizedLabel::native("Duplicate Entities", "Bauteile duplizieren"), semio_framework_plugin::ActionKind::Mutation)
-                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("collection", LocalizedLabel::native("Collection", "Sammlung")), semio_framework_plugin::ActionArgDef::any("ids", LocalizedLabel::native("Ids", "Kennungen"))]),
+                semio_plugin::ActionDefinition::new_catalog("duplicateEntities", LocalizedLabel::native("Duplicate Entities", "Bauteile duplizieren"), semio_plugin::ActionKind::Mutation)
+                    .with_args(vec![semio_plugin::ActionArgDef::text("collection", LocalizedLabel::native("Collection", "Sammlung")), semio_plugin::ActionArgDef::any("ids", LocalizedLabel::native("Ids", "Kennungen"))]),
             )
             .action_interactive_job("duplicateEntities", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("pasteEntities", LocalizedLabel::native("Paste Entities", "Bauteile einfügen"), semio_framework_plugin::ActionKind::Mutation)
-                    .with_args(vec![semio_framework_plugin::ActionArgDef::any("clip", LocalizedLabel::native("Clip", "Zwischenablage")), semio_framework_plugin::ActionArgDef::any("at", LocalizedLabel::native("Position", "Position"))]),
+                semio_plugin::ActionDefinition::new_catalog("pasteEntities", LocalizedLabel::native("Paste Entities", "Bauteile einfügen"), semio_plugin::ActionKind::Mutation)
+                    .with_args(vec![semio_plugin::ActionArgDef::any("clip", LocalizedLabel::native("Clip", "Zwischenablage")), semio_plugin::ActionArgDef::any("at", LocalizedLabel::native("Position", "Position"))]),
             )
             .action_interactive_job("pasteEntities", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("moveEntity", LocalizedLabel::native("Move Entity", "Bauteil verschieben"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("moveEntity", LocalizedLabel::native("Move Entity", "Bauteil verschieben"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Collection", "Sammlung")),
-                        semio_framework_plugin::ActionArgDef::text("id", LocalizedLabel::native("Id", "Kennung")),
-                        semio_framework_plugin::ActionArgDef::any("to", LocalizedLabel::native("Position", "Position")),
-                        semio_framework_plugin::ActionArgDef::text("over", LocalizedLabel::native("Dropped on", "Abgelegt auf")),
-                        semio_framework_plugin::ActionArgDef::any("step", LocalizedLabel::native("Step", "Schritt")),
+                        semio_plugin::ActionArgDef::text("path", LocalizedLabel::native("Collection", "Sammlung")),
+                        semio_plugin::ActionArgDef::text("id", LocalizedLabel::native("Id", "Kennung")),
+                        semio_plugin::ActionArgDef::any("to", LocalizedLabel::native("Position", "Position")),
+                        semio_plugin::ActionArgDef::text("over", LocalizedLabel::native("Dropped on", "Abgelegt auf")),
+                        semio_plugin::ActionArgDef::any("step", LocalizedLabel::native("Step", "Schritt")),
                     ]),
             )
             .action_interactive_job("moveEntity", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("deleteEntities", LocalizedLabel::native("Delete Entities", "Bauteile löschen"), semio_framework_plugin::ActionKind::Mutation)
-                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("collection", LocalizedLabel::native("Collection", "Sammlung")), semio_framework_plugin::ActionArgDef::any("ids", LocalizedLabel::native("Ids", "Kennungen"))]),
+                semio_plugin::ActionDefinition::new_catalog("deleteEntities", LocalizedLabel::native("Delete Entities", "Bauteile löschen"), semio_plugin::ActionKind::Mutation)
+                    .with_args(vec![semio_plugin::ActionArgDef::text("collection", LocalizedLabel::native("Collection", "Sammlung")), semio_plugin::ActionArgDef::any("ids", LocalizedLabel::native("Ids", "Kennungen"))]),
             )
             .action_interactive_job("deleteEntities", InteractiveJobClassification::Migrated)
             .action_describe("copyEntities", LocalizedLabel::native("Names the rows of the selection as a clip for the clipboard; the document is not changed.", "Benennt die Zeilen der Auswahl als Ausschnitt für die Zwischenablage; das Dokument ändert sich nicht."))

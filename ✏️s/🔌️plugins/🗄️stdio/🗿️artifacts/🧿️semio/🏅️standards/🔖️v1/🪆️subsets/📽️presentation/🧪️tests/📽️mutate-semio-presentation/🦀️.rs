@@ -42,7 +42,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
-    use semio_framework_os_kernel::apply_diff_cold;
+    use semio_os_kernel::apply_diff_cold;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;

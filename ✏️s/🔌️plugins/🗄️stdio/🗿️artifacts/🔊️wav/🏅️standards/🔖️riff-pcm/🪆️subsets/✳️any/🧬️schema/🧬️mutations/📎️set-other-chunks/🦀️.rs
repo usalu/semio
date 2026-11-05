@@ -27,8 +27,8 @@ impl SetOtherChunks {
 impl protocol::MutationKind<WavSnapshot, WavMutation> for SetOtherChunks {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "other-chunks", kind: "set-other-chunks", record: "SetOtherChunks" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set other chunks", "Sonstige Chunks setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set other chunks", "Sonstige Chunks setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

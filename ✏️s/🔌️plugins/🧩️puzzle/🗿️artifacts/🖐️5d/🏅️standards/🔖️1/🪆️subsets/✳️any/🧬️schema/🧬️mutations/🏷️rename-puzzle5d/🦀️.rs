@@ -32,8 +32,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Rename puzzle5d", "Puzzle 5D umbenennen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Rename puzzle5d", "Puzzle 5D umbenennen")
     }
 }
 

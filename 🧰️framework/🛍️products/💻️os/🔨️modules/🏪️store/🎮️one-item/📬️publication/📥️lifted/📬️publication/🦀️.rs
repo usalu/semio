@@ -1,10 +1,10 @@
 //! 📥️ Trait impls of `📬️publication` whose trait or type belongs to `os-store-one-item-publication` (orphan rule, PLAN-OS-KERNEL-CRATES.md 7.7): lifted out of `🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs`.
-use semio_framework_os_store_one_item::ArtifactStoreOneItemFootprint;
-use semio_framework_os_store_one_item::ArtifactStoreOneItemGrant;
+use semio_os_store_one_item::ArtifactStoreOneItemFootprint;
+use semio_os_store_one_item::ArtifactStoreOneItemGrant;
 use crate::ArtifactStoreOneItemPreparation;
 use crate::ArtifactStoreOneItemPreparationRequest;
-use semio_framework_os_store_command::HistoryLane;
-use semio_framework_os_spr::Mutation;
+use semio_os_store_command::HistoryLane;
+use semio_os_spr::Mutation;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::ValueError;

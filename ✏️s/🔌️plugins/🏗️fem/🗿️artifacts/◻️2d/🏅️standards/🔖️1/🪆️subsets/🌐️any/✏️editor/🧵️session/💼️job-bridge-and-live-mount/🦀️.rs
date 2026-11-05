@@ -109,7 +109,7 @@ pub(super) fn decode_input(job: u64, input: &[u8]) -> Option<(u16, MountedIdenti
 
 /// 📐️ The original request transfers its two handles into the boxed job under the framework's own original-job admission quote.
 fn mounted_job_demands(_job: u64, input: &Option<Vec<u8>>, restored: &Option<Vec<u8>>, _cx: &StepContext<'_>) -> Result<RetainedCloneGrant, ValueError> {
-    semio_framework_plugin::reactor::jobs::original_job_admission_demands::<MountedBoundedJob>(input, restored)
+    semio_plugin::reactor::jobs::original_job_admission_demands::<MountedBoundedJob>(input, restored)
 }
 
 fn mounted_job_admit(job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>, cx: &mut StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>, ValueError> {
@@ -124,7 +124,7 @@ fn mounted_job_admit(job: u64, input: &mut Option<Vec<u8>>, restored: &mut Optio
         }
         Ok(shell_owner)
     })?;
-    semio_framework_plugin::reactor::jobs::admit_original_job(input, restored, cx, move |input, restored| MountedBoundedJob { shell: shell_owner, identity, input: Some(input), restored })
+    semio_plugin::reactor::jobs::admit_original_job(input, restored, cx, move |input, restored| MountedBoundedJob { shell: shell_owner, identity, input: Some(input), restored })
 }
 
 /// 🏭️ Preallocates the fixed arena at plugin installation and registers the explicit job factory.
@@ -132,7 +132,7 @@ pub fn initialize() {
     MOUNTED.with(|registry| {
         let _ = registry.borrow().free_len;
     });
-    semio_framework_plugin::reactor::jobs::register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND, BoundedJobFactory { admit: mounted_job_admit, demands: mounted_job_demands });
+    semio_plugin::reactor::jobs::register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND, BoundedJobFactory { admit: mounted_job_admit, demands: mounted_job_demands });
 }
 //#endregion 💼️JobBridge
 
@@ -150,7 +150,7 @@ pub(super) fn current_identity(identity: MountedIdentity) -> Option<MountedIdent
 /// 🔍️ Advances exactly one schema owner/scalar census before the shared application may
 /// request an opaque snapshot lease. The fixed shell and exact process credit are reserved only
 /// after the census reaches its complete witness.
-fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem2dSnapshot,grant:RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
+fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem2dSnapshot,grant:RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
     if render.app_instance_id == 0 {
         return Default::default();
     }
@@ -263,7 +263,7 @@ fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem2
         registry.shell_requests[shell as usize] = Some(owner);
         true
     });
-    semio_framework_plugin::MountedSnapshotReadPreparation{ready,progress}
+    semio_plugin::MountedSnapshotReadPreparation{ready,progress}
 }
 
 /// 🪪️ Physical namespace, complete id, family and mode index own the scheduler identity.
@@ -295,18 +295,18 @@ fn prepare_result_demand(registry:&mut MountedRegistry,render:AppRenderOperation
 }
 
 /// 🧭️ Committed window partitions and source revisions admit one fair original preparation frontier.
-pub fn prepare_snapshot_read(render:AppRenderOperationContext,snapshot:&Fem2dSnapshot,windows:&semio_framework_plugin::WindowConfigOwnerRegistry,view:Option<&semio_framework_plugin::ViewModel>,grant:RetainedCloneGrant)->semio_framework_plugin::MountedSnapshotReadPreparation{
+pub fn prepare_snapshot_read(render:AppRenderOperationContext,snapshot:&Fem2dSnapshot,windows:&semio_plugin::WindowConfigOwnerRegistry,view:Option<&semio_plugin::ViewModel>,grant:RetainedCloneGrant)->semio_plugin::MountedSnapshotReadPreparation{
  if render.app_instance_id==0||grant.maximum_items==0||grant.maximum_depth==0{return Default::default();}
- let departure=retain_result_windows(render,windows,view,grant);if departure!=Default::default(){return semio_framework_plugin::MountedSnapshotReadPreparation{ready:false,progress:departure};}
+ let departure=retain_result_windows(render,windows,view,grant);if departure!=Default::default(){return semio_plugin::MountedSnapshotReadPreparation{ready:false,progress:departure};}
  let progress=MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let count=view.map_or(1,|view|view.window_instances.len()+1);for _ in 0..count{let index=registry.consumer_cursor%count;registry.consumer_cursor=(index+1)%count;if index==0{let progress=prepare_result_demand(&mut registry,render,ConsumerKey::Model,"model",snapshot.load_cases.first().map(|case|semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:&case.id}),semio_s_fem_app_surface::ResultMode::Static,0,semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion{source:source_version(render),consumer_generation:0,consumer_revision:[0;32]},grant);if progress!=Default::default(){return progress;}}else{let Some(window)=view.and_then(|view|view.window_instances.get(index-1))else{continue;};let Some(authority)=windows.borrow(&window.window_kind_id,&window.id)else{continue;};let Some(config)=authority.get::<semio_s_artifact_fem_2d_results_state::config::Fem2dResultsWindowConfigOwner>()else{continue;};let source=match config.result_source_id.as_deref(){Some(id)=>match semio_s_fem_analyses_model::borrow_result_source_identity(id){Ok(source)=>Some(source),Err(_)=>continue},None=>snapshot.load_cases.first().map(|case|semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:&case.id})};let progress=prepare_result_demand(&mut registry,render,ConsumerKey::Window(authority.authority),window.id.as_str(),source,config.result_mode,config.result_mode_index as usize,semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion{source:source_version(render),consumer_generation:authority.generation,consumer_revision:authority.revision},grant);if progress!=Default::default(){return progress;}}}Default::default()});
- if progress!=Default::default(){return semio_framework_plugin::MountedSnapshotReadPreparation{ready:false,progress};}prepare_snapshot_admission(render,snapshot,grant)
+ if progress!=Default::default(){return semio_plugin::MountedSnapshotReadPreparation{ready:false,progress};}prepare_snapshot_admission(render,snapshot,grant)
 }
 
 /// 🪟️ Original committed partition identities prune departed consumers before request retirement.
-pub fn retain_result_windows(render:AppRenderOperationContext,windows:&semio_framework_plugin::WindowConfigOwnerRegistry,view:Option<&semio_framework_plugin::ViewModel>,grant:RetainedCloneGrant)->RetainedCloneProgress{MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();for index in 0..SESSION_CONSUMER_CAPACITY{let Some((scope,consumer))=registry.requests.consumer_at(index)else{continue;};let ConsumerKey::Window(identity)=consumer else{continue;};if scope!=render.app_instance_id{continue;}let live=view.is_some_and(|view|view.window_instances.iter().any(|window|windows.borrow(&window.window_kind_id,&window.id).is_some_and(|authority|authority.authority==identity)));if !live{if let Some(step)=registry.requests.remove_consumer_controlled(scope,consumer,grant){registry.verified_sources[index]=None;return step.progress;}}}Default::default()})}
+pub fn retain_result_windows(render:AppRenderOperationContext,windows:&semio_plugin::WindowConfigOwnerRegistry,view:Option<&semio_plugin::ViewModel>,grant:RetainedCloneGrant)->RetainedCloneProgress{MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();for index in 0..SESSION_CONSUMER_CAPACITY{let Some((scope,consumer))=registry.requests.consumer_at(index)else{continue;};let ConsumerKey::Window(identity)=consumer else{continue;};if scope!=render.app_instance_id{continue;}let live=view.is_some_and(|view|view.window_instances.iter().any(|window|windows.borrow(&window.window_kind_id,&window.id).is_some_and(|authority|authority.authority==identity)));if !live{if let Some(step)=registry.requests.remove_consumer_controlled(scope,consumer,grant){registry.verified_sources[index]=None;return step.progress;}}}Default::default()})}
 
 /// 🔁️ Reconciles one live store revision and returns the exact retained job effects.
-pub fn reconcile(doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem2dSnapshot>) -> Vec<Effect> {
+pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem2dSnapshot>) -> Vec<Effect> {
     let render = doc.render_operation();
     if render.app_instance_id == 0 {
         return Vec::new();
@@ -387,7 +387,7 @@ pub fn reconcile(doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem2dSnap
 /// 📊️ Borrows physical fields from the addressed source and generation without running a solver in render.
 pub struct MountedFieldsView<'a> { pub progress: &'a Fem2dLiveVisual, pub fields: &'a [semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField], pub retained: bool }
 
-pub fn with_live_fields<R>(render: AppRenderOperationContext, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, read: impl FnOnce(Option<MountedFieldsView<'_>>) -> R) -> R {
+pub fn with_live_fields<R>(render: AppRenderOperationContext, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>, read: impl FnOnce(Option<MountedFieldsView<'_>>) -> R) -> R {
     let shells = MOUNTED.with(|registry| {
         let registry = registry.borrow();
         let owner = registry.requests.live_binding(render.app_instance_id, ConsumerKey::Window(authority?))?;
@@ -454,7 +454,7 @@ fn retire_one(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedClo
 }
 
 pub fn maintenance_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
-    semio_framework_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
+    semio_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
         let step = if let Some(progress) = MOUNTED.with(|registry| registry.borrow_mut().requests.retire_consumer_step(app_instance_id, grant)) {
             PluginLifecycleStep::Progress(progress)
         } else {
@@ -544,7 +544,7 @@ fn close_request_step(app_instance_id: u32, lease: semio_framework_value_registr
 
 /// 🪦️ App close removes consumers before independently retiring their request children.
 pub fn close_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
-    semio_framework_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
+    semio_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
         let step = close_turn(app_instance_id, cx, grant)?;
         Ok((step, terminal_is_empty(app_instance_id)))
     })

@@ -23,10 +23,10 @@ use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io::document_io;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_os_flow::{FlowHost};
+use semio_os_flow::{FlowHost};
 use semio_s_artifact_procedural_3d_preview_eval::export_meshes_from_evaluation;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -46,7 +46,7 @@ pub struct ExportDocument {
 pub fn emit(
     payload: &ExportDocument,
     doc: &ArtifactView<'_, Generation3dSnapshot>,
-    meshes: Option<&[semio_framework_plugin::MeshData]>,
+    meshes: Option<&[semio_plugin::MeshData]>,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let export = (if payload.format == "txt" {
         document_io::export_document(doc.snapshot)
@@ -75,7 +75,7 @@ pub fn retained_meshes(
     cfg: &ConfigView<'_, Generation3dConfig>,
     session: &FlowEvalSession,
     widget_id: Option<&str>,
-) -> Result<Option<Vec<semio_framework_plugin::MeshData>>, Fault> {
+) -> Result<Option<Vec<semio_plugin::MeshData>>, Fault> {
     let meshes = crate::export_meshes_from_session(doc.snapshot, cfg.snapshot, session, widget_id);
     meshes.map(Some)
         .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_IO_EXPORT), error.to_string()))
@@ -89,12 +89,12 @@ mod tests;
 
 //#region 🔖️MeshBridge
 /// 👁️ Prepares geometry from the retained evaluation and delivered mesh packs.
-pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> Result<semio_framework_plugin::MeshData, semio_framework_diagnostic::TextError> {
+pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> Result<semio_plugin::MeshData, semio_framework_diagnostic::TextError> {
     semio_s_artifact_procedural_3d_mesh_bridge::merge_meshes(&export_meshes_from_session(snapshot, cfg, session, None)?)
 }
 
 /// 🎨️ Retains each prepared surface and its authored channel set for format diagnostics and export.
-pub fn export_meshes_from_session(snapshot: &Generation3dSnapshot, _cfg: &Generation3dConfig, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_framework_plugin::MeshData>, semio_framework_diagnostic::TextError> {
+pub fn export_meshes_from_session(snapshot: &Generation3dSnapshot, _cfg: &Generation3dConfig, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_plugin::MeshData>, semio_framework_diagnostic::TextError> {
     export_meshes_from_evaluation(&snapshot.host_snapshot, session, widget_id)
 }
 

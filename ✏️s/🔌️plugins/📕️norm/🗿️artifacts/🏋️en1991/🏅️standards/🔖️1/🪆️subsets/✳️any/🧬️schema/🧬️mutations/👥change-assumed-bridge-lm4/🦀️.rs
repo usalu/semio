@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedBridgeLm4 w
         record: "ChangedAssumedBridgeLm4",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed load model 4 crowd load", "Angenommene Menschengedrängelast des Lastmodells 4 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed load model 4 crowd load", "Angenommene Menschengedrängelast des Lastmodells 4 ändern")
     }
 }
 

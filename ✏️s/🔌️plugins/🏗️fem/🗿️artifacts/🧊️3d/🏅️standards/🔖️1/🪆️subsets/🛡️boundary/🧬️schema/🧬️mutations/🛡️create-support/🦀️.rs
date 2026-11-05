@@ -27,8 +27,8 @@ where
     Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "support", kind: "create-support", record: "CreatedSupport" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create support \"{}\"", self.support.id), &format!("Auflager \"{}\" erstellen", self.support.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create support \"{}\"", self.support.id), &format!("Auflager \"{}\" erstellen", self.support.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.support.id.clone()]

@@ -3,25 +3,25 @@
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use crate::terminology::Block5dLabels;
 use crate::{block5d_action, ui_label, ui_value_map, ui_value_text};
-use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 // 🏗️ The contract's own node BUILDERS, reached directly rather than through
 // `plugin_app_close_prelude`: that prelude re-exports the SDK's `tree_item(id, label) -> BuiltNode`
 // explicitly, which shadows the contract's `tree_item(label) -> TreeItemBuilder` glob — the builder
 // is what a field row needs, since it nests its control as a child.
-use semio_framework_ui_contract as ui;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BLOCK5D_BODY_INSPECTOR: &str = "block5d.play.inspector";

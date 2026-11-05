@@ -3,11 +3,11 @@
 mod example {
 use crate::mutations::change_exaggeration::ChangeExaggeration;
 use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, NoConfig};
 use super::super::example::*;
 use crate::editor::gis3d::unit_tests::context::{app, close, dispatch, history_verb};
 use crate::editor::gis3d::Gis3dCommand;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 /// 🎬️ The catalogue is real content addressed by id, not an empty-vs-non-empty switch: the declared
 /// `📚️examples/🎬️demo` facet resolves to the bundled Liège reuse terrain, and an id nobody declared
@@ -32,7 +32,7 @@ async fn the_manifest_stages_exactly_the_catalogue_ids() {
     let definition = crate::editor::gis3d::create_gis3d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     let arg = action.args.iter().find(|arg| arg.id == "exampleId").expect("the example choice is a declared arg");
-    let semio_framework_plugin::ArgSchema::String { options, .. } = &arg.schema else { panic!("exampleId is staged as a string choice: {arg:?}") };
+    let semio_plugin::ArgSchema::String { options, .. } = &arg.schema else { panic!("exampleId is staged as a string choice: {arg:?}") };
     let staged: Vec<&str> = options.iter().map(|option| option.value.as_str()).collect();
     let catalogue = example_catalogue();
     let declared: Vec<&str> = catalogue.iter().map(|source| source.id()).collect();
@@ -52,7 +52,7 @@ async fn the_manifest_stages_exactly_the_catalogue_ids() {
 async fn set_active_example_is_a_declared_mutation_with_a_staged_argument() {
     let definition = crate::editor::gis3d::create_gis3d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
-    assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits document-mutating operations, so it is a Mutation");
+    assert!(matches!(action.kind, semio_plugin::ActionKind::Mutation), "loading an example emits document-mutating operations, so it is a Mutation");
     assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
 }
 
@@ -64,7 +64,7 @@ async fn set_active_example_empty_then_demo_round_trips_and_undoes() {
     let mut app = app().await;
     assert_eq!(app.snapshot().expect("projection").exaggeration, 1.5, "the terrain editor boots on its curated example");
     let cleared = dispatch(&mut app, Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() })).await;
-    assert!(cleared.lanes.iter().any(|lane| matches!(lane, semio_framework_plugin::app::TypedOperationResultLane::Artifact)), "clearing a curated document publishes on the artifact lane: {:?}", cleared.lanes);
+    assert!(cleared.lanes.iter().any(|lane| matches!(lane, semio_plugin::app::TypedOperationResultLane::Artifact)), "clearing a curated document publishes on the artifact lane: {:?}", cleared.lanes);
     drop(cleared);
     assert_eq!(app.snapshot().expect("projection").exaggeration, crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot().exaggeration);
     dispatch(&mut app, Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEFAULT_EXAMPLE_ID.into() })).await;
@@ -82,10 +82,10 @@ async fn set_active_example_empty_then_demo_round_trips_and_undoes() {
 #[semio_framework_async_macros::async_test]
 async fn the_reducer_emits_only_the_fields_that_differ() {
     let document = semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::text::snapshot::default_terrain_document();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc = semio_framework_plugin::ArtifactView::new(&document, &history);
-    let config = semio_framework_plugin::NoConfig {};
-    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let history = semio_plugin::HistoryView::empty();
+    let doc = semio_plugin::ArtifactView::new(&document, &history);
+    let config = semio_plugin::NoConfig {};
+    let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
 
     let same = set_active_example::handle(&set_active_example::SetActiveExample { example_id: DEFAULT_EXAMPLE_ID.into() }, &doc, &cfg).expect("re-selecting the live example reduces");
     assert!(same.artifact_mutations.is_empty(), "the boot document already IS the demo, so re-selecting it changes no field");
@@ -100,9 +100,9 @@ mod exaggeration {
 use super::super::exaggeration::*;
 use crate::editor::gis3d::modes::view::windows::terrain;
 use crate::editor::gis3d::unit_tests::context::{app, close, dispatch, history_verb, main_window_view, render, Gis3dApp};
-use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
 use crate::editor::gis3d::Gis3dCommand;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
 async fn seeds_exaggeration_from_the_terrain_fixture() {
@@ -113,8 +113,8 @@ async fn seeds_exaggeration_from_the_terrain_fixture() {
 
 //#region 🎚️Scrub
 /// 🎚️ The dispatching Terrain window's meta, the window a slider press belongs to.
-fn window_meta() -> semio_framework_plugin::ActionMeta {
-    semio_framework_plugin::ActionMeta { view_state: Some(main_window_view()), ..meta("local") }
+fn window_meta() -> semio_plugin::ActionMeta {
+    semio_plugin::ActionMeta { view_state: Some(main_window_view()), ..meta("local") }
 }
 
 fn number(value: f64) -> semio_framework_value::DslValue {
@@ -126,9 +126,9 @@ fn number(value: f64) -> semio_framework_value::DslValue {
 async fn slide(app: &mut Gis3dApp, args: Vec<(&str, semio_framework_value::DslValue)>) {
     let aborting = args.iter().any(|(key, _)| *key == "abort");
     let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setExaggeration", Some(args.clone()), &window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the slider dispatch is admitted");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setExaggeration", Some(args.clone()), &window_meta(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the slider dispatch is admitted");
     if !aborting {
-        settle_registered_typed_operation(&mut app.0, window_meta().instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the slider dispatch settles");
+        settle_registered_typed_operation(&mut app.0, window_meta().instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the slider dispatch settles");
     }
 }
 
@@ -173,8 +173,8 @@ async fn a_slider_press_is_one_transaction_one_edit_and_one_row() {
     let transaction = row.transaction.as_ref().expect("the row is the press's tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool.ends_with("#setExaggeration"), "{transaction:?}");
     assert_eq!(row.mutations.len(), 1, "one absolute leaf: the net value");
-    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Change terrain exaggeration to 3");
-    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Geländeüberhöhung auf 3 ändern");
+    assert_eq!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Change terrain exaggeration to 3");
+    assert_eq!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Geländeüberhöhung auf 3 ändern");
     history_verb(&mut app, "undo").await;
     assert_eq!(exaggeration(&app), 1.5, "one undo restores the value before the press");
     close(&mut app);
@@ -219,7 +219,7 @@ async fn two_presses_are_two_transactions() {
 
 async fn history_edit(app: &mut Gis3dApp, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) {
     let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args.clone()), &window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args.clone()), &window_meta(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -232,7 +232,7 @@ async fn pump_time_travel(app: &mut Gis3dApp, done: impl Fn(Option<semio_framewo
         if done(time_travel_stage(app).await) {
             return;
         }
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel_stage(app).await);
@@ -268,7 +268,7 @@ async fn a_committed_press_edited_in_history_replays_deterministically() {
 async fn set_exaggeration_is_a_document_operation_not_config_state() {
     let mut app = app().await;
     let result = dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).await;
-    assert_eq!(result.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::Artifact).count(), 1, "exaggeration publishes exactly one undoable document operation");
+    assert_eq!(result.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::Artifact).count(), 1, "exaggeration publishes exactly one undoable document operation");
     close(&mut app);
 }
 }
@@ -283,8 +283,8 @@ use serde_json::json;
 async fn camera_is_exact_window_config_and_emits_no_document_operation() {
     let mut app = app().await;
     let camera = dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: json!({ "position": [1.0, 1.0, 1.0] }).to_string() })).await;
-    assert_eq!(camera.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(), 1, "camera publishes exactly one window-config operation");
-    assert!(!camera.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "camera never publishes document state");
+    assert_eq!(camera.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::WindowConfig).count(), 1, "camera publishes exactly one window-config operation");
+    assert!(!camera.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact), "camera never publishes document state");
     close(&mut app);
 }
 

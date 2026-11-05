@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfRequiredRestrain
         record: "ChangedCfRequiredRestraintStiff",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Required restraint stiffness C_D,req of the cold-formed member", "Kaltprofil: Erforderliche Drehbettung C_D,req ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Required restraint stiffness C_D,req of the cold-formed member", "Kaltprofil: Erforderliche Drehbettung C_D,req ändern")
     }
 }
 

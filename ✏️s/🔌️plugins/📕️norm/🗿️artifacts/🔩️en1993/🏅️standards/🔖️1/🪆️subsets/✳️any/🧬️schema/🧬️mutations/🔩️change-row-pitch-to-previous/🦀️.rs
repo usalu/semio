@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowPitchToPrevious
         record: "ChangedRowPitchToPrevious",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pitch p to the previous row of the joint row", "Schraubenreihe: Teilung p zur vorigen Reihe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pitch p to the previous row of the joint row", "Schraubenreihe: Teilung p zur vorigen Reihe ändern")
     }
 }
 

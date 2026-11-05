@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileNegFrictionBet
         record: "ChangedPileNegFrictionBeta",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Negative friction factor β (0 = 0.25) of the pile", "Pfahl: Faktor β der negativen Mantelreibung (0 = 0,25) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Negative friction factor β (0 = 0.25) of the pile", "Pfahl: Faktor β der negativen Mantelreibung (0 = 0,25) ändern")
     }
 }
 

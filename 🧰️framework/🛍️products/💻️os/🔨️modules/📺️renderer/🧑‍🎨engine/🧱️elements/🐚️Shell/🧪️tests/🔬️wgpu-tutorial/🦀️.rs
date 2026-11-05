@@ -1,7 +1,7 @@
 use super::*;
 
 fn shell() -> ShellState {
-    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
 }
 
 fn tutorial_runtime(duration_ms: u64, mode: TutorialMode, playhead_ms: f64, rate: f32, last_tick_wall_ms: f64) -> TutorialRuntime {
@@ -61,7 +61,7 @@ fn scrub_target_ms_maps_pointer_position_to_playhead() {
 //#region CameraConversionTests
 #[test]
 fn orbit_camera_round_trips_through_tutorial_camera_state() {
-    let orbit = semio_framework_ui_scene_camera::OrbitController { target: ui_scene::math::Vec3::new(1.0, 2.0, 3.0), distance: 10.0, yaw: 0.4, pitch: 0.2, fov_y: 45.0_f32.to_radians(), ..Default::default() };
+    let orbit = semio_ui_scene_camera::OrbitController { target: ui_scene::math::Vec3::new(1.0, 2.0, 3.0), distance: 10.0, yaw: 0.4, pitch: 0.2, fov_y: 45.0_f32.to_radians(), ..Default::default() };
     let tutorial_camera = orbit_to_tutorial_camera(&orbit);
     let round_tripped = tutorial_camera_to_orbit(&tutorial_camera).expect("orbit camera state converts back");
     let original_pose = orbit.to_camera();

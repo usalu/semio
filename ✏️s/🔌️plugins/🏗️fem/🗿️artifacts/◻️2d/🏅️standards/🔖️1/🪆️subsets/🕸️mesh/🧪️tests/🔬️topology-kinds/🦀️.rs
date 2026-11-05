@@ -1,6 +1,6 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` node and element mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/🏢️appends-the-canopy-226a20/🦀️.rs"]
 mod create_node_appends_the_canopy_strut_head_node_to_the_steel_frame;

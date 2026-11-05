@@ -14,7 +14,7 @@ import {compilerLaneEnvironmentV1,compilerLaneQuotaBytesV1} from "../🟦️.ts"
 
 const GIB=1024**3,base=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());mkdirSync(base,{recursive:true});
 const python=requireTestToolV1("python");
-const lane={id:"p1a2b3c",base:"/cache/u/l/p1a2b3c",target:"/cache/u/l/p1a2b3c/t",build:"/cache/u/l/p1a2b3c/b"};
+const lane={id:"p1a2b3c",base:"/cache/u/l/p1a2b3c",target:"/cache/u/l/p1a2b3c/t",build:"/cache/u/l/p1a2b3c"};
 
 test("a lane view names the lane's directories and the unit cache chain with the crate set as focus",()=>{
  const cacheRoot=mkdtempSync(join(base,"lv-"));

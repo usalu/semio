@@ -3,7 +3,7 @@
 //! byte layout independently (that agreement is what the fixtures prove).
 
 //#region 🔖️Wire
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 
 pub fn write_u8(buf: &mut Vec<u8>, value: u8) {
     buf.push(value);
@@ -62,72 +62,72 @@ impl<'a> Reader<'a> {
         Self { data, pos: 0 }
     }
 
-    fn need(&self, count: usize) -> Result<(), semio_framework_os_mcp_foundation::errors::GatewayError> {
+    fn need(&self, count: usize) -> Result<(), semio_os_mcp_foundation::errors::GatewayError> {
         if self.pos + count > self.data.len() {
-            Err(semio_framework_os_mcp_foundation::errors::GatewayError::new(semio_framework_os_mcp_foundation::errors::GatewayErrorCode::InputInvalid, "bridge frame: unexpected end of buffer"))
+            Err(semio_os_mcp_foundation::errors::GatewayError::new(semio_os_mcp_foundation::errors::GatewayErrorCode::InputInvalid, "bridge frame: unexpected end of buffer"))
         } else {
             Ok(())
         }
     }
 
-    pub fn read_u8(&mut self) -> Result<u8, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_u8(&mut self) -> Result<u8, semio_os_mcp_foundation::errors::GatewayError> {
         self.need(1)?;
         let value = self.data[self.pos];
         self.pos += 1;
         Ok(value)
     }
-    pub fn read_u16(&mut self) -> Result<u16, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_u16(&mut self) -> Result<u16, semio_os_mcp_foundation::errors::GatewayError> {
         self.need(2)?;
         let value = u16::from_le_bytes(self.data[self.pos..self.pos + 2].try_into().expect("checked length"));
         self.pos += 2;
         Ok(value)
     }
-    pub fn read_u32(&mut self) -> Result<u32, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_u32(&mut self) -> Result<u32, semio_os_mcp_foundation::errors::GatewayError> {
         self.need(4)?;
         let value = u32::from_le_bytes(self.data[self.pos..self.pos + 4].try_into().expect("checked length"));
         self.pos += 4;
         Ok(value)
     }
-    pub fn read_u64(&mut self) -> Result<u64, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_u64(&mut self) -> Result<u64, semio_os_mcp_foundation::errors::GatewayError> {
         self.need(8)?;
         let value = u64::from_le_bytes(self.data[self.pos..self.pos + 8].try_into().expect("checked length"));
         self.pos += 8;
         Ok(value)
     }
-    pub fn read_bool(&mut self) -> Result<bool, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_bool(&mut self) -> Result<bool, semio_os_mcp_foundation::errors::GatewayError> {
         Ok(self.read_u8()? != 0)
     }
-    pub fn read_bytes(&mut self) -> Result<Vec<u8>, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_bytes(&mut self) -> Result<Vec<u8>, semio_os_mcp_foundation::errors::GatewayError> {
         let len = self.read_u32()? as usize;
         self.need(len)?;
         let value = self.data[self.pos..self.pos + len].to_vec();
         self.pos += len;
         Ok(value)
     }
-    pub fn read_string(&mut self) -> Result<String, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_string(&mut self) -> Result<String, semio_os_mcp_foundation::errors::GatewayError> {
         let bytes = self.read_bytes()?;
-        String::from_utf8(bytes).map_err(|error| semio_framework_os_mcp_foundation::errors::GatewayError::new(semio_framework_os_mcp_foundation::errors::GatewayErrorCode::InputInvalid, format!("bridge frame: invalid utf8: {error}")))
+        String::from_utf8(bytes).map_err(|error| semio_os_mcp_foundation::errors::GatewayError::new(semio_os_mcp_foundation::errors::GatewayErrorCode::InputInvalid, format!("bridge frame: invalid utf8: {error}")))
     }
-    pub fn read_option_string(&mut self) -> Result<Option<String>, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_option_string(&mut self) -> Result<Option<String>, semio_os_mcp_foundation::errors::GatewayError> {
         if self.read_bool()? {
             Ok(Some(self.read_string()?))
         } else {
             Ok(None)
         }
     }
-    pub fn read_string_vec(&mut self) -> Result<Vec<String>, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_string_vec(&mut self) -> Result<Vec<String>, semio_os_mcp_foundation::errors::GatewayError> {
         let len = self.read_u32()? as usize;
         (0..len).map(|_| self.read_string()).collect()
     }
-    pub fn read_bytes_vec(&mut self) -> Result<Vec<Vec<u8>>, semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn read_bytes_vec(&mut self) -> Result<Vec<Vec<u8>>, semio_os_mcp_foundation::errors::GatewayError> {
         let len = self.read_u32()? as usize;
         (0..len).map(|_| self.read_bytes()).collect()
     }
-    pub fn finish(self) -> Result<(), semio_framework_os_mcp_foundation::errors::GatewayError> {
+    pub fn finish(self) -> Result<(), semio_os_mcp_foundation::errors::GatewayError> {
         if self.pos == self.data.len() {
             Ok(())
         } else {
-            Err(semio_framework_os_mcp_foundation::errors::GatewayError::new(semio_framework_os_mcp_foundation::errors::GatewayErrorCode::InputInvalid, format!("bridge frame: {} trailing byte(s) after decode", self.data.len() - self.pos)))
+            Err(semio_os_mcp_foundation::errors::GatewayError::new(semio_os_mcp_foundation::errors::GatewayErrorCode::InputInvalid, format!("bridge frame: {} trailing byte(s) after decode", self.data.len() - self.pos)))
         }
     }
 }

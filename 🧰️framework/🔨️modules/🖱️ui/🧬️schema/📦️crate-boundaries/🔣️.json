@@ -5,7 +5,8 @@
   "required": [
     "version",
     "crates",
-    "tuiTest"
+    "tuiTest",
+    "identifiers"
   ],
   "properties": {
     "version": {
@@ -27,7 +28,7 @@
         "properties": {
           "package": {
             "type": "string",
-            "pattern": "^semio-framework-[a-z0-9-]+$"
+            "pattern": "^semio-[a-z0-9-]+$"
           },
           "manifest": {
             "type": "string"
@@ -74,7 +75,7 @@
             "properties": {
               "name": {
                 "type": "string",
-                "pattern": "^semio-framework-ui-tui-[a-z0-9-]+$"
+                "pattern": "^semio-ui-tui-[a-z0-9-]+$"
               },
               "manifest": {
                 "type": "string"
@@ -110,6 +111,26 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "identifiers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
           }
         }
       }

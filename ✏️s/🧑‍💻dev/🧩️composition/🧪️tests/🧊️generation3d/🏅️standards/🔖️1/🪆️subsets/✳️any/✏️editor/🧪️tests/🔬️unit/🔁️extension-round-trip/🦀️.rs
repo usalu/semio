@@ -22,14 +22,14 @@ async fn hex_column_evaluates_end_to_end_through_the_extension_round_trip() {
     drain_flow_eval_ticks(&mut app).await;
 
     let graph = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
     let status_json = scene.status_json.clone().expect("the flow window publishes a per-widget evaluation status");
     for widget_id in ["height", "radius", "sides", "profile", "extrusion-axis", "extrude", "column-preview"] {
         assert_eq!(node_eval_status(&status_json, widget_id), "ok", "{widget_id} never finished evaluating: {status_json}");
     }
 
     let preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
-    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "the extruded column must reach the preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
@@ -51,7 +51,7 @@ async fn hex_column_evaluates_end_to_end_through_the_extension_round_trip() {
 async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_needs() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     assert!(
-        semio_framework_os_flow::flow_extension_invocation_address(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).is_err(),
+        semio_os_flow::flow_extension_invocation_address(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).is_err(),
         "the witness extension must not be addressable before the host pushes it"
     );
 
@@ -85,32 +85,32 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
             Generation3dCommand::SetContributions(set_contributions::SetContributions { json: page.clone(), page: index as u64, page_count: pages.len() as u64 }),
         )
         .await;
-        assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "contributions page {index} faulted in the retained job ladder");
+        assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault), "contributions page {index} faulted in the retained job ladder");
         if index % 8 == 0 || index + 1 == pages.len() {
             context::heap_probe(&format!("after page {index}"));
         }
     }
     let (after_install, _) = context::heap_probe("after install");
-    assert_eq!(semio_framework_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "the assembler retains nothing once its last page lands");
+    assert_eq!(semio_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "the assembler retains nothing once its last page lands");
     assert_eq!(
-        semio_framework_os_flow::flow_extension_invocation_address(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness must be addressable only because this run's pages carried it"),
+        semio_os_flow::flow_extension_invocation_address(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness must be addressable only because this run's pages carried it"),
         context::CONTRIBUTIONS_WITNESS_PLUGIN_ID
     );
     for extension_id in [crate::flow_operators::BREP_EXTENSION_FLOW_ID, crate::flow_operators::MATH_EXTENSION_FLOW_ID] {
-        let address = semio_framework_os_flow::flow_extension_invocation_address(extension_id).expect("a host-pushed contribution makes its extension addressable");
+        let address = semio_os_flow::flow_extension_invocation_address(extension_id).expect("a host-pushed contribution makes its extension addressable");
         assert!(address.starts_with("flow-extension-"), "{extension_id} resolved to {address:?}, not to a contributing plugin id");
     }
 
     drain_flow_eval_ticks(&mut app).await;
     let (after_eval, _) = context::heap_probe("after first eval");
     let graph = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
     let status_json = scene.status_json.clone().expect("the flow window publishes a per-widget evaluation status");
     for widget_id in ["profile", "extrusion-axis", "extrude", "column-preview"] {
         assert_eq!(node_eval_status(&status_json, widget_id), "ok", "{widget_id} never finished evaluating under a host-pushed registry: {status_json}");
     }
     let preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
-    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "a host-pushed registry must reach a painted preview, got {mesh_count}: {}", world.meshes_json);
@@ -132,7 +132,7 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
         semio_framework_trace::GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT,
         semio_framework_trace::GUEST_LINEAR_MEMORY_MAXIMUM_BYTES
     );
-    semio_framework_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
+    semio_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
 }
 
 /// 🪟️ The thirteen surfaces the SERVED shell mounts in one `surface-visible` burst, in the order the
@@ -171,7 +171,7 @@ async fn the_shell_boot_surface_burst_renders_inside_one_turn() {
         let view = if body_key == flow_window::GENERATION_3D_PLAY_BODY_MAIN { flow.clone() } else { preview.clone() };
         let started = std::time::Instant::now();
         eprintln!("[STATS] shell burst rendering {body_key}");
-        let rendered = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view, app.1.cx()).await;
+        let rendered = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view, app.1.cx()).await;
         let elapsed = started.elapsed();
         println!("[STATS] shell burst {body_key} ok={} elapsed_ms={}", rendered.is_ok(), elapsed.as_millis());
         assert!(elapsed < std::time::Duration::from_secs(2), "surface {body_key} took {elapsed:?} to render, more than one interactive turn can afford");
@@ -212,13 +212,13 @@ async fn the_served_one_page_contributions_crossing_installs_inside_the_watchdog
     let receipt = context::dispatch(&mut app, Generation3dCommand::SetContributions(set_contributions::SetContributions { json: contributions.clone(), page: 0, page_count: 1 })).await;
     let elapsed = started.elapsed();
     println!("[STATS] served one-page contributions install chars={} elapsed_ms={}", contributions.len(), elapsed.as_millis());
-    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the served one-page crossing faulted in the retained job ladder");
+    assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault), "the served one-page crossing faulted in the retained job ladder");
     assert_eq!(
-        semio_framework_os_flow::flow_extension_invocation_address(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness must be addressable only because this run's single page carried it"),
+        semio_os_flow::flow_extension_invocation_address(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness must be addressable only because this run's single page carried it"),
         context::CONTRIBUTIONS_WITNESS_PLUGIN_ID
     );
-    assert_eq!(semio_framework_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "a one-page run retains nothing once its only page lands");
-    semio_framework_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
+    assert_eq!(semio_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "a one-page run retains nothing once its only page lands");
+    semio_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
     assert!(
         elapsed < SERVED_CONTRIBUTIONS_INSTALL_BUDGET,
         "the served one-page contributions crossing took {elapsed:?} of native debug time, over the {SERVED_CONTRIBUTIONS_INSTALL_BUDGET:?} budget — the wasm guest pays this many times over and the shard watchdog kills it mid-turn"
@@ -261,7 +261,7 @@ async fn the_settled_evaluation_tick_cycle_retains_nothing_that_would_exhaust_th
 
 /// ⚖️ LAW: every `Effect::InvokeExtension` this app emits carries the CONTRIBUTING PLUGIN's id,
 /// resolved through the single translation surface
-/// [`semio_framework_os_flow::flow_extension_invocation_address`] — the flow manifest's own id
+/// [`semio_os_flow::flow_extension_invocation_address`] — the flow manifest's own id
 /// (`brep`, `math`) is never an address, and the tessellate hop in particular must reach
 /// `flow-extension-brep`.
 ///
@@ -291,20 +291,20 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
         "the tessellate hop must address the contributing brep plugin: {addresses:?}"
     );
 
-    let miss = semio_framework_os_flow::flow_extension_invocation_address("not-contributed-by-anything").expect_err("an uncontributed flow extension id has no invocation address");
+    let miss = semio_os_flow::flow_extension_invocation_address("not-contributed-by-anything").expect_err("an uncontributed flow extension id has no invocation address");
     let mut owner = Generation3dInstanceOperationOwner::new();
     let faulted: serde_json::Value = owner
         .with_session_waking(|session| serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, Err(miss))).expect("preview status json"))
         .expect("the retained evaluation-session owner lends its session");
     assert!(context::close_instance_operation_owner(&mut owner), "the projection's own session owner must reach its terminal close");
-    assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner), "the projection's own session owner must close terminal-empty");
+    assert!(semio_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner), "the projection's own session owner must close terminal-empty");
     assert_eq!(faulted.get("phase").and_then(serde_json::Value::as_str), Some("faulted"), "{faulted}");
     let label = faulted.get("phaseLabel").expect("the faulted phase carries its own label pair");
     assert!(label.get("en").and_then(serde_json::Value::as_str).is_some_and(|text| !text.is_empty()));
     assert!(label.get("de").and_then(serde_json::Value::as_str).is_some_and(|text| !text.is_empty()));
     assert_eq!(faulted.get("cancellable").and_then(serde_json::Value::as_bool), Some(false), "a preview that never invoked anything offers no abort");
     let fault = faulted.get("fault").expect("the faulted status names the miss");
-    assert_eq!(fault.get("code").and_then(serde_json::Value::as_str), Some(semio_framework_os_flow::FlowExtensionAddressMiss::CODE));
+    assert_eq!(fault.get("code").and_then(serde_json::Value::as_str), Some(semio_os_flow::FlowExtensionAddressMiss::CODE));
     assert_eq!(fault.get("extensionId").and_then(serde_json::Value::as_str), Some("not-contributed-by-anything"));
     for language in ["en", "de"] {
         let message = fault.get("message").and_then(|value| value.get(language)).and_then(serde_json::Value::as_str).unwrap_or_default();
@@ -329,7 +329,7 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
 ///
 /// This law drives that exact order and asserts the recovery is AUTOMATIC: the page run's last page
 /// invalidates the retained session against the new
-/// `semio_framework_os_flow::flow_extension_registry_generation` and owes every attached preview
+/// `semio_os_flow::flow_extension_registry_generation` and owes every attached preview
 /// window an evaluation, which the surface's own `pending_effects` turns into a `previewEval` run.
 ///
 /// 🧪️ A `--lib` binary LINKS both extension packs (`🔬️flow-operators`), and a linked pack shadows
@@ -342,9 +342,9 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
 async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_faulted() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::take();
-    semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("an empty closure is a legal registry state — it is the state every served boot starts in");
+    semio_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("an empty closure is a legal registry state — it is the state every served boot starts in");
     assert!(
-        semio_framework_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_err(),
+        semio_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_err(),
         "the geometry kernel must be unaddressable before the host pushes anything, or this law proves nothing"
     );
 
@@ -378,7 +378,7 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
         )
         .await
         .expect("contributions page");
-        assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "contributions page {index} faulted in the retained job ladder");
+        assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault), "contributions page {index} faulted in the retained job ladder");
         let carried = context::run_actions(&receipt.effects);
         if index + 1 < pages.len() {
             assert!(carried.is_empty(), "page {index} installs nothing yet, so it carries nothing: {carried:?}");
@@ -388,7 +388,7 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
         }
     }
     assert!(
-        semio_framework_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_ok(),
+        semio_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_ok(),
         "the pushed closure must make the geometry kernel addressable"
     );
 
@@ -416,7 +416,7 @@ async fn re_pushing_an_unchanged_closure_owes_the_settled_run_nothing() {
     let (flow_view, _preview_view) = context::shell_views("procedural-repush-main", "procedural-repush-preview");
     let contributions = context::staged_flow_extension_contributions_json(&[(context::CONTRIBUTIONS_WITNESS_PLUGIN_ID, context::contributions_witness_manifest_json())]);
     let pages = semio_framework::public_invocation_string_pages(&contributions);
-    let before = semio_framework_os_flow::flow_extension_registry_generation();
+    let before = semio_os_flow::flow_extension_registry_generation();
     let mut generations = Vec::new();
     let mut owed_per_run = Vec::new();
     for _ in 0..2 {
@@ -433,7 +433,7 @@ async fn re_pushing_an_unchanged_closure_owes_the_settled_run_nothing() {
             .expect("contributions page");
             carried.extend(receipt.effects);
         }
-        generations.push(semio_framework_os_flow::flow_extension_registry_generation());
+        generations.push(semio_os_flow::flow_extension_registry_generation());
         owed_per_run.push(context::run_actions(&carried));
         context::drive_preview_run(&mut app, &flow_view, &carried).await;
     }
@@ -442,27 +442,27 @@ async fn re_pushing_an_unchanged_closure_owes_the_settled_run_nothing() {
     assert_eq!(generations[0], generations[1], "an unchanged closure must not burn a registry replacement");
     assert!(owed_per_run[1].is_empty(), "an unchanged closure must owe the settled run nothing on the second push: {:?}", owed_per_run[1]);
     println!("[STATS] re-push generations={before} -> {generations:?} owed={owed_per_run:?}");
-    semio_framework_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
+    semio_os_flow::uninstall_flow_extension(context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
 }
 
 
 /// 📈 The preview window's published tessellation phase.
 fn preview_phase(preview_body_json: &str) -> String {
-    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
     let status: serde_json::Value = serde_json::from_str(world.status_json.as_deref().unwrap_or("{}")).expect("preview status json");
     status.get("phase").and_then(serde_json::Value::as_str).unwrap_or("<absent>").to_string()
 }
 
 /// 🧊 How many meshes the preview window actually painted.
 fn preview_mesh_count(preview_body_json: &str) -> usize {
-    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     meshes.as_array().map_or(0, Vec::len)
 }
 
 /// 🚦 The flow window's per-widget evaluation status object.
 fn flow_status_json(flow_body_json: &str) -> String {
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(flow_body_json).expect("node-graph scene decodes off the rendered flow surface");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(flow_body_json).expect("node-graph scene decodes off the rendered flow surface");
     scene.status_json.clone().expect("the flow window publishes a per-widget evaluation status")
 }
 //#endregion 🔁️ExtensionRoundTripTests

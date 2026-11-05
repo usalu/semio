@@ -1,5 +1,5 @@
 //! 🔍️ Paid record identity and field relationship indexes over borrowed authored cells.
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteRow,SqliteTable,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::ordered_row_refs,transfer::reserve};
+use semio_os_kernel::sqlite_snapshot::{SqliteRow,SqliteTable,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::ordered_row_refs,transfer::reserve};
 use std::cmp::Ordering;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

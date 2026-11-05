@@ -23,10 +23,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "scale", entity: "assets", kind: "scale-assets", record: "ScaledAssets" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.asset_ids.len() {
-            1 => semio_framework_ui_locale::LocalizedLabel::native("Scale 1 asset", "1 Asset skalieren"),
-            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {count} assets"), &format!("{count} Assets skalieren")),
+            1 => semio_ui_locale::LocalizedLabel::native("Scale 1 asset", "1 Asset skalieren"),
+            count => semio_ui_locale::LocalizedLabel::native(&format!("Scale {count} assets"), &format!("{count} Assets skalieren")),
         }
     }
     fn target(&self) -> Vec<String> {

@@ -29,19 +29,19 @@ for (const row of corpus.crates) test(row.package + " has independent production
   expect(resolve(os, row.manifest, "..", manifest.lib.path)).toBe(resolve(os, row.entry));
   const dependencies = Object.entries(manifest.dependencies).map(([alias, edge]) => edge.package ?? alias);
   for (const forbidden of row.forbiddenDependencies) expect(dependencies).not.toContain(forbidden);
-  if (row.package === "semio-framework-os-store-cursor" || row.package === "semio-framework-os-store-projection") {
+  if (row.package === "semio-os-store-cursor" || row.package === "semio-os-store-projection") {
     const consumer = Bun.TOML.parse(read("📦️packages/🦀️rust/Cargo.toml")) as unknown as Manifest;
     expect(consumer.dependencies[row.package]).toBeDefined();
     const schema = read("🔨️modules/🏪️store/🧬️schema/🦀️.rs");
-    if (row.package === "semio-framework-os-store-cursor") {
-      expect(schema).toContain("pub use semio_framework_os_store_cursor::{ArtifactCursor, ArtifactCursorOwners};");
+    if (row.package === "semio-os-store-cursor") {
+      expect(schema).toContain("pub use semio_os_store_cursor::{ArtifactCursor, ArtifactCursorOwners};");
       expect(schema).not.toContain("pub struct ArtifactCursor {");
       expect(read("🔨️modules/🏪️store/♻️retirement/🦀️.rs")).not.toContain("impl RetireOwned for super::ArtifactCursor");
       expect(read(row.entry)).toContain("impl RetireOwned for ArtifactCursor");
       expect(read(row.entry)).not.toContain("pub(crate) group:");
       expect(read(row.entry)).not.toContain("pub group:");
     } else {
-      expect(schema).toContain("pub use semio_framework_os_store_projection::*;");
+      expect(schema).toContain("pub use semio_os_store_projection::*;");
       expect(schema).not.toContain("pub struct ArtifactProjectionStamp {");
     }
   }
@@ -51,11 +51,11 @@ for (const row of corpus.crates) test(row.package + " has independent production
     expect(rows.reduce((sum, input) => sum + input.bytes, 0)).toBeLessThanOrEqual(262144);
     expect(rows.length).toBeLessThanOrEqual(32);
     expect(rows.reduce((sum, input) => sum + input.activeLines, 0)).toBeLessThanOrEqual(4000);
-    if (row.package.startsWith("semio-framework-os-history")) for (const forbidden of ["semio-framework-os-directory", "semio-framework-os-vcs", "semio-framework-os-command"]) expect(dependencies).not.toContain(forbidden);
+    if (row.package.startsWith("semio-os-history")) for (const forbidden of ["semio-os-directory", "semio-os-vcs", "semio-os-command"]) expect(dependencies).not.toContain(forbidden);
   }
   for (const input of rows.filter(row => row.kind === "source")) {
     const tokens = rustTokens(selectRustSourceV1(readFileSync(resolve(workspace, input.path), "utf8"), cfg));
-    for (const forbidden of ["semio_framework_os_kernel", "semio_framework_plugin", "os_store", "os_spr", "os_directory"]) expect(tokens.some(token => token.text === forbidden)).toBe(false);
+    for (const forbidden of ["semio_os_kernel", "semio_plugin", "os_store", "os_spr", "os_directory"]) expect(tokens.some(token => token.text === forbidden)).toBe(false);
   }
 }, 120000);
 

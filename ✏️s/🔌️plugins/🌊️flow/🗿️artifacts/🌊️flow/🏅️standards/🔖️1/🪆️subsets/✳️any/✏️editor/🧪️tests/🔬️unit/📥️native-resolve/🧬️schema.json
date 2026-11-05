@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "flow.native-resolve-action.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "argsJson",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "argsJson": {
+            "type": "string",
+            "minLength": 1
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "windowId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "nodeHashWord": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "output": {}
+        }
+      }
+    }
+  }
+}

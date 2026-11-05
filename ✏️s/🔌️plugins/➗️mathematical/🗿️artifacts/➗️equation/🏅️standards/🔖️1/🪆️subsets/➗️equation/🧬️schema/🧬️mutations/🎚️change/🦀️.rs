@@ -28,8 +28,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "coefficient", kind: "change-coefficient", record: "ChangedCoefficient" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change coefficient {} to {}/{}", self.label.0, self.numer, self.denom), &format!("Koeffizient {} auf {}/{} ändern", self.label.0, self.numer, self.denom))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change coefficient {} to {}/{}", self.label.0, self.numer, self.denom), &format!("Koeffizient {} auf {}/{} ändern", self.label.0, self.numer, self.denom))
     }
     fn target(&self) -> Vec<String> {
         vec![self.label.0.to_string()]

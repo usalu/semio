@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointAnchorArea wh
         record: "ChangedJointAnchorArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Anchor stress area A_b of the joint", "Anschluss: Ankerspannungsquerschnitt A_b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Anchor stress area A_b of the joint", "Anschluss: Ankerspannungsquerschnitt A_b ändern")
     }
 }
 

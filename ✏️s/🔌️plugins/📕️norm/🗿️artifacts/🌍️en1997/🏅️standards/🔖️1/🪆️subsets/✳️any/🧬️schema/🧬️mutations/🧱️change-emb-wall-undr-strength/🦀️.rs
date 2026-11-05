@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeEmbWallUndrStrengt
         record: "ChangedEmbWallUndrStrength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Undrained strength c_u (0 = drained) of the embedded wall", "Eingespannte Wand: Undränierte Scherfestigkeit c_u (0 = dräniert) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Undrained strength c_u (0 = drained) of the embedded wall", "Eingespannte Wand: Undränierte Scherfestigkeit c_u (0 = dräniert) ändern")
     }
 }
 

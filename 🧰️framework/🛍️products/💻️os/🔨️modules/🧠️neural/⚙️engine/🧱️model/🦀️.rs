@@ -61,5 +61,3 @@ mod native_receive;
 mod dsl_binding;
 #[path = "../🚦️native/🦀️.rs"]
 mod native_controlled;
-#[path="../⚠️failure/🦀️.rs"]
-mod original_failure_projection;

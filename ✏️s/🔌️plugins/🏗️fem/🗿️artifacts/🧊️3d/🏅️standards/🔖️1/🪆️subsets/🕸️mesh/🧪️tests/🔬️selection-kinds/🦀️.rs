@@ -1,6 +1,6 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` selection move against the committed fixtures and its laws.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/⚖️laws/🦀️.rs"]
 mod laws;

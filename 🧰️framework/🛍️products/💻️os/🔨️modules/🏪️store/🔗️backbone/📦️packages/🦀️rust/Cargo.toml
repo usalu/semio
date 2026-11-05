@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-backbone"
+name = "semio-os-store-backbone"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,14 +23,14 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-value-paged-list = { path = "../../../../../../../🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust" }
-semio-framework-os-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
-semio-framework-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

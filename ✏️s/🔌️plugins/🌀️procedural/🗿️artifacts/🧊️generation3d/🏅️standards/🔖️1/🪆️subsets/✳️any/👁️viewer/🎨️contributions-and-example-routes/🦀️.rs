@@ -29,7 +29,7 @@ fn generation3d_view_contributions_contract() -> ToolExecutionContract {
 /// 🧩️ Installs one contributions page. Publishes nothing at all — not even the config lane every
 /// other viewer tool writes.
 pub(super) struct Generation3dViewContributionsWork {
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
 }
 
@@ -43,7 +43,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         command: &Generation3dViewCommand,
         snapshot: &Generation3dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
     ) -> Option<usize> {
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
@@ -113,7 +113,7 @@ impl ToolJobFactory for Generation3dViewContributionsJobFactory {
         generation3d_view_contributions_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -127,7 +127,7 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewContributionsJobFactory {
 pub(super) struct Generation3dViewBoundedCommandJobFactoryProofs;
 
 impl Generation3dViewBoundedCommandJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
@@ -142,7 +142,7 @@ impl Generation3dViewBoundedCommandJobFactoryProofs {
 pub(super) struct Generation3dViewContributionsJobFactoryProofs;
 
 impl Generation3dViewContributionsJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
@@ -194,7 +194,7 @@ impl ToolJobFactory for Generation3dViewExampleJobFactory {
         generation3d_view_example_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_EXAMPLE_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_EXAMPLE_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -213,7 +213,7 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewExampleJobFactory {
 pub(super) struct Generation3dViewExampleJobFactoryProofs;
 
 impl Generation3dViewExampleJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
@@ -227,7 +227,7 @@ impl Generation3dViewExampleJobFactoryProofs {
 //#endregion 🎨️ExampleRoute
 
 /// 🧾️ The bounded-command, contributions and example factories' first-step proofs, in registration order.
-pub(super) fn generation3d_view_route_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+pub(super) fn generation3d_view_route_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
     let mut proofs = Generation3dViewBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
     proofs.extend(Generation3dViewContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
     proofs.extend(Generation3dViewExampleJobFactoryProofs::bounded_first_step_tool_proofs());

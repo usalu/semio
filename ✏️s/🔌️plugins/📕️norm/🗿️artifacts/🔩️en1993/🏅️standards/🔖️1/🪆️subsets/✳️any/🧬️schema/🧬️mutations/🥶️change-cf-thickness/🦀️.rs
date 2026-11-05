@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfThickness where 
         record: "ChangedCfThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Nominal thickness t of the cold-formed member", "Kaltprofil: Nennblechdicke t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Nominal thickness t of the cold-formed member", "Kaltprofil: Nennblechdicke t ändern")
     }
 }
 

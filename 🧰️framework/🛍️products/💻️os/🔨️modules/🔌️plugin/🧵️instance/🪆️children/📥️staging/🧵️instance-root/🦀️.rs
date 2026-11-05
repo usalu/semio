@@ -1,19 +1,19 @@
 //! 🗄️ Staged slice of the `instance-root` band of the mounted artifact instance: its `instance-children` members (WP6 step S0 of the instance family).
 //!
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
-use semio_framework_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, document_load_fault};
+use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, document_load_fault};
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::children_components::ChildComposition;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 
 impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🪆️ Every live owned child as its archive member (persisted envelope, identity, owner), sorted by owner and identity

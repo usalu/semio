@@ -51,7 +51,7 @@ pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+::protocol::Cold
     pub(super) preview_input: Option<protocol::InputReplacement>,
     pub(super) replay: Option<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>,
     pub(super) finished: Option<store::os_store::replay::EditReplayResult<P, Mu>>,
-    pub(super) commit_request:Option<store::HistoryFinalization>,pub(super) commit_publisher:Option<Box<semio_framework_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>,pub(super) commit_receipt:Option<semio_framework_os_store_engine_replay::OriginalReplayPublicationReceipt>,pub(super) commit_outcome:Option<TimeTravelCommit>,pub(super) commit_failure:Option<semio_framework_job::OriginalTurnFailure>,pub(super) commit_request_close:semio_framework_value::retained_clone::RetainedCloneClose,pub(super) commit_stage:u8,pub(super) commit_closing:bool,
+    pub(super) commit_request:Option<store::HistoryFinalization>,pub(super) commit_publisher:Option<Box<semio_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>,pub(super) commit_receipt:Option<semio_os_store_engine_replay::OriginalReplayPublicationReceipt>,pub(super) commit_outcome:Option<TimeTravelCommit>,pub(super) commit_failure:Option<semio_framework_job::OriginalTurnFailure>,pub(super) commit_request_close:semio_framework_value::retained_clone::RetainedCloneClose,pub(super) commit_stage:u8,pub(super) commit_closing:bool,
     pub(super) head: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
     pub(super) snapshot_aliases: ManuallyDrop<[Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>; 8]>,
     pub(super) snapshot_issuers: ManuallyDrop<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>,
@@ -106,7 +106,7 @@ pub enum TimeTravelPreviewStep {
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum TimeTravelCommit {
     Pending,
-    Finalized { receipt:semio_framework_os_store_engine_replay::OriginalReplayPublicationReceipt },
+    Finalized { receipt:semio_os_store_engine_replay::OriginalReplayPublicationReceipt },
     Stale,
     Blocked,
     Failed,
@@ -163,7 +163,7 @@ pub enum TimeTravelQueryOutput {
 
 impl<P, Mu> TimeTravelStoreState<P, Mu>
 where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
+    P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
     Mu: ::protocol::StoreMutationFor<P>,
 {
     pub(super) fn discarded_has_physical_capacity(&self)->bool{size_of::<Mu>()!=0&&self.discarded.capacity()!=0}

@@ -330,7 +330,7 @@ const GENESIS_SPR_BASE64: &str = "iVNQUg0KGgoBAAAAAQAAAAEAAABv3uXPAAAAAAAAAAAqAw
 
 #[test]
 fn the_artifact_bound_genesis_document_resolves_and_solves() {
-    let document = semio_framework_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() };
+    let document = semio_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() };
     let snapshot = BitmapInferenceRequest { snapshot: None, document: Some(document), checkpoint: None }.resolve_snapshot().expect("the genesis pair decodes");
     assert_eq!((snapshot.input.width, snapshot.input.height, snapshot.input.palette.len()), (16, 16, 3));
     assert_eq!((snapshot.output.width, snapshot.output.height, snapshot.output.periodic), (24, 24, true));
@@ -361,9 +361,9 @@ fn settle<F: std::future::Future>(future: F) -> F::Output {
 fn genesis_wire_request(law: &serde_json::Value, cancellation_id: &str) -> Vec<u8> {
     let metadata = bitmap_inference_metadata();
     let workload = &law["workload"];
-    let payload = BitmapInferenceRequest { snapshot: None, document: Some(semio_framework_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() }), checkpoint: None };
-    let request = semio_framework_plugin::app::WireArtifactInferenceRequest {
-        wire_version: semio_framework_plugin::app::ARTIFACT_INFERENCE_WIRE_VERSION,
+    let payload = BitmapInferenceRequest { snapshot: None, document: Some(semio_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() }), checkpoint: None };
+    let request = semio_plugin::app::WireArtifactInferenceRequest {
+        wire_version: semio_plugin::app::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: metadata.owner.into(),
         artifact_kind: workload["artifactKind"].as_str().expect("law workload kind").into(),
         artifact_schema: metadata.artifact_schema.into(),
@@ -376,10 +376,10 @@ fn genesis_wire_request(law: &serde_json::Value, cancellation_id: &str) -> Vec<u
         generation: 1,
         source_dialect: "s.wfc.bitmap.standard.v1.dialect.canonical".into(),
         policy: Vec::new(),
-        budgets: semio_framework_plugin::app::WireArtifactInferenceBudget { allocation_bytes: workload["allocationBytes"].as_u64().expect("law allocation"), work_units: workload["workUnits"].as_u64().expect("law work units"), recursion_depth: 4 },
+        budgets: semio_plugin::app::WireArtifactInferenceBudget { allocation_bytes: workload["allocationBytes"].as_u64().expect("law allocation"), work_units: workload["workUnits"].as_u64().expect("law work units"), recursion_depth: 4 },
         cancellation_id: cancellation_id.into(),
         previous_state: None,
-        requested_cache_mode: semio_framework_plugin::app::WireArtifactInferenceCacheMode::Cold,
+        requested_cache_mode: semio_plugin::app::WireArtifactInferenceCacheMode::Cold,
         canonical_payload: crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&payload).into_bytes(),
         dependencies: Vec::new(),
     };
@@ -389,7 +389,7 @@ fn genesis_wire_request(law: &serde_json::Value, cancellation_id: &str) -> Vec<u
 /// 🏁 Drives one `semio.infer` job through the guest job protocol under `grant` exactly as the host
 /// relay does, and reports how many `step-job` crossings it took and how long.
 fn run_genesis_crossings(law: &serde_json::Value, job: u64, grant: &serde_json::Value) -> (usize, std::time::Duration) {
-    use semio_framework_plugin::reactor::jobs::{start_job, step_job, JobBudget, JobStep, JOB_KIND_INFER};
+    use semio_plugin::reactor::jobs::{start_job, step_job, JobBudget, JobStep, JOB_KIND_INFER};
     register_bitmap_inference_factory(&semio_framework::ActionBus::production()).ok();
     let budget = JobBudget { fuel: grant["fuel"].as_u64().expect("law fuel"), deadline_ms: u32::try_from(grant["deadlineMs"].as_u64().expect("law deadline")).expect("law deadline fits") };
     let started = std::time::Instant::now();
@@ -417,7 +417,7 @@ fn run_genesis_crossings(law: &serde_json::Value, job: u64, grant: &serde_json::
 fn a_whole_solve_grant_settles_the_genesis_inference_in_a_bounded_state_walk() {
     let law: serde_json::Value = serde_json::from_str((*RELAY_CROSSING_LAW)).expect("relay crossing law parses");
     let grant = &law["wholeSolveGrant"];
-    let snapshot = BitmapInferenceRequest { snapshot: None, document: Some(semio_framework_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() }), checkpoint: None }.resolve_snapshot().expect("the genesis pair decodes");
+    let snapshot = BitmapInferenceRequest { snapshot: None, document: Some(semio_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() }), checkpoint: None }.resolve_snapshot().expect("the genesis pair decodes");
     let native_started = std::time::Instant::now();
     solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("the genesis snapshot solves natively");
     let native = native_started.elapsed();

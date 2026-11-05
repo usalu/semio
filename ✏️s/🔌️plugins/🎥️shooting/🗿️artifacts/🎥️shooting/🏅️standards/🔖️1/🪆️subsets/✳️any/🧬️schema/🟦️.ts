@@ -145,7 +145,7 @@ export const shootingShootingArtifactGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseShootingArtifact(value: unknown, at = "$"): ShootingArtifact {
-  const row = shootingShootingArtifactGuardObject(value, at);
+  const row = shootingShootingArtifactGuardClosed(shootingShootingArtifactGuardObject(value, at), at, ["schema", "assets", "savedCameras", "scene", "shots", "activeShotId", "activeAssetId", "emblem"]);
   return {
     schema: shootingShootingArtifactGuardString(row["schema"], `${at}.schema`),
     assets: shootingShootingArtifactGuardArray(row["assets"], `${at}.assets`).map((item, index) => parseShootingAsset(item, `${at}.assets[${index}]`)),

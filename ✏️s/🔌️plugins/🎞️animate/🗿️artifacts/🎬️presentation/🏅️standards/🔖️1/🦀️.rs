@@ -2,7 +2,7 @@
 //! subset `any` for `s.animate.presentation@1`.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 /// 🪪️ `extensions: ["presentation"]` is the real, carried-over value (`ArtifactDsl::EXTENSION`, and the
@@ -12,9 +12,9 @@ use {semio_framework_artifact_reference::StandardId};
 /// `## openQuestions` in the fan-out report, mirrors `🎬️sequence`'s identical documented deviation.
 pub fn standard<PA>() -> StandardDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::animate::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::animate::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::animate::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::animate::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
 {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.animate.presentation"], extensions: &["presentation"] }, subsets: vec![subsets::any::subset::<PA>()] }
 }

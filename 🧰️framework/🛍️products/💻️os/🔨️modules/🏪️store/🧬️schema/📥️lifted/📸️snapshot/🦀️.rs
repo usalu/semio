@@ -1,8 +1,8 @@
 //! 📥️ Trait impls of `📸️snapshot` whose trait or type belongs to `os-store-space-schema` (orphan rule, PLAN-OS-KERNEL-CRATES.md 7.7): lifted out of `🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs`.
-use semio_framework_os_vcs::Author;
+use semio_os_vcs::Author;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_io_sqlite_snapshot::artifact::Cell;
-use semio_framework_os_spr::HybridLogicalTimestamp;
+use semio_os_spr::HybridLogicalTimestamp;
 use semio_framework_io_sqlite_snapshot::artifact::RowWriter;
 use crate::space_history_document::SpaceAlternative;
 use crate::space_history_document::SpaceCheckpoint;
@@ -13,7 +13,7 @@ use semio_framework_io_sqlite_snapshot::SqliteSnapshotControl;
 use semio_framework_io_sqlite_snapshot::SqliteSnapshotPhase;
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
-use semio_framework_os_space_sqlite_cells as fields;
+use semio_os_space_sqlite_cells as fields;
 use semio_framework_io_sqlite_snapshot::validate_sqlite_database_schema;
 
 pub fn schema(control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {

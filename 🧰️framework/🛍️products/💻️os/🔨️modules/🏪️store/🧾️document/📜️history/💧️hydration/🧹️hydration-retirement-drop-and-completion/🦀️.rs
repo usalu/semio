@@ -4,22 +4,22 @@ use super::*;
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty_unbounded() { return Ok(Default::default()); }
-        if let Some(active) = self.active.as_ref() { return semio_framework_os_store_read::artifact_retirement_box_demands(active, body); }
+        if let Some(active) = self.active.as_ref() { return semio_os_store_read::artifact_retirement_box_demands(active, body); }
         macro_rules! original {
-            ($field:ident) => { if self.$field.is_some() { return semio_framework_os_store_read::artifact_retirement_owned_birth_demands(&self.$field); } };
+            ($field:ident) => { if self.$field.is_some() { return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.$field); } };
         }
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "hydration child depth overflow"))?; Ok(demand) };
         let frame = |bytes| RetirementDemand { capacity_bytes: bytes, depth: 2, ..Default::default() };
-        if self.fold_job.is_some() { return semio_framework_os_store_read::retirement_owner_demands(&self.fold_job, body); }
+        if self.fold_job.is_some() { return semio_os_store_read::retirement_owner_demands(&self.fold_job, body); }
         original!(normalized_conflicts);
         original!(normalized_transitions);
         original!(transition_ledger);
-        if self.target_decoder.is_some() { return semio_framework_os_store_read::retirement_owner_demands(&self.target_decoder, body); }
+        if self.target_decoder.is_some() { return semio_os_store_read::retirement_owner_demands(&self.target_decoder, body); }
         original!(pending_target);
         original!(target_address);
         original!(target_source);
@@ -27,10 +27,10 @@ where
         original!(replay_order);
         if let Some(catalog) = self.initialization_catalog.as_ref() { return nested(catalog.close_demands()?); }
         if let Some(runtime) = self.runtime.as_ref() { return nested(runtime.initialization_retirement_demands(body)?); }
-        if self.pending_edit.is_some() { return Ok(frame(size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>())); }
-        if self.pending_messages.is_some() { return Ok(frame(size_of::<semio_framework_os_spr::command::MutationMessageLedgerRetirement>())); }
-        if self.replay.is_some() || self.loaded_result.is_some() { return Ok(frame(size_of::<semio_framework_os_store_read::ArtifactHistoryReadRetirement<P, M>>())); }
-        if self.envelope.is_some() { return Ok(frame(size_of::<semio_framework_os_store_read::ArtifactStoreEnvelopeRetirement<P, M>>())); }
+        if self.pending_edit.is_some() { return Ok(frame(size_of::<semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>())); }
+        if self.pending_messages.is_some() { return Ok(frame(size_of::<semio_os_spr::command::MutationMessageLedgerRetirement>())); }
+        if self.replay.is_some() || self.loaded_result.is_some() { return Ok(frame(size_of::<semio_os_store_read::ArtifactHistoryReadRetirement<P, M>>())); }
+        if self.envelope.is_some() { return Ok(frame(size_of::<semio_os_store_read::ArtifactStoreEnvelopeRetirement<P, M>>())); }
         if let Some(initial) = self.initial.as_ref() {
             let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration original projection lost its declared factory"))?;
             return Ok(frame(owners.initial_snapshot_retirement.retirement_birth_bytes(initial)));
@@ -52,8 +52,8 @@ where
 
 impl<P, M> ErasedSnapshotRetirement for RetainedPersistedDocumentHydration<P, M>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
         fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.close_demands(body)}
 
@@ -71,15 +71,15 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result; }
-        if self.fold_job.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.fold_job, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result; }
+        if self.fold_job.is_some() { return semio_os_store_read::retirement_owner_close(&mut self.fold_job, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         macro_rules! original {
-            ($field:ident) => { if self.$field.is_some() { return semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, grant).result; } };
+            ($field:ident) => { if self.$field.is_some() { return semio_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, grant).result; } };
         }
         original!(normalized_conflicts);
         original!(normalized_transitions);
         original!(transition_ledger);
-        if self.target_decoder.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.target_decoder, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.target_decoder.is_some() { return semio_os_store_read::retirement_owner_close(&mut self.target_decoder, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         original!(pending_target);
         original!(target_address);
         original!(target_source);
@@ -108,7 +108,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
             }
         }
         if let Some(messages) = self.pending_messages.take() {
-            match semio_framework_value::retirement::frame::admit_retirement_frame(messages, child, |messages| semio_framework_os_spr::command::MutationMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
+            match semio_framework_value::retirement::frame::admit_retirement_frame(messages, child, |messages| semio_os_spr::command::MutationMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, original)) => { *self.pending_messages = Some(original); return Err(error); }
             }
@@ -170,8 +170,8 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
 
 impl<P, M> Drop for RetainedPersistedDocumentHydration<P, M>
 where
-    P: semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty_unbounded(), "persisted document hydration reached Drop before exact handoff or bounded retirement");
@@ -180,8 +180,8 @@ where
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🔎️ Names the first original owner this hydration still retains, or `None` once every currency is terminal.
     pub fn remaining_owner(&self) -> Option<&'static str> {

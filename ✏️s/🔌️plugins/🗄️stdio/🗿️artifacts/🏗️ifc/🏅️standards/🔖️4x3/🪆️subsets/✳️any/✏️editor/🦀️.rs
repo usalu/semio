@@ -3,9 +3,9 @@
 use crate::templates::application::{work::factory as template_factory, APPLY_TEMPLATE_ACTION};
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, DraftView, Emit, Fault, MeshWindowKit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, WindowKit};
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_plugin::app::InteractionView;
+use semio_plugin::{ArtifactEditor, ArtifactView, ConfigView, DraftView, Emit, Fault, MeshWindowKit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, WindowKit};
+use semio_ui_locale::{Label, LocalizedLabel};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_s_artifact_stdio_contract::editing;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot, IfcValue};
@@ -66,39 +66,39 @@ impl ArtifactEditor for Ifc4x3AnyEditor {
     type TransientMutation = NoTransientMutation;
     type Command = Ifc4x3EditCommand;
     type RenderWork = render_work::Ifc4x3RenderWork;
-    fn uses_render_work(body_key: &str)->bool{body_key==editing::SNAPSHOT_DETAILS_BODY_KEY||body_key==semio_framework_plugin::action_staging::STAGED_FORM_BODY_KEY}
+    fn uses_render_work(body_key: &str)->bool{body_key==editing::SNAPSHOT_DETAILS_BODY_KEY||body_key==semio_plugin::action_staging::STAGED_FORM_BODY_KEY}
     fn begin_render_work(body_key: &str,cx: &mut semio_framework_job::StepContext<'_>)->Result<Option<Self::RenderWork>,semio_framework_job::OriginalTurnFailure>{Self::RenderWork::begin(body_key,cx)}
-    fn receive_render_work_request(work:&mut Self::RenderWork,request:&mut Option<semio_framework_plugin::action_staging::StagedFormRequest>,view:&semio_framework_plugin::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{work.receive_request(request,view,cx)}
+    fn receive_render_work_request(work:&mut Self::RenderWork,request:&mut Option<semio_plugin::action_staging::StagedFormRequest>,view:&semio_plugin::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{work.receive_request(request,view,cx)}
     fn render_work_demand(work:&Self::RenderWork,maximum:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{work.demand(maximum)}
-    fn render_with_work_context(work:&mut Self::RenderWork,_owner:&semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,body_key:&str,source:&std::sync::Arc<Self::Snapshot>,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,view_state:&semio_framework_plugin::ViewModel,_transient:&semio_framework_plugin::TransientView<'_,Self::Transient>,_interaction:&InteractionView<'_>,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree>{work.render(body_key,source,doc,view_state,cx)}
+    fn render_with_work_context(work:&mut Self::RenderWork,_owner:&semio_plugin::ArtifactInstanceOperationOwnerHandle,body_key:&str,source:&std::sync::Arc<Self::Snapshot>,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,view_state:&semio_plugin::ViewModel,_transient:&semio_plugin::TransientView<'_,Self::Transient>,_interaction:&InteractionView<'_>,cx:&mut semio_framework_job::StepContext<'_>)->semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree>{work.render(body_key,source,doc,view_state,cx)}
     const DIALECT: Dialect = IFC4X3_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IFC4X3_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.ifc@4x3", extension: ".ifc", media_type: "application/x-ifc", binary: false })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.ifc@4x3", extension: ".ifc", media_type: "application/x-ifc", binary: false })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::io::write_ifc4x3_step(snapshot).map(String::into_bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        crate::io::write_ifc4x3_step(snapshot).map(String::into_bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        let refuse = |detail: String| semio_framework_plugin::MediaError::Payload("artifact:native".into(), detail);
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        let refuse = |detail: String| semio_plugin::MediaError::Payload("artifact:native".into(), detail);
         let text = std::str::from_utf8(bytes).map_err(|error| refuse(format!("ifc4x3: not valid utf-8: {error}")))?;
         crate::io::parse_ifc4x3_step(text).map_err(|error| refuse(error.to_string()))
     }
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = editing::snapshot_edit_bounded_first_step_proofs::<Self>("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/✏️editor/🦀️.rs", IFC4X3_CONTROLLER, IFC4X3_DOCUMENT_SCHEMA);
         proofs.push(template_factory::proof());
         proofs
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         editing::register_snapshot_edit_tool_factory::<Self>(registry)?;
         template_factory::register(registry)
     }
-    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, Fault> {
+    fn build_tool_job(request: semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>) -> Result<Option<semio_plugin::ToolOperationSpec>, Fault> {
         template_factory::build(request)
     }
     semio_s_artifact_stdio_contract::snapshot_editing_publication_authority!();
@@ -123,7 +123,7 @@ impl ArtifactEditor for Ifc4x3AnyEditor {
         snapshot.header.file_schema = vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3_ADD2".into())])];
         snapshot
     }
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
     fn handle(
@@ -131,7 +131,7 @@ impl ArtifactEditor for Ifc4x3AnyEditor {
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -141,26 +141,26 @@ impl ArtifactEditor for Ifc4x3AnyEditor {
         }
     }
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         if body_key == MeshWindowKit::KIND_ID {
-            return semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render_in_context(doc.snapshot, cx).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+            return semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render_in_context(doc.snapshot, cx).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
     }
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         if body_key == MeshWindowKit::KIND_ID {
-            return semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree);
+            return semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render(doc.snapshot).map(semio_plugin::built_to_component_tree);
         }
         if body_key != editing::SNAPSHOT_DETAILS_BODY_KEY {
-            return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}")));
+            return semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}")));
         }
         let revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
         editing::render_snapshot_details_provider_revisioned(
@@ -168,17 +168,17 @@ impl ArtifactEditor for Ifc4x3AnyEditor {
             revision,
             view_state.locale,
             IFC4X3_CONTROLLER,
-            &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY),
+            &semio_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY),
         )
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 
 impl editing::SnapshotEditingEditor for Ifc4x3AnyEditor {
-    fn snapshot_edit_work_capacity() -> semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity {
+    fn snapshot_edit_work_capacity() -> semio_plugin::retained_command::ArtifactRetainedWorkCapacity {
         crate::details::details_work_capacity()
     }
-    fn snapshot_edit_work(tool: &'static str) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> {
+    fn snapshot_edit_work(tool: &'static str) -> Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<Self>>> {
         crate::details::details_edit_work::<Self>(tool)
     }
     fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &IfcSnapshot) -> bool {
@@ -224,11 +224,11 @@ impl editing::SnapshotEditingEditor for Ifc4x3AnyEditor {
     }
 }
 
-pub fn create_ifc4x3_any_editor() -> semio_framework_plugin::AppDefinition {
-    let mode = semio_framework_plugin::ModeDefinition { id: "edit".into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() };
+pub fn create_ifc4x3_any_editor() -> semio_plugin::AppDefinition {
+    let mode = semio_plugin::ModeDefinition { id: "edit".into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() };
     let layout = editing::snapshot_details_split_layout(MeshWindowKit::KIND_ID, "Main");
     editing::snapshot_edit_actions_with(
-        semio_framework_plugin::Editor::builder(IFC4X3_ANY_DIALECT)
+        semio_plugin::Editor::builder(IFC4X3_ANY_DIALECT)
             .document(["stdio", "ifc4x3"])
             .icon_id("box")
             .mode_def(mode)
@@ -238,7 +238,7 @@ pub fn create_ifc4x3_any_editor() -> semio_framework_plugin::AppDefinition {
             .default_layout(layout),
     )
     .action_with(template_factory::action())
-    .action_interactive_job(APPLY_TEMPLATE_ACTION, semio_framework_plugin::InteractiveJobClassification::Migrated)
+    .action_interactive_job(APPLY_TEMPLATE_ACTION, semio_plugin::InteractiveJobClassification::Migrated)
     .build_definition()
 }
 

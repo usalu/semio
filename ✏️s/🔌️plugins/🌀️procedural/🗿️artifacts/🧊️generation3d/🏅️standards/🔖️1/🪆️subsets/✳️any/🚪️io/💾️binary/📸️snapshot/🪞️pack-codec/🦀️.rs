@@ -1,6 +1,6 @@
 //! 🪞️ Generation3d binary pack codec — `ArtifactPack`/`ArtifactStoreSnapshot` for the snapshot and its DSL twin, owned by the crate that owns both.
 
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use crate::snapshot::Generation3dSnapshot;
 use crate::dsl_mirror::Generation3dSnapshotDsl;
 use crate::dsl_mirror::generation3d_document_to_dsl;
@@ -24,8 +24,8 @@ impl pack::snapshot::ArtifactPack for Generation3dSnapshotDsl {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dSnapshotDsl {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dSnapshotDsl {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -45,8 +45,8 @@ impl pack::snapshot::ArtifactPack for Generation3dSnapshot {
         <Generation3dSnapshotDsl as pack::snapshot::ArtifactPack>::record_spec()
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
 }

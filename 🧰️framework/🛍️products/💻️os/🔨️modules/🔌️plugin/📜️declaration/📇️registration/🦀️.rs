@@ -3,18 +3,18 @@ use semio_framework::{ActionArgDef, PluginManifest};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, BTreeSet};
 /// 🚪️ `io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
-/// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
+/// `semio-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
 /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
 /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
 use semio_framework_artifact_reference::ArtifactKindId;
 use pack::snapshot::ArtifactPack;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
 /// 2). Defined in `semio_framework` so plugins and the OS product
 /// share one definition without an inverted dependency; re-exported here verbatim.
-use semio_framework_os_kernel::io::{ComposerEntry, SubsetValidatorEntry};
+use semio_os_kernel::io::{ComposerEntry, SubsetValidatorEntry};
 #[cfg(test)]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
 use crate::declarations;
 use crate::ArtifactDeclaration;
@@ -23,19 +23,19 @@ use crate::FlowExtensionDeclaration;
 use crate::FlowExtensionRegistry;
 use crate::HostMediaHandlerDeclaration;
 use crate::HostMediaHandlerRegistry;
-use semio_framework_plugin_identity::ArtifactDefinitionRegistry;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_plugin_identity::ArtifactDefinitionRegistry;
+use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::artifact_inference::ArtifactInferenceService;
 use crate::artifact_inference::ArtifactInferenceServiceKey;
 use crate::artifact_inference::ArtifactInferenceServiceMetadata;
 use crate::artifact_inference::ArtifactInferenceServiceRegistry;
-use semio_framework_plugin_ownership::store_lifecycle::OwnerMutationRoster;
+use semio_plugin_ownership::store_lifecycle::OwnerMutationRoster;
 #[cfg(test)]
-use semio_framework_plugin_identity::ArtifactDefinition;
+use semio_plugin_identity::ArtifactDefinition;
 #[cfg(test)]
-use semio_framework_plugin_identity::ArtifactIdentity;
+use semio_plugin_identity::ArtifactIdentity;
 #[cfg(test)]
-use semio_framework_plugin_decl_surface::EditorApp;
+use semio_plugin_decl_surface::EditorApp;
 
 
 
@@ -45,13 +45,13 @@ pub struct ArtifactRegistrationPlan {
     pub inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
     pub inference_services: Vec<ArtifactInferenceService>,
     routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
-    pub formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
+    pub formats: Vec<semio_os_kernel::io::FormatDescriptor>,
     pub subset_validators: Vec<&'static SubsetValidatorEntry>,
     pub composers: Vec<&'static ComposerEntry>,
     languages: Vec<semio_framework_dsl::LanguageSpec>,
     document_codecs: Vec<store::os_store::serialization::ArtifactCodec>,
-    document_bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>,
-    native_snapshots: Vec<semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration>,
+    document_bindings: Vec<semio_os_kernel::io::ArtifactCodecBinding>,
+    native_snapshots: Vec<semio_os_kernel::io::io_mechanism::NativeSnapshotRegistration>,
     pub migrations: Vec<store::os_store::codec_registry::DialectMigration>,
     pub schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
     app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
@@ -95,7 +95,7 @@ impl ArtifactRegistrationPlan {
         for declaration in declarations {
             plan.inference_services.extend(declaration.inference_services.iter().copied());
         }
-        for (channel, rows) in [(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::OwnedDeclaration, declarations), (semio_framework_os_kernel::io::ArtifactCodecBindingChannel::HostedDeclaration, hosted)] {
+        for (channel, rows) in [(semio_os_kernel::io::ArtifactCodecBindingChannel::OwnedDeclaration, declarations), (semio_os_kernel::io::ArtifactCodecBindingChannel::HostedDeclaration, hosted)] {
             for declaration in rows {
                 plan.schemas.extend(declaration.schemas.iter().copied());
                 plan.inferences.extend(declaration.inferences.iter().copied());
@@ -107,7 +107,7 @@ impl ArtifactRegistrationPlan {
                     let codec = spec.codec();
                     plan.document_bindings.push(spec.binding(channel, &plan.owner, Some(declaration.definition.identity().as_str().to_string()), &codec));
                     plan.document_codecs.push(codec.clone());
-                    plan.native_snapshots.extend(semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), codec));
+                    plan.native_snapshots.extend(semio_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), codec));
                 }
                 plan.migrations.extend(declaration.migrations.iter().cloned());
                 plan.schema_documents.extend(declaration.schema_documents.iter().copied());
@@ -115,15 +115,15 @@ impl ArtifactRegistrationPlan {
         }
         for spec in foreign_document_codecs.iter() {
             let codec = spec.codec();
-            plan.document_bindings.push(spec.binding(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::ForeignApp, &plan.owner, None, &codec));
+            plan.document_bindings.push(spec.binding(semio_os_kernel::io::ArtifactCodecBindingChannel::ForeignApp, &plan.owner, None, &codec));
             plan.document_codecs.push(codec.clone());
-            plan.native_snapshots.extend(semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), codec));
+            plan.native_snapshots.extend(semio_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), codec));
         }
         plan
     }
 
     /// 🧬️ Freezes every definition, schema, app, language, and inference before external state changes.
-    pub fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
+    pub fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_os_kernel::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
         let Self {
             schemas,
             inferences,
@@ -163,8 +163,8 @@ impl ArtifactRegistrationPlan {
         }
         let host_media_handlers = HostMediaHandlerRegistry::from_declarations(&owner, &host_media_handlers)?;
         let flow_extensions = FlowExtensionRegistry::from_declarations(&owner, &flow_extensions)?;
-        semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
-        semio_framework_os_kernel::io::preflight_artifact_codec_bindings(&document_bindings, &document_codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.codec-binding", error.to_string()))?;
+        semio_os_kernel::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
+        semio_os_kernel::io::preflight_artifact_codec_bindings(&document_bindings, &document_codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.codec-binding", error.to_string()))?;
         Ok((
             PluginRuntimeRegistry {
                 definitions,
@@ -181,7 +181,7 @@ impl ArtifactRegistrationPlan {
                 owner_mutations: BTreeMap::new(),
                 contributed_mutations: BTreeMap::new(),
             },
-            semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { composer_entries: composers, subset_validators, format_descriptors: formats, document_codecs, document_bindings, dialect_migrations: migrations, native_snapshots, catalog_bindings:Vec::new() },
+            semio_os_kernel::io::ArtifactAssemblyRegistryPlan { composer_entries: composers, subset_validators, format_descriptors: formats, document_codecs, document_bindings, dialect_migrations: migrations, native_snapshots, catalog_bindings:Vec::new() },
         ))
     }
 }
@@ -190,7 +190,7 @@ impl ArtifactRegistrationPlan {
 /// 🧬️ Authoritative per-plugin runtime declarations. It is complete before global IO/store rows mutate.
 pub struct PluginRuntimeRegistry {
     definitions: ArtifactDefinitionRegistry,
-    document_bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>,
+    document_bindings: Vec<semio_os_kernel::io::ArtifactCodecBinding>,
     pub schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
     pub inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
     pub schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
@@ -242,11 +242,11 @@ impl PluginRuntimeRegistry {
     }
 
     /// 🪪️ Reads the immutable original codec bindings retained by this plugin assembly.
-    pub fn document_bindings(&self) -> &[semio_framework_os_kernel::io::ArtifactCodecBinding] {
+    pub fn document_bindings(&self) -> &[semio_os_kernel::io::ArtifactCodecBinding] {
         &self.document_bindings
     }
 
-    pub fn retain_document_bindings(&mut self, bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>) {
+    pub fn retain_document_bindings(&mut self, bindings: Vec<semio_os_kernel::io::ArtifactCodecBinding>) {
         self.document_bindings.extend(bindings);
     }
 
@@ -340,8 +340,8 @@ impl PluginRuntimeRegistry {
 }
 
 /// 📌️ Atomically commits all external IO/store registry rows after the local runtime is frozen.
-pub fn commit_artifact_registration_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan) -> Result<(), PluginAssemblyError> {
-    semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.registry", error.to_string()))
+pub fn commit_artifact_registration_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: semio_os_kernel::io::ArtifactAssemblyRegistryPlan) -> Result<(), PluginAssemblyError> {
+    semio_os_kernel::io::commit_artifact_assembly_registry_plan(assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.registry", error.to_string()))
 }
 
 /// 🗂️ One plugin's contribution of mutations and/or inferences onto an artifact kind OWNED by a
@@ -392,13 +392,13 @@ impl ArtifactContribution {
     /// suspension calls (io-async-signatures), so the whole body is bridged via `resolve_ready`.
     pub async fn mutation<Snapshot, Op, K>(mut self, target_artifact_schema: impl Into<String>, schema_version: u32, algorithm_version: u32) -> Self
     where
-        Snapshot: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
+        Snapshot: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
         Op: ::protocol::Mutation<Snapshot> + ::protocol::ColdMutation<Snapshot> + ::protocol::OpBinary + 'static,
         K: ::protocol::CompositeMutationKind<Snapshot, Op> + ::protocol::ColdCompositeMutationKind<Snapshot, Op> + 'static,
     {
         fn plan_cold<Snapshot, Op, K>(snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError>
         where
-            Snapshot: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
+            Snapshot: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
             Op: ::protocol::Mutation<Snapshot> + ::protocol::ColdMutation<Snapshot> + ::protocol::OpBinary,
             K: ::protocol::CompositeMutationKind<Snapshot, Op> + ::protocol::ColdCompositeMutationKind<Snapshot, Op>,
         {

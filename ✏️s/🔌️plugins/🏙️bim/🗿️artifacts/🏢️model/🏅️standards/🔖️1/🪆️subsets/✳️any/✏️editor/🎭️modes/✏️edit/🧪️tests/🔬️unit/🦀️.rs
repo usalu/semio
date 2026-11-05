@@ -1,11 +1,11 @@
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use semio_framework_plugin::create_default_layout;
+use semio_plugin::create_default_layout;
 #[allow(unused_imports)]
-use semio_framework_plugin::ModeDefinition;
+use semio_plugin::ModeDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::WindowLayout;
 use crate::editor::bim::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]

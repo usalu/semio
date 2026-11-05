@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,default_now_us};
 use semio_framework_value::{RetainedCloneGrant,retained_clone::RetainedCloneClose};
-use semio_framework_plugin_plugin_program::surface_context::SurfaceContexts;
+use semio_plugin_plugin_program::surface_context::SurfaceContexts;
 const TURN:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096};
 fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(20171),Generation(52),RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<29,maximum_release_bytes:1<<29,maximum_depth:4096},default_now_us,u64::MAX,1<<30)}
 fn event<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,f:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,f));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));result.unwrap()}

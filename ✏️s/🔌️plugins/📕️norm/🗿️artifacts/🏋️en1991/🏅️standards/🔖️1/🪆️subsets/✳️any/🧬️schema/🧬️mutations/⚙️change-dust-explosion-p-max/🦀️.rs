@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDustExplosionPMax 
         record: "ChangedDustExplosionPMax",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change dust explosion: Maximum explosion pressure p_max", "Staubexplosion: Maximaler Explosionsdruck p_max ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change dust explosion: Maximum explosion pressure p_max", "Staubexplosion: Maximaler Explosionsdruck p_max ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

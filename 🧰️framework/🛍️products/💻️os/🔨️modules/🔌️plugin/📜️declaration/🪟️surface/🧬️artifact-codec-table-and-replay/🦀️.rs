@@ -51,18 +51,18 @@ pub async fn artifact_app_genesis_pair<A: ArtifactApp>(document_id: &str) -> Res
 /// under `ArtifactEnvelope` asserts its owners were retired first).
 pub async fn artifact_pair_snapshot<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<P, store::VcsError>
 where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+    P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
     Mutation: store::StoreMutationFor<P>,
 {
     if pack.is_empty() || spr.is_empty() {
         return Err(store::VcsError::Deserialize("artifact pair carries no pack+spr baseline".into()));
     }
-    let parsed: store::os_store::text_format::ParsedDocumentText<P, Mutation> = store::os_store::text_format::parse_document_pack(pack, spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
+    let parsed: store::os_store::text_format::ParsedDocumentText<P, Mutation> = store::os_store::text_format::parse_document_pack(pack, spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
     Ok(parsed.into_snapshot())
 }
 
 /// 🎟️ Refuses borrowed codec sources before decode until an original retained reduction recipient exists.
-pub async fn artifact_app_apply_ops<A: ArtifactApp>(_pack: &[u8], _spr: &[u8], _ops: &[u8], _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<store::os_store::serialization::ArtifactPackFiles, store::VcsError> {
+pub async fn artifact_app_apply_ops<A: ArtifactApp>(_pack: &[u8], _spr: &[u8], _ops: &[u8], _identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<store::os_store::serialization::ArtifactPackFiles, store::VcsError> {
     Err(store::VcsError::NativeEncoding(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"codec requires an original retained reduction operation")))
 }
 
@@ -108,7 +108,7 @@ pub struct ArtifactCodecTableV1 {
     pub print_mirror: for<'a> fn(&'a [u8], &'a [u8]) -> ArtifactCodecFuture<'a, store::os_store::text_format::ArtifactTextFiles>,
     /// 🧩️ Applies one `os_spr::encode_ops_vec` batch to a pair of the app's kind and returns the next pair.
     /// 🚫️async: E4 fn-pointer slot
-    pub apply_ops: for<'a, 'b> fn(&'a [u8], &'a [u8], &'a [u8], &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> ArtifactCodecFuture<'a, store::os_store::serialization::ArtifactPackFiles>,
+    pub apply_ops: for<'a, 'b> fn(&'a [u8], &'a [u8], &'a [u8], &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> ArtifactCodecFuture<'a, store::os_store::serialization::ArtifactPackFiles>,
     /// 📜️ Folds one `os_spr::encode_envelopes` ledger stream onto a pair of the app's kind through the replica
     /// merge gate (`store::replay_envelopes_onto_pair`).
     /// 🚫️async: E4 fn-pointer slot
@@ -130,7 +130,7 @@ pub fn artifact_codec_table<A: ArtifactApp>() -> ArtifactCodecTableV1 {
             (reference.print_mirror)(pack,spr).await.map_err(store::VcsError::into_fault)
         })
     }
-    fn apply_ops<'a, 'b, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8], identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> ArtifactCodecFuture<'a, store::os_store::serialization::ArtifactPackFiles> {
+    fn apply_ops<'a, 'b, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8], identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> ArtifactCodecFuture<'a, store::os_store::serialization::ArtifactPackFiles> {
         Box::pin(async move { artifact_app_apply_ops::<A>(pack, spr, ops, identity).await.map_err(|error| error.into_fault()) })
     }
     fn replay_envelopes<'a, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecFuture<'a, store::os_store::serialization::ArtifactPackFiles> {

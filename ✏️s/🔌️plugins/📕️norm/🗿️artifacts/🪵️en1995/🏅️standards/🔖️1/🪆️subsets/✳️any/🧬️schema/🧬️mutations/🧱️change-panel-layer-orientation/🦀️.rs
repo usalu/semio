@@ -10,7 +10,7 @@ pub struct ChangePanelLayerOrientation { pub panel_id: String, pub layer_id: Str
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangePanelLayerOrientation where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_panel_layer_orientation::ChangePanelLayerOrientation> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "panel-layer-orientation", kind: "change-panel-layer-orientation", record: "ChangedPanelLayerOrientation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change grain orientation of layer {} of panel {}", self.layer_id, self.panel_id), &format!("Faserrichtung von Lage {} an Platte {} ändern", self.layer_id, self.panel_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change grain orientation of layer {} of panel {}", self.layer_id, self.panel_id), &format!("Faserrichtung von Lage {} an Platte {} ändern", self.layer_id, self.panel_id)) }
     fn target(&self) -> Vec<String> { vec![self.panel_id.clone(), self.layer_id.clone()] }
 }
 

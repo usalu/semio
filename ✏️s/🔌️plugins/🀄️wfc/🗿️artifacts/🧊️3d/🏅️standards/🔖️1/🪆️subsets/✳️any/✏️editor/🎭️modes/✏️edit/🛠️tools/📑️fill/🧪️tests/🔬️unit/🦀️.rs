@@ -1,15 +1,15 @@
 //! 🧪 Fill tool laws — progressive payloads, abort, oracle parity, and the language-agnostic vector.
 
 use crate::editor::wfc3d::modes::edit::windows::preview::WFC_3D_PREVIEW_WINDOW;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunTraceKind};
 use crate::editor::wfc3d::modes::edit::tools::fill::*;
 use crate::examples::tower_stack;
 use crate::inferences::solve_with_clock;
 use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ToolRunJobPort;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 use std::sync::Arc;
 

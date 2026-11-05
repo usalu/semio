@@ -4,11 +4,14 @@
 use crate::standards::v6_0::subsets::document::io::encode_tiff_page_png;
 use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
 use crate::editor::tiff_any::config::{selected_ifd, TiffEditorConfig};
-use semio_framework_plugin::app::{ImageView, ImageWindowKit};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionId, ActionKind, ArgSchema, Buildable, BuiltNode, HasBase, HasChildren, PluginAssemblyError, Trigger, UiMapBuilder, UiValue, WindowKindDefinition, WindowKit};
-use semio_framework_ui_contract::{self as ui, Label as UiLabel};
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{ImageView, ImageWindowKit};
+use semio_plugin::{ActionArgDef, ActionDefinition, ActionId, ActionKind, ArgSchema, Buildable, BuiltNode, HasBase, HasChildren, PluginAssemblyError, Trigger, UiMapBuilder, UiValue, WindowKindDefinition, WindowKit};
+use semio_ui_contract::{self as ui, Label as UiLabel};
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+
+#[path = "../../🎮️commands/🎨️paint-region/📜️declaration/🦀️.rs"]
+mod paint_region_declaration;
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
@@ -18,7 +21,7 @@ const CONTROLLER_ID: &str = "s.stdio.tiff@6.0/*#editor";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
     let mut definition = ImageWindowKit::editable_window_kind();
-    definition.actions.extend([crate::editor::tiff_any::paint_region::action(), select_ifd_action()]);
+    definition.actions.extend([paint_region_declaration::action(), select_ifd_action()]);
     definition
 }
 
@@ -37,13 +40,13 @@ fn error(code: &'static str, message: impl Into<String>) -> PluginAssemblyError 
     PluginAssemblyError::new(code, message)
 }
 
-fn select_arguments(index: usize) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn select_arguments(index: usize) -> semio_plugin::UiAssemblyResult<UiValue> {
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| error("stdio.tiff.page.arguments", "page argument map capacity"))?;
     arguments.try_insert("ifdIndex".into(), UiValue::Number(index as f64)).map_err(|_| error("stdio.tiff.page.arguments", "page argument capacity"))?;
     Ok(UiValue::Map(arguments.finish()))
 }
 
-fn page_button(id: &str, label: &str, index: usize) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn page_button(id: &str, label: &str, index: usize) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let action = ActionId::try_v1(CONTROLLER_ID, SELECT_IFD_ACTION_ID).ok_or_else(|| error("stdio.tiff.page.action", "invalid page action id"))?;
     ui::button(UiLabel::try_from(label).map_err(|_| error("stdio.tiff.page.label", "page label exceeds UI bound"))?)
         .try_id(id)
@@ -54,7 +57,7 @@ fn page_button(id: &str, label: &str, index: usize) -> semio_framework_plugin::U
         .map_err(|_| error("stdio.tiff.page.build", "page control build admission"))
 }
 
-fn page_selector(snapshot: &TiffSnapshot, active: Option<usize>, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn page_selector(snapshot: &TiffSnapshot, active: Option<usize>, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let status = match (active, locale) {
         (Some(index), Locale::En) => format!("Image page {} of {}", index + 1, snapshot.ifds.len()),
         (Some(index), Locale::De) => format!("Bildseite {} von {}", index + 1, snapshot.ifds.len()),
@@ -85,7 +88,7 @@ fn page_selector(snapshot: &TiffSnapshot, active: Option<usize>, locale: Locale)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &TiffSnapshot, config: &TiffEditorConfig, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &TiffSnapshot, config: &TiffEditorConfig, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let selected = selected_ifd(config, snapshot);
     let selector = page_selector(snapshot, selected, locale)?;
     match selected.and_then(|index| image_view(snapshot, index).ok()) {
@@ -95,7 +98,7 @@ pub fn render(snapshot: &TiffSnapshot, config: &TiffEditorConfig, locale: Locale
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn image_view(snapshot: &TiffSnapshot, ifd_index: usize) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
+fn image_view(snapshot: &TiffSnapshot, ifd_index: usize) -> semio_plugin::UiAssemblyResult<ImageView> {
     let page = encode_tiff_page_png(snapshot, ifd_index).map_err(|message| PluginAssemblyError::new("stdio.tiff.preview", message))?;
     Ok(ImageView { width: page.width, height: page.height, mime: "image/png".into(), base64: semio_s_artifact_stdio_contract::base64_standard(&page.bytes) })
 }

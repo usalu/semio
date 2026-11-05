@@ -116,9 +116,9 @@ pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32])
 /// (`paint_orbit_view_gizmo`, which needs the GPU-adjacent `WidgetContext`) stays in
 /// `widgets.rs`'s own `gizmo` module, still `wgpu-engine`-gated.
 pub mod gizmo {
-    use semio_framework_ui_scene_camera::Camera3d;
-    use semio_framework_ui_scene_algebra::{Vec3, Vec3Math};
-    use semio_framework_ui_theme::{Rgba, geometry::Rect};
+    use semio_ui_scene_camera::Camera3d;
+    use semio_ui_scene_algebra::{Vec3, Vec3Math};
+    use semio_ui_theme::{Rgba, geometry::Rect};
 
     /// 🌈️ Permanent X/Y/Z paints — the generated `primary`/`secondary`/`tertiary` palette tokens,
     /// the exact triple React's `SPATIAL_AXIS_COLOR_REFS`/`resolveSpatialAxisColors` resolves. The

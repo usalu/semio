@@ -8,7 +8,7 @@ fn directory_native_runtime_identity_uses_the_services_owned_constructor() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🪪️runtime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let _: fn(Arc<ComputePool>, Arc<TokioHostRuntime>, ScopeHandle) -> UreqStreamingHttpTransport = UreqStreamingHttpTransport::new;
     assert_eq!(std::any::TypeId::of::<TokioHostRuntime>(), std::any::TypeId::of::<TokioHostRuntime>());
-    assert_eq!(fixture["provider"], "semio_framework_os_services::TokioHostRuntime");
+    assert_eq!(fixture["provider"], "semio_os_services::TokioHostRuntime");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -116,7 +116,7 @@ async fn an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pool
     let http_pool = refilled_http_pool(&runtime, &scope, compute.clone(), budget, 2, fixture["refillIntervalMs"].as_u64().unwrap());
     let transport = NativeDirectoryTransport::new_now(runtime.clone(), scope.clone(), http_pool, PackageId("os.directory-client".into()), ActorId(0));
     let context = || OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 0, deadline_ms: None, cancel: semio_framework_async::CancelToken::root_now(), capability: None };
-    assert_eq!(transport.network_budget(), semio_framework_os_services::HttpPackageBudget { remaining_bytes: budget, capacity_bytes: budget });
+    assert_eq!(transport.network_budget(), semio_os_services::HttpPackageBudget { remaining_bytes: budget, capacity_bytes: budget });
     let first = transport.http(&context(), HttpMethod::Get, &url, None, None).await;
     let spent = transport.network_budget();
     let refused = transport.http(&context(), HttpMethod::Get, &url, None, None).await;
@@ -133,7 +133,7 @@ async fn an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pool
     }
     server.join().unwrap();
     assert_eq!(first.map(|response| (response.status, response.body)), Ok((200, body.as_bytes().to_vec())));
-    assert_eq!(spent, semio_framework_os_services::HttpPackageBudget { remaining_bytes: 0, capacity_bytes: budget }, "one request spent the whole budget");
+    assert_eq!(spent, semio_os_services::HttpPackageBudget { remaining_bytes: 0, capacity_bytes: budget }, "one request spent the whole budget");
     assert_eq!(fixture["refusal"], "budget-exhausted");
     assert!(matches!(&refused, Err(TransportError::BudgetExhausted)), "an exhausted budget is its own typed refusal: {refused:?}");
     assert_eq!(refilled.map(|response| (response.status, response.body)), Some((200, body.as_bytes().to_vec())), "the pool's own refill turn admits requests again");

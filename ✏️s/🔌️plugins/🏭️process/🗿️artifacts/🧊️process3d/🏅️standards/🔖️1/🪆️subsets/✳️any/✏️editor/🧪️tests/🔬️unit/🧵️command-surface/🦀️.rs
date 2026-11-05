@@ -27,11 +27,11 @@ fn drive_resumable_work(
     interaction: &protocol::InteractionState,
     history: &HistoryView,
 ) -> (usize, Emit<Process3dMutation, Process3dConfigMutation, NoDraftMutation>) {
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = retained_operation();
     let mut progress = 0;
     loop {
-        match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history, interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default())).expect("retained work step") {
+        match work.step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history, interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default())).expect("retained work step") {
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => progress += 1,
             ArtifactCommandWorkStep::Complete(emit) => return (progress, emit),
             ArtifactCommandWorkStep::CompleteWithEphemeral { emit, .. } => return (progress, emit),
@@ -68,7 +68,7 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
 /// pins all three at once, over the closed command vocabulary rather than a hand-kept list.
 #[semio_framework_async_macros::async_test]
 async fn every_declared_command_is_ui_reachable_on_a_real_lane() {
-    use semio_framework_plugin::ArtifactToolPublicationLane;
+    use semio_plugin::ArtifactToolPublicationLane;
 
     let definition = create_process3d_app();
     let declared = definition
@@ -135,7 +135,7 @@ fn retained_resumable_extent_accepts_exact_byte_maximum_and_rejects_max_plus_one
     let config = Process3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let snapshot = retained_snapshot(0);
-    let ceiling = semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES;
+    let ceiling = semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES;
     let exact = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(ceiling) });
     let rejected = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(ceiling + 1) });
     assert_eq!(process3d_resumable_extent(&exact, &snapshot, &config, &interaction), Some(ceiling.div_ceil(PROCESS3D_SCAN_BYTES)));
@@ -150,20 +150,20 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
     let config = Process3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let history = HistoryView::empty();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = retained_operation();
     let extent = process3d_resumable_extent(&command, &snapshot, &config, &interaction).expect("extent");
     let mut uninterrupted = Process3dResumableCommandWork::new("setContributions", extent);
     for _ in 0..11 {
         assert!(matches!(
             uninterrupted
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+                .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
                 .expect("checkpoint prefix"),
             ArtifactCommandWorkStep::Progress { .. }
         ));
     }
     let mut checkpoint = [0u8; 40];
-    assert_eq!(uninterrupted.checkpoint(&mut checkpoint, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("checkpoint"), checkpoint.len());
+    assert_eq!(uninterrupted.checkpoint(&mut checkpoint, &mut semio_plugin::artifact_app_laws::fixture_identity()).expect("checkpoint"), checkpoint.len());
     let mut wrong_tool = Process3dResumableCommandWork::new("engagementInput", extent);
     assert!(wrong_tool.restore(&checkpoint).is_err(), "a config command must not accept another tool's checkpoint");
     let mut replayed = Process3dResumableCommandWork::new("setContributions", extent);
@@ -190,7 +190,7 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
     let empty = retained_snapshot(0);
     let config = Process3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = retained_operation();
     let bounded = [
         Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
@@ -223,7 +223,7 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
         loop {
             let started = std::time::Instant::now();
             let step = work
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &empty, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+                .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &empty, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
                 .expect("maximum work step");
             assert!(started.elapsed().as_micros() < 8_000, "resumable {} exceeded the interactive step ceiling", command.command_id());
             if matches!(step, ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) {
@@ -413,7 +413,7 @@ async fn world_context_menu_exposes_process_commands() {
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let menu = app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     let ids: Vec<&str> = menu.iter().map(|item| item.id.as_str()).collect();
     assert!(ids.contains(&"addStep"), "right-click menu must expose the primary Process command: {ids:?}");
     assert!(ids.contains(&"undo") && ids.contains(&"redo"), "right-click menu must expose history commands: {ids:?}");
@@ -425,7 +425,7 @@ async fn world_context_menu_exposes_process_commands() {
 #[semio_framework_async_macros::async_test]
 async fn the_context_menu_gates_the_destructive_row_on_the_geometry_selection() {
     let registry = AppActionRegistry::from_definition(&create_process3d_app());
-    let ids = |selected: &[String]| -> Vec<String> { process3d_context_menu_items(&registry, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), selected).into_iter().map(|item| item.id).collect() };
+    let ids = |selected: &[String]| -> Vec<String> { process3d_context_menu_items(&registry, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), selected).into_iter().map(|item| item.id).collect() };
     let empty = ids(&[]);
     assert!(!empty.iter().any(|id| id == "removeSelectedStep"), "an empty geometry selection must not offer the destructive row: {empty:?}");
     assert!(empty.iter().any(|id| id == "addStep"), "the selection-free rows must survive an empty selection: {empty:?}");

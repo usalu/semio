@@ -3,15 +3,15 @@
 
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::tree_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
 
 //#region 🔖️Constants
 pub const REMODELING_PANEL_CALIBRATION_ID: &str = "remodeling.calibration";
@@ -35,7 +35,7 @@ pub fn definition() -> PanelTabDefinition {
 /// are windowed sections; the two count lines stay in their own small fixed summary section so panel
 /// chrome never competes with content for one node's slots.
 pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let summary = semio_framework_plugin::ui_node_list([
+    let summary = semio_plugin::ui_node_list([
         tree_item("remodeling-calibration.summary", format!("{}: {} - {}: {}", labels.cameras_calibrated.as_str(), scene.calibration.cameras.len(), labels.rig_extrinsics.as_str(), scene.calibration.rig.len())),
         tree_item("remodeling-calibration.gcp-count", format!("{}: {}", labels.gcps.as_str(), scene.gcps.len())),
     ])?;

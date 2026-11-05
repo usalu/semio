@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiloNRdN where Op:
         record: "ChangeSiloNRdN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Axial resistance", "Normalkrafttragfähigkeit ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Axial resistance", "Normalkrafttragfähigkeit ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-silo-n-rd-n".into()]

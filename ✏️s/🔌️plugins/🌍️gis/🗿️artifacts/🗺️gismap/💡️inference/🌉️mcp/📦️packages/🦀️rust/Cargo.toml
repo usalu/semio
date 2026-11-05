@@ -17,13 +17,13 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-s-artifact-gis-gismap = { path = "../../../../📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-os-mcp = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-os-mcp = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async = { workspace = true }
-semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 tokio = { workspace = true }

@@ -1,9 +1,9 @@
 // 📖️ Exact child framing reads the original span into an explicitly retained caller visitor.
-use semio_framework_os_kernel::os_pack::codec::{ByteSpan,ByteReader,PackDecodeOptions};
-use semio_framework_os_kernel::os_pack::PackRefusal;
+use semio_os_kernel::os_pack::codec::{ByteSpan,ByteReader,PackDecodeOptions};
+use semio_os_kernel::os_pack::PackRefusal;
 use semio_framework_value::ValueRefusalKind;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use semio_framework_ui_locale::{Locale,Terminology};
+use semio_ui_locale::{Locale,Terminology};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum ChildGroupText{Owner,Slot,ChildId,Schema}

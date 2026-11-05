@@ -12,7 +12,7 @@ use crate::editor::flow::terminology::flow_play_labels;
 use crate::editor::flow::editor_vocabulary::{FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_SCENE_ITEMS};
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProd
 #[allow(unused_imports)]
 use crate::editor::flow::commands::{add_widget, context_menu_at, delete_selection, disconnect, duplicate_widget, flow_eval_resolve, focus_selection, move_media_node, node_graph_edit, node_graph_viewport, open_spotlight, patch_flow_widgets, remove_widget, replace_image, set_catalogue_sections, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_lod_mode, set_contributions, set_preview_off, set_proximity_distance, spotlight_commit};
 #[allow(unused_imports)]
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::modes::generate::commands::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 #[allow(unused_imports)]
@@ -50,79 +50,79 @@ use semio_framework_artifact_flow_flow::{CameraJson, Widget};
 #[allow(unused_imports)]
 use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
+use semio_os_infinite_directed_presentation::DagDrawLod;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
+use semio_plugin::app::{ChildEmitPreparation, InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppActionRegistry;
+use semio_plugin::AppActionRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppDefinition;
+use semio_plugin::AppDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::CommandDefinition;
+use semio_plugin::CommandDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuRequest;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use serde_json::json;
 #[allow(unused_imports)]
@@ -142,7 +142,7 @@ use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::{FLOW_DIRECT_STORE_TOOL_IDS, FlowDirectStoreJobFactory, FLOW_CHILD_GROUP_TOOL_IDS, FlowChildGroupJobFactory, FLOW_HOST_ONLY_TOOL_IDS, FlowHostEffectJobFactory, FLOW_GRAPH_OPERATION_TOOL_IDS, FLOW_GRAPH_OPERATION_CAPACITY, FlowGraphOperationJobFactory, flow_graph_operation_contract, FLOW_CONTRIBUTIONS_TOOL_IDS, FlowContributionsJobFactory};
 use crate::editor::flow::*;
 use crate::editor::flow::unit_tests::context::flow_app_closing;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobFactory;
 use std::collections::{BTreeMap, BTreeSet};
 
 static FLOW_INTERACTIVE_JOB_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧮️interactive-job/🔣️.json"));
@@ -201,7 +201,7 @@ fn declared_classifications() -> BTreeMap<String, String> {
 /// `retained_route_dispositions_are_exact_and_exhaustive`.
 #[test]
 fn retained_route_dispositions_are_exact_and_exhaustive() {
-    let routes: [(&str, &[&str], &[semio_framework_plugin::ArtifactToolPublicationContract]); 5] = [
+    let routes: [(&str, &[&str], &[semio_plugin::ArtifactToolPublicationContract]); 5] = [
         ("FlowDirectStoreJobFactory", FLOW_DIRECT_STORE_TOOL_IDS, FlowDirectStoreJobFactory::PUBLICATION_CONTRACTS),
         ("FlowChildGroupJobFactory", FLOW_CHILD_GROUP_TOOL_IDS, FlowChildGroupJobFactory::PUBLICATION_CONTRACTS),
         ("FlowHostEffectJobFactory", FLOW_HOST_ONLY_TOOL_IDS, FlowHostEffectJobFactory::PUBLICATION_CONTRACTS),
@@ -262,7 +262,7 @@ fn graph_operation_route_declares_one_work_capacity() {
     let contract = flow_graph_operation_contract();
     assert_eq!(contract.max_raw_wire_bytes, FLOW_GRAPH_OPERATION_RAW_BYTES);
     assert_eq!(semio_framework::ToolJobFactory::execution_contract(&FlowGraphOperationJobFactory::new("s.flow.flow@1/*#editor")), contract);
-    assert_eq!(semio_framework::ToolJobFactory::classification(&FlowGraphOperationJobFactory::new("s.flow.flow@1/*#editor")), semio_framework_plugin::InteractiveJobClassification::Migrated);
+    assert_eq!(semio_framework::ToolJobFactory::classification(&FlowGraphOperationJobFactory::new("s.flow.flow@1/*#editor")), semio_plugin::InteractiveJobClassification::Migrated);
     assert_eq!(FLOW_GRAPH_OPERATION_CAPACITY.work_items(), FLOW_GRAPH_OPERATION_CAPACITY.rows(FLOW_STORE_MAX_SCENE_ITEMS + 1));
     assert_eq!(FLOW_GRAPH_OPERATION_CAPACITY.rows_for_items(1), Some(FLOW_GRAPH_OPERATION_CAPACITY.rows(1)));
     assert!(FLOW_GRAPH_OPERATION_CAPACITY.admits(FLOW_GRAPH_OPERATION_CAPACITY.rows(FLOW_STORE_MAX_SCENE_ITEMS + 1)));
@@ -276,10 +276,10 @@ fn graph_operation_route_declares_one_work_capacity() {
 #[semio_framework_async_macros::async_test]
 async fn flow_play_app_boots_through_the_real_registry_without_a_catalog_authority_fault() {
     let mut app = flow_app_closing().await;
-    assert!(!semio_framework_plugin::PluginApp::has_pending_typed_operations(&*app), "a freshly booted flow app owns no in-flight typed operation");
-    let demand = semio_framework_plugin::PluginApp::maintenance_retirement_demands(&*app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("a booted flow app quotes its own maintenance turn");
+    assert!(!semio_plugin::PluginApp::has_pending_typed_operations(&*app), "a freshly booted flow app owns no in-flight typed operation");
+    let demand = semio_plugin::PluginApp::maintenance_retirement_demands(&*app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("a booted flow app quotes its own maintenance turn");
     let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-    assert!(matches!(semio_framework_plugin::PluginApp::maintenance_step(&mut app.0, app.1.cx(), grant), Ok(_)), "a booted flow app runs its own maintenance turn");
+    assert!(matches!(semio_plugin::PluginApp::maintenance_step(&mut app.0, app.1.cx(), grant), Ok(_)), "a booted flow app runs its own maintenance turn");
 }
 
 /// ⚖️ LAW: every graph-operation route is admitted by `FlowGraphOperationJobFactory` and returns a
@@ -333,20 +333,20 @@ fn the_batch_handle_fallback_is_closed_for_every_declared_route() {
 /// authority is busy". Driven below the app so the law is independent of the app's close ladder.
 #[test]
 fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
-    use semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree;
+    use semio_plugin::artifact_app_laws::project_and_retire_fixture_tree;
     let snapshot = FlowSnapshot::default();
     let config = main::config::FlowMainWindowConfig::default();
     let mut session = FlowEvalSession::new();
-    let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view_state = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let labels = flow_play_labels(&view_state);
     let bodies = [
         main::render(&snapshot, &config, &session, &[]),
         compiled::render(&snapshot, &config, &session),
-        catalogue_panel::render(&snapshot, &config, &session, labels, &semio_framework_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_CATALOGUE)),
-        document_panel::render(&snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_ARTIFACT)),
+        catalogue_panel::render(&snapshot, &config, &session, labels, &semio_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_CATALOGUE)),
+        document_panel::render(&snapshot, labels, &semio_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_ARTIFACT)),
     ];
     for body in bodies {
-        let tree = project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(body.expect("flow body renders"))).expect("rendered flow body retires");
+        let tree = project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(body.expect("flow body renders"))).expect("rendered flow body retires");
         assert!(!tree.is_empty());
     }
     let armed = evaluate::evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap();

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingT1Method w
         record: "ChangeBuildingT1Method",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change T₁ method", "T₁-Verfahren ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change T₁ method", "T₁-Verfahren ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-t1-method".into()]

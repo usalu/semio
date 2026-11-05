@@ -50,6 +50,7 @@ import { type ActivationRegistry } from "@semio-tech/framework";
 import { type RuntimeMetricsSnapshot } from "@semio-tech/framework";
 import { type SpawnedJobRowV1 } from "../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
 import { type VideoRenderJobRow } from "@semio-tech/framework";
+import { iconExportProgressText, iconExportTaskId, type IconExportRow } from "../🖼️IconRenderHost/📤️export/🟦️.ts";
 import { videoRenderExportTaskIdV1, videoRenderExportTextV1 } from "../🎥️VideoRenderHost/🟦️.ts";
 import { type AgentConversationEntry } from "../🔗️AgentBridge/🟢️shared/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -588,6 +589,15 @@ export function videoRenderExportTasksV1(rows: readonly VideoRenderJobRow[], loc
     progress: { completed: row.completed, total: row.frames, text: videoRenderExportTextV1("progress", locale, { completed: row.completed, total: row.frames }) },
     suspendable: false,
     state: row.cancelling ? "cancelling" : "running",
+  }));
+}
+
+/** 🖼️ Maps live image export facts onto the shared progress and cancellation controls. */
+export function iconRenderExportTasksV1(rows:readonly IconExportRow[],locale:string):readonly TaskManagerTaskV1[] {
+  return rows.map(row=>({
+    id:iconExportTaskId(row.job),lane:"export",title:row.label,owner:row.owner,startedAtMs:row.atMs,steps:null,
+    progress:{completed:row.completed,total:row.total,text:iconExportProgressText(row.completed,row.total,locale)},
+    suspendable:false,state:row.cancelling?"cancelling":"running",
   }));
 }
 

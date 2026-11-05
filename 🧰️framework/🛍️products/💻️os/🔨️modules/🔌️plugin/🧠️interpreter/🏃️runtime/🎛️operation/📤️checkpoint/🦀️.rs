@@ -1,7 +1,7 @@
 //! 📤️ Borrowed Host checkpoint framing retains original allocation and failure custody.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::input::{JsonInputWriter,JsonBackingOwner};
-use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::{OriginalOperationHostIo,OriginalOperationReceiptProjection};
+use semio_os_kernel::os_vcs::io::binary::entity_identity::control::{OriginalOperationHostIo,OriginalOperationReceiptProjection};
 
 /// 🧾️ Converges bounded decimal framing against a readonly projection, then writes the actual admitted receipt.
 pub(crate) fn encode_projected_checkpoint_frame(scope:&mut OriginalOperationHostIo<'_, '_>,metadata:&mut dyn FnMut(&OriginalOperationReceiptProjection<'_>,&mut semio_framework_value::NativeEncodeControl<'_>,Option<&mut Vec<u8>>)->Result<usize,ValueError>,actor:&mut dyn FnMut(&mut dyn FnMut(&[u8])->Result<(),ValueError>)->Result<(),ValueError>)->Result<Vec<u8>,ValueError>{

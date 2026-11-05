@@ -54,10 +54,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "slot-positions", kind: "set-slot-positions", record: "SetSlotPositions" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.positions.len() {
-            1 => semio_framework_ui_locale::LocalizedLabel::native("Set 1 slot position", "1 Slotposition setzen"),
-            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Set {count} slot positions"), &format!("{count} Slotpositionen setzen")),
+            1 => semio_ui_locale::LocalizedLabel::native("Set 1 slot position", "1 Slotposition setzen"),
+            count => semio_ui_locale::LocalizedLabel::native(&format!("Set {count} slot positions"), &format!("{count} Slotpositionen setzen")),
         }
     }
     fn target(&self) -> Vec<String> {

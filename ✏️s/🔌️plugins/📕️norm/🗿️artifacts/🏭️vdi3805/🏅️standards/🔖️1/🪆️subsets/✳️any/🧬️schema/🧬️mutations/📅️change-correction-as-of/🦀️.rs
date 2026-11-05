@@ -16,8 +16,8 @@ pub struct ChangeCorrectionAsOf {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeCorrectionAsOf where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_correction_as_of::ChangeCorrectionAsOf> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "correction-as-of", kind: "change-correction-as-of", record: "ChangedCorrectionAsOf" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change correction date to {}-{:02}", self.new_correction_as_of.year, self.new_correction_as_of.month), &format!("Korrekturstand auf {}-{:02} ändern", self.new_correction_as_of.year, self.new_correction_as_of.month))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change correction date to {}-{:02}", self.new_correction_as_of.year, self.new_correction_as_of.month), &format!("Korrekturstand auf {}-{:02} ändern", self.new_correction_as_of.year, self.new_correction_as_of.month))
     }
 }
 

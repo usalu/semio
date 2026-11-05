@@ -8,22 +8,22 @@ use crate::editor::flow::editor_vocabulary::{flow_action, ui_value_map, ui_value
 use crate::playbook::{default_value_for_block, is_block_visible, selected_generation, PlaybookBlock, PlaybookValues};
 use crate::FlowSnapshot;
 use flow::forms_bridge::flow_host_snapshot_to_form_spec;
-use semio_framework_ui_contract::Label;
-use semio_framework_plugin::ActionId;
-use semio_framework_plugin::Buildable;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::HasBase;
-use semio_framework_plugin::HasChildren;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::Trigger;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::{self as ui, InputKind};
+use semio_ui_contract::Label;
+use semio_plugin::ActionId;
+use semio_plugin::Buildable;
+use semio_plugin::BuiltNode;
+use semio_plugin::HasBase;
+use semio_plugin::HasChildren;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::Trigger;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiText;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::{self as ui, InputKind};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
@@ -69,7 +69,7 @@ fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
 /// `"image"`/`"text"`/`"single"` (see `forms_bridge::widget_to_playbook_block`'s exhaustive match) — the
 /// `_` arm below covers `"text"` and any future addition defensively as a plain text input, and `"note"`/
 /// `"image"` never reach this function (handled directly in [`question_field`], unwrapped, no control).
-fn question_control(question: &PlaybookBlock, value: &semio_framework_value::DslValue, field_id: &str, action: (ActionId, Option<semio_framework_plugin::UiValue>)) -> UiAssemblyResult<BuiltNode> {
+fn question_control(question: &PlaybookBlock, value: &semio_framework_value::DslValue, field_id: &str, action: (ActionId, Option<semio_plugin::UiValue>)) -> UiAssemblyResult<BuiltNode> {
     let (action, args) = action;
     match question.kind.as_str() {
         "slider" => {
@@ -135,7 +135,13 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
 }
 
 pub fn render(snapshot: &FlowSnapshot, _config: &FlowMainWindowConfig, transient: &FlowWindowTransient, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let spec = crate::editor::flow::host::with_live_host_snapshot(snapshot, |source| flow_host_snapshot_to_form_spec(source, &PlaybookFlowFormProducer));
+    let source=snapshot.read_source().map_err(|error|PluginAssemblyError::new("flow.source",error.into_message()))?;
+    render_source(&source,_config,transient,labels)
+}
+
+/// 📝️ Reads the already retained form source.
+pub fn render_source(source:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,_config:&FlowMainWindowConfig,transient:&FlowWindowTransient,labels:&crate::editor::flow::terminology::FlowPlayLabels)->UiAssemblyResult<BuiltNode>{
+    let spec=flow_host_snapshot_to_form_spec(source,&PlaybookFlowFormProducer);
     let mut generation_owner = transient.generation().map_err(|error| PluginAssemblyError::new("ui.generate-form", error.into_message()))?;
     let generation = generation_owner.as_mut();
     let Some(active) = selected_generation(&generation) else {

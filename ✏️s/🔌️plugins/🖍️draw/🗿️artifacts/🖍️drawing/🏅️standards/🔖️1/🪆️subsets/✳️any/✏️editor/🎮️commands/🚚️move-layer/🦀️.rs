@@ -1,11 +1,11 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `move-layer`.
 
 use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::find_drawing_layer_location;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️DocumentHelpers
 pub fn resolve_reorder_target(document: &DrawingSnapshot, target_row_id: &str, drop_position: &str) -> Result<(Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, usize), Fault> {

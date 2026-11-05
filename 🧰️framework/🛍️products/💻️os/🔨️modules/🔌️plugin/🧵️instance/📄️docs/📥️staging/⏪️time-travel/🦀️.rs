@@ -2,20 +2,20 @@
 //!
 //! ⏪️ The mounted instance's time-travel turns (history editing sessions, replay and supersession) and the
 //! [`TimeTravelExtension`] that registers them with the instance through [`InstanceExtension`].
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::Mutation;
 use protocol::OpText;
 use crate::docs_components::EnvelopeJobs;
 use std::future::Future;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_time_travel::*;
-use semio_framework_plugin_document_media::ActiveDocumentArchiveLoad;
-use semio_framework_os_kernel::{MemberFactory, ReferenceSpaceMember};
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
+use semio_plugin_time_travel::*;
+use semio_plugin_document_media::ActiveDocumentArchiveLoad;
+use semio_os_kernel::{MemberFactory, ReferenceSpaceMember};
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// 🛬️ The whole-document load (document archive operation) still running on this instance, if any

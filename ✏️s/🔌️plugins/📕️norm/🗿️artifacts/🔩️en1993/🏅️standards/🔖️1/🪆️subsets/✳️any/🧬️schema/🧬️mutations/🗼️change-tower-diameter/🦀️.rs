@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerDiameter wher
         record: "ChangedTowerDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Mast diameter b (0 = none) of the tower leg", "Turmstiel: Maströhrchendurchmesser b (0 = keiner) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Mast diameter b (0 = none) of the tower leg", "Turmstiel: Maströhrchendurchmesser b (0 = keiner) ändern")
     }
 }
 

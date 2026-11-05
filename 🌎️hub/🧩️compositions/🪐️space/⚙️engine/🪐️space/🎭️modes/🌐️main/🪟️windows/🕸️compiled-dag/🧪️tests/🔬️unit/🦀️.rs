@@ -3,12 +3,12 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_compiled_dag_editor() {
-    use semio_framework_plugin::{PluginApp, ViewModel};
+    use semio_plugin::{PluginApp, ViewModel};
     let mut app = crate::unit_tests::context::app_with_registry().await;
-    let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("compiled DAG tree projection");
+    let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("render");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("compiled DAG tree projection");
     assert!(json.contains("text-editor"));
     let wire = compiled_dag_wire_literal(&demo_space_projection().await).await;
     assert!(wire.contains("appInstance") || wire.contains("draw"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

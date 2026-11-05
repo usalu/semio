@@ -1,12 +1,12 @@
 //! 🪧️ Standalone Bearbeiten pane smoke target: independent of the stale `process3d_editor_unit` modules.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[path = "../🧰️support/🦀️.rs"]
 mod context;
 
 use crate::context::app;
-use semio_framework_plugin::artifact_app_laws;
+use semio_plugin::artifact_app_laws;
 use semio_s_artifact_process_process3d_commands::step::add_step;
 use semio_s_artifact_process_process3d_editor::*;
 

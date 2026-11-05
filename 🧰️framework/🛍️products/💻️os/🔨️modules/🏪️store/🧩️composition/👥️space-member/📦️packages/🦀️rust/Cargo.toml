@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-store-space-member"
+name = "semio-os-store-space-member"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,33 +22,33 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-store-engine-command = { path = "../../../../🕰️history/🎮️command/📦️packages/🦀️rust" }
+semio-os-store-engine-command = { path = "../../../../🕰️history/🎮️command/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
-semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
-semio-framework-os-store-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
-semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../../../⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-member-group = { path = "../../../📬️publication/🤝️group/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
-semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
-semio-framework-os-store-member-open = { path = "../../../🚪️open/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
-semio-framework-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
-semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust" }
-semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
+semio-os-store-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
+semio-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-os-store-engine-core = { path = "../../../../⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
+semio-os-store-engine-member-group = { path = "../../../📬️publication/🤝️group/📦️packages/🦀️rust" }
+semio-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-os-store-member-open = { path = "../../../🚪️open/📦️packages/🦀️rust" }
+semio-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust" }
+semio-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
+semio-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust" }
+semio-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-composition-admission = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
-semio-framework-os-store-blob-identity = { path = "../../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }
-semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust"}
-semio-framework-os-store-link-schema = { path = "../../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item = { path = "../../../../🎮️one-item/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-store-blob-identity = { path = "../../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }
+semio-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust"}
+semio-os-store-link-schema = { path = "../../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-one-item = { path = "../../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
@@ -57,6 +57,6 @@ semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️m
 
 
 [dev-dependencies]
-semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json = { workspace = true }

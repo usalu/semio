@@ -1,6 +1,6 @@
 //! 🧲️ Route resolution, hub relay and the closed artifact channel set.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "../🏠️workspace/🤝️hub-relay/🦀️.rs"]
 pub mod hub_relay;

@@ -9,7 +9,8 @@
     "questionId": "q",
     "controllerId": "forms-play",
     "surface": "try",
-    "interactive": true
+    "interactive": true,
+    "authoredParams": null
   },
   "cases": [
     {
@@ -24,7 +25,8 @@
         "questionId": "q",
         "controllerId": "forms-play",
         "surface": "try",
-        "interactive": false
+        "interactive": false,
+        "authoredParams": null
       }
     },
     {
@@ -35,7 +37,8 @@
         "questionId": "q",
         "controllerId": "forms-play",
         "surface": "try",
-        "interactive": true
+        "interactive": true,
+        "authoredParams": null
       }
     }
   ]

@@ -53,8 +53,8 @@ futures = "0.3"
 semio-framework-async = { workspace = true }
 semio-framework-trace = { workspace = true }
 protocol = { path = "../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
-directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-db = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
+db = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-os-kernel-db" }
 semio-framework-server = { workspace = true }
 
 [dev-dependencies]
@@ -67,5 +67,5 @@ semio-hub-inference-runtime-contract = { workspace = true, features = ["testkit"
 semio-hub-trusted-catalog = { workspace = true, features = ["testkit", "integration-fixtures"] }
 semio-hub-trusted-catalog-contract = { workspace = true, features = ["testkit", "integration-fixtures"] }
 tokio = { version = "1", features = ["full", "test-util"] }
-directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
-db = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
+db = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-os-kernel-db", features = ["claimed-backend-laws"] }

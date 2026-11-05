@@ -4,12 +4,12 @@
 //! provisional and commits the release as ONE child edit stamped with its `TransactionRef` (design §12); this never reads a
 //! gesture and never coalesces.
 
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::{app::ChildEmitPreparation, ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{app::ChildEmitPreparation, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use {semio_s_artifact_stdio_semio_flow::schema::mutations::set_node_param::SetNodeParam, semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};

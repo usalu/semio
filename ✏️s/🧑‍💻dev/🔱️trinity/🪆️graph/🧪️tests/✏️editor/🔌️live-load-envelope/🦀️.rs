@@ -26,12 +26,12 @@ pub(super) fn jack_envelope_wire_of(snapshot: jack::standards::v1::subsets::any:
         "conflicts": []
     }))
     .into_bytes();
-    let envelope = store::os_store::document_materialize::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     jack::standards::v1::subsets::any::schema::content::drive_retirement_to_terminal(jack::standards::v1::subsets::any::schema::host::jack_envelope_decode_owner_bundle().retire_envelope(envelope)).expect("Jack fixture envelope retirement");
     wire
 }
 
-pub(super) fn admit_jack_envelope(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>, wire: &[u8],cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+pub(super) fn admit_jack_envelope(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>, wire: &[u8],cx:&mut semio_framework_job::StepContext<'_>) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Jack live envelope ingress credits");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -44,11 +44,11 @@ pub(super) fn admit_jack_envelope(app: &mut VcsArtifactApp<EditorApp<TrinityJack
     handle
 }
 
-pub(super) fn drive_jack_live_load(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+pub(super) fn drive_jack_live_load(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..100_000 {
         app.maintenance_step(cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().maintenance).expect("one Jack live maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle,cx).expect("Jack live load advancement");
-        if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+        if matches!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }
         std::thread::yield_now();
@@ -66,7 +66,7 @@ async fn jack_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succe
     let base_generation = app.artifact_generation_now();
     let handle = admit_jack_envelope(&mut app, &jack_envelope_wire(),cx);
     assert_eq!(handle.generation, base_generation);
-    assert_eq!(drive_jack_live_load(&mut app, handle,cx), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(drive_jack_live_load(&mut app, handle,cx), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("first exact Jack load acknowledgement"));
     assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate Jack load acknowledgement is a no-op"));
@@ -95,7 +95,7 @@ async fn jack_live_envelope_cancel_closes_retained_pages_without_publication() {
     let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Jack first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Jack page admission failed: {fault:?}"));
     app.cancel_artifact_envelope_load(handle).expect("cancel exact Jack ingress");
-    assert_eq!(drive_jack_live_load(&mut app, handle,cx), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled);
+    assert_eq!(drive_jack_live_load(&mut app, handle,cx), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled);
     assert_eq!(app.artifact_generation_now(), base_generation);
 
     app.close(cx);

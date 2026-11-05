@@ -1,6 +1,6 @@
 //! 🔬️ Native socket probe: probe snapshots and diffs, the native runners, the smoke runner and the icon atlas upload.
 use super::*;
-use semio_framework_os_store_testing_doubles::store;
+use semio_os_store_testing_doubles::store;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
@@ -45,8 +45,8 @@ impl pack::snapshot::ArtifactPack for NativeSocketProbeSnapshot {
     }
 }
 #[cfg(not(target_arch = "wasm32"))]
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NativeSocketProbeSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NativeSocketProbeSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn native_snapshot_registration()->Option<(semio_framework_artifact_reference::Dialect,store::os_store::serialization::ArtifactCodec)>{
         Some((native_socket_sqlite::DIALECT,store::os_store::artifact_codec::<Self,NativeSocketProbeMutation>(native_socket_sqlite::SCHEMA)))
@@ -248,7 +248,7 @@ pub async fn run_socket_grant_probe() -> i32 {
     use dsl::os_store::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, CommandAckOutcome, PersistenceBinding};
     use semio_framework_actor::{ActorId as DirectoryActorId, PackageId as DirectoryPackageId};
     use semio_framework_async::ScopeOwner;
-    use semio_framework_os_services::{ComputePool, TokioHostRuntime};
+    use semio_os_services::{ComputePool, TokioHostRuntime};
 
     const PROBE_SCHEMA: &str = native_socket_sqlite::SCHEMA;
     let Some(credential) = claimed_local_hub_credential("native") else { return 1 };
@@ -344,8 +344,8 @@ pub async fn run_socket_grant_probe() -> i32 {
 /// identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
 /// so a real hub round trip has time to land before the dump.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf,services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) -> i32 {
-    let axes = match semio_framework_os_renderer_wgpu_shell_prefs::shell_language_axes() {
+pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf,services:Vec<semio_os_kernel::os_directory::client::InstalledServiceContributionV1>) -> i32 {
+    let axes = match semio_renderer_wgpu_shell_prefs::shell_language_axes() {
         Ok(axes) => axes,
         Err(error) => { eprintln!("smoke: {error}"); return 1; }
     };
@@ -354,7 +354,7 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
 
 /// 🧭️ Boots the exact selected native plugin under caller-declared presentation axes.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn run_smoke_with_axes(plugin_filter: &str, plugin_modules_root: std::path::PathBuf,services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,axes:(semio_framework_ui_locale::Locale,semio_framework_ui_locale::Terminology)) -> i32 {
+pub async fn run_smoke_with_axes(plugin_filter: &str, plugin_modules_root: std::path::PathBuf,services:Vec<semio_os_kernel::os_directory::client::InstalledServiceContributionV1>,axes:(semio_ui_locale::Locale,semio_ui_locale::Terminology)) -> i32 {
     runtime_assets::install_native_runtime_assets();
     let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root).await {
         Ok(entries) => entries,
@@ -367,19 +367,19 @@ pub async fn run_smoke_with_axes(plugin_filter: &str, plugin_modules_root: std::
     let (locale, terminology) = axes;
     let mut shell = ShellState::new(entries, plugin_filter.to_string(), locale, terminology);
     shell.opening.install_document_services(services, &mut shell.directory);
-    if let Err(error) = semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx::of(&mut shell).boot().await {
+    if let Err(error) = semio_renderer_wgpu_shell_actions::ActionsCtx::of(&mut shell).boot().await {
         eprintln!("smoke: shell.boot() failed: {error}");
         return 1;
     }
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while std::time::Instant::now() < deadline {
-        semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut shell).pump_sync_events().await;
+        semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut shell).pump_sync_events().await;
         if shell.directory.identity.is_some() || shell.directory.identity_env.is_none() {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
-    let _ = semio_framework_os_renderer_wgpu_shell_window_actions::WindowActionsCtx::of(&mut shell).refresh_ui(semio_framework::kernel::UiDirtyScope::Full).await;
+    let _ = semio_renderer_wgpu_shell_window_actions::WindowActionsCtx::of(&mut shell).refresh_ui(semio_framework::kernel::UiDirtyScope::Full).await;
     let identity_summary = shell.directory.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
     let window_documents: Vec<_> = shell.docs.window_ui.iter().map(|(window, document)| serde_json::json!({ "window": window, "generation": document.generation() })).collect();
     let booted = plugin_filter.is_empty() || shell.docs.session.is_some();

@@ -172,10 +172,10 @@ impl EventRouter {
     pub fn row_action_icon_rect(&self, tree: &UiTree, row: NodeId, index: usize) -> Option<Rect> {
         let item = tree.authored_tree_item(row)?;
         let slot = item.actions.as_deref()?.len().checked_sub(index)?;
-        let metrics = semio_framework_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, row, &self.tree_drag_metrics);
+        let metrics = semio_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, row, &self.tree_drag_metrics);
         let band = tree_section_header_band(tree.absolute_rect(row)?, metrics.row_height, self.flow.block.is_reversed());
         let trailing = if self.tree_drag_driver == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
-        let icon = semio_framework_ui_wgpu_layout::layout::tree_row_action_rect(band.w, band.h, slot, trailing, &metrics);
+        let icon = semio_ui_wgpu_layout::layout::tree_row_action_rect(band.w, band.h, slot, trailing, &metrics);
         Some(Rect::new(band.x + icon.x, band.y + icon.y, icon.w, icon.h))
     }
 

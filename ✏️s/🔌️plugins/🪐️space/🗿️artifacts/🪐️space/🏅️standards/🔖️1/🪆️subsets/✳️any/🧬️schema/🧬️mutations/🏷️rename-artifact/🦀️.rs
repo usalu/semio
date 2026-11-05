@@ -22,8 +22,8 @@ pub fn rename_artifact(id: String, new_name: String) -> SSpaceMutation {
 impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for RenameArtifact {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "artifact", kind: "rename-artifact", record: "RenamedArtifact" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename artifact \"{}\" to \"{}\"", self.id, self.new_name), &format!("Artefakt \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename artifact \"{}\" to \"{}\"", self.id, self.new_name), &format!("Artefakt \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

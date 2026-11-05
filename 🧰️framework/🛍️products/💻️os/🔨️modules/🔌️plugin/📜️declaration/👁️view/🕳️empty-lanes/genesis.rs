@@ -1,7 +1,7 @@
 //! 🌱️ Empty persisted lanes declare a real empty record, canonical Pack and original fixed State birth.
 use super::{NoConfig,NoConfigMutation};
-use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
-use semio_framework_os_kernel as store;
+use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_os_kernel as store;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 /// 🕳️ Config and draft differ by their declared Store identity and history shape.
 pub struct EmptyLaneGenesisOwner<const DRAFT:bool>;

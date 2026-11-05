@@ -6,7 +6,7 @@ use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot
 use semio_framework_graph_manifest::{PropertyDef, PropertyKind, PortDirection};
 use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_value::{ValueError,ValueRefusalKind,ValueType};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,artifact::{Projection,Cell,FloatColumn,insert_ieee754}};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,artifact::{Projection,Cell,FloatColumn,insert_ieee754}};
 const SQL:&str=include_str!("../../🗄️.sql");
 fn limit(message:&str)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
 fn invariant(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,message)}

@@ -19,8 +19,8 @@ pub struct PaintNativeSamplesMutation {
 impl protocol::MutationKind<PngSnapshot, PngMutation> for PaintNativeSamplesMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "native-sample-region", kind: "paint-native-samples", record: "PaintNativeSamples" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Paint native PNG samples", "Native PNG-Abtastwerte malen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Paint native PNG samples", "Native PNG-Abtastwerte malen")
     }
 
     fn target(&self) -> Vec<String> {

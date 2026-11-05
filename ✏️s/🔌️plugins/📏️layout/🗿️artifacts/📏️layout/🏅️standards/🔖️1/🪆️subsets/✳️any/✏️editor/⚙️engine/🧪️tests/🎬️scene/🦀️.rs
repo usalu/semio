@@ -1,7 +1,7 @@
 //! 🧪️ Native scene, paragraph and Drawing laws exercise public engine interfaces and scoped test observations.
 #![cfg(all(test, not(target_arch = "wasm32")))]
 #![allow(unused_imports)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 use semio_s_artifact_layout_layout_engine::scene::{self, text_fonts::*, layout_engine_and_views::*, display_list_and_hit_testing::*, scene_painting_and_queries::*, paragraph::*, text_flow::*, text_flow::projection::*, metadata_index::*, drawing_planning::*, drawing_planning::segments::*, drawing_planning::composition::*, drawing_planning::composition::canvas::*};
 use semio_s_artifact_layout_layout_model::{Frame,LayoutBounds,LayoutRect,Page,ParagraphStyle,TextStory};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

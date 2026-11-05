@@ -4,14 +4,14 @@
 //! `nodes`/`edges` fields are replaced by a composed `stdio.semio.graph` CHILD slot
 //! (`🔖️ContentBridge` below) — this plugin no longer defines its own persisted node/edge model, it
 //! composes stdio's neutral `graph` subset instead. The rich live editing types
-//! (`semio_framework_os_infinite_directed_presentation::DagNodeSpec`/`DagNodeKind`/`DagHostSnapshotEdge`) still flow
+//! (`semio_os_infinite_directed_presentation::DagNodeSpec`/`DagNodeKind`/`DagHostSnapshotEdge`) still flow
 //! through the app exactly as before; only the PERSISTED shape changed. They now bridge through the
 //! composed child's exact local owner rather than plain struct fields.
 
 extern crate infinite_canvas as infinite_board_port_directed_dag;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
@@ -24,9 +24,9 @@ pub use semio_s_artifact_dag_dag_schema::{DAG_DIALECT};
 
 pub use crate::snapshot::schema::{default_snapshot, empty_snapshot};
 pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagNodePatch};
-pub use semio_framework_os_infinite_directed_presentation::{DagHostSnapshotEdge};
+pub use semio_os_infinite_directed_presentation::{DagHostSnapshotEdge};
 
-pub use semio_framework_os_infinite_directed_presentation::{DagExpandedPaths, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
+pub use semio_os_infinite_directed_presentation::{DagExpandedPaths, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
 
 pub use semio_s_artifact_dag_dag_inferences::{DAG_EDGE_KIND, DAG_EDGE_NATIVE_FIELDS, DAG_NODE_NATIVE_FIELDS, DagContentChild, DagScene, SemioGraphMutation, dag_content_child_handle, dag_content_snapshot, dag_edge_of_graph, dag_graph_edge, dag_graph_node, dag_node_of_graph, dag_record_properties, dag_scene_of_content, dsl_value_of, semio_value_of};
 pub use semio_s_artifact_dag_dag_schema::{dag_scene, dag_scene_from_children};

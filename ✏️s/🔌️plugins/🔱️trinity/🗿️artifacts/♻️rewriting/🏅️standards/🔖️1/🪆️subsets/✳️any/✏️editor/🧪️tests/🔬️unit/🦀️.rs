@@ -4,12 +4,12 @@ use crate::standards::v1::subsets::any::schema::model::{LayoutPoint, REWRITE_RUL
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
 use semio_s_artifact_trinity_jack_semio_content::SemioJackContentOwner;
-use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::ContextMenuRequest;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::MediaPayload;
+use semio_os_kernel::Viewport2d;
+use semio_plugin::NoConfigMutation;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use store::snapshot::ArtifactPack;
 use store::snapshot::ArtifactDsl;
@@ -23,93 +23,93 @@ use crate::standards::v1::subsets::any::schema::rule::ParameterKind;
 #[allow(unused_imports)]
 use semio_framework_graph_manifest::PropertyBag;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppActionRegistry;
+use semio_plugin::AppActionRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::Media;
+use semio_plugin::Media;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaClass;
+use semio_plugin::MediaClass;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaError;
+use semio_plugin::MediaError;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaForm;
+use semio_plugin::MediaForm;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, HashMap};
 #[allow(unused_imports)]
@@ -127,14 +127,14 @@ use crate::standards::v1::subsets::any::schema::test_support::fixture_rule_state
 use crate::editor::rewriting::retained_document_commands::REWRITING_DOCUMENT_TOOL_IDS;
 use crate::standards::v1::subsets::any::schema::rule::Rhs;
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin::artifact_app_laws;
-use semio_framework_plugin::App;
-use semio_framework_plugin::EditorApp;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::PluginApp;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin::VcsArtifactApp;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::artifact_app_laws;
+use semio_plugin::App;
+use semio_plugin::EditorApp;
+use semio_ui_locale::Locale;
+use semio_plugin::PluginApp;
+use semio_ui_locale::Terminology;
+use semio_plugin::VcsArtifactApp;
+use semio_plugin::ViewModel;
 
 /// 🎫️ See `jack`'s `trinity_jack_manifest_for_tests` doc comment for why this wrapper exists
 /// (SDK gap, `artifact_app_laws::new_app_with_registry`'s signature is still `fn(manifest: fn() -> App)`).
@@ -142,11 +142,11 @@ fn trinity_rewriting_manifest_for_tests() -> App {
     App { definition: create_rewriting_app(), examples: Vec::new() }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
-semio_framework_plugin::composed_reload_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
-semio_framework_plugin::composed_child_history_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, [("addWorkingNode", r#"{"kind":"Piece","name":"core","x":0.0,"y":0.0}"#), ("patchNodes", r#"{"nodeIds":["n0"],"field":"name","value":"Renamed core"}"#)]);
+semio_plugin::history_edit_acceptance_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
+semio_plugin::composed_reload_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
+semio_plugin::composed_child_history_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, [("addWorkingNode", r#"{"kind":"Piece","name":"core","x":0.0,"y":0.0}"#), ("patchNodes", r#"{"nodeIds":["n0"],"field":"name","value":"Renamed core"}"#)]);
 
-fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
+fn meta(actor: &str) -> semio_plugin::ActionMeta {
     artifact_app_laws::meta(actor)
 }
 
@@ -162,7 +162,7 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
         TrinityRewritingCommand::AddRuleClause { kind: "where".into() },
         TrinityRewritingCommand::ResetRule,
         TrinityRewritingCommand::PatchNodes { node_ids: vec!["a".into()], field: "name".into(), value: "Renamed".into() },
-        TrinityRewritingCommand::SetViewport { surface_id: Some("trinity.rewriting.before".into()), viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } },
+        TrinityRewritingCommand::SetViewport { surface_id: Some("trinity.rewriting.before".into()), viewport: semio_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } },
         TrinityRewritingCommand::Reorganize,
         TrinityRewritingCommand::SetLodMode { value: "compact".into() },
     ];
@@ -183,15 +183,15 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
 /// 🔚 Self-closing: the store's `Drop` demands the terminal-empty witness, so the guard retires the
 /// app through the framework's exact close loop (skipped while unwinding).
 async fn new_app() -> RewritingTestApp {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_rewriting_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_rewriting_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(REWRITING_TEST_INSTANCE).await;
     load_rule_fixture(&mut app, scope.cx()).await;
     RewritingTestApp(app, scope)
 }
 
 /// 🧫️ Loads the independently selected composed test input after creating an empty runtime app.
-async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, cx: &mut semio_framework_plugin::StepContext<'_>) {
+async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, cx: &mut semio_plugin::StepContext<'_>) {
     let state = fixture_rule_state();
     let files = store::os_store::serialization::ArtifactPackFiles { pack: pack::snapshot::ArtifactPack::encode_pack(&state), spr: store::os_store::text_format::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA).await, ops: String::new() };
     let mut archive = PluginApp::document_load_archive(app, &files).expect("stamp test input");
@@ -210,7 +210,7 @@ async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPl
     });
     PluginApp::begin_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION, archive).expect("admit composed test input");
     loop {
-        let status = PluginApp::poll_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("poll test input");
+        let status = PluginApp::poll_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("poll test input");
         match status.state {
             protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running => {},
             protocol::DocumentArchiveLoadState::Ready => break,
@@ -223,7 +223,7 @@ async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPl
 const REWRITING_TEST_INSTANCE: u32 = 1;
 
 /// ✍️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct RewritingTestApp(pub VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct RewritingTestApp(pub VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
 impl std::ops::Deref for RewritingTestApp {
     type Target = VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
@@ -249,12 +249,12 @@ impl Drop for RewritingTestApp {
 /// 📬️ Drives the mounted app's retained typed operation to quiescence — the receipt carries the
 /// lanes, effects and events the host would have seen.
 async fn settle(app: &mut RewritingTestApp) -> artifact_app_laws::TypedOperationFixtureReceipt {
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation")
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation")
 }
 
 /// ↩️ Dispatches a framework-reserved history verb (`undo`/`redo`) and settles its reserved job.
 async fn history(app: &mut RewritingTestApp, verb: &str) {
-    artifact_app_laws::settle_history_verb(&mut app.0, verb, REWRITING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    artifact_app_laws::settle_history_verb(&mut app.0, verb, REWRITING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🖼️ Projects a rendered body through the fixture transport — a bare `serde_json::to_string(&tree.root)`
@@ -269,8 +269,8 @@ async fn render(app: &mut RewritingTestApp, body_key: &str, view: &ViewModel) ->
 async fn select_graph(app: &mut RewritingTestApp, ids: &[&str]) {
     let targets: Vec<semio_framework_pack_json::Value> = ids.iter().map(|id| semio_framework_pack_json::json!({ "granularity": "node", "id": id })).collect();
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": "graph", "targets": semio_framework_pack_json::to_json_string(&targets) }));
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect reserved-job commit");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect reserved-job commit");
     settle(app).await;
 }
 
@@ -278,18 +278,18 @@ async fn select_graph(app: &mut RewritingTestApp, ids: &[&str]) {
 async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
     let mut app = new_app().await;
     let request = ContextMenuRequest {
-        menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-        surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        menu: semio_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+        surface: Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: TRINITY_REWRITING_PLAY_SURFACE_BEFORE.into(),
             kind: "nodeGraph".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["n1".into(), "n2".into()] }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
+            selection: vec![semio_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["n1".into(), "n2".into()] }],
             text: None,
         }),
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let menu = app.context_menu(&request, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
@@ -300,8 +300,8 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
 #[semio_framework_async_macros::async_test]
 async fn renders_before_and_after_graphs() {
     let mut app = new_app().await;
-    let before = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
-    let after = render(&mut app, TRINITY_REWRITING_PLAY_BODY_AFTER, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let before = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
+    let after = render(&mut app, TRINITY_REWRITING_PLAY_BODY_AFTER, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     assert!(before.contains("node-graph"));
     assert!(after.contains("node-graph"));
 }
@@ -322,12 +322,12 @@ async fn apply_rewriting_changes_rewritten_graph() {
 #[semio_framework_async_macros::async_test]
 async fn renders_lhs_rhs_graphs() {
     let mut app = new_app().await;
-    let lhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_LHS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
-    let rhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_RHS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let lhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_LHS, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
+    let rhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_RHS, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     assert!(lhs_json.contains("node-graph"));
     assert!(rhs_json.contains("node-graph"));
-    let lhs = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&lhs_json).expect("lhs node-graph scene");
-    let rhs = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&rhs_json).expect("rhs node-graph scene");
+    let lhs = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&lhs_json).expect("lhs node-graph scene");
+    let rhs = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&rhs_json).expect("rhs node-graph scene");
     assert_eq!(lhs.editable, Some(true));
     assert_eq!(rhs.editable, Some(true));
 }
@@ -336,9 +336,9 @@ async fn renders_lhs_rhs_graphs() {
 async fn set_parameter_emits_one_op_and_is_undoable() {
     let mut app = new_app().await;
     let history_before = app.history_snapshot().await.expect("history").upserts.len();
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set parameter");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set parameter");
     let receipt = settle(&mut app).await;
-    assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a parameter edit publishes on the artifact lane: {:?}", receipt.lanes);
+    assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact), "a parameter edit publishes on the artifact lane: {:?}", receipt.lanes);
     assert_eq!(app.history_snapshot().await.expect("history").upserts.len(), history_before + 1, "a single-key parameter edit is one ChangeParameterBinding operation (one history entry)");
     assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("changed".into())));
     history(&mut app, "undo").await;
@@ -348,15 +348,15 @@ async fn set_parameter_emits_one_op_and_is_undoable() {
 #[semio_framework_async_macros::async_test]
 async fn add_and_delete_rhs_set_clause() {
     let mut app = new_app().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::AddRuleClause { kind: "set".into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add clause");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::AddRuleClause { kind: "set".into() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add clause");
     settle(&mut app).await;
     let rhs: Rhs = app.snapshot().unwrap().rhs;
     assert_eq!(rhs.set.len(), 2);
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: semio_framework_pack_json::json!([{ "operation": "delete", "nodeIds": ["rhs-set-1"], "synapseIds": [] }]).to_string() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: semio_framework_pack_json::json!([{ "operation": "delete", "nodeIds": ["rhs-set-1"], "synapseIds": [] }]).to_string() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
         .await
         .expect("delete the clause node");
     let receipt = settle(&mut app).await;
-    assert!(!result.mutations.is_empty() || receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a delete row must publish an artifact mutation: {:?}", receipt.lanes);
+    assert!(!result.mutations.is_empty() || receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact), "a delete row must publish an artifact mutation: {:?}", receipt.lanes);
     let rhs: Rhs = app.snapshot().unwrap().rhs;
     assert_eq!(rhs.set.len(), 1);
 }
@@ -364,16 +364,16 @@ async fn add_and_delete_rhs_set_clause() {
 #[semio_framework_async_macros::async_test]
 async fn jack_view_renders_compiled_query_tokens() {
     let mut app = new_app().await;
-    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_JACK, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
-    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_JACK, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
+    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::TextEditorScene>(&json).expect("text-editor scene");
     assert!(scene.tokens_json.is_some_and(|tokens| !tokens.is_empty()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn graph_scenes_have_lod_json() {
     let mut app = new_app().await;
-    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
-    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&json).expect("node-graph scene");
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
+    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&json).expect("node-graph scene");
     assert!(scene.lod_json.is_some(), "lodJson lane missing: {json}");
 }
 
@@ -409,9 +409,9 @@ async fn app_definition_declares_set_active_example_unscoped_for_every_window_ki
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_the_registered_demo_document() {
     let mut app = new_app().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetActiveExample { example_id: crate::examples::demo::ID.into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetActiveExample { example_id: crate::examples::demo::ID.into() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
     let receipt = settle(&mut app).await;
-    let loads = receipt.effects.iter().filter(|effect| matches!(effect, semio_framework_plugin::Effect::LoadDocument { .. })).count();
+    let loads = receipt.effects.iter().filter(|effect| matches!(effect, semio_plugin::Effect::LoadDocument { .. })).count();
     assert_eq!(loads, 1, "the registered example id produces exactly one LoadDocument effect");
     let loaded = crate::editor::rewriting::commands::set_active_example::set_active_example_document(crate::examples::demo::ID).expect("the demo example resolves to a document");
     assert_eq!(loaded, pack::snapshot::ArtifactDsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo example's own dsl parses"), "the document the effect carries is the example the subset registers");
@@ -421,7 +421,7 @@ async fn set_active_example_loads_the_registered_demo_document() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_ignores_an_unregistered_id() {
     let mut app = new_app().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetActiveExample { example_id: "not-an-example".into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetActiveExample { example_id: "not-an-example".into() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
     let receipt = settle(&mut app).await;
     assert!(receipt.effects.is_empty(), "an unknown example id loads nothing");
 }
@@ -439,7 +439,7 @@ async fn set_active_example_is_registered_on_both_tool_rosters() {
 #[semio_framework_async_macros::async_test]
 async fn trinity_rewriting_labels_resolve_native_by_default() {
     let mut app = new_app().await;
-    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_ARTIFACT, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_ARTIFACT, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     assert!(json.contains("\"Pieces\""));
     assert!(!json.contains("Stücke"));
 }
@@ -447,7 +447,7 @@ async fn trinity_rewriting_labels_resolve_native_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn trinity_rewriting_labels_translate_panels_in_german() {
     let mut app = new_app().await;
-    let view = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let document_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_ARTIFACT, &view).await;
     assert!(document_json.contains("Stücke"));
     assert!(!document_json.contains("\"Pieces\""));
@@ -467,7 +467,7 @@ async fn set_lhs_json_undo_redo_round_trip() {
     let mut app = new_app().await;
     let original = app.snapshot().unwrap().lhs;
     let next_lhs = r#"{"pattern":{"leftVar":"x","leftKind":"Piece","edgeVar":"r","edgeKind":"Connection","rightVar":"y","rightKind":"Piece"}}"#;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set lhs");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set lhs");
     settle(&mut app).await;
     assert_eq!(app.snapshot().unwrap().lhs, semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::rule::Lhs>(next_lhs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed match input"));
     history(&mut app, "undo").await;
@@ -479,7 +479,7 @@ async fn set_lhs_json_undo_redo_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_graph_out_reflects_rule_applied_fixture() {
     let mut app = new_app().await;
-    let graph_out = semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "graph:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("graph:out export");
+    let graph_out = semio_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "graph:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("graph:out export");
     let MediaPayload::Structured { json, .. } = graph_out.payload else { panic!("structured payload") };
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64");
     let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).expect("decode pack");
@@ -493,9 +493,9 @@ async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
     assert_eq!(io.artifact_schema, REWRITE_RULE_SCHEMA);
     let graph_in = io.ports.iter().find(|port| port.id == "graph:in").expect("graph:in declared");
     assert_eq!(graph_in.kind_id.as_deref(), Some("graph.trinity"));
-    assert_eq!(graph_in.multiplicity, semio_framework_plugin::PortMultiplicity::One);
+    assert_eq!(graph_in.multiplicity, semio_plugin::PortMultiplicity::One);
     let graph_out = io.ports.iter().find(|port| port.id == "graph:out").expect("graph:out declared");
-    assert_eq!(graph_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+    assert_eq!(graph_out.multiplicity, semio_plugin::PortMultiplicity::Many);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -504,7 +504,7 @@ async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_his
     let expected: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = fixture_rule_state();
     let before = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_document_effect(&source) else { panic!("reset must load a document"); };
+    let semio_plugin::Effect::LoadDocument { pack, spr } = reset_document_effect(&source) else { panic!("reset must load a document"); };
     let decoded = <RewritingSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).unwrap(), before);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap(), before);
@@ -541,25 +541,25 @@ async fn working_node_label(app: &RewritingTestApp, id: &str) -> String {
 /// 🕹️ Dispatches one rail press and settles its retained job; a refusal surfaces as the fault.
 async fn dispatch_rail(app: &mut RewritingTestApp, action: &str, args: &[(&str, &str)]) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, Fault> {
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::Object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_pack_json::Value::String((*value).to_string()))).collect()));
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_plugin::Fault::from(format!("{failure:?}"))))?;
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// 🕸️ Dispatches one `nodeGraphEdit` batch on `surface` and settles it.
 async fn graph_edit(app: &mut RewritingTestApp, surface: &str, rows: semio_framework_pack_json::Value) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, Fault> {
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "surfaceId": surface, "operations": rows.to_string() }));
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "nodeGraphEdit", Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "nodeGraphEdit", Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_plugin::Fault::from(format!("{failure:?}"))))?;
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// 📜️ The edited history rows of the document.
 async fn edit_rows(app: &mut RewritingTestApp) -> usize {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).count()
 }
 
 fn child_lane(receipt: &artifact_app_laws::TypedOperationFixtureReceipt) -> bool {
-    receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Child)
+    receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Child)
 }
 
 /// ⚖️ LAW: `patchNodes` pressed from the rail with an EMPTY `nodeIds` patches the selected nodes of the
@@ -617,7 +617,7 @@ async fn a_rail_add_rule_clause_rewrites_only_the_rhs_and_round_trips() {
     let emit = crate::editor::rewriting::commands::add_rule_clause_command::add_rule_clause_command(&before, "create").expect("create clause");
     assert!(!emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| matches!(mutation, RewriteRuleMutation::EditRhs(_))), "only the RHS changes: {:?}", emit.artifact_mutations);
     let rail = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "kind": "create" }));
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addRuleClause", Some(rail.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("addRuleClause");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addRuleClause", Some(rail.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("addRuleClause");
     settle(&mut app).await;
     let after = app.snapshot().expect("projection");
     assert_ne!(after.rhs, before.rhs, "the clause is added");
@@ -641,12 +641,12 @@ async fn the_node_graph_gesture_verb_is_kept_off_the_rail_and_the_transform_grou
     assert!(patch.args.iter().any(|arg| arg.id == "nodeIds" && !arg.required), "nodeIds is optional: empty means the selection");
     let mut app = new_app().await;
     let request = ContextMenuRequest {
-        menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-        surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: TRINITY_REWRITING_PLAY_SURFACE_BEFORE.into(), kind: "nodeGraph".into(), hits: Vec::new(), selection: Vec::new(), text: None }),
+        menu: semio_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+        surface: Some(semio_plugin::ContextMenuSurfaceTarget { surface_id: TRINITY_REWRITING_PLAY_SURFACE_BEFORE.into(), kind: "nodeGraph".into(), hits: Vec::new(), selection: Vec::new(), text: None }),
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let menu = app.context_menu(&request, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     let bare_edit_rows = menu.iter().flat_map(|row| std::iter::once(row).chain(row.children.iter().flatten())).filter(|row| row.action.as_deref() == Some("nodeGraphEdit") && row.id != "delete-selection").count();
     assert_eq!(bare_edit_rows, 0, "no argument-less nodeGraphEdit row: {menu:?}");
 }
@@ -714,7 +714,7 @@ fn a_rule_node_drag_moves_each_clause_from_where_it_sits_and_undoes_in_one_row()
     let mut state = fixture_rule_state();
     state.rule_layout.insert("lhs-where".into(), LayoutPoint { x: 300.0, y: 90.0 });
     let operations = semio_framework_pack_json::Value::Array(vec![drag_row("g-lhs", &["lhs-match", "lhs-where"], 30.0, 10.0)]).to_string();
-    let emit = crate::editor::rewriting::commands::node_graph_edit::node_graph_edit(&state, &semio_framework_plugin::app::ChildContentView::EMPTY, TRINITY_REWRITING_PLAY_SURFACE_LHS, &operations, "seed").expect("a rule-node drag");
+    let emit = crate::editor::rewriting::commands::node_graph_edit::node_graph_edit(&state, &semio_plugin::app::ChildContentView::EMPTY, TRINITY_REWRITING_PLAY_SURFACE_LHS, &operations, "seed").expect("a rule-node drag");
     assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DragRuleNodes(_)]), "{:?}", emit.artifact_mutations);
     let moved = applied(&state, &emit.artifact_mutations);
     assert_eq!(moved.rule_layout.get("lhs-match"), Some(&LayoutPoint { x: 30.0, y: 10.0 }), "the match moves from its default slot");
@@ -761,7 +761,7 @@ async fn the_shared_node_graph_rows_map_to_intent_leaves() {
 /// and ONE undo moves the nodes back.
 #[semio_framework_async_macros::async_test]
 async fn one_canvas_drag_is_one_history_row_labelled_from_its_leaf() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = new_app().await;
     let before = working_positions(&app).await;
     let ids = working_node_ids(&app).await;
@@ -808,18 +808,18 @@ async fn the_add_node_verb_is_one_relative_leaf_and_canonical_graphs_undo_relati
     let mut app = new_app().await;
     let before = live_working(&app).await;
     let add = |pairs: &[(&str, semio_framework_pack_json::Value)]| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::Object(pairs.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect()));
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addWorkingNode", Some(add(&[("x", semio_framework_pack_json::json!(40.0)), ("y", semio_framework_pack_json::json!(-20.0))])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("an add");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addWorkingNode", Some(add(&[("x", semio_framework_pack_json::json!(40.0)), ("y", semio_framework_pack_json::json!(-20.0))])), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("an add");
     assert!(child_lane(&settle(&mut app).await), "the add edits the working child");
     let added = live_working(&app).await;
     assert_eq!(added.nodes.len(), before.nodes.len() + 1, "exactly one node lands");
     let first = added.nodes.iter().find(|node| before.nodes.iter().all(|held| held.id != node.id)).expect("the added node").clone();
     assert!(first.id.value.starts_with('n') && first.label == first.id.value && (first.position.x, first.position.y) == (40.0, -20.0), "{first:?}");
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addWorkingNode", Some(add(&[("kind", semio_framework_pack_json::json!(first.kind)), ("name", semio_framework_pack_json::json!("Second")), ("x", semio_framework_pack_json::json!(0.0)), ("y", semio_framework_pack_json::json!(0.0))])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a second add");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addWorkingNode", Some(add(&[("kind", semio_framework_pack_json::json!(first.kind)), ("name", semio_framework_pack_json::json!("Second")), ("x", semio_framework_pack_json::json!(0.0)), ("y", semio_framework_pack_json::json!(0.0))])), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a second add");
     settle(&mut app).await;
     let again = live_working(&app).await;
     let second = again.nodes.iter().find(|node| added.nodes.iter().all(|held| held.id != node.id)).expect("the second node");
     assert!(second.id != first.id && second.label == "Second", "{second:?}");
-    let nan = crate::editor::rewriting::commands::add_working_node_command::add_working_node_command(&fixture_rule_state(), &semio_framework_plugin::app::ChildContentView::EMPTY, None, None, f64::NAN, 0.0);
+    let nan = crate::editor::rewriting::commands::add_working_node_command::add_working_node_command(&fixture_rule_state(), &semio_plugin::app::ChildContentView::EMPTY, None, None, f64::NAN, 0.0);
     assert!(nan.is_err_and(|fault| fault.code.0 == "app.command.invalid-args"), "a non-finite position is refused by name");
     history(&mut app, "undo").await;
     assert_eq!(live_working(&app).await, added, "one undo removes the second node");
@@ -830,7 +830,7 @@ async fn the_add_node_verb_is_one_relative_leaf_and_canonical_graphs_undo_relati
 #[semio_framework_async_macros::async_test]
 async fn a_history_edit_of_a_binary64_offset_validates_and_replays() {
     use semio_framework::kernel::HistoryTimeTravelStage;
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = new_app().await;
     graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_LHS, semio_framework_pack_json::Value::Array(vec![drag_row("g-history", &["lhs-match"], 24.0, -8.0)])).await.expect("the drag is admitted");
     assert_eq!(app.snapshot().expect("dragged").rule_layout.get("lhs-match"), Some(&LayoutPoint { x: 24.0, y: -8.0 }), "the match moves from its default slot");
@@ -845,26 +845,26 @@ async fn a_history_edit_of_a_binary64_offset_validates_and_replays() {
         ("historyEditAccept", semio_framework_pack_json::json!({})),
     ];
     for (verb, args) in verbs {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_pack_json::to_dsl_value(&args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+        let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_pack_json::to_dsl_value(&args)), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
     }
     for _ in 0..10_000 {
         if stage(&mut app).await != Some(HistoryTimeTravelStage::Replaying) {
             break;
         }
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.0.take_typed_operation_ui_progress().is_some() {}
     }
     assert_eq!(stage(&mut app).await, Some(HistoryTimeTravelStage::Reviewing), "the edited offset replays to a clean review");
     for (verb, args) in [("historyEditFinalize", semio_framework_pack_json::json!({})), ("historyEditCommit", semio_framework_pack_json::json!({ "choice": "overwrite" }))] {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_pack_json::to_dsl_value(&args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+        let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_pack_json::to_dsl_value(&args)), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
     }
     for _ in 0..10_000 {
         if stage(&mut app).await.is_none() {
             break;
         }
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.0.take_typed_operation_ui_progress().is_some() {}
     }
     assert_eq!(app.snapshot().expect("edited head").rule_layout.get("lhs-match"), Some(&LayoutPoint { x: 50.0, y: -8.0 }), "the overwrite replays the edited offset");

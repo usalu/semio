@@ -2,50 +2,50 @@
 //!
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[cfg(any(test, not(target_arch = "wasm32")))]
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as store_sync;
-use semio_framework_os_renderer_wgpu_shell_async::{chrome_now_ms, debug_log, directory_now_ms};
-use semio_framework_os_renderer_wgpu_shell_chrome_state::ChromeState;
-use semio_framework_os_renderer_wgpu_shell_history::{HistoryState, prefs_set};
-use semio_framework_os_renderer_wgpu_shell_prefs::{ActiveSession, BandTongue, PrefsState, band_label, settings_text_row};
-use semio_framework_os_renderer_wgpu_shell_surfaces::SurfaceState;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as store_sync;
+use semio_renderer_wgpu_shell_async::{chrome_now_ms, debug_log, directory_now_ms};
+use semio_renderer_wgpu_shell_chrome_state::ChromeState;
+use semio_renderer_wgpu_shell_history::{HistoryState, prefs_set};
+use semio_renderer_wgpu_shell_prefs::{ActiveSession, BandTongue, PrefsState, band_label, settings_text_row};
+use semio_renderer_wgpu_shell_surfaces::SurfaceState;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_shell_surfaces::ShellPoolFuture;
+use semio_renderer_wgpu_shell_surfaces::ShellPoolFuture;
 #[cfg(not(target_arch = "wasm32"))]
 use protocol::os_directory::client::{InstalledServiceContributionV1, InstalledServiceDriverV1, InstalledServiceStatusV1, InstalledServiceTurnV1};
 use semio_framework::{AppDefinition, IconName, ViewModel, ViewSessionIdentity};
 use semio_framework_async::{CancelToken, OperationContext, TraceId};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::{Lane, WorkerPool};
-use semio_framework_os_kernel::os_directory::{DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, mint_directory_command_request_id};
+use semio_os_kernel::os_directory::{DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, mint_directory_command_request_id};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::DirectoryStreamMessage;
-use semio_framework_os_kernel::os_directory::client::{DirectoryClient, DirectoryClientError, LocalHubCredential};
+use semio_os_kernel::os_directory::DirectoryStreamMessage;
+use semio_os_kernel::os_directory::client::{DirectoryClient, DirectoryClientError, LocalHubCredential};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::client::{CanonicalDirectoryEventPageV1, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError};
+use semio_os_kernel::os_directory::client::{CanonicalDirectoryEventPageV1, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
-use semio_framework_os_kernel::os_directory::identity::{Identity, IdentityEnv, actor_id};
+use semio_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_os_kernel::os_directory::identity::{Identity, IdentityEnv, actor_id};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::identity::{IdentityOutcome, restore_claimed};
+use semio_os_kernel::os_directory::identity::{IdentityOutcome, restore_claimed};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::schema::DocumentScope;
-use semio_framework_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
-use semio_framework_os_renderer_wgpu_doors::directory_door::{ShellDirectoryClient, ShellDirectoryTransport};
-use semio_framework_os_renderer_wgpu_hub_contracts::hub_sign_in::{HUB_CONNECTION_BOOK_STORAGE_KEY_V1, HubSessionEvent, HubSignInClientClass, HubSignInCredential, HubSignInErrorCode, reduce_hub_session, serialize_hub_connection_book};
-use semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::{HubArtifactCatalogPhase, HubArtifactCreation, HubArtifactCreationState, HubArtifactOpening, hub_artifact_creation_intent};
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_ui_locale::{Label, Locale, Terminology};
+use semio_os_kernel::os_directory::schema::DocumentScope;
+use semio_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
+use semio_renderer_wgpu_doors::directory_door::{ShellDirectoryClient, ShellDirectoryTransport};
+use semio_renderer_wgpu_hub_contracts::hub_sign_in::{HUB_CONNECTION_BOOK_STORAGE_KEY_V1, HubSessionEvent, HubSignInClientClass, HubSignInCredential, HubSignInErrorCode, reduce_hub_session, serialize_hub_connection_book};
+use semio_renderer_wgpu_hub_workspace::hub_connection::{HubArtifactCatalogPhase, HubArtifactCreation, HubArtifactCreationState, HubArtifactOpening, hub_artifact_creation_intent};
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_ui_locale::{Label, Locale, Terminology};
 use semio_framework_value::DslValue;
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use store_sync::{PresencePeer, PresenceWindowView};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode, UiTextNode};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::ui::{UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode, UiTextNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🧬️component/🦀️.rs"]
 mod staged_directory__component;

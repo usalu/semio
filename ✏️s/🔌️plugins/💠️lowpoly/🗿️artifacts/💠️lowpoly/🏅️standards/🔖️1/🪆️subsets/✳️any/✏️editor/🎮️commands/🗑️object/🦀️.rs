@@ -11,7 +11,7 @@ use semio_s_artifact_lowpoly_lowpoly_view::resolve_active_object_id;
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySnapshot};
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -98,7 +98,7 @@ pub mod duplicate_object {
         let index = projection.objects.iter().position(|object| object.id == source_id).map_or(projection.objects.len(), |position| position + 1);
         let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": semio_s_artifact_lowpoly_lowpoly_view::MESH_GRANULARITY_OBJECT, "id": semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id(&id) })]).unwrap_or_default();
         let select = semio_framework::kernel::Effect::DispatchAction {
-            req: semio_framework_plugin::RequestId(1_302),
+            req: semio_plugin::RequestId(1_302),
             action: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
             args: Some(semio_framework::dsl_value!({ "domainId": semio_s_artifact_lowpoly_lowpoly_view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })),
             delay_ms: 0,

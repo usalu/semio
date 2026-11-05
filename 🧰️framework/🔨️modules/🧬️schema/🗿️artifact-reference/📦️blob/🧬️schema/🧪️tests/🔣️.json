@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "owner": "semio-framework-os-store-blob-identity",
+  "owner": "semio-os-store-blob-identity",
   "sourceBoundary": {
     "maxSourceBytes": 32768,
     "maxSourceFiles": 4,

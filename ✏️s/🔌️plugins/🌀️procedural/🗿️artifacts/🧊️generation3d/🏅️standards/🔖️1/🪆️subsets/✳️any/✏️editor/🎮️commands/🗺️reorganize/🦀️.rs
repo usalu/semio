@@ -6,8 +6,8 @@ use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::GraphEditor;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -23,17 +23,17 @@ pub fn handle(_payload: &Reorganize, _doc: &ArtifactView<'_, Generation3dSnapsho
 pub fn apply(snapshot: &Generation3dSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let maximum = cx.fuel_remaining();
     let mut completed = 0;
-    let mut progress = |progress: semio_framework_os_infinite::board::schema::layout::LayoutProgress| {
+    let mut progress = |progress: semio_os_infinite::board::schema::layout::LayoutProgress| {
         if cx.is_cancelled() || cx.deadline_exceeded() { return false; }
         cx.consume_fuel(progress.completed.saturating_sub(completed));
         completed = progress.completed;
         true
     };
-    let mut control = semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum, &mut progress);
-    let options = semio_framework_os_infinite::board::schema::layout::DagLayoutOptions::default();
+    let mut control = semio_os_infinite::board::schema::layout::LayoutControl::new(maximum, &mut progress);
+    let options = semio_os_infinite::board::schema::layout::DagLayoutOptions::default();
     with_host(&snapshot.host_snapshot, |host| {
         let mut editor = GraphEditor::new(host);
         editor.reorganize(&options, &mut control).map_err(Fault::from)?;
         Ok(Emit::mutations(editor.finish()))
-    }).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()))?
+    }).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.retained"), error.into_message()))?
 }

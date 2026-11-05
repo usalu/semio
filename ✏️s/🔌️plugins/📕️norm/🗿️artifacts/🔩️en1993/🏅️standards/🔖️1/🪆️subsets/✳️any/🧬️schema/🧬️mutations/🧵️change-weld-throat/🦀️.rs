@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeWeldThroat where O
         record: "ChangedWeldThroat",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Throat thickness a of the weld group", "Schweißnahtgruppe: Nahtdicke a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Throat thickness a of the weld group", "Schweißnahtgruppe: Nahtdicke a ändern")
     }
 }
 

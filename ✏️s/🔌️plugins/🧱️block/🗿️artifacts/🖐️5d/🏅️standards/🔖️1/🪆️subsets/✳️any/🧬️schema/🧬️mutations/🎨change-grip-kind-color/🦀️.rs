@@ -25,8 +25,8 @@ pub fn change_grip_kind_color<Op: From<crate::change_grip_kind_color::ChangeGrip
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeGripKindColor where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_grip_kind_color::ChangeGripKindColor> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "grip-kind", kind: "change-grip-kind-color", record: "ChangedGripKindColor" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change grip kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Farbe von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_color))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change grip kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Farbe von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_color))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

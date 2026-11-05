@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeDeckThicknes
         record: "ChangedBridgeDeckThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Orthotropic deck plate thickness t_d (0 = no deck) of the bridge fatigue", "Brückenermüdung: Fahrbahnblechdicke t_d (0 = keine Fahrbahnplatte) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Orthotropic deck plate thickness t_d (0 = no deck) of the bridge fatigue", "Brückenermüdung: Fahrbahnblechdicke t_d (0 = keine Fahrbahnplatte) ändern")
     }
 }
 

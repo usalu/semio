@@ -1,9 +1,9 @@
 //! ✏️ BIM model editor: the `edit` mode and its default window layout: the plan beside the 3D world, the section and the schedule alongside.
 
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const BIM_EDIT_MODE_EDIT: &str = "edit";
 

@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveUpliftCase where O
         verb: "remove", entity: "uplift-case", kind: "remove-uplift-case", record: "RemovedUpliftCase",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove uplift case", "Aufschwimmfall entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove uplift case", "Aufschwimmfall entfernen")
     }
 }
 

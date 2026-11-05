@@ -15,8 +15,8 @@ use crate::standards::v1::subsets::any::content::{admit, read, working_child_emi
 use crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::drag_rule_nodes;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::app::ChildContentView;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+use semio_plugin::app::ChildContentView;
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow};
 use {semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode, semio_s_artifact_stdio_semio_graph::schema::mutations::drag_nodes::DragNodes, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphSnapshot};

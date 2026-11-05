@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfPurlinLateralRat
         record: "ChangedCfPurlinLateralRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Lateral to vertical load ratio k_h on the free flange of the cold-formed member", "Kaltprofil: Verhältnis k_h seitliche zu lotrechter Last am freien Gurt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Lateral to vertical load ratio k_h on the free flange of the cold-formed member", "Kaltprofil: Verhältnis k_h seitliche zu lotrechter Last am freien Gurt ändern")
     }
 }
 

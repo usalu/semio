@@ -8,7 +8,7 @@ use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
-use semio_framework_plugin_identity::ArtifactExecutableIdentity;
+use semio_plugin_identity::ArtifactExecutableIdentity;
 /// 🪪️ Stable native identity and version contract for one executable artifact inference.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ArtifactInferenceServiceMetadata {

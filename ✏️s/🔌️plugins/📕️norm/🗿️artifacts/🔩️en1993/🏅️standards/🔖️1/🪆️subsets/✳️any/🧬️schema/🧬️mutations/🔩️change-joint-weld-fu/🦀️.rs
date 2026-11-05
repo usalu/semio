@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointWeldFu where 
         record: "ChangedJointWeldFu",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Weld metal tensile strength f_u of the joint", "Anschluss: Zugfestigkeit des Schweißguts f_u ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Weld metal tensile strength f_u of the joint", "Anschluss: Zugfestigkeit des Schweißguts f_u ändern")
     }
 }
 

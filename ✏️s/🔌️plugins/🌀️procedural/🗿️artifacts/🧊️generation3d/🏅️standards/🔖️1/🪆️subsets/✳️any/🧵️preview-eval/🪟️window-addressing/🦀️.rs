@@ -110,7 +110,7 @@ pub fn release_effect(window_id: &str, window_kind_id: &str) -> Effect {
 }
 
 fn hop_effect(action: &str, window_id: &str, window_kind_id: &str) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
 }
 
 /// 🚧️ Whether an unfinished evaluation of `fixture` may start or continue at all.
@@ -131,7 +131,7 @@ fn hop_effect(action: &str, window_id: &str, window_kind_id: &str) -> Effect {
 /// continuation — a fault nothing in this process can clear owes no continuation at all. The run
 /// therefore neither starts on such a graph nor continues it.
 pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
-    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_framework_os_flow::flow_operator_registry()).is_empty()
+    semio_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_os_flow::flow_operator_registry()).is_empty()
 }
 
 /// 🌀️ The one argument object every hop of the chain carries, on the redispatch and on the
@@ -161,7 +161,7 @@ pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_val
 /// move several — so THIS is the rule, and the emit route stays the fast path a gesture takes without
 /// waiting for a poll. Rows with no `edit_id` are cursor-motion and config entries, which the
 /// evaluation does not read (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn applied_document_edits_digest(history: &semio_framework_plugin::HistoryView) -> u64 {
+pub fn applied_document_edits_digest(history: &semio_plugin::HistoryView) -> u64 {
     const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
     const PRIME: u64 = 0x0000_0100_0000_01b3;
     let mut digest = OFFSET;
@@ -209,7 +209,7 @@ pub fn owe_attached_previews(session: &mut FlowEvalSession, link: &mut PreviewEv
 /// silent for 60 s with not one poll to read it. So a gesture with no live run carries the run start on
 /// its OWN emit, under the same one-request latch `preview_eval_run_effects` asks through, and an
 /// unservable graph carries nothing for the reason that function refuses one.
-pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
+pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
     if emit.artifact_mutations.is_empty() {
         link.wake();
         return Ok(false);
@@ -229,7 +229,7 @@ pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSessio
 /// preview empty for 120 s with not one `toolRunStart` in the console, and as an inspector slider that
 /// moved `height` 6 → 7 against a preview that never re-evaluated
 /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
-pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     owe_attached_previews(session, link, windows, grant)?;
     let woken = link.port.is_some() && link.settled.is_none();
     if !windows.is_empty() && servable && !woken && link.requested.is_none() {

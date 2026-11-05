@@ -2,16 +2,16 @@
 
 pub(crate) mod context {
     use crate::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
-    pub fn en1999_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_en1999_app(), examples: Vec::new() }
+    pub fn en1999_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_en1999_app(), examples: Vec::new() }
     }
 
     /// 📜️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the app's paid close.
-    pub struct NormApp(pub VcsArtifactApp<EditorApp<En1999PlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct NormApp(pub VcsArtifactApp<EditorApp<En1999PlayApp>>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
     
     impl std::ops::Deref for NormApp {
         type Target = VcsArtifactApp<EditorApp<En1999PlayApp>>;
@@ -27,14 +27,14 @@ pub(crate) mod context {
     }
 
     pub async fn app_with_registry() -> NormApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<En1999PlayApp>>(en1999_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<EditorApp<En1999PlayApp>>(en1999_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         NormApp(app, scope)
     }
 
     pub fn close(app: &mut NormApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 
     pub async fn dispatch(app: &mut NormApp, command: En1999Command) -> InvocationResult {
@@ -44,20 +44,20 @@ pub(crate) mod context {
                 window_id: Some(checks::WINDOW_CHECKS.into()),
                 focused_window_id: Some(checks::WINDOW_CHECKS.into()),
                 window_instances: vec![ViewWindowInstance { id: checks::WINDOW_CHECKS.into(), window_kind_id: checks::WINDOW_CHECKS.into() }],
-                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
             });
         }
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
 
     pub async fn settle(app: &mut NormApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle");
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle");
     }
 
     pub async fn render(app: &mut NormApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render projection")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render projection")
     }
 }
 
@@ -117,11 +117,11 @@ fn a_picked_entity_selects_its_governing_check_in_every_window() {
 }
 //#endregion 🛰️LiveWiring
 
-semio_framework_plugin::history_edit_acceptance_law!("norm", crate::En1999PlayApp, || semio_framework_plugin::App { definition: crate::create_en1999_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("norm", crate::En1999PlayApp, || semio_plugin::App { definition: crate::create_en1999_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
 
 #[test]
 fn the_new_document_palette_offers_the_full_showcase_and_its_dsl_round_trips_to_the_committed_fixture() {
-    let source = <En1999PlayApp as semio_framework_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "full-showcase").expect("the palette offers the full showcase");
+    let source = <En1999PlayApp as semio_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "full-showcase").expect("the palette offers the full showcase");
     let showcase = En1999Snapshot::full_showcase();
     assert_eq!(semio_s_artifact_norm_en1999_io::text::snapshot::decode_en1999_dsl(&source.document()).expect("the palette entry parses"), showcase);
     assert_eq!(semio_s_artifact_norm_en1999_io::text::snapshot::decode_en1999_snapshot_json(&semio_s_artifact_norm_en1999_io::text::snapshot::encode_en1999_snapshot_json(&showcase)).expect("the JSON twin parses"), showcase);
@@ -145,9 +145,9 @@ fn the_default_document_publishes_an_accessible_node_for_every_check_handle_and_
 /// 🎪️ The aluminium-showcase DSL asset is offered by the palette with an English and a German title, decodes to the committed showcase document, evaluates and projects scene entities and diagrams without panicking.
 #[test]
 fn the_aluminium_showcase_asset_decodes_to_the_showcase_fixture_and_evaluates_with_scene_and_diagrams() {
-    let source = <En1999PlayApp as semio_framework_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "aluminium-showcase").expect("the palette offers the showcase asset");
-    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
-        assert!(!source.label().resolve(semio_framework_ui_locale::Terminology::Native, locale).trim().is_empty());
+    let source = <En1999PlayApp as semio_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "aluminium-showcase").expect("the palette offers the showcase asset");
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        assert!(!source.label().resolve(semio_ui_locale::Terminology::Native, locale).trim().is_empty());
     }
     let document = semio_s_artifact_norm_en1999_io::text::snapshot::decode_en1999_dsl(&source.document()).expect("the showcase asset parses");
     assert_eq!(document, En1999Snapshot::full_showcase());

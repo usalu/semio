@@ -26,8 +26,8 @@ pub struct OpenDocument<Runner> {
 
 pub struct ArtifactHostState<Runner> {
     pub documents: std::collections::HashMap<ArtifactDocumentKey, OpenDocument<Runner>>,
-    pub document_execution_target_leases: std::collections::HashMap<ArtifactDocumentKey, semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-    pub document_seeds: std::collections::HashMap<ArtifactDocumentKey, semio_framework_os_directory::CanonicalCheckpointPairV1>,
+    pub document_execution_target_leases: std::collections::HashMap<ArtifactDocumentKey, semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    pub document_seeds: std::collections::HashMap<ArtifactDocumentKey, semio_os_directory::CanonicalCheckpointPairV1>,
     pub closing: std::collections::HashMap<u64, Runner>,
     pub next_generation: u64,
     pub host_references: usize,
@@ -58,8 +58,8 @@ impl<Runner> ArtifactHostState<Runner> {
 pub struct ArtifactHostCore<Runner> {
     pub inner: std::sync::Arc<std::sync::Mutex<ArtifactHostState<Runner>>>,
     pub pool: std::sync::Arc<semio_framework_async::WorkerPool>,
-    pub credential: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<semio_framework_os_directory_client::LocalHubCredential>>>>,
-    pub socket_grant_source: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>>>>,
+    pub credential: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<semio_os_directory_client::LocalHubCredential>>>>,
+    pub socket_grant_source: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<dyn semio_os_directory_client::HubSocketGrantSource>>>>,
     pub cancel: semio_framework_async::CancelToken,
 }
 
@@ -95,16 +95,16 @@ impl<Runner> ArtifactHostCore<Runner> {
         state.host_references == 0
     }
 
-    pub fn set_local_hub_credential(&self, credential: std::sync::Arc<semio_framework_os_directory_client::LocalHubCredential>) {
+    pub fn set_local_hub_credential(&self, credential: std::sync::Arc<semio_os_directory_client::LocalHubCredential>) {
         *self.credential.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(credential);
     }
 
-    pub fn set_hub_socket_grant_source(&self, source: std::sync::Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>) {
+    pub fn set_hub_socket_grant_source(&self, source: std::sync::Arc<dyn semio_os_directory_client::HubSocketGrantSource>) {
         *self.socket_grant_source.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(source);
     }
 
     /// 🪪️ Binds one complete verified execution-target lease before this document actor is opened.
-    pub fn set_document_execution_target_lease(&self, document_key: &ArtifactDocumentKey, surface: semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1) -> bool {
+    pub fn set_document_execution_target_lease(&self, document_key: &ArtifactDocumentKey, surface: semio_os_directory::DocumentExecutionTargetLeaseFieldsV1) -> bool {
         if !matches!(document_key, ArtifactDocumentKey::Hub { .. }) {
             return false;
         }
@@ -120,7 +120,7 @@ impl<Runner> ArtifactHostCore<Runner> {
     /// guest ([`crate::os_directory::DirectoryClient::document_canonical_checkpoint_pair`]): the actor starts at that
     /// pair — its history known, its first `SocketHelloV1` naming the pair's baseline frontier, so the hub tails only
     /// what came after it. Consumed by the next open of the same key.
-    pub fn set_document_seed(&self, document_key: &ArtifactDocumentKey, pair: semio_framework_os_directory::CanonicalCheckpointPairV1) -> bool {
+    pub fn set_document_seed(&self, document_key: &ArtifactDocumentKey, pair: semio_os_directory::CanonicalCheckpointPairV1) -> bool {
         let ArtifactDocumentKey::Hub { space_id, document_id } = document_key else {
             return false;
         };
@@ -141,7 +141,7 @@ impl<Runner> ArtifactHostCore<Runner> {
     }
 
     /// 🎫️ Takes the lease and the seed bound for the next open of `document_key`.
-    pub fn take_open_inputs(&self, document_key: &ArtifactDocumentKey) -> (Option<semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>, Option<semio_framework_os_directory::CanonicalCheckpointPairV1>) {
+    pub fn take_open_inputs(&self, document_key: &ArtifactDocumentKey) -> (Option<semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>, Option<semio_os_directory::CanonicalCheckpointPairV1>) {
         let mut state = self.state();
         (state.document_execution_target_leases.remove(document_key), state.document_seeds.remove(document_key))
     }

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for SpecifyDhwSystem where
         record: "SetDhwSystem",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Specify domestic hot water system", "Trinkwarmwassersystem festlegen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Specify domestic hot water system", "Trinkwarmwassersystem festlegen")
     }
 }
 

@@ -3,7 +3,7 @@
 //#region 🔖️FacadeTests
 #[test]
 fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
 
@@ -16,7 +16,7 @@ fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
 
 #[test]
 fn frame_before_any_apply_tree_returns_none() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     assert!(ui.frame::<RecordingSceneHost>("nonexistent", 400.0, 400.0, &mut atlas, None, None).is_none());
 }
@@ -76,7 +76,7 @@ fn retained_paint_walk_depth_cap_plus_one_faults_without_dynamic_spill() {
 
 #[test]
 fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]);
     ui.apply_tree("main", &ui_node);
@@ -90,7 +90,7 @@ fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
 
 #[test]
 fn dispatch_event_emits_a_button_click_command_once() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
     drive_layout(&mut ui, "main", 400.0, 400.0, &mut atlas);
@@ -105,14 +105,14 @@ fn dispatch_event_emits_a_button_click_command_once() {
 
 #[test]
 fn set_window_layout_wires_into_the_facades_shell() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
-    ui.set_window_layout(semio_framework_ui_declaration::layout::even_window_layout(&["app.viewport".to_string()]));
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
+    ui.set_window_layout(semio_ui_declaration::layout::even_window_layout(&["app.viewport".to_string()]));
     assert!(ui.shell().window_layout().is_some());
 }
 
 #[test]
 fn resize_storm_coalesces_to_one_latest_surface_job() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("resize", &stack_ui(vec![button_ui("go", "Go")]));
     for width in 1..=2_000 {
@@ -127,7 +127,7 @@ fn resize_storm_coalesces_to_one_latest_surface_job() {
 
 #[test]
 fn interactive_storm_does_not_starve_background_surface_lane() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("interactive", &stack_ui(vec![button_ui("go", "Go")]));
     ui.apply_tree("background", &stack_ui(vec![button_ui("bg", "Background")]));
@@ -177,7 +177,7 @@ fn interactive_storm_does_not_starve_background_surface_lane() {
 #[test]
 fn large_layout_and_shaping_job_admits_one_work_unit_per_slice() {
     let labels: Vec<String> = (0..1_024).map(|index| format!("node-{index}")).collect();
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let children = labels.iter().map(|label| UiNode::Text(UiTextNode { value: Label::data(label.clone()), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })).collect();
     ui.apply_tree("large", &stack_ui(children));
@@ -219,7 +219,7 @@ fn large_layout_and_shaping_job_admits_one_work_unit_per_slice() {
 
 #[test]
 fn mounted_layout_surface_max_plus_one_returns_exact_owner_without_mutation() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     for index in 0..UI_LAYOUT_SURFACE_SLOTS {
         let id = SurfaceId::try_from(format!("mounted-{index}")).unwrap_or_else(|_| panic!("bounded mounted surface"));
         assert!(ui.windows.try_admit(id).is_ok());
@@ -236,7 +236,7 @@ fn mounted_layout_surface_max_plus_one_returns_exact_owner_without_mutation() {
 
 #[test]
 fn mounted_layout_equal_theme_does_not_invalidate_or_requeue() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     ui.apply_tree("theme", &stack_ui(vec![button_ui("same", "Same")]));
     let before_generation = ui.windows.get("theme").map(|window| window.layout_generation);
     let before_theme_revision = ui.windows.get("theme").map(|window| window.theme_revision);
@@ -249,7 +249,7 @@ fn mounted_layout_equal_theme_does_not_invalidate_or_requeue() {
 
 #[test]
 fn changed_theme_propagates_one_fixed_surface_slot_per_opportunity() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     ui.apply_tree("theme-a", &stack_ui(vec![button_ui("a", "A")]));
     ui.apply_tree("theme-b", &stack_ui(vec![button_ui("b", "B")]));
     let before_a = ui.windows.get("theme-a").map(|window| window.theme_revision);
@@ -267,7 +267,7 @@ fn changed_theme_propagates_one_fixed_surface_slot_per_opportunity() {
 
 #[test]
 fn mounted_layout_atomic_snapshot_keeps_last_valid_geometry_until_fresh_swap() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("atomic", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("atomic"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), button_ui("target", "Target")]));
     drive_layout(&mut ui, "atomic", 320.0, 200.0, &mut atlas);
@@ -303,7 +303,7 @@ fn mounted_layout_atomic_snapshot_keeps_last_valid_geometry_until_fresh_swap() {
 
 #[test]
 fn mounted_layout_revision_max_refuses_theme_tree_and_viewport_without_alias() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let original = stack_ui(vec![button_ui("original", "Original")]);
     ui.apply_tree("max", &original);
     let original_theme = ui.theme();
@@ -334,7 +334,7 @@ fn mounted_layout_revision_max_refuses_theme_tree_and_viewport_without_alias() {
 
 #[test]
 fn mounted_layout_replay_and_resize_supersede_are_deterministic() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let input = stack_ui(vec![button_ui("replay", "Replay")]);
     ui.apply_tree("replay", &input);

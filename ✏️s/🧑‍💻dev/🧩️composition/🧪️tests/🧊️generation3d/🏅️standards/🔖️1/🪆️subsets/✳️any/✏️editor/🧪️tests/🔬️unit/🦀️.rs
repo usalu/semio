@@ -7,8 +7,8 @@ use semio_s_artifact_procedural_3d_mesh_bridge::merge_meshes;
 
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry, settle_registered_typed_operation, TypedOperationFixtureReceipt};
-    use semio_framework_plugin::{ActionMeta, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry, settle_registered_typed_operation, TypedOperationFixtureReceipt};
+    use semio_plugin::{ActionMeta, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     /// ✏️ `Generation3dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<Generation3dPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -20,8 +20,8 @@ pub(crate) mod context {
     /// `App { definition, examples }` shape `context::assert_declared_actions_bridge_to_commands` /
     /// `context::new_app_with_registry` still expect — framework test context gap, not modifiable here
     /// (`🧰️framework/**` is outside this packet's lease).
-    pub fn generation3d_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_generation3d_app(), examples: Vec::new() }
+    pub fn generation3d_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_generation3d_app(), examples: Vec::new() }
     }
     
     /// 🧹️ A live app fixture that CLOSES itself. `VcsArtifactApp`'s `ArtifactStore` owns an
@@ -31,7 +31,7 @@ pub(crate) mod context {
     /// retained close ladder (`PluginApp::close_step`) on the way out, which is the same law the runtime
     /// uses (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct Generation3dAppFixture(pub Generation3dApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct Generation3dAppFixture(pub Generation3dApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
     
     impl std::ops::Deref for Generation3dAppFixture {
         type Target = Generation3dApp;
@@ -49,7 +49,7 @@ pub(crate) mod context {
     impl Drop for Generation3dAppFixture {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -64,8 +64,8 @@ pub(crate) mod context {
     }
     
     pub async fn app_with_registry() -> Generation3dAppFixture {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(generation3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(generation3d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(1).await;
         Generation3dAppFixture(app, scope)
     }
@@ -94,16 +94,16 @@ pub(crate) mod context {
     /// a selection-fed command straight afterwards observes the PRE-selection state and its law passes
     /// vacuously (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, the same admission-vs-publication trap
     /// [`dispatch`] documents for typed commands).
-    pub async fn select_graph(app: &mut Generation3dAppFixture, granularity: &str, ids: &[&str]) -> semio_framework_plugin::InvocationResult {
+    pub async fn select_graph(app: &mut Generation3dAppFixture, granularity: &str, ids: &[&str]) -> semio_plugin::InvocationResult {
         select_domain(app, semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_DOMAIN, granularity, ids).await
     }
 
-    pub async fn select_domain(app: &mut Generation3dAppFixture, domain: &str, granularity: &str, ids: &[&str]) -> semio_framework_plugin::InvocationResult {
-        let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
+    pub async fn select_domain(app: &mut Generation3dAppFixture, domain: &str, granularity: &str, ids: &[&str]) -> semio_plugin::InvocationResult {
+        let targets: Vec<semio_plugin::InteractionTarget> = ids.iter().map(|id| semio_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
         let targets_json = serde_json::to_string(&targets).expect("selection targets");
         let args: semio_framework_value::DslValue = serde_json::json!({ "domainId": domain, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interaction selection admitted");
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interaction selection settles its reserved tool job")
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interaction selection admitted");
+        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interaction selection settles its reserved tool job")
     }
     
     pub fn preview_views(left: &str, right: &str) -> (ViewModel, ViewModel) {
@@ -111,32 +111,32 @@ pub(crate) mod context {
             ViewWindowInstance { id: left.into(), window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
             ViewWindowInstance { id: right.into(), window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
         ];
-        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
         (view.for_window_instance(left).expect("left Generation3d preview window"), view.for_window_instance(right).expect("right Generation3d preview window"))
     }
     
-    pub async fn dispatch_with_view(app: &mut Generation3dAppFixture, command: Generation3dCommand, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin::Fault> {
+    pub async fn dispatch_with_view(app: &mut Generation3dAppFixture, command: Generation3dCommand, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_plugin::Fault> {
         dispatch_with_view_meta(app, command, ActionMeta { view_state: Some(view_state), ..meta("local") }).await
     }
 
     /// 🎚️ One action exactly as a host sends it — named args, the window's own view — settled through the registered
     /// ladder: the door a continuous control's press (`gesture`/`commit`/`abort`) takes into the framework scrub machine.
-    pub async fn act_with_view(app: &mut Generation3dAppFixture, action: &str, args: serde_json::Value, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin::Fault> {
+    pub async fn act_with_view(app: &mut Generation3dAppFixture, action: &str, args: serde_json::Value, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_plugin::Fault> {
         let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
         let args: semio_framework_value::DslValue = args.into();
-        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))?;
-        settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+        semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))?;
+        settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
     }
     
     /// 🔁️ Completes whatever retained publication is already in flight — the settle half of
     /// [`dispatch`], for a caller that entered through `PluginApp::handle_action` instead.
     pub async fn settle(app: &mut Generation3dAppFixture) -> TypedOperationFixtureReceipt {
-        settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication")
+        settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication")
     }
     
-    async fn dispatch_with_view_meta(app: &mut Generation3dAppFixture, command: Generation3dCommand, action_meta: ActionMeta) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin::Fault> {
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))?;
-        settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+    async fn dispatch_with_view_meta(app: &mut Generation3dAppFixture, command: Generation3dCommand, action_meta: ActionMeta) -> Result<TypedOperationFixtureReceipt, semio_plugin::Fault> {
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))?;
+        settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
     }
     
     pub async fn render(app: &mut Generation3dAppFixture, body_key: &str) -> String {
@@ -145,7 +145,7 @@ pub(crate) mod context {
     }
     
     pub async fn render_with_view(app: &mut Generation3dAppFixture, body_key: &str, view_state: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render json")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render json")
     }
     
     /// 🧵️ The `previewEval` run hands its hops to the host through `requestedEffects` and the typed
@@ -171,7 +171,7 @@ pub(crate) mod context {
             ViewWindowInstance { id: flow.into(), window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN.into() },
             ViewWindowInstance { id: preview.into(), window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
         ];
-        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
         (view.for_window_instance(flow).expect("flow window instance"), view.for_window_instance(preview).expect("preview window instance"))
     }
     
@@ -187,7 +187,7 @@ pub(crate) mod context {
     /// command channel with the shell's own live view attached, never the scoped action channel — which
     /// is why `handle_action("flowEvalTick", …)` is answered with `interactive-job.unknown-key`
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub async fn dispatch_effect_command(app: &mut Generation3dAppFixture, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
+    pub async fn dispatch_effect_command(app: &mut Generation3dAppFixture, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_plugin::Fault> {
         crate::brep_extension::dispatch_effect_command(&mut app.0, command_id, args, action_meta, app.1.cx()).await
     }
     
@@ -215,24 +215,24 @@ pub(crate) mod context {
     }
 
     /// 🔁️ [`drive_preview_run`] with the host's extension answers served by `serve`.
-    pub async fn drive_preview_run_serving(app: &mut Generation3dAppFixture, shell_view: &ViewModel, initial: &[Effect], serve: &mut dyn FnMut(&semio_framework_plugin::artifact_app_laws::PendingExtensionInvocation) -> Result<Vec<u8>, semio_framework_plugin::Fault>) -> PreviewRunReceipt {
+    pub async fn drive_preview_run_serving(app: &mut Generation3dAppFixture, shell_view: &ViewModel, initial: &[Effect], serve: &mut dyn FnMut(&semio_plugin::artifact_app_laws::PendingExtensionInvocation) -> Result<Vec<u8>, semio_plugin::Fault>) -> PreviewRunReceipt {
         crate::brep_extension::drive_preview_run(&mut app.0, shell_view, initial, serve, app.1.cx()).await
     }
 
     /// 🧳️ A standalone retained-operation owner handle of THIS app's concrete type, for a law that
     /// drives one piece of retained work directly instead of through a live instance. Its session is a
     /// real one, so anything the work arms lands on a real latch.
-    pub fn instance_operation_owner() -> semio_framework_plugin::ArtifactInstanceOperationOwnerHandle {
-        semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::build_instance_operation_owner())
+    pub fn instance_operation_owner() -> semio_plugin::ArtifactInstanceOperationOwnerHandle {
+        semio_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as semio_plugin::ArtifactEditor>::build_instance_operation_owner())
     }
     
     /// 🧹️ Closes a test-built retained-operation owner under its own original caller scope; true once it is terminal-empty.
     pub fn close_instance_operation_owner(owner: &mut semio_s_artifact_procedural_3d_editor::Generation3dInstanceOperationOwner) -> bool {
-        use semio_framework_plugin::ArtifactInstanceOperationOwner;
-        let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        use semio_plugin::ArtifactInstanceOperationOwner;
+        let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let positive = semio_framework_value::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
         for _ in 0..1_000_000 {
-            if matches!(ArtifactInstanceOperationOwner::close_step(owner, scope.cx(), positive), Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_))) {
+            if matches!(ArtifactInstanceOperationOwner::close_step(owner, scope.cx(), positive), Ok(semio_plugin::PluginLifecycleStep::Complete(_))) {
                 return true;
             }
         }
@@ -241,13 +241,13 @@ pub(crate) mod context {
 
     /// 🧹️ Walks a test context-built owner across the same close boundary `VcsArtifactApp` runs — its
     /// `FlowEvalSession` rejects a live drop, so a law that builds one owns its retirement.
-    pub fn retire_instance_operation_owner(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) {
-        use semio_framework_plugin::ArtifactInstanceOperationOwner;
-        let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    pub fn retire_instance_operation_owner(handle: &semio_plugin::ArtifactInstanceOperationOwnerHandle) {
+        use semio_plugin::ArtifactInstanceOperationOwner;
+        let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let positive = semio_framework_value::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
         for _ in 0..1_000_000 {
             let complete = handle
-                .with_mut::<semio_s_artifact_procedural_3d_editor::Generation3dInstanceOperationOwner, _>(|owner| Ok(matches!(ArtifactInstanceOperationOwner::close_step(owner, scope.cx(), positive), Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_)))))
+                .with_mut::<semio_s_artifact_procedural_3d_editor::Generation3dInstanceOperationOwner, _>(|owner| Ok(matches!(ArtifactInstanceOperationOwner::close_step(owner, scope.cx(), positive), Ok(semio_plugin::PluginLifecycleStep::Complete(_)))))
                 .expect("the test context owner lends itself to its own close ladder");
             if complete {
                 return;
@@ -264,15 +264,15 @@ pub(crate) mod context {
     
     /// 📜️ The empty `HistoryView` a command-handler unit test hands `ArtifactView::new` — built here once
     /// because `HistoryView` (`🧰️framework/…/🔌️plugin/🦀️.rs`) derives no `Default`.
-    pub fn empty_history_view() -> semio_framework_plugin::HistoryView {
-        semio_framework_plugin::HistoryView {
+    pub fn empty_history_view() -> semio_plugin::HistoryView {
+        semio_plugin::HistoryView {
             columns: Vec::new(),
             can_undo: false,
             can_redo: false,
             active_alternative_id: None, alternatives: Vec::new(),
             current_checkpoint_id: None,
             commands: Vec::new(),
-            command_filter: semio_framework_plugin::app::HistoryCommandFilter::default(),
+            command_filter: semio_plugin::app::HistoryCommandFilter::default(),
         }
     }
     
@@ -333,7 +333,7 @@ pub(crate) mod context {
             ViewWindowInstance { id: form.into(), window_kind_id: semio_s_artifact_procedural_3d_mode_generate::windows::form::GENERATION_3D_PLAY_WINDOW_GENERATE_FORM.into() },
             ViewWindowInstance { id: preview.into(), window_kind_id: semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
         ];
-        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
         (view.for_window_instance(generations).expect("generations window instance"), view.for_window_instance(preview).expect("generate preview window instance"))
     }
 }
@@ -357,6 +357,6 @@ pub(crate) mod serial_execution {
 
 use super::*;
 use self::context::{app, app_with_registry, drain_flow_eval_ticks, drain_flow_eval_ticks_with_view, preview_views};
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 use serde_json::json;
 include!("🧰️shared-helpers/🦀️.rs");

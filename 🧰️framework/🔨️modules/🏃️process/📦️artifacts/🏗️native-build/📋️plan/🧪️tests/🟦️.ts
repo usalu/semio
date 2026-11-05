@@ -2,7 +2,7 @@ import {describe,expect,test} from "bun:test";
 import Ajv from "ajv";
 import _ from "lodash";
 import {Database} from "bun:sqlite";
-import {cargoArtifactPlanIdentityV1,cargoArtifactAcquisitionStepV1} from "../🟦️.ts";
+import {cargoArtifactPlanIdentityV1,cargoArtifactAcquisitionStepV1,cargoSourceDigestMismatchV1} from "../🟦️.ts";
 import {cargoTargetRecipeCanonicalV1} from "../../🎯️recipe/🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
@@ -27,4 +27,17 @@ describe("admitted artifact producer identity",()=>{
    for(const row of corpus.lifecycle){const {id,expected,...observation}=row;expect(cargoArtifactAcquisitionStepV1(observation)).toBe(expected);expect((statement.get({$cancel:Number(row.consumerCancelled),$publication:row.publication,$rechecked:Number(row.publicationRechecked),$plan:row.producerPlan,$settled:Number(row.producerSettled),$released:Number(row.custodyReleased)}) as {action:string}).action).toBe(row.expected);}
   }finally{database.close();}
  });
+});
+
+test("completed Source diagnostics agree with independent SQLite and preserve missing-record identity",()=>{
+ const database=new Database(":memory:"),valid=new Ajv({strict:true}).compile(schema.definitions.SourceDigestMismatch);
+ try{
+  database.exec("CREATE TABLE observed(path TEXT PRIMARY KEY,digest TEXT)");
+  const lookup=database.query("SELECT $path AS path,$expected AS expected,observed.digest AS observed,CASE WHEN observed.path IS NULL THEN 1 ELSE 0 END AS missingRecord FROM (SELECT 1) LEFT JOIN observed ON observed.path=$path WHERE observed.digest IS NOT $expected");
+  for(const row of corpus.sourceDigests){
+   database.exec("DELETE FROM observed");for(const item of row.observations)database.query("INSERT INTO observed VALUES(?,?)").run(item.path,item.sha256);
+   const values=new Map(row.observations.map(item=>[item.path,item.sha256])),actual=cargoSourceDigestMismatchV1(row.path,row.expected,values.get(row.path)),sql=lookup.get({$path:row.path,$expected:row.expected}) as {path:string;expected:string;observed:string|null;missingRecord:number}|null,oracle=sql?{...sql,missingRecord:Boolean(sql.missingRecord)}:null;
+   expect(actual,row.id).toEqual(row.result);expect(actual,row.id).toEqual(oracle);if(actual){expect(valid(actual),row.id).toBe(true);expect(JSON.stringify(actual).length).toBeLessThan(600);}
+  }
+ }finally{database.close();}
 });

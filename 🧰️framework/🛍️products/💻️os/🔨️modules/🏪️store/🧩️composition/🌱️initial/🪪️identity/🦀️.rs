@@ -1,6 +1,6 @@
 //! 🌱️ Pure bounded initial-child identity; this digest grants no creation or publication authority.
 
-use semio_framework_os_directory::schema::DocumentScope;
+use semio_os_directory::schema::DocumentScope;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 
 const INITIAL_CHILD_DOMAIN: &[u8] = b"semio.initial-child.v1\0";

@@ -8,14 +8,14 @@
 //! byte-identical TypeScript twin (parity asserted over the golden fixture
 //! `🧫️fixtures/📇️directory/⚡️events.json` in both `🧪️Tests` regions).
 //!
-//! 🏛️ Facade: the wire contract core and its canonical text IO live in `semio-framework-os-directory-schema` (`schema`, `io::text`), the Check In contract in `semio-framework-os-directory-check-in`, the binary boundaries and the canonical checkpoint pair in `semio-framework-os-directory-binary` (`io::binary`) and the declared access policy in `semio-framework-os-directory-access-policy` (`access_policy`). This crate keeps the public `os_directory` paths of the kernel facade and the read model below.
+//! 🏛️ Facade: the wire contract core and its canonical text IO live in `semio-os-directory-schema` (`schema`, `io::text`), the Check In contract in `semio-os-directory-check-in`, the binary boundaries and the canonical checkpoint pair in `semio-os-directory-binary` (`io::binary`) and the declared access policy in `semio-os-directory-access-policy` (`access_policy`). This crate keeps the public `os_directory` paths of the kernel facade and the read model below.
 
-pub use semio_framework_os_directory_schema as schema;
-pub use semio_framework_os_directory_access_policy as access_policy;
+pub use semio_os_directory_schema as schema;
+pub use semio_os_directory_access_policy as access_policy;
 
 pub mod io {
-    pub use semio_framework_os_directory_binary as binary;
-    pub use semio_framework_os_directory_schema::text;
+    pub use semio_os_directory_binary as binary;
+    pub use semio_os_directory_schema::text;
 }
 
 use std::collections::BTreeMap;
@@ -39,8 +39,8 @@ pub use schema::{
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
 pub use schema::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
 pub use schema::{DIRECTORY_PREFERENCE_PAGE_PATH_V1, USER_PREFERENCE_MUTATION_MAX_BYTES, USER_PREFERENCE_SCHEMA_ID_MAX_BYTES};
-pub use semio_framework_os_directory_binary::{CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1};
-pub use semio_framework_os_directory_check_in::{DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1};
+pub use semio_os_directory_binary::{CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1};
+pub use semio_os_directory_check_in::{DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1};
 
 //#region 🔖️ReadModel
 /// 🏠️ One projected space: its `SpaceView` plus the current member roster.

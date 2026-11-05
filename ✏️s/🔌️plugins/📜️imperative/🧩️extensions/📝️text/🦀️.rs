@@ -126,11 +126,11 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
     imperative_extension_sdk::imperative_module_topic_contribution("text", "Text", "message-square", imperative_extension_sdk::build_manifest_json("text", "Text", MODULE_VERSION, &registry, Some(&catalogue)))
 }
 
-pub fn bundle() -> semio_framework_plugin::ExtensionBundle {
+pub fn bundle() -> semio_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
-    semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Text", MODULE_VERSION)
+    semio_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Text", MODULE_VERSION)
         .extends("imperative").depends_on("imperative", semio_framework::tree_pin!())
-        .mode(semio_framework_plugin::ExecutionMode::Linked)
+        .mode(semio_plugin::ExecutionMode::Linked)
         .resource_owner(imperative_extension_sdk::ImperativeEvaluationResources::new(module_registry))
         .owned_handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY)
         .contributes_topic(topic_contribution.topic, topic_contribution.payload)

@@ -1,12 +1,12 @@
 //! ✏️ Csv editor — the `edit` mode: a single full-pane Table window over the RFC 4180 record grid.
 
 use crate::editor::csv::modes::edit::windows::main;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
-use semio_framework_plugin::WindowLayoutRoot;
-use semio_framework_plugin::WindowLayoutStackNode;
-use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
+use semio_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutStackNode;
+use semio_plugin::WindowLayoutWindowNode;
 
 pub const CSV_EDIT_MODE_ID: &str = "edit";
 

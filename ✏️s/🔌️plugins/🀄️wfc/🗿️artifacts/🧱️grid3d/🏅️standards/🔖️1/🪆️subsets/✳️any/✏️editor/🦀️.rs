@@ -14,26 +14,26 @@ use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWi
 use crate::mutations::{change_cell_sizes, change_periodicity, change_seed, change_tile_media, change_tile_weight, create_rule, create_tile, delete_rule, delete_tile, mask_cell, pin_cell, resize_grid, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{tile_index, Grid3dAxis, Grid3dCell, Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia};
 use crate::{Grid3dMutation, Grid3dSnapshot, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ToolRef;
-use semio_framework_plugin::ToolRunJob;
-use semio_framework_plugin::ToolRunJobRequest;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ToolRef;
+use semio_plugin::ToolRunJob;
+use semio_plugin::ToolRunJobRequest;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_2d_compute::EngineHandles;
 
@@ -120,7 +120,7 @@ impl protocol::OpBinary for Grid3dEditorCommand {
 /// INSTANCE (`active_utility_by_window_id`) and mirrors only the shell's ACTIVE window into the flat
 /// `active_utility_id`, so a pane that is not the active window would otherwise read `None` and run
 /// every pick as a plain select (`🗒️note`'s precedent, ticket 26/09/17/NOTE-PLUGIN-END-TO-END).
-pub fn grid3d_active_utility(view: Option<&semio_framework_plugin::ViewModel>) -> &str {
+pub fn grid3d_active_utility(view: Option<&semio_plugin::ViewModel>) -> &str {
     let Some(view) = view else { return grid::UTILITY_SELECT };
     view.window_id
         .as_deref()
@@ -263,7 +263,7 @@ pub fn grid3d_command_emit(
     command: &Grid3dEditorCommand,
     doc: &ArtifactView<'_, Grid3dSnapshot>,
     cfg: &ConfigView<'_, NoConfig>,
-    view_state: Option<&semio_framework_plugin::ViewModel>,
+    view_state: Option<&semio_plugin::ViewModel>,
 ) -> Result<Emit<Grid3dMutation>, Fault> {
     let document = doc.snapshot;
     let window_config = config_from_view(cfg);
@@ -301,7 +301,7 @@ pub fn grid3d_command_emit(
             let leaf = match utility {
                 grid::UTILITY_PIN => {
                     if window_config.active_tile_id.is_empty() {
-                        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.tile.none-armed"), "wfc.grid3d.tile.none-armed"));
+                        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.grid3d.tile.none-armed"), "wfc.grid3d.tile.none-armed"));
                     }
                     pin_cell(Grid3dPinnedCell { x, y, z, tile_id: window_config.active_tile_id })
                 }
@@ -311,11 +311,11 @@ pub fn grid3d_command_emit(
             return Ok(Emit::tool_once(GRID3D_EDITOR_APP_ID, utility, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), vec![leaf]));
         }
         Grid3dEditorCommand::SetActiveTile { tile_id } => {
-            let view = view_state.ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
+            let view = view_state.ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
             return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetActiveTile(Grid3dWindowConfigSetActiveTile { tile_id: tile_id.clone() }))?], ..Default::default() });
         }
         Grid3dEditorCommand::SetCamera { x, y, z, target_x, target_y, target_z, zoom } => {
-            let view = view_state.ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
+            let view = view_state.ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
             return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetCamera(Grid3dWindowConfigSetCamera { camera_x: *x, camera_y: *y, camera_z: *z, target_x: *target_x, target_y: *target_y, target_z: *target_z, zoom: *zoom }))?], ..Default::default() });
         }
         Grid3dEditorCommand::SetHover { .. } | Grid3dEditorCommand::WorldPick { .. } => return Ok(Emit::default()),
@@ -371,20 +371,20 @@ const GRID3D_RETAINED_RAW_BYTES: usize = 65_536;
 const GRID3D_RETAINED_WORK_ITEMS: usize = 4_096;
 
 /// 📄️ One document-lane publication row.
-const fn artifact_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] }
+const fn artifact_route(tool_id: &'static str) -> semio_plugin::ArtifactToolPublicationContract {
+    semio_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] }
 }
 
 /// 🪟️ One per-window-instance config row — the camera pose and the armed tile are pane state, never
 /// document state, and each belongs to exactly one window instance.
-const fn window_config_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] }
+const fn window_config_route(tool_id: &'static str) -> semio_plugin::ArtifactToolPublicationContract {
+    semio_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] }
 }
 
 /// 🛣️ One lane per route, read off each arm of `grid3d_command_emit`. The example picker is
 /// `HostOnly`: it answers a whole-document `Effect::LoadDocument`, which is not an edit, so
 /// re-picking the open example mints no phantom undo entry.
-pub const GRID3D_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+pub const GRID3D_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
     artifact_route("changeSeed"),
     artifact_route("resizeGrid"),
     artifact_route("changeCellSizes"),
@@ -401,12 +401,12 @@ pub const GRID3D_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPu
     artifact_route("unmaskCell"),
     artifact_route("pickCell"),
     artifact_route(grid::ACTION_WORLD_SELECT),
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: grid::ACTION_SET_HOVER, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: grid::ACTION_WORLD_PICK, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: grid::ACTION_SET_HOVER, lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: grid::ACTION_WORLD_PICK, lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
     window_config_route("setActiveTile"),
     window_config_route("setCamera"),
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: grid::ACTION_SET_ACTIVE_EXAMPLE, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "solve", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: grid::ACTION_SET_ACTIVE_EXAMPLE, lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "solve", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
 ];
 
 /// 📏️ One bounded first step per route, admitted only while the whole addressable document plus this
@@ -427,7 +427,7 @@ struct Grid3dCommandWork {
     completed: bool,
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Grid3dEditor>> for Grid3dCommandWork {
+impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<Grid3dEditor>> for Grid3dCommandWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -437,16 +437,16 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         command: &Grid3dEditorCommand,
         snapshot: &Grid3dSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<Grid3dEditor>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<Grid3dEditor>>>,
     ) -> Option<usize> {
         (!self.completed && <Grid3dEditor as ArtifactEditor>::command_id(command) == self.tool_id).then(|| grid3d_retained_extent(command, snapshot)).flatten()
     }
 
     fn step(
         &mut self,
-        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<Grid3dEditor>>,
+        input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<Grid3dEditor>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<Grid3dEditor>>, semio_framework_job::OriginalTurnFailure> {
+    ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<semio_plugin::EditorApp<Grid3dEditor>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.completed || <Grid3dEditor as ArtifactEditor>::command_id(input.command) != self.tool_id {
             return Err(Fault::from("wfc.grid3d.retained.route"));
@@ -458,7 +458,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             input.context.and_then(|context| context.view_state.as_deref()),
         )?;
         self.completed = true;
-        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+        Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -479,8 +479,8 @@ impl Grid3dRetainedCommandJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for Grid3dRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<Grid3dEditor>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<Grid3dEditor>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<semio_plugin::EditorApp<Grid3dEditor>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<semio_plugin::EditorApp<Grid3dEditor>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -498,15 +498,15 @@ impl semio_framework::ToolJobFactory for Grid3dRetainedCommandJobFactory {
         semio_framework::ToolExecutionContract::bounded_first_step(GRID3D_RETAINED_RAW_BYTES, GRID3D_RETAINED_WORK_ITEMS, 1, 262_144, 7_500)
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GRID3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GRID3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Grid3dRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Grid3dEditor>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for Grid3dRetainedCommandJobFactory {
+    type Owner = semio_plugin::EditorApp<Grid3dEditor>;
     const TOOL_IDS: &'static [&'static str] = GRID3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = WFC_GRID3D_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = GRID3D_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = GRID3D_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️Retained
 
@@ -516,8 +516,8 @@ pub struct Grid3dEditor;
 
 impl ArtifactEditor for Grid3dEditor {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-        use semio_framework_ui_locale::LocalizedLabel;
+    fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+        use semio_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 3]> = std::sync::LazyLock::new(|| {
             [
             ("wfc.grid3d.window.required", LocalizedLabel::native("This action needs an open grid window.", "Diese Aktion braucht ein geöffnetes Rasterfenster.")),
@@ -547,15 +547,15 @@ impl ArtifactEditor for Grid3dEditor {
     /// refuses to teardown without them; this editor carries no presence at all, so the `No*` factories
     /// are its exact terminal.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 🗃️ The bounded retirement catalog every store lane is released THROUGH: a store built without
@@ -567,31 +567,31 @@ impl ArtifactEditor for Grid3dEditor {
     /// ♻️ The instance close ladder walks one owned store lane per stage and faults the whole close
     /// with `interactive-job.close-owned-disposer-missing` the moment a lane answers `None`, so an
     /// editor must declare how EVERY store it types is released, not only the ones it edits.
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
-    fn reference_birth()->Option<fn()->Result<Grid3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Grid3dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::examples::blocks::snapshot())
     })}
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         crate::editor::grid3d::window::register_config(registry)
     }
 
@@ -639,32 +639,32 @@ impl ArtifactEditor for Grid3dEditor {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_tool_run_job(request: ToolRunJobRequest<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, semio_plugin::EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
         fill_tool::build_run_job(request)
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(Grid3dRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::app::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<semio_plugin::app::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !GRID3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         let tool_id = <Self as ArtifactEditor>::command_id(&original.command);
         if tool_id != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC grid 3D command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC grid 3D command does not match its exact registered tool").into());
         }
         if grid3d_retained_extent(&original.command, &original.snapshot).is_none() {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "wfc.grid3d.retained.extent").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "wfc.grid3d.retained.extent").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, <Self as ArtifactEditor>::command_id, GRID3D_RETAINED_RAW_BYTES, GRID3D_RETAINED_WORK_ITEMS, false, |request| Box::new(Grid3dCommandWork { tool_id, completed: false }))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, <Self as ArtifactEditor>::command_id, GRID3D_RETAINED_RAW_BYTES, GRID3D_RETAINED_WORK_ITEMS, false, |request| Box::new(Grid3dCommandWork { tool_id, completed: false }))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Grid3dEditor>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<Grid3dEditor>,
         owner_file: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.wfc.grid3d@1/*#editor",
         artifact_schema: "s.wfc.grid3d",
@@ -686,28 +686,28 @@ impl ArtifactEditor for Grid3dEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         grid3d_command_emit(command, doc, cfg, view_state)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let window_config: Grid3dWindowConfig = config_from_view(cfg);
         let window_id = view_state.window_id.as_deref().or(view_state.focused_window_id.as_deref()).unwrap_or(body_key);
         match body_key {
-            grid::BODY_KEY => grid::render(doc.snapshot, &window_config, &[], None, grid3d_active_utility(Some(view_state))).map(semio_framework_plugin::built_to_component_tree),
-            preview::BODY_KEY => preview::render(doc.snapshot, &window_config, window_id, doc.tool_run()).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            grid::BODY_KEY => grid::render(doc.snapshot, &window_config, &[], None, grid3d_active_utility(Some(view_state))).map(semio_plugin::built_to_component_tree),
+            preview::BODY_KEY => preview::render(doc.snapshot, &window_config, window_id, doc.tool_run()).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub fn create_grid3d_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_grid3d_editor() -> semio_plugin::AppDefinition {
     let mut builder = Editor::builder(WFC_GRID3D_DIALECT).document(["semio", "wfc", "grid3d"]).artifact_kind(crate::artifact_kind()).icon_id("box").interaction(grid::interaction());
     for utility in grid::utilities() {
         builder = builder.utility(utility);
@@ -724,26 +724,26 @@ pub fn create_grid3d_editor() -> semio_framework_plugin::AppDefinition {
         .action_destructive("deleteTile")
         .action_destructive("deleteRule")
         .action_destructive(grid::ACTION_SET_ACTIVE_EXAMPLE)
-        .action_describe("changeSeed", semio_framework_ui_locale::LocalizedLabel::native("Sets the random seed the 3D solve starts from; the same seed, tiles and rules always produce the same block arrangement.", "Legt den Zufallsstartwert des 3D-Lösers fest; derselbe Startwert mit denselben Kacheln und Regeln ergibt immer dieselbe Blockanordnung."))
-        .action_describe("resizeGrid", semio_framework_ui_locale::LocalizedLabel::native("Sets the 3D grid to the given width, height and depth in cells; refused when a pinned or masked cell would fall outside the new extent.", "Setzt das 3D-Raster auf die angegebene Breite, Höhe und Tiefe in Zellen; wird abgelehnt, wenn eine angeheftete oder ausgeblendete Zelle außerhalb läge."))
-        .action_describe("changeCellSizes", semio_framework_ui_locale::LocalizedLabel::native("Rewrites the per-cell sizes along one axis, which makes the 3D grid non-uniform; the list must have one size per cell of that axis.", "Schreibt die Zellgrößen entlang einer Achse neu und macht das 3D-Raster damit ungleichmäßig; die Liste braucht genau eine Größe pro Zelle dieser Achse."))
-        .action_describe("changePeriodicity", semio_framework_ui_locale::LocalizedLabel::native("Sets whether the 3D grid wraps around along x, y and z, so blocks on one face must fit the blocks on the opposite face.", "Legt fest, ob das 3D-Raster entlang x, y und z umläuft, sodass Blöcke an einer Seite zu denen an der gegenüberliegenden Seite passen müssen."))
-        .action_describe("createTile", semio_framework_ui_locale::LocalizedLabel::native("Adds a new block tile with the given id, label, weight and RGBA colour to the tile set the 3D solve may place.", "Fügt dem Kachelsatz des 3D-Lösers eine neue Blockkachel mit der angegebenen Id, Bezeichnung, Gewichtung und RGBA-Farbe hinzu."))
-        .action_describe("deleteTile", semio_framework_ui_locale::LocalizedLabel::native("Removes a block tile together with every adjacency rule and every cell pin that names it.", "Entfernt eine Blockkachel samt aller Nachbarschaftsregeln und Zellanheftungen, die sie nennen."))
-        .action_describe("changeTileWeight", semio_framework_ui_locale::LocalizedLabel::native("Sets how strongly the 3D solve favours one tile when several fit a cell; a higher weight makes it more frequent.", "Legt fest, wie stark der 3D-Löser eine Kachel bevorzugt, wenn mehrere in eine Zelle passen; ein höheres Gewicht macht sie häufiger."))
-        .action_describe("changeTileColor", semio_framework_ui_locale::LocalizedLabel::native("Recolours one block tile to the given RGBA value, keeping its mesh if it has one; its id, weight and rules stay unchanged.", "Färbt eine Blockkachel auf den angegebenen RGBA-Wert um und behält ein vorhandenes Netz bei; Id, Gewicht und Regeln bleiben unverändert."))
-        .action_describe("createRule", semio_framework_ui_locale::LocalizedLabel::native("Allows or forbids tile B on one of the six faces of tile A; pairs no rule mentions are forbidden, so the rules are a closed allow-list.", "Erlaubt oder verbietet Kachel B an einer der sechs Seiten von Kachel A; Paare ohne Regel sind verboten, die Regeln bilden also eine geschlossene Positivliste."))
-        .action_describe("deleteRule", semio_framework_ui_locale::LocalizedLabel::native("Removes one adjacency rule by id; since unmentioned pairs are forbidden, deleting an allowing rule narrows what the solve may place.", "Entfernt eine Nachbarschaftsregel anhand ihrer Id; da nicht genannte Paare verboten sind, schränkt das Löschen einer erlaubenden Regel den Löser ein."))
-        .action_describe("pinCell", semio_framework_ui_locale::LocalizedLabel::native("Fixes the cell at x, y, z to the given tile before solving; refused on a masked cell, and a pin already there is replaced.", "Legt die Zelle an x, y, z vor dem Lösen auf die angegebene Kachel fest; bei einer ausgeblendeten Zelle abgelehnt, eine vorhandene Anheftung wird ersetzt."))
-        .action_describe("unpinCell", semio_framework_ui_locale::LocalizedLabel::native("Releases the pin on the cell at x, y, z so the 3D solve may place any tile there again.", "Löst die Anheftung der Zelle an x, y, z, sodass der 3D-Löser dort wieder jede Kachel setzen darf."))
-        .action_describe("maskCell", semio_framework_ui_locale::LocalizedLabel::native("Carves the cell at x, y, z out of the grid so the 3D solve leaves it empty, which shapes non-box volumes; refused on a pinned cell.", "Nimmt die Zelle an x, y, z aus dem Raster, sodass der 3D-Löser sie leer lässt, womit sich Nicht-Quader-Formen bilden; bei einer angehefteten Zelle abgelehnt."))
-        .action_describe("unmaskCell", semio_framework_ui_locale::LocalizedLabel::native("Puts the carved-out cell at x, y, z back into the grid so the 3D solve fills it again.", "Nimmt die herausgenommene Zelle an x, y, z wieder ins Raster auf, sodass der 3D-Löser sie wieder füllt."))
-        .action_describe("setActiveTile", semio_framework_ui_locale::LocalizedLabel::native("Arms the tile the grid window's Pin utility places; only this window's state changes, not the document.", "Wählt die Kachel, die das Hilfsmittel Anheften im Rasterfenster setzt; nur der Zustand dieses Fensters ändert sich, nicht das Dokument."))
-        .action_describe("pickCell", semio_framework_ui_locale::LocalizedLabel::native("Applies the grid window's armed utility to one cell given as x:y:z: Pin fixes the armed tile there, Mask carves the cell out, Select changes nothing.", "Wendet das gewählte Hilfsmittel des Rasterfensters auf eine als x:y:z angegebene Zelle an: Anheften setzt die gewählte Kachel, Ausblenden nimmt die Zelle heraus, Auswählen ändert nichts."))
-        .action_describe("setActiveExample", semio_framework_ui_locale::LocalizedLabel::native("Replaces the whole document (grid, cell sizes, tiles, rules, pins, masks and seed) with one of the plugin's bundled 3D grid examples, by example id.", "Ersetzt das gesamte Dokument (Raster, Zellgrößen, Kacheln, Regeln, Anheftungen, Ausblendungen und Startwert) durch eines der mitgelieferten 3D-Raster-Beispiele, anhand der Beispiel-Id."))
-        .action_describe("solve", semio_framework_ui_locale::LocalizedLabel::native("Starts the fill tool run that fills the 3D grid from its tiles, rules, pins and masks; the result is a preview in the grid window and does not change the document.", "Startet den Füll-Werkzeuglauf, der das 3D-Raster aus Kacheln, Regeln, Anheftungen und Ausblendungen füllt; das Ergebnis ist eine Vorschau im Rasterfenster und ändert das Dokument nicht."))
-        .action_audience("worldSelect", semio_framework_plugin::CapabilityAudience::Input)
-        .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_describe("changeSeed", semio_ui_locale::LocalizedLabel::native("Sets the random seed the 3D solve starts from; the same seed, tiles and rules always produce the same block arrangement.", "Legt den Zufallsstartwert des 3D-Lösers fest; derselbe Startwert mit denselben Kacheln und Regeln ergibt immer dieselbe Blockanordnung."))
+        .action_describe("resizeGrid", semio_ui_locale::LocalizedLabel::native("Sets the 3D grid to the given width, height and depth in cells; refused when a pinned or masked cell would fall outside the new extent.", "Setzt das 3D-Raster auf die angegebene Breite, Höhe und Tiefe in Zellen; wird abgelehnt, wenn eine angeheftete oder ausgeblendete Zelle außerhalb läge."))
+        .action_describe("changeCellSizes", semio_ui_locale::LocalizedLabel::native("Rewrites the per-cell sizes along one axis, which makes the 3D grid non-uniform; the list must have one size per cell of that axis.", "Schreibt die Zellgrößen entlang einer Achse neu und macht das 3D-Raster damit ungleichmäßig; die Liste braucht genau eine Größe pro Zelle dieser Achse."))
+        .action_describe("changePeriodicity", semio_ui_locale::LocalizedLabel::native("Sets whether the 3D grid wraps around along x, y and z, so blocks on one face must fit the blocks on the opposite face.", "Legt fest, ob das 3D-Raster entlang x, y und z umläuft, sodass Blöcke an einer Seite zu denen an der gegenüberliegenden Seite passen müssen."))
+        .action_describe("createTile", semio_ui_locale::LocalizedLabel::native("Adds a new block tile with the given id, label, weight and RGBA colour to the tile set the 3D solve may place.", "Fügt dem Kachelsatz des 3D-Lösers eine neue Blockkachel mit der angegebenen Id, Bezeichnung, Gewichtung und RGBA-Farbe hinzu."))
+        .action_describe("deleteTile", semio_ui_locale::LocalizedLabel::native("Removes a block tile together with every adjacency rule and every cell pin that names it.", "Entfernt eine Blockkachel samt aller Nachbarschaftsregeln und Zellanheftungen, die sie nennen."))
+        .action_describe("changeTileWeight", semio_ui_locale::LocalizedLabel::native("Sets how strongly the 3D solve favours one tile when several fit a cell; a higher weight makes it more frequent.", "Legt fest, wie stark der 3D-Löser eine Kachel bevorzugt, wenn mehrere in eine Zelle passen; ein höheres Gewicht macht sie häufiger."))
+        .action_describe("changeTileColor", semio_ui_locale::LocalizedLabel::native("Recolours one block tile to the given RGBA value, keeping its mesh if it has one; its id, weight and rules stay unchanged.", "Färbt eine Blockkachel auf den angegebenen RGBA-Wert um und behält ein vorhandenes Netz bei; Id, Gewicht und Regeln bleiben unverändert."))
+        .action_describe("createRule", semio_ui_locale::LocalizedLabel::native("Allows or forbids tile B on one of the six faces of tile A; pairs no rule mentions are forbidden, so the rules are a closed allow-list.", "Erlaubt oder verbietet Kachel B an einer der sechs Seiten von Kachel A; Paare ohne Regel sind verboten, die Regeln bilden also eine geschlossene Positivliste."))
+        .action_describe("deleteRule", semio_ui_locale::LocalizedLabel::native("Removes one adjacency rule by id; since unmentioned pairs are forbidden, deleting an allowing rule narrows what the solve may place.", "Entfernt eine Nachbarschaftsregel anhand ihrer Id; da nicht genannte Paare verboten sind, schränkt das Löschen einer erlaubenden Regel den Löser ein."))
+        .action_describe("pinCell", semio_ui_locale::LocalizedLabel::native("Fixes the cell at x, y, z to the given tile before solving; refused on a masked cell, and a pin already there is replaced.", "Legt die Zelle an x, y, z vor dem Lösen auf die angegebene Kachel fest; bei einer ausgeblendeten Zelle abgelehnt, eine vorhandene Anheftung wird ersetzt."))
+        .action_describe("unpinCell", semio_ui_locale::LocalizedLabel::native("Releases the pin on the cell at x, y, z so the 3D solve may place any tile there again.", "Löst die Anheftung der Zelle an x, y, z, sodass der 3D-Löser dort wieder jede Kachel setzen darf."))
+        .action_describe("maskCell", semio_ui_locale::LocalizedLabel::native("Carves the cell at x, y, z out of the grid so the 3D solve leaves it empty, which shapes non-box volumes; refused on a pinned cell.", "Nimmt die Zelle an x, y, z aus dem Raster, sodass der 3D-Löser sie leer lässt, womit sich Nicht-Quader-Formen bilden; bei einer angehefteten Zelle abgelehnt."))
+        .action_describe("unmaskCell", semio_ui_locale::LocalizedLabel::native("Puts the carved-out cell at x, y, z back into the grid so the 3D solve fills it again.", "Nimmt die herausgenommene Zelle an x, y, z wieder ins Raster auf, sodass der 3D-Löser sie wieder füllt."))
+        .action_describe("setActiveTile", semio_ui_locale::LocalizedLabel::native("Arms the tile the grid window's Pin utility places; only this window's state changes, not the document.", "Wählt die Kachel, die das Hilfsmittel Anheften im Rasterfenster setzt; nur der Zustand dieses Fensters ändert sich, nicht das Dokument."))
+        .action_describe("pickCell", semio_ui_locale::LocalizedLabel::native("Applies the grid window's armed utility to one cell given as x:y:z: Pin fixes the armed tile there, Mask carves the cell out, Select changes nothing.", "Wendet das gewählte Hilfsmittel des Rasterfensters auf eine als x:y:z angegebene Zelle an: Anheften setzt die gewählte Kachel, Ausblenden nimmt die Zelle heraus, Auswählen ändert nichts."))
+        .action_describe("setActiveExample", semio_ui_locale::LocalizedLabel::native("Replaces the whole document (grid, cell sizes, tiles, rules, pins, masks and seed) with one of the plugin's bundled 3D grid examples, by example id.", "Ersetzt das gesamte Dokument (Raster, Zellgrößen, Kacheln, Regeln, Anheftungen, Ausblendungen und Startwert) durch eines der mitgelieferten 3D-Raster-Beispiele, anhand der Beispiel-Id."))
+        .action_describe("solve", semio_ui_locale::LocalizedLabel::native("Starts the fill tool run that fills the 3D grid from its tiles, rules, pins and masks; the result is a preview in the grid window and does not change the document.", "Startet den Füll-Werkzeuglauf, der das 3D-Raster aus Kacheln, Regeln, Anheftungen und Ausblendungen füllt; das Ergebnis ist eine Vorschau im Rasterfenster und ändert das Dokument nicht."))
+        .action_audience("worldSelect", semio_plugin::CapabilityAudience::Input)
+        .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -772,7 +772,7 @@ pub const WFC_GRID3D_DIALECT: Dialect = Dialect { artifact_kind: WFC_GRID3D_DOCU
 //#region 🧩️ArtifactItems2
 pub mod artifact_items_2 {
 pub use crate::schema::snapshot::WFC_GRID3D_DOCUMENT_SCHEMA;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — a 3D document: its tiles are meshes and its preview is a
@@ -781,7 +781,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.wfcgrid3d".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D Grid", "3D-Gitter"),
+        label: semio_ui_locale::LocalizedLabel::native("3D Grid", "3D-Gitter"),
         source_format: WFC_GRID3D_DOCUMENT_SCHEMA.into(),
         component_kind: "wfcgrid3d".into(),
         dimension: "3d".into(),

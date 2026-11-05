@@ -1,6 +1,6 @@
 //! 🧪️ schema tests (📊️progress): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_schema::{DagComputingProgress, DagInputCursor, DagInputFacts, DagInputKind, decode_dag_computing_progress_json};
+use semio_os_infinite_board_schema::{DagComputingProgress, DagInputCursor, DagInputFacts, DagInputKind, decode_dag_computing_progress_json};
 use semio_framework_test_fixtures::fixture_text;
 use std::cell::Cell;
 use semio_framework_value::ErasedSnapshotRetirement;

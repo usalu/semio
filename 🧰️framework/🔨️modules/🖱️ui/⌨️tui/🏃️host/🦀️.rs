@@ -1,8 +1,8 @@
-use semio_framework_ui_tui_terminal::ansi::{setup_sequence, teardown_sequence, AnsiParser, ClickCounter, CursorEmitter};
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_core::event::Event;
-use semio_framework_ui_tui_core::geometry::Size;
-use semio_framework_ui_tui_core::theme::Theme;
+use semio_ui_tui_terminal::ansi::{setup_sequence, teardown_sequence, AnsiParser, ClickCounter, CursorEmitter};
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_core::event::Event;
+use semio_ui_tui_core::geometry::Size;
+use semio_ui_tui_core::theme::Theme;
 use ui_styling::appearance::AppearanceName;
 
 /// 🏃️ A pure bytes-in/string-out host: feed terminal input, get an ANSI patch back.

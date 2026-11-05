@@ -10,10 +10,10 @@ async fn renders_world_scene_for_each_pane() {
     let scene = forest_play_scene();
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    let view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view_state = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     for body_key in [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY] {
         let node = render_direct(&app, body_key, &doc, &CadConfig::default(), &view_state).expect("CAD UI assembly");
-        let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = &node.component else { panic!("body {body_key} should render a surface") };
+        let semio_plugin::plugin_app_close_prelude::Component::Surface(props) = &node.component else { panic!("body {body_key} should render a surface") };
         assert_eq!(props.doc_schema.as_str(), "world-3d@1", "body {body_key} should render a world-3d scene");
         let lanes: Vec<&str> = node.children.iter().map(|child| child.key.as_str()).collect();
         for lane in ["meshes", "instances", "selection", "references", "environment", "fit"] {
@@ -26,10 +26,10 @@ async fn renders_world_scene_for_each_pane() {
 async fn world_scene_binds_the_cad_interaction_domain_at_object_granularity() {
     let scene = forest_play_scene();
     let view = view(scene, CadPlayRuntime::default());
-    let node = edit::build_world_scene_for_pane(&view, CadPaneId::Shape, shape::SURFACE_ID, None, CadDislocateOptions::default(), semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("scene surface");
+    let node = edit::build_world_scene_for_pane(&view, CadPaneId::Shape, shape::SURFACE_ID, None, CadDislocateOptions::default(), semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).expect("scene surface");
     assert_eq!(node.key.as_str(), shape::SURFACE_ID);
-    let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = &node.component else { panic!("world-3d surface node") };
-    let world: semio_framework_plugin::World3dScene = semio_framework_ui_scene::decode(props).expect("world-3d spine");
+    let semio_plugin::plugin_app_close_prelude::Component::Surface(props) = &node.component else { panic!("world-3d surface node") };
+    let world: semio_plugin::World3dScene = semio_ui_scene::decode(props).expect("world-3d spine");
     assert_eq!(world.domain_id.as_deref(), Some(CAD_INTERACTION_DOMAIN));
     assert_eq!(world.domain_granularity_id.as_deref(), Some(edit::CAD_WORLD_PICK_GRANULARITY));
 }
@@ -77,7 +77,7 @@ async fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
     let windows: Vec<(&str, &str)> = definition.window_kinds.iter().map(|window| (window.id.as_str(), window.body_key.as_str())).collect();
     assert_eq!(windows, vec![(shape::WINDOW_KIND_ID, shape::BODY_KEY), (building::WINDOW_KIND_ID, building::BODY_KEY), (energy::WINDOW_KIND_ID, energy::BODY_KEY), (structure_classic::WINDOW_KIND_ID, structure_classic::BODY_KEY),]);
     for window in definition.window_kinds.iter() {
-        assert_eq!(window.surface_kind, semio_framework_ui_declaration::ui::SurfaceKind::World3d, "window {} surface kind", window.id);
+        assert_eq!(window.surface_kind, semio_ui_declaration::ui::SurfaceKind::World3d, "window {} surface kind", window.id);
         assert!(window.options.measures.is_empty(), "window {} must not freeze measures into the manifest", window.id);
     }
     let modes: Vec<&str> = definition.modes.iter().map(|mode| mode.id.as_str()).collect();
@@ -87,9 +87,9 @@ async fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
     assert_eq!(
         panels,
         vec![
-            (semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID, Some(document::CAD_PLAY_BODY_ARTIFACT)),
-            (semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID, Some(catalogue::CAD_PLAY_BODY_CATALOGUE)),
-            (semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID, Some(inspection::CAD_PLAY_BODY_PROPERTIES)),
+            (semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID, Some(document::CAD_PLAY_BODY_ARTIFACT)),
+            (semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID, Some(catalogue::CAD_PLAY_BODY_CATALOGUE)),
+            (semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID, Some(inspection::CAD_PLAY_BODY_PROPERTIES)),
         ]
     );
     let layout_json = semio_framework_pack_json::to_json_string(&edit::layout());
@@ -123,7 +123,7 @@ async fn reference_pick_selects_the_reference_and_clears_the_cad_domain() {
     let mut idle = CadDispatchCtx::new(CadInteractionSnapshot::default(), None, CadWorldWindowTransient::default());
     assert!(command.dispatch(&doc, &cfg, &mut idle).expect("reference pick").interaction_writes.is_empty(), "nothing selected, nothing to subtract");
     let view = view(scene, runtime);
-    let panel = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(inspection::build_properties_panel(&view, cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), None, &semio_framework_plugin::TreeWindows::unhosted()).expect("panel"))).expect("projection");
+    let panel = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(inspection::build_properties_panel(&view, cad_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), None, &semio_plugin::TreeWindows::unhosted()).expect("panel"))).expect("projection");
     assert!(panel.contains("cad-play-inspector.reference.width.grow"), "{panel}");
 }
 
@@ -173,10 +173,10 @@ async fn engagement_input_and_possible_engagements_present() {
 /// disagree with what the world scene paints. Before this was threaded the row read `0` forever.
 #[semio_framework_async_macros::async_test]
 async fn the_engagement_hud_counts_the_threaded_cad_selection() {
-    let labels = cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = cad_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let count_of = |interaction: CadInteractionSnapshot| -> String {
         let view = view_with_interaction(forest_play_scene(), CadPlayRuntime::default(), interaction);
-        let engagement = shape::engagement(&view, labels, semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
+        let engagement = shape::engagement(&view, labels, semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En);
         engagement.status.expect("cad status rows").into_iter().find(|row| row.id == "cad-status").expect("cad-status row").text
     };
     assert!(count_of(CadInteractionSnapshot::default()).starts_with('0'), "an empty cad domain must report zero selected");
@@ -230,18 +230,18 @@ fn reference_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
 fn a_reference_row_names_its_set_verbs_over_one_target_that_asks_for_the_inverse() {
     let scene = forest_play_scene();
     let reference = scene.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.first()).expect("energy reference").clone();
-    let row = document::reference_tree_item(CAD_MODEL_DEFINITION_ENERGY, &reference, cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("the reference row is admitted");
-    let semio_framework_plugin::Component::TreeItem(props) = &row.component else { panic!("a reference row is a tree item") };
+    let row = document::reference_tree_item(CAD_MODEL_DEFINITION_ENERGY, &reference, cad_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))).expect("the reference row is admitted");
+    let semio_plugin::Component::TreeItem(props) = &row.component else { panic!("a reference row is a tree item") };
     let verbs: Vec<&str> = props.row_actions.iter().map(|action| action.verb.as_str()).collect();
     assert_eq!(verbs, ["setReferenceHidden", "setReferenceLocked"]);
     let target = props.target.as_ref().expect("the reference row carries one target");
     assert_eq!(target.activation.as_ref().map(|activation| activation.as_str()), Some("setReferenceSelection"));
     let asked = |flag: &str| target.args.as_ref().and_then(|args| args.iter().find(|(key, _)| key.as_str() == flag)).and_then(|(_, value)| match value {
-        semio_framework_plugin::UiValue::Bool(value) => Some(value),
+        semio_plugin::UiValue::Bool(value) => Some(value),
         _ => None,
     });
     assert_eq!((asked("hidden"), asked("locked")), (Some(!reference.hidden), Some(!reference.locked)), "the row asks for the inverse of hidden={} locked={}", reference.hidden, reference.locked);
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(row)).expect("the reference row retires");
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(row)).expect("the reference row retires");
 }
 
 #[semio_framework_async_macros::async_test]

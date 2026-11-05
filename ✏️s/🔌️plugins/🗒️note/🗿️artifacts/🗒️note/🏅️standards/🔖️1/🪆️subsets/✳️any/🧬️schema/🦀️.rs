@@ -495,10 +495,10 @@ pub fn note_label_number(value: f64) -> (String, String) {
 
 /// 🎚️ A document-setting history label from the setting's `(en, de)` name: "Change grid spacing to 20" / "Rasterabstand auf
 /// 20 ändern" for a value, "Reset grid spacing" / "Rasterabstand zurücksetzen" for `None` (the default applies again).
-pub fn note_setting_label(setting: (&str, &str), value: Option<(String, String)>) -> semio_framework_ui_locale::LocalizedLabel {
+pub fn note_setting_label(setting: (&str, &str), value: Option<(String, String)>) -> semio_ui_locale::LocalizedLabel {
     match value {
-        Some((en, de)) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Change {} to {en}", setting.0), &format!("{} auf {de} ändern", setting.1)),
-        None => semio_framework_ui_locale::LocalizedLabel::native(&format!("Reset {}", setting.0), &format!("{} zurücksetzen", setting.1)),
+        Some((en, de)) => semio_ui_locale::LocalizedLabel::native(&format!("Change {} to {en}", setting.0), &format!("{} auf {de} ändern", setting.1)),
+        None => semio_ui_locale::LocalizedLabel::native(&format!("Reset {}", setting.0), &format!("{} zurücksetzen", setting.1)),
     }
 }
 //#endregion 🔖️Helpers

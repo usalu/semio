@@ -14,8 +14,8 @@ pub struct SetHolidaysDst {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetHolidaysDst {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "holidays-dst", kind: "set-holidays-dst", record: "SetHolidaysDst" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set holidays DST", "Feiertage und Sommerzeit setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set holidays DST", "Feiertage und Sommerzeit setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

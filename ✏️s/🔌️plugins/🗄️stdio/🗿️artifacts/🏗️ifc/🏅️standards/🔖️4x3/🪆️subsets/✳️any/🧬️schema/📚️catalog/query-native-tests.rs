@@ -1,6 +1,6 @@
 //! 🧪️ Actual original native receiving drives the same qualified borrowed-slot corpus.
 use super::*;
-use semio_framework_os_kernel::NativeSnapshotDecodeOwner;
+use semio_os_kernel::NativeSnapshotDecodeOwner;
 use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity,IfcComplexType};

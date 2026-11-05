@@ -1,8 +1,8 @@
 //! 📬 Typed command vocabulary and binary codec owned with its retirement.
 use crate::*;
 use protocol::{MutationId, UndoPolicy, Mutation, OpBinary};
-use semio_framework_os_vcs::Author;
-use semio_framework_os_store_projection::ArtifactProjectionCause;
+use semio_os_vcs::Author;
+use semio_os_store_projection::ArtifactProjectionCause;
 use crate::operation_envelope_serde;
 
 /// 🛤️ Which undo/redo cursor a recorded edit belongs to. `Document` is the default — the
@@ -229,81 +229,81 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
         let mut out = vec![COMMAND_BINARY_FORMAT];
         match self {
             ArtifactCommand::Apply { mutations, transaction } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 0);
+                semio_os_pack::write_varint_u64(&mut out, 0);
                 out.push(u8::from(transaction.is_some()) << 1);
                 write_command_transaction(&mut out, transaction.as_ref());
                 write_command_ops(&mut out, mutations)?;
             }
-            ArtifactCommand::Undo => semio_framework_os_pack::write_varint_u64(&mut out, 1),
-            ArtifactCommand::Redo => semio_framework_os_pack::write_varint_u64(&mut out, 2),
+            ArtifactCommand::Undo => semio_os_pack::write_varint_u64(&mut out, 1),
+            ArtifactCommand::Redo => semio_os_pack::write_varint_u64(&mut out, 2),
             ArtifactCommand::UndoWithPolicy { policy, semantic_command } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 3);
+                semio_os_pack::write_varint_u64(&mut out, 3);
                 out.push(undo_policy_ordinal(*policy));
                 out.push(if semantic_command.is_some() { 0b01 } else { 0 });
                 if let Some(nested) = semantic_command {
                     let nested_bytes = nested.encode_command()?;
-                    semio_framework_os_pack::write_varint_u64(&mut out, nested_bytes.len() as u64);
+                    semio_os_pack::write_varint_u64(&mut out, nested_bytes.len() as u64);
                     out.extend_from_slice(&nested_bytes);
                 }
             }
             ArtifactCommand::CommitCheckpoint { message, authors } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 4);
+                semio_os_pack::write_varint_u64(&mut out, 4);
                 out.push(if message.is_some() { 0b01 } else { 0 });
                 if let Some(text) = message {
                     write_command_str(&mut out, text);
                 }
-                semio_framework_os_pack::write_varint_u64(&mut out, authors.len() as u64);
+                semio_os_pack::write_varint_u64(&mut out, authors.len() as u64);
                 for author in authors {
                     write_command_str(&mut out, &author.id);
                     write_command_str(&mut out, &author.name);
                 }
             }
             ArtifactCommand::CreateAlternative { name } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 5);
+                semio_os_pack::write_varint_u64(&mut out, 5);
                 write_command_str(&mut out, name);
             }
             ArtifactCommand::SwitchAlternative { alternative_id } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 6);
+                semio_os_pack::write_varint_u64(&mut out, 6);
                 write_command_str(&mut out, alternative_id);
             }
             ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 7);
+                semio_os_pack::write_varint_u64(&mut out, 7);
                 write_command_str(&mut out, checkpoint_id);
             }
             ArtifactCommand::IngestRemote { envelope } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 9);
+                semio_os_pack::write_varint_u64(&mut out, 9);
                 let mut bytes = Vec::new();
                 protocol::encode_envelope(envelope, &mut bytes);
-                semio_framework_os_pack::write_varint_u64(&mut out, bytes.len() as u64);
+                semio_os_pack::write_varint_u64(&mut out, bytes.len() as u64);
                 out.extend_from_slice(&bytes);
             }
-            ArtifactCommand::PruneDrafts => semio_framework_os_pack::write_varint_u64(&mut out, 10),
+            ArtifactCommand::PruneDrafts => semio_os_pack::write_varint_u64(&mut out, 10),
             ArtifactCommand::ApplyInLane { mutations, lane, transaction } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 11);
+                semio_os_pack::write_varint_u64(&mut out, 11);
                 out.push(u8::from(transaction.is_some()) << 1);
                 write_command_transaction(&mut out, transaction.as_ref());
                 out.push(history_lane_ordinal(*lane));
                 write_command_ops(&mut out, mutations)?;
             }
             ArtifactCommand::UndoInLane { lane } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 13);
+                semio_os_pack::write_varint_u64(&mut out, 13);
                 out.push(history_lane_ordinal(*lane));
             }
             ArtifactCommand::RedoInLane { lane } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 14);
+                semio_os_pack::write_varint_u64(&mut out, 14);
                 out.push(history_lane_ordinal(*lane));
             }
             ArtifactCommand::SetMergePolicy { policy } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 15);
+                semio_os_pack::write_varint_u64(&mut out, 15);
                 out.push(policy.as_u8());
             }
             ArtifactCommand::ResolveConflict { conflict_id, resolution } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 16);
+                semio_os_pack::write_varint_u64(&mut out, 16);
                 write_command_str(&mut out, conflict_id);
                 out.push(conflict_resolution_ordinal(*resolution));
             }
             ArtifactCommand::Supersede { scope, inputs } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 17);
+                semio_os_pack::write_varint_u64(&mut out, 17);
                 out.push(if scope.is_some() { 0b01 } else { 0 });
                 if let Some(scope) = scope {
                     write_command_str(&mut out, scope);
@@ -311,22 +311,22 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
                 write_supersede_inputs(&mut out, inputs)?;
             }
             ArtifactCommand::CreateAlternativeWithSupersede { name, inputs } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 18);
+                semio_os_pack::write_varint_u64(&mut out, 18);
                 write_command_str(&mut out, name);
                 write_supersede_inputs(&mut out, inputs)?;
             }
             ArtifactCommand::AppendTransaction { mutations, transaction } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 19);
+                semio_os_pack::write_varint_u64(&mut out, 19);
                 write_command_str(&mut out, &transaction.id);
                 write_command_str(&mut out, &transaction.tool);
                 write_command_ops(&mut out, mutations)?;
             }
             ArtifactCommand::CommitTransaction { transaction_id } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 20);
+                semio_os_pack::write_varint_u64(&mut out, 20);
                 write_command_str(&mut out, transaction_id);
             }
             ArtifactCommand::AbortTransaction { transaction_id } => {
-                semio_framework_os_pack::write_varint_u64(&mut out, 21);
+                semio_os_pack::write_varint_u64(&mut out, 21);
                 write_command_str(&mut out, transaction_id);
             }
         }
@@ -339,7 +339,7 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
     where
         Op: Mutation<P>,
     {
-        let mut reader = semio_framework_os_pack::ByteReader::new(bytes);
+        let mut reader = semio_os_pack::ByteReader::new(bytes);
         let command = Self::read_command::<P>(&mut reader)?;
         if reader.remaining() != 0 {
             let detail = format!("{} bytes past the command's end", reader.remaining());
@@ -350,7 +350,7 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
     }
 
     /// 📖️ The command at `reader`; its operation lists come last, so nothing can fail after one was decoded.
-    fn read_command<P>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<Self, CommandDecodeError>
+    fn read_command<P>(reader: &mut semio_os_pack::ByteReader<'_>) -> Result<Self, CommandDecodeError>
     where
         Op: Mutation<P>,
     {

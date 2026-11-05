@@ -2,9 +2,9 @@
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::{semantics::{self, SemanticField, SemanticFieldState, SemanticProjection}, snapshot::IfcSnapshot};
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::{self, IfcMutation};
 use semio_s_artifact_stdio_contract::editing::{self, SnapshotDetailPathSegment as Segment, SnapshotDetailsProvider, SnapshotDetailValue, SnapshotDetailPresentation, SnapshotDetailItemCapabilities, SnapshotEditEvent};
-use semio_framework_plugin::{app::InteractionView, plugin_app_close_prelude as ui, ActionId, Buildable, BuiltNode, HasBase, HasChildren, TreeWindows, UiAssemblyResult, UiMapBuilder, UiText, UiValue, WindowKindDefinition, WindowKit};
-use semio_framework_plugin::plugin_app_close_prelude::TreeWindowKit;
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{app::InteractionView, plugin_app_close_prelude as ui, ActionId, Buildable, BuiltNode, HasBase, HasChildren, TreeWindows, UiAssemblyResult, UiMapBuilder, UiText, UiValue, WindowKindDefinition, WindowKit};
+use semio_plugin::plugin_app_close_prelude::TreeWindowKit;
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_framework_value::DslValue;
 
 pub const BODY_KEY: &str = "s.stdio.ifc4.inspector";
@@ -14,14 +14,14 @@ pub fn window_definition(editable: bool) -> WindowKindDefinition {
     if !editable { definition.actions.clear(); }
     definition
 }
-fn fault(reason: impl Into<String>) -> semio_framework_plugin::Fault { semio_framework_plugin::Fault::from(reason.into()) }
+fn fault(reason: impl Into<String>) -> semio_plugin::Fault { semio_plugin::Fault::from(reason.into()) }
 fn selected(interaction: &InteractionView<'_>) -> Option<u64> { interaction.selection(semantics::DOMAIN).ids.first().and_then(|id| semantics::parse_semantic_identity(id)) }
 fn semantic_path(path: &str) -> Option<(u64, &str)> {
     let (identity, field) = path.strip_prefix('/')?.split_once('/')?;
     if field.is_empty() || field.contains('/') || field.contains('~') { return None; }
     Some((semantics::parse_semantic_identity(identity)?, field))
 }
-pub fn semantic_edit_controlled(event: &SnapshotEditEvent, snapshot: &IfcSnapshot,tick:&mut dyn FnMut()->Result<(),String>) -> Result<Option<Vec<IfcMutation>>, semio_framework_plugin::Fault> {
+pub fn semantic_edit_controlled(event: &SnapshotEditEvent, snapshot: &IfcSnapshot,tick:&mut dyn FnMut()->Result<(),String>) -> Result<Option<Vec<IfcMutation>>, semio_plugin::Fault> {
     let path = match event { SnapshotEditEvent::SetValue {path,..} | SnapshotEditEvent::RemoveValue {path} | SnapshotEditEvent::InsertValue {path,..} | SnapshotEditEvent::MoveValue {path,..} | SnapshotEditEvent::RenameKey {path,..} => path, SnapshotEditEvent::ReplaceSource {..} => return Ok(None) };
     if !path.starts_with("/ifc-") { return Ok(None); }
     let (id, field) = semantic_path(path).ok_or_else(|| fault("semantic-invalid-path"))?;
@@ -30,7 +30,7 @@ pub fn semantic_edit_controlled(event: &SnapshotEditEvent, snapshot: &IfcSnapsho
     let mut current=None;for entity in &snapshot.entities{tick().map_err(fault)?;if entity.id==id{current=entity.args.get(edit.index);break;}}
     Ok(Some(if current == Some(&edit.value) {Vec::new()} else {vec![IfcMutation::SetEntityArg(mutations::set_entity_arg::SetEntityArg {id:edit.id,index:edit.index,value:edit.value})]}))
 }
-pub fn semantic_edit(event:&SnapshotEditEvent,snapshot:&IfcSnapshot)->Result<Option<Vec<IfcMutation>>,semio_framework_plugin::Fault>{semantic_edit_controlled(event,snapshot,&mut ||Ok(()))}
+pub fn semantic_edit(event:&SnapshotEditEvent,snapshot:&IfcSnapshot)->Result<Option<Vec<IfcMutation>>,semio_plugin::Fault>{semantic_edit_controlled(event,snapshot,&mut ||Ok(()))}
 pub fn semantic_edit_admission(event: &SnapshotEditEvent, snapshot: &IfcSnapshot) -> Option<bool> {
     let path = match event { SnapshotEditEvent::SetValue {path,..} | SnapshotEditEvent::RemoveValue {path} | SnapshotEditEvent::InsertValue {path,..} | SnapshotEditEvent::MoveValue {path,..} | SnapshotEditEvent::RenameKey {path,..} => path, SnapshotEditEvent::ReplaceSource {..} => return None };
     if !path.starts_with("/ifc-"){return None;}
@@ -59,7 +59,7 @@ impl SnapshotDetailsProvider for Provider<'_> {
     fn allows_collection_insert(&self,_path:&[Segment])->bool {false}
     fn creation_template(&self,path:&[Segment],collection_item:bool)->Option<DslValue> {(!collection_item&&self.field(path).is_some_and(|field|field.descriptor.editable&&field.descriptor.optional)).then(||DslValue::String(String::new()))}
 }
-fn ui_error(code:&'static str)->semio_framework_plugin::PluginAssemblyError {semio_framework_plugin::PluginAssemblyError::new(code,"IFC semantic inspector admission failed")}
+fn ui_error(code:&'static str)->semio_plugin::PluginAssemblyError {semio_plugin::PluginAssemblyError::new(code,"IFC semantic inspector admission failed")}
 fn message(value:&str)->UiAssemblyResult<BuiltNode>{ui::text(ui::Label(UiText::clipped(value))).try_build().map_err(|_|ui_error("ifc.inspector.message"))}
 fn text(value:&str)->UiAssemblyResult<UiText>{UiText::try_from_str(value).ok_or_else(||ui_error("ifc.inspector.text"))}
 fn navigation_button(id:u64,controller:&str,locale:Locale,prefix:&str)->UiAssemblyResult<BuiltNode>{
@@ -67,9 +67,9 @@ fn navigation_button(id:u64,controller:&str,locale:Locale,prefix:&str)->UiAssemb
     let mut args=UiMapBuilder::try_new().ok_or_else(||ui_error("ifc.inspector.args"))?;
     for (key,value) in [("domainId",semantics::DOMAIN),("targets",targets.as_str()),("merge","replace"),("method","pick")]{args.try_insert(key.to_string(),UiValue::Text(text(value)?)).map_err(|_|ui_error("ifc.inspector.arg"))?;}
     let label=match locale{Locale::En=>format!("Open #{id}"),Locale::De=>format!("#{id} öffnen")};
-    ui::button(ui::Label(text(label.as_str())?)).try_id(format!("ifc-{prefix}-{id}")).map_err(|_|ui_error("ifc.inspector.link-id"))?.try_on_with(ui::Trigger::Activate,ActionId::try_v1(controller,semio_framework_plugin::INTERACTION_SELECT_ACTION_ID).ok_or_else(||ui_error("ifc.inspector.link-action"))?,UiValue::Map(args.finish())).map_err(|_|ui_error("ifc.inspector.link-binding"))?.try_build().map_err(|_|ui_error("ifc.inspector.link"))
+    ui::button(ui::Label(text(label.as_str())?)).try_id(format!("ifc-{prefix}-{id}")).map_err(|_|ui_error("ifc.inspector.link-id"))?.try_on_with(ui::Trigger::Activate,ActionId::try_v1(controller,semio_plugin::INTERACTION_SELECT_ACTION_ID).ok_or_else(||ui_error("ifc.inspector.link-action"))?,UiValue::Map(args.finish())).map_err(|_|ui_error("ifc.inspector.link-binding"))?.try_build().map_err(|_|ui_error("ifc.inspector.link"))
 }
-pub fn render(doc:&semio_framework_plugin::ArtifactView<'_,IfcSnapshot>,interaction:&InteractionView<'_>,view:&semio_framework_plugin::ViewModel,controller:&str,editable:bool,cx:&mut semio_framework_job::StepContext<'_>)->UiAssemblyResult<BuiltNode>{
+pub fn render(doc:&semio_plugin::ArtifactView<'_,IfcSnapshot>,interaction:&InteractionView<'_>,view:&semio_plugin::ViewModel,controller:&str,editable:bool,cx:&mut semio_framework_job::StepContext<'_>)->UiAssemblyResult<BuiltNode>{
     let Some(id)=selected(interaction) else{return message(match view.locale{Locale::En=>"Select an IFC product to inspect its attributes",Locale::De=>"IFC-Produkt auswählen, um Attribute zu prüfen"});};
     let _=cx.set_stage("ifc-inspector");
     let projection=semantics::project_semantics(doc.snapshot,id,&mut ||{if cx.is_cancelled(){return Err("cancelled".into());}if cx.should_yield(){return Err("limited".into());}cx.consume_fuel(1);Ok(())});
@@ -80,19 +80,19 @@ pub fn render(doc:&semio_framework_plugin::ArtifactView<'_,IfcSnapshot>,interact
     let mut children=vec![details];
     for (prefix,ids,en,de) in [("forward",&projection.forward,"References","Referenzen"),("back",&projection.back,"Referenced By","Referenziert von")]{
         let heading=match view.locale{Locale::En=>en,Locale::De=>de};
-        children.push(semio_framework_plugin::tree_window_indexed_section(&windows,&format!("ifc-{prefix}"),ui::Label(text(heading)?),true,ids.len(),|index|navigation_button(ids[index],controller,view.locale,prefix))?);
+        children.push(semio_plugin::tree_window_indexed_section(&windows,&format!("ifc-{prefix}"),ui::Label(text(heading)?),true,ids.len(),|index|navigation_button(ids[index],controller,view.locale,prefix))?);
     }
     for id in &projection.missing{children.push(message(&match view.locale{Locale::En=>format!("Missing reference #{id}"),Locale::De=>format!("Fehlende Referenz #{id}")})?);}
     ui::column().try_id("ifc-semantic-inspector").map_err(|_|ui_error("ifc.inspector.id"))?.try_children(children).map_err(|_|ui_error("ifc.inspector.children"))?.try_build().map_err(|_|ui_error("ifc.inspector.root"))
 }
 
-pub fn layout(main_window:&str,editable:bool)->semio_framework_plugin::WindowLayout {
+pub fn layout(main_window:&str,editable:bool)->semio_plugin::WindowLayout {
     let mut layout=editing::snapshot_details_split_layout(main_window,"Main");
-    if let semio_framework_plugin::WindowLayoutRoot::Axis(axis)=&mut layout.root {
-        if let Some(semio_framework_plugin::WindowLayoutChild::Stack(stack))=axis.children.last_mut(){
+    if let semio_plugin::WindowLayoutRoot::Axis(axis)=&mut layout.root {
+        if let Some(semio_plugin::WindowLayoutChild::Stack(stack))=axis.children.last_mut(){
             if !editable{stack.children.clear();}
             stack.active_window_kind_id=Some(BODY_KEY.into());
-            stack.children.insert(0,semio_framework_plugin::WindowLayoutWindowNode{kind:"window".into(),window_kind_id:BODY_KEY.into(),title:None,instance_id:None,template_id:None,corner:None});
+            stack.children.insert(0,semio_plugin::WindowLayoutWindowNode{kind:"window".into(),window_kind_id:BODY_KEY.into(),title:None,instance_id:None,template_id:None,corner:None});
         }
     }
     layout
@@ -101,7 +101,7 @@ pub fn topology(snapshot:&IfcSnapshot)->protocol::InteractionTopology {
     let ordered=snapshot.entities.iter().map(|entity|protocol::TopologyNode{id:semantics::semantic_identity(entity.id),granularity:semantics::GRANULARITY.into(),parent:None}).collect();
     let mut domains=std::collections::BTreeMap::new();domains.insert(semantics::DOMAIN.into(),protocol::DomainTopology{ordered});protocol::InteractionTopology{domains}
 }
-pub fn install_interaction(definition:&mut semio_framework_plugin::AppDefinition){
-    definition.interactions.push(semio_framework_plugin::InteractionDefinition{id:semantics::DOMAIN.into(),label:LocalizedLabel::native("IFC Entities","IFC-Entitäten"),granularities:vec![semio_framework_plugin::GranularityDefinition{id:semantics::GRANULARITY.into(),label:LocalizedLabel::native("Entity","Entität"),icon_id:"box".into()}],hierarchy:semio_framework_plugin::HierarchyProvider::Topology,hover:semio_framework_plugin::HoverSpec::default(),selection:semio_framework_plugin::SelectionSpec{modes:vec![semio_framework_plugin::SelectionMode::Multiple,semio_framework_plugin::SelectionMode::Single],methods:vec![semio_framework_plugin::SelectionMethod::Pick],merges:vec![semio_framework_plugin::MergeMode::Replace,semio_framework_plugin::MergeMode::Invertive],transitive:false,broadcast:true}});
-    for window in definition.window_kinds.iter_mut() {if window.id==BODY_KEY||window.id==semio_framework_plugin::MeshWindowKit::KIND_ID{window.interactions=vec![semio_framework_plugin::InteractionRef::new(semantics::DOMAIN)];}}
+pub fn install_interaction(definition:&mut semio_plugin::AppDefinition){
+    definition.interactions.push(semio_plugin::InteractionDefinition{id:semantics::DOMAIN.into(),label:LocalizedLabel::native("IFC Entities","IFC-Entitäten"),granularities:vec![semio_plugin::GranularityDefinition{id:semantics::GRANULARITY.into(),label:LocalizedLabel::native("Entity","Entität"),icon_id:"box".into()}],hierarchy:semio_plugin::HierarchyProvider::Topology,hover:semio_plugin::HoverSpec::default(),selection:semio_plugin::SelectionSpec{modes:vec![semio_plugin::SelectionMode::Multiple,semio_plugin::SelectionMode::Single],methods:vec![semio_plugin::SelectionMethod::Pick],merges:vec![semio_plugin::MergeMode::Replace,semio_plugin::MergeMode::Invertive],transitive:false,broadcast:true}});
+    for window in definition.window_kinds.iter_mut() {if window.id==BODY_KEY||window.id==semio_plugin::MeshWindowKit::KIND_ID{window.interactions=vec![semio_plugin::InteractionRef::new(semantics::DOMAIN)];}}
 }

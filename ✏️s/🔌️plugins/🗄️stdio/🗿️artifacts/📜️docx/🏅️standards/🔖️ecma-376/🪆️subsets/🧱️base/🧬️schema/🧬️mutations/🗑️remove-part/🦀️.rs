@@ -13,8 +13,8 @@ pub struct RemovePart {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemovePart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "part", kind: "remove-part", record: "RemovePart" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove part", "Paketteil entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove part", "Paketteil entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

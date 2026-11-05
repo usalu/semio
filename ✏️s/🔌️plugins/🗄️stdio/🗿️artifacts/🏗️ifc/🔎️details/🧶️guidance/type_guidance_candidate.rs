@@ -3,7 +3,7 @@ use super::*;
 use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,own_with,refused,costed};
 use super::{candidate_rules::IfcTypeCandidate,constituent_roster::ConstituentRoster,domain_work::DomainWork,pointer::PathAdmission,type_guidance_request::RequestCopy,wire::SnapshotSource};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
-use semio_framework_plugin::action_staging::StagedFormRequest;
+use semio_plugin::action_staging::StagedFormRequest;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::mem::{ManuallyDrop,size_of};
 type PartsCursor=<Vec<IfcComplexType> as RetainedClone>::Cursor;

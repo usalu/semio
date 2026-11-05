@@ -1,7 +1,7 @@
 //! 🥣️ Companion test crate of `semio-s-artifact-stdio-semio`: the test files stay beside their subjects and are mounted here, naming the owner crate by its own path.
 
 #[cfg(test)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 
 #[cfg(test)]

@@ -3,9 +3,9 @@ use super::{RendererOriginalIoNode,RendererOriginalIoStep};
 use crate::{renderer_worker_pool,RENDERER_IO_WAKE};
 use crate::native_caller::NativeFrameCaller;
 use semio_framework_actor::retained_context::{OriginalActorCall,OriginalActorContextError};
-use semio_framework_plugin_guest_contract::original_actor_context::OriginalActorEntryFailure;
+use semio_plugin_guest_contract::original_actor_context::OriginalActorEntryFailure;
 use semio_framework_job::{OriginalJobPageReturnRegistry,OriginalSuppliedJobPage,OriginalContiguousJobBytes,OriginalJobBytesReturnRegistry,OriginalJobBytesReservation,OriginalSuppliedJobBytes,OriginalTurnFailure,OriginalConstructionDemand,StepContext,JobOutcomeView,admit_original_construction};
-use semio_framework_os_services_native_io::{NativeIoJob, NativeIoRequest, NativeIoResultStatus, NativeIoStreamRefusal, OriginalNativePathReturnRegistry, OriginalNativePathReservation, OriginalSuppliedNativePath};
+use semio_os_services_native_io::{NativeIoJob, NativeIoRequest, NativeIoResultStatus, NativeIoStreamRefusal, OriginalNativePathReturnRegistry, OriginalNativePathReservation, OriginalSuppliedNativePath};
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use std::sync::{Mutex,MutexGuard};
 use std::sync::atomic::{AtomicBool,AtomicU8,AtomicU64,AtomicUsize,Ordering};
@@ -39,7 +39,7 @@ impl<'a> RendererIoPath<'a>{
   let mut bytes=Vec::new();bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original native path allocation refused"))?;let capacity=bytes.capacity();
   for part in self.parts.into_iter().filter(|part|!part.is_empty()){if !bytes.is_empty(){bytes.push(b'/');}bytes.extend_from_slice(part.as_encoded_bytes());}
   let path=std::path::PathBuf::from(unsafe{std::ffi::OsString::from_encoded_bytes_unchecked(bytes)});
-  let request=match mode{RendererSourceIoMode::Contiguous{..}=>NativeIoRequest::ReadPage{path,offset:0,max_bytes:semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES},RendererSourceIoMode::Directory=>NativeIoRequest::ScanDirectory{path,directories_only:false,extension:Some(std::borrow::Cow::Borrowed("wasm")),first_only:true},RendererSourceIoMode::Modified=>NativeIoRequest::Modified(semio_framework_os_services_native_io::NativePathInput::Single(path)),RendererSourceIoMode::World=>NativeIoRequest::ReadBytes(path),RendererSourceIoMode::Resident=>unreachable!()};
+  let request=match mode{RendererSourceIoMode::Contiguous{..}=>NativeIoRequest::ReadPage{path,offset:0,max_bytes:semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES},RendererSourceIoMode::Directory=>NativeIoRequest::ScanDirectory{path,directories_only:false,extension:Some(std::borrow::Cow::Borrowed("wasm")),first_only:true},RendererSourceIoMode::Modified=>NativeIoRequest::Modified(semio_os_services_native_io::NativePathInput::Single(path)),RendererSourceIoMode::World=>NativeIoRequest::ReadBytes(path),RendererSourceIoMode::Resident=>unreachable!()};
   Ok((request,RetainedCloneProgress{copied_items:1,copied_bytes:length,retained_capacity_bytes:capacity,..Default::default()}))
  }
 }

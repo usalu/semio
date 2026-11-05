@@ -16,8 +16,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "properties", kind: "delete-properties", record: "DeletedProperties" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete properties child", "Eigenschaftenkind löschen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Delete properties child", "Eigenschaftenkind löschen")
     }
     fn target(&self) -> Vec<String> {
         vec!["properties".to_string()]

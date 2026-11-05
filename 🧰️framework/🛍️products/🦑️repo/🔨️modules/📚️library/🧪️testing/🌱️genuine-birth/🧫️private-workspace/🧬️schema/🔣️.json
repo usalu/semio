@@ -1,0 +1,336 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Private Native Test Birth",
+  "definitions": {
+    "Metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "codeRoot",
+        "parentProcessId",
+        "rootDevice",
+        "rootInode"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "enum": [
+            "wgpu-wasm-outputs",
+            "native-birth-witness"
+          ]
+        },
+        "codeRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "parentProcessId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rootDevice": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "rootInode": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumMetadataBytes": 4096,
+        "maximumObservationBytes": 4096,
+        "ownerFile": ".owner",
+        "metadataFile": ".native-test-birth.json",
+        "outputDirectory": ".tmp/native-test",
+        "receiptPrefix": "[private-native-test] ",
+        "maximumCaptureBytes": 16777216,
+        "maximumCaptureLines": 65536,
+        "maximumOwnerBytes": 16
+      }
+    },
+    "Purposes": {
+      "const": {
+        "wgpu-wasm-outputs": {
+          "target": "@semio-tech/repo-lib:test-wasm-outputs",
+          "entry": "⚡️caching/🧪️tests/🧊️wasm-outputs/📥️os/📜️script.ts",
+          "allowedParentTargets": [
+            "@semio-tech/repo-lib:test-wasm-outputs",
+            "repo:test-wasm-outputs"
+          ]
+        },
+        "native-birth-witness": {
+          "target": "@semio-tech/repo-lib:test-private-native-birth",
+          "entry": "🧪️testing/🌱️genuine-birth/🧫️private-workspace/🧪️tests/👷️child/📜️script.ts",
+          "allowedParentTargets": [
+            "@semio-tech/repo-lib:test-private-native-birth"
+          ]
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "codeRoot",
+        "workspace",
+        "parentProcessId",
+        "processId",
+        "deadlineEpochMilliseconds",
+        "transport",
+        "child",
+        "network",
+        "retired"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "$ref": "#/definitions/Metadata/properties/purpose"
+        },
+        "codeRoot": {
+          "$ref": "#/definitions/Metadata/properties/codeRoot"
+        },
+        "workspace": {
+          "$ref": "#/definitions/Metadata/properties/codeRoot"
+        },
+        "parentProcessId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "processId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumBytes",
+            "maximumLines"
+          ],
+          "properties": {
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumLines": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "child": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumElapsedMilliseconds"
+          ],
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "idleMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "offline"
+          ],
+          "properties": {
+            "offline": {
+              "type": "boolean"
+            }
+          }
+        },
+        "retired": {
+          "const": true
+        }
+      }
+    },
+    "ParentSelectionHeader": {
+      "enum": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/repo-lib:test-wasm-outputs"
+        ],
+        [
+          "repo",
+          "run",
+          "@semio-tech/repo-lib:test-wasm-outputs:prototype"
+        ],
+        [
+          "repo",
+          "run",
+          "@semio-tech/repo-lib:test-wasm-outputs:release"
+        ],
+        [
+          "repo",
+          "run",
+          "repo:test-wasm-outputs"
+        ],
+        [
+          "repo",
+          "run",
+          "repo:test-wasm-outputs:prototype"
+        ],
+        [
+          "repo",
+          "run",
+          "repo:test-wasm-outputs:release"
+        ],
+        [
+          "repo",
+          "run",
+          "@semio-tech/repo-lib:test-private-native-birth"
+        ],
+        [
+          "repo",
+          "run",
+          "@semio-tech/repo-lib:test-private-native-birth:prototype"
+        ],
+        [
+          "repo",
+          "run",
+          "@semio-tech/repo-lib:test-private-native-birth:release"
+        ],
+        [
+          "nx",
+          "run",
+          "@semio-tech/repo-lib:test-wasm-outputs"
+        ],
+        [
+          "nx",
+          "run",
+          "@semio-tech/repo-lib:test-wasm-outputs:prototype"
+        ],
+        [
+          "nx",
+          "run",
+          "@semio-tech/repo-lib:test-wasm-outputs:release"
+        ],
+        [
+          "nx",
+          "run",
+          "repo:test-wasm-outputs"
+        ],
+        [
+          "nx",
+          "run",
+          "repo:test-wasm-outputs:prototype"
+        ],
+        [
+          "nx",
+          "run",
+          "repo:test-wasm-outputs:release"
+        ],
+        [
+          "nx",
+          "run",
+          "@semio-tech/repo-lib:test-private-native-birth"
+        ],
+        [
+          "nx",
+          "run",
+          "@semio-tech/repo-lib:test-private-native-birth:prototype"
+        ],
+        [
+          "nx",
+          "run",
+          "@semio-tech/repo-lib:test-private-native-birth:release"
+        ]
+      ]
+    },
+    "Funding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "remainingMilliseconds",
+        "maximumChildMilliseconds",
+        "maximumBytes",
+        "maximumLines"
+      ],
+      "properties": {
+        "remainingMilliseconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "maximumChildMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "RecordCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "metadataBytes",
+        "ownerBytes",
+        "kind",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "metadataBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ownerBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "enum": [
+            "regular",
+            "symlink",
+            "hardlink"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$id": "semio:repo/private-native-test-process/v1"
+}

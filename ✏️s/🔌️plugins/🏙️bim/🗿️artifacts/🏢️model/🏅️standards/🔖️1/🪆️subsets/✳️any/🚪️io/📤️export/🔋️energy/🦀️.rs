@@ -11,7 +11,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::build::{Build, STAGES};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::EnergyModel;
 
 
@@ -97,7 +97,7 @@ pub struct ModelIntoEnergy;
 impl Serializer<ModelSnapshot> for ModelIntoEnergy {
     const INTO: Dialect = ENERGY_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let (text, notes) = export_energy(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoEnergy: {message}"))))?;
         Ok(IoOutcome { value: IoPayload::Text(text), diagnostics: notes.into_iter().map(warning).collect() })
     }

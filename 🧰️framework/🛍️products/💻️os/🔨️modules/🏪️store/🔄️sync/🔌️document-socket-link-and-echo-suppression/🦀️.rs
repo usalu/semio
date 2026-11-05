@@ -9,17 +9,17 @@ use super::*;
 /// exactly as the hub's trusted catalog asks it), otherwise the verified execution-target lease's — the
 /// hub-selected package a client that mounted no owning component will run. Neither is no identity at
 /// all, and the caller refuses to dial rather than guess.
-pub async fn document_pack_schema_hash(schema: &str, lease: Option<&semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> Option<[u8; 32]> {
-    if let Ok(Some(codec)) = semio_framework_os_store_codec_registry::document_kind_codec(schema).await {
+pub async fn document_pack_schema_hash(schema: &str, lease: Option<&semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> Option<[u8; 32]> {
+    if let Ok(Some(codec)) = semio_os_store_codec_registry::document_kind_codec(schema).await {
         return codec.pack_schema_hash().await.ok();
     }
     let lease = lease.filter(|lease| lease.artifact.schema == schema)?;
-    semio_framework_os_directory_client::decode_lower_hex_32(&lease.artifact.pack_schema_hash)
+    semio_os_directory_client::decode_lower_hex_32(&lease.artifact.pack_schema_hash)
 }
 
 /// 🎫️ What a document actor asks of the hub's open plan for its binding.
-pub fn document_socket_expectation(schema: &str, pack_schema_hash: [u8; 32], surface: Option<&str>, lease: Option<&semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> semio_framework_os_directory_client::DocumentSocketExpectationV1 {
-    semio_framework_os_directory_client::DocumentSocketExpectationV1 { artifact_schema: schema.to_string(), pack_schema_hash, requested_surface_id: surface.map(str::to_string), lease: lease.cloned() }
+pub fn document_socket_expectation(schema: &str, pack_schema_hash: [u8; 32], surface: Option<&str>, lease: Option<&semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> semio_os_directory_client::DocumentSocketExpectationV1 {
+    semio_os_directory_client::DocumentSocketExpectationV1 { artifact_schema: schema.to_string(), pack_schema_hash, requested_surface_id: surface.map(str::to_string), lease: lease.cloned() }
 }
 
 /// 🧷️ The one binding a document actor holds a hub socket for.
@@ -31,13 +31,13 @@ pub struct DocumentSocketBinding<'a> {
     pub schema: &'a str,
     pub pack_schema_hash: [u8; 32],
     pub surface: Option<&'a str>,
-    pub lease: Option<&'a semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    pub lease: Option<&'a semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
 }
 
 /// ⚖️ Whether one admitted authority may carry this binding at `now_ms`: unexpired, from the bound
 /// hub origin, for exactly this scope, schema, pack identity and surface, and — when the client verified
 /// an execution-target lease — for exactly that lease.
-pub fn document_socket_authority_admits(authority: &semio_framework_os_directory_client::DocumentSocketAuthorityV1, binding: &DocumentSocketBinding<'_>, now_ms: u64) -> bool {
+pub fn document_socket_authority_admits(authority: &semio_os_directory_client::DocumentSocketAuthorityV1, binding: &DocumentSocketBinding<'_>, now_ms: u64) -> bool {
     authority.expires_at_unix_ms > now_ms
         && authority.hub_origin.trim_end_matches('/') == binding.hub_base_url.trim_end_matches('/')
         && authority.scope.space_id == binding.space_id
@@ -49,19 +49,19 @@ pub fn document_socket_authority_admits(authority: &semio_framework_os_directory
 }
 
 /// 🪢️ A canonical pair's public baseline in the runtime frontier grammar a `SocketHelloV1` advertises.
-pub fn canonical_pair_baseline(frontier: &semio_framework_os_directory::ArtifactFrontier) -> RuntimeFrontierSummary {
+pub fn canonical_pair_baseline(frontier: &semio_os_directory::ArtifactFrontier) -> RuntimeFrontierSummary {
     RuntimeFrontierSummary { document_id: ArtifactId(frontier.document_id.clone()), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: frontier.chain_hash.0 }
 }
 
 /// 🛟️ A wire `RebootstrapRequired` control as the directory contract names it (its frontier already projected onto the
 /// public document id by the hub).
-pub fn rebootstrap_control(control: &semio_framework_os_spr::RebootstrapRequired) -> semio_framework_os_directory::RebootstrapRequired {
+pub fn rebootstrap_control(control: &semio_os_spr::RebootstrapRequired) -> semio_os_directory::RebootstrapRequired {
     let frontier = &control.baseline_frontier;
-    semio_framework_os_directory::RebootstrapRequired {
-        scope: semio_framework_os_directory::DocumentScope::new(control.space_id.as_str(), control.document_id.as_str()),
-        checkpoint_id: semio_framework_os_directory::ArtifactHash(control.checkpoint_id),
-        descriptor_digest_v1: semio_framework_os_directory::ArtifactHash(control.descriptor_hash),
-        baseline_frontier: semio_framework_os_directory::ArtifactFrontier { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: semio_framework_os_directory::ArtifactHash(frontier.chain_hash) },
+    semio_os_directory::RebootstrapRequired {
+        scope: semio_os_directory::DocumentScope::new(control.space_id.as_str(), control.document_id.as_str()),
+        checkpoint_id: semio_os_directory::ArtifactHash(control.checkpoint_id),
+        descriptor_digest_v1: semio_os_directory::ArtifactHash(control.descriptor_hash),
+        baseline_frontier: semio_os_directory::ArtifactFrontier { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: semio_os_directory::ArtifactHash(frontier.chain_hash) },
     }
 }
 
@@ -121,8 +121,8 @@ pub async fn commands_frames_within(max_frame_bytes: usize, first_batch_id: u64,
 
 /// 🎲️ One document actor's hybrid-logical-clock replica seed: platform entropy, so two replicas
 /// of one user (two tabs, two processes) never tie on `(seed, counter)` — H4's per-replica law.
-pub fn replica_hlc_seed() -> Result<u64, semio_framework_os_identity::EntropyError> {
-    semio_framework_os_identity::entropy_u64()
+pub fn replica_hlc_seed() -> Result<u64, semio_os_identity::EntropyError> {
+    semio_os_identity::entropy_u64()
 }
 //#endregion 🔖️DocumentSocketConnect
 
@@ -154,9 +154,9 @@ impl DocumentLinkShortagePolicy {
 /// 🔌️ The policy every shell drives (`🧫️fixtures/document-link-shortage-v1` `policy`, the React twin
 /// `DOCUMENT_LINK_SHORTAGE_POLICY` in `🏪️store/🟦️.ts`).
 pub const DOCUMENT_LINK_SHORTAGE_POLICY: DocumentLinkShortagePolicy = DocumentLinkShortagePolicy {
-    reconnect_min_ms: semio_framework_os_directory_client::HUB_RECONNECT_MIN_MS,
-    reconnect_max_ms: semio_framework_os_directory_client::HUB_RECONNECT_MAX_MS,
-    shortage_bound_ms: 2 * semio_framework_os_directory_client::HUB_RECONNECT_MAX_MS,
+    reconnect_min_ms: semio_os_directory_client::HUB_RECONNECT_MIN_MS,
+    reconnect_max_ms: semio_os_directory_client::HUB_RECONNECT_MAX_MS,
+    shortage_bound_ms: 2 * semio_os_directory_client::HUB_RECONNECT_MAX_MS,
 };
 
 /// 🚫️ The HTTP statuses of a document admission that mean the hub withdrew access (`accessRefusedStatuses`):
@@ -164,10 +164,10 @@ pub const DOCUMENT_LINK_SHORTAGE_POLICY: DocumentLinkShortagePolicy = DocumentLi
 pub const DOCUMENT_LINK_ACCESS_REFUSED_STATUSES: [u16; 4] = [401, 403, 404, 410];
 
 /// 🚫️ Whether a document admission failed because the hub withdrew access rather than because the link is short.
-pub fn document_admission_refuses_access(error: &semio_framework_os_directory_client::DirectoryClientError) -> bool {
+pub fn document_admission_refuses_access(error: &semio_os_directory_client::DirectoryClientError) -> bool {
     match error {
-        semio_framework_os_directory_client::DirectoryClientError::Unauthorized => true,
-        semio_framework_os_directory_client::DirectoryClientError::Http { status, .. } => DOCUMENT_LINK_ACCESS_REFUSED_STATUSES.contains(status),
+        semio_os_directory_client::DirectoryClientError::Unauthorized => true,
+        semio_os_directory_client::DirectoryClientError::Http { status, .. } => DOCUMENT_LINK_ACCESS_REFUSED_STATUSES.contains(status),
         _ => false,
     }
 }

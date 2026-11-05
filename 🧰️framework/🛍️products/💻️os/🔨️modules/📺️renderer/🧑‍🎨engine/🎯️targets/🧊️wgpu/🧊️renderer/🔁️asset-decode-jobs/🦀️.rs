@@ -1,7 +1,7 @@
 //! 🔁️ Asset decode jobs: asset probe, decode job and session, prefix validators and the renderer worker pool with its I/O slots.
 use super::*;
-use semio_framework_ui_contract as ui_contract;
-use semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource;
+use semio_ui_contract as ui_contract;
+use semio_plugin_ownership::reserved_job_session::RefusedWorkerSource;
 
 //#region 📡️RendererAssetAuthority
 #[derive(Clone, Copy)]
@@ -356,7 +356,7 @@ impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
 /// 📬️ One mounted decoder and its exact pending source borrow the initiating caller across every poll.
 pub struct RendererAssetDecodeSession {
     pub session: Option<semio_framework_job_worker::MountedWorkerJobSession<RendererAssetDecodeJob>>,
-    pub source: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<RendererAssetDecodeJob>>,
+    pub source: Option<semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<RendererAssetDecodeJob>>,
     pub boundary: Option<(RendererAssetProbe, Option<RendererAssetDecodeResult>)>,
     pub surface_token: Option<AdmittedSurfaceToken>,
     pub request_token: WorldAssetRequestToken,
@@ -368,7 +368,7 @@ impl RendererAssetDecodeSession {
         let surface_token = match probe.owner() { RendererAssetFetchOwner::World { surface_token, .. } => Some(*surface_token), RendererAssetFetchOwner::Shared(_) => None };
         let request_token = probe.owner().owner().token();
         let job = RendererAssetDecodeJob::new(probe);
-        Self { session: None, source: Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job, (cx.operation(), cx.generation()))), boundary: None, surface_token, request_token, cancelled: AtomicBool::new(false), closing: false }
+        Self { session: None, source: Some(semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job, (cx.operation(), cx.generation()))), boundary: None, surface_token, request_token, cancelled: AtomicBool::new(false), closing: false }
     }
     pub fn cancel(&self) { self.cancelled.store(true, Ordering::Release); }
     pub fn pump_one(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {

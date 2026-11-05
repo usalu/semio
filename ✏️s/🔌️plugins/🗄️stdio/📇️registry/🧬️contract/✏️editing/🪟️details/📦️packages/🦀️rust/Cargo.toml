@@ -16,20 +16,20 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-contract = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract-editing = { path = "../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract-window-kit = { path = "../../../../🪟️window-kit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract-wire = { path = "../../../../🧾️payload-wire/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["mutation-testing"] }
-semio-framework-ui-scene = { workspace = true }
+semio-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-ui-scene = { workspace = true }
 serde_json = { workspace = true }

@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteSoftClayPi whe
         record: "ChangeSiteSoftClayPi",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plasticity index PI of the soft clay layer in percent (S1 indicator)", "Plastizitätszahl PI der weichen Tonschicht in Prozent (S1-Kennzeichen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plasticity index PI of the soft clay layer in percent (S1 indicator)", "Plastizitätszahl PI der weichen Tonschicht in Prozent (S1-Kennzeichen) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-soft-clay-pi".into()]

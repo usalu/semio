@@ -16,8 +16,8 @@ pub struct InsertEntityArg {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for InsertEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "entity-arg", kind: "insert-entity-arg", record: "InsertEntityArg" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert entity arg", "Entitätsargument einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert entity arg", "Entitätsargument einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

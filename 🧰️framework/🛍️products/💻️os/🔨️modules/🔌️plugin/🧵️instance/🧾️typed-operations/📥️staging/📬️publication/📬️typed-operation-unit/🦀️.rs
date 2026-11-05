@@ -207,7 +207,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
             }
             ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
-                let preparation=match emit.prepare_child_one(retained){Ok(step)=>step,Err(fault)=>{
+                let outcome=emit.prepare_child_original(retained);cx.consume_fuel(outcome.work);let preparation=match outcome.result{Ok(step)=>step,Err(fault)=>{
                     let progress=fault.retained_progress();if !progress.fits(retained){return Err(plugin_sdk_fault("original child preparation error exceeded mounted caller policy").into());}
                     if progress!=RetainedCloneProgress::default(){assert!(mounted.publication_ownership_progress.is_none(),"child preparation error cannot overwrite an original receipt");mounted.publication_ownership_progress=Some((retained,progress));}return Err(fault.into());
                 }};

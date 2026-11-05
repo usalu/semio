@@ -7,14 +7,14 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
-use semio_framework_ui_locale::LabelText;
+use semio_plugin::plugin_app_close_prelude::InputKind;
+use semio_ui_locale::LabelText;
 
 
 //#region 🔖️Helpers
 use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Baluster, DoorLeaves, EndJoin, Infill, Layer, LayerFunction, LocationLine, MaterialCategory, Phase, Point2, Profile, Rgb, RiserKind, RoofShape, SpaceBoundary, StairFlight, StairStringer, StringerKind, Swing, Vertex};
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
@@ -43,22 +43,22 @@ pub fn rename_element(_: &ModelSnapshot, id: &str, name: &str) -> Option<ModelMu
 
 macro_rules! field {
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr) => {
-        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_framework_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: None, choices: None }
+        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: None, choices: None }
     };
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, rename) => {
-        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_framework_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some(crate::editor::bim::entities::rename_element), choices: None }
+        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some(crate::editor::bim::entities::rename_element), choices: None }
     };
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, $parse:ident => $module:ident :: $leaf:ident) => {
-        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_framework_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some(|_, id, value| set!($module::$leaf, id, $key, &$parse(value)?)), choices: None }
+        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some(|_, id, value| set!($module::$leaf, id, $key, &$parse(value)?)), choices: None }
     };
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, |$ws:pat_param, $wid:pat_param, $value:pat_param| $write:expr) => {
-        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_framework_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some(|$ws, $wid, $value| $write), choices: None }
+        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some(|$ws, $wid, $value| $write), choices: None }
     };
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, choices: $choices:path, $parse:ident => $module:ident :: $leaf:ident) => {
-        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_framework_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some(|_, id, value| set!($module::$leaf, id, $key, &$parse(value)?)), choices: Some($choices) }
+        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some(|_, id, value| set!($module::$leaf, id, $key, &$parse(value)?)), choices: Some($choices) }
     };
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, choices: $choices:path, write: $write:path) => {
-        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_framework_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some($write), choices: Some($choices) }
+        semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow { key: $key, label: |labels| labels.$label, input: semio_plugin::plugin_app_close_prelude::InputKind::$input, read: |$s, $id| $read, write: Some($write), choices: Some($choices) }
     };
 }
 

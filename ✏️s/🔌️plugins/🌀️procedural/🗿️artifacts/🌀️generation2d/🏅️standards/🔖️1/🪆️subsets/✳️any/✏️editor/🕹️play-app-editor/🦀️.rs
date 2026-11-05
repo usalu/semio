@@ -16,14 +16,14 @@ pub struct Generation2dPlayApp;
 /// identity camera, because `ActionDefinition::new("nodeGraphViewport", …)` declares no args and every
 /// declared action must bridge from its own id under the shell's staged args alone. A present but malformed
 /// one still faults: a camera the graph cannot express is never silently replaced by one it can.
-fn parse_flow_viewport(args: &semio_framework_value::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
-    let Some(value) = args.get("viewport").cloned() else { return Ok(semio_framework_os_kernel::Viewport2d::default()) };
+fn parse_flow_viewport(args: &semio_framework_value::DslValue) -> Result<semio_os_kernel::Viewport2d, Fault> {
+    let Some(value) = args.get("viewport").cloned() else { return Ok(semio_os_kernel::Viewport2d::default()) };
     semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
 
 impl ArtifactEditor for Generation2dPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_procedural_2d_examples::demo::source()]
     }
     /// 📢️ The localized notices of the editor's own refusal codes (design §20.12): the preview evaluation's and the document-level
@@ -46,7 +46,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// `UI_FIXED_BYTES` admission it exceeds threefold with the real `brep`/`math` sets installed
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
     fn app_catalogue_json() -> String {
-        semio_framework_os_flow::flow_app_catalogue_json()
+        semio_os_flow::flow_app_catalogue_json()
     }
 
     type Snapshot = Generation2dSnapshot;
@@ -62,12 +62,12 @@ impl ArtifactEditor for Generation2dPlayApp {
 
     type Command = Generation2dCommand;
 
-    fn document_store_owners_source_demands() -> Result<semio_framework_plugin::__value::RetirementDemand, semio_framework_plugin::__value::ValueError> {
-        semio_framework_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
     }
 
-    fn build_document_store_owners(grant: semio_framework_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+    fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -75,12 +75,12 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     /// 🧠️ One retained `FlowEvalSession` per app instance — see [`Generation2dInstanceOperationOwner`].
-    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
         Box::new(Generation2dInstanceOperationOwner::new())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     const DIALECT: Dialect = GENERATION2D_DIALECT;
@@ -95,14 +95,14 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         flow_window::config::register(registry)?;
         edit_preview::config::register(registry)?;
         generate_preview::config::register(registry)
@@ -110,7 +110,7 @@ impl ArtifactEditor for Generation2dPlayApp {
 
     /// 🧾️ BOTH factories' proofs, in registration order — `validate_tool_job_rows` matches this
     /// catalogue against the registered factories exactly.
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         generation2d_bounded_first_step_tool_proofs()
     }
 
@@ -140,17 +140,17 @@ impl ArtifactEditor for Generation2dPlayApp {
         semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>, Generation2dImportJob>(source,body,cx)
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !GENERATION2D_BOUNDED_TOOL_IDS.contains(&original.tool_id.as_str()) && !GENERATION2D_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the generation 2d command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the generation 2d command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
         let contributions = GENERATION2D_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Generation2dCommand::command_id, if contributions { GENERATION2D_CONTRIBUTIONS_RAW_BYTES } else { GENERATION2D_RETAINED_RAW_BYTES }, GENERATION2D_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Generation2dPlayApp>>> { if contributions {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Generation2dCommand::command_id, if contributions { GENERATION2D_CONTRIBUTIONS_RAW_BYTES } else { GENERATION2D_RETAINED_RAW_BYTES }, GENERATION2D_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Generation2dPlayApp>>> { if contributions {
             Box::new(Generation2dContributionsWork { instance_owner: request.instance_operation_owner.clone(), consumed: false })
         } else if GENERATION2D_FLOW_EVAL_TOOL_IDS.contains(&tool_id) {
             Box::new(Generation2dFlowEvalWork { tool_id, instance_owner: request.instance_operation_owner.clone(), consumed: false,receiver:None,closing:false })
@@ -165,11 +165,11 @@ impl ArtifactEditor for Generation2dPlayApp {
         Some(semio_s_artifact_procedural_2d_editor_config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<Generation2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Generation2dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(::semio_framework_async::poll::resolve_ready(generation2d_io()))
     }
 
@@ -273,7 +273,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         doc: &ArtifactView<'_, Generation2dSnapshot>,
         cfg: &ConfigView<'_, Generation2dConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -325,7 +325,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// Before the first `Event::SurfaceVisible` the host has no roster (`view` is `None`), so nothing
     /// starts; a graph the live registry cannot serve starts nothing either, because only
     /// `setContributions` can move it.
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+    fn pending_effects(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation2d_preview_windows(view);
         let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&doc.snapshot.host_snapshot);
         let mut targets: Vec<PreviewEvalTarget> = windows.iter().map(|(_, _, target)| *target).collect();
@@ -348,7 +348,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         Ok(Some(Box::new(semio_s_artifact_procedural_2d_preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity)?)))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let mut session = FlowEvalSession::new();
         let rendered = generation2d_render_body(body_key, doc, cfg, view_state, &GraphInteractionMarks::default(), &session);
         close_flow_session(&mut session);
@@ -358,26 +358,26 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// 💚️ Resolves the live `graph` hover/selection once per render and threads it into every
     /// window body — the node graph paints the selected nodes.
     fn render_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Generation2dSnapshot>,
         cfg: &ConfigView<'_, Generation2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW {
             let labels = generation2d_labels(view_state);
             let window_config = generate_preview::config::current(cfg);
             let node = generate_preview::render(&window_config, transient.snapshot.generation_preview_text.as_deref(), labels)?;
-            return Ok(semio_framework_plugin::built_to_component_tree(node));
+            return Ok(semio_plugin::built_to_component_tree(node));
         }
         let marks = GraphInteractionMarks::from_interaction(interaction);
         owner
             .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation2d_render_body(body_key, doc, cfg, view_state, &marks, session)))
-            .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("generation2d.eval-session-owner", error.message))?
+            .map_err(|error| semio_plugin::PluginAssemblyError::new("generation2d.eval-session-owner", error.message))?
 
         })();
         rendered.map(Some).map_err(Into::into)
@@ -386,12 +386,12 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// through `context_menu_with_request_context` instead, so this delegate builds the same menu
     /// against an empty selection.
     fn context_menu(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Generation2dSnapshot>,
         cfg: &ConfigView<'_, Generation2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        view_state: &semio_plugin::ViewModel,
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         Self::context_menu_body(request, doc, cfg, view_state, &GraphInteractionMarks::default(), registry)
     }
 
@@ -399,48 +399,48 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// `interaction` is the authoritative framework-owned `graph` selection, the same one
     /// `render_with_request_context` paints from.
     fn context_menu_with_request_context(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Generation2dSnapshot>,
         cfg: &ConfigView<'_, Generation2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         interaction: &InteractionView<'_>,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         Self::context_menu_body(request, doc, cfg, view_state, &GraphInteractionMarks::from_interaction(interaction), registry)
     }
 
     /// 📤️ Declares `export_media`'s default document schema — pack-encodes `doc.snapshot`, wrapped
     /// `Structured{schema: Self::DOCUMENT_SCHEMA, json: base64}` — plus `"drawing:out"`.
-    fn export_media(port: &str, doc: &ArtifactView<'_, Generation2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Generation2dSnapshot>) -> Result<semio_plugin::Media, semio_plugin::MediaError> {
         match port {
             "drawing:out" => {
                 let eval_json = semio_s_artifact_procedural_2d_io_text::snapshot::evaluate_generation_preview(&doc.snapshot.host_snapshot, &semio_framework_artifact_playbook_playbook::PlaybookValues::new());
                 let layers_json = semio_s_artifact_procedural_2d_io_text::snapshot::generation_output_layers(&doc.snapshot.host_snapshot, &eval_json);
-                Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
+                Ok(semio_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "artifact:out" => {
                 let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
-                Ok(semio_framework_plugin::Media {
+                Ok(semio_plugin::Media {
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
-                    payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                    payload: semio_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
                 })
             }
-            _ => Err(semio_framework_plugin::MediaError::NotImplemented),
+            _ => Err(semio_plugin::MediaError::NotImplemented),
         }
     }
 
     /// 🧰️ `"params:in"`: a generic Data×Value JSON object `{widgetId: number}` — patches matching
     /// `InputSlider` widgets' `value` field, leaving unmatched keys/widget kinds untouched.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Generation2dSnapshot>) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::Media, doc: &ArtifactView<'_, Generation2dSnapshot>) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         if port != "params:in" {
-            return Err(semio_framework_plugin::MediaError::NotImplemented);
+            return Err(semio_plugin::MediaError::NotImplemented);
         }
-        let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
-            return Err(semio_framework_plugin::MediaError::Payload(port.to_string(), "params:in expects a Structured JSON object payload".into()));
+        let semio_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(semio_plugin::MediaError::Payload(port.to_string(), "params:in expects a Structured JSON object payload".into()));
         };
-        let parsed = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_plugin::MediaError::Payload(port.to_string(), error.to_string()))?;
+        let parsed = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_plugin::MediaError::Payload(port.to_string(), error.to_string()))?;
         let Some(object) = parsed.as_object() else {
-            return Err(semio_framework_plugin::MediaError::Payload(port.to_string(), "params:in payload must be a JSON object".into()));
+            return Err(semio_plugin::MediaError::Payload(port.to_string(), "params:in payload must be a JSON object".into()));
         };
         let mut operations = Vec::new();
         for (widget_id_key, value) in object.iter() {
@@ -465,15 +465,15 @@ impl Generation2dPlayApp {
     /// 🌀️ The ONE context-menu implementation — both `ArtifactEditor::context_menu` and
     /// `context_menu_with_request_context` funnel here.
     fn context_menu_body(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Generation2dSnapshot>,
         _cfg: &ConfigView<'_, Generation2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         marks: &GraphInteractionMarks,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
-        let labels = semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state);
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
+        use semio_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+        let labels = semio_plugin::resolve_labels::<Generation2dLabels>(view_state);
         let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
         let mut menu = Menu::of(registry, view_state).action("addWidget").action("reorganize").action("generate");

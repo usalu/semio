@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentAs2AreaM
         record: "ChangeAssessmentAs2AreaM2",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Compression reinforcement area A_s2", "Druckbewehrungsfläche A_s2 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Compression reinforcement area A_s2", "Druckbewehrungsfläche A_s2 ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-as2-area-m2".into()]

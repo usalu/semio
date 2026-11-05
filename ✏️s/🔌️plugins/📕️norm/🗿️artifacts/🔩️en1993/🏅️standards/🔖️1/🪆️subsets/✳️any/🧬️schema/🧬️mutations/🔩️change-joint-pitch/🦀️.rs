@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPitch where O
         record: "ChangedJointPitch",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pitch p₁ of the joint", "Anschluss: Lochabstand p₁ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pitch p₁ of the joint", "Anschluss: Lochabstand p₁ ändern")
     }
 }
 

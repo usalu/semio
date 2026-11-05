@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layout-master", kind: "set-layout-master", record: "SetLayoutMaster" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set layout master", "Layout-Master setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set layout master", "Layout-Master setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

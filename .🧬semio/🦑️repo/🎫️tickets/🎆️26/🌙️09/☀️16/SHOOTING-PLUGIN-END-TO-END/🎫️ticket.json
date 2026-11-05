@@ -1,14 +1,26 @@
 {
   "title": "Shooting Plugin End To End",
   "emoji": "📸",
-  "status": "done",
+  "status": "open",
   "description": "Get the 🎥️shooting plugin working end to end: native check + tests, guest wasm restage on the react dev lane, react dev serve (?plugin=shooting), proven boot (scene + shot windows, panels) and at least one persisted document mutation via the shell. Pattern follows 26/09/16/FORMS-PLUGIN-END-TO-END.",
-  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
+  "summary": "Shooting editor + viewer boot and mutate end to end on the react dev lane (6019): playground app pin, command_from_action bridge, every verb migrated to a bounded tool with exact publication contracts and store owners (the descriptor probe aborted the guest on 35 unclassified verbs), export split into two rows, coalesced camera config edits, empty_document_spr LoadDocument, icon render transport-url resolution + fit lane, self-closing bound test harness, fixture float canonicalization (344/346 tests).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2786"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningshooting🎯runningshooting",
   "sessions": [
-    "⚪b903f03d-2c25-49e7-bde7-26f68b23d6a5"
+    "⚪b903f03d-2c25-49e7-bde7-26f68b23d6a5",
+    "08188e9d-f8fe-4877-9c4d-5b85bd94dc77"
   ],
-  "openedAt": "2026-09-16",
-  "note": "Ticket bookkeeping manual on disk: repo MCP failed to connect (2026-09-16).",
-  "closedAt": "2026-09-16",
-  "summary": "Shooting editor + viewer boot and mutate end to end on the react dev lane (6019): playground app pin, command_from_action bridge, every verb migrated to a bounded tool with exact publication contracts and store owners (the descriptor probe aborted the guest on 35 unclassified verbs), export split into two rows, coalesced camera config edits, empty_document_spr LoadDocument, icon render transport-url resolution + fit lane, self-closing bound test harness, fixture float canonicalization (344/346 tests)."
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-04 21:54:38",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "39b6ae5d4aab567d4dafbc69cb0e1a9a09c9d377",
+      "prompt": "Get shooting plugin working end to end with current native and React paths, maximum parallel fleet and preserved concurrent work."
+    }
+  ]
 }

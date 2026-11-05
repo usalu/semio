@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindBridgeDeckWidt
         record: "ChangedWindBridgeDeckWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change deck width b of the bridge wind case", "Brückenwindfall: Überbaubreite b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change deck width b of the bridge wind case", "Brückenwindfall: Überbaubreite b ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

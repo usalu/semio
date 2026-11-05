@@ -1,68 +1,30 @@
 //! 🧩️ Forms contributions: the host-declared plugin contributions parsed from the configuration, the question kind routes and the extension question rendering and catalogue kinds shared by the builder, the try wizard and the inspection panel.
 
-use crate::editor::forms::config::FormsConfig;
-use crate::editor::forms::questions::extensions::{self, ExtensionSurface, QuestionKindContribution};
-use crate::editor::forms::support::{ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_text, FORMS_PLAY_APP_ID};
+use crate::forms_config::FormsConfig;
+use crate::question_extensions::{ExtensionSurface, QuestionKindContribution};
+use crate::editor::forms::support::FORMS_PLAY_APP_ID;
 use crate::editor::forms::terminology::{forms_play_labels, FormsLabels};
 use crate::{FormQuestion, FORM_BUILTIN_KINDS};
 use semio_framework::ProgramContributionEntry;
 use semio_framework_pack_json::Object;
-use semio_framework_plugin::IconName;
+use semio_plugin::IconName;
 
 //#region 🔖️Contributions
 pub fn parse_contributions(config: &FormsConfig) -> Vec<ProgramContributionEntry> {
     semio_framework::parse_contributions(&config.contributions_json)
 }
 
-const FORMS_QUESTION_KIND_TOPIC: &str = "forms.questionKind";
+pub use crate::question_extensions::FORMS_QUESTION_KIND_TOPIC;
 
-/// 🎯️ A resolved question-kind contribution's routing fields, sourced from the open `forms.questionKind`
-/// topic shape.
-struct QuestionKindRoute {
-    app_id: String,
-    params_body_key: String,
-    preview_body_key: String,
-}
-
-fn question_kind_route_from_topic(topic_contribution: &semio_framework_plugin::TopicContribution, kind: &str) -> Option<QuestionKindRoute> {
-    if topic_contribution.topic != FORMS_QUESTION_KIND_TOPIC {
-        return None;
-    }
-    let payload = topic_contribution.decode::<QuestionKindContribution>().ok()?;
-    (payload.question_kind == kind).then_some(QuestionKindRoute { app_id: payload.app_id, params_body_key: payload.params_body_key, preview_body_key: payload.preview_body_key })
-}
-
-/// 🗂️ Reads the open `TopicContribution` (`"forms.questionKind"` topic) shape per entry.
-fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, QuestionKindRoute)> {
-    contributions.iter().find_map(|entry| {
-        let route = entry.topic_contribution.as_ref().and_then(|topic_contribution| question_kind_route_from_topic(topic_contribution, kind))?;
-        Some((entry.plugin_id.as_str(), route))
-    })
-}
-
-/// 🧩️ Renders a contributed (extension) question kind as a pair of external slots (params editor +
-/// preview), or an "Extension unavailable" diagnostic when no contribution is registered for it. Shared
-/// by the try wizard and the inspection panel's kind-specific editor fields.
-pub fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: ExtensionSurface<'_>, interactive: bool, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    use semio_framework_ui_contract::{self as ui, Buildable, HasBase, HasChildren};
-    let key = format!("{}.extension", question.id);
-    let Some((plugin_id, route)) = find_question_kind_contribution(contributions, &question.kind) else {
-        return ui_admit(ui_admit(ui::text(ui_label(format!("{}: {}", labels.extension_unavailable.as_str(), question.kind))?).try_id(&key))?.try_build());
-    };
-    let payload = extensions::render_payload(question, values, FORMS_PLAY_APP_ID, surface, interactive).to_string();
-    let mut column = ui_admit(ui::column().try_id(&key))?;
-    for body_key in [&route.params_body_key, &route.preview_body_key] {
-        let props = ui_value_map([("bodyKey", ui_value_text(body_key)?), ("paramsJson", ui_value_text(&payload)?)])?;
-        let slot = ui_admit(ui::extension(ui_text_value(format!("{plugin_id}/{}", route.app_id))?).props(props).try_id(format!("{}.{}", question.id, body_key)))?;
-        column = ui_admit(column.try_child(slot))?;
-    }
-    ui_admit(column.try_build())
+/// 🧩️ Supplies editor authority and localized diagnostics to the shared question slots.
+pub fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: ExtensionSurface<'_>, interactive: bool, labels: &FormsLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    crate::question_extensions::render_extension_question(question, values, contributions, FORMS_PLAY_APP_ID, surface, interactive, labels.extension_unavailable.as_str())
 }
 
 /// 🗂️ Every kind offered by the catalogue/inspector kind selector: the built-in kinds (labeled from
 /// `labels`) followed by every contributed extension kind. Shared by the blueprint builder's palette, the
 /// catalogue panel, and the inspection panel's kind select.
-pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], view: &semio_framework_plugin::ViewModel) -> Vec<(String, String, IconName)> {
+pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], view: &semio_plugin::ViewModel) -> Vec<(String, String, IconName)> {
     let labels = forms_play_labels(view);
     let mut kinds: Vec<(String, String, IconName)> = FORM_BUILTIN_KINDS
         .iter()

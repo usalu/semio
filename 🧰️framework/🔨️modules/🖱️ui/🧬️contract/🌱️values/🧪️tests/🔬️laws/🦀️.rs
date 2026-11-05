@@ -1,4 +1,4 @@
-//! 🧪️ Companion white-box laws of `semio-framework-ui-contract-values`.
+//! 🧪️ Companion white-box laws of `semio-ui-contract-values`.
 
 #![cfg(test)]
 #![allow(unused_imports, unused_qualifications)]

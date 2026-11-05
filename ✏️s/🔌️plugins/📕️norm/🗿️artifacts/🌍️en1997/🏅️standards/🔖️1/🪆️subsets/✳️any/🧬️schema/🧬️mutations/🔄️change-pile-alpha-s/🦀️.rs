@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileAlphaS where O
         record: "ChangedPileAlphaS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shaft friction factor α_s of the pile", "Pfahl: Mantelreibungsbeiwert α_s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shaft friction factor α_s of the pile", "Pfahl: Mantelreibungsbeiwert α_s ändern")
     }
 }
 

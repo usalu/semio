@@ -35,7 +35,7 @@ fn apply_layout_diff_reanchors_active_and_maximized_stack_by_key() {
     dock.maximized_stack = Some(vec![1]);
     dock.split_resize_origin = vec![0.5, 0.5];
     let reversed = WindowLayout {
-        root: WindowLayoutRoot::Axis(semio_framework_ui_layout::layout::WindowLayoutAxisNode {
+        root: WindowLayoutRoot::Axis(semio_ui_layout::layout::WindowLayoutAxisNode {
             kind: "row".into(),
             size: None,
             children: vec![

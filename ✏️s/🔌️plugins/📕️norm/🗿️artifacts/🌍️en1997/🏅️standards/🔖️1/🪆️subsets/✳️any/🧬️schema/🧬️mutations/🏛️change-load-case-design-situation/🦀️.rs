@@ -24,8 +24,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLoadCaseDesignSitu
         record: "ChangedLoadCaseDesignSituation",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design situation of the footing load case", "Fundament-Lastfall: Bemessungssituation ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design situation of the footing load case", "Fundament-Lastfall: Bemessungssituation ändern")
     }
 }
 

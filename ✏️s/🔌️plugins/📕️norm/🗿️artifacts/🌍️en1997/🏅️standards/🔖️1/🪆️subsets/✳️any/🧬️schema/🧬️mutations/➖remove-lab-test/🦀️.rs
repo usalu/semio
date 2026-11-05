@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveLabTest where Op: 
         verb: "remove", entity: "lab-test", kind: "remove-lab-test", record: "RemovedLabTest",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove laboratory test", "Laborversuch entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove laboratory test", "Laborversuch entfernen")
     }
 }
 

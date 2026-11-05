@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedFlangeWidth 
         record: "ChangedPlatedFlangeWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flange width b_f of the plated panel", "Plattenfeld: Gurtbreite b_f ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flange width b_f of the plated panel", "Plattenfeld: Gurtbreite b_f ändern")
     }
 }
 

@@ -1,17 +1,17 @@
 //! 🧪️ Retained reducers bind the exact captured window-config owner and version.
 
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_window_config::{DirectIngress, WindowConfigAuthorityIdentity, TypedWindowConfigPublication, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigSnapshot};
-use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
+use semio_plugin_window_config::{DirectIngress, WindowConfigAuthorityIdentity, TypedWindowConfigPublication, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigSnapshot};
+use semio_plugin_window_config::retained::ErasedWindowConfigPackLoad;
 use semio_framework_value::FactoryBoxedValue;
 use std::future::Future;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_plugin_window_config_registry::WindowRegistry;
+use semio_plugin_window_config_registry::WindowRegistry;
 use crate::window_config_tests::{pack_identity_tests, retained_pack_load_tests};
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
 
 #[semio_framework_async_macros::async_test]
 async fn original_window_constructor_cancellation_preserves_carriers_and_full_physical_receipts(){
@@ -72,7 +72,7 @@ async fn original_window_constructor_cancellation_preserves_carriers_and_full_ph
 fn retained_window_config_context_identity_binds_owner_generation_and_revision() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️retained-window-config/🔣️.json")).unwrap();
     let mut digests=std::collections::BTreeSet::new();
-    let mut owner=semio_framework_async::block_on(async{let envelope=store::create_config_envelope::<semio_framework_plugin_decl_views::NoConfig,semio_framework_plugin_decl_views::NoConfigMutation>("test.window-config.original","original-window-config",semio_framework_plugin_decl_views::NoConfig{},None).await;let mut store=store::ConfigStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope,protocol::ActorId("window-test".into())).await.unwrap();store::install_unscheduled_catalog(&mut store,semio_framework_plugin_decl_views::no_config_retirement::no_config_store_owners()).unwrap();store});
+    let mut owner=semio_framework_async::block_on(async{let envelope=store::create_config_envelope::<semio_plugin_decl_views::NoConfig,semio_plugin_decl_views::NoConfigMutation>("test.window-config.original","original-window-config",semio_plugin_decl_views::NoConfig{},None).await;let mut store=store::ConfigStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope,protocol::ActorId("window-test".into())).await.unwrap();store::install_unscheduled_catalog(&mut store,semio_plugin_decl_views::no_config_retirement::no_config_store_owners()).unwrap();store});
     let mut returned_read=None;
     for row in fixture["cases"].as_array().unwrap() {
         let generation = row["generation"].as_u64().unwrap();
@@ -80,15 +80,15 @@ fn retained_window_config_context_identity_binds_owner_generation_and_revision()
         let snapshot = WindowConfigSnapshot { authority: WindowConfigAuthorityIdentity::issue().unwrap(), window_id: row["windowId"].as_str().unwrap().into(), window_kind_id: "graph", generation, revision, snapshot: owner.snapshot_read().unwrap().into_erased() };
         assert_eq!(snapshot.generation(), generation);
         assert_eq!(snapshot.revision(), revision);
-        let digest = semio_framework_plugin_job::test_window_config_context_identity(Some(&snapshot));
+        let digest = semio_plugin_job::test_window_config_context_identity(Some(&snapshot));
         let duplicate=snapshot.try_duplicate().unwrap();
-        assert_eq!(digest, semio_framework_plugin_job::test_window_config_context_identity(Some(&duplicate)));
+        assert_eq!(digest, semio_plugin_job::test_window_config_context_identity(Some(&duplicate)));
         crate::window_mutation_tests::tests::close_with(duplicate,||{if returned_read.is_some(){let demand=store::os_store::snapshot_read::artifact_retirement_box_demands(returned_read.as_ref().unwrap(),4096).unwrap();store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut returned_read,retained_pack_load_tests::quoted(demand,4096)).unwrap();}else{let demand=owner.returned_snapshot_read_retirement_demand().unwrap();let(child,_)=owner.take_returned_snapshot_read_retirement(retained_pack_load_tests::quoted(demand,4096)).unwrap();returned_read=child;}});
-        assert_ne!(digest, semio_framework_plugin_job::test_window_config_context_identity(None));
+        assert_ne!(digest, semio_plugin_job::test_window_config_context_identity(None));
         digests.insert(digest);
         crate::window_mutation_tests::tests::close_with(snapshot,||{if returned_read.is_some(){let demand=store::os_store::snapshot_read::artifact_retirement_box_demands(returned_read.as_ref().unwrap(),4096).unwrap();store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut returned_read,retained_pack_load_tests::quoted(demand,4096)).unwrap();}else{let demand=owner.returned_snapshot_read_retirement_demand().unwrap();let(child,_)=owner.take_returned_snapshot_read_retirement(retained_pack_load_tests::quoted(demand,4096)).unwrap();returned_read=child;}});
     }
-    assert_eq!(digests.len(), fixture["expectedUniqueContexts"].as_u64().unwrap() as usize);    while returned_read.is_some(){let demand=store::os_store::snapshot_read::artifact_retirement_box_demands(returned_read.as_ref().unwrap(),4096).unwrap();store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut returned_read,retained_pack_load_tests::quoted(demand,4096)).unwrap();}let mut disposer=semio_framework_plugin_decl_views::no_config_retirement::no_config_store_disposer();
+    assert_eq!(digests.len(), fixture["expectedUniqueContexts"].as_u64().unwrap() as usize);    while returned_read.is_some(){let demand=store::os_store::snapshot_read::artifact_retirement_box_demands(returned_read.as_ref().unwrap(),4096).unwrap();store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut returned_read,retained_pack_load_tests::quoted(demand,4096)).unwrap();}let mut disposer=semio_plugin_decl_views::no_config_retirement::no_config_store_disposer();
     for _ in 0..1000000{if disposer.terminal_is_empty(&owner){break;}let demand=disposer.retirement_demands(&owner,4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};disposer.close_step(&mut owner,grant).unwrap();}
     assert!(disposer.terminal_is_empty(&owner));
 }

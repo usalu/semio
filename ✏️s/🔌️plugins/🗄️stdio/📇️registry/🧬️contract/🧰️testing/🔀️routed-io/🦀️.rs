@@ -1,9 +1,9 @@
 //! 🔀️ Routed IO runs and SQLite snapshot controls under original native authorities.
 
 use super::{NATIVE_MAXIMUM_BYTES, original_grant};
-use semio_framework_os_kernel::io::io_mechanism::{IoRunControl, io_run_with_snapshot_control};
-use semio_framework_os_kernel::io_schema::{IoPayload, IoResult, IoRoute};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
+use semio_os_kernel::io::io_mechanism::{IoRunControl, io_run_with_snapshot_control};
+use semio_os_kernel::io_schema::{IoPayload, IoResult, IoRoute};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl};

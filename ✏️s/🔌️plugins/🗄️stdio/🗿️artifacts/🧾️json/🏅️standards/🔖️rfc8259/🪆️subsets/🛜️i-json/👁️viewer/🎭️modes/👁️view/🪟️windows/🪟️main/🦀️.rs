@@ -5,11 +5,11 @@
 
 use crate::schema::snapshot::{JsonMember, JsonValue};
 use crate::JsonSnapshot;
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -40,7 +40,7 @@ pub const JSON_ROOT_NODE_ID: &str = "$";
 /// 🔑️ The separator glyph is folded out of a member name, because a key carrying it would make the
 /// composed path ambiguous and is refused at assembly with `ui.tree-window.separator-in-key`.
 pub fn member_segment(key: &str) -> String {
-    format!("k={}", key.replace(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR, "\u{fffd}"))
+    format!("k={}", key.replace(semio_plugin::TREE_WINDOW_PATH_SEPARATOR, "\u{fffd}"))
 }
 
 /// 🆔️ `segment`, made unique among the siblings already emitted. rfc8259's base grammar lets one
@@ -77,7 +77,7 @@ pub fn strip_sibling_ordinal(segment: &str) -> &str {
 pub fn encode_path_id(segments: &[String]) -> String {
     let mut path = JSON_ROOT_NODE_ID.to_string();
     for segment in segments {
-        path.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        path.push_str(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
         path.push_str(segment);
     }
     path
@@ -98,7 +98,7 @@ fn scalar_label(value: &JsonValue) -> Option<String> {
 //#region 🔖️Render
 /// 👁️ Pure `JsonSnapshot -> BuiltNode` read: same shape as the editor's own render, no mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &JsonSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &JsonSnapshot, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     TreeWindowKit::render_windowed(&TreeView { roots: vec![node_view(JSON_ROOT_NODE_ID.to_string(), None, &document.value)] }, windows)
 }
 

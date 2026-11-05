@@ -1,6 +1,6 @@
 //! 🧫️ Explicit shared native fixture for the two actual procedural persisted type pairs.
-use semio_framework_os_flow_contract::{FlowHostSnapshot,Widget};
-use semio_framework_os_playbook_contract::{GenerationPlayRoot,GenerationPlayState};
+use semio_os_flow_contract::{FlowHostSnapshot,Widget};
+use semio_os_playbook_contract::{GenerationPlayRoot,GenerationPlayState};
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::Number;

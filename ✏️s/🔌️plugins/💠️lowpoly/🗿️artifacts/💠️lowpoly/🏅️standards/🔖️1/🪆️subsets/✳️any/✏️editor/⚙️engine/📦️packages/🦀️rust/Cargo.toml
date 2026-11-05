@@ -18,11 +18,11 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-3d = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }

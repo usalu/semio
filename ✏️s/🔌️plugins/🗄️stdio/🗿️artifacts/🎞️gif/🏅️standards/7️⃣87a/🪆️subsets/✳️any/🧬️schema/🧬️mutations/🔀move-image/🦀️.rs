@@ -16,8 +16,8 @@ pub struct MoveImage {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveImage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "image", kind: "move-image", record: "MoveImage" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Move image", "Bild verschieben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Move image", "Bild verschieben")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

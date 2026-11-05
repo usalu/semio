@@ -27,7 +27,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
-use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::spatial::analyze_spatial;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::spatial::Mat4;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::spatial::PropertySet as IfcPropertySet;

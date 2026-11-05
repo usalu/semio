@@ -3,7 +3,7 @@ use crate::schema::mutations::*;
 use crate::schema::snapshot::{FlowNode, FlowEdge, PortRef, SemioFlowSnapshot};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use crate::io::binary::mutations::wire_tag;
-use semio_framework_os_kernel::os_spr::operation_bytes::{OperationByteOutput,OperationByteLimitedOutput};
+use semio_os_kernel::os_spr::operation_bytes::{OperationByteOutput,OperationByteLimitedOutput};
 use protocol::{PackRefusal,codec::PackEncodeOptions};
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 use std::fmt::Write;
@@ -40,7 +40,7 @@ fn snapshot(options:&PackEncodeOptions,output:&mut dyn OperationByteOutput,contr
 impl SemioFlowMutation{
     /// ✍️ Streams every original Flow frame under the caller's exact source and full-frame policy.
     pub fn encode_op_into(&self,options:&PackEncodeOptions,output:&mut dyn OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<(),protocol::ProtocolError>{
-        semio_framework_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(options,control,|control|{
+        semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(options,control,|control|{
         let mut limited=OperationByteLimitedOutput::new(output,options.limits.max_file_len);
         let output:&mut dyn OperationByteOutput=&mut limited;
         output.write_bytes(&[1,wire_tag(self)],control)?;

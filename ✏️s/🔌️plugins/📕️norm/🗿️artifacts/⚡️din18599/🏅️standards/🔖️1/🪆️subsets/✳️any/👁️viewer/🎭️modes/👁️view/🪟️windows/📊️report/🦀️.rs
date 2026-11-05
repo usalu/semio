@@ -6,10 +6,10 @@
 //! compliance/report data per the contract's own guidance.
 
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
-// 🚧️ SDK GAP: `WindowKit`/`TableWindowKit`/`TableView` are not yet in `semio_framework_plugin`'s
+// 🚧️ SDK GAP: `WindowKit`/`TableWindowKit`/`TableView` are not yet in `semio_plugin`'s
 // curated crate-root re-export list — only reachable through `app`, same class of gap as `Dialect`.
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `Din18599Snapshot -> UiNode` read: recomputes the compliance report straight off the document
 /// (the same pure inference the editor's results window renders through `NormHost`), then tables it.
-pub fn render(document: &Din18599Snapshot, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &Din18599Snapshot, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let report = semio_s_artifact_norm_din18599_inferences::evaluate(document);
     TableWindowKit::render(&TableView { columns: semio_s_plugin_norm_app_surface::report_table_columns(locale), rows: semio_s_plugin_norm_app_surface::report_table_rows(&report, locale) })
 }

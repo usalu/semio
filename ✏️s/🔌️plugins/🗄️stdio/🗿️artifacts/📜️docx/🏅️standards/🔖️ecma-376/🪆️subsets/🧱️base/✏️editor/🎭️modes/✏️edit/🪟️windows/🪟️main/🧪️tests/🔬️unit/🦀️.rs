@@ -30,12 +30,12 @@ async fn render_exposes_localized_accessible_formatting_toggles_only_for_runs() 
     });
     let address = docx_top_level_text_targets(&document, 0).unwrap().remove(0).address;
     for (locale, labels) in [(Locale::En, ["Bold (inherited)", "Italic (direct on)", "Underline (inherited)"]), (Locale::De, ["Fett (geerbt)", "Kursiv (direkt an)", "Unterstrichen (geerbt)"])] {
-        let rendered = render_windowed(&document, &TreeWindows::unhosted(), locale, semio_framework_plugin::UiPublicationRevision::default()).expect("render formatting controls");
+        let rendered = render_windowed(&document, &TreeWindows::unhosted(), locale, semio_plugin::UiPublicationRevision::default()).expect("render formatting controls");
         let run = rendered.children.get(0).expect("run item");
         let toolbar = descendant(run, "run-formatting").expect("formatting toolbar");
         assert_eq!(toolbar.children.len(), 3);
         for (((control, label), expected_on), expected_next) in toolbar.children.iter().zip(labels).zip([false, true, false]).zip([(true, true, false), (false, false, false), (false, true, true)]) {
-            let semio_framework_plugin::Component::Toggle(props) = &control.component else { panic!("formatting control is a toggle") };
+            let semio_plugin::Component::Toggle(props) = &control.component else { panic!("formatting control is a toggle") };
             assert_eq!(props.text.as_ref().expect("accessible label").0.as_str(), label);
             assert_eq!(props.on, expected_on);
             let binding = control.bindings.get(0).expect("formatting action binding");
@@ -54,7 +54,7 @@ async fn formatting_accessibility_labels_distinguish_absent_and_explicit_off() {
     let inherited = formatting_toolbar(&address, Some(DocxRunFormatting::default()), BASE_CONTROLLER_ID, Locale::En).unwrap().unwrap();
     let off = formatting_toolbar(&address, Some(DocxRunFormatting { bold: Some(false), italic: Some(false), underline: Some(false) }), BASE_CONTROLLER_ID, Locale::En).unwrap().unwrap();
     let label = |toolbar: &BuiltNode| {
-        let semio_framework_plugin::Component::Toggle(props) = &toolbar.children[0].component else { panic!("bold toggle") };
+        let semio_plugin::Component::Toggle(props) = &toolbar.children[0].component else { panic!("bold toggle") };
         props.text.as_ref().unwrap().0.as_str().to_owned()
     };
     assert_eq!(label(&inherited), "Bold (inherited)");
@@ -63,7 +63,7 @@ async fn formatting_accessibility_labels_distinguish_absent_and_explicit_off() {
 
 #[semio_framework_async_macros::async_test]
 async fn hosted_collapsed_drafts_do_not_build_formatting_accessories_until_expanded() {
-    use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_PATH_SEPARATOR};
+    use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_PATH_SEPARATOR};
 
     let document = build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("formatted")], styles: Vec::new() });
     let view = |open| ViewModel {
@@ -71,20 +71,20 @@ async fn hosted_collapsed_drafts_do_not_build_formatting_accessories_until_expan
             TreeWindowRequest { body_key: BODY_KEY.into(), node_key: WINDOW_KIND_ID.into(), open: Some(true), offset: 0, rows: 1 },
             TreeWindowRequest { body_key: BODY_KEY.into(), node_key: format!("{WINDOW_KIND_ID}{TREE_WINDOW_PATH_SEPARATOR}page-0-item-0"), open: Some(open), offset: 0, rows: u32::from(open) },
         ],
-        ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native)
     };
     let collapsed = view(false);
-    let collapsed = render_windowed(&document, &TreeWindows::for_body(&collapsed, BODY_KEY), Locale::En, semio_framework_plugin::UiPublicationRevision::default()).unwrap();
+    let collapsed = render_windowed(&document, &TreeWindows::for_body(&collapsed, BODY_KEY), Locale::En, semio_plugin::UiPublicationRevision::default()).unwrap();
     assert!(descendant(collapsed.children.get(0).unwrap(), "run-formatting").is_none());
     let expanded = view(true);
-    let expanded = render_windowed(&document, &TreeWindows::for_body(&expanded, BODY_KEY), Locale::En, semio_framework_plugin::UiPublicationRevision::default()).unwrap();
+    let expanded = render_windowed(&document, &TreeWindows::for_body(&expanded, BODY_KEY), Locale::En, semio_plugin::UiPublicationRevision::default()).unwrap();
     assert!(descendant(expanded.children.get(0).unwrap(), "run-formatting").is_some());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn render_emits_one_page_per_top_level_block() {
     let document = build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: Vec::new() });
-    let stack = render(&document, semio_framework_plugin::UiPublicationRevision(23)).expect("render");
+    let stack = render(&document, semio_plugin::UiPublicationRevision(23)).expect("render");
     assert_eq!(stack.children.len(), 2);
 }
 
@@ -100,7 +100,7 @@ async fn nested_table_text_remains_editable_in_the_document_window() {
     assert_eq!(pages.iter().map(|page| page.text.as_str()).collect::<Vec<_>>(), expected.iter().flatten().map(String::as_str).collect::<Vec<_>>());
     assert!(pages.iter().all(|page| matches!(&page.arguments, Some(UiValue::Map(_)))));
     for locale in [Locale::En, Locale::De] {
-        let rendered = render_windowed(&snapshot, &TreeWindows::unhosted(), locale, semio_framework_plugin::UiPublicationRevision::default()).unwrap();
+        let rendered = render_windowed(&snapshot, &TreeWindows::unhosted(), locale, semio_plugin::UiPublicationRevision::default()).unwrap();
         assert_eq!(rendered.children.len(), 5);
     }
 }

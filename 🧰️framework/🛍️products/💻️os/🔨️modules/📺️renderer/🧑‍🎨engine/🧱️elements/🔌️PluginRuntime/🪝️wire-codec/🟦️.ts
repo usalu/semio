@@ -104,7 +104,7 @@ export const DIRECTORY_PROJECTION_RECEIPT_SCHEMA = "semio.space.home.directory-p
  *
  * MIGRATION (semantic UI contract, ticket 26/08/20): the old recursive `UiNode` this file's `node`
  * payload used to carry no longer exists — `🛂️manifest/🟦️.ts`'s hand-written mirror was
- * deleted in favor of `semio-framework-ui-contract`'s flat, id-keyed `UiSnapshot`/`UiNodeRecord`
+ * deleted in favor of `semio-ui-contract`'s flat, id-keyed `UiSnapshot`/`UiNodeRecord`
  * (`📃️UiDocumentStore`'s header doc). A "whole-body replace" is now a whole `UiSnapshot` (root pointer +
  * flat node table), not a single recursive node; an "insert one child" is a single `UiNodeRecord` row.
  * The kernel/actor WIT boundary this file bridges has not flipped onto the new wire tags yet (owned by

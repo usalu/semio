@@ -1,7 +1,7 @@
 //! 📥️ Observes the actual queue/scene frontier of one production enqueue.
 
 use super::{RuntimeApply, RuntimeCompletion, RuntimeCompletionQueue, RuntimePresentationAuthority};
-use semio_framework_os_renderer_wgpu_runtime_mailbox::{enqueue_runtime_completion, set_after_completion_publication_hook, RuntimeHostWaker};
+use semio_renderer_wgpu_runtime_mailbox::{enqueue_runtime_completion, set_after_completion_publication_hook, RuntimeHostWaker};
 use std::sync::{mpsc, Mutex, TryLockError};
 use std::time::Duration;
 

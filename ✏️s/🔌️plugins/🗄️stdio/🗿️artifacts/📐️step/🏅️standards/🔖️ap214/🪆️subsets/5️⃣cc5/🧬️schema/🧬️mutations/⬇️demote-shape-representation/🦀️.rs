@@ -17,8 +17,8 @@ pub struct DemoteShapeRepresentation {
 impl protocol::MutationKind<StepSnapshot, StepCc5Mutation> for DemoteShapeRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "shape-representation", kind: "demote-shape-representation", record: "DemotedShapeRepresentation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Demote shape representation #{} onto this class's ceiling", self.id), &format!("Formrepräsentation #{} auf die Obergrenze dieser Klasse herabstufen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Demote shape representation #{} onto this class's ceiling", self.id), &format!("Formrepräsentation #{} auf die Obergrenze dieser Klasse herabstufen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

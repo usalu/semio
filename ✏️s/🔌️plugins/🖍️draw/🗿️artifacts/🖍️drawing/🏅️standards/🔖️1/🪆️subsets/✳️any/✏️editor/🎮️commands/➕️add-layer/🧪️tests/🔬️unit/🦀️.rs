@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_tool::initialize_appearance;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::add_layer::*;
 #[test]
 fn repeated_layer_creation_fixtures() {
@@ -38,4 +38,4 @@ fn creation_keeps_explicit_paint() {
     assert_eq!(layer,before);
 }
 
-fn admitted_layer(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,kind:&str)->Result<semio_s_artifact_draw_drawing_model::DrawingLayerNode,semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_commands::add_layer::build_layer(document,kind,&admission,&mut control)}
+fn admitted_layer(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,kind:&str)->Result<semio_s_artifact_draw_drawing_model::DrawingLayerNode,semio_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_commands::add_layer::build_layer(document,kind,&admission,&mut control)}

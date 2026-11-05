@@ -1,8 +1,8 @@
 /// 🎞️ Host events, media cancel and download seam: the test host events, the retained child command work, completed media cancellation and the download seam chunks.
 
     /// 📨️ Takes the host events recorded on this test thread.
-    use semio_framework_os_store_backbone::MemoryBackbone;
-use semio_framework_os_store_backbone::BackboneMessage;
+    use semio_os_store_backbone::MemoryBackbone;
+use semio_os_store_backbone::BackboneMessage;
 fn take_test_host_events() -> Vec<HostEvent> {
         TEST_HOST_EVENTS.with(|events| events.borrow_mut().take())
     }
@@ -10,7 +10,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
     /// 🪟️ A view of the two-window roster `main-1`/`main-2` targeting `target` under `utility`.
     fn host_event_view(target: &str, utility: Option<&str>) -> ViewModel {
         let roster = vec![ViewWindowInstance { id: "main-1".into(), window_kind_id: "main".into() }, ViewWindowInstance { id: "main-2".into(), window_kind_id: "main".into() }];
-        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(target).expect("a roster window");
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }.for_window_instance(target).expect("a roster window");
         ViewModel { active_utility_id: utility.map(str::to_string), ..view }
     }
 
@@ -18,7 +18,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
         pub emit: Option<Emit<TestMutation, TestConfigMutation, NoDraftMutation>>,
     }
 
-    impl semio_framework_plugin_retained_command::ArtifactCommandWork<TestApp> for TestRetainedChildCommandWork {
+    impl semio_plugin_retained_command::ArtifactCommandWork<TestApp> for TestRetainedChildCommandWork {
         fn tool_id(&self) -> &'static str {
             TEST_RETAINED_COMMAND_TOOL
         }
@@ -27,7 +27,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
             Some(1)
         }
 
-        fn step(&mut self, input: &semio_framework_plugin_retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_retained_command::ArtifactCommandWorkStep<TestApp>, semio_framework_job::OriginalTurnFailure> {
+        fn step(&mut self, input: &semio_plugin_retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_retained_command::ArtifactCommandWorkStep<TestApp>, semio_framework_job::OriginalTurnFailure> {
             let owner = input.snapshot_owner.expect("retained runtime supplies its immutable snapshot capability");
             assert!(std::ptr::eq(owner.as_ref(), input.snapshot));
             let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧵️retained-command/🧪️tests/🧫️fixtures/🔒️immutable-reader.json")).expect("neutral immutable reader fixture");
@@ -37,16 +37,16 @@ fn take_test_host_events() -> Vec<HostEvent> {
             *std::sync::Arc::make_mut(&mut replacement) = serde_json::from_value(fixture["replacement"].clone()).expect("independent replacement snapshot");
             assert_eq!(serde_json::to_value(owner.as_ref()).unwrap(), fixture["initial"]);
             assert_eq!(serde_json::to_value(replacement.as_ref()).unwrap(), fixture["replacement"]);
-            let semio_framework_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
-            self.emit.take().map(semio_framework_plugin_retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated").into())
+            let semio_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+            self.emit.take().map(semio_plugin_retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated").into())
         }
     }
 
-    async fn test_retained_child_command_payload(completion: ArtifactToolCompletion<TestApp>, emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>) -> (semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::job_close_fixture::FixtureSnapshotOwner) {
+    async fn test_retained_child_command_payload(completion: ArtifactToolCompletion<TestApp>, emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>) -> (semio_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::job_close_fixture::FixtureSnapshotOwner) {
         let snapshot=std::sync::Arc::new(TestSnapshot::default());
         let(snapshot_read,issuer)=crate::job_close_fixture::FixtureSnapshotOwner::new(snapshot.clone(),3,[5;32]);
-        let payload=semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin_retained_command::ArtifactRetainedCommandInputs {
+        let payload=semio_plugin_retained_command::ArtifactRetainedCommandPayload::new(
+            semio_plugin_retained_command::ArtifactRetainedCommandInputs {
                 command: TestCommand::SetLabel { value: "wire".into() },
                 snapshot,
                 snapshot_read,
@@ -69,12 +69,12 @@ fn take_test_host_events() -> Vec<HostEvent> {
     /// same admission receipt every migrated dispatch answers with, so a law that reads the store right
     /// after it observed the previous revision. Settles the operation and rebuilds the settled
     /// mutations/inverse through the SAME `result_from_last_edit` the direct route uses.
-    async fn handle_intent_settled(app: &mut ContractApp, intent: &UiIntent, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn handle_intent_settled(app: &mut ContractApp, intent: &UiIntent, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let verb = intent.action.name.to_string();
         let before_edit_id = app.0.test_last_edit_id();
         let before_tail = app.0.test_edit_tail_lengths();
         let mut admitted = PluginApp::handle_intent_frame(&mut app.0, intent, meta, identity).await?;
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
         admitted.requested_effects.extend(receipt.effects);
         admitted.events.extend(receipt.events);
         if let Some(scope) = receipt.ui_scope {
@@ -93,14 +93,14 @@ fn take_test_host_events() -> Vec<HostEvent> {
 
     #[semio_framework_async_macros::async_test]
     async fn completed_media_cancel_moves_exact_output_to_bounded_cleanup() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let operation_id = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, 0);
@@ -126,13 +126,13 @@ fn take_test_host_events() -> Vec<HostEvent> {
         assert_eq!(chunks.bytes_remaining(), ARTIFACT_OUTPUT_CHUNK_BYTES + 17, "cancellation performs no synchronous output destruction");
 
         app.maintenance.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("first bounded cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("first bounded cleanup"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.bytes_remaining(), 17);
         app.maintenance.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("second bounded cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: 17, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("second bounded cleanup"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: 17, ..Default::default() }));
         assert_eq!(chunks.bytes_remaining(), 0);
         app.maintenance.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("terminal cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("terminal cleanup"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(!app.media.test_segmented_closure_contains(operation_id.0));
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
 
@@ -142,7 +142,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
     #[semio_framework_async_macros::async_test]
     async fn retained_command_download_seam_keeps_original_chunks_and_bounded_cancel_owner(){
         use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep};
-        use semio_framework_plugin_retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactCommandInputs, ArtifactRetainedCommandJob};
+        use semio_plugin_retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactCommandInputs, ArtifactRetainedCommandJob};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️retained-command/🔄️full-operation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["download"];
         struct DownloadWork{output:Option<ArtifactDownloadOutput>,first:bool,closing:bool,retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>}
         impl DownloadWork{fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.output)}}
@@ -171,9 +171,9 @@ fn take_test_host_events() -> Vec<HostEvent> {
         }
         let make=||{let length=law["payloadBytes"].as_u64().unwrap()as usize;assert!(length>law["wireBytes"].as_u64().unwrap()as usize);let chunks=ArtifactOutputChunks::new(length);for index in 0..length.div_ceil(ArtifactOutputChunks::CHUNK_BYTES){let start=index*ArtifactOutputChunks::CHUNK_BYTES;let end=(start+ArtifactOutputChunks::CHUNK_BYTES).min(length);chunks.push((start..end).map(|index|(index%251)as u8).collect()).unwrap();}chunks.seal().unwrap();ArtifactDownloadOutput::new("original.txt","text/plain",None,chunks).unwrap()};
         for (busy,cancel) in [(false,false),(true,false),(false,true)]{
-            let completion=ArtifactToolCompletion::<TestApp>::new();let consumer=completion.clone();let (mut payload,issuer)=test_retained_command_payload(completion.clone()).await;payload.work=Box::new(DownloadWork{output:Some(make()),first:true,closing:false,retirement:None});let mut job=ArtifactRetainedCommandJob::new(payload);let mut yielded=false;let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),crate::job_close_fixture::original_fixture_stock(),||Some(0),u64::MAX,1<<24);
+            let completion=ArtifactToolCompletion::<TestApp>::new();let consumer=completion.clone();let (mut payload,issuer)=test_retained_command_payload(completion.clone()).await;payload.work=Box::new(DownloadWork{output:Some(make()),first:true,closing:false,retirement:None});let mut job=ArtifactRetainedCommandJob::new(payload);let mut yielded=false;let policy=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),crate::job_close_fixture::original_fixture_stock(),||Some(0),u64::MAX,1<<24);
             let mut decoder=HistoryView::empty();assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|job.test_admit_original_source(cx)).unwrap());
-            for _ in 0..128{let result=caller.turn(policy.maintenance,|cx|Ok(if busy{completion.with_busy_test_lock(||semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut job,cx))}else{semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut job,cx)})).unwrap();match result{semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_)=>{yielded=true;if cancel{caller.cancel().cancel_now()}},semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Checkpoint{..}=>{},semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Complete{..}=>break,semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_)=>break,semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
+            for _ in 0..128{let result=caller.turn(policy.maintenance,|cx|Ok(if busy{completion.with_busy_test_lock(||semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut job,cx))}else{semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut job,cx)})).unwrap();match result{semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_)=>{yielded=true;if cancel{caller.cancel().cancel_now()}},semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Checkpoint{..}=>{},semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Complete{..}=>break,semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_)=>break,semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
             assert!(yielded);job.begin_close();for _ in 0..100000{if job.terminal_is_empty(){break}let grant=job_close_grant(&job);let before=caller.turn(semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},|cx|job.close_step(cx)).unwrap();assert!(matches!(before,InteractiveJobCloseStep::Pending{progress}if progress==Default::default())||matches!(before,InteractiveJobCloseStep::Blocked));let step=caller.turn(grant,|cx|job.close_step(cx)).unwrap();assert_eq!(step.progress(),caller.receipt());assert!(step.progress().fits(grant));assert!(!matches!(step,InteractiveJobCloseStep::Blocked))}assert!(job.terminal_is_empty());
             if busy||cancel{assert!(consumer.test_take_download().unwrap().is_none())}else{let (Ok(output),ephemeral)=consumer.test_take_download().unwrap().unwrap()else{panic!("original download completion")};let mut actual=Vec::new();while let Some(chunk)=output.chunks.take_chunk().unwrap(){assert!(chunk.len()<=law["chunkBytes"].as_u64().unwrap()as usize);actual.extend_from_slice(&chunk);crate::job_close_fixture::retire_fixture_owned(chunk,&mut caller)}let expected:Vec<u8>=serde_json::from_value(serde_json::json!((0..law["payloadBytes"].as_u64().unwrap()).map(|index|(index%251)as u8).collect::<Vec<_>>())).unwrap();assert_eq!(actual,expected);crate::job_close_fixture::retire_fixture_owned(output,&mut caller);crate::job_close_fixture::retire_fixture_owned(ephemeral,&mut caller);}
             crate::job_close_fixture::retire_fixture_owned(consumer,&mut caller);crate::job_close_fixture::retire_fixture_owned(completion,&mut caller);issuer.close(&mut caller);while !decoder.terminal_is_empty(){caller.turn(policy.close,|cx|{let step=decoder.close_step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}caller.retire(crate::job_close_fixture::original_fixture_stock());
@@ -181,7 +181,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
         let mut original=std::collections::VecDeque::with_capacity(law["queueSlots"].as_u64().unwrap()as usize);original.push_back("Mesh 😀".to_string());
         let payload_bytes=original[0].len();let backing_bytes=original.capacity()*std::mem::size_of::<String>();assert_eq!(std::mem::size_of::<String>(),law["vectorMetadataWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());
         let birth=semio_framework_value::retirement::owned_retirement_birth_bytes::<std::collections::VecDeque<String>>();
-        let admission=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_capacity_bytes:birth,..semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation};
+        let admission=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_capacity_bytes:birth,..semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation};
         let (mut retirement,admitted)=semio_framework_value::retirement::admit_owned_retirement(original,admission).unwrap_or_else(|_|panic!("original queue typed constructor refused its funded grant"));
         assert!(admitted.fits(admission));let (mut born,mut released)=(admitted.retained_capacity_bytes,admitted.released_bytes);
         for _ in 0..100000{if retirement.terminal_is_empty(){break}
@@ -198,15 +198,15 @@ fn take_test_host_events() -> Vec<HostEvent> {
     #[semio_framework_async_macros::async_test]
 
     async fn accepted_remote_prefix_notifies_before_later_refusal() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let law: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/📥️remote-prefix/🔣️.json"))).unwrap();
 
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
 
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
 
-        let mut identity = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity();
+        let mut identity = semio_plugin_testing_laws::artifact_app_laws::fixture_identity();
 
         let mut sender = contract_app(mounted_policy, &mut identity).await;
 

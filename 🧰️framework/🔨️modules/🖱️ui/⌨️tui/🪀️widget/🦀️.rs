@@ -1,11 +1,11 @@
 use crate::editor::{editor_cursor, editor_on_key, editor_on_mouse, editor_on_paste, paint_editor};
 pub use crate::editor::EditorState;
-use semio_framework_ui_tui_core::cell::CellBuffer;
+use semio_ui_tui_core::cell::CellBuffer;
 use crate::chip::paint_chip;
 use crate::dialog::{dialog_on_key, dialog_on_mouse, dialog_set_hover, paint_dialog, DialogState};
 use crate::divider::paint_divider;
-use semio_framework_ui_tui_core::event::{KeyEvent, MouseEvent};
-use semio_framework_ui_tui_core::geometry::{Rect, Size};
+use semio_ui_tui_core::event::{KeyEvent, MouseEvent};
+use semio_ui_tui_core::geometry::{Rect, Size};
 use crate::input::{input_cursor, input_on_key, input_on_mouse, input_on_paste, paint_input};
 use crate::label::paint_label;
 use crate::list::{list_on_key, list_on_mouse, list_set_hover, list_tick, paint_list};
@@ -15,15 +15,15 @@ use crate::palette::{palette_cursor, palette_on_key, palette_on_mouse, palette_s
 use crate::progress::{paint_progress, progress_tick};
 use crate::scrollable::{paint_scrollable, scrollable_on_key, scrollable_on_mouse};
 use crate::select::{paint_select, select_on_key, select_on_mouse};
-use semio_framework_ui_tui_core::signal::{CursorSpec, WidgetSignal};
+use semio_ui_tui_core::signal::{CursorSpec, WidgetSignal};
 use crate::table::{paint_table, table_on_key, table_on_mouse, table_set_hover};
 use crate::tabs::{paint_tabs, tabs_on_key, tabs_on_mouse, tabs_set_hover};
-use semio_framework_ui_tui_core::text::display_width;
-use semio_framework_ui_tui_core::theme::{Role, Theme};
+use semio_ui_tui_core::text::display_width;
+use semio_ui_tui_core::theme::{Role, Theme};
 use crate::toggle::{paint_toggle, toggle_on_key, toggle_on_mouse, toggle_set_hover};
 use crate::tooltip::{paint_tooltip, TooltipState};
 use crate::tree::{paint_tree, tree_cursor, tree_on_key, tree_on_mouse, tree_on_paste, tree_set_hover};
-use semio_framework_ui_tui_vt::pane::TerminalState;
+use semio_ui_tui_vt::pane::TerminalState;
 use crate::wizard::{paint_wizard, wizard_cursor, wizard_on_key, wizard_on_mouse, wizard_on_paste, wizard_set_hover};
 
 pub use crate::input::InputState;
@@ -211,7 +211,7 @@ impl WidgetState {
             WidgetState::Tree(t) => tree_on_paste(t, &text),
             WidgetState::Palette(p) => {
                 for c in text.chars() {
-                    palette_on_key(p, &KeyEvent { key: semio_framework_ui_tui_core::event::Key::Char(c), mods: 0 });
+                    palette_on_key(p, &KeyEvent { key: semio_ui_tui_core::event::Key::Char(c), mods: 0 });
                 }
                 Some(WidgetSignal::ValueChanged(p.query.clone()))
             }
@@ -228,7 +228,7 @@ impl WidgetState {
     }
 
     /// 👆️ Moves the hover to `pos` inside `rect` or clears it; true when the widget must repaint.
-    pub fn set_hover(&mut self, rect: Rect, pos: Option<semio_framework_ui_tui_core::geometry::Pos>) -> bool {
+    pub fn set_hover(&mut self, rect: Rect, pos: Option<semio_ui_tui_core::geometry::Pos>) -> bool {
         match self {
             WidgetState::Tabs(t) => tabs_set_hover(t, rect, pos),
             WidgetState::List(l) => list_set_hover(l, rect, pos),

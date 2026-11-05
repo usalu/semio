@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertHelicopter where O
         record: "InsertedHelicopter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert helicopter landing {}", self.item.id), &format!("Hubschrauberlandung {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert helicopter landing {}", self.item.id), &format!("Hubschrauberlandung {} einfügen", self.item.id))
     }
 }
 

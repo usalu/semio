@@ -10,7 +10,7 @@ pub struct ChangeConnectionFUK { pub connection_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeConnectionFUK where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_fuk::ChangeConnectionFUK> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-fUK", kind: "change-connection-fuk", record: "ChangedConnectionFUK" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Fastener tensile strength f_u,k of connection {}", self.connection_id), &format!("Zugfestigkeit f_u,k von Verbindung {} ändern", self.connection_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Fastener tensile strength f_u,k of connection {}", self.connection_id), &format!("Zugfestigkeit f_u,k von Verbindung {} ändern", self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
 }
 

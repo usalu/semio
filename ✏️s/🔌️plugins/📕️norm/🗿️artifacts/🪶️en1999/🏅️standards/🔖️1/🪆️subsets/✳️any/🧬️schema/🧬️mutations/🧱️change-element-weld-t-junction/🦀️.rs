@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeElementWeldTJuncti
         record: "ChangedElementWeldTJunction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change T-junction weld of the section element", "Querschnittsteil: Schweißnaht im T-Stoß ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change T-junction weld of the section element", "Querschnittsteil: Schweißnaht im T-Stoß ändern")
     }
 }
 

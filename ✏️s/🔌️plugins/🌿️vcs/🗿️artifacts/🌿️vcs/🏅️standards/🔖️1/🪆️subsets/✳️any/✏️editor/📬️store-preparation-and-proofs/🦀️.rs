@@ -116,7 +116,7 @@ where
 pub struct VcsBoundedProofs;
 
 impl VcsBoundedProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<VcsPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.vcs.vcs@1/*#editor",
@@ -142,7 +142,7 @@ impl VcsBoundedProofs {
 pub struct VcsResumableProofs;
 
 impl VcsResumableProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<VcsPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.vcs.vcs@1/*#editor",

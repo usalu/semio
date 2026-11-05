@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedAlphaCr wher
         record: "ChangedPlatedAlphaCr",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Critical load amplifier α_cr (0 = none) of the plated panel", "Plattenfeld: Kritischer Laststeigerungsfaktor α_cr (0 = keiner) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Critical load amplifier α_cr (0 = none) of the plated panel", "Plattenfeld: Kritischer Laststeigerungsfaktor α_cr (0 = keiner) ändern")
     }
 }
 

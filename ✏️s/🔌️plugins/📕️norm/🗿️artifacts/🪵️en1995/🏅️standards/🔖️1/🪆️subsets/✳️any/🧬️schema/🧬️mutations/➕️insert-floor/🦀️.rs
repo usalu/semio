@@ -10,7 +10,7 @@ pub struct InsertFloor { pub index: usize, pub floor: Floor }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertFloor where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_floor::RemoveFloor> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "floor", kind: "insert-floor", record: "InsertedFloor" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert floor {} at #{}", self.floor.id, self.index), &format!("Floor {} an #{} einfügen", self.floor.id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert floor {} at #{}", self.floor.id, self.index), &format!("Floor {} an #{} einfügen", self.floor.id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.floor.id.clone()] }
 }
 

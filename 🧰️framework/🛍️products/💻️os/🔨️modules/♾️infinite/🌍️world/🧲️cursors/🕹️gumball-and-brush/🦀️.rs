@@ -16,16 +16,16 @@ impl std::fmt::Write for WorldComponentTarget {
 }
 
 impl WorldComponentTarget {
-    pub fn new(interaction_state: &WorldInteractionState, scene_state: &WorldSceneState, entry: &WorldInteractionObjectSlot, kind: WorldComponentKind, group: u32) -> Result<Self, semio_framework_ui_action::BoundedActionFault> {
+    pub fn new(interaction_state: &WorldInteractionState, scene_state: &WorldSceneState, entry: &WorldInteractionObjectSlot, kind: WorldComponentKind, group: u32) -> Result<Self, semio_ui_action::BoundedActionFault> {
         use std::fmt::Write;
         let mut target = Self { bytes: [0; WORLD_COMPONENT_TARGET_BYTE_CAPACITY], len: 0 };
-        write!(target, "{}.{}.{}", entry.id.as_str(), kind.as_str(), group).map_err(|_| semio_framework_ui_action::BoundedActionFault::StringCredits)?;
+        write!(target, "{}.{}.{}", entry.id.as_str(), kind.as_str(), group).map_err(|_| semio_ui_action::BoundedActionFault::StringCredits)?;
         if let Some(source) = entry.component_source {
-            let admitted = entry.mesh.and_then(|mesh| interaction_state.interaction_meshes.resolve(mesh)).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
-            let mesh = scene_state.meshes.get(admitted.id.as_str()).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+            let admitted = entry.mesh.and_then(|mesh| interaction_state.interaction_meshes.resolve(mesh)).ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+            let mesh = scene_state.meshes.get(admitted.id.as_str()).ok_or(semio_ui_action::BoundedActionFault::Structure)?;
             let field = match kind { WorldComponentKind::Vertex => Mesh3dField::VertexIds, WorldComponentKind::Edge => Mesh3dField::EdgeIds, WorldComponentKind::Face => Mesh3dField::FaceIds };
-            let label = mesh.component_label(field, group).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?.ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
-            write!(target, "~{}~{}~{}", source.handle(), label, source.revision()).map_err(|_| semio_framework_ui_action::BoundedActionFault::StringCredits)?;
+            let label = mesh.component_label(field, group).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?.ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+            write!(target, "~{}~{}~{}", source.handle(), label, source.revision()).map_err(|_| semio_ui_action::BoundedActionFault::StringCredits)?;
         }
         Ok(target)
     }
@@ -43,7 +43,7 @@ impl WorldComponentKind {
     }
 }
 
-pub const WORLD_GUMBALL_SELECTED_CAPACITY: usize = semio_framework_ui_action::ACTION_NODE_CAPACITY - 11;
+pub const WORLD_GUMBALL_SELECTED_CAPACITY: usize = semio_ui_action::ACTION_NODE_CAPACITY - 11;
 
 #[derive(Clone, Copy)]
 pub struct WorldGumballTarget {
@@ -594,8 +594,8 @@ pub struct WorldGumballCommitJob {
     pub generation: u64,
     pub gesture: WorldGumballGesture,
     pub phase: WorldGumballPhase,
-    pub claim: Option<semio_framework_ui_action::BoundedActionClaim>,
-    pub draft: Option<semio_framework_ui_action::BoundedClaimedActionDraft>,
+    pub claim: Option<semio_ui_action::BoundedActionClaim>,
+    pub draft: Option<semio_ui_action::BoundedClaimedActionDraft>,
     pub stage: u16,
     pub complete: bool,
 }
@@ -622,15 +622,15 @@ pub struct WorldBrushCommitJob {
     copy_field: u8,
     copy_offset: u16,
     pub validating: bool,
-    pub claim: Option<semio_framework_ui_action::BoundedActionClaim>,
-    pub draft: Option<semio_framework_ui_action::BoundedClaimedActionDraft>,
+    pub claim: Option<semio_ui_action::BoundedActionClaim>,
+    pub draft: Option<semio_ui_action::BoundedClaimedActionDraft>,
     pub stage: u8,
     scale_stage: u8,
     pub complete: bool,
 }
 
 impl WorldBrushCommitJob {
-    pub fn new(session_state: &WorldSessionState, gumball_state: &WorldGumballState, generation: u64) -> Result<Option<Self>, semio_framework_ui_action::BoundedActionFault> {
+    pub fn new(session_state: &WorldSessionState, gumball_state: &WorldGumballState, generation: u64) -> Result<Option<Self>, semio_ui_action::BoundedActionFault> {
         let Some(preview) = gumball_state.brush_preview.as_ref() else {
             return Ok(None);
         };
@@ -638,24 +638,24 @@ impl WorldBrushCommitJob {
             return Ok(None);
         };
         if source_index > u32::MAX as usize {
-            return Err(semio_framework_ui_action::BoundedActionFault::Structure);
+            return Err(semio_ui_action::BoundedActionFault::Structure);
         }
-        if target.len() > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY || kind.len() > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
+        if target.len() > semio_ui_action::ACTION_STRING_BYTE_CAPACITY || kind.len() > semio_ui_action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(semio_ui_action::BoundedActionFault::StringCredits);
         }
         let kind_start = target.len();
-        kind_start.checked_add(kind.len()).filter(|bytes| *bytes <= WORLD_INTERACTION_BYTE_CAPACITY).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+        kind_start.checked_add(kind.len()).filter(|bytes| *bytes <= WORLD_INTERACTION_BYTE_CAPACITY).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
         let scale = match preview.scale.as_ref() {
             None | Some(serde_json::Value::Null) => WorldBrushScale::Null,
-            Some(serde_json::Value::Number(value)) => WorldBrushScale::Number(value.as_f64().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?),
+            Some(serde_json::Value::Number(value)) => WorldBrushScale::Number(value.as_f64().ok_or(semio_ui_action::BoundedActionFault::Structure)?),
             Some(serde_json::Value::Array(values)) if values.len() <= 3 => {
                 let mut scalars = [0.0; 3];
                 for index in 0..values.len() {
-                    scalars[index] = values[index].as_f64().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+                    scalars[index] = values[index].as_f64().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
                 }
                 WorldBrushScale::Array { values: scalars, len: values.len() as u8 }
             }
-            _ => return Err(semio_framework_ui_action::BoundedActionFault::Structure),
+            _ => return Err(semio_ui_action::BoundedActionFault::Structure),
         };
         Ok(Some(Self {
             generation,
@@ -678,23 +678,23 @@ impl WorldBrushCommitJob {
         }))
     }
 
-    pub fn text(&self, span: WorldInteractionSpan) -> Result<&str, semio_framework_ui_action::BoundedActionFault> {
+    pub fn text(&self, span: WorldInteractionSpan) -> Result<&str, semio_ui_action::BoundedActionFault> {
         let start = usize::from(span.start);
-        let end = start.checked_add(usize::from(span.len)).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
-        std::str::from_utf8(self.bytes.get(start..end).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)
+        let end = start.checked_add(usize::from(span.len)).ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+        std::str::from_utf8(self.bytes.get(start..end).ok_or(semio_ui_action::BoundedActionFault::Structure)?).map_err(|_| semio_ui_action::BoundedActionFault::Structure)
     }
 
-    pub fn source<'a>(&self, gumball_state: &'a WorldGumballState) -> Result<(&'a str, &'a str), semio_framework_ui_action::BoundedActionFault> {
-        let preview = gumball_state.brush_preview.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
-        let target = preview.target_vortex_full_id.as_deref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
-        let kind = preview.object_kind_id.as_deref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+    pub fn source<'a>(&self, gumball_state: &'a WorldGumballState) -> Result<(&'a str, &'a str), semio_ui_action::BoundedActionFault> {
+        let preview = gumball_state.brush_preview.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+        let target = preview.target_vortex_full_id.as_deref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+        let kind = preview.object_kind_id.as_deref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         if target.len() != usize::from(self.target.len) || kind.len() != usize::from(self.kind.len) || preview.source_vortex_index != Some(self.source_index) {
-            return Err(semio_framework_ui_action::BoundedActionFault::Structure);
+            return Err(semio_ui_action::BoundedActionFault::Structure);
         }
         Ok((target, kind))
     }
 
-    fn copy_step(&mut self, gumball_state: &WorldGumballState) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    fn copy_step(&mut self, gumball_state: &WorldGumballState) -> Result<bool, semio_ui_action::BoundedActionFault> {
         let (target, kind) = self.source(gumball_state)?;
         let (source, span) = if self.copy_field == 0 { (target.as_bytes(), self.target) } else { (kind.as_bytes(), self.kind) };
         let offset = usize::from(self.copy_offset);
@@ -715,7 +715,7 @@ impl WorldBrushCommitJob {
         let existing = &mut self.bytes[destination..destination + take];
         if self.validating {
             if existing != &source[offset..offset + take] {
-                return Err(semio_framework_ui_action::BoundedActionFault::Structure);
+                return Err(semio_ui_action::BoundedActionFault::Structure);
             }
         } else {
             existing.copy_from_slice(&source[offset..offset + take]);
@@ -724,11 +724,11 @@ impl WorldBrushCommitJob {
         Ok(false)
     }
 
-    pub fn credit(&self, session_state: &WorldSessionState) -> Result<usize, semio_framework_ui_action::BoundedActionFault> {
-        semio_framework_ui_action::checked_action_string_bytes(&[&session_state.controller_id, "addBrushObject", "targetVortexFullId", self.text(self.target)?, "objectKindId", self.text(self.kind)?, "sourceVortexIndex", "origin", "orientation", "scale"])
+    pub fn credit(&self, session_state: &WorldSessionState) -> Result<usize, semio_ui_action::BoundedActionFault> {
+        semio_ui_action::checked_action_string_bytes(&[&session_state.controller_id, "addBrushObject", "targetVortexFullId", self.text(self.target)?, "objectKindId", self.text(self.kind)?, "sourceVortexIndex", "origin", "orientation", "scale"])
     }
 
-    pub fn step(&mut self, session_state: &WorldSessionState, gumball_state: &WorldGumballState, generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, semio_framework_ui_action::BoundedActionFault> {
+    pub fn step(&mut self, session_state: &WorldSessionState, gumball_state: &WorldGumballState, generation: u64, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, semio_ui_action::BoundedActionFault> {
         if context.should_yield() {
             return Ok(WorldInteractionStep::Pending);
         }
@@ -754,8 +754,8 @@ impl WorldBrushCommitJob {
         let target_end = target_start + usize::from(self.target.len);
         let kind_start = usize::from(self.kind.start);
         let kind_end = kind_start + usize::from(self.kind.len);
-        let target = std::str::from_utf8(&self.bytes[target_start..target_end]).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
-        let kind = std::str::from_utf8(&self.bytes[kind_start..kind_end]).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let target = std::str::from_utf8(&self.bytes[target_start..target_end]).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
+        let kind = std::str::from_utf8(&self.bytes[kind_start..kind_end]).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
         let draft = self.draft.as_mut().expect("brush draft");
         match self.stage {
             0 => draft.builder().begin_object(None)?,
@@ -797,7 +797,7 @@ impl WorldBrushCommitJob {
         Ok(WorldInteractionStep::Pending)
     }
 
-    pub fn close_step(&mut self, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    pub fn close_step(&mut self, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
         if self.draft.take().is_some() {
             return false;
         }
@@ -829,7 +829,7 @@ impl WorldGumballCommitJob {
         gumball_handle_action_id(self.gesture.handle)
     }
 
-    fn string_bytes(&self, session_state: &WorldSessionState) -> Result<usize, semio_framework_ui_action::BoundedActionFault> {
+    fn string_bytes(&self, session_state: &WorldSessionState) -> Result<usize, semio_ui_action::BoundedActionFault> {
         let keys: &[&str] = if self.gesture.handle.is_translate() {
             &["surfaceId", "windowId", "mode", "ids", "dx", "dy", "dz"]
         } else if self.gesture.handle.is_rotate() {
@@ -837,16 +837,16 @@ impl WorldGumballCommitJob {
         } else {
             &["surfaceId", "windowId", "mode", "ids", "sx", "sy", "sz"]
         };
-        let mut bytes = semio_framework_ui_action::checked_action_string_bytes(&[&session_state.controller_id, self.action_id(), &session_state.surface_id, &session_state.surface_id, self.gesture.mode.map_or("mesh", WorldComponentKind::as_str)])?;
+        let mut bytes = semio_ui_action::checked_action_string_bytes(&[&session_state.controller_id, self.action_id(), &session_state.surface_id, &session_state.surface_id, self.gesture.mode.map_or("mesh", WorldComponentKind::as_str)])?;
         for key in keys {
-            bytes = bytes.checked_add(key.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+            bytes = bytes.checked_add(key.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
         }
-        bytes = bytes.checked_add(usize::from(self.gesture.selected_bytes)).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+        bytes = bytes.checked_add(usize::from(self.gesture.selected_bytes)).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
         for (key, value) in self.phase.tail() {
-            bytes = bytes.checked_add(key.len() + value.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+            bytes = bytes.checked_add(key.len() + value.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
         }
         if bytes > WORLD_INTERACTION_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+            return Err(semio_ui_action::BoundedActionFault::ByteCredits);
         }
         Ok(bytes)
     }
@@ -870,7 +870,7 @@ impl WorldGumballCommitJob {
     /// multi-window mode was addressed to whatever had focus, measured verbatim on 6118 as
     /// `handle_action promise failed: window kind generation3d-generate-form does not own
     /// action translateSelection` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn step(&mut self, session_state: &WorldSessionState, gumball_state: &WorldGumballState, interaction_state: &WorldInteractionState, scene_state: &WorldSceneState, generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, semio_framework_ui_action::BoundedActionFault> {
+    pub fn step(&mut self, session_state: &WorldSessionState, gumball_state: &WorldGumballState, interaction_state: &WorldInteractionState, scene_state: &WorldSceneState, generation: u64, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, semio_ui_action::BoundedActionFault> {
         if context.should_yield() {
             return Ok(WorldInteractionStep::Pending);
         }
@@ -904,7 +904,7 @@ impl WorldGumballCommitJob {
         let selected_end = 5 + self.gesture.selected_len;
         let selected = if self.stage >= 5 && self.stage < selected_end {
             let target = self.gesture.selected[usize::from(self.stage - 5)].as_ref().expect("gumball selected target");
-            Some(if self.gesture.live { target.captured_text() } else { target.text(gumball_state, interaction_state, scene_state, self.gesture.mode).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)? })
+            Some(if self.gesture.live { target.captured_text() } else { target.text(gumball_state, interaction_state, scene_state, self.gesture.mode).ok_or(semio_ui_action::BoundedActionFault::Structure)? })
         } else {
             None
         };
@@ -943,7 +943,7 @@ impl WorldGumballCommitJob {
         Ok(WorldInteractionStep::Pending)
     }
 
-    pub fn close_step(&mut self, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    pub fn close_step(&mut self, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
         if self.draft.take().is_some() {
             return false;
         }

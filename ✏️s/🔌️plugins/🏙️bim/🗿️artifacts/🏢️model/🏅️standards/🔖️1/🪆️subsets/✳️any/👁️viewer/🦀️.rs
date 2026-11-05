@@ -14,14 +14,14 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::{BIM
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework_artifact_reference::Dialect;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::{
     ActionArgDef, ActionDefinition, ActionDescriptor, ActionKind, AppOperationContext, ArtifactInstanceOperationOwnerHandle, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ArtifactViewer,
     CapabilityAudience, ComponentTree, ConfigView, DomainTopology, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HistoryView, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, NoConfig,
     NoConfigMutation, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode, UiAssemblyResult, ViewEmit, ViewModel, Viewer, ViewerApp,
     WindowConfigMutation, WindowConfigSnapshot, WindowMeasure,
 };
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_ui_locale::{Label, LocalizedLabel};
 use semio_framework_value::{DslValue, FromValue};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::{BTreeMap, HashMap};
@@ -239,8 +239,8 @@ fn bim_view_reduce(
     _config: &NoConfig,
     _history: &HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<BimModelViewer>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<BimModelViewer>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<ModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     view_emit(command, context.and_then(|context| context.view_state.as_deref()), context.and_then(|context| context.window_config.as_ref()))
@@ -256,7 +256,7 @@ impl BimViewCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ToolJobFactory for BimViewCommandJobFactory {
+impl semio_plugin::ToolJobFactory for BimViewCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<ViewerApp<BimModelViewer>>;
     type Job = ArtifactRetainedCommandJob<ViewerApp<BimModelViewer>>;
 
@@ -276,11 +276,11 @@ impl semio_framework_plugin::ToolJobFactory for BimViewCommandJobFactory {
         bim_view_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BIM_VIEW_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BIM_VIEW_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BimViewCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for BimViewCommandJobFactory {
     type Owner = ViewerApp<BimModelViewer>;
     const TOOL_IDS: &'static [&'static str] = BIM_VIEW_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = BIM_MODEL_DOCUMENT_SCHEMA;
@@ -297,7 +297,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BimViewCommandJobFa
 
 //#region 🔖️Viewer
 /// 👁️ Reads the framework-owned selection and hover of the element domain.
-fn marks_of(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks {
+fn marks_of(interaction: &semio_plugin::app::InteractionView<'_>) -> semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks {
     semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks { selected: interaction.selection(ELEMENT_DOMAIN).ids.clone(), hovered: interaction.hover(ELEMENT_DOMAIN, HOVER_CHANNEL).ids.clone() }
 }
 
@@ -305,9 +305,9 @@ fn render_body(body_key: &str, instance: semio_s_artifact_bim_model_inferences::
     let node = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| match body_key {
         semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::BODY_KEY => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::render(snapshot, inference, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::current(cfg), marks),
         semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::BODY_KEY => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::render(snapshot, inference, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::current(cfg), &marks.selected),
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("bim.viewer.ui.capacity", "viewer label admission failed")),
+        _ => semio_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| semio_plugin::PluginAssemblyError::new("bim.viewer.ui.capacity", "viewer label admission failed")),
     })?;
-    Ok(semio_framework_plugin::built_to_component_tree(node))
+    Ok(semio_plugin::built_to_component_tree(node))
 }
 
 #[derive(Default, Clone, Copy)]
@@ -332,32 +332,32 @@ impl ArtifactViewer for BimModelViewer {
         semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| refusal("bim.model.viewer.child-projection", &error.to_string()))
     }
 
-    fn reference_birth()->Option<fn()->Result<ModelSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<ModelSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot())
     })}
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     fn mounted_job_close_demands(_instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
@@ -380,7 +380,7 @@ impl ArtifactViewer for BimModelViewer {
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
@@ -393,7 +393,7 @@ impl ArtifactViewer for BimModelViewer {
         Ok(InteractionTopology { domains: BTreeMap::from([(ELEMENT_DOMAIN.to_string(), DomainTopology { ordered })]) })
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::BimViewerWorldWindowConfigOwner>()?;
         registry.register::<semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::BimViewerPlanWindowConfigOwner>()
     }
@@ -403,8 +403,8 @@ impl ArtifactViewer for BimModelViewer {
         registry.register(BimViewCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !BIM_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
@@ -412,10 +412,10 @@ impl ArtifactViewer for BimModelViewer {
             return Err(refusal("app.command.tool-mismatch", "the BIM view command does not match its exact registered tool"));
         }
         let tool_id = original.command.action_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimViewCommand::action_id, BIM_VIEW_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, bim_view_reduce, bim_view_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimViewCommand::action_id, BIM_VIEW_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, bim_view_reduce, bim_view_extent))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<BimModelViewer>,
         owner_file: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.bim.model@1/*#viewer",
@@ -436,11 +436,11 @@ impl ArtifactViewer for BimModelViewer {
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
         view_state: &ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        _transient: &semio_plugin::TransientView<'_, Self::Transient>,
+        interaction: &semio_plugin::app::InteractionView<'_>,
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         render_body(body_key, Some(owner), doc.snapshot, cfg, &marks_of(interaction), semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels(view_state))
 
         })();
@@ -469,7 +469,7 @@ pub fn viewer_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 
 //#region 🔖️Manifest
 /// 🗣️ A label of the viewer's one `app_labels!` block in both languages.
-fn localized(pick: fn(&semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels) -> semio_framework_ui_locale::LabelText) -> LocalizedLabel {
+fn localized(pick: fn(&semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels) -> semio_ui_locale::LabelText) -> LocalizedLabel {
     semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels::localized(pick)
 }
 
@@ -479,7 +479,7 @@ fn view_action(id: &str, label: LocalizedLabel, args: Vec<ActionArgDef>) -> Acti
 
 /// 🧱️ The viewer manifest: the `view` mode with its world and plan windows, the five window-configuration verbs (chrome audience), and the
 /// read-only `elements` interaction domain bound to the world window.
-pub fn create_bim_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_bim_viewer() -> semio_plugin::AppDefinition {
     let mut builder = Viewer::builder(BIM_MODEL_DIALECT)
         .document(["semio", "bim"])
         .icon_id("building")

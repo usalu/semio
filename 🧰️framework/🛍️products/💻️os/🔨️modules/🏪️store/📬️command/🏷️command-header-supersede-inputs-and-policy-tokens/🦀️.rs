@@ -195,14 +195,14 @@ pub fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<
 
 /// 🎯️ Binary twin of [`print_supersede_inputs`]: `count varint | (target str | 0 u8 | op len varint | op bytes | 1 u8)*`.
 pub fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[SupersedeInput<Op>]) -> Result<(), protocol::ProtocolError> {
-    semio_framework_os_pack::write_varint_u64(out, inputs.len() as u64);
+    semio_os_pack::write_varint_u64(out, inputs.len() as u64);
     for input in inputs {
         write_command_str(out, &input.target.0);
         match &input.replacement {
             Some(replacement) => {
                 out.push(0);
                 let bytes = replacement.encode_op()?;
-                semio_framework_os_pack::write_varint_u64(out, bytes.len() as u64);
+                semio_os_pack::write_varint_u64(out, bytes.len() as u64);
                 out.extend_from_slice(&bytes);
             }
             None => out.push(1),
@@ -213,7 +213,7 @@ pub fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[Superse
 
 /// 🗳️ Reads a supersede command's inputs all-or-nothing: on any failure every replacement decoded so far retires through
 /// its technology's cold disposal, so a refused command never drops a live operation.
-pub fn read_supersede_inputs<P, Op: OpBinary + Mutation<P>>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, CommandDecodeError> {
+pub fn read_supersede_inputs<P, Op: OpBinary + Mutation<P>>(reader: &mut semio_os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
     let mut inputs = Vec::with_capacity(count.min(reader.remaining() as u64) as usize);
     for index in 0..count as usize {
@@ -232,7 +232,7 @@ pub fn read_supersede_inputs<P, Op: OpBinary + Mutation<P>>(reader: &mut semio_f
 }
 
 /// 🎫️ One supersede input: its target and its replacement operation or withdrawal tag.
-pub fn read_supersede_input<Op: OpBinary>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<SupersedeInput<Op>, CommandDecodeError> {
+pub fn read_supersede_input<Op: OpBinary>(reader: &mut semio_os_pack::ByteReader<'_>) -> Result<SupersedeInput<Op>, CommandDecodeError> {
     let target = MutationId(read_command_str(reader)?);
     let replacement = match reader.read_u8()? {
         0 => Some(read_command_op(reader).map_err(|error| CommandDecodeError::Operation { index: 0, error })?),
@@ -271,16 +271,16 @@ impl OpBinary for CommandHeaderLine {
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = semio_framework_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let body = semio_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
-        semio_framework_os_pack::write_varint_u64(&mut out, ordinal as u64);
+        semio_os_pack::write_varint_u64(&mut out, ordinal as u64);
         out.extend_from_slice(&body);
         Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = semio_framework_os_pack::ByteReader::new(bytes);
+        let mut reader = semio_os_pack::ByteReader::new(bytes);
         let format = reader.read_u8()?;
         if format != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
@@ -290,7 +290,7 @@ impl OpBinary for CommandHeaderLine {
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
-        let (record, _report) = semio_framework_os_pack::record::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let (record, _report) = semio_os_pack::record::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }

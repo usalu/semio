@@ -1,6 +1,6 @@
 //! 🧮️ Projects window status from document counts and framework-owned selection.
 use super::drawing_manifest_action;
-use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementStatus};
+use semio_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementStatus};
 use crate::terminology::DrawingPlayLabels;
 use std::collections::HashMap;
 
@@ -11,9 +11,9 @@ pub fn text(layers:usize,selected:usize,labels:&DrawingPlayLabels)->String {
 }
 
 /// 🪟️ Builds one addressed canvas engagement without introducing a second selection state.
-pub fn engagements(layers:usize,selected:usize,input:String,view:&semio_framework_plugin::ViewModel)->HashMap<String,WindowEngagement> {
+pub fn engagements(layers:usize,selected:usize,input:String,view:&semio_plugin::ViewModel)->HashMap<String,WindowEngagement> {
     let Some(window)=view.window_id.clone() else {return HashMap::new()};
-    let labels=semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view);
+    let labels=semio_plugin::resolve_labels::<DrawingPlayLabels>(view);
     HashMap::from([(window,WindowEngagement {
         session_active:Some(false),options:None,
         input:Some(WindowEngagementInput {

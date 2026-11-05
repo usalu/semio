@@ -1,6 +1,6 @@
 //! 🧪 Both actual aggregate operands determine result kind, uniqueness and retained matching custody.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 
 const EMPTY: ExpressExpression = ExpressExpression { kind: ExpressExpressionKind::Unknown, offset: 0, text: None, operator: None, name: None, operands: &[], entries: &[] };
 const ONE: ExpressExpression = ExpressExpression { kind: ExpressExpressionKind::Integer, text: Some("1"), ..EMPTY };

@@ -2,7 +2,7 @@
 use semio_framework_diagnostic::{Fault, FaultCause, FaultOrigin, FaultParams, FaultScope, FaultSource, Severity, TextSpan};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as V};
 use semio_framework_job::{StepContext, OriginalTurnFailure};
-use semio_framework_os_kernel::record::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure};
+use semio_os_kernel::record::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure};
 use semio_framework_value::{Number, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;

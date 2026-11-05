@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "restore", entity: "cell", kind: "unmask-cell", record: "RestoredCell" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unmask cell ({}, {})", self.x, self.y), &format!("Zelle ({}, {}) demaskieren", self.x, self.y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Unmask cell ({}, {})", self.x, self.y), &format!("Zelle ({}, {}) demaskieren", self.x, self.y))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{},{}", self.x, self.y)]

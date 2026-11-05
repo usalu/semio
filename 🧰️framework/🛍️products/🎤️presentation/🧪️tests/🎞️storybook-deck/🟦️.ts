@@ -7,7 +7,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "../../../../../.storybook/🧪️tests/🎭️playwright/🟦️.ts";
 
 function significantConsoleErrors(messages: string[]): string[] {
   return messages.filter((text) => !/Failed to load resource:.*\b404\b/i.test(text));

@@ -77,7 +77,7 @@ export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<v
     if (!testSource.includes(marker)) throw new Error(`GIS component acceptance omits ${marker}`);
   }
   const manifest = readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml"), "utf8");
-  if (!manifest.includes('name = "component_cold_map_patch"') || !manifest.includes("semio-framework-plugin-host") || !manifest.includes("semio-framework-ui-scene")) {
+  if (!manifest.includes('name = "component_cold_map_patch"') || !manifest.includes("semio-plugin-host") || !manifest.includes("semio-ui-scene")) {
     throw new Error("GIS component acceptance is not mounted with its exact first-party host and scene owners");
   }
   console.log(`gis-component-cold-map-patch-source: ownerAdmission=1 SHA256=node+webcrypto hostile=${fixture.hostile.length} markers=9; no GIS component build or browser acceptance claim`);

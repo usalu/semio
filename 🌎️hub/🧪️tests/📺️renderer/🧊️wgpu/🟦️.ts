@@ -13,7 +13,7 @@ import { runHubCollaborationCli } from "./🤝️collaboration/🟦️.ts";
 import { nativeRuntimeDirectory } from "@semio-tech/framework-renderer-wgpu/native-entrypoint/modules";
 
 const repoRoot = findWorkspaceRoot();
-const crateName = "semio-framework-os-renderer-wgpu";
+const crateName = "semio-renderer-wgpu";
 type LiveHubPrincipal = { readonly prefix: string; readonly email: string; readonly displayName: string };
 async function withLiveHub(invocation:ScriptInvocation,phase:ResourceLeaseControl,principals:readonly LiveHubPrincipal[],body:(env:Record<string,string>,control:ResourceLeaseControl)=>Promise<void>):Promise<string>{
  requireIssuedResourceControlInvocationV1(phase,invocation);const password="correct horse battery staple",env:Record<string,string>={};

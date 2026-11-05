@@ -93,7 +93,7 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     type TransientMutation = PublicationTransientMutation;
     type Command = NoConfigMutation;
 
-    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{
         Ok(Self::Snapshot { slot: HAS_CHILD.then(|| ParentFixtureChild::new("child-1".into(), ArtifactRef {
             artifact_id: "child-1".into(),
             dialect: ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() },
@@ -103,7 +103,7 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
         match *command {}
     }
     async fn render(_body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        built_text_to_component_tree(semio_framework_ui_locale::Label::data("Composed parent fixture"))
+        built_text_to_component_tree(semio_ui_locale::Label::data("Composed parent fixture"))
     }
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(
@@ -125,13 +125,13 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
         _operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
+    ) -> semio_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
         let exact = envelope.schema == Self::DOCUMENT_SCHEMA && envelope.dialect == Some(Self::DIALECT.into()) && envelope.cursor.is_some();
         let Some(candidate_generation) = generation.0.checked_add(1) else { return Err(envelope) };
         if !exact {
             return Err(envelope);
         }
-        Ok(semio_framework_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::new(envelope, candidate_generation, actor))))
+        Ok(semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::new(envelope, candidate_generation, actor))))
     }
     fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> { TestApp::<false>::build_config_store_disposer() }
     fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> { TestApp::<false>::build_draft_store_disposer() }
@@ -240,7 +240,7 @@ impl Mutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
 
 }
 
-impl semio_framework_os_kernel::ColdMutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
+impl semio_os_kernel::ColdMutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
     type ReferenceDiff = RecursiveBranchDiff;
     fn diff(&self, _base: &RecursiveBranchSnapshot) -> protocol::MutationOutcome<Self::ReferenceDiff> { protocol::MutationOutcome::new(RecursiveBranchDiff { count: Some(self.value) }) }
     fn inverse(&self, base: &RecursiveBranchSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -258,8 +258,8 @@ impl protocol::SemanticMutation<RecursiveBranchSnapshot> for RecursiveFixtureMut
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         &RECURSIVE_FIXTURE_SEMANTICS
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set recursive value to {}", self.value), &format!("Rekursiven Wert auf {} setzen", self.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set recursive value to {}", self.value), &format!("Rekursiven Wert auf {} setzen", self.value))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
@@ -273,7 +273,7 @@ impl protocol::SemanticMutation<ComposedParentSnapshot> for RecursiveFixtureMuta
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         &RECURSIVE_FIXTURE_SEMANTICS
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         <Self as protocol::SemanticMutation<RecursiveBranchSnapshot>>::label(self)
     }
     fn target(&self) -> Vec<String> {

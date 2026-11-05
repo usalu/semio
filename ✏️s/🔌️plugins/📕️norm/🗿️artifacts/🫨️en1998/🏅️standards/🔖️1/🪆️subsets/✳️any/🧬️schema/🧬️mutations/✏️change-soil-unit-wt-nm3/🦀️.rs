@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSoilUnitWtNM3 wher
         record: "ChangeSoilUnitWtNM3",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Total unit weight", "Wichte ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Total unit weight", "Wichte ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-soil-unit-wt-nm3".into()]

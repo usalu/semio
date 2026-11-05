@@ -1,6 +1,6 @@
 //! 🧬️ Validates and renders the versioned owned semantic UI schema projection.
 
-use semio_framework_ui_contract_typegen as schema_metadata;
+use semio_ui_contract_typegen as schema_metadata;
 
 #[test]
 fn exports_typescript_bindings() {

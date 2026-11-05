@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFireProtectionSpec
         record: "ChangedFireProtectionSpecificHeat",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Specific heat of the protection c_p of the fire exposure", "Brandbeanspruchung: Spezifische Wärmekapazität der Bekleidung c_p ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Specific heat of the protection c_p of the fire exposure", "Brandbeanspruchung: Spezifische Wärmekapazität der Bekleidung c_p ändern")
     }
 }
 

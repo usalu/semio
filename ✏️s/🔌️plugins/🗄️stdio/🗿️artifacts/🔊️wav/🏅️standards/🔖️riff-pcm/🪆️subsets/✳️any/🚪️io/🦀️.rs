@@ -3,7 +3,7 @@
 pub mod derived_composition {
     use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
     use crate::standards::riff_pcm::subsets::any::io::WavAnalyzer;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
 
@@ -44,7 +44,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") }, store::bare_artifact_codec::<WavSnapshot, crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA))
+        semio_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") }, store::bare_artifact_codec::<WavSnapshot, crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -291,7 +291,7 @@ pub fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::riff_pcm::subsets::any::io::WavComposer as WavRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -319,7 +319,7 @@ pub mod derived_construction {
     use crate::standards::riff_pcm::subsets::any::schema::mutations::{WavMutation};
 
     use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct WavBuilderConstruction {
@@ -360,7 +360,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::riff_pcm::subsets::any::io;
     use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct WavParts {
@@ -373,24 +373,24 @@ pub mod derived_analysis {
         type Parts = WavParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
-                        return semio_framework_plugin::io::Confidence::High;
+                        return semio_plugin::io::Confidence::High;
                     }
                     let marker = STDIO_WAV_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
                     if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_WAV_DOCUMENT_SCHEMA) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -399,20 +399,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = WavParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <WavSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <WavSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -424,7 +424,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec WavBuilderFacets {
         construction: WavBuilderConstruction,
         analysis: WavAnalyzerAnalysis,

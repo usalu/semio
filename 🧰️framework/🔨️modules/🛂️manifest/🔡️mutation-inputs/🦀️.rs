@@ -1,8 +1,8 @@
 //! 🔡️ Mutation input schema reader: input definitions, audits and instances derived from JSON schema documents.
 
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::Number;

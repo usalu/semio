@@ -1,10 +1,10 @@
 //! 🪟️ 🧩️ Flow play app commands command — `rename-flow-widget`.
 
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -29,7 +29,7 @@ pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, 
 /// layout entry follow it, the result is published on the content child, and a missing widget or an empty or taken
 /// new id is refused by name.
 pub fn rename_edit(payload: &RenameFlowWidget, composed: &FlowSnapshot) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let refuse = |code: &str, message: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message);
+    let refuse = |code: &str, message: String| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message);
     let mut edit = crate::editor::flow::edit_rules::ContentEdit::new(crate::editor::flow::host::flow_composed_content(composed)?);
     if !edit.content.nodes.iter().any(|node| node.id == payload.old_id) {
         return Err(refuse("mutation.target-missing", format!("renameFlowWidget found no widget \"{}\"", payload.old_id)));

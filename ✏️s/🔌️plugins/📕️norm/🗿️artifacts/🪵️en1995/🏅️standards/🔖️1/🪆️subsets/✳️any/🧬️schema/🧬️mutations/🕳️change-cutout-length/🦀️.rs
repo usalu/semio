@@ -10,7 +10,7 @@ pub struct ChangeCutoutLength { pub cutout_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeCutoutLength where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_cutout_length::ChangeCutoutLength> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cutout-length", kind: "change-cutout-length", record: "ChangedCutoutLength" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change notch length or hole diameter of cutout {}", self.cutout_id), &format!("Ausklinkungslänge oder Lochdurchmesser von Cutout {} ändern", self.cutout_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change notch length or hole diameter of cutout {}", self.cutout_id), &format!("Ausklinkungslänge oder Lochdurchmesser von Cutout {} ändern", self.cutout_id)) }
     fn target(&self) -> Vec<String> { vec![self.cutout_id.clone()] }
 }
 

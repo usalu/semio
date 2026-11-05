@@ -2,8 +2,8 @@ mod tests {
     use super::*;
     use crate::standards::v1_7::subsets::a::io::PdfABuilderConstruction as PdfABuilder;
     use crate::standards::v1_7::subsets::a::io::{CODE_JAVASCRIPT, CODE_LAUNCH};
-    use semio_framework_plugin::io::AnalyzeSource;
-    use semio_framework_plugin::ArtifactBuilder as _;
+    use semio_plugin::io::AnalyzeSource;
+    use semio_plugin::ArtifactBuilder as _;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn minimal_pdf_with_extra_object(extra_obj_body: &[u8]) -> Vec<u8> {

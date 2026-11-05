@@ -27,7 +27,7 @@ semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰�
 semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 pack = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
@@ -37,6 +37,6 @@ semio-s-artifact-stdio-zip = { workspace = true }
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 zip = { version = "6", default-features = false, features = ["deflate"] }
 serde_json = { workspace = true }

@@ -78,7 +78,7 @@ pub fn editable_value(node: &UiNode) -> Option<String> {
             None => input.value.clone(),
         }),
         UiNode::IconSelect(select) => Some(select.value.clone()),
-        UiNode::NumberStepper(stepper) => Some(semio_framework_ui_wgpu_controls::stepper::stepper_value_text(stepper.value, stepper.precision, stepper.display_factor)),
+        UiNode::NumberStepper(stepper) => Some(semio_ui_wgpu_controls::stepper::stepper_value_text(stepper.value, stepper.precision, stepper.display_factor)),
         _ => None,
     }
 }
@@ -131,7 +131,7 @@ pub(super) fn search_line_action(node: &Node, trigger: Trigger, text: &str) -> O
 
 /// 🎯️ A number field's committed value: a detent kept exactly (it may sit off the step ladder), else
 /// [`constrain_number_input`] rounded to its precision.
-pub fn constrain_number_field(value: f64, input: &semio_framework_ui_declaration::ui::UiInputNode) -> f64 {
+pub fn constrain_number_field(value: f64, input: &semio_ui_declaration::ui::UiInputNode) -> f64 {
     if input.snaps.contains(&value) {
         return value;
     }
@@ -187,12 +187,12 @@ pub fn typed_number(text: &str, display_factor: Option<f64>, precision: Option<u
 }
 
 /// 🛰️ A number field's stored value and detents — the candidates a typed display value keeps exactly.
-pub(super) fn current_stored(input: &semio_framework_ui_declaration::ui::UiInputNode) -> impl Iterator<Item = f64> + '_ {
+pub(super) fn current_stored(input: &semio_ui_declaration::ui::UiInputNode) -> impl Iterator<Item = f64> + '_ {
     input.value.trim().parse::<f64>().ok().into_iter().chain(input.snaps.iter().copied())
 }
 
 /// 🧿️ The text a number field's edit buffer shows for a stored value: its display text at its precision.
-pub(super) fn number_field_text(input: &semio_framework_ui_declaration::ui::UiInputNode, stored: f64) -> String {
+pub(super) fn number_field_text(input: &semio_ui_declaration::ui::UiInputNode, stored: f64) -> String {
     ui_contract::ui_number_display_text(stored, input.display_factor, input.precision)
 }
 
@@ -241,7 +241,7 @@ pub fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: 
         UiNode::Slider(slider) => {
             let unit_width = slider.unit_label().map(|_| inline_suffix_width);
             let track = slider_control_presentation(bounds, slider.axis_position(slider.value), 0.0, 1.0, unit_width, control_gap, inline).slider.track_cell;
-            track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(semio_framework_ui_wgpu_controls::slider::slider_node_pointer_value(slider, track, x, y)))).flatten()
+            track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(semio_ui_wgpu_controls::slider::slider_node_pointer_value(slider, track, x, y)))).flatten()
         }
         UiNode::Ring(ring) => fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, x, y))),
         UiNode::NumberStepper(stepper) => {

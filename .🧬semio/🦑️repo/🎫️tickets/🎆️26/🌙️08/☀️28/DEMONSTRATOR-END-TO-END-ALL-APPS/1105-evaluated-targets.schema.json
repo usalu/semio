@@ -1,0 +1,49 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "steps",
+      "expected"
+    ],
+    "properties": {
+      "steps": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "enum": [
+                "document",
+                "generation"
+              ]
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ],
+          "additionalItems": false
+        }
+      },
+      "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

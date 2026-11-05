@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeStoreyShearResista
         record: "ChangeStoreyShearResistanceN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Storey shear resistance", "Geschoss-Querkrafttragfähigkeit ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Storey shear resistance", "Geschoss-Querkrafttragfähigkeit ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-storey-shear-resistance-n".into()]

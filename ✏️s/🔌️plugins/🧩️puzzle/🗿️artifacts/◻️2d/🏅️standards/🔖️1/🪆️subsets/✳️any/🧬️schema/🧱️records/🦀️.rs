@@ -76,7 +76,7 @@ pub enum Puzzle2dNodeAnchor {
 }
 
 /// 🔵️ One node — `shape: "circle"` (default, radius-sized) or `"rectangle"` (width/height-sized);
-/// `🐙️handles` are its rim ports. Mirrors `semio_framework_os_infinite::schema::BoardSnapshot`'s
+/// `🐙️handles` are its rim ports. Mirrors `semio_os_infinite::schema::BoardSnapshot`'s
 /// per-node fields, the canonical parser this snapshot format round-trips through.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
@@ -211,7 +211,7 @@ impl Default for Puzzle2dEdge {
 }
 
 /// 🔗️ How specifically two handle/wire kinds are allowed to link — `vortex` is a ported-graph alias
-/// for `handle` (see `semio_framework_os_infinite::parse_compat_specificity`).
+/// for `handle` (see `semio_os_infinite::parse_compat_specificity`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -544,15 +544,15 @@ pub const PUZZLE2D_DIALECT: semio_framework_artifact_reference::Dialect = semio_
 
 /// 🗿️ The `2d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
 /// the artifact, not the app, owns its own identity.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "2d.puzzle".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D Puzzle", "2D-Puzzle"),
+        label: semio_ui_locale::LocalizedLabel::native("2D Puzzle", "2D-Puzzle"),
         source_format: "puzzle.2d".into(),
         component_kind: "puzzle2d".into(),
         dimension: "2d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Design },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::TwoD, form: semio_plugin::MediaForm::Design },
         schema: PUZZLE_2D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],

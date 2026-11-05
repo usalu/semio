@@ -39,8 +39,8 @@ impl DirectoryState {
     /// clipboard is an `InteractiveJob` (`ui_host::ClipboardIoJob`) with no shell-side runner.
     /// Offering a control that silently loses an invitation is strictly worse than not
     /// offering it; the clipboard door is named as a hand-off in this packet's report.
-    pub fn space_administration_plan(&self, prefs: &PrefsState) -> Option<semio_framework_os_renderer_wgpu_hub_workspace::space_administration::SpaceAdministrationPlan> {
-                use semio_framework_os_renderer_wgpu_hub_workspace::space_administration as pane;
+    pub fn space_administration_plan(&self, prefs: &PrefsState) -> Option<semio_renderer_wgpu_hub_workspace::space_administration::SpaceAdministrationPlan> {
+                use semio_renderer_wgpu_hub_workspace::space_administration as pane;
         let operation = self.space_administration.as_ref()?;
         let german = prefs.locale_id == "de";
         let locale = prefs.active_locale();

@@ -1,7 +1,7 @@
 //! 🧪️ The funded Body endpoint executes released clauses with a fixed policy and original preparation.
 use super::*;
 use super::tessellation_tests::{graph, loan, close, request};
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcValue};
 use std::sync::Arc;

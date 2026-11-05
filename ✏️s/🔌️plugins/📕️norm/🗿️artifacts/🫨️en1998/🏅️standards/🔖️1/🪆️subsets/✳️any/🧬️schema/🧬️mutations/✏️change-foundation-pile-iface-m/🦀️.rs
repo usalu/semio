@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationPileIfac
         record: "ChangeFoundationPileIfaceM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Depth of the stiffness contrast between two soil layers", "Tiefe des Steifigkeitssprungs zwischen zwei Bodenschichten ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Depth of the stiffness contrast between two soil layers", "Tiefe des Steifigkeitssprungs zwischen zwei Bodenschichten ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-pile-iface-m".into()]

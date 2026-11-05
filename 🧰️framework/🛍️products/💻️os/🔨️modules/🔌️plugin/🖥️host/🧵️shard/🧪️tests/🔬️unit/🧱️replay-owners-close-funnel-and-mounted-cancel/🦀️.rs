@@ -12,7 +12,7 @@ async fn replay_failure_and_actor_loss_enter_one_close_funnel_before_reporting()
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4_096, 1)).await.expect("mock instantiate");
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     let turn = test_job_turn(actor, 24, 0, 0);
     let kind = "close-funnel".to_string();
@@ -66,7 +66,7 @@ async fn mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_wo
     let process_pages_before = JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire);
     let abi_bytes_before = JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire);
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default()),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default()),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.replay_seeds[0] = Some(MountedReplaySeed::new(actor.0, job, turn, request, JobPlacement::Inline, kind, input).expect("fixed mounted replay seed"));
 
     let initial_phase = shard.replay_seeds[0].as_ref().expect("mounted seed").phase;
@@ -118,7 +118,7 @@ async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before
     let process_pages_before = JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire);
     let abi_bytes_before = JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire);
     let (transport, _) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     let mut seed = MountedReplaySeed::new(actor.0, job, turn, request, JobPlacement::Inline, kind, input).expect("fixed mounted replay seed");
     seed.phase = ReplaySeedPhase::Retained;

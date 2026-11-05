@@ -6,15 +6,15 @@ use crate::editor::jack::{TrinityJackCommand, TrinityJackPlayApp};
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::app::ArtifactOwnedToolJobContext;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
 use semio_s_artifact_trinity_jack_graph_query::JackGraphQuery;
 use crate::standards::v1::subsets::any::schema::content_read::JackContentRead;
-use semio_framework_plugin::app::ChildEmitPreparation;
+use semio_plugin::app::ChildEmitPreparation;
 
 pub type Owner<C> = EditorApp<TrinityJackPlayApp<C>>;
 pub const JACK_QUERY_TOOL_IDS: &[&str] = &["runQuery", "loadExampleQuery"];
@@ -51,7 +51,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn execution_contract(&self) -> ToolExecutionContract {
         ToolExecutionContract::resumable(RAW_BYTES, 64, 1, 1_048_576, 7_500, 1, 1)
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: RAW_BYTES, checkpoint_resume: true);
 }
 
 impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackQueryJobFactory<C>{
@@ -61,13 +61,13 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "runQuery", lanes: LANES }, ArtifactToolPublicationContract { tool_id: "loadExampleQuery", lanes: LANES }];
 }
 
-pub fn build_job<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(request: &mut Option<ArtifactOwnedToolJobRequest<Owner<C>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+pub fn build_job<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(request: &mut Option<ArtifactOwnedToolJobRequest<Owner<C>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
     let tool = TrinityJackPlayApp::<C>::command_id(&original.command);
     if tool != original.tool_id || !JACK_QUERY_TOOL_IDS.contains(&tool) {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "query command does not match its exact factory key").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "query command does not match its exact factory key").into());
     }
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, TrinityJackPlayApp::<C>::command_id, RAW_BYTES, 1, true, Default::default(), |request, _identity| {
+    semio_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, TrinityJackPlayApp::<C>::command_id, RAW_BYTES, 1, true, Default::default(), |request, _identity| {
         let work = (|| -> Result<_, Fault> {
         let view = request.context.view_state.as_deref().ok_or_else(|| Fault::from("Jack query execution requires an exact attached-window roster"))?;
         let editor_window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("Jack query execution requires its originating editor window"))?;
@@ -114,7 +114,7 @@ pub fn build_job<C:crate::standards::v1::subsets::any::schema::composition::Jack
         let work = JackQueryWork::<C>::new(tool, source.to_string(), adopts_query, editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation);
             Ok(work)
         })()
-        .map_err(|fault| semio_framework_plugin::__value::ValueError::new(semio_framework_plugin::__value::ValueRefusalKind::InvalidValue, fault.message.to_string()))?;
+        .map_err(|fault| semio_plugin::__value::ValueError::new(semio_plugin::__value::ValueRefusalKind::InvalidValue, fault.message.to_string()))?;
         Ok((work, Default::default()))
     })
 }
@@ -177,14 +177,14 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         preparations:Vec<ChildEmitPreparation>,
     ) -> ArtifactCommandWorkStep<Owner<C>> {
         self.finished = true;
-        let mut emit=semio_framework_plugin::Emit{child_preparations:preparations.into(),..Default::default()};
+        let mut emit=semio_plugin::Emit{child_preparations:preparations.into(),..Default::default()};
         emit.artifact_mutations = self.adopts_query.then(|| set_query(self.source.as_ref().expect("query source is retained").clone())).into_iter().collect();
         ArtifactCommandWorkStep::CompleteWithEphemeral {
             emit,
             ephemeral: EphemeralEmit {
                 presence: Vec::new(),
                 transient: Vec::new(),
-                window_transient: vec![semio_framework_plugin::WindowTransientMutation::of::<JackResultsWindowTransientOwner>(
+                window_transient: vec![semio_plugin::WindowTransientMutation::of::<JackResultsWindowTransientOwner>(
                     self.results_window_id.as_ref().expect("results window id is retained"),
                     JackResultsWindowTransientMutation::ReplaceQueryResult(ReplaceQueryResult { execution_id: Some(input.operation.operation_id.to_string()), result, error }),
                 )],

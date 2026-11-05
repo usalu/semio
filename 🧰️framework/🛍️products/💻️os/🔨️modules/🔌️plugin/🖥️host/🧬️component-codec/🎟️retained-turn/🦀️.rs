@@ -1,6 +1,6 @@
 //! 🎟️ Checks the exact original retained identity and receipt at the host component boundary.
 use super::wit_reactor;
-use semio_framework_plugin_guest_contract::{PluginHostError, TurnFault};
+use semio_plugin_guest_contract::{PluginHostError, TurnFault};
 use semio_framework::kernel::{RetainedTurnInput,RetainedTurnReceipt};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
 #[path="💼️jobs/🦀️.rs"]
@@ -19,4 +19,4 @@ pub fn admission_from_wit(call:wit_reactor::ActorAdmissionCall)->Result<semio_fr
 /// ♻️ A blocked or refused close keeps its exact actual child delta in the required receiving ABI.
 pub fn close_from_wit(call:wit_reactor::ActorContextCloseCall)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{Ok(semio_framework_actor::retained_context::OriginalActorCloseReply{input:input_from_wit(call.input)?,spent:progress_from_wit(call.spent)?,work_units_spent:call.work_units_spent,complete:call.complete,blocked:call.blocked,refusal:call.refusal.map(cause_from_wit)})}
 /// 🧾️ Semantic failure is a scalar marker while the same typed Fault remains in guest custody.
-pub fn failure_from_wit(call:wit_reactor::ActorCallRefusal)->TurnFault{let original=(||Ok::<_,TurnFault>(semio_framework_plugin_guest_contract::original_actor_context::OriginalActorFixedCall{input:input_from_wit(call.input)?,spent:progress_from_wit(call.spent)?,work_units_spent:call.work_units_spent,kind:semio_framework_plugin_guest_contract::original_actor_context::OriginalActorFixedKind::Failure{authority:match call.failure{wit_reactor::ActorCallFailure::Authority(cause)=>Some(cause_from_wit(cause)),wit_reactor::ActorCallFailure::Semantic=>None}}}))();match original{Ok(call)=>TurnFault::ActorCall(call),Err(error)=>error}}
+pub fn failure_from_wit(call:wit_reactor::ActorCallRefusal)->TurnFault{let original=(||Ok::<_,TurnFault>(semio_plugin_guest_contract::original_actor_context::OriginalActorFixedCall{input:input_from_wit(call.input)?,spent:progress_from_wit(call.spent)?,work_units_spent:call.work_units_spent,kind:semio_plugin_guest_contract::original_actor_context::OriginalActorFixedKind::Failure{authority:match call.failure{wit_reactor::ActorCallFailure::Authority(cause)=>Some(cause_from_wit(cause)),wit_reactor::ActorCallFailure::Semantic=>None}}}))();match original{Ok(call)=>TurnFault::ActorCall(call),Err(error)=>error}}

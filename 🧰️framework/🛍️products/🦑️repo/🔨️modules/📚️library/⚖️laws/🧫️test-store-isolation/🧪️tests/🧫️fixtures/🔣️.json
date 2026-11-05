@@ -19,6 +19,11 @@
     {"name": "a function that mentions the checkout is not the checkout", "source": "const workspaceOf=(kind:string)=>kind===\"nested\"?process.cwd():root;\nconst run=()=>reset(\"/repo/.cache/b/n\",workspaceOf(kind));", "findings": []},
     {"name": "data read from a checkout file is not the checkout", "source": "const file=join(process.env.SEMIO_WORKSPACE_ROOT!,\"source.ts\"),text=readFileSync(file,\"utf8\");\nrepositoryCacheBudgetV1(text);\nrepositoryCacheBudgetV1(file);", "findings": [{"line": 3, "rule": "checkout-store-call"}]},
     {"name": "the file's own directory walked up to the checkout", "path": "🧰️framework/a/🧪️tests/🟦️.ts", "source": "const root=resolve(import.meta.dir,\"../../..\");\nawait withRepositoryCacheStoreV1(root,\"tools\",original,control,body);\nconst near=resolve(import.meta.dir,\"../..\");\nrepositoryCacheBudgetV1(near);", "findings": [{"line": 2, "rule": "checkout-store-call"}]},
-    {"name": "checkout without a store", "source": "const manifest=readFileSync(join(process.cwd(),\"📋️project.json\"),\"utf8\");", "findings": []}
+    {"name": "checkout without a store", "source": "const manifest=readFileSync(join(process.cwd(),\"📋️project.json\"),\"utf8\");", "findings": []},
+    {"name":"checkout joined with compact Rust image","source":"const rust=join(process.cwd(),\".cache/b/r/m\");","findings":[{"line":1,"rule":"checkout-store-path"}]},
+    {"name":"checkout template compact Rust image","source":"const rust=`${process.cwd()}/.cache/b/r/m`;","findings":[{"line":1,"rule":"checkout-store-path"}]},
+    {"name":"compact Rust store from private root","source":"const repository=await privateRepositoryWorkspaceV1();const rust=join(repository.root,\".cache/b/r/m\");","findings":[]},
+    {"name":"compact Rust neighbouring name remains Source","source":"const path=join(process.cwd(),\".r-neighbour/source.ts\");","findings":[]},
+    {"name":"checkout compact Rust path in a storage call","source":"await acquireQueuedResourceLease({directory:join(process.cwd(),\".cache/b/r/m/u/l\"),resource:\"r\",mode:\"shared\"});","findings":[{"line":1,"rule":"checkout-store-call"},{"line":1,"rule":"checkout-store-path"}]}
   ]
 }

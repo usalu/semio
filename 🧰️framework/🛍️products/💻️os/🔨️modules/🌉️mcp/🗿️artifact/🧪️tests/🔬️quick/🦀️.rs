@@ -3,12 +3,12 @@
 use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use crate::artifact::{base64_encode, register_artifact_tools};
-use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, CatalogSource, ToolExposure, compile};
-use semio_framework_os_mcp_port::policy::AgentPrincipal;
-use semio_framework_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
-use semio_framework_os_mcp_schema::schema::{UNTRUSTED_CONTENT_NOTICE, UNTRUSTED_CONTENT_SCHEMA, artifact_create_input_schema, artifact_create_output_schema, artifact_export_input_schema, artifact_export_output_schema, artifact_open_input_schema, artifact_open_output_schema, artifact_snapshot_input_schema, artifact_snapshot_output_schema, artifact_validate_input_schema, artifact_validate_output_schema};
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, GatewayBackend, InMemoryToolRegistry, ToolRegistry};
-use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+use semio_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, CatalogSource, ToolExposure, compile};
+use semio_os_mcp_port::policy::AgentPrincipal;
+use semio_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
+use semio_os_mcp_schema::schema::{UNTRUSTED_CONTENT_NOTICE, UNTRUSTED_CONTENT_SCHEMA, artifact_create_input_schema, artifact_create_output_schema, artifact_export_input_schema, artifact_export_output_schema, artifact_open_input_schema, artifact_open_output_schema, artifact_snapshot_input_schema, artifact_snapshot_output_schema, artifact_validate_input_schema, artifact_validate_output_schema};
+use semio_os_mcp_wire::protocol::{CallToolResult, GatewayBackend, InMemoryToolRegistry, ToolRegistry};
+use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 
@@ -38,7 +38,7 @@ fn every_artifact_tool_refuses_a_principal_without_its_scope_before_it_reads_its
 }
 
 fn empty_catalog() -> Arc<Catalog> {
-    Arc::new(compile(&CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
+    Arc::new(compile(&CatalogSource::default(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
 }
 
 /// 🧪️ A minimal, self-built (never `🧫️fixtures`, reserved for `🗂️catalog`/`🔎️search`/`🧠️context`/
@@ -67,7 +67,7 @@ fn single_plugin_catalog(plugin_id: &str) -> Arc<Catalog> {
         source: CapabilitySource::Gateway,
     };
     let source = CatalogSource { gateway: vec![probe_capability], ..Default::default() };
-    Arc::new(compile(&source, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("single-plugin source compiles"))
+    Arc::new(compile(&source, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("single-plugin source compiles"))
 }
 
 fn assert_object_typed_2020_12(schema: &serde_json::Value) {

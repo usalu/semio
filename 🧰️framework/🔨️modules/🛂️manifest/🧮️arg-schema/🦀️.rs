@@ -1,13 +1,13 @@
 //! 🧮️ Action argument schema: formats, schemas, controls and argument definitions.
 
 use semio_framework_pack_json::ArtifactCanonicalJsonText as Text;
-use semio_framework_ui_contract::SliderAppearance;
-use semio_framework_ui_contract::UiNumberBound;
-use semio_framework_ui_contract::UiNumberLimits;
-use semio_framework_ui_contract::UiNumberScale;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_contract::SliderAppearance;
+use semio_ui_contract::UiNumberBound;
+use semio_ui_contract::UiNumberLimits;
+use semio_ui_contract::UiNumberScale;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::Number;

@@ -1,7 +1,7 @@
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use crate::SVG_ANY_DIALECT;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
 use crate::editor::svg_any::modes::edit;
 #[allow(unused_imports)]
@@ -13,65 +13,65 @@ use crate::standards::v1_1::subsets::base::schema::mutations::SvgMutation;
 #[allow(unused_imports)]
 use crate::STDIO_SVG_DOCUMENT_SCHEMA;
 #[allow(unused_imports)]
-use semio_framework_plugin::{retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+use semio_plugin::{retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
 #[allow(unused_imports)]
-use semio_framework_plugin::AppOperationContext;
+use semio_plugin::AppOperationContext;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactOwnedToolJobRequest;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_plugin::ArtifactStoreInitializationJob;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolExecutionContract;
+use semio_plugin::ToolExecutionContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolOperationSpec;
+use semio_plugin::ToolOperationSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoPresence;
+use semio_plugin::NoPresence;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoPresenceMutation;
+use semio_plugin::NoPresenceMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoTransient;
+use semio_plugin::NoTransient;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::NoTransientMutation;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
@@ -104,4 +104,4 @@ fn natural_file_route_round_trips_svg_with_an_independent_xml_oracle_and_fresh_s
     assert_eq!(current, <SvgAnyEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"), "opening does not replace the selected owner before publication");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::svg_any::SvgAnyEditor, || semio_framework_plugin::App { definition: crate::editor::svg_any::create_svg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::svg_any::SvgAnyEditor, || semio_plugin::App { definition: crate::editor::svg_any::create_svg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base");

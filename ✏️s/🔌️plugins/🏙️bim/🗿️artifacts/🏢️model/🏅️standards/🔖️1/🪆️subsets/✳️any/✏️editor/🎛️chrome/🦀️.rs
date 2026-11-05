@@ -8,14 +8,14 @@ use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, se
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::{bim_labels, BimLabels};
 use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::SeverityCounts;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::MeasureSelectItem;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::ConfigView;
+use semio_plugin::DslValue;
+use semio_plugin::MeasureSelectItem;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 
 /// 🪟️ The kind of the window instance a view addresses.
@@ -90,11 +90,11 @@ pub fn engagements(snapshot: &ModelSnapshot, view_state: &ViewModel, plan_storey
 //#endregion 🔖️Status
 
 //#region 🔖️Measures
-fn view_action(field: &str) -> semio_framework_plugin::ActionDescriptor {
+fn view_action(field: &str) -> semio_plugin::ActionDescriptor {
     bim_window_action("setView", Some(DslValue::object([("field".to_string(), DslValue::String(field.to_string()))])))
 }
 
-fn view_action_with(field: &str, value: &str) -> semio_framework_plugin::ActionDescriptor {
+fn view_action_with(field: &str, value: &str) -> semio_plugin::ActionDescriptor {
     bim_window_action("setView", Some(DslValue::object([("field".to_string(), DslValue::String(field.to_string())), ("value".to_string(), DslValue::String(value.to_string()))])))
 }
 

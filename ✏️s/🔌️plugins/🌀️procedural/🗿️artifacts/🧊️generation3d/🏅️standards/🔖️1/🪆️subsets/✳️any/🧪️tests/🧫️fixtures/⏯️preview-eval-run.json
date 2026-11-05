@@ -1235,6 +1235,15 @@
       "windowId",
       "windowKindId",
       "extensionId"
+    ],
+    "compactResumeFields": [
+      "inputJson",
+      "dependencyJson"
+    ],
+    "requiredCalleeFields": [
+      "neuronId",
+      "operatorId",
+      "inputJson"
     ]
   },
   "originalCloseReceipt": {

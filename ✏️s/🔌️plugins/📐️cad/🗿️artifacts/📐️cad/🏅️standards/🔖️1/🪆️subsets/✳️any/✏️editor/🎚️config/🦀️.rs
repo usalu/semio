@@ -1,8 +1,8 @@
 //! 🧮️ CAD application preferences shared by the artifact instance. Camera, sun, and Dislocate
 //! preferences belong to exact concrete window owners beside the world windows.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 //#region 🧩️Modules
@@ -29,7 +29,7 @@ impl Default for CadDislocateOptions {
     }
 }
 
-/// 🌞️ Local `dsl::DslRecord`-able mirror of `semio_framework_plugin::WorldSunConfig` (foreign,
+/// 🌞️ Local `dsl::DslRecord`-able mirror of `semio_plugin::WorldSunConfig` (foreign,
 /// out-of-scope crate — cannot gain a `dsl` derive there). `cad_sun_config_from_world`/
 /// `cad_sun_config_to_world` convert at the boundary; field-for-field identical otherwise.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -49,19 +49,19 @@ impl Default for CadSunConfig {
     }
 }
 
-pub fn cad_sun_config_from_world(sun: &semio_framework_plugin::WorldSunConfig) -> CadSunConfig {
+pub fn cad_sun_config_from_world(sun: &semio_plugin::WorldSunConfig) -> CadSunConfig {
     CadSunConfig { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color.clone() }
 }
 
-pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::WorldSunConfig {
-    semio_framework_plugin::WorldSunConfig { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color.clone() }
+pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_plugin::WorldSunConfig {
+    semio_plugin::WorldSunConfig { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color.clone() }
 }
 
 /// 🧮️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: cad's real `ArtifactApp::Config` — see the region doc
 /// comment above for the full absorption story.
 /// The per-frame engagement state (action line, REPL step, live session, repeat-last) is NOT config: it lives in the
 /// addressed world window's transient (`🪟️windows/🫧️transient`, design §17.4 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
-#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "cadcfg")]
@@ -131,8 +131,8 @@ impl pack::snapshot::ArtifactPack for CadConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for CadConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for CadConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -317,7 +317,7 @@ impl protocol::OpBinary for CadConfigMutation {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(CadConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(CadConfigMutation);
 
 //#endregion 🔖️OpCodec
 

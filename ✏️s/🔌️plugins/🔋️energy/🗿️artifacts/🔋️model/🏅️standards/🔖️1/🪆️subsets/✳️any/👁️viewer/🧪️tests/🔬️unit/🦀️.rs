@@ -3,7 +3,7 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn create_energy_model_viewer_builds_a_definition_for_the_viewer_role() {
     let def = create_energy_model_viewer();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
+    assert_eq!(def.role, semio_plugin::AppRole::Viewer);
     assert_eq!(def.dialect, MODEL_DIALECT.into());
 }
 
@@ -30,7 +30,7 @@ async fn viewer_declares_no_dispatchable_action() {
     let def = create_energy_model_viewer();
     for window in &def.window_kinds {
         for action in semio_framework::window_kind_actions(&def, window) {
-            assert!(!matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "viewer window {} declares the mutating action {}", window.id, action.id);
+            assert!(!matches!(action.kind, semio_plugin::ActionKind::Mutation), "viewer window {} declares the mutating action {}", window.id, action.id);
         }
     }
     assert!(!def.window_kinds.iter().any(|window| semio_framework::window_kind_actions(&def, window).iter().any(|action| action.id == "set-node" || action.id == "set-cell")), "a viewer window carries a kit edit action");
@@ -53,7 +53,7 @@ async fn the_viewer_declares_and_owns_the_camera_verb() {
 /// emitted `Emit` carries a window-config write and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn every_viewer_publication_lane_is_a_window_config_lane() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let contracts = <EnergyModelViewCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     assert_eq!(contracts.len(), 1);
     assert_eq!(contracts[0].tool_id, model_window::SET_CAMERA_ACTION_ID);
@@ -63,10 +63,10 @@ async fn every_viewer_publication_lane_is_a_window_config_lane() {
 #[semio_framework_async_macros::async_test]
 async fn a_camera_gesture_becomes_an_addressed_window_config_write_and_nothing_else() {
     let command = EnergyModelViewCommand::SetCamera { camera: "{\"position\":[12.0,-9.0,7.5],\"target\":[4.0,3.0,1.35],\"zoom\":1.0}".into() };
-    let view = semio_framework_plugin::ViewModel {
+    let view = semio_plugin::ViewModel {
         window_id: Some("window-1".into()),
         window_instances: vec![semio_framework::ViewWindowInstance { id: "window-1".into(), window_kind_id: model_window::WINDOW_KIND_ID.into() }],
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let emit = camera_emit(&command, Some(&view)).expect("the pose is admissible");
     assert_eq!(emit.window_config_mutations.len(), 1, "one addressed window-config write");
@@ -80,10 +80,10 @@ async fn a_camera_gesture_without_a_concrete_window_is_refused_rather_than_writt
     let command = EnergyModelViewCommand::SetCamera { camera: "{\"position\":[1.0,1.0,1.0],\"target\":[0.0,0.0,0.0],\"zoom\":1.0}".into() };
     assert!(camera_emit(&command, None).is_err(), "a camera is addressed at ONE window instance");
 
-    let view = semio_framework_plugin::ViewModel {
+    let view = semio_plugin::ViewModel {
         window_id: Some("window-1".into()),
         window_instances: vec![semio_framework::ViewWindowInstance { id: "window-1".into(), window_kind_id: "energy.structure".into() }],
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     assert!(camera_emit(&command, Some(&view)).is_err(), "a pose addressed at another window kind must not write the 3d pane");
     assert!(camera_emit(&EnergyModelViewCommand::SetCamera { camera: String::new() }, Some(&view)).is_err(), "an empty pose is a refusal, never a silent no-op");

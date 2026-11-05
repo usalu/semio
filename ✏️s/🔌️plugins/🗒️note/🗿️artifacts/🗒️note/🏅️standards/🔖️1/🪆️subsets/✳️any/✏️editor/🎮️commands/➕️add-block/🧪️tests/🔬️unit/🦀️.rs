@@ -1,10 +1,10 @@
 use crate::schema::create_block_by_kind;
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 #[allow(unused_imports)]
 use crate::op::NoteMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Emit, Fault};
+use semio_plugin::{Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::note::commands::add_block::*;
@@ -19,7 +19,7 @@ use crate::NoteBlockNode;
 /// document's own history instead — the same reading trinity/jack's `history_len` uses.
 #[semio_framework_async_macros::async_test]
 async fn add_block_action_emits_one_op_and_grows_projection() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = note_app().await;
     let before = app.history_snapshot().await.expect("history").upserts.len();
     dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 80.0, y: 80.0 })).await;
@@ -31,9 +31,9 @@ async fn add_block_action_emits_one_op_and_grows_projection() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_block_then_undo_round_trip() {
-    use semio_framework_plugin::artifact_app_laws;
+    use semio_plugin::artifact_app_laws;
     let mut app = note_app().await;
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -66,12 +66,12 @@ async fn duplicate_selection_clones_with_offset() {
     let source = crate::schema::create_block_by_kind(&mut ids, "text", 10.0, 10.0);
     let source_id = block_id(&source).to_string();
     let document = semio_s_artifact_note_note_schema::NoteSnapshot { blocks: vec![source], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: vec![source_id.clone()], id_owner: crate::schema::NoteIdOwner::new("duplicate-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let emit = crate::editor::note::commands::duplicate_selection::handle(
         &crate::editor::note::commands::duplicate_selection::DuplicateSelection {},
-        &semio_framework_plugin::ArtifactView::new(&document, &history),
-        &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None },
+        &semio_plugin::ArtifactView::new(&document, &history),
+        &semio_plugin::ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None },
         &mut ctx,
     )
     .expect("duplicate selection");

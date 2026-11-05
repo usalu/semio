@@ -21,9 +21,9 @@ semio-framework-dsl-record = { path = "../../../../../../../../../../../../../�
 semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }

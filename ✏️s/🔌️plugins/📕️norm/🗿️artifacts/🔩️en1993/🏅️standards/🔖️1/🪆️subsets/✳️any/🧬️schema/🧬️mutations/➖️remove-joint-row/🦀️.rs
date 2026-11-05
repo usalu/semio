@@ -10,7 +10,7 @@ pub struct RemoveJointRow { pub index: usize }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveJointRow where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_joint_row::InsertJointRow> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "joint-row", kind: "remove-joint-row", record: "RemovedJointRow" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove joint row #{}", self.index), &format!("Schraubenreihe #{} entfernen", self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove joint row #{}", self.index), &format!("Schraubenreihe #{} entfernen", self.index)) }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }
 

@@ -8,7 +8,7 @@ fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
     for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {
         let actions = action_declarations(&manifest, tool_id);
         assert_eq!(actions.len(), 1, "{tool_id} requires exactly one manifest declaration");
-        assert_eq!(actions[0].semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{tool_id}");
+        assert_eq!(actions[0].semantics.execution.interactive_job, semio_plugin::InteractiveJobClassification::Migrated, "{tool_id}");
     }
     let exact = |contracts: &[ArtifactToolPublicationContract]| {
         let ids = contracts.iter().map(|contract| contract.tool_id).collect::<std::collections::BTreeSet<_>>();

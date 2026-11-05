@@ -1,9 +1,9 @@
 //! 🪶️ IDML semantic SQLite snapshot: one package row, ordered part rows and ordered byte rows, with the native wire reproduced exactly.
 use crate::{IdmlSnapshot, DOCUMENT_SCHEMA};
 use crate::schema::IdmlPart;
-use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
-use semio_framework_os_kernel::sqlite_snapshot::{artifact::{reconstruct_text, Cell, Projection}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase};
+use semio_os_kernel as store;
+use semio_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
+use semio_os_kernel::sqlite_snapshot::{artifact::{reconstruct_text, Cell, Projection}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase};
 use semio_framework_pack::snapshot::{ArtifactDsl, ArtifactPack};
 use semio_framework_pack::snapshot::ArtifactSqliteSnapshot;
 use semio_framework_value::{ValueError, ValueRefusalKind};

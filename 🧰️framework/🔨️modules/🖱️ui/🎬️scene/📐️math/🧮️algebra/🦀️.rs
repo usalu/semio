@@ -1,6 +1,6 @@
 //! 🧮️ Synchronous `Vec3`/`Mat4` algebra shared by every scene math crate — the plain `fn` mirror of `semio_framework_geometry`'s async inherent methods (ruling E6), verified against that crate's own algebra tests.
 //!
-//! Carved out of the former `semio-framework-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
+//! Carved out of the former `semio-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 
 pub use semio_framework_geometry::{Mat4, Vec3};
 

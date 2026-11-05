@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLoadCaseVerticalPe
         record: "ChangedLoadCaseVerticalPerm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permanent vertical load V_G,k of the footing load case", "Fundament-Lastfall: Ständige Vertikallast V_G,k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permanent vertical load V_G,k of the footing load case", "Fundament-Lastfall: Ständige Vertikallast V_G,k ändern")
     }
 }
 

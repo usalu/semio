@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangePrestressLoss wher
         record: "ChangedPrestressLoss",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tendon prestress loss ratio", "Spannkraftverlust (Spannglied) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tendon prestress loss ratio", "Spannkraftverlust (Spannglied) ändern")
     }
 }
 

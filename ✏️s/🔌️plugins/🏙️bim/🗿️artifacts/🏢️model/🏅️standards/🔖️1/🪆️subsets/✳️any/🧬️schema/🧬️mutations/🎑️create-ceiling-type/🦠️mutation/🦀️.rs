@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "ceiling-type", kind: "create-ceiling-type", record: "CreateCeilingType" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create ceiling type \"{}\"", self.ceiling_type.name), &format!("Unterdeckentyp \"{}\" anlegen", self.ceiling_type.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create ceiling type \"{}\"", self.ceiling_type.name), &format!("Unterdeckentyp \"{}\" anlegen", self.ceiling_type.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -14,7 +14,7 @@ use std::path::PathBuf;
 
 /// 🌳️ `…/🧑‍🎨engine`, the common root of all four sources.
 fn engine_root() -> PathBuf {
-    semio_framework_os_renderer_wgpu_test_support::engine_root()
+    semio_renderer_wgpu_test_support::engine_root()
 }
 
 fn read(relative: &str) -> String {

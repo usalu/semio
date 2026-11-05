@@ -1,6 +1,6 @@
 //! 📤️ Original edit metadata and operation pages feed the bounded causal message writer.
 use super::{ArtifactOperationWire,ArtifactOriginalOperationBytes,ArtifactPreparedOperationOutput};
-use semio_framework_os_spr::Edit;
+use semio_os_spr::Edit;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits};
 use semio_framework_replication_causal::binary::native_encoding::{CausalEnvelopeField,CausalEnvelopeShape,CausalEnvelopeWireSource,CausalEnvelopeWireCursor};

@@ -11,5 +11,6 @@
   "nativeBrowserProject": "@semio-tech/framework-renderer-wgpu",
   "actorFactoryOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
   "actorDescriptorOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
-  "actorChildOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/👷️worker/🟦️.ts"
+  "actorChildOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/👷️worker/🟦️.ts",
+  "nativeBrowserManifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️component/📦️packages/🦀️rust/Cargo.toml"
 }

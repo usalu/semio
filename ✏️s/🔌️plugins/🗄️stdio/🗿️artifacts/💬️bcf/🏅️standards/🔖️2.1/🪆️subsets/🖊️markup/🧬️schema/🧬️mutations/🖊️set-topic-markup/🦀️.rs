@@ -28,8 +28,8 @@ pub struct SetTopicMarkup {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetTopicMarkup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "topic-markup", kind: "set-topic-markup", record: "SetTopicMarkup" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set topic markup", "Themen-Markup setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set topic markup", "Themen-Markup setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

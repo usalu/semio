@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlateWeldBeta
         record: "ChangedJointPlateWeldBetaW",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Correlation factor β_w (Table 4.1) of the joint plate", "Anschlussblech: Korrelationsbeiwert β_w (Tabelle 4.1) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Correlation factor β_w (Table 4.1) of the joint plate", "Anschlussblech: Korrelationsbeiwert β_w (Tabelle 4.1) ändern")
     }
 }
 

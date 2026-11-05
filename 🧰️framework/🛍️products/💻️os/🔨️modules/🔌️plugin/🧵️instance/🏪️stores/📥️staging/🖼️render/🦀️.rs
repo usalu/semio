@@ -1,17 +1,17 @@
 //! 🪠️ Staged slice of the `render` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 🖼️ Render side of the mounted artifact instance: composition graph, interaction state, render, media jobs and media export.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
 use crate::stores_components::{InstanceStores, LocalInteraction};
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp> LocalInteraction<A> {
     /// 🕹️ Combines the persisted-local `interaction_store` snapshot with the ephemeral
@@ -36,7 +36,7 @@ impl<A: ArtifactApp> LocalInteraction<A> {
         let mut state = match stores.interaction_store.snapshot() {
             Ok(state) => state,
             Err(error) => {
-                semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] interaction-store snapshot unavailable, selection read as empty: {error}"));
+                semio_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] interaction-store snapshot unavailable, selection read as empty: {error}"));
                 protocol::InteractionState::default()
             }
         };

@@ -65,7 +65,7 @@ use crate::standards::v1::subsets::any::schema::domain::{ContributedSourcingModu
 use crate::CurationSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework::parse_contributions;
-use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_mesh_id_from_url;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.

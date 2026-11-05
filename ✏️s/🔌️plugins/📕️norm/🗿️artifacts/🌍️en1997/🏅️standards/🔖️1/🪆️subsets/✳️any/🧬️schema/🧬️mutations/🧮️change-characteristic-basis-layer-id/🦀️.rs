@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeCharacteristicBasi
         record: "ChangedCharacteristicBasisLayerId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Layer of the characteristic value basis", "Grundlage des charakteristischen Werts: Schicht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Layer of the characteristic value basis", "Grundlage des charakteristischen Werts: Schicht ändern")
     }
 }
 

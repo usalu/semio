@@ -171,7 +171,7 @@ impl FlowEvalSession {
 
     /// 🪞️ Reproduces the detached status host read without constructing mutable host custody.
     pub fn status_json_for_snapshot(&self,snapshot:&dyn FlowSnapshotSource)->String{
-        let infos=HistoryFoldIndex::new();let registry=self.operator_registry.clone().unwrap_or_else(semio_framework_os_flow_operators::registry::flow_operator_registry);
+        let infos=HistoryFoldIndex::new();let registry=self.operator_registry.clone().unwrap_or_else(semio_os_flow_operators::registry::flow_operator_registry);
         let generation=if self.operator_registry.is_some(){0}else{flow_extension_registry_generation()};let current=self.flow_extension_generation==generation;
         let previous=self.previous_channels.as_deref().filter(|_|current);
         let remaining=FlowHost::project_pending_widget_ids(snapshot,&infos,self.previous_snapshot.as_deref().filter(|_|current),previous,self.previous_channels.as_deref(),registry.as_ref(),self.neural_cache.as_ref().unwrap());
@@ -222,17 +222,31 @@ impl FlowEvalSession {
     }
 
     /// 🎟️ Publishes one preborn immutable evaluation after admitting the original reset owners.
-    pub fn set_eval_json(&mut self,eval_json:Arc<String>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Arc<String>)>{
-        if let Err(error)=self.state.retirement.preflight(grant){return Err((error,eval_json))}
+    pub fn set_eval_json(&mut self,eval_json:Arc<String>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Arc<String>)>{self.set_eval_json_original(eval_json,grant).result}
+
+    /// 📤️ Keeps the original reset admission's actual work and complete refused input custody.
+    pub fn set_eval_json_original(&mut self,eval_json:Arc<String>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,(ValueError,Arc<String>)>{
+        use semio_framework_value::RetainedWorkOutcome;
+        if let Err(error)=self.state.retirement.preflight(grant){return RetainedWorkOutcome{result:Err((error,eval_json)),work:0}}
         let original=SessionResetSources::take(&mut self.state,false);
-        match self.state.retirement.admit(SessionCollectionOwner::Reset(original),grant){
+        let turn=self.state.retirement.admit_original(SessionCollectionOwner::Reset(original),grant);
+        let result=match turn.result{
             Ok(progress)=>{self.state.eval_json=Some(eval_json);self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok(progress)},
             Err((error,SessionCollectionOwner::Reset(original)))=>{original.restore(&mut self.state);Err((error,eval_json))},
             Err(_)=>unreachable!("original session reset returned a different source family"),
-        }
+        };RetainedWorkOutcome{result,work:turn.work}
     }
 
     pub fn pending(&self) -> bool {
         self.tick_scheduled
     }
+}
+
+impl FlowEvalSession{
+ /// 🧹️ Quotes one actual progress-arena slot and the original extracted Copy row.
+ pub fn reply_progress_clear_demands(&self,slot:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:std::mem::size_of::<usize>()+std::mem::size_of::<u64>()+2*std::mem::size_of::<Option<(u64,PreviewEvalProgress)>>(),depth:if slot<self.state.eval_progress_by_hash.slot_count(){self.state.eval_progress_by_hash.next_slot_depth_demand(slot)?.max(self.state.eval_progress_by_hash.next_extract_slot_depth_demand(slot)?).max(1)}else{1},..Default::default()})}
+ /// 📤️ Moves only the matching original progress row into the caller's retained close slot.
+ pub fn clear_reply_progress_original(&mut self,hash:u64,slot:&mut usize,displaced:&mut Option<(u64,PreviewEvalProgress)>,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,RetainedCloneProgress)>{
+  let mut work=0;let result=(||{if self.closing||displaced.is_some(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original reply progress close slot is occupied"))}let d=self.reply_progress_clear_demands(*slot)?;if g.maximum_items==0||g.maximum_copy_bytes<d.copy_bytes||g.maximum_depth<d.depth{return Ok((false,Default::default()))}work=1;let progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};if *slot>=self.state.eval_progress_by_hash.slot_count(){return Ok((true,progress))}let matched=self.state.eval_progress_by_hash.slot_entry(*slot).is_some_and(|(key,_)|*key==hash);if matched{*displaced=self.state.eval_progress_by_hash.extract_slot_if(*slot,|_,_|false);}*slot+=1;Ok((matched||*slot==self.state.eval_progress_by_hash.slot_count(),progress))})();semio_framework_value::RetainedWorkOutcome{result,work}
+ }
 }

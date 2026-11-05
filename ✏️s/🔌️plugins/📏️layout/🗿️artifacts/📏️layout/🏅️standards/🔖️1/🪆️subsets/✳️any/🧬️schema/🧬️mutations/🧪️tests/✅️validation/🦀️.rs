@@ -11,7 +11,7 @@ fn decode(value: &serde_json::Value) -> LayoutSnapshot {
 
 #[test]
 fn graph_validation_witnesses_guard_replacement_and_preserve_undo() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/✅️validation/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(&crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/✅️validation/🔣️.json")).unwrap();
     let base = decode(&corpus["base"]);
     for case in corpus["documents"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
@@ -39,7 +39,7 @@ fn graph_validation_witnesses_guard_replacement_and_preserve_undo() {
 
 #[test]
 fn parent_creation_and_replacement_share_content_guards_and_normalization() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/✅️validation/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(&crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/✅️validation/🔣️.json")).unwrap();
     let base = decode(&corpus["base"]);
     for case in corpus["parents"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
@@ -77,7 +77,7 @@ fn parent_creation_and_replacement_share_content_guards_and_normalization() {
 
 #[test]
 fn nonfinite_native_numbers_are_refused_without_publication() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/✅️validation/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(&crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/✅️validation/🔣️.json")).unwrap();
     let base = decode(&corpus["base"]);
     for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
         let edits: &[fn(&mut LayoutSnapshot, f64)] = &[

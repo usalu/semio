@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeReliabilityResista
         record: "ChangedReliabilityResistanceMean",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change resistance mean μ_R of the reliability analysis", "Zuverlässigkeitsanalyse: Mittelwert des Widerstands μ_R ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change resistance mean μ_R of the reliability analysis", "Zuverlässigkeitsanalyse: Mittelwert des Widerstands μ_R ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

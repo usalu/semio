@@ -131,12 +131,14 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     }
     let maximum = fixture["maximumGeneration"].as_str().unwrap().parse::<u64>().unwrap();
     flow_extension_state().lock().unwrap().generation = maximum;
+    FLOW_PUBLISHED_GENERATION.store(maximum,std::sync::atomic::Ordering::Release);
     assert_eq!(install_flow_extension_manifest(plugin, &manifest), Err("flow.registry-generation-exhausted"));
     assert_eq!(sync_host_flow_extension_contributions("[]".to_string()), Err("flow.registry-generation-exhausted"));
     assert_eq!(flow_extension_state().lock().unwrap().generation, maximum);
     assert_eq!(third_party_json(flow_extension_registry().schema("owned").unwrap()), expected);
     assert!(flow_extension_state().lock().unwrap().retired.len() <= queued_before, "this law retires every version IT queued — the depth another live law pins is not its to empty");
     flow_extension_state().lock().unwrap().generation = generation;
+    FLOW_PUBLISHED_GENERATION.store(generation,std::sync::atomic::Ordering::Release);
     sync_host_flow_extension_contributions("[]".to_string()).unwrap();
     assert!(flow_extension_registry().schema("owned").is_none());
     for _ in 0..100_000 {

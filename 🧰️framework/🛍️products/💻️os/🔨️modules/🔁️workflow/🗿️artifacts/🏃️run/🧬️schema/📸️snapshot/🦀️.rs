@@ -330,7 +330,7 @@ pub struct RunLogLine {
 /// rejects every further operation, see `🔖️RunMutation` below). Sealing is meant to promote a run
 /// draft→asset later (`space::DraftCatalog`, W5 Lane B's territory) — this wave only carries the flag
 /// and the apply-rejection law, not the promotion wiring itself.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "os.run")]

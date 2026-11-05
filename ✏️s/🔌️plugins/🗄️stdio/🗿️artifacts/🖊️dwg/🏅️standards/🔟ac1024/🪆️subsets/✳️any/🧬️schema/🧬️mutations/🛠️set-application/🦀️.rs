@@ -16,8 +16,8 @@ pub struct SetApplication {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetApplication {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "application", kind: "set-application", record: "SetApplication" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set application info", "Anwendungsinfo setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set application info", "Anwendungsinfo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

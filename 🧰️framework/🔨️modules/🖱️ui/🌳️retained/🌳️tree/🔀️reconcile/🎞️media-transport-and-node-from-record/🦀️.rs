@@ -242,7 +242,7 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
             let body_key = props.extension.as_str().to_string();
             let params_json = serde_json::to_string(&props.props).unwrap_or_else(|_| "null".to_string());
             let host_status = media_transport_host_status(&body_key, &params_json);
-            UiNode::ExternalSlot(semio_framework_ui_declaration::ui::UiExternalSlotNode { plugin_id: surface_plugin_id(surface), app_id: controller.to_string(), body_key, params_json, host_status, presence, menu })
+            UiNode::ExternalSlot(semio_ui_declaration::ui::UiExternalSlotNode { plugin_id: surface_plugin_id(surface), app_id: controller.to_string(), body_key, params_json, host_status, presence, menu })
         }
     }
 }

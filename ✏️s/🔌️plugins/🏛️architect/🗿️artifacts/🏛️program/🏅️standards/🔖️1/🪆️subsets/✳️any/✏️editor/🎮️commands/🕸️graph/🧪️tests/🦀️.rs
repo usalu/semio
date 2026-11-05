@@ -1,7 +1,7 @@
 use crate::editor::architect::commands::graph::node_graph_edit::{NodeGraphEdit, handle};
 use crate::editor::architect::{catalog::new_adjacency, config::ArchitectConfig};
 use crate::standards::v1::subsets::any::schema::{kernel::EntityId, registers::{catalog::RegisterKey, AdjacencyKind}, mutations::ProgramMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]
@@ -14,8 +14,8 @@ fn graph_tools_follow_the_language_neutral_transaction_law() {
         program.adjacencies = vec![new_adjacency(&program, &EntityId("a".into()), &EntityId("b".into()), AdjacencyKind::Preferred)];
         program.adjacencies[0].header.id = EntityId("edge".into());
         if case.get("linked").and_then(|value| value.as_bool()) == Some(false) { program.adjacencies.clear(); }
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::with_operation(&program, &history, semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], retained: Default::default(), authoring_seed: "seed".into() });
+        let history = semio_plugin::HistoryView::empty();
+        let doc = ArtifactView::with_operation(&program, &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], retained: Default::default(), authoring_seed: "seed".into() });
         let config = ArchitectConfig::default();
         let payload = NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(case.get("rows").unwrap()) };
         let result = handle(&payload, &doc, &ConfigView { snapshot: &config, window: None });

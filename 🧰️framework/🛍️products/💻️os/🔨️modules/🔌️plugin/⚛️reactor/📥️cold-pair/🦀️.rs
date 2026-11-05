@@ -1,5 +1,5 @@
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -186,7 +186,7 @@ pub struct ColdDocumentPairIngressRegistry<const N: usize> {
 
 #[derive(Clone, Copy)]
 struct ColdDocumentPairCloseState {
-    pub key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey,
+    pub key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey,
     pub active: bool,
     pub complete: bool,
 }
@@ -345,7 +345,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         true
     }
 
-    pub fn preflight_close_instance(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn preflight_close_instance(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         let index = Self::slot_index(key.lifetime());
         if self.slots[index].as_ref().is_some_and(|owner| owner.borrow().header.lifetime != key.lifetime()) {
             return Err("cold pair slot belongs to another lifetime");
@@ -356,7 +356,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         Ok(())
     }
 
-    pub fn reserve_close_instance(&mut self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn reserve_close_instance(&mut self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         self.preflight_close_instance(key)?;
         let index = Self::slot_index(key.lifetime());
         if self.closes[index].is_none() {
@@ -365,7 +365,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         Ok(())
     }
 
-    pub fn activate_close_instance(&mut self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn activate_close_instance(&mut self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         let index = Self::slot_index(key.lifetime());
         let close = self.closes[index].as_mut().filter(|close| close.key == key).ok_or("exact cold pair close reservation missing")?;
         close.active = true;
@@ -389,11 +389,11 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         true
     }
 
-    pub fn close_instance_complete(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<bool, &'static str> {
+    pub fn close_instance_complete(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<bool, &'static str> {
         self.closes[Self::slot_index(key.lifetime())].filter(|close| close.key == key).map(|close| close.complete).ok_or("exact cold pair close receipt missing")
     }
 
-    pub fn release_close_instance(&mut self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn release_close_instance(&mut self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         let index = Self::slot_index(key.lifetime());
         if !self.closes[index].is_some_and(|close| close.key == key && close.complete) {
             return Err("cold pair close receipt is not terminal");
@@ -455,9 +455,9 @@ pub mod tests;
 
 #[path = "../📸️checkpoint/🦀️.rs"]
 pub mod checkpoint;
-use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
+use semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
 
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     pub static COLD_PAIR_INGRESS: RefCell<ColdDocumentPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(ColdDocumentPairIngressRegistry::new());
     /// 🛬️ The cold pair whose document still loads through the stepped archive load, stepped once per turn.
     pub static COLD_PAIR_DOCUMENT_LOAD: RefCell<Option<ColdPairDocumentLoad>> = RefCell::new(None);

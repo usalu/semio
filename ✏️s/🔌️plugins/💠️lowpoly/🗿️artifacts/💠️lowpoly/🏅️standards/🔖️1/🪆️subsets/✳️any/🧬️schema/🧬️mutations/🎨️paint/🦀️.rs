@@ -1,7 +1,7 @@
 //! 🎨️ Lowpoly paint-layer mutations: insert, remove, edit, rename, restyle layers and apply strokes.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🧩️Modules

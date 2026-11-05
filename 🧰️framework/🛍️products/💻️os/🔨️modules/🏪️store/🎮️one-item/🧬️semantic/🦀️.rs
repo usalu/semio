@@ -6,8 +6,8 @@ pub enum PagedOneItemEditStep<M> {
     Progress(RetainedCloneProgress),
     Complete(RetainedCloneProgress, M),
     CompleteRows(RetainedCloneProgress, Vec<M>),
-    CompleteOutcome(RetainedCloneProgress, Vec<M>, Vec<semio_framework_os_spr::MutationMessage>),
-    RefusedOutcome(RetainedCloneProgress, Vec<semio_framework_os_spr::MutationMessage>),
+    CompleteOutcome(RetainedCloneProgress, Vec<M>, Vec<semio_os_spr::MutationMessage>),
+    RefusedOutcome(RetainedCloneProgress, Vec<semio_os_spr::MutationMessage>),
 }
 
 /// 🧭️ One retained semantic unit prepares a real typed diff over original immutable sources; the shared central applier commits its candidate.

@@ -19,7 +19,7 @@ path = "../../🦀️.rs"
 semio-s-artifact-norm-en1991-checks-parts = { workspace = true }
 semio-s-artifact-norm-en1991-spec-trace = { workspace = true }
 semio-s-artifact-norm-en1991-checks-case-inputs = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1991-model = { workspace = true }
@@ -27,5 +27,5 @@ semio-s-plugin-norm-compliance = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }

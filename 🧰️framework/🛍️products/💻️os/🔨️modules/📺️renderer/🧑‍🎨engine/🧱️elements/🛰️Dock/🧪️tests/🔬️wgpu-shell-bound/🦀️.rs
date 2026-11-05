@@ -1,13 +1,13 @@
 //! 🛰️ Dock laws that read shell state: the unit laws of `🔬️wgpu-unit` that need the shell crates, mounted by the shell test bin.
 
 use super::*;
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
+use semio_renderer_wgpu_shell_state::ShellState;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::PanelGroup,semio_framework::PanelTabDefinition,semio_framework::PanelTabKind,semio_framework::WindowKindDefinition};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_layout::layout::{create_default_layout, WindowOptions};
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_layout::layout::{create_default_layout, WindowOptions};
 //#region WindowActionsAndUtilitiesTests
 use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, UtilityDefinition, UtilityRef};
-use semio_framework_ui_wgpu_input::{KeyAction, PointerModifiers};
+use semio_ui_wgpu_input::{KeyAction, PointerModifiers};
 
 fn tab(id: &str) -> DockStackTab {
     DockStackTab::new(id)
@@ -40,7 +40,7 @@ fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinitio
                     id: (*id).into(),
                     label: LocalizedLabel::data(*id),
                     body_key: format!("{id}.body"),
-                    surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+                    surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
                     icon_id: "app-window".into(),
                     options: WindowOptions::default(),
                     actions: vec![],
@@ -81,7 +81,7 @@ fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinitio
 
 #[test]
 fn unregistered_world_and_pane_identifiers_cannot_claim_scene_wheel() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let theme = Theme::default();
     for (kind, id) in [(HitKind::ScrollRegion, "panel.left.lowpoly"), (HitKind::World3d, "world-surface"), (HitKind::ScrollRegion, "graph-surface.pane"), (HitKind::ScrollRegion, "map-surface.map")] {
         let mut input = InputState::<ActionDescriptor>::default();
@@ -97,7 +97,7 @@ fn stack_with(id: &str) -> DockNode {
 
 #[test]
 fn map_marquee_mode_matches_ui_react() {
-        use semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_marquee_mode;
+        use semio_renderer_wgpu_engine_board::tiled_map::map_marquee_mode;
     assert_eq!(map_marquee_mode(false, false), "replace");
     assert_eq!(map_marquee_mode(true, false), "additive");
     assert_eq!(map_marquee_mode(false, true), "subtractive");
@@ -135,7 +135,7 @@ fn actions_utilities_app() -> AppDefinition {
 }
 
 fn shell() -> ShellState {
-    ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    ShellState::new(vec![], "test".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
 }
 
 /// 🗃️ `main` gets its explicit utility.a first, then the orphan utility.b; `aux` only sees the orphan.
@@ -144,8 +144,8 @@ fn resolve_window_utilities_scopes_explicit_and_orphans() {
     let app = actions_utilities_app();
     let main = app.window_kinds.iter().find(|k| k.id == "main").unwrap();
     let aux = app.window_kinds.iter().find(|k| k.id == "aux").unwrap();
-    let main_ids: Vec<&str> = semio_framework_os_renderer_wgpu_shell_dock::resolve_window_utilities(&app, main).iter().map(|t| t.id.as_str()).collect();
-    let aux_ids: Vec<&str> = semio_framework_os_renderer_wgpu_shell_dock::resolve_window_utilities(&app, aux).iter().map(|t| t.id.as_str()).collect();
+    let main_ids: Vec<&str> = semio_renderer_wgpu_shell_dock::resolve_window_utilities(&app, main).iter().map(|t| t.id.as_str()).collect();
+    let aux_ids: Vec<&str> = semio_renderer_wgpu_shell_dock::resolve_window_utilities(&app, aux).iter().map(|t| t.id.as_str()).collect();
     assert_eq!(main_ids, vec!["utility.a", "utility.b"]);
     assert_eq!(aux_ids, vec!["utility.b"]);
 }
@@ -155,7 +155,7 @@ fn resolve_window_utilities_scopes_explicit_and_orphans() {
 /// plain key must not fire while the accelerator is held.
 #[test]
 fn key_event_matches_chord_respects_modifiers() {
-        use semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord;
+        use semio_renderer_wgpu_shell_docs::key_event_matches_chord;
     let z = KeyAction::Char("z".into());
     assert!(key_event_matches_chord(&z, &mods(true, false, false, false), "mod+z"));
     assert!(key_event_matches_chord(&z, &mods(false, true, false, false), "mod+z"));
@@ -247,8 +247,8 @@ fn closing_a_window_collapses_persists_and_refocuses_in_one_lane() {
 /// destroyed instead of running forever behind a window that no longer exists.
 #[test]
 fn closing_a_spawned_window_takes_its_panel_entry_and_repoints_the_active_one() {
-    let entry = |id: &str, instance: u32| semio_framework_os_renderer_wgpu_shell_docs::SpawnedAppEntry { id: id.into(), plugin_id: "plug".into(), instance_id: instance, app_id: "app".into(), label: "Plug".into(), breadcrumb: vec!["plug".into()] };
-    let mut panel = semio_framework_os_renderer_wgpu_shell_docs::SpacePanelState { active_panel_tab: "workbench".into(), spawned_apps: vec![entry("plug-1", 7), entry("plug-2", 8)], active_spawned_id: Some("plug-1".into()) };
+    let entry = |id: &str, instance: u32| semio_renderer_wgpu_shell_docs::SpawnedAppEntry { id: id.into(), plugin_id: "plug".into(), instance_id: instance, app_id: "app".into(), label: "Plug".into(), breadcrumb: vec!["plug".into()] };
+    let mut panel = semio_renderer_wgpu_shell_docs::SpacePanelState { active_panel_tab: "workbench".into(), spawned_apps: vec![entry("plug-1", 7), entry("plug-2", 8)], active_spawned_id: Some("plug-1".into()) };
     let closed = take_spawned_entry(&mut panel, "plug-1").expect("the closed window owned a spawned app");
     assert_eq!(closed.instance_id, 7, "the instance id the guest must be told to destroy");
     assert_eq!(panel.spawned_apps.iter().map(|entry| entry.id.as_str()).collect::<Vec<_>>(), vec!["plug-2"]);

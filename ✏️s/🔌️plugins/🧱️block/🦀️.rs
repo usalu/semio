@@ -1,5 +1,5 @@
 //! 🧱️ Block plugin schema authority has no artifact dependencies.
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "🧬️schema/🧱️document-fields/🦀️.rs"]
 mod schema;
 pub use schema::{BlockKindIdentity, BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation, BlockCamera2d, BlockCamera3d, BlockMeta};

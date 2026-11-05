@@ -3,9 +3,9 @@ use semio_framework_dsl_record::BorrowedDslVariants;
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView};
 use semio_framework_job::StepContext;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_os_kernel::os_store::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationSource};
+use semio_os_kernel::os_store::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationSource};
 use std::mem::ManuallyDrop;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
 
 struct OriginalToyFields{pub count:i32,pub label:[u8;15],pub length:usize,pub tag:usize}
 impl FieldProjectionSource for OriginalToyFields{

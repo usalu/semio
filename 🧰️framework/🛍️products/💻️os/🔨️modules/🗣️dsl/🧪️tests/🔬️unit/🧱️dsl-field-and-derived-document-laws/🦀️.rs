@@ -104,7 +104,7 @@ impl pack::snapshot::ArtifactDsl for DerivedDocument {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_framework_os_kernel::os_store::semio_format::split_text_preamble(text) {
+        let body = match semio_os_kernel::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -114,33 +114,33 @@ impl pack::snapshot::ArtifactDsl for DerivedDocument {
     fn print_dsl(&self) -> String {
         let record = self.__dsl_to_record();
         let body = print(&record, &Self::__dsl_spec(), JoinMode::Document);
-        let envelope = semio_framework_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        semio_framework_os_kernel::os_store::semio_format::wrap_text(&envelope, &body)
+        let envelope = semio_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        semio_os_kernel::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl pack::snapshot::ArtifactPack for DerivedDocument {
-    fn encode_pack_with(&self, options: &semio_framework_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, semio_framework_os_kernel::os_store::PackError> {
-        let inner = semio_framework_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+    fn encode_pack_with(&self, options: &semio_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, semio_os_kernel::os_store::PackError> {
+        let inner = semio_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            semio_framework_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1).map_err(|error| semio_framework_os_kernel::os_store::PackError::from(error.into_value_error()))?;
-        Ok(semio_framework_os_kernel::os_store::semio_format::wrap_binary(&envelope, &inner))
+            semio_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Pack, 1).map_err(|error| semio_os_kernel::os_store::PackError::from(error.into_value_error()))?;
+        Ok(semio_os_kernel::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &semio_framework_os_kernel::os_store::PackDecodeOptions) -> Result<Self, semio_framework_os_kernel::os_store::PackError> {
-        let (envelope, inner) = semio_framework_os_kernel::os_store::semio_format::unwrap_binary(bytes).map_err(|error| semio_framework_os_kernel::os_store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1) {
-            return Err(semio_framework_os_kernel::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+    fn decode_pack_with(bytes: &[u8], options: &semio_os_kernel::os_store::PackDecodeOptions) -> Result<Self, semio_os_kernel::os_store::PackError> {
+        let (envelope, inner) = semio_os_kernel::os_store::semio_format::unwrap_binary(bytes).map_err(|error| semio_os_kernel::os_store::PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Pack, 1) {
+            return Err(semio_os_kernel::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
-        let (record, _report) = semio_framework_os_kernel::os_pack::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(semio_framework_os_kernel::os_store::serialization::text_error_to_pack_error)
+        let (record, _report) = semio_os_kernel::os_pack::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(semio_os_kernel::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DerivedDocument {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DerivedDocument {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -177,7 +177,7 @@ enum DerivedMutation {
 
 //#region 🔖️OpCodec
 /// 🎞️ Handcrafted OpText (P6).
-impl semio_framework_os_kernel::os_spr::OpText for DerivedMutation {
+impl semio_os_kernel::os_spr::OpText for DerivedMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
         variants_text::parse_op(line)
     }
@@ -187,35 +187,35 @@ impl semio_framework_os_kernel::os_spr::OpText for DerivedMutation {
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
-impl semio_framework_os_kernel::os_spr::OpBinary for DerivedMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_kernel::os_spr::ProtocolError> {
+impl semio_os_kernel::os_spr::OpBinary for DerivedMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_os_kernel::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
         let variants = <Self as DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(semio_os_kernel::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = semio_framework_os_kernel::os_pack::record::encode_record_body(&spec, &record, &semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
+        let body = semio_os_kernel::os_pack::record::encode_record_body(&spec, &record, &semio_os_kernel::os_store::PackEncodeOptions::default()).map_err(semio_os_kernel::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
-        semio_framework_os_kernel::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        semio_os_kernel::os_pack::write_varint_u64(&mut out, ordinal as u64);
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_kernel::os_spr::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_os_kernel::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = semio_framework_os_kernel::os_pack::ByteReader::new(bytes);
+        let mut reader = semio_os_kernel::os_pack::ByteReader::new(bytes);
         let format = reader.read_u8()?;
         if format != OP_BINARY_FORMAT {
-            return Err(semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+            return Err(semio_os_kernel::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(semio_os_kernel::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let record_offset = reader.position() as u64;
         let body = &bytes[record_offset as usize..];
-        let (record, _report) = semio_framework_os_kernel::os_pack::record::decode_record_body(body, &spec, &semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
-        <Self as DslVariants>::from_named_record(keyword, &record).map_err(|error| semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        let (record, _report) = semio_os_kernel::os_pack::record::decode_record_body(body, &spec, &semio_os_kernel::os_store::PackDecodeOptions::default()).map_err(semio_os_kernel::os_spr::ProtocolError::from)?;
+        <Self as DslVariants>::from_named_record(keyword, &record).map_err(|error| semio_os_kernel::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -224,9 +224,9 @@ impl semio_framework_os_kernel::os_spr::OpBinary for DerivedMutation {
 async fn derived_op_text_round_trips_every_variant_as_one_line() {
     let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
     for op in ops {
-        let printed = <DerivedMutation as semio_framework_os_kernel::os_spr::OpText>::print_op(&op);
+        let printed = <DerivedMutation as semio_os_kernel::os_spr::OpText>::print_op(&op);
         assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
-        let parsed = <DerivedMutation as semio_framework_os_kernel::os_spr::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        let parsed = <DerivedMutation as semio_os_kernel::os_spr::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
         assert_eq!(parsed, op, "OpText round trip diverged for {printed:?}");
     }
 }
@@ -239,33 +239,33 @@ async fn derived_op_text_round_trips_every_variant_as_one_line() {
 async fn derived_op_text_refuses_every_token_outside_its_own_record() {
     let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
     for op in ops {
-        let printed = <DerivedMutation as semio_framework_os_kernel::os_spr::OpText>::print_op(&op);
+        let printed = <DerivedMutation as semio_os_kernel::os_spr::OpText>::print_op(&op);
         for trailing in ["unknown-field 1", "reset", "\"", "setCategory category=\"wall\""] {
             let line = format!("{printed} {trailing}");
-            assert!(<DerivedMutation as semio_framework_os_kernel::os_spr::OpText>::parse_op(&line).is_err(), "an operation line must refuse everything outside its own record: {line:?}");
+            assert!(<DerivedMutation as semio_os_kernel::os_spr::OpText>::parse_op(&line).is_err(), "an operation line must refuse everything outside its own record: {line:?}");
         }
     }
-    assert!(<DerivedMutation as semio_framework_os_kernel::os_spr::OpText>::parse_op("").is_err());
-    assert!(<DerivedMutation as semio_framework_os_kernel::os_spr::OpText>::parse_op("unknown-field 1").is_err());
+    assert!(<DerivedMutation as semio_os_kernel::os_spr::OpText>::parse_op("").is_err());
+    assert!(<DerivedMutation as semio_os_kernel::os_spr::OpText>::parse_op("unknown-field 1").is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn derived_document_dsl_satisfies_vcs_test_support_helpers() {
     let doc = DerivedDocument { category: "floor".to_string(), climate: ClimateZone::Temperate, airtightness_n50: 0.4, occupants: 3, note: None };
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&doc);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&doc);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn derived_op_satisfies_vcs_test_support_helpers() {
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&DerivedMutation::SetCategory { category: "wall".to_string() });
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&DerivedMutation::SetCategory { category: "wall".to_string() });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn derived_op_binary_round_trips_every_variant_and_matches_text() {
     let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
     for op in ops {
-        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&op);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&op);
         let encoded = variants_binary::encode_op(&op).unwrap();
         let decoded: DerivedMutation = variants_binary::decode_op(&encoded).unwrap();
         assert_eq!(serde_json::to_value(&decoded).unwrap(), serde_json::to_value(&op).unwrap());

@@ -18,8 +18,8 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetD
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set driver to {:?}", self.driver_id), &format!("Treiber auf {:?} setzen", self.driver_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set driver to {:?}", self.driver_id), &format!("Treiber auf {:?} setzen", self.driver_id))
     }
 
     fn target(&self) -> Vec<String> {

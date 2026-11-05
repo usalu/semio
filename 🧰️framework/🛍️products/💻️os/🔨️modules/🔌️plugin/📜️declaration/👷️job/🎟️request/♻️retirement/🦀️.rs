@@ -4,7 +4,7 @@ use crate::ArtifactApp;
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,sequence,sequence_birth_bytes,deferred,deferred_birth_bytes,deferred_birth_bytes_for};
 use std::sync::Arc;
 
-use semio_framework_plugin_original_job_ownership::OriginalRequestLease;
+use semio_plugin_original_job_ownership::OriginalRequestLease;
 fn lease_field_birth<T:RetireOwned+Sync>(_:&Arc<T>)->usize{deferred_birth_bytes::<OriginalRequestLease<T>>()}
 
 impl<A:ArtifactApp> RetireOwned for ArtifactOwnedToolJobRequest<A>{

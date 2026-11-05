@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
 use crate::{GisMapSnapshot, MapFeature};
 use semio_framework_value::DslValue;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::{json, Value};
 

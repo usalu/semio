@@ -32,6 +32,11 @@ use crate::standards::v_rfc8259::subsets::base::schema::mutations::{InsertArrayE
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
 use protocol::{ColdMutation, Mutation};
 
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;
+
 //#region 🔖️Root
 /// 🌳️ RFC 7493 §2.1 made structural: the top-level value of an I-JSON text is an object or an array,
 /// and this type cannot spell anything else. `SetTopLevel` carries it instead of a bare `JsonValue`,

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-os-directory-client-tests"
+name = "semio-os-directory-client-tests"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,7 +23,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-directory-client = { path = "../../../../📦️packages/🦀️rust", features = ["ureq", "sync", "testkit"] }
+semio-os-directory-client = { path = "../../../../📦️packages/🦀️rust", features = ["ureq", "sync", "testkit"] }
 semio-framework-async = { path = "../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
@@ -33,7 +33,7 @@ serde_json = "1.0.140"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-actor = { path = "../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
-semio-framework-os-services = { path = "../../../../../../🛎️services/📦️packages/🦀️rust" }
+semio-os-services = { path = "../../../../../../🛎️services/📦️packages/🦀️rust" }
 tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }
 
 [dev-dependencies]

@@ -14,8 +14,8 @@ pub struct AddUnknownChunk {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for AddUnknownChunk {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "unknown-chunk", kind: "add-unknown-chunk", record: "AddUnknownChunk" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add unknown chunk", "Unbekannten Chunk hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add unknown chunk", "Unbekannten Chunk hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

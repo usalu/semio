@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "node", kind: "rename-node", record: "RenamedNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename node to \"{}\"", self.new_label), &format!("Knoten in \"{}\" umbenennen", self.new_label))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename node to \"{}\"", self.new_label), &format!("Knoten in \"{}\" umbenennen", self.new_label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

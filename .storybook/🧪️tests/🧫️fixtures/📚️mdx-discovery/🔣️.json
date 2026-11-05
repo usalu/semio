@@ -1,0 +1,28 @@
+{
+  "ignoredDirectories": [
+    "node_modules",
+    "compose",
+    ".🧬semio",
+    ".git",
+    ".nx",
+    ".cache",
+    ".venv",
+    "target",
+    "dist",
+    "storybook-static"
+  ],
+  "cases": [
+    {
+      "path": ".cache/dependency/docs.mdx",
+      "owned": false
+    },
+    {
+      "path": ".venv/site-packages/docs.mdx",
+      "owned": false
+    },
+    {
+      "path": "feature/docs.mdx",
+      "owned": true
+    }
+  ]
+}

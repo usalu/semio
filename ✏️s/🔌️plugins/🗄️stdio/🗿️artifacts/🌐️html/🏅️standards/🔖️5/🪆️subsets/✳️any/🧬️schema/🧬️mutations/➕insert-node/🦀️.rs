@@ -17,8 +17,8 @@ pub struct InsertNode {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for InsertNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "node", kind: "insert-node", record: "InsertNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert node", "Knoten einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert node", "Knoten einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

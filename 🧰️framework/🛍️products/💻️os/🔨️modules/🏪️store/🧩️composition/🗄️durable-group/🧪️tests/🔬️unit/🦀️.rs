@@ -1,24 +1,24 @@
-use semio_framework_os_store_engine_stage::lifted_durable_group::planning;
+use semio_os_store_engine_stage::lifted_durable_group::planning;
 use semio_framework_dsl_record::DslField;
-use semio_framework_os_store_testing_fixtures::demo::DemoMutation; use semio_framework_os_store_testing_fixtures::demo::SetN;
-use semio_framework_os_store_testing_doubles::DemoOneItemPreparationFactory; use semio_framework_os_store_testing_fixtures::DemoSnapshot; use semio_framework_os_store_testing_doubles::demo_closable_store_owners;
+use semio_os_store_testing_fixtures::demo::DemoMutation; use semio_os_store_testing_fixtures::demo::SetN;
+use semio_os_store_testing_doubles::DemoOneItemPreparationFactory; use semio_os_store_testing_fixtures::DemoSnapshot; use semio_os_store_testing_doubles::demo_closable_store_owners;
 use std::sync::Arc;
 use semio_framework_value::ErasedSnapshotRetirement as _;
 use pack::snapshot::{ArtifactDsl, ArtifactPack};
-use semio_framework_os_store_engine::lifted_store::ArtifactStore;
-use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
-use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DRAWING_ROLE, DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1, DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, DURABLE_OWNED_GROUP_JSON_MAX_DEPTH, DURABLE_OWNED_GROUP_JSON_MAX_ITEMS, DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1, DurableBoundOneItemOutcomeV1, DurableOwnedGroupDecisionError, DurableOwnedGroupJournalAdvanceV1, DurableOwnedGroupJournalCommitV1, DurableOwnedGroupJournalReceiptV1, DurableOwnedGroupJournalSinkV1, DurableOwnedGroupMapFrontiersV1, DurableOwnedGroupMapHandlesV1, DurableOwnedGroupMemberV1, DurableOwnedMapMemberAdmissionV1, DurableOwnedMapRecoveryAdvanceV1, DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedThreeStoreCommitPhaseV1, DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedThreeStoreMapAssemblyFailureV1, DurableOwnedThreeStoreMapAssemblyPhaseV1, DurableStorePreparedOutcomeV1, DurableStorePreparedOutcomesV1, DurableUnboundOneItemOutcomeV1, PARENT_RECOVERY_SCHEMA, PARENT_ROLE, VALUE_ROLE, close_journal_owner, parse_canonical_json_value, valid_identity, validate_json_budget};
+use semio_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
+use semio_os_store_durable_group_wire::lifted_durable_group::{DRAWING_ROLE, DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1, DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, DURABLE_OWNED_GROUP_JSON_MAX_DEPTH, DURABLE_OWNED_GROUP_JSON_MAX_ITEMS, DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1, DurableBoundOneItemOutcomeV1, DurableOwnedGroupDecisionError, DurableOwnedGroupJournalAdvanceV1, DurableOwnedGroupJournalCommitV1, DurableOwnedGroupJournalReceiptV1, DurableOwnedGroupJournalSinkV1, DurableOwnedGroupMapFrontiersV1, DurableOwnedGroupMapHandlesV1, DurableOwnedGroupMemberV1, DurableOwnedMapMemberAdmissionV1, DurableOwnedMapRecoveryAdvanceV1, DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedThreeStoreCommitPhaseV1, DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedThreeStoreMapAssemblyFailureV1, DurableOwnedThreeStoreMapAssemblyPhaseV1, DurableStorePreparedOutcomeV1, DurableStorePreparedOutcomesV1, DurableUnboundOneItemOutcomeV1, PARENT_RECOVERY_SCHEMA, PARENT_ROLE, VALUE_ROLE, close_journal_owner, parse_canonical_json_value, valid_identity, validate_json_budget};
 use semio_framework_value::{DslValue, ToValue as ValueToValue};
 use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
-use semio_framework_os_store_durable_group::{recover_decision_store_owned, DurableOwnedGroupJournalRecordV1, DurableOwnedMapCommitOwnersV1, DurableOwnedMapRecoveryAdmissionV1, DurableOwnedMapRecoveryOwnersV1, DurableOwnedMapRecoveryRejectedV1, DurableOwnedMapRecoveryStartV1, DurableOwnedThreeMemberDecisionV1, DurableOwnedThreeStoreBoundV1, DurableOwnedThreeStoreMapAssemblyOwnersV1, DurableOwnedThreeStoreMapAssemblyV1, DurableOwnedThreeStorePreparedV1, DurableOwnedThreeStoreRecoveryV1, capture_store_owned_three_snapshot};
-use semio_framework_os_spr::{Edit, HybridLogicalTimestamp};
+use semio_os_store_durable_group::{recover_decision_store_owned, DurableOwnedGroupJournalRecordV1, DurableOwnedMapCommitOwnersV1, DurableOwnedMapRecoveryAdmissionV1, DurableOwnedMapRecoveryOwnersV1, DurableOwnedMapRecoveryRejectedV1, DurableOwnedMapRecoveryStartV1, DurableOwnedThreeMemberDecisionV1, DurableOwnedThreeStoreBoundV1, DurableOwnedThreeStoreMapAssemblyOwnersV1, DurableOwnedThreeStoreMapAssemblyV1, DurableOwnedThreeStorePreparedV1, DurableOwnedThreeStoreRecoveryV1, capture_store_owned_three_snapshot};
+use semio_os_spr::{Edit, HybridLogicalTimestamp};
 #[cfg(feature = "durable-group-testing")]
-use semio_framework_os_store_durable_group_wire::lifted_durable_group::{durable_group_test_outcome, DurableOwnedGroupTestMember};
+use semio_os_store_durable_group_wire::lifted_durable_group::{durable_group_test_outcome, DurableOwnedGroupTestMember};
 #[cfg(feature = "durable-group-testing")]
-use semio_framework_os_store_durable_group::durable_owned_group_journal_test_record_from_edits;
+use semio_os_store_durable_group::durable_owned_group_journal_test_record_from_edits;
 use semio_framework_dsl_record::{FieldValue, Shape};
-use semio_framework_os_store_envelope::owner::OwnerRef;
-use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackVerificationLevel, pack_rt};
+use semio_os_store_envelope::owner::OwnerRef;
+use semio_os_pack::{PackDecodeOptions, PackEncodeOptions, PackVerificationLevel, pack_rt};
 
 macro_rules! advance_binding{($prepared:expr,$parent:expr,$drawing:expr,$value:expr,$grant:expr)=>{{let mut admitted=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(usize::MAX/2,&mut admitted);$prepared.advance_binding($parent,$drawing,$value,$grant,&mut native)}}}
 include!("🧰️group-outcome-and-store-fixtures/🦀️.rs");
@@ -73,7 +73,7 @@ fn durable_test_fixture_denied_frame_restores_exact_candidates_and_issuers() {
     let post_pointer = Arc::as_ptr(&member.post_snapshot);
     let mutation_pointer = Arc::as_ptr(&member.mutation_retirement);
     let snapshot_pointer = Arc::as_ptr(&member.snapshot_retirement);
-    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_os_store_one_item_publication::prepared_retirement::ArtifactStorePreparedRetirement::admit_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement, denied));
+    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_os_store_one_item_publication::prepared_retirement::ArtifactStorePreparedRetirement::admit_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement, denied));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     let Err((error, edit, post_snapshot, mutation_retirement, snapshot_retirement)) = result else { panic!("unfunded returned fixture frame admitted"); };
     assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);

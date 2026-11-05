@@ -1,25 +1,25 @@
 //! 🧱️ Root_quick of the runtime crate: Gateway runtime, entrypoint and facade.
 
 use crate::root::{GATEWAY_TOOL_NAMES, GatewayRuntime, HUB_OPEN_RETRY_ATTEMPTS, HttpOptions, StdioOptions, build_server_from_catalog, hub_open_retry_backoff_ms};
-use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, ShellToGateway};
-use semio_framework_os_mcp_catalog::catalog::{Catalog, compile};
-use semio_framework_os_mcp_foundation::audit::{AuditSinks, InMemoryAuditSink};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore};
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
-use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
-use semio_framework_os_mcp_server::mcp_server::McpServer;
-use semio_framework_os_mcp_wire::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, NullBackend, PromptRegistry, ResourceRegistry, SUPPORTED_PROTOCOL_VERSIONS, ToolRegistry, is_valid_tool_name};
+use semio_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, ShellToGateway};
+use semio_os_mcp_catalog::catalog::{Catalog, compile};
+use semio_os_mcp_foundation::audit::{AuditSinks, InMemoryAuditSink};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore};
+use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_os_mcp_server::mcp_server::McpServer;
+use semio_os_mcp_wire::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, NullBackend, PromptRegistry, ResourceRegistry, SUPPORTED_PROTOCOL_VERSIONS, ToolRegistry, is_valid_tool_name};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_mcp_capabilities::source_builders::note_and_cad_source;
+use semio_os_mcp_capabilities::source_builders::note_and_cad_source;
 #[cfg(test)]
-use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
+use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
 /// 🧫️ The compiled note+cad fixture catalog — every test below asserting a KNOWN capability
 /// census injects THIS, never `build_catalog()`, whose whole job since ticket
 /// 26/08/29/AI-MCP-END-TO-END is to discover whichever plugins are really installed.
 fn fixture_catalog() -> std::sync::Arc<Catalog> {
-    std::sync::Arc::new(compile(&note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
+    std::sync::Arc::new(compile(&note_and_cad_source(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
 }
 
 /// 🧫️ [`build_server`] over [`fixture_catalog`] — a deterministic capability census.

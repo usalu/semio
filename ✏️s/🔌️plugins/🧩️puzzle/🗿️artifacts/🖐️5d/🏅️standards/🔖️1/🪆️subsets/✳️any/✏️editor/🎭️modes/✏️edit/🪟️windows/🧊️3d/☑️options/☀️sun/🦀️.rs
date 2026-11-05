@@ -5,8 +5,8 @@
 use crate::editor::puzzle5d::entities::puzzle5d_action;
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
-use semio_framework_plugin::world3d_sun_measures;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::world3d_sun_measures;
+use semio_plugin::WindowMeasure;
 
 /// 🌞️ The sun toggle plus its azimuth/elevation/intensity sliders.
 /// 🔗️ `world3d_sun_measures` is a framework helper still bound to `semio_framework_pack_json::Value` (framework

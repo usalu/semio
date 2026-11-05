@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeFireDurationS wher
         record: "ChangedFireDurationS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Fire duration t of the fire scenario", "Brandszenario: Branddauer t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Fire duration t of the fire scenario", "Brandszenario: Branddauer t ändern")
     }
 }
 

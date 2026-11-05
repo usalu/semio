@@ -44,7 +44,7 @@ pub struct Change {
 /// b2-store-composition-report.md`**: the prior wave (`b1-spr-vcs-report.md`) believed `ArtifactRef`
 /// (defined in `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs`) was unreachable from this crate and fell
 /// back to the wire URI `String`. That was wrong: `io/🦀️.rs` is dual-mounted — the
-/// `semio-framework` crate mounts it as `io`, and THIS crate (`semio-framework-os-kernel`) mounts the
+/// `semio-framework` crate mounts it as `io`, and THIS crate (`semio-os-kernel`) mounts the
 /// very same source file as `io` (see `💻️os/📦️packages/🦀️rust/🦀️.rs:237-238`,
 /// `pub mod io;`) — no cross-crate dependency-direction problem exists; `store` already reaches
 /// `semio_framework_artifact_reference::ArtifactDialect` directly (`🏪️store/🦀️.rs:88/105/662`). Sorting for

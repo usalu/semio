@@ -63,12 +63,12 @@ impl MutationKind<PublicationTransient, PublicationTransientMutation> for Change
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change publication transient to {}", self.revision), &format!("Transiente Veröffentlichung auf {} ändern", self.revision))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change publication transient to {}", self.revision), &format!("Transiente Veröffentlichung auf {} ändern", self.revision))
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<PublicationTransient, PublicationTransientMutation> for ChangePublicationTransient {
+impl semio_os_command::ColdMutationKind<PublicationTransient, PublicationTransientMutation> for ChangePublicationTransient {
     fn diff(&self, _base: &PublicationTransient) -> MutationOutcome<crate::publication_fixture::transient::PublicationTransientDiff> {
         MutationOutcome::new(crate::publication_fixture::transient::PublicationTransientDiff { revision: Some(self.revision) })
     }

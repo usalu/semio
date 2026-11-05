@@ -39,7 +39,7 @@ pub const FLOW_DEADLINE_MILLISECONDS: u64 = 8;
 pub enum FlowFailureCause {
     Message(String),
     Value(semio_framework_value::ValueError),
-    Geometry(semio_framework_os_flow_geometry::GeometryWorkFailure),
+    Geometry(semio_os_flow_geometry::GeometryWorkFailure),
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -57,7 +57,7 @@ impl FlowFailure {
     /// 📥️ Moves the complete original refusal across the Flow boundary without copying its prose.
     pub fn from_value(code:AbiErrorCode,error:semio_framework_value::ValueError)->Self{let retained_progress=error.retained_progress();Self{code,cause:FlowFailureCause::Value(error),retained_progress,receipt_refusal:None}}
     /// 🪢️ Keeps the same original geometry cause, physical effects and consumed work together.
-    pub fn from_geometry(code:AbiErrorCode,original:semio_framework_os_flow_geometry::GeometryWorkFailure)->Self{Self{code,retained_progress:original.work.retained,cause:FlowFailureCause::Geometry(original),receipt_refusal:None}}
+    pub fn from_geometry(code:AbiErrorCode,original:semio_os_flow_geometry::GeometryWorkFailure)->Self{Self{code,retained_progress:original.work.retained,cause:FlowFailureCause::Geometry(original),receipt_refusal:None}}
     /// ⛽️ Reads actual original work without replacing or formatting the producer cause.
     pub fn consumed_work_units(&self)->usize{match &self.cause{FlowFailureCause::Geometry(original)=>original.work.consumed_units,_=>0}}
     /// 🔤️ Borrows the original cause when preparing its external reply.

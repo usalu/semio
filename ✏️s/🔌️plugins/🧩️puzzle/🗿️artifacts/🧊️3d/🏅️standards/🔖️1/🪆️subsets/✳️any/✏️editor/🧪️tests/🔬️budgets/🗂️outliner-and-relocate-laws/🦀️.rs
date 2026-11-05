@@ -275,7 +275,7 @@ async fn world_relocate_on_nakagin_admits_and_completes() {
 /// `Mutation`, never the `View` the 2026-09-10 checklist reverification claimed.
 #[semio_framework_async_macros::async_test]
 async fn world_relocate_moves_an_unlocked_object_and_refuses_a_locked_one_with_one_notice() {
-    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+    let notices = |result: &semio_plugin::InvocationResult| -> Vec<String> {
         result.requested_effects.iter().filter_map(|effect| match effect {
             Effect::Notify { message } => Some(message.clone()),
             _ => None,

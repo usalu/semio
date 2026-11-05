@@ -10,6 +10,7 @@
     "questionId": "q",
     "controllerId": "forms-play",
     "surface": "try",
-    "interactive": false
+    "interactive": false,
+    "authoredParams": null
   }
 }

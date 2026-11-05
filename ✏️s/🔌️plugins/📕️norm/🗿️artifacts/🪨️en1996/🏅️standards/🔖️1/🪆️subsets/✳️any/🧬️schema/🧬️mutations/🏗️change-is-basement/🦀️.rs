@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeIsBasement where O
         record: "ChangedIsBasement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Mark as basement wall", "Kellerwand kennzeichnen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Mark as basement wall", "Kellerwand kennzeichnen")
     }
 }
 

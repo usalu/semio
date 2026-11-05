@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfCripplingCategor
         record: "ChangedCfCripplingCategory",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Web crippling category (1 or 2) of the cold-formed member", "Kaltprofil: Kategorie Stegkrüppeln (1 oder 2) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Web crippling category (1 or 2) of the cold-formed member", "Kaltprofil: Kategorie Stegkrüppeln (1 oder 2) ändern")
     }
 }
 

@@ -1,6 +1,6 @@
 //! 🫙️ Actual original Flow SQLite native prefixes preserve source identity and physical retirement receipts.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_value::{ErasedSnapshotRetirement, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::RetireOwned};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{SemioFlowSnapshot, FlowNode, FlowParam, FlowEdge, PortRef};

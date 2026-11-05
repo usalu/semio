@@ -1,28 +1,28 @@
 use crate::editor::note::modes::edit::windows::navigator::options;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use crate::editor::note::terminology::NotePlayLabels;
 #[allow(unused_imports)]
 use crate::{NoteCamera};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementInput;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementStatus;
+use semio_plugin::WindowEngagementStatus;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 use crate::editor::note::modes::edit::windows::navigator::*;
 use crate::editor::note::unit_tests::context::{note_app, render as render_body};
 use crate::editor::note::NOTE_PLAY_BODY_NAVIGATOR as BODY_NAVIGATOR;
@@ -36,7 +36,7 @@ async fn renders_navigator_canvas() {
     let mut app = note_app().await;
     let json = render_body(&mut app, BODY_NAVIGATOR).await;
     assert!(json.contains("ink-canvas"));
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::InkCanvasScene>(&json).expect("navigator ink-canvas scene");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene::<semio_plugin::InkCanvasScene>(&json).expect("navigator ink-canvas scene");
     assert_eq!(scene.view_mode, "navigator");
 }
 

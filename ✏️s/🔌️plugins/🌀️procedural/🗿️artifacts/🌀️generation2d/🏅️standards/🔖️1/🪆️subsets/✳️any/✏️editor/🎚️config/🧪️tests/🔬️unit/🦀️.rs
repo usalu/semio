@@ -22,9 +22,9 @@ async fn config_selected_generation_set_and_clear_satisfy_the_inverse_sum_law() 
 
 #[test]
 fn config_op_text_round_trips_every_variant() {
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetShowMode(SetShowModeSetting { value: "generate".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id: None }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id: Some("g1".into()) }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetShowMode(SetShowModeSetting { value: "generate".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id: None }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id: Some("g1".into()) }));
 }
 
 /// 🧾️ The payload-record variants keep the former named variants' externally tagged wire byte for byte, checked against an

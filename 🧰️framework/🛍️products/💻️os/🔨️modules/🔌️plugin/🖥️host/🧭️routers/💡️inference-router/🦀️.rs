@@ -216,7 +216,7 @@ impl ArtifactInferenceRouter {
     /// `dependencies: Vec<(inference_schema, result_wire_bytes)>` on the outgoing request — exactly
     /// the WIT `artifact-inference-request.dependencies: list<tuple<string, list<u8>>>` shape. The
     /// requester's own entries — a composed document's owned children (design §20.15,
-    /// `semio_framework_plugin::inference_child_dependency`) — stay first and reach every dependency
+    /// `semio_plugin::inference_child_dependency`) — stay first and reach every dependency
     /// request too ([`routed_inference_dependencies`]).
     /// `visited` is the runtime counterpart of `register_plugin`'s registration-time toposort — a
     /// registered graph can still recurse infinitely if two rows' `depends_on` disagree with what

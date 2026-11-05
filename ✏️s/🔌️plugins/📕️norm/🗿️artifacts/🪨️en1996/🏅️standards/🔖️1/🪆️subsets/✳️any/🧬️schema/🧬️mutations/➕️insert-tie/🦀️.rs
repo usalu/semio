@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for InsertTie where Op: prot
         record: "InsertedTie",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert tie or anchor", "Anker einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert tie or anchor", "Anker einfügen")
     }
 }
 

@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 👁️LiveVisualLanguage
-pub(super) const FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES: usize = semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY * CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY;
+pub(super) const FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES: usize = semio_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY * CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 
 pub const FEM2D_MOUNTED_VISUAL_PAGE_BYTES: usize = 4_096;
 

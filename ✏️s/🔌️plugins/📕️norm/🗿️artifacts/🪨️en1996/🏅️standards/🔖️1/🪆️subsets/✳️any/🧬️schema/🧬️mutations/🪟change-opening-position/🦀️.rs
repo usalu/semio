@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeOpeningPosition wh
         record: "ChangedOpeningPosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change opening position", "Öffnungslage ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change opening position", "Öffnungslage ändern")
     }
 }
 

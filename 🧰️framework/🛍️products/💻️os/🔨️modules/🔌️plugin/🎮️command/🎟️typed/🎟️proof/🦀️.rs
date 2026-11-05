@@ -1,5 +1,5 @@
 //! 🎟️ Qualification compares one original catalog row at a time and retains its exact metadata lease.
-use semio_framework_plugin_job::original_declared_tools::{DeclaredToolCatalogAlias,DeclaredToolCatalogSource,DeclaredToolRegistrationAlias,DeclaredToolRowKey,DeclaredToolRole};
+use semio_plugin_job::original_declared_tools::{DeclaredToolCatalogAlias,DeclaredToolCatalogSource,DeclaredToolRegistrationAlias,DeclaredToolRowKey,DeclaredToolRole};
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use std::mem::{ManuallyDrop,size_of};

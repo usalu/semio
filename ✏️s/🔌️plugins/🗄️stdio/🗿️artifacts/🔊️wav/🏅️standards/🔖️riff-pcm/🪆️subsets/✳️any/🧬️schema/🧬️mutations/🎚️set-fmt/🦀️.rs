@@ -13,8 +13,8 @@ pub struct SetFmt {
 impl protocol::MutationKind<WavSnapshot, WavMutation> for SetFmt {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "fmt", kind: "set-fmt", record: "SetFmt" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set fmt", "fmt-Chunk setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set fmt", "fmt-Chunk setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,6 +1,6 @@
 use semio_framework::kernel::ActorUiPatchReceipt;
 use crate::PendingPatchAuthority;
-use semio_framework_ui_contract::{UiPatch, self as ui_contract};
+use semio_ui_contract::{UiPatch, self as ui_contract};
 
 #[doc(hidden)]
 pub fn receipt(row: &serde_json::Value) -> ActorUiPatchReceipt {

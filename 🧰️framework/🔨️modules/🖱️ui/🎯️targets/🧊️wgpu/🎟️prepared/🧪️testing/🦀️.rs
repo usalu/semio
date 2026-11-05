@@ -196,7 +196,7 @@ pub fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
         directives,
         uploads: PreparedRenderUploads::default(),
         evictions: PreparedRenderEvictions::default(),
-        draw: semio_framework_ui_draw_contract::DrawList::default(),
+        draw: semio_ui_draw_contract::DrawList::default(),
         overlay: None,
         commands: PreparedRenderCommandPages::default(),
         time_seconds: 0.0,

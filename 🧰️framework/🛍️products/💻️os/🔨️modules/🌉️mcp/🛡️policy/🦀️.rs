@@ -17,9 +17,9 @@ use semio_framework_value::ValueError;
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Arc;
-use semio_framework_os_mcp_catalog::catalog::CapabilityDefinition;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, SessionHandle};
+use semio_os_mcp_catalog::catalog::CapabilityDefinition;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, SessionHandle};
 
 //#region 🔖️ScopeTable
 

@@ -9,10 +9,10 @@ use super::*;
 /// by that call, whichever comes first — so a hub serves without interpreting its whole catalog first and
 /// no codec call ever runs on a row its component did not answer as the trust record says.
 pub(super) struct GuestArtifactComponent {
-    pub(super) runtime: Arc<semio_framework_plugin_interpreter_runtime::OwnedRuntime>,
+    pub(super) runtime: Arc<semio_plugin_interpreter_runtime::OwnedRuntime>,
     pub(super) package: PackageRef,
     pub(super) component: TrustedCatalogAsset,
-    pub(super) compiled: GuestResidencyV1<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>,
+    pub(super) compiled: GuestResidencyV1<semio_plugin_interpreter_runtime::OwnedCompiledGuest>,
     pub(super) position: usize,
     pub(super) component_sha256: [u8; 32],
     pub(super) rows: Vec<(String, [u8; 32])>,
@@ -22,13 +22,13 @@ pub(super) struct GuestArtifactComponent {
 }
 
 impl GuestArtifactComponent {
-    async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>, AuthorityError> {
+    async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_plugin_interpreter_runtime::OwnedCompiledGuest>, AuthorityError> {
         self.compiled
             .acquire(context, || async {
                 context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 0, total_units: 1 })?;
                 let bytes = self.component.read(context).await?;
                 let runtime = Arc::clone(&self.runtime);
-                let compiled = interpret_off_worker(context, move |_handle, _progress, _cancellation| runtime.compile_component(&bytes).map_err(semio_framework_plugin_guest_contract::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
+                let compiled = interpret_off_worker(context, move |_handle, _progress, _cancellation| runtime.compile_component(&bytes).map_err(semio_plugin_guest_contract::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
                 context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 1, total_units: 1 })?;
                 Ok(compiled)
             })
@@ -90,7 +90,7 @@ impl GuestArtifactComponent {
     }
 
     /// 🔐️ One row: the component's own `pack-schema-hash`, compared with the trust record and remembered for this engine.
-    async fn verify_row(&self, compiled: Arc<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>, schema: &str, expected: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+    async fn verify_row(&self, compiled: Arc<semio_plugin_interpreter_runtime::OwnedCompiledGuest>, schema: &str, expected: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
         let (runtime, row_schema) = (Arc::clone(&self.runtime), schema.to_string());
         let observed = interpret_off_worker(context, move |handle, progress, cancellation| handle.block_on(runtime.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel), cancellation)))
@@ -181,14 +181,14 @@ impl GuestArtifactCodecBinding {
 /// the call at its next step, so no interpretation outlives the operation that asked for it and a
 /// runtime being dropped waits for none. The outer result is the caller's own outcome, the inner one
 /// the guest's answer. Guest codec calls belong to the hub's runtime; outside one they are refused.
-pub async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_guest_contract::TurnFault>, AuthorityError>
+pub async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_plugin_guest_contract::TurnFault>, AuthorityError>
 where
     T: Send + 'static,
-    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64), &semio_framework_plugin_guest_contract::GuestCallCancellation) -> Result<T, semio_framework_plugin_guest_contract::TurnFault> + Send + 'static,
+    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64), &semio_plugin_guest_contract::GuestCallCancellation) -> Result<T, semio_plugin_guest_contract::TurnFault> + Send + 'static,
 {
     let handle = tokio::runtime::Handle::try_current().map_err(|_| catalog("guest codec calls run on the hub runtime"))?;
     let (sender, mut observations) = tokio::sync::mpsc::unbounded_channel::<u64>();
-    let released = GuestCallRelease(semio_framework_plugin_guest_contract::GuestCallCancellation::default());
+    let released = GuestCallRelease(semio_plugin_guest_contract::GuestCallCancellation::default());
     let (blocking, cancellation) = (handle.clone(), released.0.clone());
     let joined = handle.spawn_blocking(move || {
         call(
@@ -207,7 +207,7 @@ where
             Err(_) => {}
         }
     }
-    Ok(joined.await.unwrap_or_else(|error| Err(semio_framework_plugin_guest_contract::TurnFault::Trapped(format!("guest codec call ended abnormally: {error}")))))
+    Ok(joined.await.unwrap_or_else(|error| Err(semio_plugin_guest_contract::TurnFault::Trapped(format!("guest codec call ended abnormally: {error}")))))
 }
 
 /// ⏲️ How often a caller awaiting a guest call between two fuel observations (one per 25 M fuel or 5 s)
@@ -217,7 +217,7 @@ pub const GUEST_CALL_CANCELLATION_POLL: std::time::Duration = std::time::Duratio
 /// 🧯️ The awaiting side of one guest call: however its caller is released — answered, refused, cancelled or
 /// dropped mid-await — the call is cancelled, which ends its interpretation at the next step (a call that already
 /// returned is unaffected).
-struct GuestCallRelease(semio_framework_plugin_guest_contract::GuestCallCancellation);
+struct GuestCallRelease(semio_plugin_guest_contract::GuestCallCancellation);
 
 impl Drop for GuestCallRelease {
     fn drop(&mut self) {

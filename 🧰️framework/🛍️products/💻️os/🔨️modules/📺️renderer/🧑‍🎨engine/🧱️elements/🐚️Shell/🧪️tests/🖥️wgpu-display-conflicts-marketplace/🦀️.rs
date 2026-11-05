@@ -8,7 +8,7 @@
 //! `windowMeasuresToTreeItems` (`🛠️ShellHelpers/🟦️.tsx`) and `createWorldProjectionTemplates`
 //! (`♾️infinite/🌍️world/🎨️r3f/🟦️.tsx`).
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::host_test_shell;
+use semio_renderer_wgpu_fixtures::shell::host_test_shell;
 use super::*;
 
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
@@ -56,7 +56,7 @@ fn the_display_windows_leaf_publishes_reacts_kind_and_projection_ids() {
     assert!(!keys.iter().any(|key| key.contains(".projection.")), "🖥️ a canvas-2d kind offers no projection rows, exactly as React's `surfaceKind === \"world-3d\"` gate says");
 
     let session = shell.docs.session.as_mut().expect("the fixture binds a session");
-    session.app.window_kinds.first_mut().surface_kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    session.app.window_kinds.first_mut().surface_kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let keys = published_keys(&shell, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.docs.build_display_windows_ui(&shell.prefs));
     for react_id in [
         "framework.display.windows.main.projection.parallel",
@@ -77,32 +77,32 @@ fn the_display_windows_leaf_publishes_reacts_kind_and_projection_ids() {
 
 struct DisplayTreeSceneHost;
 
-impl semio_framework_ui_wgpu_hosting::scene_slots::SceneHost for DisplayTreeSceneHost {
+impl semio_ui_wgpu_hosting::scene_slots::SceneHost for DisplayTreeSceneHost {
     fn paint_slot_step(
         &mut self,
-        slot: &semio_framework_ui_wgpu_hosting::scene_slots::SceneSlot<'_>,
-        cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor,
-        _draw: &mut semio_framework_ui_draw_contract::DrawList,
-        _atlas: &mut semio_framework_ui_text::FontAtlas,
-        _icons: Option<&semio_framework_ui_draw_contract::IconAtlas>,
-    ) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
+        slot: &semio_ui_wgpu_hosting::scene_slots::SceneSlot<'_>,
+        cursor: &mut semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor,
+        _draw: &mut semio_ui_draw_contract::DrawList,
+        _atlas: &mut semio_ui_text::FontAtlas,
+        _icons: Option<&semio_ui_draw_contract::IconAtlas>,
+    ) -> semio_ui_wgpu_hosting::scene_slots::ScenePaintStep {
         match cursor.bind(slot.node) {
             Ok(true) => cursor.finish(),
-            Ok(false) => semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending,
-            Err(_) => semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault,
+            Ok(false) => semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending,
+            Err(_) => semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault,
         }
     }
 }
 
-fn settle_display_tree(engine: &mut semio_framework_ui_wgpu_engine::Ui, atlas: &mut semio_framework_ui_text::FontAtlas, witness: u64) {
+fn settle_display_tree(engine: &mut semio_ui_wgpu_engine::Ui, atlas: &mut semio_ui_text::FontAtlas, witness: u64) {
     settle_tree_surface(engine, atlas, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, witness);
 }
 
-fn settle_tree_surface(engine: &mut semio_framework_ui_wgpu_engine::Ui, atlas: &mut semio_framework_ui_text::FontAtlas, surface: &str, witness: u64) {
+fn settle_tree_surface(engine: &mut semio_ui_wgpu_engine::Ui, atlas: &mut semio_ui_text::FontAtlas, surface: &str, witness: u64) {
     settle_tree_surface_at_height(engine, atlas, surface, witness, 240.0);
 }
 
-fn settle_tree_surface_at_height(engine: &mut semio_framework_ui_wgpu_engine::Ui, atlas: &mut semio_framework_ui_text::FontAtlas, surface: &str, witness: u64, height: f32) {
+fn settle_tree_surface_at_height(engine: &mut semio_ui_wgpu_engine::Ui, atlas: &mut semio_ui_text::FontAtlas, surface: &str, witness: u64, height: f32) {
     engine.set_viewport(surface, 300.0, height);
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let operation = semio_framework_job::allocate_operation_id();
@@ -112,8 +112,8 @@ fn settle_tree_surface_at_height(engine: &mut semio_framework_ui_wgpu_engine::Ui
         let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(witness), semio_framework_job::StepBudget::new(64, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut preview_sequence, &mut cx_retained);
         match engine.step_document_reconcile(surface, "framework", &mut cx) {
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => false,
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => true,
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => false,
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => true,
             step => panic!("Display branch reconcile answered {step:?}"),
         }
     });
@@ -122,7 +122,7 @@ fn settle_tree_surface_at_height(engine: &mut semio_framework_ui_wgpu_engine::Ui
         for _ in 0..16_384 {
             let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
             let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut preview_sequence, &mut cx_retained);
-            if matches!(engine.step_layouts(&pool, atlas, &mut cx), semio_framework_ui_wgpu_engine_surface::UiLayoutStep::Idle) {
+            if matches!(engine.step_layouts(&pool, atlas, &mut cx), semio_ui_wgpu_engine_surface::UiLayoutStep::Idle) {
                 break;
             }
         }
@@ -134,8 +134,8 @@ fn settle_tree_surface_at_height(engine: &mut semio_framework_ui_wgpu_engine::Ui
     assert!(!engine.layout_is_dirty(surface), "retained Tree layout settles");
     for _ in 0..131_072 {
         match engine.frame_step::<DisplayTreeSceneHost>(surface, 300.0, height, atlas, None, None) {
-            semio_framework_ui_wgpu_engine_surface::UiFrameStep::Pending => {}
-            semio_framework_ui_wgpu_engine_surface::UiFrameStep::Ready => {
+            semio_ui_wgpu_engine_surface::UiFrameStep::Pending => {}
+            semio_ui_wgpu_engine_surface::UiFrameStep::Ready => {
                 assert!(engine.seal_presented_input_candidate(witness, &[surface.to_string()]));
                 assert!(engine.acknowledge_presented_input(witness));
                 return;
@@ -146,17 +146,17 @@ fn settle_tree_surface_at_height(engine: &mut semio_framework_ui_wgpu_engine::Ui
     panic!("Display branch paint did not settle");
 }
 
-fn press_display_tree(engine: &mut semio_framework_ui_wgpu_engine::Ui, rect: semio_framework_ui_theme::geometry::Rect) {
+fn press_display_tree(engine: &mut semio_ui_wgpu_engine::Ui, rect: semio_ui_theme::geometry::Rect) {
     let x = rect.x + rect.w * 0.5;
     let y = rect.y + rect.h * 0.5;
-    engine.dispatch_event(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, semio_framework_ui_wgpu_events::UiEvent::PointerDown { x, y, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() });
-    engine.dispatch_event(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, semio_framework_ui_wgpu_events::UiEvent::PointerUp { x, y, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() });
+    engine.dispatch_event(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, semio_ui_wgpu_events::UiEvent::PointerDown { x, y, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: semio_ui_wgpu_events::EventModifiers::default() });
+    engine.dispatch_event(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, semio_ui_wgpu_events::UiEvent::PointerUp { x, y, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: semio_ui_wgpu_events::EventModifiers::default() });
 }
 
 #[test]
 fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its_children_when_closed() {
     let mut shell = display_shell();
-    shell.docs.session.as_mut().expect("Display fixture session").app.window_kinds.first_mut().surface_kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    shell.docs.session.as_mut().expect("Display fixture session").app.window_kinds.first_mut().surface_kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let mut body = shell.docs.build_display_windows_ui(&shell.prefs);
     let UiNode::Stack(panel) = &mut body else { panic!("Display body is a panel stack") };
     let UiNode::Tree(tree) = panel.children.first_mut().expect("Display panel tree") else { panic!("Display panel child is a Tree") };
@@ -166,9 +166,9 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
     let child_id = "framework.display.windows.main.projection.parallel.orthographic";
     let chevron_id = format!("tree.chevron.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{parallel_id}");
     let child_label_id = format!("tree.label.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{child_id}");
-    let mut engine = semio_framework_ui_wgpu_engine::Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     let records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body).expect("Display's authored tree projects into retained records");
-    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+    let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
         surface: SurfaceId::try_from(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).unwrap(),
         revision: ui_contract::UiRevision(1),
@@ -182,7 +182,7 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
     }
     assert!(engine.publish_document(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, document));
     engine.set_window_flow(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
     settle_display_tree(&mut engine, &mut atlas, 1);
 
     let expected: Vec<String> = display_order_fixture()["displayResolvedOrder"]["topToBottomIds"]
@@ -235,7 +235,7 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
     let mut shell = display_shell();
     let kind = shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut();
     kind.id = fixture["displayResolvedOrder"]["windowKindId"].as_str().unwrap().into();
-    kind.surface_kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    kind.surface_kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let body = shell.docs.build_display_windows_ui(&shell.prefs);
     let mut records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body).expect("Display records");
     for record in &mut records {
@@ -245,7 +245,7 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
             _ => {}
         }
     }
-    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+    let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
         surface: SurfaceId::try_from(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).unwrap(),
         revision: ui_contract::UiRevision(1),
@@ -256,10 +256,10 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
     for record in records {
         document.try_upsert_record(record).expect("Display record admits");
     }
-    let mut engine = semio_framework_ui_wgpu_engine::Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, document));
     engine.set_window_flow(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
     settle_tree_surface_at_height(&mut engine, &mut atlas, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, 1, 720.0);
     let mut painted: Vec<(f32, &str)> = expected.iter().map(|id| {
         let control_id = format!("tree.label.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{id}");
@@ -276,10 +276,10 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
 fn the_display_layout_leaf_publishes_the_save_box_and_both_layout_rosters() {
     let mut shell = display_shell();
     shell.dock.layout_save_label.clear();
-    shell.dock.user_layouts = vec![semio_framework_ui_layout::layout::NamedLayout { id: "user-7".into(), label: "Mine".into(), icon_id: None, layout: shell.dock.dock.to_window_layout(), origin: "user".into(), group_path: None }];
+    shell.dock.user_layouts = vec![semio_ui_layout::layout::NamedLayout { id: "user-7".into(), label: "Mine".into(), icon_id: None, layout: shell.dock.dock.to_window_layout(), origin: "user".into(), group_path: None }];
     if let Some(session) = shell.docs.session.as_mut() {
         session.app.named_layouts =
-            vec![semio_framework_ui_layout::layout::NamedLayout { id: "review".into(), label: "Review".into(), icon_id: None, layout: semio_framework_ui_layout::layout::create_stack_layout(&["main".to_string()], None), origin: "builtin".into(), group_path: Some(vec!["Work".into()]) }];
+            vec![semio_ui_layout::layout::NamedLayout { id: "review".into(), label: "Review".into(), icon_id: None, layout: semio_ui_layout::layout::create_stack_layout(&["main".to_string()], None), origin: "builtin".into(), group_path: Some(vec!["Work".into()]) }];
     }
     let node = shell.dock.build_display_layout_ui(&shell.prefs, &shell.docs);
     let keys = published_keys(&shell, FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, &node);
@@ -348,7 +348,7 @@ fn a_tool_leaf_publishes_its_own_measures_under_their_own_ids() {
             id: "fill.material".into(),
             label: Some("Material".into()),
             value: "oak".into(),
-            items: vec![semio_framework_ui_layout::layout::MeasureSelectItem { id: "oak".into(), value: "oak".into(), label: "Oak".into() }],
+            items: vec![semio_ui_layout::layout::MeasureSelectItem { id: "oak".into(), value: "oak".into(), label: "Oak".into() }],
             on_change: ActionDescriptor { controller_id: "test".into(), action: "setFillMaterial".into(), args: None },
         }],
     );
@@ -377,7 +377,7 @@ fn marketplace_verbs(props: &ui_contract::TreeItemProps) -> Vec<(String, bool)> 
 fn marketplace_window_at(shell: &mut ShellState, plugin_id: &str) {
     let index = shell.plugins.marketplace_roster().iter().position(|id| id == plugin_id).unwrap_or_else(|| panic!("🛍️ '{plugin_id}' is on the roster")) as u32;
     let key = format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/{MARKETPLACE_LOCAL_SECTION_ID}");
-    shell.dock.tree_windows.report(FRAMEWORK_MARKETPLACE_TAB_ID, &[semio_framework_ui_wgpu_light::tree_window::TreeWindowRequest { key, offset: index, rows: 1 }], 20, 0);
+    shell.dock.tree_windows.report(FRAMEWORK_MARKETPLACE_TAB_ID, &[semio_ui_wgpu_light::tree_window::TreeWindowRequest { key, offset: index, rows: 1 }], 20, 0);
 }
 
 /// 🛍️ **The Marketplace action lane.** A resident plugin offers React's reload/uninstall pair, a plugin only the activation
@@ -394,7 +394,7 @@ fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
     assert_eq!((target["scope"].as_str(), target["args"]["pluginId"].as_str()), (Some("framework"), Some("space")), "🎯️ every verb fires on the row's one target: {target}");
     assert!(target.get("activation").is_none(), "🎯️ an action-only row has no activation verb");
 
-    let installable = semio_framework_os_renderer_wgpu_program_bridge::plugin_artifact_kind_activations().iter().map(|(_, plugin_id)| *plugin_id).find(|plugin_id| *plugin_id != "space").expect("the catalogue claims a plugin this shell does not hold");
+    let installable = semio_renderer_wgpu_program_bridge::plugin_artifact_kind_activations().iter().map(|(_, plugin_id)| *plugin_id).find(|plugin_id| *plugin_id != "space").expect("the catalogue claims a plugin this shell does not hold");
     marketplace_window_at(&mut shell, installable);
     let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
     let (_, row) = marketplace_row(&records, &format!("framework.marketplace.plugin.{installable}"));
@@ -432,7 +432,7 @@ fn the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_butto
 fn marketplace_accessibility_nodes(shell: &mut ShellState) -> Vec<ui_contract::AccessibilityProjectionNode> {
     marketplace_window_at(shell, "space");
     let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
-    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+    let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
         surface: SurfaceId::try_from(FRAMEWORK_MARKETPLACE_TAB_ID).unwrap(),
         revision: ui_contract::UiRevision(1),
@@ -444,11 +444,11 @@ fn marketplace_accessibility_nodes(shell: &mut ShellState) -> Vec<ui_contract::A
     for record in records {
         document.try_upsert_record(record).expect("marketplace record admits");
     }
-    let mut engine = semio_framework_ui_wgpu_engine::Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_MARKETPLACE_TAB_ID, document));
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_MARKETPLACE_TAB_ID, 1);
-    semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(engine.tree(FRAMEWORK_MARKETPLACE_TAB_ID).expect("the mounted Marketplace"))
+    semio_ui_wgpu_hosting::accessibility::accessibility_projection(engine.tree(FRAMEWORK_MARKETPLACE_TAB_ID).expect("the mounted Marketplace"))
 }
 
 /// 🪟️ **The windowed roster law** (P5 × U6): the roster is ONE windowed Tree section — whatever its length it projects inside
@@ -579,11 +579,11 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
     let detail = records.iter().find(|record| record.id == detail_id).expect("related detail record");
     let ui_contract::Component::Surface(surface) = &detail.component else { panic!("detail relation targets a Surface") };
     assert_eq!(surface.kind, ui_contract::SurfaceKind::DiffView);
-    let scene: semio_framework_ui_scene_views::DiffViewScene = semio_framework_ui_scene_surface::decode(surface).expect("DiffView scene decodes");
+    let scene: semio_ui_scene_views::DiffViewScene = semio_ui_scene_surface::decode(surface).expect("DiffView scene decodes");
     assert_eq!(scene.after, fixture["conflicts"][0]["after"].as_str().unwrap());
     assert!(records.iter().filter(|record| matches!(&record.component, ui_contract::Component::TreeItem(props) if props.detail.is_some())).count() == 1, "only the selected conflict owns a detail");
 
-    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+    let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
         surface: SurfaceId::try_from(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID).unwrap(),
         revision: ui_contract::UiRevision(1),
@@ -595,12 +595,12 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
     for record in records {
         document.try_upsert_record(record).expect("conflict record admits");
     }
-    let mut engine = semio_framework_ui_wgpu_engine::Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);
     let hit = (0..240).step_by(4).flat_map(|y| (0..300).step_by(4).map(move |x| (x as f32, y as f32))).find_map(|(x, y)| engine.scene_at(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, x, y)).expect("accepted frame exposes the selected DiffView slot");
-    assert_eq!(hit.kind, semio_framework_ui_declaration::ui::SurfaceKind::DiffView);
+    assert_eq!(hit.kind, semio_ui_declaration::ui::SurfaceKind::DiffView);
     assert!(hit.rect.w > 0.0 && hit.rect.h > 0.0, "the accepted detail slot has real geometry: {:?}", hit.rect);
 }
 
@@ -621,7 +621,7 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
         .into(),
     }];
     let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.prefs.build_settings_conflicts_ui()).expect("conflict controls project");
-    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+    let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
         surface: SurfaceId::try_from(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID).unwrap(),
         revision: ui_contract::UiRevision(1),
@@ -633,19 +633,19 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
     for record in records {
         document.try_upsert_record(record).expect("conflict record admits");
     }
-    let mut engine = semio_framework_ui_wgpu_engine::Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);
 
     let row_id = fixture["rowId"].as_str().unwrap();
     let hits = engine.window_hit_targets(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID);
-    let row_index = hits.iter().position(|hit| hit.kind == semio_framework_ui_wgpu_input::HitKind::TreeItem && hit.control_id.ends_with(row_id)).expect("one conflict row hit");
+    let row_index = hits.iter().position(|hit| hit.kind == semio_ui_wgpu_input::HitKind::TreeItem && hit.control_id.ends_with(row_id)).expect("one conflict row hit");
     let row = hits[row_index].rect;
     let mut button_indices = Vec::new();
     for expected in fixture["controls"].as_array().unwrap() {
         let key = format!("{row_id}.{}", expected["suffix"].as_str().unwrap());
-        let index = hits.iter().position(|hit| hit.kind == semio_framework_ui_wgpu_input::HitKind::Button && hit.control_id.ends_with(&key)).unwrap_or_else(|| panic!("{key} publishes a Button hit"));
+        let index = hits.iter().position(|hit| hit.kind == semio_ui_wgpu_input::HitKind::Button && hit.control_id.ends_with(&key)).unwrap_or_else(|| panic!("{key} publishes a Button hit"));
         let button = hits[index].rect;
         assert!(index > row_index, "the descendant Button is registered after the row so reverse hit-testing resolves it first");
         assert!(button.w > 0.0 && button.h > 0.0 && button.x >= row.x && button.y >= row.y && button.x + button.w <= row.x + row.w && button.y + button.h <= row.y + row.h, "{key} stays inside the one row: button={button:?}, row={row:?}");
@@ -654,7 +654,7 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
     let first = hits[button_indices[0]].rect;
     let second = hits[button_indices[1]].rect;
     assert!((first.y - second.y).abs() < 0.01 && (first.h - second.h).abs() < 0.01 && first.x + first.w <= second.x + 0.01, "the labeled Buttons form one horizontal toolbar: {first:?}, {second:?}");
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     for hit in hits {
         input.register_hit(hit.to_hit_target());
     }
@@ -662,18 +662,18 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
     for index in button_indices {
         let button = hits[index].rect;
         let resolved = input.hit_at(button.x + button.w * 0.5, button.y + button.h * 0.5).expect("button centre resolves");
-        assert_eq!(resolved.kind, semio_framework_ui_wgpu_input::HitKind::Button, "the row selection target does not steal the inline Button");
+        assert_eq!(resolved.kind, semio_ui_wgpu_input::HitKind::Button, "the row selection target does not steal the inline Button");
     }
 }
 
 #[test]
 fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture = display_order_fixture();
     let mut shell = display_shell();
     let kind = shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut();
     kind.id = fixture["displayResolvedOrder"]["windowKindId"].as_str().unwrap().into();
-    kind.surface_kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    kind.surface_kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let anchor = PanelAnchor::BottomLeft;
     shell.chrome.screen_w = 1_600.0;
     shell.chrome.screen_h = 1_000.0;

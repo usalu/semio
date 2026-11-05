@@ -5,7 +5,7 @@ use protocol::os_store::serialization::ArtifactSqliteSnapshotHost;
 use semio_framework_value::{DslValue,Number};
 use protocol::sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase};
 use std::{io::Write,process::{Command,Stdio}};
-use semio_framework_os_space_testing_sqlite_native_caller::{native_caller_policy,with_original_decode,with_original_encode};
+use semio_os_space_testing_sqlite_native_caller::{native_caller_policy,with_original_decode,with_original_encode};
 /// 🫴️ Loans one explicit native caller authority to a routed snapshot run and closes its retirement recipients.
 fn with_native_control<T>(operation:impl FnOnce(&mut protocol::io::io_mechanism::IoRunControl<'_,'_>)->T)->T{
  let maximum=16<<20;let mut receive=|_|true;let mut publish=|_|true;

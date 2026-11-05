@@ -14,8 +14,8 @@ pub struct SetSelectedGeneration {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetSelectedGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "selected-generation", kind: "set-selected-generation", record: "SetSelectedGeneration" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Selected Generation", "Ausgewählte Erzeugung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Selected Generation", "Ausgewählte Erzeugung setzen")
     }
 
     fn target(&self) -> Vec<String> {

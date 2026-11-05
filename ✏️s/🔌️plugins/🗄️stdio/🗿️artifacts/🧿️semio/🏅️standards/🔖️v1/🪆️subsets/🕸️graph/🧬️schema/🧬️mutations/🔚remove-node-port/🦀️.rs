@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-port", kind: "remove-node-port", record: "RemovedNodePort" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove port #{} from node \"{}\"", self.index, self.node_id.value), &format!("Anschluss #{} aus Knoten \"{}\" entfernen", self.index, self.node_id.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove port #{} from node \"{}\"", self.index, self.node_id.value), &format!("Anschluss #{} aus Knoten \"{}\" entfernen", self.index, self.node_id.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.value.clone(), self.index.to_string()]

@@ -4,9 +4,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::STDIO_DWG_DOCUMENT_SCHEMA;
@@ -14,13 +14,13 @@ use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::sche
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
@@ -46,14 +46,14 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// `register_schema_specs()` has no declaration field and stays on the plugin root's `.setup(..)`.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("dwg", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::dwg_artifact_schema_descriptor())
         .formats(formats)
         .inferences([semio_s_artifact_stdio_dwg_inferences::standards::v_ac1024::subsets::any::schema::inferences::dwg_artifact_inference_descriptor()])
@@ -67,8 +67,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 🎹️ `ac1018` + `ac1024` composer entries as one owned `&'static [ComposerEntry]` (both registries own
 /// their rows; `ComposerEntry` fields are all `Copy`, so the rebuild is lossless).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::io::ComposerEntry] {
-    use semio_framework_plugin::io::ComposerEntry;
+fn dwg_combined_composer_entries() -> &'static [semio_plugin::io::ComposerEntry] {
+    use semio_plugin::io::ComposerEntry;
     static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| semio_s_artifact_stdio_dwg_model::standards::v_ac1018::subsets::any::io::io_registry::entries().iter().chain(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::io_registry::entries().iter()).map(|e| ComposerEntry { writes: e.writes, reads: e.reads, compose: e.compose }).collect())
@@ -145,7 +145,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.dwg".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Dwg", "Dwg"),
+        label: semio_ui_locale::LocalizedLabel::native("Dwg", "Dwg"),
         source_format: STDIO_DWG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -163,7 +163,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use semio_s_artifact_stdio_dwg_model::standards::v_ac1018::subsets::any::io::io_registry as v_ac1018;
     use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::io_registry as v_ac1024;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
+    use {semio_plugin::io::register_composer_entries,semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

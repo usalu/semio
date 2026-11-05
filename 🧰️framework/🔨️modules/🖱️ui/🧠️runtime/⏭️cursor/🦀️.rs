@@ -9,10 +9,10 @@ use std::mem::{size_of, take};
 #[cfg(any(test, feature = "testkit"))]
 use std::collections::HashSet;
 
-use semio_framework_ui_runtime_presentation::{ComponentTree, TreeNode, UiNativeResourceLoans, UiNativeResources};
-use semio_framework_ui_runtime_reconcile_primitives::{ExistingComponentComparison, FlatPresentedNode, FreshRecordClone, NodeIdentity, PresentationFrame, RecordDiffCursor, RecordOwnedCopy, RemovalFrame, SURFACE_COMPONENT_COPY_WORK_BYTES, SURFACE_RECONCILE_FIXED_NODES, SURFACE_RECONCILE_FLOOR_BYTES, SURFACE_RECONCILE_FLOOR_ITEMS, SURFACE_RECONCILE_PAGE_BYTES, SURFACE_RECONCILE_SURFACE_BYTES, SURFACE_RECONCILE_VALUE_DEPTH, SurfaceFixedVec, SurfaceLinearMap, SurfaceLinearSet, SurfaceReconcileFault, SurfaceReconcileLimits, SurfaceReconcileUsage, SurfaceSemanticCensusCursor, SurfaceSemanticCensusStep, SurfaceSemanticUsage, SurfaceTreeRetireCursor, build_record_owned, diff_record_field, release_surface_reconcile_one, reserve_surface_reconcile_floor, retire_fresh_record_one, retire_record_one, surface_reconcile_limits_admissible};
+use semio_ui_runtime_presentation::{ComponentTree, TreeNode, UiNativeResourceLoans, UiNativeResources};
+use semio_ui_runtime_reconcile_primitives::{ExistingComponentComparison, FlatPresentedNode, FreshRecordClone, NodeIdentity, PresentationFrame, RecordDiffCursor, RecordOwnedCopy, RemovalFrame, SURFACE_COMPONENT_COPY_WORK_BYTES, SURFACE_RECONCILE_FIXED_NODES, SURFACE_RECONCILE_FLOOR_BYTES, SURFACE_RECONCILE_FLOOR_ITEMS, SURFACE_RECONCILE_PAGE_BYTES, SURFACE_RECONCILE_SURFACE_BYTES, SURFACE_RECONCILE_VALUE_DEPTH, SurfaceFixedVec, SurfaceLinearMap, SurfaceLinearSet, SurfaceReconcileFault, SurfaceReconcileLimits, SurfaceReconcileUsage, SurfaceSemanticCensusCursor, SurfaceSemanticCensusStep, SurfaceSemanticUsage, SurfaceTreeRetireCursor, build_record_owned, diff_record_field, release_surface_reconcile_one, reserve_surface_reconcile_floor, retire_fresh_record_one, retire_record_one, surface_reconcile_limits_admissible};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_ui_runtime_reconcile_primitives::{assert_unique_child_keys, build_record, identity_of};
+use semio_ui_runtime_reconcile_primitives::{assert_unique_child_keys, build_record, identity_of};
 
 #[cfg(any(test, feature = "testkit"))]
 #[path = "🧰️testkit/🦀️.rs"]

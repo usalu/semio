@@ -19,8 +19,8 @@ pub struct ChangeEditionProfile {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeEditionProfile where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_edition_profile::ChangeEditionProfile> + From<crate::remove_edition_profile::RemoveEditionProfile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "edition-profile", kind: "change-edition-profile", record: "ChangedEditionProfile" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change edition profile for sheet {} to {:?}", self.sheet, self.new_choice), &format!("Ausgabeprofil für Blatt {} auf {:?} ändern", self.sheet, self.new_choice))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change edition profile for sheet {} to {:?}", self.sheet, self.new_choice), &format!("Ausgabeprofil für Blatt {} auf {:?} ändern", self.sheet, self.new_choice))
     }
     fn target(&self) -> Vec<String> {
         vec![self.sheet.clone()]

@@ -68,7 +68,7 @@ fn artifact_store_history_metadata_retirement_cursors_authors_pins_and_ids_under
         authors: vec![Author { id: "author".repeat(64), name: "name".repeat(64), avatar: Some("avatar".repeat(64)) }],
         message: Some("message".repeat(64)),
         timestamp: "timestamp".repeat(64),
-        composition_pins: vec![semio_framework_os_vcs::CompositionPin {
+        composition_pins: vec![semio_os_vcs::CompositionPin {
             child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: "child".repeat(64), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "kind".repeat(64), standard: "standard".repeat(64), subset: "subset".repeat(64) } },
             checkpoint_id: "child-checkpoint".repeat(64),
         }],
@@ -103,8 +103,8 @@ fn fixed_edit_message_ledger_resolves_probe_collisions_without_a_parallel_runtim
     }
     let (first, second) = collision.expect("pigeonhole probe collision exists");
     let entries = vec![
-        semio_framework_os_spr::EditMessages { edit_id: first.clone(), messages: vec![semio_framework_os_spr::MutationMessage::info("mutation.cascade", "first")] },
-        semio_framework_os_spr::EditMessages { edit_id: second.clone(), messages: vec![semio_framework_os_spr::MutationMessage::info("mutation.cascade", "second")] },
+        semio_os_spr::EditMessages { edit_id: first.clone(), messages: vec![semio_os_spr::MutationMessage::info("mutation.cascade", "first")] },
+        semio_os_spr::EditMessages { edit_id: second.clone(), messages: vec![semio_os_spr::MutationMessage::info("mutation.cascade", "second")] },
     ];
     let mut ledger = ArtifactEditMessageLedger::try_from_entries(entries).unwrap_or_else(|_| panic!("colliding fixed entries probe deterministically"));
     assert_eq!(ledger.get_by_id(&first).and_then(|entry| entry.messages.first()).map(|message| message.message.as_str()), Some("first"));
@@ -135,8 +135,8 @@ fn drain_rejected_edit_message_ledger(mut rejected: ArtifactEditMessageLedgerRej
 #[test]
 fn fixed_edit_message_ledger_rejects_duplicate_and_capacity_plus_one_with_exact_retained_owners() {
     let duplicate = vec![
-        semio_framework_os_spr::EditMessages { edit_id: "duplicate".into(), messages: vec![semio_framework_os_spr::MutationMessage::info("mutation.cascade", "first")] },
-        semio_framework_os_spr::EditMessages { edit_id: "duplicate".into(), messages: vec![semio_framework_os_spr::MutationMessage::info("mutation.cascade", "second")] },
+        semio_os_spr::EditMessages { edit_id: "duplicate".into(), messages: vec![semio_os_spr::MutationMessage::info("mutation.cascade", "first")] },
+        semio_os_spr::EditMessages { edit_id: "duplicate".into(), messages: vec![semio_os_spr::MutationMessage::info("mutation.cascade", "second")] },
     ];
     let duplicate = match ArtifactEditMessageLedger::try_from_entries(duplicate) {
         Err(rejected) => rejected,
@@ -148,7 +148,7 @@ fn fixed_edit_message_ledger_rejects_duplicate_and_capacity_plus_one_with_exact_
     assert_eq!(duplicate.retained_entries().len(), 2, "duplicate rejection retains the exact owner batch");
     drain_rejected_edit_message_ledger(duplicate);
 
-    let plus_one = (0..=ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY).map(|index| semio_framework_os_spr::EditMessages { edit_id: format!("edit-{index}"), messages: Vec::new() }).collect();
+    let plus_one = (0..=ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY).map(|index| semio_os_spr::EditMessages { edit_id: format!("edit-{index}"), messages: Vec::new() }).collect();
     let plus_one = match ArtifactEditMessageLedger::try_from_entries(plus_one) {
         Err(rejected) => rejected,
         Ok(mut ledger) => {
@@ -163,7 +163,7 @@ fn fixed_edit_message_ledger_rejects_duplicate_and_capacity_plus_one_with_exact_
 #[test]
 fn fixed_edit_message_ledger_preserves_order_and_rejects_stale_generation_after_slot_reuse() {
     let entries =
-        vec![semio_framework_os_spr::EditMessages { edit_id: "first".into(), messages: Vec::new() }, semio_framework_os_spr::EditMessages { edit_id: "middle".into(), messages: Vec::new() }, semio_framework_os_spr::EditMessages { edit_id: "last".into(), messages: Vec::new() }];
+        vec![semio_os_spr::EditMessages { edit_id: "first".into(), messages: Vec::new() }, semio_os_spr::EditMessages { edit_id: "middle".into(), messages: Vec::new() }, semio_os_spr::EditMessages { edit_id: "last".into(), messages: Vec::new() }];
     let mut ledger = match ArtifactEditMessageLedger::try_from_entries(entries) {
         Ok(ledger) => ledger,
         Err(rejected) => {
@@ -174,7 +174,7 @@ fn fixed_edit_message_ledger_preserves_order_and_rejects_stale_generation_after_
     let middle = ledger.find_ticket("middle").expect("middle ticket");
     let removed = ledger.remove(middle).expect("middle owner detaches in O(1)");
     assert_eq!(removed.edit_id, "middle");
-    let reused = ledger.try_push(semio_framework_os_spr::EditMessages { edit_id: "replacement".into(), messages: Vec::new() }).unwrap_or_else(|_| panic!("released slot is reusable"));
+    let reused = ledger.try_push(semio_os_spr::EditMessages { edit_id: "replacement".into(), messages: Vec::new() }).unwrap_or_else(|_| panic!("released slot is reusable"));
     assert_eq!(reused.slot, middle.slot);
     assert_ne!(reused.generation, middle.generation);
     assert!(ledger.get(middle).is_none(), "stale generation cannot resolve the reused slot");

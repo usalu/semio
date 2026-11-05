@@ -1,10 +1,10 @@
 use crate::standards::v1::subsets::any::io::text::snapshot as forms_dsl;
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 use crate::editor::forms::commands::export_snapshot::*;
 use crate::editor::forms::unit_tests::context::{forms_app, settle};
 use crate::editor::forms::FormsCommand;
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::artifact_app_laws::meta;
+use semio_plugin::PluginApp;
 use ExportSnapshot;
 
 /// 📤️ On a MOUNTED app `InvocationResult.requested_effects` is empty — the host effect rides the
@@ -12,7 +12,7 @@ use ExportSnapshot;
 #[semio_framework_async_macros::async_test]
 async fn export_snapshot_downloads_the_forms_dsl_text() {
     let mut app = forms_app().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &FormsCommand::ExportSnapshot(ExportSnapshot {}), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &FormsCommand::ExportSnapshot(ExportSnapshot {}), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
     let receipt = settle(&mut app).await;
     let (filename, data) = receipt.effects.iter().find_map(|effect| match effect {
         semio_framework::kernel::Effect::DownloadMediaExport { filename, data, .. } => Some((filename, data)),

@@ -11,40 +11,40 @@ use crate::editor::binary::modes::edit::windows::main;
 use crate::schema::mutations::replace_byte_range;
 use crate::{BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use semio_framework_2d_compute::EngineHandles;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
 #[cfg(test)]
-use semio_framework_plugin::Component;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::Component;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_ui_locale::Label;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
+use semio_ui_locale::Label;
 
 //#region 🔖️Dialect
 /// 🎯️ This surface's dialect coordinate — `s.stdio.binary@raw/*`, verified against this artifact's
@@ -170,7 +170,7 @@ pub fn binary_text_emit(command: &semio_s_artifact_stdio_contract::editing::Snap
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn binary_invalid_hex() -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.invalid-hex"), "The byte editor contains an odd digit count or a non-hexadecimal digit.")
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.binary.invalid-hex"), "The byte editor contains an odd digit count or a non-hexadecimal digit.")
 }
 
 /// ✂️ The byte runs a hex-window change set covers. The window shows the bytes as contiguous lowercase hex (two digits per byte) followed
@@ -185,12 +185,12 @@ fn binary_hex_ranges(bytes: &[u8], ranges: &[semio_s_artifact_stdio_contract::Dr
     let window = digits + format!("\n# total bytes: {}", bytes.len()).chars().count();
     let mut runs: Vec<(usize, usize, Vec<&semio_s_artifact_stdio_contract::DraftSplice>)> = Vec::new();
     for range in ranges {
-        let end = range.offset.checked_add(range.delete).filter(|end| *end <= window).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.splice-out-of-range"), "a range of the change set leaves the byte editor"))?;
+        let end = range.offset.checked_add(range.delete).filter(|end| *end <= window).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.binary.splice-out-of-range"), "a range of the change set leaves the byte editor"))?;
         if range.offset > digits && end <= window {
             continue;
         }
         if end > digits || (range.offset == digits && range.delete > 0) {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.splice-crosses-comment"), "a range of the change set crosses between the hex digits and the comment line"));
+            return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.binary.splice-crosses-comment"), "a range of the change set crosses between the hex digits and the comment line"));
         }
         let (low, high) = (range.offset / 2, end.div_ceil(2));
         match runs.last_mut() {
@@ -225,10 +225,10 @@ fn binary_text_reduce(
     command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>,
     snapshot: &BinarySnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BinaryEditor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BinaryEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<BinaryMutation>, Fault> {
     binary_text_emit(command, snapshot)
@@ -268,7 +268,7 @@ impl ToolJobFactory for BinaryTextCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         binary_text_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BINARY_TEXT_MAXIMUM_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BINARY_TEXT_MAXIMUM_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl ArtifactOwnedToolJobFactory for BinaryTextCommandJobFactory {
@@ -279,16 +279,16 @@ impl ArtifactOwnedToolJobFactory for BinaryTextCommandJobFactory {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_binary_text_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<BinaryEditor>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+fn build_binary_text_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<BinaryEditor>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
     if original.tool_id != BINARY_TEXT_ACTION_ID {
         return Ok(false);
     }
     if binary_command_id(&original.command) != original.tool_id {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-binary-text-command-tool-mismatch").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-binary-text-command-tool-mismatch").into());
     }
     let tool_id = binary_command_id(&original.command);
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, binary_command_id, BINARY_TEXT_MAXIMUM_RAW_BYTES, main::HEX_EDITOR_MAX_BYTES, false, |request| BoundedArtifactCommandWork::new(tool_id, binary_text_reduce, binary_text_extent))
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, binary_command_id, BINARY_TEXT_MAXIMUM_RAW_BYTES, main::HEX_EDITOR_MAX_BYTES, false, |request| BoundedArtifactCommandWork::new(tool_id, binary_text_reduce, binary_text_extent))
 }
 //#endregion 🧵️RetainedTextRoute
 
@@ -312,15 +312,15 @@ impl ArtifactEditor for BinaryEditor {
     const DIALECT: Dialect = BINARY_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_BINARY_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.binary@raw", extension: ".bin", media_type: "application/octet-stream", binary: true })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.binary@raw", extension: ".bin", media_type: "application/octet-stream", binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
         Ok(snapshot.bytes.clone())
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
         Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
     }
 
@@ -348,11 +348,11 @@ impl ArtifactEditor for BinaryEditor {
         let args = args.as_ref();
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "textEdit" => Ok(BinaryEditorCommand::SpliceText { splices: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "splices")? }),
-            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.unhandled-action"), format!("unknown binary editor action '{other}'"))),
+            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.binary.unhandled-action"), format!("unknown binary editor action '{other}'"))),
         })
     }
 
-    fn reference_birth()->Option<fn()->Result<BinarySnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<BinarySnapshot,semio_plugin::Fault>>{Some(||{
         Ok(BinarySnapshot::default())
     })}
 
@@ -363,8 +363,8 @@ impl ArtifactEditor for BinaryEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -375,20 +375,20 @@ impl ArtifactEditor for BinaryEditor {
         binary_text_emit(command, doc.snapshot)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.binary@raw/*#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -454,7 +454,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BinaryE
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_binary_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_binary_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(BINARY_EDITOR_DIALECT)
         .document(["stdio", "binary"])
         .icon_id("binary")

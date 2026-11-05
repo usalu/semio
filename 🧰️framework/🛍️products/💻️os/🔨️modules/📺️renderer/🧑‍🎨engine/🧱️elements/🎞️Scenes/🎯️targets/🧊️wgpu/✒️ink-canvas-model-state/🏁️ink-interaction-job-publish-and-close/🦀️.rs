@@ -5,7 +5,7 @@ use super::*;
 //#region InkCanvas
 //#region InkCanvasState
 impl InkInteractionJob {
-    pub(super) fn publish_down(&mut self, scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    pub(super) fn publish_down(&mut self, scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
         if self.utility == "pan" || button == 1 {
             let camera = self.camera;
             mutate_scene_state(&scene.host_id, |state| {
@@ -79,7 +79,7 @@ impl InkInteractionJob {
                 Ok(())
             };
         }
-        let document = self.document.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         if matches!(self.utility.as_str(), "pencil" | "text" | "image" | "table" | "math") {
             let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
             let (world_x, world_y) = ink_maybe_snap_fields(document.snap_enabled, document.snap_grid_spacing, world_x, world_y);
@@ -104,7 +104,7 @@ impl InkInteractionJob {
         Ok(())
     }
 
-    pub(super) fn publish_move(&mut self, scene: &UiComponentSceneNode, _inner: Rect, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    pub(super) fn publish_move(&mut self, scene: &UiComponentSceneNode, _inner: Rect, x: f32, y: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
         match self.drag.as_ref() {
             Some(SceneDragMode::InkPan { start_x, start_y, camera_x, camera_y, zoom }) => {
                 let next = InkCameraF { x: *camera_x + (x - *start_x) as f64, y: *camera_y + (y - *start_y) as f64, zoom: *zoom };
@@ -137,7 +137,7 @@ impl InkInteractionJob {
                 if let Some((id, _)) = self.stroke_update.as_ref() {
                     let saturated = SCENE_STATE.with(|cell| cell.borrow().get(&scene.host_id).is_some_and(|state| !state.ink_overrides.contains_key(id) && state.ink_overrides.len() == INK_INTERACTION_ITEM_CAPACITY));
                     if saturated {
-                        return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                        return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                     }
                 }
                 let update = self.stroke_update.as_ref().map(|(id, raw)| Ok((id.clone(), raw.as_str()?.to_owned()))).transpose()?;
@@ -150,7 +150,7 @@ impl InkInteractionJob {
                     }
                 })
             }
-            Some(_) => Err(semio_framework_ui_action::BoundedActionFault::Structure),
+            Some(_) => Err(semio_ui_action::BoundedActionFault::Structure),
             None => {
                 let hovered = scene.ink_canvas.as_ref().and_then(|ink| ink.hovered_id.as_deref());
                 if hovered == self.hit_id.as_deref() {

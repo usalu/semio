@@ -126,7 +126,7 @@ impl WindowDelegate for OsHost {
     fn handle_event(&mut self, event: DispatchEvent) {
         let hold = self.frame_generation_hold();
         if enqueue_host_event(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, event) == ui_host::EnqueueOutcome::Overflow {
-            semio_framework_os_renderer_wgpu_host_base::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
+            semio_renderer_wgpu_host_base::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
         }
     }
 
@@ -142,7 +142,7 @@ impl WindowDelegate for OsHost {
         let (width, height) = metrics.logical_size();
         let _ = self.surface_resize.enqueue(metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         let dpr = metrics.scale_factor;
-        let _ = self.runtime.enqueue_apply(Some("window-metrics"), true, semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimeApply::Resize { width, height, dpr });
+        let _ = self.runtime.enqueue_apply(Some("window-metrics"), true, semio_renderer_wgpu_runtime_mailbox::RuntimeApply::Resize { width, height, dpr });
     }
 
     /// 🖼️ P3/P5 mounted split: `build_and_publish_snapshot` drains bounded input and non-blockingly
@@ -271,7 +271,7 @@ impl OsHost {
         if cx.should_yield(){return Ok(())}
         self.pump_frame_inputs(cx)?;
         if !crate::os_host::component_surface_close_pending(){
-            let inputs=self.runtime.frame_inputs(semio_framework_os_renderer_wgpu_host_base::app_now_ms());
+            let inputs=self.runtime.frame_inputs(semio_renderer_wgpu_host_base::app_now_ms());
             let generation=semio_framework_trace::Generation(self.frame_generation);
             self.runtime.observe_presentation_input_generation(generation.0);
             let runtime=self.runtime.clone();
@@ -294,16 +294,16 @@ impl OsHost {
         let present_fuel=cx.fuel_remaining();let mut presented=None;
         cx.with_original_work_loan(present_fuel,present_deadline_us,|present_cx|{presented=Some(self.presenter.present_step(present_cx));Ok(())})?;
         match presented.expect("the present step ran inside its work loan"){
-            Ok(semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::Complete{generation,cursor,theme_dark,fullscreen,cursor_wake,retained_control_deadline,shell_clock_deadline,has_animated_primitives,media_slots})=>{
-                let _latency=semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0),semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::SnapshotPublish,1);
-                self.original_snapshot=Some(semio_framework_os_renderer_wgpu_host_plumbing::render_snapshot::RenderSnapshot::new(0,semio_cursor_to_request(cursor),cursor,theme_dark,None).with_media_slots(media_slots));
+            Ok(semio_renderer_wgpu_frame_presentation::AppPresentStep::Complete{generation,cursor,theme_dark,fullscreen,cursor_wake,retained_control_deadline,shell_clock_deadline,has_animated_primitives,media_slots})=>{
+                let _latency=semio_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_renderer_wgpu_host_base::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0),semio_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::SnapshotPublish,1);
+                self.original_snapshot=Some(semio_renderer_wgpu_host_plumbing::render_snapshot::RenderSnapshot::new(0,semio_cursor_to_request(cursor),cursor,theme_dark,None).with_media_slots(media_slots));
                 cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
                 self.animation_clock.accept(has_animated_primitives);self.animation_clock.sync(&mut self.scheduler,self.clock.now_seconds());self.runtime.publish_retained_control_deadline(retained_control_deadline);self.runtime.publish_shell_clock_deadline(shell_clock_deadline);self.platform_fullscreen=fullscreen;
                 if let Some(token)=cursor_wake{if self.runtime.acknowledge_world_cursor_wake(&token){self.retain_cursor_wake_directive(token);self.scheduler.invalidate(InvalidationReason::RESOURCE_READY)}}
                 if generation.0!=self.frame_generation{self.scheduler.invalidate(InvalidationReason::INPUT_STATE)}
             },
-            Ok(semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::Pending|semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::RetryRuntime)=>self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
-            Ok(semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::AwaitingRuntime|semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::Idle)=>{},
+            Ok(semio_renderer_wgpu_frame_presentation::AppPresentStep::Pending|semio_renderer_wgpu_frame_presentation::AppPresentStep::RetryRuntime)=>self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
+            Ok(semio_renderer_wgpu_frame_presentation::AppPresentStep::AwaitingRuntime|semio_renderer_wgpu_frame_presentation::AppPresentStep::Idle)=>{},
             Err(original)=>return Err(original),
         }Ok(())
     }
@@ -316,11 +316,11 @@ impl OsHost {
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
         let snapshot = self.snapshot_sink.acquire();
-        semio_framework_os_renderer_wgpu_host_plumbing::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
+        semio_renderer_wgpu_host_plumbing::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
 
         #[cfg(not(target_arch = "wasm32"))]
         if self.hot_swap.is_due(now) {
-            self.scheduler.request_deadline(now + semio_framework_os_renderer_wgpu_host_plumbing::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
+            self.scheduler.request_deadline(now + semio_renderer_wgpu_host_plumbing::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
         }
 
         RedrawOutcome { cursor: snapshot.cursor, ime: snapshot.ime }
@@ -355,8 +355,8 @@ pub(super) fn ime_event_from_winit(ime: &winit::event::Ime) -> ImeEvent {
 /// 🚀️ The native entry: installs the runtime assets and the host temporal formatter, then runs the winit event loop with a [`WinitApp`] until it exits. Lives beside [`WinitApp`], the one item it needs from above the probe crate.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf, services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) {
-    semio_framework_os_renderer_wgpu_host_base::runtime_assets::install_native_runtime_assets();
-    semio_framework_os_renderer_wgpu_native_platform::install_native_host_temporal_formatter(std::sync::Arc::new(semio_framework_os_renderer_wgpu_native_platform::native_temporal::SystemTemporalFormatter::default()));
+    semio_renderer_wgpu_host_base::runtime_assets::install_native_runtime_assets();
+    semio_renderer_wgpu_native_platform::install_native_host_temporal_formatter(std::sync::Arc::new(semio_renderer_wgpu_native_platform::native_temporal::SystemTemporalFormatter::default()));
     let event_loop = winit::event_loop::EventLoop::<HostUserEvent>::with_user_event().build().expect("event loop");
     let proxy = event_loop.create_proxy();
     let caller = semio_framework_os_renderer_wgpu_host_plumbing::native_launch::native_frame_event_issuer().expect("native original initiating event admission");

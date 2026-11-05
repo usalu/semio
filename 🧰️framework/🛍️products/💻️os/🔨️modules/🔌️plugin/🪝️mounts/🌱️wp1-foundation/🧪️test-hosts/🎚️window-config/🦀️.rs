@@ -1,10 +1,10 @@
 //! 🎚️ Test host of `window_config`: the laws that name the facade test fixtures run in the facade test build.
-use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
+use semio_plugin_window_config::retained::ErasedWindowConfigPackLoad;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
 use semio_framework_value::FactoryBoxedValue;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::future::Future;
@@ -16,9 +16,9 @@ use semio_framework_value::ValueRefusalKind;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_plugin_window_config_registry::WindowRegistry;
-pub use semio_framework_plugin_window_config::*;
-pub use semio_framework_plugin_window_config::retained::*;
+use semio_plugin_window_config_registry::WindowRegistry;
+pub use semio_plugin_window_config::*;
+pub use semio_plugin_window_config::retained::*;
 #[path = "../../../../🪟️window/🎚️config/🧬️preparation/🧪️tests/🦀️.rs"]
 mod original_preparation_tests;
 #[doc(hidden)]

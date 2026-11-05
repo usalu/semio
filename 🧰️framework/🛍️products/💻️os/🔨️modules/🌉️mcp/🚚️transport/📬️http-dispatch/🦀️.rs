@@ -1,6 +1,6 @@
 //! 📬️ Owned HTTP response building and the POST, GET and bridge handshake dispatch.
 
-use semio_framework_os_mcp_wire::protocol::{
+use semio_os_mcp_wire::protocol::{
     JsonRpcId,
     JsonRpcRequest,
     JsonRpcResponse,

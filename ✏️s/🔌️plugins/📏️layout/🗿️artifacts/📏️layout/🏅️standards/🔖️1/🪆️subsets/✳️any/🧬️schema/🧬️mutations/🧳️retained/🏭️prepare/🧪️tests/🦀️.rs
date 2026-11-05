@@ -53,8 +53,8 @@ fn execute(event:&LayoutMutation,original:LayoutSnapshot,initial_post:LayoutSnap
 }
 #[test]
 fn genuine_generic_issuer_decides_preflights_inverts_commits_and_executes_issued_inverse(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/⚙️semantic/🔣️.json")).unwrap();
- let extra:serde_json::Value=serde_json::from_str(include_str!("../../🎚️simple/🧪️tests/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/⚙️semantic/🔣️.json")).unwrap();
+ let extra:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../🧳️retained/🎚️simple/🧪️tests/🔣️.json")).unwrap();
  let mut checked=0;
  for row in corpus["cases"].as_array().unwrap().iter().chain(extra["commands"].as_array().unwrap()){
   let event:LayoutMutation=decode(&row["mutation"]);
@@ -93,8 +93,8 @@ fn genuine_generic_issuer_decides_preflights_inverts_commits_and_executes_issued
 }
 #[test]
 fn ordinary_layout_cancellation_closes_real_semantic_diff_and_inverse_frontiers(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/⚙️semantic/🔣️.json")).unwrap();
- let extra:serde_json::Value=serde_json::from_str(include_str!("../../🎚️simple/🧪️tests/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/⚙️semantic/🔣️.json")).unwrap();
+ let extra:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../🧳️retained/🎚️simple/🧪️tests/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap().iter().take(1).chain(extra["commands"].as_array().unwrap().iter().filter(|row|(["SetPageGuides","SetStoryRuns","DeleteLink","DeleteStory","DeleteParagraphStyle","DeleteCharacterStyle","DeleteSpread","CreateLayer","CreateFrame","DeleteFrame","ChangeDataFields","SetPageParent","UpdateTextFrame","DeleteParentPage","SetPageBackgroundDrawing","CreateParentPage","SetPageSpread","DragFrames","RotateFrames","ScaleFrames","SetPageOverrides","ReplaceDocument"].iter().any(|kind|row["mutation"].get(*kind).is_some()))&&row["accepted"]==true)){
   for cut in[0,1,5,50,100,250,1000]{
    let original:LayoutSnapshot=decode(row.get("before").unwrap_or(&extra["base"]));
@@ -120,4 +120,4 @@ fn ordinary_layout_cancellation_closes_real_semantic_diff_and_inverse_frontiers(
 }
 
 #[test]
-fn shared_reference_refusals_keep_error_severity(){let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🎚️simple/🧪️tests/🔣️.json")).unwrap();let mut checked=0;for row in corpus["commands"].as_array().unwrap(){if row["errorLevel"]=="error"{assert!(matches!(error_level(row["error"].as_str().unwrap()),semio_framework_diagnostic::Severity::Error));checked+=1}}assert_eq!(checked,5);assert!(matches!(error_level("mutation.invariant"),semio_framework_diagnostic::Severity::Fatal));}
+fn shared_reference_refusals_keep_error_severity(){let corpus:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../🧳️retained/🎚️simple/🧪️tests/🔣️.json")).unwrap();let mut checked=0;for row in corpus["commands"].as_array().unwrap(){if row["errorLevel"]=="error"{assert!(matches!(error_level(row["error"].as_str().unwrap()),semio_framework_diagnostic::Severity::Error));checked+=1}}assert_eq!(checked,5);assert!(matches!(error_level("mutation.invariant"),semio_framework_diagnostic::Severity::Fatal));}

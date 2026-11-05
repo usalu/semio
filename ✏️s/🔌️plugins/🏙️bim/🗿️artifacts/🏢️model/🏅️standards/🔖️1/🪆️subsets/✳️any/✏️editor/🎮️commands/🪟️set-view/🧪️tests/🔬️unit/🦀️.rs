@@ -2,7 +2,7 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, world};
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+use semio_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet;
 #[allow(unused_imports)]
@@ -10,13 +10,13 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::in
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_coordination::editor::bim::commands::set_view::{handle, SetView};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{demo, run};
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 fn window(kind: &str) -> BimDispatchCtx {
     let view = view(Locale::En, &[("window", kind)], Some("window"));

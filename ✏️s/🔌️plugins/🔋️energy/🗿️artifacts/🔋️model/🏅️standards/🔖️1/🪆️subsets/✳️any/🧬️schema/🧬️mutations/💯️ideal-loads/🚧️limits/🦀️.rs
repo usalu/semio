@@ -1,8 +1,8 @@
 //! 🚧️ Energy model mutation domain `ideal-loads-limits`: `change-ideal-loads-system-max-heating-capacity`, `change-ideal-loads-system-max-cooling-capacity`, `change-ideal-loads-system-max-heating-supply-air-temp`, `change-ideal-loads-system-min-cooling-supply-air-temp`
 
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_diff as diff;
 extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;

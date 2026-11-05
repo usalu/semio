@@ -9,7 +9,7 @@ use semio_s_artifact_lowpoly_lowpoly_view::{document_object_row_id, is_paint_uti
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
 use crate::lowpoly_window_measures;
 use semio_s_artifact_lowpoly_lowpoly_model::mesh_data_from_transfer;
-use semio_framework_plugin::{scene_surface, world3d_camera_json, world3d_scene, InteractionRef, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_plugin::{scene_surface, world3d_camera_json, world3d_scene, InteractionRef, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -60,7 +60,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
         id: LOWPOLY_PLAY_WINDOW_MAIN.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Model", "Modell"),
+        label: semio_ui_locale::LocalizedLabel::native("Model", "Modell"),
         body_key: LOWPOLY_PLAY_BODY_MAIN.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "lowpoly-model".into(),
@@ -246,7 +246,7 @@ fn world_instances_json(view: LowpolyView<'_>) -> String {
     semio_framework_pack_json::to_json_string(&instances)
 }
 
-pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>, selection: &LowpolyWorldSelection) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>, selection: &LowpolyWorldSelection) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let config = view.config;
     match loaded {
         Some(loaded) => {
@@ -259,9 +259,9 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
             );
             scene.domain_id = Some(MESH_INTERACTION_DOMAIN.into());
             scene.domain_granularity_id = Some(MESH_GRANULARITY_OBJECT.into());
-            scene_surface(LOWPOLY_PLAY_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
+            scene_surface(LOWPOLY_PLAY_SURFACE_MAIN, semio_ui_contract::SurfaceKind::World3d, &scene)
         }
-        None => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Failed to load lowpoly document")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
+        None => semio_plugin::built_text_node(semio_ui_locale::Label::data("Failed to load lowpoly document")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
     }
 }
 //#endregion 🔖️Scene

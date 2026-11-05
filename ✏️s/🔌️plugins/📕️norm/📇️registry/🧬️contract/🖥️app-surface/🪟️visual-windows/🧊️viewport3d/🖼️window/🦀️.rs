@@ -2,7 +2,7 @@
 
 use super::lowering::LoweredViewport;
 use super::*;
-use semio_framework_plugin::{scene_surface, world3d_scene, world3d_selection_json_with_granularity, World3dScene, WorldSunConfig};
+use semio_plugin::{scene_surface, world3d_scene, world3d_selection_json_with_granularity, World3dScene, WorldSunConfig};
 
 pub const VIEWPORT_ACTION_SET_CAMERA: &str = "viewportSetCamera";
 pub const VIEWPORT_ACTION_FRAME: &str = "viewportFrame";
@@ -27,5 +27,5 @@ pub fn world3d_scene_of(lowered: &LoweredViewport, domain_id: &str, sun: bool) -
 
 /// 🪟️ The `world-3d` surface node of a lowered viewport; `body_key` is the window body key of the artifact shim.
 pub fn render_viewport3d(body_key: &str, lowered: &LoweredViewport, domain_id: &str, sun: bool) -> UiAssemblyResult<BuiltNode> {
-    scene_surface(body_key, semio_framework_ui_contract::SurfaceKind::World3d, &world3d_scene_of(lowered, domain_id, sun))
+    scene_surface(body_key, semio_ui_contract::SurfaceKind::World3d, &world3d_scene_of(lowered, domain_id, sun))
 }

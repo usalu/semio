@@ -13,19 +13,19 @@ use crate::editor::architect::editor_vocabulary::{architect_action, ui_node, ui_
 use crate::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::standards::v1::subsets::any::schema::registers::ProgramElement;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ui_node_list;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_ARTIFACT: &str = "architect.document";
@@ -54,7 +54,7 @@ pub fn definition() -> PanelTabDefinition {
 /// (switching the active register is unrelated to entity selection) and sit in the SAME tree.
 fn element_row(element: &ProgramElement) -> UiAssemblyResult<BuiltNode> {
     let id = element.header.id.to_string();
-    let row = semio_framework_ui_contract::tree_item(ui_label(format!("{} ({:?})", element.header.name, element.kind))?).description(ui_text(&id)?).granularity(ui_text(ARCHITECT_INTERACTION_GRANULARITY_ENTITY)?);
+    let row = semio_ui_contract::tree_item(ui_label(format!("{} ({:?})", element.header.name, element.kind))?).description(ui_text(&id)?).granularity(ui_text(ARCHITECT_INTERACTION_GRANULARITY_ENTITY)?);
     ui_node(row, &id)
 }
 

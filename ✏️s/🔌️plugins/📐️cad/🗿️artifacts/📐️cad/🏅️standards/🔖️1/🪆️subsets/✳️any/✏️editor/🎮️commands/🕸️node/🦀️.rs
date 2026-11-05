@@ -10,7 +10,7 @@ use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_inferences::next_cad_id;
 use semio_s_artifact_cad_cad_model::snapshot::CadNode;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️AddNode

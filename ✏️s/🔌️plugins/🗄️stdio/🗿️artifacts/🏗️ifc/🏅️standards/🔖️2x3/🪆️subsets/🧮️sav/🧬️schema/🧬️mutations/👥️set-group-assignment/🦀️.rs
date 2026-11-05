@@ -16,8 +16,8 @@ pub struct SetGroupAssignment {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssignment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "group-assignment", kind: "set-group-assignment", record: "SetGroupAssignment" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set group assignment", "Gruppenzuordnung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set group assignment", "Gruppenzuordnung setzen")
     }
 
     fn target(&self) -> Vec<String> {

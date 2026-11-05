@@ -30,5 +30,5 @@ pub struct OpeningState {
     /// was deliberately downgraded from a forgeable partial authority by the execution-target-lease
     /// lane — so nothing native fills this in yet and every port refuses with a localized terminal. Both builds retain
     /// the lease a hub document's open admitted and drop it on detach; only the native inference port reads it.
-    pub document_execution_target_lease: Option<semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    pub document_execution_target_lease: Option<semio_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
 }

@@ -19,14 +19,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use ui_locale::Locale;
 use ui_styling::appearance::AppearanceName;
-use semio_framework_ui_tui_frame::chrome::{shell, ChromeLabels, ChromeState, FooterState, NavItem, NavbarState, Shell, WindowState};
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_core::geometry::Size;
-use semio_framework_ui_tui_frame::layout::{activate_stack_tab, create_default_layout, push_window_to_stack, remove_window, split_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutWindowNode};
-use semio_framework_ui_tui_frame::scene::{Node, NodeContent, NodeId};
-use semio_framework_ui_tui_core::theme::{GlyphSet, Status};
-use semio_framework_ui_tui_widgets::widget::{Align, InputState, LabelState, ListState, WidgetState};
-use semio_framework_ui_tui_vt::pane::TerminalState;
+use semio_ui_tui_frame::chrome::{shell, ChromeLabels, ChromeState, FooterState, NavItem, NavbarState, Shell, WindowState};
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_core::geometry::Size;
+use semio_ui_tui_frame::layout::{activate_stack_tab, create_default_layout, push_window_to_stack, remove_window, split_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutWindowNode};
+use semio_ui_tui_frame::scene::{Node, NodeContent, NodeId};
+use semio_ui_tui_core::theme::{GlyphSet, Status};
+use semio_ui_tui_widgets::widget::{Align, InputState, LabelState, ListState, WidgetState};
+use semio_ui_tui_vt::pane::TerminalState;
 
 const SCROLLBACK: usize = 8000;
 
@@ -131,7 +131,7 @@ pub struct Dashboard {
     pub last_focus: std::cell::Cell<usize>,
     pub menu: Option<ContextMenu>,
     pub glyphs: GlyphSet,
-    pub waker: Option<semio_framework_ui_tui_terminal::backend::Waker>,
+    pub waker: Option<semio_ui_tui_terminal::backend::Waker>,
 }
 
 pub fn node_constraint() -> Constraint { Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, ..Default::default() } }
@@ -229,7 +229,7 @@ impl Dashboard {
             }
             Kind::Launcher => {
                 let input = add_widget(tui, root, WidgetState::Input(InputState { value: String::new(), cursor: 0, placeholder: String::new() }), Dimension::Cells(1));
-                let caption = add_widget(tui, root, WidgetState::Label(LabelState { text: String::new(), align: Align::Left, role: semio_framework_ui_tui_core::theme::Role::MutedForeground }), Dimension::Cells(1));
+                let caption = add_widget(tui, root, WidgetState::Label(LabelState { text: String::new(), align: Align::Left, role: semio_ui_tui_core::theme::Role::MutedForeground }), Dimension::Cells(1));
                 let mut launcher = LauncherState::new(self.preferences.clone(), self.locale);
                 if let Some(registry) = &self.registry { launcher.set_registry(registry.clone()); }
                 let tree = add_widget(tui, root, WidgetState::Tree(launcher.rebuild_tree(None)), Dimension::Weight(1));

@@ -18,8 +18,8 @@ pub struct ChangeColumnBucklingCurve {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnBucklingCurve where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_buckling_curve::ChangeColumnBucklingCurve> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-buckling-curve", kind: "change-column-buckling-curve", record: "ChangedColumnBucklingCurve" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change column buckling curve", "Knickspannungslinie der Stütze ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change column buckling curve", "Knickspannungslinie der Stütze ändern")
     }
 }
 

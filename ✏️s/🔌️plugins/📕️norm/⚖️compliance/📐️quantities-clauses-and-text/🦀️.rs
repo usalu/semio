@@ -100,10 +100,10 @@ impl ClauseId {
 pub const DESIGNATOR_WORDS: &[(&str, &str)] = &[("Annex", "Anhang"), ("Tables", "Tabellen"), ("Table", "Tabelle"), ("Figure", "Bild"), ("Eq.", "Gl."), ("Expression", "Ausdruck"), ("Design case", "Bemessungsfall"), ("Section", "Abschnitt")];
 
 /// 🏷️ A clause or table designator in a locale: every whole word of [`DESIGNATOR_WORDS`] is translated, numbers, letters, standard codes and symbols stay.
-pub fn designator(label: &str, locale: &semio_framework_ui_locale::Locale) -> String {
+pub fn designator(label: &str, locale: &semio_ui_locale::Locale) -> String {
     match locale {
-        semio_framework_ui_locale::Locale::En => label.to_owned(),
-        semio_framework_ui_locale::Locale::De => {
+        semio_ui_locale::Locale::En => label.to_owned(),
+        semio_ui_locale::Locale::De => {
             let mut out = String::with_capacity(label.len());
             let mut rest = label;
             'scan: while !rest.is_empty() {
@@ -135,17 +135,17 @@ pub fn annex(letter: &str) -> String {
 
 impl ClauseId {
     /// 🔗️ The clause as one line in a locale, `EN 1993 1-1 §6.2.5` / `EN 1993 1-1 Abschn. 6.2.5`, with annex and table words translated.
-    pub fn text(&self, locale: &semio_framework_ui_locale::Locale) -> String {
+    pub fn text(&self, locale: &semio_ui_locale::Locale) -> String {
         let (family, part, section) = (designator(&self.family, locale), designator(&self.part, locale), designator(&self.section, locale));
         match locale {
-            semio_framework_ui_locale::Locale::En => format!("{family} {part} §{section}"),
-            semio_framework_ui_locale::Locale::De => format!("{family} {part} Abschn. {section}"),
+            semio_ui_locale::Locale::En => format!("{family} {part} §{section}"),
+            semio_ui_locale::Locale::De => format!("{family} {part} Abschn. {section}"),
         }
     }
 }
 
 /// 📍️ The source locator of an NDP row in a locale: `Annex B` as `Anhang B`, `EN 772-1 Table A.1` as `EN 772-1 Tabelle A.1`.
-pub fn locator_text(source: &NdpSource, locale: &semio_framework_ui_locale::Locale) -> String {
+pub fn locator_text(source: &NdpSource, locale: &semio_ui_locale::Locale) -> String {
     designator(source.locator, locale)
 }
 
@@ -158,7 +158,7 @@ impl fmt::Display for ClauseId {
 #[cfg(test)]
 mod designator_tests {
     use super::*;
-    use semio_framework_ui_locale::Locale;
+    use semio_ui_locale::Locale;
 
     #[test]
     fn german_labels_translate_whole_words_only() {

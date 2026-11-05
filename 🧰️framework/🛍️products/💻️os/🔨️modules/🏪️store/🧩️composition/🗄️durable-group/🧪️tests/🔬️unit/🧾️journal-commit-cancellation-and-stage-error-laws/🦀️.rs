@@ -172,7 +172,7 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
                 rejected_partial_committed_root = true;
             }
             if !rejected_foreign_visibility {
-                let foreign_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+                let foreign_owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
                 let original_visibility = std::mem::replace(&mut value.wire.durable_group_root.as_mut().expect("committed value root").visibility, foreign_owner.view());
                 assert!(capture_store_owned_three_snapshot(&parent, &drawing, &value).is_err());
                 value.wire.durable_group_root.as_mut().expect("committed value root").visibility = original_visibility;

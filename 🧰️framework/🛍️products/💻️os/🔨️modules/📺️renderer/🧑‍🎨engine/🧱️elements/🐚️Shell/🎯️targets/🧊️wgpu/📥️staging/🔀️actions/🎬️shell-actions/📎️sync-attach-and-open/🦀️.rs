@@ -45,11 +45,11 @@ impl<'ctx> ActionsCtx<'ctx> {
         self.open_document(document_id.clone(), session.app.io.artifact_schema.clone(), bindings, surface, Some(uri)).await?;
         let Some(path) = folder else { return Ok(()) };
         self.history.ensure_local_folder_bindings();
-        self.history.remember_local_folder(semio_framework_os_config::opening_config::mutations::LocalFolderBinding {
+        self.history.remember_local_folder(semio_os_config::opening_config::mutations::LocalFolderBinding {
             document_id: document_id.clone(),
             plugin_id: session.plugin_id.clone(),
             app_id: session.app.id.clone(),
-            folder: semio_framework_os_config::opening_config::mutations::LocalFolderRef::Path { path: path.clone() },
+            folder: semio_os_config::opening_config::mutations::LocalFolderRef::Path { path: path.clone() },
         });
         #[cfg(not(target_arch = "wasm32"))]
         self.as_window_actions().restore_folder_archive(&path, &document_id).await?;
@@ -92,7 +92,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         bindings: Vec<PersistenceBinding>,
         surface: Option<String>,
         backbone_uri: Option<String>,
-        checkpoint: Option<semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1>,
+        checkpoint: Option<semio_os_kernel::os_directory::DocumentOpenCheckpointV1>,
     ) -> Result<ShellPreparedDocumentOpen, String> {
         document_bindings_admitted(SHELL_DOCUMENT_TRANSPORTS, &bindings)?;
         let session = self.docs.session.clone().ok_or("session missing")?;

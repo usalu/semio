@@ -1,8 +1,8 @@
 //! 🏗️ Assembly of stdio artifact contributions: schema definitions, executable declarations, native codec receipts, capability ledgers and the validated contribution registry.
 
-use semio_framework_os_kernel as kernel;
-use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::{
+use semio_os_kernel as kernel;
+use semio_plugin::io::FormatDescriptor;
+use semio_plugin::{
     ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, ArtifactExecutableIdentity, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactKindSpec, ArtifactLocale,
     PluginAssemblyError,
 };

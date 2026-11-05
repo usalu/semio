@@ -73,8 +73,8 @@ if (segments[0] === "home-host-panel-owner") {
     runCmd("bun", [join(context.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"), "directory-home-bootstrap-check"], { cwd: context.repoRoot });
     if (segments[1] === "native") {
       const { runCargo } = await import("@semio-tech/framework/process/execution");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "view_context_capacity_tests", "--", "--nocapture"], context.repoRoot);
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "host_panel_", "--", "--nocapture"], context.repoRoot);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-plugin", "--lib", "view_context_capacity_tests", "--", "--nocapture"], context.repoRoot);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-renderer-wgpu", "--lib", "host_panel_", "--", "--nocapture"], context.repoRoot);
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-space-home", "--lib", "--", "--nocapture"], context.repoRoot);
     }
     return;

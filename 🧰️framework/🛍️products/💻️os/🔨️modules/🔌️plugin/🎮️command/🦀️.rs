@@ -1,41 +1,41 @@
 //! 🎮️ The command log and history views, and the history panel.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as pack;
-use semio_framework_plugin_decl_views::history_view::InverseAction;
-use semio_framework_plugin_decl_views::history_view::CommandView;
-use semio_framework_plugin_decl_views::history_view::MutationView;
-use semio_framework_plugin_decl_views::history_view::HistoryView;
-use semio_framework_plugin_decl_views::history_view::AlternativeView;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as pack;
+use semio_plugin_decl_views::history_view::InverseAction;
+use semio_plugin_decl_views::history_view::CommandView;
+use semio_plugin_decl_views::history_view::MutationView;
+use semio_plugin_decl_views::history_view::HistoryView;
+use semio_plugin_decl_views::history_view::AlternativeView;
 use semio_framework::{ActionKind, IconName};
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_window_kits_rich::table_kit::row_action;
-use semio_framework_plugin_window_kits_rich::table_kit::row_target;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_window_kits_rich::table_kit::row_action;
+use semio_plugin_window_kits_rich::table_kit::row_target;
 use crate::lifted_command::HistoryMutationPages;
 use crate::lifted_command::TimeTravelPanel;
 use crate::lifted_command::history_mutation_entry;
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_plugin_interaction::ui_assembly_error;
-use semio_framework_plugin_window_transient::ui_label;
-use semio_framework_plugin_window_transient::ui_text;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::ui_assembly_error;
+use semio_plugin_window_transient::ui_label;
+use semio_plugin_window_transient::ui_text;
 
 /// 🗝️ What a backfilled command-log row references: a document edit (with the verb that authored it) or a
 /// `Supersede` history transition.

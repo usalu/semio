@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeImperfectionVertic
         record: "ChangedImperfectionVerticalLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change vertical load N of the execution imperfection", "Ausführungsimperfektion: Vertikallast N ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change vertical load N of the execution imperfection", "Ausführungsimperfektion: Vertikallast N ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

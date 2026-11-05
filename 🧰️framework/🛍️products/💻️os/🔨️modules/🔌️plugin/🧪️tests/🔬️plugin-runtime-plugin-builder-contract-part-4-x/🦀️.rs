@@ -14,18 +14,18 @@ async fn test_restart_registry() -> AppActionRegistry {
 }
 
 async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta, fixture: &Value) {
-    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original restart full-body caller");let mut original_context=original_caller.context();let cx=&mut original_context;
+    let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original restart full-body caller");let mut original_context=original_caller.context();let cx=&mut original_context;
     let law = &fixture["restartAuthority"];
     let items = law["closeItems"].as_u64().unwrap() as usize;
     let body = law["closeBodyBytes"].as_u64().unwrap() as usize;
-    let mut app = VcsArtifactApp::<TestApp<true>>::with_registry(TestApp::<true>::default(), test_restart_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
-    semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
+    let mut app = VcsArtifactApp::<TestApp<true>>::with_registry(TestApp::<true>::default(), test_restart_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
     let outcome: Result<(u64, u64, u64, u64, u64, i32), semio_framework_job::OriginalTurnFailure> = async {
         app.bind_instance_id(meta.instance_id).await;
         let contracts = app.tool_public_contracts().await;
         let exact = contracts.iter().filter(|contract| contract.tool_id == TEST_RESTART_TOOL && contract.owner == ToolOwnerWitness::of::<TestApp<true>>() && contract.controller_id == TestApp::<true>::APP_ID && contract.schema_id == TEST_RESTART_SCHEMA).count();
         if exact as u64 != law["retainedProofs"].as_u64().unwrap() { return Err(Fault::from("restart app lost its exact registered tool contract").into()); }
-        let admitted = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &command, meta, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await?;
+        let admitted = semio_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &command, meta, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await?;
         if !admitted.mutations.is_empty() { return Err(Fault::from("restart command bypassed retained publication").into()); }
         let (mut artifact, mut ui, mut scopes, mut terminal, mut completions) = (0, 0, 0, 0, 0);
         for _ in 0..100_000 {
@@ -34,7 +34,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
             if let Some(progress) = app.maintenance_step(cx,grant)?.progress() {
                 if !progress.fits(grant) { return Err(Fault::from("restart maintenance exceeded the exact grant").into()); }
             }
-            app.advance_typed_operation_publication(&mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await?;
+            app.advance_typed_operation_publication(&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await?;
             if let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
                 let fault = match page.lane {
                     TypedOperationResultLane::Artifact => { artifact += 1; None }
@@ -103,21 +103,21 @@ fn close_bounded_source_store(source: &mut store::ArtifactStore<TestSnapshot, Te
 /// (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, audit F-C1 and F-M1).
 #[semio_framework_async_macros::async_test]
 async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
-    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
-    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+    use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     let live_id = app.stores.store.envelope().id.clone();
-    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>(SingleDocumentApp::DOCUMENT_SCHEMA, &live_id, TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut source = Box::pin(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(genesis, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("source store");
+    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>(SingleDocumentApp::DOCUMENT_SCHEMA, &live_id, TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut source = Box::pin(store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(genesis, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("source store");
     source.install_operation_wire(store::ArtifactOperationWire::canonical());
     store::install_unscheduled_catalog(&mut source, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<TestSnapshot, TestMutation>()).expect("source owners");
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
-        semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
+        semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
     }
     let ids: Vec<protocol::MutationId> = source.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
     let inputs = vec![store::os_store::store_schema::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }, store::os_store::store_schema::SupersedeInput { target: ids[1].clone(), replacement: None }];
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.dispatch(store::os_store::store_schema::ArtifactCommand::Supersede { scope: None, inputs }, &mut identity)).await).expect("a clean supersession");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.dispatch(store::os_store::store_schema::ArtifactCommand::Supersede { scope: None, inputs }, &mut identity)).await).expect("a clean supersession");
     let garbage = protocol::HistoryTransition::Supersede(protocol::TransitionSupersede {
         scope: None,
         inputs: vec![protocol::SupersededInput { target: ids[2].clone(), replacement: protocol::InputReplacement::Input { schema: SingleDocumentApp::DOCUMENT_SCHEMA.into(), payload: vec![0xff, 0x13, 0x37] } }],
@@ -157,28 +157,28 @@ fn archive_history_rows(history: &semio_framework::kernel::HistoryPatch) -> Vec<
 /// lists, and none of the document it replaced.
 #[semio_framework_async_macros::async_test]
 async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
-    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
-    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
-    let mut source = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
-    semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut source, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+    use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+    let mut source = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
+    semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut source, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
-        semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
+        semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
     }
     let ids: Vec<protocol::MutationId> = source.store.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Supersede { scope: None, inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }] }, &mut identity)).await).expect("history edit");
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut identity)).await).expect("revert");
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Redo, &mut identity)).await).expect("reinstate");
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::CreateAlternativeWithSupersede { name: "c".into(), inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[2].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 7 })) }] }, &mut identity)).await).expect("history edit as a new alternative");
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[1].clone(), replacement: Some(TestMutation::SetLabel(SetLabel { value: "alternative".into() })) }] }, &mut identity)).await).expect("a second history edit as a new alternative");
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], transaction: None }, &mut identity)).await).expect("edit on the alternative");
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], transaction: None }, &mut identity)).await).expect("a second edit on the alternative");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Supersede { scope: None, inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }] }, &mut identity)).await).expect("history edit");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut identity)).await).expect("revert");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Redo, &mut identity)).await).expect("reinstate");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::CreateAlternativeWithSupersede { name: "c".into(), inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[2].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 7 })) }] }, &mut identity)).await).expect("history edit as a new alternative");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![store::os_store::store_schema::SupersedeInput { target: ids[1].clone(), replacement: Some(TestMutation::SetLabel(SetLabel { value: "alternative".into() })) }] }, &mut identity)).await).expect("a second history edit as a new alternative");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], transaction: None }, &mut identity)).await).expect("edit on the alternative");
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], transaction: None }, &mut identity)).await).expect("a second edit on the alternative");
     let expected = source.snapshot().expect("source projection");
     let before = archive_history_rows(&Box::pin(source.history_snapshot()).await.expect("source history"));
     let archive = Box::pin(PluginApp::document_archive(&source)).await.expect("source archive");
-    let mut target = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
-    semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut target, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
-    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(target.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], transaction: None }, &mut identity)).await).expect("target example");
+    let mut target = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
+    semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut target, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
+    semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(target.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], transaction: None }, &mut identity)).await).expect("target example");
     let replaced = archive_history_rows(&Box::pin(target.history_snapshot()).await.expect("target history before the load"));
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     let target_id = target.store.envelope().id.clone();

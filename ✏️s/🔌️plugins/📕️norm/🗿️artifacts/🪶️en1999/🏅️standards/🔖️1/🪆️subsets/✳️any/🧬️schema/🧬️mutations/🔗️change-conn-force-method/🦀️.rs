@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnForceMethod wh
         record: "ChangedConnForceMethod",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change connection: Fastener force distribution method", "Anschluss: Verfahren der Kraftverteilung auf die Verbindungsmittel ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change connection: Fastener force distribution method", "Anschluss: Verfahren der Kraftverteilung auf die Verbindungsmittel ändern")
     }
 }
 

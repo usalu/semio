@@ -6,21 +6,21 @@ use crate::editor::grid2d::modes::edit::tools::fill as fill_tool;
 use crate::{editor::grid2d::modes::edit::windows::grid, editor::grid2d::modes::edit::windows::preview};
 use crate::{editor::grid2d::window, editor::grid2d::window::Grid2dWindowConfig};
 use crate::{Grid2dMutation, Grid2dSnapshot, WFC_GRID2D_DIALECT, WFC_GRID2D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Editor;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
+use semio_plugin::ViewModel;
 use crate::editor::grid2d::*;
 
 #[test]
 fn the_editor_builds_a_definition_for_the_editor_role() {
     let definition = create_grid2d_editor();
-    assert_eq!(definition.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(definition.role, semio_plugin::AppRole::Editor);
     assert_eq!(definition.dialect, WFC_GRID2D_DIALECT.into());
 }
 
@@ -44,9 +44,9 @@ fn the_editor_declares_both_panes_and_a_fifty_fifty_row_layout() {
 fn both_panes_are_localized_en_and_de() {
     let definition = create_grid2d_editor();
     let grid_window = definition.window_kinds.iter().find(|window| window.id == grid::WINDOW_KIND_ID).expect("grid pane");
-    assert_eq!(grid_window.label, semio_framework_ui_locale::LocalizedLabel::native("Grid", "Raster"));
+    assert_eq!(grid_window.label, semio_ui_locale::LocalizedLabel::native("Grid", "Raster"));
     let preview_window = definition.window_kinds.iter().find(|window| window.id == preview::WINDOW_KIND_ID).expect("preview pane");
-    assert_eq!(preview_window.label, semio_framework_ui_locale::LocalizedLabel::native("Preview", "Vorschau"));
+    assert_eq!(preview_window.label, semio_ui_locale::LocalizedLabel::native("Preview", "Vorschau"));
 }
 
 #[test]
@@ -72,7 +72,7 @@ fn the_preview_pane_owns_the_solve_verb() {
 fn the_grid_pane_arms_exactly_the_three_declared_utilities() {
     let definition = create_grid2d_editor();
     let window = definition.window_kinds.iter().find(|window| window.id == grid::WINDOW_KIND_ID).expect("grid pane");
-    let armed: Vec<&str> = window.utilities.iter().map(semio_framework_plugin::UtilityRef::as_str).collect();
+    let armed: Vec<&str> = window.utilities.iter().map(semio_plugin::UtilityRef::as_str).collect();
     for utility in [grid::UTILITY_SELECT, grid::UTILITY_PIN, grid::UTILITY_MASK] {
         assert!(armed.contains(&utility), "{utility} is not armed: {armed:?}");
     }
@@ -191,7 +191,7 @@ fn a_canvas_press_on_the_grid_pins_the_cell_under_the_pointer() {
     let centre = grid::cell_at(&document, &config, 400.0, 300.0, 800.0, 600.0).expect("the pane centre is a cell");
     assert_eq!(centre, (document.width / 2, document.height / 2));
     let pinned = Grid2dEditor::armed_pick(&document, &config, grid::UTILITY_PIN, centre.0, centre.1).expect("pick").expect("the pin utility edits");
-    let english = |mutation: &Grid2dMutation| protocol::SemanticMutation::<Grid2dSnapshot>::label(mutation).resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string();
+    let english = |mutation: &Grid2dMutation| protocol::SemanticMutation::<Grid2dSnapshot>::label(mutation).resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string();
     assert!(english(&pinned).starts_with(&format!("Pin cell ({}, {}) to ", centre.0, centre.1)), "{}", english(&pinned));
     let masked = Grid2dEditor::armed_pick(&document, &config, grid::UTILITY_MASK, 5, 5).expect("pick").expect("the mask utility edits");
     assert_eq!(english(&masked), "Unmask cell (5, 5)", "an already masked cell toggles back");
@@ -234,7 +234,7 @@ fn both_camera_spellings_decode_to_their_own_command() {
 
 #[test]
 fn the_armed_utility_falls_back_through_window_then_focus_then_flat_then_select() {
-    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_SELECT);
     view.active_utility_id = Some(grid::UTILITY_MASK.into());
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_MASK);
@@ -249,7 +249,7 @@ fn the_armed_utility_falls_back_through_window_then_focus_then_flat_then_select(
 #[test]
 fn the_solve_command_starts_the_fill_run() {
     let document = crate::examples::grid2d::pipes::document();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let no_config = NoConfig::default();
     let cfg = ConfigView { snapshot: &no_config, window: None };
@@ -272,11 +272,11 @@ fn the_solve_command_starts_the_fill_run() {
 fn the_commit_fill_command_writes_solve_json() {
     let document = crate::examples::grid2d::pipes::document();
     let commit = crate::host::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("pipes solves");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let no_config = NoConfig::default();
     let cfg = ConfigView { snapshot: &no_config, window: None };
-    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view.window_id = Some("preview-1".into());
     view.window_instances = vec![semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
     let solve_json = semio_framework_pack_json::to_json_string(&commit);
@@ -290,12 +290,12 @@ fn the_commit_fill_command_writes_solve_json() {
 #[test]
 fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
     let document = crate::examples::grid2d::pipes::document();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let admitted = ArtifactView::with_operation(&document, &history, semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], authoring_seed: "seed".into() });
+    let history = semio_plugin::HistoryView::empty();
+    let admitted = ArtifactView::with_operation(&document, &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], authoring_seed: "seed".into() });
     let no_config = NoConfig::default();
     let cfg = ConfigView { snapshot: &no_config, window: None };
     let armed = |utility: &str| {
-        let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let mut view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         view.active_utility_id = Some(utility.into());
         view
     };
@@ -319,7 +319,7 @@ fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
 /// went red on 2026-09-22 when a new tool reached `TOOL_IDS` and the proofs but not the lane contracts.
 #[test]
 fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let tools: std::collections::BTreeSet<&str> = GRID2D_TOOL_IDS.iter().copied().collect();
     assert_eq!(<Grid2dCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, GRID2D_TOOL_IDS);
     let publication: std::collections::BTreeSet<&str> = <Grid2dCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
@@ -327,7 +327,7 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
     for contract in <Grid2dCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
         assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
         assert!(
-            !contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1,
+            !contract.lanes.contains(&semio_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1,
             "tool {} mixes the HostOnly lane with a publishing lane",
             contract.tool_id
         );
@@ -344,4 +344,4 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_grid2d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid2d::Grid2dEditor, || semio_framework_plugin::App { definition: crate::editor::grid2d::create_grid2d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid2d::Grid2dEditor, || semio_plugin::App { definition: crate::editor::grid2d::create_grid2d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

@@ -23,7 +23,7 @@ async fn kit_in_retained_import_media_dispatches_the_exact_factory_and_applies_c
         "attractionKinds": [],
         "kindCompatibility": [{ "source": "retained-door", "target": "retained-door", "bidirectional": true }],
     });
-    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
+    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
     let result = app.0.import_media("kit:in", media, &meta("local"), app.1.cx()).await.expect("retained kit:in dispatch");
     assert!(!result.mutations.is_empty(), "exact retained import must publish document mutations");
     let after = projection_of(&app);
@@ -43,10 +43,10 @@ async fn kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_d
     let maximum = format!("{prefix}{label}{suffix}");
     assert_eq!(maximum.len(), PUZZLE5D_IMPORT_MEDIA_BYTES);
     let mut app = app_with_registry();
-    let exact = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: maximum.clone() } };
+    let exact = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: maximum.clone() } };
     app.0.import_media("kit:in", exact, &meta("local"), app.1.cx()).await.expect("exact media maximum retained dispatch");
     let after_exact = projection_of(&app);
-    let plus_one = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: format!("{maximum} ") } };
+    let plus_one = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: format!("{maximum} ") } };
     let error = app.0.import_media("kit:in", plus_one, &meta("local"), app.1.cx()).await.expect_err("media maximum plus one must fail before Serde");
     assert!(error.message.contains("predecode cap"), "the plus-one refusal must be the predecode cap, got {:?} {:?}", error.code, error.message);
     assert_eq!(projection_of(&app), after_exact, "rejected plus-one media must not mutate the document");
@@ -74,7 +74,7 @@ async fn kit_in_retained_import_media_upserts_part_and_grip_kinds_into_kind_cata
         "attractionKinds": [],
         "kindCompatibility": [{ "source": "door", "target": "door", "bidirectional": true }],
     });
-    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
+    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
     let result = app.0.import_media("kit:in", media, &meta("local"), app.1.cx()).await.expect("retained kit:in import succeeds");
     assert!(!result.mutations.is_empty(), "importing a non-empty fragment must emit real operations");
@@ -108,7 +108,7 @@ async fn kit_in_retained_import_media_is_idempotent_on_repeated_delivery() {
         "attractionKinds": [],
         "kindCompatibility": [],
     });
-    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
+    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
     for _ in 0..2 {
         app.0.import_media("kit:in", media.clone(), &meta("local"), app.1.cx()).await.expect("retained kit:in import succeeds");
@@ -149,7 +149,7 @@ fn clipboard_verbs_cover_every_part_of_the_largest_example() {
     let document = capsule_dream_example_document();
     assert_eq!(document.parts.len() as u64, fixture["parts"].as_u64().expect("parts"));
     let snapshot = Puzzle5dPlaySnapshot::new(crate::editor::puzzle5d::entities::puzzle5d_snapshot_from_document(&document).expect("typed host document admits"));
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let view = ArtifactView::new(&snapshot, &history);
     let part_ids: Vec<String> = document.parts.iter().map(|part| part.id.clone()).collect();
     let placement = PastePlacement { anchor: PasteAnchor::Original, position: Some([offset[0], offset[1], offset[2]]) };
@@ -167,7 +167,7 @@ fn clipboard_verbs_cover_every_part_of_the_largest_example() {
 /// window registry — the same authority the retained route publishes into.
 pub(super) async fn board_window_config(app: &mut Puzzle5dTestApp, window_id: &str) -> window_ownership::Puzzle5dBoardWindowConfig {
     let view = window_view(board2d::WINDOW_KIND_ID, window_id);
-    semio_framework_plugin::artifact_app_laws::capture_fixture_window_config::<window_ownership::Puzzle5dBoardWindowConfigOwner, _, _>(app, &view)
+    semio_plugin::artifact_app_laws::capture_fixture_window_config::<window_ownership::Puzzle5dBoardWindowConfigOwner, _, _>(app, &view)
         .await
         .expect("board window config capture")
         .expect("the addressed board pane owns a partition")
@@ -176,7 +176,7 @@ pub(super) async fn board_window_config(app: &mut Puzzle5dTestApp, window_id: &s
 /// 🌍️ The exact world pane partition `window_id` currently holds.
 pub(super) async fn world_window_config(app: &mut Puzzle5dTestApp, window_id: &str) -> window_ownership::Puzzle5dWorldWindowConfig {
     let view = window_view(world3d::WINDOW_KIND_ID, window_id);
-    semio_framework_plugin::artifact_app_laws::capture_fixture_window_config::<window_ownership::Puzzle5dWorldWindowConfigOwner, _, _>(app, &view)
+    semio_plugin::artifact_app_laws::capture_fixture_window_config::<window_ownership::Puzzle5dWorldWindowConfigOwner, _, _>(app, &view)
         .await
         .expect("world window config capture")
         .expect("the addressed world pane owns a partition")

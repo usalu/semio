@@ -7,48 +7,48 @@
 extern crate infinite_canvas as infinite_world;
 use infinite_world::world::World3dState;
 use semio_framework::ViewModel;
-use semio_framework_os_renderer_wgpu_contracts::{AdmittedSurfaceMap, SCENE_SURFACE_CAPACITY};
-use semio_framework_os_renderer_wgpu_dock::{DockDragKind, DockSide, DockStackTab};
-use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe, split_pane_shell, test_app, tour_introduction, tour_shell};
-use semio_framework_os_renderer_wgpu_host_base::{keybinding_platform_uses_meta, set_host_platform_uses_meta};
+use semio_renderer_wgpu_contracts::{AdmittedSurfaceMap, SCENE_SURFACE_CAPACITY};
+use semio_renderer_wgpu_dock::{DockDragKind, DockSide, DockStackTab};
+use semio_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe, split_pane_shell, test_app, tour_introduction, tour_shell};
+use semio_renderer_wgpu_host_base::{keybinding_platform_uses_meta, set_host_platform_uses_meta};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_native_platform::native_accessibility;
-use semio_framework_os_renderer_wgpu_program_bridge::ProgramBridgeEntry;
-use semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx;
-use semio_framework_os_renderer_wgpu_shell_chrome_state::{ChromeDialogRequest, format_keybinding_shortcut};
-use semio_framework_os_renderer_wgpu_shell_dock::ShellKeyboardStop;
-use semio_framework_os_renderer_wgpu_shell_docs::{ShellExampleRow, window_template_drag_data};
-use semio_framework_os_renderer_wgpu_shell_input::{ContextMenuItem, ContextMenuState, OverlayState, PointerCapture, PointerHitOwner, context_menu_path_for_ordinal, panel_tab_introduction_element_id};
-use semio_framework_os_renderer_wgpu_shell_pointer::{
+use semio_renderer_wgpu_native_platform::native_accessibility;
+use semio_renderer_wgpu_program_bridge::ProgramBridgeEntry;
+use semio_renderer_wgpu_shell_actions::ActionsCtx;
+use semio_renderer_wgpu_shell_chrome_state::{ChromeDialogRequest, format_keybinding_shortcut};
+use semio_renderer_wgpu_shell_dock::ShellKeyboardStop;
+use semio_renderer_wgpu_shell_docs::{ShellExampleRow, window_template_drag_data};
+use semio_renderer_wgpu_shell_input::{ContextMenuItem, ContextMenuState, OverlayState, PointerCapture, PointerHitOwner, context_menu_path_for_ordinal, panel_tab_introduction_element_id};
+use semio_renderer_wgpu_shell_pointer::{
     PointerCtx, ShellEditVerb, UI_INTRODUCTION_BACK_CONTROL_ID, UI_INTRODUCTION_NEXT_CONTROL_ID, UI_INTRODUCTION_SKIP_CONTROL_ID, UI_INTRODUCTION_VEIL_CONTROL_ID, is_reserved_shell_chord, pointer_hit_owner, pointer_press_belongs_to_shell_chrome,
     shell_edit_verb_for, shell_shortcut_for, shell_shortcut_for_control_id,
 };
-use semio_framework_os_renderer_wgpu_shell_prefs::{ActiveSession, CHROME_ICON_TINY, DockTabNode};
-use semio_framework_os_renderer_wgpu_shell_session::{SessionCtx, ShellShortcut};
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
-use semio_framework_os_renderer_wgpu_shell_surfaces::ShellSettleWatch;
-use semio_framework_os_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeChildCursor, shell_example_control};
-use semio_framework_os_renderer_wgpu_shell_view_overlays::{
+use semio_renderer_wgpu_shell_prefs::{ActiveSession, CHROME_ICON_TINY, DockTabNode};
+use semio_renderer_wgpu_shell_session::{SessionCtx, ShellShortcut};
+use semio_renderer_wgpu_shell_state::ShellState;
+use semio_renderer_wgpu_shell_surfaces::ShellSettleWatch;
+use semio_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeChildCursor, shell_example_control};
+use semio_renderer_wgpu_shell_view_overlays::{
     ChromeTourLayout, OverlaysViewCtx, chrome_tour_chip_hotkey_box, chrome_tour_chip_icon_x, chrome_tour_chip_label_box, chrome_tour_layout, context_menu_level_width, context_menu_submenu_open, render_context_menu_level,
 };
-use semio_framework_os_renderer_wgpu_shell_view_paint::SHELL_WINDOW_PAINT_OPPORTUNITIES;
-use semio_framework_os_renderer_wgpu_shell_view_panels::{PanelsViewCtx, empty_dock_notice_lines};
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_os_renderer_wgpu_shell_window_actions::{KEYBINDING_UNOWNED_CODE, WindowActionsCtx, window_activation_is_user_v1};
-use semio_framework_os_renderer_wgpu_shell_windows::{PanelAnchor, world_projection_initial_seed, world_projection_template};
-use semio_framework_os_renderer_wgpu_test_support::shell_source;
-use semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn;
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_layout::layout::ActionDescriptor;
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_theme::geometry::Rect;
+use semio_renderer_wgpu_shell_view_paint::SHELL_WINDOW_PAINT_OPPORTUNITIES;
+use semio_renderer_wgpu_shell_view_panels::{PanelsViewCtx, empty_dock_notice_lines};
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_renderer_wgpu_shell_window_actions::{KEYBINDING_UNOWNED_CODE, WindowActionsCtx, window_activation_is_user_v1};
+use semio_renderer_wgpu_shell_windows::{PanelAnchor, world_projection_initial_seed, world_projection_template};
+use semio_renderer_wgpu_test_support::shell_source;
+use semio_renderer_wgpu_ui_engine_tests::fixture_original_turn;
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_layout::layout::ActionDescriptor;
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::Theme;
+use semio_ui_theme::geometry::Rect;
 use semio_framework_value::DslValue;
 use serde::Deserialize;
 use serde_json::Value;
-use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
-use semio_framework_ui_theme::Level;
+use semio_ui_wgpu_input::{HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
+use semio_ui_theme::Level;
 use winit::window::Window;
 
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-context-menu-keyboard/🦀️.rs"]

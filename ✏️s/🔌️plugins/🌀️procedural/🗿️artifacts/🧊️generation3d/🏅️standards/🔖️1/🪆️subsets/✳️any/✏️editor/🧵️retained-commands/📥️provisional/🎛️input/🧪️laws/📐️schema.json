@@ -1,0 +1,47 @@
+{
+  "type": "array",
+  "minItems": 15,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "before",
+      "mutation",
+      "after",
+      "applied"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "before": {
+        "type": "object",
+        "required": [
+          "widgets",
+          "synapses"
+        ]
+      },
+      "mutation": {
+        "type": "object",
+        "required": [
+          "mutation",
+          "id",
+          "channel",
+          "type",
+          "value"
+        ]
+      },
+      "after": {
+        "type": "object",
+        "required": [
+          "widgets",
+          "synapses"
+        ]
+      },
+      "applied": {
+        "type": "boolean"
+      }
+    }
+  }
+}

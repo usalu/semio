@@ -17,42 +17,42 @@ use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, na
 use crate::editor::home::config::{home_retained_contract, HomeConfig, HomeConfigMutation, HomeConfigPreparationFactory};
 use crate::editor::home::transient::{HomeTransient, HomeTransientMutation, HomeTransientRetirementFactory};
 use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
-use semio_framework_plugin::app::Dialect;
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::Dialect;
+use semio_plugin::app::InteractionView;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::app_commands;
-use semio_framework_plugin::create_tab_stack_layout;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
+use semio_plugin::app_commands;
+use semio_plugin::create_tab_stack_layout;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
+use semio_plugin::DraftView;
+use semio_plugin::DslValue;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::FaultOrigin;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const S_HOME_CONTROLLER_ID: &str = "s.space.home@1/*#editor";
 //#endregion 🔖️Constants
 
-fn require_session_identity(view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<&semio_framework_plugin::ViewSessionIdentity, Fault> {
+fn require_session_identity(view_state: Option<&semio_plugin::ViewModel>) -> Result<&semio_plugin::ViewSessionIdentity, Fault> {
     view_state.and_then(semio_s_space_core::home_session_identity).ok_or_else(|| Fault::from("s.home.session-identity-required"))
 }
 
@@ -145,10 +145,10 @@ fn home_retained_reduce(
     command: &HomeCommand,
     snapshot: &SHomeSnapshot,
     config: &HomeConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
     let _identity = require_session_identity(context.and_then(|context| context.view_state.as_deref()))?;
@@ -184,13 +184,13 @@ impl HomeRetainedCommandJobFactory {
 }
 
 impl ToolJobFactory for HomeRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<HomeApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<HomeApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<HomeApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<HomeApp>>;
     fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
     fn payload_schema_id(&self) -> &str { HOME_RETAINED_PAYLOAD_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { home_retained_contract() }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: HOME_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: HOME_RETAINED_RAW_BYTES, checkpoint_resume: true);
 }
 
 impl ArtifactOwnedToolJobFactory for HomeRetainedCommandJobFactory {
@@ -201,15 +201,15 @@ impl ArtifactOwnedToolJobFactory for HomeRetainedCommandJobFactory {
 }
 /// 🏙️ App-owned creation work borrows the mounted lease and returns its same receipt for publication.
 pub struct HomeCreateStudioWork {
-    completion: Option<semio_framework_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>>,
-    retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>>>,
+    completion: Option<semio_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>>,
+    retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>>>,
     validated: bool,
     completed: bool,
     closing: bool,
 }
 
 impl HomeCreateStudioWork {
-    fn new(completion: semio_framework_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>) -> Self {
+    fn new(completion: semio_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>) -> Self {
         Self { completion: Some(completion), retirement: None, validated: false, completed: false, closing: false }
     }
 
@@ -220,12 +220,12 @@ impl HomeCreateStudioWork {
     }
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for HomeCreateStudioWork {
+impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for HomeCreateStudioWork {
     fn tool_id(&self) -> &'static str { "createStudio" }
-    fn extent(&self, command: &HomeCommand, snapshot: &SHomeSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>) -> Option<usize> { matches!(command, HomeCommand::CreateStudio(_)).then(|| home_retained_extent(command, snapshot, interaction)).flatten() }
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn extent(&self, command: &HomeCommand, snapshot: &SHomeSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>) -> Option<usize> { matches!(command, HomeCommand::CreateStudio(_)).then(|| home_retained_extent(command, snapshot, interaction)).flatten() }
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        use semio_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.closing || cx.is_cancelled() { return Err(Fault::from("s.home.create-studio.effect-not-live")); }
         let HomeCommand::CreateStudio(payload) = input.command else { return Err(Fault::from("s.home.create-studio.effect-command-mismatch")) };
         let session = require_session_identity(input.context.and_then(|context| context.view_state.as_deref()))?;
@@ -245,7 +245,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn checkpoint_byte(&self, index: usize) -> Option<u8> { (index == 0).then_some(u8::from(self.validated)) }
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(size_of::<Self>()) }
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(size_of::<Self>()) }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> { self.validated = match checkpoint { [] | [0] => false, [1] => true, _ => return Err(Fault::from("s.home.create-studio.effect-checkpoint-invalid")) }; Ok(()) }
     fn begin_close(&mut self) { self.closing = true; }
     fn terminal_frame_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
@@ -288,8 +288,8 @@ impl HomeCatalogWork {
     }
 
     /// 🪜️ One stage for `command` against `doc`: `validate` (reads only) or `commit` (the one catalog write).
-    pub fn advance(&mut self, command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
-        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+    pub fn advance(&mut self, command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
+        use semio_plugin::retained_command::ArtifactCommandWorkStep;
         if self.committed {
             return Err(Fault::from("space-home-catalog-work-repeated"));
         }
@@ -349,16 +349,16 @@ impl HomeCatalogWork {
 const HOME_CATALOG_VALIDATED_STAGE: &str = "space-home.catalog.validated";
 const HOME_CATALOG_VALIDATED_PREVIEW: &str = "{\"en\":\"Studio checked, writing the catalog\",\"de\":\"Studio geprüft, Katalog wird geschrieben\"}";
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for HomeCatalogWork {
+impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for HomeCatalogWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
 
-    fn extent(&self, command: &HomeCommand, snapshot: &SHomeSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>) -> Option<usize> {
+    fn extent(&self, command: &HomeCommand, snapshot: &SHomeSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>) -> Option<usize> {
         home_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         require_session_identity(input.context.and_then(|context| context.view_state.as_deref()))?;
         self.advance(input.command, &ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone()))
@@ -367,7 +367,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(size_of::<Self>())
     }
 
@@ -399,7 +399,7 @@ pub struct HomeApp;
 
 impl ArtifactEditor for HomeApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = SHomeSnapshot;
@@ -421,7 +421,7 @@ impl ArtifactEditor for HomeApp {
         Some(std::sync::Arc::new(HomeConfigPreparationFactory))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<HomeApp>,
         owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.space.home@1/*#editor",
@@ -432,19 +432,19 @@ impl ArtifactEditor for HomeApp {
         tools: ["applyDirectoryEventPage", "applyLocalCatalogDocument", "createStudio", "bindSpaceFile", "importSpace", "openSpace", "navigateVirtualFileSystemNode", "deleteVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat"]
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     /// 🫧️ The transient lane carries the folded hub directory: one bounded page item per publication
-    /// ([`semio_framework_plugin::bounded_transient_preparation_factory`] prices the encoded page, never the root), and
+    /// ([`semio_plugin::bounded_transient_preparation_factory`] prices the encoded page, never the root), and
     /// displaced or disposed roots retire in grants measured by the projection itself, never by encoding it.
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::transient_store_disposer::<Self::Transient, Self::TransientMutation>(std::sync::Arc::new(HomeTransientRetirementFactory)))
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::transient_store_disposer::<Self::Transient, Self::TransientMutation>(std::sync::Arc::new(HomeTransientRetirementFactory)))
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
@@ -461,27 +461,27 @@ impl ArtifactEditor for HomeApp {
         registry.register(HomeRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !HOME_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "space home command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "space home command does not match its exact registered tool").into());
         }
         if home_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "space home command payload exceeds its bounded retained extent").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "space home command payload exceeds its bounded retained extent").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, HomeCommand::command_id, HOME_RETAINED_RAW_BYTES, HOME_RETAINED_WORK_ITEMS, true, |request| -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> { match request.command.as_ref() {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, HomeCommand::command_id, HOME_RETAINED_RAW_BYTES, HOME_RETAINED_WORK_ITEMS, true, |request| -> Box<dyn semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> { match request.command.as_ref() {
             HomeCommand::CreateStudio(_) => Box::new(HomeCreateStudioWork::new(request.completion.clone())),
             HomeCommand::ApplyDirectoryEventPage(_) => Box::new(apply_directory_event_page::HomeDirectoryPageWork::<EditorApp<Self>>::new(tool_id, home_directory_page_json)),
             HomeCommand::ImportSpace(_) | HomeCommand::BindSpaceFile(_) | HomeCommand::PersistLocally(_) | HomeCommand::ApplyLocalCatalogDocument(_) => Box::new(HomeCatalogWork::new(tool_id)),
-            _ => Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, home_retained_reduce, home_retained_extent)),
+            _ => Box::new(semio_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, home_retained_reduce, home_retained_extent)),
         } })
     }
 
-    fn reference_birth()->Option<fn()->Result<SHomeSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<SHomeSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(SHomeSnapshot::default())
     })}
 
@@ -577,7 +577,7 @@ impl ArtifactEditor for HomeApp {
         command: &HomeCommand,
         doc: &ArtifactView<'_, SHomeSnapshot>,
         cfg: &ConfigView<'_, HomeConfig>,
-        _interaction: &InteractionView<'_>, view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>, view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
@@ -593,23 +593,23 @@ impl ArtifactEditor for HomeApp {
     /// gate made the product's landing window refuse to publish for every signed-out visitor, which is
     /// the ordinary first paint of a hub-configured shell; the window's own render now answers an empty
     /// space table instead (ticket 26/09/18, S2 §3.4).
-    fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         render_body(body_key, cfg.snapshot, HomeTransient::default().directory(), view_state)
     }
 
     /// 🫧️ The host-facing render: the framework hands the app-local transient in here, so the table lists the folded hub
     /// directory; the bare `render` above has no transient and lists the local rows only.
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         _doc: &ArtifactView<'_, SHomeSnapshot>,
         cfg: &ConfigView<'_, HomeConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, HomeTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, HomeTransient>,
         _interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         render_body(body_key, cfg.snapshot, transient.snapshot.directory(), view_state)
 
         })();
@@ -619,10 +619,10 @@ impl ArtifactEditor for HomeApp {
 //#endregion 🔖️HomeApp
 
 /// 🖼️ One Home body from the config and the folded directory projection.
-pub fn render_body(body_key: &str, config: &HomeConfig, directory: &crate::editor::home::transient::HomeDirectoryProjection, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+pub fn render_body(body_key: &str, config: &HomeConfig, directory: &crate::editor::home::transient::HomeDirectoryProjection, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
     let root = match body_key {
         crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(config, directory, view_state)?,
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.render.unknown-body", "unknown body key text admission failed"))?,
+        _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.render.unknown-body", "unknown body key text admission failed"))?,
     };
     Ok(ComponentTree::new(root))
 }
@@ -631,7 +631,7 @@ pub fn render_body(body_key: &str, config: &HomeConfig, directory: &crate::edito
 /// 🧱️ The manifest stitch: one call per taxonomy node. `.example(...)`/`.workflow(...)` do not exist on
 /// `EditorBuilder` (contract §2.4, W0-F gap 4) — `create_home_app` never called either, so nothing is
 /// dropped here (unlike other W2 packets that had to note a loss).
-pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
+pub async fn create_home_app() -> semio_plugin::AppDefinition {
     
     Editor::builder(crate::HOME_DIALECT)
         .document(["semio", "s", "home"])
@@ -643,10 +643,10 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .mutation("createStudio", LocalizedLabel::native("Create Studio", "Studio erstellen"))
         .shell_action("bindSpaceFile", LocalizedLabel::native("Bind Studio File", "Studio-Datei verknüpfen"))
         .mutation("importSpace", LocalizedLabel::native("Import Studio", "Studio importieren"))
-        .action_with(semio_framework_plugin::ActionDefinition::new("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"), semio_framework_plugin::ActionKind::Shell, "folder-open"))
-        .action_with(semio_framework_plugin::ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), semio_framework_plugin::ActionKind::Shell, "folder"))
+        .action_with(semio_plugin::ActionDefinition::new("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"), semio_plugin::ActionKind::Shell, "folder-open"))
+        .action_with(semio_plugin::ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), semio_plugin::ActionKind::Shell, "folder"))
         .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Remove Studio from Home", "Studio aus Home entfernen"))
-        .action_with(semio_framework_plugin::ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), semio_framework_plugin::ActionKind::Shell, "home"))
+        .action_with(semio_plugin::ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), semio_plugin::ActionKind::Shell, "home"))
         .shell_action("createSpace", LocalizedLabel::native("Create Space", "Space erstellen"))
         .dialog(
             DialogDefinition::new("createSpace", LocalizedLabel::native("Create Space", "Space erstellen"), ActionRef::new("createSpace"))
@@ -768,9 +768,9 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_describe("copyInviteLink", LocalizedLabel::native("Asks the hub to mint an invite for one space and copies the redeemable link to the clipboard.", "Lässt den Hub eine Einladung für einen Space erzeugen und kopiert den einlösbaren Link in die Zwischenablage."))
         .action_describe("promoteToHubSpace", LocalizedLabel::native("Promotes a temporary local studio to a shared space on the hub under the given name, so it can be shared and edited together.", "Stuft ein temporäres lokales Studio unter dem angegebenen Namen zu einem geteilten Space auf dem Hub hoch, damit es geteilt und gemeinsam bearbeitet werden kann."))
         .action_describe("persistLocally", LocalizedLabel::native("Saves a temporary local studio into a folder on this machine so it survives restarts; it stays local-only and unshared.", "Speichert ein temporäres lokales Studio in einen Ordner auf diesem Rechner, damit es Neustarts übersteht; es bleibt lokal und ungeteilt."))
-        .action_audience("applyDirectoryEventPage", semio_framework_plugin::CapabilityAudience::Chrome)
-        .action_audience("applyLocalCatalogDocument", semio_framework_plugin::CapabilityAudience::Chrome)
-        .action_audience("presenceHeartbeat", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("applyDirectoryEventPage", semio_plugin::CapabilityAudience::Chrome)
+        .action_audience("applyLocalCatalogDocument", semio_plugin::CapabilityAudience::Chrome)
+        .action_audience("presenceHeartbeat", semio_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️HomeManifest
@@ -787,7 +787,7 @@ pub mod artifact_items_2 {
 /// `#[artifact_schema(id = "s.space.home")]`, `standard`/`subset` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Canonical surface id: `s.space.home@1/*#editor` /
 /// `s.space.home@1/*#viewer` (contract §1 grammar).
-pub const HOME_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.space.home", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const HOME_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.space.home", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 //#endregion 🔖️Dialect
 }
 //#endregion 🧩️ArtifactItems2
@@ -811,8 +811,8 @@ pub mod artifact_items_4 {
 /// deliberately has no field for app-scope schema (see that struct's own doc); it is registered by
 /// `.document_codec::<A>()` instead, keyed off `A` the same way this declaration is keyed off `kind`.
 /// 🧾️ Defines s.home's immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.space.home")?)
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.space.home")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.home")?)?)?
@@ -843,12 +843,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.home's typed runtime declaration.
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub async fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::standards::v1::subsets::any::schema::home_artifact_schema_descriptor())
         .inferences([crate::standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
         .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::home::HomeApp>>()
+        .document_codec::<semio_plugin::EditorApp<crate::editor::home::HomeApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

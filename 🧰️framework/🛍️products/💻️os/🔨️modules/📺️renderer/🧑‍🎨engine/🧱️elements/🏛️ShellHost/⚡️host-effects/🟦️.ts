@@ -136,7 +136,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
           continue;
         }
         if ("iconRenderExport" in effect) {
-          await applyIconRenderExportEffect({ effect });
+          void applyIconRenderExportEffect({ effect, baseSession, uiLocaleRef, showTransientNoticeRef });
           continue;
         }
         if ("requestFileOpen" in effect) {
@@ -178,6 +178,18 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
       }
       const nextSession = { ...baseSession, viewState: nextViewState };
       if (!isCurrentEffectOwner(effectOwner)) return;
+      const contributor = [...core.contributorInstancesRef.current.values()].find(entry => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
+      if (contributor) {
+        contributor.viewState = nextViewState;
+        const primary = sessionRef.current;
+        if (!primary) return;
+        if (contributor.ownerId.startsWith(`${primary.pluginId}:${primary.instanceId}:`)) await refreshUi(primary, { kind: "full" }, undefined, true);
+        else {
+          const parent = spawnedAppsRef.current.find(entry => contributor.ownerId.startsWith(`${entry.pluginId}:${entry.instanceId}:`));
+          if (parent) await refreshSpawnedUi(parent, primary.viewState, { kind: "full" });
+        }
+        return;
+      }
       const viewStateRewrittenByEffects = nextViewState !== baseSession.viewState;
       const isSpawnedPluginSession = hostMode && !shellDialogSessionIsCurrentV1(baseSession, shellStateRef.current.pluginRuntime.session);
       dispatch({
@@ -203,9 +215,11 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
   core.applyHostEffects = applyHostEffects;
   applyHostEffectsRef.current = applyHostEffects;
 
-  useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, showTransientNoticeRef, applyHostEffects });
+  const contributorInstancesRef = core.contributorInstancesRef;
+  const contributorRosterKey = JSON.stringify([...contributorInstancesRef.current].map(([key, entry]) => [key, entry.pluginId, entry.instanceId, entry.ownerId]));
+  useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, contributorInstancesRef, contributorRosterKey, showTransientNoticeRef, applyHostEffects });
 
-  useOperationProgressSubscriptions({ session, loadedPluginsRef, applyHistoryPatch, captureProgramEffectOwner, dropForRetiredInstance, hostMode, spawnedAppsRef, spawnedRosterKey, applyHostEffects });
+  useOperationProgressSubscriptions({ session, loadedPluginsRef, applyHistoryPatch, captureProgramEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, contributorInstancesRef, contributorRosterKey, applyHostEffects });
 
   return {};
 }

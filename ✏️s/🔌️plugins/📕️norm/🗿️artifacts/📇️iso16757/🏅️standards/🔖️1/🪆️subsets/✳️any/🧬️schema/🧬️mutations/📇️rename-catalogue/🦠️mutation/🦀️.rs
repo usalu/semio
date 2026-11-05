@@ -16,8 +16,8 @@ pub struct RenameCatalogue {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RenameCatalogue where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::rename_catalogue::mutation::RenameCatalogue> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "catalogue", kind: "rename-catalogue", record: "RenamedCatalogue" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename catalogue to \"{}\"", self.new_name), &format!("Katalog in \"{}\" umbenennen", self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename catalogue to \"{}\"", self.new_name), &format!("Katalog in \"{}\" umbenennen", self.new_name))
     }
 }
 

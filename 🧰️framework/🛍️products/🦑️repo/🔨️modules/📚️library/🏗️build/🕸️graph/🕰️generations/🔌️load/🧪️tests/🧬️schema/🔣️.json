@@ -7,7 +7,8 @@
   "shape",
   "shapeImplementation",
   "implementation",
-  "closures"
+  "closures",
+  "attempts"
  ],
  "properties": {
   "version": {
@@ -165,6 +166,47 @@
      },
      "expected": {
       "type": "object"
+     }
+    }
+   }
+  },
+  "attempts": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "transition",
+     "queries",
+     "cancelled",
+     "priorLoad"
+    ],
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "transition": {
+      "enum": [
+       "none",
+       "support",
+       "answer",
+       "generation",
+       "membership",
+       "cancel",
+       "failure",
+       "root"
+      ]
+     },
+     "queries": {
+      "type": "integer",
+      "minimum": 1
+     },
+     "cancelled": {
+      "type": "boolean"
+     },
+     "priorLoad": {
+      "type": "boolean"
      }
     }
    }

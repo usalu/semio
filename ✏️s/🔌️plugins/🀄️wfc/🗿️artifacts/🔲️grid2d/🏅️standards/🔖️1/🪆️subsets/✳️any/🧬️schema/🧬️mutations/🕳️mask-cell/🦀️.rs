@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "cell", kind: "mask-cell", record: "RemovedCell" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Mask cell ({}, {})", self.x, self.y), &format!("Zelle ({}, {}) maskieren", self.x, self.y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Mask cell ({}, {})", self.x, self.y), &format!("Zelle ({}, {}) maskieren", self.x, self.y))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{},{}", self.x, self.y)]

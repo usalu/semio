@@ -35,6 +35,7 @@ pub(super) fn migrated_command(mut definition: CommandDefinition) -> CommandDefi
 /// is a patched fixture of its own and one session holds one evaluation. Mirrors
 /// `Generation3dInstanceOperationOwner` and the framework's reference `FlowInstanceOperationOwner`.
 pub struct Generation2dInstanceOperationOwner {
+    pub(super) operator_catalogue:semio_os_flow::registry::FlowOperatorCatalogueOwner,
     pub(super) eval_session: Option<FlowEvalSession>,
     pub(super) generation_session: Option<FlowEvalSession>,
     run_link: PreviewEvalRunLink,
@@ -43,7 +44,8 @@ pub struct Generation2dInstanceOperationOwner {
 
 impl Generation2dInstanceOperationOwner {
     pub(super) fn new() -> Self {
-        Self { eval_session: Some(FlowEvalSession::new()), generation_session: Some(FlowEvalSession::new()), run_link: PreviewEvalRunLink::default(), closing: false }
+        let(registry,generation)=semio_os_flow::registry::bootstrap_flow_operator_registry_source();
+        Self { operator_catalogue:semio_os_flow::registry::FlowOperatorCatalogueOwner::new(registry,generation),eval_session: Some(FlowEvalSession::new()), generation_session: Some(FlowEvalSession::new()), run_link: PreviewEvalRunLink::default(), closing: false }
     }
 
     pub(super) fn with_session<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
@@ -55,7 +57,7 @@ impl Generation2dInstanceOperationOwner {
 
     /// 🧳️ Both sessions and the run link, while the instance is live.
     pub(super) fn parts(&mut self) -> Result<(PreviewEvalSessions<'_>, &mut PreviewEvalRunLink), Fault> {
-        let Self { eval_session, generation_session, run_link, closing } = self;
+        let Self { eval_session, generation_session, run_link, closing, .. } = self;
         match (eval_session.as_mut(), generation_session.as_mut()) {
             (Some(document), Some(generation)) if !*closing => Ok((PreviewEvalSessions { document, generation }, run_link)),
             _ => Err(Fault::from("generation2d-eval-session-closing")),
@@ -82,15 +84,14 @@ impl PreviewEvalRunOwner for Generation2dInstanceOperationOwner {
     }
 }
 
-impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInstanceOperationOwner {
+impl semio_plugin::ArtifactInstanceOperationOwner for Generation2dInstanceOperationOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
 
     fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        if !self.closing {
-            return Ok(Default::default());
-        }
+        if !self.closing{return self.operator_catalogue.step_demands(body)}
+        if !self.operator_catalogue.terminal_is_empty(){return self.operator_catalogue.close_demands(body)}
         let Some(session) = [self.eval_session.as_ref(), self.generation_session.as_ref()].into_iter().flatten().next() else { return Ok(Default::default()) };
         if session.terminal_is_empty() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
@@ -101,12 +102,11 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
     /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
     /// until `begin_close`, and reporting that from the live maintenance ladder spent the runtime's
     /// zero-progress credit every idle turn (26/09/09/PROCEDURAL-3D-END-TO-END, close-ladder lane).
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
-        use semio_framework_plugin::PluginLifecycleStep;
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
+        use semio_plugin::PluginLifecycleStep;
         use semio_framework_value::retained_clone::RetainedCloneProgress;
-        if !self.closing {
-            return Ok(PluginLifecycleStep::Complete(Default::default()));
-        }
+        if !self.closing{return retained_catalogue_lifecycle::step(&mut self.operator_catalogue,false,cx,grant)}
+        if !self.operator_catalogue.terminal_is_empty(){return retained_catalogue_lifecycle::step(&mut self.operator_catalogue,true,cx,grant)}
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
@@ -127,8 +127,9 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
         Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         self.closing = true;
+        self.operator_catalogue.begin_close();
         self.run_link.wake();
         for session in [self.eval_session.as_mut(), self.generation_session.as_mut()].into_iter().flatten() {
             session.begin_close();
@@ -137,7 +138,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.eval_session.is_none() && self.generation_session.is_none()
+        self.closing && self.eval_session.is_none() && self.generation_session.is_none() && self.operator_catalogue.terminal_is_empty()
     }
 }
 
@@ -146,27 +147,27 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
 /// `.artifact_kind(...)` document schema/media type verbatim, plus two workflow ports: `params:in`
 /// (generic Data×Value parametric input) and `drawing:out` (TwoD×Vector, tagged with draw's already-
 /// registered `2d.drawing` kind id).
-pub async fn generation2d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo::from_artifact(
+pub async fn generation2d_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo::from_artifact(
         "generation.2d",
         MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
-        semio_framework_plugin::ArtifactPresentation { id: "2d.generation".into(), name: "2D Generation".into(), dimension: "2d".into(), component_kind: "generation2d".into() },
+        semio_plugin::ArtifactPresentation { id: "2d.generation".into(), name: "2D Generation".into(), dimension: "2d".into(), component_kind: "generation2d".into() },
     )
     .await
     .with_ports(vec![
-        semio_framework_plugin::MediaPortSpec {
+        semio_plugin::MediaPortSpec {
             id: "params:in".into(),
             label: "Parameters".into(),
-            direction: semio_framework_plugin::MediaPortDirection::In,
+            direction: semio_plugin::MediaPortDirection::In,
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: None,
             required: false,
             multiplicity: semio_framework::PortMultiplicity::One,
         },
-        semio_framework_plugin::MediaPortSpec {
+        semio_plugin::MediaPortSpec {
             id: "drawing:out".into(),
             label: "Drawing".into(),
-            direction: semio_framework_plugin::MediaPortDirection::Out,
+            direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
             kind_id: Some("2d.drawing".into()),
             required: false,

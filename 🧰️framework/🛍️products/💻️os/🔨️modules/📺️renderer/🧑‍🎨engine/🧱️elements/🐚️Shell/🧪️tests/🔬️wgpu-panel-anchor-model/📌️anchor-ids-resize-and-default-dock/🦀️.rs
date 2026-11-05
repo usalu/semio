@@ -39,14 +39,14 @@ fn panel_default_width_is_uniform_and_wider_than_the_former_document_panel() {
 /// ↔️ The real panel walk publishes exactly React's resize edges and one compact-spacing hit rail.
 #[test]
 fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
     let theme = Theme::default();
     assert_eq!(fixture["widthUiSpacing"], serde_json::json!(1));
     for case in fixture["cases"].as_array().expect("resize cases") {
         let anchor_id = case["anchor"].as_str().expect("anchor");
         let anchor = PanelAnchor::from_str(anchor_id).expect("known fixture anchor");
-        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         *shell.dock.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf("fixture.resize", "Resize", "panel-right", 0)];
         shell.dock.anchor_state_mut(anchor).path = vec!["fixture.resize".into()];
         shell.dock.anchor_state_mut(anchor).visible = true;
@@ -119,8 +119,8 @@ fn fixture_dock_shell() -> ShellState {
         })
         .collect();
     app.panel_tabs.push(PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_HISTORY_ID.into()), label: LocalizedLabel::data("History"), group: PanelGroup::Settings, body_key: Some("framework/history".into()), children: vec![] });
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.docs.session = Some(ActiveSession { plugin_id: "fixture".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    shell.docs.session = Some(ActiveSession { plugin_id: "fixture".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell.sync.sync_backbone_uri = Some("folder:///tmp/fixture".into());
     SessionCtx::of(&mut shell).sync_dock_tabs();
     shell

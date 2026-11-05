@@ -23,18 +23,18 @@ pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-results-config = { workspace = true }
 semio-s-plugin-norm-structural-scene = { path = "../../../../../../../🎬️structural-scene/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { workspace = true }
+semio-ui-contract = { workspace = true }
 semio-s-plugin-norm-app-surface-foundation = { path = "../../../../🧱️foundation/📦️packages/🦀️rust" }
 semio-s-plugin-norm-app-surface-viewport3d = { path = "../../../../🪟️visual-windows/🧊️viewport3d/📦️packages/🦀️rust" }
 semio-s-plugin-norm-app-surface-visual-chrome = { path = "../../../../🖼️visual-chrome/📦️packages/🦀️rust" }
@@ -43,7 +43,7 @@ semio-s-plugin-norm-app-surface-live-core = { path = "../../../../🧲️live-co
 [dev-dependencies]
 semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
 serde_json = { workspace = true }

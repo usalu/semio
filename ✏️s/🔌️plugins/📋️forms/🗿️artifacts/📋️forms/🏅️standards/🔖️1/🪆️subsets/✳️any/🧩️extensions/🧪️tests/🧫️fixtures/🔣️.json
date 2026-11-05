@@ -1,0 +1,270 @@
+{
+  "cases": [
+    {
+      "name": "A Flow Question Does Not Invent a Geometry Fixture",
+      "question": {
+        "id": "cost",
+        "label": "Cost",
+        "kind": "flow",
+        "params": {
+          "quantity": 2
+        }
+      },
+      "values": {},
+      "interactive": true,
+      "expected": {
+        "params": {
+          "quantity": 2
+        },
+        "questionId": "cost",
+        "controllerId": "forms-play",
+        "surface": "blueprint",
+        "interactive": true,
+        "authoredParams": {
+          "quantity": 2
+        }
+      },
+      "target": {
+        "surface": "blueprint"
+      }
+    },
+    {
+      "name": "The Answer Overrides the Authored Procedural Parameters",
+      "question": {
+        "id": "column",
+        "label": "Column",
+        "kind": "buildingComponent",
+        "exampleId": "custom-column",
+        "params": {
+          "height": 3
+        }
+      },
+      "values": {
+        "column": {
+          "height": 5
+        }
+      },
+      "interactive": true,
+      "expected": {
+        "exampleId": "custom-column",
+        "params": {
+          "height": 5
+        },
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true,
+        "windowId": "fill-1",
+        "windowKindId": "forms-try",
+        "authoredParams": {
+          "height": 3
+        }
+      },
+      "target": {
+        "surface": "try",
+        "windowId": "fill-1",
+        "windowKindId": "forms-try"
+      }
+    },
+    {
+      "name": "An Explicit Null Answer Is Preserved",
+      "question": {
+        "id": "procedure",
+        "label": "Procedure",
+        "kind": "playbook",
+        "params": {
+          "enabled": true
+        }
+      },
+      "values": {
+        "procedure": null
+      },
+      "interactive": false,
+      "expected": {
+        "params": null,
+        "questionId": "procedure",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": false,
+        "windowId": "fill-2",
+        "windowKindId": "forms-try",
+        "authoredParams": {
+          "enabled": true
+        }
+      },
+      "target": {
+        "surface": "try",
+        "windowId": "fill-2",
+        "windowKindId": "forms-try"
+      }
+    },
+    {
+      "name": "A Second Fill Window Retains Its Own Answer Route",
+      "question": {
+        "id": "column",
+        "label": "Column",
+        "kind": "buildingComponent",
+        "exampleId": "custom-column",
+        "params": {
+          "height": 3
+        }
+      },
+      "values": {
+        "column": {
+          "height": 5
+        }
+      },
+      "interactive": true,
+      "expected": {
+        "exampleId": "custom-column",
+        "params": {
+          "height": 5
+        },
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true,
+        "windowId": "second-fill",
+        "windowKindId": "forms-try",
+        "authoredParams": {
+          "height": 3
+        }
+      },
+      "target": {
+        "surface": "try",
+        "windowId": "second-fill",
+        "windowKindId": "forms-try"
+      }
+    },
+    {
+      "name": "An Authored Flow Survives a Partial Answer",
+      "question": {
+        "id": "cost",
+        "label": "Cost",
+        "kind": "flow",
+        "params": {
+          "__flow": {
+            "widgets": [],
+            "synapses": []
+          },
+          "quantity": 2,
+          "unitPrice": 5
+        }
+      },
+      "values": {
+        "cost": {
+          "quantity": 3
+        }
+      },
+      "target": {
+        "surface": "try",
+        "windowId": "flow-fill",
+        "windowKindId": "forms-try"
+      },
+      "interactive": true,
+      "expected": {
+        "params": {
+          "quantity": 3
+        },
+        "authoredParams": {
+          "__flow": {
+            "widgets": [],
+            "synapses": []
+          },
+          "quantity": 2,
+          "unitPrice": 5
+        },
+        "questionId": "cost",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "windowId": "flow-fill",
+        "windowKindId": "forms-try",
+        "interactive": true
+      }
+    },
+    {
+      "name": "read-only viewer has no answer mutation lease",
+      "question": {
+        "id": "column",
+        "label": "Column",
+        "kind": "buildingComponent",
+        "exampleId": "custom-column",
+        "params": {
+          "height": 3
+        }
+      },
+      "values": {
+        "column": {
+          "height": 5
+        }
+      },
+      "interactive": false,
+      "expected": {
+        "exampleId": "custom-column",
+        "params": {
+          "height": 5
+        },
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": false,
+        "authoredParams": {
+          "height": 3
+        }
+      },
+      "target": {
+        "surface": "try"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "A Fill Extension Cannot Omit Its Window",
+      "payload": {
+        "params": {},
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true,
+        "authoredParams": {}
+      }
+    },
+    {
+      "name": "A Fill Extension Cannot Address the Designer",
+      "payload": {
+        "params": {},
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true,
+        "windowId": "designer",
+        "windowKindId": "forms-blueprint",
+        "authoredParams": {}
+      }
+    },
+    {
+      "name": "An Authoring Extension Cannot Mutate a Fill Window",
+      "payload": {
+        "params": {},
+        "questionId": "column",
+        "controllerId": "forms-play",
+        "surface": "blueprint",
+        "interactive": true,
+        "windowId": "fill-1",
+        "windowKindId": "forms-try",
+        "authoredParams": {}
+      }
+    },
+    {
+      "name": "Authored Parameters Must Be an Object",
+      "payload": {
+        "params": {},
+        "authoredParams": null,
+        "questionId": "cost",
+        "controllerId": "forms-play",
+        "surface": "blueprint",
+        "interactive": true
+      }
+    }
+  ]
+}

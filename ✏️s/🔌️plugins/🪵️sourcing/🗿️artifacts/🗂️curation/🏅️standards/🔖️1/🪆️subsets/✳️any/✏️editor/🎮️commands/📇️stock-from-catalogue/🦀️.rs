@@ -5,7 +5,7 @@ use crate::schema::available_modules;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::editor_vocabulary::reset_document_effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use std::collections::HashSet;
 use semio_framework_value_derive::{FromValue, ToValue};
 

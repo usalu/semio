@@ -1,26 +1,26 @@
 //! 🎟️ Original actor and transaction custody outlives every denied ToolRun publication.
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
 use semio_framework_value::{RetirementDemand, RetainedWorkOutcome, ValueError, ValueRefusalKind};
-use semio_framework_plugin_mounted_owner::actor_capture::ActorCapture;
-use semio_framework_ui_scene::SceneDoc;
+use semio_plugin_mounted_owner::actor_capture::ActorCapture;
+use semio_ui_scene::SceneDoc;
 use crate::{ToolRunMemberEmissionOwner, ToolRunMemberOwners, tool_grant_funds};
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 use semio_framework_value::SharedUtf8;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;

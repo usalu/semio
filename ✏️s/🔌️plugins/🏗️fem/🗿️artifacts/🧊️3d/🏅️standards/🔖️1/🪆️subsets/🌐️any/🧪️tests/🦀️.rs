@@ -1,7 +1,7 @@
 //! 🧪️ Fem3d persistent snapshot laws, kept in a dedicated test crate so the model crate stays inside its source boundary.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 
 #[cfg(test)]
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::*;

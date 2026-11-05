@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFireProtectionDens
         record: "ChangedFireProtectionDensity",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Density of the protection ρ_p of the fire exposure", "Brandbeanspruchung: Rohdichte der Bekleidung ρ_p ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Density of the protection ρ_p of the fire exposure", "Brandbeanspruchung: Rohdichte der Bekleidung ρ_p ändern")
     }
 }
 

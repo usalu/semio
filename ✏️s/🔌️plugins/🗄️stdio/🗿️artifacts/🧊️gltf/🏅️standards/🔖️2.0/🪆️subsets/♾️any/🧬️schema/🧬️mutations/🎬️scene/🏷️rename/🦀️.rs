@@ -62,8 +62,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "scene-name", kind: "change-scene-name", record: "ChangedSceneName" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Scene Name", "Szenenname ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Scene Name", "Szenenname ändern")
     }
 
     fn target(&self) -> Vec<String> {

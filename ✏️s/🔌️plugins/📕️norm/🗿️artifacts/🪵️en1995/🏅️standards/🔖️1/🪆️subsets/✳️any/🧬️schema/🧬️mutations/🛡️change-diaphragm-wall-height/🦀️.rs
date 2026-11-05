@@ -10,7 +10,7 @@ pub struct ChangeDiaphragmWallHeight { pub diaphragm_id: String, pub new_value: 
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeDiaphragmWallHeight where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_diaphragm_wall_height::ChangeDiaphragmWallHeight> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "diaphragm-wall-height", kind: "change-diaphragm-wall-height", record: "ChangedDiaphragmWallHeight" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change wall height h of diaphragm {}", self.diaphragm_id), &format!("Wandhöhe h von Diaphragm {} ändern", self.diaphragm_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change wall height h of diaphragm {}", self.diaphragm_id), &format!("Wandhöhe h von Diaphragm {} ändern", self.diaphragm_id)) }
     fn target(&self) -> Vec<String> { vec![self.diaphragm_id.clone()] }
 }
 

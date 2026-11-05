@@ -8,34 +8,34 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use semio_framework_dispatch_macros::dyn_enum_close;
 use std::sync::Arc;
-use semio_framework_os_mcp_hub_remote::remote;
-use semio_framework_os_mcp_port::__semio_dispatch_ArtifactChannel;
+use semio_os_mcp_hub_remote::remote;
+use semio_os_mcp_port::__semio_dispatch_ArtifactChannel;
 use crate::hub_relay::{HubRelay, SessionDocumentPair};
-use semio_framework_os_mcp_capabilities::core_capabilities::catalog_from_descriptors;
-use semio_framework_os_mcp_catalog::catalog::Catalog;
-use semio_framework_os_mcp_foundation::clock::now_ms;
-use semio_framework_os_mcp_foundation::errors::GatewayError;
-use semio_framework_os_mcp_hub_remote::remote::{AuthorizedCatalogSnapshot, HubRemoteBinding};
-use semio_framework_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, UnboundArtifactChannel};
-use semio_framework_os_mcp_shell_channel::shell_channel::{ChannelKind, SessionChannelBinding, ShellArtifactChannel};
+use semio_os_mcp_capabilities::core_capabilities::catalog_from_descriptors;
+use semio_os_mcp_catalog::catalog::Catalog;
+use semio_os_mcp_foundation::clock::now_ms;
+use semio_os_mcp_foundation::errors::GatewayError;
+use semio_os_mcp_hub_remote::remote::{AuthorizedCatalogSnapshot, HubRemoteBinding};
+use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, UnboundArtifactChannel};
+use semio_os_mcp_shell_channel::shell_channel::{ChannelKind, SessionChannelBinding, ShellArtifactChannel};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::hub_relay::{HUB_RELAY_ACK_WAIT_MS, HubInbound, HubInboundDelivery, carries_hub_inbound, commits_with_nothing_relayed, hub_edit_refusal, hub_link_tick, plan_hub_inbound, route_session_artifact};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_catalog::catalog::CapabilityOwner;
+use semio_os_mcp_catalog::catalog::CapabilityOwner;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, load_package_descriptor, load_plugin_registry, resolve_plugin_wasm_path};
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, load_package_descriptor, load_plugin_registry, resolve_plugin_wasm_path};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_hub_remote::remote::NativeHubBindingDriver;
+use semio_os_mcp_hub_remote::remote::NativeHubBindingDriver;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_plugin_runtime::compiled_components::{ComponentBytes, activation_fault, scoped_compiled_component, shared_plugin_runtime};
+use semio_os_mcp_plugin_runtime::compiled_components::{ComponentBytes, activation_fault, scoped_compiled_component, shared_plugin_runtime};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifactChannel;
+use semio_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifactChannel;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase};
+use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
+use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
 //#region 🔖️Routing
 
@@ -167,14 +167,14 @@ fn routing_fault(error: GatewayError) -> Fault {
 /// → committed descriptor → editor app → real `PluginArtifactChannel`) for a bare `plugin_id`,
 /// differing only in where `repo_root`/`actor_label` come from.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<PluginArtifactChannel, GatewayError> {
+pub fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<PluginArtifactChannel, GatewayError> {
     open_plugin_artifact_channel_scoped(source, plugin_id, app_id, actor_label, &ActivationScope::detached(), host_driver_policy)
 }
 
 /// 🔌️ [`open_plugin_artifact_channel`] under a caller's progress and cancel. `app_id` names the app
 /// the guest instance hosts; `None` is the plugin's first editor app.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, scope: &ActivationScope, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<PluginArtifactChannel, GatewayError> {
+pub fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, scope: &ActivationScope, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<PluginArtifactChannel, GatewayError> {
     scope.enter(ActivationPhase::ResolvingComponent).map_err(activation_fault)?;
     let runtime = shared_plugin_runtime()?;
     let (compiled, descriptor) = match source.ok_or_else(|| {
@@ -315,7 +315,7 @@ fn selected_package_key(snapshot: &AuthorizedCatalogSnapshot) -> String {
 /// `open_probes`/`action_adapter`'s mutexes, which this struct never touches).
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RoutingArtifactChannel {
-    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
     pub catalog: Arc<WorkspaceCatalog>,
     pub components: Option<PluginComponentSource>,
     pub actor_label: String,
@@ -335,7 +335,7 @@ pub struct RoutingArtifactChannel {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RoutingArtifactChannel {
-    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
+    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Self {
         Self { catalog, components, actor_label, host_driver_policy, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts, hub }
     }
 

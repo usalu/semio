@@ -13,6 +13,7 @@ mod baseline_tick_sync_and_eval_json;
 
 #[path = "🔒️window-tick-latch/🦀️.rs"]
 mod window_tick_latch;
+pub use window_tick_latch::{FlowEvalWindowKey,FlowEvalWindowKeyWork,FlowEvalWindowKeyAdvance};
 
 #[path = "🧩️extension-generation-and-preview-retention/🦀️.rs"]
 mod extension_generation_and_preview_retention;

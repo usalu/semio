@@ -2,8 +2,8 @@
 //! artifact's own `IdmlMutation::ReplacePart`, so every unedited byte of every part is preserved.
 
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use semio_framework_ui_locale::Label;
+use semio_plugin::{ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+use semio_ui_locale::Label;
 use semio_s_artifact_stdio_idml_story::{set_story_content, story_pages};
 use semio_s_artifact_stdio_idml::{IdmlMutation, IdmlPackage, IdmlSnapshot, DOCUMENT_SCHEMA};
 
@@ -34,7 +34,7 @@ fn fault(code: &'static str, message: impl Into<String>) -> Fault {
 pub fn build_set_page_mutation(snapshot: &IdmlSnapshot, page: u32, item: u32, revision: &str, text: &str) -> Result<Option<IdmlMutation>, Fault> {
     let pages = story_pages(snapshot);
     let run = pages.get(page as usize).and_then(|runs| runs.get(item as usize)).ok_or_else(|| fault("stdio.idml.set-page.address", "the addressed story run does not exist"))?;
-    if semio_framework_plugin::app::DocumentWindowKit::text_revision(&run.text) != revision {
+    if semio_plugin::app::DocumentWindowKit::text_revision(&run.text) != revision {
         return Err(fault("stdio.idml.set-page.stale-revision", "the story run changed since the draft was opened"));
     }
     set_story_content(snapshot, &run.part, run.index, &run.revision, text).map_err(|error| fault(error.code(), error.code()))
@@ -72,20 +72,20 @@ impl ArtifactEditor for IdmlEditor {
     const DIALECT: Dialect = IDML_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DOCUMENT_SCHEMA;
 
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.idml@8.0", extension: ".idml", media_type: semio_s_artifact_stdio_idml::PACKAGE_MIME, binary: true })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.idml@8.0", extension: ".idml", media_type: semio_s_artifact_stdio_idml::PACKAGE_MIME, binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        snapshot.package().map_err(|error| error.to_string()).and_then(|package| package.encode()).map_err(|message| semio_framework_plugin::MediaError::Payload("artifact:native".into(), message))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        snapshot.package().map_err(|error| error.to_string()).and_then(|package| package.encode()).map_err(|message| semio_plugin::MediaError::Payload("artifact:native".into(), message))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        IdmlPackage::decode(bytes).map(IdmlSnapshot::from_package).map_err(|message| semio_framework_plugin::MediaError::Payload("artifact:native".into(), message))
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        IdmlPackage::decode(bytes).map(IdmlSnapshot::from_package).map_err(|message| semio_plugin::MediaError::Payload("artifact:native".into(), message))
     }
 
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
@@ -126,8 +126,8 @@ impl ArtifactEditor for IdmlEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -140,20 +140,20 @@ impl ArtifactEditor for IdmlEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render_windowed(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.idml@8.0/*#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -185,7 +185,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
 }
 
 /// 🧩️ The editor's manifest: the story window beside the shared snapshot details window.
-pub fn create_idml_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_idml_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(IDML_EDITOR_DIALECT)
         .document(["semio", "stdio", "idml"])
         .icon_id("file-text")

@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 2D flow app; one field per label makes every locale combination compile-checked.
     pub struct Generation2dLabels {
         sources: native_en "Sources", native_de "Quellen", reuse_en "Sources", reuse_de "Quellen";
@@ -39,8 +39,8 @@ semio_framework_ui_locale::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from the shared view model.
-pub fn generation2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Generation2dLabels {
-    semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state)
+pub fn generation2d_labels(view_state: &semio_plugin::ViewModel) -> &'static Generation2dLabels {
+    semio_plugin::resolve_labels::<Generation2dLabels>(view_state)
 }
 //#endregion 🔖️Labels
 

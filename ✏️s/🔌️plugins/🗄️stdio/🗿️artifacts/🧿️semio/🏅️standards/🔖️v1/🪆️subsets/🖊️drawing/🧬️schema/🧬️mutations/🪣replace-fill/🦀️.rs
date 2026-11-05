@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "fill", kind: "replace-fill", record: "ReplacedFill" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace fill of style \"{}\"", self.style_name), &format!("Füllung von Stil \"{}\" ersetzen", self.style_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace fill of style \"{}\"", self.style_name), &format!("Füllung von Stil \"{}\" ersetzen", self.style_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.style_name.clone()]

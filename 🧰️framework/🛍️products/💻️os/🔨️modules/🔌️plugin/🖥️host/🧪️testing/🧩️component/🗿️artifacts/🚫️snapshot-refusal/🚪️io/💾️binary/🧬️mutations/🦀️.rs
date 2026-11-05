@@ -1,6 +1,6 @@
 //! 🚪️ Native artifact representation codecs.
 use super::super::super::*;
-use semio_framework_os_kernel::{os_spr as protocol,os_store as store};
+use semio_os_kernel::{os_spr as protocol,os_store as store};
 
 impl protocol::OpBinary for Mutation {
     fn encode_op(&self)->Result<Vec<u8>,protocol::ProtocolError>{match *self{}}

@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use std::sync::OnceLock;
 use crate::notify::{bind_job_to_active_scope, job_progress_changed, release_job_binding};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::handles::{HandleKind, mint_id};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::handles::{HandleKind, mint_id};
 
 //#region 🔖️Clock
 

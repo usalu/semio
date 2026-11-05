@@ -1,31 +1,31 @@
 //! 📃️ The document window kit.
 use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition};
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin_window_kits::text_kit::TextDraftView;
-use semio_framework_plugin_window_kits::text_kit::TextWindowKit;
+use semio_ui_contract::*;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin_window_kits::text_kit::TextDraftView;
+use semio_plugin_window_kits::text_kit::TextWindowKit;
 use crate::tree_kit::TreeWindows;
 use crate::tree_kit::tree_window_item;
 use crate::tree_kit::tree_window_section;
-use semio_framework_plugin_window_kits::WindowKit;
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_plugin_window_transient::scene_surface;
-use semio_framework_plugin_interaction::ui_assembly_error;
-use semio_framework_plugin_window_transient::ui_label;
-use semio_framework_plugin_window_transient::window_kind_definition;
+use semio_plugin_window_kits::WindowKit;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_plugin_window_transient::scene_surface;
+use semio_plugin_interaction::ui_assembly_error;
+use semio_plugin_window_transient::ui_label;
+use semio_plugin_window_transient::window_kind_definition;
 
 /// 📄️ A paginated text document — one `ui_wgpu::wgpu::ui_text` child per page inside an unlabeled vertical stack.
 #[derive(Clone, Debug, PartialEq)]
@@ -196,7 +196,7 @@ impl DocumentWindowKit {
             let id = format!("page-{index}");
             let item = tree_item(ui_label((index + 1).to_string(), "document-window.page-label")?).try_id(&id).map_err(|_| ui_assembly_error("document-window.page-id"))?;
             tree_window_item(windows, item, &id, *index == 0, &[*page], |page| {
-                let mut scene = semio_framework_ui_scene::TextEditorScene::base(page.text.clone(), None, None);
+                let mut scene = semio_ui_scene::TextEditorScene::base(page.text.clone(), None, None);
                 scene.settings_json = Some("{\"readOnly\":true}".into());
                 scene_surface("content", SurfaceKind::TextEditor, &scene)
             })

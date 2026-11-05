@@ -16,8 +16,8 @@ pub struct SetDefaults {
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetDefaults {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "defaults", kind: "set-defaults", record: "SetDefaults" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Defaults", "Standardwerte setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Defaults", "Standardwerte setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["default_shot_format".into(), "default_shot_shape".into(), "default_asset_format".into()]

@@ -18,7 +18,7 @@ pub fn preview_eval_fault_notices() -> &'static [(&'static str, LocalizedLabel)]
 }
 
 fn preview_eval_session_closing() -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(PREVIEW_EVAL_SESSION_CLOSING), "the preview evaluation session is closing")
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(PREVIEW_EVAL_SESSION_CLOSING), "the preview evaluation session is closing")
 }
 
 /// 📜️ Source of record of the run's declaration (`🔣️.json` beside this file).
@@ -251,6 +251,13 @@ pub fn next_preview_eval_hop(sessions: &PreviewEvalSessions<'_>, windows: &[(Str
     }
 }
 
+#[derive(Default)]
+pub(crate) struct EvaluatedTargets{document:Option<u64>,generation:Option<u64>}
+impl EvaluatedTargets{
+ fn get(&self,target:&PreviewEvalTarget)->Option<&u64>{match target{PreviewEvalTarget::Document=>self.document.as_ref(),PreviewEvalTarget::Generation=>self.generation.as_ref()}}
+ fn insert(&mut self,target:PreviewEvalTarget,digest:u64){match target{PreviewEvalTarget::Document=>self.document=Some(digest),PreviewEvalTarget::Generation=>self.generation=Some(digest)}}
+}
+
 /// 🔗 The surface-owned half of the run, held by the instance operation owner beside the sessions: the
 /// attached preview roster the job schedules over, the live job's port its folds wake, the run the last
 /// evaluation settled under and the digest each target last evaluated.
@@ -268,7 +275,7 @@ pub struct PreviewEvalRunLink {
     /// job's close runs after the new job installed its port, and must not quiesce the fresh evaluation.
     pub(crate) job_run: Option<u64>,
     /// 🔢️ The digest of the text each target's last hop evaluated ([`preview_eval_digest`]).
-    pub(crate) evaluated: BTreeMap<PreviewEvalTarget, u64>,
+    pub(crate) evaluated: EvaluatedTargets,
 }
 
 /// ⏯️ A run action a surface has asked the host for, and the reading of the run view that answers it.
@@ -306,6 +313,8 @@ impl PreviewEvalRunLink {
         self.evaluated.insert(target, digest);
     }
 
+    pub fn evaluated_digest(&self,target:PreviewEvalTarget)->Option<u64>{self.evaluated.get(&target).copied()}
+
     /// 🧹️ Whether the job of `run` is still the one this link belongs to.
     pub(crate) fn owned_by(&self, run: u64) -> bool {
         self.job_run == Some(run)
@@ -324,7 +333,7 @@ pub trait PreviewEvalRunOwner: std::any::Any + Send {
 }
 
 pub(crate) fn run_action_effect(action: &str, args: semio_framework_value::DslValue) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(args), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(args), delay_ms: 0 }
 }
 
 /// 🎟️ The grant the run's latch bookkeeping runs under outside a job turn (the poll and the run start).
@@ -345,7 +354,7 @@ pub fn owe_moved_targets(sessions: &mut PreviewEvalSessions<'_>, link: &PreviewE
 /// finalize a complete run as soon as it is seen (the next poll then starts the fresh one), and wake a
 /// live run so it sees a changed roster. An aborted run stays down until a gesture or a moved document
 /// owes its windows again.
-pub fn preview_eval_run_effects(mut sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], current: &BTreeMap<PreviewEvalTarget, u64>, run: Option<semio_framework_plugin::ToolRunPollView<'_>>, servable: bool) -> Vec<Effect> {
+pub fn preview_eval_run_effects(mut sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], current: &BTreeMap<PreviewEvalTarget, u64>, run: Option<semio_plugin::ToolRunPollView<'_>>, servable: bool) -> Vec<Effect> {
     for target in [PreviewEvalTarget::Document, PreviewEvalTarget::Generation] {
         let identifiers = windows.iter().filter(|(_, _, window_target)| *window_target == target).map(|(window_id, _, _)| *window_id).collect::<Vec<_>>();
         let mut cursor = 0;

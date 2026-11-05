@@ -15,7 +15,7 @@ pub use rows::*;
 mod visibility;
 pub use visibility::*;
 use crate::viewport3d::picking::{entity_address, granularity, GRANULARITY_CHECK};
-use semio_framework_plugin::{DomainTopology, InteractionTopology, TopologyNode};
+use semio_plugin::{DomainTopology, InteractionTopology, TopologyNode};
 use semio_framework_value::DslValue;
 use semio_s_plugin_norm_structural_scene::StructuralScene;
 use std::collections::{BTreeMap, HashSet};

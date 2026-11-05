@@ -1,21 +1,21 @@
 //! 🧩️ World3d state components: the per-concern state structs the host composes, with the types each one owns.
 //!
-//! Crate `semio-framework-os-infinite-world-components`; a downward producer of the infinite world family (wasi-excluded except tests).
+//! Crate `semio-os-infinite-world-components`; a downward producer of the infinite world family (wasi-excluded except tests).
 
 #![cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 
-use semio_framework_os_infinite_world_model::{default_distance_reference, default_grid_factor, default_manual_lod, RefCountPool, ROTATE_SELECTION_ACTION_ID, SCALE_SELECTION_ACTION_ID, tool_run_trace, TRANSLATE_SELECTION_ACTION_ID, World3dMeshAppearance, World3dPrimitiveMaterial, World3dScalarFieldStatus, WORLD_DYNAMIC_ID_BYTE_CAPACITY, WORLD_DYNAMIC_MESH_CAPACITY, WORLD_DYNAMIC_PIXEL_CAPACITY, WORLD_INTERACTION_ID_BYTE_CAPACITY, world_mesh_ownership_complete, world_mesh_ownership_grant, world_scene_raster_pool, WorldAttractionRecord, WorldBrushPreviewRecord, WorldCatalogueDropPreviewRecord, WorldChunkingRecord, WorldDrawRebuildCursor, WorldDrawRegistry, WorldDynamicEntry, WorldDynamicFault, WorldDynamicRegistry, WorldEngagementPreviewRecord, WorldEnvironmentRecord, WorldInteractionObjectSlot, WorldInteractionState, WorldLodRecord, WorldMeshRegistry, WorldMeshSource, WorldNativeMeshAdmission, WorldOpaqueOwner, WorldPickTargetRecord, WorldReferenceRecord, WorldSceneRaster, WorldSelectionTargets, WorldSessionState, WorldSubElementPaint, WorldTargetVolumeRecord, WorldTutorialGeometry, WorldVortexRecord};
+use semio_os_infinite_world_model::{default_distance_reference, default_grid_factor, default_manual_lod, RefCountPool, ROTATE_SELECTION_ACTION_ID, SCALE_SELECTION_ACTION_ID, tool_run_trace, TRANSLATE_SELECTION_ACTION_ID, World3dMeshAppearance, World3dPrimitiveMaterial, World3dScalarFieldStatus, WORLD_DYNAMIC_ID_BYTE_CAPACITY, WORLD_DYNAMIC_MESH_CAPACITY, WORLD_DYNAMIC_PIXEL_CAPACITY, WORLD_INTERACTION_ID_BYTE_CAPACITY, world_mesh_ownership_complete, world_mesh_ownership_grant, world_scene_raster_pool, WorldAttractionRecord, WorldBrushPreviewRecord, WorldCatalogueDropPreviewRecord, WorldChunkingRecord, WorldDrawRebuildCursor, WorldDrawRegistry, WorldDynamicEntry, WorldDynamicFault, WorldDynamicRegistry, WorldEngagementPreviewRecord, WorldEnvironmentRecord, WorldInteractionObjectSlot, WorldInteractionState, WorldLodRecord, WorldMeshRegistry, WorldMeshSource, WorldNativeMeshAdmission, WorldOpaqueOwner, WorldPickTargetRecord, WorldReferenceRecord, WorldSceneRaster, WorldSelectionTargets, WorldSessionState, WorldSubElementPaint, WorldTargetVolumeRecord, WorldTutorialGeometry, WorldVortexRecord};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_world_model::WorldMeshLodEntry;
+use semio_os_infinite_world_model::WorldMeshLodEntry;
 use ui_scene::math::{ComponentSource3d, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, Vec3};
-use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
-use semio_framework_ui_declaration::ui::{World3dSnapshotDrawPermit, World3dSnapshotLease};
+use semio_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
+use semio_ui_declaration::ui::{World3dSnapshotDrawPermit, World3dSnapshotLease};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{SceneAuthoredMaterial3d, SceneMaterialAlpha3d};
-use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionSpec};
+use semio_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionSpec};
 
 /// 👻️ Projects one tutorial scene point through the live world camera into surface-local pixels.
 pub fn world3d_tutorial_scene_point(session_state: &WorldSessionState, camera_state: &WorldCameraState, position: [f64; 3]) -> Option<[f32; 2]> {

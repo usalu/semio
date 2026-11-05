@@ -4,9 +4,9 @@ use super::{
     artifact_mailbox_pair, ensure_demo_codec_registered, presence_to_bytes, ActorId, ArtifactActorConfig, ArtifactEvent, Bootstrap, ChannelBackbone, ClientFrame, CommandAckOutcome, DemoMutation, DemoSnapshot, MutationEnvelope,
     PersistenceBinding, PresencePeer, RemoteState, RuntimeFrontierSummary, ServerFrame, AckStage, ApplyOutcome,
 };
-use semio_framework_os_store_sync_native::native_actor;
-use semio_framework_os_spr::wire::RebootstrapRequired;
-use semio_framework_os_spr::ArtifactId; use semio_framework_os_spr::Edit;
+use semio_os_store_sync_native::native_actor;
+use semio_os_spr::wire::RebootstrapRequired;
+use semio_os_spr::ArtifactId; use semio_os_spr::Edit;
 use futures::StreamExt;
 use serde_json::Value;
 use std::collections::BTreeSet;
@@ -42,10 +42,10 @@ async fn parity_envelope(document_id: &str, mutation_id: &str, n: i32) -> Mutati
         finished_at: None,
     };
     let document_id = ArtifactId(document_id.into());
-    let schema = semio_framework_os_spr::SchemaId("demo/v1".to_string());
-    let mut envelopes = semio_framework_os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("envelope");
+    let schema = semio_os_spr::SchemaId("demo/v1".to_string());
+    let mut envelopes = semio_os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("envelope");
     let mut envelope = envelopes.pop().expect("one envelope");
-    envelope.mutation_id = semio_framework_os_spr::MutationId(mutation_id.into());
+    envelope.mutation_id = semio_os_spr::MutationId(mutation_id.into());
     envelope
 }
 
@@ -125,7 +125,7 @@ impl ParityHarness {
     fn drain_events(&mut self) {
         while let Ok(event) = self.events.try_recv() {
             if let ArtifactEvent::DocumentBackbone { message } = &event {
-                if let Ok(semio_framework_os_store_backbone::BackboneMessage::Retract { mutation_ids }) = semio_framework_os_store_backbone::decode_hot_backbone_message_exact(message) {
+                if let Ok(semio_os_store_backbone::BackboneMessage::Retract { mutation_ids }) = semio_os_store_backbone::decode_hot_backbone_message_exact(message) {
                     self.retracted.extend(mutation_ids);
                 }
             }
@@ -148,7 +148,7 @@ impl ParityHarness {
         loop {
             match tokio::time::timeout(std::time::Duration::from_millis(20), socket.next()).await {
                 Ok(Some(Ok(Message::Binary(bytes)))) => {
-                    let frame = semio_framework_os_spr::decode_client_frame(&bytes).await.expect("client frame").1;
+                    let frame = semio_os_spr::decode_client_frame(&bytes).await.expect("client frame").1;
                     let kind = match frame {
                         ClientFrame::SocketHelloV1 { .. } => "socketHelloV1",
                         ClientFrame::Commands { .. } => "commands",
@@ -250,10 +250,10 @@ impl ParityHarness {
                 self.actor.queue_test_outbox(vec![envelope]);
             }
             "queueTransition" => {
-                let supersede = semio_framework_os_spr::TransitionSupersede { scope: None, inputs: vec![semio_framework_os_spr::SupersededInput { target: semio_framework_os_spr::MutationId("ghost".into()), replacement: semio_framework_os_spr::InputReplacement::Withdrawn }] };
+                let supersede = semio_os_spr::TransitionSupersede { scope: None, inputs: vec![semio_os_spr::SupersededInput { target: semio_os_spr::MutationId("ghost".into()), replacement: semio_os_spr::InputReplacement::Withdrawn }] };
                 let dependencies = supersede.targets();
-                let mut envelope = semio_framework_os_spr::history_transition_envelope(&semio_framework_os_spr::HistoryTransition::Supersede(supersede), &ArtifactId(self.document_id.clone()), &ActorId(self.author.clone().into()), dependencies, semio_framework_os_spr::HybridLogicalTimestamp::new(1, 9));
-                envelope.mutation_id = semio_framework_os_spr::MutationId(dispatch["mutationId"].as_str().expect("id").into());
+                let mut envelope = semio_os_spr::history_transition_envelope(&semio_os_spr::HistoryTransition::Supersede(supersede), &ArtifactId(self.document_id.clone()), &ActorId(self.author.clone().into()), dependencies, semio_os_spr::HybridLogicalTimestamp::new(1, 9));
+                envelope.mutation_id = semio_os_spr::MutationId(dispatch["mutationId"].as_str().expect("id").into());
                 self.actor.queue_test_outbox(vec![envelope]);
             }
             "installSocketActor" => {

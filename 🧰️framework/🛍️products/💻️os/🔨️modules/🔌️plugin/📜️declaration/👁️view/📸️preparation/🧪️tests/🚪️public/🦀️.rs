@@ -1,9 +1,9 @@
-use semio_framework_plugin::*;
+use semio_plugin::*;
 #[global_allocator]
 static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_job::{StepBudget, StepContext};
-use semio_framework_ui_runtime::ComponentTree;
+use semio_ui_runtime::ComponentTree;
 
 #[path = "../🦀️.rs"]
 mod receipts;
@@ -29,7 +29,7 @@ impl ArtifactApp for PreparationApp {
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
-    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{ Ok(NoConfig::default()) })}
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{ Ok(NoConfig::default()) })}
     async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view: Option<&ViewModel>, _draft: &DraftView<'_, Self::Draft>, _engines: &semio_framework_2d_compute::EngineHandles) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
         Ok(Emit::default())
     }

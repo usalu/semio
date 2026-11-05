@@ -1,10 +1,10 @@
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidGroup};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{World3dScene, WorldProjectionConfig};
+use semio_plugin::{World3dScene, WorldProjectionConfig};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
-use semio_framework_plugin::{world3d_camera_projection_json, world3d_scene, world3d_selection_json_with_granularity, MeshData, WorldSunConfig};
+use semio_plugin::{world3d_camera_projection_json, world3d_scene, world3d_selection_json_with_granularity, MeshData, WorldSunConfig};
 #[allow(unused_imports)]
 use semio_framework_value::{DslValue, ToValue};
 #[allow(unused_imports)]

@@ -112,9 +112,9 @@ impl FlowHost {
         self.pending_baseline_publication=Some(FlowBaselinePublication{revision:self.evaluation_revision,display:Some(FlowDisplayCursor::new()),snapshot:Some(snapshot),channels:Some(channels),shared_snapshot:None,shared_channels:None,generation,converged,pending:Vec::new(),remaining:Vec::new()});Ok(())
     }
     /// 🌊️ Moves the evaluator's original wave and remaining rows together with its channel authority.
-    pub(in super::super) fn begin_work_publication(&mut self,output:semio_framework_os_flow_host_source::work::FlowEvaluationCompletion)->Result<(),(ValueError,semio_framework_os_flow_host_source::work::FlowEvaluationCompletion)>{
+    pub(in super::super) fn begin_work_publication(&mut self,output:semio_os_flow_host_source::work::FlowEvaluationCompletion)->Result<(),(ValueError,semio_os_flow_host_source::work::FlowEvaluationCompletion)>{
         if !self.baseline_publication_terminal_is_empty(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original Work publication is already pending"),output))}
-        let semio_framework_os_flow_host_source::work::FlowEvaluationCompletion{snapshot,channels,remaining,pending_extensions,generation}=output;
+        let semio_os_flow_host_source::work::FlowEvaluationCompletion{snapshot,channels,remaining,pending_extensions,generation}=output;
         self.pending_baseline_publication=Some(FlowBaselinePublication{revision:self.evaluation_revision,display:Some(FlowDisplayCursor::new()),snapshot:Some(snapshot),channels:Some(channels),shared_snapshot:None,shared_channels:None,generation,converged:remaining.is_empty(),pending:pending_extensions,remaining});Ok(())
     }
     pub fn pending_evaluation_ids(&self)->&[String]{&self.pending_remaining}

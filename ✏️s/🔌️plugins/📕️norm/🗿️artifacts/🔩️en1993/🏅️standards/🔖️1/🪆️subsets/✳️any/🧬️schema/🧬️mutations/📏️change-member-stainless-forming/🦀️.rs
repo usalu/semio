@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberStainlessFor
         record: "ChangedMemberStainlessForming",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stainless member kind (1-4) of the member", "Bauteil: Nichtrostender Stab (1-4) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stainless member kind (1-4) of the member", "Bauteil: Nichtrostender Stab (1-4) ändern")
     }
 }
 

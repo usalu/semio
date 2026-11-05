@@ -8,7 +8,7 @@ use semio_s_artifact_block_3d_model::{Block3dSnapshot, Block3dVortexKind};
 use semio_s_artifact_block_3d_editor_config::Block3dConfig;
 use crate::edit::windows::world::transient::Block3dBrushPreview;
 use semio_s_plugin_block::BlockRepresentation;
-use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
+use semio_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
 
 use semio_framework_pack_json::{json, parse, Value};
 

@@ -1,5 +1,5 @@
 use crate::PROCEDURE_DIALECT;
-use semio_framework_plugin::{app::ArtifactViewer, app::Viewer};
+use semio_plugin::{app::ArtifactViewer, app::Viewer};
 use crate::viewer::procedure::*;
 
 #[semio_framework_async_macros::async_test]

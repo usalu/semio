@@ -68,8 +68,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "skin", kind: "delete-skin", record: "DeletedSkin" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete Skin", "Skin löschen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Delete Skin", "Skin löschen")
     }
 
     fn target(&self) -> Vec<String> {

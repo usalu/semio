@@ -9,7 +9,7 @@
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
 // #region 🔖️Imports
-use semio_framework_os_flow::mesh::*;
+use semio_os_flow::mesh::*;
 // #endregion 🔖️Imports
 
 // #region 🧰️Fixtures

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFootbridgeLoadedLe
         record: "ChangedFootbridgeLoadedLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change loaded length L of the footbridge", "Fußgängerbrücke: Belastete Länge L ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change loaded length L of the footbridge", "Fußgängerbrücke: Belastete Länge L ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

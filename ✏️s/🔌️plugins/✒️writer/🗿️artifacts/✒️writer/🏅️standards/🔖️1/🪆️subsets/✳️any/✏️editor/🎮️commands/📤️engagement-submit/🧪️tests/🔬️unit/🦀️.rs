@@ -1,12 +1,12 @@
 use crate::editor::writer::commands::engagement_submit::EngagementSubmit;
 use crate::editor_unit_tests::context::new_app;
 use crate::editor::writer::{WriterCommand, WRITER_PLAY_WINDOW_KIND};
-use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance, WindowMeasure};
+use semio_plugin::{PluginApp, ViewModel, ViewWindowInstance, WindowMeasure};
 
 const WINDOW_ID: &str = "writer-main-test";
 
 fn view() -> ViewModel {
-    ViewModel { window_instances: vec![ViewWindowInstance { id: WINDOW_ID.into(), window_kind_id: WRITER_PLAY_WINDOW_KIND.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { window_instances: vec![ViewWindowInstance { id: WINDOW_ID.into(), window_kind_id: WRITER_PLAY_WINDOW_KIND.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]

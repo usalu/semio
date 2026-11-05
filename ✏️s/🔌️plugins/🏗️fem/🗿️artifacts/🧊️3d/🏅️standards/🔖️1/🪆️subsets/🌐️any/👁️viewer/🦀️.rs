@@ -7,21 +7,21 @@
 use crate::viewer::fem3d::modes::view;
 use crate::viewer::fem3d::modes::view::windows::model;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -62,8 +62,8 @@ impl ArtifactViewer for Fem3dViewer {
     const DIALECT: Dialect = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::FEM3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA;
 
-    fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_framework_plugin::MountedOwnerPhaseV1> {
-        (!semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)).then_some(semio_framework_plugin::MountedOwnerPhaseV1::Maintenance)
+    fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_plugin::MountedOwnerPhaseV1> {
+        (!semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
@@ -74,11 +74,11 @@ impl ArtifactViewer for Fem3dViewer {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id)
     }
 
-    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure> {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_step(instance_id, cx, grant)
     }
 
-    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure> {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(instance_id, cx, grant)
     }
 
@@ -86,15 +86,15 @@ impl ArtifactViewer for Fem3dViewer {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)
     }
 
-    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_framework_plugin::WindowConfigOwnerRegistry, view: Option<&semio_framework_plugin::ViewModel>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
+    fn mounted_job_prepare_snapshot_read(operation: semio_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_plugin::WindowConfigOwnerRegistry, view: Option<&semio_plugin::ViewModel>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::prepare_snapshot_read(operation, snapshot, windows, view, grant)
     }
 
     /// 👁️ Real, non-empty default scene: the artifact's own shared boot document (the bundled `default`
     /// example DSL), the very same one `Fem3dPlayApp::initial_snapshot` boots — see
     /// `semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::fem3d_boot_snapshot`.
-    fn reference_birth()->Option<fn()->Result<Fem3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
-        semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().map_err(|error|semio_framework_plugin::reference_birth_fault("fem3d bundled boot document",error))
+    fn reference_birth()->Option<fn()->Result<Fem3dSnapshot,semio_plugin::Fault>>{Some(||{
+        semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().map_err(|error|semio_plugin::reference_birth_fault("fem3d bundled boot document",error))
     })}
 
     /// 👁️ Structurally read-only: the sole `Fem3dViewCommand::Noop` variant never carries a config
@@ -106,22 +106,22 @@ impl ArtifactViewer for Fem3dViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(_owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::reconcile(doc)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             model::BODY_KEY => semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::with_live_visual(doc.render_operation(), |visual| model::render(doc.snapshot, visual)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem3d viewer unknown-body label admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem3d viewer unknown-body label admission failed")),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer
@@ -130,14 +130,14 @@ impl ArtifactViewer for Fem3dViewer {
 /// 🧱️ Scalar `.mode(..)`/`.window_kind(..)` builder calls throughout — matches the sibling editor
 /// module's manifest style (its own `create_fem3d_app`), never a `ModeDefinition`/
 /// `WindowKindDefinition` passthrough.
-pub fn create_fem3d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_fem3d_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::FEM3D_DIALECT)
         .document(["semio", "fem", "fem3d"])
         .icon_id("fem-app")
-        .mode(view::FEM3D_VIEW_MODE_VIEW, semio_framework_ui_locale::LocalizedLabel::native("View", "Ansicht"), "eye")
+        .mode(view::FEM3D_VIEW_MODE_VIEW, semio_ui_locale::LocalizedLabel::native("View", "Ansicht"), "eye")
         .default_mode_id(view::FEM3D_VIEW_MODE_VIEW)
-        .window_kind(model::WINDOW_KIND_ID, semio_framework_ui_locale::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_framework_ui_contract::SurfaceKind::World3d, "fem-model")
-        .default_layout(semio_framework_plugin::create_default_layout(&[model::WINDOW_KIND_ID.into()], "row", None, None))
+        .window_kind(model::WINDOW_KIND_ID, semio_ui_locale::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_ui_contract::SurfaceKind::World3d, "fem-model")
+        .default_layout(semio_plugin::create_default_layout(&[model::WINDOW_KIND_ID.into()], "row", None, None))
         .build_definition()
 }
 //#endregion 🔖️Manifest

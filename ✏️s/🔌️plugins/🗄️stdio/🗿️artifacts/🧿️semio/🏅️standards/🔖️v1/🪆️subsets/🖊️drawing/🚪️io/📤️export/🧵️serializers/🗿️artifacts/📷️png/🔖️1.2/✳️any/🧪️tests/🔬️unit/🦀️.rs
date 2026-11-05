@@ -1,5 +1,5 @@
 use semio_s_artifact_stdio_semio_drawing_png_export::*;
-use semio_framework_plugin::ArtifactSerializer;
+use semio_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};

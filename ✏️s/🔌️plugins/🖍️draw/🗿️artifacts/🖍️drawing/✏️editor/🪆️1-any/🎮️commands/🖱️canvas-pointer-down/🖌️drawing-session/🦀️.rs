@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️DrawingSession
 /// 🕹️ Owned snapshot of the framework's `"strokes"` and `"points"` selections, read once per dispatch and threaded through
-/// `DrawingSession` to every command handler — decouples handlers from `semio_framework_plugin::app::InteractionView`.
+/// `DrawingSession` to every command handler — decouples handlers from `semio_plugin::app::InteractionView`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DrawingInteractionSnapshot {
     pub ids: Vec<String>,

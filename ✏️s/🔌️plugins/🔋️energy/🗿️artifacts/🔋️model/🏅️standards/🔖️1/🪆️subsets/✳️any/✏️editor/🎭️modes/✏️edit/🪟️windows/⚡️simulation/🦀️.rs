@@ -7,22 +7,22 @@
 
 use crate::editor_config::EnergyModelConfig;
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable,HasBase,HasChildren,InputKind};
+use semio_plugin::plugin_app_close_prelude::{Buildable,HasBase,HasChildren,InputKind};
 use crate::tools;
 use crate::editor_config::ResultField;
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::OriginalToolRunView as ToolRunView;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::BuiltNode;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::OriginalToolRunView as ToolRunView;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 use semio_framework_tool_run::{ToolRunAction, ToolRunState};
 
 //#region 🔖️Constants
@@ -198,7 +198,7 @@ fn keyboard_node(locale: Locale) -> TreeNodeView {
 /// the run before starting it.
 pub fn render(run: Option<ToolRunView<'_>>, settings: &EnergyModelConfig, run_period: &crate::snapshot::state::RunPeriod, weather: Option<&store::ArtifactLink>, locale: Locale) -> BuiltNode {
     let roots = vec![run_nodes(run, locale), settings_nodes(settings, run_period, weather, locale), keyboard_node(locale)];
-    let mut tree = TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Energy simulation UI unavailable")).expect("static label is valid"));
+    let mut tree = TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_plugin::built_text_node(semio_ui_locale::Label::data("Energy simulation UI unavailable")).expect("static label is valid"));
     if let Ok((select,clear))=weather_controls(weather,locale){
         tree.children.try_push(select).expect("weather selector fits the authored simulation tree");
         tree.children.try_push(clear).expect("weather clear action fits the authored simulation tree");
@@ -217,26 +217,26 @@ mod tests;
 /// 📢️ The native accessibility record drives actual live announcements and busy attributes.
 fn announce_run(node: &mut BuiltNode, busy: bool) {
     if node.key.as_str() == "energy-simulation-live-region" {
-        node.accessibility.live = semio_framework_plugin::plugin_app_close_prelude::Liveness::Polite;
-        if busy { node.activity = semio_framework_plugin::plugin_app_close_prelude::Activity::Loading; }
+        node.accessibility.live = semio_plugin::plugin_app_close_prelude::Liveness::Polite;
+        if busy { node.activity = semio_plugin::plugin_app_close_prelude::Activity::Loading; }
         return;
     }
     for child in node.children.iter_mut() { announce_run(child, busy); }
 }
 
 /// 🌦️ Native linked-artifact selection and clearing use the document's ordinary mutation history.
-fn weather_controls(weather:Option<&store::ArtifactLink>,locale:Locale)->semio_framework_plugin::UiAssemblyResult<(BuiltNode,BuiltNode)>{
+fn weather_controls(weather:Option<&store::ArtifactLink>,locale:Locale)->semio_plugin::UiAssemblyResult<(BuiltNode,BuiltNode)>{
     use crate::editor_commands::{energy_model_action,ui_label,SELECT_WEATHER_FILE_ACTION_ID,CLEAR_WEATHER_FILE_ACTION_ID};
-    use semio_framework_plugin::{UiText,PluginAssemblyError,Trigger};
+    use semio_plugin::{UiText,PluginAssemblyError,Trigger};
     let refusal=||PluginAssemblyError::new("energy.weather.control","Weather artifact controls exceed their native UI extent");
     let uri=weather.map(|link|link.target.to_uri()).unwrap_or_default();
     let value=UiText::try_from_str(&uri).ok_or_else(refusal)?;
     let (action,_)=energy_model_action(SELECT_WEATHER_FILE_ACTION_ID,None)?;
-    let input=semio_framework_ui_contract::input(InputKind::Text).value(value).commit(UiText::try_from_str("blur").unwrap())
+    let input=semio_ui_contract::input(InputKind::Text).value(value).commit(UiText::try_from_str("blur").unwrap())
         .try_id("energy-weather-address-input").map_err(|_|refusal())?.try_on(Trigger::Commit,action).map_err(|_|refusal())?.try_build().map_err(|_|refusal())?;
-    let select=semio_framework_ui_contract::tree_item(ui_label(say(locale,"EPW artifact address","EPW-Artefaktadresse"))?)
+    let select=semio_ui_contract::tree_item(ui_label(say(locale,"EPW artifact address","EPW-Artefaktadresse"))?)
         .try_id("energy-weather-address").map_err(|_|refusal())?.try_child(input).map_err(|_|refusal())?.try_build().map_err(|_|refusal())?;
-    let mut clear=semio_framework_plugin::tree_item_with_action("energy-weather-clear",ui_label(say(locale,"Clear weather artifact","Wetterartefakt lösen"))?,None,energy_model_action(CLEAR_WEATHER_FILE_ACTION_ID,None)?)?;
+    let mut clear=semio_plugin::tree_item_with_action("energy-weather-clear",ui_label(say(locale,"Clear weather artifact","Wetterartefakt lösen"))?,None,energy_model_action(CLEAR_WEATHER_FILE_ACTION_ID,None)?)?;
     clear.disabled=weather.is_none();
     Ok((select,clear))
 }

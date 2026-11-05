@@ -5,10 +5,10 @@
 //! never touches, so this file never reaches into the editor module for it.
 
 use crate::ProcedureScene;
-use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TextView, TextWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `ProcedureSnapshot -> UiNode` read: the compiled text of the document's own working
 /// `Path`, always `read_only: true` (a viewer never emits a `replace-text` command).
-pub fn render(scene: &ProcedureScene) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &ProcedureScene) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let path = &scene.path;
     TextWindowKit::render(&TextView { text: imperative_engine::compile_to_text(&path), language: Some("imperative".into()) })
 }

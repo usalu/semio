@@ -4,7 +4,7 @@
 
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the curation app; one field per label makes every locale combination compile-checked.
     pub struct SourcingLabels {
         window_pool: native_en "Pool", native_de "Pool", reuse_en "Pool", reuse_de "Pool";
@@ -34,8 +34,8 @@ semio_framework_ui_locale::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-pub fn sourcing_curation_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static SourcingLabels {
-    semio_framework_plugin::resolve_labels::<SourcingLabels>(view_state)
+pub fn sourcing_curation_labels(view_state: &semio_plugin::ViewModel) -> &'static SourcingLabels {
+    semio_plugin::resolve_labels::<SourcingLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

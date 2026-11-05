@@ -3,7 +3,7 @@
 use crate::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use std::collections::BTreeMap;
 
 pub use semio_s_procedural_core_generation_sqlite_native::{

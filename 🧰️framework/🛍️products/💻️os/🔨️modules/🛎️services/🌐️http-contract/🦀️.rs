@@ -235,8 +235,8 @@ pub trait AsyncHttpTransport: Send + Sync {
 // 🔀️ dedyn-fw-os-misc: DELIBERATELY left `dyn` — a reasoned exception, not an oversight. `call` is
 // plain sync (no `async fn`), so `dyn HttpTransport` is not an E0038 violation and stays R1-legal.
 // Closing it fully would need EITHER (a) `dyn_enum_close!`, impossible here: implementors span two
-// crates in a one-directional dependency (`semio-framework-os-kernel`'s `📇️directory::
-// UreqHttpTransport` implements a trait `semio-framework-os-services` defines, so `os-services`
+// crates in a one-directional dependency (`semio-os-kernel`'s `📇️directory::
+// UreqHttpTransport` implements a trait `semio-os-services` defines, so `os-services`
 // cannot name `UreqHttpTransport` without a reverse dependency) — OR (b) generics, which would force
 // the widely-referenced, non-generic `HttpPool`/`HttpPoolTransport` (60 references across 5 files,
 // including `📺️renderer/…/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` — flagged in `📌️important.md` as live/shared with

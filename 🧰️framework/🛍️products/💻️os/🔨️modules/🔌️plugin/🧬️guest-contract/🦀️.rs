@@ -1,4 +1,4 @@
-//! 🧬️ `semio-framework-plugin-guest-contract`: the vocabulary every plugin guest runtime shares — the owned interpreter's
+//! 🧬️ `semio-plugin-guest-contract`: the vocabulary every plugin guest runtime shares — the owned interpreter's
 //! runtime and the Wasmtime component host alike. Guest call faults ([`TurnFault`], [`PluginHostError`]), job budgets and
 //! steps, codec document pairs, caller cancellation, the original operation authority wire, the original actor context and
 //! the SQLite snapshot wire. It links no engine.
@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-pub use semio_framework_plugin_abi::{operation_authority, return_walk_template, sqlite_wire};
+pub use semio_plugin_abi::{operation_authority, return_walk_template, sqlite_wire};
 #[path = "🎟️original-actor-context/🦀️.rs"]
 pub mod original_actor_context;
 
@@ -20,7 +20,7 @@ static GUEST_CONTRACT_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_f
 /// 🗝️ Conflicting ownership of one composer route.
 #[derive(Debug)]
 pub struct IoRouteConflict {
-    pub key: semio_framework_os_kernel::io::IoKey,
+    pub key: semio_os_kernel::io::IoKey,
     pub existing_plugin: String,
     pub incoming_plugin: String,
 }

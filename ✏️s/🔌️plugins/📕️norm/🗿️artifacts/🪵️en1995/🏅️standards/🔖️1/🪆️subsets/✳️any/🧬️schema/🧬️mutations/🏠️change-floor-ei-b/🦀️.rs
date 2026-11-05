@@ -10,7 +10,7 @@ pub struct ChangeFloorEiB { pub floor_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFloorEiB where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_floor_ei_b::ChangeFloorEiB> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "floor-ei-b", kind: "change-floor-ei-b", record: "ChangedFloorEiB" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change flexural stiffness across (ei)_b of floor {}", self.floor_id), &format!("Biegesteifigkeit quer (EI)_b von Floor {} ändern", self.floor_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change flexural stiffness across (ei)_b of floor {}", self.floor_id), &format!("Biegesteifigkeit quer (EI)_b von Floor {} ändern", self.floor_id)) }
     fn target(&self) -> Vec<String> { vec![self.floor_id.clone()] }
 }
 

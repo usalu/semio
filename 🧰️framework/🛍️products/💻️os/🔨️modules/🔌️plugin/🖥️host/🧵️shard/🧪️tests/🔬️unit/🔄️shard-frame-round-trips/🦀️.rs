@@ -101,7 +101,7 @@ async fn grant_with_no_envelopes_does_not_issue_a_batch() {
     ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     let driven = pump(&mut shard).await.expect("pump");
     assert_eq!(driven, 0, "no envelopes bundled — nothing to drive yet");

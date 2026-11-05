@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete node \"{}\"", self.id.value), &format!("Knoten \"{}\" löschen", self.id.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete node \"{}\"", self.id.value), &format!("Knoten \"{}\" löschen", self.id.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]

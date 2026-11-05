@@ -66,10 +66,10 @@ fn generation2d_retained_reduce(
     command: &Generation2dCommand,
     snapshot: &Generation2dSnapshot,
     config: &Generation2dConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     operation: &AppOperationContext,
     session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Fault> {
@@ -95,18 +95,18 @@ fn generation2d_retained_reduce(
 /// `Generation2dInstanceOperationOwner` for why a per-dispatch session cannot carry a continuation.
 pub(super) struct Generation2dSessionCommandWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
 }
 
 impl Generation2dSessionCommandWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner, consumed: false }
     }
 }
 
 /// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
-pub(super) fn command_work_step_demands<A: semio_framework_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
     Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
 }
 
@@ -120,7 +120,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
         command: &Generation2dCommand,
         snapshot: &Generation2dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     ) -> Option<usize> {
         generation2d_bounded_extent(command, snapshot, interaction)
     }
@@ -159,9 +159,9 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
 /// preview's evaluation is published into the app transient its window renders.
 pub(super) struct Generation2dFlowEvalWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
-    pub(super) receiver:Option<semio_framework_os_flow::FlowEvaluationReplyReceiver>,
+    pub(super) receiver:Option<semio_os_flow::FlowEvaluationReplyReceiver>,
     pub(super) closing:bool,
 }
 
@@ -175,7 +175,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
         command: &Generation2dCommand,
         snapshot: &Generation2dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     ) -> Option<usize> {
         let kind = match command {
             Generation2dCommand::FlowEvalTick(payload) => payload.window_kind_id.as_str(),
@@ -187,9 +187,9 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
 
     fn receive_original_command(&mut self,command:&mut Generation2dCommand,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Generation2dCommand::FlowEvalResolve(payload)=command else{return Ok(true)};if self.receiver.is_some(){return Ok(true)}let g=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||g.maximum_items==0||g.maximum_depth==0{return Ok(false)}
-        if payload.fault.take().is_some(){cx.consume_fuel(1);return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"flow evaluation reported a fault"),cx))}
+        if payload.fault.is_some(){cx.consume_fuel(1);return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"flow evaluation reported a fault"),cx))}
         if !payload.input_valid{cx.consume_fuel(1);return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation reply routing input is malformed").with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}),cx))}
-        let output=std::mem::replace(&mut payload.output,semio_framework_value::DslValue::Null);match semio_framework_os_flow::FlowEvaluationReplyReceiver::new(output,cx){Ok(receiver)=>{self.receiver=Some(receiver);Ok(true)},Err((error,source))=>{match source{semio_framework_os_flow::FlowEvaluationReplyIntakeSource::Value(output)=>payload.output=output,semio_framework_os_flow::FlowEvaluationReplyIntakeSource::Receiver(receiver)=>self.receiver=Some(receiver)}Err(error)}}
+        let output=std::mem::replace(&mut payload.output,semio_framework_value::DslValue::Null);match semio_os_flow::FlowEvaluationReplyReceiver::new(output,cx){Ok(receiver)=>{self.receiver=Some(receiver);Ok(true)},Err((error,source))=>{match source{semio_os_flow::FlowEvaluationReplyIntakeSource::Value(output)=>payload.output=output,semio_os_flow::FlowEvaluationReplyIntakeSource::Receiver(receiver)=>self.receiver=Some(receiver)}Err(error)}}
     }
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<Generation2dPlayApp>>,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Generation2dCommand::FlowEvalResolve(payload)=input.command{let receiver=self.receiver.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original evaluation reply was not donated"))?;let target=generation2d_preview_target(&payload.window_kind_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation window kind is unknown"))?;
@@ -203,7 +203,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         if let Generation2dCommand::FlowEvalResolve(payload)=input.command{
-            if self.consumed||self.closing{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original evaluation command work is terminal").into())}let target=generation2d_preview_target(&payload.window_kind_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation window kind is unknown"))?;let receiver=self.receiver.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original evaluation reply was not donated"))?;let address=semio_framework_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};
+            if self.consumed||self.closing{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original evaluation command work is terminal").into())}let target=generation2d_preview_target(&payload.window_kind_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation window kind is unknown"))?;let receiver=self.receiver.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original evaluation reply was not donated"))?;let address=semio_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};
             let received=self.instance_owner.with_mut::<Generation2dInstanceOperationOwner,_>(|owner|{let(mut sessions,link)=owner.parts()?;let result=receiver.step(sessions.get_mut(target),&address,cx);link.wake();Ok(result)})??;
             if received{self.receiver=None;self.consumed=true;return Ok(ArtifactCommandWorkStep::Complete(Emit::default()))}return Ok(ArtifactCommandWorkStep::Progress{stage:"evaluationReceive",preview:br#"{"en":"Receiving evaluation output","de":"Auswertungsergebnis wird empfangen"}"#})
         }
@@ -288,7 +288,7 @@ pub fn generation2d_flow_eval_hop(
             let (emit, publication) = flow_eval_tick::evaluate(&payload.window_id, &payload.window_kind_id, target, doc, cfg, sessions.get_mut(target))?;
             link.note_evaluated(target, generation2d_preview_digest(target, committed.snapshot, cfg, provisional_generation));
             let transient = match (target, publication) {
-                (PreviewEvalTarget::Generation, semio_framework_os_flow::FlowEvalPublication::Changed(preview_text)) => vec![SetGenerationPreview { preview_text }.into()],
+                (PreviewEvalTarget::Generation, semio_os_flow::FlowEvalPublication::Changed(preview_text)) => vec![SetGenerationPreview { preview_text }.into()],
                 _ => Vec::new(),
             };
             Ok((emit, transient))
@@ -305,7 +305,7 @@ pub fn generation2d_flow_eval_hop(
 /// is evaluated by the `previewEval` run, never by a tick loop inside this command.
 pub(super) struct Generation2dGenerationCommandWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
 }
 
@@ -319,7 +319,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         _command: &Generation2dCommand,
         snapshot: &Generation2dSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     ) -> Option<usize> {
         GENERATION2D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(2)?)
     }
@@ -384,11 +384,11 @@ impl semio_framework::ToolJobFactory for Generation2dBoundedCommandJobFactory {
         generation2d_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBoundedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Generation2dBoundedCommandJobFactory {
     type Owner = EditorApp<Generation2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GENERATION2D_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;

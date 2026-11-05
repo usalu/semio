@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeRetainingWallPerme
         record: "ChangeRetainingWallPermeabilityMS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permeability k of the backfill (0 = low permeability: the water moves with the soil)", "Durchlässigkeit k der Hinterfüllung (0 = geringe Durchlässigkeit: das Wasser bewegt sich mit dem Boden) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permeability k of the backfill (0 = low permeability: the water moves with the soil)", "Durchlässigkeit k der Hinterfüllung (0 = geringe Durchlässigkeit: das Wasser bewegt sich mit dem Boden) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-retaining-wall-permeability-ms".into()]

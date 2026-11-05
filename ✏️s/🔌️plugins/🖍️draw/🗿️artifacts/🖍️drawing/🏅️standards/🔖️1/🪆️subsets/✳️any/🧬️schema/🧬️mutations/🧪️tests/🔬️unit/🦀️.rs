@@ -246,10 +246,10 @@ fn selection_history() -> (DrawingSnapshot, Vec<DrawingMutation>) {
 /// fresh fold of the edited log, and an overwrite finalizes exactly that state. Returns the report.
 async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], index: usize, edited: &DrawingMutation) -> protocol::ReplayReport {
     use protocol::OpBinary;
-    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(::semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
+    let mut store = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    store.install_document_store_owners_exact(::semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
     for mutation in log {
-        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection transform applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection transform applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), log.len(), "one applied operation per committed leaf");
@@ -273,7 +273,7 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     }
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
     if !report.blocks_finalize() {
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
     }
     store::os_store::test_support::close_plain_test_store(&mut store);
@@ -295,7 +295,7 @@ async fn every_selection_leaf_edited_in_history_replays_its_downstream() {
     ];
     for (index, edited) in &edits {
         let report = replay_history_edit(&base, &log, *index, edited).await;
-        assert!(!report.blocks_finalize(), "a re-parametrised {} never blocks finalizing: {report:?}", edited.label().resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En));
+        assert!(!report.blocks_finalize(), "a re-parametrised {} never blocks finalizing: {report:?}", edited.label().resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En));
         assert_eq!(report.outcomes.len(), log.len() - index, "the replay reports the edited leaf and every downstream one");
     }
 }
@@ -317,8 +317,8 @@ fn layer_references_read_their_name_and_take_the_canvas_selection() {
     let mut base = base_document();
     semio_s_artifact_draw_drawing_model::layer_base_mut(&mut base.layers[0]).name="Rectangle <Name> & Ü".into();
     let id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).to_string_owner();
-    let names = semio_framework_plugin_time_travel_panel::panel_pointer::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&base), &[id.as_str()].into_iter().collect());
-    assert_eq!(names.get(&id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()).as_deref(), Some("Rectangle <Name> & Ü"));
+    let names = semio_plugin_time_travel_panel::panel_pointer::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&base), &[id.as_str()].into_iter().collect());
+    assert_eq!(names.get(&id).map(|label| label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_owned()).as_deref(), Some("Rectangle <Name> & Ü"));
     fn references(value: &serde_json::Value, into: &mut Vec<serde_json::Value>) {
         match value {
             serde_json::Value::Object(fields) => {

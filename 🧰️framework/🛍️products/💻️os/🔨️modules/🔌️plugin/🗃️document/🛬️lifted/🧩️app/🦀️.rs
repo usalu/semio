@@ -1,21 +1,21 @@
 //! 🧩️ Lift file: 3 item(s), about 45 lines, of `📜️declaration/🧩️app/🦀️.rs` that belong to crate `document-media` (WP3).
 //!
 //! WP2 owns the source file and cuts the items here (MediaArtifact, whole_document_media, impl semio_framework_job::Orig); WP3 wires this file with one `mod` line in the crate root. Until `document-media` exists, the source module re-exports the items with `pub use`.
-use semio_framework_plugin_decl_app::media_projection_error;
+use semio_plugin_decl_app::media_projection_error;
 use semio_framework_value::DslValue;
 use semio_framework::Fault;
 use semio_framework::FaultCode;
 use semio_framework::FaultOrigin;
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use semio_framework::MediaWireFormat;
 use semio_framework::Media;
 use semio_framework::MediaPayload;
 use semio_framework::MediaType;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
-use semio_framework_plugin_decl_app::MEDIA_SCHEMA_MISMATCH_CODE;
-use semio_framework_plugin_decl_app::MediaArtifactDescriptor;
-use semio_framework_plugin_decl_app::MediaArtifactError;
+use semio_plugin_decl_app::MEDIA_SCHEMA_MISMATCH_CODE;
+use semio_plugin_decl_app::MediaArtifactDescriptor;
+use semio_plugin_decl_app::MediaArtifactError;
 
 /// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/📜️world.wit`): `descriptor` is the
 /// parsed `descriptor-json`, `data` the sibling raw-bytes field. Deliberately separate from
@@ -42,7 +42,7 @@ pub async fn whole_document_media(port: &str, schema: String, archive: &protocol
 
 impl MediaArtifact {
     /// 🎞️ Owns exact intrinsic bytes and descriptor text from one borrowed media owner.
-    pub fn encode_intrinsic(port:&str,media_type:MediaType,schema:&str,value:&DslValue,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_ ,'_>)->Result<Self,MediaArtifactError>{
+    pub fn encode_intrinsic(port:&str,media_type:MediaType,schema:&str,value:&DslValue,owner:&mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_ ,'_>)->Result<Self,MediaArtifactError>{
         let (port,schema,data)=encode_intrinsic_parts(port,schema,value,owner)?;
         Ok(Self{descriptor:MediaArtifactDescriptor{edge_id:None,port_id:Some(port),kind_id:None,media_type:Some(media_type),wire:MediaWireFormat::Intrinsic{schema},blob_hash:None},data})
     }

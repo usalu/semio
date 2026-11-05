@@ -63,7 +63,7 @@ async fn every_generation_row_verb_is_reachable_from_the_rendered_tree() {
 #[test]
 fn an_inline_rename_commit_carries_its_typed_text_as_value() {
     let args: semio_framework_value::DslValue = serde_json::json!({ "id": "generation-1", "value": "Balcony Study" }).into();
-    let command = <semio_s_artifact_procedural_3d_editor::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some((args).clone()), None).expect("renameGeneration bridges");
+    let command = <semio_s_artifact_procedural_3d_editor::Generation3dPlayApp as semio_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some((args).clone()), None).expect("renameGeneration bridges");
     let Generation3dCommand::RenameGeneration(payload) = command else { panic!("renameGeneration must bridge to its own command row") };
     assert_eq!(payload, rename_generation::RenameGeneration { id: "generation-1".into(), name: "Balcony Study".into() });
 }
@@ -101,7 +101,7 @@ async fn generation_row_affordances_are_localized_in_german() {
     let mut app = app().await;
     let ids = seed_generations(&mut app, 1).await;
     dispatch(&mut app, Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: ids[0].clone() })).await;
-    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
+    let view_state = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::De, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native) };
     let body = crate::editor_domain::editor_laws::context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS, &view_state).await;
     for german in ["Entfernen", "Generierung umbenennen", "Generierungen", "Generierung hinzufügen"] {
         assert!(body.contains(german), "the German generations tree must carry {german}: {body}");
@@ -132,8 +132,8 @@ async fn add_generation_lands_a_row_under_every_renderer_argument_shape() {
     ];
     let mut expected = 0usize;
     for (label, args) in shapes {
-        let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addGeneration", args.clone(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{label}: addGeneration must be admitted: {error:?}"));
+        let meta = semio_plugin::artifact_app_laws::meta("local");
+        semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addGeneration", args.clone(), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{label}: addGeneration must be admitted: {error:?}"));
         crate::editor_domain::editor_laws::context::settle(&mut app).await;
         expected += 1;
         let landed = snapshot(&app).generation.generations.len();
@@ -160,16 +160,16 @@ fn generations_window(json: &str) -> (u64, u64, Vec<String>) {
     (window.get("total").and_then(serde_json::Value::as_u64).unwrap_or_default(), window.get("offset").and_then(serde_json::Value::as_u64).unwrap_or_default(), rows)
 }
 
-fn generations_view(open: Option<bool>, offset: u32, rows: u32) -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel {
-        tree_windows: vec![semio_framework_plugin::TreeWindowRequest {
+fn generations_view(open: Option<bool>, offset: u32, rows: u32) -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel {
+        tree_windows: vec![semio_plugin::TreeWindowRequest {
             body_key: GENERATION_3D_PLAY_BODY_GENERATIONS.into(),
             node_key: GENERATION_3D_PLAY_GENERATIONS_SECTION.into(),
             open,
             offset,
             rows,
         }],
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 

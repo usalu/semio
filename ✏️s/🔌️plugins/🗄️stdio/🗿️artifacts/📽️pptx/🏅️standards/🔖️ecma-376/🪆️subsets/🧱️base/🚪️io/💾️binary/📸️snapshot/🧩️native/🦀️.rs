@@ -1,6 +1,6 @@
 //! 🎞️ Literal PPTX OPC and authoritative XML parts under one native control.
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
-use semio_framework_os_kernel::{
+use semio_os_kernel::{
     io_schema::IoPayload,
     sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl},
 };

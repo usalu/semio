@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-infinite-world-host"
+name = "semio-os-infinite-world-host"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-os-infinite-world-model/testkit", "semio-framework-os-infinite-world-components/testkit", "semio-framework-os-infinite-world-cursors/testkit", "semio-framework-os-infinite-world-scene/testkit", "semio-framework-os-infinite-world-bridge/testkit", "semio-framework-os-infinite-world-interaction/testkit", "dep:semio-framework-test-fixtures"]
+testkit = ["semio-os-infinite-world-model/testkit", "semio-os-infinite-world-components/testkit", "semio-os-infinite-world-cursors/testkit", "semio-os-infinite-world-scene/testkit", "semio-os-infinite-world-bridge/testkit", "semio-os-infinite-world-interaction/testkit", "dep:semio-framework-test-fixtures"]
 
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -31,48 +31,48 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 semio-framework-job = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-ui-viewport = { path = "../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+semio-ui-viewport = { path = "../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-bridge = { path = "../../../🌉️bridge/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-interaction = { path = "../../../🧵️interaction/📦️packages/🦀️rust" }
+semio-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
+semio-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust" }
+semio-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust" }
+semio-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust" }
+semio-os-infinite-world-bridge = { path = "../../../🌉️bridge/📦️packages/🦀️rust" }
+semio-os-infinite-world-interaction = { path = "../../../🧵️interaction/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-ui_gpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-framework-ui-wgpu-render" }
-semio-framework-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
-semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
-semio-framework-ui-draw-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
-semio-framework-ui-prepared = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["browser-presenter"] }
-semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
-semio-framework-ui-text = { path = "../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
-semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
-ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+ui_gpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-ui-wgpu-render" }
+semio-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-ui-prepared = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["browser-presenter"] }
+semio-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-ui-text = { path = "../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-ui-wgpu-widget-kit = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-semio-framework-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
-semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
-semio-framework-ui-draw-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
-semio-framework-ui-prepared = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
-semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
-semio-framework-ui-text = { path = "../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
-semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
-ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-ui-prepared = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
+semio-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-ui-text = { path = "../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-ui-wgpu-widget-kit = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
 
 [dev-dependencies]
-semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-infinite-world-bridge = { path = "../../../🌉️bridge/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-infinite-world-interaction = { path = "../../../🧵️interaction/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-bridge = { path = "../../../🌉️bridge/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-interaction = { path = "../../../🧵️interaction/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }

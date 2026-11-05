@@ -16,17 +16,17 @@ use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_brush_suggestions_ru
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_distribution_group, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_snapshot_from_document, semio_s_artifact_puzzle_3d_editor_session::scene_config, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceOperationOwner, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene};
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::RequestId;
-use semio_framework_plugin::ToolRunJob;
-use semio_framework_plugin::ToolRunJobPurpose;
-use semio_framework_plugin::ToolRunJobRequest;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::Effect;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::RequestId;
+use semio_plugin::ToolRunJob;
+use semio_plugin::ToolRunJobPurpose;
+use semio_plugin::ToolRunJobRequest;
+use semio_plugin::ToolRunView;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowMeasure;
 use semio_framework_tool_run::JobKindId;
 use semio_framework_tool_run::ToolRunDefinition;
 use semio_framework_tool_run::ToolRunRebasePolicy;
@@ -130,7 +130,7 @@ pub fn build_run_job<A: Puzzle3dEditor>(request: ToolRunJobRequest<'_, EditorApp
 /// run with a target is woken to re-read it. A request stays outstanding until the run view answers it (a new
 /// run for a start, no live run for an abort), so a refresh never repeats it; a gesture releases it. A faulted
 /// run is only restarted by a gesture, never by a refresh.
-pub fn run_effects(link: &mut BrushSuggestionsLink, run: Option<semio_framework_plugin::ToolRunPollView<'_>>) -> Vec<Effect> {
+pub fn run_effects(link: &mut BrushSuggestionsLink, run: Option<semio_plugin::ToolRunPollView<'_>>) -> Vec<Effect> {
     let run = run.filter(|run| run.tool_id == UTILITY_ID);
     let identity = run.map(|run| run.identity.id.run);
     let live = run.filter(|run| !run.state.is_terminal());

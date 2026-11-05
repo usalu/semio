@@ -3,7 +3,7 @@ use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlSnapshot, XmlNo
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use crate::standards::v1_0::subsets::base::io::sqlite::snapshot::{XmlNodeList, XmlDocumentOwner};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase, SqliteDatabaseLimits}, io_schema::IoPayload};
+use semio_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase, SqliteDatabaseLimits}, io_schema::IoPayload};
 
 struct Reader<'a, 'c, 'p> { bytes: &'a [u8], position: usize, binary: bool, rows: usize, limits: SqliteDatabaseLimits, control: &'c mut NativeDecodeControl<'p> }
 impl Reader<'_, '_, '_> {

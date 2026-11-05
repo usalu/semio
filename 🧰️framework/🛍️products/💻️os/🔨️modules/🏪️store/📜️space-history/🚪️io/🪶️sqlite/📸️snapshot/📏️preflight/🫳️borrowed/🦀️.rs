@@ -1,7 +1,7 @@
 //! 🫳️ Exact history wire demand borrows original checkpoint and alternative fields.
-use semio_framework_os_store_space_schema::space_history_document::{SpaceHistorySnapshot, SpaceCheckpoint, SpaceAlternative, SpaceMemberPin};
-use semio_framework_os_vcs::Author;
-use semio_framework_os_spr::HybridLogicalTimestamp;
+use semio_os_store_space_schema::space_history_document::{SpaceHistorySnapshot, SpaceCheckpoint, SpaceAlternative, SpaceMemberPin};
+use semio_os_vcs::Author;
+use semio_os_spr::HybridLogicalTimestamp;
 use semio_framework_io_sqlite_snapshot::SnapshotEncoding;
 use semio_framework_pack_json::{JsonWriteSource,JsonWriteNode as J};
 use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedRecordSpec as R,BorrowedShape as H,RecordLayout};

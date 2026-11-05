@@ -5,40 +5,40 @@
 //! 🧩️ Hooks come in three kinds. The static ones read only the action id. The ledger hooks read the two feature ledgers
 //! (`time_travel`, `tool_runs`) the instance owns and are passed explicitly. The context hooks run over [`ExtensionCtx`]
 //! or [`ExtensionRef`], the borrows the two implementations need, and build their own use-case bundle from it.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
+use semio_plugin_decl_emission::{ActionMeta, Emit};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_instance_children::children_components::ChildComposition;
-use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
+use semio_plugin_instance_children::children_components::ChildComposition;
+use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
 use semio_framework_value::DslValue;
-use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault, FaultFrom, ViewModel};
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction, PeerRoster};
+use semio_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction, PeerRoster};
 use semio_framework::kernel::InvocationResult;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_plugin_time_travel::TimeTravelLedger;
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
-use semio_framework_plugin_tool_run::ToolRunLedger;
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_time_travel::TimeTravelLedger;
+use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_run::ToolRunLedger;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 use std::marker::PhantomData;
-use semio_framework_ui_contract::BuiltNode;
-use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_ui_contract::BuiltNode;
+use semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 
 /// 🔌️ The exclusive borrows an extension's context hooks (`dispatch_action`, `drive_turn`, `render_body`, `after_app_render`) run over; the union of what the time-travel and tool-run bundles borrow.
 pub struct ExtensionCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X> {
     pub app: &'ctx mut A,
-    pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
+    pub mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,
     pub stores: &'ctx mut InstanceStores<A>,
     pub roster: &'ctx mut PeerRoster<A>,
     pub interaction: &'ctx mut LocalInteraction<A>,
@@ -144,7 +144,7 @@ pub trait InstanceExtension {
 
     /// 🔁️ Drives one maintenance turn under the caller's current retained grant; `true` ends the instance's maintenance
     /// turn here.
-    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, _retained: &mut RetainedCloneGrant, _identity: &mut EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(_ctx: &mut ExtensionCtx<'_, A, M, X>, _retained: &mut RetainedCloneGrant, _identity: &mut EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(false)
     }
 
@@ -221,7 +221,7 @@ impl<First: InstanceExtension, Rest: InstanceExtension> InstanceExtension for (F
         First::terminal_is_empty(time_travel, tool_runs) && Rest::terminal_is_empty(time_travel, tool_runs)
     }
 
-    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         *retained = cx.retained_grant();
         if First::drive_turn(ctx, retained, identity, cx).await? {
             return Ok(true);

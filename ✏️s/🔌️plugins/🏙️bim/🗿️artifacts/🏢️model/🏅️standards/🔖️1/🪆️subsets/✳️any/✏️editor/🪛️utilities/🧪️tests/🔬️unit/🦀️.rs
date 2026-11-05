@@ -5,9 +5,9 @@ use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::LabelOf
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet;
 #[allow(unused_imports)]
-use semio_framework_plugin::UtilityDefinition;
+use semio_plugin::UtilityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::UtilityRef;
+use semio_plugin::UtilityRef;
 use semio_s_artifact_bim_model_kit::editor::bim::utilities::{UTILITIES, for_window, definitions, DEFAULT_UTILITY, draws};
 
 #[semio_framework_async_macros::async_test]

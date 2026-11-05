@@ -17,7 +17,7 @@ use crate::editor::page::page_text_edit_mutation;
 use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
 use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
-use {semio_framework_plugin::built_to_component_tree,semio_framework_plugin::ArtifactEditor,semio_framework_plugin::ArtifactView,semio_framework_plugin::ComponentTree,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::DraftView,semio_framework_plugin::Editor,semio_framework_plugin::Emit,semio_framework_plugin::Fault,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoDraft,semio_framework_plugin::NoDraftMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::built_to_component_tree,semio_plugin::ArtifactEditor,semio_plugin::ArtifactView,semio_plugin::ComponentTree,semio_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_plugin::DraftView,semio_plugin::Editor,semio_plugin::Emit,semio_plugin::Fault,semio_plugin::NoConfig,semio_plugin::NoConfigMutation,semio_plugin::NoDraft,semio_plugin::NoDraftMutation,semio_plugin::NoPresence,semio_plugin::NoPresenceMutation,semio_plugin::NoTransient,semio_plugin::NoTransientMutation,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Dialect
@@ -117,19 +117,19 @@ impl ArtifactEditor for Pdf17UaEditor {
     const DIALECT: Dialect = PDF17UA_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.pdf@1.7/ua", extension: ".pdf", media_type: "application/pdf", binary: true })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.pdf@1.7/ua", extension: ".pdf", media_type: "application/pdf", binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::v1_7::subsets::base::io::export::encode_pdf(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload(semio_framework_plugin::NATURAL_FILE_PORT.into(), error.to_string()))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        crate::standards::v1_7::subsets::base::io::export::encode_pdf(snapshot).map_err(|error| semio_plugin::MediaError::Payload(semio_plugin::NATURAL_FILE_PORT.into(), error.to_string()))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload(semio_framework_plugin::NATURAL_FILE_PORT.into(), error.to_string()))
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes).map_err(|error| semio_plugin::MediaError::Payload(semio_plugin::NATURAL_FILE_PORT.into(), error.to_string()))
     }
 
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
@@ -163,12 +163,12 @@ impl ArtifactEditor for Pdf17UaEditor {
                 let edit = crate::editor::page::edit_from_action(other, args)?;
                 Ok(Pdf17UaEditorCommand::PageEdit { action: edit.action, payload: edit.payload })
             }
-            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pdf.unhandled-action"), format!("unknown pdf editor action '{other}'"))),
+            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.pdf.unhandled-action"), format!("unknown pdf editor action '{other}'"))),
         })
     }
 
-    fn reference_birth()->Option<fn()->Result<PdfSnapshot,semio_framework_plugin::Fault>>{Some(||{
-        <crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction::new("und")).map_err(|error|semio_framework_plugin::reference_birth_fault("authored blank UA owner must satisfy its profile",format_args!("{error:?}")))
+    fn reference_birth()->Option<fn()->Result<PdfSnapshot,semio_plugin::Fault>>{Some(||{
+        <crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction as semio_plugin::ArtifactBuilder>::build(crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction::new("und")).map_err(|error|semio_plugin::reference_birth_fault("authored blank UA owner must satisfy its profile",format_args!("{error:?}")))
     })}
 
     /// ✏️ Replaces the addressed page's Unicode text projection while retaining encoded text,
@@ -177,8 +177,8 @@ impl ArtifactEditor for Pdf17UaEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -194,33 +194,33 @@ impl ArtifactEditor for Pdf17UaEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale).map(built_to_component_tree),
+            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale).map(built_to_component_tree),
             crate::editor::page::TEXT_LAYER_BODY_KEY => crate::editor::page::render_text_layer(doc.snapshot, view_state.locale).map(built_to_component_tree),
             crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, "s.stdio.pdf@1.7/ua#editor", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.pdf@1.7/ua#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
             .map(built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, Self::Transient>,
+        interaction: &semio_plugin::app::InteractionView<'_>,
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == main::BODY_KEY {
             return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);
         }
@@ -277,7 +277,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_pdf17_ua_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_pdf17_ua_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(PDF17UA_DIALECT);
     let builder = builder.document(["stdio", "pdf", "1.7", "ua"]);
     let builder = builder.icon_id("file-text");

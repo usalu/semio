@@ -1,7 +1,7 @@
 use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
-use semio_framework_os_kernel::io::io_mechanism::ArchiveChildren;
+use semio_os_kernel::io::io_mechanism::ArchiveChildren;
 use semio_framework::io_schema::IoPayload;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
@@ -12,7 +12,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::in
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io::io_mechanism::Serializer;
+use semio_os_kernel::io::io_mechanism::Serializer;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]

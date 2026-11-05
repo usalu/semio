@@ -72,10 +72,10 @@ fn fresh_ids_avoid_every_collection() {
 #[test]
 fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     use pack::record as pack_rt;
-    let owner = <crate::editor::pdf17::Pdf17Editor as semio_framework_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
+    let owner = <crate::editor::pdf17::Pdf17Editor as semio_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let original_spec = crate::standards::v1_7::subsets::base::io::text::snapshot::spec();
     let original_record = crate::standards::v1_7::subsets::base::io::text::snapshot::to_record(&owner);
-    let maximum = semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
+    let maximum = semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
     let mut observer = |_| true;
     let mut native = semio_framework_value::NativeEncodeControl::new(maximum, &mut observer);
     let paid_spec = crate::standards::v1_7::subsets::base::io::text::snapshot::spec_producer().encode(&mut native).unwrap();
@@ -94,6 +94,6 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     assert_eq!(original,record_join,"paid RecordValue changes ordinary body");
     assert_eq!(original,spec_join,"paid RecordSpec changes ordinary body");
     assert_eq!(original,controlled,"controlled encoder changes exact body");
-    let shipped = semio_framework_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_framework_os_kernel::PackEncodeOptions::default()).unwrap();
+    let shipped = semio_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_os_kernel::PackEncodeOptions::default()).unwrap();
     assert_eq!(shipped,original,"actual shipped ArtifactPack runtime must use the same intrinsic Record authority as SQLite");
 }

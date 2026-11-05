@@ -1,34 +1,34 @@
 //! 🚦️ Cursor admission, dispatch and apply batch: the cursor close admission, the structural owner checks, the dispatch of commands, the apply batch, the transition installs and the inner dispatch. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
-use semio_framework_os_store_replay::PrefixSnapshot;
-use semio_framework_os_store_ledger::ArtifactStorePendingReportRetirement;
+use semio_os_spr::ColdMutation;
+use semio_os_store_replay::PrefixSnapshot;
+use semio_os_store_ledger::ArtifactStorePendingReportRetirement;
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     pub fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         let structural = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         match phase {
             ArtifactStoreCursorDisposerPhase::RuntimeOwners(0) => {
-                let original = std::mem::replace(&mut *self.log.applied_edit_ids, semio_framework_os_vcs::HistoryPageStack::empty());
+                let original = std::mem::replace(&mut *self.log.applied_edit_ids, semio_os_vcs::HistoryPageStack::empty());
                 match admit_artifact_retirement(original, grant, ArtifactStoreStringVectorRetirement::new) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, original)) => { *self.log.applied_edit_ids = original; Err(error) }
                 }
             }
             ArtifactStoreCursorDisposerPhase::RuntimeOwners(1) => {
-                let original = std::mem::replace(&mut *self.log.redo_edit_ids, semio_framework_os_vcs::HistoryPageStack::empty());
+                let original = std::mem::replace(&mut *self.log.redo_edit_ids, semio_os_vcs::HistoryPageStack::empty());
                 match admit_artifact_retirement(original, grant, ArtifactStoreStringVectorRetirement::new) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, original)) => { *self.log.redo_edit_ids = original; Err(error) }
                 }
             }
             ArtifactStoreCursorDisposerPhase::RuntimeOwners(2) => {
-                let original = std::mem::replace(&mut *self.cursor.revision_accumulator, CursorRevisionAccumulator { identity_digest: [0; 32], applied: semio_framework_os_vcs::HistoryPageStack::empty(), redo: semio_framework_os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() });
+                let original = std::mem::replace(&mut *self.cursor.revision_accumulator, CursorRevisionAccumulator { identity_digest: [0; 32], applied: semio_os_vcs::HistoryPageStack::empty(), redo: semio_os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() });
                 match admit_artifact_retirement(original, grant, ArtifactStoreRevisionAccumulatorRetirement::new) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, original)) => { *self.cursor.revision_accumulator = original; Err(error) }
@@ -111,7 +111,7 @@ where
             }
             ArtifactStoreCursorDisposerPhase::Backbone => self.close_take_backbone_retirement(grant),
             ArtifactStoreCursorDisposerPhase::Causal => {
-                let original = std::mem::replace(&mut *self.log.dag, semio_framework_os_spr::MutationDag::empty());
+                let original = std::mem::replace(&mut *self.log.dag, semio_os_spr::MutationDag::empty());
                 match admit_artifact_retirement(original, grant, ArtifactStoreMutationDagRetirement::new) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, original)) => { *self.log.dag = original; Err(error) }
@@ -164,27 +164,27 @@ where
     where
         P: Sync,
     {
-        semio_framework_os_store_engine_bundle::advance_apply_batch(&mut self.parts(), publication, body, grant, receiving)
+        semio_os_store_engine_bundle::advance_apply_batch(&mut self.parts(), publication, body, grant, receiving)
     }
 }
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     pub async fn fold_history<I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, supersessions: &EffectiveSupersessions) -> Result<P, VcsError>
     where
         I: IntoIterator<Item = S>,
         S: AsRef<str>,
-    Mutation: semio_framework_os_spr::ColdMutation<P>, {
+    Mutation: semio_os_spr::ColdMutation<P>, {
         fold_history(envelope, applied_edit_ids, supersessions).await
     }
 
-    /// 🪞️ Delegates to [`semio_framework_os_store_engine_bundle::edits_for_ids`]: the strict id-to-edit resolution of the merge.
+    /// 🪞️ Delegates to [`semio_os_store_engine_bundle::edits_for_ids`]: the strict id-to-edit resolution of the merge.
     #[inline]
     pub fn edits_for_ids(ids: &[String], edits: &HashMap<String, Edit<Mutation>>) -> Result<Vec<Edit<Mutation>>, VcsError> {
-        semio_framework_os_store_engine_bundle::edits_for_ids(ids, edits)
+        semio_os_store_engine_bundle::edits_for_ids(ids, edits)
     }
 
     /// 🌀️ The unawaited future borrows `command`, which is then moved into `dispatch_inner`
@@ -229,10 +229,10 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
-    /// 🪞️ Delegates to [`semio_framework_os_store_engine_bundle::advance_apply_batch`]: advances at most one preparation, fold, cursor, preflight or atomic move-publication unit of the batched publication.
+    /// 🪞️ Delegates to [`semio_os_store_engine_bundle::advance_apply_batch`]: advances at most one preparation, fold, cursor, preflight or atomic move-publication unit of the batched publication.
     #[inline]
 
 
@@ -261,7 +261,7 @@ where
     /// 🖋️ Authors one local history transition: stamps it on this replica's clock, records it
     /// in the event log, and materializes the projection through the same fold remote transitions
     /// take. The caller's dispatch announces it outbound with every other new event.
-    pub(super) async fn commit_transition(&mut self, transition: semio_framework_os_spr::HistoryTransition, dependencies: Vec<MutationId>) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
+    pub(super) async fn commit_transition(&mut self, transition: semio_os_spr::HistoryTransition, dependencies: Vec<MutationId>) -> Result<(), VcsError> where Mutation: semio_os_spr::ColdMutation<P> {
         let mut timestamp = self.log.clock;
         timestamp.tick(now_ms());
         let envelope = self.transition_envelope(&transition, dependencies, Vec::new(), timestamp);
@@ -272,7 +272,7 @@ where
     /// is the Report replay of exactly the resulting log, replaying otherwise (under [`Self::defer_local_replays`] a replay
     /// longer than one budget waits for later turns). All of them leave in this dispatch's outbound batch, or none is
     /// recorded.
-    pub(super) async fn install_transitions(&mut self, envelopes: Vec<semio_framework_os_spr::MutationEnvelope>, clock: HybridLogicalTimestamp, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    pub(super) async fn install_transitions(&mut self, envelopes: Vec<semio_os_spr::MutationEnvelope>, clock: HybridLogicalTimestamp, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         if let Err(error) = self.admit_history_shape(&envelopes) {
             if let Some(replayed) = replayed {
                 let _ = self.retire_replay_result(replayed);
@@ -316,7 +316,7 @@ where
     /// retained prefix folded forward (undo), or the edit's effective forwards folded onto the head (redo), records `envelope`,
     /// moves the edit between the stacks and keeps the prefixes it folded through. The edit's inverse and messages stand — its
     /// base is the projection it was last replayed on — and the announcement leaves in this dispatch's outbound batch.
-    fn adopt_tail_step(&mut self, step: TailStep, envelope: semio_framework_os_spr::MutationEnvelope, clock: HybridLogicalTimestamp) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    fn adopt_tail_step(&mut self, step: TailStep, envelope: semio_os_spr::MutationEnvelope, clock: HybridLogicalTimestamp) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let key = envelope.timestamp.cmp_key();
         let (projection, tail, recorded) = match step {
             TailStep::Undo => {
@@ -426,7 +426,7 @@ where
                     return Err(VcsError::ValidationFailed(format!("alternative {alternative_id} already exists")));
                 }
                 let dependencies = self.checkpoint_origin(&checkpoint_id).into_iter().collect();
-                self.commit_transition(semio_framework_os_spr::HistoryTransition::Branch { alternative_id: alternative_id.clone(), name, checkpoint_id }, dependencies).await?;
+                self.commit_transition(semio_os_spr::HistoryTransition::Branch { alternative_id: alternative_id.clone(), name, checkpoint_id }, dependencies).await?;
                 self.log.envelope.active_alternative_id = Some(alternative_id);
                 self.log.envelope.viewer_checkpoint_id = None;
                 self.reproject().await?;

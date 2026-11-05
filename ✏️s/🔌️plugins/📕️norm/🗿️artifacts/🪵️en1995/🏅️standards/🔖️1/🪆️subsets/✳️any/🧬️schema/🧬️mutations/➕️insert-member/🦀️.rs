@@ -10,7 +10,7 @@ pub struct InsertMember { pub index: usize, pub member: TimberMember }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertMember where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_member::RemoveMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "member", kind: "insert-member", record: "InsertedMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert member {} at #{}", self.member.id, self.index), &format!("Bauteil {} an #{} einfügen", self.member.id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert member {} at #{}", self.member.id, self.index), &format!("Bauteil {} an #{} einfügen", self.member.id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.member.id.clone()] }
 }
 

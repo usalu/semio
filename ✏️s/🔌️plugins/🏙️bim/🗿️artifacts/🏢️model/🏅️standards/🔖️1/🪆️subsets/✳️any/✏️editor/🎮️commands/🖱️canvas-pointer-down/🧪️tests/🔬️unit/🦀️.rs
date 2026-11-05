@@ -2,7 +2,7 @@ use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
 use semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY;
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::{Emit, NoConfigMutation};
+use semio_plugin::{Emit, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
 #[allow(unused_imports)]
@@ -14,12 +14,12 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::select_effect;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, Fault, NoConfig};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_pointer_down::{CanvasPointerDown, handle, merge_mode};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{demo, run};
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 /// 🖼️ A plan window 800 by 600 pixels framing the origin at 40 pixels per metre: the press at the pixel of model point (x, y) is `(400 + 40 x, 300 - 40 y)`.
 fn press_at(model: (f64, f64), shift: bool) -> CanvasPointerDown {

@@ -4,10 +4,10 @@
 //! a crate-root sibling module of `crate::tui::widget` (see that mod's `use crate::tui::label::paint_label;`).
 //! A label wider than its rect ends in an ellipsis instead of losing its tail silently.
 
-use semio_framework_ui_tui_core::cell::CellBuffer;
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
-use semio_framework_ui_tui_core::theme::{Surface, Theme};
+use semio_ui_tui_core::cell::CellBuffer;
+use semio_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::text::{display_width, elide, Elision};
+use semio_ui_tui_core::theme::{Surface, Theme};
 use crate::widget::{Align, LabelState};
 
 pub fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {

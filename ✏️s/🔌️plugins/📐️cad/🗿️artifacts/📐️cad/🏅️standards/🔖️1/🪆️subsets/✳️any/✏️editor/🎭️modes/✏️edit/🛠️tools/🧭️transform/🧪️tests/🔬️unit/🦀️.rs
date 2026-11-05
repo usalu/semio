@@ -4,8 +4,8 @@
 //! literal targets and parameters, every member edit stamped with the gesture's `TransactionRef`, and zero trace when
 //! nothing moves. The leaves stay editable: a history edit of the drag's offset replays onto any base.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_cad_cad_transform::*;
@@ -14,8 +14,8 @@ use semio_s_artifact_cad_cad_model::{snapshot::cad_pane_model, snapshot::cad_pan
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use machine::Command;
 use semio_framework_diagnostic::Fault;
-use semio_framework_plugin::app::ChildEmitPreparation;
-use semio_framework_plugin::{ArtifactView, ChildContentView, Emit};
+use semio_plugin::app::ChildEmitPreparation;
+use semio_plugin::{ArtifactView, ChildContentView, Emit};
 use std::collections::VecDeque;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
 use {semio_s_artifact_stdio_semio_model::schema::mutations::drag_elements::DragElements, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_model::schema::mutations::rotate_elements::RotateElements, semio_s_artifact_stdio_semio_model::schema::mutations::scale_elements::ScaleElements, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation};
@@ -28,8 +28,8 @@ use semio_s_artifact_cad_cad_editor::CadCommand;
 use semio_s_artifact_cad_cad_testing::sample_object;
 use semio_s_artifact_cad_cad_model::{geometry::objects_from_model_snapshot, geometry::semio_model_snapshot_from_objects};
 use protocol::{ColdMutation, Mutation};
-use semio_framework_plugin::app::ChildEmitPreparationStep;
-use semio_framework_plugin::{AppOperationContext, HistoryView, PluginApp};
+use semio_plugin::app::ChildEmitPreparationStep;
+use semio_plugin::{AppOperationContext, HistoryView, PluginApp};
 
 /// 🪆️ Two panes' composed models: the shape pane holds `object-a` and `object-b`, the building pane `object-c`, so one
 /// selection can span two panes.
@@ -99,7 +99,7 @@ fn a_committed_gesture_is_one_child_edit_per_touched_pane_under_one_transaction(
     assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty(), "an object gesture never edits the parent or the config");
     let groups: Vec<(&str, &str, usize)> = emit.child_emits.iter().map(|child| (child.slot.as_str(), child.child_id.as_str(), child.ops.len())).collect();
     assert_eq!(groups, vec![("shapeModel", "shape-model-test", 1), ("buildingModel", "building-model-test", 1)]);
-    assert_eq!(emit.child_emits[0].labels[0].resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Rotate 1 element by 28.65°");
+    assert_eq!(emit.child_emits[0].labels[0].resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Rotate 1 element by 28.65°");
 }
 
 /// 👻️ A stranger id, an identity motion, a pane without a model child and an empty request leave zero trace: no leaf,
@@ -206,7 +206,7 @@ fn a_move_interaction_commits_a_relative_drag() {
 /// 🧱️ Adds one box to the mounted app's shape pane and answers its id.
 async fn place_box(app: &mut CadFixtureApp) -> String {
     use semio_s_artifact_cad_cad_commands::object::add_object::AddObject;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject is admitted");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject is admitted");
     settle(app).await;
     pane_objects(app, CadPaneId::Shape).await.last().expect("the box is placed").id.clone()
 }
@@ -227,7 +227,7 @@ async fn a_mounted_translate_is_one_history_row_keyed_by_its_transaction() {
     let placed = place_box(&mut app).await;
     let origin_before = placed_origin(&app, &placed).await;
     let rows_before = member_rows(&mut app).await.len();
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::TranslateSelection(TranslateSelection { object_ids: vec![placed.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the translate is admitted");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::TranslateSelection(TranslateSelection { object_ids: vec![placed.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the translate is admitted");
     settle(&mut app).await;
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), rows_before + 1, "one gesture, one row: {rows:?}");
@@ -238,8 +238,8 @@ async fn a_mounted_translate_is_one_history_row_keyed_by_its_transaction() {
     assert_eq!(row.mutations.len(), 1, "one leaf: {:?}", row.mutations);
     assert_eq!(row.mutations[0].store.as_deref(), Some(store.as_str()));
     assert!(row.mutations[0].editable, "a drag's inputs are editable");
-    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 element by (1, 0, 0)");
-    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Element um (1; 0; 0) ziehen");
+    assert_eq!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 1 element by (1, 0, 0)");
+    assert_eq!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "1 Element um (1; 0; 0) ziehen");
     assert_eq!(placed_origin(&app, &placed).await[0], origin_before[0] + 1.0, "the leaf moved the box");
     assert_eq!(app.snapshot().expect("snapshot"), parent, "an object gesture never moves the parent document");
     close(&mut app);
@@ -256,8 +256,8 @@ async fn stream_translate(app: &mut CadFixtureApp, target: &str, gesture: &str, 
         ("gesture".to_string(), semio_framework_value::DslValue::String(gesture.into())),
     ];
     args.extend(phase.map(|(key, value)| (key.to_string(), value)));
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "translateSelection", Some(semio_framework_value::DslValue::Object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the streamed translate is admitted");
-    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "translateSelection", Some(semio_framework_value::DslValue::Object(args)), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the streamed translate is admitted");
+    let _ = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🪟️ The streamed gumball (design §17.4): every tick of one press stays provisional — the pane's child and the history

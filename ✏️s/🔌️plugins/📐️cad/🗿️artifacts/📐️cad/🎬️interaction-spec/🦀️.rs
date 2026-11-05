@@ -5,7 +5,7 @@
 
 
 use semio_framework_value::DslValue;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️InteractionSpec

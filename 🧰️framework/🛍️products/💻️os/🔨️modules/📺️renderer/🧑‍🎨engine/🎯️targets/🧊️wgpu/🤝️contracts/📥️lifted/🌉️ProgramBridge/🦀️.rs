@@ -14,7 +14,7 @@ pub struct ProgramFault {
     #[cfg(not(target_arch = "wasm32"))]
     pub kernel:Option<semio_framework_actor::KernelError>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
+    pub actor_call:Option<semio_plugin_host::original_actor_context::OriginalActorFixedCall>,
     #[cfg(not(target_arch = "wasm32"))]
     pub create_app_source:Option<CreateAppSourceRefusal>,
 }
@@ -54,7 +54,7 @@ impl From<semio_framework_actor::pack::PackError> for ProgramFault {
 #[cfg(not(target_arch="wasm32"))]
 impl From<semio_framework_actor::KernelError> for ProgramFault{fn from(error:semio_framework_actor::KernelError)->Self{Self{fault:None,text:String::new(),frame:None,kernel:Some(error),actor_call:None,#[cfg(not(target_arch = "wasm32"))] create_app_source:None}}}
 #[cfg(not(target_arch="wasm32"))]
-impl From<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall> for ProgramFault{fn from(call:semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:Some(call),create_app_source:None}}}
+impl From<semio_plugin_host::original_actor_context::OriginalActorFixedCall> for ProgramFault{fn from(call:semio_plugin_host::original_actor_context::OriginalActorFixedCall)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:Some(call),create_app_source:None}}}
 impl std::fmt::Display for ProgramFault {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         #[cfg(not(target_arch = "wasm32"))]

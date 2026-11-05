@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindFaceAssumedWp 
         record: "ChangedWindFaceAssumedWp",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed wind pressure on the face", "Angenommenen Winddruck auf die Fläche ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed wind pressure on the face", "Angenommenen Winddruck auf die Fläche ändern")
     }
 }
 

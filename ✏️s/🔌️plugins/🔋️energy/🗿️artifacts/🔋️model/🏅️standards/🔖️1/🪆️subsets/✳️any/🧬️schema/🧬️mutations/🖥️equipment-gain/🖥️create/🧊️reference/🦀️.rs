@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "equipment-gain", kind: "create-equipment-gain", record: "CreatedEquipmentGain" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Equipment Gain {} at index {}", self.id.0, self.index), &format!("Gerätewärmegewinn {} an Index {} erstellen", self.id.0, self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create Equipment Gain {} at index {}", self.id.0, self.index), &format!("Gerätewärmegewinn {} an Index {} erstellen", self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

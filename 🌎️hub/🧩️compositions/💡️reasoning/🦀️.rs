@@ -1,10 +1,10 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
-use semio_framework_plugin::PluginBuilder;
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -37,7 +37,7 @@ pub fn plugin() -> Result<Plugin<ReasoningApps>, PluginAssemblyError> {
 }
 
 //#region 🧪️SurfaceTests
-/// 🧪️ Contract §2.5 surface-pair proofs, using the canonical `semio_framework_plugin::artifact_app_laws`
+/// 🧪️ Contract §2.5 surface-pair proofs, using the canonical `semio_plugin::artifact_app_laws`
 /// functions (ticket 26/08/16 lane 0-F closed this SDK gap — see `📓️w0-f-report.md`).
 #[cfg(test)]
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]

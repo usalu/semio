@@ -129,7 +129,7 @@ pub struct ScissorRect {
 }
 
 impl ScissorRect {
-    pub fn from_rect(rect: semio_framework_ui_theme::geometry::Rect, _screen_h: f32) -> Self {
+    pub fn from_rect(rect: semio_ui_theme::geometry::Rect, _screen_h: f32) -> Self {
         let x = rect.x.max(0.0).floor() as u32;
         let y = rect.y.max(0.0).floor() as u32;
         let x2 = (rect.x + rect.w.max(0.0)).max(0.0).ceil() as u32;
@@ -170,12 +170,12 @@ pub struct ClipRegion {
 
 impl ClipRegion {
     /// 🪟️ Builds a bounded orthogonal clip union; callers provide non-overlapping pieces.
-    pub fn from_rects(rects: &[semio_framework_ui_theme::geometry::Rect], screen_h: f32) -> Self {
+    pub fn from_rects(rects: &[semio_ui_theme::geometry::Rect], screen_h: f32) -> Self {
         let scissors = rects.iter().map(|rect| ScissorRect::from_rect(*rect, screen_h)).filter(|rect| rect.w > 0 && rect.h > 0).collect();
         Self { scissors }
     }
 
-    pub(super) fn from_disjoint_rects(rects: &[semio_framework_ui_theme::geometry::Rect], screen_h: f32) -> Self {
+    pub(super) fn from_disjoint_rects(rects: &[semio_ui_theme::geometry::Rect], screen_h: f32) -> Self {
         let mut scissors = Vec::new();
         for rect in rects {
             let candidate = ScissorRect::from_rect(*rect, screen_h);
@@ -191,7 +191,7 @@ impl ClipRegion {
         Self { scissors }
     }
 
-    pub(super) fn source_pieces_overlap(rects: &[semio_framework_ui_theme::geometry::Rect]) -> bool {
+    pub(super) fn source_pieces_overlap(rects: &[semio_ui_theme::geometry::Rect]) -> bool {
         (0..rects.len()).any(|left| {
             (left + 1..rects.len()).any(|right| {
                 let left = rects[left];

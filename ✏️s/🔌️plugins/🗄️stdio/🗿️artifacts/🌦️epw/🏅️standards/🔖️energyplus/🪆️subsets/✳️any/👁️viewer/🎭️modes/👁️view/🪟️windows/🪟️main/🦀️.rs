@@ -4,10 +4,10 @@
 //! (`window_kind()`, the read-only variant, not the editable one).
 
 use crate::EpwSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -67,7 +67,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `EpwSnapshot -> BuiltNode` read: one row per hourly record, all 35 spec columns, no edit
 /// affordances.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &EpwSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &EpwSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect();
     let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
     TableWindowKit::render(&TableView { columns, rows })

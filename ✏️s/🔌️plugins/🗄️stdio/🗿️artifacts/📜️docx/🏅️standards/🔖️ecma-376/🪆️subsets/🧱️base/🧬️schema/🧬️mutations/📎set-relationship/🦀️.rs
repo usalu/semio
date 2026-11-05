@@ -36,8 +36,8 @@ impl SetRelationship {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRelationship {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationship", kind: "set-relationship", record: "SetRelationship" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set relationship", "Beziehung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set relationship", "Beziehung setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["opc".to_string(), "relationships".to_string(), self.owner.clone(), self.id.clone()]

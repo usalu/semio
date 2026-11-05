@@ -3,7 +3,7 @@
 use super::*;
 
 impl HeadlessWorkspace {
-    pub fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
+    pub fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Self {
         ensure_probe_codec_registered();
         let session_id = mint_session_id(&principal, 0);
         Self {
@@ -39,7 +39,7 @@ impl HeadlessWorkspace {
         Ok(())
     }
 
-    pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
+    pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
         if !path.is_dir() {
             std::fs::create_dir_all(&path).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("--folder `{}` does not exist and could not be created: {error}", path.display())))?;
         }
@@ -49,7 +49,7 @@ impl HeadlessWorkspace {
 
     /// 🧩️ A hub-bound workspace runs the HUB's components, never a build tree that happens to
     /// sit on the same disk: the hub is the authority over what code opens its documents.
-    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
+    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
         remote::validate_hub_origin(&base_url, &space_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {

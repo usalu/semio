@@ -4,7 +4,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 #[cfg(test)] use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::DecodedValue;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{docx_xml_parts_from_iter_controlled,DocxSnapshot,DocxXmlPart};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,SqliteDatabaseLimits},io_schema::IoPayload};
+use semio_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,SqliteDatabaseLimits},io_schema::IoPayload};
 use semio_s_artifact_stdio_zip::opc::native::{OpcNativeWriter,OpcNativeReader};
 use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::ownership::{XmlDocumentView,retire_xml_document};
@@ -31,13 +31,13 @@ fn read(reader:&mut OpcNativeReader<'_, '_, '_>)->Result<DocxSnapshot,ValueError
  reader.delimiter(b']')?;reader.delimiter(b']')?;if reader.position!=reader.bytes.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX native input has trailing fields"));}reader.control.checkpoint()?;let xml_parts=docx_xml_parts_from_iter_controlled(std::mem::take(&mut parts.0),reader.control)?;Ok(DocxSnapshot{schema,opc,xml_parts})
 }
 
-pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,_native_control:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<DocxSnapshot,ValueError>{match payload{IoPayload::Binary(bytes)=>input(bytes,true,control),IoPayload::Text(text)=>input(text.as_bytes(),false,control)}}
+pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,_native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<DocxSnapshot,ValueError>{match payload{IoPayload::Binary(bytes)=>input(bytes,true,control),IoPayload::Text(text)=>input(text.as_bytes(),false,control)}}
 
 
 
 
-pub(crate) fn encode(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{backing::encode(snapshot,encoding,control,native_owner)}
-pub(crate) fn encode_standalone(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<IoPayload,ValueError>{let mut progress=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(control.limits().max_allocation_bytes,&mut progress);let mut owner=semio_framework_os_kernel::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:u32::MAX as usize,maximum_copy_bytes:u32::MAX as usize,maximum_capacity_bytes:u32::MAX as usize,maximum_release_bytes:u32::MAX as usize,maximum_depth:1<<16});encode(snapshot,encoding,control,&mut owner)}
+pub(crate) fn encode(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{backing::encode(snapshot,encoding,control,native_owner)}
+pub(crate) fn encode_standalone(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<IoPayload,ValueError>{let mut progress=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(control.limits().max_allocation_bytes,&mut progress);let mut owner=semio_os_kernel::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:u32::MAX as usize,maximum_copy_bytes:u32::MAX as usize,maximum_capacity_bytes:u32::MAX as usize,maximum_release_bytes:u32::MAX as usize,maximum_depth:1<<16});encode(snapshot,encoding,control,&mut owner)}
 pub(crate) fn input(bytes:&[u8],binary:bool,control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{backing::input(bytes,binary,control)}
 pub(crate) fn decode_binary(bytes:&[u8],control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{input(bytes,true,control)}
 pub(crate) fn decode_text(text:&str,control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{input(text.as_bytes(),false,control)}

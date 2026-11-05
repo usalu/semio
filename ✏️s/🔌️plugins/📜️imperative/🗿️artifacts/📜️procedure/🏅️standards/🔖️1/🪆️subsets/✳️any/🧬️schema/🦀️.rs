@@ -148,10 +148,10 @@ impl Drop for ProcedureScene {
 }
 
 /// 🧸️ Composes the scene from the document's exact published `flow` and `text` children.
-pub fn procedure_scene_from_children(snapshot: &ProcedureSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ProcedureScene, semio_framework_plugin::Fault> {
-    let subset = |slot: &str, child_id: &str, expected: &str| -> Result<(), semio_framework_plugin::Fault> {
-        let dialect = children.dialect(slot, child_id).ok_or_else(|| semio_framework_plugin::Fault::from(format!("procedure-{slot}-child-dialect-required")))?;
-        (dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == expected).then_some(()).ok_or_else(|| semio_framework_plugin::Fault::from(format!("procedure-{slot}-child-dialect-mismatch")))
+pub fn procedure_scene_from_children(snapshot: &ProcedureSnapshot, children: &semio_plugin::app::ChildContentView) -> Result<ProcedureScene, semio_plugin::Fault> {
+    let subset = |slot: &str, child_id: &str, expected: &str| -> Result<(), semio_plugin::Fault> {
+        let dialect = children.dialect(slot, child_id).ok_or_else(|| semio_plugin::Fault::from(format!("procedure-{slot}-child-dialect-required")))?;
+        (dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == expected).then_some(()).ok_or_else(|| semio_plugin::Fault::from(format!("procedure-{slot}-child-dialect-mismatch")))
     };
     subset("flow", &snapshot.flow.child_id, "flow")?;
     subset("text", &snapshot.text.child_id, "text")?;
@@ -161,7 +161,7 @@ pub fn procedure_scene_from_children(snapshot: &ProcedureSnapshot, children: &se
 }
 
 /// 🧸️ [`procedure_scene_from_children`] over a document view.
-pub fn procedure_scene(doc: &semio_framework_plugin::ArtifactView<'_, ProcedureSnapshot>) -> Result<ProcedureScene, semio_framework_plugin::Fault> {
+pub fn procedure_scene(doc: &semio_plugin::ArtifactView<'_, ProcedureSnapshot>) -> Result<ProcedureScene, semio_plugin::Fault> {
     procedure_scene_from_children(doc.snapshot, &doc.children)
 }
 
@@ -229,15 +229,15 @@ pub fn procedure_flow_leaves(base: &Path, next: &Path) -> Vec<SemioFlowMutation>
 }
 
 /// 🧬️ Publishes flow child `leaves` as ONE edit of the exact composed `flow` child; no leaf is the empty emit.
-pub fn procedure_child_emit<C, D>(snapshot: &ProcedureSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_framework_plugin::Emit<ProcedureMutation, C, D> {
+pub fn procedure_child_emit<C, D>(snapshot: &ProcedureSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_plugin::Emit<ProcedureMutation, C, D> {
     if leaves.is_empty() {
-        return semio_framework_plugin::Emit::default();
+        return semio_plugin::Emit::default();
     }
-    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>("flow", &snapshot.flow.child_id, leaves)]), ..Default::default() }
+    semio_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>("flow", &snapshot.flow.child_id, leaves)]), ..Default::default() }
 }
 
 /// 🧰️ Applies one program edit to the composed scene and publishes its flow leaves as ONE child edit.
-pub fn procedure_edit_emit<C, D>(doc: &semio_framework_plugin::ArtifactView<'_, ProcedureSnapshot>, edit: impl FnOnce(&mut Path)) -> Result<semio_framework_plugin::Emit<ProcedureMutation, C, D>, semio_framework_plugin::Fault> {
+pub fn procedure_edit_emit<C, D>(doc: &semio_plugin::ArtifactView<'_, ProcedureSnapshot>, edit: impl FnOnce(&mut Path)) -> Result<semio_plugin::Emit<ProcedureMutation, C, D>, semio_plugin::Fault> {
     let base = procedure_scene(doc)?.path.clone();
     let mut next = base.clone();
     edit(&mut next);

@@ -3,12 +3,12 @@
 //! 🧭️ The tests are mounted unchanged from the production tree and reach the production crate through its public API only.
 #![cfg(test)]
 
-pub use semio_framework_os_directory::*;
-pub use semio_framework_os_directory_client as client;
+pub use semio_os_directory::*;
+pub use semio_os_directory_client as client;
 
 #[path = "../../🧬️schema/🧪️tests/🔬️unit"]
 pub mod schema {
-    pub use semio_framework_os_directory::schema::*;
+    pub use semio_os_directory::schema::*;
     use semio_framework_value_derive::{FromValue, ToValue};
 
     #[path = "🦀️.rs"]

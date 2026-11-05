@@ -205,8 +205,8 @@ fn cold_pair_ingress_is_an_exact_retained_native_close_participant() {
     let spr = patterned(COLD_PAIR_PAGE_MAXIMUM_BYTES + 1, 13, 5);
     let close_lifetime = ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 };
     let exact_header = header(&pack, &spr, close_lifetime, 59);
-    let key = semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime);
-    let foreign = semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime + 1);
+    let key = semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime);
+    let foreign = semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime + 1);
     let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 0), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
     ingress.preflight_close_instance(key).unwrap();

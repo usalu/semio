@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFatigueStressMaxCa
         record: "ChangedFatigueStressMaxCaseId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change stress range: Load case of the maximum", "Spannungsschwingbreite: Lastfall des Maximums ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change stress range: Load case of the maximum", "Spannungsschwingbreite: Lastfall des Maximums ändern")
     }
 }
 

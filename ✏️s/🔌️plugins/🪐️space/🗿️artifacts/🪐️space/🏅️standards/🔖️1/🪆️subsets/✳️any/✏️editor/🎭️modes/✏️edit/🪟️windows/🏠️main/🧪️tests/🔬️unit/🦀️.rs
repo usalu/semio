@@ -1,13 +1,13 @@
 
 use super::*;
 
-fn project(node: semio_framework_plugin::BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("Space row tree projection")
+fn project(node: semio_plugin::BuiltNode) -> String {
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("Space row tree projection")
 }
 
-fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&semio_framework_plugin::BuiltNode) -> R) -> R {
+fn observe<R>(node: semio_plugin::BuiltNode, inspect: impl FnOnce(&semio_plugin::BuiltNode) -> R) -> R {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| inspect(&node)));
-    let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(node);
+    let mut retirement = semio_ui_contract::BuiltTreeRetirement::new(node);
     while !retirement.terminal_is_empty() {
         let step = retirement.close_step(1, 4096).expect("Space row fixture tree remains valid");
         if !step.progressed {
@@ -21,22 +21,22 @@ fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&sem
 }
 
 /// 🎬️ The bindings a Space row's actions dispatch — each its verb on the row's ONE target.
-fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<semio_framework_ui_contract::ActionBinding> {
-    let semio_framework_ui_contract::Component::TableRow(props) = &node.component else { panic!("a Space row is one TableRow record") };
+fn buttons(node: &semio_plugin::BuiltNode) -> Vec<semio_ui_contract::ActionBinding> {
+    let semio_ui_contract::Component::TableRow(props) = &node.component else { panic!("a Space row is one TableRow record") };
     let target = props.target.as_ref().expect("a Space row carries its one target");
     assert_eq!(target.activation.as_ref().map(|verb| verb.as_str()), Some("openArtifact"), "a Space row's activation opens the artifact");
     props.row_actions.iter().map(|action| target.binding(&action.verb).expect("credited row binding")).collect()
 }
 
-fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> String {
-    let Some(semio_framework_ui_contract::UiValue::Map(args)) = binding.args.as_ref() else { panic!("Space row action carries map args") };
-    let (_, semio_framework_ui_contract::UiValue::Text(value)) = args.iter().find(|(name, _)| name.as_str() == key).expect("Space row action arg present") else { panic!("Space row action arg is text") };
+fn text_arg(binding: &semio_ui_contract::ActionBinding, key: &str) -> String {
+    let Some(semio_ui_contract::UiValue::Map(args)) = binding.args.as_ref() else { panic!("Space row action carries map args") };
+    let (_, semio_ui_contract::UiValue::Text(value)) = args.iter().find(|(name, _)| name.as_str() == key).expect("Space row action arg present") else { panic!("Space row action arg is text") };
     value.as_str().to_owned()
 }
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_node_for_the_default_document() {
-    let _ = project(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default(), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("default Space rows"));
+    let _ = project(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default(), &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("default Space rows"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -49,7 +49,7 @@ async fn render_reflects_live_presence_for_a_row() {
         presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }],
         ..Default::default()
     };
-    let json = project(render(&document, &config, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("Space rows with presence"));
+    let json = project(render(&document, &config, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("Space rows with presence"));
     assert!(json.contains("user:1, user:2"), "presence must reach the table cell: {json}");
 }
 
@@ -78,9 +78,9 @@ async fn a_directory_row_stamps_the_artifact_row_id_and_carries_only_the_safe_op
 #[semio_framework_async_macros::async_test]
 async fn render_wraps_the_table_with_a_real_create_artifact_button() {
     use crate::editor::space_index::SPACE_INDEX_CONTROLLER_ID;
-    observe(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default(), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("Space rows with create action"), |root| {
+    observe(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default(), &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("Space rows with create action"), |root| {
         let button = root.children.iter().find(|child| child.key.as_str() == "s-space-create-artifact").expect("a create-artifact button somewhere in the stack");
-        assert!(matches!(&button.component, semio_framework_ui_contract::Component::Button(_)));
+        assert!(matches!(&button.component, semio_ui_contract::Component::Button(_)));
         let binding = button.bindings.get(0).expect("create artifact button carries action");
         assert_eq!(binding.action.scope.as_str(), SPACE_INDEX_CONTROLLER_ID);
         assert_eq!(binding.action.name.as_str(), "createArtifact");

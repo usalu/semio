@@ -1,25 +1,25 @@
 //! 🔬️ Immediate-mode reference paint pipeline: the golden oracle the retained paint laws compare against.
 
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_wgpu_layout::chrome::chrome_item_bg;
-use semio_framework_ui_wgpu_layout::chrome::{foreground_on_fill, item_bg, item_text, push_control_border, push_icon, ICON_TINY, SIZE_TINY};
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode};
-use semio_framework_ui_declaration::ui::{UiControlNode, UiFieldNode, UiNode, UiSectionNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_layout::layout::tree_section_header_height;
-use semio_framework_ui_wgpu_layout::layout::TreeRowMetrics;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::{Level, Rgba, Theme};
-use semio_framework_ui_retained_tree::tree::EditState;
-use semio_framework_ui_retained_tree::tree::{NodeFlags, NodeKey, UiTree};
-use semio_framework_ui_wgpu_widget_kit::draw_text_on;
-use semio_framework_ui_wgpu_widget_kit::wrap_text;
-use semio_framework_ui_declaration::IconName;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
-use semio_framework_ui_wgpu_controls::stepper::{push_stepper_chrome, push_stepper_icon};
-use semio_framework_ui_wgpu_paint::{TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_TOGGLE_WIDTH, celebrate_color, celebrate_stroke, celebrate_turns, chrome_band_rect, color_input_swatch, field_paint_metrics, focus_ring_visible, node_selection_outline, paint_checkbox, paint_loading_border, paint_progress, paint_separator, paint_slider_travel, paint_stack_frame, paint_waiting_border, presence_overlay, section_paint_metrics, select_menu_top_for, select_popup_row_rect};
+use semio_ui_arena::NodeId;
+use semio_ui_wgpu_layout::chrome::chrome_item_bg;
+use semio_ui_wgpu_layout::chrome::{foreground_on_fill, item_bg, item_text, push_control_border, push_icon, ICON_TINY, SIZE_TINY};
+use semio_ui_declaration::ui::{UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode};
+use semio_ui_declaration::ui::{UiControlNode, UiFieldNode, UiNode, UiSectionNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER};
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_layout::layout::tree_section_header_height;
+use semio_ui_wgpu_layout::layout::TreeRowMetrics;
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::{Level, Rgba, Theme};
+use semio_ui_retained_tree::tree::EditState;
+use semio_ui_retained_tree::tree::{NodeFlags, NodeKey, UiTree};
+use semio_ui_wgpu_widget_kit::draw_text_on;
+use semio_ui_wgpu_widget_kit::wrap_text;
+use semio_ui_declaration::IconName;
+use semio_ui_locale::Label;
+use semio_ui_declaration::ui::UiTreeActionPlacement;
+use semio_ui_wgpu_controls::stepper::{push_stepper_chrome, push_stepper_icon};
+use semio_ui_wgpu_paint::{TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_TOGGLE_WIDTH, celebrate_color, celebrate_stroke, celebrate_turns, chrome_band_rect, color_input_swatch, field_paint_metrics, focus_ring_visible, node_selection_outline, paint_checkbox, paint_loading_border, paint_progress, paint_separator, paint_slider_travel, paint_stack_frame, paint_waiting_border, presence_overlay, section_paint_metrics, select_menu_top_for, select_popup_row_rect};
 
 /// 📐️ Every retained chrome metric below is the generated token's px value, never a hand-typed one
 /// — `PANEL_HEADER` is `--size-medium` (`chrome.panelHeaderHeightUiSpacing`, 22.4px, what React's
@@ -105,7 +105,7 @@ pub fn sync_interactive_state_node(tree: &mut UiTree, id: NodeId, theme: &Theme)
 pub fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelectItem], select_w: f32, select_h: f32, theme: &Theme) {
     for (index, item) in items.iter().enumerate() {
         let Some(row_id) = find_child_by_key(tree, select_id, &NodeKey::Explicit(item.value.clone())) else { continue };
-        let rect = select_popup_row_rect(select_w, index, select_h + semio_framework_ui_select_behavior::SELECT_SIDE_OFFSET, theme);
+        let rect = select_popup_row_rect(select_w, index, select_h + semio_ui_select_behavior::SELECT_SIDE_OFFSET, theme);
         if let Some(node) = tree.node_mut(row_id) {
             node.layout.x = rect.x;
             node.layout.y = rect.y;
@@ -246,7 +246,7 @@ pub fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut Fo
     let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
     let color = theme.text;
     let lines = wrap_text(atlas, node.value.as_str(), bounds.w.max(1.0), size);
-    let line_h = semio_framework_ui_text::line_height(size);
+    let line_h = semio_ui_text::line_height(size);
     for (index, line) in lines.iter().enumerate() {
         draw_text_on(draw, atlas, line, bounds.x, bounds.y + line_h * index as f32 + size, size, color);
     }
@@ -352,8 +352,8 @@ pub fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: b
         return;
     }
     let row_children: Vec<NodeId> = retained.map(|(tree, id)| tree.children(id).collect()).unwrap_or_default();
-    let menu_h = semio_framework_ui_select_behavior::select_menu_height(node.items.len(), theme);
-    let menu_top = retained.map_or(bounds.h + semio_framework_ui_select_behavior::SELECT_SIDE_OFFSET, |(tree, id)| select_menu_top_for(tree, id, bounds.h, node.items.len(), theme));
+    let menu_h = semio_ui_select_behavior::select_menu_height(node.items.len(), theme);
+    let menu_top = retained.map_or(bounds.h + semio_ui_select_behavior::SELECT_SIDE_OFFSET, |(tree, id)| select_menu_top_for(tree, id, bounds.h, node.items.len(), theme));
     let menu = Rect::new(bounds.x, bounds.y + menu_top, bounds.w, menu_h);
     draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, theme.glass(Level::Menu));
     for (index, item) in node.items.iter().enumerate() {
@@ -405,7 +405,7 @@ pub fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas
 pub fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let unit_label = node.unit_label();
     let unit_width = unit_label.as_ref().map(|label| atlas.measure_text(label, theme.font_size_body).0);
-    let control = semio_framework_ui_wgpu_layout::layout::slider_control_presentation(bounds, node.axis_position(node.value), 0.0, 1.0, unit_width, theme.gap_standard, ui_contract::FlowInline::Ltr);
+    let control = semio_ui_wgpu_layout::layout::slider_control_presentation(bounds, node.axis_position(node.value), 0.0, 1.0, unit_width, theme.gap_standard, ui_contract::FlowInline::Ltr);
     let presentation = control.slider;
     paint_slider_travel(node, node.value, presentation, theme, draw);
     let text = node.readout(node.value);
@@ -417,7 +417,7 @@ pub fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mu
 }
 
 pub fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
-    let segments @ [minus, center, plus] = semio_framework_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, theme.stroke_hairline);
+    let segments @ [minus, center, plus] = semio_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, theme.stroke_hairline);
     draw.push_scissor(bounds);
     push_stepper_chrome(draw, bounds, segments, ui_contract::FlowInline::Ltr, flags, None, theme);
     push_stepper_icon(draw, icons, "minus", minus, ui_contract::FlowInline::Ltr, theme);
@@ -468,30 +468,30 @@ pub fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags
 pub fn paint_field(tree: &UiTree, id: NodeId, node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let metrics = field_paint_metrics(tree, id, node, bounds, theme, atlas);
     let label = chrome_band_rect(bounds, metrics.label.expect("field label band"));
-    semio_framework_ui_wgpu_widget_kit::draw_text_weighted(draw, atlas, node.label.as_str(), label.x, label.y + semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE, semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE, theme.text, semio_framework_ui_text::TextWeight::Semibold);
+    semio_ui_wgpu_widget_kit::draw_text_weighted(draw, atlas, node.label.as_str(), label.x, label.y + semio_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE, semio_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE, theme.text, semio_ui_text::TextWeight::Semibold);
     if node.required.unwrap_or(false) {
-        let (label_w, _) = atlas.measure_text(node.label.as_str(), semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE);
-        semio_framework_ui_wgpu_widget_kit::draw_text_weighted(
+        let (label_w, _) = atlas.measure_text(node.label.as_str(), semio_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE);
+        semio_ui_wgpu_widget_kit::draw_text_weighted(
             draw,
             atlas,
             "*",
             label.x + label_w + theme.gap_standard * 0.5,
-            label.y + semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE,
-            semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE,
+            label.y + semio_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE,
+            semio_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE,
             theme.error,
-            semio_framework_ui_text::TextWeight::Semibold,
+            semio_ui_text::TextWeight::Semibold,
         );
     }
     if let Some((description, band)) = node.description.as_ref().zip(metrics.description) {
         let band = chrome_band_rect(bounds, band);
-        for (line, value) in wrap_text(atlas, description, band.w.max(1.0), semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).iter().enumerate() {
-            draw_text_on(draw, atlas, value, band.x, band.y + semio_framework_ui_text::line_height(semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE) * (line as f32 + 1.0), semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE, theme.text_muted);
+        for (line, value) in wrap_text(atlas, description, band.w.max(1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).iter().enumerate() {
+            draw_text_on(draw, atlas, value, band.x, band.y + semio_ui_text::line_height(semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE) * (line as f32 + 1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE, theme.text_muted);
         }
     }
     if let Some((error, band)) = node.error.as_ref().zip(metrics.error) {
         let band = chrome_band_rect(bounds, band);
-        for (line, value) in wrap_text(atlas, error, band.w.max(1.0), semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).iter().enumerate() {
-            draw_text_on(draw, atlas, value, band.x, band.y + semio_framework_ui_text::line_height(semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE) * (line as f32 + 1.0), semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE, theme.error);
+        for (line, value) in wrap_text(atlas, error, band.w.max(1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE).iter().enumerate() {
+            draw_text_on(draw, atlas, value, band.x, band.y + semio_ui_text::line_height(semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE) * (line as f32 + 1.0), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE, theme.error);
         }
     }
 }
@@ -502,16 +502,16 @@ pub fn paint_section(tree: &UiTree, id: NodeId, node: &UiSectionNode, bounds: Re
     let Some(label) = &node.label else { return };
     let Some(title) = section_paint_metrics(tree, id, node, bounds, atlas).title else { return };
     let title = chrome_band_rect(bounds, title);
-    for (line, value) in wrap_text(atlas, label.as_str(), title.w.max(1.0), semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE).iter().enumerate() {
-        semio_framework_ui_wgpu_widget_kit::draw_text_weighted(
+    for (line, value) in wrap_text(atlas, label.as_str(), title.w.max(1.0), semio_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE).iter().enumerate() {
+        semio_ui_wgpu_widget_kit::draw_text_weighted(
             draw,
             atlas,
             value,
             title.x,
-            title.y + semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE + semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT * line as f32,
-            semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE,
+            title.y + semio_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE + semio_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT * line as f32,
+            semio_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE,
             theme.text,
-            semio_framework_ui_text::TextWeight::Semibold,
+            semio_ui_text::TextWeight::Semibold,
         );
     }
 }
@@ -534,7 +534,7 @@ pub fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: 
     let mut y = bounds.y;
     for section in &node.sections {
         if let Some(label) = &section.label {
-            let collapsed = !semio_framework_ui_wgpu_layout::layout::tree_section_default_open(section);
+            let collapsed = !semio_ui_wgpu_layout::layout::tree_section_default_open(section);
             let text_color = if collapsed { theme.text_muted } else { theme.text_element };
             let label_x = bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard;
             if let Some(icons) = icons {
@@ -621,8 +621,8 @@ pub fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth:
         }
     }
     if let Some(control) = &item.control {
-        let control_height = semio_framework_ui_wgpu_layout::layout::tree_inline_control_height(control, theme);
-        let local = semio_framework_ui_wgpu_layout::layout::tree_row_control_rect_with_height(row.w, control_height, &metrics);
+        let control_height = semio_ui_wgpu_layout::layout::tree_inline_control_height(control, theme);
+        let local = semio_ui_wgpu_layout::layout::tree_row_control_rect_with_height(row.w, control_height, &metrics);
         let control_rect = Rect::new(row.x + local.x, row.y + local.y, local.w, local.h);
         paint_control(control, control_rect, theme, atlas, icons, draw);
     }

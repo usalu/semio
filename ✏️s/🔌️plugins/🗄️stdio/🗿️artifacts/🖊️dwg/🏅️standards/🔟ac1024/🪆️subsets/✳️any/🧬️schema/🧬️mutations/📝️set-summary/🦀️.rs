@@ -16,8 +16,8 @@ pub struct SetSummary {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetSummary {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "summary", kind: "set-summary", record: "SetSummary" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set summary info", "Zusammenfassung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set summary info", "Zusammenfassung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

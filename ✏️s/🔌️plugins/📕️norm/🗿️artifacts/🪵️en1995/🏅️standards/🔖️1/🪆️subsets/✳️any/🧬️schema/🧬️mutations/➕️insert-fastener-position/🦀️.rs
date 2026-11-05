@@ -10,7 +10,7 @@ pub struct InsertFastenerPosition { pub fastener_id: String, pub index: usize, p
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertFastenerPosition where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_fastener_position::RemoveFastenerPosition> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "fastener-position", kind: "insert-fastener-position", record: "InsertedFastenerPosition" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert position {} into fastener {} at #{}", self.position.id, self.fastener_id, self.index), &format!("Lage {} in Verbindungsmittelbild {} an #{} einfügen", self.position.id, self.fastener_id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert position {} into fastener {} at #{}", self.position.id, self.fastener_id, self.index), &format!("Lage {} in Verbindungsmittelbild {} an #{} einfügen", self.position.id, self.fastener_id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.fastener_id.clone(), self.position.id.clone()] }
 }
 

@@ -1,8 +1,8 @@
 pub(crate) mod context {
     
     use crate::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type Block2dApp = VcsArtifactApp<EditorApp<Block2dPlayApp>>;
     
@@ -11,7 +11,7 @@ pub(crate) mod context {
     /// without its exact terminal-empty shallow-shell witness". Dereferences to the app and drains the
     /// same retained close ladder (`PluginApp::close_step`) the runtime uses on the way out.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct Block2dAppFixture(pub Block2dApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct Block2dAppFixture(pub Block2dApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
     
     impl std::ops::Deref for Block2dAppFixture {
         type Target = Block2dApp;
@@ -29,7 +29,7 @@ pub(crate) mod context {
     impl Drop for Block2dAppFixture {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -42,18 +42,18 @@ pub(crate) mod context {
     /// examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands` still
     /// expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub fn block2d_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_block2d_app(), examples: Vec::new() }
+    pub fn block2d_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_block2d_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("block", Block2dPlayApp, block2d_app_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("block", Block2dPlayApp, block2d_app_manifest_for_tests, "../..");
     
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     /// 🪪️ Bound to the `local` instance id, as the runtime mounts it — an unbound app refuses every
     /// retained typed command with `interactive-job.live-instance`.
     pub async fn app_with_registry() -> Block2dAppFixture {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Block2dAppFixture(app, scope)
     }
@@ -61,8 +61,8 @@ pub(crate) mod context {
     /// 🔁️ Admits one typed command and settles it through the same bounded continuation, maintenance
     /// and ACK protocol the plugin host drives — a fault in any of those turns fails the dispatch.
     pub async fn dispatch(app: &mut Block2dAppFixture, command: Block2dCommand) -> InvocationResult {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle typed operation");
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle typed operation");
         result
     }
     
@@ -73,26 +73,26 @@ pub(crate) mod context {
         let config = crate::config::Block2dConfig::default();
         let emit = crate::commands::set_active_example::handle(
             &crate::commands::set_active_example::SetActiveExample { id: id.into() },
-            &semio_framework_plugin::ArtifactView::new(&snapshot, &semio_framework_plugin::HistoryView::empty()),
-            &semio_framework_plugin::ConfigView { snapshot: &config, window: None },
+            &semio_plugin::ArtifactView::new(&snapshot, &semio_plugin::HistoryView::empty()),
+            &semio_plugin::ConfigView { snapshot: &config, window: None },
         )
         .expect("example handler");
         assert!(emit.artifact_mutations.is_empty(), "an example load is not a document edit");
         for effect in emit.effects {
             if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the example loads");
+                semio_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the example loads");
             }
         }
     }
 
     pub async fn render(app: &mut Block2dAppFixture, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
     }
 }
 
 use crate::*;
 use crate::unit_tests::context::{Block2dApp, new_app};
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 //#region 🔖️CommandSurface
 /// ⚖️ LAW: block2d's retained route table, its publication contracts, its bounded-first-step proofs
@@ -116,7 +116,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     let definition = create_block2d_app();
     let migrated: Vec<&str> = every_command().iter().map(Block2dCommand::command_id).collect();
     assert_eq!(migrated.iter().copied().collect::<std::collections::BTreeSet<_>>(), BLOCK2D_RETAINED_TOOL_IDS.iter().copied().collect::<std::collections::BTreeSet<_>>());
-    let resolved: Vec<&semio_framework_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
+    let resolved: Vec<&semio_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
     for tool_id in BLOCK2D_RETAINED_TOOL_IDS {
         let action = resolved.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is dispatchable from a window"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id} must be UI-dispatchable");
@@ -170,7 +170,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 /// `command_id`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Block2dPlayApp>>(crate::unit_tests::context::block2d_app_manifest_for_tests).await;
+    semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Block2dPlayApp>>(crate::unit_tests::context::block2d_app_manifest_for_tests).await;
     assert!(Block2dPlayApp::command_from_action("noSuchAction", None, None).is_err());
 }
 //#endregion 🔖️CommandSurface
@@ -209,7 +209,7 @@ async fn interaction_topology_nests_handles_under_their_handle_kind() {
     let snapshot = app.snapshot().expect("snapshot");
     let kind_id = snapshot.handles[0].handle_kind.clone();
     let handle_id = snapshot.handles[0].id.clone();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Block2dConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
@@ -293,11 +293,11 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let kinds = app.snapshot().expect("snapshot").handle_kinds.len();
     crate::unit_tests::context::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})).await;
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("undo settles");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("undo settles");
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds);
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "redo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("redo");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("redo settles");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "redo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("redo");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("redo settles");
     assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
 }
 
@@ -306,7 +306,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 async fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
     let mut app = new_app().await;
     crate::unit_tests::context::load_example(&mut app, set_active_example::BLOCK2D_EXAMPLE_LEFT).await;
-    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "catalog:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export catalog");
+    let media = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "catalog:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
         MediaPayload::Structured { schema, json } => {
@@ -349,7 +349,7 @@ async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry
 /// every later typed-operation refresh, never as the original fault.
 #[semio_framework_async_macros::async_test]
 async fn example_announcements_keep_live_maintenance_within_its_contract() {
-    use semio_framework_plugin::PluginLifecycleStep;
+    use semio_plugin::PluginLifecycleStep;
     const RUNTIME_LIVE_CLEANUP_BYTES: usize = 32 * 1_024;
     fn drain(app: &mut Block2dAppFixture, phase: &str) -> usize {
         for turn in 0..100_000 {
@@ -385,9 +385,9 @@ async fn example_announcements_keep_live_maintenance_within_its_contract() {
 fn example_switch_and_json_edit_load_a_document_instead_of_editing_one() {
     let document = semio_s_artifact_block_2d_io::text::snapshot::empty_block2d_snapshot();
     let config = crate::config::Block2dConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let view = semio_framework_plugin::ArtifactView::new(&document, &history);
-    let config_view = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let history = semio_plugin::HistoryView::empty();
+    let view = semio_plugin::ArtifactView::new(&document, &history);
+    let config_view = semio_plugin::ConfigView { snapshot: &config, window: None };
     for id in [set_active_example::BLOCK2D_EXAMPLE_LEFT, set_active_example::BLOCK2D_EXAMPLE_RIGHT] {
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { id: id.into() }, &view, &config_view).expect("every offered example loads");
         assert!(emit.artifact_mutations.is_empty(), "{id}: an example load is not a document edit");

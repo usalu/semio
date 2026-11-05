@@ -1,7 +1,7 @@
 //! 📤️ Exports Writer text as one US Letter page in the PDF 1.4 base subset.
 
 use crate::{writer_text, WriterSnapshot};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
@@ -13,7 +13,7 @@ pub struct WriterIntoPdf;
 impl Serializer<WriterSnapshot> for WriterIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let pdf = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: PageDoc::DEFAULT_WIDTH, height: PageDoc::DEFAULT_HEIGHT, text: writer_text(from) }] };
         Ok(IoOutcome { value: IoPayload::Binary(<PdfSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&pdf)), diagnostics: Vec::new() })
     }

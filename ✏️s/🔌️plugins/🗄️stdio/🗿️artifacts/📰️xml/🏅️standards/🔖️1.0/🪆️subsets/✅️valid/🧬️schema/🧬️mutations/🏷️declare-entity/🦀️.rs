@@ -16,8 +16,8 @@ pub struct DeclareEntity {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "entity", kind: "declare-entity", record: "DeclareEntity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Declare entity", "Entität deklarieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Declare entity", "Entität deklarieren")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

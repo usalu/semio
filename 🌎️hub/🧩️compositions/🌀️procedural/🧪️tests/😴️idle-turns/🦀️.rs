@@ -10,9 +10,9 @@
 //!
 //! Measured 2026-09-10 before the fix: `status=MoreWork effects=0 patches=0` on 512 consecutive
 //! turns and 4 437 B/turn of guest linear memory. See `📓️idle-turns-2026-09-10.md`.
-use semio_framework_os_kernel as store;
-use semio_framework_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_text, plugin_render, PluginRuntime};
+use semio_os_kernel as store;
+use semio_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
+use semio_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_text, plugin_render, PluginRuntime};
 
 /// 🧮️ Weighs every allocation the idle turns make, so the growth law reads bytes rather than pages.
 #[global_allocator]
@@ -53,8 +53,8 @@ fn open_event(app_id: &str) -> Event {
     }
 }
 
-async fn turn(runtime: &ProceduralRuntime, events: Vec<Event>) -> semio_framework_plugin::kernel::TurnResult {
-    semio_framework_plugin::reactor::poll_kernel(runtime, events, None, None, idle_budget()).await.expect("procedural idle turn")
+async fn turn(runtime: &ProceduralRuntime, events: Vec<Event>) -> semio_plugin::kernel::TurnResult {
+    semio_plugin::reactor::poll_kernel(runtime, events, None, None, idle_budget()).await.expect("procedural idle turn")
 }
 
 async fn acknowledge(runtime: &ProceduralRuntime, receipt: ActorInstanceLifecycleReceipt) {
@@ -72,9 +72,9 @@ async fn boot(app_id: &str) -> ProceduralRuntime {
 }
 
 fn preview_view_state() -> String {
-    let view = semio_framework_plugin::ViewModel {
+    let view = semio_plugin::ViewModel {
         window_id: Some("procedural-idle-preview".into()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "procedural-idle-preview".into(), window_kind_id: GENERATION3D_PREVIEW_WINDOW.into() }],
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: "procedural-idle-preview".into(), window_kind_id: GENERATION3D_PREVIEW_WINDOW.into() }],
         ..Default::default()
     };
     serde_json::to_string(&view).expect("view model json")
@@ -83,9 +83,9 @@ fn preview_view_state() -> String {
 /// 🍄️ Loads the bundled example and renders its preview once, arming the retained evaluation
 /// session, the window-transient partitions and the tessellation request table.
 async fn arm_example(runtime: &ProceduralRuntime, dsl: &str) {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let booted = plugin_document_text(runtime, IDLE_INSTANCE).await.expect("booted document text");
-    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, IDLE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("the bundled example loads into the booted instance");
+    semio_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, IDLE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("the bundled example loads into the booted instance");
     let view_state = preview_view_state();
     for _ in 0..4 {
         let _ = plugin_render(runtime, IDLE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;
@@ -106,7 +106,7 @@ struct IdleReading {
 }
 
 fn record(sources: &mut std::collections::BTreeMap<String, usize>) -> bool {
-    let armed = semio_framework_plugin::reactor::last_turn_more_work_sources();
+    let armed = semio_plugin::reactor::last_turn_more_work_sources();
     let key = match (armed.any(), armed.typed_operation_contended) {
         (true, _) => armed.names().join("+"),
         (false, true) => "settled(contended)".into(),

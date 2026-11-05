@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeImpactActionStiffn
         record: "ChangedImpactActionStiffness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change equivalent stiffness k (0 = registry value) of the impact action", "Anpralleinwirkung: Ersatzsteifigkeit k (0 = Registerwert) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change equivalent stiffness k (0 = registry value) of the impact action", "Anpralleinwirkung: Ersatzsteifigkeit k (0 = Registerwert) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -11,7 +11,7 @@ type WsRead = futures::stream::SplitStream<WsStream>;
 pub(super) struct ConnectedDocumentSocket {
     pub(super) stream: WsStream,
     pub socket_actor: semio_framework_value::SharedUtf8,
-    pub authority: semio_framework_os_directory_client::DocumentSocketAuthorityV1,
+    pub authority: semio_os_directory_client::DocumentSocketAuthorityV1,
     pub(super) identity_progress: semio_framework_value::RetainedCloneProgress,
 }
 
@@ -131,7 +131,7 @@ impl FolderEndpoint {
                     Some(files) => Some((files.pack, files.spr)),
                     None => match storage.read(document_id, extension).await.map_err(|error| error.to_string())? {
                         Some(files) => {
-                            let codec = semio_framework_os_store_codec_registry::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only source"))?;
+                            let codec = semio_os_store_codec_registry::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only source"))?;
                             let (pack, _) = (codec.reference().map_err(|error|error.to_string())?.compile_dsl)(&files.dsl, &files.ops).await.map_err(|error| error.to_string())?;
                             Some((pack.pack, pack.spr))
                         }
@@ -139,7 +139,7 @@ impl FolderEndpoint {
                     },
                 };
                 pair.map(|(parent_pack, parent_spr)| {
-                    semio_framework_os_spr::encode_document_archive_bytes(&semio_framework_os_spr::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).map_err(|error| error.to_string())
+                    semio_os_spr::encode_document_archive_bytes(&semio_os_spr::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).map_err(|error| error.to_string())
                 })
                 .transpose()
             }
@@ -148,11 +148,11 @@ impl FolderEndpoint {
 
     /// 🗃️ Persists one exact versioned recursive-document archive and its root text mirrors.
     pub async fn write_archive(&self, archive_bytes: &[u8]) -> Result<(), String> {
-        let archive = semio_framework_os_spr::decode_document_archive_bytes(archive_bytes).await.map_err(|error| error.to_string())?;
+        let archive = semio_os_spr::decode_document_archive_bytes(archive_bytes).await.map_err(|error| error.to_string())?;
         match self {
             FolderEndpoint::EventLog { storage, document_id, schema } => storage.write_archive(document_id, schema, archive_bytes).await.map_err(|error| error.to_string()),
             FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                let codec = semio_framework_os_store_codec_registry::document_kind_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {schema:?} — cannot persist synchronized archive mirrors"))?;
+                let codec = semio_os_store_codec_registry::document_kind_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {schema:?} — cannot persist synchronized archive mirrors"))?;
                 let mirror = codec.print_mirror(&archive.parent_pack, &archive.parent_spr).await.map_err(|error| error.to_string())?;
                 let pack_files = ArtifactPackFiles { pack: archive.parent_pack, spr: archive.parent_spr, ops: mirror.ops };
                 storage.write_archive(document_id, extension, archive_bytes, &pack_files, &mirror.dsl).await.map_err(|error| error.to_string())
@@ -179,9 +179,9 @@ pub struct ArtifactActor {
     pub watch_external: bool,
     pub hub_base_url: Option<String>,
     pub hub_space_id: Option<String>,
-    pub credential: Arc<std::sync::RwLock<Option<Arc<semio_framework_os_directory_client::LocalHubCredential>>>>,
-    pub socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>>>>,
-    pub document_execution_target_lease: Option<semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    pub credential: Arc<std::sync::RwLock<Option<Arc<semio_os_directory_client::LocalHubCredential>>>>,
+    pub socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn semio_os_directory_client::HubSocketGrantSource>>>>,
+    pub document_execution_target_lease: Option<semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
     pub operation_cancel: semio_framework_async::CancelToken,
     pub hub_surface: Option<String>,
     pub socket_actor: Option<semio_framework_value::SharedUtf8>,
@@ -243,7 +243,7 @@ pub struct ArtifactActor {
     pub(super) folder_writes: usize,
     pub remote_state: RemoteState,
     pub last_status: Option<ArtifactSyncStatus>,
-    pub(super) watcher: Option<semio_framework_os_services::OwnedFileChangeWatcher>,
+    pub(super) watcher: Option<semio_os_services::OwnedFileChangeWatcher>,
     pub(super) fs_deadline: Option<Instant>,
     pub started: bool,
     pub(super) command_turns: u8,

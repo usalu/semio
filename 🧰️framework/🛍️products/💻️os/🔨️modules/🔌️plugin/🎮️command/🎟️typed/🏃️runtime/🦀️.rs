@@ -1,7 +1,7 @@
 //! 🏃️ A command the runtime itself originates enters the original typed source through the generic OpBinary producer the declaration crate owns.
 use super::*;
-use semio_framework_plugin_decl_app::tool_contract::admit_op_binary_producer;
-pub use semio_framework_plugin_decl_app::tool_contract::RUNTIME_COMMAND_WIRE_MAXIMUM;
+use semio_plugin_decl_app::tool_contract::admit_op_binary_producer;
+pub use semio_plugin_decl_app::tool_contract::RUNTIME_COMMAND_WIRE_MAXIMUM;
 impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
  /// 📣️ Domain command storage is born under its declared original quote before the wire producer receives it.
  pub fn produce_host_event(&mut self,event:&semio_framework_plugin_decl_emission::HostEvent,cx:&mut StepContext<'_>)->Result<Option<bool>,OriginalTurnFailure>{
@@ -23,7 +23,7 @@ impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
 mod tests{
  use super::*;
  use semio_framework::{Fault,FaultCode,FaultOrigin,action_bus::{RetainedToolWireInput,TOOL_WIRE_PAGE_BYTES}};
- use semio_framework_plugin_decl_app::tool_contract::{ArtifactOriginalCommandProducer,ArtifactOriginalCommandProducerFactory,OriginalActionCommandBridge,OriginalCommandBirth,admit_op_binary_producer};
+ use semio_plugin_decl_app::tool_contract::{ArtifactOriginalCommandProducer,ArtifactOriginalCommandProducerFactory,OriginalActionCommandBridge,OriginalCommandBirth,admit_op_binary_producer};
  use semio_framework_value::{DslValue,RetainedCloneGrant,retirement::RetireOwned};
  use protocol::OpBinary;
  use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,default_now_us};

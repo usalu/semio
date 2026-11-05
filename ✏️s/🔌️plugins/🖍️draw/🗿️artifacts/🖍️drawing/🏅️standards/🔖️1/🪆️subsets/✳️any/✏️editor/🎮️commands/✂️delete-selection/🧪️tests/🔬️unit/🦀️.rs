@@ -3,7 +3,7 @@
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 #[allow(unused_imports)] use std::collections::{BTreeMap,BTreeSet};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::delete_selection::*;
 use semio_s_artifact_draw_drawing_geometry::editing::PathPoint;

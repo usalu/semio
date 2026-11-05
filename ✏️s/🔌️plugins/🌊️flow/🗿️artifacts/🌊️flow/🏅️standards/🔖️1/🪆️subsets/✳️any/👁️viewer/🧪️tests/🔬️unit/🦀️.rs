@@ -1,6 +1,6 @@
 use crate::FLOW_DIALECT;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::Viewer;
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::viewer::flow::modes::view;
@@ -9,39 +9,39 @@ use crate::viewer::flow::modes::view::windows::main;
 #[allow(unused_imports)]
 use crate::{FlowMutation, FlowSnapshot, FLOW_DOCUMENT_SCHEMA};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoPresence;
+use semio_plugin::NoPresence;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoPresenceMutation;
+use semio_plugin::NoPresenceMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoTransient;
+use semio_plugin::NoTransient;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::NoTransientMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ViewEmit;
+use semio_plugin::ViewEmit;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::flow::*;
-use semio_framework_plugin::{plugin_app_close_prelude::*};
-use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_plugin::{plugin_app_close_prelude::*};
+use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
 
 semio_framework_dispatch_macros::dyn_enum_close! {
-    enum FlowViewerTestApps: semio_framework_plugin::PluginApp {
+    enum FlowViewerTestApps: semio_plugin::PluginApp {
         FlowViewer(VcsArtifactApp<ViewerApp<FlowViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
@@ -49,8 +49,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 #[semio_framework_async_macros::async_test]
 async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract() {
     use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-    use semio_framework_plugin::{Plugin, PluginApp, PluginLifecycleStep};
-    use semio_framework_plugin::PluginBuilder;
+    use semio_plugin::{Plugin, PluginApp, PluginLifecycleStep};
+    use semio_plugin::PluginBuilder;
     let fixture: Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧹️owners/🔣️.json")).unwrap();
     let definition = create_flow_viewer();
     assert_eq!(definition.role, AppRole::Viewer);
@@ -79,8 +79,8 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
         })
         .collect::<Vec<_>>();
     assert_eq!(document_rights, fixture["documentRights"].as_array().unwrap().iter().map(|right| right.as_str().unwrap()).collect::<Vec<_>>());
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = plugin.create_app(&id, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("registered Flow viewer factory births its snapshot").expect("registered Flow viewer factory must retain its typed member fleet");
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = plugin.create_app(&id, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).expect("registered Flow viewer factory births its snapshot").expect("registered Flow viewer factory must retain its typed member fleet");
     assert!(matches!(&app, FlowViewerTestApps::FlowViewer(_)));
     let items = fixture["grant"]["items"].as_u64().unwrap() as usize;
     let body = fixture["grant"]["bytes"].as_u64().unwrap() as usize;

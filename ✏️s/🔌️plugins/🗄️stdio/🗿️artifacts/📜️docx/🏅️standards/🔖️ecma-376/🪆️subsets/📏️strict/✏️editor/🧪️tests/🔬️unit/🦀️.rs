@@ -32,7 +32,7 @@ fn formatting_arguments(address: &DocxXmlAddress) -> semio_framework_value::DslV
 #[semio_framework_async_macros::async_test]
 async fn create_docx_strict_editor_builds_a_definition_for_the_editor_role() {
     let def = create_docx_strict_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, DOCX_STRICT_EDITOR_DIALECT.into());
 }
 
@@ -46,7 +46,7 @@ fn initial_strict_document_is_conformant_and_renders_one_empty_paragraph_target(
     assert_eq!(targets.len(), 1);
     assert_eq!(targets[0].kind, semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxTextTargetKind::EmptyParagraph);
     assert_eq!(targets[0].text, "");
-    assert_eq!(main::render(&snapshot, semio_framework_plugin::UiPublicationRevision(23)).unwrap().children.len(), 1);
+    assert_eq!(main::render(&snapshot, semio_plugin::UiPublicationRevision(23)).unwrap().children.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -117,4 +117,4 @@ async fn set_run_formatting_requires_and_preserves_the_complete_canonical_addres
     assert!(<DocxStrictEditor as ArtifactEditor>::command_from_action("set-run-formatting", None, None).is_err());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio/DocxStrictEditor", DocxStrictEditor, || semio_framework_plugin::App { definition: create_docx_strict_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio/DocxStrictEditor", DocxStrictEditor, || semio_plugin::App { definition: create_docx_strict_editor(), examples: Vec::new() }, "../..");

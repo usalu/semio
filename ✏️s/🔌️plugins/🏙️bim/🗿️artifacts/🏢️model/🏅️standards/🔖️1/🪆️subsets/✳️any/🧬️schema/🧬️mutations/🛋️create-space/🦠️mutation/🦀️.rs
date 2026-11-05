@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "space", kind: "create-space", record: "CreateSpace" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create space \"{}\"", self.space.name), &format!("Raum \"{}\" anlegen", self.space.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create space \"{}\"", self.space.name), &format!("Raum \"{}\" anlegen", self.space.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

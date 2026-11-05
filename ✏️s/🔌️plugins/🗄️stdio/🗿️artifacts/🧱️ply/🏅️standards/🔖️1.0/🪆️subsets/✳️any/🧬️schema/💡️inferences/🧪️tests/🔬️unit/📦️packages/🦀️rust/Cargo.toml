@@ -16,7 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-s-artifact-stdio-ply-inferences = { path = "../../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]

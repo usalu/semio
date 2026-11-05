@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-contract-identity"
+name = "semio-ui-contract-identity"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -16,7 +16,7 @@ role = "framework"
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-contract-text = { path = "../../../🔤️text/📦️packages/🦀️rust" }
+semio-ui-contract-text = { path = "../../../🔤️text/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde.workspace = true

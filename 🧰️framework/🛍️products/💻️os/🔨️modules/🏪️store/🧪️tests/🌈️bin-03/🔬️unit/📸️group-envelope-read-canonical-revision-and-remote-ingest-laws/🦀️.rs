@@ -3,7 +3,7 @@
 //#region 📸️CompoundEnvelopeReadLaws
 struct GroupReadTriggerSnapshot {
     value: i32,
-    commit: Option<Arc<Mutex<semio_framework_os_vcs::ArtifactGroupVisibilityOwner>>>,
+    commit: Option<Arc<Mutex<semio_os_vcs::ArtifactGroupVisibilityOwner>>>,
     reads: Arc<std::sync::atomic::AtomicUsize>,
 }
 
@@ -38,8 +38,8 @@ fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEn
         viewer_checkpoint_id: None,
         edit_messages: ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
-        transitions: semio_framework_os_vcs::ArtifactHistoryLedger::new(),
-        history_shape: semio_framework_os_spr::HistoryShape::Document,
+        transitions: semio_os_vcs::ArtifactHistoryLedger::new(),
+        history_shape: semio_os_spr::HistoryShape::Document,
         open_transaction: None,
     })
 }
@@ -68,7 +68,7 @@ fn close_group_read_fixture(envelope: ArtifactEnvelope<GroupReadTriggerSnapshot,
 fn retained_group_envelope_read_captures_history_and_cursor_before_decision() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📖️group-read.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let owner = Arc::new(Mutex::new(semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new()));
+        let owner = Arc::new(Mutex::new(semio_os_vcs::ArtifactGroupVisibilityOwner::new()));
         let view = owner.lock().unwrap().view();
         let inject_commit = case["capture"] == "pending" && case["decision"] == "committed";
         let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -114,9 +114,9 @@ fn retained_group_envelope_read_captures_history_and_cursor_before_decision() {
 
 #[test]
 fn retained_group_envelope_read_rejects_foreign_cursor_visibility_before_serialization() {
-    let mut history_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+    let mut history_owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
     let history = history_owner.view();
-    let mut cursor_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+    let mut cursor_owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
     let cursor = cursor_owner.view();
     let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: None, reads: reads.clone() });
@@ -140,7 +140,7 @@ async fn retained_group_cursor_shares_history_visibility_and_retires_displaced_r
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🎯️group-cursor.json")).expect("group cursor fixture");
     let mut cursor: ArtifactCursor = serde_json::from_value(fixture["before"].clone()).expect("independent old cursor");
     let next: ArtifactCursorOwners = serde_json::from_value(fixture["after"].clone()).expect("independent next cursor");
-    let mut owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+    let mut owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
     let view = owner.view();
     let mut history = ArtifactHistoryLedger::new();
     history.try_push("initial".to_string()).expect("old history");
@@ -168,9 +168,9 @@ async fn retained_group_cursor_shares_history_visibility_and_retires_displaced_r
     assert!(retirement.terminal_is_empty());
     while history.pop().is_some() {}
     assert!(history.terminal_is_empty());
-    let mut abort_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+    let mut abort_owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
     let abort_view = abort_owner.view();
-    let mut wrong_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+    let mut wrong_owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
     let wrong_view = wrong_owner.view();
     let next: ArtifactCursorOwners = serde_json::from_value(fixture["before"].clone()).expect("cancelled cursor owner");
     cursor.stage_group_owned(next, &abort_view).expect("unpublished next cursor");
@@ -187,7 +187,7 @@ async fn retained_group_cursor_empty_base_and_dropped_publisher_return_every_sta
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🎯️group-cursor.json")).expect("group cursor fixture");
     let mut cursor = ArtifactCursor::default();
     let mut history = ArtifactHistoryLedger::<String>::new();
-    let owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+    let owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
     let view = owner.view();
     let next: ArtifactCursorOwners = serde_json::from_value(fixture["after"].clone()).expect("prepared cursor");
     cursor.stage_group_owned(next, &view).expect("staged empty-base cursor");
@@ -215,11 +215,11 @@ async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_b
     let ids: Vec<MutationId> = serde_json::from_value::<Vec<String>>(fixture["identities"].clone()).expect("fixture identities").into_iter().map(MutationId).collect();
     let expected: Vec<String> = serde_json::from_value(fixture["applied"].clone()).expect("independent fixture applied identities");
     let retired: Vec<String> = serde_json::from_value(fixture["retired"].clone()).expect("independent fixture duplicate identities");
-    semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&ids).expect("duplicate identities are valid existing authority");
-    let (mut dag, duplicates) = semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::adopt_runtime_seed(ids);
+    semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&ids).expect("duplicate identities are valid existing authority");
+    let (mut dag, duplicates) = semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::adopt_runtime_seed(ids);
     assert_eq!(duplicates, retired);
     let mut applied = Vec::new();
-    while let Some(semio_framework_os_spr::MutationDagCloseOwner::Identity(id)) = dag.take_one_close_owner() {
+    while let Some(semio_os_spr::MutationDagCloseOwner::Identity(id)) = dag.take_one_close_owner() {
         applied.push(id);
     }
     applied.reverse();
@@ -228,15 +228,15 @@ async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_b
     let mut retirement = ArtifactStoreStringVectorRetirement::new(duplicates);
     drive_retirement_within(&mut retirement, RetainedCloneGrant { maximum_items:fixture["maximumItems"].as_u64().expect("item grant") as usize,maximum_copy_bytes:fixture["maximumBytes"].as_u64().expect("logical byte work") as usize,..physical_test_close_grant() });
     assert!(retirement.terminal_is_empty());
-    let oversized = vec![MutationId("x".repeat(semio_framework_os_spr::causal::MUTATION_DAG_IDENTIFIER_BYTES + 1))];
-    assert!(semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&oversized).is_err());
-    let saturated: Vec<_> = (0..=semio_framework_os_spr::causal::MUTATION_DAG_CAPACITY).map(|index| MutationId(index.to_string())).collect();
-    assert!(semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&saturated).is_err());
+    let oversized = vec![MutationId("x".repeat(semio_os_spr::causal::MUTATION_DAG_IDENTIFIER_BYTES + 1))];
+    assert!(semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&oversized).is_err());
+    let saturated: Vec<_> = (0..=semio_os_spr::causal::MUTATION_DAG_CAPACITY).map(|index| MutationId(index.to_string())).collect();
+    assert!(semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&saturated).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
-    let mut original = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut original = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     original.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     for n in [1, 2, 3] {
         test_support::dispatch_test_command(&mut original, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("seed revision edit");
@@ -261,7 +261,7 @@ async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
 
 #[semio_framework_async_macros::async_test]
 async fn rejected_remote_ingest_keeps_state_and_dag_unpoisoned() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let valid = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 7 })).await;
     let mut malformed = valid.clone();
     malformed.diff.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&[0xff]).unwrap();
@@ -278,7 +278,7 @@ async fn rejected_remote_ingest_keeps_state_and_dag_unpoisoned() {
 
 #[semio_framework_async_macros::async_test]
 async fn remote_ingest_requires_duplicate_mutation_payload_equivalence() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let accepted = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await;
     store.ingest_remote(accepted.clone()).await.expect("first remote envelope");
     let before = owned_test_envelope(&store).await;
@@ -306,8 +306,8 @@ async fn a_remote_transition_repeating_a_known_id_with_another_payload_is_refuse
     assert_eq!(replica.snapshot().expect("replica snapshot"), DemoSnapshot { n: Some(0) }, "the replicated revert withdraws the edit");
     let before = owned_test_envelope(&replica).await;
     let mut forged = events.last().expect("the revert transition").clone();
-    let semio_framework_os_spr::HistoryTransition::Revert { mutation_ids } = semio_framework_os_spr::history_transition_from_envelope(&forged).expect("decode").expect("a transition") else { panic!("the last event is the revert") };
-    forged.diff.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&semio_framework_os_spr::encode_history_transition(&semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids })).unwrap();
+    let semio_os_spr::HistoryTransition::Revert { mutation_ids } = semio_os_spr::history_transition_from_envelope(&forged).expect("decode").expect("a transition") else { panic!("the last event is the revert") };
+    forged.diff.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&semio_os_spr::encode_history_transition(&semio_os_spr::HistoryTransition::Reinstate { mutation_ids })).unwrap();
     let error = replica.ingest_remote(forged).await.expect_err("a known transition id may not carry another payload");
     assert!(matches!(error, VcsError::ValidationFailed(message) if message.contains("conflicts with its established payload")));
     assert_eq!(replica.envelope(), &before);

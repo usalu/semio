@@ -29,7 +29,7 @@
           "rustBuildIntent": {
             "version": 1,
             "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🧪️tests/📥️reader/📦️packages/🦀️rust/Cargo.toml",
-            "package": "semio-framework-os-native-runtime-reader",
+            "package": "semio-os-native-runtime-reader",
             "scope": "binary",
             "binary": "semio-native-runtime-reader",
             "fallback": {

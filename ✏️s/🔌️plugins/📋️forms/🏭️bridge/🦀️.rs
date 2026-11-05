@@ -7,7 +7,7 @@
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/📋️orchestration/🟦️.ts — the caller.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use protocol::{Mutation, MutationLeafDescriptor};
 
@@ -18,7 +18,7 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
-    ("FormsConfigMutation", descriptors::<semio_s_artifact_forms_forms::editor::forms::config::FormsConfig, semio_s_artifact_forms_forms::editor::forms::config::FormsConfigMutation>),
+    ("FormsConfigMutation", descriptors::<semio_s_artifact_forms_forms::forms_config::FormsConfig, semio_s_artifact_forms_forms::forms_config::FormsConfigMutation>),
     ("FormMutation", descriptors::<semio_s_artifact_forms_forms::standards::v1::subsets::any::schema::snapshot::FormsSnapshot, semio_s_artifact_forms_forms::standards::v1::subsets::any::schema::mutations::FormMutation>),
 ];
 
@@ -27,7 +27,7 @@ const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
 /// prefix that is that subset's dispatch.
 const COORDINATES: &[(&str, &str, &str, &str, &str, &str)] = &[
     ("s.forms.forms", "1", "any", "", "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any", ""),
-    ("s.forms.forms", "1", "any", "✏️editor/🎚️config", "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", ""),
+    ("s.forms.forms", "1", "any", "🎚️config", "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🎚️config", ""),
 ];
 
 /// 🎚️ The subset surface directories whose state lanes (config, presence, transient) are never document dispatch.

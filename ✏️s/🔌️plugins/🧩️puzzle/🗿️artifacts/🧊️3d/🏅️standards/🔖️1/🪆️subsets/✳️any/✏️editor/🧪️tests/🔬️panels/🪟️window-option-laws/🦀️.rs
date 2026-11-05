@@ -260,7 +260,7 @@ async fn an_abandoned_app_hands_its_worker_session_admission_back_to_the_next_ap
 
 /// 🔁️ Maintenance units the reclaim law grants: every stage of the round robin, many times over, so the
 /// law fails on a missing pump rather than on a tight budget.
-const RETIREMENT_RECLAIM_TURNS: usize = semio_framework_plugin::MAINTENANCE_STAGES as usize * 64;
+const RETIREMENT_RECLAIM_TURNS: usize = semio_plugin::MAINTENANCE_STAGES as usize * 64;
 
 /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam`/`focusSelection` moved off the document —
 /// they are View-kind and must never emit VCS operations, no matter what they mutate.

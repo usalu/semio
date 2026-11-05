@@ -76,14 +76,14 @@ class RouterEffectSourceCustodyScript extends BundleScript {
 class SqliteObservationCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("sqlite-observation-check has a fixed native observation contract");
-    await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-plugin-host-guest-laws", target: { kind: "lib" }, laws: ["shared_wasmtime_engine_tests::sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor"] }], progress: (event) => console.log(`sqlite-observation ${event.stage} ${event.law ?? ""}`) });
+    await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-plugin-host-guest-laws", target: { kind: "lib" }, laws: ["shared_wasmtime_engine_tests::sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor"] }], progress: (event) => console.log(`sqlite-observation ${event.stage} ${event.law ?? ""}`) });
   }
 }
 
 class OwnedInstanceCheckScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw new Error("owned-instance-check has a fixed native fixture contract");
-    await runCargo(["test","--manifest-path","Cargo.toml","-p","semio-framework-plugin-host-guest-laws","--lib","owned_instance_open_tests","--","--nocapture"],this.repoRoot);
+    await runCargo(["test","--manifest-path","Cargo.toml","-p","semio-plugin-host-guest-laws","--lib","owned_instance_open_tests","--","--nocapture"],this.repoRoot);
   }
 }
 
@@ -92,7 +92,7 @@ class CountComponentCheckScript extends BundleScript {
     if(segments.length)throw new Error("count-component-check has an exact three-law contract");
     if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw new Error("count-component-check requires the task artifact root");
     await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), lawMilliseconds: 300000 }, cwd:this.repoRoot, groups:[{
-      package: "semio-framework-plugin-host-guest-laws",
+      package: "semio-plugin-host-guest-laws",
       target: { kind: "lib" },
       laws: [
         "owned_instance_open_tests::count_component_tests::count_component_full_i32_both_native_encodings_use_real_wasm_and_independent_sqlite",

@@ -1,7 +1,7 @@
 //! ⛔️ Fatal command preserving the rejected-forward inverse-law test.
 
 use super::super::{CounterDiff, CounterMutation};
-use semio_framework_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
+use semio_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -14,14 +14,14 @@ pub struct AddRejectedCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddRejectedCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "rejected-counter", kind: "add-rejected-counter", record: "AddedRejectedCounter" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add rejected counter", "Abgelehnten Zähler hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add rejected counter", "Abgelehnten Zähler hinzufügen")
     }
 
 
 }
 
-impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddRejectedCounter {
+impl semio_os_spr::ColdMutationKind<i64, CounterMutation> for AddRejectedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::fatal("mutation.invariant", "boom", ["x"])
     }

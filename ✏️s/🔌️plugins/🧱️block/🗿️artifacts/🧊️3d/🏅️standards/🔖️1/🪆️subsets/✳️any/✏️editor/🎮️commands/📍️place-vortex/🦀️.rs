@@ -6,7 +6,7 @@ use semio_s_artifact_block_3d_mutations::Block3dMutation;
 use semio_s_artifact_block_3d_model::{Block3dSnapshot, Block3dVortexTemplate};
 use semio_s_artifact_block_3d_editor_config::{block3d_window_view, Block3dConfig, Block3dConfigMutation};
 use semio_s_artifact_block_3d_editor_modes::world::{default_vortex_kind, instance_offset_for_representation, resolve_brush_vortex_kind_id};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_block_3d_editor_modes::BLOCK3D_PLAY_APP_ID;
 

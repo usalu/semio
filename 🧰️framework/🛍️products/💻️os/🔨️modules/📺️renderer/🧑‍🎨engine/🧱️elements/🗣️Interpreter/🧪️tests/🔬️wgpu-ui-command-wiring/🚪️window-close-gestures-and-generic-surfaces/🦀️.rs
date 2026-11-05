@@ -4,20 +4,20 @@
 
 #[test]
 fn window_close_retires_queued_scene_and_capture_owners_before_slot_release() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let window_id = "closing-window-scene-owners";
-    let node = seed_scene_window(window_id, "closing-canvas", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
+    let node = seed_scene_window(window_id, "closing-canvas", semio_ui_declaration::ui::SurfaceKind::Canvas2d);
     let target = retained_scene_target(window_id, node).unwrap();
     let generation = target.window_generation;
     assert!(claim_scene_pointer_owner(target, ui_render::PointerId(1)));
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
-        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+        semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
-        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        &semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -32,31 +32,31 @@ fn window_close_retires_queued_scene_and_capture_owners_before_slot_release() {
     assert!(UI_ENGINE.with(|cell| cell.borrow().surface_token(window_id).is_none()));
     assert!(scene_interaction_terminal_is_empty(), "the sole window close owner also retires its queued scene work");
     assert!(SCENE_POINTER_OWNERS.with(|cell| cell.borrow().slots.iter().all(|owner| owner.target.window_id != window_id || owner.target.window_generation != generation)));
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
     caller.finish();
 }
 
 #[test]
 fn closing_window_silently_retires_an_active_canvas_gesture() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let window_id = "closing-window-active-canvas";
-    let node = seed_scene_window(window_id, "active-canvas", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let node = seed_scene_window(window_id, "active-canvas", semio_ui_declaration::ui::SurfaceKind::Canvas2d);
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
-        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+        semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         Rect::new(0.0, 0.0, 200.0, 200.0),
-        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        &semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
     assert!(drive_scene_interaction_step(&mut input));
-    assert_eq!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown"]);
+    assert_eq!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown"]);
     assert!(request_ui_document_close(window_id));
-    semio_framework_os_renderer_wgpu_scene_render::request_canvas_pointer_gesture_cancel_for_window(window_id);
+    semio_renderer_wgpu_scene_render::request_canvas_pointer_gesture_cancel_for_window(window_id);
     drive_scene_interaction_step(&mut input);
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "closing a mounted Canvas cannot publish a synthetic pointer terminal action");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "closing a mounted Canvas cannot publish a synthetic pointer terminal action");
     for _ in 0..262_144 {
         if !ui_document_close_pending() {
             break;
@@ -64,38 +64,38 @@ fn closing_window_silently_retires_an_active_canvas_gesture() {
         assert!(caller.turn(|cx|close_ui_document_one(cx)).expect("original fixture caller turn"));
     }
     assert!(!ui_document_close_pending());
-    assert!(!semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture_for(ui_render::PointerId(1), &mut input));
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
+    assert!(!semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture_for(ui_render::PointerId(1), &mut input));
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
     caller.finish();
 }
 
 #[test]
 fn live_canvas_gesture_cancels_when_its_published_generation_is_replaced() {
     while !close_scene_interaction_step() {}
-    let mut discarded = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
-    semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut discarded);
+    let mut discarded = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut discarded);
     let window_id = "canvas-generation-cancellation";
-    let node = publish_focus_rebase_document(window_id, 1, 454, semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d, &[4]).expect("presented Canvas receiver");
+    let node = publish_focus_rebase_document(window_id, 1, 454, semio_ui_declaration::ui::SurfaceKind::Canvas2d, &[4]).expect("presented Canvas receiver");
     assert_eq!(retained_scene_surface_id(window_id, node), window_id);
     let canvas_host = retained_scene_host_id(window_id, node);
     let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
-        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+        semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
-        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 20.0, y: 20.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() },
+        &semio_ui_wgpu_events::UiEvent::PointerDown { x: 20.0, y: 20.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: semio_ui_wgpu_events::EventModifiers::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
     assert!(drive_scene_interaction_step(&mut input));
-    assert_eq!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown"]);
+    assert_eq!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown"]);
 
-    let successor = publish_focus_rebase_document(window_id, 2, 455, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor, &[4]).expect("presented non-Canvas successor");
+    let successor = publish_focus_rebase_document(window_id, 2, 455, semio_ui_declaration::ui::SurfaceKind::TextEditor, &[4]).expect("presented non-Canvas successor");
     assert_ne!(retained_scene_host_id(window_id, successor), canvas_host, "component-kind replacement receives a fresh private host identity");
     assert!(drive_scene_interaction_step(&mut input), "the terminal lane observes the replaced generation even when the old surface no longer paints");
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerUp"]);
     assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("cancelled")).and_then(semio_framework::DslValue::as_bool), Some(true));
     retire_presented_document(window_id);
@@ -104,24 +104,24 @@ fn live_canvas_gesture_cancels_when_its_published_generation_is_replaced() {
 #[test]
 fn scene_command_skips_bespoke_surface_kinds_to_avoid_double_dispatch() {
     let window_id = "apply-ui-commands-scene-bespoke-skip";
-    let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph);
+    let node = seed_scene_window(window_id, "s1", semio_ui_declaration::ui::SurfaceKind::NodeGraph);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
     apply_ui_commands(
-        &mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene {
+        &mut vec![semio_ui_wgpu_events::UiCommand::Scene {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
-            kind: semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph,
+            kind: semio_ui_declaration::ui::SurfaceKind::NodeGraph,
             rect,
-            event: semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         }],
         None,
         &mut input,
     );
 
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "node-graph already gets real input through its own bespoke dock/engine_canvas host and must not be double-dispatched via UiCommand::Scene");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "node-graph already gets real input through its own bespoke dock/engine_canvas host and must not be double-dispatched via UiCommand::Scene");
 }
 
 #[test]
@@ -139,32 +139,32 @@ fn pointer_button_code_round_trips_through_pointer_button_from_code_for_every_do
 #[test]
 fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking() {
     let kinds = [
-        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
-        semio_framework_ui_declaration::ui::SurfaceKind::Paint2d,
-        semio_framework_ui_declaration::ui::SurfaceKind::TextEditor,
-        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
-        semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline,
-        semio_framework_ui_declaration::ui::SurfaceKind::Table,
-        semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem,
-        semio_framework_ui_declaration::ui::SurfaceKind::IconRender,
-        semio_framework_ui_declaration::ui::SurfaceKind::BlockList,
-        semio_framework_ui_declaration::ui::SurfaceKind::DiffView,
-        semio_framework_ui_declaration::ui::SurfaceKind::EventFeed,
+        semio_ui_declaration::ui::SurfaceKind::Canvas2d,
+        semio_ui_declaration::ui::SurfaceKind::Paint2d,
+        semio_ui_declaration::ui::SurfaceKind::TextEditor,
+        semio_ui_declaration::ui::SurfaceKind::InkCanvas,
+        semio_ui_declaration::ui::SurfaceKind::GraphTimeline,
+        semio_ui_declaration::ui::SurfaceKind::Table,
+        semio_ui_declaration::ui::SurfaceKind::VirtualFileSystem,
+        semio_ui_declaration::ui::SurfaceKind::IconRender,
+        semio_ui_declaration::ui::SurfaceKind::BlockList,
+        semio_ui_declaration::ui::SurfaceKind::DiffView,
+        semio_ui_declaration::ui::SurfaceKind::EventFeed,
     ];
     for kind in kinds {
-        assert!(!semio_framework_os_renderer_wgpu_scene_render::scene_has_bespoke_pointer_dispatch(kind), "{kind:?} must stay in the generic-fallback set for this smoke test to be meaningful");
+        assert!(!semio_renderer_wgpu_scene_render::scene_has_bespoke_pointer_dispatch(kind), "{kind:?} must stay in the generic-fallback set for this smoke test to be meaningful");
         let window_id = format!("apply-ui-commands-scene-smoke-{kind:?}");
         let node = seed_scene_window(&window_id, "s1", kind);
         let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+        let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         let events = [
-            semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
-            semio_framework_ui_wgpu_events::UiEvent::PointerMove { x: 12.0, y: 12.0, modifiers: Default::default() },
-            semio_framework_ui_wgpu_events::UiEvent::PointerUp { x: 12.0, y: 12.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
-            semio_framework_ui_wgpu_events::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0, modifiers: Default::default() },
+            semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+            semio_ui_wgpu_events::UiEvent::PointerMove { x: 12.0, y: 12.0, modifiers: Default::default() },
+            semio_ui_wgpu_events::UiEvent::PointerUp { x: 12.0, y: 12.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+            semio_ui_wgpu_events::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0, modifiers: Default::default() },
         ];
         for event in events {
-            apply_ui_commands(&mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }], None, &mut input);
+            apply_ui_commands(&mut vec![semio_ui_wgpu_events::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }], None, &mut input);
         }
     }
 }
@@ -184,23 +184,23 @@ fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking()
 #[test]
 fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_no_op_without_a_rendered_host() {
     let window_id = "apply-ui-commands-scene-text-editor-right-click";
-    let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::TextEditor);
+    let node = seed_scene_window(window_id, "s1", semio_ui_declaration::ui::SurfaceKind::TextEditor);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
     apply_ui_commands(
-        &mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene {
+        &mut vec![semio_ui_wgpu_events::UiCommand::Scene {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
-            kind: semio_framework_ui_declaration::ui::SurfaceKind::TextEditor,
+            kind: semio_ui_declaration::ui::SurfaceKind::TextEditor,
             rect,
-            event: semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Secondary, modifiers: Default::default() },
+            event: semio_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_ui_wgpu_events::PointerButton::Secondary, modifiers: Default::default() },
         }],
         None,
         &mut input,
     );
 
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "no ENGINE_SURFACES entry exists without a real paint pass, so this should no-op rather than panic or queue a stale action");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "no ENGINE_SURFACES entry exists without a real paint pass, so this should no-op rather than panic or queue a stale action");
 }
 //#endregion 🔖️SceneCommandTests

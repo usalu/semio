@@ -8,7 +8,7 @@ pub(super) async fn arm_transaction_prepare<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, origin, prepared_child_ops } = command else { unreachable!("arm_transaction_prepare is dispatched only for its own command") };
     let decoded_origin = if origin.is_empty() { Ok(None) } else { decode_wire_serialized::<protocol::MutationOrigin>(&origin).await.map(Some) };
     match decoded_origin {
@@ -42,11 +42,11 @@ pub(super) async fn arm_transaction_prepare<PA: PluginApp>(
 pub(super) async fn arm_transaction_commit<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::TransactionCommit { seq, txn_id } = command else { unreachable!("arm_transaction_commit is dispatched only for its own command") };
     let meta = ActionMeta { expected_document_revision:None, actor: instance_actor(runtime, instance_id).await?.into(), instance_id, view_state: None };
     let outcome = with_instances_mut(runtime, |list| {
@@ -70,7 +70,7 @@ pub(super) async fn arm_transaction_rollback<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::TransactionRollback { seq, txn_id } = command else { unreachable!("arm_transaction_rollback is dispatched only for its own command") };
     let outcome = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
@@ -90,11 +90,11 @@ pub(super) async fn arm_transaction_rollback<PA: PluginApp>(
 pub(super) async fn arm_transaction_undo<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::TransactionUndo { seq, group_id } = command else { unreachable!("arm_transaction_undo is dispatched only for its own command") };
     let outcome = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
@@ -114,11 +114,11 @@ pub(super) async fn arm_transaction_undo<PA: PluginApp>(
 pub(super) async fn arm_transaction_redo<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::TransactionRedo { seq, group_id } = command else { unreachable!("arm_transaction_redo is dispatched only for its own command") };
     let outcome = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;

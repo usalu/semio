@@ -9,7 +9,7 @@ use protocol::{ColdMutation, Mutation, MutationDiff, SemanticMutation};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, WidgetLayout};
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead;
-use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use semio_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 use semio_s_artifact_procedural_2d_mutations::central_apply::apply_generation2d_mutation;
 
 /// 🧊️ Every owned projection this suite materialises is CLOSED, never dropped — `fixture.layout`

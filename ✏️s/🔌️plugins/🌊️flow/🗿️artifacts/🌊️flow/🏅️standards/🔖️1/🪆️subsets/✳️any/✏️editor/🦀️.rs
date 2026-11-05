@@ -16,7 +16,7 @@ use crate::editor::flow::commands::{
     set_contributions, set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
 };
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::flow::modes::edit::windows::{compiled, main};
 use crate::editor::flow::modes::generate::commands::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 use crate::editor::flow::modes::generate::windows::{form, generations, preview};
@@ -34,44 +34,44 @@ use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_artifact_flow_flow::{CameraJson, Widget};
 #[cfg(test)] use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
-use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::AppDefinition;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
+use semio_os_infinite_directed_presentation::DagDrawLod;
+use semio_plugin::app::{ChildEmitPreparation, InteractionView};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::AppDefinition;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Effect;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
+use semio_plugin::WindowMeasure;
 #[cfg(test)]
 use serde_json::json;
 use semio_framework::kernel::UiDirtyScope;
@@ -128,12 +128,14 @@ pub use direct_store_factory_and_child_group_route::{
     FLOW_CHILD_GROUP_TOOL_IDS,
 };
 
+use direct_store_factory_and_child_group_route::flow_build_retained_job;
+
 #[path = "📤️host-only-retained-route/🦀️.rs"]
 mod host_only_retained_route;
 pub use host_only_retained_route::{
-    flow_scalar_command_view, FlowHostEffectJobFactory, FLOW_HOST_ONLY_TOOL_IDS,
+    flow_scalar_command_view, FlowHostEffectJobFactory, FlowEvaluationJobFactory, FLOW_HOST_ONLY_TOOL_IDS, FLOW_EVALUATION_TOOL_IDS,
 };
-use host_only_retained_route::{FlowHostEffectPayload, flow_build_host_only_job};
+use host_only_retained_route::{FlowHostEffectPayload,flow_build_host_job,FlowEvaluationJobFactoryProofs};
 
 #[path = "🕸️graph-operation-route/🦀️.rs"]
 mod graph_operation_route;
@@ -167,7 +169,7 @@ pub use app_assembly::create_flow_app;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `FlowPlayApp::Command` — the SOLE dispatch surface for flow's own behavior, assembled from the
     /// `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`, the
     /// camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
@@ -247,7 +249,7 @@ mod original_host_effect;
 //#region 🧩️ArtifactItems5
 pub mod artifact_items_5 {
 use crate::{FLOW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -255,7 +257,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.flow".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Flow", "Fluss"),
+        label: semio_ui_locale::LocalizedLabel::native("Flow", "Fluss"),
         source_format: "flow.artifact".into(),
         component_kind: "flow".into(),
         dimension: "graph".into(),
@@ -271,3 +273,6 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 }
 //#endregion 🧩️ArtifactItems5
+
+#[path="📤️child-publication/🦀️.rs"]
+mod child_publication;

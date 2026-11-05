@@ -1,12 +1,12 @@
 //! 🗃️ Normal board model: events, plans, kinds, styles-neutral records and constants shared by the board host components.
 //!
-//! Crate `semio-framework-os-infinite-board-normal-model`; a downward producer of the infinite board family.
+//! Crate `semio-os-infinite-board-normal-model`; a downward producer of the infinite board family.
 
 #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
 #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure the call sites.")]
 
-use semio_framework_os_infinite_board_schema::{array, board_locked_option, board_visible_option, BoardNodeShape, BoardSnapshot, EdgeTipDef, EdgeTipGeometry, field, NodeDescriptor};
-use semio_framework_os_infinite_board_engine::{BoardElementStyleKind, Camera, CanvasPalette, CompatSpecificity, EdgeDescriptor, EdgeStrokePattern, GestureStage, HandleData, HandleDescriptor, LinkCompatRule, NodeKindHandleTemplate, region_bounds, RegionDescriptor, RegionGrip, SceneDescriptor};
+use semio_os_infinite_board_schema::{array, board_locked_option, board_visible_option, BoardNodeShape, BoardSnapshot, EdgeTipDef, EdgeTipGeometry, field, NodeDescriptor};
+use semio_os_infinite_board_engine::{BoardElementStyleKind, Camera, CanvasPalette, CompatSpecificity, EdgeDescriptor, EdgeStrokePattern, GestureStage, HandleData, HandleDescriptor, LinkCompatRule, NodeKindHandleTemplate, region_bounds, RegionDescriptor, RegionGrip, SceneDescriptor};
 use semio_framework_canvas::{Affine, Circle, Color, CubicBez, FillRule, Point, Scene, Stroke, Vec2};
 use std::collections::{BTreeMap, BTreeSet};
 use serde::Deserialize;

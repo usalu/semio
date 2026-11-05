@@ -1,8 +1,8 @@
 //! 🧭️ Profile authority: declaration roles, type metadata and local-rule candidates every IFC details layer shares.
 
 use semio_s_artifact_stdio_ifc_declarations::{IfcAttributeDeclaration, IfcCatalog, IfcTypeExpression};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::Fault;
+use semio_ui_locale::Locale;
 use semio_framework_value::{DslValue, FromValue, RetainedWorkOutcome, ToValue};
 use semio_s_artifact_stdio_contract::editing;
 use semio_s_artifact_stdio_contract::editing::{DslSnapshotDetailsProvider, SnapshotDetailItemCapabilities, SnapshotDetailPathSegment as P, SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailVariant, SnapshotDetailsProvider};

@@ -1,22 +1,22 @@
 //! 💡️ Artifact inference services: metadata, registry, cancellation and the cold wire entry points.
-use semio_framework_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION;
-use semio_framework_plugin_decl_registry::ArtifactInferenceExecution;
-use semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError;
-use semio_framework_plugin_decl_registry::ArtifactInferenceExecutionRequest;
-use semio_framework_plugin_decl_registry::ArtifactInferenceRegistrationConflict;
-use semio_framework_plugin_decl_registry::ArtifactInferenceRegistrationError;
-use semio_framework_plugin_decl_registry::ArtifactInferenceStepContext;
-use semio_framework_plugin_decl_registry::WireArtifactInferenceBudget;
-use semio_framework_plugin_decl_registry::WireArtifactInferenceCacheMode;
-use semio_framework_plugin_plugin_program::WireArtifactInferenceRequest;
-use semio_framework_plugin_plugin_program::WireArtifactInferenceResult;
-use semio_framework_plugin_plugin_program::artifact_inference_service_registry;
-use semio_framework_plugin_plugin_program::inference_child_dependency_parts;
-use semio_framework_plugin_plugin_program::validate_wire_request_resources;
+use semio_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION;
+use semio_plugin_decl_registry::ArtifactInferenceExecution;
+use semio_plugin_decl_registry::ArtifactInferenceExecutionError;
+use semio_plugin_decl_registry::ArtifactInferenceExecutionRequest;
+use semio_plugin_decl_registry::ArtifactInferenceRegistrationConflict;
+use semio_plugin_decl_registry::ArtifactInferenceRegistrationError;
+use semio_plugin_decl_registry::ArtifactInferenceStepContext;
+use semio_plugin_decl_registry::WireArtifactInferenceBudget;
+use semio_plugin_decl_registry::WireArtifactInferenceCacheMode;
+use semio_plugin_plugin_program::WireArtifactInferenceRequest;
+use semio_plugin_plugin_program::WireArtifactInferenceResult;
+use semio_plugin_plugin_program::artifact_inference_service_registry;
+use semio_plugin_plugin_program::inference_child_dependency_parts;
+use semio_plugin_plugin_program::validate_wire_request_resources;
 #[cfg(test)]
-use semio_framework_plugin_plugin_program::inference_gateway::wire_artifact_infer_from_cold;
+use semio_plugin_plugin_program::inference_gateway::wire_artifact_infer_from_cold;
 #[cfg(test)]
-use semio_framework_plugin_plugin_program::wire_artifact_infer_cold;
+use semio_plugin_plugin_program::wire_artifact_infer_cold;
 #[cfg(test)]
 use crate::inference_gateway::cancel_artifact_inference;
 use protocol::{OpBinary, OpText};
@@ -24,9 +24,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_plugin_decl_surface::artifact_pair_snapshot;
+use semio_plugin_decl_surface::artifact_pair_snapshot;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::NoConfig;
+use semio_plugin_decl_views::NoConfig;
 
 /// 🪆️ The `dependencies` key under which a composed document's owned child at `slot`/`child_id` travels with an inference
 /// request (design §20.15): its head snapshot pack.
@@ -36,7 +36,7 @@ pub fn inference_child_dependency(slot: &str, child_id: &str) -> String {
 
 /// 🧵️ The owned child at `slot`/`child_id` of the requesting composed document, decoded from the request's dependencies (design
 /// §20.15: readers compose on read; the requester injects every owned child under [`inference_child_dependency`]).
-pub fn inference_child<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState>(request: &ArtifactInferenceExecutionRequest<'_>, slot: &str, child_id: &str) -> Result<S, ArtifactInferenceExecutionError> {
+pub fn inference_child<S: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState>(request: &ArtifactInferenceExecutionRequest<'_>, slot: &str, child_id: &str) -> Result<S, ArtifactInferenceExecutionError> {
     let key = inference_child_dependency(slot, child_id);
     let (_, pack) = request.dependencies.iter().find(|(name, _)| *name == key).ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.child-missing", format!("the request carries no owned child {slot}/{child_id}")))?;
     S::decode_pack(pack).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.child-decode", format!("owned child {slot}/{child_id}: {error:?}")))
@@ -124,7 +124,7 @@ impl ArtifactDocumentPayload {
     /// an inference factory is a synchronous contract, so the settle happens at the call site.
     pub async fn snapshot<P, Mutation>(&self) -> Result<P, String>
     where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+        P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
         Mutation: store::StoreMutationFor<P>,
     {
         let (pack, spr) = self.pair()?;
@@ -140,7 +140,7 @@ impl ArtifactDocumentPayload {
     /// decode path instead of re-deriving it per kind.
     pub fn settled_snapshot<P, Mutation>(&self) -> Result<P, String>
     where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+        P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
         Mutation: store::StoreMutationFor<P>,
     {
         ::semio_framework_async::poll::resolve_ready(self.snapshot::<P, Mutation>())
@@ -188,9 +188,9 @@ impl ArtifactInferenceGatewayFailure {
  pub fn source_identity(&self)->usize{self.fault_wire_fields().1.as_ptr()as usize}
 }
 
-pub use semio_framework_plugin_decl_registry::artifact_inference::*;
+pub use semio_plugin_decl_registry::artifact_inference::*;
 
-pub use semio_framework_plugin_plugin_program::artifact_inference::*;
+pub use semio_plugin_plugin_program::artifact_inference::*;
 
 #[path = "🫴️receiving/🦀️.rs"]
 mod receiving;

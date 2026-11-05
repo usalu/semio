@@ -3,19 +3,19 @@
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::editor_vocabulary::ui_label;
 use crate::{SequenceHostSnapshot, SequenceStep};
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_BODY_INSPECTOR: &str = "sequence.play.inspection";

@@ -24,8 +24,8 @@ pub fn change_node_kind_icon<Op: From<crate::change_node_kind_icon::ChangeNodeKi
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeNodeKindIcon where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_node_kind_icon::ChangeNodeKindIcon> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-kind", kind: "change-node-kind-icon", record: "ChangedNodeKindIcon" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node kind icon to {:?}", self.new_icon), &format!("Knotenartsymbol auf {:?} ändern", self.new_icon))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change node kind icon to {:?}", self.new_icon), &format!("Knotenartsymbol auf {:?} ändern", self.new_icon))
     }
 }
 

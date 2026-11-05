@@ -17,8 +17,8 @@ pub struct SetAttribute {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "attribute", kind: "set-attribute", record: "SetAttribute" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set attribute", "Attribut setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set attribute", "Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

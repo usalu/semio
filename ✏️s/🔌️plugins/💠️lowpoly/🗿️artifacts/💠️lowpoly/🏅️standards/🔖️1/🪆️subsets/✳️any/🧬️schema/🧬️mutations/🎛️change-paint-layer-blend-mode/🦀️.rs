@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "paint-layer", kind: "change-paint-layer-blend-mode", record: "ChangedPaintLayerBlendMode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set paint layer blend mode to \"{}\"", self.new_blend_mode), &format!("Füllmethode der Malebene auf \"{}\" setzen", self.new_blend_mode))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set paint layer blend mode to \"{}\"", self.new_blend_mode), &format!("Füllmethode der Malebene auf \"{}\" setzen", self.new_blend_mode))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

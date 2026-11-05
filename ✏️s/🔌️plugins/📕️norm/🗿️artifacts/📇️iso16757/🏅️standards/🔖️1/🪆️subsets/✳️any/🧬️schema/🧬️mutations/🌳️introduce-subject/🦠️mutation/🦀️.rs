@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceSubject where
 
         protocol::SemanticDescriptor { verb: "insert", entity: "subject", kind: "introduce-subject", record: "IntroducedSubject" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create dictionary subject \"{}\"", self.subject.names.preferred.text), &format!("Wörterbuchthema \"{}\" erstellen", self.subject.names.preferred.text))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create dictionary subject \"{}\"", self.subject.names.preferred.text), &format!("Wörterbuchthema \"{}\" erstellen", self.subject.names.preferred.text))
     }
     fn target(&self) -> Vec<String> {
         vec![self.subject.id.clone()]

@@ -10,7 +10,7 @@ pub struct ChangeFastenerLoadAngle { pub fastener_id: String, pub new_value: f64
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFastenerLoadAngle where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_fastener_load_angle::ChangeFastenerLoadAngle> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fastener-load-angle", kind: "change-fastener-load-angle", record: "ChangedFastenerLoadAngle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change load to grain angle α of fastener {}", self.fastener_id), &format!("Winkel α zwischen Kraft und Faser von Fastener {} ändern", self.fastener_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change load to grain angle α of fastener {}", self.fastener_id), &format!("Winkel α zwischen Kraft und Faser von Fastener {} ändern", self.fastener_id)) }
     fn target(&self) -> Vec<String> { vec![self.fastener_id.clone()] }
 }
 

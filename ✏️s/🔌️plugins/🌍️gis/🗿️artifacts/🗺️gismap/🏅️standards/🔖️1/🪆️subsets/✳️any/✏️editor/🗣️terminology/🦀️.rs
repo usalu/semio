@@ -2,7 +2,7 @@
 //! reaches for.
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the GIS 2D app; one field per label makes every locale combination compile-checked.
     pub struct Gis2dPlayLabels {
         window_map: native_en "Map", native_de "Karte", reuse_en "Map", reuse_de "Karte";
@@ -43,8 +43,8 @@ semio_framework_ui_locale::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from the canonical shared view state.
-pub fn gis2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Gis2dPlayLabels {
-    semio_framework_plugin::resolve_labels::<Gis2dPlayLabels>(view_state)
+pub fn gis2d_labels(view_state: &semio_plugin::ViewModel) -> &'static Gis2dPlayLabels {
+    semio_plugin::resolve_labels::<Gis2dPlayLabels>(view_state)
 }
 
 /// 🗣️ Resolves a standard map layer's display label from its stable id; unknown ids fall back to the
@@ -74,6 +74,6 @@ pub fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static s
 //#region 🧩️ArtifactItems2
 pub mod artifact_items_2 {
 /// ♻️ This synchronous executable retains no callback child between invocations.
-pub fn gis_map_inference_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}
+pub fn gis_map_inference_demands(_request:&semio_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}
 }
 //#endregion 🧩️ArtifactItems2

@@ -305,7 +305,7 @@ def selection_ids(scope, content):
     out = []
     for m in re.finditer(r"fn\s+selection_ids\s*\(", content, A):
         body = extract_body(content, m.start())
-        if "semio_framework_plugin::selection_ids(" in body or (alias and re.search(r"\b%s\(" % alias, body, A)):
+        if "semio_plugin::selection_ids(" in body or (alias and re.search(r"\b%s\(" % alias, body, A)):
             continue
         n = line_of(content, m.start())
         out.append(row("sdk-selection-ids-%s-%d" % (scope, n), "sdk-selection-ids", n))

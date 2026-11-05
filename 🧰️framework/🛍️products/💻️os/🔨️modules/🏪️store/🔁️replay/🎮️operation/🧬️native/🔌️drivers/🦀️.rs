@@ -2,11 +2,11 @@
 use super::*;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor};
 use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor, ProjectionOutput};
-use semio_framework_os_store_one_item::{PagedOneItemEdit,PagedOneItemEditStep};use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
-use semio_framework_os_store_snapshot_clone::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory};
+use semio_os_store_one_item::{PagedOneItemEdit,PagedOneItemEditStep};use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
+use semio_os_store_snapshot_clone::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory};
 use super::super::{ArtifactReplayPreparation,ArtifactReplayPreparationFactory};
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
-use semio_framework_os_store_command::HistoryLane;
+use semio_os_store_command::HistoryLane;
 
 pub struct PagedProjection<P:SnapshotProjection>{cursor:Option<P::Projection>,closing:bool,last_work:u64}
 impl<P:SnapshotProjection> Default for PagedProjection<P>{fn default()->Self{Self{cursor:None,closing:false,last_work:0}}}

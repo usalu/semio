@@ -88,17 +88,17 @@ fn layout_window_node(tab: &DockStackTab) -> WindowLayoutWindowNode {
 pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
     match node {
         DockNode::Stack { windows, active } => WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() }),
-        DockNode::Row(children) => WindowLayoutRoot::Axis(semio_framework_ui_declaration::layout::WindowLayoutAxisNode { kind: "row".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
-        DockNode::Column(children) => WindowLayoutRoot::Axis(semio_framework_ui_declaration::layout::WindowLayoutAxisNode { kind: "column".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
+        DockNode::Row(children) => WindowLayoutRoot::Axis(semio_ui_declaration::layout::WindowLayoutAxisNode { kind: "row".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
+        DockNode::Column(children) => WindowLayoutRoot::Axis(semio_ui_declaration::layout::WindowLayoutAxisNode { kind: "column".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
     }
 }
 
 fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
     match node {
         DockNode::Stack { windows, active } => WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(size as f64), active_window_kind_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() }),
-        DockNode::Row(children) => WindowLayoutChild::Axis(semio_framework_ui_declaration::layout::WindowLayoutAxisNode { kind: "row".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() }),
+        DockNode::Row(children) => WindowLayoutChild::Axis(semio_ui_declaration::layout::WindowLayoutAxisNode { kind: "row".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() }),
         DockNode::Column(children) => {
-            WindowLayoutChild::Axis(semio_framework_ui_declaration::layout::WindowLayoutAxisNode { kind: "column".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() })
+            WindowLayoutChild::Axis(semio_ui_declaration::layout::WindowLayoutAxisNode { kind: "column".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() })
         }
     }
 }

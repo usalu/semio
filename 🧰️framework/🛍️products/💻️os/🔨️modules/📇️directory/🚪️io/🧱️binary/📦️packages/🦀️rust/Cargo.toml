@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-directory-binary"
+name = "semio-os-directory-binary"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,4 +23,4 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
-semio-framework-os-directory-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-directory-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }

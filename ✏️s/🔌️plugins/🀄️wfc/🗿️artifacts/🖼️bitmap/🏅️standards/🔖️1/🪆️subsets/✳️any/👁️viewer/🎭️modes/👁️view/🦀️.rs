@@ -2,10 +2,10 @@
 //! same way whichever surface opened it.
 
 use crate::viewer::bitmap::modes::view::windows::{input, output};
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const WFC_BITMAP_MODE_VIEW: &str = "view";
 

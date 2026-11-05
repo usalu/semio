@@ -1,8 +1,8 @@
 //! 🧪️ schema tests (🔬️dag-unit): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_schema::DagScreenHit;
+use semio_os_infinite_board_schema::DagScreenHit;
 use semio_framework_pack_json::JsonMemberPolicy;
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 use semio_framework_test_fixtures::fixture_text;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.

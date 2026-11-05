@@ -3,7 +3,7 @@
 use semio_s_artifact_block_3d_model::Block3dSnapshot;
 use semio_s_artifact_block_3d_editor_config::{block3d_window_view, Block3dConfig};
 use semio_s_artifact_block_3d_editor_terminology::Block3dLabels;
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_plugin::{MeasureSelectItem, WindowMeasure};
 
 pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
     let view = block3d_window_view(config, window_id);

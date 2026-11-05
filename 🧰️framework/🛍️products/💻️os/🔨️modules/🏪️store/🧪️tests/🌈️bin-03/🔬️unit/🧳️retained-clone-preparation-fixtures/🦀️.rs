@@ -20,7 +20,7 @@ impl DemoEphemeralPreparationFactory {
 struct DemoEphemeralPreparation {
     request: Option<ArtifactEphemeralOneItemPreparationRequest<DemoSnapshot, DemoMutation>>,
     prepared: Option<ArtifactEphemeralOneItemPrepared<DemoSnapshot>>,
-    semantic_refusal: std::mem::ManuallyDrop<Option<semio_framework_os_spr::MutationApplyError>>,
+    semantic_refusal: std::mem::ManuallyDrop<Option<semio_os_spr::MutationApplyError>>,
     checkpoint: ArtifactStoreOneItemCheckpoint,
     base: Option<ArtifactEphemeralBaseRead<DemoSnapshot>>,
     mutation: Option<DemoMutation>,
@@ -163,7 +163,7 @@ struct DemoRetainedCloneEditCursor {
     phase: u8,
     inverse: Option<Vec<DemoMutation>>,
     active_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
-    semantic_refusal: std::mem::ManuallyDrop<Option<semio_framework_os_spr::MutationApplyError>>,
+    semantic_refusal: std::mem::ManuallyDrop<Option<semio_os_spr::MutationApplyError>>,
     cancelled: bool,
     closing: bool,
 }

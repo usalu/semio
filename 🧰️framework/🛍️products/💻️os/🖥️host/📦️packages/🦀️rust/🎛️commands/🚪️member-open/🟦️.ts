@@ -76,7 +76,7 @@ export class MemberOpenProtocolScript extends BundleScript {
     assert(storeTests.includes("member_open_partial_parse_and_initialization_owners_retire_exactly"));
     console.log(`[TRACE] member open request oracle: ${fixture.cases.length} admission cases, ${fixture.framing.length} framing cases, ${fixture.retention.length} declared retained-stage cases; rejected input bytes retained=${rejectedBytes}; typed parser/factory activation not claimed`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_open_request_rejection_retains_exact_pages_and_identity", "member_open_input_framing_is_canonical_scoped_and_budgeted"] }, { package: "semio-framework-os-store-tests-02", target: { kind: "lib" }, laws: ["member_open_partial_parse_and_initialization_owners_retire_exactly"] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_open_request_rejection_retains_exact_pages_and_identity", "member_open_input_framing_is_canonical_scoped_and_budgeted"] }, { package: "semio-os-store-tests-02", target: { kind: "lib" }, laws: ["member_open_partial_parse_and_initialization_owners_retire_exactly"] }] });
     assert.equal(receipts[0]!.assertions, 3);
   }
 }

@@ -10,8 +10,8 @@ pub struct RemoveZone { pub zone_id: String }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for RemoveZone where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::insert_zone::InsertZone> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "zone", kind: "remove-zone", record: "RemoveZone" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove zone", "Zone entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove zone", "Zone entfernen")
     }
 }
 

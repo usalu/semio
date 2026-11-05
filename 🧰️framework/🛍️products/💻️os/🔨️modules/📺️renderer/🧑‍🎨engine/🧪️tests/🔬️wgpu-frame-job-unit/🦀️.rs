@@ -1,24 +1,24 @@
 use super::*;
-use semio_framework_os_renderer_wgpu_app_runtime::{AppFrameAfterChrome, AppFrameBuild, AppFramePresentation, AppMailbox, AppRuntime, FrameBuildCursor, FrameEnginePackets, discard_frame_input_candidate};
-use semio_framework_os_renderer_wgpu_frame_actions::{AppInteractionState, FrameActionOwners};
-use semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction;
-use semio_framework_os_renderer_wgpu_host_plumbing::deadlines;
-use semio_framework_os_renderer_wgpu_runtime_mailbox::{RuntimeMailbox, RuntimePresentationWitness};
-use semio_framework_os_renderer_wgpu_shell_input::{PointerCapture, PresentedInputCandidateWitness};
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
-use semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx;
-use semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx;
-use semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_renderer_wgpu_app_runtime::{AppFrameAfterChrome, AppFrameBuild, AppFramePresentation, AppMailbox, AppRuntime, FrameBuildCursor, FrameEnginePackets, discard_frame_input_candidate};
+use semio_renderer_wgpu_frame_actions::{AppInteractionState, FrameActionOwners};
+use semio_renderer_wgpu_frame_transaction::FrameTransaction;
+use semio_renderer_wgpu_host_plumbing::deadlines;
+use semio_renderer_wgpu_runtime_mailbox::{RuntimeMailbox, RuntimePresentationWitness};
+use semio_renderer_wgpu_shell_input::{PointerCapture, PresentedInputCandidateWitness};
+use semio_renderer_wgpu_shell_state::ShellState;
+use semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx;
+use semio_renderer_wgpu_shell_view_panels::PanelsViewCtx;
+use semio_renderer_wgpu_ui_engine_dump::chrome_ledger;
+use semio_ui_locale::{Locale, Terminology};
 use serde_json::Value;
 use std::sync::atomic::Ordering;
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_text::text::FontAtlas;
-use semio_framework_ui_draw_contract::IconAtlas;
-use semio_framework_ui_wgpu_input::InputState;
-use semio_framework_ui_wgpu_input::PointerModifiers;
-use semio_framework_ui_wgpu_hosting::cursor::SemioCursor;
-use semio_framework_ui_theme::theme::Theme;
+use semio_ui_draw_contract::DrawList;
+use semio_ui_text::text::FontAtlas;
+use semio_ui_draw_contract::IconAtlas;
+use semio_ui_wgpu_input::InputState;
+use semio_ui_wgpu_input::PointerModifiers;
+use semio_ui_wgpu_hosting::cursor::SemioCursor;
+use semio_ui_theme::theme::Theme;
 use std::sync::Arc;
 
 
@@ -41,22 +41,22 @@ fn partial_control_deadline_publication_cannot_erase_another_owner_when_a_candid
         assert!(runtime.try_lock().unwrap().shell.input.presented_input_candidate_matches(witness));
     }
     let mut scheduler = ui_render::FrameScheduler::new();
-    let key = semio_framework_os_renderer_wgpu_host_plumbing::deadlines::RETAINED_CONTROL_CLOCK;
+    let key = semio_renderer_wgpu_host_plumbing::deadlines::RETAINED_CONTROL_CLOCK;
     runtime.publish_shell_clock_deadline(Some(1.4));
     runtime.publish_retained_control_deadline(Some(1.0));
-    scheduler.replace_deadline(key, semio_framework_os_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(0), 0.0));
+    scheduler.replace_deadline(key, semio_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(0), 0.0));
     assert!(scheduler.should_render(1.0).is_some());
     runtime.publish_retained_control_deadline(Some(1.6));
     let mut candidate = Some(witness);
-    assert!(semio_framework_os_renderer_wgpu_app_runtime::discard_frame_input_candidate(&runtime, &mut candidate));
+    assert!(semio_renderer_wgpu_app_runtime::discard_frame_input_candidate(&runtime, &mut candidate));
     assert!(candidate.is_none());
     assert_eq!(runtime.control_deadline_us(), Some(1_400_000));
-    scheduler.replace_deadline(key, semio_framework_os_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_000_000), 1.0));
+    scheduler.replace_deadline(key, semio_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_000_000), 1.0));
     assert!(scheduler.should_render(1.0).is_none());
     assert_eq!(scheduler.next_deadline().map(|value| value.due), Some(1.4));
     assert!(scheduler.should_render(1.4).is_some());
     runtime.publish_shell_clock_deadline(Some(1.8));
-    scheduler.replace_deadline(key, semio_framework_os_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_400_000), 1.4));
+    scheduler.replace_deadline(key, semio_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_400_000), 1.4));
     assert!(scheduler.should_render(1.4).is_none());
     assert!((scheduler.next_deadline().unwrap().due - 1.6).abs() < f64::EPSILON * 2.0);
     runtime.publish_shell_clock_deadline(None);
@@ -84,7 +84,7 @@ fn retained_clock_publication_preserves_the_live_frame_and_uses_its_completion_w
     assert_eq!(wakes.load(std::sync::atomic::Ordering::SeqCst), 0, "deadline publication rides the existing frame completion; generic Wake would supersede this build");
     assert!(runtime.retained_control_deadline(0.0).is_none());
     let mut candidate = Some(witness);
-    assert!(semio_framework_os_renderer_wgpu_app_runtime::discard_frame_input_candidate(&runtime, &mut candidate));
+    assert!(semio_renderer_wgpu_app_runtime::discard_frame_input_candidate(&runtime, &mut candidate));
     assert!(candidate.is_none());
 }
 
@@ -99,8 +99,8 @@ fn inputs(now_ms: f64) -> FrameBuildInputs {
 /// 🎫️ A stepped outcome belongs to the session until it is CHECKED OUT — the same two-call order
 /// `ActiveFrameBuild::advance` uses; without it the checked-out job is `None` and the directives
 /// this law reads are invisible.
-fn admit_deadline(job:FrameBuildJob,original:&mut semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1)->BatchJobSession<FrameBuildJob>{
-    let mut source=original.turn(|cx|semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation())));
+fn admit_deadline(job:FrameBuildJob,original:&mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1)->BatchJobSession<FrameBuildJob>{
+    let mut source=original.turn(|cx|semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation())));
     for _ in 0..32{
         if let Some(session)=original.turn(|cx|source.admit_pending_batch(BatchDriveConfig{retained:cx.retained_grant(),site:"original-frame-deadline-law",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000000},cx)).expect("original deadline admission"){
             assert!(source.terminal_is_empty());return session;
@@ -109,12 +109,12 @@ fn admit_deadline(job:FrameBuildJob,original:&mut semio_framework_os_renderer_wg
     panic!("original deadline admission did not complete")
 }
 
-fn retire_fixture_phase(phase:&mut ActiveFramePhase,original:&mut semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1)->InteractiveJobCloseStep{
+fn retire_fixture_phase(phase:&mut ActiveFramePhase,original:&mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1)->InteractiveJobCloseStep{
     original.turn(|cx|{let witness=cx.borrowed_original_cancel_token()?;retire_active_phase(phase,cx,witness)}).expect("same original phase close")
 }
 
 fn compute(inputs: FrameBuildInputs) -> FrameDirectives {
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
     let mut session=admit_deadline(FrameBuildJob::new(inputs),&mut original);
     let mut directives=None;
     for _ in 0..32{
@@ -162,7 +162,7 @@ fn retained_frame_owner_turn_advances_once_and_charges_terminal_work() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap_or_else(|_| panic!("frame turn fixture"));
     let turns = fixture["requests"][0]["remainingTurns"].as_u64().unwrap_or_else(|| panic!("frame turn count"));
     let mut calls = 0;
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
     for turn in 0..turns {
         original.turn(|context|{
             let step=run_frame_owner_turn(context,|_|{calls+=1;if turn+1==turns{ActiveFrameStep::Complete(None)}else{ActiveFrameStep::Pending}});
@@ -175,7 +175,7 @@ fn retained_frame_owner_turn_advances_once_and_charges_terminal_work() {
 
 #[test]
 fn cancellation_retires_deadline_apply_and_build_phases_to_terminal_empty() {
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
     let deadline=admit_deadline(FrameBuildJob::new(FrameBuildInputs{wheel_zoom_deadline_ms:0.0,now_ms:2.0}),&mut original);
     let mut phases=[ActiveFramePhase::Deadlines(deadline),ActiveFramePhase::ApplyPending(FrameDirectives{wheel_zoom_deadline_cleared:false})];
     for phase in &mut phases{
@@ -186,13 +186,13 @@ fn cancellation_retires_deadline_apply_and_build_phases_to_terminal_empty() {
 
 #[test]
 fn cancellation_retires_empty_preparation_to_terminal_empty() {
-    let build = semio_framework_os_renderer_wgpu_app_runtime::AppFrameBuild {
+    let build = semio_renderer_wgpu_app_runtime::AppFrameBuild {
         retained: fixture_frame_grant(),
-        input: semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 1, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty fixture preparation admission")),
+        input: semio_ui_prepared::PreparedRenderInput::try_new(1, 1, semio_ui_draw_contract::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty fixture preparation admission")),
         input_candidate: None,
-        engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
+        engine_packets: semio_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation: Generation(1),
-        cursor: semio_framework_ui_wgpu_hosting::cursor::SemioCursor::Default,
+        cursor: semio_ui_wgpu_hosting::cursor::SemioCursor::Default,
         theme_dark: false,
         fullscreen: None,
         cursor_wake: None,
@@ -200,7 +200,7 @@ fn cancellation_retires_empty_preparation_to_terminal_empty() {
         job_progress: None,
     };
     let mut phase = ActiveFramePhase::Prepare(build.into_preparation());
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
     for _ in 0..100 {
         if matches!(retire_fixture_phase(&mut phase,&mut original), InteractiveJobCloseStep::Complete { .. }) {
             break;
@@ -210,19 +210,19 @@ fn cancellation_retires_empty_preparation_to_terminal_empty() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn runtime_with_presented_input_candidate() -> (semio_framework_os_renderer_wgpu_app_runtime::AppMailbox, semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness) {
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut interaction = semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
-        shell: semio_framework_os_renderer_wgpu_shell_state::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
-        input: semio_framework_ui_wgpu_input::InputState::default(),
-        theme: semio_framework_ui_theme::Theme::default(),
+fn runtime_with_presented_input_candidate() -> (semio_renderer_wgpu_app_runtime::AppMailbox, semio_renderer_wgpu_shell_input::PresentedInputCandidateWitness) {
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    let mut interaction = semio_renderer_wgpu_frame_actions::AppInteractionState {
+        shell: semio_renderer_wgpu_shell_state::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native),
+        input: semio_ui_wgpu_input::InputState::default(),
+        theme: semio_ui_theme::Theme::default(),
         theme_dark: false,
         last_pointer_x: 0.0,
         last_pointer_y: 0.0,
         pointer_down: false,
         pointer_button: 0,
-        pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
-        modifiers: semio_framework_ui_wgpu_input::PointerModifiers::default(),
+        pointer_capture: semio_renderer_wgpu_shell_input::PointerCapture::default(),
+        modifiers: semio_ui_wgpu_input::PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
         text_streams: std::array::from_fn(|_| None),
@@ -231,20 +231,20 @@ fn runtime_with_presented_input_candidate() -> (semio_framework_os_renderer_wgpu
         text_cancel_pending: false,
         last_sync_pump_ms: 0.0,
     };
-    let accepted = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_framework_ui_theme::Theme::default()).expect("accepted A presented input candidate");
-    assert!(semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, accepted), "baseline A is accepted before B is staged");
-    let witness = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_framework_ui_theme::Theme::default()).expect("stale B presented input candidate");
-    let runtime = semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimeMailbox::new(semio_framework_os_renderer_wgpu_app_runtime::AppRuntime {
-        atlas: semio_framework_ui_text::FontAtlas::builtin(),
-        icons: semio_framework_ui_draw_contract::IconAtlas::default(),
+    let accepted = semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_ui_theme::Theme::default()).expect("accepted A presented input candidate");
+    assert!(semio_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, accepted), "baseline A is accepted before B is staged");
+    let witness = semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_ui_theme::Theme::default()).expect("stale B presented input candidate");
+    let runtime = semio_renderer_wgpu_runtime_mailbox::RuntimeMailbox::new(semio_renderer_wgpu_app_runtime::AppRuntime {
+        atlas: semio_ui_text::FontAtlas::builtin(),
+        icons: semio_ui_draw_contract::IconAtlas::default(),
         icon_rebuild: None,
         icon_raster_scale: 1.0,
         interaction: Some(interaction),
         checkout: Default::default(),
-        draw: semio_framework_ui_draw_contract::DrawList::default(),
-        overlay: semio_framework_ui_draw_contract::DrawList::default(),
+        draw: semio_ui_draw_contract::DrawList::default(),
+        overlay: semio_ui_draw_contract::DrawList::default(),
         pending_frame_deferred: None,
-        frame_actions: semio_framework_os_renderer_wgpu_frame_actions::FrameActionOwners::default(),
+        frame_actions: semio_renderer_wgpu_frame_actions::FrameActionOwners::default(),
         pending_frame_maintenance_refusal: None,
         plugin_modules_root: Default::default(),
         native_hot_swap_scan: None,
@@ -256,7 +256,7 @@ fn runtime_with_presented_input_candidate() -> (semio_framework_os_renderer_wgpu
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn close_active_frame(mut active: ActiveFrameBuild,original:&mut semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1) -> semio_framework_os_renderer_wgpu_app_runtime::AppMailbox {
+fn close_active_frame(mut active: ActiveFrameBuild,original:&mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1) -> semio_renderer_wgpu_app_runtime::AppMailbox {
     let runtime = active.runtime.clone();
     active.begin_close();
     for _ in 0..262_144 {
@@ -269,14 +269,14 @@ fn close_active_frame(mut active: ActiveFrameBuild,original:&mut semio_framework
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn assert_candidate_returned(runtime: &semio_framework_os_renderer_wgpu_app_runtime::AppMailbox, witness: semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness) {
+fn assert_candidate_returned(runtime: &semio_renderer_wgpu_app_runtime::AppMailbox, witness: semio_renderer_wgpu_shell_input::PresentedInputCandidateWitness) {
     let mut runtime = runtime.try_lock().expect("test runtime lock");
     let interaction = runtime.interaction.as_mut().expect("test interaction owner");
     assert!(!interaction.shell.input.presented_input_candidate_matches(witness), "the abandoned frame returns its exact sealed input candidate");
-    let successor = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_framework_ui_theme::Theme::default()).expect("successor presented input candidate");
+    let successor = semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_ui_theme::Theme::default()).expect("successor presented input candidate");
     assert_ne!(successor, witness, "the successor receives a fresh presentation witness");
     assert!(interaction.shell.input.presented_input_candidate_matches(successor), "the successor owns the one retained candidate slot");
-    assert!(semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, successor), "the successor candidate remains publishable after abandonment");
+    assert!(semio_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, successor), "the successor candidate remains publishable after abandonment");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -285,10 +285,10 @@ fn superseded_frame_build_returns_its_exact_presented_input_candidate() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(91);
     let generation = Generation(91);
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
-    let presentation = semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
-    let mut transaction = semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
-    let mut cursor = semio_framework_os_renderer_wgpu_app_runtime::FrameBuildCursor::new(presentation, fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
+    let presentation = semio_renderer_wgpu_runtime_mailbox::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
+    let mut transaction = semio_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
+    let mut cursor = semio_renderer_wgpu_app_runtime::FrameBuildCursor::new(presentation, fixture_frame_grant());
     cursor.input_candidate = Some(witness);
     transaction.build_cursor = Some(cursor);
     let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, original.alias(), fixture_frame_grant());
@@ -303,14 +303,14 @@ fn cancelled_frame_preparation_returns_its_exact_presented_input_candidate() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(92);
     let generation = Generation(92);
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
-    let build = semio_framework_os_renderer_wgpu_app_runtime::AppFrameBuild {
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
+    let build = semio_renderer_wgpu_app_runtime::AppFrameBuild {
         retained: fixture_frame_grant(),
-        input: semio_framework_ui_prepared::PreparedRenderInput::try_new(1, generation.0, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty prepared input")),
+        input: semio_ui_prepared::PreparedRenderInput::try_new(1, generation.0, semio_ui_draw_contract::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty prepared input")),
         input_candidate: Some(witness),
-        engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
+        engine_packets: semio_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation,
-        cursor: semio_framework_ui_wgpu_hosting::cursor::SemioCursor::Default,
+        cursor: semio_ui_wgpu_hosting::cursor::SemioCursor::Default,
         theme_dark: false,
         fullscreen: None,
         cursor_wake: None,
@@ -328,14 +328,14 @@ fn stale_completed_frame_returns_its_exact_presented_input_candidate() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(93);
     let generation = Generation(93);
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
-    let frame = semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation {
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
+    let frame = semio_renderer_wgpu_app_runtime::AppFramePresentation {
         retained: fixture_frame_grant(),
         packet: None,
         input_candidate: Some(witness),
-        engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
+        engine_packets: semio_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation,
-        cursor: semio_framework_ui_wgpu_hosting::cursor::SemioCursor::Default,
+        cursor: semio_ui_wgpu_hosting::cursor::SemioCursor::Default,
         theme_dark: false,
         fullscreen: None,
         cursor_wake: None,
@@ -354,10 +354,10 @@ fn cancelled_after_chrome_frame_returns_its_exact_presented_input_candidate() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(94);
     let generation = Generation(94);
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
-    let mut transaction = semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
+    let mut transaction = semio_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
     transaction.after_chrome =
-        Some(semio_framework_os_renderer_wgpu_app_runtime::AppFrameAfterChrome { retained: fixture_frame_grant(), resource_input: None, input_candidate: Some(witness), upload_rejected: None, draw_rejected: None, engine_packets: None, fullscreen: None, cursor_wake: None, job_progress: None, retirement: None });
+        Some(semio_renderer_wgpu_app_runtime::AppFrameAfterChrome { retained: fixture_frame_grant(), resource_input: None, input_candidate: Some(witness), upload_rejected: None, draw_rejected: None, engine_packets: None, fullscreen: None, cursor_wake: None, job_progress: None, retirement: None });
     let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, original.alias(), fixture_frame_grant());
     active.phase = ActiveFramePhase::Build(transaction);
     let runtime = close_active_frame(active,&mut original);
@@ -370,10 +370,10 @@ fn component_close_transiently_retires_the_creating_frame_and_readmits_the_same_
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(95);
     let generation = Generation(95);
-    let mut original=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
-    let presentation = semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
-    let mut transaction = semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
-    let mut cursor = semio_framework_os_renderer_wgpu_app_runtime::FrameBuildCursor::new(presentation, fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
+    let presentation = semio_renderer_wgpu_runtime_mailbox::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
+    let mut transaction = semio_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
+    let mut cursor = semio_renderer_wgpu_app_runtime::FrameBuildCursor::new(presentation, fixture_frame_grant());
     cursor.input_candidate = Some(witness);
     transaction.build_cursor = Some(cursor);
     let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, original.alias(), fixture_frame_grant());
@@ -425,7 +425,7 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
         maximum_release_bytes: caller["maximumReleaseBytes"].as_u64().unwrap() as usize,
         maximum_depth: caller["maximumDepth"].as_u64().unwrap() as usize,
     };
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),OperationId(99),Generation(99));
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),OperationId(99),Generation(99));
     let mut job=FrameBuildJob::new(inputs(1_000.0));
     caller.turn(|cx|{assert!(job.step(cx).unwrap().is_none());assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<FrameDirectives>>(),..Default::default()});});
     job.begin_close();let original=job.complete.as_ref().unwrap()as*const FrameDirectives;

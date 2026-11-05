@@ -4,7 +4,7 @@ use semio_framework_job::*;
 use semio_framework_value::RetainedCloneStep;
 use super::initial_source::tests::{caller,call,close_decoder,TURN};
 #[test]fn original_energy_document_genesis_installs_the_same_native_publication_and_replay_issuer(){
- use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesis,OriginalStoreSlot};
+ use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesis,OriginalStoreSlot};
  type Birth=OriginalStoreGenesis<EnergyModelGenesis>;
  let policy=RetainedCloneGrant{maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,..TURN};
  let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let actor=store::ActorId("native-energy-reader".into());let mut birth=call(&mut caller,&mut decoder,policy,|cx|Birth::admit("native-energy",&actor,cx));let mut output=None;

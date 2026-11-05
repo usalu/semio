@@ -1,25 +1,25 @@
 // #region widgets
 //! 🧩️ Generic widget tree — layout, measurement, and drawing.
 
-use semio_framework_ui_declaration::ui::UiTreeWindow;
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState};
-use semio_framework_ui_wgpu_layout::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
-use semio_framework_ui_text::{FontAtlas, TextFace};
-use semio_framework_ui_theme::{Rgba, Theme};
-use semio_framework_ui_declaration::IconName;
-use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
+use semio_ui_declaration::ui::UiTreeWindow;
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_input::{HitKind, HitTarget, InputState};
+use semio_ui_wgpu_layout::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
+use semio_ui_text::{FontAtlas, TextFace};
+use semio_ui_theme::{Rgba, Theme};
+use semio_ui_declaration::IconName;
+use semio_ui_declaration::ui::UiTreeActionPlacement;
 use std::collections::HashMap;
 
 const PANEL_HEADER: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::PANEL_HEADER_HEIGHT_UI_SPACING) as f32;
 /// 🌳️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — the token React's `Tree` rows
 /// carry as `h-workbench`, and the same number `Theme::tree_row_height` hands the retained
 /// layout/paint/hit path (`layout::TreeRowMetrics`).
-pub use semio_framework_ui_theme::metrics::TREE_ROW_HEIGHT;
+pub use semio_ui_theme::metrics::TREE_ROW_HEIGHT;
 pub const TREE_INDENT_PER_LEVEL: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_INDENT_PER_LEVEL_UI_SPACING) as f32;
 pub const TREE_TOGGLE_WIDTH: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_TOGGLE_UI_SPACING) as f32;
-pub const TREE_ICON_SIZE: f32 = semio_framework_ui_wgpu_layout::chrome::ICON_TREE_ROW;
+pub const TREE_ICON_SIZE: f32 = semio_ui_wgpu_layout::chrome::ICON_TREE_ROW;
 pub const TREE_SECTION_GAP: f32 = 8.0;
 
 pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode<E>) -> (f32, f32) {
@@ -87,10 +87,10 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
             (max_w.max(120.0), height)
         }
         WidgetNode::Tree { sections, .. } => (measure_tree_sections_width(sections, atlas, theme), measure_tree_sections(sections)),
-        WidgetNode::Progress { .. } => (120.0, semio_framework_ui_wgpu_layout::chrome::SIZE_TINY.max(theme.gap_standard)),
-        WidgetNode::Image { src, alt, .. } => match semio_framework_ui_wgpu_paint::ui_image_natural_size(src.as_str()) {
+        WidgetNode::Progress { .. } => (120.0, semio_ui_wgpu_layout::chrome::SIZE_TINY.max(theme.gap_standard)),
+        WidgetNode::Image { src, alt, .. } => match semio_ui_wgpu_paint::ui_image_natural_size(src.as_str()) {
             Some((natural_w, natural_h)) => {
-                let height = (natural_h as f32).min(semio_framework_ui_wgpu_paint::UI_IMAGE_MAX_BOX_HEIGHT);
+                let height = (natural_h as f32).min(semio_ui_wgpu_paint::UI_IMAGE_MAX_BOX_HEIGHT);
                 let scale = if natural_h > 0 { height / natural_h as f32 } else { 1.0 };
                 ((natural_w as f32 * scale).max(1.0), height.max(1.0))
             }
@@ -202,7 +202,7 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
                 let header = Rect::new(bounds.x, bounds.y, bounds.w, PANEL_HEADER);
                 let chevron_rect = Rect::new(bounds.x, bounds.y, TREE_TOGGLE_WIDTH, PANEL_HEADER);
                 let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
-                tree_draw_chevron(ctx, chevron, chevron_rect, semio_framework_ui_wgpu_layout::chrome::ICON_TINY);
+                tree_draw_chevron(ctx, chevron, chevron_rect, semio_ui_wgpu_layout::chrome::ICON_TINY);
                 if let Some(label) = label {
                     draw_text(ctx, label, bounds.x + TREE_TOGGLE_WIDTH + ctx.theme.gap_standard, bounds.y + (PANEL_HEADER + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, ctx.theme.text);
                 }
@@ -244,7 +244,7 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
 /// retained ladder, so the two kits cannot drift on geometry, the indeterminate share, or the
 /// `muted`/`accent` token pair.
 fn render_progress<E>(completed: f64, total: Option<f64>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
-    let (track, fill) = semio_framework_ui_wgpu_paint::progress_bar_rects_of(completed, total, bounds, ctx.theme);
+    let (track, fill) = semio_ui_wgpu_paint::progress_bar_rects_of(completed, total, bounds, ctx.theme);
     ctx.draw.push_rounded(track, ctx.theme.muted, ctx.theme.border_radius);
     if fill[2] > 0.0 {
         ctx.draw.push_rounded(fill, ctx.theme.accent, ctx.theme.border_radius);
@@ -255,9 +255,9 @@ fn render_progress<E>(completed: f64, total: Option<f64>, bounds: Rect, ctx: &mu
 /// other source is a host fetch this crate has no authority to perform, so it shows the placeholder
 /// panel plus `alt` — which is also what React's `<img>` shows while it is pending or broken.
 fn render_image<E>(id: &str, src: &str, alt: Option<&str>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
-    let decoded = matches!(semio_framework_ui_wgpu_paint::admit_ui_image(src), semio_framework_ui_wgpu_paint::UiImageAdmission::Ready).then(|| semio_framework_ui_wgpu_paint::ui_image_natural_size(src)).flatten();
+    let decoded = matches!(semio_ui_wgpu_paint::admit_ui_image(src), semio_ui_wgpu_paint::UiImageAdmission::Ready).then(|| semio_ui_wgpu_paint::ui_image_natural_size(src)).flatten();
     if let Some((natural_w, natural_h)) = decoded {
-        let content = semio_framework_ui_wgpu_paint::ui_image_content_rect(bounds, natural_w, natural_h);
+        let content = semio_ui_wgpu_paint::ui_image_content_rect(bounds, natural_w, natural_h);
         ctx.draw.push_raster_quad(src, [content.x, content.y, content.w, content.h], [0.0, 0.0, 1.0, 1.0], 1.0);
         return;
     }
@@ -276,7 +276,7 @@ fn render_group<E: Clone>(id: &str, label: &str, default_open: bool, children: &
     let collapsed = tree_row_collapsed(ctx.collapsed_sections, &section_key, default_open);
     let header = Rect::new(bounds.x, bounds.y, bounds.w, PANEL_HEADER);
     let chevron_rect = Rect::new(bounds.x, bounds.y, TREE_TOGGLE_WIDTH, PANEL_HEADER);
-    tree_draw_chevron(ctx, if collapsed { "chevron-right" } else { "chevron-down" }, chevron_rect, semio_framework_ui_wgpu_layout::chrome::ICON_TINY);
+    tree_draw_chevron(ctx, if collapsed { "chevron-right" } else { "chevron-down" }, chevron_rect, semio_ui_wgpu_layout::chrome::ICON_TINY);
     draw_text(ctx, label, bounds.x + TREE_TOGGLE_WIDTH + ctx.theme.gap_standard, bounds.y + (PANEL_HEADER + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, ctx.theme.text);
     ctx.input.register_hit(HitTarget { rect: header, event: None, control_id: Some(format!("section.chevron.{id}")), kind: HitKind::Generic, drag_axis: None, drag_data: None });
     if collapsed {
@@ -295,13 +295,13 @@ fn render_group<E: Clone>(id: &str, label: &str, default_open: bool, children: &
 fn render_scene_placeholder<E>(surface_id: &str, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let _ = surface_id;
     ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
-    semio_framework_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
+    semio_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
 }
 
 /// 🔌️ A plugin body slot labelled by its `body_key`; the body itself is the host's concern.
 fn render_external_slot<E>(body_key: &str, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
-    semio_framework_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
+    semio_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
     draw_text(ctx, body_key, bounds.x + ctx.theme.padding_standard, bounds.y + (bounds.h + ctx.theme.font_size_small) * 0.5 - 2.0, ctx.theme.font_size_small, ctx.theme.text_muted);
 }
 //#endregion 🧩️KitCompositeParity
@@ -337,17 +337,17 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
     }
 }
 
-use semio_framework_ui_wgpu_controls::button::render_button;
-use semio_framework_ui_wgpu_controls::icon_selector::render_icon_select;
-use semio_framework_ui_wgpu_controls::input_element::render_input;
-use semio_framework_ui_wgpu_controls::key_value::render_key_value;
-use semio_framework_ui_wgpu_controls::ring::render_ring;
-use semio_framework_ui_wgpu_controls::select::render_select;
-use semio_framework_ui_wgpu_controls::slider::render_slider;
-use semio_framework_ui_wgpu_controls::stepper::render_number_stepper;
-use semio_framework_ui_wgpu_controls::toggle::render_toggle;
+use semio_ui_wgpu_controls::button::render_button;
+use semio_ui_wgpu_controls::icon_selector::render_icon_select;
+use semio_ui_wgpu_controls::input_element::render_input;
+use semio_ui_wgpu_controls::key_value::render_key_value;
+use semio_ui_wgpu_controls::ring::render_ring;
+use semio_ui_wgpu_controls::select::render_select;
+use semio_ui_wgpu_controls::slider::render_slider;
+use semio_ui_wgpu_controls::stepper::render_number_stepper;
+use semio_ui_wgpu_controls::toggle::render_toggle;
 use crate::tree_element::{measure_tree_sections, measure_tree_sections_state, measure_tree_sections_width, render_tree};
-use semio_framework_ui_wgpu_widget_kit::{ControlNode, TreeItem, WidgetContext, WidgetNode, draw_icon, draw_text, draw_text_wrapped, register_input_meta, register_select_meta, register_toggle_meta, render_scroll_region, wrap_text};
+use semio_ui_wgpu_widget_kit::{ControlNode, TreeItem, WidgetContext, WidgetNode, draw_icon, draw_text, draw_text_wrapped, register_input_meta, register_select_meta, register_toggle_meta, render_scroll_region, wrap_text};
 
 #[path = "../../../🧱️elements/🌳️Tree/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod tree_element;

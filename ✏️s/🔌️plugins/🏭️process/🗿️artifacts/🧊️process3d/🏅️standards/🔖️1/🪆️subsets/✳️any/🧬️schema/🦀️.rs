@@ -1,7 +1,7 @@
 //! 🧬️ Process3d artifact schema — every field of the artifact with its state class.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 //#region 🧩️Modules

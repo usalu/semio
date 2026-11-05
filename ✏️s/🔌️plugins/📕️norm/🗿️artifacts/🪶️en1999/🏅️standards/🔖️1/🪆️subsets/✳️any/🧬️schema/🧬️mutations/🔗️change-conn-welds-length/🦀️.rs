@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnWeldsLength wh
         record: "ChangedConnWeldsLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Weld length l_w of the connection", "Anschluss: Nahtlänge l_w ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Weld length l_w of the connection", "Anschluss: Nahtlänge l_w ändern")
     }
 }
 

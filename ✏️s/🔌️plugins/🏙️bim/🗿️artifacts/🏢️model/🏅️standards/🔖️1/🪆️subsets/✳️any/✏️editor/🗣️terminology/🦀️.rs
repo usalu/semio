@@ -3,7 +3,7 @@
 
 macro_rules! bim_labels {
     ($( $field:ident: $en:literal, $de:literal; )+) => {
-        semio_framework_ui_locale::app_labels! {
+        semio_ui_locale::app_labels! {
             pub struct BimLabels {
                 $( $field: native_en $en, native_de $de, reuse_en $en, reuse_de $de );+
             }
@@ -39,24 +39,24 @@ bim_label_rows_model! { bim_label_rows_commands, bim_label_rows_faults, bim_labe
 //#endregion 🔖️Labels
 
 /// 🗣️ Resolves the label set of the addressed view's locale and terminology.
-pub fn bim_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static BimLabels {
-    semio_framework_plugin::resolve_labels::<BimLabels>(view_state)
+pub fn bim_labels(view_state: &semio_plugin::ViewModel) -> &'static BimLabels {
+    semio_plugin::resolve_labels::<BimLabels>(view_state)
 }
 
 impl BimLabels {
     /// 🌐️ The English and German text of one label field, read through borrowed constants: `BimLabels::NATIVE_EN.field` copies the whole ~17 KiB label set into the caller's frame
     /// at `opt-level = 0`, so a table of 100+ rows spent 7 MiB of stack before the app existed (ticket `r13-stack`).
-    pub fn localized(pick: fn(&Self) -> semio_framework_ui_locale::LabelText) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(pick(&Self::NATIVE_EN).as_str(), pick(&Self::NATIVE_DE).as_str())
+    pub fn localized(pick: fn(&Self) -> semio_ui_locale::LabelText) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(pick(&Self::NATIVE_EN).as_str(), pick(&Self::NATIVE_DE).as_str())
     }
 
     /// 🧩️ Fills the `{name}` placeholder of a label.
-    pub fn named(text: semio_framework_ui_locale::LabelText, name: &str) -> String {
+    pub fn named(text: semio_ui_locale::LabelText, name: &str) -> String {
         text.as_str().replace("{name}", name)
     }
 
     /// 🧮️ Fills the `{count}` placeholder of a label.
-    pub fn counted(text: semio_framework_ui_locale::LabelText, count: usize) -> String {
+    pub fn counted(text: semio_ui_locale::LabelText, count: usize) -> String {
         text.as_str().replace("{count}", &count.to_string())
     }
 }

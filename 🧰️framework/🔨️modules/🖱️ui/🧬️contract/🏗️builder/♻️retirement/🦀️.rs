@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::{BuiltChildRetirementNext,BuiltChildrenIntoIter,BuiltNode};
-use semio_framework_ui_contract_budget::UI_BUILT_CHILD_RETIRE_SLOTS;
+use semio_ui_contract_budget::UI_BUILT_CHILD_RETIRE_SLOTS;
 use std::mem::ManuallyDrop;
 
 const _: () = {

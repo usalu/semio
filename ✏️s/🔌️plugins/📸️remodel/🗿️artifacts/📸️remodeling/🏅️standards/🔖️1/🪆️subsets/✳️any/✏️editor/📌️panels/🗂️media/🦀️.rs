@@ -6,16 +6,16 @@ use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::rem
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::tree_item;
+use semio_plugin::tree_item_desc;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
 
 //#region 🔖️Constants
 pub const REMODELING_PANEL_MEDIA_ID: &str = "remodeling.media";
@@ -32,7 +32,7 @@ pub fn definition() -> PanelTabDefinition {
 /// 🪟️ A multi-camera import brings in more streams than one node admits, so the stream list is its
 /// own windowed section beside the fixed drop zone and counts line.
 pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let chrome = semio_framework_plugin::ui_node_list([
+    let chrome = semio_plugin::ui_node_list([
         tree_item_desc("remodeling-media-drop", labels.panel_media.as_str(), Some(format!("{} ({REMODELING_MEDIA_ACCEPT})", labels.no_streams.as_str()))),
         tree_item("remodeling-media.summary", format!("{}: {} - {}: {}", labels.streams.as_str(), scene.streams.len(), labels.assets.as_str(), scene.assets.len())),
     ])?;

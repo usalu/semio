@@ -14,7 +14,7 @@ import { join } from "node:path";
 type OsPluginArtifact = { pluginId: string; cratePath: string; wasmOut: string };
 
 /** 🔍️ Whether one registry row's shipped component exists under its crate's `dist/components` — the same path as
- * `resolve_plugin_paths` in `semio-framework-os-run`. */
+ * `resolve_plugin_paths` in `semio-os-run`. */
 function pluginWasmArtifactExists(repoRoot: string, entry: OsPluginArtifact): boolean {
   return existsSync(join(repoRoot, entry.cratePath, COMPONENT_PROFILE_POLICIES[SHIPPED_COMPONENT_PROFILE].directory, entry.wasmOut));
 }
@@ -47,7 +47,7 @@ export class OsScript extends Script {
         }
       }
       const watch = rest.includes("--watch");
-      runCmd("cargo", ["run", "-p", "semio-framework-os-run", "--", ...rest], {
+      runCmd("cargo", ["run", "-p", "semio-os-run", "--", ...rest], {
         cwd: this.root,
         env: { ...process.env, SEMIO_REPO_ROOT: repoRoot },
         ...(watch ? daemonBudgetOpts() : { budgetMs: buildBudgetMs() }),
@@ -68,7 +68,7 @@ export class SemioScript extends Script {
       console.error("[semio] usage: repo ./📜️script.ts semio <inspect|verify|open|convert> <path>");
       process.exit(1);
     }
-    runCmd("cargo", ["run", "-p", "semio-framework-os-kernel", "--features", "native-bin", "--bin", "semio", "--", ...segments], {
+    runCmd("cargo", ["run", "-p", "semio-os-kernel", "--features", "native-bin", "--bin", "semio", "--", ...segments], {
       cwd: this.root,
       budgetMs: buildBudgetMs(),
     });

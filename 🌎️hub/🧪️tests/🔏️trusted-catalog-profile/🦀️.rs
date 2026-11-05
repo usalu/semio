@@ -96,9 +96,9 @@ pub async fn verified_gis_map_release_profile(root: &Path) -> Result<VerifiedGis
 }
 
 async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<VerifiedGisMapIntegrationProfileV1, AuthorityError> {
-    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
-    semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
-    let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
+    let runtime = semio_plugin::plugin_runtime::PluginRuntime::new(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
+    semio_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
+    let emitted = semio_plugin::describe::describe_plugin(&runtime).await;
     let descriptor = semio_hub_trusted_catalog_descriptor::decode_package_descriptor(&emitted)?;
     semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(semio_hub_trusted_catalog_contract::catalog_error)?;
     semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(semio_hub_trusted_catalog_contract::catalog_error)?;

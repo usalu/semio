@@ -1,18 +1,18 @@
 //! 🧱️ Registry_quick of the capabilities crate: Gateway capability declarations and the core catalog.
 
 use semio_framework::manifest;
-use semio_framework_os_kernel::native_catalog::NativeCatalogV1;
+use semio_os_kernel::native_catalog::NativeCatalogV1;
 use std::path::Path;
 use crate::core_capabilities::core_tool_capabilities;
-use semio_framework_os_mcp_catalog::catalog::{CatalogSource, compile};
-use semio_framework_os_mcp_catalog::registry::RegistryDiscovery;
+use semio_os_mcp_catalog::catalog::{CatalogSource, compile};
+use semio_os_mcp_catalog::registry::RegistryDiscovery;
 #[cfg(any(test, feature = "testkit"))]
 use crate::source_builders::{cad_descriptor, note_descriptor};
 
 /// 📇️ Authors a closed native document and admits it through the production publication reader.
 fn write_registry(root:&Path,rows:&[(&str,&str)])->NativeCatalogV1{
     let plugins:Vec<serde_json::Value>=rows.iter().map(|(plugin_id,owner_rel)|serde_json::json!({"pluginId":plugin_id,"cratePath":format!("{owner_rel}/📦️packages/🦀️rust"),"wasmOut":format!("{plugin_id}.wasm"),"role":"plugin","extends":null,"host":null,"capabilities":[],"activationEvents":[]})).collect();
-    let publication=root.join("catalog");std::fs::create_dir_all(&publication).unwrap();std::fs::write(publication.join("🦀️catalog.json"),serde_json::to_vec(&serde_json::json!({"version":1,"plugins":plugins,"playgrounds":[]})).unwrap()).unwrap();semio_framework_os_kernel::native_catalog::load_native_catalog_v1(Some(&publication)).unwrap()
+    let publication=root.join("catalog");std::fs::create_dir_all(&publication).unwrap();std::fs::write(publication.join("🦀️catalog.json"),serde_json::to_vec(&serde_json::json!({"version":1,"plugins":plugins,"playgrounds":[]})).unwrap()).unwrap();semio_os_kernel::native_catalog::load_native_catalog_v1(Some(&publication)).unwrap()
 }
 
 fn write_descriptor(root: &Path, owner_rel: &str, descriptor: &manifest::PackageDescriptor) {
@@ -72,7 +72,7 @@ fn the_same_input_compiles_to_a_byte_identical_catalog_hash_twice() {
 
     let source_a=CatalogSource{descriptors:RegistryDiscovery::scan(root.clone(),&catalog).unwrap().descriptors,gateway:core_tool_capabilities(),shell:Vec::new(),os_commands:Vec::new()};
     let source_b=CatalogSource{descriptors:RegistryDiscovery::scan(root.clone(),&catalog).unwrap().descriptors,gateway:core_tool_capabilities(),shell:Vec::new(),os_commands:Vec::new()};
-    let catalog_a = compile(&source_a, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("compiles");
-    let catalog_b = compile(&source_b, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("compiles");
+    let catalog_a = compile(&source_a, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("compiles");
+    let catalog_b = compile(&source_b, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("compiles");
     assert_eq!(catalog_a.hash, catalog_b.hash, "discovering + compiling the same install twice must be byte-identical");
 }

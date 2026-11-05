@@ -9,8 +9,8 @@ use semio_s_artifact_procedural_2d_mutations::generation_mutation_to_generation2
 
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, selected_generation, PlaybookValues};
-use semio_framework_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit};
+use semio_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
+use semio_plugin::{ArtifactView, ConfigView, Emit};
 
 pub struct Generation2dGenerationCommandResult {
     pub emit: Emit<Generation2dMutation, Generation2dConfigMutation>,

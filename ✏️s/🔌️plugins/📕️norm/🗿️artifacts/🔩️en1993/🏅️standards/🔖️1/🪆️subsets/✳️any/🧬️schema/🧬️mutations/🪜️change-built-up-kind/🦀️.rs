@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpKind where 
         record: "ChangedBuiltUpKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Kind of built-up member of the built-up member", "Zusammengesetzter Stab: Art des mehrteiligen Stabes ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Kind of built-up member of the built-up member", "Zusammengesetzter Stab: Art des mehrteiligen Stabes ändern")
     }
 }
 

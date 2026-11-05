@@ -14,7 +14,7 @@ use crate::editor::shooting::ui_helpers_and_io::{ShootingDispatchCtx, SHOOTING_P
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use machine::Command;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
 

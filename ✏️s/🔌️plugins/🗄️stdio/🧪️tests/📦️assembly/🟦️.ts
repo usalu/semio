@@ -31,7 +31,7 @@ export function runAssemblyChecks(): number {
   const manifest = parse(cargo);
   assert.deepEqual(Bun.TOML.parse(cargo), manifest);
   assert.equal(table(table(manifest.package).metadata).component, undefined);
-  assert.deepEqual(Object.keys(table(manifest.dependencies)).sort(), ["semio-framework-plugin", "semio-s-artifact-stdio-contract"]);
+  assert.deepEqual(Object.keys(table(manifest.dependencies)).sort(), ["semio-plugin", "semio-s-artifact-stdio-contract"]);
   checks++;
   const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
   assert.equal(/selected_contributions|plugin_exports!|semio_s_artifact_stdio_(?!contract)|include_str!/u.test(source), false);

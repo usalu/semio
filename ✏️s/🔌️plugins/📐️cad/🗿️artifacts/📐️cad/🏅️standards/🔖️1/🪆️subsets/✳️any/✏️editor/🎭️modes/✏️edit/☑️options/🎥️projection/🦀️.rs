@@ -8,7 +8,7 @@
 use semio_s_artifact_cad_cad_kit::{cad_pane_camera_runtime, cad_window_action, CadPlayRuntime};
 use semio_s_artifact_cad_cad_inferences::cad_camera_projection_config;
 use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
-use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
+use semio_plugin::{world3d_projection_measures, WindowMeasure};
 
 pub fn measure(runtime: &CadPlayRuntime, pane: CadPaneId) -> WindowMeasure {
     world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera_runtime(runtime, pane)), |action, args| cad_window_action(action, args))

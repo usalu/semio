@@ -17,12 +17,12 @@
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts`.
 
 use super::{EventModifiers, EventRouter, PointerButton, UiCommand, UiEvent};
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_declaration::ui::{UiIconSelectNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSliderNode, UiStackNode, UiToggleNode};
-use semio_framework_ui_retained_tree::tree::{Node, NodeKey, UiTree, WidgetSpec};
-use semio_framework_ui_wgpu_layout::layout::slider_control_presentation;
-use semio_framework_ui_declaration::IconName;
+use semio_ui_arena::NodeId;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::{UiIconSelectNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSliderNode, UiStackNode, UiToggleNode};
+use semio_ui_retained_tree::tree::{Node, NodeKey, UiTree, WidgetSpec};
+use semio_ui_wgpu_layout::layout::slider_control_presentation;
+use semio_ui_declaration::IconName;
 use semio_framework_value::DslValue;
 use serde_json::Value;
 
@@ -271,7 +271,7 @@ fn a_dragged_slider_reports_every_intermediate_value() {
     let control = place(&mut tree, Some(root), 1, control_node(case), (20.0, 0.0, 100.0, 24.0));
     let mut router = EventRouter::new("main");
 
-    let presentation = slider_control_presentation(semio_framework_ui_theme::geometry::Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, semio_framework_ui_theme::Theme::default().gap_standard, ui_contract::FlowInline::Ltr).slider;
+    let presentation = slider_control_presentation(semio_ui_theme::geometry::Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, semio_ui_theme::Theme::default().gap_standard, ui_contract::FlowInline::Ltr).slider;
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: presentation.track_cell.x, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
     let moved = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: presentation.track_cell.x + presentation.track_cell.w * 0.5, y: 12.0, modifiers: Default::default() });
 
@@ -295,7 +295,7 @@ fn a_dragged_slider_reports_every_intermediate_value() {
 // than one behind the live document, and its per-surface `seq` advances once per gesture. React
 // applies exactly these rules in `UiDocumentStore::buildIntent` + its runtime's `Stale` outcome.
 
-use semio_framework_ui_action::{UiIntentAddress, UiIntentBindings};
+use semio_ui_action::{UiIntentAddress, UiIntentBindings};
 use ui_contract::{ActionId, Trigger};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -389,7 +389,7 @@ fn publish_revision(tree: &mut UiTree, revision: u64) {
         layout_epoch: 1,
         node_count: 0,
     };
-    tree.publish_document(semio_framework_ui_retained_tree::tree::UiDocumentTree::new(header).expect("header admits"));
+    tree.publish_document(semio_ui_retained_tree::tree::UiDocumentTree::new(header).expect("header admits"));
 }
 
 #[test]

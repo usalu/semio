@@ -1,5 +1,5 @@
 //! 🌊️ Framework Flow persisted-owner capability and complete state baselines.
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use crate::*;
 use semio_framework_value::{DslValue, FromValue, Number, ToValue};
 use store::{ArtifactDsl,ArtifactPack};

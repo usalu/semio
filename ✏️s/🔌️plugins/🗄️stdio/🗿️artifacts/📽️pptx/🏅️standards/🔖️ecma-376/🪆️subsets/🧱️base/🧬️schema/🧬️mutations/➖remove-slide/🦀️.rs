@@ -14,8 +14,8 @@ pub struct RemoveSlide {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveSlide {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "slide", kind: "remove-slide", record: "RemoveSlide" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove slide", "Folie entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove slide", "Folie entfernen")
     }
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.entry.part_path.clone()).chain(self.address.entry.node_path.iter().map(usize::to_string)).collect()

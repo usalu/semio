@@ -21,7 +21,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
@@ -34,7 +34,7 @@ semio-s-artifact-stdio-svg = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-s-artifact-draw-drawing-scene = { workspace = true }
 semio-s-artifact-draw-drawing-write = { workspace = true }
 serde_json = { workspace = true }

@@ -13,10 +13,10 @@ pub use results_animation::FemResultsAnimation;
 pub use results_animation::FemWaveform;
 
 use semio_s_fem_model::Dof;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -32,20 +32,20 @@ pub const MODE_SHAPE_AMPLITUDE_RATIO: f64 = 0.1;
 //#region 🔖️Shared
 /// 🎬️ Encodes one Canvas2d scene into the semantic UI contract — its spine inside the fixed surface
 /// doc and every declared payload lane beside it as a paged carrier (`scene_surface`).
-pub fn canvas_2d_surface(id: impl Into<String>, scene: &semio_framework_ui_scene::Canvas2dScene) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(&id.into(), semio_framework_ui_contract::SurfaceKind::Canvas2d, scene)
+pub fn canvas_2d_surface(id: impl Into<String>, scene: &semio_ui_scene::Canvas2dScene) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(&id.into(), semio_ui_contract::SurfaceKind::Canvas2d, scene)
 }
 
 /// 🌍️ Encodes one World3d scene into the semantic UI contract: the meshes/instances lanes ride as
 /// paged carriers, so a meshed solid with per-vertex stress is bounded by carrier pages rather than
 /// refused by the 32 KiB surface doc (`ui.scene.encode: World3d scene admission failed`).
-pub fn world_3d_surface(id: impl Into<String>, scene: &semio_framework_ui_scene::World3dScene) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(&id.into(), semio_framework_ui_contract::SurfaceKind::World3d, scene)
+pub fn world_3d_surface(id: impl Into<String>, scene: &semio_ui_scene::World3dScene) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(&id.into(), semio_ui_contract::SurfaceKind::World3d, scene)
 }
 
 /// 🎨️ Projects the shared color-input parser into Canvas2d RGB, using black for refused input.
 pub fn hex_to_rgb01(hex: &str) -> (f64, f64, f64) {
-    let rgba = semio_framework_ui_contract::parse_ui_color_hex(hex).unwrap_or([0.0; 4]);
+    let rgba = semio_ui_contract::parse_ui_color_hex(hex).unwrap_or([0.0; 4]);
     (rgba[0], rgba[1], rgba[2])
 }
 

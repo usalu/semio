@@ -1,10 +1,10 @@
 //! 🎟️ The real history frame constructor keeps original pointers until its exact admission.
-use semio_framework_os_store_read::history_read_admission::{admit_history_read_retirement, history_read_retirement_birth_bytes};
-use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, HistoryReadPlan};
-use semio_framework_os_store_replay::ReplayProgress;
+use semio_os_store_read::history_read_admission::{admit_history_read_retirement, history_read_retirement_birth_bytes};
+use semio_os_store_read::{ArtifactDerivedHistoryPreview, HistoryReadPlan};
+use semio_os_store_replay::ReplayProgress;
 use semio_framework_value_snapshot_read::{SnapshotReadLeaseRegistry, artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
-use semio_framework_os_store_testing_fixtures::DemoSnapshot;
+use semio_os_store_testing_fixtures::demo::DemoMutation;
+use semio_os_store_testing_fixtures::DemoSnapshot;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,factory::OwnedValueRetirementFactory,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueRefusalKind};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use std::{sync::Arc,marker::PhantomData};
@@ -12,8 +12,8 @@ use std::{sync::Arc,marker::PhantomData};
 #[test]
 fn history_read_prepared_derived_snapshot_conserves_original_registry_and_payload(){
  use semio_framework_value::ErasedSnapshotRetirement;
- let ((mut original,snapshots,mutations),heap)=observe_heap_allocations_on_this_thread(||{let original=Some(semio_framework_os_store_read::ArtifactDerivedSnapshot{owner:Arc::new(DemoSnapshot{n:Some(23)}),registry:semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new(),generation:7,revision:[11;32]});let snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoSnapshot>>=Arc::new(OwnedValueRetirementFactory::<DemoSnapshot>::default());let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoMutation>>=Arc::new(OwnedValueRetirementFactory::<DemoMutation>::default());(original,snapshots,mutations)});let held=heap.requested_bytes-heap.released_bytes;let pointer=Arc::as_ptr(&original.as_ref().unwrap().owner);let registry=original.as_ref().unwrap().registry.identity();
- let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1<<20,maximum_release_bytes:262144,maximum_depth:128};let ((mut prepared,receipt),heap)=observe_heap_allocations_on_this_thread(||semio_framework_os_store_read::history_read_admission::prepare_history_read_retirement(&snapshots,&mutations,grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));let mut births=heap.requested_bytes;let mut releases=heap.released_bytes;
+ let ((mut original,snapshots,mutations),heap)=observe_heap_allocations_on_this_thread(||{let original=Some(semio_os_store_read::ArtifactDerivedSnapshot{owner:Arc::new(DemoSnapshot{n:Some(23)}),registry:semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new(),generation:7,revision:[11;32]});let snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoSnapshot>>=Arc::new(OwnedValueRetirementFactory::<DemoSnapshot>::default());let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoMutation>>=Arc::new(OwnedValueRetirementFactory::<DemoMutation>::default());(original,snapshots,mutations)});let held=heap.requested_bytes-heap.released_bytes;let pointer=Arc::as_ptr(&original.as_ref().unwrap().owner);let registry=original.as_ref().unwrap().registry.identity();
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1<<20,maximum_release_bytes:262144,maximum_depth:128};let ((mut prepared,receipt),heap)=observe_heap_allocations_on_this_thread(||semio_os_store_read::history_read_admission::prepare_history_read_retirement(&snapshots,&mutations,grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));let mut births=heap.requested_bytes;let mut releases=heap.released_bytes;
  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let (receipt,heap)=observe_heap_allocations_on_this_thread(||prepared.install_derived_snapshot(&mut original,denied).unwrap());assert!(receipt.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(Arc::as_ptr(&original.as_ref().unwrap().owner),pointer);assert_eq!(original.as_ref().unwrap().registry.identity(),registry)}
  prepared.bind_registry(registry.wrapping_add(1));let (refused,heap)=observe_heap_allocations_on_this_thread(||prepared.install_derived_snapshot(&mut original,grant));assert!(refused.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(Arc::as_ptr(&original.as_ref().unwrap().owner),pointer);prepared.bind_registry(registry);let (receipt,heap)=observe_heap_allocations_on_this_thread(||prepared.install_derived_snapshot(&mut original,grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(original.is_none());let (_,heap)=observe_heap_allocations_on_this_thread(||drop((snapshots,mutations)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  for _ in 0..10000{if prepared.terminal_is_empty(){break}let (step,heap)=observe_heap_allocations_on_this_thread(||prepared.close_step(grant).result.unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes}assert!(prepared.terminal_is_empty());assert_eq!(releases,held+births);let (_,heap)=observe_heap_allocations_on_this_thread(||drop((prepared,original)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -46,7 +46,7 @@ fn history_read_retirement_frame_preserves_original_preview_on_every_refusal() {
 
 #[test]
 fn history_read_retirement_preparation_keeps_original_before_paid_installation(){
- use semio_framework_os_store_read::history_read_admission::prepare_history_read_retirement;use semio_framework_value::ErasedSnapshotRetirement;
+ use semio_os_store_read::history_read_admission::prepare_history_read_retirement;use semio_framework_value::ErasedSnapshotRetirement;
  for body in [1,17,4096]{for cancel in [false,true]{
   let((mut original,snapshots,mutations),heap)=observe_heap_allocations_on_this_thread(||{
    let mut target=String::with_capacity(65536);target.push_str("original/α\0😀");let input=protocol::InputReplacement::Input{schema:String::with_capacity(8192),payload:Vec::with_capacity(65536)};let plan=HistoryReadPlan::new(Some(protocol::MutationId(target)),protocol::HistoryInputDrafts::from([(protocol::MutationId("original/🐚".into()),input)]),17,false);

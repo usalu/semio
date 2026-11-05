@@ -1,7 +1,7 @@
 //! 👁️ BIM viewer: the `view` mode, a world | plan split. The read-only counterpart of the editor `edit` mode.
 
 use crate::viewer::bim::modes::view::windows::{plan, world};
-use semio_framework_plugin::{create_default_layout, ModeDefinition, WindowLayout};
+use semio_plugin::{create_default_layout, ModeDefinition, WindowLayout};
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels;
 
 pub const BIM_VIEW_MODE_VIEW: &str = "view";

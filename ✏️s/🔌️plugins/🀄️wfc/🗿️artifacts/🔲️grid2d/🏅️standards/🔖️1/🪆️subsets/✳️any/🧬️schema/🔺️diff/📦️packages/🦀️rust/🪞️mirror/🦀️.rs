@@ -149,13 +149,13 @@ pub mod examples {
         pub mod terrain;
 
         /// 📇️ Every bundled example, in the order the editor's example picker offers them.
-        pub fn sources() -> Vec<semio_framework_plugin::ExampleSource> {
+        pub fn sources() -> Vec<semio_plugin::ExampleSource> {
             vec![pipes::source(), terrain::source()]
         }
 
         /// 🧫️ The committed default document an editor or viewer boots with.
-        pub fn example_source_slice() -> &'static [semio_framework_plugin::ExampleSource] {
-            static SOURCES: std::sync::OnceLock<Vec<semio_framework_plugin::ExampleSource>> = std::sync::OnceLock::new();
+        pub fn example_source_slice() -> &'static [semio_plugin::ExampleSource] {
+            static SOURCES: std::sync::OnceLock<Vec<semio_plugin::ExampleSource>> = std::sync::OnceLock::new();
             SOURCES.get_or_init(sources).as_slice()
         }
 

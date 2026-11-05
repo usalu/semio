@@ -86,7 +86,7 @@ struct GraphScreenPointerOutcome {
 /// 🎯️ The gather is this host's own per-gesture pick batch; the selection action
 /// written below reports the SAME live selection, so leaving it queued would only
 /// let a later caller dispatch the gesture twice.
-fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<GraphScreenPointerOutcome>, semio_framework_ui_action::BoundedActionFault> {
+fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<GraphScreenPointerOutcome>, semio_ui_action::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(engine) = map.get_mut(surface_id).and_then(|entry| entry.node_graph.as_mut()) else {
@@ -133,10 +133,10 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
 
 /// ✍️ The bounded action builder as a sink of the ONE node-graph row encoder (`flow::dag::write_dag_graph_edit_rows`), so the
 /// rows wgpu dispatches are the rows React dispatches from the same journal, written by the same function (design §13.3).
-struct BoundedGraphEditRows<'b>(&'b mut semio_framework_ui_action::BoundedActionBuilder);
+struct BoundedGraphEditRows<'b>(&'b mut semio_ui_action::BoundedActionBuilder);
 
 impl<'a> flow::dag::DagGraphEditRowSink<'a> for BoundedGraphEditRows<'_> {
-    type Error = semio_framework_ui_action::BoundedActionFault;
+    type Error = semio_ui_action::BoundedActionFault;
     fn begin_row(&mut self) -> Result<(), Self::Error> {
         self.0.begin_object(None)
     }
@@ -147,7 +147,7 @@ impl<'a> flow::dag::DagGraphEditRowSink<'a> for BoundedGraphEditRows<'_> {
         self.0.number(Some(field), value)
     }
     fn integer(&mut self, field: &'static str, value: u64) -> Result<(), Self::Error> {
-        self.0.integer(Some(field), i64::try_from(value).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?)
+        self.0.integer(Some(field), i64::try_from(value).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?)
     }
     fn texts(&mut self, field: &'static str, values: &'a [String]) -> Result<(), Self::Error> {
         self.0.begin_array(Some(field))?;
@@ -163,14 +163,14 @@ impl<'a> flow::dag::DagGraphEditRowSink<'a> for BoundedGraphEditRows<'_> {
 
 /// 🔗️ Writes the `nodeGraphEdit` one gesture's graph edits ask for — `{operations: [...]}` through the shared row encoder,
 /// its string credits priced from the encoder's own string census.
-pub(super) fn write_graph_edit_action(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, edits: &[flow::dag::DagGraphEdit]) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+pub(super) fn write_graph_edit_action(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, edits: &[flow::dag::DagGraphEdit]) -> Result<(), semio_ui_action::BoundedActionFault> {
     if edits.is_empty() {
         return Ok(());
     }
     let edit_action = "nodeGraphEdit";
     let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations"];
     parts.extend(flow::dag::dag_graph_edit_row_strings(edits));
-    let edit_bytes = semio_framework_ui_action::checked_action_string_bytes(&parts)?;
+    let edit_bytes = semio_ui_action::checked_action_string_bytes(&parts)?;
     batch.action(controller_id, edit_action, edit_bytes, |builder| {
         builder.begin_object(None)?;
         builder.begin_array(Some("operations"))?;
@@ -189,11 +189,11 @@ pub(super) fn write_graph_edit_action(batch: &mut semio_framework_ui_action::Bou
 /// over a port or the minimap can produce no edit at all, so it pays only for the actions it actually
 /// changes and, when it changes none, takes no reservation whatsoever — see
 /// `📌️GraphInteractionChange` for the sweep that died without that rule.
-pub(super) fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &str, intent: flow::dag::DagPointerIntent, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub(super) fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &str, intent: flow::dag::DagPointerIntent, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(wire_surface_id) = engine_surface_wire_id(surface_id) else { return Ok(false) };
     let may_mutate = !matches!(intent.phase, flow::dag::DagPointerPhase::Move) || node_graph_gesture_is_screen_path(surface_id, None);
     if may_mutate {
-        let mut reservation = input.reserve_actions(4, 4 * semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
+        let mut reservation = input.reserve_actions(4, 4 * semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
         let Some(outcome) = apply_node_graph_screen_pointer(surface_id, intent)? else {
             return Ok(false);
         };
@@ -212,7 +212,7 @@ pub(super) fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &s
     if items == 0 {
         return Ok(true);
     }
-    let mut reservation = input.reserve_actions(items, items * semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let mut reservation = input.reserve_actions(items, items * semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
     write_graph_edit_action(&mut reservation, controller_id, &outcome.edits)?;
     reservation.publish()?;
@@ -221,7 +221,7 @@ pub(super) fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &s
 }
 //#endregion 🔗️NodeGraphScreenPointer
 
-pub(super) fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<(NodeGraphPointerPlan, GraphInteractionSnapshot)>, semio_framework_ui_action::BoundedActionFault> {
+pub(super) fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<(NodeGraphPointerPlan, GraphInteractionSnapshot)>, semio_ui_action::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else {
@@ -275,25 +275,25 @@ pub(super) fn commit_node_graph_pointer(surface_id: &str, plan: NodeGraphPointer
     })
 }
 
-fn bounded_graph_selection(dag: &flow::dag::DagHost) -> Result<(Vec<String>, Option<String>), semio_framework_ui_action::BoundedActionFault> {
-    if dag.graph.selected_node_count() > semio_framework_ui_action::ACTION_NODE_CAPACITY - 2 {
-        return Err(semio_framework_ui_action::BoundedActionFault::NodeCredits);
+fn bounded_graph_selection(dag: &flow::dag::DagHost) -> Result<(Vec<String>, Option<String>), semio_ui_action::BoundedActionFault> {
+    if dag.graph.selected_node_count() > semio_ui_action::ACTION_NODE_CAPACITY - 2 {
+        return Err(semio_ui_action::BoundedActionFault::NodeCredits);
     }
     let hovered = hovered_node_id_ref(&dag.viewport, &dag.graph);
     let mut bytes = 0usize;
     for id in dag.graph.selected_node_id_refs().chain(hovered) {
-        if id.len() > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
+        if id.len() > semio_ui_action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(semio_ui_action::BoundedActionFault::StringCredits);
         }
-        bytes = bytes.checked_add(id.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
-        if bytes > semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+        bytes = bytes.checked_add(id.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
+        if bytes > semio_ui_action::ACTION_ITEM_BYTE_CAPACITY {
+            return Err(semio_ui_action::BoundedActionFault::ByteCredits);
         }
     }
     Ok((dag.graph.selected_node_id_refs().map(str::to_owned).collect(), hovered.map(str::to_owned)))
 }
 
-pub(super) fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -> Result<GraphInteractionSnapshot, semio_framework_ui_action::BoundedActionFault> {
+pub(super) fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -> Result<GraphInteractionSnapshot, semio_ui_action::BoundedActionFault> {
     let (node_ids, hovered_id, current_camera) = match entry.node_graph.as_ref() {
         Some(NodeGraphEngine::Flow(host)) => {
             let (selected, hovered) = bounded_graph_selection(&host.dag)?;
@@ -303,7 +303,7 @@ pub(super) fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[
             let (selected, hovered) = bounded_graph_selection(&host.dag)?;
             (selected, hovered, [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom])
         }
-        None => return Err(semio_framework_ui_action::BoundedActionFault::Structure),
+        None => return Err(semio_ui_action::BoundedActionFault::Structure),
     };
     graph_projection_snapshot(node_ids, hovered_id, None, camera.unwrap_or(current_camera))
 }

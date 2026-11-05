@@ -2,17 +2,17 @@
 
 use crate::tile_coordinates::gis_policy::GIS_MAP_LAYER_KEYS;
 use crate::{GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_ui_locale::Label;
+use semio_plugin::app::InteractionView;
+use semio_plugin::tree_item;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::AppIo;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_ui_locale::Label;
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_APP_ID: &str = "gis2d-play";
@@ -31,7 +31,7 @@ pub const GIS2D_LAYER_GRANULARITY: &str = "layer";
 /// 🕹️ Owned snapshot of the framework's `"features"` domain — `InteractionView::selection` plus the
 /// `"pointer"` hover — read once per render by `ArtifactApp::render_with_request_context` and threaded
 /// into the map scene (selected/hovered feature paint) and the inspection panel (the selected layer's
-/// or feature's own fields). Decouples both from `semio_framework_plugin::app::InteractionView`, whose
+/// or feature's own fields). Decouples both from `semio_plugin::app::InteractionView`, whose
 /// fields are `pub(crate)` to that crate, so this crate's tests construct this plain struct instead
 /// (mirrors `📐️cad`'s `CadInteractionSnapshot`).
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -107,8 +107,8 @@ pub const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎚️options/*`) builds its `on_change`/item actions with.
-pub fn gis2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(GIS2D_PLAY_APP_ID).action(action, args)
+pub fn gis2d_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(GIS2D_PLAY_APP_ID).action(action, args)
 }
 
 /// 🪟️ Bridges semantic app actions into the retained window-measure transport.
@@ -117,41 +117,41 @@ pub fn gis2d_window_action(action: &str, args: Option<semio_framework::DslValue>
 }
 
 /// 🏷️ Admits resolved app text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "GIS UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "GIS UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🌳️ A layer tree item — `tree_item_with_action`/`tree_item` plus the icon that identifies each map
@@ -162,26 +162,26 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// non-selection click that toggles layer visibility in an unbound tree).
 pub fn gis2d_layer_tree_item(
     id: impl AsRef<str>,
-    label: semio_framework_ui_contract::Label,
+    label: semio_ui_contract::Label,
     description: Option<String>,
     icon_id: &str,
-    action: Option<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
+    action: Option<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)>,
     granularity: Option<&str>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut node = match action {
         Some(action) => tree_item_with_action(id, label, description.clone(), action)?,
         None => tree_item(id, label)?,
     };
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
         if props.description.is_none() {
             props.description = match description {
-                Some(value) => Some(semio_framework_plugin::UiText::try_from_string(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer description admission failed"))?),
+                Some(value) => Some(semio_plugin::UiText::try_from_string(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer description admission failed"))?),
                 None => None,
             };
         }
-        props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer icon admission failed"))?);
+        props.icon = Some(semio_plugin::UiText::try_from_str(icon_id).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer icon admission failed"))?);
         props.granularity = match granularity {
-            Some(value) => Some(semio_framework_plugin::UiText::try_from_str(value).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer granularity admission failed"))?),
+            Some(value) => Some(semio_plugin::UiText::try_from_str(value).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer granularity admission failed"))?),
             None => None,
         };
     }
@@ -205,18 +205,18 @@ pub fn gis2d_io() -> AppIo {
         ports: vec![gis2d_features_in_port(), gis2d_map_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::GISMAP_DIALECT.artifact_kind.into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: crate::GISMAP_DIALECT.artifact_kind.into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
     }
 }
 
 /// 🔌️ `features:in` — accepts any TwoD×Vector producer (draw's `vector:out`, another gis2d's
 /// `map:out`, …); no `kind_id` pin since it's a generic vector-features sink, not one specific kind.
 /// `Many`/optional: several producers may fan into one map, and a map with no upstream edge is valid.
-pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
-    semio_framework_plugin::MediaPortSpec {
+pub fn gis2d_features_in_port() -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
         id: "features:in".into(),
         label: "Features".into(),
-        direction: semio_framework_plugin::MediaPortDirection::In,
+        direction: semio_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: None,
         required: false,
@@ -227,11 +227,11 @@ pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🔌️ `map:out` — this document's positions/routes/regions as the `2d.map` interchange kind (gis3d's
 /// `map:in` consumes it). `Many`/optional: several downstream consumers may fan out from one map, and a
 /// map with no downstream edge is valid.
-pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
-    semio_framework_plugin::MediaPortSpec {
+pub fn gis2d_map_out_port() -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
         id: "map:out".into(),
         label: "Map".into(),
-        direction: semio_framework_plugin::MediaPortDirection::Out,
+        direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: Some(crate::GISMAP_DIALECT.artifact_kind.into()),
         required: false,

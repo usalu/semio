@@ -13,8 +13,8 @@ pub struct ChangeVentSfpClass {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeVentSfpClass where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_vent_sfp_class::ChangeVentSfpClass> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vent-sfp-class", kind: "change-vent-sfp-class", record: "ChangeVentSfpClass" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change specific fan power class", "Klasse der spezifischen Ventilatorleistung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change specific fan power class", "Klasse der spezifischen Ventilatorleistung ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.vent_id.clone()] }
 }

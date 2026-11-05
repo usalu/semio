@@ -15,8 +15,8 @@ pub struct SetPixelAspectRatio {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetPixelAspectRatio {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "pixel-aspect-ratio", kind: "set-pixel-aspect-ratio", record: "SetPixelAspectRatio" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set pixel aspect ratio", "Pixel-Seitenverhältnis setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set pixel aspect ratio", "Pixel-Seitenverhältnis setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

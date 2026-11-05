@@ -1,6 +1,6 @@
 //! 🏛️ Plugin SDK ownership: bounded lifecycle steps and grants, SDK faults, worker session admission, store lifecycle and disposers, and transient publication.
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 /// 🧮️ The heap witness this crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
 #[cfg(test)]

@@ -35,7 +35,7 @@ where M:protocol::Mutation<crate::snapshot::original::EnergyModelSnapshot,Diff=c
 impl<M> protocol::MutationKind<crate::snapshot::original::EnergyModelSnapshot,M> for ChangeModelVersion
 where M:protocol::Mutation<crate::snapshot::original::EnergyModelSnapshot,Diff=crate::diff::original::EnergyModelDiff>+From<ChangeModelVersion> {
  const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor{verb:"change",entity:"model",kind:"change-model-version",record:"ChangedModelVersion"};
- fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native("Change energy model version","Energiemodellversion ändern")}
+ fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native("Change energy model version","Energiemodellversion ändern")}
 }
 
 impl semio_s_artifact_energy_model_native_mutations::target::ArtifactOperationTargets for ChangeModelVersion{fn len(&self)->usize{0}fn segment_len(&self,_:usize)->Result<usize,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"this authored identity operation targets the whole document"))}fn read_segment(&self,_:usize,_:usize,_:&mut[u8])->Result<usize,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"this authored identity operation has no entity target fragments"))}}

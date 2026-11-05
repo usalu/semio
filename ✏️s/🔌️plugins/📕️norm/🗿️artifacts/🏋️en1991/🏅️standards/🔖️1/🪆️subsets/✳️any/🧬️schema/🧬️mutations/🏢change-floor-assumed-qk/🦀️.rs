@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFloorAssumedQk whe
         record: "ChangedFloorAssumedQk",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed imposed floor load", "Angenommene Nutzlast der Decke ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed imposed floor load", "Angenommene Nutzlast der Decke ändern")
     }
 }
 

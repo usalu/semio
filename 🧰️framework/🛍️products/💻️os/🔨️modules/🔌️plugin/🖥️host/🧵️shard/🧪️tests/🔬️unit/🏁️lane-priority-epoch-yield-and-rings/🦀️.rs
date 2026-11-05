@@ -8,7 +8,7 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
     const BACKGROUND_ACTORS: u64 = 5;
     let mock = Arc::new(MockGuestRuntime::new().await);
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
 
     let package = PackageRef { package: PackageId("lane-priority".to_string()), hash: PackageHash([90u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
@@ -86,7 +86,7 @@ async fn a_turn_that_hits_its_epoch_deadline_yields_more_work_not_a_fault_and_st
     mock.script_deadline_exceeded(actor).await;
 
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") }).await).await;
 
@@ -117,7 +117,7 @@ async fn a_trapped_guest_turn_emits_one_fault_frame_frees_the_retry_slot_and_ret
     mock.script_fault(actor, "scripted deterministic trap").await;
 
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport), semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport), semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") }).await).await;
 
@@ -175,7 +175,7 @@ async fn malformed_frame_terminalizes_once_without_self_resubmission_readiness()
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(raw.clone()).await;
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
 
     match shard.drive_one().await {
         ShardDrive::Fault { consumed_epoch: Some(1), work_remains: false, terminal_frame: true, .. } => {}

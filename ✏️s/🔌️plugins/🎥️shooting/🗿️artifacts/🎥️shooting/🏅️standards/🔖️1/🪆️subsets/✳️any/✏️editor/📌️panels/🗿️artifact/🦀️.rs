@@ -3,15 +3,15 @@
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::ui_helpers_and_io::SHOOTING_INTERACTION_DOMAIN;
 use crate::ShootingSnapshot;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_BODY_ARTIFACT: &str = "shooting.play.artifact";
@@ -36,8 +36,8 @@ pub fn definition() -> PanelTabDefinition {
 /// `.interaction_domain(...)?` (matches `cad`'s `document_tree_selected_ids` precedent) — the asset row's
 /// click action is built manually instead, one target per click (`"replace"` merge, matching the old
 /// `setSelection` row-click semantics).
-fn asset_select_action(asset_id: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    let targets = semio_framework_pack_json::to_json_string(&[semio_framework_plugin::InteractionTarget { granularity: "asset".into(), id: asset_id.into() }]);
+fn asset_select_action(asset_id: &str) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    let targets = semio_framework_pack_json::to_json_string(&[semio_plugin::InteractionTarget { granularity: "asset".into(), id: asset_id.into() }]);
     let args = crate::editor::shooting::ui_helpers_and_io::ui_value_map([
         ("domainId", crate::editor::shooting::ui_helpers_and_io::ui_value_text(SHOOTING_INTERACTION_DOMAIN)?),
         ("merge", crate::editor::shooting::ui_helpers_and_io::ui_value_text("replace")?),
@@ -46,7 +46,7 @@ fn asset_select_action(asset_id: &str) -> semio_framework_plugin::UiAssemblyResu
     crate::editor::shooting::ui_helpers_and_io::shooting_action("interactionSelect", Some(args))
 }
 
-pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     PanelTreeBuilder::new("shooting-play-document")?
         .window_section(windows, "shooting-play-document.shots", Some(crate::editor::shooting::ui_helpers_and_io::ui_label(labels.shots.as_str())?), true, &snapshot.shots, |shot| {
             let ids = crate::editor::shooting::ui_helpers_and_io::ui_value_list([crate::editor::shooting::ui_helpers_and_io::ui_value_text(&shot.id)?])?;

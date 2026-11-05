@@ -83,11 +83,11 @@ fn checkpoint_restart_transient_close_retains_the_exact_store_until_granted() {
 /// `poll_kernel_output` → `with_turn_execution` → `poll_kernel_turn`, with the same generic
 /// arguments the WIT bridge instantiates.
 fn reactor_turn_future_bytes() -> usize {
-    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let budget = Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16);
-    let mut identity = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity();
-    let mut context = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step_context();
-    let future = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, budget, &mut identity, &mut context);
+    let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let budget = Budget::from_retained(semio_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16);
+    let mut identity = semio_plugin_testing_laws::artifact_app_laws::fixture_identity();
+    let mut context = semio_plugin_testing_laws::artifact_app_laws::fixture_step_context();
+    let future = semio_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, budget, &mut identity, &mut context);
     let bytes = size_of_val(&future);
     drop(future);
     bytes
@@ -109,7 +109,7 @@ fn the_reactor_turn_future_fits_the_one_page_ceiling() {
 }
 
 /// 🎟️ The fixture's original close policy remains independent of every retirement quote.
-fn composed_close_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+fn composed_close_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
     let step = app.close_step(cx,COMPOSITION_MAINTENANCE_GRANT);
     let _ = app.take_constructor_receipt();

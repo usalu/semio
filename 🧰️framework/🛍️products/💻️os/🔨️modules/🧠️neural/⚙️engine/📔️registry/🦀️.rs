@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use protocol::causal::transition::HistoryFoldIndex;
 use std::hash::Hash;
 use semio_framework_value::ValueType;
-use semio_framework_os_kernel_neural_engine_model::{original_retirement_cursor, OperatorRetirement, Atom, Cardinality, ChannelSpec, ColdDictionaryBuilder, ColdOwner, ColdRetire, Dictionary, EvalError, FieldSpec, NeuralEngineError, Operator, OperatorInfo, OperatorPlanAdmission, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, SCHEMA_KEY, Schema, SchemaRef, VALUE_TYPE_LIST, VALUE_TYPE_NUMBER, Value, ValueRetirement, derive_channel_names, operator_signature, validate_neuron_inputs, validate_operator_outputs};
+use semio_os_kernel_neural_engine_model::{original_retirement_cursor, OperatorRetirement, Atom, Cardinality, ChannelSpec, ColdDictionaryBuilder, ColdOwner, ColdRetire, Dictionary, EvalError, FieldSpec, NeuralEngineError, Operator, OperatorInfo, OperatorPlanAdmission, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, SCHEMA_KEY, Schema, SchemaRef, VALUE_TYPE_LIST, VALUE_TYPE_NUMBER, Value, ValueRetirement, derive_channel_names, operator_signature, validate_neuron_inputs, validate_operator_outputs};
 
 #[path = "✅️output/🦀️.rs"]
 mod output;
@@ -54,7 +54,7 @@ impl SharedRegistry {
     /// 🎟️ Creates readers and their unique retirement authority before any shared alias can escape.
     pub fn new(registry: Registry) -> (Self, RegistryRetirement) {
         let final_root=Arc::new_in(FinalRootSlot {registry:OnceLock::new(),shell:OnceLock::new(),registry_bytes:AtomicUsize::new(0)},ShellAllocator::default());
-        let retirement=RegistryRetirement {final_root:ManuallyDrop::new(Some(Arc::clone(&final_root))),registry:None};
+        let retirement=RegistryRetirement {final_root:ManuallyDrop::new(Some(Arc::clone(&final_root))),registry:None,work:0};
         let root=Arc::new_in(registry,RegistryAllocator {final_root:Arc::as_ptr(&final_root)as usize});
         (Self { root: Some(root), final_root }, retirement)
     }
@@ -72,8 +72,9 @@ impl Drop for SharedRegistry {
 //#region 🧹️RegistryRetirement
 /// 🧹️ Preserves the original registry payload and both allocator-recorded shells until funded closure.
 #[must_use="registry retirement must reach terminal-empty"]
-pub struct RegistryRetirement {final_root:ManuallyDrop<Option<FinalRoot>>,registry:Option<ControlledRetirement<Registry>>}
+pub struct RegistryRetirement {final_root:ManuallyDrop<Option<FinalRoot>>,registry:Option<ControlledRetirement<Registry>>,work:u64}
 impl RegistryRetirement {
+    pub fn last_turn_work(&self)->u64{self.work}
     pub fn terminal_is_empty(&self)->bool {self.final_root.is_none()&&self.registry.is_none()}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(0)}else{self.registry.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(0)}else{self.registry.as_ref().map_or(Ok(0),|value|value.next_capacity_byte_demand(copy))}}
@@ -88,7 +89,7 @@ impl RegistryRetirement {
     }
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(1)}else{self.registry.as_ref().map_or(Ok(0),ControlledRetirement::next_depth_demand)}}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let empty=RetainedCloneProgress::default();
+        self.work=0;let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"registry retained ownership exceeds admitted depth"));}
@@ -97,21 +98,21 @@ impl RegistryRetirement {
             if let Some(shell)=slot.shell.get() {
                 if shell.layout.size()>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
                 let shell=slot.shell.take().unwrap();
-                unsafe {Global.deallocate(NonNull::new_unchecked(shell.address as *mut u8),shell.layout)};
+                self.work=1;unsafe {Global.deallocate(NonNull::new_unchecked(shell.address as *mut u8),shell.layout)};
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:shell.layout.size(),..empty}));
             }
             if let Some(value)=slot.registry.take() {
-                self.registry=Some(ControlledRetirement::new(ManuallyDrop::into_inner(value)).unwrap_or_else(|(error,_)|panic!("original registry typed ownership refused: {error}")));
+                self.work=1;self.registry=Some(ControlledRetirement::new(ManuallyDrop::into_inner(value)).unwrap_or_else(|(error,_)|panic!("original registry typed ownership refused: {error}")));
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
             }
             if self.registry.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"registry final-root payload is missing"));}
             let bytes=Arc::allocator(root).0.load(Ordering::Acquire);
             if bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
-            drop(self.final_root.take());
+            self.work=1;drop(self.final_root.take());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
         }
         let value=self.registry.as_mut().unwrap();
-        let step=value.step(grant)?;
+        let result=value.step(grant);self.work=value.last_turn_work();let step=result?;
         let progress=admit_retained_clone_close(grant,step,value.terminal_is_empty(),"original registry fields")?.progress();
         if value.terminal_is_empty(){self.registry=None;}
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
@@ -570,6 +571,10 @@ impl Registry {
     }
 
     /// 📚️ Borrows current metadata in registry order without acquiring nested default-value owners.
+    pub fn operator_info_slot_count(&self)->usize{self.operators.slot_count()}
+    pub fn operator_info_slot(&self,slot:usize)->Option<&OperatorInfo>{self.operators.slot_entry(slot).map(|(_,record)|&record.info)}
+    pub fn operator_info_slot_depth_demand(&self,slot:usize)->Result<usize,ValueError>{self.operators.next_slot_depth_demand(slot)}
+
     pub fn operator_infos(&self) -> impl DoubleEndedIterator<Item = &OperatorInfo> + ExactSizeIterator {
         self.operators.values().map(|entry| &entry.info)
     }

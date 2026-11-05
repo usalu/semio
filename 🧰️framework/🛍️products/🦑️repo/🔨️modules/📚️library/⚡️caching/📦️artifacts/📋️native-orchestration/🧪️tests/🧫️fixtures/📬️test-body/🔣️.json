@@ -236,7 +236,7 @@
       "target": "wasm",
       "command": "repo ../../🏗️compiler/🌐️wasm/📜️script.ts build",
       "dependencies": [
-        "workspace:deps-trunk",
+        "workspace:deps-browser-wasm",
         "workspace:deps-wasm-opt"
       ],
       "mode": "prototype",
@@ -249,7 +249,7 @@
       "target": "wasm",
       "command": "repo ../../🏗️compiler/🌐️wasm/📜️script.ts build",
       "dependencies": [
-        "workspace:deps-trunk",
+        "workspace:deps-browser-wasm",
         "workspace:deps-wasm-opt"
       ],
       "mode": "release",
@@ -262,7 +262,7 @@
       "target": "test-runtime-fixture-graph",
       "command": "repo ./📜️script.ts test runtime-fixture-graph",
       "dependencies": [
-        "workspace:deps-trunk",
+        "workspace:deps-browser-wasm",
         "workspace:deps-wasm-opt"
       ]
     }

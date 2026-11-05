@@ -33,8 +33,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "region-property", kind: "set-region-property", record: "RegionPropertySet" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of region \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Region \"{}\" setzen", self.key, self.feature))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of region \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Region \"{}\" setzen", self.key, self.feature))
     }
 }
 

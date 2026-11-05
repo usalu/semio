@@ -1,10 +1,10 @@
 //! 🧪️ dag-model tests (🛠️edit-rows): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_schema::field;
-use semio_framework_os_infinite_board_dag_model::{dag_graph_edit_row_strings, dag_graph_edit_rows_json, DagGraphEdit, DagPortSide};
+use semio_os_infinite_board_schema::field;
+use semio_os_infinite_board_dag_model::{dag_graph_edit_row_strings, dag_graph_edit_rows_json, DagGraphEdit, DagPortSide};
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
 

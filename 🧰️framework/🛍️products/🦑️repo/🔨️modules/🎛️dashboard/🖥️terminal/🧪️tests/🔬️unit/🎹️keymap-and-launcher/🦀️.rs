@@ -4,7 +4,7 @@
 fn native_leader_bytes_match_the_shared_control_vectors() {
     let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
     let bytes: Vec<u8> = fixture["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
-    let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
+    let mut parser = semio_ui_tui_terminal::ansi::AnsiParser::new();
     let mut events = Vec::new();
     parser.feed(&bytes, &mut events);
     let projection: Vec<_> = events.into_iter().map(|event| match event { Event::Key(KeyEvent { key: Key::Char(character), mods: modifiers }) => serde_json::json!({"key": character.to_string(), "ctrl": modifiers & mods::CTRL != 0}), _ => panic!("unexpected control event") }).collect();
@@ -15,7 +15,7 @@ fn native_leader_bytes_match_the_shared_control_vectors() {
 fn decoded_terminal_keys_resolve_through_the_keymap_exactly_as_written() {
     let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
     let bytes: Vec<u8> = fixture["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
-    let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
+    let mut parser = semio_ui_tui_terminal::ansi::AnsiParser::new();
     let mut events = Vec::new();
     parser.feed(&bytes, &mut events);
     let keymap = Preferences::default().keymap().0;
@@ -30,7 +30,7 @@ fn terminal_bytes_become_the_keymaps_canonical_spellings() {
     let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/⌨️keymap/🔣️.json")).unwrap();
     for row in fixture["terminal"].as_array().unwrap() {
         let bytes: Vec<u8> = row["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
-        let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
+        let mut parser = semio_ui_tui_terminal::ansi::AnsiParser::new();
         let mut events = Vec::new();
         parser.feed(&bytes, &mut events);
         let specs: Vec<String> = events.iter().filter_map(|event| if let Event::Key(key) = event { dashboard_terminal::testing::spec_of(key).map(|spec| spec.to_string()) } else { None }).collect();

@@ -89,3 +89,71 @@ fn original_actor_expired_cancelled_source_retires_without_renewing_authority(){
  println!("[SOURCE-EXPIRY] {}",serde_json::json!({"zeroFuelBlocked":true,"zeroFuelReceipt":zero.receipt_spent,"unscopedBlocked":true,"unscopedReceipt":unscoped.receipt_spent,"records":records}));
  for _ in 0..4096{if slot.terminal_is_empty(){break}epoch+=1;let input=retained_input(&slot,epoch);assert!(slot.close_step(input,loan(policy,input.grant)).result.is_ok());}assert!(slot.terminal_is_empty());
 }
+
+
+fn actor_close_delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}}
+fn actor_close_retirement(slot:&mut OriginalActorContextSlot,input:RetainedTurnInput,policy:RetainedCloneGrant,run:impl FnOnce(&semio_framework_job::OriginalCallerSourceParent,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->(RetainedCloneProgress,u64){
+ slot.begin_retirement_input(input).unwrap();
+ let owner=slot.context.as_mut().unwrap();let before=owner.physical_spent;
+ let OriginalActorContext{source,sequence,physical_spent,work_units_spent,initial_grant,..}=owner;
+ let parent=source.as_ref().unwrap();
+ let mut cx=parent.borrow_context(StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,*initial_grant),fixture_clock,sequence,physical_spent).unwrap();
+ cx.bind_original_clock_binding(input.work.clock_binding).unwrap();cx.bind_original_source_epoch(input.epoch).unwrap();cx.bind_original_retained_total(input.grant).unwrap();cx.bind_original_work_recipient(work_units_spent).unwrap();
+ cx.narrow_original_work_budget(StepBudget::new(1,input.work.absolute_deadline_us,loan(policy,input.grant))).unwrap();
+ cx.with_original_retirement(|cx|run(parent,cx)).unwrap();drop(cx);
+ let owner=slot.context.as_ref().unwrap();(actor_close_delta(before,owner.physical_spent),u64::try_from(owner.work_units_spent).unwrap())
+}
+#[test]
+fn original_actor_close_uses_the_same_raw_child_work_for_financial_512_cancel_errors_and_denials(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧭️source-drain.json")).unwrap();
+ for case in fixture["closeWorkCases"].as_array().unwrap(){
+  let mut slots=[OriginalActorContextSlot::empty(),OriginalActorContextSlot::empty()];let mut epochs=[1u64;2];let mut loans=[None,None];let mut errors:[Option<ValueError>;2]=[None,None];let mut born=0;let mut released=0;let mut calls=0;let mut same=true;let mut ceiling=true;
+  let first=RetainedTurnInput{operation:fixture["operation"].as_u64().unwrap(),generation:fixture["generation"].as_u64().unwrap(),epoch:1,work:declared_work(&fixture),grant:declared_grant(&fixture,"totalGrant")};
+  let policy=RetainedCloneGrant{maximum_items:case["financialItems"].as_u64().unwrap()as usize,..declared_grant(&fixture,"callPolicy")};
+  for index in 0..2{
+   loop{
+    let input=if slots[index].context.is_none(){first}else{retained_input(&slots[index],epochs[index])};
+    let(call,heap)=observe(||slots[index].admit_step(input,loan(policy,input.grant),fixture_clock));calls+=1;born+=heap.0;released+=heap.1;same&=heap==(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes);let ready=call.result.unwrap().ready;if ready{break}epochs[index]+=1;
+   }
+   epochs[index]+=1;let input=retained_input(&slots[index],epochs[index]);let mut recipient=RetainedCloneProgress::default();
+   let(call,heap)=observe(||slots[index].dispatch_step(input,StepBudget::new(64,input.work.absolute_deadline_us,loan(policy,input.grant)),&mut recipient,fixture_clock,|cx|{cx.original_source_parent()?.admit_loan(&mut loans[index],cx)?;Ok::<_,OriginalTurnFailure>(())}));
+   calls+=1;born+=heap.0;released+=heap.1;same&=heap==(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes)&&recipient==call.receipt_spent;call.result.unwrap();
+   if case["cancelled"].as_bool().unwrap(){slots[index].context.as_ref().unwrap().source.as_ref().unwrap().cancellation().unwrap().cancel_now();}
+   epochs[index]+=1;let input=retained_input(&slots[index],epochs[index]);let(call,heap)=observe(||slots[index].close_step(input,loan(policy,input.grant)));calls+=1;born+=heap.0;released+=heap.1;same&=heap==(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes);ceiling&=call.work_units_spent<=1;call.result.unwrap();
+  }
+  for _ in 0..2{
+   epochs[0]+=1;let input=retained_input(&slots[0],epochs[0]);let denied=RetainedCloneGrant{maximum_items:0,..loan(policy,input.grant)};
+   let(call,heap)=observe(||slots[0].close_step(input,denied));calls+=1;born+=heap.0;released+=heap.1;same&=heap==(0,0)&&call.receipt_spent==Default::default()&&call.work_units_spent==0;call.result.unwrap();
+  }
+  for _ in 0..16{
+   epochs[1]+=1;let input=retained_input(&slots[1],epochs[1]);slots[1].begin_retirement_input(input).unwrap();let grant=RetainedCloneGrant{maximum_items:case["primitiveItems"].as_u64().unwrap()as usize,..loan(policy,input.grant)};
+   let(raw,heap)=observe(||slots[1].context.as_mut().unwrap().source.as_mut().unwrap().close_step(grant));calls+=1;born+=heap.0;released+=heap.1;
+   let progress=match &raw.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};slots[1].record_pending_physical(input,progress).unwrap();slots[1].record_pending_work(input,raw.work).unwrap();same&=heap==(progress.retained_capacity_bytes,progress.released_bytes);
+   epochs[0]+=1;let input=retained_input(&slots[0],epochs[0]);let(call,heap)=observe(||slots[0].close_step(input,loan(policy,input.grant)));calls+=1;born+=heap.0;released+=heap.1;
+   same&=call.receipt_spent==progress&&call.work_units_spent==raw.work&&heap==(progress.retained_capacity_bytes,progress.released_bytes);ceiling&=call.work_units_spent<=1;
+   let ended=raw.result.is_err();match raw.result{Ok(_)=>{},Err(error)=>errors[1]=Some(error)}
+   match call.result{Ok(_)=>{},Err(OriginalActorContextError::Refused(error))=>errors[0]=Some(error),Err(other)=>panic!("unexpected original actor close error: {:?}",other)}
+   if ended{break}
+  }
+  let refused=errors.iter().all(Option::is_some);
+  for index in 0..2{
+   let mut close=RetainedCloneClose::default();
+   for _ in 0..4096{
+    if loans[index].as_ref().unwrap().terminal_is_empty()&&errors[index].is_none()&&close.is_empty(){break}
+    epochs[index]+=1;let input=retained_input(&slots[index],epochs[index]);
+    let((progress,work),heap)=observe(||actor_close_retirement(&mut slots[index],input,policy,|parent,cx|{
+     if !loans[index].as_ref().unwrap().terminal_is_empty(){loans[index].as_mut().unwrap().close_step(parent,cx)?;return Ok(())}
+     let demand=if close.is_empty(){close.next_owner_demands::<ValueError>(errors[index].is_some(),&None,cx.retained_grant().maximum_copy_bytes)?}else{close.demands(cx.retained_grant().maximum_copy_bytes)?};
+     semio_framework_job::close_original_retained_step(cx,demand,|g|if close.is_empty(){let turn=close.begin_granted(&mut errors[index],g);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}}else{close.step_granted(g)})?;Ok(())
+    }));
+    calls+=1;born+=heap.0;released+=heap.1;same&=heap==(progress.retained_capacity_bytes,progress.released_bytes);ceiling&=work<=1;
+   }
+   drop(loans[index].take());
+   for _ in 0..4096{
+    if slots[index].terminal_is_empty(){break}
+    epochs[index]+=1;let input=retained_input(&slots[index],epochs[index]);let(call,heap)=observe(||slots[index].close_step(input,loan(policy,input.grant)));calls+=1;born+=heap.0;released+=heap.1;same&=heap==(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes);ceiling&=call.work_units_spent<=1;call.result.unwrap();
+   }
+  }
+  assert!(slots.iter().all(OriginalActorContextSlot::terminal_is_empty));assert_eq!(born,released);assert!(same,"parent work and physical receipt must equal the actual raw primitive");assert!(ceiling,"financial512 never authorizes a second semantic close primitive");assert!(refused,"both actual original source aliases retain their error owners");assert!(calls<=200,"full original actor cleanup exceeded200 calls: {}",calls);
+ }
+}

@@ -8,8 +8,8 @@ use semio_framework_job::{Generation, Operation, OperationId, RevisionId};
 #[cfg(test)]
 use crate::infer::LosslessInferenceItem;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_plugin_decl_registry::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
-use semio_framework_plugin_plugin_program::WireArtifactInferenceRequest;
+use semio_plugin_decl_registry::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_plugin_plugin_program::WireArtifactInferenceRequest;
 
 const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceServiceMetadata {
     owner: "s.jobtest",
@@ -23,7 +23,7 @@ const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceService
     payload: None,
 };
 
-fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin_decl_registry::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin_decl_registry::ArtifactInferenceExecutionStep, semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError> {
+fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_plugin_decl_registry::ArtifactInferenceStepContext<'_>) -> Result<semio_plugin_decl_registry::ArtifactInferenceExecutionStep, semio_plugin_decl_registry::ArtifactInferenceExecutionError> {
     Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: Some(request.canonical_payload.to_vec()), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 
@@ -32,7 +32,7 @@ fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_fra
 #[doc(hidden)]
 pub fn request_bytes(cancellation_id: &str) -> Vec<u8> {
     let request = WireArtifactInferenceRequest {
-        wire_version: semio_framework_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION,
+        wire_version: semio_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: TEST_METADATA.owner.into(),
         artifact_kind: TEST_METADATA.artifact_kind.into(),
         artifact_schema: TEST_METADATA.artifact_schema.into(),
@@ -105,7 +105,7 @@ fn interactive_bridge_diagnostic_ring_is_item_and_byte_bounded() {
 #[test]
 fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_it_was_not_told() {
     let request = decode_request(&request_bytes("jobtest-cancel-encode")).expect("the fixture request decodes");
-    let decoded = |bytes: Vec<u8>| -> semio_framework_plugin_plugin_program::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
+    let decoded = |bytes: Vec<u8>| -> semio_plugin_plugin_program::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
 
     let resumable = decoded(encode_result(request.clone(), vec![1, 2, 3], Some(vec![4, 5]),RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536}).expect("encodes"));
     assert_eq!((resumable.canonical_payload, resumable.previous_state, resumable.complete), (Some(vec![1, 2, 3]), Some(vec![4, 5]), true));

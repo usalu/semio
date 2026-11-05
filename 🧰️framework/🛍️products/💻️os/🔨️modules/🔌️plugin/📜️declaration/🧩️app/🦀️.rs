@@ -1,8 +1,8 @@
 //! 🧩️ The app contract: `ArtifactApp`, media artifacts, `PluginApp` and the action registry.
 #![feature(associated_type_defaults)]
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[path="🌱️original/🦀️.rs"]
 pub mod original_admission;
@@ -63,11 +63,11 @@ pub mod tool_run_contract;
 #[path = "🛬️lifted/🎬️media-export/🦀️.rs"]
 pub mod media_contract;
 use semio_framework::history_edit::HISTORY_EDIT_ACTION_IDS;
-use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_mounted_owner::MountedOwnerPhaseV1;
-use semio_framework_plugin_ownership::transient_publication::bounded_transient_store_disposer;
-use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use semio_plugin_window_kits::AppActionRegistry;
+use semio_plugin_mounted_owner::MountedOwnerPhaseV1;
+use semio_plugin_ownership::transient_publication::bounded_transient_store_disposer;
+use semio_plugin_window_config::WindowConfigOwnerRegistry;
+use semio_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
 use semio_framework_value::DslValue;
 use semio_framework::kernel::UiDirtyScope;
 /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
@@ -77,25 +77,25 @@ use semio_framework_2d_compute::EngineHandles;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
-use semio_framework_ui_runtime::ComponentTree;
+use semio_ui_contract::*;
+use semio_ui_runtime::ComponentTree;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_layout::layout::ContextMenuItemSpec;
-use semio_framework_ui_layout::layout::ContextMenuRequest;
-use semio_framework_ui_layout::layout::WindowEngagement;
-use semio_framework_ui_layout::layout::WindowMeasure;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_layout::layout::ContextMenuItemSpec;
+use semio_ui_layout::layout::ContextMenuRequest;
+use semio_ui_layout::layout::WindowEngagement;
+use semio_ui_layout::layout::WindowMeasure;
 /// 🎞️ `MediaWireFormat` backs `MediaArtifactDescriptor::wire` (see `🔖️DocumentContract`
 /// below) — the plugin ABI's `consume-media`/`produce-media` payload framing, separate from
 /// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).
@@ -117,41 +117,41 @@ use semio_framework::{MediaClass, MediaType};
 use semio_framework_artifact_reference::Dialect;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use semio_framework::AppRole;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use crate::app_emission::EphemeralEmit;
-use semio_framework_plugin_decl_emission::HostEvent;
-use semio_framework_plugin_decl_views::AppRenderOperationContext;
-use semio_framework_plugin_decl_views::{ArtifactView,ArtifactPendingView,MountedSnapshotReadPreparation};
-use semio_framework_plugin_decl_views::ConfigView;
-use semio_framework_plugin_decl_views::DraftView;
-use semio_framework_plugin_decl_views::InteractionView;
-use semio_framework_plugin_decl_views::PresenceView;
-use semio_framework_plugin_window_transient::window_transient::TransientView;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_decl_emission::HostEvent;
+use semio_plugin_decl_views::AppRenderOperationContext;
+use semio_plugin_decl_views::{ArtifactView,ArtifactPendingView,MountedSnapshotReadPreparation};
+use semio_plugin_decl_views::ConfigView;
+use semio_plugin_decl_views::DraftView;
+use semio_plugin_decl_views::InteractionView;
+use semio_plugin_decl_views::PresenceView;
+use semio_plugin_window_transient::window_transient::TransientView;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::media_contract::ArtifactMediaExportJobRequest;
 use crate::tool_contract::ArtifactReservedToolJob;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
-use semio_framework_plugin_ownership::store_lifecycle::{DocumentStoreLivePublication, DocumentStorePublicationToken};
-use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::store_lifecycle::ArtifactDisposal;
+use semio_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
+use semio_plugin_ownership::store_lifecycle::{DocumentStoreLivePublication, DocumentStorePublicationToken};
+use semio_plugin_decl_emission::ArtifactMutationOutcome;
+use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
 use crate::tool_contract::ArtifactBoundedFirstStepProof;
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 use crate::tool_contract::ArtifactOwnedToolJobRequest;
 use crate::tool_contract::ArtifactReservedToolJobRequest;
 use crate::tool_contract::ArtifactToolCompletionValue;
 use crate::tool_contract::ArtifactToolFactoryRegistry;
-use semio_framework_plugin_decl_tool_contract::EmptyArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJob;
+use semio_plugin_decl_tool_contract::EmptyArtifactInstanceOperationOwner;
+use semio_plugin_decl_views::tool_run_contract::ToolRunJob;
 use crate::tool_run_contract::ToolRunJobRequest;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 
-use semio_framework_plugin_window_kits::merge_ui_values;
-use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_plugin_window_kits::merge_ui_values;
+use semio_plugin_interaction::UiAssemblyResult;
 
 #[path = "🎛️artifact-app-trait/🦀️.rs"]
 mod artifact_app_trait;

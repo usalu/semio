@@ -99,7 +99,7 @@ pub fn take_engine_surface_registrations() -> Vec<EngineSurfaceRegistration> {
 ///
 /// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `NodeGraphHost`
 /// @see `🧱️elements/🪪️WasmSessionLoader/🟦️.tsx` — `isFlowGraphScene`
-fn node_graph_scene_uses_flow_engine(graph: &semio_framework_ui_declaration::ui::NodeGraphScene) -> bool {
+fn node_graph_scene_uses_flow_engine(graph: &semio_ui_declaration::ui::NodeGraphScene) -> bool {
     if graph.host_snapshot_json.as_deref().is_some_and(|json| !json.trim().is_empty()) {
         return true;
     }
@@ -112,7 +112,7 @@ fn node_graph_scene_uses_flow_engine(graph: &semio_framework_ui_declaration::ui:
     value.get("engine").and_then(Value::as_str) == Some("flow") || value.get("spotlight").and_then(Value::as_bool) == Some(true) || value.get("noteEdit").and_then(Value::as_bool) == Some(true)
 }
 
-pub(super) fn node_graph_engine_from_scene(graph: &semio_framework_ui_declaration::ui::NodeGraphScene, dark: bool) -> NodeGraphEngine {
+pub(super) fn node_graph_engine_from_scene(graph: &semio_ui_declaration::ui::NodeGraphScene, dark: bool) -> NodeGraphEngine {
     if node_graph_scene_uses_flow_engine(graph) {
         let snapshot = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()).unwrap_or_default();
         let mut host = FlowHost::from_host_snapshot(snapshot);
@@ -186,7 +186,7 @@ fn node_graph_frames_content(dag: &flow::dag::DagHost) -> bool {
 ///
 /// 🔀️ An example switch can move the whole graph out from under a live camera; only then is
 /// the camera the viewer set re-fitted (`CONTENT_REFIT_MAX_COVERAGE`).
-pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &semio_framework_ui_declaration::ui::NodeGraphScene) -> bool {
+pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &semio_ui_declaration::ui::NodeGraphScene) -> bool {
     let mut changed = false;
     let mut snapshot_changed = false;
     if cache.interaction_domain.as_deref() != graph.interaction_domain.as_ref() {

@@ -1,9 +1,9 @@
 //! 🧬️ The seven local DSL twins of the generation host and play-state records, shared by generation 2d and 3d, with the conversions to and from the foreign `flow` and `playbook` types.
 //!
 //! The foreign types cannot carry the derive themselves (orphan rule), so the twins live here and both artifacts re-export them.
-use semio_framework_os_flow_contract::neural::{Atom, Dictionary, Value as NeuralValue};
-use semio_framework_os_flow_contract::{CameraJson, SynapseSpec, Widget, WidgetLayout};
-use semio_framework_os_playbook_contract::FormGeneration;
+use semio_os_flow_contract::neural::{Atom, Dictionary, Value as NeuralValue};
+use semio_os_flow_contract::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+use semio_os_playbook_contract::FormGeneration;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

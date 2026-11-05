@@ -6,6 +6,7 @@ use super::*;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(deny_unknown_fields)]
 pub struct RemoveMember {
     pub path: JsonPath,
     pub key: String,
@@ -14,8 +15,8 @@ pub struct RemoveMember {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RemoveMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "member", kind: "remove-member", record: "RemoveMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove member", "Eigenschaft entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove member", "Eigenschaft entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

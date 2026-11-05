@@ -1,5 +1,5 @@
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use semio_s_artifact_cad_cad_model::{snapshot::empty_cad_snapshot, snapshot::CadModelChild, snapshot::CadNode, snapshot::CadPaneId, snapshot::CadReference, snapshot::CadSnapshot};
 

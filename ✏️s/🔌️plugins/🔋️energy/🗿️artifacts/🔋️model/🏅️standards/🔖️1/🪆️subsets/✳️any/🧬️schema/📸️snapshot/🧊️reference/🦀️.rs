@@ -4,7 +4,7 @@
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 extern crate protocol;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
@@ -417,7 +417,7 @@ pub fn artifact_kind() -> semio_framework_manifest_media::ArtifactKindSpec {
     use semio_framework_manifest_media::{MediaClass, MediaForm, MediaType, OsMediaCapability};
     semio_framework_manifest_media::ArtifactKindSpec {
         id: "data.model".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Energy Model", "Energiemodell"),
+        label: semio_ui_locale::LocalizedLabel::native("Energy Model", "Energiemodell"),
         source_format: ENERGY_MODEL_DOCUMENT_SCHEMA.into(),
         component_kind: "energy".into(),
         dimension: "data".into(),

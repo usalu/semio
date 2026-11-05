@@ -1,9 +1,9 @@
 //! ✉️ Generation3d typed owned envelope catalog: the retained mutation owners, the mutation session, the snapshot and mutation decode authorities and the owned field catalog of the document envelope.
 #![allow(clippy::result_large_err)]
 #![allow(unused_imports)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 use semio_s_artifact_procedural_3d_mut_generations::change_generation_value::ChangeGenerationValue;
 use semio_s_artifact_procedural_3d_mut_document::change_schema::ChangeSchema;
 use semio_s_artifact_procedural_3d_mut_synapses::connect_synapse::ConnectSynapse;

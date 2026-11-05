@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRailDynamicDetermi
         record: "ChangedRailDynamicDeterminantLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change determinant length L_Φ of the rail span", "Eisenbahnfeld: Maßgebende Länge L_Φ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change determinant length L_Φ of the rail span", "Eisenbahnfeld: Maßgebende Länge L_Φ ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

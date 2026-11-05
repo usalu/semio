@@ -27,7 +27,7 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgTextEntity;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgVertexEntity;
 use super::{reader::optional_words,number::Projection,reader::{boolean,byte,full_unsigned,high,low,optional_integer,optional_real,optional_text,optional_unsigned,ordinal,real,signed_word,unsigned,word,Reader},entity_dimension,entity_viewport};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 use Cell::{Integer as I,Real as R,Text as T,Null as N};
 
 pub fn project(projection:&mut Projection<'_,'_>,id:i64,value:&DwgEntityBody)->Result<(),ValueError>{

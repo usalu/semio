@@ -1,14 +1,14 @@
 //! 🎾️ Staged `producers` members of the `instance-dispatch` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🎟️ The reserved emit producers: lease admission, owner mounting and the producer admission fixtures.
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 #[cfg(test)]
-use semio_framework_plugin_job::reserved_jobs::FrameworkCutJob;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_job::reserved_jobs::FrameworkCutJob;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::DslValue;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::Fault;
 use semio_framework::FaultCode;
 use semio_framework::FaultOrigin;
@@ -18,32 +18,32 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use store::ReferenceSpaceMember;
 use semio_framework_value::ValueError;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework::FaultFrom;
-use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_emission::ActionMeta;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactReservedToolJob, ArtifactToolCompletion, ArtifactToolCompletionValue};
-use semio_framework_plugin_operation::{ArtifactDocumentAuthority, ToolCancellationLease, ToolOperationKey};
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactReservedToolJob, ArtifactToolCompletion, ArtifactToolCompletionValue};
+use semio_plugin_operation::{ArtifactDocumentAuthority, ToolCancellationLease, ToolOperationKey};
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::dispatch_bundle::DispatchCtx;
-use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
-use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolView};
+use semio_plugin_decl_app::app_emission::EphemeralEmit;
+use semio_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolView};
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
-use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
-use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use semio_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
+use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use store::Mutation;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
-use semio_framework_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_instance_jobs::jobs_lease::OriginalToolLeaseAdmission;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_os_kernel as store;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
+use semio_ui_contract::*;
+use semio_plugin_instance_jobs::jobs_lease::OriginalToolLeaseAdmission;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_os_kernel as store;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     pub async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<FrameworkReservedCommitPermit>, semio_framework_job::OriginalTurnFailure> {
@@ -172,7 +172,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     #[cfg(test)]
     pub async fn test_reserved_emit_cancelled_worker_handoff(&mut self,meta:&ActionMeta)->bool{
         fn now()->Option<u64>{Some(1)}
-        let grant=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation;
+        let grant=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation;
         let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(899),semio_framework_job::Generation(3),grant,now,u64::MAX,1_000_000);
         let mut permit=None;
         for _ in 0..128{caller.turn(grant,|cx|{permit=self.admit_reserved_emit_producer("cut",meta,cx)?;Ok(())}).unwrap();if permit.is_some(){break}}
@@ -240,7 +240,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:0,transient_generation:0,
             window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:None,
             session:None,session_rejected:None,producer_source:None,producer_request:None,producer_request_retirement:None,reserved_producer,completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:lease,identity,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},terminal_seen:true,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,original_retirement_receipt:None,
-            publication,publication_ownership_progress:None,actor_capture:None,actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture::new(),worker_resume_pending:false,tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,pending_stream_abort:None,stream_abort_completed:false,pending_child_publication:None,
+            publication,publication_ownership_progress:None,actor_capture:None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),worker_resume_pending:false,tool_stage:semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,pending_stream_abort:None,stream_abort_completed:false,pending_child_publication:None,
             owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,
             captured_child_content:Some(std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root))),captured_child_content_generation:self.child_composition.child_content_generation,
             page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,

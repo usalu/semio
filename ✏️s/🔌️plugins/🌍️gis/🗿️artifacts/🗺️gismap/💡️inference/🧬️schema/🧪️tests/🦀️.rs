@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{os_directory::schema::EditedArtifactFrontierV1, os_directory::schema::DocumentExecutionTargetLocaleV1, os_directory::schema::DOCUMENT_OPEN_MAX_SAFE_INTEGER};
+use semio_os_kernel::{os_directory::schema::EditedArtifactFrontierV1, os_directory::schema::DocumentExecutionTargetLocaleV1, os_directory::schema::DOCUMENT_OPEN_MAX_SAFE_INTEGER};
 use crate::inference_schema::*;
 
 #[test]

@@ -13,8 +13,8 @@ pub struct RemoveTableRow {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveTableRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "table-row", kind: "remove-table-row", record: "RemoveTableRow" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove table row", "Tabellenzeile entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove table row", "Tabellenzeile entfernen")
     }
 
     fn target(&self) -> Vec<String> {

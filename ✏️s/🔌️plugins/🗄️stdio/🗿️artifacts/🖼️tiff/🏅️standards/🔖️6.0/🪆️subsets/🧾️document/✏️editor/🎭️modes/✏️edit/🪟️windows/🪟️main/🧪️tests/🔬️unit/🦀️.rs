@@ -1,10 +1,10 @@
 use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
 use crate::{editor::tiff_any::config::selected_ifd, editor::tiff_any::config::TiffEditorConfig};
-use semio_framework_plugin::{BuiltNode, UiValue};
+use semio_plugin::{BuiltNode, UiValue};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use crate::editor::tiff_any::modes::edit::windows::main::*;
-use semio_framework_plugin::{ActionBinding, Component};
+use semio_plugin::{ActionBinding, Component};
 
 fn selection_fixture() -> (TiffSnapshot, TiffEditorConfig, Vec<u8>) {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🧫️fixtures/🧬️ifd-selection/🔣️.json")).expect("neutral IFD selection fixture");
@@ -53,7 +53,7 @@ async fn selected_ifd_renders_bilingual_accessible_controls_and_the_selected_pag
     let status = node_by_key(&english, "tiff-image-page-status").expect("English page status");
     let Component::Text(status) = &status.component else { panic!("page status is text") };
     assert_eq!(status.value.0.as_str(), "Image page 2 of 2");
-    let selected = node_by_key(&english, semio_framework_plugin::app::IMAGE_WINDOW_CONTENT_NODE_KEY).expect("selected page image");
+    let selected = node_by_key(&english, semio_plugin::app::IMAGE_WINDOW_CONTENT_NODE_KEY).expect("selected page image");
     let Component::Image(selected) = &selected.component else { panic!("selected page projection is an image") };
     assert_eq!(selected.alt.as_ref().map(|label| label.0.as_str()), Some("1x1"));
     let encoded = selected.src.as_str().strip_prefix("data:image/png;base64,").expect("rendered selected page data URI");

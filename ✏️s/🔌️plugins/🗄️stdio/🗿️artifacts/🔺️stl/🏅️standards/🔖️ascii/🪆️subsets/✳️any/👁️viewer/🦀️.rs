@@ -8,23 +8,23 @@ use crate::standards::v_ascii::subsets::any::schema::mutations::StlMutation;
 use crate::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;
 use crate::viewer::stl::modes::view;
 use crate::viewer::stl::modes::view::windows::main;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Dialect
@@ -71,7 +71,7 @@ impl ArtifactViewer for StlAnyViewer {
     const DIALECT: Dialect = STL_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STL_ANY_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<StlSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<StlSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(StlSnapshot::default())
     })}
 
@@ -81,16 +81,16 @@ impl ArtifactViewer for StlAnyViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -98,7 +98,7 @@ impl ArtifactViewer for StlAnyViewer {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_stl_any_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_stl_any_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(STL_ANY_DIALECT).document(["stdio", "stl"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::STL_ANY_VIEW_MODE_ID).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
@@ -119,7 +119,7 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜�
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{STDIO_STL_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
@@ -127,7 +127,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.stl".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Stl", "Stl"),
+        label: semio_ui_locale::LocalizedLabel::native("Stl", "Stl"),
         source_format: STDIO_STL_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -174,7 +174,7 @@ pub mod artifact_items_7 {
 use crate::{native_codecs};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
@@ -186,7 +186,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub mod artifact_items_8 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }
@@ -217,14 +217,14 @@ pub use crate::schema::snapshot::StlSnapshot;
 /// performed is covered by a declaration field — no `.setup()` survivor needed.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("stl", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::schema::stl_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::schema::inferences::stl_artifact_inference_descriptor()])

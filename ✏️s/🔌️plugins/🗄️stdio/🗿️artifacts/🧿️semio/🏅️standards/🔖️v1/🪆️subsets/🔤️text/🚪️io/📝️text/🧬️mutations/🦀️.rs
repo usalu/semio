@@ -181,7 +181,7 @@ use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioTextSnapshot, SemioTextMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. This
 /// plugin crate reaches the derive through the `dsl` extern-crate alias `🦀️.rs` declares
-/// (`extern crate semio_framework_os_kernel as dsl;`), the same spelling every other stdio subset's
+/// (`extern crate semio_os_kernel as dsl;`), the same spelling every other stdio subset's
 /// eventual `dsl::Mutations` derive uses (confirmed against `din4108`'s already-compiling facet,
 /// this ticket's binding reference).
 

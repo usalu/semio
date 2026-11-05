@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_ui_wgpu_input::InputState;
+use semio_ui_wgpu_input::InputState;
 
 #[test]
 fn context_menu_path_for_ordinal_selects_enabled_rows() {
@@ -16,7 +16,7 @@ fn context_menu_submenu_open_follows_active_path() {
 
 #[test]
 fn context_menu_click_on_group_row_control_id_opens_its_submenu_instead_of_dispatching() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.input.context_menu = Some(ContextMenuState {
         items: vec![ContextMenuItem { id: "menu.group.view".into(), label: "View".into(), children: vec![ContextMenuItem { id: "menu.group.view.child".into(), label: "Child".into(), ..Default::default() }], ..Default::default() }],
         ..Default::default()

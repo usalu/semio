@@ -164,14 +164,14 @@ class AddWidgetRetainedCheckScript extends BundleScript {
     for (const witness of [
       'pub const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &["addWidget"',
       "struct FlowChildGroupWork",
-      "impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowChildGroupWork",
+      "impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowChildGroupWork",
       "struct FlowChildGroupJobFactory",
       "ArtifactToolPublicationLane::Child",
       "FlowChildGroupJobFactoryProofs::bounded_first_step_tool_proofs()",
       "registry.register(FlowChildGroupJobFactory::new(&controller))",
       "ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES",
       "FlowCommand::AddWidget(payload)",
-      "semio_framework_plugin::InteractiveJobClassification::Migrated",
+      "semio_plugin::InteractiveJobClassification::Migrated",
     ])
       assert(source.includes(witness), `missing retained addWidget source witness: ${witness}`);
     assert(source.includes('dialect.artifact_kind != "s.stdio.semio"') && source.includes('dialect.standard != "v1"') && source.includes('dialect.subset != "flow"'), "retained addWidget must bind the exact captured child dialect");
@@ -179,7 +179,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
     const retainedCommandSource = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs"));
     assert.deepEqual(fixture.progress, { en: "Applying command", de: "Befehl wird angewendet" });
     assert(retainedCommandSource.includes('{"en":"Applying command","de":"Befehl wird angewendet"}'), "retained addWidget progress must bind the production bilingual preview");
-    assert(source.includes('action_interactive_job("addWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)'), "the manifest must expose one migrated addWidget route");
+    assert(source.includes('action_interactive_job("addWidget", semio_plugin::InteractiveJobClassification::Migrated)'), "the manifest must expose one migrated addWidget route");
     assert(source.includes("FLOW_CHILD_GROUP_TOOL_IDS.contains(&command.command_id())"), "legacy addWidget dispatch must fail closed");
     console.log(`[TRACE] Flow retained addWidget oracle: ${fixture.accepted.length} accepted + ${fixture.denials.length} hostile cases; session/publication model is independent; runtimeClaims=0`);
   }

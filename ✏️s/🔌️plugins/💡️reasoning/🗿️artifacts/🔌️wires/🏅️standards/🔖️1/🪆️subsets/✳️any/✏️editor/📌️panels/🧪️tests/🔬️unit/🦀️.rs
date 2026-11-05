@@ -23,13 +23,13 @@ async fn definition_binds_the_catalogue_tab_to_this_body_key() {
 mod document {
 use crate::editor::wires::terminology::WiresLabels;
 use crate::WiresComposed;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use super::super::document::*;
 use crate::editor::wires::unit_tests::context::{metabolism_app, render as render_body};
 use crate::editor::wires::WIRES_PLAY_BODY_ARTIFACT as APP_BODY_ARTIFACT;
 use semio_framework_value::DslValue;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 #[semio_framework_async_macros::async_test]
 async fn document_has_identities_section() {
@@ -64,10 +64,10 @@ fn oversized(identities: usize, relationships: usize) -> crate::WiresComposed {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(document: &crate::WiresComposed, requests: Vec<TreeWindowRequest>) -> String {
-    let view_state = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let labels = semio_framework_plugin::resolve_labels::<WiresLabels>(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let view_state = ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let labels = semio_plugin::resolve_labels::<WiresLabels>(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let node = render(document, labels, &TreeWindows::for_body(&view_state, WIRES_PLAY_BODY_ARTIFACT)).expect("wires document tree assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("wires document tree projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("wires document tree projection")
 }
 
 fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
@@ -194,10 +194,10 @@ async fn metabolism_fixture_hydrates_extension() {
 async fn txt_dsl_carrier_round_trips_exactly() {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
+    use semio_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::empty_wires_snapshot();
-    let exported = export::txt::v_utf_8::any::WiresIntoTxt::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
+    let exported = export::txt::v_utf_8::any::WiresIntoTxt::serialize(&snapshot, &semio_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoWires::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);
@@ -206,11 +206,11 @@ async fn txt_dsl_carrier_round_trips_exactly() {
 
 mod inspection_2 {
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 use super::super::inspection::*;
 
 fn project(node: BuiltNode) -> serde_json::Value {
-    let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
+    let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("retire semantic tree");
     serde_json::from_str(&text).expect("independent UI oracle")
 }
 
@@ -220,14 +220,14 @@ fn wires_semantic_panels_match_the_json_oracle() {
     let document = crate::empty_wires_snapshot();
     let composed = crate::wires_composed(&document, &crate::empty_wires_content());
     for row in vectors["cases"].as_array().expect("locales") {
-        let labels = semio_framework_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(&semio_framework_plugin::ViewModel {
-            locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"),
-            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native)
+        let labels = semio_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(&semio_plugin::ViewModel {
+            locale: semio_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"),
+            ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_ui_locale::Terminology::Native)
         });
-        let tree = project(crate::editor::wires::panels::document::render(&composed, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
+        let tree = project(crate::editor::wires::panels::document::render(&composed, labels, &semio_plugin::TreeWindows::unhosted()).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["identities"]);
         assert_eq!(tree["children"][1]["component"]["label"], row["relationships"]);
-        let tree = project(crate::editor::wires::panels::catalogue::render(&document.wires_snapshot, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue"));
+        let tree = project(crate::editor::wires::panels::catalogue::render(&document.wires_snapshot, labels, &semio_plugin::TreeWindows::unhosted()).expect("catalogue"));
         assert_eq!(tree["children"][0]["component"]["label"], row["identityKinds"]);
         assert_eq!(tree["children"][1]["component"]["label"], row["relationshipKinds"]);
         let tree = project(render(&composed, labels).expect("inspection"));
@@ -238,8 +238,8 @@ fn wires_semantic_panels_match_the_json_oracle() {
         crate::editor::wires::modes::edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default()).expect("editor canvas"),
         crate::viewer::wires::modes::view::windows::canvas::render(&composed).expect("viewer canvas"),
     ] {
-        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
-        let scene: semio_framework_plugin::Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
+        let semio_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
+        let scene: semio_plugin::Canvas2dScene = semio_ui_scene::decode(props).expect("packed canvas");
         assert_eq!(scene.camera_x, vectors["canvas"]["cameraX"].as_f64().expect("camera x"));
         assert_eq!(scene.camera_y, vectors["canvas"]["cameraY"].as_f64().expect("camera y"));
         assert_eq!(scene.zoom, vectors["canvas"]["zoom"].as_f64().expect("zoom"));

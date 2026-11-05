@@ -6,7 +6,7 @@ use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::modes::edit::windows::world3d::options::select as world_select;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 /// 🎯️ `puzzle5d-play-board-select` — parts / grips / fasteners for the board pane.
 pub fn measure(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeasure {

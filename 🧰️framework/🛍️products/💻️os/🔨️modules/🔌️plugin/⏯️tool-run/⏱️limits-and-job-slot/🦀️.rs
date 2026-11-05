@@ -1,7 +1,7 @@
 //! ⏱️ Limits and job slot of the tool run ledger: the turn, refold, discard, panel and trace limits, the job site, the job handle and slot with their transitions and the trace lane helpers. See [`super`].
 
 use super::*;
-use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::UiAssemblyResult;
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 //#region 🔖️Limits
@@ -226,19 +226,19 @@ pub fn inject_tool_run_trace_lane_into(surface: &mut BuiltNode, lane: &str) -> U
     let reference = SceneLaneRef { lane: name.to_string(), bytes: lane.len() as u32, hash: scene_lane_hash(lane) };
     let encoded = match props.doc_schema.as_str() {
         World3dScene::SCHEMA => {
-            let mut spine: World3dScene = semio_framework_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
+            let mut spine: World3dScene = semio_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
             spine.lanes.push(reference);
-            semio_framework_ui_scene::encode(props.kind, &spine)
+            semio_ui_scene::encode(props.kind, &spine)
         }
         Board2dScene::SCHEMA => {
-            let mut spine: Board2dScene = semio_framework_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
+            let mut spine: Board2dScene = semio_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
             spine.lanes.push(reference);
-            semio_framework_ui_scene::encode(props.kind, &spine)
+            semio_ui_scene::encode(props.kind, &spine)
         }
         _ => {
-            let mut spine: Canvas2dScene = semio_framework_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
+            let mut spine: Canvas2dScene = semio_ui_scene::decode(props).map_err(|error| ui_assembly_error_because("tool-run-trace.decode", error))?;
             spine.lanes.push(reference);
-            semio_framework_ui_scene::encode(props.kind, &spine)
+            semio_ui_scene::encode(props.kind, &spine)
         }
     };
     let mut encoded = encoded.map_err(|error| ui_assembly_error_because("tool-run-trace.encode", error))?;

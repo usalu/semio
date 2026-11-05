@@ -1,5 +1,5 @@
 //! 🧫️ Neutral document snapshot carried by the real host component fixture.
-use semio_framework_os_kernel::{os_store as store,os_pack as pack,os_dsl as dsl};
+use semio_os_kernel::{os_store as store,os_pack as pack,os_dsl as dsl};
 use semio_framework_value_derive::{ToValue,FromValue};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(deny_unknown_fields)]
@@ -17,12 +17,12 @@ impl pack::snapshot::ArtifactDsl for Snapshot {
 }
 impl pack::snapshot::ArtifactPack for Snapshot {
     
-    fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{semio_framework_os_kernel::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)}
-    fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(record,_)=semio_framework_os_kernel::pack_rt::decode_document(bytes,&Self::__dsl_spec(),options)?;Self::__dsl_from_record(&record).map_err(store::serialization::text_error_to_pack_error)}
+    fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{semio_os_kernel::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)}
+    fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(record,_)=semio_os_kernel::pack_rt::decode_document(bytes,&Self::__dsl_spec(),options)?;Self::__dsl_from_record(&record).map_err(store::serialization::text_error_to_pack_error)}
     fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Snapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Snapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec()->Option<store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }

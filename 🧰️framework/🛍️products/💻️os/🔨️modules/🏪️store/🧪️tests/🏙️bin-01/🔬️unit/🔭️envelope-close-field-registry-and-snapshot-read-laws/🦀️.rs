@@ -206,9 +206,9 @@ fn drive_member_close<M: SpaceMember>(member: &mut M) {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_close_order() {
-    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: Some(7) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid empty-history store");
-    store.install_document_store_owners_exact(complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: Some(7) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = semio_os_store_engine::lifted_store::ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid empty-history store");
+    store.install_document_store_owners_exact(complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     *store.live.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.live.current)));
     let original = store.live.tail_undo_cache.as_ref().unwrap().0.as_ptr();
     let phase = ArtifactStoreCursorDisposerPhase::RuntimeOwners(5);
@@ -286,7 +286,7 @@ fn close_erased_publication_quoted(publication: &mut dyn ErasedMemberStoreOneIte
 async fn member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_revision_and_metadata_refusal() {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "owned-batch", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "owned-batch", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
     let make_request = |mutations| MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(715), expected_generation: member.generation_now(), expected_revision: member.content_revision_now(), actor: fixture["metadata"]["actor"].as_str().unwrap().into(), group_id: Some(fixture["metadata"]["groupId"].as_str().unwrap().into()), transaction: None, mutations };

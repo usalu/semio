@@ -6,6 +6,7 @@ use super::*;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(deny_unknown_fields)]
 pub struct SetString {
     pub path: JsonPath,
     pub value: String,
@@ -14,8 +15,8 @@ pub struct SetString {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "string", kind: "set-string", record: "SetString" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set string", "Zeichenkette setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set string", "Zeichenkette setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

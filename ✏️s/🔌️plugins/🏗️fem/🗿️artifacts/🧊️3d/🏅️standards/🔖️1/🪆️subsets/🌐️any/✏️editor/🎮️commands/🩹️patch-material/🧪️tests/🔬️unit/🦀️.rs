@@ -1,12 +1,12 @@
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_material::*;
 use semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::replace_material;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use crate::context::dispatch;
@@ -19,7 +19,7 @@ fn demo() -> Fem3dSnapshot {
 }
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchMaterial) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(snapshot, &history);
     let config = NoConfig::default();
     handle(&payload, &doc, &ConfigView { snapshot: &config, window: None })
@@ -33,15 +33,15 @@ fn concurrent_material_fields_preserve_both_authors_intent() {
     let elasticity = emit(&base, PatchMaterial { id: "steel".into(), field: "e".into(), value: "190000000000".into() }).expect("elasticity intent").artifact_mutations.remove(0);
     for sequence in [[&name, &elasticity], [&elasticity, &name]] {
         let mut snapshot = base.clone();
-        for mutation in sequence { snapshot = semio_framework_os_kernel::apply_mutation(&snapshot, mutation).expect("field replay").0; }
+        for mutation in sequence { snapshot = semio_os_kernel::apply_mutation(&snapshot, mutation).expect("field replay").0; }
         let material = snapshot.materials.iter().find(|material| material.id == "steel").expect("steel");
         assert_eq!(material.name, "Steel S355");
         assert_eq!(material.e, 190000000000.0);
     }
     let mut snapshot = base.clone();
-    for mutation in [&name, &elasticity] { snapshot = semio_framework_os_kernel::apply_mutation(&snapshot, mutation).expect("field replay").0; }
-    let inverse = semio_framework_os_kernel::Mutation::inverse(&name, &base).expect("field inverse");
-    for mutation in inverse.iter().rev() { snapshot = semio_framework_os_kernel::apply_mutation(&snapshot, mutation).expect("inverse field replay").0; }
+    for mutation in [&name, &elasticity] { snapshot = semio_os_kernel::apply_mutation(&snapshot, mutation).expect("field replay").0; }
+    let inverse = semio_os_kernel::Mutation::inverse(&name, &base).expect("field inverse");
+    for mutation in inverse.iter().rev() { snapshot = semio_os_kernel::apply_mutation(&snapshot, mutation).expect("inverse field replay").0; }
     let material = snapshot.materials.iter().find(|material| material.id == "steel").expect("steel");
     assert_eq!(material.name, base.materials.iter().find(|material| material.id == "steel").expect("base steel").name);
     assert_eq!(material.e, 190000000000.0);
@@ -68,7 +68,7 @@ fn concurrent_material_same_field_last_replay_wins() {
     let second = emit(&base, PatchMaterial { id: "steel".into(), field: "name".into(), value: "Second Author".into() }).expect("second intent").artifact_mutations.remove(0);
     for (sequence, expected) in [([&first, &second], "Second Author"), ([&second, &first], "First Author")] {
         let mut snapshot = base.clone();
-        for mutation in sequence { snapshot = semio_framework_os_kernel::apply_mutation(&snapshot, mutation).expect("chronological replay").0; }
+        for mutation in sequence { snapshot = semio_os_kernel::apply_mutation(&snapshot, mutation).expect("chronological replay").0; }
         assert_eq!(snapshot.materials.iter().find(|material| material.id == "steel").expect("steel").name, expected);
     }
 }

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for InsertChase where Op: pr
         record: "InsertedChase",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert chase {}", self.item.id), &format!("Schlitz {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert chase {}", self.item.id), &format!("Schlitz {} einfügen", self.item.id))
     }
 }
 

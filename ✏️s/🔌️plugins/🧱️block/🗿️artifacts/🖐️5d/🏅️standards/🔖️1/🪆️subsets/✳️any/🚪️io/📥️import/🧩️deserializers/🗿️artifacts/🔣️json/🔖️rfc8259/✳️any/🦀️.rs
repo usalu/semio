@@ -2,7 +2,7 @@
 //! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`.
 
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
@@ -32,7 +32,7 @@ impl Deserializer<Block5dSnapshot> for JsonIntoBlock5d {
             _ => Confidence::None,
         }
     }
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Block5dSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Block5dSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "json→block5d: expected a text json payload".to_string())));
         };

@@ -5,8 +5,8 @@ use semio_framework_tool_run::{TOOL_RUN_ARG_TOOL_ID};
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::apply_puzzle3d_focus_selection, semio_s_artifact_puzzle_3d_editor_session::drive_precompute, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_SELECTION_METHOD_LASSO, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_SELECTION_METHOD_PICK, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_SELECTION_METHOD_RECTANGLE};
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::strip_engagement_prefix;
+use semio_plugin::kernel::Effect;
+use semio_plugin::strip_engagement_prefix;
 use semio_framework_tool_run::TOOL_RUN_START_ACTION_ID;
 
 /// 🗣️ `fill <n>` arms the Fill tool, sets the shared count and starts a fill run through the framework's
@@ -18,7 +18,7 @@ pub fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
         let count = rest.parse::<u32>().ok().unwrap_or(ctx.scene.runtime.fill_count);
         ctx.effects.push(set_fill_count::request(count));
         let start = semio_framework::dsl_value!({ TOOL_RUN_ARG_TOOL_ID: semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID });
-        ctx.effects.push(Effect::DispatchAction { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_START_ACTION_ID.into(), args: Some(start), delay_ms: 0 });
+        ctx.effects.push(Effect::DispatchAction { req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_START_ACTION_ID.into(), args: Some(start), delay_ms: 0 });
     } else {
         match raw.to_lowercase().as_str() {
             "brush" => {

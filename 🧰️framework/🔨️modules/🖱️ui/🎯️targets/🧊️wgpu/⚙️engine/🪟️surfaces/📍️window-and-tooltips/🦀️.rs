@@ -16,7 +16,7 @@ pub struct UiOverlayPlacement {
     pub y: f32,
     pub width: f32,
     pub height: f32,
-    pub side: semio_framework_ui_wgpu_events::OverlaySide,
+    pub side: semio_ui_wgpu_events::OverlaySide,
 }
 //#endregion 🪟️OverlayPlacement
 
@@ -288,7 +288,7 @@ pub fn mark_window_paint_dirty(window: &mut UiWindow) {
     }
 }
 
-pub fn presented_caret(surface: UiSurfaceToken, tree: &UiTree, step: semio_framework_ui_wgpu_events::CaretStep) -> Option<UiPresentedCaret> {
+pub fn presented_caret(surface: UiSurfaceToken, tree: &UiTree, step: semio_ui_wgpu_events::CaretStep) -> Option<UiPresentedCaret> {
     Some(UiPresentedCaret {
         surface,
         document_id: tree.document_id(step.node)?,
@@ -304,7 +304,7 @@ pub fn presented_caret(surface: UiSurfaceToken, tree: &UiTree, step: semio_frame
 /// epoch; `None` while the router shows no hint. Answers whether the presented hint changed.
 fn synchronize_presented_row_reason(window: &mut UiWindow, surface: UiSurfaceToken) -> Option<bool> {
     let (row, index) = window.presented_router.revealed_row_reason()?;
-    let next = match (window.presented_tree.document_id(row), semio_framework_ui_wgpu_events::disabled_row_action_reason(&window.presented_tree, row, index)) {
+    let next = match (window.presented_tree.document_id(row), semio_ui_wgpu_events::disabled_row_action_reason(&window.presented_tree, row, index)) {
         (Some(document_id), Some(label)) => Some(PresentedTooltip { surface, document_id, label: label.to_string(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch, row_action: Some(index) }),
         _ => None,
     };
@@ -332,7 +332,7 @@ pub fn retained_tooltip_paint(window: &mut UiWindow, surface: UiSurfaceToken, at
     let placement = match tooltip.row_action {
         Some(index) => {
             let icon = window.router.row_action_icon_rect(&window.tree, candidate_node, index)?;
-            ui_contract::resolve_overlay_placement(semio_framework_ui_wgpu_events::overlay_rect(icon), size, window.viewport, OverlayKind::Tooltip.default_placement(), window.router.flow().inline)
+            ui_contract::resolve_overlay_placement(semio_ui_wgpu_events::overlay_rect(icon), size, window.viewport, OverlayKind::Tooltip.default_placement(), window.router.flow().inline)
         }
         None => resolve_overlay_placement_side(&window.tree, OverlayAnchor::Node(candidate_node), size, window.viewport, OverlayKind::Tooltip.default_placement(), window.router.flow().inline),
     };

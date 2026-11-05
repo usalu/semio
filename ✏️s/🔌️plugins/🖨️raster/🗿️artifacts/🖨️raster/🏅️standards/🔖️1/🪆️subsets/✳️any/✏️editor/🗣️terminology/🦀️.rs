@@ -2,7 +2,7 @@
 //! (TEMPLATE.md §4).
 
 //#region 🔖️Terminology
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the raster app; one field per label makes every locale combination
     /// compile-checked.
     pub struct RasterPlayLabels {
@@ -118,7 +118,7 @@ semio_framework_ui_locale::app_labels! {
 
 /// 🗣️ Resolves the raster app's label set for a config's locale — the one call site every window/panel
 /// render fn goes through.
-pub fn raster_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static RasterPlayLabels {
-    semio_framework_plugin::resolve_labels::<RasterPlayLabels>(view_state)
+pub fn raster_play_labels(view_state: &semio_plugin::ViewModel) -> &'static RasterPlayLabels {
+    semio_plugin::resolve_labels::<RasterPlayLabels>(view_state)
 }
 //#endregion 🔖️Terminology

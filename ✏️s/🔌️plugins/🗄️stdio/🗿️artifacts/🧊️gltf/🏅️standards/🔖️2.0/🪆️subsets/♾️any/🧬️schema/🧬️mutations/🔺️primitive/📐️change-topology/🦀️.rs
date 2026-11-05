@@ -67,8 +67,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "primitive-topology-mode", kind: "change-primitive-topology-mode", record: "ChangedPrimitiveTopologyMode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Primitive Topology Mode", "Topologiemodus des Primitivs ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Primitive Topology Mode", "Topologiemodus des Primitivs ändern")
     }
 
     fn target(&self) -> Vec<String> {

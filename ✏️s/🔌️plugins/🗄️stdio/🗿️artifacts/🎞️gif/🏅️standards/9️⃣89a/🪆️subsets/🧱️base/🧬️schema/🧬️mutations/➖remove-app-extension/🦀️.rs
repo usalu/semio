@@ -15,8 +15,8 @@ pub struct RemoveAppExtension {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveAppExtension {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "app-extension", kind: "remove-app-extension", record: "RemoveAppExtension" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove app extension", "Anwendungserweiterung entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove app extension", "Anwendungserweiterung entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

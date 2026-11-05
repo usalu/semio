@@ -8,7 +8,7 @@ use crate::editor::json_any::edit_rules::{fail, index_of, locate, segments_of};
 use crate::standards::v_rfc8259::subsets::base::schema::mutations::{JsonPath, JsonPathSegment};
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
 use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{insert_array_element, remove_array_element, remove_member, rename_member, set_safe_number, set_string, set_top_level, upsert_member, JsonIJsonMutation, JsonIJsonRoot};
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, SnapshotEditEvent};
 

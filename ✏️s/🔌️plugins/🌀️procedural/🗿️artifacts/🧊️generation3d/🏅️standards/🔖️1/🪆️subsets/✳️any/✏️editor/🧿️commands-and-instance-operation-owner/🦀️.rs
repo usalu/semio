@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `Generation3dPlayApp::Command` — the SOLE dispatch surface for generation3d's own behavior,
     /// covering EVERY declared action. Row order is the binary variant ordinal: appending is safe,
     /// reordering is a wire-format break.
@@ -86,6 +86,7 @@ pub fn generation_command_result_for(command: &Generation3dCommand, projection: 
 /// throwaway also violated `FlowEvalSession`'s own `Drop` contract, which rejects a live drop.)
 /// Mirrors `FlowInstanceOperationOwner` in the flow artifact — the framework's reference owner.
 pub struct Generation3dInstanceOperationOwner {
+    pub(super) operator_catalogue:semio_os_flow::registry::FlowOperatorCatalogueOwner,
     pub(super) eval_session: Option<FlowEvalSession>,
     /// ⏯️ The `previewEval` run's surface-owned half: attached preview roster and the live job's port.
     run_link: semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink,
@@ -98,7 +99,8 @@ pub struct Generation3dInstanceOperationOwner {
 
 impl Generation3dInstanceOperationOwner {
     pub fn new() -> Self {
-        Self { eval_session: Some(FlowEvalSession::new()), run_link: semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink::default(), gumball: semio_s_artifact_procedural_3d_transforms::GumballGestures::default(), geometry: Default::default(), closing: false }
+        let(registry,generation)=semio_os_flow::registry::bootstrap_flow_operator_registry_source();
+        Self { operator_catalogue:semio_os_flow::registry::FlowOperatorCatalogueOwner::new(registry,generation),eval_session: Some(FlowEvalSession::new()), run_link: semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink::default(), gumball: semio_s_artifact_procedural_3d_transforms::GumballGestures::default(), geometry: Default::default(), closing: false }
     }
 
     /// 📐️ The geometry host a run of the contextual `s.procedural.generation3d.inference` geometry service executes against.
@@ -153,15 +155,15 @@ impl semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunOwner for Genera
     }
 }
 
-impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInstanceOperationOwner {
+impl semio_plugin::ArtifactInstanceOperationOwner for Generation3dInstanceOperationOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
 
     fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        if !self.closing {
-            return Ok(Default::default());
-        }
+        if !self.closing{return self.operator_catalogue.step_demands(body)}
+        if !self.operator_catalogue.terminal_is_empty(){return self.operator_catalogue.close_demands(body)}
+        if !self.gumball.terminal_is_empty(){return self.gumball.retirement_demands(body)}
         let Some(session) = self.eval_session.as_ref() else { return Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.geometry.terminal_is_empty()), ..Default::default() }) };
         if session.terminal_is_empty() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
@@ -172,11 +174,16 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInst
     /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
     /// until `begin_close`, and reporting that from the live maintenance ladder spent the runtime's
     /// zero-progress credit every idle turn (26/09/09/PROCEDURAL-3D-END-TO-END, close-ladder lane).
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
-        use semio_framework_plugin::PluginLifecycleStep;
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
+        use semio_plugin::PluginLifecycleStep;
         use semio_framework_value::retained_clone::RetainedCloneProgress;
-        if !self.closing {
-            return Ok(PluginLifecycleStep::Complete(Default::default()));
+        if !self.closing{return retained_catalogue_lifecycle::step(&mut self.operator_catalogue,false,cx,grant)}
+        if !self.operator_catalogue.terminal_is_empty(){return retained_catalogue_lifecycle::step(&mut self.operator_catalogue,true,cx,grant)}
+        if !self.gumball.terminal_is_empty(){
+            let d=self.gumball.retirement_demands(grant.maximum_copy_bytes)?;
+            let loan=semio_plugin::app::original_lifecycle_grant(cx,grant);
+            let step=cx.with_retained_loan(loan,|cx|cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|g|self.gumball.close_original(g)))).map_err(semio_plugin::PluginLifecycleFailure::from)?;
+            return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return Ok(PluginLifecycleStep::Progress(Default::default()));
@@ -202,8 +209,9 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInst
         Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         self.closing = true;
+        self.operator_catalogue.begin_close();
         if let Some(session) = self.eval_session.as_mut() {
             session.begin_close();
         }
@@ -211,7 +219,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInst
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.eval_session.is_none() && self.geometry.terminal_is_empty()
+        self.closing && self.eval_session.is_none() && self.geometry.terminal_is_empty() && self.gumball.terminal_is_empty() && self.operator_catalogue.terminal_is_empty()
     }
 }
 

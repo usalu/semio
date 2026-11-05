@@ -18,7 +18,7 @@ pub struct LayoutWindowTransient {
 
 semio_framework_value::artifact_retire_struct!(LayoutWindowTransient { drop_preview, engagement_input, transform_tool });
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: LayoutWindowTransient,
     mutation: LayoutWindowTransientMutation,
     diff: LayoutWindowTransientDiff,
@@ -31,7 +31,7 @@ semio_framework_plugin::transient_root! {
     fields: { drop_preview: LayoutDropPreviewState, engagement_input: String, transform_tool: Option<Box<LayoutTransformToolState>> },
 }
 
-semio_framework_plugin::window_transient_owners! {
+semio_plugin::window_transient_owners! {
     state: LayoutWindowTransient,
     mutation: LayoutWindowTransientMutation,
     windows: {

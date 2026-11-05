@@ -97,7 +97,7 @@ assert!(error.to_string().contains("fixture cancellation"));
 pub mod sqlite_control {
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
 use super::{GeoJsonConformanceControl,check_geojson_conformance_with_control};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,ValueError};
+use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,ValueError};
 struct SqliteGeoJsonConformance<'a,'b>{control:&'a mut SqliteSnapshotControl<'b>}
 impl GeoJsonConformanceControl for SqliteGeoJsonConformance<'_,'_>{
 fn checkpoint(&mut self,visited:usize,total:usize)->Result<(),ValueError>{self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,visited,total)}

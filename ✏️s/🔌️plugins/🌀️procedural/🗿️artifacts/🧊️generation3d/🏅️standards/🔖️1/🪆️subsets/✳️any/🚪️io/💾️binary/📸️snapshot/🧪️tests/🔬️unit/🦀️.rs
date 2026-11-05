@@ -1,7 +1,7 @@
 use crate::snapshot::*;
 use semio_s_artifact_procedural_3d_io_text::snapshot as generation3d_dsl;
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_os_kernel::os_store::test_support;
+use semio_os_kernel::os_store::test_support;
 
 #[test]
 fn dsl_pack_equivalence_empty_projection() {
@@ -49,10 +49,10 @@ fn dsl_pack_equivalence_covers_every_widget_kind() {
 fn pack_round_trips() {
     let projection = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse fixture"));
     let bytes = encode(&projection);
-    assert!(bytes.starts_with(&semio_framework_os_kernel::os_semio::BINARY_MAGIC), "a whole-document `ArtifactPack` encode carries the semio binary container magic, not the mounted streaming prefix");
+    assert!(bytes.starts_with(&semio_os_kernel::os_semio::BINARY_MAGIC), "a whole-document `ArtifactPack` encode carries the semio binary container magic, not the mounted streaming prefix");
     let decoded = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(decode(&bytes).expect("decode"));
     assert_eq!(*decoded, *projection, "pack round trip diverged");
     let mut wrong = bytes;
-    wrong[..semio_framework_os_kernel::os_semio::BINARY_MAGIC.len()].copy_from_slice(&[0; semio_framework_os_kernel::os_semio::BINARY_MAGIC.len()]);
+    wrong[..semio_os_kernel::os_semio::BINARY_MAGIC.len()].copy_from_slice(&[0; semio_os_kernel::os_semio::BINARY_MAGIC.len()]);
     assert!(decode(&wrong).is_err(), "a corrupted container magic must be rejected");
 }

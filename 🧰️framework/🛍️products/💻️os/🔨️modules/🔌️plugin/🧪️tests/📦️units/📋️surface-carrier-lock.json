@@ -1,14 +1,14 @@
 {
   "path": "Cargo.lock",
-  "package": "semio-framework-plugin-surface-carrier-laws",
+  "package": "semio-plugin-surface-carrier-laws",
   "dependencies": [
     "semio-framework",
     "semio-framework-async-macros",
-    "semio-framework-plugin-testing-laws",
-    "semio-framework-plugin-window-transient",
+    "semio-plugin-testing-laws",
+    "semio-plugin-window-transient",
     "semio-framework-trace",
-    "semio-framework-ui-contract",
-    "semio-framework-ui-scene",
+    "semio-ui-contract",
+    "semio-ui-scene",
     "serde_json"
   ],
   "missingDirectFirstparty": []

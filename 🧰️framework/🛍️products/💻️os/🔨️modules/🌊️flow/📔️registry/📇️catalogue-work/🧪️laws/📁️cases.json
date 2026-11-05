@@ -1,0 +1,84 @@
+[
+  {
+    "generation": 7,
+    "operators": [
+      {
+        "id": "zeta",
+        "extension": "test",
+        "name": "Ζ",
+        "abbreviation": "Z",
+        "icon": "🧊️",
+        "summary": "exact source",
+        "inputs": [
+          {
+            "code": "i",
+            "abbreviation": "I",
+            "name": "input",
+            "fullName": "Input",
+            "operators": [
+              "cap"
+            ],
+            "valueTypes": [
+              "number"
+            ],
+            "itemTypes": [],
+            "default": {
+              "nested": {
+                "text": "a\nβ",
+                "value": 2
+              }
+            },
+            "label": "Value",
+            "cardinality": "?"
+          }
+        ],
+        "outputs": [],
+        "variadicInput": {
+          "slotKey": "item",
+          "min": 0,
+          "max": 5
+        },
+        "variadicOutput": null,
+        "group": [
+          "Group"
+        ]
+      },
+      {
+        "id": "alpha",
+        "extension": "test",
+        "name": "Alpha",
+        "abbreviation": "A",
+        "icon": "",
+        "summary": "",
+        "inputs": [],
+        "outputs": [
+          {
+            "code": "o",
+            "abbreviation": "O",
+            "name": "output",
+            "fullName": "Output",
+            "operators": [],
+            "valueTypes": [
+              "text"
+            ],
+            "itemTypes": [],
+            "default": null,
+            "label": null,
+            "cardinality": "!"
+          }
+        ],
+        "variadicInput": null,
+        "variadicOutput": {
+          "slotKey": "output",
+          "min": 1,
+          "max": null
+        },
+        "group": []
+      }
+    ],
+    "expectedIds": [
+      "alpha",
+      "zeta"
+    ]
+  }
+]

@@ -1,9 +1,9 @@
 //! 🧱️ Studio foundation: the persisted space configuration, presence, terminology and the identifiers every studio layer shares.
 
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 use semio_s_space_core::*;

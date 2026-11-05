@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-os-renderer-wgpu-asset-decode"
+name = "semio-renderer-wgpu-asset-decode"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,22 +22,22 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-renderer-wgpu-asset-authority = { path = "../../../🗂️asset-authority/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust" }
-infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-renderer-wgpu-asset-authority = { path = "../../../🗂️asset-authority/📦️packages/🦀️rust" }
+semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
+semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust" }
+infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
 semio-framework-job = { workspace = true }
-semio-framework-plugin-ownership = { path = "../../../../../../../🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../../../../../🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 semio-framework-pixels = { path = "../../../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
-semio-framework-ui-raster-owner = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
-ui_scene = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-ui-raster-owner = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
 semio-framework-hash = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
+semio-ui-contract = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }

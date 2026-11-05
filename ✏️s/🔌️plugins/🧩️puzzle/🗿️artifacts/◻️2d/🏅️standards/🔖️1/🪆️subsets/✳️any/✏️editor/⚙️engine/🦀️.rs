@@ -25,7 +25,7 @@ pub use semio_framework_canvas as canvas;
 pub use canvas::CubicBez;
 pub use canvas::Point;
 pub use canvas::Vec2;
-pub use semio_framework_os_infinite::*;
+pub use semio_os_infinite::*;
 
 //#region 🔖️Puzzle2dExtension
 /// 🧩️ Puzzle 2d domain extension over the property graph canvas.

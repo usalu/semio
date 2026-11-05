@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeFootingEmbedment w
         verb: "change", entity: "footing-embedment", kind: "change-footing-embedment", record: "ChangedFootingEmbedment",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change footing embedment depth", "Einbindetiefe des Fundaments ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change footing embedment depth", "Einbindetiefe des Fundaments ändern")
     }
 }
 

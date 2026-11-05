@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointAnchorLength 
         record: "ChangedJointAnchorLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Anchor elongation length L_b of the joint", "Anschluss: Ankerdehnlänge L_b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Anchor elongation length L_b of the joint", "Anschluss: Ankerdehnlänge L_b ändern")
     }
 }
 

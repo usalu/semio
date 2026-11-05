@@ -4,19 +4,19 @@
 //! rows read as applied, every history edit each author may undo with the restore it authors, and each author's redo.
 
 #[cfg(test)]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
 use std::collections::BTreeMap;
 use std::future::Future;
 use semio_framework::kernel::{HybridLogicalTimestamp, MutationId};
 #[cfg(test)]
-use semio_framework_plugin_time_travel::{SupersedeLedger, SupersedeRecord, SupersedeRole};
+use semio_plugin_time_travel::{SupersedeLedger, SupersedeRecord, SupersedeRole};
 #[cfg(test)]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_ui_contract::*;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 

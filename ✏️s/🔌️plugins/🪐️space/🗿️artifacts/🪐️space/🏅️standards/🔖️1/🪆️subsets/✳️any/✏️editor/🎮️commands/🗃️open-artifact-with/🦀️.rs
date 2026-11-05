@@ -5,8 +5,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::kernel::Effect;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "open-artifact-with")]

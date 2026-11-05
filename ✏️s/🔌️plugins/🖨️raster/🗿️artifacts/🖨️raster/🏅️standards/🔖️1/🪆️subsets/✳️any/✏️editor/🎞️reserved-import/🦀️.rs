@@ -2,18 +2,18 @@
 
 use super::*;
 use semio_framework_job::InteractiveJob;
-use semio_framework_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedJob;
 use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
-use semio_framework_plugin::ArtifactToolCompletion;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaPayload;
+use semio_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactToolCompletion;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Media;
+use semio_plugin::MediaPayload;
 
 //#region 🎞️ReservedImport
 pub(super) const RASTER_IMPORT_TOOL_ID: &str = "import-media";
@@ -38,7 +38,7 @@ pub(super) struct RasterImportJob {
     pub(super) completed: bool,
     pub(super) closing: bool,
     pub(super) completion: Option<ArtifactToolCompletion<EditorApp<RasterPlayApp>>>,
-    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<RasterPlayApp>>>,
+    pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<RasterPlayApp>>>,
     pub(super) publication: RetainedJobPublication,
     pub(super) publishing: Option<JobPublicationKind>,
     pub(super) source: Vec<u8>,

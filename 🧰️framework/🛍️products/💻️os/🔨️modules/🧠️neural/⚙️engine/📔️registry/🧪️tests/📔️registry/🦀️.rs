@@ -5,7 +5,7 @@ use crate::{OperatorPlanAdmission,ColdOwner, Dictionary, EvalError, Operator, Op
 use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
 
 //#region 🧪️SharedRegistry
-use semio_framework_os_kernel_neural_engine_model::testkit::{observe_ownership,ObservedSystem,ShellObservation,SHELL_OBSERVATION};
+use semio_os_kernel_neural_engine_model::testkit::{observe_ownership,ObservedSystem,ShellObservation,SHELL_OBSERVATION};
 #[test]
 fn nested_original_system_observations_preserve_child_and_aggregate_receipts() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️retirement/🧪️tests/🧫️fixtures/🎮️typed-owners/🔣️.json")).unwrap();

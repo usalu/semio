@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeShellActionVYK whe
         record: "ChangedShellActionVYK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic shear force V_y,k of the shell action", "Schaleneinwirkung: Charakteristische Querkraft V_y,k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic shear force V_y,k of the shell action", "Schaleneinwirkung: Charakteristische Querkraft V_y,k ändern")
     }
 }
 

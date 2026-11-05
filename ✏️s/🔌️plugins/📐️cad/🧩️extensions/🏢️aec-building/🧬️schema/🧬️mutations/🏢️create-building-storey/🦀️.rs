@@ -34,8 +34,8 @@ impl CreateBuildingStorey {
 impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildingStorey {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "building-storey", kind: "create-building-storey", record: "CreatedBuildingStorey" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create building storey \"{}\"", self.storey_label()), &format!("Gebäudegeschoss \"{}\" erstellen", self.storey_label()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create building storey \"{}\"", self.storey_label()), &format!("Gebäudegeschoss \"{}\" erstellen", self.storey_label()))
     }
 
     fn target(&self) -> Vec<String> {

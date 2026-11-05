@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "route": {
+    "from": {
+      "artifactKind": "s.puzzle.puzzle2d",
+      "standard": "1",
+      "subset": "*"
+    },
+    "into": {
+      "artifactKind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "*"
+    }
+  },
+  "material": {
+    "nodes": 1024,
+    "columns": 32,
+    "spacing": 128,
+    "idPrefix": "export-node-"
+  },
+  "limits": {
+    "requestBytes": 2097152,
+    "resultBytes": 2097152,
+    "nativeValueAllowanceBytes": 4194304,
+    "vmBytes": 16777216,
+    "scaffoldingBytes": 2097152,
+    "pageBytes": 16384,
+    "progressBytes": 512
+  },
+  "execution": {
+    "maximumTurns": 10000,
+    "maximumMilliseconds": 120000,
+    "userVisibleTurns": 2000
+  },
+  "operationSource": {
+    "maximumItems": 64000,
+    "maximumCopyBytes": 50331648,
+    "maximumCapacityBytes": 73400320,
+    "maximumReleaseBytes": 73400320,
+    "maximumDepth": 4096
+  },
+  "progress": {
+    "carrier": "preview",
+    "phase": "encode",
+    "completedBytesMinimum": 1,
+    "strictlyBeforeTotal": true
+  },
+  "cancel": {
+    "code": "canceled",
+    "origin": "framework",
+    "severity": "error",
+    "retryable": false,
+    "outputForbidden": true,
+    "paidSourceClosure": true,
+    "observation": "paidCleanupTypedFault"
+  },
+  "format": {
+    "pretty": true,
+    "indent": 2,
+    "exactLeafBytes": true,
+    "allAuthoredWords": true,
+    "completeRelationalSpecimen": true,
+    "emptyTargetRegionsOmitted": true
+  },
+  "afterCancel": {
+    "command": "createNode",
+    "id": "AfterExportCancel",
+    "undo": true,
+    "redo": true
+  }
+}

@@ -1,15 +1,15 @@
 //! 🧪️ `assert_viewer_never_mutates`/`assert_editor_and_viewer_share_dialect` (contract §2.5) —
 //! local stand-ins per the pilot's `📓️w2-cad-report.md` "SDK gaps" #2: as of this packet's W0-F
-//! handoff, the canonical `semio_framework_plugin::artifact_app_laws` versions exist
+//! handoff, the canonical `semio_plugin::artifact_app_laws` versions exist
 //! (`👁️✏️SurfaceUnitTests` region) and are used directly here rather than re-invented.
-use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+use semio_plugin::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 use semio_framework_test_fixtures::fixture_path;
 
 macro_rules! surface_law {
     ($name:ident, $editor:ty, $viewer:ty) => {
         #[semio_framework_async_macros::async_test]
         async fn $name() {
-            assert_viewer_never_mutates::<$viewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+            assert_viewer_never_mutates::<$viewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
             assert_editor_and_viewer_share_dialect::<$editor, $viewer>().await;
         }
     };
@@ -49,13 +49,13 @@ macro_rules! set_active_example_case {
                 stringify!($name)
             );
             let boot = <$snapshot>::default();
-            let config = semio_framework_plugin::NoConfig::default();
+            let config = semio_plugin::NoConfig::default();
             let emit = {
                 use $set_active as set_active_example;
                 set_active_example::handle(
                     &set_active_example::SetActiveExample { example_id: $example_id.to_string() },
-                    &semio_framework_plugin::ArtifactView::new(&boot, &semio_framework_plugin::HistoryView::empty()),
-                    &semio_framework_plugin::ConfigView { snapshot: &config, window: None },
+                    &semio_plugin::ArtifactView::new(&boot, &semio_plugin::HistoryView::empty()),
+                    &semio_plugin::ConfigView { snapshot: &config, window: None },
                 )
                 .expect("setActiveExample handle")
             };
@@ -63,8 +63,8 @@ macro_rules! set_active_example_case {
                 use $set_active as set_active_example;
                 set_active_example::handle(
                     &set_active_example::SetActiveExample { example_id: "__unknown_example__".into() },
-                    &semio_framework_plugin::ArtifactView::new(&boot, &semio_framework_plugin::HistoryView::empty()),
-                    &semio_framework_plugin::ConfigView { snapshot: &config, window: None },
+                    &semio_plugin::ArtifactView::new(&boot, &semio_plugin::HistoryView::empty()),
+                    &semio_plugin::ConfigView { snapshot: &config, window: None },
                 )
                 .expect("unknown example is a no-op")
             };
@@ -225,16 +225,16 @@ macro_rules! roster_examples_case {
     ($name:ident, $editor:ty, $set_active:path, $snapshot:ty, $family_dir:literal) => {
         #[test]
         fn $name() {
-            use semio_framework_plugin::ArtifactEditor;
+            use semio_plugin::ArtifactEditor;
             use $set_active as set_active_example;
             let roster = <$editor as ArtifactEditor>::examples();
             let boot = <$snapshot>::default();
-            let config = semio_framework_plugin::NoConfig::default();
+            let config = semio_plugin::NoConfig::default();
             for example in &roster {
                 let emit = set_active_example::handle(
                     &set_active_example::SetActiveExample { example_id: example.id().to_string() },
-                    &semio_framework_plugin::ArtifactView::new(&boot, &semio_framework_plugin::HistoryView::empty()),
-                    &semio_framework_plugin::ConfigView { snapshot: &config, window: None },
+                    &semio_plugin::ArtifactView::new(&boot, &semio_plugin::HistoryView::empty()),
+                    &semio_plugin::ConfigView { snapshot: &config, window: None },
                 )
                 .unwrap_or_else(|fault| panic!("{}: example '{}' must load: {fault:?}", stringify!($name), example.id()));
                 assert!(

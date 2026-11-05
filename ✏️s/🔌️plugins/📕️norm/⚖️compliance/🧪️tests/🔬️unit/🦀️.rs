@@ -139,8 +139,8 @@ async fn fail_requires_remedy_invariant() {
 #[semio_framework_async_macros::async_test]
 async fn localized_copy_resolves_en_and_de() {
     let copy = LocalizedCopy::new("Pass", "Bestanden");
-    assert_eq!(copy.resolve(&semio_framework_ui_locale::Locale::En), "Pass");
-    assert_eq!(copy.resolve(&semio_framework_ui_locale::Locale::De), "Bestanden");
+    assert_eq!(copy.resolve(&semio_ui_locale::Locale::En), "Pass");
+    assert_eq!(copy.resolve(&semio_ui_locale::Locale::De), "Bestanden");
 }
 
 #[semio_framework_async_macros::async_test]

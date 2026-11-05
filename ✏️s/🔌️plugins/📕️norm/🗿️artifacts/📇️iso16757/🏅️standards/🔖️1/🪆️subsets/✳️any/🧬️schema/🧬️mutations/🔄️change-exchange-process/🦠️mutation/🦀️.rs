@@ -17,8 +17,8 @@ pub struct ChangeExchangeProcess {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangeExchangeProcess where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_exchange_process::mutation::ChangeExchangeProcess> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "exchange-process", kind: "change-exchange-process", record: "ChangedExchangeProcess" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change exchange process to {:?}", self.new_exchange_process), &format!("Austauschprozess auf {:?} ändern", self.new_exchange_process))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change exchange process to {:?}", self.new_exchange_process), &format!("Austauschprozess auf {:?} ändern", self.new_exchange_process))
     }
 }
 

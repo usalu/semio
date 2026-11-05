@@ -256,3 +256,12 @@ fn borrowed_json_writer_preserves_actual_post_birth_cancellation_receipt(){
  assert_eq!(actual,expected);assert_eq!(serde_json::from_str::<serde_json::Value>(&actual).unwrap(),serde_json::Value::String("雪".repeat(16)));
  retire_original_json(writer,3,100000);retire_original_json(source,3,100000);retire_original_json(actual,3,100000);
 }
+
+#[test]
+fn retained_json_writer_quotes_bounded_utf8_blocks_and_preserves_actual_work(){
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🫳️source-sink.json")).unwrap();
+ for row in fixture["retainedTextBlocks"].as_array().unwrap(){let word=row["text"].as_str().unwrap();let source=DslValue::String(word.to_owned());let expected=serde_json::to_string(word).unwrap();let mut writer=JsonBorrowedWriteCursor::new();let mut callback=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new_retained(&mut callback);let g=RetainedCloneGrant{maximum_items:512,maximum_copy_bytes:usize::try_from(row["copy"].as_u64().unwrap()).unwrap().max(1),maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:256};let mut output=None;
+  for _ in 0..200{assert!(writer.step(&source,1,&mut control,RetainedCloneGrant{maximum_items:0,..g}).unwrap().is_none());assert_eq!(writer.last_turn_work(),0);let before=writer.progress();let demand=writer.normal_step_demands_with_copy(&source,g.maximum_copy_bytes).unwrap();let result=writer.step(&source,1,&mut control,g).unwrap();assert!(writer.last_turn_work()<=1);assert!(writer.normal_step_progress().fits(g));if before==(1,true)&&!word.is_empty(){assert_eq!(writer.normal_step_progress().copied_bytes,row["encodedBytes"].as_u64().unwrap()as usize);}if writer.normal_step_progress().copied_bytes!=0{assert_eq!(writer.normal_step_progress().copied_bytes,demand.copy_bytes)}if result.is_some(){output=result;break}}
+  let matches=output.as_deref()==Some(expected.as_str());retire_original_json(writer,3,100000);retire_original_json(source,3,100000);assert!(matches,"bounded native writer matches independent serde JSON");
+ }
+}

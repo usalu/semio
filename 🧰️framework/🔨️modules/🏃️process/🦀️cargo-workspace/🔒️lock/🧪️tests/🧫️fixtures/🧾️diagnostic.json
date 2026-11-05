@@ -3,7 +3,7 @@
     {
       "name": "nested-manifest-cause",
       "status": 101,
-      "stderr": "error: failed to get `semio-framework-plugin-composition-publication` as a dependency\n\nCaused by:\n  failed to load source for dependency `semio-framework-plugin-composition-publication`\n\nCaused by:\n  failed to parse manifest at /original/漢/Cargo.toml\n\nCaused by:\n  package workspace root is missing\n",
+      "stderr": "error: failed to get `semio-plugin-composition-publication` as a dependency\n\nCaused by:\n  failed to load source for dependency `semio-plugin-composition-publication`\n\nCaused by:\n  failed to parse manifest at /original/漢/Cargo.toml\n\nCaused by:\n  package workspace root is missing\n",
       "stdout": "original resolver output\n",
       "repeat": 1
     },

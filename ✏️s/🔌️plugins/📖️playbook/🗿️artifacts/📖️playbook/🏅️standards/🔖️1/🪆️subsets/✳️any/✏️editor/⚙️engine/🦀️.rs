@@ -11,22 +11,22 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports plus one
 /// extra input, `chapters:in` (Text×Document, kind `text.document`, `Many` — fans in from several
 /// upstream `writer` nodes' `"text:out"`).
-pub fn playbook_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn playbook_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
-        artifact_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Text, form: semio_framework_plugin::MediaForm::Document },
-        ports: vec![semio_framework_plugin::MediaPortSpec {
+        artifact_media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Text, form: semio_plugin::MediaForm::Document },
+        ports: vec![semio_plugin::MediaPortSpec {
             id: "chapters:in".into(),
             label: "Chapters".into(),
-            direction: semio_framework_plugin::MediaPortDirection::In,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Text, form: semio_framework_plugin::MediaForm::Document },
+            direction: semio_plugin::MediaPortDirection::In,
+            media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Text, form: semio_plugin::MediaForm::Document },
             kind_id: Some("text.document".into()),
             required: false,
-            multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            multiplicity: semio_plugin::PortMultiplicity::Many,
         }],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "text.playbook".into(), name: "Playbook".into(), dimension: "text".into(), component_kind: "playbook".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "text.playbook".into(), name: "Playbook".into(), dimension: "text".into(), component_kind: "playbook".into() },
     }
 }
 

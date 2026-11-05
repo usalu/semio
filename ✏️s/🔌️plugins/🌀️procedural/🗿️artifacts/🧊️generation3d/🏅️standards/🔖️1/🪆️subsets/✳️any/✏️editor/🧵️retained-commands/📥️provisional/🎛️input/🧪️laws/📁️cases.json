@@ -1,0 +1,1485 @@
+[
+  {
+    "name": "Native Number Replaces One Param",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "number",
+      "value": 2.0
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 2.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": true
+  },
+  {
+    "name": "Same Native Value Preserves Extra Data",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0,
+              "extra": "preserved"
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "number",
+      "value": 1.0
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0,
+              "extra": "preserved"
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Equal Integer Carrier Remains Original",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "number",
+      "value": 1.0
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Note Owned Text Lands",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "t",
+      "channel": "text",
+      "type": "text",
+      "value": "Grüße🧱"
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "Grüße🧱"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": true
+  },
+  {
+    "name": "Equal Note Remains Original",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "t",
+      "channel": "text",
+      "type": "text",
+      "value": "old"
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Wrong Note Literal Refuses",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "t",
+      "channel": "text",
+      "type": "number",
+      "value": 1.0
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Raw Dangling Wire Blocks Neuron Input",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [
+        {
+          "id": "w",
+          "from": "missing-source",
+          "fromPort": "out",
+          "to": "n",
+          "toPort": "value"
+        }
+      ],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "number",
+      "value": 2.0
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [
+        {
+          "id": "w",
+          "from": "missing-source",
+          "fromPort": "out",
+          "to": "n",
+          "toPort": "value"
+        }
+      ],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Raw Dangling Wire Blocks Note Text",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [
+        {
+          "id": "w",
+          "from": "missing-source",
+          "fromPort": "out",
+          "to": "t",
+          "toPort": "text"
+        }
+      ],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "t",
+      "channel": "text",
+      "type": "text",
+      "value": "next"
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [
+        {
+          "id": "w",
+          "from": "missing-source",
+          "fromPort": "out",
+          "to": "t",
+          "toPort": "text"
+        }
+      ],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Unknown Param Refuses",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "missing",
+      "type": "number",
+      "value": 2.0
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Missing Widget Refuses",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "missing",
+      "channel": "value",
+      "type": "number",
+      "value": 2.0
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Other Widget Kind Refuses",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "s",
+      "channel": "value",
+      "type": "number",
+      "value": 2.0
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Other Typed Schema Refuses",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "point",
+      "value": [
+        1.0,
+        2.0,
+        3.0
+      ]
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "number",
+              "value": 1.0
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": false
+  },
+  {
+    "name": "Native Text Param Lands",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "text",
+              "value": "old"
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "text",
+      "value": "next🧱"
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "text",
+              "value": "next🧱"
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": true
+  },
+  {
+    "name": "Native Number Collection Lands",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "list",
+              "0": {
+                "$schema": "number",
+                "value": 1.0
+              },
+              "1": {
+                "$schema": "number",
+                "value": 2.0
+              }
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "numberList",
+      "value": [
+        2.0,
+        3.0
+      ]
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "list",
+              "0": {
+                "$schema": "number",
+                "value": 2.0
+              },
+              "1": {
+                "$schema": "number",
+                "value": 3.0
+              }
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": true
+  },
+  {
+    "name": "Native Plane Lands",
+    "before": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "plane",
+              "origin": {
+                "$schema": "point",
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "normal": {
+                "$schema": "vector",
+                "x": 0.0,
+                "y": 0.0,
+                "z": 1.0
+              }
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "mutation": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "plane",
+      "value": {
+        "origin": [
+          1.0,
+          2.0,
+          3.0
+        ],
+        "normal": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "after": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "n",
+          "neuronKind": "fixture",
+          "params": {
+            "value": {
+              "$schema": "plane",
+              "origin": {
+                "$schema": "point",
+                "x": 1.0,
+                "y": 2.0,
+                "z": 3.0
+              },
+              "normal": {
+                "$schema": "vector",
+                "x": 1.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "other": true
+          },
+          "inputPorts": [],
+          "outputPorts": [],
+          "preview": true
+        },
+        {
+          "kind": "inputNote",
+          "id": "t",
+          "text": "old"
+        },
+        {
+          "kind": "inputSlider",
+          "id": "s",
+          "label": "S",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [],
+      "layout": {}
+    },
+    "applied": true
+  }
+]

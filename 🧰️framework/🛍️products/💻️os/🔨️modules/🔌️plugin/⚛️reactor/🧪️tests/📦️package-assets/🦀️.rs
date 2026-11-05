@@ -1,5 +1,5 @@
 
-use semio_framework_plugin_reactor_core::package_asset;
+use semio_plugin_reactor_core::package_asset;
 
 #[test]
 fn an_asset_the_host_delivered_on_open_is_readable_by_name() {

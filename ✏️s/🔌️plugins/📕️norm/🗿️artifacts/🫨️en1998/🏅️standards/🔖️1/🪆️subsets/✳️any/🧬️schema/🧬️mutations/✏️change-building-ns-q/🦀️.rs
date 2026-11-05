@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingNsQ where 
         record: "ChangeBuildingNsQ",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Non-structural element behaviour factor q_a", "Verhaltensbeiwert des nichttragenden Bauteils q_a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Non-structural element behaviour factor q_a", "Verhaltensbeiwert des nichttragenden Bauteils q_a ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-ns-q".into()]

@@ -1,9 +1,9 @@
 //! 🔒️ The reactor close registry and the close participant steps of the lifecycle owner.
 
-use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::{PLUGIN_REACTOR_INSTANCE_SLOTS, ReactorFixedSlots};
+use semio_plugin_reactor_tasks::tasks_fixed_slots::{PLUGIN_REACTOR_INSTANCE_SLOTS, ReactorFixedSlots};
 use crate::{REACTOR_CLOSES, instance_lifetime};
-use semio_framework_plugin_reactor_tasks::{REGISTRY, TASK_RESUMES};
-use semio_framework_plugin_actor_host::requests;
+use semio_plugin_reactor_tasks::{REGISTRY, TASK_RESUMES};
+use semio_plugin_actor_host::requests;
 
 pub struct ReactorCloseState {
     pub key: instance_lifetime::NativeCloseKey,

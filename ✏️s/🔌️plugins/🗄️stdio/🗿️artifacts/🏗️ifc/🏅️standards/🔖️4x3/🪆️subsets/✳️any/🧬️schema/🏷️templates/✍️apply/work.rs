@@ -4,8 +4,8 @@ use super::*;
 use crate::details::{IfcPublication, SnapshotSource};
 use crate::editor::{Ifc4x3AnyEditor, Ifc4x3EditCommand};
 use semio_framework_job::{OriginalTurnFailure, StepContext};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{EditorApp, Fault};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
+use semio_plugin::{EditorApp, Fault};
 use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSourceAdmission, RetainedCloneStep};
 use semio_framework_value::{DslValue, RetirementDemand, ValueError, ValueRefusalKind};
 use std::{mem::size_of, sync::Arc};
@@ -185,7 +185,7 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
     fn tool_id(&self) -> &'static str {
         APPLY_TEMPLATE_ACTION
     }
-    fn extent(&self, command: &Ifc4x3EditCommand, _: &IfcSnapshot, _: &protocol::InteractionState, _: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Ifc4x3AnyEditor>>>) -> Option<usize> {
+    fn extent(&self, command: &Ifc4x3EditCommand, _: &IfcSnapshot, _: &protocol::InteractionState, _: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Ifc4x3AnyEditor>>>) -> Option<usize> {
         matches!(command, Ifc4x3EditCommand::ApplyTemplate { .. }).then_some(TEMPLATE_WORK_CAPACITY.work_items())
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -389,7 +389,7 @@ pub(crate) fn test_identity_query(original:DslValue,snapshot:&IfcSnapshot,cancel
 enum TestPlanningOutcome{Mutations(Vec<IfcMutation>),Identities(Vec<(usize,bool)>)}
 #[cfg(test)]
 fn test_planning(original: DslValue, snapshot: &IfcSnapshot, cancel_at: Option<usize>,query:bool) -> Result<TestPlanningOutcome, String> {
-    use semio_framework_plugin::app_testing::OriginalWorkFixture;
+    use semio_plugin::app_testing::OriginalWorkFixture;
     let mut caller = OriginalWorkFixture::with_identity(semio_framework_job::OperationId(918), semio_framework_job::Generation(1));
     let grant = RetainedCloneGrant { maximum_items: 1_000_000, maximum_copy_bytes: 1_048_576, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 1_048_576, maximum_depth: 256 };
     let mut receiver = ApplicationReceiver::default();

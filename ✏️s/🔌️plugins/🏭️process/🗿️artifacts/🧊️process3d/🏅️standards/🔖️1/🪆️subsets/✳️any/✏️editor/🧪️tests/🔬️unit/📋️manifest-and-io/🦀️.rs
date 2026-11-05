@@ -45,16 +45,16 @@ async fn process3d_io_mirrors_the_declared_artifact_kind() {
 async fn process3d_io_declares_geometry_in_and_brep_out_ports() {
     let io = process3d_io();
     let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
-    assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
+    assert_eq!(geometry_in.direction, semio_plugin::MediaPortDirection::In);
     assert!(geometry_in.kind_id.is_none());
     assert!(!geometry_in.required);
-    assert_eq!(geometry_in.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+    assert_eq!(geometry_in.multiplicity, semio_plugin::PortMultiplicity::Many);
 
     let brep_out = io.ports.iter().find(|port| port.id == "brep:out").expect("brep:out declared");
-    assert_eq!(brep_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(brep_out.direction, semio_plugin::MediaPortDirection::Out);
     assert_eq!(brep_out.kind_id.as_deref(), Some("3d.process"));
     assert!(!brep_out.required);
-    assert_eq!(brep_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+    assert_eq!(brep_out.multiplicity, semio_plugin::PortMultiplicity::Many);
     assert_eq!(brep_out.media_type.class, MediaClass::ThreeD);
     assert_eq!(brep_out.media_type.form, MediaForm::Brep);
 }
@@ -63,7 +63,7 @@ async fn process3d_io_declares_geometry_in_and_brep_out_ports() {
 //#region 🔖️MediaTests
 #[semio_framework_async_macros::async_test]
 async fn export_brep_out_returns_step_text_structured_payload() {
-    semio_framework_os_kernel::io::register_format_descriptors(semio_s_artifact_stdio_step::formats().expect("STEP format descriptors")).await.expect("register stdio format descriptors");
+    semio_os_kernel::io::register_format_descriptors(semio_s_artifact_stdio_step::formats().expect("STEP format descriptors")).await.expect("register stdio format descriptors");
     let document = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -92,7 +92,7 @@ async fn import_geometry_in_rejects_unrecognized_schema() {
     let document = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
+    let media = semio_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
     assert!(matches!(Process3dPlayApp::import_media("geometry:in", &media, &doc), Err(MediaError::Payload(port, _)) if port == "geometry:in"));
 }
 //#endregion 🔖️MediaTests

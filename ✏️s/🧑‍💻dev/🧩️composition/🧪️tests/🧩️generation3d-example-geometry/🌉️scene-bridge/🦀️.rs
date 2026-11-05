@@ -54,7 +54,7 @@ fn hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture() 
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     let eval_json = host.evaluate().expect("example evaluates");
     transfer_evaluation_geometry(&host, &eval_json);
-    let mut session = semio_framework_os_flow::FlowEvalSession::new().with_geometry_port(geometry_session().port());
+    let mut session = semio_os_flow::FlowEvalSession::new().with_geometry_port(geometry_session().port());
     resolve_preview_geometry(&eval_json, &host.host_snapshot, &cfg.lod_mode, &mut session);
     let payload = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload(&eval_json, &host.host_snapshot, &cfg, Some(&session), &Default::default());
     let (meshes_json, instances_json) = (payload.meshes_json, payload.instances_json);

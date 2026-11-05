@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeOpeningWidth where
         record: "ChangedOpeningWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change opening width (along x) of the opening", "Öffnung: Öffnungsbreite (in x) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change opening width (along x) of the opening", "Öffnung: Öffnungsbreite (in x) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.opening_id.clone()]

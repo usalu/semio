@@ -25,8 +25,8 @@ pub struct ChangeJfifHeaderMutation {
 impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "jfif-header", kind: "change-jfif-header", record: "ChangeJfifHeader" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change JFIF header", "JFIF-Header ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change JFIF header", "JFIF-Header ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-jfif-header".into()]

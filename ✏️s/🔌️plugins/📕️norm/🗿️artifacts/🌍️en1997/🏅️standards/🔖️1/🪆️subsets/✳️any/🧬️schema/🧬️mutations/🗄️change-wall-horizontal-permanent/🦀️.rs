@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallHorizontalPerm
         record: "ChangedWallHorizontalPermanent",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change horizontal permanent of the retaining wall", "Stützwand: Horizontale ständige Einwirkung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change horizontal permanent of the retaining wall", "Stützwand: Horizontale ständige Einwirkung ändern")
     }
 }
 

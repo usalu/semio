@@ -13,8 +13,8 @@ fn multiple_value(input: &serde_json::Value) -> IfcValue {
 }
 #[test]
 fn multiple_required_references_use_the_original_controller_and_keep_supplied_fields_editable() {
-    use semio_framework_plugin::{AppRenderOperationContext, ChildContentView};
-    use semio_framework_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
+    use semio_plugin::{AppRenderOperationContext, ChildContentView};
+    use semio_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
     use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity};
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔎️details/🧪️tests/type-multiple-input.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
@@ -30,7 +30,7 @@ fn multiple_required_references_use_the_original_controller_and_keep_supplied_fi
             })
             .collect();
         let snapshot = std::sync::Arc::new(IfcSnapshot { entities, ..Default::default() });
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = semio_plugin::HistoryView::empty();
         let view = staged_view();
         let mut request = staged_request(&serde_json::json!({"path":"/entities/0","value":{"$ifcType":row["target"],"$ifcInputs":row["initial"]}}));
         request.token.action = "setSnapshotValue".into();
@@ -39,11 +39,11 @@ fn multiple_required_references_use_the_original_controller_and_keep_supplied_fi
             base_revision: semio_framework_job::RevisionId(0),
             generation: semio_framework_job::Generation(1),
             canonical_base_revision: [0; 32],
-            mounted_policy: semio_framework_plugin::app_testing::artifact_app_laws::fixture_mounted_policy(),
+            mounted_policy: semio_plugin::app_testing::artifact_app_laws::fixture_mounted_policy(),
         };
         let doc = semio_framework_async::poll::resolve_ready(ArtifactView::with_render_context(snapshot.as_ref(), &history, ChildContentView::EMPTY, operation, "multiple-source", None));
         let mut caller = OriginalWorkFixture::new();
-        let mut work = caller.work_turn(staged_grant(), 1000, |cx| Ifc4x3AnyEditor::begin_render_work(semio_framework_plugin::action_staging::STAGED_FORM_BODY_KEY, cx)).unwrap().unwrap();
+        let mut work = caller.work_turn(staged_grant(), 1000, |cx| Ifc4x3AnyEditor::begin_render_work(semio_plugin::action_staging::STAGED_FORM_BODY_KEY, cx)).unwrap().unwrap();
         let mut donor = Some(request);
         let mut received = false;
         for _ in 0..16 {
@@ -55,7 +55,7 @@ fn multiple_required_references_use_the_original_controller_and_keep_supplied_fi
         assert!(received && donor.is_none());
         let mut output = None;
         for _ in 0..100000 {
-            match caller.work_turn(staged_grant(), 1000, |cx| Ok(work.render(semio_framework_plugin::action_staging::STAGED_FORM_BODY_KEY, &snapshot, &doc, &view, cx))).unwrap() {
+            match caller.work_turn(staged_grant(), 1000, |cx| Ok(work.render(semio_plugin::action_staging::STAGED_FORM_BODY_KEY, &snapshot, &doc, &view, cx))).unwrap() {
                 Ok(Some(tree)) => {
                     output = Some(tree);
                     break;

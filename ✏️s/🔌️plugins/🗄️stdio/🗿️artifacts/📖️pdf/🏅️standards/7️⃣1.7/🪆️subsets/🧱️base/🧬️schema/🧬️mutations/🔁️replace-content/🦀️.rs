@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "content", kind: "replace-content", record: "Replace" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace operator {} on page {}", self.at, self.index), &format!("Operator {} auf Seite {} ersetzen", self.at, self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace operator {} on page {}", self.at, self.index), &format!("Operator {} auf Seite {} ersetzen", self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

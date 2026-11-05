@@ -1,8 +1,8 @@
 //! 🌱️ Config creation declares its authored default, original Pack receiver and shared publication/replay issuer.
 use super::{EnergyModelConfig as State,EnergyModelConfigMutation as Mutation};
-use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};
-use semio_framework_os_store_codec_registry::native_snapshot::{OriginalArtifactPackReceiving,OriginalSnapshotRecordReceiving};
+use semio_os_store_codec_registry::native_snapshot::{OriginalArtifactPackReceiving,OriginalSnapshotRecordReceiving};
 use std::{mem::size_of,sync::Arc};
 use store::os_store::document_store_owners::{DocumentStoreOwnerProducer,DocumentStoreOwners,DocumentStoreOwnersAdmissionError,BoundedArtifactRetirementFactory};
 type Owners=DocumentStoreOwners<State,Mutation>;
@@ -18,7 +18,7 @@ fn source_copy()->usize{2*size_of::<Disposer>()+2*size_of::<Owners>()+2*size_of:
 pub struct EnergyConfigCatalog;
 impl DocumentStoreOwnerProducer<State,Mutation> for EnergyConfigCatalog{
  fn source_demands()->Result<RetirementDemand,ValueError>{Owners::shared_semantic_source_demands::<StateRetirement,StateRetirement,MutationRetirement,Disposer,EnergyConfigPreparationFactory>(children(),source_copy())}
- fn admit_sources(grant:RetainedCloneGrant)->Result<(Owners,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<State,Mutation>>{Owners::admit_source_constructor_with_shared_semantic_preparation(grant,children(),source_copy(),||{let preparation=EnergyConfigPreparationFactory::new(Arc::new(Edit::new()),Arc::new(MutationRetirement::new()),Arc::new(StateRetirement::new()),store::snapshot_clone_preparation::CONFIG_APPLY_MAXIMUM_PREPARATION_DEPTH).expect("authored nonzero config preparation depth");(StateRetirement::new(),StateRetirement::new(),MutationRetirement::new(),Disposer::new(),preparation)}).map(|(mut owners,p)|{owners.operation_wire=semio_framework_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)));(owners.with_batch_digest(),p)})}
+ fn admit_sources(grant:RetainedCloneGrant)->Result<(Owners,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<State,Mutation>>{Owners::admit_source_constructor_with_shared_semantic_preparation(grant,children(),source_copy(),||{let preparation=EnergyConfigPreparationFactory::new(Arc::new(Edit::new()),Arc::new(MutationRetirement::new()),Arc::new(StateRetirement::new()),store::snapshot_clone_preparation::CONFIG_APPLY_MAXIMUM_PREPARATION_DEPTH).expect("authored nonzero config preparation depth");(StateRetirement::new(),StateRetirement::new(),MutationRetirement::new(),Disposer::new(),preparation)}).map(|(mut owners,p)|{owners.operation_wire=semio_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)));(owners.with_batch_digest(),p)})}
 }
 /// 🌱️ The four authored settings have a finite original String birth and canonical envelope identity.
 pub struct EnergyConfigGenesis;
@@ -40,10 +40,10 @@ impl OriginalArtifactPackReceiving for State{
  fn original_pack_birth_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self::Receiving>(),depth:1,..Default::default()}}
  fn admit_original_pack(source:&[u8],limits:protocol::PackLimits,native:&semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<(Self::Receiving,RetainedCloneProgress)>,ValueError>{Self::Receiving::admit(source,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),limits,native,grant)}
 }
-impl semio_framework_os_store_operation_wire::ArtifactOperationTargets for Mutation{
+impl semio_os_store_operation_wire::ArtifactOperationTargets for Mutation{
  fn len(&self)->usize{1}
  fn segment_len(&self,index:usize)->Result<usize,ValueError>{if index!=0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"config target ordinal is absent"))}Ok(match self{Self::ChangeSimulationSettings(_)=>19,Self::ChangeResultField(_)=>12})}
- fn read_segment(&self,index:usize,offset:usize,output:&mut[u8])->Result<usize,ValueError>{let len=semio_framework_os_store_operation_wire::ArtifactOperationTargets::segment_len(self,index)?;let text=match self{Self::ChangeSimulationSettings(_)=>"simulation-settings",Self::ChangeResultField(_)=>"result-field"};if offset>len{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"config target offset is absent"))}let bytes=&text.as_bytes()[offset..];let count=bytes.len().min(output.len());output[..count].copy_from_slice(&bytes[..count]);Ok(count)}
+ fn read_segment(&self,index:usize,offset:usize,output:&mut[u8])->Result<usize,ValueError>{let len=semio_os_store_operation_wire::ArtifactOperationTargets::segment_len(self,index)?;let text=match self{Self::ChangeSimulationSettings(_)=>"simulation-settings",Self::ChangeResultField(_)=>"result-field"};if offset>len{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"config target offset is absent"))}let bytes=&text.as_bytes()[offset..];let count=bytes.len().min(output.len());output[..count].copy_from_slice(&bytes[..count]);Ok(count)}
 }
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

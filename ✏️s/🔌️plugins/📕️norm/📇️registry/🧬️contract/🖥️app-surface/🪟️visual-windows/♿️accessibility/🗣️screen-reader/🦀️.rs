@@ -6,7 +6,7 @@ use crate::diagrams2d::{accessible_description, table_twin};
 use crate::viewport3d::config::Lang;
 use crate::viewport3d::description::{entity_spoken_name, pick, spoken_utilisation};
 use crate::viewport3d::overlays::number;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use semio_s_plugin_norm_structural_scene::{CheckStatus, Diagram2d, Handle, LocalizedCopy, SceneEntity};
 
 /// 🎚️ Current, minimum and maximum of a range widget.

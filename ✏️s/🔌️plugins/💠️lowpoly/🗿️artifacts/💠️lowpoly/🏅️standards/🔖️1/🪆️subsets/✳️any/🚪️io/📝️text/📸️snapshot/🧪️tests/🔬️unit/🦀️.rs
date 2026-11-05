@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::io::component::text::snapshot::*;
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_the_default_snapshot() {
     let projection = crate::standards::v1::subsets::any::io::component::text::snapshot::default_snapshot();
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -18,7 +18,7 @@ async fn dsl_round_trips_a_projection_with_a_painted_layer() {
     projection.objects[0].paint_layers[0].pixels = crate::snapshot::empty_paint_pixels();
     projection.objects[0].paint_layers[0].pixels[0] = 7;
     projection.objects[0].paint_layers[0].pixels[1] = 9;
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
 }
 
 #[semio_framework_async_macros::async_test]

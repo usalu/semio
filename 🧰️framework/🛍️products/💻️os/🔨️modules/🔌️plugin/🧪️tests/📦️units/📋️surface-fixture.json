@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "package": "semio-framework-plugin-surface-fixture",
+  "package": "semio-plugin-surface-fixture",
   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/🦀️.rs",
   "original": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs",
   "metadataTarget": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️private-child-metadata/🦀️.rs",
@@ -1464,12 +1464,12 @@
       "features": []
     },
     {
-      "name": "semio-framework-os-command",
+      "name": "semio-os-command",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-os-kernel",
+      "name": "semio-os-kernel",
       "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
       "features": [
         "mutation-testing"
@@ -1481,79 +1481,79 @@
       "features": []
     },
     {
-      "name": "semio-framework-plugin-app-builder",
+      "name": "semio-plugin-app-builder",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧩️app/📦️packages/🦀️rust/Cargo.toml",
       "features": [
         "artifact-app-testing"
       ]
     },
     {
-      "name": "semio-framework-plugin-composition-publication",
+      "name": "semio-plugin-composition-publication",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-plugin-decl-app",
+      "name": "semio-plugin-decl-app",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust/Cargo.toml",
       "features": [
         "artifact-app-testing"
       ]
     },
     {
-      "name": "semio-framework-plugin-decl-emission",
+      "name": "semio-plugin-decl-emission",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-plugin-decl-surface",
+      "name": "semio-plugin-decl-surface",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📦️packages/🦀️rust/Cargo.toml",
       "features": [
         "artifact-app-testing"
       ]
     },
     {
-      "name": "semio-framework-plugin-decl-views",
+      "name": "semio-plugin-decl-views",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-plugin-document-media",
+      "name": "semio-plugin-document-media",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/📦️packages/🦀️rust/Cargo.toml",
       "features": [
         "artifact-app-testing"
       ]
     },
     {
-      "name": "semio-framework-plugin-ownership",
+      "name": "semio-plugin-ownership",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-plugin-reactor-app",
+      "name": "semio-plugin-reactor-app",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-plugin-retained-command",
+      "name": "semio-plugin-retained-command",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust/Cargo.toml",
       "features": [
         "artifact-app-testing"
       ]
     },
     {
-      "name": "semio-framework-plugin-testing-caller",
+      "name": "semio-plugin-testing-caller",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-plugin-testing-laws",
+      "name": "semio-plugin-testing-laws",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
       "features": [
         "artifact-app-testing"
       ]
     },
     {
-      "name": "semio-framework-plugin-window-transient",
+      "name": "semio-plugin-window-transient",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
@@ -1573,17 +1573,17 @@
       "features": []
     },
     {
-      "name": "semio-framework-ui-contract",
+      "name": "semio-ui-contract",
       "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-ui-locale",
+      "name": "semio-ui-locale",
       "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },
     {
-      "name": "semio-framework-ui-runtime",
+      "name": "semio-ui-runtime",
       "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/Cargo.toml",
       "features": []
     },

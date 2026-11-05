@@ -1,5 +1,5 @@
 //! 🗃️ Kernel retained state: retained document exchange and surfaces, pending rejections, mounted replay routes, command document retirement and the pool state head.
-use semio_framework_ui_contract_validation::{UiDocumentLimits,UiPatchApplyOutcome,UiPatchApplyProducer,UiPatchApplyRejected,UiPatchApplyStep};
+use semio_ui_contract_validation::{UiDocumentLimits,UiPatchApplyOutcome,UiPatchApplyProducer,UiPatchApplyRejected,UiPatchApplyStep};
 use super::*;
 
 //#region 🎠️KernelRuntime
@@ -319,7 +319,7 @@ impl RetainedSurface {
             return false;
         }
         if !self.patch_close_complete {
-            self.patch_close_complete = semio_framework_ui_contract_validation::close_ui_patch_owner_one();
+            self.patch_close_complete = semio_ui_contract_validation::close_ui_patch_owner_one();
             return false;
         }
         ui_contract::close_ui_document_page_one()

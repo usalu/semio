@@ -7,14 +7,14 @@
 //! `extensions: ["note"]` is the real, carried-over value.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA>() -> StandardDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::note::NoteViewer>>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::note::NotePlayApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::note::NoteViewer>>>,
 {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.note+json"], extensions: &["note"] }, subsets: vec![subsets::any::subset()] }
 }
@@ -39,7 +39,7 @@ pub const NOTE_DIALECT: Dialect = Dialect { artifact_kind: "s.note.note", standa
 //#region 🧩️ArtifactItems3
 pub mod artifact_items_3 {
 use crate::{NOTE_DIALECT};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 pub use crate::standards::v1::subsets::any::schema;
 
 //#region 🔖️ArtifactKind
@@ -53,7 +53,7 @@ pub use crate::standards::v1::subsets::any::schema;
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: NOTE_DIALECT.artifact_kind.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Note", "Notiz"),
+        label: semio_ui_locale::LocalizedLabel::native("Note", "Notiz"),
         source_format: "note.document".into(),
         component_kind: "note".into(),
         dimension: "2d".into(),
@@ -79,8 +79,8 @@ use semio_s_artifact_note_note_schema::NoteSnapshot;
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn note_child_restore_projection(snapshot: &NoteSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("note.child-projection"), error.to_string()))
+pub fn note_child_restore_projection(snapshot: &NoteSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("note.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
 }

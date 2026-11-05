@@ -10,7 +10,7 @@ pub struct ChangeTrussBracingCapacity { pub truss_id: String, pub new_value: f64
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTrussBracingCapacity where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_truss_bracing_capacity::ChangeTrussBracingCapacity> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "truss-bracing-capacity", kind: "change-truss-bracing-capacity", record: "ChangedTrussBracingCapacity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change bracing system capacity q_rd of truss {}", self.truss_id), &format!("Tragfähigkeit des Aussteifungssystems q_Rd von Truss {} ändern", self.truss_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change bracing system capacity q_rd of truss {}", self.truss_id), &format!("Tragfähigkeit des Aussteifungssystems q_Rd von Truss {} ändern", self.truss_id)) }
     fn target(&self) -> Vec<String> { vec![self.truss_id.clone()] }
 }
 

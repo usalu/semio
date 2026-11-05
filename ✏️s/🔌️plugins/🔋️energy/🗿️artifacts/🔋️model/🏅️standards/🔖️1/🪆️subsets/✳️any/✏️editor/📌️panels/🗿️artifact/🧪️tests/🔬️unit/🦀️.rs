@@ -1,7 +1,7 @@
 use super::*;
 use crate::model::Model;
 use crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_plugin::{TreeWindowRequest, ViewModel};
 
 fn snapshot_of(model: &Model) -> EnergyModelSnapshot {
     crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
@@ -34,21 +34,21 @@ fn opened(node_key: &str) -> TreeWindowRequest {
 }
 
 fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// ♻️ Every built row is projected AND RETIRED: an argument map dropped without retirement never
 /// returns its credit, which would starve the panels assembled by the tests running beside this one.
 fn panel(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, locale: Locale, view: &ViewModel) -> String {
     let built = render(snapshot, interaction, locale, &TreeWindows::for_body(view, BODY_KEY)).expect("energy artifact tree assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("energy artifact tree projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(built)).expect("energy artifact tree projection")
 }
 
 /// 🏠️ The first paint: no host state at all, so every container opens at its author default and the
 /// shared first-paint budget decides how much of each is materialised.
 fn unhosted(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, locale: Locale) -> String {
     let built = render(snapshot, interaction, locale, &TreeWindows::unhosted()).expect("energy artifact tree assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("energy artifact tree projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(built)).expect("energy artifact tree projection")
 }
 
 fn english(snapshot: &EnergyModelSnapshot) -> String {
@@ -88,7 +88,7 @@ fn section_key(suffix: &str) -> String {
 /// `zones` section and a surface inside its zone, so a host request for either names the whole path,
 /// never the bare id.
 fn window_path(segments: &[&str]) -> String {
-    segments.join(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+    segments.join(semio_plugin::TREE_WINDOW_PATH_SEPARATOR)
 }
 
 /// 🏘️ The demo's single zone, addressed through the `zones` section it hangs in.
@@ -109,7 +109,7 @@ async fn the_panel_tab_declares_the_framework_artifact_slot_and_this_body_key() 
     let tab = definition();
     assert_eq!(tab.body_key.as_deref(), Some(BODY_KEY));
     assert_eq!(tab.group, PanelGroup::Workbench);
-    assert_eq!(tab.kind, PanelTabKind::App(semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()));
+    assert_eq!(tab.kind, PanelTabKind::App(semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()));
 }
 
 /// 🌳️ Every family the tree claims to list is present, keyed by its RAW `EntityId`, and the section

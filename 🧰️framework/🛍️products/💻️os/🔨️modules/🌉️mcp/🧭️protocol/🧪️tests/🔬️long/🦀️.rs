@@ -1,8 +1,8 @@
 //! 🧱️ Protocol_long of the server crate: The MCP server dispatcher and the stdio transport.
 
 use crate::mcp_server::McpServer;
-use semio_framework_os_mcp_wire::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcOutcome, JsonRpcRequest, METHOD_NOTIFICATIONS_CANCELLED, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_RESOURCES_LIST, METHOD_RESOURCES_READ, METHOD_RESOURCES_SUBSCRIBE, NullBackend, ProtocolEra, Resource, ResourceContent};
-use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+use semio_os_mcp_wire::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcOutcome, JsonRpcRequest, METHOD_NOTIFICATIONS_CANCELLED, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_RESOURCES_LIST, METHOD_RESOURCES_READ, METHOD_RESOURCES_SUBSCRIBE, NullBackend, ProtocolEra, Resource, ResourceContent};
+use semio_os_mcp_workspace::gateway_backend::GatewayBackends;
 #[cfg(test)]
 use crate::protocol_tests_support::request_with;
 

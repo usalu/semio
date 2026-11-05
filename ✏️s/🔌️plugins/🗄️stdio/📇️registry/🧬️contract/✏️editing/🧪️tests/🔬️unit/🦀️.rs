@@ -16,7 +16,7 @@ fn retained_copy_original_backing_uses_shared_four_axis_allocator_law(){
  }
 }
 
-use semio_framework_plugin::plugin_app_close_prelude::store as fixture_store;
+use semio_plugin::plugin_app_close_prelude::store as fixture_store;
 use std::collections::BTreeMap;
 
 fn apply_snapshot_edit<S: ArtifactDsl + ToValue + FromValue>(snapshot: &S, event: &SnapshotEditEvent) -> Result<S, SnapshotEditError> {
@@ -238,7 +238,7 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let cancel_after = lifecycle["cancelAfter"].as_u64().expect("cancel after") as usize;
     let mut preparation = ProbePreparation { remaining: units, last_work:0, checkpoint: Default::default(), cancelled: false, closing: false };
     let grant = fixture_store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items:1,maximum_copy_bytes:std::mem::size_of::<usize>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1 };
-    let mut receiving = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant());
+    let mut receiving = semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant());
     let mut progress = Vec::new();
     for _ in 0..cancel_after {
         let fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, physical) = receiving.receive(|control| fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, 0, grant, control)).expect("progress") else {
@@ -430,7 +430,7 @@ fn chunked_rfc6901_paths_join_losslessly_and_require_one_canonical_shape() {
     let ambiguous = DslValue::object([("path".to_string(), DslValue::String(pointer)), ("pathChunks".to_string(), DslValue::Array(vec![DslValue::String("/other".into())])), ("value".to_string(), DslValue::String("updated".into()))]);
     assert_eq!(snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&ambiguous)).expect_err("two pointer shapes").code.0, "snapshot-edit.path-shape");
     let definition = snapshot_edit_actions().into_iter().find(|definition| definition.id == SET_SNAPSHOT_VALUE_ACTION_ID).expect("set action");
-    assert!(definition.args.iter().any(|argument| argument.id == "pathChunks" && matches!(argument.schema, semio_framework_plugin::ArgSchema::Array { .. })));
+    assert!(definition.args.iter().any(|argument| argument.id == "pathChunks" && matches!(argument.schema, semio_plugin::ArgSchema::Array { .. })));
 }
 
 #[test]
@@ -440,8 +440,8 @@ fn direct_control_action_inputs_preserve_their_typed_values() {
     for case in fixture["actionInputs"].as_array().expect("direct action inputs") {
         let args: DslValue = semio_framework_pack_json::from_json_str(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed action args");
         let definition = definitions.iter().find(|definition| definition.id == case["action"].as_str().expect("action id")).expect("registered action");
-        let effective = semio_framework_plugin::effective_action_args(&definition.args, &args, None);
-        assert!(semio_framework_plugin::missing_required_args(&definition.args, &effective).is_empty(), "{}: host action argument admission", case["id"]);
+        let effective = semio_plugin::effective_action_args(&definition.args, &args, None);
+        assert!(semio_plugin::missing_required_args(&definition.args, &effective).is_empty(), "{}: host action argument admission", case["id"]);
         let actual = snapshot_edit_event_from_action(case["action"].as_str().expect("action id"), Some(&effective)).unwrap_or_else(|error| panic!("{}: {error:?}", case["id"])).expect("known action");
         assert_eq!(actual, event(&case["expectedEvent"]), "{}", case["id"]);
     }

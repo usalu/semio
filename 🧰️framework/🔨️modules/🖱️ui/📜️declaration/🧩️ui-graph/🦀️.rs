@@ -4,7 +4,7 @@
 //! 🕸️ Declarative UI graph types shared by kernel, plugins, and renderers.
 
 use crate::IconName;
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 use semio_framework_value::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
@@ -98,7 +98,7 @@ pub use status_builders::{ui_empty_state, ui_error_state, ui_import_drop_zone, u
 // nested port/node/edge/viewport/operator records, `TextEditorScene`, `TableScene`,
 // `Paint2dScene`, `IconRenderScene`, `VirtualFileSystemScene`, `TiledMapScene`, `Board2dScene`,
 // `InkCanvasScene`, `GraphTimelineScene`, `DiffViewScene`, `EventFeedScene`, `BlockListScene`)
-// relocated to `semio-framework-ui-scene` — ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
+// relocated to `semio-ui-scene` — ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
 // RUNTIME packet `scene-surface`. Re-exported here (not a compatibility shim: this crate
 // genuinely still builds `UiNode`s from them, see `build_table_scene` etc. below) so every
 // Scene payload ownership belongs to the independent scene contract.
@@ -122,10 +122,10 @@ pub use ui_scene::{
 
 // 🎬️ `NodeGraphRecords` (`NodeGraphPortRecord`/`NodeGraphNodeRecord`/`NodeGraphEdgeRecord`/
 // `NodeGraphFindItem`/`NodeGraphHover`/`NodeGraphOperator*Record`) and
-// `NodeGraphScene` itself moved to `semio-framework-ui-scene` together (see the re-export above)
+// `NodeGraphScene` itself moved to `semio-ui-scene` together (see the re-export above)
 // — the latter's fields are typed directly against the former, so they moved as one unit.
 
-// 🎬️ `TextEditorScene` and `TableScene` (+ its `base()`) moved to `semio-framework-ui-scene`
+// 🎬️ `TextEditorScene` and `TableScene` (+ its `base()`) moved to `semio-ui-scene`
 // (see the re-export above). `TableScene.drop_action` is `drop_action_json: Option<String>` on
 // the moved type — it named `ActionDescriptor` (this crate's own type, defined just below via
 // `UiTreeItemAction`'s sibling), which the wasm-safe scene crate cannot depend on.
@@ -144,7 +144,7 @@ include!("../../🧪️tests/🔬️targets-wgpu-component-ui-ui-node-wire-forma
 //#region 🔖️ValueRoundTripTests
 /// 🌱️ `ToValue`/`FromValue` round-trip tests for ticket
 /// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's additive pass over
-/// `pub mod ui`'s standalone node types, plus (since `semio-framework-ui-scene` landed hand-
+/// `pub mod ui`'s standalone node types, plus (since `semio-ui-scene` landed hand-
 /// written `ToValue`/`FromValue` for all 15 embedded scene payload types) the previously-
 /// blocked recursive-through-`UiNode` family: `UiStackNode`/`UiGroupNode`/`UiFieldNode`/
 /// `UiSectionNode`/`UiInspectorFieldGroup`/`UiComponentSceneNode`/`UiNode` itself.

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpChordDistan
         record: "ChangedBuiltUpChordDistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Chord distance h_0 of the built-up member", "Zusammengesetzter Stab: Gurtabstand h_0 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Chord distance h_0 of the built-up member", "Zusammengesetzter Stab: Gurtabstand h_0 ändern")
     }
 }
 

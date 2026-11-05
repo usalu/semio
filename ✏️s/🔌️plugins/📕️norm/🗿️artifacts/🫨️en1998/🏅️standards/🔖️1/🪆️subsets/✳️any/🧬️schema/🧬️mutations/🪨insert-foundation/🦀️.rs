@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for InsertFoundation where O
         record: "InsertFoundation",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert foundation", "Gründung einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert foundation", "Gründung einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-foundation".into()]

@@ -18,8 +18,8 @@ pub struct ChangeMemberOrder {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberOrder where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_member_order::ChangeMemberOrder> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "member", kind: "change-member-order", record: "ReorderedMembers" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move member #{} to #{}", self.from_index, self.to_index), &format!("Bauteil von #{} nach #{} verschieben", self.from_index, self.to_index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move member #{} to #{}", self.from_index, self.to_index), &format!("Bauteil von #{} nach #{} verschieben", self.from_index, self.to_index))
     }
 }
 

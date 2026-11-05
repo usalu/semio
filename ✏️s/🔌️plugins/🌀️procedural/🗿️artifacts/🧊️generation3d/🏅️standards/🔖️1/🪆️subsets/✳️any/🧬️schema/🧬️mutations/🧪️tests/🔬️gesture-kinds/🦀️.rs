@@ -1,6 +1,6 @@
 //! 🧪️ Kind fixture laws of `change-slider-value`, `drag-transforms`, `rotate-transforms`, `scale-transforms`, `move-nodes`: each committed scenario applied, inverted and diffed through the mutation union.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🎚️change-slider-value/🧪️tests/🎚️sets/🦀️.rs"]
 mod change_slider_value_sets;

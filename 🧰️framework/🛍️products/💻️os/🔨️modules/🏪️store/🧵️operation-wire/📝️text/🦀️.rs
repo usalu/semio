@@ -1,8 +1,8 @@
 //! 📝️ Borrowed ordered domain text with one structural event or sixty-four copied bytes per turn.
 use super::{ValueError, ValueRefusalKind};
-use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactPreparedOperationError;
+use semio_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactPreparedOperationError;
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneGrant};
-pub use semio_framework_os_store_one_item_publication::lifted_text::{ArtifactOperationText, ArtifactOperationTextNode};
+pub use semio_os_store_one_item_publication::lifted_text::{ArtifactOperationText, ArtifactOperationTextNode};
 
 
 

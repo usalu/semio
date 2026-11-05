@@ -13,10 +13,10 @@ use dashboard_wire::client::{Connection, Message};
 use dashboard_wire::ipc::{task_language, ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_core::geometry::Size;
-use semio_framework_ui_tui_frame::layout::activate_stack_tab;
-use semio_framework_ui_tui_widgets::widget::WidgetState;
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_core::geometry::Size;
+use semio_ui_tui_frame::layout::activate_stack_tab;
+use semio_ui_tui_widgets::widget::WidgetState;
 
 const PENDING_LIMIT: usize = 128;
 const SHUTDOWN_PATIENCE: Duration = Duration::from_secs(5);

@@ -1,0 +1,23 @@
+# Nested Admission Audit
+
+The authoritative capacity snapshot identifies the renderer’s nested exec request as label graph-farm, preferredJobs 9, minimumJobs 1, elastic true, fixed1536 MB + per-job2048 MB. It is not a required native helper, compiler, or descriptor command. Snapshot captured in generated/nested-admission-capacity.json; fleet in generated/nested-admission-fleet.json. The run has an existing4279 MB parent grant; the nested request is queued17th with3584 MB minimum. Head request native-dependencies requires7168 MB against2283 MB spare above the unchanged4096 MB floor.
+
+The renderer log still advanced from inference40/128 to107/128 and then114/128 while that exec request waited. This is direct evidence that graph inference did not await the queued request before continuing.
+
+Canonical call path: project-nodes opens openProjectFarmV1. Its open() starts a worker covered by the parent’s existing allocation when qualified, then calls requestBuildFarmCapacityV1 for optional extra pools. It stores capacity.granted.then(...) as opening without awaiting it. prepare() selects a ready pool; with none ready it returns false, preserving parent inference fallback. close() cancels the pending request before awaiting opening whenever all pools are own pools (including zero pools). requestBuildFarmCapacityV1.release aborts an unadmitted wait, resolves granted as undefined, or returns a real admitted grant. The separately requested extra workers intentionally remove inherited grant/plan from their capacity-request environment, so they cannot claim the parent’s already-accounted memory twice. No actual Original/source/compiler custody is changed by this pool mechanism.
+
+This snapshot shows head-of-line capacity contention but does not prove a dependency wait cycle: the child is optional and parent inference continued. The descriptor is independently active, so the set of active work is not mutually waiting. Fleet classifies the renderer blocked because it sees the optional request; that status alone cannot establish a hard wait. No ancestry/loan patch, helper-ordering change, floor/cap change, environment override, or cancellation was made. A real deadlock claim would require all remaining required work to await this request despite the documented serial fallback; the current evidence is the opposite.
+
+Production source owners inspected: library/build/graph/inference/project-nodes/project-farm and library/build/host-capacity. No source edits were justified by this observation. Continue monitoring actual inference completion and canonical pool close; if close fails to cancel or a required task is later identified, retain its exact causal evidence before changing policy.
+
+## Follow-Up Observation
+
+Browser owner observed renderer21435 leave active inference for the supported peer-graph handoff: a front door alone without a loader. This is further actual evidence of pool/loader release after optional admission waiting, rather than a stuck prerequisite close. TypeScript compilation had not yet run at that observation.
+
+## Concrete Runtime Entry Metadata Correction
+
+A later partial-inference refusal exposed a separate authored metadata defect: framework-renderer-react:document-archive-ownership-check used its actual test path without the schema-required {workspaceRoot}/ prefix. readBuildRuntimeSourceEntriesV1 correctly refuses it under the existing RuntimeSourceEntries pattern. The earlier structural archive audit missed this prefix constraint; its claim of no malformed metadata was superseded by exact schema validation.
+
+Test-first bounded evidence: runtime-entry-red.json records the actual authored JSON entry rejected by both the canonical JSON-schema validator at /0 and independent strict Ajv. Only the owning project manifest literal was then prefixed with {workspaceRoot}/. runtime-entry-green.json records canonical errors[], Ajv true, resolved physical entry exists, and the original unprefixed value still refused. This is an existing declaration correction; no generic validator, source role, cache policy, compiler authority, capacity interface, or runtime implementation changed. The dispatched Bun test path is unchanged.
+
+Changed file: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json. Browser owner confirmed no concurrent metadata edit; exact string replacement preserved all other fields. Live descriptor19405 and index76837 remain retained, with canonical source rechecks expected to consume this correction. An actual fresh declared owner result is still required.

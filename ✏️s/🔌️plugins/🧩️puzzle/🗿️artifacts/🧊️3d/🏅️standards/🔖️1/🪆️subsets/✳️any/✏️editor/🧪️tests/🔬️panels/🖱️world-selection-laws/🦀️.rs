@@ -128,7 +128,7 @@ async fn world_vortices_reveal_in_selected_mode_only_for_the_selected_object() {
     let revealed = vortices_of(&render_composite(&mut app).await);
     assert!(!revealed.is_empty(), "Selected mode must reveal the selected object's own vortex markers");
     assert!(revealed.iter().all(|vortex| vortex.get("objectId").and_then(Value::as_str) == Some(object_id.as_str())), "Selected mode must reveal ONLY the selected object's markers");
-    dispatch(&mut app, semio_framework_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear");
+    dispatch(&mut app, semio_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear");
     assert!(vortices_of(&render_composite(&mut app).await).is_empty(), "clearing the selection hides the markers again");
     dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).await.expect("setVortexShow");
     assert!(!vortices_of(&render_composite(&mut app).await).is_empty(), "Always mode must still reveal every vortex marker");
@@ -257,7 +257,7 @@ async fn select_same_kind_with_no_selection_leaves_the_selection_untouched() {
 /// never happen is a silent nothing — that is what the notice below pins.
 #[semio_framework_async_macros::async_test]
 async fn selection_scoped_commands_with_no_selection_refuse_with_exactly_one_notice() {
-    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+    let notices = |result: &semio_plugin::InvocationResult| -> Vec<String> {
         result
             .requested_effects
             .iter()
@@ -270,7 +270,7 @@ async fn selection_scoped_commands_with_no_selection_refuse_with_exactly_one_not
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
-    dispatch(&mut app, semio_framework_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear the seed gesture's own selection");
+    dispatch(&mut app, semio_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear the seed gesture's own selection");
     let objects_before = projection_of(&app).get("objects").and_then(Value::as_array).map(Vec::len).unwrap_or_default();
     for action in ["duplicateSelection", "deleteSelection", "selectSameKindSelection"] {
         let result = dispatch(&mut app, action, None, None).await.unwrap_or_else(|error| panic!("{action} must complete, not fault: {error:?}"));

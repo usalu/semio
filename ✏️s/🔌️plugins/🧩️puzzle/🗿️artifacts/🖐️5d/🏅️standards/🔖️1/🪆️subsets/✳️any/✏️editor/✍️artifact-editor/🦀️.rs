@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️PlayApp
 impl ArtifactEditor for Puzzle5dPlayApp {
-    const DIALECT: semio_framework_plugin::app::Dialect = crate::PUZZLE5D_DIALECT;
+    const DIALECT: semio_plugin::app::Dialect = crate::PUZZLE5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
     type Snapshot = Puzzle5dPlaySnapshot;
     type Mutation = Puzzle5dMutation;
@@ -14,11 +14,11 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = Puzzle5dPresence;
     type PresenceMutation = Puzzle5dPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
     type Command = Puzzle5dCommand;
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         window_ownership::register_config(registry)
     }
 
@@ -27,40 +27,40 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         puzzle5d_entity_label(snapshot.typed(), kinds, id)
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         window_ownership::register_transient(registry)
     }
 
 
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     /// 👥️ Puzzle 5d presence is inline camera scalars, so the default root is its exact empty terminal.
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default Puzzle5d presence is the exact empty terminal")))
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default Puzzle5d presence is the exact empty terminal")))
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -73,7 +73,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     /// ⏯️ The fill utility's run and revalidate jobs and the brush utility's suggestions run: the puzzle 3d planners
     /// behind the 5d translation.
-    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
+    fn build_tool_run_job(request: semio_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_plugin::ToolRunJob>, Fault> {
         match request.tool_id {
             board2d::utilities::brush::UTILITY_ID => crate::editor::puzzle5d::precompute::brush::build_run_job(request),
             fill_tool::TOOL_ID => crate::editor::puzzle5d::precompute::fill::build_run_job(request),
@@ -82,7 +82,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     /// 📜️ The retained command catalog's proofs plus the two host-configuration verbs' generic ones.
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = Puzzle5dRetainedCommandProofs::proofs();
         proofs.extend(Puzzle5dHostConfigurationProofs::proofs());
         proofs
@@ -90,12 +90,12 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     /// 🧠️ What one document instance retains across turns: puzzle 3d's brush suggestions link, which the brush run
     /// job follows and publishes to.
-    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
         Box::new(Puzzle3dInstanceOperationOwner::default())
     }
 
     /// 🚦️ Starts, wakes or aborts the brush suggestions run for the grip the link points at.
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+    fn pending_effects(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, _view: Option<&semio_plugin::ViewModel>) -> Vec<Effect> {
         owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush::run_effects(&mut owner.brush_suggestions, doc.tool_run()))).unwrap_or_default()
     }
 
@@ -105,21 +105,21 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         registry.register(Puzzle5dRetainedCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original puzzle5d producer request is absent"))?;
         if !PUZZLE5D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {return Ok(false);}
         if original.command.action_id()!=original.tool_id {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"puzzle5d-command-tool-mismatch").into());}
         let tool_id=original.command.action_id();
         macro_rules! work {
             (|$request:ident| $make:expr) => {
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,Puzzle5dCommand::action_id,PUZZLE5D_RETAINED_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,|$request|{let _=&$request;$make})
+                semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,Puzzle5dCommand::action_id,PUZZLE5D_RETAINED_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,|$request|{let _=&$request;$make})
             };
         }
         macro_rules! seed {
             (|$request:ident,$seed:ident| $make:expr) => {{
                 let bytes=original.authoring_seed.len();
                 let demand=semio_framework_value::RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()};
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,Puzzle5dCommand::action_id,PUZZLE5D_RETAINED_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,demand,|$request,_|{
+                semio_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,Puzzle5dCommand::action_id,PUZZLE5D_RETAINED_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,demand,|$request,_|{
                     let $seed=$request.authoring_seed.clone();let capacity=$seed.capacity();
                     Ok(($make,semio_framework_job::RetainedCloneProgress{copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()}))
                 })
@@ -128,7 +128,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         macro_rules! owned {
             ($owner:ty, |$request:ident, $scope:ident| $make:expr) => {{
                 let demand = <$owner>::original_birth_demands()?;
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(
+                semio_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(
                     request, output, cx, Puzzle5dCommand::action_id, PUZZLE5D_RETAINED_RAW_BYTES,
                     crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, true, demand,
                     |$request, $scope| { let _ = &$request; $make },
@@ -188,8 +188,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// the 10-minute watchdog). None of it is needed to produce the boot document, and nothing is lost:
     /// each static is a `LazyLock`, forced only when its example is switched to. That matrix has since been
     /// deleted outright.
-    fn reference_birth()->Option<fn()->Result<Puzzle5dPlaySnapshot,semio_framework_plugin::Fault>>{Some(||{
-        puzzle5d_snapshot_from_document(&default_document()).map(Puzzle5dPlaySnapshot::new).map_err(|error|semio_framework_plugin::reference_birth_fault("authored initial document admits",format_args!("{error:?}")))
+    fn reference_birth()->Option<fn()->Result<Puzzle5dPlaySnapshot,semio_plugin::Fault>>{Some(||{
+        puzzle5d_snapshot_from_document(&default_document()).map(Puzzle5dPlaySnapshot::new).map_err(|error|semio_plugin::reference_birth_fault("authored initial document admits",format_args!("{error:?}")))
     })}
 
     fn clipboard_media_type() -> Option<MediaType> {
@@ -244,7 +244,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref();
         if let Some(flag) = puzzle5d_flag_value_argument(action) {
-            args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle5d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
+            args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("puzzle5d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
         }
         let args = args.map(semio_framework_pack_json::from_dsl_value);
         let window_id = args.as_ref().and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(Value::as_str).map(str::to_string);
@@ -258,7 +258,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
@@ -272,22 +272,22 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
     /// parts and fasteners as flat roots, grips nested under their owning part (mirrors puzzle3d's
     /// object→vortex-marker nesting).
-    fn interaction_topology(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+    fn interaction_topology(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError> {
  Ok((||{
         let document: Puzzle5dDocument = puzzle5d_document_from_snapshot(doc.snapshot.typed()).expect("admitted snapshot projects to native editor document");
         let mut ordered = Vec::new();
         for part in &document.parts {
-            ordered.push(semio_framework_plugin::TopologyNode { id: part.id.clone(), granularity: PUZZLE5D_GRANULARITY_PART.into(), parent: None });
+            ordered.push(semio_plugin::TopologyNode { id: part.id.clone(), granularity: PUZZLE5D_GRANULARITY_PART.into(), parent: None });
             for grip in &part.grips {
-                ordered.push(semio_framework_plugin::TopologyNode { id: puzzle5d_grip_full_id(&part.id, &grip.id), granularity: PUZZLE5D_GRANULARITY_GRIP.into(), parent: Some(part.id.clone()) });
+                ordered.push(semio_plugin::TopologyNode { id: puzzle5d_grip_full_id(&part.id, &grip.id), granularity: PUZZLE5D_GRANULARITY_GRIP.into(), parent: Some(part.id.clone()) });
             }
         }
         for fastener in &document.fasteners {
-            ordered.push(semio_framework_plugin::TopologyNode { id: fastener.id.clone(), granularity: PUZZLE5D_GRANULARITY_FASTENER.into(), parent: None });
+            ordered.push(semio_plugin::TopologyNode { id: fastener.id.clone(), granularity: PUZZLE5D_GRANULARITY_FASTENER.into(), parent: None });
         }
         let mut domains = std::collections::BTreeMap::new();
-        domains.insert(PUZZLE5D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered });
-        semio_framework_plugin::InteractionTopology { domains }
+        domains.insert(PUZZLE5D_INTERACTION_DOMAIN.to_string(), semio_plugin::DomainTopology { ordered });
+        semio_plugin::InteractionTopology { domains }
     
 })())
 }
@@ -331,15 +331,15 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Err(MediaError::NotImplemented)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let projection = puzzle5d_editor_projection(&doc.snapshot);
         let window_for_body = if body_key == board2d::BODY_KEY { crate::editor::puzzle5d::entities::PUZZLE5D_BOARD_WINDOW_KIND_ID } else { crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID };
         let window_id = view_state.window_id.as_deref().unwrap_or(window_for_body);
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&projection, runtime, &active_utility);
-        let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
-        let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
+        let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
+        let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             board2d::BODY_KEY => board2d::render(&envelope, labels, None),
             world3d::BODY_KEY => world3d::render(&envelope, labels, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document), None),
@@ -347,30 +347,30 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             catalogue::BODY_KEY => catalogue::render(&envelope, labels, &windows),
             inspection::BODY_KEY => inspection::render(&envelope, labels, &windows),
             settings_panel::BODY_KEY => settings_panel::render(&envelope, labels, settings_panel::panel_window_id(view_state)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 
     fn render_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         let projection = puzzle5d_editor_projection(&doc.snapshot);
         let window_kind = window_ownership::kind_for_view(view_state).unwrap_or_else(|| if body_key == board2d::BODY_KEY { crate::editor::puzzle5d::entities::PUZZLE5D_BOARD_WINDOW_KIND_ID } else { crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID });
         let window_id = view_state.window_id.as_deref().unwrap_or(window_kind);
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::transient_from_view(transient), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection_with_interaction(&projection, runtime, &active_utility, Puzzle5dInteractionSnapshot::from_interaction(interaction));
-        let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
-        let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
+        let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
+        let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
         let menu_target = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.as_str());
         let suggestions = menu_target.and_then(|target| owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
         let node = match body_key {
@@ -380,15 +380,15 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             catalogue::BODY_KEY => catalogue::render(&envelope, labels, &windows),
             inspection::BODY_KEY => inspection::render(&envelope, labels, &windows),
             settings_panel::BODY_KEY => settings_panel::render(&envelope, labels, settings_panel::panel_window_id(view_state)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
 
         })();
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let projection = puzzle5d_editor_projection(&doc.snapshot);
         let Some(labels) = puzzle5d_labels(view_state) else { return HashMap::new() };
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
@@ -402,8 +402,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
@@ -415,7 +415,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.tool_run()))])
     }
 
-    fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let projection = puzzle5d_editor_projection(&doc.snapshot);
         let Some(labels) = puzzle5d_labels(view_state) else { return HashMap::new() };
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
@@ -429,7 +429,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     /// 🛠️ The mode-level tool options rail: the fill tool's count entry and distribution trees, live against
     /// this instance's run so the count reads `loading` while the run is working.
-    fn tool_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(labels) = puzzle5d_labels(view_state) else { return HashMap::new() };
         let window_id = view_state.window_id.as_deref().unwrap_or(crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID);
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
@@ -439,25 +439,25 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     fn context_menu(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        view_state: &semio_plugin::ViewModel,
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         Self::context_menu_body(request, doc, cfg, view_state, &Puzzle5dInteractionSnapshot::default(), registry)
     }
 
     /// 🕹️ The live-`vortex`-domain twin: a grip or fastener selected in EITHER pane reaches the menu even though
     /// the world host's surface only reports its painted part ids.
     fn context_menu_with_request_context(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         interaction: &InteractionView<'_>,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         Self::context_menu_body(request, doc, cfg, view_state, &Puzzle5dInteractionSnapshot::from_interaction(interaction), registry)
     }
 }

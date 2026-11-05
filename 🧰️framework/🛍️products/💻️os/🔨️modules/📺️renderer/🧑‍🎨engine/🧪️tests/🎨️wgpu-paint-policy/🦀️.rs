@@ -2,7 +2,7 @@
 
 use semio_framework_test_fixtures::manifest_dir;
 
-use semio_framework_ui_testing_paint_policy as paint_policy;
+use semio_ui_testing_paint_policy as paint_policy;
 
 const SCAN_ROOTS: &[&str] = &["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer"];
 

@@ -3,22 +3,22 @@ use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATE_PREVIEW;
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 #[allow(unused_imports)]
-use semio_framework_plugin::scene_surface;
+use semio_plugin::scene_surface;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-#[allow(unused_imports)] use semio_framework_ui_declaration::ui::TextEditorScene;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
+#[allow(unused_imports)] use semio_ui_declaration::ui::TextEditorScene;
 use crate::editor::flow::modes::generate::windows::preview::*;
 use crate::editor::flow::unit_tests::context::{flow_app, render as render_body};
 

@@ -8,7 +8,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -35,11 +35,11 @@ pub fn handle_with_row(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapsh
             "dataClass": "ephemeralLocalOnly",
             "reason": "ephemeral-local-only"
         })));
-        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(128), dialog_id: "ephemeralShareBlocked".into(), args }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(128), dialog_id: "ephemeralShareBlocked".into(), args }));
     }
     if payload.email.trim().is_empty() {
         let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": payload.space_id.clone() })));
-        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(126), dialog_id: "shareSpace".into(), args }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(126), dialog_id: "shareSpace".into(), args }));
     }
     let role = if payload.role.trim().is_empty() { "spectator".to_string() } else { payload.role.clone() };
     let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": payload.space_id.clone(), "email": payload.email.clone(), "role": role })));

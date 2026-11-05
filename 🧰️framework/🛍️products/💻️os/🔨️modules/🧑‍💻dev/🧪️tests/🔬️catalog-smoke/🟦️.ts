@@ -1,12 +1,12 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 🧩️ Semantic catalog smoke owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 
-import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 
 import { openStudioE2e, openStudioE2eCommandPalette, waitForStudioE2eCondition } from "../🎬️studio/🟦️.ts";
 
@@ -193,8 +193,8 @@ async function closeCatalogSmokeWindow(page: import("playwright").Page, windowId
   await page.waitForTimeout(250);
 }
 
-async function runCatalogSmokeVerify(baseUrl: string, opts: { readonly outDir: string; readonly timeoutMs: number; readonly perProgramMs: number }): Promise<CatalogSmokeReport> {
-  ensureParityPlaywrightBrowsersPath();
+async function runCatalogSmokeVerify(repoRoot: string, baseUrl: string, opts: { readonly outDir: string; readonly timeoutMs: number; readonly perProgramMs: number }): Promise<CatalogSmokeReport> {
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();

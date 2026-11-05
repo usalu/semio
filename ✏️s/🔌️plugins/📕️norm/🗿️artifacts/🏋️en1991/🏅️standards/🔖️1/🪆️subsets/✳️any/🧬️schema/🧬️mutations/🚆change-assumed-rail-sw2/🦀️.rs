@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedRailSw2 whe
         record: "ChangedAssumedRailSw2",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed sw/2 load", "Angesetzte SW/2-Last ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed sw/2 load", "Angesetzte SW/2-Last ändern")
     }
 }
 

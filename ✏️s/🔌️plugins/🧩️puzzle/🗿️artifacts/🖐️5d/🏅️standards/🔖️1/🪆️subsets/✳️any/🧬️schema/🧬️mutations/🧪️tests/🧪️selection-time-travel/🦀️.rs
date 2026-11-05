@@ -15,9 +15,9 @@ use protocol::{DiffAlgebra, Mutation};
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::apply_puzzle5d_mutation;
 use protocol::OpBinary;
-use semio_framework_test_fixtures::fixture_text;
+use store::snapshot::{ArtifactDsl, ArtifactPack};
 
-static CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json"));
+static CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json"));
 
 /// 🗂️ One decoded corpus case.
 struct TimeTravelCase {
@@ -106,11 +106,11 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
     let mut regenerated: Vec<(String, semio_framework_pack_json::Value, semio_framework_pack_json::Value)> = Vec::new();
     let cases = cases();
     assert!(cases.len() >= 7, "the corpus edits every selection leaf's parameters and targets");
-    for case in cases {
+    for mut case in cases {
         let id = case.id.as_str();
-        let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for (index, mutation) in case.log.iter().enumerate() {
-            semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }, &mut identity).await).expect("a recorded gesture applies");
+            semio_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }, &mut identity).await).expect("a recorded gesture applies");
         }
         let ids: Vec<protocol::MutationId> = {
             let operations = store.mutation_ops().expect("applied operations");
@@ -148,17 +148,24 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             result.retire_unscheduled().expect("a blocked replay retires to its terminal-empty witness");
             assert_eq!(store.snapshot_ref(), &head, "{id}: a blocked replay is never committed");
         } else {
-            semio_framework_plugin::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).expect("overwrite commits");
+            semio_plugin::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).expect("overwrite commits");
             assert_eq!(store.snapshot_ref(), &case.replayed, "{id}: the overwritten history folds to the edited state");
+            let head = store.snapshot_ref();
+            assert_eq!(Puzzle5dSnapshot::decode_pack(&head.encode_pack()).expect("the edited head reopens from pack"), case.replayed, "{id}: persisted pack retains the replayed edit");
+            assert_eq!(Puzzle5dSnapshot::parse_dsl(&head.print_dsl()).expect("the edited head reopens from DSL"), case.replayed, "{id}: persisted DSL retains the replayed edit");
             let operations = store.mutation_ops().expect("applied operations");
             assert!(operations[case.at].supersession.is_some(), "{id}: the edited gesture is superseded, never rewritten");
             assert!(operations.iter().enumerate().all(|(index, operation)| operation.transaction == Some(&gesture_transaction(index))), "{id}: time travel edits the mutation, never the tool transaction");
         }
+        let envelope = store.envelope();
+        for edit in envelope.vcs.edits.iter() {
+            store::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &protocol::ArtifactId(envelope.id.clone()), &protocol::SchemaId(envelope.schema.clone())).await;
+        }
         crate::host::owned::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
     }
     if write {
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧫️selection-time-travel/🔣️.json");
-        let mut corpus = semio_framework_pack_json::parse(&std::fs::read_to_string(path).expect("the corpus reads"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus parses");
+        let path = semio_framework_test_fixtures::repo_root!().join("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json");
+        let mut corpus = semio_framework_pack_json::parse(&std::fs::read_to_string(&path).expect("the corpus reads"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus parses");
         for (id, preview, replayed) in &regenerated {
             let case = corpus.get_mut("cases").and_then(semio_framework_pack_json::Value::as_array_mut).expect("the corpus lists its cases").iter_mut().find(|case| case.get("id").and_then(semio_framework_pack_json::Value::as_str) == Some(id.as_str())).and_then(semio_framework_pack_json::Value::as_object_mut).expect("the regenerated case exists");
             case.insert("preview", preview.clone());

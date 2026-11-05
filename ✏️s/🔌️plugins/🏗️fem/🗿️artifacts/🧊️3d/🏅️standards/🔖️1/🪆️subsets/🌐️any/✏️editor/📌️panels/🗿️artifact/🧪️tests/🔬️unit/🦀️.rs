@@ -26,35 +26,35 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_ui_contract::Label as UiLabel;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_ui_contract::Label as UiLabel;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels;
-use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::TreeWindowRequest;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_ui_contract::TreeWindow;
-use semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR;
-use semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX;
+use semio_plugin::plugin_app_close_prelude::Component;
+use semio_plugin::ComponentTree;
+use semio_ui_locale::Locale;
+use semio_plugin::TreeWindowRequest;
+use semio_plugin::ViewModel;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_ui_contract::TreeWindow;
+use semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR;
+use semio_ui_contract::UI_BUILT_CHILDREN_MAX;
 
 //#region 🔖️Fixtures
 fn demo() -> Fem3dSnapshot {
@@ -62,11 +62,11 @@ fn demo() -> Fem3dSnapshot {
 }
 
 fn english() -> &'static Fem3dLabels {
-    fem3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    fem3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 fn german() -> &'static Fem3dLabels {
-    fem3d_labels(&ViewModel { locale: Locale::De, ..ViewModel::new(Locale::De, semio_framework_ui_locale::Terminology::Native) })
+    fem3d_labels(&ViewModel { locale: Locale::De, ..ViewModel::new(Locale::De, semio_ui_locale::Terminology::Native) })
 }
 
 /// 🪟️ A host viewport tall enough to hold the demo whole, with the three sections the author leaves
@@ -84,7 +84,7 @@ fn german() -> &'static Fem3dLabels {
 /// concrete-forest document needs, at 97 of the 103 records a body may spend.
 fn wide_view() -> ViewModel {
     let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, 2)).collect();
-    ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 fn build_for(document: &Fem3dSnapshot, labels: &Fem3dLabels, view: &ViewModel) -> BuiltNode {
@@ -96,7 +96,7 @@ fn build(document: &Fem3dSnapshot, labels: &Fem3dLabels) -> BuiltNode {
 }
 
 fn projection(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(node)).expect("fixture projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(node)).expect("fixture projection")
 }
 
 fn section_node<'a>(tree: &'a BuiltNode, suffix: &str) -> &'a BuiltNode {
@@ -153,7 +153,7 @@ fn nested_request(section_suffix: &str, node_key: &str, open: Option<bool>, offs
 }
 
 fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// 🧱️ A document an order of magnitude past one viewport: 60 nodes and a 40-load wind case.
@@ -203,7 +203,7 @@ fn house() -> Fem3dSnapshot {
 }
 
 /// 🧾️ Records the reconciler charges for a presented body — every node counts once, which is exactly
-/// `SurfaceReconcileLimits::max_nodes` (`semio_framework_ui_contract::UI_DOCUMENT_NODES`).
+/// `SurfaceReconcileLimits::max_nodes` (`semio_ui_contract::UI_DOCUMENT_NODES`).
 fn body_nodes(node: &BuiltNode) -> usize {
     1 + node.children.iter().map(body_nodes).sum::<usize>()
 }
@@ -321,7 +321,7 @@ async fn scalars_and_overlong_labels_stay_inside_the_ui_text_envelope() {
     document.solids.push(FemSolid { id: "s1".into(), name: "S".repeat(900), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], holes: Vec::new(), base_z: 0.0, height: 0.2, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z });
     let tree = build(&document, labels);
     let clipped = row_labels(section_node(&tree, "solids")).remove(0);
-    assert!(clipped.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES, "clipped to {} bytes", clipped.len());
+    assert!(clipped.len() <= semio_ui_contract::UI_TEXT_MAX_BYTES, "clipped to {} bytes", clipped.len());
     assert!(clipped.ends_with('…'), "an overlong solid name is clipped, not refused");
 }
 
@@ -420,7 +420,7 @@ async fn an_oversized_document_stamps_every_extent_and_materialises_one_viewport
         assert_eq!(window_of(wind).total, 40, "a case row announces every load it owns");
     }
     let total = 1 + tree.children.iter().map(|section| 1 + section.children.iter().map(|row| 1 + row.children.len()).sum::<usize>()).sum::<usize>();
-    assert!(total < semio_framework_ui_contract::UI_DOCUMENT_NODES, "one first paint stays inside one UI document: {total}");
+    assert!(total < semio_ui_contract::UI_DOCUMENT_NODES, "one first paint stays inside one UI document: {total}");
     let json = projection(tree);
     assert!(!json.contains(".more"), "a windowed container never mints a continuation key: {json}");
     assert!(!json.contains("\"+"), "a windowed container never mints a `+N` label: {json}");
@@ -465,7 +465,7 @@ async fn a_house_sized_first_paint_keeps_the_whole_body_inside_the_record_arena(
     let document = house();
     let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::unhosted()).expect("a House-sized document still assembles");
     let nodes = body_nodes(&tree);
-    assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles: {nodes} > {}", semio_framework_ui_contract::UI_DOCUMENT_NODES);
+    assert!(nodes <= semio_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles: {nodes} > {}", semio_ui_contract::UI_DOCUMENT_NODES);
     for (suffix, total) in SECTION_SUFFIXES.into_iter().zip(section_totals(&document)) {
         assert_eq!(extent_of(section_node(&tree, suffix)), total, "section {suffix} still stamps its full extent, seated or starved");
     }
@@ -488,7 +488,7 @@ async fn a_house_sized_body_honours_every_capped_host_window() {
     ];
     requests.extend((0..4).map(|case| nested_request("load-cases", &format!("hc{case}"), Some(true), 0, 8)));
     let cost: u32 = requests.iter().map(|entry| 1 + entry.rows).sum();
-    assert!(cost as usize <= semio_framework_plugin::TREE_WINDOW_BODY_NODE_BUDGET, "the fixture asks what the host is allowed to ask: {cost}");
+    assert!(cost as usize <= semio_plugin::TREE_WINDOW_BODY_NODE_BUDGET, "the fixture asks what the host is allowed to ask: {cost}");
     let view = viewing(requests);
     let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a House-sized windowed document assembles");
     assert_eq!(section_node(&tree, "nodes").children.len(), 20, "a capped request is honoured in full, wherever it sits in the body");
@@ -502,7 +502,7 @@ async fn a_house_sized_body_honours_every_capped_host_window() {
     }
     assert_eq!(window_of(section_node(&tree, "nodes")), TreeWindow { row_extent: Default::default(), total: 63, offset: 0 });
     let nodes = body_nodes(&tree);
-    assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles under a full host request set: {nodes} > {}", semio_framework_ui_contract::UI_DOCUMENT_NODES);
+    assert!(nodes <= semio_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles under a full host request set: {nodes} > {}", semio_ui_contract::UI_DOCUMENT_NODES);
 }
 
 /// 🌱️ An empty document is a readable tree of "(none)" placeholders, not a refusal.

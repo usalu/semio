@@ -998,7 +998,7 @@
       "id": "rust-registration-macro",
       "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "mod component;\npub use component::*;\nsemio_framework_plugin::plugin_exports!(plugin::plugin, plugin::Apps);\n",
+      "content": "mod component;\npub use component::*;\nsemio_plugin::plugin_exports!(plugin::plugin, plugin::Apps);\n",
       "expectedRole": "registration",
       "expectedEvidence": "registration macro invocations only",
       "oracle": "rust-syn"
@@ -1034,7 +1034,7 @@
       "id": "rust-known-registration-macro-with-hidden-call",
       "analyzer": "rust",
       "maxDelegationStatements": 32,
-      "content": "semio_framework_plugin::plugin_exports! { execute() }\n",
+      "content": "semio_plugin::plugin_exports! { execute() }\n",
       "expectedRole": "implementation",
       "expectedEvidence": "registration macro contains an unowned executable body",
       "oracle": "rust-syn"

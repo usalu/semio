@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "elements", kind: "mirror-elements", record: "MirrorElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Mirror {} element(s) about the line through ({}, {}) and ({}, {})", self.ids.len(), self.line_start.x, self.line_start.y, self.line_end.x, self.line_end.y), &format!("{} Element(e) an der Linie durch ({}, {}) und ({}, {}) spiegeln", self.ids.len(), self.line_start.x, self.line_start.y, self.line_end.x, self.line_end.y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Mirror {} element(s) about the line through ({}, {}) and ({}, {})", self.ids.len(), self.line_start.x, self.line_start.y, self.line_end.x, self.line_end.y), &format!("{} Element(e) an der Linie durch ({}, {}) und ({}, {}) spiegeln", self.ids.len(), self.line_start.x, self.line_start.y, self.line_end.x, self.line_end.y))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

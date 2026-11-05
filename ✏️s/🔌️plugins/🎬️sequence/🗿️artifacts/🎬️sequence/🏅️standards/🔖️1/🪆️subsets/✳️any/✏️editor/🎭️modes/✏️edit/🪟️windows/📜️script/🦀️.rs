@@ -3,13 +3,13 @@
 use super::transient::SequenceScriptWindowTransient;
 use crate::editor::sequence::host::host_from_host_snapshot;
 use crate::SequenceHostSnapshot;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TextEditorScene;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TextEditorScene;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_SCRIPT: &str = "sequence-script";
@@ -47,7 +47,7 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, transient: &SequenceScriptWi
         text.push_str("\n\n# run result\n");
         text.push_str(&transient.last_run_json);
     }
-    semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_SCRIPT, semio_framework_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(text, Some("imperative".into()), None))
+    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_SCRIPT, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(text, Some("imperative".into()), None))
 }
 //#endregion 🔖️Render
 

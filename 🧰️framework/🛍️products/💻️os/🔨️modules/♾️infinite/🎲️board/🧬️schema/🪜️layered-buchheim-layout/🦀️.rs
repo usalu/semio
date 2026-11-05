@@ -215,3 +215,7 @@ pub fn layered_positions(node_ids:&HashSet<String>,directed:&[(String,String)],o
     let mut result=HashMap::new();
     for (id,(bx,by)) in pos {control.advance(1)?;let (x,y)=match opts.orientation {DagLayoutOrientation::LeftRight=>(by*opts.layer_spacing+dx,bx*opts.sibling_gap+dy),DagLayoutOrientation::TopBottom=>(bx*opts.sibling_gap+dx,by*opts.layer_spacing+dy)};result.insert(id,(x,y));}Ok(result)
 }
+
+#[path="🧵️work/🦀️.rs"]
+mod work;
+pub use work::{LayeredLayoutCursor,LayeredLayoutNode,LayeredLayoutEdge,LayeredLayoutFault};

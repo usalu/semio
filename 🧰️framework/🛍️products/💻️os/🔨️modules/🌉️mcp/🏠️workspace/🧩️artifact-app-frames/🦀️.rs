@@ -3,11 +3,11 @@
 #[cfg(not(target_arch = "wasm32"))]
 use crate::plugin_artifact_channel::{PluginArtifactChannel, headless_agent_ops};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_foundation::base64_codec::encode_base64;
+use semio_os_mcp_foundation::base64_codec::encode_base64;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_foundation::reports::RevisionStamp;
+use semio_os_mcp_foundation::reports::RevisionStamp;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, PreparedOps, action_input_arguments};
+use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, PreparedOps, action_input_arguments};
 
 /// 🔢️ Every `AppCommand` variant's own leading `seq`, as a place to WRITE. The kernel envelope's
 /// sequence and the command's own must be the same number: the guest answers a command by publishing
@@ -383,11 +383,11 @@ pub fn app_media_out_ports(app: &semio_framework::AppDefinition) -> Vec<String> 
 }
 
 /// 🪆️ One inference dependency per owned child of a composed document (design §20.15): key `child:<slot>/<childId>`
-/// (`semio_framework_plugin::inference_child_dependency`, the key the guest's request validation accepts), value the child's
+/// (`semio_plugin::inference_child_dependency`, the key the guest's request validation accepts), value the child's
 /// HEAD snapshot pack, in the guest's slot/id order.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn child_head_dependencies(entries: Vec<store::ChildHeadPackEntry>) -> Vec<(String, Vec<u8>)> {
-    entries.into_iter().map(|entry| (semio_framework_plugin::inference_child_dependency(&entry.slot, &entry.child_id), entry.head_pack)).collect()
+    entries.into_iter().map(|entry| (semio_plugin::inference_child_dependency(&entry.slot, &entry.child_id), entry.head_pack)).collect()
 }
 
 /// 🔗️ Folds the artifact this inference is being run ON into the canonical request body, under the

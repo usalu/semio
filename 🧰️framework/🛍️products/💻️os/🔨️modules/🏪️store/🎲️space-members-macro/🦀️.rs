@@ -10,7 +10,7 @@
 /// silent bug. Usage:
 /// ```ignore
 /// space_members! {
-///     native_producer:&semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+///     native_producer:&semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
 ///     history_limits: HistoryReadLimits { file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64 },
 ///     maximum_history_allocation_bytes:8388608,
 ///     pub enum NoteMembers, NoteMembersOpen {

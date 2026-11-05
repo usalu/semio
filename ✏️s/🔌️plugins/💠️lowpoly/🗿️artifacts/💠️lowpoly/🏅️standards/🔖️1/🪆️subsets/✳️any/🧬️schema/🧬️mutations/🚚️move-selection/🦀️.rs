@@ -36,7 +36,7 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "selection", kind: "move-selection", record: "MovedSelection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         self.motion().label(&self.object_id, self.vertex_ids.len())
     }
     fn target(&self) -> Vec<String> {

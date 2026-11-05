@@ -15,8 +15,8 @@ pub struct MoveSlide {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for MoveSlide {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "slide", kind: "move-slide", record: "MoveSlide" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Move slide", "Folie verschieben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Move slide", "Folie verschieben")
     }
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.entry.part_path.clone()).chain(self.address.entry.node_path.iter().map(usize::to_string)).collect()

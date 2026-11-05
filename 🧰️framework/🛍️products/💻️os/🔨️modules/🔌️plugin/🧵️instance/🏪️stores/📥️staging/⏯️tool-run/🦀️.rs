@@ -2,22 +2,22 @@
 //!
 //! ⏯️ The mounted instance's tool-run turns (ledger driving, tick folding and finalize publication) and the
 //! [`ToolRunExtension`] that registers them with the instance through [`InstanceExtension`].
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_value_derive::ToValue;
-use semio_framework_plugin_tool_run::ToolRunSettingsValues;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_tool_run::ToolRunSettingsValues;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::Mutation;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use std::future::Future;
 use crate::stores_components::InstanceStores;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_tool_run::*;
+use semio_ui_contract::*;
+use semio_plugin_tool_run::*;
 use semio_framework_tool_run::{tool_run_pointer_value, ToolRunSettingsReads};
-use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_os_kernel::{MemberFactory, SpaceMember};
 
 impl<A: ArtifactApp> InstanceStores<A> {
     /// 🎚️ What the run's declared settings reads name right now. A declared window kind that is the starting

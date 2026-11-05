@@ -4,9 +4,9 @@
 
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_s_plugin_norm_app_surface::{apply_remedy_edit, get_value_at_path, parse_path, set_value_at_path};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, NormFamily, RemedyBound};

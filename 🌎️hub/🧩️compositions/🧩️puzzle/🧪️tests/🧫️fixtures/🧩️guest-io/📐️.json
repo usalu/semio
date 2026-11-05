@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:puzzle-guest-io-acceptance/1",
+  "type": "object",
+  "required": [
+    "version",
+    "component",
+    "route",
+    "material",
+    "progress",
+    "execution",
+    "afterCancel",
+    "closure",
+    "client",
+    "limits",
+    "operationSource",
+    "cancellationTerminal"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "component": {
+      "type": "object",
+      "required": [
+        "pluginId",
+        "packageId",
+        "profile",
+        "target",
+        "appId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pluginId": {
+          "const": "puzzle"
+        },
+        "packageId": {
+          "const": "semio:puzzle"
+        },
+        "profile": {
+          "const": "prototype"
+        },
+        "target": {
+          "const": "wasm32-wasip2"
+        },
+        "appId": {
+          "const": "s.puzzle.puzzle2d@1/*#editor"
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "required": [
+        "from",
+        "into"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "const": "s.puzzle.puzzle2d@1/*"
+        },
+        "into": {
+          "const": "s.stdio.json@rfc8259/*"
+        }
+      }
+    },
+    "material": {
+      "type": "object",
+      "required": [
+        "nodes",
+        "columns",
+        "spacing",
+        "idPrefix",
+        "edges"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "const": 1024
+        },
+        "columns": {
+          "const": 32
+        },
+        "spacing": {
+          "const": 128
+        },
+        "idPrefix": {
+          "const": "export-node-"
+        },
+        "edges": {
+          "const": 0
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "required": [
+        "excludeDecodedIdentity",
+        "phase",
+        "minimumCompleted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "excludeDecodedIdentity": {
+          "const": true
+        },
+        "phase": {
+          "const": "execute"
+        },
+        "minimumCompleted": {
+          "const": 1
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": [
+        "maximumTurns",
+        "maximumMilliseconds",
+        "userVisibleTurns",
+        "mountedPolicy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maximumTurns": {
+          "const": 10000
+        },
+        "maximumMilliseconds": {
+          "const": 120000
+        },
+        "userVisibleTurns": {
+          "const": 2000
+        },
+        "mountedPolicy": {
+          "const": "INTERACTIVE_COMPONENT"
+        }
+      }
+    },
+    "afterCancel": {
+      "type": "object",
+      "required": [
+        "command",
+        "args",
+        "requireAccepted",
+        "requireAppEffect",
+        "requireActiveAlternativeChanged"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "createAlternative"
+        },
+        "args": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "const": "AfterExportCancel"
+            }
+          }
+        },
+        "requireAccepted": {
+          "const": true
+        },
+        "requireAppEffect": {
+          "const": true
+        },
+        "requireActiveAlternativeChanged": {
+          "const": true
+        }
+      }
+    },
+    "closure": {
+      "type": "object",
+      "required": [
+        "requireSourceClosed",
+        "requireNoCompletedOutput",
+        "requirePaidInstanceClose"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "requireSourceClosed": {
+          "const": true
+        },
+        "requireNoCompletedOutput": {
+          "const": true
+        },
+        "requirePaidInstanceClose": {
+          "const": true
+        }
+      }
+    },
+    "client": {
+      "type": "object",
+      "required": [
+        "locale",
+        "terminology"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "locale": {
+          "const": "en"
+        },
+        "terminology": {
+          "const": "native"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "requestBytes",
+        "resultBytes",
+        "nativeValueAllowanceBytes",
+        "vmBytes",
+        "scaffoldingBytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "requestBytes": {
+          "const": 2097152
+        },
+        "resultBytes": {
+          "const": 2097152
+        },
+        "nativeValueAllowanceBytes": {
+          "const": 4194304
+        },
+        "vmBytes": {
+          "const": 16777216
+        },
+        "scaffoldingBytes": {
+          "const": 2097152
+        }
+      }
+    },
+    "operationSource": {
+      "type": "object",
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maximumItems": {
+          "const": 64000
+        },
+        "maximumCopyBytes": {
+          "const": 50331648
+        },
+        "maximumCapacityBytes": {
+          "const": 73400320
+        },
+        "maximumReleaseBytes": {
+          "const": 73400320
+        },
+        "maximumDepth": {
+          "const": 4096
+        }
+      }
+    },
+    "cancellationTerminal": {
+      "type": "object",
+      "required": [
+        "state",
+        "encoding",
+        "code",
+        "origin",
+        "severity",
+        "retryable"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "const": "failed"
+        },
+        "encoding": {
+          "const": "pack"
+        },
+        "code": {
+          "const": "canceled"
+        },
+        "origin": {
+          "const": "framework"
+        },
+        "severity": {
+          "const": "error"
+        },
+        "retryable": {
+          "const": false
+        }
+      }
+    }
+  }
+}

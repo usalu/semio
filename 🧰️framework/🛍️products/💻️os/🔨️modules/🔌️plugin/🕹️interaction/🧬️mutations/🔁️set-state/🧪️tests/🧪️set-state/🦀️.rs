@@ -55,6 +55,6 @@ async fn inverse_diffs_sum_to_the_negative_diff() {
     let source: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let populated: InteractionState = serde_json::from_value(source).unwrap();
     for (base, next) in [(InteractionState::default(), populated.clone()), (populated, InteractionState::default())] {
-        semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&InteractionConfigMutation::set_state(next), &base).await;
+        semio_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&InteractionConfigMutation::set_state(next), &base).await;
     }
 }

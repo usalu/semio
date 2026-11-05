@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTankShellTM where 
         record: "ChangeTankShellTM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shell wall thickness t for the hoop stress under hydrostatic and hydrodynamic pressure (0 = not given)", "Wanddicke t der Schale für die Ringspannung aus hydrostatischem und hydrodynamischem Druck (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shell wall thickness t for the hoop stress under hydrostatic and hydrodynamic pressure (0 = not given)", "Wanddicke t der Schale für die Ringspannung aus hydrostatischem und hydrodynamischem Druck (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-tank-shell-tm".into()]

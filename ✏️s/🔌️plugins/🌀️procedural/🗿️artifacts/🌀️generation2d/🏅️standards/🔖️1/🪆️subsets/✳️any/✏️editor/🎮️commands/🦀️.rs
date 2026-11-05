@@ -1,5 +1,5 @@
 //! 🎮️ Generation2d editor commands: one module per editor verb.
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "➕️add-generation/🦀️.rs"]
 pub mod add_generation;

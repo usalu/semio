@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-contract-validation"
+name = "semio-ui-contract-validation"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -20,7 +20,7 @@ path = "../../🦀️.rs"
 default = []
 
 [dependencies]
-semio-framework-ui-contract = { path = "../../../📦️packages/🦀️rust" }
+semio-ui-contract = { path = "../../../📦️packages/🦀️rust" }
 serde = { workspace = true, features = ["derive"] }
 semio-framework-value-derive = { workspace = true }
 semio-framework-value = { workspace = true }

@@ -22,8 +22,8 @@ async fn view_instance_ids(app: &mut Puzzle3dApp, view_id: &str) -> Vec<String> 
     ids
 }
 
-async fn assert_every_pane_body_renders(app: &mut Puzzle3dApp, locale: semio_framework_ui_locale::Locale) {
-    app.set_label_axes(locale, semio_framework_ui_locale::Terminology::Native);
+async fn assert_every_pane_body_renders(app: &mut Puzzle3dApp, locale: semio_ui_locale::Locale) {
+    app.set_label_axes(locale, semio_ui_locale::Terminology::Native);
     for view_id in AGGREGATOR_VIEW_IDS {
         let node = render_window_refresh(app, main::BODY_KEY, view_id).await;
         assert!(instance_count(&node) > 0, "{view_id} renders world instances in {locale:?}");
@@ -42,9 +42,9 @@ async fn aggregator_pane_loads_applies_undoes_and_closes() {
     assert_eq!(loaded.len(), CONCRETE_FOREST_EXAMPLE_SNAPSHOT.objects.len(), "the booted document is the page fixture");
     assert!(loaded.iter().any(|id| id == AGGREGATOR_SEED_ID), "the page fixture carries the seed object");
 
-    assert_every_pane_body_renders(&mut app, semio_framework_ui_locale::Locale::En).await;
-    assert_every_pane_body_renders(&mut app, semio_framework_ui_locale::Locale::De).await;
-    app.set_label_axes(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    assert_every_pane_body_renders(&mut app, semio_ui_locale::Locale::En).await;
+    assert_every_pane_body_renders(&mut app, semio_ui_locale::Locale::De).await;
+    app.set_label_axes(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
 
     let mut loaded_views = Vec::new();
     for view_id in AGGREGATOR_VIEW_IDS {

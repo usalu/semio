@@ -8,7 +8,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
-    let fixture: serde_json::Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")).expect("modelling fixture");
+    let fixture: serde_json::Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")).expect("modelling fixture");
     let row = &fixture["glbSubElementIds"];
     let attribute_names = (row["faceAttribute"].as_str().unwrap().to_string(), row["vertexAttribute"].as_str().unwrap().to_string());
     let face_ids: Vec<u32> = row["faceIds"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect();
@@ -125,7 +125,7 @@ fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn owned_decoder_fixture() -> (WorldAssetIoAuthority, RendererAssetProbe) {
-    let bytes = semio_framework_os_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let bytes = semio_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let mut authority = WorldAssetIoAuthority::default();
     authority.reserve(1, 1, WorldAssetRequestKind::Glb, "catalogue-decode-owner.glb", bytes.len()).unwrap();
     let mut owner = authority.take_next().unwrap();
@@ -195,10 +195,10 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert_eq!(blend.material.emissive, [0.1, 0.05, 0.02]);
     assert_eq!((blend.material.metalness, blend.material.roughness), (0.65, 0.2));
     assert!(blend.material.double_sided && blend.material.preserve_vertex_color);
-    assert_eq!(blend.material.alpha, semio_framework_ui_scene_pass::SceneMaterialAlpha3d::Blend);
+    assert_eq!(blend.material.alpha, semio_ui_scene_pass::SceneMaterialAlpha3d::Blend);
     let mask = &appearance.primitives()[1];
     assert_eq!((mask.first_index, mask.index_count), (3, 3));
-    assert_eq!(mask.material.alpha, semio_framework_ui_scene_pass::SceneMaterialAlpha3d::Mask);
+    assert_eq!(mask.material.alpha, semio_ui_scene_pass::SceneMaterialAlpha3d::Mask);
     assert_eq!(mask.material.alpha_cutoff, 0.37);
     assert_eq!(blend.material.normal_scale,[1.0,-1.0]);assert_eq!(mask.material.normal_scale,[0.5,0.5]);assert_eq!(mask.material.occlusion_strength,0.25);
     for item in 0..3 {assert_eq!(mesh.vec4(Mesh3dField::Tangents,item).unwrap(),[0.0;4]);assert_eq!(mesh.vec4(Mesh3dField::Tangents,item+3).unwrap(),[0.0,0.0,1.0,-1.0]);let uv1=[[0.1,0.2],[0.9,0.2],[0.5,0.8]][item as usize];let uv4=[[0.2,0.3],[0.8,0.3],[0.5,0.7]][item as usize];assert_eq!(mesh.vec2(Mesh3dField::UvsNormal,item+3).unwrap(),uv1);assert_eq!(mesh.vec2(Mesh3dField::UvsOcclusion,item+3).unwrap(),uv1);assert_eq!(mesh.vec2(Mesh3dField::UvsMetallicRoughness,item+3).unwrap(),uv4);}
@@ -211,11 +211,11 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert_eq!(mask.material.additional_texture_samplers,[mask.material.texture_sampler;4]);
     assert_eq!(
         mask.material.texture_sampler,
-        semio_framework_ui_scene_pass::SceneTextureSampler3d {
-            wrap_u: semio_framework_ui_scene_pass::SceneTextureWrap3d::ClampToEdge,
-            wrap_v: semio_framework_ui_scene_pass::SceneTextureWrap3d::MirrorRepeat,
-            mag_filter: semio_framework_ui_scene_pass::SceneTextureFilter3d::Linear,
-            min_filter: semio_framework_ui_scene_pass::SceneTextureFilter3d::Nearest,
+        semio_ui_scene_pass::SceneTextureSampler3d {
+            wrap_u: semio_ui_scene_pass::SceneTextureWrap3d::ClampToEdge,
+            wrap_v: semio_ui_scene_pass::SceneTextureWrap3d::MirrorRepeat,
+            mag_filter: semio_ui_scene_pass::SceneTextureFilter3d::Linear,
+            min_filter: semio_ui_scene_pass::SceneTextureFilter3d::Nearest,
         }
     );
     let asset = probe.take_ready_mesh_asset().expect("ready material asset transfers into request-owned Icon preparation");
@@ -230,9 +230,9 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
         "shape": "ellipse"
     })
     .to_string();
-    let mut preparation = semio_framework_os_renderer_wgpu_icon_host::icon_export::IconExportScenePreparation::new(request, asset).expect("request-owned Icon scene admits the full material asset");
+    let mut preparation = semio_renderer_wgpu_icon_host::icon_export::IconExportScenePreparation::new(request, asset).expect("request-owned Icon scene admits the full material asset");
     assert_eq!(preparation.dimensions(), (64, 32));
-    assert_eq!(preparation.format(), semio_framework_os_renderer_wgpu_icon_host::icon_export::IconExportFormat::Png);
+    assert_eq!(preparation.format(), semio_renderer_wgpu_icon_host::icon_export::IconExportFormat::Png);
     for turn in 0..262_144 {
         match preparation.advance() {
             Ok(true) => break,
@@ -243,11 +243,11 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert!(preparation.terminal(), "request-owned Icon scene preparation reaches its accepted boundary");
     let mut prepared = preparation.take_prepared().expect("the exact prepared scene owner is published once");
     assert_eq!(prepared.dimensions(), (64, 32));
-    assert_eq!(prepared.format(), semio_framework_os_renderer_wgpu_icon_host::icon_export::IconExportFormat::Png);
+    assert_eq!(prepared.format(), semio_renderer_wgpu_icon_host::icon_export::IconExportFormat::Png);
     let mut packet = prepared.take_packet().expect("prepared scene transfers one packet while retaining its World owner");
     let uploads = packet.uploads();
-    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_framework_ui_prepared_staging::PreparedRenderUpload::Mesh { .. }))));
-    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_framework_ui_prepared_staging::PreparedRenderUpload::SceneRaster { .. }))));
+    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_ui_prepared_staging::PreparedRenderUpload::Mesh { .. }))));
+    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_ui_prepared_staging::PreparedRenderUpload::SceneRaster { .. }))));
     while !packet.retire_step() {}
     prepared.begin_close();
     for _ in 0..262_144 {

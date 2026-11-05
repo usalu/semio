@@ -5,19 +5,19 @@
 #[path = "♻️retirement/🦀️.rs"]
 pub mod backbone_retirement;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
-use semio_framework_os_spr::command::ArtifactMessageSource;
+use semio_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
+use semio_os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
-use semio_framework_os_vcs::VcsError;
-use semio_framework_os_vcs::{Identified, Patchable};
-use semio_framework_os_store_envelope::{ArtifactBackboneRef, document_backbone_ref};
+use semio_os_vcs::VcsError;
+use semio_os_vcs::{Identified, Patchable};
+use semio_os_store_envelope::{ArtifactBackboneRef, document_backbone_ref};
 use semio_framework_diagnostic::TextError;
 use semio_framework_diagnostic::TextSpan;
-use semio_framework_os_pack::pack_rt;
+use semio_os_pack::pack_rt;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 
 /// 📨️ Wire message exchanged over an attached backbone channel. B-R6 "kill hand-rolled binary
@@ -69,7 +69,7 @@ pub enum BackboneMessage {
 
 impl BackboneMessage{
     /// 📨️ Encodes an owned reference event batch into the canonical paged message field.
-    pub fn from_envelopes(envelopes:&[semio_framework_os_spr::MutationEnvelope])->Self{Self::Mutations{envelopes:original_outbox::OriginalBackboneMessageBytes::try_from_slice(&semio_framework_os_spr::encode_envelopes(envelopes)).expect("addressable reference wire fits canonical paged storage")}}
+    pub fn from_envelopes(envelopes:&[semio_os_spr::MutationEnvelope])->Self{Self::Mutations{envelopes:original_outbox::OriginalBackboneMessageBytes::try_from_slice(&semio_os_spr::encode_envelopes(envelopes)).expect("addressable reference wire fits canonical paged storage")}}
 }
 
 /// 🎞️ Handcrafted OpText (P6).
@@ -95,22 +95,22 @@ impl OpText for BackboneMessage {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl OpBinary for BackboneMessage {
-    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
-        semio_framework_os_dsl::variants_binary::encode_op(self)
+    fn encode_op(&self) -> Result<Vec<u8>, semio_os_spr::ProtocolError> {
+        semio_os_dsl::variants_binary::encode_op(self)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
-        semio_framework_os_dsl::variants_binary::decode_op(bytes)
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_os_spr::ProtocolError> {
+        semio_os_dsl::variants_binary::decode_op(bytes)
     }
 }
 
-pub const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES: usize = semio_framework_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES;
+pub const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES: usize = semio_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES;
 
 pub const BACKBONE_GENESIS_MESSAGE_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
 
-pub const BACKBONE_CHANNEL_MAXIMUM_MESSAGES: usize = semio_framework_os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES;
+pub const BACKBONE_CHANNEL_MAXIMUM_MESSAGES: usize = semio_os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES;
 
-pub const BACKBONE_CHANNEL_MAXIMUM_BYTES: usize = semio_framework_os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES;
+pub const BACKBONE_CHANNEL_MAXIMUM_BYTES: usize = semio_os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES;
 
 pub fn decode_backbone_message_exact(bytes: &[u8]) -> Result<BackboneMessage, VcsError> {
     if bytes.len() > BACKBONE_GENESIS_MESSAGE_MAXIMUM_BYTES {

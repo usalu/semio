@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v_rfc8259::subsets::base::io::JsonAnalyzer;
     use crate::JsonSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -52,7 +52,7 @@ pub mod io_registry {
     use crate::standards::v_rfc8259::subsets::base::io::JsonComposer as JsonRawAnyComposer;
     use crate::standards::v_rfc8259::subsets::i_json::io::JsonIJsonComposer;
     use crate::standards::v_rfc8259::subsets::geojson::io::JsonGeoJsonComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -76,7 +76,7 @@ pub mod text {
 
 pub mod derived_construction {
     use crate::{JsonDiff, JsonMutation, JsonSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.json` snapshot.
@@ -124,7 +124,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::JsonSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.json` parts.
@@ -142,30 +142,30 @@ pub mod derived_analysis {
         type Parts = JsonParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
-                AnalyzeSource::Text(text) => if <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).is_ok() { semio_framework_plugin::io::Confidence::High } else { semio_framework_plugin::io::Confidence::Low },
-                AnalyzeSource::Binary(bytes) => if <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).is_ok() { semio_framework_plugin::io::Confidence::High } else { semio_framework_plugin::io::Confidence::Low },
+                AnalyzeSource::Text(text) => if <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).is_ok() { semio_plugin::io::Confidence::High } else { semio_plugin::io::Confidence::Low },
+                AnalyzeSource::Binary(bytes) => if <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).is_ok() { semio_plugin::io::Confidence::High } else { semio_plugin::io::Confidence::Low },
             }
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = JsonParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -183,7 +183,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec JsonBuilderFacets {
         construction: JsonBuilderConstruction,
         analysis: JsonAnalyzerAnalysis,
@@ -204,7 +204,7 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜�
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{STDIO_JSON_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
@@ -212,7 +212,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.json".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Json", "Json"),
+        label: semio_ui_locale::LocalizedLabel::native("Json", "Json"),
         source_format: STDIO_JSON_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -259,7 +259,7 @@ pub mod artifact_items_7 {
 use crate::{native_codecs};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
@@ -271,7 +271,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub mod artifact_items_8 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }
@@ -303,14 +303,14 @@ pub use crate::schema::snapshot::JsonSnapshot;
 /// repo to populate this field, see its own builder doc).
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("json", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::schema::json_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::standards::v_rfc8259::subsets::base::schema::inferences::json_artifact_inference_descriptor()])
@@ -327,9 +327,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// why this is a fresh `subset_validator_entry_of::<JsonIJsonValidator>()` call rather than a reuse
 /// of `subsets::i_json::io::derived_composition`'s private `validator_entry()`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn pilot_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<crate::standards::v_rfc8259::subsets::i_json::io::JsonIJsonValidator>(), semio_framework_plugin::io::subset_validator_entry_of::<crate::standards::v_rfc8259::subsets::geojson::io::JsonGeoJsonValidator>()]).as_slice()
+pub fn pilot_subset_validators() -> &'static [semio_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_plugin::io::subset_validator_entry_of::<crate::standards::v_rfc8259::subsets::i_json::io::JsonIJsonValidator>(), semio_plugin::io::subset_validator_entry_of::<crate::standards::v_rfc8259::subsets::geojson::io::JsonGeoJsonValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once

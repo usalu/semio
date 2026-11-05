@@ -32,7 +32,7 @@ async fn cad_config_pack_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn cad_sun_config_round_trips_through_world_sun_config() {
-    let world = semio_framework_plugin::WorldSunConfig { enabled: true, azimuth: 12.0, elevation: 34.0, intensity: 0.5, color: "#112233".into() };
+    let world = semio_plugin::WorldSunConfig { enabled: true, azimuth: 12.0, elevation: 34.0, intensity: 0.5, color: "#112233".into() };
     let cad_sun = cad_sun_config_from_world(&world);
     let back = cad_sun_config_to_world(&cad_sun);
     assert_eq!(back, world);

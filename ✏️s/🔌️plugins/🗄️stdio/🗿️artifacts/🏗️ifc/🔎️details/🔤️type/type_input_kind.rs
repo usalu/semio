@@ -106,7 +106,7 @@ impl Cursor {
                 self.set=true;self.node=Some(node.item.ok_or_else(invalid)?);self.depth+=1;return Ok(None);
             }
             let upper=node.upper.and_then(|value|usize::try_from(value).ok()).ok_or_else(invalid)?;
-            if self.list.is_some()||node.aggregate!=Some("LIST")||upper<lower||upper>=semio_framework_plugin::action_staging::STAGED_FORM_BODY_LIMITS.content{return Err(invalid());}
+            if self.list.is_some()||node.aggregate!=Some("LIST")||upper<lower||upper>=semio_plugin::action_staging::STAGED_FORM_BODY_LIMITS.content{return Err(invalid());}
             let item=node.item.ok_or_else(invalid)?;self.list=Some((lower,upper));self.node=Some(item);self.depth+=1;return Ok(None);
         }
         if node.kind != "named" {

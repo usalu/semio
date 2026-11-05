@@ -7,7 +7,7 @@
 //!
 //! The app's typed `PlaybookCommand` enum — which used to share the old `📡️protocol` crate with this
 //! codec — is an EDITOR concern, not an artifact one: it now lives in `✏️editor/🦀️.rs`,
-//! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
+//! assembled from the `🎮️commands/*` payload modules by `semio_plugin::app_commands!`.
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).

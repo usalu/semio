@@ -3,23 +3,23 @@ use crate::editor::forms::support::{forms_action, ui_admit, ui_label, ui_value_m
 use crate::editor::forms::terminology::FormsLabels;
 use crate::schema::response::{FormsAnswer, FormsResponse};
 use crate::FormsSnapshot;
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::RowActionPlacement;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract as ui;
-use ui::{Buildable, HasBase};
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::tree_window_item;
+use semio_plugin::ui_node_list;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::RowActionPlacement;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract as ui;
+use ui::{Buildable, HasBase, HasChildren};
 
 pub const WINDOW: &str = "forms-responses";
 pub const BODY: &str = "forms.play.responses";
@@ -42,7 +42,13 @@ fn answer_row(answer: &FormsAnswer, labels: &FormsLabels) -> UiAssemblyResult<Bu
         semio_framework_value::DslValue::Bool(value) => if *value { labels.yes.as_str() } else { labels.no.as_str() }.to_string(),
         value => semio_framework_pack_json::to_json_string(value),
     };
-    ui_admit(ui_admit(ui::tree_item(ui_label(&answer.label)?).try_id(&answer.question_id))?.description(UiText::clipped(&value)).try_build())
+    let item = ui_admit(ui::tree_item(ui_label(&answer.label)?).try_id(&answer.question_id))?.description(UiText::clipped(&value));
+    let item = if value.len() > semio_ui_contract::UI_TEXT_MAX_BYTES {
+        let mut scene = semio_plugin::TextEditorScene::base(value, None, None);
+        scene.settings_json = Some(semio_framework_pack_json::to_json_string(&semio_framework_pack_json::json!({ "readOnly": true, "label": answer.label })));
+        ui_admit(item.default_open(true).try_child(semio_plugin::scene_surface(&format!("{}.answer", answer.question_id), ui::SurfaceKind::TextEditor, &scene)?))?
+    } else { item };
+    ui_admit(item.try_build())
 }
 
 fn response_row(response: &FormsResponse, labels: &FormsLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {

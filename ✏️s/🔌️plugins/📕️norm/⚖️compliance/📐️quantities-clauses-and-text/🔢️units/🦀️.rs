@@ -1,7 +1,7 @@
 //! 🔢️ Units: the closed unit vocabulary, SI factors, conversion, locale-aware parse and format. See [`super`].
 
 use super::*;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 macro_rules! units {
     ($($variant:ident: $symbol:literal, $alias:literal, $family:ident, $factor:expr, $offset:expr, $en:literal, $de:literal;)*) => {

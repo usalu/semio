@@ -6,7 +6,7 @@
 
 use crate::schema::flatten_blocks;
 use crate::{NoteBlockNode, NoteSnapshot};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dxf::schema::snapshot::{DxfEntity, DxfLine};
@@ -20,7 +20,7 @@ pub struct NoteIntoDxf;
 impl Serializer<NoteSnapshot> for NoteIntoDxf {
     const INTO: Dialect = DXF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let mut entities = Vec::new();
         for block in flatten_blocks(&from.blocks) {
             if let NoteBlockNode::Ink { points, .. } = block {

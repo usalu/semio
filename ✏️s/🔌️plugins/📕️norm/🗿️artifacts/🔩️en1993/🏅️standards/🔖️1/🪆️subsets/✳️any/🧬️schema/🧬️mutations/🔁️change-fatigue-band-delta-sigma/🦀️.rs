@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFatigueBandDeltaSi
         record: "ChangedFatigueBandDeltaSigma",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stress range Δσ_i of the fatigue band", "Ermüdungsband: Spannungsschwingbreite Δσ_i ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stress range Δσ_i of the fatigue band", "Ermüdungsband: Spannungsschwingbreite Δσ_i ändern")
     }
 }
 

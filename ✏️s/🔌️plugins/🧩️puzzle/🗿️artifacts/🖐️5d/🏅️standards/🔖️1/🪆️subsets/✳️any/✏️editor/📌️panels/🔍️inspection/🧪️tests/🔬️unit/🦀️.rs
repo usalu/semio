@@ -1,8 +1,8 @@
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::view::{Puzzle5dInteractionSnapshot, Puzzle5dScene};
 use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, Puzzle5dFastener, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::interaction::ui_label;
 #[allow(unused_imports)]
@@ -12,35 +12,35 @@ use crate::editor::puzzle5d::view::engine_grip_kind;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::{part_scale_json, target_volume_flat_rect, target_volume_scale_json, Puzzle5dDocument, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_PLAY_CONTROLLER_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_desc;
+use semio_plugin::tree_item_desc;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action;
 #[allow(unused_imports)]
-use semio_framework_plugin::ui_node_list;
+use semio_plugin::ui_node_list;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionFactory;
+use semio_plugin::ActionFactory;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiFixedList;
+use semio_plugin::UiFixedList;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiValue;
+use semio_plugin::UiValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use crate::editor::puzzle5d::panels::inspection::*;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
@@ -50,21 +50,21 @@ use crate::editor::puzzle5d::Puzzle5dPart;
 use crate::editor::puzzle5d::Puzzle5dPart2d;
 use crate::editor::puzzle5d::Puzzle5dPart3d;
 use crate::editor::puzzle5d::testkit::*;
-use semio_framework_plugin::TreeWindowRequest;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::TreeWindowRequest;
+use semio_plugin::ViewModel;
 
 fn labels() -> &'static Puzzle5dLabels {
-    puzzle5d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("an admitted host label axis")
+    puzzle5d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("an admitted host label axis")
 }
 
 fn drain() {
     for _ in 0..4096 {
-        if semio_framework_ui_contract::close_built_node_page_one() {
+        if semio_ui_contract::close_built_node_page_one() {
             break;
         }
     }
     for _ in 0..4096 {
-        if semio_framework_ui_contract::close_ui_value_page_one() {
+        if semio_ui_contract::close_ui_value_page_one() {
             break;
         }
     }
@@ -135,7 +135,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[test]
@@ -211,7 +211,7 @@ fn a_wide_selection_stamps_every_id_and_materialises_only_its_window() {
     let node = inspect(&scene, &hosted(vec![request(IDS_SECTION, Some(true), 0, 8)]));
     let section = node.children.iter().find(|child| child.key.as_str() == IDS_SECTION).expect("the ids section");
     let window = match &section.component {
-        semio_framework_ui_contract::Component::TreeSection(props) => props.window.expect("the ids section stamps its window"),
+        semio_ui_contract::Component::TreeSection(props) => props.window.expect("the ids section stamps its window"),
         _ => panic!("the ids section is a tree section"),
     };
     assert_eq!(window.total as usize, ids.len());

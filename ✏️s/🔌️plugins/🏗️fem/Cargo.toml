@@ -43,16 +43,16 @@ path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️
 [workspace.dependencies.semio-framework-io-sqlite-snapshot]
 path = "../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-locale]
+[workspace.dependencies.semio-ui-locale]
 path = "../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-scene]
+[workspace.dependencies.semio-ui-scene]
 path = "../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value]

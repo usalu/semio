@@ -1,12 +1,12 @@
 //! 🏁️ One bounded reactor close opportunity driven by the turn.
 
-use semio_framework_plugin_reactor_core::ARMED_TIMERS;
+use semio_plugin_reactor_core::ARMED_TIMERS;
 use std::cell::Cell;
-use semio_framework_plugin_reactor_tasks::{INSTANCE_METADATA, REGISTRY, TASK_RESUMES};
-use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
-use semio_framework_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR};
-use semio_framework_plugin_reactor_tasks::tasks_task_lane::cancel_instance_tasks_step;
-use semio_framework_plugin_actor_host::requests;
+use semio_plugin_reactor_tasks::{INSTANCE_METADATA, REGISTRY, TASK_RESUMES};
+use semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
+use semio_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR};
+use semio_plugin_reactor_tasks::tasks_task_lane::cancel_instance_tasks_step;
+use semio_plugin_actor_host::requests;
 use crate as turn;
 
 #[doc(hidden)]

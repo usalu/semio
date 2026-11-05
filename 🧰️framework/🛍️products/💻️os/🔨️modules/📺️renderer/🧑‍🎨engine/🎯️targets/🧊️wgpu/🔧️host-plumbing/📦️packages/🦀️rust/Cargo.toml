@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-os-renderer-wgpu-host-plumbing"
+name = "semio-renderer-wgpu-host-plumbing"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,9 +25,9 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
-semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-media-slots = { path = "../../../🎥️media-slots/📦️packages/🦀️rust" }
+semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
+semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-renderer-wgpu-media-slots = { path = "../../../🎥️media-slots/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-job-worker = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
@@ -35,17 +35,17 @@ semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modul
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
-ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
-semio-framework-plugin-ownership = { workspace = true }
+ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-ui-render" }
+semio-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
+semio-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-plugin-ownership = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
-semio-framework-plugin-guest-contract = { workspace = true }
-semio-framework-os-services-native-io = { workspace = true }
+semio-plugin-guest-contract = { workspace = true }
+semio-os-services-native-io = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 semio-framework-async = { workspace = true }
@@ -55,7 +55,7 @@ serde_json = "1.0.140"
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-infinite-world-scene = { path = "../../../../../../../♾️infinite/🌍️world/🧱️scene/📦️packages/🦀️rust" }
+semio-os-infinite-world-scene = { path = "../../../../../../../♾️infinite/🌍️world/🧱️scene/📦️packages/🦀️rust" }
 
 [[test]]
 name = "original_native_frame_caller"

@@ -1,8 +1,8 @@
 //! 🤖️ The writer editor's own tool-command job (`writer.writer.tool-command.v1`) on the agent lane: what the semio MCP gateway's
 //! `action_prepare` previews for the verbs its coverage battery reaches on a writer document.
 
-use semio_framework_plugin::app::EditorApp;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::app::EditorApp;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
 use crate::editor::writer::editor_vocabulary::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, writer_action, writer_chapter_payload, writer_io};
 #[allow(unused_imports)]
@@ -40,111 +40,111 @@ use semio_framework::{kernel::Effect, InteractiveJobClassification, ToolExecutio
 #[allow(unused_imports)]
 use semio_framework_job::Operation;
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::AppOperationContext;
+use semio_plugin::AppOperationContext;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, EphemeralEmit, InteractionView};
+use semio_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, EphemeralEmit, InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
+use semio_plugin::plugin_app_close_prelude::ArtifactDisposal;
 #[allow(unused_imports)]
-use semio_framework_plugin::engagement_token_matches;
+use semio_plugin::engagement_token_matches;
 #[allow(unused_imports)]
-use semio_framework_plugin::strip_engagement_prefix;
+use semio_plugin::strip_engagement_prefix;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDescriptor;
+use semio_plugin::ActionDescriptor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppActionRegistry;
+use semio_plugin::AppActionRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuRequest;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuTextContext;
+use semio_plugin::ContextMenuTextContext;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::Media;
+use semio_plugin::Media;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaClass;
+use semio_plugin::MediaClass;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaError;
+use semio_plugin::MediaError;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaForm;
+use semio_plugin::MediaForm;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPayload;
+use semio_plugin::MediaPayload;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::Menu;
+use semio_plugin::Menu;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoPresence;
+use semio_plugin::NoPresence;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoPresenceMutation;
+use semio_plugin::NoPresenceMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoTransient;
+use semio_plugin::NoTransient;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::NoTransientMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use serde::{Deserialize, Serialize};
 #[allow(unused_imports)]
@@ -158,7 +158,7 @@ use pack::snapshot::ArtifactPack;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::editor::writer::*;
-use semio_framework_plugin::artifact_app_laws::{declared_verb_agent_divergences, declared_verb_probe, declared_verb_wrote_document, probe_agent_lane, DeclaredVerbOutcome};
+use semio_plugin::artifact_app_laws::{declared_verb_agent_divergences, declared_verb_probe, declared_verb_wrote_document, probe_agent_lane, DeclaredVerbOutcome};
 
 /// 🤖️ The verbs the semio MCP coverage battery (`plugin-coverage-check`) tries on a fresh writer document, in its order —
 /// every one was refused `interactive-job.preview-unsupported` before the agent lane ran the editor's own job.
@@ -169,7 +169,7 @@ const BATTERY_VERBS: &[&str] = &["formatDocument", "commitRename", "setText"];
 /// the pinned verbs.
 #[semio_framework_async_macros::async_test]
 async fn the_agent_lane_runs_the_writer_editors_own_tool_command_job() {
-    let probes = probe_agent_lane::<semio_framework_plugin::EditorApp<WriterPlayApp>, <WriterPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_writer_app, None, BATTERY_VERBS, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let probes = probe_agent_lane::<semio_plugin::EditorApp<WriterPlayApp>, <WriterPlayApp as semio_plugin::ArtifactEditor>::Members>(create_writer_app, None, BATTERY_VERBS, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     for probe in &probes {
         assert!(!matches!(&probe.agent, Some(DeclaredVerbOutcome::Unreachable { .. })), "{} is unreachable on the agent lane: {:?}", probe.verb, probe.agent);
     }

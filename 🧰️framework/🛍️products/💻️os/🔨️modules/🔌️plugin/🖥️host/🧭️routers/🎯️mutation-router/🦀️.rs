@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🎯️MutationRouter
 /// 🗂️ Host mirror of the guest `WireMutationRosterEntry` (contract §6's `contributor.
-/// list-artifact-mutations` roster row) — `semio-framework-plugin-host` does not depend on the
+/// list-artifact-mutations` roster row) — `semio-plugin-host` does not depend on the
 /// guest SDK crate (same reasoning `ExtensionManifest` below already documents), so this is a
 /// field-for-field shape-identical local copy, decoded off the same `store::pack_rt::
 /// encode_wire_value`/`semio_framework_value::ToValue::to_value` wire `list_artifact_mutations()` returns, `inputs` included.

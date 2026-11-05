@@ -21,7 +21,7 @@ pub type Vec2 = [f64; 2];
 
 /// ✏️ Path segment in local coordinates. `ToValue`/`FromValue` are its plugin-facing wire encoding: `large_arc` renders as
 /// `largeArc`, which `◻️2d/🟦️.ts`'s `PathSegment` mirror reads. Serde (de)serialization is owned by its only serde user,
-/// `semio-framework-os-flow`'s `🖍️drawing` kernel, through an explicit conversion type there.
+/// `semio-os-flow`'s `🖍️drawing` kernel, through an explicit conversion type there.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PathSegment {

@@ -3,7 +3,7 @@
 use crate::schema::diff::NodePath;
 use crate::schema::mutations::{create_node::CreateNode, delete_node::DeleteNode, move_node::MoveNode, replace_path::ReplacePath, SemioDrawingMutation};
 use crate::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::FromValue;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{event_path, unsupported};

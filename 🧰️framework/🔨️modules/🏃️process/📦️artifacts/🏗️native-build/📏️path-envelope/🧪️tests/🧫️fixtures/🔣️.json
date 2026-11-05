@@ -1,0 +1,230 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "actual-wide-dependency-refuses-original-lane",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/p2c7b95/b",
+      "units": [
+        {
+          "packageName": "short",
+          "name": "short",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        },
+        {
+          "packageName": "semio-framework-replication-mutation-messages",
+          "name": "semio_framework_replication_mutation_messages",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": false,
+      "maximum": 289
+    },
+    {
+      "id": "compact-lane-covers-target-codegen-object",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.r/i/m/u/l/p2c7b95",
+      "units": [
+        {
+          "packageName": "semio-framework-replication-mutation-messages",
+          "name": "semio_framework_replication_mutation_messages",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": true,
+      "maximum": 256
+    },
+    {
+      "id": "one-extra-character-is-refused",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.r/i/m/u/l/p2c7b950",
+      "units": [
+        {
+          "packageName": "semio-framework-replication-mutation-messages",
+          "name": "semio_framework_replication_mutation_messages",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": false,
+      "maximum": 257
+    },
+    {
+      "id": "host-does-not-inherit-cross-target-directory",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.r/i/m/u/l/p2c7b95",
+      "units": [
+        {
+          "packageName": "semio-framework-os-renderer-wgpu-native-runtime-modules",
+          "name": "semio_framework_os_renderer_wgpu_native_runtime_modules",
+          "platform": null,
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": true,
+      "maximum": 253
+    },
+    {
+      "id": "windows-native-object-and-dynamic-library",
+      "flavor": "win32",
+      "buildDirectory": "C:\\w\\.r\\i\\m\\u\\l\\p2c7b95",
+      "units": [
+        {
+          "packageName": "semio-framework-replication-mutation-messages",
+          "name": "semio_framework_replication_mutation_messages",
+          "platform": null,
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "custom-target-json-basename-is-the-directory",
+      "flavor": "posix",
+      "buildDirectory": "/s/l/aa",
+      "units": [
+        {
+          "packageName": "semio-framework-replication-mutation-messages",
+          "name": "semio_framework_replication_mutation_messages",
+          "platform": "/targets/custom.json",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "noncompiling-build-script-run-has-no-artifacts",
+      "flavor": "posix",
+      "buildDirectory": "/s",
+      "units": [
+        {
+          "packageName": "semio-framework-replication-mutation-messages",
+          "name": "semio_framework_replication_mutation_messages",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "build-script-run",
+          "operation": "run-custom-build"
+        }
+      ],
+      "expected": true,
+      "maximum": 0
+    },
+    {
+      "id": "utf16-bound-refuses-257-while-codepoints-fit-256",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.r/i/m/u/l/p2c7b9🧬",
+      "units": [
+        {
+          "packageName": "semio-framework-replication-mutation-messages",
+          "name": "semio_framework_replication_mutation_messages",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": false,
+      "maximum": 257
+    },
+    {
+      "id": "font-wide-package-is-refused-before-compilation",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.r/i/m/u/l/p2c7b95",
+      "units": [
+        {
+          "packageName": "semio-framework-font-noto-emoji-activities-regular",
+          "name": "semio_framework_font_noto_emoji_activities_regular",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": false,
+      "maximum": 266
+    },
+    {
+      "id": "font-domain-package-fits-browser-codegen",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.r/i/m/u/l/p2c7b95",
+      "units": [
+        {
+          "packageName": "semio-font-noto-emoji-activities-regular",
+          "name": "semio_font_noto_emoji_activities_regular",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": true,
+      "maximum": 246
+    },
+    {
+      "id": "longest-font-domain-package-fits-browser-codegen",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.r/i/m/u/l/p2c7b95",
+      "units": [
+        {
+          "packageName": "semio-font-noto-emoji-joined-forms-regular",
+          "name": "semio_font_noto_emoji_joined_forms_regular",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": true,
+      "maximum": 250
+    },
+    {
+      "id": "distinct-selected-overflows-are-reported-together",
+      "flavor": "posix",
+      "buildDirectory": "/Users/ueli/Documents/semio/.r/i/m/u/l/p2c7b95",
+      "units": [
+        {
+          "packageName": "semio-framework-font-noto-emoji-activities-regular",
+          "name": "semio_framework_font_noto_emoji_activities_regular",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        },
+        {
+          "packageName": "semio-framework-os-renderer-wgpu-shell-window-actions",
+          "name": "semio_framework_os_renderer_wgpu_shell_window_actions",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        },
+        {
+          "packageName": "semio-framework-font-noto-emoji-activities-regular",
+          "name": "semio_framework_font_noto_emoji_activities_regular",
+          "platform": "wasm32-unknown-unknown",
+          "profileName": "prototype",
+          "kind": "library",
+          "operation": "build"
+        }
+      ],
+      "expected": false
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Retained Original Projection",
+    "source": {
+      "value": "Original receiving owner🧱"
+    },
+    "expected": "Original receiving owner🧱",
+    "parentPreserved": true,
+    "wrap": "root"
+  },
+  {
+    "name": "Nested Original Projection",
+    "source": {
+      "value": "Nested source🧱"
+    },
+    "expected": "Nested source🧱",
+    "parentPreserved": true,
+    "wrap": "array"
+  }
+]

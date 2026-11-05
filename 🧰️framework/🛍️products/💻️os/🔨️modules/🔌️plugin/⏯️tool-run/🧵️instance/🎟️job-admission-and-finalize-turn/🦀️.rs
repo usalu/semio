@@ -51,7 +51,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let interactive:&dyn semio_framework_job::InteractiveJob=match &job.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
             match interactive.borrow_outcome(descriptor)?{
                 semio_framework_job::JobOutcomeView::PreviewReady{payload,..}=>{
-                    let source=semio_framework_plugin_tool_run::original_native_tick::OriginalPreviewPages(payload);
+                    let source=semio_plugin_tool_run::original_native_tick::OriginalPreviewPages(payload);
                     if entry.native.receive_with_domain(&source,entry.identity,entry.slot.state,|tick,cx|{if entry.operations.ingest(tick,&self.stores.store,&mut entry.overlay,cx)?{Ok(Some(entry.operations.len()as u32))}else{Ok(None)}},cx)?{
                         let d=RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()};
                         if cx.retained_work_can_enter(d){job.outcome_received=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);self.mark_tool_run_ui_dirty();}

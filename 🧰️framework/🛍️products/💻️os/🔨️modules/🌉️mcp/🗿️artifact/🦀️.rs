@@ -26,18 +26,18 @@
 //! arm answers with — never a hardcoded `{"valid": true}`.
 
 use std::sync::Arc;
-use semio_framework_os_mcp_capabilities::capability_declarations::artifact_capabilities;
-use semio_framework_os_mcp_catalog::capability_tools::tool_from_capability;
-use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::reports::RevisionStamp;
-use semio_framework_os_mcp_port::channel_port::ActivationScope;
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, authorize_capability_scopes};
-use semio_framework_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
-use semio_framework_os_mcp_schema::schema::{UntrustedSource, untrusted_content};
-use semio_framework_os_mcp_wire::job_registry::job_registry;
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry};
-use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+use semio_os_mcp_capabilities::capability_declarations::artifact_capabilities;
+use semio_os_mcp_catalog::capability_tools::tool_from_capability;
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::reports::RevisionStamp;
+use semio_os_mcp_port::channel_port::ActivationScope;
+use semio_os_mcp_port::policy::{AgentPrincipal, authorize_capability_scopes};
+use semio_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
+use semio_os_mcp_schema::schema::{UntrustedSource, untrusted_content};
+use semio_os_mcp_wire::job_registry::job_registry;
+use semio_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry};
+use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 
 //#region 🔖️Tiering
 

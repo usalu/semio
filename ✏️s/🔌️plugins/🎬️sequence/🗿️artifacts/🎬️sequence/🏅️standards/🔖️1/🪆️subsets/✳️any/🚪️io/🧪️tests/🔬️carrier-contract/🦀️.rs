@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::{export::serializers::artifacts as export, import::deserializers::artifacts as import};
 use crate::{SequenceHostSnapshot, SequenceSnapshot};
 use dsl::os_pack as pack;
-use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
+use semio_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_csv::CsvSnapshot;
@@ -18,7 +18,7 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
         let fixture = neural_engine::ColdOwner::new(semio_framework_pack_json::from_json_str::<SequenceHostSnapshot>(&row["fixture"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned fixture decoder"));
         assert_eq!(oracle(&semio_framework_pack_json::to_json_string(&*fixture)), oracle(&row["fixture"].to_string()));
         let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(fixture.into_inner()));
-        let payload = export::md::v_commonmark::any::SequenceIntoMd::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("markdown export").value;
+        let payload = export::md::v_commonmark::any::SequenceIntoMd::serialize(&snapshot, &semio_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("markdown export").value;
         let IoPayload::Binary(bytes) = &payload else { panic!("binary markdown snapshot") };
         let md = <MdSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).expect("markdown snapshot codec");
         let [MdBlock::CodeBlock { info: Some(info), literal }] = md.blocks.as_slice() else { panic!("one JSON code block") };
@@ -26,7 +26,7 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
         assert_eq!(oracle(literal), oracle(&row["fixture"].to_string()));
         let restored = neural_engine::ColdOwner::new(import::md::v_commonmark::any::MdIntoSequence::deserialize(&payload).await.expect("markdown import").value);
         assert_eq!(neural_engine::ColdOwner::new(restored.to_host_snapshot()), neural_engine::ColdOwner::new(snapshot.to_host_snapshot()));
-        let csv_payload = export::csv::v_rfc4180::any::SequenceIntoCsv::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("csv export").value;
+        let csv_payload = export::csv::v_rfc4180::any::SequenceIntoCsv::serialize(&snapshot, &semio_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("csv export").value;
         let IoPayload::Binary(bytes) = &csv_payload else { panic!("binary csv snapshot") };
         let csv = <CsvSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).expect("csv snapshot codec");
         assert!(csv.has_header, "raw CSV carrier decoding applies its default header metadata");
@@ -50,7 +50,7 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
 async fn artifact_io_descriptors_match_the_neutral_fixture() {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-    use semio_framework_os_kernel::io::io_mechanism::{io_entries, io_register, io_route};
+    use semio_os_kernel::io::io_mechanism::{io_entries, io_register, io_route};
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::IoEntryDescriptor,semio_framework::io_schema::IoRoute};
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/🧪️tests/🧫️fixtures/📇️descriptor-parity.json")).expect("neutral descriptors");
     let declaration = crate::standards::v1::subsets::any::io::io();
@@ -81,8 +81,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native_snapshot() {
-    use semio_framework_os_kernel::io::io_mechanism::{io_register, io_route};
-    use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
+    use semio_os_kernel::io::io_mechanism::{io_register, io_route};
+    use semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
     use semio_framework_test_original_snapshot_owners::io_run;
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::CARRIER_TEXT};
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/🧪️tests/🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral native snapshots");
@@ -94,7 +94,7 @@ async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native
         let payload = crate::standards::v1::subsets::any::io::snapshot_pack(&snapshot);
         assert_eq!(payload, <SequenceSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot));
         let effect = crate::editor::sequence::editor_vocabulary::reset_sequence_document_effect(&snapshot);
-        let semio_framework_plugin::Effect::LoadDocument { pack: effect_pack, spr } = effect else { panic!("load effect") };
+        let semio_plugin::Effect::LoadDocument { pack: effect_pack, spr } = effect else { panic!("load effect") };
         assert_eq!(effect_pack, payload);
         assert!(!spr.is_empty());
         let export = io_route(&native, &text, 1).await.expect("text export route").value;

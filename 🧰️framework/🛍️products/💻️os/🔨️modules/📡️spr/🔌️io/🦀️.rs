@@ -14,7 +14,7 @@ mod native {
     use std::collections::HashMap;
     use std::path::{Path, PathBuf};
 
-    use semio_framework_os_pack::{CodecId};
+    use semio_os_pack::{CodecId};
 use semio_framework_pack_source::{PackSource};
     use crate::format::{parse_commit_payload, read_header, recover as recover_records, Blake3Hasher, FrameCursor, RecoveryMode, SprWriter, VerificationLevel, WriteOptions, COMMIT_FRAME_LEN, HEADER_SIZE};
     use crate::history::{decode_history, encode_composition, encode_conflicts, encode_doc, encode_edit, encode_transition, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
@@ -34,8 +34,8 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
     /// 📖️ Re-derives a `ResumeState` from whatever `path` currently contains: runs
     /// `crate::format::recover` (`RecoveryMode::LastCommit`), then reads back either the
     /// header-only `chain_0` (no commit yet) or the trusted tail's `REC_COMMIT` payload.
-    async fn resume_state_for(path: &Path, limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<ResumeState, ProtocolError> {
-        let source = semio_framework_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
+    async fn resume_state_for(path: &Path, limits: &ProtocolLimits, context: &semio_os_pack_tools::control::CommandContext) -> Result<ResumeState, ProtocolError> {
+        let source = semio_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
         let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
         if recovery.last_commit_seq == 0 {
             let mut header_bytes = [0u8; HEADER_SIZE];
@@ -54,19 +54,19 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
     /// pure inspection handle (`open_read_only`, `appender` unset). One struct for both so
     /// `resume_state()` reports uniformly regardless of how the handle was opened.
     pub struct HistoryFile {
-        appender: Option<HistoryAppender<semio_framework_os_pack::io::FilePackSink>>,
+        appender: Option<HistoryAppender<semio_os_pack::io::FilePackSink>>,
         resume: ResumeState,
-        context: semio_framework_os_pack_tools::control::CommandContext,
+        context: semio_os_pack_tools::control::CommandContext,
     }
 
     impl HistoryFile {
         /// 🆕️ Creates `path` fresh (truncating any existing file) and writes the header plus
         /// the `REC_DOC` record. No commit has happened yet — `resume_state().last_commit_seq == 0`
         /// until the caller's first `appender().commit().await`.
-        pub async fn create(path: &Path, doc_id: &str, schema: &str, options: &WriteOptions, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
-            let sink = semio_framework_os_pack::io::FilePackSink::create(path, context.transport().clone())?;
+        pub async fn create(path: &Path, doc_id: &str, schema: &str, options: &WriteOptions, context: &semio_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
+            let sink = semio_os_pack::io::FilePackSink::create(path, context.transport().clone())?;
             let appender = HistoryAppender::begin(sink, doc_id, schema, options).await?;
-            let source = semio_framework_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
+            let source = semio_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
             let mut header_bytes = [0u8; HEADER_SIZE];
             source.read_exact_at(0, &mut header_bytes).await?;
             let resume = ResumeState { end_offset: source.len().await, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes) };
@@ -97,18 +97,18 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         /// fully preserved; only acceleration/snapshot data is lost, which the wider system already
         /// tolerates gracefully (`crate::materialize::resolve_plan` falls back to full replay from
         /// genesis when a snapshot is missing/corrupt).
-        pub async fn open_append(path: &Path, limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
-            let source = semio_framework_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
+        pub async fn open_append(path: &Path, limits: &ProtocolLimits, context: &semio_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
+            let source = semio_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
             let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
             let header = read_header(&source).await?;
-            let trusted = semio_framework_os_pack_tools::control::read_command_source(&source,recovery.bytes_recovered,limits.max_file_len,context).await?;
+            let trusted = semio_os_pack_tools::control::read_command_source(&source,recovery.bytes_recovered,limits.max_file_len,context).await?;
             drop(source);
 
             let decode_options = DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
             let log = decode_history(&trusted, &decode_options).await?;
 
             let write_options = WriteOptions { required_flags: header.required_flags, optional_flags: header.optional_flags };
-            let sink = semio_framework_os_pack::io::FilePackSink::create(path, context.transport().clone())?;
+            let sink = semio_os_pack::io::FilePackSink::create(path, context.transport().clone())?;
             let mut appender = HistoryAppender::begin(sink, &log.doc_id, &log.schema, &write_options).await?;
             for edit in &log.edits {
                 appender.append_edit(edit).await?;
@@ -134,7 +134,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         /// 👓️ Opens an existing `.spr` file purely for inspection: computes `resume_state()`
         /// via `crate::format::recover` without writing a single byte to `path`. `appender()` must
         /// never be called on a handle opened this way (see its doc).
-        pub async fn open_read_only(path: &Path, limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
+        pub async fn open_read_only(path: &Path, limits: &ProtocolLimits, context: &semio_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
             let resume = resume_state_for(path, limits, context).await?;
             Ok(Self { appender: None, resume, context: context.clone() })
         }
@@ -144,7 +144,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         }
 
         /// 🪪️ The caller-owned transport context every native operation of this handle is admitted under.
-        pub fn transport_context(&self) -> &semio_framework_os_pack_tools::control::CommandContext {
+        pub fn transport_context(&self) -> &semio_os_pack_tools::control::CommandContext {
             &self.context
         }
 
@@ -152,7 +152,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         /// that constructor never builds a write path (see its doc); this mirrors the frozen
         /// contract's non-`Option` return type while keeping "read only" an honest guarantee (never
         /// touching the file) rather than a polite suggestion.
-        pub async fn appender(&mut self) -> &mut HistoryAppender<semio_framework_os_pack::io::FilePackSink> {
+        pub async fn appender(&mut self) -> &mut HistoryAppender<semio_os_pack::io::FilePackSink> {
             self.appender.as_mut().expect("HistoryFile::appender: this handle was opened via open_read_only and never built a write path")
         }
     }
@@ -172,19 +172,19 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
 
     /// 💾️ Writes a complete `.spk` pack file as a sidecar, atomically (`crate::os_pack::io::write_atomic`
     /// — temp file + fsync + rename, so a reader never observes a torn sidecar).
-    pub async fn write_sidecar(protocol_path: &Path, body_hash: &[u8; 32], pack_bytes: &[u8], context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<(), ProtocolError> {
-        semio_framework_os_pack::io::write_atomic(&sidecar_path(protocol_path, body_hash).await, pack_bytes, context.transport())?;
+    pub async fn write_sidecar(protocol_path: &Path, body_hash: &[u8; 32], pack_bytes: &[u8], context: &semio_os_pack_tools::control::CommandContext) -> Result<(), ProtocolError> {
+        semio_os_pack::io::write_atomic(&sidecar_path(protocol_path, body_hash).await, pack_bytes, context.transport())?;
         Ok(())
     }
 
-    pub async fn read_sidecar(protocol_path: &Path, body_hash: &[u8; 32], limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<semio_framework_os_pack_tools::control::CommandBytes, ProtocolError> {
-        semio_framework_os_pack_tools::control::read_command_file(&sidecar_path(protocol_path, body_hash).await, limits.max_file_len, context).await.map_err(ProtocolError::from)
+    pub async fn read_sidecar(protocol_path: &Path, body_hash: &[u8; 32], limits: &ProtocolLimits, context: &semio_os_pack_tools::control::CommandContext) -> Result<semio_os_pack_tools::control::CommandBytes, ProtocolError> {
+        semio_os_pack_tools::control::read_command_file(&sidecar_path(protocol_path, body_hash).await, limits.max_file_len, context).await.map_err(ProtocolError::from)
     }
     //#endregion 🔖️Sidecar
 
     //#region 🔖️Recover
-    pub async fn recover_file(path: &Path, limits: &ProtocolLimits, mode: RecoveryMode, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<crate::format::RecoveryReport, ProtocolError> {
-        let source = semio_framework_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
+    pub async fn recover_file(path: &Path, limits: &ProtocolLimits, mode: RecoveryMode, context: &semio_os_pack_tools::control::CommandContext) -> Result<crate::format::RecoveryReport, ProtocolError> {
+        let source = semio_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
         recover_records(&source, limits, mode).await
     }
     //#endregion 🔖️Recover
@@ -201,16 +201,16 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         /// its exact off-by-one semantics unspecified.
         next_edit_ordinal: u64,
         limits: ProtocolLimits,
-        context: semio_framework_os_pack_tools::control::CommandContext,
+        context: semio_os_pack_tools::control::CommandContext,
     }
 
     impl TailFollower {
         /// 🪪️ Retains caller transport and input credit for every later poll.
-        pub fn transport_context(&self)->&semio_framework_os_pack_tools::control::CommandContext{&self.context}
+        pub fn transport_context(&self)->&semio_os_pack_tools::control::CommandContext{&self.context}
         /// 📖️ Validates `path` looks like a real `.spr` file (header check) up front, so a
         /// bad path fails fast at `open` rather than on the first `poll`.
-        pub async fn open(path: &Path, from_edit_ordinal: u64, limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
-            let source = semio_framework_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
+        pub async fn open(path: &Path, from_edit_ordinal: u64, limits: &ProtocolLimits, context: &semio_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
+            let source = semio_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
             read_header(&source).await?;
             Ok(Self { path: path.to_path_buf(), next_edit_ordinal: from_edit_ordinal, limits: limits.clone(), context: context.clone() })
         }
@@ -225,7 +225,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         /// reachable through this crate family's public API; re-scanning from the start on every
         /// poll is the only option, not merely the simplest one.
         pub async fn poll(&mut self) -> Result<Vec<HistoryEdit>, ProtocolError> {
-            let bytes = semio_framework_os_pack_tools::control::read_command_file(&self.path, self.limits.max_file_len, &self.context).await?;
+            let bytes = semio_os_pack_tools::control::read_command_file(&self.path, self.limits.max_file_len, &self.context).await?;
             let reader = HistoryReader::open(&bytes, &DecodeOptions{verification:VerificationLevel::Standard,limits:self.limits.clone()}).await?;
             let mut out = Vec::new();
             for edit in reader.edits().await.skip(self.next_edit_ordinal as usize) {
@@ -258,7 +258,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
     /// the family): `format: u8 (=1), drop_ephemeral: u8 (0/1), keep_snapshots_tag: u8
     /// (0=All, 1=LatestPerAlternative, 2=LatestN), [latest_n: varint u64 iff tag==2]`.
     async fn encode_compaction_payload(options: &CompactOptions) -> Vec<u8> {
-        let mut out = semio_framework_os_pack::ByteWriter::new();
+        let mut out = semio_os_pack::ByteWriter::new();
         out.write_u8(1);
         out.write_u8(options.drop_ephemeral as u8);
         match options.keep_snapshots {
@@ -281,7 +281,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         let len = dict.len();
         if len > *base {
             let entries = dict.entries_since(*base);
-            let mut payload = semio_framework_os_pack::ByteWriter::new();
+            let mut payload = semio_os_pack::ByteWriter::new();
             payload.write_u8(1);
             payload.write_varint_u64(*base as u64);
             payload.write_varint_u64(entries.len() as u64);
@@ -306,11 +306,11 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
     /// `REC_INDEX`/`REC_SEALED`/`REC_EPHEMERAL` slot to filter in the first place (see
     /// `HistoryFile::open_append`'s doc for the same crate-boundary caveat — this crate has no
     /// `protocol_materialize` dependency to interpret snapshot bodies with).
-    pub async fn compact(path: &Path, options: &CompactOptions, limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<(), ProtocolError> {
-        let source = semio_framework_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
+    pub async fn compact(path: &Path, options: &CompactOptions, limits: &ProtocolLimits, context: &semio_os_pack_tools::control::CommandContext) -> Result<(), ProtocolError> {
+        let source = semio_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
         let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
         let header = read_header(&source).await?;
-        let trusted = semio_framework_os_pack_tools::control::read_command_source(&source,recovery.bytes_recovered,limits.max_file_len,context).await?;
+        let trusted = semio_os_pack_tools::control::read_command_source(&source,recovery.bytes_recovered,limits.max_file_len,context).await?;
         drop(source);
 
         let decode_options = DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
@@ -351,7 +351,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         }
 
         writer.commit().await?;
-        semio_framework_os_pack::io::write_atomic(path, &writer.into_sink().await, context.transport())?;
+        semio_os_pack::io::write_atomic(path, &writer.into_sink().await, context.transport())?;
         Ok(())
     }
     //#endregion 🔖️Compact

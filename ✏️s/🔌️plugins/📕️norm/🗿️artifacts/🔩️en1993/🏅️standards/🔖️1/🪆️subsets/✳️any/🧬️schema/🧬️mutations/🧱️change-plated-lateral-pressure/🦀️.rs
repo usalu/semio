@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedLateralPress
         record: "ChangedPlatedLateralPressure",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Uniform lateral pressure p on the panel (EN 1993-1-7, perpendicular to the plate) of the plated panel", "Plattenfeld: Gleichmäßiger Querdruck p auf das Blech (EN 1993-1-7, senkrecht zur Blechebene) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Uniform lateral pressure p on the panel (EN 1993-1-7, perpendicular to the plate) of the plated panel", "Plattenfeld: Gleichmäßiger Querdruck p auf das Blech (EN 1993-1-7, senkrecht zur Blechebene) ändern")
     }
 }
 

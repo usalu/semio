@@ -1,12 +1,12 @@
 //! ✏️ Xml editor — the `edit` mode: a single full-pane Tree window over the whole `XmlDocument`.
 
 use crate::editor::xml_any::modes::edit::windows::main;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
-use semio_framework_plugin::WindowLayoutRoot;
-use semio_framework_plugin::WindowLayoutStackNode;
-use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
+use semio_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutStackNode;
+use semio_plugin::WindowLayoutWindowNode;
 
 pub const XML_EDIT_MODE_ID: &str = "edit";
 
@@ -62,7 +62,7 @@ pub mod artifact_items_7 {
 use crate::{native_codecs};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)

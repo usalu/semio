@@ -21,7 +21,7 @@
     "composition": "semio-framework-schema-composition",
     "state": "semio-framework-schema-state",
     "registry": "semio-framework-schema-registry",
-    "forbidden": "semio-framework-os-kernel"
+    "forbidden": "semio-os-kernel"
   },
   "compositionTypes": [
     "ArtifactCompositionFields",

@@ -6,13 +6,13 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit;
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::ViewModel;
 use crate::editor::bim::BimModelApp;
 use semio_s_artifact_bim_model_gestures::editor::bim::gestures::ToolSession;
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{GestureKey, Modifiers, Pointer, Step, Surface, ToolContext, ToolEvent};
@@ -213,16 +213,16 @@ impl Rig {
 pub mod context {
     use crate::editor::bim::*;
     use crate::editor::bim::{BimCommand, BimModelApp};
-    use semio_framework_plugin::app::EditorApp;
-    use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::app::EditorApp;
+    use semio_plugin::app::TypedOperationResultLane;
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_plugin::{Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
     /// 🧪️ The registered, MOUNTED fixture app every editor test drives, bound to [`BIM_TEST_INSTANCE`] so typed commands reach their retained routes and retired through the framework's
     /// exact close loop when it goes out of scope.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the paid app close.
-    pub struct BimApp(pub VcsArtifactApp<EditorApp<BimModelApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct BimApp(pub VcsArtifactApp<EditorApp<BimModelApp>>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for BimApp {
         type Target = VcsArtifactApp<EditorApp<BimModelApp>>;
@@ -240,33 +240,33 @@ pub mod context {
     impl Drop for BimApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
 
     pub const BIM_TEST_INSTANCE: u32 = 1;
 
-    pub fn bim_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_bim_app(), examples: Vec::new() }
+    pub fn bim_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_bim_app(), examples: Vec::new() }
     }
 
     pub async fn bim_app() -> BimApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<BimModelApp>>(bim_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<EditorApp<BimModelApp>>(bim_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(BIM_TEST_INSTANCE).await;
         BimApp(app, scope)
     }
 
     /// 🔁️ Dispatches `command` as the host does (no window addressed), drives its retained publication home and applies any `LoadDocument` effect.
     pub async fn dispatch(app: &mut BimApp, command: BimCommand) -> Dispatched {
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
+                semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         Dispatched { result, lanes: settled.lanes }
@@ -274,9 +274,9 @@ pub mod context {
 
     /// 🪟️ Dispatches `command` addressed at the window instance `view` names, as the shell does for a window-scoped action.
     pub async fn dispatch_in(app: &mut BimApp, command: BimCommand, view: &ViewModel) -> Dispatched {
-        let action_meta = semio_framework_plugin::ActionMeta { instance_id: BIM_TEST_INSTANCE, view_state: Some(view.clone()), ..meta("local") };
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+        let action_meta = semio_plugin::ActionMeta { instance_id: BIM_TEST_INSTANCE, view_state: Some(view.clone()), ..meta("local") };
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         Dispatched { result, lanes: settled.lanes }
     }
@@ -303,28 +303,28 @@ pub mod context {
     }
 
     pub async fn history_verb(app: &mut BimApp, verb: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, BIM_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
-    pub fn view(locale: semio_framework_ui_locale::Locale, windows: &[(&str, &str)], addressed: Option<&str>) -> ViewModel {
+    pub fn view(locale: semio_ui_locale::Locale, windows: &[(&str, &str)], addressed: Option<&str>) -> ViewModel {
         ViewModel {
             window_id: addressed.map(str::to_string),
             window_instances: windows.iter().map(|(id, kind)| ViewWindowInstance { id: (*id).into(), window_kind_id: (*kind).into() }).collect(),
-            ..ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(locale, semio_ui_locale::Terminology::Native)
         }
     }
 
     pub async fn render_text(app: &mut BimApp, body_key: &str, view: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view, app.1.cx()).await.expect("project and retire semantic tree")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view, app.1.cx()).await.expect("project and retire semantic tree")
     }
 
-    pub async fn canvas_scene(app: &mut BimApp, body_key: &str, view: &ViewModel) -> semio_framework_plugin::Canvas2dScene {
+    pub async fn canvas_scene(app: &mut BimApp, body_key: &str, view: &ViewModel) -> semio_plugin::Canvas2dScene {
         let json = render_text(app, body_key, view).await;
-        semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("assembled canvas scene")
+        semio_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("assembled canvas scene")
     }
 
-    pub async fn world_scene(app: &mut BimApp, view: &ViewModel) -> semio_framework_plugin::World3dScene {
-        semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::BODY_KEY, view, app.1.cx(), |root| semio_framework_plugin::artifact_app_laws::built_surface_scene(root)).await.expect("render world").expect("assembled 3D scene")
+    pub async fn world_scene(app: &mut BimApp, view: &ViewModel) -> semio_plugin::World3dScene {
+        semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::BODY_KEY, view, app.1.cx(), |root| semio_plugin::artifact_app_laws::built_surface_scene(root)).await.expect("render world").expect("assembled 3D scene")
     }
 }
 
@@ -332,27 +332,27 @@ pub mod context {
 pub mod support {
     use crate::editor::bim::*;
     use crate::editor::bim::BimModelApp;
-    use semio_framework_plugin::ArtifactView;
+    use semio_plugin::ArtifactView;
     use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
-    use semio_framework_plugin::ConfigView;
-    use semio_framework_plugin::Emit;
+    use semio_plugin::ConfigView;
+    use semio_plugin::Emit;
     use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
     use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-    use semio_framework_plugin::NoConfig;
-    use semio_framework_plugin::NoConfigMutation;
-    use semio_framework_plugin::ViewModel;
-    use semio_framework_plugin::HistoryView;
+    use semio_plugin::NoConfig;
+    use semio_plugin::NoConfigMutation;
+    use semio_plugin::ViewModel;
+    use semio_plugin::HistoryView;
 
     pub fn demo() -> ModelSnapshot {
         BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births")
     }
 
     pub fn english() -> ViewModel {
-        ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 
     pub fn german() -> ViewModel {
-        ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native)
+        ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native)
     }
 
     pub fn ctx(selected: &[&str]) -> BimDispatchCtx {

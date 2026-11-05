@@ -82,7 +82,7 @@ async fn world_relocate_on_nakagin_admits_and_completes() {
 /// `Mutation`, never the `View` the 2026-09-10 checklist reverification claimed.
 #[semio_framework_async_macros::async_test]
 async fn world_relocate_moves_an_unlocked_object_and_refuses_a_locked_one_with_one_notice() {
-    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+    let notices = |result: &semio_plugin::InvocationResult| -> Vec<String> {
         result.requested_effects.iter().filter_map(|effect| match effect {
             Effect::Notify { message } => Some(message.clone()),
             _ => None,
@@ -297,7 +297,7 @@ async fn import_snapshot_of_a_distinct_two_object_json_against_a_one_object_live
 /// law asserts the absence of a refusal as well as the presence of the edit.
 #[semio_framework_async_macros::async_test]
 async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_identity() {
-    let exported = |result: &semio_framework_plugin::InvocationResult| -> String {
+    let exported = |result: &semio_plugin::InvocationResult| -> String {
         result
             .requested_effects
             .iter()
@@ -307,7 +307,7 @@ async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_i
             })
             .expect("exportSnapshot emits one DownloadMediaExport")
     };
-    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+    let notices = |result: &semio_plugin::InvocationResult| -> Vec<String> {
         result
             .requested_effects
             .iter()
@@ -540,7 +540,7 @@ fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() 
     use crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_segmented;
     use crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_segmented_budget_bytes;
     use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
-    use semio_framework_plugin::app::ArtifactOutputChunks;
+    use semio_plugin::app::ArtifactOutputChunks;
     let budget = puzzle3d_export_segmented_budget_bytes().expect("the declared output budget is within the framework cap");
     assert_eq!(budget, PUZZLE_COMMAND_OUTPUT_BYTES, "the segmented budget IS this command's declared contract output budget");
     assert!(budget <= ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES, "no app may declare a download larger than the wire admits");

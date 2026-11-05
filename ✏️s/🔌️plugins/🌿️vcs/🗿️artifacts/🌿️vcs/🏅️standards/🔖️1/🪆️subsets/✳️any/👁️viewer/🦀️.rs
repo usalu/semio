@@ -7,22 +7,22 @@
 use crate::viewer::vcs::modes::view;
 use crate::viewer::vcs::modes::view::windows::history;
 use crate::{VcsSnapshot, VCS_DIALECT, VCS_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::ArtifactView;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::UiAssemblyResult;
 // 🚧️ SDK GAP: `InteractionView` is only reachable through `app`, not yet in the crate-root
 // re-export list (same gap the sibling editor surface's own note documents).
-use semio_framework_plugin::app::InteractionView;
-use {semio_framework_plugin::ArtifactViewer,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer};
+use semio_plugin::app::InteractionView;
+use {semio_plugin::ArtifactViewer,semio_framework_artifact_reference::Dialect,semio_plugin::ViewEmit,semio_plugin::Viewer};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -65,7 +65,7 @@ impl ArtifactViewer for VcsViewer {
     const DIALECT: Dialect = VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<VcsSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<VcsSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::v1::subsets::any::schema::empty_vcs_snapshot())
     })}
 
@@ -78,23 +78,23 @@ impl ArtifactViewer for VcsViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            history::BODY_KEY => history::render(doc.snapshot, doc.history).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            history::BODY_KEY => history::render(doc.snapshot, doc.history).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_vcs_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_vcs_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(VCS_DIALECT).document(["semio", "vcs"]).icon_id("git-branch").mode_def(view::definition()).default_mode_id(view::VCS_VIEW_MODE_VIEW).window_kind_def(history::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
@@ -109,7 +109,7 @@ mod tests;
 pub mod artifact_items_5 {
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait VcsApplication:
-    semio_framework_plugin::PluginApp + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::vcs::VcsPlayApp>>> + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::vcs::VcsViewer>>>
+    semio_plugin::PluginApp + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::vcs::VcsPlayApp>>> + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::vcs::VcsViewer>>>
 {
 }
 }

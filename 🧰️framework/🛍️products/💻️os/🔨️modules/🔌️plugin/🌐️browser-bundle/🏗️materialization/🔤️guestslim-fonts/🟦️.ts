@@ -3,7 +3,7 @@ import { copyFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { GUESTSLIM_FONT_RELATIVE } from "../🧾️contract/🟦️.ts";
 
-/** 🔤️ The staged typst font seed `semio-framework-os-infinite:fonts` publishes — the one source of the
+/** 🔤️ The staged typst font seed `semio-os-infinite:fonts` publishes — the one source of the
  * `🪞️vendor` font asset every plugin-module root (dev and release) serves. */
 export function guestSlimTypstFontSeed(repoRoot: string): string {
   return join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "♾️infinite", "📦️packages", "🦀️rust", "dist", "fonts", "🔤️guestslim-typst-fonts.bin");

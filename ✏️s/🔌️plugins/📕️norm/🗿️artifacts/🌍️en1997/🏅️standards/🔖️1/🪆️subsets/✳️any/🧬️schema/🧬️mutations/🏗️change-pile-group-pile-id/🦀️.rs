@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileGroupPileId wh
         record: "ChangedPileGroupPileId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pile id of the pile group", "Pfahlgruppe: Pfahl-ID ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pile id of the pile group", "Pfahlgruppe: Pfahl-ID ändern")
     }
 }
 

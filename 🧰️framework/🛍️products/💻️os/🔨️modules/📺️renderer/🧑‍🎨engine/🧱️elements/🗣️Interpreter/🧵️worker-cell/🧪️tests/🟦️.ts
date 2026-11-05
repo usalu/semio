@@ -50,20 +50,20 @@ test("actual Rust worker source requires owned factories and explicit locale adm
   expect(source.includes("initialize: fn() -> T")).toBe(true);
   expect(source.includes("get_or_init(|| Mutex::new((self.initialize)()))")).toBe(true);
   expect(source.includes("test_worker_cell::<T>(std::ptr::from_ref(self).addr(), self.initialize)")).toBe(true);
-  expect(source).toMatch(/UiEngineCell\((?:pub\([a-z]+\) |pub )?WorkerCell<Option<semio_framework_ui_wgpu_engine::Ui>>\)/);
-  expect(source.match(/fn initial_ui_engine\(\)[\s\S]*?\n}/)?.[0]).toMatch(/#\[cfg\(any\(test, feature = "testkit"\)\)\]\s+return Some\(semio_framework_ui_wgpu_engine::Ui::new\(TEST_UI_ENGINE_LOCALE\)\);\s+#\[cfg\(not\(any\(test, feature = "testkit"\)\)\)\]\s+None/);
+  expect(source).toMatch(/UiEngineCell\((?:pub\([a-z]+\) |pub )?WorkerCell<Option<semio_ui_wgpu_engine::Ui>>\)/);
+  expect(source.match(/fn initial_ui_engine\(\)[\s\S]*?\n}/)?.[0]).toMatch(/#\[cfg\(any\(test, feature = "testkit"\)\)\]\s+return Some\(semio_ui_wgpu_engine::Ui::new\(TEST_UI_ENGINE_LOCALE\)\);\s+#\[cfg\(not\(any\(test, feature = "testkit"\)\)\)\]\s+None/);
   expect(source.includes("self.0.as_ref().expect(UI_ENGINE_LOCALE_UNRESOLVED)")).toBe(true);
   expect(source.includes("self.0.as_mut().expect(UI_ENGINE_LOCALE_UNRESOLVED)")).toBe(true);
   const admission = source.match(/pub fn install_ui_engine_locale\([^)]*\)[\s\S]*?\n}/)?.[0];
   expect(admission).toMatch(/Some\(ui\) => ui.set_locale\(locale\),/);
-  expect(admission).toMatch(/None => \*engine = Some\(semio_framework_ui_wgpu_engine::Ui::new\(locale\)\),/);
+  expect(admission).toMatch(/None => \*engine = Some\(semio_ui_wgpu_engine::Ui::new\(locale\)\),/);
   expect(readFileSync(resolve(import.meta.dir, "../../../../🎯️targets/🧊️wgpu/🧿️ui-engine-tests/🦀️.rs"), "utf8").includes('#[path = "../../../🧱️elements/🗣️Interpreter/🧵️worker-cell/🧪️tests/🦀️.rs"]')).toBe(true);
 });
 
 test("actual Shell and Ui locale updates retain the existing engine and Scenes cell contract", () => {
   const shell = readSourceFamilySource(resolve(import.meta.dir, "../../../🐚️Shell"));
-  expect(shell).toMatch(/pub fn new\(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String, locale: Locale, terminology: Terminology\) -> Self \{\s+semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale\(locale\);/);
-  expect(shell.match(/semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale\((?:self\.prefs\.|prefs\.|self\.)active_locale\(\)\);/g)?.length).toBe(3);
+  expect(shell).toMatch(/pub fn new\(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String, locale: Locale, terminology: Terminology\) -> Self \{\s+semio_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale\(locale\);/);
+  expect(shell.match(/semio_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale\((?:self\.prefs\.|prefs\.|self\.)active_locale\(\)\);/g)?.length).toBe(3);
   const engine = readModuleTreeSource(resolve(import.meta.dir, "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs"));
   expect(engine.match(/pub fn set_locale\([^)]*\)[\s\S]*?\n    }/)?.[0]).toMatch(/\{\s+self.shell.set_locale\(locale\);\s+}/);
   const scenes = readModuleTreeSource(resolve(import.meta.dir, "../../../🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs"));

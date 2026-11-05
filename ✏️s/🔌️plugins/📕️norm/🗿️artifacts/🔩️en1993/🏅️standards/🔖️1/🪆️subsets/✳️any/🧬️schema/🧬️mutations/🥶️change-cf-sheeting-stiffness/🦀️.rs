@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfSheetingStiffnes
         record: "ChangedCfSheetingStiffness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Sheeting rotational stiffness C_D,C of the cold-formed member", "Kaltprofil: Drehbettung Trapezblech C_D,C ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Sheeting rotational stiffness C_D,C of the cold-formed member", "Kaltprofil: Drehbettung Trapezblech C_D,C ändern")
     }
 }
 

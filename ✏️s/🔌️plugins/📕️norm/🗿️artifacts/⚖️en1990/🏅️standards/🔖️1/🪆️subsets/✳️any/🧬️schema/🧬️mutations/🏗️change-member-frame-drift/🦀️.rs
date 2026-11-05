@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberFrameDrift w
         record: "ChangedMemberFrameDrift",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change horizontal frame drift u of the member", "Bauteil: Horizontale Rahmenverschiebung u ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change horizontal frame drift u of the member", "Bauteil: Horizontale Rahmenverschiebung u ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

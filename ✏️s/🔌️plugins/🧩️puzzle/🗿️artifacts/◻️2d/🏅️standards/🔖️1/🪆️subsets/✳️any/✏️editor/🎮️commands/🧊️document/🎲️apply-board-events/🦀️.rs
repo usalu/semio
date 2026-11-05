@@ -257,7 +257,7 @@ fn fold_brush_candidates(runtime: &mut Puzzle2dPlayRuntime, payload: &Value) {
 
 /// 🕹️ The LAST `select` row of a batch is the engine's whole selection set (`ids`, replace semantics),
 /// so it becomes one framework selection write — later rows supersede earlier ones inside a batch.
-fn board_selection_write(events: &[Value], snapshot: &Value) -> Option<semio_framework_plugin::InteractionWrite> {
+fn board_selection_write(events: &[Value], snapshot: &Value) -> Option<semio_plugin::InteractionWrite> {
     let ids: Vec<String> = events
         .iter()
         .rev()

@@ -718,7 +718,7 @@ pub mod extension_guest {
     use super::{extension_manifest_json, module_registry};
     use flow_extension_sdk::{flow_extension_topic_contribution};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
-    use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
+    use semio_plugin::{ExecutionMode, ExtensionBundle};
 
     const FLOW_APP_ID: &str = "flow-play";
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
@@ -728,7 +728,7 @@ pub mod extension_guest {
     // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
     // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
     // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's
-    // path_scope); bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request.
+    // path_scope); bridged via `semio_os_kernel::io::resolve_ready` — see this packet's lease-request.
     // See R9.
     pub fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();

@@ -11,7 +11,7 @@ use crate::editor::flow::commands::{add_widget, connect_media_ports, delete_sele
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::{compiled, main};
 #[allow(unused_imports)]
@@ -43,81 +43,81 @@ use semio_framework_artifact_flow_flow::{CameraJson, Widget};
 #[allow(unused_imports)]
 use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
+use semio_os_infinite_directed_presentation::DagDrawLod;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
+use semio_plugin::app::{ChildEmitPreparation, InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppActionRegistry;
+use semio_plugin::AppActionRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppDefinition;
+use semio_plugin::AppDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::CommandDefinition;
+use semio_plugin::CommandDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuRequest;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use serde_json::json;
 #[allow(unused_imports)]
@@ -148,7 +148,7 @@ fn command(row: &Value) -> FlowCommand {
         "openSpotlight" => FlowCommand::OpenSpotlight(open_spotlight::OpenSpotlight {}),
         "replaceImage" => FlowCommand::ReplaceImage(replace_image::ReplaceImage { id: text(&fields[0]) }),
         "flowEvalTick" => FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: text(&fields[0]), window_kind_id: text(&fields[1]) }),
-        "flowEvalResolve" => FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: text(&fields[0]), node_hash: fields[1]["value"].as_str().unwrap().parse().unwrap(), output_json: fields.as_array().unwrap().get(2).map(text) }),
+        "flowEvalResolve" => FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: text(&fields[0]), node_hash: fields[1]["value"].as_str().unwrap().parse().unwrap(), output:fields.as_array().unwrap().get(2).map(|field|semio_framework_pack_json::from_json_str(&text(field),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) }),
         _ => unreachable!(),
     }
 }
@@ -192,7 +192,7 @@ fn close(mut cursor: ScalarRecordWireWitness<FlowCommand>, root: &Arc<FlowComman
 
 //#region 🧪️Laws
 #[test]
-fn host_wire_witness_matches_real_opbinary_for_all_six_routes() {
+fn host_wire_witness_matches_real_opbinary_for_all_scalar_routes() {
     let fixture: Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/📡️host-wire/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let root = Arc::new(command(row));
@@ -223,3 +223,11 @@ fn host_wire_witness_matches_real_opbinary_for_all_six_routes() {
     }
 }
 //#endregion 🧪️Laws
+
+#[test]
+fn native_resolve_opbinary_preserves_its_native_output_and_lossless_address(){
+ let fixture:Value=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/📡️host-wire/🔣️.json")).unwrap();
+ for row in fixture["nativeCases"].as_array().unwrap(){let root=command(row);let bytes=protocol::OpBinary::encode_op(&root).unwrap();assert!(bytes.len()<=row["maximumWireBytes"].as_u64().unwrap()as usize);assert_eq!(bytes[0],1);assert_eq!(bytes[1]as u64,row["ordinal"].as_u64().unwrap());let decoded=<FlowCommand as protocol::OpBinary>::decode_op(&bytes).unwrap();assert_eq!(decoded,root);let FlowCommand::FlowEvalResolve(payload)=decoded else{panic!("native response retains its actual command")};assert_eq!(payload.window_id,"flow-main");assert_eq!(payload.node_hash,u64::MAX);assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(payload.output.as_ref().unwrap())).unwrap(),row["nativeOutput"]);
+ let mut trailing=bytes.clone();trailing.push(0);for invalid in [trailing,bytes[..bytes.len()-1].to_vec(),br#"[\"flowEvalResolve\",{}]"#.to_vec()]{assert!(<FlowCommand as protocol::OpBinary>::decode_op(&invalid).map_or(true,|other|other!=root));}
+ }
+}

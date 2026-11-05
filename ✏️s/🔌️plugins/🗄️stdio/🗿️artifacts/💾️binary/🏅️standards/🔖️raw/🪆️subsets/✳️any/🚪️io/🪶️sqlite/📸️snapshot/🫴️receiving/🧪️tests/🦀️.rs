@@ -1,7 +1,7 @@
 //! 🧪️ Closed original Binary receiving laws with physical allocator observations.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{bind,Carrier};
-use semio_framework_os_kernel::NativeSnapshotBodyWallet;
+use semio_os_kernel::NativeSnapshotBodyWallet;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
@@ -26,7 +26,7 @@ fn binary_original_receiving_shapes_and_independent_authored_body_bounds(){
 
 #[test]
 fn binary_original_receiving_cancellation_retains_fields_and_funded_close(){
- use semio_framework_os_kernel::NativeSnapshotDecodeOwner;
+ use semio_os_kernel::NativeSnapshotDecodeOwner;
  use semio_framework_value::{ValueError, ValueRefusalKind};
  use semio_framework_value_native_owned::{native_decoding::NativeDecodeProgress, native_decoding::NativeDecodeRetirementRecipient};
  let fixture=fixture();let original=&fixture["original"];let full=grant(&original["grant"]);let zero=grant(&original["closeZeroGrant"]);let close=grant(&original["closeFundedGrant"]);let policy=&fixture["cancellation"];let schema=policy["schemaSeed"].as_str().unwrap().repeat(policy["schemaRepeat"].as_u64().unwrap()as usize);let pattern=policy["bytePattern"].as_array().unwrap();let bytes=(0..policy["byteCount"].as_u64().unwrap()as usize).map(|index|pattern[index%pattern.len()].as_u64().unwrap()as u8).collect::<Vec<_>>();
@@ -37,7 +37,7 @@ fn binary_original_receiving_cancellation_retains_fields_and_funded_close(){
 
 #[test]
 fn binary_original_receiving_literal_schema_and_relational_constraints(){
- use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner,sqlite_snapshot::{SqliteSnapshotControl,SqliteValue}};
+ use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner,sqlite_snapshot::{SqliteSnapshotControl,SqliteValue}};
  use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
  use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
  let fixture=fixture();let original=&fixture["original"];let full=grant(&original["grant"]);let maximum=original["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot=super::BinarySnapshot{schema:original["literalSchema"].as_str().unwrap().into(),bytes:fixture["shapeCases"][0]["expected"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect()};let mut callback=|_|true;let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(maximum,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=NativeSnapshotDecodeOwner::new(&mut native,full);let mut sql_callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let database=snapshot.to_sqlite_database_receiving(&mut control,&mut owner).unwrap();drop(owner);while native.has_retirement_owner(){native.close_retirement_recipient(full).unwrap();}
@@ -45,7 +45,7 @@ fn binary_original_receiving_literal_schema_and_relational_constraints(){
 }
 #[test]
 fn binary_original_receiving_native_output_matches_closed_raw_and_hex(){
- use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,NativeSnapshotEncodeOwner,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl}};
+ use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,NativeSnapshotEncodeOwner,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl}};
  use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
  let fixture=fixture();let original=&fixture["original"];let full=grant(&original["grant"]);let maximum=original["nativeMaximumBytes"].as_u64().unwrap()as usize;
  for row in fixture["shapeCases"].as_array().unwrap().iter().filter(|row|row["accepted"]==true){let bytes=row["expected"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>();let snapshot=super::BinarySnapshot{schema:original["canonicalSchema"].as_str().unwrap().into(),bytes};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut callback=|_|true;let mut recipient=NativeEncodeRetirementRecipient::new();let mut native=semio_framework_value::NativeEncodeControl::new(maximum,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=NativeSnapshotEncodeOwner::new(&mut native,full);let mut sql_callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let(result,born,released)=observe(||snapshot.encode_sqlite_snapshot_native(encoding,&mut control,&mut owner));let output=result.unwrap();let progress=owner.progress();drop(owner);match output{store::io_schema::IoPayload::Binary(bytes)=>assert_eq!(bytes,snapshot.bytes),store::io_schema::IoPayload::Text(text)=>{let suffix=snapshot.bytes.iter().map(|byte|format!("{byte:02x}")).collect::<String>();assert_eq!(text,original["canonicalPrefix"].as_str().unwrap().to_owned()+&suffix);}}while native.has_retirement_owner(){native.close_retirement_recipient(full).unwrap();}}}
@@ -53,7 +53,7 @@ fn binary_original_receiving_native_output_matches_closed_raw_and_hex(){
 
 #[test]
 fn binary_original_receiving_output_cancellation_keeps_actual_payload_until_funded_close(){
- use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,NativeSnapshotEncodeOwner,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl}};
+ use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,NativeSnapshotEncodeOwner,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl}};
  use semio_framework_value::{native_encoding::{NativeEncodeProgress,NativeEncodeRetirementRecipient},ValueRefusalKind};
  let fixture=fixture();let original=&fixture["original"];let full=grant(&original["grant"]);let zero=grant(&original["closeZeroGrant"]);let close=grant(&original["closeFundedGrant"]);let policy=&fixture["cancellation"];let pattern=policy["bytePattern"].as_array().unwrap();let bytes=(0..policy["byteCount"].as_u64().unwrap()as usize).map(|index|pattern[index%pattern.len()].as_u64().unwrap()as u8).collect::<Vec<_>>();let snapshot=super::BinarySnapshot{schema:original["canonicalSchema"].as_str().unwrap().into(),bytes};
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{for checkpoint in policy["checkpoints"].as_array().unwrap(){let checkpoint=checkpoint.as_str().unwrap();let total=snapshot.bytes.len();let after=match checkpoint{"first"=>0,"interior"=>total/2,"final"=>total,_=>unreachable!()};let armed=Cell::new(false);let reached=Cell::new(false);let restored=Cell::new(false);let mut callback=|event:NativeEncodeProgress|{if !armed.get(){restored.set(event.completed==17&&event.total==17);return true}let stop=event.total==total&&event.completed>=after;reached.set(reached.get()||stop);!stop};let mut recipient=NativeEncodeRetirementRecipient::new();let mut native=semio_framework_value::NativeEncodeControl::new(original["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();native.begin_stage(17).unwrap();native.advance(17).unwrap();armed.set(true);let mut owner=NativeSnapshotEncodeOwner::new(&mut native,full);let mut sql_callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let(result,born,released)=observe(||snapshot.encode_sqlite_snapshot_native(encoding,&mut control,&mut owner));let progress=owner.progress();drop(owner);assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert!(reached.get());assert_eq!(released,0);assert_eq!(born,progress.retained_capacity_bytes);assert!(native.has_retirement_owner());armed.set(false);native.checkpoint().unwrap();assert!(restored.get());let(_,zero_born,zero_release)=observe(||native.close_retirement_recipient(zero).unwrap());assert_eq!((zero_born,zero_release),(0,0));assert!(native.has_retirement_owner());let mut total_release=0;let mut total_birth=born;while native.has_retirement_owner(){let(step,close_born,close_release)=observe(||native.close_retirement_recipient(close).unwrap());assert_eq!(close_born,step.progress().retained_capacity_bytes);assert_eq!(close_release,step.progress().released_bytes);total_release+=close_release;total_birth+=close_born;}assert_eq!(total_release,total_birth);}}
@@ -61,7 +61,7 @@ fn binary_original_receiving_output_cancellation_keeps_actual_payload_until_fund
 
 #[test]
 fn binary_original_receiving_explicit_subset_policy_preserves_zero_authority(){
- use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl}};
+ use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl}};
  let fixture=fixture();let original=&fixture["original"];let zero=grant(&original["refusalGrant"]);let snapshot=super::BinarySnapshot{schema:original["canonicalSchema"].as_str().unwrap().into(),bytes:Vec::new()};let database=SqliteDatabase{tables:Vec::new()};
  for row in fixture["subsetCases"].as_array().unwrap(){let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.binary".into(),standard:"raw".into(),subset:row["subset"].as_str().unwrap().into()};let mut callback=|_|true;let mut native=NativeDecodeControl::new(0,&mut callback);let mut owner=NativeSnapshotDecodeOwner::new(&mut native,zero);let mut sql_callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let(result,born,released)=observe(||snapshot.validate_sqlite_snapshot_subset_decoding(&dialect,&database,&mut control,&mut owner));assert_eq!((born,released),(0,0));assert_eq!(result.is_ok(),row["accepted"].as_bool().unwrap());assert_eq!(owner.progress(),Default::default());if let Err(error)=result{assert_eq!(error.cause.message,row["cause"].as_str().unwrap());}drop(owner);assert_eq!(native.owned_bytes(),0);let mut callback=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(0,&mut callback);let mut owner=NativeSnapshotEncodeOwner::new(&mut native,zero);let mut sql_callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let(result,born,released)=observe(||snapshot.validate_sqlite_snapshot_subset_encoding(&dialect,&database,&mut control,&mut owner));assert_eq!((born,released),(0,0));assert_eq!(result.is_ok(),row["accepted"].as_bool().unwrap());assert_eq!(owner.progress(),Default::default());if let Err(error)=result{assert_eq!(error.cause.message,row["cause"].as_str().unwrap());}drop(owner);assert_eq!(native.owned_bytes(),0);}
 }
@@ -69,7 +69,7 @@ fn binary_original_receiving_explicit_subset_policy_preserves_zero_authority(){
 
 #[test]
 fn binary_original_receiving_required_pack_retains_every_cancelled_backing_and_raw_carrier(){
- use semio_framework_os_kernel::{ArtifactPackReceiving,NativeSnapshotDecodeOwner};
+ use semio_os_kernel::{ArtifactPackReceiving,NativeSnapshotDecodeOwner};
  use semio_framework_value::{retirement::controlled::ControlledRetirement, RetainedCloneStep, ValueRefusalKind};
  use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
  let fixture=fixture();let original=&fixture["original"];let full=grant(&original["grant"]);let close=grant(&original["closeFundedGrant"]);let zero=grant(&original["closeZeroGrant"]);let policy=&fixture["cancellation"];let pattern=policy["bytePattern"].as_array().unwrap();let bytes=(0..policy["byteCount"].as_u64().unwrap()as usize).map(|index|pattern[index%pattern.len()].as_u64().unwrap()as u8).collect::<Vec<_>>();let wire=bytes.as_ptr();let mut canceled=0;

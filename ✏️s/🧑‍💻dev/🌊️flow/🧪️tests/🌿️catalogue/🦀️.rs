@@ -1,5 +1,5 @@
 //! 🌊️ Concrete first-party Flow catalogue and example composition laws.
-use semio_framework_os_flow::*;
+use semio_os_flow::*;
 use semio_framework_artifact_flow_flow::*;
 use neural_engine::{Atom, Dictionary, Value as NeuralValue};
 use std::sync::{Mutex, OnceLock};
@@ -348,7 +348,7 @@ fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
     let geometry = Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String(handle.into()))).insert("kind", NeuralValue::Atom(Atom::String("solid".into())));
     let input = Dictionary::new().insert("geometry", NeuralValue::Dictionary(geometry)).insert("deflection", NeuralValue::Dictionary(Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(0.05)))));
     let exported = flow_operator_registry().dispatch("brep.io.exportStl", &input).expect("the evaluated solid is live in its extension's kernel");
-    let stl = semio_framework_os_flow::mesh::decode_base64(exported.get("stl").and_then(NeuralValue::as_dictionary).and_then(|text| text.get("value")).and_then(NeuralValue::as_atom).and_then(Atom::as_str).expect("stl text")).expect("stl base64");
+    let stl = semio_os_flow::mesh::decode_base64(exported.get("stl").and_then(NeuralValue::as_dictionary).and_then(|text| text.get("value")).and_then(NeuralValue::as_atom).and_then(Atom::as_str).expect("stl text")).expect("stl base64");
     let triangles = u32::from_le_bytes(stl[80..84].try_into().expect("binary stl count")) as usize;
     assert!(triangles > 0 && stl.len() == 84 + 50 * triangles, "a closed solid tessellates to a non-empty binary STL ({} bytes, {triangles} triangles)", stl.len());
     neural::ColdRetire::retire_cold(exported);
@@ -389,8 +389,8 @@ fn supplied_operator_registries_and_geometry_ports_keep_host_authorities_indepen
             steps += 1;
             assert!(steps <= fixture["maximumTessellationSteps"].as_u64().unwrap());
             match host.geometry_port().unwrap().tessellate_step(&handle,0.05,fixture["tessellationGrant"].as_u64().unwrap() as usize) {
-                semio_framework_os_flow::geometry::GeometryStep::Ready(mesh) => { assert!(!mesh.indices.is_empty()); break; },
-                semio_framework_os_flow::geometry::GeometryStep::Working { units_done, .. } => { assert!(units_done > units); units = units_done; },
+                semio_os_flow::geometry::GeometryStep::Ready(mesh) => { assert!(!mesh.indices.is_empty()); break; },
+                semio_os_flow::geometry::GeometryStep::Working { units_done, .. } => { assert!(units_done > units); units = units_done; },
                 _ => panic!("owned geometry port failed before terminal mesh"),
             }
         }

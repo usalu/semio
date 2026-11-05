@@ -13,7 +13,7 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetLoadCase>,
 {
 const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "load-case", kind: "set-load-case", record: "SetLoadCase" };
-fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("set load-case", "Ändern Lastfall") }
+fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("set load-case", "Ändern Lastfall") }
 fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

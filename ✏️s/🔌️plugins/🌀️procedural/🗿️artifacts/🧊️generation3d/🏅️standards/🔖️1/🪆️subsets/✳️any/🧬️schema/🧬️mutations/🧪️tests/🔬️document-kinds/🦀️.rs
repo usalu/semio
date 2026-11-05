@@ -1,6 +1,6 @@
 //! 🧪️ Kind fixture laws of `change-generation-value`, `select-generation`, `change-generation-preview`, `change-schema`, `update-camera`: each committed scenario applied, inverted and diffed through the mutation union.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../📷️update-camera/🧪️tests/🔍️frames/🦀️.rs"]
 mod update_camera_frames;

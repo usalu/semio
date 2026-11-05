@@ -5,7 +5,7 @@
   "source": "🔤️tokens/🐍️.py",
   "backend": "hatchling==1.27.0",
   "module": "🎨️styling.🐍️",
-  "wheel": "semio_framework_ui_styling-0.1.0-py3-none-any.whl",
+  "wheel": "semio_ui_styling-0.1.0-py3-none-any.whl",
   "values": [
     "#ff344f",
     "#123456"

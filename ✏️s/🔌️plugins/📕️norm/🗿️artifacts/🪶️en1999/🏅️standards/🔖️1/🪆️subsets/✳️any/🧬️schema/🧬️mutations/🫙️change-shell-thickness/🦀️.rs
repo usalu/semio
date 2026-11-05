@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeShellThickness whe
         record: "ChangedShellThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Wall thickness t of the shell", "Schale: Wanddicke t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Wall thickness t of the shell", "Schale: Wanddicke t ändern")
     }
 }
 

@@ -5,7 +5,7 @@
 //! evaluations and starts the catalogue kind's compute as a stepped job. The heavy values live in the instance-owned
 //! [`engine::GeometryEngine`]; the inference record carries per-widget summaries.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "🚂️engine/🦀️.rs"]
 pub mod engine;

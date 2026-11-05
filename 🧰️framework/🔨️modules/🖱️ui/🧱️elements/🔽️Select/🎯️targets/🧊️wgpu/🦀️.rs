@@ -18,12 +18,12 @@
 //! `onKeyDown` at :395-410, `SelectContent`'s at :641-672, `moveActive` at :435-452,
 //! `findTypeaheadOption` at :455-466), not of Radix, which this element stopped wrapping.
 
-use semio_framework_ui_wgpu_layout::chrome::push_control_border;
-use semio_framework_ui_declaration::layout::MeasureSelectItem;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_input::{HitKind, HitTarget};
-use semio_framework_ui_theme::{Level, Theme};
-use semio_framework_ui_wgpu_widget_kit::{draw_text, draw_text_on, SelectItem, WidgetContext};
+use semio_ui_wgpu_layout::chrome::push_control_border;
+use semio_ui_declaration::layout::MeasureSelectItem;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_input::{HitKind, HitTarget};
+use semio_ui_theme::{Level, Theme};
+use semio_ui_wgpu_widget_kit::{draw_text, draw_text_on, SelectItem, WidgetContext};
 
 pub trait SelectItemView {
     fn value(&self) -> &str;
@@ -50,7 +50,7 @@ impl SelectItemView for MeasureSelectItem {
     }
 }
 
-pub use semio_framework_ui_select_behavior::*;
+pub use semio_ui_select_behavior::*;
 
 pub fn render_select<E: Clone, T: SelectItemView>(id: &str, value: &str, items: &[T], placeholder: Option<&str>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let open = *ctx.open_selects.get(id).unwrap_or(&false);
@@ -60,13 +60,13 @@ pub fn render_select<E: Clone, T: SelectItemView>(id: &str, value: &str, items: 
     let label = items.iter().find(|item| item.value() == value).map_or(placeholder.unwrap_or("Select…"), |item| item.label());
     draw_text(ctx, label, bounds.x + ctx.theme.padding_standard, bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, ctx.theme.text);
     if let Some(icons) = ctx.icons {
-        semio_framework_ui_wgpu_layout::chrome::push_icon(
+        semio_ui_wgpu_layout::chrome::push_icon(
             ctx.draw,
             icons,
             "chevron-down",
-            bounds.x + bounds.w - ctx.theme.padding_standard - semio_framework_ui_wgpu_layout::chrome::ICON_TINY,
-            bounds.y + (bounds.h - semio_framework_ui_wgpu_layout::chrome::ICON_TINY) * 0.5,
-            semio_framework_ui_wgpu_layout::chrome::ICON_TINY,
+            bounds.x + bounds.w - ctx.theme.padding_standard - semio_ui_wgpu_layout::chrome::ICON_TINY,
+            bounds.y + (bounds.h - semio_ui_wgpu_layout::chrome::ICON_TINY) * 0.5,
+            semio_ui_wgpu_layout::chrome::ICON_TINY,
             ctx.theme.text_element,
         );
     }
@@ -94,10 +94,10 @@ pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, it
     } else {
         ctx.scroll_offsets.insert(scroll_key, popup.scroll);
     }
-    let mut render_rows = |draw: &mut semio_framework_ui_draw_contract::DrawList| {
+    let mut render_rows = |draw: &mut semio_ui_draw_contract::DrawList| {
         let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
         draw.begin_glass_content(glass);
-        semio_framework_ui_wgpu_layout::chrome::push_chrome_border(draw, popup.menu, ctx.theme.stroke_hairline, ctx.theme.border_normal, true, true, true, true);
+        semio_ui_wgpu_layout::chrome::push_chrome_border(draw, popup.menu, ctx.theme.stroke_hairline, ctx.theme.border_normal, true, true, true, true);
         draw.push_scissor(select_popup_viewport_rect(popup));
         for (index, item) in items.iter().enumerate().take(popup.last_row).skip(popup.first_row) {
             let row = select_popup_row_rect(bounds, index, popup, ctx.theme);
@@ -110,11 +110,11 @@ pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, it
         }
         draw.pop_scissor();
         if let (Some(up), Some(down)) = (popup.up, popup.down) {
-            let chevron = semio_framework_ui_wgpu_layout::chrome::SIZE_TINY;
+            let chevron = semio_ui_wgpu_layout::chrome::SIZE_TINY;
             let center_x = popup.menu.x + (popup.menu.w - chevron) * 0.5;
             if let Some(icons) = ctx.icons {
-                semio_framework_ui_wgpu_layout::chrome::push_icon(draw, icons, "chevron-up", center_x, up.y + (up.h - chevron) * 0.5, chevron, ctx.theme.text_muted);
-                semio_framework_ui_wgpu_layout::chrome::push_icon(draw, icons, "chevron-down", center_x, down.y + (down.h - chevron) * 0.5, chevron, ctx.theme.text_muted);
+                semio_ui_wgpu_layout::chrome::push_icon(draw, icons, "chevron-up", center_x, up.y + (up.h - chevron) * 0.5, chevron, ctx.theme.text_muted);
+                semio_ui_wgpu_layout::chrome::push_icon(draw, icons, "chevron-down", center_x, down.y + (down.h - chevron) * 0.5, chevron, ctx.theme.text_muted);
             }
             ctx.input.register_hit(HitTarget { rect: up, event: None, control_id: Some(select_scroll_control_id(id, true)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
             ctx.input.register_hit(HitTarget { rect: down, event: None, control_id: Some(select_scroll_control_id(id, false)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
@@ -131,22 +131,22 @@ pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, it
     }
 }
 
-pub fn arm_retained_select_scroll_at(tree: &mut semio_framework_ui_retained_tree::tree::UiTree, id: semio_framework_ui_arena::NodeId, x: f32, y: f32) -> bool {
+pub fn arm_retained_select_scroll_at(tree: &mut semio_ui_retained_tree::tree::UiTree, id: semio_ui_arena::NodeId, x: f32, y: f32) -> bool {
     let direction = tree.node(id).and_then(|node| node.state.select_popup).and_then(|popup| select_scroll_direction_at(popup, x, y));
     let Some(direction) = direction else { return false };
     let Some(node) = tree.node_mut(id) else { return false };
     node.state.scroll_offset.0 = direction;
-    tree.mark_dirty(id, semio_framework_ui_retained_tree::tree::NodeFlags::DIRTY_PAINT);
+    tree.mark_dirty(id, semio_ui_retained_tree::tree::NodeFlags::DIRTY_PAINT);
     true
 }
 
-pub fn scroll_retained_select_at(tree: &mut semio_framework_ui_retained_tree::tree::UiTree, id: semio_framework_ui_arena::NodeId, x: f32, y: f32, delta: f32) -> bool {
+pub fn scroll_retained_select_at(tree: &mut semio_ui_retained_tree::tree::UiTree, id: semio_ui_arena::NodeId, x: f32, y: f32, delta: f32) -> bool {
     let Some(popup) = tree.node(id).filter(|node| node.state.open).and_then(|node| node.state.select_popup).filter(|popup| popup.menu.contains(x, y)) else { return false };
     if delta.is_finite() && delta != 0.0 {
         if let Some(node) = tree.node_mut(id) {
             node.state.scroll_offset.1 = (node.state.scroll_offset.1 + delta).clamp(0.0, popup.max_scroll);
         }
-        tree.mark_dirty(id, semio_framework_ui_retained_tree::tree::NodeFlags::DIRTY_PAINT);
+        tree.mark_dirty(id, semio_ui_retained_tree::tree::NodeFlags::DIRTY_PAINT);
     }
     true
 }

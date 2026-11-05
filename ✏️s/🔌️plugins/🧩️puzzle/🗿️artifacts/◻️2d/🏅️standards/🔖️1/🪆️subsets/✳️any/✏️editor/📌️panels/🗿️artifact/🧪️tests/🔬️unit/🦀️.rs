@@ -1,44 +1,44 @@
 use crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::{Puzzle2dScene, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_NODE};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_ui_contract as ui;
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_ui_contract as ui;
 use semio_framework_pack_json::Value;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::{snapshot::board_snapshot_edges, snapshot::board_snapshot_nodes, snapshot::snapshot_target_regions, snapshot::puzzle2d_node_display_label, interaction::ui_label, snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, snapshot::PUZZLE2D_INTERACTION_DOMAIN, snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::RowActionPlacement;
+use semio_plugin::plugin_app_close_prelude::RowActionPlacement;
 #[allow(unused_imports)]
-use semio_framework_plugin::row_action;
+use semio_plugin::row_action;
 #[allow(unused_imports)]
-use semio_framework_plugin::row_target;
+use semio_plugin::row_target;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiListBuilder;
+use semio_plugin::UiListBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiMapBuilder;
+use semio_plugin::UiMapBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiValue;
+use semio_plugin::UiValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use crate::editor::puzzle2d::panels::artifact::*;
 use crate::editor::puzzle2d::testkit::*;
 
@@ -56,10 +56,10 @@ async fn labels_resolve_native_english_and_german_and_reuse() {
     let mut app = concrete_forest_app();
     let english = render_body(&mut app, PUZZLE2D_PLAY_BODY_LAYERS);
     assert!(english.contains("\"Nodes\"") && english.contains("\"Edges\""));
-    let german_view = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
+    let german_view = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::De, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native) };
     let german = render_body_with_view(&mut app, PUZZLE2D_PLAY_BODY_LAYERS, &german_view);
     assert!(german.contains("\"Knoten\"") && german.contains("\"Kanten\""));
-    let reuse_view = semio_framework_plugin::ViewModel { terminology: semio_framework_ui_locale::Terminology::Reuse, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Reuse) };
+    let reuse_view = semio_plugin::ViewModel { terminology: semio_ui_locale::Terminology::Reuse, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Reuse) };
     let reuse = render_body_with_view(&mut app, PUZZLE2D_PLAY_BODY_LAYERS, &reuse_view);
     assert!(reuse.contains("Building components"));
     close_app(&mut app);
@@ -89,7 +89,7 @@ fn drain_retired_ui_owners() {
 }
 
 fn labels() -> &'static Puzzle2dLabels {
-    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 /// 🏗️ A synthetic snapshot of `nodes` nodes and `edges` edges — the shape Nakagin has (180/179),
@@ -124,19 +124,19 @@ fn granularity_of(node: &BuiltNode) -> Option<String> {
 /// 🧾️ The body as JSON. A built tree's children travel as retained pages, so the projection helper —
 /// not `serde_json` on the root — is what walks and retires them.
 fn body_json(tree: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
 }
 
 fn child_of<'a>(node: &'a BuiltNode, key: &str) -> &'a BuiltNode {
     node.children.iter().find(|child| child.key.as_str() == key).unwrap_or_else(|| panic!("container {key} must exist"))
 }
 
-fn view_with(requests: Vec<semio_framework_plugin::TreeWindowRequest>) -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel { tree_windows: requests, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+fn view_with(requests: Vec<semio_plugin::TreeWindowRequest>) -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel { tree_windows: requests, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
-fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_framework_plugin::TreeWindowRequest {
-    semio_framework_plugin::TreeWindowRequest { body_key: PUZZLE2D_PLAY_BODY_LAYERS.into(), node_key: node_key.into(), open, offset, rows }
+fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_plugin::TreeWindowRequest {
+    semio_plugin::TreeWindowRequest { body_key: PUZZLE2D_PLAY_BODY_LAYERS.into(), node_key: node_key.into(), open, offset, rows }
 }
 
 /// 🪟️ (a) An oversized document: every container stamps its FULL extent and materialises no more
@@ -152,7 +152,7 @@ fn the_outliner_stamps_every_container_and_never_pages() {
     assert_eq!(window_of(nodes).expect("the nodes section must stamp its window").total as usize, SCALE_NODES);
     assert_eq!(window_of(edges).expect("the edges section must stamp its window").total as usize, SCALE_EDGES);
     assert!(nodes.children.len() <= SCALE_NODES, "a section may never materialise more than its extent");
-    assert!(nodes.children.len() <= semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX, "a built node may not exceed the children contract");
+    assert!(nodes.children.len() <= semio_ui_contract::UI_BUILT_CHILDREN_MAX, "a built node may not exceed the children contract");
     assert!(!nodes.children.is_empty(), "the open nodes section must materialise its first window");
     let body = body_json(tree);
     assert!(!body.contains(".more"), "a windowed body carries no continuation key: {body:.400}");
@@ -210,7 +210,7 @@ fn outliner_pick_rows_are_domain_bound_without_a_per_row_binding() {
     let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_LAYERS);
     let tree = render(&scene, labels(), &windows).expect("a domain-bound outliner must be admitted");
     assert_eq!(tree.bindings.len(), 1, "the tree root carries exactly one interactionSelect binding");
-    assert_eq!(tree.bindings.iter().next().expect("root binding").action.name.as_str(), semio_framework_plugin::INTERACTION_SELECT_ACTION_ID);
+    assert_eq!(tree.bindings.iter().next().expect("root binding").action.name.as_str(), semio_plugin::INTERACTION_SELECT_ACTION_ID);
     for (section, granularity) in [(NODES_SECTION, PUZZLE2D_GRANULARITY_NODE), (EDGES_SECTION, PUZZLE2D_GRANULARITY_EDGE)] {
         for row in child_of(&tree, section).children.iter() {
             assert_eq!(granularity_of(row).as_deref(), Some(granularity), "row {} must declare its granularity", row.key.as_str());
@@ -285,7 +285,7 @@ fn row_actions_of(node: &BuiltNode) -> Vec<(String, bool)> {
                     verb => panic!("a row toggle names a set-verb, not {verb}"),
                 };
                 let asked = props.target.as_ref().and_then(|target| target.args.as_ref()).and_then(|args| args.iter().find(|(key, _)| key.as_str() == flag)).and_then(|(_, value)| match value {
-                    semio_framework_plugin::UiValue::Bool(value) => Some(value),
+                    semio_plugin::UiValue::Bool(value) => Some(value),
                     _ => None,
                 });
                 (action.icon.as_str().to_string(), asked.expect("a row toggle's target always names the state it asks for"))

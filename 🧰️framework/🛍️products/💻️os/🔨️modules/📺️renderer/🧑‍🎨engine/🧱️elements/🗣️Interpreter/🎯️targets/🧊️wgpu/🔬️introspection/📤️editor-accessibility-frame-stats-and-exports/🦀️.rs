@@ -15,13 +15,13 @@ struct TextEditorAccessibilityEntry {
     read_only: bool,
 }
 
-fn collect_text_editor_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, origin: (f32, f32), depth: usize, entries: &mut Vec<TextEditorAccessibilityEntry>) {
+fn collect_text_editor_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, origin: (f32, f32), depth: usize, entries: &mut Vec<TextEditorAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     let (x, y, width, height) = tree.mounted_layout(node).unwrap_or((retained.layout.x, retained.layout.y, retained.layout.width, retained.layout.height));
     let absolute = (origin.0 + x, origin.1 + y);
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::TextEditor && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            if let Some(value) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_accessibility_value(scene) {
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::TextEditor && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            if let Some(value) = semio_renderer_wgpu_engine_text::text_editor::text_editor_accessibility_value(scene) {
                 entries.push(TextEditorAccessibilityEntry {
                     scene_node: node,
                     host_id: scene.host_id.clone(),
@@ -30,12 +30,12 @@ fn collect_text_editor_accessibility_entries(tree: &semio_framework_ui_retained_
                     depth: depth.saturating_add(1),
                     rect: Rect::new(absolute.0, absolute.1, width, height),
                     value,
-                    read_only: semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_is_read_only(scene),
+                    read_only: semio_renderer_wgpu_engine_text::text_editor::text_editor_is_read_only(scene),
                 });
             }
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -43,7 +43,7 @@ fn collect_text_editor_accessibility_entries(tree: &semio_framework_ui_retained_
     }
 }
 
-pub fn text_editor_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Vec<TextEditorAccessibilityEntry> {
+pub fn text_editor_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree) -> Vec<TextEditorAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_text_editor_accessibility_entries(tree, root, (0.0, 0.0), 0, &mut entries);
@@ -51,7 +51,7 @@ pub fn text_editor_accessibility_entries(tree: &semio_framework_ui_retained_tree
     entries
 }
 
-fn append_text_editor_accessibility_nodes(window_id: &str, tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+fn append_text_editor_accessibility_nodes(window_id: &str, tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     let focus = focused_text_editor();
     for entry in text_editor_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
@@ -108,7 +108,7 @@ fn append_text_editor_accessibility_nodes(window_id: &str, tree: &semio_framewor
 /// ♿️ …and the chrome around those windows, which owns no retained tree of its own. Announced
 /// only when the caller named no single window (or named the chrome itself), the same rule the
 /// per-window filter above follows.
-pub fn build_accessibility_dump(engine: &semio_framework_ui_wgpu_engine::Ui, requested: Option<&str>) -> DumpAccessibility {
+pub fn build_accessibility_dump(engine: &semio_ui_wgpu_engine::Ui, requested: Option<&str>) -> DumpAccessibility {
     let window_ids = dump_window_ids(engine);
     let announced: Vec<String> = match requested.filter(|id| !id.is_empty()) {
         Some(id) => window_ids.iter().filter(|live| live.as_str() == id).cloned().collect(),
@@ -117,7 +117,7 @@ pub fn build_accessibility_dump(engine: &semio_framework_ui_wgpu_engine::Ui, req
     let mut windows: Vec<DumpAccessibilityWindow> = announced
         .into_iter()
         .map(|window_id| {
-            let mut nodes = engine.tree(&window_id).map(semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection).unwrap_or_default();
+            let mut nodes = engine.tree(&window_id).map(semio_ui_wgpu_hosting::accessibility::accessibility_projection).unwrap_or_default();
             if let Some(tree) = engine.tree(&window_id) {
                 append_table_stepper_accessibility_nodes(&window_id, tree, &mut nodes);
                 append_table_editable_text_accessibility_nodes(&window_id, tree, &mut nodes);
@@ -151,10 +151,10 @@ pub fn build_accessibility_dump(engine: &semio_framework_ui_wgpu_engine::Ui, req
 /// `draw_list` answered zeros — the hexagonal column was on screen while `dumpFrameStats` said
 /// nothing had been drawn (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-pub fn build_frame_stats(engine: &semio_framework_ui_wgpu_engine::Ui, requested: Option<&str>) -> DumpFrameStats {
+pub fn build_frame_stats(engine: &semio_ui_wgpu_engine::Ui, requested: Option<&str>) -> DumpFrameStats {
     let window_ids = dump_window_ids(engine);
     let Some(window_id) = dump_window_id(engine, requested) else {
-        return DumpFrameStats { window_id: None, window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::snapshot() };
+        return DumpFrameStats { window_id: None, window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: semio_renderer_wgpu_host_base::frame_latency::snapshot() };
     };
     if let Some(census) = engine.paint_census(&window_id).filter(|census| census.layers > 0 || census.scene_passes > 0) {
         return DumpFrameStats {
@@ -166,11 +166,11 @@ pub fn build_frame_stats(engine: &semio_framework_ui_wgpu_engine::Ui, requested:
             scene_passes: census.scene_passes,
             scene_draws: census.scene_draws,
             scene_instances: census.scene_instances,
-            frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::snapshot(),
+            frame_latency: semio_renderer_wgpu_host_base::frame_latency::snapshot(),
         };
     }
     let Some(draw) = engine.draw_list(&window_id) else {
-        return DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::snapshot() };
+        return DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: semio_renderer_wgpu_host_base::frame_latency::snapshot() };
     };
     let draw_calls = draw.layers.iter().filter(|layer| layer_is_nonempty(layer)).count();
     let all_instances = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()));
@@ -193,7 +193,7 @@ pub fn build_frame_stats(engine: &semio_framework_ui_wgpu_engine::Ui, requested:
                 + pass.textured_draws.iter().map(|scene_draw| scene_draw.instances.len()).sum::<usize>()
         })
         .sum();
-    DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls, quad_count, glyph_count, scene_passes, scene_draws, scene_instances, frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::snapshot() }
+    DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls, quad_count, glyph_count, scene_passes, scene_draws, scene_instances, frame_latency: semio_renderer_wgpu_host_base::frame_latency::snapshot() }
 }
 //#endregion 🔬️IntrospectionBuilders
 

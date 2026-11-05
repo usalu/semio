@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertBulkSolid where Op
         record: "InsertedBulkSolid",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bulk solid {}", self.item.id), &format!("Schüttgut {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert bulk solid {}", self.item.id), &format!("Schüttgut {} einfügen", self.item.id))
     }
 }
 

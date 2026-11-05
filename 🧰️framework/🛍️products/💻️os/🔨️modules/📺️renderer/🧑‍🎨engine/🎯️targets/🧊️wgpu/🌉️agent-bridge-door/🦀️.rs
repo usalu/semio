@@ -228,9 +228,9 @@ type AgentBridgeCancel = std::sync::Arc<std::sync::atomic::AtomicBool>;
 /// then re-arm itself — immediately when it did work, on the idle timer when it did not. Never a
 /// loop inside one job, so an `Io` worker is never held by a quiet socket.
 #[cfg(not(target_arch = "wasm32"))]
-fn drive_native_agent_socket(pool: semio_framework_async::WorkerPool, lane: AgentBridgeLaneHandle, cancel: AgentBridgeCancel, mut connection: semio_framework_os_kernel::os_directory::client::native::TungsteniteConnection) {
-    use semio_framework_os_kernel::os_directory::client::native::NativeWsPoll;
-    use semio_framework_os_kernel::os_directory::client::DirectoryWsConnection;
+fn drive_native_agent_socket(pool: semio_framework_async::WorkerPool, lane: AgentBridgeLaneHandle, cancel: AgentBridgeCancel, mut connection: semio_os_kernel::os_directory::client::native::TungsteniteConnection) {
+    use semio_os_kernel::os_directory::client::native::NativeWsPoll;
+    use semio_os_kernel::os_directory::client::DirectoryWsConnection;
     if cancel.load(std::sync::atomic::Ordering::Relaxed) {
         connection.close();
         lane.lock().expect("agent bridge lane poisoned").note_closed(None);
@@ -298,7 +298,7 @@ impl AgentBridgeSocket {
             Lane::Io,
             Box::new(move || {
                 let ctx = OperationContext { actor: 0, capability: None, cancel: CancelToken::root_now(), deadline_ms: None, generation: 0, lane: 0, trace: TraceId(0) };
-                match semio_framework_os_kernel::os_directory::client::native::open_client_ws(&ctx, &url, &protocols, AGENT_BRIDGE_DIAL_TIMEOUT_MS, Some(crate::agent_bridge::BRIDGE_SUBPROTOCOL)) {
+                match semio_os_kernel::os_directory::client::native::open_client_ws(&ctx, &url, &protocols, AGENT_BRIDGE_DIAL_TIMEOUT_MS, Some(crate::agent_bridge::BRIDGE_SUBPROTOCOL)) {
                     Ok(connection) => {
                         task_lane.lock().expect("agent bridge lane poisoned").note_open();
                         drive_native_agent_socket(dial_pool, task_lane, task_cancel, connection);

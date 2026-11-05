@@ -41,8 +41,8 @@ impl pack::snapshot::ArtifactPack for TiffEditorConfig {
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TiffEditorConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TiffEditorConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -138,7 +138,7 @@ impl protocol::OpBinary for TiffEditorConfigMutation {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(TiffEditorConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(TiffEditorConfigMutation);
 
 /// 🦺️ Resolves a safe image page for the current snapshot; stale local state returns to page zero.
 pub fn selected_ifd(config: &TiffEditorConfig, snapshot: &crate::TiffSnapshot) -> Option<usize> {

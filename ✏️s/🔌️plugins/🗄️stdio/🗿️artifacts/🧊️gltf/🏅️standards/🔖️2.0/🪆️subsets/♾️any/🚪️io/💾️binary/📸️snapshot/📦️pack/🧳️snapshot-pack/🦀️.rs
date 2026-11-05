@@ -19,8 +19,8 @@ impl pack::snapshot::ArtifactPack for GltfSnapshot{
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity("stdio.gltf",store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF owned pack identity differs")));}let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::os_store::serialization::text_error_to_pack_error)}
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GltfSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GltfSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
@@ -45,4 +45,4 @@ fn snapshot_value(value: &GltfSnapshot, control: &mut NativeEncodeControl<'_>) -
 }
 
 /// 🛫️ Emits every literal logical field through the declared controlled native output terminal.
-pub fn encode_native(value:&GltfSnapshot,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{store::encode_sqlite_snapshot_record_native(encoding,"stdio.gltf",spec_producer(),|native|snapshot_value(value,native),control,native_owner)}
+pub fn encode_native(value:&GltfSnapshot,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{store::encode_sqlite_snapshot_record_native(encoding,"stdio.gltf",spec_producer(),|native|snapshot_value(value,native),control,native_owner)}

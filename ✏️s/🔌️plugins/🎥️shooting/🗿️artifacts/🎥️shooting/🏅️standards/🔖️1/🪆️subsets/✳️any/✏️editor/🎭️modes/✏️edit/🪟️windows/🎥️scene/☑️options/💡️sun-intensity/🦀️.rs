@@ -3,7 +3,7 @@
 
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::ShootingSnapshot;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 //#region 🔖️Measure
 pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {

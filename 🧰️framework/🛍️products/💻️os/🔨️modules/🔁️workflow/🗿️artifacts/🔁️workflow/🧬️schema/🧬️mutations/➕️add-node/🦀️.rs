@@ -17,8 +17,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "workflow", kind: "add-node", record: "AddedWorkflowNode" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add workflow node {}", self.node.id), &format!("Arbeitsablaufknoten {} hinzufügen", self.node.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add workflow node {}", self.node.id), &format!("Arbeitsablaufknoten {} hinzufügen", self.node.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node.id.clone()]

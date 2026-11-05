@@ -21,8 +21,8 @@ pub struct ChangeRegion {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeRegion where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeRegion> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "region", kind: "change-region", record: "ChangedRegion" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change region \"{}\"", self.id), &format!("Region \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change region \"{}\"", self.id), &format!("Region \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

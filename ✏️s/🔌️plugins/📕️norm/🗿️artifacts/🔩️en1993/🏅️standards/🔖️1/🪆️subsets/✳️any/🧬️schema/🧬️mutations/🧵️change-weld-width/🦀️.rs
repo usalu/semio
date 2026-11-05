@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeWeldWidth where Op
         record: "ChangedWeldWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Group width b of the weld group", "Schweißnahtgruppe: Gruppenbreite b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Group width b of the weld group", "Schweißnahtgruppe: Gruppenbreite b ändern")
     }
 }
 

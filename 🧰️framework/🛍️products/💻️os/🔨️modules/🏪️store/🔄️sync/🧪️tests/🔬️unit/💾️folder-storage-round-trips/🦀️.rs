@@ -7,7 +7,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn folder_event_log_storage_round_trips_by_document_id() {
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
     assert_eq!(storage.read("doc-a").await.expect("read empty"), None, "absent document reads as None");
 
@@ -28,43 +28,43 @@ async fn folder_event_log_storage_round_trips_by_document_id() {
 #[semio_framework_async_macros::async_test]
 async fn document_archive_event_log_storage_round_trips_complete_owned_bytes() {
     let archive = persisted_recursive_document_archive();
-    let bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode recursive archive");
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let bytes = semio_os_spr::encode_document_archive_bytes(&archive).expect("encode recursive archive");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
     assert_eq!(storage.read_archive("root-1").await.expect("read absent archive"), None);
     storage.write_archive("root-1", "s.test.root/1/*", &bytes).await.expect("write recursive archive");
     let persisted = storage.read_archive("root-1").await.expect("read recursive archive").expect("archive exists");
     assert_eq!(persisted, bytes);
-    assert_eq!(semio_framework_os_spr::decode_document_archive_bytes(&persisted).await.expect("decode persisted recursive archive"), archive);
+    assert_eq!(semio_os_spr::decode_document_archive_bytes(&persisted).await.expect("decode persisted recursive archive"), archive);
     assert!(storage.document_ids().await.expect("archive document index").contains(&"root-1".to_string()));
     let mut trailing = persisted.clone();
     trailing.push(0);
     assert!(storage.write_archive("root-1", "s.test.root/1/*", &trailing).await.is_err());
     assert_eq!(storage.read_archive("root-1").await.expect("read after malformed refusal").expect("prior archive remains"), persisted);
-    let oversized = vec![1; semio_framework_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1];
+    let oversized = vec![1; semio_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1];
     assert!(storage.write_archive("root-1", "s.test.root/1/*", &oversized).await.is_err());
     assert_eq!(storage.read_archive("root-1").await.expect("read after over-limit refusal").expect("prior archive remains"), bytes);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn persisted_recursive_document_archive() -> semio_framework_os_spr::DocumentArchivePack {
-    let root = semio_framework_os_spr::DocumentArchiveArtifactRef { artifact_id: "root-1".into(), artifact_kind: "s.test.root".into(), standard: "1".into(), subset: "*".into() };
-    let child = semio_framework_os_spr::DocumentArchiveArtifactRef { artifact_id: "child-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
-    let leaf = semio_framework_os_spr::DocumentArchiveArtifactRef { artifact_id: "leaf-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
-    semio_framework_os_spr::DocumentArchivePack {
+fn persisted_recursive_document_archive() -> semio_os_spr::DocumentArchivePack {
+    let root = semio_os_spr::DocumentArchiveArtifactRef { artifact_id: "root-1".into(), artifact_kind: "s.test.root".into(), standard: "1".into(), subset: "*".into() };
+    let child = semio_os_spr::DocumentArchiveArtifactRef { artifact_id: "child-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
+    let leaf = semio_os_spr::DocumentArchiveArtifactRef { artifact_id: "leaf-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
+    semio_os_spr::DocumentArchivePack {
         parent_pack: vec![1, 2],
         parent_spr: vec![3],
         members: vec![
-            semio_framework_os_spr::OwnedDocumentMemberPackEntry {
+            semio_os_spr::OwnedDocumentMemberPackEntry {
                 ordinal: 0,
                 reference: child.clone(),
-                owner: semio_framework_os_spr::DocumentArchiveOwnerRef { parent: root, slot: "children".into(), child_id: child.artifact_id.clone() },
+                owner: semio_os_spr::DocumentArchiveOwnerRef { parent: root, slot: "children".into(), child_id: child.artifact_id.clone() },
                 envelope_pack: vec![4, 5],
             },
-            semio_framework_os_spr::OwnedDocumentMemberPackEntry {
+            semio_os_spr::OwnedDocumentMemberPackEntry {
                 ordinal: 1,
                 reference: leaf.clone(),
-                owner: semio_framework_os_spr::DocumentArchiveOwnerRef { parent: child, slot: "nested".into(), child_id: leaf.artifact_id.clone() },
+                owner: semio_os_spr::DocumentArchiveOwnerRef { parent: child, slot: "nested".into(), child_id: leaf.artifact_id.clone() },
                 envelope_pack: vec![6],
             },
         ],
@@ -74,7 +74,7 @@ fn persisted_recursive_document_archive() -> semio_framework_os_spr::DocumentArc
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn document_archive_actor_refuses_malformed_and_over_limit_candidates_without_displacing_live_bytes() {
-    let live = semio_framework_os_spr::encode_document_archive_bytes(&persisted_recursive_document_archive()).expect("encode live recursive archive");
+    let live = semio_os_spr::encode_document_archive_bytes(&persisted_recursive_document_archive()).expect("encode live recursive archive");
     let (_, remote) = ChannelBackbone::pair("document-archive-refusal").await;
     let (_, receiver) = artifact_mailbox_pair();
     let (events, _) = broadcast::channel(8);
@@ -104,7 +104,7 @@ async fn document_archive_actor_refuses_malformed_and_over_limit_candidates_with
     actor.handle_test_document_archive(unsupported).await;
     assert_eq!(actor.current_archive_test(), Some(live.clone()));
 
-    let mut oversized = vec![0; semio_framework_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1];
+    let mut oversized = vec![0; semio_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1];
     oversized[0] = 1;
     assert!(artifact_actor_message_bytes(&ArtifactActorMsg::LocalDocumentArchive { archive: oversized.clone() }).is_none());
     actor.handle_test_document_archive(oversized).await;
@@ -115,15 +115,15 @@ async fn document_archive_actor_refuses_malformed_and_over_limit_candidates_with
 #[semio_framework_async_macros::async_test]
 async fn document_archive_text_storage_round_trips_complete_owned_bytes() {
     let archive = persisted_recursive_document_archive();
-    let bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode recursive archive");
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let bytes = semio_os_spr::encode_document_archive_bytes(&archive).expect("encode recursive archive");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     let files = ArtifactPackFiles { pack: archive.parent_pack.clone(), spr: archive.parent_spr.clone(), ops: String::new() };
     assert_eq!(storage.read_archive("root-1", "test").await.expect("read absent archive"), None);
     storage.write_archive("root-1", "test", &bytes, &files, "root = 1\n").await.expect("write recursive archive");
     let persisted = storage.read_archive("root-1", "test").await.expect("read recursive archive").expect("archive exists");
     assert_eq!(persisted, bytes);
-    assert_eq!(semio_framework_os_spr::decode_document_archive_bytes(&persisted).await.expect("decode persisted recursive archive"), archive);
+    assert_eq!(semio_os_spr::decode_document_archive_bytes(&persisted).await.expect("decode persisted recursive archive"), archive);
     let mut malformed = persisted.clone();
     malformed.push(0);
     assert!(storage.write_archive("root-1", "test", &malformed, &files, "root = 2\n").await.is_err());
@@ -139,11 +139,11 @@ async fn document_archive_text_storage_round_trips_complete_owned_bytes() {
 async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
-    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = semio_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply e2");
@@ -154,15 +154,15 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     storage.write("doc-a", "demo/v1", &files.pack, &files.spr).await.expect("write");
 
     let (pack, spr) = storage.read("doc-a").await.expect("read").expect("some");
-    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
     assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
-    let mut reloaded = semio_framework_os_store_test_support::plain_test_store(parsed.envelope).await;
+    let mut reloaded = semio_os_store_test_support::plain_test_store(parsed.envelope).await;
     assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
 
     reloaded.dispatch(ArtifactCommand::Redo, &mut identity).await.expect("redo e2 after folder reload");
     assert_eq!(reloaded.snapshot().expect("post-redo"), DemoSnapshot { n: 2 });
-    semio_framework_os_store_test_support::close_plain_test_store(&mut store);
-    semio_framework_os_store_test_support::close_plain_test_store(&mut reloaded);
+    semio_os_store_test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::close_plain_test_store(&mut reloaded);
 }
 
 /// 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
@@ -176,16 +176,16 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
 async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
 
-    let mut seed = semio_framework_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut seed = semio_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let files = print_document_text(seed.envelope()).await.expect("print document text");
     storage.write("demo", "demo", &files).await.expect("write");
 
-    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = semio_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
@@ -195,13 +195,13 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
     let reloaded = storage.read("demo", "demo").await.expect("read").expect("some");
-    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
     assert_eq!(parsed.snapshot.n, 2, "write + append reconstructs every edit in order");
     let _ = parsed.into_snapshot();
 
     assert_eq!(storage.document_ids("demo").await.expect("document ids"), vec!["demo".to_string()]);
-    semio_framework_os_store_test_support::close_plain_test_store(&mut seed);
-    semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::close_plain_test_store(&mut seed);
+    semio_os_store_test_support::close_plain_test_store(&mut store);
 }
 
 /// 🎯️ Unlike the `.ops`-text hot path (`append_ops`, tested above), `.pack`+`.spr` have
@@ -228,17 +228,17 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
 async fn folder_text_storage_round_trips_pack() {
     const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
 
-    let mut seed = semio_framework_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut seed = semio_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let files = print_document_pack(seed.envelope()).await.expect("print document pack");
     let dsl_mirror = seed.envelope().vcs.genesis.facts().snapshot().print_dsl();
     storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
-    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = semio_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
@@ -248,12 +248,12 @@ async fn folder_text_storage_round_trips_pack() {
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
     let reloaded_text = storage.read("demo", "demo").await.expect("read text").expect("some text");
-    let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse text: {error}"));
+    let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse text: {error}"));
     assert_eq!(parsed_text.snapshot.n, 2, "the .ops text mirror reflects every appended edit");
     let _ = parsed_text.into_snapshot();
 
     let reloaded_pack = storage.read_pack("demo", "demo").await.expect("read pack").expect("some pack");
-    let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
+    let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
     assert_eq!(parsed_pack.snapshot.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
     let _ = parsed_pack.into_snapshot();
 
@@ -261,21 +261,21 @@ async fn folder_text_storage_round_trips_pack() {
     let dsl_mirror2 = store.envelope().vcs.genesis.facts().snapshot().print_dsl();
     storage.write_pack("demo", "demo", &files2, &dsl_mirror2).await.expect("write pack 2");
     let reloaded_pack2 = storage.read_pack("demo", "demo").await.expect("read pack 2").expect("some pack 2");
-    let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+    let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
     assert_eq!(parsed_pack2.snapshot.n, 2, "a fresh write_pack brings pack+spr current with the live store");
     let _ = parsed_pack2.into_snapshot();
 
-    let mirror_path = dir.path().join(semio_framework_os_semio::semio_filename("demo", "demo", semio_framework_os_semio::Component::Dsl));
+    let mirror_path = dir.path().join(semio_os_semio::semio_filename("demo", "demo", semio_os_semio::Component::Dsl));
     let mirror = std::fs::read_to_string(&mirror_path).expect("dsl mirror on disk");
     assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
-    semio_framework_os_store_test_support::close_plain_test_store(&mut seed);
-    semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+    semio_os_store_test_support::close_plain_test_store(&mut seed);
+    semio_os_store_test_support::close_plain_test_store(&mut store);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn blob_store_put_get_dedupes_idempotently() {
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
     let bytes = b"hello content-addressed world";
     assert!(!storage.has("not-a-real-hash").await.expect("has on empty store"));
@@ -303,7 +303,7 @@ async fn blob_store_put_get_dedupes_idempotently() {
 async fn folder_event_log_ignores_an_incomplete_tail_and_coordinates_handles() {
     use std::io::Write;
 
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let first = FolderEventLogStorage::new(dir.path().to_path_buf());
     let second = FolderEventLogStorage::new(dir.path().to_path_buf());
     first.write("doc-a", "demo/v1", b"pack-a", b"spr-a").await.expect("first handle write");
@@ -323,7 +323,7 @@ async fn folder_event_log_truncates_an_interrupted_final_record_before_appending
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🩹️folder-event-log-torn-tail/🔣️.json")).expect("the corpus parses");
     for case in corpus["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("a case name");
-        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let dir = semio_os_store_test_support::tempdir().expect("tempdir");
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         storage.write("doc-a", "demo/v1", b"pack-1", b"spr-1").await.expect("first write");
         let mut tail = case["tail"].as_str().expect("tail").as_bytes().to_vec();
@@ -344,12 +344,12 @@ async fn folder_event_log_truncates_an_interrupted_final_record_before_appending
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn folder_text_storage_concurrent_archive_writes_never_tear_or_leave_staged_files() {
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     let mut archives = Vec::new();
     for index in 0u8..6 {
         let mut archive = persisted_recursive_document_archive();
         archive.parent_pack = vec![index; 64];
-        archives.push(semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode"));
+        archives.push(semio_os_spr::encode_document_archive_bytes(&archive).expect("encode"));
     }
     let files = ArtifactPackFiles { pack: vec![1], spr: vec![2], ops: String::new() };
     let writers: Vec<_> = archives.iter().cloned().map(|archive| {

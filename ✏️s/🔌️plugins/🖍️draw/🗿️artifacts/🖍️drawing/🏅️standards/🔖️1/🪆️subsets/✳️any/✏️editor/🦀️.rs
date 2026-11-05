@@ -14,9 +14,9 @@ use semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN
 use semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_GRANULARITY;
 use semio_s_artifact_draw_drawing_editor_interaction::DRAWING_POINT_DOMAIN;
 use semio_s_artifact_draw_drawing_editor_interaction::drawing_manifest_action;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast, nudge_selection_down, nudge_selection_down_fast};
@@ -36,44 +36,44 @@ use semio_s_artifact_draw_drawing_scene::identity::SceneIdentity;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
 use semio_framework_job_registry::{FixedOperationOwner};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementStatus;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementStatus;
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
 use std::collections::HashMap;
@@ -92,7 +92,7 @@ use semio_s_artifact_draw_drawing_editor_interaction::panels::properties::DRAWIN
 /// is not the shell's active window therefore carried `None` and every rectangle drag ran as a
 /// marquee select (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17). Resolution order: the
 /// addressed window's entry, the focused window's entry, the flat field, the default.
-pub fn drawing_active_utility(view: &semio_framework_plugin::ViewModel) -> &str {
+pub fn drawing_active_utility(view: &semio_plugin::ViewModel) -> &str {
     view.window_id
         .as_deref()
         .and_then(|window| view.active_utility_by_window_id.get(window))
@@ -104,14 +104,14 @@ pub fn drawing_active_utility(view: &semio_framework_plugin::ViewModel) -> &str 
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `DrawingPlayApp::Command` — the SOLE dispatch surface for drawing's own behavior, covering every
     /// action `create_drawing_app` declares. Field shapes mirror each action's real `args` object.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**

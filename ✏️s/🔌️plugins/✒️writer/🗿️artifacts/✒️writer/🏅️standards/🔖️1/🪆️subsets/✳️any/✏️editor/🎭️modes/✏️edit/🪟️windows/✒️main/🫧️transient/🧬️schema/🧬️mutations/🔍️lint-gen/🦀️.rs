@@ -11,8 +11,8 @@ pub struct SetLintGeneration {
 impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransientMutation> for SetLintGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-lint-generation", kind: "set-lint-generation", record: "SetLintGeneration" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Lint Generation", "Prüfstand des Schreibfensters setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Writer Window Lint Generation", "Prüfstand des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["lint_generation".into()]

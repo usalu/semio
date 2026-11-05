@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeRingShellId where 
         record: "ChangedRingShellId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shell of the ring stiffener", "Ringsteife: Schale ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shell of the ring stiffener", "Ringsteife: Schale ändern")
     }
 }
 

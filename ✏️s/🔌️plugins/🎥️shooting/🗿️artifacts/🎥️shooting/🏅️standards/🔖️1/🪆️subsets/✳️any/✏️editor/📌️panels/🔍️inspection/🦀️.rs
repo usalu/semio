@@ -3,20 +3,20 @@
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::ui_helpers_and_io::{shooting_action, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
-use semio_framework_plugin::ui_node_list;
+use semio_plugin::ui_node_list;
 use crate::{ShootingShot, ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
-use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
-use semio_framework_ui_contract::{input, BuiltNode};
+use semio_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::tree_item;
+use semio_plugin::tree_item_desc;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_ui_contract::{input, BuiltNode};
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_BODY_INSPECTION: &str = "shooting.play.inspection";
@@ -36,8 +36,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn control_row(row_id: &str, label: &str, control: BuiltNode) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    semio_framework_ui_contract::tree_item(ui_label(label)?)
+fn control_row(row_id: &str, label: &str, control: BuiltNode) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    semio_ui_contract::tree_item(ui_label(label)?)
         .try_id(row_id)
         .map_err(|_| ui_capacity_error())?
         .try_child(control)
@@ -46,7 +46,7 @@ fn control_row(row_id: &str, label: &str, control: BuiltNode) -> semio_framework
         .map_err(|_| ui_capacity_error())
 }
 
-fn shot_field(shot: &ShootingShot, name: &'static str, label: &str, value: &str, kind: Option<InputKind>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn shot_field(shot: &ShootingShot, name: &'static str, label: &str, value: &str, kind: Option<InputKind>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let id = format!("{ROOT}.shot.{name}");
     if let Some(kind) = kind {
         let args = ui_value_map([("field", ui_value_text(name)?), ("shotIds", ui_value_list([ui_value_text(&shot.id)?])?)])?;
@@ -67,7 +67,7 @@ fn shot_field(shot: &ShootingShot, name: &'static str, label: &str, value: &str,
     tree_item_desc(&id, ui_label(label)?, Some(value.to_string()))
 }
 
-fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let fields = ui_node_list([
         shot_field(shot, "label", labels.field_label.as_str(), &shot.label, Some(InputKind::Text)),
         shot_field(shot, "format", labels.field_format.as_str(), &shot.format, None),
@@ -79,7 +79,7 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> semio_f
 }
 
 /// 🔍️ Resolves shot configuration selection, then the document's active shot, then a localized summary.
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let selected = cfg.selected_shot_ids.first().and_then(|id| snapshot.shots.iter().find(|shot| &shot.id == id));
     if let Some(shot) = selected.or_else(|| crate::active_shot(snapshot)) {
         return shot_inspector_group(shot, labels);

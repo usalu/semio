@@ -5,7 +5,7 @@ use crate::unit_tests::context;
 async fn definition_declares_this_windows_body_key() {
     assert_eq!(definition().body_key, BODY_VIEWPORT);
     assert_eq!(definition().id, WINDOW_VIEWPORT);
-    assert_eq!(definition().surface_kind, semio_framework_plugin::SurfaceKind::World3d);
+    assert_eq!(definition().surface_kind, semio_plugin::SurfaceKind::World3d);
 }
 
 #[semio_framework_async_macros::async_test]

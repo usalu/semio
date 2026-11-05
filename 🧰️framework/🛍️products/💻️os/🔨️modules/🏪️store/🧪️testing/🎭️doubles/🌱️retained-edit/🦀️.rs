@@ -2,13 +2,13 @@
 //!
 //! 🧭️ Shares the demo fixture behind native replay and one-item preparation for every mutation family of the demo document.
 
-use semio_framework_os_store_testing_prelude::*;
-use semio_framework_os_store_testing_fixtures::*;
+use semio_os_store_testing_prelude::*;
+use semio_os_store_testing_fixtures::*;
 use crate::*;
-use semio_framework_os_spr::ColdMutation as _;
-use semio_framework_os_store_snapshot_clone::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
+use semio_os_spr::ColdMutation as _;
+use semio_os_store_snapshot_clone::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
-use semio_framework_os_spr::apply_diff_cold;
+use semio_os_spr::apply_diff_cold;
 
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -20,13 +20,13 @@ pub struct ColdRetainedCloneEditCursor<M: 'static> {
     phase: u8,
     inverse: Option<Vec<M>>,
     active_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
-    semantic_refusal: std::mem::ManuallyDrop<Option<semio_framework_os_spr::MutationApplyError>>,
+    semantic_refusal: std::mem::ManuallyDrop<Option<semio_os_spr::MutationApplyError>>,
     cancelled: bool,
     closing: bool,
     last_work:u64,
 }
 
-impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> ColdRetainedCloneEditCursor<M> {
+impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_os_spr::Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> ColdRetainedCloneEditCursor<M> {
     fn close_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         if let Some(retirement) = self.active_retirement.as_ref() {
@@ -45,7 +45,7 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
     }
 }
 
-impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> RetainedCloneEdit<DemoSnapshot, M> for ColdRetainedCloneEdit<M> {
+impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_os_spr::Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> RetainedCloneEdit<DemoSnapshot, M> for ColdRetainedCloneEdit<M> {
     type Cursor = ColdRetainedCloneEditCursor<M>;
 
     fn preflight(&self, _mutation: &M, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, &'static str> {
@@ -60,7 +60,7 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
     }
 }
 
-impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> RetainedCloneEditCursor<DemoSnapshot, M> for ColdRetainedCloneEditCursor<M> {
+impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_os_spr::Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> RetainedCloneEditCursor<DemoSnapshot, M> for ColdRetainedCloneEditCursor<M> {
     fn foreign_step_presence(&self)->bool{false}
     fn next_work_demand(&self,_:RetainedCloneRef<'_,DemoSnapshot>,_:&DemoSnapshot,_:RetainedCloneRef<'_,M>,_:usize)->Result<u64,ValueError>{Ok(if self.phase==2{2}else{1})}
     fn last_turn_work(&self)->u64{self.last_work}
@@ -177,7 +177,7 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
 
 
 /// 🏭️ Native replay preparation of one cold mutation family of the demo document.
-pub fn cold_demo_replay_preparation_factory<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static>() -> std::sync::Arc<dyn semio_framework_os_store_replay_operation::ArtifactReplayPreparationFactory<DemoSnapshot, M>>
+pub fn cold_demo_replay_preparation_factory<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_os_spr::Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static>() -> std::sync::Arc<dyn semio_os_store_replay_operation::ArtifactReplayPreparationFactory<DemoSnapshot, M>>
 {
-    std::sync::Arc::new(semio_framework_os_store_snapshot_clone::RetainedClonePreparationFactory::new(std::sync::Arc::new(ColdRetainedCloneEdit::<M> { marker: std::marker::PhantomData }), std::sync::Arc::new(DemoMutationRetirementFactory), std::sync::Arc::new(DemoSnapshotRetirementFactory), 64).expect("cold demo replay preparation factory"))
+    std::sync::Arc::new(semio_os_store_snapshot_clone::RetainedClonePreparationFactory::new(std::sync::Arc::new(ColdRetainedCloneEdit::<M> { marker: std::marker::PhantomData }), std::sync::Arc::new(DemoMutationRetirementFactory), std::sync::Arc::new(DemoSnapshotRetirementFactory), 64).expect("cold demo replay preparation factory"))
 }

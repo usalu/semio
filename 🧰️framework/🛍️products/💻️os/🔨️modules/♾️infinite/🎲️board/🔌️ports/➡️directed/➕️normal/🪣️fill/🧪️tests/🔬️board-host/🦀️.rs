@@ -1,7 +1,7 @@
-use semio_framework_os_infinite_board_normal_fill::{BoardFillNodeCapture, BoardFillNodeSnapshot, BoardFillText, BoardFillCaptureStep};
+use semio_os_infinite_board_normal_fill::{BoardFillNodeCapture, BoardFillNodeSnapshot, BoardFillText, BoardFillCaptureStep};
 //! 🧪️ normal-fill tests (🔬️board-host): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_normal_fill::{BOARD_FILL_COMMIT_BYTES, BOARD_FILL_COMMIT_PAGE_COUNT, BOARD_FILL_KIND_HANDLE_CAPACITY, BOARD_FILL_PAGE_ITEMS, BOARD_FILL_PLACEMENT_CAPACITY, BOARD_FILL_SOURCE_CAPACITY, BoardFillCheckpoint, BoardFillCommitCandidate, BoardFillCommitEncoder, BoardFillCommitPlacement, BoardFillFixedPages, BoardFillJob, BoardFillJobState, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotCapture, BoardFillSnapshotIngress, BoardFillSource, BoardFillVirtualHandle, NEUTRAL_BOARD_NAMING};
+use semio_os_infinite_board_normal_fill::{BOARD_FILL_COMMIT_BYTES, BOARD_FILL_COMMIT_PAGE_COUNT, BOARD_FILL_KIND_HANDLE_CAPACITY, BOARD_FILL_PAGE_ITEMS, BOARD_FILL_PLACEMENT_CAPACITY, BOARD_FILL_SOURCE_CAPACITY, BoardFillCheckpoint, BoardFillCommitCandidate, BoardFillCommitEncoder, BoardFillCommitPlacement, BoardFillFixedPages, BoardFillJob, BoardFillJobState, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotCapture, BoardFillSnapshotIngress, BoardFillSource, BoardFillVirtualHandle, NEUTRAL_BOARD_NAMING};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
@@ -294,9 +294,9 @@ fn board_fill_original_descriptors_keep_source_and_semantic_serial_separate() {
 fn board_fill_capture_original_page_births_keep_pending_on_each_denied_axis() {
     let mut original = BoardFillOriginalFixture::new();
     let mut capture = original.capture();
-    let scene = semio_framework_os_infinite_board_normal_scene::BoardSceneState::default();
-    let style = semio_framework_os_infinite_board_normal_scene::BoardStyleState::default();
-    let brush = semio_framework_os_infinite_board_normal_gestures::BoardBrushState::default();
+    let scene = semio_os_infinite_board_normal_scene::BoardSceneState::default();
+    let style = semio_os_infinite_board_normal_scene::BoardStyleState::default();
+    let brush = semio_os_infinite_board_normal_gestures::BoardBrushState::default();
     for index in 0..=BOARD_FILL_PAGE_ITEMS {
         capture.node = Some(BoardFillNodeCapture { id: BoardFillText::empty(), bounds: Some([0.0; 4]) });
         let demand = capture.next_step_demands(&style).unwrap();

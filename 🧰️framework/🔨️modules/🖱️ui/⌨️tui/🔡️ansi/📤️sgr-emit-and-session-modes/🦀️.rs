@@ -26,19 +26,19 @@ fn push_sgr(out: &mut String, state: &mut SgrState, cell: &Cell) {
         return;
     }
     out.push_str("\x1b[0");
-    if cell.attrs & semio_framework_ui_tui_core::cell::attr::BOLD != 0 {
+    if cell.attrs & semio_ui_tui_core::cell::attr::BOLD != 0 {
         out.push_str(";1");
     }
-    if cell.attrs & semio_framework_ui_tui_core::cell::attr::DIM != 0 {
+    if cell.attrs & semio_ui_tui_core::cell::attr::DIM != 0 {
         out.push_str(";2");
     }
-    if cell.attrs & semio_framework_ui_tui_core::cell::attr::ITALIC != 0 {
+    if cell.attrs & semio_ui_tui_core::cell::attr::ITALIC != 0 {
         out.push_str(";3");
     }
-    if cell.attrs & semio_framework_ui_tui_core::cell::attr::UNDERLINE != 0 {
+    if cell.attrs & semio_ui_tui_core::cell::attr::UNDERLINE != 0 {
         out.push_str(";4");
     }
-    if cell.attrs & semio_framework_ui_tui_core::cell::attr::REVERSE != 0 {
+    if cell.attrs & semio_ui_tui_core::cell::attr::REVERSE != 0 {
         out.push_str(";7");
     }
     out.push_str(&format!(";38;2;{};{};{}", cell.fg[0], cell.fg[1], cell.fg[2]));

@@ -1,6 +1,6 @@
 //! 📦️ Sparse collection staging never clones an existing row or document snapshot.
 use super::{keyed_plan::{KeyedPlan,PlanAdvance},borrowed_lists::{BorrowedRows,BorrowedDelta,BorrowedKey},list_move::{TypedListMove,OwnedInsertion}};
-use semio_framework_os_kernel::{ApplyCapability,RetainedFieldPreparation};
+use semio_os_kernel::{ApplyCapability,RetainedFieldPreparation};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedClone,RetainedCloneRef,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{size_of,ManuallyDrop};
 /// 📤 A real sparse delta transfers its already-admitted insertion vector once.

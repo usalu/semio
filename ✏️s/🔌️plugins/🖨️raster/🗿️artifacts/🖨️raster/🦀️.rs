@@ -3,9 +3,9 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
@@ -48,10 +48,10 @@ extern crate semio_framework_schema as schema;
 /// `io_registry::entries()` call below is now re-qualified onto `subsets::any::io::io_registry`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): the whole `⚙️engine` file this
 /// function moved out of has since been dissolved into `🧬️schema/`/`🚪️io/`/the app, per rule 5.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.raster.raster.standard.v1", "standard", "1", &[], None),
         ("s.raster.raster.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.raster.raster.schema.artifact", "schema", "s.raster.raster", &[("schema", "s.raster.raster")], None),
@@ -89,13 +89,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub use semio_s_artifact_raster_raster_io::artifact_kind;
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(semio_s_artifact_raster_raster_descriptor::raster_artifact_schema_descriptor())
         .inferences([semio_s_artifact_raster_raster_model::inferences::raster_artifact_inference_descriptor()])
         .composers(semio_s_artifact_raster_raster_io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::app::EditorApp<semio_s_artifact_raster_raster_editor::RasterPlayApp>>()
+        .document_codec::<semio_plugin::app::EditorApp<semio_s_artifact_raster_raster_editor::RasterPlayApp>>()
         .try_build()
 }
 

@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 serde = { workspace = true, optional = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
@@ -37,7 +37,7 @@ semio-s-artifact-norm-din18599-mutations = { workspace = true, features = ["test
 semio-s-artifact-norm-din18599-diff = { workspace = true, features = ["test-support"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
 semio-s-artifact-norm-din18599-model = { workspace = true, features = ["test-support"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-norm-din18599-checks = { workspace = true }
 semio-s-artifact-norm-din18599-io = { workspace = true }

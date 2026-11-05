@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "append", entity: "page-content", kind: "append-page-content", record: "Append" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Append {} operators to page {}", self.content.len(), self.index), &format!("{} Operatoren an Seite {} anhängen", self.content.len(), self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Append {} operators to page {}", self.content.len(), self.index), &format!("{} Operatoren an Seite {} anhängen", self.content.len(), self.index))
     }
 
     fn target(&self) -> Vec<String> {

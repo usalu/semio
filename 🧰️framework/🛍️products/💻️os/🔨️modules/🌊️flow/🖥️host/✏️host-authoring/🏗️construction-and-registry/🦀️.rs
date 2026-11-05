@@ -22,16 +22,16 @@ impl FlowHost {
     pub fn operator_registry(&self) -> neural::SharedRegistry { self.operator_registry.clone().unwrap_or_else(flow_operator_registry) }
     pub(in super::super) fn operator_registry_generation(&self) -> u64 { if self.operator_registry.is_some() { 0 } else { flow_extension_registry_generation() } }
     /// 🔌️ Supplies one geometry authority that this owner retains and explicitly closes.
-    pub fn with_geometry_port(mut self, port: Box<dyn semio_framework_os_flow_geometry::GeometryPort>) -> Self {
+    pub fn with_geometry_port(mut self, port: Box<dyn semio_os_flow_geometry::GeometryPort>) -> Self {
         assert!(self.geometry_port.is_none(), "geometry authority is supplied once");
         self.geometry_port = Some(port);
         self
     }
-    pub fn geometry_port(&self) -> Result<&dyn semio_framework_os_flow_geometry::GeometryPort, String> {
+    pub fn geometry_port(&self) -> Result<&dyn semio_os_flow_geometry::GeometryPort, String> {
         self.geometry_port.as_deref().ok_or_else(|| "flow.geometry-port-missing".into())
     }
     /// 🏭️ Selects the actual baseline Store producer supplied by this host's child composition.
-    pub fn with_history_store_factory(mut self,producer:semio_framework_os_kernel::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>)->Self{assert!(self.history_store_factory.is_none()&&self.history_store.is_none(),"original history producer is supplied once before Store birth");self.history_store_factory=Some(producer);self}
+    pub fn with_history_store_factory(mut self,producer:semio_os_kernel::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>)->Self{assert!(self.history_store_factory.is_none()&&self.history_store.is_none(),"original history producer is supplied once before Store birth");self.history_store_factory=Some(producer);self}
     pub fn from_host_snapshot(host_snapshot: FlowHostSnapshot) -> Self {
         Self::from_host_snapshot_with_cache(host_snapshot, Arc::new(NeuralCache::new()))
     }
@@ -53,7 +53,7 @@ impl FlowHost {
             geometry_port: None,
             operator_registry: None,
             host_snapshot: host_snapshot,
-            dag: DagHost::from_host_snapshot(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_os_infinite_directed_presentation::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            dag: DagHost::from_host_snapshot(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_os_infinite_directed_presentation::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             current_channels: None,
             export_payloads: HistoryFoldIndex::new(),
             last_eval_json: String::new(),

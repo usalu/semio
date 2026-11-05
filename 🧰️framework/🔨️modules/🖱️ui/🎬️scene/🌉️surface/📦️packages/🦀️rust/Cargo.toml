@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-scene-surface"
+name = "semio-ui-scene-surface"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,12 +22,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-scene-doc = { path = "../../../🎬️scenes/📜️doc/📦️packages/🦀️rust" }
-semio-framework-ui-scene-pack = { path = "../../../📦️pack/📦️packages/🦀️rust" }
-ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-ui-scene-doc = { path = "../../../🎬️scenes/📜️doc/📦️packages/🦀️rust" }
+semio-ui-scene-pack = { path = "../../../📦️pack/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 
 [dev-dependencies]
-semio-framework-ui-scene-plane = { path = "../../../🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
-semio-framework-ui-scene-views = { path = "../../../🎬️scenes/📄️views/📦️packages/🦀️rust" }
-semio-framework-ui-scene-world3d = { path = "../../../🎬️scenes/🌍️world3d/📦️packages/🦀️rust" }
+semio-ui-scene-plane = { path = "../../../🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
+semio-ui-scene-views = { path = "../../../🎬️scenes/📄️views/📦️packages/🦀️rust" }
+semio-ui-scene-world3d = { path = "../../../🎬️scenes/🌍️world3d/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140" }

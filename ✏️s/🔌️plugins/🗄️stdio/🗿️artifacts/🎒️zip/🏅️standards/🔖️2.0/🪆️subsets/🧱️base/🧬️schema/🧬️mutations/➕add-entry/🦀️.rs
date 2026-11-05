@@ -17,8 +17,8 @@ pub struct AddEntry {
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for AddEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "entry", kind: "add-entry", record: "AddEntry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add entry", "Eintrag hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add entry", "Eintrag hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -22,8 +22,8 @@ pub struct ChangeMaterial {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeMaterial where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeMaterial> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "material", kind: "change-material", record: "ChangedMaterial" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change material \"{}\"", self.id), &format!("Material \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change material \"{}\"", self.id), &format!("Material \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

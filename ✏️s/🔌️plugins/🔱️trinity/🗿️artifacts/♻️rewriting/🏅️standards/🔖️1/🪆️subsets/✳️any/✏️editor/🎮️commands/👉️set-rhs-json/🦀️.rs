@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::{snapshot::json, mutations::{edit_rhs,RewriteRuleMutation}};
 use crate::standards::v1::subsets::any::schema::rule::Rhs;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::{Emit,Fault,FaultOrigin,FaultCode,NoConfigMutation};
+use semio_plugin::{Emit,Fault,FaultOrigin,FaultCode,NoConfigMutation};
 pub fn set_rhs(state:&RewritingSnapshot,value:&str)->Result<Emit<RewriteRuleMutation,NoConfigMutation>,Fault>{
  let invalid=|message:String|Fault::new(FaultOrigin::App,FaultCode::new("app.command.invalid-args"),message);
  let value=semio_framework_pack_json::parse(value,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|invalid(error.to_string()))?;

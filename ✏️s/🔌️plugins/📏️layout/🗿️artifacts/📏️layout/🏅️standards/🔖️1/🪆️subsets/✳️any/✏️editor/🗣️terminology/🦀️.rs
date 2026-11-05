@@ -2,11 +2,11 @@
 //! reaches for. Deliberately ONE block for the whole app (never split per window/panel): the macro's
 //! value is that every locale×terminology combination is compile-checked in one place.
 
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LabelText;
+use semio_ui_locale::Label;
+use semio_ui_locale::LabelText;
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the layout app; one field per label makes every locale combination compile-checked.
     pub struct LayoutLabels {
         artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";
@@ -201,8 +201,8 @@ semio_framework_ui_locale::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from the shared OS-owned view context.
-pub fn layout_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static LayoutLabels {
-    semio_framework_plugin::resolve_labels::<LayoutLabels>(view_state)
+pub fn layout_labels(view_state: &semio_plugin::ViewModel) -> &'static LayoutLabels {
+    semio_plugin::resolve_labels::<LayoutLabels>(view_state)
 }
 
 /// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.

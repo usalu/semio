@@ -13,8 +13,8 @@ pub struct SetConformanceAttribute {
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetConformanceAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "conformance-attribute", kind: "set-conformance-attribute", record: "SetConformanceAttribute" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

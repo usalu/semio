@@ -91,7 +91,7 @@ test("canvas nudge shortcuts have explicit argument-free input contracts",async(
   const source=await Bun.file(new URL("../../../../🛂️manifest/🦀️.rs",import.meta.url)).text();
   for(const row of nudges) {
     expect(source.includes(`.keybinding("${row.keys}", "${row.action}")`)).toBe(true);
-    expect(source.includes(`.action_audience("${row.action}", semio_framework_plugin::CapabilityAudience::Input)`)).toBe(true);
+    expect(source.includes(`.action_audience("${row.action}", semio_plugin::CapabilityAudience::Input)`)).toBe(true);
   }
 });
 

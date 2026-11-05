@@ -32,7 +32,7 @@ fn object_min_properties_hides_removal_at_the_boundary() {
     assert!(capabilities.rename);
     assert!(!capabilities.remove);
     assert!(provider.allows_collection_insert(&[]));
-    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.min-properties#editor", &TreeWindows::unhosted()).expect("min properties details");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.min-properties#editor", &TreeWindows::unhosted()).expect("min properties details");
     assert!(!contains_key(&rendered, &format!("{}-remove", path_id(&path))));
 }
 
@@ -97,15 +97,15 @@ fn tagged_union_details_follow_the_current_native_discriminator() {
                     value: DslValue::Object(vec![("kind".into(), DslValue::String("automated".into())), ("value".into(), DslValue::String("queued".into())), ("label".into(), DslValue::String("Keep me".into())),]),
                 }]
             );
-            let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::De, "test.tagged#editor", &TreeWindows::unhosted()).expect("tagged union details");
+            let rendered = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::De, "test.tagged#editor", &TreeWindows::unhosted()).expect("tagged union details");
             let kind_id = path_id(&[SnapshotDetailPathSegment::Key("variant".into()), SnapshotDetailPathSegment::Key("kind".into())]);
             assert!(!contains_key(&rendered, &format!("{kind_id}-text")), "the discriminator is switched only through a complete valid variant");
             assert!(!contains_key(&rendered, &format!("{kind_id}-enum")), "the discriminator has no lossy scalar select");
             let variant_id = path_id(&variant_path);
             let switch = find_key(&rendered, &format!("{variant_id}-variant-0")).expect("variant switch");
-            let semio_framework_ui_contract::Component::Button(props) = &switch.component else { panic!("variant switch must be a button") };
+            let semio_ui_contract::Component::Button(props) = &switch.component else { panic!("variant switch must be a button") };
             assert_eq!(props.label.0.as_str(), "Wechseln zu Automatisiert");
-            let binding = switch.bindings.iter().find(|binding| binding.trigger == semio_framework_ui_contract::Trigger::Activate).expect("variant switch binding");
+            let binding = switch.bindings.iter().find(|binding| binding.trigger == semio_ui_contract::Trigger::Activate).expect("variant switch binding");
             let Some(UiValue::Map(arguments)) = &binding.args else { panic!("variant switch arguments") };
             assert!(arguments.iter().any(|(key, value)| key.as_str() == "path" && matches!(value, UiValue::Text(path) if path.as_str() == "/variant")));
             let source = arguments
@@ -205,12 +205,12 @@ fn enum_values_render_as_an_accessible_typed_select() {
             path.is_empty().then(|| vec![DslValue::String("draft".into()), DslValue::String("review".into()), DslValue::String("published".into())]).unwrap_or_default()
         }
     }
-    let rendered = render_snapshot_details_provider_revisioned(&EnumValue, semio_framework_ui_contract::UiPublicationRevision(1), Locale::De, "test.enum#editor", &TreeWindows::unhosted()).expect("enum details");
+    let rendered = render_snapshot_details_provider_revisioned(&EnumValue, semio_ui_contract::UiPublicationRevision(1), Locale::De, "test.enum#editor", &TreeWindows::unhosted()).expect("enum details");
     let select = find_key(&rendered, &format!("{ROOT_PATH_ID}-enum")).expect("enum select");
-    let semio_framework_ui_contract::Component::Select(props) = &select.component else { panic!("string enum must use a select") };
+    let semio_ui_contract::Component::Select(props) = &select.component else { panic!("string enum must use a select") };
     assert_eq!(props.value.as_str(), "review");
     assert_eq!(props.items.len(), 3);
-    let binding = select.bindings.iter().find(|binding| binding.trigger == semio_framework_ui_contract::Trigger::Change).expect("enum change binding");
+    let binding = select.bindings.iter().find(|binding| binding.trigger == semio_ui_contract::Trigger::Change).expect("enum change binding");
     let Some(UiValue::Map(arguments)) = &binding.args else { panic!("enum path arguments") };
     assert!(arguments.iter().any(|(key, value)| key.as_str() == "path" && matches!(value, UiValue::Text(value) if value.as_str().is_empty())));
     let event = snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&DslValue::Object(vec![("path".into(), DslValue::String(String::new())), ("value".into(), DslValue::String("published".into()))])))
@@ -223,7 +223,7 @@ fn enum_values_render_as_an_accessible_typed_select() {
 fn unicode_rfc6901_paths_past_one_text_value_use_lossless_chunks() {
     let key = "Pfad/mit~Unicode-🚀é".repeat(64);
     let path = pointer(&[SnapshotDetailPathSegment::Key(key.clone())]);
-    assert!(path.len() > semio_framework_ui_contract::UI_TEXT_MAX_BYTES);
+    assert!(path.len() > semio_ui_contract::UI_TEXT_MAX_BYTES);
     let (argument, value) = pointer_argument(&path, "path", "pathChunks").expect("chunked pointer");
     assert_eq!(argument, "pathChunks");
     let UiValue::List(chunks) = value else { panic!("path chunk list") };
@@ -231,7 +231,7 @@ fn unicode_rfc6901_paths_past_one_text_value_use_lossless_chunks() {
     let mut decoded = Vec::new();
     while let Some(chunk) = cursor.next() {
         let UiValue::Text(chunk) = chunk else { panic!("text chunk") };
-        assert!(chunk.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES);
+        assert!(chunk.len() <= semio_ui_contract::UI_TEXT_MAX_BYTES);
         decoded.push(DslValue::String(chunk.to_string()));
     }
     let event = snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&DslValue::Object(vec![(argument.into(), DslValue::Array(decoded)), ("value".into(), DslValue::String("after".into()))])))
@@ -268,22 +268,22 @@ fn paths_beyond_the_flat_chunk_carrier_open_the_complete_editable_source() {
     }
     let provider = HugeKey("🚀".repeat(40_000));
     let path = pointer(&[SnapshotDetailPathSegment::Key(provider.0.clone())]);
-    assert!(path.len() > semio_framework_ui_contract::UI_TEXT_MAX_BYTES * semio_framework_ui_contract::UI_VALUE_MAX_ITEMS);
-    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.huge-key#editor", &TreeWindows::unhosted()).expect("source fallback");
+    assert!(path.len() > semio_ui_contract::UI_TEXT_MAX_BYTES * semio_ui_contract::UI_VALUE_MAX_ITEMS);
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.huge-key#editor", &TreeWindows::unhosted()).expect("source fallback");
     let fallback = find_key(&rendered, &format!("{}-source-fallback", path_id(&[SnapshotDetailPathSegment::Key(provider.0.clone())]))).expect("editable source fallback");
     let surface = fallback.children.get(0).expect("draft surface");
-    let semio_framework_ui_contract::Component::Surface(props) = &surface.component else { panic!("fallback must be a text draft") };
-    let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("draft scene");
+    let semio_ui_contract::Component::Surface(props) = &surface.component else { panic!("fallback must be a text draft") };
+    let mut scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(props).expect("draft scene");
     for carrier in &surface.children {
         let mut payload = String::new();
         let mut frontier = vec![carrier];
         while let Some(node) = frontier.pop() {
-            if let semio_framework_ui_contract::Component::Text(text) = &node.component {
+            if let semio_ui_contract::Component::Text(text) = &node.component {
                 payload.push_str(&text.packed_payload());
             }
             frontier.extend(node.children.iter().rev());
         }
-        assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), payload));
+        assert!(semio_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), payload));
     }
     let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings JSON");
     assert_eq!(settings["readOnly"], false);

@@ -35,17 +35,17 @@ pub const UI_ENGINE_LOCALE_UNRESOLVED: &str = "ui.engine.locale-unresolved: the 
 
 /// 🧫️ The locale a law's engine starts in when the law builds no shell — a test fixture, never a production default.
 #[cfg(any(test, feature = "testkit"))]
-pub const TEST_UI_ENGINE_LOCALE: semio_framework_ui_locale::Locale = semio_framework_ui_locale::Locale::En;
+pub const TEST_UI_ENGINE_LOCALE: semio_ui_locale::Locale = semio_ui_locale::Locale::En;
 
 /// 🌐️ The retained UI engine cell. There is no default language, so the engine exists only once the shell resolved its
 /// locale ([`install_ui_engine_locale`]); every access before that is refused by name ([`UI_ENGINE_LOCALE_UNRESOLVED`]).
-pub struct UiEngineCell(pub WorkerCell<Option<semio_framework_ui_wgpu_engine::Ui>>);
+pub struct UiEngineCell(pub WorkerCell<Option<semio_ui_wgpu_engine::Ui>>);
 
 /// 🔐️ The held engine: dereferences to the `Ui`, refusing by name while none was installed.
-pub struct UiEngineGuard<'a>(MutexGuard<'a, Option<semio_framework_ui_wgpu_engine::Ui>>);
+pub struct UiEngineGuard<'a>(MutexGuard<'a, Option<semio_ui_wgpu_engine::Ui>>);
 
 impl std::ops::Deref for UiEngineGuard<'_> {
-    type Target = semio_framework_ui_wgpu_engine::Ui;
+    type Target = semio_ui_wgpu_engine::Ui;
 
     fn deref(&self) -> &Self::Target {
         self.0.as_ref().expect(UI_ENGINE_LOCALE_UNRESOLVED)
@@ -59,9 +59,9 @@ impl std::ops::DerefMut for UiEngineGuard<'_> {
 }
 
 /// 🌱️ The engine before any locale: none in production; a law's fixture locale under `cfg(test)`.
-fn initial_ui_engine() -> Option<semio_framework_ui_wgpu_engine::Ui> {
+fn initial_ui_engine() -> Option<semio_ui_wgpu_engine::Ui> {
     #[cfg(any(test, feature = "testkit"))]
-    return Some(semio_framework_ui_wgpu_engine::Ui::new(TEST_UI_ENGINE_LOCALE));
+    return Some(semio_ui_wgpu_engine::Ui::new(TEST_UI_ENGINE_LOCALE));
     #[cfg(not(any(test, feature = "testkit")))]
     None
 }
@@ -86,18 +86,18 @@ impl UiEngineCell {
 
 /// 🏁️ Installs the retained UI engine in the shell's resolved locale — the first resolution builds it, every later one
 /// (a `setLocale`, a preferences load) re-sets the language of its own chrome.
-pub fn install_ui_engine_locale(locale: semio_framework_ui_locale::Locale) {
+pub fn install_ui_engine_locale(locale: semio_ui_locale::Locale) {
     let mut engine = UI_ENGINE.0.borrow();
     match engine.as_mut() {
         Some(ui) => ui.set_locale(locale),
-        None => *engine = Some(semio_framework_ui_wgpu_engine::Ui::new(locale)),
+        None => *engine = Some(semio_ui_wgpu_engine::Ui::new(locale)),
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UiDocumentCloseOwner {
     pub window_id: SurfaceId,
-    pub token: semio_framework_ui_wgpu_engine::UiSurfaceToken,
+    pub token: semio_ui_wgpu_engine::UiSurfaceToken,
     pub generation: u64,
 }
 
@@ -112,7 +112,7 @@ impl UiDocumentCloseQueue {
             *existing = owner;
             return true;
         }
-        if self.owners.len() == semio_framework_ui_wgpu_engine::UI_LAYOUT_SURFACE_SLOTS {
+        if self.owners.len() == semio_ui_wgpu_engine::UI_LAYOUT_SURFACE_SLOTS {
             return false;
         }
         self.owners.push_back(owner);
@@ -134,7 +134,7 @@ pub fn ui_document_close_pending_for(window_id: &str) -> bool {
     UI_DOCUMENT_CLOSE_QUEUE.with(|cell| cell.borrow().owns_window(window_id))
 }
 
-pub fn component_scene_is_presented(witness: &semio_framework_ui_retained_tree::reconcile::UiComponentSceneWitness<'_>) -> bool {
+pub fn component_scene_is_presented(witness: &semio_ui_retained_tree::reconcile::UiComponentSceneWitness<'_>) -> bool {
     UI_ENGINE.with(|cell| cell.borrow().presented_component_scene_matches(witness))
 }
 

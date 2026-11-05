@@ -112,7 +112,7 @@ fn a_body_that_is_not_a_json_object_is_refused_by_name() {
 /// 🔁️ The inference wire the owned codec writes and reads is the wire the reference codec writes and reads: the request, the roster rows and the result decode to the same documents.
 #[test]
 fn the_owned_codec_speaks_the_inference_wire_like_the_reference_codec() {
-    use semio_framework_os_mcp_schema::schema::{ArtifactInferenceBudgetV1, ArtifactInferenceCacheModeV1, ArtifactInferenceRequestV1, ArtifactInferenceResultV1};
+    use semio_os_mcp_schema::schema::{ArtifactInferenceBudgetV1, ArtifactInferenceCacheModeV1, ArtifactInferenceRequestV1, ArtifactInferenceResultV1};
     let request = ArtifactInferenceRequestV1 {
         wire_version: 2,
         owner: "wfc".into(),

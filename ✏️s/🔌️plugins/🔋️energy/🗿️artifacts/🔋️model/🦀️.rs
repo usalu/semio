@@ -13,7 +13,7 @@ extern crate semio_s_plugin_energy_engine_model as model;
 #[cfg(test)]
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use crate::snapshot::{ENERGY_MODEL_DOCUMENT_SCHEMA, EnergyModelSnapshot};
@@ -37,8 +37,8 @@ use crate::mutations::EnergyModelMutation;
 /// headless library with ZERO apps — there is no `ArtifactApp` to name. `document_codec_bare` is the
 /// new sibling closing exactly that gap (see its own doc); the old free fn in `⚙️engine` is deleted
 /// with this — nothing else called it.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     type CapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
     let rows: &[CapabilityRow<'_>] = &[
@@ -73,8 +73,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::schema::energy_model_artifact_schema_descriptor())
         .inferences([crate::inferences::energy_model_artifact_inference_descriptor()])
         .composers(crate::io::io_registry::entries())

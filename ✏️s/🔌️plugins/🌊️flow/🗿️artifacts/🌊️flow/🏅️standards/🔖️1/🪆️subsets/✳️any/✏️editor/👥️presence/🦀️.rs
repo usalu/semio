@@ -12,7 +12,7 @@ pub mod retirement;
 /// `selected_edge_ids`/`selected_handle_ids` deleted — the "graph" interaction domain's selection is
 /// now broadcast generically by the framework (`PresenceInteraction`/`PresenceDomain`), for every peer,
 /// with no per-app mirror needed.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "flow.presence")]
 #[dsl(layout = "lines")]
@@ -66,8 +66,8 @@ impl ArtifactPack for FlowPresence {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for FlowPresence {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for FlowPresence {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

@@ -1,11 +1,11 @@
 //! 🕹️ Layout interaction domain: the `"elements"` domain, its snapshot and the select, hover and clear effects.
 
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::CLEAR_SELECTION_ACTION_ID;
-use semio_framework_plugin::INTERACTION_HOVER_ACTION_ID;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::app::InteractionView;
+use semio_plugin::DslValue;
+use semio_plugin::CLEAR_SELECTION_ACTION_ID;
+use semio_plugin::INTERACTION_HOVER_ACTION_ID;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
 
 /// 🕹️ The one framework-owned interaction domain layout declares — pages/frames on the Blueprint
 /// canvas plus the document tree's frame rows (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
@@ -60,15 +60,15 @@ pub fn layout_hover_action_args(id: Option<&str>) -> DslValue {
 /// app asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
 pub fn layout_select_effect(ids: &[String], merge: &str) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(layout_select_action_args(ids, merge)), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(layout_select_action_args(ids, merge)), delay_ms: 0 }
 }
 
 /// 🐁️ Wraps [`layout_hover_action_args`] the same way, for `interactionHover`.
 pub fn layout_hover_effect(id: Option<&str>) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(114), action: INTERACTION_HOVER_ACTION_ID.into(), args: Some(layout_hover_action_args(id)), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(114), action: INTERACTION_HOVER_ACTION_ID.into(), args: Some(layout_hover_action_args(id)), delay_ms: 0 }
 }
 
 /// 🕹️ Clicking empty canvas clears every domain's selection — `clearSelection` takes no `domainId`.
 pub fn layout_clear_selection_effect() -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(113), action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(113), action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
 }

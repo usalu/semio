@@ -6,16 +6,16 @@
 pub mod lifted_retirement;
 #[path = "🧬️retained-clone/🦀️.rs"]
 pub mod artifact_child_retained_clone;
-use semio_framework_os_spr::command::ArtifactMessageSource;
+use semio_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use semio_framework_os_store_envelope::owner::OwnerRef;
-use semio_framework_os_store_link_schema::ArtifactLink;
-use semio_framework_os_pack::pack_rt;
+use semio_os_store_envelope::owner::OwnerRef;
+use semio_os_store_link_schema::ArtifactLink;
+use semio_os_pack::pack_rt;
 use semio_framework_dsl_record::RecordSpecProducer;
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
 

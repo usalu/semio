@@ -11,10 +11,10 @@ use semio_framework_value::DslValue;
 use semio_framework_value::ValueError;
 use serde::Deserialize;
 use serde::Serialize;
-use semio_framework_os_mcp_catalog::catalog::CapabilityDefinition;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::opaque_json::dsl_json;
-use semio_framework_os_mcp_foundation::reports::RevisionStamp;
+use semio_os_mcp_catalog::catalog::CapabilityDefinition;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::opaque_json::dsl_json;
+use semio_os_mcp_foundation::reports::RevisionStamp;
 
 /// 🌉️ `serde_json::Value` ↔ `DslValue` bridge, built on `🌱️value/🦀️.rs`'s own infallible
 /// `From<&DslValue>`/`From<&serde_json::Value>` impls — shared by every field in this file typed
@@ -115,7 +115,7 @@ pub enum AppCommand {
 /// plugin whose guest actually owns the route (the row's `contributor`, which equals `owner` for an
 /// owner-authored inference): `RoutingArtifactChannel` reads it directly rather than decoding a
 /// plugin out of `instance`, because an inference carries no capability id. Every remaining field is
-/// exactly what `semio_framework_plugin_host::ArtifactInferenceRouter::infer`'s own request wire
+/// exactly what `semio_plugin_host::ArtifactInferenceRouter::infer`'s own request wire
 /// carries — this port never invents one of its own.
 #[derive(Clone, Debug, PartialEq)]
 pub struct InferCommand {

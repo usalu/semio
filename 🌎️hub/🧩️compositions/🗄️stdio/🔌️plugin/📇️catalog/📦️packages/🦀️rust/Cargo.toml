@@ -25,8 +25,8 @@ semio-framework-schema = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-hash = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 pack = { workspace = true }

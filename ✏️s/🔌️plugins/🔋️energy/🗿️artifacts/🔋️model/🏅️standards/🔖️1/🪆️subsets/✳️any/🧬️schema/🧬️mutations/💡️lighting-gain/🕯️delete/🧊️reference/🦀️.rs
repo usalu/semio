@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "lighting-gain", kind: "delete-lighting-gain", record: "DeletedLightingGain" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete Lighting Gain {}", self.id.0), &format!("Beleuchtungswärmegewinn {} löschen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete Lighting Gain {}", self.id.0), &format!("Beleuchtungswärmegewinn {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

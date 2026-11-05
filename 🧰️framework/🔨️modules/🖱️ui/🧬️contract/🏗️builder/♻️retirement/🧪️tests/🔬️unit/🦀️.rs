@@ -33,7 +33,7 @@ fn built_tree_retirement_closes_all_typed_fields_and_preserves_foreign_values() 
     let fixture = fixture();
     let components: serde_json::Value = serde_json::from_str(include_str!("../../../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
     let foreign: UiValue = serde_json::from_value(serde_json::json!({"foreign": ["Grüße"]})).unwrap();
-    let observation=semio_framework_ui_contract_values::test_observer::UiValueObservation::capture(&foreign).unwrap();
+    let observation=semio_ui_contract_values::test_observer::UiValueObservation::capture(&foreign).unwrap();
     for grant in fixture["grants"].as_array().unwrap() {
         for row in components["cases"].as_array().unwrap() {
             let mut node = BuiltNode::try_new("K", serde_json::from_value(row["component"].clone()).unwrap()).unwrap();

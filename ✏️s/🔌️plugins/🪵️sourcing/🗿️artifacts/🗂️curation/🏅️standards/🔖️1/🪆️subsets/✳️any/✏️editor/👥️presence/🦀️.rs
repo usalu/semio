@@ -7,7 +7,7 @@ use pack::snapshot::ArtifactPack;
 /// 👥️ Shareable live subset of sourcing curation view state (grid camera). Row selection now broadcasts
 /// automatically through the framework's typed `PresenceInteraction` field for the "rows" interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -137,8 +137,8 @@ impl ArtifactPack for SourcingCurationPresence {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SourcingCurationPresence {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SourcingCurationPresence {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -444,8 +444,8 @@ pub fn genesis_catalog_pack(document: &CurationSnapshot, slot: &str, child_id: &
 /// the framework's replacement pump (`ArtifactEditor::child_restore_projection` /
 /// `ArtifactViewer::child_restore_projection`). The trait default grants no restore authority, so
 /// without it every live envelope load faults `editor did not declare a loaded-parent child projection`.
-pub fn curation_child_restore_projection(document: &CurationSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(document).map_err(|error| semio_framework_plugin::Fault::from(format!("sourcing curation child projection failed: {error}")))
+pub fn curation_child_restore_projection(document: &CurationSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(document).map_err(|error| semio_plugin::Fault::from(format!("sourcing curation child projection failed: {error}")))
 }
 //#endregion 🔖️CatalogComposition
 }

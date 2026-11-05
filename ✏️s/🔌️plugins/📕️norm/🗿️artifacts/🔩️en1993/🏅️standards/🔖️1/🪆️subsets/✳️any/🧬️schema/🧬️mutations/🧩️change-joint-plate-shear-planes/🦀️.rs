@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlateShearPla
         record: "ChangedJointPlateShearPlanes",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear planes per bolt of the joint plate", "Anschlussblech: Scherfugen je Schraube ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear planes per bolt of the joint plate", "Anschlussblech: Scherfugen je Schraube ändern")
     }
 }
 

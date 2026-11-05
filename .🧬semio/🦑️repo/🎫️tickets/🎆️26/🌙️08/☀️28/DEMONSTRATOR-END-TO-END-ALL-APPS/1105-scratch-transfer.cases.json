@@ -1,0 +1,62 @@
+[
+  {
+    "id": "take-ready",
+    "op": "take",
+    "source": true,
+    "target": false,
+    "admitted": true,
+    "changed": true,
+    "afterSource": false,
+    "afterTarget": true
+  },
+  {
+    "id": "take-denied",
+    "op": "take",
+    "source": true,
+    "target": false,
+    "admitted": false,
+    "changed": false,
+    "afterSource": true,
+    "afterTarget": false
+  },
+  {
+    "id": "restore-ready",
+    "op": "restore",
+    "source": false,
+    "target": true,
+    "admitted": true,
+    "changed": true,
+    "afterSource": true,
+    "afterTarget": false
+  },
+  {
+    "id": "restore-denied",
+    "op": "restore",
+    "source": false,
+    "target": true,
+    "admitted": false,
+    "changed": false,
+    "afterSource": false,
+    "afterTarget": true
+  },
+  {
+    "id": "occupied-target",
+    "op": "take",
+    "source": true,
+    "target": true,
+    "admitted": true,
+    "changed": false,
+    "afterSource": true,
+    "afterTarget": true
+  },
+  {
+    "id": "occupied-source",
+    "op": "restore",
+    "source": true,
+    "target": true,
+    "admitted": true,
+    "changed": false,
+    "afterSource": true,
+    "afterTarget": true
+  }
+]

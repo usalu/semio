@@ -6,7 +6,7 @@ use super::*;
 
 //#region 🔖️MediaArtifact
 /// 🔁️ Lossless bridge from `Media` to the wire-level `(descriptor, data)` byte pair carried by
-/// `AppCommand::MediaIn`/`AppFrame::Media` — reuses `semio_framework_plugin::app::MediaArtifactDescriptor`
+/// `AppCommand::MediaIn`/`AppFrame::Media` — reuses `semio_plugin::app::MediaArtifactDescriptor`
 /// directly (not a hand-mirrored duplicate) so the runner and every guest plugin's
 /// `plugin_consume_media`/`plugin_produce_media` glue agree on the shape by construction. A `Binary`
 /// payload's bytes never live inline in `Media` (only its content-addressed `blob_hash` does) — this
@@ -28,7 +28,7 @@ pub async fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> R
             (MediaWireFormat::Binary { format_kind: format_kind.clone() }, Some(blob_hash.clone()), bytes)
         }
     };
-    let descriptor = semio_framework_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: None, kind_id: None, media_type: Some(media.media_type), wire, blob_hash };
+    let descriptor = semio_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: None, kind_id: None, media_type: Some(media.media_type), wire, blob_hash };
     let descriptor_value = semio_framework_value::ToValue::to_value(&descriptor);
     Ok((store::pack_rt::encode_wire_value(&descriptor_value), data))
 }
@@ -39,7 +39,7 @@ pub async fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> R
 /// whatever `blob_hash` the artifact's own descriptor claimed.
 pub async fn media_from_document<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B) -> Result<Media, RunError> {
     let value = store::pack_rt::decode_wire_value(descriptor).map_err(|error| RunError::Host(error.to_string()))?;
-    let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor = semio_framework_value::FromValue::from_value(value).map_err(|error| RunError::Host(error.to_string()))?;
+    let descriptor: semio_plugin::app::MediaArtifactDescriptor = semio_framework_value::FromValue::from_value(value).map_err(|error| RunError::Host(error.to_string()))?;
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
     let payload = match descriptor.wire {
         MediaWireFormat::Document { schema } => MediaPayload::Structured { schema, json: String::from_utf8(data).map_err(|error| RunError::Host(error.to_string()))? },
@@ -52,7 +52,7 @@ pub async fn media_from_document<B: BlobStore>(descriptor: &[u8], data: Vec<u8>,
             MediaPayload::Intrinsic { schema,value }
         }
         MediaWireFormat::Binary { format_kind } => {
-            let mime = semio_framework_os_kernel::io::format_descriptor(&format_kind)
+            let mime = semio_os_kernel::io::format_descriptor(&format_kind)
                 .map_err(|error| RunError::Host(error.to_string()))?
                 .ok_or_else(|| RunError::Host(format!("unknown media format kind {format_kind:?}")))?
                 .mimes
@@ -196,7 +196,7 @@ pub fn register_media_converter(class: MediaClass, from: MediaForm, to: MediaFor
 /// 🖼️ Vector→Raster: rasterizes an SVG `Media` payload (as produced by a TwoD×Vector app's
 /// `"vector:out"` port — e.g. `draw`'s `2d.drawing`, `MediaPayload::Structured { schema:
 /// "2d.drawing", json: <svg text> }`) into a base64 PNG `Media` payload consumable by a TwoD×Raster
-/// `"image:in"` port (e.g. `raster`'s `2d.image`) — reuses `semio_framework_os`'s
+/// `"image:in"` port (e.g. `raster`'s `2d.image`) — reuses `semio_os`'s
 /// `rasterize_svg_to_png_base64` (the same engine `raster_engine::raster_document_json_from_dwg`'s
 /// DWG-import rasterizer already uses), auto-sizing from the SVG's own intrinsic viewBox (`width: 0,
 /// height: 0`). The FIRST real `MediaConvertFn` body this registry carries (WORKFLOWS-END-TO-END-
@@ -206,7 +206,7 @@ pub(super) fn vector_to_raster(media: &Media) -> Result<Media, RunError> {
     let MediaPayload::Structured { json: svg, .. } = &media.payload else {
         return Err(RunError::Media(MediaError::Payload("vector-to-raster".into(), "expected a Structured (SVG text) payload".into())));
     };
-    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(svg, 0, 0).map_err(RunError::Host)?;
+    let png_base64 = semio_os::rasterize_svg_to_png_base64(svg, 0, 0).map_err(RunError::Host)?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
 

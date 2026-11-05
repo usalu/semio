@@ -1,14 +1,14 @@
 //! 🧪️ Original Window domain cursors conserve physical custody through every neutral partial frontier.
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_window_config::retained::ErasedWindowConfigPackLoad;
 use std::future::Future;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::ValueError;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
 use crate::window_config_tests::retained_pack_load_tests;
-use semio_framework_os_kernel::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
+use semio_os_kernel::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
 use semio_framework_value::{FromValue, ToValue, RetirementDemand};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
@@ -39,9 +39,9 @@ where P:RetainedClone+Clone+FromValue+ToValue,M:RetireOwned+Sync+FromValue+ToVal
 #[test]
 fn window_original_preparation_domain_cursors_preserve_physical_receipts_and_partial_custody(){
  let policy:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let camera=&policy["camera"];law::<retained_pack_load_tests::RetainedLoadCameraConfig,retained_pack_load_tests::RetainedLoadCameraConfigMutation,_,_>(&camera["base"],&serde_json::json!({"kind":"snapshot","config":camera["next"]}),&camera["next"],&serde_json::json!([{"kind":"snapshot","config":camera["base"]}]),&retained_pack_load_tests::CameraRetainedEdit,|cursor,_,_,_|Ok(cursor.normal_demand()));
- use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
- use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit;
+ use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
+ use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit;
  use protocol::OpBinary;
- for row in policy["selectionBounds"].as_array().unwrap(){let base=row["base"].as_str();let next=row["next"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize);let state=TestConfig{selected:Some(next.clone())};let forward=TestConfigMutation::ChangeTestConfigSelection(semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection{selected:Some(next.clone())});let inverse=TestConfigMutation::ChangeTestConfigSelection(semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection{selected:base.map(str::to_owned)});let independent=serde_json::to_vec(&state.to_value()).unwrap().len()+forward.encode_op().unwrap().len()+inverse.encode_op().unwrap().len();let(quoted,heap)=observe(||semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::selection_prepared_bytes(base,Some(&next)).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(quoted,independent);assert_eq!(quoted,row["bytes"].as_u64().unwrap()as usize);assert_eq!(quoted<=1024,row["admissible"].as_bool().unwrap());assert_eq!(SelectionRetainedEdit.preflight(&forward,store::os_store::store_schema::HistoryLane::Document).is_ok(),semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::selection_prepared_bytes(None,Some(&next)).unwrap()<=1024);}
+ for row in policy["selectionBounds"].as_array().unwrap(){let base=row["base"].as_str();let next=row["next"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize);let state=TestConfig{selected:Some(next.clone())};let forward=TestConfigMutation::ChangeTestConfigSelection(semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection{selected:Some(next.clone())});let inverse=TestConfigMutation::ChangeTestConfigSelection(semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection{selected:base.map(str::to_owned)});let independent=serde_json::to_vec(&state.to_value()).unwrap().len()+forward.encode_op().unwrap().len()+inverse.encode_op().unwrap().len();let(quoted,heap)=observe(||semio_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::selection_prepared_bytes(base,Some(&next)).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(quoted,independent);assert_eq!(quoted,row["bytes"].as_u64().unwrap()as usize);assert_eq!(quoted<=1024,row["admissible"].as_bool().unwrap());assert_eq!(SelectionRetainedEdit.preflight(&forward,store::os_store::store_schema::HistoryLane::Document).is_ok(),semio_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::selection_prepared_bytes(None,Some(&next)).unwrap()<=1024);}
  for row in policy["selection"].as_array().unwrap(){law::<TestConfig,TestConfigMutation,_,_>(&serde_json::json!({"selected":row["base"]}),&serde_json::json!({"operation":"changeTestConfigSelection","payload":{"selected":row["next"]}}),&serde_json::json!({"selected":row["next"]}),&serde_json::json!([{"operation":"changeTestConfigSelection","payload":{"selected":row["base"]}}]),&SelectionRetainedEdit,|cursor,base,mutation,body|cursor.normal_demand(base.get(),mutation.get(),body));}
 }

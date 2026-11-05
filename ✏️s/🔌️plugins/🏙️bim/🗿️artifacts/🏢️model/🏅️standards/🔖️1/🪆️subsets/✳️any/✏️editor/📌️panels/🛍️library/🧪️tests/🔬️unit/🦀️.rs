@@ -1,7 +1,7 @@
 use semio_s_artifact_bim_model_entities::editor::bim::entities::ENTITIES;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
 #[allow(unused_imports)]
@@ -9,31 +9,31 @@ use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRAR
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::Buildable;
+use semio_plugin::Buildable;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasBase;
+use semio_plugin::HasBase;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 use crate::editor::bim::panels::library::*;
-use semio_framework_plugin::ViewModel;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::ViewModel;
+use semio_ui_locale::{Locale, Terminology};
 
 fn text(snapshot: &ModelSnapshot, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
     let node = render(snapshot, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, BODY_KEY)).expect("the library renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 fn demo() -> ModelSnapshot {

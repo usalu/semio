@@ -13,7 +13,7 @@ use super::*;
 /// roster first), so the two only have to agree here.
 pub(super) struct Generation3dViewFlowEvalWindowWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) tessellate: preview_eval::PreviewTessellateReceive,
     evaluation:preview_eval::PreviewEvalReceive,
     pub(super) complete: bool,
@@ -21,7 +21,7 @@ pub(super) struct Generation3dViewFlowEvalWindowWork {
 }
 
 impl Generation3dViewFlowEvalWindowWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), complete: false, closing: false }
     }
 }
@@ -43,7 +43,7 @@ fn generation3d_view_continue_inline(
     retained_grant: semio_framework_value::RetainedCloneGrant,
 ) -> Result<preview_eval::FlowEvalTickOutcome, semio_framework_value::ValueError> {
     if !session.inline_continuation_admitted(window_id, turn_started_us, semio_framework_job::default_now_us()) {
-        return Ok(preview_eval::FlowEvalTickOutcome { extension_invocations: Vec::new(), publication: semio_framework_os_flow::FlowEvalPublication::Retained, census_moved: false });
+        return Ok(preview_eval::FlowEvalTickOutcome { extension_invocations: Vec::new(), publication: semio_os_flow::FlowEvalPublication::Retained, census_moved: false });
     }
     session.arm_window_tick(window_id, retained_grant)?;
     preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, turn_started_us, retained_grant)
@@ -53,7 +53,7 @@ fn generation3d_view_continue_inline(
 /// (a read-only surface paints no node-graph computing chrome) and the framework tool-run panel that
 /// carries the abort affordance.
 fn generation3d_view_chain_ui_scope(census_moved: bool) -> semio_framework::kernel::UiDirtyScope {
-    preview_eval::chain_ui_scope(preview::BODY_KEY, None, &[semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY], census_moved)
+    preview_eval::chain_ui_scope(preview::BODY_KEY, None, &[semio_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY], census_moved)
 }
 
 /// 🪟️ The preview window one chain route addresses, or `None` for a route that addresses none.
@@ -76,7 +76,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         command: &Generation3dViewCommand,
         _snapshot: &Generation3dSnapshot,
         _interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
     ) -> Option<usize> {
         let (window_id, window_kind_id) = generation3d_view_flow_eval_window_address(command)?;
         let context = context?;
@@ -90,7 +90,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
     }
 
     fn receive_original_command(&mut self,command:&mut Generation3dViewCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if let Generation3dViewCommand::FlowTessellateResolve(payload)=command{self.tessellate.configure_scope([Some(preview::BODY_KEY),None],[Some(semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY),None]);return self.tessellate.receive(payload,cx)}if let Generation3dViewCommand::FlowEvalResolve(payload)=command{self.evaluation.configure_scope([Some(preview::BODY_KEY),None],[Some(semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY),None]);return self.evaluation.receive(payload,cx)}Ok(true)
+        if let Generation3dViewCommand::FlowTessellateResolve(payload)=command{self.tessellate.configure_scope([Some(preview::BODY_KEY),None],[Some(semio_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY),None]);return self.tessellate.receive(payload,cx)}if let Generation3dViewCommand::FlowEvalResolve(payload)=command{self.evaluation.configure_scope([Some(preview::BODY_KEY),None],[Some(semio_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY),None]);return self.evaluation.receive(payload,cx)}Ok(true)
     }
 
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,ViewerApp<Generation3dViewer>>,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
@@ -144,8 +144,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         let outcome = outcome??;
         self.complete = true;
         let window_transient = match outcome.publication {
-            semio_framework_os_flow::FlowEvalPublication::Retained => Vec::new(),
-            semio_framework_os_flow::FlowEvalPublication::Changed(eval_text) => vec![preview::transient::addressed(window, eval_text)?],
+            semio_os_flow::FlowEvalPublication::Retained => Vec::new(),
+            semio_os_flow::FlowEvalPublication::Changed(eval_text) => vec![preview::transient::addressed(window, eval_text)?],
         };
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
             emit: Emit { extension_invocations: outcome.extension_invocations, ui_scope: generation3d_view_chain_ui_scope(outcome.census_moved), ..Default::default() },
@@ -170,7 +170,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
 /// because they continue the chain and owe their window a publication.
 pub(super) struct Generation3dViewFlowResolveWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
 }
 
@@ -187,7 +187,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         command: &Generation3dViewCommand,
         snapshot: &Generation3dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
     ) -> Option<usize> {
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
@@ -253,7 +253,7 @@ impl ToolJobFactory for Generation3dViewBoundedCommandJobFactory {
         generation3d_view_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_RAW_BYTES, checkpoint_resume: false);
 
 }
 

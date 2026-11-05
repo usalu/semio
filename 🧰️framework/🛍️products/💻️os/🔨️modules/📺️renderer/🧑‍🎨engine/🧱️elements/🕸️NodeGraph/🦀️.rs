@@ -1,14 +1,14 @@
 //! 🕸️ OS DAG render-session composition over neutral General scene records.
 use semio_framework_surface::node_graph::{GraphPortRecord,GraphNodeRecord,GraphEdgeRecord,NodeGraphScenePayload,SelectionGather};
 pub use canvas;
-pub use semio_framework_os_infinite::board::ports::directed_dag as dag;
+pub use semio_os_infinite::board::ports::directed_dag as dag;
 
 use dag::{dag_screen_to_world, fit_node_size, DagHost};
-use semio_framework_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge};
+use semio_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge};
 
-use semio_framework_os_infinite_directed_presentation::{DagNodeKind, DagNodeSpec, IoPortSpec};
+use semio_os_infinite_directed_presentation::{DagNodeKind, DagNodeSpec, IoPortSpec};
 use protocol::{DomainHover, DomainSelection, SelectionMethod};
-use semio_framework_ui_viewport::Viewport2d;
+use semio_ui_viewport::Viewport2d;
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 use semio_framework_value::FromValue;
@@ -332,7 +332,7 @@ impl GraphHost {
         if let Some(status_json) = &payload.status_json {
             let mut observe=|progress:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress.total<=64*1024;
             let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(256*1024,&mut observe);
-            if let Ok(statuses)=semio_framework_os_infinite::board::io::text::dag_input::decode_dag_node_statuses_json(status_json,&mut control){set_node_statuses(&mut self.dag.graph, &mut self.dag.paint, &statuses);}
+            if let Ok(statuses)=semio_os_infinite::board::io::text::dag_input::decode_dag_node_statuses_json(status_json,&mut control){set_node_statuses(&mut self.dag.graph, &mut self.dag.paint, &statuses);}
         } else if let Some(computing_json) = &payload.computing_json {
             if let Ok(value) = serde_json::from_str::<Value>(computing_json) {
                 let active = value.get("active").and_then(|v| v.as_str()).map(str::to_string);
@@ -388,7 +388,7 @@ impl GraphHost {
     }
 
     /// 🖱️ Projects channel hover and live wire refusal facts.
-    pub fn hover_facts(&self)->semio_framework_os_infinite::board::schema::dag_input::DagHoverFacts{self.dag.graph.hover_facts()}
+    pub fn hover_facts(&self)->semio_os_infinite::board::schema::dag_input::DagHoverFacts{self.dag.graph.hover_facts()}
 
     pub fn label_overlay_paint_state_json(&self) -> Result<String, NodeGraphError> {
         Ok(self.dag.label_overlay_paint_state_json()?)
@@ -739,7 +739,7 @@ mod wasm_session {
         pub fn set_canvas_theme_json(&mut self, json: &str) {
             let mut accepted = |_| true;
             let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024, &mut accepted);
-            if let Ok(overlay) = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control) {
+            if let Ok(overlay) = semio_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control) {
                 match &mut self.state.borrow_mut().host.dag { __host => dag_set_canvas_palette(&mut __host.viewport, &mut __host.paint, &overlay) };
             }
         }
@@ -813,7 +813,7 @@ mod wasm_session {
         pub fn selected_node_ids_json(&self) -> Result<String,JsValue> {
             let mut observe=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.owned_bytes<=256*1024;
             let mut control=semio_framework_value::NativeEncodeControl::new(256*1024,&mut observe);
-            semio_framework_os_infinite::board::io::text::dag_input::encode_dag_node_ids_json(&self.state.borrow().host.selected_node_ids(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
+            semio_os_infinite::board::io::text::dag_input::encode_dag_node_ids_json(&self.state.borrow().host.selected_node_ids(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
         }
 
         #[wasm_bindgen(js_name = hoveredNodeId)]
@@ -825,7 +825,7 @@ mod wasm_session {
         pub fn hovered_channel_json(&self) -> Result<String,JsValue> {
             let mut observe=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.owned_bytes<=256*1024;
             let mut control=semio_framework_value::NativeEncodeControl::new(256*1024,&mut observe);
-            semio_framework_os_infinite::board::io::text::dag_input::encode_dag_hover_json(&self.state.borrow().host.hover_facts(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
+            semio_os_infinite::board::io::text::dag_input::encode_dag_hover_json(&self.state.borrow().host.hover_facts(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
         }
 
         #[wasm_bindgen(js_name = viewport)]
@@ -958,8 +958,8 @@ mod wasm_session {
         pub fn reorganize(&self,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<(),JsValue>{
             let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|v|v.as_bool().unwrap_or(false)).unwrap_or(false);
             let mut decoding=|p:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
-            let opts=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(options_json,&mut decode).map_err(|e|JsValue::from_str(&e.to_string()))?;
-            let mut working=|p:semio_framework_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut working);
+            let opts=semio_os_infinite::board::io::text::layout::decode_dag_options_json(options_json,&mut decode).map_err(|e|JsValue::from_str(&e.to_string()))?;
+            let mut working=|p:semio_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);let mut work=semio_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut working);
             self.state.borrow_mut().host.dag.graph.reorganize(&opts,&mut work).map_err(|e|JsValue::from_str(&e.to_string()))
         }
     }
@@ -977,9 +977,9 @@ mod tests;
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use dag::{dag_take_pending_open_instance_id};
-use semio_framework_os_infinite_board_dag_graph::{dag_pick_targets_at_screen_json, entity_screen_json, hovered_node_id};
-use semio_framework_os_infinite_board_dag_host::{derive_pointer_plan, set_computing_progress, set_dimmed, set_node_statuses};
+use semio_os_infinite_board_dag_graph::{dag_pick_targets_at_screen_json, entity_screen_json, hovered_node_id};
+use semio_os_infinite_board_dag_host::{derive_pointer_plan, set_computing_progress, set_dimmed, set_node_statuses};
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use semio_framework_os_infinite_board_dag_graph::{dag_draw_lod_label, selection_union_bounds_screen_json, slider_overlay_state_json};
+use semio_os_infinite_board_dag_graph::{dag_draw_lod_label, selection_union_bounds_screen_json, slider_overlay_state_json};
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use semio_framework_os_infinite_board_dag_host::dag_set_canvas_palette;
+use semio_os_infinite_board_dag_host::dag_set_canvas_palette;

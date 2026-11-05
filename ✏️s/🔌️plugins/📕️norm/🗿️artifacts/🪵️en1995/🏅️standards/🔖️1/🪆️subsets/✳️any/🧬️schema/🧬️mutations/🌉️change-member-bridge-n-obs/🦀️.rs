@@ -10,7 +10,7 @@ pub struct ChangeMemberBridgeNObs { pub member_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberBridgeNObs where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_bridge_n_obs::ChangeMemberBridgeNObs> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-bridgeNObs", kind: "change-member-bridge-n-obs", record: "ChangedMemberBridgeNObs" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Observed load cycles per year N_obs of member {}", self.member_id), &format!("Beobachtete Lastzyklen pro Jahr N_obs von Bauteil {} ändern", self.member_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Observed load cycles per year N_obs of member {}", self.member_id), &format!("Beobachtete Lastzyklen pro Jahr N_obs von Bauteil {} ändern", self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
 

@@ -1,10 +1,10 @@
 //! ✏️ Drawing play app — the `edit` mode: the single-window canvas authoring layout.
 
 use crate::modes::edit::windows::canvas;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const DRAWING_PLAY_MODE_EDIT: &str = "edit";
 

@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::graph::{Edge,GraphEffect,Node};
 use semio_s_artifact_trinity_jack_graph_query::{JackContentVisual,JackGraphQuery};
 use semio_framework_value::{ValueError,retirement::RetirementCursor};
-use semio_framework_plugin::{Fault,app::{ChildContentView,ChildEmitPreparation}};
+use semio_plugin::{Fault,app::{ChildContentView,ChildEmitPreparation}};
 
 /// 📍️ One decoded move keeps the concrete operation representation owned by composition.
 pub struct JackContentMove{pub node_id:String,pub x:f64,pub y:f64}

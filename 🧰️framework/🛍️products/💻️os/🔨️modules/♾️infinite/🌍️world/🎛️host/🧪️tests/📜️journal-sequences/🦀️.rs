@@ -1,17 +1,17 @@
 //! 🧪️ host tests (📜️journal-sequences): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::{world_mesh_ownership_grant, WorldInteractionIntent};
-use semio_framework_os_infinite_world_cursors::WorldInteractionAuthorityStep;
+use semio_os_infinite_world_model::{world_mesh_ownership_grant, WorldInteractionIntent};
+use semio_os_infinite_world_cursors::WorldInteractionAuthorityStep;
 use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_world_scene::TerrainMeshOracleData;
-use semio_framework_os_infinite_world_bridge::world_navigation_snapshot;
-use semio_framework_os_infinite_world_interaction::{enqueue_world3d_event, store_mesh, world3d_hover_clear_is_owed, world3d_hover_is_published, world3d_interaction_front_generation, world3d_pointer_move_folds};
-use semio_framework_os_infinite_world_host::{step_world3d_interaction, World3dState};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_os_infinite_world_scene::TerrainMeshOracleData;
+use semio_os_infinite_world_bridge::world_navigation_snapshot;
+use semio_os_infinite_world_interaction::{enqueue_world3d_event, store_mesh, world3d_hover_clear_is_owed, world3d_hover_is_published, world3d_interaction_front_generation, world3d_pointer_move_folds};
+use semio_os_infinite_world_host::{step_world3d_interaction, World3dState};
+use semio_ui_declaration::layout::ActionDescriptor;
 use ui_scene::math::{CameraProjection3d, Instance3d, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, SceneDraw3d};
-use semio_framework_ui_wgpu_input::PointerModifiers;
-use semio_framework_ui_theme::geometry::Rect;
+use semio_ui_wgpu_input::PointerModifiers;
+use semio_ui_theme::geometry::Rect;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -25,7 +25,7 @@ fn read_joined(paths: &[&str]) -> &'static str {
     Box::leak(joined.into_boxed_str())
 }
 
-pub(crate) fn take_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub(crate) fn take_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));
@@ -168,7 +168,7 @@ fn journey_state() -> World3dState {
 /// 🏁️ Drives every queued intent — and the camera settle the drained queue owes — to idle, answering
 /// with the ORDERED action ids published along the way.
 fn journal(state: &mut World3dState) -> Vec<String> {
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut published = Vec::new();
     let mut turns = 0;
     while let Some(generation) = world3d_interaction_front_generation(&state.camera, &state.authority) {

@@ -1,5 +1,5 @@
 use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use crate::viewer::tiff_baseline::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

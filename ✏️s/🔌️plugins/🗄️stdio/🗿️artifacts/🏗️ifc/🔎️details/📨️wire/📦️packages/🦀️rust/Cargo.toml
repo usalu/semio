@@ -17,10 +17,10 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-s-artifact-stdio-ifc-details-profile = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
@@ -30,10 +30,10 @@ semio-s-artifact-stdio-ifc-4-mutations = { workspace = true }
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+semio-ui-contract = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-s-artifact-stdio-ifc-details-profile = { workspace = true, features = ["testkit"] }

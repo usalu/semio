@@ -33,7 +33,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
             "overBudget" => DemoRetainedCloneEditMode::OverBudget,
             _ => DemoRetainedCloneEditMode::Apply,
         };
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["id"].as_str().expect("case id"), DemoSnapshot { n: Some(initial) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["id"].as_str().expect("case id"), DemoSnapshot { n: Some(initial) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let generation = store.generation_now();
         let revision = store.content_revision_now();
@@ -188,7 +188,7 @@ async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() 
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> =
         Arc::new(ProbedRetainedClonePreparationFactory { inner: retained_clone_preparation_factory(DemoRetainedCloneEditMode::Apply), dropped: Arc::clone(&dropped) });
     let initial = DemoSnapshot { n: Some(31) };
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-driver-loss", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-driver-loss", initial.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let mut publication = Some(
         store
@@ -242,7 +242,7 @@ async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_
     let text_bytes = fixture["largeCapacity"]["stringByteLength"].as_u64().expect("large string byte length") as usize;
     let expected_code = fixture["largeCapacity"]["expectedCode"].as_str().expect("large capacity refusal code");
     let initial = RetainedTextSnapshot { text: "x".repeat(text_bytes) };
-    let mut store = ArtifactStore::bare(create_document_envelope::<RetainedTextSnapshot, RetainedTextMutation>("retained.text/v1", "retained-text-capacity", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<RetainedTextSnapshot, RetainedTextMutation>("retained.text/v1", "retained-text-capacity", initial.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (semio_framework_value::factory::SharedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::factory::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::factory::OwnedValueRetirementFactory::<RetainedTextMutation>::default(), ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<RetainedTextSnapshot, RetainedTextMutation>> = Arc::new(
         RetainedClonePreparationFactory::new(
@@ -315,7 +315,7 @@ fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublica
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_generation_revision_and_history() {
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-single", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-single", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for InsertBeamAction where O
         record: "InsertedBeamAction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert beam action {}", self.action.id), &format!("Trägereinwirkung {} einfügen", self.action.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert beam action {}", self.action.id), &format!("Trägereinwirkung {} einfügen", self.action.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.beam_id.clone()]

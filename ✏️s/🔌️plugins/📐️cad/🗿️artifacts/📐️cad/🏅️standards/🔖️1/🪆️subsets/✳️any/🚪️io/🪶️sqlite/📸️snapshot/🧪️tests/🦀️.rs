@@ -1,7 +1,7 @@
 //! 📐️ Genuine CAD parent native baselines before semantic provider opt-in.
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use semio_framework_test_original_snapshot_owners as original_owners;
 fn complete_literal_cad(actual:&CadSnapshot,expected:&CadSnapshot){
  assert_eq!(actual.schema,expected.schema);assert_eq!(actual.id,expected.id);
@@ -92,8 +92,8 @@ fn sqlite_snapshot_cad_parent_initial_cancellation_reaches_all_four_owned_phases
 fn sqlite_snapshot_cad_parent_long_unicode_is_cancellable_inside_every_owned_phase(){
  let mut expected=fixture();expected.schema="😀".repeat(laws()["control"]["largeCharacters"].as_u64().unwrap()as usize);let d=database(&expected);for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::EncodeNative]{let mut reached=false;let mut callback=|event:SqliteSnapshotProgress|if event.phase==phase&&event.total>=65536&&event.completed>=65536&&event.completed<event.total{reached=true;false}else{true};let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let result=match phase{SqliteSnapshotPhase::ProjectSnapshot=>expected.to_sqlite_database(&mut control).map(|_|()),SqliteSnapshotPhase::ReconstructSnapshot=>CadSnapshot::from_sqlite_database(&d,&mut control).map(|_|()),SqliteSnapshotPhase::DecodeNative=>original_owners::with_decoding(|native_owner|CadSnapshot::decode_sqlite_snapshot_native(&payload(&expected,SnapshotEncoding::Text),&mut control, native_owner)).map(|_|()),SqliteSnapshotPhase::EncodeNative=>original_owners::with_encoding(|native_owner|expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut control, native_owner)).map(|_|()),_=>panic!("unexpected")};assert!(result.is_err(),"{phase:?}");drop(control);assert!(reached,"{phase:?}");}
 }
-use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,plugin_app_close_prelude::*};
-use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,plugin_app_close_prelude::*};
+use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 📐️ The actual CAD editor and viewer app roster.
  enum SqliteApps:PluginApp{
@@ -103,7 +103,7 @@ semio_framework_dispatch_macros::dyn_enum_close!{
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_cad_parent_actual_native_declaration_routes_queryable_files(){
- semio_framework_plugin::PluginBuilder::<_, SqliteApps>::new("cad").label("CAD owned SQLite").version("0.0.1").package_id("semio:cad").artifact(semio_s_artifact_cad_cad::declaration().unwrap()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(semio_s_artifact_cad_cad_model::snapshot::CAD_DOCUMENT_SCHEMA).await.unwrap().unwrap();assert!(codec.snapshot_sqlite.is_some());let expected=fixture();
+ semio_plugin::PluginBuilder::<_, SqliteApps>::new("cad").label("CAD owned SQLite").version("0.0.1").package_id("semio:cad").artifact(semio_s_artifact_cad_cad::declaration().unwrap()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(semio_s_artifact_cad_cad_model::snapshot::CAD_DOCUMENT_SCHEMA).await.unwrap().unwrap();assert!(codec.snapshot_sqlite.is_some());let expected=fixture();
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect();let original_file_input=&expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));let actual=async{let original_file_dialect=&dialect();let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_import_sqlite_snapshot::<CadSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(actual,expected);}
 }
 

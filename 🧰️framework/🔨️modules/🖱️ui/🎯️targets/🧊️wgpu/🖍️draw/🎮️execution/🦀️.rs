@@ -1,14 +1,14 @@
 // #region gpu
 //! 🖥️ WebGPU device, surface, and frame loop.
-use semio_framework_ui_wgpu_device as gpu_device;
+use semio_ui_wgpu_device as gpu_device;
 
-use semio_framework_ui_wgpu_draw_execution::{
+use semio_ui_wgpu_draw_execution::{
     FrameBuffers, MeshGpuTable, PreparedCompositeTarget, RasterTextureAdmission, RasterTextureCancelFault, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines, SCENE_MIP_LEVELS,
 };
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use semio_framework_ui_prepared::OffscreenPresentToken;
-use semio_framework_ui_prepared::{DrawMeasureCursor, PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, RasterContentIdentity, UiPresentToken, PREPARED_RENDER_COMMAND_PAGES, PREPARED_RENDER_COMMAND_PAGE_ITEMS};
-use semio_framework_ui_text::FontAtlas;
+use semio_ui_prepared::OffscreenPresentToken;
+use semio_ui_prepared::{DrawMeasureCursor, PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, RasterContentIdentity, UiPresentToken, PREPARED_RENDER_COMMAND_PAGES, PREPARED_RENDER_COMMAND_PAGE_ITEMS};
+use semio_ui_text::FontAtlas;
 use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
 use std::sync::Arc;
 use gpu_device::platform::Surface;

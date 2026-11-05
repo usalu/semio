@@ -1,6 +1,6 @@
 //! 🧳 Genuine original fields become one serializable sparse IDML member change.
 use crate::schema::diff::IdmlPartPatch;
-use semio_framework_os_kernel::RetainedFieldPreparation;
+use semio_os_kernel::RetainedFieldPreparation;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{ManuallyDrop,size_of};
 fn fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items!=0&&d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth}

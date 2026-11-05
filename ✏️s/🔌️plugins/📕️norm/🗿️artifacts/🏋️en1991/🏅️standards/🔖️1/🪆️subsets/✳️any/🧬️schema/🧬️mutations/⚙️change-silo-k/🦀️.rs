@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeSiloK where Op: pr
         record: "ChangedSiloK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change lateral pressure ratio K", "Horizontallastverhältnis K ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change lateral pressure ratio K", "Horizontallastverhältnis K ändern")
     }
 }
 

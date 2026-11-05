@@ -30,11 +30,11 @@ semio-framework-value = { path = "../../../../../../../../../🧰️framework/�
 semio-s-artifact-space-space = { workspace = true }
 semio-s-space-core = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 semio-framework-artifact-space-space = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
+semio-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
 semio-framework = { workspace = true }
 base64_codec = { path = "../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
-semio-framework-os = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 

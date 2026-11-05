@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeVertexY where Op: 
         record: "ChangedVertexY",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Vertex y of the outline vertex", "Umrissknoten: Knoten y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Vertex y of the outline vertex", "Umrissknoten: Knoten y ändern")
     }
 }
 

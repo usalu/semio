@@ -1,8 +1,8 @@
 //! 📨️ Validate and persist one response from the addressed answering window.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::{config::FormsTryWindowConfig, transient::FormsTryWindowTransient};
 

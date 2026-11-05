@@ -8,39 +8,39 @@ use crate::editor::tsv::modes::edit::windows::main;
 use crate::standards::iana::subsets::any::schema::mutations::{insert_row,remove_row,set_cell};
 
 use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_ui_locale::Label;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
+use semio_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Dialect
@@ -286,7 +286,7 @@ pub fn tsv_command_from_action(action: &str, args: Option<&semio_framework_value
         semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID => {
             Ok(TsvEditorCommand::RemoveColumn { column: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")?, revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")? })
         }
-        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-cell)"))),
+        other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.tsv.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-cell)"))),
     }
 }
 
@@ -330,7 +330,7 @@ fn tsv_emit_at_revision(command: &TsvEditorCommand, snapshot: &TsvSnapshot, cano
     };
     let current_revision = canonical_revision.map(str::to_owned).unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot));
     if current_revision != *revision {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.table-conflict"), "The TSV document changed before this table draft was applied."));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.tsv.table-conflict"), "The TSV document changed before this table draft was applied."));
     }
     let replace_row = |index: usize, row: Vec<String>| [TsvMutation::RemoveRow(remove_row::RemoveRow { index }), TsvMutation::InsertRow(insert_row::InsertRow { index, row })];
     let mutations: Vec<TsvMutation> = match command {
@@ -340,7 +340,7 @@ fn tsv_emit_at_revision(command: &TsvEditorCommand, snapshot: &TsvSnapshot, cano
                 .records
                 .get(row_index)
                 .and_then(|record| record.get(*column as usize))
-                .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.cell-stale"), format!("TSV cell {row},{column} no longer exists")))?;
+                .ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.tsv.cell-stale"), format!("TSV cell {row},{column} no longer exists")))?;
             if current == value {
                 return Ok(Emit::default());
             }
@@ -354,7 +354,7 @@ fn tsv_emit_at_revision(command: &TsvEditorCommand, snapshot: &TsvSnapshot, cano
         TsvEditorCommand::RemoveRow { row, .. } => {
             let index = *row as usize;
             if snapshot.records.get(index).is_none() {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.row-stale"), format!("TSV row {row} no longer exists")));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.tsv.row-stale"), format!("TSV row {row} no longer exists")));
             }
             vec![TsvMutation::RemoveRow(remove_row::RemoveRow { index })]
         }
@@ -374,7 +374,7 @@ fn tsv_emit_at_revision(command: &TsvEditorCommand, snapshot: &TsvSnapshot, cano
         TsvEditorCommand::RemoveColumn { column, .. } => {
             let column = *column as usize;
             if !snapshot.records.iter().any(|record| column < record.len()) {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.column-stale"), format!("TSV column {column} no longer exists")));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.tsv.column-stale"), format!("TSV column {column} no longer exists")));
             }
             snapshot
                 .records
@@ -399,10 +399,10 @@ fn tsv_retained_reduce(
     command: &TsvEditorCommand,
     snapshot: &TsvSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TsvEditor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TsvEditor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<TsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision);
@@ -435,7 +435,7 @@ impl ToolJobFactory for TsvRetainedCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         tsv_retained_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: TSV_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: TSV_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -453,7 +453,7 @@ pub struct TsvEditor;
 
 impl ArtifactEditor for TsvEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = TsvSnapshot;
@@ -471,20 +471,20 @@ impl ArtifactEditor for TsvEditor {
     const DIALECT: Dialect = TSV_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TSV_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.tsv@iana", extension: ".tsv", media_type: "text/tab-separated-values", binary: false })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.tsv@iana", extension: ".tsv", media_type: "text/tab-separated-values", binary: false })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
         Ok(crate::standards::iana::subsets::any::io::text::snapshot::encode_tsv(snapshot).into_bytes())
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
         Ok(crate::standards::iana::subsets::any::io::text::snapshot::decode_tsv(text))
     }
 
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
@@ -505,8 +505,8 @@ impl ArtifactEditor for TsvEditor {
         semio_s_artifact_stdio_contract::editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if semio_s_artifact_stdio_contract::editing::is_snapshot_edit_action(&original.tool_id) {
             return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Self>(request, output, cx);
         }
@@ -514,10 +514,10 @@ impl ArtifactEditor for TsvEditor {
             return Ok(false);
         }
         if tsv_command_id(&original.command) != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-tsv-retained-command-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-tsv-retained-command-tool-mismatch").into());
         }
         let tool_id = tsv_command_id(&original.command);
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, tsv_command_id, TSV_RETAINED_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, tsv_retained_reduce, tsv_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, tsv_command_id, TSV_RETAINED_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, tsv_retained_reduce, tsv_retained_extent))
     }
 
     /// 📤️ The artifact lane's one-item publication authority. The kit verb's route declares the
@@ -542,7 +542,7 @@ impl ArtifactEditor for TsvEditor {
         tsv_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Result<TsvSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<TsvSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(TsvSnapshot::default())
     })}
 
@@ -551,8 +551,8 @@ impl ArtifactEditor for TsvEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -565,7 +565,7 @@ impl ArtifactEditor for TsvEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
                 let revision = doc
@@ -573,16 +573,16 @@ impl ArtifactEditor for TsvEditor {
                     .map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))
                     .unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot));
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render_revisioned(doc.snapshot, &revision, publication_revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
+                main::render_revisioned(doc.snapshot, &revision, publication_revision, view_state.locale, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.tsv@iana/*#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -622,7 +622,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TsvEdit
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_tsv_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_tsv_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(TSV_EDITOR_DIALECT)
         .document(["semio", "stdio", "tsv"])
         .artifact_kind(crate::artifact_kind())
@@ -665,7 +665,7 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜�
 pub mod artifact_items_4 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }
@@ -692,11 +692,11 @@ use crate::{formats};
 use crate::{STDIO_TSV_DOCUMENT_SCHEMA};
 use crate::{native_codec};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 pub use crate::standards::iana::subsets::any::schema::mutations::TsvMutation;
 pub use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
@@ -709,23 +709,23 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("tsv", definition()?, declaration)
 }
 
 /// 🧩️ The executable facets the hub-native document codec needs: the artifact schema, the declared representations
 /// and the `stdio.tsv` document codec the linked `stdio.native.tsv.v1` receipt instantiates.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(crate::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tsv", standard: semio_framework_artifact_reference::StandardId("iana"), subset: semio_framework_artifact_reference::SubsetId("*") }).try_build()
+    semio_plugin::ArtifactDeclaration::builder(definition).schema(crate::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tsv", standard: semio_framework_artifact_reference::StandardId("iana"), subset: semio_framework_artifact_reference::SubsetId("*") }).try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.tsv".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Tsv", "Tsv"),
+        label: semio_ui_locale::LocalizedLabel::native("Tsv", "Tsv"),
         source_format: STDIO_TSV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

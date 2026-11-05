@@ -27,26 +27,26 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
             use semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN;
             use semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT;
             use super::context::{new_app as new_app_with_registry_wired, SequenceApp};
-            use semio_framework_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowTransientOwner};
+            use semio_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowTransientOwner};
 
             async fn dispatch(app: &mut SequenceApp, command: SequenceCommand, view: &ViewModel) -> Result<(usize, usize, usize), String> {
                 let command_id = command.command_id();
                 let meta = ActionMeta { instance_id: 83, view_state: Some(view.clone()), ..artifact_app_laws::meta("sequence-window-ownership") };
-                semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
-                let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 let lanes = (
-                    receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(),
-                    receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient).count(),
-                    receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::Child).count(),
+                    receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::WindowConfig).count(),
+                    receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::WindowTransient).count(),
+                    receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::Child).count(),
                 );
                 Ok(lanes)
             }
-            async fn graph_scene(app: &mut SequenceApp, view: &ViewModel) -> Result<semio_framework_plugin::NodeGraphScene, String> {
-                let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, SEQUENCE_PLAY_BODY_MAIN, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+            async fn graph_scene(app: &mut SequenceApp, view: &ViewModel) -> Result<semio_plugin::NodeGraphScene, String> {
+                let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, SEQUENCE_PLAY_BODY_MAIN, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 artifact_app_laws::decode_fixture_scene_with_lanes(&json).map_err(str::to_string)
             }
-            async fn script_scene(app: &mut SequenceApp, view: &ViewModel) -> Result<semio_framework_plugin::TextEditorScene, String> {
-                let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, SEQUENCE_PLAY_BODY_SCRIPT, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+            async fn script_scene(app: &mut SequenceApp, view: &ViewModel) -> Result<semio_plugin::TextEditorScene, String> {
+                let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, SEQUENCE_PLAY_BODY_SCRIPT, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 artifact_app_laws::decode_fixture_scene_with_lanes(&json).map_err(str::to_string)
             }
 
@@ -59,7 +59,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                     ViewWindowInstance { id: ids[2].into(), window_kind_id: SequenceScriptWindowTransientOwner::WINDOW_KIND_ID.into() },
                     ViewWindowInstance { id: ids[3].into(), window_kind_id: SequenceScriptWindowTransientOwner::WINDOW_KIND_ID.into() },
                 ],
-                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
             };
             let main_left = view.for_window_instance(ids[0]).unwrap();
             let main_right = view.for_window_instance(ids[1]).unwrap();
@@ -99,7 +99,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Sequence window publication changed document bytes".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &document_before, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+                semio_plugin::artifact_app_laws::load_document(&mut app.0, &document_before, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 let cleared = app.window_transient_snapshot(&script_left).map_err(|error| format!("{error:?}"))?.ok_or("Sequence transient owner missing after reload")?;
                 if cleared.get::<SequenceScriptWindowTransientOwner>() != Some(&SequenceScriptWindowTransient::default()) { return Err("Sequence transient survived same-byte reload".into()); }
                 for context in [&main_left, &main_right] {
@@ -127,7 +127,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 let reopened_right = graph_scene(&mut reopened, &main_right).await?.viewport.ok_or("reopened right Sequence viewport missing")?;
                 drop(reopened);
                 if reopened_left != left_graph || reopened_right != right_graph { return Err("Sequence persisted window config changed during restore".into()); }
-                let stale = ViewModel { window_id: Some("lost-sequence-window".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+                let stale = ViewModel { window_id: Some("lost-sequence-window".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
                 if addressed(&stale, SequenceMainWindowConfig::default()).is_ok() { return Err("Sequence accepted stale window identity".into()); }
                 if semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::script::transient::addressed(&main_left, SequenceScriptWindowTransient::default()).is_ok() {
                     return Err("Sequence accepted wrong-kind window identity".into());

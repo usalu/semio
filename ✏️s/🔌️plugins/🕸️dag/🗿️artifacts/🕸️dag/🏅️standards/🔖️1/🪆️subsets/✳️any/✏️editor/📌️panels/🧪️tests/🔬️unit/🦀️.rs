@@ -1,7 +1,7 @@
 //! 🧪️ Aggregated unit tests of the `panels` leaves, one module per leaf.
 
 mod catalogue {
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use super::super::catalogue::*;
 use crate::editor::dag::unit_tests::context::{close, new_app, render as render_body};
 
@@ -25,7 +25,7 @@ async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
 
 mod document {
 use crate::DagScene;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use super::super::document::*;
 use crate::editor::dag::unit_tests::context::{close, new_app, render as render_body};
 
@@ -52,7 +52,7 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 // (c) a host `TreeWindowRequest{offset, rows}` materialises exactly `[offset, offset + rows)` keyed by
 // the row's own target id, (d) pick rows carry a granularity and no binding of their own while the
 // tree root carries exactly one `interactionSelect`.
-use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
 
 const NODES_SECTION: &str = "dag-play-document.nodes";
 const OVERSIZED: usize = 200;
@@ -100,13 +100,13 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_document_stamps_the_full_total_and_materialises_at_most_its_slice() {
     let document = oversized_dag_document(OVERSIZED);
-    let tree = render(&document, crate::editor::dag::terminology::dag_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, crate::editor::dag::terminology::dag_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     let nodes = window_law_node(&tree, NODES_SECTION);
     assert_eq!(window_law_extent(nodes), (OVERSIZED as u32, 0));
     assert!(nodes.children.len() < OVERSIZED, "only the first-paint slice is materialised: {}", nodes.children.len());
@@ -117,7 +117,7 @@ async fn an_oversized_document_stamps_the_full_total_and_materialises_at_most_it
 async fn a_closed_section_stamps_its_total_and_builds_no_children() {
     let document = oversized_dag_document(OVERSIZED);
     let view = window_law_view(vec![window_law_request(NODES_SECTION, Some(false), 0, 32)]);
-    let tree = render(&document, crate::editor::dag::terminology::dag_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, DAG_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&document, crate::editor::dag::terminology::dag_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, DAG_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let nodes = window_law_node(&tree, NODES_SECTION);
     assert_eq!(window_law_extent(nodes), (OVERSIZED as u32, 0));
     assert_eq!(nodes.children.len(), 0);
@@ -127,7 +127,7 @@ async fn a_closed_section_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_node_id() {
     let document = oversized_dag_document(OVERSIZED);
     let view = window_law_view(vec![window_law_request(NODES_SECTION, Some(true), 120, 5)]);
-    let tree = render(&document, crate::editor::dag::terminology::dag_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, DAG_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&document, crate::editor::dag::terminology::dag_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, DAG_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let nodes = window_law_node(&tree, NODES_SECTION);
     assert_eq!(window_law_extent(nodes), (OVERSIZED as u32, 120));
     assert_eq!(window_law_keys(nodes), (120..125).map(|index| format!("node-{index:03}")).collect::<Vec<_>>());
@@ -136,12 +136,12 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_node_i
 #[semio_framework_async_macros::async_test]
 async fn pick_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let document = oversized_dag_document(4);
-    let tree = render(&document, crate::editor::dag::terminology::dag_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, crate::editor::dag::terminology::dag_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     for row in window_law_node(&tree, NODES_SECTION).children.iter() {
         let Component::TreeItem(props) = &row.component else { panic!("{} is not a tree row", row.key.as_str()) };
-        assert_eq!(props.granularity.as_ref().map(semio_framework_plugin::UiText::as_str), Some("node"));
+        assert_eq!(props.granularity.as_ref().map(semio_plugin::UiText::as_str), Some("node"));
         assert!(row.bindings.is_empty(), "{} must not pay for its own activate binding", row.key.as_str());
     }
 }
@@ -150,7 +150,7 @@ async fn pick_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interac
 }
 
 mod inspection {
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 use super::super::inspection::*;
 use crate::editor::dag::unit_tests::context::{close, new_app, render as render_body};
 
@@ -178,9 +178,9 @@ async fn renders_the_select_a_node_placeholder_when_nothing_is_selected() {
 async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
     let document = crate::examples::demo::scene();
     let node_id = document.nodes.first().map(|node| node.id.clone()).expect("node");
-    let labels = crate::editor::dag::terminology::dag_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = crate::editor::dag::terminology::dag_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let node = render(&document, &[node_id.clone()], labels).expect("inspector component tree");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("inspector tree projection");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("inspector tree projection");
     assert!(json.contains(&node_id));
     assert!(json.contains("Name") || json.contains("Kind"));
 }
@@ -191,10 +191,10 @@ async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
 async fn txt_dsl_carrier_round_trips_exactly() {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
+    use semio_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::empty_snapshot();
-    let exported = export::txt::v_utf_8::any::DagIntoTxt::serialize(&snapshot,&semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
+    let exported = export::txt::v_utf_8::any::DagIntoTxt::serialize(&snapshot,&semio_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoDag::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);

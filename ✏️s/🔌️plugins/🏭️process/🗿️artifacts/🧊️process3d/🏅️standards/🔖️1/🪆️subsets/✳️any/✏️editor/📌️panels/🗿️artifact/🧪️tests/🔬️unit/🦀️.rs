@@ -1,24 +1,24 @@
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_process_process3d_panels::document::*;
 use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_icon, editor::process3d::terminology::Process3dLabels};
 use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
 use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessStep};
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::RowActionPlacement;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::RowActionPlacement;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_document_tab_to_this_body_key() {
@@ -49,8 +49,8 @@ async fn document_panel_lists_every_step_payload_in_order() {
         ],
     };
     let fixture = process_working_scene_to_snapshot(&scene, Workshop::default());
-    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let rendered = project(&fixture, &semio_framework_plugin::TreeWindows::unhosted());
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let rendered = project(&fixture, &semio_plugin::TreeWindows::unhosted());
     let rip_index = rendered.find("step-rip").expect("step-rip present");
     let bore_index = rendered.find("step-bore").expect("step-bore present");
     let dowel_index = rendered.find("step-dowel").expect("step-dowel present");
@@ -58,7 +58,7 @@ async fn document_panel_lists_every_step_payload_in_order() {
 }
 
 //#region 🪟️WindowLaws
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_plugin::{TreeWindowRequest, ViewModel};
 
 /// 🔎️ `(total, offset, row keys)` of one container, read off a projected body.
 fn container_of(json: &str, key: &str) -> (u64, u64, Vec<String>) {
@@ -96,19 +96,19 @@ fn oversized_document() -> Process3dSnapshot {
     process_working_scene_to_snapshot(&scene, Workshop::default())
 }
 
-fn project(document: &Process3dSnapshot, windows: &semio_framework_plugin::TreeWindows<'_>) -> String {
+fn project(document: &Process3dSnapshot, windows: &semio_plugin::TreeWindows<'_>) -> String {
     project_at(document, None, windows)
 }
 
 /// 🔎️ The projected body at the viewer's replay cursor `resolved_up_to`.
-fn project_at(document: &Process3dSnapshot, resolved_up_to: Option<usize>, windows: &semio_framework_plugin::TreeWindows<'_>) -> String {
-    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+fn project_at(document: &Process3dSnapshot, resolved_up_to: Option<usize>, windows: &semio_plugin::TreeWindows<'_>) -> String {
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let node = render(document, resolved_up_to, labels, windows).expect("document tree renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("document projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("document projection")
 }
 
 fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
-    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW (a)/(d): an oversized timeline states its full extent, materialises at most its slice, and
@@ -116,7 +116,7 @@ fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> Vi
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_timeline_stamps_every_sections_total() {
     let document = oversized_document();
-    let json = project(&document, &semio_framework_plugin::TreeWindows::unhosted());
+    let json = project(&document, &semio_plugin::TreeWindows::unhosted());
     let (stock_total, _, stock_rows) = container_of(&json, PROCESS_3D_PLAY_DOCUMENT_STOCK);
     assert_eq!(stock_total, 1, "the stock section stamps its single row: {json}");
     assert_eq!(stock_rows.len(), 1, "the stock row is always materialised: {json}");
@@ -133,7 +133,7 @@ async fn an_oversized_timeline_stamps_every_sections_total() {
 async fn a_closed_steps_section_stamps_its_total_with_no_rows() {
     let document = oversized_document();
     let view = window_view(PROCESS_3D_PLAY_DOCUMENT_STEPS, Some(false), 0, 0);
-    let json = project(&document, &semio_framework_plugin::TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_ARTIFACT));
+    let json = project(&document, &semio_plugin::TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_ARTIFACT));
     let (total, offset, rows) = container_of(&json, PROCESS_3D_PLAY_DOCUMENT_STEPS);
     assert_eq!(total, 180, "a closed section still states its extent: {json}");
     assert_eq!(offset, 0);
@@ -146,7 +146,7 @@ async fn a_closed_steps_section_stamps_its_total_with_no_rows() {
 async fn a_steps_window_request_materialises_exactly_its_slice_with_its_row_actions() {
     let document = oversized_document();
     let view = window_view(PROCESS_3D_PLAY_DOCUMENT_STEPS, Some(true), 100, 6);
-    let json = project(&document, &semio_framework_plugin::TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_ARTIFACT));
+    let json = project(&document, &semio_plugin::TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_ARTIFACT));
     let (total, offset, rows) = container_of(&json, PROCESS_3D_PLAY_DOCUMENT_STEPS);
     assert_eq!(total, 180);
     assert_eq!(offset, 100, "the stamped offset is the requested one: {json}");
@@ -160,7 +160,7 @@ async fn a_steps_window_request_materialises_exactly_its_slice_with_its_row_acti
 #[semio_framework_async_macros::async_test]
 async fn document_rows_declare_their_granularity_and_pick_through_the_tree() {
     let document = oversized_document();
-    let json = project(&document, &semio_framework_plugin::TreeWindows::unhosted());
+    let json = project(&document, &semio_plugin::TreeWindows::unhosted());
     let projection: serde_json::Value = serde_json::from_str(&json).expect("document projection json");
     assert_eq!(projection["component"]["interactionDomain"].as_str(), Some(PROCESS3D_INTERACTION_DOMAIN), "{json}");
     assert_eq!(projection["bindings"].as_array().cloned().unwrap_or_default().iter().filter(|binding| binding["trigger"] == "activate").count(), 1, "exactly one tree-level interactionSelect: {json}");
@@ -180,7 +180,7 @@ async fn steps_past_the_viewers_cursor_render_pending() {
     use semio_s_artifact_process_process3d_model::{snapshot::process_working_scene_to_snapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::Workshop};
     let step = |id: &str| ProcessStep { id: id.into(), label: id.into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.02, pose: Default::default() } };
     let fixture = process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps: vec![step("a"), step("b"), step("c")] }, Workshop::default());
-    assert_eq!(project_at(&fixture, None, &semio_framework_plugin::TreeWindows::unhosted()).matches("pending").count(), 0, "an unset cursor resolves every step");
-    assert_eq!(project_at(&fixture, Some(1), &semio_framework_plugin::TreeWindows::unhosted()).matches("pending").count(), 2);
-    assert_eq!(project_at(&fixture, Some(9), &semio_framework_plugin::TreeWindows::unhosted()).matches("pending").count(), 0, "a cursor past the timeline clamps to its end");
+    assert_eq!(project_at(&fixture, None, &semio_plugin::TreeWindows::unhosted()).matches("pending").count(), 0, "an unset cursor resolves every step");
+    assert_eq!(project_at(&fixture, Some(1), &semio_plugin::TreeWindows::unhosted()).matches("pending").count(), 2);
+    assert_eq!(project_at(&fixture, Some(9), &semio_plugin::TreeWindows::unhosted()).matches("pending").count(), 0, "a cursor past the timeline clamps to its end");
 }

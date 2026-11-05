@@ -804,7 +804,7 @@ function decodeScenePackItem(bytes: Uint8Array, position: { value: number }): un
   throw new Error(`decodeScenePackValue: invalid tag ${tag}`);
 }
 
-/** 🎬️ Decodes the self-describing serde packet emitted by `semio-framework-ui-scene`. */
+/** 🎬️ Decodes the self-describing serde packet emitted by `semio-ui-scene`. */
 export function decodeScenePackValue(bytes: Uint8Array): unknown {
   const position = { value: 0 };
   const value = decodeScenePackItem(bytes, position);
@@ -816,7 +816,7 @@ export function decodeScenePackValue(bytes: Uint8Array): unknown {
 //#region 🔖️MeshPackCodec
 /**
  * 🧊️ Field ids of the brep preview mesh `pack` record body — the exact ids
- * `semio-framework-os-flow`'s `mesh_pack_spec` declares. Every array rides as one little-endian
+ * `semio-os-flow`'s `mesh_pack_spec` declares. Every array rides as one little-endian
  * `Bytes64` blob, so decoding is a typed-array view over the payload rather than a JSON parse of a
  * number-per-element array.
  */

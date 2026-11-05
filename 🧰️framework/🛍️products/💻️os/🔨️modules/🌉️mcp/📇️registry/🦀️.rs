@@ -2,12 +2,12 @@
 //! Descriptor failures remain visible diagnostics, and an absent publication supplies gateway-only capabilities.
 
 use semio_framework::manifest;
-use semio_framework_os_kernel::native_catalog::NativeCatalogV1;
-use semio_framework_os_kernel::native_catalog::configured_native_catalog_v1;
+use semio_os_kernel::native_catalog::NativeCatalogV1;
+use semio_os_kernel::native_catalog::configured_native_catalog_v1;
 use std::path::Path;
 use std::path::PathBuf;
 use crate::plugin_paths_and_descriptor::{load_package_descriptor, plugin_registry_entries};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 
 //#region 🔖️RegistryDiscovery
 

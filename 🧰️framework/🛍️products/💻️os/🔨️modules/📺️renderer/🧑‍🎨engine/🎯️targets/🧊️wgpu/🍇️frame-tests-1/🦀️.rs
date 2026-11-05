@@ -5,28 +5,28 @@
 #![cfg(test)]
 
 #[cfg(any(test, not(target_arch = "wasm32")))]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use semio_framework_job::RetainedCloneGrant;
-use semio_framework_os_kernel::os_directory::identity::Identity;
-use semio_framework_os_renderer_wgpu_asset_decode::{GLB_OUTLINE_SCALE, GlbMatrix, GlbOutlineAccumulator};
-use semio_framework_os_renderer_wgpu_canvas2d_host::begin;
-use semio_framework_os_renderer_wgpu_frame_actions::{FrameActionOwners, FrameDeferredCursor, FrameDeferredWork, FrameInputActionStep, RuntimeDispatchCursor, RuntimeDispatchSource, transfer_frame_input_action};
-use semio_framework_os_renderer_wgpu_frame_presentation::{APP_PRESENT_STALL_STEPS, AppPresentInputWait, AppPresentPhase, AppPresentProgress, AppPresentStallWatch, note_present_stall_signature};
-use semio_framework_os_renderer_wgpu_frame_transaction::FrameTransactionStage;
-use semio_framework_os_renderer_wgpu_host_base::frame_latency::*;
+use semio_os_kernel::os_directory::identity::Identity;
+use semio_renderer_wgpu_asset_decode::{GLB_OUTLINE_SCALE, GlbMatrix, GlbOutlineAccumulator};
+use semio_renderer_wgpu_canvas2d_host::begin;
+use semio_renderer_wgpu_frame_actions::{FrameActionOwners, FrameDeferredCursor, FrameDeferredWork, FrameInputActionStep, RuntimeDispatchCursor, RuntimeDispatchSource, transfer_frame_input_action};
+use semio_renderer_wgpu_frame_presentation::{APP_PRESENT_STALL_STEPS, AppPresentInputWait, AppPresentPhase, AppPresentProgress, AppPresentStallWatch, note_present_stall_signature};
+use semio_renderer_wgpu_frame_transaction::FrameTransactionStage;
+use semio_renderer_wgpu_host_base::frame_latency::*;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_native_probe::native_socket_sqlite;
+use semio_renderer_wgpu_native_probe::native_socket_sqlite;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_native_probe::{NativeSocketProbeDiff, NativeSocketProbeMutation, NativeSocketProbeSnapshot};
-use semio_framework_os_renderer_wgpu_shell_sync::Phase;
+use semio_renderer_wgpu_native_probe::{NativeSocketProbeDiff, NativeSocketProbeMutation, NativeSocketProbeSnapshot};
+use semio_renderer_wgpu_shell_sync::Phase;
 #[cfg(test)]
-use semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn;
+use semio_renderer_wgpu_ui_engine_tests::fixture_original_turn;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use serde::Deserialize;
 use serde_json::Value;
 use std::sync::atomic::Ordering;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::InputState;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::InputState;
 #[cfg(not(target_arch = "wasm32"))]
 use winit::window::Fullscreen;
 

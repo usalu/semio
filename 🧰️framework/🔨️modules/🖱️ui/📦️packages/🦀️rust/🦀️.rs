@@ -1,6 +1,6 @@
 //! 🖱️ Target-neutral UI facts shared by every UI target: whether a session may offer its authored
-//! introduction. The terminal target lives in the `semio-framework-ui-tui-*` crates and the wgpu
-//! target in the `semio-framework-ui-wgpu-*` crates.
+//! introduction. The terminal target lives in the `semio-ui-tui-*` crates and the wgpu
+//! target in the `semio-ui-wgpu-*` crates.
 
 #[path = "../../🎓️introduction/🦀️.rs"]
 pub mod introduction;

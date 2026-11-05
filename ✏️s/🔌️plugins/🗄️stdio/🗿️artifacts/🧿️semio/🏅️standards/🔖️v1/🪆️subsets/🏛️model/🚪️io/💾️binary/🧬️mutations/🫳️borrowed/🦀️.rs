@@ -1,6 +1,6 @@
 //! 🏛️ Exact original Model element tuple fields reborrowed by bounded operation traversal.
 use {crate::schema::snapshot::*, crate::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_base::schema::geometry::{SemioTransform, SemioPoint3, SemioQuaternion}, semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64};
-use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactOperationText, ArtifactOperationTextNode as Node, ArtifactPreparedOperationError};
+use semio_plugin::plugin_app_close_prelude::store::{ArtifactOperationText, ArtifactOperationTextNode as Node, ArtifactPreparedOperationError};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
 enum View<'a> {

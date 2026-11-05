@@ -469,5 +469,99 @@
       "publicationRechecked": false,
       "expected": "produce"
     }
+  ],
+  "sourceDigests": [
+    {
+      "id": "matching-source",
+      "path": "/w/source.rs",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observations": [
+        {
+          "path": "/w/source.rs",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "result": null
+    },
+    {
+      "id": "changed-digest",
+      "path": "/w/source.rs",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observations": [
+        {
+          "path": "/w/source.rs",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "result": {
+        "path": "/w/source.rs",
+        "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observed": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "missingRecord": false
+      }
+    },
+    {
+      "id": "missing-observation",
+      "path": "/w/source.rs",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observations": [],
+      "result": {
+        "path": "/w/source.rs",
+        "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observed": null,
+        "missingRecord": true
+      }
+    },
+    {
+      "id": "observed-missing-file",
+      "path": "/w/source.rs",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observations": [
+        {
+          "path": "/w/source.rs",
+          "sha256": null
+        }
+      ],
+      "result": {
+        "path": "/w/source.rs",
+        "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observed": null,
+        "missingRecord": false
+      }
+    },
+    {
+      "id": "distinct-lookup-key",
+      "path": "/w/source.rs",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observations": [
+        {
+          "path": "/w/./source.rs",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "result": {
+        "path": "/w/source.rs",
+        "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observed": null,
+        "missingRecord": true
+      }
+    },
+    {
+      "id": "windows-path",
+      "path": "C:\\w\\source.rs",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observations": [
+        {
+          "path": "C:\\w\\source.rs",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "result": {
+        "path": "C:\\w\\source.rs",
+        "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observed": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "missingRecord": false
+      }
+    }
   ]
 }

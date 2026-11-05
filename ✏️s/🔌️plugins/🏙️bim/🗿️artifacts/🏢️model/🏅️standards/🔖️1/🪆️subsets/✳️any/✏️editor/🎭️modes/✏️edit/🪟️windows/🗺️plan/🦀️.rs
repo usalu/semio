@@ -15,11 +15,11 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::DslValue;
+use semio_plugin::InteractionRef;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "bim-edit-plan";
@@ -126,13 +126,13 @@ pub fn records(plan: &PlanLinework, selection: &[String], hover: &[String], util
 }
 
 /// 🗺️ Renders the plan window: the configured storey's linework, or an empty surface when the model has no storey or no linework yet.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     render_over(snapshot, inference, config, selection, hover, utility, revision, labels, &[])
 }
 
 /// 🗺️ [`render`] with the records of the authoring overlay (handles, snap markers, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let view = active_view(snapshot, config);
     let filtered = view.as_ref().and_then(|view| inference.view_linework.get(view)).map(|drawing| {
         let mut lines = drawing.lines.clone();
@@ -148,7 +148,7 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
         records.push(text_record("empty", (0.0, 0.0), labels.empty_plan.as_str(), semio_s_artifact_bim_model_plan_linework::render::plan::TEXT_SIZE * 2.0, [0.22, 0.24, 0.28, 1.0]));
     }
     records.extend(overlay.iter().cloned());
-    let framing = plan.filter(|_| !config.framed).and_then(|plan| semio_s_artifact_bim_model_plan_linework::render::plan::canvas_bounds(plan).map(|bounds| semio_framework_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 }));
+    let framing = plan.filter(|_| !config.framed).and_then(|plan| semio_s_artifact_bim_model_plan_linework::render::plan::canvas_bounds(plan).map(|bounds| semio_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 }));
     canvas_surface(SURFACE_ID, config.viewport, framing, &records)
 }
 //#endregion 🔖️Render

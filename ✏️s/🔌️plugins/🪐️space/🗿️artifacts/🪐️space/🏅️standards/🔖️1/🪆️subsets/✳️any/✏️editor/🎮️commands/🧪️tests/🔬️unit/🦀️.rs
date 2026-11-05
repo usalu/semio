@@ -1,14 +1,14 @@
 //! 🧪️ Aggregated unit tests of the `commands` leaves, one module per leaf.
 
 mod copy_invite_link {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::copy_invite_link::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn copy_invite_link_relays_share_link() {
     let mut app = context::new_app().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::CopyInviteLink(CopyInviteLink { role: "spectator".into(), ttl_secs: 3600 }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("copy link");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::CopyInviteLink(CopyInviteLink { role: "spectator".into(), ttl_secs: 3600 }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("copy link");
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
@@ -23,7 +23,7 @@ async fn copy_invite_link_relays_share_link() {
 }
 
 mod create_artifact {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::create_artifact::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
@@ -31,7 +31,7 @@ use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 async fn create_artifact_relays_only_the_catalog_choice_and_name_without_local_publication() {
     let mut app = context::new_app().await;
     let kind_choice = "{\"kindId\":\"s.gis.gismap\",\"schema\":\"gis.map\"}";
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::CreateArtifact(CreateArtifact { name: " First ".into(), kind_choice: kind_choice.into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("create artifact");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::CreateArtifact(CreateArtifact { name: " First ".into(), kind_choice: kind_choice.into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("create artifact");
     let snapshot = app.snapshot().expect("projection");
     assert!(snapshot.artifacts.is_empty(), "the guest must not mint or publish a document identity");
     assert_eq!(result.requested_effects.len(), 1);
@@ -50,7 +50,7 @@ async fn create_artifact_relays_only_the_catalog_choice_and_name_without_local_p
 #[semio_framework_async_macros::async_test]
 async fn empty_name_and_kind_open_the_dialog_instead_of_failing() {
     let mut app = context::new_app().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::CreateArtifact(CreateArtifact { name: String::new(), kind_choice: String::new() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("empty args must open the dialog, not fail");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::CreateArtifact(CreateArtifact { name: String::new(), kind_choice: String::new() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("empty args must open the dialog, not fail");
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
         Effect::OpenDialog { dialog_id, args, .. } => {
@@ -71,7 +71,7 @@ use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 #[semio_framework_async_macros::async_test]
 async fn delete_artifact_removes_the_row() {
     let (mut app, id) = context::new_app_with_artifact().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::DeleteArtifact(DeleteArtifact { id: id.clone() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("delete artifact");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::DeleteArtifact(DeleteArtifact { id: id.clone() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("delete artifact");
     let snapshot = app.snapshot().expect("projection");
     assert!(snapshot.artifacts.iter().all(|row| row.id != id));
 }
@@ -80,13 +80,13 @@ async fn delete_artifact_removes_the_row() {
 mod fold_directory_events {
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig};
-use semio_framework_os_kernel::os_directory::{DirectoryEvent, DirectorySpaceRole, DirectorySpaceVisibility};
-use semio_framework_plugin::{ConfigView};
+use semio_os_kernel::os_directory::{DirectoryEvent, DirectorySpaceRole, DirectorySpaceVisibility};
+use semio_plugin::{ConfigView};
 use super::super::fold_directory_events::*;
 use protocol::Mutation as _;
-use semio_framework_os_kernel::os_directory::{ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody, DirectorySpaceKind, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc};
+use semio_os_kernel::os_directory::{ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody, DirectorySpaceKind, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc};
 use {semio_framework_artifact_reference::ArtifactDialect};
-use semio_framework_plugin::{ArtifactView, HistoryView};
+use semio_plugin::{ArtifactView, HistoryView};
 
 fn event(seq: u64, body: DirectoryEventBody, space_id: Option<&str>) -> DirectoryEvent {
     DirectoryEvent {
@@ -225,14 +225,14 @@ async fn an_index_without_a_space_id_never_guesses_between_two_spaces() {
 }
 
 mod invite_member {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::invite_member::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn invite_member_relays_upsert_member() {
     let mut app = context::new_app().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::InviteMember(InviteMember { email: "a@example.com".into(), role: "author".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("invite");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::InviteMember(InviteMember { email: "a@example.com".into(), role: "author".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("invite");
     assert!(result.mutations.is_empty());
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
@@ -248,14 +248,14 @@ async fn invite_member_relays_upsert_member() {
 }
 
 mod open_artifact {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::open_artifact::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn open_artifact_relays_with_document_and_space_ids() {
     let (mut app, id) = context::new_app_with_indexed_artifact().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::OpenArtifact(OpenArtifact { id: id.clone() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("open indexed artifact");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::OpenArtifact(OpenArtifact { id: id.clone() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("open indexed artifact");
     assert!(result.mutations.is_empty());
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
@@ -273,20 +273,20 @@ async fn open_artifact_relays_with_document_and_space_ids() {
 #[semio_framework_async_macros::async_test]
 async fn open_artifact_of_a_missing_row_faults() {
     let mut app = context::new_app().await;
-    let error = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::OpenArtifact(OpenArtifact { id: "ghost".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect_err("missing row must fault");
+    let error = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::OpenArtifact(OpenArtifact { id: "ghost".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect_err("missing row must fault");
     assert_eq!(error.code.0, "s.space.index.target-missing");
 }
 }
 
 mod open_artifact_with {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::open_artifact_with::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn open_artifact_with_relays_the_explicit_choice() {
     let (mut app, id) = context::new_app_with_indexed_artifact().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::OpenArtifactWith(OpenArtifactWith { id: id.clone(), role: "viewer".into(), plugin_id: "draw".into(), app_id: "draw-play".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::OpenArtifactWith(OpenArtifactWith { id: id.clone(), role: "viewer".into(), plugin_id: "draw".into(), app_id: "draw-play".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
         .await
         .expect("open with");
     assert_eq!(result.requested_effects.len(), 1);
@@ -307,12 +307,12 @@ async fn open_artifact_with_relays_the_explicit_choice() {
 mod presence_heartbeat {
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use super::super::presence_heartbeat::*;
 use protocol::Mutation as _;
 
-fn empty_doc() -> (SSpaceSnapshot, semio_framework_plugin::HistoryView) {
-    (SSpaceSnapshot::default(), semio_framework_plugin::HistoryView::empty())
+fn empty_doc() -> (SSpaceSnapshot, semio_plugin::HistoryView) {
+    (SSpaceSnapshot::default(), semio_plugin::HistoryView::empty())
 }
 
 #[semio_framework_async_macros::async_test]
@@ -342,14 +342,14 @@ async fn heartbeat_replaces_an_existing_artifacts_presence() {
 }
 
 mod remove_member {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::remove_member::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn remove_member_relays_remove_member() {
     let mut app = context::new_app().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RemoveMember(RemoveMember { user_id: "u-1".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("remove");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RemoveMember(RemoveMember { user_id: "u-1".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("remove");
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
@@ -369,21 +369,21 @@ use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 #[semio_framework_async_macros::async_test]
 async fn rename_artifact_updates_the_name() {
     let (mut app, id) = context::new_app_with_artifact().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RenameArtifact(RenameArtifact { id: id.clone(), new_name: "Renamed".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("rename artifact");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RenameArtifact(RenameArtifact { id: id.clone(), new_name: "Renamed".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("rename artifact");
     let snapshot = app.snapshot().expect("projection");
     assert_eq!(snapshot.artifacts.iter().find(|row| row.id == id).map(|row| row.name.clone()), Some("Renamed".into()));
 }
 }
 
 mod request_delete_artifact {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::request_delete_artifact::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn request_delete_opens_the_confirm_dialog_without_mutating() {
     let (mut app, id) = context::new_app_with_artifact().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: id.clone() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("request delete");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: id.clone() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("request delete");
     assert!(result.mutations.is_empty(), "requesting delete never mutates the document directly");
     assert_eq!(app.snapshot().unwrap().artifacts.len(), 1, "the row survives until the dialog is confirmed");
     assert_eq!(result.requested_effects.len(), 1);
@@ -400,20 +400,20 @@ async fn request_delete_opens_the_confirm_dialog_without_mutating() {
 #[semio_framework_async_macros::async_test]
 async fn request_delete_of_a_missing_row_faults() {
     let mut app = context::new_app().await;
-    let error = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: "ghost".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect_err("missing row must fault");
+    let error = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: "ghost".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect_err("missing row must fault");
     assert_eq!(error.code.0, "s.space.mutation.target-missing");
 }
 }
 
 mod request_invite_member {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::request_invite_member::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn request_invite_member_opens_the_dialog() {
     let mut app = context::new_app().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RequestInviteMember(RequestInviteMember {}), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("request invite");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::RequestInviteMember(RequestInviteMember {}), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("request invite");
     assert!(result.mutations.is_empty());
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
@@ -424,14 +424,14 @@ async fn request_invite_member_opens_the_dialog() {
 }
 
 mod set_visibility {
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use super::super::set_visibility::*;
 use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 
 #[semio_framework_async_macros::async_test]
 async fn set_visibility_relays_the_directory_command() {
     let mut app = context::new_app().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::SetVisibility(SetVisibility { visibility: "public".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set visibility");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::SetVisibility(SetVisibility { visibility: "public".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set visibility");
     assert_eq!(result.requested_effects.len(), 1);
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
@@ -451,7 +451,7 @@ use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 #[semio_framework_async_macros::async_test]
 async fn touch_artifact_stamps_the_row() {
     let (mut app, id) = context::new_app_with_artifact().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::TouchArtifact(TouchArtifact { id: id.clone(), now_ms: 99, actor: "user:2".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("touch artifact");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::TouchArtifact(TouchArtifact { id: id.clone(), now_ms: 99, actor: "user:2".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("touch artifact");
     let snapshot = app.snapshot().expect("projection");
     let row = snapshot.artifacts.iter().find(|row| row.id == id).expect("row");
     assert_eq!(row.updated_at_ms, 99);

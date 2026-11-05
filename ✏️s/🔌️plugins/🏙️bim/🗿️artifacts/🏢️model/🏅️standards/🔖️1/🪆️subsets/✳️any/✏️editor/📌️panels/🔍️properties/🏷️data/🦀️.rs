@@ -10,11 +10,11 @@ use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyDef;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiValue;
-use semio_framework_ui_locale::Label;
+use semio_plugin::tree_item_desc;
+use semio_plugin::BuiltNode;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiValue;
+use semio_ui_locale::Label;
 
 /// 🧱️ The most rows one group of the panel shows: the fixed capacity of a container is 128 nodes.
 const ROWS: usize = 96;

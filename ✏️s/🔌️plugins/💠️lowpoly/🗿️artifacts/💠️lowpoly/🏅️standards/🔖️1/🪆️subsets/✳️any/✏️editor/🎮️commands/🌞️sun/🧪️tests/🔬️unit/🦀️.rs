@@ -1,9 +1,9 @@
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use crate::context::{action_meta, app, dispatch};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
 async fn toggle_sun_flips_enabled() {

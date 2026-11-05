@@ -25,7 +25,7 @@ pub fn puzzle3d_io() -> AppIo {
         ::semio_framework_async::poll::resolve_ready(AppIo::from_artifact(
             "puzzle.3d",
             MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
-            semio_framework_plugin::ArtifactPresentation { id: "3d.puzzle".into(), name: "3D Puzzle".into(), dimension: "3d".into(), component_kind: "puzzle3d".into() },
+            semio_plugin::ArtifactPresentation { id: "3d.puzzle".into(), name: "3D Puzzle".into(), dimension: "3d".into(), component_kind: "puzzle3d".into() },
         ))
         .with_ports(vec![MediaPortSpec {
             id: "kit:in".into(),
@@ -135,7 +135,7 @@ fn puzzle3d_object_kind_arg() -> ActionArgDef {
 /// here, not ported (contract §7.4's `App { definition, examples }` split: `.editor::<E>(def)` only
 /// takes the definition, so `AppBuilder`'s own `examples` vec is discarded either way) — flagged as a
 /// known gap for the coordinator, not silently lost.
-pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_puzzle3d_app() -> semio_plugin::AppDefinition {
     let envelope = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let builder = Editor::builder(semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT);
     let builder = create_puzzle3d_app_part_1(builder, envelope);
@@ -147,7 +147,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
 }
 
 /// 🧱️ The manifest slice 1 of 5 of `create_puzzle3d_app`: its builder calls.
-fn create_puzzle3d_app_part_1(builder: semio_framework_plugin::app::EditorBuilder, envelope: Puzzle3dScene) -> semio_framework_plugin::app::EditorBuilder {
+fn create_puzzle3d_app_part_1(builder: semio_plugin::app::EditorBuilder, envelope: Puzzle3dScene) -> semio_plugin::app::EditorBuilder {
     builder.document(["semio", "puzzle", "3d"])
             .artifact_kind(semio_s_artifact_puzzle_3d_model::artifact_kind())
             .icon_id("puzzle")
@@ -190,7 +190,7 @@ fn create_puzzle3d_app_part_1(builder: semio_framework_plugin::app::EditorBuilde
             .action_with(puzzle3d_flag_value_action("setSelectionLocked", "locked", LocalizedLabel::native("Set Locked", "Gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
             .mutation("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
-            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementSubmit", semio_plugin::CapabilityAudience::Input)
             .mutation("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"))
             .mutation("createAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Create {w}"), |w| format!("{w} erstellen")))
             .action_with(ActionDefinition::bounded_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets").in_palette(false))
@@ -207,7 +207,7 @@ fn create_puzzle3d_app_part_1(builder: semio_framework_plugin::app::EditorBuilde
 }
 
 /// 🪵️ The manifest slice 2 of 5 of `create_puzzle3d_app`: its builder calls.
-fn create_puzzle3d_app_part_2(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+fn create_puzzle3d_app_part_2(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
             .view_action("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
             .action_with(ActionDefinition::bounded_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).category("selection"))
@@ -227,9 +227,9 @@ fn create_puzzle3d_app_part_2(builder: semio_framework_plugin::app::EditorBuilde
             .view_action("setChunkSize", LocalizedLabel::native("Set Chunk Size", "Blockgröße festlegen"))
             .view_action("setSelectableKind", LocalizedLabel::native("Set Selectable Kind", "Auswählbare Art festlegen"))
             .action_with(ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand"))
-            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand"))
-            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementAbort", semio_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand"))
             .view_action("setTransformGumballFlag", LocalizedLabel::native("Set Transform Gumball Flag", "Transformieren-Griff festlegen"))
             .view_action("setVoxelDims", LocalizedLabel::native("Set Voxel Dims", "Voxel-Abmessungen festlegen"))
@@ -243,11 +243,11 @@ fn create_puzzle3d_app_part_2(builder: semio_framework_plugin::app::EditorBuilde
             .action_with(ActionDefinition::bounded_catalog("openVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Open {w} Suggestions"), |w| format!("{w}-Vorschläge öffnen")), ActionKind::View).category("tools"))
             .view_action("closeVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Close {w} Suggestions"), |w| format!("{w}-Vorschläge schließen")))
             .view_action("hoverSuggestion", LocalizedLabel::native("Hover Suggestion", "Vorschlag überfahren"))
-            .action_audience("hoverSuggestion", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("hoverSuggestion", semio_plugin::CapabilityAudience::Input)
             .view_action("targetBrushSuggestions", LocalizedLabel::native("Target Brush Suggestions", "Pinselvorschläge ausrichten"))
             .view_action("registerBrushMesh", LocalizedLabel::native("Register Brush Mesh", "Pinsel-Mesh registrieren"))
             .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
-            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerDown", semio_plugin::CapabilityAudience::Input)
             .action_args("addObjectKind", vec![puzzle3d_object_kind_arg()])
             .utility(semio_s_artifact_puzzle_3d_editor_transform::definition())
             .utility(utilities::brush::definition(puzzle3d_localized(|l| l.brush)))
@@ -265,7 +265,7 @@ fn create_puzzle3d_app_part_2(builder: semio_framework_plugin::app::EditorBuilde
 }
 
 /// 🔩️ The manifest slice 3 of 5 of `create_puzzle3d_app`: its builder calls.
-fn create_puzzle3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+fn create_puzzle3d_app_part_3(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.introduction(IntroductionDefinition {
                 title: puzzle3d_localized_phrase(|l| l.window_main, |w| format!("Welcome to {w}"), |w| format!("Willkommen bei {w}")),
                 steps: vec![
@@ -296,7 +296,7 @@ fn create_puzzle3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilde
                         LocalizedLabel::native("The Catalogue", "Der Katalog"),
                         puzzle3d_localized_phrase(|l| l.objects, |w| format!("Browse the {w} available to place from here."), |w| format!("Durchstöbern Sie hier die verfügbaren {w}.")),
                     )
-                        .introduce(panel_tab_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
+                        .introduce(panel_tab_element_id(semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
                         .placement(IntroductionPlacement::Right),
                     IntroductionStepDefinition::new(
                         "add-object",
@@ -307,8 +307,8 @@ fn create_puzzle3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilde
                             |_w| "Ziehen Sie den ersten Eintrag per Drag-and-Drop aus dem Katalog in die 3D-Ansicht.".to_string(),
                         ),
                     )
-                        .introduce(panel_tab_first_draggable_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
-                        .show(vec![panel_tab_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)])
+                        .introduce(panel_tab_first_draggable_element_id(semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
+                        .show(vec![panel_tab_element_id(semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)])
                         .placement(IntroductionPlacement::Right)
                         .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::action("addObjectKind", LocalizedLabel::native("Add an object", "Objekt hinzufügen")))]),
                     IntroductionStepDefinition::new(
@@ -339,75 +339,75 @@ fn create_puzzle3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilde
                     .args(vec![puzzle3d_object_kind_arg().required()])
                     .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             )
-            .action_interactive_job("acceptSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addBrushObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addObjectKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("closeVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("createAttraction", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("cycleBrushCandidate", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("cycleBrushCandidateBack", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteAttraction", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportSnapshot", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("acceptSuggestion", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBrushObject", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addObjectKind", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addTargetVolume", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("closeVortexSuggestions", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("createAttraction", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("cycleBrushCandidate", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("cycleBrushCandidateBack", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteAttraction", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteTargetVolume", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportSnapshot", semio_plugin::InteractiveJobClassification::Migrated)
             .action_destructive("exportSnapshot")
-            .action_interactive_job("importSnapshot", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("openImportSnapshot", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("importSnapshot", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("openImportSnapshot", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementAbort", semio_plugin::InteractiveJobClassification::Migrated)
             
 }
 
 /// ⚙️ The manifest slice 4 of 5 of `create_puzzle3d_app`: its builder calls.
-fn create_puzzle3d_app_part_4(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
-    builder.action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("hoverSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("openAddObjectDialog", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("openVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchInspector", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("registerBrushMesh", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("relocateTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("selectSameKindSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setBrushPlacementContactTolerance", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setChunkSize", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFillCount", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setObjectKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setProximityRadius", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSelectableKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSelectionFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSelectionHidden", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSelectionLocked", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setTargetVolumeFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setTransformGumballFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVortexDirection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVortexKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVortexShow", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVoxelDims", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("targetBrushSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldRelocate", semio_framework_plugin::InteractiveJobClassification::Migrated)
+fn create_puzzle3d_app_part_4(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
+    builder.action_interactive_job("engagementControlSelect", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementRepeatLast", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("focusSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("hoverSuggestion", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("openAddObjectDialog", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("openVortexSuggestions", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchInspector", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("registerBrushMesh", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("relocateTargetVolume", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectSameKindSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setBrushPlacementContactTolerance", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setChunkSize", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFillCount", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSnapEnabled", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSpacing", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridVisible", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodAutomatic", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodDepthVariable", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodManual", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setObjectKindWeight", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjectionParam", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProximityRadius", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectableKind", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionFlag", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionHidden", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionLocked", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTargetVolumeFlag", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTransformGumballFlag", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexDirection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexKindWeight", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexShow", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVoxelDims", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("targetBrushSuggestions", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleSun", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerDown", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldRelocate", semio_plugin::InteractiveJobClassification::Migrated)
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole 3D puzzle with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte 3D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
             .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected object from the 3D puzzle together with its connections.", "Löscht alle ausgewählten Objekte samt ihrer Verbindungen aus dem 3D-Puzzle."))
             .action_describe("duplicateSelection", LocalizedLabel::native("Adds a copy of every selected object next to the original; nothing happens without a selection.", "Fügt neben jedem ausgewählten Objekt eine Kopie hinzu; ohne Auswahl geschieht nichts."))
@@ -420,7 +420,7 @@ fn create_puzzle3d_app_part_4(builder: semio_framework_plugin::app::EditorBuilde
 }
 
 /// 🧲️ The manifest slice 5 of 5 of `create_puzzle3d_app`: its builder calls.
-fn create_puzzle3d_app_part_5(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+fn create_puzzle3d_app_part_5(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.action_describe("openImportSnapshot", LocalizedLabel::native("Opens the host's file picker for a 3D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
             .action_describe("importSnapshot", LocalizedLabel::native("Replaces the whole 3D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 3D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
             .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected objects.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Objekte."))
@@ -464,14 +464,14 @@ fn create_puzzle3d_app_part_5(builder: semio_framework_plugin::app::EditorBuilde
             .action_describe("setVortexDirection", LocalizedLabel::native("Sets how connection point directions are drawn; only the view changes.", "Legt fest, wie die Richtungen der Anschlusspunkte gezeichnet werden; nur die Ansicht ändert sich."))
             .action_describe("setObjectKindWeight", LocalizedLabel::native("Sets how often the fill tool and brush pick one object kind relative to the others.", "Legt fest, wie oft Füllwerkzeug und Pinsel eine Objektart im Verhältnis zu den anderen wählen."))
             .action_describe("setVortexKindWeight", LocalizedLabel::native("Sets how strongly one connection point kind is preferred when suggesting placements.", "Legt fest, wie stark eine Anschlusspunktart bei Platzierungsvorschlägen bevorzugt wird."))
-            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("setProjection", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("setProjectionParam", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("engagementRepeatLast", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("engagementControlSelect", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("targetBrushSuggestions", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("registerBrushMesh", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("setTransformGumballFlag", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("setProjection", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("setProjectionParam", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("engagementRepeatLast", semio_plugin::CapabilityAudience::Input)
+            .action_audience("engagementControlSelect", semio_plugin::CapabilityAudience::Input)
+            .action_audience("targetBrushSuggestions", semio_plugin::CapabilityAudience::Input)
+            .action_audience("registerBrushMesh", semio_plugin::CapabilityAudience::Input)
+            .action_audience("setTransformGumballFlag", semio_plugin::CapabilityAudience::Chrome)
             .action_destructive("importSnapshot")
             
 }

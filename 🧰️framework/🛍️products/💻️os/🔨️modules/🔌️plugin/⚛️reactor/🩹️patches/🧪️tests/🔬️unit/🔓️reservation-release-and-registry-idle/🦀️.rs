@@ -21,10 +21,10 @@
 /// with it, it also proves the released output returns to the fixed `ready` pool.
 #[test]
 fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let key = NativeCloseKey::fixture(5, 1);
     let surface = ui_contract::SurfaceId::try_from("5:window").expect("bounded surface");
@@ -62,10 +62,10 @@ fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
 /// wave B50's 7 843-turn streak with `sources=["reconcile"]`).
 #[test]
 fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retirement_ladder() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("21:window".into(), tree_with_owned_child("alias")).expect("admitted alias publication");
     let patch = finish(&tracker,cx).expect("alias surface publishes");
@@ -102,11 +102,11 @@ fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retire
 /// other half — that ordinary bodies are never refused at all.
 #[test]
 fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_handback_registry() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
-    let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
+    let baseline = semio_ui_runtime::surface_reconcile_registry_census();
     let ceiling = (ui_contract::UI_RESIDENT_AGGREGATE_BYTES - baseline.resident_bytes) / ui_contract::UI_RESIDENT_SURFACE_BYTES;
     assert!(ceiling > 0 && ceiling < ui_contract::UI_RESIDENT_SLOTS, "the ceiling-sized credit ceiling must be a handful of surfaces, not the slot count: {ceiling}");
     let held = fill_resident_aggregate();
@@ -116,7 +116,7 @@ fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_ha
     let state = tracker.debug_state();
     assert!(state.contains("reserve_refusal=unmounted:registry-resident-credit-exhausted"), "the refusal must name the resident credit ledger, not an opaque registry — and a surface refused before it ever mounted has no slot to name: {state}");
     assert!(state.contains(&format!("of {}B", ui_contract::UI_RESIDENT_AGGREGATE_BYTES)), "the census must price the refusal against the aggregate budget: {state}");
-    let refused_census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let refused_census = semio_ui_runtime::surface_reconcile_registry_census();
     assert!(refused_census.handback_free > 0, "the handback registry must still have headroom when credit runs out: {refused_census:?}");
     release_resident_aggregate(held);
 
@@ -138,11 +138,11 @@ fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_ha
 /// so the count is the session's, not the unit's (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
 #[test]
 fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
-    let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
+    let baseline = semio_ui_runtime::surface_reconcile_registry_census();
     let baseline_fixed = ui_contract::UiResidentPermit::fixed_backing_bytes().expect("resident ledger");
     let tracker = PatchTracker::new();
     for round in 0..200u32 {
@@ -150,11 +150,11 @@ fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
         let patch = acknowledge_one_publication(&tracker, "41:puzzle3d-main",cx).unwrap_or_else(|| panic!("round {round} publishes: {}", tracker.debug_state()));
         close_test_patch(patch);
         drain_released_output(&tracker, "41:puzzle3d-main", round,cx);
-        let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+        let census = semio_ui_runtime::surface_reconcile_registry_census();
         assert!(census.resident_bytes <= baseline.resident_bytes + ui_contract::UI_RESIDENT_SURFACE_BYTES, "round {round} left more than one live reservation's credit held: {census:?} against baseline {baseline:?} — {}", tracker.debug_state());
     }
     close_instance_to_empty(&tracker, 41,cx);
-    let after = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let after = semio_ui_runtime::surface_reconcile_registry_census();
     assert_eq!(after.resident_slots, baseline.resident_slots, "resident slots leaked across 200 publications: {after:?} against {baseline:?}");
     let after_fixed = ui_contract::UiResidentPermit::fixed_backing_bytes().expect("resident ledger");
     assert_eq!(
@@ -181,10 +181,10 @@ fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
 /// 26/09/02/PUZZLE-3D-END-TO-END wave B52 §2).
 #[test]
 fn a_node_record_wider_than_the_copy_grant_still_retires_its_document_to_terminal_empty() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let record = size_of::<ui_contract::UiNodeRecord>();
     let tracker = PatchTracker::new();
     let mut root = leaf("catalogue", "Catalogue").root;

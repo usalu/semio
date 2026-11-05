@@ -47,16 +47,16 @@ const GENERATION3D_BODY_KEYS: [&str; 8] = [
 #[test]
 fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let bound = semio_framework_ui_contract::UI_RESIDENT_SURFACE_BYTES;
+    let bound = semio_ui_contract::UI_RESIDENT_SURFACE_BYTES;
     let config = Generation3dConfig::default();
-    let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view_state = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     for example_id in examples().into_iter().map(|source| source.id().to_string()) {
         let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         for body_key in GENERATION3D_BODY_KEYS {
             let session = FlowEvalSession::new();
             let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session, None).expect("render");
             context::retire_flow_eval_session(session);
-            let rendered = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render json");
+            let rendered = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render json");
             println!("[STATS] surface example={example_id} body={body_key} bytes={} bound={bound}", rendered.len());
             assert!(!rendered.is_empty(), "{example_id}/{body_key} rendered empty");
             assert!(rendered.len() <= bound, "{example_id}/{body_key} is {} B, over the {bound} B resident surface bound", rendered.len());
@@ -74,13 +74,13 @@ fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, defect 1).
 #[semio_framework_async_macros::async_test]
 async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
-    use semio_framework_plugin::{ArtifactView, ConfigView};
+    use semio_plugin::{ArtifactView, ConfigView};
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
 
     let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
     let config = Generation3dConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let (_, preview_view) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
@@ -103,6 +103,6 @@ async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
     let mut owner = Generation3dInstanceOperationOwner::new();
     let closed = context::close_instance_operation_owner(&mut owner);
     assert!(closed, "the retained evaluation-session owner never reached its terminal close");
-    assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
+    assert!(semio_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
 }
 //#endregion 🧹️RetirementTests

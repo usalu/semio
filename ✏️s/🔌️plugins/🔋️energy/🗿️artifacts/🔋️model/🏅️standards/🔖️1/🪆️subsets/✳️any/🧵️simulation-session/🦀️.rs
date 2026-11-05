@@ -39,7 +39,7 @@ use semio_framework_job::RetainedCloneStep;
 use semio_framework_job_payload::RetainedJobPayload;
 use semio_framework_job::StepContext;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_tool_run::{JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunSettingsReads, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict};
 use semio_framework_tool_run_tick_wire::{ToolRunTickWireCursor, ToolRunTickPayloadSource};
 use std::sync::Arc;

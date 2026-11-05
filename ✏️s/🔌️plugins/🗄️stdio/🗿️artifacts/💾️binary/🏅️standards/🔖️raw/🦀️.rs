@@ -6,7 +6,7 @@
 //! (`mimes: ["application/octet-stream"], extensions: [".bin"]`) — not invented.
 
 use crate::standards::v_raw::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 /// 🌳️ `standard "raw"`'s complete declaration — one subset, `any`.
@@ -17,14 +17,14 @@ pub fn standard() -> StandardDeclaration<crate::BinaryApps> {
 
 //#region 🧩️ArtifactItems7
 pub mod artifact_items_7 {
-    use semio_framework_plugin::declarations;
+    use semio_plugin::declarations;
 use crate::{definition};
 use crate::{formats};
 use crate::{STDIO_BINARY_DOCUMENT_SCHEMA};
 use crate::BinaryApps;
-use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+use semio_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 pub use crate::schema::mutations::BinaryMutation;
 pub use crate::schema::snapshot::BinarySnapshot;
 
@@ -58,7 +58,7 @@ pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration
 /// (see `📓️w2-p-report.md` `## openQuestions`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact() -> declarations::ArtifactDeclaration<BinaryApps> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").expect("canonical stdio.binary kind"), localization: &[], standards: vec![crate::standards::v_raw::standard()] }
 }
@@ -68,7 +68,7 @@ pub fn artifact() -> declarations::ArtifactDeclaration<BinaryApps> {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.binary".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Binary", "Binärdatei"),
+        label: semio_ui_locale::LocalizedLabel::native("Binary", "Binärdatei"),
         source_format: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

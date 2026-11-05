@@ -1,37 +1,37 @@
 //! 🎳️ Staged `history-view` members of the `instance-render` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 📜️ The history projection: the command log backfill, the history view and its patches, the projection cache refresh, the history route commands and the reprojection status.
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_command::{CommandLogAppendKey, HistoryBackfillMark, HistoryRowReads, HistoryViewCache, HistoryViewPatch, HistoryViewStamp, backfilled_edit_label};
-use semio_framework_plugin_decl_views::history_view::{CommandLogEntry, CommandView, HistoryView, MutationView};
+use semio_plugin_command::{CommandLogAppendKey, HistoryBackfillMark, HistoryRowReads, HistoryViewCache, HistoryViewPatch, HistoryViewStamp, backfilled_edit_label};
+use semio_plugin_decl_views::history_view::{CommandLogEntry, CommandView, HistoryView, MutationView};
 use semio_framework_value::DslValue;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use std::collections::{HashMap, HashSet};
 use semio_framework::kernel::{HistoryEntry, HistoryPatch, InvocationResult};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use store::{Mutation, build_history_columns};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use crate::render_bundle::{RenderCtx, RenderRef};
-use semio_framework_plugin_command::lifted_command::history_mutation_entry;
-use semio_framework_plugin_job::reserved_jobs::plugin_job_yield_once;
-use semio_framework_ui_contract::*;
+use semio_plugin_command::lifted_command::history_mutation_entry;
+use semio_plugin_job::reserved_jobs::plugin_job_yield_once;
+use semio_ui_contract::*;
 use semio_framework::kernel::HistoryReprojection;
 use semio_framework::kernel::HistoryReprojectionKind;
 use semio_framework::history_edit::HISTORY_EDIT_COMMIT_ACTION_ID;
 use std::sync::Arc;
-use semio_framework_plugin_instance_extension::InstanceExtension;
-use semio_framework_plugin_command::CommandLogAppend;
-use semio_framework_plugin_document_media::ActiveDocumentArchiveLoad;
+use semio_plugin_instance_extension::InstanceExtension;
+use semio_plugin_command::CommandLogAppend;
+use semio_plugin_document_media::ActiveDocumentArchiveLoad;
 use semio_framework::ActionKind;
 use store::MemberFactory;
 use store::ReferenceSpaceMember;
-use semio_framework_plugin_time_travel as time_travel;
+use semio_plugin_time_travel as time_travel;
 
 /// 🖋️ Decodes `args.authors` (`[{id, name, avatar?}]`, both shells' wire shape for a
 /// checkpoint dispatch) into `vcs::Author`s — empty when absent or malformed, never a hard

@@ -3,8 +3,8 @@
 use crate::standards::v1::subsets::any::content::{read, working_child_emit};
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::app::ChildContentView;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+use semio_plugin::app::ChildContentView;
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use {semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_kind::ChangeNodeKind, semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;
 

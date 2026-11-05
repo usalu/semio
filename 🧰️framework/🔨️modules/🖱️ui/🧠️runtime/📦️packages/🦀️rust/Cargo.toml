@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../.."
-name = "semio-framework-ui-runtime"
+name = "semio-ui-runtime"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -17,17 +17,17 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-ui-contract-validation = { path = "../../../🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+semio-ui-contract-validation = { path = "../../../🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 
-semio-framework-ui-runtime-exchange = { path = "../../📡️exchange/📦️packages/🦀️rust" }
-semio-framework-ui-runtime-presentation = { path = "../../🖼️presentation/📦️packages/🦀️rust" }
-semio-framework-ui-runtime-reconcile-primitives = { path = "../../🧱️primitives/📦️packages/🦀️rust" }
-semio-framework-ui-runtime-reconcile = { path = "../../♻️reconcile/📦️packages/🦀️rust" }
+semio-ui-runtime-exchange = { path = "../../📡️exchange/📦️packages/🦀️rust" }
+semio-ui-runtime-presentation = { path = "../../🖼️presentation/📦️packages/🦀️rust" }
+semio-ui-runtime-reconcile-primitives = { path = "../../🧱️primitives/📦️packages/🦀️rust" }
+semio-ui-runtime-reconcile = { path = "../../♻️reconcile/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-runtime-reconcile = { path = "../../♻️reconcile/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-runtime-reconcile = { path = "../../♻️reconcile/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 # 🧪️ `TransactionPatch`'s test-only `Serialize` impl and the fixture-oracle tests diff published
 # patches/snapshots against `serde_json` directly — ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-

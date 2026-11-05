@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberRadiationShi
         record: "ChangedMemberRadiationShift",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Radiation loss shift ΔT_r of the member", "Bauteil: Abstrahlungsanteil ΔT_r ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Radiation loss shift ΔT_r of the member", "Bauteil: Abstrahlungsanteil ΔT_r ändern")
     }
 }
 

@@ -149,7 +149,7 @@ async fn pump_drives_one_turn_per_actor_and_reports_it_as_a_shard_outcome() {
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     assert!(shard.is_registered(actor).await);
 
@@ -175,7 +175,7 @@ async fn pump_reports_an_envelope_for_an_unregistered_actor_as_a_fault_not_a_sil
     let stranger = ActorId(99);
     probe.push_inbound(encode_event_envelope(stranger, 1, &fixture_instance_close_event()).await).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     let driven = pump(&mut shard).await.expect("pump succeeds even with an unknown actor");
     assert_eq!(driven, 1, "the rejected envelope consumes one bounded authority opportunity");
 
@@ -193,7 +193,7 @@ async fn unregister_drops_the_instance_and_shrinks_actor_count() {
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("mock instantiate");
     let (transport, _probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     assert_eq!(shard.actor_count().await, 1);
     shard.unregister(actor).await;

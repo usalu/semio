@@ -8,8 +8,10 @@ import texts from "./📖️texts/🔣️.json" with {type:"json"};
 
 /** 🌐️ The two languages every cache text is authored in; English comes first and nothing else is assumed. */
 export type CacheLanguageV1="en"|"de";
-/** 🏠️ The two declared loose roots: the repository cache root and the native cache root. */
-export type CacheRootIdV1="repository"|"native";
+/** 🏠️ Closed authored roots for repository, native and compact Rust storage. */
+export type CacheRootIdV1=keyof typeof policy.roots;
+/** 🗝️ Enumerates every schema-closed root for validation and physical accounting. */
+export const CACHE_ROOT_IDS_V1:readonly CacheRootIdV1[]=Object.freeze(Object.keys(policy.roots) as CacheRootIdV1[]);
 /** 🧑‍🔧️ Names who keeps an area within its budget when the generic collector must not. */
 export type CacheOwnerV1="image"|"control"|"cargo"|"nx"|"nx-tooling"|"bazel"|"test-evidence"|"dashboard"|"graph"|"remote-cache"|"remote-execution";
 type Bilingual=Readonly<Record<CacheLanguageV1,string>>;
@@ -48,7 +50,7 @@ const carved=(parent:NestedHome,child:NestedHome):boolean=>parent.units!==undefi
 /** 📋️ Validates the entire ledger, its budgets and its disjointness before any cache read or write relies on it. */
 export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):CacheLedgerV1{
  const errors=validateJsonSchemaSubset(schema,value);if(errors.length)refuse(errors[0]!);
- const ledger=value as CacheLedgerV1,ids=new Set<string>(),claimed=new Map<CacheRootIdV1,string[][]>([["repository",[]],["native",[]]]),nested=new Map<string,{paths:NestedHome[];explicit:number;remainders:number}>();
+ const ledger=value as CacheLedgerV1,ids=new Set<string>(),claimed=new Map<CacheRootIdV1,string[][]>(CACHE_ROOT_IDS_V1.map(root=>[root,[]])),nested=new Map<string,{paths:NestedHome[];explicit:number;remainders:number}>();
  for(const area of ledger.areas){
   if(ids.has(area.id))refuse("duplicate area "+area.id);ids.add(area.id);
   if(area.recreate!==undefined&&area.kind!=="partition")refuse("only a partition may declare how it is recreated: "+area.id);
@@ -99,7 +101,7 @@ export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgets
  for(const[partition,row]of nested){
   const limit=partitions[partition]!.maximumLogicalBytes;if(row.remainders>1||row.explicit>=limit||row.remainders===1&&limit-row.explicit<1048576)refuse("nested budgets exceed partition "+partition);
  }
- for(const root of["repository","native"] as const){
+ for(const root of CACHE_ROOT_IDS_V1){
   const total=ledger.areas.filter(area=>area.root===root&&area.kind==="tree"||area.root===root&&area.kind==="control"&&area.collect).reduce((sum,area)=>sum+bytesOf(area.budget),0);
   if(total>ledger.roots[root].maximumBytes)refuse("area budgets exceed the budget of the "+root+" root");
  }

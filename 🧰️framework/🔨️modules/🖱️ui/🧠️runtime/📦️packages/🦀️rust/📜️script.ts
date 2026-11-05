@@ -6,7 +6,7 @@ import { resolve } from "node:path";
 import { readCargoTestPolicyV1, runAdmittedCargoCommandV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** ⚙️ Runs the `semio-framework-ui-runtime` test suite and the guest-target compile gates.
+/** ⚙️ Runs the `semio-ui-runtime` test suite and the guest-target compile gates.
  *
  * The wasm gates are the point of this crate: the contract is what `wasm32-wasip2` plugin components
  * and `wasm32-unknown-unknown` browser renderers both speak, so a dependency that fails either target
@@ -23,7 +23,7 @@ import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts
 
 const packageRoot = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 /** 🧠️ The headless runtime crates, bottom up: exchange and presentation, the reconcile primitives, the cursor, the reconcile authority, then the facade. */
-const UI_RUNTIME_PACKAGES = ["semio-framework-ui-runtime-exchange", "semio-framework-ui-runtime-presentation", "semio-framework-ui-runtime-reconcile-primitives", "semio-framework-ui-runtime-reconcile-cursor", "semio-framework-ui-runtime-reconcile", "semio-framework-ui-runtime"];
+const UI_RUNTIME_PACKAGES = ["semio-ui-runtime-exchange", "semio-ui-runtime-presentation", "semio-ui-runtime-reconcile-primitives", "semio-ui-runtime-reconcile-cursor", "semio-ui-runtime-reconcile", "semio-ui-runtime"];
 
 
 //#region 🔖️test
@@ -59,7 +59,7 @@ class TestScript extends BundleScript {
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    const check = (args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-runtime", ...args],packageRoot,process.env,buildBudgetMs());
+    const check = (args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-ui-runtime", ...args],packageRoot,process.env,buildBudgetMs());
     await check(["--target", "wasm32-wasip2"]);
     await check(["--target", "wasm32-unknown-unknown"]);
   }

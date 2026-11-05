@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeBridgeDampingRatio
         record: "ChangedBridgeDampingRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change deck damping ratio ζ (0 = registry default) of the bridge serviceability", "Brückengebrauchstauglichkeit: Dämpfungsgrad ζ des Decks (0 = Registerwert) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change deck damping ratio ζ (0 = registry default) of the bridge serviceability", "Brückengebrauchstauglichkeit: Dämpfungsgrad ζ des Decks (0 = Registerwert) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

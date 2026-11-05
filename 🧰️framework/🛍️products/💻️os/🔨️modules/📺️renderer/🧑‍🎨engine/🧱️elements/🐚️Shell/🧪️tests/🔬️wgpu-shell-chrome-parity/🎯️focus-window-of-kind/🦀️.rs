@@ -1,6 +1,6 @@
 /// 🎯️ Focus window of kind: the one `focusWindow` verb opens a closed window, raises an open one, moves the keyboard focus into it and announces it in the interface language; a kind the app never declared is refused and announced.
 
-fn focus_window_shell() -> semio_framework_os_renderer_wgpu_shell_state::ShellState {
+fn focus_window_shell() -> semio_renderer_wgpu_shell_state::ShellState {
     let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️focus-window-of-kind/🔣️.json")).unwrap();
     let mut shell = host_test_shell();
     let prototype = shell.docs.session.as_ref().unwrap().app.window_kinds.first().clone();
@@ -12,7 +12,7 @@ fn focus_window_shell() -> semio_framework_os_renderer_wgpu_shell_state::ShellSt
     });
     shell.docs.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(kinds.collect::<Vec<_>>()).unwrap();
     let open = law["initiallyOpen"][0].as_str().unwrap().to_string();
-    let initial = WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![semio_framework_os_renderer_wgpu_dock::DockStackTab::new(open.clone())], active: open.clone() }) };
+    let initial = WindowLayout { root: semio_renderer_wgpu_dock::dock_node_to_layout_root(&semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![semio_renderer_wgpu_dock::DockStackTab::new(open.clone())], active: open.clone() }) };
     shell.docs.session.as_mut().unwrap().app.default_layout = Some(initial.clone());
     shell.dock.layout_override = Some(initial);
     shell.windows.active_window_id = Some(open);
@@ -21,16 +21,16 @@ fn focus_window_shell() -> semio_framework_os_renderer_wgpu_shell_state::ShellSt
 }
 
 fn focus_window_action(kind: &str) -> ActionDescriptor {
-    ActionDescriptor { controller_id: "framework".into(), action: semio_framework::FOCUS_WINDOW_ACTION_ID.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowKindId": kind }) }
+    ActionDescriptor { controller_id: "framework".into(), action: semio_framework::FOCUS_WINDOW_ACTION_ID.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "windowKindId": kind }) }
 }
 
-fn mounted(shell: &semio_framework_os_renderer_wgpu_shell_state::ShellState) -> Vec<String> {
+fn mounted(shell: &semio_renderer_wgpu_shell_state::ShellState) -> Vec<String> {
     shell.dock.dock.window_instances().into_iter().map(|(id, _)| id).collect()
 }
 
 #[test]
 fn focusing_a_closed_window_kind_opens_it_and_an_open_one_is_only_raised() {
-    use semio_framework_os_renderer_wgpu_shell_dock::WindowKindFocus;
+    use semio_renderer_wgpu_shell_dock::WindowKindFocus;
     let mut shell = focus_window_shell();
     assert_eq!(mounted(&shell), ["a"]);
     let opened = shell.dock.focus_window_of_kind(&shell.docs, "b", &mut shell.windows, &mut shell.settle);
@@ -56,7 +56,7 @@ fn the_focus_window_action_moves_the_keyboard_ring_into_the_window_and_announces
     let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️focus-window-of-kind/🔣️.json")).unwrap();
     assert_eq!(law["action"], semio_framework::FOCUS_WINDOW_ACTION_ID);
     assert_eq!(law["argument"], semio_framework::FOCUS_WINDOW_ARG_KIND);
-    let dispatch = |shell: &mut semio_framework_os_renderer_wgpu_shell_state::ShellState, kind: &str| semio_framework_async::block_on(semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx::of(shell).dispatch_action(focus_window_action(kind)));
+    let dispatch = |shell: &mut semio_renderer_wgpu_shell_state::ShellState, kind: &str| semio_framework_async::block_on(semio_renderer_wgpu_shell_actions::ActionsCtx::of(shell).dispatch_action(focus_window_action(kind)));
     let expected = |locale: &str, outcome: &str| law["announcements"].as_array().unwrap().iter().find(|row| row["locale"] == locale && row["outcome"] == outcome).unwrap().clone();
     for locale in ["en", "de"] {
         let mut shell = focus_window_shell();
@@ -88,23 +88,23 @@ fn the_focus_window_action_moves_the_keyboard_ring_into_the_window_and_announces
     }
 }
 
-fn install_device_layouts(shell: &mut semio_framework_os_renderer_wgpu_shell_state::ShellState, law: &Value, with_device_layouts: bool) {
+fn install_device_layouts(shell: &mut semio_renderer_wgpu_shell_state::ShellState, law: &Value, with_device_layouts: bool) {
     let layouts = law["deviceLayouts"].as_array().unwrap().iter().filter(|_| with_device_layouts).map(|row| {
         let kinds: Vec<String> = row["kinds"].as_array().unwrap().iter().map(|kind| kind.as_str().unwrap().to_string()).collect();
         let id = row["id"].as_str().unwrap();
-        semio_framework_ui_declaration::layout::create_named_layout(id, id, semio_framework_ui_declaration::layout::create_stack_layout(&kinds, None), "builtin", None, None)
+        semio_ui_declaration::layout::create_named_layout(id, id, semio_ui_declaration::layout::create_stack_layout(&kinds, None), "builtin", None, None)
     });
     shell.docs.session.as_mut().unwrap().app.named_layouts = layouts.collect();
 }
 
-fn present_as(shell: &mut semio_framework_os_renderer_wgpu_shell_state::ShellState, device: &str) {
+fn present_as(shell: &mut semio_renderer_wgpu_shell_state::ShellState, device: &str) {
     shell.chrome.screen_w = if device == "mobile" { 375.0 } else { 1280.0 };
     shell.chrome.chrome_build.preferences.ui_layout = if device == "tablet" { "tablet".to_string() } else { "desktop".to_string() };
 }
 
 #[test]
 fn a_window_kind_missing_from_the_device_layout_maps_to_its_stand_in_or_is_refused_like_the_language_agnostic_rows() {
-    use semio_framework_os_renderer_wgpu_shell_dock::{FocusDevice, resolve_device_window_kind};
+    use semio_renderer_wgpu_shell_dock::{FocusDevice, resolve_device_window_kind};
     let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️focus-window-of-kind/🔣️.json")).unwrap();
     for row in law["deviceRows"].as_array().unwrap() {
         let id = row["id"].as_str().unwrap();
@@ -116,7 +116,7 @@ fn a_window_kind_missing_from_the_device_layout_maps_to_its_stand_in_or_is_refus
         let resolved = shell.dock.resolve_window_kind_for_device(&shell.docs, requested, fallback, device);
         assert_eq!(resolved.as_deref(), row["target"].as_str(), "{id}");
         let layouts = &shell.docs.session.as_ref().unwrap().app.named_layouts;
-        let available = semio_framework_os_renderer_wgpu_shell_dock::device_layout_window_kinds(layouts, device);
+        let available = semio_renderer_wgpu_shell_dock::device_layout_window_kinds(layouts, device);
         assert_eq!(resolve_device_window_kind(available.as_deref(), requested, fallback).as_deref(), row["target"].as_str(), "{id}: the pure resolver agrees");
     }
 }
@@ -124,13 +124,13 @@ fn a_window_kind_missing_from_the_device_layout_maps_to_its_stand_in_or_is_refus
 #[test]
 fn the_focus_window_action_lands_on_the_device_stand_in_and_announces_an_unavailable_kind_in_both_languages() {
     let law: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️focus-window-of-kind/🔣️.json")).unwrap();
-    let dispatch = |shell: &mut semio_framework_os_renderer_wgpu_shell_state::ShellState, kind: &str, fallback: Option<&str>| {
+    let dispatch = |shell: &mut semio_renderer_wgpu_shell_state::ShellState, kind: &str, fallback: Option<&str>| {
         let args = match fallback {
-            Some(stand_in) => semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowKindId": kind, "fallbackWindowKindId": stand_in }),
-            None => semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowKindId": kind }),
+            Some(stand_in) => semio_renderer_wgpu_host_base::action_args_json!({ "windowKindId": kind, "fallbackWindowKindId": stand_in }),
+            None => semio_renderer_wgpu_host_base::action_args_json!({ "windowKindId": kind }),
         };
         let action = ActionDescriptor { controller_id: "framework".into(), action: semio_framework::FOCUS_WINDOW_ACTION_ID.into(), args };
-        semio_framework_async::block_on(semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx::of(shell).dispatch_action(action))
+        semio_framework_async::block_on(semio_renderer_wgpu_shell_actions::ActionsCtx::of(shell).dispatch_action(action))
     };
     assert_eq!(law["fallbackArgument"], semio_framework::FOCUS_WINDOW_ARG_FALLBACK);
     for row in law["unavailable"].as_array().unwrap() {

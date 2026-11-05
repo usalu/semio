@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerCptQc where O
         record: "ChangedLayerCptQc",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cone resistance q_c of the soil layer", "Bodenschicht: Spitzenwiderstand q_c ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cone resistance q_c of the soil layer", "Bodenschicht: Spitzenwiderstand q_c ändern")
     }
 }
 

@@ -44,8 +44,8 @@ impl SetLineEndingMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineEndingMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "line-ending", kind: "set-line-ending", record: "SetLineEnding" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Line Ending", "Zeilenende setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Line Ending", "Zeilenende setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-line-ending".to_string()]

@@ -1,5 +1,5 @@
 
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit};
+use semio_plugin::{ArtifactView, ConfigView, Emit};
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
@@ -12,7 +12,7 @@ use crate::editor::sourcing::editor_vocabulary::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EX
 use crate::schema::{SourcingModule};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_document};
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{HistoryView, PluginApp};
+use semio_plugin::{HistoryView, PluginApp};
 
 #[semio_framework_async_macros::async_test]
 async fn pre_deserialization_envelope_accepts_exact_limits_and_rejects_plus_one() {
@@ -57,7 +57,7 @@ fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurationConfigMutati
 #[semio_framework_async_macros::async_test]
 async fn curation_and_example_actions_survive_registry_enforcement() {
     let mut app = new_app().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set example");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set example");
     let effects = crate::editor_unit_tests::context::settle(&mut app).await;
     let Some(Effect::LoadDocument { pack, .. }) = effects.first() else { panic!("setActiveExample must publish a LoadDocument effect") };
     let loaded = <CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
@@ -65,8 +65,8 @@ async fn curation_and_example_actions_survive_registry_enforcement() {
     let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
     crate::editor_unit_tests::context::dispatch(&mut app, SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id: object_id.clone() })).await;
     assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 1, "curationAdd is a document operation");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("undo settles its reserved job");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("undo settles its reserved job");
     crate::editor_unit_tests::context::settle(&mut app).await;
     assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 0, "undo reverts the curation edit");
 }

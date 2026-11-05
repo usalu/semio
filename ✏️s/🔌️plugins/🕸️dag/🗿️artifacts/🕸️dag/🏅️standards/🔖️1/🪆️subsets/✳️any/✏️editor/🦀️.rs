@@ -26,45 +26,45 @@ use crate::editor::dag::terminology::dag_play_labels;
 use crate::{DagMutation, DagSnapshot};
 use semio_framework::kernel::Effect;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::app::{Dialect, InteractionView};
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionFactory;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -80,59 +80,59 @@ pub use main::{DAG_PLAY_BODY_MAIN, DAG_PLAY_WINDOW_MAIN};
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn dag_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+pub fn dag_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
     ActionFactory::new(DAG_PLAY_APP_ID).action(action, args)
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🌳️ The framework's one node-list admission — the crate-local copy is gone (ticket
 /// 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §8.3).
-pub use semio_framework_plugin::ui_node_list;
+pub use semio_plugin::ui_node_list;
 
-/// 🕹️ A domain pick row: [`semio_framework_plugin::tree_item_desc`] plus the granularity that marks
+/// 🕹️ A domain pick row: [`semio_plugin::tree_item_desc`] plus the granularity that marks
 /// the row a pick target of the panel tree's `.interaction_domain(..)`, so no per-row
 /// `interactionSelect` argument map is ever built.
-pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_ui_contract::Label>>(
+pub fn pick_item<I: AsRef<str>, L: TryInto<semio_ui_contract::Label>>(
     id: I,
     label: L,
     description: Option<String>,
     granularity: &str,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut node = semio_framework_plugin::tree_item_desc(id, label, description)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-        props.granularity = Some(semio_framework_plugin::UiText::try_from_str(granularity).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "interaction granularity admission failed"))?);
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let mut node = semio_plugin::tree_item_desc(id, label, description)?;
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
+        props.granularity = Some(semio_plugin::UiText::try_from_str(granularity).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "interaction granularity admission failed"))?);
     }
     Ok(node)
 }
@@ -140,7 +140,7 @@ pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_ui_contract::Label>>(
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `DagPlayApp::Command` — the SOLE dispatch surface for dag's own behavior, assembled from the
     /// `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`, the
     /// camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
@@ -165,8 +165,8 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🔖️ContextMenu
-fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::dag::terminology::DagPlayLabels, view_state: &semio_framework_plugin::ViewModel, selected: &[String], request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
-    use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::dag::terminology::DagPlayLabels, view_state: &semio_plugin::ViewModel, selected: &[String], request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
+    use semio_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
     let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), selected, &[]);
     let hit_edge_id = request.surface.as_ref().and_then(|target| target.hits.iter().find(|hit| hit.domain == "edge")).map(|hit| hit.id.clone());
@@ -256,10 +256,10 @@ fn dag_retained_document_reduce(
     command: &DagCommand,
     snapshot: &DagSnapshot,
     config: &DagConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<DagMutation, DagConfigMutation, NoDraftMutation>, Fault> {
     if !DAG_RETAINED_DOCUMENT_TOOL_IDS.contains(&command.command_id()) {
@@ -299,7 +299,7 @@ fn dag_command_from_action(action: &str, args: Option<&semio_framework_value::Ds
         _ => None,
     };
     let required = |keys: &[&str], code: &str, message: &str| {
-        Some(text(keys, "")).filter(|value| !value.is_empty()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message))
+        Some(text(keys, "")).filter(|value| !value.is_empty()).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message))
     };
     match action {
         "setActiveExample" => Ok(DagCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
@@ -309,14 +309,14 @@ fn dag_command_from_action(action: &str, args: Option<&semio_framework_value::Ds
         "disconnect" => Ok(DagCommand::Disconnect(disconnect::Disconnect { edge_id: text(&["edgeId", "edge_id", "id", "value"], "") })),
         "graphPointerDown" => Ok(DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
         "nodeGraphViewport" => Ok(DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport {
-            viewport: semio_framework_os_kernel::Viewport2d { x: number(&["x"]).unwrap_or_default(), y: number(&["y"]).unwrap_or_default(), zoom: number(&["zoom"]).unwrap_or(1.0) },
+            viewport: semio_os_kernel::Viewport2d { x: number(&["x"]).unwrap_or_default(), y: number(&["y"]).unwrap_or_default(), zoom: number(&["zoom"]).unwrap_or(1.0) },
         })),
         "nodeGraphEdit" => node_graph_edit::NodeGraphEdit::from_action_args(args).map(DagCommand::NodeGraphEdit),
         "moveMediaNode" => {
             let node_id = required(&["nodeId", "node_id", "id"], "dag.move-media-node.malformed", "moveMediaNode needs a nodeId")?;
             match (number(&["x"]), number(&["y"])) {
                 (Some(x), Some(y)) => Ok(DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id, x, y })),
-                _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.move-media-node.malformed"), "moveMediaNode needs a numeric x and y")),
+                _ => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("dag.move-media-node.malformed"), "moveMediaNode needs a numeric x and y")),
             }
         }
         "patchDagNodes" => {
@@ -328,10 +328,10 @@ fn dag_command_from_action(action: &str, args: Option<&semio_framework_value::Ds
             let value = match lookup(&["value"]) {
                 Some(semio_framework_value::DslValue::Number(value)) => value.as_f64().to_string(),
                 Some(_) => text(&["value"], ""),
-                None => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.patch-dag-nodes.malformed"), "patchDagNodes needs a value")),
+                None => return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("dag.patch-dag-nodes.malformed"), "patchDagNodes needs a value")),
             };
             if node_ids.is_empty() {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.patch-dag-nodes.malformed"), "patchDagNodes needs at least one node id"));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("dag.patch-dag-nodes.malformed"), "patchDagNodes needs at least one node id"));
             }
             Ok(DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids, field, value }))
         }
@@ -339,7 +339,7 @@ fn dag_command_from_action(action: &str, args: Option<&semio_framework_value::Ds
             let old_id = required(&["oldId", "old_id"], "dag.rename-dag-node.malformed", "renameDagNode needs an oldId")?;
             match lookup(&["value"]) {
                 Some(_) => Ok(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id, value: text(&["value"], "") })),
-                None => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.rename-dag-node.malformed"), "renameDagNode needs a value")),
+                None => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("dag.rename-dag-node.malformed"), "renameDagNode needs a value")),
             }
         }
         "connectMediaPorts" => Ok(DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
@@ -349,8 +349,8 @@ fn dag_command_from_action(action: &str, args: Option<&semio_framework_value::Ds
             target_port_id: text(&["targetPortId"], "in"),
         })),
         other => Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("dag.unhandled-action"),
+            semio_plugin::FaultOrigin::App,
+            semio_plugin::FaultCode::new("dag.unhandled-action"),
             format!("dag declares no action '{other}'"),
         )),
     }
@@ -382,11 +382,11 @@ impl semio_framework::ToolJobFactory for DagRetainedCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         ToolExecutionContract::bounded_first_step(DAG_RETAINED_RAW_BYTES, 64, 1, 8_192, 7_500)
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: DAG_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: DAG_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagRetainedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for DagRetainedCommandJobFactory {
     type Owner = EditorApp<DagPlayApp>;
     const TOOL_IDS: &'static [&'static str] = DAG_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
@@ -404,10 +404,10 @@ fn dag_retained_config_reduce(
     command: &DagCommand,
     snapshot: &DagSnapshot,
     config: &DagConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<DagMutation, DagConfigMutation, NoDraftMutation>, Fault> {
     if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()) {
@@ -563,8 +563,8 @@ impl ArtifactEditor for DagPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::editor::dag::presence::DagPresence;
     type PresenceMutation = crate::editor::dag::presence::DagPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = DagCommand;
 
@@ -575,7 +575,7 @@ impl ArtifactEditor for DagPlayApp {
     }
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<DagPlayApp>,
         owner_file: "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.dag.dag@1/*#editor",
@@ -602,37 +602,37 @@ impl ArtifactEditor for DagPlayApp {
         Some(std::sync::Arc::new(DagConfigPreparationFactory))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     /// 👥️ DAG presence is three inline camera scalars, so the default root is its exact empty terminal.
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default DAG presence is the exact empty terminal")))
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default DAG presence is the exact empty terminal")))
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 🕳️ The parent vocabulary is uninhabited, so no parent mutation can be prepared and the document lane is denied.
@@ -642,8 +642,8 @@ impl ArtifactEditor for DagPlayApp {
 
     /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the
     /// ledger's checkpoint and provisional moves on a settings change.
-    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
-        if request.tool_id != reorganize::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {
+    fn build_tool_run_job(request: semio_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_plugin::ToolRunJob>, Fault> {
+        if request.tool_id != reorganize::TOOL_ID || request.purpose != semio_plugin::ToolRunJobPurpose::Run {
             return Ok(None);
         }
         let scene = crate::dag_scene_from_children(&request.snapshot, &request.children)?;
@@ -660,17 +660,17 @@ impl ArtifactEditor for DagPlayApp {
         registry.register(DagRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let is_config = DAG_RETAINED_CONFIG_TOOL_IDS.contains(&original.tool_id.as_str());
         if !is_config && !DAG_RETAINED_DOCUMENT_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "DAG command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "DAG command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, DagCommand::command_id, DAG_RETAINED_RAW_BYTES, 1, false, |request| { let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<_>> = if is_config {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, DagCommand::command_id, DAG_RETAINED_RAW_BYTES, 1, false, |request| { let work: Box<dyn semio_plugin::retained_command::ArtifactCommandWork<_>> = if is_config {
                 Box::new(BoundedArtifactCommandWork::new(tool_id, dag_retained_config_reduce, dag_retained_config_extent))
             } else {
                 Box::new(BoundedArtifactCommandWork::new(tool_id, dag_retained_document_reduce, dag_retained_document_extent))
@@ -689,8 +689,8 @@ impl ArtifactEditor for DagPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, crate::DAG_DOCUMENT_SCHEMA, operation, generation, actor))
+    ) -> Result<semio_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_plugin::bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, crate::DAG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
@@ -700,7 +700,7 @@ impl ArtifactEditor for DagPlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<DagSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<DagSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::default_snapshot())
     })}
 
@@ -725,7 +725,7 @@ impl ArtifactEditor for DagPlayApp {
         doc: &ArtifactView<'_, DagSnapshot>,
         cfg: &ConfigView<'_, DagConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
@@ -741,26 +741,26 @@ impl ArtifactEditor for DagPlayApp {
     /// threads interaction into render; the document tree instead binds `interaction_domain("graph")`
     /// so the framework's own post-render stamp paints its selection/hover, no app code needed.
     /// Flagged as a discovered framework gap, not worked around here (matches `space`'s identical gap).
-    fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let scene = crate::dag_scene(doc).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("dag.child-content", format!("{error:?}")))?;
+    fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+        let scene = crate::dag_scene(doc).map_err(|error| semio_plugin::PluginAssemblyError::new("dag.child-content", format!("{error:?}")))?;
         let config = cfg.snapshot;
         let camera = dag_config_camera(config);
         let labels = dag_play_labels(view_state);
         let node = match body_key {
             DAG_PLAY_BODY_MAIN => main::render(&scene, &camera, labels),
             DAG_PLAY_BODY_COMPILED => compiled::render(&scene, &camera),
-            DAG_PLAY_BODY_ARTIFACT => document_panel::render(&scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_ARTIFACT)),
-            DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_CATALOGUE)),
+            DAG_PLAY_BODY_ARTIFACT => document_panel::render(&scene, labels, &semio_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_ARTIFACT)),
+            DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_CATALOGUE)),
             DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(&scene, &[], labels),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => return semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render`), so the
     /// selection-dependent rows below always take the "nothing selected" branch — `request.surface`'s
     /// own click-carried selection (independent of `graph`'s live state) still drives the menu.
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, view_state: &semio_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let labels = dag_play_labels(view_state);
         dag_context_menu_items(registry, labels, view_state, &[], request)
     }
@@ -801,7 +801,7 @@ pub fn dag_interaction_topology(scene: &crate::DagScene) -> InteractionTopology 
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_dag_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::DAG_DIALECT)
             .document(["semio", "mathematical", "graph", "port", "directed", "dag"])
             .artifact_kind(crate::artifact_kind())
@@ -828,7 +828,7 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .mutation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
             .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
-            .action_audience("graphPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("graphPointerDown", semio_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file").with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]))
             .keybinding("delete,backspace", "deleteSelection")
             .action_args("addNode", vec![
@@ -853,18 +853,18 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
                 selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
             })
             .window_kind_interactions(DAG_PLAY_WINDOW_MAIN, vec![InteractionRef::new(DAG_PLAY_INTERACTION_DOMAIN)])
-            .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("connectMediaPorts", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("disconnect", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("moveMediaNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("renameDagNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchDagNodes", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("graphPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNode", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeNode", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphEdit", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("connectMediaPorts", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("disconnect", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveMediaNode", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameDagNode", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchDagNodes", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphViewport", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("graphPointerDown", semio_plugin::InteractiveJobClassification::Migrated)
             .config(DagPlayApp::config_spec())
             .action_describe("addNode", LocalizedLabel::native("Adds a new node of the given kind (such as slider, select, screen, note or preview) to the graph at x, y, or at a default spot.", "Fügt dem Graphen einen neuen Knoten der angegebenen Art (etwa Schieberegler, Auswahl, Bildschirm, Notiz oder Vorschau) an x, y oder an einer Standardstelle hinzu."))
             .action_describe("removeNode", LocalizedLabel::native("Removes one node by id from the graph together with every edge attached to it.", "Entfernt einen Knoten anhand seiner Id samt aller angeschlossenen Kanten aus dem Graphen."))
@@ -875,8 +875,8 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("renameDagNode", LocalizedLabel::native("Renames a node's id from the old id to a new one and updates every edge that referenced it; a taken or empty id changes nothing.", "Benennt die Id eines Knotens von der alten in eine neue um und aktualisiert alle Kanten, die darauf verweisen; eine vergebene oder leere Id ändert nichts."))
             .action_describe("patchDagNodes", LocalizedLabel::native("Sets one field (name, or a slider's value, min or max) on every node with the given ids.", "Setzt ein Feld (Name oder Wert, Minimum oder Maximum eines Schiebereglers) auf allen Knoten mit den angegebenen Ids."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole graph with the bundled demo graph, or with an empty graph for any other example id.", "Ersetzt den gesamten Graphen durch den mitgelieferten Demo-Graphen, bei jeder anderen Beispiel-Id durch einen leeren Graphen."))
-            .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("nodeGraphEdit", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nodeGraphViewport", semio_plugin::CapabilityAudience::Chrome)
             .action_destructive("setActiveExample")
             .build_definition()
 }
@@ -898,14 +898,14 @@ pub(crate) mod unit_tests;
 //#region 🧩️ArtifactItems9
 pub mod artifact_items_9 {
 use crate::{DAG_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.dag".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("DAG", "DAG"),
+        label: semio_ui_locale::LocalizedLabel::native("DAG", "DAG"),
         source_format: DAG_DOCUMENT_SCHEMA.into(),
         component_kind: "dag".into(),
         dimension: "graph".into(),

@@ -3,15 +3,15 @@
 use crate::standards::v1::subsets::any::schema::inferences::audit_trail;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_value::ToValue;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_scene::EventFeedScene;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_scene::EventFeedScene;
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_TRACE: &str = "architect-trace";
@@ -96,7 +96,7 @@ fn event_feed_entries(program: &ProgramSnapshot) -> semio_framework_value::DslVa
 /// 📰️ Projects the document-wide audit trail as the neutral EventFeed scene used by every renderer.
 pub fn render(program: &ProgramSnapshot, _windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let scene = EventFeedScene { entries_json: semio_framework_pack_json::to_json_string(&event_feed_entries(program)), follow: Some(true), activate_action: None, domain_id: None };
-    scene_surface(ARCHITECT_SURFACE_TRACE, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::EventFeed, &scene)
+    scene_surface(ARCHITECT_SURFACE_TRACE, semio_plugin::plugin_app_close_prelude::SurfaceKind::EventFeed, &scene)
 }
 //#endregion 🔖️Render
 

@@ -31,7 +31,7 @@ pub struct HistoryState {
     pub time_travel_polled_at_ms: f64,
     /// 📁️ This device's remembered folder bindings (`os.config.local-folders`), loaded once and kept current by every
     /// commit (see `📎️local-folders`).
-    pub local_folder_bindings: Option<semio_framework_os_config::opening_config::mutations::LocalFolderBindings>,
+    pub local_folder_bindings: Option<semio_os_config::opening_config::mutations::LocalFolderBindings>,
     /// 🔁️ The document whose remembered folder the direct reattach already tried, so a failure is offered, not retried.
     pub local_folder_reattach_tried: Option<String>,
     /// 🚪️ Whether this build reopens a remembered folder by itself (native) or offers it for the person's gesture

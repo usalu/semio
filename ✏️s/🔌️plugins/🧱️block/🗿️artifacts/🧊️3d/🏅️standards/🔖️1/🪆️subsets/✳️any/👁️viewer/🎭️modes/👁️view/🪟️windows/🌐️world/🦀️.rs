@@ -9,12 +9,12 @@
 
 use semio_s_artifact_block_3d_model::{vortex_kinds_of, Block3dSnapshot};
 use semio_s_plugin_block::BlockRepresentation;
-use semio_framework_plugin::{world3d_camera_projection_json, world3d_fit_json, world3d_mesh_id_from_url, World3dScene, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
-use semio_framework_ui_contract::SurfaceKind;
+use semio_plugin::{world3d_camera_projection_json, world3d_fit_json, world3d_mesh_id_from_url, World3dScene, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
+use semio_ui_contract::SurfaceKind;
 // 🚧️ SDK GAP: `MeshWindowKit`/`WindowKit` (contract §2.6) are only reachable through the `app`
-// submodule they're declared in — not (yet) in `semio_framework_plugin`'s curated crate-root
+// submodule they're declared in — not (yet) in `semio_plugin`'s curated crate-root
 // re-export list, mirroring the sibling editor module's own gap note about `Dialect`.
-use semio_framework_plugin::app::{MeshWindowKit, WindowKit};
+use semio_plugin::app::{MeshWindowKit, WindowKit};
 
 use semio_framework_pack_json::{json, to_string, Value};
 
@@ -49,7 +49,7 @@ pub fn render(document: &Block3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let mut scene = World3dScene::base(camera_json, meshes_json, instances_json, selection_json);
     scene.vortices_json = Some(vortices_json);
     scene.fit_json = Some(world3d_fit_json(semio_s_artifact_block_3d_model::block3d_world_fit_revision(document), semio_s_artifact_block_3d_model::BLOCK3D_FIT_PADDING, None));
-    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
 }
 
 /// 👁️ Read-only twin of the editor `🌍️world` facet's `representation_mesh_id` — duplicated on purpose

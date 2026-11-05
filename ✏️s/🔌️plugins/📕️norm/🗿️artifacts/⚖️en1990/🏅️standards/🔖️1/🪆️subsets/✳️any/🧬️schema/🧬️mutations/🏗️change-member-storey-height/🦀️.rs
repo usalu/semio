@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberStoreyHeight
         record: "ChangedMemberStoreyHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change storey height h (A1.4) of the member", "Bauteil: Geschosshöhe h (A1.4) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change storey height h (A1.4) of the member", "Bauteil: Geschosshöhe h (A1.4) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

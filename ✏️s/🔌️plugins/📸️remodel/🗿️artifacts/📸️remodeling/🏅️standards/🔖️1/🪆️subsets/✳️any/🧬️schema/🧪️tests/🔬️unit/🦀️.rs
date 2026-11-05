@@ -1,7 +1,7 @@
 use super::*;
 
-fn admission(seed: &str) -> semio_framework_plugin::AppOperationContext {
-    semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "remodel".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], authoring_seed: seed.into() }
+fn admission(seed: &str) -> semio_plugin::AppOperationContext {
+    semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "remodel".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], authoring_seed: seed.into() }
 }
 
 /// 🆔️ A minted id is a pure function of the admission's seed and the prefix: two admissions mint two ids, a replayed

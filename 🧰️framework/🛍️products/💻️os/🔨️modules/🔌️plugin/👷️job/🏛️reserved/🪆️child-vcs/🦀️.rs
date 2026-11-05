@@ -1,5 +1,5 @@
 //! 🪆️ A retained child VCS unit keeps the exact request and erased typed command through result, acknowledgement and physical closure.
-use semio_framework_os_kernel::os_store::{SpaceMember,MemberNativeVcsCommand,ArtifactNativeVcsRequest,ArtifactNativeVcsPhase,ArtifactNativeVcsResult};
+use semio_os_kernel::os_store::{SpaceMember,MemberNativeVcsCommand,ArtifactNativeVcsRequest,ArtifactNativeVcsPhase,ArtifactNativeVcsResult};
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,OriginalConstructionDemand};
 use semio_framework_value::{RetirementDemand,RetainedCloneStep,RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
 use std::mem::{size_of,ManuallyDrop};

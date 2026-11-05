@@ -14,8 +14,8 @@ pub struct RemoveTrack {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for RemoveTrack {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "track", kind: "remove-track", record: "RemoveTrack" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove track", "Spur entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove track", "Spur entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

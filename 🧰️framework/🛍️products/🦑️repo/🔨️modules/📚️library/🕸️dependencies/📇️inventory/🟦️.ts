@@ -10,7 +10,7 @@ import { runProbe } from "../../🏃️process/🔍️probe/🟦️.ts";
 import { canonicalFilenameForKind } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
-const DEPENDENCY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".cache", ".lake", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
+const DEPENDENCY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".cache", ".r", ".lake", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 
 /** 📖️ Reads one repository-relative dependency input without racing a concurrent removal. */
 export function dependencyReadFileSafe(repoRoot: string, ...parts: string[]): string {
@@ -797,7 +797,7 @@ export function dependencyDiscoverContributionManifests(repoRoot: string, dirNam
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       const childRel = relDir ? `${relDir}/${entry.name}` : entry.name;
-      if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".cache" || entry.name === ".lake" || entry.name === ".nx" || entry.name === "target" || entry.name === "dist" || childRel.startsWith(".🧬semio")) continue;
+      if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".cache" || entry.name === ".r" || entry.name === ".lake" || entry.name === ".nx" || entry.name === "target" || entry.name === "dist" || childRel.startsWith(".🧬semio")) continue;
       if (entry.name === dirName) {
         if (existsSync(join(repoRoot, childRel, fileName))) found.push(`${childRel}/${fileName}`);
         continue;
@@ -898,7 +898,7 @@ function dependencyCollectPython(repoRoot: string, record: (ecosystem: Dependenc
     for (const ent of entries) {
       const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
       if (ent.isDirectory()) {
-        if (ent.name === "node_modules" || ent.name === ".git" || ent.name === ".cache" || ent.name === ".lake" || ent.name === ".venv" || ent.name === ".nx" || ent.name === "target" || ent.name === "dist" || ent.name === "compose" || childRel.startsWith(".🧬semio")) continue;
+        if (ent.name === "node_modules" || ent.name === ".git" || ent.name === ".cache" || ent.name === ".r" || ent.name === ".lake" || ent.name === ".venv" || ent.name === ".nx" || ent.name === "target" || ent.name === "dist" || ent.name === "compose" || childRel.startsWith(".🧬semio")) continue;
         walk(childRel);
         continue;
       }
@@ -943,7 +943,7 @@ function dependencyCollectDotnet(repoRoot: string, record: (ecosystem: Dependenc
     for (const ent of entries) {
       const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
       if (ent.isDirectory()) {
-        if (ent.name === "node_modules" || ent.name === ".git" || ent.name === ".cache" || ent.name === ".lake" || ent.name === ".nx" || ent.name === "bin" || ent.name === "obj" || ent.name === "target" || ent.name === "compose" || childRel.startsWith(".🧬semio")) continue;
+        if (ent.name === "node_modules" || ent.name === ".git" || ent.name === ".cache" || ent.name === ".r" || ent.name === ".lake" || ent.name === ".nx" || ent.name === "bin" || ent.name === "obj" || ent.name === "target" || ent.name === "compose" || childRel.startsWith(".🧬semio")) continue;
         walk(childRel);
         continue;
       }

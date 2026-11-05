@@ -7,7 +7,7 @@
 //! See `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT) for the layering.
 
 use protocol::Mutation;
-use semio_framework_os_vcs::VcsError;
+use semio_os_vcs::VcsError;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::ValueError;
 

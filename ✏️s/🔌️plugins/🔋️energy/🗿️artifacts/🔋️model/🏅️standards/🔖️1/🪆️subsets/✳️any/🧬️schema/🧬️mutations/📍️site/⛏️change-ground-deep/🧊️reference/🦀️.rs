@@ -11,8 +11,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change deep ground temperature to {} °C", self.new_temperature_c), &format!("Erdreichtemperatur in der Tiefe auf {} °C ändern", self.new_temperature_c))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change deep ground temperature to {} °C", self.new_temperature_c), &format!("Erdreichtemperatur in der Tiefe auf {} °C ändern", self.new_temperature_c))
     }
 }
 

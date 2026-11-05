@@ -69,13 +69,13 @@ pub async fn with_turn_execution<T>(mut future: std::pin::Pin<&mut (impl std::fu
 /// 🧠️ Repository-owned actor ABI entrypoint. The component-model wrapper above and the native
 /// interpreter both call this exact kernel reducer, so WIT lifting is no longer the production
 /// host's semantic authority.
-pub async fn poll_kernel<PA: semio_framework_plugin_reactor_app::PluginApp + 'static>(
-    runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
+pub async fn poll_kernel<PA: semio_plugin_reactor_app::PluginApp + 'static>(
+    runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     events: &mut Option<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<semio_framework::kernel::TurnResult, semio_framework_job::OriginalTurnFailure> {
     poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result, identity,cx).await
@@ -84,15 +84,15 @@ pub async fn poll_kernel<PA: semio_framework_plugin_reactor_app::PluginApp + 'st
 /// 🧠️ One guest turn under [`with_turn_execution`] accounting — the only door into [`poll_kernel_turn`].
 #[doc(hidden)]
 #[expect(clippy::result_large_err, reason = "Patch reservation and publication callbacks return the original fixed surface or patch owner on refusal; these transfers must not allocate an error wrapper.")]
-pub async fn poll_kernel_output<PA: semio_framework_plugin_reactor_app::PluginApp, T, Prepared>(
-    runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
+pub async fn poll_kernel_output<PA: semio_plugin_reactor_app::PluginApp, T, Prepared>(
+    runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     events: &mut Option<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<T, semio_framework_job::OriginalTurnFailure> {
     with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish, identity,cx))).await
@@ -103,15 +103,15 @@ pub async fn poll_kernel_output<PA: semio_framework_plugin_reactor_app::PluginAp
 /// that most turns never reach. Boxed here, the turn generator holds an 8-byte pointer and the
 /// exchange state is allocated only on the turns that actually run a command. See
 /// `📓️poll-task-leak-2026-09-10.md` §3.2.
-pub(super) fn plugin_exchange_boxed<'a, 'b, 'context, PA: semio_framework_plugin_reactor_app::PluginApp>(
-    runtime: &'a semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
+pub(super) fn plugin_exchange_boxed<'a, 'b, 'context, PA: semio_plugin_reactor_app::PluginApp>(
+    runtime: &'a semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     instance_id: u32,
-    command: Option<(u64, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,
-    identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,
+    command: Option<(u64, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,
+    identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,
     cx:&'a mut semio_framework_job::StepContext<'context>,
-) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput, semio_framework_job::OriginalTurnFailure>> + 'a>> {
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput, semio_framework_job::OriginalTurnFailure>> + 'a>> {
     Box::pin(async move{
-        let mut output=semio_framework_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,command,identity,cx).await?;
+        let mut output=semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,command,identity,cx).await?;
         if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){return Err(retain_refused_publication(instance_id,output,refusal,cx));}
         Ok(output)
     })
@@ -148,7 +148,7 @@ pub fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framework::kern
     let mut page = semio_framework::kernel::UiTurnPatches::default();
     let mut spent = 0usize;
     while page.len() < semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM {
-        let taken = with_pending_patches(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES))
+        let taken = with_pending_patches(|pending| pending.borrow_mut().take_one(semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES))
             .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.pending-patch-authority"), reason))?;
         let Some(patch) = taken else { break };
         let cost = semio_framework::kernel::ui_patch_turn_bytes(&patch);

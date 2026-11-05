@@ -4,7 +4,7 @@
 /// 🎬️ A minimal `ComponentScene` leaf — every optional per-`SurfaceKind` payload left `None`,
 /// matching `ui_wgpu::wgpu::events::tests::component_scene_ui`'s own fixture shape (that one is private
 /// to the sibling `ui_wgpu` crate, so this is a separate copy for this crate's own tests).
-fn component_scene_ui(surface_id: &str, kind: semio_framework_ui_declaration::ui::SurfaceKind) -> UiNode {
+fn component_scene_ui(surface_id: &str, kind: semio_ui_declaration::ui::SurfaceKind) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
         host_id: surface_id.into(),
         surface_id: surface_id.into(),
@@ -37,38 +37,38 @@ fn component_scene_ui(surface_id: &str, kind: semio_framework_ui_declaration::ui
 /// `apply_scene_ui_command` re-fetches it by `(window_id, node)` from `UI_ENGINE`.
 fn scene_surface_props(scene: &UiComponentSceneNode) -> ui_contract::SurfaceProps {
     let kind = match scene.component_kind {
-        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d => ui_contract::SurfaceKind::Canvas2d,
-        semio_framework_ui_declaration::ui::SurfaceKind::World3d => ui_contract::SurfaceKind::World3d,
-        semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph => ui_contract::SurfaceKind::NodeGraph,
-        semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => ui_contract::SurfaceKind::TextEditor,
-        semio_framework_ui_declaration::ui::SurfaceKind::Table => ui_contract::SurfaceKind::Table,
-        semio_framework_ui_declaration::ui::SurfaceKind::Paint2d => ui_contract::SurfaceKind::Paint2d,
-        semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem => ui_contract::SurfaceKind::VirtualFileSystem,
-        semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => ui_contract::SurfaceKind::TiledMap,
-        semio_framework_ui_declaration::ui::SurfaceKind::Board2d => ui_contract::SurfaceKind::Board2d,
-        semio_framework_ui_declaration::ui::SurfaceKind::IconRender => ui_contract::SurfaceKind::IconRender,
-        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => ui_contract::SurfaceKind::InkCanvas,
-        semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline => ui_contract::SurfaceKind::GraphTimeline,
-        semio_framework_ui_declaration::ui::SurfaceKind::BlockList => ui_contract::SurfaceKind::BlockList,
-        semio_framework_ui_declaration::ui::SurfaceKind::DiffView => ui_contract::SurfaceKind::DiffView,
-        semio_framework_ui_declaration::ui::SurfaceKind::EventFeed => ui_contract::SurfaceKind::EventFeed,
+        semio_ui_declaration::ui::SurfaceKind::Canvas2d => ui_contract::SurfaceKind::Canvas2d,
+        semio_ui_declaration::ui::SurfaceKind::World3d => ui_contract::SurfaceKind::World3d,
+        semio_ui_declaration::ui::SurfaceKind::NodeGraph => ui_contract::SurfaceKind::NodeGraph,
+        semio_ui_declaration::ui::SurfaceKind::TextEditor => ui_contract::SurfaceKind::TextEditor,
+        semio_ui_declaration::ui::SurfaceKind::Table => ui_contract::SurfaceKind::Table,
+        semio_ui_declaration::ui::SurfaceKind::Paint2d => ui_contract::SurfaceKind::Paint2d,
+        semio_ui_declaration::ui::SurfaceKind::VirtualFileSystem => ui_contract::SurfaceKind::VirtualFileSystem,
+        semio_ui_declaration::ui::SurfaceKind::TiledMap => ui_contract::SurfaceKind::TiledMap,
+        semio_ui_declaration::ui::SurfaceKind::Board2d => ui_contract::SurfaceKind::Board2d,
+        semio_ui_declaration::ui::SurfaceKind::IconRender => ui_contract::SurfaceKind::IconRender,
+        semio_ui_declaration::ui::SurfaceKind::InkCanvas => ui_contract::SurfaceKind::InkCanvas,
+        semio_ui_declaration::ui::SurfaceKind::GraphTimeline => ui_contract::SurfaceKind::GraphTimeline,
+        semio_ui_declaration::ui::SurfaceKind::BlockList => ui_contract::SurfaceKind::BlockList,
+        semio_ui_declaration::ui::SurfaceKind::DiffView => ui_contract::SurfaceKind::DiffView,
+        semio_ui_declaration::ui::SurfaceKind::EventFeed => ui_contract::SurfaceKind::EventFeed,
     };
     let encoded = match scene.component_kind {
-        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d => scene.canvas_2d.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::World3d => scene.world_3d.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph => scene.node_graph.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => scene.text_editor.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::Table => scene.table.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::Paint2d => scene.paint_2d.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem => scene.virtual_file_system.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => scene.tiled_map.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::Board2d => scene.board2d.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::IconRender => scene.icon_render.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => scene.ink_canvas.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline => scene.graph_timeline.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::BlockList => scene.block_list.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::DiffView => scene.diff_view.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::EventFeed => scene.event_feed.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::Canvas2d => scene.canvas_2d.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::World3d => scene.world_3d.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::NodeGraph => scene.node_graph.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::TextEditor => scene.text_editor.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::Table => scene.table.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::Paint2d => scene.paint_2d.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::VirtualFileSystem => scene.virtual_file_system.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::TiledMap => scene.tiled_map.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::Board2d => scene.board2d.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::IconRender => scene.icon_render.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::InkCanvas => scene.ink_canvas.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::GraphTimeline => scene.graph_timeline.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::BlockList => scene.block_list.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::DiffView => scene.diff_view.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::EventFeed => scene.event_feed.as_ref().map(|value| semio_ui_scene_surface::encode(kind, value)),
     };
     encoded.transpose().expect("the bounded scene fixture encodes").unwrap_or_else(|| ui_contract::SurfaceProps {
         kind,
@@ -78,9 +78,9 @@ fn scene_surface_props(scene: &UiComponentSceneNode) -> ui_contract::SurfaceProp
     })
 }
 
-fn scene_identity_document(window_id: &str, scene: &UiComponentSceneNode) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
+fn scene_identity_document(window_id: &str, scene: &UiComponentSceneNode) -> semio_ui_retained_tree::tree::UiDocumentTree {
     let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from(window_id).unwrap(), revision: ui_contract::UiRevision(1), root: ui_contract::UiNodeId(0), layout_epoch: 1, node_count: 2 };
-    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(header).unwrap();
+    let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(header).unwrap();
     let mut children = ui_contract::UiFixedList::default();
     children.try_push(ui_contract::UiNodeId(1)).unwrap();
     let root = ui_contract::UiNodeRecord {
@@ -116,7 +116,7 @@ fn scene_identity_document(window_id: &str, scene: &UiComponentSceneNode) -> sem
     document
 }
 
-fn clipboard_input_document(window_id: &str) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
+fn clipboard_input_document(window_id: &str) -> semio_ui_retained_tree::tree::UiDocumentTree {
     let records = serde_json::json!([
         {
             "id": 0,
@@ -136,14 +136,14 @@ fn clipboard_input_document(window_id: &str) -> semio_framework_ui_retained_tree
     ]);
     let rows = records.as_array().unwrap();
     let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from(window_id).unwrap(), revision: ui_contract::UiRevision(1), root: ui_contract::UiNodeId(0), layout_epoch: 1, node_count: rows.len() };
-    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(header).unwrap();
+    let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(header).unwrap();
     for row in rows {
         document.try_upsert_record(serde_json::from_value(row.clone()).unwrap()).unwrap();
     }
     document
 }
 
-fn publish_presented_document(window_id: &str, generation: u64, witness: u64, controller_id: &str, document: semio_framework_ui_retained_tree::tree::UiDocumentTree) {
+fn publish_presented_document(window_id: &str, generation: u64, witness: u64, controller_id: &str, document: semio_ui_retained_tree::tree::UiDocumentTree) {
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, document)));
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
@@ -152,9 +152,9 @@ fn publish_presented_document(window_id: &str, generation: u64, witness: u64, co
         let mut step_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut step = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(64, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut step_retained);
         match UI_ENGINE.with(|cell| cell.borrow_mut().step_document_reconcile(window_id, controller_id, &mut step)) {
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => false,
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => true,
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("presented document reconcile fault: {fault:?}"),
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => false,
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => true,
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("presented document reconcile fault: {fault:?}"),
         }
     });
     assert!(complete, "presented fixture reconcile reaches terminal within its fixed opportunity ceiling");
@@ -172,9 +172,9 @@ fn drive_scene_seed_reconcile(window_id: &str, controller_id: &str) {
         let mut step_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut step = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(64, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut step_retained);
         match UI_ENGINE.with(|cell| cell.borrow_mut().step_document_reconcile(window_id, controller_id, &mut step)) {
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => {}
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => return,
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("scene seed reconcile fault: {fault:?}"),
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => {}
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => return,
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("scene seed reconcile fault: {fault:?}"),
         }
     }
     panic!("scene seed reconcile exceeded its fixed opportunity ceiling");
@@ -226,15 +226,15 @@ fn rebased_scene_key(key: &str, authored_host: &str, retained_host: &str) -> Str
 /// reach the accessibility tree).
 fn accept_table_editable_text_cells(window_id: &str, node: NodeId, epoch: u64) {
     let retained = retained_scene(window_id, node);
-    semio_framework_os_renderer_wgpu_scene_state::remember_scene_theme(&Theme::default());
-    let cells = semio_framework_os_renderer_wgpu_scene_tables::table_editable_text_accessibility_cells(&retained, Rect::new(0.0, 0.0, 200.0, 200.0), semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle);
+    semio_renderer_wgpu_scene_state::remember_scene_theme(&Theme::default());
+    let cells = semio_renderer_wgpu_scene_tables::table_editable_text_accessibility_cells(&retained, Rect::new(0.0, 0.0, 200.0, 200.0), semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle);
     assert!(!cells.is_empty(), "the seeded Table paints its editable cells");
-    semio_framework_os_renderer_wgpu_scene_feeds::stage_table_editable_text_accessibility_cells(&retained.host_id, cells);
-    semio_framework_os_renderer_wgpu_scene_feeds::seal_table_editable_text_accessibility_candidates(epoch);
-    semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_table_editable_text_accessibility_candidates(epoch);
+    semio_renderer_wgpu_scene_feeds::stage_table_editable_text_accessibility_cells(&retained.host_id, cells);
+    semio_renderer_wgpu_scene_feeds::seal_table_editable_text_accessibility_candidates(epoch);
+    semio_renderer_wgpu_scene_feeds::acknowledge_table_editable_text_accessibility_candidates(epoch);
 }
 
-fn seed_scene_window(window_id: &str, surface_id: &str, kind: semio_framework_ui_declaration::ui::SurfaceKind) -> NodeId {
+fn seed_scene_window(window_id: &str, surface_id: &str, kind: semio_ui_declaration::ui::SurfaceKind) -> NodeId {
     seed_scene_window_with(window_id, component_scene_ui(surface_id, kind))
 }
 
@@ -256,7 +256,7 @@ fn retained_scene_surface_id(window_id: &str, node: NodeId) -> String {
     })
 }
 
-fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64], ink: Option<&semio_framework_ui_scene_plane::InkCanvasScene>) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
+fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: semio_ui_declaration::ui::SurfaceKind, children: &[u64], ink: Option<&semio_ui_scene_plane::InkCanvasScene>) -> semio_ui_retained_tree::tree::UiDocumentTree {
     let mut root: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
         "id": 1,
         "key": "focus-rebase/root",
@@ -266,7 +266,7 @@ fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: semio_
     }))
     .unwrap();
     root.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis: ui_contract::Axis::Horizontal, grow: true, ..Default::default() });
-    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+    let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation,
         surface: ui_contract::SurfaceId::try_from(window_id).unwrap(),
         revision: ui_contract::UiRevision(generation),
@@ -288,19 +288,19 @@ fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: semio_
         record.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { grow: true, ..Default::default() });
         if *id == 4 {
             let surface = match kind {
-                semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d => semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Canvas2d, &semio_framework_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into())).unwrap(),
-                semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TextEditor, &semio_framework_ui_scene_views::TextEditorScene::base("focus".into(), None, None)).unwrap(),
-                semio_framework_ui_declaration::ui::SurfaceKind::Table => semio_framework_ui_scene_surface::encode(
+                semio_ui_declaration::ui::SurfaceKind::Canvas2d => semio_ui_scene_surface::encode(ui_contract::SurfaceKind::Canvas2d, &semio_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into())).unwrap(),
+                semio_ui_declaration::ui::SurfaceKind::TextEditor => semio_ui_scene_surface::encode(ui_contract::SurfaceKind::TextEditor, &semio_ui_scene_views::TextEditorScene::base("focus".into(), None, None)).unwrap(),
+                semio_ui_declaration::ui::SurfaceKind::Table => semio_ui_scene_surface::encode(
                     ui_contract::SurfaceKind::Table,
-                    &semio_framework_ui_scene_views::TableScene::base(
+                    &semio_ui_scene_views::TableScene::base(
                         serde_json::json!([{ "id": "count", "label": "Count" }]).to_string(),
                         serde_json::json!([{ "id": "r1", "count": { "kind": "stepper", "value": 2.0, "min": 0.0, "max": 5.0, "step": 0.5, "action": { "controllerId": "focus-rebase", "action": "setCount", "args": { "objectId": "r1" } } } }])
                             .to_string(),
                     ),
                 )
                 .unwrap(),
-                semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => {
-                    semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::InkCanvas, &ink.cloned().unwrap_or_else(|| semio_framework_ui_scene_plane::InkCanvasScene::base("[]".into(), "pen".into(), "document".into(), true))).unwrap()
+                semio_ui_declaration::ui::SurfaceKind::InkCanvas => {
+                    semio_ui_scene_surface::encode(ui_contract::SurfaceKind::InkCanvas, &ink.cloned().unwrap_or_else(|| semio_ui_scene_plane::InkCanvasScene::base("[]".into(), "pen".into(), "document".into(), true))).unwrap()
                 }
                 _ => panic!("focus rebase fixture supports Canvas, Table and editor surfaces"),
             };
@@ -311,7 +311,7 @@ fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: semio_
     document
 }
 
-fn focus_rebase_document(window_id: &str, generation: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
+fn focus_rebase_document(window_id: &str, generation: u64, kind: semio_ui_declaration::ui::SurfaceKind, children: &[u64]) -> semio_ui_retained_tree::tree::UiDocumentTree {
     focus_rebase_document_with_ink(window_id, generation, kind, children, None)
 }
 
@@ -323,19 +323,19 @@ fn drive_focus_rebase_reconcile(window_id: &str, generation: u64) {
         let mut step_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut step = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(64, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut step_retained);
         match UI_ENGINE.with(|cell| cell.borrow_mut().step_document_reconcile(window_id, "focus-rebase", &mut step)) {
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => {}
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => return,
-            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("focus rebase reconcile fault: {fault:?}"),
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => {}
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => return,
+            semio_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("focus rebase reconcile fault: {fault:?}"),
         }
     }
     panic!("focus rebase reconcile exceeded its fixed opportunity ceiling");
 }
 
-fn focus_rebase_node(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Option<NodeId> {
-    tree.children(tree.root?).find(|node| tree.node(*node).is_some_and(|node| node.key == semio_framework_ui_retained_tree::tree::NodeKey::Explicit("focus-rebase/4".into())))
+fn focus_rebase_node(tree: &semio_ui_retained_tree::tree::UiTree) -> Option<NodeId> {
+    tree.children(tree.root?).find(|node| tree.node(*node).is_some_and(|node| node.key == semio_ui_retained_tree::tree::NodeKey::Explicit("focus-rebase/4".into())))
 }
 
-fn publish_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> Option<NodeId> {
+fn publish_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_ui_declaration::ui::SurfaceKind, children: &[u64]) -> Option<NodeId> {
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
     begin_accessibility_visible_documents();
@@ -345,19 +345,19 @@ fn publish_new_focus_rebase_document(window_id: &str, generation: u64, witness: 
     UI_ENGINE.with(|cell| cell.borrow().tree(window_id).and_then(focus_rebase_node))
 }
 
-fn publish_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> Option<NodeId> {
+fn publish_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_ui_declaration::ui::SurfaceKind, children: &[u64]) -> Option<NodeId> {
     if generation > 1 {
         drive_focus_rebase_reconcile(window_id, generation - 1);
     }
     publish_new_focus_rebase_document(window_id, generation, witness, kind, children)
 }
 
-fn reconcile_focus_rebase_document(window_id: &str, generation: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) {
+fn reconcile_focus_rebase_document(window_id: &str, generation: u64, kind: semio_ui_declaration::ui::SurfaceKind, children: &[u64]) {
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
 }
 
-fn stage_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> NodeId {
+fn stage_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_ui_declaration::ui::SurfaceKind, children: &[u64]) -> NodeId {
     drive_focus_rebase_reconcile(window_id, generation - 1);
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
@@ -373,7 +373,7 @@ fn stage_focus_rebase_document(window_id: &str, generation: u64, witness: u64, k
     })
 }
 
-fn stage_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> NodeId {
+fn stage_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_ui_declaration::ui::SurfaceKind, children: &[u64]) -> NodeId {
     drive_focus_rebase_reconcile(window_id, generation - 1);
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
@@ -383,23 +383,23 @@ fn stage_new_focus_rebase_document(window_id: &str, generation: u64, witness: u6
     UI_ENGINE.with(|cell| cell.borrow().candidate_tree(window_id).and_then(focus_rebase_node).expect("candidate editor node"))
 }
 
-fn ink_intent_scene(law: &Value, utility: &str, document_id: &str) -> semio_framework_ui_scene_plane::InkCanvasScene {
+fn ink_intent_scene(law: &Value, utility: &str, document_id: &str) -> semio_ui_scene_plane::InkCanvasScene {
     let mut document = law["document"].clone();
     document["id"] = Value::String(document_id.into());
     document["activeUtility"] = Value::String(utility.into());
-    let mut scene = semio_framework_ui_scene_plane::InkCanvasScene::base(serde_json::to_string(&document).unwrap(), utility.into(), "edit".into(), true);
+    let mut scene = semio_ui_scene_plane::InkCanvasScene::base(serde_json::to_string(&document).unwrap(), utility.into(), "edit".into(), true);
     scene.selection_json = law["scene"]["inkCanvas"]["selectionJson"].as_str().unwrap().into();
     scene
 }
 
-fn publish_ink_intent_document(window_id: &str, generation: u64, witness: u64, children: &[u64], ink: &semio_framework_ui_scene_plane::InkCanvasScene) -> NodeId {
-    publish_presented_document(window_id, generation, witness, "focus-rebase", focus_rebase_document_with_ink(window_id, generation, semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, children, Some(ink)));
+fn publish_ink_intent_document(window_id: &str, generation: u64, witness: u64, children: &[u64], ink: &semio_ui_scene_plane::InkCanvasScene) -> NodeId {
+    publish_presented_document(window_id, generation, witness, "focus-rebase", focus_rebase_document_with_ink(window_id, generation, semio_ui_declaration::ui::SurfaceKind::InkCanvas, children, Some(ink)));
     UI_ENGINE.with(|cell| cell.borrow().tree(window_id).and_then(focus_rebase_node).expect("presented Ink intent receiver"))
 }
 
-fn stage_ink_intent_document(window_id: &str, generation: u64, witness: u64, children: &[u64], ink: &semio_framework_ui_scene_plane::InkCanvasScene) -> NodeId {
+fn stage_ink_intent_document(window_id: &str, generation: u64, witness: u64, children: &[u64], ink: &semio_ui_scene_plane::InkCanvasScene) -> NodeId {
     drive_focus_rebase_reconcile(window_id, generation - 1);
-    assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document_with_ink(window_id, generation, semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, children, Some(ink)))));
+    assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document_with_ink(window_id, generation, semio_ui_declaration::ui::SurfaceKind::InkCanvas, children, Some(ink)))));
     drive_focus_rebase_reconcile(window_id, generation);
     begin_accessibility_visible_documents();
     note_accessibility_visible_document(window_id);
@@ -407,13 +407,13 @@ fn stage_ink_intent_document(window_id: &str, generation: u64, witness: u64, chi
     UI_ENGINE.with(|cell| cell.borrow().candidate_tree(window_id).and_then(focus_rebase_node).expect("candidate Ink intent receiver"))
 }
 
-fn begin_pending_ink_intent(window_id: &str, node: NodeId, pointer: ui_render::PointerId, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) {
+fn begin_pending_ink_intent(window_id: &str, node: NodeId, pointer: ui_render::PointerId, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) {
     apply_scene_ui_command(
         window_id,
         node,
-        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
+        semio_ui_declaration::ui::SurfaceKind::InkCanvas,
         Rect::new(0.0, 0.0, 320.0, 240.0),
-        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 220.0, y: 190.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+        &semio_ui_wgpu_events::UiEvent::PointerDown { x: 220.0, y: 190.0, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(pointer),
         input,
     );

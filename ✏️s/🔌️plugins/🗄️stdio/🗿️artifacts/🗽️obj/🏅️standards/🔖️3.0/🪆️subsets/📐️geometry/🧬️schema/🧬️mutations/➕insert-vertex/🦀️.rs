@@ -22,8 +22,8 @@ pub struct InsertVertex {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertVertex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vertex", kind: "insert-vertex", record: "InsertVertex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert vertex", "Vertex einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert vertex", "Vertex einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -86,7 +86,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// [`Self::has_pending_applies`] already owes the frame.
     #[cfg(target_arch = "wasm32")]
     pub fn has_pending_settle(&self) -> bool {
-        self.try_lock().ok().and_then(|runtime| runtime.interaction().map(|interaction| semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
+        self.try_lock().ok().and_then(|runtime| runtime.interaction().map(|interaction| semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -132,7 +132,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     pub fn retained_control_deadline(&self, host_seconds: f64) -> Option<ui_render::Deadline> {
-        semio_framework_os_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(self.control_deadline_us(), semio_framework_job::default_now_us(), host_seconds)
+        semio_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(self.control_deadline_us(), semio_framework_job::default_now_us(), host_seconds)
     }
 
     pub fn update_frame_inputs(&self, runtime: &R) {
@@ -210,7 +210,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 FrameDeferredWork::ShellMaintenance => {}
                 FrameDeferredWork::PumpSync => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).pump_sync_events().await;
+                    semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).pump_sync_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
                     if action.cancelled {
@@ -220,12 +220,12 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                         let mut receipt_owner = FrameActionReceiptOwner { receipt };
                         let result = {
                             let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                            semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).dispatch_gesture_action(action.descriptor).await
+                            semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).dispatch_gesture_action(action.descriptor).await
                         };
                         match result {
-                            Ok(()) => receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Accepted),
+                            Ok(()) => receipt_owner.settle(semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Accepted),
                             Err(error) => {
-                                receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(&error));
+                                receipt_owner.settle(semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(&error));
                                 let Some(owner) = execution.owner_mut() else { return };
                                 if let Some(receipt) = receipt {
                                     if receipt.abort_correlation_on_error {
@@ -242,11 +242,11 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 }
                 FrameDeferredWork::FlushTutorial => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).tutorial_flush_pending_document_ops().await;
+                    semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).tutorial_flush_pending_document_ops().await;
                 }
                 FrameDeferredWork::Settle => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_step().await;
+                    semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_step().await;
                 }
             }
             if !execution.finish() {
@@ -297,7 +297,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                     cursor.begin_close();
                     interaction.frame_fault = Some(fault.to_string());
                 } else {
-                    cursor.shell_maintenance = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
+                    cursor.shell_maintenance = semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
                     if cursor.shell_maintenance {
                         cursor.phase = 0;
                     }

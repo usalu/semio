@@ -171,7 +171,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             if let Some(owner) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).and_then(window_pane_owner).map(str::to_string) {
                 scope_action_to_window(&mut action, &owner);
             }
-            semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_dispatched_action(&action, self.chrome.dispatch_origin);
+            semio_renderer_wgpu_ui_engine_dump::chrome_ledger::note_dispatched_action(&action, self.chrome.dispatch_origin);
             if action.action == semio_framework::FOCUS_WINDOW_ACTION_ID {
                 return self.framework_focus_window(&action);
             }

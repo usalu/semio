@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeImperfectionHeight
         record: "ChangedImperfectionHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change member height h of the execution imperfection", "Ausführungsimperfektion: Bauteilhöhe h ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change member height h of the execution imperfection", "Ausführungsimperfektion: Bauteilhöhe h ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

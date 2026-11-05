@@ -1,7 +1,7 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
@@ -14,7 +14,7 @@ pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 /// read but never mutated, undone or closed. The editor app installs the same catalog through
 /// the framework's bounded default owners; every standalone store goes through here instead.
 pub async fn new_cad_store(envelope: CadEnvelope, actor: protocol::ActorId) -> Result<OwnedCadStore, store::VcsError> {
-    let mut store = CadStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
+    let mut store = CadStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<CadSnapshot, CadMutation>().expect("CAD document store owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("CAD document store refused its exact owner catalog: {error}");

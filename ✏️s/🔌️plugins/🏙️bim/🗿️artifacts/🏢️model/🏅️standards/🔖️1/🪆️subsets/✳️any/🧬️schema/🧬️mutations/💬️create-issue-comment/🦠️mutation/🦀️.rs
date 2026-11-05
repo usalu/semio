@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "issue-comment", kind: "create-issue-comment", record: "CreateIssueComment" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Comment on issue \"{}\"", self.issue_comment.issue), &format!("Hinweis \"{}\" kommentieren", self.issue_comment.issue))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Comment on issue \"{}\"", self.issue_comment.issue), &format!("Hinweis \"{}\" kommentieren", self.issue_comment.issue))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

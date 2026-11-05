@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangePierHeightM where 
         record: "ChangePierHeightM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Clear pier height from the foundation to the bearing level", "Lichte Pfeilerhöhe von der Gründung bis zur Lagerebene ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Clear pier height from the foundation to the bearing level", "Lichte Pfeilerhöhe von der Gründung bis zur Lagerebene ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-pier-height-m".into()]

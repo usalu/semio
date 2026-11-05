@@ -40,12 +40,12 @@ fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
     let mut forward = before.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Puzzle5dSnapshot>::inverse(operation, &forward).expect("typed inverse"));
-        forward = protocol::apply_diff_cold(Mutation::<Puzzle5dSnapshot>::diff(operation, &forward).diff(), &forward).expect("typed diff");
+        inverses.extend(<Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::inverse(operation, &forward).expect("typed inverse"));
+        forward = protocol::apply_diff_cold(<Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(operation, &forward).diff(), &forward).expect("typed diff");
     }
     assert_eq!(forward, after);
     for inverse in inverses.iter().rev() {
-        forward = protocol::apply_diff_cold(Mutation::<Puzzle5dSnapshot>::diff(inverse, &forward).diff(), &forward).expect("typed inverse diff");
+        forward = protocol::apply_diff_cold(<Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(inverse, &forward).diff(), &forward).expect("typed inverse diff");
     }
     assert_eq!(forward, before);
 
@@ -149,10 +149,10 @@ async fn document_scalar_mutations_inverse_law() {
 #[test]
 fn dispatch_registers_semantic_descriptors() {
     register_puzzle5d_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
-    for kind in <Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds() {
-        assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
+    for kind in <Puzzle5dMutation as semio_os_command::SemanticMutation<Puzzle5dSnapshot>>::kinds() {
+        assert!(semio_os_command::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(<Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds().len(), 39);
+    assert_eq!(<Puzzle5dMutation as semio_os_command::SemanticMutation<Puzzle5dSnapshot>>::kinds().len(), 39);
 }
 //#endregion 🔖️MutationLaws
 
@@ -218,7 +218,7 @@ fn selection_leaves_replay_on_a_moved_base() {
 /// 🗣️ Every selection leaf's history label is a real sentence in both locales.
 #[test]
 fn selection_labels_are_localized() {
-    let label = |mutation: Puzzle5dMutation| serde_json::to_string(&<Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::label(&mutation)).expect("label serializes");
+    let label = |mutation: Puzzle5dMutation| serde_json::to_string(&<Puzzle5dMutation as semio_os_command::SemanticMutation<Puzzle5dSnapshot>>::label(&mutation)).expect("label serializes");
     let board = label(drag_selection_2d(vec!["p1".into(), "p2".into()], 5.0, -2.5));
     assert!(board.contains("Drag 2 items by (5, -2.5) on the board") && board.contains("2 Elemente auf dem Brett um (5; -2,5) ziehen"), "{board}");
     let world = label(drag_selection_3d(vec!["p1".into()], [1.5, 0.0, -1.0]));
@@ -245,10 +245,10 @@ async fn selection_missing_targets_are_errors() {
 #[semio_framework_async_macros::async_test]
 async fn a_board_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_selection_2d(vec!["p1".into()], 1.0, 0.0), drag_selection_3d(vec!["p1".into()], [0.0, 0.0, 4.0]), drag_selection_2d(vec!["p1".into()], 0.0, 2.0)];
     for mutation in &log {
-        semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut identity).await).expect("a selection gesture applies");
+        semio_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut identity).await).expect("a selection gesture applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = drag_selection_2d(vec!["p1".into()], 7.0, 0.0);
@@ -267,7 +267,7 @@ async fn a_board_drag_edited_in_history_replays_its_downstream() {
     }
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
     assert_eq!((fresh.parts[0].part_2d.x, fresh.parts[0].part_2d.y, fresh.parts[0].part_3d.origin), (7.0, 2.0, [0.0, 0.0, 4.0]));
-    semio_framework_plugin::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).expect("overwrite commits");
+    semio_plugin::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
     crate::host::owned::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
@@ -280,7 +280,7 @@ async fn a_board_drag_edited_in_history_replays_its_downstream() {
 /// declared vocabulary and the measured one from drifting apart.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    let descriptors = <Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds();
+    let descriptors = <Puzzle5dMutation as semio_os_command::SemanticMutation<Puzzle5dSnapshot>>::kinds();
     assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Puzzle5dMutation variant");
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");

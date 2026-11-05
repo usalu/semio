@@ -1,17 +1,17 @@
 //! 🎺️ Staged slice of the `plugin-app-impl` band of the mounted artifact instance: its `instance-typed-ops` members (WP6 step S0 of the instance family).
 //!
 //! 🔌️ The `PluginApp` implementation of the mounted artifact instance with the framework-reserved settle helpers and the maintenance stage constants.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
 
 /// ⏳️ Rounds one child publication spends reclaiming the retirements ahead of it before it waits instead.
 /// ♻️ Returned document roots a publication leaves to the maintenance rotation: only beyond this many does a publication

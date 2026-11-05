@@ -70,8 +70,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "scene-root-node", kind: "move-scene-root-node", record: "MovedSceneRootNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Move Scene Root Node", "Szenenwurzelknoten verschieben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Move Scene Root Node", "Szenenwurzelknoten verschieben")
     }
 
     fn target(&self) -> Vec<String> {

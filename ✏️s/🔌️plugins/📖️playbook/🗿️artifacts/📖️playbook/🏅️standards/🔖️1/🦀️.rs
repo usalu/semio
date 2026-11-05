@@ -8,7 +8,7 @@
 //! carried-over value from `definition()`'s `s.playbook.codec.document.v1` row.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<A: crate::PlaybookApplication>() -> StandardDeclaration<A> {
@@ -28,8 +28,8 @@ use semio_framework_artifact_playbook_playbook as playbook;
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
 /// function set. Lives at the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) —
 /// `declaration()` describes the artifact (kind/schema/io/ownership), it is not engine behaviour.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     type CapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
     let rows: &[CapabilityRow<'_>] = &[
         ("s.playbook.playbook.standard.v1", "standard", "1", &[], None),
@@ -68,24 +68,24 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-pub fn artifact<A: PlaybookApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: PlaybookApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.playbook.playbook").expect("canonical playbook kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// 🧰️ Application variants required to assemble the Playbook artifact.
 pub trait PlaybookApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::playbook::PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::playbook::PlaybookViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::playbook::PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::playbook::PlaybookViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> PlaybookApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::playbook::PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::playbook::PlaybookViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::playbook::PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::playbook::PlaybookViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 

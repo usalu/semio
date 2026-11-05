@@ -1,6 +1,6 @@
 //! 🧪️ Kind fixture laws of `create-widget`, `delete-widget`, `replace-widget`, `move-widget`: each committed scenario applied, inverted and diffed through the mutation union.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🗑️delete-widget/🧪️tests/🚫️removes/🦀️.rs"]
 mod delete_widget_removes_note_a_and_flags_the_dangling_synapse;

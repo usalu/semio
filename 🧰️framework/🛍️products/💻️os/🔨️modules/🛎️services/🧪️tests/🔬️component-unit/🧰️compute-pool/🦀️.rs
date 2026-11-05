@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::task::{Context, Poll, Waker};
 use super::super::compute_pool::{ComputeError, ComputePool, ComputeRetainedRecipient};
-use semio_framework_os_services::ComputeOriginalCaller;
+use semio_os_services::ComputeOriginalCaller;
 use super::super::host_runtime::TokioHostRuntime;
 use super::support::{sleep_ms, test_ctx, test_pool};
 

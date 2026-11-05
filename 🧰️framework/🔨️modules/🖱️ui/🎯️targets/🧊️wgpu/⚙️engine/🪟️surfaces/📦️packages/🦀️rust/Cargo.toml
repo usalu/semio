@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-ui-wgpu-engine-surface"
+name = "semio-ui-wgpu-engine-surface"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -30,19 +30,19 @@ semio-framework-async-slots = { path = "../../../../../../../⏳️async/🧱️
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
-semio-framework-ui-arena = { path = "../../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
-semio-framework-ui-declaration = { path = "../../../../../../📜️declaration/📦️packages/🦀️rust" }
-semio-framework-ui-draw-contract = { path = "../../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
-semio-framework-ui-retained-tree = { path = "../../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust" }
-semio-framework-ui-select-behavior = { path = "../../../../../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust" }
-semio-framework-ui-surface-identity = { path = "../../../../../../🪟️surface/🪪️identity/📦️packages/🦀️rust" }
-semio-framework-ui-text = { path = "../../../../../../🔤️typography/📦️packages/🦀️rust" }
-semio-framework-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-events = { path = "../../../../⚡️events/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-hosting = { path = "../../../../🧭️hosting/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-input = { path = "../../../../📥️input/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-layout = { path = "../../../../🧱️layout-stack/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-mounted-layout = { path = "../../../../📌️mounted_layout/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-paint = { path = "../../../../🖌️paint/📦️packages/🦀️rust" }
+semio-ui-arena = { path = "../../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-ui-retained-tree = { path = "../../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust" }
+semio-ui-select-behavior = { path = "../../../../../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust" }
+semio-ui-surface-identity = { path = "../../../../../../🪟️surface/🪪️identity/📦️packages/🦀️rust" }
+semio-ui-text = { path = "../../../../../../🔤️typography/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-wgpu-events = { path = "../../../../⚡️events/📦️packages/🦀️rust" }
+semio-ui-wgpu-hosting = { path = "../../../../🧭️hosting/📦️packages/🦀️rust" }
+semio-ui-wgpu-input = { path = "../../../../📥️input/📦️packages/🦀️rust" }
+semio-ui-wgpu-layout = { path = "../../../../🧱️layout-stack/📦️packages/🦀️rust" }
+semio-ui-wgpu-mounted-layout = { path = "../../../../📌️mounted_layout/📦️packages/🦀️rust" }
+semio-ui-wgpu-paint = { path = "../../../../🖌️paint/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
-ui_contract = { path = "../../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_contract = { path = "../../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

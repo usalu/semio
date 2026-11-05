@@ -7,49 +7,49 @@
 pub mod lifted_store;
 #[path = "📥️lifted/🏭️operation/🦀️.rs"]
 pub mod lifted_operation;
-use semio_framework_os_store_read::retire_document_envelope;
-use semio_framework_os_store_read::retirement_owner_demands;
-use semio_framework_os_store_read::retirement_owner_close;
-use semio_framework_os_store_read::ArtifactStoreEnvelopeRetirement;
+use semio_os_store_read::retire_document_envelope;
+use semio_os_store_read::retirement_owner_demands;
+use semio_os_store_read::retirement_owner_close;
+use semio_os_store_read::ArtifactStoreEnvelopeRetirement;
 use crate::lifted_store::ArtifactStoreCursorDisposer;
-use semio_framework_os_store_read::ArtifactGenesisRetirement;
+use semio_os_store_read::ArtifactGenesisRetirement;
 use crate::lifted_operation::MemberSnapshotOpenOperation;
-use semio_framework_os_store_read::history_read_admission;
-use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirementFactory;
-use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
-use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreChangeRetirementFactory;
-use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
+use semio_os_store_read::history_read_admission;
+use semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirementFactory;
+use semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
+use semio_os_store_ledger::edit_retirement::ArtifactStoreChangeRetirementFactory;
+use semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress};
-use semio_framework_os_spr::command::ArtifactMessageSource;
+use semio_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress};
+use semio_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::MutationId;
-use semio_framework_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
+use semio_os_spr::MutationId;
+use semio_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use semio_framework_value_snapshot_read::SnapshotReadRegistryHandle;
 use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
-use semio_framework_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
+use semio_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
-use semio_framework_os_vcs::{Author, VcsError};
-use semio_framework_os_vcs::{Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable};
-use semio_framework_os_store_envelope::owner::OwnerRef;
-use semio_framework_os_pack::pack_rt;
-use semio_framework_os_store_ledger::{ArtifactEditMessageLedgerRetirement, CursorRevisionAccumulator};
-use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
-use semio_framework_os_store_operation_wire::{ArtifactOperationWire, ArtifactOperationText};
-use semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
-use semio_framework_os_store_space_schema::{ArtifactBackboneRef, ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, HistoryLane, MigrationProvenance, OpenToolTransaction};
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use semio_os_vcs::{Author, VcsError};
+use semio_os_vcs::{Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable};
+use semio_os_store_envelope::owner::OwnerRef;
+use semio_os_pack::pack_rt;
+use semio_os_store_ledger::{ArtifactEditMessageLedgerRetirement, CursorRevisionAccumulator};
+use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
+use semio_os_store_operation_wire::{ArtifactOperationWire, ArtifactOperationText};
+use semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+use semio_os_store_space_schema::{ArtifactBackboneRef, ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, HistoryLane, MigrationProvenance, OpenToolTransaction};
+use semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
 use crate::lifted_store::ArtifactStoreOwnedDisposer;
-use semio_framework_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, ReplayProgress, retire_shared_projection};
-use semio_framework_os_store_one_item_publication::lifted_publication::MemberStoreOneItemWirePreparationFactory;
+use semio_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, ReplayProgress, retire_shared_projection};
+use semio_os_store_one_item_publication::lifted_publication::MemberStoreOneItemWirePreparationFactory;
 
 #[path="🏭️producer/🧬️schema/🦀️.rs"]
 pub mod producer;
@@ -117,35 +117,35 @@ where
     }
 
     /// 🧮️ Quotes the existing decoded Edit issuer with its original mutation factory.
-    pub fn history_edit_read_issuer_demands(&self)->semio_framework_value::RetirementDemand where Mutation:Send+'static {semio_framework_os_store_ledger::edit_retirement::history_edit_read_issuer_demands::<Mutation>()}
+    pub fn history_edit_read_issuer_demands(&self)->semio_framework_value::RetirementDemand where Mutation:Send+'static {semio_os_store_ledger::edit_retirement::history_edit_read_issuer_demands::<Mutation>()}
     /// 🎟️ Captures the installed mutation issuer through the shared decoded Edit factory.
     pub fn admit_history_edit_read_issuer(&self,slot:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> where Mutation:Send+'static {
         let original=self.mutation_retirement.0.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history read lost its installed original mutation issuer"))?;
-        semio_framework_os_store_ledger::edit_retirement::admit_history_edit_read_issuer(original,slot,grant)
+        semio_os_store_ledger::edit_retirement::admit_history_edit_read_issuer(original,slot,grant)
     }
 
     /// 🎟️ Funds the original semantic producer before transferring its retained request from initialization custody.
-    pub fn admit_native_replay_preparation(&self,request:&mut Option<semio_framework_os_store_replay_operation::native::ArtifactReplayPreparationRequest<P,Mutation>>,task:&mut Option<semio_framework_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,ValueError>
+    pub fn admit_native_replay_preparation(&self,request:&mut Option<semio_os_store_replay_operation::native::ArtifactReplayPreparationRequest<P,Mutation>>,task:&mut Option<semio_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,ValueError>
     where Mutation:Sync,
     {
         if task.is_some()||request.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay admission requires its original request and empty producer slot"));}
         let context=request.as_ref().unwrap().context;if context.generation!=cx.generation().0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay request belongs to another original Job generation"));}
         let factory=self.replay_preparation.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its installed semantic producer"))?;
-        let birth=factory.preparation_birth_demand();let overhead=size_of::<Option<semio_framework_os_store_replay_operation::native::ArtifactReplayPreparationRequest<P,Mutation>>>()+size_of::<Option<semio_framework_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>>>();let mut demand=birth;demand.copy_bytes=demand.copy_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native replay request movement overflow"))?;
+        let birth=factory.preparation_birth_demand();let overhead=size_of::<Option<semio_os_store_replay_operation::native::ArtifactReplayPreparationRequest<P,Mutation>>>()+size_of::<Option<semio_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>>>();let mut demand=birth;demand.copy_bytes=demand.copy_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native replay request movement overflow"))?;
         let grant=cx.retained_grant();if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,..grant};
-        let result=cx.with_native_receiving(|control|{control.admit_turn_capacity(grant.maximum_capacity_bytes)?;if birth.capacity_bytes!=0{control.charge(birth.capacity_bytes)?;}let original=request.take().unwrap();match factory.begin(original,child){Ok((cursor,mut p))=>{*task=Some(semio_framework_os_store_replay_operation::ArtifactReplayPreparationTask::new(context,cursor));p.copied_bytes=p.copied_bytes.checked_add(overhead).expect("native replay preflight movement");if !p.fits(grant)||p.retained_capacity_bytes!=birth.capacity_bytes{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay issuer changed its original birth receipt").with_retained_progress(p));}Ok(RetainedCloneStep::Progress(p))},Err((error,original))=>{*request=Some(original);Err(error)}}});
+        let result=cx.with_native_receiving(|control|{control.admit_turn_capacity(grant.maximum_capacity_bytes)?;if birth.capacity_bytes!=0{control.charge(birth.capacity_bytes)?;}let original=request.take().unwrap();match factory.begin(original,child){Ok((cursor,mut p))=>{*task=Some(semio_os_store_replay_operation::ArtifactReplayPreparationTask::new(context,cursor));p.copied_bytes=p.copied_bytes.checked_add(overhead).expect("native replay preflight movement");if !p.fits(grant)||p.retained_capacity_bytes!=birth.capacity_bytes{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay issuer changed its original birth receipt").with_retained_progress(p));}Ok(RetainedCloneStep::Progress(p))},Err((error,original))=>{*request=Some(original);Err(error)}}});
         let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_receiving_retained(grant,progress)?;cx.consume_fuel(progress.copied_items as u64);result
     }
     /// ⏯️ Loans only the actual initializer context to its installed original semantic task.
-    pub fn advance_native_replay_preparation(&self,task:&mut semio_framework_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>,generation:u64,revision:[u8;32],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_replay_operation::ArtifactReplayPreparationStep,ValueError>{
+    pub fn advance_native_replay_preparation(&self,task:&mut semio_os_store_replay_operation::ArtifactReplayPreparationTask<P,Mutation>,generation:u64,revision:[u8;32],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_os_store_replay_operation::ArtifactReplayPreparationStep,ValueError>{
         if generation!=cx.generation().0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native replay continuation belongs to another original Job generation"));}
-        let body=cx.retained_grant().maximum_copy_bytes;let grant=cx.retained_grant();if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,task.demands(generation,revision,body)?){return Ok(semio_framework_os_store_replay_operation::ArtifactReplayPreparationStep::Blocked);}
-        let clock=cx.clock_source();let deadline=cx.deadline_us();let result=cx.with_native_receiving(|control|task.step(generation,revision,body,semio_framework_os_store_one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},control,&mut||clock().is_none_or(|now|now>=deadline)));
+        let body=cx.retained_grant().maximum_copy_bytes;let grant=cx.retained_grant();if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,task.demands(generation,revision,body)?){return Ok(semio_os_store_replay_operation::ArtifactReplayPreparationStep::Blocked);}
+        let clock=cx.clock_source();let deadline=cx.deadline_us();let result=cx.with_native_receiving(|control|task.step(generation,revision,body,semio_os_store_one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},control,&mut||clock().is_none_or(|now|now>=deadline)));
         let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_receiving_retained(grant,progress)?;cx.consume_fuel(progress.copied_items as u64);result
     }
     /// ♻️ Closes the same native producer through the initializer's original cleanup authority.
-    pub fn close_native_replay_preparation(&self,owner:&mut semio_framework_os_store_replay_operation::ArtifactReplayPreparationRetirement<P,Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,ValueError>{
+    pub fn close_native_replay_preparation(&self,owner:&mut semio_os_store_replay_operation::ArtifactReplayPreparationRetirement<P,Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,ValueError>{
         let grant=cx.retained_grant();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,owner.next_demand(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
         let result=cx.with_native_retirement(|control|owner.close_step(grant,control));let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);result
     }

@@ -6,15 +6,15 @@ use semio_s_artifact_reasoning_wires_window_transient::editor::wires::window_tra
 async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document_positions() {
     use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp, delete_selection::DeleteSelection};
     use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_BODY_COMPOSITE, WIRES_PLAY_WINDOW_CANVAS};
-    use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, Canvas2dScene, EditorApp, InteractionTarget, PluginApp, ViewModel, ViewWindowInstance, INTERACTION_SELECT_ACTION_ID};
+    use semio_plugin::{artifact_app_laws, ActionMeta, App, Canvas2dScene, EditorApp, InteractionTarget, PluginApp, ViewModel, ViewWindowInstance, INTERACTION_SELECT_ACTION_ID};
     fn manifest() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
     let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: ["left", "right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: ["left", "right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let result: Result<(), String> = async {
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
         crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
@@ -30,10 +30,10 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
                 _ => return Err("unknown gesture command".into()),
             };
             let window = view.for_window_instance(row["window"].as_str().ok_or("missing window")?).ok_or("unknown window")?;
-            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(window), ..artifact_app_laws::meta("gesture") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-            let child_publication = receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Child);
-            if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) || child_publication != row["childPublication"].as_bool().ok_or("missing child publication")? {
+            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(window), ..artifact_app_laws::meta("gesture") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            let child_publication = receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Child);
+            if receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact) || child_publication != row["childPublication"].as_bool().ok_or("missing child publication")? {
                 return Err(format!("gesture publication lanes disagree with neutral fixture: {} {:?}", row["command"], receipt.lanes));
             }
             let board = crate::editor::wires::unit_tests::context::board(&app);
@@ -57,7 +57,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
                 } else if state.drag_node_id.as_deref() != vectors["node"].as_str() {
                     return Err(format!("gesture preview lost its captured node in {id}"));
                 }
-                let projection = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app, WIRES_PLAY_BODY_COMPOSITE, &window, scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+                let projection = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app, WIRES_PLAY_BODY_COMPOSITE, &window, scope.cx()).await.map_err(|error| format!("{error:?}"))?;
                 let scene = artifact_app_laws::decode_fixture_scene::<Canvas2dScene>(&projection).map_err(str::to_string)?;
                 let layers: serde_json::Value = serde_json::from_str(&scene.layers_json).map_err(|error| error.to_string())?;
                 let rendered = layers.as_array().and_then(|layers| layers.iter().find(|layer| layer["id"].as_str() == vectors["node"].as_str())).ok_or("rendered gesture node absent")?;
@@ -72,9 +72,9 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
         if released.content != declared_content {
             return Err("released child mutation changed the declared graph member identity".into());
         }
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "undo", None, &ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("gesture-undo") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|error| format!("{error:?}"))?;
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.map_err(|error| format!("{error:?}"))?;
-        artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "undo", None, &ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("gesture-undo") }, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|error| format!("{error:?}"))?;
+        semio_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         let board = crate::editor::wires::unit_tests::context::board(&app);
         let node = crate::schema::board_node(&board, vectors["node"].as_str().ok_or("missing node")?).ok_or("undone node is absent")?;
         if crate::schema::node_position(&node) != (0.0, 0.0) {
@@ -86,18 +86,18 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
         }
         let left = view.for_window_instance("left").ok_or("left window absent")?;
         for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 1.0, y: 1.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 5.0, y: 7.0, samples: Vec::new() })] {
-            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-drag") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-            artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-drag") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         }
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "node-1".into() }]).map_err(|error| error.to_string())?;
-        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(semio_framework_plugin::dsl_value!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" })), &artifact_app_laws::meta("missing-target-selection"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)
+        semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(semio_plugin::dsl_value!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" })), &artifact_app_laws::meta("missing-target-selection"), &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)
         .await
         .map_err(|error| format!("{error:?}"))?;
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::DeleteSelection(DeleteSelection {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-delete") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-        artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-release") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-        let missing_release = artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-        if missing_release.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) {
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::DeleteSelection(DeleteSelection {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-delete") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-release") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        let missing_release = artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        if missing_release.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact) {
             return Err("missing drag target published a durable move".into());
         }
         let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("missing-target transient absent")?;
@@ -110,7 +110,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
     if let Err(error) = &result {
         eprintln!("Wires pointer move runtime failure before close: {error}");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     result.expect("captured-canvas document gesture");
 }
 
@@ -118,38 +118,38 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
 async fn wires_pointer_move_document_replacement_clears_only_successful_reload_previews() {
     use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, node_graph_viewport::NodeGraphViewport};
     use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_BODY_COMPOSITE, WIRES_PLAY_WINDOW_CANVAS};
-    use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, Canvas2dScene, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::{artifact_app_laws, ActionMeta, App, Canvas2dScene, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     fn manifest() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
-    async fn dispatch_gesture(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, command: WiresCommand, window: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), String> {
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(window.clone()), ..artifact_app_laws::meta("reload-gesture") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
-        artifact_app_laws::settle_registered_typed_operation(app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+    async fn dispatch_gesture(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, command: WiresCommand, window: &ViewModel, cx: &mut semio_plugin::StepContext<'_>) -> Result<(), String> {
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(window.clone()), ..artifact_app_laws::meta("reload-gesture") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
         Ok(())
     }
-    async fn scene(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, window: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<Canvas2dScene, String> {
-        let projection = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, WIRES_PLAY_BODY_COMPOSITE, window, cx).await.map_err(|error| format!("{error:?}"))?;
+    async fn scene(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, window: &ViewModel, cx: &mut semio_plugin::StepContext<'_>) -> Result<Canvas2dScene, String> {
+        let projection = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, WIRES_PLAY_BODY_COMPOSITE, window, cx).await.map_err(|error| format!("{error:?}"))?;
         artifact_app_laws::decode_fixture_scene(&projection).map_err(str::to_string)
     }
     let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
         crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial.clone()], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let snapshot = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let mut malformed = store::os_store::text_format::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
         crate::editor::wires::unit_tests::context::retire_envelope(envelope);
         malformed.pack.truncate(4);
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 12.0, y: -4.0, zoom: 2.0 } }), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("reload-camera") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx())
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: 12.0, y: -4.0, zoom: 2.0 } }), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("reload-camera") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx())
         .await
         .map_err(|error| format!("{error:?}"))?;
-        artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         let config_generation = app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))?.ok_or("window config generation absent")?;
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left, scope.cx()).await?;
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: Vec::new() }), &left, scope.cx()).await?;
@@ -166,7 +166,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 7.0, y: 9.0, samples: Vec::new() }), &left, scope.cx()).await?;
         let preview = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WiresCanvasTransientOwner>().cloned()).ok_or("active preview absent")?;
         let preview_generation = app.window_transient_generation(&left).map_err(|error| format!("{error:?}"))?.ok_or("preview generation absent")?;
-        if semio_framework_plugin::artifact_app_laws::load_document(&mut app, &malformed, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.is_ok() {
+        if semio_plugin::artifact_app_laws::load_document(&mut app, &malformed, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.is_ok() {
             return Err("malformed pack unexpectedly replaced the document".into());
         }
         let preserved = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("preserved transient absent")?;
@@ -187,7 +187,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
     if let Err(error) = &result {
         eprintln!("Wires document replacement runtime failure before close: {error}");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     result.expect("Wires document replacement ownership");
 }
 
@@ -195,34 +195,34 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
 async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_zero_grants() {
     use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp};
     use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_WINDOW_CANVAS};
-    use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
     fn manifest() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
     let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
         crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 0.0, y: 0.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 11.0, y: 13.0, samples: Vec::new() })] {
-            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("cancel-release") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-            artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("cancel-release") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         }
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }), &ActionMeta { view_state: Some(left), ..artifact_app_laws::meta("cancel-release") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }), &ActionMeta { view_state: Some(left), ..artifact_app_laws::meta("cancel-release") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         if !app.has_pending_typed_operations() {
             return Err("released drag did not enter retained publication".into());
         }
-        app.maintenance_step(scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        app.maintenance_step(scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         if !app.has_pending_typed_operations() {
             return Err("zero grant unexpectedly completed retained publication".into());
         }
-        app.maintenance_step(scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        app.maintenance_step(scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         if !app.has_pending_typed_operations() {
             return Err("one-byte grant unexpectedly completed retained publication".into());
         }
@@ -232,7 +232,7 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
     if let Err(error) = &result {
         eprintln!("Wires cancellation runtime failure before close: {error}");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     result.expect("bounded Wires publication cancellation");
 }
 
@@ -270,25 +270,25 @@ async fn window_transient_backwards_restores_the_same_field_from_base() {
 async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
     use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_up::CanvasPointerUp, node_graph_viewport::NodeGraphViewport};
     use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_WINDOW_CANVAS};
-    use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
     fn manifest() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: ["canvas-left", "canvas-right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: ["canvas-left", "canvas-right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("canvas-left").unwrap();
     let right = view.for_window_instance("canvas-right").unwrap();
     let result: Result<(), String> = async {
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("canvas") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-        artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("canvas window config: {error:?}"))?;
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("canvas") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("canvas window config: {error:?}"))?;
         let document = app.snapshot().map_err(|error| format!("{error:?}"))?;
         let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
         for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 12.0, y: 24.0 }), WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false })] {
-            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("canvas") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("canvas lifecycle did not finish: {error:?}"))?;
-            if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault) {
+            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("canvas") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("canvas lifecycle did not finish: {error:?}"))?;
+            if receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault) {
                 return Err(format!("canvas lifecycle fault: {:?}", receipt.lanes));
             }
         }
@@ -313,7 +313,7 @@ async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
     if let Err(error) = &result {
         eprintln!("Wires window transient runtime failure before close: {error}");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     result.expect("concrete canvas transient ownership");
 }
 
@@ -325,22 +325,22 @@ async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
 async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing() {
     use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp};
     use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_WINDOW_CANVAS};
-    use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     fn manifest() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
-    async fn gesture(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, command: WiresCommand, window: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(window.clone()), ..artifact_app_laws::meta("batched-gesture") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
-        artifact_app_laws::settle_registered_typed_operation(app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))
+    async fn gesture(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, command: WiresCommand, window: &ViewModel, cx: &mut semio_plugin::StepContext<'_>) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(window.clone()), ..artifact_app_laws::meta("batched-gesture") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))
     }
     fn preview(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, window: &ViewModel) -> Result<WiresCanvasTransient, String> {
         app.window_transient_snapshot(window).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WiresCanvasTransientOwner>().cloned()).ok_or_else(|| "window transient absent".into())
     }
     let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
@@ -355,7 +355,7 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
             return Err(format!("separate moves did not land on the last move: {one_per_event:?}"));
         }
         let receipt = gesture(&mut app, WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: true }), &left, scope.cx()).await?;
-        if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) {
+        if receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact) {
             return Err("a cancelled release published a durable move".into());
         }
         if preview(&mut app, &left)? != WiresCanvasTransient::default() {
@@ -382,13 +382,13 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
         if preview(&mut app, &left)? != WiresCanvasTransient::default() {
             return Err("the second cancel left a drag preview behind".into());
         }
-        let rows_before = semio_framework_plugin::app::node_drag_history::node_drag_transaction_rows(&app.history_snapshot().await.map_err(|error| format!("{error:?}"))?).len();
+        let rows_before = semio_plugin::app::node_drag_history::node_drag_transaction_rows(&app.history_snapshot().await.map_err(|error| format!("{error:?}"))?).len();
         gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left, scope.cx()).await?;
         gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: Vec::new() }), &left, scope.cx()).await?;
         let zoom = preview(&mut app, &left)?.drag_zoom;
         gesture(&mut app, WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }), &left, scope.cx()).await?;
         let history = app.history_snapshot().await.map_err(|error| format!("{error:?}"))?;
-        let released = semio_framework_plugin::app::node_drag_history::node_drag_transaction_rows(&history);
+        let released = semio_plugin::app::node_drag_history::node_drag_transaction_rows(&history);
         if released.len() != rows_before + 1 || !released.iter().any(|row| !row.op_lines.is_empty() && row.op_lines.iter().all(|line| line.starts_with("dragNodes")) && row.mutations.iter().all(|mutation| mutation.store.as_deref().is_some_and(|store| store.starts_with("content/")))) {
             return Err(format!("a released drag is not ONE child-lane dragNodes transaction: {rows_before} -> {released:?}"));
         }
@@ -403,7 +403,7 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
     if let Err(error) = &result {
         eprintln!("Wires batched gesture runtime failure before close: {error}");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     result.expect("Wires batched move and cancelled release");
 }
 

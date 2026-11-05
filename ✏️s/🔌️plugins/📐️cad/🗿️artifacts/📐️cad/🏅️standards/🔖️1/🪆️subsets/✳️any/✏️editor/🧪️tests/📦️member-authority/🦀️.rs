@@ -1,6 +1,6 @@
 #[semio_framework_async_macros::async_test]
 async fn cad_imported_geometry_members_install_exact_typed_publication_authority() {
-    use semio_framework_os_kernel::{ArtifactStore, MemberStoreOwnedBatch, MemberStoreOwnedBatchRequest, SpaceMember};
+    use semio_os_kernel::{ArtifactStore, MemberStoreOwnedBatch, MemberStoreOwnedBatchRequest, SpaceMember};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, semio_s_artifact_stdio_semio_brep::schema::mutations::create_vertex::CreateVertex};
     let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
@@ -16,7 +16,7 @@ async fn cad_imported_geometry_members_install_exact_typed_publication_authority
             let pointer = original.as_ptr();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 1048576, maximum_release_bytes: 1048576, maximum_depth: 64 };
             let (mutations,_) = MemberStoreOwnedBatch::try_new(original,grant).unwrap_or_else(|_| panic!("exact original imported mutation owner"));
-            let envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope("stdio.semio","neutral-member",<$snapshot>::default(),None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+            let envelope = semio_os_kernel::os_store::document_materialize::create_document_envelope("stdio.semio","neutral-member",<$snapshot>::default(),None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
             let mut store = ArtifactStore::<$snapshot,$mutation>::new(envelope,protocol::ActorId("fixture-member".into())).await.unwrap();
             store::install_funded_member_store_owners(&mut store, &semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer::<$snapshot,$mutation>::new()).expect("funded member catalog");
             let (generation,revision) = store.one_item_publication_identity();

@@ -187,9 +187,9 @@ pub fn pdf_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::register_schema_leaf_documents(&[
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🦀️.rs" },
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔣️.json" },

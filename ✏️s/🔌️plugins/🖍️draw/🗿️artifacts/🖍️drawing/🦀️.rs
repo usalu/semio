@@ -3,9 +3,9 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<DrawingMutation, NoConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
@@ -27,9 +27,9 @@ extern crate semio_framework_schema as framework_schema;
 /// channel by `artifact()` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) — this
 /// function's only remaining reader is the `en`/`de` localized name pair (see `artifact()`'s own
 /// `localization: &[]` doc).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.draw.drawing.standard.v1", "standard", "1", &[], None),
         ("s.draw.drawing.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.draw.drawing.schema.artifact", "schema", "s.draw.drawing", &[("schema", "s.draw.drawing")], None),
@@ -71,37 +71,37 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// because `🦀️.rs`'s own `.activation(...)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) still reads `artifact_kind().id`; neither has
 /// any caller left in this function.
-pub fn artifact<A: DrawingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: DrawingApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.draw.drawing").expect("canonical drawing kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait DrawingApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_draw_drawing_editor::DrawingPlayApp>>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_draw_drawing_viewer::DrawingViewer>>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<semio_s_artifact_draw_drawing_editor::DrawingPlayApp>>>
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<semio_s_artifact_draw_drawing_viewer::DrawingViewer>>>
 {
 }
 
 impl<A> DrawingApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_draw_drawing_editor::DrawingPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_draw_drawing_viewer::DrawingViewer>>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<semio_s_artifact_draw_drawing_editor::DrawingPlayApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<semio_s_artifact_draw_drawing_viewer::DrawingViewer>>>
 {
 }
 
 //#endregion 🔖️ArtifactKind
 
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
     use semio_s_artifact_draw_drawing_write::serializers::artifacts as export;
     use semio_s_artifact_draw_drawing_read::deserializers::artifacts as import;
     use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
     use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
     use semio_s_artifact_draw_drawing_model::{DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
     fn entries() -> &'static [IoEntry] {

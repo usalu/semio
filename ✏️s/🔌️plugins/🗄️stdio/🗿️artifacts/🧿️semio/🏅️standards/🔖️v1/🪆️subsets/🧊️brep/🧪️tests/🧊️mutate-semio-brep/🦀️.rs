@@ -64,7 +64,7 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_framework_os_kernel::apply_diff_cold;
+    use semio_os_kernel::apply_diff_cold;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio_brep::schema::mutations::{diff_semio_brep_mutation, inverse_semio_brep_mutation, SemioBrepMutation};
     use semio_s_artifact_stdio_semio_brep::io::text::mutations::decode_semio_brep_mutation_json;

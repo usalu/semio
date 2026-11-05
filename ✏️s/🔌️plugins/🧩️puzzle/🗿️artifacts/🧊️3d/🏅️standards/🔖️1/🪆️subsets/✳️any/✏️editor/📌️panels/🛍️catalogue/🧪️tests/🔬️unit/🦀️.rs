@@ -2,8 +2,8 @@ use super::*;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_labels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::nakagin_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_DEFAULT_UTILITY};
-use semio_framework_plugin::TreeWindowRequest;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::TreeWindowRequest;
+use semio_plugin::ViewModel;
 
 const RETIREMENT_DRAIN_STEPS: usize = 4096;
 
@@ -21,7 +21,7 @@ fn drain() {
 }
 
 fn labels() -> &'static Puzzle3dLabels {
-    puzzle3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis")
+    puzzle3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("admitted host axis")
 }
 
 fn scene(scene_snapshot: semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot) -> Puzzle3dScene {
@@ -38,7 +38,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// 🛍️ The catalogue with its object-kind section opened wide — what a reader scrolled to the top of
@@ -54,7 +54,7 @@ fn built(envelope: &Puzzle3dScene, view: &ViewModel) -> BuiltNode {
 
 fn json_of(envelope: &Puzzle3dScene, view: &ViewModel) -> String {
     let node = built(envelope, view);
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("catalogue projection");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("catalogue projection");
     drain();
     json
 }

@@ -35,7 +35,7 @@ pub enum ArtifactInferenceCacheModeV1 {
     Bypass,
 }
 
-/// 💡️ The request `semio_framework_plugin_host::ArtifactInferenceRouter::infer` decodes — os is a
+/// 💡️ The request `semio_plugin_host::ArtifactInferenceRouter::infer` decodes — os is a
 /// CLIENT of that router here, so this export is an explicit MIRROR of the router's own private
 /// `InferenceRouteRequest` (which that crate does not export), never a second authority. The router
 /// re-checks every identity field against its registered route and against the guest's echo before

@@ -10,8 +10,8 @@ use super::*;
 /// peer mark chip, each with the board it is clipped to.
 #[derive(Clone, Debug)]
 pub enum ShellBoardPresencePaint {
-    Cursor { bounds: Rect, peer: semio_framework_os_renderer_wgpu_hub_workspace::canvas_presence::BoardPeerCursor },
-    Mark { bounds: Rect, rect: Rect, mark: semio_framework_os_renderer_wgpu_hub_workspace::canvas_presence::BoardPeerMark },
+    Cursor { bounds: Rect, peer: semio_renderer_wgpu_hub_workspace::canvas_presence::BoardPeerCursor },
+    Mark { bounds: Rect, rect: Rect, mark: semio_renderer_wgpu_hub_workspace::canvas_presence::BoardPeerMark },
 }
 
 /// 👥️🖼️ A presence chip's width for its text — the same estimate the status pills use.

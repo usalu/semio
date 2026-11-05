@@ -63,7 +63,7 @@ fn the_section_renders_one_row_per_parameter_and_jumps_to_the_governing_check_of
     let report = report();
     let render = |locale| {
         let node = check_parameters_section(&report, 0, &document(), locale, "s.norm.test@1/*#editor").expect("section").expect("some");
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("projection")
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("projection")
     };
     let (en, de) = (render(Locale::En), render(Locale::De));
     assert!(en.contains("Check parameters (3)") && de.contains("Nachweisparameter (3)"));

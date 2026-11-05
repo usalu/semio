@@ -17,8 +17,8 @@ pub struct RemoveEditionProfile {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RemoveEditionProfile where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_edition_profile::ChangeEditionProfile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "edition-profile", kind: "remove-edition-profile", record: "RemovedEditionProfile" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove edition profile override for sheet {}", self.sheet), &format!("Ausgabeprofil-Überschreibung für Blatt {} entfernen", self.sheet))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove edition profile override for sheet {}", self.sheet), &format!("Ausgabeprofil-Überschreibung für Blatt {} entfernen", self.sheet))
     }
     fn target(&self) -> Vec<String> {
         vec![self.sheet.clone()]

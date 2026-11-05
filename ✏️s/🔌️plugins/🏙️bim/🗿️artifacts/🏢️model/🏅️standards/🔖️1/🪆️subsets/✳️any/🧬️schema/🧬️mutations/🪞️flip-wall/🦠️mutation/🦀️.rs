@@ -17,8 +17,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "toggle", entity: "wall", kind: "flip-wall", record: "FlipWall" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Flip wall \"{}\"", self.id), &format!("Wand \"{}\" wenden", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Flip wall \"{}\"", self.id), &format!("Wand \"{}\" wenden", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

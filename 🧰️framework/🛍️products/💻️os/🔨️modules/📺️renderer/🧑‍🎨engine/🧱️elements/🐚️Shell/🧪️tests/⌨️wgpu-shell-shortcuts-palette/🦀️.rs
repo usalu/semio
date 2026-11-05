@@ -9,14 +9,14 @@
 //! - the palette lists and EXECUTES every in-palette command of every owner, and ranks its rows with the
 //!   very algorithm React's `UISearch` uses (`🔨️modules/🖱️ui/🔨️modules/🔎️fuzzy-ranking/🟦️.ts`).
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_shell, test_app, tree_pointer_record};
+use semio_renderer_wgpu_fixtures::shell::{host_test_shell, test_app, tree_pointer_record};
 use super::*;
 use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, CommandOwnerAddress};
 
 //#region ⌨️ChordTable
 
 /// ⌨️ Parses one chord of the shared table into the key event this target would receive.
-fn chord_event(chord: &str) -> (semio_framework_ui_wgpu_input::KeyAction, PointerModifiers) {
+fn chord_event(chord: &str) -> (semio_ui_wgpu_input::KeyAction, PointerModifiers) {
     let mut modifiers = PointerModifiers::default();
     let mut key = "";
     for token in chord.split('+') {
@@ -29,15 +29,15 @@ fn chord_event(chord: &str) -> (semio_framework_ui_wgpu_input::KeyAction, Pointe
         }
     }
     let action = match key {
-        "enter" => semio_framework_ui_wgpu_input::KeyAction::Enter,
-        "backspace" => semio_framework_ui_wgpu_input::KeyAction::Backspace,
-        "escape" => semio_framework_ui_wgpu_input::KeyAction::Escape,
-        "tab" => semio_framework_ui_wgpu_input::KeyAction::Tab,
-        "up" | "arrowup" => semio_framework_ui_wgpu_input::KeyAction::ArrowUp,
-        "down" | "arrowdown" => semio_framework_ui_wgpu_input::KeyAction::ArrowDown,
-        "left" | "arrowleft" => semio_framework_ui_wgpu_input::KeyAction::ArrowLeft,
-        "right" | "arrowright" => semio_framework_ui_wgpu_input::KeyAction::ArrowRight,
-        other => semio_framework_ui_wgpu_input::KeyAction::Char(other.to_string()),
+        "enter" => semio_ui_wgpu_input::KeyAction::Enter,
+        "backspace" => semio_ui_wgpu_input::KeyAction::Backspace,
+        "escape" => semio_ui_wgpu_input::KeyAction::Escape,
+        "tab" => semio_ui_wgpu_input::KeyAction::Tab,
+        "up" | "arrowup" => semio_ui_wgpu_input::KeyAction::ArrowUp,
+        "down" | "arrowdown" => semio_ui_wgpu_input::KeyAction::ArrowDown,
+        "left" | "arrowleft" => semio_ui_wgpu_input::KeyAction::ArrowLeft,
+        "right" | "arrowright" => semio_ui_wgpu_input::KeyAction::ArrowRight,
+        other => semio_ui_wgpu_input::KeyAction::Char(other.to_string()),
     };
     (action, modifiers)
 }
@@ -126,13 +126,13 @@ fn the_edit_chords_are_shadowable_and_carry_the_react_redo_alias() {
 /// ⚖️ LAW: a chord only fires when the user is NOT typing, and a bare key is never a shell chord.
 #[test]
 fn a_focused_content_field_swallows_every_shell_chord() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     input.focused_id = Some("app.content.field".into());
     let (action, modifiers) = chord_event("meta+b");
     PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, &mut input);
     assert!(!shell.dock.anchor_open(PanelAnchor::TopLeft), "a chord never fires while a content field has focus");
-    assert_eq!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::Char("b".into()), &PointerModifiers::default()), None, "a bare `b` is ordinary text");
+    assert_eq!(shell_shortcut_for(&semio_ui_wgpu_input::KeyAction::Char("b".into()), &PointerModifiers::default()), None, "a bare `b` is ordinary text");
 }
 
 //#endregion ⌨️ChordTable
@@ -188,7 +188,7 @@ fn each_panel_anchor_chord_toggles_its_own_anchor() {
 /// that closes them (the regression `🔬️wgpu-shell-input` pins for `mod+p` — re-asserted here for `mod+f`).
 #[test]
 fn the_overlay_chords_toggle_through_the_same_table() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = chord_event("mod+f");
     PointerCtx::of(&mut shell).handle_keyboard(action.clone(), &modifiers, &mut input);
@@ -201,7 +201,7 @@ fn the_overlay_chords_toggle_through_the_same_table() {
 
 #[test]
 fn dismissing_and_reopening_a_palette_preserves_its_query() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = chord_event("mod+p");
     PointerCtx::of(&mut shell).handle_keyboard(action.clone(), &modifiers, &mut input);
@@ -214,12 +214,12 @@ fn dismissing_and_reopening_a_palette_preserves_its_query() {
 }
 
 fn two_window_shell() -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let app = test_app(Vec::new(), Vec::new());
-    shell.dock.dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
+    shell.dock.dock.root = semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
     shell.dock.dock.active_window_id = Some("main".into());
     shell.windows.active_window_id = Some("main".into());
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -310,7 +310,7 @@ fn fuzzy_normalization_matches_the_neutral_nfkd_oracle() {
 #[test]
 fn built_in_command_labels_match_the_neutral_react_locale_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     for row in fixture["producer"]["localizedCommands"].as_array().expect("localized command rows") {
         let command_id = row["id"].as_str().expect("localized command id");
         for locale in ["en", "de"] {
@@ -350,8 +350,8 @@ fn palette_shell() -> ShellState {
         CommandDefinition::new("app.compose", LocalizedLabel::data("Compose"), "app", "play", ActionKind::Shell).with_args([select_arg("value"), ActionArgDef::text("note", LocalizedLabel::data("Note"))]),
         CommandDefinition::new("app.rename", LocalizedLabel::data("Rename"), "app", "play", ActionKind::Shell).with_args([ActionArgDef::text("name", LocalizedLabel::data("Name"))]),
     ];
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(commands, Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(commands, Vec::new()), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -449,7 +449,7 @@ fn picking_an_arg_carrying_command_opens_its_form() {
 }
 
 fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     while input.retire_hit_step() {}
     shell.chrome.screen_w = 1280.0;
     shell.chrome.screen_h = 720.0;
@@ -495,7 +495,7 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
     assert_eq!(input_node.value_text.as_deref(), Some(""));
     assert!(input_node.focused, "shortcut focus and accessibility focus are the same input");
     let target =
-        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
+        ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Set Theme".into()), &mut input)).expect("palette accessibility value"));
     assert_eq!(shell.commands.search_query, "Set Theme");
 
@@ -504,7 +504,7 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
     assert_eq!(rows.len(), 1, "the query is reflected by the published row set: {rows:?}");
     assert_eq!(rows[0].key, fixture_staged_palette_id());
     assert_eq!(rows[0].label.as_deref(), Some("Set Theme…"), "the deterministic result is the staged command");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).expect("palette activation");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).expect("palette activation");
     assert_eq!(shell.input.overlay_state, OverlayState::None);
     assert_eq!(input.focused_id, None, "closing the dialog retires textbox focus");
     assert!(shell.dock.anchor_open(PanelAnchor::BottomMiddle), "activation reaches the existing Command panel funnel");
@@ -521,19 +521,19 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
 fn find_publishes_filters_and_activates_with_a_physical_row_click() {
     let mut shell = host_test_shell();
     shell.plugins.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_action(accept_find_fixture_action);
-    shell.dock.dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
+    shell.dock.dock.root = semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
     shell.dock.dock.active_window_id = Some("main".into());
     shell.windows.active_window_id = Some("main".into());
     SessionCtx::of(&mut shell).sync_dock_tabs();
     let window_id = shell.dock.dock.window_instances().first().map(|(id, _)| id.clone()).expect("the app contributes one mounted window");
-    let mut graph: semio_framework_ui_scene_node_graph::NodeGraphScene = serde_json::from_value(serde_json::json!({
+    let mut graph: semio_ui_scene_node_graph::NodeGraphScene = serde_json::from_value(serde_json::json!({
         "nodes": [],
         "edges": [],
         "viewport": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
     }))
     .expect("NodeGraph find fixture decodes");
-    graph.find_items.push(semio_framework_ui_scene_node_graph::NodeGraphFindItem { id: "media.node".into(), label: "Media Node".into(), category: "Nodes".into() });
-    let surface = semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::NodeGraph, &graph).expect("bounded NodeGraph find scene encodes");
+    graph.find_items.push(semio_ui_scene_node_graph::NodeGraphFindItem { id: "media.node".into(), label: "Media Node".into(), category: "Nodes".into() });
+    let surface = semio_ui_scene_surface::encode(ui_contract::SurfaceKind::NodeGraph, &graph).expect("bounded NodeGraph find scene encodes");
     let records = vec![tree_pointer_record(1, "find-node-graph", ui_contract::Component::Surface(surface), &[], None)];
     let document = shell.windows.publish_surface_records(&window_id, records).expect("NodeGraph production ingress");
     shell.docs.window_ui.insert(window_id, document);
@@ -544,7 +544,7 @@ fn find_publishes_filters_and_activates_with_a_physical_row_click() {
     let input_node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.find.input").expect("Find textbox projects to accessibility");
     assert_eq!(input_node.role, "combobox");
     let target =
-        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
+        ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Media".into()), &mut input)).expect("Find accessibility value"));
     publish_palette_chrome(&mut shell, &mut input);
     let row = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some("ui.find.item.0")).expect("filtered Find row publishes a physical hit").rect;
@@ -625,7 +625,7 @@ fn palette_accessibility_is_a_dialog_tree_with_close_list_groups_status_and_stab
     assert!(empty_nodes.iter().any(|node| node.role == "status" && node.live == "polite"), "no-results is an announced status");
     let close = empty_nodes.iter().find(|node| node.key == "ui.search.close").expect("accessible close after filtering");
     let target =
-        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: close.node_id, node_key: close.key.clone() };
+        ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: close.node_id, node_key: close.key.clone() };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("accessible Close activation"));
     assert_eq!(shell.input.overlay_state, OverlayState::None);
     assert_eq!(shell.commands.search_query, "zzzz", "Close preserves the query");
@@ -670,7 +670,7 @@ fn the_palette_rows_follow_the_react_declaration_order() {
 
 #[test]
 fn a_palette_without_a_session_is_empty_like_react() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(SessionCtx::of(&mut shell).build_search_items().is_empty());
 }
 

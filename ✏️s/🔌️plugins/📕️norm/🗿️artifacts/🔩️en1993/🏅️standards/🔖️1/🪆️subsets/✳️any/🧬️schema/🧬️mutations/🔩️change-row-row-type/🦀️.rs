@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowRowType where O
         record: "ChangedRowRowType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Row position of the joint row", "Schraubenreihe: Reihenlage ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Row position of the joint row", "Schraubenreihe: Reihenlage ändern")
     }
 }
 

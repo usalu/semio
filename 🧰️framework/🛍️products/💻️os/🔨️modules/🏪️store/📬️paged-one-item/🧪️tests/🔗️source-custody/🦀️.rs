@@ -1,6 +1,6 @@
 //! 🧷️ Actual paged owners retain genuine source bindings and the exact original issuer pair.
 use super::*;
-use semio_framework_os_store_one_item_batch::paged_one_item::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
+use semio_os_store_one_item_batch::paged_one_item::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
 use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,SnapshotRetirementFactory,RetirementDemand,ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
@@ -94,7 +94,7 @@ fn original_owner(law:&Value)->(Box<dyn ArtifactStoreOneItemPreparation<Document
     let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>>=Arc::new(ExactMutationIssuer);ISSUER.set(Arc::as_ptr(&mutations).cast::<()>() as usize);
     let snapshots:Arc<dyn SnapshotRetirementFactory<Document>>=Arc::new(ExactSnapshotIssuer);SNAPSHOT_ISSUER.set(Arc::as_ptr(&snapshots).cast::<()>() as usize);
     let registry=SnapshotReadRegistryHandle::new();let lease=registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_|panic!("original source lease"));
-    let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_framework_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
+    let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
     let request=ArtifactStoreOneItemPreparationRequest{operation:semio_framework_job::OperationId(1),generation:semio_framework_job::Generation(1),base_revision:[0;32],lane:HistoryLane::Document,authority,base:SnapshotRead::new(Arc::clone(&root),lease),mutation:original,mutation_retirement:Arc::clone(&mutations),snapshot_retirement:Arc::clone(&snapshots)};
     let issuer=PagedOneItemPreparationFactory::<Document,DocumentMutation,SourceProbeEdit>::default();
     let(owner,receipt)=issuer.begin(request,policy(law)).unwrap_or_else(|_|panic!("original source owner birth"));assert!(receipt.fits(policy(law).retained_grant()));
@@ -218,10 +218,10 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
 }      
 #[test]
 fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until_funded_close(){
-    use semio_framework_os_store_one_item_batch::paged_one_item::test_support::{retain_seal_returns,returned_edit_demands,close_returned_edit,returned_post_demands,close_returned_post};
+    use semio_os_store_one_item_batch::paged_one_item::test_support::{retain_seal_returns,returned_edit_demands,close_returned_edit,returned_post_demands,close_returned_post};
     let law=law();let maximum=law["maximumTurns"].as_u64().unwrap() as usize;
     CALLS.set(0);SNAPSHOT_CALLS.set(0);REFUSE_ISSUER.set(false);
-    let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_framework_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
+    let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
     let authority_address=Arc::as_ptr(&authority) as usize;
     let original=mutation(&law["mutation"]);let DocumentMutation::SetText{text,..}=&original else{unreachable!()};PAYLOAD.set(text.as_ptr() as usize);
     let edit=authority.next_edit(original,Vec::new());
@@ -230,8 +230,8 @@ fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until
     let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>>=Arc::new(ExactMutationIssuer);ISSUER.set(Arc::as_ptr(&mutations).cast::<()>() as usize);
     let snapshots:Arc<dyn SnapshotRetirementFactory<Document>>=Arc::new(ExactSnapshotIssuer);SNAPSHOT_ISSUER.set(Arc::as_ptr(&snapshots).cast::<()>() as usize);
     let snapshot_address=Arc::as_ptr(&snapshots).cast::<()>() as usize;
-    let birth=semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer::<Document,DocumentMutation>::constructor_demand();
-    let denied=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer::<Document,DocumentMutation>::constructor_copy_byte_demand()-1,maximum_capacity_bytes:birth.capacity_bytes,maximum_depth:birth.depth,..Default::default()};
+    let birth=semio_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer::<Document,DocumentMutation>::constructor_demand();
+    let denied=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:semio_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer::<Document,DocumentMutation>::constructor_copy_byte_demand()-1,maximum_capacity_bytes:birth.capacity_bytes,maximum_depth:birth.depth,..Default::default()};
     let(result,heap)=observe(||authority.begin_one_item_seal(edit,post,mutations,snapshots,denied));
     let(error,authority,edit,post,mutations,snapshots)=match result{Err(returned)=>returned,Ok(_)=>panic!("one-below seal admission accepted")};
     assert_eq!(error.kind,ValueRefusalKind::WorkLimit);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));

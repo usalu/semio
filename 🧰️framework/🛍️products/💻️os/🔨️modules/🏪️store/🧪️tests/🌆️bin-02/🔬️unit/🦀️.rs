@@ -53,7 +53,7 @@ async fn member_owned_batch_admission_defers_whole_source_census_and_retains_phy
     for count in fixture["census"]["rowCounts"].as_array().unwrap() {
         let count = count.as_u64().unwrap() as usize;
         let preflights = Arc::new(AtomicUsize::new(0));
-        let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "bounded-source", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "bounded-source", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         let owners = complete_test_catalog(demo_base_store_owners().with_one_item_preparation(Arc::new(CountingOwnedPreparationFactory { inner: DemoOneItemPreparationFactory::admissible(), preflights: Arc::clone(&preflights) }),physical_test_close_grant()));
         member.install_document_store_owners_exact(owners).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let values = (0..count).map(|index| DemoMutation::SetN(SetN { n: fixture["values"][index % 3].as_i64().unwrap() as i32 })).collect::<Vec<_>>();
@@ -160,34 +160,34 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
         let mut retained = member_open::MemberStoreOpenRetained::new(request, owners);
         let stage = row["stage"].as_str().unwrap();
         if stage != "input" {
-            let history = semio_framework_os_spr::HistoryLog {
+            let history = semio_os_spr::HistoryLog {
                 doc_id: "member-retained".into(),
                 schema: "demo/v1".into(),
-                edits: [semio_framework_os_spr::HistoryEdit {
+                edits: [semio_os_spr::HistoryEdit {
                     line: None,
                     id: "raw-edit".into(),
                     actor: Some("raw-actor".into()),
                     started_at: "started".into(),
                     finished_at: Some("finished".into()),
                     verb: None,
-                    ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(vec![0xff; 129]) }],
+                    ops: vec![semio_os_spr::OpPayload { text: None, binary: Some(vec![0xff; 129]) }],
                     inverse: Vec::new().into(),
-                    meta: Some(vec![semio_framework_os_spr::HistoryOpMeta {
+                    meta: Some(vec![semio_os_spr::HistoryOpMeta {
                         dependencies: vec!["dependency".into()],
                         payload_hash: Some([3; 32]),
-                        origin: semio_framework_os_spr::MutationOrigin::Transaction { initiator: semio_framework_os_spr::ForeignTarget { artifact_id: "initiator".into(), artifact_kind: "s.test.member".into(), dialect: Some("1/*".into()) } },
+                        origin: semio_os_spr::MutationOrigin::Transaction { initiator: semio_os_spr::ForeignTarget { artifact_id: "initiator".into(), artifact_kind: "s.test.member".into(), dialect: Some("1/*".into()) } },
                         ..Default::default()
                     }]),
                     lane: None,
                 }].into_iter().collect(),
-                composition: Some(semio_framework_os_spr::HistoryComposition { owner: Some(("parent".into(), "slot".into(), "member-retained".into())), dialect: Some(("s.test.member".into(), "1".into(), "*".into())) }),
+                composition: Some(semio_os_spr::HistoryComposition { owner: Some(("parent".into(), "slot".into(), "member-retained".into())), dialect: Some(("s.test.member".into(), "1".into(), "*".into())) }),
                 ..Default::default()
             };
             retained.stage_history(history).unwrap_or_else(|_| panic!("raw decoded model stays owned before typed hydration"));
             let packed = DemoSnapshot { n: Some(7) }.encode_pack();
             let initial = DemoSnapshot::decode_pack(&packed).unwrap();
             if matches!(stage, "envelope" | "initialization") {
-                let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-retained", initial, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
+                let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-retained", initial, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
                 retained.stage_envelope(envelope).unwrap_or_else(|_| panic!("unique parsed owner slot"));
                 if stage == "initialization" {
                     let current = DemoSnapshot::decode_pack(&packed).unwrap();
@@ -265,8 +265,8 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
 async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_without_commit() {
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES, ..one_item_test_policy() };
-    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
-    let mut wrong = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut wrong = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     wrong.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     member.closes_on_drop();
@@ -316,8 +316,8 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES, ..one_item_test_policy() };
     let mut members = [
-        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-first", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
-        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
+        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-first", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
+        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
     ];
     for member in &mut members {
         member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
@@ -397,16 +397,16 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     const IDENTITY_CEILING: usize = 4096 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧩️composition/📬️publication/🤝️group/🧪️tests/🧫️fixtures/📚️history-cases/🔣️.json")).unwrap();
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize, ..one_item_test_policy() };
     for row in fixture["cases"].as_array().unwrap() {
         for commit in [false, true] {
             let history = row["historyEntries"].as_u64().unwrap() as usize;
             let mut members = [
-                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-parent", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
-                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-child", DemoSnapshot { n: Some(10) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
-                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-existing", DemoSnapshot { n: Some(100) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
+                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-parent", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
+                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-child", DemoSnapshot { n: Some(10) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
+                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-existing", DemoSnapshot { n: Some(100) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
             ];
             for (lane, member) in members.iter_mut().enumerate() {
                 member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
@@ -429,7 +429,7 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
                 }
                 assert!(prepared);
             }
-            let mut decision = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+            let mut decision = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
             let visibility = decision.view();
             let mut turns = [0usize; 3];
             for lane in 0..3 {
@@ -628,11 +628,11 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪆️derived-read/🔣️.json")).expect("closed language-neutral origin corpus");
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-source", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-source", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    let mut foreign = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-foreign", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut foreign = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-foreign", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     foreign.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let base = store.derived_snapshot_head();
     let(snapshot_owner,supplier)=original_snapshot_ports_without_representation_bounds(&store);
@@ -704,7 +704,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     let checkpoint_id=store.envelope().vcs.checkpoints[0].id.clone();
     store.dispatch(ArtifactCommand::Apply{mutations:vec![DemoMutation::SetN(SetN{n:checkpoint_case["live"]["n"].as_i64().unwrap()as i32})],transaction:None},&mut identity).await.expect("distinct live frontier after checkpoint");
     let grant=physical_test_close_grant();
-    let birth=semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot,DemoMutation>::derived_checkpoint_preview_admission_demands();
+    let birth=semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot,DemoMutation>::derived_checkpoint_preview_admission_demands();
     let birth_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:birth.copy_bytes,maximum_capacity_bytes:birth.capacity_bytes,maximum_release_bytes:birth.release_bytes,maximum_depth:birth.depth};
     for denied in [RetainedCloneGrant{maximum_items:0,..birth_grant},RetainedCloneGrant{maximum_copy_bytes:birth.copy_bytes-1,..birth_grant},RetainedCloneGrant{maximum_depth:0,..birth_grant}]{assert!(store.begin_derived_checkpoint_preview(&checkpoint_id,denied).unwrap().is_none());}
     let(mut preview,birth_receipt)=store.begin_derived_checkpoint_preview(&checkpoint_id,birth_grant).expect("actual checkpoint source").expect("exact checkpoint source frame");
@@ -777,10 +777,10 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
 async fn apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_owner() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "exact-tail-transfer", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "exact-tail-transfer", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }, &mut identity).await.expect("apply");
     store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo");
@@ -833,8 +833,8 @@ fn the_canonical_operation_wire_of_every_demo_leaf_is_the_header_and_the_indepen
 async fn a_store_without_a_catalog_cannot_author_and_a_catalog_alone_gives_it_the_canonical_wire() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity: semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("original authoring identity");
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "catalog-wire", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut identity: semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("original authoring identity");
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "catalog-wire", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     assert!(store.operation_wire().is_none(), "a bare store holds no wire");
     let refusal = store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect_err("a store that received neither a catalog nor a wire cannot author");
     assert!(format!("{refusal:?}").contains("authoring requires an installed canonical operation wire or an original domain codec"), "{refusal:?}");
@@ -853,8 +853,8 @@ async fn a_store_without_a_catalog_cannot_author_and_a_catalog_alone_gives_it_th
 async fn a_store_with_no_preparation_factory_authors_apply_undo_redo_and_its_rows_through_its_installed_canonical_wire() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity: semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("original authoring identity");
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "canonical-wire", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut identity: semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("original authoring identity");
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "canonical-wire", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_operation_wire(prepared_operation_wire::ArtifactOperationWire::semantic::<DemoSnapshot>());
     store.install_document_store_owners_exact(demo_base_store_owners()).unwrap_or_else(|(error, _)| panic!("funded base catalog install refused: {error}"));
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }, &mut identity).await.expect("apply authors through the canonical wire");
@@ -877,8 +877,8 @@ async fn a_store_with_no_preparation_factory_authors_apply_undo_redo_and_its_row
 async fn store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_owner() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "live-reader-close", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "live-reader-close", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut identity).await.expect("apply");
     let read = store.snapshot_read().expect("exact live snapshot read");
@@ -925,7 +925,7 @@ fn returned_snapshot_read_releases_an_alias_before_the_displaced_root_and_retire
 async fn store_close_releases_a_returned_read_before_its_displaced_root() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "returned-before-displaced", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "returned-before-displaced", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(fixture_authoring_catalog(physical_test_close_grant(), ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory)).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let read = store.snapshot_read().expect("read captures the pre-edit root");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply displaces the captured root");
@@ -939,7 +939,7 @@ async fn store_close_releases_a_returned_read_before_its_displaced_root() {
 async fn erased_member_snapshot_read_releases_its_alias_before_the_live_current_root() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "erased-live-reader", DemoSnapshot { n: Some(3) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "erased-live-reader", DemoSnapshot { n: Some(3) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(fixture_authoring_catalog(physical_test_close_grant(), ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory)).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let grant = physical_test_close_grant();
     let mut read = Some(SpaceMember::snapshot_read_erased_now(&store).expect("erased member read"));
@@ -964,7 +964,7 @@ async fn retained_genesis_aliases_retire_each_decoded_allocation_once() {
     for case in fixture["cases"].as_array().unwrap() {
         let snapshots = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", case["name"].as_str().unwrap(), DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", case["name"].as_str().unwrap(), DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(fixture_authoring_catalog(physical_test_close_grant(), ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory)).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let commands = case["commands"].as_array().unwrap();
         let mut tail = None;
@@ -1007,6 +1007,6 @@ fn close_stalls_at_reader_boundary(store: &mut ArtifactStore<DemoSnapshot, DemoM
 }
 
 
-fn original_snapshot_ports_without_representation_bounds<P,M>(store:&semio_framework_os_store_engine::lifted_store::ArtifactStore<P,M>)->(Arc<P>,Result<&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,ValueError>)
-where P:Clone+ToValue+FromValue+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+semio_framework_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static,
+fn original_snapshot_ports_without_representation_bounds<P,M>(store:&semio_os_store_engine::lifted_store::ArtifactStore<P,M>)->(Arc<P>,Result<&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,ValueError>)
+where P:Clone+ToValue+FromValue+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+semio_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static,
 {(store.snapshot_owner(),store.owned_snapshot_retirement_factory())}

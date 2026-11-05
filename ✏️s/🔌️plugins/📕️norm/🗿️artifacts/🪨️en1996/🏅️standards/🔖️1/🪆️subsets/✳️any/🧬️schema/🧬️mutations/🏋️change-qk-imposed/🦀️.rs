@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeQKImposed where Op
         verb: "change", entity: "q-k-imposed", kind: "change-qk-imposed", record: "ChangedQKImposed",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change imposed floor load qk", "Nutzlast qk ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change imposed floor load qk", "Nutzlast qk ändern")
     }
 }
 

@@ -10,10 +10,10 @@
 /// unchanged, and it still closes to terminal-empty afterwards.
 #[semio_framework_async_macros::async_test]
 async fn a_refused_reload_returns_its_error_and_retires_the_candidate_it_consumed() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(3) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(3) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    let mut rejected = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(9) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let orphan = vec![semio_framework_os_spr::EditMessages { edit_id: "edit-that-never-existed".to_string(), messages: vec![semio_framework_os_spr::MutationMessage::info("mutation.cascade", "orphan")] }];
+    let mut rejected = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(9) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let orphan = vec![semio_os_spr::EditMessages { edit_id: "edit-that-never-existed".to_string(), messages: vec![semio_os_spr::MutationMessage::info("mutation.cascade", "orphan")] }];
     rejected.edit_messages = ArtifactEditMessageLedger::try_from_entries(orphan).unwrap_or_else(|_| panic!("one exact orphan message entry is admitted by the fixed ledger"));
     let error = store.reset(rejected).await.expect_err("a message ledger naming an edit the history never recorded must be refused");
     assert!(format!("{error:?}").contains("invalid message ledger"), "the caller reads the refusal itself: {error:?}");

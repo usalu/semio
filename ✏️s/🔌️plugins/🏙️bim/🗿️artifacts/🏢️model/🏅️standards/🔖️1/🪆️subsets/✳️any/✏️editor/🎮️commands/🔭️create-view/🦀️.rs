@@ -12,7 +12,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
@@ -86,7 +86,7 @@ pub fn elevation_of(rect: [f64; 4], side: Side) -> (ViewPlane, f64) {
     }
 }
 
-fn word(labels: Option<&'static BimLabels>, pick: fn(&BimLabels) -> semio_framework_ui_locale::LabelText, fallback: &str) -> String {
+fn word(labels: Option<&'static BimLabels>, pick: fn(&BimLabels) -> semio_ui_locale::LabelText, fallback: &str) -> String {
     labels.map_or_else(|| fallback.to_string(), |labels| pick(labels).as_str().to_string())
 }
 
@@ -163,7 +163,7 @@ fn views_for(payload: &CreateView, snapshot: &ModelSnapshot, building: &str, sto
     }
 }
 
-fn pattern(labels: Option<&'static BimLabels>, pick: fn(&BimLabels) -> semio_framework_ui_locale::LabelText, fallback: &str, name: &str) -> String {
+fn pattern(labels: Option<&'static BimLabels>, pick: fn(&BimLabels) -> semio_ui_locale::LabelText, fallback: &str, name: &str) -> String {
     labels.map_or_else(|| fallback.replace("{name}", name), |labels| BimLabels::named(pick(labels), name))
 }
 

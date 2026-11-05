@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "referenced-model", kind: "connect-referenced-model", record: "ConnectedReferencedModel" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect referenced model {}", self.link.target.artifact_id), &format!("Referenziertes Modell {} verbinden", self.link.target.artifact_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Connect referenced model {}", self.link.target.artifact_id), &format!("Referenziertes Modell {} verbinden", self.link.target.artifact_id))
     }
 
     fn target(&self) -> Vec<String> {

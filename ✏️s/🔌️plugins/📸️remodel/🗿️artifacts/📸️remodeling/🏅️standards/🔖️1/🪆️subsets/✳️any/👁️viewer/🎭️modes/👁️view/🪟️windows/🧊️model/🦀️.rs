@@ -15,19 +15,19 @@
 //! reason) is the honest fit here, not `MeshWindowKit`.
 
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_plugin::WorldSunConfig;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -169,7 +169,7 @@ pub fn render(scene: &RemodelingSnapshot) -> UiAssemblyResult<BuiltNode> {
         &WorldSunConfig::default(),
     );
     world_scene.points_json = world_points_json(scene);
-    semio_framework_plugin::scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &world_scene)
+    semio_plugin::scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &world_scene)
 }
 //#endregion 🔖️Render
 

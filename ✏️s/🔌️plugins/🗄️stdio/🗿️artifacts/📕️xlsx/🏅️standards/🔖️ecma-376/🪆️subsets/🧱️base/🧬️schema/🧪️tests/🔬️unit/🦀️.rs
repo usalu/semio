@@ -294,7 +294,7 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
         let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_xlsx_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
         let native = format!("{}\n{body}", envelope.envelope_id());
-        assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&native).unwrap());
+        assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&native).unwrap());
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
@@ -302,7 +302,7 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
-        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
@@ -314,7 +314,7 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
-        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
@@ -444,7 +444,7 @@ fn insertion_history_inputs_preserve_identity_and_reject_forged_namespace() {
         semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(ADDRESS_SCHEMA, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())
     });
     let inputs = semio_framework::mutation_input_defs(schema, &resolver).unwrap();
-    let changes = semio_framework_plugin::app::history_edit_acceptance::acceptance_changes(&inputs, &mutation.to_value());
+    let changes = semio_plugin::app::history_edit_acceptance::acceptance_changes(&inputs, &mutation.to_value());
     assert!(changes.iter().any(|(path, _)| path == "/address/row"));
     assert!(changes.iter().any(|(path, _)| path == "/address/column"));
     assert!(changes.iter().all(|(path, _)| !path.starts_with("/address/worksheet")));

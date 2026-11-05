@@ -16,7 +16,7 @@ fn auxiliary_context_leases_use_actual_windows_and_never_survive_source_replacem
             "sibling"=>contexts.insert("7:right".into(),"graph".into(),view.for_window_instance("right").unwrap()).unwrap(),
             "refresh"=>contexts.insert("7:left".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap(),
             "update"=>contexts.update_view(&view),
-            "locale"=>{let mut next=view.clone();next.locale=semio_framework_ui_locale::Locale::En;contexts.update_view(&next);},
+            "locale"=>{let mut next=view.clone();next.locale=semio_ui_locale::Locale::En;contexts.update_view(&next);},
             "close"=>contexts.remove("7:left"),
             "close-remount"=>{contexts.remove("7:left");contexts.insert("7:left".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap();},
             "ambiguous"=>contexts.insert("alias".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap(),
@@ -96,13 +96,13 @@ fn surface_context_capacity_reuses_closed_windows_without_partial_updates() {
     let mut view = ViewModel {
         window_instances: vec![semio_framework::ViewWindowInstance { id: "closed".into(), window_kind_id: "graph".into() }],
         window_id: Some("closed".into()),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
-    for index in 0..semio_framework_ui_contract::UI_RESIDENT_SLOTS {
+    for index in 0..semio_ui_contract::UI_RESIDENT_SLOTS {
         contexts.insert(index.to_string(), "graph".into(), view.clone()).unwrap();
     }
     assert!(contexts.insert("overflow".into(), "graph".into(), view.clone()).is_err());
-    assert_eq!(contexts.len(), semio_framework_ui_contract::UI_RESIDENT_SLOTS);
+    assert_eq!(contexts.len(), semio_ui_contract::UI_RESIDENT_SLOTS);
     view.window_instances.clear();
     view.window_id = None;
     contexts.insert("panel".into(), "properties".into(), view).unwrap();
@@ -120,7 +120,7 @@ fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows(
         window_instances: vec![semio_framework::ViewWindowInstance { id: "left".into(), window_kind_id: "graph".into() }],
         window_id: Some("left".into()),
         active_tool_id: Some("fill".into()),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     contexts.insert("7:left".into(), "graph".into(), view.for_window_instance("left").unwrap()).unwrap();
     for section in UiRefreshSection::ALL {

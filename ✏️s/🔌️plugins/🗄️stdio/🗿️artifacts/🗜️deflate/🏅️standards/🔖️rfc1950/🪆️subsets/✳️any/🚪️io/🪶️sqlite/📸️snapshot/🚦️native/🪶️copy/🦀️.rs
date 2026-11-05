@@ -1,7 +1,7 @@
 //! 🪶️ Unmounted authored SQLite mapping adds paid literal-field copies after its owning baseline.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc1950::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection}, validate_sqlite_database_schema, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection}, validate_sqlite_database_schema, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
@@ -34,6 +34,6 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
         let rows = database.table("deflate_payload_byte")?.ordered_rows(2)?;
         for (index, row) in rows.iter().enumerate() { if index % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, index, rows.len())?; } if row.rowid <= 0 || row.integer(0)? != row.rowid || row.integer(1)? != 1 { return Err(invalid("Deflate payload byte has invalid identity or parent")); } payload.push(u8::try_from(row.integer(3)?).map_err(|error|invalid(error.to_string()))?); }
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, rows.len(), rows.len())?;
-        Ok(Self { schema: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, document.text(1)?)?, compression_method: u8::try_from(document.integer(2)?).map_err(|error|invalid(error.to_string()))?, window_bits: u8::try_from(document.integer(3)?).map_err(|error|invalid(error.to_string()))?, compression_level_hint: DeflateLevelHint::from_bits(hint), dict_id, payload })
+        Ok(Self { schema: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, document.text(1)?)?, compression_method: u8::try_from(document.integer(2)?).map_err(|error|invalid(error.to_string()))?, window_bits: u8::try_from(document.integer(3)?).map_err(|error|invalid(error.to_string()))?, compression_level_hint: DeflateLevelHint::from_bits(hint), dict_id, payload })
     }
 }

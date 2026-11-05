@@ -2,7 +2,7 @@
 use super::overlay::{IdmlOverlayCursor,IdmlFieldAddress};
 use crate::{IdmlSnapshot,IdmlDiff,schema::IdmlPart};
 use crate::io::admission::IdmlAdmissionGrant;
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use protocol::{RetainedDiffApply,RetainedDiffPreflightAdvance,RetainedFieldPreparation,RetainedDiagnosticPreparation,RetainedDiagnosticSpec,MutationMessage,MutationMessageLedgerRetirement,ApplyCapability};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{ManuallyDrop,size_of};

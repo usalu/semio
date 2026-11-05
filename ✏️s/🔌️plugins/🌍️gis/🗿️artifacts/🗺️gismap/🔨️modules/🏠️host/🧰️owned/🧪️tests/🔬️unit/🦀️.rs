@@ -50,10 +50,10 @@ fn install_gis_map_owners(store: &mut store::ArtifactStore<GisMapSnapshot, GisMa
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_text_round_trips_through_store() {
     let initial = empty_gis_map_snapshot();
-    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     install_gis_map_owners(&mut store);
-    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     close_gis_map_candidate(store);
@@ -66,7 +66,7 @@ fn gis_map_initializer(envelope: store::os_store::store_schema::ArtifactEnvelope
 }
 
 fn empty_gis_map_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> GisMapStoreInitializationAuthority {
-    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-retained-load", empty_gis_map_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-retained-load", empty_gis_map_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     gis_map_initializer(envelope, operation, generation)
 }
 
@@ -122,7 +122,7 @@ fn drive_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority,
     let mut turns = GisOriginalTurns::new(operation, generation);
     for _ in 0..100_000 {
         let end = turns.turn(ORIGINAL_STOCK, |context| {
-            Ok(match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, context)? {
+            Ok(match semio_plugin::ArtifactStoreInitializationAuthority::step(authority, context)? {
                 Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Some(GisDriveEnd::Complete),
                 Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Some(GisDriveEnd::Cancelled),
                 Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => Some(GisDriveEnd::Fault),
@@ -138,7 +138,7 @@ fn drive_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority,
 }
 
 fn close_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority) {
-    use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    use semio_plugin::ArtifactStoreInitializationAuthority;
     let mut turns = GisOriginalTurns::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(0));
     for _ in 0..100_000 {
         if authority.terminal_is_empty() {
@@ -156,9 +156,9 @@ fn close_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority)
 }
 
 fn close_gis_map_candidate(mut candidate: store::ArtifactStore<GisMapSnapshot, GisMapMutation>) {
-    use semio_framework_plugin::ArtifactOwnedDisposer;
+    use semio_plugin::ArtifactOwnedDisposer;
 
-    let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<GisMapSnapshot, GisMapMutation>();
+    let mut disposer = semio_plugin::bounded_document_store_disposer::<GisMapSnapshot, GisMapMutation>();
     for _ in 0..100_000 {
         if disposer.terminal_is_empty(&candidate) {
             drop(disposer);
@@ -168,8 +168,8 @@ fn close_gis_map_candidate(mut candidate: store::ArtifactStore<GisMapSnapshot, G
         let demand = disposer.retirement_demands(&candidate, GIS_MAP_OWNED_FIELD_BYTES).expect("GIS candidate close quote");
         let grant = grant_for(demand);
         match disposer.close_step(&mut candidate, grant).expect("GIS candidate close step") {
-            semio_framework_plugin::PluginLifecycleStep::Progress(progress) | semio_framework_plugin::PluginLifecycleStep::Complete(progress) => assert!(progress.fits(grant)),
-            semio_framework_plugin::PluginLifecycleStep::AwaitingInput { reason } | semio_framework_plugin::PluginLifecycleStep::Blocked { reason } => panic!("fresh GIS candidate close unexpectedly blocked: {reason}"),
+            semio_plugin::PluginLifecycleStep::Progress(progress) | semio_plugin::PluginLifecycleStep::Complete(progress) => assert!(progress.fits(grant)),
+            semio_plugin::PluginLifecycleStep::AwaitingInput { reason } | semio_plugin::PluginLifecycleStep::Blocked { reason } => panic!("fresh GIS candidate close unexpectedly blocked: {reason}"),
         }
     }
     panic!("GIS candidate did not reach terminal-empty close")
@@ -182,11 +182,11 @@ fn gis_map_history_edit_initializer_aliases_genesis_and_publishes_next_generatio
     let mut authority = empty_gis_map_initializer(operation, generation);
     let genesis = authority.envelope.as_ref().expect("retained GisMap envelope").vcs.genesis.facts().share_snapshot();
     assert_eq!(drive_gis_map_initializer(&mut authority, operation, generation), GisDriveEnd::Complete);
-    let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact GIS candidate");
+    let candidate = semio_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact GIS candidate");
     assert_eq!(candidate.generation_now(), 22);
     assert!(std::sync::Arc::ptr_eq(&genesis, &candidate.snapshot_owner()));
     drop(genesis);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
+    assert!(semio_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
     drop(authority);
     close_gis_map_candidate(candidate);
 }
@@ -196,15 +196,15 @@ fn gis_map_store_initializer_cancel_and_stale_generation_return_every_owner_term
     let operation = semio_framework_job::OperationId(602);
     let generation = semio_framework_job::Generation(23);
     let mut cancelled = empty_gis_map_initializer(operation, generation);
-    semio_framework_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut cancelled);
+    semio_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut cancelled);
     assert_eq!(drive_gis_map_initializer(&mut cancelled, operation, generation), GisDriveEnd::Cancelled);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&cancelled));
+    assert!(semio_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&cancelled));
     drop(cancelled);
 
     let mut stale = empty_gis_map_initializer(operation, generation);
     assert_eq!(drive_gis_map_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), GisDriveEnd::Cancelled);
     close_gis_map_initializer(&mut stale);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
+    assert!(semio_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
     drop(stale);
 }
 
@@ -298,11 +298,11 @@ fn close_candidate_store(store: store::ArtifactStore<GisMapSnapshot, GisMapMutat
 /// mid-clone, THIS is the law that names it instead of the pump's erased string.
 #[semio_framework_async_macros::async_test]
 async fn the_initialization_candidate_projects_its_canonical_child_handles() {
-    use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    use semio_plugin::ArtifactStoreInitializationAuthority;
 
     for (label, snapshot) in [("empty", empty_gis_map_snapshot()), ("default-document", default_document())] {
         let expected = snapshot.clone();
-        let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let operation = semio_framework_job::OperationId(u64::MAX - 401);
         let generation = semio_framework_job::Generation(61);
         let mut authority = gis_map_initializer(envelope, operation, generation);

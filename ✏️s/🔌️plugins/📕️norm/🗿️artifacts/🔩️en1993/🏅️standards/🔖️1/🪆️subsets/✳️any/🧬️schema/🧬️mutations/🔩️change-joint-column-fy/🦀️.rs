@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointColumnFy wher
         record: "ChangedJointColumnFy",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Column yield strength f_y,c of the joint", "Anschluss: Stützenstreckgrenze f_y,c ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Column yield strength f_y,c of the joint", "Anschluss: Stützenstreckgrenze f_y,c ändern")
     }
 }
 

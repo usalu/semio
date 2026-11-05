@@ -3,21 +3,21 @@
 use semio_framework_async::CancelToken;
 use semio_framework_async::OperationContext;
 use semio_framework_async::TraceId;
-use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
-use semio_framework_os_kernel::os_directory::DirectoryStreamMessage;
-use semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1;
-use semio_framework_os_kernel::os_directory::DocumentOpenIntentV1;
-use semio_framework_os_kernel::os_directory::DocumentScope;
-use semio_framework_os_kernel::os_directory::client::DirectoryClient;
-use semio_framework_os_kernel::os_directory::client::DirectoryClientError;
-use semio_framework_os_kernel::os_directory::client::DirectoryTransport;
-use semio_framework_os_kernel::os_directory::client::DirectoryWsConnection;
-use semio_framework_os_kernel::os_directory::client::DirectoryWsPoll;
-use semio_framework_os_kernel::os_directory::client::HttpMethod;
-use semio_framework_os_kernel::os_directory::client::HttpResponse;
-use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
-use semio_framework_os_kernel::os_directory::client::TransportError;
-use semio_framework_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
+use semio_os_kernel::os_directory::DirectorySpaceRole;
+use semio_os_kernel::os_directory::DirectoryStreamMessage;
+use semio_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1;
+use semio_os_kernel::os_directory::DocumentOpenIntentV1;
+use semio_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::client::DirectoryClient;
+use semio_os_kernel::os_directory::client::DirectoryClientError;
+use semio_os_kernel::os_directory::client::DirectoryTransport;
+use semio_os_kernel::os_directory::client::DirectoryWsConnection;
+use semio_os_kernel::os_directory::client::DirectoryWsPoll;
+use semio_os_kernel::os_directory::client::HttpMethod;
+use semio_os_kernel::os_directory::client::HttpResponse;
+use semio_os_kernel::os_directory::client::LocalHubCredential;
+use semio_os_kernel::os_directory::client::TransportError;
+use semio_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -26,11 +26,11 @@ use std::sync::Mutex;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 use crate::remote::{AuthorizedDocumentView, HUB_AUTHORITY_SETTLE_WAIT_MS, HUB_BINDING_DIAGNOSTIC_MAX_BYTES, HUB_COMPONENT_STREAM_ATTEMPTS, HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS, HUB_NETWORK_BUDGET_SETTLE_WAIT_MS, HUB_REFRESH_NETWORK_BUDGET_BYTES, HUB_REFRESH_RETRY_BASE_MS, HUB_REFRESH_RETRY_MAX_MS, HubBindingPhase, HubBindingProgress, HubComponentTransferPhase, HubRemoteBinding, HubRemoteBindingState, HubStreamObservation, await_network_budget, binding_error_to_gateway, bounded_diagnostic, descriptor_resource_uri, directory_dial_refusal, hub_refresh_retry_ms, map_catalog_client_error, map_client_error, parse_descriptor_resource_uri, validate_document_count, validate_hub_origin};
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
-use semio_framework_os_mcp_hub_pair::binding_errors::{HUB_UNAVAILABLE_DETAIL_MAX_CHARS, HubBindingError, HubUnavailableCause};
-use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairBody, CanonicalPairMountError};
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_hub_pair::binding_errors::{HUB_UNAVAILABLE_DETAIL_MAX_CHARS, HubBindingError, HubUnavailableCause};
+use semio_os_mcp_hub_pair::pair::{CanonicalPairBody, CanonicalPairMountError};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_mcp_capabilities::source_builders::catalog_contract_descriptor;
+use semio_os_mcp_capabilities::source_builders::catalog_contract_descriptor;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::remote::{HubComponentAssets, complete_authorized_directory_dial, settled_pair_attempt};
 
@@ -193,8 +193,8 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     manifest.package.descriptor_byte_sha256 = descriptor_sha256.clone();
     manifest.descriptor.sha256 = descriptor_sha256;
     manifest.descriptor.byte_length = u64::try_from(descriptor_bytes.len()).expect("descriptor length");
-    manifest.package.component_receipt = semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: manifest.package.plugin_id.clone(), package_id: manifest.package.package_id.clone(), wasm_sha256: manifest.package.component_sha256.clone(), wasm_bytes: manifest.component.byte_length, semantic_descriptor_sha256: manifest.package.descriptor_byte_sha256.clone(), ..manifest.package.component_receipt.clone() };
-    if let semio_framework_os_kernel::os_directory::schema::DocumentExecutionTargetBrowserActorV1::ClosedBrowserActor { source_component_sha256, source_descriptor_byte_sha256, .. } = &mut manifest.browser_actor {
+    manifest.package.component_receipt = semio_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: manifest.package.plugin_id.clone(), package_id: manifest.package.package_id.clone(), wasm_sha256: manifest.package.component_sha256.clone(), wasm_bytes: manifest.component.byte_length, semantic_descriptor_sha256: manifest.package.descriptor_byte_sha256.clone(), ..manifest.package.component_receipt.clone() };
+    if let semio_os_kernel::os_directory::schema::DocumentExecutionTargetBrowserActorV1::ClosedBrowserActor { source_component_sha256, source_descriptor_byte_sha256, .. } = &mut manifest.browser_actor {
         source_component_sha256.clone_from(&manifest.package.component_sha256);
         source_descriptor_byte_sha256.clone_from(&manifest.package.descriptor_byte_sha256);
     }
@@ -398,10 +398,10 @@ async fn native_driver_closes_post_open_cancelled_and_stale_authority_dials_once
     let cancelled_client = Arc::new(DirectoryClient::new(ObservedTransport { closes: cancelled_closes.clone() }, "http://hub.invalid"));
     let mut cancelled_stream = cancelled_client.stream(0);
     let cancelled = context(Some(20_000));
-    assert!(matches!(cancelled_stream.turn(&cancelled, 10_001), semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn::Dial { .. }));
+    assert!(matches!(cancelled_stream.turn(&cancelled, 10_001), semio_os_kernel::os_directory::client::DirectoryStreamTurn::Dial { .. }));
     cancelled.cancel.cancel_now();
     let cancelled_turn = complete_authorized_directory_dial(&mut cancelled_stream, &binding, &cancelled, authority_generation, 10_002, ObservedWs { closes: cancelled_closes.clone() });
-    assert!(matches!(cancelled_turn, semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn::Closed));
+    assert!(matches!(cancelled_turn, semio_os_kernel::os_directory::client::DirectoryStreamTurn::Closed));
     assert_eq!(cancelled_closes.load(Ordering::SeqCst), 1);
     assert_eq!(binding.generation.load(Ordering::SeqCst), initial_generation);
     assert_eq!(binding.authority_generation.load(Ordering::SeqCst), authority_generation);
@@ -412,11 +412,11 @@ async fn native_driver_closes_post_open_cancelled_and_stale_authority_dials_once
     let stale_client = Arc::new(DirectoryClient::new(ObservedTransport { closes: stale_closes.clone() }, "http://hub.invalid"));
     let mut stale_stream = stale_client.stream(0);
     let active = context(Some(20_000));
-    assert!(matches!(stale_stream.turn(&active, 10_003), semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn::Dial { .. }));
+    assert!(matches!(stale_stream.turn(&active, 10_003), semio_os_kernel::os_directory::client::DirectoryStreamTurn::Dial { .. }));
     binding.invalidate_stream();
     let invalidated_generation = binding.generation.load(Ordering::SeqCst);
     let stale_turn = complete_authorized_directory_dial(&mut stale_stream, &binding, &active, authority_generation, 10_004, ObservedWs { closes: stale_closes.clone() });
-    assert!(matches!(stale_turn, semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn::Closed));
+    assert!(matches!(stale_turn, semio_os_kernel::os_directory::client::DirectoryStreamTurn::Closed));
     assert_eq!(stale_closes.load(Ordering::SeqCst), 1);
     assert_eq!(binding.generation.load(Ordering::SeqCst), invalidated_generation);
     assert_eq!(binding.authority_generation.load(Ordering::SeqCst), 0);
@@ -506,8 +506,8 @@ fn catalog_selection(seed: &AuthorizedDocumentView, document_id: &str) -> (Docum
     manifest.package.descriptor_byte_sha256 = descriptor_sha256.clone();
     manifest.descriptor.sha256 = descriptor_sha256;
     manifest.descriptor.byte_length = u64::try_from(descriptor_bytes.len()).expect("descriptor length");
-    manifest.package.component_receipt = semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: manifest.package.plugin_id.clone(), package_id: manifest.package.package_id.clone(), wasm_sha256: manifest.package.component_sha256.clone(), wasm_bytes: manifest.component.byte_length, semantic_descriptor_sha256: manifest.package.descriptor_byte_sha256.clone(), ..manifest.package.component_receipt.clone() };
-    if let semio_framework_os_kernel::os_directory::schema::DocumentExecutionTargetBrowserActorV1::ClosedBrowserActor { source_component_sha256, source_descriptor_byte_sha256, .. } = &mut manifest.browser_actor {
+    manifest.package.component_receipt = semio_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: manifest.package.plugin_id.clone(), package_id: manifest.package.package_id.clone(), wasm_sha256: manifest.package.component_sha256.clone(), wasm_bytes: manifest.component.byte_length, semantic_descriptor_sha256: manifest.package.descriptor_byte_sha256.clone(), ..manifest.package.component_receipt.clone() };
+    if let semio_os_kernel::os_directory::schema::DocumentExecutionTargetBrowserActorV1::ClosedBrowserActor { source_component_sha256, source_descriptor_byte_sha256, .. } = &mut manifest.browser_actor {
         source_component_sha256.clone_from(&manifest.package.component_sha256);
         source_descriptor_byte_sha256.clone_from(&manifest.package.descriptor_byte_sha256);
     }
@@ -570,15 +570,15 @@ fn a_spent_network_budget_is_a_wait_for_the_refill_never_a_refusal() {
     let reads = AtomicUsize::new(0);
     let refilling = || {
         let read = reads.fetch_add(1, Ordering::SeqCst);
-        semio_framework_os_services::HttpPackageBudget { remaining_bytes: if read < 3 { 10 } else { 1_000 }, capacity_bytes: 1_000 }
+        semio_os_services::HttpPackageBudget { remaining_bytes: if read < 3 { 10 } else { 1_000 }, capacity_bytes: 1_000 }
     };
     let mut waits = Vec::new();
     assert_eq!(await_network_budget(refilling, 400, &CancelToken::root_now(), |remaining, needed| waits.push((remaining, needed))), Ok(()));
     assert_eq!(waits, [(10, 400), (10, 400), (10, 400)], "each wait names what the budget has and what the transfer needs");
-    let full = || semio_framework_os_services::HttpPackageBudget { remaining_bytes: 1_000, capacity_bytes: 1_000 };
+    let full = || semio_os_services::HttpPackageBudget { remaining_bytes: 1_000, capacity_bytes: 1_000 };
     assert_eq!(await_network_budget(full, 5_000, &CancelToken::root_now(), |_, _| panic!("a full budget admits a transfer larger than the allowance")), Ok(()));
     let cancel = CancelToken::root_now();
-    let spent = || semio_framework_os_services::HttpPackageBudget { remaining_bytes: 0, capacity_bytes: 1_000 };
+    let spent = || semio_os_services::HttpPackageBudget { remaining_bytes: 0, capacity_bytes: 1_000 };
     assert_eq!(await_network_budget(spent, 1, &cancel, |_, _| cancel.cancel_now()), Err(HubBindingError::Cancelled));
     assert_eq!(map_client_error(DirectoryClientError::Transport(TransportError::BudgetExhausted)), HubBindingError::Unavailable(HubUnavailableCause::NetworkBudget));
     assert_eq!(map_catalog_client_error(DirectoryClientError::Transport(TransportError::BudgetExhausted)), HubBindingError::Unavailable(HubUnavailableCause::NetworkBudget));
@@ -722,15 +722,15 @@ fn asset_hub(component: Vec<u8>, busy_retry_after_ms: u64) -> AssetHub {
 /// API budget: it runs on a pool of its own.
 #[test]
 fn a_component_is_a_static_asset_kept_once_and_streamed_only_when_the_store_lacks_it() {
-    use semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore;
-    use semio_framework_os_kernel::os_directory::DocumentExecutionTargetComponentV1;
+    use semio_os_kernel::os_directory::client::ExecutionTargetModuleStore;
+    use semio_os_kernel::os_directory::DocumentExecutionTargetComponentV1;
     let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️hub-component-asset.json")).unwrap();
     assert_eq!(corpus["streamAttempts"].as_u64(), Some(u64::from(HUB_COMPONENT_STREAM_ATTEMPTS)));
     let length = corpus["component"]["byteLength"].as_u64().unwrap() as usize;
     let component: Vec<u8> = (0..length).map(|index| ((index * 31 + 7) % 251) as u8).collect();
     let expected = DocumentExecutionTargetComponentV1 { sha256: corpus["component"]["sha256"].as_str().unwrap().to_string(), blake3: String::new(), byte_length: length as u64 };
     assert_eq!(framework_hash::sha256_hex(&component), expected.sha256, "the corpus names the component's own content address");
-    let runtime = Arc::new(semio_framework_os_services::TokioHostRuntime::new());
+    let runtime = Arc::new(semio_os_services::TokioHostRuntime::new());
     let hub = asset_hub(component.clone(), corpus["busyRetryAfterMs"].as_u64().unwrap());
     let credential = Arc::new(LocalHubCredential::from_minted_session(&hub.origin, &format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64))).unwrap());
     let intent = DocumentOpenIntentV1 { schema: "semio.hub.document-open-intent/v1".into(), version: 1, scope: DocumentScope::new("space-a", "doc-1"), requested_surface_id: None, client_instance_id: "mcp-component-law".into() };

@@ -71,6 +71,8 @@ pub struct BrepBooleanJob {
     pub(super) rec: OpRecorder,
 }
 
+semio_framework_value::artifact_retire_struct!(BrepBooleanJob {job,rec});
+
 impl BrepBooleanJob {
     /// 📈️ Progress right now — safe to read between steps and after termination.
     pub fn progress(&self) -> BooleanProgress {

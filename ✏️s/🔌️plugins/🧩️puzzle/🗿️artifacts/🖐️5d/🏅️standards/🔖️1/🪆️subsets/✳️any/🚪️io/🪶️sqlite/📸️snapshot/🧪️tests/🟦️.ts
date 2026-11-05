@@ -167,7 +167,7 @@ test("Puzzle5d borrowed Scale and diff metadata preserve the authored neutral re
  expect(owner).toContain("impl semio_framework_dsl_record::BorrowedDslField for Puzzle5dScale");
  expect(owner).toContain("<Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE");
  const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
- expect([...diff.matchAll(/^pub struct (Puzzle5d\w+)\b(?!<)/gm)].map(match=>match[1]!).sort()).toEqual([...laws.diffRecordOwners].sort());
+ expect([...diff.matchAll(/^pub struct (Puzzle5d\w+)\s*\{/gm)].map(match=>match[1]!).sort()).toEqual([...laws.diffRecordOwners].sort());
  for(const name of laws.diffRecordOwners){expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"))}
  for(const name of laws.deltaOwners)expect(diff).toContain("protocol::list_delta! { pub "+name+" {");
 });

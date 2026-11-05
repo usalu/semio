@@ -14,10 +14,10 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let snapshot = En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(
-        <En1997Viewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default(), window: None }, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("viewer assembly"),
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(
+        <En1997Viewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default(), window: None }, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("viewer assembly"),
     )
     .expect("json");
     assert!(json.contains("Unknown body"));
@@ -32,11 +32,11 @@ fn the_viewer_is_explicitly_read_only() {
 #[test]
 fn a_viewer_steps_checks_and_combinations_through_its_ephemeral_lane_without_any_edit() {
     let snapshot = En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
     let lane = crate::lanes::NormLaneTransient::default();
-    let transient = semio_framework_plugin::TransientView { snapshot: &lane, window: None };
+    let transient = semio_plugin::TransientView { snapshot: &lane, window: None };
     for action in ["viewportStepCheck", "viewportStepGoverning", "viewportStepCombination"] {
         let command = En1997ViewCommand::ViewportAct(viewport_act::ViewportAct { action: action.to_string(), text: None, number: Some(1.0) });
         assert!(command.dispatch(&doc, &cfg).expect("dispatch").config_mutations.is_empty(), "{action} never writes the config");

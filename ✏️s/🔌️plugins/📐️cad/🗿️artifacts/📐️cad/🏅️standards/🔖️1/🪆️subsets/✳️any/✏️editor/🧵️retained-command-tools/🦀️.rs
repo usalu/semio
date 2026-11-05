@@ -130,14 +130,14 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
 ];
 
 /// 🧾️ The ONE execution contract every retained cad tool is admitted under. Its wire ceiling is
-/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] because ONE of those tools —
+/// [`semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] because ONE of those tools —
 /// `setContributions` — carries a host pack, not a gesture, and a factory declares one contract for
 /// every tool it serves (`ArtifactOwnedToolJobFactory::execution_contract`), which the proof
 /// catalogue must join exactly. Widening the ADMISSION does not widen what any gesture may actually
 /// send: [`cad_retained_raw_bytes`] is what the payload reserves and what the wire factory refuses
 /// past, per tool id.
 pub(super) fn cad_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, CAD_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+    ToolExecutionContract::bounded_first_step(semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, CAD_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
 /// 📏️ The raw-wire ceiling one retained tool id is admitted against — the twin of its registered
@@ -145,7 +145,7 @@ pub(super) fn cad_retained_contract() -> ToolExecutionContract {
 /// is refused one layer deeper.
 pub(super) fn cad_retained_raw_bytes(tool_id: &str) -> usize {
     if tool_id == "setContributions" || tool_id == "importCadFile" {
-        semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
+        semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
     } else {
         CAD_RETAINED_RAW_BYTES
     }
@@ -206,7 +206,7 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
         self.tool_id
     }
 
-    fn extent(&self, command: &CadCommand, snapshot: &CadSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &CadCommand, snapshot: &CadSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>) -> Option<usize> {
         cad_retained_extent(command, snapshot, interaction)
     }
 
@@ -219,7 +219,7 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
         let (emit, transient) = cad_retained_reduce(input)?;
         let view = input.context.and_then(|context| context.view_state.as_deref()).filter(|view| view.window_id.is_some());
         Ok(match (transient, view) {
-            (Some(transient), Some(view)) => ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: semio_framework_plugin::EphemeralEmit { window_transient: vec![window_transient::addressed(view, transient)?], ..Default::default() } },
+            (Some(transient), Some(view)) => ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: semio_plugin::EphemeralEmit { window_transient: vec![window_transient::addressed(view, transient)?], ..Default::default() } },
             _ => ArtifactCommandWorkStep::Complete(emit),
         })
     
@@ -258,7 +258,7 @@ impl ToolJobFactory for CadRetainedCommandJobFactory {
         cad_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
 
 }
 

@@ -3,7 +3,7 @@
 pub mod derived_composition {
     use crate::standards::v6_0::subsets::document::io::facets::TiffAnalyzer;
     use crate::TiffSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -41,7 +41,7 @@ pub use derived_composition::*;
 
 pub mod derived_construction {
     use crate::{TiffDiff, TiffMutation, TiffSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.tiff` snapshot.
@@ -89,7 +89,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::TiffSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.tiff` parts.
@@ -107,15 +107,15 @@ pub mod derived_analysis {
         type Parts = TiffParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             const SIG_LE: [u8; 4] = [0x49, 0x49, 0x2A, 0x00];
             const SIG_BE: [u8; 4] = [0x4D, 0x4D, 0x00, 0x2A];
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if bytes.len() >= 4 && (bytes[0..4] == SIG_LE || bytes[0..4] == SIG_BE) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
@@ -125,19 +125,19 @@ pub mod derived_analysis {
                     };
                     let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(8).collect();
                     if hex.len() < 8 {
-                        return semio_framework_plugin::io::Confidence::Low;
+                        return semio_plugin::io::Confidence::Low;
                     }
                     let mut decoded = [0u8; 4];
                     for (i, byte) in decoded.iter_mut().enumerate() {
                         match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
                             Ok(b) => *byte = b,
-                            Err(_) => return semio_framework_plugin::io::Confidence::Low,
+                            Err(_) => return semio_plugin::io::Confidence::Low,
                         }
                     }
                     if decoded == SIG_LE || decoded == SIG_BE {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -146,20 +146,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = TiffParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <TiffSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <TiffSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -172,7 +172,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec TiffBuilderFacets {
         construction: TiffBuilderConstruction,
         analysis: TiffAnalyzerAnalysis,

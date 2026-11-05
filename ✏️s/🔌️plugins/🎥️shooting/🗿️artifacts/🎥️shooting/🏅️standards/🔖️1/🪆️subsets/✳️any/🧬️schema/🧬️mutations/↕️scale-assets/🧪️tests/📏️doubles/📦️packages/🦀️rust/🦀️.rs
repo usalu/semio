@@ -1,6 +1,6 @@
 //! 📏️ mut-any-3 of `semio-s-artifact-shooting-shooting` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_schema as schema;
 
 #[cfg(test)]

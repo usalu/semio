@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveEmbeddedWall where
         verb: "remove", entity: "embedded-wall", kind: "remove-embedded-wall", record: "RemovedEmbeddedWall",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove embedded wall", "Eingespannte Wand entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove embedded wall", "Eingespannte Wand entfernen")
     }
 }
 

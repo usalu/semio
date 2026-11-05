@@ -165,11 +165,11 @@ package = "semio-framework-hash"
 [workspace.dependencies.semio-framework-io-ports]
 path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔌️ports/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
-package = "semio-framework-os-kernel"
+package = "semio-os-kernel"
 
-[workspace.dependencies.semio-framework-os-spr]
+[workspace.dependencies.semio-os-spr]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-pack-json]
@@ -179,9 +179,9 @@ path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/�
 path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust"
 package = "semio-framework-pixels"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
-package = "semio-framework-plugin"
+package = "semio-plugin"
 
 [workspace.dependencies.semio-framework-schema]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
@@ -193,14 +193,14 @@ path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️regi
 [workspace.dependencies.semio-framework-schema-state]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
-package = "semio-framework-ui-contract"
+package = "semio-ui-contract"
 
-[workspace.dependencies.semio-framework-ui-locale]
+[workspace.dependencies.semio-ui-locale]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-scene]
+[workspace.dependencies.semio-ui-scene]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value]

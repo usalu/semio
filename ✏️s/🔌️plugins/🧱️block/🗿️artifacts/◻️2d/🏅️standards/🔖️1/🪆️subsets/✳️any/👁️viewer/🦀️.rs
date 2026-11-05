@@ -6,9 +6,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -16,7 +16,7 @@ use semio_s_artifact_block_2d_model::{Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D
 use semio_s_artifact_block_2d_schema as schema;
 use crate::modes::view;
 use crate::modes::view::windows::board;
-use {semio_framework_plugin::ArtifactView,semio_framework_plugin::ArtifactViewer,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::Fault,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer};
+use {semio_plugin::ArtifactView,semio_plugin::ArtifactViewer,semio_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_plugin::Fault,semio_plugin::NoConfig,semio_plugin::NoConfigMutation,semio_plugin::NoPresence,semio_plugin::NoPresenceMutation,semio_plugin::NoTransient,semio_plugin::NoTransientMutation,semio_plugin::ViewEmit,semio_plugin::Viewer};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -67,35 +67,35 @@ impl ArtifactViewer for Block2dViewer {
     /// bounded disposer for document-store") on its FIRST turn, and the `ArtifactStore` then reaches
     /// `Drop` without its terminal-empty witness. Read-only says nothing about ownership: a viewer
     /// allocates the same envelope and must retire it the same way.
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<NoConfig, NoConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<NoConfig, NoConfigMutation>())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_framework_plugin::NoPresenceRetirementFactory))
+        Some(std::sync::Arc::new(semio_plugin::NoPresenceRetirementFactory))
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_framework_plugin::NoPresenceRetirementFactory))
+        Some(std::sync::Arc::new(semio_plugin::NoPresenceRetirementFactory))
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(NoPresence::default()), |_| true).expect("NoPresence is statically empty")))
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(NoPresence::default()), |_| true).expect("NoPresence is statically empty")))
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document so the view board
     /// renders real handle kinds/handles instead of two bare header lines — the artifact-side
     /// `default_block2d_snapshot` the editor boots on too (no editor import: this is
     /// `crate::standards::v1::subsets::any::io::text::snapshot`).
-    fn reference_birth()->Option<fn()->Result<Block2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Block2dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_block_2d_io::text::snapshot::default_block2d_snapshot())
     })}
 
@@ -107,25 +107,25 @@ impl ArtifactViewer for Block2dViewer {
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let node = match body_key {
             board::BODY_KEY => board::render(doc.snapshot)?,
-            _ => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer unknown-body label admission failed"))?,
+            _ => semio_plugin::built_text_node(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer unknown-body label admission failed"))?,
         };
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_block2d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_block2d_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(BLOCK2D_DIALECT)
         .document(["semio", "block", "2d"])
         .icon_id("layout-grid")

@@ -11,11 +11,11 @@ async fn bounded_viewer_fixture_preserves_declared_lifecycle_hooks() {
     type Fixture = crate::app_testing::artifact_app_laws::BoundedViewerFixture<SurfaceViewerFixture>;
     let demand = <Fixture as ArtifactViewer>::mounted_job_maintenance_demands(u32::MAX, 0).expect("maintenance quote");
     assert_eq!((demand.release_bytes, demand.depth), (7, 1));
-    let grant = semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant(demand);
+    let grant = semio_plugin_ownership::bounded_ownership::plugin_demand_grant(demand);
     let short = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
-    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX,&mut cx,short).expect("maintenance hook"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()), "a grant below the quoted release axis yields");
-    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX,&mut cx,grant).expect("maintenance hook"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: 7, ..Default::default() }));
-    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_close_step(u32::MAX,&mut cx,grant).expect("close hook"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "surface viewer lifecycle witness" });
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX,&mut cx,short).expect("maintenance hook"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()), "a grant below the quoted release axis yields");
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX,&mut cx,grant).expect("maintenance hook"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: 7, ..Default::default() }));
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_close_step(u32::MAX,&mut cx,grant).expect("close hook"), semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "surface viewer lifecycle witness" });
     assert!(!<Fixture as ArtifactViewer>::mounted_jobs_terminal_is_empty(u32::MAX));
     assert_eq!(<Fixture as ArtifactViewer>::config_schema(), "semio.testkit-surface.viewer-config/v1");
     assert_eq!(<Fixture as ArtifactViewer>::command_id(&SurfaceViewerCommand::Noop), "surface-viewer-noop");

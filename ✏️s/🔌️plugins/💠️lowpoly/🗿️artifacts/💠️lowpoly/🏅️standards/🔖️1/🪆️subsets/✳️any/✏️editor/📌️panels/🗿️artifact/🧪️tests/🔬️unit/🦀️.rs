@@ -1,5 +1,5 @@
 use semio_framework_3d::mesh::{MeshModelingOps};
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_lowpoly_lowpoly_panels::document::*;
@@ -7,30 +7,30 @@ use semio_s_artifact_lowpoly_lowpoly_engine::LowpolyDocument;
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
 use semio_s_artifact_lowpoly_lowpoly_view::{document_object_row_id, document_target_row_id, resolve_active_object_id, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use semio_s_artifact_lowpoly_lowpoly_kit::{ui_label, ui_value_list, ui_value_map, ui_value_number, LOWPOLY_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::lowpoly_play_labels;
 use crate::context::render as render_body;
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySelection, snapshot::LowpolySnapshot, snapshot::LowpolyTransform};
 use semio_framework_3d::mesh::HalfedgeMesh;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_PATH_SEPARATOR};
+use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_PATH_SEPARATOR};
 use std::collections::HashMap;
 
 #[semio_framework_async_macros::async_test]
@@ -72,10 +72,10 @@ fn oversized(objects: usize) -> (LowpolySnapshot, LowpolyConfig, LowpolyDocument
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(snapshot: &LowpolySnapshot, config: &LowpolyConfig, doc: &LowpolyDocument, requests: Vec<TreeWindowRequest>) -> String {
-    let view_state = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let labels = lowpoly_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let view_state = ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let labels = lowpoly_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let node = render(LowpolyView { snapshot, config }, doc, labels, &TreeWindows::for_body(&view_state, LOWPOLY_PLAY_BODY_ARTIFACT)).expect("lowpoly document tree assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("lowpoly document tree projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("lowpoly document tree projection")
 }
 
 fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {

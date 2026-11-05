@@ -1,7 +1,7 @@
 //! 🛰️ History lane commands and outbound: the local alternatives and checkpoints, the command application, the edit messages, the conflict resolution, the quarantined events and the outbound flushes. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️HistoryLane
     /// 👁 Moves this replica onto `alternative_id` at its tip. Registration stays the shared log;
@@ -132,7 +132,7 @@ where
     //#endregion 🔖️HistoryLane
     /// 📨️ Records `edit_id`'s replay messages into the durable ledger and `pending_report`, shared
     /// by `apply_command` and the transaction appends — every local dispatch's own `DispatchReport`-shaped tail.
-    pub(super) fn record_edit_messages(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, edit_id: &str, messages: Vec<semio_framework_os_spr::MutationMessage>) -> Result<(), VcsError> {
+    pub(super) fn record_edit_messages(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, edit_id: &str, messages: Vec<semio_os_spr::MutationMessage>) -> Result<(), VcsError> {
         if messages.is_empty() {
             return Ok(());
         }
@@ -142,9 +142,9 @@ where
         let mut candidate = if let Some(established) = store_log.envelope.edit_messages.get_by_id(edit_id) {
             let mut combined = established.messages.clone();
             combined.extend(messages.clone());
-            semio_framework_os_spr::EditMessages { edit_id: edit_id.to_string(), messages: combined }
+            semio_os_spr::EditMessages { edit_id: edit_id.to_string(), messages: combined }
         } else {
-            semio_framework_os_spr::EditMessages { edit_id: edit_id.to_string(), messages: messages.clone() }
+            semio_os_spr::EditMessages { edit_id: edit_id.to_string(), messages: messages.clone() }
         };
         bound_edit_messages(edit_id, &mut candidate.messages);
         store_owners.displaced_retirements.reserve(1)?;
@@ -183,36 +183,36 @@ where
     /// `Discarded`. `Degraded`+`Accept` only flips the status: the batch is already durable history,
     /// resolving never rewrites it. `Degraded`+`Discard` is refused outright — shared history is
     /// never rewritten.
-    pub async fn resolve_conflict(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, conflict_id: &str, resolution: semio_framework_os_spr::ConflictResolution) -> Result<semio_framework_os_spr::MergeReport, VcsError>
+    pub async fn resolve_conflict(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, conflict_id: &str, resolution: semio_os_spr::ConflictResolution) -> Result<semio_os_spr::MergeReport, VcsError>
     where
         P: Clone + Sync,
         Mutation: ColdMutation<P>,
     {
         store_wire.ensure_durable_group_idle()?;
-        let index = store_log.envelope.conflicts.iter().position(|conflict| conflict.id.0 == conflict_id && conflict.status == semio_framework_os_spr::ConflictStatus::Open).ok_or_else(|| VcsError::UnknownConflict(conflict_id.to_string()))?;
+        let index = store_log.envelope.conflicts.iter().position(|conflict| conflict.id.0 == conflict_id && conflict.status == semio_os_spr::ConflictStatus::Open).ok_or_else(|| VcsError::UnknownConflict(conflict_id.to_string()))?;
         let conflict = store_log.envelope.conflicts[index].clone();
         match (conflict.kind.clone(), resolution) {
-            (semio_framework_os_spr::ConflictKind::Quarantined { envelopes, .. }, semio_framework_os_spr::ConflictResolution::Accept) => self.accept_quarantined_events(store_log, store_owners, store_cursor, store_live, index, conflict.id.clone(), envelopes).await,
-            (semio_framework_os_spr::ConflictKind::Quarantined { envelopes, .. }, semio_framework_os_spr::ConflictResolution::Discard) => {
+            (semio_os_spr::ConflictKind::Quarantined { envelopes, .. }, semio_os_spr::ConflictResolution::Accept) => self.accept_quarantined_events(store_log, store_owners, store_cursor, store_live, index, conflict.id.clone(), envelopes).await,
+            (semio_os_spr::ConflictKind::Quarantined { envelopes, .. }, semio_os_spr::ConflictResolution::Discard) => {
                 for envelope in &envelopes {
                     store_log.dag.seed_applied(envelope.mutation_id.clone()).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
                 }
-                store_log.envelope.conflicts[index].status = semio_framework_os_spr::ConflictStatus::Discarded;
+                store_log.envelope.conflicts[index].status = semio_os_spr::ConflictStatus::Discarded;
                 self.pending_report.declare_edit_ids(Vec::new());
                 self.bump(store_log, store_owners, store_cursor, store_live)?;
                 store_cursor.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
                 store_owners.prune_resolved_conflicts(store_log)?;
-                Ok(semio_framework_os_spr::MergeReport { policy: store_log.merge_policy, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: Some(conflict.id.clone()) })
+                Ok(semio_os_spr::MergeReport { policy: store_log.merge_policy, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: Some(conflict.id.clone()) })
             }
-            (semio_framework_os_spr::ConflictKind::Degraded { .. }, semio_framework_os_spr::ConflictResolution::Accept) => {
-                store_log.envelope.conflicts[index].status = semio_framework_os_spr::ConflictStatus::Accepted;
+            (semio_os_spr::ConflictKind::Degraded { .. }, semio_os_spr::ConflictResolution::Accept) => {
+                store_log.envelope.conflicts[index].status = semio_os_spr::ConflictStatus::Accepted;
                 self.pending_report.declare_edit_ids(Vec::new());
                 self.bump(store_log, store_owners, store_cursor, store_live)?;
                 store_cursor.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
                 store_owners.prune_resolved_conflicts(store_log)?;
-                Ok(semio_framework_os_spr::MergeReport { policy: store_log.merge_policy, accepted: true, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: Some(conflict.id.clone()) })
+                Ok(semio_os_spr::MergeReport { policy: store_log.merge_policy, accepted: true, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: Some(conflict.id.clone()) })
             }
-            (semio_framework_os_spr::ConflictKind::Degraded { .. }, semio_framework_os_spr::ConflictResolution::Discard) => Err(VcsError::ValidationFailed("a Degraded conflict's batch is already durable history and can never be discarded".to_string())),
+            (semio_os_spr::ConflictKind::Degraded { .. }, semio_os_spr::ConflictResolution::Discard) => Err(VcsError::ValidationFailed("a Degraded conflict's batch is already durable history and can never be discarded".to_string())),
         }
     }
 
@@ -220,7 +220,7 @@ where
     /// conflict were accepted and the resulting order is replayed from genesis under `LaissezFaire`.
     /// A `Fatal` outcome reports the replay and changes nothing; otherwise the withheld edits join the
     /// log, the conflict turns `Accepted`, and the projection follows the fold.
-    async fn accept_quarantined_events(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, index: usize, conflict_id: semio_framework_os_spr::ConflictId, envelopes: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<semio_framework_os_spr::MergeReport, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    async fn accept_quarantined_events(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, index: usize, conflict_id: semio_os_spr::ConflictId, envelopes: Vec<semio_os_spr::MutationEnvelope>) -> Result<semio_os_spr::MergeReport, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let mut admitted: Vec<Edit<Mutation>> = Vec::with_capacity(envelopes.len());
         for envelope in &envelopes {
             let mut edit = edit_from_operation_envelope_cold::<Mutation>(envelope).await?;
@@ -233,7 +233,7 @@ where
             }
         }
         let mut conflicts = store_log.envelope.conflicts.clone();
-        conflicts[index].status = semio_framework_os_spr::ConflictStatus::Accepted;
+        conflicts[index].status = semio_os_spr::ConflictStatus::Accepted;
         let mut edits: Vec<&Edit<Mutation>> = store_log.envelope.vcs.edits.iter().collect();
         edits.extend(admitted.iter());
         let head = envelope_viewer_head(&store_log.envelope);
@@ -244,7 +244,7 @@ where
                 return Err(error);
             }
         };
-        let  replay = Self::replay_suffix_partitioned(store_log.envelope.vcs.genesis.facts().share_snapshot(), &fold.applied, 0, &OriginalReplayEdits::new(&store_log.envelope.vcs.edits,&admitted), &store_log.envelope.schema, &fold.supersessions, semio_framework_os_spr::MergePolicy::LaissezFaire);
+        let  replay = Self::replay_suffix_partitioned(store_log.envelope.vcs.genesis.facts().share_snapshot(), &fold.applied, 0, &OriginalReplayEdits::new(&store_log.envelope.vcs.edits,&admitted), &store_log.envelope.schema, &fold.supersessions, semio_os_spr::MergePolicy::LaissezFaire);
         let (state, quarantined_ids, mut rebased_inverse, replayed) = match replay {
             Ok(mut replay) => {
                 let taken = (replay.take_state(), replay.take_quarantined(), replay.take_rebased_undo_rows().into_iter().collect::<HashMap<String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>>>(), replay.take_replayed());
@@ -259,9 +259,9 @@ where
         if let Some(state) = state {
             retire_shared_projection::<P, Mutation>(state);
         }
-        let admitted_replay: Vec<semio_framework_os_spr::EditMessages> = replayed.into_iter().filter(|entry| admitted.iter().any(|edit| edit.id == entry.edit_id)).collect();
+        let admitted_replay: Vec<semio_os_spr::EditMessages> = replayed.into_iter().filter(|entry| admitted.iter().any(|edit| edit.id == entry.edit_id)).collect();
         let worst = admitted_replay.iter().flat_map(|entry| entry.messages.iter()).map(|message| message.level).max();
-        let report = semio_framework_os_spr::MergeReport { policy: semio_framework_os_spr::MergePolicy::LaissezFaire, accepted: quarantined_ids.is_empty(), insertion_index: 0, replayed: admitted_replay, worst, conflict: Some(conflict_id) };
+        let report = semio_os_spr::MergeReport { policy: semio_os_spr::MergePolicy::LaissezFaire, accepted: quarantined_ids.is_empty(), insertion_index: 0, replayed: admitted_replay, worst, conflict: Some(conflict_id) };
         if !report.accepted {
             retire_scratch_edits::<P, Mutation>(admitted);
             for (_, inverse) in rebased_inverse {
@@ -287,11 +287,11 @@ where
         for envelope in &envelopes {
             match store_log.dag.seed_applied(envelope.mutation_id.clone()) {
                 Ok(()) => {}
-                Err(rejected) if rejected.error == semio_framework_os_spr::MutationDagError::Duplicate => {}
+                Err(rejected) if rejected.error == semio_os_spr::MutationDagError::Duplicate => {}
                 Err(rejected) => return Err(VcsError::ValidationFailed(rejected.error.to_string())),
             }
         }
-        store_log.envelope.conflicts[index].status = semio_framework_os_spr::ConflictStatus::Accepted;
+        store_log.envelope.conflicts[index].status = semio_os_spr::ConflictStatus::Accepted;
         store_live.reproject(store_log, store_owners, store_cursor).await?;
         self.pending_report.declare_edit_ids(admitted_ids);
         self.bump(store_log, store_owners, store_cursor, store_live)?;
@@ -375,7 +375,7 @@ where
         }
         let cursor = store_log.envelope.cursor.as_ref().expect("a bumped store holds its cursor");
         assert!(cursor.applied_edit_ids == *store_log.applied_edit_ids && cursor.redo_edit_ids == *store_log.redo_edit_ids && cursor.checkpoint_id == *store_log.current_checkpoint_id, "the persisted cursor mirrors the live stacks");
-        let mut rebuilt = CursorRevisionAccumulator { identity_digest: store_cursor.revision_accumulator.identity_digest, applied: semio_framework_os_vcs::HistoryPageStack::new(), redo: semio_framework_os_vcs::HistoryPageStack::new(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
+        let mut rebuilt = CursorRevisionAccumulator { identity_digest: store_cursor.revision_accumulator.identity_digest, applied: semio_os_vcs::HistoryPageStack::new(), redo: semio_os_vcs::HistoryPageStack::new(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
         rebuilt.reconcile::<P, Mutation>(&store_log.applied_edit_ids, &store_log.redo_edit_ids, &store_log.envelope.vcs.edits, &store_live.supersessions, StackMirrorDirt::ALL, None);
         for (stack, live, scratch) in [("applied", &store_cursor.revision_accumulator.applied, &rebuilt.applied), ("redo", &store_cursor.revision_accumulator.redo, &rebuilt.redo)] {
             let stale = live.iter().zip(scratch.iter()).position(|(live, scratch)| live.id_digest != scratch.id_digest || live.edit_digest != scratch.edit_digest);

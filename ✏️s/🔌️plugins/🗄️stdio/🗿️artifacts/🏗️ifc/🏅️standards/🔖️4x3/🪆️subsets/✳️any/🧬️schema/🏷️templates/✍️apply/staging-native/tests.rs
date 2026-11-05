@@ -1,6 +1,6 @@
 //! 🧪️ Private native pages preserve the independently specified command addresses.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 fn raw(value:&serde_json::Value)->DslValue{let parsed=semio_framework_pack_json::parse(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();semio_framework_pack_json::to_dsl_value(&parsed)}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:1_048_576,maximum_capacity_bytes:1_048_576,maximum_release_bytes:1_048_576,maximum_depth:256}}
 fn retire<T:RetireOwned>(caller:&mut OriginalWorkFixture,owner:&mut Option<T>){let mut close=RetainedCloneClose::default();for _ in 0..1_000_000{if owner.is_none()&&close.is_empty(){return;}caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let demand=close.next_owner_demands::<T>(owner.is_some(),&None,4096)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|if close.is_empty(){close.begin_granted(owner,grant)?.ok_or_else(refused)}else{close.step_granted(grant)})?;Ok(())})).unwrap();}panic!("original page owner did not retire");}
@@ -31,7 +31,7 @@ fn prepared_native_source_actual_original_endpoint_yields_complete_typed_pages()
 }
 fn case_raw(value:&serde_json::Value)->DslValue{raw(value)}
 fn render_and_close(source:&IfcPreparedTemplateSource,caller:&mut OriginalWorkFixture){
-    use semio_framework_ui_contract::{Component,ContainerRole,OriginalBuiltTreeRetirement};let mut cursor=StagedBodyCursor::default();let mut output=None;
+    use semio_ui_contract::{Component,ContainerRole,OriginalBuiltTreeRetirement};let mut cursor=StagedBodyCursor::default();let mut output=None;
     for _ in 0..100000{let complete=caller.work_turn(grant(),1000,|cx|{let grant=cx.retained_grant();let result=cx.with_native_receiving(|native|cursor.step(source,native,&mut output,grant));let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_receiving_retained(grant,progress)?;cx.consume_fuel(progress.copied_items as u64);Ok(matches!(result?,RetainedCloneStep::Complete(_)))}).unwrap();if complete{break;}}
     let node=output.take().expect("actual prepared source builds an ordinary body");let Component::Container(form)=&node.component else{panic!("form missing")};assert_eq!(form.role,ContainerRole::Form);assert_eq!(node.children.len(),source.controls()+1);let mut tree=OriginalBuiltTreeRetirement::new(node);for _ in 0..100000{if tree.terminal_is_empty(){break;}caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let demand=tree.next_demand(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|tree.step(grant))?;Ok(())})).unwrap();}assert!(tree.terminal_is_empty());for _ in 0..100000{if cursor.terminal_is_empty(){break;}caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let demand=cursor.close_demand(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|cursor.close(grant))?;Ok(())})).unwrap();}assert!(cursor.terminal_is_empty());
 }

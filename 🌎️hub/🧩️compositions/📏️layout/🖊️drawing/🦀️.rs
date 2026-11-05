@@ -7,7 +7,7 @@
 //! @see 🔌️ `🧰️framework/🔨️modules/🚪️io/🔌️ports/🦀️.rs` for the contract and `✏️s/🧪️tests/🏘️plugin-composition/📏️layout-drawing/🔗️binding/🟦️.ts` for its TypeScript twin.
 
 #[cfg(test)]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use semio_framework_io_ports::{EmbeddedChildCodecV1, EmbeddedChildSlotError, VectorCanvas, VectorLayer, VectorNode, VectorPoint2, VectorPoint3, VectorQuaternion, VectorRgba, VectorScene, VectorSegment, VectorStyle, VectorTransform};
 use semio_framework_io_sqlite_snapshot::artifact::RowWriter;

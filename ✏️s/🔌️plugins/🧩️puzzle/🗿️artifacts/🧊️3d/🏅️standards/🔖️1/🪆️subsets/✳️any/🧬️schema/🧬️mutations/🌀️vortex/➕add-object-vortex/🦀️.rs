@@ -34,8 +34,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add vortex \"{}\" to object \"{}\"", self.vortex.id, self.object_id), &format!("Wirbel \"{}\" zu Objekt \"{}\" hinzufügen", self.vortex.id, self.object_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add vortex \"{}\" to object \"{}\"", self.vortex.id, self.object_id), &format!("Wirbel \"{}\" zu Objekt \"{}\" hinzufügen", self.vortex.id, self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone(), self.vortex.id.clone()]

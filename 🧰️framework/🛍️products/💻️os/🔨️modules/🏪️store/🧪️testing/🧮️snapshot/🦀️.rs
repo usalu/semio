@@ -3,7 +3,7 @@
 //! 🧭️ Moved from the former store unit test module; the items are `pub` because the test crates of the Store use them through the public API only.
 
 use crate::prelude::*;
-use semio_framework_os_spr::ColdMutationDiff;
+use semio_os_spr::ColdMutationDiff;
 use crate::*;
 use crate::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
 use crate::lossy::{LossyMutation, SetN as LossySetN};
@@ -11,28 +11,28 @@ use crate::severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, S
 use crate::timestamped::{SetN as TimestampedSetN, TimestampedMutation};
 use crate::validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEdit;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEditCursor;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEditStep;
-use semio_framework_os_store_snapshot_clone::RetainedClonePreparationFactory;
+use semio_os_store_snapshot_clone::RetainedCloneEdit;
+use semio_os_store_snapshot_clone::RetainedCloneEditCursor;
+use semio_os_store_snapshot_clone::RetainedCloneEditStep;
+use semio_os_store_snapshot_clone::RetainedClonePreparationFactory;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
 use semio_framework_pack_json_retained_schema::testing::{OWNED_SCHEMA_TEST_FIELDS, owned_schema_test_cursor, drive_owned_schema, schema_test_close_grant};
 use semio_framework_value::testing::physical_test_close_grant;
 
-pub fn assert_fixture_descriptor<T: semio_framework_os_spr::MutationLeaf>(descriptor: &str) {
+pub fn assert_fixture_descriptor<T: semio_os_spr::MutationLeaf>(descriptor: &str) {
     assert_eq!(serde_json::Value::from(T::DESCRIPTOR.to_value()), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
     assert!(T::DESCRIPTOR.validate().is_ok());
 }
 
 /// ➕️ L3 for one fixture leaf: the concrete inverse's diffs sum to the negative of the forward diff on every listed demo document (`None` is the deleted value).
-pub async fn assert_fixture_sum_law<Op: semio_framework_os_spr::Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot, ReferenceDiff = DemoDiff>>(mutation: &Op, bases: &[Option<i32>]) {
+pub async fn assert_fixture_sum_law<Op: semio_os_spr::Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot, ReferenceDiff = DemoDiff>>(mutation: &Op, bases: &[Option<i32>]) {
     for n in bases {
-        semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, &DemoSnapshot { n: *n }).await;
+        semio_os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, &DemoSnapshot { n: *n }).await;
     }
 }
 
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_dsl::DslArtifact, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_os_dsl::DslArtifact, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
 #[artifact(id = "demo.doc", extension = "demo")]
 pub struct DemoSnapshot {
     pub n: Option<i32>,
@@ -63,7 +63,7 @@ impl Default for DemoSnapshot {
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6).
 
-impl semio_framework_os_store_text_io::ArtifactSqliteSnapshotHost for DemoSnapshot {
+impl semio_os_store_text_io::ArtifactSqliteSnapshotHost for DemoSnapshot {
     
     fn preflight_sqlite_snapshot_encoding(&self, _: semio_framework_io_sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), semio_framework_value::ValueError> {
         let mut bound = semio_framework_io_sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
@@ -109,7 +109,7 @@ impl ArtifactDsl for DemoSnapshot {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_framework_os_semio::split_text_preamble(text) {
+        let body = match semio_os_semio::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -119,8 +119,8 @@ impl ArtifactDsl for DemoSnapshot {
     fn print_dsl(&self) -> String {
         let record = self.__dsl_to_record();
         let body = semio_framework_dsl_record::print(&record, &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Dsl, 1).expect("valid envelope_id");
-        semio_framework_os_semio::wrap_text(&envelope, &body)
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Dsl, 1).expect("valid envelope_id");
+        semio_os_semio::wrap_text(&envelope, &body)
     }
 }
 
@@ -135,13 +135,13 @@ impl ArtifactPack for DemoSnapshot {
 
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(semio_framework_os_semio::wrap_binary(&envelope, &inner))
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
+        Ok(semio_os_semio::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         MEMBER_SNAPSHOT_DECODE_COUNT.with(|count| count.set(count.get() + 1));
-        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+        let (envelope, inner) = semio_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1) {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
@@ -152,11 +152,11 @@ impl ArtifactPack for DemoSnapshot {
     }
 }
 
-impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DemoSnapshot {
-    fn reference_snapshot_codec()->Option<semio_framework_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_framework_os_store_text_io::reference_snapshot_codec::<Self>())}
+impl semio_os_store_text_io::ArtifactStoreSnapshot for DemoSnapshot {
+    fn reference_snapshot_codec()->Option<semio_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_os_store_text_io::reference_snapshot_codec::<Self>())}
 
-fn sqlite_snapshot_codec() -> Option<semio_framework_os_store_text_io::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec())
+fn sqlite_snapshot_codec() -> Option<semio_os_store_text_io::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as semio_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -181,14 +181,14 @@ impl DemoDiff {
     }
 }
 
-impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
+impl semio_os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
 
     fn is_empty(&self) -> bool {
         self.n.is_none()
     }
 }
 
-impl semio_framework_os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
+impl semio_os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
     fn inverse(&self, base: &DemoSnapshot) -> Self {
         Self { n: self.n.as_ref().map(|_| DemoFieldChange { value: base.n }) }
     }
@@ -207,7 +207,7 @@ impl ColdMutationDiff<DemoSnapshot> for DemoDiff {
         }
     }
 
-    fn apply(&self, snapshot: &mut DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+    fn apply(&self, snapshot: &mut DemoSnapshot, _capability: semio_os_spr::ApplyCapability) -> semio_os_spr::MutationApplyResult<()> {
                 if let Some(change) = &self.n { snapshot.n = change.value; }
         Ok(())
     }
@@ -216,14 +216,14 @@ impl ColdMutationDiff<DemoSnapshot> for DemoDiff {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct LossyDiff {}
 
-impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for LossyDiff {
+impl semio_os_spr::DiffAlgebra<DemoSnapshot> for LossyDiff {
 
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl semio_framework_os_spr::ColdDiffAlgebra<DemoSnapshot> for LossyDiff {
+impl semio_os_spr::ColdDiffAlgebra<DemoSnapshot> for LossyDiff {
     fn inverse(&self, _base: &DemoSnapshot) -> Self {
         Self {}
     }
@@ -237,7 +237,7 @@ impl MutationDiff<DemoSnapshot> for LossyDiff {
 impl ColdMutationDiff<DemoSnapshot> for LossyDiff {
     fn absorb(&mut self, _other: Self) {}
 
-    fn apply(&self, _unpublished: &mut DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+    fn apply(&self, _unpublished: &mut DemoSnapshot, _capability: semio_os_spr::ApplyCapability) -> semio_os_spr::MutationApplyResult<()> {
         Ok(())
     }
 }
@@ -268,8 +268,8 @@ impl ArtifactPack for RetainedTextSnapshot {
     }
 }
 
-impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for RetainedTextSnapshot {
-    fn reference_snapshot_codec()->Option<semio_framework_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_framework_os_store_text_io::reference_snapshot_codec::<Self>())}
+impl semio_os_store_text_io::ArtifactStoreSnapshot for RetainedTextSnapshot {
+    fn reference_snapshot_codec()->Option<semio_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_os_store_text_io::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -279,14 +279,14 @@ pub struct RetainedTextDiff {
     pub text: Option<String>,
 }
 
-impl semio_framework_os_spr::DiffAlgebra<RetainedTextSnapshot> for RetainedTextDiff {
+impl semio_os_spr::DiffAlgebra<RetainedTextSnapshot> for RetainedTextDiff {
 
     fn is_empty(&self) -> bool {
         self.text.is_none()
     }
 }
 
-impl semio_framework_os_spr::ColdDiffAlgebra<RetainedTextSnapshot> for RetainedTextDiff {
+impl semio_os_spr::ColdDiffAlgebra<RetainedTextSnapshot> for RetainedTextDiff {
     fn inverse(&self, base: &RetainedTextSnapshot) -> Self {
         Self { text: self.text.as_ref().map(|_| base.text.clone()) }
     }
@@ -305,7 +305,7 @@ impl ColdMutationDiff<RetainedTextSnapshot> for RetainedTextDiff {
         }
     }
 
-    fn apply(&self, base: &mut RetainedTextSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+    fn apply(&self, base: &mut RetainedTextSnapshot, _capability: semio_os_spr::ApplyCapability) -> semio_os_spr::MutationApplyResult<()> {
                 if let Some(value) = &self.text { base.text = value.clone(); }
         Ok(())
     }
@@ -327,12 +327,12 @@ pub enum RetainedTextMutation {
     SetRetainedText(SetRetainedText),
 }
 
-impl semio_framework_os_spr::Mutation<RetainedTextSnapshot> for RetainedTextMutation {
+impl semio_os_spr::Mutation<RetainedTextSnapshot> for RetainedTextMutation {
     type Diff = RetainedTextDiff;
-    const DESCRIPTORS: &'static [semio_framework_os_spr::MutationLeafDescriptor] = <DemoMutation as semio_framework_os_spr::Mutation<DemoSnapshot>>::DESCRIPTORS;
+    const DESCRIPTORS: &'static [semio_os_spr::MutationLeafDescriptor] = <DemoMutation as semio_os_spr::Mutation<DemoSnapshot>>::DESCRIPTORS;
 
-    fn descriptor(&self) -> &'static semio_framework_os_spr::MutationLeafDescriptor {
-        &<Self as semio_framework_os_spr::Mutation<RetainedTextSnapshot>>::DESCRIPTORS[0]
+    fn descriptor(&self) -> &'static semio_os_spr::MutationLeafDescriptor {
+        &<Self as semio_os_spr::Mutation<RetainedTextSnapshot>>::DESCRIPTORS[0]
     }
 
 
@@ -344,11 +344,11 @@ impl semio_framework_os_spr::Mutation<RetainedTextSnapshot> for RetainedTextMuta
     }
 }
 
-impl semio_framework_os_spr::ColdMutation<RetainedTextSnapshot> for RetainedTextMutation {
+impl semio_os_spr::ColdMutation<RetainedTextSnapshot> for RetainedTextMutation {
     type ReferenceDiff = RetainedTextDiff;
-    fn diff(&self, _base: &RetainedTextSnapshot) -> semio_framework_os_spr::MutationOutcome<RetainedTextDiff> {
+    fn diff(&self, _base: &RetainedTextSnapshot) -> semio_os_spr::MutationOutcome<RetainedTextDiff> {
         let Self::SetRetainedText(value) = self;
-        semio_framework_os_spr::MutationOutcome::new(RetainedTextDiff { text: Some(value.text.clone()) })
+        semio_os_spr::MutationOutcome::new(RetainedTextDiff { text: Some(value.text.clone()) })
     }
 
     fn inverse(&self, base: &RetainedTextSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -370,13 +370,13 @@ impl OpText for RetainedTextMutation {
 }
 
 impl OpBinary for RetainedTextMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_os_spr::ProtocolError> {
         Ok(self.print_op().into_bytes())
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_os_spr::ProtocolError::Malformed { what: "retained text mutation", offset: error.valid_up_to() as u64, detail: error.to_string() })?;
-        Self::parse_op(text).map_err(|error| semio_framework_os_spr::ProtocolError::Malformed { what: "retained text mutation", offset: 0, detail: error.to_string() })
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_os_spr::ProtocolError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| semio_os_spr::ProtocolError::Malformed { what: "retained text mutation", offset: error.valid_up_to() as u64, detail: error.to_string() })?;
+        Self::parse_op(text).map_err(|error| semio_os_spr::ProtocolError::Malformed { what: "retained text mutation", offset: 0, detail: error.to_string() })
     }
 }
 

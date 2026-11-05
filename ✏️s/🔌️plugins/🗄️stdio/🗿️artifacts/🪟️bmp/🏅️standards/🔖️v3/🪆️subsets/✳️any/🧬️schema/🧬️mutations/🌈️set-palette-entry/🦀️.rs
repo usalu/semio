@@ -19,8 +19,8 @@ pub struct SetPaletteEntry {
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for SetPaletteEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "palette-entry", kind: "set-palette-entry", record: "SetPaletteEntry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set palette entry", "Paletteneintrag setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set palette entry", "Paletteneintrag setzen")
     }
 
     fn target(&self) -> Vec<String> {

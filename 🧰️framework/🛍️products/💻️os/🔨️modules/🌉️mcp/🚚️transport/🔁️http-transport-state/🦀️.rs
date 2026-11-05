@@ -1,7 +1,7 @@
 //! 🔁️ The retained HTTP transport state machine: limits, rings, head parsing, connection phases and the per-turn drivers.
 
-use semio_framework_os_mcp_bridge::session::{BridgeEncodedLease, BridgeHandle, BridgeOutboxReceiver, ShellConnectionId};
-use semio_framework_os_mcp_bridge_codec::bridge::{
+use semio_os_mcp_bridge::session::{BridgeEncodedLease, BridgeHandle, BridgeOutboxReceiver, ShellConnectionId};
+use semio_os_mcp_bridge_codec::bridge::{
     BRIDGE_VERSION,
     BridgeRefusal,
     GatewayToShell,
@@ -13,8 +13,8 @@ use semio_framework_os_mcp_bridge_codec::bridge::{
     ShellToGatewayDecodeCursor,
     ShellToGatewayMaterializeCursor,
 };
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_server::mcp_server::McpServer;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_server::mcp_server::McpServer;
 use std::io::{Read, Write};
 use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};

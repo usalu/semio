@@ -8,7 +8,7 @@ use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Canvas2dFraming, Canvas2dScene};
+use semio_plugin::{Canvas2dFraming, Canvas2dScene};
 #[allow(unused_imports)]
 use semio_framework_value::ToValue;
 use semio_s_artifact_bim_model_plan_linework::render::plan::{ACCENT, ring, record};

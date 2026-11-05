@@ -1,0 +1,40 @@
+{
+  "controllerId": "s.forms.forms@1/*#viewer",
+  "question": {
+    "id": "readonly-question",
+    "label": "Readonly Question",
+    "kind": "flow",
+    "params": {
+      "quantity": 2
+    }
+  },
+  "expected": {
+    "questionId": "readonly-question",
+    "controllerId": "s.forms.forms@1/*#viewer",
+    "surface": "try",
+    "interactive": false,
+    "params": {
+      "quantity": 2
+    },
+    "authoredParams": {
+      "quantity": 2
+    }
+  },
+  "routes": [
+    {
+      "kind": "buildingComponent",
+      "paramsBodyKey": "params",
+      "previewBodyKey": "preview"
+    },
+    {
+      "kind": "flow",
+      "paramsBodyKey": "flowParams",
+      "previewBodyKey": "flowPreview"
+    },
+    {
+      "kind": "procedural3d",
+      "paramsBodyKey": "proceduralParams",
+      "previewBodyKey": "proceduralPreview"
+    }
+  ]
+}

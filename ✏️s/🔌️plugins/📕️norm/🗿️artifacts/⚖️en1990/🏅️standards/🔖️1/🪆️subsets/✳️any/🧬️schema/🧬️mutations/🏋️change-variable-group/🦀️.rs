@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeVariableGroup wher
         record: "ChangedVariableGroup",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change exclusive group of the variable action", "Veränderliche Einwirkung: Ausschlussgruppe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change exclusive group of the variable action", "Veränderliche Einwirkung: Ausschlussgruppe ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-ui-tui-vt-laws"
+name = "semio-ui-tui-vt-laws"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -25,6 +25,6 @@ path = "../../🦀️.rs"
 
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-ui-tui-core = { path = "../../../../../🧱️cell-model/📦️packages/🦀️rust" }
-semio-framework-ui-tui-vt = { path = "../../../../📦️packages/🦀️rust" }
-ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-ui-tui-core = { path = "../../../../../🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-vt = { path = "../../../../📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }

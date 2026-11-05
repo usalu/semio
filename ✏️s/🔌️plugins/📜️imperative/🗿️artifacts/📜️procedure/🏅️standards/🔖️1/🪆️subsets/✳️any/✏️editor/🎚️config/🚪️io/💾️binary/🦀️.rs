@@ -3,7 +3,7 @@
 
 //#region 🧩️ArtifactItems
 pub mod artifact_items {
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use std::collections::BTreeMap;
 
 //#region 🔖️Types
@@ -17,8 +17,8 @@ pub use neural_engine::{Dictionary, Registry, Value};
 /// this artifact's own schema declares (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`);
 /// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the
 /// canonical surface id is `s.imperative.procedure@1/*#editor` / `s.imperative.procedure@1/*#viewer`.
-pub const PROCEDURE_DIALECT: semio_framework_plugin::app::Dialect =
-    semio_framework_plugin::app::Dialect { artifact_kind: "s.imperative.procedure", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const PROCEDURE_DIALECT: semio_plugin::app::Dialect =
+    semio_plugin::app::Dialect { artifact_kind: "s.imperative.procedure", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 /// 🌱️ View of a snapshot seed map as a neural [`Dictionary`] for execution — folds entries straight
 /// into the dictionary's own `insert` cursor, no JSON round trip needed.
@@ -53,7 +53,7 @@ pub struct PathRef {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.procedure".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Procedure", "Prozedur"),
+        label: semio_ui_locale::LocalizedLabel::native("Procedure", "Prozedur"),
         source_format: "procedure.document".into(),
         component_kind: "procedure".into(),
         dimension: "graph".into(),

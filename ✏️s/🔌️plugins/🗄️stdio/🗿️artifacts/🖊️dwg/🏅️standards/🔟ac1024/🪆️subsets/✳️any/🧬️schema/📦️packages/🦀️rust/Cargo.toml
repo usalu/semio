@@ -20,9 +20,9 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
@@ -43,6 +43,6 @@ semio-s-artifact-stdio-dwg-snapshot-drawing = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }

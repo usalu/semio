@@ -1,9 +1,9 @@
 //! 🚪️ Artifact io capabilities: serializers, deserializers, composers, builders, decomposers, analyzers and derived artifacts.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as pack;
-use semio_framework_os_kernel::io;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as pack;
+use semio_os_kernel::io;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::Fault;
 use std::collections::HashMap;
@@ -12,7 +12,7 @@ use store::{Mutation, MutationDiff};
 /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
 /// 2). Defined in `semio_framework` so plugins and the OS product
 /// share one definition without an inverted dependency; re-exported here verbatim.
-use {semio_framework_os_kernel::io::{Analysis, AnalyzeSource, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, ErasedComposeSource, IoPayload}, semio_framework_artifact_reference::{ArtifactDialect, Dialect, StandardId, SubsetId}};
+use {semio_os_kernel::io::{Analysis, AnalyzeSource, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, ErasedComposeSource, IoPayload}, semio_framework_artifact_reference::{ArtifactDialect, Dialect, StandardId, SubsetId}};
 
 
 
@@ -79,14 +79,14 @@ pub trait ArtifactComposer: Sized {
 /// returning the already-boxed future.
 pub fn composer_entry_of<C: ArtifactComposer>() -> ComposerEntry
 where
-    C::Snapshot: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    C::Snapshot: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
 {
     /// 🌉️ bridged via `resolve_ready` — see `composer_entry_of`'s doc: no real
     /// suspension exists in a codec body, and this fn-pointer thunk feeds the
     /// Send-bounded `ComposeFuture` erasure table (R1), which plain AFIT can't satisfy.
     fn erased_compose<C: ArtifactComposer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
     where
-        C::Snapshot: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+        C::Snapshot: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     {
         Box::pin(async move {
             let typed_sources: Vec<ComposeSource<'_>> = sources
@@ -119,16 +119,16 @@ where
 /// 🚫️async: E4 fn-pointer slot — see `composer_entry_of`'s inner `erased_compose` doc.
 pub fn deserializer_entry_of<D: ArtifactDeserializer>() -> ComposerEntry
 where
-    D::From: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send,
-    D::Into: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    D::From: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send,
+    D::Into: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
 {
     /// 🌉️ bridged via `resolve_ready` — see `composer_entry_of`'s doc: no real
     /// suspension exists in a codec body, and this fn-pointer thunk feeds the
     /// Send-bounded `ComposeFuture` erasure table (R1), which plain AFIT can't satisfy.
     fn erased_compose<D: ArtifactDeserializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
     where
-        D::From: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send,
-        D::Into: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+        D::From: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send,
+        D::Into: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     {
         Box::pin(async move {
             let source = match sources {
@@ -160,16 +160,16 @@ where
 /// 🚫️async: E4 fn-pointer slot — see `composer_entry_of`'s inner `erased_compose` doc.
 pub fn serializer_entry_of<S: ArtifactSerializer>() -> ComposerEntry
 where
-    S::From: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send,
-    S::Into: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    S::From: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send,
+    S::Into: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
 {
     /// 🌉️ bridged via `resolve_ready` — see `composer_entry_of`'s doc: no real
     /// suspension exists in a codec body, and this fn-pointer thunk feeds the
     /// Send-bounded `ComposeFuture` erasure table (R1), which plain AFIT can't satisfy.
     fn erased_compose<S: ArtifactSerializer>(sources: &[ErasedComposeSource]) -> ComposeFuture<'_>
     where
-        S::From: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send,
-        S::Into: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+        S::From: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send,
+        S::Into: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     {
         Box::pin(async move {
             let source = match sources {

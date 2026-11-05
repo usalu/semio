@@ -1,7 +1,7 @@
 //! 🪟️ Window-kit conventions of the stdio artifacts: example switching, argument readers, addressed and structural tables, revisions and media import.
 
-use semio_framework_os_kernel as kernel;
-use semio_framework_plugin::PluginAssemblyError;
+use semio_os_kernel as kernel;
+use semio_plugin::PluginAssemblyError;
 use semio_framework_value as value;
 use semio_s_artifact_stdio_contract_wire::{draft_splices_from_json, snapshot_edit_source, DraftSplice};
 
@@ -14,7 +14,7 @@ pub use mesh_scene_kit::{mesh_scene, mesh_scene_frame, MESH_SCENE_MAXIMUM_MARKER
 /// (`SET_ACTIVE_EXAMPLE_ACTION_ID` in the renderer's own `🛠️ShellHelpers`). An app that does not
 /// declare it is hidden from the picker outright by `appSwitchesExamples`, and the shell then never
 /// announces a boot example — the pane opens the app's genesis document instead of its curated one.
-pub const SET_ACTIVE_EXAMPLE_ACTION_ID: &str = semio_framework_plugin::app::CATALOGUE_EXAMPLE_ACTION_ID;
+pub const SET_ACTIVE_EXAMPLE_ACTION_ID: &str = semio_plugin::app::CATALOGUE_EXAMPLE_ACTION_ID;
 
 /// 📚️ Parses one declared typed example and refuses unknown sources or a mismatched document schema.
 pub fn parse_example_snapshot<S:pack::snapshot::ArtifactDsl>(example_id:&str,declared_id:&str,source:&str,document_schema:&str,schema_of:fn(&S)->&str)->Result<S,semio_framework_plugin::Fault>{
@@ -75,39 +75,39 @@ pub fn window_kit_index_argument(args: Option<&semio_framework_value::DslValue>,
     raw.trim().parse::<f64>().ok().filter(|reading| reading.is_finite() && *reading >= 0.0).map_or(fallback, |reading| reading as u32)
 }
 
-fn required_window_kit_argument<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Result<&'a semio_framework_value::DslValue, semio_framework_plugin::Fault> {
+fn required_window_kit_argument<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Result<&'a semio_framework_value::DslValue, semio_plugin::Fault> {
     let entries = match args {
         Some(semio_framework_value::DslValue::Object(entries)) => entries,
         _ => {
-            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.arguments-required"), "the action requires an argument object"));
+            return Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.window-kit.arguments-required"), "the action requires an argument object"));
         }
     };
     let mut values = entries.iter().filter(|(name, _)| name == key).map(|(_, value)| value);
     let Some(value) = values.next() else {
-        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-required"), format!("the action requires argument '{key}'")));
+        return Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.window-kit.argument-required"), format!("the action requires argument '{key}'")));
     };
     if values.next().is_some() {
-        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-duplicate"), format!("the action argument '{key}' must occur exactly once")));
+        return Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.window-kit.argument-duplicate"), format!("the action argument '{key}' must occur exactly once")));
     }
     Ok(value)
 }
 
 /// 📝️ Reads one required canonical text argument without aliases, coercion, or fallback.
-pub fn window_kit_required_text_argument(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<String, semio_framework_plugin::Fault> {
+pub fn window_kit_required_text_argument(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<String, semio_plugin::Fault> {
     match required_window_kit_argument(args, key)? {
         semio_framework_value::DslValue::String(value) => Ok(value.clone()),
-        _ => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-type"), format!("the action argument '{key}' must be text"))),
+        _ => Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.window-kit.argument-type"), format!("the action argument '{key}' must be text"))),
     }
 }
 
 /// 📥️ Reads the change set a text window published under the `splices` edit argument (JSON list of `{offset, delete, insert}`):
 /// the gesture, verbatim. Refuses a malformed list, an unknown member, and ranges that are not ascending and disjoint.
-pub fn window_kit_splices_argument(args: Option<&semio_framework_value::DslValue>) -> Result<Vec<DraftSplice>, semio_framework_plugin::Fault> {
+pub fn window_kit_splices_argument(args: Option<&semio_framework_value::DslValue>) -> Result<Vec<DraftSplice>, semio_plugin::Fault> {
     draft_splices_from_json(&window_kit_required_text_argument(args, "splices")?)
 }
 
 /// 🔢️ Reads one required canonical non-negative `u32` index without truncation or fallback.
-pub fn window_kit_required_index_argument(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<u32, semio_framework_plugin::Fault> {
+pub fn window_kit_required_index_argument(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<u32, semio_plugin::Fault> {
     let value = required_window_kit_argument(args, key)?;
     let integer = match value {
         semio_framework_value::DslValue::Number(number) => number.as_u64().or_else(|| number.as_i64().and_then(|value| u64::try_from(value).ok())).or_else(|| {
@@ -117,13 +117,13 @@ pub fn window_kit_required_index_argument(args: Option<&semio_framework_value::D
         _ => None,
     };
     integer.and_then(|value| u32::try_from(value).ok()).ok_or_else(|| {
-        semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-range"), format!("the action argument '{key}' must be a non-negative 32-bit integer"))
+        semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.window-kit.argument-range"), format!("the action argument '{key}' must be a non-negative 32-bit integer"))
     })
 }
 
 /// 📊️ Declares the addressed editable-table contract used by stdio record formats.
-pub fn addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
-    use semio_framework_plugin::app::{TableWindowKit, WindowKit};
+pub fn addressed_table_window_kind() -> semio_plugin::WindowKindDefinition {
+    use semio_plugin::app::{TableWindowKit, WindowKit};
     let mut definition = TableWindowKit::editable_window_kind();
     let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("TableWindowKit declares set-cell");
     let column = action.args.iter_mut().find(|argument| argument.id == "column").expect("set-cell declares column");
@@ -132,10 +132,10 @@ pub fn addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefini
 }
 
 /// 🔐️ Declares a table cell address guarded by the rendered document revision.
-pub fn revision_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
-    use semio_framework_plugin::app::{TableWindowKit, WindowKit};
-    use semio_framework_plugin::ActionArgDef;
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn revision_addressed_table_window_kind() -> semio_plugin::WindowKindDefinition {
+    use semio_plugin::app::{TableWindowKit, WindowKit};
+    use semio_plugin::ActionArgDef;
+    use semio_ui_locale::LocalizedLabel;
     let mut definition = TableWindowKit::editable_window_kind();
     let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("TableWindowKit declares set-cell");
     action.args = vec![
@@ -148,9 +148,9 @@ pub fn revision_addressed_table_window_kind() -> semio_framework_plugin::WindowK
 }
 
 /// 🔐️ Declares a table cell address guarded by its row's own revision — a target token, not the document's.
-pub fn row_revision_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
-    use semio_framework_plugin::ActionArgDef;
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn row_revision_addressed_table_window_kind() -> semio_plugin::WindowKindDefinition {
+    use semio_plugin::ActionArgDef;
+    use semio_ui_locale::LocalizedLabel;
     let mut definition = revision_addressed_table_window_kind();
     let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("the revision-addressed table declares set-cell");
     let revision = action.args.iter_mut().find(|argument| argument.id == "revision").expect("set-cell declares revision");
@@ -166,12 +166,12 @@ pub const SET_TABLE_HEADER_ACTION_ID: &str = "set-header";
 
 /// 🧱️ Declares direct structural table edits beside revision-addressed cell editing — retained routes, classified
 /// `Migrated` here like the kit scaffold classifies its own rows, so every app declaring the table assembles.
-pub fn structural_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
-    use semio_framework_plugin::ActionArgDef;
-    use semio_framework_plugin::ActionDefinition;
-    use semio_framework_plugin::ActionKind;
-    use semio_framework_plugin::InteractiveJobClassification;
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn structural_table_window_kind() -> semio_plugin::WindowKindDefinition {
+    use semio_plugin::ActionArgDef;
+    use semio_plugin::ActionDefinition;
+    use semio_plugin::ActionKind;
+    use semio_plugin::InteractiveJobClassification;
+    use semio_ui_locale::LocalizedLabel;
     let revision = || ActionArgDef::document_revision("revision", LocalizedLabel::native("Document revision", "Dokumentrevision"));
     let mut definition = revision_addressed_table_window_kind();
     let structural = [
@@ -204,7 +204,7 @@ pub struct WindowKitRevisionedCellEdit {
 }
 
 /// 🎯️ Parses a revision-guarded table cell edit without destructive defaults.
-pub fn window_kit_revisioned_cell_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitRevisionedCellEdit, semio_framework_plugin::Fault> {
+pub fn window_kit_revisioned_cell_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitRevisionedCellEdit, semio_plugin::Fault> {
     Ok(WindowKitRevisionedCellEdit {
         row: window_kit_required_index_argument(args, "row")?,
         column: window_kit_required_index_argument(args, "column")?,
@@ -215,7 +215,7 @@ pub fn window_kit_revisioned_cell_edit(args: Option<&semio_framework_value::DslV
 
 /// 🔐️ Computes the optimistic revision for one table projection from the typed snapshot.
 pub fn window_kit_snapshot_revision<S: semio_framework_value::ToValue>(snapshot: &S) -> String {
-    semio_framework_plugin::app::DocumentWindowKit::text_revision(&snapshot_edit_source(snapshot))
+    semio_plugin::app::DocumentWindowKit::text_revision(&snapshot_edit_source(snapshot))
 }
 
 /// 🪪️ Encodes the store-owned revision already captured for a render or command operation.
@@ -231,27 +231,27 @@ pub fn window_kit_canonical_revision(revision: [u8; 32]) -> String {
 
 /// 🧾️ Projects a canonical 32-byte hex revision onto the exact decimal u64 lane carried by
 /// `AppFrame::OperationCompleted`, rejecting every malformed or non-canonical input.
-pub fn window_kit_publication_revision(revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiPublicationRevision> {
-    use semio_framework_plugin::PluginAssemblyError;
+pub fn window_kit_publication_revision(revision: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::UiPublicationRevision> {
+    use semio_plugin::PluginAssemblyError;
     if revision.len() != 64 || !revision.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
         return Err(PluginAssemblyError::new("stdio.table.publication-revision", "table publication revision must be 32 canonical lowercase hex bytes"));
     }
     let prefix = u64::from_str_radix(&revision[..16], 16).map_err(|_| PluginAssemblyError::new("stdio.table.publication-revision", "table publication revision prefix is invalid"))?;
-    Ok(semio_framework_plugin::UiPublicationRevision(prefix))
+    Ok(semio_plugin::UiPublicationRevision(prefix))
 }
 
 /// 🎨️ Projects the exact store revision captured for a render pass onto the completion lane.
-pub fn window_kit_artifact_publication_revision<S: semio_framework_value::ToValue>(doc: &semio_framework_plugin::ArtifactView<'_, S>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiPublicationRevision> {
-    semio_framework_plugin::app::artifact_render_publication_revision(doc)
+pub fn window_kit_artifact_publication_revision<S: semio_framework_value::ToValue>(doc: &semio_plugin::ArtifactView<'_, S>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiPublicationRevision> {
+    semio_plugin::app::artifact_render_publication_revision(doc)
 }
 
 /// 🎨️ Projects one renderer-captured store authority without materializing or renumbering it.
 pub fn window_kit_render_publication_revision<S: semio_framework_value::ToValue>(
     _snapshot: &S,
-    render_operation: Option<semio_framework_plugin::AppRenderOperationContext>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiPublicationRevision> {
+    render_operation: Option<semio_plugin::AppRenderOperationContext>,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::UiPublicationRevision> {
     render_operation
-        .map(semio_framework_plugin::app::render_operation_publication_revision)
+        .map(semio_plugin::app::render_operation_publication_revision)
         .ok_or_else(|| PluginAssemblyError::new("stdio.render.publication-revision", "editable rendering requires a render-pinned document revision"))
 }
 
@@ -262,8 +262,8 @@ fn table_arena(stage: &'static str) -> PluginAssemblyError {
 }
 
 /// 📍️ Builds one complete revision-guarded ordinal cell address without materializing its table.
-pub fn window_kit_revisioned_cell_arguments(row: usize, column: usize, revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
+pub fn window_kit_revisioned_cell_arguments(row: usize, column: usize, revision: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    use semio_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| table_arena("cell argument map"))?;
     arguments.try_insert("row".into(), UiValue::Number(row as f64)).map_err(|_| table_arena("row argument"))?;
     arguments.try_insert("column".into(), UiValue::Number(column as f64)).map_err(|_| table_arena("column argument"))?;
@@ -274,8 +274,8 @@ pub fn window_kit_revisioned_cell_arguments(row: usize, column: usize, revision:
 }
 
 /// 📍️ Builds one revision-only structural table address.
-pub fn window_kit_revision_arguments(revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
+pub fn window_kit_revision_arguments(revision: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    use semio_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| table_arena("structure argument map"))?;
     arguments
         .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?))
@@ -284,8 +284,8 @@ pub fn window_kit_revision_arguments(revision: &str) -> semio_framework_plugin::
 }
 
 /// 📍️ Builds one row- or column-indexed structural table address.
-pub fn window_kit_indexed_revision_arguments(index_name: &str, index: usize, revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
+pub fn window_kit_indexed_revision_arguments(index_name: &str, index: usize, revision: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    use semio_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| table_arena("indexed argument map"))?;
     arguments.try_insert(index_name.into(), UiValue::Number(index as f64)).map_err(|_| table_arena("index argument"))?;
     arguments
@@ -303,17 +303,17 @@ pub fn render_structural_table(
     editable_headers: bool,
     controller_id: &str,
     revision: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
-    locale: semio_framework_ui_locale::Locale,
-    windows: &semio_framework_plugin::TreeWindows<'_>,
-    table: impl FnOnce() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    use semio_framework_plugin::app::{editable_table_window_row, row_action, row_target, TableWindowKit, WindowedEditableTableCell};
-    use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, PluginAssemblyError, RowActionPlacement, Trigger};
-    use semio_framework_ui_contract::{self as ui, Label as UiLabel};
+    publication_revision: semio_plugin::UiPublicationRevision,
+    locale: semio_ui_locale::Locale,
+    windows: &semio_plugin::TreeWindows<'_>,
+    table: impl FnOnce() -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    use semio_plugin::app::{editable_table_window_row, row_action, row_target, TableWindowKit, WindowedEditableTableCell};
+    use semio_plugin::{ActionId, Buildable, HasBase, HasChildren, PluginAssemblyError, RowActionPlacement, Trigger};
+    use semio_ui_contract::{self as ui, Label as UiLabel};
     let labels = match locale {
-        semio_framework_ui_locale::Locale::De => ("Zeile hinzufügen", "Spalte hinzufügen", "Spaltenköpfe", "Spaltenkopf", "Aktionen", "Spalte entfernen"),
-        semio_framework_ui_locale::Locale::En => ("Add row", "Add column", "Headers", "Header", "Actions", "Remove column"),
+        semio_ui_locale::Locale::De => ("Zeile hinzufügen", "Spalte hinzufügen", "Spaltenköpfe", "Spaltenkopf", "Aktionen", "Spalte entfernen"),
+        semio_ui_locale::Locale::En => ("Add row", "Add column", "Headers", "Header", "Actions", "Remove column"),
     };
     let action = |name: &str| ActionId::try_v1(controller_id, name).ok_or_else(|| PluginAssemblyError::new("stdio.table.action", format!("invalid action {name}")));
     let add_row = ui::button(UiLabel::try_from(labels.0).map_err(|_| PluginAssemblyError::new("stdio.table.add-row", "button label admission"))?)
@@ -360,19 +360,19 @@ pub fn render_structural_table(
 }
 
 /// 📊️ Binds every present table cell to its row, column, and shared snapshot revision.
-pub fn window_kit_revisioned_editable_cells(rows: &[Vec<String>], action_id: &str, revision: &str) -> semio_framework_plugin::UiAssemblyResult<Vec<semio_framework_plugin::app::EditableTableCell>> {
+pub fn window_kit_revisioned_editable_cells(rows: &[Vec<String>], action_id: &str, revision: &str) -> semio_plugin::UiAssemblyResult<Vec<semio_plugin::app::EditableTableCell>> {
     rows.iter()
         .enumerate()
         .flat_map(|(row, cells)| cells.iter().enumerate().map(move |(column, _)| (row, column)))
-        .map(|(row, column)| Ok(semio_framework_plugin::app::EditableTableCell::new(row, column, action_id, window_kit_revisioned_cell_arguments(row, column, revision)?)))
+        .map(|(row, column)| Ok(semio_plugin::app::EditableTableCell::new(row, column, action_id, window_kit_revisioned_cell_arguments(row, column, revision)?)))
         .collect()
 }
 
 /// 🎯️ Declares a stable, revision-guarded spreadsheet cell address.
-pub fn stable_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
-    use semio_framework_plugin::app::{TableWindowKit, WindowKit};
-    use semio_framework_plugin::ActionArgDef;
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn stable_addressed_table_window_kind() -> semio_plugin::WindowKindDefinition {
+    use semio_plugin::app::{TableWindowKit, WindowKit};
+    use semio_plugin::ActionArgDef;
+    use semio_ui_locale::LocalizedLabel;
     let mut definition = TableWindowKit::editable_window_kind();
     let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("TableWindowKit declares set-cell");
     action.args = vec![
@@ -396,7 +396,7 @@ pub struct WindowKitStableCellEdit {
 }
 
 /// 🎯️ Parses a spreadsheet cell edit without ordinal aliases or destructive defaults.
-pub fn window_kit_stable_cell_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitStableCellEdit, semio_framework_plugin::Fault> {
+pub fn window_kit_stable_cell_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitStableCellEdit, semio_plugin::Fault> {
     Ok(WindowKitStableCellEdit {
         sheet_name: window_kit_required_text_argument(args, "sheetName")?,
         row: window_kit_required_index_argument(args, "row")?,
@@ -416,7 +416,7 @@ pub struct WindowKitDocumentTextEdit {
 }
 
 /// 📄️ Parses a document draft payload without aliases, coercion, or destructive defaults.
-pub fn window_kit_document_text_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitDocumentTextEdit, semio_framework_plugin::Fault> {
+pub fn window_kit_document_text_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitDocumentTextEdit, semio_plugin::Fault> {
     Ok(WindowKitDocumentTextEdit {
         page: window_kit_required_index_argument(args, "page")?,
         item: window_kit_required_index_argument(args, "item")?,
@@ -426,21 +426,21 @@ pub fn window_kit_document_text_edit(args: Option<&semio_framework_value::DslVal
 }
 
 /// 🔐️ Rejects a stale document text target before a mutation can be published.
-pub fn require_window_kit_document_revision(text: &str, revision: &str, code: &'static str) -> Result<(), semio_framework_plugin::Fault> {
-    if semio_framework_plugin::app::DocumentWindowKit::text_revision(text) == revision {
+pub fn require_window_kit_document_revision(text: &str, revision: &str, code: &'static str) -> Result<(), semio_plugin::Fault> {
+    if semio_plugin::app::DocumentWindowKit::text_revision(text) == revision {
         return Ok(());
     }
-    Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), "the saved document text changed while the local draft was open"))
+    Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), "the saved document text changed while the local draft was open"))
 }
 
 /// 🎬️ Projects the exact live app/document/revision/generation authority into a media transport resource.
-pub fn media_transport_resource<P>(doc: &semio_framework_plugin::ArtifactView<'_, P>, controller_id: &str) -> Option<semio_framework_plugin::app::MediaResource> {
+pub fn media_transport_resource<P>(doc: &semio_plugin::ArtifactView<'_, P>, controller_id: &str) -> Option<semio_plugin::app::MediaResource> {
     let operation = doc.render_operation()?;
-    Some(semio_framework_plugin::app::MediaResource {
+    Some(semio_plugin::app::MediaResource {
         controller_id: controller_id.to_string(),
         app_instance_id: operation.app_instance_id,
         parent_document_id: doc.parent_document_id()?.to_string(),
-        output_port: semio_framework_plugin::app::MEDIA_PLAYBACK_OUTPUT_PORT.to_string(),
+        output_port: semio_plugin::app::MEDIA_PLAYBACK_OUTPUT_PORT.to_string(),
         revision: operation.base_revision.0.to_string(),
         generation: operation.generation.0.to_string(),
     })
@@ -454,14 +454,14 @@ pub fn media_duration_ms(duration_seconds: f64) -> Option<u64> {
 }
 
 /// 🎬️ The one media transport view every stdio media editor shares: ready exactly when a live revision-bound playback resource exists, otherwise unsupported with a localized reason.
-pub fn media_transport_view(duration_seconds: f64, kind: semio_framework_plugin::app::MediaKind, media_type: &str, host_content_height: f64, locale: semio_framework_ui_locale::Locale, resource: Option<semio_framework_plugin::app::MediaResource>, trim: Option<semio_framework_plugin::app::MediaTrim>) -> semio_framework_plugin::app::MediaView {
-    use semio_framework_plugin::app::MediaCapabilityStatus;
+pub fn media_transport_view(duration_seconds: f64, kind: semio_plugin::app::MediaKind, media_type: &str, host_content_height: f64, locale: semio_ui_locale::Locale, resource: Option<semio_plugin::app::MediaResource>, trim: Option<semio_plugin::app::MediaTrim>) -> semio_plugin::app::MediaView {
+    use semio_plugin::app::MediaCapabilityStatus;
     let ready = resource.is_some();
     let reason = match locale {
-        semio_framework_ui_locale::Locale::En => "Playback waits for a revision-bound document resource.",
-        semio_framework_ui_locale::Locale::De => "Die Wiedergabe wartet auf eine revisionsgebundene Dokumentressource.",
+        semio_ui_locale::Locale::En => "Playback waits for a revision-bound document resource.",
+        semio_ui_locale::Locale::De => "Die Wiedergabe wartet auf eine revisionsgebundene Dokumentressource.",
     };
-    semio_framework_plugin::app::MediaView {
+    semio_plugin::app::MediaView {
         duration_ms: media_duration_ms(duration_seconds),
         position_ms: 0,
         selection_start_ms: None,
@@ -482,23 +482,23 @@ pub fn media_transport_view(duration_seconds: f64, kind: semio_framework_plugin:
 /// in-history mutation (no stdio subset mints a whole-snapshot edit for it), so the switch emits an
 /// `Effect::LoadDocument` carrying the example's own pack plus an edit-free `.spr` log — the shape
 /// `dag`/`reasoning.wires` already use, and the reason the route publishes on the HostOnly lane.
-pub fn load_example_effect<P: pack::snapshot::ArtifactPack>(document: &P, schema: &'static str) -> semio_framework_plugin::Effect {
+pub fn load_example_effect<P: pack::snapshot::ArtifactPack>(document: &P, schema: &'static str) -> semio_plugin::Effect {
     let pack = document.encode_pack();
     let spr = ::semio_framework_async::poll::resolve_ready(kernel::os_store::text_format::empty_document_spr(schema, schema));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+    semio_plugin::Effect::LoadDocument { pack, spr }
 }
 
 /// 📂️ A natural-file or document-pack import as the whole-document load it is: the imported snapshot replaces the open document
 /// through [`load_example_effect`] (no stdio subset mints a whole-snapshot mutation), decoded by the editor's own natural-file
 /// codec on the reserved port or from the structured base64 pack on `artifact:in`. Any other port is not implemented.
-pub fn import_media_as_load<E>(port: &str, media: &semio_framework_plugin::app::Media) -> Result<semio_framework_plugin::Emit<E::Mutation, E::ConfigMutation, E::DraftMutation>, semio_framework_plugin::MediaError>
+pub fn import_media_as_load<E>(port: &str, media: &semio_plugin::app::Media) -> Result<semio_plugin::Emit<E::Mutation, E::ConfigMutation, E::DraftMutation>, semio_plugin::MediaError>
 where
-    E: semio_framework_plugin::ArtifactEditor,
+    E: semio_plugin::ArtifactEditor,
     E::Snapshot: pack::snapshot::ArtifactPack,
 {
-    use semio_framework_plugin::app::MediaPayload;
-    use semio_framework_plugin::MediaError;
-    let snapshot = if port == semio_framework_plugin::NATURAL_FILE_PORT {
+    use semio_plugin::app::MediaPayload;
+    use semio_plugin::MediaError;
+    let snapshot = if port == semio_plugin::NATURAL_FILE_PORT {
         let codec = E::natural_file_codec().ok_or(MediaError::NotImplemented)?;
         let MediaPayload::Intrinsic { schema, value: value::DslValue::Bytes(bytes) } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "natural file importer requires intrinsic owned bytes".into()));
@@ -516,7 +516,7 @@ where
     } else {
         return Err(MediaError::NotImplemented);
     };
-    Ok(semio_framework_plugin::Emit { effects: vec![load_example_effect(&snapshot, E::DOCUMENT_SCHEMA)], ..Default::default() })
+    Ok(semio_plugin::Emit { effects: vec![load_example_effect(&snapshot, E::DOCUMENT_SCHEMA)], ..Default::default() })
 }
 
 /// 📇️ The picker's own action declaration — one row per stdio editor, so the nine editors cannot
@@ -525,15 +525,15 @@ where
 /// records never reads a hand-written description. The caller still chains `.action_args(..)`, `.action_destructive(..)`
 /// and `.action_interactive_job(.., Migrated)`: only `Migrated` survives UI dispatch, and only a
 /// destructive row makes the MCP gateway ask before replacing a document.
-pub fn set_active_example_action() -> semio_framework_plugin::ActionDefinition {
-    let label = semio_framework_plugin::app::runtime_verb_label(SET_ACTIVE_EXAMPLE_ACTION_ID).expect("the framework labels its load-example verb");
-    semio_framework_plugin::ActionDefinition::new(SET_ACTIVE_EXAMPLE_ACTION_ID, label, semio_framework_plugin::ActionKind::Mutation, "file")
+pub fn set_active_example_action() -> semio_plugin::ActionDefinition {
+    let label = semio_plugin::app::runtime_verb_label(SET_ACTIVE_EXAMPLE_ACTION_ID).expect("the framework labels its load-example verb");
+    semio_plugin::ActionDefinition::new(SET_ACTIVE_EXAMPLE_ACTION_ID, label, semio_plugin::ActionKind::Mutation, "file")
 }
 
 /// 💬️ The agent-facing description of every stdio editor's `setActiveExample` — one sentence for all formats,
 /// beside the argument form every stdio editor already shares.
-pub fn set_active_example_description() -> semio_framework_ui_locale::LocalizedLabel {
-    semio_framework_ui_locale::LocalizedLabel::native(
+pub fn set_active_example_description() -> semio_ui_locale::LocalizedLabel {
+    semio_ui_locale::LocalizedLabel::native(
         "Replaces the whole open document with one of the bundled examples for its format, by example id.",
         "Ersetzt das gesamte offene Dokument durch eines der mitgelieferten Beispiele für sein Format, anhand der Beispiel-Id.",
     )
@@ -541,11 +541,11 @@ pub fn set_active_example_description() -> semio_framework_ui_locale::LocalizedL
 
 /// 📝️ The picker's typed argument: one option per example this editor's subset publishes, defaulting
 /// to the one the pane boots.
-pub fn set_active_example_args(options: &[(&str, semio_framework_ui_locale::LocalizedLabel)], default_example_id: &str) -> Vec<semio_framework_plugin::ActionArgDef> {
-    vec![semio_framework_plugin::ActionArgDef::select(
+pub fn set_active_example_args(options: &[(&str, semio_ui_locale::LocalizedLabel)], default_example_id: &str) -> Vec<semio_plugin::ActionArgDef> {
+    vec![semio_plugin::ActionArgDef::select(
         "exampleId",
-        semio_framework_ui_locale::LocalizedLabel::native("Example", "Beispiel"),
-        options.iter().map(|(id, label)| semio_framework_plugin::ActionArgOption::new(*id, label.clone())).collect(),
+        semio_ui_locale::LocalizedLabel::native("Example", "Beispiel"),
+        options.iter().map(|(id, label)| semio_plugin::ActionArgOption::new(*id, label.clone())).collect(),
     )
     .default_value(&default_example_id.to_string())]
 }

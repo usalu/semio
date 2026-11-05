@@ -1,6 +1,6 @@
 use crate::GIF_87A_DIALECT;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
 use crate::editor::gif_87a::*;
 
 #[semio_framework_async_macros::async_test]
@@ -48,13 +48,13 @@ fn paint_command(args: Vec<(&str, u64)>) -> Gif87aEditCommand {
     super::gif87a_editor_command_from_action(paint_region::ACTION_ID, Some(&semio_framework_value::DslValue::object(args.into_iter().map(|(key, value)| (key.into(), number(value))).collect::<Vec<_>>()))).expect("typed paint-region action")
 }
 
-fn drive_paint(command: &Gif87aEditCommand, snapshot: &crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot) -> Result<Vec<crate::standards::v87a::subsets::any::schema::mutations::GifMutation>, semio_framework_plugin::Fault> {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-    let config = semio_framework_plugin::NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+fn drive_paint(command: &Gif87aEditCommand, snapshot: &crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot) -> Result<Vec<crate::standards::v87a::subsets::any::schema::mutations::GifMutation>, semio_plugin::Fault> {
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    let config = semio_plugin::NoConfig::default();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "paint-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "paint-region-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
+    let hover = semio_plugin::app::InteractionHoverState::default();
+    let operation = semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "paint-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "paint-region-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new();
     assert!(work.extent(command, snapshot, &interaction, None).is_some());
     for _ in 0..4096 {
@@ -63,7 +63,7 @@ fn drive_paint(command: &Gif87aEditCommand, snapshot: &crate::standards::v87a::s
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
         let step = work.step(&ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx);
         match step {
-            Err(failure) => return Err(semio_framework_plugin::Fault::from(format!("{failure:?}"))),
+            Err(failure) => return Err(semio_plugin::Fault::from(format!("{failure:?}"))),
             Ok(ArtifactCommandWorkStep::Progress { preview, .. }) => assert!(std::str::from_utf8(preview).unwrap().contains("\"de\"")),
             Ok(ArtifactCommandWorkStep::Complete(emit)) => return Ok(emit.artifact_mutations),
             Ok(_) => panic!("unexpected paint region work step"),
@@ -104,7 +104,7 @@ fn window_declares_region_painting_as_a_mutation_action() {
     use crate::editor::gif_87a::modes::edit::windows::main;
     let definition = main::definition();
     let paint = definition.actions.iter().find(|action| action.id == "paint-region").expect("region painting is a window action");
-    assert_eq!(paint.kind, semio_framework_plugin::ActionKind::Mutation);
+    assert_eq!(paint.kind, semio_plugin::ActionKind::Mutation);
 }
 
 #[test]
@@ -115,4 +115,4 @@ fn native_receipt_codecs_carry_the_pack_hash_of_the_registered_document_codecs()
     assert_eq!(registered_89a.pack_schema_hash, crate::native_codec_89a().pack_schema_hash);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::gif_87a::Gif87aEditor, || semio_framework_plugin::App { definition: crate::editor::gif_87a::create_gif_87a_editor(), examples: Vec::new() }, "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::gif_87a::Gif87aEditor, || semio_plugin::App { definition: crate::editor::gif_87a::create_gif_87a_editor(), examples: Vec::new() }, "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any");

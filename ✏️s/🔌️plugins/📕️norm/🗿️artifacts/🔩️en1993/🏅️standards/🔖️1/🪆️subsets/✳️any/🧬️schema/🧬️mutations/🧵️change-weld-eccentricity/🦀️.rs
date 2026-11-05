@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeWeldEccentricity w
         record: "ChangedWeldEccentricity",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Eccentricity e of the force of the weld group", "Schweißnahtgruppe: Ausmitte e der Kraft ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Eccentricity e of the force of the weld group", "Schweißnahtgruppe: Ausmitte e der Kraft ändern")
     }
 }
 

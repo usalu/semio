@@ -1,7 +1,7 @@
 //! 🧪️ Provenance text copies and every abandoned partial cursor have exact physical receipts.
 use super::*;
-use semio_framework_os_kernel::MutationOrigin;
-use semio_framework_os_kernel as store;
+use semio_os_kernel::MutationOrigin;
+use semio_os_kernel as store;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,default_now_us};
 use semio_framework_value::RetainedCloneGrant;
 fn turn<R>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->R{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,run));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes),"actual original provenance receipt {p:?}");result.unwrap()}

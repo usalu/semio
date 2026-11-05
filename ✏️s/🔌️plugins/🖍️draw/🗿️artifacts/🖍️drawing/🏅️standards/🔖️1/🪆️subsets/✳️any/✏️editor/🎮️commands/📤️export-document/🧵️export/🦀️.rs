@@ -1,15 +1,15 @@
 //! 📤️ Registered captured serializers publish through the existing sealed download completion.
 use crate::{DRAWING_BOUNDED_PAYLOAD_SCHEMA, DRAWING_EXPORT_PUBLICATION_CONTRACTS, DRAWING_EXPORT_TOOL_IDS, DrawingCommand, DrawingPlayApp};
 use semio_s_artifact_draw_drawing_editor_commands::export_document;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
-use semio_framework_plugin::app::{ArtifactDownloadOutput,ArtifactOutputChunks};
-use semio_framework_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerJob,OwnedSerializerOutput,io_begin_owned_serialization};
+use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
+use semio_plugin::app::{ArtifactDownloadOutput,ArtifactOutputChunks};
+use semio_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerJob,OwnedSerializerOutput,io_begin_owned_serialization};
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{DslValue,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
 use semio_framework::Fault;
-type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
+type App=semio_plugin::EditorApp<DrawingPlayApp>;
 /// 🪙️ Admits the serializer frame under the same fixed limits the framework applies to every owned tool birth.
 fn birth_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES,maximum_depth:1,..Default::default()}}
 /// 📨️ Funds one zero-heap terminal ownership transfer independently of the frame birth.
@@ -27,7 +27,7 @@ impl Work{
 impl ArtifactCommandWork<App> for Work{
  fn tool_id(&self)->&'static str{"exportDocument"}
  fn work_demands(&self,_input:&ArtifactCommandInputs<'_,App>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Self>(),depth:1,..Default::default()})}
- fn extent(&self,command:&DrawingCommand,_snapshot:&DrawingSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize>{(!self.complete&&matches!(command,DrawingCommand::ExportDocument(_))).then_some(1)}
+ fn extent(&self,command:&DrawingCommand,_snapshot:&DrawingSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize>{(!self.complete&&matches!(command,DrawingCommand::ExportDocument(_))).then_some(1)}
  fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>, semio_framework_job::OriginalTurnFailure> {
         if self.read.is_none()&&self.phase=="header"&&self.request.is_none()&&!self.complete&&!self.closing{self.read=input.snapshot_read.take_current(input.operation.generation,input.operation.canonical_base_revision,cx)?;return Ok(ArtifactCommandWorkStep::Progress{stage:self.phase,preview:b""})}
         let original: Result<_, Fault> = (|| {if self.complete||self.closing||cx.is_cancelled(){return Err(Fault::from("Drawing export cancelled or terminal"));}let generation=input.operation.generation;let revision=input.operation.canonical_base_revision;if self.phase!="handoff-fault"&&!self.source_authority_matches(generation,revision){return Err(Fault::from("Drawing export source authority changed"));}if cx.should_yield(){return Ok(ArtifactCommandWorkStep::Progress{stage:self.phase,preview:b""});}let DrawingCommand::ExportDocument(payload)=input.command else{return Err(Fault::from("Drawing export command required"));};
@@ -58,16 +58,16 @@ impl ArtifactCommandWork<App> for Work{
 pub struct DrawingExportCommandJobFactory{keys:Vec<semio_framework::ToolFactoryKey>}
 impl DrawingExportCommandJobFactory{pub fn new(controller:&str)->Self{Self{keys:vec![semio_framework::ToolFactoryKey::new(controller,"exportDocument")]}}}
 impl semio_framework::ToolJobFactory for DrawingExportCommandJobFactory {
- type Payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<App>;
- type Job=semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<App>;
+ type Payload=semio_plugin::retained_command::ArtifactRetainedCommandPayload<App>;
+ type Job=semio_plugin::retained_command::ArtifactRetainedCommandJob<App>;
  fn keys(&self)->&[semio_framework::ToolFactoryKey]{&self.keys}
  fn payload_schema_id(&self)->&str{DRAWING_BOUNDED_PAYLOAD_SCHEMA}
  fn classification(&self)->semio_framework::InteractiveJobClassification{semio_framework::InteractiveJobClassification::Migrated}
  fn execution_contract(&self)->semio_framework::ToolExecutionContract{semio_framework::ToolExecutionContract::resumable(4096,4096,1,OUTPUT_LIMIT,7500,1,1)}
- semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:4096,checkpoint_resume:false);
+ semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:4096,checkpoint_resume:false);
 }
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingExportCommandJobFactory{type Owner=App;const TOOL_IDS:&'static[&'static str]=DRAWING_EXPORT_TOOL_IDS;const DOCUMENT_SCHEMA:&'static str=DRAWING_DOCUMENT_SCHEMA;const PUBLICATION_CONTRACTS:&'static[semio_framework_plugin::ArtifactToolPublicationContract]=DRAWING_EXPORT_PUBLICATION_CONTRACTS;}
-pub fn build(request:&mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<App>>,output:&mut Option<semio_framework_plugin::ErasedToolJob>,cx:&mut semio_framework_plugin::__job::StepContext<'_>)->Result<bool,semio_framework_plugin::__job::OriginalTurnFailure>{
- semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,4096,4096,false,|_|Work::new(birth_grant(),handoff_grant()))
+impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingExportCommandJobFactory{type Owner=App;const TOOL_IDS:&'static[&'static str]=DRAWING_EXPORT_TOOL_IDS;const DOCUMENT_SCHEMA:&'static str=DRAWING_DOCUMENT_SCHEMA;const PUBLICATION_CONTRACTS:&'static[semio_plugin::ArtifactToolPublicationContract]=DRAWING_EXPORT_PUBLICATION_CONTRACTS;}
+pub fn build(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<App>>,output:&mut Option<semio_plugin::ErasedToolJob>,cx:&mut semio_plugin::__job::StepContext<'_>)->Result<bool,semio_plugin::__job::OriginalTurnFailure>{
+ semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,4096,4096,false,|_|Work::new(birth_grant(),handoff_grant()))
 }
 

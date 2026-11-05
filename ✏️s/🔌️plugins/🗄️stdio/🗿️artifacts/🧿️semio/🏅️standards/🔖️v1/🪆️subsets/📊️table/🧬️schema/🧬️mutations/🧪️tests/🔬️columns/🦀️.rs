@@ -1,6 +1,6 @@
 //! 🧪️ Fixture laws of the semio table column mutations (create, delete, rename, reorder), over the mutation crate's public API.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🏗️create-column/🧪️tests/🏗️appends/🦀️.rs"]
 mod tests_create_column_appends_a_float_column_and_null_pads_every_row;

@@ -42,18 +42,18 @@ pub const BITMAP_INFERENCE_COMMIT_ACTION: &str = "pin-solution";
 
 /// 📜️ The whole published contract for `s.wfc.bitmap.solve`: request schema, result schema, the
 /// unit its bounded job counts, and the artifact binding that makes it callable at all.
-pub const BITMAP_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePayloadContract = semio_framework_plugin::ArtifactInferencePayloadContract {
+pub const BITMAP_INFERENCE_CONTRACT: semio_plugin::ArtifactInferencePayloadContract = semio_plugin::ArtifactInferencePayloadContract {
     payload_schema_id: BITMAP_INFERENCE_PAYLOAD_SCHEMA,
     input_schema: BITMAP_INFERENCE_REQUEST_SCHEMA,
     output_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"),
     progress_unit: "cells",
-    artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
-    commit: Some(semio_framework_plugin::ArtifactInferenceCommitBinding { action: BITMAP_INFERENCE_COMMIT_ACTION }),
+    artifact_binding: Some(semio_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
+    commit: Some(semio_plugin::ArtifactInferenceCommitBinding { action: BITMAP_INFERENCE_COMMIT_ACTION }),
 };
 
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.
-pub const fn bitmap_inference_metadata() -> semio_framework_plugin::ArtifactInferenceServiceMetadata {
-    semio_framework_plugin::ArtifactInferenceServiceMetadata {
+pub const fn bitmap_inference_metadata() -> semio_plugin::ArtifactInferenceServiceMetadata {
+    semio_plugin::ArtifactInferenceServiceMetadata {
         owner: "wfc",
         artifact_kind: "s.wfc.bitmap",
         artifact_schema: "s.wfc.bitmap",
@@ -91,7 +91,7 @@ pub struct BitmapInferenceRequest {
     /// `inference_run` with `artifactId` never has to state a snapshot it could not type: the
     /// gateway binds the document here and the guest decodes it into its own snapshot below.
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub document: Option<semio_framework_plugin::ArtifactDocumentPayload>,
+    pub document: Option<semio_plugin::ArtifactDocumentPayload>,
     pub checkpoint: Option<Vec<u8>>,
 }
 
@@ -806,7 +806,7 @@ impl semio_framework::ToolJobFactory for BitmapInferenceJobFactory {
         semio_framework::ToolExecutionContract::resumable(16 << 20, MAX_BITMAP_INPUT_CELLS + MAX_BITMAP_OUTPUT_CELLS + MAX_BITMAP_PINS, 4_096, MAX_BITMAP_OUTPUT_BYTES, 7_500, 1, 1)
     }
 
-    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| BitmapInferenceJob::new(operation, payload));
+    semio_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| BitmapInferenceJob::new(operation, payload));
 }
 
 pub fn register_bitmap_inference_factory(bus: &semio_framework::ActionBus) -> Result<(), semio_framework::ToolRegistrationError> {

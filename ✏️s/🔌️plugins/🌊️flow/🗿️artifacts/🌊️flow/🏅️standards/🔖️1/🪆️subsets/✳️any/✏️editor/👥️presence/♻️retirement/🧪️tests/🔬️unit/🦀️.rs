@@ -5,7 +5,7 @@ use std::sync::Arc;
 #[allow(unused_imports)]
 use semio_framework_value::{ValueError, RetainedCloneProgress};
 use crate::editor::flow::presence::retirement::*;
-use semio_framework_plugin::{ArtifactApp,EditorApp,PluginLifecycleStep};
+use semio_plugin::{ArtifactApp,EditorApp,PluginLifecycleStep};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 fn presence(value:&serde_json::Value)->FlowPresence{let text=value["unit"].as_str().unwrap().repeat(value["repeat"].as_u64().unwrap() as usize);FlowPresence{preview_off_node_ids:if text.is_empty(){vec![]}else{vec![text]},camera:semio_framework_artifact_flow_flow::CameraJson{x:2.0,y:3.0,zoom:4.0}}}

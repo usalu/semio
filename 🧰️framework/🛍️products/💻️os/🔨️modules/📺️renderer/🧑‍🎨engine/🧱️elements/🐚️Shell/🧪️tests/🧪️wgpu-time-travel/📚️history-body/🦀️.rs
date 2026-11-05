@@ -6,8 +6,8 @@ const HISTORY_BODY_OPERATIONS: u32 = 120;
 const HISTORY_BODY_PROJECTED: u32 = 3;
 
 /// 🧱️ Publishes the guest producer through the same bounded, parent/key reconciler as its runtime.
-fn publish_history_body(current: &mut Option<semio_framework_ui_runtime::SurfaceReconciler>, built: ui_contract::BuiltNode, generation: u64) -> UiDocumentLease {
-    use semio_framework_ui_runtime::{ComponentTree, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconciler};
+fn publish_history_body(current: &mut Option<semio_ui_runtime::SurfaceReconciler>, built: ui_contract::BuiltNode, generation: u64) -> UiDocumentLease {
+    use semio_ui_runtime::{ComponentTree, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconciler};
     let surface = SurfaceId::try_from(FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("History surface");
     let mut job = SurfaceReconcileJob::try_new(current.take().unwrap_or_else(|| SurfaceReconciler::new(surface)), ComponentTree::new(built), generation).expect("history producer admission");
     let mut sequence = 0;
@@ -36,9 +36,9 @@ fn publish_history_body(current: &mut Option<semio_framework_ui_runtime::Surface
 }
 
 /// 🧹️ Retires the fixture publisher after its renderer and document readers release their roots.
-fn close_history_producer(current: &mut Option<semio_framework_ui_runtime::SurfaceReconciler>) {
+fn close_history_producer(current: &mut Option<semio_ui_runtime::SurfaceReconciler>) {
     if let Some(current) = current.take() {
-        let mut terminal = semio_framework_ui_runtime::SurfaceReconcileTerminal::try_from_reconciler(current, 1000).expect("publisher close admission");
+        let mut terminal = semio_ui_runtime::SurfaceReconcileTerminal::try_from_reconciler(current, 1000).expect("publisher close admission");
         while !terminal.close_step() {}
     }
 }
@@ -105,7 +105,7 @@ fn list_editor_panel() -> TimeTravelPanel {
 /// [`HISTORY_BODY_OPERATIONS`] operations ([`HISTORY_BODY_PROJECTED`] projected), the host's window `(offset, rows)` over that
 /// row with the store's page past the projection, the session `panel` when a history edit is open, and the history step
 /// still replaying (`reprojection`).
-fn history_body(current: &mut Option<semio_framework_ui_runtime::SurfaceReconciler>, window: Option<(u32, u32)>, panel: Option<TimeTravelPanel>, reprojection: Option<HistoryReprojection>, locale: Locale, generation: u64) -> UiDocumentLease {
+fn history_body(current: &mut Option<semio_ui_runtime::SurfaceReconciler>, window: Option<(u32, u32)>, panel: Option<TimeTravelPanel>, reprojection: Option<HistoryReprojection>, locale: Locale, generation: u64) -> UiDocumentLease {
     let history = HistoryView {
         commands: vec![CommandView {
             seq: 1,
@@ -129,12 +129,12 @@ fn history_body(current: &mut Option<semio_framework_ui_runtime::SurfaceReconcil
         ..HistoryView::empty()
     };
     let mut pages = HistoryMutationPages::new();
-    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     if let Some((offset, rows)) = window {
         let start = offset.min(HISTORY_BODY_OPERATIONS.saturating_sub(rows));
         let paged = start.max(HISTORY_BODY_PROJECTED);
         pages.insert(1, HistoryMutationPage { from: (paged - HISTORY_BODY_PROJECTED) as usize, rows: (paged..(start + rows).min(HISTORY_BODY_OPERATIONS)).map(drag_mutation).collect() });
-        view.tree_windows = vec![semio_framework::TreeWindowRequest { body_key: semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: history_row_window_path(1), open: Some(true), offset, rows }];
+        view.tree_windows = vec![semio_framework::TreeWindowRequest { body_key: semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: history_row_window_path(1), open: Some(true), offset, rows }];
     }
     let built = semio_framework_async::block_on(ui_history_panel(&history, panel.as_ref(), reprojection.as_ref(), &pages, "s.test.history", locale, false, false, &view)).expect("the guest's history body assembles");
     let viewport: Value = serde_json::from_str(include_str!("../../../../../../../🔌️plugin/🧪️tests/🧫️fixtures/history-panel-command-window/🔣️.json")).expect("the neutral history viewport fixture");
@@ -150,12 +150,12 @@ fn history_document_node_id(document: &UiDocumentLease, key: &str) -> ui_contrac
 
 /// ♿️ The History surface's mirror node whose key names `key`.
 fn history_mirror_node(key: &str) -> Option<ui_contract::AccessibilityProjectionNode> {
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID).into_iter().find(|node| projected_key_is(&node.key, key))
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID).into_iter().find(|node| projected_key_is(&node.key, key))
 }
 
 /// 📜️ The mutation rows the History surface's mirror shows, in reading order.
 fn history_mirror_mutations() -> Vec<String> {
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID)
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID)
         .into_iter()
         .filter_map(|node| node.key.rsplit('/').next().and_then(|key| key.strip_prefix("framework.history.mutation.")).filter(|id| !id.contains("::")).map(str::to_owned))
         .collect()
@@ -173,16 +173,16 @@ fn wheel_history_window_into_view(shell: &mut ShellState, surface: &str, documen
         assert!(shell.input.handle_pointer_wheel(x, y, 0.0, row_h * 3.0, &mut input), "the History body owns the wheel");
         input = paint_retained_body(shell, surface, document, body);
     }
-    panic!("`{wanted}` never scrolled into the History body: windows={:?} shown={:?}", semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::tree_window_measures(surface), history_mirror_mutations());
+    panic!("`{wanted}` never scrolled into the History body: windows={:?} shown={:?}", semio_renderer_wgpu_ui_engine::retained_ui_engine::tree_window_measures(surface), history_mirror_mutations());
 }
 
 /// 🖱️ Activates one History mirror node the way the ARIA mirror's click does; answers what it dispatched.
 fn activate_history_mirror_node(shell: &mut ShellState, key: &str) -> Vec<ActionDescriptor> {
     let node = history_mirror_node(key).unwrap_or_else(|| panic!("`{key}` is in the mirror"));
-    let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID, &node.key).expect("a mirror node is an accessibility target");
+    let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID, &node.key).expect("a mirror node is an accessibility target");
     let mut input = InputState::<ActionDescriptor>::default();
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("the activation is handled");
-    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
+    semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 /// ⚖️ LAW (gaps N1 + N15 on wgpu, through the guest's REAL producer and the ARIA mirror): a closed transaction row of 120
@@ -212,7 +212,7 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
     shell.dock.observe_tree_windows(surface, &shell.docs);
     let (requests, _) = shell.dock.tree_windows.view_state_fields();
     let path = history_row_window_path(1);
-    let asked = requests.iter().find(|request| request.body_key == semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY && request.node_key == path).cloned().unwrap_or_else(|| panic!("the opened row is asked for by the guest's window path {path:?}: {requests:?}"));
+    let asked = requests.iter().find(|request| request.body_key == semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY && request.node_key == path).cloned().unwrap_or_else(|| panic!("the opened row is asked for by the guest's window path {path:?}: {requests:?}"));
     assert!(asked.open == Some(true) && asked.rows > HISTORY_BODY_PROJECTED, "the request opens the row over more than its projection: {asked:?}");
 
     documents.push(history_body(&mut producer, Some((asked.offset, asked.rows)), None, None, Locale::En, 2));

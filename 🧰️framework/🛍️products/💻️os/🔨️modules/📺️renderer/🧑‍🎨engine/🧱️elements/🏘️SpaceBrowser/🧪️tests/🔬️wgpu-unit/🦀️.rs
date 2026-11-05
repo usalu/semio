@@ -8,7 +8,7 @@
 //! IS the canonical order the sealer re-serializes and byte-compares.
 
 use super::*;
-use semio_framework_os_kernel::os_directory::{MemberSpaceViewV1, PublicSpaceViewV1};
+use semio_os_kernel::os_directory::{MemberSpaceViewV1, PublicSpaceViewV1};
 
 const FIXTURE: &str = include_str!("../../../../../../📇️directory/🧪️tests/🧫️fixtures/🏘️spaces/🔣️.json");
 const DIRECTORY_SCHEMA_SOURCE: &str = include_str!("../../../../../../📇️directory/🧬️schema/📖️events-commands-and-admin/🦀️.rs");
@@ -282,7 +282,7 @@ fn the_receipt_fold_agrees_with_the_directory_read_model_on_the_golden_log() {
     let golden = fixture()["receiptFolds"].as_array().expect("receiptFolds").iter().find(|fold| fold["id"] == "the-golden-directory-log-folds-to-the-read-models-view-of-its-owner").cloned().expect("golden fold");
     let events = fixture_events(&golden["events"]);
     let user_id = golden["userId"].as_str().expect("user id");
-    let model = events.iter().fold(semio_framework_os_kernel::os_directory::DirectoryReadModel::default(), semio_framework_os_kernel::os_directory::fold);
+    let model = events.iter().fold(semio_os_kernel::os_directory::DirectoryReadModel::default(), semio_os_kernel::os_directory::fold);
     let rows = space_rows_after_events(&[], &events, user_id);
     let mine: Vec<_> = model.spaces.values().filter(|space| space.members.iter().any(|member| member.user_id == user_id)).collect();
     assert_eq!(rows.iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), mine.iter().map(|space| space.view.id.as_str()).collect::<Vec<_>>());

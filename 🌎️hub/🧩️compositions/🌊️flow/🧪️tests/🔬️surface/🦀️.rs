@@ -3,7 +3,7 @@ use crate::viewer::flow::FlowViewer;
 
 #[semio_framework_async_macros::async_test]
 async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
-    use semio_framework_plugin::{AppRole, PluginApp, PluginCloseStep};
+    use semio_plugin::{AppRole, PluginApp, PluginCloseStep};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️surface-owners/🔣️.json")).unwrap();
     let plugin = super::plugin().expect("the actual Flow package must assemble every registered surface");
     assert_eq!(plugin.manifest.apps.len(), fixture["expected"]["factories"].as_u64().unwrap() as usize);
@@ -21,7 +21,7 @@ async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
     for definition in &plugin.manifest.apps {
         for grant in fixture["byteGrants"].as_array().unwrap() {
             let bytes = grant.as_u64().unwrap() as usize;
-            let mut app = plugin.create_app(&definition.id, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).expect("every declared surface has an actual factory");
+            let mut app = plugin.create_app(&definition.id, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).expect("every declared surface has an actual factory");
             assert!(matches!((&app, &definition.role), (super::FlowApps::FlowEditor(_), AppRole::Editor) | (super::FlowApps::FlowViewer(_), AppRole::Viewer)));
             let mut completed = false;
             let (mut turns, mut released_item_total, mut released_byte_total, mut idle_turns) = (0u64, 0u64, 0u64, 0u64);
@@ -62,11 +62,11 @@ async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
 /// 👁️ A viewer instance never mutates the document store, even when dispatched.
 #[semio_framework_async_macros::async_test]
 async fn flow_viewer_never_mutates() {
-    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<FlowViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_plugin::artifact_app_laws::assert_viewer_never_mutates::<FlowViewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
 #[semio_framework_async_macros::async_test]
 async fn flow_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<FlowPlayApp, FlowViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<FlowPlayApp, FlowViewer>().await;
 }

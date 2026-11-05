@@ -1,8 +1,8 @@
 //! 🧬️ mutations of `semio-s-artifact-flow-flow` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use crate::standards::v1::subsets::any::schema::snapshot::FlowSnapshot;
 pub use crate::standards::v1::subsets::any::schema::mutations::FlowMutation;
@@ -141,3 +141,7 @@ pub mod editor {
         }
     }
 }
+
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

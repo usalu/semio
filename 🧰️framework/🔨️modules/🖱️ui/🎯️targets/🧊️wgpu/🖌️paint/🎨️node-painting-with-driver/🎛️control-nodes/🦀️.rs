@@ -5,7 +5,7 @@ use super::*;
 /// 🔘 Paints one step of a button node: chrome, border and label.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_button_node_step(
-    button: &semio_framework_ui_declaration::ui::UiButtonNode,
+    button: &semio_ui_declaration::ui::UiButtonNode,
     atlas: &mut FontAtlas,
     icons: Option<&IconAtlas>,
     draw: &mut DrawList,
@@ -45,7 +45,7 @@ pub(super) fn paint_button_node_step(
 /// ⌨ Paints one step of an input node: chrome, text, caret and selection.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_input_node_step(
-    input_node: &semio_framework_ui_declaration::ui::UiInputNode,
+    input_node: &semio_ui_declaration::ui::UiInputNode,
     atlas: &mut FontAtlas,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
@@ -111,7 +111,7 @@ pub(super) fn paint_input_node_step(
 /// 🔽 Paints one step of a select node: the closed control and the open popup.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_select_node_step(
-    select: &semio_framework_ui_declaration::ui::UiSelectNode,
+    select: &semio_ui_declaration::ui::UiSelectNode,
     tree: &UiTree,
     id: NodeId,
     atlas: &mut FontAtlas,
@@ -171,7 +171,7 @@ pub(super) fn paint_select_node_step(
                 let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], theme.border_radius, theme.glass(Level::Menu));
                 draw.begin_glass_content(glass);
                 push_chrome_border(draw, popup.menu, theme.stroke_hairline, theme.border_normal, true, true, true, true);
-                draw.push_scissor(semio_framework_ui_select_behavior::select_popup_viewport_rect(popup));
+                draw.push_scissor(semio_ui_select_behavior::select_popup_viewport_rect(popup));
                 opened = true;
             });
             cursor.phase = 4;
@@ -190,7 +190,7 @@ pub(super) fn paint_select_node_step(
                 let _ = retained_select_close_route(draw, cursor);
                 return RetainedNodePaintStep::Fault;
             };
-            let row = semio_framework_ui_select_behavior::select_popup_row_rect(bounds, cursor.item, popup, theme);
+            let row = semio_ui_select_behavior::select_popup_row_rect(bounds, cursor.item, popup, theme);
             let item = &select.items[cursor.item];
             let highlighted = node.state.highlighted == Some(cursor.item);
             let result = retained_fixed_output(draw, |draw| {
@@ -220,7 +220,7 @@ pub(super) fn paint_select_node_step(
                 let _ = retained_select_close_route(draw, cursor);
                 return RetainedNodePaintStep::Fault;
             };
-            let painted = semio_framework_ui_select_behavior::select_popup_row_rect(bounds, cursor.item, popup, theme);
+            let painted = semio_ui_select_behavior::select_popup_row_rect(bounds, cursor.item, popup, theme);
             let row = Rect::new(painted.x + theme.padding_standard, painted.y, (painted.w - theme.padding_standard).max(0.0), painted.h);
             match retained_text_node_step(item.label.as_str(), row, theme.font_size_body, theme.text, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
@@ -276,7 +276,7 @@ pub(super) fn paint_select_node_step(
 /// 🔀 Paints one step of a toggle node: the switch or checkbox and its label.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_toggle_node_step(
-    toggle: &semio_framework_ui_declaration::ui::UiToggleNode,
+    toggle: &semio_ui_declaration::ui::UiToggleNode,
     atlas: &mut FontAtlas,
     icons: Option<&IconAtlas>,
     inline: ui_contract::FlowInline,
@@ -330,7 +330,7 @@ pub(super) fn paint_toggle_node_step(
 /// 🧩 Paints one step of an icon select node: the icon grid and its selection.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_icon_select_node_step(
-    select: &semio_framework_ui_declaration::ui::UiIconSelectNode,
+    select: &semio_ui_declaration::ui::UiIconSelectNode,
     atlas: &mut FontAtlas,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,

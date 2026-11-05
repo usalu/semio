@@ -1,0 +1,124 @@
+{
+  "schema": "flow.native-resolve-action.v1",
+  "cases": [
+    {
+      "name": "Native Nested Envelope",
+      "argsJson": "{\"windowId\":\"原-window\",\"nodeHash\":41,\"output\":{\"done\":true,\"output\":{\"point\":{\"x\":1,\"y\":2,\"z\":3},\"text\":\"雪🌳️\"}}}",
+      "accepted": true,
+      "windowId": "原-window",
+      "nodeHashWord": "41",
+      "output": {
+        "done": true,
+        "output": {
+          "point": {
+            "x": 1,
+            "y": 2,
+            "z": 3
+          },
+          "text": "雪🌳️"
+        }
+      }
+    },
+    {
+      "name": "Native Array Is Donated",
+      "argsJson": "{\"windowId\":\"array\",\"nodeHash\":42,\"output\":[{\"text\":\"original\"},false]}",
+      "accepted": true,
+      "windowId": "array",
+      "nodeHashWord": "42",
+      "output": [
+        {
+          "text": "original"
+        },
+        false
+      ]
+    },
+    {
+      "name": "Native String Is Never Parsed",
+      "argsJson": "{\"windowId\":\"text\",\"nodeHash\":43,\"output\":\"{\\\"done\\\":true}\"}",
+      "accepted": true,
+      "windowId": "text",
+      "nodeHashWord": "43",
+      "output": "{\"done\":true}"
+    },
+    {
+      "name": "Empty Native Object",
+      "argsJson": "{\"windowId\":\"empty\",\"nodeHash\":0,\"output\":{}}",
+      "accepted": true,
+      "windowId": "empty",
+      "nodeHashWord": "0",
+      "output": {}
+    },
+    {
+      "name": "False Native Value",
+      "argsJson": "{\"windowId\":\"bool\",\"nodeHash\":9,\"output\":false}",
+      "accepted": true,
+      "windowId": "bool",
+      "nodeHashWord": "9",
+      "output": false
+    },
+    {
+      "name": "Null Transport Output",
+      "argsJson": "{\"windowId\":\"null\",\"nodeHash\":11,\"output\":null}",
+      "accepted": true,
+      "windowId": "null",
+      "nodeHashWord": "11"
+    },
+    {
+      "name": "Absent Transport Output",
+      "argsJson": "{\"windowId\":\"absent\",\"nodeHash\":12}",
+      "accepted": true,
+      "windowId": "absent",
+      "nodeHashWord": "12"
+    },
+    {
+      "name": "Full Unsigned Hash Word",
+      "argsJson": "{\"windowId\":\"max\",\"nodeHash\":18446744073709551615,\"output\":{\"done\":false}}",
+      "accepted": true,
+      "windowId": "max",
+      "nodeHashWord": "18446744073709551615",
+      "output": {
+        "done": false
+      }
+    },
+    {
+      "name": "Out of Range Hash",
+      "argsJson": "{\"windowId\":\"w\",\"nodeHash\":18446744073709551616,\"output\":{}}",
+      "accepted": false
+    },
+    {
+      "name": "Missing Window",
+      "argsJson": "{\"nodeHash\":1,\"output\":{\"deep\":[\"preserve\"]}}",
+      "accepted": false
+    },
+    {
+      "name": "Empty Window",
+      "argsJson": "{\"windowId\":\"\",\"nodeHash\":1,\"output\":{}}",
+      "accepted": false
+    },
+    {
+      "name": "Missing Hash",
+      "argsJson": "{\"windowId\":\"w\",\"output\":{}}",
+      "accepted": false
+    },
+    {
+      "name": "Fractional Hash",
+      "argsJson": "{\"windowId\":\"w\",\"nodeHash\":1.5,\"output\":{}}",
+      "accepted": false
+    },
+    {
+      "name": "String Hash",
+      "argsJson": "{\"windowId\":\"w\",\"nodeHash\":\"1\",\"output\":{}}",
+      "accepted": false
+    },
+    {
+      "name": "Negative Hash",
+      "argsJson": "{\"windowId\":\"w\",\"nodeHash\":-1,\"output\":{}}",
+      "accepted": false
+    },
+    {
+      "name": "Non Object",
+      "argsJson": "null",
+      "accepted": false
+    }
+  ]
+}

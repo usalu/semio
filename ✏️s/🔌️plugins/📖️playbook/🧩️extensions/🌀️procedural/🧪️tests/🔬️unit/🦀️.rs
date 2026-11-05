@@ -1,6 +1,6 @@
 use super::*;
-use semio_framework_plugin::{ActionMeta, PluginApp, VcsArtifactApp};
-use semio_framework_ui_locale::{AppLabels, Locale, Terminology};
+use semio_plugin::{ActionMeta, PluginApp, VcsArtifactApp};
+use semio_ui_locale::{AppLabels, Locale, Terminology};
 
 #[semio_framework_async_macros::async_test]
 async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutating_the_document() {
@@ -8,8 +8,8 @@ async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutat
     let mut app = new_app().await;
     let before = to_json_string(&app.snapshot().expect("initial payload"));
     for input in fixture["cases"].as_array().expect("embedded inputs") {
-        let view = ViewModel { extension_input_json: Some(serde_json::json!({ "bodyKey": "params", "paramsJson": input.to_string() }).to_string()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-        let projection = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PARAMS, &view, app.1.cx()).await.expect("retire params tree");
+        let view = ViewModel { extension_input_json: Some(serde_json::json!({ "bodyKey": "params", "paramsJsonChunks": text_chunks(&input.to_string()) }).to_string()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+        let projection = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PARAMS, &view, app.1.cx()).await.expect("retire params tree");
         let tree: serde_json::Value = serde_json::from_str(&projection).expect("independent projection oracle");
         let children = tree["children"].as_array().expect("parameters");
         let height = &children[0]["children"][0];
@@ -21,7 +21,7 @@ async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutat
         assert_eq!(children.len(), 3, "embedded parameter controls expose only parent-owned actions");
         assert_eq!(to_json_string(&app.snapshot().expect("unmodified payload")), before);
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[test]
@@ -50,11 +50,11 @@ fn procedural_payload_vectors_match_the_json_oracle() {
 async fn procedural_actor_descriptor_matches_the_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛂️actor.json")).expect("independent actor fixture");
     __semio_install_plugin_bundle();
-    let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::plugin_runtime::plugin_manifest(runtime)));
+    let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_plugin::plugin_runtime::plugin_manifest(runtime)));
     assert_eq!(manifest.plugin_id, MODULE_PLUGIN_ID, "bundle assembly: {}", manifest.label);
-    let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_extension_with_apps(runtime)));
-    semio_framework_plugin::plugin_runtime::extension_dispose_cold().expect("cold actor inspection retires its installed extension");
-    assert!(semio_framework_plugin::plugin_runtime::extension_terminal_is_empty());
+    let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_plugin::describe::describe_extension_with_apps(runtime)));
+    semio_plugin::plugin_runtime::extension_dispose_cold().expect("cold actor inspection retires its installed extension");
+    assert!(semio_plugin::plugin_runtime::extension_terminal_is_empty());
     let value = store::pack_rt::decode_wire_value(&bytes).expect("first-party wire decoder");
     let descriptor: serde_json::Value = value.into();
     assert_eq!(descriptor["role"], fixture["role"]);
@@ -88,13 +88,22 @@ fn procedural_parameter_controls_match_the_json_oracle() {
             interactive: row["interactive"].as_bool().expect("interactive"),
             ..default_payload()
         };
-        let node = render_question_control(&question, &value, &payload, None).expect("semantic control");
-        let control = node.children.get(0).expect("field control");
-        let actual = serde_json::to_value(control).expect("independent semantic JSON oracle");
+        let node = render_question_control(&question, &value, &payload, None, None).expect("semantic control");
+        let rendered = artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("retire control tree");
+        let tree: serde_json::Value = serde_json::from_str(&rendered).expect("independent semantic JSON oracle");
+        let actual = &tree["children"][0];
         assert_eq!(actual["component"]["type"], row["component"]);
         assert_eq!(actual["accessibility"]["label"], row["question"]["label"]);
-        assert_eq!(control.disabled, !payload.interactive);
         assert_eq!(actual["disabled"].as_bool().unwrap_or(false), !payload.interactive);
+        if !payload.interactive {
+            assert!(actual["bindings"].as_array().is_none_or(Vec::is_empty));
+            continue;
+        }
+        if matches!(question.kind.as_str(), "text" | "longText") {
+            assert_eq!(actual["component"]["kind"], "text-editor");
+            assert_eq!(carrier_text(actual), row["expectedValue"].as_str().unwrap());
+            continue;
+        }
         assert_eq!(actual["bindings"][0]["trigger"], "change");
         assert_eq!(actual["bindings"][0]["action"]["scope"], payload.controller_id);
         assert_eq!(actual["bindings"][0]["action"]["name"], if payload.surface == "blueprint" { "patchQuestions" } else { "setTryValue" });
@@ -103,7 +112,6 @@ fn procedural_parameter_controls_match_the_json_oracle() {
         if let Some(expected) = row.get("expectedValue") {
             assert_eq!(&actual["component"]["value"], expected);
         }
-        artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("retire control tree");
     }
 }
 
@@ -114,7 +122,7 @@ fn meta() -> ActionMeta {
 /// 🔗️ Registered AND bound: a migrated tool command is refused with `interactive-job.live-instance`
 /// unless the mounted live instance id equals the dispatching `ActionMeta`'s.
 /// 🧹️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-struct ModuleTestApp(VcsArtifactApp<ModuleApp>, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+struct ModuleTestApp(VcsArtifactApp<ModuleApp>, semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
 impl std::ops::Deref for ModuleTestApp {
     type Target = VcsArtifactApp<ModuleApp>;
@@ -131,9 +139,9 @@ impl std::ops::DerefMut for ModuleTestApp {
 
 async fn new_app() -> ModuleTestApp {
     let definition = create_module_app().await.expect("module definition").definition;
-    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
-    semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition), semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    semio_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     app.bind_instance_id(meta().instance_id).await;
     ModuleTestApp(app, scope)
 }
@@ -141,18 +149,18 @@ async fn new_app() -> ModuleTestApp {
 /// 🔁️ Admits one migrated action and settles its publication — the admission receipt alone
 /// publishes nothing.
 async fn act(app: &mut ModuleTestApp, action: &str, args: Option<&DslValue>) {
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, args.cloned(), &meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, args.cloned(), &meta(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
 }
 
 fn payload_json(params: Value) -> String {
-    to_json_string(&ModuleRenderPayload { example_id: "hexagonal-mushroom-column".into(), params: json_to_dsl_value(&params), question_id: "q".into(), controller_id: "forms-play".into(), surface: "try".into(), interactive: true })
+    to_json_string(&ModuleRenderPayload { example_id: "hexagonal-mushroom-column".into(), params: json_to_dsl_value(&params), authored_params: DslValue::Null, question_id: "q".into(), controller_id: "forms-play".into(), surface: "try".into(), interactive: true })
 }
 
 #[semio_framework_async_macros::async_test]
 async fn module_app_declares_window_kinds() {
     let app = create_module_app().await.expect("MODULE_APP_ID must be a canonical surface id");
-    assert_eq!(app.definition.window_kinds.len(), 2);
+    assert_eq!(app.definition.window_kinds.len(), 6);
     assert_eq!(app.definition.window_kinds[0].id, MODULE_WINDOW_PARAMS);
     assert_eq!(app.definition.window_kinds[0].body_key, BODY_PARAMS);
     assert_eq!(app.definition.window_kinds[1].id, MODULE_WINDOW_PREVIEW);
@@ -161,10 +169,16 @@ async fn module_app_declares_window_kinds() {
 
 #[semio_framework_async_macros::async_test]
 async fn module_manifest_contributes_building_component() {
-    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let mut original_caller=semio_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
     let bundle = module_extension_bundle();
     let manifest = bundle.into_manifest_cold(&mut cx).unwrap();
-    assert_eq!(manifest.topic_contributions.len(), 2);
+    assert_eq!(manifest.topic_contributions.len(), 4);
+    let projected = manifest.topic_contributions.iter().filter(|topic| topic.topic == "forms.questionKind").map(|topic| semio_framework::ProgramContributionEntry { plugin_id: MODULE_PLUGIN_ID.into(), topic_contribution: Some(topic.clone()) }).collect::<Vec<_>>();
+    let source = semio_framework_pack_json::to_json_string(&projected);
+    let independent: serde_json::Value = serde_json::from_str(&source).unwrap();
+    assert_eq!(independent.as_array().unwrap().len(), 3);
+    let cost = source.chars().map(semio_framework::public_invocation_char_cost).sum::<usize>();
+    assert!(cost <= semio_framework::PUBLIC_INVOCATION_STRING_BYTES, "actual Forms provider closure exceeds public string capacity: {cost}");
     let topic = &manifest.topic_contributions[0];
     assert_eq!(topic.topic, "playbook.blockKind");
     assert!(topic.payload.as_object().is_some());
@@ -179,29 +193,32 @@ async fn module_manifest_contributes_building_component() {
 async fn preview_body_emits_world_scene() {
     let mut app = new_app().await;
     let document = payload_json(semio_framework_pack_json::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app_over(&mut app.0, BODY_PREVIEW, Some(&document), &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("preview projection");
+    let _ = semio_plugin::artifact_app_laws::render_registered_fixture_app_over(&mut app.0, BODY_PREVIEW, Some(&document), &ViewModel::new(Locale::En, Terminology::Native), app.1.cx()).await.expect("run controls");
+    let args = json_to_dsl_value(&semio_framework_pack_json::json!({ "payloadJsonChunks": text_chunks(&document), "bodyKey": BODY_PREVIEW }));
+    act(&mut app, ACTION_EVALUATE_FLOW, Some(&args)).await;
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app_over(&mut app.0, BODY_PREVIEW, Some(&document), &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("preview projection");
     assert!(json.contains("world-3d"));
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn params_body_lists_flow_inputs() {
     let mut app = new_app().await;
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PARAMS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("params projection");
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PARAMS, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("params projection");
     let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
     let fields = tree["children"].as_array().expect("column children").iter().filter(|child| child["component"]["role"] == "field").map(|child| child["component"]["label"].as_str().expect("field label")).collect::<Vec<_>>();
     assert_eq!(fields, ["Column Height", "Profile Radius", "Side Count"], "every flow input of the default fixture is a labelled field");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn params_body_includes_media_export_buttons() {
     let mut app = new_app().await;
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PARAMS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("params projection");
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PARAMS, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("params projection");
     let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
     let button_count = tree["children"].as_array().expect("column children").iter().filter(|child| child["component"]["type"] == "button").count();
     assert_eq!(button_count, SOLID_MEDIA_FORMATS.len() * 2);
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -211,9 +228,9 @@ async fn export_solid_action_stashes_result_and_is_undoable() {
     let export_args = json_to_dsl_value(&semio_framework_pack_json::json!({ "format": "obj" }));
     act(&mut app, ACTION_EXPORT_SOLID, Some(&export_args)).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
-    artifact_app_laws::settle_history_verb(&mut app.0, "undo", meta().instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    artifact_app_laws::settle_history_verb(&mut app.0, "undo", meta().instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -222,7 +239,7 @@ async fn import_solid_action_stashes_result_on_params() {
     let import_args = json_to_dsl_value(&semio_framework_pack_json::json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" }));
     act(&mut app, ACTION_IMPORT_SOLID, Some(&import_args)).await;
     assert!(app.snapshot().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -233,12 +250,12 @@ async fn import_solid_action_reports_error_when_no_data_given() {
     let payload = app.snapshot().expect("projection");
     let import = payload.params.get("__solidImport").expect("import result present");
     assert!(import.get("error").is_some());
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn export_solid_declares_only_format_arg_and_materializes_default() {
-    use semio_framework_plugin::app::AppActionRegistry;
+    use semio_plugin::app::AppActionRegistry;
     let definition = create_module_app().await.expect("MODULE_APP_ID must be a canonical surface id").definition;
     let declared = || definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()));
     let import = declared().find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
@@ -246,23 +263,23 @@ async fn export_solid_declares_only_format_arg_and_materializes_default() {
     let export = declared().find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
     assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
     let registry = AppActionRegistry::from_definition(&definition);
-    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = VcsArtifactApp::with_registry(ModuleApp, registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
-    semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = VcsArtifactApp::with_registry(ModuleApp, registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    semio_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     app.bind_instance_id(meta().instance_id).await;
     let mut app = ModuleTestApp(app, scope);
     act(&mut app, ACTION_EXPORT_SOLID, None).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn unknown_action_yields_no_document_change() {
     let mut app = new_app().await;
     let before = app.snapshot().expect("projection");
-    assert!(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "noSuchAction", None, &meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err(), "an undeclared action is rejected rather than silently ignored");
+    assert!(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "noSuchAction", None, &meta(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err(), "an undeclared action is rejected rather than silently ignored");
     assert_eq!(app.snapshot().expect("snapshot"), before);
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -330,11 +347,11 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
-        ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+        ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<ModuleRenderPayload, ModulePayloadMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     let mut payload = default_payload();
     payload.interactive = false;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     store.close_owned_unscheduled().expect("module store closes through its exact bounded owners");
@@ -420,7 +437,8 @@ async fn instance_geometry_replays_durable_sources_and_preserves_preview_authori
         assert!(!meshes.as_array().unwrap().is_empty());
         assert!(meshes.as_array().unwrap().iter().all(|mesh| mesh["id"].as_str().unwrap().starts_with("eval-")));
         for mesh in meshes.as_array().unwrap() {
-            let positions = mesh["data"]["positions"].as_array().expect("evaluated mesh coordinates");
+            let data: serde_json::Value = serde_json::from_str(mesh["data"].as_str().expect("canonical mesh JSON")).expect("independent mesh parser");
+            let positions = data["positions"].as_array().expect("evaluated mesh coordinates");
             assert!(!positions.is_empty() && positions.len() % 3 == 0);
             let mut minimum_z = f64::INFINITY;
             let mut maximum_z = f64::NEG_INFINITY;
@@ -446,4 +464,315 @@ async fn instance_geometry_replays_durable_sources_and_preserves_preview_authori
         }
         assert!(owner.terminal_is_empty(), "instance geometry retirement completes");
     }
+}
+
+#[test]
+fn authored_flow_questions_execute_the_authored_graph_without_fallback_geometry() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌊️embedded-flow.json")).unwrap();
+    let payload = ModuleRenderPayload { example_id: String::new(), params: json_to_dsl_value(&parse_json(&fixture["parameters"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()), ..default_payload() };
+    let snapshot = embedded_flow::authored_flow_snapshot(&payload).expect("authored graph");
+    let independent: FlowHostSnapshot = serde_json::from_value(fixture["snapshot"].clone()).unwrap();
+    assert_eq!(snapshot, independent);
+    independent.retire_cold();
+    let mut owner = ModuleGeometryOwner::new();
+    let installed: std::collections::BTreeSet<_> = owner.registry.as_ref().unwrap().operator_infos().map(|info| info.extension.as_str()).collect();
+    for extension in fixture["operatorExtensions"].as_array().unwrap() { assert!(installed.contains(extension.as_str().unwrap()), "missing extension {extension}"); }
+    let mut host = owner.host(snapshot.clone()).unwrap();
+    apply_flow_params(&mut host, &snapshot, &params_as_json(&payload.params));
+    let actual: serde_json::Value = serde_json::from_str(&host.host_snapshot_json().unwrap()).unwrap();
+    assert_eq!(actual["widgets"][0]["value"].as_f64(), fixture["expected"]["slider"].as_f64());
+    assert_eq!(actual["widgets"][1]["text"], fixture["expected"]["note"]);
+    let output: serde_json::Value = serde_json::from_str(&host.evaluate().unwrap()).unwrap();
+    assert_eq!(output["amount"]["out"]["number"]["value"].as_f64(), fixture["expected"]["slider"].as_f64());
+    host.retire_cold();
+    let (meshes, instances) = evaluated_preview_payload(&mut owner, &snapshot, &params_as_json(&payload.params));
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&meshes).unwrap(), fixture["expected"]["meshes"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&instances).unwrap(), fixture["expected"]["instances"]);
+    snapshot.retire_cold();
+    for _ in 0..1_000_000 {
+        let grant = quoted_close_grant(&owner, 65_536);
+        if matches!(close_turn(&mut owner, grant), PluginLifecycleStep::Complete(_)) { break; }
+    }
+    assert!(owner.terminal_is_empty());
+}
+
+#[test]
+fn authored_flow_controls_retain_exact_parent_routes_and_read_only_isolation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌊️embedded-flow.json")).unwrap();
+    let baseline = json_to_dsl_value(&parse_json(&fixture["parameters"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+    for (locale, title) in [(Locale::En, "Flow Document"), (Locale::De, "Flow-Dokument")] {
+        let labels = ModuleLabels::labels(locale, Terminology::Native);
+        for surface in ["blueprint", "try"] {
+            for interactive in [false, true] {
+                let payload = ModuleRenderPayload { example_id: String::new(), authored_params: baseline.clone(), params: json_to_dsl_value(&semio_framework_pack_json::json!({"amount":4})), question_id: "authored-question".into(), controller_id: "s.forms.forms@1/*#editor".into(), surface: surface.into(), interactive };
+                let node = embedded_flow::render_flow_params(&payload, labels, (surface == "try").then_some(("fill-a", "forms-try"))).unwrap();
+                let rendered = artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).unwrap();
+                let tree: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+                let controls = tree["children"].as_array().unwrap();
+                assert_eq!(controls.len(), if surface == "blueprint" { 3 } else { 2 });
+                let offset = usize::from(surface == "blueprint");
+                if offset == 1 { assert!(rendered.contains(title)); }
+                let slider = &controls[offset]["children"][0];
+                assert_eq!(slider["component"]["value"].as_f64(), Some(4.0));
+                assert_eq!(slider["disabled"].as_bool().unwrap_or(false), !interactive);
+                if interactive {
+                    let binding = &slider["bindings"][0];
+                    assert_eq!(binding["action"]["scope"], payload.controller_id);
+                    assert_eq!(binding["args"]["paramKey"], "amount");
+                    assert_eq!(binding["args"]["key"], "authored-question");
+                    assert_eq!(binding["action"]["name"], if surface == "blueprint" { "patchQuestions" } else { "setTryValue" });
+                    if surface == "try" { assert_eq!(binding["args"]["windowId"], "fill-a"); }
+                } else { assert!(slider["bindings"].as_array().is_none_or(Vec::is_empty)); }
+                let snapshot = embedded_flow::authored_flow_snapshot(&payload).unwrap();
+                assert_eq!(snapshot.widgets.len(), fixture["snapshot"]["widgets"].as_array().unwrap().len());
+                snapshot.retire_cold();
+            }
+        }
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn embedded_flow_run_can_be_cancelled_without_changing_parent_inputs() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🧫️fixtures/📋️forms/🌐️cancellation.json")).unwrap();
+    let mut app = new_app().await;
+    let before = to_json_string(&app.snapshot().unwrap());
+    let payload = ModuleRenderPayload { example_id: String::new(), authored_params: json_to_dsl_value(&parse_json(&serde_json::json!({"__flow":fixture["snapshot"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()), params: DslValue::Null, question_id: "authored-question".into(), controller_id: "s.forms.forms@1/*#editor".into(), surface: "try".into(), interactive: true };
+    let view = ViewModel { extension_input_json: Some(serde_json::json!({ "bodyKey": BODY_PROCEDURAL_PREVIEW, "paramsJsonChunks": text_chunks(&to_json_string(&payload)), "windowId": "fill-a" }).to_string()), ..ViewModel::new(Locale::En, Terminology::Native) };
+    let _ = artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PROCEDURAL_PREVIEW, &view, app.1.cx()).await.unwrap();
+    let args = json_to_dsl_value(&semio_framework_pack_json::json!({ "payloadJsonChunks": text_chunks(&to_json_string(&payload)), "bodyKey": BODY_PROCEDURAL_PREVIEW }));
+    artifact_app_laws::dispatch_fixture_action(&mut app.0, ACTION_EVALUATE_FLOW, Some(args), &meta(), &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("retained run admitted");
+    artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", None, &meta(), &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("original retained run cancellation");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("cancelled run settles");
+    assert_eq!(to_json_string(&app.snapshot().unwrap()), before);
+    let rendered = artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PROCEDURAL_PREVIEW, &view, app.1.cx()).await.unwrap();
+    let cancelled: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+    assert!(preview_lane(&cancelled, "framework.scene.world3d.meshes").is_none(), "cancelled incomplete geometry is never published");
+    let args = json_to_dsl_value(&semio_framework_pack_json::json!({ "payloadJsonChunks": text_chunks(&to_json_string(&payload)), "bodyKey": BODY_PROCEDURAL_PREVIEW }));
+    artifact_app_laws::dispatch_fixture_action(&mut app.0, ACTION_EVALUATE_FLOW, Some(args), &meta(), &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("same retained flow rerun");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("real four-column evaluation and tessellation settle");
+    assert_eq!(to_json_string(&app.snapshot().unwrap()), before);
+    let rendered = artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_PROCEDURAL_PREVIEW, &view, app.1.cx()).await.unwrap();
+    let tree: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+    let meshes: serde_json::Value = serde_json::from_str(&preview_carrier_text(preview_lane(&tree, "framework.scene.world3d.meshes").expect("published mesh lane"))).unwrap();
+    let instances: serde_json::Value = serde_json::from_str(&preview_carrier_text(preview_lane(&tree, "framework.scene.world3d.instances").expect("published instance lane"))).unwrap();
+    let mut bounds = Vec::new();
+    for index in 0..4 {
+        let id = format!("c{index}-column-preview");
+        let instance = instances.as_array().unwrap().iter().find(|instance| instance["id"] == id).expect("each actual output column is published after rerun");
+        let mesh = meshes.as_array().unwrap().iter().find(|mesh| mesh["id"] == instance["meshId"]).expect("instance addresses its computed mesh");
+        let data: serde_json::Value = serde_json::from_str(mesh["data"].as_str().unwrap()).unwrap();
+        let positions = data["positions"].as_array().unwrap();
+        assert!(!positions.is_empty() && positions.len() % 3 == 0);
+        let (mut lower, mut upper, mut radius) = (f64::INFINITY, f64::NEG_INFINITY, 0.0_f64);
+        for vertex in positions.chunks_exact(3) {
+            let [x,y,z] = std::array::from_fn(|axis| vertex[axis].as_f64().unwrap());
+            lower = lower.min(z);
+            upper = upper.max(z);
+            radius = radius.max(x.hypot(y));
+        }
+        let widgets = fixture["snapshot"]["widgets"].as_array().unwrap();
+        let expected_height = widgets.iter().find(|widget|widget["id"] == format!("c{index}-height")).unwrap()["value"].as_f64().unwrap();
+        let expected_radius = widgets.iter().find(|widget|widget["id"] == format!("c{index}-radius")).unwrap()["value"].as_f64().unwrap();
+        assert!((upper-lower-expected_height).abs() < 1e-5);
+        assert!((radius-expected_radius).abs() < 1e-5);
+        bounds.push((upper-lower,radius));
+    }
+    assert!(bounds.windows(2).all(|pair| pair[0] != pair[1]), "four distinct authored columns survive cancellation and rerun");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("cancelled flow instance closes");
+}
+
+#[test]
+fn authored_flow_config_authority_and_preview_limits_match_shared_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌊️embedded-flow.json")).unwrap();
+    let baseline = json_to_dsl_value(&parse_json(&fixture["parameters"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+    let mut payload = ModuleRenderPayload { authored_params: baseline, params: json_to_dsl_value(&semio_framework_pack_json::json!({ "__flow": {}, "amount": 4 })), ..default_payload() };
+    let snapshot = embedded_flow::authored_flow_snapshot(&payload).expect("answer cannot replace the authored graph");
+    assert_eq!(snapshot.widgets.len(), fixture["snapshot"]["widgets"].as_array().unwrap().len());
+    let initial = embedded_flow::input_initial_values(&snapshot, &effective_params(&payload));
+    assert_eq!(initial.get("amount").and_then(Value::as_f64), Some(4.0));
+    assert!(initial.get("__flow").is_none());
+    snapshot.retire_cold();
+    payload.params = DslValue::Null;
+    payload.interactive = false;
+    let exact = to_json_string(&payload);
+    let node = embedded_flow::render_flow_params(&payload, ModuleLabels::labels(Locale::En, Terminology::Native), Some(("read-only", "forms-try"))).unwrap();
+    let rendered = artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).unwrap();
+    let tree: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+    assert_eq!(tree["children"][0]["children"][0]["component"]["value"].as_f64(), fixture["expected"]["slider"].as_f64());
+    assert_eq!(to_json_string(&payload), exact);
+    assert_eq!(params_as_json(&payload.params), Value::Null);
+    for case in fixture["invalidGraphs"].as_array().unwrap() {
+        payload.authored_params = json_to_dsl_value(&semio_framework_pack_json::json!({ "__flow": parse_json(&case["graph"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }));
+        assert!(embedded_flow::authored_flow_snapshot(&payload).is_err(), "{}", case["name"]);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn embedded_flow_run_renders_authored_output_and_preserves_exact_null_answer() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌊️embedded-flow.json")).unwrap();
+    let mut app = new_app().await;
+    let before = to_json_string(&app.snapshot().unwrap());
+    let payload = ModuleRenderPayload { example_id: String::new(), authored_params: json_to_dsl_value(&parse_json(&fixture["parameters"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()), params: DslValue::Null, question_id: "read-only-output".into(), controller_id: "s.forms.forms@1/*#editor".into(), surface: "try".into(), interactive: false };
+    let document = to_json_string(&payload);
+    let view = ViewModel { extension_input_json: Some(serde_json::json!({ "bodyKey": BODY_FLOW_PREVIEW, "paramsJsonChunks": text_chunks(&document) }).to_string()), ..ViewModel::new(Locale::En, Terminology::Native) };
+    let _ = artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_FLOW_PREVIEW, &view, app.1.cx()).await.unwrap();
+    let args = json_to_dsl_value(&semio_framework_pack_json::json!({ "payloadJsonChunks": text_chunks(&document), "bodyKey": BODY_FLOW_PREVIEW }));
+    act(&mut app, ACTION_EVALUATE_FLOW, Some(&args)).await;
+    let rendered = artifact_app_laws::render_registered_fixture_app(&mut app.0, BODY_FLOW_PREVIEW, &view, app.1.cx()).await.unwrap();
+    assert!(rendered.contains("Flow Complete"));
+    let tree: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+    let output = tree["children"].as_array().unwrap().iter().find(|node| node["key"] == "embedded-flow.output.answer").expect("authored output field");
+    assert!(serde_json::to_string(output).unwrap().contains(&fixture["expected"]["slider"].to_string()));
+    assert_eq!(params_as_json(&payload.params), Value::Null);
+    assert_eq!(to_json_string(&app.snapshot().unwrap()), before);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("read-only computation closes");
+}
+
+#[test]
+fn embedded_preview_progress_is_indeterminate_and_localized() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌊️embedded-flow.json")).unwrap();
+    let payload = ModuleRenderPayload { controller_id: "s.forms.forms@1/*#editor".into(), interactive: false, ..default_payload() };
+    let mut owner = ModuleGeometryOwner::new();
+    for (locale, label) in [(Locale::En, "en"), (Locale::De, "de")] {
+        let labels = ModuleLabels::labels(locale, Terminology::Native);
+        let first = embedded_evaluation::render_cached_preview(&mut owner, &payload, BODY_FLOW_PREVIEW, labels).unwrap();
+        artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(first)).unwrap();
+        owner.preview_phase = 1;
+        owner.preview_units = fixture["progress"]["completed"].as_u64().unwrap() as usize;
+        let node = embedded_evaluation::render_cached_preview(&mut owner, &payload, BODY_FLOW_PREVIEW, labels).unwrap();
+        let rendered = artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).unwrap();
+        let tree: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+        let progress = tree["children"].as_array().unwrap().iter().find(|node| node["key"] == "embedded-flow.progress").expect("semantic progress component");
+        assert_eq!(progress["component"]["completed"].as_f64(), fixture["progress"]["completed"].as_f64());
+        assert!(progress["component"]["total"].is_null());
+        assert!(rendered.contains(fixture["progress"]["labels"][label].as_str().unwrap()));
+        assert!(!rendered.contains("\"scope\":\"s.forms.forms@1/*#editor\""), "read-only computation emits only child view actions");
+    }
+    for _ in 0..1_000_000 {
+        let grant = quoted_close_grant(&owner, 65_536);
+        if matches!(close_turn(&mut owner, grant), PluginLifecycleStep::Complete(_)) { break; }
+    }
+    assert!(owner.terminal_is_empty());
+}
+
+fn text_chunks(text: &str) -> Vec<String> {
+    let mut result = Vec::new();
+    let mut start = 0;
+    while start < text.len() {
+        let mut end = (start + semio_ui_contract::UI_TEXT_MAX_BYTES).min(text.len());
+        while !text.is_char_boundary(end) { end -= 1; }
+        result.push(text[start..end].into());
+        start = end;
+    }
+    result
+}
+
+fn carrier_text(value: &serde_json::Value) -> String {
+    let mut output = String::new();
+    if value["component"]["type"] == "text" {
+        if let Some(text) = value["component"]["value"].as_str() { output.push_str(text); }
+        if let Some(attributes) = value["component"]["dataAttributes"].as_object() { for text in attributes.values().filter_map(serde_json::Value::as_str) { output.push_str(text); } }
+    }
+    if let Some(children) = value["children"].as_array() { for child in children { output.push_str(&carrier_text(child)); } }
+    output
+}
+
+#[test]
+fn flow_note_controls_page_unicode_and_encode_exact_parent_answer_changes() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌊️embedded-flow.json")).unwrap();
+    let long = &fixture["longInput"];
+    let text = long["unit"].as_str().unwrap().repeat(long["repeat"].as_u64().unwrap() as usize);
+    assert_eq!(text.len(), long["utf8Bytes"].as_u64().unwrap() as usize);
+    let question: PlaybookBlock = serde_json::from_value(long["question"].clone()).unwrap();
+    let initial = semio_framework_pack_json::json!({ "message": text, "amount": 2 });
+    let mut owner_payload = default_payload();
+    owner_payload.question_id = "flow-question".into();
+    owner_payload.controller_id = "s.forms.forms@1/*#editor".into();
+    owner_payload.surface = "try".into();
+    let args_for = |baseline: &Value| value_map([("key", value_text("flow-question").unwrap()), ("paramKey", value_text("message").unwrap()), ("windowId", value_text("fill-a").unwrap()), ("windowKindId", value_text("forms-try").unwrap()), ("initialValueJsonChunks", UiValue::try_text_chunks(&json_to_string(baseline), ANSWER_VALUE_MAXIMUM_BYTES).unwrap())]).unwrap();
+    let args = args_for(&initial);
+    let value = Value::from(text.clone());
+    let scene = preview_and_params_body::text_parameter_scene(&question, &value, &owner_payload, &args);
+    assert_eq!(scene.buffer, text);
+    let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_ref().unwrap()).unwrap();
+    assert_eq!(settings["editControllerId"], owner_payload.controller_id);
+    assert_eq!(settings["editAction"], "setTryValue");
+    assert_eq!(settings["editArgument"], "valueJsonChunks");
+    assert_eq!(settings["editEncoding"], "json-chunks");
+    let transport: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).unwrap();
+    assert_eq!(settings["editMaximumBytes"], transport["$defs"]["QuestionControlTransport"]["properties"]["answerEncodedBytes"]["const"]);
+    let mut blueprint = owner_payload.clone();
+    blueprint.surface = "blueprint".into();
+    let blueprint_scene = preview_and_params_body::text_parameter_scene(&question, &value, &blueprint, &args);
+    let blueprint_settings: serde_json::Value = serde_json::from_str(blueprint_scene.settings_json.as_ref().unwrap()).unwrap();
+    assert_eq!(blueprint_settings["editMaximumBytes"], transport["$defs"]["QuestionControlTransport"]["properties"]["blueprintEncodedBytes"]["const"]);
+    assert_eq!(BLUEPRINT_VALUE_MAXIMUM_BYTES, 32_770);
+    assert_eq!(settings["editArguments"]["windowId"], "fill-a");
+    assert_eq!(settings["editIdentityArguments"], long["editIdentityArguments"]);
+    assert!(settings["editArguments"]["initialValueJsonChunks"].is_array());
+    let changed_args = args_for(&semio_framework_pack_json::json!({"message":"corrected", "amount":2}));
+    let changed_scene = preview_and_params_body::text_parameter_scene(&question, &value, &owner_payload, &changed_args);
+    let changed_settings: serde_json::Value = serde_json::from_str(changed_scene.settings_json.as_ref().unwrap()).unwrap();
+    assert_eq!(changed_settings["editIdentityArguments"], settings["editIdentityArguments"]);
+    assert_ne!(changed_settings["editArguments"]["initialValueJsonChunks"], settings["editArguments"]["initialValueJsonChunks"]);
+    assert!(blueprint_settings.get("editIdentityArguments").is_none());
+    drop(args);
+    let node = render_question_control(&question, &value, &owner_payload, Some(("fill-a", "forms-try")), Some(&initial)).unwrap();
+    let rendered = artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).unwrap();
+    let tree: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+    assert_eq!(carrier_text(&tree["children"][0]), text);
+    for row in long["initialControls"].as_array().unwrap() {
+        let mut question = question.clone();
+        question.kind = row["kind"].as_str().unwrap().into();
+        let value = Value::from(row["value"].as_str().unwrap());
+        let node = render_question_control(&question, &value, &owner_payload, Some(("fill-a", "forms-try")), Some(&semio_framework_pack_json::json!({ "message": "" }))).unwrap();
+        let rendered = artifact_app_laws::project_and_retire_fixture_tree(built_to_component_tree(node)).unwrap();
+        let tree: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+        assert_eq!(tree["children"][0]["component"]["kind"], "text-editor");
+        assert!(rendered.contains("valueJsonChunks"));
+        assert!(rendered.contains("json-chunks"));
+        assert_eq!(carrier_text(&tree["children"][0]), "");
+    }
+}
+
+#[test]
+fn typed_variable_relays_preserve_authored_identity_and_channel_values() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️typed-relays.json")).unwrap();
+    let mut owner = ModuleGeometryOwner::new();
+    for row in fixture["cases"].as_array().unwrap() {
+        let snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let params = parse_json(&row["parameters"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&json_to_string(&embedded_flow::input_initial_values(&snapshot, &params))).unwrap(), row["expectedInitialValues"]);
+        let mut host = owner.host(snapshot.clone()).unwrap();
+        apply_flow_params(&mut host, &snapshot, &params);
+        assert!(host.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Variable { name, .. } if name == row["expectedRelayName"].as_str().unwrap())));
+        let evaluated: serde_json::Value = serde_json::from_str(&host.evaluate().unwrap()).unwrap();
+        assert_eq!(evaluated["relay"]["out"]["payload"], row["expectedChannel"], "{}", row["name"]);
+        host.retire_cold();
+        snapshot.retire_cold();
+    }
+    for _ in 0..1_000_000 {
+        let grant = quoted_close_grant(&owner, 4_096);
+        if matches!(close_turn(&mut owner, grant), PluginLifecycleStep::Complete(_)) { break; }
+    }
+    assert!(owner.terminal_is_empty());
+}
+
+fn preview_lane<'a>(tree: &'a serde_json::Value, key: &str) -> Option<&'a serde_json::Value> {
+    if tree["key"] == key { return Some(tree); }
+    tree["children"].as_array()?.iter().find_map(|child| preview_lane(child,key))
+}
+
+fn preview_carrier_text(tree: &serde_json::Value) -> String {
+    let mut output = String::new();
+    if tree["component"]["type"] == "text" {
+        if let Some(text) = tree["component"]["value"].as_str() { output.push_str(text); }
+        if let Some(attributes) = tree["component"]["dataAttributes"].as_object() {
+            for text in attributes.values().filter_map(serde_json::Value::as_str) { output.push_str(text); }
+        }
+    }
+    if let Some(children) = tree["children"].as_array() {
+        for child in children { output.push_str(&preview_carrier_text(child)); }
+    }
+    output
 }

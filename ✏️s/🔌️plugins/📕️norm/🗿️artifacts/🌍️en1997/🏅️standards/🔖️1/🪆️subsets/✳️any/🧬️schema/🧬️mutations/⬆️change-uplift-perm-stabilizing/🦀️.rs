@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeUpliftPermStabiliz
         record: "ChangedUpliftPermStabilizing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change permanent stabilizing of the uplift case", "Auftriebsfall: Ständig, stabilisierend ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change permanent stabilizing of the uplift case", "Auftriebsfall: Ständig, stabilisierend ändern")
     }
 }
 

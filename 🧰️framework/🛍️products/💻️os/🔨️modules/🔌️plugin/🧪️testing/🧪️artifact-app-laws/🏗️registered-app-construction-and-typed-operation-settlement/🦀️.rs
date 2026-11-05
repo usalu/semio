@@ -28,12 +28,12 @@ pub fn meta(actor: &str) -> ActionMeta {
 
 /// 🪣️ Publishes the framework's shared schema documents before a fixture app's manifest is authored, exactly as production app construction does ([`PluginRuntimeRegistry::publish_framework_schema_documents`]), so a command or input schema that `$ref`s a framework document resolves while the manifest is built. Idempotent.
 pub fn publish_framework_schemas() {
-    semio_framework_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry::publish_framework_schema_documents().expect("the OS's own schema documents never conflict");
+    semio_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry::publish_framework_schema_documents().expect("the OS's own schema documents never conflict");
 }
 
 /// 🧬️ A registry-less wrapper (`VcsArtifactApp::new`) for store-only tests. UI and typed
 /// command dispatch fail closed until a real registry and exact factory are supplied.
-pub async fn new_app<A: ArtifactApp + Default>(actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A> {
+pub async fn new_app<A: ArtifactApp + Default>(actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A> {
     publish_framework_schemas();
     let mut app = VcsArtifactApp::new(A::default(), actor, mounted_policy, identity).await.expect("the reference snapshot births");
     settle_store_constructor(&mut app, mounted_policy);
@@ -42,13 +42,13 @@ pub async fn new_app<A: ArtifactApp + Default>(actor: protocol::ActorId, mounted
 
 /// 🧬️ A registry-backed wrapper carrying `manifest`'s real `AppActionRegistry` — needed whenever a
 /// test must exercise declared-arg defaults/required-arg enforcement or View/Shell kind discipline.
-pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A> {
+pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A> {
     new_app_with_registry_and_members::<A, store::NoMembers>(manifest, actor, mounted_policy, identity).await
 }
 
 /// 🧬️ `new_app_with_registry` over an explicit member roster `M` — for an app whose snapshot
 /// composes children it derives (`ArtifactApp::genesis_child_pack`), which `NoMembers` can never open.
-pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M> {
+pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M> {
     publish_framework_schemas();
     let definition = manifest().definition;
     let registry = AppActionRegistry::from_definition(&definition);
@@ -61,7 +61,7 @@ pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: stor
 /// 🧬️ A registry-backed wrapper whose manifest is authored asynchronously by the concrete fixture,
 /// over the default (empty) member roster. The body lives in
 /// [`new_registered_app_with_members`]; this is the `NoMembers` spelling of it.
-pub async fn new_registered_app<A, Manifest>(manifest: Manifest, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A>
+pub async fn new_registered_app<A, Manifest>(manifest: Manifest, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A>
 where
     A: ArtifactApp + Default,
     Manifest: std::future::Future<Output = App>,
@@ -82,7 +82,7 @@ where
 /// is not the app's bound live runtime instance, and a fresh app has none. `meta` stamps 1,
 /// so every caller of this helper gets the instance its own `meta(...)` addresses; a caller
 /// that binds a different id afterwards simply overwrites this one.
-pub async fn new_registered_app_with_members<A, M, Manifest>(manifest: Manifest, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M>
+pub async fn new_registered_app_with_members<A, M, Manifest>(manifest: Manifest, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M>
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -99,7 +99,7 @@ where
 /// 🏗️ A `VcsArtifactApp` is born constructing: its store owner catalogs are installed by metered constructor turns
 /// the reactor drives before it admits any command. A fixture that reaches the stores directly settles that
 /// constructor first, claiming and validating every phase receipt exactly as the reactor's exchange does.
-pub fn settle_store_constructor<A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
+pub fn settle_store_constructor<A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     let mut receipts = Vec::new();
     loop {
@@ -113,7 +113,7 @@ pub fn settle_store_constructor<A: ArtifactApp, M: store::ReferenceSpaceMember +
 /// 🚰️ Drains a standalone Store's displaced-owner maintenance queue to terminal emptiness under its own quoted grant — the caller no scheduler funds — so a fixture that edits a long history frees the fixed 1 024-slot retirement authority between batches.
 pub fn drain_store_displaced_retirements<P, Mutation>(store: &mut store::ArtifactStore<P, Mutation>)
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + store::OpBinary + store::OpText + Send + 'static,
 {
     for _ in 0..1_000_000 {
@@ -125,7 +125,7 @@ where
 }
 
 /// 🧹 The close-side twin of [`settle_store_constructor`]: drives the constructor's own close phase to terminal emptiness, claiming every phase receipt, so the close quote that follows names the next application owner instead of the constructor.
-pub fn settle_store_constructor_close<A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
+pub fn settle_store_constructor_close<A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1) -> Vec<TypedOperationFixtureOwnershipReceipt> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     let mut receipts = Vec::new();
     loop {
@@ -139,7 +139,7 @@ pub fn settle_store_constructor_close<A: ArtifactApp, M: store::ReferenceSpaceMe
 /// 📬️ Host-visible output collected while one registered fixture operation reaches quiescence.
 /// 🧾️ Fixtures retain the original producer receipt under the caller's declared phase policy.
 pub enum TypedOperationFixtureOwnershipReceipt {
-    Constructor { kind: semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind, phase: semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase, grant: RetainedCloneGrant, progress: RetainedCloneProgress },
+    Constructor { kind: semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind, phase: semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase, grant: RetainedCloneGrant, progress: RetainedCloneProgress },
     Preparation { operation: semio_framework_job::OperationId, grant: RetainedCloneGrant, progress: RetainedCloneProgress },
     Retirement { operation: semio_framework_job::OperationId, grant: RetainedCloneGrant, progress: RetainedCloneProgress },
     History { grant: RetainedCloneGrant, progress: RetainedCloneProgress },
@@ -161,11 +161,11 @@ pub struct TypedOperationFixtureReceipt {
     pub resume_outcomes: Vec<Result<semio_framework::kernel::InvocationResult, semio_framework::Fault>>,
     /// 🧩️ One entry per composed gesture this settle observed — see
     /// [`crate::app::ComposedGestureResult`].
-    pub composed: Vec<semio_framework_plugin_composition_publication::ComposedGestureResult>,
+    pub composed: Vec<semio_plugin_composition_publication::ComposedGestureResult>,
 }
 
 /// 🎚️ Projects current config from the concrete window registry, including its applied event history.
-pub async fn capture_fixture_window_config<O: semio_framework_plugin_window_config::WindowConfigOwner, A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory>(app: &mut VcsArtifactApp<A, M>, view: &semio_framework::ViewModel) -> Result<Option<O::State>, semio_framework::Fault> {
+pub async fn capture_fixture_window_config<O: semio_plugin_window_config::WindowConfigOwner, A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory>(app: &mut VcsArtifactApp<A, M>, view: &semio_framework::ViewModel) -> Result<Option<O::State>, semio_framework::Fault> {
     Ok(app.stores.window_config_store.capture(Some(view)).await?.and_then(|authority| authority.snapshot.get::<O>().cloned()))
 }
 
@@ -190,7 +190,7 @@ pub async fn capture_fixture_window_config<O: semio_framework_plugin_window_conf
 /// 📜️ A pending history patch (a time-travel stage change) rides a UI-progress frame the host takes every turn;
 /// left untaken it kept `has_pending_typed_operations` true until the deadline for the first operation after a
 /// history edit (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, forms frozen-press law).
-pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut turns=0;let maximum_turns=OriginalFixtureCaller::maximum_turns();
     let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), resume_outcomes: Vec::new(), composed: Vec::new() };
     crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
@@ -200,7 +200,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
         if !app.has_runnable_typed_operations() {
             let grant = mounted_policy.maintenance;
             let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;
-            let maintenance = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
+            let maintenance = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
                 let step = app.maintenance_step(same,grant)?;
                 Ok((step, app.maintenance_terminal_is_empty()))
             })?;
@@ -210,7 +210,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
         retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
         while let Some(mut page) = crate::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation).expect("original fixture page presentation") {
             let lane = page.lane;
-            let fault = (lane == TypedOperationResultLane::Fault).then(|| semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()));
+            let fault = (lane == TypedOperationResultLane::Fault).then(|| semio_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()));
             let token = crate::artifact_app_laws::close_fixture_result_page(&mut page, mounted_policy.close);
             if !app.acknowledge_typed_operation_result(token)? {
                 return Err(semio_framework::Fault::from("registered fixture typed operation rejected its exact result ACK").into());
@@ -254,15 +254,15 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
     Ok(receipt)
 }
 
-fn retain_registered_ownership_receipts<P: PluginApp>(app: &mut P, policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, recipient: &mut TypedOperationFixtureReceipt) -> Result<(), semio_framework::Fault> {
+fn retain_registered_ownership_receipts<P: PluginApp>(app: &mut P, policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, recipient: &mut TypedOperationFixtureReceipt) -> Result<(), semio_framework::Fault> {
     retain_original_ownership_receipts(app, policy, &mut recipient.ownership_receipts)
 }
 
 /// 🧾️ Collects original producer receipts once before any subsequent semantic fixture callback.
 #[doc(hidden)]
-pub fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, recipient: &mut Vec<TypedOperationFixtureOwnershipReceipt>) -> Result<(), semio_framework::Fault> {
+pub fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, recipient: &mut Vec<TypedOperationFixtureOwnershipReceipt>) -> Result<(), semio_framework::Fault> {
     if let Some((kind, phase, grant, progress)) = app.take_constructor_receipt() {
-        let original = match phase { semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase::Preparation => policy.preparation, semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase::Close => fixture_close_grant(policy) };
+        let original = match phase { semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase::Preparation => policy.preparation, semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase::Close => fixture_close_grant(policy) };
         if grant != original || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture constructor receipt differs from its original caller authority")); }
         recipient.push(TypedOperationFixtureOwnershipReceipt::Constructor { kind, phase, grant, progress });
     }
@@ -330,10 +330,10 @@ pub async fn settle_extension_invocations<P: PluginApp>(
     receiver: u32,
     action_meta: &ActionMeta,
     serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, semio_framework::Fault>,
-    mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<SettledExtensionInvocations,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<SettledExtensionInvocations,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut settled = SettledExtensionInvocations { ownership_receipts: Vec::new(), answered: 0, effects: Vec::new() };
-    for effect in semio_framework_plugin_reactor_tasks::tasks_extension_continuation::drain_queued_effects(receiver) {
+    for effect in semio_plugin_reactor_tasks::tasks_extension_continuation::drain_queued_effects(receiver) {
         let semio_framework::kernel::Effect::InvokeExtension { req, extension_id, capability, request_json, .. } = effect else { continue };
         let pending = PendingExtensionInvocation { extension_id, capability, request_json };
         let outcome = serve(&pending).and_then(|json| {
@@ -342,7 +342,7 @@ pub async fn settle_extension_invocations<P: PluginApp>(
                 .map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.answer-not-json"), format!("the served capability answer is not JSON: {error}")))?;
             Ok(store::pack_rt::encode_wire_value(&value))
         });
-        let Ok((instance, action, args, original_fault)) = semio_framework_plugin_reactor_tasks::tasks_extension_continuation::take_extension_response(req, outcome) else { continue };
+        let Ok((instance, action, args, original_fault)) = semio_plugin_reactor_tasks::tasks_extension_continuation::take_extension_response(req, outcome) else { continue };
         let meta = ActionMeta { instance_id: instance, ..action_meta.clone() };
         dispatch_fixture_response_action(app,&action,Some(args),original_fault,&mut Some(meta),identity,cx,mounted_policy.close).await?;
         let receipt = settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await?;
@@ -355,12 +355,12 @@ pub async fn settle_extension_invocations<P: PluginApp>(
 
 /// 🪪️ The close grant every fixture turn is driven under: exactly the caller's close policy, as a mounted runtime drives it.
 #[doc(hidden)]
-pub fn fixture_close_grant(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1) -> RetainedCloneGrant {
+pub fn fixture_close_grant(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1) -> RetainedCloneGrant {
     mounted_policy.close
 }
 
 /// 🧹️ Closes one registered fixture through the exact retained app close state machine.
-pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<TypedOperationFixtureOwnershipReceipt>,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<TypedOperationFixtureOwnershipReceipt>,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut pending_authority = None;
     let mut last_quote = None;
     let mut close_turn = 0usize;let maximum_turns=OriginalFixtureCaller::maximum_turns();
@@ -372,17 +372,17 @@ pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: s
         let grant = fixture_close_grant(mounted_policy);
         let demand = app.close_retirement_demands(grant.maximum_copy_bytes)?;
         last_quote = Some((demand, grant));
-        let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
+        let step = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
             Ok((app.close_step(same,grant)?, app.close_terminal_is_empty()))
         })?;
         retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)?;
         match step {
-            semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) | semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => {
+            semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) | semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => {
                 assert!(progress.fits(grant), "registered fixture close turn {close_turn} exceeded its exact physical grant");
-                if matches!(step, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)) { break; }
+                if matches!(step, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)) { break; }
                 if progress == Default::default() { std::thread::yield_now(); }
             }
-            semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason } | semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason } => {
+            semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason } | semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason } => {
                 pending_authority = Some(reason);
                 std::thread::yield_now();
             }

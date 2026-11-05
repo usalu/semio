@@ -16,8 +16,8 @@ pub struct SetSampleData {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetSampleData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-data", kind: "set-sample-data", record: "SetSampleData" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set sample data", "Sample-Daten setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set sample data", "Sample-Daten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

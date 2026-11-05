@@ -13,8 +13,8 @@ pub struct SetBitsPerSample {
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetBitsPerSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "bits-per-sample", kind: "set-bits-per-sample", record: "SetBitsPerSample" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set bits per sample", "Bits pro Abtastwert setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set bits per sample", "Bits pro Abtastwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

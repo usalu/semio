@@ -1,40 +1,40 @@
 //! 📥️ Items of `store` that belong to `os-store-space` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🦀️.rs`.
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
-use semio_framework_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
+use semio_os_store_text_io::ArtifactStoreSnapshot as _;
+use semio_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{ActorId, HybridLogicalTimestamp};
-use semio_framework_os_spr::{Mutation, OpBinary, OpText};
+use semio_os_spr::{ActorId, HybridLogicalTimestamp};
+use semio_os_spr::{Mutation, OpBinary, OpText};
 use serde::Deserialize;
 use std::collections::HashMap;
-use semio_framework_os_store_engine_owners::{DocumentStoreOwners, funded_member_store_owners};
-use semio_framework_os_store_engine_owners::member_producer::MemberStoreProducer;
-use semio_framework_os_store_engine_owners::close_unscheduled_catalog;
-use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use semio_framework_os_vcs::io::binary::entity_identity::{mint_space_checkpoint_id, mint_space_alternative_id};
-use semio_framework_os_vcs::{Author, VcsError};
-use semio_framework_os_store_space_schema::{ArtifactBackboneRef, ArtifactCommand, ArtifactEnvelope};
-use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_os_store_engine_owners::{DocumentStoreOwners, funded_member_store_owners};
+use semio_os_store_engine_owners::member_producer::MemberStoreProducer;
+use semio_os_store_engine_owners::close_unscheduled_catalog;
+use semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_os_vcs::io::binary::entity_identity::{mint_space_checkpoint_id, mint_space_alternative_id};
+use semio_os_vcs::{Author, VcsError};
+use semio_os_store_space_schema::{ArtifactBackboneRef, ArtifactCommand, ArtifactEnvelope};
+use semio_os_store_envelope::owner::OwnerRef;
 //#region 🔖️EphemeralLanes
 
-use semio_framework_os_store_ephemeral::*;
-use semio_framework_os_store_text_io::decode_document_pack_bytes;
-use semio_framework_os_store_engine_owners::funded_bounded_artifact_store_owners;
-use semio_framework_os_store_document::create_document_envelope_from_genesis;
-use semio_framework_os_store_initialization_runtime::lifted_document_materialize::now_ms;
-use semio_framework_os_store_text_io::text_format::parse_decoded_document_spr;
-use semio_framework_os_store_initialization_runtime::native_publication_producer::{ArtifactStorePublication, ArtifactSnapshotPublication};
+use semio_os_store_ephemeral::*;
+use semio_os_store_text_io::decode_document_pack_bytes;
+use semio_os_store_engine_owners::funded_bounded_artifact_store_owners;
+use semio_os_store_document::create_document_envelope_from_genesis;
+use semio_os_store_initialization_runtime::lifted_document_materialize::now_ms;
+use semio_os_store_text_io::text_format::parse_decoded_document_spr;
+use semio_os_store_initialization_runtime::native_publication_producer::{ArtifactStorePublication, ArtifactSnapshotPublication};
 //#region 🔖️Backbone
 //#region 🔖️Backbone
-use semio_framework_os_store_backbone as backbone;
+use semio_os_store_backbone as backbone;
 use backbone::Backbones;
-use semio_framework_os_store_space_schema::space_history_document::{SpaceAlternative, SpaceCheckpoint, SpaceHistorySnapshot, SpaceMemberPin};
-use semio_framework_os_store_space_schema::space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, SpaceHistoryMutation, SwitchSpaceAlternative};
-use semio_framework_os_store_space_member::lifted_store::MemberDirectory;
-use semio_framework_os_store_engine::lifted_store::ArtifactStore;
-use semio_framework_os_store_space_member::lifted_store::{ReferenceSpaceMember, SpaceMember};
-use semio_framework_os_store_space_member::lifted_store::NoMembers;
+use semio_os_store_space_schema::space_history_document::{SpaceAlternative, SpaceCheckpoint, SpaceHistorySnapshot, SpaceMemberPin};
+use semio_os_store_space_schema::space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, SpaceHistoryMutation, SwitchSpaceAlternative};
+use semio_os_store_space_member::lifted_store::MemberDirectory;
+use semio_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_store_space_member::lifted_store::{ReferenceSpaceMember, SpaceMember};
+use semio_os_store_space_member::lifted_store::NoMembers;
 //#region 🔖️Composition
 impl MemberDirectory for SpaceHost {
     async fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
@@ -65,8 +65,8 @@ impl MemberDirectory for SpaceHost {
 /// program drops): the registry's kind-keying now lives in the generated enum's own `match kind`.
 pub async fn create_member_store<P, Mutation, G, C>(schema: &str, id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId, producer:&G,catalog:&C) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
     G: ArtifactGenesisProducer<P> + ArtifactStorePublication<P> + Sync,
     C:MemberStoreProducer<P,Mutation>,
 {
@@ -90,13 +90,13 @@ where
 /// without consulting the parent.
 pub async fn open_member_store<P, Mutation, G, C>(schema: &str, expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId, producer:&G,catalog:&C) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
     G: ArtifactGenesisProducer<P> + ArtifactStorePublication<P> + Sync,
     C:MemberStoreProducer<P,Mutation>,
 {
     let (pack, spr) = decode_document_pack_bytes(envelope_pack).await?;
-    let history = semio_framework_os_spr::decode_history(&spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let history = semio_os_spr::decode_history(&spr, &semio_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     validate_member_history_identity(&history, schema, expected, owner)?;
     let parsed = parse_decoded_document_spr::<P, Mutation>(&pack, history, producer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let mut store = ArtifactStore::new::<G>(parsed.envelope, actor).await?;
@@ -107,8 +107,8 @@ where
 /// 🔐️ Installs a completed catalog and retires it exactly when the store refuses its transfer.
 pub fn install_unscheduled_catalog<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, owners: Result<DocumentStoreOwners<P, Mutation>, ValueError>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     let owners = owners.map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
     store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); VcsError::ValidationFailed(error.into_message()) })
@@ -117,14 +117,14 @@ where
 /// 🔐️ Installs a self-funded member catalog and leaves the store retaining every original owner on refusal.
 pub fn install_funded_member_store_owners<P, Mutation, C>(store: &mut ArtifactStore<P, Mutation>,producer:&C) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
     C:MemberStoreProducer<P,Mutation>,
 {
     install_unscheduled_catalog(store, funded_member_store_owners::<P, Mutation,C>(producer))
 }
 
-pub fn validate_member_history_identity(history: &semio_framework_os_spr::HistoryLog, schema: &str, expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>) -> Result<(), VcsError> {
+pub fn validate_member_history_identity(history: &semio_os_spr::HistoryLog, schema: &str, expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>) -> Result<(), VcsError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let persisted_dialect = history.composition.as_ref().and_then(|composition| composition.dialect.as_ref());
@@ -191,7 +191,7 @@ impl<M> Drop for SpaceHost<M> {
 
 impl<M: SpaceMember> SpaceHost<M> {
     pub async fn new(meta_envelope: ArtifactEnvelope<SpaceHistorySnapshot, SpaceHistoryMutation>, actor: ActorId) -> Result<Self, VcsError> {
-        let mut meta = ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(meta_envelope, actor).await?;
+        let mut meta = ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(meta_envelope, actor).await?;
         install_unscheduled_catalog(&mut meta, space_history_store_owners())?;
         Ok(Self { meta, members: HashMap::new() })
     }

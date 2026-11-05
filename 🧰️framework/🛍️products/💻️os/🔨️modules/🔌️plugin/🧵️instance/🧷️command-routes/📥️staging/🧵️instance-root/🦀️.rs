@@ -2,21 +2,21 @@
 //!
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
-use semio_framework_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, is_framework_reserved_action_id};
+use semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
+use semio_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, is_framework_reserved_action_id};
 use semio_framework_value::DslValue;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use std::future::Future;
-use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
-use semio_framework_plugin_instance_extension::InstanceExtension;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_plugin_instance_extension::InstanceExtension;
+use semio_ui_locale::LocalizedLabel;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
 
 /// 📚️ Turns a registered example body into the app snapshot. A `{` body is the JSON a deferred
 /// producer emits; anything else is the subset's own DSL, parsed by the owner's declared reference codec.

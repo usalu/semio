@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::kernel::EntityId;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 📑️ Names the authored ReportRecord rendered by one concrete Report window.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.architect.program.report-window.config", extension = "architectreportwindowcfg")]
@@ -163,8 +163,8 @@ impl pack::snapshot::ArtifactPack for ArchitectReportWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ArchitectReportWindowConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ArchitectReportWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -194,7 +194,7 @@ impl store::snapshot_clone_preparation::ConfigApplyMutation<ArchitectReportWindo
 
 pub struct ArchitectReportWindowConfigOwner;
 
-impl semio_framework_plugin::WindowConfigOwner for ArchitectReportWindowConfigOwner {
+impl semio_plugin::WindowConfigOwner for ArchitectReportWindowConfigOwner {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -203,32 +203,32 @@ impl semio_framework_plugin::WindowConfigOwner for ArchitectReportWindowConfigOw
     const MAXIMUM_PUBLICATION_BYTES: usize = 1_024;
     type State = ArchitectReportWindowConfig;
     type Mutation = ArchitectReportWindowConfigMutation;
-    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+    type Edit = semio_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
-    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
-    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
-    fn build_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_plugin::app::WindowConfigApplyEdit::new()) }
+    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
+    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_preparation_factory::<Self>() }
+    fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_plugin::bounded_window_config_store_disposer::<Self>() }
 }
 
 /// 📖️ Reads the caller's exact Report-window configuration or its empty selection.
-pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> ArchitectReportWindowConfig {
+pub fn current<C>(view: &semio_plugin::ConfigView<'_, C>) -> ArchitectReportWindowConfig {
     view.window::<ArchitectReportWindowConfigOwner>().cloned().unwrap_or_default()
 }
 
 /// 📬️ Selects a record only when the invocation itself comes from an exact Report window.
 pub fn addressed_if_report(
-    view: Option<&semio_framework_plugin::ViewModel>,
+    view: Option<&semio_plugin::ViewModel>,
     selected_report_id: EntityId,
-) -> Result<Option<semio_framework_plugin::WindowConfigMutation>, semio_framework_plugin::Fault> {
+) -> Result<Option<semio_plugin::WindowConfigMutation>, semio_plugin::Fault> {
     let Some(view) = view else { return Ok(None) };
     let Some(id) = view.window_id.as_deref() else { return Ok(None) };
-    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("architect-report-window-stale"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_plugin::Fault::from("architect-report-window-stale"))?;
     if kind != super::ARCHITECT_WINDOW_REPORT {
         return Ok(None);
     }
-    Ok(Some(semio_framework_plugin::WindowConfigMutation::of::<ArchitectReportWindowConfigOwner>(
+    Ok(Some(semio_plugin::WindowConfigMutation::of::<ArchitectReportWindowConfigOwner>(
         id,
         ArchitectReportWindowConfigMutation::SelectReport(SelectReport { selected_report_id: Some(selected_report_id) }),
     )))

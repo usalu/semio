@@ -3,13 +3,13 @@
 use crate::editor::animate::terminology::AnimatePresentationLabels;
 use crate::editor::animate::support::{animate_presentation_action, ui_capacity_error, ui_children, ui_label, ui_map, ui_node, ui_text};
 use crate::PresentationSnapshot;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use semio_framework_ui_contract::{button, column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger, UiValue};
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_contract::{button, column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger, UiValue};
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_BODY_CATALOGUE: &str = "animate.presentation.play.catalogue";
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn catalogue_button(id: &str, label: &str, action: &str, args: Option<UiValue>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn catalogue_button(id: &str, label: &str, action: &str, args: Option<UiValue>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let builder = button(ui_label(label)?).icon(ui_text("plus")?);
     let (action, args) = animate_presentation_action(action, args)?;
     let builder = match args {
@@ -39,7 +39,7 @@ fn catalogue_button(id: &str, label: &str, action: &str, args: Option<UiValue>) 
     ui_node(builder, id)
 }
 
-fn source_args() -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn source_args() -> semio_plugin::UiAssemblyResult<UiValue> {
     let source = crate::default_figure_tile_source();
     let frame = ui_map([("height", UiValue::Number(source.frame.height)), ("width", UiValue::Number(source.frame.width)), ("x", UiValue::Number(source.frame.x)), ("y", UiValue::Number(source.frame.y))])?;
     let mut entries = vec![("frame", frame), ("kind", UiValue::Text(ui_text(&source.kind)?))];
@@ -53,7 +53,7 @@ fn source_args() -> semio_framework_plugin::UiAssemblyResult<UiValue> {
     ui_map([("source", ui_map(entries)?)])
 }
 
-pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (source, _) = crate::presentation_working_scene(deck);
     let templates = [
         ui_node(text(ui_label(labels.catalogue_seed_desc.as_str())?), "animate.presentation.play.catalogue.description")?,

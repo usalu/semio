@@ -1,15 +1,15 @@
 //! 🏭️ A normal generation3d action reaches its typed command through the framework-declared action producer: the plugin declares none, yet a widget value edit and its undo run end to end on the mounted app.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[path = "../🔬️app-fixture/🦀️.rs"]
 mod app_fixture;
 use app_fixture::{app, snapshot, Generation3dApp};
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_plugin::artifact_app_laws::{dispatch_fixture_action, fixture_identity, meta, settle_history_verb, settle_registered_typed_operation};
-use semio_framework_plugin::{ArtifactApp, ArtifactEditor, EditorApp, MountedOwnerPolicyV1};
+use semio_plugin::artifact_app_laws::{dispatch_fixture_action, fixture_identity, meta, settle_history_verb, settle_registered_typed_operation};
+use semio_plugin::{ArtifactApp, ArtifactEditor, EditorApp, MountedOwnerPolicyV1};
 use semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
 
 /// 🎚️ The first input slider of the fixture document with the nearest other value it accepts.

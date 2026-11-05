@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::Component;
+use semio_plugin::Component;
 
 fn descendant<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
     (node.key.as_str() == key).then_some(node).or_else(|| node.children.iter().find_map(|child| descendant(child, key)))
@@ -42,7 +42,7 @@ fn viewer_projects_requested_sparse_grid_windows_against_calamine() {
     use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
     use calamine::Reader;
-    use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_PATH_SEPARATOR};
+    use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_PATH_SEPARATOR};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🪟️viewer-cell-window/🔣️.json")).unwrap();
     let sheets = fixture["sheets"]
@@ -78,7 +78,7 @@ fn viewer_projects_requested_sparse_grid_windows_against_calamine() {
         let table_id = format!("xlsx-viewer-sheet-{sheet_index}-grid");
         let item_path = format!("{section_id}{TREE_WINDOW_PATH_SEPARATOR}{item_id}");
         let table_path = format!("{item_path}{TREE_WINDOW_PATH_SEPARATOR}{table_id}");
-        let column_path = format!("{item_path}{TREE_WINDOW_PATH_SEPARATOR}{}", semio_framework_plugin::app::table_column_window_key(&table_id));
+        let column_path = format!("{item_path}{TREE_WINDOW_PATH_SEPARATOR}{}", semio_plugin::app::table_column_window_key(&table_id));
         let view = ViewModel {
             locale,
             tree_windows: vec![
@@ -87,7 +87,7 @@ fn viewer_projects_requested_sparse_grid_windows_against_calamine() {
                 TreeWindowRequest { body_key: BODY_KEY.into(), node_key: table_path, open: Some(true), offset: row_offset as u32, rows: row_count as u32 },
                 TreeWindowRequest { body_key: BODY_KEY.into(), node_key: column_path, open: Some(true), offset: column_offset as u32, rows: column_count as u32 },
             ],
-            ..ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(locale, semio_ui_locale::Terminology::Native)
         };
         let node = render(&document, locale, &TreeWindows::for_body(&view, BODY_KEY)).unwrap();
         let table = descendant(&node, &table_id).expect("requested worksheet table");

@@ -2,9 +2,9 @@
 //! its one subset (`✳️any`). New file: this level did not exist before ticket
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM.
 
-pub fn standard<A: crate::FormsApplication>() -> semio_framework_plugin::app::declarations::StandardDeclaration<A> {
+pub fn standard<A: crate::FormsApplication>() -> semio_plugin::app::declarations::StandardDeclaration<A> {
     use crate::standards::v1::subsets;
-    use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+    use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
     use {semio_framework_artifact_reference::StandardId};
 
     StandardDeclaration {
@@ -17,7 +17,7 @@ pub fn standard<A: crate::FormsApplication>() -> semio_framework_plugin::app::de
 //#region 🧩️ArtifactItems3
 pub mod artifact_items_3 {
 use crate::{FORMS_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -25,7 +25,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "form.dictionary".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),
+        label: semio_ui_locale::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),
         source_format: "form.dictionary".into(),
         component_kind: "forms".into(),
         dimension: "data".into(),
@@ -57,8 +57,8 @@ pub mod artifact_items_4 {
 /// `LanguagePair` fields stay `{ text: None, binary: None }` (`🚪️io/🦀️.rs`), the same
 /// documented deferral every other subset on this ticket carries — the underlying grammar/protocol
 /// `.semio` assets themselves are untouched and still compiled into their own facet files.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     type CapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
     let rows: &[CapabilityRow<'_>] = &[
         ("s.forms.forms.standard.v1", "standard", "1", &[], None),
@@ -93,8 +93,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// (`any`). Sole registration channel (plugin root `.declare_artifact(artifact())`); the old
 /// `.artifact(declaration())`/`.editor::<>()`/`.viewer::<>()` triad is deleted, not kept alongside
 /// it (a second parallel registration channel is the compatibility layer CLAUDE.md forbids).
-pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: FormsApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
 
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.forms.forms").expect("canonical forms kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
@@ -102,16 +102,16 @@ pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarati
 
 /// 📋️ Application variants required to assemble the Forms artifact.
 pub trait FormsApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> FormsApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 //#endregion 🔖️Declaration

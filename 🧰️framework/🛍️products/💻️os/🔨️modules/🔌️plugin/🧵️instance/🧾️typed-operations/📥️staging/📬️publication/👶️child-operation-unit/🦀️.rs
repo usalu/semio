@@ -1,11 +1,11 @@
 //! 👶️ Converts exact encoded child sources through installed native decoders before the common private group ladder.
 use super::*;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
-use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,plugin_grant_funds};
+use semio_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,plugin_grant_funds};
 use semio_framework_value::{RetirementDemand,ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_plugin_decl_emission::{ChildEmit,child_emit_preparation::OwnedChildEmit};
-use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
+use semio_plugin_decl_emission::{ChildEmit,child_emit_preparation::OwnedChildEmit};
+use semio_plugin_decl_views::child_view::MemberKeyRef;
 fn original_failure(detail:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,detail)}
 fn original_header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn post_original<T>(cx:&mut StepContext<'_>,result:Result<(T,RetainedCloneProgress),ValueError>)->Result<T,OriginalTurnFailure>{let p=result.as_ref().map(|(_,p)|*p).unwrap_or_else(|e|e.retained_progress());if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)?;}else{cx.consume_retained(p)?;}cx.consume_fuel(p.copied_items as u64);Ok(result?.0)}

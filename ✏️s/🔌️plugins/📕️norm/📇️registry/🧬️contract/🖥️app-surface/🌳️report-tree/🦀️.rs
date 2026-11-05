@@ -70,7 +70,7 @@ pub fn action_args_map(entries: Vec<(&str, UiValue)>) -> UiAssemblyResult<UiValu
     Ok(UiValue::Map(args.finish()))
 }
 
-pub fn norm_action(controller_id: &'static str, action: &str, args: Option<UiValue>) -> UiAssemblyResult<(semio_framework_plugin::ActionId, Option<UiValue>)> {
+pub fn norm_action(controller_id: &'static str, action: &str, args: Option<UiValue>) -> UiAssemblyResult<(semio_plugin::ActionId, Option<UiValue>)> {
     ActionFactory::new(controller_id).action(action, args)
 }
 

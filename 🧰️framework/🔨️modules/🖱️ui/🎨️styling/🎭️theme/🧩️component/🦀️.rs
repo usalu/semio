@@ -365,13 +365,13 @@ impl Theme {
 
     /// 🚦️ The ink of a semantic tone — the four outcome roles React paints `text-info`, `text-success`, `text-warning` and
     /// `text-destructive`; `None` for the neutral tone and the brand roles, which keep the surrounding text colour.
-    pub fn tone_ink(&self, tone: semio_framework_ui_contract::Tone) -> Option<Rgba> {
+    pub fn tone_ink(&self, tone: semio_ui_contract::Tone) -> Option<Rgba> {
         match tone {
-            semio_framework_ui_contract::Tone::Info => Some(Rgba::from_token(&colors::INFO)),
-            semio_framework_ui_contract::Tone::Success => Some(self.success),
-            semio_framework_ui_contract::Tone::Warning => Some(self.warning),
-            semio_framework_ui_contract::Tone::Danger => Some(self.error),
-            semio_framework_ui_contract::Tone::Neutral | semio_framework_ui_contract::Tone::Primary | semio_framework_ui_contract::Tone::Secondary | semio_framework_ui_contract::Tone::Tertiary => None,
+            semio_ui_contract::Tone::Info => Some(Rgba::from_token(&colors::INFO)),
+            semio_ui_contract::Tone::Success => Some(self.success),
+            semio_ui_contract::Tone::Warning => Some(self.warning),
+            semio_ui_contract::Tone::Danger => Some(self.error),
+            semio_ui_contract::Tone::Neutral | semio_ui_contract::Tone::Primary | semio_ui_contract::Tone::Secondary | semio_ui_contract::Tone::Tertiary => None,
         }
     }
 

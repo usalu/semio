@@ -384,7 +384,7 @@ async fn read_point_list_errors_when_entry_is_not_a_point() {
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
     use flow_extension_sdk::build_manifest_json;
-    use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
+    use semio_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
     let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
     let flow_topic = flow_extension_sdk::flow_extension_topic_contribution("flow-play", "draw", "Draw", "draw", &manifest_json);
@@ -402,5 +402,5 @@ async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
     let _ = extension_manifest().await;
     extension_activate().await.expect("activate");
     let _ = extension_invoke;
-    semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
+    semio_plugin::plugin_runtime::extension_dispose_cold().unwrap();
 }

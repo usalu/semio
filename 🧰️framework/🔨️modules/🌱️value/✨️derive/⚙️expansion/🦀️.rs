@@ -366,7 +366,7 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
 /// call site interpolates as `#value_crate::Type` — defaults to `::semio_framework_value` when
 /// absent, so a container with no `crate` attribute emits byte-identical code to before this
 /// attribute existed. Lets a sub-kernel crate (e.g. `semio-framework-actor`, which cannot depend on
-/// `semio-framework-os-kernel` without a Cargo cycle) reexport `DslValue`/`ToValue`/`FromValue`/
+/// `semio-os-kernel` without a Cargo cycle) reexport `DslValue`/`ToValue`/`FromValue`/
 /// `ValueError` from wherever it actually gets them and point the derive there instead.
 fn container_crate_path(container: &ContainerAttrs) -> syn::Path {
     let path = container.crate_path.as_deref().unwrap_or("::semio_framework_value");

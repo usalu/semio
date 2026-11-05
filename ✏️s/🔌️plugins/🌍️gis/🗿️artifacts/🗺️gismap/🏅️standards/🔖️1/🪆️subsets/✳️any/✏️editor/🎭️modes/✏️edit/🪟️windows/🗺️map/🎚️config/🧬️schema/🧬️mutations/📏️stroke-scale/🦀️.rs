@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-stroke-scale", kind: "set-layer-stroke-scale", record: "SetLayerStrokeScale" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Linienstärkenmaßstab der Ebene {} setzen", self.layer_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Linienstärkenmaßstab der Ebene {} setzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["layerStrokeScale".into(), self.layer_id.clone()]

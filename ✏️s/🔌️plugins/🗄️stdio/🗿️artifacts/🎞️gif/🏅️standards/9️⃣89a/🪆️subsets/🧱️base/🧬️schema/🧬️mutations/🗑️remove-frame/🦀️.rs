@@ -15,8 +15,8 @@ pub struct RemoveFrame {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "frame", kind: "remove-frame", record: "RemoveFrame" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove frame", "Einzelbild entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove frame", "Einzelbild entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

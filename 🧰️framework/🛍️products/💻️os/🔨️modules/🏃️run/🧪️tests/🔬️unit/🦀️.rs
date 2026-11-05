@@ -585,7 +585,7 @@ async fn space_runner_never_overlaps_exchange_for_the_same_node_across_a_real_ru
 /// 🧪️ `compute_node` checks `self.cancel` BEFORE `open`/`exchange` (see `RunError::Cancelled`'s
 /// doc) — cancelling `SpaceRunner`'s own token stops the run before its NEXT node. Node-a's own
 /// `exchange` still completes (cancellation is checked between nodes, not preemptible mid-call —
-/// the same honest limitation `semio-framework-os-services::ComputePool` documents), so this
+/// the same honest limitation `semio-os-services::ComputePool` documents), so this
 /// asserts node-b specifically never runs.
 #[semio_framework_async_macros::async_test]
 async fn cancelling_the_run_token_stops_the_run_before_the_next_node() {
@@ -766,16 +766,16 @@ async fn cancelling_the_run_during_a_whole_document_input_restores_the_node_docu
 async fn a_whole_document_carrier_crosses_a_run_edge_byte_for_byte() {
     let archive = protocol::DocumentArchivePack { parent_pack: vec![0x89, 0, 255, 7], parent_spr: vec![1, 2, 3], members: Vec::new() };
     let carrier = store::pack_rt::pack_value_to_base64(&protocol::encode_document_archive_bytes(&archive).expect("archive bytes")).into_bytes();
-    let descriptor = semio_framework_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: Some("artifact:out".into()), kind_id: None, media_type: Some(fake_media_type()), wire: MediaWireFormat::Document { schema: FAKE_DOCUMENT_SCHEMA.into() }, blob_hash: None };
+    let descriptor = semio_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: Some("artifact:out".into()), kind_id: None, media_type: Some(fake_media_type()), wire: MediaWireFormat::Document { schema: FAKE_DOCUMENT_SCHEMA.into() }, blob_hash: None };
     let descriptor_bytes = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let blobs = InMemoryBlobStore::default();
     let media = media_from_document(&descriptor_bytes, carrier.clone(), &blobs).await.expect("a text carrier is a structured media");
     assert!(matches!(&media.payload, MediaPayload::Structured { schema, .. } if schema == FAKE_DOCUMENT_SCHEMA));
     let (wire_descriptor, data) = media_to_artifact(&media, &blobs).await.expect("the edge hands it on");
     assert_eq!(data, carrier, "the carrier arrives byte for byte");
-    let wire: semio_framework_plugin::app::MediaArtifactDescriptor = semio_framework_value::FromValue::from_value(store::pack_rt::decode_wire_value(&wire_descriptor).expect("descriptor")).expect("typed descriptor");
+    let wire: semio_plugin::app::MediaArtifactDescriptor = semio_framework_value::FromValue::from_value(store::pack_rt::decode_wire_value(&wire_descriptor).expect("descriptor")).expect("typed descriptor");
     assert_eq!(wire.wire, MediaWireFormat::Document { schema: FAKE_DOCUMENT_SCHEMA.into() });
-    assert_eq!(semio_framework_plugin::app::whole_document_archive(&data).await.expect("the downstream guest decodes it"), archive);
+    assert_eq!(semio_plugin::app::whole_document_archive(&data).await.expect("the downstream guest decodes it"), archive);
 }
 //#endregion 🔖️SteppedDocumentLoad
 
@@ -914,9 +914,9 @@ async fn intrinsic_media_wire_runner_preserves_owned_tags_words_octets_and_occur
 /// raised stays its reason in words.
 #[test]
 fn an_admission_refusal_reaches_the_runner_as_the_guests_structured_fault() {
-    use semio_framework_plugin_host::activation::ActivationRefusal;
+    use semio_plugin_host::activation::ActivationRefusal;
     let fault = protocol::admit_guest_channel_version(20, 21).expect_err("a guest of another channel version is refused");
-    let refused = activation_refusal_error(ActivationRefusal::instantiation(semio_framework_plugin_guest_contract::PluginHostError::Refused(Box::new(fault.clone()))));
+    let refused = activation_refusal_error(ActivationRefusal::instantiation(semio_plugin_guest_contract::PluginHostError::Refused(Box::new(fault.clone()))));
     assert!(matches!(&refused, RunError::Refused(kept) if *kept == fault), "the guest's fault is kept whole: {refused:?}");
     assert_eq!(refused.to_string(), format!("{}: {}", protocol::CHANNEL_MISMATCH_CODE, fault.message));
     let host = activation_refusal_error(ActivationRefusal::host("Kernel activation refused: Saturated"));

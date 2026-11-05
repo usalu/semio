@@ -94,7 +94,7 @@ for (const row of treeProjection.cases) {
 
 const treeFixtureSource = readModuleTreeSource(fileURLToPath(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🦀️.rs")));
 assert(treeFixtureSource.includes("pub fn project_and_retire_fixture_tree("), "shared retained tree fixture observer is not implemented");
-assert(treeFixtureSource.includes("FIXTURE_TREE_MAX_NODES * (semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX + 1)"), "retirement must cover every retained page, including unobserved rejected descendants");
+assert(treeFixtureSource.includes("FIXTURE_TREE_MAX_NODES * (semio_ui_contract::UI_BUILT_CHILDREN_MAX + 1)"), "retirement must cover every retained page, including unobserved rejected descendants");
 
 //#region 🔎️ActualHostWire
 const hostWire = await Bun.file(new URL("../🧫️fixtures/📡️host-wire/🔣️.json", import.meta.url)).json();
@@ -108,6 +108,13 @@ for (const row of hostWire.cases) {
   const actual = encodeScalarRecordFixture(row, false), oracle = encodeScalarRecordFixture(row, true);
   assert.deepEqual(actual, oracle); assert.equal(actual.bytes.length, row.wireBytes); assert.equal(actual.symbols, row.symbols);
   for (const grant of hostWire.grants) assert.deepEqual(Buffer.concat(Array.from({length:Math.ceil(actual.bytes.length/grant)}, (_, index) => actual.bytes.subarray(index*grant, (index+1)*grant))), oracle.bytes);
+}
+
+for (const row of hostWire.nativeCases) {
+  assert.equal(hostCommandRows.indexOf(row.id), row.ordinal);
+  assert.equal(BigInt(row.fields[1].value), 18446744073709551615n);
+  assert.deepEqual(JSON.parse(stableStringify(row.nativeOutput)), {});
+  assert.equal(row.maximumWireBytes, 16_384);
 }
 
 //#endregion 🔎️ActualHostWire
@@ -336,7 +343,7 @@ assert(flowSurfaceTestSource.includes("async fn flow_actual_surface_factories_cl
  */
 const interactiveJob = await Bun.file(new URL("../🧫️fixtures/🧮️interactive-job/🔣️.json", import.meta.url)).json();
 const editorSource = readModuleTreeSource(fileURLToPath(new URL("../../🦀️.rs", import.meta.url)));
-const classifiedRows = [...editorSource.matchAll(/\.action_interactive_job\("([A-Za-z0-9]+)",\s*semio_framework_plugin::InteractiveJobClassification::([A-Za-z]+)\)/g)];
+const classifiedRows = [...editorSource.matchAll(/\.action_interactive_job\("([A-Za-z0-9]+)",\s*semio_plugin::InteractiveJobClassification::([A-Za-z]+)\)/g)];
 const classified = new Map(classifiedRows.map((row) => [row[1], row[2]]));
 assert.equal(classified.size, classifiedRows.length, "an action may carry at most one interactive-job classification");
 assert.deepEqual([...classified.keys()].sort(), [...interactiveJob.migrated].sort(), "every declared action must appear in the fixture");

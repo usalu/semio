@@ -13,8 +13,8 @@ pub struct ChangeVentDesignAirflow {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeVentDesignAirflow where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_vent_design_airflow::ChangeVentDesignAirflow> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vent-design-airflow", kind: "change-vent-design-airflow", record: "ChangeVentDesignAirflow" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change design airflow of the ventilation system", "Auslegungsvolumenstrom der Lüftungsanlage ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change design airflow of the ventilation system", "Auslegungsvolumenstrom der Lüftungsanlage ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.vent_id.clone()] }
 }

@@ -15,27 +15,27 @@
 use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS;
 use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_edges, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_nodes, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::snapshot_target_regions, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_node_display_label, semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction::ui_label, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dScene, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::plugin_app_close_prelude::RowActionPlacement;
-use semio_framework_plugin::{Buildable, HasBase};
+use semio_plugin::plugin_app_close_prelude::RowActionPlacement;
+use semio_plugin::{Buildable, HasBase};
 
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiListBuilder;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiListBuilder;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 use semio_framework_pack_json::Value;
 
 //#region 🔖️Constants

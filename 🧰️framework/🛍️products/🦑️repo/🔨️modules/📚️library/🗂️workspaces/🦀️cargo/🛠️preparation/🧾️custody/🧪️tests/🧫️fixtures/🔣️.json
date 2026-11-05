@@ -7,5 +7,9 @@
   ],
   "command": [
     "prepare"
-  ]
+  ],
+  "minimumObservationBytes": 655361,
+  "actualProgram": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📜️script.ts",
+  "backpressureHighWaterMark": 1,
+  "backpressureDelayMilliseconds": 25
 }

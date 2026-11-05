@@ -1,11 +1,11 @@
 //! 🎒️ Windowed archive comment and entry-name drafts.
 
 use crate::ZipSnapshot;
-use semio_framework_plugin::app::{TreeWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{TreeWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -24,9 +24,9 @@ pub fn definition() -> WindowKindDefinition {
     if let Some(action) = definition.actions.iter_mut().find(|action| action.id == "set-node") {
         action.in_palette = false;
         action.args = vec![
-            semio_framework_plugin::ActionArgDef::text("nodeId", LocalizedLabel::native("Entry", "Eintrag")).required(),
-            semio_framework_plugin::ActionArgDef::text("value", LocalizedLabel::native("Name or comment", "Name oder Kommentar")).min_length(0).required(),
-            semio_framework_plugin::ActionArgDef::target_revision("revision", LocalizedLabel::native("Saved revision", "Gespeicherte Revision")),
+            semio_plugin::ActionArgDef::text("nodeId", LocalizedLabel::native("Entry", "Eintrag")).required(),
+            semio_plugin::ActionArgDef::text("value", LocalizedLabel::native("Name or comment", "Name oder Kommentar")).min_length(0).required(),
+            semio_plugin::ActionArgDef::target_revision("revision", LocalizedLabel::native("Saved revision", "Gespeicherte Revision")),
         ];
     }
     definition
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// ✏️ Shares the same localized, guarded editing controls across ZIP dialects.
-pub fn render(document: &ZipSnapshot, windows: &TreeWindows<'_>, locale: semio_framework_ui_locale::Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &ZipSnapshot, windows: &TreeWindows<'_>, locale: semio_ui_locale::Locale, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     crate::editor::editing::render(document, windows, locale, publication_revision)
 }
 //#endregion 🔖️Render

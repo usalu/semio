@@ -1,7 +1,7 @@
 //! 🧪️ `flowers-24` — the committed asset IS the print of the authored spec, and the example really
 //! exercises the ground constraint and the pin lane.
 
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use crate::examples::flowers_24::{indices, label, snapshot, EDGE, GROUND, PETAL, PRIMARY_TEXT, SEED, SKY, STEM};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 
@@ -42,5 +42,5 @@ fn the_model_declares_the_ground_colour_and_a_narrow_symmetry_group() {
     assert!(!snapshot.model.periodic_input);
     assert_eq!(snapshot.pinned.len(), 1, "the example exercises the pin lane too");
     assert_eq!(snapshot.seed, SEED);
-    assert_eq!(label(), semio_framework_ui_locale::LocalizedLabel::native("Flowers 24", "Blumen 24"));
+    assert_eq!(label(), semio_ui_locale::LocalizedLabel::native("Flowers 24", "Blumen 24"));
 }

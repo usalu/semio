@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ReorderLayers where Op:
         record: "ReorderedLayers",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Reorder layers", "Schichtenfolge ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Reorder layers", "Schichtenfolge ändern")
     }
 }
 

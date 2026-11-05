@@ -38,8 +38,8 @@ impl ArtifactPack for RetainedSnapshot {
     fn encode_pack_with(&self, _: &PackEncodeOptions) -> Result<Vec<u8>, PackError> { if self.value == -2 { return Err(PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "owner encoder refusal"))); } Ok(self.value.to_le_bytes().to_vec()) }
     fn decode_pack_with(bytes: &[u8], _: &PackDecodeOptions) -> Result<Self, PackError> { Ok(Self { value: i64::from_le_bytes(bytes.try_into().map_err(|_| PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "expected integer word")))?), retired: false }) }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RetainedSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RetainedSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -114,7 +114,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
     child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture,"sqlite":protocol::bytes::encode_base64(&sqlite)}).to_string().as_bytes()).unwrap();
     let result = child.wait_with_output().unwrap();
     assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
-    let codec = <RetainedSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
+    let codec = <RetainedSnapshot as semio_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
     for case in fixture["cases"].as_array().unwrap() {
         RETIREMENTS.with(|count| count.set(0));
         let value = case["value"].as_i64().unwrap();
@@ -144,7 +144,7 @@ drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owne
 fn sqlite_snapshot_codec_original_input_and_retained_result_have_exact_custody(){
  let policy:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
  let full:semio_framework_value::RetainedCloneGrant=serde_json::from_value(policy["original"]["grant"].clone()).unwrap();
- let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let codec=<RetainedSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
+ let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let codec=<RetainedSnapshot as semio_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
  let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"fixture.retained".into(),standard:"1".into(),subset:"*".into()};
  for case in fixture["custodyCases"].as_array().unwrap().iter().filter(|case|case["id"].as_str().unwrap().starts_with("import")){
   let mut input=Some(value_database(7));let pointer=input.as_ref().unwrap().tables.as_ptr();let original=std::cell::Cell::new(true);let mut observer=|_|original.get();

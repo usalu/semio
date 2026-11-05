@@ -13,19 +13,19 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 use std::time::Instant;
-use semio_framework_os_mcp_capabilities::core_capabilities::build_catalog;
-use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
-use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
-use semio_framework_os_mcp_foundation::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore};
-use semio_framework_os_mcp_port::channel_port::{ActivationPhase, ActivationScope};
-use semio_framework_os_mcp_port::policy::AutoApprovePolicy;
-use semio_framework_os_mcp_routing::hub_relay::InstalledArtifactKind;
-use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
-use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+use semio_os_mcp_capabilities::core_capabilities::build_catalog;
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
+use semio_os_mcp_dispatch::actions::ActionAdapter;
+use semio_os_mcp_foundation::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore};
+use semio_os_mcp_port::channel_port::{ActivationPhase, ActivationScope};
+use semio_os_mcp_port::policy::AutoApprovePolicy;
+use semio_os_mcp_routing::hub_relay::InstalledArtifactKind;
+use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_plugin_runtime::compiled_components::set_component_compile_worker;
+use semio_os_mcp_plugin_runtime::compiled_components::set_component_compile_worker;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

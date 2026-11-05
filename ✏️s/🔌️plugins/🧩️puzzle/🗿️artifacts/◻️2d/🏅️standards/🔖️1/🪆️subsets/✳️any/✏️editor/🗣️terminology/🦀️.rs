@@ -1,20 +1,20 @@
-//! 📖️ terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
+//! 📖️ terminology×locale combination is compile-checked by `semio_plugin::app_labels!`
 //! 🗣️ Puzzle 2d play app — the complete UI label set: one field per label, so every
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use semio_framework_ui_locale::AppLabels;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::AppLabels;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale
-// combination compile-checked via `semio_framework_plugin::app_labels!` (see ticket
+// combination compile-checked via `semio_plugin::app_labels!` (see ticket
 // 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND). Fields whose reuse
 // cells repeat the native text verbatim were previously inherited via `..PUZZLE2D_LABELS_NATIVE_EN`
 // struct-update syntax — the new macro has no implicit inheritance, so those cells are now spelled
 // out explicitly (same text, four times).
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     pub struct Puzzle2dLabels {
         nodes: native_en "Nodes", native_de "Knoten", reuse_en "Building components", reuse_de "Baukomponenten";
         handles: native_en "Handles", native_de "Anschlüsse", reuse_en "Connection points", reuse_de "Verbindungspunkte";
@@ -133,8 +133,8 @@ semio_framework_ui_locale::app_labels! {
 //#endregion 🔖️Labels
 
 /// 🗣️ Resolves the active label set from the shared view state.
-pub fn puzzle2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Puzzle2dLabels {
-    semio_framework_plugin::resolve_labels::<Puzzle2dLabels>(view_state)
+pub fn puzzle2d_labels(view_state: &semio_plugin::ViewModel) -> &'static Puzzle2dLabels {
+    semio_plugin::resolve_labels::<Puzzle2dLabels>(view_state)
 }
 
 /// 🎛️ Resolves labels from the original caller's explicit presentation axes.

@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_lowpoly_lowpoly_commands::media::*;
@@ -9,7 +9,7 @@ use semio_s_artifact_lowpoly_lowpoly_io::{import::deserializers::artifacts::obj:
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use serde::{Deserialize, Serialize};
 use crate::context::{app, committed_edits, dispatch};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
@@ -59,7 +59,7 @@ async fn opened_file_bytes_reads_raw_text_and_base64_data_urls() {
 async fn import_mesh_file_emits_a_load_document_effect() {
     let obj = "o Quad\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nf 1 2 3 4\n";
     let projection = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
     let cfg = ConfigView { snapshot: &LowpolyConfig::default(), window: None };
     let mut ctx = LowpolyScratch::default();

@@ -6,21 +6,21 @@
 
 use semio_s_artifact_procedural_2d_terminology::Generation2dLabels;
 use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
-use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::tree_item_with_action_draggable;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::HasBase;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::plugin_app_close_prelude::Component;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action_draggable;
+use semio_plugin::tree_window_item;
+use semio_plugin::ActionFactory;
+use semio_plugin::HasBase;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_BODY_CATALOGUE: &str = "generation2d.play.catalogue";
@@ -46,7 +46,7 @@ fn catalogue_error(scope: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new("ui.catalogue", scope)
 }
 
-fn item_key(item: &semio_framework_os_flow::CatalogueItem) -> String {
+fn item_key(item: &semio_os_flow::CatalogueItem) -> String {
     let variant = match item.kind.as_str() {
         "neuron" => item.neuron_kind.as_deref(),
         "outputExport" => item.format.as_deref(),
@@ -60,7 +60,7 @@ fn item_key(item: &semio_framework_os_flow::CatalogueItem) -> String {
 }
 
 /// 🖱️ Widget descriptor JSON: kind, neuronKind for neurons, and format or action when the item has them.
-fn widget_descriptor(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
+fn widget_descriptor(item: &semio_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
     let kind = ("kind".to_string(), semio_framework_pack_json::Value::String(item.kind.clone()));
     if item.kind == "neuron" {
         let neuron = item.neuron_kind.clone().unwrap_or_else(|| "math.add".into());
@@ -75,12 +75,12 @@ fn widget_descriptor(item: &semio_framework_os_flow::CatalogueItem) -> semio_fra
     semio_framework_pack_json::object([kind])
 }
 
-fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
+fn widget_drag_json(item: &semio_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
     let descriptor = widget_descriptor(item);
     semio_framework_pack_json::object([(FLOW_WIDGET_DRAG_MIME.to_string(), semio_framework_pack_json::Value::String(descriptor.to_string()))])
 }
 
-fn click_args(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+fn click_args(item: &semio_os_flow::CatalogueItem) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
     let mut pairs = vec![("kind", semio_s_procedural_core_semantic_ui::ui_value_text(if item.kind == "neuron" { "neuron" } else { item.kind.as_str() })?)];
     if item.kind == "neuron" {
         pairs.push(("neuronKind", semio_s_procedural_core_semantic_ui::ui_value_text(item.neuron_kind.as_deref().unwrap_or("math.add"))?));
@@ -94,7 +94,7 @@ fn click_args(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_
     semio_s_procedural_core_semantic_ui::ui_value_map(pairs)
 }
 
-fn catalogue_row(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn catalogue_row(item: &semio_os_flow::CatalogueItem) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let drag = widget_drag_json(item);
     let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
     let mut node = tree_item_with_action_draggable(item_key(item), item.name.clone(), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("addWidget", Some(click_args(item)?))?, &drag)?;
@@ -104,19 +104,19 @@ fn catalogue_row(item: &semio_framework_os_flow::CatalogueItem) -> semio_framewo
     Ok(node)
 }
 
-fn group_id(section: &semio_framework_os_flow::CatalogueSection) -> String {
+fn group_id(section: &semio_os_flow::CatalogueSection) -> String {
     format!("procedural2d-play-catalogue.{}", section.id)
 }
 
 /// 🗂️ A palette group whose children are that group's own window. The group row is not a pick target.
-fn group_row(windows: &TreeWindows<'_>, section: &semio_framework_os_flow::CatalogueSection, default_open: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn group_row(windows: &TreeWindows<'_>, section: &semio_os_flow::CatalogueSection, default_open: bool) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let id = group_id(section);
-    let item = semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(section.title.as_str())?).try_id(&id).map_err(|_| catalogue_error("group.id"))?;
+    let item = semio_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(section.title.as_str())?).try_id(&id).map_err(|_| catalogue_error("group.id"))?;
     tree_window_item(windows, item, &id, default_open, &section.items, catalogue_row)
 }
 
-pub fn render(labels: &Generation2dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+pub fn render(labels: &Generation2dLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let sections = semio_os_flow::flow_palette_catalogue_sections();
     let first_group = sections.first().map(|section| section.id.clone()).unwrap_or_default();
     let modes = ["preview", "generate", "wire"];
     PanelTreeBuilder::new("procedural2d-play-catalogue")?

@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v1_0::subsets::any::io::LasAnalyzer;
     use crate::LasSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -46,7 +46,7 @@ pub use crate::schema::inferences::{decode_las, encode_las};
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v1_0::subsets::any::io::LasComposer as LasRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -74,7 +74,7 @@ pub mod text;
 
 pub mod derived_construction {
     use crate::{LasDiff, LasMutation, LasSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.las` snapshot.
@@ -122,7 +122,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::LasSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.las` parts.
@@ -140,14 +140,14 @@ pub mod derived_analysis {
         type Parts = LasParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             const SIG: [u8; 4] = *b"LASF";
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if bytes.len() >= 4 && bytes[0..4] == SIG {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
@@ -157,19 +157,19 @@ pub mod derived_analysis {
                     };
                     let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(8).collect();
                     if hex.len() < 8 {
-                        return semio_framework_plugin::io::Confidence::Low;
+                        return semio_plugin::io::Confidence::Low;
                     }
                     let mut decoded = [0u8; 4];
                     for (i, byte) in decoded.iter_mut().enumerate() {
                         match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
                             Ok(b) => *byte = b,
-                            Err(_) => return semio_framework_plugin::io::Confidence::Low,
+                            Err(_) => return semio_plugin::io::Confidence::Low,
                         }
                     }
                     if decoded == SIG {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -178,20 +178,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = LasParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <LasSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <LasSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -204,7 +204,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec LasBuilderFacets {
         construction: LasBuilderConstruction,
         analysis: LasAnalyzerAnalysis,
@@ -246,14 +246,14 @@ pub use crate::schema::snapshot::LasSnapshot;
 /// a genuine, narrowly scoped registration gap.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("las", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::schema::las_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::schema::inferences::las_artifact_inference_descriptor()])

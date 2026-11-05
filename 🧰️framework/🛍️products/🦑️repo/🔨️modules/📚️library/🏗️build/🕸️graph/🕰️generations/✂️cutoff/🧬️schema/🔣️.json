@@ -16,37 +16,73 @@
   "Row": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["kind", "path", "fact"],
+   "required": [
+    "kind",
+    "path",
+    "fact"
+   ],
    "properties": {
-    "kind": {"type": "string"},
-    "path": {"type": "string"},
+    "kind": {
+     "type": "string"
+    },
+    "path": {
+     "type": "string"
+    },
     "fact": {}
    }
   },
   "Fixture": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["version", "worlds"],
+   "required": [
+    "version",
+    "worlds",
+    "memoBounds"
+   ],
    "properties": {
-    "version": {"const": 1},
+    "version": {
+     "const": 1
+    },
     "worlds": {
      "type": "array",
      "items": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "owners", "derived", "stale", "answers", "expect"],
+      "required": [
+       "id",
+       "owners",
+       "derived",
+       "stale",
+       "answers",
+       "expect"
+      ],
       "properties": {
-       "id": {"type": "string"},
+       "id": {
+        "type": "string"
+       },
        "owners": {
         "type": "object",
         "description": "project name to the raw rows it holds directly and the derived questions it holds",
         "additionalProperties": {
          "type": "object",
          "additionalProperties": false,
-         "required": ["raw", "derived"],
+         "required": [
+          "raw",
+          "derived"
+         ],
          "properties": {
-          "raw": {"type": "array", "items": {"type": "string"}},
-          "derived": {"type": "array", "items": {"type": "string"}}
+          "raw": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          },
+          "derived": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          }
          }
         }
        },
@@ -56,26 +92,108 @@
         "additionalProperties": {
          "type": "object",
          "additionalProperties": false,
-         "required": ["answer", "support"],
-         "properties": {"answer": {"type": "string"}, "support": {"type": "array", "items": {"type": "string"}}}
+         "required": [
+          "answer",
+          "support"
+         ],
+         "properties": {
+          "answer": {
+           "type": "string"
+          },
+          "support": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          }
+         }
         }
        },
-       "stale": {"type": "array", "items": {"type": "string"}, "description": "raw rows that no longer hold"},
-       "scope": {"type": "array", "items": {"type": "string"}, "description": "when present, the verification is scoped to these projects: only they can be dirty and only the questions one of them holds are asked; the others stay stale"},
+       "stale": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "description": "raw rows that no longer hold"
+       },
+       "scope": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "description": "when present, the verification is scoped to these projects: only they can be dirty and only the questions one of them holds are asked; the others stay stale"
+       },
        "answers": {
         "type": "object",
         "description": "the answer digest a question gets now, and `!error` when the computation fails",
-        "additionalProperties": {"type": "string"}
+        "additionalProperties": {
+         "type": "string"
+        }
        },
        "expect": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["dirty", "held", "changed"],
+        "required": [
+         "dirty",
+         "held",
+         "changed"
+        ],
         "properties": {
-         "dirty": {"type": "array", "items": {"type": "string"}},
-         "held": {"type": "array", "items": {"type": "string"}},
-         "changed": {"type": "array", "items": {"type": "string"}}
+         "dirty": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "held": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "changed": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         }
         }
+       }
+      }
+     }
+    },
+    "memoBounds": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "fill",
+       "known",
+       "queries",
+       "cached"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "fill": {
+        "enum": [
+         "below",
+         "full"
+        ]
+       },
+       "known": {
+        "type": "boolean"
+       },
+       "queries": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 2
+       },
+       "cached": {
+        "type": "boolean"
        }
       }
      }

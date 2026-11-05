@@ -4,9 +4,9 @@ use crate::schema::mutations::move_vertex::MoveVertex;
 use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::SemioBrepSnapshot;
 use semio_framework::DslValue;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
 use semio_s_artifact_stdio_contract::editing;
 use crate::editor::{move_vertex_mutation};
 use crate::editor::*;
@@ -14,7 +14,7 @@ use crate::editor::*;
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_semio_brep_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, SEMIO_BREP_DIALECT.into());
 }
 
@@ -25,7 +25,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioBrepEditor, crate::viewer::SemioBrepViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioBrepEditor, crate::viewer::SemioBrepViewer>().await;
 }
 
 //#region 🧪️SetVertex
@@ -104,8 +104,8 @@ async fn set_vertex_is_visible_with_required_localized_arguments() {
     let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "set-vertex").expect("set-vertex action");
     assert_eq!(action.args.len(), 2);
     assert!(action.args.iter().all(|argument| argument.required));
-    assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Move Vertex");
-    assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Vertex verschieben");
+    assert_eq!(action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Move Vertex");
+    assert_eq!(action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Vertex verschieben");
 }
 
 /// ✏️ Ticket goal: "applying it moves the vertex" — real `protocol::Mutation::diff`/
@@ -121,29 +121,29 @@ async fn applying_the_move_vertex_mutation_actually_moves_the_vertex() {
 
 #[semio_framework_async_macros::async_test]
 async fn registered_set_vertex_publishes_refuses_a_missing_target_and_undoes_redoes() {
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+    use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let original = one_vertex_snapshot();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<SemioBrepEditor>, _>(async { semio_framework_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, SEMIO_BREP_DOCUMENT_SCHEMA) else { panic!("B-rep fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<SemioBrepEditor>, _>(async { semio_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, SEMIO_BREP_DOCUMENT_SCHEMA) else { panic!("B-rep fixture produces a document load") };
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
     let meta = artifact_app_laws::meta("local");
     let arguments = |vertex_id: &str, point: [f64; 3]| DslValue::object([("vertexId".into(), DslValue::String(vertex_id.into())), ("point".into(), DslValue::Array(point.into_iter().map(DslValue::float).collect()))]);
 
     let edit = arguments("v1", [3.0, 4.0, 5.0]);
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-vertex", Some(edit.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-vertex", Some(edit.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
     assert_eq!(app.snapshot().unwrap().vertices[0].point, SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 });
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().unwrap(), original);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().unwrap().vertices[0].point, SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 });
 
     let missing = arguments("missing", [7.0, 8.0, 9.0]);
     let history_before = ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history before refused edit").upserts.len();
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-vertex", Some(missing.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-vertex", Some(missing.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    assert!(semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
     assert_eq!(app.snapshot().unwrap().vertices[0].point, SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 });
     assert_eq!(::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history after refused edit").upserts.len(), history_before);
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
@@ -151,23 +151,23 @@ async fn registered_set_vertex_publishes_refuses_a_missing_target_and_undoes_red
 
 #[semio_framework_async_macros::async_test]
 async fn registered_set_vertex_refuses_duplicate_ids_without_history() {
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+    use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let mut duplicate = one_vertex_snapshot();
     duplicate.vertices.push(duplicate.vertices[0].clone());
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<SemioBrepEditor>, _>(async { semio_framework_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&duplicate, SEMIO_BREP_DOCUMENT_SCHEMA) else { panic!("B-rep fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<SemioBrepEditor>, _>(async { semio_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&duplicate, SEMIO_BREP_DOCUMENT_SCHEMA) else { panic!("B-rep fixture produces a document load") };
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
     let meta = artifact_app_laws::meta("local");
     let history_before = ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("initial history").upserts.len();
     let args = DslValue::object([("vertexId".into(), DslValue::String("v1".into())), ("point".into(), DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]))]);
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-vertex", Some(args.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-vertex", Some(args.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    assert!(semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
     assert_eq!(app.snapshot().unwrap(), duplicate);
     assert_eq!(::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history after duplicate refusal").upserts.len(), history_before);
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 //#endregion 🧪️SetVertex
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", SemioBrepEditor, || semio_framework_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio", SemioBrepEditor, || semio_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() }, "../..");

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeHoistingSpeed wher
         record: "ChangedHoistingSpeed",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change hoisting speed", "Hubgeschwindigkeit ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change hoisting speed", "Hubgeschwindigkeit ändern")
     }
 }
 

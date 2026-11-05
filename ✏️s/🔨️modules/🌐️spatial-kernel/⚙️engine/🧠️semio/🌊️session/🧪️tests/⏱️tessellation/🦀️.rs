@@ -1,18 +1,18 @@
 //! 🎟️ The actual Session port refuses unfunded normal work without changing its original family.
 use super::*;
-use semio_framework_os_flow::geometry::{GeometryPort,GeometryPortRetirement};
+use semio_os_flow::geometry::{GeometryPort,GeometryPortRetirement};
 
 pub(super) fn original_geometry_source_grant()->RetainedCloneGrant{
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️tessellation/🎟️owners.json")).unwrap();let p=fixture["originalCaller"]["sourceGrant"].as_array().unwrap();RetainedCloneGrant{maximum_items:p[0].as_u64().unwrap()as usize,maximum_copy_bytes:p[1].as_u64().unwrap()as usize,maximum_capacity_bytes:p[2].as_u64().unwrap()as usize,maximum_release_bytes:p[3].as_u64().unwrap()as usize,maximum_depth:p[4].as_u64().unwrap()as usize}
 }
-pub(super) fn original_geometry_caller(identity:semio_framework_os_flow::geometry::GeometryWorkIdentity)->semio_framework_job::OriginalJobFixtureCaller{
+pub(super) fn original_geometry_caller(identity:semio_os_flow::geometry::GeometryWorkIdentity)->semio_framework_job::OriginalJobFixtureCaller{
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️tessellation/🎟️owners.json")).unwrap();let p=&fixture["originalCaller"];
  semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(identity.operation),semio_framework_job::Generation(identity.generation),original_geometry_source_grant(),||Some(1),p["deadlineUs"].as_u64().unwrap(),p["fuel"].as_u64().unwrap())
 }
-fn original_geometry_step(caller:&mut semio_framework_job::OriginalJobFixtureCaller,port:&dyn GeometryPort,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,grant:RetainedCloneGrant)->Result<(semio_framework_os_flow::geometry::GeometryStep,semio_framework_os_flow::geometry::GeometryWorkProgress),semio_framework_os_flow::geometry::GeometryWorkFailure>{
+fn original_geometry_step(caller:&mut semio_framework_job::OriginalJobFixtureCaller,port:&dyn GeometryPort,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,grant:RetainedCloneGrant)->Result<(semio_os_flow::geometry::GeometryStep,semio_os_flow::geometry::GeometryWorkProgress),semio_os_flow::geometry::GeometryWorkFailure>{
  let result=caller.turn(grant,|cx|Ok(port.tessellate_step(identity,handle,tolerance,cx))).unwrap();let receipt=match &result{Ok((_,work))=>work.retained,Err(failure)=>failure.work.retained};assert_eq!(caller.receipt(),receipt);result
 }
-fn original_geometry_cancel(caller:&mut semio_framework_job::OriginalJobFixtureCaller,port:&dyn GeometryPort,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,grant:RetainedCloneGrant)->Result<(RetainedCloneStep,semio_framework_os_flow::geometry::GeometryWorkProgress),semio_framework_os_flow::geometry::GeometryWorkFailure>{
+fn original_geometry_cancel(caller:&mut semio_framework_job::OriginalJobFixtureCaller,port:&dyn GeometryPort,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,grant:RetainedCloneGrant)->Result<(RetainedCloneStep,semio_os_flow::geometry::GeometryWorkProgress),semio_os_flow::geometry::GeometryWorkFailure>{
  let result=caller.turn(grant,|cx|Ok(port.cancel_tessellation_step(identity,handle,tolerance,cx))).unwrap();let receipt=match &result{Ok((_,work))=>work.retained,Err(failure)=>failure.work.retained};assert_eq!(caller.receipt(),receipt);result
 }
 
@@ -21,10 +21,10 @@ fn original_session_tessellation_requires_original_capacity_before_any_normal_ef
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️tessellation/🎟️owners.json")).unwrap();let row=&law["source"];
     let source=Session::new();let handle=source.with_kernel(|kernel|kernel.box_prim_sync(row["width"].as_f64().unwrap(),row["depth"].as_f64().unwrap(),row["height"].as_f64().unwrap()).map_err(|error|map_kernel_error(&error))).unwrap();let mut port=source.port();
     let original=Arc::as_ptr(&source.state);let claims=source.state.claims.try_lock().unwrap().iter().map(|(_,claims)|claims.handles.len()).sum::<usize>();let policy=&law["denied"];let grant=RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap()as usize};
-    let identity=semio_framework_os_flow::geometry::GeometryWorkIdentity{operation:1,generation:1};let mut caller=original_geometry_caller(identity);
+    let identity=semio_os_flow::geometry::GeometryWorkIdentity{operation:1,generation:1};let mut caller=original_geometry_caller(identity);
     let (binding,heap)=physical_session_custody::observe(||original_geometry_step(&mut caller,&*port,identity,handle.as_str(),law["tolerance"].as_f64().unwrap(),grant));
     assert_eq!(heap,(0,0));let(_,binding)=binding.unwrap();assert_eq!(binding.retained,RetainedCloneProgress{copied_items:law["inlineSourceReceiptItems"].as_u64().unwrap()as usize,..Default::default()});assert_eq!(binding.consumed_units,1);
-    let(result,heap)=physical_session_custody::observe(||original_geometry_step(&mut caller,&*port,semio_framework_os_flow::geometry::GeometryWorkIdentity{operation:1,generation:1},handle.as_str(),law["tolerance"].as_f64().unwrap(),grant));let(step,receipt)=result.unwrap();assert_eq!(heap,(0,0),"actual original Session normal work requires caller capacity before claim/key/registry/query or status backing birth");assert_eq!(receipt.retained,RetainedCloneProgress::default());assert_eq!(receipt.consumed_units,0);assert!(matches!(step,semio_framework_os_flow::geometry::GeometryStep::Working{..}));assert_eq!(Arc::as_ptr(&source.state),original);assert_eq!(source.state.claims.try_lock().unwrap().iter().map(|(_,claims)|claims.handles.len()).sum::<usize>(),claims);
+    let(result,heap)=physical_session_custody::observe(||original_geometry_step(&mut caller,&*port,semio_os_flow::geometry::GeometryWorkIdentity{operation:1,generation:1},handle.as_str(),law["tolerance"].as_f64().unwrap(),grant));let(step,receipt)=result.unwrap();assert_eq!(heap,(0,0),"actual original Session normal work requires caller capacity before claim/key/registry/query or status backing birth");assert_eq!(receipt.retained,RetainedCloneProgress::default());assert_eq!(receipt.consumed_units,0);assert!(matches!(step,semio_os_flow::geometry::GeometryStep::Working{..}));assert_eq!(Arc::as_ptr(&source.state),original);assert_eq!(source.state.claims.try_lock().unwrap().iter().map(|(_,claims)|claims.handles.len()).sum::<usize>(),claims);
     port.begin_close();while !port.terminal_is_empty(){let copy=port.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:port.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:port.next_release_byte_demand().unwrap(),maximum_depth:port.next_depth_demand().unwrap()};port.close_step(grant).unwrap();}drop(port);source.close();caller.retire(original_geometry_source_grant());
 }
 
@@ -36,7 +36,7 @@ fn admission_fingerprint(session:&Session)->(usize,usize,usize,usize,usize,usize
 
 #[test]
 fn original_session_admission_and_specific_cancel_preserve_source_and_full_custody(){
-    use semio_framework_os_flow::geometry::GeometryWorkIdentity;
+    use semio_os_flow::geometry::GeometryWorkIdentity;
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️tessellation/🎟️owners.json")).unwrap();
     for body in law["admission"]["cancelBodies"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;
         for stop in [0,1,3,7,usize::MAX]{
@@ -76,7 +76,7 @@ fn original_session_admission_and_specific_cancel_preserve_source_and_full_custo
 
 #[test]
 fn original_session_query_requires_original_capacity_after_source_admission(){
-    use semio_framework_os_flow::geometry::GeometryWorkIdentity;
+    use semio_os_flow::geometry::GeometryWorkIdentity;
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️tessellation/🎟️owners.json")).unwrap();let source=Session::new();let handle=source.with_kernel(|kernel|kernel.box_prim_sync(2.,3.,4.).map_err(|error|map_kernel_error(&error))).unwrap();let mut port=Box::new(source.admitted_port());let identity=GeometryWorkIdentity{operation:27,generation:9};let mut caller=original_geometry_caller(identity);
     for _ in 0..1000{let demand=port.tessellation_demands(identity,handle.as_str(),0.05,64).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};original_geometry_step(&mut caller,&*port,identity,handle.as_str(),0.05,grant).unwrap();if port.authority.session.as_ref().unwrap().admission_demands(identity,handle.as_str(),0.05,64).unwrap().is_none(){break;}}
     let before=admission_fingerprint(port.authority.session.as_ref().unwrap());let original=(handle.0.as_ptr(),handle.0.len());let demand=port.tessellation_demands(identity,handle.as_str(),0.05,64).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:law["queryFunding"]["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:0,maximum_depth:demand.depth};
@@ -86,7 +86,7 @@ fn original_session_query_requires_original_capacity_after_source_admission(){
 
 #[test]
 fn original_session_failed_admitted_event_retains_native_primary_and_actual_cpu(){
-    use semio_framework_os_flow::geometry::{GeometryWorkIdentity,GeometryWorkFailure};
+    use semio_os_flow::geometry::{GeometryWorkIdentity,GeometryWorkFailure};
     use physical_session_custody::observe;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️tessellation/🎟️owners.json")).unwrap();let law=&fixture["failure"];
     let((mut source,handle,moved,mut port),heap)=observe(||{let source=Session::new();let handle=GeometryHandle(law["missingHandle"].as_str().unwrap().into());let moved=handle.0.clone();let port=Box::new(source.admitted_port());let capture=source.capture();drop(source);(capture,handle,moved,port)});let(mut born,mut freed)=(heap.0,heap.1);
@@ -115,7 +115,7 @@ fn original_session_failed_admitted_event_retains_native_primary_and_actual_cpu(
 
 #[test]
 fn original_session_validation_frontier_funds_actual_body_and_full_cancel_custody(){
-    use semio_framework_os_flow::geometry::GeometryWorkIdentity;
+    use semio_os_flow::geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_validation::BodyValidationPhase;
     use physical_session_custody::observe;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedLoops"];

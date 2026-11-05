@@ -5,9 +5,9 @@ use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::config::puzzle5d_camera3
 
 use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::apply_world3d_projection_action;
-use semio_framework_plugin::world3d_projection_action_moves_pose;
-use semio_framework_plugin::world3d_projection_pose;
+use semio_plugin::apply_world3d_projection_action;
+use semio_plugin::world3d_projection_action_moves_pose;
+use semio_plugin::world3d_projection_pose;
 
 pub fn set_projection(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&Value>) {
     let moves_pose = world3d_projection_action_moves_pose(action, args);

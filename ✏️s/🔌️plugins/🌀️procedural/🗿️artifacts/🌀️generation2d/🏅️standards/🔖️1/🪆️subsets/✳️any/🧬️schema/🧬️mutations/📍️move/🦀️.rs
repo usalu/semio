@@ -10,7 +10,8 @@ use semio_framework_artifact_flow_flow::WidgetLayout;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️MoveWidget
 /// 📍 `move-widget` payload — the widget's new absolute canvas position.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_pack_json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -30,8 +31,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "widget", kind: "move-widget", record: "MovedWidget" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move widget \"{}\" to ({}, {})", self.id, self.layout.x, self.layout.y), &format!("Widget \"{}\" nach ({}, {}) verschieben", self.id, self.layout.x, self.layout.y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move widget \"{}\" to ({}, {})", self.id, self.layout.x, self.layout.y), &format!("Widget \"{}\" nach ({}, {}) verschieben", self.id, self.layout.x, self.layout.y))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

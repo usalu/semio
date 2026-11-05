@@ -1,21 +1,21 @@
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_ui_scene::Canvas2dScene;
+use semio_plugin::SurfaceKind;
+use semio_ui_scene::Canvas2dScene;
 #[allow(unused_imports)]
 use crate::{FigureTileFrame, PresentationSnapshot};
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 use crate::editor::animate::modes::main::windows::tile_editor::{deck_to_canvas_layers};
 use crate::editor::animate::modes::main::windows::tile_editor::*;
 use crate::editor::animate::unit_tests::context::{presentation_app, render as render_body};
 use crate::editor::animate::PresentationCommand;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::artifact_app_laws::meta;
+use semio_plugin::artifact_app_laws::meta;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_canvas_2d_scene() {
@@ -86,8 +86,8 @@ fn the_first_paint_camera_frames_every_layer_inside_the_narrowest_pane() {
     const PANE: f64 = 469.0;
     for deck in [crate::default_presentation_snapshot(), crate::demo_presentation_snapshot()] {
         let node = render(&deck).expect("tile editor canvas");
-        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
-        let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
+        let semio_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
+        let scene: Canvas2dScene = semio_ui_scene::decode(props).expect("packed canvas");
         assert!(scene.zoom > 0.0 && scene.zoom <= 1.0, "zoom {} must fit, never magnify", scene.zoom);
         let layers: Vec<Value> = semio_framework_pack_json::parse(&scene.layers_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("layers JSON").as_array().cloned().unwrap_or_default();
         assert!(!layers.is_empty());

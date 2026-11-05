@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDustExplosionVentA
         record: "ChangedDustExplosionVentArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change dust explosion: Vent area A_v", "Staubexplosion: Entlastungsfläche A_v ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change dust explosion: Vent area A_v", "Staubexplosion: Entlastungsfläche A_v ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

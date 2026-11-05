@@ -8,8 +8,8 @@ use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 
 /// 🧳️ Object-safe app-instance operation state retained and closed by [VcsArtifactApp].
@@ -92,7 +92,7 @@ impl InstanceInferenceSessions {
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
   let demand=self.retirement_demands(loan.maximum_copy_bytes)?;
-  semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|_,grant|{let step=self.close_granted(grant)?;let terminal=self.terminal_is_empty();Ok((match step{semio_framework_value::RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),semio_framework_value::RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)},terminal))})
+  semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|_,grant|{let step=self.close_granted(grant)?;let terminal=self.terminal_is_empty();Ok((match step{semio_framework_value::RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),semio_framework_value::RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)},terminal))})
  }
 
 }
@@ -106,7 +106,7 @@ pub fn original_inference_close_step(original:&std::sync::Arc<std::sync::Mutex<I
 /// 🧳️ Cloneable capability for one concrete app instance's retained operation owner and its inference sessions.
 #[derive(Clone)]
 pub struct ArtifactInstanceOperationOwnerHandle {
-    inner: std::sync::Arc<semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellV1<dyn ArtifactInstanceOperationOwner>>,
+    inner: std::sync::Arc<semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellV1<dyn ArtifactInstanceOperationOwner>>,
     inference: std::sync::Arc<std::sync::Mutex<InstanceInferenceSessions>>,
 }
 
@@ -143,7 +143,7 @@ fn original_inference_metadata(cx:&mut StepContext<'_>,copy:usize,depth:usize)->
 
 impl ArtifactInstanceOperationOwnerHandle {
     /// 📏️ Quotes the defining two shared original owners without constructing either source early.
-    pub fn original_birth_demands()->Result<RetirementDemand,ValueError>{let capacity_bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellV1<dyn ArtifactInstanceOperationOwner>>().checked_add(semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<std::sync::Mutex<InstanceInferenceSessions>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original operation owner shared extent overflow"))?;Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<Self>()+2*std::mem::size_of::<Box<dyn ArtifactInstanceOperationOwner>>(),capacity_bytes,depth:2,..Default::default()})}
+    pub fn original_birth_demands()->Result<RetirementDemand,ValueError>{let capacity_bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellV1<dyn ArtifactInstanceOperationOwner>>().checked_add(semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<std::sync::Mutex<InstanceInferenceSessions>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original operation owner shared extent overflow"))?;Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<Self>()+2*std::mem::size_of::<Box<dyn ArtifactInstanceOperationOwner>>(),capacity_bytes,depth:2,..Default::default()})}
     /// 🌱️ An explicitly authored empty operation owner still admits its actual inference and mutable-owner authorities.
     pub fn admit_original_empty(cx:&mut StepContext<'_>,output:&mut Option<Self>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if output.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original empty operation owner requires an empty recipient").into())}let demand=Self::original_birth_demands()?;built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},||Ok((Self::new(Box::new(EmptyArtifactInstanceOperationOwner)),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})))?;Ok(output.is_some())}
     /// 🧳️ Wraps an owner the CALLER built. It confers no authority of its own — `with_mut`
@@ -151,7 +151,7 @@ impl ArtifactInstanceOperationOwnerHandle {
     /// handle their retained work expects instead of reaching into a live instance
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn new(owner: Box<dyn ArtifactInstanceOperationOwner>) -> Self {
-        Self { inner: std::sync::Arc::new(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellV1::new(owner)), inference: Default::default() }
+        Self { inner: std::sync::Arc::new(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellV1::new(owner)), inference: Default::default() }
     }
 
     /// 🔮️ Explicit synchronous semantic facade of the same registry and typed close owner.
@@ -243,9 +243,16 @@ impl ArtifactInstanceOperationOwnerHandle {
         apply(owner)
     }
 
+    /// 🔏️ Lends the original mutable owner through its nonblocking gate and preserves the typed outcome.
+    pub fn with_original_mut<T:std::any::Any,R>(&self,apply:impl FnOnce(&mut T)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
+        let mut owner=match self.inner.try_lock(){Ok(owner)=>owner,Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy)=>return Ok(None),Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original mutable instance owner is poisoned").into())};
+        let source=owner.as_any_mut().downcast_mut::<T>().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original mutable instance owner type changed"))?;
+        apply(source).map(Some)
+    }
+
     /// 🔎️ Quotes the same original concrete owner without manufacturing a diagnostic on contention.
     pub fn inspect_original<T:std::any::Any,R>(&self,read:impl FnOnce(&T)->R)->Result<Option<R>,ValueError>{
-        let mut owner=match self.inner.try_lock(){Ok(owner)=>owner,Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy)=>return Ok(None),Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original instance owner is poisoned"))};
+        let mut owner=match self.inner.try_lock(){Ok(owner)=>owner,Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy)=>return Ok(None),Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original instance owner is poisoned"))};
         let source=owner.as_any_mut().downcast_ref::<T>().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original instance owner type changed"))?;
         Ok(Some(read(source)))
     }
@@ -263,32 +270,32 @@ impl ArtifactInstanceOperationOwnerHandle {
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         match self.inner.try_lock() {
             Ok(owner) => if owner.terminal_is_empty(){self.inference_retirement_demands(body)}else{owner.retirement_demands(body)},
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(RetirementDemand::default()),
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "app-instance operation owner is poisoned")),
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(RetirementDemand::default()),
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "app-instance operation owner is poisoned")),
         }
     }
 
     pub fn maintenance_step(&self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         match self.inner.try_lock() {
-            Ok(mut owner) => {let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|owner.maintenance_step(cx,grant).map(|step|(step,true)))},
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(PluginLifecycleStep::Progress(Default::default())),
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"app-instance operation owner is poisoned").into()),
+            Ok(mut owner) => {let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|owner.maintenance_step(cx,grant).map(|step|(step,true)))},
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(PluginLifecycleStep::Progress(Default::default())),
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"app-instance operation owner is poisoned").into()),
         }
     }
 
     pub fn close_step(&self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         match self.inner.try_lock() {
-            Ok(mut owner) => {if owner.terminal_is_empty(){drop(owner);return self.close_inference_step(cx,loan)}let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|{let step=owner.close_step(cx,grant)?;let terminal=owner.terminal_is_empty();Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step},terminal))})},
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(PluginLifecycleStep::Progress(Default::default())),
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"app-instance operation owner is poisoned").into()),
+            Ok(mut owner) => {if owner.terminal_is_empty(){drop(owner);return self.close_inference_step(cx,loan)}let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|{let step=owner.close_step(cx,grant)?;let terminal=owner.terminal_is_empty();Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step},terminal))})},
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(PluginLifecycleStep::Progress(Default::default())),
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"app-instance operation owner is poisoned").into()),
         }
     }
 
     pub fn terminal_is_empty(&self) -> Result<bool, Fault> {
         match self.inner.try_lock() {
             Ok(owner) => Ok(owner.terminal_is_empty()),
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(false),
-            Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(Self::instance_owner_poisoned_fault()),
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(false),
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(Self::instance_owner_poisoned_fault()),
         }
     }
 
@@ -300,7 +307,7 @@ impl ArtifactInstanceOperationOwnerHandle {
 
 /// 🔗️ One original command alias keeps final instance payload custody until each physical backing closes.
 pub struct ArtifactInstanceOperationOwnerAliasRetirement{
-    original:semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1<dyn ArtifactInstanceOperationOwner>,
+    original:semio_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1<dyn ArtifactInstanceOperationOwner>,
     inference:ManuallyDrop<Option<std::sync::Arc<std::sync::Mutex<InstanceInferenceSessions>>>>,
     inference_owned:ManuallyDrop<Option<std::sync::Mutex<InstanceInferenceSessions>>>,
 }
@@ -308,11 +315,11 @@ pub struct ArtifactInstanceOperationOwnerAliasRetirement{
 impl ArtifactInstanceOperationOwnerAliasRetirement {
     /// 📥️ Moves the caller's exact existing handle into an inline frontier without a new lease or frame.
     pub fn new(source: ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self{original:semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1::new(source.inner),inference:ManuallyDrop::new(Some(source.inference)),inference_owned:ManuallyDrop::new(None)}
+        Self{original:semio_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1::new(source.inner),inference:ManuallyDrop::new(Some(source.inference)),inference_owned:ManuallyDrop::new(None)}
     }
     /// 📏️ Initial custody transfer needs one item and depth while all heap currencies remain zero.
     pub fn constructor_demands() -> RetirementDemand {
-        semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1::<dyn ArtifactInstanceOperationOwner>::constructor_demands()
+        semio_plugin_mounted_owner::alias_retirement::MountedOwnerAliasRetirementV1::<dyn ArtifactInstanceOperationOwner>::constructor_demands()
     }
     /// 🔎️ Queries the same retained payload or actual backing without creating authority.
     pub fn demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
@@ -367,8 +374,8 @@ impl ArtifactInstanceOperationOwnerAliasRetirement {
 
 impl Drop for ArtifactInstanceOperationOwnerAliasRetirement{
     fn drop(&mut self){
-        assert!(std::thread::panicking()||self.terminal_is_empty(),"original instance alias abandoned inferred owner custody");
-        if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.inference);ManuallyDrop::drop(&mut self.inference_owned);}}
+        assert!(self.terminal_is_empty(),"original instance alias abandoned inferred owner custody");
+        unsafe{ManuallyDrop::drop(&mut self.inference);ManuallyDrop::drop(&mut self.inference_owned);}
     }
 }
 
@@ -381,3 +388,7 @@ mod original_inference_close_tests;
 #[cfg(test)]
 #[path = "../../../👷️job/🧪️inference-admission/🦀️.rs"]
 mod original_inference_admission_tests;
+
+#[cfg(test)]
+#[path="🧪️mutation/🦀️.rs"]
+mod original_mutation_tests;

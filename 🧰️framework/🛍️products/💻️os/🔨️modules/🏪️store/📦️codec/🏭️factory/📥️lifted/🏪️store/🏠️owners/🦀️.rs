@@ -1,6 +1,6 @@
 //! 🏠️ Explicit original owner selection for native codec reduction and replay stores.
 use super::*;
-use semio_framework_os_store_engine_owners::{BoundedArtifactRetirementFactory,DocumentStoreOwnersAdmissionError,lifted_store::ArtifactStoreCursorDisposer};
+use semio_os_store_engine_owners::{BoundedArtifactRetirementFactory,DocumentStoreOwnersAdmissionError,lifted_store::ArtifactStoreCursorDisposer};
 use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 /// 🧬️ A document supplies its original catalog constructor without an erased global fallback.
 pub trait ArtifactCodecOwnerSource<P:ToValue,M:ToValue+FromValue+Mutation<P>> {

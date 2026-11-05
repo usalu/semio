@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "textPrefix": "json-i-json-mutation ",
+  "cases": [
+    {
+      "tag": 1,
+      "value": {
+        "mutation": "setTopLevel",
+        "root": {
+          "kind": "array",
+          "items": []
+        }
+      },
+      "binaryHex": "01010105617272617901011110010704726f6f74100207046b696e64060007056974656d730c00"
+    },
+    {
+      "tag": 2,
+      "value": {
+        "mutation": "upsertMember",
+        "path": [],
+        "key": "title",
+        "value": {
+          "kind": "string",
+          "value": "Ünïcödé"
+        },
+        "index": 0
+      },
+      "binaryHex": "01020306737472696e67057469746c650bc39c6ec3af63c3b664c3a901011110040704706174680c0007036b65790601070576616c7565100207046b696e640600070576616c756506020705696e6465780400"
+    },
+    {
+      "tag": 3,
+      "value": {
+        "mutation": "removeMember",
+        "path": [],
+        "key": "title"
+      },
+      "binaryHex": "010301057469746c6501011110020704706174680c0007036b65790600"
+    },
+    {
+      "tag": 4,
+      "value": {
+        "mutation": "renameMember",
+        "path": [],
+        "from": "title",
+        "to": "heading"
+      },
+      "binaryHex": "0104020768656164696e67057469746c6501011110030704706174680c00070466726f6d06010702746f0600"
+    },
+    {
+      "tag": 5,
+      "value": {
+        "mutation": "setSafeNumber",
+        "path": [],
+        "lexeme": "9007199254740991"
+      },
+      "binaryHex": "010501103930303731393932353437343039393101011110020704706174680c0007066c6578656d650600"
+    },
+    {
+      "tag": 6,
+      "value": {
+        "mutation": "setString",
+        "path": [],
+        "value": "Ünïcödé"
+      },
+      "binaryHex": "0106010bc39c6ec3af63c3b664c3a901011110020704706174680c00070576616c75650600"
+    },
+    {
+      "tag": 7,
+      "value": {
+        "mutation": "insertArrayElement",
+        "path": [],
+        "index": 0,
+        "value": {
+          "kind": "null"
+        }
+      },
+      "binaryHex": "010701046e756c6c01011110030704706174680c000705696e6465780400070576616c7565100107046b696e640600"
+    },
+    {
+      "tag": 8,
+      "value": {
+        "mutation": "removeArrayElement",
+        "path": [],
+        "index": 0
+      },
+      "binaryHex": "01080001011110020704706174680c000705696e6465780400"
+    },
+    {
+      "tag": 2,
+      "value": {
+        "mutation": "upsertMember",
+        "path": [],
+        "key": "title",
+        "value": {
+          "kind": "string",
+          "value": "Ünïcödé"
+        }
+      },
+      "binaryHex": "01020306737472696e67057469746c650bc39c6ec3af63c3b664c3a901011110030704706174680c0007036b65790601070576616c7565100207046b696e640600070576616c75650602"
+    }
+  ],
+  "rejectedBinary": [
+    {
+      "reason": "extra-record-field",
+      "binaryHex": "010301057469746c6502011110020704706174680c0007036b65790600021112"
+    }
+  ]
+}

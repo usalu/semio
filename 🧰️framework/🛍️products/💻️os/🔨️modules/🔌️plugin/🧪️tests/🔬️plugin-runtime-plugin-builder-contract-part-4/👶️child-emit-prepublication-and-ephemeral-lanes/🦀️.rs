@@ -20,18 +20,18 @@
             Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: 7 })], child_emits: children, ..Default::default() }
         };
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(42), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
-        let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
+        let policy=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
         let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,crate::job_close_fixture::original_fixture_stock(),||Some(0),u64::MAX,1<<24);
         let mut decoder=semio_framework_job::OriginalJobDecodeOwner::empty();
-        let drive_to_publish = |job:&mut semio_framework_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>,caller:&mut semio_framework_job::OriginalJobFixtureCaller| {
+        let drive_to_publish = |job:&mut semio_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>,caller:&mut semio_framework_job::OriginalJobFixtureCaller| {
             for expected_stage in ["preflight", "work"] {
-                match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(job,cx))).unwrap() {
-                    semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
+                match caller.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(job,cx))).unwrap() {
+                    semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
                     _ => panic!("retained child job failed at {expected_stage}"),
                 }
             }
         };
-        let close_and_observe = |job:&mut semio_framework_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>,caller:&mut semio_framework_job::OriginalJobFixtureCaller| {
+        let close_and_observe = |job:&mut semio_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>,caller:&mut semio_framework_job::OriginalJobFixtureCaller| {
             use semio_framework_value::retained_clone::RetainedCloneGrant;
             let initial = job.test_pending_emit_shape().expect("pre-publication emit owner");
             assert_eq!(initial, (2, 1, expected_ids.clone()));
@@ -80,7 +80,7 @@
         let direct_completion = ArtifactToolCompletion::<TestApp>::new();
         let _direct_consumer = direct_completion.clone();
         let (direct_payload,direct_issuer)=test_retained_child_command_payload(direct_completion,build_emit()).await;
-        let mut direct=semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::new(direct_payload);
+        let mut direct=semio_plugin_retained_command::ArtifactRetainedCommandJob::new(direct_payload);
         assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|direct.test_admit_original_source(cx)).unwrap());
         drive_to_publish(&mut direct,&mut caller);
         close_and_observe(&mut direct,&mut caller);direct_issuer.close(&mut caller);crate::job_close_fixture::retire_fixture_owned(_direct_consumer,&mut caller);
@@ -89,12 +89,12 @@
         let duplicate_consumer = duplicate_completion.clone();
         duplicate_completion.complete(Ok(Emit::default()), EphemeralEmit::default()).expect("prefill completion once");
         let (duplicate_payload,duplicate_issuer)=test_retained_child_command_payload(duplicate_completion,build_emit()).await;
-        let mut duplicate=semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::new(duplicate_payload);
+        let mut duplicate=semio_plugin_retained_command::ArtifactRetainedCommandJob::new(duplicate_payload);
         assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|duplicate.test_admit_original_source(cx)).unwrap());
         drive_to_publish(&mut duplicate,&mut caller);
         
-        match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut duplicate,cx))).unwrap() {
-            semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
+        match caller.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut duplicate,cx))).unwrap() {
+            semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
             _ => panic!("duplicate completion must reject the handoff"),
         }
         assert!(duplicate.test_pending_emit_shape().is_some(), "duplicate rejection returns the exact emit owner");
@@ -105,13 +105,13 @@
         let busy_completion = ArtifactToolCompletion::<TestApp>::new();
         let busy_consumer = busy_completion.clone();
         let (busy_payload,busy_issuer)=test_retained_child_command_payload(busy_completion.clone(),build_emit()).await;
-        let mut busy=semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::new(busy_payload);
+        let mut busy=semio_plugin_retained_command::ArtifactRetainedCommandJob::new(busy_payload);
         assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|busy.test_admit_original_source(cx)).unwrap());
         drive_to_publish(&mut busy,&mut caller);
         busy_completion.with_busy_test_lock(|| {
             
-            match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut busy,cx))).unwrap() {
-                semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
+            match caller.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut busy,cx))).unwrap() {
+                semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
                 _ => panic!("busy completion must reject the handoff"),
             }
         });
@@ -149,15 +149,15 @@
     /// were never part of the undoable gesture in the first place.
     #[semio_framework_async_macros::async_test]
     async fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../../🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json")).expect("neutral captured-context fixture");
         let vectors = &fixture["ephemeralPublication"];
@@ -166,7 +166,7 @@
         assert_eq!(app.stores.transient_store.generation().await, 0);
 
         let frame = meta();
-        let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("mount increment");
+        let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("mount increment");
         assert!(started.mutations.is_empty(), "mounting does not publish a producer emission");
         assert_eq!(app.stores.presence_store.generation().await, 0, "dispatch did not run an ephemeral prelude");
         assert_eq!(app.stores.transient_store.generation().await, 0, "dispatch did not apply transient work before its worker completion");

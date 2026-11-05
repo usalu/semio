@@ -5,7 +5,7 @@ use super::*;
 //#region 🔖️Protocol
 pub const ARTIFACT_MAILBOX_ITEMS: usize = 64;
 
-pub const ARTIFACT_MAILBOX_BYTES: usize = semio_framework_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 65_536;
+pub const ARTIFACT_MAILBOX_BYTES: usize = semio_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 65_536;
 
 #[derive(Debug)]
 pub enum ArtifactMailboxSendError {

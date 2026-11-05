@@ -1,9 +1,9 @@
 //! 🛑️ Selected compiled refusal ownership with real native and individually authored relational routes.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::super::super::Snapshot;
-use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::os_pack as pack;
-use semio_framework_os_kernel::sqlite_snapshot::{*,artifact::{Cell,Projection}};
+use semio_os_kernel as store;
+use semio_os_kernel::os_pack as pack;
+use semio_os_kernel::sqlite_snapshot::{*,artifact::{Cell,Projection}};
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_diagnostic::{Diagnostic,ExpectedSet,FaultCode,FaultScope,Severity,TextSpan};

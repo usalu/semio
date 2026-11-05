@@ -12,7 +12,7 @@ use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 #[allow(unused_imports)]
 use crate::{ShootingSavedCamera, ShootingSnapshot};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::shooting::commands::camera::*;

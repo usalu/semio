@@ -25,8 +25,8 @@ pub fn move_camera3d<Op: From<crate::move_camera3d::MoveCamera3d>>(new_position:
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for MoveCamera3d where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::move_camera3d::MoveCamera3d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "camera3d", kind: "move-camera3d", record: "MovedCamera3d" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move camera to {:?}", self.new_position), &format!("Kamera nach {:?} verschieben", self.new_position))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move camera to {:?}", self.new_position), &format!("Kamera nach {:?} verschieben", self.new_position))
     }
 }
 

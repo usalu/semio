@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationAnchorEm
         record: "ChangedFoundationAnchorEmbedment",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Anchor embedment depth h_ef of the foundation block", "Fundamentblock: Verankerungstiefe h_ef ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Anchor embedment depth h_ef of the foundation block", "Fundamentblock: Verankerungstiefe h_ef ändern")
     }
 }
 

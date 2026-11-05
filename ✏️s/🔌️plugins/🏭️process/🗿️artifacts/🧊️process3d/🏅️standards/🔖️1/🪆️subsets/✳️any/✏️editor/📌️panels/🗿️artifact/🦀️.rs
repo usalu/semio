@@ -3,20 +3,20 @@
 use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_icon, editor::process3d::terminology::Process3dLabels};
 use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
 use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessStep};
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::RowActionPlacement;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::RowActionPlacement;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_ARTIFACT: &str = "process.play.artifact";
@@ -37,18 +37,18 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn document_error(scope: &'static str) -> semio_framework_plugin::PluginAssemblyError {
-    semio_framework_plugin::PluginAssemblyError::new("ui.document", scope)
+fn document_error(scope: &'static str) -> semio_plugin::PluginAssemblyError {
+    semio_plugin::PluginAssemblyError::new("ui.document", scope)
 }
 
-fn ui_text(value: &str) -> UiAssemblyResult<semio_framework_plugin::UiText> {
-    semio_framework_plugin::UiText::try_from_str(value).ok_or_else(|| document_error("text"))
+fn ui_text(value: &str) -> UiAssemblyResult<semio_plugin::UiText> {
+    semio_plugin::UiText::try_from_str(value).ok_or_else(|| document_error("text"))
 }
 
 /// 🪵️ The stock row — the composition identity, always the document's first target.
 fn stock_row(snapshot: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let mut item = tree_item(&snapshot.stock_id, semio_s_artifact_process_process3d_kit::ui_label(&snapshot.stock_label)?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(ui_text("box")?);
         props.granularity = Some(ui_text(PROCESS3D_GRANULARITY_OBJECT)?);
     }
@@ -63,10 +63,10 @@ fn step_row(index: usize, step: &ProcessStep, cursor: usize, labels: &Process3dL
     let mut item = tree_item(&step.id, semio_s_artifact_process_process3d_kit::ui_label(&step.label)?)?;
     let args = semio_s_artifact_process_process3d_kit::ui_value_map([("enabled", semio_s_artifact_process_process3d_kit::ui_value_bool(!step.enabled)), ("id", semio_s_artifact_process_process3d_kit::ui_value_text(&step.id)?)])?;
     let target = row_target(semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
-    let mut row_actions = semio_framework_plugin::UiFixedList::default();
+    let mut row_actions = semio_plugin::UiFixedList::default();
     row_actions.try_push(row_action(if step.enabled { "eye" } else { "eye-off" }, labels.enabled.as_str(), "setStepEnabled", RowActionPlacement::Row)?).map_err(|_| document_error("row-actions"))?;
     row_actions.try_push(row_action("trash", labels.remove.as_str(), "removeStep", RowActionPlacement::Menu)?).map_err(|_| document_error("row-actions"))?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         props.description = if index >= cursor { Some(ui_text("pending")?) } else { None };
         props.icon = Some(ui_text(process3d_measure_icon(&step.measure))?);
         props.dimmed = Some(!step.enabled);

@@ -2,10 +2,10 @@
 //! window it was dispatched in, and the two windows both render non-empty for both examples.
 
 use crate::{editor::grid3d::modes::edit::windows::grid, editor::grid3d::modes::edit::windows::preview};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::NoConfig;
 use crate::editor::grid3d::{command_from_action, GRID3D_PUBLICATION_CONTRACTS, Grid3dRetainedCommandJobFactory};
 use crate::editor::grid3d::*;
 
@@ -78,7 +78,7 @@ fn every_command_maps_onto_a_real_mutation_builder() {
 #[test]
 fn every_declared_action_bridges_to_the_command_it_names() {
     let definition = create_grid3d_editor();
-    let staged = |action: &semio_framework_plugin::ActionDefinition| semio_framework::effective_action_args(&action.args, &semio_framework_value::DslValue::Object(Vec::new()), None);
+    let staged = |action: &semio_plugin::ActionDefinition| semio_framework::effective_action_args(&action.args, &semio_framework_value::DslValue::Object(Vec::new()), None);
     let arguments: std::collections::BTreeMap<&str, semio_framework_value::DslValue> = [
         ("changeSeed", semio_framework_pack_json::parse(r#"{"seed":7}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
         ("resizeGrid", semio_framework_pack_json::parse(r#"{"width":2,"height":2,"depth":2}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
@@ -126,7 +126,7 @@ fn every_declared_action_bridges_to_the_command_it_names() {
     let mut bridged = 0usize;
     for window in &definition.window_kinds {
         for action in &window.actions {
-            if RESERVED.contains(&action.id.as_str()) || semio_framework_plugin::is_tool_run_action_id(&action.id) {
+            if RESERVED.contains(&action.id.as_str()) || semio_plugin::is_tool_run_action_id(&action.id) {
                 continue;
             }
             let args = arguments.get(action.id.as_str()).cloned().unwrap_or_else(|| staged(action));
@@ -203,14 +203,14 @@ fn the_example_picker_replaces_the_document_and_re_selecting_the_open_one_is_ine
 /// every one of its panes reached `data-shell-error` instead of `data-shell-ready`.
 #[test]
 fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let tools: std::collections::BTreeSet<&str> = GRID3D_RETAINED_TOOL_IDS.iter().copied().collect();
     let publication: std::collections::BTreeSet<&str> = <Grid3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
     assert_eq!(publication, tools, "every owned tool declares exactly one publication-lane contract");
     for contract in <Grid3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
         assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
     }
-    let proofs: std::collections::BTreeSet<&str> = <Grid3dEditor as semio_framework_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
+    let proofs: std::collections::BTreeSet<&str> = <Grid3dEditor as semio_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
     assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }
 
@@ -220,12 +220,12 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
 #[test]
 fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
     let document = crate::examples::blocks::snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let admitted = ArtifactView::with_operation(&document, &history, semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], authoring_seed: "seed".into() });
+    let history = semio_plugin::HistoryView::empty();
+    let admitted = ArtifactView::with_operation(&document, &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], authoring_seed: "seed".into() });
     let no_config = NoConfig::default();
     let cfg = ConfigView { snapshot: &no_config, window: None };
     let armed = |utility: &str| {
-        let mut view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let mut view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         view.active_utility_id = Some(utility.into());
         view
     };
@@ -239,4 +239,4 @@ fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
     assert!(plain.transaction.is_none() && plain.artifact_mutations.len() == 1, "no admission: the leaf publishes plainly");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid3d::Grid3dEditor, || semio_framework_plugin::App { definition: crate::editor::grid3d::create_grid3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid3d::Grid3dEditor, || semio_plugin::App { definition: crate::editor::grid3d::create_grid3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

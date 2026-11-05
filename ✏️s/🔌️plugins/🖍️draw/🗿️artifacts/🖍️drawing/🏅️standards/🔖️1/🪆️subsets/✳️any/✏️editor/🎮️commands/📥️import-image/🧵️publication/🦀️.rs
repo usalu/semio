@@ -2,7 +2,7 @@
 use semio_s_artifact_draw_drawing_model::{DrawingImageAsset, DrawingImageBody, DrawingLayerNode};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_plugin::{AppOperationContext,InteractionWrite};
+use semio_plugin::{AppOperationContext,InteractionWrite};
 use semio_framework_value::{paged::{PagedUtf8,PagedUtf8AppendCursor},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::ErasedSnapshotRetirement as _;
 use semio_s_artifact_draw_drawing_model::DrawingLayerBase;

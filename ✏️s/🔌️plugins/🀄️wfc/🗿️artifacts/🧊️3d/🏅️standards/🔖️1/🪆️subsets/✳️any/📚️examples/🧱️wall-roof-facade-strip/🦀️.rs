@@ -10,8 +10,8 @@
 //! the engine's propagation treats differently.
 
 use crate::schema::snapshot::{Color, GraphRule, Slot3d, SlotEdge, Tile, Wfc3dSnapshot, WFC3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "wall-roof-facade-strip";
 pub const ICON: &str = "layers";

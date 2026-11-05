@@ -1,0 +1,115 @@
+{
+  "commands": [
+    [
+      "dependencies",
+      "lock",
+      "--all"
+    ],
+    [
+      "dependencies",
+      "sync",
+      "--all"
+    ],
+    [
+      "cargo",
+      "--",
+      "--version"
+    ]
+  ],
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "rows": [
+    {
+      "id": "original",
+      "patch": [],
+      "valid": true
+    },
+    {
+      "id": "missing-tool",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/tool"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "unknown-root-field",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/extra",
+          "value": true
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "zero-transport",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/native/transport/maximumBytes",
+          "value": 0
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "invalid-mode",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/buildMode",
+          "value": "debug"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "nul-root",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/workspaceRoot",
+          "value": "root\u0000tail"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "unknown-child-field",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/native/child/extra",
+          "value": true
+        }
+      ],
+      "valid": false
+    }
+  ],
+  "diagnostics": [
+    {
+      "id": "invalid-mode",
+      "tool": "nx",
+      "environment": {
+        "SEMIO_BUILD_MODE": "sensitive-invalid-mode"
+      },
+      "expectedPath": "/buildMode",
+      "forbidden": "sensitive-invalid-mode"
+    },
+    {
+      "id": "invalid-tool",
+      "tool": "SENSITIVE_TOOL",
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype"
+      },
+      "expectedPath": "/tool",
+      "forbidden": "SENSITIVE_TOOL"
+    }
+  ]
+}

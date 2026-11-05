@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-plugin-command-page-laws"
+name = "semio-plugin-command-page-laws"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

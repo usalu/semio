@@ -8,9 +8,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -21,28 +21,28 @@ use crate::modes::edit::windows::{inputs, results};
 use crate::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
 use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::{NoPresence, NoPresenceMutation};
-// 🚧️ SDK GAP: `Dialect` is not in `semio_framework_plugin`'s curated crate-root re-export list
+use semio_plugin::app::InteractionView;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::AppIo;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaError;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::{NoPresence, NoPresenceMutation};
+// 🚧️ SDK GAP: `Dialect` is not in `semio_plugin`'s curated crate-root re-export list
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,
 // per ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W0-F gap 1) — only reachable through `app`.
-use semio_framework_plugin::app::Dialect;
+use semio_plugin::app::Dialect;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region ðï¸Constants
@@ -56,7 +56,7 @@ pub const DOCUMENT_SCHEMA: &str = "semio.norm.vdi3805/v1";
 //#endregion ðï¸Constants
 
 //#region ðï¸Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `Vdi3805PlayApp::Command` â the SOLE dispatch surface for this app's own behavior, covering every
     /// action `create_vdi3805_app` declares. Row order IS the binary variant ordinal (appending is safe,
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
@@ -78,7 +78,7 @@ pub struct Vdi3805PlayApp;
 
 impl ArtifactEditor for Vdi3805PlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![
             semio_s_artifact_norm_vdi3805_examples::demo::source(),
             semio_s_artifact_norm_vdi3805_examples::nonconforming::source(),
@@ -112,8 +112,8 @@ impl ArtifactEditor for Vdi3805PlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = Vdi3805Command;
 
@@ -126,16 +126,16 @@ impl ArtifactEditor for Vdi3805PlayApp {
 
     semio_s_plugin_norm_app_surface::norm_exact_store_ownership!();
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         Vdi3805BoundedCommandJobFactory::register(registry)
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request, output, cx)
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Vdi3805PlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<Vdi3805PlayApp>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.norm.vdi3805@1/*#editor",
         artifact_schema: "semio.norm.vdi3805/v1",
@@ -150,11 +150,11 @@ impl ArtifactEditor for Vdi3805PlayApp {
         Some(semio_s_plugin_norm_app_surface::app_schema_descriptor())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<results::ResultsWindowConfigOwner>()
     }
 
-    fn reference_birth()->Option<fn()->Result<Vdi3805Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Vdi3805Snapshot,semio_plugin::Fault>>{Some(||{
         Ok(Vdi3805Snapshot::default())
     })}
 
@@ -173,24 +173,24 @@ impl ArtifactEditor for Vdi3805PlayApp {
         doc: &ArtifactView<'_, Vdi3805Snapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Vdi3805Mutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_plugin_norm_app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let host = NormHost::<Vdi3805Family>::live(doc.snapshot.clone());
         match body_key {
-            inputs::BODY_INPUTS => inputs::render(doc.snapshot, view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, inputs::BODY_INPUTS)),
-            results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS), view_state.locale, Some(CONTROLLER_ID)),
+            inputs::BODY_INPUTS => inputs::render(doc.snapshot, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, inputs::BODY_INPUTS)),
+            results::BODY_RESULTS => results::render(&host, &semio_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS), view_state.locale, Some(CONTROLLER_ID)),
             document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),
-            catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Self::examples(), view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)),
+            catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Self::examples(), view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)),
             inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, semio_s_plugin_norm_results_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
             _ => semio_s_plugin_norm_app_surface::render_unknown_body(body_key, view_state.locale),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 
     //#region ðï¸MediaPorts
@@ -219,7 +219,7 @@ impl Vdi3805BoundedCommandJobFactory {
         Self(semio_s_plugin_norm_app_surface::NormBoundedCommandJobFactory::<Vdi3805PlayApp>::new(controller_id))
     }
 
-    pub fn register(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Vdi3805PlayApp>>) -> Result<(), Fault> {
+    pub fn register(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Vdi3805PlayApp>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(Self::new(&controller))
     }
@@ -254,11 +254,11 @@ impl semio_framework::ToolJobFactory for Vdi3805BoundedCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Vdi3805BoundedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Vdi3805PlayApp>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for Vdi3805BoundedCommandJobFactory {
+    type Owner = semio_plugin::EditorApp<Vdi3805PlayApp>;
     const TOOL_IDS: &'static [&'static str] = semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = <Vdi3805PlayApp as ArtifactEditor>::DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = semio_s_plugin_norm_app_surface::NORM_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = semio_s_plugin_norm_app_surface::NORM_PUBLICATION_CONTRACTS;
 }
 
 impl semio_s_plugin_norm_app_surface::NormRetainedEditor for Vdi3805PlayApp {
@@ -308,7 +308,7 @@ pub type Host = NormHost<Vdi3805Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
-pub fn create_vdi3805_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_vdi3805_app() -> semio_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_norm_vdi3805_model::VDI3805_DIALECT)
             .document(["semio", "norm", VARIANT])
             .artifact_kind(semio_s_artifact_norm_vdi3805_model::artifact_kind())
@@ -325,35 +325,35 @@ pub fn create_vdi3805_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)
             
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("setField", LocalizedLabel::native("Set Field", "Feld setzen"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("setField", LocalizedLabel::native("Set Field", "Feld setzen"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
-                        semio_framework_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")).required(),
+                        semio_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")).required(),
                     ]),
             )
             .action_interactive_job("setField", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("insertItem", LocalizedLabel::native("Insert Item", "Eintrag einfügen"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("insertItem", LocalizedLabel::native("Insert Item", "Eintrag einfügen"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
-                        semio_framework_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
-                        semio_framework_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")),
+                        semio_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
+                        semio_plugin::ActionArgDef::any("value", LocalizedLabel::native("Value", "Wert")),
                     ]),
             )
             .action_interactive_job("insertItem", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("removeItem", LocalizedLabel::native("Remove Item", "Eintrag entfernen"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("removeItem", LocalizedLabel::native("Remove Item", "Eintrag entfernen"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
-                        semio_framework_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
+                        semio_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")).required(),
+                        semio_plugin::ActionArgDef::index("index", LocalizedLabel::native("Index", "Index")).required(),
                     ]),
             )
             .action_interactive_job("removeItem", InteractiveJobClassification::Migrated)
             .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("applyRemedy", LocalizedLabel::native("Apply Remedy", "Abhilfe anwenden"), semio_framework_plugin::ActionKind::Mutation)
+                semio_plugin::ActionDefinition::new_catalog("applyRemedy", LocalizedLabel::native("Apply Remedy", "Abhilfe anwenden"), semio_plugin::ActionKind::Mutation)
                     .with_args(vec![
-                        semio_framework_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")).required(),
-                        semio_framework_plugin::ActionArgDef::index("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")).required(),
+                        semio_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")).required(),
+                        semio_plugin::ActionArgDef::index("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")).required(),
                     ]),
             )
             .action_interactive_job("applyRemedy", InteractiveJobClassification::Migrated)

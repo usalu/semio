@@ -7,3 +7,7 @@ export type{FormsResponse,FormsAnswer}from"./🏅️standards/🔖️1/🪆️su
 export type{FormsDefinition}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🟦️.ts";
 export {parseFormsJsonArtifact,parseFormsJsonDefinition,parseFormsJsonResponse,parseFormsJsonQuestion,parseFormsJsonCondition,parseFormsJsonValue,formsArtifactJson,formsValueJson} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 export {parseFormsJsonDiff} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🔣️json/🟦️.ts";
+export {extensionRenderPayload,questionKindLabel} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧩️extensions/🟦️.ts";
+export type {ExtensionSurface,ExtensionRenderPayload,QuestionKindContribution} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧩️extensions/🟦️.ts";
+export {parseFormsConfig} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🎚️config/🧬️schema/🟦️.ts";
+export type {FormsConfig} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🎚️config/🧬️schema/🟦️.ts";

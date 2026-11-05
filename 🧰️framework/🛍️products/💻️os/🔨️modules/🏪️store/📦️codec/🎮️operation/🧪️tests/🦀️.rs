@@ -1,6 +1,6 @@
 use super::*;
 use crate::os_store::document_store_owners::bounded_artifact_store_owners;
-use semio_framework_os_store_testing_fixtures::{DemoSnapshot, demo::DemoMutation};
+use semio_os_store_testing_fixtures::{DemoSnapshot, demo::DemoMutation};
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]

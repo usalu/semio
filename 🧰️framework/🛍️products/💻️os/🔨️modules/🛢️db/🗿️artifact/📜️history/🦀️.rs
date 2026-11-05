@@ -1,5 +1,5 @@
 //! 📜️ Db artifact history replay.
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_durability::Frontier;
 use db_ids::{*, ArtifactId, DbError};

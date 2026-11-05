@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "curve", kind: "replace-curve", record: "ReplacedCurve" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace curve on edge \"{}\"", self.edge_id), &format!("Kurve auf Kante \"{}\" ersetzen", self.edge_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace curve on edge \"{}\"", self.edge_id), &format!("Kurve auf Kante \"{}\" ersetzen", self.edge_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge_id.clone()]

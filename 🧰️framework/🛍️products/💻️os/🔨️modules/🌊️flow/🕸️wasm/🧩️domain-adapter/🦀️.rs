@@ -1,10 +1,10 @@
 //! 🧩️ The Flow domain adapter: surface and host custody, argument preflight, program state and the program feature.
 
-use semio_framework_os_infinite::board::io::text::dag_input::selection as dag_selection_io;
+use semio_os_infinite::board::io::text::dag_input::selection as dag_selection_io;
 use semio_framework_artifact_flow_flow::artifact::Widget;
-use semio_framework_os_infinite::board::ports::directed_dag as dag;
+use semio_os_infinite::board::ports::directed_dag as dag;
 use semio_framework_canvas as canvas;
-use semio_framework_os_flow_vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsCloseDemands, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
+use semio_os_flow_vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsCloseDemands, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
 use protocol::{FlowFailure, FlowFeature, FlowFeatureAdmission, FlowFeatureStep, FlowPayloadReader, FlowPayloadWriter};
 use semio_framework_value::{retained_clone::{RetainedCloneStep, RetainedCloneProgress, RetainedCloneGrant, admit_retained_clone_close}, retirement::controlled::ControlledRetirement};
 use semio_framework_abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
@@ -12,7 +12,7 @@ use serde_json::json;
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
 use ui_webgpu::{CanvasMetrics, SurfaceGeneration, SurfaceId};
-use semio_framework_os_flow_host_core::*;
+use semio_os_flow_host_core::*;
 
 #[path = "../📡️protocol/🦀️.rs"]
 pub mod protocol;

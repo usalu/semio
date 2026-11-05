@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "mark-info", kind: "set-mark-info", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/UA-Markierungskennung auf {} setzen", self.marked))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/UA-Markierungskennung auf {} setzen", self.marked))
     }
 
     fn target(&self) -> Vec<String> {

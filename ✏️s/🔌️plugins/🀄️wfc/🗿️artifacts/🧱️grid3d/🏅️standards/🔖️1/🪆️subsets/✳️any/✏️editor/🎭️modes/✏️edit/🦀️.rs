@@ -4,10 +4,10 @@
 
 use crate::editor::grid3d::modes::edit::tools;
 use crate::editor::grid3d::modes::edit::windows::{grid, preview};
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const GRID3D_EDIT_MODE_ID: &str = "edit";
 
@@ -15,7 +15,7 @@ pub const GRID3D_EDIT_MODE_ID: &str = "edit";
 /// 🧱️ Stitched into the editor manifest by `crate::editor::grid3d::create_grid3d_editor`. The mode
 /// lists the interactive fill tool whose run the framework drives.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: GRID3D_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: vec![::semio_framework_async::poll::resolve_ready(semio_framework_plugin::ToolRef::new(tools::fill::TOOL_ID))], layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: GRID3D_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: vec![::semio_framework_async::poll::resolve_ready(semio_plugin::ToolRef::new(tools::fill::TOOL_ID))], layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Grid left, preview right, equal halves.

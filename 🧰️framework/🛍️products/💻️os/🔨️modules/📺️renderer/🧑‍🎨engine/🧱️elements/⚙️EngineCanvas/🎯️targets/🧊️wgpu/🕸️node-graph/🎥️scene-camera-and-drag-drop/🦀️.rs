@@ -120,8 +120,8 @@ pub fn node_graph_fit_camera(surface_id: &str) -> Option<[f64; 3]> {
 /// to call from the shell's per-refresh `publish_app_catalogue` sweep. Returns whether a live host
 /// took it — `false` when the surface has no engine yet (the shell simply republishes next refresh).
 ///
-/// @see `semio_framework_os_node_graph::GraphHost::set_catalogue_json`
-/// @see `semio_framework_os_flow::FlowHost::set_host_catalogue_json`
+/// @see `semio_os_node_graph::GraphHost::set_catalogue_json`
+/// @see `semio_os_flow::FlowHost::set_host_catalogue_json`
 pub fn node_graph_set_catalogue_json(surface_id: &str, json: &str) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut surfaces = cell.borrow_mut();

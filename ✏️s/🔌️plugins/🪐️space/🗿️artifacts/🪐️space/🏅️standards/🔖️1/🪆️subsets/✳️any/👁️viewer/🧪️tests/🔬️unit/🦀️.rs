@@ -15,9 +15,9 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let snapshot = SSpaceSnapshot::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let tree = <SpaceIndexViewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default(), window: None }, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("unknown Space viewer body tree");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("unknown Space viewer body projection");
+    let tree = <SpaceIndexViewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default(), window: None }, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("unknown Space viewer body tree");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("unknown Space viewer body projection");
     assert!(json.contains("Unknown body"));
 }

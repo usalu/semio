@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloRingInertia wh
         record: "ChangedSiloRingInertia",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ring stiffener second moment I_r about its own centroid of the silo shell", "Silo-Schale: Ringsteifen-Flächenträgheitsmoment I_r um den eigenen Schwerpunkt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ring stiffener second moment I_r about its own centroid of the silo shell", "Silo-Schale: Ringsteifen-Flächenträgheitsmoment I_r um den eigenen Schwerpunkt ändern")
     }
 }
 

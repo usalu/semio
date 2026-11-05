@@ -1321,31 +1321,31 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
-[workspace.dependencies.semio-framework-ui-contract-values]
+[workspace.dependencies.semio-ui-contract-values]
 path = "🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract-actions]
+[workspace.dependencies.semio-ui-contract-actions]
 path = "🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract-presentation]
+[workspace.dependencies.semio-ui-contract-presentation]
 path = "🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract-components]
+[workspace.dependencies.semio-ui-contract-components]
 path = "🔨️modules/🖱️ui/🧬️contract/🧩️component/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract-operations]
+[workspace.dependencies.semio-ui-contract-operations]
 path = "🔨️modules/🖱️ui/🧬️contract/⚙️operations/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract-builder]
+[workspace.dependencies.semio-ui-contract-builder]
 path = "🔨️modules/🖱️ui/🧬️contract/🏗️builder/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract-validation]
+[workspace.dependencies.semio-ui-contract-validation]
 path = "🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract-text-edit]
+[workspace.dependencies.semio-ui-contract-text-edit]
 path = "🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract-typegen]
+[workspace.dependencies.semio-ui-contract-typegen]
 path = "🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-filesystem-workspace]

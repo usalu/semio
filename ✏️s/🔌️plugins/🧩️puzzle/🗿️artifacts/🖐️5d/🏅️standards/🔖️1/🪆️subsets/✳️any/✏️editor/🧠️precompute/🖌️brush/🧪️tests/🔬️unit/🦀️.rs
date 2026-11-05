@@ -13,16 +13,16 @@ use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, d
 
 
 use crate::editor::puzzle5d::unit_tests::context::Puzzle5dApp;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::ArtifactApp;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::kernel::Effect;
+use semio_plugin::ArtifactApp;
+use semio_plugin::PluginApp;
 use semio_framework_tool_run::ToolRunTraceDelta;
 use semio_framework_tool_run::ToolRunTraceStore;
 use semio_framework_tool_run::ToolRunTraceSubject;
 use semio_framework_tool_run::ToolRunVerdict;
 use std::collections::HashMap;
 
-fn armed_view() -> semio_framework_plugin::ViewModel {
+fn armed_view() -> semio_plugin::ViewModel {
     let mut view = window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID);
     view.active_utility_by_window_id.insert(world3d::WINDOW_KIND_ID.to_string(), UTILITY_ID.to_string());
     view
@@ -93,7 +93,7 @@ fn the_armed_brush_traces_every_candidate_in_both_windows_and_leaving_aborts_it(
     close_app(&mut app);
 }
 
-fn select_view() -> semio_framework_plugin::ViewModel {
+fn select_view() -> semio_plugin::ViewModel {
     window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)
 }
 

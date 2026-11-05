@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "split", entity: "wall", kind: "split-wall", record: "SplitWall" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Split wall \"{}\" at {}", self.id, self.t), &format!("Wand \"{}\" bei {} teilen", self.id, self.t))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Split wall \"{}\" at {}", self.id, self.t), &format!("Wand \"{}\" bei {} teilen", self.id, self.t))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

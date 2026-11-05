@@ -317,10 +317,10 @@ pub mod standards {
                                 #[path = "."]
                                 pub mod dwg {
                                     #[path = "."]
-                                    pub mod v_ac1018 {
+                                    pub mod v_ac1024 {
                                         #[path = "."]
                                         pub mod any {
-                                            #[path = "../../../../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
+                                            #[path = "../../../../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }

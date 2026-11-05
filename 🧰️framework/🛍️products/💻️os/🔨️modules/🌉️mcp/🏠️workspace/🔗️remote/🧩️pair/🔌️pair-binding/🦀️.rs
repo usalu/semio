@@ -1,14 +1,14 @@
 //! 🔌️ Pair binding of the hub-remote crate: Hub remote binding, component assets and the native binding driver.
 
 use semio_framework_async::OperationContext;
-use semio_framework_os_kernel::os_directory::ArtifactFrontier;
-use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::ArtifactFrontier;
+use semio_os_kernel::os_directory::DocumentScope;
 use std::sync::PoisonError;
 use std::sync::atomic::Ordering;
 use crate::remote::{HubRemoteBinding, HubRemoteBindingState};
-use semio_framework_os_mcp_foundation::percent_codec::percent_encode;
-use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
-use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairActorState, CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairMount, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairMountProgress, CanonicalPairMountStage, CanonicalPairTransport, HUB_PAIR_MEDIA_TYPE, PairBegin, checkpoint, decode_response, maximum_wire_bytes, receipt_now, receipt_wall_now, receive_body, validate_expected_identity, wait_for_published_receipt};
+use semio_os_mcp_foundation::percent_codec::percent_encode;
+use semio_os_mcp_hub_pair::binding_errors::HubBindingError;
+use semio_os_mcp_hub_pair::pair::{CanonicalPairActorState, CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairMount, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairMountProgress, CanonicalPairMountStage, CanonicalPairTransport, HUB_PAIR_MEDIA_TYPE, PairBegin, checkpoint, decode_response, maximum_wire_bytes, receipt_now, receipt_wall_now, receive_body, validate_expected_identity, wait_for_published_receipt};
 
 impl HubRemoteBinding {
     pub async fn mount_canonical_pair<T: CanonicalPairTransport>(

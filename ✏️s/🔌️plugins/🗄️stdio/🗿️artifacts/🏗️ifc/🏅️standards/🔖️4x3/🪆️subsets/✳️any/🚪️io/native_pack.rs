@@ -1,6 +1,6 @@
 //! 🫴️ Normal IFC route entries bind the actual original Pack receiver and final Pack publication owner.
 use super::*;
-use semio_framework_os_kernel::{ArtifactPackReceiving, io::io_mechanism::IoEntryDirection};
+use semio_os_kernel::{ArtifactPackReceiving, io::io_mechanism::IoEntryDirection};
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 fn invalid(message: &'static str) -> IoError {
@@ -33,7 +33,7 @@ pub fn serializer<T: Serializer<IfcSnapshot>>() -> IoEntry {
 }
 /// 📥 Foreign imports retain the actual IFC graph and diagnostics until the sole final native Pack is encoded and its scratch closes.
 pub fn deserializer<T: Deserializer<IfcSnapshot>>() -> IoEntry {
-    fn sniff<T: Deserializer<IfcSnapshot>>(input: &IoPayload) -> semio_framework_os_kernel::io::io_schema::Confidence {
+    fn sniff<T: Deserializer<IfcSnapshot>>(input: &IoPayload) -> semio_os_kernel::io::io_schema::Confidence {
         semio_framework_async::poll::resolve_ready(T::sniff(input))
     }
     fn run<T: Deserializer<IfcSnapshot>>(input: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {

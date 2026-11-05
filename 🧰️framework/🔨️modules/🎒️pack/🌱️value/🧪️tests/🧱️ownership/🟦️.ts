@@ -23,5 +23,5 @@ test("one actual Pack record library owns the codec and the facade exposes it wi
  expect(Object.keys(native.dependencies).sort()).toEqual([...contract.dependencies].sort());expect(native.dependencies).not.toHaveProperty(contract.package);
  expect(resolve(dirname(path),contract.library.path)).toBe(resolve(owner,"🦀️.rs"));
  const facade=readFileSync(resolve(dirname(path),contract.facadeLibrary),"utf8");expect(facade).toContain("pub mod "+contract.module+" {");for(const entry of [...contract.publicEntries,...contract.schemaEntries])expect(facade).toContain(entry);
- for(const path of ["🦀️.rs","🛫️encode/🦀️.rs","🏭️schema/🦀️.rs","🔎️scalar-witness/🦀️.rs"])for(const forbidden of ["crate::os_","semio_framework_os_kernel::"])expect(tree(path)).not.toContain(forbidden);
+ for(const path of ["🦀️.rs","🛫️encode/🦀️.rs","🏭️schema/🦀️.rs","🔎️scalar-witness/🦀️.rs"])for(const forbidden of ["crate::os_","semio_os_kernel::"])expect(tree(path)).not.toContain(forbidden);
 });

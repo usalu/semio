@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeMu where Op: proto
         record: "ChangedMu",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change friction μ", "Reibungsbeiwert μ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change friction μ", "Reibungsbeiwert μ ändern")
     }
 }
 

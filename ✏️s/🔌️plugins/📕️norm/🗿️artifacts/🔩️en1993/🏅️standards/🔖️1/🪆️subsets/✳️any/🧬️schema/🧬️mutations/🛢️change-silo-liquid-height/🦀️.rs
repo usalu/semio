@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloLiquidHeight w
         record: "ChangedSiloLiquidHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Liquid height H of the silo shell", "Silo-Schale: Füllhöhe H ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Liquid height H of the silo shell", "Silo-Schale: Füllhöhe H ändern")
     }
 }
 

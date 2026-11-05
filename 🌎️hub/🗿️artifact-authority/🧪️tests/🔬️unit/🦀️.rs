@@ -4,7 +4,7 @@ use super::adapters::{AUTHORITY_MAX_DIAGNOSTIC_BYTES, LivePluginPackageBinding, 
 use super::*;
 use ::directory::os_directory::{DocumentFrontier, DocumentOwner};
 use ::directory::os_store::{serialization::ArtifactCodec, serialization::ArtifactPackFiles, text_format::ArtifactTextFiles, VcsError, codec_registry::register_document_codec};
-use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef, PluginGraph};
+use semio_plugin_host::{PackageHash, PackageId, PackageRef, PluginGraph};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -193,7 +193,7 @@ fn fixture_manifest() -> semio_framework::PluginManifest {
         commands: Vec::new(),
         artifact_kinds: vec![semio_framework::ArtifactKindSpec {
             id: "fixture.number".to_string(),
-            label: semio_framework_plugin::LocalizedLabel::native("Fixture Number", "Fixture-Zahl"),
+            label: semio_plugin::LocalizedLabel::native("Fixture Number", "Fixture-Zahl"),
             source_format: "fixture".to_string(),
             component_kind: "document".to_string(),
             dimension: "data".to_string(),

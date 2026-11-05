@@ -9,9 +9,9 @@ impl ArtifactActor {
         remote: ChannelBackboneRemote,
         cmd_rx: ArtifactMailboxReceiver,
         events: broadcast::Sender<ArtifactEvent>,
-        credential: Arc<std::sync::RwLock<Option<Arc<semio_framework_os_directory_client::LocalHubCredential>>>>,
-        socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>>>>,
-        document_execution_target_lease: Option<semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+        credential: Arc<std::sync::RwLock<Option<Arc<semio_os_directory_client::LocalHubCredential>>>>,
+        socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn semio_os_directory_client::HubSocketGrantSource>>>>,
+        document_execution_target_lease: Option<semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
         operation_cancel: semio_framework_async::CancelToken,
     ) -> Self {
         let mut folder = None;
@@ -117,14 +117,14 @@ impl ArtifactActor {
     /// guest: the pair's history is known (a tail never re-applies it), a folder binding persists it, and the first
     /// `SocketHelloV1` names its baseline, so the hub sends only what followed it. A pair whose SPR cannot be read
     /// is reported as a conflict and the document starts unseeded.
-    pub async fn seed_hub_document(&mut self, pair: semio_framework_os_directory::CanonicalCheckpointPairV1) {
+    pub async fn seed_hub_document(&mut self, pair: semio_os_directory::CanonicalCheckpointPairV1) {
         self.install_hub_seed(pair.pack_bytes, pair.spr_bytes, &pair.baseline_frontier).await;
     }
 
     /// 🛟️ Restarts a rebootstrapping hub document at the pair the host verified and loaded into the guest
     /// ([`ArtifactActorMsg::Reseed`]): the pair becomes the baseline, the unacked local operations the pair does not already
     /// hold go back to the guest, and the actor dials at once — no outage backoff, Hello at the baseline.
-    pub async fn reseed_hub_document(&mut self, pack: Vec<u8>, spr: Vec<u8>, baseline: semio_framework_os_directory::ArtifactFrontier) {
+    pub async fn reseed_hub_document(&mut self, pack: Vec<u8>, spr: Vec<u8>, baseline: semio_os_directory::ArtifactFrontier) {
         if !self.artifact_rebootstrap_required {
             return;
         }
@@ -142,9 +142,9 @@ impl ArtifactActor {
     }
 
     /// 🪢️ Adopts one verified pair as this document's baseline; `false` (and one conflict) when its SPR cannot be read.
-    async fn install_hub_seed(&mut self, pack: Vec<u8>, spr: Vec<u8>, baseline: &semio_framework_os_directory::ArtifactFrontier) -> bool {
+    async fn install_hub_seed(&mut self, pack: Vec<u8>, spr: Vec<u8>, baseline: &semio_os_directory::ArtifactFrontier) -> bool {
         let seeded = match spr_op_ids(&spr).await {
-            Ok(op_ids) => semio_framework_os_spr::encode_document_archive_bytes(&semio_framework_os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr.clone(), members: Vec::new() }).map(|archive| (op_ids, archive)).map_err(|error| error.to_string()),
+            Ok(op_ids) => semio_os_spr::encode_document_archive_bytes(&semio_os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr.clone(), members: Vec::new() }).map(|archive| (op_ids, archive)).map_err(|error| error.to_string()),
             Err(error) => Err(error),
         };
         let (op_ids, archive) = match seeded {
@@ -344,7 +344,7 @@ impl ArtifactActor {
         let seeded = read.and_then(|read| read.ok().flatten());
         self.folder_held_hash = seeded.as_deref().map(document_archive_hash).or(self.folder_held_hash.take());
         if let Some(bytes) = seeded {
-            let decoded = match semio_framework_os_spr::decode_document_archive_bytes(&bytes).await {
+            let decoded = match semio_os_spr::decode_document_archive_bytes(&bytes).await {
                 Ok(archive) => spr_op_ids(&archive.parent_spr).await.map(|op_ids| (archive.parent_pack, archive.parent_spr, op_ids)).map_err(|error| error.to_string()),
                 Err(error) => Err(error.to_string()),
             };
@@ -404,7 +404,7 @@ impl ArtifactActor {
                 false
             }
             ArtifactActorMsg::LocalDocumentArchive { archive } => {
-                if let Ok(decoded) = semio_framework_os_spr::decode_document_archive_bytes(&archive).await {
+                if let Ok(decoded) = semio_os_spr::decode_document_archive_bytes(&archive).await {
                     self.persist_archive(archive, decoded).await;
                 }
                 false
@@ -437,7 +437,7 @@ impl ArtifactActor {
     }
 
     /// 📤️ Pops and advances exactly one store-to-actor FIFO owner.
-    pub async fn relay_one_backbone(&mut self) -> Result<bool, semio_framework_os_vcs::VcsError> {
+    pub async fn relay_one_backbone(&mut self) -> Result<bool, semio_os_vcs::VcsError> {
         let Some(message) = self.remote.try_pop_front()? else { return Ok(false) };
         match message {
             BackboneMessage::Mutations { envelopes } => {
@@ -447,8 +447,8 @@ impl ArtifactActor {
             }
             BackboneMessage::Genesis { pack } => self.persist_genesis(pack).await,
             BackboneMessage::Ack { .. } => {}
-            BackboneMessage::Member { .. } => return Err(semio_framework_os_vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
-            BackboneMessage::Retract { .. } => return Err(semio_framework_os_vcs::VcsError::Backbone("a retraction flows from the actor to its store, never back".into())),
+            BackboneMessage::Member { .. } => return Err(semio_os_vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
+            BackboneMessage::Retract { .. } => return Err(semio_os_vcs::VcsError::Backbone("a retraction flows from the actor to its store, never back".into())),
         }
         Ok(true)
     }

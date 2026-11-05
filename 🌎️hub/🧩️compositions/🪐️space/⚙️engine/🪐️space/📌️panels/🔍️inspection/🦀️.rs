@@ -3,7 +3,7 @@
 //! domain's live selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — passed in by
 //! the caller, since `ArtifactApp::render` carries no `InteractionView` (a discovered framework gap).
 //!
-//! 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20) port: rebuilt on the `semio_framework_ui_
+//! 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20) port: rebuilt on the `semio_ui_
 //! contract` builder DSL (`BuiltNode`), replacing the old `ui_wgpu::wgpu::UiNode` struct literals —
 //! same treatment, same helper shapes, as the sibling `📌️panels/🔢️parameters/🦀️.rs` port. The old
 //! per-file `s_play_action` (returning the legacy `ActionDescriptor`) is gone — `crate::engine::space::
@@ -13,18 +13,18 @@ use semio_hub_space_operations::{parameter_entity_id, workflow_parameter_fits_os
 use semio_hub_space_foundation::terminology::SStudioLabels;
 use crate::{ui_value_list, ui_value_map, ui_value_text};
 use semio_hub_space_foundation::S_PLAY_INSPECTOR_TAB_ID;
-use semio_framework_os::{os_app_registration, WorkflowNode, WorkflowParameter, WorkflowSnapshot};
-use semio_framework_plugin::{
+use semio_os::{os_app_registration, WorkflowNode, WorkflowParameter, WorkflowSnapshot};
+use semio_plugin::{
     tree_item, tree_item_desc, ui_inspector_all_equal, ActionId, Buildable, HasBase, HasChildren, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
-use semio_framework_ui_contract::{input, select, tree_item as tree_item_row, BuiltNode, InputKind, Label, Trigger};
+use semio_ui_contract::{input, select, tree_item as tree_item_row, BuiltNode, InputKind, Label, Trigger};
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(S_PLAY_INSPECTOR_TAB_ID.into()),
-        label: semio_framework_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+        label: semio_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
         group: PanelGroup::Details,
         body_key: Some(semio_hub_space_foundation::S_PLAY_INSPECTOR_BODY_KEY.into()),
         children: Vec::new(),
@@ -90,7 +90,7 @@ fn read_only_row(id: &str, label: &str, code: &'static str, value: impl Into<Str
 /// `Bound` row underneath; flattening both into ONE list is what lets the window address them by
 /// index without changing the rendered row order.
 enum InspectorParameterRow<'a> {
-    Binding(&'a semio_framework_os::OsParameterFieldSpec),
+    Binding(&'a semio_os::OsParameterFieldSpec),
     Bound { field_path: &'a str, value: String },
 }
 
@@ -107,7 +107,7 @@ fn workflow_parameter_display_value(parameter: &WorkflowParameter) -> String {
 /// each followed by a `Bound` row when that field currently resolves to a workflow parameter. Cheap to
 /// build whole (string lookups only) — the expensive per-row `select` assembly happens only for the
 /// rows the window actually materialises.
-fn inspector_parameter_rows<'a>(projection: &'a WorkflowSnapshot, node: &WorkflowNode, registration: &'a semio_framework_os::OsAppRegistration) -> Vec<InspectorParameterRow<'a>> {
+fn inspector_parameter_rows<'a>(projection: &'a WorkflowSnapshot, node: &WorkflowNode, registration: &'a semio_os::OsAppRegistration) -> Vec<InspectorParameterRow<'a>> {
     let mut rows = Vec::new();
     for field_spec in &registration.parameter_fields {
         rows.push(InspectorParameterRow::Binding(field_spec));
@@ -153,7 +153,7 @@ fn inspector_parameter_row(projection: &WorkflowSnapshot, node: &WorkflowNode, t
 pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_labels: &SStudioLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let nodes: Vec<&WorkflowNode> = selected_node_ids.iter().filter_map(|node_id| projection.graph.nodes.iter().find(|node| &node.id == node_id)).collect();
 
-    let mut header_rows = semio_framework_plugin::UiFixedList::<BuiltNode>::default();
+    let mut header_rows = semio_plugin::UiFixedList::<BuiltNode>::default();
     header_rows
         .try_push(tree_item(
             format!("{ROOT}.header.count"),
@@ -179,7 +179,7 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
         let x_uniform = ui_inspector_all_equal(&xs.iter().map(|v| v.to_string()).collect::<Vec<_>>());
         let y_uniform = ui_inspector_all_equal(&ys.iter().map(|v| v.to_string()).collect::<Vec<_>>());
 
-        let mut node_fields = semio_framework_plugin::UiFixedList::<BuiltNode>::default();
+        let mut node_fields = semio_plugin::UiFixedList::<BuiltNode>::default();
         if selected_node_ids.len() == 1 {
             let noop = crate::s_play_action("noOperation", None)?;
             let control = input(InputKind::Text)
@@ -222,7 +222,7 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
         let program_uniform = ui_inspector_all_equal(&programs);
         let app_uniform = ui_inspector_all_equal(&apps);
 
-        let mut instance_fields = semio_framework_plugin::UiFixedList::<BuiltNode>::default();
+        let mut instance_fields = semio_plugin::UiFixedList::<BuiltNode>::default();
         instance_fields
             .try_push(read_only_row(
                 &format!("{ROOT}.app-instance.program"),

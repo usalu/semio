@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedPatchForce w
         record: "ChangedPlatedPatchForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Transverse force F_Ed of the plated panel", "Plattenfeld: Querkraft F_Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Transverse force F_Ed of the plated panel", "Plattenfeld: Querkraft F_Ed ändern")
     }
 }
 

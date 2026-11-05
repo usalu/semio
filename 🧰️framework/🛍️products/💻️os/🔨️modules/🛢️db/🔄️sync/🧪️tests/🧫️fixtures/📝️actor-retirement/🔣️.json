@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "owner": "semio-framework-os-kernel-db",
+  "owner": "semio-os-kernel-db",
   "actors": ["", "actor-1", "Äkteur 日本語"],
   "reservedTextBytes": 256,
   "aliases": 2,

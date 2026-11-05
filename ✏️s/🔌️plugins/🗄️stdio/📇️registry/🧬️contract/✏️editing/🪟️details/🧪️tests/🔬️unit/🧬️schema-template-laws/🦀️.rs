@@ -56,7 +56,7 @@ fn schema_templates_create_required_records_in_empty_lists_and_nullable_fields()
     let provider = TypedRecords { schema: semio_framework_pack_json::from_json_str(schema, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema") };
     assert_eq!(provider.creation_template(&[SnapshotDetailPathSegment::Key("records".into())], true), Some(DslValue::Object(vec![("fields".into(), DslValue::Array(Vec::new()))])));
     assert_eq!(provider.creation_template(&[SnapshotDetailPathSegment::Key("selection".into())], false), Some(DslValue::Object(vec![("name".into(), DslValue::String("x".into())), ("enabled".into(), DslValue::Bool(false)),])));
-    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.records#editor", &TreeWindows::unhosted()).expect("schema-aware details");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.records#editor", &TreeWindows::unhosted()).expect("schema-aware details");
     let records_id = path_id(&[SnapshotDetailPathSegment::Key("records".into())]);
     let selection_id = path_id(&[SnapshotDetailPathSegment::Key("selection".into())]);
     assert!(contains_key(&rendered, &format!("{records_id}-add-template")));
@@ -149,13 +149,13 @@ fn schema_annotations_localize_fixed_fields_without_translating_user_keys() {
     assert_eq!(provider.presentation(&[SnapshotDetailPathSegment::Key("windowBits".into())], Locale::De), Some(SnapshotDetailPresentation { label: "Fenstergröße [windowBits]".into(), description: Some("Kompressionsfenster in Bit.".into()) }));
     assert_eq!(provider.presentation(&[SnapshotDetailPathSegment::Key("Projektname".into())], Locale::De), None);
     for (locale, expected_label, expected_description) in [(Locale::En, "Window size [windowBits]", "Compression window in bits."), (Locale::De, "Fenstergröße [windowBits]", "Kompressionsfenster in Bit.")] {
-        let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), locale, "test.presentation#editor", &TreeWindows::unhosted()).expect("localized details");
+        let rendered = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), locale, "test.presentation#editor", &TreeWindows::unhosted()).expect("localized details");
         let fixed = find_key(&rendered, &path_id(&[SnapshotDetailPathSegment::Key("windowBits".into())])).expect("fixed schema field");
-        let semio_framework_ui_contract::Component::TreeItem(props) = &fixed.component else { panic!("schema field tree item") };
+        let semio_ui_contract::Component::TreeItem(props) = &fixed.component else { panic!("schema field tree item") };
         assert_eq!(props.label.0.as_str(), expected_label);
         assert_eq!(props.description.as_ref().map(|value| value.as_str()), Some(expected_description));
         let dynamic = find_key(&rendered, &path_id(&[SnapshotDetailPathSegment::Key("Projektname".into())])).expect("dynamic map key");
-        let semio_framework_ui_contract::Component::TreeItem(props) = &dynamic.component else { panic!("dynamic field tree item") };
+        let semio_ui_contract::Component::TreeItem(props) = &dynamic.component else { panic!("dynamic field tree item") };
         assert_eq!(props.label.0.as_str(), "Projektname");
         assert!(props.description.is_none());
     }
@@ -200,7 +200,7 @@ fn schema_capabilities_hide_impossible_actions_and_offer_missing_optional_fields
         ("custom".into(), DslValue::String("dynamic".into())),
     ]);
     let provider = DslSnapshotDetailsProvider::<CapabilityFixture>::from_value_and_schema(value, schema);
-    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.capabilities#editor", &TreeWindows::unhosted()).expect("capability details");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.capabilities#editor", &TreeWindows::unhosted()).expect("capability details");
     let schema_id = path_id(&[SnapshotDetailPathSegment::Key("schema".into())]);
     assert!(!contains_key(&rendered, &format!("{schema_id}-text")));
     assert!(!contains_key(&rendered, &format!("{schema_id}-key")));
@@ -219,15 +219,15 @@ fn schema_capabilities_hide_impossible_actions_and_offer_missing_optional_fields
     assert!(!contains_key(&rendered, &format!("{items_id}-add-template")));
     assert!(!contains_key(&rendered, &format!("{items_id}-add-0")));
     let optional = find_key(&rendered, &format!("{ROOT_PATH_ID}-add-property-0")).expect("optional property choice");
-    let semio_framework_ui_contract::Component::Button(props) = &optional.component else { panic!("optional property choice must be a button") };
+    let semio_ui_contract::Component::Button(props) = &optional.component else { panic!("optional property choice must be a button") };
     assert_eq!(props.label.0.as_str(), "Add Display name [optionalLabel]");
-    let binding = optional.bindings.iter().find(|binding| binding.trigger == semio_framework_ui_contract::Trigger::Activate).expect("optional property insert binding");
+    let binding = optional.bindings.iter().find(|binding| binding.trigger == semio_ui_contract::Trigger::Activate).expect("optional property insert binding");
     let Some(UiValue::Map(arguments)) = &binding.args else { panic!("optional property typed arguments") };
     assert!(arguments.iter().any(|(key, value)| key.as_str() == "path" && matches!(value, UiValue::Text(path) if path.as_str() == "/optionalLabel")));
     assert!(arguments.iter().any(|(key, value)| key.as_str() == "value" && matches!(value, UiValue::Text(value) if value.as_str() == "\"Untitled\"")));
     assert!(arguments.iter().any(|(key, value)| key.as_str() == "valueEncoding" && matches!(value, UiValue::Text(value) if value.as_str() == "json")));
-    let german = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::De, "test.capabilities#editor", &TreeWindows::unhosted()).expect("German capability details");
+    let german = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::De, "test.capabilities#editor", &TreeWindows::unhosted()).expect("German capability details");
     let optional = find_key(&german, &format!("{ROOT_PATH_ID}-add-property-0")).expect("German optional property choice");
-    let semio_framework_ui_contract::Component::Button(props) = &optional.component else { panic!("optional property choice must be a button") };
+    let semio_ui_contract::Component::Button(props) = &optional.component else { panic!("optional property choice must be a button") };
     assert_eq!(props.label.0.as_str(), "Hinzufügen Anzeigename [optionalLabel]");
 }

@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-s-artifact-wfc-bitmap = { path = "../../../📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-test-mutation-inventory = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust" }
 
 [dev-dependencies]

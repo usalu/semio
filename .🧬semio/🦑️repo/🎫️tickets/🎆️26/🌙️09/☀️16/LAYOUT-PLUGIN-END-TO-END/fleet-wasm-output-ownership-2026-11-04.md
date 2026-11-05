@@ -1,0 +1,9 @@
+# Wasm Output Integration Ownership
+
+The full test-store-isolation law produced24 findings. The current runtime test contained one actionable goal-owned duplicate: it called real buildWasmRenderer with process.cwd as workspace and derived checkout Cargo storage despite receiving real test Original. It is removed from the broad runtime unit file. Actual compilation belongs to the declared prototype/release test-wasm-outputs owner, whose existing checks include transformed and mounted bytes, current observation, publication removal/restoration without a build, actual served bytes, changed Source and failed compilation preservation.
+
+The dedicated owner now additionally checks WebAssembly.Module.exports and actual modified publication refusal/restoration, preserving the duplicate's unique assertions with its answer42/43 fixture in place of value7. No assertion is bypassed or made conditional. Real gate completion is still pending.
+
+Correction to earlier reports: the dedicated output fixture initially used isolated Source beneath charged test output but still selected checkout compiler/products stores; it was not yet a private-workspace test. Host execution is implementing code-root/private-workspace separation at the existing genuine OS birth issuer. The WGPU output owner will receive an actual private workspace Original there. In-process privateRepository.invoke is not used as proof of parent authority. No private target override, forged envelope, Source copy or cap increase is authorized.
+
+The whole Source isolation law remains RED pending precise own-defect repair and classification of unrelated findings. Its unchanged .cache findings are not attributed to the new .r detector. Source-only wrappers and pure pinned toolchain path reads require semantic classification distinct from mutable store opening; no exemptions were added.

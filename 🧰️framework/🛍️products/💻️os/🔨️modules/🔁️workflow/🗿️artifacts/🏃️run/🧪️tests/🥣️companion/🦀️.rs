@@ -5,9 +5,9 @@
 
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use semio_framework_artifact_workflow_run::*;
 pub use semio_framework_artifact_workflow_run_admission::{admit_run_operation, apply_run_operation_checked};

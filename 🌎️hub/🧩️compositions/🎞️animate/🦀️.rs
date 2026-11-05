@@ -1,10 +1,10 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest, MEDIA_VIDEO_RENDER_CAPABILITY};
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, PluginAssemblyError, VcsArtifactApp, ViewerApp};
-use semio_framework_plugin::PluginBuilder;
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest, MEDIA_VIDEO_RENDER_CAPABILITY};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, PluginAssemblyError, VcsArtifactApp, ViewerApp};
+use semio_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 // 🗃️ Closed runtime app fleet for the declaration-owned animate surfaces.

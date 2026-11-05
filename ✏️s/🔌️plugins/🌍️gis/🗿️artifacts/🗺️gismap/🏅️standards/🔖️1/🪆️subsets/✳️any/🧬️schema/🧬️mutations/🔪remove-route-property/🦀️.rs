@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "route-property", kind: "remove-route-property", record: "RoutePropertyRemoved" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove property \"{}\" of route \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Route \"{}\" entfernen", self.key, self.feature))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove property \"{}\" of route \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Route \"{}\" entfernen", self.key, self.feature))
     }
 }
 

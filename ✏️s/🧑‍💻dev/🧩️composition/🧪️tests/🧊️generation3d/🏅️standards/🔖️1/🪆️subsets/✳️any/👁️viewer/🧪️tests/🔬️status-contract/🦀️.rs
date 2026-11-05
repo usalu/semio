@@ -11,8 +11,8 @@
 
 use super::*;
 use crate::viewer_domain::viewer_laws::context::{self, app};
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::PluginApp;
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::PluginApp;
 use semio_framework_test_fixtures::repo_text;
 
 fn preview_cancel_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛑️preview-cancel.json") }
@@ -158,17 +158,17 @@ fn preview_cancel_fixture() -> PreviewCancelFixture {
 }
 
 fn node_hash(handle: &str) -> u64 {
-    semio_framework_os_flow::preview_tessellate_node_hash(handle, 0.05_f64.to_bits())
+    semio_os_flow::preview_tessellate_node_hash(handle, 0.05_f64.to_bits())
 }
 
 /// 🪪️ The address the fixture's `addressable` flag stands for — supplied rather than looked up, so
 /// the unaddressable branch is provable without uninstalling the process-global contribution table
 /// (which poisons the flow catalogue's cache lock for every later test in this binary).
-fn address(addressable: bool) -> Result<String, semio_framework_os_flow::FlowExtensionAddressMiss> {
+fn address(addressable: bool) -> Result<String, semio_os_flow::FlowExtensionAddressMiss> {
     if addressable {
         Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string())
     } else {
-        Err(semio_framework_os_flow::FlowExtensionAddressMiss { extension_id: preview_eval::GENERATION_3D_GEOMETRY_EXTENSION_ID.to_string(), contributed: Vec::new() })
+        Err(semio_os_flow::FlowExtensionAddressMiss { extension_id: preview_eval::GENERATION_3D_GEOMETRY_EXTENSION_ID.to_string(), contributed: Vec::new() })
     }
 }
 
@@ -209,9 +209,9 @@ const VIEW_PREVIEW_WINDOW_ID: &str = "window:procedural-view-preview";
 /// ⏯️ The run a fixture state implies: the abort affordance is the RUN's, so a state the fixture calls
 /// `cancellable` is a state with a live `previewEval` run and every other state has none. Mirrors
 /// `🧵️preview-eval/🧪️tests/🔬️unit`'s own `run_view`.
-fn run_view(cancellable: bool) -> Option<semio_framework_plugin::ToolRunView> {
+fn run_view(cancellable: bool) -> Option<semio_plugin::ToolRunView> {
     cancellable.then(|| {
-        semio_framework_plugin::ToolRunView::new(
+        semio_plugin::ToolRunView::new(
             preview_eval::PREVIEW_EVAL_TOOL_ID,
             semio_framework_tool_run::ToolRunIdentity { id: semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 1 }, generation: 1, base_revision: [0; 32] },
             semio_framework_tool_run::ToolRunState::Running,
@@ -278,8 +278,8 @@ fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
             None => assert!(status.get("fault").is_none(), "{}: a healthy status publishes no fault — {status}", state.id),
         }
     }
-    assert_eq!(contract.evaluate_fault_code, semio_framework_os_flow::ExtensionEvaluateFault::CODE);
-    assert_eq!(contract.address_miss_code, semio_framework_os_flow::FlowExtensionAddressMiss::CODE);
+    assert_eq!(contract.evaluate_fault_code, semio_os_flow::ExtensionEvaluateFault::CODE);
+    assert_eq!(contract.address_miss_code, semio_os_flow::FlowExtensionAddressMiss::CODE);
     assert!(!contract.debug_keys.is_empty());
 }
 
@@ -304,7 +304,7 @@ fn the_published_progress_ratio_is_monotone_and_advances_across_one_evaluation()
     let mut ratios = Vec::new();
     let mut nodes_done = Vec::new();
     for step in &census.sequence {
-        let status = semio_framework_os_flow::PreviewChainStatus { nodes_done: step.nodes_done, nodes_total: step.nodes_total, in_flight: step.in_flight, working: step.working };
+        let status = semio_os_flow::PreviewChainStatus { nodes_done: step.nodes_done, nodes_total: step.nodes_total, in_flight: step.in_flight, working: step.working };
         assert_eq!(status.units(), (step.units_done, step.units_total), "{}: the chain ledger owes the fixture's units", step.step);
         assert!((status.ratio() - step.ratio).abs() < 1e-12, "{}: ratio {} is not the fixture's {}", step.step, status.ratio(), step.ratio);
         assert_eq!(step.in_flight as usize, step.wave.len(), "{}: every parked node of a wave is one answer in flight", step.step);
@@ -349,7 +349,7 @@ async fn the_rendered_viewer_preview_scene_carries_the_status_contract() {
     let shell_view = context::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
     let projection = context::render_with_view(&mut app, preview::BODY_KEY, &shell_view).await;
     drop(app);
-    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("the viewer preview body decodes as a world-3d scene");
+    let world: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("the viewer preview body decodes as a world-3d scene");
     let published = world.status_json.clone().expect("the viewer preview window must publish a status contract, exactly as both editor preview windows do");
     let status: serde_json::Value = serde_json::from_str(&published).expect("the published status is one JSON object");
     assert_contract_shape(&status, &fixture.status_contract, &fixture.phase_labels, &fixture.cancel_action, "rendered");
@@ -375,11 +375,11 @@ async fn a_viewer_kernel_release_dispatches_live_and_never_mutates_the_document(
     let mut app = app().await;
     let before = context::snapshot(&app);
     let shell_view = context::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
-    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(shell_view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(shell_view), ..semio_plugin::artifact_app_laws::meta("local") };
     let args = preview_eval::window_args(VIEW_PREVIEW_WINDOW_ID, preview::WINDOW_KIND_ID);
     context::dispatch_effect_command(&mut app, "flowEvalRelease", Some(&args), &action_meta).await.expect("the shell dispatches the declared release verb");
-    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the cancel settles through the retained ladder");
-    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the viewer kernel release faulted in the retained job ladder");
+    let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the cancel settles through the retained ladder");
+    assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault), "the viewer kernel release faulted in the retained job ladder");
     assert_eq!(context::snapshot(&app), before, "a kernel release must not mutate the document");
     let _ = app.pending_effects(None).await;
 }
@@ -416,7 +416,7 @@ fn the_viewer_preview_window_offers_the_cancel_verb_the_fixture_names() {
 /// for the evaluation, because it is the only thing that knows a gesture started one.
 #[test]
 fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_is() {
-    let live_run = semio_framework_plugin::ToolRunView::new(
+    let live_run = semio_plugin::ToolRunView::new(
         semio_s_artifact_procedural_3d_preview_eval::PREVIEW_EVAL_TOOL_ID,
         semio_framework_tool_run::ToolRunIdentity { id: semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 1 }, generation: 0, base_revision: [0; 32] },
         semio_framework_tool_run::ToolRunState::Running,
@@ -426,7 +426,7 @@ fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_
     let started: serde_json::Value = serde_json::from_str(&started).expect("status json");
     assert_eq!(started["computing"], serde_json::json!(true), "a run with no census behind it still speaks for the evaluation it started");
 
-    let mut host = semio_framework_os_flow::FlowHost::default();
+    let mut host = semio_os_flow::FlowHost::default();
     let mut session = FlowEvalSession::new();
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a census exists to settle");
     session.arm_window_tick("preview-1");

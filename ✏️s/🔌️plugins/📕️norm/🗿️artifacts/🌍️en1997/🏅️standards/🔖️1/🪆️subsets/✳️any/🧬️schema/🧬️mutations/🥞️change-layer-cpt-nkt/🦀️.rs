@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerCptNkt where 
         record: "ChangedLayerCptNkt",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cone factor N_kt (0 = not given) of the soil layer", "Bodenschicht: Kegelfaktor N_kt (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cone factor N_kt (0 = not given) of the soil layer", "Bodenschicht: Kegelfaktor N_kt (0 = nicht angegeben) ändern")
     }
 }
 

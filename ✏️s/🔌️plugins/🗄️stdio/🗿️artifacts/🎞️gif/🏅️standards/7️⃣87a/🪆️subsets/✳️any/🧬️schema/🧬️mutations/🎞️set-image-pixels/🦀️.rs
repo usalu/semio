@@ -17,8 +17,8 @@ pub struct SetImagePixels {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetImagePixels {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "image-pixels", kind: "set-image-pixels", record: "SetImagePixels" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set image pixels", "Bildpixel setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set image pixels", "Bildpixel setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

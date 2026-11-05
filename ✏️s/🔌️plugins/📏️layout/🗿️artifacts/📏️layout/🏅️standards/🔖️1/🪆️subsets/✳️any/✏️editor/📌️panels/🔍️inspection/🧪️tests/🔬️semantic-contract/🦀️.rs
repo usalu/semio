@@ -8,9 +8,9 @@ fn layout_inspection_summary_matches_the_json_oracle() {
     assert_eq!(snapshot.pages.len(), fixture["pageCount"].as_u64().expect("page count") as usize);
     for row in fixture["cases"].as_array().expect("locales") {
         let config = LayoutWindowConfig { active_page_id: fixture["activePage"].as_str().expect("active page").into(), ..LayoutWindowConfig::default() };
-        let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
-        let node = render(&snapshot, &config, &semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot::default(), crate::terminology::layout_labels(&view_state), &semio_framework_plugin::TreeWindows::for_body(&view_state, LAYOUT_PLAY_BODY_INSPECTION)).expect("semantic inspector");
-        let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project and retire inspector");
+        let view_state = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_ui_locale::Terminology::Native) };
+        let node = render(&snapshot, &config, &semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot::default(), crate::terminology::layout_labels(&view_state), &semio_plugin::TreeWindows::for_body(&view_state, LAYOUT_PLAY_BODY_INSPECTION)).expect("semantic inspector");
+        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project and retire inspector");
         let actual: serde_json::Value = serde_json::from_str(&projection).expect("independent semantic JSON oracle");
         let section = &actual["children"][0];
         assert_eq!(section["component"]["label"], row["heading"]);
@@ -38,14 +38,14 @@ fn every_run_and_structural_operation_has_an_accessible_localized_control() {
     let story = snapshot.stories.iter_mut().find(|story| story.id == story_id).expect("story");
     story.style_runs = (0..fixture["runCount"].as_u64().unwrap()).map(|_| semio_s_artifact_layout_layout_model::TextStyleRun { start: 0, end: 0, paragraph_style_id: None, character_style_id: None }).collect();
     for locale in fixture["locales"].as_array().unwrap() {
-        let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(locale.as_str().unwrap()).unwrap(), semio_framework_ui_locale::Terminology::Native);
+        let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::from_language_tag(locale.as_str().unwrap()).unwrap(), semio_ui_locale::Terminology::Native);
         let labels = crate::terminology::layout_labels(&view);
         let config = LayoutWindowConfig { active_page_id: snapshot.pages[0].id.clone(), ..Default::default() };
         let mut projections = String::new();
         for id in [frame_id.clone(), "frame-1".into()] {
             let interaction = LayoutInteractionSnapshot { ids: vec![id], ..Default::default() };
-            let node = render(&snapshot, &config, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), LAYOUT_PLAY_BODY_INSPECTION)).expect("inspector");
-            projections.push_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project"));
+            let node = render(&snapshot, &config, &interaction, labels, &semio_plugin::TreeWindows::for_body(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), LAYOUT_PLAY_BODY_INSPECTION)).expect("inspector");
+            projections.push_str(&semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project"));
         }
         assert!(!projections.contains("patchDocument.dataFields"), "data values use typed controls");
         for control in fixture["controls"].as_array().unwrap() {
@@ -66,13 +66,13 @@ fn large_stories_render_as_complete_unicode_safe_windows() {
         assert_eq!(serde_json::to_value(actual).unwrap(), case["spans"]);
         let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
         snapshot.stories[0].content = content;
-        let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         let labels = crate::terminology::layout_labels(&view);
         let config = LayoutWindowConfig { active_page_id: snapshot.pages[0].id.clone(), ..Default::default() };
         for ids in [Vec::new(), vec!["frame-text-1".into()]] {
             let interaction = LayoutInteractionSnapshot { ids, ..Default::default() };
-            let node = render(&snapshot, &config, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).expect("large text inspector");
-            let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+            let node = render(&snapshot, &config, &interaction, labels, &semio_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).expect("large text inspector");
+            let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
             let _: serde_json::Value = serde_json::from_str(&json).unwrap();
         }
     }
@@ -87,10 +87,10 @@ fn a_choice_after_the_fixed_select_limit_remains_reachable_and_selected() {
     let field = "run.0.paragraphStyle";
     let key = format!("layout-play-inspector.patchFrame.{field}");
     let choices: Vec<_> = (0..count).map(|index| format!("style-{index}")).collect();
-    let view = semio_framework_plugin::ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: LAYOUT_PLAY_BODY_INSPECTION.into(), node_key: key, open: Some(true), offset, rows }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = semio_plugin::ViewModel { tree_windows: vec![semio_plugin::TreeWindowRequest { body_key: LAYOUT_PLAY_BODY_INSPECTION.into(), node_key: key, open: Some(true), offset, rows }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let labels = crate::terminology::layout_labels(&view);
-    let node = choice_row(&semio_framework_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION), "patchFrame", field, labels.paragraph_style, "style-79", choices.iter().map(|choice| (choice.as_str(), choice.as_str())), Some("frame-text-1"), Some("page-1")).unwrap();
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+    let node = choice_row(&semio_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION), "patchFrame", field, labels.paragraph_style, "style-79", choices.iter().map(|choice| (choice.as_str(), choice.as_str())), Some("frame-text-1"), Some("page-1")).unwrap();
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
     let actual: serde_json::Value = serde_json::from_str(&json).unwrap();
     assert_eq!(actual["component"]["window"]["total"], count);
     assert_eq!(actual["component"]["window"]["offset"], offset);
@@ -119,11 +119,11 @@ fn every_large_relationship_collection_renders_without_fixed_select_admission() 
         let mut row = frame.clone(); if let Frame::Text { id, .. } = &mut row { *id = format!("capacity-text-{index}"); } snapshot.pages[0].frames.push(row);
     }
     snapshot.stories[0].style_runs.push(semio_s_artifact_layout_layout_model::TextStyleRun { start: 0, end: 0, paragraph_style_id: None, character_style_id: None });
-    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let config = LayoutWindowConfig { active_page_id: snapshot.pages[0].id.clone(), ..Default::default() };
     let interaction = LayoutInteractionSnapshot { ids: vec!["frame-text-1".into()], ..Default::default() };
-    let node = render(&snapshot, &config, &interaction, crate::terminology::layout_labels(&view), &semio_framework_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).expect("all relationships exceed 32");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+    let node = render(&snapshot, &config, &interaction, crate::terminology::layout_labels(&view), &semio_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).expect("all relationships exceed 32");
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
 }
 
 #[test]
@@ -135,13 +135,13 @@ fn inherited_configuration_is_an_explicit_shared_parent_editor() {
     snapshot.parent_pages[0].frames = vec![frame];
     snapshot.pages[0].parent_page_id = Some(snapshot.parent_pages[0].id.clone());
     snapshot.pages[0].frames.clear();
-    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
-        let view = semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        let view = semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native);
         let labels = crate::terminology::layout_labels(&view);
         let config = LayoutWindowConfig { active_page_id: snapshot.pages[0].id.clone(), ..Default::default() };
         let interaction = LayoutInteractionSnapshot { ids: vec!["frame-text-1".into()], ..Default::default() };
-        let node = render(&snapshot, &config, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).unwrap();
-        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+        let node = render(&snapshot, &config, &interaction, labels, &semio_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).unwrap();
+        let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
         assert!(json.contains(labels.shared_parent_frame.as_str()));
         for field in fixture["parentFields"].as_array().unwrap().iter().filter(|field| field.as_str() != Some("parent.fill")) { assert!(json.contains(field.as_str().unwrap())); }
         assert!(!json.contains("patchFrame.columns.input"));
@@ -152,15 +152,15 @@ fn inherited_configuration_is_an_explicit_shared_parent_editor() {
 fn selected_and_global_story_editors_have_distinct_surface_keys() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️concurrency.json")).unwrap();
     let snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let config = LayoutWindowConfig { active_page_id: snapshot.pages[0].id.clone(), ..Default::default() };
     let interaction = LayoutInteractionSnapshot { ids: vec!["frame-text-1".into()], ..Default::default() };
-    let node = render(&snapshot, &config, &interaction, crate::terminology::layout_labels(&view), &semio_framework_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).unwrap();
+    let node = render(&snapshot, &config, &interaction, crate::terminology::layout_labels(&view), &semio_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).unwrap();
     let mut keys = std::collections::HashSet::new();
     let mut pending = vec![&node];
     while let Some(row) = pending.pop() { assert!(keys.insert(row.key.as_str().to_string()), "duplicate UI key: {}", row.key.as_str()); pending.extend(row.children.iter()); }
     for location in fixture["locations"].as_array().unwrap() { assert!(keys.contains(location.as_str().unwrap()), "missing editor location"); }
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
 }
 
 #[test]
@@ -171,10 +171,10 @@ fn a_257_byte_dictionary_value_uses_typed_windowed_hex_inputs() {
     let byte_spans: Vec<_> = text_chunks::byte_ranges(fixture["byteValues"].as_array().unwrap().len()).iter().map(|span| serde_json::json!({ "start": span.start, "end": span.end })).collect();
     assert_eq!(serde_json::to_value(byte_spans).unwrap(), fixture["byteSpans"]);
     snapshot.data_fields.as_mut().unwrap().entries[0].value = semio_framework_value::DslValue::Bytes(fixture["byteValues"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect());
-    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let config = LayoutWindowConfig { active_page_id: snapshot.pages[0].id.clone(), ..Default::default() };
-    let node = render(&snapshot, &config, &LayoutInteractionSnapshot::default(), crate::terminology::layout_labels(&view), &semio_framework_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).expect("typed byte inspector");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+    let node = render(&snapshot, &config, &LayoutInteractionSnapshot::default(), crate::terminology::layout_labels(&view), &semio_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION)).expect("typed byte inspector");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
     assert!(json.contains("data.0.value.bytes"));
 }
 
@@ -182,17 +182,17 @@ fn a_257_byte_dictionary_value_uses_typed_windowed_hex_inputs() {
 fn story_editor_locations_scroll_independently_over_the_same_semantic_field() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️concurrency.json")).unwrap();
     let locations: Vec<_> = fixture["locations"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
-    let view = semio_framework_plugin::ViewModel { tree_windows: locations.iter().enumerate().map(|(index, location)| semio_framework_plugin::TreeWindowRequest { body_key: LAYOUT_PLAY_BODY_INSPECTION.into(), node_key: (*location).into(), open: Some(true), offset: (index * 2) as u32, rows: 1 }).collect(), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let windows = semio_framework_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION);
+    let view = semio_plugin::ViewModel { tree_windows: locations.iter().enumerate().map(|(index, location)| semio_plugin::TreeWindowRequest { body_key: LAYOUT_PLAY_BODY_INSPECTION.into(), node_key: (*location).into(), open: Some(true), offset: (index * 2) as u32, rows: 1 }).collect(), ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let windows = semio_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION);
     let labels = crate::terminology::layout_labels(&view);
     let content = "a".repeat(600);
     let stamp = text_chunks::fingerprint(content.as_bytes());
     for (index, location) in locations.iter().enumerate() {
         let node = chunked_text(&windows, location, "story.story-1.content", &content, labels.story, &stamp).unwrap();
-        let semio_framework_plugin::Component::TreeItem(props) = &node.component else { panic!("text window") };
+        let semio_plugin::Component::TreeItem(props) = &node.component else { panic!("text window") };
         assert_eq!(props.window.as_ref().map(|window| (window.total, window.offset)), Some((3, (index * 2) as u32)));
         assert_eq!(node.children.len(), 1);
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
     }
 }
 
@@ -201,13 +201,13 @@ fn the_nonfirst_typed_byte_window_remains_reachable() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️concurrency.json")).unwrap();
     let bytes: Vec<_> = fixture["byteValues"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let location = "layout-play-inspector.dictionary.data.0.value.bytes";
-    let view = semio_framework_plugin::ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: LAYOUT_PLAY_BODY_INSPECTION.into(), node_key: location.into(), open: Some(true), offset: 1, rows: 1 }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let node = chunked_bytes(&semio_framework_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION), location, "data.0.value", &bytes, crate::terminology::layout_labels(&view).data_bytes, "expected-stamp").unwrap();
-    let semio_framework_plugin::Component::TreeItem(props) = &node.component else { panic!("byte window") };
+    let view = semio_plugin::ViewModel { tree_windows: vec![semio_plugin::TreeWindowRequest { body_key: LAYOUT_PLAY_BODY_INSPECTION.into(), node_key: location.into(), open: Some(true), offset: 1, rows: 1 }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let node = chunked_bytes(&semio_plugin::TreeWindows::for_body(&view, LAYOUT_PLAY_BODY_INSPECTION), location, "data.0.value", &bytes, crate::terminology::layout_labels(&view).data_bytes, "expected-stamp").unwrap();
+    let semio_plugin::Component::TreeItem(props) = &node.component else { panic!("byte window") };
     assert_eq!(props.window.as_ref().map(|window| (window.total, window.offset)), Some((3, 1)));
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
     assert!(json.contains("data.0.value.bytes.128.256.expected-stamp"));
 }
 
 #[test]
-fn a_long_story_materializes_only_its_requested_last_text_window(){let law:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/📄️patch-document/🧵️text-chunks/🔣️.json")).unwrap();let row=&law["cases"][2];let content=row["unit"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize);let location="layout-play-inspector.long-story";let count=text_chunks::ranges(&content).len();let view=semio_framework_plugin::ViewModel{tree_windows:vec![semio_framework_plugin::TreeWindowRequest{body_key:LAYOUT_PLAY_BODY_INSPECTION.into(),node_key:location.into(),open:Some(true),offset:(count-1)as u32,rows:1}],..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De,semio_framework_ui_locale::Terminology::Native)};let labels=crate::terminology::layout_labels(&view);let node=chunked_text(&semio_framework_plugin::TreeWindows::for_body(&view,LAYOUT_PLAY_BODY_INSPECTION),location,"story.long.content",&content,labels.story,&text_chunks::fingerprint(content.as_bytes())).unwrap();assert_eq!(node.children.len(),1);let semio_framework_plugin::Component::TreeItem(props)=&node.component else{panic!("text window")};assert_eq!(props.window.as_ref().map(|window|(window.total,window.offset)),Some((count as u32,(count-1)as u32)));semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();}
+fn a_long_story_materializes_only_its_requested_last_text_window(){let law:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/📄️patch-document/🧵️text-chunks/🔣️.json")).unwrap();let row=&law["cases"][2];let content=row["unit"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize);let location="layout-play-inspector.long-story";let count=text_chunks::ranges(&content).len();let view=semio_plugin::ViewModel{tree_windows:vec![semio_plugin::TreeWindowRequest{body_key:LAYOUT_PLAY_BODY_INSPECTION.into(),node_key:location.into(),open:Some(true),offset:(count-1)as u32,rows:1}],..semio_plugin::ViewModel::new(semio_ui_locale::Locale::De,semio_ui_locale::Terminology::Native)};let labels=crate::terminology::layout_labels(&view);let node=chunked_text(&semio_plugin::TreeWindows::for_body(&view,LAYOUT_PLAY_BODY_INSPECTION),location,"story.long.content",&content,labels.story,&text_chunks::fingerprint(content.as_bytes())).unwrap();assert_eq!(node.children.len(),1);let semio_plugin::Component::TreeItem(props)=&node.component else{panic!("text window")};assert_eq!(props.window.as_ref().map(|window|(window.total,window.offset)),Some((count as u32,(count-1)as u32)));semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();}

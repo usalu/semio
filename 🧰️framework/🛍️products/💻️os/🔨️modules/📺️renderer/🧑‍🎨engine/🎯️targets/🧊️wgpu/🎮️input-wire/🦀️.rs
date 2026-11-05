@@ -108,7 +108,7 @@ pub enum BrowserWireEvent {
     ImeCancel,
     HubDocumentStatus {
         document_key: String,
-        remote: semio_framework_os_renderer_wgpu_contracts::ShellHubRemoteV1,
+        remote: semio_renderer_wgpu_contracts::ShellHubRemoteV1,
     },
     HubDocumentClose {
         document_key: String,
@@ -271,8 +271,8 @@ pub fn pointer_button_to_i16(button: PointerButton) -> i16 {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn event_modifiers_to_pointer(modifiers: EventModifiers) -> semio_framework_ui_wgpu_input::PointerModifiers {
-    semio_framework_ui_wgpu_input::PointerModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
+pub fn event_modifiers_to_pointer(modifiers: EventModifiers) -> semio_ui_wgpu_input::PointerModifiers {
+    semio_ui_wgpu_input::PointerModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
 }
 
 /// ⌨️ DOM-`KeyboardEvent.key`-shaped strings (`ui_host::logical_key_to_dispatch_string`'s own output
@@ -281,8 +281,8 @@ pub fn event_modifiers_to_pointer(modifiers: EventModifiers) -> semio_framework_
 /// on); everything else is edge-triggered on `KeyDown` only, matching the old raw-winit dispatch path
 /// this replaces (`ui_wgpu::wgpu::dispatch_window_event`, never consulted for `KeyUp` beyond Space).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<semio_framework_ui_wgpu_input::KeyAction> {
-    use semio_framework_ui_wgpu_input::KeyAction as K;
+pub fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<semio_ui_wgpu_input::KeyAction> {
+    use semio_ui_wgpu_input::KeyAction as K;
     if key == " " {
         return Some(K::Space(pressed));
     }

@@ -12,11 +12,11 @@
 use semio_s_artifact_layout_layout_model::resolve_page;
 use semio_s_artifact_layout_layout_model::Frame;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -97,8 +97,8 @@ fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
 
 /// 👁️ Fixed default camera every render — a viewer has no persisted per-session camera (`Config =
 /// NoConfig`), matching cad's viewer's documented "default camera/sun" simplification.
-pub fn render(doc: &LayoutSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+pub fn render(doc: &LayoutSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

@@ -46,7 +46,7 @@ fn instance_lifetime_ui_document_terminal_includes_typed_value_descendants() {
     let fixture = fixture();
     let row = &fixture["document"];
     let value: UiValue = serde_json::from_value(row["value"].clone()).unwrap();
-    let observation=semio_framework_ui_contract_values::test_observer::UiValueObservation::capture(&value).unwrap();
+    let observation=semio_ui_contract_values::test_observer::UiValueObservation::capture(&value).unwrap();
     let record = crate::UiNodeRecord {
         id: crate::UiNodeId(row["nodeId"].as_u64().unwrap()),
         key: UiText::try_from_str("extension").unwrap(),

@@ -1,4 +1,4 @@
-use semio_framework_os_renderer_wgpu_fixtures::shell::paint_component_pointer_documents;
+use semio_renderer_wgpu_fixtures::shell::paint_component_pointer_documents;
 use super::*;
 use serde::Deserialize;
 

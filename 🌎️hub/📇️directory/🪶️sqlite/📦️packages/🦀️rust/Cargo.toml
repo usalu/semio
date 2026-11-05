@@ -31,7 +31,7 @@ semio-hub-directory = { workspace = true }
 semio-hub-directory-contract = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
-directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 
 [dev-dependencies]

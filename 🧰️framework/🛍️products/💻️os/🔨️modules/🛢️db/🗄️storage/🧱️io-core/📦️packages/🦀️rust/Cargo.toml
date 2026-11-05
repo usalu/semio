@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-kernel-db-io-core"
+name = "semio-os-kernel-db-io-core"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -29,15 +29,15 @@ testkit = ["claimed-backend-laws"]
 [dependencies]
 protocol = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
+semio-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
+semio-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-async-sync = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

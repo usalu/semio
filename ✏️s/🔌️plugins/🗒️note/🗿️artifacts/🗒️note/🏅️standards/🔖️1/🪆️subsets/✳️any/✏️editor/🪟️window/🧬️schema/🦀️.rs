@@ -21,7 +21,7 @@ pub struct NoteInkToolState {
     pub verb: String,
     pub authoring_seed: String,
     pub base_revision: String,
-    pub transaction: semio_framework_os_kernel::TransactionRef,
+    pub transaction: semio_os_kernel::TransactionRef,
     pub entries: Vec<NoteInkToolEntry>,
 }
 

@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ViewModel;
 
 fn demo() -> Fem3dSnapshot {
     semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
@@ -44,7 +44,7 @@ fn entity_points_frame_geometry_bearing_entities() {
 
 #[test]
 fn the_transform_utility_is_read_from_the_addressed_window() {
-    let mut view = ViewModel { window_id: Some("model-left".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let mut view = ViewModel { window_id: Some("model-left".into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     assert!(!fem3d_transform_armed(&view));
     view.active_utility_by_window_id.insert("model-left".into(), FEM3D_UTILITY_TRANSFORM.into());
     assert!(fem3d_transform_armed(&view));

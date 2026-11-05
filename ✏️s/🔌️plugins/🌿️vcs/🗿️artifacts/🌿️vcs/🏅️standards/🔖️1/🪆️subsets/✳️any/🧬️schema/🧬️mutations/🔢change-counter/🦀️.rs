@@ -23,8 +23,8 @@ pub fn change_counter(new_counter: i64) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeCounter {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-counter", record: "ChangedVcsCounter" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change counter to {}", self.new_counter), &format!("Zähler auf {} ändern", self.new_counter))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change counter to {}", self.new_counter), &format!("Zähler auf {} ändern", self.new_counter))
     }
 }
 

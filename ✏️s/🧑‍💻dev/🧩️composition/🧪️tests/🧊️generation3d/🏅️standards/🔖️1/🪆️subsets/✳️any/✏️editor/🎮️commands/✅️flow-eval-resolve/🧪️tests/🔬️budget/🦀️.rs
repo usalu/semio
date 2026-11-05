@@ -8,7 +8,7 @@
 
 use super::*;
 use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use semio_framework_test_fixtures::repo_text;
 
 fn evaluate_budget_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json") }
@@ -137,7 +137,7 @@ fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
             let expected_value: serde_json::Value = serde_json::from_str(expected).expect("expected output json");
             let observed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&cached)).expect("cached output json");
             assert_eq!(observed, expected_value, "{}: the seeded output is exactly the envelope's own body", row.id);
-            semio_framework_os_flow::neural::ColdRetire::retire_cold(cached);
+            semio_os_flow::neural::ColdRetire::retire_cold(cached);
         }
         drop(cache);
         assert!(emit.effects.is_empty(), "{}: a fold dispatches nothing itself", row.id);
@@ -164,11 +164,11 @@ fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
 fn every_declared_job_phase_tag_projects_to_its_declared_surface_phase() {
     let fixture = fixture();
     for (job_tag, surface_tag) in &fixture.job_phase_tags {
-        assert_eq!(semio_framework_os_flow::PreviewEvalPhase::from_job_tag(job_tag).tag(), surface_tag.as_str(), "job phase `{job_tag}` projects to `{surface_tag}`");
+        assert_eq!(semio_os_flow::PreviewEvalPhase::from_job_tag(job_tag).tag(), surface_tag.as_str(), "job phase `{job_tag}` projects to `{surface_tag}`");
     }
-    assert_eq!(semio_framework_os_flow::PreviewEvalPhase::from_job_tag("a-phase-no-surface-has-heard-of").tag(), "computing", "an unknown tag is live work, never idle");
+    assert_eq!(semio_os_flow::PreviewEvalPhase::from_job_tag("a-phase-no-surface-has-heard-of").tag(), "computing", "an unknown tag is live work, never idle");
     for (tag, labels) in &fixture.phase_labels {
-        let phase = semio_framework_os_flow::PreviewEvalPhase::from_job_tag(match tag.as_str() {
+        let phase = semio_os_flow::PreviewEvalPhase::from_job_tag(match tag.as_str() {
             "imprinting" => "imprint",
             "splitting" => "applyA",
             "classifying" => "classifyA",
@@ -244,7 +244,7 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
         assert!(session.window_tick_owed(BUDGET_WINDOW_ID), "`{phase}` owes the run exactly one continuation");
     }
     if let Some(cached) = cache.get(BUDGET_NODE_HASH) {
-        semio_framework_os_flow::neural::ColdRetire::retire_cold(cached);
+        semio_os_flow::neural::ColdRetire::retire_cold(cached);
     }
     drop(cache);
     retire_flow_eval_session(session);
@@ -317,7 +317,7 @@ struct ChainLadder {
 const REPLAY_TURN_STARTED_US: u64 = 1_000_000;
 
 fn replay_now_us(spent: bool) -> Option<u64> {
-    Some(if spent { REPLAY_TURN_STARTED_US + semio_framework_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US } else { REPLAY_TURN_STARTED_US })
+    Some(if spent { REPLAY_TURN_STARTED_US + semio_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US } else { REPLAY_TURN_STARTED_US })
 }
 
 /// ⛓️ The hop ladder of ONE chain, driven through the real latch exactly as the run job and the two

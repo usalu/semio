@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeStoreyDriftYM wher
         record: "ChangeStoreyDriftYM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Interstorey drift Y", "Stockwerksverschiebung Y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Interstorey drift Y", "Stockwerksverschiebung Y ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-storey-drift-ym".into()]

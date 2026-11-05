@@ -110,15 +110,15 @@ async fn owned_hosts_admit_a_guest_channel_before_any_frame() {
     let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let input = OwnedCodecInput { artifact_schema: "s.fixture.document", document_id: "", pack: &[], spr: &[], ops: &[] };
     let refusal = |guest: u32, fault: &semio_framework::Fault| {
-        assert_eq!(fault.code.0, semio_framework_os_kernel::CHANNEL_MISMATCH_CODE, "guest {guest}");
+        assert_eq!(fault.code.0, semio_os_kernel::CHANNEL_MISMATCH_CODE, "guest {guest}");
         assert_eq!(fault.param("guest"), Some(guest.to_string().as_str()));
-        assert_eq!(fault.param("host"), Some(semio_framework_os_kernel::CHANNEL_VERSION.to_string().as_str()));
+        assert_eq!(fault.param("host"), Some(semio_os_kernel::CHANNEL_VERSION.to_string().as_str()));
     };
-    for guest in [semio_framework_os_kernel::CHANNEL_VERSION, semio_framework_os_kernel::CHANNEL_VERSION - 1, semio_framework_os_kernel::CHANNEL_VERSION + 1] {
+    for guest in [semio_os_kernel::CHANNEL_VERSION, semio_os_kernel::CHANNEL_VERSION - 1, semio_os_kernel::CHANNEL_VERSION + 1] {
         let compiled = runtime.compile_component(&owned_channel_guest(guest)).expect("compile the synthetic owned guest");
         let actor = runtime.instantiate_actor(&compiled);
         let codec = runtime.codec_call::<Vec<u8>, _>(&compiled, OwnedOperation::PackSchemaHash, &input, budget(), |_, _| {}, None);
-        if guest == semio_framework_os_kernel::CHANNEL_VERSION {
+        if guest == semio_os_kernel::CHANNEL_VERSION {
             assert!(actor.is_ok(), "a guest of the host's own channel is instantiated");
             assert!(matches!(codec, Err(TurnFault::Trapped(_))), "an admitted guest reaches its first codec frame");
             continue;

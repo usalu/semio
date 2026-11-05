@@ -26,8 +26,8 @@ pub mod mutation {
     crate::remove_layer_asset::inverse::inverse(self, base)
 }
 
-        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove asset {}", self.asset_id), &format!("Asset {} entfernen", self.asset_id))
+        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+            semio_ui_locale::LocalizedLabel::native(&format!("Remove asset {}", self.asset_id), &format!("Asset {} entfernen", self.asset_id))
         }
 
         fn target(&self) -> Vec<String> {

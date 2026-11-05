@@ -1,13 +1,13 @@
 //! 🧿️ Every shipped semio subset editor mounts the `.semio` natural-file codec and registers its pack envelope with the semio dispatcher exactly once.
 
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_os_kernel::os_store::semio_format::{dispatch, registered_envelope_keys};
+use semio_plugin::ArtifactEditor;
+use semio_os_kernel::os_store::semio_format::{dispatch, registered_envelope_keys};
 
 macro_rules! shipped_subsets {
     ($($subset:literal => $editor:ty),+ $(,)?) => {
         const SHIPPED: &[&str] = &[$($subset),+];
 
-        fn codec_of(subset: &str) -> semio_framework_plugin::NaturalFileCodec {
+        fn codec_of(subset: &str) -> semio_plugin::NaturalFileCodec {
             match subset { $($subset => <$editor as ArtifactEditor>::natural_file_codec().expect("a semio subset editor mounts the natural-file codec"),)+ other => panic!("unshipped subset {other}") }
         }
 

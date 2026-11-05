@@ -2,7 +2,7 @@
 use semio_framework_job::StepContext;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,retirement::controlled::ControlledRetirement};
 use std::mem::size_of;
-use semio_framework_os_spr as protocol;
+use semio_os_spr as protocol;
 use semio_framework_job::{OriginalDomainReservation,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeConstructionStepOutcome,NativeConstructionStepFailure,OriginalReceivingPrimary};
 pub struct NativeSupersessionSource<'a>{pub event:&'a protocol::MutationEnvelope,pub previous:Option<&'a protocol::MutationEnvelope>,pub document:&'a str,pub line:Option<&'a str>}

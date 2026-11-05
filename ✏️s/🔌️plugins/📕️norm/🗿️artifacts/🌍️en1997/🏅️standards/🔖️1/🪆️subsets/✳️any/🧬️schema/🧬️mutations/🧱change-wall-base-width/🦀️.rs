@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallBaseWidth wher
         verb: "change", entity: "wall-base-width", kind: "change-wall-base-width", record: "ChangedWallBaseWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change retaining wall base width", "Sohlbreite der Stützwand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change retaining wall base width", "Sohlbreite der Stützwand ändern")
     }
 }
 

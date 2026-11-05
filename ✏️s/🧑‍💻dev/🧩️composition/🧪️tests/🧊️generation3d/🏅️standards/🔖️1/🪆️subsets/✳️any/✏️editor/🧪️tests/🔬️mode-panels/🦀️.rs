@@ -12,7 +12,7 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::app_with_registry;
 use crate::editor_domain::editor_laws::serial_execution;
-use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance};
+use semio_plugin::{PluginApp, ViewModel, ViewWindowInstance};
 use semio_framework_test_fixtures::repo_text;
 
 //#region 📌️Fixture
@@ -65,7 +65,7 @@ fn mode_panel_fixture() -> ModePanelFixture {
 /// projection the host mounts panels with.
 fn panel_view(case: &ModePanelCase) -> ViewModel {
     let roster = case.windows.iter().map(|window| ViewWindowInstance { id: window.id.clone(), window_kind_id: window.kind.clone() }).collect();
-    ViewModel { active_mode_id: Some(case.mode.clone()), focused_window_id: Some(case.focused_window.clone()), window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { active_mode_id: Some(case.mode.clone()), focused_window_id: Some(case.focused_window.clone()), window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
         .for_panel()
 }
 //#endregion 📌️Fixture
@@ -84,7 +84,7 @@ async fn every_panel_publishes_its_body_in_generate_mode_as_well_as_edit() {
         assert_eq!(view.window_id, None, "case {} is a panel projection, not a window one", case.id);
         assert_eq!(view.focused_window_id.is_some(), case.focused_window_in_roster, "case {} kept the wrong focused pane: {:?}", case.id, view.focused_window_id);
         for panel in &fixture.panels {
-            let json = match semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, &panel.body_key, &view, app.1.cx()).await {
+            let json = match semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, &panel.body_key, &view, app.1.cx()).await {
                 Ok(json) => json,
                 Err(fault) => panic!("case {} published no body for {} ({}): {fault:?}", case.id, panel.tab, panel.body_key),
             };
@@ -94,7 +94,7 @@ async fn every_panel_publishes_its_body_in_generate_mode_as_well_as_edit() {
             }
         }
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: ONE shared panel projection — the body a panel publishes is byte-identical across modes.
@@ -109,14 +109,14 @@ async fn a_panel_publishes_the_same_body_in_every_mode() {
         let mut baseline: Option<(&str, String)> = None;
         for case in &fixture.cases {
             let view = panel_view(case);
-            let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, &panel.body_key, &view, app.1.cx()).await.expect("panel body json");
+            let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, &panel.body_key, &view, app.1.cx()).await.expect("panel body json");
             match &baseline {
                 None => baseline = Some((case.id.as_str(), json)),
                 Some((first, expected)) => assert_eq!(&json, expected, "{} published a different body in case {} than in case {first}", panel.tab, case.id),
             }
         }
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: the three panels are declared ONCE on the app, with the framework tab ids and the body keys
@@ -126,7 +126,7 @@ fn the_app_declares_one_shared_panel_per_framework_tab_and_no_mode_declares_its_
     let fixture = mode_panel_fixture();
     let definition = create_generation3d_app();
     for panel in &fixture.panels {
-        let declared: Vec<_> = definition.panel_tabs.iter().filter(|tab| tab.kind == semio_framework_plugin::PanelTabKind::App(panel.tab.clone())).collect();
+        let declared: Vec<_> = definition.panel_tabs.iter().filter(|tab| tab.kind == semio_plugin::PanelTabKind::App(panel.tab.clone())).collect();
         assert_eq!(declared.len(), 1, "{} must be declared exactly once on the app", panel.tab);
         assert_eq!(declared[0].body_key.as_deref(), Some(panel.body_key.as_str()), "{} must carry its fixture body key", panel.tab);
     }

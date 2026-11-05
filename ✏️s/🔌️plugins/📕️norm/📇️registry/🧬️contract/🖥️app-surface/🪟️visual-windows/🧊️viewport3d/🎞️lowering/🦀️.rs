@@ -14,7 +14,7 @@ use super::picking::{entity_address, granularity, resolve, PickTarget};
 use super::pose::*;
 use super::scene::{EntityKind, Geometry, LocalizedCopy, PickPolicy, SceneEntity, StructuralScene, StyleState};
 use semio_framework_pack_json::{json, Value};
-use semio_framework_plugin::{World3dText, World3dHighlight, World3dModellingOptions, World3dScalarDomain, World3dScalarField, World3dScalarRange, World3dSection, World3dSubElementStyle, World3dTone};
+use semio_plugin::{World3dText, World3dHighlight, World3dModellingOptions, World3dScalarDomain, World3dScalarField, World3dScalarRange, World3dSection, World3dSubElementStyle, World3dTone};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 pub struct ViewportInputs<'a> {
@@ -38,7 +38,7 @@ pub struct LoweredViewport {
     pub meshes: Vec<Value>,
     pub instances: Vec<Value>,
     pub scalar_field: Option<World3dScalarField>,
-    pub annotations: Option<semio_framework_plugin::World3dAnnotationLayer>,
+    pub annotations: Option<semio_plugin::World3dAnnotationLayer>,
     pub options: World3dModellingOptions,
     pub selection_ids: Vec<String>,
     pub hovered: Option<String>,

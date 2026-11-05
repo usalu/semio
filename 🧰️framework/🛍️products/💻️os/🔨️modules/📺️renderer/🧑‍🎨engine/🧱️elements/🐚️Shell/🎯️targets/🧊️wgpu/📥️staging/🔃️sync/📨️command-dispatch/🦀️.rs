@@ -51,9 +51,9 @@ impl SyncState {
             match answer.and_then(|rows| rows) {
                 Ok(rows) => {
                     directory.hub_workspace.rows = rows;
-                    directory.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready;
+                    directory.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready;
                 }
-                Err(()) => directory.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale,
+                Err(()) => directory.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale,
             }
             changed = true;
         }

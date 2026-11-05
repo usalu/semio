@@ -1,7 +1,7 @@
 //! 🪝️ remodeling media mutations: stream, asset and durable content leaves (part 3).
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 #[path = "."]
 pub mod standards {

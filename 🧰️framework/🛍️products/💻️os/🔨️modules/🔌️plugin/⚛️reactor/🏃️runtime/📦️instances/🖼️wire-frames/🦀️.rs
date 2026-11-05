@@ -1,13 +1,13 @@
 //! 🖼️ Fault frames, merge-conflict frames and the instance registry accessors of the runtime.
 
-use semio_framework_plugin_plugin_program::{AppInstance, PluginProgram, decode_wire_serialized, encode_wire_serialized};
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_plugin_program::{AppInstance, PluginProgram, decode_wire_serialized, encode_wire_serialized};
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_reactor_lifecycle::life_instance_registry::{PluginRuntime, RuntimeActorAuthority, RuntimeInstanceRegistry};
-use semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell;
-use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_lifecycle::life_instance_registry::{PluginRuntime, RuntimeActorAuthority, RuntimeInstanceRegistry};
+use semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell;
+use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 #[doc(hidden)]
 pub async fn push_app_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, fault: Fault) {
     frames.push(protocol::AppFrame::Error { in_reply_to, fault: encode_wire_serialized(&fault), report: Vec::new() });
@@ -66,7 +66,7 @@ pub async fn with_instances_mut<PA: PluginApp, R, F: FnOnce(&mut RuntimeInstance
 pub async fn with_instances_turn_mut<PA:PluginApp,R>(runtime:&PluginRuntime<PA>,f:impl FnOnce(&mut RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<R,semio_framework_job::OriginalTurnFailure>{let mut instances=runtime.instances.try_borrow_mut().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"runtime instance authority is busy"))?;f(&mut instances)}
 /// 🪢️ Returns complete lifecycle causes through the same original registry authority.
 #[doc(hidden)]
-pub async fn with_instances_original_mut<PA:PluginApp,R>(runtime:&PluginRuntime<PA>,f:impl FnOnce(&mut RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>)->Result<R,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>)->Result<R,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{let mut instances=runtime.instances.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime instance authority is busy"))?;f(&mut instances)}
+pub async fn with_instances_original_mut<PA:PluginApp,R>(runtime:&PluginRuntime<PA>,f:impl FnOnce(&mut RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>)->Result<R,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>)->Result<R,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{let mut instances=runtime.instances.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime instance authority is busy"))?;f(&mut instances)}
 /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: registers `instance` directly into `INSTANCES`,
 /// bypassing `plugin_create_app_with_id`'s `PLUGIN`/`PluginProgram` requirement — a real
 /// `AsyncTask` resume test only needs A `dyn PluginApp` at a known id, not a fully assembled

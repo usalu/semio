@@ -24,9 +24,9 @@ where
 {
     pub envelope: std::mem::ManuallyDrop<ArtifactEnvelope<P, Mutation>>,
     pub envelope_detached: bool,
-    pub dag: std::mem::ManuallyDrop<semio_framework_os_spr::MutationDag>,
-    pub applied_edit_ids: std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>,
-    pub redo_edit_ids: std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>,
+    pub dag: std::mem::ManuallyDrop<semio_os_spr::MutationDag>,
+    pub applied_edit_ids: std::mem::ManuallyDrop<semio_os_vcs::HistoryPageStack<String>>,
+    pub redo_edit_ids: std::mem::ManuallyDrop<semio_os_vcs::HistoryPageStack<String>>,
     pub edit_sequence: i32,
     /// 🧭️ The checkpoint new commits parent onto; advances on commit/checkout/switch. Not
     /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM plugin)
@@ -39,7 +39,7 @@ where
     pub local_actor_id: std::mem::ManuallyDrop<ActorId>,
     /// ⚖️ This store's local `crate::os_spr::MergePolicy` — authority-local state, defaults
     /// to `Normal`, never carried on the wire envelope (never part of an artifact's shared history).
-    pub merge_policy: semio_framework_os_spr::MergePolicy,
+    pub merge_policy: semio_os_spr::MergePolicy,
     /// ⏰️ Monotone hybrid logical clock: `tick`s on every local apply, `merge`s in a remote
     /// tick on every ingest — replaces the old per-call `HybridLogicalTimestamp::new(0, now_ms())`
     /// construction in `replay_mutations`. Not part of the wire envelope.
@@ -93,8 +93,8 @@ where
     /// ordinary `dispatch` can never silently drop a child's remote edit, drained by
     /// {@link take_member_inbound}, and retired with the transport when the store closes.
     pub member_inbox: VecDeque<BackboneMessage>,
-    pub original_outbox: semio_framework_os_store_backbone::original_outbox::OriginalBackboneOutbox,
-    pub durable_group_root: std::mem::ManuallyDrop<Option<semio_framework_os_store_durable_group_wire::lifted_durable_group::ArtifactStoreDurableGroupRootV1<P, Mutation>>>,
+    pub original_outbox: semio_os_store_backbone::original_outbox::OriginalBackboneOutbox,
+    pub durable_group_root: std::mem::ManuallyDrop<Option<semio_os_store_durable_group_wire::lifted_durable_group::ArtifactStoreDurableGroupRootV1<P, Mutation>>>,
 }
 
 /// 🧭️ The revision mirror of one store: the content revision, its accumulator and mirror dirt, the generation and the last projection cause.
@@ -143,7 +143,7 @@ pub struct StoreMintToken {
     _sealed: (),
 }
 
-impl semio_framework_os_store_one_item_publication::StoreMintWitness for StoreMintToken {}
+impl semio_os_store_one_item_publication::StoreMintWitness for StoreMintToken {}
 
 impl<P, Mutation> StoreLog<P, Mutation>
 where

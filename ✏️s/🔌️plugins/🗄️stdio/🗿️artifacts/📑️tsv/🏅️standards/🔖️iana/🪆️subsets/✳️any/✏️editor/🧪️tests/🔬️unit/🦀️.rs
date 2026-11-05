@@ -1,10 +1,10 @@
 use crate::editor::tsv::modes::edit::windows::main;
 use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use crate::editor::tsv::{TSV_KIT_ACTION_ID, tsv_example_snapshot, tsv_command_from_action, tsv_emit};
 use crate::apply_mutation;
@@ -13,7 +13,7 @@ use crate::editor::tsv::*;
 #[semio_framework_async_macros::async_test]
 async fn create_tsv_editor_builds_a_definition_for_the_editor_role() {
     let def = create_tsv_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, TSV_EDITOR_DIALECT.into());
 }
 
@@ -100,11 +100,11 @@ async fn the_editor_declares_the_example_pickers_verb() {
 /// `Migrated` classification and `OpBinary::TOOL_JOB_IDS` disagree — so constructing one is the proof.
 #[semio_framework_async_macros::async_test]
 async fn the_example_switch_joins_its_exact_retained_factory() {
-    use semio_framework_plugin::PluginApp;
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_tsv_editor());
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<TsvEditor>>::with_registry(EditorApp::<TsvEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
+    use semio_plugin::PluginApp;
+    let registry = semio_plugin::AppActionRegistry::from_definition(&create_tsv_editor());
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::VcsArtifactApp::<EditorApp<TsvEditor>>::with_registry(EditorApp::<TsvEditor>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
 
@@ -131,26 +131,26 @@ async fn the_shell_action_pair_resolves_into_the_typed_command() {
 //#endregion 🎬️ExampleSwitchLaws
 
 //#region 🪟️KitVerbLaws
-type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<TsvEditor>>;
+type KitFixtureApp = semio_plugin::VcsArtifactApp<EditorApp<TsvEditor>>;
 
 /// 🧪️ One registered fixture app holding `document`, loaded exactly as a host applies the example
 /// switch's `Effect::LoadDocument`.
-async fn kit_fixture_holding(document: &TsvSnapshot) -> (KitFixtureApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope) {
-    use semio_framework_plugin::PluginApp;
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TsvEditor>, _>(async { semio_framework_plugin::App { definition: create_tsv_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TSV_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
+async fn kit_fixture_holding(document: &TsvSnapshot) -> (KitFixtureApp, semio_plugin::artifact_app_laws::OriginalFixtureScope) {
+    use semio_plugin::PluginApp;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<TsvEditor>, _>(async { semio_plugin::App { definition: create_tsv_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TSV_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
     (app, scope)
 }
 
 /// 🕹️ Dispatches `action` with typed renderer `args`, exactly as the editable cell sends them, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: semio_framework_value::DslValue, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), Fault> {
-    use semio_framework_plugin::PluginApp;
-    let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: semio_framework_value::DslValue, cx: &mut semio_plugin::StepContext<'_>) -> Result<(), Fault> {
+    use semio_plugin::PluginApp;
+    let meta = semio_plugin::artifact_app_laws::meta("local");
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_plugin::Fault::from(format!("{failure:?}"))))?;
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// ⚖️ LAW: `set-cell` — the verb the `TableWindowKit` mints for `🪟️main` — reaches the document through this
@@ -169,7 +169,7 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     ]);
     dispatch_settled(&mut app, "set-cell", args, scope.cx()).await.expect("set-cell settles");
     assert_eq!(app.snapshot().expect("tsv snapshot").records[0][1], "Oak Board");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 #[test]
@@ -222,7 +222,7 @@ fn blank_tsv_can_build_edit_and_remove_a_table_through_structural_mutations() {
     assert!(snapshot.records[0].is_empty());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", TsvEditor, || semio_framework_plugin::App { definition: create_tsv_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio", TsvEditor, || semio_plugin::App { definition: create_tsv_editor(), examples: Vec::new() }, "../..");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_cell() {

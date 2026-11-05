@@ -26,8 +26,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "channel-interpolation", kind: "set-channel-interpolation", record: "SetChannelInterpolation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set channel interpolation", "Kanalinterpolation setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set channel interpolation", "Kanalinterpolation setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

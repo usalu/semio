@@ -2,7 +2,7 @@
 
 use crate::REGISTRY;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin_actor_host::requests;
+use semio_plugin_actor_host::requests;
 
 /// 🌐️ Every `host::Host` handle vended to plugin/extension code shares this actor's one
 /// `RequestRegistry`, scoped to `instance` (`RequestRegistry::for_instance` — design-abi.md §4's
@@ -10,9 +10,9 @@ use semio_framework_plugin_actor_host::requests;
 /// pending host round-trips and no other's) — see `host::Host::new`.
 ///
 /// 🌐️ Captures the actor's existing request registry without polling a future.
-pub fn host_for_instance(instance: u32) -> semio_framework_plugin_actor_host::Host {
+pub fn host_for_instance(instance: u32) -> semio_plugin_actor_host::Host {
     let registry = REGISTRY.with(|registry| registry.for_instance(instance));
-    semio_framework_plugin_actor_host::Host::new(registry)
+    semio_plugin_actor_host::Host::new(registry)
 }
 //#region 🔖️ExtensionContinuation
 /// 🔁️ Mints one `Effect::InvokeExtension` for `instance` through this actor's `RequestRegistry` and
@@ -21,7 +21,7 @@ pub fn host_for_instance(instance: u32) -> semio_framework_plugin_actor_host::Ho
 /// minted id (diagnostic; the effect itself rides the registry's own outbound queue, drained into
 /// `turn-result.effects` by `poll` later in the SAME turn).
 #[doc(hidden)]
-pub fn queue_extension_invocation(instance: u32, invocation: &semio_framework_plugin_decl_emission::ExtensionInvocation) -> Result<semio_framework::kernel::RequestId, semio_framework::Fault> {
+pub fn queue_extension_invocation(instance: u32, invocation: &semio_plugin_decl_emission::ExtensionInvocation) -> Result<semio_framework::kernel::RequestId, semio_framework::Fault> {
     let registry = REGISTRY.with(|registry| registry.for_instance(instance));
     let extension_id = invocation.extension_id.clone();
     let capability = invocation.capability.clone();
@@ -104,6 +104,6 @@ pub fn append_extension_response_page(req: semio_framework::kernel::RequestId, b
 /// `RequestRegistry::for_instance`'s own doc names. `⚛️reactor/💼️jobs/🦀️.rs::spawn_job`
 /// calls this (as `crate::reactor::host()`, zero args): a job is actor-global, not tied to one open
 /// instance the way an `AsyncTask` is, so it has no `instance: u32` to scope by in the first place.
-pub fn host() -> semio_framework_plugin_actor_host::Host {
-    REGISTRY.with(|registry| semio_framework_plugin_actor_host::Host::new(registry.clone()))
+pub fn host() -> semio_plugin_actor_host::Host {
+    REGISTRY.with(|registry| semio_plugin_actor_host::Host::new(registry.clone()))
 }

@@ -1,15 +1,15 @@
 //! 🧬️ Generation2d artifact schema — every field of the artifact with its state class.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate self as semio_s_artifact_procedural_2d_model;
 
 use crate::snapshot::Generation2dSnapshot;
-use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
+pub use semio_framework_artifact_playbook_playbook::{GenerationPlayRoot,GenerationPlayState,FormGeneration};
 
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_artifact_flow_flow::Widget;
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
+use {semio_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_plugin::MediaClass,semio_plugin::MediaForm,semio_plugin::MediaType,semio_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Generation2dArtifact
@@ -68,7 +68,7 @@ pub use descriptor::generation2d_artifact_schema_descriptor;
 /// drop (`ordered-map root must be explicitly retired before drop`,
 /// `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), so a host is CLOSED through
 /// [`FlowHost::retire_cold`], never dropped.
-pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> semio_framework_os_flow::FlowHostScopeOutcome<R> {
+pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> semio_os_flow::FlowHostScopeOutcome<R> {
     FlowHost::with_host_snapshot(host_snapshot, |host| {
         host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
         body(host)
@@ -87,10 +87,10 @@ pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSes
     }
 }
 
-pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<semio_framework_os_flow::FlowHostScopeOutcome<R>, (semio_framework_value::ValueError, FlowHost)> {
+pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<semio_os_flow::FlowHostScopeOutcome<R>, (semio_framework_value::ValueError, FlowHost)> {
     let mut host = host_with_session(host_snapshot, session, grant)?;
     let result = body(&mut host, session);
-    Ok(semio_framework_os_flow::FlowHostScopeOutcome { output: result, close: host.retire_cold() })
+    Ok(semio_os_flow::FlowHostScopeOutcome { output: result, close: host.retire_cold() })
 }
 
 
@@ -152,8 +152,8 @@ pub fn widget_id(widget: &Widget) -> &str {
 pub const GENERATION2D_CHILD_PROJECTION: &str = "generation2d.child.projection";
 
 /// 📣️ The localized notices of the document-level refusals both surfaces raise (design §20.12).
-pub fn generation2d_document_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn generation2d_document_fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+    use semio_ui_locale::LocalizedLabel;
     static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 1]> = std::sync::LazyLock::new(|| [(GENERATION2D_CHILD_PROJECTION, LocalizedLabel::native("The document's composed parts cannot be restored.", "Die zusammengesetzten Teile des Dokuments können nicht wiederhergestellt werden."))]);
     &*NOTICES
 }
@@ -165,7 +165,7 @@ pub fn generation2d_document_fault_notices() -> &'static [(&'static str, semio_f
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.generation".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D Generation", "2D-Generierung"),
+        label: semio_ui_locale::LocalizedLabel::native("2D Generation", "2D-Generierung"),
         source_format: "generation.2d".into(),
         component_kind: "generation2d".into(),
         dimension: "2d".into(),

@@ -54,7 +54,7 @@
     "frozen"
   ],
   "readerBinary": "semio-native-runtime-reader",
-  "readerPackage": "semio-framework-os-native-runtime-reader",
+  "readerPackage": "semio-os-native-runtime-reader",
   "drainCases": [
     "live",
     "undefined",

@@ -4,7 +4,7 @@ use crate::editor::writer::WriterCommand;
 use crate::writer_text;
 
 fn keystroke(previous: &str, next: &str, seq: u64) -> WriterCommand {
-    let splice = semio_framework_plugin::TextSplice::from_edit(previous, next, semio_framework_plugin::TEXT_SPLICE_CONTEXT_SCALARS).expect("a keystroke changes the text");
+    let splice = semio_plugin::TextSplice::from_edit(previous, next, semio_plugin::TEXT_SPLICE_CONTEXT_SCALARS).expect("a keystroke changes the text");
     let caret = next.len();
     WriterCommand::TextSplice(crate::editor::writer::commands::text_splice::TextSplice { start: splice.start, deleted: splice.deleted, insert: splice.insert, before: splice.before, after: splice.after, seq, anchor: caret, caret })
 }

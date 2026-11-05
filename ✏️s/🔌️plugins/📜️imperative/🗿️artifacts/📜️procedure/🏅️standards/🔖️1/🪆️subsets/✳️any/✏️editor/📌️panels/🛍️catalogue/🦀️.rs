@@ -3,16 +3,16 @@
 
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::editor::procedure::IMPERATIVE_PLAY_APP_ID;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ActionFactory;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_CATALOGUE: &str = "imperative.play.catalogue";
@@ -31,15 +31,15 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &ImperativeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(labels: &ImperativeLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let actions = [("state.set", labels.action_state_set), ("log.print", labels.action_log_print), ("control.if", labels.action_control_if), ("control.while", labels.action_control_while), ("math.add", labels.action_math_add)];
     let action_factory = ActionFactory::new(IMPERATIVE_PLAY_APP_ID);
     PanelTreeBuilder::new("imperative-play-catalogue")?
         .window_section(windows, "imperative-play-catalogue.actions", Some(crate::editor::procedure::ui_label(labels.catalogue_title.as_str())?), true, &actions, |(kind, label)| {
-            let kind_value = semio_framework_plugin::UiText::try_from_str(kind).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "fixed action kind admission failed"))?;
-            let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.args", "fixed action argument map admission failed"))?;
-            args.push("kind".to_owned(), kind_value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.args.kind", "fixed action kind argument admission failed"))?;
-            tree_item_with_action(format!("imperative-play-catalogue.action.{kind}"), label.as_str(), Some((*kind).into()), action_factory.action("addStep", Some(semio_framework_plugin::UiValue::Map(args.finish())))?)
+            let kind_value = semio_plugin::UiText::try_from_str(kind).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.kind", "fixed action kind admission failed"))?;
+            let mut args = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.args", "fixed action argument map admission failed"))?;
+            args.push("kind".to_owned(), kind_value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.args.kind", "fixed action kind argument admission failed"))?;
+            tree_item_with_action(format!("imperative-play-catalogue.action.{kind}"), label.as_str(), Some((*kind).into()), action_factory.action("addStep", Some(semio_plugin::UiValue::Map(args.finish())))?)
         })?
         .selected([])?
         .build()

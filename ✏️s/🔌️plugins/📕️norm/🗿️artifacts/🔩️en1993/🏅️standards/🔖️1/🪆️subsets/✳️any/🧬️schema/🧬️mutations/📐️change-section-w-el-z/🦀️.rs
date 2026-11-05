@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSectionWElZ where 
         record: "ChangedSectionWElZ",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Elastic section modulus W_el,z of the section", "Querschnitt: Elastisches Widerstandsmoment W_el,z ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Elastic section modulus W_el,z of the section", "Querschnitt: Elastisches Widerstandsmoment W_el,z ändern")
     }
 }
 

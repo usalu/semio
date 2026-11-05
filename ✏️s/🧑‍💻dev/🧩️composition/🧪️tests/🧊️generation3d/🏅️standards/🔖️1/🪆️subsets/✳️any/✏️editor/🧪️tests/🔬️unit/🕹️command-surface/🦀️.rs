@@ -9,7 +9,7 @@ async fn preview_eval_exact_window_transient_isolates_and_resets_in_the_register
     let mut app = Box::new(app_with_registry().await);
     let (left, right) = preview_views("generation3d-preview-left", "generation3d-preview-right");
     let config_before = app.config_pack().await.expect("Generation3d app config before preview evaluation");
-    let left_only = semio_framework_plugin::ViewModel { window_instances: left.window_instances.iter().filter(|window| Some(&window.id) == left.window_id.as_ref()).cloned().collect(), ..left.clone() };
+    let left_only = semio_plugin::ViewModel { window_instances: left.window_instances.iter().filter(|window| Some(&window.id) == left.window_id.as_ref()).cloned().collect(), ..left.clone() };
     drain_flow_eval_ticks_with_view(&mut app, &left_only).await;
     {
         let left_state = app.window_transient_snapshot(&left).expect("left preview transient snapshot").expect("left preview owner");
@@ -22,11 +22,11 @@ async fn preview_eval_exact_window_transient_isolates_and_resets_in_the_register
     drain_flow_eval_ticks_with_view(&mut app, &right).await;
     assert!(app.window_transient_snapshot(&right).expect("right evaluated snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_some()));
     let document = app.document_pack().await.expect("Generation3d document before reload");
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("same document reload resets preview window transient");
+    semio_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("same document reload resets preview window transient");
     for view in [&left, &right] {
         assert!(app.window_transient_snapshot(view).expect("reset preview snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_none()));
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 //#region 🔖️CommandSurface
 /// ⚖️ LAW: the brep kernel's mesh transfer unit fits the wire bound `flowTessellateResolve` actually
@@ -72,8 +72,8 @@ const GENERATION3D_MEASURED_CONTRIBUTIONS_PACK_CHARS: usize = 272_089;
 /// and its docstring names this exact trap; a second copy of a bounded protocol is how a fix lands in
 /// one of them only (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 async fn drive_preview_operation(app: &mut context::Generation3dAppFixture) -> Result<(u64, u64, u64), String> {
-    use semio_framework_plugin::app::TypedOperationResultLane;
-    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("preview-owner").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    use semio_plugin::app::TypedOperationResultLane;
+    let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_plugin::artifact_app_laws::meta("preview-owner").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
         .await
         .map_err(|error| format!("{error:?}"))?;
     let count = |lane: TypedOperationResultLane| receipt.lanes.iter().filter(|published| **published == lane).count() as u64;
@@ -85,7 +85,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
     let mut app = app_with_registry().await;
     let result: Result<(), String> = async {
         let before_document = crate::SnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?);
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Generation3dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::artifact_app_laws::meta("preview-owner"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Generation3dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_plugin::artifact_app_laws::meta("preview-owner"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         let published = drive_preview_operation(&mut app).await?;
         if published != (1, 1, 0) {
             return Err(format!("a generation command publishes its document edit and selection config exactly once and no app transient: artifact={} config={} transient={}", published.0, published.1, published.2));
@@ -93,17 +93,17 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
         if crate::SnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?).generation.as_state().generations.len() != before_document.generation.as_state().generations.len() + 1 {
             return Err("addGeneration did not preserve its document behavior".into());
         }
-        let view = semio_framework_plugin::ViewModel {
+        let view = semio_plugin::ViewModel {
             window_instances: vec![
                 semio_framework::ViewWindowInstance { id: "preview-a".into(), window_kind_id: generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
                 semio_framework::ViewWindowInstance { id: "preview-b".into(), window_kind_id: generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
             ],
-            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         let mut rendered = Vec::new();
         for window_id in ["preview-a", "preview-b"] {
             let context = view.for_window_instance(window_id).ok_or("missing generation preview window")?;
-            rendered.push(semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &context, app.1.cx()).await.map_err(|error| format!("{error:?}"))?);
+            rendered.push(semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &context, app.1.cx()).await.map_err(|error| format!("{error:?}"))?);
         }
         if rendered[0] != rendered[1] {
             return Err("generation windows did not consume the same preview evaluation".into());
@@ -114,7 +114,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
         Ok(())
     }
     .await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     result.expect("Generation3d preview ownership runtime");
 }
 
@@ -122,7 +122,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
 fn every_command_round_trips_through_text_and_binary() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     for command in every_command() {
-        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -201,7 +201,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "generation-1".into() }),
         Generation3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
         Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: semio_framework_value::DslValue::float(5.0) }),
-        Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } }),
+        Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } }),
         Generation3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
         Generation3dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),
         Generation3dCommand::ToggleSun(toggle_sun::ToggleSun {}),
@@ -244,15 +244,15 @@ fn fixture_rows(value: &serde_json::Value, key: &str) -> Vec<serde_json::Value> 
 }
 
 /// 📇️ One declared action of this app by id.
-fn declared_editor_action(definition: &semio_framework_plugin::AppDefinition, id: &str) -> semio_framework_plugin::ActionDefinition {
+fn declared_editor_action(definition: &semio_plugin::AppDefinition, id: &str) -> semio_plugin::ActionDefinition {
     declared_actions(definition).find(|action| action.id == id).unwrap_or_else(|| panic!("{id} is declared by no generation3d editor window")).clone()
 }
 
 /// 📝️ A declared action's `select` options, in declaration order.
-fn declared_select_options(action: &semio_framework_plugin::ActionDefinition, arg_id: &str) -> Vec<semio_framework_plugin::ActionArgOption> {
+fn declared_select_options(action: &semio_plugin::ActionDefinition, arg_id: &str) -> Vec<semio_plugin::ActionArgOption> {
     let arg = action.args.iter().find(|arg| arg.id == arg_id).unwrap_or_else(|| panic!("{} carries no `{arg_id}` arg", action.id));
     match &arg.schema {
-        semio_framework_plugin::ArgSchema::String { options, .. } => options.clone(),
+        semio_plugin::ArgSchema::String { options, .. } => options.clone(),
         other => panic!("{}'s `{arg_id}` is not a string select, it is {other:?}", action.id),
     }
 }
@@ -273,8 +273,8 @@ fn declared_select_options(action: &semio_framework_plugin::ActionDefinition, ar
 /// two user-facing verbs carry the fixture's keyboard chord, so neither is mouse-only.
 #[test]
 fn the_editor_declares_every_io_action_and_chord_the_fixture_names() {
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::Terminology;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let definition = create_generation3d_app();
     for row in fixture_rows(&document_io_fixture(), "editorActions") {
@@ -311,7 +311,7 @@ fn the_editor_binds_every_keyboard_verb_the_fixture_names() {
             continue;
         }
         let action = declared_actions(&definition).find(|action| action.id == binding.action.action);
-        let framework_minted = action.is_some_and(|action| matches!(action.kind, semio_framework_plugin::ActionKind::History | semio_framework_plugin::ActionKind::Clipboard | semio_framework_plugin::ActionKind::Interaction));
+        let framework_minted = action.is_some_and(|action| matches!(action.kind, semio_plugin::ActionKind::History | semio_plugin::ActionKind::Clipboard | semio_plugin::ActionKind::Interaction));
         assert!(framework_minted, "{} reaches {} but the fixture never names it — the fixture is the WHOLE app keyboard surface", binding.keys, binding.action.action);
     }
     for row in rows {
@@ -339,8 +339,8 @@ fn the_editor_binds_every_keyboard_verb_the_fixture_names() {
 
 /// 🪟️ Every window kind a mode's layout mounts, in layout order — the set `ShellHost`'s keybinding
 /// loop scopes an app-wide chord against (`🏛️ShellHost/⌨️window-scope/🟦️.ts`, `mounted`).
-fn mode_window_kind_ids(definition: &semio_framework_plugin::AppDefinition, mode_id: &str) -> Vec<String> {
-    use semio_framework_plugin::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
+fn mode_window_kind_ids(definition: &semio_plugin::AppDefinition, mode_id: &str) -> Vec<String> {
+    use semio_plugin::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
     fn stack(node: &WindowLayoutStackNode, out: &mut Vec<String>) {
         out.extend(node.children.iter().map(|window| window.window_kind_id.clone()));
     }
@@ -427,8 +427,8 @@ fn the_example_picker_offers_the_flow_examples_and_never_the_command_session() {
 #[test]
 fn the_export_action_offers_every_declared_format_in_both_languages() {
     use semio_s_artifact_procedural_3d_io::document_io;
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::Terminology;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let definition = create_generation3d_app();
     let action = declared_editor_action(&definition, "exportDocument");

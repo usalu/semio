@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "field",
+      "revisionByte",
+      "generation",
+      "cancelAfter"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "field": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "revisionByte": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "generation": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "cancelAfter": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      }
+    }
+  }
+}

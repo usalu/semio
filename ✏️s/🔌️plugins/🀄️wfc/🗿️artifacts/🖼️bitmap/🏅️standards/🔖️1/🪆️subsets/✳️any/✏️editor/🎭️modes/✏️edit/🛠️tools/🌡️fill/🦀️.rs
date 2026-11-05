@@ -9,13 +9,13 @@ use crate::schema::snapshot::{BitmapSnapshot};
 use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
 use crate::standards::v1::subsets::any::io::text::snapshot::{encode_base64};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, StepContext};
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::RequestId;
-use semio_framework_plugin::ToolDefinition;
-use semio_framework_plugin::ToolRunJobRequest;
+use semio_plugin::Effect;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::RequestId;
+use semio_plugin::ToolDefinition;
+use semio_plugin::ToolRunJobRequest;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg,
     ToolRunStepKind, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,
@@ -368,7 +368,7 @@ pub struct BitmapFillRunJob {
     operation: semio_framework_job::Operation,
     snapshot: Arc<BitmapSnapshot>,
     identity: ToolRunIdentity,
-    port: semio_framework_plugin::ToolRunJobPort,
+    port: semio_plugin::ToolRunJobPort,
     writer: ToolRunTickWriter,
     prep: PrepStage,
     parts: Option<crate::inferences::BitmapCollapseParts>,
@@ -389,7 +389,7 @@ impl BitmapFillRunJob {
     }
 
     /// 🏗 Build a fresh run over `snapshot`.
-    pub fn new(identity: ToolRunIdentity, port: semio_framework_plugin::ToolRunJobPort, snapshot: BitmapSnapshot, operation: semio_framework_job::Operation) -> Self {
+    pub fn new(identity: ToolRunIdentity, port: semio_plugin::ToolRunJobPort, snapshot: BitmapSnapshot, operation: semio_framework_job::Operation) -> Self {
         Self {
             operation,
             snapshot: Arc::new(snapshot),

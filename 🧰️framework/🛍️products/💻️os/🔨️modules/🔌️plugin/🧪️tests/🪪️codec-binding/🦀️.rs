@@ -4,8 +4,8 @@ pub fn contract() -> serde_json::Value {
 }
 
 fn flat(schema: &str) -> ArtifactDeclaration {
-    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
-    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
+    use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
+    use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
     let kind = "s.testkit.w1c-fixture";
     ArtifactDeclaration {
         kind: kind.to_string(), schemas: Vec::new(), inferences: Vec::new(), inference_services: Vec::new(), composers: Vec::new(), formats: Vec::new(), subset_validators: Vec::new(), languages: Vec::new(),
@@ -17,7 +17,7 @@ fn flat(schema: &str) -> ArtifactDeclaration {
 
 #[test]
 fn codec_binding_original_flat_capture_preserves_app_less_owned_and_hosted_rows() {
-    use semio_framework_os_kernel::io::ArtifactCodecBindingChannel as Channel;
+    use semio_os_kernel::io::ArtifactCodecBindingChannel as Channel;
     let owned = flat("binding.original.owned/v1");
     let hosted = flat("binding.original.hosted/v1");
     let context = owned.document_codec_contexts(Channel::OwnedDeclaration, "testkit");
@@ -44,7 +44,7 @@ fn codec_binding_original_flat_capture_preserves_app_less_owned_and_hosted_rows(
 
 #[test]
 fn codec_binding_original_tree_capture_keeps_one_row_and_both_surface_apps_per_subset() {
-    use semio_framework_os_kernel::io::ArtifactCodecBindingChannel as Channel;
+    use semio_os_kernel::io::ArtifactCodecBindingChannel as Channel;
     let declaration = declarations::fixture::build_declaration();
     let rows = declarations::artifact_declaration_bindings("testkit", std::slice::from_ref(&declaration));
     let subsets: Vec<_> = declaration.standards.iter().flat_map(|standard| &standard.subsets).collect();
@@ -69,7 +69,7 @@ fn codec_binding_original_tree_capture_keeps_one_row_and_both_surface_apps_per_s
         assert_eq!(serde_json::json!(row.factory), expected["unjoinedFactory"]);
     }
     let codecs: Vec<_> = subsets.iter().map(|subset| subset.io.native.codec.clone()).collect();
-    semio_framework_os_kernel::io::preflight_artifact_codec_bindings(&rows, &codecs).expect("all actual subset rows remain admissible");
+    semio_os_kernel::io::preflight_artifact_codec_bindings(&rows, &codecs).expect("all actual subset rows remain admissible");
     let mut runtime = PluginRuntimeRegistry::empty();
     runtime.retain_document_bindings(rows.clone());
     assert_eq!(runtime.document_bindings(), rows);
@@ -77,7 +77,7 @@ fn codec_binding_original_tree_capture_keeps_one_row_and_both_surface_apps_per_s
 
 #[semio_framework_async_macros::async_test]
 async fn codec_binding_original_surface_specs_resolve_real_apps_before_flat_and_foreign_capture() {
-    use semio_framework_os_kernel::io::ArtifactCodecBindingChannel as Channel;
+    use semio_os_kernel::io::ArtifactCodecBindingChannel as Channel;
     type App = EditorApp<declarations::fixture::Std1AnyEditor>;
     let tree = declarations::fixture::build_declaration();
     let expected = &tree.standards[0].subsets[0].editor.definition.id;

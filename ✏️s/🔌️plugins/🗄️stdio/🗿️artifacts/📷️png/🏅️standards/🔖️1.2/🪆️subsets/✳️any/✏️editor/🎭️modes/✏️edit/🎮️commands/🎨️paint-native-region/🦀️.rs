@@ -6,9 +6,9 @@ use crate::schema::snapshot::{PngNativePaint,PngNativeProfile,PngRegion};
 use crate::schema::mutations::{PaintNativeSamplesMutation, PngMutation};
 use crate::schema::snapshot::PngSnapshot;
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
+use semio_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
+use semio_ui_locale::LocalizedLabel;
 
 pub const INDEXED_ACTION_ID: &str = "paint-index-region";
 pub const GRAYSCALE_ACTION_ID: &str = "paint-grayscale-region";
@@ -133,7 +133,7 @@ impl PaintNativeRegionWork {
 impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
     fn tool_id(&self) -> &'static str { self.tool_id }
 
-    fn extent(&self, command: &PngEditCommand, snapshot: &PngSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>) -> Option<usize> {
+    fn extent(&self, command: &PngEditCommand, snapshot: &PngSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>) -> Option<usize> {
         let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(command)) = command else { return None };
         if action_id(command.paint.profile) != self.tool_id { return None; }
         CAPACITY.rows_for_items(command.validate(snapshot).ok()?.min(CAPACITY.invertible_items()).max(1))

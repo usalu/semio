@@ -632,5 +632,22 @@
       "cargo": true,
       "accepted": false
     }
+  ],
+  "sourceRoots": [
+    {
+      "codeRoot": "/checkout",
+      "repositoryRoot": "/private",
+      "expected": "/checkout"
+    },
+    {
+      "codeRoot": "C:\\source",
+      "repositoryRoot": "C:\\private",
+      "expected": "C:\\source"
+    },
+    {
+      "codeRoot": "/ordinary",
+      "repositoryRoot": "/ordinary",
+      "expected": "/ordinary"
+    }
   ]
 }

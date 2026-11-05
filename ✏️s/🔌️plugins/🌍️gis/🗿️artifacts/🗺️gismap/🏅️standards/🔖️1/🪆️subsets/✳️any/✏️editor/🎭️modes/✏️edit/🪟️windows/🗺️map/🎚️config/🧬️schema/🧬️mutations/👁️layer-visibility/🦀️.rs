@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-visibility", kind: "set-layer-visibility", record: "SetLayerVisibility" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer visibility {}", self.layer_id), &format!("Ebenensichtbarkeit {} setzen", self.layer_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set layer visibility {}", self.layer_id), &format!("Ebenensichtbarkeit {} setzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["layerVisibility".into(), self.layer_id.clone()]

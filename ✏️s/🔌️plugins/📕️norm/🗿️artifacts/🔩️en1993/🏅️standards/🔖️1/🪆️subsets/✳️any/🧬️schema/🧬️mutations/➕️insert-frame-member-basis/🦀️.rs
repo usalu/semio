@@ -10,7 +10,7 @@ pub struct InsertFrameMemberBasis { pub index: Option<usize>, pub frame_member_b
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertFrameMemberBasis where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_frame_member_basis::RemoveFrameMemberBasis> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "frame-member-basis", kind: "insert-frame-member-basis", record: "InsertedFrameMemberBasis" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert member force basis at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Kraftgrundlage des Bauteils an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert member force basis at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Kraftgrundlage des Bauteils an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

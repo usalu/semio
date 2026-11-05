@@ -8,23 +8,23 @@ use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema:
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use crate::viewer::ifc4_any::modes::view;
 use crate::viewer::ifc4_any::modes::view::windows::main;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Dialect
@@ -73,7 +73,7 @@ impl ArtifactViewer for Ifc4AnyViewer {
 
     fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(crate::standards::v4::subsets::any::io::inspector::topology(doc.snapshot))}
 
-    fn reference_birth()->Option<fn()->Result<IfcSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<IfcSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(IfcSnapshot::default())
     })}
 
@@ -83,35 +83,35 @@ impl ArtifactViewer for Ifc4AnyViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         if body_key == crate::standards::v4::subsets::any::io::inspector::BODY_KEY {
-            return crate::standards::v4::subsets::any::io::inspector::render(doc,_interaction,view_state,"s.stdio.ifc@4/*#viewer",false,cx).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+            return crate::standards::v4::subsets::any::io::inspector::render(doc,_interaction,view_state,"s.stdio.ifc@4/*#viewer",false,cx).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         if body_key == main::BODY_KEY {
-            return crate::standards::v4::subsets::any::io::geometry::render_selected_in_context(doc.snapshot, cx, _interaction).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+            return crate::standards::v4::subsets::any::io::geometry::render_selected_in_context(doc.snapshot, cx, _interaction).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -119,7 +119,7 @@ impl ArtifactViewer for Ifc4AnyViewer {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_ifc4_any_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_ifc4_any_viewer() -> semio_plugin::AppDefinition {
     let mut definition=Viewer::builder(IFC4_ANY_DIALECT).document(["stdio", "ifc4"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::IFC4_ANY_VIEW_MODE_ID).window_kind_def(main::definition()).window_kind_def(crate::standards::v4::subsets::any::io::inspector::window_definition(false)).default_layout(view::layout()).build_definition();
     crate::standards::v4::subsets::any::io::inspector::install_interaction(&mut definition);
     definition

@@ -12,8 +12,8 @@ use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::che
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url_jpeg;
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_video_data_url;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch, test_window, verify_import_checker_stream, RemodelingApp};
-use semio_framework_plugin::artifact_app_laws::{meta, settle_history_verb, settle_registered_typed_operation};
-use semio_framework_plugin::PluginApp;
+use semio_plugin::artifact_app_laws::{meta, settle_history_verb, settle_registered_typed_operation};
+use semio_plugin::PluginApp;
 use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
@@ -98,9 +98,9 @@ async fn a_still_import_is_one_edit_one_undo_and_one_redo() {
     let mut app = app().await;
     verify_import_checker_stream(&mut app, 3).await;
     assert_eq!(shape(&app), (1, 3, 3));
-    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(shape(&app), (0, 0, 0), "one undo reverts the whole import");
-    settle_history_verb(&mut app.0, "redo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "redo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(shape(&app), (1, 3, 3), "one redo restores the whole import");
 }
 
@@ -115,7 +115,7 @@ async fn a_video_import_streams_its_frames_and_commits_one_edit() {
     }
     video_done(&mut app).await;
     assert!(app.snapshot().expect("projection").streams[0].source.is_some());
-    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(shape(&app), (0, 0, 0), "one undo reverts the whole video import");
 }
 
@@ -125,10 +125,10 @@ async fn a_video_import_streams_its_frames_and_commits_one_edit() {
 async fn an_open_import_refuses_every_other_document_verb() {
     let mut app = app().await;
     video_tick(&mut app, 0).await;
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RemodelingCommand::AddStream(add_stream::AddStream { name: "Side".into(), kind: "video".into(), camera_id: String::new() }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    let admitted = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RemodelingCommand::AddStream(add_stream::AddStream { name: "Side".into(), kind: "video".into(), camera_id: String::new() }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     let refusal = match admitted {
         Err(fault) => fault,
-        Ok(_) => settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("a foreign edit while the import is open is refused"),
+        Ok(_) => settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("a foreign edit while the import is open is refused"),
     };
     assert!(format!("{refusal:?}").contains("toolTransaction.open"), "{refusal:?}");
     video_tick(&mut app, 1).await;
@@ -151,7 +151,7 @@ async fn an_aborted_import_leaves_zero_trace() {
     video_tick(&mut app, 2).await;
     video_done(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), before, "a tick and a done arriving after the abort are dropped, never appended to another stream");
-    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(shape(&app), (0, 0, 0), "the only edit left to undo is the stream added before the import");
     dispatch(&mut app, RemodelingCommand::ImportAbort(import_abort::ImportAbort { reason: None })).await;
     assert_eq!(shape(&app), (0, 0, 0), "an abort with nothing open is no edit");
@@ -162,12 +162,12 @@ const OTHER_WINDOW: &str = "remodeling-other-window";
 /// 📨️ The host forwarding `kind` for `window_id`, under a view holding the import's Frames test window and a Model window.
 async fn host_event(app: &mut RemodelingApp, window_id: &str, kind: &str) {
     let mut view = test_window(capture::windows::frames::REMODELING_PLAY_WINDOW_FRAMES);
-    view.window_instances.push(semio_framework_plugin::ViewWindowInstance { id: OTHER_WINDOW.into(), window_kind_id: model::windows::model::REMODELING_PLAY_WINDOW_MAIN.into() });
-    let under = semio_framework_plugin::ActionMeta { view_state: Some(view), ..meta("local") };
+    view.window_instances.push(semio_plugin::ViewWindowInstance { id: OTHER_WINDOW.into(), window_kind_id: model::windows::model::REMODELING_PLAY_WINDOW_MAIN.into() });
+    let under = semio_plugin::ActionMeta { view_state: Some(view), ..meta("local") };
     let args = semio_framework_value::DslValue::from(&serde_json::json!({ "windowId": window_id, "kind": kind }));
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::HOST_EVENT_ACTION_ID, Some(args.clone()), &under, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("hostEvent {kind}: {fault:?}"));
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("hostEvent {kind} settles: {fault:?}"));
-    settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("hostEvent {kind} answer settles: {fault:?}"));
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::HOST_EVENT_ACTION_ID, Some(args.clone()), &under, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("hostEvent {kind}: {fault:?}"));
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("hostEvent {kind} settles: {fault:?}"));
+    settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("hostEvent {kind} answer settles: {fault:?}"));
 }
 
 /// 🪟️ Closing the window an import streams in aborts it with zero trace: the document is the one before it, a late tick
@@ -185,7 +185,7 @@ async fn the_importing_window_closing_aborts_its_import_with_zero_trace() {
     video_tick(&mut app, 2).await;
     video_done(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), before, "the host's late tick and done are dropped");
-    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(shape(&app), (0, 0, 0), "the only edit left to undo is the stream added before the import");
 }
 
@@ -201,7 +201,7 @@ async fn other_host_facts_leave_an_import_running() {
     video_tick(&mut app, 1).await;
     video_done(&mut app).await;
     assert_eq!(shape(&app), (1, 2, 2));
-    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(shape(&app), (0, 0, 0), "the import committed as one edit");
 }
 
@@ -219,7 +219,7 @@ async fn a_pick_whose_first_file_does_not_decode_mints_its_own_stream() {
     assert_eq!(scene.streams.len(), 2);
     assert!(scene.streams[0].frames.is_empty(), "the earlier stream is untouched");
     assert_eq!(scene.streams[1].frames.len(), 2);
-    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(shape(&app), (1, 0, 0), "one undo reverts the whole pick");
 }
 
@@ -228,9 +228,9 @@ async fn a_pick_whose_first_file_does_not_decode_mints_its_own_stream() {
 async fn a_windowless_multi_file_pick_is_refused() {
     let mut app = app().await;
     let first = RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url(24, 24, 3).await, name: "frame-0.png".into(), index: 0, total: 2 });
-    let refusal = match semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &first, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
+    let refusal = match semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &first, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
         Err(fault) => fault,
-        Ok(_) => settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("a windowless multi-file pick is refused"),
+        Ok(_) => settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("a windowless multi-file pick is refused"),
     };
     assert!(format!("{refusal:?}").contains("remodeling.import.window-required"), "{refusal:?}");
     assert_eq!(shape(&app), (0, 0, 0));
@@ -241,10 +241,10 @@ fn drive_ticks(frames: &[(u32, String)]) -> (semio_s_artifact_remodel_remodeling
     use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient;
     let mut scene = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot::default();
     let mut window = RemodelingWindowTransient::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     for (index, payload) in frames {
-        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "remodel".into(), operation_id: u64::from(*index), generation: 0, canonical_base_revision: [0; 32], authoring_seed: "seed-video".into() };
-        let doc = semio_framework_plugin::ArtifactView::with_operation(&scene, &history, operation);
+        let operation = semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "remodel".into(), operation_id: u64::from(*index), generation: 0, canonical_base_revision: [0; 32], authoring_seed: "seed-video".into() };
+        let doc = semio_plugin::ArtifactView::with_operation(&scene, &history, operation);
         let tick = ImportVideoFramePayload { payload: payload.clone(), name: "clip.mp4".into(), index: *index, frame_index: *index, timestamp_ms: f64::from(*index) * 40.0 };
         let (emit, next) = handle_in_window(&tick, &doc, &window).expect("a tick streams");
         let mut document = scene.clone();
@@ -280,8 +280,8 @@ async fn the_blur_gate_rolls_in_the_import_state_and_refuses_a_blurred_frame() {
 async fn a_new_import_over_a_live_one_in_the_same_window_is_refused() {
     let sharp = checker_data_url_jpeg(24, 24, 3).await;
     let (scene, window) = drive_ticks(&[(0, sharp.clone()), (1, sharp.clone())]);
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc = semio_framework_plugin::ArtifactView::new(&scene, &history);
+    let history = semio_plugin::HistoryView::empty();
+    let doc = semio_plugin::ArtifactView::new(&scene, &history);
     let restart = ImportVideoFramePayload { payload: sharp, name: "other.mp4".into(), index: 0, frame_index: 0, timestamp_ms: 0.0 };
     let Err(fault) = handle_in_window(&restart, &doc, &window) else { panic!("a second import over a live one is refused") };
     assert_eq!(fault.code.0, "remodeling.import.open");

@@ -10,7 +10,7 @@ pub struct RemoveFireExposure { pub index: usize }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveFireExposure where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_fire_exposure::InsertFireExposure> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "fire-exposure", kind: "remove-fire-exposure", record: "RemovedFireExposure" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove fire exposure #{}", self.index), &format!("Brandbeanspruchung #{} entfernen", self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove fire exposure #{}", self.index), &format!("Brandbeanspruchung #{} entfernen", self.index)) }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }
 

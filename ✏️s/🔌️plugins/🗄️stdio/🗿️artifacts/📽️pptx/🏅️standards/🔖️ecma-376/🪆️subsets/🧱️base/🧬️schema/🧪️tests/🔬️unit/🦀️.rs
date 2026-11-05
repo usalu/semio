@@ -92,7 +92,7 @@ async fn builder_produces_minimal_valid_package_that_decodes_back() {
 #[semio_framework_async_macros::async_test]
 async fn typed_construction_appends_to_imported_canonical_package_without_rebuilding_it() {
     use quick_xml::{events::Event, reader::Reader, XmlVersion};
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
     use std::io::{Cursor, Read};
 
     let fixture = construction_fidelity_fixture();
@@ -508,7 +508,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{PptxMutation};
     use protocol::{ColdDiffAlgebra, DiffAlgebra, DiffBinary,DiffCodec,DiffText, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     use protocol::ColdMutationDiff;
-    use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
+    use semio_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
     let snapshot = decode_pptx(&exact_pptx_bytes().await).expect("import exact fixture");
     assert_eq!(snapshot.presentation().expect("derived fixture presentation").slides.len(), 7);
@@ -649,7 +649,7 @@ mod conformance_laws {
         let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
         let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_pptx_snapshot().await);
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
-        assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
+        assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros())
             .expect("selected grammar fragments")
             .recognize(&format!("{}\n{body}", envelope.envelope_id()))
             .unwrap());
@@ -660,7 +660,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
-        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros())
             .expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
@@ -673,7 +673,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
-        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros())
             .expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();

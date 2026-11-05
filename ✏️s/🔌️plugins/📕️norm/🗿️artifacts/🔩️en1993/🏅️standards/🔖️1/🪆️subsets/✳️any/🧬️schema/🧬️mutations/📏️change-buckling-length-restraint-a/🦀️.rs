@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBucklingLengthRest
         record: "ChangedBucklingLengthRestraintA",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change buckling length: Node A", "Knicklänge: Knoten A ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change buckling length: Node A", "Knicklänge: Knoten A ändern")
     }
 }
 

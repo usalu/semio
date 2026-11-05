@@ -4,10 +4,10 @@
 
 use crate::inference::DeclaredInference;
 use crate::jobs::{GuestInferenceJob, InferenceService, canonical_json, guest_page, guest_proposal, hub_events_page, select_inference_service};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceEventPageV1, HubInferenceServiceV1, INFERENCE_JOB_EVENT_PAGE_MAX_ITEMS, InferenceExecutionSiteV1};
-use semio_framework_os_mcp_schema::schema::{compile_validator, validate};
-use semio_framework_os_mcp_wire::job_registry::JobRegistry;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_inference_hub::hub_wire::{HubInferenceEventPageV1, HubInferenceServiceV1, INFERENCE_JOB_EVENT_PAGE_MAX_ITEMS, InferenceExecutionSiteV1};
+use semio_os_mcp_schema::schema::{compile_validator, validate};
+use semio_os_mcp_wire::job_registry::JobRegistry;
 use semio_framework_test_fixtures::fixture_text;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.

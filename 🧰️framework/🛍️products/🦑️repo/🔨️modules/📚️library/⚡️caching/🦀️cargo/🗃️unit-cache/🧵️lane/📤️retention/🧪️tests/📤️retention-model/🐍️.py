@@ -2,7 +2,7 @@
 usage: 🐍️.py verdicts <corpus.json>   reads the corpus on a file or stdin ("-") and prints {"plan":[...],"origin":[...]} as JSON
 
 Plan. Lane files whose name matches the receipt pattern, in name order, at most `maximumFiles` of them: over `maximumFileBytes` is refused; a name the shared directory lacks is published; the same name with the same digest is dropped (same); the same name with another digest is a conflict.
-Origin. A compiler origin is owned when it is the shared build and target directory pair, or the build directory `<root>/<lanes>/<id>/<build>` of a lane with a valid id whose target is `<root>/<lanes>/<id>/<target>` or lies strictly inside that build directory. Posix paths, normalised by hand (no `os.path`).
+Origin. A compiler origin is owned when it is the shared build and target directory pair, or the build directory `<root>/<lanes>/<id>` of a lane with a valid id whose target is `<root>/<lanes>/<id>/<target>` or lies strictly inside that target directory. Posix paths, normalised by hand (no `os.path`).
 """
 import json
 import re
@@ -49,10 +49,11 @@ def owned(case, policy):
     if not build.startswith(lanes):
         return False
     parts = build[len(lanes):].split("/")
-    if len(parts) != 2 or parts[1] != policy["layout"]["build"] or not re.fullmatch(r"[a-z0-9]{1,12}", parts[0]):
+    if len(parts) != 1 or not re.fullmatch(r"[a-z0-9]{1,12}", parts[0]):
         return False
     lane = lanes + parts[0]
-    return target == lane + "/" + policy["layout"]["target"] or (target.startswith(build + "/") and len(target) > len(build) + 1)
+    target_root = lane + "/" + policy["layout"]["target"]
+    return target == target_root or target.startswith(target_root + "/")
 
 
 def lane_owned(case, policy):
@@ -62,7 +63,7 @@ def lane_owned(case, policy):
     if not build.startswith(lanes):
         return False
     parts = build[len(lanes):].split("/")
-    return len(parts) == 2 and parts[1] == policy["layout"]["build"] and re.fullmatch(r"[a-z0-9]{1,12}", parts[0]) is not None
+    return len(parts) == 1 and re.fullmatch(r"[a-z0-9]{1,12}", parts[0]) is not None
 
 
 def main():

@@ -1,7 +1,7 @@
 //! 👥️ Real shared-ephemeral publication snapshot fixture.
 
 use pack::snapshot::{ArtifactDsl, ArtifactPack};
-use semio_framework_os_kernel::{PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
+use semio_os_kernel::{PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
@@ -32,8 +32,8 @@ impl ArtifactPack for PublicationPresence {
         serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PublicationPresence {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PublicationPresence {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -82,16 +82,16 @@ pub mod mutations;
 pub use crate::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
 pub use crate::publication_fixture::presence::mutations::{PublicationPresenceMutation, change_publication_presence};
 
-impl semio_framework_os_kernel::ArtifactPresenceSnapshot for PublicationPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
-        semio_framework_os_presence_native_snapshot::decode_presence_json(bytes, owner)
+impl semio_os_kernel::ArtifactPresenceSnapshot for PublicationPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        semio_os_presence_native_snapshot::decode_presence_json(bytes, owner)
     }
 }
 
 #[cfg(test)]
 mod original_native_laws {
     use super::*;
-    use semio_framework_os_kernel::ArtifactPresenceSnapshot;
+    use semio_os_kernel::ArtifactPresenceSnapshot;
     #[test]
     fn scalar_presence_original_native_matches_independent_serde() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️native.json")).unwrap();
@@ -103,7 +103,7 @@ mod original_native_laws {
             let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
             let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut callback);
             native.install_retirement_recipient(&mut recipient).unwrap();
-            let mut owner = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+            let mut owner = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
             let (value, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PublicationPresence::decode_presence_native(bytes, &mut owner).unwrap());
             let progress = owner.progress();
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -114,7 +114,7 @@ mod original_native_laws {
             let mut recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
             let mut native = semio_framework_value::NativeEncodeControl::new(1 << 20, &mut callback);
             native.install_retirement_recipient(&mut recipient).unwrap();
-            let mut owner = semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
+            let mut owner = semio_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
             let (encoded, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| value.encode_presence_native(&mut owner).unwrap());
             let progress = owner.progress();
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -126,7 +126,7 @@ mod original_native_laws {
             let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
             let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut callback);
             native.install_retirement_recipient(&mut recipient).unwrap();
-            let mut owner = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+            let mut owner = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
             assert!(PublicationPresence::decode_presence_native(bytes, &mut owner).is_err());
             assert!(serde_json::from_slice::<PublicationPresence>(bytes).is_err());
         }

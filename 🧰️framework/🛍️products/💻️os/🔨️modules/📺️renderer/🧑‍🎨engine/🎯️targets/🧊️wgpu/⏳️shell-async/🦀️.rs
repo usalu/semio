@@ -2,14 +2,14 @@
 //!
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
-use semio_framework_os_config::opening_config::{UiLocale as OsUiLocale, UiPreferences};
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_os_config::opening_config::{UiLocale as OsUiLocale, UiPreferences};
+use semio_ui_locale::{Locale, Terminology};
 use std::collections::HashMap;
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::utilities::UtilityNode;
-use semio_framework_ui_wgpu_layout::chrome::push_chrome_group_border;
+use semio_ui_draw_contract::DrawList;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::utilities::UtilityNode;
+use semio_ui_wgpu_layout::chrome::push_chrome_group_border;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/📨️command-dispatch/🦀️.rs"]
 mod staged_async__command_dispatch;

@@ -2,7 +2,7 @@
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use crate::schema::snapshot::*;
-use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as Node, ARTIFACT_CANONICAL_JSON_DEPTH};
+use semio_plugin::plugin_app_close_prelude::store::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as Node, ARTIFACT_CANONICAL_JSON_DEPTH};
 
 trait Borrowed {
     fn node(&self) -> Node<'_>;

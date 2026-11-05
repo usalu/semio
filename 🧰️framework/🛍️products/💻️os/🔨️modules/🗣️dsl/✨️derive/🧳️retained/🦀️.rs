@@ -12,8 +12,8 @@ pub fn expand(input:&DeriveInput,snapshot:&Type)->syn::Result<proc_macro2::Token
   let variant_name=&variant.ident;let Fields::Unnamed(fields)=&variant.fields else{return Err(syn::Error::new_spanned(variant,"retained mutation variants require a single leaf"));};
   if fields.unnamed.len()!=1{return Err(syn::Error::new_spanned(variant,"retained mutation variants require a single leaf"));}
   let leaf=&fields.unnamed[0].ty;
-  let child=quote!(<#leaf as ::semio_framework_os_kernel::RetainedMutationLeaf<#snapshot,#aggregate>>::Preparation);
-  let ports=quote!(<#child as ::semio_framework_os_kernel::RetainedMutationLeafPreparation<#snapshot,#aggregate,#leaf>>);
+  let child=quote!(<#leaf as ::semio_os_kernel::RetainedMutationLeaf<#snapshot,#aggregate>>::Preparation);
+  let ports=quote!(<#child as ::semio_os_kernel::RetainedMutationLeafPreparation<#snapshot,#aggregate,#leaf>>);
   let payload=quote!(mutation.project(#index,|operation|match operation{#name::#variant_name(payload)=>payload,_=>unreachable!("immutable retained leaf discriminator")}));
   variants.push(quote!(#variant_name(::std::boxed::Box<#child>)));
   select_demand.push(quote!(#name::#variant_name(_)=>::semio_framework_value::RetirementDemand{copy_bytes: ::core::mem::size_of::<#child>()+::core::mem::size_of::<#state #ty_generics>(),capacity_bytes: ::core::mem::size_of::<#child>(),release_bytes:0,depth:2}));
@@ -33,43 +33,43 @@ pub fn expand(input:&DeriveInput,snapshot:&Type)->syn::Result<proc_macro2::Token
   enum #state #generics #where_clause{Unselected,#(#variants),*}
   /// 🧳️ Required typed leaf custody until separately paid body closure.
   pub struct #preparation #generics #where_clause{state: ::core::mem::ManuallyDrop<#state #ty_generics>,closing:bool}
-  impl #impl_generics ::semio_framework_os_kernel::RetainedMutation<#snapshot> for #aggregate #where_clause{type Preparation=#preparation #ty_generics;}
-  impl #impl_generics ::semio_framework_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate> for #preparation #ty_generics #where_clause{
+  impl #impl_generics ::semio_os_kernel::RetainedMutation<#snapshot> for #aggregate #where_clause{type Preparation=#preparation #ty_generics;}
+  impl #impl_generics ::semio_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate> for #preparation #ty_generics #where_clause{
    fn new()->Self{Self{state: ::core::mem::ManuallyDrop::new(#state::Unselected),closing:false}}
    fn decision_demand(&self,mutation: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#aggregate>,original: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#snapshot>,maximum_body_bytes:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{
     if self.closing{return Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"retained aggregate already closing"));}
     if matches!(&*self.state,#state::Unselected){return Ok(match mutation.get(){#(#select_demand),*});}
     match(&*self.state,mutation.get()){#(#demand),*,_=>Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"retained aggregate leaf changed"))}
    }
-   fn decide(&mut self,mutation: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#aggregate>,original: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#snapshot>,body:usize,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->Result<::semio_framework_os_kernel::RetainedMutationAdvance,::semio_framework_value::ValueError>{
-    let demand=<Self as ::semio_framework_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate>>::decision_demand(self,mutation,original,body)?;
-    if !::semio_framework_os_kernel::retained_mutation_demand_fits(demand,grant){return Ok(::semio_framework_os_kernel::RetainedMutationAdvance::Progress(Default::default()));}
-    if matches!(&*self.state,#state::Unselected){match mutation.get(){#(#select),*};return Ok(::semio_framework_os_kernel::RetainedMutationAdvance::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}));}
+   fn decide(&mut self,mutation: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#aggregate>,original: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#snapshot>,body:usize,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->Result<::semio_os_kernel::RetainedMutationAdvance,::semio_framework_value::ValueError>{
+    let demand=<Self as ::semio_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate>>::decision_demand(self,mutation,original,body)?;
+    if !::semio_os_kernel::retained_mutation_demand_fits(demand,grant){return Ok(::semio_os_kernel::RetainedMutationAdvance::Progress(Default::default()));}
+    if matches!(&*self.state,#state::Unselected){match mutation.get(){#(#select),*};return Ok(::semio_os_kernel::RetainedMutationAdvance::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}));}
     match(&mut *self.state,mutation.get()){#(#advance),*,_=>Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"retained aggregate leaf changed"))}
    }
-   fn take_decision(&mut self)->::semio_framework_os_kernel::RetainedMutationDecision<<#aggregate as ::semio_framework_os_kernel::Mutation<#snapshot>>::Diff>{match &mut *self.state{#(#outcome),*,#state::Unselected=>panic!("retained aggregate has no admitted leaf outcome")}}
-   fn inverse_demand(&self,mutation: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#aggregate>,original: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#snapshot>,diff: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,<#aggregate as ::semio_framework_os_kernel::Mutation<#snapshot>>::Diff>,maximum_body_bytes:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{
+   fn take_decision(&mut self)->::semio_os_kernel::RetainedMutationDecision<<#aggregate as ::semio_os_kernel::Mutation<#snapshot>>::Diff>{match &mut *self.state{#(#outcome),*,#state::Unselected=>panic!("retained aggregate has no admitted leaf outcome")}}
+   fn inverse_demand(&self,mutation: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#aggregate>,original: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#snapshot>,diff: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,<#aggregate as ::semio_os_kernel::Mutation<#snapshot>>::Diff>,maximum_body_bytes:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{
     if self.closing{return Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"retained aggregate inverse already closing"));}
     match(&*self.state,mutation.get()){#(#inverse_demand),*,_=>Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"retained inverse requires the original decided leaf"))}
    }
-   fn inverse(&mut self,mutation: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#aggregate>,original: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#snapshot>,diff: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,<#aggregate as ::semio_framework_os_kernel::Mutation<#snapshot>>::Diff>,body:usize,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->Result<::semio_framework_os_kernel::RetainedMutationAdvance,::semio_framework_value::ValueError>{
-    let demand=<Self as ::semio_framework_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate>>::inverse_demand(self,mutation,original,diff,body)?;
-    if !::semio_framework_os_kernel::retained_mutation_demand_fits(demand,grant){return Ok(::semio_framework_os_kernel::RetainedMutationAdvance::Progress(Default::default()));}
+   fn inverse(&mut self,mutation: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#aggregate>,original: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#snapshot>,diff: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,<#aggregate as ::semio_os_kernel::Mutation<#snapshot>>::Diff>,body:usize,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->Result<::semio_os_kernel::RetainedMutationAdvance,::semio_framework_value::ValueError>{
+    let demand=<Self as ::semio_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate>>::inverse_demand(self,mutation,original,diff,body)?;
+    if !::semio_os_kernel::retained_mutation_demand_fits(demand,grant){return Ok(::semio_os_kernel::RetainedMutationAdvance::Progress(Default::default()));}
     match(&mut *self.state,mutation.get()){#(#inverse),*,_=>Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"retained inverse leaf changed"))}
    }
    fn take_inverse(&mut self)->Vec<#aggregate>{match &mut *self.state{#(#take_inverse),*,#state::Unselected=>panic!("retained aggregate has no prepared inverse")}}
    fn begin_close(&mut self){self.closing=true;match &mut *self.state{#(#begin_close),*,#state::Unselected=>{}}}
-   fn close_demand(&self,context: ::semio_framework_os_kernel::RetainedMutationCloseContext<'_,#aggregate>,maximum_body_bytes:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{match &*self.state{#(#close_demand),*,#state::Unselected=>Ok(Default::default())}}
-   fn close_step(&mut self,context: ::semio_framework_os_kernel::RetainedMutationCloseContext<'_,#aggregate>,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->Result<::semio_framework_value::retained_clone::RetainedCloneStep,::semio_framework_value::ValueError>{
+   fn close_demand(&self,context: ::semio_os_kernel::RetainedMutationCloseContext<'_,#aggregate>,maximum_body_bytes:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{match &*self.state{#(#close_demand),*,#state::Unselected=>Ok(Default::default())}}
+   fn close_step(&mut self,context: ::semio_os_kernel::RetainedMutationCloseContext<'_,#aggregate>,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->Result<::semio_framework_value::retained_clone::RetainedCloneStep,::semio_framework_value::ValueError>{
     if !self.closing{return Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"retained aggregate closure not started"));}
-    let demand=<Self as ::semio_framework_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate>>::close_demand(self,context,grant.maximum_copy_bytes)?;
-    if !::semio_framework_os_kernel::retained_mutation_demand_fits(demand,grant){return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));}
+    let demand=<Self as ::semio_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate>>::close_demand(self,context,grant.maximum_copy_bytes)?;
+    if !::semio_os_kernel::retained_mutation_demand_fits(demand,grant){return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));}
     match &mut *self.state{#(#close_step),*,#state::Unselected=>Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
    }
    fn terminal_is_empty(&self)->bool{match &*self.state{#state::Unselected=>true,#(#terminal),*}}
   }
   impl #impl_generics Drop for #preparation #ty_generics #where_clause{
-   fn drop(&mut self){let empty=<Self as ::semio_framework_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate>>::terminal_is_empty(self);assert!(empty||::std::thread::panicking(),"retained aggregate requires exact funded leaf closure");if empty{unsafe{::core::mem::ManuallyDrop::drop(&mut self.state);}}}
+   fn drop(&mut self){let empty=<Self as ::semio_os_kernel::RetainedMutationPreparation<#snapshot,#aggregate>>::terminal_is_empty(self);assert!(empty||::std::thread::panicking(),"retained aggregate requires exact funded leaf closure");if empty{unsafe{::core::mem::ManuallyDrop::drop(&mut self.state);}}}
   }
  })
 }

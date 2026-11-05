@@ -3,7 +3,7 @@
 //! value is that every locale combination is compile-checked in one place.
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the playbook-play app; one field per label makes every locale
     /// combination compile-checked. No separate reuse-terminology concept, so reuse repeats native.
     pub struct PlaybookPlayLabels {
@@ -18,8 +18,8 @@ semio_framework_ui_locale::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-pub fn playbook_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static PlaybookPlayLabels {
-    semio_framework_plugin::resolve_labels::<PlaybookPlayLabels>(view_state)
+pub fn playbook_play_labels(view_state: &semio_plugin::ViewModel) -> &'static PlaybookPlayLabels {
+    semio_plugin::resolve_labels::<PlaybookPlayLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

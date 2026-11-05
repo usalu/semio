@@ -50,7 +50,10 @@ export type WasmEditorSurfaceProps = {
   readonly scene: TextEditorScene;
   readonly controllerId: string;
   readonly surfaceId: string;
-  readonly onAction: (action: ActionDescriptor) => void;
+  readonly onAction: (action: ActionDescriptor) => unknown;
+  readonly onSourceCommit?: (text: string) => Promise<void>;
+  readonly label?: string;
+  readonly readOnly?: boolean;
   readonly explicitDraft?: TextEditorExplicitDraftSettings | null;
   readonly explicitDraftDirty?: boolean;
   readonly descriptionId?: string;

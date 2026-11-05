@@ -1,51 +1,51 @@
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 use crate::playbook::FormGeneration;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
 use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATIONS;
 #[allow(unused_imports)]
 use crate::editor::flow::editor_vocabulary::{flow_action, ui_value_map, ui_value_text};
 #[allow(unused_imports)]
-use semio_framework_ui_contract::Label;
+use semio_ui_contract::Label;
 #[allow(unused_imports)]
-use semio_framework_plugin::activation_target;
+use semio_plugin::activation_target;
 #[allow(unused_imports)]
-use semio_framework_plugin::row_action;
+use semio_plugin::row_action;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action;
 #[allow(unused_imports)]
-use semio_framework_plugin::Buildable;
+use semio_plugin::Buildable;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasBase;
+use semio_plugin::HasBase;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasChildren;
+use semio_plugin::HasChildren;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::RowActionPlacement;
+use semio_plugin::RowActionPlacement;
 #[allow(unused_imports)]
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::Trigger;
+use semio_plugin::Trigger;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiFixedList;
+use semio_plugin::UiFixedList;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_ui_contract as ui;
+use semio_ui_contract as ui;
 use crate::editor::flow::modes::generate::windows::generations::*;
 use crate::editor::flow::unit_tests::context::{flow_app, render as render_body};
 
@@ -60,7 +60,7 @@ async fn the_empty_generation_list_still_offers_the_add_action() {
 // `PanelTreeBuilder` tree outside `📌️panels`, so wave 2 missed it: its list was a `UiFixedList` that
 // HARD-FAULTED (`ui.generations` / `items`) once a playbook run produced more than
 // `UI_FIXED_LIST_ITEMS` generations. It is a windowed section now, and these laws pin that.
-use semio_framework_plugin::{Component, TreeWindowRequest, ViewModel};
+use semio_plugin::{Component, TreeWindowRequest, ViewModel};
 
 const GENERATIONS_SECTION: &str = "flow-play-generate.generations";
 const OVERSIZED: usize = 200;
@@ -102,7 +102,7 @@ fn generations_no_continuation(node: &BuiltNode) {
 }
 
 fn generations_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[test]

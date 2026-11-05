@@ -2,9 +2,9 @@ use crate::editor::dag::commands::add_node::*;
 use crate::editor::dag::commands::{patch_dag_nodes, remove_node, rename_dag_node};
 use crate::editor::dag::unit_tests::context;
 use crate::editor::dag::DagCommand;
-use semio_framework_os_infinite_directed_presentation::DagNodeKind;
-use semio_framework_plugin::artifact_app_laws::{meta, settle_history_verb};
-use semio_framework_plugin::PluginApp;
+use semio_os_infinite_directed_presentation::DagNodeKind;
+use semio_plugin::artifact_app_laws::{meta, settle_history_verb};
+use semio_plugin::PluginApp;
 
 // 🧪️ Every fixture below drives the MOUNTED wrapper: `dispatch_typed` only QUEUES a typed
 // operation, so `context::dispatch` settles its publication before the document is read, and each
@@ -71,7 +71,7 @@ async fn add_node_then_undo_restores_document() {
     let before = context::live_scene(&app).await.nodes.len();
     context::dispatch(&mut app, DagCommand::AddNode(AddNode { kind: "note".into(), x: None, y: None })).await;
     assert_eq!(context::live_scene(&app).await.nodes.len(), before + 1);
-    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::live_scene(&app).await.nodes.len(), before);
     context::close(&mut app);
 }

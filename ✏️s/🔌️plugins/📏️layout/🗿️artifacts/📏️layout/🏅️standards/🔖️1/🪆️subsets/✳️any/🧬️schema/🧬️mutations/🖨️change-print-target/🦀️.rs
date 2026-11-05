@@ -19,8 +19,8 @@ pub struct ChangePrintTarget {
 impl<Op> MutationKind<LayoutSnapshot, Op> for ChangePrintTarget where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_print_target::ChangePrintTarget> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "print-target", kind: "change-print-target", record: "ChangedPrintTarget" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&{
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&{
         match &self.new_print_target {
             Some(target) => format!("Set print target to \"{target}\""),
             None => "Clear print target".into(),

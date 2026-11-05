@@ -3,7 +3,7 @@
 //#region 🧬️ComposedParentFixture
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_document_archive_round_trips_the_complete_owned_closure() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let archive = recursive_document_archive("archive-parent").await;
     let expected = archive.clone();
     let mut app = live_recursive_replacement_app().await;
@@ -100,14 +100,14 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
 /// been retired. Both are asserted directly.
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_document_archive_cancel_retires_the_exact_input_before_acknowledgement() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let archive = recursive_document_archive("cancelled-archive-parent").await;
     let mut app = live_recursive_replacement_app().await;
     let previous = app.stores.store.envelope().id.clone();
     PluginApp::begin_document_archive_load(app.as_mut(), 84, archive).expect("recursive archive cancellation admission");
     assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err());
     PluginApp::cancel_document_archive_load(app.as_mut(), 84).expect("recursive archive cancellation request");
-    let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut cx)).await.expect("recursive archive cancellation request status");
+    let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut cx)).await.expect("recursive archive cancellation request status");
     assert!(!matches!(requested.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Fault), "a cancelled recursive archive published or faulted: {:?}", requested.state);
     if requested.state != protocol::DocumentArchiveLoadState::Cancelled {
         assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err(), "a cancelled archive short of its terminal status was acknowledgeable");
@@ -129,10 +129,10 @@ async fn verify_recursive_rejection_case(id: &'static str, operation: u64, cx:&m
     let old_window_generation = app.stores.window_transient_store.document_generation();
     let old_content_generation = app.child_composition.child_content_generation;
     let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, operation, &format!("rejected-{id}"), row["mode"].as_str().expect("recursive rejection mode"), cx)).await;
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, cx)).await;
-    assert_eq!(app.poll_artifact_store_replacement(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault, "{id}");
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, cx)).await;
+    assert_eq!(app.poll_artifact_store_replacement(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault, "{id}");
     assert_eq!(app.stores.store.envelope().id, old_parent_id, "{id}");
     assert_eq!(app.child_composition.child_content_root.slots(), vec![("slot".into(), "child-1".into())], "{id}");
     assert_eq!(app.child_composition.child_content_root.typed_read::<RecursiveBranchSnapshot>("slot", "child-1").expect("rejection retained live recursive branch").count, 0, "{id}");
@@ -145,7 +145,7 @@ async fn verify_recursive_rejection_case(id: &'static str, operation: u64, cx:&m
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_replacement_rejects_missing_extra_and_duplicate_members_after_bounded_retirement() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     for (offset, id) in ["missing-grandchild", "extra-unreachable-member", "duplicate-member"].into_iter().enumerate() {
         Box::pin(verify_recursive_rejection_case(id, 750 + offset as u64, &mut cx)).await;
     }
@@ -157,9 +157,9 @@ async fn verify_recursive_cancellation_case(id: &'static str, operation: u64, cx
     let vectors = recursive_replacement_vectors();
     let row = recursive_replacement_case(&vectors, id);
     let target = match row["cancelAt"].as_str().expect("recursive cancellation phase") {
-        "memberOpen" => semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::OpeningMembers,
-        "closure" => semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::ValidatingClosure,
-        "viewPreparation" => semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::PreparingCandidateViews,
+        "memberOpen" => semio_plugin_document_media::ActiveArtifactStoreReplacementState::OpeningMembers,
+        "closure" => semio_plugin_document_media::ActiveArtifactStoreReplacementState::ValidatingClosure,
+        "viewPreparation" => semio_plugin_document_media::ActiveArtifactStoreReplacementState::PreparingCandidateViews,
         other => panic!("unknown recursive cancellation phase {other}"),
     };
     let mut app = Box::pin(live_recursive_replacement_app()).await;
@@ -167,11 +167,11 @@ async fn verify_recursive_cancellation_case(id: &'static str, operation: u64, cx
     let old_window_generation = app.stores.window_transient_store.document_generation();
     let old_content_generation = app.child_composition.child_content_generation;
     let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, operation, &format!("cancelled-{id}"), row["mode"].as_str().expect("recursive cancellation mode"), cx)).await;
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
     Box::pin(drive_recursive_replacement_to(&mut app, handle, target, cx)).await;
-    if target == semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::OpeningMembers {
-        for _ in 0..semio_framework_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES {
+    if target == semio_plugin_document_media::ActiveArtifactStoreReplacementState::OpeningMembers {
+        for _ in 0..semio_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES {
             if app.ingest.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.active_member_open.is_some()) {
                 break;
             }
@@ -180,8 +180,8 @@ async fn verify_recursive_cancellation_case(id: &'static str, operation: u64, cx
         assert!(app.ingest.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.active_member_open.is_some()));
     }
     app.cancel_artifact_store_replacement(handle).expect("cancel recursive retained replacement");
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, cx)).await;
-    assert_eq!(app.poll_artifact_store_replacement(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{id}");
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, cx)).await;
+    assert_eq!(app.poll_artifact_store_replacement(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{id}");
     assert_eq!(app.stores.store.envelope().id, old_parent_id, "{id}");
     assert_eq!(app.child_composition.child_content_root.slots(), vec![("slot".into(), "child-1".into())], "{id}");
     assert_eq!(app.child_composition.child_content_generation, old_content_generation, "{id}");
@@ -198,13 +198,13 @@ async fn verify_recursive_stale_authority_case( cx:&mut semio_framework_job::Ste
     let old_window_generation = app.stores.window_transient_store.document_generation();
     let old_content_generation = app.child_composition.child_content_generation;
     let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, 769, "stale-recursive-parent", row["mode"].as_str().expect("recursive stale mode"), cx)).await;
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::CandidateReady, cx)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::CandidateReady, cx)).await;
     let generation = app.child_composition.admit_child_content_publication().expect("real concurrent child-content publication authority");
     app.child_composition.publish_child_content_member(generation, "slot", "child-1").await.expect("real concurrent child-content publication");
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_framework_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, cx)).await;
-    assert_eq!(app.poll_artifact_store_replacement(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, semio_plugin_document_media::ActiveArtifactStoreReplacementState::Complete, cx)).await;
+    assert_eq!(app.poll_artifact_store_replacement(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.stores.store.envelope().id, old_parent_id);
     assert_eq!(app.child_composition.child_content_root.slots(), vec![("slot".into(), "child-1".into())]);
     assert_eq!(app.child_composition.child_content_generation, old_content_generation + 1);
@@ -217,7 +217,7 @@ async fn verify_recursive_stale_authority_case( cx:&mut semio_framework_job::Ste
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_replacement_cancellation_and_stale_authority_preserve_the_live_bundle() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     for (offset, id) in ["cancel-member-open", "cancel-closure", "cancel-view-preparation"].into_iter().enumerate() {
         Box::pin(verify_recursive_cancellation_case(id, 760 + offset as u64, &mut cx)).await;
     }

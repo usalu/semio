@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "ideal-loads-system", kind: "create-ideal-loads-system", record: "CreatedIdealLoadsSystem" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create ideal loads system {}", self.id.0), &format!("Ideallastsystem {} erstellen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create ideal loads system {}", self.id.0), &format!("Ideallastsystem {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -3,22 +3,22 @@
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
 extern crate infinite_canvas as infinite_world;
-use semio_framework_os_renderer_wgpu_shell_chrome_state::ChromeState;
+use semio_renderer_wgpu_shell_chrome_state::ChromeState;
 use infinite_world::world::{World3dState, WorldInteractionIntent, WorldInteractionPhase, enqueue_world3d_events, step_world3d_dynamic_retirement, world3d_catalogue_drop_origin, world3d_clear_catalogue_drop_preview, world3d_dynamic_retirement_terminal_is_empty, world3d_update_catalogue_drop_preview};
 use semio_framework::kernel::UiDirtyScope;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::{Lane, WorkerPool};
-use semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceMap;
-use semio_framework_os_renderer_wgpu_scene_feeds::{NodeGraphSurface, TiledMapSurface};
-use semio_framework_os_renderer_wgpu_scene_text_vfs::Board2dSurface;
+use semio_renderer_wgpu_contracts::AdmittedSurfaceMap;
+use semio_renderer_wgpu_scene_feeds::{NodeGraphSurface, TiledMapSurface};
+use semio_renderer_wgpu_scene_text_vfs::Board2dSurface;
 use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use ui_contract::UiDocumentLease;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::PointerModifiers;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::PointerModifiers;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🧬️component/🦀️.rs"]
 mod staged_surfaces__component;

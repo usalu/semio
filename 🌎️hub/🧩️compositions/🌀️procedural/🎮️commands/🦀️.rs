@@ -5,9 +5,9 @@
 //! fills, and `Plugin::plugin_command` the only way to fill it — so every entry here carries its own
 //! program-level handler and is dispatched through `handle_plugin_command`, never through an app.
 
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::DslValue;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::DslValue;
+use semio_ui_locale::LocalizedLabel;
 
 /// 🪪️ The command id, addressed as `{owner: Plugin{"procedural"}, command_id: LIST_FLOW_EXTENSIONS}`.
 pub(crate) const LIST_FLOW_EXTENSIONS: &str = "listFlowExtensions";

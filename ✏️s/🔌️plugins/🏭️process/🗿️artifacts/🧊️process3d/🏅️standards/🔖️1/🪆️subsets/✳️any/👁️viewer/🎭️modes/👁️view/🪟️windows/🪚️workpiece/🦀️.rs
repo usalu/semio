@@ -11,18 +11,18 @@
 use semio_s_artifact_process_process3d_inferences::processed_mesh;
 use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_pack_json as json;
-use semio_framework_plugin::app::WindowKit;
-use semio_framework_plugin::mesh_from_kind;
-use semio_framework_plugin::world3d_camera_json;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MeshView;
-use semio_framework_plugin::MeshWindowKit;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::app::WindowKit;
+use semio_plugin::mesh_from_kind;
+use semio_plugin::world3d_camera_json;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MeshView;
+use semio_plugin::MeshWindowKit;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const PROCESS3D_VIEW_WINDOW_MAIN: &str = "process-workpiece-view";

@@ -15,7 +15,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::di
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, WallSweep};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, TopConstraint, WallSide};
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::plugin_app_close_prelude::InputKind;
 use semio_s_artifact_bim_model_mut_any_176::standards::v1::subsets::any::schema::mutations::set_opening;
 use semio_s_artifact_bim_model_mut_any_187::standards::v1::subsets::any::schema::mutations::set_wall_sweep;
 

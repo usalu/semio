@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "paint-layer", kind: "rename-paint-layer", record: "RenamedPaintLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename paint layer to \"{}\"", self.new_name), &format!("Malebene in \"{}\" umbenennen", self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename paint layer to \"{}\"", self.new_name), &format!("Malebene in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

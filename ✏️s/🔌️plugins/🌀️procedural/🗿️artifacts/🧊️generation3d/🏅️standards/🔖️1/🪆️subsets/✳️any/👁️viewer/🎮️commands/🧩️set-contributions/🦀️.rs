@@ -5,8 +5,8 @@
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧩️ One page of the shell's `contributionsJson`. The viewer evaluates its own preview through the
@@ -34,14 +34,14 @@ pub struct SetContributions {
 /// owed evaluation nothing in the app ever looks again (`📓️runtime-verification-2026-09-09.md` boot
 /// #11).
 ///
-/// The key is [`semio_framework_os_flow::flow_extension_registry_generation`], not "this was the
+/// The key is [`semio_os_flow::flow_extension_registry_generation`], not "this was the
 /// last page": a re-push of an unchanged closure leaves the generation where it was and owes nothing,
 /// while ANY later contribution change re-evaluates (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn install(payload: &SetContributions, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
-    semio_framework_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
-    Ok(session.invalidate_for_flow_extension_registry(semio_framework_os_flow::flow_extension_registry_generation(), grant).map_err(|error| Fault::from(error.to_string()))?.0)
+    semio_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
+    Ok(session.invalidate_for_flow_extension_registry(semio_os_flow::flow_extension_registry_generation(), grant).map_err(|error| Fault::from(error.to_string()))?.0)
 }
 
 /// 🧩️ The `view_commands!` row. Its `handle(payload, doc, cfg)` signature is framework-fixed and
@@ -51,6 +51,6 @@ pub fn install(payload: &SetContributions, session: &mut FlowEvalSession, grant:
 pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
-    semio_framework_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
+    semio_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
     Ok(ViewEmit::default())
 }

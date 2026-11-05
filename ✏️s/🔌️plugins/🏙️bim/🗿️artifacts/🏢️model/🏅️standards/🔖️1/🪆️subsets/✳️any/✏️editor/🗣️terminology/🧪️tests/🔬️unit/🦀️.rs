@@ -1,5 +1,5 @@
 use crate::editor::bim::terminology::*;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 
 fn rows(labels: &BimLabels) -> Vec<(&'static str, String)> {
     let mut rows = Vec::new();
@@ -30,8 +30,8 @@ async fn placeholders_agree_between_the_locales() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_locale_comes_from_the_view_model_alone() {
-    let english = semio_framework_plugin::ViewModel::new(Locale::En, Terminology::Native);
-    let german = semio_framework_plugin::ViewModel::new(Locale::De, Terminology::Native);
+    let english = semio_plugin::ViewModel::new(Locale::En, Terminology::Native);
+    let german = semio_plugin::ViewModel::new(Locale::De, Terminology::Native);
     assert_eq!(bim_labels(&english).kind_storey.as_str(), "Storey");
     assert_eq!(bim_labels(&german).kind_storey.as_str(), "Geschoss");
     assert_eq!(bim_labels(&german).locale(), Locale::De);

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-prepared"
+name = "semio-ui-prepared"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -21,27 +21,27 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-ui-prepared-staging/testkit", "semio-framework-job/testkit", "dep:ui_contract"]
+testkit = ["semio-ui-prepared-staging/testkit", "semio-framework-job/testkit", "dep:ui_contract"]
 browser-presenter = ["dep:js-sys"]
 
 [dependencies]
-semio-framework-ui-scene-mesh = { path = "../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
-semio-framework-ui-scene-pass = { path = "../../../../../🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
-semio-framework-ui-draw-contract = { path = "../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
-semio-framework-ui-prepared-staging = { path = "../../📤️staging/📦️packages/🦀️rust" }
+semio-ui-scene-mesh = { path = "../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
+semio-ui-scene-pass = { path = "../../../../../🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-ui-prepared-staging = { path = "../../📤️staging/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "../../../../../../🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 
-ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract", optional = true }
+ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract", optional = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { version = "0.3.83", optional = true }
 
 [dev-dependencies]
-ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
-semio-framework-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -2,7 +2,7 @@
 use crate::{SSpaceSnapshot, SSpaceMutation, S_SPACE_INDEX_DOCUMENT_SCHEMA};
 use semio_s_space_core::resolve_backbone_bytes;
 use semio_framework_artifact_space_collection::{artifact_backbone_uri, collection_backbone_uri, ArtifactBody, CollectionEntry, CollectionMutation, CollectionSnapshot, S_COLLECTION_SCHEMA};
-use semio_framework_os::{decode_backbone_payload, materialize_backbone_snapshot, OsSpaceDocument, OsWorkflowArtifactDocument, WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
+use semio_os::{decode_backbone_payload, materialize_backbone_snapshot, OsSpaceDocument, OsWorkflowArtifactDocument, WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
 
 /// 🪆️ Reads a space's `s.space` artifact index (document id `index`, contract §C4) and decodes it —
 /// `None` when no index document has been written yet (older spaces / test fixtures seeded before this

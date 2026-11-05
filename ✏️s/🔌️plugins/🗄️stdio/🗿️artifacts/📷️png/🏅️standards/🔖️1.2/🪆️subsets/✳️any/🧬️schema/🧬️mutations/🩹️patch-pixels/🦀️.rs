@@ -30,8 +30,8 @@ impl PatchPixelsMutation {
 impl protocol::MutationKind<PngSnapshot, PngMutation> for PatchPixelsMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "rgba8-region", kind: "patch-pixels", record: "PatchPixels" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Paint RGBA8 region", "RGBA8-Bereich malen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Paint RGBA8 region", "RGBA8-Bereich malen")
     }
 
     fn target(&self) -> Vec<String> {

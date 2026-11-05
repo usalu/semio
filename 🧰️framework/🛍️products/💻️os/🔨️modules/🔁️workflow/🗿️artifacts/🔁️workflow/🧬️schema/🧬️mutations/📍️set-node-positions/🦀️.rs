@@ -38,8 +38,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for SetNodePosit
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "workflow", kind: "set-node-positions", record: "SetWorkflowNodePositions" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} workflow node(s)", self.positions.len()), &format!("Positionen von {} Arbeitsablaufknoten setzen", self.positions.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} workflow node(s)", self.positions.len()), &format!("Positionen von {} Arbeitsablaufknoten setzen", self.positions.len()))
     }
     fn target(&self) -> Vec<String> {
         std::iter::once("nodes".to_string()).chain(self.node_ids()).collect()

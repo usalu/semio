@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnActionMZK wher
         record: "ChangedConnActionMZK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic bending moment M_z,k of the connection action", "Anschlusseinwirkung: Charakteristisches Biegemoment M_z,k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic bending moment M_z,k of the connection action", "Anschlusseinwirkung: Charakteristisches Biegemoment M_z,k ändern")
     }
 }
 

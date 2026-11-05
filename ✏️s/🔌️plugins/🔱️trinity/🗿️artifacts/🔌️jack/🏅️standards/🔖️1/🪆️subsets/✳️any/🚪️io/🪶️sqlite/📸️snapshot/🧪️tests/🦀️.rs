@@ -1,7 +1,7 @@
 //! 🔌️ Authentic Jack parent Native baselines, before semantic provider opt-in.
 use store::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotControl, SqliteSnapshotPhase};
 use semio_framework_test_original_snapshot_owners as original_owners;
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::graph::Camera;
 use crate::standards::v1::subsets::any::schema::manifest::{EdgeKindDef, Manifest, NodeKindDef, PortKindDef};
@@ -307,13 +307,13 @@ fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phas
 }
 
 mod populated_public_owner {
-use crate::hoisted_snapshot_10::*;use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
+use crate::hoisted_snapshot_10::*;use semio_plugin_reactor_app::__semio_dispatch_PluginApp;use semio_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::jack::TrinityJackPlayApp<crate::test_support::FixtureComposition>>,store::NoMembers>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::jack::TrinityJackViewer<crate::test_support::FixtureComposition>>,store::NoMembers>),}
 }
 
-fn register(){semio_framework_plugin::PluginBuilder::<_, PublicApps>::new("trinity").label("Populated public SQLite").version("0.0.1").package_id("semio:trinity").declare_artifact(crate::standards::v1::subsets::any::registration::artifact::<PublicApps,crate::test_support::FixtureComposition>()).try_build().unwrap();}
+fn register(){semio_plugin::PluginBuilder::<_, PublicApps>::new("trinity").label("Populated public SQLite").version("0.0.1").package_id("semio:trinity").declare_artifact(crate::standards::v1::subsets::any::registration::artifact::<PublicApps,crate::test_support::FixtureComposition>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_jack_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};

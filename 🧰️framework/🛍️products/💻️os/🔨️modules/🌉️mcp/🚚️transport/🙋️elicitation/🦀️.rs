@@ -10,8 +10,8 @@ use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_wire::protocol::{ClientFeatures, intercept_cancellation};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_wire::protocol::{ClientFeatures, intercept_cancellation};
 
 //#region 🔖️StdioTransport
 

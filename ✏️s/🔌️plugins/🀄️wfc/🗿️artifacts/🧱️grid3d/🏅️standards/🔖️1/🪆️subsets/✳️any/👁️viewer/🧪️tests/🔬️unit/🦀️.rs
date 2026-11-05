@@ -1,7 +1,7 @@
 //! 🔬️ Viewer laws — the same dialect as the editor, one read-only window, and a command channel that
 //! structurally cannot author a mutation.
 
-use semio_framework_plugin::ArtifactViewer;
+use semio_plugin::ArtifactViewer;
 use crate::viewer::grid3d::*;
 
 #[test]
@@ -9,7 +9,7 @@ fn the_manifest_declares_one_read_only_window() {
     let definition = create_grid3d_viewer();
     assert_eq!(definition.id, "s.wfc.grid3d@1/*#viewer");
     assert_eq!(definition.window_kinds.len(), 1);
-    let mutating: Vec<&str> = definition.window_kinds[0].actions.iter().filter(|action| matches!(action.kind, semio_framework_plugin::ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
+    let mutating: Vec<&str> = definition.window_kinds[0].actions.iter().filter(|action| matches!(action.kind, semio_plugin::ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
     assert!(mutating.is_empty(), "a viewer window may carry framework chrome actions, but never a mutating one: {mutating:?}");
 }
 

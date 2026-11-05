@@ -14,18 +14,18 @@ use crate::terminology::LayoutLabels;
 use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text};
 use semio_s_artifact_layout_layout_model::Frame;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
@@ -200,14 +200,14 @@ fn layout_tree_item(
     label: impl Into<Label>,
     description: Option<String>,
     icon_id: Option<String>,
-    action: Option<(semio_framework_plugin::ActionId, Option<UiValue>)>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    action: Option<(semio_plugin::ActionId, Option<UiValue>)>,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let label = label.into();
     let mut item = match action {
         Some(action) => tree_item_with_action(id, label.as_str(), description.clone(), action)?,
         None => tree_item_desc(id, label.as_str(), description.clone())?,
     };
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         if props.description.is_none() {
             props.description = match description {
                 Some(value) => Some(UiText::try_from_string(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight description admission failed"))?),
@@ -222,7 +222,7 @@ fn layout_tree_item(
     Ok(item)
 }
 
-fn issue_row(issue: &PreflightIssue) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn issue_row(issue: &PreflightIssue) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let issue_value = ui_value_map([
         ("severity", ui_value_text(&issue.severity)?),
         ("code", ui_value_text(&issue.code)?),
@@ -252,7 +252,7 @@ fn issue_row(issue: &PreflightIssue) -> semio_framework_plugin::UiAssemblyResult
     )
 }
 
-pub fn render(doc: &LayoutSnapshot, labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &LayoutSnapshot, labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let issues = run_layout_preflight(doc, labels);
     PanelTreeBuilder::new(LAYOUT_PREFLIGHT_ROOT)?
         .window_section_or_placeholder(windows, LAYOUT_PREFLIGHT_ISSUES, Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.preflight.as_str())?), true, &issues, issue_row, semio_s_artifact_layout_layout_editor_commands::ui_label(labels.no_issues.as_str())?)?

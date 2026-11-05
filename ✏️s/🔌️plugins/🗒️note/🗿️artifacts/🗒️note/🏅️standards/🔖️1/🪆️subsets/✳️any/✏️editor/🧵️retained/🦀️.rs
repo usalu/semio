@@ -10,8 +10,8 @@ use crate::{NOTE_DOCUMENT_SCHEMA};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES};
-use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES};
+use semio_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, FaultCode, FaultOrigin};
 
 //#region 🔖️Contract
 pub const NOTE_RETAINED_PAYLOAD_SCHEMA: &str = "semio.note.retained-command.v1";
@@ -148,7 +148,7 @@ fn note_command_units(command: &NoteCommand, selected: &[String]) -> Vec<NoteCom
 struct NoteCommandRemnant {
     units: Vec<NoteCommandUnit>,
     projection: Option<NoteSnapshot>,
-    accumulated: Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>,
+    accumulated: Emit<crate::op::NoteMutation, semio_plugin::NoConfigMutation>,
     ephemeral: EphemeralEmit<EditorApp<NotePlayApp>>,
     id_owner: Option<NoteIdOwner>,
 }
@@ -160,7 +160,7 @@ struct NoteCommandWork {
     cursor: usize,
     replay_target: Option<usize>,
     projection: Option<NoteSnapshot>,
-    accumulated: Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>,
+    accumulated: Emit<crate::op::NoteMutation, semio_plugin::NoConfigMutation>,
     ephemeral: EphemeralEmit<EditorApp<NotePlayApp>>,
     id_owner: Option<NoteIdOwner>,
     workspace_identity: u64,
@@ -179,7 +179,7 @@ impl NoteCommandWork {
         Ok(Self { remnant: None, tool_id, units, cursor: 0, replay_target: None, projection: None, accumulated: Emit::default(), ephemeral: EphemeralEmit::default(), id_owner: Some(NoteIdOwner::new(scope, 0)), workspace_identity, complete: false, closing: false })
     }
 
-    fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>) -> Result<(), Fault> {
+    fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, semio_plugin::NoConfigMutation>) -> Result<(), Fault> {
         if let Some(transaction) = emit.transaction.take() {
             if self.accumulated.transaction.is_some() || self.units.len() != 1 {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.transaction"), "a Note tool transaction is exactly one semantic unit"));
@@ -225,13 +225,13 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         self.workspace_identity
     }
 
-    fn extent(&self, _command: &NoteCommand, _snapshot: &NoteSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<NotePlayApp>>>) -> Option<usize> {
+    fn extent(&self, _command: &NoteCommand, _snapshot: &NoteSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<NotePlayApp>>>) -> Option<usize> {
         Some(self.units.len())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation } = *input;
         if self.complete || self.cursor >= self.units.len() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.repeated"), "Note retained work was stepped after completion"));
         }
@@ -424,11 +424,11 @@ impl semio_framework::ToolJobFactory for NoteCommandJobFactory {
         note_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: NOTE_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: NOTE_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for NoteCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for NoteCommandJobFactory {
     type Owner = EditorApp<NotePlayApp>;
     const TOOL_IDS: &'static [&'static str] = NOTE_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
@@ -440,16 +440,16 @@ pub fn register(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<NotePla
     registry.register(NoteCommandJobFactory::new(&controller))
 }
 
-pub fn build(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+pub fn build(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
     if !NOTE_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
         return Ok(false);
     }
     if original.command.command_id() != original.tool_id {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Note command does not match its exact registered tool").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Note command does not match its exact registered tool").into());
     }
     let tool_id = original.command.command_id();
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, NoteCommand::command_id, NOTE_RETAINED_RAW_BYTES, NOTE_RETAINED_MAXIMUM_UNITS, true, Default::default(), |request, _identity| {
+    semio_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, NoteCommand::command_id, NOTE_RETAINED_RAW_BYTES, NOTE_RETAINED_MAXIMUM_UNITS, true, Default::default(), |request, _identity| {
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -459,7 +459,7 @@ pub fn build(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<NotePlay
             retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let work = NoteCommandWork::new(tool_id, &request.command, &request.snapshot, &request.interaction_state, &operation).map_err(|fault| semio_framework_plugin::__value::ValueError::new(semio_framework_plugin::__value::ValueRefusalKind::InvalidValue, fault.message.to_string()))?;
+        let work = NoteCommandWork::new(tool_id, &request.command, &request.snapshot, &request.interaction_state, &operation).map_err(|fault| semio_plugin::__value::ValueError::new(semio_plugin::__value::ValueRefusalKind::InvalidValue, fault.message.to_string()))?;
         Ok((work, Default::default()))
     })
 }

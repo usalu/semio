@@ -1,38 +1,38 @@
 //! 🌳️ Tree items, panel trees, windowed tree rows and the tree window kit.
 use semio_framework_value::DslValue;
 use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, TreeWindowRequest, ViewModel, WindowKindDefinition, INTERACTION_SELECT_ACTION_ID};
-use semio_framework_ui_contract as ui;
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract as ui;
+use semio_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 /// 🧾️ The body-wide node budget and its fixed-node reserve live ONCE, in the UI contract, because
 /// the React host spends the same number from the other side of the wire
 /// (`🌳️Tree/🟦️.tsx`'s `capTreeWindowRequests`). See
-/// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
+/// [`semio_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
 /// implement; [`TreeWindows`] is this side of it.
-use semio_framework_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
-use semio_framework_plugin_window_kits::ActionFactory;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
+use semio_plugin_window_kits::ActionFactory;
+use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::table_kit::activation_target;
-use semio_framework_plugin_window_kits::WindowKit;
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_plugin_interaction::ui_assembly_error;
-use semio_framework_plugin_window_transient::ui_label;
-use semio_framework_plugin_window_transient::ui_text;
-use semio_framework_plugin_window_transient::window_kind_definition;
+use semio_plugin_window_kits::WindowKit;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::ui_assembly_error;
+use semio_plugin_window_transient::ui_label;
+use semio_plugin_window_transient::ui_text;
+use semio_plugin_window_transient::window_kind_definition;
 
 
 
@@ -124,7 +124,7 @@ pub fn selection_ids(args: Option<&DslValue>) -> Vec<String> {
 /// `📓️terra-sdk-helpers-report.md`): `.selected()`/`.highlighted()` used to stamp
 /// `presence.selected`/`.hovered` directly onto matching items via the old `ui_tree_stamp_presence`.
 /// That field no longer exists on a built node — selection/hover is now
-/// `semio_framework_ui_contract::PresenceUpdate`, a separate TTL-scoped channel published through a
+/// `semio_ui_contract::PresenceUpdate`, a separate TTL-scoped channel published through a
 /// live `transact()` call this SDK layer does not have (`📓️recipe-plugin.md` §6; `sdk-flip`'s own
 /// decision 1 — the reactor embeds `SurfaceReconciler` only, not the full `UiRuntime` a
 /// `PresenceHub` publish needs). `selected_ids`/`highlighted_ids` are still recorded here — a
@@ -141,17 +141,17 @@ pub struct PanelTreeBuilder {
     pub interaction_domain: Option<UiText>,
     interaction_select: Option<(ActionId, Option<UiValue>)>,
     drop_action: Option<ActionId>,
-    presentation: semio_framework_ui_contract::TreePresentation,
+    presentation: semio_ui_contract::TreePresentation,
 }
 
 impl PanelTreeBuilder {
     /// 🌳️ `namespace` prefixes every id built via `.item_id()`, e.g. `"flow-play-document"`.
     pub fn new(namespace: impl TryInto<UiText>) -> UiAssemblyResult<Self> {
-        Ok(Self { namespace: ui_text(namespace, "panel-tree.namespace")?, sections: UiFixedList::default(), selected_ids: None, highlighted_ids: None, interaction_domain: None, interaction_select: None, drop_action: None, presentation: semio_framework_ui_contract::TreePresentation::Standard })
+        Ok(Self { namespace: ui_text(namespace, "panel-tree.namespace")?, sections: UiFixedList::default(), selected_ids: None, highlighted_ids: None, interaction_domain: None, interaction_select: None, drop_action: None, presentation: semio_ui_contract::TreePresentation::Standard })
     }
 
     /// 🌳️ Selects the inherited row presentation of the built tree: `Touch` makes every row at least 44 px tall, for trees a finger taps (the Edit menu, nudge buttons).
-    pub fn presentation(mut self, presentation: semio_framework_ui_contract::TreePresentation) -> Self {
+    pub fn presentation(mut self, presentation: semio_ui_contract::TreePresentation) -> Self {
         self.presentation = presentation;
         self
     }
@@ -302,12 +302,12 @@ pub const TREE_WINDOW_FIXED_NODE_ITEMS: usize = 32;
 pub const TREE_WINDOW_ROW_OWN_ITEMS: usize = 512;
 
 /// 🧾️ The body-wide ITEM budget windowed rows spend: the surface reconciler's item ceiling
-/// ([`semio_framework_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS`], less its one root seed) less what the fixed
+/// ([`semio_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS`], less its one root seed) less what the fixed
 /// records may charge. Rows carrying their own argument maps reach this long before the node budget — 28
 /// Home rows with five row actions each do — so [`TreeWindows`] prices every materialised row with
-/// [`semio_framework_ui_runtime::surface_subtree_items`] and ends a window early rather than letting the
+/// [`semio_ui_runtime::surface_subtree_items`] and ends a window early rather than letting the
 /// reconciler refuse the whole surface (ticket 26/09/23 U5: 138 Home spaces faulted `items 4098 > 4097`).
-pub const TREE_WINDOW_BODY_ITEM_BUDGET: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS - 1 - TREE_WINDOW_FIXED_NODE_HEADROOM * TREE_WINDOW_FIXED_NODE_ITEMS;
+pub const TREE_WINDOW_BODY_ITEM_BUDGET: usize = semio_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS - 1 - TREE_WINDOW_FIXED_NODE_HEADROOM * TREE_WINDOW_FIXED_NODE_ITEMS;
 
 /// 🪟️ What one container materialises this render: `len` rows starting at `offset` out of `total`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -324,7 +324,7 @@ pub struct TreeSlice {
 /// stops, instead of the whole document.
 ///
 /// 🧾️ `nodes` is the body-wide **node ledger**, and it is the reason per-container clamps are not
-/// enough. The reconciler admits at most [`semio_framework_ui_contract::UI_DOCUMENT_NODES`] node
+/// enough. The reconciler admits at most [`semio_ui_contract::UI_DOCUMENT_NODES`] node
 /// records per PRESENTED BODY — the tree root, every section node, every group item, every row and
 /// every placeholder counts once (`SurfaceReconcileLimits::max_nodes`, enforced per admitted node
 /// in `🧠️runtime/♻️reconcile/🦀️.rs`). A body whose containers each stayed inside
@@ -332,7 +332,7 @@ pub struct TreeSlice {
 /// House did, at `nodes: 129 > max_nodes: 128`.
 ///
 /// 🧾️ **Cost model — one budget, one arithmetic, both sides of the wire.** The ledger opens on
-/// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`], the SAME number the React host
+/// [`semio_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`], the SAME number the React host
 /// caps its requests with, and one windowed container costs `1 + its materialised rows`. Every
 /// node is charged EXACTLY ONCE: a nested [`tree_window_item`] built as a row of an enclosing
 /// window is the row its parent already paid for, so it does not charge its own `1` again (the
@@ -356,7 +356,7 @@ pub struct TreeSlice {
 ///
 /// 🔑️ **A container is addressed by its window PATH, never by its bare node key.** The path is the
 /// enclosing windowed containers' keys, outermost first, then its own key, joined by
-/// [`semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR`] — see [`Self::path_of`]. A
+/// [`semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR`] — see [`Self::path_of`]. A
 /// top-level section's path IS its key, so a flat body is byte-identical to a bare-key one; a
 /// nested one is `"…load-cases\u{1f}dead"`. This is what makes container identity collision-free
 /// BY CONSTRUCTION without touching node keys or pick target ids: a load case and a combination
@@ -437,7 +437,7 @@ impl<'a> TreeWindows<'a> {
 
     /// 🔑️ The **window path** `node_key` is addressed by from where the render currently stands:
     /// the enclosing windowed containers' keys, outermost first, then `node_key`, joined by
-    /// [`semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR`]. At the top level this is
+    /// [`semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR`]. At the top level this is
     /// `node_key` itself, so a flat body's requests and laws are byte-identical to before.
     ///
     /// 🔑️ A path is a **view-context identifier**: printable, at most 256 code points, because it
@@ -639,8 +639,8 @@ pub fn take_arena_unbuilt_rows() -> usize {
 /// full `BuiltChildren` — or one whose whole subtree the remaining [`TREE_WINDOW_BODY_ITEM_BUDGET`]
 /// cannot pay for ends the window early with a shorter materialised run, and gives back the records
 /// and items it and the unbuilt rest held; any other error propagates. A row the process-wide `UiValue`
-/// arena can no longer price is not started at all: [`semio_framework_ui_contract::ui_value_headroom`] must
-/// still admit one row of [`semio_framework_ui_contract::UI_VALUE_ROW_COLLECTIONS`] collections, because the
+/// arena can no longer price is not started at all: [`semio_ui_contract::ui_value_headroom`] must
+/// still admit one row of [`semio_ui_contract::UI_VALUE_ROW_COLLECTIONS`] collections, because the
 /// arena is ONE page shared by every panel and by the previous generations the reactor is still retiring, and
 /// a window that stops there stamps its full extent like any other short run. Rows are built with the
 /// ledger's `nested` flag raised, so a row that is itself a windowed container does not charge its own
@@ -673,7 +673,7 @@ pub(crate) fn tree_window_indexed_rows<B: HasChildren>(mut builder: B, windows: 
             }
             Err(error) => return Err(error),
         };
-        let Some(cost) = semio_framework_ui_runtime::surface_subtree_items(&node).ok().filter(|cost| *cost <= items) else {
+        let Some(cost) = semio_ui_runtime::surface_subtree_items(&node).ok().filter(|cost| *cost <= items) else {
             unbuilt();
             break;
         };
@@ -878,7 +878,7 @@ impl TreeWindowKit {
     /// is this with [`TreeWindows::unhosted`] — author defaults and one viewport of rows.
     pub fn render_windowed(view: &TreeView, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
         let root_id = UiText::try_format(format_args!("{}-root", Self::KIND_ID)).ok_or_else(|| ui_assembly_error("tree-window.section-id"))?;
-        let section = tree_window_section(windows, root_id.as_str(), Label::default(), true, &view.roots, |node| Self::windowed_node(windows, node, semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH))?;
+        let section = tree_window_section(windows, root_id.as_str(), Label::default(), true, &view.roots, |node| Self::windowed_node(windows, node, semio_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH))?;
         let tree_builder = tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
         tree_builder.try_child(section).map_err(|_| ui_assembly_error("tree-window.section"))?.try_build().map_err(|_| ui_assembly_error("tree-window.build"))
     }
@@ -918,7 +918,7 @@ impl TreeWindowKit {
     {
         let root_id = UiText::try_format(format_args!("{}-root", Self::KIND_ID)).ok_or_else(|| ui_assembly_error("tree-window.section-id"))?;
         let section = tree_window_section(windows, root_id.as_str(), Label::default(), true, &view.roots, |node| {
-            Self::editable_windowed_node(windows, node, &node.id, semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH, controller_id, &mut editable)
+            Self::editable_windowed_node(windows, node, &node.id, semio_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH, controller_id, &mut editable)
         })?;
         let tree_builder = tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
         tree_builder.try_child(section).map_err(|_| ui_assembly_error("tree-window.section"))?.try_build().map_err(|_| ui_assembly_error("tree-window.build"))

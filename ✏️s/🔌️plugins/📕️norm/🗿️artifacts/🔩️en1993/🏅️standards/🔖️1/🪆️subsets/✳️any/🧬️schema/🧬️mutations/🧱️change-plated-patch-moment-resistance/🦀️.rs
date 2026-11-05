@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedPatchMomentR
         record: "ChangedPlatedPatchMomentResistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Moment resistance M_c,Rd of the plated panel", "Plattenfeld: Momententragfähigkeit M_c,Rd ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Moment resistance M_c,Rd of the plated panel", "Plattenfeld: Momententragfähigkeit M_c,Rd ändern")
     }
 }
 

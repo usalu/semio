@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-plugin-instance-typed-ops"
+name = "semio-plugin-instance-typed-ops"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,44 +25,44 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
-semio-framework-plugin-scrub-host = { path = "../../../../🛠️tool-machine/🫧️host/📦️packages/🦀️rust" }
-semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
-semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
-semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
-semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
-semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
-semio-framework-plugin-window-config-mutation = { path = "../../../../🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust" }
-semio-framework-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
-semio-framework-plugin-composition-publication = { path = "../../../../🧩️composition/📬️publication/📦️packages/🦀️rust" }
-semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
-semio-framework-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
-semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust" }
-semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-jobs = { path = "../../../👷️jobs/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-extension = { path = "../../../🧩️extensions/📦️packages/🦀️rust" }
+semio-plugin-scrub-host = { path = "../../../../🛠️tool-machine/🫧️host/📦️packages/🦀️rust" }
+semio-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
+semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
+semio-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-plugin-window-config-mutation = { path = "../../../../🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust" }
+semio-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
+semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-plugin-composition-publication = { path = "../../../../🧩️composition/📬️publication/📦️packages/🦀️rust" }
+semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
+semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
+semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust" }
+semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust" }
+semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
+semio-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
+semio-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
+semio-plugin-instance-jobs = { path = "../../../👷️jobs/📦️packages/🦀️rust" }
+semio-plugin-instance-extension = { path = "../../../🧩️extensions/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-render = { path = "../../../🖼️render/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-dispatch = { path = "../../../📨️dispatch/📦️packages/🦀️rust" }
-semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }
+semio-plugin-instance-render = { path = "../../../🖼️render/📦️packages/🦀️rust" }
+semio-plugin-instance-dispatch = { path = "../../../📨️dispatch/📦️packages/🦀️rust" }
+semio-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
-semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
-semio-framework-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
+semio-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
+semio-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
-semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]
@@ -70,4 +70,4 @@ serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-tool-typing-edit = { path = "../../../../../../../../🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
-semio-framework-plugin-tool-run-operations = { path = "../../../../⏯️tool-run/🎞️tick/🎮️operations/📦️packages/🦀️rust" }
+semio-plugin-tool-run-operations = { path = "../../../../⏯️tool-run/🎞️tick/🎮️operations/📦️packages/🦀️rust" }

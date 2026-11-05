@@ -7,15 +7,15 @@
 
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphEdgeRecord;
-use semio_framework_plugin::NodeGraphNodeRecord;
-use semio_framework_plugin::NodeGraphPortRecord;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_ui_contract::SurfaceKind;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphEdgeRecord;
+use semio_plugin::NodeGraphNodeRecord;
+use semio_plugin::NodeGraphPortRecord;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_os_kernel::Viewport2d;
+use semio_ui_contract::SurfaceKind;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "trinity-jack-view-graph";
@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Nakagin Graph", "Nakagin-Graph"),
         body_key: BODY_KEY.into(),
-        surface_kind: semio_framework_plugin::SurfaceKind::NodeGraph,
+        surface_kind: semio_plugin::SurfaceKind::NodeGraph,
         icon_id: "graph-dag".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
@@ -51,7 +51,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Renders the original rich published child through its visual behavior.
-pub fn render(document:&JackSnapshot,child:&dyn semio_s_artifact_trinity_jack_graph_query::JackContentVisual)->semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>{
+pub fn render(document:&JackSnapshot,child:&dyn semio_s_artifact_trinity_jack_graph_query::JackContentVisual)->semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>{
  let(count_nodes,count_edges)=child.visual_counts();
  let nodes=(0..count_nodes).filter_map(|index|{
   let node=child.node_view(index)?;
@@ -63,7 +63,7 @@ pub fn render(document:&JackSnapshot,child:&dyn semio_s_artifact_trinity_jack_gr
     let viewport = Viewport2d { x: document.camera.x, y: document.camera.y, zoom: document.camera.zoom };
     let mut scene = NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) };
     scene.controls_json = Some(semio_framework_pack_json::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
-    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render
 

@@ -18,8 +18,8 @@ pub struct ChangeSlabActionCategory {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSlabActionCategory where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_slab_action_category::ChangeSlabActionCategory> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "slab-action-category", kind: "change-slab-action-category", record: "ChangedSlabActionCategory" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change category of the slab action", "Kategorie der Deckeneinwirkung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change category of the slab action", "Kategorie der Deckeneinwirkung ändern")
     }
 }
 

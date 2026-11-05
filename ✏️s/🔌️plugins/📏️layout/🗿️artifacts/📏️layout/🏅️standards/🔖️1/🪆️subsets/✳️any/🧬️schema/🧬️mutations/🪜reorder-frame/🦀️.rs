@@ -23,11 +23,11 @@ pub struct ReorderFrame {
 impl<Op> MutationKind<LayoutSnapshot, Op> for ReorderFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::reorder_frame::ReorderFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "frame", kind: "reorder-frame", record: "ReorderFrame" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         if self.forward {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Bring frame \"{}\" forward", self.frame_id), &format!("Rahmen \"{}\" nach vorn holen", self.frame_id))
+            semio_ui_locale::LocalizedLabel::native(&format!("Bring frame \"{}\" forward", self.frame_id), &format!("Rahmen \"{}\" nach vorn holen", self.frame_id))
         } else {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Send frame \"{}\" backward", self.frame_id), &format!("Rahmen \"{}\" nach hinten stellen", self.frame_id))
+            semio_ui_locale::LocalizedLabel::native(&format!("Send frame \"{}\" backward", self.frame_id), &format!("Rahmen \"{}\" nach hinten stellen", self.frame_id))
         }
     }
     fn target(&self) -> Vec<String> { vec![self.frame_id.clone()] }

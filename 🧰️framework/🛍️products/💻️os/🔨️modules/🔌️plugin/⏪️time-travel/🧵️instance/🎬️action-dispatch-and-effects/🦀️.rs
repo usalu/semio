@@ -1,7 +1,7 @@
 //! 🎬️ Action dispatch and effects of the instance time-travel turns: the dispatched and applied time-travel actions, the event reduction and the performed effects. See [`super`].
 
 use super::*;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Terminology;
 use semio_framework::Fault;
 use semio_framework::MutationId;
 use semio_framework::FaultOrigin;
@@ -16,7 +16,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// (its stage and generation) is prepared at once as the history patch of the unsolicited UI progress frame of this
     /// same turn, so every dispatch route — a command's reply, a retained-surface intent's reply that carries no patch —
     /// publishes the new generation with the stage flip and a verb stamped with it is never stale.
-    pub(crate) async fn dispatch_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    pub(crate) async fn dispatch_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         let mut effects = Vec::new();
         let outcome = self.apply_time_travel_action(action, args, meta, &mut effects, identity, cx).await?;
         let output = match outcome {
@@ -34,7 +34,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// ⚖️ Applies one history-edit verb: delivers a pending base change first, then the verb's event with its effects.
-    pub async fn apply_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<TimeTravelActionOutcome, Fault> {
+    pub async fn apply_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<TimeTravelActionOutcome, Fault> {
         if self.time_travel.owners().any(TimeTravelOwners::command_pending)||self.time_travel.command_receipt.is_some()||self.time_travel.pending_command.is_some()||self.time_travel.discard_cursor.is_some()||!self.time_travel.command_retirements.terminal_is_empty(){return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy))}
         self.watch_time_travel_base(identity).await?;
         if !self.time_travel.is_active() {
@@ -92,7 +92,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// re-published only when the event or its effects swapped the document a window shows (the committed document, the
     /// draft preview, the replayed head); any other edge — the finalize prompt opening or closing, an accepted draft
     /// starting its replay, a replay run again — re-publishes the history body and the chips alone.
-    async fn reduce_unprepared_time_travel_event(&mut self, event: TimeTravelEvent, meta: Option<&ActionMeta>, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<TimeTravelActionOutcome, Fault> {
+    async fn reduce_unprepared_time_travel_event(&mut self, event: TimeTravelEvent, meta: Option<&ActionMeta>, effects: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<TimeTravelActionOutcome, Fault> {
         let shown = self.shared().time_travel_shown_identity();
         match self.time_travel.session.apply(event) {
             Ok(session_effects) => {
@@ -108,7 +108,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
     }
 
-    pub(super) async fn apply_time_travel_event(&mut self,event:TimeTravelEvent,meta:Option<&ActionMeta>,effects:&mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:Option<&mut semio_framework_job::StepContext<'_>>)->Result<TimeTravelActionOutcome,Fault>{
+    pub(super) async fn apply_time_travel_event(&mut self,event:TimeTravelEvent,meta:Option<&ActionMeta>,effects:&mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:Option<&mut semio_framework_job::StepContext<'_>>)->Result<TimeTravelActionOutcome,Fault>{
         if self.time_travel.owners().any(TimeTravelOwners::command_pending)||self.time_travel.command_receipt.is_some()||self.time_travel.pending_command.is_some()||self.time_travel.discard_cursor.is_some()||!self.time_travel.command_retirements.terminal_is_empty(){return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy))}
         if let TimeTravelEvent::Discard{generation}=&event{
             if *generation!=self.time_travel.session.generation{return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Session(TimeTravelRefusal::Stale)))}
@@ -119,7 +119,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// 🛠️ Performs the session's effects in order; a commit's own `Finalized`/`FinalizeFaulted` effects follow it.
-    pub(super) async fn perform_time_travel_effects(&mut self, effects: Vec<TimeTravelEffect>, meta: Option<&ActionMeta>, kernel: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,mut receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<(), Fault> {
+    pub(super) async fn perform_time_travel_effects(&mut self, effects: Vec<TimeTravelEffect>, meta: Option<&ActionMeta>, kernel: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,mut receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<(), Fault> {
         let mut queue: VecDeque<TimeTravelEffect> = effects.into();
         while let Some(effect) = queue.pop_front() {
             match effect {

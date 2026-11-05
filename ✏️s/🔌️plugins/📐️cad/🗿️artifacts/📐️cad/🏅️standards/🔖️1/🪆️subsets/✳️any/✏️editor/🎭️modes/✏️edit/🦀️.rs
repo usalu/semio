@@ -2,9 +2,9 @@
 //! energy/structure-classic) plus the world-scene, selection-overlay and engagement-HUD builders its
 //! four windows share. Each window binds these to its own pane; nothing here is pane-specific.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[path = "."]
@@ -42,28 +42,28 @@ use semio_s_artifact_cad_cad_model::{geometry::CadGeometry, geometry::CadObject}
 use semio_s_artifact_cad_cad_inferences::{object_mesh_data, object_scale_json, resolve_object_mesh_url};
 use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadSnapshot, snapshot::CadWorkingScene};
 use semio_framework_value::DslValue;
-use semio_framework_plugin::mesh_from_kind;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::world3d_environment_json;
-use semio_framework_plugin::world3d_fit_json;
-use semio_framework_plugin::world3d_mesh_id_from_url;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementPossible;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowLayout;
-use semio_framework_plugin::WindowLayoutAxisNode;
-use semio_framework_plugin::WindowLayoutChild;
-use semio_framework_plugin::WindowLayoutRoot;
-use semio_framework_plugin::WindowLayoutStackNode;
-use semio_framework_plugin::WindowLayoutWindowNode;
-use semio_framework_plugin::World3dScene;
+use semio_plugin::mesh_from_kind;
+use semio_plugin::scene_surface;
+use semio_plugin::world3d_environment_json;
+use semio_plugin::world3d_fit_json;
+use semio_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_plugin::ModeDefinition;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementPossible;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowLayout;
+use semio_plugin::WindowLayoutAxisNode;
+use semio_plugin::WindowLayoutChild;
+use semio_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutStackNode;
+use semio_plugin::WindowLayoutWindowNode;
+use semio_plugin::World3dScene;
 use std::hash::{Hash, Hasher};
 
 pub const CAD_PLAY_MODE_EDIT: &str = "edit";
@@ -129,10 +129,10 @@ pub const CAD_FIT_PADDING: f64 = 1.25;
 /// 🥽️ The granularity a world-3d pane pick selects under in the `"cad"` interaction domain.
 pub const CAD_WORLD_PICK_GRANULARITY: &str = "object";
 
-/// 🌉️ `MeshData` (`semio_framework_plugin`) carries its own first-party `From<MeshData> for
+/// 🌉️ `MeshData` (`semio_plugin`) carries its own first-party `From<MeshData> for
 /// pack::json::Value` — reached here through `protocol`'s `os_pack` re-export of the same `pack`
 /// crate, never `serde_json`. Bridged once, here, at the point each mesh payload is assembled.
-fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> DslValue {
+fn mesh_data_to_dsl(data: &semio_plugin::MeshData) -> DslValue {
     semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::from(data.clone()))
 }
 
@@ -512,7 +512,7 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document, pane, objects), CAD_FIT_PADDING, None));
     scene.domain_id = Some(CAD_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(CAD_WORLD_PICK_GRANULARITY.into());
-    scene_surface(surface_id, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)
+    scene_surface(surface_id, semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️WorldScene
 
@@ -598,7 +598,7 @@ pub mod window_transient {
     use semio_s_artifact_cad_cad_transient::{CadWorldWindowTransient, CadWorldWindowTransientMutation};
     use crate::{windows::building, windows::energy, windows::shape, windows::structure_classic};
 
-    semio_framework_plugin::window_transient_registry! {
+    semio_plugin::window_transient_registry! {
         state: CadWorldWindowTransient,
         mutation: CadWorldWindowTransientMutation,
         windows: {

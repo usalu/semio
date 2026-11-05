@@ -22,8 +22,8 @@ pub struct InsertFace {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertFace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "face", kind: "insert-face", record: "InsertFace" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert face", "Fläche einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert face", "Fläche einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

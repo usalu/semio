@@ -51,19 +51,19 @@ fn owned_test_guest(hash: OwnedTestHash) -> Vec<u8> {
         body.push(0x0b);
         body
     };
-    let exports = semio_framework_plugin_interpreter::OwnedSemioExport::ALL;
+    let exports = semio_plugin_interpreter::OwnedSemioExport::ALL;
     let (types, bodies): (Vec<u8>, Vec<Vec<u8>>) = exports
         .iter()
         .map(|export| match export {
-            semio_framework_plugin_interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
-            semio_framework_plugin_interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
-            semio_framework_plugin_interpreter::OwnedSemioExport::Checkpoint | semio_framework_plugin_interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
-            semio_framework_plugin_interpreter::OwnedSemioExport::ChannelVersion => (2, returning(3072, &channel_output)),
-            semio_framework_plugin_interpreter::OwnedSemioExport::PackSchemaHash => match hash {
+            semio_plugin_interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
+            semio_plugin_interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
+            semio_plugin_interpreter::OwnedSemioExport::Checkpoint | semio_plugin_interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
+            semio_plugin_interpreter::OwnedSemioExport::ChannelVersion => (2, returning(3072, &channel_output)),
+            semio_plugin_interpreter::OwnedSemioExport::PackSchemaHash => match hash {
                 OwnedTestHash::Answers(_) => (3, returning(1024, &hash_output)),
                 OwnedTestHash::Spins => (3, vec![0x00, 0x03, 0x40, 0x0c, 0x00, 0x0b, 0x42, 0x00, 0x0b]),
             },
-            semio_framework_plugin_interpreter::OwnedSemioExport::Genesis => (3, returning(2048, &genesis_output)),
+            semio_plugin_interpreter::OwnedSemioExport::Genesis => (3, returning(2048, &genesis_output)),
             _ => (3, vec![0x00, 0x42, 0x00, 0x0b]),
         })
         .unzip();
@@ -182,20 +182,20 @@ async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
 async fn guest_codec_tables_answer_like_the_linked_native_codecs() {
     macro_rules! compare_plugin {
         ($plugin:expr, $codecs:expr) => {{
-            let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
-            semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, $plugin.expect("plugin assembles"));
+            let runtime = semio_plugin::plugin_runtime::PluginRuntime::new(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
+            semio_plugin::plugin_runtime::install_plugin_bundle(&runtime, $plugin.expect("plugin assembles"));
             let document_id = format!("artifact-{}", "2".repeat(32));
             let (mut owned, mut unowned) = (Vec::new(), 0usize);
             for codec in $codecs {
-                match semio_framework_plugin::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, &codec.schema).await {
+                match semio_plugin::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, &codec.schema).await {
                     Err(fault) => {
                         assert!(format!("{fault:?}").contains("owned by no app"), "{}: {fault:?}", codec.schema);
                         unowned += 1;
                     }
                     Ok(hash) => {
                         assert_eq!(hash, codec.pack_schema_hash, "{}: pack-schema hash", codec.schema);
-                        let pair = semio_framework_plugin::plugin_runtime::plugin_artifact_genesis(&runtime, &codec.schema, &document_id).await.unwrap_or_else(|fault| panic!("{}: genesis {fault:?}", codec.schema));
-                        let guest = semio_framework_plugin::plugin_runtime::plugin_artifact_print_mirror(&runtime, &codec.schema, &pair.pack, &pair.spr).await.unwrap_or_else(|fault| panic!("{}: guest mirror {fault:?}", codec.schema));
+                        let pair = semio_plugin::plugin_runtime::plugin_artifact_genesis(&runtime, &codec.schema, &document_id).await.unwrap_or_else(|fault| panic!("{}: genesis {fault:?}", codec.schema));
+                        let guest = semio_plugin::plugin_runtime::plugin_artifact_print_mirror(&runtime, &codec.schema, &pair.pack, &pair.spr).await.unwrap_or_else(|fault| panic!("{}: guest mirror {fault:?}", codec.schema));
                         let native = (codec.print_mirror)(&pair.pack, &pair.spr).await.unwrap_or_else(|error| panic!("{}: native mirror {error:?}", codec.schema));
                         assert_eq!(guest.ops, native.ops, "{}: op-log mirror", codec.schema);
                         assert!(!guest.dsl.is_empty() && !native.dsl.is_empty(), "{}: both render the document", codec.schema);

@@ -1,7 +1,7 @@
 //! 🏭️ Process3d workshop machine mutations: create, delete, rename, re-icon and re-capability machines.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 //#region 🧩️Modules
 #[path = "."]

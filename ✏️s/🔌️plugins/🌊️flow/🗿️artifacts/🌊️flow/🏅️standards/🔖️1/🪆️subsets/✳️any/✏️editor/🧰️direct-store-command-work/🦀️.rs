@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🧵️DirectStoreLaneRoutes
-impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowDirectStoreWork {
+impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowDirectStoreWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -13,7 +13,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         command: &FlowCommand,
         snapshot: &FlowSnapshot,
         interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<FlowPlayApp>>>,
     ) -> Option<usize> {
         if command.command_id() != self.tool_id || !FLOW_DIRECT_STORE_TOOL_IDS.contains(&self.tool_id) {
             return None;
@@ -62,9 +62,9 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         }
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_plugin::EditorApp<FlowPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation, snapshot_read: _ } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation, snapshot_read: _ } = *input;
         let context = context.ok_or_else(|| Fault::from("flow-window-context-required"))?;
         let view = context.view_state.as_deref().ok_or_else(|| Fault::from("flow-window-view-required"))?;
         let config = main::config::from_snapshot(context.window_config.as_ref());
@@ -96,7 +96,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     return Ok(ArtifactCommandWorkStep::Progress { stage: "flow-duplicate-source", preview: br#"{"en":"Finding source widget","de":"Quell-Widget wird gesucht"}"# });
                 }
                 self.completed = true;
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("duplicateWidget found no widget \"{}\"", payload.widget_id)));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("mutation.target-missing"), format!("duplicateWidget found no widget \"{}\"", payload.widget_id)));
             }
             let source_index = self.duplicate_source.ok_or_else(|| Fault::from("flow-duplicate-source-owner"))?;
             let source = child.nodes.get(source_index).filter(|node| node.id == payload.widget_id).ok_or_else(|| Fault::from("flow-duplicate-source-stale"))?;
@@ -143,7 +143,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             transient.duplicate_widget_progress_json.clear();
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
                 emit,
-                ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![main::transient::addressed(view, transient)?] },
+                ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![main::transient::addressed(view, transient)?] },
             });
         }
         if let FlowCommand::FocusSelection(_) = command {
@@ -177,7 +177,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let mutation = generation_window_transient(command, &composed, &config, &current, view)?;
             self.completed = true;
             let emit = Emit::default();
-            let ephemeral = semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: mutation.into_iter().collect() };
+            let ephemeral = semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: mutation.into_iter().collect() };
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral });
         }
         if matches!(command, FlowCommand::RemoveWidget(_) | FlowCommand::Disconnect(_)) {
@@ -207,8 +207,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             self.completed = true;
             if node_ids.is_empty() && edge_ids.is_empty() {
                 return Err(match command {
-                    FlowCommand::RemoveWidget(payload) => Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("removeWidget found no widget \"{}\"", payload.widget_id)),
-                    FlowCommand::Disconnect(payload) => Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("disconnect found no synapse \"{}\"", payload.synapse_id)),
+                    FlowCommand::RemoveWidget(payload) => Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("mutation.target-missing"), format!("removeWidget found no widget \"{}\"", payload.widget_id)),
+                    FlowCommand::Disconnect(payload) => Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("mutation.target-missing"), format!("disconnect found no synapse \"{}\"", payload.synapse_id)),
                     _ => Fault::from("flow-retained-direct-route-mismatch"),
                 });
             }
@@ -270,7 +270,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let node_ids = self.node_ids.take().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?;
             self.completed = true;
             if node_ids.is_empty() && edge_ids.is_empty() {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
             }
             return Ok(ArtifactCommandWorkStep::Complete(flow_content_leaves_emit(&snapshot.content.child_id, flow_removal_leaves(&child, &node_ids, &edge_ids))));
         }

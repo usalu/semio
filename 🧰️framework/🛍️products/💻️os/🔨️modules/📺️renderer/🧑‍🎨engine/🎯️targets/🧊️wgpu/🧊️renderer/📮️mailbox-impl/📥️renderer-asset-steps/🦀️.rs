@@ -71,7 +71,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             RendererAssetFetchOwner::Shared(owner) => {
                 if matches!(owner.kind(), WorldAssetRequestKind::Glb) {
                     if let Some((detail, _, _)) = rejection {
-                        semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), detail);
+                        semio_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), detail);
                     }
                 }
                 finish_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared)
@@ -102,8 +102,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         let (detail, kind, url) = rejection;
         log_debug(&format!("asset refused: {detail} — url={url}"));
         match *kind {
-            WorldAssetRequestKind::UiImage { id } => semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::apply_ui_image_bytes(id.as_str(), url, &[]),
-            kind @ WorldAssetRequestKind::MapTile { .. } => semio_framework_os_renderer_wgpu_engine_board::tiled_map::apply_map_tile_bytes(kind, &[]),
+            WorldAssetRequestKind::UiImage { id } => semio_renderer_wgpu_scene_canvas2d::ui_image_loading::apply_ui_image_bytes(id.as_str(), url, &[]),
+            kind @ WorldAssetRequestKind::MapTile { .. } => semio_renderer_wgpu_engine_board::tiled_map::apply_map_tile_bytes(kind, &[]),
             WorldAssetRequestKind::Glb | WorldAssetRequestKind::ReferenceImage | WorldAssetRequestKind::Terrain { .. } => {}
         }
     }
@@ -221,7 +221,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
 
     /// 🧵️ Advances the private asset owner independently of frame construction and presentation.
     pub fn asset_decode_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<RendererAssetDecodeTurn, semio_framework_job::OriginalTurnFailure> {
-        if semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::retire_cancelled_step() {
+        if semio_renderer_wgpu_icon_host::icon_export::asset::retire_cancelled_step() {
             return Ok(self.asset_decode_deferred_turn());
         }
         let session = self.pump_asset_decode_session_step(false, cx)?;

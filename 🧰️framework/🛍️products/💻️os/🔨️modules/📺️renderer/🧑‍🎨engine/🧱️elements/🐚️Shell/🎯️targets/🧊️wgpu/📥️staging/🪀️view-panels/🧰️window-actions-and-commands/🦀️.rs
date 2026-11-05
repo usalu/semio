@@ -62,7 +62,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         let documents = if search { &mut self.docs.window_search_documents } else { &mut self.docs.window_actions_documents };
         let Some(document) = documents.remove(window_id) else { return true };
         let surface = if search { window_search_surface_id(window_id) } else { window_actions_surface_id(window_id) };
-        let height = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(&surface).unwrap_or(theme.control_height * 2.0);
+        let height = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(&surface).unwrap_or(theme.control_height * 2.0);
         let rect = if search { window_search_rect(theme, window_rect, height) } else { window_actions_rect(theme, window_rect, height) };
         if !cursor.flag {
             draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.panel);
@@ -74,7 +74,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
             let collapsed_sections = &mut self.input.collapsed_sections;
             let open_selects = &mut self.input.open_selects;
             let widget_maps = &mut self.input.widget_maps_staging;
-            let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface.as_str() };
+            let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface.as_str() };
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(rect);

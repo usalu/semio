@@ -1,9 +1,9 @@
 //! ⌨️ Drawing editor unit laws over commands: every command round trip, wire keyword, retained route dispositions and example resolution.
 
 use super::*;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::NoConfig;
+use semio_plugin::ArtifactEditor;
 
 //#region 🔖️WireGuards
 /// 🔖️ One `DrawingCommand` value per row, in binary-variant-ordinal order — feeds both the
@@ -143,7 +143,7 @@ async fn every_command_row_prints_starting_with_its_wire_keyword() {
 /// unreachable from the client.
 #[semio_framework_async_macros::async_test]
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory as _;
+    use semio_plugin::ArtifactOwnedToolJobFactory as _;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
     assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 30);
@@ -161,13 +161,13 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     for contract in DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.iter().chain(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingPathCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingImageCommandJobFactory::PUBLICATION_CONTRACTS) {
         assert!(routes.contains(&contract.tool_id), "{} publishes without owning a route", contract.tool_id);
         assert!(!contract.lanes.is_empty(), "{} declares no publication lane", contract.tool_id);
-        assert!(!contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1, "{} pairs HostOnly with another lane, which the registry rejects", contract.tool_id);
+        assert!(!contract.lanes.contains(&semio_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1, "{} pairs HostOnly with another lane, which the registry rejects", contract.tool_id);
     }
 
     assert_eq!(<DrawingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), routes.len());
     assert!(<DrawingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the artifact lane needs its one-item preparation authority");
     assert!(<DrawingPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_none(), "NoConfig owns no document-config publication lane");
-    let mut window_config_owners = semio_framework_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("drawing-contract-owner".into()));
+    let mut window_config_owners = semio_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("drawing-contract-owner".into()));
     <DrawingPlayApp as ArtifactEditor>::register_window_config_owners(&mut window_config_owners).expect("register canvas window config owner");
     assert!(!window_config_owners.is_empty(), "the canvas window config owns its own retained publication authority");
 
@@ -186,7 +186,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
         .chain(definition.commands.iter().map(|command| (command.id.as_str(), command.semantics.execution.interactive_job)))
         .collect::<Vec<_>>();
     for route in &routes {
-        assert!(classified.iter().any(|(id, classification)| id == route && *classification == semio_framework_plugin::InteractiveJobClassification::Migrated), "{route} owns a retained route but the manifest does not classify it Migrated");
+        assert!(classified.iter().any(|(id, classification)| id == route && *classification == semio_plugin::InteractiveJobClassification::Migrated), "{route} owns a retained route but the manifest does not classify it Migrated");
     }
 }
 
@@ -198,7 +198,7 @@ async fn set_active_example_resolves_the_registered_catalogue() {
     let examples = semio_s_artifact_draw_drawing_examples::examples();
     assert!(examples.iter().any(|source| source.id() == "demo"), "the subset registers its demo example");
     let doc = default_drawing_document("example-probe", None);
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let config = NoConfig::default();
     let view = ArtifactView::with_operation(&doc, &history,semio_s_artifact_draw_drawing_editor::identity_test::operation());
     let cfg = ConfigView { snapshot: &config, window: None };

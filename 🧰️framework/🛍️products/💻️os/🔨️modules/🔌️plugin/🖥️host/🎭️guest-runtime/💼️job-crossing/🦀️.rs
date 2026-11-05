@@ -2,8 +2,8 @@
 
 use super::{GuestInstance, GuestRuntime, GuestRuntimes};
 use semio_framework_actor::{OriginalActorTurnLoan, OriginalActorTurnWork, OriginalGuestExecutionBudget, OriginalJobBudget, OriginalJobCallFailure, OriginalJobOutputState, OriginalJobSource, RetainedTurnInput};
-use semio_framework_plugin_guest_contract::{identity_turn_fault, JobStep, TurnFault};
-use semio_framework_plugin_interpreter_runtime::OriginalGuestJobCall;
+use semio_plugin_guest_contract::{identity_turn_fault, JobStep, TurnFault};
+use semio_plugin_interpreter_runtime::OriginalGuestJobCall;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError, ValueRefusalKind};
 
 /// 🎟️ One funded crossing: the logical job budget and the independent backend instruction authorization of the same original input.

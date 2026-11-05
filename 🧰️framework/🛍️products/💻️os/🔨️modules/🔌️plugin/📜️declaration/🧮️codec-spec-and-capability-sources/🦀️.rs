@@ -54,13 +54,13 @@ impl DocumentCodecSpec {
     /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
     pub fn bare<Snapshot, Mutation>(schema: impl Into<String>, dialect: Dialect) -> Self
     where
-        Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
-        Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_framework_os_kernel::StoreMutationFor<Snapshot>,
+        Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState,
+        Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_os_kernel::StoreMutationFor<Snapshot>,
     {
         fn codec<Snapshot, Mutation>(schema: String) -> store::os_store::serialization::ArtifactCodec
         where
-            Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
-            Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_framework_os_kernel::StoreMutationFor<Snapshot>,
+            Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState,
+            Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_os_kernel::StoreMutationFor<Snapshot>,
         {
             store::native_artifact_codec::<Snapshot>(schema)
         }
@@ -79,9 +79,9 @@ impl DocumentCodecSpec {
             + Sync
             + pack::snapshot::ArtifactDsl
             + ArtifactPack
-            + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
+            + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot
             + 'static,
-        Mutation: ::semio_framework_os_kernel::StoreMutationFor<Snapshot>
+        Mutation: ::semio_os_kernel::StoreMutationFor<Snapshot>
             + PartialEq
             + semio_framework_value::ToValue
             + semio_framework_value::FromValue
@@ -105,9 +105,9 @@ impl DocumentCodecSpec {
                 + Sync
                 + pack::snapshot::ArtifactDsl
                 + ArtifactPack
-                + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
+                + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot
                 + 'static,
-            Mutation: ::semio_framework_os_kernel::StoreMutationFor<Snapshot>
+            Mutation: ::semio_os_kernel::StoreMutationFor<Snapshot>
                 + PartialEq
                 + semio_framework_value::ToValue
                 + semio_framework_value::FromValue
@@ -131,13 +131,13 @@ impl DocumentCodecSpec {
 
     pub fn binding(
         &self,
-        channel: semio_framework_os_kernel::io::ArtifactCodecBindingChannel,
+        channel: semio_os_kernel::io::ArtifactCodecBindingChannel,
         contributor: &str,
         artifact_kind: Option<String>,
         codec: &store::os_store::serialization::ArtifactCodec,
-    ) -> semio_framework_os_kernel::io::ArtifactCodecBinding {
+    ) -> semio_os_kernel::io::ArtifactCodecBinding {
         let apps = if self.app_id.is_empty() { Vec::new() } else { vec![self.app_id.to_string()] };
-        semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(channel, contributor, artifact_kind, apps, Some(self.dialect.into()), None, codec)
+        semio_os_kernel::io::ArtifactCodecBinding::from_codec(channel, contributor, artifact_kind, apps, Some(self.dialect.into()), None, codec)
     }
 
     pub fn preflight_foreign(&self, document_app_ids: &BTreeSet<String>) -> Result<(), PluginAssemblyError> {
@@ -150,7 +150,7 @@ impl DocumentCodecSpec {
         if !document_app_ids.contains(self.app_id.as_str()) {
             return Err(PluginAssemblyError::new("plugin-assembly.foreign-document-codec-owner", format!("foreign document codec for app {:?} requires that app to be declared by this plugin", self.app_id)));
         }
-        semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(self.dialect.into(), self.codec()).into_iter().collect::<Vec<_>>())
+        semio_os_kernel::io::io_mechanism::preflight_native_snapshots(&semio_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(self.dialect.into(), self.codec()).into_iter().collect::<Vec<_>>())
             .map_err(|error| PluginAssemblyError::new("plugin-assembly.foreign-snapshot", error.to_string()))?;
         Ok(())
     }
@@ -163,7 +163,7 @@ pub(super) struct ArtifactCapabilitySources<'a> {
     pub(super) inferences: &'a [::semio_framework_schema_registry::ArtifactInferenceDescriptor],
     pub(super) inference_services: &'a [ArtifactInferenceService],
     pub(super) composers: &'a [&'static ComposerEntry],
-    pub(super) formats: &'a [semio_framework_os_kernel::io::FormatDescriptor],
+    pub(super) formats: &'a [semio_os_kernel::io::FormatDescriptor],
     pub(super) subset_validators: &'a [&'static SubsetValidatorEntry],
     pub(super) languages: &'a [&'static semio_framework_dsl::LanguageSpec],
     pub(super) document_codecs: &'a [DocumentCodecSpec],
@@ -186,7 +186,7 @@ impl ArtifactCapabilitySources<'_> {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::inference(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), service.metadata().inference_schema)?]));
         }
         for entry in composers {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), semio_framework_plugin_identity::composer_identity_claims(owner, entry.writes, entry.reads)?));
+            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), semio_plugin_identity::composer_identity_claims(owner, entry.writes, entry.reads)?));
         }
         for row in formats {
             let mut claims = Vec::with_capacity(row.mimes.len() + row.extensions.len());
@@ -239,7 +239,7 @@ impl ArtifactDeclaration {
     }
 
     /// 🪪️ Reads each original codec together with its declaration and optional app context.
-    pub fn document_codec_contexts(&self, channel: semio_framework_os_kernel::io::ArtifactCodecBindingChannel, contributor: &str) -> Vec<semio_framework_os_kernel::io::ArtifactCodecBinding> {
+    pub fn document_codec_contexts(&self, channel: semio_os_kernel::io::ArtifactCodecBindingChannel, contributor: &str) -> Vec<semio_os_kernel::io::ArtifactCodecBinding> {
         self.document_codecs.iter().map(|spec| spec.binding(channel, contributor, Some(self.definition.identity().as_str().to_string()), &spec.codec())).collect()
     }
 
@@ -311,8 +311,8 @@ impl ArtifactDeclaration {
                 return Err(PluginAssemblyError::new("plugin-assembly.snapshot-owner", format!("snapshot codec {:?} requires an exact dialect of artifact {:?}", spec.schema, self.kind)));
             }
         }
-        let snapshots: Vec<_> = self.document_codecs.iter().filter_map(|spec| semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec())).collect();
-        semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
+        let snapshots: Vec<_> = self.document_codecs.iter().filter_map(|spec| semio_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec())).collect();
+        semio_os_kernel::io::io_mechanism::preflight_native_snapshots(&snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
         for entry in &self.composers {
             if entry.writes.artifact_kind != self.kind && !entry.reads.iter().any(|dialect| dialect.artifact_kind == self.kind) {
                 return Err(PluginAssemblyError::new("plugin-assembly.composer-owner", format!("composer for {:?} neither reads nor writes that artifact", self.kind)));

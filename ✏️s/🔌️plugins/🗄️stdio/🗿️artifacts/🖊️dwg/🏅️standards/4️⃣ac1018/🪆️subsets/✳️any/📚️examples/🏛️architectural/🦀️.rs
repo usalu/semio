@@ -3,8 +3,8 @@
 //! The DWG codec projects the real fixture into standard logical drawing and metadata concepts.
 
 use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg;
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "architectural";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

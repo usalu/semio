@@ -5,13 +5,13 @@
 //! engagement input: a viewer has none of those and emits no mutations by construction (`ViewEmit`).
 
 use crate::NoteSnapshot;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::InkCanvasScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_plugin::InkCanvasScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "note-view-composite";
@@ -51,7 +51,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(document: &NoteSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = crate::NoteCamera::default();
     let document_json = crate::note_canvas_document_json(document, &camera);
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, String::new(), "composite".into(), false))
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, String::new(), "composite".into(), false))
 }
 //#endregion 🔖️Render
 

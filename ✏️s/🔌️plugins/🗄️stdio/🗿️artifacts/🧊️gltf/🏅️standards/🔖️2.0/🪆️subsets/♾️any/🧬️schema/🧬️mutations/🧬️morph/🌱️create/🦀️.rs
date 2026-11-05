@@ -70,8 +70,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "morph-target", kind: "create-morph-target", record: "CreatedMorphTarget" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Create Morph Target", "Morphziel erstellen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Create Morph Target", "Morphziel erstellen")
     }
 
     fn target(&self) -> Vec<String> {

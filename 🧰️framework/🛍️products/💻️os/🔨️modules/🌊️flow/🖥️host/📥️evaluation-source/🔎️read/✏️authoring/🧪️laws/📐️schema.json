@@ -1,0 +1,100 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "law",
+    "operations",
+    "profiles",
+    "checks"
+  ],
+  "properties": {
+    "law": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "connect",
+          "selfConnect",
+          "disconnect",
+          "unknownDisconnect",
+          "remove",
+          "add",
+          "insertInput",
+          "insertOutput",
+          "reorganize"
+        ]
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "items",
+          "copy",
+          "capacity",
+          "release",
+          "depth",
+          "expectedMutation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copy": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "release": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedMutation": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "enum": [
+          "exactCanonicalLeaves",
+          "originalSourceUnchanged",
+          "foreignSourceRefusedBeforeWork",
+          "foreignRequestRefusedBeforeWork",
+          "foreignCallerRefusedBeforeWork",
+          "eachPhysicalReceiptFits",
+          "cancellationClosesEveryOwnedField",
+          "returnedOutcomeRestoresWithoutClone",
+          "domainFaultAndControlFaultRemainDistinct"
+        ]
+      }
+    }
+  }
+}

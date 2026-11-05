@@ -1691,9 +1691,9 @@
     "localeSource": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🦀️.rs",
     "kernelRoot": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
     "pluginSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
-    "package": "semio-framework-ui-locale",
-    "forbidden": "semio-framework-os-kernel",
-    "viewport": "semio_framework_ui_viewport::Viewport2d",
+    "package": "semio-ui-locale",
+    "forbidden": "semio-os-kernel",
+    "viewport": "semio_ui_viewport::Viewport2d",
     "localeAuthority": "explicit"
   }
 }

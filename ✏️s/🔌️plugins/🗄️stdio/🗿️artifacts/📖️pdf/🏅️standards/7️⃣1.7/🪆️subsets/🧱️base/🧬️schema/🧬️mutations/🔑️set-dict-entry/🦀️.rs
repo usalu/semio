@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dict-entry", kind: "set-dict-entry", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set dictionary entry {}", self.key), &format!("Wörterbucheintrag {} setzen", self.key))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set dictionary entry {}", self.key), &format!("Wörterbucheintrag {} setzen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

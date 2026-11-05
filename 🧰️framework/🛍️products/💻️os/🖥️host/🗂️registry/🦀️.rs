@@ -4,15 +4,15 @@
 use semio_framework_artifact_space_collection::S_COLLECTION_SCHEMA;
 use semio_framework_artifact_space_space::S_SPACE_SCHEMA;
 use semio_framework_artifact_workflow_workflow::S_WORKFLOW_SCHEMA;
-use semio_framework_os_host_instance::OsParameterFieldSpec;
+use semio_os_host_instance::OsParameterFieldSpec;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ArtifactKindSpec,semio_framework::ConfigSpec,semio_framework::MediaClass,semio_framework::MediaForm,semio_framework::MediaType,semio_framework::ModeDefinition,semio_framework::OsMediaCapability,semio_framework::PluginManifest,semio_framework::WindowKindDefinition};
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_declaration::ui::SurfaceKind;
 
 /// 🌉️ Synchronous bridge for the kernel/`semio_framework` calls this crate's already-published
 /// sync API (`BackboneDocument` codecs, `OsBackbonePort`'s in-memory/localStorage bridge, media
@@ -402,7 +402,7 @@ pub fn resolve_os_app_definition(plugin_id: &str, app_id: &str) -> Option<AppDef
         body_key: registration.component_kind.clone(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "app-window".into(),
-        options: semio_framework_ui_declaration::layout::WindowOptions::default(),
+        options: semio_ui_declaration::layout::WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
         interactions: Vec::new(),

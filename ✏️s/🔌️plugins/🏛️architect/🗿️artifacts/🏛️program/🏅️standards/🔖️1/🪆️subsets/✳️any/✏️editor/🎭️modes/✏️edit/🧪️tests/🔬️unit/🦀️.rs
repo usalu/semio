@@ -1,12 +1,12 @@
 use crate::{editor::architect::modes::edit::windows::adjacency, editor::architect::modes::edit::windows::graph, editor::architect::modes::edit::windows::register, editor::architect::modes::edit::windows::report};
 #[allow(unused_imports)]
-use semio_framework_plugin::create_default_layout;
+use semio_plugin::create_default_layout;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::ModeDefinition;
+use semio_plugin::ModeDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::WindowLayout;
 use crate::editor::architect::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]

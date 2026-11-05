@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin_ownership::bounded_ownership::{plugin_demand_grant, PluginLifecycleStep};
+use semio_plugin_ownership::bounded_ownership::{plugin_demand_grant, PluginLifecycleStep};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::RetirementDemand;
 

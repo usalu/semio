@@ -1,6 +1,6 @@
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::remove_selection::*;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_combination;
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element;
@@ -12,10 +12,10 @@ use semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::
 use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_load_case;
@@ -66,12 +66,12 @@ fn selection_fixture() -> (serde_json::Value, Fem2dSnapshot) {
 #[test]
 fn remove_selection_orders_dependencies_and_restores_exact_snapshot() {
     use protocol::{ColdMutation, Mutation};
-    use semio_framework_os_command::SemanticMutation;
+    use semio_os_command::SemanticMutation;
 
     let (fixture, before) = selection_fixture();
     for (selection, kinds) in [("completeSelection", "completeKinds"), ("loadSelection", "loadKinds")] {
         let ids: Vec<String> = serde_json::from_value(fixture[selection].clone()).expect("selection ids");
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = semio_plugin::HistoryView::empty();
         let result = remove_ids(&ArtifactView::new(&before, &history), &ids).expect("selection command");
         let emitted: Vec<_> = result.artifact_mutations.iter().map(|operation| operation.semantics().kind).collect();
         assert_eq!(emitted, serde_json::from_value::<Vec<String>>(fixture[kinds].clone()).expect("expected semantic kinds"));
@@ -113,7 +113,7 @@ async fn mounted_delete_body() {
     for selection in ["completeSelection", "loadSelection", "protectedSelection"] {
         let mut app = fem2d_empty_app();
         let semio_framework::kernel::Effect::LoadDocument { pack, spr } = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect(&before) else { panic!("document fixture effect") };
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("mount shared wire fixture");
+        semio_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("mount shared wire fixture");
         let ids: Vec<String> = serde_json::from_value(fixture[selection].clone()).expect("selection ids");
         dispatch(&mut app, Fem2dCommand::RemoveSelection(RemoveSelection { ids })).await;
         let after = app.snapshot().expect("published snapshot");

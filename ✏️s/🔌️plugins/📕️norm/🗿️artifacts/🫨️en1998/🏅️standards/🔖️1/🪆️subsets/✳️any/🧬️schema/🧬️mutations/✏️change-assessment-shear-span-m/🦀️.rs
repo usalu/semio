@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentShearSpa
         record: "ChangeAssessmentShearSpanM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear span L_V = M/V at the end section", "Schubspannweite L_V = M/V am Stabende ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear span L_V = M/V at the end section", "Schubspannweite L_V = M/V am Stabende ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-shear-span-m".into()]

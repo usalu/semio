@@ -18,8 +18,8 @@ fn semantic_chart_inference_owns_values_and_io_owns_native_text(){
 use crate::*;
 use semio_framework_value::{DslValue,FromValue,ToValue};
 use protocol::{ColdMutation, ColdDiffAlgebra, Mutation,ColdMutationDiff,MutationDiff,DiffAlgebra,Inference};
-use semio_framework_plugin::component::WireArtifactInferenceCacheMode;
-use semio_framework_plugin::component::ArtifactInferenceServiceRegistry;
+use semio_plugin::component::WireArtifactInferenceCacheMode;
+use semio_plugin::component::ArtifactInferenceServiceRegistry;
 
 #[test]
 fn io_value_declarations_preserve_neutral_omission_null_and_unicode(){
@@ -112,7 +112,7 @@ async fn change_chart_value_inverse_diffs_sum_to_the_negative_diff() {
 
 #[test]
 fn native_registry_dispatch_is_deterministic_and_controlled() {
-    use semio_framework_plugin::*;
+    use semio_plugin::*;
     let base = snapshot();
     let payload = protocol::pack_rt::encode_wire_value(&base.to_value());
     let budgets = WireArtifactInferenceBudget { work_units: 100, allocation_bytes: 1_000_000, recursion_depth: 64 };
@@ -121,7 +121,7 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
     registry.register(chart_inference_service(&assets())).unwrap();
     register_chart_artifact(&assets()).unwrap();
     register_chart_artifact(&assets()).unwrap();
-    let published=semio_framework_plugin::app::artifact_inference_service(CHART_ARTIFACT_KIND,"framework.print.chart.inference").unwrap().unwrap();
+    let published=semio_plugin::app::artifact_inference_service(CHART_ARTIFACT_KIND,"framework.print.chart.inference").unwrap().unwrap();
     assert_eq!(published.infer(&request,&mut step_context()).unwrap().execution.expect("terminal execution").canonical_payload,registry.infer(CHART_ARTIFACT_KIND,"framework.print.chart.inference",&request,&mut step_context()).unwrap().execution.expect("terminal execution").canonical_payload);
     let first = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request, &mut step_context()).unwrap().execution.expect("terminal execution");
     let second = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request, &mut step_context()).unwrap().execution.expect("terminal execution");

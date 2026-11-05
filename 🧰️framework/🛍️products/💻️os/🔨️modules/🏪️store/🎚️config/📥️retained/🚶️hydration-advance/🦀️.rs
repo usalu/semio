@@ -4,10 +4,10 @@ use super::*;
 
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where
-    P: semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
-    pub fn advance(&mut self, grant: RetainedCloneGrant) -> ConfigStoreHydrationStep<P, M> where M:semio_framework_os_spr::ColdMutation<P> {
+    pub fn advance(&mut self, grant: RetainedCloneGrant) -> ConfigStoreHydrationStep<P, M> where M:semio_os_spr::ColdMutation<P> {
         self.last_retirement_progress = Default::default();
         let maximum_items = grant.maximum_items;
         let maximum_bytes = grant.maximum_copy_bytes;
@@ -35,12 +35,12 @@ where
             return ConfigStoreHydrationStep::Pending(self.progress());
         }
         if self.retired_messages.is_some() {
-            let capacity = size_of::<semio_framework_os_spr::command::MutationMessageLedgerRetirement>();
+            let capacity = size_of::<semio_os_spr::command::MutationMessageLedgerRetirement>();
             if grant.maximum_depth < 2 { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
             if grant.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
             let messages = self.retired_messages.take().expect("original exhausted messages retain their edit identity");
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            match semio_framework_value::retirement::frame::admit_retirement_frame(messages, child, |messages| semio_framework_os_spr::command::MutationMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
+            match semio_framework_value::retirement::frame::admit_retirement_frame(messages, child, |messages| semio_os_spr::command::MutationMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
                 Ok((owner, progress)) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
                 Err((_, messages)) => { *self.retired_messages = Some(messages); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
             }
@@ -71,7 +71,7 @@ where
         if self.pending_retired_payload.is_some() {
             if grant.maximum_depth < 2 { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let capacity = semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<semio_framework_os_spr::OpPayload>();
+            let capacity = semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<semio_os_spr::OpPayload>();
             if child.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
             let payload = self.pending_retired_payload.take().expect("decoded original payload retains its custody slot");
             match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(payload, child) .result {
@@ -88,7 +88,7 @@ where
                 if history.doc_id != *expected_id || history.schema != *schema || history.composition.is_some() || !history.conflicts.is_empty() {
                     return self.reject(ConfigStoreHydrationDiagnostic::Identity);
                 }
-                *self.fold_job = Some(semio_framework_os_spr::HistoryLog::fold_job(history.clone(), semio_framework_os_spr::HistoryShape::Config));
+                *self.fold_job = Some(semio_os_spr::HistoryLog::fold_job(history.clone(), semio_os_spr::HistoryShape::Config));
                 self.phase = Phase::Fold;
                 ConfigStoreHydrationStep::Pending(self.progress())
             }
@@ -97,8 +97,8 @@ where
                 let result = job.step(grant, grant.maximum_copy_bytes, &mut || false);
                 self.fold_completed = job.completed();
                 match result {
-                    Ok(semio_framework_os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(grant) => { self.last_retirement_progress = progress; }
-                    Ok(semio_framework_os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), progress }) => {
+                    Ok(semio_os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(grant) => { self.last_retirement_progress = progress; }
+                    Ok(semio_os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), progress }) => {
                         let valid_auxiliary = replay_order.is_empty() && conflicts.is_empty();
                         *self.fold = Some(fold);
                         *self.normalized_transitions = Some(transitions.into());
@@ -121,12 +121,12 @@ where
                 let current = self.current.take().expect("typed config current snapshot remains retained");
                 let expected_id = self.expected_id.take().expect("config identity remains retained");
                 let schema = self.schema.take().expect("config schema remains retained");
-                let mut envelope = semio_framework_os_store_document::create_document_envelope_from_genesis::<P, M>(&schema, &expected_id, initial, None);
-                envelope.history_shape = semio_framework_os_spr::HistoryShape::Config;
-                envelope.cursor = Some(semio_framework_os_store_space_schema::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
+                let mut envelope = semio_os_store_document::create_document_envelope_from_genesis::<P, M>(&schema, &expected_id, initial, None);
+                envelope.history_shape = semio_os_spr::HistoryShape::Config;
+                envelope.cursor = Some(semio_os_store_space_schema::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
                 envelope.transitions = self.transition_ledger.take().expect("native config transition ledger remains retained");
-                *self.source_edits = Some(semio_framework_os_store_retirement::resident_backing::PagedSourceIterator::new(std::mem::take(&mut history.edits),Self::vacant_history_edit));
-                *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, std::sync::Arc::new(current), self.initial_digest, semio_framework_os_spr::ActorId(std::mem::take(&mut self.actor.0))));
+                *self.source_edits = Some(semio_os_store_retirement::resident_backing::PagedSourceIterator::new(std::mem::take(&mut history.edits),Self::vacant_history_edit));
+                *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, std::sync::Arc::new(current), self.initial_digest, semio_os_spr::ActorId(std::mem::take(&mut self.actor.0))));
                 *self.expected_id = Some(expected_id);
                 *self.schema = Some(schema);
                 *self.envelope = Some(envelope);
@@ -170,11 +170,11 @@ where
                     return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                 }
                 let Some(metadata) = source.meta else {
-                    *self.pending_source_edit = Some(semio_framework_os_spr::HistoryEdit { meta: None, ..source });
+                    *self.pending_source_edit = Some(semio_os_spr::HistoryEdit { meta: None, ..source });
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 };
                 if metadata.len() != source.ops.len() {
-                    *self.pending_source_edit = Some(semio_framework_os_spr::HistoryEdit { meta: Some(metadata), ..source });
+                    *self.pending_source_edit = Some(semio_os_spr::HistoryEdit { meta: Some(metadata), ..source });
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 }
                 *self.pending_source_lane = source.lane;
@@ -190,16 +190,16 @@ where
                     started_at: source.started_at,
                     finished_at: source.finished_at,
                 };
-                *self.source_forwards = Some(semio_framework_os_store_retirement::resident_backing::SourceIterator::new(source.ops));
-                *self.source_inverse = Some(semio_framework_os_store_retirement::resident_backing::SourceIterator::new(source.inverse));
-                *self.source_metadata = Some(semio_framework_os_store_retirement::resident_backing::SourceIterator::new(metadata));
+                *self.source_forwards = Some(semio_os_store_retirement::resident_backing::SourceIterator::new(source.ops));
+                *self.source_inverse = Some(semio_os_store_retirement::resident_backing::SourceIterator::new(source.inverse));
+                *self.source_metadata = Some(semio_os_store_retirement::resident_backing::SourceIterator::new(metadata));
                 let runtime = self.runtime.as_mut().expect("config hydration runtime remains retained");
-                if runtime.seed_mutation(semio_framework_os_spr::MutationId(edit.id.clone())).is_err() {
+                if runtime.seed_mutation(semio_os_spr::MutationId(edit.id.clone())).is_err() {
                     self.retire_edit(edit);
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 }
                 runtime.observe_sequence(self.edit_index as i32 + 1);
-                *self.pending_messages = Some(semio_framework_os_spr::EditMessages { edit_id: edit.id.clone(), messages: Vec::new() });
+                *self.pending_messages = Some(semio_os_spr::EditMessages { edit_id: edit.id.clone(), messages: Vec::new() });
                 *self.pending_edit = Some(edit);
                 self.operation_index = 0;
                 self.phase = Phase::DecodeForward;
@@ -270,7 +270,7 @@ where
                     if retained_bytes > self.maximum_value_bytes {
                         return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                     }
-                    if maximum_bytes < retained_bytes.max(size_of::<semio_framework_os_spr::MutationMeta>()) {
+                    if maximum_bytes < retained_bytes.max(size_of::<semio_os_spr::MutationMeta>()) {
                         return ConfigStoreHydrationStep::Pending(self.progress());
                     }
                     let source = self.pending_metadata.take().expect("bounded config metadata remains retained");
@@ -312,7 +312,7 @@ where
                     self.retire_edit(edit);
                     return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                 }
-                semio_framework_os_store_ledger::stamp_edit_semantics::<P, M>(&mut edit, &self.envelope.as_ref().expect("config envelope remains retained").schema);
+                semio_os_store_ledger::stamp_edit_semantics::<P, M>(&mut edit, &self.envelope.as_ref().expect("config envelope remains retained").schema);
                 let edit_id = edit.id.clone();
                 let edit_position = self.envelope.as_ref().expect("config envelope remains retained").vcs.edits.len();
                 if let Err(edit) = self.envelope.as_mut().expect("config envelope remains retained").vcs.edits.try_push(edit) {
@@ -339,7 +339,7 @@ where
                 if let Some(edit) = envelope.vcs.edits.get(self.record_index) {
                     if let Some(operation) = edit.forwards.get(self.operation_index) {
                         let validation = self.validation.as_mut().expect("config validation projection remains retained");
-                        let next = match semio_framework_os_vcs::apply_mutation(validation, operation) {
+                        let next = match semio_os_vcs::apply_mutation(validation, operation) {
                             Ok((next, _)) => next,
                             Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                         };
@@ -371,7 +371,7 @@ where
                     let edit = envelope.vcs.edits.get(position).expect("indexed config edit remains retained");
                     if let Some(operation) = edit.forwards.get(self.operation_index) {
                         let current = self.runtime.as_mut().and_then(ArtifactStoreInitializationRuntime::current_mut).expect("config current remains retained");
-                        let next = match semio_framework_os_vcs::apply_mutation(current, operation) {
+                        let next = match semio_os_vcs::apply_mutation(current, operation) {
                             Ok((next, _)) => next,
                             Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                         };
@@ -462,7 +462,7 @@ where
                 runtime.set_current_checkpoint_id(cursor.checkpoint_id.clone());
                 let owners = self.owners.take().expect("config hydration owners remain retained");
                 self.terminal = true;
-                ConfigStoreHydrationStep::Ready(Box::new(semio_framework_os_store_engine::lifted_store::config_store_from_initialized_runtime_with_owners(envelope, runtime, self.generation, owners)))
+                ConfigStoreHydrationStep::Ready(Box::new(semio_os_store_engine::lifted_store::config_store_from_initialized_runtime_with_owners(envelope, runtime, self.generation, owners)))
             }
             Phase::Rejected => ConfigStoreHydrationStep::Rejected(self.diagnostic.unwrap_or(ConfigStoreHydrationDiagnostic::Cancelled)),
         }

@@ -12,21 +12,21 @@
 use crate::viewer::equation::modes::view;
 use crate::viewer::equation::modes::view::windows::geometry;
 use crate::{EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -83,32 +83,32 @@ impl ArtifactViewer for EquationViewer {
     /// bundle to read its schema and closes the ones it does not return, so a viewer missing this
     /// disposer faults `codec.*` calls that never touch the viewer at all (the exact defect
     /// `🗒️note`'s viewer documents for itself, ticket 26/09/18 slices TC3c §5f / TC3d §1 / TC3e).
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 🌱️ The derivable `notation`/`results`/`computed` members — see
@@ -120,7 +120,7 @@ impl ArtifactViewer for EquationViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<EquationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<EquationSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(EquationSnapshot::default())
     })}
 
@@ -133,24 +133,24 @@ impl ArtifactViewer for EquationViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let node = match body_key {
             geometry::BODY_KEY => geometry::render(doc.snapshot),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => return semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_equation_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_equation_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(EQUATION_DIALECT)
         .document(["semio", "equation"])
         .icon_id("math-app")
@@ -200,8 +200,8 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn equation_child_restore_projection(snapshot: &EquationSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("equation.child-projection"), error.to_string()))
+pub fn equation_child_restore_projection(snapshot: &EquationSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("equation.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
 }

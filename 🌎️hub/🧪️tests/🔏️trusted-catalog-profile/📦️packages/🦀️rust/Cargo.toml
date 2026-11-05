@@ -33,11 +33,11 @@ serde_json = { workspace = true }
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-hub-stdio-catalog = { workspace = true }
 semio-hub-gis = { workspace = true }
-semio-framework-plugin-host = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter-runtime = { workspace = true }
+semio-plugin-host = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-plugin-interpreter-runtime = { workspace = true }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true }
-directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-plugin = { workspace = true }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

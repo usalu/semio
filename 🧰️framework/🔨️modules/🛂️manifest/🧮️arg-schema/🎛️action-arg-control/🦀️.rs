@@ -39,7 +39,7 @@ pub enum ActionArgControl {
         placeholder: Option<String>,
     },
     /// 📜️ A multi-line text field (a plain string declared `presentation: Multiline`): Enter inserts a line,
-    /// Ctrl/⌘+Enter commits, Escape reverts — the text-control keyboard law (`semio_framework_ui_contract::text_input_key`).
+    /// Ctrl/⌘+Enter commits, Escape reverts — the text-control keyboard law (`semio_ui_contract::text_input_key`).
     Multiline,
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]

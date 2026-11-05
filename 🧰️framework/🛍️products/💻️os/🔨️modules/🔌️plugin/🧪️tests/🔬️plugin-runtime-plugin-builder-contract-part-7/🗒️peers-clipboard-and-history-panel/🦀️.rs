@@ -36,7 +36,7 @@
     /// config lane answered for them (ticket 26/09/18 S11 §3.4b, S12 §4); no lane but the document and its children can.
     #[test]
     fn a_row_follows_its_parent_document_lane_and_else_its_children() {
-        use semio_framework_plugin_command::history_row_applied as applied;
+        use semio_plugin_command::history_row_applied as applied;
         assert!(!applied(true, false, true), "a row that published a parent edit is UNDONE once that edit is retracted, however live its child edit is");
         assert!(!applied(true, false, false), "a parent-lane row with nothing applied anywhere is undone");
         assert!(applied(true, true, false), "a parent-lane row whose document edit is applied is applied");
@@ -111,13 +111,13 @@
             ],
             command_filter: HistoryCommandFilter::All,
         };
-        let all_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
+        let all_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
         let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
         assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
         assert_eq!(all_panel.children[0].children.len(), 6, "undo/redo/commit/checkin/alternative/filter");
         assert_eq!(all_panel.children[0].children[3].key.as_str(), "framework.history.checkin", "the check-in row follows Commit Checkpoint");
-        let viewer_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, true, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("viewer history panel");
+        let viewer_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, true, false, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("viewer history panel");
         assert_eq!(viewer_panel.children[0].children.len(), 5, "a viewer never gets the check-in row at all \u{2014} React's `canCheckIn` gate removes it rather than disabling it");
         assert!(all_panel.children[0].children.iter().all(|item| !item.children.is_empty()), "Actions rows carry their control as a child node");
         let Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
@@ -129,12 +129,12 @@
         assert!(non_revertible_props.row_actions.is_empty(), "the non-revertible entry must not offer inverse");
 
         let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
-        let ops_panel = ui_history_panel(&only_ops, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
+        let ops_panel = ui_history_panel(&only_ops, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(ops_panel.children[1].children.len(), 1);
         assert_eq!(ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.1");
 
         let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
-        let no_ops_panel = ui_history_panel(&without_ops, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
+        let no_ops_panel = ui_history_panel(&without_ops, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(no_ops_panel.children[1].children.len(), 1);
         assert_eq!(no_ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.2");
     }
@@ -168,7 +168,7 @@
             }],
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("an oversized operation line must not fail admission");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("an oversized operation line must not fail admission");
         let Component::TreeItem(props) = &panel.children[1].children[0].component else { panic!("expected a TreeItem") };
         let description = props.description.as_ref().expect("clipped description").as_str();
         assert!(description.starts_with("register-mesh vertices=[1.0 "));
@@ -202,7 +202,7 @@
             mutations: Vec::new(),
         };
         let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
-        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("an oversized command label must not fail admission");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("an oversized command label must not fail admission");
         for (index, expected_tail) in [(0, UI_TEXT_CLIP_MARK), (1, UI_TEXT_CLIP_MARK)] {
             let Component::TreeItem(props) = &panel.children[1].children[index].component else { panic!("expected a TreeItem") };
             let label = props.label.0.as_str();
@@ -272,7 +272,7 @@
         let prefix = fixture["entryKeyPrefix"].as_str().unwrap();
         let history = history_window_log(rows, false);
 
-        let cold = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("a log of any length must assemble");
+        let cold = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("a log of any length must assemble");
         assert_eq!(serde_json::to_value(&cold.layout).expect("the authored history root layout"), fixture["rootLayout"]);
         assert_eq!(cold.children[1].children.len(), default_rows.min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport, clamped by the built-children ceiling");
         assert!(cold.children[1].children.iter().all(|row| row.key.as_str().starts_with(prefix)), "rows are the entries themselves, never page columns");
@@ -289,7 +289,7 @@
                 offset,
                 rows: requested,
             }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         let scrolled = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &view).await.expect("a scrolled window must assemble");
         assert_eq!(scrolled.children[1].children.len(), requested as usize);
@@ -311,7 +311,7 @@
     async fn ui_history_panel_keeps_every_materialised_revert_inside_the_arena_page() {
         let entries = 20usize;
         let history = history_window_log(entries, true);
-        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("revertible entries must assemble without an alias refusal");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("revertible entries must assemble without an alias refusal");
         fn census(node: &BuiltNode, rows: &mut usize, actions: &mut usize) {
             if node.key.as_str().starts_with("framework.history.entry.") {
                 *rows += 1;

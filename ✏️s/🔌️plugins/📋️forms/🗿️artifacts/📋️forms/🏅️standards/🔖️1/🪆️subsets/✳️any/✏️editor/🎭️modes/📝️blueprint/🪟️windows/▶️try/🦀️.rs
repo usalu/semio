@@ -5,7 +5,7 @@ pub mod config;
 #[path = "🫧️transient/🦀️.rs"]
 pub mod transient;
 
-use crate::editor::forms::config::FormsConfig;
+use crate::forms_config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::contributions::{parse_contributions, render_extension_question};
 use crate::editor::forms::support::{forms_action, FORMS_PLAY_WINDOW_TRY, ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_number, ui_value_text};
@@ -14,12 +14,12 @@ use crate::standards::v1::subsets::any::io::text::snapshot::{json_f64_value,json
 use crate::schema::{can_advance,default_value_for_question,is_extension_question_kind,step_errors,visible_questions};
 use crate::FormQuestion;
 use semio_framework_pack_json::{Object, Value};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract as ui;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract as ui;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use ui::{Buildable, HasBase, HasChildren};
@@ -74,14 +74,14 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn window_owner(view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<(&str, &str)> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("forms.try-window.required", "Forms Try controls require a concrete window"))?;
-    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("forms.try-window.stale", "Forms Try controls require a live window"))?;
-    if kind != FORMS_PLAY_WINDOW_TRY { return Err(semio_framework_plugin::PluginAssemblyError::new("forms.try-window.kind", "Forms Try controls require the Try window kind")); }
+fn window_owner(view: &semio_plugin::ViewModel) -> UiAssemblyResult<(&str, &str)> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::PluginAssemblyError::new("forms.try-window.required", "Forms Try controls require a concrete window"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_plugin::PluginAssemblyError::new("forms.try-window.stale", "Forms Try controls require a live window"))?;
+    if kind != FORMS_PLAY_WINDOW_TRY { return Err(semio_plugin::PluginAssemblyError::new("forms.try-window.kind", "Forms Try controls require the Try window kind")); }
     Ok((id, kind))
 }
 
-fn answer_args(key: &str, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::UiValue> {
+fn answer_args(key: &str, view: &semio_plugin::ViewModel) -> UiAssemblyResult<ui::UiValue> {
     let (window_id, window_kind_id) = window_owner(view)?;
     ui_value_map([("key", ui_value_text(key)?), ("windowId", ui_value_text(window_id)?), ("windowKindId", ui_value_text(window_kind_id)?)])
 }
@@ -131,14 +131,28 @@ fn try_field(question: &FormQuestion, error: Option<&str>, child: ui::BuiltNode)
     ui_admit(ui_admit(field.try_child(child))?.try_build())
 }
 
-pub fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
+pub fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels, view: &semio_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| json_value_from_dsl(question));
     let key = question.id.as_str();
     let label = question.label.as_str();
     let child = match question.kind.as_str() {
-        "text" | "longText" | "number" | "date" | "color" | "file" => {
+        "longText" | "text" => {
+            let (window_id, window_kind_id) = window_owner(view)?;
+            let mut scene = semio_plugin::TextEditorScene::base(json_string_value(&value), None, None);
+            scene.settings_json = Some(semio_framework_pack_json::to_json_string(&semio_framework_pack_json::json!({
+                "readOnly": false,
+                "commit": "change",
+                "editControllerId": crate::editor::forms::support::FORMS_PLAY_APP_ID,
+                "editAction": "setTryValue",
+                "editArgument": "valueJsonChunks",
+                "editEncoding": "json-chunks",
+                "editArguments": { "key": key, "windowId": window_id, "windowKindId": window_kind_id },
+                "label": label
+            })));
+            semio_plugin::scene_surface(&format!("forms-try.{key}.input"), ui::SurfaceKind::TextEditor, &scene)?
+        }
+        "number" | "date" | "color" | "file" => {
             let kind = match question.kind.as_str() {
-                "longText" => ui::InputKind::LongText,
                 "number" => ui::InputKind::Number,
                 "date" => ui::InputKind::Date,
                 "color" => ui::InputKind::Color,
@@ -213,9 +227,9 @@ pub fn render_try_question(question: &FormQuestion, values: &Object, contributio
         "note" => return display(&format!("forms-try.{key}.note"), question.text.as_deref().unwrap_or(label), false),
         kind if is_extension_question_kind(kind) => {
             let (window_id, _) = window_owner(view)?;
-            render_extension_question(question, values, contributions, crate::editor::forms::questions::extensions::ExtensionSurface::Try { window_id }, true, labels)?
+            render_extension_question(question, values, contributions, crate::question_extensions::ExtensionSurface::Try { window_id, window_kind_id: "forms-try" }, true, labels)?
         }
-        _ => return display(&format!("forms-try.{key}.unsupported"), &format!("Unsupported kind: {}", question.kind), false),
+        _ => return display(&format!("forms-try.{key}.unsupported"), &format!("{}: {}", labels.unsupported_kind.as_str(), question.kind), false),
     };
     try_field(question, error, child)
 }
@@ -224,7 +238,7 @@ fn json_value_from_dsl(question: &FormQuestion) -> Value {
     crate::standards::v1::subsets::any::io::text::snapshot::dsl_to_value(&default_value_for_question(question))
 }
 
-fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
+fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool, view: &semio_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
     let (window_id, window_kind_id) = window_owner(view)?;
     let args = ui_value_map([("windowId", ui_value_text(window_id)?), ("windowKindId", ui_value_text(window_kind_id)?)])?;
     let (action, args) = forms_action(command, Some(args))?;
@@ -240,7 +254,7 @@ pub fn render(
     window_config: &config::FormsTryWindowConfig,
     transient: &transient::FormsTryWindowTransient,
     labels: &FormsLabels,
-    view: &semio_framework_plugin::ViewModel,
+    view: &semio_plugin::ViewModel,
 ) -> UiAssemblyResult<ui::BuiltNode> {
     if window_config.submitted_response_id.as_ref().is_some_and(|id| spec.responses.iter().any(|response| &response.id == id)) {
         return stack(ui::Axis::Vertical, vec![

@@ -6,7 +6,7 @@
 use super::examples;
 use semio_s_artifact_puzzle_3d_model::io::text::snapshot::parse_dsl;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
-use semio_framework_plugin::ExampleSourceBody;
+use semio_plugin::ExampleSourceBody;
 
 /// 🧱️ Each registered example's authored DSL parses, its produced document decodes to that same snapshot, and the
 /// snapshot round-trips through the DSL and pack codecs.
@@ -19,7 +19,7 @@ fn every_registered_example_builds_its_document() {
         let parsed = parse_dsl(text).unwrap_or_else(|error| panic!("{} example DSL parses: {error}", source.id()));
         let built: Puzzle3dSnapshot = semio_framework_pack_json::from_json_str(&source.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{} document decodes: {error:?}", source.id()));
         assert!(built == parsed, "{} document equals its authored DSL", source.id());
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&built);
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&built);
+        semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&built);
+        semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&built);
     }
 }

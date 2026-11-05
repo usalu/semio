@@ -24,8 +24,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for InsertShellAction where 
         record: "AddedShellAction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add shell action", "Schaleneinwirkung hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add shell action", "Schaleneinwirkung hinzufügen")
     }
 }
 

@@ -2,7 +2,7 @@
 //! MECHANISM). Exports `standard() -> StandardDeclaration`, mounting subset `any` (this artifact's
 //! only subset).
 
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 /// 🎯️ `mimes` is a documented synthesis — no real MIME registration exists anywhere in the

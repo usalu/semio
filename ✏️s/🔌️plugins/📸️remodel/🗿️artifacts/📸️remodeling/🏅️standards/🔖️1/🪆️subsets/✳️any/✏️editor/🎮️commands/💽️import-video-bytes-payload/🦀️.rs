@@ -5,7 +5,7 @@ use crate::editor::remodeling::commands::import_video_frame_payload::import_tran
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::blur_gate_admits;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::sharpness_score;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::BLUR_GATE_ROLLING_WINDOW;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::describe_video_probe;
 use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::video_codec_to_artifact;
@@ -20,7 +20,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoSource;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🎞️ One in-process sampled video frame, JPEG-encoded, with its sample index and timestamp.

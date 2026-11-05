@@ -8,8 +8,8 @@ use {crate::Puzzle3dAttraction, crate::Puzzle3dKindCompatibility, crate::Puzzle3
 fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
     for dsl_text in [std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio")).expect("committed example reads"), std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio")).expect("committed example reads")] {
         let projection = parse_dsl(&dsl_text).expect("example scene_snapshot parses as dsl");
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
+        semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+        semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
     }
 }
 
@@ -19,8 +19,8 @@ fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
 #[test]
 fn puzzle3d_projection_dsl_round_trips() {
     let empty = Puzzle3dSnapshot::default();
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
     let mut projection = Puzzle3dSnapshot::default();
     projection.objects.push(Puzzle3dObject {
         id: "seed-left-001".into(),
@@ -50,6 +50,6 @@ fn puzzle3d_projection_dsl_round_trips() {
     });
     projection.meta =
         Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::Puzzle3dCompatSpecificity::Vortex }] };
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
 }

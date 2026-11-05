@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerDesignLife wh
         record: "ChangedTowerDesignLife",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design life T of the tower leg", "Turmstiel: Nutzungsdauer T ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design life T of the tower leg", "Turmstiel: Nutzungsdauer T ändern")
     }
 }
 

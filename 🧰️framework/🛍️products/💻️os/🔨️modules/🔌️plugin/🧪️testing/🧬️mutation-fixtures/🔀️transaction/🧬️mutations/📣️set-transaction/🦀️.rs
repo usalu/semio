@@ -44,8 +44,8 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "transaction-count-and-notify", kind: "set-transaction-count-and-notify", record: "SetTransactionCountAndNotify" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count and notify to {}", self.value), &format!("Transaktionsanzahl und Benachrichtigung auf {} setzen", self.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set transaction count and notify to {}", self.value), &format!("Transaktionsanzahl und Benachrichtigung auf {} setzen", self.value))
     }
     fn foreign_step_source<'a>(&'a self, _: &'a TxnSnapshot, index: usize) -> Result<Option<protocol::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
         Ok((index == 0).then_some(protocol::ForeignStepSource { artifact_id: "peer-doc", artifact_kind: "s.testkit.txn", dialect: None, mutation_id: "semio.testkit-txn/v1#notify", payload: &[], label: "notify" }))
@@ -55,7 +55,7 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
+impl semio_os_command::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
     fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
         MutationOutcome::new(TxnDiff { count: Some(self.value) })
     }

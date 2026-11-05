@@ -65,7 +65,7 @@ export function treeRowStandsForControl(control: UiNodeRecord, rowLabel: string 
  * contract's declared mechanism for this state, and it was the one thing this view dropped: a
  * `treeSection` carries `loading`/`waiting` for exactly this purpose. An idle tree with no sections is
  * a real, rendered empty body and says so instead. */
-export function treeStatusSection(store: UiDocumentStore, record: UiNodeRecord): TreeDataSection {
+export function treeStatusSection(store: UiDocumentStore, record: UiNodeRecord): TreeDataSection & { readonly label: string } {
   const loading = record.activity === "loading";
   const waiting = record.activity === "waiting";
   const status = loading || waiting ? interpLabel("ui.common.loadingSurface") : interpLabel("ui.common.noData");

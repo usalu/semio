@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for RemoveAction where Op: p
         record: "RemovedAction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove action {}", self.index), &format!("Einwirkung {} entfernen", self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove action {}", self.index), &format!("Einwirkung {} entfernen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.index.to_string()]

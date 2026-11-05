@@ -605,7 +605,7 @@ async fn finalize_reconstruction(app: &mut RemodelingApp) -> (RemodelingSnapshot
     assert_eq!(complete.state.wire_name(), "complete");
     let arguments = run_arguments(app).await;
     let output = run_action(app, semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
-    assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("beginFinalize"));
+    assert_eq!(output.get("toolRun").and_then(semio_plugin::DslValue::as_str), Some("beginFinalize"));
     pump_run(app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
     settle(app, "the finalize publication").await;
     (app.snapshot().expect("finalized snapshot"), stages)
@@ -715,7 +715,7 @@ async fn aborting_the_synthetic_orbit_reconstruction_mid_run_leaves_the_document
     pump_run(&mut app, "the run reaches feature extraction", |run| run.stage >= 1).await;
     let arguments = run_arguments(&mut app).await;
     let output = run_action(&mut app, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
-    assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("closeJob"));
+    assert_eq!(output.get("toolRun").and_then(semio_plugin::DslValue::as_str), Some("closeJob"));
     pump_run(&mut app, "abort settles", |run| run.state.wire_name() == "aborted").await;
     let after = durable(&mut app).await;
     assert!(before.0 == after.0 && before.1 == after.1, "an aborted reconstruction leaves the document pack byte-identical");
@@ -737,15 +737,15 @@ async fn a_finalized_reconstruction_is_one_undoable_edit() {
     assert!(unfinalized.0 == before.0 && unfinalized.1 == before.1, "a complete but unfinalized run leaves the document pack byte-identical");
     let arguments = run_arguments(&mut app).await;
     let output = run_action(&mut app, semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
-    assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("beginFinalize"));
+    assert_eq!(output.get("toolRun").and_then(semio_plugin::DslValue::as_str), Some("beginFinalize"));
     pump_run(&mut app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
     settle(&mut app, "the finalize publication").await;
     let finalized = durable(&mut app).await;
     let finalized_scene = app.snapshot().expect("finalized snapshot");
     assert!(finalized.1 != before.1 && finalized_scene != before_scene, "finalize publishes the reconstruction");
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", semio_plugin::artifact_app_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(app.snapshot().expect("undone snapshot"), before_scene, "one undo removes the whole finalized reconstruction");
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", semio_plugin::artifact_app_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(app.snapshot().expect("redone snapshot"), finalized_scene, "one redo restores it");
     close(app);
 }

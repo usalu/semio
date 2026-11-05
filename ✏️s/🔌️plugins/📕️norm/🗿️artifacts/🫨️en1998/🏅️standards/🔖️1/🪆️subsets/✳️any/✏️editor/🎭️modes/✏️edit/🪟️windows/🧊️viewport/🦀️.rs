@@ -1,7 +1,7 @@
 //! 🧊️ EN 1998 play app — the 3D viewport window: the projected seismic scene with storeys, masses, lateral forces, mode shape, drift bars and utilisation colouring.
 
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use semio_s_artifact_norm_en1998_scene::live_scene_of;
 use semio_s_plugin_norm_app_surface::direct_manipulation::InsertSpec;

@@ -9,7 +9,7 @@ use semio_s_artifact_raster_raster_model::{find_layer, layer_opacity, layer_tran
 use semio_s_artifact_raster_raster_model::{RasterLayerMask, RasterLayerNode, RasterTransform};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared

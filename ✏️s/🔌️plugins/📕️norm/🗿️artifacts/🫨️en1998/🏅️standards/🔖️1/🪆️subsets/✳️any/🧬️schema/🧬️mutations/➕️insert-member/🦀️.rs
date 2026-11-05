@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for InsertMember where Op: p
         record: "InsertMember",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert member", "Bauteil einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert member", "Bauteil einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec![self.building_id.clone(), self.member.id.clone()]

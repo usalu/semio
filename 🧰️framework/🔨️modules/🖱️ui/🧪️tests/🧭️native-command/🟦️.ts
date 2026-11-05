@@ -43,7 +43,7 @@ const { createUiNativeRouter } = script;
 function oracle(row: Case): { calls: Call[]; rejected: boolean; level: string; coverage: boolean } {
   const trace: Call[] = [];
   let level = row.inheritedLevel ?? "fundamental", coverage = false;
-  const tui = ["semio-framework-ui-tui-core", "semio-framework-ui-tui-vt", "semio-framework-ui-tui-terminal", "semio-framework-ui-tui-widgets", "semio-framework-ui-tui-frame", "semio-framework-ui-tui-engine"];
+  const tui = ["semio-ui-tui-core", "semio-ui-tui-vt", "semio-ui-tui-terminal", "semio-ui-tui-widgets", "semio-ui-tui-frame", "semio-ui-tui-engine"];
   const project = (args: string[], head: string[]): void => {
     if (["fundamental", "quick", "long", "exhaustive"].includes(args[0] ?? "")) level = args.shift()!;
     coverage = level === "exhaustive";
@@ -51,11 +51,11 @@ function oracle(row: Case): { calls: Call[]; rejected: boolean; level: string; c
   };
   const check = (packages: string[], ...args: string[]): void => { trace.push({ kind: "check", packages, args, budgetMs: 4242 }); };
   const command = new Command().exitOverride().configureOutput({ writeErr() {}, writeOut() {} }).enablePositionalOptions();
-  const tests = command.command("test").argument("[args...]").allowUnknownOption().passThroughOptions().action((args: string[]) => project(args, ["--features", "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"]));
+  const tests = command.command("test").argument("[args...]").allowUnknownOption().passThroughOptions().action((args: string[]) => project(args, ["--features", "semio-ui-tui-terminal/native,semio-ui-tui-unit-laws/native"]));
   tests.command("wgpu-engine").argument("[args...]").allowUnknownOption().passThroughOptions().action((args: string[]) => project(args, ["--lib"]));
   const checks = command.command("check").action(() => { trace.push({ kind: "axes", args: [] }); });
-  checks.command("wasm").action(() => { check(tui, "--target", "wasm32-unknown-unknown"); check(["semio-framework-ui-tui-host"], "--target", "wasm32-unknown-unknown", "--features", "semio-framework-ui-tui-host/bindgen"); check(["semio-framework-ui-wgpu-light", "semio-framework-ui-wgpu-input"], "--target", "wasm32-wasip2"); });
-  checks.command("wgpu-engine").action(() => { throw Error("Missing wasm"); }).command("wasm").action(() => check(["semio-framework-ui-wgpu-engine"], "--target", "wasm32-unknown-unknown"));
+  checks.command("wasm").action(() => { check(tui, "--target", "wasm32-unknown-unknown"); check(["semio-ui-tui-host"], "--target", "wasm32-unknown-unknown", "--features", "semio-ui-tui-host/bindgen"); check(["semio-ui-wgpu-light", "semio-ui-wgpu-input"], "--target", "wasm32-wasip2"); });
+  checks.command("wgpu-engine").action(() => { throw Error("Missing wasm"); }).command("wasm").action(() => check(["semio-ui-wgpu-engine"], "--target", "wasm32-unknown-unknown"));
   let rejected = false;
   try { command.parse(row.argv, { from: "user" }); } catch { rejected = true; }
   return { calls: trace, rejected, level, coverage };

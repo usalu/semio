@@ -7,11 +7,11 @@
 use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA, SOURCING_DIALECT};
 use crate::viewer::sourcing::modes::view;
 use crate::viewer::sourcing::modes::view::windows::pool;
-use {semio_framework_plugin::ArtifactView,semio_framework_plugin::ArtifactViewer,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::Fault,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer};
+use {semio_plugin::ArtifactView,semio_plugin::ArtifactViewer,semio_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_plugin::Fault,semio_plugin::NoConfig,semio_plugin::NoConfigMutation,semio_plugin::NoPresence,semio_plugin::NoPresenceMutation,semio_plugin::NoTransient,semio_plugin::NoTransientMutation,semio_plugin::ViewEmit,semio_plugin::Viewer};
 // 🚧️ SDK GAP: same note as the editor's own import block — `InteractionView` is only reachable
 // through `app`, not yet in the crate-root re-export list (w0-f Gap 1 only closed the surface
 // traits/builders/adapters, not this pre-existing type).
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -61,7 +61,7 @@ impl ArtifactViewer for SourcingViewer {
     const DIALECT: Dialect = SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<CurationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<CurationSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
@@ -80,7 +80,7 @@ impl ArtifactViewer for SourcingViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a
     /// local sort/search toggle) is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
@@ -88,18 +88,18 @@ impl ArtifactViewer for SourcingViewer {
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &semio_framework_plugin::ViewModel,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        _view_state: &semio_plugin::ViewModel,
+    ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            pool::BODY_KEY => pool::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            pool::BODY_KEY => pool::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_sourcing_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_sourcing_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(SOURCING_DIALECT)
         .document(["semio", "sourcing", "curation"])
         .icon_id("library")

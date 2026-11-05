@@ -1,6 +1,6 @@
 //! 🧪️ The semio value per-mutation inverse laws, over the mutation crate's public API.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 

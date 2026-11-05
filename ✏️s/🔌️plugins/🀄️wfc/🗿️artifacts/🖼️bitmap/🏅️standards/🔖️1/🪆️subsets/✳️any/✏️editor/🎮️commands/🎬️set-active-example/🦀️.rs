@@ -9,7 +9,7 @@
 
 use crate::schema::snapshot::{BitmapSnapshot};
 use crate::BitmapMutation;
-use semio_framework_plugin::{ArtifactView, Emit, Fault};
+use semio_plugin::{ArtifactView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload

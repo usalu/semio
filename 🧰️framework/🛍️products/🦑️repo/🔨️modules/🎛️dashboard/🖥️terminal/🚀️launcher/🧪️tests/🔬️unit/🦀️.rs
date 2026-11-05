@@ -1,6 +1,6 @@
 use super::*;
 use dashboard_registry::Facts;
-use semio_framework_ui_tui_widgets::widget::{TreeState, WidgetState};
+use semio_ui_tui_widgets::widget::{TreeState, WidgetState};
 
 fn source_launcher() -> Harness {
     let facts: Facts = serde_json::from_value(serde_json::json!({"projects":[{"name":"workspace","root":".","dashboard":{"tools":[{"id":"source","command":["bun","{project}"],"parameters":[{"id":"project","kind":"text","required":true,"suggestions":{"source":"projects"}}]}]}},{"name":"app","root":"app"}],"playgrounds":[],"tickets":[],"problems":[]})).unwrap();

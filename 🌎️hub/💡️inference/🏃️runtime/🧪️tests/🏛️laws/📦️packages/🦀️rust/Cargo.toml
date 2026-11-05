@@ -34,8 +34,8 @@ semio-hub-inference-runtime = { workspace = true, features = ["integration-fixtu
 semio-hub-inference-runtime-contract = { workspace = true, features = ["testkit"] }
 semio-s-artifact-gis-gismap = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
-directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
-db = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
+db = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-os-kernel-db", features = ["claimed-backend-laws"] }
 semio-framework-async = { workspace = true }
 semio-hub-gis = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -43,5 +43,5 @@ serde_json = { workspace = true }
 semio-hub-inference-binding = { workspace = true }
 semio-framework-artifact-reference = { path = "../../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 pack = { workspace = true }

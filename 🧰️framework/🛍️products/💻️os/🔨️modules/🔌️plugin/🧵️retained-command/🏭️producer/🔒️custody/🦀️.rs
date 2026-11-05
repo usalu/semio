@@ -1,5 +1,5 @@
 //! 🔒️ The admitted typed box remains sealed while original retained work borrows its payload.
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand;
+use semio_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand;
 use semio_framework_job::StepContext;
 use semio_framework_value::{ValueError,retirement::RetireOwned};
 #[derive(semio_framework_value::RetireOwned)]enum CommandCustody<C:RetireOwned>{Received(C),Original(ArtifactOriginalToolCommand<C>)}

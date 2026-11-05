@@ -4,8 +4,8 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `✏️editor` module (`policyViewerPurityBreaches`).
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[path = "."]
@@ -38,19 +38,19 @@ use semio_s_artifact_cad_cad_inferences::forest_play_scene;
 use crate::modes::view;
 use crate::modes::view::windows::shape;
 use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CAD_DIALECT, snapshot::CAD_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `ArtifactViewer`/`Viewer`/
 // `ViewEmit`/`Dialect` are only reachable through `app`, not yet in the crate-root re-export list.
-use semio_framework_plugin::app::{ArtifactViewer, Dialect, ViewEmit, Viewer};
+use semio_plugin::app::{ArtifactViewer, Dialect, ViewEmit, Viewer};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -105,7 +105,7 @@ impl ArtifactViewer for CadViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<CadSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<CadSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(forest_play_scene())
     })}
 
@@ -117,24 +117,24 @@ impl ArtifactViewer for CadViewer {
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            shape::BODY_KEY => shape::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            shape::BODY_KEY => shape::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_cad_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_cad_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(CAD_DIALECT).document(["semio", "cad"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::CAD_VIEW_MODE_VIEW).window_kind_def(shape::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

@@ -1,0 +1,7 @@
+# Storage Admission Observation
+
+The actual fleet alert reported host space below the15GiB floor while native27392compiled. Root consulted clean/SKILL.md and build/SKILL.md recovery guidance. The workspace clean route includes oversized files across ticket trees, which is broader than this task and can conflict with the user instruction to retain ticket inputs/reports; it was not executed. No unrelated ticket, active build artifact, fixed image, receipt or process was deleted/modified.
+
+Current native repo cache --help declares lease-aware cache gc, which never removes held/recent units and leaves owner-managed stores/images to their owners. repo cache status --lang=en exited0 without deep walking: rust44.02GiB inside96GiBimage, products15.02/24GiB, tools5.35/8GiB; host2.47GiBbelowfloor. The ledger is partly recorded data, not a fresh deep inventory.
+
+Root then executed only repo cache gc --dry-run --area=retired,undeclared --lang=en. Owned session92104 completed exit0. Actual dry-run verdict: Would remove0entries,0B,0kept. It is a read-only plan, not space recovery. No real gc/clear/reset/image maintenance was started. Current owner-managed compilation remains valid to monitor; any actual storage refusal must be handled by its owning supported maintenance target, preserving current custody and active peer work. The disk alert alone is not a test failure or proof of a deadlock.

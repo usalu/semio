@@ -1,7 +1,7 @@
 //! ➕️ Lawful signed counter addition used by the testkit's own law tests.
 
 use super::super::{CounterDiff, CounterMutation};
-use semio_framework_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
+use semio_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -16,14 +16,14 @@ pub struct AddCounter {
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter", record: "AddedCounter" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
     }
 
 
 }
 
-impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddCounter {
+impl semio_os_spr::ColdMutationKind<i64, CounterMutation> for AddCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff::delta(self.delta))
     }

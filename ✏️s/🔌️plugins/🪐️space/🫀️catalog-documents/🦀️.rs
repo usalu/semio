@@ -18,14 +18,14 @@
 type SharedStudioPorts = Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>;
 
 use crate::time::{rfc3339_utc_epoch_ms, utc_minute_text};
-use semio_framework_os::{empty_space_snapshot, space_backbone_uri, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, S_SPACE_SCHEMA};
-use semio_framework_os::{
+use semio_os::{empty_space_snapshot, space_backbone_uri, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, S_SPACE_SCHEMA};
+use semio_os::{
     create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, WorkflowSnapshot, S_WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os::{document_backbone_ref, VcsError};
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_ui_locale::app_labels;
+use semio_os::{document_backbone_ref, VcsError};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_ui_locale::app_labels;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, OnceLock};
 use store::{os_store::backbone::BackbonePorts, os_store::backbone::LocalStorageBackbonePort};
@@ -117,7 +117,7 @@ async fn draft_backbone_port_concrete() -> Arc<BackbonePorts> {
 /// 🚧️ BLOCKER — this process-global mutable payload registry violates the retained-interaction
 /// instance-ownership invariant and keeps Space global-state closure red. `register_studio_port`'s two real callers
 /// (`create_folder_studio`/`bind_studio_file` in the Home editor's `create-studio`/`bind-space-file`
-/// commands) source `port` from `semio_framework_os::open_folder_space_backbone`/
+/// commands) source `port` from `semio_os::open_folder_space_backbone`/
 /// `open_file_space_backbone` — both declared in `🖥️host/🗃️document-backbone/🦀️.rs` (out of this packet's owned
 /// path) as returning `Arc<dyn OsBackbonePort>` directly, already type-erased before this file ever
 /// sees the value; there is no concrete type left to recover into a closed enum variant, and no `Any`
@@ -292,7 +292,7 @@ pub async fn sync_os_space_document_helper(document: &OsSpaceDocument, backbone_
 /// best-effort tombstones its bytes) BEFORE this listing is built, so Home's VFS never shows a studio
 /// draft past its deadline. Mirrors the spirit of os-core's own catalog-listing entry points. `pub`
 /// (not `pub`): only reached from within this crate (Home's editor/viewer main windows).
-pub async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpaceCatalogEntry> {
+pub async fn list_all_space_catalog_entries() -> Vec<semio_os::OsSpaceCatalogEntry> {
     let mut seen = HashSet::new();
     let mut entries = Vec::new();
     for port in [catalog_port().await, temp_catalog_port().await] {
@@ -315,7 +315,7 @@ pub async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpace
         }
         let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) else { continue };
         let projection = &document.vcs.genesis.facts().snapshot();
-        entries.push(semio_framework_os::OsSpaceCatalogEntry {
+        entries.push(semio_os::OsSpaceCatalogEntry {
             id: draft.artifact_id,
             name: document.name.clone(),
             backbone_uri: String::new(),

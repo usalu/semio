@@ -1,6 +1,6 @@
 //! 🧪️ Input window — the window kind it declares and the canvas it renders for every example.
 
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::bitmap::modes::edit::windows::input::*;
 use crate::editor::bitmap::modes::edit::windows::input::config::BitmapInputWindowConfig;
 

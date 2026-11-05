@@ -10,11 +10,11 @@ fn receive_persistent_fixture(value:semio_framework_value::DslValue,grant:semio_
 use semio_framework_value::ToValue;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use semio_s_artifact_raster_raster_editor::commands::apply_filter::*;
 use semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection;
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
-use semio_framework_plugin::HistoryView;
+use semio_plugin::HistoryView;
 
 fn document(locked: bool) -> RasterSnapshot {
     let identity = r#"{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":0.0,"d":1.0}"#;

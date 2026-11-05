@@ -151,7 +151,7 @@ impl RuntimeApply {
                 Ok(true)
             }
             Self::ResumeDispatch { interaction, cursor } => {
-                if let Some(returned) = interaction.as_mut() { if let Some(original) = cursor.as_ref() { original.validate_original(cx)?; } if !semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut returned.input, cx)? { return Ok(false); } }
+                if let Some(returned) = interaction.as_mut() { if let Some(original) = cursor.as_ref() { original.validate_original(cx)?; } if !semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut returned.input, cx)? { return Ok(false); } }
                 if interaction.is_some() { if !frame_action_metadata(cx)? { return Ok(false); } runtime.return_interaction(interaction.take().unwrap()); return Ok(false); }
                 if let Some(owner) = cursor.as_mut() { if !owner.close_step(cx)? { return Ok(false); } if !frame_action_metadata(cx)? { return Ok(false); } cursor.take(); return Ok(false); }
                 Ok(true)
@@ -287,7 +287,7 @@ impl RuntimeApply {
             #[cfg(target_arch = "wasm32")]
             {
                 mailbox.spawn_frame_maintenance_reserved(async move {
-                    cursor_value.shell_maintenance = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
+                    cursor_value.shell_maintenance = semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
                     if cursor_value.shell_maintenance {
                         cursor_value.phase = 0;
                     }
@@ -315,7 +315,7 @@ impl RuntimeApply {
             match work {
                 FrameDeferredWork::ShellMaintenance => {}
                 FrameDeferredWork::PumpSync => {
-                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).pump_sync_events().await;
+                    semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).pump_sync_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
                     if action.cancelled {
@@ -323,12 +323,12 @@ impl RuntimeApply {
                     } else {
                         let receipt = action.receipt;
                         let mut receipt_owner = FrameActionReceiptOwner { receipt };
-                        match semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).dispatch_gesture_action(action.descriptor).await {
+                        match semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).dispatch_gesture_action(action.descriptor).await {
                             Ok(()) => {
-                                receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Accepted);
+                                receipt_owner.settle(semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Accepted);
                             }
                             Err(error) => {
-                                receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(&error));
+                                receipt_owner.settle(semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(&error));
                                 if let Some(receipt) = receipt {
                                     if receipt.abort_correlation_on_error {
                                         cursor_value.actions.cancel_correlation(receipt.token);
@@ -340,9 +340,9 @@ impl RuntimeApply {
                         }
                     }
                 }
-                FrameDeferredWork::FlushTutorial => semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).tutorial_flush_pending_document_ops().await,
+                FrameDeferredWork::FlushTutorial => semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).tutorial_flush_pending_document_ops().await,
                 FrameDeferredWork::Settle => {
-                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_step().await;
+                    semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_step().await;
                 }
             }
             (interaction, cursor_value)
@@ -362,7 +362,7 @@ impl RuntimeApply {
             Self::ResumeDispatch { interaction, cursor } => {
                 if let Some(returned) = interaction.as_mut() {
                     if let Some(original) = cursor.as_ref() { original.validate_original(cx)?; }
-                    if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::drive_clipboard_io_step(&mut returned.input, cx)? { return Ok(false); }
+                    if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::drive_clipboard_io_step(&mut returned.input, cx)? { return Ok(false); }
                 }
                 if interaction.is_some() {
                     if !frame_action_metadata(cx)? { return Ok(false); }
@@ -406,7 +406,7 @@ impl RuntimeApply {
                     let handle = handle.clone();
                     RuntimeMailbox::submit_interaction(runtime,&handle, Some("plugin-boot"), move |mut interaction| async move {
                         interaction.shell.docs.prepare_hot_reload(entries, &mut interaction.shell.plugins, &mut interaction.shell.directory);
-                        if let Err(error) = semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx::of(&mut interaction.shell).boot().await {
+                        if let Err(error) = semio_renderer_wgpu_shell_actions::ActionsCtx::of(&mut interaction.shell).boot().await {
                             log_debug(&format!("wasm program hot reload failed: {error}"));
                         } else {
                             log_debug("wasm program hot reload complete");

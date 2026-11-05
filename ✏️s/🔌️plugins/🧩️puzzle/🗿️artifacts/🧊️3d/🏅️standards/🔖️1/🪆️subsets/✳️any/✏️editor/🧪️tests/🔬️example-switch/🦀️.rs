@@ -41,10 +41,10 @@ fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = original.construct(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope));
-    let extent = <Puzzle3dSetActiveExampleWork as semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
+    let extent = <Puzzle3dSetActiveExampleWork as semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
     let mut progress_steps = 0usize;
     let emit = loop {
         assert!(progress_steps <= extent + 8, "setActiveExample work did not reach Complete within its own declared extent");
@@ -120,8 +120,8 @@ async fn nakagin_world3d_surface_fits_reconcile_node_cap() {
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let census = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
-    assert!(census.nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "Nakagin world-3d surface presented {} nodes over UI_DOCUMENT_NODES: {}", census.nodes, census.report());
-    eprintln!("Nakagin world-3d surface presented {} nodes (cap {}) {}", census.nodes, semio_framework_ui_contract::UI_DOCUMENT_NODES, census.report());
+    assert!(census.nodes <= semio_ui_contract::UI_DOCUMENT_NODES, "Nakagin world-3d surface presented {} nodes over UI_DOCUMENT_NODES: {}", census.nodes, census.report());
+    eprintln!("Nakagin world-3d surface presented {} nodes (cap {}) {}", census.nodes, semio_ui_contract::UI_DOCUMENT_NODES, census.report());
 }
 
 /// 🚚️ Wave W-P5 — the switch is only done when what a RENDER HOST assembles is drawable. The lane
@@ -150,8 +150,8 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
     assert!(dangling.is_empty(), "every instance must name a mesh the same publication declares; unresolved {dangling:?} against {declared_meshes:?}");
     assert!(meshes.iter().all(|mesh| mesh.get("kind").and_then(serde_json::Value::as_str).is_some() || mesh.get("url").and_then(serde_json::Value::as_str).is_some()), "every declared mesh resolves by kind or by url: {meshes:?}");
 
-    let instances_lane = census.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
-    assert_eq!(instances_lane.declared_hash, semio_framework_plugin::scene_lane_hash(&census.assembled.instances_json), "the spine manifest must describe the very text the host reassembles");
+    let instances_lane = census.lane(semio_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
+    assert_eq!(instances_lane.declared_hash, semio_plugin::scene_lane_hash(&census.assembled.instances_json), "the spine manifest must describe the very text the host reassembles");
     assert_eq!(instances_lane.bytes, census.assembled.instances_json.len(), "the carrier text and the assembled lane are the same bytes");
 }
 
@@ -169,7 +169,7 @@ fn set_active_example_history_is_one_set_active_example_row() {
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = original.construct(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope));
     let emit = loop {
@@ -202,7 +202,7 @@ async fn a_document_swap_republishes_the_camera_fit_lane_and_an_object_edit_does
     let forest_fit = fit_of(&forest);
     assert_eq!(forest_fit["enabled"], serde_json::json!(true), "the fit lane must arm the host's one-shot auto-fit");
     assert!(forest_fit["revision"].as_u64().is_some(), "the fit lane must carry a document revision: {forest_fit}");
-    assert!(forest.lane(semio_framework_plugin::World3dSceneLane::Fit.body_key()).is_some(), "the fit payload rides as its own carrier: {}", forest.report());
+    assert!(forest.lane(semio_plugin::World3dSceneLane::Fit.body_key()).is_some(), "the fit payload rides as its own carrier: {}", forest.report());
 
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let nakagin = world_surface_carrier_census(&mut app, main::BODY_KEY).await;

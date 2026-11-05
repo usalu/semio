@@ -19,12 +19,12 @@ pub fn order_ledger_as<'order, T>(ledger: &mut ArtifactHistoryLedger<T>, id: imp
 }
 
 /// 🤝️ How many leading ids `live` and `next` share.
-pub fn shared_prefix_len(live: &semio_framework_os_vcs::HistoryPageStack<String>, next: &[String]) -> usize {
+pub fn shared_prefix_len(live: &semio_os_vcs::HistoryPageStack<String>, next: &[String]) -> usize {
     live.iter().zip(next).take_while(|(live, next)| live == next).count()
 }
 
 /// 🪞️ Rewrites `mirror` from position `dirty` on to `live`'s suffix ([`StackMirrorDirt`]); answers the ids it displaced.
-pub fn mirror_id_suffix(mirror: &mut semio_framework_os_vcs::HistoryPageStack<String>, live: &semio_framework_os_vcs::HistoryPageStack<String>, dirty: usize) -> Option<Vec<String>> {
+pub fn mirror_id_suffix(mirror: &mut semio_os_vcs::HistoryPageStack<String>, live: &semio_os_vcs::HistoryPageStack<String>, dirty: usize) -> Option<Vec<String>> {
     let keep = dirty.min(live.len()).min(mirror.len());
     let mut displaced = Vec::new();
     while mirror.len() > keep {
@@ -90,7 +90,7 @@ where
     let mut positions = Vec::new();
     for (position, edit_id) in applied.iter().enumerate() {
         let edit = edits.find_near(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-        if semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().any(|mutation_id| changed.contains(mutation_id)) {
+        if semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().any(|mutation_id| changed.contains(mutation_id)) {
             positions.push(position);
         }
     }
@@ -114,7 +114,7 @@ pub const DRAFT_SUPERSESSION_ID: &str = "draft";
 /// every outcome and never aborts, so its result is policy-independent and identical on every replica.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReplayMode {
-    Merge(semio_framework_os_spr::MergePolicy),
+    Merge(semio_os_spr::MergePolicy),
     Report,
 }
 
@@ -127,7 +127,7 @@ pub trait ReplayEdits<Mutation> {
 pub struct IndexedAppliedReplayEdits<'a, Mutation> {
     pub edits: &'a ArtifactHistoryLedger<Edit<Mutation>>,
     pub revision: &'a CursorRevisionAccumulator,
-    pub ids: &'a semio_framework_os_vcs::HistoryPageStack<String>,
+    pub ids: &'a semio_os_vcs::HistoryPageStack<String>,
 }
 
 impl<Mutation> ReplayEdits<Mutation> for IndexedAppliedReplayEdits<'_, Mutation> {
@@ -141,7 +141,7 @@ impl<Mutation> ReplayEdits<Mutation> for IndexedAppliedReplayEdits<'_, Mutation>
 }
 
 /// 🪡️ A reinstated original row extends the same authenticated applied index without cloning its mutation owner.
-pub struct SelectedReplayEdits<'a,M>{pub original:IndexedAppliedReplayEdits<'a,M>,pub reinstated:Option<&'a Edit<M>>,pub checkpoint_order:Option<&'a semio_framework_os_vcs::HistoryPageStack<semio_framework_os_vcs::ArtifactHistoryKey>>}
+pub struct SelectedReplayEdits<'a,M>{pub original:IndexedAppliedReplayEdits<'a,M>,pub reinstated:Option<&'a Edit<M>>,pub checkpoint_order:Option<&'a semio_os_vcs::HistoryPageStack<semio_os_vcs::ArtifactHistoryKey>>}
 impl<M> ReplayEdits<M> for SelectedReplayEdits<'_,M>{fn replay_edit(&self,id:&str)->Option<&Edit<M>>{self.reinstated.filter(|edit|edit.id==id).or_else(||self.original.replay_edit(id))}fn replay_edit_at(&self,position:usize,id:&str)->Option<&Edit<M>>{if let Some(order)=self.checkpoint_order{let edit=self.original.edits.get_key(*order.get(position)?)?;(edit.id==id).then_some(edit)}else{self.replay_edit(id)}}}
 
 /// 📶️ Completed replay work: folded operations, planned source rows and sealed suffix edits.
@@ -198,10 +198,10 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> EditReplay<P,Mutation>{
 
 impl<P,Mutation:super::Mutation<P>> EditReplay<P,Mutation>{
     pub fn retain(original: ReplayOwnedState<P, Mutation>) -> Self { Self { original: std::mem::ManuallyDrop::new(original), raw_retirement: std::mem::ManuallyDrop::new(None), raw_factory: std::mem::ManuallyDrop::new(None), retiring: false } }
-    pub fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_framework_os_vcs::HistoryPageStack<String>, from: usize, schema: String, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> { ReplayOwnedState::new_counted(mode, base, order, from, schema, supersessions, total).map(Self::retain) }
+    pub fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_os_vcs::HistoryPageStack<String>, from: usize, schema: String, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> { ReplayOwnedState::new_counted(mode, base, order, from, schema, supersessions, total).map(Self::retain) }
     pub fn with_base(mut self, generation: u64, revision: [u8; 32]) -> Self { self.original.generation = generation; self.original.revision = revision; self }
     pub fn with_drafts(mut self, drafts: protocol::HistoryInputDrafts) -> Self { self.original.drafts = drafts; self }
-    pub fn with_retirement_factories(mut self, snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self where P: Send + Sync + 'static, Mutation: Send + 'static { self.original.replay_retirement_factory = Some(semio_framework_os_spr::command::registered_replay_retirement_factory(snapshots, mutations)); self }
+    pub fn with_retirement_factories(mut self, snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self where P: Send + Sync + 'static, Mutation: Send + 'static { self.original.replay_retirement_factory = Some(semio_os_spr::command::registered_replay_retirement_factory(snapshots, mutations)); self }
     pub fn with_operation_preparation(mut self, factory: Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>) -> Self { self.original.operation_preparation_factory = Some(factory); self }
 
     /// 🏁️ The finished replay's result; refused while operations remain.
@@ -214,7 +214,7 @@ impl<P,Mutation:super::Mutation<P>> EditReplay<P,Mutation>{
         let result = ReplayResultOwnedState {
             original_history:None,original_decode:None,original_selection:None,original_order:None,
             conflict_target:std::mem::take(&mut self.conflict_target),
-            order: std::mem::replace(&mut self.order, semio_framework_os_vcs::HistoryPageStack::empty()),
+            order: std::mem::replace(&mut self.order, semio_os_vcs::HistoryPageStack::empty()),
             from: self.from,
             supersessions: std::mem::take(&mut self.supersessions),
             drafts: std::mem::take(&mut self.drafts),
@@ -237,7 +237,7 @@ impl<P,Mutation:super::Mutation<P>> EditReplay<P,Mutation>{
     }
 }
 
-impl<P: Clone, Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary> EditReplay<P, Mutation> {
+impl<P: Clone, Mutation: super::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary> EditReplay<P, Mutation> {
 
     pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new(mode, base, order, from, schema, supersessions, edits).map(Self::retain) }
 

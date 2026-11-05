@@ -7,14 +7,14 @@ use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_POINTER_CHANNEL;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
-use semio_framework_os_kernel::Viewport2d;
+use semio_os_kernel::Viewport2d;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
 use semio_framework::kernel::Effect;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::HistoryView;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::ViewWindowInstance;
+use semio_plugin::HistoryView;
+use semio_plugin::ViewModel;
+use semio_plugin::ViewWindowInstance;
 use pack::snapshot::ArtifactDsl;
 
 const CANVAS_WIDTH: f64 = 800.0;
@@ -29,7 +29,7 @@ fn addressed(kind: &str) -> ViewModel {
         window_id: Some("w".into()),
         window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }],
         active_utility_id: Some(canvas_gesture::FEM2D_UTILITY_SELECT_DIRECT.into()),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 
@@ -111,7 +111,7 @@ async fn an_unaddressed_pointer_event_faults() {
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let payload = CanvasPointerDown { x: 0.0, y: 0.0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, button: 0, shift: false, ctrl: false, meta: false, alt: false };
-    assert!(handle_window(&payload, &view, &cfg, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).is_err(), "a pick without an addressed window has no camera to invert");
+    assert!(handle_window(&payload, &view, &cfg, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).is_err(), "a pick without an addressed window has no camera to invert");
     assert!(handle(&payload, &view, &cfg).is_err(), "the doc-scoped route always refuses");
 }
 

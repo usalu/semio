@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabTestCompression
         record: "ChangedLabTestCompressionIndex",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Compression index C_c of the laboratory test", "Laborversuch: Kompressionsbeiwert C_c ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Compression index C_c of the laboratory test", "Laborversuch: Kompressionsbeiwert C_c ändern")
     }
 }
 

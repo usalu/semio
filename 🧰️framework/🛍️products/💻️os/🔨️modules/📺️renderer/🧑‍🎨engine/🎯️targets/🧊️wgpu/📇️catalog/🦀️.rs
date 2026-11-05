@@ -1,5 +1,5 @@
 //! 📇️ Native host and activation views derived only from the caller-supplied catalog.
-use semio_framework_os_kernel::native_catalog::{NativeCatalogV1,read_native_catalog_v1,configured_native_catalog_v1};
+use semio_os_kernel::native_catalog::{NativeCatalogV1,read_native_catalog_v1,configured_native_catalog_v1};
 use std::sync::OnceLock;
 static CATALOG:OnceLock<NativeCatalogV1>=OnceLock::new();
 

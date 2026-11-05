@@ -74,7 +74,7 @@ async fn selection_scope_names_the_inspector_and_not_the_catalogue() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_verbs_declare_exactly_the_lanes_they_move() {
     use {semio_s_artifact_puzzle_3d_editor_dispatch::puzzle3d_interaction_chrome_scope, semio_s_artifact_puzzle_3d_editor_dispatch::puzzle3d_selection_scope, semio_s_artifact_puzzle_3d_editor_modes::windows::main::puzzle3d_viewport_scope, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN};
-    use semio_framework_plugin::InteractionVerb;
+    use semio_plugin::InteractionVerb;
     let domain = [PUZZLE3D_INTERACTION_DOMAIN];
     assert_eq!(Puzzle3dPlayApp::interaction_scope(InteractionVerb::Hover, &domain), Some(puzzle3d_viewport_scope()), "a hover moves the world body's hover lane and nothing else");
     for verb in [InteractionVerb::Select, InteractionVerb::ClearSelection, InteractionVerb::SelectAll] {

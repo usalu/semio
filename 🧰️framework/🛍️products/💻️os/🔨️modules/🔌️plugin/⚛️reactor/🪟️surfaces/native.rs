@@ -1,6 +1,6 @@
 //! 🔄️ One original host view funds each surface projection and every displaced owner.
 use super::*;
-use std::mem::ManuallyDrop;
+use std::mem::{ManuallyDrop,size_of};
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneSourceTake,RetainedCloneClose,RetainedCloneCursor,RetainedFieldCursor,retained_clone_grant_admits}};
 use semio_framework::ViewModelWindowSelection;
@@ -44,7 +44,25 @@ impl OriginalSurfaceRefresh{
 impl Drop for OriginalSurfaceRefresh{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original surface refresh requires paid physical closure")}}
 impl SurfaceContexts{
  /// 🪦️ Cached projections retire one genuine binding and one original view at a time.
- pub fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.cached_capture.is_some(){return Ok(false)}if self.closing_body.is_none(){let body=cx.retained_grant().maximum_copy_bytes;if paid(cx,demand::<Option<usize>>())?{self.closing_body=Some(body)}return Ok(false)}let body=self.closing_body.unwrap();if !self.retirement.is_empty(){let mut selected=self.retirement.select(body)?;let d=selected.demands();retired(cx,d,|g|selected.step(g).result)?;return Ok(false)}if self.closing_slot<self.slots.len(){let slot=&mut self.slots[self.closing_slot];if slot.is_some(){let d=self.retirement.next_owner_demands::<SurfaceBinding>(true,&None,body)?;retired(cx,d,|g|Ok(self.retirement.begin_granted(slot,g).result?.unwrap_or(RetainedCloneStep::Complete(Default::default()))))?;}else if paid(cx,demand::<usize>())?{self.closing_slot+=1}return Ok(false)}if self.view_state.is_some(){let d=self.retirement.next_owner_demands::<ViewModel>(true,&None,body)?;retired(cx,d,|g|Ok(self.retirement.begin_granted(&mut self.view_state,g).result?.unwrap_or(RetainedCloneStep::Complete(Default::default()))))?;return Ok(false)}Ok(true)}
+ pub fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.cached_capture.is_some(){return Ok(false)}
+  if self.closing_body.is_none(){let body=cx.retained_grant().maximum_copy_bytes;read::retire_metadata(cx,demand::<Option<usize>>(),||self.closing_body=Some(body))?;return Ok(false)}
+  let body=self.closing_body.unwrap();
+  if !self.retirement.is_empty(){let d=self.retirement.demands(body)?;read::retire(cx,d,|g|self.retirement.step_granted(g))?;return Ok(false)}
+  if self.closing_slot<self.slots.len(){
+   let slot=&mut self.slots[self.closing_slot];
+   if slot.is_some(){
+    let d=self.retirement.next_owner_demands::<SurfaceBinding>(true,&None,body)?;
+    read::retire(cx,d,|g|{let turn=self.retirement.begin_granted(slot,g);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}})?;
+   }else{read::retire_metadata(cx,demand::<usize>(),||self.closing_slot+=1)?;}
+   return Ok(false)
+  }
+  if self.view_state.is_some(){
+   let d=self.retirement.next_owner_demands::<ViewModel>(true,&None,body)?;
+   read::retire(cx,d,|g|{let turn=self.retirement.begin_granted(&mut self.view_state,g);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}})?;return Ok(false)
+  }Ok(true)
+ }
+
  pub fn original_terminal_is_empty(&self)->bool{self.slots.iter().all(Option::is_none)&&self.view_state.is_none()&&self.retirement.is_empty()&&self.cached_source.is_none()&&self.cached_capture.is_none()&&self.captured_slot.is_none()}
  /// 🧪️ Source-only fixture setup creates all authored surface roles before receipt observation.
  #[cfg(feature="original-surface-testing")]
@@ -58,7 +76,7 @@ impl SurfaceContexts{
 }
 
 #[path="read.rs"]mod read;
-pub use read::OriginalSurfaceViewCapture;
+pub use read::{OriginalSurfaceViewCapture,OriginalSurfaceViewRead};
 
 #[cfg(feature="original-surface-testing")]
 impl SurfaceContexts{#[doc(hidden)]pub fn original_surface_read_fixture(surface:&str,view:&ViewModel)->Self{let mut result=Self::default();let mut cached=view.clone();cached.window_id=Some("cache-window".into());result.view_state=Some(cached);result.slots[0]=Some(SurfaceBinding{surface:"cached".into(),body_key:"section".into(),role:SurfaceRole::Section,view_state:Some(result.view_state.as_ref().unwrap().clone()),version:0});result.slots[1]=Some(SurfaceBinding{surface:surface.into(),body_key:"section".into(),role:SurfaceRole::Section,view_state:Some(view.clone()),version:0});result}}

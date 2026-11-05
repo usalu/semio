@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "different-order",
+      "widgets": [
+        "c",
+        "a",
+        "b"
+      ],
+      "positions": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expected": [
+        "c",
+        "a",
+        "b"
+      ]
+    },
+    {
+      "id": "already-sorted",
+      "widgets": [
+        "a",
+        "b",
+        "c"
+      ],
+      "positions": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expected": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "id": "reverse",
+      "widgets": [
+        "d",
+        "c",
+        "b",
+        "a"
+      ],
+      "positions": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "expected": [
+        "d",
+        "c",
+        "b",
+        "a"
+      ]
+    },
+    {
+      "id": "only-changed",
+      "widgets": [
+        "c",
+        "a",
+        "b"
+      ],
+      "positions": [
+        "b",
+        "c"
+      ],
+      "expected": [
+        "c",
+        "b"
+      ]
+    },
+    {
+      "id": "duplicates",
+      "widgets": [
+        "b",
+        "a",
+        "b",
+        "c",
+        "a"
+      ],
+      "positions": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expected": [
+        "b",
+        "a",
+        "c"
+      ]
+    },
+    {
+      "id": "unicode",
+      "widgets": [
+        "ä",
+        "@a",
+        "a@x",
+        "漢"
+      ],
+      "positions": [
+        "@a",
+        "a@x",
+        "ä",
+        "漢"
+      ],
+      "expected": [
+        "ä",
+        "@a",
+        "a@x",
+        "漢"
+      ]
+    },
+    {
+      "id": "empty",
+      "widgets": [],
+      "positions": [],
+      "expected": []
+    },
+    {
+      "id": "unchanged-all",
+      "widgets": [
+        "c",
+        "a",
+        "b"
+      ],
+      "positions": [],
+      "expected": []
+    }
+  ]
+}

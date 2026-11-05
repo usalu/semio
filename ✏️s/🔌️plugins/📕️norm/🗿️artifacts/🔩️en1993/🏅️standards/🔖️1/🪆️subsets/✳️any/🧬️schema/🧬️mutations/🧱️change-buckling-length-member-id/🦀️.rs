@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBucklingLengthMemb
         record: "ChangedBucklingLengthMemberId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change buckling length: Column", "Knicklänge: Stütze ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change buckling length: Column", "Knicklänge: Stütze ändern")
     }
 }
 

@@ -1,6 +1,6 @@
 //! 🧪️ Shared population laws retain one original source and index across borrowed clause turns.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcHeader};
 #[derive(Debug, semio_framework_value::RetireOwned)]
 struct Request { word: String }

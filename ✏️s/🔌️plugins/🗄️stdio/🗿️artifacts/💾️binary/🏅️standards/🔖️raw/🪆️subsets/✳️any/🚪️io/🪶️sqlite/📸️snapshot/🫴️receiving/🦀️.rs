@@ -1,6 +1,6 @@
 //! 🫴️ Original typed Binary fields before native schema or octet backing is born.
 use super::BinarySnapshot;
-use semio_framework_os_kernel::NativeSnapshotBodyWallet;
+use semio_os_kernel::NativeSnapshotBodyWallet;
 use semio_framework_value::{RetainedCloneGrant, retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(Clone,Copy)]
@@ -31,7 +31,7 @@ pub(super)fn bind(carrier:Carrier<'_>,schema:&str,slot:&mut Option<BinarySnapsho
 }
 
 
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Direction,Projection,Scalar,Port as OriginalPort,cell,text_cell,row,push_row,sort,settle,validate_schema,AuthoredTable}};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Direction,Projection,Scalar,Port as OriginalPort,cell,text_cell,row,push_row,sort,settle,validate_schema,AuthoredTable}};
 type Port<'a,'b,'c>=OriginalPort<'a,'b,'c,NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 const NAMES:[&str;2]=["binary_document","binary_byte"];

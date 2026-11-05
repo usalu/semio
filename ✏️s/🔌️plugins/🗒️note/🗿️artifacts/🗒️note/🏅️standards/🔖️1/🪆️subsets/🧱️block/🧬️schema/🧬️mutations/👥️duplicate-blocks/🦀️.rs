@@ -31,8 +31,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "blocks", kind: "duplicate-blocks", record: "DuplicatedBlocks" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Duplicate {} blocks", self.source_ids.len()), &format!("{} Blöcke duplizieren", self.source_ids.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Duplicate {} blocks", self.source_ids.len()), &format!("{} Blöcke duplizieren", self.source_ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.source_ids.clone()

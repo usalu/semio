@@ -10,12 +10,12 @@ pub mod pipes_3d;
 
 /// 📇️ Every bundled example, in the order the editor's example picker offers them. Append-only:
 /// a new example is added at the END so a stored picker index never re-points.
-pub fn sources() -> Vec<semio_framework_plugin::ExampleSource> {
+pub fn sources() -> Vec<semio_plugin::ExampleSource> {
     vec![blocks::source(), pipes_3d::source()]
 }
 
 /// 📇️ The same roster as a leaked `&'static` slice, for the subset declaration.
-pub fn example_source_slice() -> &'static [semio_framework_plugin::ExampleSource] {
-    static EXAMPLES: std::sync::OnceLock<Vec<semio_framework_plugin::ExampleSource>> = std::sync::OnceLock::new();
+pub fn example_source_slice() -> &'static [semio_plugin::ExampleSource] {
+    static EXAMPLES: std::sync::OnceLock<Vec<semio_plugin::ExampleSource>> = std::sync::OnceLock::new();
     EXAMPLES.get_or_init(sources).as_slice()
 }

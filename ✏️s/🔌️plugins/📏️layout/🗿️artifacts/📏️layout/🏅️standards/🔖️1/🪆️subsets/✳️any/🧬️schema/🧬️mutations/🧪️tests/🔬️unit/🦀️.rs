@@ -417,23 +417,22 @@ async fn create_page_duplicate_id_is_fatal() {
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
     for witness in [
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖋️create-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️update-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️update-parent-page/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📓️update-spread/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗄️set-page-parent/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-page-guides/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️set-story-runs/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️update-link/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎set-page-overrides/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑create-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲set-frame-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-drawing-text/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪜reorder-frame/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️update-text-frame/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗂️update-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-paragraph-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖋️create-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️update-character-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📖️update-parent-page/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📓️update-spread/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗄️set-page-parent/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-page-guides/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️set-story-runs/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️update-link/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎set-page-overrides/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑create-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧲set-frame-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪜reorder-frame/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📑️update-text-frame/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗂️update-layer/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        &crate::test_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-paragraph-style/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ] {
         store::os_store::test_support::assert_wire_witness::<LayoutMutation>(witness);
     }
@@ -507,10 +506,10 @@ async fn frame_selection_leaves_are_editable_through_their_payload_value() {
 #[semio_framework_async_macros::async_test]
 async fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = semio_s_artifact_layout_layout_host::new_layout_store(store::os_store::document_materialize::create_document_envelope::<LayoutSnapshot, LayoutMutation>(semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = semio_s_artifact_layout_layout_host::new_layout_store(store::os_store::document_materialize::create_document_envelope::<LayoutSnapshot, LayoutMutation>(semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_frames(&["frame-1"], 10.0, 0.0), rotate_frames(&["frame-1"], (40.0, 30.0), std::f64::consts::FRAC_PI_2), scale_frames(&["frame-1"], (40.0, 30.0), 2.0, 2.0)];
     for mutation in &log {
-        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a frame transform applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("a frame transform applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), 3, "one applied op per gesture");
@@ -531,7 +530,7 @@ async fn a_drag_edited_in_history_replays_its_downstream() {
         assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a clean edit never blocks finalizing");
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "replay {attempt} equals the fresh fold of the edited log");
         if attempt == 1 {
-            store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+            store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         }
     }
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");

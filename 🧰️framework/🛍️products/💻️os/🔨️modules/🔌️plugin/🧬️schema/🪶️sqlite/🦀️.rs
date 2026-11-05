@@ -156,11 +156,11 @@ pub enum SnapshotPayloadResult {
 }
 
 pub fn encode_diagnostics(diagnostics: &Vec<semio_framework::Diagnostic>) -> Vec<u8> {
-    semio_framework_os_kernel::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(diagnostics))
+    semio_os_kernel::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(diagnostics))
 }
 
 pub fn decode_diagnostics(bytes: &[u8]) -> Result<Vec<semio_framework::Diagnostic>, semio_framework_value::ValueError> {
-    let value = semio_framework_os_kernel::pack_rt::decode_wire_value(bytes).map_err(|error| error.into_value_error())?;
+    let value = semio_os_kernel::pack_rt::decode_wire_value(bytes).map_err(|error| error.into_value_error())?;
     <Vec<semio_framework::Diagnostic> as semio_framework_value::FromValue>::from_value(value)
 }
 
@@ -197,8 +197,8 @@ mod tests {
         assert_eq!(transported.max_rows, limits.max_rows);
         assert_eq!(transported.max_file_bytes, limits.max_file_bytes);
         let result = SnapshotFileResult::Rejected(SnapshotRejection { kind: semio_framework_value::ValueRefusalKind::InvalidValue, message: "invalid exact subset".into(), diagnostics: encode_diagnostics(&diagnostics) });
-        let packed = semio_framework_os_kernel::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&result));
-        let value = semio_framework_os_kernel::pack_rt::decode_wire_value(&packed).unwrap();
+        let packed = semio_os_kernel::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&result));
+        let value = semio_os_kernel::pack_rt::decode_wire_value(&packed).unwrap();
         let restored = <SnapshotFileResult as semio_framework_value::FromValue>::from_value(value).unwrap();
         let SnapshotFileResult::Rejected(restored) = restored else { panic!("rejection changed kind") };
         assert_eq!(restored.message, "invalid exact subset");

@@ -114,11 +114,6 @@ pub mod editor {
     pub mod forms {
         #[path = "."]
         pub mod questions {
-            pub use semio_s_artifact_forms_forms_diff::editor::forms::questions::extensions;
-        }
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
         }
         pub use semio_s_artifact_forms_forms_tests::editor::forms::terminology;
         pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
@@ -163,26 +158,5 @@ pub mod editor {
         }
     }
 }
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod forms {
-        #[path = "../../../../../../../👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "../../../../../../../👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "../../../../../../../👁️viewer/🎭️modes/👁️view/🪟️windows/▶️try/🦀️.rs"]
-                    pub mod try_wizard;
-                }
-            }
-        }
-    }
-}
+
+pub use semio_s_artifact_forms_forms_diff::question_extensions;

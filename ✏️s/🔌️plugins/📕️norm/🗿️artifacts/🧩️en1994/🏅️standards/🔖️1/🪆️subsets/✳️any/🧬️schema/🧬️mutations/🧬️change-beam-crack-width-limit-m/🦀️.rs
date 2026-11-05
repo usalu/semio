@@ -17,8 +17,8 @@ pub struct ChangeBeamCrackWidthLimitM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamCrackWidthLimitM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_crack_width_limit_m::ChangeBeamCrackWidthLimitM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-crack-width-limit-m", kind: "change-beam-crack-width-limit-m", record: "ChangedBeamCrackWidthLimitM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change crack width limit w_k", "Rissbreitengrenze w_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change crack width limit w_k", "Rissbreitengrenze w_k ändern")
     }
 }
 

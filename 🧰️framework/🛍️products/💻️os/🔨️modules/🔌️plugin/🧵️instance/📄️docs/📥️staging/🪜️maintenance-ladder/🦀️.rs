@@ -4,24 +4,24 @@
 //! in which an empty stage never consumes the call. Every unit quotes its next demand on all axes and spends the caller's
 //! unchanged grant on exactly one owner; the same module drives the envelope-ingress, store-replacement and archive-load
 //! frontiers for both the live rotation and the close ladder.
-use semio_framework_plugin_document_media::{ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, ArtifactEnvelopeDecodeOperationPoll, PendingDocumentArchiveMember};
-use semio_framework_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_HISTORY_INVALID_CODE, document_load_fault};
+use semio_plugin_document_media::{ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, ArtifactEnvelopeDecodeOperationPoll, PendingDocumentArchiveMember};
+use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_HISTORY_INVALID_CODE, document_load_fault};
 use store::os_store::store_schema::ArtifactEnvelope;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_plugin_instance_children::children_components::ChildComposition;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_instance_children::children_components::ChildComposition;
+use semio_plugin_decl_emission::Emit;
 use crate::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_retirement_fault};
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_retirement_fault};
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
@@ -213,7 +213,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
     /// Genesis and `try_begin_owned_document_members` happen in ONE step: yielding between them would let the replacement
     /// lane observe `AwaitingMembers` with no ingress and seal the roster before the archived members were admitted. A
     /// childless candidate is sealed by the replacement lane itself, so this load then only awaits its outcome.
-    pub fn advance_document_archive_load(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub fn advance_document_archive_load(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let item = item();
         let missing = |message: &'static str| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, message);
@@ -288,7 +288,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 owner.operation=cx.operation();
                 owner.generation=cx.generation();
                 let step=owner.step(cx,RetainedCloneGrant{maximum_items:1,..grant});
-                let spent=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+                let spent=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
                 let item=RetainedCloneProgress{copied_items:spent.copied_items.max(1),..spent};
                 let envelope = match step {
                     store::PersistedDocumentHydrationStep::Pending(_) => return Ok(PluginLifecycleStep::Progress(item)),

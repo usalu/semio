@@ -1,7 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` node and element mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🏗️hall-new-tie-074a69/🦀️.rs"]
 mod create_element_hall_hall_new_tie;

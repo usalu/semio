@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact, semio_framework_value_derive::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_dsl::DslArtifact, semio_framework_value_derive::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.unbound-one-item-outcome")]
 pub struct DurableUnboundOneItemOutcomeV1 {
@@ -22,7 +22,7 @@ pub struct DurableUnboundOneItemOutcomeV1 {
     pub post_snapshot_pack: Vec<u8>,
 }
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_dsl::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.bound-one-item-outcome")]
 pub struct DurableBoundOneItemOutcomeV1 {
@@ -127,7 +127,7 @@ pub enum DurableOwnedGroupJournalAdvanceV1 {
 
 /// 🧯️ Retained, cancellable owner for one durable decision attempt and its recovery resolution.
 pub trait DurableOwnedGroupJournalCommitV1: semio_framework_value::ErasedSnapshotRetirement {
-    fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String>;
+    fn advance(&mut self, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
     fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError>;
@@ -150,21 +150,21 @@ pub trait DurableOwnedGroupJournalSinkV1: Send {
 }
 
 pub struct ArtifactStoreDurableGroupRootV1<P, Mutation> {
-        pub diagnostics: semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,
-pub visibility: Arc<semio_framework_os_vcs::ArtifactGroupVisibility>,
+        pub diagnostics: semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,
+pub visibility: Arc<semio_os_vcs::ArtifactGroupVisibility>,
     pub current: Option<Arc<P>>,
     pub generation: u64,
     pub content_revision: [u8; 32],
-    pub applied_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
-    pub redo_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
-    pub last_projection_cause: Option<semio_framework_os_store_space_schema::ArtifactProjectionCause>,
+    pub applied_edit_ids: semio_os_vcs::HistoryPageStack<String>,
+    pub redo_edit_ids: semio_os_vcs::HistoryPageStack<String>,
+    pub last_projection_cause: Option<semio_os_store_space_schema::ArtifactProjectionCause>,
     pub edit_sequence: i32,
     pub clock: HybridLogicalTimestamp,
     pub revision_accumulator: Option<CursorRevisionAccumulator>,
     pub tail_undo_cache: Option<(String, Arc<P>)>,
     pub authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
         pub mutation_retirement: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mutation>>,
-pub displaced_reservation: Option<semio_framework_os_store_read::ArtifactStoreDisplacedOwnerReservation>,
+pub displaced_reservation: Option<semio_os_store_read::ArtifactStoreDisplacedOwnerReservation>,
     pub retirement: Option<Box<StagedRootRetirement<P, Mutation>>>,
     pub adopted: bool,
 }

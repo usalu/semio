@@ -1,6 +1,6 @@
 //! 🏗️ The authored native S installation binds Jack behavior to its real rich Semio member store.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 #[path="🚪️io/🦀️.rs"]
 pub mod io;
 use semio_s_artifact_trinity_jack as jack;
@@ -11,7 +11,7 @@ use jack::standards::v1::subsets::any::schema::content_read::{JackContentRead, J
 use semio_s_artifact_trinity_jack_graph_query::{JackContentVisual, JackGraphQuery};
 use semio_framework_schema_composition::ChildRefFields;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_plugin::{Fault,FaultOrigin,FaultCode,app::{ChildContentView,ChildEmitPreparation}};
+use semio_plugin::{Fault,FaultOrigin,FaultCode,app::{ChildContentView,ChildEmitPreparation}};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use semio_s_artifact_stdio_semio_base::schema::geometry::read_binary64_lexeme;
@@ -61,7 +61,7 @@ impl JackComposition for SemioJackComposition{
   }
   Ok(None)
  }
- fn examples()->&'static[semio_framework_plugin::ExampleSource]{static EXAMPLES:std::sync::LazyLock<Vec<semio_framework_plugin::ExampleSource>>=std::sync::LazyLock::new(||vec![semio_framework_plugin::ExampleSource::deferred("demo",jack::examples::demo::label(),"file",".query.json",include_bytes!("🖼️assets/🎬️demo/🔣️.query.json"),||{let snapshot=SemioJackComposition::initial_snapshot();let text=snapshot.to_json();jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(snapshot).expect("authored example source retirement");text.expect("authored parent JSON")} )]);EXAMPLES.as_slice()}
+ fn examples()->&'static[semio_plugin::ExampleSource]{static EXAMPLES:std::sync::LazyLock<Vec<semio_plugin::ExampleSource>>=std::sync::LazyLock::new(||vec![semio_plugin::ExampleSource::deferred("demo",jack::examples::demo::label(),"file",".query.json",include_bytes!("🖼️assets/🎬️demo/🔣️.query.json"),||{let snapshot=SemioJackComposition::initial_snapshot();let text=snapshot.to_json();jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(snapshot).expect("authored example source retirement");text.expect("authored parent JSON")} )]);EXAMPLES.as_slice()}
  fn io_entries()->&'static[store::io::io_mechanism::IoEntry]{io::entries()}
 }
 
@@ -94,7 +94,7 @@ impl JackContentRead for SemioJackPublishedRead<'_>{
 }
 
 /// 🏗️ The S-owned native declaration installs its concrete content composition explicitly.
-pub fn artifact<PA:jack::standards::v1::subsets::any::registration::ArtifactApps<SemioJackComposition>>()->semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>{jack::standards::v1::subsets::any::registration::artifact::<PA,SemioJackComposition>()}
+pub fn artifact<PA:jack::standards::v1::subsets::any::registration::ArtifactApps<SemioJackComposition>>()->semio_plugin::app::declarations::ArtifactDeclaration<PA>{jack::standards::v1::subsets::any::registration::artifact::<PA,SemioJackComposition>()}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

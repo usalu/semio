@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertPlacement where Op
         record: "InsertedPlacement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert placement {}", self.placement.id), &format!("Platzierung {} einfügen", self.placement.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert placement {}", self.placement.id), &format!("Platzierung {} einfügen", self.placement.id))
     }
 }
 

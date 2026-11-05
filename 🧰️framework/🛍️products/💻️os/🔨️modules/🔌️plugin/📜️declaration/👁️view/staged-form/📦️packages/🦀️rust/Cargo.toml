@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-plugin-decl-staged-form"
+name = "semio-plugin-decl-staged-form"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,8 +25,8 @@ path = "../../🦀️.rs"
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-runtime = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-runtime = { workspace = true }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }

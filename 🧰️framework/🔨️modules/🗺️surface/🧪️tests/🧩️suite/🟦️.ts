@@ -20,7 +20,7 @@ test("surface neutral owner survives deleting each specific graph composition",(
   const graphSource=readFileSync(join(owner,"🕸️node-graph/📦️packages/🦀️rust/Cargo.toml"),"utf8"),graphManifest=Bun.TOML.parse(graphSource);expect(graphManifest).toEqual(parseToml(graphSource));visit(graphManifest);
   const graph=readFileSync(join(owner,"🕸️node-graph/🦀️.rs"),"utf8");
   for(const name of ownership.neutralTypes)expect(graph).toContain(name);
-  expect(graph).not.toContain("semio_framework_os_");expect(graph).not.toContain("semio_framework_artifact_infinite_dag");expect(graph).not.toContain("pub struct GraphHost");
+  expect(graph).not.toContain("semio_os_");expect(graph).not.toContain("semio_framework_artifact_infinite_dag");expect(graph).not.toContain("pub struct GraphHost");
 });
 
 test("surface retained refusal interfaces use the defining General Value owner",()=>{

@@ -5,7 +5,7 @@
 #[test]
 fn presented_editor_text_focus_rebases_only_after_same_host_pixels_are_accepted() {
     let window_id = "presented-text-focus-rebase";
-    let kind = semio_framework_ui_declaration::ui::SurfaceKind::TextEditor;
+    let kind = semio_ui_declaration::ui::SurfaceKind::TextEditor;
     assert!(publish_focus_rebase_document(window_id, 1, 501, kind, &[2]).is_none());
     drive_focus_rebase_reconcile(window_id, 1);
     reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
@@ -27,7 +27,7 @@ fn presented_editor_text_focus_rebases_only_after_same_host_pixels_are_accepted(
 #[test]
 fn presented_table_stepper_focus_rebases_only_after_same_host_pixels_are_accepted() {
     let window_id = "presented-table-stepper-focus-rebase";
-    let kind = semio_framework_ui_declaration::ui::SurfaceKind::Table;
+    let kind = semio_ui_declaration::ui::SurfaceKind::Table;
     assert!(publish_focus_rebase_document(window_id, 1, 521, kind, &[2]).is_none());
     drive_focus_rebase_reconcile(window_id, 1);
     reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
@@ -35,7 +35,7 @@ fn presented_table_stepper_focus_rebases_only_after_same_host_pixels_are_accepte
     assert!(acknowledge_presented_input(522));
     let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
     let host_id = retained_scene_host_id(window_id, old);
-    focus_table_stepper(window_id, generation, old, &host_id, semio_framework_os_renderer_wgpu_scene_state::TableStepperFocusTarget { row_id: "r1".into(), column_id: "count".into() });
+    focus_table_stepper(window_id, generation, old, &host_id, semio_renderer_wgpu_scene_state::TableStepperFocusTarget { row_id: "r1".into(), column_id: "count".into() });
 
     let successor = stage_focus_rebase_document(window_id, 4, 523, kind, &[2, 3, 4]);
     assert_ne!(old, successor);
@@ -43,9 +43,9 @@ fn presented_table_stepper_focus_rebases_only_after_same_host_pixels_are_accepte
     assert!(acknowledge_presented_input(523));
     assert!(FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().is_some_and(|focus| focus.node == successor && focus.host_id == host_id)), "accepted pixels rebase the same Table stepper focus");
 
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
-    assert!(apply_focused_table_stepper_key(&semio_framework_ui_wgpu_input::KeyAction::End, &mut input));
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    assert!(apply_focused_table_stepper_key(&semio_ui_wgpu_input::KeyAction::End, &mut input));
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1);
     let args = actions[0].args.as_ref().expect("stepper args");
     assert_eq!(args.get("objectId").and_then(semio_framework::DslValue::as_str), Some("r1"));
@@ -56,7 +56,7 @@ fn presented_table_stepper_focus_rebases_only_after_same_host_pixels_are_accepte
 #[test]
 fn presented_editor_ink_focus_rebases_only_after_same_host_pixels_are_accepted() {
     let window_id = "presented-ink-focus-rebase";
-    let kind = semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas;
+    let kind = semio_ui_declaration::ui::SurfaceKind::InkCanvas;
     assert!(publish_focus_rebase_document(window_id, 1, 511, kind, &[2]).is_none());
     drive_focus_rebase_reconcile(window_id, 1);
     reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
@@ -76,10 +76,10 @@ fn presented_editor_ink_focus_rebases_only_after_same_host_pixels_are_accepted()
 
 #[test]
 fn presented_editor_ink_clipboard_owners_rebase_only_after_same_host_pixels_are_accepted() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    let source=caller.turn(|cx|semio_framework_ui_wgpu_input::ClipboardIntentSource{operation:cx.operation(),generation:cx.generation(),epoch:cx.original_source_epoch().expect("fixture issued input epoch")});
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let source=caller.turn(|cx|semio_ui_wgpu_input::ClipboardIntentSource{operation:cx.operation(),generation:cx.generation(),epoch:cx.original_source_epoch().expect("fixture issued input epoch")});
     let window_id = "presented-ink-clipboard-rebase";
-    let kind = semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas;
+    let kind = semio_ui_declaration::ui::SurfaceKind::InkCanvas;
     assert!(publish_focus_rebase_document(window_id, 1, 521, kind, &[2]).is_none());
     drive_focus_rebase_reconcile(window_id, 1);
     reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
@@ -117,7 +117,7 @@ fn presented_ink_intent_finishes_before_an_unchanged_same_host_sibling_refresh_i
     let window_id = "presented-ink-intent-unchanged";
     let old = publish_ink_intent_document(window_id, 1, 601, &children(0), &ink);
     let host_id = retained_scene_host_id(window_id, old);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let pointer = ui_render::PointerId(61);
     begin_pending_ink_intent(window_id, old, pointer, &mut input);
 
@@ -131,7 +131,7 @@ fn presented_ink_intent_finishes_before_an_unchanged_same_host_sibling_refresh_i
     assert_eq!(candidate_host, host_id, "the sibling insertion keeps the exact mounted Ink host");
     assert!(!acknowledge_presented_input(602), "a checked-out presented Ink job bars its candidate pixels until the old event reaches a terminal state");
     drive_ink_scene_terminal(&mut input);
-    let admitted = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let admitted = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(admitted.iter().filter(|action| action.action == "inkApplyEvents").count(), packet["admittedActions"].as_u64().unwrap() as usize);
     cancel_scene_pointer(pointer, &mut input);
     assert!(acknowledge_presented_input(602));
@@ -139,7 +139,7 @@ fn presented_ink_intent_finishes_before_an_unchanged_same_host_sibling_refresh_i
     let successor_pointer = ui_render::PointerId(62);
     begin_pending_ink_intent(window_id, successor, successor_pointer, &mut input);
     drive_ink_scene_terminal(&mut input);
-    let successor_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let successor_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(successor_actions.iter().filter(|action| action.action == "inkApplyEvents").count(), packet["successorActions"][0].as_u64().unwrap() as usize);
     cancel_scene_pointer(successor_pointer, &mut input);
     retire_presented_document(window_id);
@@ -158,7 +158,7 @@ fn presented_ink_intent_uses_old_authored_content_before_a_changed_same_host_suc
     let window_id = "presented-ink-intent-authored-change";
     let old = publish_ink_intent_document(window_id, 1, 611, &children(0), &old_ink);
     let host_id = retained_scene_host_id(window_id, old);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let pointer = ui_render::PointerId(63);
     begin_pending_ink_intent(window_id, old, pointer, &mut input);
 
@@ -171,7 +171,7 @@ fn presented_ink_intent_uses_old_authored_content_before_a_changed_same_host_suc
     }));
     assert!(!acknowledge_presented_input(612), "new authored pixels cannot mix with a partially stepped job that owns the old document snapshot");
     drive_ink_scene_terminal(&mut input);
-    let admitted = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let admitted = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(admitted.iter().filter(|action| action.action == "inkApplyEvents").count(), packet["admittedActions"].as_u64().unwrap() as usize);
     cancel_scene_pointer(pointer, &mut input);
     assert!(acknowledge_presented_input(612));
@@ -179,7 +179,7 @@ fn presented_ink_intent_uses_old_authored_content_before_a_changed_same_host_suc
     let successor_pointer = ui_render::PointerId(64);
     begin_pending_ink_intent(window_id, successor, successor_pointer, &mut input);
     drive_ink_scene_terminal(&mut input);
-    let successor_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let successor_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(successor_actions.iter().filter(|action| action.action == "inkApplyEvents").count(), packet["successorActions"][1].as_u64().unwrap() as usize);
     cancel_scene_pointer(successor_pointer, &mut input);
     retire_presented_document(window_id);
@@ -199,7 +199,7 @@ fn presented_ink_intent_in_a_hidden_window_does_not_block_an_unrelated_candidate
     let hidden_window = "presented-ink-intent-hidden-owner";
     let hidden = publish_ink_intent_document(hidden_window, 1, 621, &children(0), &ink);
     let pointer = ui_render::PointerId(65);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     begin_pending_ink_intent(hidden_window, hidden, pointer, &mut input);
 
     let participant = "presented-ink-intent-visible-candidate";
@@ -209,7 +209,7 @@ fn presented_ink_intent_in_a_hidden_window_does_not_block_an_unrelated_candidate
     assert!(SCENE_INTENTS.with(|cell| cell.borrow().slots.iter().flatten().any(|intent| intent.window_id == hidden_window && intent.pointer_id == Some(pointer))));
 
     drive_ink_scene_terminal(&mut input);
-    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     cancel_scene_pointer(pointer, &mut input);
     retire_presented_document(hidden_window);
     retire_presented_document(participant);
@@ -229,7 +229,7 @@ fn presented_ink_intent_from_a_stale_revision_does_not_block_the_current_candida
     let window_id = "presented-ink-intent-stale-revision";
     let old = publish_ink_intent_document(window_id, 1, 631, &children(0), &ink);
     let pointer = ui_render::PointerId(66);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     begin_pending_ink_intent(window_id, old, pointer, &mut input);
     let _ = stage_ink_intent_document(window_id, 2, 632, &children(1), &ink);
     SCENE_INTENTS.with(|cell| {
@@ -240,7 +240,7 @@ fn presented_ink_intent_from_a_stale_revision_does_not_block_the_current_candida
     });
     assert!(acknowledge_presented_input(632), "an intent that no longer belongs to the presented revision cannot veto its candidate");
     drive_ink_scene_terminal(&mut input);
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the stale intent closes instead of dispatching against successor content");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the stale intent closes instead of dispatching against successor content");
     cancel_scene_pointer(pointer, &mut input);
     retire_presented_document(window_id);
 }
@@ -257,7 +257,7 @@ fn presented_ink_intent_barrier_has_an_independent_bounded_progress_owner() {
     let window_id = "presented-ink-intent-presenter-progress";
     let old = publish_ink_intent_document(window_id, 1, 641, &children(0), &ink);
     let pointer = ui_render::PointerId(67);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     begin_pending_ink_intent(window_id, old, pointer, &mut input);
     let _ = stage_ink_intent_document(window_id, 2, 642, &children(1), &ink);
 
@@ -271,7 +271,7 @@ fn presented_ink_intent_barrier_has_an_independent_bounded_progress_owner() {
     }
     assert!(scene_interaction_terminal_is_empty());
     assert!(acknowledge_presented_input(642));
-    assert_eq!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().filter(|action| action.action == "inkApplyEvents").count(), 1);
+    assert_eq!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().filter(|action| action.action == "inkApplyEvents").count(), 1);
     cancel_scene_pointer(pointer, &mut input);
     retire_presented_document(window_id);
 }

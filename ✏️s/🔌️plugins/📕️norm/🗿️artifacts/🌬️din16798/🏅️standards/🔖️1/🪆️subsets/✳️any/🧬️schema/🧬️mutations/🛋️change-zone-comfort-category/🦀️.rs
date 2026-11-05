@@ -13,8 +13,8 @@ pub struct ChangeZoneComfortCategory {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZoneComfortCategory where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_comfort_category::ChangeZoneComfortCategory> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-comfort-category", kind: "change-zone-comfort-category", record: "ChangeZoneComfortCategory" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change comfort category of the zone", "Kategorie des Raumklimas der Zone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change comfort category of the zone", "Kategorie des Raumklimas der Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
 }

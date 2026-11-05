@@ -37,22 +37,22 @@ pub use surface::{
     Transform2D,
 };
 
-pub use semio_framework_ui_render_interaction::{
+pub use semio_ui_render_interaction::{
     hit_test, node_bounds, AccessibilityEvent, AccessibilityTarget, Bounds, CursorRequest, Deadline, DeadlineKey, DispatchEvent, DispatchFlags, DispatchOutcome, DispatchTree, Dispatcher, ElementId, EventModifiers, FrameNodeId, FrameScheduler,
     Hitbox, ImeDirective, ImeEvent, InvalidationReason, ListenerSet, PointerButton, PointerId, PointerInfo, PointerKind, ReconciliationKey, TextEditTarget,
 };
 #[cfg(feature = "backend-testing")]
-pub use semio_framework_ui_render_packet::ReadbackImage;
-pub use semio_framework_ui_render_packet::{
+pub use semio_ui_render_packet::ReadbackImage;
+pub use semio_ui_render_packet::{
     AtlasId, BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FinishParams, FrameStats, GlassInstance, GlassStyle, GpuTier, GraphicsBackend, LayerState, LayoutRect, LineVertex3, LossReason, MemoryClass, MeshId, MeshInstance, PhysicalSize,
     PipelineKind, QuadInstance, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp, ResourceRegistry, Scene, SceneBuilder, SceneError, ScissorRect, SurfaceFormat, SurfaceLighting, SurfaceMaterial, SurfacePass, SurfaceShadow,
     TextureId, VectorVertex,
 };
-pub use semio_framework_ui_render_shader_contract::{
+pub use semio_ui_render_shader_contract::{
     BindGroupEntrySpec, BindGroupSpec, BindingKind, BlendMode, ColorWriteMask, CompareFunction, CullMode, DepthBiasSpec, DepthStencilFormat, DepthStencilSpec, PipelineSpec, PrimitiveTopology, ShaderStageVisibility, StencilOperation,
     StencilStateSpec, VertexBufferSpec, VertexFormat, VertexStepMode, ALL_SHADERS, BLUR_DOWNSAMPLE_SHADER, BLUR_FAMILY, GLASS_FAMILY, GLASS_SHADER, SCENE_BLIT_SHADER, UI_CONTENT_PIPELINE, UI_FAMILY, UI_SHADER, VECTOR_FAMILY, VECTOR_PIPELINE,
     VECTOR_SHADER, WORLD3D_FAMILY, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_PIPELINE,
 };
-pub use semio_framework_ui_render_text::{FontDependencyId, FontFamilyChoice, Measurement, ShapedText, TextAlignment, TextFontError, TextFontRole, TextFontSet, TextRunStyle, TextStyle, TextSystem};
+pub use semio_ui_render_text::{FontDependencyId, FontFamilyChoice, Measurement, ShapedText, TextAlignment, TextFontError, TextFontRole, TextFontSet, TextRunStyle, TextStyle, TextSystem};
 #[cfg(not(target_arch = "wasm32"))]
-pub use semio_framework_ui_render_text::{TextFontFiles, TextFontReadError};
+pub use semio_ui_render_text::{TextFontFiles, TextFontReadError};

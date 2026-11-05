@@ -10,7 +10,7 @@ pub(super) async fn arm_media_in<PA: PluginApp>(
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::MediaIn { seq, port, descriptor, data } = command else { unreachable!("arm_media_in is dispatched only for its own command") };
     let descriptor_value: DslValue = decode_wire_serialized_or(&descriptor, DslValue::Null).await;
     let descriptor_json = serde_json::to_string(&descriptor_value).unwrap_or_else(|_| "{}".into());
@@ -28,9 +28,9 @@ pub(super) async fn arm_media_in<PA: PluginApp>(
 /// 📤️ Answers a submitted media export handle.
 pub(super) async fn arm_submit_media_export(
     frames: &mut Vec<protocol::AppFrame>,
-    owner: &mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand,
+    owner: &mut semio_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::SubmitMediaExport { seq, .. } = command else { unreachable!("arm_submit_media_export is dispatched only for its own command") };
     let handle=owner.take_media_submission().expect("original media submission is complete before command donation");
     frames.push(protocol::AppFrame::MediaExportSubmitted{in_reply_to:seq,handle:media_export_handle_into_wire(handle)});
@@ -40,9 +40,9 @@ pub(super) async fn arm_submit_media_export(
 /// ⏳️ Answers the poll status of a media export.
 pub(super) async fn arm_poll_media_export(
     frames: &mut Vec<protocol::AppFrame>,
-    owner: &mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand,
+    owner: &mut semio_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::PollMediaExport { seq, handle } = command else { unreachable!("arm_poll_media_export is dispatched only for its own command") };
     let handle = media_export_handle_from_wire(handle);
     if let Some(status)=owner.take_media_status(){frames.push(protocol::AppFrame::MediaExportStatus{in_reply_to:seq,handle:media_export_handle_into_wire(handle),state:protocol::MediaExportStateWire::Complete,applied_progress:status.total_bytes,checkpoint_available:false,mime_type:status.mime_type,total_bytes:status.total_bytes,detail:String::new()});}else{
@@ -89,7 +89,7 @@ pub(super) async fn arm_cancel_media_export<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::CancelMediaExport { seq, handle } = command else { unreachable!("arm_cancel_media_export is dispatched only for its own command") };
     let handle = media_export_handle_from_wire(handle);
     match plugin_cancel_media_export(runtime, instance_id, &handle).await {
@@ -105,7 +105,7 @@ pub(super) async fn arm_media_fingerprint<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::MediaFingerprint { seq, port } = command else { unreachable!("arm_media_fingerprint is dispatched only for its own command") };
     let fingerprint = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;

@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v_r12::subsets::any::io::DxfAnalyzer;
     use crate::DxfSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -43,7 +43,7 @@ pub use derived_composition::*;
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_r12::subsets::any::io::DxfComposer as DxfRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -65,7 +65,7 @@ pub mod text;
 
 pub mod derived_construction {
     use crate::{DxfDiff, DxfMutation, DxfSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.dxf` snapshot.
@@ -113,7 +113,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::DxfSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.dxf` parts.
@@ -135,45 +135,45 @@ pub mod derived_analysis {
         /// heuristic rather than an exact match: the first non-blank line must trim to a valid
         /// integer group code, and one of the DXF section/version markers (`SECTION`, `HEADER`,
         /// `ENTITIES`, or an `AC10xx`-style version string) must appear among the first tags.
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             let text = match source {
                 AnalyzeSource::Text(text) => Some(*text),
                 AnalyzeSource::Binary(_) => None,
             };
-            let Some(text) = text else { return semio_framework_plugin::io::Confidence::Low };
+            let Some(text) = text else { return semio_plugin::io::Confidence::Low };
             if let Ok((envelope, _)) = store::semio_format::split_text_preamble(text) {
-                return if envelope.matches_identity("stdio.dxf", store::semio_format::Component::Dsl, 1) { semio_framework_plugin::io::Confidence::High } else { semio_framework_plugin::io::Confidence::Low };
+                return if envelope.matches_identity("stdio.dxf", store::semio_format::Component::Dsl, 1) { semio_plugin::io::Confidence::High } else { semio_plugin::io::Confidence::Low };
             }
             let lines: Vec<&str> = text.lines().map(str::trim).filter(|l| !l.is_empty()).collect();
-            let Some(first) = lines.first() else { return semio_framework_plugin::io::Confidence::Low };
+            let Some(first) = lines.first() else { return semio_plugin::io::Confidence::Low };
             if first.parse::<i32>().is_err() {
-                return semio_framework_plugin::io::Confidence::Low;
+                return semio_plugin::io::Confidence::Low;
             }
             let has_marker = lines.iter().take(64).any(|l| matches!(*l, "SECTION" | "HEADER" | "ENTITIES" | "EOF") || (l.len() == 6 && l.starts_with("AC") && l[2..].chars().all(|c| c.is_ascii_digit())));
             if has_marker {
-                semio_framework_plugin::io::Confidence::High
+                semio_plugin::io::Confidence::High
             } else {
-                semio_framework_plugin::io::Confidence::Medium
+                semio_plugin::io::Confidence::Medium
             }
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = DxfParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.lines().find(|line| !line.trim().is_empty()).is_some_and(|line| line.trim().parse::<i32>().is_ok()) { crate::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error,semio_framework_diagnostic::TextSpan::at(1,1))) } else { <DxfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <DxfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -186,7 +186,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec DxfBuilderFacets {
         construction: DxfBuilderConstruction,
         analysis: DxfAnalyzerAnalysis,

@@ -65,8 +65,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "mesh", kind: "move-mesh", record: "MovedMesh" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Move Mesh", "Netz verschieben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Move Mesh", "Netz verschieben")
     }
 
     fn target(&self) -> Vec<String> {

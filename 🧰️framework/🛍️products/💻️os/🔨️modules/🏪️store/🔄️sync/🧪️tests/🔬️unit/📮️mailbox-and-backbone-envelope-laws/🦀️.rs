@@ -2,7 +2,7 @@
 
 #[tokio::test]
 async fn folder_event_log_refuses_the_repository_root() {
-    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let dir = semio_os_store_test_support::tempdir().expect("tempdir");
     std::fs::write(dir.path().join("📋️project.json"), "{}\n").expect("build marker");
     std::fs::write(dir.path().join("package.json"), r#"{"workspaces":[]}"#).expect("workspace declaration");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
@@ -24,9 +24,9 @@ fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![1]).unwrap() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![2]).unwrap() },
-        timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
+        diff: semio_os_spr::ArtifactDiff { schema: semio_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![1]).unwrap() },
+        inverse: semio_os_spr::InverseMutation { schema: semio_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![2]).unwrap() },
+        timestamp: semio_os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
         transaction: None, verb: None, line: None,
     }
 }
@@ -141,7 +141,7 @@ fn artifact_mailbox_stale_late_send_hands_back_exact_owner_and_interrupted_close
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_ownership_order() {
-    use semio_framework_os_store_backbone::Backbone;
+    use semio_os_store_backbone::Backbone;
     let nested = sample_presence_peer_with_interaction().await;
     let bare = PresencePeer {
         actor: nested.actor.clone(),

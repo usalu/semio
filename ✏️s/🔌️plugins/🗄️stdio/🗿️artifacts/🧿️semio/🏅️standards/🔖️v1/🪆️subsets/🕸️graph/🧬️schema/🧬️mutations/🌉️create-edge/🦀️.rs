@@ -30,8 +30,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "edge", kind: "create-edge", record: "CreatedEdge" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create edge \"{}\" ({} -> {})", self.id.value, self.source.value, self.target.value), &format!("Kante \"{}\" ({} -> {}) erstellen", self.id.value, self.source.value, self.target.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create edge \"{}\" ({} -> {})", self.id.value, self.source.value, self.target.value), &format!("Kante \"{}\" ({} -> {}) erstellen", self.id.value, self.source.value, self.target.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]

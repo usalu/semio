@@ -16,8 +16,8 @@ pub struct SetTemplate {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetTemplate {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "template", kind: "set-template", record: "SetTemplate" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set template", "Vorlage setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set template", "Vorlage setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

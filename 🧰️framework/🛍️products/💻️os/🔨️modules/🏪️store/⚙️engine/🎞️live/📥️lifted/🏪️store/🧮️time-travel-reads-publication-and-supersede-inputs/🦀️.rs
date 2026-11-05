@@ -1,7 +1,7 @@
 //! 🧮️ Time travel reads, publication and supersede inputs: the supersessions and mutation outcomes, the report replay, the one item publication batches, the tool transactions and the supersede and draft inputs. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️TimeTravelReads
     /// 🗺️ The effective supersessions the live projection folds with.
@@ -46,7 +46,7 @@ where
         let effective = effective_operation::<P, Mutation>(operation, index as u32, target.clone(), &store_log.envelope.schema, &self.supersessions);
         let descriptor = effective.operation().unwrap_or(operation).descriptor();
         let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
-        let spans = store_cursor.applied_unit_flag(store_wire, digest, index) || matches!(meta.map(|meta| &meta.origin), Some(semio_framework_os_spr::MutationOrigin::Transaction { .. }));
+        let spans = store_cursor.applied_unit_flag(store_wire, digest, index) || matches!(meta.map(|meta| &meta.origin), Some(semio_os_spr::MutationOrigin::Transaction { .. }));
         let unit = spans.then(|| meta.and_then(|meta| meta.group_id.clone()).unwrap_or_else(|| target.0.clone()));
         Ok(AppliedMutation { mutation_id: target.clone(), edit_id: &edit.id, position, op_index: index as u32, operation, meta, transaction: meta.and_then(|meta| meta.transaction.as_ref()), supersession, effective: descriptor, unit })
     }
@@ -57,7 +57,7 @@ where
         let edit = store_cursor.applied_edit(store_log, store_wire, position)?;
         let units = store_cursor.applied_edit_units(store_log, store_wire, position)?;
         let mut operations = Vec::with_capacity(edit.forwards.len());
-        for (index, (mutation_id, operation)) in semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()).enumerate() {
+        for (index, (mutation_id, operation)) in semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()).enumerate() {
             let meta = edit.mutation_meta.get(index);
             let supersession = self.supersessions.get(&mutation_id);
             let effective = match supersession {
@@ -92,20 +92,20 @@ where
     pub fn applied_edit_outcomes(&self, store_log: &StoreLog<P, Mutation>, store_wire: &StoreWire<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, position: usize) -> Result<Vec<protocol::MutationReplayOutcome>, VcsError> {
         let edit = store_cursor.applied_edit(store_log, store_wire, position)?;
         let messages = store_log.messages_for_edit(&edit.id);
-        let mut by_operation: Vec<Vec<semio_framework_os_spr::MutationMessage>> = vec![Vec::new(); edit.forwards.len()];
+        let mut by_operation: Vec<Vec<semio_os_spr::MutationMessage>> = vec![Vec::new(); edit.forwards.len()];
         for message in messages {
             if let Some(slot) = message.op_index.and_then(|index| by_operation.get_mut(index as usize)) {
                 slot.push(message.clone());
             }
         }
-        Ok(semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit)
+        Ok(semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit)
             .into_iter()
             .zip(by_operation)
             .enumerate()
             .map(|(index, (mutation_id, operation_messages))| {
                 let supersession = self.supersessions.get(&mutation_id);
                 protocol::MutationReplayOutcome {
-                    worst: semio_framework_os_spr::worst_level(&operation_messages),
+                    worst: semio_os_spr::worst_level(&operation_messages),
                     messages: operation_messages,
                     superseded: supersession.is_some(),
                     withdrawn: supersession.is_some_and(|supersession| supersession.replacement == protocol::InputReplacement::Withdrawn),
@@ -175,12 +175,12 @@ where
     pub fn refuse_blocking_history(&self, store_log: &StoreLog<P, Mutation>) -> Result<(), VcsError> {
         let result = EditReplay::new(ReplayMode::Report, store_log.envelope.vcs.genesis.facts().share_snapshot(), store_log.applied_edit_ids.to_vec(), 0, &store_log.envelope.schema, (*self.supersessions).clone(), &store_log.envelope.vcs.edits)?.run(&store_log.envelope.vcs.edits)?;
         let blocks = result.report().blocks_finalize();
-        let messages: Vec<_> = if blocks { result.report().outcomes.iter().flat_map(|outcome| outcome.messages.iter()).filter(|message| semio_framework_os_spr::MergePolicy::Normal.rejects(message.level)).cloned().collect() } else { Vec::new() };
+        let messages: Vec<_> = if blocks { result.report().outcomes.iter().flat_map(|outcome| outcome.messages.iter()).filter(|message| semio_os_spr::MergePolicy::Normal.rejects(message.level)).cloned().collect() } else { Vec::new() };
         result.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
         if !blocks {
             return Ok(());
         }
-        Err(VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, messages })
+        Err(VcsError::Rejected { policy: semio_os_spr::MergePolicy::Normal, messages })
     }
 
     /// 📑️ A finished replay's per-mutation report; a replay that converged gets the unreplayed tail's durable outcomes
@@ -233,7 +233,7 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
         output:&mut protocol::ForeignStepsPreparation, grant:RetainedCloneGrant,
     )->Result<RetainedCloneStep,ValueError> {
         let(original,prebase)=self.original_proposal_forward(store_owners, store_cursor, publication)?;
-        let source=if original.may_emit_foreign_steps(){semio_framework_os_spr::ColdMutation::foreign_step_source(original,prebase,output.source_index())?}else{None};
+        let source=if original.may_emit_foreign_steps(){semio_os_spr::ColdMutation::foreign_step_source(original,prebase,output.source_index())?}else{None};
         let step=output.advance_source(source,grant)?;
         semio_framework_value::retained_clone::admit_retained_clone_progress(grant,step.progress(),"original prepared foreign row turn")?;
         Ok(step)
@@ -254,8 +254,8 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
 
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️ToolTransactions
     /// 🪂️ Takes the open tool transaction's edit off the applied tail before a remote merge: the ledger, the message ledger
@@ -277,7 +277,7 @@ where
     /// 🧪️ The Report replay of everything `fold` changes against the live projection, driven to completion, touching nothing.
     /// Synchronous: the supersede command API (agents, text, hub) gets its verdict inside the dispatch. Under
     /// [`Self::defer_local_replays`] [`Self::author_supersession`] steps the same replay across turns instead.
-    pub fn dry_run(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, fold: &semio_framework_os_spr::HistoryFold) -> Result<EditReplayResult<P, Mutation>, VcsError> {
+    pub fn dry_run(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, fold: &semio_os_spr::HistoryFold) -> Result<EditReplayResult<P, Mutation>, VcsError> {
         let (from, horizon) = self.replay_window(store_log, &fold.applied, &fold.supersessions)?;
         self.report_replay(store_log, store_cursor, &fold.applied, from, fold.supersessions.clone(), horizon, Self::prefix_stride(fold.applied.len()))?.run(&store_log.envelope.vcs.edits)
     }
@@ -290,7 +290,7 @@ where
         let mut failure = None;
         for edit_id in store_log.applied_edit_ids.iter() {
             match store_log.envelope.vcs.edits.find_near(|edit| edit.id == *edit_id) {
-                Some(edit) => applied.extend(semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter())),
+                Some(edit) => applied.extend(semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter())),
                 None => {
                     failure = Some(VcsError::UnknownEdit(edit_id.clone()));
                     break;

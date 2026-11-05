@@ -155,9 +155,9 @@ pub fn bim_model_inference_descriptor() -> semio_framework_schema_registry::Arti
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.bim.model.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: "", proto: "" },

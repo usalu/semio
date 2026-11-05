@@ -1,6 +1,6 @@
 //! 🎟️ A preborn native carrier retains its actual return Origin until semantic and physical settlement.
 use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,InteractiveStage,JobOutcomeBorrow,JobOutcomeView,OriginalJobContinuation,OriginalJobContinuationView,OriginalJobOutcome,OriginalJobReturn,OriginalJobReturnOrigin,OriginalJobPageReservation,OriginalJobPageReturnRegistry,OriginalSourceBinding,OriginalSuppliedJobPage,OriginalTurnFailure,StepContext,close_original_retained_step,drive_step,receive_original_retained_work};
-use semio_framework_os_services_native_io::{NativeIoJob,NativeIoRequest,NativeIoResultStatus};
+use semio_os_services_native_io::{NativeIoJob,NativeIoRequest,NativeIoResultStatus};
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 
 /// 🚦️ Semantic completion is distinct from a still-owned original continuation or cancellation.
@@ -64,7 +64,7 @@ impl<const N:usize> RendererOriginalIoNode<N>{
  pub fn result_page(&self,index:usize)->Option<&[u8]>{self.acknowledged.then(||self.job.as_ref().and_then(|job|job.result_page(index))).flatten()}
  pub fn result_modified(&self,index:usize)->Option<(&std::path::Path,std::time::SystemTime)>{self.acknowledged.then(||self.job.as_ref().and_then(|job|job.result_modified(index))).flatten()}
  /// 🧭️ The actual selected path moves only after the original descriptor settlement.
- pub fn supply_selected_path<const P:usize>(&mut self,reservation:&mut semio_framework_os_services_native_io::OriginalNativePathReservation<P>,output:&mut Option<semio_framework_os_services_native_io::OriginalSuppliedNativePath>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.closing||!self.outcome_is_acknowledged(){return Err(invalid("selected native path requires its acknowledged original invocation"))}self.job.as_mut().unwrap().supply_result_last_path(reservation,output,cx)}
+ pub fn supply_selected_path<const P:usize>(&mut self,reservation:&mut semio_os_services_native_io::OriginalNativePathReservation<P>,output:&mut Option<semio_os_services_native_io::OriginalSuppliedNativePath>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.closing||!self.outcome_is_acknowledged(){return Err(invalid("selected native path requires its acknowledged original invocation"))}self.job.as_mut().unwrap().supply_result_last_path(reservation,output,cx)}
  /// 📮️ Caller-owned page output survives publication refusal and its reservation clears in a separate paid turn.
  pub fn supply_next_page(&mut self,output:&mut Option<OriginalSuppliedJobPage>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.closing||!self.acknowledged{return Err(invalid("native page publication requires an acknowledged live result"))}

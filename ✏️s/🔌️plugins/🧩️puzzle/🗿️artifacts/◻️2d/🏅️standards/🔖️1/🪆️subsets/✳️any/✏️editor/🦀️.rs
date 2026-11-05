@@ -61,49 +61,49 @@ pub use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::sele
 pub use crate::editor::puzzle2d::terminology::puzzle2d_localized;
 pub use crate::editor::puzzle2d::terminology::puzzle2d_localized_phrase;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ActionRef;
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactPresentation;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ActionRef;
+use semio_plugin::AppIo;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DialogDefinition;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_plugin::InteractionVerb;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPortDirection;
-use semio_framework_plugin::MediaPortSpec;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::PortMultiplicity;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::DialogDefinition;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTarget;
+use semio_plugin::InteractionVerb;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPortDirection;
+use semio_plugin::MediaPortSpec;
+use semio_plugin::MediaType;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::PortMultiplicity;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowMeasure;
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
-// `semio_framework_plugin`, flagged to the coordinator, not fixed here).
-use semio_framework_plugin::app::InteractionView;
+// `semio_plugin`, flagged to the coordinator, not fixed here).
+use semio_plugin::app::InteractionView;
 use semio_framework_pack_json::{json, Value};
 #[cfg(test)] use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dCommand;
@@ -125,7 +125,7 @@ use semio_s_artifact_puzzle_2d_board_host::editor::puzzle2d::engine::board_host:
 //#region 🔖️Puzzle2dCommand
 //#endregion 🔖️Puzzle2dCommand
 //#region 🧵️ReservedJobs
-use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
+use semio_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 //#endregion 🧵️ReservedJobs
 
 pub use semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction;

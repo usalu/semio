@@ -28,8 +28,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "slots", kind: "connect-slots", record: "ConnectedSlots" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect slots \"{}\" ↔ \"{}\"", self.edge.from_slot_id, self.edge.to_slot_id), &format!("Slots \"{}\" ↔ \"{}\" verbinden", self.edge.from_slot_id, self.edge.to_slot_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Connect slots \"{}\" ↔ \"{}\"", self.edge.from_slot_id, self.edge.to_slot_id), &format!("Slots \"{}\" ↔ \"{}\" verbinden", self.edge.from_slot_id, self.edge.to_slot_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge.id.clone()]

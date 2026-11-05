@@ -1,7 +1,7 @@
 //! 🧪️ Independent byte-index edits and full raw-word owner equality share the closed corpus.
 use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_kernel::{pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
+use semio_os_kernel::{pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 use std::{io::Write,process::{Command,Stdio}};
 pub fn verify<S:ArtifactPack+ArtifactSqliteSnapshotHost>(source:&S,edited:Option<&S>,prefix:&str,case:&serde_json::Value){
  let expected=source.encode_pack();

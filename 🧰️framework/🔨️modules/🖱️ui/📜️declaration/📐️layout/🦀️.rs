@@ -459,14 +459,14 @@ pub mod role_chrome {
 pub use semio_framework_icon_contract::IconName;
 
 /// 📐️ The inverse of [`named_space_token`].
-pub fn space_token_name(token: semio_framework_ui_contract::SpaceToken) -> &'static str {
+pub fn space_token_name(token: semio_ui_contract::SpaceToken) -> &'static str {
     match token {
-        semio_framework_ui_contract::SpaceToken::None => "none",
-        semio_framework_ui_contract::SpaceToken::Xs => "xs",
-        semio_framework_ui_contract::SpaceToken::Sm => "sm",
-        semio_framework_ui_contract::SpaceToken::Md => "md",
-        semio_framework_ui_contract::SpaceToken::Lg => "lg",
-        semio_framework_ui_contract::SpaceToken::Xl => "xl",
-        semio_framework_ui_contract::SpaceToken::Xxl => "xxl",
+        semio_ui_contract::SpaceToken::None => "none",
+        semio_ui_contract::SpaceToken::Xs => "xs",
+        semio_ui_contract::SpaceToken::Sm => "sm",
+        semio_ui_contract::SpaceToken::Md => "md",
+        semio_ui_contract::SpaceToken::Lg => "lg",
+        semio_ui_contract::SpaceToken::Xl => "xl",
+        semio_ui_contract::SpaceToken::Xxl => "xxl",
     }
 }

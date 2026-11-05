@@ -1,38 +1,20 @@
-//! 🧩️ puzzle2d <- json
-//!
-//! 🩹️ `stdio_gap`/foreign-lag fix (not part of this wave's svg/dwg-pattern scope — see
-//! `w5b--puzzle-report.md`): `JsonSnapshot.value` was retyped from `serde_json::Value` to stdio's
-//! own lexeme-preserving `JsonValue` (own type, `#[serde(tag = "kind")]` — an intentional boundary
-//! per that schema's own doc comment, NOT structurally plain JSON) by a concurrent stdio wave,
-//! breaking this pre-existing leaf's compile. Fixed as a minimal lagging-call-site update: routes
-//! through `JsonSnapshot::to_serde_value` (stdio's own real `JsonValue -> serde_json::Value`
-//! bridge) plus stdio's own real `parse_json_text` — no hand-rolled converter here.
-//!
-//! 🩹️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: no longer
-//! routes through `serde_json::from_value` — `Puzzle2dSnapshot` only derives `Deserialize` under
-//! `#[cfg(test)]` now. The number lexemes cross into `dsl::DslValue` through stdio's own
-//! first-party `to_pack_value()` bridge, then `dsl::FromValue::from_value` hydrates the typed
-//! snapshot — same shape the sibling `block2d` leaf already uses. NOT through
-//! `to_serde_value()`: `serde_json`'s default (no `float_roundtrip`) number parser reconstructs an
-//! f64 as `significand as f64 * 10^exponent`, which is off by one ULP for any 17-significant-digit
-//! literal (`0.42839899821678995` came back as `0.4283989982167899`) and made every example whose
-//! geometry needs full f64 precision fail its lossless-round-trip oracle.
+//! 📥️ Declared Puzzle2d JSON restores words only at its typed floating-point fields.
 use crate::Puzzle2dSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::JsonSnapshot;
-use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 
 pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<Puzzle2dSnapshot, semio_framework_diagnostic::TextError> {
-    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let raw: semio_framework_value::DslValue = semio_framework_pack_json::to_dsl_value(&from.to_pack_value());
-    let snap: Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(raw).map_err(|e| semio_framework_diagnostic::TextError::new(e.kind, format!("puzzle2d<-json: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-    Ok(snap)
+    let raw = semio_framework_pack_json::to_dsl_value(&from.to_pack_value());
+    let raw = crate::standards::v1::subsets::any::io::puzzle2d_json::convert(raw, true)
+        .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("puzzle2d<-json: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    semio_framework_value::FromValue::from_value(raw)
+        .map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, format!("puzzle2d<-json: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<Puzzle2dSnapshot, semio_framework_diagnostic::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     let value = parse_json_text(text)?;
     deserialize(&JsonSnapshot::from_value(value))
 }

@@ -1,7 +1,7 @@
 //! 🎫️ Db engine artifact handle: submit, history and query operations.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as pack;
+extern crate semio_os_kernel as store;
 
 use db_engine_base::{CheckpointPublicationSnapshot, CommandReceipt, Consistency, DatabaseDocumentMountRegistry, DatabaseDocumentMountSlot, Frontier, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryResultEntry, QueryStream, SnapshotFuture, SnapshotKind, engine_query_maintenance_step, now_ms, reserve_engine_query_retirement, to_engine_frontier, to_engine_receipt};
 use db_ids::{ArtifactId, DbError, GenerationId};

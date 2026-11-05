@@ -2,43 +2,43 @@ use crate::editor::puzzle5d::catalog::puzzle5d_part_display_label;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART};
 use crate::editor::puzzle5d::view::Puzzle5dScene;
-use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiValue;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiValue;
+use semio_ui_contract as ui;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::interaction::ui_label;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::{find_part_by_grip_full_id, Puzzle5dDocument, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::{RowActionPlacement};
-use semio_framework_plugin::{Buildable, HasBase};
+use semio_plugin::plugin_app_close_prelude::{RowActionPlacement};
+use semio_plugin::{Buildable, HasBase};
 #[allow(unused_imports)]
-use semio_framework_plugin::row_action;
+use semio_plugin::row_action;
 #[allow(unused_imports)]
-use semio_framework_plugin::row_target;
+use semio_plugin::row_target;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_window_item;
+use semio_plugin::tree_window_item;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use crate::editor::puzzle5d::panels::artifact::*;
 use crate::editor::puzzle5d::testkit::*;
 
@@ -72,7 +72,7 @@ fn drain_retired_ui_owners() {
 }
 
 fn labels() -> &'static Puzzle5dLabels {
-    crate::editor::puzzle5d::terminology::puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("an admitted host label axis")
+    crate::editor::puzzle5d::terminology::puzzle5d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("an admitted host label axis")
 }
 
 /// 🏗️ A synthetic document of `parts` parts carrying `grips` grips each, plus `fasteners` fasteners.
@@ -125,19 +125,19 @@ fn granularity_of(node: &BuiltNode) -> Option<String> {
 /// 🧾️ The body as JSON. A built tree's children travel as retained pages, so the projection helper —
 /// not `serde_json` on the root — is what walks and retires them.
 fn body_json(tree: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
 }
 
 fn child_of<'a>(node: &'a BuiltNode, key: &str) -> &'a BuiltNode {
     node.children.iter().find(|child| child.key.as_str() == key).unwrap_or_else(|| panic!("container {key} must exist"))
 }
 
-fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_framework_plugin::TreeWindowRequest {
-    semio_framework_plugin::TreeWindowRequest { body_key: BODY_KEY.into(), node_key: node_key.into(), open, offset, rows }
+fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_plugin::TreeWindowRequest {
+    semio_plugin::TreeWindowRequest { body_key: BODY_KEY.into(), node_key: node_key.into(), open, offset, rows }
 }
 
-fn windows_for(requests: Vec<semio_framework_plugin::TreeWindowRequest>) -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel { tree_windows: requests, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+fn windows_for(requests: Vec<semio_plugin::TreeWindowRequest>) -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel { tree_windows: requests, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// 🔑️ The window PATH of a container nested inside a section — enclosing container keys, outermost
@@ -159,7 +159,7 @@ fn the_outliner_stamps_every_container_and_never_pages() {
     let fasteners = child_of(&tree, FASTENERS_SECTION);
     assert_eq!(window_of(parts).expect("the parts section must stamp its window").total as usize, SCALE_PARTS);
     assert_eq!(window_of(fasteners).expect("the fasteners section must stamp its window").total as usize, SCALE_FASTENERS);
-    assert!(!parts.children.is_empty() && parts.children.len() <= semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX);
+    assert!(!parts.children.is_empty() && parts.children.len() <= semio_ui_contract::UI_BUILT_CHILDREN_MAX);
     for part in parts.children.iter() {
         assert_eq!(window_of(part).expect("every part row stamps its grip window").total as usize, SCALE_GRIPS);
         assert_eq!(part.children.len(), 0, "a closed part row materialises no grip");
@@ -222,7 +222,7 @@ fn outliner_pick_rows_are_domain_bound_without_a_per_row_binding() {
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     let tree = render(&scene, labels(), &windows).expect("a domain-bound outliner must be admitted");
     assert_eq!(tree.bindings.len(), 1, "the tree root carries exactly one interactionSelect binding");
-    assert_eq!(tree.bindings.iter().next().expect("root binding").action.name.as_str(), semio_framework_plugin::INTERACTION_SELECT_ACTION_ID);
+    assert_eq!(tree.bindings.iter().next().expect("root binding").action.name.as_str(), semio_plugin::INTERACTION_SELECT_ACTION_ID);
     let parts = child_of(&tree, PARTS_SECTION);
     for part in parts.children.iter() {
         assert_eq!(granularity_of(part).as_deref(), Some(PUZZLE5D_GRANULARITY_PART));

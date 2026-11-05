@@ -149,13 +149,13 @@ fn derived_codec_round_trips_composed_children_and_links_byte_exactly() {
     for row in fixture["documents"].as_array().unwrap() {
         let document = snapshot(&row["snapshot"]);
         let spec = ComposedSnapshot::__dsl_spec();
-        let bytes = semio_framework_os_pack::record::encode_document(&spec, &document.__dsl_to_record(), &PackEncodeOptions::default()).expect("encode composed snapshot");
+        let bytes = semio_os_pack::record::encode_document(&spec, &document.__dsl_to_record(), &PackEncodeOptions::default()).expect("encode composed snapshot");
         assert_eq!(hex(&bytes), row["packHex"].as_str().unwrap(), "{}", row["name"]);
-        let (record, report) = semio_framework_os_pack::record::decode_document(&bytes, &spec, &PackDecodeOptions::default()).expect("decode composed snapshot");
+        let (record, report) = semio_os_pack::record::decode_document(&bytes, &spec, &PackDecodeOptions::default()).expect("decode composed snapshot");
         assert!(report.unknown_field_ids.is_empty() && !report.schema_drift);
         let decoded = ComposedSnapshot::__dsl_from_record(&record).expect("record to snapshot");
         assert_eq!(decoded, document);
-        assert_eq!(semio_framework_os_pack::record::encode_document(&spec, &decoded.__dsl_to_record(), &PackEncodeOptions::default()).expect("re-encode"), bytes);
-        assert!(semio_framework_os_pack::record::decode_document(&bytes, &ComposedWithoutLinks::__dsl_spec(), &PackDecodeOptions::default()).expect("narrow decode").1.schema_drift);
+        assert_eq!(semio_os_pack::record::encode_document(&spec, &decoded.__dsl_to_record(), &PackEncodeOptions::default()).expect("re-encode"), bytes);
+        assert!(semio_os_pack::record::decode_document(&bytes, &ComposedWithoutLinks::__dsl_spec(), &PackDecodeOptions::default()).expect("narrow decode").1.schema_drift);
     }
 }

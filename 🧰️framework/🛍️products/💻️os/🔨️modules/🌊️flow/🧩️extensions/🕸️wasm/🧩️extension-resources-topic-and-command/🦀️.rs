@@ -60,7 +60,7 @@ impl ExtensionEvaluationResources {
     }
 }
 
-impl semio_framework_plugin::ExtensionResourceOwner for ExtensionEvaluationResources {
+impl semio_plugin::ExtensionResourceOwner for ExtensionEvaluationResources {
     fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         let pending=self.invoke.lock().unwrap_or_else(std::sync::PoisonError::into_inner);if self.close_failure.is_some(){return Ok(semio_framework_job::original_domain_failure_demand::<original_failure::EvaluationCloseFailure>());}if let Some(cursor)=pending.as_ref(){return match self.registry.as_ref(){Some(registry)=>cursor.retirement_demands_with_registry(registry,copy),None=>cursor.retirement_demands(copy)};}
         if let Some(registry)=&self.registry{if evaluation_retirement_pending(registry){return evaluation_retirement_demands(registry,copy);}return Ok(RetirementDemand {depth:1,..Default::default()});}
@@ -71,14 +71,14 @@ impl semio_framework_plugin::ExtensionResourceOwner for ExtensionEvaluationResou
         let Some(retirement)=self.retirement.as_ref() else{return Ok(Default::default());};
         Ok(RetirementDemand {copy_bytes:retirement.next_copy_byte_demand()?,capacity_bytes:retirement.next_capacity_byte_demand(copy)?,release_bytes:retirement.next_release_byte_demand()?,depth:retirement.next_depth_demand()?})
     }
-    fn invoke(&mut self,capability:&str,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::ExtensionInvokeStep,semio_framework::Fault>{
+    fn invoke(&mut self,capability:&str,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin::ExtensionInvokeStep,semio_framework::Fault>{
         match capability {"evaluate"=>evaluate_invoke_json(self,request,cx),_=>Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin,semio_framework::FaultCode::new("extension.unknown-capability"),"unknown flow evaluation capability"))}
     }
 
     fn cancel_inference(&self,cancellation_id:&str)->bool{self.registry.as_ref().is_some_and(|registry|cancel_inference_evaluation(registry,cancellation_id))}
     fn begin_close(&mut self){self.closing=true;self.registry_issuer.begin_close();if let Some(cursor)=self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner){cursor.begin_close();}if let Some(registry)=&self.registry{cancel_all_evaluations(registry);}}
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_plugin::PluginLifecycleStep;
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin::PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_plugin::PluginLifecycleStep;
         if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
         if self.close_failure.is_some()||self.close_failure_place.is_some(){return match original_failure::admit_evaluation_failure(&mut self.close_failure,&mut self.close_failure_place,cx)?{Some(failure)=>Err(failure),None=>Ok(PluginLifecycleStep::Progress(Default::default()))}}
         if !self.registry_issuer.terminal_is_empty(){

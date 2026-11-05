@@ -1,13 +1,13 @@
-use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_ui_tui_core::cell::{Cell, CellBuffer};
 use crate::footer::paint_footer;
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::geometry::{Pos, Rect};
 use crate::layout::{solve_window_layout, weight_of, WindowLayout};
-use semio_framework_ui_tui_core::docking::{WindowStackCorner, WINDOW_GAP};
+use semio_ui_tui_core::docking::{WindowStackCorner, WINDOW_GAP};
 use crate::navbar::paint_navbar;
 use crate::scene::{AxisState, Node, NodeContent, NodeId, Scene};
-use semio_framework_ui_tui_core::text::{display_width, elide_end};
-use semio_framework_ui_tui_core::theme::{GlyphSet, Role, Status, Surface, Theme};
-use semio_framework_ui_tui_core::signal::WidgetSignal;
+use semio_ui_tui_core::text::{display_width, elide_end};
+use semio_ui_tui_core::theme::{GlyphSet, Role, Status, Surface, Theme};
+use semio_ui_tui_core::signal::WidgetSignal;
 use crate::window::paint_window;
 
 #[derive(Clone)]
@@ -302,7 +302,7 @@ impl ChromeState {
                 return Some(group.corner);
             }
         }
-        match semio_framework_ui_tui_core::docking::DockPlacement::at(rect, pos) { Some(semio_framework_ui_tui_core::docking::DockPlacement::Corner(corner)) => Some(corner), _ => None }
+        match semio_ui_tui_core::docking::DockPlacement::at(rect, pos) { Some(semio_ui_tui_core::docking::DockPlacement::Corner(corner)) => Some(corner), _ => None }
     }
 
     /// 📍️ Corner-local insertion index after excluding the held tab, just like the regular UI.

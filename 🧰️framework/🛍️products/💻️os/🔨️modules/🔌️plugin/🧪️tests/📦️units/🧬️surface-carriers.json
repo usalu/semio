@@ -19,7 +19,7 @@
       "const": 1
     },
     "package": {
-      "const": "semio-framework-plugin-surface-carrier-laws"
+      "const": "semio-plugin-surface-carrier-laws"
     },
     "original": {
       "type": "string"

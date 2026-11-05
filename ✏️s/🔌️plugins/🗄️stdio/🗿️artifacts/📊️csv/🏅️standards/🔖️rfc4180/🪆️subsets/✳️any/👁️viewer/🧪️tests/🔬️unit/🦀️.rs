@@ -1,12 +1,12 @@
 use crate::viewer::csv::modes::view::windows::main;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::Viewer;
 use crate::viewer::csv::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_csv_viewer_builds_a_definition_for_the_viewer_role() {
     let def = create_csv_viewer();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
+    assert_eq!(def.role, semio_plugin::AppRole::Viewer);
     assert_eq!(def.dialect, CSV_VIEWER_DIALECT.into());
 }
 

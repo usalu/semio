@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSoilLayerThickness
         record: "ChangeSoilLayerThicknessM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Layer thickness", "Schichtdicke ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Layer thickness", "Schichtdicke ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-soil-layer-thickness-m".into()]

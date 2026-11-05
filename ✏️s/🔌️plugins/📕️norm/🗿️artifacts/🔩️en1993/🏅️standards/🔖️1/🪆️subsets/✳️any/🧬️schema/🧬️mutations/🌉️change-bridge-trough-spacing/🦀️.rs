@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeTroughSpacin
         record: "ChangedBridgeTroughSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Trough spacing e (centre to centre) of the bridge fatigue", "Brückenermüdung: Trogabstand e (Mitte zu Mitte) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Trough spacing e (centre to centre) of the bridge fatigue", "Brückenermüdung: Trogabstand e (Mitte zu Mitte) ändern")
     }
 }
 

@@ -1,13 +1,13 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
-use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
-use semio_framework_plugin::PluginBuilder;
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -23,38 +23,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 }
 //#endregion 🗃️Apps
 
-/// 🔌️ Builds the plugin surface for host registration. `.declare_artifact(…)` (ticket
-/// `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, `terra-descriptors` packet, following the
-/// `terra-fleet-trinity-recipe` recipe) replaces the old `.artifact(declaration())`/`.editor()`/
-/// `.viewer()` triad — one registration channel per artifact (puzzle2d, puzzle3d, puzzle5d), each
-/// built by its own artifact engine.
-///
-/// **W1d update.** The app-schema half of the old `.setup()` callback is GONE:
-/// `register_app_schemas()` was never actually a distinct `ArtifactDeclaration` coverage gap — it
-/// was category-1 app-scope schema wearing a different name. `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/
-/// `Puzzle5dPlayApp` now each override `ArtifactApp::app_schema()`, so `.document_app()`
-/// below auto-registers all three, exactly like `🗒️note`'s exemplar — see each app's own
-/// `app_schema` override doc.
-///
-/// **`.setup()` still survives for the OS media-host bridges** (`register_media_io`/
-/// `register_mesh_io` — `register_2d_export_handlers`/`register_dwg_import_handler`/
-/// `register_mesh_exporter`/`register_mesh_importer`/`register_mesh_dwg_{export,import}_handler`),
-/// judged NOT to get a new `ArtifactDeclaration` field this pass (see `📓️w1d-declaration-gaps-report.md`
-/// for the full reasoning): they write into `semio_framework_os`'s own process-global media-handler
-/// registry — a SEPARATE registry from `io_registry`/`ComposerEntry` (which `.composers(...)` below
-/// already covers, and which independently duplicates part of this same format coverage for 2d
-/// SVG/DWG and 3d DWG/OBJ/STL export), keyed by a legacy "OS media kind" string (`"2d.puzzle"` /
-/// `"3d.puzzle"` / `"5d.puzzle"`) that is NOT `ArtifactDeclaration.kind` (`"s.puzzle2d"` etc.) — so a
-/// declaration field could not even validate ownership the way `.composers()`/`.migrations()` do.
-/// This registry family is the SAME one `📓️status.md` finding #3 documents as non-deterministic
-/// under concurrent registrants elsewhere in this ticket (demonstrator racing an owner for
-/// `3d.process`/`3d.procedural`) — adding a declaration field here would legitimize exactly that
-/// mechanism rather than close it. Deleting outright (the lowpoly precedent: check the composer tree,
-/// delete pure duplicates) is NOT done here either, because the two registries' format coverage only
-/// PARTIALLY overlaps (composer also serves PDF/JSON/DXF/LAS/PLY/GLTF that the OS bridge does not, and
-/// the OS bridge's own live consumer — the OS-level export/import dispatch this file does not own —
-/// was not traced this pass) — deleting on inference alone risks silently breaking real export/import
-/// UI functionality, which this ticket's "get everything working" rule forbids doing speculatively.
+/// 🧩️ Registers the three artifact trees and their six editor/viewer surfaces.
+/// Foreign IO routes are published by each subset's canonical typed declaration.
 pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
     PluginBuilder::<_, PuzzleApps>::new("puzzle")
         .label("Puzzle")
@@ -101,3 +71,7 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
 mod surface_tests;
 //#endregion 🔖️SurfaceTests
 
+
+#[cfg(test)]
+#[global_allocator]
+static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

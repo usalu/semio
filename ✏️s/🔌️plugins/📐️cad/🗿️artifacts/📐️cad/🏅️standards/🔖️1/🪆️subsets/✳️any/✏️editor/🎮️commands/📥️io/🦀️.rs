@@ -10,7 +10,7 @@ use semio_s_artifact_cad_cad_io::{import_cad_object_by_extension, scene_from_spa
 use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadSnapshot};
 use semio_framework_value::DslValue;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ImportCadFile
@@ -122,7 +122,7 @@ pub mod load_raw_request {
 
     pub fn handle(_payload: &LoadRawRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {
-            req: semio_framework_plugin::RequestId(116),
+            req: semio_plugin::RequestId(116),
             accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),
             read_as: Some("dataUrl".into()),
             import_action: "importCadFile".into(),

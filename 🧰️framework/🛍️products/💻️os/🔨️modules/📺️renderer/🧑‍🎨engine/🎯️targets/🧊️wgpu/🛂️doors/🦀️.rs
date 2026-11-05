@@ -2,10 +2,10 @@
 //!
 //! 🧭️ Native and wasm32. The module files stay in the target tree; this crate root mounts them as the public modules `socket_door` and `directory_door`.
 
-extern crate semio_framework_os_kernel as store_sync;
+extern crate semio_os_kernel as store_sync;
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_renderer_wgpu_host_base::host_io_call;
-use semio_framework_os_renderer_wgpu_host_base::spawn_app_task;
+use semio_renderer_wgpu_host_base::host_io_call;
+use semio_renderer_wgpu_host_base::spawn_app_task;
 
 #[path = "../🔌️socket-door/🦀️.rs"]
 pub mod socket_door;

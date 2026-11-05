@@ -4,18 +4,18 @@
 use crate::editor::remodeling::modes::capture::windows::frames::config::{RemodelingFrameCursor, RemodelingFramesWindowConfig};
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UtilityRef;
-use semio_framework_plugin::WindowEngagementSlot;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UtilityRef;
+use semio_plugin::WindowEngagementSlot;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
 use semio_framework_pack_json::Value;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
 pub const REMODELING_PLAY_WINDOW_FRAMES: &str = "remodeling-frames";
@@ -115,9 +115,9 @@ fn cursored_frame<'a>(scene: &'a RemodelingSnapshot, cursor: &RemodelingFrameCur
     Some((stream, frame_index))
 }
 
-pub fn render(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let scene_2d = Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &config.frame_cursor), snapshot: None, tool_run_trace: None, lanes: Vec::new() };
-    semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_FRAMES, ContractSurfaceKind::Canvas2d, &scene_2d)
+    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_FRAMES, ContractSurfaceKind::Canvas2d, &scene_2d)
 }
 //#endregion 🔖️Scene
 

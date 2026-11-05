@@ -2,8 +2,8 @@
 
 use super::super::{MiniDiff, MiniDoc, MiniMutation};
 use protocol::{MutationOutcome};
-use semio_framework_os_command::MutationKind;
-use semio_framework_os_command::SemanticDescriptor;
+use semio_os_command::MutationKind;
+use semio_os_command::SemanticDescriptor;
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -25,7 +25,7 @@ impl MutationKind<MiniDoc, MiniMutation> for RenameMini {
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<MiniDoc, MiniMutation> for RenameMini {
+impl semio_os_command::ColdMutationKind<MiniDoc, MiniMutation> for RenameMini {
     fn diff(&self, _base: &MiniDoc) -> MutationOutcome<MiniDiff> {
         MutationOutcome::new(MiniDiff { name: Some(self.new_name.clone()) })
     }

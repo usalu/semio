@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-os-flow-extensions-laws"
+name = "semio-os-flow-extensions-laws"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,9 +22,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-flow-extensions = { path = "../../../📦️packages/🦀️rust" }
+semio-os-flow-extensions = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-neural_engine = { path = "../../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
@@ -33,7 +33,7 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modu
 semio-framework-trace = { path = "../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-plugin = { path = "../../../../../../🔌️plugin/📦️packages/🦀️rust" }
+semio-plugin = { path = "../../../../../../🔌️plugin/📦️packages/🦀️rust" }
 serde = { version = "1", features = ["derive"] }
-semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 serde_json = "1"

@@ -67,7 +67,7 @@ use super::*;
     }
 
     fn rejected_puzzle3d_transient(transient: Puzzle3dWindowTransient) -> Puzzle3dWindowTransient {
-        let owners = <Puzzle3dWindowTransientOwner as semio_framework_plugin::WindowTransientOwner>::build_owners();
+        let owners = <Puzzle3dWindowTransientOwner as semio_plugin::WindowTransientOwner>::build_owners();
         let request = store::ArtifactEphemeralOneItemPreparationRequest {
             operation: semio_framework_job::OperationId(1),
             generation: semio_framework_job::Generation(1),
@@ -151,7 +151,7 @@ use super::*;
     /// is the same precedence `puzzle3d_scene_active_utility` resolves the scene mode with.
     #[test]
     fn host_activation_reads_the_tool_first_then_the_addressed_window_utility() {
-        let mut view = semio_framework_plugin::ViewModel { active_utility_id: Some("transform".into()), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let mut view = semio_plugin::ViewModel { active_utility_id: Some("transform".into()), ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
         assert_eq!(host_activation(Some(&view)), "transform");
         view.active_tool_id = Some("fill".into());
         assert_eq!(host_activation(Some(&view)), "fill");
@@ -195,8 +195,8 @@ use super::*;
 fn config_store_disposer_birth_quotes_the_actual_bounded_owner() {
     type Owner = Puzzle3dWindowConfigOwner;
     let law: serde_json::Value = serde_json::from_str(include_str!("disposer-birth.json")).expect("neutral disposer birth law");
-    let demand = <Owner as semio_framework_plugin::WindowConfigOwner>::store_disposer_birth().expect("declared Puzzle config disposer birth");
-    let disposer = <Owner as semio_framework_plugin::WindowConfigOwner>::build_store_disposer();
+    let demand = <Owner as semio_plugin::WindowConfigOwner>::store_disposer_birth().expect("declared Puzzle config disposer birth");
+    let disposer = <Owner as semio_plugin::WindowConfigOwner>::build_store_disposer();
     assert_eq!(demand.capacity_bytes, std::alloc::Layout::for_value(disposer.as_ref()).size());
     assert_eq!(demand.depth, law["depth"].as_u64().unwrap() as usize);
     assert_eq!(demand.copy_bytes, law["copyBytes"].as_u64().unwrap() as usize);

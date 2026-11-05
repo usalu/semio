@@ -5,22 +5,22 @@
 //! declared intent or first leaf.
 
 #[cfg(test)]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
 use std::future::Future;
 use semio_framework::kernel::HybridLogicalTimestamp;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 #[cfg(test)]
-use semio_framework_plugin_decl_views::history_view::MutationView;
+use semio_plugin_decl_views::history_view::MutationView;
 #[cfg(test)]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_framework_plugin_time_travel as time_travel;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_time_travel as time_travel;
+use semio_ui_contract::*;
 use std::collections::{HashMap, HashSet};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use serde_json::Value;
 
 const COMPOSED_CHILD_HISTORY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️composed-child-history/🔣️.json");
@@ -37,7 +37,7 @@ pub fn label(value: &Value) -> LocalizedLabel {
 
 #[doc(hidden)]
 pub fn resolved(label: &LocalizedLabel) -> (String, String) {
-    (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string())
+    (label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string(), label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_string())
 }
 
 /// 🧩️ One fixture history as the member history visitor reads it.

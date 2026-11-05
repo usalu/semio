@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeGroundInvestigatio
         record: "ChangedGroundInvestigationDepth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Investigation depth of the ground investigation", "Baugrunderkundung: Erkundungstiefe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Investigation depth of the ground investigation", "Baugrunderkundung: Erkundungstiefe ändern")
     }
 }
 

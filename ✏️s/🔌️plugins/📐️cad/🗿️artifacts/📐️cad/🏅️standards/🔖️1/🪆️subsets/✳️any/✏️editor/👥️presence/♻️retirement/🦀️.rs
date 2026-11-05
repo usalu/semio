@@ -27,8 +27,8 @@ pub fn terminal_is_empty(value: &CadPresence) -> bool {
 }
 
 /// 🧹️ Closes the presence store through the framework's exact owner, seeded with CAD's empty terminal root.
-pub fn store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPresence, CadPresenceMutation>>> {
-    Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(Arc::new(empty_terminal()), terminal_is_empty).expect("CAD empty terminal root is its own empty witness"))
+pub fn store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPresence, CadPresenceMutation>>> {
+    Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(Arc::new(empty_terminal()), terminal_is_empty).expect("CAD empty terminal root is its own empty witness"))
 }
 //#endregion 🏪️StoreRetirement
 

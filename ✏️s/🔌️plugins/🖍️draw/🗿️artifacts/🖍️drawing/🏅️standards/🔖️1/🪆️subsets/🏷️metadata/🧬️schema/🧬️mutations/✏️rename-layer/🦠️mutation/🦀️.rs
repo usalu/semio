@@ -25,8 +25,8 @@ pub fn rename_layer<Op: From<RenameLayer>>(layer_id: semio_framework_value::page
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for RenameLayer where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<RenameLayer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "layer", kind: "rename-layer", record: "RenamedLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename layer \"{}\" to \"{}\"", self.layer_id, self.new_name), &format!("Ebene \"{}\" in \"{}\" umbenennen", self.layer_id, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename layer \"{}\" to \"{}\"", self.layer_id, self.new_name), &format!("Ebene \"{}\" in \"{}\" umbenennen", self.layer_id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.to_string_owner()]

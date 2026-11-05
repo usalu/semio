@@ -27,60 +27,60 @@ use crate::{writer_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework_action_bus::RetainedToolWireInput;
 use semio_framework::{kernel::Effect, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::Operation;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, EditorApp, EphemeralEmit, InteractionView};
-use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
-use semio_framework_plugin::engagement_token_matches;
-use semio_framework_plugin::strip_engagement_prefix;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::ContextMenuTextContext;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::AppOperationContext;
+use semio_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, EditorApp, EphemeralEmit, InteractionView};
+use semio_plugin::plugin_app_close_prelude::ArtifactDisposal;
+use semio_plugin::engagement_token_matches;
+use semio_plugin::strip_engagement_prefix;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::AppIo;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuTextContext;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::Menu;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::Menu;
+use semio_plugin::MergeMode;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
+use semio_plugin::WindowMeasure;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use serde_json::Value;
@@ -114,7 +114,7 @@ pub use writer_play_app_editor_and_constructor::{create_writer_app, WriterPlayAp
 //#endregion 🔖️Interaction
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `WriterPlayApp::Command` — the SOLE dispatch surface for writer's own behavior, assembled from
     /// the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`,
     /// the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
@@ -161,14 +161,14 @@ mod agent_lane_tests;
 //#region 🧩️ArtifactItems5
 pub mod artifact_items_5 {
 use crate::{WRITER_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.document".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Text Document", "Textdokument"),
+        label: semio_ui_locale::LocalizedLabel::native("Text Document", "Textdokument"),
         source_format: WRITER_DOCUMENT_SCHEMA.into(),
         component_kind: "writer".into(),
         dimension: "text".into(),

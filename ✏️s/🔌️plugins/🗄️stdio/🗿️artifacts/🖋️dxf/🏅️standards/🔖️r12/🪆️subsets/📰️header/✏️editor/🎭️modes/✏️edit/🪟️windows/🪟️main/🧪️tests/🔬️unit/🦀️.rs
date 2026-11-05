@@ -1,6 +1,6 @@
 use crate::standards::v_r12::subsets::any::schema::snapshot::{DxfArc, DxfCircle, DxfEntity, DxfLine, DxfSnapshot};
-use semio_framework_plugin::app::ImageWindowKit;
-use semio_framework_plugin::WindowKit;
+use semio_plugin::app::ImageWindowKit;
+use semio_plugin::WindowKit;
 use crate::editor::dxf::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

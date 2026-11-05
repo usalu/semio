@@ -1,5 +1,5 @@
 //! 📄️ Retains private genesis pages through separately bounded source copy and whole backing release.
-use semio_framework_os_kernel::os_store::owned_schema_decode::{OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnedSchemaDecodeCredits, OwnedSchemaDecodeAdmissionFault, OWNED_SCHEMA_DECODE_PAGE_BYTES};
+use semio_os_kernel::os_store::owned_schema_decode::{OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnedSchemaDecodeCredits, OwnedSchemaDecodeAdmissionFault, OWNED_SCHEMA_DECODE_PAGE_BYTES};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
 

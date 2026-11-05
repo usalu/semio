@@ -4,13 +4,13 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::SemioDiff;
 pub use schema::mutations::SemioMutation;
@@ -23,19 +23,19 @@ pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
 /// 🧾️ The runtime `semio` declares: the `✉️base` envelope schema opens the declaration and every subset appends its own
 /// rows (`subsets::*::io::declare`, the declarative twin of each subset's `register`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition, conversions: &[semio_s_artifact_stdio_semio_base::SemioConversion]) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(schema::semio_artifact_schema_descriptor()).formats(formats()?).schema_documents(schema::SEMIO_SHARED_SCHEMA_DOCUMENTS);
+pub fn declaration(definition: semio_plugin::ArtifactDefinition, conversions: &[semio_s_artifact_stdio_semio_base::SemioConversion]) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    let builder = semio_plugin::ArtifactDeclaration::builder(definition).schema(schema::semio_artifact_schema_descriptor()).formats(formats()?).schema_documents(schema::SEMIO_SHARED_SCHEMA_DOCUMENTS);
     let builder = io::declare(builder);
     let builder = semio_s_artifact_stdio_semio_animation::io::declare(builder);
     let builder = semio_s_artifact_stdio_semio_audio::io::declare(builder);
@@ -62,7 +62,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition, conve
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.semio".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Semio", "Semio"),
+        label: semio_ui_locale::LocalizedLabel::native("Semio", "Semio"),
         source_format: STDIO_SEMIO_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -153,8 +153,8 @@ use semio_s_artifact_stdio_semio_text_model::schema::snapshot as text;
 
 // 🧬️ Eighteen composable subsets, each bound to its exact kind, standard, subset and schema.
 dsl::space_members! {
-    native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
-    history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    native_producer:&::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+    history_limits:semio_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum SemioMembers, SemioMembersOpen {
         Animation("s.stdio.semio", "v1", "animation", "stdio.semio") => (semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot, semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation, ::semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer<semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot,semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation>, ::semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer::<semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot,semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation>::new()),

@@ -1,5 +1,5 @@
 //! 🖨️ Print chart artifact with canonical mutation and inference execution.
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
@@ -67,16 +67,16 @@ fn chart_artifact_inference_descriptor(assets:&ChartSchemaAssets)->semio_framewo
 }
 
 /// 🧷️ Publishes the real native service to the existing OS inference registry.
-pub fn register_chart_inference(assets: &ChartSchemaAssets) -> Result<(), semio_framework_plugin::ArtifactInferenceRegistrationError> {
-    semio_framework_plugin::app::register_artifact_inference_service(chart_inference_service(assets))
+pub fn register_chart_inference(assets: &ChartSchemaAssets) -> Result<(), semio_plugin::ArtifactInferenceRegistrationError> {
+    semio_plugin::app::register_artifact_inference_service(chart_inference_service(assets))
 }
 
 pub fn register_chart_artifact(assets:&ChartSchemaAssets)->Result<(),String>{
     print_plugin(assets).map(|_|()).map_err(|error|error.to_string())
 }
 
-pub fn chart_artifact_declaration(assets:&ChartSchemaAssets)->Result<semio_framework_plugin::app::ArtifactDeclaration,semio_framework_plugin::app::ArtifactDefinitionError>{
-    use semio_framework_plugin::app::{ArtifactDefinition,ArtifactIdentity,ArtifactCapability,ArtifactCapabilityKind,ArtifactIdentityClaim,ArtifactIdentityNamespace,ArtifactDeclaration};
+pub fn chart_artifact_declaration(assets:&ChartSchemaAssets)->Result<semio_plugin::app::ArtifactDeclaration,semio_plugin::app::ArtifactDefinitionError>{
+    use semio_plugin::app::{ArtifactDefinition,ArtifactIdentity,ArtifactCapability,ArtifactCapabilityKind,ArtifactIdentityClaim,ArtifactIdentityNamespace,ArtifactDeclaration};
     let capability=|id,kind,claim,descriptor:&str|ArtifactCapability::new(ArtifactIdentity::parse(id)?,kind).descriptor(descriptor.as_bytes().to_vec())?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(),claim)?);
     let definition=ArtifactDefinition::new(ArtifactIdentity::parse(CHART_ARTIFACT_KIND)?)
         .capability(capability("framework.print.chart.schema",ArtifactCapabilityKind::schema(),"framework.print.chart",assets.snapshot.json_schema)?)?
@@ -87,9 +87,9 @@ pub fn chart_artifact_declaration(assets:&ChartSchemaAssets)->Result<semio_frame
 }
 
 /// 🚀️ The print domain boots through the existing transactional plugin assembly.
-pub fn print_plugin(assets:&ChartSchemaAssets)->Result<semio_framework_plugin::app::Plugin<semio_framework_plugin::app::NoPluginApp>,semio_framework_plugin::app::PluginAssemblyError>{
-    use semio_framework_plugin::app::{Plugin,NoPluginApp,PluginAssemblyError};
-    use semio_framework_plugin::app::PluginBuilder;
+pub fn print_plugin(assets:&ChartSchemaAssets)->Result<semio_plugin::app::Plugin<semio_plugin::app::NoPluginApp>,semio_plugin::app::PluginAssemblyError>{
+    use semio_plugin::app::{Plugin,NoPluginApp,PluginAssemblyError};
+    use semio_plugin::app::PluginBuilder;
     let declaration=chart_artifact_declaration(assets).map_err(|error|PluginAssemblyError::new("print.chart.declaration",error.to_string()))?;
     let plugin=PluginBuilder::<_, NoPluginApp>::new("print").label("Print").version(env!("CARGO_PKG_VERSION")).package_id("semio:print").artifact(declaration).try_build()?;
     register_chart_inference(assets).map_err(|error|PluginAssemblyError::new("print.chart.inference-registration",error.to_string()))?;
@@ -97,8 +97,8 @@ pub fn print_plugin(assets:&ChartSchemaAssets)->Result<semio_framework_plugin::a
     Ok(plugin)
 }
 
-pub fn chart_inference_service(assets: &ChartSchemaAssets) -> semio_framework_plugin::ArtifactInferenceService {
-    use semio_framework_plugin::{ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactInferencePayloadContract};
+pub fn chart_inference_service(assets: &ChartSchemaAssets) -> semio_plugin::ArtifactInferenceService {
+    use semio_plugin::{ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactInferencePayloadContract};
     ArtifactInferenceService::new(ArtifactInferenceServiceMetadata {
         owner: "print", artifact_kind: CHART_ARTIFACT_KIND, artifact_schema: "framework.print.chart", artifact_schema_version: 1, inference_schema: "framework.print.chart.inference", inference_schema_version: 1, algorithm_version: 1, policy_version: 1,
         payload: Some(ArtifactInferencePayloadContract { payload_schema_id: "framework.print.chart.inference.payload", input_schema: assets.snapshot.json_schema, output_schema: assets.inference_output_schema, progress_unit: "chart-values", artifact_binding: None, commit: None }),
@@ -107,4 +107,4 @@ pub fn chart_inference_service(assets: &ChartSchemaAssets) -> semio_framework_pl
 
 
 /// ♻️ This synchronous executable retains no callback child between invocations.
-fn chart_inference_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}
+fn chart_inference_demands(_request:&semio_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}

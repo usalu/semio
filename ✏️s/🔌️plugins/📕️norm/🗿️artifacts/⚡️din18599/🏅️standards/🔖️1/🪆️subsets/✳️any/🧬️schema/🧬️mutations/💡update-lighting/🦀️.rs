@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for UpdateLighting where O
         record: "UpdatedLighting",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update lighting", "Beleuchtung aktualisieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Update lighting", "Beleuchtung aktualisieren")
     }
 }
 

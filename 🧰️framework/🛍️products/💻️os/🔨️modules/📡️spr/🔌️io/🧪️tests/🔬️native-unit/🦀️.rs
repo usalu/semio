@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    fn test_command_context()->semio_framework_os_pack_tools::control::CommandContext{let token=semio_framework_async::CancelToken::root_now();let transport=semio_framework_os_pack_tools::control::admit_command_transport(1048576,token.clone(),|_|{}).unwrap();semio_framework_os_pack_tools::control::CommandContext::try_new(transport,1048576,token,|_|{}).unwrap()}
+    fn test_command_context()->semio_os_pack_tools::control::CommandContext{let token=semio_framework_async::CancelToken::root_now();let transport=semio_os_pack_tools::control::admit_command_transport(1048576,token.clone(),|_|{}).unwrap();semio_os_pack_tools::control::CommandContext::try_new(transport,1048576,token,|_|{}).unwrap()}
 
     use crate::history::HistoryTransitionRecord;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -146,7 +146,7 @@ mod tests {
         let dir = scratch_dir("sidecar_missing").await;
         let protocol_path = dir.join("doc.spr");
         let limits=ProtocolLimits::default();let context=test_command_context();let result = read_sidecar(&protocol_path, &[0u8; 32], &limits, &context);
-        let ProtocolError::Pack(semio_framework_os_pack::PackError::TransportFailure(error))=result.await.unwrap_err()else{panic!("missing sidecar retains genuine native failure")};assert!(std::error::Error::source(&error).unwrap().downcast_ref::<std::io::Error>().is_some());
+        let ProtocolError::Pack(semio_os_pack::PackError::TransportFailure(error))=result.await.unwrap_err()else{panic!("missing sidecar retains genuine native failure")};assert!(std::error::Error::source(&error).unwrap().downcast_ref::<std::io::Error>().is_some());
     }
     //#endregion 🔖️Sidecar
 
@@ -294,16 +294,16 @@ mod tests {
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎒️pack/🚦️control/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         let token=semio_framework_async::CancelToken::root_now();let maximum=fixture["maximumTransportBytes"].as_u64().unwrap();
         let observed=std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));let events=observed.clone();
-        let transport=semio_framework_os_pack_tools::control::admit_command_transport(maximum,token.clone(),move|_|{events.fetch_add(1,Ordering::Relaxed);}).unwrap();
-        let context=semio_framework_os_pack_tools::control::CommandContext::try_new(transport,maximum,token.clone(),|_|{}).unwrap();
+        let transport=semio_os_pack_tools::control::admit_command_transport(maximum,token.clone(),move|_|{events.fetch_add(1,Ordering::Relaxed);}).unwrap();
+        let context=semio_os_pack_tools::control::CommandContext::try_new(transport,maximum,token.clone(),|_|{}).unwrap();
         let dir=std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("caller test artifacts")).join("retained-spr-command-context");
         std::fs::create_dir_all(&dir).unwrap();let path=dir.join("doc.spr");
         let mut file=HistoryFile::create(&path,"caller-doc","caller-schema",&WriteOptions::default(),&context).await.unwrap();
         file.appender().await.append_edit(&sample_edit("retained-edit").await).await.unwrap();file.appender().await.commit().await.unwrap();
         let mut follower=TailFollower::open(&path,0,&ProtocolLimits::default(),&context).await.unwrap();
         let before=observed.load(Ordering::Relaxed);drop(context);token.cancel_now();
-        let error=follower.poll().await.unwrap_err();let ProtocolError::Pack(semio_framework_os_pack::PackError::Refusal(refusal))=error else{panic!("retained caller cancellation")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
-        let error=file.appender().await.append_edit(&sample_edit("denied-edit").await).await.unwrap_err();let ProtocolError::Pack(semio_framework_os_pack::PackError::Refusal(refusal))=error else{panic!("retained writer cancellation")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
+        let error=follower.poll().await.unwrap_err();let ProtocolError::Pack(semio_os_pack::PackError::Refusal(refusal))=error else{panic!("retained caller cancellation")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
+        let error=file.appender().await.append_edit(&sample_edit("denied-edit").await).await.unwrap_err();let ProtocolError::Pack(semio_os_pack::PackError::Refusal(refusal))=error else{panic!("retained writer cancellation")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
         assert!(before>0);
     }
 

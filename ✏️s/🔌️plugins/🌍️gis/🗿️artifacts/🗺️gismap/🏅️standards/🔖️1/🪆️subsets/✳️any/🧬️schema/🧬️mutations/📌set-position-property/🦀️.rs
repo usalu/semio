@@ -33,8 +33,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "position-property", kind: "set-position-property", record: "PositionPropertySet" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of position \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Position \"{}\" setzen", self.key, self.feature))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of position \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Position \"{}\" setzen", self.key, self.feature))
     }
 }
 

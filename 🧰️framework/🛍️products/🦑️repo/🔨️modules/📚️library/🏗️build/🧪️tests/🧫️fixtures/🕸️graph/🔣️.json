@@ -3024,7 +3024,8 @@
           "child": {
             "maximumElapsedMilliseconds": 180000
           }
-        }
+        },
+        "codeRoot": "."
       },
       {
         "name": "DSL Receiving Native",
@@ -3052,7 +3053,8 @@
           "child": {
             "maximumElapsedMilliseconds": 180000
           }
-        }
+        },
+        "codeRoot": "."
       },
       {
         "name": "Jack Composition",
@@ -3080,7 +3082,8 @@
           "child": {
             "maximumElapsedMilliseconds": 1200000
           }
-        }
+        },
+        "codeRoot": "."
       }
     ],
     "parent": {

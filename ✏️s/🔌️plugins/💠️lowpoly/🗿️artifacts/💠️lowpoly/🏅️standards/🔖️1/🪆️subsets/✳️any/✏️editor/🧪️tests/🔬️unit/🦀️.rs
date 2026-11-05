@@ -2,8 +2,8 @@ use semio_framework_3d::mesh::{MeshModelingOps};
 
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
 const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[path = "../🧰️support/🦀️.rs"]
 mod context;
 
@@ -25,46 +25,46 @@ use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::artifact_kind, snapshot::
 use protocol::Mutation;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionRef;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementOption;
-use semio_framework_plugin::WindowEngagementPossible;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionRef;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementOption;
+use semio_plugin::WindowEngagementPossible;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
@@ -81,9 +81,9 @@ use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use transform::{rotate_selection, scale_selection, translate_selection};
 use utility::set_utility_param;
 use uv::{clear_seam, mark_uv_seam, unwrap_active};
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 use crate::{context::app, context::app_with_registry, context::dispatch, context::lowpoly_manifest_for_tests, context::LowpolyApp};
-use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
 fn retained_operation() -> AppOperationContext {
     AppOperationContext { app_instance_id: 7, parent_document_id: "lowpoly-retained-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32], authoring_seed: "authoring-seed-test".into() }
@@ -96,8 +96,8 @@ fn retained_context(transient: LowpolyTransient, transient_generation: u64) -> s
         [17; 32],
         0,
         transient_generation,
-        semio_framework_plugin::app::ArtifactOwnedToolJobSnapshots {
-            children: std::sync::Arc::new(semio_framework_plugin::ChildContentView::EMPTY),
+        semio_plugin::app::ArtifactOwnedToolJobSnapshots {
+            children: std::sync::Arc::new(semio_plugin::ChildContentView::EMPTY),
             draft: std::sync::Arc::new(NoDraft::default()),
             transient: std::sync::Arc::new(transient),
             window_config: None,
@@ -132,7 +132,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     let snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let config = LowpolyConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let history = HistoryView::empty();
     let operation = retained_operation();
     let context = retained_context(LowpolyTransient::default(), 19);
@@ -140,7 +140,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     let mut uninterrupted = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
     assert!(matches!(
         uninterrupted
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs {
                 snapshot_owner: None, command: &command,
                 snapshot: &snapshot,
                 config: &config,
@@ -161,7 +161,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     replayed.restore(&checkpoint).expect("work restore");
     assert!(matches!(
         replayed
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs {
                 snapshot_owner: None, command: &command,
                 snapshot: &snapshot,
                 config: &config,
@@ -176,7 +176,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     ));
     assert!(matches!(
         replayed
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs {
                 snapshot_owner: None, command: &command,
                 snapshot: &snapshot,
                 config: &config,
@@ -192,11 +192,11 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     let drifted = AppOperationContext { generation: operation.generation + 1, ..operation.clone() };
     let mut rejected = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
     assert!(rejected
-        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+        .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
         .is_err());
     let drifted_context = retained_context(LowpolyTransient::default(), 20);
     assert!(rejected
-        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
+        .step(&semio_plugin::retained_command::ArtifactCommandInputs {
             snapshot_owner: None, command: &command,
             snapshot: &snapshot,
             config: &config,
@@ -209,7 +209,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
         .is_err());
     assert!(matches!(
         rejected
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs {
                 snapshot_owner: None, command: &command,
                 snapshot: &snapshot,
                 config: &config,
@@ -254,7 +254,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
     let snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json(&unit_box, "obj-1", "Unit Box");
     let config = LowpolyConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let history = HistoryView::empty();
     let operation = retained_operation();
     let context = retained_context(LowpolyTransient::default(), 29);
@@ -268,7 +268,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
             let mut refused = false;
             loop {
                 let started = std::time::Instant::now();
-                let step = work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None,
+                let step = work.step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None,
                     command: &command,
                     snapshot: &snapshot,
                     config: &config,
@@ -320,7 +320,7 @@ async fn command_ids_are_unique() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_through_text_and_binary() {
     for command in every_command() {
-        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -434,7 +434,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         || async { lowpoly_manifest_for_tests() },
         LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Renamed By A").unwrap()) }),
         LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("box".into()) }),
-        |app| app.snapshot().expect("projection"),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        |app| app.snapshot().expect("projection"),semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -460,10 +460,10 @@ async fn ingest_operations_is_idempotent() {
     assert!(!envelopes.is_empty(), "the rename reached the backbone");
     let operations = protocol::encode_envelopes(&envelopes);
     let mut receiver = app().await;
-    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
+    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
     let once = receiver.snapshot().expect("projection");
     assert_eq!(once.objects[0].name, "Hero", "the replayed rename applies");
-    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
+    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
     assert_eq!(receiver.snapshot().expect("projection"), once, "feeding the same operation twice must not double-apply");
 }
 
@@ -479,7 +479,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_mesh_out_produces_mesh_document_payload() {
     let mut a: LowpolyApp = app().await;
-    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut a.0, "mesh:out", a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export mesh:out");
+    let media = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::export_fixture_media(&mut a.0, "mesh:out", a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export mesh:out");
     assert_eq!(media.media_type, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh });
     match media.payload {
         MediaPayload::Structured { schema, .. } => assert_eq!(schema, "mesh.document"),
@@ -492,7 +492,7 @@ async fn export_media_mesh_out_produces_mesh_document_payload() {
 /// mutation per `📓️taxonomy.md`, so this is an effect, not an `artifact_mutations` entry.
 #[semio_framework_async_macros::async_test]
 async fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
-    let mesh = semio_framework_plugin::mesh_from_kind("box");
+    let mesh = semio_plugin::mesh_from_kind("box");
     let mesh_document = semio_s_artifact_lowpoly_lowpoly_model::mesh_document_value(&mesh);
     let json = semio_framework_pack_json::to_json_string(&mesh_document);
     let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
@@ -501,7 +501,7 @@ async fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
     let doc = ArtifactView::new(&projection, &history);
     let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");
     assert!(emit.artifact_mutations.is_empty(), "whole-document replace is an effect, not a mutation");
-    let semio_framework_plugin::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("mesh:in must emit a LoadDocument effect") else {
+    let semio_plugin::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("mesh:in must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <LowpolySnapshot as ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

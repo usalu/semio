@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-contract-builder"
+name = "semio-ui-contract-builder"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -20,13 +20,13 @@ path = "../../🦀️.rs"
 default = []
 
 [dependencies]
-semio-framework-ui-contract-components = { path = "../../../🧩️component/📦️packages/🦀️rust" }
-semio-framework-ui-contract-values = { path = "../../../🌱️values/📦️packages/🦀️rust" }
-semio-framework-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
+semio-ui-contract-components = { path = "../../../🧩️component/📦️packages/🦀️rust" }
+semio-ui-contract-values = { path = "../../../🌱️values/📦️packages/🦀️rust" }
+semio-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
 serde = { workspace = true, features = ["derive"] }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
-semio-framework-ui-contract-presentation = { path = "../../../🖼️presentation/📦️packages/🦀️rust" }
-semio-framework-ui-contract-values = { path = "../../../🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-contract-presentation = { path = "../../../🖼️presentation/📦️packages/🦀️rust" }
+semio-ui-contract-values = { path = "../../../🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json.workspace = true

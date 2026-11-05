@@ -1,0 +1,16 @@
+[
+  {
+    "variant": "puzzle2d",
+    "ports": {
+      "react": 1,
+      "wgpu": 2
+    }
+  },
+  {
+    "variant": "puzzle3d",
+    "ports": {
+      "react": 1,
+      "wgpu": 2
+    }
+  }
+]

@@ -10,7 +10,7 @@ pub struct InsertMemberAction { pub index: Option<usize>, pub member_action: Mem
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertMemberAction where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_member_action::RemoveMemberAction> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "member-action", kind: "insert-member-action", record: "InsertedMemberAction" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert member action at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Bauteilbeanspruchung an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert member action at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Bauteilbeanspruchung an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

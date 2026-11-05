@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "name": "complete persisted document", "path": [], "valid": true },
+    { "name": "unknown document property", "path": ["unexpected"], "value": true, "valid": false },
+    { "name": "unknown asset property", "path": ["assets", 0, "unexpected"], "value": true, "valid": false },
+    { "name": "incomplete asset origin", "path": ["assets", 0, "origin"], "value": [1, 2], "valid": false },
+    { "name": "oversized shot width", "path": ["shots", 0, "width"], "value": 4294967296, "valid": false },
+    { "name": "fractional shot height", "path": ["shots", 0, "height"], "value": 1.5, "valid": false },
+    { "name": "unknown scene property", "path": ["scene", "unexpected"], "value": true, "valid": false },
+    { "name": "omitted optional stroke", "path": ["scene", "material", "stroke"], "remove": true, "valid": true }
+  ]
+}

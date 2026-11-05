@@ -12,15 +12,15 @@
 
 use crate::editor::grid2d::window::{effective_camera, Grid2dWindowConfig};
 use crate::schema::snapshot::Grid2dSnapshot;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -196,7 +196,7 @@ pub fn scene(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, _active_uti
 }
 
 pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, active_utility))
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, active_utility))
 }
 //#endregion 🔖️Render
 

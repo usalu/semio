@@ -1,11 +1,11 @@
-use semio_framework_os_kernel::ColdMutationKind;
+use semio_os_kernel::ColdMutationKind;
 use super::*;
 
 #[test]
 fn label_names_role_and_dialect() {
     let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
     let payload = ClearDefaultApp { dialect, role: AppRole::Viewer };
-    assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload), semio_framework_ui_locale::LocalizedLabel::native("Clear default viewer for \"s.cad.cad (1, *)\"", "Standard-Betrachter für \"s.cad.cad (1, *)\" entfernen"));
+    assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload), semio_ui_locale::LocalizedLabel::native("Clear default viewer for \"s.cad.cad (1, *)\"", "Standard-Betrachter für \"s.cad.cad (1, *)\" entfernen"));
 }
 
 #[test]

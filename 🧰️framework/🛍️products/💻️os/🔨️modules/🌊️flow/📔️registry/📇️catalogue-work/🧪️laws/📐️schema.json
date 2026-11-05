@@ -1,0 +1,47 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "generation",
+      "operators",
+      "expectedIds"
+    ],
+    "properties": {
+      "generation": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "operators": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "extension",
+            "name",
+            "abbreviation",
+            "icon",
+            "summary",
+            "inputs",
+            "outputs",
+            "variadicInput",
+            "variadicOutput",
+            "group"
+          ]
+        }
+      },
+      "expectedIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

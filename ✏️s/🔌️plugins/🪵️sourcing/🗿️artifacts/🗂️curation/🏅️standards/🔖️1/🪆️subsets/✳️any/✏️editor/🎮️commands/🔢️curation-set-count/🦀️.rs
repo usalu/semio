@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::schema::{curation_decision_for_delta, curation_decision_for_set, CurationDecision};
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🔀️ Turns a resolved curation decision into the real `SourcingMutation` it corresponds to — `None`

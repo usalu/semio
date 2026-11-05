@@ -1,7 +1,7 @@
 use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, ENTITIES};
 #[allow(unused_imports)]
@@ -15,37 +15,37 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_wit
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use semio_framework_plugin::Buildable;
+use semio_plugin::Buildable;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasBase;
+use semio_plugin::HasBase;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::Trigger;
+use semio_plugin::Trigger;
 #[allow(unused_imports)]
-use semio_framework_plugin::{row_action, row_target, RowActionPlacement};
+use semio_plugin::{row_action, row_target, RowActionPlacement};
 #[allow(unused_imports)]
-use semio_framework_plugin::UiFixedMap;
+use semio_plugin::UiFixedMap;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 use crate::editor::bim::panels::outliner::{movable};
 use crate::editor::bim::panels::outliner::*;
-use semio_framework_plugin::ViewModel;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::ViewModel;
+use semio_ui_locale::{Locale, Terminology};
 
 fn demo() -> (ModelSnapshot, ModelInference) {
     let snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
@@ -56,7 +56,7 @@ fn demo() -> (ModelSnapshot, ModelInference) {
 fn text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
     let node = render(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, BODY_KEY)).expect("the outliner renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -92,12 +92,12 @@ async fn a_huge_group_stays_closed_and_an_opened_one_materialises_only_the_reque
         snapshot.walls.insert(format!("bulk-{index:04}"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall { name: format!("Bulk {index:04}"), ..template.clone() });
     }
     assert_eq!(text(&snapshot, &inference, Locale::En).matches("Bulk ").count(), 0, "a group over the open limit is not built until the host opens it");
-    let group = ["bim-outliner.model", "site-1", "bldg-1", "st-ground", "st-ground::wall"].join(semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR);
+    let group = ["bim-outliner.model", "site-1", "bldg-1", "st-ground", "st-ground::wall"].join(semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR);
     let mut view = ViewModel::new(Locale::En, Terminology::Native);
-    view.tree_windows = vec![semio_framework_plugin::TreeWindowRequest { body_key: BODY_KEY.into(), node_key: group, open: Some(true), offset: 100, rows: 20 }];
+    view.tree_windows = vec![semio_plugin::TreeWindowRequest { body_key: BODY_KEY.into(), node_key: group, open: Some(true), offset: 100, rows: 20 }];
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     let node = render(&snapshot, &inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &windows).expect("renders");
-    let rendered = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects");
+    let rendered = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects");
     let materialised = rendered.matches("Bulk ").count();
     assert!((1..=60).contains(&materialised), "{materialised} of 600 rows were built for a 20-row request");
 }

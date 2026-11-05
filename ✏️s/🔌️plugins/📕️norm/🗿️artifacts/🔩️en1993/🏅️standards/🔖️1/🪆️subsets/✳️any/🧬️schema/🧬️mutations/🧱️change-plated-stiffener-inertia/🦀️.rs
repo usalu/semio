@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedStiffenerIne
         record: "ChangedPlatedStiffenerInertia",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stiffener second moment I_sl of the plated panel", "Plattenfeld: Steifen-Flächenmoment I_sl ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stiffener second moment I_sl of the plated panel", "Plattenfeld: Steifen-Flächenmoment I_sl ändern")
     }
 }
 

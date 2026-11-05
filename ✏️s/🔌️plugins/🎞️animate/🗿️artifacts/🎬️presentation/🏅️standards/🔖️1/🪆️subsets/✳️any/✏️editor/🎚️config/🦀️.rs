@@ -13,7 +13,7 @@ use protocol::Mutation;
 /// 🧮️ B1: animate presentation's real `ArtifactApp::Config` — absorbs every former
 /// `AnimatePresentationPlayRuntime` field (`engagement_input`). Locale and terminology come from the
 /// shared host `ViewModel` (see `crate::editor::animate::terminology`).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "presentcfg")]
 #[artifact(id = "presentation.config")]
@@ -65,8 +65,8 @@ impl pack::snapshot::ArtifactPack for PresentationConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PresentationConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PresentationConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

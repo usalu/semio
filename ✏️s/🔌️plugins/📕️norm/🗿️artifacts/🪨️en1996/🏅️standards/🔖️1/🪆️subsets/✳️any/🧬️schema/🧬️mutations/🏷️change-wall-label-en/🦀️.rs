@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeWallLabelEn where 
         record: "ChangedWallLabelEn",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change wall label (EN)", "Wandbezeichnung (EN) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change wall label (EN)", "Wandbezeichnung (EN) ändern")
     }
 }
 

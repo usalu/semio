@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointEndDistance w
         record: "ChangedJointEndDistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change End distance e₁ of the joint", "Anschluss: Randabstand in Kraftrichtung e₁ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change End distance e₁ of the joint", "Anschluss: Randabstand in Kraftrichtung e₁ ändern")
     }
 }
 

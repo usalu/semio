@@ -7,13 +7,13 @@ use std::net::TcpStream;
 use std::sync::Arc;
 use std::sync::Mutex;
 use crate::transport::{BridgeSession, EventLog, FixedByteCredits, FixedOwnerRing, HTTP_CONNECTION_CAPACITY, HTTP_HEADER_BYTES, HTTP_IO_PAGE_BYTES, HTTP_REQUEST_BYTES, HTTP_REQUEST_LINE_BYTES, HTTP_RESPONSE_BYTES, HTTP_SLOWLORIS_MS, HttpAdmission, HttpAfterWrite, HttpConnection, HttpConnectionKey, HttpConnectionPhase, HttpTerminalPolicy, HttpTerminalReason, HttpTransportMode, HttpTransportOptions, HttpTransportState, HttpTurn, OwnedHeader, ParsedHttpHead, WEBSOCKET_FRAME_BYTES, constant_time_eq, decode_client_websocket_frame, dispatch_owned_bridge_handshake, encode_server_websocket_frame, find_crlf_bounded, generation_is_current, is_loopback_or_null, origin_allowed, websocket_accept, websocket_key_nonce};
-use semio_framework_os_mcp_bridge::session::BridgeHandle;
-use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, ShellKind, ShellToGateway};
-use semio_framework_os_mcp_consent::elicitation::{ELICITATION_TIMEOUT_MS, ElicitationAction, ElicitationChannel, ElicitationClock, ElicitationUnavailable, StdioLines, SystemElicitationClock};
-use semio_framework_os_mcp_server::mcp_server::McpServer;
-use semio_framework_os_mcp_server::stdio_transport::{McpTransport, StdioTransport};
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, ClientFeatures, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcId, JsonRpcRequest, JsonRpcResponse, NullBackend, Tool};
-use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+use semio_os_mcp_bridge::session::BridgeHandle;
+use semio_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, ShellKind, ShellToGateway};
+use semio_os_mcp_consent::elicitation::{ELICITATION_TIMEOUT_MS, ElicitationAction, ElicitationChannel, ElicitationClock, ElicitationUnavailable, StdioLines, SystemElicitationClock};
+use semio_os_mcp_server::mcp_server::McpServer;
+use semio_os_mcp_server::stdio_transport::{McpTransport, StdioTransport};
+use semio_os_mcp_wire::protocol::{CallToolResult, ClientFeatures, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcId, JsonRpcRequest, JsonRpcResponse, NullBackend, Tool};
+use semio_os_mcp_workspace::gateway_backend::GatewayBackends;
 
 /// 📝️ An owned, cloneable `Write` sink — `StdioTransport` now takes its output stream by value
 /// (`'static`, because the elicitation channel shares it), so a test keeps its own handle on the

@@ -5,9 +5,9 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_raster_raster_editor_modes::modes;
@@ -62,7 +62,7 @@ pub mod commands {
 //#endregion 🪢️TaxonomyMounts
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `RasterPlayApp::Command` — the SOLE dispatch surface for raster's own behavior, assembled from
     /// the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`,
     /// the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case

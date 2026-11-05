@@ -5,12 +5,12 @@ use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::sele
 use crate::editor::fem2d::modes::edit::fem2d_addressed_body_key;
 use crate::editor::fem2d::modes::edit::fem2d_addressed_camera;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 
@@ -40,7 +40,7 @@ pub fn handle(_payload: &CanvasPointerUp, _doc: &ArtifactView<'_, Fem2dSnapshot>
 
 /// 🖱️ Completes a marquee/lasso drag or falls back to a direct pick when the drag never crossed the threshold;
 /// a `cancelled` release only clears the gesture and refreshes the window.
-pub fn handle_window(payload: &CanvasPointerUp, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+pub fn handle_window(payload: &CanvasPointerUp, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let camera = fem2d_addressed_camera(cfg, view, "fem2d.canvas-pointer-up")?;
     let merge = selection_merge_mode(payload.shift, payload.ctrl, payload.meta);
     canvas_gesture::pointer_up(doc.snapshot, &camera, view, fem2d_addressed_body_key(view, "fem2d.canvas-pointer-up")?, payload.x, payload.y, payload.width, payload.height, merge, payload.cancelled)

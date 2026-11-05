@@ -3,16 +3,16 @@
 //! The editor scene document, the typing delivery state and echo ledger, the explicit draft settings and the public
 //! text editor pointer, key, wheel and action API.
 
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{ENGINE_SURFACES, ENGINE_SURFACE_CAPACITY, EngineSurfaceRegistry, EngineSurfaceToken, TEXT_EDITOR_PENDING_ECHO_CAPACITY, TextEditorDeliveryInFlight, TextEditorDeliveryPublication, TextEditorDeliverySnapshot, TextEditorDraftPublication, TextEditorTypingEnd, TextEditorTypingRun, engine_canvas_fault_log, retire_string_page, text_editor_now_ms};
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::{ENGINE_SURFACES, ENGINE_SURFACE_CAPACITY, EngineSurfaceRegistry, EngineSurfaceToken, TEXT_EDITOR_PENDING_ECHO_CAPACITY, TextEditorDeliveryInFlight, TextEditorDeliveryPublication, TextEditorDeliverySnapshot, TextEditorDraftPublication, TextEditorTypingEnd, TextEditorTypingRun, engine_canvas_fault_log, retire_string_page, text_editor_now_ms};
 use framework_editor::EditorHost;
 #[cfg(target_arch = "wasm32")]
 use js_sys;
 use serde_json::{json, Value};
 use std::collections::VecDeque;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::{KeyAction, PointerModifiers};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::UiComponentSceneNode;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::{KeyAction, PointerModifiers};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::UiComponentSceneNode;
 
 #[path = "📄️scene-document-and-host-sync/🦀️.rs"]
 mod scene_document_and_host_sync;

@@ -1,6 +1,6 @@
 //! ⚙️ LAW: General uses the shared Tree grammar and bottom panels reserve footer chrome below content.
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
+use semio_renderer_wgpu_fixtures::shell::test_app;
 use super::*;
 use serde_json::Value;
 
@@ -64,7 +64,7 @@ fn retained_control_state(shell: &ShellState, surface: &str, control_id: &str) -
 
 #[test]
 fn general_projection_is_the_react_tree_with_inline_controls() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let UiNode::Tree(tree) = shell.docs.build_settings_general_ui(&shell.chrome, &shell.prefs) else { panic!("General must publish one Tree") };
     let fixture = fixture();
     let expected_sections = fixture["tree"]["sections"].as_array().expect("fixture sections");
@@ -109,7 +109,7 @@ fn bottom_flow_places_content_above_root_and_leaf_tab_rows() {
 
 #[test]
 fn chrome_hosted_panel_owns_only_nested_rows_above_the_footer_root_toggle() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     shell.dock.dock_tabs.tabs_mut(anchor).clear();
     shell.dock.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch("framework.settings", "Settings", "settings", 0, vec![DockTabNode::leaf("framework.settings.general", "General", "settings", 0)]));
@@ -129,8 +129,8 @@ fn chrome_hosted_panel_owns_only_nested_rows_above_the_footer_root_toggle() {
 
 #[test]
 fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pending_panel_tab() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     shell.dock.dock_tabs.tabs_mut(anchor).clear();
     shell.dock.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)]));
@@ -195,11 +195,11 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
 
 #[test]
 fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     const SURFACE: &str = "framework.settings.general.compact-law";
     let fixture = fixture();
     let vector = &fixture["stableGeneral"];
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     shell.chrome.screen_w = vector["screen"]["width"].as_f64().unwrap() as f32;
     shell.chrome.screen_h = vector["screen"]["height"].as_f64().unwrap() as f32;
@@ -227,8 +227,8 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     let mut first_cursor = ShellChromeChildCursor::default();
     let first_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut first_cursor, anchor, &mut first_draw, None, &mut atlas, &icons, &mut first_input, &theme, body, &mut resources, cx)));
     assert!(first_complete, "normal General ingress, reconcile, layout and paint complete");
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_root_is_tree(SURFACE), "the accepted production root remains Tree");
-    let intrinsic = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(SURFACE).expect("accepted General intrinsic height");
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_root_is_tree(SURFACE), "the accepted production root remains Tree");
+    let intrinsic = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(SURFACE).expect("accepted General intrinsic height");
     let minimum_unused = vector["minimumUnusedBandHeight"].as_f64().unwrap() as f32;
     assert!(intrinsic + shell.dock.anchor_tab_bar_height(anchor, &theme) + theme.gap_standard * 2.0 + minimum_unused < first_panel.h, "fixture keeps a material unused band below the compact General extent: intrinsic={intrinsic} band={}", first_panel.h);
     let first_compact = first_cursor.rect.expect("accepted first-walk panel rectangle");
@@ -251,7 +251,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     let owners = shell.input.retained_hit_windows_staging.values().filter(|(owner, _)| owner == SURFACE).collect::<Vec<_>>();
     assert!(!owners.is_empty() && owners.iter().all(|(_, rect)| *rect == content), "every retained General target is owned by the compact content rectangle");
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
-    let accessibility = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(SURFACE);
+    let accessibility = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(SURFACE);
     for (key, label) in [
         ("framework.settings.appearance", "Appearance"),
         ("framework.settings.layout", "Layout"),
@@ -275,7 +275,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
 
 #[test]
 fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     const SURFACE: &str = "framework.settings.general.appearance-commit-law";
     let fixture = fixture();
     let vector = &fixture["selectCommit"];
@@ -284,7 +284,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     let initial_value = vector["initialValue"].as_str().unwrap();
     let next_value = vector["nextValue"].as_str().unwrap();
     let expected_action = vector["action"].as_str().unwrap();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     shell.chrome.screen_w = 1_440.0;
     shell.chrome.screen_h = 1_000.0;
@@ -358,7 +358,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(option_x, option_y, false, 0, &mut input, &theme)).expect("appearance option release");
 
     assert_eq!(shell.prefs.appearance_id, initial_value, "the retained gesture queues its app command before Shell mutation");
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), vector["expectedQueuedActions"].as_u64().unwrap() as usize, "one retained option activation publishes one bounded action");
     let action = actions.into_iter().next().unwrap();
     assert_eq!(action.controller_id, "framework");
@@ -390,7 +390,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     let (ordinary_x, ordinary_y) = (ordinary.rect.x + ordinary.rect.w * 0.5, ordinary.rect.y + ordinary.rect.h * 0.5);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(ordinary_x, ordinary_y, true, 0, &mut input, &next_theme)).expect("ordinary retained Button press");
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(ordinary_x, ordinary_y, false, 0, &mut input, &next_theme)).expect("ordinary retained Button release");
-    let ordinary_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let ordinary_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(ordinary_actions.len(), 1, "ordinary retained Buttons keep one EventRouter action path");
     assert_eq!(ordinary_actions[0].action, "runOsCommand");
     caller.retire_world(&mut resources);
@@ -399,7 +399,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
 
 #[test]
 fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_them_when_closed() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     const SURFACE: &str = "framework.settings.general.driver-retirement-law";
     let neutral = fixture();
     let geometry = &neutral["upFlowDisclosure"];
@@ -407,7 +407,7 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
     let expected = &geometry["expectedHeaderRect"];
     let expected_y = section["y"].as_f64().unwrap() + section["h"].as_f64().unwrap() - geometry["headerHeight"].as_f64().unwrap();
     assert_eq!(expected["y"].as_f64(), Some(expected_y), "the neutral Up-flow oracle bonds the disclosure header to the section bottom");
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     shell.chrome.screen_w = 1_440.0;
     shell.chrome.screen_h = 1_000.0;
@@ -469,8 +469,8 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
     let fixture = fixture();
     let contract = &fixture["retainedPreferencePublication"];
     let surface = contract["surfaceId"].as_str().unwrap();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell.chrome.chrome_present.maintenance.load_requested = false;
     let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(surface).expect("initial General publication").expect("General owns a retained document");
     shell.docs.panel_documents.insert(surface.to_string(), initial);
@@ -485,7 +485,7 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
         assert_eq!(retained_select_value(&shell, surface, control_id), initial_value);
         let before = shell.docs.panel_documents.get(surface).unwrap().header().expect("initial General header");
 
-        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": next_value }) })).expect("host preference dispatch");
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": next_value }) })).expect("host preference dispatch");
 
         let after_dispatch = shell.docs.panel_documents.get(surface).expect("dispatch keeps General published").header().expect("General header after dispatch");
         assert!(after_dispatch.revision != before.revision && after_dispatch.generation > before.generation, "{action} republishes in dispatch");
@@ -502,7 +502,7 @@ fn driver_draft_save_and_reset_republish_every_retained_general_field() {
     let fixture = fixture();
     let contract = &fixture["retainedPreferencePublication"];
     let surface = contract["surfaceId"].as_str().unwrap();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.prefs.driver_id = "compact".into();
     shell.prefs.clear_driver_draft(&mut shell.chrome);
     let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(surface).expect("initial General publication").expect("General owns a retained document");
@@ -531,7 +531,7 @@ fn driver_draft_save_and_reset_republish_every_retained_general_field() {
 
 #[test]
 fn general_republication_refusal_preserves_the_exact_readable_owner_and_retries() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let surface = FRAMEWORK_SETTINGS_GENERAL_TAB_ID;
     let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(surface).expect("initial General publication").expect("General retained document");
     let before = initial.header().expect("initial General header");
@@ -539,7 +539,7 @@ fn general_republication_refusal_preserves_the_exact_readable_owner_and_retries(
     let vacancy = shell.docs.closing_documents.first_vacant_index().expect("retirement vacancy");
     shell.docs.closing_documents.epochs[vacancy] = u64::MAX;
 
-    let error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": "dark" }) }))
+    let error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": "dark" }) }))
         .expect_err("exhausted retirement admission refuses replacement");
     assert!(error.contains("retirement registry refused"));
     let retained = shell.docs.panel_documents.get(surface).expect("refusal keeps the readable General owner");
@@ -547,7 +547,7 @@ fn general_republication_refusal_preserves_the_exact_readable_owner_and_retries(
     assert_eq!(retained_select_value(&shell, surface, "framework.settings.appearance"), "system");
 
     shell.docs.closing_documents.epochs[vacancy] = 0;
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": "dark" }) }))
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": "dark" }) }))
         .expect("the exact refused preference retries after retirement admission returns");
     let successor = shell.docs.panel_documents.get(surface).unwrap().header().expect("successor General header");
     assert!(successor.generation > before.generation);
@@ -563,10 +563,10 @@ fn locale_and_terminology_changes_require_one_full_guest_refresh_and_settle() {
     assert_eq!(contract["refreshScope"].as_str(), Some("full"));
     assert_eq!(contract["settleRequired"].as_bool(), Some(true));
     for (action, value) in [("setLocale", contract["nextLocale"].as_str().unwrap()), ("setTerminology", Terminology::Reuse.as_str())] {
-        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-        shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+        shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
         shell.chrome.chrome_present.maintenance.load_requested = false;
-        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) })).expect("locale-bearing host mutation");
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": value }) })).expect("locale-bearing host mutation");
         assert!(matches!(shell.settle.owed_refresh_scope, semio_framework::kernel::UiDirtyScope::Full), "{action} must rebuild guest bodies and Window Measures from the new ViewModel axes");
         assert!(PointerCtx::of(&mut shell).settle_pump_pending(), "{action} arms the bounded settle owner for the full guest refresh");
         assert!(!shell.chrome.chrome_present.maintenance.pending(), "{action} must not schedule a duplicate shell-only locale publication lane");
@@ -582,9 +582,9 @@ fn a_framework_setting_dispatch_completes_on_a_one_mebibyte_thread() {
     let completed = std::thread::Builder::new()
         .stack_size(1024 * 1024)
         .spawn(|| {
-            let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-            shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-            semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": "dark" }) })).map(|()| shell.prefs.appearance_id.clone())
+            let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+            shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
+            semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": "dark" }) })).map(|()| shell.prefs.appearance_id.clone())
         })
         .expect("a 1 MiB shell thread starts")
         .join();

@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
+use semio_plugin::app::{TextView, TextWindowKit, WindowKit};
 use crate::viewer::rewriting::modes::view::windows::rule::*;
 
 #[semio_framework_async_macros::async_test]

@@ -1,42 +1,22 @@
+import {retirePrivateRepositoryRootV1} from "./🪦️retirement/🟦️.ts";
 /** 🧫️ A private repository per test process: its own store, caches, lease images and scratch, so no test touches the checkout's live store. @see ../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts */
-import {mkdir,mkdtemp,readdir,rm} from "node:fs/promises";
-import {existsSync,readFileSync,realpathSync,writeFileSync} from "node:fs";
+import {mkdir,mkdtemp,readdir} from "node:fs/promises";
+import {readFileSync,realpathSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {afterAll} from "bun:test";
 import {privateRepositoryStartDirectoryV1,testCheckoutRootV1,requirePrivateRepositoryWorkspaceV1,privateRepositoryParentsV1,privateRepositoryDeepestV1,privateRepositoryInvocationV1,withPrivateRepositoryWorkingDirectoryV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
 export {testCheckoutRootV1,testToolchainDirectoryV1,testNxToolkitDirectoryV1,requirePrivateRepositoryWorkspaceV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
 
-import {repositoryCacheBudgetV1,type RepositoryCachePartitionIdV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
+import {type RepositoryCachePartitionIdV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import {openRepositoryCachePartitionV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
-import {repositoryLeaseDirectoryV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {repositoryCheckoutRootV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧭️root/🟦️.ts";
 import {createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {openNativePlatformStorageV1,retireNativePlatformStorageV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
-import {nativeImageServiceEntryV1,requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {nativeStorageRetirementPortV1,observeNativeStorageStateV1,recoverNativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";
 
 /** 🧫️ One private repository: its root, whether this process owns it (an adopted one is retired by its parent), invocations issued for it, partitions prepared ahead of a timed test, scratch directories inside it, the isolation check and its retirement. */
 export interface PrivateRepositoryWorkspaceV1{readonly root:string;readonly owned:boolean;invoke<T>(body:(invocation:ScriptInvocation)=>Promise<T>,options?:Readonly<{owner?:string;maximumElapsedMilliseconds?:number}>):Promise<T>;within<T>(body:()=>Promise<T>):Promise<T>;prepare(...partitions:RepositoryCachePartitionIdV1[]):Promise<void>;scratch(prefix:string):Promise<string>;requireIsolated():Promise<string>;close():Promise<void>}
-/** 🪦️ Retires one private partition image with the genuine protocol: its allocations are recovered and retired, its content removed, then the backing. */
-async function retirePrivatePartitionV1(options:any):Promise<void>{
- const image=await openNativePlatformStorageV1(options);let primary:{error:unknown}|undefined;
- try{const held=await image.withExclusiveMaintenance({version:1,wait:false},async(port:any)=>{
-  const policy={version:1 as const,root:image.root,leaseDirectory:options.leaseDirectory,capacityBytes:options.maximumPhysicalBytes,maximumWorkspaceBytes:options.filesystemBytes,maximumArtifactBytes:options.filesystemBytes},state=await observeNativeStorageStateV1({policy,control:options.control,port});let cleared=false;
-  const retiring=nativeStorageRetirementPortV1(port,async()=>{if(cleared)return;for(const name of await readdir(image.root)){if(name==="storage-events.jsonl"||nativeImageServiceEntryV1(name))continue;await rm(requireNativeStoragePathV1(image.root,join(image.root,name)),{recursive:true,force:true});}cleared=true;});
-  for(const row of state.allocations){const receipt=await recoverNativeStorageReservationV1({policy,control:options.control,port:retiring,id:row.id});await receipt.retire();}
- });if(!held.acquired)throw Error("private-repository-partition-has-readers");}catch(error){primary={error};throw error;}finally{try{await image.close();}catch(error){if(!primary)throw error;}}
- if(!await retireNativePlatformStorageV1(options,{version:1,wait:false}))throw Error("private-repository-image-retirement-refused");
-}
-/** 🪦️ Retires every partition image of one private repository (the lease image last) and removes it. */
+/** 🪦️ Retires the private root through its declared unit-test invocation. */
 async function retirePrivateRootV1(root:string):Promise<void>{
- await privateRepositoryInvocationV1(root)(async original=>{
-  const budget=repositoryCacheBudgetV1(root),control:ResourceLeaseControl=createIssuedResourceControlV1(original,"repository:private-retire",0);
-  const retire=async(partition:any,options:object)=>{if(!existsSync(join(partition.directory,"image.json")))return;await retirePrivatePartitionV1({...partition,maximumPhysicalBytes:partition.capacityBytes,control,...options});};
-  for(const[id,partition]of Object.entries(budget.partitions)){if(id==="leases")continue;await retire(partition,{leaseDirectory:repositoryLeaseDirectoryV1(root)});}
-  await retire(budget.partitions.leases,{maximumLeaseDatabaseBytes:16384,leaseDirectory:budget.controlDirectory});
- },{owner:"private-repository-retirement",maximumElapsedMilliseconds:120000});
- await rm(root,{recursive:true,force:true});
+ await privateRepositoryInvocationV1(root)(async original=>retirePrivateRepositoryRootV1(root,original,createIssuedResourceControlV1(original,"repository:private-retire",0)),{owner:"private-repository-retirement",maximumElapsedMilliseconds:120000});
 }
 /** 🧹️ Retires the private repositories a killed test process left behind: those whose recorded owner process is gone. */
 async function reapStalePrivateRootsV1(parent:string):Promise<void>{

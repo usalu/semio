@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfFlangeWidth wher
         record: "ChangedCfFlangeWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flange width b_p of the cold-formed member", "Kaltprofil: Gurtbreite b_p ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flange width b_p of the cold-formed member", "Kaltprofil: Gurtbreite b_p ändern")
     }
 }
 

@@ -1,14 +1,14 @@
 use super::*;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
-use semio_framework_plugin::HistoryView;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::ViewWindowInstance;
+use semio_plugin::HistoryView;
+use semio_plugin::ViewModel;
+use semio_plugin::ViewWindowInstance;
 
 fn results_view() -> ViewModel {
     ViewModel {
         window_id: Some("results-left".into()),
         window_instances: vec![ViewWindowInstance { id: "results-left".into(), window_kind_id: results::WINDOW_KIND_ID.into() }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 
@@ -23,7 +23,7 @@ async fn set_result_display_is_config_only() {
     let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle_window(&SetResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: "modal".into(), mode_index: 1, field: None, value: None, window_id: None }, &cfg, &results_view()).expect("the addressed results window accepts a display change");
     assert!(emit.artifact_mutations.is_empty(), "setResultDisplay must not emit a document VCS operation");
-    assert_eq!(emit.window_config_mutations.iter().map(semio_framework_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-left"]);
+    assert_eq!(emit.window_config_mutations.iter().map(semio_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-left"]);
     assert!(handle(&SetResultDisplay { source_id: None, mode: "static".into(), mode_index: 0, field: None, value: None, window_id: None }, &doc, &cfg).is_err(), "without a window there is nothing to address");
 }
 

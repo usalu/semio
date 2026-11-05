@@ -50,7 +50,7 @@ pub fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value,
     let dependency = semio_hub_stdio_catalog::native_artifact_catalog_dependency().map_err(catalog_error)?;
     let version = dependency.version.0.to_string();
     let receipts = semio_hub_stdio_catalog::native_codec_factory_receipts().map_err(catalog_error)?;
-    let mut builder = semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Stdio Fixture").version(version.clone()).package_id("semio:stdio");
+    let mut builder = semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("Stdio Fixture").version(version.clone()).package_id("semio:stdio");
     for kind in semio_hub_stdio_catalog::native_codec_artifact_kinds() {
         builder = builder.artifact_kind(kind);
     }

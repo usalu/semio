@@ -10,15 +10,15 @@ include!("../../../../⚙️engine/📤️export/🧪️tests/🔬️unit/📕�
 /// `drainSegmentedMediaExport` performs — one bounded chunk per call until `None`.
 async fn original_layout_export_download(command:semio_s_artifact_layout_layout_editor::LayoutCommand)->(String,String,Option<String>,Vec<u8>){
     use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
-    use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
+    use semio_plugin::app::TypedOperationResultLane;
+    use semio_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
     const INSTANCE: u32 = 1;
     let mut app = semio_s_artifact_layout_layout_editor::unit_tests::context::layout_app_with_registry().await;
     app.bind_instance_id(INSTANCE).await;
     let before=app.0.document_pack().await.expect("original document pack before export");
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("exportPdf dispatch");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("exportPdf dispatch");
     assert!(result.mutations.is_empty(), "an export never mutates the document");
     let mut download: Option<(u64, String, String, Option<String>, usize)> = None;
     let mut turns = 0usize;
@@ -26,8 +26,8 @@ async fn original_layout_export_download(command:semio_s_artifact_layout_layout_
     while app.has_pending_typed_operations() {
         turns += 1;
         assert!(turns < 65_536, "the export never quiesced");
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("publication unit");
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("publication unit");
         if let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
             assert_ne!(page.lane, TypedOperationResultLane::Fault, "export faulted: {}", String::from_utf8_lossy(page.bytes()));
             if page.lane == TypedOperationResultLane::Download {
@@ -55,7 +55,7 @@ async fn original_layout_export_download(command:semio_s_artifact_layout_layout_
     
     let mut assembled = Vec::with_capacity(declared);
     while let Some(chunk) = app.take_segmented_download_chunk(operation).await.expect("take one chunk") {
-        assert!(!chunk.is_empty() && chunk.len() <= semio_framework_plugin::app::ArtifactOutputChunks::CHUNK_BYTES);
+        assert!(!chunk.is_empty() && chunk.len() <= semio_plugin::app::ArtifactOutputChunks::CHUNK_BYTES);
         assembled.extend_from_slice(&chunk);
     }
     assert_eq!(assembled.len(), declared, "the handle declares exactly the drained byte count");

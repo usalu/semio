@@ -2,10 +2,10 @@
 
 use crate::editor::page;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_locale::Locale;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_contract::BuiltNode;
 
 pub const WINDOW_KIND_ID: &str = page::WINDOW_KIND_ID;
 pub const BODY_KEY: &str = page::BODY_KEY;
@@ -16,12 +16,12 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🖼️ Paints the document for an unhosted window.
-pub fn render(document: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &PdfSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     page::render_window(document)
 }
 
 /// 🖼️ Paints the document. Locale and tree chrome do not change the page geometry.
-pub fn render_windowed(document: &PdfSnapshot, windows: &TreeWindows<'_>, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_windowed(document: &PdfSnapshot, windows: &TreeWindows<'_>, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let _ = (windows, locale);
     page::render_window(document)
 }

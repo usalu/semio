@@ -13,7 +13,7 @@ use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_3d_brep_engine::{Brep, BrepKernel};
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use std::collections::HashMap;
 use std::sync::OnceLock;
 

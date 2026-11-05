@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-os-config"
+name = "semio-os-config"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,30 +14,30 @@ id = "os-config"
 workspace = true
 
 [lib]
-name = "semio_framework_os_config"
+name = "semio_os_config"
 path = "../../🦀️.rs"
 
 [features]
 testkit = []
 
 [dependencies]
-semio-framework-os-config-merge-policy = { workspace = true }
+semio-os-config-merge-policy = { workspace = true }
 semio-framework-pack = { path = "../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 schemars = "0.8.22"
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-framework-os-command = { path = "../../../🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../../🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
-semio-framework-os-store-one-item = { path = "../../../🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true, features = ["mutation-testing"] }
+semio-os-store-one-item = { path = "../../../🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }

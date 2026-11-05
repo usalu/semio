@@ -44,15 +44,15 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPrefli
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "transaction-count-without-preflight", kind: "set-transaction-count-without-preflight", record: "SetTransactionCountWithoutPreflight" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count without preflight to {}", self.value), &format!("Transaktionsanzahl ohne Vorprüfung auf {} setzen", self.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set transaction count without preflight to {}", self.value), &format!("Transaktionsanzahl ohne Vorprüfung auf {} setzen", self.value))
     }
     fn foreign_step_source<'a>(&'a self, _: &'a TxnSnapshot, _: usize) -> Result<Option<protocol::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
         panic!("no-foreign mutations must bypass foreign-step preflight")
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPreflight {
+impl semio_os_command::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPreflight {
     fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
         MutationOutcome::new(TxnDiff { count: Some(self.value) })
     }

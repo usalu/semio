@@ -121,12 +121,12 @@ impl Puzzle3dSetActiveExampleWork {
     }
 }
 
-impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dSetActiveExampleWork {
+impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dSetActiveExampleWork {
     fn tool_id(&self) -> &'static str {
         "setActiveExample"
     }
 
-    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let target = Self::target(command)?;
         let document = snapshot.typed();
         let items = document
@@ -145,16 +145,16 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         (items <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         semio_s_plugin_puzzle_retained::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
-        let Some(target) = Self::target(command) else { return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::default())) };
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
+        let Some(target) = Self::target(command) else { return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::default())) };
         match self.stage {
             Puzzle3dSetActiveExampleStage::DeleteAttractions => {
                 let items = &snapshot.typed().attractions;
@@ -314,7 +314,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 } else {
                     vec![Puzzle3dConfigMutation::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ value: example_id.to_string() })]
                 };
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     artifact_mutations: std::mem::take(&mut self.mutations),
                     config_mutations,
                     ui_scope: puzzle3d_scope(Puzzle3dScopeClass::Chrome),

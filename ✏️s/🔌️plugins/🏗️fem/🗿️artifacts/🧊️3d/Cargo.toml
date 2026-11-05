@@ -80,10 +80,10 @@ path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️package
 [workspace.dependencies.semio-framework-job-payload]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-schema]
@@ -95,10 +95,10 @@ path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦�
 [workspace.dependencies.semio-framework-trace]
 path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-scene]
+[workspace.dependencies.semio-ui-scene]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-derive]
@@ -176,7 +176,7 @@ path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️regi
 [workspace.dependencies.semio-framework-schema-state]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-locale]
+[workspace.dependencies.semio-ui-locale]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value]

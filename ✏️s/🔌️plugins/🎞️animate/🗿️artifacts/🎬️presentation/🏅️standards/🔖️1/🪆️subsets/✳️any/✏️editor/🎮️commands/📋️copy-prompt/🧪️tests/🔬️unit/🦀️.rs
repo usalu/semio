@@ -7,13 +7,13 @@ use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 #[allow(unused_imports)]
 use crate::PresentationSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::animate::commands::copy_prompt::*;
 use crate::editor::animate::unit_tests::context::presentation_app_with_registry;
 use crate::editor::animate::PresentationCommand;
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 
 #[semio_framework_async_macros::async_test]
 async fn copy_prompt_is_shell_effect_not_view_mutation() {

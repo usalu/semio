@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeWeldPattern where 
         record: "ChangedWeldPattern",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Weld pattern of the weld group", "Schweißnahtgruppe: Nahtanordnung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Weld pattern of the weld group", "Schweißnahtgruppe: Nahtanordnung ändern")
     }
 }
 

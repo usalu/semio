@@ -67,7 +67,7 @@ pub fn plugin_error(fault: &semio_framework::Fault) -> semio::framework::types::
 /// 🤝️ The app-channel version this guest was compiled for — what `reactor.channel-version` and its owned twin answer, and
 /// what every host admits before any frame (`protocol::admit_guest_channel_version`).
 pub fn channel_version() -> u32 {
-    semio_framework_os_kernel::CHANNEL_VERSION
+    semio_os_kernel::CHANNEL_VERSION
 }
 
 #[doc(hidden)]

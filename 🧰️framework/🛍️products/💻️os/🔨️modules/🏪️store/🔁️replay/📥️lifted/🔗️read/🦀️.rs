@@ -2,9 +2,9 @@
 use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::ValueError;
-use semio_framework_os_store_ledger::lifted_replay::EffectiveSupersessions;
+use semio_os_store_ledger::lifted_replay::EffectiveSupersessions;
 use semio_framework_value_snapshot_read::*;
-use semio_framework_os_store_ledger::lifted_snapshot_read::ArtifactStoreStringRetirement;
+use semio_os_store_ledger::lifted_snapshot_read::ArtifactStoreStringRetirement;
 /// 🧳️ Retains the original supersession index under independent item, capacity, release and depth grants.
 pub struct ArtifactStoreSupersessionRetirement {
     pub owner: semio_framework_value::retirement::controlled::ControlledRetirement<EffectiveSupersessions>,
@@ -28,12 +28,12 @@ impl ErasedSnapshotRetirement for ArtifactStoreSupersessionRetirement {
 }
 
 pub struct ArtifactStoreStringVectorRetirement {
-    pub values: std::mem::ManuallyDrop<Option<semio_framework_os_vcs::HistoryPageStack<String>>>,
+    pub values: std::mem::ManuallyDrop<Option<semio_os_vcs::HistoryPageStack<String>>>,
     pub active: std::mem::ManuallyDrop<Option<ArtifactStoreStringRetirement>>,
 }
 
 impl ArtifactStoreStringVectorRetirement {
-    pub fn new(values: impl Into<semio_framework_os_vcs::HistoryPageStack<String>>) -> Self {
+    pub fn new(values: impl Into<semio_os_vcs::HistoryPageStack<String>>) -> Self {
         Self { values: std::mem::ManuallyDrop::new(Some(values.into())), active: std::mem::ManuallyDrop::new(None) }
     }
 }

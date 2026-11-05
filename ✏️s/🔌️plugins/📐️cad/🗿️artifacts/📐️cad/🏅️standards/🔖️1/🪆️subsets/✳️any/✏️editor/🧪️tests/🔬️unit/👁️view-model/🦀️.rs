@@ -80,7 +80,7 @@ async fn active_utility_flows_from_the_host_view_into_scene() {
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
     let config = CadConfig::default();
-    let view_state = ViewModel { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view_state = ViewModel { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let node = render_direct(&app, shape::BODY_KEY, &doc, &config, &view_state).expect("CAD UI assembly");
     let selection = scene_lane(&node, "selection");
     assert!(selection.contains(r#""transformMode":"transform""#), "render sources Dislocate from ViewModel.active_utility_id: {selection}");
@@ -93,8 +93,8 @@ async fn dislocate_utility_is_scoped_by_each_window_view_context() {
     let config = CadConfig::default();
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    let shape_view = ViewModel { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let building_view = ViewModel { active_utility_id: None, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let shape_view = ViewModel { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let building_view = ViewModel { active_utility_id: None, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let shape = scene_lane(&render_direct(&app, shape::BODY_KEY, &doc, &config, &shape_view).expect("CAD UI assembly"), "selection");
     let building = scene_lane(&render_direct(&app, building::BODY_KEY, &doc, &config, &building_view).expect("CAD UI assembly"), "selection");
     assert!(shape.contains(r#""gumballActive":false"#), "the interaction-less render path has no selection to arm: {shape}");
@@ -112,7 +112,7 @@ async fn context_menu_resolves_labels_from_the_registry() {
     let registry = AppActionRegistry::from_definition(&create_cad_app());
     let config = CadConfig::default();
 
-    let view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view_state = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let items = context_menu_direct(&app, &doc, &config, &view_state, &registry);
     assert!(items.iter().any(|item| item.id == "translateSelection" && item.label.is_some()), "labels must resolve from the registry: {items:?}");
     assert!(items.iter().any(|item| item.id == "deleteObject" && item.destructive == Some(true)), "deleteObject must be marked destructive: {items:?}");
@@ -130,7 +130,7 @@ async fn context_menu_is_grouped_and_keeps_delete_object_last() {
     let registry = AppActionRegistry::from_definition(&create_cad_app());
     let config = CadConfig::default();
 
-    let view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view_state = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let items = context_menu_direct(&app, &doc, &config, &view_state, &registry);
 
     assert!(items.len() <= 9, "top-level context menu should stay progressively disclosed: {items:?}");
@@ -180,8 +180,8 @@ async fn sun_measures_registered_for_all_four_panes_and_default_off() {
     let view_state = ViewModel {
         window_id: Some("shape-sun".into()),
         active_window_kind_id: Some(shape::WINDOW_KIND_ID.into()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "shape-sun".into(), window_kind_id: shape::WINDOW_KIND_ID.into() }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: "shape-sun".into(), window_kind_id: shape::WINDOW_KIND_ID.into() }],
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let measures = window_measures_direct(&app, &doc, &base_config, &view_state);
     assert!(measures.contains_key("shape-sun"), "missing exact-window sun measures");
@@ -195,5 +195,5 @@ async fn sun_measures_registered_for_all_four_panes_and_default_off() {
 // and their round-trip tests are DELETED, not migrated — mesh object/vertex/edge/face
 // selection AND hover are now the framework-owned `"cad"` interaction domain, dispatched
 // through the auto-injected `interactionSelect`/`interactionHover` verbs (never app-declared)
-// and tested once, centrally, by the framework's own `semio-framework-plugin` suite.
+// and tested once, centrally, by the framework's own `semio-plugin` suite.
 //#endregion 🔖️ViewModel

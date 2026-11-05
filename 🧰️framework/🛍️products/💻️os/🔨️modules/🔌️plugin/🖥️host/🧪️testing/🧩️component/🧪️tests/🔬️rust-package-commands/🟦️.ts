@@ -13,4 +13,4 @@ const validate=new Ajv({strict:true}).addKeyword({keyword:"x-semio-state",schema
 for(const vector of law.wireVectors)assert(validate(vector));
 for(const vector of [{count:0,foreign:true},{count:0.5},{}])assert(!validate(vector));
 console.log("neutral-host-fixture: independent Ajv valid=3 hostile=3");
-await runCargo(["check","--manifest-path","Cargo.toml","-p","semio-framework-plugin-host-test-component","--lib"],context.repoRoot);}
+await runCargo(["check","--manifest-path","Cargo.toml","-p","semio-plugin-host-test-component","--lib"],context.repoRoot);}

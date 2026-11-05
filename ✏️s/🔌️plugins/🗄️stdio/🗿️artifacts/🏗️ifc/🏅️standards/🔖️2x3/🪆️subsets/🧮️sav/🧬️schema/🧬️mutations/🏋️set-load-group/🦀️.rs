@@ -16,8 +16,8 @@ pub struct SetLoadGroup {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetLoadGroup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "load-group", kind: "set-load-group", record: "SetLoadGroup" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set load group", "Lastgruppe setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set load group", "Lastgruppe setzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -81,7 +81,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
             let changed = self.prefs.locale_id != value;
             self.prefs.locale_id = value.to_string();
-            semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(self.prefs.active_locale());
+            semio_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(self.prefs.active_locale());
             if let Some(status) = self.prefs.plugin_fault_status(&self.plugins) {
                 self.chrome.error = Some(status);
             }

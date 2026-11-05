@@ -1,9 +1,9 @@
 // #region layout
 //! 🧮️ Flex stack layout for widget trees.
 
-use semio_framework_ui_declaration::ui::{UiControlNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::ui::{UiControlNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
 use ui_contract::SpaceToken;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -40,7 +40,7 @@ pub fn named_space_token(token: Option<&str>) -> Option<SpaceToken> {
     }
 }
 
-pub use semio_framework_ui_layout::space_token_name;
+pub use semio_ui_layout::space_token_name;
 
 /// 🪐️ The [`SpaceToken`] a legacy declarative `UiStackNode.padding` string names — one step looser
 /// than [`gap_space_token`] at `tight`/`loose`, the same relation the two private literal tables had.
@@ -144,7 +144,7 @@ pub const TREE_ROW_TOUCH_MIN_PX: f32 = 44.0;
 /// 🌴️ React's compact property-tree value column, measured from the actual mounted DOM.
 pub const TREE_ROW_COMPACT_CONTROL_WIDTH: f32 = 104.0;
 
-pub use semio_framework_ui_retained_tree::tree::TREE_ROW_MAX_DEPTH;
+pub use semio_ui_retained_tree::tree::TREE_ROW_MAX_DEPTH;
 
 impl TreeRowMetrics {
     pub fn from_theme(theme: &Theme) -> Self {
@@ -258,7 +258,7 @@ pub fn tree_section_height(section: &UiTreeSectionNode, metrics: &TreeRowMetrics
     tree_section_height_with_open(section, metrics, tree_section_default_open(section))
 }
 
-pub use semio_framework_ui_retained_tree::tree::tree_section_default_open;
+pub use semio_ui_retained_tree::tree::tree_section_default_open;
 
 pub fn tree_section_height_with_open(section: &UiTreeSectionNode, metrics: &TreeRowMetrics, open: bool) -> f32 {
     if !section.presence.visible() {
@@ -379,7 +379,7 @@ pub fn table_column_rect(row_width: f32, row_height: f32, column: usize, columns
 /// tree window observer's measurement share.
 pub fn tree_window_row_extent_px(extent: UiTreeWindowRowExtent) -> f32 {
     match extent {
-        UiTreeWindowRowExtent::Standard => semio_framework_ui_theme::metrics::TREE_ROW_HEIGHT,
+        UiTreeWindowRowExtent::Standard => semio_ui_theme::metrics::TREE_ROW_HEIGHT,
         UiTreeWindowRowExtent::CompactText => crate::chrome::SIZE_TINY * 1.5,
         UiTreeWindowRowExtent::CompactSmallControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_SMALL_UI_SPACING) as f32,
         UiTreeWindowRowExtent::CompactControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_UI_SPACING) as f32,

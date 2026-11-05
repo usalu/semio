@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileGroupCapVertic
         record: "ChangedPileGroupCapVertical",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cap vertical load V_d of the pile group", "Pfahlgruppe: Vertikallast Kopfplatte V_d ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cap vertical load V_d of the pile group", "Pfahlgruppe: Vertikallast Kopfplatte V_d ändern")
     }
 }
 

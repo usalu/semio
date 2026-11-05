@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "clear", entity: "fenestration", kind: "clear-fenestration-glazing-construction", record: "ClearedFenestrationGlazingConstruction" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Clear fenestration {} glazing construction", self.id.0), &format!("Verglasungsaufbau von Fenster {} entfernen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Clear fenestration {} glazing construction", self.id.0), &format!("Verglasungsaufbau von Fenster {} entfernen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

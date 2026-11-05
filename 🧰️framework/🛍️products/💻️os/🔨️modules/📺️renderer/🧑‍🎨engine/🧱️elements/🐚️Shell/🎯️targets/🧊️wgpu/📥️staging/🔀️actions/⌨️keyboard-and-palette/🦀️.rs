@@ -75,7 +75,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         let claimed = self.docs.session.as_ref().filter(|_| self.plugins.host_config().is_some()).map(|session| session.app.controller_id.clone());
         let is_app_leaf = self.docs.session.as_ref().is_some_and(|session| flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().any(|leaf| leaf.id() == tab_id));
         if let Some(controller_id) = claimed.filter(|_| is_app_leaf) {
-            self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": tab_id }) }).await?;
+            self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "tabId": tab_id }) }).await?;
             return Ok(());
         }
         self.dock.toggle_anchor_tab(anchor, tab_id);

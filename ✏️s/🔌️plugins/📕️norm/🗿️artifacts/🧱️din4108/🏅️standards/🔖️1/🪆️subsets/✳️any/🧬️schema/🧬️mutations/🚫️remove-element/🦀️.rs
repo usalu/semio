@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for RemoveElement where Op:
         record: "RemovedElement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove envelope element", "Hüllbauteil entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove envelope element", "Hüllbauteil entfernen")
     }
 }
 

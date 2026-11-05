@@ -7,7 +7,7 @@
 //! packet's own report for the tradeoff).
 
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -58,7 +58,7 @@ fn world_instances_json(document: &SemioTableSnapshot) -> String {
 /// 👁️ Pure `SemioTableSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioTableSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &SemioTableSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(vec![semio_framework_pack_json::object([
         ("id".to_string(), semio_framework_pack_json::Value::from(SEMIO_TABLE_VIEW_FALLBACK_MESH_KIND)),
         ("data".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&mesh_from_kind(SEMIO_TABLE_VIEW_FALLBACK_MESH_KIND)))),

@@ -28,7 +28,7 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use super::number::Projection;
 use super::evaluation::{project_expression,reconstruct_expression,project_coordinates as coords,reconstruct_coordinates as read_coords};
 use super::reader::{boolean,full_unsigned,high,low,ordinal,signed_integer,unsigned,Reader};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 fn location(value:DwgBlockParameterBaseLocation)->&'static str{match value{DwgBlockParameterBaseLocation::StartPoint=>"start_point",DwgBlockParameterBaseLocation::Midpoint=>"midpoint"}}
 fn read_location(value:&str)->Result<DwgBlockParameterBaseLocation,ValueError>{match value{"start_point"=>Ok(DwgBlockParameterBaseLocation::StartPoint),"midpoint"=>Ok(DwgBlockParameterBaseLocation::Midpoint),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG block parameter base location is unknown"))}}

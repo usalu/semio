@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberSlsLimitQp w
         record: "ChangedMemberSlsLimitQp",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change SLS criterion C_d, quasi-permanent of the member", "Bauteil: GZG-Kriterium C_d, quasi-ständig ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change SLS criterion C_d, quasi-permanent of the member", "Bauteil: GZG-Kriterium C_d, quasi-ständig ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

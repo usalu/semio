@@ -20,12 +20,12 @@ use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dPart,
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::os_store::document_materialize::create_document_envelope;
 
-    let mut store = puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
+    let mut store = puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-    semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity))).expect("apply");
+    semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity))).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
+    ::semio_framework_async::poll::resolve_ready(semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
     close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests
@@ -116,7 +116,7 @@ async fn window_kind_actions_scope_transform_to_3d_only() {
     let definition = create_puzzle5d_app();
     let resolve = |window_id: &str| -> Vec<String> {
         let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
-        semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
+        semio_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
     };
     let board = resolve(board2d::WINDOW_KIND_ID);
     let world = resolve(world3d::WINDOW_KIND_ID);
@@ -242,7 +242,7 @@ async fn add_part_kind_materializes_the_declared_kind_default() {
     let result = dispatch(&mut app, "addPartKind", None, None).expect("addPartKind");
     assert!(result.mutations.is_empty(), "a Migrated verb's admission carries no mutations of its own");
     let declaration = declared_actions(&create_puzzle5d_app()).into_iter().find(|action| action.id == "addPartKind").expect("addPartKind is declared").kind;
-    assert_eq!(declaration, semio_framework_plugin::ActionKind::Mutation, "addPartKind is declared a Mutation");
+    assert_eq!(declaration, semio_plugin::ActionKind::Mutation, "addPartKind is declared a Mutation");
     assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
     let projection = projection_of(&app);
     let kind = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("partKind")).and_then(Value::as_str);
@@ -336,7 +336,7 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
 /// `WindowEngagementControl` on the HUD and never a window rail group — for both the 2D and 3D windows.
 #[semio_framework_async_macros::async_test]
 async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_controls() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("admitted host axis");
     let fill_runtime = Puzzle5dRuntime { fill_count: 3, ..Default::default() };
     let fill_scene = Puzzle5dScene { document: default_document(), runtime: fill_runtime, active_utility: fill_tool::TOOL_ID.into(), interaction: Default::default() };
     let tool_measures = fill_tool::measures(&fill_scene, labels, None);
@@ -361,7 +361,7 @@ async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_cont
 /// pin must not come back anywhere on the path from runtime default to rendered tool measure.
 #[semio_framework_async_macros::async_test]
 async fn fill_count_entry_is_unbounded_and_defaults_to_one_hundred() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("admitted host axis");
     assert_eq!(PUZZLE5D_DEFAULT_FILL_COUNT, 100);
     assert_eq!(Puzzle5dRuntime::default().fill_count, 100);
     assert_eq!(Puzzle5dConfig::default().fill_count, 100);
@@ -398,7 +398,7 @@ async fn fill_is_registered_as_a_mode_tool_and_no_longer_as_a_utility() {
 /// verb no arm implements is a dead promise (the defect 3d still carries with `pick`/`rectangle`/`lasso`).
 #[semio_framework_async_macros::async_test]
 async fn engagement_placeholder_advertises_exactly_the_parsed_verbs() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("admitted host axis");
     let scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into(), interaction: Default::default() };
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
         let hud = edit::puzzle5d_engagement(&scene, window, labels, None);
@@ -426,16 +426,16 @@ async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
 }
 
 /// 🧾️ The applied history rows one dispatch upserted that carry document ops.
-fn edit_rows(result: &semio_framework_plugin::InvocationResult) -> Vec<semio_framework::kernel::HistoryEntry> {
+fn edit_rows(result: &semio_plugin::InvocationResult) -> Vec<semio_framework::kernel::HistoryEntry> {
     result.history_patch.iter().flat_map(|patch| patch.upserts.iter()).filter(|entry| entry.applied && !entry.op_lines.is_empty()).cloned().collect()
 }
 
 fn english(entry: &semio_framework::kernel::HistoryEntry) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
+    entry.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string()
 }
 
 fn german(entry: &semio_framework::kernel::HistoryEntry) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
+    entry.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_string()
 }
 
 /// 📍️ One part's `(flat x, flat y, world origin)`.

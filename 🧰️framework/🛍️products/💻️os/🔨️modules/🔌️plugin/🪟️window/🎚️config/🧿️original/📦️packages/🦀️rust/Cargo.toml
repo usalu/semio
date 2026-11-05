@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-plugin-window-config-original"
+name = "semio-plugin-window-config-original"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,25 +22,25 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-store-text-io={path = "../../../../../../🏪️store/🚪️io/📦️packages/🦀️rust"}
+semio-os-store-text-io={path = "../../../../../../🏪️store/🚪️io/📦️packages/🦀️rust"}
 semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-plugin-window-config-mutation = { path = "../../../📬️mutation/📦️packages/🦀️rust" }
-semio-framework-plugin-window-config-registry = { path = "../../../🗂️registry/📦️packages/🦀️rust" }
-semio-framework-plugin-window-config-replace = { path = "../../../🧬️preparation/🔁️replace/📦️packages/🦀️rust" }
-semio-framework-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-plugin-window-config-mutation = { path = "../../../📬️mutation/📦️packages/🦀️rust" }
+semio-plugin-window-config-registry = { path = "../../../🗂️registry/📦️packages/🦀️rust" }
+semio-plugin-window-config-replace = { path = "../../../🧬️preparation/🔁️replace/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-retirement-queue = { path = "../../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-os-store-codec-registry = { path = "../../../../../../🏪️store/📦️codec/📦️packages/🦀️rust" }
-semio-framework-os-store-operation-wire = { path = "../../../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
-semio-framework-plugin-window-config = { path = "../../../📦️packages/🦀️rust" }
+semio-os-store-codec-registry = { path = "../../../../../../🏪️store/📦️codec/📦️packages/🦀️rust" }
+semio-os-store-operation-wire = { path = "../../../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
+semio-plugin-window-config = { path = "../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

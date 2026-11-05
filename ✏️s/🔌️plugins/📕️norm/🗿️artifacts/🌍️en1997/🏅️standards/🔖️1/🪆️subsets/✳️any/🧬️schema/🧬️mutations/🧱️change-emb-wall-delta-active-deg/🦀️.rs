@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeEmbWallDeltaActive
         record: "ChangedEmbWallDeltaActiveDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Active wall friction δ_a of the embedded wall", "Eingespannte Wand: Wandreibung aktiv δ_a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Active wall friction δ_a of the embedded wall", "Eingespannte Wand: Wandreibung aktiv δ_a ändern")
     }
 }
 

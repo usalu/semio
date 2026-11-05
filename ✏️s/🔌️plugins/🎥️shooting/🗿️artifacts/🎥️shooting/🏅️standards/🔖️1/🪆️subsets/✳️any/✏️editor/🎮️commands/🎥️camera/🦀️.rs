@@ -10,7 +10,7 @@ use crate::mutations::create_saved_camera::CreateSavedCamera;
 use crate::mutations::replace_shot_camera::ReplaceShotCamera;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::{ShootingCamera, ShootingSavedCamera, ShootingSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetShotCamera

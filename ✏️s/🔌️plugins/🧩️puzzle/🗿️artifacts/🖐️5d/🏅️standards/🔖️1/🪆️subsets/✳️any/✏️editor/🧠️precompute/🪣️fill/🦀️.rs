@@ -14,10 +14,10 @@ use crate::editor::puzzle5d::precompute::editor_part;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
 use crate::editor::puzzle5d::entities::Puzzle5dDocument;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::ToolRunJob;
-use semio_framework_plugin::ToolRunJobRequest;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::ToolRunJob;
+use semio_plugin::ToolRunJobRequest;
 use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill3d;
 use {semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::change_target_volume_hidden, semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::change_target_volume_locked, semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object, semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::create_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::delete_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::move_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::rotate_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::scale_target_volume, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
 

@@ -1,7 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` region mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 #[path = "../../🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🏢️infills-the-upper-6cc520/🦀️.rs"]
 mod create_region_infills_the_upper_storey_bay_with_a_concrete_panel;
 #[path = "../../🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/📐️denies-two-point-99954a/🦀️.rs"]

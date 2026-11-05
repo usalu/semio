@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{artifact::{Cell, RowWriter}, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{artifact::{Cell, RowWriter}, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned;
 
 fn number(value: usize) -> Result<i64,ValueError> { i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string())) }
@@ -33,7 +33,7 @@ fn value_reference(nodes:&[(&str,i64)],id:&str,out:&mut RowWriter<'_,'_>)->Resul
 pub fn visit_rows(snapshot:&SemioValueSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.check_rows(snapshot.nodes.len().checked_add(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio value row overflow"))?)?;
  let mut nodes=out.allocate_frontier(snapshot.nodes.len())?;for(ordinal,node)in snapshot.nodes.iter().enumerate(){out.checkpoint()?;nodes.push((node.id.value.as_str(),number(ordinal+1)?));}
- out.sort_frontier(&mut nodes,|a,b,c|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,SqliteSnapshotPhase::ProjectSnapshot,c))?;
+ out.sort_frontier(&mut nodes,|a,b,c|semio_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,SqliteSnapshotPhase::ProjectSnapshot,c))?;
  for pair in nodes.windows(2){if out.compare_text(pair[0].0,pair[1].0)?==std::cmp::Ordering::Equal{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio value node identifier"))}}
  let root=project_value_tree(&snapshot.root,VALUE_TABLES,Some(&nodes),out)?;out.insert_key("semio_value_document",1,&[Cell::Text(&snapshot.schema),Cell::Integer(root)])?;
  for(ordinal,node)in snapshot.nodes.iter().enumerate(){let value=project_value_tree(&node.value,VALUE_TABLES,Some(&nodes),out)?;out.insert_key("semio_value_node",number(ordinal+1)?,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&node.id.value),Cell::Integer(value)])?;}Ok(())
@@ -59,17 +59,17 @@ pub fn project_value_tree(value: &SemioValue, tables: ValueSqliteTables, nodes: 
 impl ArtifactSqliteSnapshotHost for SemioValueSnapshot {
 fn retire_sqlite_snapshot(self){drop(Owned::new(self));}
 
-fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
-fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
+fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
 
-fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
+fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_os_kernel::io_schema::IoOutcome<()>,ValueError>{
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
 if dialect.artifact_kind!="s.stdio.semio"||dialect.standard!="v1"||(dialect.subset!="*"&&dialect.subset!="value"){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned snapshot dialect differs from its dedicated semantic subset"));}
 let row=database.table("semio_value_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
-control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
+control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_os_kernel::io_schema::IoError::from_value_error)}
 
     
     

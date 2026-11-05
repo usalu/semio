@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberStrainRateSh
         record: "ChangedMemberStrainRateShift",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Strain-rate shift ΔT_ε̇ of the member", "Bauteil: Dehnratenanteil ΔT_ε̇ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Strain-rate shift ΔT_ε̇ of the member", "Bauteil: Dehnratenanteil ΔT_ε̇ ändern")
     }
 }
 

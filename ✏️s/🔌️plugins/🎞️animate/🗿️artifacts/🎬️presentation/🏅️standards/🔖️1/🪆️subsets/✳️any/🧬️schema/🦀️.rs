@@ -87,7 +87,7 @@ pub fn presentation_artifact_schema_descriptor() -> semio_framework_schema_regis
 /// `PresentationComposer` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §2) — the
 /// generic construction/mutation-application path every trivial subset (no custom analysis/
 /// composition logic beyond ordinary `Mutation`/`MutationDiff` algebra) now uses, mirroring `🎬️sequence`'s identical shape.
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::PresentationSnapshot, crate::PresentationMutation>;
+pub type Construction = semio_plugin::app::SnapshotBuilder<crate::PresentationSnapshot, crate::PresentationMutation>;
 //#endregion 🏗️Construction
 
 //#region 🔖️Error

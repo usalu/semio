@@ -4,12 +4,12 @@ use semio_framework_schema_registry::FacetLeaves;
 use semio_framework_schema_registry::SchemaExport;
 use semio_framework_schema_registry::ScopeSchemaExports;
 use semio_framework_schema_registry::register_scope_schema_exports as register_exports;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use serde::Deserialize;
 use serde::Serialize;
-use semio_framework_ui_declaration::IconName;
+use semio_ui_declaration::IconName;
 
 #[path = "👆️gesture/🦀️.rs"]
 pub mod gesture;
@@ -47,7 +47,7 @@ pub struct InteractionDefinition {
 
 impl InteractionDefinition {
     /// 🪞️ Projects this declaration down to the label/icon-free `InteractionOutline` `validate_state`
-    /// consumes — `semio-framework-os-kernel` cannot name `InteractionDefinition` itself (see this
+    /// consumes — `semio-os-kernel` cannot name `InteractionDefinition` itself (see this
     /// file's header comment), so callers build one of these per declared domain before validating.
     pub async fn outline(&self) -> InteractionOutline {
         InteractionOutline { id: self.id.clone(), granularity_ids: self.granularities.iter().map(|granularity| granularity.id.clone()).collect(), selection: self.selection.clone() }

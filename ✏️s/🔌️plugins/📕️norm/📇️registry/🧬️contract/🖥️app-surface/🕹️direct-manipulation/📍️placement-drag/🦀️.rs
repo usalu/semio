@@ -107,13 +107,13 @@ where
 }
 
 /// 📤️ [`resolve_placed_fields`] as ONE emit: the release of a drag is one undo step, rows inserted and leaves set together.
-pub fn handle_placed_fields<D, M, F>(document: &D, writes: &[FieldWrite], standing: &dyn Fn(&str) -> Option<Placement>, resolve: F) -> Result<semio_framework_plugin::Emit<M, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault>
+pub fn handle_placed_fields<D, M, F>(document: &D, writes: &[FieldWrite], standing: &dyn Fn(&str) -> Option<Placement>, resolve: F) -> Result<semio_plugin::Emit<M, semio_plugin::NoConfigMutation>, semio_plugin::Fault>
 where
     D: Clone + ToValue,
     M: protocol::Mutation<D> + protocol::ColdMutation<D> + semio_framework_value::retirement::RetireOwned,
     F: FnMut(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
-    let mutations = resolve_placed_fields(document, writes, standing, resolve).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.edit-unresolved"), error))?;
+    let mutations = resolve_placed_fields(document, writes, standing, resolve).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("norm.edit-unresolved"), error))?;
     crate::commit_snapshot_fields(mutations)
 }
 

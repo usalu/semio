@@ -1,30 +1,30 @@
 //! 🎼️ Staged slice of the `group` band of the mounted artifact instance: its `instance-history` members (WP6 step S0 of the instance family).
 //!
 //! 🤝️ The instance's private child group publication and mounted command log turns.
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework::Fault;
-use semio_framework_plugin_publication_mounted::command_mounted::MountedCommandPrune;
+use semio_plugin_publication_mounted::command_mounted::MountedCommandPrune;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::MemberFactory;
 use store::SpaceMember;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::history_components::CommandHistory;
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::Mutation;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_retirement_fault, plugin_turn_admitted};
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_os_kernel as store;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_retirement_fault, plugin_turn_admitted};
+use semio_ui_contract::*;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_os_kernel as store;
 
 impl<A: ArtifactApp> CommandHistory<A> {
     pub fn command_prune_requested(&self) -> bool { self.command_prune_generation != self.command_prune_processed }

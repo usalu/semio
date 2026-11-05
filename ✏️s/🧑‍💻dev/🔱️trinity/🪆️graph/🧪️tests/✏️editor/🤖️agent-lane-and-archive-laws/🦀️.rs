@@ -14,28 +14,28 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
     let mut original_context=original_caller.context();
     let cx=&mut original_context;
 
-    use semio_framework_plugin::artifact_app_laws::{declared_verb_agent_divergences, declared_verb_probe, declared_verb_staged_wrote_document, declared_verb_wrote_document, probe_agent_lane, DeclaredVerbOutcome};
+    use semio_plugin::artifact_app_laws::{declared_verb_agent_divergences, declared_verb_probe, declared_verb_staged_wrote_document, declared_verb_wrote_document, probe_agent_lane, DeclaredVerbOutcome};
     let definition = create_trinity_jack_app();
     let patch = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "patchNodes").expect("declared");
     let node_ids = patch.args.iter().find(|arg| arg.id == "nodeIds").expect("nodeIds");
     assert!(!node_ids.required, "the rail may leave nodeIds empty to act on the selection");
-    let schema = node_ids.json_schema(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
+    let schema = node_ids.json_schema(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En);
     let items = schema.get("items").expect("nodeIds is a list");
     assert_eq!(
-        (schema.get("type").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-format").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-entity-kind").and_then(semio_framework_plugin::DslValue::as_str)),
+        (schema.get("type").and_then(semio_plugin::DslValue::as_str), items.get("x-semio-format").and_then(semio_plugin::DslValue::as_str), items.get("x-semio-entity-kind").and_then(semio_plugin::DslValue::as_str)),
         (Some("array"), Some("entityId"), Some("ast/node"))
     );
     let first = jack::standards::v1::subsets::any::schema::snapshot::jack_working_scene(&SemioJackComposition::initial_snapshot()).expect("curated example scene").nodes[0].id.clone();
     let named = probe_agent_lane::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(
         create_trinity_jack_app,
         Some(&format!(r#"{{"verbs":{{"patchNodes":{{"nodeIds":["{first}"],"field":"name","value":"Agent Named"}}}}}}"#)),
-        &["patchNodes"],semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        &["patchNodes"],semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
     let probe = declared_verb_probe(&named, "patchNodes");
     assert!(declared_verb_wrote_document(probe.agent.as_ref().expect("patchNodes is agent-facing")), "the agent's preview renames the named node: {:?}", probe.agent);
     assert!(declared_verb_staged_wrote_document(probe), "the shell renames the named node too");
-    let unnamed = probe_agent_lane::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(create_trinity_jack_app, Some(r#"{"verbs":{"patchNodes":{"field":"name","value":"Agent Unnamed"}}}"#), &["patchNodes"], semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let unnamed = probe_agent_lane::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(create_trinity_jack_app, Some(r#"{"verbs":{"patchNodes":{"field":"name","value":"Agent Unnamed"}}}"#), &["patchNodes"], semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     match declared_verb_probe(&unnamed, "patchNodes").agent.as_ref() {
         Some(DeclaredVerbOutcome::Refused { code, .. }) => assert_eq!(code, "app.command.targets-required"),
         other => panic!("an agent naming no node is refused by name: {other:?}"),
@@ -48,20 +48,20 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
 }
 //#endregion 🤖️AgentLaneLaws
 
-semio_framework_plugin::history_edit_acceptance_law!("trinity", super::super::TrinityJackPlayApp, || semio_framework_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("trinity", super::super::TrinityJackPlayApp, || semio_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
 
-semio_framework_plugin::composed_reload_law!("trinity", super::super::TrinityJackPlayApp, || semio_framework_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::composed_reload_law!("trinity", super::super::TrinityJackPlayApp, || semio_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
 
-semio_framework_plugin::composed_child_history_law!("trinity", super::super::TrinityJackPlayApp, || semio_framework_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, [("patchNodes", r#"{"nodeIds":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1"],"field":"name","value":"Renamed core"}"#)]);
+semio_plugin::composed_child_history_law!("trinity", super::super::TrinityJackPlayApp, || semio_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, [("patchNodes", r#"{"nodeIds":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1"],"field":"name","value":"Renamed core"}"#)]);
 
 /// 📦️ A real edited registered Jack document restores its exact parent, histories and rich member bytes.
 #[semio_framework_async_macros::async_test]
 async fn foreign_carriers_restore_the_edited_registered_rich_document(){
- use semio_framework_plugin::PluginApp;
+ use semio_plugin::PluginApp;
  let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
  let mut app=new_app().await;let first=node_id_at(&app,0).await;
  dispatch_rail(&mut app,"patchNodes",&[("nodeIds",&first),("field","name"),("value","Original rich archive")],cx).await.unwrap();
- semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::TextEdit{text:"MATCH (n) RETURN n".into()}, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), cx).await.unwrap();settle(&mut app,cx).await;
+ semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::TextEdit{text:"MATCH (n) RETURN n".into()}, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), cx).await.unwrap();settle(&mut app,cx).await;
  let original=PluginApp::document_archive(&app.app).await.unwrap();assert!(!original.members.is_empty());assert!(!original.parent_spr.is_empty());
  let original_bytes=store::channel::encode_document_archive_bytes(&original).unwrap();
  for format in 0..2{

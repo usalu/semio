@@ -3,7 +3,7 @@
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::constants_and_io::gis2d_window_action;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Option
 pub const GIS2D_RENDER_MODE_MEASURE_ID: &str = "gis2d-play-window.render-mode";

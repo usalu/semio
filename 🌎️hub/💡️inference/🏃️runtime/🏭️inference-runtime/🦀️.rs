@@ -143,11 +143,11 @@ impl HubInferenceRuntimeV1 {
         let run = self.proposals.infer(base.pack.as_slice(), job_id, &inference_budget(), &mut |completed| {
             if let Err(error) = control.checkpoint(completed) {
                 failure = Some(error.into());
-                return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
+                return Err(semio_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
             }
             if let Err(error) = checkpoint(completed, WORK_UNIT_LIMIT) {
                 failure = Some(error);
-                return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
+                return Err(semio_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
             }
             Ok(())
         });

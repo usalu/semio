@@ -9,14 +9,14 @@ use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 #[allow(unused_imports)]
 use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::animate::commands::add_tile::*;
 use crate::editor::animate::commands::{delete_selection, delete_tile, patch_tile_crops, rename_tiles};
 use crate::editor::animate::unit_tests::context::{dispatch, presentation_app, presentation_app_with_registry};
 use crate::editor::animate::PresentationCommand;
-use semio_framework_plugin::artifact_app_laws::meta;
+use semio_plugin::artifact_app_laws::meta;
 
 async fn seed_2x2(app: &mut crate::editor::animate::unit_tests::context::PresentationApp) {
     dispatch(app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
@@ -35,7 +35,7 @@ async fn add_delete_and_rename_tile_round_trip_through_operations() {
 
 #[semio_framework_async_macros::async_test]
 async fn patch_tile_crop_clamps_and_is_reversible() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = presentation_app().await;
     crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::AddTile(AddTile { crop: None })).await;
     let tile_id = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
@@ -52,7 +52,7 @@ async fn patch_tile_crop_clamps_and_is_reversible() {
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_removes_only_the_selected_tile() {
     use crate::editor::animate::support::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};
-    use semio_framework_plugin::{PluginApp, INTERACTION_SELECT_ACTION_ID};
+    use semio_plugin::{PluginApp, INTERACTION_SELECT_ACTION_ID};
     let mut app = presentation_app_with_registry().await;
     seed_2x2(&mut app).await;
     let first_id = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
@@ -66,7 +66,7 @@ async fn delete_selection_removes_only_the_selected_tile() {
         ("merge".to_string(), semio_framework_value::DslValue::String("replace".into())),
         ("method".to_string(), semio_framework_value::DslValue::String("pick".into())),
     ]);
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("select");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("select");
     crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::DeleteSelection(delete_selection::DeleteSelection {})).await;
     assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 3, "only the selected tile is removed");
 }
@@ -122,9 +122,9 @@ async fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
 /// not cloned into `WindowKindDefinition::actions`, which holds only a window's OWN declarations.
 #[semio_framework_async_macros::async_test]
 async fn app_manifest_declares_expected_operations() {
-    use semio_framework_plugin::ActionKind;
+    use semio_plugin::ActionKind;
     let definition = crate::editor::animate::create_animate_presentation_app();
-    let actions: Vec<&semio_framework_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
+    let actions: Vec<&semio_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
     let operation_ids: Vec<&str> = actions.iter().filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
     for expected in ["addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops"] {
         assert!(operation_ids.contains(&expected), "missing declared operation {expected}");

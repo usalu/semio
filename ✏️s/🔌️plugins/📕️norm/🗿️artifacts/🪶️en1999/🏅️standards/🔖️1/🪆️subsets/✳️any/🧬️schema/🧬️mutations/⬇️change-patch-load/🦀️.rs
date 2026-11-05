@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangePatchLoad where Op
         record: "ChangedPatchLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Transverse force F_Ed of the web patch load", "Stegeinzellast: Querkraft F_Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Transverse force F_Ed of the web patch load", "Stegeinzellast: Querkraft F_Ed ändern")
     }
 }
 

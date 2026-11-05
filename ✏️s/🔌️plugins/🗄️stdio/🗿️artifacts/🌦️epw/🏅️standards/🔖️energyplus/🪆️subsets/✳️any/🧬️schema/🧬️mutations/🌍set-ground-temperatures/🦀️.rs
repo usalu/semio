@@ -14,8 +14,8 @@ pub struct SetGroundTemperatures {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetGroundTemperatures {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "ground-temperatures", kind: "set-ground-temperatures", record: "SetGroundTemperatures" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set ground temperatures", "Bodentemperaturen setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set ground temperatures", "Bodentemperaturen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

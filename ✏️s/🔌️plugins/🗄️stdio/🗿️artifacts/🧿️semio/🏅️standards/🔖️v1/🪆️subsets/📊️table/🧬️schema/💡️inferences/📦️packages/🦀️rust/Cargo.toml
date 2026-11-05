@@ -16,7 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
@@ -30,6 +30,6 @@ semio-s-artifact-stdio-semio-table-model = { workspace = true }
 semio-s-artifact-stdio-semio-table-statistics = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 serde_json = { workspace = true }

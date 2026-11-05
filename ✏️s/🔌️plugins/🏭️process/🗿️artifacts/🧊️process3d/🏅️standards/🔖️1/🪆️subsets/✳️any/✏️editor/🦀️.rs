@@ -12,9 +12,9 @@
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `ArtifactEditor::handle`.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[path = "."]
@@ -42,55 +42,55 @@ use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::C
 use semio_framework::kernel::Effect;
 use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::AppDefinition;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactKindSpec;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::AppDefinition;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactKindSpec;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::Menu;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::OsMediaCapability;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::Menu;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::OsMediaCapability;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
@@ -124,7 +124,7 @@ use world::{world_face_drag_end, world_pointer_down};
 //#endregion 🔖️Commands
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `Process3dPlayApp::Command` — the SOLE dispatch surface for process3d's own behavior, assembled
     /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`) and the `dsl` wire keyword (the kebab `#[dsl(key = ..)]` the codec uses) — copied
@@ -174,7 +174,7 @@ pub struct Process3dPlayApp;
 /// 🖱️ The one context-menu implementation both `ArtifactEditor` entry points share — the destructive
 /// `removeSelectedStep` row exists only for a non-empty `"geometry"` selection, so a right-click on
 /// empty space never offers a verb that would silently no-op in `remove_selected_step::handle`.
-fn process3d_context_menu_items(registry: &AppActionRegistry, view_state: &semio_framework_plugin::ViewModel, selected_ids: &[String]) -> Vec<ContextMenuItemSpec> {
+fn process3d_context_menu_items(registry: &AppActionRegistry, view_state: &semio_plugin::ViewModel, selected_ids: &[String]) -> Vec<ContextMenuItemSpec> {
     let menu = Menu::of(registry, view_state).action("addStep");
     let menu = if selected_ids.is_empty() { menu } else { menu.destructive("removeSelectedStep") };
     menu.separator().action("undo").action("redo").build()
@@ -191,7 +191,7 @@ use store_preparation::*;
 //#region 🧾️ProofCatalogs
 struct Process3dBoundedProofs;
 impl Process3dBoundedProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Process3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.process.process3d@1/*#editor",
@@ -230,7 +230,7 @@ impl Process3dBoundedProofs {
 
 struct Process3dResumableProofs;
 impl Process3dResumableProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Process3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.process.process3d@1/*#editor",
@@ -316,15 +316,15 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_with(internal_action("setStepEnabled", LocalizedLabel::native("Set Step Enabled", "Schrittaktivierung festlegen"), ActionKind::Mutation))
             .action_with(internal_action("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::Mutation, "mouse-pointer") })
-            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerDown", semio_plugin::CapabilityAudience::Input)
             .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Mutation))
-            .action_audience("worldFaceDragEnd", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldFaceDragEnd", semio_plugin::CapabilityAudience::Input)
             .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::View))
             .action_with(internal_action("stepCursor", LocalizedLabel::native("Step Cursor", "Cursor schrittweise bewegen"), ActionKind::View))
             .action_with(internal_action("stepCursorBack", LocalizedLabel::native("Step Cursor Back", "Cursor zurück"), ActionKind::View))
             .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::View))
             .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::View))
-            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementSubmit", semio_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
@@ -420,33 +420,33 @@ pub fn create_process3d_app() -> AppDefinition {
 /// fields copied verbatim), plus the two workflow ports: `geometry:in` (Many, unrequired — accepts
 /// upstream geometry producers, e.g. cad/lowpoly) and `brep:out` (Many, unrequired, `kind_id:
 /// "3d.process"` — reusing the artifact kind already declared, never a second `.artifact_kind(...)` call).
-pub fn process3d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn process3d_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
         ports: vec![
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "geometry:in".into(),
                 label: "Geometry".into(),
-                direction: semio_framework_plugin::MediaPortDirection::In,
+                direction: semio_plugin::MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
                 kind_id: None,
                 required: false,
-                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+                multiplicity: semio_plugin::PortMultiplicity::Many,
             },
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "brep:out".into(),
                 label: "Brep".into(),
-                direction: semio_framework_plugin::MediaPortDirection::Out,
+                direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
                 kind_id: Some("3d.process".into()),
                 required: false,
-                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+                multiplicity: semio_plugin::PortMultiplicity::Many,
             },
         ],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.process".into(), name: "3D Process".into(), dimension: "3d".into(), component_kind: "process3d".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "3d.process".into(), name: "3D Process".into(), dimension: "3d".into(), component_kind: "process3d".into() },
     }
 }
 //#endregion 🔖️Io

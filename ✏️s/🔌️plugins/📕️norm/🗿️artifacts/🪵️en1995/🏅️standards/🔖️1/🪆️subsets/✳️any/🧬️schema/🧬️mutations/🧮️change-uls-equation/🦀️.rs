@@ -11,7 +11,7 @@ pub struct ChangeUlsEquation { pub new_value: UlsEquation }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeUlsEquation where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_uls_equation::ChangeUlsEquation> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "uls-equation", kind: "change-uls-equation", record: "ChangedUlsEquation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change ULS combination equation to {}", equation_designation(self.new_value)), &format!("GZT-Kombinationsgleichung auf {} ändern", equation_designation(self.new_value))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change ULS combination equation to {}", equation_designation(self.new_value)), &format!("GZT-Kombinationsgleichung auf {} ändern", equation_designation(self.new_value))) }
     fn target(&self) -> Vec<String> { vec![equation_designation(self.new_value).to_owned()] }
 }
 

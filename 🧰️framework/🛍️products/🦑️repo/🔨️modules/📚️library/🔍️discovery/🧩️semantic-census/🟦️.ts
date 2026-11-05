@@ -123,7 +123,7 @@ interface SemanticResolverIndex {
   readonly tsPaths: readonly { readonly root: string; readonly pattern: string; readonly targets: readonly string[] }[];
 }
 
-const SEMANTIC_SKIP_DIRS = new Set(["node_modules", "target", "dist", ".git", ".nx", ".cache", "vendor", "pkg", "storybook-static", "temp"]);
+const SEMANTIC_SKIP_DIRS = new Set(["node_modules", "target", "dist", ".git", ".nx", ".cache", ".r", "vendor", "pkg", "storybook-static", "temp"]);
 
 const SEMANTIC_NON_PRODUCTION_SEGMENTS = new Set(["🧪️tests", "tests", "test", "__tests__", "📚️examples", "🧪️examples", "examples", "fixtures", "🧫️fixtures", "🤖️generated"]);
 

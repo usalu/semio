@@ -17,9 +17,9 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-catalog = { path = "../../../../🗂️catalog/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-document-records = { path = "../../../../../🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }

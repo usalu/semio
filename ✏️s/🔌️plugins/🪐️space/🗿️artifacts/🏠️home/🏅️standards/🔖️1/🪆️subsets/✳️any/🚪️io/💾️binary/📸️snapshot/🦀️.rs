@@ -29,8 +29,8 @@ impl pack::snapshot::ArtifactPack for SHomeSnapshot {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SHomeSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SHomeSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
 }
@@ -45,14 +45,14 @@ pub const S_HOME_DOCUMENT_SCHEMA: &str = "s.home";
 //#region 🧩️ArtifactItems3
 pub mod artifact_items_3 {
 use crate::{S_HOME_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ OS artifact kind for this document.
 pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "space.shome".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("S Home", "S-Start"),
+        label: semio_ui_locale::LocalizedLabel::native("S Home", "S-Start"),
         source_format: S_HOME_DOCUMENT_SCHEMA.into(),
         component_kind: "home".into(),
         dimension: "data".into(),

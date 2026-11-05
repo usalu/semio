@@ -2,13 +2,13 @@
 
 mod grid {
     use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-    use semio_framework_plugin::WindowMeasure;
+    use semio_plugin::WindowMeasure;
     #[allow(unused_imports)]
     use crate::editor::flow::terminology::FlowPlayLabels;
     #[allow(unused_imports)]
     use crate::editor::flow::editor_vocabulary::FLOW_PLAY_APP_ID;
     #[allow(unused_imports)]
-    use semio_framework_plugin::ActionDescriptor;
+    use semio_plugin::ActionDescriptor;
     use crate::editor::flow::modes::edit::windows::main::options::grid::*;
     use crate::editor::flow::terminology::flow_play_labels;
 
@@ -17,7 +17,7 @@ mod grid {
     #[semio_framework_async_macros::async_test]
     async fn the_factor_slider_range_matches_the_command_handler_clamp() {
         let config = FlowMainWindowConfig::default();
-        match measure(&config, flow_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))) {
+        match measure(&config, flow_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))) {
             WindowMeasure::Group { children, .. } => {
                 let slider = children.iter().find(|child| matches!(child, WindowMeasure::Slider { id, .. } if id == "flow-play-measures.grid-factor")).expect("factor slider");
                 assert!(matches!(slider, WindowMeasure::Slider { min, max, .. } if *min == 0.5 && *max == 50.0));
@@ -31,7 +31,7 @@ mod grid {
 mod lod {
     use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
     use flow::FLOW_LOD_MODE_AUTOMATIC;
-    use semio_framework_plugin::WindowMeasure;
+    use semio_plugin::WindowMeasure;
     #[allow(unused_imports)]
     use crate::editor::flow::terminology::FlowPlayLabels;
     #[allow(unused_imports)]
@@ -39,7 +39,7 @@ mod lod {
     #[allow(unused_imports)]
     use flow::dag::dag_lod_scale_json;
     #[allow(unused_imports)]
-    use semio_framework_plugin::{ActionDescriptor, MeasureSelectItem};
+    use semio_plugin::{ActionDescriptor, MeasureSelectItem};
     #[allow(unused_imports)]
     use serde_json::Value;
     use crate::editor::flow::modes::edit::windows::main::options::lod::*;
@@ -48,7 +48,7 @@ mod lod {
     #[semio_framework_async_macros::async_test]
     async fn the_select_always_offers_the_automatic_entry_first() {
         let config = FlowMainWindowConfig::default();
-        match measure(&config, flow_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))) {
+        match measure(&config, flow_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))) {
             WindowMeasure::Select { items, value, .. } => {
                 assert_eq!(items.first().expect("automatic entry").id, FLOW_LOD_MODE_AUTOMATIC);
                 assert_eq!(value, FLOW_LOD_MODE_AUTOMATIC);
@@ -61,13 +61,13 @@ mod lod {
 
 mod proximity {
     use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-    use semio_framework_plugin::WindowMeasure;
+    use semio_plugin::WindowMeasure;
     #[allow(unused_imports)]
     use crate::editor::flow::terminology::FlowPlayLabels;
     #[allow(unused_imports)]
     use crate::editor::flow::editor_vocabulary::FLOW_PLAY_APP_ID;
     #[allow(unused_imports)]
-    use semio_framework_plugin::ActionDescriptor;
+    use semio_plugin::ActionDescriptor;
     use crate::editor::flow::modes::edit::windows::main::options::proximity::*;
     use crate::editor::flow::terminology::flow_play_labels;
     use crate::schema::FLOW_DEFAULT_PROXIMITY_DISTANCE;
@@ -75,7 +75,7 @@ mod proximity {
     #[semio_framework_async_macros::async_test]
     async fn the_slider_range_brackets_the_default_distance() {
         let config = FlowMainWindowConfig::default();
-        match measure(&config, flow_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))) {
+        match measure(&config, flow_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))) {
             WindowMeasure::Slider { value, min, max, .. } => {
                 assert_eq!(value, FLOW_DEFAULT_PROXIMITY_DISTANCE);
                 assert!(min <= value && value <= max, "default {value} must sit inside {min}..={max}");

@@ -1,7 +1,7 @@
 //! 🧲️ Original native decode and encode owners the stdio artifact tests run their operations under.
 
 use super::{NATIVE_MAXIMUM_BYTES, original_grant};
-use semio_framework_os_kernel::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use semio_os_kernel::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::NativeEncodeControl;

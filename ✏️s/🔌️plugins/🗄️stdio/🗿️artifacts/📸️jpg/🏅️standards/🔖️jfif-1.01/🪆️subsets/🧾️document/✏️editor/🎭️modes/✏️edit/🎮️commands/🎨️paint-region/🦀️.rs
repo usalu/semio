@@ -1,5 +1,7 @@
 //! 🎨️ Checked JPEG region painting with retained progress and cancellation.
 
+pub use crate::editor::paint_region_declaration::{action, ACTION_ID, MAXIMUM_INTERACTIVE_ROWS};
+
 use super::{JpgAnyEditCommand, JpgAnyEditor};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
@@ -8,7 +10,6 @@ use super::main::MAXIMUM_INTERACTIVE_ROWS;
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot as Snapshot;
 use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation as Mutation;
 
-pub const ACTION_ID: &str = "paint-region";
 pub const TOOL_IDS: &[&str] = &[ACTION_ID];
 pub const PAYLOAD_SCHEMA: &str = "s.stdio.jpg.any.command.paint-region.v1";
 pub const MAXIMUM_RAW_BYTES: usize = 8_192;

@@ -1,7 +1,7 @@
 //! 🎞️ Event sourced history reprojection: the remote transition adoption, the reprojection, the live prefix state, the replayed projection adoption, the convergence checkpoints and the prefix snapshot ring. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -17,13 +17,13 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️EventSourcedHistory
     /// 📥️ Records admitted remote transitions in the log and materializes the projection they fold to — adopting `replayed`
     /// when it is their finished Report replay — or records none of them.
-    pub(super) async fn adopt_remote_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, transitions: Vec<semio_framework_os_spr::MutationEnvelope>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    pub(super) async fn adopt_remote_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, transitions: Vec<semio_os_spr::MutationEnvelope>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let admitted: Vec<MutationId> = transitions.iter().map(|envelope| envelope.mutation_id.clone()).collect();
         for envelope in transitions {
             self.insert_transition(store_log, envelope);
@@ -36,7 +36,7 @@ where
     }
 
     /// 📎️ Records `envelope` in the transition log at its `(hlc, id)` position.
-    pub fn insert_transition(&mut self, store_log: &mut StoreLog<P, Mutation>, envelope: semio_framework_os_spr::MutationEnvelope) {
+    pub fn insert_transition(&mut self, store_log: &mut StoreLog<P, Mutation>, envelope: semio_os_spr::MutationEnvelope) {
         self.fold_frontier = None;
         let key = envelope.timestamp.cmp_key();
         let next=store_log.envelope.transitions.iter().position(|known|(known.timestamp.cmp_key(),known.mutation_id.0.as_str())>=(key,envelope.mutation_id.0.as_str())).and_then(|position|store_log.envelope.transitions.key_at(position));
@@ -48,12 +48,12 @@ where
     /// ingest converge through: the document is always the fold of its events, never a merge.
     /// Transactional: the projection is computed and every capacity its adoption needs is checked before the first fact
     /// is adopted. Answers the messages of every edit a replay re-evaluated.
-    pub async fn reproject(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    pub async fn reproject(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.reproject_now(store_log, store_owners, store_cursor)
     }
 
     /// ♻️ [`Self::reproject`]'s body, which never suspends: for the history steps that must not.
-    pub(super) fn reproject_now(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    pub(super) fn reproject_now(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.fold_frontier = None;
         let fold = store_log.fold_live_log()?;
         let replay = self.reprojection_replay(store_log, store_cursor, &fold)?;
@@ -126,7 +126,7 @@ where
     /// Synchronous: one command or ingest replays the applied history in place. A remote change under
     /// [`Self::defer_remote_replays`] and a local step under [`Self::defer_local_replays`] replay resumably instead
     /// ([`Self::step_reprojection`]).
-    fn reprojection_replay(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, fold: &semio_framework_os_spr::HistoryFold) -> Result<Option<EditReplayResult<P, Mutation>>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    fn reprojection_replay(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, fold: &semio_os_spr::HistoryFold) -> Result<Option<EditReplayResult<P, Mutation>>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         if fold.supersessions == *self.supersessions && store_log.applied_edit_ids.starts_with(&fold.applied) {
             return Ok(None);
         }
@@ -137,7 +137,7 @@ where
     /// 🚀️ Adopts an already finished Report replay of exactly the folded event log instead of replaying again — the fast path
     /// of a supersession whose replay was computed before it was authored (a dry run, or a time-travel session). A replay of
     /// another order or other effective inputs is dropped and the log is replayed as usual.
-    pub fn reproject_replayed(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, result: EditReplayResult<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    pub fn reproject_replayed(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, result: EditReplayResult<P, Mutation>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.fold_frontier = None;
         let fold = match store_log.fold_live_log() {
             Ok(fold) => fold,
@@ -157,7 +157,7 @@ where
     /// 🧷️ Adopts `fold` and the replay it needed ([`Self::reprojection_replay`]): a tail-only removal re-projects through
     /// the tail snapshot or the nearest retained prefix, a replay publishes its projection, inverses and messages. Nothing
     /// is adopted unless [`Self::preflight_reprojection`] admits all of it.
-    fn adopt_reprojection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, fold: semio_framework_os_spr::HistoryFold, replay: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    fn adopt_reprojection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, fold: semio_os_spr::HistoryFold, replay: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let prefix = match &replay {
             None if fold.applied != *store_log.applied_edit_ids => Some(self.live_prefix_state(store_log, store_cursor, fold.applied.len())?),
             _ => None,
@@ -187,7 +187,7 @@ where
             }
             return Err(error);
         }
-        let semio_framework_os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
+        let semio_os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
         let replayed = match (replay, prefix) {
             (Some(result), _) => self.adopt_replayed_projection(store_log, store_owners, store_cursor, applied, supersessions, result)?,
             (None, Some((current, recorded))) => {
@@ -206,7 +206,7 @@ where
 
     /// 🪄️ Publishes a finished Report replay of `applied` under `supersessions`. A replay that only appended one edit to the
     /// live tail keeps the live head as that edit's tail snapshot (an undo answers from it again).
-    fn adopt_replayed_projection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, applied: Vec<String>, supersessions: EffectiveSupersessions, mut result: EditReplayResult<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    fn adopt_replayed_projection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, applied: Vec<String>, supersessions: EffectiveSupersessions, mut result: EditReplayResult<P, Mutation>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> {
         let from = result.from;
         let appended = from == store_log.applied_edit_ids.len() && from + 1 == applied.len() && store_log.applied_edit_ids.is_prefix_of_slice(&applied) && supersessions == *self.supersessions && !self.current_detached;
         let tail = appended.then(|| (applied[from].clone(), Arc::clone(&*self.current)));
@@ -303,7 +303,7 @@ where
     /// 📣️ Publishes a finished Report replay: every replayed edit gets its rebased inverse and its messages (bounded by
     /// the replay itself, [`bound_edit_messages`]), `tail` becomes the tail snapshot and the reached projection becomes
     /// `current`.
-    fn adopt_report_replay(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, mut result: EditReplayResult<P, Mutation>, tail: Option<(String, Arc<P>)>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    fn adopt_report_replay(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, mut result: EditReplayResult<P, Mutation>, tail: Option<(String, Arc<P>)>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> {
         let taken = store_cursor.take_report_replay(store_log, &mut result);
         let retired = store_owners.retire_replay_result(result);
         let (replayed, state) = taken?;
@@ -469,7 +469,7 @@ where
 impl<P, Mutation> StoreLive<P, Mutation>
 where
     P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: ToValue + FromValue + semio_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🧱️ Where a replay of the live order from `length` starts: the head, the tail snapshot, or the nearest retained prefix
     /// at or before `length` (exact: [`Self::prune_prefix_ring`]), else the genesis; the replay folds the rest of the prefix

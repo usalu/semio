@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAccelerogramSample
         record: "ChangeAccelerogramSamples",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ground acceleration samples in m/s² separated by blanks", "Bodenbeschleunigungswerte in m/s² durch Leerzeichen getrennt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ground acceleration samples in m/s² separated by blanks", "Bodenbeschleunigungswerte in m/s² durch Leerzeichen getrennt ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-accelerogram-samples".into()]

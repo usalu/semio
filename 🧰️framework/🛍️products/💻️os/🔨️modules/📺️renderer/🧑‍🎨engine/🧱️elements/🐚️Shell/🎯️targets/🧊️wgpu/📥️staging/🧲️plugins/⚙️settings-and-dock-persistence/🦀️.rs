@@ -13,7 +13,7 @@ impl PluginState {
             return;
         }
         for (host_id, _) in surfaces.node_graph_states.iter() {
-            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_set_catalogue_json(host_id, &self.app_catalogue_json);
+            semio_renderer_wgpu_engine_graph::node_graph::node_graph_set_catalogue_json(host_id, &self.app_catalogue_json);
         }
     }
 
@@ -59,7 +59,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub fn marketplace_roster(&self) -> Vec<String> {
         let extension_ids: Vec<&str> = self.extensions.iter().map(|entry| entry.record.extension_id.as_str()).collect();
         let mut ids: Vec<String> = self.plugins.iter().filter(|entry| !extension_ids.contains(&entry.plugin_id.as_str())).map(|entry| entry.plugin_id.clone()).collect();
-        for (_, plugin_id) in semio_framework_os_renderer_wgpu_program_bridge::plugin_artifact_kind_activations().iter() {
+        for (_, plugin_id) in semio_renderer_wgpu_program_bridge::plugin_artifact_kind_activations().iter() {
             if !ids.iter().any(|id| id.as_str() == *plugin_id) {
                 ids.push((*plugin_id).to_string());
             }

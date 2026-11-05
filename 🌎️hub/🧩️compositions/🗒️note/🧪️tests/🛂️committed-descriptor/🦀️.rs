@@ -1,6 +1,6 @@
 //! 🗒️ Committed note descriptor smoke law owned by the note composition.
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
-use semio_framework_os_run::{InMemoryBlobStore, WasmtimeNodeHost};
+use semio_os_run::{InMemoryBlobStore, WasmtimeNodeHost};
 
 /// 🧭️ Declared package workspace above `CARGO_MANIFEST_DIR`, the SAME rule `🏗️bootstrap/🦀️.rs` uses.
 fn test_repo_root() -> PathBuf {
@@ -39,7 +39,7 @@ async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
     assert!(host.app_router().owned_surface_gaps().await.is_empty(), "note's own panels leave no viewer/editor surface gap");
 }
 
-fn original_test_shard_issuer()->semio_framework_plugin_host::shard::OriginalShardIdentityIssuer{
+fn original_test_shard_issuer()->semio_plugin_host::shard::OriginalShardIdentityIssuer{
  let policy=serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).expect("original independent fixture identity policy");
- semio_framework_plugin_host::shard::native_identity_issuer(policy,|_|Box::new(|_|true))
+ semio_plugin_host::shard::native_identity_issuer(policy,|_|Box::new(|_|true))
 }

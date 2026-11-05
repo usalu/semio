@@ -53,7 +53,7 @@ impl SyncState {
                 precision: None,
                 snaps: Vec::new(),
                 on_change: ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: None },
-                on_submit: Some(ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "kind": kind }) }),
+                on_submit: Some(ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "kind": kind }) }),
                 on_abort: None,
                 on_repeat_last: None,
                 presence: UiPresence::default(),
@@ -75,9 +75,9 @@ impl SyncState {
                 id: Some("framework.sync.attach".into()),
                 icon_id: IconName::from("link"),
                 label: Label::data(shell_chrome_string("sync.attach", is_de)),
-                action: ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "kind": kind }) },
+                action: ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "kind": kind }) },
                 style: None,
-                presence: UiPresence { state: if self.sync_card_draft.trim().is_empty() { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
+                presence: UiPresence { state: if self.sync_card_draft.trim().is_empty() { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             }));
         }

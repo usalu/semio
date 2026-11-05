@@ -3,7 +3,7 @@
 use super::*;
 
 impl TerminalBackend for NativeTerminal {
-    fn width_mode(&self) -> semio_framework_ui_tui_core::text::WidthMode { semio_framework_ui_tui_core::text::WidthMode::WindowsConsole }
+    fn width_mode(&self) -> semio_ui_tui_core::text::WidthMode { semio_ui_tui_core::text::WidthMode::WindowsConsole }
 
     fn size(&self) -> io::Result<Size> {
         unsafe {

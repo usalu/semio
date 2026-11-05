@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveGroundInvestigatio
         verb: "remove", entity: "investigation", kind: "remove-ground-investigation", record: "RemovedInvestigation",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove ground investigation", "Baugrunderkundung entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove ground investigation", "Baugrunderkundung entfernen")
     }
 }
 

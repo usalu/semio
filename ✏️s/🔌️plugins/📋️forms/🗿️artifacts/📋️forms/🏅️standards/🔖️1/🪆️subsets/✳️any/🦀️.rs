@@ -5,13 +5,13 @@
 //! per-plugin convention — `grep -n "pub mod editor\b\|pub mod viewer\b" 🦀️.rs` confirms — not
 //! nested under `artifacts::forms::…`, per `📓️recipe-subset.md` §5 gotcha 1).
 
-pub fn subset<A: crate::FormsApplication>() -> semio_framework_plugin::app::declarations::SubsetDeclaration<A> {
+pub fn subset<A: crate::FormsApplication>() -> semio_plugin::app::declarations::SubsetDeclaration<A> {
     use crate::editor::forms as editor;
     use crate::standards::v1::subsets::any::{io, schema};
     use crate::viewer::forms as viewer;
     use crate::FORMS_DIALECT;
-    use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-    use semio_framework_plugin::ExampleSource;
+    use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+    use semio_plugin::ExampleSource;
     use std::sync::OnceLock;
 
     fn examples() -> &'static [ExampleSource] {

@@ -1,9 +1,9 @@
 //! ✌️ Direct add-counter-twice fixture payload and behavior.
 use super::super::{AddCounter, Counter, CounterMutation};
-use semio_framework_os_command::CompositeMutationKind;
-use semio_framework_os_command::PlanError;
-use semio_framework_os_command::Planner;
-use semio_framework_os_command::SemanticDescriptor;
+use semio_os_command::CompositeMutationKind;
+use semio_os_command::PlanError;
+use semio_os_command::Planner;
+use semio_os_command::SemanticDescriptor;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord, dsl_derive::MutationLeaf, dsl_derive::CompositeMutation, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -24,7 +24,7 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterTwice {
     }
 }
 
-impl semio_framework_os_command::ColdCompositeMutationKind<Counter, CounterMutation> for AddCounterTwice {
+impl semio_os_command::ColdCompositeMutationKind<Counter, CounterMutation> for AddCounterTwice {
     fn plan(&self, _base: &Counter, planner: &mut Planner<Counter, CounterMutation>) -> Result<(), PlanError> {
         planner.call(CounterMutation::AddCounter(AddCounter { delta: self.delta }))?;
         planner.call(CounterMutation::AddCounter(AddCounter { delta: self.delta }))

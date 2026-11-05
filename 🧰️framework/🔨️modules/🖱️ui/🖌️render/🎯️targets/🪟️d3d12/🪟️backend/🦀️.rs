@@ -26,7 +26,7 @@
 //! bookkeeping (see that file's header).
 
 #[cfg(not(target_os = "windows"))]
-compile_error!("semio-framework-ui-backend-d3d12 builds only on Windows.");
+compile_error!("semio-ui-backend-d3d12 builds only on Windows.");
 
 use crate::frame_buffers::{FrameBuffers, FrameDescriptors, GrowBuffer};
 use crate::pipelines::{Pipelines, DEPTH_STENCIL_FORMAT};

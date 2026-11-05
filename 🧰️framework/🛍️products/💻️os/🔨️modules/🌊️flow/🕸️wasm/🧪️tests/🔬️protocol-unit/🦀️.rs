@@ -188,7 +188,7 @@ fn original_flow_failure_retains_and_closes_complete_value_cause() {
                     let original_extent = owned.capacity();
                     let error = if borrowed { ValueError::literal(kind, "original borrowed refusal") } else { ValueError::new(kind, owned) }.with_retained_progress(progress);
                     let original_pointer = error.message.as_ptr();
-                    let (failure, heap) = observe(|| if through_vcs { super::flow_vcs_close_failure(semio_framework_os_flow_vcs::FlowVcsCloseFailure::from(error)) } else { super::flow_close_value_failure(error) });
+                    let (failure, heap) = observe(|| if through_vcs { super::flow_vcs_close_failure(semio_os_flow_vcs::FlowVcsCloseFailure::from(error)) } else { super::flow_close_value_failure(error) });
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                     let FlowFailureCause::Value(original) = &failure.cause else { panic!("complete original value cause") };
                     assert_eq!(original.kind, kind);

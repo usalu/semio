@@ -570,6 +570,7 @@ selected_cursor!(FlowSynapseCopy, SynapseSpec);
 selected_cursor!(FlowHostSnapshotCopy, FlowHostSnapshot);
 /// 🧬️ The Store state selects its one stable Flow snapshot projection, so staged source admission needs no captured function.
 pub trait FlowSnapshotProjection:RetireOwned+Sync+'static{fn project_snapshot(&self)->&FlowHostSnapshot;}
+impl FlowSnapshotProjection for FlowHostSnapshot{fn project_snapshot(&self)->&FlowHostSnapshot{self}}
 /// 🧳️ Failed intake preserves the unadmitted original read, its partial staged admission or its admitted copy owner.
 pub enum FlowSnapshotCopyIntakeSource<R:FlowSnapshotProjection>{Read(SnapshotRead<R>),Admission(RetainedCloneSourceAdmission<FlowHostSnapshot,SnapshotRead<R>>),Copy(FlowHostSnapshotCopy<R>)}
 impl<R:FlowSnapshotProjection> FlowHostSnapshotCopy<R>{

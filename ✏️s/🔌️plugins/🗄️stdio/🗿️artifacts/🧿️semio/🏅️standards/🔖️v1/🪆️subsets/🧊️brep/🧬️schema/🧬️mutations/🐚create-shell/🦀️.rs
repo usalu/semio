@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "shell", kind: "create-shell", record: "CreatedShell" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create shell \"{}\"", self.id), &format!("Schale \"{}\" erstellen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create shell \"{}\"", self.id), &format!("Schale \"{}\" erstellen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

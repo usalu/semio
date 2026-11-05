@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeBridgeCurveRadius 
         record: "ChangedBridgeCurveRadius",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change horizontal deck radius (0 = straight deck)", "Deckradius ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change horizontal deck radius (0 = straight deck)", "Deckradius ändern")
     }
 }
 

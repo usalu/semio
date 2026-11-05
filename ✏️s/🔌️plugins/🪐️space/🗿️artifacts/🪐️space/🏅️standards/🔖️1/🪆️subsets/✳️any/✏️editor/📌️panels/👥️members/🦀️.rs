@@ -5,15 +5,15 @@
 
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
-use semio_framework_ui_contract::Label;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
+use semio_ui_contract::Label;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ui_node_list;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
 
 pub const SPACE_INDEX_BODY_MEMBERS: &str = "s.space.members";
 pub const SPACE_INDEX_PANEL_MEMBERS: &str = "s-space-members";
@@ -26,23 +26,23 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn action_button(id: &str, label: impl TryInto<Label>, icon: &str, action: &str, args: semio_framework_plugin::UiValue) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn action_button(id: &str, label: impl TryInto<Label>, icon: &str, action: &str, args: semio_plugin::UiValue) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut item = tree_item_with_action(id, label, None, space_index_action(action, Some(args))?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
-        props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.member.icon", "fixed member-row icon admission failed"))?);
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
+        props.icon = Some(semio_plugin::UiText::try_from_str(icon).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.member.icon", "fixed member-row icon admission failed"))?);
     }
     Ok(item)
 }
 
-fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::config::SpaceIndexMember) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::config::SpaceIndexMember) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let row_id = format!("member:{}", member.user_id);
     let label = if member.display_name.is_empty() { member.email.clone() } else { format!("{} ({})", member.display_name, member.email) };
     let _ = config;
     let args = crate::editor::space_index::ui_value_map([("userId", crate::editor::space_index::ui_value_text(&member.user_id)?)])?;
     let mut item = tree_item_with_action(row_id, label, None, space_index_action("removeMember", Some(args))?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
-        props.description = Some(semio_framework_plugin::UiText::try_from_str(&member.role).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.member.role", "fixed member role admission failed"))?);
-        props.icon = Some(semio_framework_plugin::UiText::try_from_str("user").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.member.icon", "fixed member-row icon admission failed"))?);
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
+        props.description = Some(semio_plugin::UiText::try_from_str(&member.role).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.member.role", "fixed member role admission failed"))?);
+        props.icon = Some(semio_plugin::UiText::try_from_str("user").ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.member.icon", "fixed member-row icon admission failed"))?);
     }
     Ok(item)
 }
@@ -60,14 +60,14 @@ fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::co
 /// precedent) — a real facet, not a one-line fix, deferred rather than half-built at this effort
 /// level. Every tree-content string below is English-only until that lands; every STATIC manifest
 /// string (panel tab, dialogs, action labels) is already en+de.
-pub fn render(config: &SpaceIndexConfig, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(config: &SpaceIndexConfig, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let visibility_action = if config.visibility == "public" {
         action_button("s-space-visibility", "Make Private", "lock", "setVisibility", crate::editor::space_index::ui_value_map([("visibility", crate::editor::space_index::ui_value_text("private")?)])?)
     } else {
         action_button("s-space-visibility", "Make Public", "globe", "setVisibility", crate::editor::space_index::ui_value_map([("visibility", crate::editor::space_index::ui_value_text("public")?)])?)
     };
     let action_items = ui_node_list([
-        action_button("s-space-invite", "Invite Member", "user-plus", "requestInviteMember", semio_framework_plugin::UiValue::Map(Default::default())),
+        action_button("s-space-invite", "Invite Member", "user-plus", "requestInviteMember", semio_plugin::UiValue::Map(Default::default())),
         action_button(
             "s-space-share",
             "Copy Invite Link",
@@ -77,8 +77,8 @@ pub fn render(config: &SpaceIndexConfig, windows: &TreeWindows<'_>) -> semio_fra
         ),
         visibility_action,
     ])?;
-    let actions_label = Label::try_from("Actions").map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.member.actions-label", "fixed member actions label admission failed"))?;
-    let section_label = Label::try_from("Members").map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.member.section-label", "fixed member section label admission failed"))?;
+    let actions_label = Label::try_from("Actions").map_err(|_| semio_plugin::PluginAssemblyError::new("ui.member.actions-label", "fixed member actions label admission failed"))?;
+    let section_label = Label::try_from("Members").map_err(|_| semio_plugin::PluginAssemblyError::new("ui.member.section-label", "fixed member section label admission failed"))?;
     PanelTreeBuilder::new(SPACE_INDEX_PANEL_MEMBERS)?
         .section(SPACE_INDEX_ACTIONS_SECTION, Some(actions_label), true, action_items)?
         .window_section_or_placeholder(windows, SPACE_INDEX_PANEL_MEMBERS, Some(section_label), true, &config.members, |member| member_row(config, member), "No members yet")?

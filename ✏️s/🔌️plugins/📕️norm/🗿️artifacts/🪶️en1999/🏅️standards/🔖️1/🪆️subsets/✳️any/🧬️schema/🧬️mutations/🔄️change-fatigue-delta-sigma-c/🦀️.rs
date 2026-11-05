@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeFatigueDeltaSigmaC
         record: "ChangedFatigueDeltaSigmaC",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Detail category strength Δσ_C of the fatigue detail", "Ermüdungsdetail: Ermüdungsfestigkeit des Kerbfalls Δσ_C ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Detail category strength Δσ_C of the fatigue detail", "Ermüdungsdetail: Ermüdungsfestigkeit des Kerbfalls Δσ_C ändern")
     }
 }
 

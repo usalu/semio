@@ -7,21 +7,21 @@ use crate::is_transparent_shooting_background;
 use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::{parse, Value};
-use semio_framework_plugin::world3d_mesh_id_from_url;
-use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementPossible;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::World3dScene;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_selection_json;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementPossible;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
+use semio_plugin::World3dScene;
+use semio_plugin::WorldSunConfig;
 use std::collections::HashSet;
 
 fn vec3(v: [f64; 3]) -> Value {
@@ -224,10 +224,10 @@ fn shooting_fit_json(cfg: &ShootingConfig) -> String {
     json!({ "enabled": cfg.center_model, "revision": cfg.fit_revision, "padding": 1.25 }).to_string()
 }
 
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, active_utility: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_plugin::scene_surface(
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, active_utility: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(
         SHOOTING_PLAY_SURFACE_SCENE,
-        semio_framework_ui_contract::SurfaceKind::World3d,
+        semio_ui_contract::SurfaceKind::World3d,
         &World3dScene {
             environment_json: Some(shooting_environment_json(snapshot)),
             frame_json: crate::active_shot(snapshot).map(shooting_frame_json),

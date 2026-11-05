@@ -1,0 +1,60 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "source",
+      "windowId",
+      "windowKindId",
+      "registryGeneration",
+      "pending"
+    ],
+    "properties": {
+      "source": {
+        "type": "string"
+      },
+      "windowId": {
+        "type": "string"
+      },
+      "windowKindId": {
+        "type": "string"
+      },
+      "registryGeneration": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "pending": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "neuronId",
+          "extensionId",
+          "operatorId",
+          "nodeHash",
+          "inputJson"
+        ],
+        "properties": {
+          "neuronId": {
+            "type": "string"
+          },
+          "extensionId": {
+            "type": "string"
+          },
+          "operatorId": {
+            "type": "string"
+          },
+          "nodeHash": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "inputJson": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

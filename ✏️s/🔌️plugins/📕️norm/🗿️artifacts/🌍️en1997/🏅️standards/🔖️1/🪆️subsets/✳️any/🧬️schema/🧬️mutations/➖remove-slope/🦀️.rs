@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveSlope where Op: pr
         verb: "remove", entity: "slope", kind: "remove-slope", record: "RemovedSlope",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove slope", "Böschung entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove slope", "Böschung entfernen")
     }
 }
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmShearStrM
         record: "ChangeDiaphragmShearStrMpa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design in-plane shear strength of the diaphragm", "Bemessungswert der Scheibenschubfestigkeit ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design in-plane shear strength of the diaphragm", "Bemessungswert der Scheibenschubfestigkeit ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-shear-str-mpa".into()]

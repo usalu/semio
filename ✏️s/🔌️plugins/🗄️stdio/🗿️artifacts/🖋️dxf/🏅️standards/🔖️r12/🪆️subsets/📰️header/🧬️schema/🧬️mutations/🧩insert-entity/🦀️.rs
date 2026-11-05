@@ -14,8 +14,8 @@ pub struct InsertEntity {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "entity", kind: "insert-entity", record: "InsertEntity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert entity", "Entität einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert entity", "Entität einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

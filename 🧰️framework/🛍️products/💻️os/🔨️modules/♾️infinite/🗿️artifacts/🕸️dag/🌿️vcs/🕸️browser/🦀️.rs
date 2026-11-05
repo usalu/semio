@@ -2,7 +2,7 @@
     use crate::{create_dag_store,empty_dag_document,ActorId,DagStore};
     use std::cell::RefCell;
     use wasm_bindgen::prelude::*;
-    use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority, Observer};
+    use semio_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority, Observer};
     use semio_framework_value::native_encoding::NativeEncodeProgress;
 
     /// 🪪️ Fixed identity-authoring ceiling every browser dispatch admits before it owns any authored bytes.

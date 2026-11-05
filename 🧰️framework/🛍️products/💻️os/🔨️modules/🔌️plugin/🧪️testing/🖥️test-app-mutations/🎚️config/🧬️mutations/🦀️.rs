@@ -37,7 +37,7 @@ impl protocol::OpBinary for TestConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(TestConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(TestConfigMutation);
 impl store::snapshot_clone_preparation::ConfigApplyMutation<crate::test_app_mutation_fixture::config::TestConfig> for TestConfigMutation {
     fn exchange(self, post: &mut crate::test_app_mutation_fixture::config::TestConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::ChangeTestConfigSelection(change) = self;

@@ -1,6 +1,6 @@
 //! 🌉️ Gateway runtime, entrypoint and facade.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[global_allocator]
@@ -33,25 +33,25 @@ mod root_quick;
 mod workspace_quick;
 
 pub mod agent_credential {
-    pub use semio_framework_os_mcp_foundation::agent_credential::{CredentialExchangeProtocolV1, CredentialExchangeRequestV1, DelegatedCredentialV1, DelegatedSessionGrantV1, read_delegated_credential_file_v1};
+    pub use semio_os_mcp_foundation::agent_credential::{CredentialExchangeProtocolV1, CredentialExchangeRequestV1, DelegatedCredentialV1, DelegatedSessionGrantV1, read_delegated_credential_file_v1};
 }
 pub mod catalog {
-    pub use semio_framework_os_mcp_catalog::catalog::{CatalogSource, compile};
+    pub use semio_os_mcp_catalog::catalog::{CatalogSource, compile};
 }
 pub mod protocol {
-    pub use semio_framework_os_mcp_wire::protocol::{InMemoryToolRegistry, ToolRegistry};
+    pub use semio_os_mcp_wire::protocol::{InMemoryToolRegistry, ToolRegistry};
 }
 pub mod inference {
-    pub use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceApprovalRequestV1, HubInferenceEventPageV1, HubInferenceSubmitRequestV1, InferenceHubMethodV1, InferenceHubRequestV1, InferenceHubResponseV1, InferenceHubTransport, InferenceHubTransportErrorV1, InferenceRouteErrorV1, approve_hub_inference_job, cancel_hub_inference_job, read_hub_inference_job_events, submit_hub_inference_job, undo_hub_inference_approval};
-    pub use semio_framework_os_mcp_inference_hub::service::{RemoteInferenceProtocolV1, install_remote_inference_protocols_v1};
+    pub use semio_os_mcp_inference_hub::hub_wire::{HubInferenceApprovalRequestV1, HubInferenceEventPageV1, HubInferenceSubmitRequestV1, InferenceHubMethodV1, InferenceHubRequestV1, InferenceHubResponseV1, InferenceHubTransport, InferenceHubTransportErrorV1, InferenceRouteErrorV1, approve_hub_inference_job, cancel_hub_inference_job, read_hub_inference_job_events, submit_hub_inference_job, undo_hub_inference_approval};
+    pub use semio_os_mcp_inference_hub::service::{RemoteInferenceProtocolV1, install_remote_inference_protocols_v1};
 }
 pub mod workspace {
-    pub use semio_framework_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace};
-    pub use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{load_package_descriptor};
+    pub use semio_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace};
+    pub use semio_os_mcp_catalog::plugin_paths_and_descriptor::{load_package_descriptor};
     pub mod remote {
-        pub use semio_framework_os_mcp_hub_remote::remote::{exchange_delegated_session_v1};
+        pub use semio_os_mcp_hub_remote::remote::{exchange_delegated_session_v1};
     }
 }
-pub use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-pub use semio_framework_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace};
+pub use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+pub use semio_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace};
 pub use crate::entrypoint::run_mcp_entrypoint;

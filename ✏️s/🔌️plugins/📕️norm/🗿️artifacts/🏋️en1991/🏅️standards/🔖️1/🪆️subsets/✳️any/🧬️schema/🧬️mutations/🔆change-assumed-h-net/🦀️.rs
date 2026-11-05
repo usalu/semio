@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedHNet where 
         record: "ChangedAssumedHNet",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed net heat flux", "Angenommenen Netto-Wärmestrom ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed net heat flux", "Angenommenen Netto-Wärmestrom ändern")
     }
 }
 

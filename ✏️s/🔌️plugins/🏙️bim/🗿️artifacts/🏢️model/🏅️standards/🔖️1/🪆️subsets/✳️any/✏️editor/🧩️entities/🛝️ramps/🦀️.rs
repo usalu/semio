@@ -13,7 +13,7 @@ use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schem
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{HostSide, Point2, RailingHost, Vertex};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::plugin_app_close_prelude::InputKind;
 use semio_s_artifact_bim_model_mut_any_91::standards::v1::subsets::any::schema::mutations::set_ramp;
 
 /// 📏️ How far a new ramp stands from the previous ones of its storey, in metres.

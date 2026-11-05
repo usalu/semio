@@ -1,6 +1,6 @@
 /// 🚦️ Dispatch cursors, frame deferred and maintenance: the native entrypoint driver, the manifest edges, the dispatch cursors, the frame deferred cursor and cancel, the catalogue terminal pair, the maintenance authority, refusal cell and test owner.
 
-use semio_framework_os_renderer_wgpu_runtime_mailbox::FrameOriginalRecovery;
+use semio_renderer_wgpu_runtime_mailbox::FrameOriginalRecovery;
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn presenter_restores_only_the_checked_out_interaction_and_retains_its_deferred_cursor() {
@@ -105,7 +105,7 @@ fn runtime_dispatch_cursor_merges_retained_pointer_by_input_generation() {
     let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), ..Default::default() };
     events.discrete[0] = Some(scroll);
     events.discrete[1] = Some(key);
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
     let mut cursor = RuntimeDispatchCursor::new(events,original);
 
     assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::Scroll { .. })));
@@ -122,7 +122,7 @@ fn runtime_dispatch_cursor_retires_one_owned_event_per_step() {
     for (index, slot) in events.discrete.iter_mut().enumerate() {
         *slot = Some(ui_host::DiscreteEvent { event: ui_render::DispatchEvent::Paste { text: "x".repeat(4096) }, generation: ui_host::InputGeneration(index as u64) });
     }
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
     let mut cursor = RuntimeDispatchCursor::new(events,original);
     for _ in 0..cursor.events.discrete.len() {
         assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
@@ -169,7 +169,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
         for row in pair {
             batch
                 .action("writer", row["action"].as_str().unwrap(), 128, |builder| {
-                    builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
+                    builder.set_receipt(semio_ui_action::ActionQueueReceipt { source: semio_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
                         token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
                         member: row["member"].as_u64().unwrap() as u8,
                         abort_correlation_on_error: row["abort"].as_bool().unwrap(),
@@ -189,7 +189,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
     let mut batch = interaction.input.reserve_actions(2, 256).unwrap();
     for member in 0..2 {
         batch
-            .action("writer", "textEdit", 128, |builder| builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor, token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0 }))
+            .action("writer", "textEdit", 128, |builder| builder.set_receipt(semio_ui_action::ActionQueueReceipt { source: semio_ui_action::ActionQueueReceiptSource::CanvasTextEditor, token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0 }))
             .unwrap();
     }
     batch.publish().unwrap();
@@ -205,7 +205,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
         assert!(queue.reserve_interaction());
         queue.finish(returned_completion(141, RuntimeApply::ResumeFrameDeferred { interaction: Some(returned), cursor: Some(FrameDeferredCursor::new(handback, false, false, false, false, 141, semio_framework_job::root_cancel_token())) }));
     }
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(!caller.turn(|cx|runtime.close_input_step(cx)).unwrap());
     assert!(runtime.try_lock().unwrap().interaction_available());
     for step in 0..64 {
@@ -296,9 +296,9 @@ fn a_fault_after_staging_leave_retires_the_source_drop_before_a_later_single_dis
     input.reserve_action("fixture", "later", 16).unwrap().publish().unwrap();
     let mut actions = FrameActionOwners::default();
     assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending));
-    input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+    input.record_action_fault(semio_ui_action::BoundedActionFault::ByteCredits);
     let mut faulted = false;
-    for _ in 0..semio_framework_ui_action::ACTION_BATCH_ITEM_CAPACITY * 2 + 2 {
+    for _ in 0..semio_ui_action::ACTION_BATCH_ITEM_CAPACITY * 2 + 2 {
         match transfer_frame_input_action(&mut input, &mut actions) {
             Err("bounded frame input action batch source faulted") => {
                 faulted = true;
@@ -400,7 +400,7 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         assert!(action_owners.try_push(ActionDescriptor { controller_id: format!("owner-{index}"), action: "close".to_string(), args: None }).is_ok());
     }
     let interaction = AppInteractionState {
-        shell: ShellState::new(Vec::new(), "maintenance-owner".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
+        shell: ShellState::new(Vec::new(), "maintenance-owner".to_string(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native),
         input: InputState::default(),
         theme: Theme::default(),
         theme_dark: false,
@@ -408,7 +408,7 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         last_pointer_y: 0.0,
         pointer_down: false,
         pointer_button: 0,
-        pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
+        pointer_capture: semio_renderer_wgpu_shell_input::PointerCapture::default(),
         modifiers: PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,

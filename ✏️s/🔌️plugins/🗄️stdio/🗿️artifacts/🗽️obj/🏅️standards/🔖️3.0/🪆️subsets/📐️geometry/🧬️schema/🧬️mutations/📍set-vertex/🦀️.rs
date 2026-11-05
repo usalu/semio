@@ -22,8 +22,8 @@ pub struct SetVertex {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetVertex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "vertex", kind: "set-vertex", record: "SetVertex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set vertex", "Vertex setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set vertex", "Vertex setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

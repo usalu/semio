@@ -5,7 +5,7 @@ use semio_s_artifact_cad_cad_model::{geometry::centroid_from_host_snapshot_primi
 use semio_s_artifact_cad_cad_model::{snapshot::CadCamera, snapshot::CadNode, snapshot::CadPaneId, snapshot::CadProjectionDsl, snapshot::CadReference, snapshot::CadSnapshot, snapshot::CAD_PLAY_DOCUMENT_SCHEMA};
 #[cfg(test)] use crate::{CadWorkingScene};
 use semio_framework::parse_contributions;
-use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
+use semio_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
 use semio_framework_3d_brep_engine::mesh_data_from_mesh_transfer;
 use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle}, semio_framework_3d_brep_representation::contract::MeshTransfer};
 use std::sync::{OnceLock};

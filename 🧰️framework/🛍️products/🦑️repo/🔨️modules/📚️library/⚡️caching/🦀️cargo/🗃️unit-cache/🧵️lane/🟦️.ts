@@ -11,7 +11,7 @@ export type LaneOwnerV1=Readonly<{session:string;agent:string}>;
 export function lanePathsV1(root:string,id:string){
  if(!idPattern.test(id))throw Error("Invalid Cargo lane identifier");
  const base=join(root,layout.lanes,id);
- return Object.freeze({id,base,target:join(base,layout.target),build:join(base,layout.build),live:join(base,layout.live),stamps:join(base,layout.stamps),metadata:join(base,layout.metadata),size:join(base,layout.size)});
+ return Object.freeze({id,base,target:join(base,layout.target),build:base,live:join(base,layout.live),stamps:join(base,layout.stamps),metadata:join(base,layout.metadata),size:join(base,layout.size)});
 }
 
 /** 🔑️ The affinity key of a crate set: the same sorted, de-duplicated names always give the same key, an empty set (a whole-workspace command) gives `*`. */
@@ -70,7 +70,7 @@ function treeBytes(path:string,limit:{files:number}):number{
 /** 📁️ The incremental-compilation directories of a lane's build directory (`<profile>/incremental` and `<triple>/<profile>/incremental`). */
 export function incrementalDirectoriesV1(build:string):string[]{
  const found:string[]=[];
- const walk=(directory:string,depth:number)=>{let entries;try{entries=readdirSync(directory,{withFileTypes:true});}catch{return;}for(const entry of entries){if(!entry.isDirectory())continue;const path=join(directory,entry.name);if(entry.name==="incremental")found.push(path);else if(depth<2)walk(path,depth+1);}};
+ const walk=(directory:string,depth:number)=>{let entries;try{entries=readdirSync(directory,{withFileTypes:true});}catch{return;}for(const entry of entries){if(!entry.isDirectory()||depth===0&&[layout.target,layout.live,layout.stamps].includes(entry.name))continue;const path=join(directory,entry.name);if(entry.name==="incremental")found.push(path);else if(depth<2)walk(path,depth+1);}};
  walk(build,0);return found;
 }
 

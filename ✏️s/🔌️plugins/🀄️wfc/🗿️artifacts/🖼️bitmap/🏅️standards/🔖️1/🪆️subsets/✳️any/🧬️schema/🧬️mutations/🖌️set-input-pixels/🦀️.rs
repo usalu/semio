@@ -36,8 +36,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "input-pixels", kind: "set-input-pixels", record: "SetInputPixels" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Paint {}×{} at ({}, {})", self.width, self.height, self.x, self.y), &format!("{}×{} an ({}, {}) malen", self.width, self.height, self.x, self.y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Paint {}×{} at ({}, {})", self.width, self.height, self.x, self.y), &format!("{}×{} an ({}, {}) malen", self.width, self.height, self.x, self.y))
     }
 }
 

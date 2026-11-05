@@ -7,7 +7,7 @@ use crate::editor::flow::commands::{add_widget, connect_media_ports, context_men
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::{compiled, main};
 #[allow(unused_imports)]
@@ -39,81 +39,81 @@ use semio_framework_artifact_flow_flow::{CameraJson, Widget};
 #[allow(unused_imports)]
 use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
+use semio_os_infinite_directed_presentation::DagDrawLod;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
+use semio_plugin::app::{ChildEmitPreparation, InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppActionRegistry;
+use semio_plugin::AppActionRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppDefinition;
+use semio_plugin::AppDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::CommandDefinition;
+use semio_plugin::CommandDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuRequest;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use serde_json::json;
 #[allow(unused_imports)]
@@ -166,7 +166,7 @@ fn flow_contributions_records_original_registry_receipts_before_yield_or_refusal
 fn flow_contributions_retires_only_its_original_alias_before_terminal_work(){
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🎟️contributions/🔣️.json")).unwrap();
     for policy in fixture["aliasPolicies"].as_array().unwrap(){
-        let shared=semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(FlowInstanceOperationOwner::new()));
+        let shared=semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(FlowInstanceOperationOwner::new()));
         let source=shared.with_mut::<FlowInstanceOperationOwner,_>(|owner|Ok(owner as *mut _ as usize)).unwrap();
         let mut work=FlowContributionsWork::new(shared.clone());work.begin_close();
         let incoming=grant(policy);let denied=RetainedCloneGrant{maximum_items:0,..incoming};
@@ -180,7 +180,7 @@ fn flow_contributions_retires_only_its_original_alias_before_terminal_work(){
         assert!(work.terminal_is_empty());assert_eq!(work.terminal_frame_release_bytes(),Some(std::mem::size_of::<FlowContributionsWork>()));
         shared.with_mut::<FlowInstanceOperationOwner,_>(|owner|{assert_eq!(owner as *mut _ as usize,source);Ok(())}).unwrap();
         drop(work);
-        let mut final_owner=semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(shared);
+        let mut final_owner=semio_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(shared);
         for turn in 0..1_000_000{if final_owner.terminal_is_empty(){break}assert!(turn<999_999,"actual original final instance owner stalled");crate::self_funded_close(incoming,|cx|Ok(final_owner.step(cx,incoming).unwrap())).unwrap();}
         assert!(final_owner.terminal_is_empty());drop(final_owner);
     }

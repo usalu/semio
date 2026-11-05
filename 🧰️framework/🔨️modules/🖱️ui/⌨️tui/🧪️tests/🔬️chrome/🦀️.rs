@@ -1,17 +1,17 @@
 //! 🔬️ Window anatomy, tab strip, compact chrome, ellipsis and the navbar/footer bands (R02 R06 R08 R13 R16 R17 R23).
 
-use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
-use semio_framework_ui_tui_frame::chrome::{window_chip_layout, ChromeMode, ChromeState, FooterState, KeyHint, NavItem, NavbarState, TabKind, WindowState};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
-use semio_framework_ui_tui_core::theme::{Role, Theme};
-use semio_framework_ui_tui_core::signal::WidgetSignal;
+use semio_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_ui_tui_frame::chrome::{window_chip_layout, ChromeMode, ChromeState, FooterState, KeyHint, NavItem, NavbarState, TabKind, WindowState};
+use semio_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_ui_tui_core::theme::{Role, Theme};
+use semio_ui_tui_core::signal::WidgetSignal;
 use ui_styling::appearance::AppearanceName;
 
 #[test]
 fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
-    use semio_framework_ui_tui_frame::chrome::{WindowHit, WindowStackTabState};
-    use semio_framework_ui_tui_core::docking::WindowStackCorner;
-    use semio_framework_ui_tui_core::theme::Surface;
+    use semio_ui_tui_frame::chrome::{WindowHit, WindowStackTabState};
+    use semio_ui_tui_core::docking::WindowStackCorner;
+    use semio_ui_tui_core::theme::Surface;
     use semio_framework_pack_json::{parse, JsonMemberPolicy};
     use tiny_skia::{Paint, Pixmap, Transform};
     let fixture = parse(include_str!("../🧫️fixtures/🖼️chrome-emphasis/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
@@ -76,12 +76,12 @@ fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
 
 #[test]
 fn chrome_ancestor_emphasis_follows_descendants_and_clears_stale_lineages() {
-    use semio_framework_ui_tui_frame::chrome::shell;
-    use semio_framework_ui_tui_engine::Tui;
-    use semio_framework_ui_tui_core::event::{Event, MouseEvent, MouseKind};
-    use semio_framework_ui_tui_frame::layout::{create_default_layout, Constraint, Dimension};
-    use semio_framework_ui_tui_frame::scene::{Node, NodeContent};
-    use semio_framework_ui_tui_widgets::widget::{TabsState, WidgetState};
+    use semio_ui_tui_frame::chrome::shell;
+    use semio_ui_tui_engine::Tui;
+    use semio_ui_tui_core::event::{Event, MouseEvent, MouseKind};
+    use semio_ui_tui_frame::layout::{create_default_layout, Constraint, Dimension};
+    use semio_ui_tui_frame::scene::{Node, NodeContent};
+    use semio_ui_tui_widgets::widget::{TabsState, WidgetState};
     let theme = Theme::new(AppearanceName::Dark);
     let mut tui = Tui::new(Size { width: 80, height: 24 }, theme);
     let layout = create_default_layout(&["window".into()], "row", None, None);
@@ -173,13 +173,13 @@ fn chrome_compact_active_tab_owns_both_shared_border_cells() {
         let inactive = layout.groups[0].tabs.iter().find(|tab| tab.index != active).unwrap();
         let inactive_only = if inactive.x == tab.x + tab.interior_width + 1 { inactive.x + inactive.interior_width + 1 } else { inactive.x };
         assert_eq!(buf.get(inactive_only, 0).unwrap().fg, theme.role(Role::BorderNormal));
-        assert_eq!(buf.get(tab.x + 2, 0).unwrap().bg, theme.surface(semio_framework_ui_tui_core::theme::Surface::Window));
+        assert_eq!(buf.get(tab.x + 2, 0).unwrap().bg, theme.surface(semio_ui_tui_core::theme::Surface::Window));
     }
 }
 
 #[test]
 fn chrome_compact_hovered_inactive_tab_owns_non_active_shared_border_cells() {
-    use semio_framework_ui_tui_frame::chrome::WindowHit;
+    use semio_ui_tui_frame::chrome::WindowHit;
     let theme = Theme::new(AppearanceName::Dark);
     for active in [0, 1, 2] {
         for hovered in [0, 1, 2] {
@@ -204,7 +204,7 @@ fn chrome_compact_hovered_inactive_tab_owns_non_active_shared_border_cells() {
 
 #[test]
 fn chrome_narrow_overflow_chips_keep_independent_border_roles() {
-    use semio_framework_ui_tui_frame::chrome::WindowHit;
+    use semio_ui_tui_frame::chrome::WindowHit;
     for width in [4, 18, 30, 44] {
         for active in [0, 5, 11] {
             let mut state = many(12);
@@ -251,7 +251,7 @@ fn chrome_narrow_overflow_chips_keep_independent_border_roles() {
 
 #[test]
 fn chrome_close_and_maximize_hover_keep_active_perimeter_and_emphasize_inactive_tabs() {
-    use semio_framework_ui_tui_frame::chrome::WindowHit;
+    use semio_ui_tui_frame::chrome::WindowHit;
     for focused in [false, true] {
         for active in [0, 1] {
             let mut state = WindowState::new("host").with_stack_tabs(vec!["first".into(), "second".into()], active);
@@ -430,7 +430,7 @@ fn short_terminals_get_one_row_chrome_with_the_tabs_on_the_border() {
     state.peers = 2;
     let rect = Rect::new(0, 0, 50, 6);
     assert_eq!(window_chip_layout(&state, rect).mode, ChromeMode::Compact);
-    assert_eq!(semio_framework_ui_tui_frame::chrome::window_content_padding(&state, rect), [1, 1, 1, 1]);
+    assert_eq!(semio_ui_tui_frame::chrome::window_content_padding(&state, rect), [1, 1, 1, 1]);
     let (buf, window) = paint(state, 50, 6);
     let top = row(&buf, 0);
     assert!(top.starts_with('\u{250c}') && top.ends_with('\u{2510}'), "{top:?}");
@@ -439,7 +439,7 @@ fn short_terminals_get_one_row_chrome_with_the_tabs_on_the_border() {
     assert_eq!(row(&buf, 5).chars().next(), Some('\u{2514}'), "no bottom chrome");
     let active = top.find("tasks").unwrap();
     let theme = Theme::new(AppearanceName::Dark);
-    assert_eq!(buf.get(top[..active].chars().count() as u16, 0).unwrap().bg, theme.surface(semio_framework_ui_tui_core::theme::Surface::Window));
+    assert_eq!(buf.get(top[..active].chars().count() as u16, 0).unwrap().bg, theme.surface(semio_ui_tui_core::theme::Surface::Window));
     let dev_x = top.find("dev").unwrap() as u16;
     assert!(matches!(window.window_hit(Rect::new(0, 0, 50, 6), Pos { x: dev_x, y: 0 }), Some(WidgetSignal::WindowTabActivated(0))));
     let close = top.chars().position(|c| c == '\u{2715}').unwrap() as u16;
@@ -515,12 +515,12 @@ fn the_footer_status_keeps_a_share_of_the_row_and_cut_hints_end_in_an_ellipsis()
 
 #[test]
 fn controls_and_status_are_drawn_from_the_glyph_set_and_keep_their_columns() {
-    use semio_framework_ui_tui_core::docking::WindowStackCorner;
-    use semio_framework_ui_tui_core::theme::{GlyphSet, Status};
+    use semio_ui_tui_core::docking::WindowStackCorner;
+    use semio_ui_tui_core::theme::{GlyphSet, Status};
     let mut state = WindowState::new("host").with_stack_tab_states(
         vec![
-            semio_framework_ui_tui_frame::chrome::WindowStackTabState::new("done", WindowStackCorner::TopLeft).with_status(Some(Status::Success)),
-            semio_framework_ui_tui_frame::chrome::WindowStackTabState::new("busy", WindowStackCorner::TopLeft).with_status(Some(Status::Running)),
+            semio_ui_tui_frame::chrome::WindowStackTabState::new("done", WindowStackCorner::TopLeft).with_status(Some(Status::Success)),
+            semio_ui_tui_frame::chrome::WindowStackTabState::new("busy", WindowStackCorner::TopLeft).with_status(Some(Status::Running)),
         ],
         1,
     );

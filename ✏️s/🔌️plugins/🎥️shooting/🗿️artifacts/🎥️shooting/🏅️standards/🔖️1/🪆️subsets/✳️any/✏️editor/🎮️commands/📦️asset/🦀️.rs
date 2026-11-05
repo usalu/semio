@@ -11,7 +11,7 @@ use crate::next_shooting_id;
 use crate::{ShootingAsset, ShootingSnapshot};
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🩹️ Builds the single-field `ShootingMutation` for a `patchAsset`/`patchAssets` field write,
@@ -135,7 +135,7 @@ pub mod import_asset_request {
     pub struct ImportAssetRequest {}
 
     pub fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(108), accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false, args: None }))
+        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_plugin::RequestId(108), accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false, args: None }))
     }
 }
 //#endregion 🔖️ImportAssetRequest

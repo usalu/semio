@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertConcreteGrade wher
         record: "InsertedConcreteGrade",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert concrete grade {}", self.concrete_grade.id), &format!("Betonsorte {} einfügen", self.concrete_grade.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert concrete grade {}", self.concrete_grade.id), &format!("Betonsorte {} einfügen", self.concrete_grade.id))
     }
 }
 

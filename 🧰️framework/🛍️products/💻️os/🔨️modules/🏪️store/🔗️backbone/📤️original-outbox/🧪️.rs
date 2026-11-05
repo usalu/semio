@@ -33,7 +33,7 @@ fn original_transport_moves_original_pages_once_and_retains_both_cancel_frontier
 #[test]
 fn canonical_backbone_message_owns_original_paged_causal_bytes_and_closes_them(){
  let law:serde_json::Value=serde_json::from_str(include_str!("transfer.json")).unwrap();let pattern=law["pattern"].as_array().unwrap();let bytes:Vec<_>=(0..law["bytes"].as_u64().unwrap()as usize).map(|i|pattern[i%pattern.len()].as_u64().unwrap()as u8).collect();let payload=OriginalBackboneMessageBytes::try_from_slice(&bytes).unwrap();let pointer=payload.retained_bytes().backing_ptr(0).unwrap();let message=crate::BackboneMessage::Mutations{envelopes:payload};let crate::BackboneMessage::Mutations{envelopes}= &message else{unreachable!()};assert_eq!(envelopes.retained_bytes().backing_ptr(0).unwrap(),pointer);
- let encoded=semio_framework_os_spr::OpBinary::encode_op(&message).unwrap();assert_eq!(crate::decode_backbone_message_exact(&encoded).unwrap(),message);
+ let encoded=semio_os_spr::OpBinary::encode_op(&message).unwrap();assert_eq!(crate::decode_backbone_message_exact(&encoded).unwrap(),message);
  let mut queue=std::collections::VecDeque::new();queue.push_back(message);let mut owner=crate::backbone_retirement::ArtifactStoreBackboneRetirement::from_queue(queue);for turn in 0..10000{if semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&owner){break}let d=owner.demands().unwrap();observed(||{let step=semio_framework_value::ErasedSnapshotRetirement::close_step(&mut owner,fund(d)).result.unwrap();((),step.progress())});assert!(turn<9999);}
 }
 

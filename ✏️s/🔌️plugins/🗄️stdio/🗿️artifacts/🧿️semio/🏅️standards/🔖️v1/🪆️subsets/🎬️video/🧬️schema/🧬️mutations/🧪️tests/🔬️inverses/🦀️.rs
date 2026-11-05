@@ -1,6 +1,6 @@
 //! 🧪️ The semio video per-mutation inverse laws, over the mutation crate's public API.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 

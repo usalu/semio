@@ -4,7 +4,7 @@ use super::*;
 
 // #region gpu
 impl GpuContext {
-    pub(super) fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, scissor: Option<semio_framework_ui_draw_contract::ScissorRect>) -> Result<(), String> {
+    pub(super) fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, scissor: Option<semio_ui_draw_contract::ScissorRect>) -> Result<(), String> {
         let draw = if packet_overlay { packet.overlay().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { packet.draw() };
         if let DrawMeasureCursor::PassBackdropSnapshot { pass } = cursor {
             let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared backdrop snapshot pass cursor was stale".to_string())?;
@@ -173,7 +173,7 @@ impl GpuContext {
         self.pipelines.upload_glyph_atlas(&self.roots.queue, &atlas.pixels, atlas.width, atlas.height);
     }
 
-    pub fn upload_icon_atlas(&self, atlas: &semio_framework_ui_draw_contract::IconAtlas) {
+    pub fn upload_icon_atlas(&self, atlas: &semio_ui_draw_contract::IconAtlas) {
         self.pipelines.upload_icon_atlas(&self.roots.queue, &atlas.pixels, atlas.width, atlas.height);
     }
 

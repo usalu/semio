@@ -10,7 +10,7 @@ pub struct ChangeMemberMassKgPerM { pub member_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberMassKgPerM where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_mass_kg_per_m::ChangeMemberMassKgPerM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-massKgPerM", kind: "change-member-mass-kg-per-m", record: "ChangedMemberMassKgPerM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Linear mass of member {}", self.member_id), &format!("Längenbezogene Masse von Bauteil {} ändern", self.member_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Linear mass of member {}", self.member_id), &format!("Längenbezogene Masse von Bauteil {} ändern", self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
 

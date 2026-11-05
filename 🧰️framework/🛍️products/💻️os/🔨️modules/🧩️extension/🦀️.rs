@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use semio_framework_deflate::zip_archive::{ZipArchive, ZipArchiveError, ZipWriter};
 
-use semio_framework_os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, SemioError};
+use semio_os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, SemioError};
 
 //#region 🔖️Errors
 /// ⚠️ Failures packing, unpacking, or verifying an `.sxt` extension package.
@@ -86,8 +86,8 @@ pub const EXTENSION_PACKAGE_FORMAT: u16 = 1;
 
 //#region 🔖️Manifest
 /// 🔗️ Package-manifest-local mirror of `semio_framework::PluginDependency` — this crate
-/// (`semio-framework-os-kernel`) must never depend on `semio-framework` (contract freeze §0
-/// dependency edge law: `semio-framework` depends on `semio-framework-os-kernel`, never the
+/// (`semio-os-kernel`) must never depend on `semio-framework` (contract freeze §0
+/// dependency edge law: `semio-framework` depends on `semio-os-kernel`, never the
 /// reverse), so the `.sxt` wire shape is duplicated here byte-identically instead of imported.
 /// `version` is the exact pin's display string `=X.Y.Z` — the only form `semio_framework::VersionPin::parse`
 /// accepts at any call site that does depend on that crate (e.g. the guest `ExtensionManifest`); `from_json`

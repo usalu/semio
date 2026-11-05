@@ -8,7 +8,7 @@ use semio_s_artifact_stdio_semio_document_import::deserializers::artifacts::docx
 use semio_s_artifact_stdio_semio_document_import::deserializers::artifacts::md::v_commonmark::any::SemioDocumentFromMd;
 use semio_s_artifact_stdio_semio_document_import::deserializers::artifacts::pdf::v1_7::any::SemioDocumentFromPdf;
 use semio_s_artifact_stdio_semio_document_import::deserializers::artifacts::txt::v_utf_8::any::SemioDocumentFromTxt;
-use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
+use semio_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
 #[semio_framework_async_macros::async_test]
 async fn docx_round_trip_is_stable() {

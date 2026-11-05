@@ -93,76 +93,76 @@ use crate::editor::puzzle5d::terminology::puzzle5d_labels;
 use crate::editor::puzzle5d::terminology::puzzle5d_localized;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::window as window_ownership;
-use semio_framework_plugin::kernel::ClipboardError;
-use semio_framework_plugin::kernel::ClipboardFragment;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::kernel::PasteAnchor;
-use semio_framework_plugin::kernel::PastePlacement;
-use semio_framework_plugin::kernel::UiDirtyScope;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactPresentation;
-use semio_framework_plugin::ArtifactReservedJob;
-use semio_framework_plugin::ArtifactReservedToolInput;
-use semio_framework_plugin::ArtifactReservedToolJob;
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
-use semio_framework_plugin::ArtifactToolCompletion;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::DialogDefinition;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_plugin::InteractionWrite;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPortDirection;
-use semio_framework_plugin::MediaPortSpec;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::PortMultiplicity;
-use semio_framework_plugin::ToolRef;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::kernel::ClipboardError;
+use semio_plugin::kernel::ClipboardFragment;
+use semio_plugin::kernel::Effect;
+use semio_plugin::kernel::PasteAnchor;
+use semio_plugin::kernel::PastePlacement;
+use semio_plugin::kernel::UiDirtyScope;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::AppIo;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedToolInput;
+use semio_plugin::ArtifactReservedToolJob;
+use semio_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactToolCompletion;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Fault;
+use semio_plugin::DialogDefinition;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTarget;
+use semio_plugin::InteractionWrite;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPortDirection;
+use semio_plugin::MediaPortSpec;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::PortMultiplicity;
+use semio_plugin::ToolRef;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowMeasure;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️.rs's identical import comment (missing top-level
-// re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
+// re-export from `semio_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_job::InteractiveJob;
 use semio_framework_job::Operation;
 use semio_framework_job::StepContext;
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_pack_json::parse;
@@ -304,15 +304,15 @@ use crate::{PUZZLE_5D_SCHEMA};
 //#region 🔖️ArtifactKind
 /// 🗿️ The `5d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
 /// the artifact, not the app, owns its own identity.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "5d.puzzle".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("5D Puzzle", "5D-Puzzle"),
+        label: semio_ui_locale::LocalizedLabel::native("5D Puzzle", "5D-Puzzle"),
         source_format: "puzzle.5d".into(),
         component_kind: "puzzle5d".into(),
         dimension: "5d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Design },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Kit, form: semio_plugin::MediaForm::Design },
         schema: PUZZLE_5D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],

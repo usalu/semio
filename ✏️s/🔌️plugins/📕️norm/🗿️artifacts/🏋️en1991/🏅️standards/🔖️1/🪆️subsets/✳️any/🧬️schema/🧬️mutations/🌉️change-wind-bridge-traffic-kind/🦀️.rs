@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindBridgeTrafficK
         record: "ChangedWindBridgeTrafficKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change traffic on the deck (0 none, 1 road, 2 rail) of the bridge wind case", "Brückenwindfall: Verkehr auf dem Überbau (0 keiner, 1 Straße, 2 Schiene) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change traffic on the deck (0 none, 1 road, 2 rail) of the bridge wind case", "Brückenwindfall: Verkehr auf dem Überbau (0 keiner, 1 Straße, 2 Schiene) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

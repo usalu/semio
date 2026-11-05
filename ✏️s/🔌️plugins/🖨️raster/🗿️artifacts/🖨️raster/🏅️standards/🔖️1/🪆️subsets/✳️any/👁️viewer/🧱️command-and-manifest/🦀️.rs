@@ -23,7 +23,7 @@ impl protocol::OpBinary for RasterViewCommand {
 }
 
 //#region 🔖️Manifest
-pub fn create_raster_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_raster_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(RASTER_DIALECT)
         .document(["semio", "raster"])
         .icon_id("raster")

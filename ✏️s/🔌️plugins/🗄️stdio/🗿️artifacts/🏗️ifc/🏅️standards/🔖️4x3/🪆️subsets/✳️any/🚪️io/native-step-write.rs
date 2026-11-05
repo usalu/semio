@@ -1,6 +1,6 @@
 //! 📤 Original-owned STEP publication writes directly into the native UTF-8 artifact envelope.
 use super::{emit::IfcStepEmitCursor, snapshot, IfcSnapshot, IfcValue, IFC4X3_STEP_SCHEMA, MAX_RECORD_BYTES, MAX_SOURCE_BYTES};
-use semio_framework_os_kernel::{NativeSnapshotBodyWallet, NativeSnapshotEncodeOwner};
+use semio_os_kernel::{NativeSnapshotBodyWallet, NativeSnapshotEncodeOwner};
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress, RetireOwned, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 
@@ -102,7 +102,7 @@ pub(super) fn encode(source: &IfcSnapshot, owner: &mut NativeSnapshotEncodeOwner
         let physical = state.meter.bytes.checked_add(12 + TOKEN.len()).ok_or_else(|| limit("STEP UTF-8 artifact extent overflow"))?;
         port.body.allocate_encode_vec_into(port.native, physical, &mut state.output, 2)?;
         port.effect(size_of::<IfcStepEmitCursor>(), || state.cursor = IfcStepEmitCursor::new())?;
-        port.append(&mut state.output, &semio_framework_os_kernel::semio_format::BINARY_MAGIC)?;
+        port.append(&mut state.output, &semio_os_kernel::semio_format::BINARY_MAGIC)?;
         port.append(&mut state.output, &(TOKEN.len() as u32).to_le_bytes())?;
         port.append(&mut state.output, TOKEN)?;
         loop { let fragment = port.effect(size_of::<super::emit::Fragment>(), || state.cursor.next(source))??; let Some(fragment) = fragment else { break; }; port.append(&mut state.output, fragment.as_bytes())?; }

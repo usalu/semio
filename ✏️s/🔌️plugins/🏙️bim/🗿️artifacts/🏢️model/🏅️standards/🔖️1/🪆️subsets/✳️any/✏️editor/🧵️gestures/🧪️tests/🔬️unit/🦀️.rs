@@ -7,7 +7,7 @@ use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world;
 use semio_s_artifact_bim_model_bim::editor::bim::BimModelApp;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ColumnType, DoorType, Material, RoofType, SlabType, WindowType};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DoorLeaves, Layer, LayerFunction, MaterialCategory, Profile, Rgb, Swing};
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_framework_test_fixtures::fixture_text;
 
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::*;
@@ -66,10 +66,10 @@ async fn the_owner_closes_empty() {
     let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.clone());
     let mut context = semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     owner.advance("w1", PLAN, "wall", &mut context, &ToolEvent::Escape);
-    assert!(!semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
+    assert!(!semio_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 4 };
-    assert!(matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, grant), Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_))));
-    assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
+    assert!(matches!(semio_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, grant), Ok(semio_plugin::PluginLifecycleStep::Complete(_))));
+    assert!(semio_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
 }
 
 #[semio_framework_async_macros::async_test]

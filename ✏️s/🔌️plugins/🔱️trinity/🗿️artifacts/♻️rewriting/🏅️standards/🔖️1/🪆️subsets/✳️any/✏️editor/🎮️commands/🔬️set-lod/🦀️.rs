@@ -2,7 +2,7 @@
 
 use crate::editor::rewriting::window_config::{addressed, RewritingWindowConfigMutation, SetLodMode};
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation, ViewModel};
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation, ViewModel};
 
 pub fn set_lod_mode(value: &str, view: Option<&ViewModel>) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
     let view = view.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("trinity.rewriting.window-required"), "Rewriting LOD requires a host window context"))?;

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnBoltsMaterial 
         record: "ChangedConnBoltsMaterial",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change bolts material of the connection", "Anschluss: Schraubenwerkstoff ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change bolts material of the connection", "Anschluss: Schraubenwerkstoff ändern")
     }
 }
 

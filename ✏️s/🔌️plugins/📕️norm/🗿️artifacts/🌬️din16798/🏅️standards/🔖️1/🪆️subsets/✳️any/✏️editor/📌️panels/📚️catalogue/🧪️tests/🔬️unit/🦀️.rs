@@ -1,6 +1,6 @@
 use crate::panels::catalogue::*;
 use crate::unit_tests::context;
-use semio_framework_plugin::{TreeWindows, ViewModel};
+use semio_plugin::{TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
@@ -17,10 +17,10 @@ async fn renders_this_standards_catalogue_headline() {
 
 #[test]
 fn renders_reference_tables_with_examples() {
-    let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let windows = TreeWindows::for_body(&view, BODY_CATALOGUE);
-    let node = render(Vec::new(), semio_framework_ui_locale::Locale::En, "norm.catalogue", &windows).expect("catalogue");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project");
+    let node = render(Vec::new(), semio_ui_locale::Locale::En, "norm.catalogue", &windows).expect("catalogue");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project");
     assert!(json.contains("norm-catalogue.examples") || json.contains("Examples") || json.contains("Beispiele") || json.contains("catalogue"), "{json}");
     let tables = reference_tables();
     if tables.is_empty() {

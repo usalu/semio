@@ -1,0 +1,11 @@
+# Current Graph Observation
+
+Read-only bounded observation of `🗑️generated/puzzle-producer-current.log` and the actual graph owner code. No process cancellation, installation, build, cache mutation or peer intervention was performed.
+
+The repeated inference passes are finite prefetch chunks, not evidence of whole-graph invalidation. The log completed verification of 1294/1294 input closures, then monotonically advanced prefetch through 0,128,256,384,512,640 of 950 stale projects. Its current claim prepares 128 of the remaining 310 open owners. The claim schema declares chunkOwners=128 and tailOwners=32. Each chunk starts a local inference counter, explaining repeated 128-project passes. `graph/🟦️.ts:538–559` explicitly fills shared stale project records in chunks, releases heap between chunks, and joins peer work before exclusive generation assembly.
+
+The next decisive global marker is `build:graph-phase:prefetch:768:950`, then 896/950 and 950/950, unless an already-published peer generation serves the request. At the last observation the current chunk was at local inference 27/128, naming semio-s-artifact-stdio-pdf-mut-family-3. This is observable ongoing work, not a frozen local counter.
+
+The log does show a handled degradation: worker leaves were declined for several projects, followed by explicit messages that remaining projects are inferred in this process. `project-farm/🟨️.mjs:87` stops the worker pool on declined adoption and returns false for local fallback. `build/inputs/🟨️.mjs:116` sets declined only when withBuildGraphOptionalPublicationsV1 refuses its optional publication reservation. Therefore the zero adopted worker count means no accepted worker contribution, not zero completed projects. The completed farm summaries report zero failed, lost and restarted workers. This explains additional parent work without establishing a graph restart or source-freshness defect.
+
+Memory and admission messages show peer capacity contention; the displayed small project-inference memory counter is not a complete measurement of the parent process RSS. No ETA can be inferred from these counters. The evidence supports continuing the admitted owner while watching the global monotonic prefetch marker. There is no source evidence here justifying a bypass, bounds increase or modification of peer jobs.

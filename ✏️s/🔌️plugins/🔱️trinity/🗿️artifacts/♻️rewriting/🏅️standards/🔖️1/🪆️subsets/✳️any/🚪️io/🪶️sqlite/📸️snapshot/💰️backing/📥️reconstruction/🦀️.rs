@@ -11,7 +11,7 @@ use semio_framework_graph_manifest::{PropertyDef, PropertyKind, PortDirection};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Camera;
 use semio_framework_graph_manifest::PropertyBag;
 use semio_framework_value::{ValueError,ValueRefusalKind,ValueType,DecodedValue};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,artifact::{FloatColumn,read_binary64}};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,artifact::{FloatColumn,read_binary64}};
 fn pattern(id:i64,read:&mut Reader<'_,'_,'_>)->Result<Pattern,ValueError>{
  let row=read.rows.take(11,id,read.control)?;
  Ok(Pattern{left_var:read.text(row,1)?,left_kind:read.text(row,2)?,edge_var:read.optional(row,3)?,edge_kind:read.optional(row,4)?,right_var:read.optional(row,5)?,right_kind:read.optional(row,6)?})

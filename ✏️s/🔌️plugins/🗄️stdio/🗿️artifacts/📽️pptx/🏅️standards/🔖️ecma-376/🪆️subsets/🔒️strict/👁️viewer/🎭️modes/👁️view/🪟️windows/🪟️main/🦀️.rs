@@ -4,10 +4,10 @@
 //! (`window_kind()`, the read-only variant, not the editable one).
 
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -27,9 +27,9 @@ pub fn definition() -> WindowKindDefinition {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 /// 👁️ Pure `PptxSnapshot -> BuiltNode` read: one `DocumentPage` per slide.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PptxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &PptxSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let pages = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(document)
-        .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("pptx.projection", error))?
+        .map_err(|error| semio_plugin::PluginAssemblyError::new("pptx.projection", error))?
         .into_iter()
         .map(|slide| DocumentPage { text: slide.shapes.into_iter().filter_map(|shape| shape.text).collect::<Vec<_>>().join("\n") })
         .collect();

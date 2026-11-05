@@ -15,37 +15,37 @@ use crate::FlowSnapshot;
 #[allow(unused_imports)]
 use flow::forms_bridge::flow_host_snapshot_to_form_spec;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::Label;
+use semio_ui_contract::Label;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionId;
+use semio_plugin::ActionId;
 #[allow(unused_imports)]
-use semio_framework_plugin::Buildable;
+use semio_plugin::Buildable;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasBase;
+use semio_plugin::HasBase;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasChildren;
+use semio_plugin::HasChildren;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::Trigger;
+use semio_plugin::Trigger;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiFixedList;
+use semio_plugin::UiFixedList;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::InputKind;
+use semio_ui_contract::InputKind;
 use crate::editor::flow::modes::generate::windows::form::*;
 use crate::editor::flow::unit_tests::context::{flow_app, render as render_body};
 

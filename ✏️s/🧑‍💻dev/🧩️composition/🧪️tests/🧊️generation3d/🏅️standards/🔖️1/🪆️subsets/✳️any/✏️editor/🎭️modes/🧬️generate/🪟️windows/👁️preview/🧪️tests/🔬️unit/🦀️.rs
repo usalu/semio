@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, render as render_body};
-use semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes;
+use semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes;
 
 /// ⚖️ LAW: the generate-mode ENTRY state. Before any generation exists the preview window is already a
 /// WORLD-3D status host — empty meshes, a live tessellation `phase`, and the authored hint — never a
@@ -14,7 +14,7 @@ use semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes;
 async fn generate_preview_entry_state_is_an_idle_status_host_with_a_hint() {
     let mut app = app().await;
     let body = render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW).await;
-    let scene: semio_framework_ui_declaration::ui::World3dScene = decode_fixture_scene_with_lanes(&body).expect("the generate-mode entry preview is a world-3d surface");
+    let scene: semio_ui_declaration::ui::World3dScene = decode_fixture_scene_with_lanes(&body).expect("the generate-mode entry preview is a world-3d surface");
     assert_eq!(scene.meshes_json, "[]", "nothing is evaluated yet: {}", scene.meshes_json);
     let status_json = scene.status_json.clone().expect("the generate preview publishes a status host from its first frame");
     let status: serde_json::Value = serde_json::from_str(&status_json).expect("generate preview status json");

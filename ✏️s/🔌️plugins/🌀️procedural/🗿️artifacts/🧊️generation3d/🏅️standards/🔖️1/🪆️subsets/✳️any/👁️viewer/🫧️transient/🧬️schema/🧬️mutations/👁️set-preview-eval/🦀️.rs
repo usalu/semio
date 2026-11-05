@@ -15,8 +15,8 @@ pub struct SetPreviewEval {
 impl protocol::MutationKind<Generation3dViewTransient, Generation3dViewTransientMutation> for SetPreviewEval {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-eval", kind: "set-preview-eval", record: "SetPreviewEval" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Preview Eval", "Vorschauauswertung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Preview Eval", "Vorschauauswertung setzen")
     }
 
     fn target(&self) -> Vec<String> {

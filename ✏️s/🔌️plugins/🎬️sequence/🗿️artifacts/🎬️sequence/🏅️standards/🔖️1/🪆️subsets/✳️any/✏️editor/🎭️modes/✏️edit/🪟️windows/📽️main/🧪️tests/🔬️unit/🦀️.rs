@@ -1,4 +1,4 @@
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::sequence::modes::edit::windows::main::{SEQUENCE_PLAY_BODY_MAIN, definition, split_endpoint};
 use crate::editor_unit_tests::context::{new_app, render as render_body};
 

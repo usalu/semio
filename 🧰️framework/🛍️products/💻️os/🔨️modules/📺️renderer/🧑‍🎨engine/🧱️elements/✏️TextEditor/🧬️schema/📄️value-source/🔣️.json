@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "readOnly",
+    "label"
+  ],
+  "properties": {
+    "readOnly": {
+      "type": "boolean"
+    },
+    "commit": {
+      "const": "change"
+    },
+    "editControllerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "editAction": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "editArgument": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "editArguments": {
+      "type": "object",
+      "maxProperties": 32
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "editEncoding": {
+      "const": "json-chunks"
+    },
+    "editMaximumBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "editIdentityArguments": {
+      "type": "object",
+      "maxProperties": 32
+    }
+  },
+  "anyOf": [
+    {
+      "properties": {
+        "readOnly": {
+          "const": true
+        }
+      }
+    },
+    {
+      "required": [
+        "readOnly",
+        "commit",
+        "editControllerId",
+        "editAction",
+        "editArgument",
+        "editArguments",
+        "label"
+      ],
+      "properties": {
+        "readOnly": {},
+        "commit": {},
+        "editControllerId": {},
+        "editAction": {},
+        "editArgument": {},
+        "editArguments": {},
+        "label": {}
+      }
+    }
+  ],
+  "$defs": {
+    "CommitResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "local"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "refused"
+            },
+            "reason": {
+              "const": "source-too-large"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "action"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dispatch"
+            },
+            "action": {
+              "type": "object",
+              "required": [
+                "controllerId",
+                "action"
+              ],
+              "properties": {
+                "controllerId": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

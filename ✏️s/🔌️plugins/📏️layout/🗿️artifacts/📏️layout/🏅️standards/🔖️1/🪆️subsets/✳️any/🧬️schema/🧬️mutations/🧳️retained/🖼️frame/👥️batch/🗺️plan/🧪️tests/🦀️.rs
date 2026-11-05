@@ -14,7 +14,7 @@ fn close(owner:&mut FrameSelectionPlan){owner.begin_close();for _ in 0..100000{i
 fn failure(value:&str)->BatchFailure{match value{"envelope"=>BatchFailure::Envelope,"empty"=>BatchFailure::Empty,"duplicate"=>BatchFailure::Duplicate,"page-missing"=>BatchFailure::PageMissing,"none-unlocked"=>BatchFailure::NoneUnlocked,"bounds"=>BatchFailure::Bounds,_=>unreachable!()}}
 #[test]
 fn numeric_original_target_order_lock_bounds_and_heap_receipts_share_neutral_witnesses(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../🧳️retained/🖼️frame/👥️batch/🗺️plan/🧪️tests/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){let event:LayoutMutation=decode(&row["mutation"]);let mut original:LayoutSnapshot=decode(&row["before"]);if row["beforeXNegativeZero"]==true{match &mut original.pages[0].frames[0]{Frame::Rect{bounds,..}|Frame::Text{bounds,..}|Frame::Image{bounds,..}=>bounds.x=-0.0}}
   for cut in std::iter::once(usize::MAX).chain(fixture["cuts"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as usize)){
    let mut mutation=source(event.clone());let mut base=source(original.clone());let mut owner=FrameSelectionPlan::default();

@@ -21,7 +21,7 @@ semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-hash = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
@@ -41,7 +41,7 @@ semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️f
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-dsl = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 serde_json = { workspace = true }

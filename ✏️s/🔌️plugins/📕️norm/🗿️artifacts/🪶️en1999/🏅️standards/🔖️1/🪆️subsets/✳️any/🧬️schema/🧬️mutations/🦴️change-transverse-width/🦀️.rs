@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeTransverseWidth wh
         record: "ChangedTransverseWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stiffener width b_st of the transverse stiffener", "Quersteife: Steifenbreite b_st ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stiffener width b_st of the transverse stiffener", "Quersteife: Steifenbreite b_st ändern")
     }
 }
 

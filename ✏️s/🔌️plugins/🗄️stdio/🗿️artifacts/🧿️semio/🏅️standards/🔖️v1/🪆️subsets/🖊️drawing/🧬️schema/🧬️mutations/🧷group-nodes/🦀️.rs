@@ -25,10 +25,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "group", entity: "nodes", kind: "group-nodes", record: "GroupedNodes" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.indices.len() {
-            1 => semio_framework_ui_locale::LocalizedLabel::native(&format!("Group 1 node in layer #{}", self.parent.layer), &format!("1 Knoten in Ebene #{} gruppieren", self.parent.layer)),
-            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Group {count} nodes in layer #{}", self.parent.layer), &format!("{count} Knoten in Ebene #{} gruppieren", self.parent.layer)),
+            1 => semio_ui_locale::LocalizedLabel::native(&format!("Group 1 node in layer #{}", self.parent.layer), &format!("1 Knoten in Ebene #{} gruppieren", self.parent.layer)),
+            count => semio_ui_locale::LocalizedLabel::native(&format!("Group {count} nodes in layer #{}", self.parent.layer), &format!("{count} Knoten in Ebene #{} gruppieren", self.parent.layer)),
         }
     }
     fn target(&self) -> Vec<String> {

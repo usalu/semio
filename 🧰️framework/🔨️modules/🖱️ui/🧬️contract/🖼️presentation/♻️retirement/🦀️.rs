@@ -1,7 +1,7 @@
 //! ♻️ Exact presentation record descendant retirement.
 use crate::*;
-use semio_framework_ui_contract_values::{ui_typed_fields,ui_typed_scalar};
-use semio_framework_ui_contract_values::retirement_protocol::{maximum_depth,done};
+use semio_ui_contract_values::{ui_typed_fields,ui_typed_scalar};
+use semio_ui_contract_values::retirement_protocol::{maximum_depth,done};
 ui_typed_scalar!(TransitionHint,Activity,StyleSpec,SurfaceKind,Liveness,GridTrack,SpaceToken,Align,Justify,EdgeSpace,Axis,Anchor,ScrollAxes,Sizing,UiPublicationRevision);
 impl UiTypedRetire for Label {
     fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(0) }

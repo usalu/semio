@@ -9,8 +9,8 @@ pub struct RemoveVentSystem { pub vent_id: String }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for RemoveVentSystem where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::insert_vent_system::InsertVentSystem> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "vent-system", kind: "remove-vent-system", record: "RemoveVentSystem" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove ventilation system", "Lüftungsanlage entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove ventilation system", "Lüftungsanlage entfernen")
     }
 }
 

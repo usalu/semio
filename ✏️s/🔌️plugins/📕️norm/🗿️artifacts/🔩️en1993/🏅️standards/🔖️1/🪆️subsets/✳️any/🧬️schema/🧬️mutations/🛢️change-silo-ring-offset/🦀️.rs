@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloRingOffset whe
         record: "ChangedSiloRingOffset",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ring centroid offset e_r from the shell mid-surface (outwards positive) of the silo shell", "Silo-Schale: Ringschwerpunktabstand e_r von der Schalenmittelfläche (nach außen positiv) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ring centroid offset e_r from the shell mid-surface (outwards positive) of the silo shell", "Silo-Schale: Ringschwerpunktabstand e_r von der Schalenmittelfläche (nach außen positiv) ändern")
     }
 }
 

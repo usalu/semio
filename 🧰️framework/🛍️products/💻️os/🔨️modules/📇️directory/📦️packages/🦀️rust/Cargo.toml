@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-directory"
+name = "semio-os-directory"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -27,7 +27,7 @@ default = []
 [dependencies]
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-framework-os-directory-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-directory-check-in = { path = "../../🧬️schema/📌️document-check-in-v1/📦️packages/🦀️rust" }
-semio-framework-os-directory-binary = { path = "../../🚪️io/🧱️binary/📦️packages/🦀️rust" }
-semio-framework-os-directory-access-policy = { path = "../../🛡️access-policy/📦️packages/🦀️rust" }
+semio-os-directory-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-directory-check-in = { path = "../../🧬️schema/📌️document-check-in-v1/📦️packages/🦀️rust" }
+semio-os-directory-binary = { path = "../../🚪️io/🧱️binary/📦️packages/🦀️rust" }
+semio-os-directory-access-policy = { path = "../../🛡️access-policy/📦️packages/🦀️rust" }

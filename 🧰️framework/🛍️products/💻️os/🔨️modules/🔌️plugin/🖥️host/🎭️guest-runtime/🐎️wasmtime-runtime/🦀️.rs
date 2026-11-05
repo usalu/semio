@@ -6,7 +6,7 @@ use super::*;
 //#region 🐎️WasmtimeRuntime
 pub(crate) struct WasmtimeInstanceState {
     pub(crate) store: Store<ActorHostState>,
-    pub(crate) bindings: semio_framework_plugin_host_wit::actor_bindings::Actor,
+    pub(crate) bindings: semio_plugin_host_wit::actor_bindings::Actor,
     /// ⏱️ This store's wall deadline, read by the callback [`EpochDeadlines::install`] put on it.
     pub(crate) deadline: Arc<EpochDeadlineCell>,
     /// 🪪️ "One actor per app instance is the default" (design-abi.md §4) — minted once at
@@ -44,8 +44,8 @@ impl WasmtimeRuntime {
         let (engine, pooling_active) = build_shared_engine(cfg).await?;
         let epoch = EpochDeadlines::new(&engine, &plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
-        semio_framework_plugin_host_wit::actor_bindings::Actor::add_to_linker::<ActorHostState, wasm::component::HasSelf<ActorHostState>>(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        semio_framework_plugin_host_operation::register(&mut linker).map_err(|error|PluginHostError::Wasmtime(error.to_string()))?;
+        semio_plugin_host_wit::actor_bindings::Actor::add_to_linker::<ActorHostState, wasm::component::HasSelf<ActorHostState>>(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        semio_plugin_host_operation::register(&mut linker).map_err(|error|PluginHostError::Wasmtime(error.to_string()))?;
         wasm::wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active).await;
         let isolated_engine = SharedEngineConfig { force_on_demand: !pooling_active, ..cfg }.to_isolated_arg();
@@ -86,36 +86,36 @@ impl WasmtimeRuntime {
     }
 
     /// 📤️ Executes a semantic snapshot projection within the guest's resource bounds.
-    pub async fn codec_sqlite_export<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
+    pub async fn codec_sqlite_export<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite export requires Wasmtime instance".into())); };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        let encoding = match encoding { "binary" => semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary, "text" => semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text, _ => return Err(TurnFault::Trapped("invalid snapshot encoding".into())) };
+        let encoding = match encoding { "binary" => semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary, "text" => semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text, _ => return Err(TurnFault::Trapped("invalid snapshot encoding".into())) };
         let limits = wit_snapshot_limits(limits);
         let (coordinate,bytes)=snapshot_component_transport(dialect,payload,identity)?;
-        let mut receiver=semio_framework_plugin_host_operation::OriginalOperationReceiver::new(identity);
-        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| semio_framework_plugin_host_operation::receive(accessor,&mut receiver,bindings.semio_framework_codec().call_sqlite_export(accessor, coordinate, encoding, bytes, limits, wit_snapshot_grant(native_grant))).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(receiving_turn_fault)?.map_err(decode_guest_plugin_error)?;
-        Ok(match output { semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Done(output) => sqlite_wire::SnapshotFileResult::Done(sqlite_wire::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }), semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Rejected(output) => sqlite_wire::SnapshotFileResult::Rejected(wit_snapshot_rejection(output)), semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Pending(output)=>sqlite_wire::SnapshotFileResult::Pending(wit_snapshot_retirement(output)) })
+        let mut receiver=semio_plugin_host_operation::OriginalOperationReceiver::new(identity);
+        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| semio_plugin_host_operation::receive(accessor,&mut receiver,bindings.semio_framework_codec().call_sqlite_export(accessor, coordinate, encoding, bytes, limits, wit_snapshot_grant(native_grant))).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(receiving_turn_fault)?.map_err(decode_guest_plugin_error)?;
+        Ok(match output { semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Done(output) => sqlite_wire::SnapshotFileResult::Done(sqlite_wire::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }), semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Rejected(output) => sqlite_wire::SnapshotFileResult::Rejected(wit_snapshot_rejection(output)), semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Pending(output)=>sqlite_wire::SnapshotFileResult::Pending(wit_snapshot_retirement(output)) })
     }
 
     /// 📥️ Reconstructs a native snapshot from the exact declared semantic SQLite schema.
-    pub async fn codec_sqlite_import<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
+    pub async fn codec_sqlite_import<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite import requires Wasmtime instance".into())); };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let limits = wit_snapshot_limits(limits);
         let (coordinate,bytes)=snapshot_component_transport(dialect,payload,identity)?;
-        let mut receiver=semio_framework_plugin_host_operation::OriginalOperationReceiver::new(identity);
-        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| semio_framework_plugin_host_operation::receive(accessor,&mut receiver,bindings.semio_framework_codec().call_sqlite_import(accessor, coordinate, bytes, limits, wit_snapshot_grant(native_grant))).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(receiving_turn_fault)?.map_err(decode_guest_plugin_error)?;
+        let mut receiver=semio_plugin_host_operation::OriginalOperationReceiver::new(identity);
+        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| semio_plugin_host_operation::receive(accessor,&mut receiver,bindings.semio_framework_codec().call_sqlite_import(accessor, coordinate, bytes, limits, wit_snapshot_grant(native_grant))).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(receiving_turn_fault)?.map_err(decode_guest_plugin_error)?;
         Ok(match output {
-            semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Done(output) => {
-                let encoding = match output.encoding { semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary => sqlite_wire::SnapshotEncoding::Binary, semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text => sqlite_wire::SnapshotEncoding::Text };
+            semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Done(output) => {
+                let encoding = match output.encoding { semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary => sqlite_wire::SnapshotEncoding::Binary, semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text => sqlite_wire::SnapshotEncoding::Text };
                 sqlite_wire::SnapshotPayloadResult::Done(sqlite_wire::SnapshotPayload { encoding, bytes: output.bytes, diagnostics: output.diagnostics })
             }
-            semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Rejected(output) => sqlite_wire::SnapshotPayloadResult::Rejected(wit_snapshot_rejection(output)),
-            semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Pending(output)=>sqlite_wire::SnapshotPayloadResult::Pending(wit_snapshot_retirement(output)),
+            semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Rejected(output) => sqlite_wire::SnapshotPayloadResult::Rejected(wit_snapshot_rejection(output)),
+            semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Pending(output)=>sqlite_wire::SnapshotPayloadResult::Pending(wit_snapshot_retirement(output)),
         })
     }
 
@@ -171,7 +171,7 @@ impl WasmtimeRuntime {
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let artifact_schema = artifact_schema.to_string();
-        let pair = semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
+        let pair = semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
         let mirror = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_print_mirror(accessor, artifact_schema, pair).await)
             .await
@@ -183,7 +183,7 @@ impl WasmtimeRuntime {
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for a package whose Rust codec the
     /// host does not link.
-    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: &Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
+    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: &Budget, _identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
             return Err(TurnFault::Trapped("codec.apply-ops called on a non-wasmtime GuestInstance".to_string()));
@@ -191,7 +191,7 @@ impl WasmtimeRuntime {
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let artifact_schema = artifact_schema.to_string();
-        let pair = semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
+        let pair = semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
         let ops = ops.to_vec();
         let next = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_apply_ops(accessor, artifact_schema, pair, ops).await)
@@ -212,7 +212,7 @@ impl WasmtimeRuntime {
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let artifact_schema = artifact_schema.to_string();
-        let pair = semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
+        let pair = semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
         let envelopes = envelopes.to_vec();
         let next = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_replay_envelopes(accessor, artifact_schema, pair, envelopes).await)

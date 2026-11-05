@@ -14,8 +14,8 @@ pub struct RemoveEntry {
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for RemoveEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entry", kind: "remove-entry", record: "RemoveEntry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove entry", "Eintrag entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove entry", "Eintrag entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

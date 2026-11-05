@@ -1,0 +1,88 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "snapshot",
+      "expectedIds",
+      "expectedSynapses",
+      "floatWords"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "snapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema",
+          "camera",
+          "widgets",
+          "synapses",
+          "layout"
+        ],
+        "properties": {
+          "schema": {
+            "type": "string"
+          },
+          "camera": {
+            "type": "object"
+          },
+          "widgets": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "synapses": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "layout": {
+            "type": "object"
+          }
+        }
+      },
+      "expectedIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "expectedSynapses": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "floatWords": {
+        "type": "array",
+        "minItems": 7,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bits",
+            "json"
+          ],
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            },
+            "json": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

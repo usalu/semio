@@ -26,8 +26,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "machine", kind: "create-machine", record: "CreatedMachine" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create machine \"{}\"", self.machine.label), &format!("Maschine \"{}\" erstellen", self.machine.label))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create machine \"{}\"", self.machine.label), &format!("Maschine \"{}\" erstellen", self.machine.label))
     }
 
     fn target(&self) -> Vec<String> {

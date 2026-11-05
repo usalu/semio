@@ -9,17 +9,17 @@ pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
         pub args: Option<DslValue>,
         pub read: Option<store::os_store::snapshot_read::SnapshotRead<TestSnapshot>>,
         pub completion: Option<ArtifactToolCompletion<TestApp<RETAINED, TOOLS>>>,
-        pub rejected: Option<semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection<TestApp<RETAINED, TOOLS>>>,
+        pub rejected: Option<semio_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection<TestApp<RETAINED, TOOLS>>>,
         pub retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-        pub outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
+        pub outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes,
         pub completed: bool,
         pub closing: bool,
     }
 
     impl<const RETAINED: bool, const TOOLS: u8> TestClipboardJob<RETAINED, TOOLS> {
-        pub fn new(request: semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Self, Fault> {
-            let semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolInput::Action { args, .. } = request.input else { return Err(Fault::from("the contract clipboard requires an action input")) };
-            Ok(Self { tool: request.tool_id, label: request.snapshot.label.clone(), args, read: Some(request.snapshot_read), completion: Some(request.completion), rejected: None, retirement: None, outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(), completed: false, closing: false })
+        pub fn new(request: semio_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Self, Fault> {
+            let semio_plugin_decl_app::tool_contract::ArtifactReservedToolInput::Action { args, .. } = request.input else { return Err(Fault::from("the contract clipboard requires an action input")) };
+            Ok(Self { tool: request.tool_id, label: request.snapshot.label.clone(), args, read: Some(request.snapshot_read), completion: Some(request.completion), rejected: None, retirement: None, outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(), completed: false, closing: false })
         }
 
         pub fn emit(&self) -> Result<Emit<TestMutation, TestConfigMutation, NoDraftMutation>, Fault> {
@@ -112,7 +112,7 @@ pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
         }
     }
 
-    impl<const RETAINED: bool, const TOOLS: u8> semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob for TestClipboardJob<RETAINED, TOOLS> {}
+    impl<const RETAINED: bool, const TOOLS: u8> semio_plugin_decl_app::tool_contract::ArtifactReservedJob for TestClipboardJob<RETAINED, TOOLS> {}
     //#endregion 📋️ContractClipboardFixture
 
     #[doc(hidden)]
@@ -131,7 +131,7 @@ pub struct TestRetainedCommandWork {
         pub cursor: u8,
     }
 
-    impl semio_framework_plugin_retained_command::ArtifactCommandWork<TestApp> for TestRetainedCommandWork {
+    impl semio_plugin_retained_command::ArtifactCommandWork<TestApp> for TestRetainedCommandWork {
         fn tool_id(&self) -> &'static str {
             TEST_RETAINED_COMMAND_TOOL
         }
@@ -140,14 +140,14 @@ pub struct TestRetainedCommandWork {
             Some(3)
         }
 
-        fn step(&mut self, input: &semio_framework_plugin_retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_retained_command::ArtifactCommandWorkStep<TestApp>, semio_framework_job::OriginalTurnFailure> {
-            let semio_framework_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+        fn step(&mut self, input: &semio_plugin_retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_retained_command::ArtifactCommandWorkStep<TestApp>, semio_framework_job::OriginalTurnFailure> {
+            let semio_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
             TEST_RETAINED_COMMAND_STEP_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             if self.cursor < 2 {
                 self.cursor += 1;
-                return Ok(semio_framework_plugin_retained_command::ArtifactCommandWorkStep::Progress { stage: "test-retained-command-work", preview: br#"{"en":"Applying","de":"Anwenden"}"# });
+                return Ok(semio_plugin_retained_command::ArtifactCommandWorkStep::Progress { stage: "test-retained-command-work", preview: br#"{"en":"Applying","de":"Anwenden"}"# });
             }
-            Ok(semio_framework_plugin_retained_command::ArtifactCommandWorkStep::Complete(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: "resumed".into() })])))
+            Ok(semio_plugin_retained_command::ArtifactCommandWorkStep::Complete(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: "resumed".into() })])))
         }
 
         fn checkpoint_byte(&self, index: usize) -> Option<u8> {
@@ -183,8 +183,8 @@ pub struct TestRetainedCommandFactory {
     }
 
     impl ToolJobFactory for TestRetainedCommandFactory {
-        type Payload = semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>;
-        type Job = semio_framework_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>;
+        type Payload = semio_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>;
+        type Job = semio_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>;
 
         fn keys(&self) -> &[ToolFactoryKey] {
             &self.keys
@@ -202,7 +202,7 @@ pub struct TestRetainedCommandFactory {
             ToolExecutionContract::resumable(TEST_RETAINED_COMMAND_RAW_BYTES, 4, 1, TEST_RETAINED_COMMAND_RAW_BYTES, 7_500, 1, 1)
         }
 
-        semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes:TEST_RETAINED_COMMAND_RAW_BYTES,checkpoint_resume:true);
+        semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes:TEST_RETAINED_COMMAND_RAW_BYTES,checkpoint_resume:true);
     }
 
     #[doc(hidden)]
@@ -217,11 +217,11 @@ pub fn test_retained_command_id(command: &TestCommand) -> &'static str {
 pub const TEST_COMMAND_RETAINED_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
 
     #[doc(hidden)]
-pub  async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> (semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::job_close_fixture::FixtureSnapshotOwner) {
+pub  async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> (semio_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::job_close_fixture::FixtureSnapshotOwner) {
         let snapshot=std::sync::Arc::new(TestSnapshot::default());
         let(snapshot_read,issuer)=crate::job_close_fixture::FixtureSnapshotOwner::new(snapshot.clone(),3,[5;32]);
-        let payload=semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin_retained_command::ArtifactRetainedCommandInputs {
+        let payload=semio_plugin_retained_command::ArtifactRetainedCommandPayload::new(
+            semio_plugin_retained_command::ArtifactRetainedCommandInputs {
                 command: TestCommand::SetLabel { value: "wire".into() },
                 snapshot,
                 snapshot_read,
@@ -315,7 +315,7 @@ pub fn test_app_reduce(command: &TestCommand, doc: &ArtifactView<'_, TestSnapsho
             }
             TestCommand::CompositeEdit { slot, child_id, child_value } => Ok(Emit {
                 artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: "composite".into() })],
-                child_preparations:std::collections::VecDeque::from([semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparation::of::<TestSnapshot,_>(slot.clone(),child_id.clone(),vec![TestMutation::SetCount(SetCount{value:*child_value})])]),
+                child_preparations:std::collections::VecDeque::from([semio_plugin_decl_emission::child_emit_preparation::ChildEmitPreparation::of::<TestSnapshot,_>(slot.clone(),child_id.clone(),vec![TestMutation::SetCount(SetCount{value:*child_value})])]),
                 ..Default::default()
             }),
             TestCommand::ProbeChild { slot, child_id } => {

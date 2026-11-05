@@ -3,7 +3,7 @@
 //! 🧭️ The tests are mounted unchanged from the production tree and reach the production crate through its public API only.
 #![cfg(test)]
 
-pub use semio_framework_os_command::*;
+pub use semio_os_command::*;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "../📔️registry/🦀️.rs"]

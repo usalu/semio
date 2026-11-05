@@ -16,8 +16,8 @@ use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::OnceLock;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 #[path="🎞️tick/🛬️receive/🎟️limits/🦀️.rs"]
 mod receiving_limits;
 pub use receiving_limits::{ToolRunRecordReadLimits,ToolRunHistoryReadLimits,ToolRunReceivingLimits};

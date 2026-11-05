@@ -27,7 +27,7 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
   edition = "2021"
   rust-version = "1.95"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-dev-services]

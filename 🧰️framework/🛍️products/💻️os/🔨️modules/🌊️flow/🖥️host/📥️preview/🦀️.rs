@@ -24,7 +24,12 @@ struct Fields{source:Option<DslValue>,mesh:Option<MeshData>,insertion:Option<His
 pub enum FlowPreviewCompletedIntakeSource{Value(DslValue),Receiver(FlowPreviewCompletedReceiver)}
 /// 🧵️ Every partial field and the original handle remain in custody until paid commit or full close.
 pub struct FlowPreviewCompletedReceiver{origin:(u64,u64),binding:Option<[u64;8]>,fields:ManuallyDrop<Option<Fields>>,decoder:Option<MeshCanonicalDecoder>,source_close:Option<ControlledRetirement<DslValue>>,close:Option<ControlledRetirement<Fields>>,scan:usize,slots:[usize;11],field:Option<usize>,offset:usize,phase:u8,closing:bool,committed:bool,complete:bool,received:bool,units_done:u64,units_total:u64,progress_phase:PreviewTessellatePhase}
+#[cfg(any(test,feature="testkit"))]
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct FlowPreviewCompletedDiagnostic{pub scan:usize,pub slots:[usize;11],pub field:Option<usize>,pub offset:usize,pub phase:u8,pub received:bool,pub committed:bool,pub incoming_positions:Option<usize>,pub displaced:Option<(usize,usize)>}
 impl FlowPreviewCompletedReceiver{
+ #[cfg(any(test,feature="testkit"))]
+ pub fn test_diagnostic(&self)->FlowPreviewCompletedDiagnostic{let fields=self.fields.as_ref();FlowPreviewCompletedDiagnostic{scan:self.scan,slots:self.slots,field:self.field,offset:self.offset,phase:self.phase,received:self.received,committed:self.committed,incoming_positions:fields.and_then(|fields|fields.mesh.as_ref()).map(|mesh|mesh.positions.as_ptr()as usize),displaced:fields.and_then(|fields|fields.displaced.as_ref()).and_then(ControlledRetirement::original).map(|(handle,mesh)|(handle.as_ptr()as usize,mesh.positions.as_ptr()as usize))}}
  pub fn new(source:DslValue,cx:&mut StepContext<'_>)->Result<Self,(OriginalTurnFailure,FlowPreviewCompletedIntakeSource)>{
   if cx.is_cancelled()||cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Err((invalid("original completed preview intake awaits admission").into(),FlowPreviewCompletedIntakeSource::Value(source)))}
   cx.consume_fuel(1);if object(&source).is_err()||!matches!(object(&source).unwrap().len(),10|11){return Err((invalid("original completed preview member shape is invalid").into(),FlowPreviewCompletedIntakeSource::Value(source)))}

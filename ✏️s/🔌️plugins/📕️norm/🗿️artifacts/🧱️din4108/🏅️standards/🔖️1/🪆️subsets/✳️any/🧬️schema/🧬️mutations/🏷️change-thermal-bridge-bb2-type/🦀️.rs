@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeThermalBridgeBb2T
         record: "ChangedThermalBridgeBb2Type",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Supplement 2 thermal bridge category", "Wärmebrückenkategorie nach Beiblatt 2 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Supplement 2 thermal bridge category", "Wärmebrückenkategorie nach Beiblatt 2 ändern")
     }
 }
 

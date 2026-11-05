@@ -8,7 +8,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::di
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, View};
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::plugin_app_close_prelude::InputKind;
 use semio_s_artifact_bim_model_mut_any_28::standards::v1::subsets::any::schema::mutations::set_view;
 
 const CATEGORIES: [ViewCategory; 11] = [

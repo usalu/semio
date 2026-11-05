@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "storey", kind: "set-storey-cut-height", record: "SetStoreyCutHeight" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set plan cut height of storey \"{}\"", self.id), &format!("Schnitthöhe von Geschoss \"{}\" setzen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set plan cut height of storey \"{}\"", self.id), &format!("Schnitthöhe von Geschoss \"{}\" setzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

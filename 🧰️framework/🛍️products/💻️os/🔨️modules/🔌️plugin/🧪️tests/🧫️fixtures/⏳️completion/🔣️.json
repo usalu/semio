@@ -103,7 +103,7 @@
           {
             "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️retained-commands/🦀️.rs",
             "tokens": [
-              "type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle3dPlayApp>>;",
+              "type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle3dPlayApp>>;",
               "ArtifactRetainedCommandJob::from_wire(payload, input)"
             ]
           },
@@ -122,7 +122,7 @@
         "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
         "terminalGuard": "if self.pending_completion_rejection.is_some()",
-        "legacyLossToken": "payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()).is_err()",
+        "legacyLossToken": "payload.completion.complete(emit, semio_plugin::EphemeralEmit::default()).is_err()",
         "incrementalClose": "emit.close_child_one(grant)",
         "retainedPhysicalOwners": []
       },

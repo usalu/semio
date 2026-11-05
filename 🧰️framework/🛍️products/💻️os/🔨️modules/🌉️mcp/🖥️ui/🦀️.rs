@@ -21,17 +21,17 @@
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use semio_framework_os_mcp_bridge::session::BridgeHandle;
-use semio_framework_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, active_shell_connection, bridge_not_running_error, dispatch_shell_command, no_shell_attached_error, resolve_bridge};
-use semio_framework_os_mcp_bridge_codec::bridge::{GatewayToShell, ShellToGateway, truncate_conversation_text};
-use semio_framework_os_mcp_capabilities::capability_declarations::{conversation_reply_capability, ui_focus_capability, ui_reveal_capability};
-use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, PolicyEngine, authorize_capability_scopes};
-use semio_framework_os_mcp_schema::schema::{conversation_reply_input_schema, conversation_reply_output_schema, job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
-use semio_framework_os_mcp_wire::job_registry::job_registry;
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
-use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+use semio_os_mcp_bridge::session::BridgeHandle;
+use semio_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, active_shell_connection, bridge_not_running_error, dispatch_shell_command, no_shell_attached_error, resolve_bridge};
+use semio_os_mcp_bridge_codec::bridge::{GatewayToShell, ShellToGateway, truncate_conversation_text};
+use semio_os_mcp_capabilities::capability_declarations::{conversation_reply_capability, ui_focus_capability, ui_reveal_capability};
+use semio_os_mcp_dispatch::actions::ActionAdapter;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_port::policy::{AgentPrincipal, PolicyEngine, authorize_capability_scopes};
+use semio_os_mcp_schema::schema::{conversation_reply_input_schema, conversation_reply_output_schema, job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
+use semio_os_mcp_wire::job_registry::job_registry;
+use semio_os_mcp_wire::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
+use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 
 //#region 🔖️ToolHandlers
 
@@ -216,7 +216,7 @@ pub fn register_conversation_tools(registry: &mut InMemoryToolRegistry, bridge: 
 /// 🧭️ The attached shell's last full `ShellState` snapshot, decoded as raw JSON — `🧵️bridge`'s own
 /// design note says `state`/`command` bytes are opaque, AgentBridge encodes/decodes them as JSON on
 /// the renderer side, so this facet mirrors that instead of taking a new compile-time dependency on
-/// `semio-framework-os-shell`'s Rust types (see this file's W6 report for the tradeoff). A
+/// `semio-os-shell`'s Rust types (see this file's W6 report for the tradeoff). A
 /// `ShellStatePatch`-only connection (no full snapshot received yet) is a typed, retryable
 /// `PLUGIN_UNAVAILABLE`, never a guess at merging a patch onto nothing.
 fn full_shell_state(bridge: Option<&Arc<BridgeHandle>>) -> Result<serde_json::Value, GatewayError> {

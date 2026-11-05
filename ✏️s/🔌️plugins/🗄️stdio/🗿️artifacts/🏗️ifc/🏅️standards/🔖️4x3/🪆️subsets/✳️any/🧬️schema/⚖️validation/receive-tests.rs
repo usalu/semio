@@ -1,6 +1,6 @@
 //! 🧪️ Semantic receiving keeps original text borrowed and charges each real arena frontier.
 use super::{overlay::*, receive::*};
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 fn measured<'context, T>(

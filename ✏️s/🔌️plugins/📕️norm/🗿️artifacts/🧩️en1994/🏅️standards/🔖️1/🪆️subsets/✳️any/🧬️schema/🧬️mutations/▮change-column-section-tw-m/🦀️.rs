@@ -17,8 +17,8 @@ pub struct ChangeColumnSectionTwM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnSectionTwM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_section_tw_m::ChangeColumnSectionTwM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-section-tw-m", kind: "change-column-section-tw-m", record: "ChangedColumnSectionTwM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change web thickness of the encased I-section", "Stegdicke des einbetonierten I-Profils ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change web thickness of the encased I-section", "Stegdicke des einbetonierten I-Profils ändern")
     }
 }
 

@@ -30,11 +30,11 @@ semio-s-artifact-stdio-gltf-mutations-mut-any-9 = { path = "../../🎬️scene/�
 semio-s-artifact-stdio-gltf-mutations-mut-any-10 = { path = "../../🦴️skin/🔀️reorder/🧪️tests/🔀️flips/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-state = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 
@@ -47,5 +47,5 @@ semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde_json = { workspace = true }

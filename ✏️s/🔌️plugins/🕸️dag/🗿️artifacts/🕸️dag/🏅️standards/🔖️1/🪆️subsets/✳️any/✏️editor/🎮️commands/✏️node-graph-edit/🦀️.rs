@@ -3,7 +3,7 @@
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::editor::dag::DAG_PLAY_APP_ID;
 use crate::{DagMutation, DagSnapshot, SemioGraphMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -56,7 +56,7 @@ impl NodeGraphEdit {
     /// `🛠️tool-machine` (a press's top-level `gesture`/`commit`/`abort` belong to the framework scrub machine). Any malformed
     /// row refuses the whole batch by name.
     pub fn from_action_args(args: Option<&semio_framework_value::DslValue>) -> Result<Self, Fault> {
-        let refuse = |message: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.node-graph-edit.malformed"), message);
+        let refuse = |message: String| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("dag.node-graph-edit.malformed"), message);
         let rows = node_graph_edit_rows(args.ok_or_else(|| refuse("nodeGraphEdit needs its operations".into()))?).map_err(refuse)?;
         Ok(Self { operations: rows.into_iter().map(DagNodeGraphEditOp::from).collect() })
     }
@@ -97,7 +97,7 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg
                 leaves.extend(scene.nodes.iter().filter(|node| &node.id == widget_id).flat_map(|node| crate::schema::node_field_leaves(node, "value", &value.to_string())));
             }
             DagNodeGraphEditOp::InsertPort { node_id, .. } => {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.node-graph-edit.unsupported"), format!("dag node {node_id:?} takes no inserted port")));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("dag.node-graph-edit.unsupported"), format!("dag node {node_id:?} takes no inserted port")));
             }
             DagNodeGraphEditOp::Delete { node_ids, synapse_ids } => {
                 let removes = crate::schema::remove_nodes_leaves(&scene, node_ids);

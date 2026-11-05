@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowEdgeDistance wh
         record: "ChangedRowEdgeDistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Edge distance e of the joint row", "Schraubenreihe: Randabstand e ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Edge distance e of the joint row", "Schraubenreihe: Randabstand e ändern")
     }
 }
 

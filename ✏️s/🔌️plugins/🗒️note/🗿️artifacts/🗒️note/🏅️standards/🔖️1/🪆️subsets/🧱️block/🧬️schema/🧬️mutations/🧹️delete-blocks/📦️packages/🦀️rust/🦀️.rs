@@ -1,7 +1,7 @@
 //! 🧹️ delete-blocks of `semio-s-artifact-note-note` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 pub use crate::schema::snapshot::NoteSnapshot;
 pub use crate::schema::diff::NoteDiff;

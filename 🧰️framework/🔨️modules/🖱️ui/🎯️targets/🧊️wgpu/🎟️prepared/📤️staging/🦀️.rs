@@ -1,5 +1,5 @@
 //! 📤️ Original atlas and raster upload staging with independent credits and retirement.
-use semio_framework_ui_scene_mesh::Mesh3dLease;
+use semio_ui_scene_mesh::Mesh3dLease;
 use semio_framework_job::{InteractiveJobCloseStep as CloseStep, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::mem::size_of;
@@ -10,9 +10,9 @@ pub mod retirement;
 use retirement::*;
 
 //#region 🧩️PagedRasterProducer
-pub use semio_framework_ui_raster_owner::RASTER_CONTENT_PAGE_BYTES as PREPARED_RASTER_PAGE_BYTES;
+pub use semio_ui_raster_owner::RASTER_CONTENT_PAGE_BYTES as PREPARED_RASTER_PAGE_BYTES;
 
-pub use semio_framework_ui_raster_owner::RasterContentIdentity;
+pub use semio_ui_raster_owner::RasterContentIdentity;
 
 #[path = "🧾️raster-ledger-and-atlas-permits/🦀️.rs"]
 mod raster_ledger_and_atlas_permits;

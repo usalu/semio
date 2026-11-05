@@ -2,13 +2,13 @@ use super::*;
 use semio_s_artifact_puzzle_3d_mutations::apply_puzzle3d_mutation;
 use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_labels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::nakagin_scene_snapshot};
-use semio_framework_plugin::TreeWindowRequest;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::TreeWindowRequest;
+use semio_plugin::ViewModel;
 
 const RETIREMENT_DRAIN_STEPS: usize = 4096;
 
 fn native() -> &'static Puzzle3dLabels {
-    puzzle3d_labels(&ViewModel { terminology: semio_framework_ui_locale::Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }).expect("admitted host axis")
+    puzzle3d_labels(&ViewModel { terminology: semio_ui_locale::Terminology::Native, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }).expect("admitted host axis")
 }
 
 /// ♻️ Stands in for the reactor's own one-page-per-turn retirement pump, which no unit test has: a
@@ -34,7 +34,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 fn section_key(suffix: &str) -> String {
@@ -53,7 +53,7 @@ fn nested_key(section: &str, node_key: &str) -> String {
 fn panel(scene_snapshot: &Puzzle3dSceneSnapshot, view: &ViewModel) -> String {
     drain_retired_ui_owners();
     let built = render(scene_snapshot, native(), &TreeWindows::for_body(view, BODY_KEY)).expect("puzzle3d artifact tree assembly");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("puzzle3d artifact tree projection");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(built)).expect("puzzle3d artifact tree projection");
     drain_retired_ui_owners();
     json
 }
@@ -63,7 +63,7 @@ fn panel(scene_snapshot: &Puzzle3dSceneSnapshot, view: &ViewModel) -> String {
 fn first_paint(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
     drain_retired_ui_owners();
     let built = render(scene_snapshot, native(), &TreeWindows::unhosted()).expect("puzzle3d artifact tree assembly");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("puzzle3d artifact tree projection");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(built)).expect("puzzle3d artifact tree projection");
     drain_retired_ui_owners();
     json
 }
@@ -235,8 +235,8 @@ fn every_row_is_a_domain_pick_target_and_only_the_tree_binds_the_pick() {
     let tree = tree_of(&json);
 
     let root_bindings = tree["bindings"].to_string();
-    assert!(root_bindings.contains(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID), "the tree itself binds the pick: {root_bindings}");
-    assert_eq!(root_bindings.matches(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID).count(), 1, "exactly ONE tree-level pick binding: {root_bindings}");
+    assert!(root_bindings.contains(semio_plugin::INTERACTION_SELECT_ACTION_ID), "the tree itself binds the pick: {root_bindings}");
+    assert_eq!(root_bindings.matches(semio_plugin::INTERACTION_SELECT_ACTION_ID).count(), 1, "exactly ONE tree-level pick binding: {root_bindings}");
     assert!(json.contains(PUZZLE3D_INTERACTION_DOMAIN), "and it names this app's interaction domain: {json}");
 
     for (key, granularity) in [
@@ -269,7 +269,7 @@ fn the_first_paint_draws_one_viewport_and_still_reports_the_whole_document() {
     assert_eq!(window_of(section).0, scene_snapshot.objects.len(), "the cold section still reports every object: {section}");
     let built = child_keys(section).len();
     assert!(built > 0, "the objects section opens by author default and must build rows: {section}");
-    assert!(built <= semio_framework_plugin::TREE_WINDOW_DEFAULT_ROWS as usize, "the cold paint stays inside one viewport budget, built {built}");
+    assert!(built <= semio_plugin::TREE_WINDOW_DEFAULT_ROWS as usize, "the cold paint stays inside one viewport budget, built {built}");
     for suffix in ["references", "target-volumes", "attractions"] {
         let folded = node_at(&tree, &section_key(suffix)).expect("every section is assembled");
         assert!(child_keys(folded).is_empty(), "section {suffix} is folded by author default and builds nothing: {folded}");

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeWeldMemberId where
         record: "ChangedWeldMemberId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Member id of the weld group", "Schweißnahtgruppe: Bauteil-Id ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Member id of the weld group", "Schweißnahtgruppe: Bauteil-Id ändern")
     }
 }
 

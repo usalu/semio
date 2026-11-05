@@ -4,7 +4,7 @@
 //! surface split since it predates this measure; see the app's `🎭️modes` doc comment).
 
 use crate::editor::shooting::terminology::ShootingLabels;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 //#region 🔖️Measure
 pub fn measure(labels: &ShootingLabels) -> WindowMeasure {

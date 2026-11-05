@@ -1,33 +1,33 @@
 //! 🐂️ The composer's bundle builders: one exclusive builder per use-case crate and one shared builder per crate that has `&self` members (WP7 of the instance family).
 //!
 //! 🏗️ Each builder borrows the composer fields its bundle names; the extension list is fixed here to [`InstanceExtensions`].
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_plugin_decl_emission::{ActionMeta, Emit};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_instance_commands::command_bundle::CommandCtx;
-use semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx;
+use semio_plugin_instance_commands::command_bundle::CommandCtx;
+use semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx;
 use semio_framework_value::DslValue;
 use semio_framework::kernel::{Effect, InvocationResult};
-use semio_framework_plugin_instance_extension::{ExtensionCtx, ExtensionRef, InstanceExtension};
+use semio_plugin_instance_extension::{ExtensionCtx, ExtensionRef, InstanceExtension};
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use crate::{InstanceExtensions, VcsArtifactApp};
-use semio_framework_plugin_instance_ladders::ladder_bundle::{LadderCtx, LadderRef};
+use semio_plugin_instance_ladders::ladder_bundle::{LadderCtx, LadderRef};
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
-use semio_framework_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
-use semio_framework_plugin_time_travel::TimeTravelLedger;
-use semio_framework_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
-use semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
+use semio_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
+use semio_plugin_time_travel::TimeTravelLedger;
+use semio_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
+use semio_plugin_instance_typed_ops::typed_bundle::TypedCtx;
+use semio_ui_contract::*;
 use std::marker::PhantomData;
-use semio_framework_plugin_time_travel::TimeTravelActionOutcome;
-use semio_framework_plugin_tool_run::ToolRunActionOutcome;
+use semio_plugin_time_travel::TimeTravelActionOutcome;
+use semio_plugin_tool_run::ToolRunActionOutcome;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     #[doc(hidden)]
@@ -96,7 +96,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🏃️ One funded turn of a typed command the caller owns, produced and admitted through the original source like a host event; laws loop it over fixture turns until the receipt answers.
-    pub async fn drive_typed(&mut self, source: &mut semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>, command: &mut Option<Box<A::Command>>, meta: &mut Option<ActionMeta>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+    pub async fn drive_typed(&mut self, source: &mut semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>, command: &mut Option<Box<A::Command>>, meta: &mut Option<ActionMeta>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         self.dispatch_ctx().drive_runtime_typed_command(source, || command.take(), &mut None, meta, identity, cx).await
     }
 
@@ -134,7 +134,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
     }
 
     /// ⚖️ Applies one history-edit verb: delivers a pending base change first, then the verb's event with its effects.
-    pub async fn apply_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<TimeTravelActionOutcome, Fault> {
+    pub async fn apply_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<TimeTravelActionOutcome, Fault> {
         self.time_travel_ctx().apply_time_travel_action(action, args, meta, effects, identity, cx).await
     }
 

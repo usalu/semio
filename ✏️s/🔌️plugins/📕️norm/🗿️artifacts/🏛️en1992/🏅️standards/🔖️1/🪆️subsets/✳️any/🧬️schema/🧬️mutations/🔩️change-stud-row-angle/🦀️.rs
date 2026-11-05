@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeStudRowAngle where
         record: "ChangedStudRowAngle",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change rail angle from the column x axis of the stud row", "Dübelreihe: Schienenwinkel zur Stützenachse x ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change rail angle from the column x axis of the stud row", "Dübelreihe: Schienenwinkel zur Stützenachse x ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.stud_row_id.clone()]

@@ -1,13 +1,13 @@
-use semio_framework_os_renderer_wgpu_scene_feeds::{accepted_vfs_accessibility_controls, acknowledge_vfs_accessibility_candidates, seal_vfs_accessibility_candidates, stage_vfs_accessibility_controls};
+use semio_renderer_wgpu_scene_feeds::{accepted_vfs_accessibility_controls, acknowledge_vfs_accessibility_candidates, seal_vfs_accessibility_candidates, stage_vfs_accessibility_controls};
 use crate::scene_double_click_action;
-use semio_framework_os_renderer_wgpu_scene_state::{SceneListHit, SceneModifiers, VfsAccessibilityControl, VfsAccessibilityControlKind, VfsAccessibilityFocusTarget};
-use semio_framework_os_renderer_wgpu_scene_text_vfs::{VfsAccessibilityKeyOutcome, VfsDescriptorValue, VfsSchema, build_vfs_visible_rows, vfs_accessibility_activate, vfs_accessibility_apply_key, vfs_avatar_initials, vfs_descriptor_label, vfs_descriptor_value, vfs_double_click_action, vfs_glyph_icon, vfs_hit, vfs_row_id, vfs_temporal_request};
+use semio_renderer_wgpu_scene_state::{SceneListHit, SceneModifiers, VfsAccessibilityControl, VfsAccessibilityControlKind, VfsAccessibilityFocusTarget};
+use semio_renderer_wgpu_scene_text_vfs::{VfsAccessibilityKeyOutcome, VfsDescriptorValue, VfsSchema, build_vfs_visible_rows, vfs_accessibility_activate, vfs_accessibility_apply_key, vfs_avatar_initials, vfs_descriptor_label, vfs_descriptor_value, vfs_double_click_action, vfs_glyph_icon, vfs_hit, vfs_row_id, vfs_temporal_request};
 use serde_json::{Value, json};
 use std::collections::BTreeSet;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_ui_theme::Theme;
 
 /// 🗂️ A configured `fileNodeKinds[kindId].icon` must win over the kind-name fallback table —
 /// previously `vfs_glyph_icon` only checked `.is_some()` and always returned `"folder"` for any
@@ -49,7 +49,7 @@ fn vfs_scene(surface_id: &str, rows: Value) -> UiComponentSceneNode {
         text_editor: None,
         table: None,
         paint_2d: None,
-        virtual_file_system: Some(semio_framework_ui_scene_views::VirtualFileSystemScene { schema_json: "{}".into(), rows_json: rows.to_string(), selected_row_ids_json: None, hovered_row_id: None, empty_message: None, drag_drop_enabled: None }),
+        virtual_file_system: Some(semio_ui_scene_views::VirtualFileSystemScene { schema_json: "{}".into(), rows_json: rows.to_string(), selected_row_ids_json: None, hovered_row_id: None, empty_message: None, drag_drop_enabled: None }),
         tiled_map: None,
         board2d: None,
         icon_render: None,
@@ -155,10 +155,10 @@ fn accepted_vfs_controls_match_the_shared_localized_keyboard_law() {
     acknowledge_vfs_accessibility_candidates(77);
     assert_eq!(accepted_vfs_accessibility_controls(host_id), vec![row, chevron]);
     let scene = vfs_scene(host_id, fixture["rows"].clone());
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     for law in fixture["keyboard"].as_array().expect("keyboard laws") {
         let kind = if law["control"] == "chevron" { VfsAccessibilityControlKind::Chevron } else { VfsAccessibilityControlKind::Row };
-        let key = if law["key"] == "enter" { semio_framework_ui_wgpu_input::KeyAction::Enter } else { semio_framework_ui_wgpu_input::KeyAction::Space(true) };
+        let key = if law["key"] == "enter" { semio_ui_wgpu_input::KeyAction::Enter } else { semio_ui_wgpu_input::KeyAction::Space(true) };
         let target = VfsAccessibilityFocusTarget { row_id: "folder".into(), kind };
         let outcome = vfs_accessibility_apply_key(&scene, &target, &key, &mut input).expect("accepted control").expect("bounded action");
         let expected = if law["result"] == "toggle" { VfsAccessibilityKeyOutcome::Consumed } else { VfsAccessibilityKeyOutcome::Unhandled };

@@ -54,10 +54,10 @@ semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modul
 semio-framework-trace = { workspace = true }
 semio-hub-stdio-catalog = { workspace = true }
 semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 protocol = { path = "../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
-directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
+db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-os-kernel-db" }
 tokio-tungstenite = "0.26"
 blake3 = "1"
 semio-framework-server = { workspace = true }

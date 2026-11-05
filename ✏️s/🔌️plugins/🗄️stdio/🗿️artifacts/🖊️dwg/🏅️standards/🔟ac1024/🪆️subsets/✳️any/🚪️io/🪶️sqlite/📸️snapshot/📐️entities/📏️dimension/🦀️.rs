@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLinearDimensionEntity;
 use super::{reader::optional_words,number::Projection,entities::{coordinates,read_coordinates},reader::{boolean,full_unsigned,high,low,optional_unsigned,real,Reader}};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 use Cell::{Integer as I,Real as R,Text as T};
 
 pub fn project(projection:&mut Projection<'_,'_>,id:i64,v:&DwgLinearDimensionEntity)->Result<(),ValueError>{

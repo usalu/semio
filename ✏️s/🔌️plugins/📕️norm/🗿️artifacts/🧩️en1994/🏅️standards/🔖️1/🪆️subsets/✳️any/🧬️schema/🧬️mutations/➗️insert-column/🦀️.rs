@@ -17,8 +17,8 @@ pub struct InsertColumn {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for InsertColumn where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::remove_column::RemoveColumn> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "column", kind: "insert-column", record: "InsertedColumn" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert composite column", "Verbundstütze einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert composite column", "Verbundstütze einfügen")
     }
 }
 

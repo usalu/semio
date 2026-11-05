@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertImperfection where
         record: "InsertedImperfection",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert execution imperfection {}", self.item.id), &format!("Ausführungsimperfektion {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert execution imperfection {}", self.item.id), &format!("Ausführungsimperfektion {} einfügen", self.item.id))
     }
 }
 

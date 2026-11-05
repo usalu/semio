@@ -1,15 +1,15 @@
 //! 🎬️ Sequence artifact — the document entity this plugin's app edits (constitutional: general).
 
-extern crate semio_framework_os_infinite as infinite_board_port_directed_dag;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_infinite as infinite_board_port_directed_dag;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 
 use neural_engine::{Value};
-use semio_framework_plugin::{MediaClass, MediaForm, MediaType};
+use semio_plugin::{MediaClass, MediaForm, MediaType};
 
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 

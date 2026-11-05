@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSectionWPlZ where 
         record: "ChangedSectionWPlZ",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plastic section modulus W_pl,z of the section", "Querschnitt: Plastisches Widerstandsmoment W_pl,z ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plastic section modulus W_pl,z of the section", "Querschnitt: Plastisches Widerstandsmoment W_pl,z ändern")
     }
 }
 

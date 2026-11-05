@@ -16,9 +16,9 @@ impl EventRouter {
             overlays: OverlayStack::new(),
             drag: None,
             tree_drag_driver: UiDriverDrag::Handle,
-            tree_drag_metrics: TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default()),
-            control_border: semio_framework_ui_theme::Theme::default().stroke_hairline,
-            control_gap: semio_framework_ui_theme::Theme::default().gap_standard,
+            tree_drag_metrics: TreeRowMetrics::from_theme(&semio_ui_theme::Theme::default()),
+            control_border: semio_ui_theme::Theme::default().stroke_hairline,
+            control_gap: semio_ui_theme::Theme::default().gap_standard,
             tree_drag_handle_press: None,
             drag_payloads: BTreeMap::new(),
             drop_accept: BTreeMap::new(),
@@ -256,7 +256,7 @@ impl EventRouter {
             return true;
         }
         let Some(row_rect) = node_abs_rect(tree, row) else { return false };
-        let metrics = semio_framework_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, row, &self.tree_drag_metrics);
+        let metrics = semio_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, row, &self.tree_drag_metrics);
         let relative = tree_drag_handle_rect(row_rect.w, &metrics);
         Rect::new(row_rect.x + relative.x, row_rect.y + relative.y, relative.w, relative.h).contains(x, y)
     }
@@ -309,7 +309,7 @@ impl EventRouter {
     /// (`mounted_layout::document_row_action_id`) — `build_intent` would answer the row's activation, its primary action, for
     /// the same trigger.
     pub(super) fn row_action_command(&mut self, tree: &UiTree, row: NodeId, index: usize) -> Option<UiCommand> {
-        let action = semio_framework_ui_wgpu_mounted_layout::document_row_action_id(tree, row, index)?.ok()?;
+        let action = semio_ui_wgpu_mounted_layout::document_row_action_id(tree, row, index)?.ok()?;
         let args = tree.authored_tree_item(row)?.actions.as_deref()?.get(index)?.action.args.clone();
         let current_revision = tree.document().map_or(0, |document| document.revision().0);
         let address = match tree.node(row)?.intent.as_ref() {
@@ -325,10 +325,10 @@ impl EventRouter {
     /// pointer on a tree or table row — a click there fires that action, never the row's activation or disclosure.
     pub(super) fn pointer_row_action(&self, tree: &UiTree, id: NodeId, x: f32, y: f32) -> Option<usize> {
         let item = tree.authored_tree_item(id)?;
-        let metrics = semio_framework_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, id, &self.tree_drag_metrics);
+        let metrics = semio_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, id, &self.tree_drag_metrics);
         let band = tree_section_header_band(tree.absolute_rect(id)?, metrics.row_height, self.flow.block.is_reversed());
         let trailing = if self.tree_drag_driver == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
-        semio_framework_ui_wgpu_layout::layout::tree_row_action_at(item, band.w, band.h, trailing, &metrics, x - band.x, y - band.y)
+        semio_ui_wgpu_layout::layout::tree_row_action_at(item, band.w, band.h, trailing, &metrics, x - band.x, y - band.y)
     }
     //#endregion 🎬️IntentApi
 

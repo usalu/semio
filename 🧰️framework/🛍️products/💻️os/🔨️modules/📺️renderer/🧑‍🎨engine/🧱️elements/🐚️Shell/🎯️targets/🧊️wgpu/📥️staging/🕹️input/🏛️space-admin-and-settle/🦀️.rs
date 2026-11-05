@@ -22,9 +22,9 @@ pub struct PresentedInputCandidateWitness(pub u64);
 
 pub struct PresentedInputGeometry {
     pub retained_body_rects: Vec<(String, Rect)>,
-    pub media_owners: Vec<(String, Option<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaOwner>)>,
+    pub media_owners: Vec<(String, Option<semio_renderer_wgpu_media_slots::PresentedMediaOwner>)>,
     pub media_blocked: bool,
-    pub retained_surfaces: Vec<(String, semio_framework_ui_wgpu_engine::UiSurfaceToken)>,
+    pub retained_surfaces: Vec<(String, semio_ui_wgpu_engine::UiSurfaceToken)>,
     pub dock_canvas_bounds: Rect,
     pub dock_axis_separator: f32,
     pub dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,
@@ -120,6 +120,6 @@ impl PointerCapture {
 /// `📓️w11a-prepared-world-mesh-missing.md` §6 family A).
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PointerCapture {
-    pub slots: [Option<PointerCaptureSlot>; semio_framework_os_renderer_wgpu_contracts::SCENE_POINTER_OWNER_CAPACITY],
+    pub slots: [Option<PointerCaptureSlot>; semio_renderer_wgpu_contracts::SCENE_POINTER_OWNER_CAPACITY],
 }
 //#endregion ShellTypes

@@ -16,8 +16,8 @@ pub struct ChangeInsulationThicknessM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeInsulationThicknessM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_insulation_thickness_m::ChangeInsulationThicknessM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "insulation-thickness-m", kind: "change-insulation-thickness-m", record: "ChangedInsulationThicknessM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fire protection thickness", "Dicke der Brandschutzbekleidung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fire protection thickness", "Dicke der Brandschutzbekleidung ändern")
     }
 }
 

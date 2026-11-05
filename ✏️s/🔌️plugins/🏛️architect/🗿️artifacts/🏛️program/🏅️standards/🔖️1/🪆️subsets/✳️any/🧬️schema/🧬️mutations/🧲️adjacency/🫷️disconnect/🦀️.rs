@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "adjacency", kind: "disconnect-adjacency", record: "DisconnectedAdjacency" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect adjacency \"{}\"", self.id.0), &format!("Nachbarschaft \"{}\" aufheben", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Disconnect adjacency \"{}\"", self.id.0), &format!("Nachbarschaft \"{}\" aufheben", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

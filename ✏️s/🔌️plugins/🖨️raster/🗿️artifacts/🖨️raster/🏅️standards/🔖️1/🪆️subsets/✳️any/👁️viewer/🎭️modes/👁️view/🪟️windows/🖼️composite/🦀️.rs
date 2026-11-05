@@ -6,8 +6,8 @@
 //! (contract §2.6) as raster's right base — this artifact IS a pixel image.
 
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use semio_framework_plugin::app::{ImageView, ImageWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult};
+use semio_plugin::app::{ImageView, ImageWindowKit, WindowKit};
+use semio_plugin::{BuiltNode, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const RASTER_VIEW_WINDOW_COMPOSITE: &str = ImageWindowKit::KIND_ID;
@@ -22,7 +22,7 @@ const RASTER_VIEW_FALLBACK_PNG_BASE64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABC
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::raster::create_raster_viewer` — the read-only
 /// `ImageWindowKit::window_kind()` variant verbatim (never `editable_window_kind()`, which declares the
 /// mutating `set-pixel-region` command a viewer must never carry).
-pub fn definition() -> semio_framework_plugin::WindowKindDefinition {
+pub fn definition() -> semio_plugin::WindowKindDefinition {
     ImageWindowKit::window_kind()
 }
 //#endregion 🔖️Definition

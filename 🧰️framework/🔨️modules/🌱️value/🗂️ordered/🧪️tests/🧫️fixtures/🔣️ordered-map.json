@@ -1,7 +1,12 @@
 {
   "schema": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/schema.json#/$defs/OrderedMapFixture",
   "ownership": {
-    "liveOwners": ["map", "update", "lookup", "retirement"],
+    "liveOwners": [
+      "map",
+      "update",
+      "lookup",
+      "retirement"
+    ],
     "liveDrop": "reject-without-payload-destruction",
     "finalPayload": "owned-handoff",
     "terminalOwners": 0
@@ -9,17 +14,33 @@
   "lookupCases": [
     {
       "id": "found-equal-long-key",
-      "sourceKey": {"prefix": "🌊", "repetitions": 2048, "suffix": "a"},
+      "sourceKey": {
+        "prefix": "🌊",
+        "repetitions": 2048,
+        "suffix": "a"
+      },
       "sourceValue": 17,
-      "query": {"prefix": "🌊", "repetitions": 2048, "suffix": "a"},
+      "query": {
+        "prefix": "🌊",
+        "repetitions": 2048,
+        "suffix": "a"
+      },
       "expected": 17,
       "expectedComparedBytes": 16386
     },
     {
       "id": "missing-long-common-prefix",
-      "sourceKey": {"prefix": "🌊", "repetitions": 2048, "suffix": "a"},
+      "sourceKey": {
+        "prefix": "🌊",
+        "repetitions": 2048,
+        "suffix": "a"
+      },
       "sourceValue": 17,
-      "query": {"prefix": "🌊", "repetitions": 2048, "suffix": "b"},
+      "query": {
+        "prefix": "🌊",
+        "repetitions": 2048,
+        "suffix": "b"
+      },
       "expected": null,
       "expectedComparedBytes": 16386
     }
@@ -304,5 +325,301 @@
         }
       ]
     }
-  ]
+  ],
+  "borrowedLookupCases": [
+    {
+      "name": "Retained Port Name",
+      "entries": [
+        [
+          "alpha",
+          1
+        ],
+        [
+          "beta",
+          2
+        ],
+        [
+          "gamma",
+          3
+        ]
+      ],
+      "query": "beta",
+      "expected": 2,
+      "expectedRank": 1
+    },
+    {
+      "name": "UTF8 Prefix",
+      "entries": [
+        [
+          "é",
+          5
+        ],
+        [
+          "ê",
+          6
+        ],
+        [
+          "🧱",
+          7
+        ]
+      ],
+      "query": "é",
+      "expected": 5,
+      "expectedRank": 0
+    },
+    {
+      "name": "Missing Between",
+      "entries": [
+        [
+          "alpha",
+          1
+        ],
+        [
+          "gamma",
+          3
+        ]
+      ],
+      "query": "beta",
+      "expected": null,
+      "expectedRank": null
+    },
+    {
+      "name": "Empty Query",
+      "entries": [
+        [
+          "",
+          9
+        ],
+        [
+          "a",
+          1
+        ]
+      ],
+      "query": "",
+      "expected": 9,
+      "expectedRank": 0
+    },
+    {
+      "name": "Empty Root",
+      "entries": [],
+      "query": "port",
+      "expected": null,
+      "expectedRank": null
+    },
+    {
+      "name": "Rank After Right Navigation",
+      "entries": [
+        [
+          "omega",
+          9
+        ],
+        [
+          "alpha",
+          1
+        ],
+        [
+          "lambda",
+          6
+        ],
+        [
+          "gamma",
+          4
+        ]
+      ],
+      "query": "omega",
+      "expected": 9,
+      "expectedRank": 3
+    }
+  ],
+  "ownedRemovalCases": [
+    {
+      "name": "Remove Present Middle",
+      "base": [
+        [
+          "a",
+          1
+        ],
+        [
+          "b",
+          2
+        ],
+        [
+          "c",
+          3
+        ]
+      ],
+      "key": "b",
+      "expected": [
+        [
+          "a",
+          1
+        ],
+        [
+          "c",
+          3
+        ]
+      ]
+    },
+    {
+      "name": "Remove Missing",
+      "base": [
+        [
+          "a",
+          1
+        ],
+        [
+          "c",
+          3
+        ]
+      ],
+      "key": "b",
+      "expected": [
+        [
+          "a",
+          1
+        ],
+        [
+          "c",
+          3
+        ]
+      ]
+    },
+    {
+      "name": "Remove Last",
+      "base": [
+        [
+          "a",
+          1
+        ]
+      ],
+      "key": "a",
+      "expected": []
+    },
+    {
+      "name": "Remove Unicode",
+      "base": [
+        [
+          "é",
+          1
+        ],
+        [
+          "ê",
+          2
+        ],
+        [
+          "🧱",
+          3
+        ]
+      ],
+      "key": "ê",
+      "expected": [
+        [
+          "é",
+          1
+        ],
+        [
+          "🧱",
+          3
+        ]
+      ]
+    },
+    {
+      "name": "Remove Empty Root",
+      "base": [],
+      "key": "none",
+      "expected": []
+    }
+  ],
+  "sharedOwnerFixture": {
+    "schema": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/schema.json#/$defs/SharedOwnerFixture",
+    "grants": [
+      1,
+      64,
+      4096
+    ],
+    "key": {
+      "text": "🌊",
+      "repetitions": 4096
+    },
+    "aliases": 8,
+    "expected": {
+      "keyBytes": 16384,
+      "sharedReleases": 7,
+      "finalHandoffs": 1,
+      "payloadDropsBeforeHandoff": 0,
+      "terminalOwners": 0
+    }
+  },
+  "retirementFixture": {
+    "cases": [
+      {
+        "id": "ascii-spare-capacity",
+        "key": "key",
+        "keyCapacity": 257,
+        "value": "payload",
+        "valueCapacity": 513
+      },
+      {
+        "id": "unicode-spare-capacity",
+        "key": "雪😀",
+        "keyCapacity": 513,
+        "value": "é",
+        "valueCapacity": 257
+      }
+    ],
+    "grants": [
+      1,
+      3,
+      64
+    ],
+    "expected": {
+      "terminalOwners": 0,
+      "stepBirthBytes": 0,
+      "reportedReleaseEqualsAllocator": true,
+      "actualReleaseFitsGrant": true,
+      "sourcePayloadPointerPreserved": true
+    }
+  },
+  "fullReceiptFixture": {
+    "id": "original-ordered-mixed-full-receipt",
+    "key": "mixed",
+    "payloadByte": 7,
+    "sourceCapacityBytes": 32,
+    "replacementCapacityBytes": 96,
+    "copyGrants": [
+      1,
+      3,
+      64
+    ],
+    "minimumReleaseGrantBytes": 32,
+    "expected": {
+      "mixedProgress": {
+        "copiedItems": 1,
+        "copiedBytes": 1,
+        "retainedCapacityBytes": 96,
+        "releasedBytes": 32
+      },
+      "sourcePointerPreserved": true,
+      "reportedReceiptEqualsAllocator": true,
+      "releasedEqualsSourcePlusAdmitted": true,
+      "terminalDropReleasedBytes": 0
+    },
+    "expectedMixedDemand": {
+      "copyBytes": 1,
+      "capacityBytes": 96,
+      "releaseBytes": 32,
+      "depth": 2
+    },
+    "deque": {
+      "source": [
+        "雪😀",
+        "retained"
+      ],
+      "containerCapacity": 8,
+      "payloadCapacity": 64,
+      "canonicalSource": "[\"雪😀\",\"retained\"]",
+      "expectedMissingReleaseDemands": 0,
+      "terminalDropReleasedBytes": 0
+    }
+  }
 }

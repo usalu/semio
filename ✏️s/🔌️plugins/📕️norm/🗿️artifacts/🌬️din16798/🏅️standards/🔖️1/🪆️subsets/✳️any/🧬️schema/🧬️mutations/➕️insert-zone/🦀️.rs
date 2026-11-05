@@ -10,8 +10,8 @@ pub struct InsertZone { pub index: Option<usize>, pub zone: ZoneDocument }
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for InsertZone where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::remove_zone::RemoveZone> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "zone", kind: "insert-zone", record: "InsertZone" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert zone", "Zone einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert zone", "Zone einfügen")
     }
 }
 

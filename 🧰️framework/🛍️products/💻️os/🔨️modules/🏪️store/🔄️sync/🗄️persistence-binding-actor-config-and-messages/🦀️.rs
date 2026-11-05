@@ -164,7 +164,7 @@ pub enum ArtifactActorMsg {
     /// 🛟️ The host re-seeded a rebootstrapping hub document ([`ArtifactEvent::RebootstrapRequired`]): the canonical
     /// checkpoint pair it verified against the control and already loaded into the guest. The actor adopts it as its baseline,
     /// hands its unacked local operations back to the guest and dials at once, saying Hello at the pair's baseline.
-    Reseed { pack: Vec<u8>, spr: Vec<u8>, baseline: semio_framework_os_directory::ArtifactFrontier },
+    Reseed { pack: Vec<u8>, spr: Vec<u8>, baseline: semio_os_directory::ArtifactFrontier },
     /// 🔄️ Forces an immediate re-read + diff of the folder binding (test/manual poke hook).
     ExternalChanged,
     /// ✂️ Flushes any pending outbound operations, then stops the actor.

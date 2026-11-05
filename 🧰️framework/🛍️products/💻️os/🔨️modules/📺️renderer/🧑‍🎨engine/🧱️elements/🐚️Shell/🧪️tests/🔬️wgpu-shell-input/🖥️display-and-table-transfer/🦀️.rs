@@ -6,14 +6,14 @@
 /// still commits that row's published `Activate` binding on a later click.
 #[test]
 fn published_tree_handle_routes_through_shell_and_preserves_label_selection() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "tree-pointer-host-boundary";
     let body = Rect::new(17.0, 31.0, 360.0, 240.0);
     let theme = Theme::default();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let (mut document, item_key) = published_tree_pointer_document(&mut shell, surface);
     let mut input = paint_tree_pointer_document(&mut shell, surface, &document, body);
-    assert_eq!(semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::accessibility_visible_window_ids(), vec![surface.to_string()], "the same completed retained-body publication owns the unnamed accessibility surface set");
+    assert_eq!(semio_renderer_wgpu_ui_engine_dump::chrome_ledger::accessibility_visible_window_ids(), vec![surface.to_string()], "the same completed retained-body publication owns the unnamed accessibility surface set");
 
     let handle_id = format!("tree.drag.transfer.{item_key}");
     let handle = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(handle_id.as_str())).expect("the published Handle driver exposes the transfer affordance").rect;
@@ -22,26 +22,26 @@ fn published_tree_handle_routes_through_shell_and_preserves_label_selection() {
     let (handle_x, handle_y) = (handle.x + handle.w * 0.5, handle.y + handle.h * 0.5);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(handle_x, handle_y, true, 0, &mut input, &theme)).expect("Shell routes handle down");
     PointerCtx::of(&mut shell).handle_pointer_move(handle_x - 8.0, handle_y, true, &mut input, &theme);
-    let sessions = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions();
+    let sessions = semio_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions();
     assert_eq!(sessions.len(), 1, "the Shell move promotes the retained Tree press to one drag session");
     assert_eq!(sessions[0].0, surface);
     assert_eq!(sessions[0].3.get("application/x-semio-window-template").map(String::as_str), Some("{\"windowKindId\":\"world\",\"templateId\":\"default\"}"));
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(handle_x - 8.0, handle_y, false, 0, &mut input, &theme)).expect("Shell routes handle up");
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions().is_empty(), "release retires the retained drag session");
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "a handle gesture never aliases the row-label selection");
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions().is_empty(), "release retires the retained drag session");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "a handle gesture never aliases the row-label selection");
 
     let (label_x, label_y) = (row.x + theme.gap_standard.max(1.0), row.y + row.h * 0.5);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(label_x, label_y, true, 0, &mut input, &theme)).expect("Shell routes label down");
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(label_x, label_y, false, 0, &mut input, &theme)).expect("Shell routes label up");
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1, "the label click still commits exactly one selection action");
     assert_eq!(actions[0].controller_id, "s.test.tree");
     assert_eq!(actions[0].action, "selectTreeItem");
     let args = dsl_value_as_json(actions[0].args.as_ref().expect("the retained host scopes the selection"));
     assert_eq!(args["windowId"], surface);
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
-    assert!(semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::accessibility_visible_window_ids().is_empty(), "a later complete walk with no retained body removes the live document from production accessibility without retiring it");
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
+    assert!(semio_renderer_wgpu_ui_engine_dump::chrome_ledger::accessibility_visible_window_ids().is_empty(), "a later complete walk with no retained body removes the live document from production accessibility without retiring it");
     while !document.close_step() {}
 }
 
@@ -97,14 +97,14 @@ fn close_display_transfer_host_fixture(mut fixture: DisplayTransferHostFixture) 
 
 #[test]
 fn cancelled_display_transfer_retires_capture_without_creating_a_window() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut fixture = display_transfer_host_fixture();
     let before = fixture.shell.dock.dock.window_instances().len();
     let (x, y) = fixture.source;
     semio_framework_async::block_on(ChromeViewCtx::of(&mut fixture.shell).handle_pointer_button(x, y, true, 0, &mut fixture.input, &fixture.theme)).expect("Display transfer press");
     PointerCtx::of(&mut fixture.shell).handle_pointer_move(800.0, 500.0, true, &mut fixture.input, &fixture.theme);
     PointerCtx::of(&mut fixture.shell).handle_pointer_cancel(&mut fixture.input);
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     assert!(fixture.shell.dock.dock_drag.is_none() && fixture.shell.dock.pending_dock_drag.is_none());
     assert!(!fixture.input.pointer_down && !fixture.input.drag.active);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut fixture.shell).handle_pointer_button(800.0, 500.0, false, 0, &mut fixture.input, &fixture.theme)).expect("late release stays inert");
@@ -115,7 +115,7 @@ fn cancelled_display_transfer_retires_capture_without_creating_a_window() {
 
 #[test]
 fn refused_window_publication_does_not_block_a_ready_display_peer() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let contract: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window publication fixture");
     let cohort = &contract["publicationOutcomes"]["cohort"];
     let mut fixture = display_transfer_host_fixture();
@@ -165,20 +165,20 @@ fn refused_window_publication_does_not_block_a_ready_display_peer() {
 
 #[test]
 fn actual_display_release_refuses_item_and_byte_credit_before_dock_mutation() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let contract: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window publication fixture");
     let refusals = contract["publicationOutcomes"]["atomicCreditRefusals"].as_array().expect("credit vectors");
 
     let mut item = display_transfer_host_fixture();
     let item_root = item.shell.dock.dock.root.clone();
-    for _ in 0..semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY {
+    for _ in 0..semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY {
         item.shell.windows.reserve_window_topology_action(ActionDescriptor { controller_id: "fixture".into(), action: "occupied".into(), args: None }).expect("item-credit fixture admission");
     }
     let item_error = perform_display_transfer(&mut item, (800.0, 500.0)).expect_err("the physical release observes item refusal");
     assert!(item_error.contains("ItemCredits"));
     assert_eq!(item.shell.dock.dock.root, item_root);
     assert!(item.shell.windows.window_topology_publications.is_empty());
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "a refused physical release still retires capture");
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "a refused physical release still retires capture");
     assert!(item.shell.dock.pending_dock_drag.is_none() && item.shell.dock.dock_drag.is_none());
     assert_eq!(refusals[0]["dockMutation"], "none");
     close_display_transfer_host_fixture(item);
@@ -188,19 +188,19 @@ fn actual_display_release_refuses_item_and_byte_credit_before_dock_mutation() {
     let chunk = "x".repeat(3_900);
     let mut admitted = 0usize;
     loop {
-        let action = ActionDescriptor { controller_id: "fixture".into(), action: "occupied".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "a": chunk.clone(), "b": chunk.clone(), "c": chunk.clone(), "d": chunk.clone() }) };
+        let action = ActionDescriptor { controller_id: "fixture".into(), action: "occupied".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "a": chunk.clone(), "b": chunk.clone(), "c": chunk.clone(), "d": chunk.clone() }) };
         match bytes.shell.windows.reserve_window_topology_action(action) {
             Ok(_) => admitted += 1,
-            Err(semio_framework_ui_action::BoundedActionFault::ByteCredits) => break,
+            Err(semio_ui_action::BoundedActionFault::ByteCredits) => break,
             Err(error) => panic!("byte fixture reached the wrong admission fault: {error:?}"),
         }
     }
-    assert!(admitted < semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY, "byte credits exhaust before item credits");
+    assert!(admitted < semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY, "byte credits exhaust before item credits");
     let byte_error = perform_display_transfer(&mut bytes, (800.0, 500.0)).expect_err("the physical release observes byte refusal");
     assert!(byte_error.contains("ByteCredits"));
     assert_eq!(bytes.shell.dock.dock.root, byte_root);
     assert!(bytes.shell.windows.window_topology_publications.is_empty());
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     assert!(bytes.shell.dock.pending_dock_drag.is_none() && bytes.shell.dock.dock_drag.is_none());
     assert_eq!(refusals[1]["dockMutation"], "none");
     close_display_transfer_host_fixture(bytes);
@@ -210,8 +210,8 @@ fn actual_display_release_refuses_item_and_byte_credit_before_dock_mutation() {
 /// retained reconciliation and paint, so the published Shell ingress starts a NewWindow dock drag.
 #[test]
 fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "display-transfer-host-boundary";
     let body = Rect::new(19.0, 37.0, 420.0, 300.0);
     let theme = Theme::default();
@@ -268,7 +268,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     assert_eq!(shell.windows.window_topology_publications.len(), 1);
     assert!(shell.windows.window_topology_publications[0].journal_token.is_some());
     assert!(shell.settle.deferred_actions.is_empty(), "the guest journal cannot run before the new window body is published");
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "the hitless release retires retained capture");
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "the hitless release retires retained capture");
     assert!(shell.dock.pending_dock_drag.is_none() && shell.dock.dock_drag.is_none());
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(800.0, 500.0, false, 0, &mut input, &theme)).expect("a duplicate release is inert");
     assert_eq!(shell.dock.dock.window_instances().len(), 1, "one gesture cannot create a second window");
@@ -277,10 +277,10 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     PointerCtx::of(&mut shell).handle_pointer_move(1000.0, 700.0, true, &mut input, &theme);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(1000.0, 700.0, false, 0, &mut input, &theme)).expect("an outside release cancels cleanly");
     assert_eq!(shell.dock.dock.window_instances().len(), 1, "an outside drop does not create a window");
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     assert!(shell.dock.pending_dock_drag.is_none() && shell.dock.dock_drag.is_none());
 
-    let scene = semio_framework_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
+    let scene = semio_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
     let body_document = shell.windows.publish_surface_records("main-2", vec![world3d_pointer_record(1, "initial-world", &scene)]).expect("the guest producer publishes the created instance's retained body");
     shell.docs.window_ui.insert("main-2".into(), body_document);
     SessionCtx::of(&mut shell).complete_window_topology_refresh();
@@ -310,7 +310,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     let mut body_input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut body_input, &theme, bounds, &mut world_resources, cx)));
     assert!(painted, "the canonical Shell window walk consumes the created instance's initial body");
     assert!(body_input.staged_hits().iter().any(|hit| hit.kind == HitKind::World3d), "the canonical window walk stages the new instance's physical World3d hit target");
@@ -346,13 +346,13 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     }
     assert!(shell.surfaces.retired_world3d_states.is_empty(), "the retired World3d owner reaches terminal empty under maintenance");
     for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
-        if !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for("main-2") {
+        if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for("main-2") {
             break;
         }
-        assert!(caller.turn(|cx|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
-        shell = semio_framework_os_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close(shell);
+        assert!(caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
+        shell = semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close(shell);
     }
-    assert!(!semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for("main-2"), "the presenter maintenance lane returns the closed retained surface before its identity is reused");
+    assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for("main-2"), "the presenter maintenance lane returns the closed retained surface before its identity is reused");
 
     let program = shell.plugins.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("the host fixture has its guest program");
     program.install_fixture_render(runnable_window_body_fixture);
@@ -381,7 +381,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     let mut refreshed_overlay = Some(&mut refreshed_overlay_draw);
     let mut refreshed_input = InputState::<ActionDescriptor>::default();
     let mut refreshed_cursor = ShellChromeChildCursor::default();
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let refreshed =
         (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut refreshed_cursor, &mut refreshed_draw, &mut refreshed_overlay, &mut atlas, &icons, &mut refreshed_input, &theme, bounds, &mut world_resources, cx)));
     assert!(refreshed, "the body returned by refresh_ui enters the canonical Shell paint walk");
@@ -416,25 +416,25 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
 /// and the host's retained down/move/up ingress preserves the generation-owned transfer between them.
 #[test]
 fn two_published_table_surfaces_transfer_through_the_shell_host() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     table_transfer_through_the_shell_host(false);
 }
 
 #[test]
 fn a_published_table_transfer_survives_a_same_host_document_refresh() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     table_transfer_through_the_shell_host(true);
 }
 
 fn table_transfer_through_the_shell_host(refresh: bool) {
-    semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer();
+    semio_renderer_wgpu_scene_render::cancel_scene_list_transfer();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔀️scene-list-transfer/🔣️.json")).expect("shared transfer fixture");
     let source_fixture = &fixture["table"]["source"];
     let destination_fixture = &fixture["table"]["destination"];
     let source_id = "table-shell-source";
     let destination_id = "table-shell-destination";
     let columns = serde_json::json!([{ "id": "name", "label": "Name", "sortable": false }]).to_string();
-    let mut source_scene = semio_framework_ui_scene_views::TableScene::base(
+    let mut source_scene = semio_ui_scene_views::TableScene::base(
         columns.clone(),
         serde_json::json!([{
             "id": source_fixture["rowId"],
@@ -444,7 +444,7 @@ fn table_transfer_through_the_shell_host(refresh: bool) {
         .to_string(),
     );
     source_scene.row_drag_mime = source_fixture["mime"].as_str().map(str::to_string);
-    let mut destination_scene = semio_framework_ui_scene_views::TableScene::base(columns, serde_json::json!([{ "id": "destination", "name": "Destination" }]).to_string());
+    let mut destination_scene = semio_ui_scene_views::TableScene::base(columns, serde_json::json!([{ "id": "destination", "name": "Destination" }]).to_string());
     destination_scene.drop_action_json = Some(destination_fixture["dropAction"].to_string());
 
     let mut shell = host_test_shell();
@@ -456,8 +456,8 @@ fn table_transfer_through_the_shell_host(refresh: bool) {
         &mut shell,
         &[(source_id, "controller.table-a", &source_document, source_body), (destination_id, destination_fixture["dropAction"]["controllerId"].as_str().expect("destination controller"), &destination_document, destination_body)],
     );
-    let source_owner = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(source_id, source_body.w * 0.5, source_body.h * 0.5).expect("source component host");
-    let destination_owner = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(destination_id, destination_body.w * 0.5, destination_body.h * 0.5).expect("destination component host");
+    let source_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(source_id, source_body.w * 0.5, source_body.h * 0.5).expect("source component host");
+    let destination_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(destination_id, destination_body.w * 0.5, destination_body.h * 0.5).expect("destination component host");
     let source_control = format!("{}.row.asset-7", source_owner.host_id);
     let destination_control = format!("{}.row.destination", destination_owner.host_id);
     let source_row = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(source_control.as_str())).expect("source row paints from the decoded Component::Surface").rect;
@@ -474,7 +474,7 @@ fn table_transfer_through_the_shell_host(refresh: bool) {
         let document = shell.windows.publish_surface_records(source_id, vec![table_pointer_record(1, "source-table", &source_scene)]).expect("the source refresh publishes");
         input =
             paint_component_pointer_documents(&mut shell, &[(source_id, "controller.table-a", &document, source_body), (destination_id, destination_fixture["dropAction"]["controllerId"].as_str().unwrap(), &destination_document, destination_body)]);
-        let refreshed_owner = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(source_id, source_body.w * 0.5, source_body.h * 0.5).expect("refreshed component host");
+        let refreshed_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(source_id, source_body.w * 0.5, source_body.h * 0.5).expect("refreshed component host");
         assert!(source_owner.same_component_host(&refreshed_owner), "ordinary publication preserves the mounted Table owner");
         Some(document)
     } else {
@@ -482,11 +482,11 @@ fn table_transfer_through_the_shell_host(refresh: bool) {
     };
     PointerCtx::of(&mut shell).handle_pointer_move(destination_point.0, destination_point.1, true, &mut input, &theme);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(destination_point.0, destination_point.1, false, 0, &mut input, &theme)).expect("Shell routes Table destination up");
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1, "one physical transfer emits exactly one destination action");
     assert_eq!(serde_json::to_value(&actions[0]).expect("action wire"), fixture["table"]["expectedAction"]);
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "release retires retained capture");
-    assert!(!semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer(), "release retires the scene transfer authority");
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "release retires retained capture");
+    assert!(!semio_renderer_wgpu_scene_render::cancel_scene_list_transfer(), "release retires the scene transfer authority");
     while !source_document.close_step() {}
     while !destination_document.close_step() {}
     if let Some(document) = refreshed_document.as_mut() {

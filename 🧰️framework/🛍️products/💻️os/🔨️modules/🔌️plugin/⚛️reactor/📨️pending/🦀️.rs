@@ -1,13 +1,13 @@
 //! 📨️ Exact pending patch roots shared by native and component reactor dispatch.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use semio_framework::kernel::ActorUiPatchReceipt;
-use semio_framework_ui_contract::{self as ui_contract, UiPatch};
-use semio_framework_ui_runtime::{SurfaceReconcilePublishedAck, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch};
+use semio_ui_contract::{self as ui_contract, UiPatch};
+use semio_ui_runtime::{SurfaceReconcilePublishedAck, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch};
 use std::cell::RefCell;
 
 //#region 📨️PendingPatchAuthority
-const PENDING_PATCH_CAPACITY: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_ADMISSION_SLOTS;
+const PENDING_PATCH_CAPACITY: usize = semio_ui_runtime::SURFACE_RECONCILE_ADMISSION_SLOTS;
 
 enum PendingPatchOwner {
     Reconcile(SurfaceReconcileReadyPatch),
@@ -656,7 +656,7 @@ mod issued_receipt_tests;
 #[path = "🧪️tests/🔬️instance-lifetime-patch-close/🦀️.rs"]
 mod instance_lifetime_patch_close_tests;
 
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     static PENDING_PATCHES: RefCell<PendingPatchAuthority> = RefCell::new(PendingPatchAuthority::new());
 }
 
@@ -691,7 +691,7 @@ pub mod result_publication;
 use std::cell::Cell;
 use life_reactor_close::ReactorCloseRegistry;
 
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     /// 🎛️ Per-instance `QuotaSchema`, real values decoded off `Event::InstanceOpen.quotas`
     /// (previously always defaulted — see `wit_event_to_kernel`'s `InstanceOpen` arm) and dropped
     /// again on `Event::InstanceClose`. `spawn_task`'s quota gate is the first real reader.

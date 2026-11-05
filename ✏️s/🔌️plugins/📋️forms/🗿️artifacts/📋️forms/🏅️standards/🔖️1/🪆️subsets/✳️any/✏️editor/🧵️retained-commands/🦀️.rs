@@ -37,6 +37,44 @@ pub const FORMS_RETAINED_TOOL_IDS: &[&str] = &[
     "discardResponse",
 ];
 
+pub const FORMS_STANDARD_TOOL_IDS: &[&str] = &[
+    "setTryValues",
+    "resetTry",
+    "previousStep",
+    "nextStep",
+    "submit",
+    "setContributions",
+    "addStep",
+    "patchStep",
+    "removeStep",
+    "moveStep",
+    "updateForm",
+    "addBlock",
+    "removeBlock",
+    "patchQuestionOptions",
+    "addQuestionOption",
+    "removeQuestionOption",
+    "patchVectorField",
+    "addVectorField",
+    "removeVectorField",
+    "moveBlock",
+    "dropQuestionKind",
+    "setSpecJson",
+    "setActiveExample",
+    "exportSnapshot",
+    "setTryValueStep",
+    "exportResponses",
+    "discardResponse",
+];
+
+pub const FORMS_PAGED_VALUE_RAW_BYTES: usize = 131_072;
+
+pub fn forms_paged_value_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(FORMS_PAGED_VALUE_RAW_BYTES, 640, 64, 4_096, 7_500)
+}
+
+pub fn forms_tool_raw_bytes(tool_id: &str) -> usize { if matches!(tool_id, "patchQuestions" | "setTryValue") { FORMS_PAGED_VALUE_RAW_BYTES } else { FORMS_RETAINED_RAW_BYTES } }
+
 const FORMS_RETAINED_PAYLOAD_SCHEMA: &str = "forms.tool-command.v1";
 
 pub const FORMS_RETAINED_RAW_BYTES: usize = 16_384;
@@ -57,7 +95,7 @@ impl FormsWindowCommandWork {
     pub fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false, response_export: None } }
 }
 
-pub fn forms_try_view<'a>(view: &'a semio_framework_plugin::ViewModel, window_id: &str, window_kind_id: &str) -> Result<&'a semio_framework_plugin::ViewModel, Fault> {
+pub fn forms_try_view<'a>(view: &'a semio_plugin::ViewModel, window_id: &str, window_kind_id: &str) -> Result<&'a semio_plugin::ViewModel, Fault> {
     if view.window_id.as_deref() != Some(window_id)
         || window_kind_id != support::FORMS_PLAY_WINDOW_TRY
         || !view.window_instances.iter().any(|window| window.id == window_id && window.window_kind_id == window_kind_id)
@@ -67,7 +105,7 @@ pub fn forms_try_view<'a>(view: &'a semio_framework_plugin::ViewModel, window_id
     Ok(view)
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<FormsPlayApp>> for FormsWindowCommandWork {
+impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<FormsPlayApp>> for FormsWindowCommandWork {
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn extent(
@@ -75,7 +113,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
         command: &FormsCommand,
         snapshot: &FormsSnapshot,
         _interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
     ) -> Option<usize> {
         if self.completed || command.command_id() != self.tool_id { return None; }
         match command {
@@ -93,11 +131,11 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
 
     fn step(
         &mut self,
-        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<FormsPlayApp>>,
+        input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<FormsPlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<FormsPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<FormsPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        use semio_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("forms-window-work-terminal")); }
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
@@ -133,7 +171,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
                 let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
                 let view = forms_try_view(context.view_state.as_deref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
                 let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
-                let output = set_try_value::advance_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
+                let output = set_try_value::advance_window(input.snapshot, payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
                 emit = output.emit;
                 transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
             }
@@ -171,7 +209,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
         match transient {
             Some(mutation) => Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
                 emit,
-                ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] },
+                ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] },
             }),
             None => Ok(ArtifactCommandWorkStep::Complete(emit)),
         }
@@ -195,7 +233,7 @@ pub struct FormsBoundedCommandJobFactory {
 
 impl FormsBoundedCommandJobFactory {
     pub fn new(controller_id: &str) -> Self {
-        Self { keys: FORMS_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+        Self { keys: FORMS_STANDARD_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
 
@@ -219,16 +257,15 @@ impl semio_framework::ToolJobFactory for FormsBoundedCommandJobFactory {
         forms_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: FORMS_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: FORMS_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommandJobFactory {
     type Owner = EditorApp<FormsPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = FORMS_RETAINED_TOOL_IDS;
+    const TOOL_IDS: &'static [&'static str] = FORMS_STANDARD_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        ArtifactToolPublicationContract { tool_id: "setTryValue", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "setTryValues", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "resetTry", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "previousStep", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -242,7 +279,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
         ArtifactToolPublicationContract { tool_id: "updateForm", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "addBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "removeBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "patchQuestions", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchQuestionOptions", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "addQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "removeQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -260,3 +296,88 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
     ];
 }
 //#endregion 🧵️RetainedCommands
+
+pub struct FormsPagedValueCommandJobFactory { keys: Vec<ToolFactoryKey> }
+
+impl FormsPagedValueCommandJobFactory {
+    pub fn new(controller: &str) -> Self { Self { keys: vec![ToolFactoryKey::new(controller, "setTryValue"), ToolFactoryKey::new(controller, "patchQuestions")] } }
+}
+
+impl semio_framework::ToolJobFactory for FormsPagedValueCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<FormsPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<FormsPlayApp>>;
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { "forms.paged-value-command.v1" }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { forms_paged_value_bounded_contract() }
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: FORMS_PAGED_VALUE_RAW_BYTES, checkpoint_resume: false);
+}
+
+impl semio_plugin::ArtifactOwnedToolJobFactory for FormsPagedValueCommandJobFactory {
+    type Owner = EditorApp<FormsPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = &["setTryValue", "patchQuestions"];
+    const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setTryValue", lanes: &[ArtifactToolPublicationLane::WindowTransient] }, ArtifactToolPublicationContract { tool_id: "patchQuestions", lanes: &[ArtifactToolPublicationLane::Artifact] }];
+}
+
+struct FormsStandardProofs;
+impl FormsStandardProofs {
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<FormsPlayApp>,
+        owner_file: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.forms.forms@1/*#editor",
+        artifact_schema: "forms.form",
+        factory: "FormsBoundedCommandJobFactory",
+        factory_type: FormsBoundedCommandJobFactory,
+        tools: {
+            "setTryValues" => forms_bounded_contract(),
+            "resetTry" => forms_bounded_contract(),
+            "previousStep" => forms_bounded_contract(),
+            "nextStep" => forms_bounded_contract(),
+            "submit" => forms_bounded_contract(),
+            "setContributions" => forms_bounded_contract(),
+            "addStep" => forms_bounded_contract(),
+            "patchStep" => forms_bounded_contract(),
+            "removeStep" => forms_bounded_contract(),
+            "moveStep" => forms_bounded_contract(),
+            "updateForm" => forms_bounded_contract(),
+            "addBlock" => forms_bounded_contract(),
+            "removeBlock" => forms_bounded_contract(),
+            "patchQuestionOptions" => forms_bounded_contract(),
+            "addQuestionOption" => forms_bounded_contract(),
+            "removeQuestionOption" => forms_bounded_contract(),
+            "patchVectorField" => forms_bounded_contract(),
+            "addVectorField" => forms_bounded_contract(),
+            "removeVectorField" => forms_bounded_contract(),
+            "moveBlock" => forms_bounded_contract(),
+            "dropQuestionKind" => forms_bounded_contract(),
+            "setSpecJson" => forms_bounded_contract(),
+            "setActiveExample" => forms_bounded_contract(),
+            "exportSnapshot" => forms_bounded_contract(),
+            "exportResponses" => forms_bounded_contract(),
+            "discardResponse" => forms_bounded_contract(),
+            "setTryValueStep" => forms_bounded_contract(),
+        }
+    }
+}
+
+struct FormsPagedValueProofs;
+impl FormsPagedValueProofs {
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<FormsPlayApp>,
+        owner_file: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.forms.forms@1/*#editor",
+        artifact_schema: "forms.form",
+        factory: "FormsPagedValueCommandJobFactory",
+        factory_type: FormsPagedValueCommandJobFactory,
+        contract: forms_paged_value_bounded_contract(),
+        tools: ["setTryValue", "patchQuestions"]
+    }
+}
+
+pub fn forms_command_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+    let mut proofs = FormsStandardProofs::bounded_first_step_tool_proofs();
+    proofs.extend(FormsPagedValueProofs::bounded_first_step_tool_proofs());
+    proofs.sort_by_key(|proof| FORMS_RETAINED_TOOL_IDS.iter().position(|id| *id == proof.tool_id()).unwrap());
+    proofs
+}

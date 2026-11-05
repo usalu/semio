@@ -1,18 +1,17 @@
 //! 🗣️ Flow play app — the compiled-DAG window: the read-only wire literal of the current snapshot.
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::host::with_live_host_snapshot;
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use semio_framework_ui_declaration::ui::TextEditorScene;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_declaration::ui::TextEditorScene;
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_WINDOW_COMPILED: &str = "flow-compiled-dag";
@@ -44,7 +43,13 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
-    let wire=with_live_host_snapshot(snapshot,|live|flow::FlowHost::project_compiled_wire_literal(live,&flow::flow_neuron_kind_info_map()));
+    let live=snapshot.read_source().map_err(|error|semio_plugin::PluginAssemblyError::new("flow.source",error.into_message()))?;
+    render_source(&live,config,session)
+}
+
+/// 🗣️ Projects the already retained execution source.
+pub fn render_source(live:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,_config:&FlowMainWindowConfig,_session:&FlowEvalSession)->UiAssemblyResult<BuiltNode>{
+    let wire=flow::FlowHost::project_compiled_wire_literal(live,&flow::flow_neuron_kind_info_map());
     let scene = TextEditorScene::base(wire, Some("wire".into()), None);
     scene_surface(FLOW_PLAY_SURFACE_COMPILED, ContractSurfaceKind::TextEditor, &scene)
 }

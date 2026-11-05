@@ -17,9 +17,9 @@
 //! Every leaf folder's stem equals its `semanticKind` and every leaf is wired by [`Leaves`](self) below, in enum
 //! order — no other file path-includes a leaf.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate self as semio_s_artifact_procedural_3d_mutations;
 
 //#region 📖️SemioGrammar
@@ -34,13 +34,15 @@ use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_os_flow::FlowHost;
+use semio_os_flow::FlowHost;
 
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the generation3d document, derived per
 /// `📓️derivation-rules.md` from `Generation3dSnapshot`'s shape.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.2d", reference = Generation3dSnapshot, reference_diff = Generation3dDiff)]
 pub enum Generation3dMutation {
     CreateWidget(semio_s_artifact_procedural_3d_mut_widgets::create_widget::CreateWidget),
@@ -362,7 +364,7 @@ impl<'a> GraphEditor<'a> {
     }
 
     /// 🗺️ Lays the graph out again with the host's layered layout: one `move-widget` per widget that moves.
-    pub fn reorganize(&mut self, options: &semio_framework_os_infinite::board::schema::layout::DagLayoutOptions, control: &mut semio_framework_os_infinite::board::schema::layout::LayoutControl<'_>) -> Result<(), String> {
+    pub fn reorganize(&mut self, options: &semio_os_infinite::board::schema::layout::DagLayoutOptions, control: &mut semio_os_infinite::board::schema::layout::LayoutControl<'_>) -> Result<(), String> {
         let before = self.host.host_snapshot.layout.clone();
         let reorganized = self.host.reorganize(options, control).map_err(|error| error.to_string());
         let moved: Vec<String> = self.host.host_snapshot.layout.iter().filter(|(id, layout)| before.get(id) != Some(*layout)).map(|(id, _)| id.clone()).collect();
@@ -404,3 +406,13 @@ pub mod text;
 
 #[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
 pub mod binary;
+
+#[cfg(test)]
+#[path="📥️provisional/🧪️tests/🦀️.rs"]
+mod provisional_wire_laws;
+
+/// 🎛️ Original typed input records used by retained editor producers.
+pub use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::{ChangeWidgetInput,WidgetInputValue};
+
+/// 🧭️ Canonical native transform kinds used by retained command producers.
+pub use semio_s_artifact_procedural_3d_mut_transforms::{GENERATION3D_TRANSLATE_KINDS,GENERATION3D_ROTATE_KINDS,GENERATION3D_SCALE_KINDS};

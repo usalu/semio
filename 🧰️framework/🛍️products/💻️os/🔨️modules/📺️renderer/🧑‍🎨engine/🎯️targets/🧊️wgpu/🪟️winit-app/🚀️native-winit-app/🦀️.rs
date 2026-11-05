@@ -6,7 +6,7 @@ use super::*;
 pub(super) mod native {
     use super::{advance_frame_generation, collect_scheduler_redraw, ime_event_from_winit, invalidate_scheduler_redraw, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
                                                                                                                                                                                                                                                                 use crate::os_host::OsHostRetirement;
-        use semio_framework_os_renderer_wgpu_app_runtime::AppMailbox;
+        use semio_renderer_wgpu_app_runtime::AppMailbox;
     use std::sync::Arc;
     use ui_render::{PhysicalSize, PointerInfo};
     #[cfg(target_arch = "wasm32")]
@@ -27,7 +27,7 @@ pub(super) mod native {
     pub enum HostUserEvent {
         RuntimeReady {
             runtime: AppMailbox,
-            presenter: semio_framework_os_renderer_wgpu_frame_presentation::AppPresenter,
+            presenter: semio_renderer_wgpu_frame_presentation::AppPresenter,
         },
         /// 🔔️ Payload-free worker-completion signal. Receiving it invalidates the retained snapshot;
         /// no future is polled by the event loop.
@@ -54,14 +54,14 @@ pub(super) mod native {
         #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: std::path::PathBuf,
         #[cfg(not(target_arch = "wasm32"))]
-        services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,
+        services:Vec<semio_os_kernel::os_directory::client::InstalledServiceContributionV1>,
         window: Option<Arc<Window>>,
         /// ♿️ The window's platform accessibility adapter, attached before the window was first shown.
         #[cfg(not(target_arch = "wasm32"))]
-        accessibility: Option<semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityBridge>,
+        accessibility: Option<semio_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityBridge>,
         host: Option<OsHost>,
         retirement: Option<OsHostRetirement>,
-        frame_caller:semio_framework_os_renderer_wgpu_host_plumbing::native_caller::NativeFrameEventIssuer,
+        frame_caller:semio_renderer_wgpu_host_plumbing::native_caller::NativeFrameEventIssuer,
         close_pending:bool,
         #[cfg(not(target_arch = "wasm32"))]
         pointers: ui_host::PointerRegistry,
@@ -79,8 +79,8 @@ pub(super) mod native {
             #[cfg(target_arch = "wasm32")] plugins: Option<wasm_bindgen::JsValue>,
             #[cfg(target_arch = "wasm32")] canvas: Option<web_sys::HtmlCanvasElement>,
             #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
-            #[cfg(not(target_arch = "wasm32"))] services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,
-            frame_caller:semio_framework_os_renderer_wgpu_host_plumbing::native_caller::NativeFrameEventIssuer,
+            #[cfg(not(target_arch = "wasm32"))] services:Vec<semio_os_kernel::os_directory::client::InstalledServiceContributionV1>,
+            frame_caller:semio_renderer_wgpu_host_plumbing::native_caller::NativeFrameEventIssuer,
         ) -> Self {
             Self {
                 proxy,
@@ -310,15 +310,15 @@ pub(super) mod native {
     // 🚫️async: U1 — called from winit's own sync `ApplicationHandler` callbacks.
     fn publish_system_appearance(theme: Option<winit::window::Theme>) {
         let Some(theme) = theme else { return };
-        semio_framework_os_renderer_wgpu_host_base::set_host_appearance(semio_framework_os_renderer_wgpu_host_base::HostAppearance { system_dark: matches!(theme, winit::window::Theme::Dark), ..semio_framework_os_renderer_wgpu_host_base::host_appearance() });
+        semio_renderer_wgpu_host_base::set_host_appearance(semio_renderer_wgpu_host_base::HostAppearance { system_dark: matches!(theme, winit::window::Theme::Dark), ..semio_renderer_wgpu_host_base::host_appearance() });
     }
 
-    /// 🎛️ Reads the accessibility preferences of the operating system (high contrast, more contrast, dark scheme, reduced motion) into [`semio_framework_os_renderer_wgpu_host_base::publish_host_platform_prefs`]; `true` when one changed. The browser twin is the page thread forwarding its media queries, so a wasm realm reads nothing here.
+    /// 🎛️ Reads the accessibility preferences of the operating system (high contrast, more contrast, dark scheme, reduced motion) into [`semio_renderer_wgpu_host_base::publish_host_platform_prefs`]; `true` when one changed. The browser twin is the page thread forwarding its media queries, so a wasm realm reads nothing here.
     // 🚫️async: U1 — called from winit's own sync `ApplicationHandler` callbacks.
     #[cfg(not(target_arch = "wasm32"))]
     fn publish_platform_prefs() -> bool {
-        let read = semio_framework_os_renderer_wgpu_native_platform::platform_prefs::detect();
-        semio_framework_os_renderer_wgpu_host_base::publish_host_platform_prefs(read.forced_colors, read.prefers_contrast_more, read.prefers_dark, read.prefers_reduced_motion)
+        let read = semio_renderer_wgpu_native_platform::platform_prefs::detect();
+        semio_renderer_wgpu_host_base::publish_host_platform_prefs(read.forced_colors, read.prefers_contrast_more, read.prefers_dark, read.prefers_reduced_motion)
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -352,7 +352,7 @@ pub(super) mod native {
                 return;
             }
             semio_framework_trace::register_ui_thread();
-            let mut attributes = WindowAttributes::default().with_title(semio_framework_os_renderer_wgpu_host_base::boot_window_title());
+            let mut attributes = WindowAttributes::default().with_title(semio_renderer_wgpu_host_base::boot_window_title());
             #[cfg(target_arch = "wasm32")]
             {
                 use winit::platform::web::WindowAttributesExtWebSys;
@@ -372,7 +372,7 @@ pub(super) mod native {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let proxy = self.proxy.clone();
-                self.accessibility = Some(semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityBridge::new(
+                self.accessibility = Some(semio_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityBridge::new(
                     event_loop,
                     &window,
                     Arc::new(move || {
@@ -393,8 +393,8 @@ pub(super) mod native {
             #[cfg(not(target_arch = "wasm32"))]
             let services=self.services.clone();
             let gpu = ui_gpu::platform::NativeSurfaceCapture::capture(window.clone()).expect("native GPU surface capture").prepare();
-            semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
-                let result = semio_framework_os_renderer_wgpu_frame_transaction::boot_runtime(
+            semio_renderer_wgpu_host_base::spawn_app_task(async move {
+                let result = semio_renderer_wgpu_frame_transaction::boot_runtime(
                     window,
                     gpu,
                     plugin_filter,
@@ -410,7 +410,7 @@ pub(super) mod native {
                     Ok((runtime, presenter)) => {
                         let _ = proxy.send_event(HostUserEvent::RuntimeReady { runtime, presenter });
                     }
-                    Err(error) => semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("boot_runtime failed: {error}")),
+                    Err(error) => semio_renderer_wgpu_host_base::log_debug(&format!("boot_runtime failed: {error}")),
                 }
             });
         }
@@ -421,8 +421,8 @@ pub(super) mod native {
         fn user_event(&mut self, event_loop: &ActiveEventLoop, event: HostUserEvent) {
             match event {
                 HostUserEvent::RuntimeReady { runtime, presenter } => {
-                    semio_framework_os_renderer_wgpu_host_base::log_debug_diagnostic("[TRACE] native renderer boot ready");
-                    let mut host = OsHost::new(runtime, presenter, semio_framework_os_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
+                    semio_renderer_wgpu_host_base::log_debug_diagnostic("[TRACE] native renderer boot ready");
+                    let mut host = OsHost::new(runtime, presenter, semio_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
                     let proxy = self.proxy.clone();
                     #[cfg(not(target_arch = "wasm32"))]
                     host.runtime.set_waker(Arc::new(move || {
@@ -513,7 +513,7 @@ pub(super) mod native {
                 }
                 WindowEvent::Focused(false) => {
                     let _=self.frame_caller.observe_event();
-                    semio_framework_os_renderer_wgpu_shell_window_actions::note_host_window_blur();
+                    semio_renderer_wgpu_shell_window_actions::note_host_window_blur();
                     window.request_redraw();
                 }
                 WindowEvent::RedrawRequested => {

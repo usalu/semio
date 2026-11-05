@@ -25,5 +25,5 @@ export const evaluateToolJobSources = (sources: Record<string, string>) => {
 /** 🪙 Builds the exact bounded first step proof source of one tool for an owner file and controller. */
 export const exactBoundedFirstStepProof = (owner: string, controller: string, id: string, raw = 64) => {
   const ownerType = `Owner${owner.replaceAll(/[^A-Za-z0-9]/g, "")}`;
-  return `impl ArtifactEditor for ${ownerType} { const DOCUMENT_SCHEMA: &'static str = "fixture.document"; }\nbounded_first_step_tool_proofs! { owner: semio_framework_plugin::EditorApp<${ownerType}>, owner_file: "${owner}", controller: "${controller}", artifact_schema: "fixture.document", factory: "BoundedFirstStepCommandJobFactory", tools: { "${id}" => semio_framework::ToolExecutionContract::bounded_first_step(${raw}, 1, 1, 64, 100), } }`;
+  return `impl ArtifactEditor for ${ownerType} { const DOCUMENT_SCHEMA: &'static str = "fixture.document"; }\nbounded_first_step_tool_proofs! { owner: semio_plugin::EditorApp<${ownerType}>, owner_file: "${owner}", controller: "${controller}", artifact_schema: "fixture.document", factory: "BoundedFirstStepCommandJobFactory", tools: { "${id}" => semio_framework::ToolExecutionContract::bounded_first_step(${raw}, 1, 1, 64, 100), } }`;
 };

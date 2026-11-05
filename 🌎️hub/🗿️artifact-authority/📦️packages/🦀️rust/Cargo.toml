@@ -30,8 +30,8 @@ semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/�
 tokio = { workspace = true, features = ["full"] }
 semio-framework-async = { workspace = true }
 semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-framework-plugin-host = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
-directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-plugin-host = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
 sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"] }
@@ -40,7 +40,7 @@ neo4rs = { version = "0.8" }
 [dev-dependencies]
 semio-hub-directory-contract = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
-directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
 serde_json = { workspace = true }
 semio-framework = { path = "../../../../🧰️framework/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }

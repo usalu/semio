@@ -1,43 +1,43 @@
 //! 📥️ Items of `store` that belong to `os-store-codec-factory` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🦀️.rs`.
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
+use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::ActorId;
-use semio_framework_os_spr::{Mutation, OpBinary, OpText};
+use semio_os_spr::ActorId;
+use semio_os_spr::{Mutation, OpBinary, OpText};
 use serde::Deserialize;
-use semio_framework_os_store_engine_owners::DocumentStoreOwners;
-use semio_framework_os_store_engine_owners::close_unscheduled_catalog;
-use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use semio_framework_os_vcs::VcsError;
-use semio_framework_os_store_space_schema::ArtifactCursor;
+use semio_os_store_engine_owners::DocumentStoreOwners;
+use semio_os_store_engine_owners::close_unscheduled_catalog;
+use semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_os_vcs::VcsError;
+use semio_os_store_space_schema::ArtifactCursor;
 //#region 🔖️EphemeralLanes
 
-use semio_framework_os_store_ephemeral::*;
-use semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations;
-use semio_framework_os_store_text_io::{ArtifactCodec, ArtifactCodecReference, ArtifactNativeSnapshotIdentity, ArtifactPackFiles, ArtifactSqliteSnapshotHost};
+use semio_os_store_ephemeral::*;
+use semio_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations;
+use semio_os_store_text_io::{ArtifactCodec, ArtifactCodecReference, ArtifactNativeSnapshotIdentity, ArtifactPackFiles, ArtifactSqliteSnapshotHost};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_store_text_io::ArtifactCodecApplyFuture;
+use semio_os_store_text_io::ArtifactCodecApplyFuture;
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_store_text_io::ArtifactCodecApplyFuture;
-use semio_framework_os_store_owned_schema_decode::artifact_retirement_self_grant;
+use semio_os_store_text_io::ArtifactCodecApplyFuture;
+use semio_os_store_owned_schema_decode::artifact_retirement_self_grant;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
-use semio_framework_os_store_codec_registry::canonical_check_in_line;
+use semio_os_store_text_io::ArtifactStoreSnapshot;
+use semio_os_store_codec_registry::canonical_check_in_line;
 #[path="🏠️owners/🦀️.rs"]
 mod codec_owners;
 pub use codec_owners::{ArtifactCodecOwnerSource,BoundedArtifactCodecOwners,codec_document_owners};
-use semio_framework_os_store_text_io::text_format::{ArtifactTextFiles, ParsedDocumentText, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines};
-use semio_framework_os_store_text_io::text_format::project_envelope_history;
-use semio_framework_os_store_ledger::edit_from_operation_envelope_cold;
-use semio_framework_os_store_canonical_json::ArtifactCanonicalJsonTree;
-use semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
-use semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication;
+use semio_os_store_text_io::text_format::{ArtifactTextFiles, ParsedDocumentText, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines};
+use semio_os_store_text_io::text_format::project_envelope_history;
+use semio_os_store_ledger::edit_from_operation_envelope_cold;
+use semio_os_store_canonical_json::ArtifactCanonicalJsonTree;
+use semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+use semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication;
 //#region 🔖️Backbone
 //#region 🔖️Backbone
-use semio_framework_os_store_backbone as backbone;
-use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_store_backbone as backbone;
+use semio_os_store_engine::lifted_store::ArtifactStore;
 //#region 🔖️Authority
 //#region 🔖️EphemeralLanes
 //#region 🔖️Text
@@ -57,8 +57,8 @@ where P:pack::snapshot::ArtifactPackMetadata+ArtifactStoreSnapshot+'static,
 /// [`bare_artifact_codec`]. One call per document kind registers it (`register_document_codec_for_app`).
 pub fn artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
-    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ArtifactSqliteSnapshotHost + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + ArtifactSqliteSnapshotHost + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
 {
     let mut codec = bare_artifact_codec::<P, Mutation>(schema);
     codec.snapshot_sqlite = Some(P::sqlite_codec());
@@ -74,8 +74,8 @@ where
 /// `Option::map`'s closure is sync (R10 shape 1).
 pub fn bare_artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
-    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
 {
     bare_artifact_codec_with_owners::<P, Mutation, BoundedArtifactCodecOwners>(schema)
 }
@@ -83,8 +83,8 @@ where
 /// 🧬️ Selects one original publication/replay owner source for every native reduction store.
 pub fn bare_artifact_codec_with_owners<P, Mutation, Source>(schema: impl Into<String>) -> ArtifactCodec
 where
-    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
     Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
 {
     /// 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
@@ -94,11 +94,11 @@ where
     /// saying it here costs nothing and lets the coercion succeed.
     fn compile_dsl_impl<'a, P, Mutation>(dsl: &'a str, ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>>
     where
-        P: Clone + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static + FromValue,
-        Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static + Clone + semio_framework_os_spr::ColdMutation<P>,
+        P: Clone + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static + FromValue,
+        Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static + Clone + semio_os_spr::ColdMutation<P>,
     {
         Box::pin(async move {
-            let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(dsl, ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(dsl, ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
             let envelope = parsed.into_envelope();
             let pack_files = print_document_pack(&envelope).await;
             let dsl_mirror = envelope.vcs.genesis.facts().snapshot().print_dsl();
@@ -114,11 +114,11 @@ where
     /// saying it here costs nothing and lets the coercion succeed.
     fn print_mirror_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>
     where
-        P: Clone + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static + FromValue,
-        Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static + Clone + semio_framework_os_spr::ColdMutation<P>,
+        P: Clone + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static + FromValue,
+        Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static + Clone + semio_os_spr::ColdMutation<P>,
     {
         Box::pin(async move {
-            let parsed: ParsedDocumentText<P, Mutation> = parse_document_pack(pack, spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let parsed: ParsedDocumentText<P, Mutation> = parse_document_pack(pack, spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
             let envelope = parsed.into_envelope();
             let mirror = print_document_text(&envelope).await;
             envelope.retire_unadopted();
@@ -146,15 +146,15 @@ where
     /// store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
     fn apply_ops_binary_impl<'a, 'b, P, Mutation, Source>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
     where
-        P: Clone + FromValue + ToValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+        P: Clone + FromValue + ToValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: Clone + semio_os_spr::ColdMutation<P> + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
         Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
         {
         Box::pin(async move {
             let mutations: Vec<Mutation> = if ops_vec.is_empty() {
                 Vec::new()
             } else {
-                let op_blobs = semio_framework_os_spr::decode_ops_vec(ops_vec).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                let op_blobs = semio_os_spr::decode_ops_vec(ops_vec).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                 let mut decoded = Vec::with_capacity(op_blobs.len());
                 for bytes in &op_blobs {
                     decoded.push(Mutation::decode_op(bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?);
@@ -165,7 +165,7 @@ where
                 if pack.is_empty() && spr.is_empty() {
                     return Ok((Vec::new(), Vec::new(), String::new()));
                 }
-                let parsed = parse_document_pack::<P, Mutation>(pack, spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                let parsed = parse_document_pack::<P, Mutation>(pack, spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
                 let envelope = parsed.into_envelope();
                 let printed = print_document_pack(&envelope).await;
                 envelope.retire_unadopted();
@@ -175,15 +175,15 @@ where
             let (mut store, installed) = if pack.is_empty() && spr.is_empty() {
                 return Err(VcsError::Deserialize("apply_ops_binary: lane has no pack+spr baseline".into()));
             } else {
-                let parsed = parse_document_pack::<P, Mutation>(pack, spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                let parsed = parse_document_pack::<P, Mutation>(pack, spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
                 let mut envelope = parsed.into_envelope();
                 let (applied, redo) = match &envelope.cursor {
                     Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-                    None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), semio_framework_os_vcs::HistoryPageStack::new()),
+                    None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), semio_os_vcs::HistoryPageStack::new()),
                 };
                 envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
                 let owners = match codec_document_owners::<P,Mutation,Source>() { Ok(owners)=>owners, Err(error)=>{envelope.retire_unadopted();return Err(VcsError::ValidationFailed(error.into_message()))} };
-                let mut store = match ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await {Ok(store)=>store,Err(error)=>{close_unscheduled_catalog(owners);return Err(error)}};
+                let mut store = match ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await {Ok(store)=>store,Err(error)=>{close_unscheduled_catalog(owners);return Err(error)}};
                 let installed = store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); VcsError::ValidationFailed(error.into_message()) });
                 (store, installed)
             };
@@ -205,8 +205,8 @@ where
 
     fn replay_envelopes_impl<'a, P, Mutation, Source>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
     where
-        P: Clone + FromValue + ToValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: semio_framework_os_spr::ColdMutation<P> + Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+        P: Clone + FromValue + ToValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: semio_os_spr::ColdMutation<P> + Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
         Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
         {
         Box::pin(async move {
@@ -215,9 +215,9 @@ where
         })
     }
 
-    fn edit_text_from_envelope_impl<'a, P, Mutation>(envelope: &'a semio_framework_os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>
+    fn edit_text_from_envelope_impl<'a, P, Mutation>(envelope: &'a semio_os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>
     where
-        Mutation: semio_framework_os_spr::ColdMutation<P> + OpText + OpBinary,
+        Mutation: semio_os_spr::ColdMutation<P> + OpText + OpBinary,
     {
         Box::pin(async move {
             let edit = edit_from_operation_envelope_cold::<Mutation>(envelope).await?;
@@ -254,8 +254,8 @@ pub const ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
 /// [`ArtifactCodec::apply_ops_binary`] and [`replay_envelopes_onto_pair`].
 pub fn close_codec_reduction_store<P, Mutation>(mut store: ArtifactStore<P, Mutation>) -> Result<(), VcsError>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     let mut closed = Err(VcsError::ValidationFailed("artifact codec store did not reach terminal emptiness within its bounded close budget".into()));
     for _ in 0..ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS {
@@ -297,7 +297,7 @@ where
     if drop_ready { Ok(()) } else { Err(VcsError::ValidationFailed("artifact codec store close left a live shallow-shell owner".into())) }
 }
 
-/// 📜️ Folds an [`semio_framework_os_spr::encode_envelopes`] ledger stream onto one authoritative pair through
+/// 📜️ Folds an [`semio_os_spr::encode_envelopes`] ledger stream onto one authoritative pair through
 /// the SAME gate every replica folds a remote envelope through ([`ArtifactStore::ingest_remote`]):
 /// causal order, history transitions (undo/redo/checkpoint), edit identity and conflict quarantine are
 /// exactly a replica's, so the printed pair is the one any client holding that ledger prefix holds.
@@ -310,14 +310,14 @@ where
 /// See `🌎️hub/🗿️artifact-authority/📌️check-in` and `db::artifact_ledger_tail`.
 pub async fn replay_envelopes_onto_pair<P, Mutation>(pack: &[u8], spr: &[u8], envelopes: &[u8], owners: impl FnOnce() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>) -> Result<ArtifactPackFiles, VcsError>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     if pack.is_empty() || spr.is_empty() {
         return Err(VcsError::Deserialize("replay-envelopes has no pack+spr baseline".into()));
     }
-    let envelopes = semio_framework_os_spr::decode_envelopes(envelopes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-    let parsed = parse_document_pack::<P, Mutation>(pack, spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let envelopes = semio_os_spr::decode_envelopes(envelopes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let parsed = parse_document_pack::<P, Mutation>(pack, spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let mut envelope = parsed.into_envelope();
     let _canonical_line = canonical_check_in_line(&envelope.id);
     envelope.active_alternative_id = None;
@@ -325,11 +325,11 @@ where
     project_envelope_history(&mut envelope)?;
     let (applied, redo) = match &envelope.cursor {
         Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), semio_framework_os_vcs::HistoryPageStack::new()),
+        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), semio_os_vcs::HistoryPageStack::new()),
     };
     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
     let owners = match owners() {Ok(owners)=>owners,Err(error)=>{envelope.retire_unadopted();return Err(VcsError::ValidationFailed(error.into_message()))}};
-    let mut store = match ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await {Ok(store)=>store,Err(error)=>{close_unscheduled_catalog(owners);return Err(error)}};
+    let mut store = match ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await {Ok(store)=>store,Err(error)=>{close_unscheduled_catalog(owners);return Err(error)}};
     let baseline = store.supersessions().clone();
     let mut folded = store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); VcsError::ValidationFailed(error.into_message()) });
     for envelope in envelopes {

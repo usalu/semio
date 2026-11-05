@@ -1,7 +1,7 @@
 //! 🧭️ Every selected stdio artifact resolves from its natural file name and MIME type to exactly itself, driven by
 //! the language-agnostic `🧫️fixtures/🧭️format-resolution/🔣️.json` fixture.
 
-use semio_framework_os_kernel::io::{resolve_format_in, FormatDescriptor, FormatQuery, FormatResolutionBasis};
+use semio_os_kernel::io::{resolve_format_in, FormatDescriptor, FormatQuery, FormatResolutionBasis};
 use serde_json::Value;
 use std::collections::BTreeSet;
 

@@ -1,8 +1,8 @@
 use crate::{editor::forms::support::FORMS_INTERACTION_FIELDS, editor::forms::support::FORMS_INTERACTION_GRANULARITY_FIELD, editor::forms::support::FORMS_INTERACTION_GRANULARITY_SECTION, editor::forms::support::FORMS_PLAY_APP_ID};
 use crate::{FormQuestion, FormStep, FormsSnapshot};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use crate::editor::forms::panels::document::*;
 use crate::editor::forms::unit_tests::context::{forms_app, render as render_body};
 use crate::editor::forms::FORMS_PLAY_BODY_ARTIFACT as BODY_ARTIFACT;
@@ -34,9 +34,9 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 //#region 🪟️WindowLaws
 use crate::editor::forms::terminology::forms_play_labels;
 use crate::replace_forms_steps;
-use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
-use semio_framework_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
+use semio_plugin::plugin_app_close_prelude::Component;
+use semio_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
 
 fn question(step: usize, index: usize) -> FormQuestion {
     FormQuestion {
@@ -86,7 +86,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 /// 🪟️ A nested container's node key is its PATH from the body root — the SDK addresses a step row as
 /// `<steps section>␟<step tree id>`, so a request naming the bare row id addresses nothing.
 fn step_path(step_id: &str) -> String {
-    format!("{FORMS_PLAY_DOCUMENT_STEPS}{}{step_id}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+    format!("{FORMS_PLAY_DOCUMENT_STEPS}{}{step_id}", semio_plugin::TREE_WINDOW_PATH_SEPARATOR)
 }
 
 /// 🪟️ A REALISTIC measured viewport. A large `tree_viewport_rows` is not a harmless over-request: a wide
@@ -96,15 +96,15 @@ fn step_path(step_id: &str) -> String {
 const MEASURED_VIEWPORT_ROWS: u32 = 8;
 
 fn viewing(rows: u32, requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 fn build(spec: &FormsSnapshot, view: &ViewModel) -> BuiltNode {
-    render(spec, forms_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, FORMS_PLAY_BODY_ARTIFACT)).expect("forms document tree assembly")
+    render(spec, forms_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, FORMS_PLAY_BODY_ARTIFACT)).expect("forms document tree assembly")
 }
 
 fn projection(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("forms document tree projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("forms document tree projection")
 }
 
 fn steps_section(tree: &BuiltNode) -> &BuiltNode {

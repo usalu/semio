@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeMixedTerrainDistan
         record: "ChangedMixedTerrainDistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change distance to the terrain category change", "Abstand zum Geländekategoriewechsel ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change distance to the terrain category change", "Abstand zum Geländekategoriewechsel ändern")
     }
 }
 

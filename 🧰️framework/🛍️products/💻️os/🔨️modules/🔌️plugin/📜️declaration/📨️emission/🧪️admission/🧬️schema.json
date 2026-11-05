@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rows"
+  ],
+  "properties": {
+    "rows": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "input",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "input": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "length",
+              "capacity",
+              "cellBytes",
+              "original",
+              "items",
+              "copyBytes",
+              "capacityBytes",
+              "releaseBytes",
+              "depth"
+            ],
+            "properties": {
+              "length": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "capacity": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cellBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "original": {
+                "type": "boolean"
+              },
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "copyBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "capacityBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "releaseBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "depth": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "length",
+              "capacity",
+              "original",
+              "work",
+              "copiedBytes",
+              "bornBytes",
+              "releasedBytes",
+              "complete"
+            ],
+            "properties": {
+              "length": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "capacity": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "original": {
+                "type": "boolean"
+              },
+              "work": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "copiedBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bornBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "releasedBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "complete": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -24,8 +24,8 @@ pub fn change_part_kind_variant<Op: From<crate::change_part_kind_variant::Change
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangePartKindVariant where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_part_kind_variant::ChangePartKindVariant> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "part-kind", kind: "change-part-kind-variant", record: "ChangedPartKindVariant" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change part kind variant to {:?}", self.new_variant), &format!("Bauteilartvariante auf {:?} ändern", self.new_variant))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change part kind variant to {:?}", self.new_variant), &format!("Bauteilartvariante auf {:?} ändern", self.new_variant))
     }
 }
 

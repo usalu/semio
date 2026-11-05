@@ -1,0 +1,47 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "op",
+      "source",
+      "target",
+      "admitted",
+      "changed",
+      "afterSource",
+      "afterTarget"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "op": {
+        "enum": [
+          "take",
+          "restore"
+        ]
+      },
+      "source": {
+        "type": "boolean"
+      },
+      "target": {
+        "type": "boolean"
+      },
+      "admitted": {
+        "type": "boolean"
+      },
+      "changed": {
+        "type": "boolean"
+      },
+      "afterSource": {
+        "type": "boolean"
+      },
+      "afterTarget": {
+        "type": "boolean"
+      }
+    }
+  }
+}

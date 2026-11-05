@@ -2,12 +2,12 @@
 use pack::snapshot::ArtifactPack;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_diagnostic::{Diagnostic, Severity, TextSpan};
-use semio_framework_plugin::io::{AnalyzeSource, ComposeError, ComposeSource, ComposerEntry, Composition, Confidence};
-use semio_framework_plugin::ArtifactComposer;
+use semio_plugin::io::{AnalyzeSource, ComposeError, ComposeSource, ComposerEntry, Composition, Confidence};
+use semio_plugin::ArtifactComposer;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::{geometry, snapshot::{IfcSnapshot, IfcValue}};
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::{io as gltf_io, schema::snapshot::*};
 use std::sync::OnceLock;
-use semio_framework_os_kernel::io::{io_mechanism::{self, ArchiveChildren, Deserializer, IoEntry, IoRunControl, Serializer}, io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult}};
+use semio_os_kernel::io::{io_mechanism::{self, ArchiveChildren, Deserializer, IoEntry, IoRunControl, Serializer}, io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult}};
 use pack::snapshot::{ArtifactNativeSnapshot, NativeSnapshotEncoding, NativeSnapshotInput};
 use semio_s_artifact_stdio_ifc4x3_step as io;
 mod validation {
@@ -136,10 +136,10 @@ pub struct GltfIntoIfcNative;
 impl Deserializer<IfcSnapshot> for GltfIntoIfcNative {
     const FROM: Dialect=GLTF_DIALECT;
     const FIDELITY: IoFidelity=IoFidelity::Lossy;
-    async fn sniff(payload:&IoPayload)->semio_framework_os_kernel::io::io_schema::Confidence {
-        let IoPayload::Binary(bytes)=payload else{return semio_framework_os_kernel::io::io_schema::Confidence::None;};
-        let Ok(length)=semio_framework_os_kernel::semio_format::declared_envelope_prefix_len("stdio.gltf",semio_framework_os_kernel::semio_format::Component::Pack,1)else{return semio_framework_os_kernel::io::io_schema::Confidence::None;};
-        if bytes.len()>=length&&(0..length).all(|i|semio_framework_os_kernel::semio_format::declared_binary_prefix_byte("stdio.gltf",semio_framework_os_kernel::semio_format::Component::Pack,1,i).ok().flatten()==Some(bytes[i])){semio_framework_os_kernel::io::io_schema::Confidence::High}else{semio_framework_os_kernel::io::io_schema::Confidence::None}
+    async fn sniff(payload:&IoPayload)->semio_os_kernel::io::io_schema::Confidence {
+        let IoPayload::Binary(bytes)=payload else{return semio_os_kernel::io::io_schema::Confidence::None;};
+        let Ok(length)=semio_os_kernel::semio_format::declared_envelope_prefix_len("stdio.gltf",semio_os_kernel::semio_format::Component::Pack,1)else{return semio_os_kernel::io::io_schema::Confidence::None;};
+        if bytes.len()>=length&&(0..length).all(|i|semio_os_kernel::semio_format::declared_binary_prefix_byte("stdio.gltf",semio_os_kernel::semio_format::Component::Pack,1,i).ok().flatten()==Some(bytes[i])){semio_os_kernel::io::io_schema::Confidence::High}else{semio_os_kernel::io::io_schema::Confidence::None}
     }
     async fn deserialize(payload:&IoPayload,control:&mut IoRunControl<'_,'_>)->IoResult<IfcSnapshot> {
         gltf_owned::import_payload(payload,false,control)
@@ -149,7 +149,7 @@ impl Deserializer<IfcSnapshot> for GltfIntoIfcNative {
 /// 💾 Natural GLB export for host binary delivery, independently of target-native artifact pack composition.
 pub struct IfcIntoGlb;
 impl Serializer<IfcSnapshot> for IfcIntoGlb {
-    const INTO:Dialect=semio_framework_os_kernel::io::io_schema::CARRIER_BINARY;
+    const INTO:Dialect=semio_os_kernel::io::io_schema::CARRIER_BINARY;
     const FIDELITY:IoFidelity=IoFidelity::Lossy;
     async fn serialize(source:&IfcSnapshot,_:&ArchiveChildren,control:&mut IoRunControl<'_,'_>)->IoResult<IoPayload> {
         gltf_owned::export_payload(source,true,control)
@@ -159,9 +159,9 @@ impl Serializer<IfcSnapshot> for IfcIntoGlb {
 /// 📥️ Actual natural GLB carriers borrow their original JSON and BIN spans under the source recipient.
 pub struct GlbIntoIfcNative;
 impl Deserializer<IfcSnapshot> for GlbIntoIfcNative {
-    const FROM:Dialect=semio_framework_os_kernel::io::io_schema::CARRIER_BINARY;
+    const FROM:Dialect=semio_os_kernel::io::io_schema::CARRIER_BINARY;
     const FIDELITY:IoFidelity=IoFidelity::Lossy;
-    async fn sniff(payload:&IoPayload)->semio_framework_os_kernel::io::io_schema::Confidence{match payload{IoPayload::Binary(bytes)if bytes.len()>=12&&bytes.starts_with(b"glTF")&&u32::from_le_bytes(bytes[4..8].try_into().unwrap())==2&&u32::from_le_bytes(bytes[8..12].try_into().unwrap())as usize==bytes.len()=>semio_framework_os_kernel::io::io_schema::Confidence::High,_=>semio_framework_os_kernel::io::io_schema::Confidence::None}}
+    async fn sniff(payload:&IoPayload)->semio_os_kernel::io::io_schema::Confidence{match payload{IoPayload::Binary(bytes)if bytes.len()>=12&&bytes.starts_with(b"glTF")&&u32::from_le_bytes(bytes[4..8].try_into().unwrap())==2&&u32::from_le_bytes(bytes[8..12].try_into().unwrap())as usize==bytes.len()=>semio_os_kernel::io::io_schema::Confidence::High,_=>semio_os_kernel::io::io_schema::Confidence::None}}
     async fn deserialize(payload:&IoPayload,control:&mut IoRunControl<'_,'_>)->IoResult<IfcSnapshot>{gltf_owned::import_payload(payload,true,control)}
 }
 
@@ -179,7 +179,7 @@ pub fn io_entries()->&'static[IoEntry] {
 /// 📇 Native composition registry routes publish target-owned artifact packs.
 pub fn entries() -> &'static [ComposerEntry] {
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::composer_entry_of::<IfcToGltf>(), semio_framework_plugin::composer_entry_of::<GltfToIfc>()]).as_slice()
+    ENTRIES.get_or_init(|| vec![semio_plugin::composer_entry_of::<IfcToGltf>(), semio_plugin::composer_entry_of::<GltfToIfc>()]).as_slice()
 }
 
 #[cfg(test)]

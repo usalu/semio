@@ -1,0 +1,23 @@
+{
+  "artifactKind": "s.stdio.semio",
+  "standard": "v1",
+  "subset": "flow",
+  "command": "applyMutations",
+  "publication": "original-qualified-native-batch",
+  "vector": false,
+  "mutations": [
+    "insert-node",
+    "remove-node",
+    "set-node-kind",
+    "set-node-label",
+    "set-node-position",
+    "set-node-param",
+    "remove-node-param",
+    "insert-edge",
+    "remove-edge",
+    "set-edge-endpoints",
+    "set-edge-kind",
+    "drag-nodes"
+  ],
+  "editorId": "s.stdio.semio@v1/flow#editor"
+}

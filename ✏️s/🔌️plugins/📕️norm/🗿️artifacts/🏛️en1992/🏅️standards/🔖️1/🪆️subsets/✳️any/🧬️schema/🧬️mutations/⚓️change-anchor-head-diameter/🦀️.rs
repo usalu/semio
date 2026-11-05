@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeAnchorHeadDiameter
         record: "ChangedAnchorHeadDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change anchor head diameter d_h (0 = derived 2 d) of the anchor", "Dübel: Ankerkopfdurchmesser d_h (0 = abgeleitet 2 d) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change anchor head diameter d_h (0 = derived 2 d) of the anchor", "Dübel: Ankerkopfdurchmesser d_h (0 = abgeleitet 2 d) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.anchor_id.clone()]

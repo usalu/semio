@@ -1,10 +1,10 @@
 //! 📚️ EN 1992 play app panel — examples plus Table 3.1 concrete and B500 reinforcing steel.
 
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 use semio_s_artifact_norm_en1992_model::{ConcreteGrade, ReinforcementGrade};
 
@@ -145,11 +145,11 @@ pub fn reference_tables() -> Vec<semio_s_plugin_norm_app_surface::CatalogueTable
 
 //#region 🔖️Render
 pub fn render(
-    examples: Vec<semio_framework_plugin::ExampleSource>,
-    locale: semio_framework_ui_locale::Locale,
+    examples: Vec<semio_plugin::ExampleSource>,
+    locale: semio_ui_locale::Locale,
     controller_id: &'static str,
-    windows: &semio_framework_plugin::TreeWindows<'_>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    windows: &semio_plugin::TreeWindows<'_>,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut tables = reference_tables();
     tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1992", &<semio_s_artifact_norm_en1992_checks::En1992Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)

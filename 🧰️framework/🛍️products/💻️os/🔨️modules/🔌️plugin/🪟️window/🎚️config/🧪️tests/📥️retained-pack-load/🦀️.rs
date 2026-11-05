@@ -1,18 +1,18 @@
 //! 📥️ Current exact registry load/reopen baseline for the retained load lifecycle cutover.
 
 use std::sync::Arc;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_window_config::{DirectIngress, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigPackLoadStep, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, registry};
-use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
+use semio_plugin_window_config::{DirectIngress, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigPackLoadStep, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, registry};
+use semio_plugin_window_config::retained::ErasedWindowConfigPackLoad;
 use std::future::Future;
 use std::pin::Pin;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_plugin_window_config_registry::WindowRegistry;
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
+use semio_plugin_window_config_registry::WindowRegistry;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
 use std::collections::BTreeMap;
 
 /// 🎟️ Funds exactly one quoted retirement turn with at least the given copy floor and one level of depth.
@@ -33,7 +33,7 @@ fn window_config_paged_registry_opened_actor_owns_new_and_hydrated_partitions_be
         block_on_retained_window_load(Box::pin(async move{
             let law=&fixture["actorAuthority"];
             let mut identity_progress = |_| true;
-            let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
+            let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
             let mut source=WindowConfigOwnerRegistry::new(protocol::ActorId(history_actor.clone().into()));source.register::<RetainedLoadOwnerA>().unwrap();let source_owner=source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).unwrap();drop(source_owner.capture("actor-window").await.unwrap());source_owner.dispatch(&history_actor,WindowConfigMutation::of::<RetainedLoadOwnerA>("actor-window",RetainedLoadCameraConfigMutation::Snapshot{config:Box::new(camera.clone())}),&mut identity).await.unwrap();let pack=source.packs().await.unwrap().pop().unwrap();let history=pack.files.spr.clone();let stored_pack=pack.files.pack.clone();assert!(!history.is_empty());close_retained_load_registry(&mut source);
             let mut reopened=WindowConfigOwnerRegistry::new(protocol::ActorId(opened_actor.clone().into()));reopened.register::<RetainedLoadOwnerA>().unwrap();let refused=reopened.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).unwrap().dispatch(&history_actor,WindowConfigMutation::of::<RetainedLoadOwnerA>("foreign-actor-window",RetainedLoadCameraConfigMutation::Snapshot{config:Box::new(camera.clone())}),&mut identity).await.unwrap_err();assert_eq!(refused.code.0,"window-config.actor");assert!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"foreign-actor-window").is_none());let mut load=reopened.begin_retained_load(pack).unwrap();let mut ready=false;for _ in 0..65536{let grant=load.next_grant();match reopened.advance_retained_load(&mut load,grant){WindowConfigPackLoadStep::Ready=>{ready=true;break},WindowConfigPackLoadStep::Pending(_)|WindowConfigPackLoadStep::OwnershipProgress(_,_)=>{},other=>panic!("opened actor hydration {other:?}")}}assert!(ready);let candidate_actor=load.candidate_actor_for_test::<RetainedLoadOwnerA>().unwrap();let committed=reopened.commit_retained_load(&mut load);assert!(matches!(committed,WindowConfigPackLoadStep::Pending(_)|WindowConfigPackLoadStep::Complete));for _ in 0..65536{let grant=load.next_grant();if matches!(reopened.close_retained_load_step(&mut load,grant).unwrap(),PluginLifecycleStep::Complete(_))&&load.terminal_is_empty(){break}}assert!(load.terminal_is_empty());assert_eq!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"actor-window").unwrap().get::<RetainedLoadOwnerA>(),Some(&camera));let restored=reopened.packs().await.unwrap().pop().unwrap();assert_eq!(restored.files.spr,history);assert_eq!(restored.files.pack,stored_pack);close_retained_load_registry(&mut reopened);
             let mut partition=TypedWindowConfigStoreOwner::<RetainedLoadOwnerA>{direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new(),addresses:Vec::new()}).map_err(|(error,_)|error).unwrap(),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(protocol::ActorId(opened_actor.clone().into())),actor_retirement:None};let new_actor=partition.partition("fresh-actor-window").await.unwrap().store.local_actor_id().clone();for _ in 0..65536{if matches!(partition.close_step(retained_registry_grant()).unwrap(),PluginLifecycleStep::Complete(_))&&partition.terminal_is_empty(){break}}assert!(partition.terminal_is_empty());
@@ -71,7 +71,7 @@ fn saved_camera(fixture: &serde_json::Value) -> RetainedLoadCameraConfig {
     let viewport = &fixture["savedCamera"]["viewport"];
     let eye = fixture["savedCamera"]["eye"].as_array().expect("saved camera eye");
     RetainedLoadCameraConfig {
-        viewport: semio_framework_os_kernel::Viewport2d { x: viewport["x"].as_f64().unwrap(), y: viewport["y"].as_f64().unwrap(), zoom: viewport["zoom"].as_f64().unwrap() },
+        viewport: semio_os_kernel::Viewport2d { x: viewport["x"].as_f64().unwrap(), y: viewport["y"].as_f64().unwrap(), zoom: viewport["zoom"].as_f64().unwrap() },
         eye: [eye[0].as_f64().unwrap(), eye[1].as_f64().unwrap(), eye[2].as_f64().unwrap()],
     }
 }
@@ -120,7 +120,7 @@ fn window_config_paged_registry_retained_pack_load_round_trips_a_saved_camera_wi
         assert_ne!(camera, RetainedLoadCameraConfig::default());
         block_on_retained_window_load(Box::pin(async move {
             let mut identity_progress = |_| true;
-            let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
+            let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
             let mut source = WindowConfigOwnerRegistry::new(protocol::ActorId("camera-actor".to_owned().into()));
             register_retained_load_owners(&mut source);
             let owner = source.owners.get_mut(kind.as_str()).expect("registered camera owner");
@@ -151,7 +151,7 @@ fn window_config_paged_registry_retained_pack_load_refuses_exhausted_turn_bounds
         let camera = saved_camera(&fixture);
         block_on_retained_window_load(Box::pin(async move {
             let mut identity_progress = |_| true;
-            let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
+            let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
             let mut source = WindowConfigOwnerRegistry::new(protocol::ActorId("camera-actor".to_owned().into()));
             register_retained_load_owners(&mut source);
             let owner = source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).expect("registered camera owner");
@@ -199,7 +199,7 @@ fn window_config_paged_registry_retained_pack_load_reloads_a_coordinate_valued_w
         assert_ne!(camera.eye, RetainedLoadCameraConfig::default().eye, "the saved coordinate differs from Default, so a lost coordinate cannot pass unnoticed");
         block_on_retained_window_load(Box::pin(async move {
             let mut identity_progress = |_| true;
-            let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
+            let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
             let mut source = WindowConfigOwnerRegistry::new(protocol::ActorId("coordinate-actor".to_owned().into()));
             register_retained_load_owners(&mut source);
             let owner = source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).expect("registered coordinate owner");

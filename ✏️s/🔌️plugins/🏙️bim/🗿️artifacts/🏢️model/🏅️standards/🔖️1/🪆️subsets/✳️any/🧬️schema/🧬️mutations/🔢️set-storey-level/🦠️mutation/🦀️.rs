@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "storey", kind: "set-storey-level", record: "SetStoreyLevel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set storey level to {}", self.level), &format!("Geschossebene auf {} setzen", self.level))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set storey level to {}", self.level), &format!("Geschossebene auf {} setzen", self.level))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -47,7 +47,7 @@ test("mounted retirement requires original caller and preserves both complete fa
  const path=join(import.meta.dir,"../../../../🪜️maintenance-ladder/📥️staging/🔄️full-operation/🦀️.rs"),source=readFileSync(path,"utf8"),start=source.indexOf("fn granted_mounted_retirement_step(");
  expect(start).toBeGreaterThanOrEqual(0);const body=source.slice(start);
  expect(body).toContain("cx:&mut semio_framework_job::StepContext<'_>");
- expect(body).toContain("Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>");
+ expect(body).toContain("Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>");
  expect(body).toContain("self.as_typed().retire_typed_operation_unit(id,cx)");
  expect(body).toContain("owner.close_step(cx)");
  expect(body).toContain("owner.retirement_step(cx)");

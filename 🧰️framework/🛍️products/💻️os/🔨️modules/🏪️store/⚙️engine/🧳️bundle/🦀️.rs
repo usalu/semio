@@ -2,56 +2,56 @@
 //!
 //! 🧭️ Spill valve D3 of `PLAN-OS-KERNEL-CRATES.md` (sections 5.3, 7.5 and 13): the bodies are the composer's, over the six component borrows; `ArtifactStore` in `os-store-engine` keeps delegates with the old signatures.
 
-use semio_framework_os_spr::ActorId;
-use semio_framework_os_spr::ArtifactId;
-use semio_framework_os_spr::Edit;
-use semio_framework_os_spr::HybridLogicalTimestamp;
-use semio_framework_os_spr::Mutation;
-use semio_framework_os_spr::MutationId;
-use semio_framework_os_spr::OpBinary;
-use semio_framework_os_spr::OpText;
-use semio_framework_os_spr::SchemaId;
-use semio_framework_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
-use semio_framework_os_store_engine_core::lifted_document_materialize::now_iso;
-use semio_framework_os_store_engine_core::lifted_store::fold_history;
-use semio_framework_os_store_engine_live::lifted_document_materialize::stamp_primary_operation_identity;
-use semio_framework_os_store_engine_live::lifted_store::StoreParts;
-use semio_framework_os_store_engine_live::lifted_store::StoreReplay;
-use semio_framework_os_store_ledger::ArtifactStoreHistoryCommitReservation;
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
-use semio_framework_os_store_ledger::CursorRevisionRecord;
-use semio_framework_os_store_ledger::PendingCommandReport;
-use semio_framework_os_store_ledger::edit_from_operation_envelope_cold;
-use semio_framework_os_store_ledger::retire_scratch_edits;
-use semio_framework_os_store_ledger::retire_scratch_operations;
-use semio_framework_os_store_ledger::stamp_edit_semantics;
-use semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES;
-use semio_framework_os_store_one_item::ArtifactStoreOneItemFootprint;
-use semio_framework_os_store_one_item::ArtifactStoreOneItemGrant;
-use semio_framework_os_store_one_item::ArtifactStoreOneItemPreparationStep;
-use semio_framework_os_store_one_item::LaneItemReceipt;
-use semio_framework_os_store_one_item::validate_original_preparation_step;
-use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
-use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchStage;
-use semio_framework_os_store_one_item_publication::ArtifactStoreBatchItemRequest;
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance;
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparation;
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase;
-use semio_framework_os_store_read::ArtifactStoreMutationDagRetirement;
-use semio_framework_os_store_read::ArtifactStoreRevisionAccumulatorRetirement;
-use semio_framework_os_store_read::ArtifactStoreStringVectorRetirement;
-use semio_framework_os_store_read::SnapshotRead;
-use semio_framework_os_store_read::artifact_retirement_box_close_step;
-use semio_framework_os_store_replay::EditReplayResult;
-use semio_framework_os_store_replay::retire_shared_projection;
-use semio_framework_os_store_space_schema::ArtifactProjectionCause;
-use semio_framework_os_store_space_schema::HistoryLane;
-use semio_framework_os_store_space_schema::OpenToolTransaction;
-use semio_framework_os_store_text_io::text_format::canonical_conflict_actors;
-use semio_framework_os_store_text_io::text_format::conflict_messages_for_edits;
-use semio_framework_os_vcs::ArtifactHistoryKey;
-use semio_framework_os_vcs::ArtifactHistoryLedger;
-use semio_framework_os_vcs::VcsError;
+use semio_os_spr::ActorId;
+use semio_os_spr::ArtifactId;
+use semio_os_spr::Edit;
+use semio_os_spr::HybridLogicalTimestamp;
+use semio_os_spr::Mutation;
+use semio_os_spr::MutationId;
+use semio_os_spr::OpBinary;
+use semio_os_spr::OpText;
+use semio_os_spr::SchemaId;
+use semio_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
+use semio_os_store_engine_core::lifted_document_materialize::now_iso;
+use semio_os_store_engine_core::lifted_store::fold_history;
+use semio_os_store_engine_live::lifted_document_materialize::stamp_primary_operation_identity;
+use semio_os_store_engine_live::lifted_store::StoreParts;
+use semio_os_store_engine_live::lifted_store::StoreReplay;
+use semio_os_store_ledger::ArtifactStoreHistoryCommitReservation;
+use semio_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_store_ledger::CursorRevisionRecord;
+use semio_os_store_ledger::PendingCommandReport;
+use semio_os_store_ledger::edit_from_operation_envelope_cold;
+use semio_os_store_ledger::retire_scratch_edits;
+use semio_os_store_ledger::retire_scratch_operations;
+use semio_os_store_ledger::stamp_edit_semantics;
+use semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES;
+use semio_os_store_one_item::ArtifactStoreOneItemFootprint;
+use semio_os_store_one_item::ArtifactStoreOneItemGrant;
+use semio_os_store_one_item::ArtifactStoreOneItemPreparationStep;
+use semio_os_store_one_item::LaneItemReceipt;
+use semio_os_store_one_item::validate_original_preparation_step;
+use semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
+use semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchStage;
+use semio_os_store_one_item_publication::ArtifactStoreBatchItemRequest;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemAdvance;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemPreparation;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase;
+use semio_os_store_read::ArtifactStoreMutationDagRetirement;
+use semio_os_store_read::ArtifactStoreRevisionAccumulatorRetirement;
+use semio_os_store_read::ArtifactStoreStringVectorRetirement;
+use semio_os_store_read::SnapshotRead;
+use semio_os_store_read::artifact_retirement_box_close_step;
+use semio_os_store_replay::EditReplayResult;
+use semio_os_store_replay::retire_shared_projection;
+use semio_os_store_space_schema::ArtifactProjectionCause;
+use semio_os_store_space_schema::HistoryLane;
+use semio_os_store_space_schema::OpenToolTransaction;
+use semio_os_store_text_io::text_format::canonical_conflict_actors;
+use semio_os_store_text_io::text_format::conflict_messages_for_edits;
+use semio_os_vcs::ArtifactHistoryKey;
+use semio_os_vcs::ArtifactHistoryLedger;
+use semio_os_vcs::VcsError;
 use semio_framework_value::ArtifactOwnedValueRetirementFactory;
 use semio_framework_value::FromValue;
 use semio_framework_value::SnapshotRetirementFactory;
@@ -62,14 +62,14 @@ use semio_framework_value::retained_clone::RetainedCloneStep;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use semio_framework_os_store_replay::ReplayEdits;
-use semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage;
-use semio_framework_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
+use semio_os_store_replay::ReplayEdits;
+use semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage;
+use semio_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use std::mem::size_of;
-use semio_framework_os_store_replay::original_ingress::{OriginalReplayEdits, original_edits_for_ids};
-pub use semio_framework_os_store_engine_live::lifted_store::publish_prepared_diagnostics;
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
+use semio_os_store_replay::original_ingress::{OriginalReplayEdits, original_edits_for_ids};
+pub use semio_os_store_engine_live::lifted_store::publish_prepared_diagnostics;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
 #[path="📤️message/🦀️.rs"]
 mod original_message;
 #[path="📚️metadata/🦀️.rs"]
@@ -94,8 +94,8 @@ where P:semio_framework_os_spr::StoreState,Mutation:semio_framework_os_spr::Stor
 
 fn advance_apply_batch_inner<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     if !publication.original_registry.as_ref().is_some_and(|registry|registry.ptr_eq(&store.owners.snapshot_read_leases)){return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batched publication requires its original Store issuer")));}
     ensure_durable_group_idle(store)?;
@@ -395,7 +395,7 @@ where
             if !retired_redo.is_empty() || retired_redo.capacity() != 0 {
                 store.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreRevisionAccumulatorRetirement::new(CursorRevisionAccumulator {
                     identity_digest: store.cursor.revision_accumulator.identity_digest,
-                    applied: semio_framework_os_vcs::HistoryPageStack::new(),
+                    applied: semio_os_vcs::HistoryPageStack::new(),
                     redo: retired_redo,
                     applied_tail_chains: None,
                     mutation_positions: protocol::HistoryFoldIndex::new(),
@@ -425,8 +425,8 @@ where
 /// 🧹️ Preserves the original preparation receipt before admitting its final owned Box frame.
 fn spend_item_close_grant<P, Mutation>(owner: &mut Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<RetainedCloneStep, ValueError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
     let Some(current) = owner.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
@@ -535,13 +535,13 @@ where
 /// (R10 shape 1), so the max is found by an explicit fold over resolved keys instead.
 ///
 /// `>=`: `Iterator::max_by_key` keeps the LAST equally-maximum element on a tie.
-pub async fn ingest_remote_merge<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, envelope: semio_framework_os_spr::MutationEnvelope) -> Result<semio_framework_os_spr::MergeReport, VcsError>
+pub async fn ingest_remote_merge<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, envelope: semio_os_spr::MutationEnvelope) -> Result<semio_os_spr::MergeReport, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     ensure_durable_group_idle(store)?;
-    let no_op_report = |policy: semio_framework_os_spr::MergePolicy, insertion_index: usize| semio_framework_os_spr::MergeReport { policy, accepted: true, insertion_index: insertion_index as u32, replayed: Vec::new(), worst: None, conflict: None };
+    let no_op_report = |policy: semio_os_spr::MergePolicy, insertion_index: usize| semio_os_spr::MergeReport { policy, accepted: true, insertion_index: insertion_index as u32, replayed: Vec::new(), worst: None, conflict: None };
     store.owners.displaced_retirements.reserve(2)?;
     let mut candidate_dag = (*store.log.dag).clone();
     let insertion = match candidate_dag.insert(envelope.clone()) {
@@ -552,7 +552,7 @@ where
             return Err(VcsError::Backbone(rejected.error.to_string()));
         }
     };
-    if let semio_framework_os_spr::InsertResult::AlreadyApplied(rejected) = insertion {
+    if let semio_os_spr::InsertResult::AlreadyApplied(rejected) = insertion {
         let equivalent = assert_equivalent_remote_mutation(store, &envelope);
         store.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreConflictRetirement::causal_envelope(rejected)));
         store.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreMutationDagRetirement::new(candidate_dag)));
@@ -560,14 +560,14 @@ where
         return Ok(no_op_report(store.log.merge_policy, store.log.applied_edit_ids.len()));
     }
     let mut batch: Vec<Edit<Mutation>> = Vec::new();
-    let mut ready_transitions: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
+    let mut ready_transitions: Vec<semio_os_spr::MutationEnvelope> = Vec::new();
     loop {
         let ready_envelope = match candidate_dag.take_next_applied() {
-            semio_framework_os_spr::MutationDagAppliedStep::Envelope(envelope) => envelope,
-            semio_framework_os_spr::MutationDagAppliedStep::SeededIdentity => continue,
-            semio_framework_os_spr::MutationDagAppliedStep::Complete => break,
+            semio_os_spr::MutationDagAppliedStep::Envelope(envelope) => envelope,
+            semio_os_spr::MutationDagAppliedStep::SeededIdentity => continue,
+            semio_os_spr::MutationDagAppliedStep::Complete => break,
         };
-        if semio_framework_os_spr::is_history_transition(&ready_envelope) {
+        if semio_os_spr::is_history_transition(&ready_envelope) {
             ready_transitions.push(ready_envelope);
             continue;
         }
@@ -617,7 +617,7 @@ where
         bump(store)?;
         store.cursor.last_projection_cause = Some(store.cursor.last_projection_cause.filter(|cause| *cause == ArtifactProjectionCause::Replay).unwrap_or(ArtifactProjectionCause::RemoteIngest));
         let worst = replayed.iter().flat_map(|entry| entry.messages.iter()).map(|message| message.level).max();
-        return Ok(semio_framework_os_spr::MergeReport { policy: store.log.merge_policy, accepted: true, insertion_index: store.log.applied_edit_ids.len() as u32, replayed, worst, conflict: None });
+        return Ok(semio_os_spr::MergeReport { policy: store.log.merge_policy, accepted: true, insertion_index: store.log.applied_edit_ids.len() as u32, replayed, worst, conflict: None });
     }
     let edit_hlc = |edit: &Edit<Mutation>| edit.mutation_meta.first().map_or_else(|| HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp);
     batch.sort_by_key(|edit| edit_hlc(edit).cmp_key());
@@ -684,7 +684,7 @@ where
     let mut degraded_ids: Vec<String> = Vec::new();
     for id in &committed_ids {
         let is_degraded = match replayed.iter().find(|entry| &entry.edit_id == id) {
-            Some(entry) => semio_framework_os_spr::worst_level(&entry.messages).is_some_and(|level| level >= semio_framework_diagnostic::Severity::Warning),
+            Some(entry) => semio_os_spr::worst_level(&entry.messages).is_some_and(|level| level >= semio_framework_diagnostic::Severity::Warning),
             None => false,
         };
         if is_degraded {
@@ -710,17 +710,17 @@ where
     if !quarantined_ids.is_empty() {
         let  original_edits=OriginalReplayEdits::new(&store.log.envelope.vcs.edits,&batch);
         let quarantined_edits = original_edits_for_ids(&quarantined_ids, &original_edits)?;
-        let mut envelopes: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
+        let mut envelopes: Vec<semio_os_spr::MutationEnvelope> = Vec::new();
         for edit in &quarantined_edits {
-            envelopes.extend(semio_framework_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?);
+            envelopes.extend(semio_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?);
         }
         let conflict_actors = canonical_conflict_actors(envelopes.iter().map(|envelope| envelope.actor.clone())).await;
         let mut quarantine_mutation_ids: Vec<MutationId> = Vec::new();
         for edit in &quarantined_edits {
-            quarantine_mutation_ids.extend(semio_framework_os_spr::mutation_ids_for_edit(edit));
+            quarantine_mutation_ids.extend(semio_os_spr::mutation_ids_for_edit(edit));
         }
         let quarantine_messages = conflict_messages_for_edits(&quarantined_edits, &replayed).await?;
-        let kind = semio_framework_os_spr::ConflictKind::Quarantined { envelopes };
+        let kind = semio_os_spr::ConflictKind::Quarantined { envelopes };
         let mut conflict_hlc = store.log.clock;
         let mut conflict_hlc_key: Option<(u64, u64, u64)> = None;
         for edit in &quarantined_edits {
@@ -731,8 +731,8 @@ where
                 conflict_hlc = hlc;
             }
         }
-        let id = semio_framework_os_spr::ConflictId::new(&kind, &ArtifactId(store.log.envelope.id.clone()), &quarantine_mutation_ids, &conflict_hlc).await;
-        store.log.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: id.clone(), kind, status: semio_framework_os_spr::ConflictStatus::Open, messages: quarantine_messages, actors: conflict_actors, timestamp: conflict_hlc });
+        let id = semio_os_spr::ConflictId::new(&kind, &ArtifactId(store.log.envelope.id.clone()), &quarantine_mutation_ids, &conflict_hlc).await;
+        store.log.envelope.conflicts.push(semio_os_spr::Conflict { id: id.clone(), kind, status: semio_os_spr::ConflictStatus::Open, messages: quarantine_messages, actors: conflict_actors, timestamp: conflict_hlc });
         prune_resolved_conflicts(store)?;
         for quarantined_id in &quarantined_ids {
             replace_edit_messages(store, quarantined_id, Vec::new())?;
@@ -749,9 +749,9 @@ where
         let degraded_actors = canonical_conflict_actors(degraded_edits.iter().filter_map(|edit| edit.actor.clone()).map(ActorId)).await;
         let mut degraded_mutation_ids: Vec<MutationId> = Vec::new();
         for edit in &degraded_edits {
-            degraded_mutation_ids.extend(semio_framework_os_spr::mutation_ids_for_edit(edit));
+            degraded_mutation_ids.extend(semio_os_spr::mutation_ids_for_edit(edit));
         }
-        let kind = semio_framework_os_spr::ConflictKind::Degraded { edit_ids: degraded_ids.clone() };
+        let kind = semio_os_spr::ConflictKind::Degraded { edit_ids: degraded_ids.clone() };
         let mut conflict_hlc = store.log.clock;
         let mut conflict_hlc_key: Option<(u64, u64, u64)> = None;
         for edit in &degraded_edits {
@@ -762,8 +762,8 @@ where
                 conflict_hlc = hlc;
             }
         }
-        let id = semio_framework_os_spr::ConflictId::new(&kind, &ArtifactId(store.log.envelope.id.clone()), &degraded_mutation_ids, &conflict_hlc).await;
-        store.log.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: id.clone(), kind, status: semio_framework_os_spr::ConflictStatus::Open, messages: degraded_messages, actors: degraded_actors, timestamp: conflict_hlc });
+        let id = semio_os_spr::ConflictId::new(&kind, &ArtifactId(store.log.envelope.id.clone()), &degraded_mutation_ids, &conflict_hlc).await;
+        store.log.envelope.conflicts.push(semio_os_spr::Conflict { id: id.clone(), kind, status: semio_os_spr::ConflictStatus::Open, messages: degraded_messages, actors: degraded_actors, timestamp: conflict_hlc });
         prune_resolved_conflicts(store)?;
         degraded_conflict_id = Some(id);
     }
@@ -808,7 +808,7 @@ where
     bump(store)?;
     store.cursor.last_projection_cause = Some(store.cursor.last_projection_cause.filter(|cause| *cause == ArtifactProjectionCause::Replay).unwrap_or(ArtifactProjectionCause::RemoteIngest));
     let accepted = batch_ids.iter().all(|id| committed_ids.contains(id));
-    Ok(semio_framework_os_spr::MergeReport { policy: store.log.merge_policy, accepted, insertion_index: k as u32, replayed, worst, conflict: quarantine_conflict_id.or(degraded_conflict_id) })
+    Ok(semio_os_spr::MergeReport { policy: store.log.merge_policy, accepted, insertion_index: k as u32, replayed, worst, conflict: quarantine_conflict_id.or(degraded_conflict_id) })
 }
 
 /// 🎯️ HIGH-2 (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` J1
@@ -828,165 +828,165 @@ pub fn edits_for_ids<Mutation: Clone>(ids: &[String], edits: &HashMap<String, Ed
 
 //#region 🪞️BundleHelpers
 #[inline]
-async fn admit_remote_transitions<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, transitions: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError>
+async fn admit_remote_transitions<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, transitions: Vec<semio_os_spr::MutationEnvelope>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 
 { store.replay.admit_remote_transitions(&mut *store.log, &mut *store.owners, &mut *store.wire, &mut *store.cursor, &mut *store.live, transitions).await }
 
 #[inline]
-fn assert_equivalent_remote_envelope<P, Mutation>(store: &StoreParts<'_, P, Mutation>, existing: &Edit<Mutation>, incoming: &semio_framework_os_spr::MutationEnvelope) -> Result<(), VcsError>
+fn assert_equivalent_remote_envelope<P, Mutation>(store: &StoreParts<'_, P, Mutation>, existing: &Edit<Mutation>, incoming: &semio_os_spr::MutationEnvelope) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.log.assert_equivalent_remote_envelope(existing, incoming) }
 
 #[inline]
-fn assert_equivalent_remote_mutation<P, Mutation>(store: &StoreParts<'_, P, Mutation>, incoming: &semio_framework_os_spr::MutationEnvelope) -> Result<(), VcsError>
+fn assert_equivalent_remote_mutation<P, Mutation>(store: &StoreParts<'_, P, Mutation>, incoming: &semio_os_spr::MutationEnvelope) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.log.assert_equivalent_remote_mutation(incoming) }
 
 #[inline]
 fn batch_amend_target<P, Mutation>(store: &StoreParts<'_, P, Mutation>, transaction: Option<&protocol::TransactionRef>) -> Option<String>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.log.batch_amend_target(transaction) }
 
 #[inline]
 fn batch_amend_target_ref<'s, P, Mutation>(store: &'s StoreParts<'_, P, Mutation>, transaction: Option<&protocol::TransactionRef>) -> Option<&'s str>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.log.batch_amend_target_ref(transaction) }
 
 #[inline]
 fn batch_item_base<P, Mutation>(store: &StoreParts<'_, P, Mutation>, staged_root: Option<&Arc<P>>) -> Result<SnapshotRead<P>, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.live.batch_item_base(&*store.owners, &*store.wire, &*store.cursor, staged_root) }
 
 #[inline]
 fn bump<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.replay.bump(&mut *store.log, &mut *store.owners, &mut *store.cursor, &mut *store.live) }
 
 #[inline]
 fn continue_pending_replay_across_append<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, before: [u8; 32], edit_id: &str, appended: usize)
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.replay.continue_pending_replay_across_append(&mut *store.cursor, before, edit_id, appended) }
 
 #[inline]
 fn ensure_durable_group_idle<P, Mutation>(store: &StoreParts<'_, P, Mutation>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.wire.ensure_durable_group_idle() }
 
 #[inline]
 fn ensure_open_conflict_capacity<P, Mutation>(store: &StoreParts<'_, P, Mutation>, additional_open: usize) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.log.ensure_open_conflict_capacity(additional_open) }
 
 #[inline]
 fn fold_batch_item<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.owners.fold_batch_item(&mut *store.log, publication, grant) }
 
 #[inline]
 fn insert_reserved_edit_history<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, reservation: ArtifactStoreHistoryCommitReservation, edit: Edit<Mutation>) -> Result<ArtifactHistoryKey, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.live.insert_reserved_edit_history(&mut *store.log, &mut *store.owners, reservation, edit) }
 
 #[inline]
 fn prune_resolved_conflicts<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.owners.prune_resolved_conflicts(&mut *store.log) }
 
 #[inline]
-fn refuse_with_candidate_dag<T, P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, candidate_dag: semio_framework_os_spr::MutationDag, error: VcsError) -> Result<T, VcsError>
+fn refuse_with_candidate_dag<T, P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, candidate_dag: semio_os_spr::MutationDag, error: VcsError) -> Result<T, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.owners.refuse_with_candidate_dag::<T>(candidate_dag, error) }
 
 #[inline]
 fn replace_applied_edit_ids_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: Vec<String>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.live.replace_applied_edit_ids_retained(&mut *store.log, &mut *store.owners, &mut *store.cursor, next) }
 
 #[inline]
-fn replace_causal_dag_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: semio_framework_os_spr::MutationDag) -> Result<(), VcsError>
+fn replace_causal_dag_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: semio_os_spr::MutationDag) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.owners.replace_causal_dag_retained(&mut *store.log, next) }
 
 #[inline]
 fn replace_current_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: Arc<P>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.live.replace_current_retained(&mut *store.log, &mut *store.owners, next) }
 
 #[inline]
-fn replace_edit_messages<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, edit_id: &str, messages: Vec<semio_framework_os_spr::MutationMessage>) -> Result<(), VcsError>
+fn replace_edit_messages<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, edit_id: &str, messages: Vec<semio_os_spr::MutationMessage>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.owners.replace_edit_messages(&mut *store.log, edit_id, messages) }
 
 #[inline]
 fn replace_pending_report_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: PendingCommandReport) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.replay.replace_pending_report_retained(&mut *store.owners, next) }
 
 #[inline]
 fn replace_redo_edit_ids_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: Vec<String>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.live.replace_redo_edit_ids_retained(&mut *store.log, &mut *store.owners, &mut *store.cursor, next) }
 
 #[inline]
 fn replace_tail_undo_cache_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: Option<(String, Arc<P>)>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.live.replace_tail_undo_cache_retained(&mut *store.log, &mut *store.owners, next) }
 
 #[inline]
 fn reserve_edit_history_slot<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>) -> Result<ArtifactStoreHistoryCommitReservation, VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.owners.reserve_edit_history_slot(&mut *store.log) }
 
 #[inline]
 fn retire_replay_result<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, result: EditReplayResult<P, Mutation>) -> Result<(), VcsError>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 { store.owners.retire_replay_result(result) }
 //#endregion 🪞️BundleHelpers
 

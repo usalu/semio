@@ -1,11 +1,11 @@
 //! 📥️ 📥️ Forms play app commands command — `set-active-example`.
 
 use crate::standards::v1::subsets::any::io::text::snapshot as forms_dsl;
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::schema::empty_forms_snapshot;
 use crate::{op::FormMutation, FormsSnapshot};
 use super::set_spec_json::replace_design_operations;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

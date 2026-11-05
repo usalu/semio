@@ -330,7 +330,7 @@ mod localized_label_value_round_trip_tests;
 #[path = "../🧪️tests/🏷️localized-label-fixture/🦀️.rs"]
 mod localized_label_fixture_tests;
 
-/// 🗣️ Two-axis label set; implement via `semio_framework_ui_locale::app_labels!` only — the macro emits
+/// 🗣️ Two-axis label set; implement via `semio_ui_locale::app_labels!` only — the macro emits
 /// an exhaustive `match (terminology, locale)` with no catch-all, so a `Locale`/`Terminology` variant
 /// added to the generated axes fails every implementor's build until covered.
 pub trait AppLabels: Sized + 'static {

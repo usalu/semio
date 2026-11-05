@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePanelSteelGrade wh
         record: "ChangedPanelSteelGrade",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plated panel: Steel grade (empty = not given)", "Plattenfeld: Stahlgüte (leer = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plated panel: Steel grade (empty = not given)", "Plattenfeld: Stahlgüte (leer = nicht angegeben) ändern")
     }
 }
 

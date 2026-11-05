@@ -2,12 +2,12 @@
 //! mutation-capable surface's own single-window layout, same `🪟️main` table, no edit affordances.
 
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::transitional::modes::view::windows::main;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
-use semio_framework_plugin::WindowLayoutRoot;
-use semio_framework_plugin::WindowLayoutStackNode;
-use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
+use semio_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutStackNode;
+use semio_plugin::WindowLayoutWindowNode;
 
 pub const XLSX_TRANSITIONAL_VIEW_MODE_ID: &str = "view";
 

@@ -1,8 +1,8 @@
 //! 🧩️ Extension bundle, inference gateway, describe and extension retirement of the plugin SDK.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
 
 /// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
 #[cfg(test)]

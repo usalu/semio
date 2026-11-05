@@ -1,6 +1,6 @@
 //! 🧪️ Actual retained admission preserves cold byte limits and original cancellation/close owners.
 use super::*;
-use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneClose;
 fn grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 33554432, maximum_depth: 256 }

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileSetPerBlow whe
         record: "ChangedPileSetPerBlow",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Set per blow s of the pile", "Pfahl: Eindringung je Schlag s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Set per blow s of the pile", "Pfahl: Eindringung je Schlag s ändern")
     }
 }
 

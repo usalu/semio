@@ -1,9 +1,9 @@
 //! 🧪 Fill tool laws — definition, progressive payloads, abort, oracle parity, and the language-agnostic vector.
 
 use crate::editor::grid3d::modes::edit::windows::preview;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunTraceKind};
 use std::sync::Arc;
 use crate::editor::grid3d::modes::edit::tools::fill::*;

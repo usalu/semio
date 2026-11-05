@@ -10,20 +10,20 @@ use crate::editor::grid3d::window::Grid3dWindowConfig;
 use crate::schema::scene_internals;
 use crate::Grid3dSnapshot;
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::world3d_camera_json;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::WorldSunConfig;
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind;
+use semio_plugin::world3d_camera_json;
+use semio_plugin::world3d_scene;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_plugin::WorldSunConfig;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "wfc-grid3d-grid";
@@ -66,17 +66,17 @@ pub fn utilities() -> Vec<UtilityDefinition> {
 /// can only ever mean a cell. A window kind that references a domain the app never declared is
 /// refused outright by the plugin builder (`app-definition.invalid: … references undeclared
 /// interaction …`), so the declaration and the reference live side by side in this file.
-pub fn interaction() -> semio_framework_plugin::InteractionDefinition {
-    semio_framework_plugin::InteractionDefinition {
+pub fn interaction() -> semio_plugin::InteractionDefinition {
+    semio_plugin::InteractionDefinition {
         id: INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Cells", "Zellen"),
-        granularities: vec![semio_framework_plugin::GranularityDefinition { id: INTERACTION_GRANULARITY_CELL.into(), label: LocalizedLabel::native("Cell", "Zelle"), icon_id: "box".into() }],
-        hierarchy: semio_framework_plugin::HierarchyProvider::Topology,
-        hover: semio_framework_plugin::HoverSpec { enabled: true, transitive: false, channels: vec![HOVER_CHANNEL.into()], broadcast: true },
-        selection: semio_framework_plugin::SelectionSpec {
-            modes: vec![semio_framework_plugin::SelectionMode::Multiple, semio_framework_plugin::SelectionMode::Single],
-            methods: vec![semio_framework_plugin::SelectionMethod::Pick, semio_framework_plugin::SelectionMethod::Rectangle],
-            merges: vec![semio_framework_plugin::MergeMode::Replace, semio_framework_plugin::MergeMode::Additive, semio_framework_plugin::MergeMode::Subtractive],
+        granularities: vec![semio_plugin::GranularityDefinition { id: INTERACTION_GRANULARITY_CELL.into(), label: LocalizedLabel::native("Cell", "Zelle"), icon_id: "box".into() }],
+        hierarchy: semio_plugin::HierarchyProvider::Topology,
+        hover: semio_plugin::HoverSpec { enabled: true, transitive: false, channels: vec![HOVER_CHANNEL.into()], broadcast: true },
+        selection: semio_plugin::SelectionSpec {
+            modes: vec![semio_plugin::SelectionMode::Multiple, semio_plugin::SelectionMode::Single],
+            methods: vec![semio_plugin::SelectionMethod::Pick, semio_plugin::SelectionMethod::Rectangle],
+            merges: vec![semio_plugin::MergeMode::Replace, semio_plugin::MergeMode::Additive, semio_plugin::MergeMode::Subtractive],
             transitive: false,
             broadcast: true,
         },
@@ -96,12 +96,12 @@ pub fn definition() -> WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Grid", "Raster"),
         body_key: BODY_KEY.into(),
-        surface_kind: semio_framework_plugin::SurfaceKind::World3d,
+        surface_kind: semio_plugin::SurfaceKind::World3d,
         icon_id: "grid-3x3".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: vec![UTILITY_SELECT.into(), UTILITY_PIN.into(), UTILITY_MASK.into()],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(INTERACTION_DOMAIN)],
+        interactions: vec![semio_plugin::InteractionRef::new(INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -206,22 +206,22 @@ pub fn framed_camera(document: &Grid3dSnapshot, config: &Grid3dWindowConfig) -> 
 /// spelled for that fallback — `World3dHost` reads `mesh`/`object` as "address the hit by ARRAY INDEX"
 /// and dispatches `worldPick` instead, which would hand the app a number in place of a cell key.
 pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene(document, config, selected, hovered, utility))
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene(document, config, selected, hovered, utility))
 }
 
 /// 🧱️ The scene `render` paints, minted separately so the pick-lane law can be asserted on the real
 /// struct instead of on a rendered node's debug text.
-pub fn scene(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str) -> semio_framework_ui_declaration::ui::World3dScene {
+pub fn scene(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str) -> semio_ui_declaration::ui::World3dScene {
     let (position, target) = framed_camera(document, config);
     let writes = utility == UTILITY_PIN || utility == UTILITY_MASK;
-    semio_framework_ui_declaration::ui::World3dScene {
+    semio_ui_declaration::ui::World3dScene {
         domain_id: (!writes).then(|| INTERACTION_DOMAIN.into()),
         domain_granularity_id: (!writes).then(|| INTERACTION_GRANULARITY_CELL.into()),
         ..world3d_scene(
             world3d_camera_json(position, target, 45.0),
             crate::standards::v1::subsets::any::io::text::inferences::scene_projection::grid_meshes_json(document),
             crate::standards::v1::subsets::any::io::text::inferences::scene_projection::grid_instances_json(document),
-            semio_framework_plugin::world3d_selection_json_with_granularity(
+            semio_plugin::world3d_selection_json_with_granularity(
                 if writes { ACTION_WORLD_SELECT } else { "interactionSelect" },
                 selected,
                 hovered,

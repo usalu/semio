@@ -34,10 +34,9 @@
   "target": "lockfile-check",
   "tooling": {
     "target": "deps-trunk",
-    "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync trunk",
+    "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync trunk",
     "consumers": [
-      "wasm",
-      "wasm-release"
+      "wasm"
     ],
     "cases": [
       {
@@ -93,13 +92,14 @@
             "wasm-bindgen-cli",
             "--version",
             "0.2.126",
-            "--locked"
+            "--locked",
+            "--force"
           ]
         ]
       }
     ],
     "bindgenVersion": "0.2.126",
-    "implementation": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts"
+    "implementation": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts"
   },
   "originalNativeControl": {
     "maximumElapsedMilliseconds": 90000,

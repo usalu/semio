@@ -1,5 +1,5 @@
 {
-  "description": "Manifest-admitted universal history serve selection. Catalog rows come from generated playground authority.",
+  "description": "Manifest-admitted history startup uses the actual issued build mode and catalog composition under DevServeSpawnRequestV1.",
   "cases": [
     {
       "name": "specialized journey keeps the declared scenario playground",
@@ -69,7 +69,8 @@
         "@semio-tech/framework-os-dev:activate-$scenario-react-prototype",
         "spawn",
         "stop"
-      ]
+      ],
+      "profile": "prototype"
     },
     {
       "name": "cold custom WGPU activates its declared family",
@@ -85,7 +86,8 @@
         "@semio-tech/framework-os-dev:activate-$family-wgpu-prototype",
         "spawn",
         "stop"
-      ]
+      ],
+      "profile": "prototype"
     },
     {
       "name": "existing serve is reused without activation",
@@ -97,7 +99,8 @@
       "cancel": null,
       "activationFails": false,
       "outcome": "reused",
-      "trace": []
+      "trace": [],
+      "profile": "prototype"
     },
     {
       "name": "failed activation starts no listener",
@@ -111,7 +114,8 @@
       "outcome": "error",
       "trace": [
         "@semio-tech/framework-os-dev:activate-$scenario-react-prototype"
-      ]
+      ],
+      "profile": "prototype"
     },
     {
       "name": "pre-cancelled journey owns no producer or listener",
@@ -123,7 +127,8 @@
       "cancel": "before",
       "activationFails": false,
       "outcome": "error",
-      "trace": []
+      "trace": [],
+      "profile": "prototype"
     },
     {
       "name": "cancelled activation starts no listener",
@@ -137,7 +142,8 @@
       "outcome": "error",
       "trace": [
         "@semio-tech/framework-os-dev:activate-$family-wgpu-prototype"
-      ]
+      ],
+      "profile": "prototype"
     },
     {
       "name": "occupied non-server port refuses before activation",
@@ -149,7 +155,8 @@
       "cancel": null,
       "activationFails": false,
       "outcome": "error",
-      "trace": []
+      "trace": [],
+      "profile": "prototype"
     },
     {
       "name": "canonical hub port refuses before activation",
@@ -161,7 +168,8 @@
       "cancel": null,
       "activationFails": false,
       "outcome": "error",
-      "trace": []
+      "trace": [],
+      "profile": "prototype"
     },
     {
       "name": "another journey finishes the listener during activation",
@@ -177,7 +185,8 @@
         "@semio-tech/framework-os-dev:activate-$scenario-react-prototype"
       ],
       "afterActivationAnswers": true,
-      "afterActivationOccupied": true
+      "afterActivationOccupied": true,
+      "profile": "prototype"
     },
     {
       "name": "a non-server claims the port during activation",
@@ -193,7 +202,135 @@
         "@semio-tech/framework-os-dev:activate-$scenario-react-prototype"
       ],
       "afterActivationAnswers": false,
-      "afterActivationOccupied": true
+      "afterActivationOccupied": true,
+      "profile": "prototype"
+    },
+    {
+      "name": "cold release React forwards its issued profile",
+      "variant": "$scenario",
+      "renderer": "react",
+      "port": 6012,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "ready",
+      "trace": [
+        "@semio-tech/framework-os-dev:activate-$scenario-react-release",
+        "spawn",
+        "stop"
+      ],
+      "profile": "release"
+    },
+    {
+      "name": "cold release WGPU forwards its issued profile and catalog composition",
+      "variant": "$family",
+      "renderer": "wgpu",
+      "port": 6164,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "ready",
+      "trace": [
+        "@semio-tech/framework-os-dev:activate-$family-wgpu-release",
+        "spawn",
+        "stop"
+      ],
+      "profile": "release"
+    },
+    {
+      "name": "cold WGPU without catalog composition refuses before activation",
+      "variant": "$family",
+      "renderer": "wgpu",
+      "port": 6164,
+      "answers": false,
+      "occupied": false,
+      "cancel": null,
+      "activationFails": false,
+      "outcome": "error",
+      "trace": [],
+      "profile": "prototype",
+      "composition": "missing"
+    }
+  ],
+  "requests": [
+    {
+      "name": "prototype React catalog request",
+      "renderer": "react",
+      "profile": "prototype",
+      "composition": "catalog",
+      "accepted": true
+    },
+    {
+      "name": "release React catalog request",
+      "renderer": "react",
+      "profile": "release",
+      "composition": "catalog",
+      "accepted": true
+    },
+    {
+      "name": "prototype WGPU catalog request",
+      "renderer": "wgpu",
+      "profile": "prototype",
+      "composition": "catalog",
+      "accepted": true
+    },
+    {
+      "name": "release WGPU catalog request",
+      "renderer": "wgpu",
+      "profile": "release",
+      "composition": "catalog",
+      "accepted": true
+    },
+    {
+      "name": "React does not require WGPU-only composition",
+      "renderer": "react",
+      "profile": "release",
+      "composition": "missing",
+      "accepted": true
+    },
+    {
+      "name": "WGPU requires catalog composition",
+      "renderer": "wgpu",
+      "profile": "prototype",
+      "composition": "missing",
+      "accepted": false
+    },
+    {
+      "name": "WGPU refuses empty composition",
+      "renderer": "wgpu",
+      "profile": "release",
+      "composition": "empty",
+      "accepted": false
+    },
+    {
+      "name": "WGPU refuses a composition control character",
+      "renderer": "wgpu",
+      "profile": "prototype",
+      "composition": "control",
+      "accepted": false
+    },
+    {
+      "name": "WGPU refuses an oversized composition",
+      "renderer": "wgpu",
+      "profile": "release",
+      "composition": "oversized",
+      "accepted": false
+    },
+    {
+      "name": "unknown issued profile is refused",
+      "renderer": "react",
+      "profile": "debug",
+      "composition": "catalog",
+      "accepted": false
+    },
+    {
+      "name": "missing issued profile is refused",
+      "renderer": "react",
+      "profile": null,
+      "composition": "catalog",
+      "accepted": false
     }
   ]
 }

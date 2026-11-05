@@ -16,8 +16,8 @@ use crate::editor::puzzle5d::terminology::puzzle5d_brush_suggestions_run_reasons
 use crate::editor::puzzle5d::terminology::puzzle5d_brush_suggestions_run_stages;
 
 use crate::editor::puzzle5d::terminology::puzzle5d_brush_suggestions_run_unit;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityDefinition;
 use semio_framework_tool_run::JobKindId;
 use semio_framework_tool_run::ToolRunDefinition;
 use semio_framework_tool_run::ToolRunRebasePolicy;

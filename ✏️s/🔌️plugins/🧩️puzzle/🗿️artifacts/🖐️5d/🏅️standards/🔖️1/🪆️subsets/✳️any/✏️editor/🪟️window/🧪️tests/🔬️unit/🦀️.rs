@@ -1,5 +1,5 @@
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dSelectableKinds};
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::WorldSunConfig;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 #[allow(unused_imports)]
@@ -69,7 +69,7 @@ use crate::editor::puzzle5d::window::*;
 
     #[test]
     fn oversized_string_capacity_rejects_and_returns_the_exact_puzzle5d_owner() {
-        let owners = <Puzzle5dBoardWindowTransientOwner as semio_framework_plugin::WindowTransientOwner>::build_owners();
+        let owners = <Puzzle5dBoardWindowTransientOwner as semio_plugin::WindowTransientOwner>::build_owners();
         let mut engagement_input = String::with_capacity(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
         engagement_input.push('5');
         let pointer = engagement_input.as_ptr();
@@ -116,7 +116,7 @@ use crate::editor::puzzle5d::window::*;
                 target: [4.0, 5.0, 6.0],
                 zoom: 2.5,
                 up: Some([0.0, 0.0, 1.0]),
-                projection: semio_framework_plugin::WorldProjectionConfig { kind: "orthographic".into(), orthographic_view: "front".into(), fov: 35.0, ..Default::default() },
+                projection: semio_plugin::WorldProjectionConfig { kind: "orthographic".into(), orthographic_view: "front".into(), fov: 35.0, ..Default::default() },
             },
             sun: WorldSunConfig { enabled: true, azimuth: 12.5, elevation: 33.0, intensity: 0.5, color: "#102030".into() },
             grid_visible: false,

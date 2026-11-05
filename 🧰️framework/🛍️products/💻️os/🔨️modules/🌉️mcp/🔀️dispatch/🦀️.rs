@@ -17,17 +17,17 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use semio_framework_os_mcp_catalog::catalog::{CapabilityDefinition, Catalog};
-use semio_framework_os_mcp_consent::approval_coordinator::{ApprovalCoordinator, ApprovalRequest, ApprovalResolution};
-use semio_framework_os_mcp_foundation::audit::{AgentAuditEvent, AuditDecision, AuditSink, AuditSinks, ClientInfo, SENSITIVE_KEYS, hash_input, redact_input};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, IdempotencyStore, SessionHandle, mint_id};
-use semio_framework_os_mcp_foundation::reports::{InvocationReport, InvocationStatus, PreparedActionReport, RevisionStamp};
-use semio_framework_os_mcp_inference_hub::hub_wire::is_hub_inference_route;
-use semio_framework_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, InferCommand, InferenceOutcome, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedActionRecord, PreparedOps, SagaMember, SagaMemberResult, SagaRecord, SagaReport, UndoMember, UndoRecord, UndoRedoReport, declared_effective_input, map_fault, omitted_revision_arguments, revision_guard_required, unacknowledged_relay_error};
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
-use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
-use semio_framework_os_mcp_schema::schema::{compile_validator, validate};
+use semio_os_mcp_catalog::catalog::{CapabilityDefinition, Catalog};
+use semio_os_mcp_consent::approval_coordinator::{ApprovalCoordinator, ApprovalRequest, ApprovalResolution};
+use semio_os_mcp_foundation::audit::{AgentAuditEvent, AuditDecision, AuditSink, AuditSinks, ClientInfo, SENSITIVE_KEYS, hash_input, redact_input};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, IdempotencyStore, SessionHandle, mint_id};
+use semio_os_mcp_foundation::reports::{InvocationReport, InvocationStatus, PreparedActionReport, RevisionStamp};
+use semio_os_mcp_inference_hub::hub_wire::is_hub_inference_route;
+use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, InferCommand, InferenceOutcome, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedActionRecord, PreparedOps, SagaMember, SagaMemberResult, SagaRecord, SagaReport, UndoMember, UndoRecord, UndoRedoReport, declared_effective_input, map_fault, omitted_revision_arguments, revision_guard_required, unacknowledged_relay_error};
+use semio_os_mcp_port::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
+use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_os_mcp_schema::schema::{compile_validator, validate};
 
 //#region 🔖️ActionAdapter
 
@@ -146,12 +146,12 @@ impl ActionAdapter {
         &self,
         session: &SessionHandle,
         hub_origin: &str,
-        scope: &semio_framework_os_kernel::os_directory::DocumentScope,
+        scope: &semio_os_kernel::os_directory::DocumentScope,
         route: &str,
         handle:&semio_framework_value::DslValue,
         now_ms: u64,
     ) -> Result<String, GatewayError> {
-        semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(handle,16*1024).map_err(|_|GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history value"))?;
+        semio_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(handle,16*1024).map_err(|_|GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history value"))?;
         if hub_origin.is_empty() || hub_origin.len()>2048 || !is_hub_inference_route(route) || !matches!(handle,semio_framework_value::DslValue::Object(_)) || semio_framework_pack_json::to_json_string(handle).len()>16*1024 {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid,"invalid durable owner history locator"));
         }

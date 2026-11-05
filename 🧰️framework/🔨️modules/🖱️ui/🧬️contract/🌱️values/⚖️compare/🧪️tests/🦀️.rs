@@ -1,6 +1,6 @@
-use semio_framework_ui_contract_values::compare_protocol::*;
-use semio_framework_ui_contract_values::*;
-use semio_framework_ui_contract_values::testkit::*;
+use semio_ui_contract_values::compare_protocol::*;
+use semio_ui_contract_values::*;
+use semio_ui_contract_values::testkit::*;
 use semio_framework_test_fixtures::fixture_text;
 use std::mem::size_of;
 fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../../⚖️compare/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}

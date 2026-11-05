@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeSiloHopperAngleDeg
         record: "ChangedSiloHopperAngleDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change hopper wall angle to horizontal", "Trichterneigung zur Horizontalen ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change hopper wall angle to horizontal", "Trichterneigung zur Horizontalen ändern")
     }
 }
 

@@ -34,8 +34,8 @@
 //!
 //! @see ../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🦀️.rs — the same linked installation the headless geometry lane uses, which needs no host half.
 
-use semio_framework_os_flow::neural::Registry;
-use semio_framework_os_flow::{install_flow_extension_manifest, register_linked_flow_extension_installer};
+use semio_os_flow::neural::Registry;
+use semio_os_flow::{install_flow_extension_manifest, register_linked_flow_extension_installer};
 
 /// 🪪️ The two contributing plugins' own ids — the ONLY address the host resolves an extension actor
 /// by, and therefore the address every `Effect::InvokeExtension` this app emits must carry. Mirrors
@@ -80,7 +80,7 @@ pub(crate) fn install(registry: &mut Registry) {
 pub fn installed() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_framework_plugin::register_artifact_inference_service(semio_s_plugin_flow_brep::geometry_inference::geometry_inference_service()).expect("packaged geometry inference admission");
+        semio_plugin::register_artifact_inference_service(semio_s_plugin_flow_brep::geometry_inference::geometry_inference_service()).expect("packaged geometry inference admission");
         register_linked_flow_extension_installer(BREP_EXTENSION_FLOW_ID, install_brep);
         register_linked_flow_extension_installer(MATH_EXTENSION_FLOW_ID, install_math);
         install_flow_extension_manifest(BREP_EXTENSION_PLUGIN_ID, &resolve_ready(semio_s_plugin_flow_brep::extension_manifest_json())).expect("contributed brep extension admission");
@@ -122,15 +122,15 @@ pub struct UnlinkedFlowExtensions {
 impl UnlinkedFlowExtensions {
     pub fn contributed() -> Self {
         let guard = Self::take();
-        semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("empty contributed registry admission");
-        semio_framework_os_flow::sync_host_flow_extension_contributions(staged_flow_extension_contributions_json(&[])).expect("packaged contributed registry admission");
+        semio_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("empty contributed registry admission");
+        semio_os_flow::sync_host_flow_extension_contributions(staged_flow_extension_contributions_json(&[])).expect("packaged contributed registry admission");
         guard
     }
 
     pub fn take() -> Self {
         let taken = [BREP_EXTENSION_FLOW_ID, MATH_EXTENSION_FLOW_ID]
             .into_iter()
-            .filter_map(|extension_id| semio_framework_os_flow::unregister_linked_flow_extension_installer(extension_id).map(|install| (extension_id, install)))
+            .filter_map(|extension_id| semio_os_flow::unregister_linked_flow_extension_installer(extension_id).map(|install| (extension_id, install)))
             .collect::<Vec<_>>();
         assert_eq!(taken.len(), 2, "both linked packs must be registered before a law retires them");
         Self { taken }
@@ -143,9 +143,9 @@ impl Drop for UnlinkedFlowExtensions {
         for (extension_id, install) in self.taken.drain(..) {
             register_linked_flow_extension_installer(extension_id, install);
         }
-        let restored = semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string())
-            .and_then(|()| semio_framework_os_flow::sync_host_flow_extension_contributions(staged_flow_extension_contributions_json(&[])))
-            .and_then(|()| semio_framework_os_flow::flow_extension_invocation_address(BREP_EXTENSION_FLOW_ID).map(|_| ()).map_err(|_| "the restored registry must address the geometry kernel again"));
+        let restored = semio_os_flow::sync_host_flow_extension_contributions("[]".to_string())
+            .and_then(|()| semio_os_flow::sync_host_flow_extension_contributions(staged_flow_extension_contributions_json(&[])))
+            .and_then(|()| semio_os_flow::flow_extension_invocation_address(BREP_EXTENSION_FLOW_ID).map(|_| ()).map_err(|_| "the restored registry must address the geometry kernel again"));
         if let Err(reason) = restored {
             eprintln!("UnlinkedFlowExtensions: the process-wide registry was not restored: {reason}");
         }
@@ -153,11 +153,11 @@ impl Drop for UnlinkedFlowExtensions {
     }
 }
 
-/// 🧹️ Walks a bare [`semio_framework_os_flow::FlowEvalSession`] down its explicit close ladder.
+/// 🧹️ Walks a bare [`semio_os_flow::FlowEvalSession`] down its explicit close ladder.
 /// Surface-neutral on purpose: BOTH test contexts need it, and a viewer test may not reach through
 /// `::editor::` (`policyViewerPurityBreaches`), so the one implementation lives here beside the
 /// other shared test guards (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn retire_flow_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
+pub fn retire_flow_eval_session(mut session: semio_os_flow::FlowEvalSession) {
     session.begin_close();
     for _ in 0..1_000_000 {
         let copy = session.next_close_copy_byte_demand().expect("the evaluation session quotes its next close copy").max(65_536);
@@ -177,7 +177,7 @@ pub(crate) fn geometry_session() -> &'static semio_s_spatial_kernel_semio_sessio
 }
 
 /// 🚚️ Delivers every painted handle through the concrete Session's bounded broker envelopes.
-pub(crate) fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_framework_os_flow::FlowEvalSession) {
+pub(crate) fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_os_flow::FlowEvalSession) {
     use semio_s_artifact_procedural_3d_preview_eval::pending_preview_tessellate_handles;
     use semio_s_artifact_procedural_3d_preview_eval::preview_tolerance;
     use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_BUDGET;
@@ -185,12 +185,12 @@ pub(crate) fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_
     let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preview evaluation parses");
     let tolerance = preview_tolerance(lod_mode);
     for handle in pending_preview_tessellate_handles(&eval, graph, session) {
-        let hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
+        let hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
         for _ in 0..4096 {
             if !session.note_pending_tessellate(hash, handle.clone()) { break; }
             let chunk = session.next_tessellate_chunk(hash) as usize;
             let envelope = geometry_session().tessellate_step_envelope_json(&handle, tolerance, PREVIEW_TESSELLATE_STEP_BUDGET as usize, PREVIEW_TESSELLATE_STEP_WALL_MICROS, chunk);
-            if !matches!(session.resolve_preview_tessellate(hash, &envelope), semio_framework_os_flow::PreviewTessellateOutcome::Working) { break; }
+            if !matches!(session.resolve_preview_tessellate(hash, &envelope), semio_os_flow::PreviewTessellateOutcome::Working) { break; }
         }
         assert!(session.preview_mesh_pack(&handle).is_some() || session.preview_diagnostics(&handle).is_some(), "painted handle {handle} must reach a terminal answer through its owning Session");
     }

@@ -18,7 +18,7 @@ async fn committed_example_carries_the_genesis_content_child() {
 async fn set_active_example_emits_one_load_document_effect() {
     let emit = set_active_example::emit(crate::examples::demo::ID).expect("demo example emits");
     assert!(emit.artifact_mutations.is_empty());
-    assert_eq!(emit.effects.iter().filter(|effect| matches!(effect, semio_framework_plugin::Effect::LoadDocument { .. })).count(), 1);
+    assert_eq!(emit.effects.iter().filter(|effect| matches!(effect, semio_plugin::Effect::LoadDocument { .. })).count(), 1);
 }
 
 /// 📚️ The playground navbar dispatches `setActiveExample` on boot; undeclared, the shell drops it
@@ -26,7 +26,7 @@ async fn set_active_example_emits_one_load_document_effect() {
 /// shell's `{action, args}` vocabulary.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_is_declared_and_bridged() {
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     let definition = crate::editor::sequence::app::create_sequence_app();
     assert!(
         definition.actions.iter().any(|action| action.id == "setActiveExample") || definition.window_kinds.iter().any(|window| window.actions.iter().any(|action| action.id == "setActiveExample")),

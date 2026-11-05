@@ -99,7 +99,7 @@ impl<P: FromValue + protocol::os_store::ArtifactPack, Op: FromValue> FromValue f
 impl<P, Op> BackboneDocument<P, Op> {
     /// ♻️ Retires the document's history ledgers entry by entry so none is dropped full.
     pub fn retire(self) {
-        fn drain<T>(mut ledger: ::semio_framework_os_kernel::os_vcs::ArtifactHistoryLedger<T>) {
+        fn drain<T>(mut ledger: ::semio_os_kernel::os_vcs::ArtifactHistoryLedger<T>) {
             while ledger.pop().is_some() {}
         }
         drain(self.vcs.edits);
@@ -144,7 +144,7 @@ where
         schema: schema.into(),
         id: id.into(),
         name: name.into(),
-        vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners().vcs,
+        vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners().vcs,
         transitions: Vec::new(),
         edit_messages: Vec::new(),
         conflicts: Vec::new(),
@@ -205,12 +205,12 @@ pub(super) fn take_backbone_envelope<P, Op>(document: BackboneDocument<P, Op>) -
 }
 
 /// 📜️ Seats plain transition rows into the exact ledger owner of an envelope shell.
-pub fn transitions_ledger(rows: Vec<protocol::MutationEnvelope>) -> Result<::semio_framework_os_kernel::os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>, VcsError> {
-    ::semio_framework_os_kernel::os_vcs::ArtifactHistoryLedger::try_from_preflighted(rows).map_err(|_| VcsError::ValidationFailed("backbone transitions exceed the history ledger page capacity".into()))
+pub fn transitions_ledger(rows: Vec<protocol::MutationEnvelope>) -> Result<::semio_os_kernel::os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>, VcsError> {
+    ::semio_os_kernel::os_vcs::ArtifactHistoryLedger::try_from_preflighted(rows).map_err(|_| VcsError::ValidationFailed("backbone transitions exceed the history ledger page capacity".into()))
 }
 
 /// 📤️ Drains an envelope's transition ledger into plain rows in log order so no ledger is dropped full.
-pub fn drain_transitions(mut ledger: ::semio_framework_os_kernel::os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>) -> Vec<protocol::MutationEnvelope> {
+pub fn drain_transitions(mut ledger: ::semio_os_kernel::os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>) -> Vec<protocol::MutationEnvelope> {
     let mut rows = Vec::with_capacity(ledger.len());
     while let Some(row) = ledger.pop() { rows.push(row); }
     rows.reverse();
@@ -220,7 +220,7 @@ pub fn drain_transitions(mut ledger: ::semio_framework_os_kernel::os_vcs::Artifa
 /// 🛌️ Retires a copied backbone envelope through its exact bounded owner catalogue.
 pub(super) fn close_backbone_envelope<P, Op>(envelope: ArtifactEnvelope<P, Op>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     use store::ErasedSnapshotRetirement as _;
@@ -246,7 +246,7 @@ where
 /// 👑️ Lends a copied authoritative envelope, then retires every exact nested owner.
 fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> Result<R, VcsError>) -> Result<R, VcsError>
 where
-    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     let envelope = backbone_envelope_of(document)?;
@@ -257,7 +257,7 @@ where
 
 pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
 where
-    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Op: Clone + ToValue + FromValue + Mutation<P> + store::ColdMutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
@@ -273,14 +273,14 @@ pub struct BackboneExport<T> {
 impl<T> BackboneExport<T> {
     /// 🧼️ The cross-platform file stem of this export: the document name, else the document id.
     pub fn file_stem(&self, document_id: &str) -> String {
-        semio_framework_os_host_workflow::sanitize_export_file_stem(&self.name, document_id)
+        semio_os_host_workflow::sanitize_export_file_stem(&self.name, document_id)
     }
 }
 
 /// 📤️ Exports an already-loaded backbone document as pack bytes + ops text, with its name.
 pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<BackboneExport<store::os_store::serialization::ArtifactPackFiles>, VcsError>
 where
-    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope))).map(|files| BackboneExport { name: document.name.clone(), files })
@@ -289,7 +289,7 @@ where
 /// 📝️ DSL-text counterpart of `export_backbone_pack`.
 pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<BackboneExport<store::os_store::text_format::ArtifactTextFiles>, VcsError>
 where
-    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + pack::snapshot::ArtifactDsl,
+    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + pack::snapshot::ArtifactDsl,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_text(envelope))).map(|files| BackboneExport { name: document.name.clone(), files })
@@ -301,7 +301,7 @@ where
 /// undo/redo/checkpoint position.
 pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
 where
-    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     let files = with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope)))?;
@@ -313,13 +313,13 @@ where
 /// document kind's bytes as another.
 pub fn decode_backbone_payload<P, Op>(bytes: &[u8], expected_schema: &str) -> Result<BackboneDocument<P, Op>, VcsError>
 where
-    P: Clone + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
+    P: Clone + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
     Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P> + store::ColdMutation<P> + 'static,
 {
     let (name_bytes, inner) = resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(bytes))?;
     let name = String::from_utf8(name_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let (pack, spr) = resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(&inner))?;
-    let parsed: store::os_store::text_format::ParsedDocumentText<P, Op> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let parsed: store::os_store::text_format::ParsedDocumentText<P, Op> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let envelope = parsed.into_envelope();
     if envelope.schema != expected_schema {
         envelope.retire_unadopted();

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWaterPermeability 
         record: "ChangedWaterPermeability",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permeability k [m/s] of the layer water", "Schichtwasser: Durchlässigkeit k [m/s] ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permeability k [m/s] of the layer water", "Schichtwasser: Durchlässigkeit k [m/s] ändern")
     }
 }
 

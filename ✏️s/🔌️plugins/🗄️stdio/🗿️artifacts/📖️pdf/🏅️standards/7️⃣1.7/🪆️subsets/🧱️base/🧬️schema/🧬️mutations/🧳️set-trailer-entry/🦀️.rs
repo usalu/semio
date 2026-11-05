@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "trailer-entry", kind: "set-trailer-entry", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set trailer entry {}", self.key), &format!("Trailer-Eintrag {} setzen", self.key))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set trailer entry {}", self.key), &format!("Trailer-Eintrag {} setzen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

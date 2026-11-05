@@ -3,14 +3,14 @@
 use crate::config::RasterConfig;
 use crate::raster_scene;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_WINDOW_NAVIGATOR: &str = "raster-navigator";

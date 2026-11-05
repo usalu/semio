@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallSeismicKv wher
         record: "ChangedWallSeismicKv",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Seismic coefficient k_v of the retaining wall", "Stützwand: Seismischer Beiwert k_v ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Seismic coefficient k_v of the retaining wall", "Stützwand: Seismischer Beiwert k_v ändern")
     }
 }
 

@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveRetainingWall wher
         verb: "remove", entity: "retaining-wall", kind: "remove-retaining-wall", record: "RemovedRetainingWall",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove retaining wall", "Stützwand entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove retaining wall", "Stützwand entfernen")
     }
 }
 

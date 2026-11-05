@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRestraintLoadHeigh
         record: "ChangedRestraintLoadHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Load height z_g above the shear centre of the restraint", "Halterung: Lastangriffshöhe z_g über dem Schubmittelpunkt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Load height z_g above the shear centre of the restraint", "Halterung: Lastangriffshöhe z_g über dem Schubmittelpunkt ändern")
     }
 }
 

@@ -4,7 +4,7 @@
 //! for a viewer packet.
 
 use crate::modes::view::windows::report;
-use semio_framework_plugin::{ModeDefinition, WindowLayout};
+use semio_plugin::{ModeDefinition, WindowLayout};
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::vdi3805::create_vdi3805_viewer`.

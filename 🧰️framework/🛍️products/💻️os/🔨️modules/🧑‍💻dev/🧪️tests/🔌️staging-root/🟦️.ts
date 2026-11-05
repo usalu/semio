@@ -9,11 +9,13 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { collectActivationArtifactsV1, activationFilesDigest } from "../../♻️activation/🔖️identity/🟦️.ts";
+import { createRequire } from "node:module";
 import picomatch from "picomatch";
 import { URL as OracleURL } from "whatwg-url";
 import { describe, expect, it } from "vitest";
 import { COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, GENERATED_COMPONENT_OWNER_FILES, UNWATCHED_COMPONENT_SOURCE_DIRECTORIES, buildComponentSourceStatIndex, componentSourceContentHash, newestComponentSourceMtime, readStagedSourceContentHash, readStagedSourceStatIndex, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, SOURCE_FRESHNESS_FILE_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash, writeStagedSourceFreshness } from "@semio-tech/framework-plugin/build/freshness";
-import { healthyPreparedComponents, preparedComponentReportLines, preparedComponentVerdict, builtPluginModulesRootIn, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
+import { publishActivationReceipt, readActivationReceipt, nextActivationReceipt, healthyPreparedComponents, preparedComponentReportLines, preparedComponentVerdict, builtPluginModulesRootIn, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
 
 const suiteDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteDir, "../../../../../../..");
@@ -448,5 +450,53 @@ describe("staged module freshness", () => {
     } finally {
       rmSync(sandbox, { recursive: true, force: true });
     }
+  });
+});
+
+
+describe("activation current content", () => {
+  const row = JSON.parse(readFileSync(join(suiteDir, "../🧫️fixtures/🔌️staging-root.json"), "utf8")).activation;
+
+  it("reobserves changed modules and support despite an unchanged prior source marker", async () => {
+    const require = createRequire(join(repoRoot, "package.json"));
+    const oracle = require("next/dist/compiled/crypto-browserify");
+    const hash = (value: string): string => oracle.createHash("sha256").update(value).digest("hex");
+    const directory = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "activation-"));
+    try {
+      const sourceRoot = join(directory, "source"), freshnessDirectory = join(directory, "freshness");
+      mkdirSync(sourceRoot); writeFileSync(join(sourceRoot, row.source), row.previous);
+      const module = join(directory, "module.js"), support = join(directory, "support.js");
+      writeFileSync(module, row.previous); writeFileSync(support, row.previous);
+      const files = new Map([["module.js", module]]), signal = new AbortController().signal;
+      const components = [{ pluginId: row.pluginId, files, sourceRoot, freshnessDirectory }];
+      const supportDigest = await activationFilesDigest(new Map([["support.js", support]]), signal);
+      const priorArtifacts = await collectActivationArtifactsV1(components, supportDigest, signal);
+      const previous = nextActivationReceipt(row.variant, row.profile, priorArtifacts, undefined, row.rebuiltAt);
+      const receiptDirectory = join(directory, "receipt");
+      expect(publishActivationReceipt(receiptDirectory, previous)).toBe(true);
+      expect(publishActivationReceipt(receiptDirectory, previous)).toBe(false);
+      const marker = readStagedSourceContentHash(freshnessDirectory);
+      expect(nextActivationReceipt(row.variant, row.profile, await collectActivationArtifactsV1(components, supportDigest, signal), previous, row.now)).toEqual(previous);
+      writeFileSync(module, row.current);
+      expect(readStagedSourceContentHash(freshnessDirectory)).toBe(marker);
+      const currentArtifacts = await collectActivationArtifactsV1(components, supportDigest, signal);
+      const moduleDigest = hash(JSON.stringify(["module.js", Buffer.byteLength(row.current)]) + "\n" + row.current);
+      expect(currentArtifacts[0].artifactSha256).toBe(hash(supportDigest + moduleDigest));
+      expect(currentArtifacts[0].sourceContentSha256).toBe(marker);
+      const current = nextActivationReceipt(row.variant, row.profile, currentArtifacts, previous, row.now);
+      expect(publishActivationReceipt(receiptDirectory, current)).toBe(true);
+      expect(readActivationReceipt(receiptDirectory)).toEqual(current);
+      expect(current.plugins[0].rebuiltAt).toBe(row.now);
+      expect(current.plugins[0].artifactSha256).not.toBe(previous.plugins[0].artifactSha256);
+      writeFileSync(support, row.current);
+      const changedSupport = await activationFilesDigest(new Map([["support.js", support]]), signal);
+      const supported = await collectActivationArtifactsV1(components, changedSupport, signal);
+      expect(supported[0].artifactSha256).not.toBe(current.plugins[0].artifactSha256);
+      writeFileSync(join(sourceRoot, row.source), row.current);
+      const changedSource = await collectActivationArtifactsV1(components, changedSupport, signal);
+      expect(changedSource[0].sourceContentSha256).not.toBe(marker);
+      const cancelled = new AbortController(); cancelled.abort();
+      await expect(collectActivationArtifactsV1(components, changedSupport, cancelled.signal)).rejects.toThrow();
+    } finally { rmSync(directory, { recursive: true, force: true }); }
   });
 });

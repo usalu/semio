@@ -2,7 +2,7 @@ use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMEN
 use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
 #[allow(unused_imports)]
@@ -14,13 +14,13 @@ use semio_s_artifact_bim_model_tests_5::render::world::{mesh_data, overview_orbi
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::{scene, config, section_options, visible_solids, framing_camera, INITIAL_CAMERA, definition, WINDOW_KIND_ID, BODY_KEY, view_phase};
 use protocol::Inference;
@@ -32,11 +32,11 @@ fn demo() -> (ModelSnapshot, ModelInference) {
     (snapshot, inference)
 }
 
-fn instances(scene: &semio_framework_plugin::World3dScene) -> Vec<Value> {
+fn instances(scene: &semio_plugin::World3dScene) -> Vec<Value> {
     serde_json::from_str::<Vec<Value>>(&scene.instances_json).expect("instances are a JSON array")
 }
 
-fn meshes(scene: &semio_framework_plugin::World3dScene) -> Vec<Value> {
+fn meshes(scene: &semio_plugin::World3dScene) -> Vec<Value> {
     serde_json::from_str::<Vec<Value>>(&scene.meshes_json).expect("meshes are a JSON array")
 }
 

@@ -1,7 +1,7 @@
 //! 🧪️ The actual history ledger exposes all original inverses until one shared decision commits, and exact original factories close every displaced owner.
 use super::*;
 use crate::CursorRevisionRecord;
-use semio_framework_os_vcs::{ArtifactGroupVisibilityOwner,HistoryPageStack};
+use semio_os_vcs::{ArtifactGroupVisibilityOwner,HistoryPageStack};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use std::sync::atomic::{AtomicU64,Ordering};
 static RETIRED:AtomicU64=AtomicU64::new(0);

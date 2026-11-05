@@ -12,5 +12,5 @@ test("headless Run receives original call spending before semantic failure or co
  const source=readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url)),start=source.indexOf("ShardOutcome::OriginalCall {"),arm=source.slice(start,source.indexOf("ShardOutcome::Turn",start));
  expect(start).toBeGreaterThanOrEqual(0);expect(arm).toContain("receive_original_call");expect(arm.indexOf("receive_original_call")).toBeLessThan(arm.indexOf("original.kind"));
  expect(arm).toContain("RunError::Kernel");expect(arm).toContain("RunError::ActorCall");expect(arm).not.toContain("TurnResult {");expect(arm).not.toContain("Event::Wake");
- expect(source).toContain("Kernel(semio_framework_actor::KernelError)");expect(source).toContain("ActorCall(semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall)");
+ expect(source).toContain("Kernel(semio_framework_actor::KernelError)");expect(source).toContain("ActorCall(semio_plugin_host::original_actor_context::OriginalActorFixedCall)");
 });

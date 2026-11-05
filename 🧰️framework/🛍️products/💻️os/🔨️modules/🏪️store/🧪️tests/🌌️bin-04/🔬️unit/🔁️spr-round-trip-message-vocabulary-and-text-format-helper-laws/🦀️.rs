@@ -7,26 +7,26 @@
 async fn spr_round_trip_preserves_state_dependent_error_codes() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let initial = DemoSnapshot { n: Some(0) };
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "state-dependent-codes", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "state-dependent-codes", initial.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    store.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 2 })], transaction: None }, &mut identity).await.expect("warning is accepted");
     let edit_id = receipt.edit_ids.first().expect("one durable edit").clone();
     let edit = store.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id).expect("durable edit");
     let mutation_ids = stable_mutation_ids_for_edit(edit).await.expect("durable edit carries operation identity");
     let actors = vec![ActorId(edit.actor.clone().expect("durable edit has an actor"))];
     let timestamp = edit.mutation_meta.first().expect("durable edit carries timestamp").timestamp;
-    let kind = semio_framework_os_spr::ConflictKind::Degraded { edit_ids: vec![edit_id.clone()] };
-    let conflict_id = semio_framework_os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp).await;
-    let messages: Vec<semio_framework_os_spr::MutationMessage> = ["mutation.target-referenced", "mutation.target-mismatch"].into_iter().map(|code| semio_framework_os_spr::MutationMessage::error(code, format!("{code} persisted")).at(["node-1"]).at_op(0)).collect();
-    store.0.log.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: conflict_id, kind, status: semio_framework_os_spr::ConflictStatus::Open, messages, actors, timestamp });
+    let kind = semio_os_spr::ConflictKind::Degraded { edit_ids: vec![edit_id.clone()] };
+    let conflict_id = semio_os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp).await;
+    let messages: Vec<semio_os_spr::MutationMessage> = ["mutation.target-referenced", "mutation.target-mismatch"].into_iter().map(|code| semio_os_spr::MutationMessage::error(code, format!("{code} persisted")).at(["node-1"]).at_op(0)).collect();
+    store.0.log.envelope.conflicts.push(semio_os_spr::Conflict { id: conflict_id, kind, status: semio_os_spr::ConflictStatus::Open, messages, actors, timestamp });
 
     let pack = initial.encode_pack();
     let spr = print_document_spr(store.envelope()).await.expect("state-dependent codes encode");
-    let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("state-dependent codes decode");
+    let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("state-dependent codes decode");
     assert_eq!(parsed.envelope.conflicts, store.envelope().conflicts);
-    let restored = ArtifactStore::new(parsed.envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let restored = ArtifactStore::new(parsed.envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(restored.conflicts(), store.conflicts());
     let codes: Vec<&str> = restored.conflicts().last().expect("the conflict survives").messages.iter().map(|message| message.code.0.as_str()).collect();
     assert_eq!(codes, ["mutation.target-referenced", "mutation.target-mismatch"]);
@@ -48,7 +48,7 @@ async fn persisted_messages_admit_exactly_the_outcome_vocabulary() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json")).expect("outcome code fixture parses");
     let levels = [("info", semio_framework_diagnostic::Severity::Info), ("warning", semio_framework_diagnostic::Severity::Warning), ("error", semio_framework_diagnostic::Severity::Error), ("fatal", semio_framework_diagnostic::Severity::Fatal)];
     let level_of = |name: &str| levels.iter().find(|(known, _)| *known == name).map(|(_, level)| *level).expect("fixture level");
-    let persisted = |code: &str, level: semio_framework_diagnostic::Severity| semio_framework_os_spr::MutationMessage {
+    let persisted = |code: &str, level: semio_framework_diagnostic::Severity| semio_os_spr::MutationMessage {
         level,
         code: semio_framework_diagnostic::FaultCode::new(code),
         message: format!("{code} persisted"),
@@ -73,25 +73,25 @@ async fn persisted_messages_admit_exactly_the_outcome_vocabulary() {
 #[semio_framework_async_macros::async_test]
 async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
     let initial = DemoSnapshot { n: Some(0) };
-    let history = semio_framework_os_spr::HistoryLog {
+    let history = semio_os_spr::HistoryLog {
         doc_id: "metadata-required".to_string(),
         schema: "demo/v1".to_string(),
-        edits: [semio_framework_os_spr::HistoryEdit {
+        edits: [semio_os_spr::HistoryEdit {
             line: None,
             id: "edit-1".to_string(),
             actor: Some("author".into()),
             started_at: String::new(),
             finished_at: None,
             verb: None,
-            ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(SeverityMutation::SetN(SeveritySetN { n: 1 }).encode_op().expect("encode")) }],
+            ops: vec![semio_os_spr::OpPayload { text: None, binary: Some(SeverityMutation::SetN(SeveritySetN { n: 1 }).encode_op().expect("encode")) }],
             inverse: Vec::new().into(),
             meta: None,
             lane: None,
         }].into_iter().collect(),
         ..Default::default()
     };
-    let spr = semio_framework_os_spr::encode_history(&history, &semio_framework_os_spr::EncodeOptions::default()).await.expect("encode fixture");
-    let error = parse_document_spr::<DemoSnapshot, SeverityMutation>(&initial.encode_pack(), &spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect_err("authoritative history must never synthesize operation identity");
+    let spr = semio_os_spr::encode_history(&history, &semio_os_spr::EncodeOptions::default()).await.expect("encode fixture");
+    let error = parse_document_spr::<DemoSnapshot, SeverityMutation>(&initial.encode_pack(), &spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect_err("authoritative history must never synthesize operation identity");
     assert!(error.message.contains("authoritative operation metadata"));
 }
 

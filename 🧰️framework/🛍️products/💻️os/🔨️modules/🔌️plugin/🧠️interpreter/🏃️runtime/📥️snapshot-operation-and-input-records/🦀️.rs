@@ -101,7 +101,7 @@ pub struct OwnedInvocation {
 pub fn owned_engine_identity() -> &'static str {
     static IDENTITY: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     IDENTITY.get_or_init(|| {
-        let interpreter = semio_framework_plugin_interpreter::INTERPRETER_SOURCE.as_bytes();
+        let interpreter = semio_plugin_interpreter::INTERPRETER_SOURCE.as_bytes();
         let host = OWNED_RUNTIME_SOURCE.as_bytes();
         let mut engine = Vec::with_capacity(64 + interpreter.len() + host.len());
         engine.extend_from_slice(b"semio.owned-engine/v1\n");

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeBridgeDeflection w
         record: "ChangedBridgeDeflection",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change vertical deflection δ of the bridge serviceability", "Brückengebrauchstauglichkeit: Vertikale Durchbiegung δ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change vertical deflection δ of the bridge serviceability", "Brückengebrauchstauglichkeit: Vertikale Durchbiegung δ ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

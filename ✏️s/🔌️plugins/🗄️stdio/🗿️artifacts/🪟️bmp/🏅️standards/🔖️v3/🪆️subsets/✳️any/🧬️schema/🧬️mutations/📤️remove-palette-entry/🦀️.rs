@@ -16,8 +16,8 @@ pub struct RemovePaletteEntry {
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for RemovePaletteEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "palette-entry", kind: "remove-palette-entry", record: "RemovePaletteEntry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove palette entry", "Paletteneintrag entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove palette entry", "Paletteneintrag entfernen")
     }
 
     fn target(&self) -> Vec<String> {

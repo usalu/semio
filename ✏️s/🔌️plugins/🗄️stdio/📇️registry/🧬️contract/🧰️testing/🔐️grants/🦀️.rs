@@ -1,6 +1,6 @@
 //! 🔐️ Original grants and the mounted owner policy every stdio artifact test caller runs under.
 
-use semio_framework_plugin::MountedOwnerPolicyV1;
+use semio_plugin::MountedOwnerPolicyV1;
 use semio_framework_value::RetainedCloneGrant;
 
 /// 📏️ Native allocation ceiling the original test callers grant.

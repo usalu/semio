@@ -273,7 +273,7 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize, cx: &mut StepConte
             return Ok(());
         }
         let receiver_bytes = size_of::<ReadySlot>();
-        let Some(grant) = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES.checked_sub(receiver_bytes) else { return Ok(()) };
+        let Some(grant) = semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES.checked_sub(receiver_bytes) else { return Ok(()) };
         let output = state.ready[output_index].as_mut().expect("output reserved before producer");
         let result = output.outputs.receive_job_into(&mut output.reservation, slot.job.as_mut().expect("structural job receiver"), &mut slot.reconciler, grant);
         match result {
@@ -343,7 +343,7 @@ pub(super) fn commit_generation(state: &mut PatchTrackerState, generation: u64) 
 /// <aggregate>B` and `handback=<free>/<slots>`. A `registry-resident-credit-exhausted` refusal beside
 /// `resident=4s/33550336B of 33554432B` is a credit accounting fact, not a guess.
 fn registry_census_line() -> String {
-    let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let census = semio_ui_runtime::surface_reconcile_registry_census();
     format!("resident={}s/{}i/{}B of {}B handback={}/{}", census.resident_slots, census.resident_items, census.resident_bytes, census.resident_aggregate_bytes, census.handback_free, census.handback_slots)
 }
 

@@ -1,9 +1,9 @@
 use super::*;
 use crate::editor_interaction::energy_target_id;
-use semio_framework_plugin::World3dScene;
+use semio_plugin::World3dScene;
 
 fn scene_of(node: &BuiltNode) -> World3dScene {
-    semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("the built node decodes back into a world scene")
+    semio_plugin::artifact_app_laws::built_surface_scene(node).expect("the built node decodes back into a world scene")
 }
 
 fn bestest_600() -> crate::model::Model {
@@ -25,10 +25,10 @@ fn assert_sibling_keys_unique(node: &BuiltNode, path: &str) {
 
 /// 🎬️ The one world surface inside a (possibly captioned) render.
 fn surface_node(node: &BuiltNode) -> &BuiltNode {
-    if matches!(node.component, semio_framework_plugin::Component::Surface(_)) {
+    if matches!(node.component, semio_plugin::Component::Surface(_)) {
         return node;
     }
-    node.children.iter().find_map(|child| child.children.iter().chain(std::iter::once(child)).find(|entry| matches!(entry.component, semio_framework_plugin::Component::Surface(_)))).expect("a captioned render still carries exactly one world surface")
+    node.children.iter().find_map(|child| child.children.iter().chain(std::iter::once(child)).find(|entry| matches!(entry.component, semio_plugin::Component::Surface(_)))).expect("a captioned render still carries exactly one world surface")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -42,7 +42,7 @@ async fn definition_declares_a_world3d_window() {
     assert_eq!(def.actions.len(), 1);
     assert_eq!(def.actions[0].id, SET_CAMERA_ACTION_ID);
     assert!(
-        semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| def.label.resolve(terminology, semio_framework_ui_locale::Locale::En) != def.label.resolve(terminology, semio_framework_ui_locale::Locale::De)),
+        semio_ui_locale::Terminology::ALL.iter().all(|&terminology| def.label.resolve(terminology, semio_ui_locale::Locale::En) != def.label.resolve(terminology, semio_ui_locale::Locale::De)),
         "the window label is really translated"
     );
 }
@@ -101,7 +101,7 @@ async fn an_overlay_replaces_a_surfaces_colour_and_a_caption_wraps_the_scene() {
     assert_ne!(scene_of(&plain).meshes_json, scene_of(&coloured).meshes_json, "a results overlay replaces the class swatch");
 
     let captioned = render(&model, &EnergyModelInteractionSnapshot::default(), None, Some("Transmission loss (kWh)"),Locale::En).expect("captioned");
-    assert!(!matches!(captioned.component, semio_framework_plugin::Component::Surface(_)), "a captioned render wraps the surface in a column");
+    assert!(!matches!(captioned.component, semio_plugin::Component::Surface(_)), "a captioned render wraps the surface in a column");
     assert_eq!(captioned.children.len(), 2, "the caption sits above the scene stack");
 }
 
@@ -171,12 +171,12 @@ async fn a_window_polygon_lies_on_its_host_surfaces_plane() {
 async fn the_window_declares_the_camera_verb_the_world3d_host_dispatches() {
     let action = definition().actions.into_iter().find(|action| action.id == SET_CAMERA_ACTION_ID).expect("the window declares setCamera");
     assert_eq!(action.id, "setCamera", "the id is the host's own wire spelling, not an authored name");
-    assert!(matches!(action.kind, semio_framework_plugin::ActionKind::View), "a camera pose is never document data");
+    assert!(matches!(action.kind, semio_plugin::ActionKind::View), "a camera pose is never document data");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "Migrated is the only UI-dispatchable classification");
     let camera = action.args.iter().find(|arg| arg.id == "camera").expect("the camera argument is declared");
     assert!(camera.required, "the pose is the whole payload");
     assert!(
-        semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework_ui_locale::Locale::En) != action.label.resolve(terminology, semio_framework_ui_locale::Locale::De)),
+        semio_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_ui_locale::Locale::En) != action.label.resolve(terminology, semio_ui_locale::Locale::De)),
         "the camera verb is really translated"
     );
 }
@@ -220,7 +220,7 @@ async fn a_re_render_of_the_same_model_never_re_arms_the_auto_fit() {
 /// 🎨️ Depth-first walk collecting every `Component::Image` src under a node.
 fn swatch_sources(node: &BuiltNode) -> Vec<String> {
     let mut found = Vec::new();
-    if let semio_framework_plugin::Component::Image(props) = &node.component {
+    if let semio_plugin::Component::Image(props) = &node.component {
         found.push(props.src.as_str().to_string());
     }
     for child in node.children.iter() {
@@ -231,7 +231,7 @@ fn swatch_sources(node: &BuiltNode) -> Vec<String> {
 
 fn text_values(node: &BuiltNode) -> Vec<String> {
     let mut found = Vec::new();
-    if let semio_framework_plugin::Component::Text(props) = &node.component {
+    if let semio_plugin::Component::Text(props) = &node.component {
         found.push(props.value.to_string());
     }
     for child in node.children.iter() {
@@ -278,7 +278,7 @@ async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_a
 async fn without_an_overlay_there_is_no_legend_at_all() {
     let model = bestest_600();
     let bare = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), None, None, Some((0.0, 9.0)), None,Locale::En).expect("the bare render assembles");
-    assert!(matches!(bare.component, semio_framework_plugin::Component::Surface(_)), "an un-overlaid viewport is the surface itself, with no legend column");
+    assert!(matches!(bare.component, semio_plugin::Component::Surface(_)), "an un-overlaid viewport is the surface itself, with no legend column");
     assert!(swatch_sources(&bare).is_empty(), "no overlay, no swatches");
 
     let captioned = render(&model, &EnergyModelInteractionSnapshot::default(), None, Some("Conduction loss"),Locale::En).expect("the captioned render assembles");

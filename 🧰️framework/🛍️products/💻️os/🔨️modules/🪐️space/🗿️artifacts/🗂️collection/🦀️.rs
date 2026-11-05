@@ -1,13 +1,13 @@
 //! 🗂️ Composable persisted collection artifact.
 
-use semio_framework_os_kernel::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_os_kernel::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 pub use io::sqlite::snapshot::{register_sqlite_snapshot,SQLITE_SNAPSHOT_DIALECT};
 extern crate semio_framework_value_derive as value_derive;
 
@@ -239,7 +239,7 @@ pub struct CollectionEntry {
 }
 
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[artifact(id = "os.collection")]
 pub struct CollectionSnapshot {

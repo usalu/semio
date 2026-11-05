@@ -15,8 +15,8 @@ pub struct RemoveViewpoint {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveViewpoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "viewpoint", kind: "remove-viewpoint", record: "RemoveViewpoint" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove viewpoint", "Blickpunkt entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove viewpoint", "Blickpunkt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

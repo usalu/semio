@@ -10,7 +10,7 @@ pub struct ChangeConnectionEndDistance { pub connection_id: String, pub new_valu
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeConnectionEndDistance where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_end_distance::ChangeConnectionEndDistance> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-endDistanceM", kind: "change-connection-end-distance", record: "ChangedConnectionEndDistance" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change End distance a₃,t of connection {}", self.connection_id), &format!("Hirnholzabstand a₃,t von Verbindung {} ändern", self.connection_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change End distance a₃,t of connection {}", self.connection_id), &format!("Hirnholzabstand a₃,t von Verbindung {} ändern", self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
 }
 

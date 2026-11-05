@@ -1,3 +1,5 @@
+import {pickStoryWorldSelectionV1} from "../../../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎯️selection/🟦️.ts";
+import worldPickCorpus from "../../../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎯️selection/🧫️fixtures/🔣️.json";
 import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -5,12 +7,33 @@ import { createRequire } from "node:module";
 import ts from "typescript";
 import { transformSync } from "esbuild";
 import fg from "fast-glob";
+import wasmFixture from "../🧫️fixtures/🕸️managed-wasm/🔣️.json" with { type: "json" };
+import { frameworkOsEngineDeliveriesV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import { managedWasmPackagesVitePluginV1 } from "../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import { STORY_SCOPES, buildScopeAliases, buildScopeStoryGlobs, repoRootFromHere, resolveActiveScopes, storybookRuntimeChunk, STORYBOOK_PREVIEW_DEPENDENCIES } from "../../📖️stories/🧭️coordination/🟦️.ts";
 
 const root = repoRootFromHere();
 
 describe("Storybook catalog integrity", () => {
+  it.each(wasmFixture.cases)("keeps managed WASM and source export ownership separate: $id", row => {
+    const deliveries = frameworkOsEngineDeliveriesV1(resolve(root, ".fixture-products"), { version: 1, mode: "prototype", facet: "play" });
+    const plugin = managedWasmPackagesVitePluginV1(deliveries.map(({ packageName, root, entry, files, entrypoint }) => ({ packageName, root, entry, files, entrypoint })));
+    const id = row.package + row.suffix;
+    const resolveId = plugin.resolveId as (id: string) => string | undefined;
+    if (row.resolution === "refused") {
+      expect(() => resolveId(id)).toThrow("Declared managed WASM package file required");
+    } else if (row.resolution === "source-refused") {
+      expect(resolveId(id)).toBeUndefined();
+      expect(() => createRequire(import.meta.url).resolve(id)).toThrow();
+    } else if (row.resolution === "source") {
+      expect(resolveId(id)).toBeUndefined();
+      expect(existsSync(createRequire(import.meta.url).resolve(id))).toBe(true);
+    } else {
+      expect(resolveId(id)).toBe(deliveries.find(delivery => delivery.packageName === row.package)!.entry);
+    }
+  });
+
   it.each(fixture.sourceAliasScopes)("resolves the current canvas renderer in %s", scope => {
     const aliases = buildScopeAliases(resolveActiveScopes(scope), {});
     expect(aliases[fixture.canvasRendererAlias]).toBe(fixture.canvasRendererEntry);
@@ -78,7 +101,7 @@ describe("Storybook catalog integrity", () => {
   it("excludes inactive host WASM imports from scoped UI builds", () => {
     const source = readFileSync(resolve(root, ".storybook/preview.tsx"), "utf8");
     const compile = (active: boolean) => transformSync(source, { loader: "tsx", minifySyntax: true, define: { __STORYBOOK_HOST_WASM__: String(active) } }).code;
-    const host = "@semio-tech/framework-editor-rs/pkg/framework_editor.js";
+    const host = "@semio-tech/framework-editor-rs";
     expect(compile(false)).not.toContain(host);
     expect(compile(true)).toContain(host);
   });
@@ -96,4 +119,8 @@ describe("Storybook catalog integrity", () => {
   it("does not force an undeclared golden-layout optimizer dependency", () => {
     expect(readFileSync(resolve(root, ".storybook/main.ts"), "utf8")).not.toContain('"golden-layout"');
   });
+});
+
+describe("standalone world pick contract",()=>{
+ it.each(worldPickCorpus.cases)("$name",row=>{expect(pickStoryWorldSelectionV1(worldPickCorpus.current,worldPickCorpus.targets,row.id,row.merge)).toEqual(row.expected);});
 });

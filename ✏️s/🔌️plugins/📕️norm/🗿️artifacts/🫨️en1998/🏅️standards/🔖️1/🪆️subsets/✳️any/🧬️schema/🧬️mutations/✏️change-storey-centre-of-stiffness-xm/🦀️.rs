@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeStoreyCentreOfStif
         record: "ChangeStoreyCentreOfStiffnessXM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Centre of stiffness X", "Steifigkeitsschwerpunkt X ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Centre of stiffness X", "Steifigkeitsschwerpunkt X ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-storey-centre-of-stiffness-xm".into()]

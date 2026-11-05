@@ -25,8 +25,8 @@ pub fn change_grip_kind_label<Op: From<crate::change_grip_kind_label::ChangeGrip
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeGripKindLabel where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_grip_kind_label::ChangeGripKindLabel> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "grip-kind", kind: "change-grip-kind-label", record: "ChangedGripKindLabel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change grip kind \"{}\" label to \"{}\"", self.id, self.new_label), &format!("Beschriftung von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_label))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change grip kind \"{}\" label to \"{}\"", self.id, self.new_label), &format!("Beschriftung von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

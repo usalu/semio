@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeHollowBrace1Force 
         record: "ChangedHollowBrace1Force",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Brace 1 force N_1,Ed of the hollow joint", "Hohlprofilknoten: Streben-1-Kraft N_1,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Brace 1 force N_1,Ed of the hollow joint", "Hohlprofilknoten: Streben-1-Kraft N_1,Ed ändern")
     }
 }
 

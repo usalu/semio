@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedStiffenerSha
         record: "ChangedPlatedStiffenerShape",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Transverse stiffener outline shape (centreline walls for I_T, I_w and I_p of the stiffener) of the plated panel", "Plattenfeld: Konturform der Quersteife (Mittellinienwände für I_T, I_w und I_p der Steife) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Transverse stiffener outline shape (centreline walls for I_T, I_w and I_p of the stiffener) of the plated panel", "Plattenfeld: Konturform der Quersteife (Mittellinienwände für I_T, I_w und I_p der Steife) ändern")
     }
 }
 

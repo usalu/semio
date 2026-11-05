@@ -19,9 +19,9 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 
 //#region 🔖️IoDeclaration
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
     use crate::{Wfc2dMutation, Wfc2dSnapshot, WFC_2D_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
     /// 🗣️ The five hand-authored `dsl::LanguageSpec`s this subset carries — `OnceLock` because

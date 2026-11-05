@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeTestTheoryVariatio
         record: "ChangedTestTheoryVariation",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Test series: Theory scatter V_rt (D.7.2)", "Versuchsreihe: Streuung der Basisvariablen V_rt (D.7.2) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Test series: Theory scatter V_rt (D.7.2)", "Versuchsreihe: Streuung der Basisvariablen V_rt (D.7.2) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -10,21 +10,21 @@ use semio_framework::REVERT_TO_COMMAND_ACTION_ID;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::collections::BTreeMap;
 use std::collections::{HashMap, HashSet};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 /// 🔗️ `ContextMenuRequest.menu` (the kept old `ContextMenuRequest`, above) is itself still declared
-/// as `semio_framework_ui_layout::layout::UiMenuRef`, not the contract's `MenuRef` — same "forced by a kept old
+/// as `semio_ui_layout::layout::UiMenuRef`, not the contract's `MenuRef` — same "forced by a kept old
 /// consumer" reasoning as `KeybindingActionDescriptor` below, so this stays bare (no name collision
 /// with the contract's differently-named `MenuRef` to guard against, unlike that one).
 /// 🏷️ The ui crate's NON-node domains, named explicitly rather than glob-imported: localized
@@ -32,25 +32,25 @@ use semio_framework_ui_locale::LocalizedLabel;
 /// flow. The node schema moved to the contract, but these never did — they are separate concerns
 /// that happen to share a home crate, and a second glob here would silently shadow the contract's
 /// own types with the old ones, quietly undoing the migration.
-use semio_framework_ui_layout::layout::collect_window_kind_ids_from_layout;
+use semio_ui_layout::layout::collect_window_kind_ids_from_layout;
 /// 🔗️ `manifest::Keybinding.action` (FORBIDDEN file, `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`)
-/// is still declared as `semio_framework_ui_layout::layout::ActionDescriptor` and was not part of this migration's scope
+/// is still declared as `semio_ui_layout::layout::ActionDescriptor` and was not part of this migration's scope
 /// — it is a separate, un-migrated manifest domain (declarative keybinding data), not one of the
 /// ~30 UI-tree helpers this packet converts. Aliased rather than left bare so every OTHER
 /// `ActionDescriptor`-shaped construction in this file reads as the genuine `ActionBinding` gap it
 /// is, instead of silently resolving to this one foreign survivor.
-use semio_framework_ui_layout::layout::ActionDescriptor as KeybindingActionDescriptor;
-use semio_framework_ui_layout::layout::NamedLayout;
-use semio_framework_ui_layout::layout::WindowEngagement;
-use semio_framework_ui_layout::layout::WindowEngagementSlot;
-use semio_framework_ui_layout::layout::WindowLayout;
-use semio_framework_ui_layout::layout::WindowMeasure;
-use semio_framework_ui_layout::layout::WindowOptions;
-use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_ui_layout::layout::ActionDescriptor as KeybindingActionDescriptor;
+use semio_ui_layout::layout::NamedLayout;
+use semio_ui_layout::layout::WindowEngagement;
+use semio_ui_layout::layout::WindowEngagementSlot;
+use semio_ui_layout::layout::WindowLayout;
+use semio_ui_layout::layout::WindowMeasure;
+use semio_ui_layout::layout::WindowOptions;
+use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
 /// 🗂️ `OsMediaCapability`/`ArtifactKindSpec` now live in `semio-framework-core` (both this crate and
-/// `semio-framework-os` already depend on it) the same way the legacy format enum used to — re-exported
+/// `semio-os` already depend on it) the same way the legacy format enum used to — re-exported
 /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
-/// `semio_framework_os`'s artifact catalog registry share one definition.
+/// `semio_os`'s artifact catalog registry share one definition.
 use semio_framework::ArtifactKindSpec;
 /// 🧬️ `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
 /// `ArtifactKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
@@ -65,16 +65,16 @@ use semio_framework_artifact_reference::ArtifactDialect;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::surface_app_id;
 use semio_framework::AppRole;
-use semio_framework_plugin_decl_app::viewer_rejects_action;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use semio_framework_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
-use semio_framework_plugin_decl_views::cancellation_action_definition;
-use semio_framework_plugin_window_transient::contract_surface_kind;
-use semio_framework_plugin_window_transient::legacy_surface_kind;
+use semio_plugin_decl_app::viewer_rejects_action;
+use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
+use semio_plugin_decl_views::cancellation_action_definition;
+use semio_plugin_window_transient::contract_surface_kind;
+use semio_plugin_window_transient::legacy_surface_kind;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::VIEWER_REJECTED_ACTION_IDS;
+use semio_plugin_decl_app::VIEWER_REJECTED_ACTION_IDS;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::is_time_travel_action_id;
+use semio_plugin_decl_app::is_time_travel_action_id;
 
 #[path = "🖐️gumball-audience/🦀️.rs"]
 mod gumball_audience;

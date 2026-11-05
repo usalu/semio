@@ -39,8 +39,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "project", kind: "set-project-info", record: "SetProjectInfo" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&String::from("Update the project info"), &String::from("Projektinformationen ändern"))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&String::from("Update the project info"), &String::from("Projektinformationen ändern"))
     }
     fn target(&self) -> Vec<String> {
         vec!["project".to_string()]

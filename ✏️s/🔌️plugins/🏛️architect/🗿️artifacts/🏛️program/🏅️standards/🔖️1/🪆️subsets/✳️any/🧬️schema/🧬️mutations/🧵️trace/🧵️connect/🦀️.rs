@@ -26,8 +26,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "trace", kind: "connect-trace", record: "ConnectedTrace" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect trace \"{}\" -> \"{}\"", self.trace.from_id.0, self.trace.to_id.0), &format!("Nachverfolgung \"{}\" -> \"{}\" verknüpfen", self.trace.from_id.0, self.trace.to_id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Connect trace \"{}\" -> \"{}\"", self.trace.from_id.0, self.trace.to_id.0), &format!("Nachverfolgung \"{}\" -> \"{}\" verknüpfen", self.trace.from_id.0, self.trace.to_id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.trace.id.0.clone()]

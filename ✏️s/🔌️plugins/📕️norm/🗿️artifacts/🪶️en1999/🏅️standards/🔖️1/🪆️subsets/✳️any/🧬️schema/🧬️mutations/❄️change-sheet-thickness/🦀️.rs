@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSheetThickness whe
         record: "ChangedSheetThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design thickness t of the cold-formed sheet", "Kaltgeformtes Blech: Bemessungsblechdicke t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design thickness t of the cold-formed sheet", "Kaltgeformtes Blech: Bemessungsblechdicke t ändern")
     }
 }
 

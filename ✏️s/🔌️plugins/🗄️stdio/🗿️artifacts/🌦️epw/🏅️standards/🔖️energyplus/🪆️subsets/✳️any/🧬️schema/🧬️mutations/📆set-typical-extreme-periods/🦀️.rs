@@ -14,8 +14,8 @@ pub struct SetTypicalExtremePeriods {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetTypicalExtremePeriods {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "typical-extreme-periods", kind: "set-typical-extreme-periods", record: "SetTypicalExtremePeriods" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set typical extreme periods", "Typische und extreme Perioden setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set typical extreme periods", "Typische und extreme Perioden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

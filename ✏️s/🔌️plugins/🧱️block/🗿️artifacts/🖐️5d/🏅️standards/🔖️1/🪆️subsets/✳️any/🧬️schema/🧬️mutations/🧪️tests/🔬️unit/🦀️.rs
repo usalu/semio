@@ -5,7 +5,7 @@ use semio_s_artifact_block_5d_model::{Block5dGripKind, Block5dGripTemplate};
 use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;
-use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
+use semio_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
 
 fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
     let forward = protocol::apply_diff_cold(mutation.diff(base).diff(), base).expect("valid mutation diff");
@@ -274,7 +274,7 @@ async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
 //#region 🔖️OutcomeLaws
 // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
 // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
-use semio_framework_os_kernel::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
+use semio_os_kernel::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use semio_s_artifact_block_5d_mut_part_kind::rename_part_kind::rename_part_kind;
 use semio_s_artifact_block_5d_mut_part_kind::update_part_2d::update_part_2d;

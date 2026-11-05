@@ -29,8 +29,8 @@ pub struct UpdateTextFrame {
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateTextFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_text_frame::UpdateTextFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "text-frame", kind: "update-text-frame", record: "UpdatedTextFrame" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update text frame \"{}\"", self.frame_id), &format!("Textrahmen \"{}\" aktualisieren", self.frame_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update text frame \"{}\"", self.frame_id), &format!("Textrahmen \"{}\" aktualisieren", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

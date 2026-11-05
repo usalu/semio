@@ -1,9 +1,9 @@
 //! 🧵️ process3d retained cursors: the incremental capability, machine, pose, child, measure, step, string and solid cursors that decode one record per grant.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::{PROCESS3D_MAXIMUM_DOMAIN_ITEMS};
 use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
-use semio_framework_plugin::ArtifactOwnedDisposer as _;
+use semio_plugin::ArtifactOwnedDisposer as _;
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 
 impl Process3dRetainedCapabilityCursor {

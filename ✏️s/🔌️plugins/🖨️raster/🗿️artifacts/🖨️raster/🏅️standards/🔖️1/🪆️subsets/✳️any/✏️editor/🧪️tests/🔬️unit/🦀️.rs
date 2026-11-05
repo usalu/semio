@@ -1,11 +1,11 @@
 pub mod context {
     //! 🧪️ Shared harness for every `editor::raster` node's tests — mirrors TEMPLATE.md §7.
     use super::*;
-    use semio_framework_plugin::{artifact_app_laws as artifact_laws, InvocationResult, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::{artifact_app_laws as artifact_laws, InvocationResult, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     pub type RasterApp = VcsArtifactApp<EditorApp<RasterPlayApp>>;
 
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
 
     /// 🧹️ A live app fixture that CLOSES itself. `VcsArtifactApp`'s `ArtifactStore` owns an
     /// `ArtifactStoreCursorDisposer` whose `Drop` asserts terminal-empty ownership, so a plainly
@@ -13,7 +13,7 @@ pub mod context {
     /// shallow-shell witness". Dereferences to the app and drains the exact retained close ladder on
     /// the way out — the same law the runtime uses, and the same shape `mounted_app` already had.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct RasterAppFixture(pub RasterApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct RasterAppFixture(pub RasterApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for RasterAppFixture {
         type Target = RasterApp;
@@ -31,18 +31,18 @@ pub mod context {
     impl Drop for RasterAppFixture {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                artifact_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                artifact_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
 
     /// ✏️ Adapts `create_raster_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `new_app_with_registry` still expects — framework test context gap.
-    pub fn raster_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_raster_app(), examples: Vec::new() }
+    pub fn raster_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_raster_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("raster", RasterPlayApp, raster_app_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("raster", RasterPlayApp, raster_app_manifest_for_tests, "../..");
 
     /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
     /// `EditorApp<RasterPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
@@ -54,8 +54,8 @@ pub mod context {
     /// every typed command until the app carries the live runtime instance the `ActionMeta` names, so
     /// an unmounted fixture can construct and render but never mutate.
     pub async fn app() -> RasterAppFixture {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = artifact_laws::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = artifact_laws::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(artifact_laws::meta("local").instance_id).await;
         RasterAppFixture(app, scope)
     }
@@ -68,7 +68,7 @@ pub mod context {
         ViewModel {
             window_id: Some(id.into()),
             window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         }
     }
 
@@ -79,8 +79,8 @@ pub mod context {
     pub async fn dispatch(app: &mut RasterAppFixture, command: RasterCommand) -> InvocationResult {
         let mut action = artifact_laws::meta("local");
         action.view_state = Some(raster_view_state());
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        let settled = artifact_laws::settle_registered_typed_operation(&mut app.0, artifact_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = artifact_laws::settle_registered_typed_operation(&mut app.0, artifact_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         result
     }
@@ -90,11 +90,11 @@ pub mod context {
     /// `ArtifactCommand::Undo`, and only then does the typed publication settle. Pressing it with a
     /// bare `handle_action` reads back as a silent no-op on a MOUNTED app.
     pub async fn history(app: &mut RasterAppFixture, action: &str) {
-        artifact_laws::settle_history_verb(&mut app.0, action, artifact_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        artifact_laws::settle_history_verb(&mut app.0, action, artifact_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
     pub async fn render(app: &mut RasterAppFixture, body_key: &str) -> String {
-        render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
+        render_with_view(app, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await
     }
     
     pub async fn render_with_view(app: &mut RasterAppFixture, body_key: &str, view_state: &ViewModel) -> String {
@@ -116,10 +116,10 @@ pub mod context {
     pub async fn semio_app() -> RasterAppFixture {
         let mut app = app().await;
         let document = semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot();
-        let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print document pack");
         retire_raster_envelope(envelope);
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load semio");
+        semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load semio");
         app
     }
 }
@@ -127,8 +127,8 @@ pub mod context {
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::EditorApp;
+use semio_plugin::WindowMeasure;
 use context::*;
 use semio_s_artifact_raster_raster_editor::*;
 use semio_s_artifact_raster_raster_editor::config::RasterConfig;
@@ -136,21 +136,21 @@ use semio_s_artifact_raster_raster_editor::modes::edit::windows::composite;
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_framework_pack_json::Value;
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::UtilityCategory;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::UtilityCategory;
 use semio_s_artifact_raster_raster_editor::panels::{catalogue, document, inspection, masks};
 use semio_s_artifact_raster_raster_model::{layer_name, layer_visible};
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
-use semio_framework_plugin::{artifact_app_laws, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
+use semio_plugin::{artifact_app_laws, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::os_store::backbone::MemoryBackbone;
 
 include!("📥️envelope-and-scene-laws/🦀️.rs");

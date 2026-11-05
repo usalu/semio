@@ -14,7 +14,7 @@ use semio_s_plugin_puzzle_retained::PUZZLE_IMPORT_TOTAL_BYTES;
 use semio_framework_pack_json::parse;
 
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use semio_framework_value::FromValue;
 use semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD;
 

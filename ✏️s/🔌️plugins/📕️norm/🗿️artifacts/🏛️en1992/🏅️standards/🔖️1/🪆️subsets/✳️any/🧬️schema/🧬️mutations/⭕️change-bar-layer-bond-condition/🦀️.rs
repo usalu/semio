@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeBarLayerBondCondit
         record: "ChangedBarLayerBondCondition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change bond condition of the bar layer", "Bewehrungslage: Verbundbedingung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change bond condition of the bar layer", "Bewehrungslage: Verbundbedingung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.layer_id.clone()]

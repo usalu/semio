@@ -1,4 +1,4 @@
-use semio_framework_os_infinite_directed_presentation::DagCamera;
+use semio_os_infinite_directed_presentation::DagCamera;
 use crate::editor::dag::config::*;
 use protocol::{ColdMutation, Mutation};
 

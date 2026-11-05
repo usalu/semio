@@ -22,7 +22,7 @@ impl<'ctx> SessionCtx<'ctx> {
                 label: tab.label.resolve(self.prefs.active_terminology(), self.prefs.active_locale()).to_string(),
                 description: None,
                 group: shell_chrome_string("palette.group.panels", is_de).into(),
-                dispatch_action: Some(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": tab.id() }) }),
+                dispatch_action: Some(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "setActivePanelTab".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "tabId": tab.id() }) }),
                 action: None,
                 category: None,
             });
@@ -49,7 +49,7 @@ impl<'ctx> SessionCtx<'ctx> {
                     label: format!("{} {breadcrumb}", shell_chrome_string("palette.spawnPrefix", is_de)),
                     description: None,
                     group: shell_chrome_string("palette.group.catalogue", is_de).into(),
-                    dispatch_action: Some(ActionDescriptor { controller_id: controller_id.clone(), action: "spawnApp".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "pluginId": program.plugin_id }) }),
+                    dispatch_action: Some(ActionDescriptor { controller_id: controller_id.clone(), action: "spawnApp".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "pluginId": program.plugin_id }) }),
                     action: None,
                     category: None,
                 });
@@ -192,7 +192,7 @@ impl<'ctx> SessionCtx<'ctx> {
         if self.dock.dock.window_kind_id(window_id).is_none() {
             return false;
         }
-        if !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id) {
+        if !semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id) {
             return false;
         }
         if !self.dock.dock.close_window(window_id) {
@@ -201,8 +201,8 @@ impl<'ctx> SessionCtx<'ctx> {
         self.windows.window_icon_overrides.remove(window_id);
         self.windows.window_title_overrides.remove(window_id);
         self.windows.active_window_id = self.dock.dock.active_window_id.clone();
-        semio_framework_os_renderer_wgpu_scene_render::request_canvas_pointer_gesture_cancel_for_window(window_id);
-        semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer_for_window(window_id);
+        semio_renderer_wgpu_scene_render::request_canvas_pointer_gesture_cancel_for_window(window_id);
+        semio_renderer_wgpu_scene_render::cancel_scene_list_transfer_for_window(window_id);
         self.teardown_spawned_window(window_id);
         self.dock.persist_dock_layout();
         self.windows.owe_window_topology_refresh(&mut self.settle);

@@ -1,7 +1,7 @@
 //! 🧊️ EN 1991 viewer — the read-only 3D model window over the same projected scene the editor shows; imports nothing from the editor (`policyViewerPurityBreaches`).
 
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_s_artifact_norm_en1991_scene::live_scene_of;
 use semio_s_plugin_norm_app_surface::viewport3d::toolbar::{render_viewport_panel, ViewportView};

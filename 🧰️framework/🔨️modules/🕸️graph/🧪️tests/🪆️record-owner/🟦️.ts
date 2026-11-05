@@ -18,14 +18,14 @@ test("Graph names every canonical Record Value Diagnostic and Replication provid
  for(const crate of graphCrates){const source=readFileSync(join(owner,crate,"📦️packages/🦀️rust/Cargo.toml"),"utf8"), first=Bun.TOML.parse(source) as {dependencies:Record<string,unknown>}, third=dependencyLoader("@iarna/toml").parse(source);expect(first).toEqual(third);Object.assign(dependencies,first.dependencies);}
  const packages={record:"semio-framework-dsl-record",value:"semio-framework-value",diagnostic:"semio-framework-diagnostic",replication:"semio-framework-replication"} as const;
  for(const row of fixture.directEdges.filter(row=>row.consumer==="graph"))expect(dependencies[packages[row.provider as keyof typeof packages]]).toBeDefined();
- expect(dependencies["semio-framework-os-kernel"]).toBeUndefined();
+ expect(dependencies["semio-os-kernel"]).toBeUndefined();
 });
 
 test("Graph package syntax refuses the former OS dsl_core alias without reading any product",async()=>{
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",owner)),"out/tree-sitter-rust.wasm")));
  try{for(const crate of graphCrates){const tree=parser.parse(readFileSync(join(owner,crate,"🦀️.rs"),"utf8"));
   if(!tree)throw Error("Missing Graph package syntax tree");
-  try{expect(tree.rootNode.hasError(),crate).toBe(false);for(const node of tree.rootNode.namedChildren.filter(node=>node.type==="extern_crate_declaration")){expect(node.text.includes("semio_framework_os_kernel")).toBe(false);expect(node.text.includes("dsl_core")).toBe(false);}}
+  try{expect(tree.rootNode.hasError(),crate).toBe(false);for(const node of tree.rootNode.namedChildren.filter(node=>node.type==="extern_crate_declaration")){expect(node.text.includes("semio_os_kernel")).toBe(false);expect(node.text.includes("dsl_core")).toBe(false);}}
   finally{tree.delete();}}}
  finally{parser.delete();}
 });

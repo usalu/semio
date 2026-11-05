@@ -4,11 +4,11 @@
 use crate::editor::puzzle2d::snapshot::{PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
 use crate::editor::puzzle2d::recorder::puzzle2d_paste_operations_on;
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
-use semio_framework_plugin::kernel::{Effect, PastePlacement};
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
+use semio_plugin::kernel::{Effect, PastePlacement};
+use semio_plugin::InteractionTarget;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
 use semio_framework_pack_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 #[allow(unused_imports)]
@@ -44,88 +44,88 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 #[allow(unused_imports)]
 use semio_framework::kernel::UiDirtyScope;
 #[allow(unused_imports)]
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment};
+use semio_plugin::kernel::{ClipboardError, ClipboardFragment};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionRef;
+use semio_plugin::ActionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactPresentation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DialogDefinition;
+use semio_plugin::DialogDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionVerb;
+use semio_plugin::InteractionVerb;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortDirection;
+use semio_plugin::MediaPortDirection;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortSpec;
+use semio_plugin::MediaPortSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::PortMultiplicity;
+use semio_plugin::PortMultiplicity;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use std::collections::BTreeSet;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_puzzle_2d_unit_tests::{editor::puzzle2d::snapshot::board_snapshot_nodes, editor::puzzle2d::snapshot::board_snapshot_edges, editor::puzzle2d::snapshot::PUZZLE2D_CLIPBOARD_SCHEMA, editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
+use semio_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::kit::*;
 #[allow(unused_imports)]
@@ -134,7 +134,7 @@ use crate::editor::puzzle2d::retained::*;
 use crate::editor::puzzle2d::session::*;
 use crate::editor::puzzle2d::*;
 use crate::editor::puzzle2d::testkit::*;
-use semio_framework_plugin::InvocationResult;
+use semio_plugin::InvocationResult;
 
 fn node_ids(app: &Puzzle2dApp) -> Vec<String> {
     board_snapshot_nodes(&fixture_of(app)).iter().filter_map(|node| node.get("id").and_then(Value::as_str).map(str::to_string)).collect()
@@ -162,7 +162,7 @@ fn select_ids(app: &mut Puzzle2dApp, ids: &[String]) {
     dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).expect("select ids");
 }
 
-fn clipboard_fragment(result: &InvocationResult) -> semio_framework_plugin::kernel::ClipboardFragment {
+fn clipboard_fragment(result: &InvocationResult) -> semio_plugin::kernel::ClipboardFragment {
     result
         .requested_effects
         .iter()
@@ -173,7 +173,7 @@ fn clipboard_fragment(result: &InvocationResult) -> semio_framework_plugin::kern
         .expect("copy must emit exactly one ClipboardWrite")
 }
 
-fn paste_args(fragment: &semio_framework_plugin::kernel::ClipboardFragment) -> Value {
+fn paste_args(fragment: &semio_plugin::kernel::ClipboardFragment) -> Value {
     json!({ "fragment": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(fragment)) })
 }
 
@@ -299,7 +299,7 @@ fn cut_refuses_a_locked_node_with_a_notice() {
 #[test]
 fn paste_refuses_a_foreign_media_type() {
     let snapshot = Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [], "edges": [] }))).expect("typed fixture admits"));
-    let foreign = semio_framework_plugin::kernel::ClipboardFragment {
+    let foreign = semio_plugin::kernel::ClipboardFragment {
         schema: PUZZLE2D_CLIPBOARD_SCHEMA.into(),
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
         dsl_text: json!({ "nodes": [{ "id": "n", "x": 0.0, "y": 0.0 }], "edges": [] }).to_string(),

@@ -1,11 +1,11 @@
 use crate::editor::json_i_json::modes::edit::windows::main;
 use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{insert_array_element, remove_array_element, remove_member, rename_member, set_safe_number, set_string, JsonIJsonMutation};
 use crate::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
 use crate::editor::json_i_json::{decode_path_id, JSON_I_JSON_KIT_ACTION_ID, json_i_json_example_snapshot, json_i_json_command_from_action, json_i_json_emit};
 use crate::editor::json_i_json::*;
 use crate::schema::snapshot::JsonValue;
@@ -28,7 +28,7 @@ fn set_node_requires_a_complete_address_and_value_without_forbidding_empty_text(
 #[semio_framework_async_macros::async_test]
 async fn create_json_i_json_editor_builds_a_definition_for_the_editor_role() {
     let def = create_json_i_json_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, JSON_I_JSON_EDITOR_DIALECT.into());
 }
 
@@ -57,7 +57,7 @@ async fn decode_path_id_roundtrips_root_and_nested() {
 fn set_node_rejects_every_noncanonical_address_before_emitting() {
     let snapshot = JsonSnapshot::default();
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
-    let separator = semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
+    let separator = semio_plugin::TREE_WINDOW_PATH_SEPARATOR;
     for node_id in [String::new(), "m=0".into(), format!("${separator}{separator}m=0"), format!("${separator}${separator}m=0")] {
         let command = JsonIJsonIJsonEditorCommand::SetNode { node_id, revision: revision.clone(), value: "null".into() };
         assert!(json_i_json_emit(&command, &snapshot, None).is_err());
@@ -116,11 +116,11 @@ async fn the_editor_declares_the_example_pickers_verb() {
 /// `Migrated` classification and `OpBinary::TOOL_JOB_IDS` disagree — so constructing one is the proof.
 #[semio_framework_async_macros::async_test]
 async fn the_example_switch_joins_its_exact_retained_factory() {
-    use semio_framework_plugin::PluginApp;
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_json_i_json_editor());
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<JsonIJsonEditor>>::with_registry(EditorApp::<JsonIJsonEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
+    use semio_plugin::PluginApp;
+    let registry = semio_plugin::AppActionRegistry::from_definition(&create_json_i_json_editor());
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::VcsArtifactApp::<EditorApp<JsonIJsonEditor>>::with_registry(EditorApp::<JsonIJsonEditor>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
 
@@ -147,28 +147,28 @@ async fn the_shell_action_pair_resolves_into_the_typed_command() {
 //#endregion 🎬️ExampleSwitchLaws
 
 //#region 🪟️KitVerbLaws
-type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<JsonIJsonEditor>>;
+type KitFixtureApp = semio_plugin::VcsArtifactApp<EditorApp<JsonIJsonEditor>>;
 
 /// 🧪️ One registered fixture app holding `document`, loaded exactly as a host applies the example
 /// switch's `Effect::LoadDocument`.
-async fn kit_fixture_holding(document: &JsonSnapshot) -> (KitFixtureApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope) {
-    use semio_framework_plugin::PluginApp;
+async fn kit_fixture_holding(document: &JsonSnapshot) -> (KitFixtureApp, semio_plugin::artifact_app_laws::OriginalFixtureScope) {
+    use semio_plugin::PluginApp;
     register_document_schema();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<JsonIJsonEditor>, _>(async { semio_framework_plugin::App { definition: create_json_i_json_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_JSON_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<JsonIJsonEditor>, _>(async { semio_plugin::App { definition: create_json_i_json_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_JSON_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
     (app, scope)
 }
 
 /// 🕹️ Dispatches `action` with text-staged `args`, exactly as a rail sends it, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)], cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), Fault> {
-    use semio_framework_plugin::PluginApp;
-    let meta = semio_framework_plugin::artifact_app_laws::meta("local");
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)], cx: &mut semio_plugin::StepContext<'_>) -> Result<(), Fault> {
+    use semio_plugin::PluginApp;
+    let meta = semio_plugin::artifact_app_laws::meta("local");
     let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_plugin::Fault::from(format!("{failure:?}"))))?;
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// ⚖️ LAW: `set-node` — the verb the `TreeWindowKit` mints for `🪟️main` — reaches the document through this
@@ -185,11 +185,11 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     dispatch_settled(&mut app, "set-node", &[("nodeId", &node_id), ("revision", &revision), ("value", "\"semio.stdio.i-json.edited\"")], scope.cx()).await.expect("set-node settles");
     let printed = <JsonSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&app.snapshot().expect("json snapshot"));
     let restored=<JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("owned logical edit payload");assert_eq!(restored,app.snapshot().expect("json snapshot"));let JsonValue::Object{members}=&restored.value else{panic!("edited object")};assert_eq!(members[id_index].value,JsonValue::String{value:"semio.stdio.i-json.edited".into()});
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 //#endregion 🪟️KitVerbLaws
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", JsonIJsonEditor, || semio_framework_plugin::App { definition: create_json_i_json_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio", JsonIJsonEditor, || semio_plugin::App { definition: create_json_i_json_editor(), examples: Vec::new() }, "../..");
 
 /// ⚖️ LAW: the Details pane reaches the I-JSON leaves structurally: member insert and remove, a rename that keeps the position and refuses a
 /// duplicate, element insert and remove, and string and number writes, each exactly one leaf of the right kind.

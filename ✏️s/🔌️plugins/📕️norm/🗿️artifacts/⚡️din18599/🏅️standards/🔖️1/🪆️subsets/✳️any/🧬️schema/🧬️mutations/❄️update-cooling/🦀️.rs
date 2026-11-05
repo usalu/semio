@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for UpdateCooling where Op
         record: "UpdatedCooling",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update cooling system", "Kühlsystem aktualisieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Update cooling system", "Kühlsystem aktualisieren")
     }
 }
 

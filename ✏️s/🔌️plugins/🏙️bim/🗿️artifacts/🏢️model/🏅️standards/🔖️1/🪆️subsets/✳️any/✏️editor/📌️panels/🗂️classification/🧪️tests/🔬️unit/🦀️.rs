@@ -1,5 +1,5 @@
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot};
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
 #[allow(unused_imports)]
@@ -9,27 +9,27 @@ use crate::editor::bim::panels::properties::input_row;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_desc;
+use semio_plugin::tree_item_desc;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
 use std::collections::BTreeSet;
 use crate::editor::bim::panels::classification::*;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationItem;
-use semio_framework_plugin::ViewModel;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::ViewModel;
+use semio_ui_locale::{Locale, Terminology};
 
 fn item(code: &str, title: &str, parent: Option<&str>) -> ClassificationItem {
     ClassificationItem { code: code.into(), title: title.into(), parent: parent.map(str::to_string) }
@@ -47,7 +47,7 @@ fn text(snapshot: &ModelSnapshot, elements: &[&str], library: &[&str], locale: L
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let view = ViewModel::new(locale, Terminology::Native);
     let node = render(snapshot, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &own(elements), &own(library), &TreeWindows::for_body(&view, BODY_KEY)).expect("the classification browser renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 #[semio_framework_async_macros::async_test]

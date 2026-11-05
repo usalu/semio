@@ -174,7 +174,7 @@ function policyResolveImportAlias(content: string, importedName: string): string
   return content.match(new RegExp(`\\b${importedName}\\s+as\\s+(\\w+)\\b`))?.[1];
 }
 
-/** 🔑️V1 rule: local `fn selection_ids` must delegate to `semio_framework_plugin::selection_ids` before adding a fallback key. */
+/** 🔑️V1 rule: local `fn selection_ids` must delegate to `semio_plugin::selection_ids` before adding a fallback key. */
 export function policySelectionIdsBreaches(scope: string, content: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const alias = policyResolveImportAlias(content, "selection_ids");
@@ -182,17 +182,17 @@ export function policySelectionIdsBreaches(scope: string, content: string): Brea
   let m: RegExpExecArray | null;
   while ((m = re.exec(content))) {
     const body = policyExtractFnBody(content, m.index);
-    if (body.includes("semio_framework_plugin::selection_ids(") || (alias && new RegExp(`\\b${alias}\\(`).test(body))) continue;
+    if (body.includes("semio_plugin::selection_ids(") || (alias && new RegExp(`\\b${alias}\\(`).test(body))) continue;
     const lineNo = policyLineOfIndex(content, m.index);
     breaches.push({
       id: `sdk-selection-ids-${scope}-${lineNo}`,
-      summary: `Local "fn selection_ids" does not delegate to semio_framework_plugin::selection_ids`,
+      summary: `Local "fn selection_ids" does not delegate to semio_plugin::selection_ids`,
       kind: "app-plugin/sdk-selection-ids",
       scope,
       line: lineNo,
       priority: "medium",
       reason: "Wave 4 V1 duplication audit: apps needing an extra fallback key must still call the SDK's selection_ids core first (see procedural::app_3d, reasoning/mindmap for the reference shape).",
-      solution: `Rewrite selection_ids at line ${lineNo} to call semio_framework_plugin::selection_ids(args) first and only add the extra fallback key on top.`,
+      solution: `Rewrite selection_ids at line ${lineNo} to call semio_plugin::selection_ids(args) first and only add the extra fallback key on top.`,
     });
   }
   return breaches;
@@ -214,7 +214,7 @@ export function policyArtifactAppLawDelegateBreaches(scope: string, content: str
       const lineNo = policyLineOfIndex(content, m.index);
       breaches.push({
         id: `sdk-artifact-app-laws-delegate-${scope}-${lineNo}`,
-        summary: `Local "${m[0]!.trim()}" does not delegate to semio_framework_plugin::${label}`,
+        summary: `Local "${m[0]!.trim()}" does not delegate to semio_plugin::${label}`,
         kind: "app-plugin/sdk-artifact-app-laws-delegate",
         scope,
         line: lineNo,
@@ -250,7 +250,7 @@ export function policyTreeItemBreaches(crate: PolicyCrateRef, content: string, l
       line: lineNo,
       priority: "medium",
       reason: "Wave 4 V1 duplication audit: redefining tree_item_with_action locally is only accepted for a documented SDK gap (e.g. icon rendering).",
-      solution: `Delete this and call semio_framework_plugin::tree_item_with_action directly, or if it exists for a genuine SDK gap, add it to POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST citing the ticket.`,
+      solution: `Delete this and call semio_plugin::tree_item_with_action directly, or if it exists for a genuine SDK gap, add it to POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST citing the ticket.`,
     });
   }
 
@@ -278,7 +278,7 @@ export function policyTreeItemBreaches(crate: PolicyCrateRef, content: string, l
   return breaches;
 }
 
-/** 🏷️V1 rule: `struct XLabels` must be defined inside `semio_framework_plugin::app_labels! { ... }`, unless allowlisted as a documented SDK gap. */
+/** 🏷️V1 rule: `struct XLabels` must be defined inside `semio_plugin::app_labels! { ... }`, unless allowlisted as a documented SDK gap. */
 export function policyLabelsStructBreaches(crate: PolicyCrateRef, content: string): BreachRecord[] {
   const scope = crate.dir;
   const breaches: BreachRecord[] = [];
@@ -294,15 +294,15 @@ export function policyLabelsStructBreaches(crate: PolicyCrateRef, content: strin
     const allowed = POLICY_LABELS_TWO_AXIS_ALLOWLIST.has(`${crate.pluginId}#${structName}`);
     breaches.push({
       id: `sdk-labels-struct-${scope}-${structName}`,
-      summary: allowed ? `"struct ${structName}" is a tracked SDK-primitive gap (terminology axis) — Wave 4 decision pending` : `"struct ${structName}" hand-rolls its label set instead of semio_framework_plugin::app_labels!/LocaleLabels`,
+      summary: allowed ? `"struct ${structName}" is a tracked SDK-primitive gap (terminology axis) — Wave 4 decision pending` : `"struct ${structName}" hand-rolls its label set instead of semio_plugin::app_labels!/LocaleLabels`,
       kind: "app-plugin/sdk-labels-struct",
       scope,
       line: lineNo,
       priority: allowed ? "low" : "medium",
       reason: allowed
         ? "Wave 4 V1 duplication audit flagged this for a Wave-4 design decision (extend LocaleLabels/app_labels! to a two-axis resolver, or formally accept the gap) — tracked, not a lint failure."
-        : "Wave 4 V1 duplication audit: hand-rolled Labels structs (NATIVE/REUSE-style consts + resolver fn) should route through semio_framework_plugin::app_labels!/LocaleLabels unless there's a documented SDK-primitive gap.",
-      solution: allowed ? `See .🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-V1-DUPLICATION-HUNTER-AUDIT for the pending decision; if formally accepted, keep this allowlisted with that citation.` : `Route ${structName} through semio_framework_plugin::app_labels! { ... }, or if it needs a second axis, add it to POLICY_LABELS_TWO_AXIS_ALLOWLIST citing a ticket.`,
+        : "Wave 4 V1 duplication audit: hand-rolled Labels structs (NATIVE/REUSE-style consts + resolver fn) should route through semio_plugin::app_labels!/LocaleLabels unless there's a documented SDK-primitive gap.",
+      solution: allowed ? `See .🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-V1-DUPLICATION-HUNTER-AUDIT for the pending decision; if formally accepted, keep this allowlisted with that citation.` : `Route ${structName} through semio_plugin::app_labels! { ... }, or if it needs a second axis, add it to POLICY_LABELS_TWO_AXIS_ALLOWLIST citing a ticket.`,
     });
   }
   return breaches;

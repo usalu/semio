@@ -63,7 +63,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                             #[cfg(not(target_arch = "wasm32"))]
                             self.settle.submit_shell_io_future(async move { ShellIoCompletion::Program(plugin.load_app_document_pack(instance_id, &pack, &spr).await) });
                             #[cfg(target_arch = "wasm32")]
-                            semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
+                            semio_renderer_wgpu_host_base::spawn_app_task(async move {
                                 if let Err(error) = plugin.load_app_document_pack(instance_id, &pack, &spr).await { debug_log(&format!("[TRACE] wgpu shell loadDocument effect failed: {error}")); }
                             });
                         }

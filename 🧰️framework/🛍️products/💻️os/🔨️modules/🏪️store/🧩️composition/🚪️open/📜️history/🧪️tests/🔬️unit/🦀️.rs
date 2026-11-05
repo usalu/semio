@@ -1,11 +1,11 @@
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification, VerifiedMemberHistoryInput};
-use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
+use semio_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification, VerifiedMemberHistoryInput};
+use semio_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification};
+use semio_os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification};
 use semio_framework_job::StepContext;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
-use semio_framework_os_store_owned_schema_decode::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
+use semio_os_store_owned_schema_decode::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 
 fn fixture() -> serde_json::Value {
@@ -40,7 +40,7 @@ fn request(history: &[u8]) -> MemberOpenRequest {
     }
     pages.seal().unwrap();
     let expected = ArtifactRef { artifact_id: "flow-member".into(), dialect: ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
-    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, None, pages, semio_framework_os_spr::ActorId(fixture()["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
+    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, None, pages, semio_os_spr::ActorId(fixture()["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
 }
 
 pub(super) trait RequestRetirementCensus: ErasedSnapshotRetirement { fn request(&self) -> Option<&MemberOpenRequest>; }

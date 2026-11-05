@@ -3,18 +3,18 @@
 use semio_s_artifact_cad_cad_config::CadDislocateOptions;
 use crate as edit;
 use crate::options;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 use semio_s_artifact_cad_cad_kit::editor::cad::terminology::CadLabels;
 use semio_s_artifact_cad_cad_kit::{CadPlayRuntime, CadPlayView};
 use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
+use semio_ui_declaration::ui::SurfaceKind;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

@@ -8,7 +8,7 @@ use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::rem;
 use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::INDEX;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};
 
 const RUN: Selector = Selector::Index("run_index");

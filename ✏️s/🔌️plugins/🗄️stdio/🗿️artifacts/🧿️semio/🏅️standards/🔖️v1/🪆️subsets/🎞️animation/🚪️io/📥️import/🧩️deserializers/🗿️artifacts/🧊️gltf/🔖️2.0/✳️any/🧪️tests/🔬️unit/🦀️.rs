@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::ArtifactBuilder;
+use semio_plugin::ArtifactBuilder;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAnimation;

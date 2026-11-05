@@ -2,10 +2,10 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
+use semio_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioFlowSnapshot, FlowNode, FlowEdge, FlowParam, PortRef};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🫙️projection/🦀️.rs"]
 pub(crate)mod projection;
 #[path="💰️reconstruction/🦀️.rs"]
@@ -16,10 +16,10 @@ mod semantic;
 pub fn visit_rows(snapshot:&SemioFlowSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
 let phase=out.phase();let mut nodes=out.allocate_frontier(snapshot.nodes.len())?;
 for(ordinal,node)in snapshot.nodes.iter().enumerate(){out.checkpoint()?;nodes.push((node.id.as_str(),number(ordinal+1)?));}
-out.sort_frontier(&mut nodes,|a,b,c|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,phase,c))?;
+out.sort_frontier(&mut nodes,|a,b,c|semio_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,phase,c))?;
 for pair in nodes.windows(2){if out.compare_text(pair[0].0,pair[1].0)?==std::cmp::Ordering::Equal{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio flow node identifier"))}}
 let mut ids=out.allocate_frontier(snapshot.edges.len())?;for edge in &snapshot.edges{out.checkpoint()?;ids.push(edge.id.as_str());}
-out.sort_frontier(&mut ids,|a,b,c|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a,b,phase,c))?;
+out.sort_frontier(&mut ids,|a,b,c|semio_os_kernel::sqlite_snapshot::transfer::compare_text(a,b,phase,c))?;
 for pair in ids.windows(2){if out.compare_text(pair[0],pair[1])?==std::cmp::Ordering::Equal{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio flow edge identifier"))}}
 out.insert_key("semio_flow_document",1,&[Cell::Text(&snapshot.schema)])?;
 for(ordinal,node)in snapshot.nodes.iter().enumerate(){
@@ -48,16 +48,16 @@ fn number(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|err
 fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio flow row identity or columns"))}else{Ok(())}}
 impl ArtifactSqliteSnapshotHost for SemioFlowSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
-fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
-fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
-fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
+fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
+fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
 
-fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
+fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_os_kernel::io_schema::IoOutcome<()>,ValueError>{
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
 if dialect.artifact_kind!="s.stdio.semio"||dialect.standard!="v1"||(dialect.subset!="*"&&dialect.subset!="flow"){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned snapshot dialect differs from its dedicated semantic subset"));}
 let row=database.table("semio_flow_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
-control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
+control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_os_kernel::io_schema::IoError::from_value_error)}
 
 
 

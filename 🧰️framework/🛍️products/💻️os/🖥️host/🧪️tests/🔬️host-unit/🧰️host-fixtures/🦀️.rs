@@ -20,7 +20,7 @@
                 body_key: id.into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: "app-window".into(),
-                options: semio_framework_ui_declaration::layout::WindowOptions::default(),
+                options: semio_ui_declaration::layout::WindowOptions::default(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 interactions: Vec::new(),
@@ -73,8 +73,8 @@
     }
 
     fn test_space_store() -> OsSpaceStore {
-        let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-        resolve_kernel_future(ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture")
+        let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        resolve_kernel_future(ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture")
     }
 
     fn test_workflow_store() -> OsWorkflowStore {

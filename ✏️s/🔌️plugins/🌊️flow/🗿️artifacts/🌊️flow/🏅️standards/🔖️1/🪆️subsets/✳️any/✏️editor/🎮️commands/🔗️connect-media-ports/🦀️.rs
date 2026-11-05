@@ -1,13 +1,13 @@
 //! 🔗️ 🔗️ Flow play app commands command — `connect-media-ports`.
 
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
 use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit, host_from_snapshot};
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -30,8 +30,8 @@ pub fn connect_edit(payload: &ConnectMediaPorts, composed: &FlowSnapshot, config
     host.retire_cold().map_err(crate::editor::flow::host::value_fault)?;
     let Ok(id) = connected else {
         return Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("flow.connect-incompatible"),
+            semio_plugin::FaultOrigin::App,
+            semio_plugin::FaultCode::new("flow.connect-incompatible"),
             format!("connectMediaPorts cannot connect {}@{} to {}@{}", payload.source_node_id, payload.source_port_id, payload.target_node_id, payload.target_port_id),
         ));
     };

@@ -6,10 +6,10 @@ fn mask_panel_keeps_disabled_masks_and_authors_semantic_controls() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️controls/🔣️.json")).unwrap();
     let document: RasterDocument = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for labels in [&RasterPlayLabels::NATIVE_EN, &RasterPlayLabels::NATIVE_DE] {
-        let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         let windows = TreeWindows::for_body(&view, RASTER_PLAY_BODY_MASKS);
         let tree = render(&document, &RasterConfig::default(), labels, &windows).unwrap();
-        let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+        let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
         let projection: serde_json::Value = serde_json::from_str(&text).unwrap();
         let mut nodes = Vec::new();
         let mut pending = vec![&projection];

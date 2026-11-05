@@ -20,8 +20,8 @@ pub struct AppendBytes {
 impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for AppendBytes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "append", entity: "bytes", kind: "append-bytes", record: "AppendBytes" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Append bytes", "Bytes anhängen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Append bytes", "Bytes anhängen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

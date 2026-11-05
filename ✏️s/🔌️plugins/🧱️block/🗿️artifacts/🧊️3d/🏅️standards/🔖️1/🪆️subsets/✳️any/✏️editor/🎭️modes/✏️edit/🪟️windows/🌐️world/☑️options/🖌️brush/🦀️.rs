@@ -5,7 +5,7 @@ use semio_s_artifact_block_3d_editor_config::Block3dConfig;
 use semio_s_artifact_block_3d_editor_terminology::Block3dLabels;
 use crate::world::resolve_brush_vortex_kind_id;
 use crate::BLOCK3D_UTILITY_SURFACE_BRUSH;
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_plugin::{MeasureSelectItem, WindowMeasure};
 
 pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Block3dLabels) -> WindowMeasure {
     WindowMeasure::Group {

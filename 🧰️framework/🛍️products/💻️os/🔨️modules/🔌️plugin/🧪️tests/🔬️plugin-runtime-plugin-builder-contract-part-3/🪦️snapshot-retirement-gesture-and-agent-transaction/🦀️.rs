@@ -1,6 +1,6 @@
 /// 🪦️ Snapshot retirement, gesture and agent transaction: the test snapshot retirement, closed dialect pin rejection, the composite undo group and the owned child op groups of an agent transaction.
 
-    use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
+    use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
 struct TestSnapshotRetirement {
         pub owner: Option<Box<dyn store::ErasedSnapshotRetirement>>,
         lie_about_terminal: bool,
@@ -79,15 +79,15 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_register_rejects_pin_without_mutating_member() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
@@ -96,7 +96,7 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
         let before = member.envelope_pack_bytes().await.unwrap();
         declare_test_child(&mut app, "child-1").await;
-        let error = app.register_child("slot", "child-1", dialect, member, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect_err("direct transfer must not apply a deferred restore pin");
+        let error = app.register_child("slot", "child-1", dialect, member, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect_err("direct transfer must not apply a deferred restore pin");
         let mut returned = error.member.expect("exact caller member returned");
         assert_eq!(returned.envelope_pack_bytes().await.unwrap(), before);
         assert_eq!(returned.artifact_ref().as_ref(), Some(&expected));
@@ -128,15 +128,15 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
     /// one composite row names the child's edit, and it is the row that carries the parent's.
     #[semio_framework_async_macros::async_test]
     async fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
@@ -182,15 +182,15 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
 
     #[semio_framework_async_macros::async_test]
     async fn an_agent_transaction_carries_owned_child_op_groups_and_commits_undoes_and_redoes_them_as_one_group() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
@@ -204,7 +204,7 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
         let parent_op = <TestMutation as ::protocol::OpBinary>::encode_op(&TestMutation::SetLabel(SetLabel { value: "agent".into() })).expect("encode parent op");
         let outcome = app.transaction_prepare("txn-agent-1", "", &[], &[parent_op], &wire, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "prepare admits a held child: {:?}", outcome.rejection.as_ref().map(|fault| &fault.message));
-        let edit_id = app.transaction_commit("txn-agent-1", &meta(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("commit the composite transaction");
+        let edit_id = app.transaction_commit("txn-agent-1", &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("commit the composite transaction");
         assert!(!edit_id.is_empty());
         macro_rules! child_count {
             ($app:expr) => {{
@@ -216,20 +216,20 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
         assert_eq!(app.stores.test_snapshot().await.label, "agent", "the parent applied the agent's op");
         assert_eq!(app.stores.store.tail_group_id().await.as_deref(), Some("txn-agent-1"), "the group identity is the transaction id");
 
-        app.transaction_undo("txn-agent-1", &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("undo the whole group");
+        app.transaction_undo("txn-agent-1", &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("undo the whole group");
         assert_eq!(child_count!(app), 0, "undo reverts the child");
         assert_ne!(app.stores.test_snapshot().await.label, "agent", "undo reverts the parent");
-        app.transaction_redo("txn-agent-1", &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("redo the whole group");
+        app.transaction_redo("txn-agent-1", &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("redo the whole group");
         assert_eq!(child_count!(app), 5, "redo reapplies the child");
         assert_eq!(app.stores.test_snapshot().await.label, "agent", "redo reapplies the parent");
-        assert!(app.transaction_undo("txn-someone-else", &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.is_err(), "a group no member carries is refused by name");
+        assert!(app.transaction_undo("txn-someone-else", &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.is_err(), "a group no member carries is refused by name");
 
         let only_child = ChildEmit::encode_groups(&[test_child_emit("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 8 })])]);
         let outcome = app.transaction_prepare("txn-agent-2", "", &[], &[], &only_child, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "a children-only transaction is a pre-planned transaction");
-        app.transaction_commit("txn-agent-2", &meta(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("commit the children-only transaction");
+        app.transaction_commit("txn-agent-2", &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("commit the children-only transaction");
         assert_eq!(child_count!(app), 8);
-        app.transaction_undo("txn-agent-2", &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("undo the children-only group");
+        app.transaction_undo("txn-agent-2", &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("undo the children-only group");
         assert_eq!(child_count!(app), 5);
 
         let stray = ChildEmit::encode_groups(&[test_child_emit("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);

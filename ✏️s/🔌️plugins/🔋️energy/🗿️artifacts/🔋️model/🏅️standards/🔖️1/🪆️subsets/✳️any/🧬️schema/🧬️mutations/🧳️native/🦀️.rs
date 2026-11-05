@@ -1,5 +1,5 @@
 //! 🧳️ Native Energy row, membership and adjacency pipelines compose only actual original typed sources and sparse persistent paths.
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_diff as diff;
 #[path="🔢️scalar/🦀️.rs"]pub mod scalar;

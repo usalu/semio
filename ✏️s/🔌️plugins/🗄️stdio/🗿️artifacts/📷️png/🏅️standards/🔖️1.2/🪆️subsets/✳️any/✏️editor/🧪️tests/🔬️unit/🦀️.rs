@@ -2,14 +2,14 @@ use crate::editor::png::modes::edit::windows::main;
 use crate::standards::v1_2::subsets::any::schema::mutations::PngMutation;
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 use crate::{PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandPayload};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::{retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandPayload};
+use semio_plugin::AppOperationContext;
+use semio_plugin::EditorApp;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::ToolOperationSpec;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::NoConfig;
 use semio_s_artifact_stdio_contract::editing;
 use crate::editor::png::{png_editor_command_id, png_editor_command_from_action, PngPixelRegionFactory};
 use crate::editor::png::*;
@@ -46,11 +46,11 @@ fn pixel_region_command() -> PngEditCommand {
 }
 
 fn drive_pixel_region(command: &PngEditCommand, snapshot: &PngSnapshot) -> Vec<PngMutation> {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = patch_pixel_region::PatchPixelRegionWork::default();
     assert!(work.extent(command, snapshot, &interaction, None).is_some());
@@ -83,9 +83,9 @@ async fn image_window_exposes_a_typed_localized_pixel_region_action() {
     let window = definition.window_kinds.iter().find(|window| window.id == main::WINDOW_KIND_ID).unwrap();
     let action = window.actions.iter().find(|action| action.id == patch_pixel_region::ACTION_ID).unwrap();
     assert_eq!(action.args.len(), 8);
-    assert!(action.args.iter().all(|argument| argument.required && matches!(argument.schema, semio_framework_plugin::ArgSchema::Number { integer: true, .. })));
-    assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Paint Pixel Region");
-    assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Pixelbereich malen");
+    assert!(action.args.iter().all(|argument| argument.required && matches!(argument.schema, semio_plugin::ArgSchema::Number { integer: true, .. })));
+    assert_eq!(action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Paint Pixel Region");
+    assert_eq!(action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Pixelbereich malen");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -102,9 +102,9 @@ async fn image_window_exposes_accessible_native_profile_paint_actions() {
     for (id, count, english, german) in expected {
         let action = window.actions.iter().find(|action| action.id == id).unwrap();
         assert_eq!(action.args.len(), count);
-        assert!(action.args.iter().all(|argument| argument.required && !argument.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).is_empty() && !argument.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).is_empty()));
-        assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), english);
-        assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), german);
+        assert!(action.args.iter().all(|argument| argument.required && !argument.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).is_empty() && !argument.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).is_empty()));
+        assert_eq!(action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), english);
+        assert_eq!(action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), german);
     }
 }
 
@@ -143,14 +143,14 @@ fn native_profile_action_defaults_are_valid_for_eight_and_sixteen_bit_sources() 
 
 #[test]
 fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
     let reader = std::sync::Arc::new(crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap());
     let snapshot = reader.as_ref();
     let command = PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(paint_native_region::PaintNativeRegion {
         region: crate::standards::v1_2::subsets::any::schema::snapshot::PngRegion { x: 1, y: 0, width: 1, height: 1 },
         paint: crate::standards::v1_2::subsets::any::schema::snapshot::PngNativePaint::grayscale(0x1234),
     }));
-    let config = NoConfig::default(); let history = semio_framework_plugin::HistoryView::empty(); let interaction = protocol::InteractionState::default(); let hover = Default::default();
+    let config = NoConfig::default(); let history = semio_plugin::HistoryView::empty(); let interaction = protocol::InteractionState::default(); let hover = Default::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-native-region".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "png-native".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let input = ArtifactCommandInputs { command: &command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut work = paint_native_region::PaintNativeRegionWork::new(paint_native_region::GRAYSCALE_ACTION_ID);
@@ -227,13 +227,13 @@ fn natural_file_route_exports_edited_and_committed_native_profiles_exactly() {
 
 #[test]
 fn pixel_region_rejects_invalid_bounds_and_cancellation_publishes_nothing() {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
     let snapshot = rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]);
     let invalid = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: 1_024, y: 0, width: 1, height: 1, red: 0, green: 0, blue: 0, alpha: 0 }));
     let interaction = protocol::InteractionState::default();
     assert_eq!(patch_pixel_region::PatchPixelRegionWork::default().extent(&invalid, &snapshot, &interaction, None), None);
     let command = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: 1, y: 0, width: 1, height: 512, red: 9, green: 8, blue: 7, alpha: 6 }));
-    let config = NoConfig::default(); let history = semio_framework_plugin::HistoryView::empty(); let hover = Default::default();
+    let config = NoConfig::default(); let history = semio_plugin::HistoryView::empty(); let hover = Default::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut work = patch_pixel_region::PatchPixelRegionWork::default();
@@ -278,14 +278,14 @@ fn registered_pixel_region_factory_cancellation_retires_without_publication() {
     use protocol::OpBinary;
     use semio_framework_action_bus::{ActionBus, ToolFactoryKey};
     use semio_framework_job::{Generation, Operation, OperationId, RevisionId};
-    use semio_framework_plugin::app::ArtifactToolCompletion;
+    use semio_plugin::app::ArtifactToolCompletion;
     use semio_s_artifact_stdio_contract::testing::registered_job::{admit, close, snapshot_read, step_stage, wire, Session};
     use std::sync::Arc;
     let snapshot = Arc::new(rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]));
     let command = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: 1, y: 0, width: 1, height: 512, red: 9, green: 8, blue: 7, alpha: 6 }));
     let wire_bytes = command.encode_op().unwrap(); let completion = ArtifactToolCompletion::<EditorApp<PngEditor>>::test_new(); let consumer = completion.clone();
     let (snapshot_read, lease) = snapshot_read(snapshot.clone(), 3, [4; 32]);
-    let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command, snapshot: snapshot.clone(), snapshot_read, config: Arc::new(NoConfig::default()), history: Arc::new(semio_framework_plugin::HistoryView::empty()), interaction_state: Arc::new(Default::default()), interaction_hover: Arc::new(Default::default()), context: None, operation: AppOperationContext { app_instance_id: 1, parent_document_id: "png-registered-cancel".into(), operation_id: 41, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "png-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() }, completion }, png_editor_command_id, patch_pixel_region::MAXIMUM_RAW_BYTES, patch_pixel_region::CAPACITY.work_items(), Box::new(patch_pixel_region::PatchPixelRegionWork::default()));
+    let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command, snapshot: snapshot.clone(), snapshot_read, config: Arc::new(NoConfig::default()), history: Arc::new(semio_plugin::HistoryView::empty()), interaction_state: Arc::new(Default::default()), interaction_hover: Arc::new(Default::default()), context: None, operation: AppOperationContext { app_instance_id: 1, parent_document_id: "png-registered-cancel".into(), operation_id: 41, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "png-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() }, completion }, png_editor_command_id, patch_pixel_region::MAXIMUM_RAW_BYTES, patch_pixel_region::CAPACITY.work_items(), Box::new(patch_pixel_region::PatchPixelRegionWork::default()));
     let bus = ActionBus::new(); bus.register(PngPixelRegionFactory::new("png-cancel")).unwrap();
     let operation = Operation::new(OperationId(41), RevisionId(2), Generation(3), 5);
     let mut session = Session::new(operation);
@@ -301,19 +301,19 @@ fn registered_pixel_region_factory_cancellation_retires_without_publication() {
 #[semio_framework_async_macros::async_test]
 async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
     use protocol::OpText;
-    use semio_framework_plugin::{artifact_app_laws, PluginApp};
+    use semio_plugin::{artifact_app_laws, PluginApp};
     let mut expected = rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]);
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<PngEditor>, _>(async { semio_framework_plugin::App { definition: create_png_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&expected, STDIO_PNG_DOCUMENT_SCHEMA) else { panic!("PNG fixture load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<PngEditor>, _>(async { semio_plugin::App { definition: create_png_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&expected, STDIO_PNG_DOCUMENT_SCHEMA) else { panic!("PNG fixture load") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
     let revision = app.test_document_revision(); let number = |value| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value));
     let arguments = semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1_024)), ("height".into(), number(512)), ("red".into(), number(9)), ("green".into(), number(8)), ("blue".into(), number(7)), ("alpha".into(), number(6))]);
-    let meta = artifact_app_laws::meta("local"); semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, patch_pixel_region::ACTION_ID, Some(arguments.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap(); assert_eq!(app.test_document_revision(), revision);
+    let meta = artifact_app_laws::meta("local"); semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, patch_pixel_region::ACTION_ID, Some(arguments.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap(); assert_eq!(app.test_document_revision(), revision);
     let concurrent = crate::standards::v1_2::subsets::any::schema::operations::paint_rgba8_region_controlled(&expected, &crate::standards::v1_2::subsets::any::schema::operations::png_revision(&expected), crate::standards::v1_2::subsets::any::schema::snapshot::PngRegion { x: 0, y: 0, width: 1, height: 1 }, [31, 32, 33, 34], &mut |_, _| true).unwrap();
     let mutation = PngMutation::ReplaceImage(crate::schema::mutations::ReplaceImage { image: concurrent.image.clone() });
-    semio_framework_plugin::with_authoring_identity!(|identity| app.ingest_operations_text(&mutation.print_op(), &mut identity).await).unwrap(); expected = concurrent;
-    let fault = match semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await) { Err(fault) => fault, Ok(_) => panic!("stale snapshot was accepted") };
+    semio_plugin::with_authoring_identity!(|identity| app.ingest_operations_text(&mutation.print_op(), &mut identity).await).unwrap(); expected = concurrent;
+    let fault = match semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await) { Err(fault) => fault, Ok(_) => panic!("stale snapshot was accepted") };
     assert!(fault.message.contains("stale immutable document root")); assert_eq!(app.snapshot().unwrap(), expected);
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
@@ -376,4 +376,4 @@ fn truncated_png_is_refused_with_a_recoverable_error() {
     }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::png::PngEditor, || semio_framework_plugin::App { definition: crate::editor::png::create_png_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::png::PngEditor, || semio_plugin::App { definition: crate::editor::png::create_png_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any");

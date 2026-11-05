@@ -1,0 +1,28 @@
+{
+  "roots": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/⚡️caches/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/📐️model/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🟦️.ts"
+  ],
+  "flags": [
+    "--noEmit",
+    "--strict",
+    "--noUncheckedIndexedAccess",
+    "--skipLibCheck",
+    "--resolveJsonModule",
+    "--esModuleInterop",
+    "--target",
+    "ESNext",
+    "--module",
+    "preserve",
+    "--moduleResolution",
+    "bundler",
+    "--allowImportingTsExtensions",
+    "--types",
+    "bun"
+  ],
+  "admission": "normal-managed"
+}

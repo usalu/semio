@@ -1,8 +1,8 @@
 //! 💰️ Complete typed BMP semantic row ownership.
 use super::BmpSnapshot;
 use crate::schema::snapshot::{BmpImage,BmpNativeSample,BmpPaletteEntry,BmpPixels,BmpProfile,BmpRowOrder};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteTable,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,validate_sqlite_database_schema_controlled};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{Cell,RowWriter,reconstruct_text,ordered_row_refs};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteTable,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,validate_sqlite_database_schema_controlled};
+use semio_os_kernel::sqlite_snapshot::artifact::{Cell,RowWriter,reconstruct_text,ordered_row_refs};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 type Result<T> = std::result::Result<T,ValueError>;
 const SQL: &str = include_str!("../🗄️.sql");

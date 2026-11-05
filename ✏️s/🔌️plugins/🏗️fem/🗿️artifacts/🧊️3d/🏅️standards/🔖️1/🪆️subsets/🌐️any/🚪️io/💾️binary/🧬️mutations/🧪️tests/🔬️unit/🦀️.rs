@@ -34,7 +34,7 @@ fn cantilever_fixture() -> semio_s_artifact_fem_3d_model::standards::v1::subsets
 #[test]
 fn op_binary_round_trips_and_agrees_with_text() {
     let operation = Fem3dMutation::UpdateAnalysisSettings(semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
-    semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+    semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }
@@ -46,7 +46,7 @@ fn material_field_intent_binary_round_trips_and_agrees_with_text() {
         id: "steel".into(),
         patch: schema::diff::Fem3dMaterialPatch { e: Some(190e9), ..Default::default() }
     });
-    semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+    semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode sparse material field intent");
     assert_eq!(decode_op(&bytes).expect("decode sparse material field intent"), operation);
 }
@@ -59,8 +59,8 @@ fn material_field_intent_binary_round_trips_and_agrees_with_text() {
 async fn fem3d_document_text_round_trips_through_the_store() {
     let value = cantilever_value();
     let fixture = cantilever_fixture();
-    let mut store = ::semio_framework_async::poll::resolve_ready(crate::standards::v1::subsets::any::schema::mutations::Fem3dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
-    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
+    let mut store = ::semio_framework_async::poll::resolve_ready(crate::standards::v1::subsets::any::schema::mutations::Fem3dStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
+    store.install_document_store_owners_exact(semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     let mutations = vec![
         Fem3dMutation::CreateMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial { material: value.materials[0].clone(), index: None }),
         Fem3dMutation::CreateSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: value.sections[0].clone(), index: None }),
@@ -70,10 +70,10 @@ async fn fem3d_document_text_round_trips_through_the_store() {
         Fem3dMutation::CreateSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: value.supports[0].clone(), index: None }),
         Fem3dMutation::CreateLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase { load_case: value.load_cases[0].clone(), index: None }),
     ];
-    store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), fixture);
-    semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
-    semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
+    semio_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
     store.close_owned_unscheduled().expect("fem3d document store closes through its exact bounded owners");
 }
 
@@ -91,6 +91,6 @@ fn sparse_field_intent_text_binary_equivalence(){
         r#"{"mutation":"changeCombinationTerm","id":"c1","caseId":"lc1","factor":2}"#,
         r#"{"mutation":"changeCombinationTerm","id":"c1","caseId":"lc1","factor":null}"#,
     ];
-    for wire in vectors{let operation=semio_framework_pack_json::from_json_str::<Fem3dMutation>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored field event");semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);}
+    for wire in vectors{let operation=semio_framework_pack_json::from_json_str::<Fem3dMutation>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored field event");semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);}
     for wire in[r#"{"mutation":"changeCombinationTerm","id":"c1","caseId":"lc1"}"#,r#"{"mutation":"changeLoad","caseId":"lc1","id":"l1","patch":{"kind":"nodal","value":null}}"#]{assert!(semio_framework_pack_json::from_json_str::<Fem3dMutation>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());}
 }

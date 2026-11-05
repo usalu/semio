@@ -16,8 +16,8 @@ pub struct SetBrushPreview {
 impl protocol::MutationKind<Block3dWorldWindowTransient, Block3dWorldWindowTransientMutation> for SetBrushPreview {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "world-window-brush-preview", kind: "set-brush-preview", record: "SetBrushPreview" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set World Window Brush Preview", "Pinselvorschau im Weltfenster setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set World Window Brush Preview", "Pinselvorschau im Weltfenster setzen")
     }
 
     fn target(&self) -> Vec<String> {

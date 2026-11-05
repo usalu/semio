@@ -22,8 +22,8 @@ pub struct ReplaceByteRange {
 impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for ReplaceByteRange {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "byte-range", kind: "replace-byte-range", record: "ReplaceByteRange" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace byte range", "Bytebereich ersetzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Replace byte range", "Bytebereich ersetzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -205,7 +205,7 @@ async fn open_add_part_dialog_opens_the_declared_dialog_and_edits_nothing() {
 /// interaction verbs, and none of the authored vocabulary — which is why `addPartKind`,
 /// `openAddPartDialog`, `setActiveExample` and the rest "vanished" from these laws. Same fix
 /// `🧊️3d`'s `dispatchable_actions` carries, for the same framework change.
-pub(super) fn declared_actions(definition: &semio_framework_plugin::AppDefinition) -> Vec<&semio_framework_plugin::ActionDefinition> {
+pub(super) fn declared_actions(definition: &semio_plugin::AppDefinition) -> Vec<&semio_plugin::ActionDefinition> {
     let mut seen = std::collections::BTreeSet::new();
     definition
         .window_kinds
@@ -224,8 +224,8 @@ async fn add_part_dialog_enumerates_live_part_kinds() {
     let dialog = definition.dialogs.iter().find(|dialog| dialog.id == open_add_part_dialog::PUZZLE5D_ADD_PART_DIALOG).expect("addPart dialog");
     let arg = dialog.args.iter().find(|arg| arg.id == "partKind").expect("the dialog declares the partKind select");
     assert!(arg.required, "a kind must be picked before the dialog submits");
-    let options = |arg: &semio_framework_plugin::ActionArgDef| {
-        let semio_framework_plugin::ArgSchema::String { options, .. } = &arg.schema else { panic!("the partKind arg must stay a string select") };
+    let options = |arg: &semio_plugin::ActionArgDef| {
+        let semio_plugin::ArgSchema::String { options, .. } = &arg.schema else { panic!("the partKind arg must stay a string select") };
         options.iter().map(|option| option.value.clone()).collect::<Vec<_>>()
     };
     let offered = options(arg);
@@ -263,32 +263,32 @@ async fn add_part_dialog_enumerates_live_part_kinds() {
 
 //#region 🖱️ContextMenuRows
 /// 🖱️ Builds one context-menu request for a surface selection of `(domain, ids)` groups.
-fn context_menu_of(app: &mut Puzzle5dTestApp, groups: Vec<(&str, Vec<String>)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn context_menu_of(app: &mut Puzzle5dTestApp, groups: Vec<(&str, Vec<String>)>) -> Vec<semio_plugin::ContextMenuItemSpec> {
     context_menu_at(app, groups, None)
 }
 
 /// 🖱️ `context_menu_of` with the world host's pointer hit — `(domain, id)` exactly as `world3dContextMenuSurfaceV1`
 /// sends it (`vortex` for a grip marker, `object` for a part instance).
-fn context_menu_at(app: &mut Puzzle5dTestApp, groups: Vec<(&str, Vec<String>)>, hit: Option<(&str, &str)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn context_menu_at(app: &mut Puzzle5dTestApp, groups: Vec<(&str, Vec<String>)>, hit: Option<(&str, &str)>) -> Vec<semio_plugin::ContextMenuItemSpec> {
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget {
             surface_id: world3d::WINDOW_KIND_ID.into(),
             kind: "world3d".into(),
-            hits: hit.into_iter().map(|(domain, id)| semio_framework_plugin::ContextMenuHit { domain: domain.into(), id: id.into(), label: None }).collect(),
+            hits: hit.into_iter().map(|(domain, id)| semio_plugin::ContextMenuHit { domain: domain.into(), id: id.into(), label: None }).collect(),
             selection: groups.into_iter().map(|(domain, ids)| ContextMenuSelectionGroup { domain: domain.into(), ids }).collect(),
             text: None,
         }),
         window_instance_id: None,
         point: None,
     };
-    ::semio_framework_async::poll::resolve_ready(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)))
+    ::semio_framework_async::poll::resolve_ready(app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)))
 }
 
 /// 🖱️ Every action id a menu row carries, at any depth.
-fn context_menu_actions(rows: &[semio_framework_plugin::ContextMenuItemSpec]) -> Vec<String> {
+fn context_menu_actions(rows: &[semio_plugin::ContextMenuItemSpec]) -> Vec<String> {
     let mut out = Vec::new();
-    let mut stack: Vec<&semio_framework_plugin::ContextMenuItemSpec> = rows.iter().collect();
+    let mut stack: Vec<&semio_plugin::ContextMenuItemSpec> = rows.iter().collect();
     while let Some(row) = stack.pop() {
         if let Some(action) = row.action.as_deref() {
             out.push(action.to_string());
@@ -530,7 +530,7 @@ fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
     snapshot.parts[0].part_3d.label = None;
     snapshot.parts[0].part_2d.text = Some("Forest Left".into());
     snapshot.fasteners.push(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener { id: "fastener-chip".into(), source: grip.clone(), target: grip.clone(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
-    let chip = |kinds: &[&str], id: &str| puzzle5d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string());
+    let chip = |kinds: &[&str], id: &str| puzzle5d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string());
     assert_eq!(chip(&[PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME], &part).as_deref(), Some("Forest Left"), "a part without a volume label reads its flat text");
     assert_eq!(chip(&[PUZZLE5D_GRANULARITY_GRIP], &grip), Some(format!("Forest Left \u{b7} {grip_kind}")), "a grip reads its part and its kind");
     assert_eq!(chip(&[PUZZLE5D_GRANULARITY_FASTENER], "fastener-chip").as_deref(), Some("Forest Left \u{2192} Forest Left"), "a fastener reads its two parts");

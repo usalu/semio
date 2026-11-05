@@ -1,9 +1,8 @@
 //! 🧊️ Exact Native capability and controlled Scale laws precede semantic owner mounting.
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::{ArtifactStoreSnapshot as _,ArtifactSqliteSnapshotHost as _};
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_s_artifact_puzzle_3d_model::*;
-use store::snapshot::ArtifactDsl;
-use store::snapshot::ArtifactPack;
+use store::snapshot::{ArtifactDsl,ArtifactPack,ArtifactSqliteSnapshot};
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 
 fn words() -> Vec<u64> {
@@ -82,11 +81,11 @@ fn specimen(word: u64) -> Puzzle3dSnapshot {
 
 #[test]
 fn sqlite_snapshot_puzzle3d_actual_typed_bare_capability_is_present() {
-    assert!(<Puzzle3dSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
+    assert!(<Puzzle3dSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_puzzle3d_actual_play_bare_capability_is_present() {
-    assert!(<Puzzle3dPlaySnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
+    assert!(<Puzzle3dPlaySnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_puzzle3d_native_typed_text_and_pack_preserve_every_word() {
@@ -114,6 +113,8 @@ fn sqlite_snapshot_puzzle3d_declared_json_preserves_every_word() {
     for word in words() {
         let s = specimen(word);
         let bytes = semio_s_artifact_puzzle_3d_io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&s).unwrap();
+        let independent:serde_json::Value=serde_json::from_slice(&bytes).expect("independent declared JSON parse");
+        assert_registered_json_route(&s,&independent);
         let out = semio_s_artifact_puzzle_3d_io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).unwrap();
         assert_eq!(out.print_dsl(), s.print_dsl());
     }
@@ -194,7 +195,7 @@ fn sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domai
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.puzzle.puzzle3d".into(), standard: "1".into(), subset: "*".into() };
     for word in words() {
         let value = specimen(word);
-        for codec in [<Puzzle3dSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap(), <Puzzle3dPlaySnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap()] {
+        for codec in [<Puzzle3dSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap(), <Puzzle3dPlaySnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap()] {
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
                 let payload = match encoding {
                     SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(value.encode_pack()),
@@ -254,7 +255,7 @@ fn sqlite_snapshot_puzzle3d_exact_rows_and_all_four_interior_copy_phases() {
 }
 
 mod populated_public_owner {
-use super::*;use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
+use super::*;use semio_plugin_reactor_app::__semio_dispatch_PluginApp;use semio_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_3d_viewer::Puzzle3dViewer>>),}
@@ -262,7 +263,36 @@ pub enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<semio_s_artifact
 struct PublicOwned(Option<Puzzle3dSnapshot>);impl PublicOwned{fn new(value:Puzzle3dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Puzzle3dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Puzzle3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(value);}}}
 fn exact(a:&Puzzle3dSnapshot,b:&Puzzle3dSnapshot){use semio_framework_value::{DslValue,Number,ToValue};fn same(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);same(a,b);}},_=>assert_eq!(a,b)}}same(&a.to_value(),&b.to_value());}
 
-fn register(){semio_framework_plugin::PluginBuilder::<semio_framework_plugin::component::app::NeedsLabel, PublicApps>::new("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PublicApps>()).try_build().unwrap();}
+#[test]
+fn sqlite_snapshot_puzzle3d_declared_txt_preserves_complete_fields_and_every_word() {
+    use semio_s_artifact_puzzle_3d_io::{export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes, import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes};
+    use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::*};
+    let corpus: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()).unwrap();
+    assert_eq!(corpus["textCarrier"]["encoding"], "utf-8");
+    for word in words() {
+        let expected = PublicOwned::new(specimen(word));
+        assert_eq!(expected.get().domain, corpus["textCarrier"]["domain"].as_str().unwrap());
+        let bytes = serialize_bytes(expected.get()).unwrap();
+        assert_eq!(std::str::from_utf8(&bytes).unwrap(), expected.get().print_dsl());
+        let actual = PublicOwned::new(deserialize_bytes(&bytes).unwrap());
+        exact(actual.get(), expected.get());
+        let mut accept = |_| true;
+        let database = original_owners::with_sqlite_recipient(Default::default(), &mut accept, |control| actual.get().to_sqlite_database(control)).unwrap();
+        let physical = export_sqlite_database(&database, Default::default(), &mut accept).unwrap();
+        let independent = independent_puzzle3_edit(&physical, "");
+        let database = import_sqlite_database(&independent, Default::default(), &mut accept).unwrap();
+        let oracle = PublicOwned::new(original_owners::with_sqlite_recipient(Default::default(), &mut accept, |control| Puzzle3dSnapshot::from_sqlite_database(&database, control)).unwrap());
+        exact(oracle.get(), expected.get());
+        assert_eq!(serialize_bytes(oracle.get()).unwrap(), bytes);
+    }
+    for invalid in corpus["textCarrier"]["invalidHex"].as_array().unwrap() {
+        let hex = invalid.as_str().unwrap();
+        let bytes: Vec<u8> = (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(&hex[i..i + 2], 16).unwrap()).collect();
+        assert!(deserialize_bytes(&bytes).is_err(), "{hex}");
+    }
+}
+
+fn register(){semio_plugin::PluginBuilder::<semio_plugin::component::app::NeedsLabel, PublicApps>::new("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PublicApps>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_puzzle3d_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
@@ -298,3 +328,25 @@ fn sqlite_snapshot_puzzle3d_borrowed_scale_matches_neutral_list_shape() {
         assert_eq!(value, <Vec<f64> as semio_framework_dsl_record::DslField>::to_value(&sample));
     }
 }
+
+/// 🚏️ Executes the canonical native entry and independently encoded foreign carrier over every field.
+fn assert_registered_json_route(source:&Puzzle3dSnapshot,expected:&serde_json::Value){
+ use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding};
+ use store::io::io_mechanism::{IoRunControl,IoEntryDirection};
+ use store::io_schema::IoPayload;
+ let entries=semio_s_artifact_puzzle_3d_io::routes::entries();
+ let export=entries.iter().find(|entry|entry.direction==IoEntryDirection::Export&&entry.into.artifact_kind=="s.stdio.json").expect("canonical JSON export");
+ let import=entries.iter().find(|entry|entry.direction==IoEntryDirection::Import&&entry.from.artifact_kind=="s.stdio.json").expect("canonical JSON import");
+ let native=original_owners::with_encoding(|owner|source.encode_native_snapshot(NativeSnapshotEncoding::Binary,owner.native())).expect("original native carrier");
+ let exported=original_owners::with_decoding(|owner|(export.run)(&native,&mut IoRunControl::decoding(owner.native(),original_owners::original_grant()))).expect("actual registered JSON export").value;
+ let IoPayload::Text(exported)=exported else{panic!("canonical JSON entry preserves its text carrier")};let exported=exported.into_bytes();
+ assert_eq!(&serde_json::from_slice::<serde_json::Value>(&exported).expect("independent registered JSON parse"),expected,"complete registered wire");
+ let foreign=IoPayload::Binary(serde_json::to_vec(expected).expect("independent registered JSON encode"));
+ let restored=original_owners::with_encoding(|owner|(import.run)(&foreign,&mut IoRunControl::encoding(owner.native(),original_owners::original_grant()))).expect("actual registered JSON import").value;
+ let IoPayload::Binary(restored)=restored else{panic!("native binary entry output")};
+ let restored=RouteSnapshotOwner(Some(original_owners::with_decoding(|owner|Puzzle3dSnapshot::decode_native_snapshot(NativeSnapshotInput::Binary(&restored),owner.native())).expect("original restored native carrier")));
+ let project=|snapshot:&Puzzle3dSnapshot|original_owners::with_sqlite_recipient(store::sqlite_snapshot::SqliteDatabaseLimits::default(),&mut |_|true,|control|snapshot.to_sqlite_database(control)).unwrap();
+ assert_eq!(project(restored.0.as_ref().unwrap()),project(source),"all registered native entities and exact words");
+}
+struct RouteSnapshotOwner(Option<Puzzle3dSnapshot>);
+impl Drop for RouteSnapshotOwner{fn drop(&mut self){if let Some(snapshot)=self.0.take(){snapshot.retire_sqlite_snapshot();}}}

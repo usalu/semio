@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use semio_framework_plugin::{Emit, NoConfigMutation};
+use semio_plugin::{Emit, NoConfigMutation};
 use pack::snapshot::ArtifactDsl;
 
 pub fn preset_query(preset_id: &str) -> &'static str {

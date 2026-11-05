@@ -1,8 +1,8 @@
 //! 🗂️ Catalogue of the puzzle 5d editor: the kind and part labels, the inferred kind rows and the kind distribution helpers. See [`super`].
 
 use crate::Puzzle5dSnapshot;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ActionArgOption;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_pack_json::Value;
 use std::collections::HashMap;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, Puzzle5dDocument, Puzzle5dPart, puzzle5d_grip_full_id};

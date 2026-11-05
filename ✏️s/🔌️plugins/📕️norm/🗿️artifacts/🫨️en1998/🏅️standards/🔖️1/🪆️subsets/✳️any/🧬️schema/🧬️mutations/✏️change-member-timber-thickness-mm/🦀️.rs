@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberTimberThickn
         record: "ChangeMemberTimberThicknessMm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Timber member thickness at the connection", "Holzdicke am Anschluss ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Timber member thickness at the connection", "Holzdicke am Anschluss ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-timber-thickness-mm".into()]

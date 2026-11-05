@@ -13,8 +13,8 @@ pub struct RemoveLinetype {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveLinetype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "linetype", kind: "remove-linetype", record: "RemoveLinetype" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove linetype", "Linientyp entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove linetype", "Linientyp entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

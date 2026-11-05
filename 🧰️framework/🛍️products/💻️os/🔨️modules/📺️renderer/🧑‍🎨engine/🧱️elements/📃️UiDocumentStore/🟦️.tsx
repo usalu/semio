@@ -2,7 +2,7 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/📃️UiDocumentStore/component.tsx
 /** 🗄️ `📃️UiDocumentStore` — the per-surface retained store for the semantic UI contract
- * (`semio-framework-ui-contract`). Holds `{ revision, root, nodes: Map<UiNodeId, UiNodeRecord> }` and
+ * (`semio-ui-contract`). Holds `{ revision, root, nodes: Map<UiNodeId, UiNodeRecord> }` and
  * applies a `UiPatch` **transactionally**: every op lands on a draft copy first, the draft is
  * validated against the same invariants the Rust `validate_snapshot`/`apply_patch` (`🦀️limits.rs`)
  * enforce, and only a fully-valid draft is swapped in. On ANY rejection the store is left

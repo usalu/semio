@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlateHoleDiam
         record: "ChangedJointPlateHoleDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Hole diameter d_0 of the joint plate", "Anschlussblech: Lochdurchmesser d_0 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Hole diameter d_0 of the joint plate", "Anschlussblech: Lochdurchmesser d_0 ändern")
     }
 }
 

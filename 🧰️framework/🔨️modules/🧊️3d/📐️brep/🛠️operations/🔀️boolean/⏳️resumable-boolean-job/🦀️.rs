@@ -133,6 +133,8 @@ pub struct BooleanJob {
     pub(super) phase: BooleanPhase,
 }
 
+semio_framework_value::artifact_retire_struct!(BooleanJob {pre_existing_solids,protected_edges,protected_vertices,coincident_a,coincident_b,faces_a,faces_b,row,weld,pending_a,pending_b,pieces_a,pieces_b,selected,validation});
+
 impl BooleanJob {
     /// 🎟️ Runs the existing result-validation producer on its actual supplied caller turn.
     pub fn step(&mut self, body:&mut Body, _rec:&mut OpRecorder, cx:&mut semio_framework_job::StepContext<'_>)->Result<BooleanStep,semio_framework_job::OriginalTurnFailure>{

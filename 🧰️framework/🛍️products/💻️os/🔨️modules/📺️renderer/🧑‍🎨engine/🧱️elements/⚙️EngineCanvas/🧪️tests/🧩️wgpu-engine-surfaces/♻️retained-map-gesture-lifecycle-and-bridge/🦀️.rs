@@ -13,17 +13,17 @@ fn retained_map_same_identity_refresh_preserves_the_active_gesture() {
     let mut first = retained_document(surface_id, 1, 1, vec![retained_map_record(1, key, &base)]);
     let _ = publish_retained_map_fixture(&first, surface_id, bounds, 901);
     let mut input = InputState::<ActionDescriptor>::default();
-    let owner = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("mounted Map exposes its exact retained target");
-    assert_eq!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&owner, "map.lifecycle.fixture", bounds, 100.0, 100.0, 0, false, false, "rectangle", &mut input), Ok(true));
-    assert!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_drag_active(&owner.host_id));
+    let owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("mounted Map exposes its exact retained target");
+    assert_eq!(semio_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&owner, "map.lifecycle.fixture", bounds, 100.0, 100.0, 0, false, false, "rectangle", &mut input), Ok(true));
+    assert!(semio_renderer_wgpu_scene_feeds::tiled_map_drag_active(&owner.host_id));
     let mut changed = base.clone();
     changed.camera_json = json!({ "x": 0.5, "y": 0.4, "zoom": 5.0 }).to_string();
     let mut refresh = retained_document(surface_id, 2, 1, vec![retained_map_record(1, key, &changed)]);
     let mut refresh_input = publish_retained_map_fixture(&refresh, surface_id, bounds, 902);
-    let refresh_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut refresh_input);
+    let refresh_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut refresh_input);
     assert!(refresh_actions.is_empty(), "an ordinary refresh does not synthesize Map input");
-    assert!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_drag_active(&owner.host_id), "the same retained node/key/kind/surface preserves its active gesture");
-    assert_eq!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_cancel_into(&owner.host_id, "map.lifecycle.fixture", bounds, 100.0, 100.0, &mut input), Ok(true));
+    assert!(semio_renderer_wgpu_scene_feeds::tiled_map_drag_active(&owner.host_id), "the same retained node/key/kind/surface preserves its active gesture");
+    assert_eq!(semio_renderer_wgpu_scene_feeds::tiled_map_pointer_cancel_into(&owner.host_id, "map.lifecycle.fixture", bounds, 100.0, 100.0, &mut input), Ok(true));
     close_retained_map_fixture(surface_id);
     while !first.close_step() {}
     while !refresh.close_step() {}
@@ -44,29 +44,29 @@ fn retained_map_key_replacement_and_removal_retire_the_old_gesture_without_input
     let mut first = retained_document(surface_id, 1, 1, vec![retained_map_record(1, original, &map)]);
     let _ = publish_retained_map_fixture(&first, surface_id, bounds, 901);
     let mut gesture_input = InputState::<ActionDescriptor>::default();
-    let original_owner = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("mounted Map exposes its exact retained target");
-    assert_eq!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&original_owner, "map.lifecycle.fixture", bounds, 100.0, 100.0, 0, false, false, "rectangle", &mut gesture_input), Ok(true));
-    assert!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_drag_active(&original_owner.host_id));
+    let original_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("mounted Map exposes its exact retained target");
+    assert_eq!(semio_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&original_owner, "map.lifecycle.fixture", bounds, 100.0, 100.0, 0, false, false, "rectangle", &mut gesture_input), Ok(true));
+    assert!(semio_renderer_wgpu_scene_feeds::tiled_map_drag_active(&original_owner.host_id));
     let mut replacement = retained_document(surface_id, 2, 1, vec![retained_map_record(1, successor, &map)]);
     let mut replacement_input = publish_retained_map_fixture(&replacement, surface_id, bounds, 902);
-    let replacement_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut replacement_input);
+    let replacement_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut replacement_input);
     assert!(replacement_actions.is_empty(), "key replacement cannot synthesize PointerUp or selection");
-    assert!(!semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&original_owner), "acknowledgement revokes the old Map receiver before successor input");
+    assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&original_owner), "acknowledgement revokes the old Map receiver before successor input");
     let mut retirement_input = publish_retained_map_fixture(&replacement, surface_id, bounds, 903);
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut retirement_input).is_empty(), "bounded Map retirement cannot synthesize input");
-    assert!(!semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_drag_active(&original_owner.host_id), "the bounded retirement lane clears the old keyed Map gesture");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut retirement_input).is_empty(), "bounded Map retirement cannot synthesize input");
+    assert!(!semio_renderer_wgpu_scene_feeds::tiled_map_drag_active(&original_owner.host_id), "the bounded retirement lane clears the old keyed Map gesture");
     assert!(engine_surface_token(&original_owner.host_id).is_none());
-    let successor_owner = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("successor exposes its exact retained target");
-    assert_eq!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&successor_owner, "map.lifecycle.fixture", bounds, 140.0, 140.0, 0, false, false, "rectangle", &mut gesture_input), Ok(true));
-    assert!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_drag_active(&successor_owner.host_id), "the keyed successor starts a fresh gesture");
+    let successor_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("successor exposes its exact retained target");
+    assert_eq!(semio_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&successor_owner, "map.lifecycle.fixture", bounds, 140.0, 140.0, 0, false, false, "rectangle", &mut gesture_input), Ok(true));
+    assert!(semio_renderer_wgpu_scene_feeds::tiled_map_drag_active(&successor_owner.host_id), "the keyed successor starts a fresh gesture");
     let mut removed = retained_document(surface_id, 3, 2, vec![retained_separator_record(2, "map.removed")]);
     let mut removal_input = publish_retained_map_fixture(&removed, surface_id, bounds, 904);
-    let removal_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut removal_input);
+    let removal_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut removal_input);
     assert!(removal_actions.is_empty(), "node removal cannot synthesize PointerUp or selection");
-    assert!(!semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&successor_owner), "acknowledgement revokes the removed Map receiver");
+    assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&successor_owner), "acknowledgement revokes the removed Map receiver");
     let mut retirement_input = publish_retained_map_fixture(&removed, surface_id, bounds, 905);
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut retirement_input).is_empty());
-    assert!(!semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_drag_active(&successor_owner.host_id), "Retire clears the removed Map gesture");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut retirement_input).is_empty());
+    assert!(!semio_renderer_wgpu_scene_feeds::tiled_map_drag_active(&successor_owner.host_id), "Retire clears the removed Map gesture");
     close_retained_map_fixture(surface_id);
     while !first.close_step() {}
     while !replacement.close_step() {}
@@ -97,9 +97,9 @@ fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
         records.extend(ids.iter().map(|id| retained_map_record(*id, &format!("map-{id}"), &map)));
         let document = retained_document(window_id, index as u64 + 1, 1, records);
         let mut input = paint_retained_map_document(&document, window_id, bounds);
-        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_accessibility_visible_document(window_id);
-        let registrations = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::register_clipped_retained_hit_targets(window_id, bounds, &mut input);
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::note_accessibility_visible_document(window_id);
+        let registrations = semio_renderer_wgpu_ui_engine::retained_ui_engine::register_clipped_retained_hit_targets(window_id, bounds, &mut input);
         for (_, target, _) in &registrations {
             if let Some(target) = target {
                 if !hosts.contains(&target.host_id) {
@@ -108,17 +108,17 @@ fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
             }
         }
         let witness = 840 + index as u64;
-        assert!(semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::seal_presented_input_candidate(witness));
-        assert!(semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::acknowledge_presented_input(witness));
+        assert!(semio_renderer_wgpu_ui_engine_dump::chrome_ledger::seal_presented_input_candidate(witness));
+        assert!(semio_renderer_wgpu_ui_engine_dump::chrome_ledger::acknowledge_presented_input(witness));
         input.publish_hits();
-        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
         if index > 0 {
             let (target, rect) = registrations.into_iter().find_map(|(_, target, rect)| target.filter(|target| target.document_id == ui_contract::UiNodeId(receiver)).map(|target| (target, rect))).expect("the receiver Map remains mounted");
-            assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&target), "the accepted receiver registration names the live Map host");
+            assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&target), "the accepted receiver registration names the live Map host");
             if index == 1 {
                 let mut interaction = InputState::<ActionDescriptor>::default();
-                assert_eq!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&target, "map.lifecycle.fixture", rect, rect.x + rect.w * 0.5, rect.y + rect.h * 0.5, 0, false, false, "rectangle", &mut interaction), Ok(true));
-                assert!(semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_drag_active(&target.host_id));
+                assert_eq!(semio_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&target, "map.lifecycle.fixture", rect, rect.x + rect.w * 0.5, rect.y + rect.h * 0.5, 0, false, false, "rectangle", &mut interaction), Ok(true));
+                assert!(semio_renderer_wgpu_scene_feeds::tiled_map_drag_active(&target.host_id));
                 presented = Some(target);
             } else {
                 accepted = Some(target);
@@ -129,21 +129,21 @@ fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
     let presented = presented.expect("the displayed Map owns the interaction");
     let accepted = accepted.expect("the accepted sibling candidate retains the Map");
     let engine_retired = retire_map_interaction_owner(&accepted);
-    let gesture_retired = semio_framework_os_renderer_wgpu_scene_state::retire_tiled_map_scene_identity(&accepted);
-    let gesture_live = semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_drag_active(&accepted.host_id);
+    let gesture_retired = semio_renderer_wgpu_scene_state::retire_tiled_map_scene_identity(&accepted);
+    let gesture_live = semio_renderer_wgpu_scene_feeds::tiled_map_drag_active(&accepted.host_id);
     let duplicate_retired = retire_map_interaction_owner(&presented);
     for host in hosts {
         drop_engine_surface(&host);
     }
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id));
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id));
     for _ in 0..262_144 {
-        if !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
+        if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
             break;
         }
-        caller.turn(|cx|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn");
-        semio_framework_os_renderer_wgpu_host_winit::os_host::finish_retired_cpu_only_map_fixture_close();
+        caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn");
+        semio_renderer_wgpu_host_winit::os_host::finish_retired_cpu_only_map_fixture_close();
     }
-    assert!(!semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending(), "the retained Map window returns every bounded owner");
+    assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending(), "the retained Map window returns every bounded owner");
     for mut document in documents {
         while !document.close_step() {}
     }
@@ -188,7 +188,7 @@ fn a_revision_bump_while_the_bridge_lease_is_in_flight_still_publishes_the_draws
     let scene = world3d_preview_scene(surface_id, &fixture);
     let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
 
-    let mut frame = paint_scene(&scene, bounds, semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceMap::default());
+    let mut frame = paint_scene(&scene, bounds, semio_renderer_wgpu_contracts::AdmittedSurfaceMap::default());
     assert!(frame.world3d_states.contains_key(surface_id), "the first painted frame constructs the World3d host");
     drive_world3d_ladder(frame.world3d_states.get_mut(surface_id).expect("attached world state"));
 

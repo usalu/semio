@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationLiqWater
         record: "ChangeFoundationLiqWaterDepthM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Groundwater depth below the surface", "Grundwassertiefe unter der Oberfläche ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Groundwater depth below the surface", "Grundwassertiefe unter der Oberfläche ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-liq-water-depth-m".into()]

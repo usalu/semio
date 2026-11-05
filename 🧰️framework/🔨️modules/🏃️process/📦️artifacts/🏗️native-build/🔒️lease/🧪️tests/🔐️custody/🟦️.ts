@@ -130,7 +130,7 @@ test("builds of distinct lane directories overlap while builds of one directory 
   const script=join(work,"worker.ts");writeFileSync(script,laneWorker);
   for(const mode of ["one-directory","two-lanes"] as const){
    const leases=join(work,mode+"-leases"),log=join(work,mode+".log");mkdirSync(leases);writeFileSync(log,"");
-   const directories=mode==="one-directory"?[join(work,"m/b"),join(work,"m/b")]:[join(work,"m/u/l/d/b"),join(work,"m/u/l/d1/b")];
+   const directories=mode==="one-directory"?[join(work,"m/b"),join(work,"m/b")]:[join(work,"m/u/l/d"),join(work,"m/u/l/d1")];
    const children=directories.map(directory=>Bun.spawn([process.execPath,script,leases,directory,log],{stdout:"pipe",stderr:"pipe"}));
    const exits=await Promise.all(children.map(child=>child.exited));expect(exits,await new Response(children[0]!.stderr).text()).toEqual([0,0]);
    const run=Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),log]),report=JSON.parse(run.stdout.toString().split("\n")[0]!);

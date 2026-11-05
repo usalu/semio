@@ -3,7 +3,7 @@
 #![cfg(test)]
 #![allow(unused_imports, unused_qualifications)]
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../🔬️unit/🦀️.rs"]
 mod memo_tests;

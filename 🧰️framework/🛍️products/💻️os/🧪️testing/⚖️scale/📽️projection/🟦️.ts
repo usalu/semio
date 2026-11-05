@@ -30,7 +30,7 @@ type ScaleFixtureProfile = (typeof SCALE_FIXTURE_PROFILES)[number];
 
 type ScaleFixtureActivationEvent = { type: "on-startup-finished" } | { type: "on-command"; id: string } | { type: "on-artifact-kind"; kind: string } | { type: "on-view-visible"; id: string };
 
-/** 📋️ Exact shape the `semio-framework-os-scale-fixture` crate's `FixtureConfig` (`🎭️profile/
+/** 📋️ Exact shape the `semio-os-scale-fixture` crate's `FixtureConfig` (`🎭️profile/
  * 🦀️.rs`) decodes from `instance-open`'s `config` pack — field names match its `serde`
  * `camelCase` rename 1:1 so a real host can hand this object, JSON-encoded, straight through. */
 type ScaleFixtureConfig = {

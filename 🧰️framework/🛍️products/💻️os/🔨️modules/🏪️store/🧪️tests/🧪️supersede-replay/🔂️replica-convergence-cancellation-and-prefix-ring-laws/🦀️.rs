@@ -53,7 +53,7 @@ async fn cancelling_a_report_replay_at_every_step_leaves_the_store_untouched() {
     let mut probe = store.begin_report_replay(&entries, None).expect("probe").with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoMutation>::default()));
     let total = probe.progress().total;
     probe.cancel();
-    semio_framework_os_store_testing_doubles::close(&mut probe);
+    semio_os_store_testing_doubles::close(&mut probe);
     assert_eq!(total, 7);
     for stop in 0..=total {
         let (generation, revision, snapshot, applied, transitions, outcomes) =
@@ -72,7 +72,7 @@ async fn cancelling_a_report_replay_at_every_step_leaves_the_store_untouched() {
         assert_eq!(store.applied_edit_ids(), applied.as_slice());
         assert_eq!(store.envelope().transitions.len(), transitions);
         assert_eq!(store.mutation_outcomes().unwrap(), outcomes);
-        semio_framework_os_store_testing_doubles::close(&mut replay);
+        semio_os_store_testing_doubles::close(&mut replay);
     }
 }
 
@@ -150,7 +150,7 @@ async fn finished_replays_commit_atomically_and_refuse_stale_or_blocking_ones() 
     assert!(matches!(fixture_finalize(&mut store,stale, HistoryFinalization::Overwrite).await, Err(VcsError::Stale { .. })));
     let blocking = finish(&store, store.begin_report_replay(&drafts(&[(&ids[0], Some(DemoMutation::DeleteN(DeleteN {})))]), None).expect("blocking replay"));
     let generation = store.generation();
-    assert!(matches!(fixture_finalize(&mut store,blocking, HistoryFinalization::Overwrite).await, Err(VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, .. })));
+    assert!(matches!(fixture_finalize(&mut store,blocking, HistoryFinalization::Overwrite).await, Err(VcsError::Rejected { policy: semio_os_spr::MergePolicy::Normal, .. })));
     assert_eq!(store.generation(), generation);
     let clean = finish(&store, store.begin_report_replay(&drafts(&[(&ids[0], Some(set(10)))]), None).expect("clean replay"));
     let receipt = fixture_finalize(&mut store,clean, HistoryFinalization::Overwrite).await.expect("overwrite");
@@ -170,7 +170,7 @@ async fn finished_replays_commit_atomically_and_refuse_stale_or_blocking_ones() 
 #[semio_framework_async_macros::async_test]
 async fn prefix_ring_evictions_retire_through_the_snapshot_factory() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "ring", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "ring", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("original catalog installation refused: {error}"));
     for n in 1..=6 {
         apply(&mut store, vec![set(n)]).await;
@@ -216,7 +216,7 @@ async fn operations_carry_semantic_kind_label_and_transaction_everywhere() {
     }
     expect(&peer);
     let files = print_document_pack(store.envelope()).await.expect("pack prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     expect(&reloaded);
 }
 

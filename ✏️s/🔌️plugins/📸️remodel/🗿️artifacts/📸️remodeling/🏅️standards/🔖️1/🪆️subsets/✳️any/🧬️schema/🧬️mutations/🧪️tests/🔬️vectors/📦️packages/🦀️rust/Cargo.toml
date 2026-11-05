@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

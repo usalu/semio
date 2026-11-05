@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-din18599-model = { workspace = true }
@@ -26,7 +26,7 @@ semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
 semio-s-artifact-norm-din18599-model = { workspace = true, features = ["test-support"] }
 pack = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-value = { workspace = true }
 semio-s-artifact-norm-din18599-examples = { workspace = true }
 semio-s-artifact-norm-din18599-schema = { workspace = true, features = ["test-support"] }

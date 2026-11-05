@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-plugin-host-engine"
+name = "semio-plugin-host-engine"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -26,12 +26,12 @@ doctest = false
 testkit = []
 
 [dependencies]
-semio-framework-plugin-guest-contract = { workspace = true }
+semio-plugin-guest-contract = { workspace = true }
 # ⚡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `⚡️effects/🦀️.rs`'s
 # `AsyncEffectExecutor` derives `OperationContext`/`ScopeHandle`/`ChannelPolicy` (this crate's own
 # vocabulary is domain-neutral, zero tokio) and dispatches onto `HttpPool`/`StorageScheduler`/
 # `TimerWheel`/`ComputePool`/`EventRouter` (packet R2's tokio-backed services) — same dependency
-# shape `semio-framework-os-services` itself already establishes.
+# shape `semio-os-services` itself already establishes.
 # 🧵️ P1c (one-pool-worker-runtime): `"entrypoint"` is required (not merely `cfg(test)`) because
 # `🧵️shard/🧵️executor/🦀️.rs`'s `ShardExecutor::run` calls `semio_framework_async::block_on` from a
 # PRODUCTION `WorkerPool` job closure (a plain OS thread, no async executor already polling it) —

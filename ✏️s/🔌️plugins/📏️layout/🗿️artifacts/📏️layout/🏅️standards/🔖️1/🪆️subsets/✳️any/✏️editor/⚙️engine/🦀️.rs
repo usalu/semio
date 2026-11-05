@@ -7,9 +7,9 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 
@@ -19,25 +19,25 @@ extern crate semio_framework_schema as schema;
 /// WORKFLOWS-END-TO-END-TYPED-PORTS ports: `fields:in` (a `form.dictionary` this layout binds as a new
 /// named data source — see `crate::LayoutSnapshot::data_fields`) and `layout:out`
 /// (the current layout re-exported as `2d.layout` vector/SVG for a downstream consumer).
-pub fn layout_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn layout_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: "layout.layout".into(),
-        artifact_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        artifact_media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::TwoD, form: semio_plugin::MediaForm::Vector },
         ports: vec![
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "fields:in".into(),
                 label: "Fields".into(),
-                direction: semio_framework_plugin::MediaPortDirection::In,
-                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+                direction: semio_plugin::MediaPortDirection::In,
+                media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Data, form: semio_plugin::MediaForm::Value },
                 kind_id: Some("form.dictionary".into()),
                 required: false,
                 multiplicity: semio_framework::PortMultiplicity::One,
             },
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "layout:out".into(),
                 label: "Layout".into(),
-                direction: semio_framework_plugin::MediaPortDirection::Out,
-                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+                direction: semio_plugin::MediaPortDirection::Out,
+                media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::TwoD, form: semio_plugin::MediaForm::Vector },
                 kind_id: Some("2d.layout".into()),
                 required: false,
                 multiplicity: semio_framework::PortMultiplicity::Many,
@@ -45,7 +45,7 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
         ],
         export_formats: ["json", "svg", "png", "pdf", "step", "idml", "dxf", "dwg"].into_iter().map(str::to_string).collect(),
         import_formats: ["json", "svg", "pdf", "step", "idml", "dxf", "dwg"].into_iter().map(str::to_string).collect(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.layout".into(), name: "2D Layout".into(), dimension: "2d".into(), component_kind: "layout".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "2d.layout".into(), name: "2D Layout".into(), dimension: "2d".into(), component_kind: "layout".into() },
     }
 }
 //#endregion 🔖️Io

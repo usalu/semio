@@ -1,9 +1,9 @@
-#[allow(unused_imports)] use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)] use semio_plugin::NoConfig;
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::canvas_drop::*;
-use semio_framework_plugin::HistoryView;
+use semio_plugin::HistoryView;
 
 #[test]
 fn dropping_a_pdf_links_the_native_artifact_on_an_image_frame() {
@@ -44,7 +44,7 @@ fn every_placeable_artifact_kind_links_its_native_dialect() {
 #[test]
 fn a_drop_payload_keeps_the_native_preview_image() {
     use semio_s_artifact_layout_layout_editor::LayoutPlayApp;
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     let drag = r#"{"kind":"png","artifactRef":"shot","proxyDataUrl":"data:image/png;base64,AA=="}"#;
     let args = semio_framework_value::DslValue::Object(vec![
         ("dragData".into(), semio_framework_value::DslValue::String(drag.into())),

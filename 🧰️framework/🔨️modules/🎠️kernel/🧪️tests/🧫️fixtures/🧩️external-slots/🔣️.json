@@ -7,9 +7,32 @@
   "bodyKey": "params",
   "windowKindId": "playbook-module-procedural-params",
   "windowId": "extension",
-  "viewState": { "locale": "de", "terminology": "native" },
+  "viewState": {
+    "locale": "de",
+    "terminology": "native"
+  },
   "slots": [
-    { "key": "column-a.params", "props": { "bodyKey": "params", "paramsJson": "{\"questionId\":\"column-a\",\"params\":{\"height\":6},\"windowId\":\"fill-a\"}" } },
-    { "key": "column-b.params", "props": { "bodyKey": "params", "paramsJson": "{\"questionId\":\"column-b\",\"params\":{\"height\":9},\"windowId\":\"fill-b\"}" } }
-  ]
+    {
+      "key": "column-a.params",
+      "props": {
+        "bodyKey": "params",
+        "paramsJson": "{\"questionId\":\"column-a\",\"params\":{\"height\":6},\"windowId\":\"fill-a\"}"
+      }
+    },
+    {
+      "key": "column-b.params",
+      "props": {
+        "bodyKey": "params",
+        "paramsJson": "{\"questionId\":\"column-b\",\"params\":{\"height\":9},\"windowId\":\"fill-b\"}"
+      }
+    }
+  ],
+  "actions": {
+    "instanceId": 41,
+    "child": "evaluateEmbeddedFlow",
+    "parent": "setTryValue",
+    "parentController": "forms-editor",
+    "parameter": "height",
+    "value": 6.5
+  }
 }

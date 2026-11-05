@@ -2,9 +2,9 @@
 
 use replication::SchemaId;
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -321,7 +321,7 @@ pub enum PackageRole {
 /// 🚦 How an extension actor runs relative to its host plugin — `📓️design-abi.md` §5. Default
 /// `Isolated`: a same-process sandboxed actor, no publisher trust assumed. `Linked` additionally
 /// requires the same publisher as the host plugin (enforced at link time, feature-gated to avoid
-/// the `semio-framework-os-flow` ↔ extension-crate cycle); `Exclusive` gets a dedicated actor
+/// the `semio-os-flow` ↔ extension-crate cycle); `Exclusive` gets a dedicated actor
 /// (e.g. flow/brep tessellation); `Cold` runs as a bounded job, not a resident actor.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -599,12 +599,12 @@ fn canonical_members(value: DslValue) -> DslValue {
 // Attachment point, and why it is a LEASE rather than a field added directly here: the obvious
 // home is a new `PackageDescriptor.agent: Option<AgentContributions>` field. `PackageDescriptor`'s
 // only known construction sites (`describe_plugin()`/`describe_extension()`,
-// `🔌️plugin/🛂️describe/🦀️.rs`) live in `semio-framework-plugin` — a crate this packet
+// `🔌️plugin/🛂️describe/🦀️.rs`) live in `semio-plugin` — a crate this packet
 // does not own and the peer ticket's W3 is about to freeze — and both build the value as a full
 // explicit struct literal (verified by reading the file: no `..Default::default()` anywhere, and
 // `PackageDescriptor` has no `Default` impl — `role: PackageRole` has no default variant — so a
 // `Default` impl could not rescue an untouched call site either way). Adding the field HERE alone
-// would therefore break `cargo check -p semio-framework-plugin --lib` the moment this region
+// would therefore break `cargo check -p semio-plugin --lib` the moment this region
 // lands, in a live shared tree, before any reviewer applies a companion lease — exactly the
 // destabilisation this packet must not cause. So the field itself, and its counterpart on the
 // `PluginDescriptorExtras` side-channel (`🔌️plugin/🦀️.rs`, E2's own established pattern

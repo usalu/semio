@@ -25,7 +25,7 @@
         for tab in definition.panel_tabs.iter() {
             history_panel_tab_ids.push(tab.id());
         }
-        assert!(history_panel_tab_ids.iter().any(|id| *id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID));
+        assert!(history_panel_tab_ids.iter().any(|id| *id == semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID));
         let action_ids: HashSet<&str> = declared_actions(&definition).map(|a| a.id.as_str()).collect();
         assert!(action_ids.contains(REVERT_TO_COMMAND_ACTION_ID));
         assert!(action_ids.contains(SET_HISTORY_COMMAND_FILTER_ACTION_ID));
@@ -39,13 +39,13 @@
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
-        let definition = minimal_app("manual-history-app").await.panel_tab(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").await.build_definition();
+        let definition = minimal_app("manual-history-app").await.panel_tab(semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").await.build_definition();
         let mut manual_history_tab_ids: Vec<&str> = Vec::new();
         for t in definition.panel_tabs.iter() {
             manual_history_tab_ids.push(t.id());
         }
-        assert_eq!(manual_history_tab_ids.iter().filter(|id| **id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
-        let manual_history_tab_idx = manual_history_tab_ids.iter().position(|id| *id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
+        assert_eq!(manual_history_tab_ids.iter().filter(|id| **id == semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
+        let manual_history_tab_idx = manual_history_tab_ids.iter().position(|id| *id == semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
         let tab = &definition.panel_tabs[manual_history_tab_idx];
         assert_eq!(tab.body_key.as_deref(), Some("custom.history"));
     }
@@ -194,9 +194,9 @@
         assert_eq!(bound("mod+shift+enter").as_deref(), Some("toolRunFinalize"));
         assert!(interactive.keybindings.iter().all(|binding| binding.action.action != "toolRunDismiss" && binding.action.action != "toolRunResume"));
         assert_ne!(bound("escape").as_deref(), Some("toolRunDismiss"), "escape dismisses only with the run panel focused");
-        let tool_run_tab = |definition: &AppDefinition| definition.panel_tabs.iter().find(|tab| matches!(&tab.kind, PanelTabKind::App(id) if id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID)).map(|tab| (tab.group, tab.body_key.clone()));
+        let tool_run_tab = |definition: &AppDefinition| definition.panel_tabs.iter().find(|tab| matches!(&tab.kind, PanelTabKind::App(id) if id == semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID)).map(|tab| (tab.group, tab.body_key.clone()));
         assert_eq!(tool_run_tab(&plain), None, "an app without a tool run gets no ToolRun panel tab");
-        assert_eq!(tool_run_tab(&interactive), Some((PanelGroup::Details, Some(semio_framework_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()))), "an app declaring a tool run mounts the framework ToolRun panel as a details tab");
+        assert_eq!(tool_run_tab(&interactive), Some((PanelGroup::Details, Some(semio_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()))), "an app declaring a tool run mounts the framework ToolRun panel as a details tab");
     }
 
     #[semio_framework_async_macros::async_test]

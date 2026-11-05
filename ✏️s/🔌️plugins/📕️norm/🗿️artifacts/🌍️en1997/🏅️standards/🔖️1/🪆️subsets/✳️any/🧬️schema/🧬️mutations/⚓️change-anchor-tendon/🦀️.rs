@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorTendon where
         record: "ChangedAnchorTendon",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Tendon (strand | bar) of the anchor", "Anker: Zugglied (Litze | Stab) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Tendon (strand | bar) of the anchor", "Anker: Zugglied (Litze | Stab) ändern")
     }
 }
 

@@ -8,7 +8,7 @@ use semio_framework_value::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use semio_framework_ui_contract::UiFixedList;
+use semio_ui_contract::UiFixedList;
 
 #[path = "🎬️action-and-presence/🦀️.rs"]
 mod action_and_presence;

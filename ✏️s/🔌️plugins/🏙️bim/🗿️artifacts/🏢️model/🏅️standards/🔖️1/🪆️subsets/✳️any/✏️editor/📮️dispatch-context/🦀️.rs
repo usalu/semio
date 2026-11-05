@@ -3,7 +3,7 @@
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use semio_s_artifact_bim_model_tests::editor::bim::presence::{BimPresence, BimPresenceMutation};
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::{bim_labels, BimLabels};
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ViewModel;
 
 //#region 🔖️Dispatch
 /// 🕹️ Per-dispatch state that is neither document nor app config: the framework selection of both domains, the addressed window with its own config, the armed utility and the
@@ -23,14 +23,14 @@ pub struct BimDispatchCtx {
     pub sheet: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig,
     pub presence: BimPresence,
     pub presence_out: Vec<BimPresenceMutation>,
-    pub gestures: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    pub gestures: Option<semio_plugin::ArtifactInstanceOperationOwnerHandle>,
     pub window_transient: crate::editor::bim::transient::BimWindowTransient,
     pub transient_out: Option<crate::editor::bim::transient::BimWindowTransient>,
 }
 
 impl BimDispatchCtx {
     /// 🕹️ The context of a command addressed at `view` with the config snapshot of its window.
-    pub fn new(selected: Vec<String>, library_selected: Vec<String>, view: Option<&ViewModel>, window_config: Option<&semio_framework_plugin::WindowConfigSnapshot>, presence: Option<&BimPresence>) -> Self {
+    pub fn new(selected: Vec<String>, library_selected: Vec<String>, view: Option<&ViewModel>, window_config: Option<&semio_plugin::WindowConfigSnapshot>, presence: Option<&BimPresence>) -> Self {
         Self {
             selected,
             library_selected,

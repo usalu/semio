@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeHollowChordFy wher
         record: "ChangedHollowChordFy",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Chord yield strength f_y0 of the hollow joint", "Hohlprofilknoten: Gurtstreckgrenze f_y0 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Chord yield strength f_y0 of the hollow joint", "Hohlprofilknoten: Gurtstreckgrenze f_y0 ändern")
     }
 }
 

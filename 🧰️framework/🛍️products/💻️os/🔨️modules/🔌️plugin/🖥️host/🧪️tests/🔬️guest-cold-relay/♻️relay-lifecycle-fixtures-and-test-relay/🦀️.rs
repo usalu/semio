@@ -6,7 +6,7 @@ fn relay_lifecycle_fixture() -> serde_json::Value {
 
 #[test]
 fn neutral_relay_lifecycle_traces_drive_production_machines() {
-    let _replay_authority = semio_framework_plugin_host_shard::replay_test_authority();
+    let _replay_authority = semio_plugin_host_shard::replay_test_authority();
     for trace in relay_lifecycle_fixture()["traces"].as_array().expect("relay lifecycle traces") {
         let actual: serde_json::Value = serde_json::from_str(&exercise_relay_lifecycle_trace(&trace.to_string(),test_relay_wake_authority()).expect("production lifecycle trace")).expect("production lifecycle projection");
         assert_eq!(actual, trace["expected"], "{} production projection", trace["🪪️id"]);

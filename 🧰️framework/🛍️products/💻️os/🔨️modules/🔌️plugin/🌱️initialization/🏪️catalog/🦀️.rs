@@ -21,7 +21,7 @@ Mu:semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
  done:bool,
 }
 impl<P,Mu> OriginalCatalogConstructor<P,Mu>
-where P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + protocol::StoreState,
+where P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + protocol::StoreState,
 Mu: 'static + protocol::StoreMutationFor<P> {
  #[doc(hidden)]
  pub fn new()->Self{Self{original:ManuallyDrop::new(None),refusal:ManuallyDrop::new(None),refusal_close:ManuallyDrop::new(None),done:false}}

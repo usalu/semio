@@ -83,7 +83,7 @@ fn parking_round_trips_through_the_transport_settings() {
 //#region 🫧️PartitionLaws
 #[test]
 fn clock_publication_and_retirement_obey_tiny_grants() {
-    use semio_framework_plugin::WindowTransientOwner;
+    use semio_plugin::WindowTransientOwner;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️codec/🔣️.json")).unwrap();
     let owners = Fem2dResultsWindowTransientOwner::build_owners();
     for row in fixture["cases"].as_array().unwrap() {
@@ -126,7 +126,7 @@ fn clock_partition_matches_language_neutral_json_oracle() {
         let clock = serde_json::from_value::<Option<FemPlaybackClock>>(step["clock"].clone()).expect("clock");
         let mutation = FemResultsWindowTransientMutation::from(SetPlaybackClock { clock });
         let state = typed.entry(window_id.clone()).or_default();
-        let (next, _) = store::os_store::replay::apply_outcome(state, ::semio_framework_os_kernel::ColdMutation::diff(&mutation, state));
+        let (next, _) = store::os_store::replay::apply_outcome(state, ::semio_os_kernel::ColdMutation::diff(&mutation, state));
         *state = next;
         oracle.insert(window_id, step["clock"].clone());
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);

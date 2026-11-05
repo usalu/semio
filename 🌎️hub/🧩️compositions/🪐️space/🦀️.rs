@@ -1,18 +1,18 @@
 //! 🔌️ Space composition of independently packaged Home and Space Index artifacts.
 
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
-use semio_framework_plugin::PluginBuilder;
-use semio_framework_os::OS_SPACE_SCHEMA;
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_plugin::PluginBuilder;
+use semio_os::OS_SPACE_SCHEMA;
 pub use semio_s_space_core::*;
 
 #[cfg(test)]

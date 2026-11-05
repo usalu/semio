@@ -15,8 +15,8 @@ pub struct SetMovie {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetMovie {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "movie", kind: "set-movie", record: "SetMovie" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set movie header", "Film-Header setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set movie header", "Film-Header setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

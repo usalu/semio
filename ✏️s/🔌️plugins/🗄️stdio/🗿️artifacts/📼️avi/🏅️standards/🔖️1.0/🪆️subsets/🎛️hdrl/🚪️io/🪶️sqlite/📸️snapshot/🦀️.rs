@@ -1,7 +1,7 @@
 //! 📼️ Individually authored AVI headers, formats and retained chunk relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_0::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 
 pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
@@ -9,7 +9,7 @@ fn ownership(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusal
 fn allocation(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::AllocationFailed,message)}
 
 use std::collections::BTreeMap;
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell,RowWriter,NativeEncodingBound,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{artifact::{Cell,RowWriter,NativeEncodingBound,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshotHost};
 
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
 type Groups<'a>=BTreeMap<i64,Vec<&'a SqliteRow>>;
@@ -48,9 +48,9 @@ out.insert("avi_document",&[Cell::Text(&snapshot.schema),Cell::Integer(i64::from
 }
 
 impl ArtifactSqliteSnapshotHost for AviSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
  
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   semantic::typed(self,SqliteSnapshotPhase::EncodeNative,control)?;
   store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }

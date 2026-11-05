@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "air-loop", kind: "create-air-loop", record: "CreatedAirLoop" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create air loop {}", self.id.0), &format!("Luftkreislauf {} erstellen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create air loop {}", self.id.0), &format!("Luftkreislauf {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

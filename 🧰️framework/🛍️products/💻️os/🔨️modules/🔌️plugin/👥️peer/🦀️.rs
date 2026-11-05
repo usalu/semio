@@ -1,10 +1,10 @@
 //! 👥️ Peer presence roots and the peer roster publication.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-use semio_framework_plugin_decl_views::PeerPresence;
-use semio_framework_plugin_decl_views::PEER_PRESENCE_SLOTS;
-use semio_framework_plugin_decl_views::PeerPresenceEntry;
-use semio_framework_plugin_decl_views::PeerPresenceRoot;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+use semio_plugin_decl_views::PeerPresence;
+use semio_plugin_decl_views::PEER_PRESENCE_SLOTS;
+use semio_plugin_decl_views::PeerPresenceEntry;
+use semio_plugin_decl_views::PeerPresenceRoot;
 use semio_framework::kernel::FixedCommandPage;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -14,17 +14,17 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use std::mem::ManuallyDrop;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault;
-use semio_framework_plugin_decl_views::child_view::child_content_arc_bytes;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::plugin_retirement_fault;
+use semio_plugin_decl_views::child_view::child_content_arc_bytes;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::NoConfigMutation;
+use semio_plugin_decl_views::NoConfigMutation;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::NoPresence;
+use semio_plugin_decl_views::NoPresence;
 #[cfg(test)]
-use semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement;
+use semio_plugin_job::reserved_jobs::ConfigurationDecodeRetirement;
 
 #[doc(hidden)]
 pub struct PeerPresenceRootRetirement {
@@ -184,7 +184,7 @@ mod peer_root_retirement_laws {
         let mut decoder_events = 0;
         let mut admit_decode = |_| { decoder_events += 1; true };
         let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut admit_decode);
-        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut decode, grant);
+        let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut decode, grant);
         let (value, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original).unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(original.progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
@@ -196,7 +196,7 @@ mod peer_root_retirement_laws {
         let mut encode_events = 0;
         let mut admit_encode = |_| { encode_events += 1; true };
         let mut encode = semio_framework_value::NativeEncodeControl::new(0, &mut admit_encode);
-        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut encode, grant);
+        let mut original = semio_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut encode, grant);
         let (bytes, heap) = observe(|| value.encode_presence_native(&mut original).unwrap());
         assert_eq!(bytes, Vec::<u8>::new());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -206,14 +206,14 @@ mod peer_root_retirement_laws {
         assert!(encode_events > 0);
         let mut reject = |_| false;
         let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut reject);
-        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+        let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
         assert!(result.is_err());
         assert_eq!(original.progress(), RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let mut reject = |_| false;
         let mut native = semio_framework_value::NativeEncodeControl::new(0, &mut reject);
-        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
+        let mut original = semio_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
         let (result, heap) = observe(|| value.encode_presence_native(&mut original));
         assert!(result.is_err());
         assert_eq!(original.progress(), RetainedCloneProgress::default());
@@ -221,7 +221,7 @@ mod peer_root_retirement_laws {
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
             let mut accept = |_| true;
             let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut accept);
-            let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, denied);
+            let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, denied);
             let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
             assert!(result.is_err());
             assert_eq!(original.progress(), RetainedCloneProgress::default());
@@ -537,7 +537,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(PluginLifecycleStep::Progress(empty)); }
         let mut admit = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
         let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut admit);
-        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+        let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let turn = self.step_stage(presence_store, &mut original);
         let progress = original.progress();
         match turn {
@@ -549,7 +549,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         }
     }
 
-    fn step_stage(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, original: &mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<PeerRosterTurn, Fault> {
+    fn step_stage(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, original: &mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<PeerRosterTurn, Fault> {
         let refused = |error: ValueError| plugin_sdk_fault(error.to_string());
         match self.stage {
             PeerRosterPublicationStage::DecodeMetadata => {

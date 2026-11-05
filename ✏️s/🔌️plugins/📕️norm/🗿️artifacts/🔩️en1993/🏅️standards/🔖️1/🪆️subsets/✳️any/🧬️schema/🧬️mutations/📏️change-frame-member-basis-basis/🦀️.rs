@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFrameMemberBasisBa
         record: "ChangedFrameMemberBasisBasis",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change member force basis: Basis (FrameDerived | Explicit)", "Kraftgrundlage des Bauteils: Grundlage (FrameDerived | Explicit) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change member force basis: Basis (FrameDerived | Explicit)", "Kraftgrundlage des Bauteils: Grundlage (FrameDerived | Explicit) ändern")
     }
 }
 

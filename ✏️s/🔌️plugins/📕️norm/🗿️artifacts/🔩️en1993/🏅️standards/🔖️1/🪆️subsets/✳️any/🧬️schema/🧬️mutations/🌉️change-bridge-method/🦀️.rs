@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeMethod where
         record: "ChangedBridgeMethod",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Assessment method of the bridge fatigue", "Brückenermüdung: Nachweiskonzept ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Assessment method of the bridge fatigue", "Brückenermüdung: Nachweiskonzept ändern")
     }
 }
 

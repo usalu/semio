@@ -2,9 +2,9 @@
 
 use super::{Gif87aEditCommand, Gif87aEditor};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
+use semio_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
+use semio_ui_locale::LocalizedLabel;
 use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot as Snapshot;
 use crate::standards::v87a::subsets::any::schema::mutations::GifMutation as Mutation;
 
@@ -109,7 +109,7 @@ impl PaintRegionWork {
 impl ArtifactCommandWork<EditorApp<Gif87aEditor>> for PaintRegionWork {
     fn tool_id(&self) -> &'static str { ACTION_ID }
 
-    fn extent(&self, command: &Gif87aEditCommand, snapshot: &Snapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gif87aEditor>>>) -> Option<usize> {
+    fn extent(&self, command: &Gif87aEditCommand, snapshot: &Snapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gif87aEditor>>>) -> Option<usize> {
         let Gif87aEditCommand::PaintRegion(command) = command else { return None };
         if command.width == 0 || command.height == 0 || snapshot.images.get(command.item as usize).is_none() { return None; }
         CAPACITY.rows_for_items(1)

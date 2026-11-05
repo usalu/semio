@@ -27,8 +27,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "layer", kind: "add-layer", record: "AddLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add layer", "Ebene hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add layer", "Ebene hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

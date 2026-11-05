@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "stages": [
+    "read",
+    "source",
+    "reserve-failure",
+    "author",
+    "close-author",
+    "translate",
+    "close-translate",
+    "qualify-publish",
+    "assemble-emit",
+    "handoff"
+  ],
+  "closing": [
+    "author",
+    "translate",
+    "source",
+    "child-publication",
+    "domain-reservation",
+    "outputs",
+    "bindings"
+  ],
+  "laws": [
+    "same-original-parent-command-and-context",
+    "same-preborn-infos-authority",
+    "original-output-retained-on-refusal",
+    "actual-raw-child-work-forwarded",
+    "cancel-closes-source-before-qualified-child-custody",
+    "no-synchronous-host-or-whole-scene-clone"
+  ]
+}

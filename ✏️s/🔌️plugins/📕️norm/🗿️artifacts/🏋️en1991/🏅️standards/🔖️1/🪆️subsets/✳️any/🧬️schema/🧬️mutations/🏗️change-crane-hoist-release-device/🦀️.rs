@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeCraneHoistReleaseD
         record: "ChangedCraneHoistReleaseDevice",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change release device (grab or magnet) of the crane hoist", "Kranhubwerk: Abwurfeinrichtung (Greifer oder Magnet) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change release device (grab or magnet) of the crane hoist", "Kranhubwerk: Abwurfeinrichtung (Greifer oder Magnet) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

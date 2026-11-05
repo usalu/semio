@@ -25,8 +25,8 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Sign out", "Abmelden")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Sign out", "Abmelden")
     }
 
     fn target(&self) -> Vec<String> {
@@ -34,7 +34,7 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
+impl semio_os_command::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
     fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
         if base.0.is_none() {
             return MutationOutcome::empty();

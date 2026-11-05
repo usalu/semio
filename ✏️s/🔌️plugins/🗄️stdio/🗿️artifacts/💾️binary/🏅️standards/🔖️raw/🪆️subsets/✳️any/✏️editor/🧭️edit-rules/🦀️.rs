@@ -30,7 +30,7 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../../�
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
-use semio_framework_plugin::{ArtifactDefinition, PluginAssemblyError};
+use semio_plugin::{ArtifactDefinition, PluginAssemblyError};
 
 pub fn definition() -> Result<ArtifactDefinition, PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
@@ -41,8 +41,8 @@ pub fn definition() -> Result<ArtifactDefinition, PluginAssemblyError> {
 //#region 🧩️ArtifactItems5
 pub mod artifact_items_5 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
-use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::ArtifactDefinitionError;
+use semio_plugin::io::FormatDescriptor;
+use semio_plugin::ArtifactDefinitionError;
 
 pub fn formats() -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)

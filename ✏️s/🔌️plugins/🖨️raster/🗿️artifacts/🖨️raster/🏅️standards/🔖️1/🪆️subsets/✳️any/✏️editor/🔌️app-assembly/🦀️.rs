@@ -7,31 +7,31 @@ use crate::modes::edit::windows::{composite, navigator};
 use semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppDefinition;
-use semio_framework_plugin::ArtifactKindSpec;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::OsMediaCapability;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionKind;
+use semio_plugin::AppDefinition;
+use semio_plugin::ArtifactKindSpec;
+use semio_plugin::Editor;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::OsMediaCapability;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
 
 //#region 🔖️Io
 /// 🔌️ Relocated verbatim from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
@@ -93,8 +93,8 @@ pub fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaE
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the panel/pointer/gesture-bound vocabulary
 /// dispatched by the layer tree, catalogue drops and inspector, never a palette command.
-fn raster_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
-    semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, kind) }
+fn raster_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_plugin::ActionDefinition {
+    semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
 /// 🧰️ One composite-window utility declaration; ids must stay host-compatible (`paint*` prefix paints,
@@ -164,11 +164,11 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("maskFromSelection", LocalizedLabel::native("Mask From Selection", "Maske aus Auswahl"), ActionKind::Mutation))
             .action_describe("maskFromSelection", LocalizedLabel::native("Creates an undoable layer mask from the current pixel selection.", "Erstellt eine rückgängig machbare Ebenenmaske aus der aktuellen Pixelauswahl."))
             .action_interactive_job("maskFromSelection", InteractiveJobClassification::Migrated)
-            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Mutation))
             .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
             .action_with(raster_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Mutation))
-            .action_audience("dropLayerKind", semio_framework_plugin::CapabilityAudience::Agent)
+            .action_audience("dropLayerKind", semio_plugin::CapabilityAudience::Agent)
             .action_with(raster_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Mutation))
             .action_with(raster_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Mutation))
             .action_with(raster_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Mutation))
@@ -201,7 +201,7 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("setFilterAmount", LocalizedLabel::native("Set Filter Amount", "Filterstärke festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setImageGrid", LocalizedLabel::native("Set Image Grid", "Bildraster festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setCompositeViewport", LocalizedLabel::native("Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"), ActionKind::View))
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(raster_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             .action_args("addLayer", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Layer Kind", "Ebenenart"), vec![

@@ -2,7 +2,7 @@
 //! the source of truth; the load is the artifact's reset-document effect (frames travel as load content), never mutation
 //! rows: an example switch is not an edit and leaves no history row.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image;
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::example_text;
 use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
@@ -10,7 +10,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::store_remodeling_asset;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload

@@ -31,7 +31,7 @@ path = "../../../🧰️framework/📦️packages/🦀️rust"
 [workspace.dependencies.semio-framework-artifact-flow-flow]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-flow]
+[workspace.dependencies.semio-os-flow]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-spatial-kernel-semio-session]

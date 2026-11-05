@@ -19,8 +19,8 @@ pub struct AddGeometryConnection {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddGeometryConnection where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::add_geometry_connection::AddGeometryConnection> + From<crate::remove_geometry_connection::RemoveGeometryConnection> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "geometry-connection", kind: "add-geometry-connection", record: "AddedGeometryConnection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add connection \"{}\" to geometry \"{}\"", self.connection.id, self.id), &format!("Verbindung \"{}\" zu Geometrie \"{}\" hinzufügen", self.connection.id, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add connection \"{}\" to geometry \"{}\"", self.connection.id, self.id), &format!("Verbindung \"{}\" zu Geometrie \"{}\" hinzufügen", self.connection.id, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone(), self.connection.id.clone()]

@@ -18,8 +18,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindOutput
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "workflow", kind: "unbind-output", record: "UnboundWorkflowOutput" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unbind workflow output {}", self.node_id), &format!("Bindung der Arbeitsablaufausgabe {} aufheben", self.node_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Unbind workflow output {}", self.node_id), &format!("Bindung der Arbeitsablaufausgabe {} aufheben", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["output-bindings".into(), self.node_id.clone(), self.port_id.clone()]

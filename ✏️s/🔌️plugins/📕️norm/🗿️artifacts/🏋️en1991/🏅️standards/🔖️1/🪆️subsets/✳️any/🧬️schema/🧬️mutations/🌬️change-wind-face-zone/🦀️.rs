@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindFaceZone where
         record: "ChangedWindFaceZone",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change pressure zone of the wind face", "Windfläche: Druckzone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change pressure zone of the wind face", "Windfläche: Druckzone ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

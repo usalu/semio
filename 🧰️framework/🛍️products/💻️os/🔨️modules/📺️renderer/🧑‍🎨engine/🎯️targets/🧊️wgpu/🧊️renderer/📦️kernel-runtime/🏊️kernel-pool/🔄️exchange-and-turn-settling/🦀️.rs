@@ -1,7 +1,7 @@
 //! 🔄️ Exchange and turn settling: the exchange, the command exchange, the turn run and settle, the cancelled turn retirement, the serving compile and the reserved job admission. See [`super`].
 
 use super::*;
-use semio_framework_os_renderer_wgpu_kernel_protocol::CreateAppSourceFailureKind;
+use semio_renderer_wgpu_kernel_protocol::CreateAppSourceFailureKind;
 
 //#region 🎠️KernelRuntime
 //#region 🔖️KernelPoolState
@@ -323,7 +323,7 @@ impl KernelPoolState {
     /// large component parses for minutes in a debug host, and the synchronous parse used to hold the whole
     /// loop — reusing the handle already compiled for the same content hash. The open's owner may cancel it
     /// while the initiating original compiler caller retains the sealed future, source loan and complete result through publication.
-    pub(super) async fn compile_serving_others(&mut self,owner:&CreateAppRequestOwner,hash:PackageHash,bytes:semio_framework_job::OriginalSuppliedJobBytes)->Result<semio_framework_plugin_host::CompiledHandle,CreateAppSourceFailureKind>{
+    pub(super) async fn compile_serving_others(&mut self,owner:&CreateAppRequestOwner,hash:PackageHash,bytes:semio_framework_job::OriginalSuppliedJobBytes)->Result<semio_plugin_host::CompiledHandle,CreateAppSourceFailureKind>{
         if let Some((_,compiled))=self.compiled_components.iter().find(|(key,_)|*key==hash){return Ok(compiled.clone())}
         let mut original=Some(bytes);let mut compiled=None;
         loop{

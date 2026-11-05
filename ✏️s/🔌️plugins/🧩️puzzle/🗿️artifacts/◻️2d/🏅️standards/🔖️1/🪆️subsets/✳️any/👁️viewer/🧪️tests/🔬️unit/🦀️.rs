@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::schema::records::PUZZLE2D_DIALECT;
-use semio_framework_plugin::ArtifactViewer;
+use semio_plugin::ArtifactViewer;
 #[allow(unused_imports)]
 use crate::viewer::puzzle2d::modes::view;
 #[allow(unused_imports)]
@@ -7,33 +7,33 @@ use crate::viewer::puzzle2d::modes::view::windows::board;
 #[allow(unused_imports)]
 use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA};
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoPresence;
+use semio_plugin::NoPresence;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoPresenceMutation;
+use semio_plugin::NoPresenceMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoTransient;
+use semio_plugin::NoTransient;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::NoTransientMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ViewEmit;
+use semio_plugin::ViewEmit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Viewer;
+use semio_plugin::Viewer;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::puzzle2d::*;

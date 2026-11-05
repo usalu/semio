@@ -1,7 +1,7 @@
 //! ⚠️ Dynamic diagnostic rows copy only bounded original UTF8 fragments into their final contiguous String owner.
 use crate::{LayoutMutationSource,LayoutMutationView as LayoutMutation};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_os_kernel::{RetainedFieldPreparation,MutationMessage,MutationMessageLedgerRetirement};
+use semio_os_kernel::{RetainedFieldPreparation,MutationMessage,MutationMessageLedgerRetirement};
 use semio_framework_diagnostic::{Severity,FaultCode};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerSptN where Op
         record: "ChangedLayerSptN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change SPT blow count N of the soil layer", "Bodenschicht: SPT-Schlagzahl N ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change SPT blow count N of the soil layer", "Bodenschicht: SPT-Schlagzahl N ändern")
     }
 }
 

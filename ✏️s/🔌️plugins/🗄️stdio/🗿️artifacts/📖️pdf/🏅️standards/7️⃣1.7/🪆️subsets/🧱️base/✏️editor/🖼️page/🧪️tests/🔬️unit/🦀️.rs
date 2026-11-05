@@ -1,7 +1,7 @@
 use crate::standards::v1_7::subsets::base::schema::mutations::set_font::SetFont;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAnnotation, PdfAppearanceEntry, PdfBaseEncoding, PdfColorSpace, PdfDestination, PdfEncryptionAlgorithm, PdfFont, PdfLineCap, PdfFontKind, PdfFontProgram, PdfFormFieldKind, PdfFunction, PdfFormXObject, PdfImageBody, PdfImageMask, PdfObject, PdfOpenAction, PdfPatternKind, PdfSimpleEncoding, PdfPageLabelStyle, PdfShadingKind};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use serde_json::Value;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
@@ -10,59 +10,59 @@ use crate::standards::v1_7::subsets::base::schema::mutations::{insert_object::In
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfAction, PdfAppearance, PdfBorderStyle, PdfCharProc, PdfDate, PdfDestinationFit, PdfDictEntry, PdfEmbeddedFile, PdfEncryption, PdfExtGState, PdfFileSpecification, PdfLineJoin, PdfFontDescriptor, PdfFormField, PdfMarkInfo, PdfMarkupAnnotation, PdfMatrix, PdfNamedColorSpace, PdfNamedDestination, PdfNamedProperties, PdfOutputIntent, PdfPattern, PdfOptionalContentGroup, PdfOutlineItem, PdfPageLabelRange, PdfTextArrayItem, PdfTransparencyGroup, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude as ui;
+use semio_plugin::plugin_app_close_prelude as ui;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionId;
+use semio_plugin::ActionId;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::Buildable;
+use semio_plugin::Buildable;
 #[allow(unused_imports)]
-use semio_framework_plugin::Canvas2dScene;
+use semio_plugin::Canvas2dScene;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::FaultCode;
+use semio_plugin::FaultCode;
 #[allow(unused_imports)]
-use semio_framework_plugin::FaultOrigin;
+use semio_plugin::FaultOrigin;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasBase;
+use semio_plugin::HasBase;
 #[allow(unused_imports)]
-use semio_framework_plugin::HasChildren;
+use semio_plugin::HasChildren;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiMapBuilder;
+use semio_plugin::UiMapBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiValue;
+use semio_plugin::UiValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::WindowLayout;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutAxisNode;
+use semio_plugin::WindowLayoutAxisNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutChild;
+use semio_plugin::WindowLayoutChild;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutRoot;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutStackNode;
+use semio_plugin::WindowLayoutStackNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_plugin::WindowLayoutWindowNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
 use serde_json::json;
 use crate::editor::page::{inspector};
@@ -425,7 +425,7 @@ fn pointer_down_selects_the_hit_object_and_clears_a_miss() {
     let edit = edit_from_action("canvasPointerDown", Some(&args(vec![("x", semio_framework_value::DslValue::float(x)), ("y", semio_framework_value::DslValue::float(y))]))).expect("pointer");
     let emit = emit_page_edit(&snapshot, &edit.action, &edit.payload).expect("select");
     assert!(emit.artifact_mutations.is_empty());
-    let semio_framework_plugin::Effect::DispatchAction { action, args: effect_args, .. } = &emit.effects[0] else { panic!("select effect") };
+    let semio_plugin::Effect::DispatchAction { action, args: effect_args, .. } = &emit.effects[0] else { panic!("select effect") };
     assert_eq!(action, "interactionSelect");
     let value = serde_json::Value::from(effect_args.clone().expect("args"));
     assert_eq!(value["domainId"], "objects");
@@ -433,12 +433,12 @@ fn pointer_down_selects_the_hit_object_and_clears_a_miss() {
     assert!(value["targets"].as_str().expect("targets").contains(&text.id));
     let miss = edit_from_action("canvasPointerDown", Some(&args(vec![("x", semio_framework_value::DslValue::float(1.0)), ("y", semio_framework_value::DslValue::float(1.0))]))).expect("miss");
     let cleared = emit_page_edit(&snapshot, &miss.action, &miss.payload).expect("clear");
-    let semio_framework_plugin::Effect::DispatchAction { action, args: cleared_args, .. } = &cleared.effects[0] else { panic!("clear effect") };
+    let semio_plugin::Effect::DispatchAction { action, args: cleared_args, .. } = &cleared.effects[0] else { panic!("clear effect") };
     assert_eq!(action, "clearSelection");
     assert!(cleared_args.is_none());
     let shifted = edit_from_action("canvasPointerDown", Some(&args(vec![("x", semio_framework_value::DslValue::float(x)), ("y", semio_framework_value::DslValue::float(y)), ("shift", semio_framework_value::DslValue::Bool(true))]))).expect("shift");
     let toggled = emit_page_edit(&snapshot, &shifted.action, &shifted.payload).expect("invert");
-    let semio_framework_plugin::Effect::DispatchAction { args: effect_args, .. } = &toggled.effects[0] else { panic!("invert effect") };
+    let semio_plugin::Effect::DispatchAction { args: effect_args, .. } = &toggled.effects[0] else { panic!("invert effect") };
     let value = serde_json::Value::from(effect_args.clone().expect("args"));
     assert_eq!(value["merge"], "invertive");
     let moved = emit_page_edit(&snapshot, "canvasPointerMove", &edit.payload).expect("move");
@@ -608,7 +608,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     apply(&mut edited, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(vector.id.clone())), ("field", semio_framework_value::DslValue::String("x".into())), ("y", semio_framework_value::DslValue::float(20.0)), ("value", semio_framework_value::DslValue::float(44.0))]))).unwrap());
     let moved = objects(&edited).into_iter().find(|object| object.id == vector.id).expect("vector");
     assert!((moved.x - 44.0).abs() < 0.01);
-    let node = render_inspector(&snapshot, Some(&text.id), "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::UiPublicationRevision(17), semio_framework_ui_locale::Locale::En).expect("inspector");
+    let node = render_inspector(&snapshot, Some(&text.id), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::En).expect("inspector");
     let mut names = Vec::new();
     let mut shown = Vec::new();
     collect_inspector(&node, &mut names, &mut shown);
@@ -620,7 +620,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     apply(&mut edited, edit_from_action("set-font", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(text.id.clone())), ("field", semio_framework_value::DslValue::String("text".into())), ("value", semio_framework_value::DslValue::String("Times-Roman".into()))]))).unwrap());
     assert!(edited.fonts.iter().any(|font| font.base_font() == "Times-Roman"));
     let image = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).expect("image");
-    let image_panel = render_inspector(&snapshot, Some(&image.id), "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::UiPublicationRevision(17), semio_framework_ui_locale::Locale::En).expect("image inspector");
+    let image_panel = render_inspector(&snapshot, Some(&image.id), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::En).expect("image inspector");
     let mut image_names = Vec::new();
     let mut image_shown = Vec::new();
     collect_inspector(&image_panel, &mut image_names, &mut image_shown);
@@ -628,7 +628,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     assert!(image_shown.iter().any(|value| value == "0"));
     apply(&mut edited, edit_from_action("set-resource-detail", Some(&args(vec![("object", semio_framework_value::DslValue::String(image.text.clone())), ("text", semio_framework_value::DslValue::String("image.interpolate".into())), ("field", semio_framework_value::DslValue::String("x".into())), ("value", semio_framework_value::DslValue::float(1.0))]))).unwrap());
     assert!(edited.images[0].interpolate);
-    let empty = render_inspector(&snapshot, None, "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::UiPublicationRevision(17), semio_framework_ui_locale::Locale::De).expect("empty inspector");
+    let empty = render_inspector(&snapshot, None, "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::De).expect("empty inspector");
     let mut empty_names = Vec::new();
     let mut empty_shown = Vec::new();
     collect_inspector(&empty, &mut empty_names, &mut empty_shown);
@@ -641,13 +641,13 @@ fn selected_object_fields_commit_through_the_value_argument() {
     assert_eq!(edited.info.title.as_deref(), Some("Title"));
 }
 
-fn collect_inspector(node: &semio_framework_ui_contract::BuiltNode, names: &mut Vec<String>, shown: &mut Vec<String>) {
+fn collect_inspector(node: &semio_ui_contract::BuiltNode, names: &mut Vec<String>, shown: &mut Vec<String>) {
     for binding in node.bindings.iter() {
         names.push(binding.action.name.as_str().to_string());
     }
-    if let semio_framework_ui_contract::Component::Input(input) = &node.component {
+    if let semio_ui_contract::Component::Input(input) = &node.component {
         assert!(input.draft_target.is_some(), "every PDF inspector input has an explicit semantic draft target");
-        assert_eq!(input.publication_revision, Some(semio_framework_plugin::UiPublicationRevision(17)), "every PDF inspector input carries the exact render publication");
+        assert_eq!(input.publication_revision, Some(semio_plugin::UiPublicationRevision(17)), "every PDF inspector input carries the exact render publication");
         shown.push(input.value.as_str().to_string());
     }
     for child in node.children.iter() {

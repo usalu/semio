@@ -431,5 +431,439 @@
       ]
     ],
     "fullRows": 42
+  },
+  "declaredJson": {
+    "floatPointers": [
+      "/camera/x",
+      "/camera/y",
+      "/camera/zoom",
+      "/nodes/0/x",
+      "/nodes/0/y",
+      "/nodes/0/radius",
+      "/nodes/0/width",
+      "/nodes/0/height",
+      "/nodes/0/scale",
+      "/nodes/0/handles/0/angle",
+      "/nodes/0/handles/0/radius",
+      "/nodes/0/handles/0/scale",
+      "/nodes/0/handles/1/angle",
+      "/nodes/1/x",
+      "/nodes/1/y",
+      "/edges/0/gap",
+      "/edges/0/shift",
+      "/edges/0/rise",
+      "/edges/0/rotation",
+      "/edges/0/turn",
+      "/edges/0/tilt",
+      "/edges/0/x",
+      "/edges/0/y",
+      "/edges/1/gap",
+      "/edges/1/shift",
+      "/edges/1/rise",
+      "/edges/1/rotation",
+      "/edges/1/turn",
+      "/edges/1/tilt",
+      "/edges/1/x",
+      "/edges/1/y",
+      "/targetRegions/0/x",
+      "/targetRegions/0/y",
+      "/targetRegions/0/width",
+      "/targetRegions/0/height",
+      "/targetRegions/1/x",
+      "/targetRegions/1/y",
+      "/targetRegions/1/width",
+      "/targetRegions/1/height",
+      "/meta/kindCatalogs/nodes/0/handles/0/angle",
+      "/meta/kindCatalogs/nodes/0/handles/0/t",
+      "/meta/kindCatalogs/nodes/0/handles/0/radius",
+      "/meta/kindCatalogs/nodes/0/handles/1/angle"
+    ],
+    "wireSchema": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/io/json/rfc8259.json",
+    "wordInputs": [
+      {
+        "name": "closed-zero",
+        "json": "{\"bits\":\"0000000000000000\"}",
+        "accepted": true
+      },
+      {
+        "name": "empty-object",
+        "json": "{}",
+        "accepted": false
+      },
+      {
+        "name": "null-required",
+        "json": "null",
+        "accepted": false
+      },
+      {
+        "name": "primitive-number",
+        "json": "1",
+        "accepted": false
+      },
+      {
+        "name": "nontext-word",
+        "json": "{\"bits\":0}",
+        "accepted": false
+      },
+      {
+        "name": "short-word",
+        "json": "{\"bits\":\"0\"}",
+        "accepted": false
+      },
+      {
+        "name": "uppercase-word",
+        "json": "{\"bits\":\"FFFFFFFFFFFFFFFF\"}",
+        "accepted": false
+      },
+      {
+        "name": "nonhex-word",
+        "json": "{\"bits\":\"000000000000000g\"}",
+        "accepted": false
+      },
+      {
+        "name": "extra-member",
+        "json": "{\"bits\":\"0000000000000000\",\"extra\":true}",
+        "accepted": false
+      },
+      {
+        "name": "duplicate-member",
+        "json": "{\"bits\":\"0000000000000000\",\"bits\":\"0000000000000000\"}",
+        "accepted": false
+      }
+    ],
+    "presenceCases": [
+      {
+        "name": "missing-required",
+        "path": "/camera/x",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "null-required",
+        "path": "/camera/x",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "missing-optional",
+        "path": "/nodes/0/radius",
+        "operation": "remove",
+        "accepted": true,
+        "nativeAbsent": true
+      },
+      {
+        "name": "null-optional",
+        "path": "/nodes/0/radius",
+        "operation": "replace",
+        "value": null,
+        "accepted": true,
+        "nativeAbsent": true
+      },
+      {
+        "name": "null-optional-catalogue",
+        "path": "/meta/kindCatalogs",
+        "operation": "replace",
+        "value": null,
+        "accepted": true,
+        "nativeAbsent": true
+      },
+      {
+        "name": "missing-schema",
+        "path": "/schema",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "null-schema",
+        "path": "/schema",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "default-camera",
+        "path": "/camera",
+        "operation": "remove",
+        "accepted": true,
+        "native": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 1.0
+        }
+      },
+      {
+        "name": "default-nodes",
+        "path": "/nodes",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "default-edges",
+        "path": "/edges",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "default-meta",
+        "path": "/meta",
+        "operation": "remove",
+        "accepted": true,
+        "native": {
+          "kindCompatibility": []
+        }
+      },
+      {
+        "name": "default-regions",
+        "path": "/targetRegions",
+        "operation": "remove",
+        "accepted": true,
+        "nativeAbsent": true
+      },
+      {
+        "name": "null-camera",
+        "path": "/camera",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "null-nodes",
+        "path": "/nodes",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "null-edges",
+        "path": "/edges",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "null-meta",
+        "path": "/meta",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "null-regions",
+        "path": "/targetRegions",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "default-anchor",
+        "path": "/nodes/0/anchor",
+        "operation": "remove",
+        "accepted": true,
+        "native": "fixed"
+      },
+      {
+        "name": "default-node-handles",
+        "path": "/nodes/0/handles",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "null-node-handles",
+        "path": "/nodes/0/handles",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "default-edge-gap",
+        "path": "/edges/0/gap",
+        "operation": "remove",
+        "accepted": true,
+        "native": 0.0
+      },
+      {
+        "name": "null-edge-gap",
+        "path": "/edges/0/gap",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "default-region-x",
+        "path": "/targetRegions/0/x",
+        "operation": "remove",
+        "accepted": true,
+        "native": 0.0
+      },
+      {
+        "name": "null-region-x",
+        "path": "/targetRegions/0/x",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "default-region-hidden",
+        "path": "/targetRegions/0/hidden",
+        "operation": "remove",
+        "accepted": true,
+        "native": false
+      },
+      {
+        "name": "default-compatibility-direction",
+        "path": "/meta/kindCompatibility/0/bidirectional",
+        "operation": "remove",
+        "accepted": true,
+        "native": false
+      },
+      {
+        "name": "required-compatibility-specificity",
+        "path": "/meta/kindCompatibility/0/specificity",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "default-representation-tags",
+        "path": "/meta/kindCatalogs/nodes/0/representations/0/tags",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "required-representation-url",
+        "path": "/meta/kindCatalogs/nodes/0/representations/0/url",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "default-template-angle",
+        "path": "/meta/kindCatalogs/nodes/0/handles/0/angle",
+        "operation": "remove",
+        "accepted": true,
+        "native": 0.0
+      },
+      {
+        "name": "null-template-angle",
+        "path": "/meta/kindCatalogs/nodes/0/handles/0/angle",
+        "operation": "replace",
+        "value": null,
+        "accepted": false
+      },
+      {
+        "name": "required-template-id",
+        "path": "/meta/kindCatalogs/nodes/0/handles/0/id",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "default-kind-abstract",
+        "path": "/meta/kindCatalogs/nodes/0/abstract",
+        "operation": "remove",
+        "accepted": true,
+        "native": false
+      },
+      {
+        "name": "default-kind-base-roster",
+        "path": "/meta/kindCatalogs/nodes/0/baseKinds",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "default-catalogue-compatibility",
+        "path": "/meta/kindCatalogs/handles/0/compatibleWith",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "optional-author-rank",
+        "path": "/meta/kindCatalogs/nodes/0/authors/0/rank",
+        "operation": "replace",
+        "value": null,
+        "accepted": true,
+        "nativeAbsent": true
+      },
+      {
+        "name": "required-author-name",
+        "path": "/meta/kindCatalogs/nodes/0/authors/0/name",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "optional-attribute-definition",
+        "path": "/meta/kindCatalogs/nodes/0/attributes/0/definition",
+        "operation": "replace",
+        "value": null,
+        "accepted": true,
+        "nativeAbsent": true
+      },
+      {
+        "name": "required-attribute-id",
+        "path": "/meta/kindCatalogs/nodes/0/attributes/0/id",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "required-catalogue-edge-name",
+        "path": "/meta/kindCatalogs/edges/0/name",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "required-catalogue-wire-default",
+        "path": "/meta/kindCatalogs/wires/0/defaultEdgeKind",
+        "operation": "remove",
+        "accepted": false
+      },
+      {
+        "name": "default-catalogue-nodes",
+        "path": "/meta/kindCatalogs/nodes",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "default-catalogue-handles",
+        "path": "/meta/kindCatalogs/handles",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "default-catalogue-edges",
+        "path": "/meta/kindCatalogs/edges",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      },
+      {
+        "name": "default-catalogue-wires",
+        "path": "/meta/kindCatalogs/wires",
+        "operation": "remove",
+        "accepted": true,
+        "native": []
+      }
+    ],
+    "untouchedObjects": [
+      {
+        "extension": {
+          "bits": "semantic-text",
+          "x": 0.25
+        }
+      },
+      {
+        "camera": {
+          "opaque": {
+            "bits": "semantic-text",
+            "angle": 0.25
+          }
+        }
+      }
+    ]
   }
 }

@@ -11,13 +11,13 @@ use framework_editor::EditorHost;
 use js_sys;
 use infinite_world::world::{tool_run_trace, WorldAssetFault};
 use serde_json::{json, Value};
-use semio_framework_os_node_graph::GraphHost;
+use semio_os_node_graph::GraphHost;
 use semio_framework_surface::paint::{PaintTarget, RasterHost};
 use semio_framework_surface::tiled_map::MapHost;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::layout::ActionDescriptor;
 use vello::wgpu;
 
 #[path = "🆔️surface-ids-and-registry/🦀️.rs"]

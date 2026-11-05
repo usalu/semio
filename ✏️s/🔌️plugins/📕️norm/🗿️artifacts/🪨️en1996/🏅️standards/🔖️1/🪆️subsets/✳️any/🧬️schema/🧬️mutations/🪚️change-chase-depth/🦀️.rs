@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeChaseDepth where O
         record: "ChangedChaseDepth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change chase depth of the chase", "Schlitz: Schlitztiefe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change chase depth of the chase", "Schlitz: Schlitztiefe ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

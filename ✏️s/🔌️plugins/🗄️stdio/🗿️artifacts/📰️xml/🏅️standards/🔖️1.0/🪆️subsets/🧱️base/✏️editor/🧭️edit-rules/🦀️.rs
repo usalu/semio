@@ -6,7 +6,7 @@
 use crate::schema::mutations::{InsertElementPayload, RemoveElementPayload, SetAttributePayload, SetDeclarationPayload, SetDoctypePayload, SetTextPayload, XmlMutation, XmlNodePath};
 use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlNode};
 use crate::XmlSnapshot;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, SnapshotEditEvent};
 

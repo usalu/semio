@@ -30,7 +30,7 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
     for (id, descriptor) in [("brep", &*std::fs::read_to_string(fixture_path!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")).expect("flow extension descriptor")), ("list", &*std::fs::read_to_string(fixture_path!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📃️list/🧩️component/🔣️.json")).expect("flow extension descriptor"))] {
         let descriptor: serde_json::Value = serde_json::from_str(descriptor).unwrap();
         let manifest = descriptor["manifest"]["topicContributions"][0]["payload"]["manifestJson"].as_str().unwrap();
-        semio_framework_os_flow::install_flow_extension_manifest(id, manifest).unwrap();
+        semio_os_flow::install_flow_extension_manifest(id, manifest).unwrap();
     }
     let fixtures: serde_json::Value = serde_json::from_str(fixture_text!("../../../🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["analyticGraph"].as_array().unwrap() {

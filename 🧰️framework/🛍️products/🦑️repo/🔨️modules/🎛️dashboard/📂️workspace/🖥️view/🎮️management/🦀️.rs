@@ -1,6 +1,6 @@
 //! 🎮️ Guided workspace commands share the native file worker and ordinary customizable actions.
 use super::*;
-use semio_framework_ui_tui_widgets::widget::{InputState,ListState};
+use semio_ui_tui_widgets::widget::{InputState,ListState};
 
 
 
@@ -11,7 +11,7 @@ impl<H:SourceWindowPort> View<'_,H> {
         let Body::Files(files)=self.port.window(index).body else{self.effects.push(Effect::Notice(Some(self.text().source_choose_entry.as_str().into())));return;};
         if files.history{self.effects.push(Effect::Notice(Some(self.text().source_read_only.as_str().into())));return;}
         if matches!(kind,EntryAction::CreateFile|EntryAction::CreateDirectory){self.show_management_form(tui,index,kind,String::new(),None);return;}
-        let selected=match &tui.scene.node(self.port.window(index).list).content{semio_framework_ui_tui_frame::scene::NodeContent::Widget(WidgetState::List(list))=>list.selected,_=>return};
+        let selected=match &tui.scene.node(self.port.window(index).list).content{semio_ui_tui_frame::scene::NodeContent::Widget(WidgetState::List(list))=>list.selected,_=>return};
         let parent_visible=!files.directory.is_empty()&&files.query.is_empty();if parent_visible&&selected==0{return;}
         let Some(entry)=files.visible.get(selected.saturating_sub(usize::from(parent_visible))).and_then(|position|files.entries.get(*position))else{return;};let path=entry.path.clone();
         if self.management_dirty(tui,&path,None){return;}
@@ -39,11 +39,11 @@ impl<H:SourceWindowPort> View<'_,H> {
         self.source_form_paste(tui,index,text);true
     }
 
-    pub(super) fn source_form_key(&mut self,tui:&mut Tui,index:usize,key:&KeyEvent){if let Some(WidgetState::Input(input))=tui.scene.node_mut(self.port.window(index).list).widget(){if matches!(key.key,Key::Char(c)if !c.is_control()&&key.mods&(mods::CTRL|mods::ALT)==0&&input.value.encode_utf16().count()+c.len_utf16()>256){self.effects.push(Effect::Notice(Some(self.text().source_path_error.as_str().into())));return;}let _=semio_framework_ui_tui_widgets::input::input_on_key(input,key);}}
-    pub(super) fn source_form_paste(&mut self,tui:&mut Tui,index:usize,text:&str){if let Some(WidgetState::Input(input))=tui.scene.node_mut(self.port.window(index).list).widget(){if text.len()<=1024&&input.value.encode_utf16().count()+text.encode_utf16().count()<=256{let _=semio_framework_ui_tui_widgets::input::input_on_paste(input,text);}else{self.effects.push(Effect::Notice(Some(self.text().source_path_error.as_str().into())));}}}
+    pub(super) fn source_form_key(&mut self,tui:&mut Tui,index:usize,key:&KeyEvent){if let Some(WidgetState::Input(input))=tui.scene.node_mut(self.port.window(index).list).widget(){if matches!(key.key,Key::Char(c)if !c.is_control()&&key.mods&(mods::CTRL|mods::ALT)==0&&input.value.encode_utf16().count()+c.len_utf16()>256){self.effects.push(Effect::Notice(Some(self.text().source_path_error.as_str().into())));return;}let _=semio_ui_tui_widgets::input::input_on_key(input,key);}}
+    pub(super) fn source_form_paste(&mut self,tui:&mut Tui,index:usize,text:&str){if let Some(WidgetState::Input(input))=tui.scene.node_mut(self.port.window(index).list).widget(){if text.len()<=1024&&input.value.encode_utf16().count()+text.encode_utf16().count()<=256{let _=semio_ui_tui_widgets::input::input_on_paste(input,text);}else{self.effects.push(Effect::Notice(Some(self.text().source_path_error.as_str().into())));}}}
 
     fn submit_management(&mut self,tui:&mut Tui,index:usize) {
-        let value=match &tui.scene.node(self.port.window(index).list).content{semio_framework_ui_tui_frame::scene::NodeContent::Widget(WidgetState::Input(input))=>input.value.clone(),_=>return};
+        let value=match &tui.scene.node(self.port.window(index).list).content{semio_ui_tui_frame::scene::NodeContent::Widget(WidgetState::Input(input))=>input.value.clone(),_=>return};
         let Body::Files(files)=self.port.window(index).body else{return;};let request=match files.prepare_entry(&value){Ok(request)=>request,Err(error)=>{self.effects.push(Effect::Notice(Some(self.text().source_browser_error(error,files.form.as_ref().map(|form|form.path.as_str())))));return;}};
         let paths=request.management_paths();if self.management_dirty(tui,paths[0].unwrap_or(""),paths[1]){return;}
         if let Body::Files(files)=self.port.window_mut(index).body{if let Some(form)=&mut files.form{form.busy=true;}}

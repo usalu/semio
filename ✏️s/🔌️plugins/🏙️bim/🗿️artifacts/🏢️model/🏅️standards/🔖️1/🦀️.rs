@@ -3,7 +3,7 @@
 
 use crate::standards::v1::subsets;
 use semio_framework_artifact_reference::StandardId;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 
 //#region 🔖️Standard
 /// 🏅️ The complete declaration of standard `1`.
@@ -16,8 +16,8 @@ pub fn standard<A: crate::BimApplication>() -> StandardDeclaration<A> {
 pub mod artifact_items {
 //#region 🔖️Declaration
 /// 🔖️ This artifact's capability definition: standard, schema, inference, document codec and localization rows.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let codec_extension = format!("{}:{}:bim", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA.chars().count(), semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA);
     let rows: Vec<(&str, &str, &str, Vec<(&str, &str)>, Option<(&str, &str)>)> = vec![
@@ -44,23 +44,23 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🌳️ This artifact's declaration tree root, consumed by the hub composition through `declare_artifact`: schema, io (native codec and the IFC, glTF and SVG hops), viewer, editor and examples of every subset.
-pub fn artifact<A: BimApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: BimApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     ArtifactDeclaration { kind: semio_framework_artifact_reference::ArtifactKindId::parse(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT.artifact_kind).expect("canonical BIM kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait BimApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp>>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp>>>
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>>>
 {
 }
 
 impl<A> BimApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>>>
 {
 }
 //#endregion 🔖️Declaration

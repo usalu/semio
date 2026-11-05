@@ -11,8 +11,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change site elevation to {} m", self.new_elevation_m), &format!("Höhe des Standorts auf {} m ändern", self.new_elevation_m))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change site elevation to {} m", self.new_elevation_m), &format!("Höhe des Standorts auf {} m ändern", self.new_elevation_m))
     }
 }
 

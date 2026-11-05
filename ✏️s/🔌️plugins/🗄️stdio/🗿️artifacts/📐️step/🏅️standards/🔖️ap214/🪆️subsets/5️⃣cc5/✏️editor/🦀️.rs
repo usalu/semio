@@ -6,40 +6,40 @@ use crate::editor::step_cc5::modes::edit;
 use crate::editor::step_cc5::modes::edit::windows::main;
 use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation;
 use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
+use semio_plugin::EditorApp;
+use semio_plugin::InteractiveJobClassification;
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::schema::mutations::edit_rules;
@@ -117,10 +117,10 @@ fn step_cc5_editor_retained_reduce(
     command: &StepCc5EditCommand,
     _snapshot: &StepSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<StepCc5Editor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<StepCc5Editor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<StepCc5Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
@@ -149,7 +149,7 @@ impl ToolJobFactory for StepCc5EditorExampleFactory {
     fn payload_schema_id(&self) -> &str { STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500) }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
 }
 
 impl ArtifactOwnedToolJobFactory for StepCc5EditorExampleFactory {
@@ -164,7 +164,7 @@ pub struct StepCc5Editor;
 
 impl ArtifactEditor for StepCc5Editor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_stdio_step_base_editor::examples::demo::source()]
     }
     type Snapshot = StepSnapshot;
@@ -182,26 +182,26 @@ impl ArtifactEditor for StepCc5Editor {
     const DIALECT: Dialect = STEP_CC5_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STEP_CC5_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.step@ap214", extension: ".step", media_type: "model/step", binary: false })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.step@ap214", extension: ".step", media_type: "model/step", binary: false })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
         Ok(semio_s_artifact_stdio_contract::part21::write_part21(&snapshot.to_part21_document()).into_bytes())
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
-        let document = semio_s_artifact_stdio_contract::part21::parse_part21(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+        let document = semio_s_artifact_stdio_contract::part21::parse_part21(text).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
         Ok(<Self::Snapshot>::from_part21_document(&document))
     }
 
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
@@ -221,16 +221,16 @@ impl ArtifactEditor for StepCc5Editor {
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx); }
         if !STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if step_cc5_editor_command_id(&original.command) != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, step_cc5_editor_command_id, STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, step_cc5_editor_retained_reduce, step_cc5_editor_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, step_cc5_editor_command_id, STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, step_cc5_editor_retained_reduce, step_cc5_editor_retained_extent))
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_publication_authority!();
@@ -241,8 +241,8 @@ impl ArtifactEditor for StepCc5Editor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); step_cc5_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->Result<StepSnapshot,semio_framework_plugin::Fault>>{Some(||{
-        <semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).map_err(|error|semio_framework_plugin::reference_birth_fault("valid authored AP214 cc5 initial owner",format_args!("{error:?}")))
+    fn reference_birth()->Option<fn()->Result<StepSnapshot,semio_plugin::Fault>>{Some(||{
+        <semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).map_err(|error|semio_plugin::reference_birth_fault("valid authored AP214 cc5 initial owner",format_args!("{error:?}")))
     })}
 
     fn handle(
@@ -250,7 +250,7 @@ impl ArtifactEditor for StepCc5Editor {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -263,11 +263,11 @@ impl ArtifactEditor for StepCc5Editor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.step@ap214/cc5#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.step@ap214/cc5#editor", &semio_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -288,7 +288,7 @@ impl editing::SnapshotEditingEditor for StepCc5Editor {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_step_cc5_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_step_cc5_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(STEP_CC5_DIALECT).document(["stdio", "step"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::STEP_CC5_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_step_base_editor::examples::demo::ID, semio_s_artifact_stdio_step_base_editor::examples::demo::label())], semio_s_artifact_stdio_step_base_editor::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)

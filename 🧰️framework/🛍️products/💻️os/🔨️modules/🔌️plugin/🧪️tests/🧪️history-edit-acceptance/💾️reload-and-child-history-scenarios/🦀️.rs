@@ -15,13 +15,13 @@ where
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let archive = PluginApp::document_archive(app).await.map_err(|fault| AcceptanceError::from(fault).context("the document does not archive".into()))?;
-    let mut reloaded = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+    let mut reloaded = semio_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     reloaded.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let loaded = async {
         assert_eq!(reloaded.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         PluginApp::begin_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, archive).map_err(|fault| AcceptanceError::from(fault).context("the archive is refused".into()))?;
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-            let status = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity,cx).await).map_err(|fault| AcceptanceError::from(fault).context("the archive load faulted".into()))?;
+            let status = semio_plugin_testing_laws::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity,cx).await).map_err(|fault| AcceptanceError::from(fault).context("the archive load faulted".into()))?;
             match status.state {
                 protocol::DocumentArchiveLoadState::Ready => break,
                 protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault => return Err((format!("the archive load ends {:?}: {}", status.state, String::from_utf8_lossy(&status.fault))).into()),
@@ -121,13 +121,13 @@ where
     documents.extend(examples.iter().map(|example| (format!("example {}", example.id()), Some(example.id().to_string()))));
     let mut reloaded_documents = 0;
     for (name, example) in documents {
-        let mut saved = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+        let mut saved = semio_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
         saved.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
         let outcome = async {
             if let Some(example) = example {
                 assert_eq!(saved.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
                 Box::pin(acceptance_verb(&mut saved, CATALOGUE_EXAMPLE_ACTION_ID, vec![("exampleId", DslValue::String(example))],cx)).await.map_err(|refusal|refusal.context("the app's own example route does not load it".into()))?;
-                semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await)?;
+                semio_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await)?;
             }
             saved.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))?;
             let before = Box::pin(acceptance_document_view(&mut saved, manifest,cx)).await?;
@@ -182,7 +182,7 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+    let mut app = semio_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
         assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
@@ -192,7 +192,7 @@ where
                 return Err((format!("the seed args of {action} are not a JSON object")).into());
             };
             Box::pin(acceptance_verb(&mut app, action, args.iter().map(|(key, value)| (key.as_str(), value.clone())).collect(),cx)).await?;
-            semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await).map_err(|fault|AcceptanceError::from(fault).context(format!("the seed gesture {action} does not publish")))?;
+            semio_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await).map_err(|fault|AcceptanceError::from(fault).context(format!("the seed gesture {action} does not publish")))?;
         }
         app.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))
     }

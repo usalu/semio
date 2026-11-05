@@ -109,5 +109,14 @@
     "Puzzle5dFastenersDelta",
     "Puzzle5dTargetVolumesDelta",
     "Puzzle5dKindCompatibilityDelta"
+  ],
+  "declaredJsonOptionalWordPointers": [
+    "/parts/0/2d/width",
+    "/parts/0/grips/0/3d/radius",
+    "/targetVolumes/0/orientation/0",
+    "/targetVolumes/0/orientation/1",
+    "/targetVolumes/0/orientation/2",
+    "/targetVolumes/0/orientation/3",
+    "/kindCatalogsExtra/parts/0/grips/0/radius"
   ]
 }

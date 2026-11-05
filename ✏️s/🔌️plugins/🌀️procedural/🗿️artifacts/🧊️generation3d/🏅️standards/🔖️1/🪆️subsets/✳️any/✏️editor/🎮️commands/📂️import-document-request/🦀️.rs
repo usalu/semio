@@ -15,8 +15,8 @@ use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io::document_io;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🪪️ This app's own file-open request id — distinct from every other plugin's in the repo
@@ -47,7 +47,7 @@ pub fn emit(payload: &ImportDocumentRequest, host: &semio_framework_artifact_flo
     };
     let accept = if target.is_some() { ".png,.jpg,.jpeg".into() } else { document_io::import_accept_filter().map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_IO_IMPORT_ACCEPT), error.to_string()))? };
     Ok(Emit::effect(Effect::RequestFileOpen {
-        req: semio_framework_plugin::RequestId(GENERATION3D_IMPORT_REQUEST_ID),
+        req: semio_plugin::RequestId(GENERATION3D_IMPORT_REQUEST_ID),
         accept,
         read_as: Some("dataUrl".into()),
         import_action: GENERATION3D_IMPORT_ACTION.into(),

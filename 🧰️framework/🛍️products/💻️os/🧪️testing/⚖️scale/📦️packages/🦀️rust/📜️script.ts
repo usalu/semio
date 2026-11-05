@@ -7,13 +7,13 @@ import { runBuildWasmScript } from "../../🧪️tests/🔬️rust-package-comma
 
 class CheckScript extends BundleScript {
   run(): void {
-    runCargo(["check", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-scale-fixture", "--all-targets"], this.root);
+    runCargo(["check", "--manifest-path", "Cargo.toml", "-p", "semio-os-scale-fixture", "--all-targets"], this.root);
   }
 }
 
 class CheckWasmScript extends BundleScript {
   run(): void {
-    runCargo(["check", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-scale-fixture", "--target", "wasm32-wasip2"], this.root);
+    runCargo(["check", "--manifest-path", "Cargo.toml", "-p", "semio-os-scale-fixture", "--target", "wasm32-wasip2"], this.root);
   }
 }
 
@@ -25,7 +25,7 @@ class BuildWasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(): void {
-    runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-scale-fixture", "--lib"], this.root);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-scale-fixture", "--lib"], this.root);
   }
 }
 

@@ -13,8 +13,8 @@ pub struct RemoveRecord {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for RemoveRecord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "record", kind: "remove-record", record: "RemoveRecord" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove record", "Datensatz entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove record", "Datensatz entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

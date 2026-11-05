@@ -1,8 +1,8 @@
 //! 🧪️ Exact serde operation wire and same-thread allocator witnesses across admitted copy and cancellation turns.
-use semio_framework_os_store_operation_wire::*;
+use semio_os_store_operation_wire::*;
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::RetainedCloneGrant};
 use semio_framework_pack_json::ArtifactCanonicalJsonNode;
-use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
+use semio_os_store_canonical_json::ArtifactCanonicalJson;
 
 fn original_codec(source:ArtifactPreparedOperationSource<'_>)->ArtifactPreparedOperationCursor{
     let(mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactPreparedOperationCursor::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));

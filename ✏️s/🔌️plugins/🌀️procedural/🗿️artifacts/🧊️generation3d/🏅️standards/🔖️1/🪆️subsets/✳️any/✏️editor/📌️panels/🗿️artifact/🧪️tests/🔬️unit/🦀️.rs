@@ -2,20 +2,20 @@ use super::*;
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::graph_outline;
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_OUTLINE_NODES;
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_OUTLINE_WIRES;
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 const DOCUMENT_ROWS_LAW: &str = include_str!("../🧫️fixtures/🔬️unit/🔣️.json");
 /// 🧾️ The law fixture's document tree, projected through the same borrowed projection the flow
 /// window's outline law uses, so both trees are read as one renderer-neutral shape.
 fn law_document_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(DOCUMENT_ROWS_LAW).expect("document rows law json");
-    let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
-    let dag = FlowHost::project_dag_snapshot(&fixture, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let fixture = semio_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
+    let dag = FlowHost::project_dag_snapshot(&fixture, &semio_os_flow::flow_neuron_kind_info_map());
     let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
-    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("document tree builds");
     fixture.retire_cold();
-    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(outline)).expect("document tree projects");
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(outline)).expect("document tree projects");
     serde_json::from_str(&projection).expect("document projection json")
 }
 
@@ -111,9 +111,9 @@ fn oversized_graph() -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
 }
 
 fn outline_projection(windows: &TreeWindows<'_>, nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord]) -> serde_json::Value {
-    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let outline = graph_outline(windows, nodes, edges, None, labels).expect("outline builds");
-    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(outline)).expect("outline projects");
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(outline)).expect("outline projects");
     serde_json::from_str(&projection).expect("outline projection json")
 }
 
@@ -137,7 +137,7 @@ fn window_of(node: &serde_json::Value) -> (u64, u64, usize) {
 }
 
 fn window_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW (a): an oversized document states its full extent and materialises at most its slice.

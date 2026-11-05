@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertBarPoint where Op:
         record: "InsertedBarPoint",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bar point {}", self.bar_point.id), &format!("Bewehrungsstab {} einfügen", self.bar_point.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert bar point {}", self.bar_point.id), &format!("Bewehrungsstab {} einfügen", self.bar_point.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

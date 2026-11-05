@@ -12,6 +12,8 @@ pub(super) struct Pending {
     pub(super) prange: (f64, f64),
 }
 
+semio_framework_value::artifact_retire_leaf!(Pending);
+
 /// 🔀 One (face-of-A, face-of-B) imprint unit: intersect the two supports, clip every resulting
 /// curve to both trims, and queue the imprint each side owes. The atomic unit of
 /// [`BooleanPhase::Imprint`] — extracted verbatim out of the former `exact_imprint_boolean`'s inner

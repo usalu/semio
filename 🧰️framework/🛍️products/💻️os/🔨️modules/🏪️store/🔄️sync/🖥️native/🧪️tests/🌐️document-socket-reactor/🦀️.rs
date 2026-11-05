@@ -1,7 +1,7 @@
 //! 🌐️ The document-socket reactor port: one shared reactor, entered scopes, detached tasks and the ordered event pump. See [`super`].
 
 use super::{pump_events, DocumentSocketReactor};
-use semio_framework_os_store_sync::ArtifactEvent;
+use semio_os_store_sync::ArtifactEvent;
 use std::sync::mpsc;
 use std::time::Duration;
 

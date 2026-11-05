@@ -13,13 +13,13 @@ async fn definition_declares_a_table_window_keeping_the_kit_action() {
 async fn every_authored_action_is_localized_in_english_and_german() {
     for action in actions() {
         assert!(
-            semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework_ui_locale::Locale::En) != action.label.resolve(terminology, semio_framework_ui_locale::Locale::De)),
+            semio_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_ui_locale::Locale::En) != action.label.resolve(terminology, semio_ui_locale::Locale::De)),
             "action {} is not really translated",
             action.id
         );
         for arg in &action.args {
             assert!(
-                semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| arg.label.resolve(terminology, semio_framework_ui_locale::Locale::En) != arg.label.resolve(terminology, semio_framework_ui_locale::Locale::De)),
+                semio_ui_locale::Terminology::ALL.iter().all(|&terminology| arg.label.resolve(terminology, semio_ui_locale::Locale::En) != arg.label.resolve(terminology, semio_ui_locale::Locale::De)),
                 "arg {} of action {} is not really translated",
                 arg.id,
                 action.id
@@ -35,7 +35,7 @@ fn zone(id: u32, name: &str) -> crate::model::Zone {
 
 /// 📊️ The table's row records, read the way both hosts read them: the scene spine with its paged `rows` lane merged back in.
 fn rows(table: &BuiltNode) -> Vec<serde_json::Value> {
-    let scene = semio_framework_plugin::artifact_app_laws::built_surface_scene::<semio_framework_plugin::TableScene>(table).expect("the table scene decodes");
+    let scene = semio_plugin::artifact_app_laws::built_surface_scene::<semio_plugin::TableScene>(table).expect("the table scene decodes");
     serde_json::from_str(&scene.rows_json).expect("the rows lane is JSON")
 }
 

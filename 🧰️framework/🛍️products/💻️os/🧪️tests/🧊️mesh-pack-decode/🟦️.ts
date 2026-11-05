@@ -4,7 +4,7 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 /**
  * 🧊️ The TypeScript half of the cross-language preview-mesh wire contract. Rust encodes the golden
- * vector in `semio-framework-os-flow`'s `flow_mesh_pack_wire` test; this decodes the SAME base64
+ * vector in `semio-os-flow`'s `flow_mesh_pack_wire` test; this decodes the SAME base64
  * bytes out of the SAME fixture, so a drift on either side fails on both.
  */
 export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/framework/packs"), "decodeMeshPackBody" | "decodeMeshPackChunks">, source: TestSource): Promise<void> {

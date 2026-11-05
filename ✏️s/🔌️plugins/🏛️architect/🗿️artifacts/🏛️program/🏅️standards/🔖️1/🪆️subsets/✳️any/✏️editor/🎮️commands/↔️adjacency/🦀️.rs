@@ -8,7 +8,7 @@ pub mod set_adjacency_field {
     use crate::standards::v1::subsets::any::schema::{kernel::EntityId, snapshot::ProgramSnapshot};
     use semio_framework_value::DslValue as Value;
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "set-adjacency-field")]
@@ -39,7 +39,7 @@ pub mod set_adjacency_kind {
     use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::{kernel::EntityId, snapshot::ProgramSnapshot};
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "set-adjacency-kind")]
@@ -95,7 +95,7 @@ pub mod set_adjacency_filter {
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "set-adjacency-filter")]

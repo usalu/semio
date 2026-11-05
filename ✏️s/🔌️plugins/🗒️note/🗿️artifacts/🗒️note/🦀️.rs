@@ -1,9 +1,9 @@
 //! 📝️ Note artifact — the document entity this plugin's app edits: an infinite-canvas block tree
 //! (text/image/table/math/ink/group blocks).
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 use semio_framework_value_derive::{FromValue};
@@ -21,9 +21,9 @@ use std::collections::BTreeMap;
 /// machinery this comment block's own `"composer"` rows once cross-checked against is deleted
 /// (`🚪️io/🦀️.rs`'s `io()` replaces it); the capability rows themselves are inert now, kept
 /// only because nothing on this pass's boundary reads or removes `definition()`'s callers.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.note.note.standard.v1", "standard", "1", &[], None),
         ("s.note.note.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.note.note.schema.artifact", "schema", "s.note.note", &[("schema", "s.note.note")], None),
@@ -64,13 +64,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// en/de localized names (`"Note"`/`"Notiz"`) still live on `definition()`'s kept
 /// `ArtifactCapability` rows (debt D1) — wiring them into this field is real follow-up work, not
 /// required for this pass (`📓️recipe-subset.md` §4c, matches the stdio pilot's identical deviation).
-pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>
+pub fn artifact<PA>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::note::NotePlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::note::NoteViewer>>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<editor::note::NotePlayApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<viewer::note::NoteViewer>>>,
 {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.note.note").expect("canonical note kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }

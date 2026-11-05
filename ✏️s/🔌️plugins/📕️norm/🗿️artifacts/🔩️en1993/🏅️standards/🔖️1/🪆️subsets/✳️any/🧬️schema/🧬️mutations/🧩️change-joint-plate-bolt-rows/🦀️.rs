@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlateBoltRows
         record: "ChangedJointPlateBoltRows",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bolt rows n_1 along the line of action of the joint plate", "Anschlussblech: Schraubenreihen n_1 in Kraftrichtung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bolt rows n_1 along the line of action of the joint plate", "Anschlussblech: Schraubenreihen n_1 in Kraftrichtung ändern")
     }
 }
 

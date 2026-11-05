@@ -35,7 +35,7 @@ pub fn dv(value: Value) -> DslValue {
     /// 🎟️ Validates a physical demand within the caller-authored fixture close ceiling.
     #[doc(hidden)]
 pub fn fixture_close_grant(demand:semio_framework_value::RetirementDemand)->semio_framework_value::retained_clone::RetainedCloneGrant{
-        let grant=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
+        let grant=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
         assert!(grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"demand exceeds the original fixture close policy");
         grant
     }
@@ -43,7 +43,7 @@ pub fn fixture_close_grant(demand:semio_framework_value::RetirementDemand)->semi
     /// 🎟️ Checks the next physical demand against the fixture's original close policy.
     #[doc(hidden)]
 pub fn job_close_grant<J: semio_framework_job::InteractiveJob + ?Sized>(job: &J) -> semio_framework_value::retained_clone::RetainedCloneGrant {
-        let grant=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
+        let grant=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
         let demand=semio_framework_value::RetirementDemand{copy_bytes:job.next_close_copy_byte_demand().expect("quoted copy demand"),capacity_bytes:job.next_close_capacity_byte_demand(grant.maximum_copy_bytes).expect("quoted capacity demand"),release_bytes:job.next_close_release_byte_demand().expect("quoted release demand"),depth:job.next_close_depth_demand().expect("quoted depth demand")};
         assert!(grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"job demand exceeds its original fixture close policy");
         grant
@@ -62,19 +62,19 @@ pub fn drive_job_close<J:semio_framework_job::InteractiveJob+?Sized>(job:&mut J,
 
     /// 🎟️ Spends exactly the quoted maintenance turn of a hosted app.
     #[doc(hidden)]
-pub fn app_maintenance_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+pub fn app_maintenance_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-        let grant = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance;
+        let grant = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance;
         assert!(grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"app demand exceeds its original fixture maintenance policy");
-        let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.maintenance_step(same,grant)?,app.maintenance_terminal_is_empty())))?;
+        let step = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.maintenance_step(same,grant)?,app.maintenance_terminal_is_empty())))?;
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "maintenance receipt {step:?} exceeds its exact grant {grant:?}");
         Ok(step)
     }
 
     /// ✍️ Authors one `Apply` of document mutations under the plugin's caller-owned identity authority.
     #[doc(hidden)]
-pub async fn apply_test_mutations(store: &mut store::ArtifactStore<semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot, semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation>, mutations: Vec<semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation>) -> Result<store::CommandReceipt, store::VcsError> {
-        semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations, transaction: None }, &mut identity)).await)
+pub async fn apply_test_mutations(store: &mut store::ArtifactStore<semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot, semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation>, mutations: Vec<semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation>) -> Result<store::CommandReceipt, store::VcsError> {
+        semio_plugin_testing_laws::with_authoring_identity!(|identity| Box::pin(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations, transaction: None }, &mut identity)).await)
     }
 
     /// 🪪️ `TestApp`'s one dialect coordinate (contract §1) — every canonical id this module needs

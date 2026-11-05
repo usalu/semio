@@ -19,7 +19,7 @@ const guide=readFileSync(join(repo,"📓️build-guide.md"),"utf8"),readme=readF
 
 test("the machine default is the sum of the declared capacities and loose roots and every weight is a store's share of it (independent Python largest-remainder split)",()=>{
  const stores=machine.stores.map(store=>({id:store.id,capacity:store.partition!==undefined?partitions[store.partition as keyof typeof partitions].capacityBytes:null}));
- const loose=ledger.roots.repository.maximumBytes+ledger.roots.native.maximumBytes;
+ const loose=Object.values(ledger.roots).reduce((sum,root)=>sum+root.maximumBytes,0);
  const program="import json,sys\nv=json.load(sys.stdin)\nrows=[(s['id'],s['capacity'] if s['capacity'] is not None else v['loose']) for s in v['stores']]\ntotal=sum(c for _,c in rows)\nraw=[(i,c*10000/total) for i,c in rows]\nout={i:int(r) for i,r in raw}\nleft=10000-sum(out.values())\nfor i,r in sorted(raw,key=lambda x:(-(x[1]-int(x[1])),x[0]))[:left]: out[i]+=1\nprint(json.dumps({'total':total,'weights':out}))";
  const run=spawnSync("python3",["-I","-c",program],{input:JSON.stringify({stores,loose}),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
  const expected=JSON.parse(run.stdout) as {total:number;weights:Record<string,number>};

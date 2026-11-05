@@ -23,11 +23,11 @@ const PUZZLE3D_MEASURED_STEP_BUDGET: std::time::Duration = std::time::Duration::
 /// itself enforces at runtime; what a test can prove is that the WORK inside a turn fits it.
 const PUZZLE3D_MEASURED_STEP_RUNS: u32 = 5;
 
-fn measured_step_loop(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, work: &mut dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig, context: &semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>, guard: usize, label: &str) -> Vec<std::time::Duration> {
+fn measured_step_loop(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, work: &mut dyn semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig, context: &semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>, guard: usize, label: &str) -> Vec<std::time::Duration> {
 
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let mut turns = Vec::with_capacity(guard);
     loop {
         assert!(turns.len() <= guard, "{label} step() did not reach Complete within {guard} bounded turns");
@@ -42,22 +42,22 @@ fn measured_step_loop(original: &mut semio_s_plugin_puzzle_retained::testing::Or
     turns
 }
 
-fn measured_tool_work(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, tool_id: &'static str, run: u32) -> (Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>, semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>) {
-    let instance = Puzzle3dInstanceBinding { app_instance_id: 9_000 + run, parent_document_id: format!("measured-{tool_id}-{run}"), owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default())) };
+fn measured_tool_work(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, tool_id: &'static str, run: u32) -> (Box<dyn semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>, semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>) {
+    let instance = Puzzle3dInstanceBinding { app_instance_id: 9_000 + run, parent_document_id: format!("measured-{tool_id}-{run}"), owner: semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default())) };
     let app_instance_id = instance.app_instance_id;
-    let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>> = match tool_id {
+    let work: Box<dyn semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>> = match tool_id {
         "acceptSuggestion" => original.construct_boxed(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope).map(|(work, progress)| (work.bound(instance), progress))),
         "setActiveExample" => original.construct_boxed(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope)),
         "openVortexSuggestions" => Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(instance.clone())),
         _ => Box::new(semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
     };
-    let context = semio_framework_plugin::app::ArtifactOwnedToolJobContext::new(
+    let context = semio_plugin::app::ArtifactOwnedToolJobContext::new(
         app_instance_id,
         Some(measured_view_state()),
         [0; 32],
         0,
         0,
-        semio_framework_plugin::app::ArtifactOwnedToolJobSnapshots { children: Default::default(), draft: Default::default(), transient: Default::default(), window_config: None, window_transient: None },
+        semio_plugin::app::ArtifactOwnedToolJobSnapshots { children: Default::default(), draft: Default::default(), transient: Default::default(), window_config: None, window_transient: None },
     );
     (work, context)
 }
@@ -89,11 +89,11 @@ fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot
     (best.len(), worst)
 }
 
-fn measured_view_state() -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel {
+fn measured_view_state() -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel {
         window_id: Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.to_string()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: WINDOW_KIND_ID.to_string(), window_kind_id: WINDOW_KIND_ID.to_string() }],
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: WINDOW_KIND_ID.to_string(), window_kind_id: WINDOW_KIND_ID.to_string() }],
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 

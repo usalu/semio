@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteBelowAlluviumV
         record: "ChangeSiteBelowAlluviumVSMS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear wave velocity of the substratum below the alluvium (E indicator)", "Scherwellengeschwindigkeit des Untergrunds unter der Alluvionsschicht (E-Kennzeichen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear wave velocity of the substratum below the alluvium (E indicator)", "Scherwellengeschwindigkeit des Untergrunds unter der Alluvionsschicht (E-Kennzeichen) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-below-alluvium-vsms".into()]

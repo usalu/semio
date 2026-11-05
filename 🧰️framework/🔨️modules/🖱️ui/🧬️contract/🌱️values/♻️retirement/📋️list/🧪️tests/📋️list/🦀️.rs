@@ -1,6 +1,6 @@
 //! 📋️ Fixed-list initialized ownership and cold serde oracle laws.
-use semio_framework_ui_contract_values::*;
-use semio_framework_ui_contract_values::testkit::*;
+use semio_ui_contract_values::*;
+use semio_ui_contract_values::testkit::*;
 
 use semio_framework_test_fixtures::fixture_text;
 

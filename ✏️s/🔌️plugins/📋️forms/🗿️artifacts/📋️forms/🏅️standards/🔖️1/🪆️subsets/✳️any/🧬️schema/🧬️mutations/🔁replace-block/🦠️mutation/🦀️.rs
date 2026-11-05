@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplacedBlock" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace block \"{}\"", self.block.id), &format!("Block \"{}\" ersetzen", self.block.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace block \"{}\"", self.block.id), &format!("Block \"{}\" ersetzen", self.block.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block.id.clone()]

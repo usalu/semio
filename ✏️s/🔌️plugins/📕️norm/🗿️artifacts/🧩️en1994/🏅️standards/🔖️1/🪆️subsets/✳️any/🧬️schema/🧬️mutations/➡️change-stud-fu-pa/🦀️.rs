@@ -17,8 +17,8 @@ pub struct ChangeStudFUPa {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeStudFUPa where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_stud_f_u_pa::ChangeStudFUPa> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stud-f-u-pa", kind: "change-stud-fu-pa", record: "ChangedStudFUPa" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change shear stud: Ultimate strength", "Kopfbolzendübel: Zugfestigkeit ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change shear stud: Ultimate strength", "Kopfbolzendübel: Zugfestigkeit ändern")
     }
 }
 

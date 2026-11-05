@@ -1,7 +1,7 @@
 //! 🧩️ Original document block fields and scalar forest traversal stay in their caller workspace.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
-use semio_framework_os_kernel::sqlite_snapshot::{transfer,artifact::{RowIndexStorage,reconstruct_text_into,reconstruct_blob_into}};
+use semio_os_kernel::sqlite_snapshot::{transfer,artifact::{RowIndexStorage,reconstruct_text_into,reconstruct_blob_into}};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace;
 
 /// 🪆️ Stores every partial block and all relational scratch in the original outer prefix.

@@ -118,7 +118,7 @@ fn browser_document_generation(surface_id: &str, revision: u64) -> u64 {
     }
     MINTED.with(|cell| {
         let mut minted = cell.borrow_mut();
-        let generation = semio_framework_ui_wgpu_engine_surface::ui_document_ingress_generation(minted.get(surface_id).copied(), revision);
+        let generation = semio_ui_wgpu_engine_surface::ui_document_ingress_generation(minted.get(surface_id).copied(), revision);
         minted.insert(surface_id.to_string(), (revision, generation));
         generation
     })
@@ -268,7 +268,7 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 /// 📋️ Loads only the completed components named by the build runtime manifest.
 pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
     use crate::native_runtime_modules::{NativeJsonPages, NativeRuntimeManifest};
-    let bytes=semio_framework_os_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(&modules_root.join("🔣️runtime.json"),NATIVE_RUNTIME_MANIFEST_MAX_BYTES).await.map_err(|error|error.to_string())?;
+    let bytes=semio_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(&modules_root.join("🔣️runtime.json"),NATIVE_RUNTIME_MANIFEST_MAX_BYTES).await.map_err(|error|error.to_string())?;
     let runtime=NativeRuntimeManifest::read(NativeJsonPages::new(std::iter::once(bytes.bytes())),plugin_filter);
     drop(bytes);
     let mut entries = Vec::new();
@@ -285,18 +285,18 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
 /// re-encodes to exactly its own bytes, is version 1, names this plugin, and the receipt binds exactly that package and
 /// those descriptor bytes — the same admission the semio MCP remote workspace applies to the same bytes.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn load_resolved_program(plugin_id: &str, component: &std::path::Path, descriptor: &std::path::Path, receipt: &semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1) -> Result<ProgramBridgeEntry, String> {
+pub async fn load_resolved_program(plugin_id: &str, component: &std::path::Path, descriptor: &std::path::Path, receipt: &semio_os_kernel::os_component_receipt::ComponentReceiptV1) -> Result<ProgramBridgeEntry, String> {
 
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-    let bytes=semio_framework_os_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(descriptor,semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await.map_err(|error|error.to_string())?;
+    let bytes=semio_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(descriptor,semio_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await.map_err(|error|error.to_string())?;
     let wire=bytes.bytes();
     let value = store::pack_rt::decode_wire_value(wire).map_err(|_| "hub execution-target descriptor is not a canonical pack".to_string())?;
     let package = semio_framework::manifest::PackageDescriptor::from_value(value.clone()).map_err(|_| "hub execution-target descriptor is not a package descriptor".to_string())?;
     if store::pack_rt::encode_wire_value(&value).as_slice() != wire || store::pack_rt::encode_wire_value(&package.to_value()).as_slice() != wire {
         return Err("hub execution-target descriptor is not its exact canonical package projection".into());
     }
-    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || receipt.binds(semio_framework_os_kernel::os_component_receipt::ComponentProfileV1::Release, plugin_id, &package.package_id, &receipt.wasm_sha256, &semio_framework_hash::sha256_hex(wire)).is_err() {
+    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || receipt.binds(semio_os_kernel::os_component_receipt::ComponentProfileV1::Release, plugin_id, &package.package_id, &receipt.wasm_sha256, &semio_framework_hash::sha256_hex(wire)).is_err() {
         return Err((format!("hub execution-target descriptor identity mismatch: {plugin_id}")).into());
     }
     ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(receipt.wasm_sha256.clone()), component.to_path_buf(), package.manifest)
@@ -311,7 +311,7 @@ const NATIVE_RUNTIME_MANIFEST_MAX_BYTES: u64 = 1024 * 1024;
 #[cfg(not(target_arch = "wasm32"))]
 async fn read_descriptor_manifest(path: &std::path::Path, plugin_id: &str) -> Result<semio_framework::manifest::PackageDescriptor, String> {
 
-    let bytes=semio_framework_os_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(path,semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await.map_err(|error|error.to_string())?;
+    let bytes=semio_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(path,semio_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await.map_err(|error|error.to_string())?;
     let descriptor=serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(bytes.bytes());
     drop(bytes);
     let descriptor = descriptor.map_err(|error| format!("Native descriptor {}: {error}", path.display()))?;

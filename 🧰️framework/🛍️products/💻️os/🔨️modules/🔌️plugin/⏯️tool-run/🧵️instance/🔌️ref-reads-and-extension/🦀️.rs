@@ -4,10 +4,10 @@ use super::*;
 use semio_framework::Fault;
 use semio_framework::FaultOrigin;
 use semio_framework::FaultCode;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_os_kernel::DslValue;
+use semio_ui_locale::Terminology;
+use semio_os_kernel::DslValue;
 use semio_framework::InvocationResult;
-use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::UiAssemblyResult;
 
 impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunRef<'v, A, M, X> {
     /// 🏃️ Ledger work plus an unobserved store or settings generation change the watch still owes.
@@ -95,7 +95,7 @@ impl InstanceExtension for ToolRunExtension {
         tool_runs.terminal_is_empty()
     }
 
-    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn drive_turn<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let mut ctx = ToolRunCtx::of_extension(ctx);
         if !ctx.shared().tool_run_has_pending_work() {
             return Ok(false);
@@ -104,7 +104,7 @@ impl InstanceExtension for ToolRunExtension {
         ctx.drive_tool_run_turn(cx, identity).await?;
         if cx.retained_progress() != before {
             if !ctx.tool_runs.has_original_receipt() {
-                let progress = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?;
+                let progress = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?;
                 ctx.tool_runs.retain_original_receipt(*retained, progress)?;
             }
             return Ok(true);

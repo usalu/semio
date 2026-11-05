@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeCoastOrIsland wher
         record: "ChangedCoastOrIsland",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change coastal or island location", "Küsten- oder Insellage ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change coastal or island location", "Küsten- oder Insellage ändern")
     }
 }
 

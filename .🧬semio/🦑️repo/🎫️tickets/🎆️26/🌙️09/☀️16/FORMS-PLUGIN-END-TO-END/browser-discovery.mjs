@@ -1,0 +1,11 @@
+import { createRequire } from "node:module";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+const workspace = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../..");
+const play = join(workspace, "🏢️semio-tech/🎡️play");
+const require = createRequire(join(play, "package.json"));
+const cli = join(dirname(require.resolve("playwright/package.json")), "cli.js");
+process.chdir(workspace);
+process.env.PLAYWRIGHT_BASE_URL ??= "http://127.0.0.1:1";
+process.argv = [process.argv[0], cli, "test", "--config", join(play, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--list", "--grep", "forms (en-US|de-DE)"];
+await import(pathToFileURL(cli).href);

@@ -1,12 +1,12 @@
 //! 🌳️ Checkpoint ancestry, merge base, alternative reconciliation and the by-id merge over an envelope's history ledgers.
 
-use semio_framework_os_store_engine_core::lifted_document_materialize::now_iso;
-use semio_framework_os_store_engine_live::lifted_store::transition_retraction_closure;
-use semio_framework_os_store_space_schema::ArtifactEnvelope;
-use semio_framework_os_vcs::io::binary::checkpoint_identity::content_addressed_checkpoint_id;
-use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use semio_framework_os_vcs::io::binary::entity_identity::{mint_alternative_id, mint_change_id};
-use semio_framework_os_vcs::{Alternative, ArtifactHistoryLedger, Author, Change, Checkpoint, VcsError};
+use semio_os_store_engine_core::lifted_document_materialize::now_iso;
+use semio_os_store_engine_live::lifted_store::transition_retraction_closure;
+use semio_os_store_space_schema::ArtifactEnvelope;
+use semio_os_vcs::io::binary::checkpoint_identity::content_addressed_checkpoint_id;
+use semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_os_vcs::io::binary::entity_identity::{mint_alternative_id, mint_change_id};
+use semio_os_vcs::{Alternative, ArtifactHistoryLedger, Author, Change, Checkpoint, VcsError};
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::{HashMap, HashSet};
 
@@ -107,10 +107,10 @@ pub async fn merge_by_id<T: Clone + PartialEq>(local: &mut Vec<T>, remote: Vec<T
 /// 🪒️ The `.spr` byte log without the transitions `refused` retracts ([`transition_retraction_closure`]) — what a sync
 /// actor persists after the hub refused them — and the retracted ids.
 pub async fn retract_history_transitions_from_spr(spr: &[u8], refused: &[String]) -> Result<(Vec<u8>, Vec<String>), VcsError> {
-    let mut log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let mut log = semio_os_spr::decode_history(spr, &semio_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let retracted = transition_retraction_closure(&log.transitions, |record| record.id.as_str(), |record| record.dependencies.iter().map(String::as_str).collect(), refused);
     log.transitions.retain(|record| !retracted.contains(&record.id));
-    let options = semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..semio_framework_os_spr::EncodeOptions::default() };
-    let bytes = semio_framework_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))?;
+    let options = semio_os_spr::EncodeOptions { write_backwards_section: true, ..semio_os_spr::EncodeOptions::default() };
+    let bytes = semio_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))?;
     Ok((bytes, retracted))
 }

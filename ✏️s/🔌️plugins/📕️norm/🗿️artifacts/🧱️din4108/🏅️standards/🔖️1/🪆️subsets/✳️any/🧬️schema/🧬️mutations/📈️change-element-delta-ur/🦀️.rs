@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeElementDeltaUr wh
         record: "ChangedElementDeltaUr",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change inverted roof correction ΔUr", "Umkehrdachkorrektur ΔUr ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change inverted roof correction ΔUr", "Umkehrdachkorrektur ΔUr ändern")
     }
 }
 

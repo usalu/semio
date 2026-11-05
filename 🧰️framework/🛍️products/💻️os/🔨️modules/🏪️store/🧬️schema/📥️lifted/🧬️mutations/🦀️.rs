@@ -1,6 +1,6 @@
 //! 📥️ Trait impls of `🧬️mutations` whose trait or type belongs to `os-store-space-schema` (orphan rule, PLAN-OS-KERNEL-CRATES.md 7.7): lifted out of `🏪️store/🚪️io/📝️text/🧬️mutations/🦀️.rs`.
 use semio_framework_pack_json::ArtifactCanonicalJsonNode as Node;
-use semio_framework_os_spr::OpText;
+use semio_os_spr::OpText;
 use crate::space_history_mutations::SpaceHistoryMutation;
 use semio_framework_pack_json::ArtifactCanonicalJsonText as Text;
 use semio_framework_diagnostic::TextError;

@@ -1,0 +1,15 @@
+# Shared Build Source Trace
+
+Actual failure owner: repo library ⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts, captureNxAuthorizerSourcesV1 (capture callback at line130 at observation time). The normal build command calls captureCompilerBuildSourceClosureV1 in 🏗️build/📥️source/🔏️closure/🏗️compiler/🟦️.ts with installed=true; executeCapturedBuildSourceV1 invokes it before the selected native task dispatches. Its common runtime CLI entry captures literal/dynamic imports and declared companions irrespective of the currently selected run target.
+
+First diagnostic gate failure: Authorizer source closure capacity exceeded files1788/2048 bytes16780262/16777216. Later test-first gate85421: files1822/2048 bytes16783971/16777216, diagnostic path build/🏛️sealed/🔣️.json, origin import, chain sealed JSON → sealed module → sealed execution → build/📜️script.ts → command/runtime. No cap was changed.
+
+Capture baseline11269 independently failed ancestry lstat ENOENT at /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📖️storybook. The originating import lineage was nonenumerable and absent from its emitted error; the exact old-path chain therefore cannot honestly be recovered from that log. A current independent literal import trace finds no missing imports, consistent with concurrent Storybook relocation being completed. Storybook was not a declared runtime-data companion and its current computed-import schema row has roots=[] at build/📖️storybook/🏃️execution.
+
+Retained input trace-build-source.cjs reads source and uses the existing third-party TypeScript scanner independently. Its generated path/edge-only report fleet-build-source-trace-2026-11-04.json observed1829files17172879bytes before runtime-data discovery. This is an independent literal trace, not the authoritative source-admission census and not target execution. It identifies these current Storybook edges:
+
+- build/📜️script.ts directly imports build/📖️storybook/🏃️execution in the dormant Storybook branch.
+- build/📜️script.ts → 📥️caller/📤️child → Storybook preparation/engines (child module line40 imported for every build/test/dev/run).
+- The engines module imports root 📋️project.json (181977bytes) and the .storybook coordination implementation even when a non-Storybook run immediately returns no descendants.
+
+These are compiler-required under the current literal import graph, but incidental to the native layout task. The largest independent inputs were Bazel scopes JSON387204bytes, dependency storage TypeScript293383bytes, filesystem descriptor TypeScript206336bytes, root project181977bytes and Bazel script162591bytes. Simply skipping these reads or increasing caps would weaken ownership. Root/host subsequently repaired ownership via the narrow Storybook boundary and shared invocation extraction; host reports both actual CLI/runtime entry captures within unchanged16MiB and normal native dry-run Source admission succeeded. This lane did not edit the shared authorizer or CLI.

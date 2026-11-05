@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabTestConsolTime 
         record: "ChangedLabTestConsolTime",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Time to 90 % consolidation t₉₀ of the laboratory test", "Laborversuch: Zeit bis 90 % Konsolidation t₉₀ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Time to 90 % consolidation t₉₀ of the laboratory test", "Laborversuch: Zeit bis 90 % Konsolidation t₉₀ ändern")
     }
 }
 

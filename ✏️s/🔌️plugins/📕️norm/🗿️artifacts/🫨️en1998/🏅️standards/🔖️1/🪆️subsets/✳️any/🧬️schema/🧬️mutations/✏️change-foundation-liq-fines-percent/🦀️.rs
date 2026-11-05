@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationLiqFines
         record: "ChangeFoundationLiqFinesPercent",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Fines content of the layer", "Feinkornanteil der Schicht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Fines content of the layer", "Feinkornanteil der Schicht ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-liq-fines-percent".into()]

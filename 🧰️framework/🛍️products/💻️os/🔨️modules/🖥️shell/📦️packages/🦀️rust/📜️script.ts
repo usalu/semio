@@ -17,7 +17,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runAdmittedCargoPackageTestsV1(["semio-framework-os-shell"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-os-shell"], this.repoRoot, this.invocation, rest);
   }
 }
 

@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-svg-snapshot = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-svg-diff = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-svg-handcrafted-diff-codec-tests = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧪️tests/🔬️handcrafted-diff-codec/📦️packages/🦀️rust" }
@@ -33,7 +33,7 @@ semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
@@ -41,8 +41,8 @@ semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modu
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-hash = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-schema = { workspace = true }
@@ -54,8 +54,8 @@ semio-s-artifact-stdio-xml = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-s-artifact-stdio-svg-test-oracle = { path = "../../🔮️oracles/📦️packages/🦀️rust" }

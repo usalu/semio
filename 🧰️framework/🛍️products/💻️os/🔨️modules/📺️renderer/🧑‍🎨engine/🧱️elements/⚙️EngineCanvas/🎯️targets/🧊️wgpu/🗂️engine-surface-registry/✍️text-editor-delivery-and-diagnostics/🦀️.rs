@@ -63,12 +63,12 @@ pub struct TextEditorDeliveryInFlight {
 pub struct TextEditorDraftPublication {
     pub source: String,
     pub restore: Option<String>,
-    pub action: semio_framework_ui_action::RetainedStringAction,
+    pub action: semio_ui_action::RetainedStringAction,
 }
 
 pub struct TextEditorDeliveryPublication {
     pub source: String,
-    pub action: semio_framework_ui_action::RetainedStringAction,
+    pub action: semio_ui_action::RetainedStringAction,
     pub snapshot: TextEditorDeliverySnapshot,
     pub include_selection: bool,
 }

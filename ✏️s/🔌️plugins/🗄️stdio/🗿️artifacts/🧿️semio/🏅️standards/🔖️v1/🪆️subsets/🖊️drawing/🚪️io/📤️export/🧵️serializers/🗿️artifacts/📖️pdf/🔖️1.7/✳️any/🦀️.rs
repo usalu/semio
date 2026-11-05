@@ -14,7 +14,7 @@
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_drawing::schema::geometry::{arc_to_cubics, semio_transform_affine};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfExtGState, PdfFont, PdfLineCap, PdfLineJoin, PdfOp, PdfPage, PdfTextString};
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 

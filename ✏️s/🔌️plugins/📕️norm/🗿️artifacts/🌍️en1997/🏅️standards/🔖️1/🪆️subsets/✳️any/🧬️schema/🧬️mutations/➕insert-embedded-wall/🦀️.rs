@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertEmbeddedWall where
         verb: "insert", entity: "embedded-wall", kind: "insert-embedded-wall", record: "InsertedEmbeddedWall",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert embedded wall", "Eingespannte Wand einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert embedded wall", "Eingespannte Wand einfügen")
     }
 }
 

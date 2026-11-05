@@ -2,8 +2,8 @@
 
 use super::*;
 use semio_framework::Fault;
-use semio_framework_plugin_decl_emission::ChildEmit;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_emission::ChildEmit;
+use semio_plugin_decl_views::child_view::ChildContentView;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     /// ♻️ One bounded unit of member-run retirement: one alias of a member run's typed owners handed to its member store's

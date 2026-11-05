@@ -21,10 +21,10 @@ semio-framework = { workspace = true }
 semio-framework-2d-compute = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-din18599-checks = { workspace = true }
@@ -45,8 +45,8 @@ semio-s-artifact-norm-din18599-mutations = { workspace = true, features = ["test
 semio-s-artifact-norm-din18599-inferences = { workspace = true, features = ["test-support"] }
 semio-s-artifact-norm-din18599-model = { workspace = true, features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }

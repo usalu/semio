@@ -27,29 +27,29 @@ use crate::editor_commands::{energy_model_action, surface_class_id, ui_label, EN
 use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, ShadingSurface, Space, Surface, Zone};
 use crate::snapshot::state::EnergyRowsView;
 use crate::snapshot::EnergyModelSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_ui_contract::Label as UiLabel;
-use semio_framework_plugin::activation_target;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_window_indexed_item;
-use semio_framework_plugin::ActionId;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_ui_contract::Label as UiLabel;
+use semio_plugin::activation_target;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_window_indexed_item;
+use semio_plugin::ActionId;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "energy.model.artifact";
@@ -57,7 +57,7 @@ pub const BODY_KEY: &str = "energy.model.artifact";
 pub const TREE_NAMESPACE: &str = "energy-model-artifact";
 /// 🎯️ Ids the builder records as selected/hovered — one `UiFixedList`, so a wider selection marks
 /// its first page rather than refusing the whole render.
-const MARKED_IDS_LIMIT: usize = semio_framework_ui_contract::UI_FIXED_LIST_ITEMS;
+const MARKED_IDS_LIMIT: usize = semio_ui_contract::UI_FIXED_LIST_ITEMS;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -93,7 +93,7 @@ fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
 
 /// 🗺️ `UiMapBuilder` admits keys in ascending order only, so every caller lists them sorted.
 fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| capacity_error("energy artifact UI map admission failed"))?;
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| capacity_error("energy artifact UI map admission failed"))?;
     for (key, value) in values {
         builder.push(key.to_owned(), value).map_err(|_| capacity_error("energy artifact UI map entry admission failed"))?;
     }

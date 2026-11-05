@@ -86,7 +86,7 @@ impl SceneHost for BackpressureSceneHost {
 /// dispatched (see [`Ui::scene_at`]).
 #[test]
 fn scene_at_answers_the_component_scene_leaf_under_the_point() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.at")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -101,7 +101,7 @@ fn scene_at_answers_the_component_scene_leaf_under_the_point() {
 /// own `"window"` menu instead of inventing a surface for it.
 #[test]
 fn scene_at_answers_none_outside_every_scene() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![button_ui("b", "Button")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -115,7 +115,7 @@ fn scene_at_answers_none_outside_every_scene() {
 /// whole reason `scene_at` exists instead of dispatching an event to find out.
 #[test]
 fn scene_at_is_read_only_where_a_press_is_not() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.readonly")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -129,7 +129,7 @@ fn scene_at_is_read_only_where_a_press_is_not() {
 //#region 🪟️OverlayBodyTests
 /// 🪟️ The first `ComponentScene` leaf's arena id — overlay tests need a real content root and the
 /// façade exposes node ids only through the tree itself.
-fn first_component_scene_node(ui: &Ui, window_id: &str) -> semio_framework_ui_arena::NodeId {
+fn first_component_scene_node(ui: &Ui, window_id: &str) -> semio_ui_arena::NodeId {
     let tree = ui.tree(window_id).expect("window has a tree");
     let root = tree.root.expect("tree has a root");
     let mut stack = vec![root];
@@ -155,7 +155,7 @@ fn assert_close(left: (f32, f32), right: (f32, f32), what: &str) {
  * `PopoverContent`'s fixed positioning. */
 #[test]
 fn an_open_overlays_body_is_positioned_at_its_resolved_placement() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -177,7 +177,7 @@ fn an_open_overlays_body_is_positioned_at_its_resolved_placement() {
 /// frame, never a stored offset, so nothing has to be unwound.
 #[test]
 fn closing_an_overlay_returns_its_body_to_the_in_flow_position() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -197,7 +197,7 @@ fn closing_an_overlay_returns_its_body_to_the_in_flow_position() {
 /// one origin rule — `OverlayKind::default_placement`'s `Centered` branch.
 #[test]
 fn a_modal_overlays_body_is_centered_in_the_viewport() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.dialog")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -232,7 +232,7 @@ fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content
     let overlay_instances = |draw: &DrawList| -> usize { draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum() };
     let body = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
 
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
     drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
@@ -262,12 +262,12 @@ fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content
 #[test]
 fn frame_into_step_publishes_one_atomic_candidate_only_when_ready() {
     let body = Rect::new(12.0, 18.0, 240.0, 160.0);
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("atomic-frame", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("Accepted label"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
     drive_layout(&mut ui, "atomic-frame", body.w, body.h, &mut atlas);
     let mut target = DrawList::default();
-    target.push_solid([1.0, 2.0, 3.0, 4.0], semio_framework_ui_theme::Rgba::new(0.1, 0.2, 0.3, 1.0));
+    target.push_solid([1.0, 2.0, 3.0, 4.0], semio_ui_theme::Rgba::new(0.1, 0.2, 0.3, 1.0));
     let baseline_layers = target.layers.len();
     let baseline_quads = target.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum::<usize>();
     let mut prior_progress = None;
@@ -300,7 +300,7 @@ fn retained_frame_progress_ignores_unchanged_scene_backpressure_and_observes_ext
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
     assert_eq!(fixture["sceneBackpressure"]["externalCompleted"], serde_json::json!([0, 0, 1]));
     let body = Rect::new(0.0, 0.0, 240.0, 160.0);
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let mut host = BackpressureSceneHost { calls: 0, released: false, external_completed: 0 };
     ui.apply_tree("scene-backpressure", &stack_ui(vec![component_scene_ui("surface.backpressure")]));
@@ -340,7 +340,7 @@ fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publ
     let initial = rect(&fixture["sameSizeOriginMove"]["initial"]);
     let moved = rect(&fixture["sameSizeOriginMove"]["moved"]);
     assert_eq!((initial.w, initial.h), (moved.w, moved.h));
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("moved-origin", &stack_ui(vec![button_ui("target", "Target")]));
     drive_layout(&mut ui, "moved-origin", initial.w, initial.h, &mut atlas);
@@ -370,7 +370,7 @@ fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publ
 
 #[test]
 fn frame_with_no_scene_host_falls_back_to_the_placeholder_chrome() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.no-host")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -381,7 +381,7 @@ fn frame_with_no_scene_host_falls_back_to_the_placeholder_chrome() {
 
 #[test]
 fn frame_with_a_scene_host_routes_the_component_scene_leaf_through_it() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.host-test")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -397,7 +397,7 @@ fn frame_with_a_scene_host_routes_the_component_scene_leaf_through_it() {
 
 #[test]
 fn frame_with_a_scene_host_still_paints_ancestor_chrome_around_the_hosted_slot() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let group_node = UiNode::Group(UiGroupNode {
         id: "group".into(),

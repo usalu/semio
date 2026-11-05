@@ -1,8 +1,8 @@
 use super::*;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use semio_framework_ui_retained_tree::tree::{Node, NodeKey, WidgetSpec};
-use semio_framework_ui_declaration::IconName;
-use semio_framework_ui_locale::Label;
+use semio_ui_declaration::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_ui_retained_tree::tree::{Node, NodeKey, WidgetSpec};
+use semio_ui_declaration::IconName;
+use semio_ui_locale::Label;
 use semio_framework_test_fixtures::fixture_text;
 
 include!("🎯️event-fixtures-hit-test-capture-and-focus-laws/🦀️.rs");

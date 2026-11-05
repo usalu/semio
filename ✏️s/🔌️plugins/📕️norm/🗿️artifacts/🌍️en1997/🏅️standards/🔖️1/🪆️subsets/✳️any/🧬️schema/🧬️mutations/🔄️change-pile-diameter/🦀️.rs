@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileDiameter where
         record: "ChangedPileDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pile diameter D of the pile", "Pfahl: Pfahldurchmesser D ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pile diameter D of the pile", "Pfahl: Pfahldurchmesser D ändern")
     }
 }
 

@@ -1,10 +1,10 @@
 //! 📸️ Native editor root with typed authority and a derived intrinsic host view.
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use {semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
@@ -86,23 +86,23 @@ pub use command_variants::Puzzle3dCommand;
 
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
-use {semio_framework_plugin::kernel::ClipboardError, semio_framework_plugin::kernel::ClipboardFragment, semio_framework_plugin::kernel::PastePlacement};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID;
+use {semio_plugin::kernel::ClipboardError, semio_plugin::kernel::ClipboardFragment, semio_plugin::kernel::PastePlacement};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactView;
+use semio_plugin::InteractionTarget;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::WindowMeasure;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::SET_ACTIVE_TOOL_ACTION_ID;
 use semio_framework_value::FromValue;
 use {semio_framework_pack_json::from_json_str, semio_framework_pack_json::json, semio_framework_pack_json::object, semio_framework_pack_json::parse, semio_framework_pack_json::to_json_string, semio_framework_pack_json::to_string, semio_framework_pack_json::Object, semio_framework_pack_json::Value};
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 use {std::collections::HashMap, std::collections::HashSet};
 use {std::sync::atomic::AtomicU32, std::sync::atomic::Ordering};
 use std::sync::LazyLock;

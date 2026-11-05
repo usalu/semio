@@ -3,10 +3,10 @@
 use crate::demo_space_projection;
 use semio_hub_space_app::SpaceCommand;
 use semio_hub_space_app::unit_tests::context::{apply_mutations, studio_emit};
-use semio_framework_os::{ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat, register_artifact_descriptor};
+use semio_os::{ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat, register_artifact_descriptor};
 use semio_hub_space_commands_media::connect_media_ports::ConnectMediaPorts;
 use semio_hub_space_foundation::config::SpaceConfig;
-use semio_framework_os::WorkflowMutation;
+use semio_os::WorkflowMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
@@ -18,11 +18,11 @@ async fn space_command_op_text_round_trips_every_variant() {
 async fn connect_media_ports_rejects_incompatible_types_via_notice() {
     register_artifact_descriptor(&ArtifactKindSpec {
         id: "test.contract.2d".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Test 2D", "Test 2D"),
+        label: semio_ui_locale::LocalizedLabel::native("Test 2D", "Test 2D"),
         source_format: "test.2d".into(),
         component_kind: "test".into(),
         dimension: "2d".into(),
-        media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
+        media_capability: semio_os::OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         schema: "test.contract.2d.schema".into(),
         export_formats: vec!["svg".into()],
@@ -32,11 +32,11 @@ async fn connect_media_ports_rejects_incompatible_types_via_notice() {
     });
     register_artifact_descriptor(&ArtifactKindSpec {
         id: "test.contract.3d".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Test 3D", "Test 3D"),
+        label: semio_ui_locale::LocalizedLabel::native("Test 3D", "Test 3D"),
         source_format: "test.3d".into(),
         component_kind: "test".into(),
         dimension: "3d".into(),
-        media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
+        media_capability: semio_os::OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         schema: "test.contract.3d.schema".into(),
         export_formats: vec!["glb".into()],
@@ -58,18 +58,18 @@ async fn connect_media_ports_rejects_incompatible_types_via_notice() {
     .await
     .expect("handle");
     assert!(emit.artifact_mutations.is_empty(), "an incompatible connect must not push WorkflowMutation::ConnectPorts");
-    assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
+    assert!(matches!(emit.effects.first(), Some(semio_plugin::Effect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
     register_artifact_descriptor(&ArtifactKindSpec {
         id: "test.contract.doc-a".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Test Doc A", "Testdokument A"),
+        label: semio_ui_locale::LocalizedLabel::native("Test Doc A", "Testdokument A"),
         source_format: "test.doc".into(),
         component_kind: "test".into(),
         dimension: "data".into(),
-        media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
+        media_capability: semio_os::OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         schema: "test.contract.doc.schema".into(),
         export_formats: vec![],
@@ -79,11 +79,11 @@ async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
     });
     register_artifact_descriptor(&ArtifactKindSpec {
         id: "test.contract.doc-b".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Test Doc B", "Testdokument B"),
+        label: semio_ui_locale::LocalizedLabel::native("Test Doc B", "Testdokument B"),
         source_format: "test.doc".into(),
         component_kind: "test".into(),
         dimension: "data".into(),
-        media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
+        media_capability: semio_os::OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         schema: "test.contract.doc.schema".into(),
         export_formats: vec![],
@@ -91,7 +91,7 @@ async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
         export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     });
-    let mut projection = semio_framework_os::empty_workflow_snapshot().await;
+    let mut projection = semio_os::empty_workflow_snapshot().await;
     let src_out = semio_hub_space_app::unit_tests::context::test_port("contract-src-2", "out", MediaPortDirection::Out, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-a").await;
     let dst_in = semio_hub_space_app::unit_tests::context::test_port("contract-dst-2", "in", MediaPortDirection::In, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-b").await;
     projection.graph.nodes.push(semio_hub_space_app::unit_tests::context::test_node("contract-src-2", vec![], vec![src_out]).await);
@@ -116,5 +116,5 @@ async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
     assert_eq!(edge.contract.wire, MediaWireFormat::Document { schema: "test.contract.doc.schema".into() });
     assert!(edge.contract.conversion.is_none());
     let next = apply_mutations(&projection, &emit.artifact_mutations).await;
-    assert!(semio_framework_os::validate_workflow(&next.graph).ok, "a freshly negotiated edge must pass validate_workflow's contract-consistency check");
+    assert!(semio_os::validate_workflow(&next.graph).ok, "a freshly negotiated edge must pass validate_workflow's contract-consistency check");
 }

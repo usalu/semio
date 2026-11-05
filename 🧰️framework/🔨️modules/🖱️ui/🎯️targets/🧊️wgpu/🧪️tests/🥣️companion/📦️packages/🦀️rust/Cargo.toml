@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-ui-wgpu-laws"
+name = "semio-ui-wgpu-laws"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -40,27 +40,27 @@ semio-framework-job-worker = { path = "../../../../../../../🧵️job/👷️wo
 semio-framework-job-worker-authority = { path = "../../../../../../../🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
-semio-framework-ui-arena = { path = "../../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
-semio-framework-ui-declaration = { path = "../../../../../../📜️declaration/📦️packages/🦀️rust" }
-semio-framework-ui-draw-contract = { path = "../../../../🖍️draw/🏷️types/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-locale = { path = "../../../../../../🌐️locale/📦️packages/🦀️rust" }
-semio-framework-ui-prepared = { path = "../../../../🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-retained-tree = { path = "../../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-text = { path = "../../../../../../🔤️typography/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-controls = { path = "../../../../🔘️controls/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-wgpu-engine-surface = { path = "../../../../⚙️engine/🪟️surfaces/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-wgpu-events = { path = "../../../../⚡️events/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-hosting = { path = "../../../../🧭️hosting/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-wgpu-layout = { path = "../../../../🧱️layout-stack/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-paint = { path = "../../../../🖌️paint/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-wgpu-render = { path = "../../../../🖍️draw/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-wgpu-widget-kit = { path = "../../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+semio-ui-arena = { path = "../../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../../🖍️draw/🏷️types/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-locale = { path = "../../../../../../🌐️locale/📦️packages/🦀️rust" }
+semio-ui-prepared = { path = "../../../../🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-retained-tree = { path = "../../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-text = { path = "../../../../../../🔤️typography/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-wgpu-controls = { path = "../../../../🔘️controls/📦️packages/🦀️rust" }
+semio-ui-wgpu-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-wgpu-engine-surface = { path = "../../../../⚙️engine/🪟️surfaces/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-wgpu-events = { path = "../../../../⚡️events/📦️packages/🦀️rust" }
+semio-ui-wgpu-hosting = { path = "../../../../🧭️hosting/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-wgpu-layout = { path = "../../../../🧱️layout-stack/📦️packages/🦀️rust" }
+semio-ui-wgpu-paint = { path = "../../../../🖌️paint/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-wgpu-render = { path = "../../../../🖍️draw/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-wgpu-widget-kit = { path = "../../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 tiny-skia = "0.11.4"
-ui_contract = { path = "../../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-ui_scene = { path = "../../../../../../🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-semio-framework-ui-testing-paint-policy = { path = "../../../../../../🧪️testing/🎨️paint-policy/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+ui_scene = { path = "../../../../../../🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
+ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
+semio-ui-testing-paint-policy = { path = "../../../../../../🧪️testing/🎨️paint-policy/📦️packages/🦀️rust" }

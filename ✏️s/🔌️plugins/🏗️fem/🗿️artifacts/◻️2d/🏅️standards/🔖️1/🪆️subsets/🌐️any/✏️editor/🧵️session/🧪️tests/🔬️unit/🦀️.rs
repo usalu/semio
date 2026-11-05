@@ -1,4 +1,4 @@
-fn prepare_test(render:AppRenderOperationContext,snapshot:&Fem2dSnapshot)->bool{let windows=semio_framework_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("fem2d-preparation-test".into()));let steps=128+snapshot.nodes.len()*64+snapshot.elements.len()*64+snapshot.regions.iter().map(|region|(region.outline.len()+region.holes.iter().map(Vec::len).sum::<usize>())*32+128).sum::<usize>()+snapshot.load_cases.len()*128+snapshot.combinations.len()*128;for _ in 0..steps{let step=prepare_snapshot_read(render,snapshot,&windows,None,render.mounted_policy.preparation);assert!(step.progress.fits(render.mounted_policy.preparation));if step.ready{return true;}if step.progress==Default::default(){return false;}}false}
+fn prepare_test(render:AppRenderOperationContext,snapshot:&Fem2dSnapshot)->bool{let windows=semio_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("fem2d-preparation-test".into()));let steps=128+snapshot.nodes.len()*64+snapshot.elements.len()*64+snapshot.regions.iter().map(|region|(region.outline.len()+region.holes.iter().map(Vec::len).sum::<usize>())*32+128).sum::<usize>()+snapshot.load_cases.len()*128+snapshot.combinations.len()*128;for _ in 0..steps{let step=prepare_snapshot_read(render,snapshot,&windows,None,render.mounted_policy.preparation);assert!(step.progress.fits(render.mounted_policy.preparation));if step.ready{return true;}if step.progress==Default::default(){return false;}}false}
 use super::*;
 
 fn persist(value: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue) -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
@@ -245,7 +245,7 @@ const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, ma
 #[test]
 fn mounted_app_admission_isolates_colliding_ids_until_original_children_return() {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 };
-    let render = |app_instance_id| AppRenderOperationContext { app_instance_id, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
+    let render = |app_instance_id| AppRenderOperationContext { app_instance_id, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32], mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
     let snapshot = Fem2dSnapshot::default();
     for app in [1, 33] { let mut ready=false;for _ in 0..128{if prepare_test(render(app), &snapshot){ready=true;break;}}assert!(ready); }
     let (first, second, retained) = MOUNTED.with(|registry| {
@@ -279,10 +279,10 @@ fn mounted_app_admission_isolates_colliding_ids_until_original_children_return()
 async fn mounted_app_close_keeps_borrowed_original_child_and_full_digest_authority() {
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
     let snapshot = Fem2dSnapshot::default();
-    let mut document = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "mounted-child-affinity", snapshot.clone(), None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+    let mut document = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "mounted-child-affinity", snapshot.clone(), None, &semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     document.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().unwrap()).unwrap_or_else(|(error, _)| panic!("original owners refused: {error}"));
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 };
-    let render = AppRenderOperationContext { app_instance_id: 101, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(document.generation()), canonical_base_revision: document.content_revision(), mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
+    let render = AppRenderOperationContext { app_instance_id: 101, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(document.generation()), canonical_base_revision: document.content_revision(), mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
     assert!(prepare_test(render, &snapshot));
     let read = document.snapshot_read().unwrap();
     let owner = MOUNTED.with(|registry| {
@@ -314,7 +314,7 @@ async fn mounted_app_close_keeps_borrowed_original_child_and_full_digest_authori
     drop(borrowed);
     for _ in 0..4096 { if terminal_is_empty(render.app_instance_id) { break } assert!(!matches!(close(render.app_instance_id, grant), PluginLifecycleStep::Blocked { .. })); }
     assert!(terminal_is_empty(render.app_instance_id));
-    let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<Fem2dSnapshot, Fem2dMutation>();
+    let mut disposer = semio_plugin::bounded_document_store_disposer::<Fem2dSnapshot, Fem2dMutation>();
     for _ in 0..4096 {
         if disposer.terminal_is_empty(&document) { break }
         let demand = disposer.retirement_demands(&document, 1 << 20).unwrap();
@@ -356,7 +356,7 @@ fn mounted_close_and_capacity_are_fixed_and_terminal_witnessed() {
 
 #[test]
 fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reuses_it() {
-    let render = AppRenderOperationContext { app_instance_id: 2_000_000_007, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } };
+    let render = AppRenderOperationContext { app_instance_id: 2_000_000_007, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32], mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } };
     let snapshot = Fem2dSnapshot::default();
     assert!((0..64).any(|_| prepare_test(render, &snapshot)), "empty schema census completes incrementally");
     let first = MOUNTED.with(|registry| { let registry = registry.borrow(); registry.pending[registry.app_slots.lookup(render.app_instance_id).unwrap().index()].expect("pending admission") });
@@ -373,7 +373,7 @@ fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reus
 
 #[test]
 fn snapshot_census_completes_within_one_opportunity_and_rejects_exact_plus_one_without_partial_credit() {
-    let render = AppRenderOperationContext { app_instance_id: 2_000_000_006, base_revision: semio_framework_job::RevisionId(29), generation: semio_framework_job::Generation(31), canonical_base_revision: [37; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } };
+    let render = AppRenderOperationContext { app_instance_id: 2_000_000_006, base_revision: semio_framework_job::RevisionId(29), generation: semio_framework_job::Generation(31), canonical_base_revision: [37; 32], mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } };
     let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let mut census = SnapshotAdmissionCursor::new();
     let mut units = 0;

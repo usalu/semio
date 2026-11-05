@@ -12,29 +12,29 @@ use crate::FlowSnapshot;
 #[allow(unused_imports)]
 use flow::FlowEvalSession;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::Label;
+use semio_ui_contract::Label;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_with_action_draggable;
+use semio_plugin::tree_item_with_action_draggable;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 #[allow(unused_imports)]
 use serde_json::Value;
 use crate::editor::flow::panels::catalogue::*;
@@ -66,9 +66,9 @@ async fn catalogue_items_export_flow_widget_drag_payload() {
 #[semio_framework_async_macros::async_test]
 async fn every_built_in_extension_is_listed_in_the_installed_section() {
     let mut app = flow_app().await;
-    let view = semio_framework_plugin::ViewModel {
-        tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: FLOW_PLAY_BODY_CATALOGUE.into(), node_key: "flow-play-extensions.installed".into(), open: Some(true), offset: 0, rows: FLOW_AUTOMATIONS.len() as u32 }],
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    let view = semio_plugin::ViewModel {
+        tree_windows: vec![semio_plugin::TreeWindowRequest { body_key: FLOW_PLAY_BODY_CATALOGUE.into(), node_key: "flow-play-extensions.installed".into(), open: Some(true), offset: 0, rows: FLOW_AUTOMATIONS.len() as u32 }],
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let json = render_with_view(&mut app, FLOW_PLAY_BODY_CATALOGUE, &view).await;
     for (id, ..) in FLOW_AUTOMATIONS {
@@ -82,7 +82,10 @@ async fn catalogue_sections_are_built_once_and_equal_the_host_projection() {
     let first = crate::editor::flow::host::catalogue_sections(&config.catalogue_sections_json);
     let second = crate::editor::flow::host::catalogue_sections(&config.catalogue_sections_json);
     assert!(std::sync::Arc::ptr_eq(&first, &second), "a catalogue render must reuse the shared sections, never rebuild them per render");
-    let raw = with_host_from_snapshot(&FlowSnapshot::default(), &config, &FlowEvalSession::new(), |host| host.catalogue_json()).unwrap().expect("host catalogue");
+    let fixture=FlowSnapshot::default();let session=FlowEvalSession::new();
+    let outcome=with_host_from_snapshot(&fixture,&config,&session,|host|host.catalogue_json());
+    outcome.close.unwrap();let raw=outcome.output.expect("host catalogue");
+    session.retire_cold();
     let projected: Value = serde_json::from_str(&raw).expect("host catalogue json");
     assert_eq!(*first, projected);
 }

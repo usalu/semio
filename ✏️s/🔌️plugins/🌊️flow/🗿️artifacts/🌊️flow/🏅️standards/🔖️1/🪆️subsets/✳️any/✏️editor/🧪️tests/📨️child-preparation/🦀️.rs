@@ -1,6 +1,6 @@
-use semio_framework_plugin::app::ChildEmitPreparation;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::Emit;
+use semio_plugin::app::ChildEmitPreparation;
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::Emit;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
@@ -12,7 +12,7 @@ use crate::editor::flow::commands::{add_widget, connect_media_ports, context_men
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::{compiled, main};
 #[allow(unused_imports)]
@@ -44,79 +44,79 @@ use semio_framework_artifact_flow_flow::{CameraJson, Widget};
 #[allow(unused_imports)]
 use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
+use semio_os_infinite_directed_presentation::DagDrawLod;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppActionRegistry;
+use semio_plugin::AppActionRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppDefinition;
+use semio_plugin::AppDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::CommandDefinition;
+use semio_plugin::CommandDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuRequest;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use serde_json::json;
 #[allow(unused_imports)]
@@ -143,8 +143,8 @@ fn quoted_close_grant(work:&FlowChildGroupWork,body:usize)->semio_framework_valu
 
 #[test]
 fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
-    use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandWorkStep};
-    use semio_framework_plugin::app::ChildEmitPreparation;
+    use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandWorkStep};
+    use semio_plugin::app::ChildEmitPreparation;
     use semio_framework_job::InteractiveJobCloseStep;
     use {semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation, semio_s_artifact_stdio_semio_flow::schema::mutations::drag_nodes::DragNodes};
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../✏️node-graph-edit/🧪️tests/🧫️fixtures/child-preparation/🔣️.json")).unwrap();
@@ -152,7 +152,7 @@ fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
     let mut work=FlowChildGroupWork::detached("nodeGraphEdit");
     for (slot,accepted) in [(fixture["foreignSlot"].as_str().unwrap(),false),(fixture["slot"].as_str().unwrap(),true)]{
         let operation=SemioFlowMutation::DragNodes(DragNodes{targets:vec![fixture["target"].as_str().unwrap().into()],dx:fixture["dx"].as_f64().unwrap(),dy:fixture["dy"].as_f64().unwrap()});
-        let emit=semio_framework_plugin::Emit{child_preparations:std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot,_>(slot,child_id,vec![operation])]),..Default::default()};
+        let emit=semio_plugin::Emit{child_preparations:std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot,_>(slot,child_id,vec![operation])]),..Default::default()};
         let source=emit.child_preparations.front().unwrap();
         assert_eq!(source.matches_source::<SemioFlowMutation>(fixture["slot"].as_str().unwrap(),child_id,1),accepted);
         assert!(!source.matches_source::<u8>(slot,child_id,1));

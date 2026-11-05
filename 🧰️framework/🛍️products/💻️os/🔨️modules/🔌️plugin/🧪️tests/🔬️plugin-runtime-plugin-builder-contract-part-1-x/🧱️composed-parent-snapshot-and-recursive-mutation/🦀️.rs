@@ -173,7 +173,7 @@ impl Mutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
 
 }
 
-impl semio_framework_os_kernel::ColdMutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
+impl semio_os_kernel::ColdMutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
     type ReferenceDiff = ComposedParentDiff;
     fn diff(&self, _base: &ComposedParentSnapshot) -> protocol::MutationOutcome<Self::ReferenceDiff> { protocol::MutationOutcome::new(ComposedParentDiff { revision: Some(self.value) }) }
     fn inverse(&self, base: &ComposedParentSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -205,8 +205,8 @@ impl ArtifactPack for ComposedParentSnapshot {
         <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::from(error))
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ComposedParentSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ComposedParentSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())

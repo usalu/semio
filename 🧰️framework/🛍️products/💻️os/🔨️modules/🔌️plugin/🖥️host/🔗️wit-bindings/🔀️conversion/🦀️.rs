@@ -2,7 +2,7 @@
 
 use semio_framework::kernel::{ArtifactHandle, BrokerCapabilityGrant, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnStatus, WindowHandle, WindowKindId};
 use semio_framework::DslValue;
-use semio_framework_plugin_guest_contract::{PluginHostError, TurnFault, sqlite_wire};
+use semio_plugin_guest_contract::{PluginHostError, TurnFault, sqlite_wire};
 use crate::cold_pair::kernel_cold_page_to_wit;
 use crate::actor_bindings;
 use crate::wit_capabilities;

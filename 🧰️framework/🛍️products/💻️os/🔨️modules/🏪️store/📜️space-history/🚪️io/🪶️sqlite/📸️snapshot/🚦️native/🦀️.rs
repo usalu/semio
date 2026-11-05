@@ -250,7 +250,7 @@ pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, c
                     let record = semio_framework_value::DecodedValue::new(record.take(), retire_record);
                     let mut options = pack::record::EncodeOptions::default();
                     options.limits.max_file_len = limits.max_file_bytes as u64;
-                    let bytes = pack::record::encode_document_controlled(&spec, record.get(), &options, c).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?;
+                    let bytes = pack::record::encode_document_controlled(&spec, record.get(), &options, c).map_err(semio_os_pack::PackRefusal::into_value_error)?;
                     drop(record);
                     Ok(semio_framework_io_schema::IoPayload::Binary(bytes))
                 }
@@ -285,7 +285,7 @@ pub fn decode_with<T:semio_framework_value::retirement::RetireOwned>(payload:&se
             }
             semio_framework_io_schema::IoPayload::Binary(bytes)=>{
                 *schema=Some(spec(native)?);
-                *record=Some(pack::record::decode_document_controlled(bytes,schema.as_ref().unwrap(),&pack::record::DecodeOptions::default(),native).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?.0);
+                *record=Some(pack::record::decode_document_controlled(bytes,schema.as_ref().unwrap(),&pack::record::DecodeOptions::default(),native).map_err(semio_os_pack::PackRefusal::into_value_error)?.0);
                 let Some(FieldValue::Value(value))=record.as_ref().unwrap().get(1)else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history native value field is missing"))};
                 bind(value,output,native,body)?;
             }

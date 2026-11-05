@@ -4,7 +4,7 @@
 //! artifact documents, since no MIME registration exists for a semio artifact kind.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
@@ -14,7 +14,7 @@ pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
 //#region 🧩️ArtifactItems2
 pub mod artifact_items_2 {
 pub use crate::schema::snapshot::WFC_2D_DOCUMENT_SCHEMA;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The `2d.wfc2d` artifact kind — a 2D design surface: the document is a plane of rectangles with
@@ -23,7 +23,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.wfc2d".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D", "2D"),
+        label: semio_ui_locale::LocalizedLabel::native("2D", "2D"),
         source_format: WFC_2D_DOCUMENT_SCHEMA.into(),
         component_kind: "wfc2d".into(),
         dimension: "2d".into(),
@@ -46,24 +46,24 @@ pub mod artifact_items_3 {
 /// 🧾️ The app bounds every declaration function in this crate carries — one editor app and one
 /// viewer app, exactly like `semio_s_artifact_puzzle_2d::ArtifactApps`.
 pub trait ArtifactApps:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::wfc2d::Wfc2dEditor>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::wfc2d::Wfc2dViewer>>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::wfc2d::Wfc2dEditor>>>
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::wfc2d::Wfc2dViewer>>>
 {
 }
 
 impl<PA> ArtifactApps for PA where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::wfc2d::Wfc2dEditor>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::wfc2d::Wfc2dViewer>>>
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::wfc2d::Wfc2dEditor>>>
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::wfc2d::Wfc2dViewer>>>
 {
 }
 
 /// 🧾️ Defines `s.wfc.wfc2d`'s immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.wfc.wfc2d.standard.v1", "standard", "1", &[], None),
         ("s.wfc.wfc2d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.wfc.wfc2d.schema.artifact", "schema", "s.wfc.wfc2d", &[("schema", "s.wfc.wfc2d")], None),
@@ -94,8 +94,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 /// 🌳️ This artifact's declaration tree root — the ONLY registration channel for schema/io/viewer/
 /// editor rows.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<PA: ArtifactApps>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.wfc2d").expect("canonical wfc2d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }

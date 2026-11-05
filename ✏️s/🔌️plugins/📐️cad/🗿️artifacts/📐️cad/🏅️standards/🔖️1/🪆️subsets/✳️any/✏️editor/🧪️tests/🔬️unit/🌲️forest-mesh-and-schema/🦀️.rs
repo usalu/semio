@@ -115,8 +115,8 @@ async fn the_pick_overlay_is_bounded_and_only_published_while_a_selection_is_acc
     use semio_s_artifact_cad_cad_interaction::{accepts_selection, start_session};
     let scene = forest_working_scene();
     let document = forest_play_scene();
-    let idle = edit::build_world_scene_for_pane(&view(document, CadPlayRuntime::default()), CadPaneId::Building, "cad.play.scene3d/building", None, Default::default(), semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("idle scene");
-    let idle_scene: semio_framework_plugin::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(idle)).expect("projected")).expect("world scene");
+    let idle = edit::build_world_scene_for_pane(&view(document, CadPlayRuntime::default()), CadPaneId::Building, "cad.play.scene3d/building", None, Default::default(), semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).expect("idle scene");
+    let idle_scene: semio_plugin::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene(&semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(idle)).expect("projected")).expect("world scene");
     assert!(idle_scene.engagement_preview_json.is_none(), "no session, no overlay");
 
     let session = start_session("feature.extrudeWire", CadPaneId::Building).expect("extrude-wire session");

@@ -3,18 +3,17 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 
-use semio_s_artifact_layout_layout_model::set_drawing_text;
 use semio_s_artifact_layout_layout_model::set_frame_layer;
 extern crate semio_framework_schema as schema;
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 
 use protocol::{Identified, Patchable};
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
@@ -112,9 +111,9 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 /// a plugin `.setup()` callback, including `crate::io_registry::register()` — a
 /// DUPLICATE registration of the exact `standards::v1::subsets::any::io::io_registry::entries()` slice the
 /// `.composers(…)` call below now registers once.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.layout.layout.standard.v1", "standard", "1", &[], None),
         ("s.layout.layout.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.layout.layout.schema.artifact", "schema", "s.layout.layout", &[("schema", "s.layout.layout")], None),
@@ -151,13 +150,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(semio_s_artifact_layout_layout_descriptor::layout_artifact_schema_descriptor())
         .inferences([semio_s_artifact_layout_layout_model::inferences::layout_artifact_inference_descriptor()])
         .composers(semio_s_artifact_layout_layout_io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_layout_layout_editor::LayoutPlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<semio_s_artifact_layout_layout_editor::LayoutPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️ArtifactKind

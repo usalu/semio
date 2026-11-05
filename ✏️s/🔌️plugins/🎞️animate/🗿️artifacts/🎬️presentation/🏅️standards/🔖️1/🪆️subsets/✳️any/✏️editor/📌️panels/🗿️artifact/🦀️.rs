@@ -4,16 +4,16 @@ use crate::editor::animate::terminology::AnimatePresentationLabels;
 use crate::editor::animate::support::ui_label;
 use crate::editor::animate::support::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY, PRESENTATION_PLAY_APP_ID};
 use crate::PresentationSnapshot;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract::BuiltNode;
+use semio_plugin::tree_item_desc;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract::BuiltNode;
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_BODY_ARTIFACT: &str = "animate.presentation.play.artifact";
@@ -37,7 +37,7 @@ pub fn definition() -> PanelTabDefinition {
 /// clicks — never declare that yourself (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 ///
 /// 🪟️ A real deck outgrows one node's fixed child capacity, so the tile list is a windowed section.
-pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (_, tiles) = crate::presentation_working_scene(deck);
     PanelTreeBuilder::new("animate-presentation-play")?
         .window_section_or_placeholder(
@@ -48,7 +48,7 @@ pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels, w
             &tiles,
             |tile| {
                 let mut node = tree_item_desc(tile.id.clone(), ui_label(&tile.name)?, Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))?;
-                if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+                if let semio_plugin::Component::TreeItem(props) = &mut node.component {
                     props.granularity = Some(crate::editor::animate::support::ui_text(PRESENTATION_INTERACTION_GRANULARITY)?);
                 }
                 Ok(node)

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-os-space-testing-sqlite-preflight"
+name = "semio-os-space-testing-sqlite-preflight"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,8 +24,8 @@ doctest = false
 
 [dependencies]
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
-semio-framework-os-io = { path = "../../../../../../🚪️io/📦️packages/🦀️rust" }
-semio-framework-os-store-text-io = { path = "../../../../../../🏪️store/🚪️io/📦️packages/🦀️rust" }
+semio-os-io = { path = "../../../../../../🚪️io/📦️packages/🦀️rust" }
+semio-os-store-text-io = { path = "../../../../../../🏪️store/🚪️io/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]

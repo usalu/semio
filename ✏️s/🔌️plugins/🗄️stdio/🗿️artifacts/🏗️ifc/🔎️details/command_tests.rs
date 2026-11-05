@@ -1,6 +1,6 @@
 //! 🧪️ Original command wire parsing and field movement preserve every cancellation owner.
 use super::*;
-use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 fn grant()->RetainedCloneGrant {RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:262144,maximum_release_bytes:1048576,maximum_depth:256}}
 fn close(caller:&mut OriginalWorkFixture,reader:&mut CommandWire){
  reader.begin_close();

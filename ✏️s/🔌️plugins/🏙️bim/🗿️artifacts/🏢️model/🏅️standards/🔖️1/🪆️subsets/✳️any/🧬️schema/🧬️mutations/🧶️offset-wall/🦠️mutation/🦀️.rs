@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "wall", kind: "offset-wall", record: "OffsetWall" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Offset wall \"{}\" by {} m", self.id, self.distance), &format!("Wand \"{}\" um {} m versetzen", self.id, self.distance))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Offset wall \"{}\" by {} m", self.id, self.distance), &format!("Wand \"{}\" um {} m versetzen", self.id, self.distance))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

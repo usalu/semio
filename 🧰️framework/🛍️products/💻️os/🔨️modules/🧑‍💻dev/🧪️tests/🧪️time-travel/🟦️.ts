@@ -4,11 +4,12 @@
  * @see ../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧩️scenario/🟦️.ts
  * @see ../../../🔌️plugin/⏪️time-travel/🦀️.rs
  * @see ../👥️two-human/🟦️.ts */
-import { checkScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkScriptInvocation, readIssuedScriptProcessEnvelopeV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { withAcceptanceRecord, publishAcceptanceCheckResult, acceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
-import { timeTravelServeVariantV1 } from "./🚀️boot/🟦️.ts";
-import { playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
+import { withAcceptanceRecord, publishAcceptanceCheckResult, acceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { timeTravelServeRequestV1, type TimeTravelPlaygroundV1 } from "./🚀️boot/🟦️.ts";
+import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {loadFrameworkOsPlaygroundCatalog} from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/📚️catalog/🟦️.ts";
 import { ensureDevServe, devServePortV1 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import { existsSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
@@ -42,6 +43,7 @@ async function loadScenario(repoRoot: string, modulePath: string): Promise<TimeT
  * after the running step and still writes the report. */
 export async function runTimeTravelCli(invocation: ScriptInvocation, repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
   checkScriptInvocation(invocation);
+  const profile = readBuildMode((readIssuedScriptProcessEnvelopeV1(invocation).capabilities as {buildMode?:unknown}).buildMode);
   const scenarioModule = flagValue(segments, "--scenario");
   if (scenarioModule === undefined && !segments.includes("--universal")) throw new Error("a run without a scenario is universal: pass --universal --variant <declared variant> --serve <url>, or --scenario <repository-relative module of the plugin that owns a scenario>");
   const scenarioDefinition = scenarioModule === undefined ? undefined : await loadScenario(repoRoot, scenarioModule);
@@ -54,14 +56,15 @@ export async function runTimeTravelCli(invocation: ScriptInvocation, repoRoot: s
     async () => {
       let variant: string | null = null;
       const startServe = async () => {
-        const selectedVariant = timeTravelServeVariantV1({ universal: universalRoute !== null, url: routeUrl(), renderer, explicit: flagValue(segments, "--variant"), scenarioVariant: scenarioDefinition?.variant }, playgroundCatalog());
-        variant = selectedVariant;
+        const request = timeTravelServeRequestV1({ universal: universalRoute !== null, url: routeUrl(), renderer, explicit: flagValue(segments, "--variant"), scenarioVariant: scenarioDefinition?.variant, profile, port: devServePortV1(serveUrl), logPath: join(OUT, `${base}-serve.log`) }, loadFrameworkOsPlaygroundCatalog<TimeTravelPlaygroundV1>());
+        variant = request.variant;
         if (universalRoute !== null) {
           const route = new URL(universalRoute);
           route.searchParams.set("plugin", variant);
           setUniversalRoute(route.href);
         }
-        return ensureDevServe({ repoRoot, port: devServePortV1(serveUrl), variant, renderer, signal: invocation.control.signal, logPath: join(OUT, `${base}-serve.log`), beforeSpawn: async () => (await import("../../♻️activation/🏃️execution/🟦️.ts")).activatePlaygroundRuntime(invocation, selectedVariant, "prototype", renderer), onProgress: (_status, line) => console.log(line) });
+        await (await import("../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts")).prepareRepositoryBrowserV1(repoRoot,invocation);
+        return ensureDevServe({ ...request, hubUrl: request.hubUrl ?? undefined, repoRoot, signal: invocation.control.signal, beforeSpawn: async () => (await import("../../♻️activation/🚀️launch/🟦️.ts")).activatePlaygroundRuntime(invocation, request.variant, request.profile, request.renderer), onProgress: (_status, line) => console.log(line) });
       };
       const serve = await startServe().catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
       if (serve instanceof Error) {
@@ -71,7 +74,7 @@ export async function runTimeTravelCli(invocation: ScriptInvocation, repoRoot: s
         return;
       }
       try {
-        const run = await runProbe();
+        const run = await runProbe(repoRoot);
         const status = run.verdicts > 0 && run.failed === 0 && run.uncaught === 0 && run.hard === 0 && !invocation.control.signal.aborted ? "pass" : "fail";
         const failing = run.failing.slice(0, 8).join(", ");
         publishAcceptanceCheckResult(

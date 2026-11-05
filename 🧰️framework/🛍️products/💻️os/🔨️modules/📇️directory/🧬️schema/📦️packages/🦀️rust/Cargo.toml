@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-directory-schema"
+name = "semio-os-directory-schema"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -26,10 +26,10 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { path = "../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
-semio-framework-os-channel = { path = "../../../../📡️spr/🧵️channel/📦️packages/🦀️rust" }
-semio-framework-os-identity = { path = "../../../../🪪️identity/📦️packages/🦀️rust" }
-semio-framework-plugin-component-receipt = { path = "../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }
+semio-os-channel = { path = "../../../../📡️spr/🧵️channel/📦️packages/🦀️rust" }
+semio-os-identity = { path = "../../../../🪪️identity/📦️packages/🦀️rust" }
+semio-plugin-component-receipt = { path = "../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-os-directory-browser-actor = { path = "../../🌐️browser-actor/📦️packages/🦀️rust" }
+semio-os-directory-browser-actor = { path = "../../🌐️browser-actor/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

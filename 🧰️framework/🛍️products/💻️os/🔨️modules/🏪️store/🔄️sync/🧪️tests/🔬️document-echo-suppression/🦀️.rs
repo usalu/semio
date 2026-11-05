@@ -4,7 +4,7 @@
 //! never discard a frame by its origin (ticket 26/09/23 session 12, run s12i: late joiners saw no history).
 
 use super::{admit_remote_envelopes, note_authored_envelopes};
-use semio_framework_os_spr::{ActorId, ArtifactId, MutationEnvelope, MutationId};
+use semio_os_spr::{ActorId, ArtifactId, MutationEnvelope, MutationId};
 
 const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/document-echo-suppression-v1/🔣️.json");
 
@@ -30,9 +30,9 @@ fn envelope(value: &serde_json::Value) -> MutationEnvelope {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_os_spr::CausalPayload::try_from_slice(&[1]).unwrap() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_os_spr::CausalPayload::try_from_slice(&[2]).unwrap() },
-        timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 },
+        diff: semio_os_spr::ArtifactDiff { schema: semio_os_spr::SchemaId("demo/v1".into()), payload: semio_os_spr::CausalPayload::try_from_slice(&[1]).unwrap() },
+        inverse: semio_os_spr::InverseMutation { schema: semio_os_spr::SchemaId("demo/v1".into()), payload: semio_os_spr::CausalPayload::try_from_slice(&[2]).unwrap() },
+        timestamp: semio_os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 },
         transaction: None, verb: None, line: None,
     }
 }
@@ -92,7 +92,7 @@ fn both_actors_settle_committed_operations_before_admission() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_history_transition_has_no_inverse_rollback() {
-    let transition = semio_framework_os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("edit-a#0".into())] };
-    let envelope = semio_framework_os_spr::history_transition_envelope(&transition, &ArtifactId("artifact-echo".into()), &ActorId("hub.v1.author".into()), Vec::new(), semio_framework_os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 });
+    let transition = semio_os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("edit-a#0".into())] };
+    let envelope = semio_os_spr::history_transition_envelope(&transition, &ArtifactId("artifact-echo".into()), &ActorId("hub.v1.author".into()), Vec::new(), semio_os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 });
     assert!(super::rollback_envelope(&envelope).await.is_none(), "a transition is undone by a later transition, never by its (empty) inverse");
 }

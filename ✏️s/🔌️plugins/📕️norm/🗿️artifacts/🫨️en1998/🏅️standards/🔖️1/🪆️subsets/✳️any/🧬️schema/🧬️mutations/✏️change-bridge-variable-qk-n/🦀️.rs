@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgeVariableQkN 
         record: "ChangeBridgeVariableQkN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Variable action Q_k", "Veränderliche Einwirkung Q_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Variable action Q_k", "Veränderliche Einwirkung Q_k ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-variable-qk-n".into()]

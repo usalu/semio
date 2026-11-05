@@ -1,6 +1,6 @@
 //! 🛠️ Db artifact engine: document state, query source, state pages and ledger tail.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use db_artifact_contract::{ArtifactDurableGroupJournalAppendV1, ArtifactDurableGroupRecoveryDriverCoreV1 as _, ArtifactDurableGroupRecoveryDriverV1, CheckpointPublicationSnapshot, CommandBatch, CommandReceipt, ConflictRecord, DB_PATHMAP_SCHEMA, FOREIGN_HISTORY_TRANSITION_CODE, FOREIGN_HISTORY_TRANSITION_MESSAGE, MALFORMED_HISTORY_TRANSITION_CODE, MALFORMED_HISTORY_TRANSITION_MESSAGE, MAX_RECENT_TOUCHES, SubmitOptions, UNKNOWN_SUPERSEDE_TARGET_CODE, UNKNOWN_SUPERSEDE_TARGET_MESSAGE, command_touch, committed_durable_group_decision_from_transaction, diff_entries, durable_group_touch, encode_pathmap, entries_to_value, entries_touched, grade_concurrent_write, inverse_entries, remember_recent_touch, to_core_actor_id, to_core_document_id, unseen_concurrent_writes};
 use db_artifact_history::{HistoryReplayFuture, HistoryReplayReservation};

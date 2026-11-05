@@ -7,44 +7,44 @@
 //! from the `⚠️errors`/`🧬️schema`/`🧭️protocol`/`🚚️transport`/`🎫️handles`/`📒️audit`/`🧵️bridge` facets
 //! is re-exported flat at this crate root for ergonomic downstream use.
 
-use semio_framework_os_mcp_bridge::session::AgentConversation;
-use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
-use semio_framework_os_mcp_capabilities::core_capabilities::{build_catalog, gateway_only_catalog};
-use semio_framework_os_mcp_catalog::capability_tools::{to_schema_search_hit, tool_from_capability};
-use semio_framework_os_mcp_catalog::catalog::{CapabilityKind, Catalog};
-use semio_framework_os_mcp_catalog::search::{SearchFilters, search};
-use semio_framework_os_mcp_consent::approval_coordinator::ApprovalCoordinator;
-use semio_framework_os_mcp_consent::elicitation::ElicitationSlot;
-use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
-use semio_framework_os_mcp_foundation::agent_credential::AgentCredentialSource;
-use semio_framework_os_mcp_foundation::audit::{AuditSinks, ClientInfo, FileAuditSink, default_audit_dir};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
-use semio_framework_os_mcp_foundation::rendezvous::{BridgeOffer, BridgeOfferScope, PublishedBridgeOffer, RENDEZVOUS_SCHEMA_VERSION, live_os_sessions, mint_admission_proof, publish_offer};
-use semio_framework_os_mcp_foundation::reports::{RevisionStamp, SearchHit};
-use semio_framework_os_mcp_http_transport::transport::{HttpTransport, HttpTransportOptions, HttpTransportRun};
-use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
-use semio_framework_os_mcp_port::channel_port::{InvokeRequest, UnboundArtifactChannel};
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
-use semio_framework_os_mcp_routing::routing_and_shell_routed::{ArtifactChannels, ShellRoutedArtifactChannel};
-use semio_framework_os_mcp_schema::schema::{action_invoke_input_schema, action_prepare_input_schema, capability_generic_output_schema, handle_input_schema, tool_output_schema, transaction_begin_input_schema};
-use semio_framework_os_mcp_server::mcp_server::McpServer;
-use semio_framework_os_mcp_server::stdio_transport::{McpTransport, StdioTransport};
-use semio_framework_os_mcp_shell_channel::context_resolve::{mint_session_id, resolve_context};
-use semio_framework_os_mcp_shell_channel::shell_channel::SessionChannelBinding;
-use semio_framework_os_mcp_tools_gateway::artifact::register_artifact_tools;
-use semio_framework_os_mcp_tools_gateway::context::WorkspaceResourceRegistry;
-use semio_framework_os_mcp_tools_gateway::prompts::build_prompt_registry;
-use semio_framework_os_mcp_tools_gateway::ui::{register_conversation_tools, register_ui_tools};
-use semio_framework_os_mcp_tools_inference::inference::{register_inference_job_tools, register_inference_tools};
-use semio_framework_os_mcp_wire::notify::notification_slot;
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, NullBackend, PromptRegistry, ResourceRegistry, Tool, ToolRegistry};
-use semio_framework_os_mcp_workspace::gateway_backend::{GatewayBackends, SharedWorkspace};
-use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+use semio_os_mcp_bridge::session::AgentConversation;
+use semio_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_os_mcp_capabilities::core_capabilities::{build_catalog, gateway_only_catalog};
+use semio_os_mcp_catalog::capability_tools::{to_schema_search_hit, tool_from_capability};
+use semio_os_mcp_catalog::catalog::{CapabilityKind, Catalog};
+use semio_os_mcp_catalog::search::{SearchFilters, search};
+use semio_os_mcp_consent::approval_coordinator::ApprovalCoordinator;
+use semio_os_mcp_consent::elicitation::ElicitationSlot;
+use semio_os_mcp_dispatch::actions::ActionAdapter;
+use semio_os_mcp_foundation::agent_credential::AgentCredentialSource;
+use semio_os_mcp_foundation::audit::{AuditSinks, ClientInfo, FileAuditSink, default_audit_dir};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
+use semio_os_mcp_foundation::rendezvous::{BridgeOffer, BridgeOfferScope, PublishedBridgeOffer, RENDEZVOUS_SCHEMA_VERSION, live_os_sessions, mint_admission_proof, publish_offer};
+use semio_os_mcp_foundation::reports::{RevisionStamp, SearchHit};
+use semio_os_mcp_http_transport::transport::{HttpTransport, HttpTransportOptions, HttpTransportRun};
+use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_os_mcp_port::channel_port::{InvokeRequest, UnboundArtifactChannel};
+use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_os_mcp_routing::routing_and_shell_routed::{ArtifactChannels, ShellRoutedArtifactChannel};
+use semio_os_mcp_schema::schema::{action_invoke_input_schema, action_prepare_input_schema, capability_generic_output_schema, handle_input_schema, tool_output_schema, transaction_begin_input_schema};
+use semio_os_mcp_server::mcp_server::McpServer;
+use semio_os_mcp_server::stdio_transport::{McpTransport, StdioTransport};
+use semio_os_mcp_shell_channel::context_resolve::{mint_session_id, resolve_context};
+use semio_os_mcp_shell_channel::shell_channel::SessionChannelBinding;
+use semio_os_mcp_tools_gateway::artifact::register_artifact_tools;
+use semio_os_mcp_tools_gateway::context::WorkspaceResourceRegistry;
+use semio_os_mcp_tools_gateway::prompts::build_prompt_registry;
+use semio_os_mcp_tools_gateway::ui::{register_conversation_tools, register_ui_tools};
+use semio_os_mcp_tools_inference::inference::{register_inference_job_tools, register_inference_tools};
+use semio_os_mcp_wire::notify::notification_slot;
+use semio_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, NullBackend, PromptRegistry, ResourceRegistry, Tool, ToolRegistry};
+use semio_os_mcp_workspace::gateway_backend::{GatewayBackends, SharedWorkspace};
+use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_hub_remote::remote::exchange_delegated_session_v1;
+use semio_os_mcp_hub_remote::remote::exchange_delegated_session_v1;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_routing::routing_and_shell_routed::capability_instance_slot;
+use semio_os_mcp_routing::routing_and_shell_routed::capability_instance_slot;
 
 //#region 🔖️Tools
 
@@ -631,7 +631,7 @@ const HUB_OPEN_RETRY_STEP_MS: u64 = 500;
 /// `PluginUnavailable: authenticated hub descriptor index is refreshing; retry after authority
 /// refresh`, exit 1, before `initialize`). A non-retryable error — a bad credential, a space the
 /// principal is not a member of, a version boundary — is returned on its first occurrence untouched.
-fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal, host_driver_policy:semio_framework_plugin_host_wake::GuestRelayDriverPolicy) -> Result<HeadlessWorkspace, GatewayError> {
+fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy) -> Result<HeadlessWorkspace, GatewayError> {
     let scopes: Vec<String> = principal.scopes.iter().map(|scope| scope.0.clone()).collect();
     let mut attempts_made = 0;
     loop {
@@ -692,7 +692,7 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
 /// 🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
 /// inside the workspace; publishing the binding there is what keeps a `shell` session from having
 /// two document owners (`📓️lb1…` §7.3 step 1).
-fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_framework_plugin_host_wake::GuestRelayDriverPolicy) -> Result<(McpServer, String), GatewayError> {
+fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy) -> Result<(McpServer, String), GatewayError> {
     let origin_label;
     let workspace = if let Some(folder) = folder {
         origin_label = format!("folder {folder}");
@@ -711,11 +711,11 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
                 eprintln!("[semio-os-mcp] acting as agent principal {} (\"{}\") in space {}", grant.agent_principal_id, grant.agent_label, grant.space_id);
                 adopted = Some((grant.agent_principal_id.clone(), grant.agent_label.clone()));
                 std::sync::Arc::new(
-                    semio_framework_os_kernel::os_directory::client::LocalHubCredential::adopt_session_capability(hub.base_url.trim_end_matches('/'), &grant.token)
+                    semio_os_kernel::os_directory::client::LocalHubCredential::adopt_session_capability(hub.base_url.trim_end_matches('/'), &grant.token)
                         .map_err(|_| GatewayError::new(GatewayErrorCode::PermissionDenied, "the hub returned an agent session capability this process cannot adopt"))?,
                 )
             }
-            None => semio_framework_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
+            None => semio_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
                 .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "hub workspace requires either --credential-file <delegated agent credential> or a protected process-entry MCP credential"))?,
         };
         if let Some((agent_principal_id, agent_label)) = adopted {
@@ -747,7 +747,7 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
 /// [--no-bridge]`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StdioOptions {
-    pub host_driver_policy:semio_framework_plugin_host_wake::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy,
     pub folder: Option<String>,
     pub hub: Option<HubOptions>,
     pub principal: Option<String>,
@@ -896,7 +896,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
 /// by the protected process-entry credential and never by argv, URL, environment, or disk state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HttpOptions {
-    pub host_driver_policy:semio_framework_plugin_host_wake::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy,
     pub port: u16,
     pub bind: String,
     pub folder: Option<String>,
@@ -922,7 +922,7 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let runtime = GatewayRuntime { bridge: Some(bridge_slot.clone()), elicitation: None, auto_approve: options.auto_approve, channel_binding: None };
     let (server, _principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy)?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
-    let credential = semio_framework_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
+    let credential = semio_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
         .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "HTTP mode requires a protected process-entry MCP credential"))?;
     eprintln!("[semio-os-mcp] bridge listening on ws://{bind_ip}:{}/bridge", options.port);
     let transport_options = HttpTransportOptions::new(credential).bind_addr(std::net::SocketAddr::new(bind_ip, options.port)).allowed_origins(options.allow_origin);

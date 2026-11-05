@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{create_drawing_boolean_layer, find_drawing_layer, find_drawing_layer_location, layer_base, layer_base_mut};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::combine_boolean::*;
 fn document()->DrawingSnapshot {
     let mut a=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("a")).to_string().into()).expect("nonempty authored identity"), "a");layer_base_mut(&mut a).id="a".into();
@@ -48,4 +48,4 @@ fn drawing_boolean_command_preserves_parent_and_checks_ancestor_admission() {
     }
 }
 
-fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<(Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,String),semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_commands::combine_boolean::plan(document,ids,operation,&admission,&mut control)}
+fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<(Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,String),semio_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_commands::combine_boolean::plan(document,ids,operation,&admission,&mut control)}

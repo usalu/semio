@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_contract::apply_mutation;
 pub mod derived_composition {
     use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
     use crate::standards::v5::subsets::any::io::HtmlAnalyzer;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") };
 
@@ -48,7 +48,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }, store::artifact_codec::<HtmlSnapshot, semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::schema::mutations::HtmlMutation>(semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA))
+        semio_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }, store::artifact_codec::<HtmlSnapshot, semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::schema::mutations::HtmlMutation>(semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -84,7 +84,7 @@ pub mod import {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v5::subsets::any::io::HtmlComposer as HtmlRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -107,7 +107,7 @@ pub mod derived_construction {
     use semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::schema::mutations::HtmlMutation;
 
     use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct HtmlBuilderConstruction {
@@ -148,7 +148,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v5::subsets::any::io::import::deserializers as engine;
     use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, STDIO_HTML_DOCUMENT_SCHEMA};
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct HtmlParts {
@@ -161,24 +161,24 @@ pub mod derived_analysis {
         type Parts = HtmlParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if engine::sniff_real_bytes(bytes) {
-                        return semio_framework_plugin::io::Confidence::High;
+                        return semio_plugin::io::Confidence::High;
                     }
                     let marker = STDIO_HTML_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
                     if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_HTML_DOCUMENT_SCHEMA) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -187,20 +187,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = HtmlParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <HtmlSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -212,7 +212,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec HtmlBuilderFacets {
         construction: HtmlBuilderConstruction,
         analysis: HtmlAnalyzerAnalysis,

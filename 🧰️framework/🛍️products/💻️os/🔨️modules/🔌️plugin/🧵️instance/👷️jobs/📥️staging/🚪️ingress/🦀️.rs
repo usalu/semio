@@ -1,25 +1,25 @@
 //! 🔧️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, plugin_retirement_fault};
-use semio_framework_os_kernel::SpaceMember;
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, plugin_retirement_fault};
+use semio_os_kernel::SpaceMember;
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_plugin_instance_children::children_components::ChildComposition;
-use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents};
+use semio_plugin_instance_children::children_components::ChildComposition;
+use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents};
 use semio_framework_value::RetirementDemand;
-use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolView};
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolView};
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_operation::ToolCancellationHandle;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_operation::ToolCancellationHandle;
 use crate::jobs_components::ToolOperations;
-use semio_framework_plugin_window_kits::validate_ui_dispatch_classification;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_kits::validate_ui_dispatch_classification;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp> ToolOperations<A> {
     #[cfg(test)]

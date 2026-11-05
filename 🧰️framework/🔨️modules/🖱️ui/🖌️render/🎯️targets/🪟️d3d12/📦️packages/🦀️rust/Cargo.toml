@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-backend-d3d12"
+name = "semio-ui-backend-d3d12"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,7 +22,7 @@ backend-testing = ["ui_render/backend-testing"]
 
 [dependencies]
 bytemuck = { version = "1.24.0", features = ["derive"] }
-ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-ui-render" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 raw-window-handle = "0.6"

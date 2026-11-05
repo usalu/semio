@@ -29,8 +29,8 @@ impl ReplaceSamplesMutation {
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ReplaceSamplesMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "samples", kind: "replace-samples", record: "ReplaceSamples" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace samples", "Abtastwerte ersetzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Replace samples", "Abtastwerte ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec![format!("ifd:{}:block:{}:samples:{}", self.ifd_index, self.block, self.offset)]

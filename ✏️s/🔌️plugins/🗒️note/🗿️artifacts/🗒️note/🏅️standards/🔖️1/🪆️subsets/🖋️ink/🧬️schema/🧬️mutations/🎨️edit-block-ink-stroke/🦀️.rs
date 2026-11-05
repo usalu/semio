@@ -36,8 +36,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-ink-stroke", kind: "edit-block-ink-stroke", record: "EditedBlockInkStroke" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit block \"{}\" ink stroke", self.id), &format!("Tintenstrich von Block \"{}\" bearbeiten", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Edit block \"{}\" ink stroke", self.id), &format!("Tintenstrich von Block \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

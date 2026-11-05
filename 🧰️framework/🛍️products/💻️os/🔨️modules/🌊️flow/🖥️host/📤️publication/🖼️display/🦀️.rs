@@ -7,8 +7,17 @@ struct Field{kind:u8,rank:usize}
 struct Row{widget:usize,fields:Vec<Field>}
 #[derive(semio_framework_value::RetireOwned)]
 pub struct FlowDisplayCursor{control:Option<semio_framework_value::NativeEncodeContinuation>,rows:Vec<Row>,writer:JsonBorrowedWriteCursor,text:Option<String>,widget:usize,scan:usize,rank:usize,stage:u8}
-struct OriginalDisplay<'a>{snapshot:&'a dyn FlowSnapshotSource,channels:&'a EvalChannels,infos:&'a HistoryFoldIndex<String,OperatorInfo>,rows:&'a[Row]}
+struct OriginalDisplay<'a>{snapshot:&'a dyn FlowSnapshotSource,channels:&'a EvalChannels,infos:&'a HistoryFoldIndex<String,OperatorInfo>,rows:&'a[Row],fallback:Option<&'a semio_framework_value::DslValue>}
 impl<'a> OriginalDisplay<'a>{
+ fn fallback_entry(&self,row:&Row)->Option<&'a semio_framework_value::DslValue>{
+  use semio_framework_value::DslValue as V;
+  let output=self.output(row);if output.is_some_and(|out|out.iter().next().is_some()){return None}
+  let V::Object(entries)=self.fallback? else{return None};let id=widget_id_for(&self.snapshot.widgets()[row.widget]);let entry=&entries.iter().find(|(key,_)|key==id)?.1;
+  let V::Object(fields)=entry else{return None};
+  let answered=fields.iter().any(|(key,value)|key=="error"||(key=="out"&&matches!(value,V::Object(rows) if !rows.is_empty())));
+  answered.then_some(entry)
+ }
+
  fn input(&self,widget:usize)->Option<&'a Dictionary>{self.channels.inputs.get(widget_id_for(&self.snapshot.widgets()[widget]))}
  pub fn params(&self,widget:usize)->Option<&'a Dictionary>{match &self.snapshot.widgets()[widget]{Widget::Neuron{params,..}=>Some(params),_=>None}}
  fn info(&self,widget:usize)->Option<&'a OperatorInfo>{match &self.snapshot.widgets()[widget]{Widget::Neuron{neuron_kind,..}=>self.infos.get(neuron_kind),_=>None}}
@@ -34,12 +43,14 @@ impl JsonWriteSource for OriginalDisplay<'_>{
  fn node_at_path(&self,path:&[usize])->Result<JsonWriteNode<'_>,ValueError>{
   if path.is_empty(){return Ok(JsonWriteNode::Object(self.rows.len()))}
   let row=self.rows.get(path[0]).ok_or_else(absent)?;
+  if let Some(entry)=self.fallback_entry(row){return entry.node_at_path(&path[1..])}
   if path.len()==1{return Ok(JsonWriteNode::Object(2+usize::from(self.error(row).is_some())))}
   match path[1]{0=>{if path.len()==2{return Ok(JsonWriteNode::Object(row.fields.len()))}value_node(self.field(row,path[2])?.1,&path[3..])},1=>{match self.output(row){Some(dict)=>dict.node_at_path(&path[2..]),None if path.len()==2=>Ok(JsonWriteNode::Object(0)),None=>Err(absent())}},2 if path.len()==2=>self.error(row).map(JsonWriteNode::String).ok_or_else(absent),_=>Err(absent())}
  }
  fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
   if path.is_empty(){return self.rows.get(index).map(|row|widget_id_for(&self.snapshot.widgets()[row.widget])).ok_or_else(absent)}
   let row=self.rows.get(path[0]).ok_or_else(absent)?;
+  if let Some(entry)=self.fallback_entry(row){return entry.object_key_at_path(&path[1..],index)}
   if path.len()==1{return ["in","out","error"].get(index).copied().ok_or_else(absent)}
   match path[1]{0 if path.len()==2=>Ok(self.field(row,index)?.0),0=>self.field(row,path[2])?.1.as_dictionary().ok_or_else(absent)?.object_key_at_path(&path[3..],index),1=>self.output(row).ok_or_else(absent)?.object_key_at_path(&path[2..],index),_=>Err(absent())}
  }
@@ -48,16 +59,18 @@ impl FlowDisplayCursor{
  pub fn new()->Self{Self{control:None,rows:Vec::new(),writer:JsonBorrowedWriteCursor::new(),text:None,widget:0,scan:0,rank:0,stage:0}}
  pub fn complete(&self)->bool{self.stage==255}
  pub fn take_text(&mut self)->Option<String>{self.text.take()}
- fn source<'a>(&'a self,snapshot:&'a dyn FlowSnapshotSource,channels:&'a EvalChannels,infos:&'a HistoryFoldIndex<String,OperatorInfo>)->OriginalDisplay<'a>{OriginalDisplay{snapshot,channels,infos,rows:&self.rows}}
- pub fn demands(&self,snapshot:&dyn FlowSnapshotSource,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>)->Result<RetirementDemand,ValueError>{
+ fn source<'a>(&'a self,snapshot:&'a dyn FlowSnapshotSource,channels:&'a EvalChannels,infos:&'a HistoryFoldIndex<String,OperatorInfo>)->OriginalDisplay<'a>{OriginalDisplay{snapshot,channels,infos,rows:&self.rows,fallback:None}}
+ pub fn demands(&self,snapshot:&dyn FlowSnapshotSource,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>)->Result<RetirementDemand,ValueError>{self.demands_with_fallback(snapshot,channels,infos,None)}
+ pub fn demands_with_fallback(&self,snapshot:&dyn FlowSnapshotSource,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>,fallback:Option<&semio_framework_value::DslValue>)->Result<RetirementDemand,ValueError>{
   let mut d=RetirementDemand{depth:1,..Default::default()};
   if self.stage==0{d.capacity_bytes=snapshot.widgets().len().checked_mul(size_of::<Row>()).ok_or_else(absent)?;}
   if self.stage==2{let source=self.source(snapshot,channels,infos);let maximum=source.input(self.widget).map_or(0,Dictionary::len)+source.params(self.widget).map_or(0,Dictionary::len)+source.slots(self.widget).map_or(0,Dictionary::len)+source.info(self.widget).map_or(0,|info|info.inputs.len());d.capacity_bytes=maximum.checked_mul(size_of::<Field>()).ok_or_else(absent)?;}
-  if self.stage==7{return self.writer.normal_step_demands(&self.source(snapshot,channels,infos))}
+  if self.stage==7{return self.writer.normal_step_demands(&OriginalDisplay{snapshot,channels,infos,rows:&self.rows,fallback})}
   Ok(d)
  }
- pub fn step(&mut self,snapshot:&dyn FlowSnapshotSource,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  let d=self.demands(snapshot,channels,infos)?;if grant.maximum_items==0{return Ok(Default::default())}if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original display requires source depth"))}if grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes{return Ok(Default::default())}
+ pub fn step(&mut self,snapshot:&dyn FlowSnapshotSource,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.step_with_fallback(snapshot,channels,infos,None,grant)}
+ pub fn step_with_fallback(&mut self,snapshot:&dyn FlowSnapshotSource,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>,fallback:Option<&semio_framework_value::DslValue>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  let d=self.demands_with_fallback(snapshot,channels,infos,fallback)?;if grant.maximum_items==0{return Ok(Default::default())}if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original display requires source depth"))}if grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes{return Ok(Default::default())}
   let mut p=RetainedCloneProgress{copied_items:1,..Default::default()};
   match self.stage{
    0=>{self.rows.try_reserve_exact(snapshot.widgets().len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original display roster birth refused"))?;p.retained_capacity_bytes=self.rows.capacity()*size_of::<Row>();self.stage=1;self.scan=1;},
@@ -68,7 +81,7 @@ impl FlowDisplayCursor{
    5=>{if self.source(snapshot,channels,infos).slots(self.widget).and_then(|dict|dict.entry_at_rank(self.rank)).is_some(){self.stage=8;self.scan=0;}else{self.stage=6;self.rank=0;}},
    6=>{let source=self.source(snapshot,channels,infos);if let Some(port)=source.info(self.widget).and_then(|info|info.inputs.get(self.rank)){let keep=port.name!="*"&&source.merged(self.widget,&port.name).is_some();if keep{self.rows.last_mut().unwrap().fields.push(Field{kind:3,rank:self.rank});}self.rank+=1;}else{self.next_widget();}},
    8=>{let source=self.source(snapshot,channels,infos);let key=source.slots(self.widget).and_then(|dict|dict.entry_at_rank(self.rank)).map(|(key,_)|key.as_str()).ok_or_else(absent)?;if let Some(port)=source.info(self.widget).and_then(|info|info.inputs.get(self.scan)){let replaced=port.name==key&&source.merged(self.widget,key).is_some();if replaced{self.rank+=1;self.stage=5;}else{self.scan+=1;}}else{self.rows.last_mut().unwrap().fields.push(Field{kind:2,rank:self.rank});self.rank+=1;self.stage=5;}},
-   7=>{let source=OriginalDisplay{snapshot,channels,infos,rows:&self.rows};let mut receive=|_|true;let mut control=match self.control.take(){Some(receipt)=>semio_framework_value::NativeEncodeControl::resume(receipt,&mut receive)?,None=>semio_framework_value::NativeEncodeControl::new_retained(&mut receive)};let result=self.writer.step(&source,1,&mut control,grant);p=self.writer.normal_step_progress();self.control=Some(control.pause()?);if let Some(text)=result.map_err(|error|error.with_retained_progress(p))?{self.text=Some(text);self.stage=255;}},
+   7=>{let source=OriginalDisplay{snapshot,channels,infos,rows:&self.rows,fallback};let mut receive=|_|true;let mut control=match self.control.take(){Some(receipt)=>semio_framework_value::NativeEncodeControl::resume(receipt,&mut receive)?,None=>semio_framework_value::NativeEncodeControl::new_retained(&mut receive)};let result=self.writer.step(&source,1,&mut control,grant);p=self.writer.normal_step_progress();self.control=Some(control.pause()?);if let Some(text)=result.map_err(|error|error.with_retained_progress(p))?{self.text=Some(text);self.stage=255;}},
    255=>return Ok(Default::default()),_=>return Err(absent())
   }Ok(p)
  }

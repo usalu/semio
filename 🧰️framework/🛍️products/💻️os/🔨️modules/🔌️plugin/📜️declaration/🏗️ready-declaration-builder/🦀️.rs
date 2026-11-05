@@ -74,18 +74,18 @@ impl ArtifactDeclarationBuilder<DeclarationReady> {
         use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 
         for entry in entries {
-            require_declared_capability_or_record(&self.definition, &mut self.definition_error, &ArtifactCapabilityKind::composer(), semio_framework_plugin_identity::composer_identity_claims(&self.kind, entry.writes, entry.reads));
+            require_declared_capability_or_record(&self.definition, &mut self.definition_error, &ArtifactCapabilityKind::composer(), semio_plugin_identity::composer_identity_claims(&self.kind, entry.writes, entry.reads));
             self.composers.push(entry);
         }
         self
     }
 
     /// 🗂️ Appends format rows (`register_format_descriptors`).
-    pub fn formats(self, rows: impl IntoIterator<Item = semio_framework_os_kernel::io::FormatDescriptor>) -> Self {
+    pub fn formats(self, rows: impl IntoIterator<Item = semio_os_kernel::io::FormatDescriptor>) -> Self {
         ::semio_framework_async::poll::resolve_ready(self.formats_async(rows))
     }
 
-    async fn formats_async(mut self, rows: impl IntoIterator<Item = semio_framework_os_kernel::io::FormatDescriptor>) -> Self {
+    async fn formats_async(mut self, rows: impl IntoIterator<Item = semio_os_kernel::io::FormatDescriptor>) -> Self {
         for row in rows {
             let mut claims = Vec::with_capacity(row.mimes.len() + row.extensions.len());
             let mut claim_error = None;
@@ -189,16 +189,16 @@ impl ArtifactDeclarationBuilder<DeclarationReady> {
     /// to the same plural codec capability set as `.document_codec::<A>()`.
     pub fn document_codec_bare<Snapshot, Mutation>(self, schema: impl Into<String>, dialect: Dialect) -> Self
     where
-        Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
-        Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_framework_os_kernel::StoreMutationFor<Snapshot>,
+        Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState,
+        Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_os_kernel::StoreMutationFor<Snapshot>,
     {
         ::semio_framework_async::poll::resolve_ready(self.document_codec_bare_async::<Snapshot, Mutation>(schema, dialect))
     }
 
     async fn document_codec_bare_async<Snapshot, Mutation>(self, schema: impl Into<String>, dialect: Dialect) -> Self
     where
-        Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
-        Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_framework_os_kernel::StoreMutationFor<Snapshot>,
+        Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState,
+        Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_os_kernel::StoreMutationFor<Snapshot>,
     {
         self.append_document_codec(DocumentCodecSpec::bare::<Snapshot,Mutation>(schema,dialect))
     }
@@ -215,9 +215,9 @@ impl ArtifactDeclarationBuilder<DeclarationReady> {
             + Sync
             + pack::snapshot::ArtifactDsl
             + ArtifactPack
-            + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
+            + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot
             + 'static,
-        Mutation: ::semio_framework_os_kernel::StoreMutationFor<Snapshot>
+        Mutation: ::semio_os_kernel::StoreMutationFor<Snapshot>
             + PartialEq
             + semio_framework_value::ToValue
             + semio_framework_value::FromValue

@@ -1,46 +1,46 @@
 //! 🩻️ The instance components of `instance-docs`: MediaTransfers, EnvelopeJobs (WP6, plan section 7.3).
-use semio_framework_plugin_document_media::{ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveDocumentArchiveLoad};
-use semio_framework_plugin_document_media::media_export::ActiveMediaExport;
+use semio_plugin_document_media::{ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveDocumentArchiveLoad};
+use semio_plugin_document_media::media_export::ActiveMediaExport;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
-use semio_framework_plugin_ownership::bounded_ownership::{ArtifactFixedRegistry, DOCUMENT_ARCHIVE_LOAD_SLOTS};
-use semio_framework_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_media::ArtifactDownloadOutput;
+use semio_plugin_ownership::bounded_ownership::{ArtifactFixedRegistry, DOCUMENT_ARCHIVE_LOAD_SLOTS};
+use semio_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
-use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
+use semio_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
 use std::future::Future;
 use std::mem::ManuallyDrop;
 use crate::docs_instance_root::MediaExportPreparation;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_child::SnapshotReadReturnPump;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_child::SnapshotReadReturnPump;
+use semio_ui_contract::*;
 
 /// 🩺️ Media transfers: the media exports, downloads, closures and snapshot retirements of the instance.
 pub struct MediaTransfers<A: ArtifactApp> {
     pub pending_media_import_permit:ManuallyDrop<Option<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>>,
     pub media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
     pub media_export_preparation:ManuallyDrop<Option<MediaExportPreparation<A>>>,
-    pub media_download_preparation:ManuallyDrop<Option<semio_framework_plugin_document_media::media_export::MediaDownloadPreparation>>,
+    pub media_download_preparation:ManuallyDrop<Option<semio_plugin_document_media::media_export::MediaDownloadPreparation>>,
     pub media_closures: ArtifactFixedRegistry<ActiveMediaExport>,
     pub snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>,
     pub current_media_export: Option<u64>,
-    pub media_submission_refusal: std::mem::ManuallyDrop<Option<semio_framework_plugin_document_media::media_operation_refusal::MediaOperationRefusal>>,
-    pub media_submission_refusal_place: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_framework_plugin_document_media::media_operation_refusal::MediaOperationRefusal>>>,
+    pub media_submission_refusal: std::mem::ManuallyDrop<Option<semio_plugin_document_media::media_operation_refusal::MediaOperationRefusal>>,
+    pub media_submission_refusal_place: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_plugin_document_media::media_operation_refusal::MediaOperationRefusal>>>,
     pub media_submission_refusal_identity: Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,
-    pub media_submission_refusal_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_document_media::media_operation_refusal::MediaOperationRefusal>>>,
+    pub media_submission_refusal_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_document_media::media_operation_refusal::MediaOperationRefusal>>>,
     pub segmented_downloads: ArtifactFixedRegistry<ArtifactDownloadOutput>,
-    pub segmented_closures: ArtifactFixedRegistry<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>,
+    pub segmented_closures: ArtifactFixedRegistry<semio_plugin_document_media::media_export::MediaDownloadRetirement>,
 }
 
 impl<A: ArtifactApp> MediaTransfers<A> {
     /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
-    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.media_exports,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.media_closures,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.snapshot_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.segmented_downloads,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.segmented_closures,64)?])}
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.media_exports,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.media_closures,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.snapshot_retirements,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.segmented_downloads,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.segmented_closures,64)?])}
 
     /// 💉️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new() -> Self {Self::with_backing(true)}
@@ -63,7 +63,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         }
     }
 
-    pub async fn take_media_export_chunk(&mut self,handle:semio_framework_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub async fn take_media_export_chunk(&mut self,handle:semio_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         cx.original_source_parent()?;if receiver.is_some(){return Ok(true)}let operation_id=handle.operation_id.0;
         if *terminal&&self.segmented_downloads.get(operation_id).is_none(){return Ok(true)}
         self.snapshot_retirements.get(operation_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving lost its original source"))?.validate(cx)?;
@@ -71,8 +71,8 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         if !output.owns_media_export_loan(handle){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving requires its exact handle").into())}
         if !*terminal{if !output.chunks.take_chunk_original(receiver,terminal,cx)?{return Ok(false)}return Ok(receiver.is_some())}
         if !output.terminal_is_empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download EOF retains unread original chunks").into())}
-        let grant=cx.retained_grant();let bytes=size_of::<semio_framework_plugin_decl_media::ArtifactDownloadOutput>()+size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
-        if !self.segmented_closures.can_insert(operation_id){return Ok(false)}let output=self.segmented_downloads.remove(operation_id).expect("checked exact original download");self.segmented_closures.insert_admitted(operation_id,semio_framework_plugin_document_media::media_export::MediaDownloadRetirement::pending(output));cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+        let grant=cx.retained_grant();let bytes=size_of::<semio_plugin_decl_media::ArtifactDownloadOutput>()+size_of::<semio_plugin_document_media::media_export::MediaDownloadRetirement>();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        if !self.segmented_closures.can_insert(operation_id){return Ok(false)}let output=self.segmented_downloads.remove(operation_id).expect("checked exact original download");self.segmented_closures.insert_admitted(operation_id,semio_plugin_document_media::media_export::MediaDownloadRetirement::pending(output));cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
 
     pub async fn take_segmented_download_chunk(&mut self, operation_id: u64) -> Result<Option<Vec<u8>>, semio_framework::Fault> {
@@ -109,7 +109,7 @@ pub struct EnvelopeJobs<A: ArtifactApp, M: SpaceMember + MemberFactory> {
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// 📏️ Quotes the component frame and fixed registries while preserving the separately admitted decoder issuers.
-    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_ingress,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_decode_jobs,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.store_replacement_jobs,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_field_decoder_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_completed_record_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.document_archive_loads,DOCUMENT_ARCHIVE_LOAD_SLOTS)?])}
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_ingress,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_decode_jobs,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.store_replacement_jobs,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_field_decoder_retirements,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_completed_record_retirements,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.document_archive_loads,DOCUMENT_ARCHIVE_LOAD_SLOTS)?])}
 
     /// 🪸️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new() -> Self {Self::from_original(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry::new(),store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry::new())}
@@ -133,28 +133,28 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     }
 
     pub fn acknowledge_document_archive_load(&mut self, operation: u64) -> Result<(), semio_framework::Fault> {
-        let active = self.document_archive_loads.get(operation).ok_or_else(|| semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
+        let active = self.document_archive_loads.get(operation).ok_or_else(|| semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
         if !active.terminal() {
-            return Err(semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE, "recursive document archive operation cannot be acknowledged before terminal status"));
+            return Err(semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE, "recursive document archive operation cannot be acknowledged before terminal status"));
         }
         if !active.inputs_are_empty() {
-            return Err(semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE, "terminal recursive document archive operation still owns retained input"));
+            return Err(semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE, "terminal recursive document archive operation still owns retained input"));
         }
-        let mut active = self.document_archive_loads.remove(operation).ok_or_else(|| semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive authority changed before acknowledgement"))?;
+        let mut active = self.document_archive_loads.remove(operation).ok_or_else(|| semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive authority changed before acknowledgement"))?;
         drop(std::mem::take(&mut active.fault));
         drop(active);
         Ok(())
     }
 
     pub fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), semio_framework::Fault> {
-        let active = self.document_archive_loads.get_mut(operation).ok_or_else(|| semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
+        let active = self.document_archive_loads.get_mut(operation).ok_or_else(|| semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
         match active.state {
-            semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Pending | semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Running => {
-                active.request_terminal(semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled);
+            semio_plugin_document_media::ActiveDocumentArchiveLoadState::Pending | semio_plugin_document_media::ActiveDocumentArchiveLoadState::Running => {
+                active.request_terminal(semio_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled);
                 Ok(())
             }
-            semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled => Ok(()),
-            semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Ready | semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Fault => Err(semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive operation cannot be cancelled")),
+            semio_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled => Ok(()),
+            semio_plugin_document_media::ActiveDocumentArchiveLoadState::Ready | semio_plugin_document_media::ActiveDocumentArchiveLoadState::Fault => Err(semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive operation cannot be cancelled")),
         }
     }
 }

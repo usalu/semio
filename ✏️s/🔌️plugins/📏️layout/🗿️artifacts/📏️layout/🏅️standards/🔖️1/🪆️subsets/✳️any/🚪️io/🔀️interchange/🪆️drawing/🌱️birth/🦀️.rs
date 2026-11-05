@@ -1,6 +1,6 @@
 //! 🌱️ Original Drawing birth custody funds only parent reference duplication before exact payload transfer.
 use semio_s_artifact_layout_layout_model::{LayoutDrawingBirth,LayoutDrawingMember};
-use semio_framework_os_kernel::RetainedFieldPreparation;
+use semio_os_kernel::RetainedFieldPreparation;
 use semio_framework_value::{RetireOwned,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneSource,RetainedCloneSourceTake,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use std::mem::{size_of,ManuallyDrop};
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"Drawing import birth lost original custody")}

@@ -1,8 +1,8 @@
 use crate::{schema::snapshot::JsonMember, schema::snapshot::JsonValue};
 use crate::JsonSnapshot;
-use semio_framework_plugin::WindowKit as _;
-use semio_framework_plugin::app::TreeWindowKit;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::WindowKit as _;
+use semio_plugin::app::TreeWindowKit;
+use semio_ui_locale::Locale;
 use crate::editor::json_any::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
@@ -15,7 +15,7 @@ async fn definition_declares_a_tree_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_walks_object_and_array_members() {
     let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }] } }] } };
-    let node = render(&document, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    let node = render(&document, &semio_plugin::TreeWindows::unhosted()).expect("render");
     let section = node.children.get(0).expect("tree section");
     let root = section.children.get(0).expect("tree root");
     assert_eq!(root.key.as_str(), JSON_ROOT_NODE_ID, "the root must carry a real key, never the positional `#0` fallback an empty id produces");
@@ -30,16 +30,16 @@ fn editor_render_exposes_natural_json_as_an_explicit_whole_document_draft() {
     let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "greeting".into(), value: JsonValue::String { value: "Grüße\n%20".into() } }] } };
     let node = render_editor(
         &document,
-        semio_framework_ui_locale::Locale::De,
-        &semio_framework_plugin::TreeWindows::unhosted(),
+        semio_ui_locale::Locale::De,
+        &semio_plugin::TreeWindows::unhosted(),
         "json-editor",
         "revision",
-        semio_framework_plugin::UiPublicationRevision(23),
+        semio_plugin::UiPublicationRevision(23),
     )
     .expect("editor render");
     let source = node.children.get(0).expect("source surface");
-    let semio_framework_plugin::Component::Surface(props) = &source.component else { panic!("expected text editor surface") };
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
+    let semio_plugin::Component::Surface(props) = &source.component else { panic!("expected text editor surface") };
+    let scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(&props).expect("decode text scene");
     let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings JSON");
     assert_eq!(settings["editAction"], "set-node");
     assert_eq!(settings["editArguments"]["nodeId"], "$");
@@ -47,7 +47,7 @@ fn editor_render_exposes_natural_json_as_an_explicit_whole_document_draft() {
     assert_eq!(settings["commit"], "explicit");
     assert_eq!(settings["applyLabel"], "Anwenden");
     assert_eq!(settings["discardLabel"], "Verwerfen");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project");
     assert!(json.contains(r#"Grüße\\n%20"#), "the natural JSON source (its own `\\n` escape, JSON-encoded once more by the projection) remains in the draft: {json}");
 }
 
@@ -59,12 +59,12 @@ fn editor_render_exposes_natural_json_as_an_explicit_whole_document_draft() {
 fn window_path(keys: &[&str]) -> String {
     let mut path = format!("{}-root", TreeWindowKit::KIND_ID);
     for key in keys {
-        path.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        path.push_str(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
         path.push_str(key);
     }
     path
 }
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 /// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
 /// real `UiValue` argument-arena credit, shared process-wide, and a law that materialised a full
@@ -79,9 +79,9 @@ fn oversized_document(items: usize) -> JsonSnapshot {
 
 /// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(document: &JsonSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let node = render(document, &TreeWindows::for_body(&view, BODY_KEY)).expect("render the json tree");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the json tree")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the json tree")
 }
 
 /// 🪟️ Law (a): a 300-element array renders — the array node stamps its full extent and no `+N` appears.
@@ -144,9 +144,9 @@ fn deep_member_name(level: usize) -> String {
 /// 🪟️ Like [`window_body`] with a viewport wide enough to walk ten nesting levels before it spends
 /// anything on rows — the first-paint budget is shared across the WHOLE body, containers included.
 fn deep_window_body(document: &JsonSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(32), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(32), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let node = render(document, &TreeWindows::for_body(&view, BODY_KEY)).expect("render the json tree");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the json tree")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the json tree")
 }
 
 /// 🪟️ Law (e): a container's window path is a VIEW-CONTEXT IDENTIFIER — printable and at most 256
@@ -179,7 +179,7 @@ fn repeated_member_names_get_distinct_sibling_keys() {
             members: vec![
                 JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }] } },
                 JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Null] } },
-                JsonMember { key: format!("literal{}#2", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR), value: JsonValue::Null },
+                JsonMember { key: format!("literal{}#2", semio_plugin::TREE_WINDOW_PATH_SEPARATOR), value: JsonValue::Null },
             ],
         },
     };

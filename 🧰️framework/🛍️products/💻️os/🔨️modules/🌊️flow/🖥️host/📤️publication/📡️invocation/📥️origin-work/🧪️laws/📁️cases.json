@@ -1,0 +1,28 @@
+[
+  {
+    "source": "linear",
+    "windowId": "window-a",
+    "windowKindId": "preview",
+    "registryGeneration": 3,
+    "pending": {
+      "neuronId": "c",
+      "extensionId": "geometry",
+      "operatorId": "geometry.box",
+      "nodeHash": 7,
+      "inputJson": "{\"number\":1}"
+    }
+  },
+  {
+    "source": "neural-params-and-cluster",
+    "windowId": "Fenster-🪟️",
+    "windowKindId": "generate",
+    "registryGeneration": 42,
+    "pending": {
+      "neuronId": "cluster",
+      "extensionId": "geometry",
+      "operatorId": "geometry.boolean",
+      "nodeHash": 13,
+      "inputJson": "{\"source\":\"α\\n\"}"
+    }
+  }
+]

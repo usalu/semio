@@ -1,3 +1,4 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 🧮️ The editor × viewer × locale matrix of the served `s` React shell, as a user drives it.
  *
  * One row per spawnable program the shell's own catalog probe lists (`window.__semioOsCatalogProbe.programs`), opened
@@ -20,8 +21,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Browser, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { devServePortV1, ensureDevServe } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 
@@ -580,7 +580,7 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
   mkdirSync(outDir, { recursive: true });
   const out = join(outDir, "matrix.json");
   const log = (line: string): void => console.log(`[matrix] ${line}`);
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser: Browser = await chromium.launch({ headless: !options.headed, args: ["--use-angle=metal"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

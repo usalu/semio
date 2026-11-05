@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerGuyAngle wher
         record: "ChangedTowerGuyAngle",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Guy angle α of the tower leg", "Turmstiel: Abspannwinkel α ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Guy angle α of the tower leg", "Turmstiel: Abspannwinkel α ändern")
     }
 }
 

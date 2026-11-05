@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerBendingStiffn
         record: "ChangedTowerBendingStiffness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bending stiffness EI (N·m²) of the tower leg", "Turmstiel: Biegesteifigkeit EI (N·m²) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bending stiffness EI (N·m²) of the tower leg", "Turmstiel: Biegesteifigkeit EI (N·m²) ändern")
     }
 }
 

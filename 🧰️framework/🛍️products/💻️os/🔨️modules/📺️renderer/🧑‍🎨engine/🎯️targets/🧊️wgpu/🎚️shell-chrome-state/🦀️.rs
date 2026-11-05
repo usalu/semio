@@ -2,19 +2,19 @@
 //!
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
-use semio_framework_os_renderer_wgpu_shell_async::{chrome_now_ms, debug_log};
-use semio_framework_os_config::opening_config::{UiAppearance as OsUiAppearance, UiDriver as OsUiDriver};
-use semio_framework_os_renderer_wgpu_contracts::ShellFindItems;
-use semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::RetainedNodeFocusKind;
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_renderer_wgpu_shell_async::{chrome_now_ms, debug_log};
+use semio_os_config::opening_config::{UiAppearance as OsUiAppearance, UiDriver as OsUiDriver};
+use semio_renderer_wgpu_contracts::ShellFindItems;
+use semio_renderer_wgpu_ui_engine::retained_ui_engine::RetainedNodeFocusKind;
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use semio_framework_ui_declaration::layout::{ActionDescriptor, FRAMEWORK_PANEL_TAB_HISTORY_ID};
-use semio_framework_ui_wgpu_input::InputState;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::{ActionDescriptor, FRAMEWORK_PANEL_TAB_HISTORY_ID};
+use semio_ui_wgpu_input::InputState;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🧬️component/🦀️.rs"]
 mod staged_chrome_state__component;

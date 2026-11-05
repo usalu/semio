@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeSelfWeightMaterial
         record: "ChangedSelfWeightMaterial",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change material (EN 1991-1-1 Annex A) of the self-weight element", "Eigengewichtselement: Baustoff (EN 1991-1-1 Anhang A) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change material (EN 1991-1-1 Annex A) of the self-weight element", "Eigengewichtselement: Baustoff (EN 1991-1-1 Anhang A) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -18,7 +18,7 @@ impl PrefsState {
             id: format!("command.{}", key.replace(':', ".")),
             label: Label::data(if arg_carrying { format!("{}…", definition.label.resolve(self.active_terminology(), self.active_locale())) } else { definition.label.resolve(self.active_terminology(), self.active_locale()).to_string() }),
             icon_id: Some(if arg_carrying { IconName::ChevronUp } else { definition.icon_id.clone() }),
-            action: Some(ActionDescriptor { controller_id: "framework".into(), action: if arg_carrying { "setCommandExpanded" } else { "executeResolvedCommand" }.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": key }) }),
+            action: Some(ActionDescriptor { controller_id: "framework".into(), action: if arg_carrying { "setCommandExpanded" } else { "executeResolvedCommand" }.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": key }) }),
             ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
         }
     }

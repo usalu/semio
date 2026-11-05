@@ -78,5 +78,5 @@ fn invoke_action_on_an_unknown_handle_is_not_found_not_a_panic() {
 }
 
 fn note_and_cad_catalog() -> Arc<Catalog> {
-    Arc::new(compile(&note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("note+cad fixture source compiles"))
+    Arc::new(compile(&note_and_cad_source(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("note+cad fixture source compiles"))
 }

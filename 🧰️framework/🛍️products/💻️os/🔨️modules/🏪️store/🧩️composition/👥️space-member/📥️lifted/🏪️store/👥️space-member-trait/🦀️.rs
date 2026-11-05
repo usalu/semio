@@ -37,16 +37,16 @@ use super::*;
 pub struct MemberIdentityRef<'a>{pub artifact_id:&'a str,pub dialect:&'a semio_framework_artifact_reference::ArtifactDialect,pub owner:Option<&'a OwnerRef>}
 pub trait SpaceMember {
     /// 📤️ Borrows the actual materialized native Pack fields without a reference codec or copied snapshot.
-    fn native_head_pack_source(&self)->Option<semio_framework_os_store_text_io::OriginalSnapshotPackView<'_>>;
+    fn native_head_pack_source(&self)->Option<semio_os_store_text_io::OriginalSnapshotPackView<'_>>;
     fn native_pack_generation(&self)->u64;
     fn native_checkpoint_id(&self)->Option<&str>;
-    fn native_checkpoint_probe_demands(&self,probe:&semio_framework_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds)->Result<semio_framework_value::RetirementDemand,ValueError>;
-    fn advance_native_checkpoint_probe(&self,probe:&mut semio_framework_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>;
+    fn native_checkpoint_probe_demands(&self,probe:&semio_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds)->Result<semio_framework_value::RetirementDemand,ValueError>;
+    fn advance_native_checkpoint_probe(&self,probe:&mut semio_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>;
 
     fn member_native_vcs_capture_demands(&self)->semio_framework_value::RetirementDemand;
-    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_framework_os_store_engine_command::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
-    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_engine_command::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>;
-    fn take_member_native_vcs_result(&self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_framework_os_store_engine_command::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
+    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_os_store_engine_command::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
+    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_os_store_engine_command::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>;
+    fn take_member_native_vcs_result(&self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_os_store_engine_command::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
     fn ack_member_native_vcs_command(&self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
     fn member_native_vcs_close_demands(&self,owner:&dyn MemberNativeVcsCommand,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
     fn close_member_native_vcs_command(&mut self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
@@ -66,17 +66,17 @@ pub trait SpaceMember {
 
     /// 🪙️ Queries exact borrowed metadata and frame allocations before the original typed source transfers.
     fn original_batch_receiving_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError>;
-    fn admit_original_batch_receiving(&self, wires: &mut Option<Vec<Vec<u8>>>, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn semio_framework_os_store_one_item_batch::member_owned_batch::original_receiving::MemberOriginalBatchReceiving>, RetainedCloneProgress)>, ValueError>;
+    fn admit_original_batch_receiving(&self, wires: &mut Option<Vec<Vec<u8>>>, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn semio_os_store_one_item_batch::member_owned_batch::original_receiving::MemberOriginalBatchReceiving>, RetainedCloneProgress)>, ValueError>;
     fn owned_publication_birth_bytes(&self, request: &MemberStoreOwnedBatchRequest) -> Result<usize, String>;
     fn begin_one_item_owned_publication(&self, request: &mut MemberStoreOwnedBatchRequest, grant: ArtifactStoreOneItemGrant) -> Result<Option<(Box<dyn ErasedMemberStoreOneItemPublication>, semio_framework_value::RetainedCloneProgress)>, String>;
     fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String>;
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String>;
-    fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
-    fn adopt_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
+    fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
+    fn adopt_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
     /// 🪞️ Reads an exact private staged root before its common visibility decision.
-    fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError>;
+    fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError>;
     /// ↩️ Returns a private candidate lease before its exact staged snapshot may be aborted.
-    fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)>;
+    fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)>;
     fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     /// 🧵️ The live typed snapshot behind an opaque immutable ownership boundary.
     fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String>;
@@ -98,7 +98,7 @@ pub trait SpaceMember {
     async fn is_dirty(&self) -> bool;
     async fn current_checkpoint_id(&self) -> Option<String>;
     async fn current_alternative_id(&self) -> Option<String>;
-    /// 🎞️ CW3: `semio_framework_os_spr::HybridLogicalTimestamp` (not `semio_framework`'s local one) — these
+    /// 🎞️ CW3: `semio_os_spr::HybridLogicalTimestamp` (not `semio_framework`'s local one) — these
     /// read `MutationMeta.timestamp`, which is the moved struct's field, typed against protocol_core.
     async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
     async fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
@@ -140,7 +140,7 @@ pub trait SpaceMember {
     /// `group_id` onto a member AFTER an ordinary `Apply` already hard-codes `group_id: None`,
     /// genesis needs a way to set `ArtifactEnvelope.owner` on a freshly-created child through the
     /// same type-erased interface, and `merge_policy` is what lets phase 1 fold every member's
-    /// `preview_wire` messages against one authority-chosen `semio_framework_os_spr::MergePolicy` without
+    /// `preview_wire` messages against one authority-chosen `semio_os_spr::MergePolicy` without
     /// downcasting.
 
 
@@ -195,7 +195,7 @@ pub trait SpaceMember {
     /// 🔀️ Stamps `origin` onto every `MutationMeta` entry of this member's TAIL applied
     /// edit — `stamp_tail_group_id`'s provenance-direction twin, used by
     /// `TransactionCoordinator::dispatch_group`'s `Peer` relation to mark a foreign member's edit
-    /// `semio_framework_os_spr::MutationOrigin::Transaction { initiator }` after dispatching it (the
+    /// `semio_os_spr::MutationOrigin::Transaction { initiator }` after dispatching it (the
     /// initiator's OWN edit is left `Owner` — it is not foreign to itself). Never called on the
     /// `Owned` relation path, which keeps every member's origin at its ordinary `Apply`-assigned
     /// default (`Owner`) — this is precisely what keeps `Owned` byte-identical to its pre-`Peer`
@@ -245,7 +245,7 @@ pub trait SpaceMember {
 
 
 
-    /// ⚖️ This member's own `semio_framework_os_spr::MergePolicy` — local/authority state (§C3: never
+    /// ⚖️ This member's own `semio_os_spr::MergePolicy` — local/authority state (§C3: never
     /// wire-carried, never part of shared history), consulted by `CompositionCoordinator` phase 1
     /// to decide whether the group's unioned `preview_wire` messages are accepted or rejected.
     /// Defaults to `MergePolicy::default()` (`Normal`) so every member reports a policy even before
@@ -254,8 +254,8 @@ pub trait SpaceMember {
     /// landed — override this method in the blanket impl below to delegate to it the moment that
     /// inherent method exists (Rust picks the inherent method over this trait one automatically, the
     /// same pattern `current_checkpoint_id` already relies on just above).
-    async fn merge_policy(&self) -> semio_framework_os_spr::MergePolicy {
-        semio_framework_os_spr::MergePolicy::default()
+    async fn merge_policy(&self) -> semio_os_spr::MergePolicy {
+        semio_os_spr::MergePolicy::default()
     }
 }
 //#endregion 🔖️BlobStore

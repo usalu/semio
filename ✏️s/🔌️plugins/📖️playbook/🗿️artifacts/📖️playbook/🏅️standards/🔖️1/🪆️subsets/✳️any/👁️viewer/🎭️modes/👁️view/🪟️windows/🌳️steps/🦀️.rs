@@ -5,13 +5,13 @@
 //! read-only.
 
 use crate::PlaybookSpec;
-use semio_framework_plugin::{TreeWindows, WindowKindDefinition};
+use semio_plugin::{TreeWindows, WindowKindDefinition};
 // 🚧️ SDK GAP: the seven framework window kits (contract §2.6 — `TreeWindowKit`/`TreeView`/
-// `TreeNodeView`/the `WindowKit` trait) are not yet in `semio_framework_plugin`'s curated crate-root
+// `TreeNodeView`/the `WindowKit` trait) are not yet in `semio_plugin`'s curated crate-root
 // re-export list (only reachable through `app`, unlike `ArtifactEditor`/`ArtifactViewer`/`Editor`/
 // `Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit`, which w0-f already promoted). Not fixable here
 // (`🧰️framework/**` is outside this packet's lease); flagged in this packet's notes file.
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 
 //#region 🔖️Constants
 pub const PLAYBOOK_VIEW_WINDOW_STEPS: &str = "playbook-view-steps";
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🌳️ One root node per step (labeled with the step title, falling back to its id when the title is
 /// empty), one leaf child per block (labeled `"<label> (<kind>)"`) — a faithful, read-only reflection
 /// of the same step/block nesting the editor's block-list builder edits.
-pub fn render(spec: &PlaybookSpec, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(spec: &PlaybookSpec, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let roots = spec
         .steps
         .iter()

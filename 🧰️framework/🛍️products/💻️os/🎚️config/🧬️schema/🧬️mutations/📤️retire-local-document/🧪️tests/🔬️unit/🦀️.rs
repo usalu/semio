@@ -1,6 +1,6 @@
-use semio_framework_os_kernel::ColdMutation;
-use semio_framework_os_kernel::ColdMutationDiff;
-use semio_framework_os_kernel::ColdDiffAlgebra;
+use semio_os_kernel::ColdMutation;
+use semio_os_kernel::ColdMutationDiff;
+use semio_os_kernel::ColdDiffAlgebra;
 use super::*;
 use crate::opening_config::mutations::{admit_local_document, apply_local_catalog_config_mutation_reporting, LocalDocument, LocalDocumentStorage};
 use protocol::{Mutation};

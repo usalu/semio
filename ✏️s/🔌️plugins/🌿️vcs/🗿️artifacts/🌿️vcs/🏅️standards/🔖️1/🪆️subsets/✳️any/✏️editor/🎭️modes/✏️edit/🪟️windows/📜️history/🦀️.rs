@@ -1,14 +1,14 @@
 //! 📜️ VCS play app — the history window: the checkpoint/alternative swimlane graph.
 
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::HistoryView;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_scene::GraphTimelineScene;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_plugin::HistoryView;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_scene::GraphTimelineScene;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_WINDOW_HISTORY: &str = "vcs-history";
@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 pub fn render(history: &HistoryView) -> UiAssemblyResult<BuiltNode> {
     let scene = GraphTimelineScene { columns_json: semio_framework_pack_json::to_json_string(&history.columns) };
-    scene_surface(VCS_PLAY_SURFACE_HISTORY, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::GraphTimeline, &scene)
+    scene_surface(VCS_PLAY_SURFACE_HISTORY, semio_plugin::plugin_app_close_prelude::SurfaceKind::GraphTimeline, &scene)
 }
 //#endregion 🔖️Render
 

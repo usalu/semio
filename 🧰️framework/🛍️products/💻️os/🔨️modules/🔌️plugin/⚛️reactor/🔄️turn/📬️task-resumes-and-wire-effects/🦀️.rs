@@ -25,7 +25,7 @@ use super::*;
 /// next one. A resume can itself spawn more tasks (`dispatch_emit` runs for real), so the
 /// executor may have fresh ready work by the time this returns — folded into `more_work` below
 /// rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
-pub fn drain_task_resumes<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
+pub fn drain_task_resumes<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
     let mut delivering = false;
     for _ in 0..max_rounds {
         let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()) else {
@@ -46,11 +46,11 @@ pub fn drain_task_resumes<PA: semio_framework_plugin_reactor_app::PluginApp>(run
             }
             TaskResumeOutcome::Command(bytes) => {
                 delivering = true;
-                semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes)
+                semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes)
             }
-            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
+            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
         };
-        let output = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(runtime, resume.instance, &resume.meta, input, identity, cx));
+        let output = ::semio_framework_async::poll::resolve_ready(semio_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(runtime, resume.instance, &resume.meta, input, identity, cx));
         for frame_bytes in output.frames {
             route_app_frame(resume.instance, &frame_bytes, effects);
         }

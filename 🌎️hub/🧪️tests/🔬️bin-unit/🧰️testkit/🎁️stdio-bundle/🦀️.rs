@@ -11,15 +11,15 @@ pub fn native_openable_stdio_bundle() -> std::path::PathBuf {
     let component_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(component));
     let component_blake3 = blake3::hash(component).to_hex().to_string();
     let receipts = semio_hub_stdio_catalog::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
-    let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
+    let viewer = semio_plugin::Viewer::builder(semio_plugin::Dialect { artifact_kind: "s.stdio.json", standard: semio_plugin::StandardId("rfc8259"), subset: semio_plugin::SubsetId::ANY })
         .document(["semio", "stdio", "json"])
-        .mode("view", semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
+        .mode("view", semio_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
         .default_mode_id("view")
-        .window_kind_def(<semio_framework_plugin::app::TreeWindowKit as semio_framework_plugin::app::WindowKit>::window_kind())
+        .window_kind_def(<semio_plugin::app::TreeWindowKit as semio_plugin::app::WindowKit>::window_kind())
         .build_definition();
     let mut viewer = viewer;
     viewer.artifact_kinds = semio_hub_stdio_catalog::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "s.stdio.json").collect();
-    let mut manifest = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::new("stdio", "Stdio Fixture", receipts[0].package_version).manifest;
+    let mut manifest = semio_plugin::Plugin::<semio_plugin::app::NoPluginApp>::new("stdio", "Stdio Fixture", receipts[0].package_version).manifest;
     manifest.artifact_kinds = semio_hub_stdio_catalog::native_codec_artifact_kinds();
     manifest.apps.push(viewer.clone());
     manifest.topic_contributions.push(semio_hub_stdio_catalog::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));

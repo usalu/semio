@@ -11,8 +11,8 @@ use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_s_artifact_procedural_2d_mode_edit::windows::preview as edit_preview;
 use semio_s_artifact_procedural_2d_mode_generate::windows::preview as generate_preview;
 use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalWindow;
-use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os_flow::{FlowEvalPublication, FlowEvalSession};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 pub use semio_s_artifact_procedural_2d_preview_eval::FlowEvalTick;
 
 
@@ -26,7 +26,7 @@ pub fn generation2d_preview_target(kind: &str) -> Option<PreviewEvalTarget> {
 }
 
 /// 🪟️ Every attached preview window, in roster order — the windows the `previewEval` run evaluates.
-pub fn generation2d_preview_windows(view: Option<&semio_framework_plugin::ViewModel>) -> Vec<PreviewEvalWindow<'_>> {
+pub fn generation2d_preview_windows(view: Option<&semio_plugin::ViewModel>) -> Vec<PreviewEvalWindow<'_>> {
     semio_s_artifact_procedural_2d_preview_eval::attached_preview_windows(view, GENERATION2D_PREVIEW_TARGETS)
 }
 
@@ -58,7 +58,7 @@ pub fn evaluate(window_id: &str, window_kind_id: &str, target: PreviewEvalTarget
             };
             let host = semio_s_artifact_procedural_2d_io_text::snapshot::generation_preview_host(&doc.snapshot.host_snapshot, &values);
             let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, &host.host_snapshot, session, retained.as_deref(), retained_grant);
-            host.retire_cold().map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()))?;
+            host.retire_cold().map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.retained"), error.into_message()))?;
             outcome.map_err(|error| Fault::from(error.to_string()))?
         }
     };

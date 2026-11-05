@@ -13,8 +13,8 @@ pub struct ChangeZoneNoise {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZoneNoise where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_noise::ChangeZoneNoise> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-noise", kind: "change-zone-noise", record: "ChangeZoneNoise" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change sound pressure level of the zone", "Schalldruckpegel der Zone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change sound pressure level of the zone", "Schalldruckpegel der Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
 }

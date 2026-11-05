@@ -4,12 +4,12 @@
 
 use semio_framework::manifest::ApprovalMode;
 use semio_framework::manifest::UndoMode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use std::collections::BTreeMap;
 use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, Catalog, CatalogSource, compile};
 use crate::search::{SearchFilters, search};
-use semio_framework_os_mcp_schema::schema::{compile_validator, validate};
+use semio_os_mcp_schema::schema::{compile_validator, validate};
 
 //#region 🔖️Finding
 

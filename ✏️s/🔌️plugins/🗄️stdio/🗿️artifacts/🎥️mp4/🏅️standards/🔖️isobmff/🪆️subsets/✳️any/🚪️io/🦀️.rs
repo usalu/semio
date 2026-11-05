@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
     use crate::standards::isobmff::subsets::any::io::Mp4Analyzer;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 
@@ -46,7 +46,7 @@ pub mod derived_composition {
     pub async fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences().await;
-        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") }, store::bare_artifact_codec::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA))
+        semio_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") }, store::bare_artifact_codec::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -100,14 +100,14 @@ pub use encode::*;
 pub mod playback {
     use super::{Mp4EncodeAdvance, Mp4EncodeCursor, Mp4Snapshot, STDIO_MP4_DOCUMENT_SCHEMA};
     use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-    use semio_framework_plugin::{ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault};
+    use semio_plugin::{ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault};
     use semio_s_artifact_stdio_contract::media_export::{IncrementalMediaAdvance, IncrementalMediaExportJob, IncrementalMediaExportSpec, PLAYBACK_CONTRACT, PLAYBACK_TOOL_ID};
     use std::marker::PhantomData;
 
     pub const MIME_TYPE: &str = "video/mp4";
     pub const MEDIA_SCHEMA: &str = "stdio.mp4";
     pub const PAYLOAD_SCHEMA: &str = "stdio.mp4.playback-export.v1";
-    pub const MEDIA_TYPE: semio_framework_plugin::MediaType = semio_s_artifact_stdio_contract::media_export::PLAYBACK_MEDIA_TYPE;
+    pub const MEDIA_TYPE: semio_plugin::MediaType = semio_s_artifact_stdio_contract::media_export::PLAYBACK_MEDIA_TYPE;
 
     pub struct Mp4PlaybackExport;
     impl IncrementalMediaExportSpec for Mp4PlaybackExport {
@@ -142,7 +142,7 @@ pub mod playback {
         fn payload_schema_id(&self) -> &str { PAYLOAD_SCHEMA }
         fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
         fn execution_contract(&self) -> ToolExecutionContract { PLAYBACK_CONTRACT }
-        semio_framework_plugin::retained_command::reserved_tool_job_factory_admission!();
+        semio_plugin::retained_command::reserved_tool_job_factory_admission!();
     }
     impl<A: ArtifactApp<Snapshot = Mp4Snapshot>> ArtifactOwnedToolJobFactory for Mp4MediaExportJobFactory<A> {
         type Owner = A;
@@ -156,7 +156,7 @@ pub mod playback {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::isobmff::subsets::any::io::Mp4Composer as Mp4RawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -180,7 +180,7 @@ pub mod derived_construction {
     use crate::standards::isobmff::subsets::any::schema::mutations::{Mp4Mutation};
 
     use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Mp4BuilderConstruction {
@@ -221,7 +221,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::isobmff::subsets::any::io;
     use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Snapshot, STDIO_MP4_DOCUMENT_SCHEMA};
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Mp4Parts {
@@ -234,24 +234,24 @@ pub mod derived_analysis {
         type Parts = Mp4Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
-                        return semio_framework_plugin::io::Confidence::High;
+                        return semio_plugin::io::Confidence::High;
                     }
                     let marker = STDIO_MP4_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
                     if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_MP4_DOCUMENT_SCHEMA) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -260,20 +260,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Mp4Parts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Mp4Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Mp4Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -285,7 +285,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec Mp4BuilderFacets {
         construction: Mp4BuilderConstruction,
         analysis: Mp4AnalyzerAnalysis,

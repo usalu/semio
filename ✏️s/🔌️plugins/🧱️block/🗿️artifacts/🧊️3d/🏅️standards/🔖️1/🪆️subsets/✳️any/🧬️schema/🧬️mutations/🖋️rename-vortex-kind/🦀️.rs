@@ -25,8 +25,8 @@ pub fn rename_vortex_kind<Op: From<crate::rename_vortex_kind::RenameVortexKind>>
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for RenameVortexKind where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::rename_vortex_kind::RenameVortexKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "vortex-kind", kind: "rename-vortex-kind", record: "RenamedVortexKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename vortex kind \"{}\" to \"{}\"", self.id, self.new_name), &format!("Wirbelart \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename vortex kind \"{}\" to \"{}\"", self.id, self.new_name), &format!("Wirbelart \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

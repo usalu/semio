@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingTiedownNm 
         record: "ChangeBuildingTiedownNm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stabilising moment of tie-downs and anchors about the overturning edge", "Rückhaltemoment von Zugankern und Verankerungen um die Kippkante ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stabilising moment of tie-downs and anchors about the overturning edge", "Rückhaltemoment von Zugankern und Verankerungen um die Kippkante ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-tiedown-nm".into()]

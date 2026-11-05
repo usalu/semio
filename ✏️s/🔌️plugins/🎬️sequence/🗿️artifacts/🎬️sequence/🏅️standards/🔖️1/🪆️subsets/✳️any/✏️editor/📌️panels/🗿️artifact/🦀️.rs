@@ -5,23 +5,23 @@ use crate::editor::sequence::host::{control_slots, is_control_kind};
 use crate::editor::sequence::editor_vocabulary::SEQUENCE_INTERACTION_STEPS;
 use crate::editor::sequence::editor_vocabulary::{sequence_action, ui_label, ui_value_map, ui_value_text, SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_PLAY_APP_ID};
 use crate::{SequenceHostSnapshot, SequenceStep};
-use semio_framework_plugin::plugin_app_close_prelude::{Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::{Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_window_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_BODY_ARTIFACT: &str = "sequence.play.artifact";
@@ -62,7 +62,7 @@ fn slot_label<'a>(slot_name: &'a str, labels: &SequenceLabels) -> &'a str {
 /// number of child steps at every depth, while a control step's own children are a closed set (its
 /// collapse `toggle` plus the one or two slots [`control_slots`] declares), so the toggle stays a
 /// fixed child control of the step row rather than competing with a window.
-fn build_step_tree_item(step: &SequenceStep, host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn build_step_tree_item(step: &SequenceStep, host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut builder = ui::tree_item(ui_label(format!("{} ({})", step.id, step.kind))?)
         .try_id(&step.id)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence step id admission failed"))?
@@ -103,7 +103,7 @@ fn build_step_tree_item(step: &SequenceStep, host_snapshot: &SequenceHostSnapsho
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let root_steps: Vec<&SequenceStep> = host_snapshot.steps.iter().filter(|step| step.slot.is_none()).collect();
     PanelTreeBuilder::new("sequence-play-document")?
         .window_section_or_placeholder(

@@ -92,7 +92,7 @@ async fn grammar_conformance_law() {
     let grammar_text = crate::standards::v_utf_8::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO;
     let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
     assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar);
-    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     let body = crate::examples::demo::PRIMARY_TEXT;
     let normalized = format!("{}\n{body}", <TxtSnapshot as pack::snapshot::ArtifactDsl>::envelope_id());
     let ok = recognizer.recognize(&normalized).expect("recognize should not error");

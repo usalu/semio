@@ -4,7 +4,7 @@ use super::*;
 use semio_s_artifact_block_3d_editor_modes::BLOCK3D_UTILITY_SURFACE_BRUSH;
 
 //#region 🔖️Manifest
-pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_block3d_app() -> semio_plugin::AppDefinition {
     Editor::builder(BLOCK3D_DIALECT)
         .document(["semio", "block", "3d"])
         .artifact_kind(artifact_kind())
@@ -41,7 +41,7 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .mutation("addVortex", LocalizedLabel::native("Add Vortex", "Wirbel hinzufügen"))
         .mutation("removeVortex", LocalizedLabel::native("Remove Vortex", "Wirbel entfernen"))
         .action_destructive("removeVortex")
-        .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+        .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
         .action_destructive("setActiveExample")
         .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
@@ -54,11 +54,11 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .view_action("setBrushRadius", LocalizedLabel::native("Set Brush Radius", "Pinselradius festlegen"))
         .view_action("setBrushFlip", LocalizedLabel::native("Set Brush Flip", "Pinselrichtung umkehren"))
         .view_action("worldSurfaceHover", LocalizedLabel::native("Surface Hover", "Flächenhover"))
-        .action_audience("worldSurfaceHover", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("worldSurfaceHover", semio_plugin::CapabilityAudience::Input)
         .view_action("worldSurfaceLeave", LocalizedLabel::native("Surface Leave", "Fläche verlassen"))
         .mutation("worldSurfacePlace", LocalizedLabel::native("Place Vortex", "Wirbel platzieren"))
         .mutation("patchRepresentation", LocalizedLabel::native("Patch Representation", "Darstellung bearbeiten"))
-        .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
+        .action_with(semio_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_plugin::ActionKind::View, "camera"))
         .action_interactive_job("patchObjectKind", InteractiveJobClassification::Migrated)
         .action_interactive_job("addRepresentation", InteractiveJobClassification::Migrated)
         .action_interactive_job("removeRepresentation", InteractiveJobClassification::Migrated)
@@ -100,9 +100,9 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .action_describe("setBrushRadius", LocalizedLabel::native("Sets the radius of the vortex placement brush; only the editor's brush setting changes.", "Legt den Radius des Wirbel-Platzierungspinsels fest; nur die Pinseleinstellung des Editors ändert sich."))
         .action_describe("setBrushFlip", LocalizedLabel::native("Sets whether the placement brush flips the direction of vortices it places; only the brush setting changes.", "Legt fest, ob der Platzierungspinsel die Richtung gesetzter Wirbel umkehrt; nur die Pinseleinstellung ändert sich."))
         .action_describe("patchRepresentation", LocalizedLabel::native("Sets one field of one representation by id: its name, mesh URL, level of detail or description.", "Setzt ein Feld einer Darstellung anhand ihrer Id: Name, Netz-URL, Detailstufe oder Beschreibung."))
-        .action_audience("worldSurfaceLeave", semio_framework_plugin::CapabilityAudience::Input)
-        .action_audience("worldSurfacePlace", semio_framework_plugin::CapabilityAudience::Input)
-        .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("worldSurfaceLeave", semio_plugin::CapabilityAudience::Input)
+        .action_audience("worldSurfacePlace", semio_plugin::CapabilityAudience::Input)
+        .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
         .action_destructive("edit")
         .build_definition()
 }

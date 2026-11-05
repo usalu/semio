@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveFootbridge where O
         record: "RemovedFootbridge",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove footbridge {}", self.id), &format!("Fußgängerbrücke {} entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove footbridge {}", self.id), &format!("Fußgängerbrücke {} entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

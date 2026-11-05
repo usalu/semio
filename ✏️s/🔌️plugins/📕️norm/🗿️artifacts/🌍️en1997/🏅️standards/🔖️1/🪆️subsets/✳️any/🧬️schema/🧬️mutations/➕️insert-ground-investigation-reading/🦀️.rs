@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertGroundInvestigatio
         verb: "insert", entity: "investigation-reading", kind: "insert-ground-investigation-reading", record: "InsertedInvestigationReading",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert investigation reading", "Erkundungsmesswert einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert investigation reading", "Erkundungsmesswert einfügen")
     }
 }
 

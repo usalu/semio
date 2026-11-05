@@ -16,8 +16,8 @@ pub struct SetShapePosition {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapePosition {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape-position", kind: "set-shape-position", record: "SetShapePosition" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set shape position", "Position der Form setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set shape position", "Position der Form setzen")
     }
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.node.part_path.clone()).chain(self.address.node.node_path.iter().map(usize::to_string)).collect()

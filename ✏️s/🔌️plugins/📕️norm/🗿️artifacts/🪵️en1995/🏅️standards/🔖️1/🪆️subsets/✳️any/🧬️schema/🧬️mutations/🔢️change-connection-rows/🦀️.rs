@@ -10,7 +10,7 @@ pub struct ChangeConnectionRows { pub connection_id: String, pub new_value: u32 
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeConnectionRows where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_rows::ChangeConnectionRows> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-rows", kind: "change-connection-rows", record: "ChangedConnectionRows" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Rows of connection {}", self.connection_id), &format!("Reihen von Verbindung {} ändern", self.connection_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Rows of connection {}", self.connection_id), &format!("Reihen von Verbindung {} ändern", self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
 }
 

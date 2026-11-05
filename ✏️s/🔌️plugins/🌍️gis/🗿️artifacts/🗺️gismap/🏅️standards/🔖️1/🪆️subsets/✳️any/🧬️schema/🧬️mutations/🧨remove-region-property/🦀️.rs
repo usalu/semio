@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "region-property", kind: "remove-region-property", record: "RegionPropertyRemoved" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove property \"{}\" of region \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Region \"{}\" entfernen", self.key, self.feature))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove property \"{}\" of region \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Region \"{}\" entfernen", self.key, self.feature))
     }
 }
 

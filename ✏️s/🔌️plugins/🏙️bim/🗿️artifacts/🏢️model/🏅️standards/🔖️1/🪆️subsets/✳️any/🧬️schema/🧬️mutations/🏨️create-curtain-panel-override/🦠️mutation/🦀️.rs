@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "curtain-panel-override", kind: "create-curtain-panel-override", record: "CreateCurtainPanelOverride" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Override cell ({}, {}) of curtain wall \"{}\"", self.curtain_panel_override.u, self.curtain_panel_override.v, self.curtain_panel_override.curtain), &format!("Feld ({}, {}) von Vorhangfassade \"{}\" abweichend füllen", self.curtain_panel_override.u, self.curtain_panel_override.v, self.curtain_panel_override.curtain))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Override cell ({}, {}) of curtain wall \"{}\"", self.curtain_panel_override.u, self.curtain_panel_override.v, self.curtain_panel_override.curtain), &format!("Feld ({}, {}) von Vorhangfassade \"{}\" abweichend füllen", self.curtain_panel_override.u, self.curtain_panel_override.v, self.curtain_panel_override.curtain))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

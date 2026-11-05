@@ -2,8 +2,8 @@
 
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use semio_framework_artifact_workflow_workflow_schema::*;
 #[cfg(test)]
@@ -11,8 +11,8 @@ use semio_framework_artifact_workflow_workflow_graph::*;
 #[cfg(test)]
 use semio_framework_artifact_workflow_workflow_snapshot::*;
 #[cfg(test)] use semio_framework::{MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, PortMultiplicity};
-#[cfg(test)] use semio_framework_ui_locale::Locale;
-#[cfg(test)] use semio_framework_ui_locale::Terminology;
+#[cfg(test)] use semio_ui_locale::Locale;
+#[cfg(test)] use semio_ui_locale::Terminology;
 #[cfg(test)] use std::collections::HashSet;
 
 /// 🧾️ Reads one file below the workflow node at test time instead of compiling it into the suite; the text lives for the whole test process.

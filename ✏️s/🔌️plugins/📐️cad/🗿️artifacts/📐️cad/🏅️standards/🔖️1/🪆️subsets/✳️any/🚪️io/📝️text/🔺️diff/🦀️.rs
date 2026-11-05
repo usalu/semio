@@ -8,4 +8,4 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type CadDiffText = String;
 
-semio_framework_os_kernel::diff_text!(crate::CadDiff);
+semio_os_kernel::diff_text!(crate::CadDiff);

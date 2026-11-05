@@ -1,8 +1,8 @@
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 
 // GIS terrain artifact — the document entity the 3d app edits (constitutional: general).
 
@@ -28,15 +28,15 @@ pub use semio_s_artifact_gis_gisterrain_inferences::{GISTERRAIN_DIALECT, GIS_3D_
 /// 🏔️ The canonical GIS terrain artifact-kind declaration: one id with its dialect and its native codec receipt
 /// (`s.gis.gisterrain`), so the hub's one open-target rule pairs it with the terrain editor and viewer; the payload
 /// schema stays `gis.terrain`.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: GISTERRAIN_DIALECT.artifact_kind.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D Terrain", "3D-Gelände"),
+        label: semio_ui_locale::LocalizedLabel::native("3D Terrain", "3D-Gelände"),
         source_format: GIS_3D_TERRAIN_SCHEMA.into(),
         component_kind: "gisterrain".into(),
         dimension: "3d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::ThreeD, form: semio_plugin::MediaForm::Mesh },
         schema: GIS_3D_TERRAIN_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
@@ -55,8 +55,8 @@ pub use semio_s_artifact_gis_gisterrain_inferences::{gis_terrain_mesh_child_hand
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
 /// 🧾️ Defines s.gis.gisterrain's immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.gis.gisterrain")?)
         .capability(
@@ -118,8 +118,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.gis.gisterrain's typed runtime declaration.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(schema::gisterrain_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::gisterrain_artifact_inference_descriptor()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())

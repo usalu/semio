@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "ext-g-state", kind: "remove-ext-g-state", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove ext-g-state {}", self.id), &format!("ExtGState {} entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove ext-g-state {}", self.id), &format!("ExtGState {} entfernen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

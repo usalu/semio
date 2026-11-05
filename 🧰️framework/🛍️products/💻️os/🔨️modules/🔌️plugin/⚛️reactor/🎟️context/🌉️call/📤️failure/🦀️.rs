@@ -2,7 +2,7 @@
 use semio_framework_job::OriginalDomainProjection;
 use semio_framework_job::{receive_original_retained_work, OriginalTurnFailure, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
 use semio_framework_job_payload::{RetainedPayloadBuilder, JobPayloadStream};
-use semio_framework_os_kernel::record::BorrowedProjectedPackCursor;
+use semio_os_kernel::record::BorrowedProjectedPackCursor;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 
 /// 🏛️ The enclosing Entry admission owns this fixed window and metadata before the same cause is lent.

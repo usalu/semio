@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "elements", kind: "rotate-elements", record: "RotateElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {} element(s) by {} rad", self.ids.len(), self.angle), &format!("{} Element(e) um {} rad drehen", self.ids.len(), self.angle))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rotate {} element(s) by {} rad", self.ids.len(), self.angle), &format!("{} Element(e) um {} rad drehen", self.ids.len(), self.angle))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

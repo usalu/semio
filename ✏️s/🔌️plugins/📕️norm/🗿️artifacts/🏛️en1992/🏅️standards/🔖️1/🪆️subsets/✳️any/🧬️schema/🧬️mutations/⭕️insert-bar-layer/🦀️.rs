@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertBarLayer where Op:
         record: "InsertedBarLayer",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bar layer {}", self.bar_layer.id), &format!("Bewehrungslage {} einfügen", self.bar_layer.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert bar layer {}", self.bar_layer.id), &format!("Bewehrungslage {} einfügen", self.bar_layer.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

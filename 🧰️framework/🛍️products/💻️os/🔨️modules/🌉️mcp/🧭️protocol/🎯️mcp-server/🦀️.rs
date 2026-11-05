@@ -1,11 +1,11 @@
 //! 🎯️ Mcp server of the server crate: The MCP server dispatcher and the stdio transport.
 
 use std::sync::Arc;
-use semio_framework_os_mcp_bridge::session::AgentConversation;
-use semio_framework_os_mcp_bridge_codec::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS;
-use semio_framework_os_mcp_wire::notify::{DEFAULT_PAGE_SIZE, NotificationSlot, ProgressBinding, ResourceSubscriptions, broadcast_tool_result_changes, cancel_request, decode_cursor, enter_progress_scope, enter_request_scope, paginate};
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, ClientFeatures, ContentBlock, INVALID_PARAMS, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcRequest, JsonRpcResponse, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_CANCELLED, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_NOT_FOUND, METHOD_PING, METHOD_PROMPTS_GET, METHOD_PROMPTS_LIST, METHOD_RESOURCES_LIST, METHOD_RESOURCES_READ, METHOD_RESOURCES_SUBSCRIBE, METHOD_RESOURCES_TEMPLATES_LIST, METHOD_RESOURCES_UNSUBSCRIBE, METHOD_SERVER_DISCOVER, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, NullBackend, PromptRegistry, ProtocolEra, ResourceRegistry, SERVER_INSTRUCTIONS, SUPPORTED_PROTOCOL_VERSIONS, ToolRegistry, UNSUPPORTED_PROTOCOL_VERSION, extract_meta_protocol_version};
-use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+use semio_os_mcp_bridge::session::AgentConversation;
+use semio_os_mcp_bridge_codec::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS;
+use semio_os_mcp_wire::notify::{DEFAULT_PAGE_SIZE, NotificationSlot, ProgressBinding, ResourceSubscriptions, broadcast_tool_result_changes, cancel_request, decode_cursor, enter_progress_scope, enter_request_scope, paginate};
+use semio_os_mcp_wire::protocol::{CallToolResult, ClientFeatures, ContentBlock, INVALID_PARAMS, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcRequest, JsonRpcResponse, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_CANCELLED, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_NOT_FOUND, METHOD_PING, METHOD_PROMPTS_GET, METHOD_PROMPTS_LIST, METHOD_RESOURCES_LIST, METHOD_RESOURCES_READ, METHOD_RESOURCES_SUBSCRIBE, METHOD_RESOURCES_TEMPLATES_LIST, METHOD_RESOURCES_UNSUBSCRIBE, METHOD_SERVER_DISCOVER, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, NullBackend, PromptRegistry, ProtocolEra, ResourceRegistry, SERVER_INSTRUCTIONS, SUPPORTED_PROTOCOL_VERSIONS, ToolRegistry, UNSUPPORTED_PROTOCOL_VERSION, extract_meta_protocol_version};
+use semio_os_mcp_workspace::gateway_backend::GatewayBackends;
 
 //#region 🔖️Server
 

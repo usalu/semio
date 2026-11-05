@@ -1,8 +1,8 @@
 //! 🚪 IFC4X3_ADD2 source STEP boundary and registered native graph composition.
 use pack::snapshot::ArtifactPack;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_plugin::io::{AnalyzeSource, ComposeError, ComposeSource, ComposerEntry, Composition, Confidence};
-use semio_framework_plugin::{ArtifactComposer, ArtifactComposition, ArtifactDeserializer, ArtifactSerializer};
+use semio_plugin::io::{AnalyzeSource, ComposeError, ComposeSource, ComposerEntry, Composition, Confidence};
+use semio_plugin::{ArtifactComposer, ArtifactComposition, ArtifactDeserializer, ArtifactSerializer};
 use semio_s_artifact_stdio_contract::part21::{self, Part21Header, Part21Value};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{self, IfcSnapshot, IfcValue};
 use semio_s_artifact_stdio_txt::TxtSnapshot;
@@ -28,7 +28,7 @@ pub use reading::{read as receive_ifc4x3_step_txt,NativeStepReadError};
 pub use importing::TxtIntoIfc4x3Native;
 
 /// 🫴️ Publishes natural STEP inside the UTF-8 artifact envelope through the original encoder owner.
-pub fn write_ifc4x3_step_pack(source: &IfcSnapshot, owner: &mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, semio_framework_value::ValueError> { writing::encode(source, owner) }
+pub fn write_ifc4x3_step_pack(source: &IfcSnapshot, owner: &mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, semio_framework_value::ValueError> { writing::encode(source, owner) }
 
 pub const IFC4X3_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4x3"), subset: SubsetId("*") };
 pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -467,20 +467,20 @@ pub fn write_ifc4x3_step(snapshot: &IfcSnapshot) -> Result<String, IfcStepError>
 }
 
 /// 🔌 Connect source parsing checkpoints to the original framework IO cancellation authority.
-pub fn parse_ifc4x3_step_io(text: &str, control: &mut semio_framework_os_kernel::io::control::IoRunControl<'_, '_>) -> Result<IfcSnapshot, IfcStepError> {
+pub fn parse_ifc4x3_step_io(text: &str, control: &mut semio_os_kernel::io::control::IoRunControl<'_, '_>) -> Result<IfcSnapshot, IfcStepError> {
     parse_ifc4x3_step_controlled(text, &mut |_| control.checkpoint().is_ok())
 }
 
 /// 🔌 Connect source writing checkpoints to the original framework IO cancellation authority.
-pub fn write_ifc4x3_step_io(snapshot: &IfcSnapshot, control: &mut semio_framework_os_kernel::io::control::IoRunControl<'_, '_>) -> Result<String, IfcStepError> {
+pub fn write_ifc4x3_step_io(snapshot: &IfcSnapshot, control: &mut semio_os_kernel::io::control::IoRunControl<'_, '_>) -> Result<String, IfcStepError> {
     write_ifc4x3_step_controlled(snapshot, &mut |_| control.checkpoint().is_ok())
 }
 
 fn compose_error(error: impl fmt::Display) -> ComposeError {
     ComposeError { message: error.to_string(), diagnostics: vec![] }
 }
-fn pack_error(error: impl fmt::Display) -> semio_framework_os_kernel::PackError {
-    semio_framework_os_kernel::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
+fn pack_error(error: impl fmt::Display) -> semio_os_kernel::PackError {
+    semio_os_kernel::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
 }
 
 /// 🎹 Compose one source, refusing ambiguous multi-source replacement or foreign schema bytes.
@@ -528,7 +528,7 @@ impl ArtifactDeserializer for Ifc4x3FromTxt {
     type Into = IfcSnapshot;
     const FROM: Dialect = TXT_DIALECT;
     const INTO: Dialect = IFC4X3_DIALECT;
-    async fn deserialize(from: &Self::From) -> Result<Self::Into, semio_framework_os_kernel::PackError> {
+    async fn deserialize(from: &Self::From) -> Result<Self::Into, semio_os_kernel::PackError> {
         parse_ifc4x3_step(&from.to_body()).map_err(pack_error)
     }
 }
@@ -540,7 +540,7 @@ impl ArtifactSerializer for Ifc4x3ToTxt {
     type Into = TxtSnapshot;
     const FROM: Dialect = IFC4X3_DIALECT;
     const INTO: Dialect = TXT_DIALECT;
-    async fn serialize(from: &Self::From) -> Result<Self::Into, semio_framework_os_kernel::PackError> {
+    async fn serialize(from: &Self::From) -> Result<Self::Into, semio_os_kernel::PackError> {
         Ok(TxtSnapshot::from_body(&write_ifc4x3_step(from).map_err(pack_error)?))
     }
 }
@@ -548,7 +548,7 @@ impl ArtifactSerializer for Ifc4x3ToTxt {
 /// 📇 Actual import and export entries consumed by the artifact declaration and registry.
 pub fn entries() -> &'static [ComposerEntry] {
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::composer_entry_of::<Ifc4x3Composer>(), semio_framework_plugin::serializer_entry_of::<Ifc4x3ToTxt>()]).as_slice()
+    ENTRIES.get_or_init(|| vec![semio_plugin::composer_entry_of::<Ifc4x3Composer>(), semio_plugin::serializer_entry_of::<Ifc4x3ToTxt>()]).as_slice()
 }
 
 #[cfg(test)]

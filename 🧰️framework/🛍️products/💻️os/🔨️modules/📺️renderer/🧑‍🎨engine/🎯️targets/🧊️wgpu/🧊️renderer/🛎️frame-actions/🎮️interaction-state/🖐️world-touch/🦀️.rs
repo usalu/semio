@@ -95,14 +95,14 @@ pub(super) fn intents_of(step: &TouchStep, projection: OrbitProjection, height: 
 }
 
 /// 🖐️ Applies touch steps to a `world-3d` surface: the intents go to the interaction authority exactly like a mouse's; a long press, tap or double tap is collected for the plugin.
-pub(super) fn apply(state: &mut infinite_world::world::World3dState, steps: &[TouchStep], base: &PointerModifiers, gestures: &mut Vec<(ShellTouchGesture, f32, f32)>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+pub(super) fn apply(state: &mut infinite_world::world::World3dState, steps: &[TouchStep], base: &PointerModifiers, gestures: &mut Vec<(ShellTouchGesture, f32, f32)>) -> Result<(), semio_ui_action::BoundedActionFault> {
     let height = f64::from(state.session.bounds.h);
     let projection = if state.camera.orbit.projection.is_parallel() { OrbitProjection::Orthographic { frustum_height: height } } else { OrbitProjection::Perspective { fov_y_radians: f64::from(state.camera.orbit.fov_y) } };
     for step in steps {
         let (intents, gesture) = intents_of(step, projection, height, base);
         gestures.extend(gesture);
         for intent in intents.into_iter().flatten() {
-            enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits)?;
+            enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).map_err(|_| semio_ui_action::BoundedActionFault::ItemCredits)?;
         }
     }
     Ok(())

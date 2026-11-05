@@ -49,6 +49,26 @@
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "nativeSources",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          },
+          "runtimeSourceEntries": [
+            "{projectRoot}/📜️script.ts"
+          ]
+        }
       }
     },
     "test-media-adoption-source": {

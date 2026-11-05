@@ -2,8 +2,8 @@
 
 use super::*;
 use semio_s_artifact_raster_raster_editor_commands::RasterCommand;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::{FaultCode, FaultOrigin};
+use semio_plugin::Fault;
+use semio_plugin::{FaultCode, FaultOrigin};
 
 fn snake(key: &str) -> String {
     let mut out = String::with_capacity(key.len() + 4);

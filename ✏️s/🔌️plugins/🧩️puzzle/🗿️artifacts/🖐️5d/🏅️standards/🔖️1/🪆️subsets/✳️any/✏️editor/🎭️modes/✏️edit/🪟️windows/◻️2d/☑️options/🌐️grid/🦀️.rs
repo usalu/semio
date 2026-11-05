@@ -9,7 +9,7 @@ use crate::editor::puzzle5d::entities::puzzle5d_action;
 use crate::editor::puzzle5d::PUZZLE5D_GRID_FACTOR_MAX;
 use crate::editor::puzzle5d::PUZZLE5D_GRID_FACTOR_MIN;
 use crate::editor::puzzle5d::PUZZLE5D_PLAY_CONTROLLER_ID;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 /// 🌐️ `puzzle5d-play-board-grid` — visible / snap / factor.
 pub fn measure(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeasure {

@@ -13,7 +13,7 @@ use super::*;
 /// keystroke's buffer and caret range — so they stay out of the palette and the Actions rail, where a
 /// press carries neither (`textSelect` was refused `missing start`, `textEdit` would have emptied the
 /// query). `patchNodes`' `nodeIds` is optional: left empty, the verb renames the selected nodes.
-pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_trinity_jack_app() -> semio_plugin::AppDefinition {
     Editor::builder(TRINITY_JACK_DIALECT).document(["semio", "trinity", "jack"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.trinity".into(),
@@ -21,7 +21,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
                 source_format: "trinity.graph".into(),
                 component_kind: "trinity".into(),
                 dimension: "graph".into(),
-                media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+                media_capability: semio_plugin::OsMediaCapability::MeshOnly,
                 media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
                 schema: "trinity.graph".into(),
                 export_formats: vec![],
@@ -55,20 +55,20 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
                 PanelGroup::Details,
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
             )
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_with(semio_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
             .action_destructive("deleteSelection")
             .mutation("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"))
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Mutation).with_category("methods"))
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
+            .action_with(semio_plugin::ActionDefinition::bounded_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Mutation).with_category("methods"))
+            .action_with(semio_plugin::ActionDefinition::bounded_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
+            .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
             .action_destructive("setActiveExample")
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), ActionKind::Mutation) })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::bounded_catalog("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), ActionKind::Mutation) })
             .action_destructive("loadDocumentJson")
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::Mutation, "typography") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"), ActionKind::View, "text-cursor") })
-            .action_with(semio_framework_plugin::ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::Mutation, "typography").with_category("utilities"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::Mutation, "typography") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"), ActionKind::View, "text-cursor") })
+            .action_with(semio_plugin::ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::Mutation, "typography").with_category("utilities"))
+            .action_with(semio_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
             .action_interactive_job("runQuery", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadExampleQuery", InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
@@ -130,7 +130,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("loadExampleQuery", LocalizedLabel::native("Makes one of the bundled example queries the document's query, runs it and shows its matches in the given results window.", "Macht eine der mitgelieferten Beispielabfragen zur Abfrage des Dokuments, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole document with a bundled fixture (the Nakagin capsule tower or the branch chain) and its example query, by example id.", "Ersetzt das gesamte Dokument durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette) samt Beispielabfrage, anhand der Beispiel-Id."))
             .action_describe("loadDocumentJson", LocalizedLabel::native("Replaces the whole component graph with one parsed from the given document JSON; invalid JSON changes nothing.", "Ersetzt den gesamten Bauteilgraphen durch einen, der aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."))
-            .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("nodeGraphViewport", semio_plugin::CapabilityAudience::Chrome)
             .action_destructive("runQuery")
             .build_definition()
 }

@@ -32,7 +32,7 @@ pub fn emitted_action_ids(projection: &str) -> BTreeSet<String> {
 }
 
 /// 🎛️ Observes action descriptors throughout a native window's chrome measures.
-pub fn measure_action_ids(measures: &[semio_framework_ui_layout::layout::WindowMeasure]) -> BTreeSet<String> {
+pub fn measure_action_ids(measures: &[semio_ui_layout::layout::WindowMeasure]) -> BTreeSet<String> {
     let mut found = BTreeSet::new();
     collect(&serde_json::to_value(measures).expect("measures json"), false, &mut found);
     found
@@ -57,7 +57,7 @@ pub mod tests {
             if scoped {
                 assert_eq!(emitted_action_ids(&case["document"].to_string()), expected);
             } else if case["kind"] == "measures" {
-                let measures: Vec<semio_framework_ui_layout::layout::WindowMeasure> = serde_json::from_value(case["document"].clone()).unwrap();
+                let measures: Vec<semio_ui_layout::layout::WindowMeasure> = serde_json::from_value(case["document"].clone()).unwrap();
                 assert_eq!(measure_action_ids(&measures), expected);
             }
         }

@@ -10,7 +10,7 @@ pub struct InsertPlatedPanel { pub index: Option<usize>, pub plated_panel: Plate
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertPlatedPanel where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_plated_panel::RemovePlatedPanel> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "plated-panel", kind: "insert-plated-panel", record: "InsertedPlatedPanel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert plated panel at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Beulfeld an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert plated panel at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Beulfeld an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

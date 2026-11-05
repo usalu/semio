@@ -33,18 +33,18 @@ class WasmScript extends BundleScript {
       rsDir: this.root,
       componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/os/host/rs",
-      wasmBaseName: "semio_framework_os",
+      wasmBaseName: "semio_os",
       pkg: {
         name: "@semio-tech/framework-os-rs",
         files: [
-          "semio_framework_os_bg.wasm",
-          "semio_framework_os.js",
-          "semio_framework_os.d.ts",
-          "semio_framework_os_bg.wasm.d.ts",
+          "semio_os_bg.wasm",
+          "semio_os.js",
+          "semio_os.d.ts",
+          "semio_os_bg.wasm.d.ts",
         ],
-        main: "semio_framework_os.js",
-        module: "semio_framework_os.js",
-        types: "semio_framework_os.d.ts",
+        main: "semio_os.js",
+        module: "semio_os.js",
+        types: "semio_os.d.ts",
       },
     });
   }

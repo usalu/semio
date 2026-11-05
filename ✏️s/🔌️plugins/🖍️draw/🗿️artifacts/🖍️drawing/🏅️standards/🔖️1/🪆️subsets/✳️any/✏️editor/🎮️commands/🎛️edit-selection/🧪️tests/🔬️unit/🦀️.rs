@@ -6,7 +6,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::edit_selection::*;
 
 #[test]
@@ -209,4 +209,4 @@ fn ungroup_refuses_explicit_isolation_even_at_normal_blend_and_unit_opacity() {
     assert!(admitted_plan(&document,&["group".into()],"ungroup").is_err());
 }
 
-fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_commands::edit_selection::plan(document,ids,operation,&admission,&mut control)}
+fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,semio_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_commands::edit_selection::plan(document,ids,operation,&admission,&mut control)}

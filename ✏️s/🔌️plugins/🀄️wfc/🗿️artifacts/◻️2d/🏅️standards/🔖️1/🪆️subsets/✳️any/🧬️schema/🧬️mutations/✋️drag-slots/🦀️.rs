@@ -50,13 +50,13 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "slots", kind: "drag-slots", record: "DraggedSlots" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (wfc2d_offset_text(self.dx), wfc2d_offset_text(self.dy));
         let (items_en, items_de) = match self.targets.len() {
             1 => ("1 slot".to_string(), "1 Slot".to_string()),
             count => (format!("{count} slots"), format!("{count} Slots")),
         };
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by ({dx_en}, {dy_en})"), &format!("{items_de} um ({dx_de}; {dy_de}) ziehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by ({dx_en}, {dy_en})"), &format!("{items_de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

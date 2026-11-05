@@ -2,23 +2,18 @@ import {withPlaygroundSessionV1} from "@semio-tech/plugin-registry/playground/se
 import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
 import{withInfiniteFontArtifactV1}from"@semio-tech/framework-os/modules/infinite/fonts/reading";
 import{scriptCompilerAdmissionControlV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {checkScriptInvocation,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createRequestedIssuedResourceControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { runRepositoryCommand } from "@semio-tech/process/execution";
 
 /** 🧩️ Semantic activation execution owner. */
 
 import { artifactFiles } from "@semio-tech/framework-plugin/browser-bundle/distribution/inventory";
 
-import { newestComponentSourceMtime, stagedModuleMtime, readStagedSourceContentHash, writeStagedSourceContentHash, writeStagedSourceFreshness } from "@semio-tech/framework-plugin/build/freshness";
 import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, activationSourceFreshnessDirectory, developmentRuntimeRoot, healthyPreparedComponents, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { FONT_ASSET, validateFontAsset } from "@semio-tech/framework-canvas-ts/fonts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
-
-import { createHash } from "node:crypto";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
@@ -65,7 +60,8 @@ import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODUL
 
 const repoRoot = findWorkspaceRoot();
 
-import { activationFilesDigest, publishActivatedExtension } from "../📥️installation/🟦️.ts";
+import { publishActivatedExtension } from "../📥️installation/🟦️.ts";
+import { activationFilesDigest, collectActivationArtifactsV1 } from "../🔖️identity/🟦️.ts";
 
 import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
 
@@ -88,35 +84,16 @@ class ActivationScript extends BundleScript {
     try {
       const support = new Map<string, string>();
       for (const directory of [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY]) for (const [name, path] of artifactFiles(join(moduleRoot, directory))) support.set(join(directory, name), path);
-      const fontControl=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"activation:font-digest",60000),0,controller.signal),supportDigest=await withInfiniteFontArtifactV1(repoRoot,profile,this.invocation,fontControl,async artifact=>{support.set(FONT_ASSET,join(artifact.path,FONT_ASSET));try{return await activationFilesDigest(support,fontControl.signal);}finally{support.delete(FONT_ASSET);}}),completed = [];
+      const fontControl=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"activation:font-digest",60000),0,controller.signal),supportDigest=await withInfiniteFontArtifactV1(repoRoot,profile,this.invocation,fontControl,async artifact=>{support.set(FONT_ASSET,join(artifact.path,FONT_ASSET));try{return await activationFilesDigest(support,fontControl.signal);}finally{support.delete(FONT_ASSET);}});
       const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
       const healthy = healthyPreparedComponents(verdicts, playgroundCatalog().find((row) => row.variant === variant)?.pluginId ?? variant);
       for (const line of preparedComponentReportLines(healthy.excluded, `repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
       if (healthy.refusal) throw new Error(healthy.refusal);
-      const previousWarm = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
-      if (previousWarm && previousWarm.variant === variant && previousWarm.profile === profile) {
-        const prior = new Map(previousWarm.plugins.map((row) => [row.pluginId, row]));
-        let warm = healthy.prepared.length > 0 && prior.size === healthy.prepared.length;
-        for (const pluginId of healthy.prepared) {
-          const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId, runtimeCatalogBuildInventoryV1().moduleDirectories));
-          const staged = readStagedSourceContentHash(activationSourceFreshnessDirectory(runtime, pluginId));
-          const row = prior.get(pluginId);
-          if (!row?.sourceContentSha256 || staged !== row.sourceContentSha256) { warm = false; break; }
-        }
-        if (warm) {
-          console.log(`Activated ${variant} ${renderer} ${profile}: ${healthy.prepared.length} completed components (warm content-hash unchanged)`);
-          return;
-        }
-      }
-      for (const pluginId of healthy.prepared) {
-        controller.signal.throwIfAborted();
+      const completed = await collectActivationArtifactsV1(healthy.prepared.map(pluginId => {
         const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId, runtimeCatalogBuildInventoryV1().moduleDirectories));
-        const digest = await activationFilesDigest(artifactFiles(moduleDirectory), controller.signal);
         const catalogEntry = catalog.get(pluginId);
-        const sourceRoot = catalogEntry ? join(repoRoot, componentOwnerRootV1(catalogEntry.cratePath)) : moduleDirectory;
-        const sourceContentSha256 = await writeStagedSourceFreshness(activationSourceFreshnessDirectory(runtime, pluginId), sourceRoot, controller.signal);
-        completed.push({ pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex"), sourceContentSha256 });
-      }
+        return { pluginId, files: artifactFiles(moduleDirectory), sourceRoot: catalogEntry ? join(repoRoot, componentOwnerRootV1(catalogEntry.cratePath)) : moduleDirectory, freshnessDirectory: activationSourceFreshnessDirectory(runtime, pluginId) };
+      }), supportDigest, controller.signal);
       const previous = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
       const receipt = nextActivationReceipt(variant, profile, completed, previous);
       for (const plugin of receipt.plugins) {
@@ -133,25 +110,6 @@ class ActivationScript extends BundleScript {
   }
 }
 
-/** 🎯️ Resolves the authored activation producer for one admitted playground runtime. */
-export function playgroundActivationTargetV1(variant: string, profile: "prototype" | "release", renderer: "react" | "wgpu"): string {
-  if (!playgroundCatalog().some(row => row.variant === variant)) throw Error(`Missing generated playground ${variant}`);
-  return `@semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`;
-}
+export {playgroundActivationTargetV1} from "../🎯️target/🟦️.ts";
 
-/** ♻️ Brings one playground variant's `renderer` runtime up to a publishable activation state by
- * running the build target that OWNS that closure — `activate-<variant>-<renderer>-<profile>`, whose declared
- * `dependsOn` (`…🦑️repo/🔨️modules/📚️library/🟨️.mjs` `playgroundPreparationTargets`) is the single
- * source of truth for the chain: every selected plugin's `component-<profile>` → `materialize-<profile>`,
- * `@semio-tech/framework-plugin-web:support-<profile>`, `semio-framework-os-infinite:fonts`, the renderer's
- * own `wasm` producer(s), `@semio-tech/plugin-registry:session-<variant>`, then `prepare` and `activate`.
- * Delegating rather than re-listing that closure here is what makes "reuse whatever is already fresh"
- * the build cache's decision instead of a second, drifting freshness rule — react and wgpu share this one path. */
-async function activatePlaygroundRuntime(invocation:ScriptInvocation,variant: string, profile: "prototype" | "release", renderer: "react" | "wgpu"): Promise<void> {
-  checkScriptInvocation(invocation);
-  const target = playgroundActivationTargetV1(variant, profile, renderer);
-  console.log(`[dev] activating ${variant} ${renderer} ${profile} via ${target}`);
-  await runRepositoryCommand(invocation,"repo", ["run", target], repoRoot, `playground-activation:${variant}:${renderer}:${profile}`, {version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null});
-}
-
-export { ActivationScript, activatePlaygroundRuntime };
+export { ActivationScript };

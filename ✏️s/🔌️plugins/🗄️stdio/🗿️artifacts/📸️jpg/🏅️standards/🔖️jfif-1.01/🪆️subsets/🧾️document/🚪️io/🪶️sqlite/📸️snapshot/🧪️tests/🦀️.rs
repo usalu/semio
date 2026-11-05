@@ -1,18 +1,18 @@
 use crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot as owned_text;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+use semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+use semio_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
 #[allow(unused_imports)]
 use std::{collections::BTreeMap, collections::BTreeSet};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteRow};
+use semio_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteRow};
 use crate::standards::v_jfif_1_01::subsets::document::io::sqlite::snapshot::{invalid};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_jfif_1_01::subsets::document::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue},os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue},os_store::serialization::ArtifactSqliteSnapshotHost};
 
 fn fixture()->JpgSnapshot{semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn roundtrip(snapshot:&JpgSnapshot)->JpgSnapshot{let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();JpgSnapshot::from_sqlite_database(&import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
@@ -49,7 +49,7 @@ fn sqlite_snapshot_jpg_refuses_malformed_relations_and_bounds_expensive_work(){
 
 #[test]
 fn sqlite_snapshot_jpg_actual_erased_records_retain_all_owned_fields() {
- use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding};
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_os_kernel::sqlite_snapshot::SnapshotEncoding};
  let mut complete=fixture();complete.schema="owned 世界\0".into();complete.image.jfif_version=(0,255);
  let absent=JpgSnapshot { schema:"independent empty state".into(), image: crate::schema::snapshot::JpgImage { width:u32::MAX,height:0,pixels:Vec::new(),..crate::schema::snapshot::JpgImage::default() } };
  let empty=JpgSnapshot { schema: crate::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { jfif_thumbnail:Some(JfifThumbnail{width:0,height:255,rgb_data:Vec::new()}),..absent.image.clone() } };
@@ -66,9 +66,9 @@ fn sqlite_snapshot_jpg_actual_erased_records_retain_all_owned_fields() {
 
 #[test]
 fn sqlite_snapshot_jpg_owned_native_controls_physical_and_typed_materialization(){
- use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost};use semio_framework_os_kernel::{io_schema::IoPayload,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase}};
+ use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost};use semio_os_kernel::{io_schema::IoPayload,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase}};
  let mut snapshot=fixture();snapshot.schema="logical 世界\0".into();snapshot.image.other_segments=vec![JpgSegment{marker:255,data:vec![0,255,128]};2048];
- for payload in [IoPayload::Text(snapshot.print_dsl()),IoPayload::Binary(snapshot.encode_pack())]{let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JpgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(restored,snapshot);let mut limits=SqliteDatabaseLimits::default();limits.max_value_bytes=128;assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JpgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err());let mut canceled=|event:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|event.phase!=SqliteSnapshotPhase::DecodeNative||event.completed<256||event.completed>=event.total;assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JpgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut canceled,SqliteDatabaseLimits::default()), native_owner)).is_err());}
+ for payload in [IoPayload::Text(snapshot.print_dsl()),IoPayload::Binary(snapshot.encode_pack())]{let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JpgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(restored,snapshot);let mut limits=SqliteDatabaseLimits::default();limits.max_value_bytes=128;assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JpgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err());let mut canceled=|event:semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|event.phase!=SqliteSnapshotPhase::DecodeNative||event.completed<256||event.completed>=event.total;assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JpgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut canceled,SqliteDatabaseLimits::default()), native_owner)).is_err());}
  let record=owned_text::to_record(&snapshot);let mut interior=false;let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if event.total==2048&&event.completed==256{interior=true;false}else{true}};let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(10_000_000,&mut callback);assert!(owned_text::from_record_controlled(&record,&mut control).is_err());drop(control);assert!(interior);
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut limits=SqliteDatabaseLimits::default();limits.max_value_bytes=1024;assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());}
  let foreign=IoPayload::Text(snapshot.print_dsl().replacen("stdio.jpg.dsl","stdio.png.dsl",1));assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JpgSnapshot::decode_sqlite_snapshot_native(&foreign,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).is_err());
@@ -82,7 +82,7 @@ fn sqlite_snapshot_jpg_native_factory_has_declared_structural_identity(){
 
 #[test]
 fn sqlite_snapshot_jpg_controlled_output_admits_owned_octets_and_cancels_inside_copy(){
- use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase as Phase,SqliteSnapshotProgress};
+ use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase as Phase,SqliteSnapshotProgress};
  let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📸️snapshot/🛫️encoding/🔣️.json")).unwrap();
  let mut snapshot=fixture();snapshot.schema="owned JPG 世界\0".into();snapshot.image.other_segments[0].data=vec![255;plan["octets"].as_u64().unwrap()as usize];
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
@@ -101,7 +101,7 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     let owner = crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot();
     let original_spec = crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::spec();
     let original_record = crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::to_record(&owner);
-    let maximum = semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
+    let maximum = semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
     let mut observer = |_| true;
     let mut native = semio_framework_value::NativeEncodeControl::new(maximum, &mut observer);
     let paid_spec = crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::spec_producer().encode(&mut native).unwrap();
@@ -120,6 +120,6 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     assert_eq!(original,record_join,"paid RecordValue changes ordinary body");
     assert_eq!(original,spec_join,"paid RecordSpec changes ordinary body");
     assert_eq!(original,controlled,"controlled encoder changes exact body");
-    let shipped = semio_framework_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_framework_os_kernel::PackEncodeOptions::default()).unwrap();
+    let shipped = semio_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_os_kernel::PackEncodeOptions::default()).unwrap();
     assert_eq!(shipped,original,"actual shipped ArtifactPack runtime must use the same intrinsic Record authority as SQLite");
 }

@@ -5,7 +5,7 @@ use semio_framework_value::{retained_clone::RetainedCloneProgress, retained_clon
 use crate::editor::flow::retained::{Retirement};
 use crate::editor::flow::retained::*;
 use semio_framework_job::InteractiveJobCloseStep as Step;
-use semio_framework_plugin::retained_command::ArtifactCommandWork;
+use semio_plugin::retained_command::ArtifactCommandWork;
 use semio_framework_value::RetainedCloneGrant;
 
 fn quoted_grant(work: &crate::editor::flow::FlowDirectStoreWork, body: usize) -> RetainedCloneGrant {

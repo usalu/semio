@@ -5,7 +5,7 @@
 use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
 use semio_s_artifact_lowpoly_lowpoly_view::utility_params_value;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 /// 🎛️ The live chrome measure for this option.
 pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {

@@ -35,64 +35,64 @@ use semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::Inser
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::tree_item as framework_tree_item;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::world3d_camera_projection_json;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ChildContentView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::Menu;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::tree_item as framework_tree_item;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::world3d_camera_projection_json;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ChildContentView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
+use semio_plugin::DraftView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::Menu;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WorldSunConfig;
 use semio_framework_3d_brep_engine::{Brep, GeometryHandle};
-use semio_framework_plugin::app::{ArtifactEditor, Dialect, Editor};
+use semio_plugin::app::{ArtifactEditor, Dialect, Editor};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_pack_json::Value;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 use protocol::{ColdMutation, Mutation};
-use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, UiMenuRef, VcsArtifactApp};
+use semio_plugin::{ActionMeta, HistoryView, PluginApp, UiMenuRef, VcsArtifactApp};
 
 pub fn meta(actor: &str) -> ActionMeta {
-    semio_framework_plugin::artifact_app_laws::meta(actor)
+    semio_plugin::artifact_app_laws::meta(actor)
 }
 
 /// ✏️ `CadPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
@@ -117,8 +117,8 @@ pub fn meta(actor: &str) -> ActionMeta {
 /// Every caller must therefore settle each dispatch ([`settle`]) and [`close`] the app before it
 /// drops, exactly as the host's own close loop does.
 pub async fn new_app() -> CadFixtureApp {
-    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(TEST_INSTANCE).await;
     CadFixtureApp(app, scope)
 }
@@ -128,7 +128,7 @@ pub const TEST_INSTANCE: u32 = 1;
 
 /// 📐️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
-pub struct CadFixtureApp(pub VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+pub struct CadFixtureApp(pub VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
 impl std::ops::Deref for CadFixtureApp {
     type Target = VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
@@ -145,22 +145,22 @@ impl std::ops::DerefMut for CadFixtureApp {
 
 /// 🔁️ Drives the host's bounded continuation + ACK protocol to quiescence after a dispatch.
 pub async fn settle(app: &mut CadFixtureApp) {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("cad fixture publication: {fault:?}"));
+    semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("cad fixture publication: {fault:?}"));
 }
 
 /// 🔚️ Runs the exact terminal-empty close loop; a fixture store that drops without it panics with
 /// `artifact store reached Drop without its exact terminal-empty shallow-shell witness`.
 pub fn close(app: &mut CadFixtureApp) {
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🪟️ The four cad pane windows as `ShellHost` mounts them. `window_engagements`/`window_measures`
-/// project ONLY the window instances the view carries, so a `ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)` yields an empty
+/// project ONLY the window instances the view carries, so a `ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)` yields an empty
 /// map however many window kinds the app declares.
 pub fn four_pane_view() -> ViewModel {
     ViewModel {
-        window_instances: CAD_PANE_WINDOW_KIND_IDS.iter().map(|kind| semio_framework_plugin::ViewWindowInstance { id: (*kind).to_string(), window_kind_id: (*kind).to_string() }).collect(),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        window_instances: CAD_PANE_WINDOW_KIND_IDS.iter().map(|kind| semio_plugin::ViewWindowInstance { id: (*kind).to_string(), window_kind_id: (*kind).to_string() }).collect(),
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 
@@ -170,13 +170,13 @@ pub const CAD_PANE_WINDOW_KIND_IDS: [&str; 4] = [shape::WINDOW_KIND_ID, building
 /// ✏️ Adapts `create_cad_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
 /// examples }` shape `context::assert_declared_actions_bridge_to_commands` still expects —
 /// framework test context gap, not modifiable here (`🧰️framework/**` is outside this packet's lease).
-pub fn cad_app_manifest_for_tests() -> semio_framework_plugin::App {
-    semio_framework_plugin::App { definition: create_cad_app(), examples: Vec::new() }
+pub fn cad_app_manifest_for_tests() -> semio_plugin::App {
+    semio_plugin::App { definition: create_cad_app(), examples: Vec::new() }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("cad", CadPlayApp, cad_app_manifest_for_tests, "../..");
-semio_framework_plugin::composed_reload_law!("cad", CadPlayApp, cad_app_manifest_for_tests, "../..");
-semio_framework_plugin::composed_child_history_law!("cad", CadPlayApp, cad_app_manifest_for_tests, [("translateSelection", r#"{"objectIds":["object-hexagonal-cut-concrete-forest-left"],"dx":1.5,"dy":0.0,"dz":0.0}"#)]);
+semio_plugin::history_edit_acceptance_law!("cad", CadPlayApp, cad_app_manifest_for_tests, "../..");
+semio_plugin::composed_reload_law!("cad", CadPlayApp, cad_app_manifest_for_tests, "../..");
+semio_plugin::composed_child_history_law!("cad", CadPlayApp, cad_app_manifest_for_tests, [("translateSelection", r#"{"objectIds":["object-hexagonal-cut-concrete-forest-left"],"dx":1.5,"dy":0.0,"dz":0.0}"#)]);
 
 pub fn empty_history() -> HistoryView {
     HistoryView::empty()
@@ -186,7 +186,7 @@ pub fn empty_history() -> HistoryView {
 /// `cad_command_from_action` speaks `DslValue`, so this bridges the `pack::json::Value`-shaped
 /// test-harness `args` via `protocol::json::to_dsl_value` right at the call site.
 pub fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
-    <CadPlayApp as semio_framework_plugin::app::ArtifactEditor>::command_from_action(action, &mut args.map(semio_framework_pack_json::to_dsl_value), &mut None).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
+    <CadPlayApp as semio_plugin::app::ArtifactEditor>::command_from_action(action, &mut args.map(semio_framework_pack_json::to_dsl_value), &mut None).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
 }
 
 /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
@@ -200,7 +200,7 @@ pub fn drive(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<V
 ///
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): dispatches straight through
 /// `CadCommand::dispatch` instead of the `ArtifactApp::handle` trait method — `handle`'s
-/// `interaction: &semio_framework_plugin::app::InteractionView<'_>` parameter has `pub(crate)`
+/// `interaction: &semio_plugin::app::InteractionView<'_>` parameter has `pub(crate)`
 /// fields in that crate, so this crate's own tests cannot construct one; `dispatch` only needs
 /// the app-owned `CadDispatchCtx` (whose `interaction: CadInteractionSnapshot` field IS plain
 /// and cad-owned), so tests build that by hand and skip the adaptation `handle` exists for.
@@ -239,14 +239,14 @@ pub fn drive_in_window(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args
     let view_state = ViewModel {
         window_id: Some(window_id.into()),
         active_window_kind_id: Some(window_kind_id.into()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_kind_id.into() }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_kind_id.into() }],
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let mut ctx = CadDispatchCtx::new(CadInteractionSnapshot::default(), Some(view_state), CadWorldWindowTransient::default());
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
-pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let cfg = ConfigView { snapshot: config, window: None };
     CadPlayApp::render(body_key, doc, &cfg, view_state).map(|tree| tree.root)
 }
@@ -330,8 +330,8 @@ pub fn window_meta(window_id: &str, window_kind_id: &str) -> ActionMeta {
         view_state: Some(ViewModel {
             window_id: Some(window_id.into()),
             active_window_kind_id: Some(window_kind_id.into()),
-            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_kind_id.into() }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            window_instances: vec![semio_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_kind_id.into() }],
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         }),
         ..meta("local")
     }
@@ -347,8 +347,8 @@ pub fn selecting(ids: &[&str]) -> CadInteractionSnapshot {
 }
 
 /// 🚚️ Depth-first concatenation of one paged text carrier — the inverse of `paged_text_carrier`.
-fn packed_text(node: &semio_framework_plugin::BuiltNode, payload: &mut String) {
-    if let semio_framework_plugin::plugin_app_close_prelude::Component::Text(props) = &node.component {
+fn packed_text(node: &semio_plugin::BuiltNode, payload: &mut String) {
+    if let semio_plugin::plugin_app_close_prelude::Component::Text(props) = &node.component {
         payload.push_str(&props.packed_payload());
     }
     for child in node.children.iter() {
@@ -357,7 +357,7 @@ fn packed_text(node: &semio_framework_plugin::BuiltNode, payload: &mut String) {
 }
 
 /// 🚚️ The world-3d `lane` payload a rendered scene surface publishes beside its spine.
-pub fn scene_lane(node: &semio_framework_plugin::BuiltNode, lane: &str) -> String {
+pub fn scene_lane(node: &semio_plugin::BuiltNode, lane: &str) -> String {
     let suffix = format!(".{lane}");
     let carrier = node.children.iter().find(|child| child.key.as_str().ends_with(&suffix)).unwrap_or_else(|| panic!("scene surface must publish the {lane} lane"));
     let mut payload = String::new();

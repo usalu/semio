@@ -17,11 +17,11 @@ use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, target_volume_flat_rect, Puzzle5dDocument, Puzzle5dPart, PUZZLE5D_BOARD_SNAPSHOT_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
 use crate::editor::puzzle5d::view::{puzzle5d_scene_mode, Puzzle5dScene};
-use semio_framework_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
-use semio_framework_ui_contract::BuiltNode;
+use semio_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_ui_contract::BuiltNode;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
-use semio_framework_os_infinite::BoardPlacementNaming;
+use semio_os_infinite::BoardPlacementNaming;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_BOARD_WINDOW_KIND_ID;
@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into()],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle5d::entities::PUZZLE5D_INTERACTION_DOMAIN)],
+        interactions: vec![semio_plugin::InteractionRef::new(crate::editor::puzzle5d::entities::PUZZLE5D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -242,10 +242,10 @@ pub fn board_suggestion_menu_json(envelope: &Puzzle5dScene, labels: &Puzzle5dLab
 }
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, suggestions: Option<&semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, suggestions: Option<&semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut scene = puzzle5d_board_scene(envelope);
     scene.suggestion_menu_json = board_suggestion_menu_json(envelope, labels, suggestions);
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Board2d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Board2d, &scene)
 }
 //#endregion 🔖️Render
 

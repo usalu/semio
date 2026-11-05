@@ -1,6 +1,6 @@
 //! 🎟️ Retained event admission reads original nodes and native JSON bytes without encoded-body allocation.
 use super::*;
-use semio_framework_plugin::plugin_app_close_prelude::store;
+use semio_plugin::plugin_app_close_prelude::store;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 fn invalid(message: &'static str) -> ValueError {

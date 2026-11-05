@@ -38,7 +38,7 @@ pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &semio_framework_v
     let target = snapshot.pages.get(page_index).ok_or_else(|| {
         Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.set-page.stale-target"), format!("PDF page {page_index} no longer exists"))
     })?;
-    Ok(Some(semio_framework_plugin::app::DocumentWindowKit::text_revision(&target.text())))
+    Ok(Some(semio_plugin::app::DocumentWindowKit::text_revision(&target.text())))
 }
 
 /// 📄️ Builds one exact, reversible PDF page-text replacement or rejects an invalid/stale target.
@@ -93,7 +93,7 @@ mod document_text_edit_tests {
     fn page_text_edit_rejects_missing_stale_and_non_text_addresses() {
         let mut snapshot = PdfSnapshot::default();
         snapshot.pages.push(PdfPage::default());
-        let revision = semio_framework_plugin::app::DocumentWindowKit::text_revision("");
+        let revision = semio_plugin::app::DocumentWindowKit::text_revision("");
         assert!(page_text_edit_mutation(&snapshot, 1, 0, &revision, "draft").is_err());
         assert!(page_text_edit_mutation(&snapshot, 0, 1, &revision, "draft").is_err());
         assert!(page_text_edit_mutation(&snapshot, 0, 0, "0000000000000000", "draft").is_err());

@@ -25,24 +25,24 @@ use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::ui_la
 use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::terminology::Puzzle5dLabels;
 use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::{find_part_by_grip_full_id, puzzle5d_grip_full_id, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::view::Puzzle5dScene;
-use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.artifact";
@@ -97,7 +97,7 @@ fn grip_row(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> UiAssemblyResult<BuiltN
 ///
 /// 🔑️ `UiMapBuilder::push` admits keys in STRICTLY ASCENDING order only, so `entries` arrive sorted by key.
 fn flag_target<const N: usize>(entries: [(&str, UiValue); N]) -> UiAssemblyResult<ui::RowTarget> {
-    let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target map admission failed"))?;
+    let mut args = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target map admission failed"))?;
     for (key, value) in entries {
         args.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target entry admission failed"))?;
     }
@@ -110,7 +110,7 @@ fn flag_text(value: &str) -> UiAssemblyResult<UiValue> {
 
 /// 🎯️ A part row's target: `{entity, hidden, ids, locked}` names exactly that part.
 fn part_flag_target(id: &str, hidden: bool, locked: bool) -> UiAssemblyResult<ui::RowTarget> {
-    let mut ids = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target list admission failed"))?;
+    let mut ids = semio_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target list admission failed"))?;
     ids.push(flag_text(id)?).map_err(|_| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target id admission failed"))?;
     flag_target([("entity", flag_text(PUZZLE5D_GRANULARITY_PART)?), ("hidden", UiValue::Bool(!hidden)), ("ids", UiValue::List(ids.finish())), ("locked", UiValue::Bool(!locked))])
 }

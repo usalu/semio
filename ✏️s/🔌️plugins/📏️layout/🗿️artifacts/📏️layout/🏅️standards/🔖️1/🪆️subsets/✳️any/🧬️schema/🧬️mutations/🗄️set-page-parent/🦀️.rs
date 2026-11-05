@@ -22,7 +22,7 @@ pub struct SetPageParent {
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetPageParent where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_page_parent::SetPageParent> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-parent", kind: "set-page-parent", record: "SetPageParent" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set parent of page \"{}\"", self.id), &format!("Mustervorlage von Seite \"{}\" setzen", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Set parent of page \"{}\"", self.id), &format!("Mustervorlage von Seite \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

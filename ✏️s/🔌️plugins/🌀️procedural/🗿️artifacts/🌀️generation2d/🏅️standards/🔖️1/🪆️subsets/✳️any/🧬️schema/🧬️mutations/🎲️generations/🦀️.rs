@@ -1,6 +1,6 @@
 //! 🎲️ Generation2d generation mutation leaves: create, delete, select and rename generations and change their answers. Every leaf is generic over the dispatch enum.
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 #[path = "."]
 pub mod create_generation {

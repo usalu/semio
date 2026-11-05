@@ -245,7 +245,7 @@ impl MountedLayoutJob {
                     UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
                     UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
                     UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
-                    UiNode::Progress(_) => LayoutNodeKind::Control { height: semio_framework_ui_wgpu_layout::chrome::SIZE_TINY, label_padding: None },
+                    UiNode::Progress(_) => LayoutNodeKind::Control { height: semio_ui_wgpu_layout::chrome::SIZE_TINY, label_padding: None },
                     _ => LayoutNodeKind::Leaf,
                 }
             }

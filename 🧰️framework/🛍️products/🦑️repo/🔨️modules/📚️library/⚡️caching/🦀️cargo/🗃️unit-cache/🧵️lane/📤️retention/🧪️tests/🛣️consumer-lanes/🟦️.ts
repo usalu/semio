@@ -1,10 +1,10 @@
 /** 🛣️ Contract: the lane an artifact consumer takes is the same lane for the same product, and the directories a real pooled lane hands out are recognised as owned by their store (and nobody else's). Real lane paths from the real pool; the crate selection of `buildRepositoryCargoArtifacts` is checked on real manifests.
  * @see ../../🟦️.ts */
 import {expect,test} from "bun:test";
-import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
-import {crateKeyV1} from "../../../🟦️.ts";
+import {crateKeyV1,enterLaneV1,incrementalDirectoriesV1,removeLaneV1} from "../../../🟦️.ts";
 import {acquirePooledLaneV1} from "../../../🏊️pool/🟦️.ts";
 import {cargoLaneCratesV1} from "../../../../../../📦️artifacts/🏗️native-build/🟦️.ts";
 import {compilerOriginOwnedV1,laneBuildDirectoryOwnedV1} from "../../🟦️.ts";
@@ -29,7 +29,7 @@ test("the build and target directories of a real pooled lane, and the recipe slo
  try{
   const lane=await acquirePooledLaneV1(cache,{crates:["a"],quotaBytes:Number.MAX_SAFE_INTEGER}),slot=join(lane.paths.build,"t","0123456789abcdef");
   try{
-   expect(laneBuildDirectoryOwnedV1(cache,lane.paths.build)).toBe(true);
+   expect(lane.paths.build).toBe(lane.paths.base);expect(lane.paths.target).toBe(join(lane.paths.base,"t"));expect(laneBuildDirectoryOwnedV1(cache,join(lane.paths.base,"b"))).toBe(false);expect(laneBuildDirectoryOwnedV1(cache,lane.paths.build)).toBe(true);
    expect(compilerOriginOwnedV1({cacheRoot:cache,shared,origin:{buildDirectory:lane.paths.build,targetDirectory:lane.paths.target}})).toBe(true);
    expect(compilerOriginOwnedV1({cacheRoot:cache,shared,origin:{buildDirectory:lane.paths.build,targetDirectory:slot}})).toBe(true);
    expect(compilerOriginOwnedV1({cacheRoot:other,shared,origin:{buildDirectory:lane.paths.build,targetDirectory:lane.paths.target}})).toBe(false);
@@ -40,3 +40,5 @@ test("the build and target directories of a real pooled lane, and the recipe slo
   }finally{lane.release();}
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("incremental lane retirement never descends target or live/stamp namespaces",()=>{const root=mkdtempSync(join(base,"cl-gc-")),cache=join(root,"u"),lane=enterLaneV1(cache,"d1");try{const build=["prototype/incremental","wasm32-unknown-unknown/prototype/incremental"],kept=["t/prototype/incremental","v/prototype/incremental","m/prototype/incremental"];for(const path of [...build,...kept]){mkdirSync(join(lane.paths.base,path),{recursive:true});writeFileSync(join(lane.paths.base,path,"sentinel"),"keep");}expect(incrementalDirectoriesV1(lane.paths.build).map(path=>path.slice(lane.paths.base.length+1).replaceAll("\\","/")).sort()).toEqual(build);lane.release();expect(removeLaneV1(cache,"d1","incremental",Date.now())).toBe(true);for(const path of build)expect(existsSync(join(lane.paths.base,path))).toBe(false);for(const path of kept)expect(existsSync(join(lane.paths.base,path,"sentinel"))).toBe(true);}finally{lane.release();rmSync(root,{recursive:true,force:true});}});

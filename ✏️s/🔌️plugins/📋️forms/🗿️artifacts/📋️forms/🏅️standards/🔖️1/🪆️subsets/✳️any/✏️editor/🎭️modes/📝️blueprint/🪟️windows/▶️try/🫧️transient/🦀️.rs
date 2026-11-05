@@ -178,9 +178,9 @@ pub struct FormsTryWindowLease {
 }
 
 impl FormsTryWindowLease {
-    pub fn capture(snapshot: Option<&semio_framework_plugin::WindowTransientSnapshot>) -> Result<Self, semio_framework_plugin::Fault> {
-        let snapshot = snapshot.ok_or_else(|| semio_framework_plugin::Fault::from("forms-try-window-transient-required"))?;
-        if snapshot.window_kind_id() != super::FORMS_PLAY_WINDOW_TRY || snapshot.get::<FormsTryWindowTransientOwner>().is_none() { return Err(semio_framework_plugin::Fault::from("forms-try-window-transient-kind-required")); }
+    pub fn capture(snapshot: Option<&semio_plugin::WindowTransientSnapshot>) -> Result<Self, semio_plugin::Fault> {
+        let snapshot = snapshot.ok_or_else(|| semio_plugin::Fault::from("forms-try-window-transient-required"))?;
+        if snapshot.window_kind_id() != super::FORMS_PLAY_WINDOW_TRY || snapshot.get::<FormsTryWindowTransientOwner>().is_none() { return Err(semio_plugin::Fault::from("forms-try-window-transient-kind-required")); }
         Ok(Self { window_id: snapshot.window_id().into(), window_kind_id: snapshot.window_kind_id().into(), window_generation: snapshot.generation(), document_generation: snapshot.document_generation() })
     }
 
@@ -194,7 +194,7 @@ impl FormsTryWindowLease {
 //#endregion 🪢️TaxonomyMounts
 
 //#region 🔖️Owner
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: FormsTryWindowTransient,
     mutation: FormsTryWindowTransientMutation,
     diff: FormsTryWindowTransientDiff,
@@ -207,7 +207,7 @@ semio_framework_plugin::transient_root! {
     fields: { try_values: FormsTryValues },
 }
 
-semio_framework_plugin::window_transient_owners! {
+semio_plugin::window_transient_owners! {
     state: FormsTryWindowTransient,
     mutation: FormsTryWindowTransientMutation,
     windows: {

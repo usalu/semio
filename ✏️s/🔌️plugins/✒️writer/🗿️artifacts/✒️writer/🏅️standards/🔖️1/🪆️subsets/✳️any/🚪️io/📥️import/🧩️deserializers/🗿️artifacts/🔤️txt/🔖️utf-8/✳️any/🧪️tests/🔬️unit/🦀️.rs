@@ -2,7 +2,7 @@ use semio_framework::io_schema::IoPayload;
 #[allow(unused_imports)]
 use crate::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]

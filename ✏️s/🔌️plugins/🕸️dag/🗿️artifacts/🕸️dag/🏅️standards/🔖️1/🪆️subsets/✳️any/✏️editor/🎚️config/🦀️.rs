@@ -6,18 +6,18 @@
 //! session-only view state and round-trips through the config `ArtifactStore` exactly like document
 //! content, with a real `backwards` per `DagConfigMutation` instead of never being VCS'd at all.
 
-use semio_framework_os_infinite_directed_presentation::DagCamera;
+use semio_os_infinite_directed_presentation::DagCamera;
 
 //#region 🔖️Config
 /// 🧮️ `DagPlayApp::Config` — the pure-trait `ArtifactEditor::Config` for the dag app.
 ///
 /// The camera is flattened to its three scalar fields (`camera_x`/`camera_y`/`camera_zoom`) rather than
-/// embedding `semio_framework_os_infinite_directed_presentation::DagCamera` as a `#[dsl(block)]`: that kernel type is
+/// embedding `semio_os_infinite_directed_presentation::DagCamera` as a `#[dsl(block)]`: that kernel type is
 /// explicitly out of scope for this crate and doesn't derive `dsl::DslRecord` (only
 /// `Clone`/`Debug`/`PartialEq`/`Serialize`/`Deserialize`), so it can't satisfy a nested-block field —
 /// three plain `f64` fields need no such support at all. See `dag_config_camera` below for the seam back
 /// to the real `DagCamera` type.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -75,8 +75,8 @@ impl pack::snapshot::ArtifactPack for DagConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DagConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DagConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

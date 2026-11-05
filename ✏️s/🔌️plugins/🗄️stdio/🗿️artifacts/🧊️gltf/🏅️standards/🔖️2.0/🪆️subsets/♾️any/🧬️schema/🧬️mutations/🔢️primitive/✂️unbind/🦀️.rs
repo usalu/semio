@@ -65,8 +65,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "primitive-indices", kind: "unbind-primitive-indices", record: "UnboundPrimitiveIndices" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Unbind Primitive Indices", "Bindung der Primitivindizes aufheben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Unbind Primitive Indices", "Bindung der Primitivindizes aufheben")
     }
 
     fn target(&self) -> Vec<String> {

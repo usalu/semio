@@ -22,101 +22,101 @@ use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 #[allow(unused_imports)]
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+use semio_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppOperationContext;
+use semio_plugin::AppOperationContext;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactOwnedToolJobRequest;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::FaultCode;
+use semio_plugin::FaultCode;
 #[allow(unused_imports)]
-use semio_framework_plugin::FaultOrigin;
+use semio_plugin::FaultOrigin;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::Media;
+use semio_plugin::Media;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaClass;
+use semio_plugin::MediaClass;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaError;
+use semio_plugin::MediaError;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaForm;
+use semio_plugin::MediaForm;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPayload;
+use semio_plugin::MediaPayload;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::OsMediaCapability;
+use semio_plugin::OsMediaCapability;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::UtilityDefinition;
+use semio_plugin::UtilityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 #[allow(unused_imports)]
@@ -144,8 +144,8 @@ use crate::editor::shooting::ui_helpers_and_io::*;
 fn shooting_window_actions_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️window-actions.json")).expect("neutral window vectors");
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
-        let view_state = semio_framework_plugin::ViewModel { locale, ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native) };
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        let view_state = semio_plugin::ViewModel { locale, ..semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native) };
         let labels = shooting_play_labels(&view_state);
         for (kind, measures) in [("scene", scene_window::window_measures(&document, labels)), ("icon", icon_window::window_measures(&document, labels))] {
             let json = serde_json::to_value(measures).expect("independent window oracle");

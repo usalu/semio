@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedStressX wher
         record: "ChangedPlatedStressX",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Reduced-stress σ_x of the plated panel", "Plattenfeld: Vergleichsspannung σ_x ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Reduced-stress σ_x of the plated panel", "Plattenfeld: Vergleichsspannung σ_x ändern")
     }
 }
 

@@ -1,6 +1,6 @@
 //! 🛫️ TXT owns one admitted output backing through the original native receiving frame.
 use super::{native_length,TxtSnapshot};
-use semio_framework_os_kernel::{NativeSnapshotEncodeOwner,NativeSnapshotBodyWallet,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_os_kernel::{NativeSnapshotEncodeOwner,NativeSnapshotBodyWallet,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_value::{NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use store::io_schema::IoPayload;
 use std::mem::size_of;

@@ -20,14 +20,14 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "node", kind: "resize-node", record: "ResizedNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let number = |value: f64| {
             let en = format!("{}", (value * 100.0).round() / 100.0);
             let de = en.replace('.', ",");
             (en, de)
         };
         let ((width_en, width_de), (height_en, height_de)) = (number(self.width), number(self.height));
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize node \"{}\" to {width_en} × {height_en}", self.id.value), &format!("Knoten \"{}\" auf {width_de} × {height_de} skalieren", self.id.value))
+        semio_ui_locale::LocalizedLabel::native(&format!("Resize node \"{}\" to {width_en} × {height_en}", self.id.value), &format!("Knoten \"{}\" auf {width_de} × {height_de} skalieren", self.id.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]

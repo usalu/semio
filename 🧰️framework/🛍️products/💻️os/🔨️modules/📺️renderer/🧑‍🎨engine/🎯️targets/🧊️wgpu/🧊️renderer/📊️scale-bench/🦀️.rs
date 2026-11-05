@@ -3,7 +3,7 @@
 //!
 //! 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet V1b-bench): the native half of the ticket's
 //! headline claim — "50+ plugins x 50+ extensions concurrently" — turned from measurable into
-//! measured. Drives the REAL `semio-framework-os-scale-fixture` `wasm32-wasip2` component (one
+//! measured. Drives the REAL `semio-os-scale-fixture` `wasm32-wasip2` component (one
 //! compile, many instantiations, exactly the pooling-allocator scenario `build_shared_engine` was
 //! built for) through `crate::parallel_runtime::ParallelRuntime` (terra-kernel-loop) — the same engine `//#region 🎠️KernelRuntime`
 //! above already wires for the winit renderer, reused here without the winit/GPU half. terra-kernel-loop
@@ -13,9 +13,9 @@
 //! `semio-wgpu-native --scale/--scale-wasm/--shards/--report`.
 use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, QuotaSchema};
 use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, JobCheckpoint, JobOperation, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
-use semio_framework_plugin_host::shard::ShardOutcome;
-use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef};
-use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
+use semio_plugin_host::shard::ShardOutcome;
+use semio_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef};
+use semio_plugin_interpreter_runtime::OwnedRuntime;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::HashMap;
@@ -151,7 +151,7 @@ impl Env {
     async fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
         let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
         let pool = Arc::new(semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores)));
-        let runtime = super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64,{let policy=semio_framework_pack_json::from_json_str(include_str!("../../../../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored benchmark shard identity policy");move |_|semio_framework_plugin_host::shard::native_identity_issuer(policy,|_|Box::new(|_|true))}).await;
+        let runtime = super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64,{let policy=semio_framework_pack_json::from_json_str(include_str!("../../../../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored benchmark shard identity policy");move |_|semio_plugin_host::shard::native_identity_issuer(policy,|_|Box::new(|_|true))}).await;
         Self { runtime, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new(), now_ms: 0, pending: Vec::new() }
     }
 
@@ -252,7 +252,7 @@ impl Env {
     /// `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
     /// failure ladder never sees the SAME "hang"/"crash" profiles budgets 2/3/6
     /// deliberately exercise.
-    async fn pump(&mut self) -> Result<usize, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
+    async fn pump(&mut self) -> Result<usize, semio_renderer_wgpu_contracts::ProgramFault> {
         let mut total = 0usize;
         loop {
             self.now_ms += 1;
@@ -309,7 +309,7 @@ impl Env {
     /// whichever arrives) is among them. That stamp, not this call's own return, is budget 5's
     /// actual measurement: see its round loop for why the interval is `send -> this stamp`, not
     /// `send -> this call returning`.
-    async fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
+    async fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, semio_renderer_wgpu_contracts::ProgramFault> {
         let mut target_seen: Option<Instant> = None;
         loop {
             self.now_ms += 1;
@@ -364,14 +364,14 @@ impl Env {
         std::mem::take(&mut self.pending)
     }
 
-    async fn unregister(&mut self, actor: ActorId) -> Result<(), semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
+    async fn unregister(&mut self, actor: ActorId) -> Result<(), semio_renderer_wgpu_contracts::ProgramFault> {
         self.runtime.unregister(actor).await?;
         Ok(())
     }
 }
 //#endregion 🔖️Env
 
-async fn process_rss_bytes()->Result<Option<u64>,semio_framework_os_renderer_wgpu_kernel_protocol::RendererSourceIoError>{semio_framework_os_renderer_wgpu_host_plumbing::native_io::read_renderer_resident_bytes().await}
+async fn process_rss_bytes()->Result<Option<u64>,semio_renderer_wgpu_kernel_protocol::RendererSourceIoError>{semio_renderer_wgpu_host_plumbing::native_io::read_renderer_resident_bytes().await}
 
 //#region 🔖️Budget2ColdBoot
 async fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
@@ -612,7 +612,7 @@ async fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle,
 /// fails with "cannot enter component instance" — that message is CONFIRMING evidence of an
 /// earlier kill, not a different failure. Checked here first; falls back to an explicit `Wake`
 /// only if the InstanceOpen turn happened not to trigger it.
-async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
+async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, semio_renderer_wgpu_contracts::ProgramFault> {
     let Some(hang_record) = records.iter().find(|r| profile_of(r) == "hang") else {
         return Ok(skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no hang-profile record in registry"));
     };
@@ -702,7 +702,7 @@ const BUDGET_7_DESCRIPTION: &str = "stateful actor LRU-suspended and resumed -> 
 /// 💤️ The "evicted" half of LRU-suspend: drop A's live instance from this shard.
 ///
 /// The "resumed elsewhere" half: a FRESH instance, resumed from the captured checkpoint bytes.
-async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
+async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, semio_renderer_wgpu_contracts::ProgramFault> {
     let Some(record) = records.iter().find(|r| profile_of(r) == "stateful") else {
         return Ok(skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry"));
     };
@@ -823,9 +823,9 @@ async fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &Com
 /// writes one JSON report. Returns `0` on a clean harness run (regardless of individual budget
 /// pass/fail — a real measured FAIL is a valid, non-error outcome), `1` if the harness itself could
 /// not set up (bad registry/wasm/report path).
-pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf,original_clock:fn()->Option<u64>) -> Result<i32, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
+pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf,original_clock:fn()->Option<u64>) -> Result<i32, semio_renderer_wgpu_contracts::ProgramFault> {
     let process_start = Instant::now();
-    let registry_bytes=match semio_framework_os_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(&registry_path,semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES as u64).await{
+    let registry_bytes=match semio_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(&registry_path,semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES as u64).await{
         Ok(bytes)=>bytes,
         Err(error)=>{eprintln!("scale-bench: failed to read {}: {error}",registry_path.display());return Ok(1)}
     };

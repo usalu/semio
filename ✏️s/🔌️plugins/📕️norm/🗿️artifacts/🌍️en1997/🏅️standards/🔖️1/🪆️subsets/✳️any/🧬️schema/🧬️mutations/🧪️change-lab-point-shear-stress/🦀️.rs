@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabPointShearStres
         record: "ChangedLabPointShearStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear stress τ / deviator q of the laboratory test point", "Laborversuchspunkt: Scherspannung τ / Deviator q ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear stress τ / deviator q of the laboratory test point", "Laborversuchspunkt: Scherspannung τ / Deviator q ändern")
     }
 }
 

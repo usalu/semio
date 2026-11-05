@@ -1,4 +1,4 @@
-//! 🧪️ Companion white-box laws of `semio-framework-os-renderer-wgpu-dock`.
+//! 🧪️ Companion white-box laws of `semio-renderer-wgpu-dock`.
 
 #![cfg(test)]
 #![allow(unused_imports, unused_qualifications)]

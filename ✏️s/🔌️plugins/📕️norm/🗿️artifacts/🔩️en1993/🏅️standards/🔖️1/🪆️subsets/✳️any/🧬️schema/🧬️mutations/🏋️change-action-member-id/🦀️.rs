@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeActionMemberId whe
         record: "ChangedActionMemberId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change member id of the member action", "Bauteileinwirkung: Bauteilkennung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change member id of the member action", "Bauteileinwirkung: Bauteilkennung ändern")
     }
 }
 

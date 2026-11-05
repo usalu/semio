@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertFalling where Op: 
         record: "InsertedFalling",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert falling load {}", self.item.id), &format!("Fallende Last {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert falling load {}", self.item.id), &format!("Fallende Last {} einfügen", self.item.id))
     }
 }
 

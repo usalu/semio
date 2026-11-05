@@ -8,15 +8,15 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::{canvas_surface, meta_reco
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewPlane;
 #[allow(unused_imports)]
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::{active_view, vertical_views, plane_of, records, render};
 use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;

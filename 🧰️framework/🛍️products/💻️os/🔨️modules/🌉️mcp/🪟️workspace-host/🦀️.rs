@@ -1,6 +1,6 @@
 //! 🪟️ The headless workspace and its gateway backend.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "../🏠️workspace/🛂️gateway-backend/🦀️.rs"]
 pub mod gateway_backend;

@@ -1,7 +1,7 @@
 //! 🧪️ Original declaration metadata retains source identity and refuses unfunded transitions.
 use super::super::DetailsTestProfile;
 use super::*;
-use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 fn grant() -> semio_framework_value::retained_clone::RetainedCloneGrant {
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1_048_576, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 1_048_576, maximum_depth: 256 }
 }

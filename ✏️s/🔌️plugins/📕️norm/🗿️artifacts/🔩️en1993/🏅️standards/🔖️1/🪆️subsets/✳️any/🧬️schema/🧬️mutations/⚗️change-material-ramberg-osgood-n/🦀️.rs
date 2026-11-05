@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMaterialRambergOsg
         record: "ChangedMaterialRambergOsgoodN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ramberg-Osgood exponent n of the stainless grade (EN 1993-1-4 Annex C; 0 = built-in grade table, unverified) of the material", "Werkstoff: Ramberg-Osgood-Exponent n der nichtrostenden Güte (EN 1993-1-4 Anhang C; 0 = eingebaute Gütetabelle, ungeprüft) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ramberg-Osgood exponent n of the stainless grade (EN 1993-1-4 Annex C; 0 = built-in grade table, unverified) of the material", "Werkstoff: Ramberg-Osgood-Exponent n der nichtrostenden Güte (EN 1993-1-4 Anhang C; 0 = eingebaute Gütetabelle, ungeprüft) ändern")
     }
 }
 

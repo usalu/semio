@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpPanelSpacin
         record: "ChangedBuiltUpPanelSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Connection spacing a of the built-up member", "Zusammengesetzter Stab: Abstand der Bindebleche a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Connection spacing a of the built-up member", "Zusammengesetzter Stab: Abstand der Bindebleche a ändern")
     }
 }
 

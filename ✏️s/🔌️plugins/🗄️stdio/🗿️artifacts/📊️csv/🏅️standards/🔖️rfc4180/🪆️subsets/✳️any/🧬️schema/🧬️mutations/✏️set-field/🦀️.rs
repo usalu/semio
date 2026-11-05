@@ -17,8 +17,8 @@ pub struct SetField {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "field", kind: "set-field", record: "SetField" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set field", "Feld setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set field", "Feld setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

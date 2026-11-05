@@ -1,5 +1,5 @@
 use semio_s_artifact_stdio_semio_document_examples::schema::snapshot::SemioDocumentSnapshot;
-use semio_framework_plugin::MeshWindowKit;
+use semio_plugin::MeshWindowKit;
 use semio_s_artifact_stdio_semio_document_examples::viewer::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

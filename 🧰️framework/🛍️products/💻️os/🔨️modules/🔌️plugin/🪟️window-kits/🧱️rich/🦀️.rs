@@ -1,6 +1,6 @@
 //! 🧱️ Tree, table, world3d and document window kits of the plugin SDK.
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../🌳️tree/🦀️.rs"]
 pub mod tree_kit;

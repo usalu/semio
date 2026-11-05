@@ -12,19 +12,19 @@ use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::i
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::Buildable;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::HasBase;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LabelText;
+use semio_plugin::tree_item_desc;
+use semio_plugin::ui_node_list;
+use semio_plugin::Buildable;
+use semio_plugin::BuiltNode;
+use semio_plugin::HasBase;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_ui_locale::Label;
+use semio_ui_locale::LabelText;
 
 //#region 🔖️Constants
 /// 🪪️ The unique id of this panel tab, a child of the framework catalogue tab.
@@ -76,7 +76,7 @@ pub fn selected(snapshot: &ModelSnapshot, library: &[String]) -> Vec<String> {
 
 fn entry_row(snapshot: &ModelSnapshot, id: &str) -> UiAssemblyResult<BuiltNode> {
     let name = snapshot.families.get(id).map_or_else(|| id.to_string(), |family| family.name.clone());
-    semio_framework_ui_contract::tree_item(ui_label(&name)?).try_id(id).map_err(|_| ui_capacity_error())?.icon(ui_text("shapes")?).granularity(ui_text("family")?).default_open(false).try_build().map_err(|_| ui_capacity_error())
+    semio_ui_contract::tree_item(ui_label(&name)?).try_id(id).map_err(|_| ui_capacity_error())?.icon(ui_text("shapes")?).granularity(ui_text("family")?).default_open(false).try_build().map_err(|_| ui_capacity_error())
 }
 
 fn action_row(kind: &str, family: &str, name: &str, label: LabelText, icon: &str, action: &str) -> UiAssemblyResult<BuiltNode> {

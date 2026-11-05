@@ -9,7 +9,7 @@ use crate::chrome_ledger::CHROME_LEDGER;
 #[cfg(any(test, feature = "testkit"))]
 use crate::chrome_ledger::{accessibility_window_is_visible, begin_accessibility_visible_documents, chrome_action_args, chrome_hit_row, ledger_publish_hits, ledger_publish_surfaces, ledger_push_action, note_accessibility_visible_document, note_chrome_accessibility, publish_accessibility_visible_documents, world_camera_ledger_row, ChromeLedger, CHROME_ACTION_ARGS_BYTES, CHROME_ACTION_CAPACITY, WORLD_CAMERA_LEDGER};
 use crate::chrome_ledger::{ACCESSIBILITY_VISIBLE_WINDOWS, CHROME_ACCESSIBILITY, SHELL_CHROME_ACCESSIBILITY_WINDOW_ID};
-use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::focused_vfs_control;
+use semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::focused_vfs_control;
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 use crate::mesh_and_board2d_stats::build_board2d_dump;
 #[cfg(target_arch = "wasm32")]
@@ -17,19 +17,19 @@ use crate::mesh_and_board2d_stats::build_mesh_stats;
 #[cfg(any(test, feature = "testkit"))]
 use crate::mesh_and_board2d_stats::{board2d_surface, mesh_stats_for_scene, walk_board2d, walk_mesh_stats};
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_renderer_wgpu_contracts::UI_ENGINE;
-use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::{focused_table_editable_text_address, focused_table_editable_text_draft, focused_text_editor, FOCUSED_TABLE_STEPPER};
+use semio_renderer_wgpu_contracts::UI_ENGINE;
+use semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::{focused_table_editable_text_address, focused_table_editable_text_draft, focused_text_editor, FOCUSED_TABLE_STEPPER};
 #[cfg(any(test, feature = "testkit"))]
 use crate::element_contracts::fixture_scene_pointer_target;
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 use serde_json::Value;
-#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))] use semio_framework_ui_declaration::ui::UiState;
-#[cfg(any(test, feature = "testkit"))] use semio_framework_ui_declaration::layout::ActionDescriptor;
-#[cfg(any(test, feature = "testkit"))] use semio_framework_ui_declaration::ui::UiPresence;
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::ui::UiNode;
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))] use semio_ui_declaration::ui::UiState;
+#[cfg(any(test, feature = "testkit"))] use semio_ui_declaration::layout::ActionDescriptor;
+#[cfg(any(test, feature = "testkit"))] use semio_ui_declaration::ui::UiPresence;
+use semio_ui_arena::NodeId;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::ui::UiNode;
 
 //#region 🔬️Introspection
 /** 🔬️ Structural + frame-stats dump for the wgpu↔React UI-parity headless test harness (see

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneWheelContactL
         record: "ChangedCraneWheelContactLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Wheel contact length of the crane runway", "Kranbahn: Radaufstandslänge ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Wheel contact length of the crane runway", "Kranbahn: Radaufstandslänge ändern")
     }
 }
 

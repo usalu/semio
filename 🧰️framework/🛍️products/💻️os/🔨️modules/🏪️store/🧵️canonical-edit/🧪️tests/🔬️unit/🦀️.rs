@@ -1,16 +1,16 @@
-use semio_framework_os_store_canonical_json::{ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, CANONICAL_EDIT_MAXIMUM_BYTES, CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES, invalid_path};
+use semio_os_store_canonical_json::{ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, CANONICAL_EDIT_MAXIMUM_BYTES, CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES, invalid_path};
 use std::sync::Arc;
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonScalarBytes as ScalarBytes};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, FromValue, SnapshotRetirementFactory, ToValue, ValueError};
-use semio_framework_os_store_one_item_publication::native_source::ArtifactStoreCanonicalSource;
-use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
-use semio_framework_os_store_one_item_publication::lifted_canonical_edit::{ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer};
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_store_one_item_publication::native_source::ArtifactStoreCanonicalSource;
+use semio_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
+use semio_os_store_one_item_publication::lifted_canonical_edit::{ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer};
+use semio_os_store_ledger::CursorRevisionAccumulator;
 use serde::{Deserialize, Serialize};
-use semio_framework_os_spr::{Edit, HybridLogicalTimestamp, SchemaId};
+use semio_os_spr::{Edit, HybridLogicalTimestamp, SchemaId};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_test_support as test_support; use super::canonical_edit_tests as tests;
+use semio_os_store_test_support as test_support; use super::canonical_edit_tests as tests;
 
 #[test]
 fn canonical_sealer_constructor_refusal_keeps_every_original_owner_without_heap_work() {
@@ -367,8 +367,8 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
             let FixtureMutation::Replace(FixtureReplace { text, .. }) = &mut edit.forwards[0];
             *text = "x".repeat(length.as_u64().unwrap() as usize);
             edit.finished_at = Some("finished".into());
-            edit.mutation_meta[0].origin = semio_framework_os_spr::MutationOrigin::from_value(origin.clone().into()).unwrap();
-            edit.mutation_meta[0].payload_hash = Some(semio_framework_os_spr::PayloadHash([23; 32]));
+            edit.mutation_meta[0].origin = semio_os_spr::MutationOrigin::from_value(origin.clone().into()).unwrap();
+            edit.mutation_meta[0].payload_hash = Some(semio_os_spr::PayloadHash([23; 32]));
             edit.mutation_meta[0].semantic_kind = Some(SchemaId("fixture#replace".into()));
             let expected = serde_json::to_vec(&test_support::SerdeValue(&CursorRevisionAccumulator::revision_value(&edit))).unwrap();
             let mut actual = Vec::new();
@@ -447,15 +447,15 @@ fn edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally() {
         }
     };
     for case in fixture["cases"].as_array().unwrap() {
-        let digest = semio_framework_os_store_ledger::CursorRevisionAccumulator::edit_digest(&edit_of(case));
+        let digest = semio_os_store_ledger::CursorRevisionAccumulator::edit_digest(&edit_of(case));
         assert_eq!(semio_framework_hash::hex_lower(&digest), case["expectedDigest"].as_str().unwrap(), "edit digest vector {}", case["name"]);
     }
     let mut grown = edit_of(&fixture["cases"][1]);
-    let (_, chains) = semio_framework_os_store_ledger::CursorRevisionAccumulator::edit_digest_extending(&grown, None);
+    let (_, chains) = semio_os_store_ledger::CursorRevisionAccumulator::edit_digest_extending(&grown, None);
     grown.forwards.push(serde_json::json!({ "SetN": { "n": 3 } }).into());
     grown.inverse.push(serde_json::json!({ "SetN": { "n": 2 } }).into());
-    let (extended, _) = semio_framework_os_store_ledger::CursorRevisionAccumulator::edit_digest_extending(&grown, chains);
-    assert_eq!(extended, semio_framework_os_store_ledger::CursorRevisionAccumulator::edit_digest(&grown), "an amend's incremental digest equals the from-scratch digest");
+    let (extended, _) = semio_os_store_ledger::CursorRevisionAccumulator::edit_digest_extending(&grown, chains);
+    assert_eq!(extended, semio_os_store_ledger::CursorRevisionAccumulator::edit_digest(&grown), "an amend's incremental digest equals the from-scratch digest");
 }
 
 #[test]
@@ -515,4 +515,4 @@ fn canonical_json_original_supplied_depth_and_prefix_conserve_every_real_turn() 
     }
 }
 
-fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }
+fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }

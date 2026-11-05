@@ -15,7 +15,7 @@ use crate::editor::puzzle5d::entities::PUZZLE5D_DEFAULT_UTILITY;
 
 
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID;
 use semio_framework_tool_run::TOOL_RUN_START_ACTION_ID;
 
@@ -44,7 +44,7 @@ pub fn engagement_submit(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
             let count = numbers.first().filter(|count| **count >= 0.0 && count.round() <= f64::from(u32::MAX)).map_or(ctx.scene.runtime.fill_count, |count| count.round() as u32);
             ctx.effects.push(set_fill_count::request(count));
             ctx.effects.push(Effect::DispatchAction {
-                req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
+                req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
                 action: TOOL_RUN_START_ACTION_ID.into(),
                 args: Some(semio_framework::dsl_value!({ TOOL_RUN_ARG_TOOL_ID: fill_tool::TOOL_ID })),
                 delay_ms: 0,

@@ -35,7 +35,7 @@ fn aggregate_cold_dispatch_matches_portable_contract() {
                 assert_eq!(pattern.path.segments.last().unwrap().ident, leaf["variant"].as_str().unwrap());
                 let syn::Expr::Call(call) = arm.body.as_ref() else { panic!("expected direct cold hook") };
                 let syn::Expr::Path(callee) = call.func.as_ref() else { panic!("expected qualified cold kind") };
-                let expected: syn::ExprPath = syn::parse_str(&format!("<{} as ::semio_framework_os_command::ColdMutationKind<{}, Ops>>::{method}", leaf["payload"].as_str().unwrap(), case["expected"]["reference"].as_str().unwrap())).unwrap();
+                let expected: syn::ExprPath = syn::parse_str(&format!("<{} as ::semio_os_command::ColdMutationKind<{}, Ops>>::{method}", leaf["payload"].as_str().unwrap(), case["expected"]["reference"].as_str().unwrap())).unwrap();
                 assert_eq!(callee, &expected);
                 assert_eq!(call.args.len(), if method == "foreign_step_source" { 3 } else { 2 });
             }

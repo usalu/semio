@@ -14,8 +14,8 @@ pub struct SetMainHeader {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetMainHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "main-header", kind: "set-main-header", record: "SetMainHeader" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set main header", "Haupt-Header setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set main header", "Haupt-Header setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

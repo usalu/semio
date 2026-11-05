@@ -28,14 +28,14 @@ fn every_action_arg_carrier_of_an_exact_integer_reads_the_same_identity() {
     for row in fixture()["actionArgCarriers"]["rows"].as_array().expect("carrier rows") {
         let id = text(&row["id"]);
         let args = DslValue::Object(vec![("generation".to_string(), carrier_value(row)), ("runId".to_string(), carrier_value(row))]);
-        let read = semio_framework_plugin_tool_run::tool_run_arg_u64(Some(&args), "generation");
+        let read = semio_plugin_tool_run::tool_run_arg_u64(Some(&args), "generation");
         let expected = row["reads"].as_u64();
         println!("[STATS] actionArgCarriers {id}: carrier={} read={read:?}", text(&row["carrier"]));
         assert_eq!(read, expected, "{id}: generation");
-        assert_eq!(semio_framework_plugin_tool_run::tool_run_arg_u64(Some(&args), "runId"), expected, "{id}: runId — one reader, both identity arguments");
+        assert_eq!(semio_plugin_tool_run::tool_run_arg_u64(Some(&args), "runId"), expected, "{id}: runId — one reader, both identity arguments");
     }
-    assert_eq!(semio_framework_plugin_tool_run::tool_run_arg_u64(Some(&DslValue::Object(Vec::new())), "generation"), None, "an absent argument names no identity");
-    assert_eq!(semio_framework_plugin_tool_run::tool_run_arg_u64(None, "generation"), None, "an action with no arguments at all names no identity");
+    assert_eq!(semio_plugin_tool_run::tool_run_arg_u64(Some(&DslValue::Object(Vec::new())), "generation"), None, "an absent argument names no identity");
+    assert_eq!(semio_plugin_tool_run::tool_run_arg_u64(None, "generation"), None, "an action with no arguments at all names no identity");
 }
 
 /// ⚖️ LAW: a `toolRunFinalize` whose `generation` arrives in the fixture's declared wire carrier really
@@ -43,11 +43,11 @@ fn every_action_arg_carrier_of_an_exact_integer_reads_the_same_identity() {
 /// `handle_action` door the shell dispatches through.
 #[semio_framework_async_macros::async_test]
 async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
@@ -83,11 +83,11 @@ async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
 /// ▶️ And the slot is free: the next start is admitted, with no finalize action anywhere in this test.
 #[semio_framework_async_macros::async_test]
 async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
@@ -111,8 +111,8 @@ async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start(
 
 #[semio_framework_async_macros::async_test]
 async fn original_preview_updates_the_mounted_ledger_before_ack_and_the_next_producer_step(){
- let law:Value=serde_json::from_str(include_str!("../../🔬️tool-run/📬️native-ledger/🔣️.json")).unwrap();let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut context=original_caller.context();let cx=&mut context;
- let(policy,maximum)=toy_fixture_caller_policy();let mut observer=|_|true;let identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum,&mut observer).unwrap();let mut caller=ToyFixtureCaller{context:cx,policy,identity,receipts:Vec::new()};let mut app=toy_app(1,&mut caller).await;start(&mut app,law["toolId"].as_str().unwrap(),&mut caller).await;
+ let law:Value=serde_json::from_str(include_str!("../../🔬️tool-run/📬️native-ledger/🔣️.json")).unwrap();let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut context=original_caller.context();let cx=&mut context;
+ let(policy,maximum)=toy_fixture_caller_policy();let mut observer=|_|true;let identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum,&mut observer).unwrap();let mut caller=ToyFixtureCaller{context:cx,policy,identity,receipts:Vec::new()};let mut app=toy_app(1,&mut caller).await;start(&mut app,law["toolId"].as_str().unwrap(),&mut caller).await;
  pump_until(&mut app,"original preview reaches the actual immutable mounted ledger",|app|app.tool_runs.original_view_for(None).is_some_and(|view|view.progress.completed==law["completed"].as_u64().unwrap()),&mut caller).await;
  let view=app.tool_runs.original_view_for(None).unwrap();assert_eq!(view.progress.counters.len(),law["counters"].as_array().unwrap().len());for(counter,expected)in view.progress.counters.iter().zip(law["counters"].as_array().unwrap()){assert_eq!(counter.value,expected.as_u64().unwrap());}assert_eq!(view.payload.unwrap().read_fixed::<4>(0).unwrap(),[17,23,41,67]);let job=app.tool_runs.entries.last().unwrap().job.as_ref().unwrap();let descriptor=job.outcome.as_ref().unwrap();assert_eq!(descriptor.kind(),semio_framework_job::JobOutcomeKind::PreviewReady);assert!(!descriptor.is_acknowledged());
  pump_until(&mut app,"original loan acknowledges and the actual next producer step completes",|app|app.tool_runs.state()==Some(ToolRunState::Finalized)&&!app.tool_runs.has_pending_work(),&mut caller).await;

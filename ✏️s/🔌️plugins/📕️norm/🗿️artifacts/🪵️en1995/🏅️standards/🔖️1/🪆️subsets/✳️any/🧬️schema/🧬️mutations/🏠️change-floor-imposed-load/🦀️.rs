@@ -10,7 +10,7 @@ pub struct ChangeFloorImposedLoad { pub floor_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFloorImposedLoad where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_floor_imposed_load::ChangeFloorImposedLoad> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "floor-imposed-load", kind: "change-floor-imposed-load", record: "ChangedFloorImposedLoad" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change imposed load q_k of floor {}", self.floor_id), &format!("Nutzlast q_k von Floor {} ändern", self.floor_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change imposed load q_k of floor {}", self.floor_id), &format!("Nutzlast q_k von Floor {} ändern", self.floor_id)) }
     fn target(&self) -> Vec<String> { vec![self.floor_id.clone()] }
 }
 

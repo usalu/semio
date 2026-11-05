@@ -1,5 +1,5 @@
 [package]
-name = "semio-framework-plugin-host-configuration"
+name = "semio-plugin-host-configuration"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,7 +25,7 @@ testkit = ["semio-framework-job/testkit", "dep:semio-framework-trace"]
 
 [dependencies]
 semio-framework-trace = { workspace = true, optional = true }
-semio-framework-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

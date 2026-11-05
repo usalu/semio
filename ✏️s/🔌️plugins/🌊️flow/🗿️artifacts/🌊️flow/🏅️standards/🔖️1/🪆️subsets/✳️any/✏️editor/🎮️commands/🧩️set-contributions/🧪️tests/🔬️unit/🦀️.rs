@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
 
 const MANIFEST_ADMISSION_FIXTURE: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📔️registry/🧪️tests/🧫️fixtures/🔣️manifest-admission.json");
 

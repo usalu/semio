@@ -1,6 +1,6 @@
-use semio_framework_os_kernel::ColdMutation;
-use semio_framework_os_kernel::ColdMutationDiff;
-use semio_framework_os_kernel::ColdDiffAlgebra;
+use semio_os_kernel::ColdMutation;
+use semio_os_kernel::ColdMutationDiff;
+use semio_os_kernel::ColdDiffAlgebra;
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
 use semio_framework_value::{DslValue,FromValue,ToValue};

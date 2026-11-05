@@ -1,5 +1,5 @@
 use crate::{PendingPatchAuthority, PendingPatchOwner, PendingPatchSlot};
-use semio_framework_ui_contract::{UiPatch, self as ui_contract};
+use semio_ui_contract::{UiPatch, self as ui_contract};
 
 #[doc(hidden)]
 pub fn patch(surface: &str) -> UiPatch {

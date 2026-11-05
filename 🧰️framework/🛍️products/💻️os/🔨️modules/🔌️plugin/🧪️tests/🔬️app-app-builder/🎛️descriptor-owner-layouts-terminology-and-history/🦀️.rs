@@ -29,7 +29,7 @@
                     other => panic!("unknown owner kind {other}"),
                 }
             }
-            semio_framework_plugin_job::reserved_jobs::join_framework_shared_action_dispositions(&mut definition);
+            semio_plugin_job::reserved_jobs::join_framework_shared_action_dispositions(&mut definition);
             let rows = match law["ownerKind"].as_str().expect("owner kind") {
                 "appAction" => serde_json::to_value(&definition.actions),
                 "windowAction" => serde_json::to_value(&definition.window_kinds.iter().next().expect("window owner").actions),

@@ -1,5 +1,5 @@
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_cad_cad_panels::document::*;
@@ -9,25 +9,25 @@ use semio_s_artifact_cad_cad_kit::{cad_action, cad_tree_item, cad_tree_item_stat
 use semio_s_artifact_cad_cad_model::geometry::CadObject;
 use semio_s_artifact_cad_cad_inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadReference, snapshot::CadSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 use semio_s_artifact_cad_cad_config::CadConfig;
 use semio_s_artifact_cad_cad_editor::forest_working_scene;
 use semio_s_artifact_cad_cad_kit::editor::cad::terminology::cad_labels;
@@ -37,17 +37,17 @@ use semio_s_artifact_cad_cad_editor::CadPlayApp;
 use semio_s_artifact_cad_cad_model::geometry::CadPrimitiveSlot;
 use semio_s_artifact_cad_cad_inferences::{default_document, forest_play_scene};
 use semio_s_artifact_cad_cad_model::{snapshot::CadNode};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::TreeWindowRequest;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::ArtifactView;
+use semio_ui_locale::Locale;
+use semio_plugin::TreeWindowRequest;
+use semio_plugin::ViewModel;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
 
 //#region 🧪️Harness
 /// 🪟️ A host view state whose first-paint budget is wide enough that every container materialises
 /// its whole list — the laws below that are about content, not about windowing, read this.
 fn wide_view_state(locale: Locale) -> ViewModel {
-    ViewModel { locale, tree_viewport_rows: Some(1024), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { locale, tree_viewport_rows: Some(1024), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// 🪟️ One host window request against this panel's body.
@@ -56,7 +56,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn windowed(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 fn child<'a>(parent: &'a BuiltNode, key: &str) -> &'a BuiltNode {
@@ -67,8 +67,8 @@ fn child<'a>(parent: &'a BuiltNode, key: &str) -> &'a BuiltNode {
 /// whenever it has entries, so the host always learns the full extent.
 fn window_of(node: &BuiltNode) -> ui::TreeWindow {
     match &node.component {
-        semio_framework_plugin::Component::TreeSection(props) => props.window.unwrap_or_else(|| panic!("section {} stamps a window", node.key)),
-        semio_framework_plugin::Component::TreeItem(props) => props.window.unwrap_or_else(|| panic!("item {} stamps a window", node.key)),
+        semio_plugin::Component::TreeSection(props) => props.window.unwrap_or_else(|| panic!("section {} stamps a window", node.key)),
+        semio_plugin::Component::TreeItem(props) => props.window.unwrap_or_else(|| panic!("item {} stamps a window", node.key)),
         _ => panic!("{} is not a windowed container", node.key),
     }
 }
@@ -82,7 +82,7 @@ fn tree_of(scene: CadSnapshot, view_state: &ViewModel) -> BuiltNode {
 }
 
 fn snapshot_json(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("fixture projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("fixture projection")
 }
 
 /// 🌲️ The forest document with `extra` synthetic nodes appended — an oversized container whose
@@ -117,7 +117,7 @@ async fn document_lists_every_pane_object_bound_to_the_cad_domain() {
     let working = forest_working_scene();
     let view_state = wide_view_state(Locale::En);
     let tree = tree_of(forest_play_scene(), &view_state);
-    let semio_framework_plugin::Component::Tree(props) = &tree.component else { panic!("panel tree") };
+    let semio_plugin::Component::Tree(props) = &tree.component else { panic!("panel tree") };
     assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(CAD_INTERACTION_DOMAIN));
     let panes: [(&str, &[CadObject]); 4] =
         [("shape", &working.objects), ("building", &working.building_objects), ("energy", &working.energy_objects), ("structure-classic", &working.structure_classic_objects)];
@@ -145,7 +145,7 @@ async fn an_oversized_document_stamps_the_full_total_and_materialises_only_its_s
     let scene = oversized_scene(300);
     let nodes = scene.nodes.len();
     assert!(nodes > ui::UI_BUILT_CHILDREN_MAX, "this law needs a container past one built page, found {nodes}");
-    let tree = tree_of(scene, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let tree = tree_of(scene, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let section = child(&tree, "cad-play-document.nodes");
     let window = window_of(section);
     assert_eq!(window.total as usize, nodes, "the section reports every node it logically holds");
@@ -200,7 +200,7 @@ async fn object_rows_are_domain_picks_without_a_row_binding() {
     let section = child(&tree, "cad-play-document.shape");
     let row = section.children.iter().next().expect("the shape pane lists objects");
     assert!(row.bindings.is_empty(), "a pick row binds nothing of its own, found {}", row.bindings.len());
-    let semio_framework_plugin::Component::TreeItem(props) = &row.component else { panic!("object row is a tree item") };
+    let semio_plugin::Component::TreeItem(props) = &row.component else { panic!("object row is a tree item") };
     assert_eq!(props.granularity.as_ref().map(|granularity| granularity.as_str()), Some(edit::CAD_WORLD_PICK_GRANULARITY), "the row names the domain granularity it picks at");
 }
 
@@ -267,16 +267,16 @@ async fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node
 
 #[semio_framework_async_macros::async_test]
 async fn generated_object_names_resolve_per_viewer_language() {
-    let axes = |locale| Some((semio_framework_ui_locale::Terminology::Native, locale));
+    let axes = |locale| Some((semio_ui_locale::Terminology::Native, locale));
     let mut object = make_object_for_typology("building.building.beam", 1, CadPaneId::Shape);
-    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::En)), "Beam 2");
-    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::De)), "Träger 2");
+    assert_eq!(object_name(&object, axes(semio_ui_locale::Locale::En)), "Beam 2");
+    assert_eq!(object_name(&object, axes(semio_ui_locale::Locale::De)), "Träger 2");
     object.label = semio_s_artifact_cad_cad_model::geometry::CadObjectName::Interaction { interaction_id: "building.building.placeBeam".into(), ordinal: 3, part: None };
-    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::En)), "Place Beam 3");
-    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::De)), "Träger platzieren 3");
+    assert_eq!(object_name(&object, axes(semio_ui_locale::Locale::En)), "Place Beam 3");
+    assert_eq!(object_name(&object, axes(semio_ui_locale::Locale::De)), "Träger platzieren 3");
     assert_eq!(object_name(&object, None), "building.building.placeBeam 3", "without a view context the key is shown, in no language");
     object.label = semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("U2");
-    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::De)), "U2");
+    assert_eq!(object_name(&object, axes(semio_ui_locale::Locale::De)), "U2");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -284,19 +284,19 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
     object.label = semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("U2");
     let windows = TreeWindows::unhosted();
-    let labels = cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = cad_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let item = object_tree_item(&windows, "shape", &object, labels, None).expect("object tree item");
-    let semio_framework_plugin::Component::TreeItem(props) = &item.component else {
+    let semio_plugin::Component::TreeItem(props) = &item.component else {
         panic!("expected tree item");
     };
     assert_eq!(props.label.0.as_str(), "U2");
     assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Beam"));
 
-    let de_view = ViewModel { locale: Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let de_view = ViewModel { locale: Locale::De, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let de_labels = cad_labels(&de_view);
     let de_windows = TreeWindows::unhosted();
-    let de_item = object_tree_item(&de_windows, "shape", &object, de_labels, Some((semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De))).expect("German object tree item");
-    let semio_framework_plugin::Component::TreeItem(props) = &de_item.component else {
+    let de_item = object_tree_item(&de_windows, "shape", &object, de_labels, Some((semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De))).expect("German object tree item");
+    let semio_plugin::Component::TreeItem(props) = &de_item.component else {
         panic!("expected German tree item");
     };
     assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Träger"));
@@ -308,7 +308,7 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
 async fn object_tree_item_streams_its_primitive_children_on_expand() {
     let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
     object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
-    let labels = cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = cad_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let collapsed = object_tree_item(&TreeWindows::unhosted(), "shape", &object, labels, None).expect("collapsed object row");
     assert_eq!(collapsed.key.as_str(), object.id.as_str(), "object rows are keyed by the raw domain id");
     assert_eq!(window_of(&collapsed).total, 1, "a collapsed object row still reports its primitive count");

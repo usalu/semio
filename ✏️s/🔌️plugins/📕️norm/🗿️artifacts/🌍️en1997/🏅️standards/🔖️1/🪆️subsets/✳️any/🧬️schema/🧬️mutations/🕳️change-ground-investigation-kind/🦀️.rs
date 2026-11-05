@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeGroundInvestigatio
         record: "ChangedGroundInvestigationKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Kind (borehole | cpt | spt) of the ground investigation", "Baugrunderkundung: Art (borehole | cpt | spt) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Kind (borehole | cpt | spt) of the ground investigation", "Baugrunderkundung: Art (borehole | cpt | spt) ändern")
     }
 }
 

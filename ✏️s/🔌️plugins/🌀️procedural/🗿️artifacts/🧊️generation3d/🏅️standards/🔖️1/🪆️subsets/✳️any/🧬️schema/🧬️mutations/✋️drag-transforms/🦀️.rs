@@ -11,7 +11,8 @@ use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️DragTransforms
 /// ✋️ Adds `(dx, dy, dz)` to the offset of every addressed translate operator.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -33,10 +34,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "transforms", kind: "drag-transforms", record: "DraggedTransforms" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let [(x_en, x_de), (y_en, y_de), (z_en, z_de)] = [self.dx, self.dy, self.dz].map(generation3d_label_number);
         let (en, de) = generation3d_label_items(self.targets.len(), "shape(s)", "Form(en)");
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({x_en}, {y_en}, {z_en})"), &format!("{de} um ({x_de}; {y_de}; {z_de}) ziehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({x_en}, {y_en}, {z_en})"), &format!("{de} um ({x_de}; {y_de}; {z_de}) ziehen"))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,7 +1,7 @@
 //! 🧪️ remodeling editor integration tests: every law that drives the play app through its command dispatch.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_plugin_energy_engine_results as results;
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberPunchingAsw 
         record: "ChangedMemberPunchingAsw",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change punching shear reinforcement A_sw of the member", "Bauteil: Durchstanzbewehrung A_sw ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change punching shear reinforcement A_sw of the member", "Bauteil: Durchstanzbewehrung A_sw ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

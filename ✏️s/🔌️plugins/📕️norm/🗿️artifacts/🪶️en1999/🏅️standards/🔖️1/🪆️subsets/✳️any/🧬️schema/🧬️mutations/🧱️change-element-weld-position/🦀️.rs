@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeElementWeldPositio
         record: "ChangedElementWeldPosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Weld position from the root of the section element", "Querschnittsteil: Lage der Schweißnaht ab Anschluss ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Weld position from the root of the section element", "Querschnittsteil: Lage der Schweißnaht ab Anschluss ändern")
     }
 }
 

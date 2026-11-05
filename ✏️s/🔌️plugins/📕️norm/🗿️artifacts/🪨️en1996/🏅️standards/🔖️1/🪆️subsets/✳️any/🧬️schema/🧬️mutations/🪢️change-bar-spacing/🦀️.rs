@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeBarSpacing where O
         record: "ChangedBarSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change reinforcing bar bar spacing", "Stababstand (Bewehrungsstab) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change reinforcing bar bar spacing", "Stababstand (Bewehrungsstab) ändern")
     }
 }
 

@@ -3,9 +3,9 @@
 //! (`semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient`); this window kind only
 //! registers it under its own id.
 
-use semio_framework_plugin::WindowTransientOwner;
+use semio_plugin::WindowTransientOwner;
 
-use semio_framework_plugin::WindowTransientOwnerBundle;
+use semio_plugin::WindowTransientOwnerBundle;
 pub use crate::editor::fem3d::modes::edit::windows::results::config::addressed_to;
 pub use semio_s_artifact_fem_2d_results_state::transient::captured_clock;
 pub use semio_s_artifact_fem_2d_results_state::transient::required_clock;

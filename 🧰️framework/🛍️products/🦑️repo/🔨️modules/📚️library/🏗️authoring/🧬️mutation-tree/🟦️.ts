@@ -253,7 +253,7 @@ export function newMutationFamilyRoot(existing: string | null, domainLabel: stri
   const operation = name.split("/")[1]!;
   const mount = `#[path = "${operation}/${POLICY_RS_COMPONENT_LEAF_NAME}"]\npub mod ${parts.moduleName};`;
   if (existing !== null && existing.includes(mount)) return { source: existing, added: false };
-  const head = existing ?? `//! 🧬️ ${NEW_SCAFFOLD_MARKER}: mutation family \`${domainLabel}\` — one crate of leaf payloads composed by the transparent aggregate; every leaf stays generic over its aggregate.\n\n#![allow(async_fn_in_trait)]\n\nextern crate semio_framework_os_kernel as dsl;\nextern crate semio_framework_os_kernel as protocol;\n`;
+  const head = existing ?? `//! 🧬️ ${NEW_SCAFFOLD_MARKER}: mutation family \`${domainLabel}\` — one crate of leaf payloads composed by the transparent aggregate; every leaf stays generic over its aggregate.\n\n#![allow(async_fn_in_trait)]\n\nextern crate semio_os_kernel as dsl;\nextern crate semio_os_kernel as protocol;\n`;
   return { source: `${head.trimEnd()}\n\n${mount}\n`, added: true };
 }
 

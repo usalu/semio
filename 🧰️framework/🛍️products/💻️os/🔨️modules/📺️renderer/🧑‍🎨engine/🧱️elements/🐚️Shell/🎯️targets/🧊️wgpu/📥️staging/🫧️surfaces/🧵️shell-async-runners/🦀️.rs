@@ -22,7 +22,7 @@ impl<T: 'static> ShellDetached<T> {
     {
         let answer = std::sync::Arc::new(std::sync::Mutex::new(None));
         let slot = answer.clone();
-        semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
+        semio_renderer_wgpu_host_base::spawn_app_task(async move {
             let value = request.await;
             *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(value);
         });
@@ -33,7 +33,7 @@ impl<T: 'static> ShellDetached<T> {
     pub fn spawn(request: impl std::future::Future<Output = T> + 'static) -> Self {
         let answer = std::sync::Arc::new(std::sync::Mutex::new(None));
         let slot = answer.clone();
-        semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
+        semio_renderer_wgpu_host_base::spawn_app_task(async move {
             let value = request.await;
             *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(value);
         });
@@ -51,11 +51,11 @@ impl<T: 'static> ShellDetached<T> {
 /// the refresh no longer wants is handed back by its document's own `Drop`.
 pub struct ShellRenderedRefresh {
     pub instance_id: u32,
-    pub surfaces: HashMap<String, (Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>, Vec<semio_framework::kernel::Effect>)>,
-    pub catalogue: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>,
-    pub engagements: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>,
-    pub measures: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>,
-    pub tools: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>,
+    pub surfaces: HashMap<String, (Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>, Vec<semio_framework::kernel::Effect>)>,
+    pub catalogue: Option<Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>>,
+    pub engagements: Option<Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>>,
+    pub measures: Option<Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>>,
+    pub tools: Option<Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>>,
 }
 
 impl ShellRenderedRefresh {
@@ -141,7 +141,7 @@ pub enum ShellIoCompletion {
     Actions(Vec<ActionDescriptor>),
     Import(PickedImport),
     MediaFrames { controller_id: String, frames: Vec<ActionDescriptor> },
-    Program(Result<(), semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>),
+    Program(Result<(), semio_renderer_wgpu_program_bridge::ProgramFault>),
     Finished,
 }
 

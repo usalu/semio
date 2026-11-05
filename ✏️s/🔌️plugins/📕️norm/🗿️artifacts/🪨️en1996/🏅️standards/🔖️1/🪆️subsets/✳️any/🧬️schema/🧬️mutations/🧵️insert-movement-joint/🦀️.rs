@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for InsertMovementJoint wher
         record: "InsertedMovementJoint",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert movement joint {}", self.item.id), &format!("Dehnfuge {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert movement joint {}", self.item.id), &format!("Dehnfuge {} einfügen", self.item.id))
     }
 }
 

@@ -17,8 +17,8 @@ pub struct ChangeBeamTransverseAs {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamTransverseAs where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_transverse_as::ChangeBeamTransverseAs> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-transverse-as", kind: "change-beam-transverse-as", record: "ChangedBeamTransverseAs" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change transverse reinforcement", "Querbewehrung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change transverse reinforcement", "Querbewehrung ändern")
     }
 }
 

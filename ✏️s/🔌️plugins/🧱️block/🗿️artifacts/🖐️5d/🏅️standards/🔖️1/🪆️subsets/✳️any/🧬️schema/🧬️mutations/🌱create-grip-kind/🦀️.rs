@@ -31,8 +31,8 @@ pub fn create_grip_kind_at<Op: From<crate::create_grip_kind::CreateGripKind>>(gr
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for CreateGripKind where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::delete_grip_kind::DeleteGripKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "grip-kind", kind: "create-grip-kind", record: "CreatedGripKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create grip kind \"{}\"", self.grip_kind.id), &format!("Griffart \"{}\" erstellen", self.grip_kind.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create grip kind \"{}\"", self.grip_kind.id), &format!("Griffart \"{}\" erstellen", self.grip_kind.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.grip_kind.id.clone()]

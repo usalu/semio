@@ -80,7 +80,7 @@ pub fn diff_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValu
 }
 
 /// ↩️ Free-function face of [`Mutation::inverse`], named only in this subset's own reachable types.
-/// `protocol` is a private `extern crate semio_framework_os_kernel as protocol;` alias that nothing
+/// `protocol` is a private `extern crate semio_os_kernel as protocol;` alias that nothing
 /// re-exports, so an owner-root test adapter compiled as an external crate cannot bring the
 /// `Mutation` trait into scope to call the method form — the structural gap wave 7 recorded for
 /// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by

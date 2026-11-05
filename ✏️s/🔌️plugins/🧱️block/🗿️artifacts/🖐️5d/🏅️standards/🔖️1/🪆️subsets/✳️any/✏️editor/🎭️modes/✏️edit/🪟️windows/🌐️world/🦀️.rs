@@ -3,17 +3,17 @@
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use crate::terminology::Block5dLabels;
 use crate::ui_label;
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-// 🚧️ SDK GAP: the block crate has no direct `semio-framework-ui-contract` dependency (unlike puzzle/
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+// 🚧️ SDK GAP: the block crate has no direct `semio-ui-contract` dependency (unlike puzzle/
 // lowpoly), so the contract's node builders are reached through the plugin SDK's own re-export.
-use semio_framework_plugin::plugin_app_close_prelude as ui;
+use semio_plugin::plugin_app_close_prelude as ui;
 
 //#region 🔖️Constants
 pub const BLOCK5D_WINDOW_WORLD: &str = "block5d-world";

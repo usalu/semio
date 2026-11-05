@@ -1,9 +1,9 @@
 //! 🪪️ Persisted window configuration is admitted only to its exact generated partition identity.
 
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
-use semio_framework_os_kernel as protocol;
+use semio_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
+use semio_os_kernel as protocol;
 use crate::window_config_tests::retained_pack_load_tests;
 
 pub(super) use super::camera_owner::IdentityWindowOwner;

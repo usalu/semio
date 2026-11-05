@@ -1,13 +1,13 @@
 //! 📏️ Literal Generation relational census before typed native field ownership.
-use semio_framework_os_flow_contract::{FlowHostSnapshot,Widget,neural::{Atom,Dictionary,Value as NeuralValue}};
-use semio_framework_os_playbook_contract::GenerationPlayState;
+use semio_os_flow_contract::{FlowHostSnapshot,Widget,neural::{Atom,Dictionary,Value as NeuralValue}};
+use semio_os_playbook_contract::GenerationPlayState;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_dsl_record::NativeSchemaControl;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_value::DslValue;
 use semio_framework_value::Number;
-use semio_framework_os_flow_contract::{FlowUi,NodeChrome,neural::Tree};
+use semio_os_flow_contract::{FlowUi,NodeChrome,neural::Tree};
 struct Rows<'a,C>{control:&'a mut C,maximum:usize,count:usize,maximum_bytes:usize,bytes:usize}
 impl<C:NativeSchemaControl> Rows<'_,C>{
  fn cells(&mut self,n:usize)->Result<(),ValueError>{self.bytes=self.bytes.checked_add(n).filter(|n|*n<=self.maximum_bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation complete SQL semantic value bytes exceeded"))?;self.control.step()}

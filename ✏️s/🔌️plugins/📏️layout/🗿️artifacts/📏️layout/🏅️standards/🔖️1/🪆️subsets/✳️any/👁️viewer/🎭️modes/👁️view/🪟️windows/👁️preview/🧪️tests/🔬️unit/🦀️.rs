@@ -11,7 +11,7 @@ async fn definition_declares_a_canvas_2d_preview_window() {
 async fn render_produces_a_scene_node_for_the_default_document() {
     let document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let node = render(&document).expect("layout preview surface");
-    assert!(matches!(node.component, semio_framework_plugin::plugin_app_close_prelude::Component::Surface(_)));
+    assert!(matches!(node.component, semio_plugin::plugin_app_close_prelude::Component::Surface(_)));
 }
 
 #[semio_framework_async_macros::async_test]

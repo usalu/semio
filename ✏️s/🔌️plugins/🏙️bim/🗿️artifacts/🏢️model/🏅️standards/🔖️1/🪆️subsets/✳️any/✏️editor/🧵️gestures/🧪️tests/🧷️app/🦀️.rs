@@ -1,8 +1,8 @@
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, canvas_scene, dispatch_in, history_verb, view, world_scene};
 use semio_s_artifact_bim_model_bim::editor::bim::BimCommand;
-use semio_framework_plugin::app::TypedOperationResultLane;
-use semio_framework_plugin::{Effect, PluginApp, ViewModel};
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::TypedOperationResultLane;
+use semio_plugin::{Effect, PluginApp, ViewModel};
+use semio_ui_locale::Locale;
 
 const WINDOW: &str = "bim-plan";
 
@@ -234,7 +234,7 @@ fn debug_stack_probe() {
             2 => { let _ = semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::definition(); }
             3 => { let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::definition(); let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::definition(); let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::definition(); let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::definition(); let _ = semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::definition(); let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::definition(); }
             4 => { let _ = semio_s_artifact_bim_model_bim::editor::bim::create_bim_app(); }
-            5 => { let d = semio_s_artifact_bim_model_bim::editor::bim::create_bim_app(); let _ = semio_framework_plugin::AppActionRegistry::from_definition(&d); }
+            5 => { let d = semio_s_artifact_bim_model_bim::editor::bim::create_bim_app(); let _ = semio_plugin::AppActionRegistry::from_definition(&d); }
             _ => {}
         }
     }).unwrap().join().unwrap();

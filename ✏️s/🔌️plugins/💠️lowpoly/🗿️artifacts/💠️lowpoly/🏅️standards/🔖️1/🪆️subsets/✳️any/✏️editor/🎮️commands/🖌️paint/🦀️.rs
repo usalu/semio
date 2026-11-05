@@ -19,9 +19,9 @@ use semio_s_artifact_lowpoly_lowpoly_mut_paint::{apply_paint_stroke::ApplyPaintS
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from};
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot};
-use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
-use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault};
+use semio_plugin::app::ArtifactOwnedToolJobContext;
+use semio_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault};
 
 //#region 🖌️PaintTick
 /// 🎯️ What one paint tick at `points` on `object_id` amounts to under the active paint utility: the leaf it yields

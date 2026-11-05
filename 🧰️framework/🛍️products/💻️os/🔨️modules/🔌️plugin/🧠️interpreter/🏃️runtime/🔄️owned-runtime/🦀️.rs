@@ -108,14 +108,14 @@ impl OwnedRuntime {
         Ok((self.origin_instance(compiled, &used.origin), used.spent_fuel))
     }
 
-    fn actor_context_call(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<original_actor_context::OriginalActorFixedCall,TurnFault>{
+    fn actor_context_call(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<original_actor_context::OriginalActorFixedCall,TurnFault>{
         if state.pending.is_none(){let encoded=identity.encode(|control|operation::input::encode_json_input(&(input,budget.retained_policy),control)).map_err(identity_turn_fault)?;identity.encode(|control|control.charge(encoded.len())).map_err(identity_turn_fault)?;begin_owned_operation(state,operation,Some(encoded))?;}
         let invocation=resume_owned_operation_observed(state,operation,budget.fuel,budget.deadline_us,OwnedDeadline::Original,|_,_|{},None)?;
         original_actor_context::OriginalActorFixedReceipt::read(&invocation.output).map_err(identity_turn_fault)
     }
 
     /// 🎬️ Runs one actor turn over `events`, or resumes the turn `state` has in flight when `events` is empty.
-    pub fn execute_actor_turn(&self, state: &mut OwnedGuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+    pub fn execute_actor_turn(&self, state: &mut OwnedGuestInstance, events: &[Event], budget: Budget, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         if state.pending.is_some() && !events.is_empty() {
             return Err(TurnFault::Trapped(format!("owned turn is mid-flight and cannot admit {} more event(s) — resume it with no events until it settles", events.len())));
         }
@@ -145,7 +145,7 @@ impl OwnedRuntime {
         identity.encode(|control|control.charge(input.len())).map_err(identity_turn_fault)?;
         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
         }
-        let mut receiver=if fresh{semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(identity)}else{let receipt=state.original_receipt.take().ok_or_else(||identity_turn_fault(operation_authority::refusal(4)))?;match semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::resume(receipt,identity){Ok(receiver)=>receiver,Err((error,receipt))=>{state.original_receipt=Some(receipt);return Err(identity_turn_fault(error));}}};
+        let mut receiver=if fresh{semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(identity)}else{let receipt=state.original_receipt.take().ok_or_else(||identity_turn_fault(operation_authority::refusal(4)))?;match semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::resume(receipt,identity){Ok(receiver)=>receiver,Err((error,receipt))=>{state.original_receipt=Some(receipt);return Err(identity_turn_fault(error));}}};
         let invocation = resume_owned_operation_authored(state, OwnedOperation::Poll, budget.fuel, budget.deadline_us, OwnedDeadline::Original, |_,_|{}, None, &mut receiver);
         let receipt=receiver.pause();
         state.original_receipt=if state.pending.is_some()||invocation.is_err(){Some(receipt)}else{None};
@@ -177,13 +177,13 @@ impl OwnedRuntime {
         decode_owned_result(&invocation.output)
     }
 
-    fn codec_call_authored<T:serde::de::DeserializeOwned,I:serde::Serialize,O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self,compiled:&OwnedCompiledGuest,operation:OwnedOperation,input:&I,budget:Budget,mut progress:impl FnMut(u64,std::time::Duration),cancellation:Option<&GuestCallCancellation>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>)->Result<T,TurnFault>{
+    fn codec_call_authored<T:serde::de::DeserializeOwned,I:serde::Serialize,O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self,compiled:&OwnedCompiledGuest,operation:OwnedOperation,input:&I,budget:Budget,mut progress:impl FnMut(u64,std::time::Duration),cancellation:Option<&GuestCallCancellation>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>)->Result<T,TurnFault>{
         let used=self.codec_origin(compiled,budget,&mut progress,cancellation)?;
         let state=&mut self.origin_instance(compiled,&used.origin);
         let input=identity.encode(|control|operation::input::encode_json_input(input,control)).map_err(identity_turn_fault)?;
         identity.encode(|control|control.charge(input.len())).map_err(identity_turn_fault)?;
         begin_owned_operation(state,operation,Some(input))?;
-        let mut receiver=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(identity);
+        let mut receiver=semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(identity);
         let invocation=resume_owned_operation_authored(state,operation,budget.fuel.saturating_sub(used.spent_fuel),budget.deadline_us,OwnedDeadline::Original,|fuel,elapsed|progress(used.reported_fuel.saturating_add(fuel),elapsed),cancellation,&mut receiver)?;
         decode_owned_result(&invocation.output)
     }
@@ -194,12 +194,12 @@ impl OwnedRuntime {
     }
 
     /// 📤️ Projects native values using the component's own semantic provider under observed fuel.
-    pub async fn codec_sqlite_export<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &OwnedCompiledGuest, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
+    pub async fn codec_sqlite_export<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &OwnedCompiledGuest, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
         self.codec_call_authored(compiled, OwnedOperation::SqliteExport, &OwnedSnapshotInput { dialect, encoding, payload, limits: limits.into(), native: native_grant.into() }, budget, progress, Some(cancellation), identity)
     }
 
     /// 📥️ Reconstructs native values after the component validates exact dialect and domain DDL.
-    pub async fn codec_sqlite_import<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &OwnedCompiledGuest, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
+    pub async fn codec_sqlite_import<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &OwnedCompiledGuest, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
         self.codec_call_authored(compiled, OwnedOperation::SqliteImport, &OwnedSnapshotInput { dialect, encoding: "", payload, limits: limits.into(), native: native_grant.into() }, budget, progress, Some(cancellation), identity)
     }
 
@@ -245,12 +245,12 @@ impl OwnedRuntime {
     }
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
-    pub async fn codec_apply_ops(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
+    pub async fn codec_apply_ops(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
         self.codec_call_authored(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {}, None, identity)
     }
 
     /// 🧩️ `codec.apply-ops` with the same original deadline and fuel observations as [`Self::codec_genesis_observed`].
-    pub async fn codec_apply_ops_observed(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
+    pub async fn codec_apply_ops_observed(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
         self.codec_call_authored(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, progress, Some(cancellation), identity)
     }
 
@@ -269,9 +269,9 @@ impl OwnedRuntime {
     }
 
     /// 🎟️ Admits the original actor context of `state` for one retained turn.
-    pub fn admit_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::AdmitActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Admission{ready,refusal}=>Ok(semio_framework_actor::retained_context::OriginalActorAdmissionReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,ready,refusal}),_=>Err(TurnFault::ActorCall(call))}}
+    pub fn admit_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::AdmitActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Admission{ready,refusal}=>Ok(semio_framework_actor::retained_context::OriginalActorAdmissionReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,ready,refusal}),_=>Err(TurnFault::ActorCall(call))}}
     /// ♻️ Runs one closing step of the original actor context of `state`.
-    pub fn close_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::CloseActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Close{complete,blocked,refusal}=>Ok(semio_framework_actor::retained_context::OriginalActorCloseReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,complete,blocked,refusal}),_=>Err(TurnFault::ActorCall(call))}}
+    pub fn close_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::CloseActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Close{complete,blocked,refusal}=>Ok(semio_framework_actor::retained_context::OriginalActorCloseReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,complete,blocked,refusal}),_=>Err(TurnFault::ActorCall(call))}}
 
     /// 🛰️ Drives one owned job export to its resident fixed receipt, reporting the instructions it spent even when it fails.
     fn drive_job(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,json:Option<Vec<u8>>,arguments:Vec<Value>,fuel:u64,deadline_us:u64)->Result<(Vec<u8>,u64),OwnedJobFailure>{
@@ -368,7 +368,7 @@ impl OwnedRuntime {
 
     /// 📸️ Frames `state` — its in-flight operation, original receipt, guest checkpoint and interpreter memory — as one owned
     /// host checkpoint.
-    pub fn checkpoint_actor(&self, state: &mut OwnedGuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
+    pub fn checkpoint_actor(&self, state: &mut OwnedGuestInstance, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         let guest_checkpoint = if state.pending.is_none() {
             begin_owned_operation(state, OwnedOperation::Checkpoint, None).map_err(turn_fault_host)?;
             let invocation = match resume_owned_operation(state, OwnedOperation::Checkpoint, 100_000_000, 1_000_000) {

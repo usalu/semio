@@ -17,7 +17,7 @@ use semio_s_artifact_lowpoly_lowpoly_model::composite_layer_pixels;
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolyObjectPatch, snapshot::LowpolySelection, snapshot::LowpolySnapshot, snapshot::LOWPOLY_PAINT_TEXTURE_SIZE};
 use machine::Command;
 use protocol::Mutation;
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
@@ -379,7 +379,7 @@ impl semio_framework_value::FromValue for LowpolyTransient {
     }
 }
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: LowpolyTransient,
     mutation: LowpolyTransientMutation,
     diff: LowpolyTransientDiff,
@@ -392,7 +392,7 @@ semio_framework_plugin::transient_root! {
     whole,
 }
 
-semio_framework_plugin::window_transient_transfer! { state: LowpolyTransient, mutation: LowpolyTransientMutation }
+semio_plugin::window_transient_transfer! { state: LowpolyTransient, mutation: LowpolyTransientMutation }
 
 impl LowpolyScratch {
     /// 🫧️ The dispatch context rehydrated from the live transient: its mesh cache and its window paint gestures.
@@ -540,7 +540,7 @@ pub fn lowpoly_tool_once(verb: &str, authoring_seed: &str, leaves: Vec<LowpolyMu
 
 /// 📤️ The emission of one one-shot gesture: its committed transaction as ONE edit stamped with the ref — plain when the
 /// view carries no admission (a render or test view without command authority) — or nothing.
-pub fn lowpoly_tool_emit(verb: &str, doc: &semio_framework_plugin::ArtifactView<'_, LowpolySnapshot>, leaves: Vec<LowpolyMutation>) -> Emit<LowpolyMutation, semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfigMutation> {
+pub fn lowpoly_tool_emit(verb: &str, doc: &semio_plugin::ArtifactView<'_, LowpolySnapshot>, leaves: Vec<LowpolyMutation>) -> Emit<LowpolyMutation, semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfigMutation> {
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
     match lowpoly_tool_once(verb, seed, leaves) {
         Some((transaction, mutations)) if !seed.is_empty() => Emit::commit_transaction(transaction, mutations),
@@ -623,9 +623,9 @@ pub struct LowpolyPaintDrive {
 /// 🛞️ Drives `window`'s paint tool through ONE dispatch on the shared streamed-gesture runner
 /// ([`semio_framework_tool_machine::drive_gesture`]) against the gesture this transient holds for that window; a refused
 /// start or tick raises its tool-transaction fault (`toolTransaction.closed` | `toolTransaction.unclosed`).
-pub fn lowpoly_paint_drive(transient: &LowpolyTransient, window: &str, phase: GesturePhase, tick: Option<LowpolyMutation>, authoring_seed: &str, base_revision: &str) -> Result<LowpolyPaintDrive, semio_framework_plugin::Fault> {
+pub fn lowpoly_paint_drive(transient: &LowpolyTransient, window: &str, phase: GesturePhase, tick: Option<LowpolyMutation>, authoring_seed: &str, base_revision: &str) -> Result<LowpolyPaintDrive, semio_plugin::Fault> {
     let drive = semio_framework_tool_machine::drive_gesture::<LowpolyPaintTool>(transient.paint(window), LOWPOLY_PAINT_VERB, phase, tick, authoring_seed, base_revision)
-        .map_err(|refusal| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, refusal.code(), "the paint tool refused the dispatch"))?;
+        .map_err(|refusal| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, refusal.code(), "the paint tool refused the dispatch"))?;
     Ok(LowpolyPaintDrive { committed: drive.committed, transient: drive.next.map(|gesture| transient.with_paint(window, gesture)) })
 }
 //#endregion 🛠️Tool

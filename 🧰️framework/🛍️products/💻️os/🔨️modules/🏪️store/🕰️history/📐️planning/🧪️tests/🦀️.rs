@@ -1,7 +1,7 @@
 //! 🧪️ The actual planner retains every original ordinal, input and page backing until exact retirement.
-use semio_framework_os_store_read::HistoryReadPlan;
-use semio_framework_os_store_replay::ReplayProgress;
-use semio_framework_os_store_ledger::lifted_replay::EffectiveSupersessions;
+use semio_os_store_read::HistoryReadPlan;
+use semio_os_store_replay::ReplayProgress;
+use semio_os_store_ledger::lifted_replay::EffectiveSupersessions;
 use ::protocol::{MutationId,InputReplacement,HybridLogicalTimestamp};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueRefusalKind};
@@ -46,10 +46,10 @@ fn history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffol
 }
 #[test]
 fn history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories() {
-    use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactHistoryReadRetirement};
+    use semio_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactHistoryReadRetirement};
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
-use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
-use semio_framework_os_store_testing_fixtures::DemoSnapshot;
+use semio_os_store_testing_fixtures::demo::DemoMutation;
+use semio_os_store_testing_fixtures::DemoSnapshot;
 use semio_framework_value::ErasedSnapshotRetirement;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,factory::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
@@ -73,10 +73,10 @@ use semio_framework_value::ErasedSnapshotRetirement;
 }
 #[test]
 fn history_completed_plan_retains_original_residue_and_transferred_results() {
-    use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay};
+    use semio_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay};
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
-use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
-use semio_framework_os_store_testing_fixtures::DemoSnapshot;
+use semio_os_store_testing_fixtures::demo::DemoMutation;
+use semio_os_store_testing_fixtures::DemoSnapshot;
     use std::{sync::Arc,marker::PhantomData};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for route in law["completionRoutes"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for frontier in law["cancelAt"].as_array().unwrap(){
@@ -87,10 +87,10 @@ use semio_framework_os_store_testing_fixtures::DemoSnapshot;
                 let mut owner=ArtifactDerivedHistoryPreview::<DemoSnapshot,DemoMutation> {derived_operation:None,history_source:None,checkpoint:None,history_input:None,history_issuer:None,history_issuer_close:None,displaced_operation:None,operation_close:None,operation_identity:None,operation_adopted:false,preparation_receipt:Default::default(),plan:Some(plan),plan_retirement:None,drafts:protocol::HistoryInputDrafts::new(),target:None,cursor:0,operation:0,state:None,progress:ReplayProgress::default(),registry:registry_alias,generation:7,revision:[11;32],marker:PhantomData,finished:false};
                 assert_eq!(owner.retain_completed_plan(),first_input);assert_eq!(owner.target,Some((7,2)));
                 let mut retirement=owner.plan_retirement.take().unwrap();let residual=retirement.take_original().unwrap();let drafts=std::mem::take(&mut owner.drafts);
-                (residual,(drafts,semio_framework_os_vcs::HistoryPageStack::empty(),EffectiveSupersessions::new()))
+                (residual,(drafts,semio_os_vcs::HistoryPageStack::empty(),EffectiveSupersessions::new()))
             } else {
                 let mut owner=ArtifactDerivedReplay::<DemoSnapshot,DemoMutation> {replacement_wire:Default::default(),replacement_foreign:false,original_decode:None,original_selection:None,original_order:None,original_history_issuance:0,target:Default::default(),target_operation:None,replacement:Default::default(),replacement_operation:None,replacement_phase:0,history_source:None,history_input:None,history_issuer:None,history_issuer_close:None,history_operation:None,failed_operation:None,preparation_receipt:Default::default(),replay:None,plan:Some(plan),plan_retirement:None,registry:registry_alias,generation:7,revision:[11;32]};
-                let original=owner.retain_completed_plan();let drafts=std::mem::take(&mut original.drafts);let order=std::mem::replace(&mut original.order,semio_framework_os_vcs::HistoryPageStack::empty());let supersessions=std::mem::take(&mut original.supersessions);let mut retirement=owner.plan_retirement.take().unwrap();let residual=retirement.take_original().unwrap();
+                let original=owner.retain_completed_plan();let drafts=std::mem::take(&mut original.drafts);let order=std::mem::replace(&mut original.order,semio_os_vcs::HistoryPageStack::empty());let supersessions=std::mem::take(&mut original.supersessions);let mut retirement=owner.plan_retirement.take().unwrap();let residual=retirement.take_original().unwrap();
                 (residual,(drafts,order,supersessions))
             }
         });assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(residual.positions.get(&MutationId("🐚".into())).unwrap()as*const _,position_pointer);assert_eq!(residual.counts.get(0).map(|value|value as*const _),count_pointer);assert!(residual.drafts.terminal_is_empty());assert_eq!(results.0.len(),2);
@@ -106,12 +106,12 @@ use semio_framework_os_store_testing_fixtures::DemoSnapshot;
 
 #[test]
 fn history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody() {
-    use semio_framework_os_store_read::{ArtifactDerivedReplay, ArtifactHistoryReadRetirement};
+    use semio_os_store_read::{ArtifactDerivedReplay, ArtifactHistoryReadRetirement};
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
-use semio_framework_os_store_replay::{EditReplay, ReplayOwnedState};
+use semio_os_store_replay::{EditReplay, ReplayOwnedState};
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
-use semio_framework_os_store_testing_fixtures::DemoSnapshot;
+use semio_os_store_testing_fixtures::demo::DemoMutation;
+use semio_os_store_testing_fixtures::DemoSnapshot;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,factory::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
@@ -133,12 +133,12 @@ use semio_framework_os_store_testing_fixtures::DemoSnapshot;
 
 #[test]
 fn history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close() {
-    use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactHistoryReadRetirement};
+    use semio_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactHistoryReadRetirement};
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
-use semio_framework_os_store_testing_fixtures::DemoSnapshot;
-use semio_framework_os_vcs::VcsError;
+use semio_os_store_testing_fixtures::demo::DemoMutation;
+use semio_os_store_testing_fixtures::DemoSnapshot;
+use semio_os_vcs::VcsError;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,factory::{OwnedValueRetirementFactory,FactorySharedRetirement}};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

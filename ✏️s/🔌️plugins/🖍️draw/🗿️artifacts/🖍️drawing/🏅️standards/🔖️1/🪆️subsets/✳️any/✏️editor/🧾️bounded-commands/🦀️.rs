@@ -46,22 +46,22 @@ pub(super) const DRAWING_EXPORT_TOOL_IDS: &[&str] = &["exportDocument"];
 
 pub(super) const DRAWING_CLIPBOARD_RESERVED_IDS: &[&str] = &["copy","cut","paste"];
 
-pub(super) const DRAWING_EXPORT_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+pub(super) const DRAWING_EXPORT_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "exportDocument", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
 ];
 
 pub const DRAWING_IMAGE_RAW_BYTES:usize=89_481_584;
 
 pub const DRAWING_IMAGE_TOOL_IDS: &[&str] = &["importImage"];
 
-pub const DRAWING_IMAGE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importImage", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Interaction] },
+pub const DRAWING_IMAGE_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "importImage", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Interaction] },
 ];
 
 pub const DRAWING_PATH_TOOL_IDS: &[&str] = &["editPath"];
 
-pub const DRAWING_PATH_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editPath", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+pub const DRAWING_PATH_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "editPath", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
 ];
 
 pub const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
@@ -72,36 +72,36 @@ const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
 /// (`🎮️commands/*/🦀️.rs`). The four whole-document routes emit nothing but an `Effect::LoadDocument`
 /// — effects are not a store lane, so those are honestly `HostOnly`; the layer routes emit
 /// `DrawingMutation`s; the view routes emit exact Canvas window mutations.
-const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeft", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeftFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionRight", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionRightFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionUp", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionUpFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionDownFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSelectedOpacity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "dropLayerKind", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "duplicateLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLayerVisible", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editFill", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "combineBoolean", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
+const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeft", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeftFast", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionRight", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionRightFast", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionUp", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionUpFast", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionDown", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionDownFast", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setSelectedOpacity", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "dropLayerKind", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "moveLayer", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteLayer", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "duplicateLayer", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "toggleLayerVisible", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "editSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "editFill", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "combineBoolean", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "patchLayer", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "patchLayers", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
 ];
 
 fn drawing_bounded_contract() -> semio_framework::ToolExecutionContract {
@@ -128,11 +128,11 @@ impl DrawingWindowCommandWork {
     pub(super) fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false } }
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>> for DrawingWindowCommandWork {
+impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<DrawingPlayApp>> for DrawingWindowCommandWork {
     fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
     fn tool_id(&self) -> &'static str { self.tool_id }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<DrawingPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<DrawingPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
 
@@ -141,7 +141,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         command: &DrawingCommand,
         snapshot: &DrawingSnapshot,
         interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<DrawingPlayApp>>>,
     ) -> Option<usize> {
         if self.completed || command.command_id() != self.tool_id || drawing_bounded_extent(command, snapshot, interaction) != Some(1) { return None; }
         match command {
@@ -152,11 +152,11 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
 
     fn step(
         &mut self,
-        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<DrawingPlayApp>>,
+        input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<DrawingPlayApp>>,
     cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<DrawingPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<semio_plugin::EditorApp<DrawingPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        use semio_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("drawing-window-work-terminal")); }
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
@@ -199,7 +199,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         Ok(match transient {
             Some(mutation) => ArtifactCommandWorkStep::CompleteWithEphemeral {
                 emit,
-                ephemeral: semio_framework_plugin::EphemeralEmit { window_transient: vec![mutation], ..Default::default() },
+                ephemeral: semio_plugin::EphemeralEmit { window_transient: vec![mutation], ..Default::default() },
             },
             None => ArtifactCommandWorkStep::Complete(emit),
         })
@@ -220,8 +220,8 @@ impl DrawingBoundedCommandJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for DrawingBoundedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<DrawingPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<DrawingPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<semio_plugin::EditorApp<DrawingPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<semio_plugin::EditorApp<DrawingPlayApp>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -239,24 +239,24 @@ impl semio_framework::ToolJobFactory for DrawingBoundedCommandJobFactory {
         drawing_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: DRAWING_BOUNDED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: DRAWING_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingBoundedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<DrawingPlayApp>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingBoundedCommandJobFactory {
+    type Owner = semio_plugin::EditorApp<DrawingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = DRAWING_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = DRAWING_BOUNDED_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = DRAWING_BOUNDED_PUBLICATION_CONTRACTS;
 }
 
 /// 🏗️ The bounded half of `DrawingPlayApp::build_tool_job` — one `BoundedArtifactCommandWork` per
 /// non-gesture route, refused outright when the id, the typed command and the live extent disagree.
-pub(super) fn drawing_bounded_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<DrawingPlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+pub(super) fn drawing_bounded_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<DrawingPlayApp>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
     if original.command.command_id() != original.tool_id || drawing_bounded_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "bounded Drawing command does not match its exact registered tool or exceeds its declared extent").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "bounded Drawing command does not match its exact registered tool or exceeds its declared extent").into());
     }
     let tool_id = original.command.command_id();
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, DrawingCommand::command_id, DRAWING_BOUNDED_RAW_BYTES, DRAWING_BOUNDED_WORK_ITEMS, false, |_| DrawingWindowCommandWork::new(tool_id))
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, DrawingCommand::command_id, DRAWING_BOUNDED_RAW_BYTES, DRAWING_BOUNDED_WORK_ITEMS, false, |_| DrawingWindowCommandWork::new(tool_id))
 }
 //#endregion 🧵️BoundedCommands

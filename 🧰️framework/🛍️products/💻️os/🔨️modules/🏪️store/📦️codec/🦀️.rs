@@ -17,35 +17,35 @@ pub mod lifted_io;
 #[path = "📥️lifted/🪆️workspace-receiving/🦀️.rs"]
 pub mod lifted_sqlite_snapshot_workspace;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_spr::command::ArtifactMessageSource;
+use semio_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{ActorId, ArtifactId};
-use semio_framework_os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
+use semio_os_spr::{ActorId, ArtifactId};
+use semio_os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use semio_framework_os_vcs::VcsError;
-use semio_framework_os_vcs::{Identified, Patchable};
-use semio_framework_os_store_space_schema::ArtifactCursor;
-use semio_framework_os_store_text_io::ArtifactCodec;
-use semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
+use semio_os_vcs::VcsError;
+use semio_os_vcs::{Identified, Patchable};
+use semio_os_store_space_schema::ArtifactCursor;
+use semio_os_store_text_io::ArtifactCodec;
+use semio_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
 
-use semio_framework_os_pack::pack_rt;
-use semio_framework_os_store_owned_schema_decode::artifact_retirement_self_grant;
-use semio_framework_os_store_text_io::text_format::ArtifactTextFiles;
+use semio_os_pack::pack_rt;
+use semio_os_store_owned_schema_decode::artifact_retirement_self_grant;
+use semio_os_store_text_io::text_format::ArtifactTextFiles;
 
-use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
-use semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
+use semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_store_backbone::resolve_backbone;
+use semio_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use semio_framework_os_store_backbone::local_storage_backbone_key;
+use semio_os_store_backbone::local_storage_backbone_key;
 
 
 /// 🛡️ Applies the owner's semantic policy and preserves warnings while refusing errors.
@@ -67,7 +67,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// 📌️ The alternative a hub Check In materializes. It is the canonical trunk of `document_id`;
 /// a viewer's checkout is local and never selects it.
 pub fn canonical_check_in_line(document_id: &str) -> String {
-    semio_framework_os_spr::trunk_alternative_id(&ArtifactId(document_id.to_string()))
+    semio_os_spr::trunk_alternative_id(&ArtifactId(document_id.to_string()))
 }
 
 pub static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, ArtifactCodec>>> = std::sync::OnceLock::new();
@@ -274,7 +274,7 @@ pub async fn lane_schema_from_spr(spr: &[u8]) -> Option<String> {
     if spr.is_empty() {
         return None;
     }
-    semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.ok().map(|log| log.schema).filter(|schema| !schema.is_empty())
+    semio_os_spr::decode_history(spr, &semio_os_spr::DecodeOptions::default()).await.ok().map(|log| log.schema).filter(|schema| !schema.is_empty())
 }
 
 /// 🧬️ One registered lossy/lossless pack-bytes transform between two dialects of the SAME

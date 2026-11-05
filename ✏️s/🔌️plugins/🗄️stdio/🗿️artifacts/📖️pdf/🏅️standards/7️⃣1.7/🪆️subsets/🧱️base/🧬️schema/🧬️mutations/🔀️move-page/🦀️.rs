@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "page", kind: "move-page", record: "Move" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move page {} to {}", self.from, self.to), &format!("Seite {} nach {} verschieben", self.from, self.to))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move page {} to {}", self.from, self.to), &format!("Seite {} nach {} verschieben", self.from, self.to))
     }
 
     fn target(&self) -> Vec<String> {

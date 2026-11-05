@@ -7,33 +7,33 @@ use crate::editor::modes::edit::windows::main;
 use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 use semio_framework::DslValue;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::ArtifactCommandInputs;
-use semio_framework_plugin::retained_command::ArtifactCommandWork;
-use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArgSchema;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::retained_command::ArtifactCommandInputs;
+use semio_plugin::retained_command::ArtifactCommandWork;
+use semio_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ArgSchema;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_contract::editing;
@@ -99,7 +99,7 @@ pub fn set_vertex_action() -> ActionDefinition {
         vertex_index_arg(),
         ActionArgDef::vector("point", LocalizedLabel::native("Target Point", "Zielpunkt"), 3).required(),
     ]);
-    action.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+    action.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
     action
 }
 
@@ -153,7 +153,7 @@ impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork 
         command: &editing::SnapshotEditingCommand<SemioMeshEditCommand>,
         _snapshot: &SemioMeshSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SemioMeshEditor>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SemioMeshEditor>>>,
     ) -> Option<usize> {
         let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(args)) = command else { return None };
         (!args.mesh_id.is_empty() && !args.primitive_id.is_empty() && args.point.iter().all(|value| value.is_finite())).then_some(2)
@@ -277,7 +277,7 @@ impl ArtifactEditor for SemioMeshEditor {
         editing::snapshot_editing_command_id(command, |command|match command{SemioMeshEditCommand::SetVertex(_)=>"set-vertex",SemioMeshEditCommand::SetActiveExample{..}=>semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID})
     }
 
-    fn reference_birth()->Option<fn()->Result<SemioMeshSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<SemioMeshSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(SemioMeshSnapshot::default())
     })}
 
@@ -286,7 +286,7 @@ impl ArtifactEditor for SemioMeshEditor {
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -301,12 +301,12 @@ impl ArtifactEditor for SemioMeshEditor {
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.semio@v1/mesh#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
-                .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.semio@v1/mesh#editor", &semio_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
+                .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -316,7 +316,7 @@ impl ArtifactEditor for SemioMeshEditor {
         editing::snapshot_editing_command_from_action(action, args, |action, args| {
             if action==semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID{return Ok(SemioMeshEditCommand::SetActiveExample{example_id:semio_s_artifact_stdio_contract::example_id_argument(args,"")})}
             if action != "set-vertex" {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioMeshEditor")));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioMeshEditor")));
             }
             let field = |key: &str| args.and_then(|value| value.get(key)).ok_or_else(|| Fault::from(format!("set-vertex requires '{key}'")));
             let mesh_id = field("meshId")?.as_str().filter(|value| !value.is_empty()).ok_or_else(|| Fault::from("set-vertex meshId must be non-empty text"))?.to_owned();
@@ -369,7 +369,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_semio_mesh_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(SEMIO_MESH_DIALECT)
         .document(["stdio", "semio"])
         .icon_id("box")

@@ -1,5 +1,5 @@
 {
-  "name": "semio-framework-os-renderer-camera",
+  "name": "semio-renderer-camera",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera",
   "projectType": "library",
   "namedInputs": {

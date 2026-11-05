@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-directory-check-in"
+name = "semio-os-directory-check-in"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,5 +25,5 @@ path = "../../🦀️.rs"
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-os-directory-schema = { path = "../../../📦️packages/🦀️rust" }
+semio-os-directory-schema = { path = "../../../📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

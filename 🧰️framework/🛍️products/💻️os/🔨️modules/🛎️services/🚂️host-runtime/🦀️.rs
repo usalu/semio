@@ -345,7 +345,7 @@ impl TokioHostRuntime {
 
     /// 🧵️ Drives `f` to completion on the calling thread — the entry point a process bootstrap uses
     /// for its own top-level async setup before handing scopes to services. This crate's designated
-    /// executor entry point (R4 sanctions `semio-framework-os-services` by name); every `#[test]`
+    /// executor entry point (R4 sanctions `semio-os-services` by name); every `#[test]`
     /// in this file that drives real suspending work goes through THIS bridge, per R4 Clause 5.
     /// Delegates to `semio_framework_async::block_on` (this crate's `entrypoint`-feature import) —
     /// the SAME bridge every [`ScopeTable`]-submitted [`WorkerPool`] job uses internally, just called

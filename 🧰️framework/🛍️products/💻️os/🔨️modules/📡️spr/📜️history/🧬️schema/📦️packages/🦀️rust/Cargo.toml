@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-history-schema"
+name = "semio-os-history-schema"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

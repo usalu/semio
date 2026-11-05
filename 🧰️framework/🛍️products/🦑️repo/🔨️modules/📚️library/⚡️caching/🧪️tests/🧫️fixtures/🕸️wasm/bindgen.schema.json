@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "locked",
+    "stale",
+    "paths",
+    "cases",
+    "matches",
+    "readiness"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "locked": {
+      "type": "string"
+    },
+    "stale": {
+      "type": "string"
+    },
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "platform",
+          "home",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          },
+          "home": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "owned",
+          "ambient",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "owned": {
+            "type": "string"
+          },
+          "ambient": {
+            "type": "string"
+          },
+          "explicit": {
+            "type": "boolean"
+          },
+          "expected": {
+            "enum": [
+              "owned",
+              "ambient",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "matches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "output",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "output": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "required": [
+        "locked",
+        "cases"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "locked": {
+          "type": "string"
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "before",
+              "after",
+              "install",
+              "refused"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "before": {
+                "type": "string"
+              },
+              "after": {
+                "type": "string"
+              },
+              "install": {
+                "type": "boolean"
+              },
+              "refused": {
+                "type": "boolean"
+              },
+              "explicit": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

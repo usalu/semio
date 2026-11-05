@@ -1,0 +1,678 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Puzzle Canonical IO Metadata Bridge Law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "pluginId",
+    "registeredOnly",
+    "synthesizedSqliteIncluded",
+    "rows",
+    "discovery",
+    "publication",
+    "bridge",
+    "routeCases",
+    "refusals",
+    "independentGraphOracle"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "pluginId": {
+      "const": "puzzle"
+    },
+    "registeredOnly": {
+      "const": true
+    },
+    "synthesizedSqliteIncluded": {
+      "const": false
+    },
+    "rows": {
+      "const": [
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.json@rfc8259/*",
+          "direction": "import",
+          "from": "s.stdio.json@rfc8259/*",
+          "into": "s.puzzle.puzzle2d@1/*",
+          "fidelity": "Exact",
+          "sniffs": true
+        },
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.txt@utf-8/*",
+          "direction": "import",
+          "from": "s.stdio.txt@utf-8/*",
+          "into": "s.puzzle.puzzle2d@1/*",
+          "fidelity": "Exact",
+          "sniffs": true
+        },
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.dwg@ac1024/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.dwg@ac1024/*",
+          "fidelity": "Lossy",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.dxf@r12/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.dxf@r12/*",
+          "fidelity": "Lossy",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.json@rfc8259/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.json@rfc8259/*",
+          "fidelity": "Exact",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.pdf@1.4/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.pdf@1.4/*",
+          "fidelity": "Lossy",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.png@1.2/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.png@1.2/*",
+          "fidelity": "Lossy",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.svg@1.1/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.svg@1.1/*",
+          "fidelity": "Lossy",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle2d@1/*",
+          "foreign": "s.stdio.txt@utf-8/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.txt@utf-8/*",
+          "fidelity": "Exact",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle3d@1/*",
+          "foreign": "s.stdio.json@rfc8259/*",
+          "direction": "import",
+          "from": "s.stdio.json@rfc8259/*",
+          "into": "s.puzzle.puzzle3d@1/*",
+          "fidelity": "Exact",
+          "sniffs": true
+        },
+        {
+          "native": "s.puzzle.puzzle3d@1/*",
+          "foreign": "s.stdio.txt@utf-8/*",
+          "direction": "import",
+          "from": "s.stdio.txt@utf-8/*",
+          "into": "s.puzzle.puzzle3d@1/*",
+          "fidelity": "Exact",
+          "sniffs": true
+        },
+        {
+          "native": "s.puzzle.puzzle3d@1/*",
+          "foreign": "s.stdio.json@rfc8259/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle3d@1/*",
+          "into": "s.stdio.json@rfc8259/*",
+          "fidelity": "Exact",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle3d@1/*",
+          "foreign": "s.stdio.txt@utf-8/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle3d@1/*",
+          "into": "s.stdio.txt@utf-8/*",
+          "fidelity": "Exact",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle5d@1/*",
+          "foreign": "s.stdio.json@rfc8259/*",
+          "direction": "import",
+          "from": "s.stdio.json@rfc8259/*",
+          "into": "s.puzzle.puzzle5d@1/*",
+          "fidelity": "Exact",
+          "sniffs": true
+        },
+        {
+          "native": "s.puzzle.puzzle5d@1/*",
+          "foreign": "s.stdio.txt@utf-8/*",
+          "direction": "import",
+          "from": "s.stdio.txt@utf-8/*",
+          "into": "s.puzzle.puzzle5d@1/*",
+          "fidelity": "Exact",
+          "sniffs": true
+        },
+        {
+          "native": "s.puzzle.puzzle5d@1/*",
+          "foreign": "s.stdio.zip@2.0/*",
+          "direction": "import",
+          "from": "s.stdio.zip@2.0/*",
+          "into": "s.puzzle.puzzle5d@1/*",
+          "fidelity": "Exact",
+          "sniffs": true
+        },
+        {
+          "native": "s.puzzle.puzzle5d@1/*",
+          "foreign": "s.stdio.json@rfc8259/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle5d@1/*",
+          "into": "s.stdio.json@rfc8259/*",
+          "fidelity": "Exact",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle5d@1/*",
+          "foreign": "s.stdio.png@1.2/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle5d@1/*",
+          "into": "s.stdio.png@1.2/*",
+          "fidelity": "Lossy",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle5d@1/*",
+          "foreign": "s.stdio.txt@utf-8/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle5d@1/*",
+          "into": "s.stdio.txt@utf-8/*",
+          "fidelity": "Exact",
+          "sniffs": false
+        },
+        {
+          "native": "s.puzzle.puzzle5d@1/*",
+          "foreign": "s.stdio.zip@2.0/*",
+          "direction": "export",
+          "from": "s.puzzle.puzzle5d@1/*",
+          "into": "s.stdio.zip@2.0/*",
+          "fidelity": "Exact",
+          "sniffs": false
+        }
+      ]
+    },
+    "discovery": {
+      "const": {
+        "perNative": [
+          {
+            "native": "s.puzzle.puzzle2d@1/*",
+            "imports": [
+              "s.stdio.json@rfc8259/*",
+              "s.stdio.txt@utf-8/*"
+            ],
+            "exports": [
+              "s.stdio.dwg@ac1024/*",
+              "s.stdio.dxf@r12/*",
+              "s.stdio.json@rfc8259/*",
+              "s.stdio.pdf@1.4/*",
+              "s.stdio.png@1.2/*",
+              "s.stdio.svg@1.1/*",
+              "s.stdio.txt@utf-8/*"
+            ]
+          },
+          {
+            "native": "s.puzzle.puzzle3d@1/*",
+            "imports": [
+              "s.stdio.json@rfc8259/*",
+              "s.stdio.txt@utf-8/*"
+            ],
+            "exports": [
+              "s.stdio.json@rfc8259/*",
+              "s.stdio.txt@utf-8/*"
+            ]
+          },
+          {
+            "native": "s.puzzle.puzzle5d@1/*",
+            "imports": [
+              "s.stdio.json@rfc8259/*",
+              "s.stdio.txt@utf-8/*",
+              "s.stdio.zip@2.0/*"
+            ],
+            "exports": [
+              "s.stdio.json@rfc8259/*",
+              "s.stdio.png@1.2/*",
+              "s.stdio.txt@utf-8/*",
+              "s.stdio.zip@2.0/*"
+            ]
+          }
+        ],
+        "pluginDestinations": [
+          "s.stdio.dwg@ac1024/*",
+          "s.stdio.dxf@r12/*",
+          "s.stdio.json@rfc8259/*",
+          "s.stdio.pdf@1.4/*",
+          "s.stdio.png@1.2/*",
+          "s.stdio.svg@1.1/*",
+          "s.stdio.txt@utf-8/*",
+          "s.stdio.zip@2.0/*"
+        ],
+        "formatIdentity": "completeDialectCoordinate",
+        "mediaPortsAreFormats": false
+      }
+    },
+    "publication": {
+      "const": {
+        "expectedRowCount": 20,
+        "expectedImportCount": 7,
+        "expectedExportCount": 13,
+        "preserveFidelity": true,
+        "preserveSniffPresence": true,
+        "sniffPresenceMeansPositiveConfidence": false,
+        "composerRowsSeparate": true,
+        "schemaDefaultsAllowed": false,
+        "wireShape": "routeAndDirection",
+        "nativeForeignAreOracleOnly": true
+      }
+    },
+    "bridge": {
+      "const": {
+        "origin": "actualRegisteredEntries",
+        "publication": "actualDescribeBytes",
+        "wireOracle": "independentSerdeAndAjv",
+        "registration": "typedIoRouterFromPublishedRows",
+        "discovery": "canonicalPublishedExports",
+        "sameEntryKeysRequired": true,
+        "emptyGraphAcceptedAsBridgeProof": false
+      }
+    },
+    "routeCases": {
+      "const": [
+        {
+          "id": "native2d-json-exact",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.json@rfc8259/*",
+          "minimumFidelity": "Exact",
+          "maximumHops": 1,
+          "expected": {
+            "reachable": true,
+            "fidelity": "Exact",
+            "hops": 1
+          }
+        },
+        {
+          "id": "native2d-dwg-lossy",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.dwg@ac1024/*",
+          "minimumFidelity": "Lossy",
+          "maximumHops": 1,
+          "expected": {
+            "reachable": true,
+            "fidelity": "Lossy",
+            "hops": 1
+          }
+        },
+        {
+          "id": "native2d-dwg-exact-refused",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.dwg@ac1024/*",
+          "minimumFidelity": "Exact",
+          "maximumHops": 4,
+          "expected": {
+            "reachable": false
+          }
+        },
+        {
+          "id": "native5d-zip-exact",
+          "from": "s.puzzle.puzzle5d@1/*",
+          "into": "s.stdio.zip@2.0/*",
+          "minimumFidelity": "Exact",
+          "maximumHops": 1,
+          "expected": {
+            "reachable": true,
+            "fidelity": "Exact",
+            "hops": 1
+          }
+        },
+        {
+          "id": "json-txt-two-hops",
+          "from": "s.stdio.json@rfc8259/*",
+          "into": "s.stdio.txt@utf-8/*",
+          "minimumFidelity": "Exact",
+          "maximumHops": 2,
+          "expected": {
+            "reachable": true,
+            "fidelity": "Exact",
+            "hops": 2
+          }
+        },
+        {
+          "id": "json-txt-one-hop-refused",
+          "from": "s.stdio.json@rfc8259/*",
+          "into": "s.stdio.txt@utf-8/*",
+          "minimumFidelity": "Exact",
+          "maximumHops": 1,
+          "expected": {
+            "reachable": false
+          }
+        },
+        {
+          "id": "native3d-png-exact-refused",
+          "from": "s.puzzle.puzzle3d@1/*",
+          "into": "s.stdio.png@1.2/*",
+          "minimumFidelity": "Exact",
+          "maximumHops": 4,
+          "expected": {
+            "reachable": false
+          }
+        },
+        {
+          "id": "obsolete-dwg-standard-refused",
+          "from": "s.puzzle.puzzle2d@1/*",
+          "into": "s.stdio.dwg@ac1018/*",
+          "minimumFidelity": "Lossy",
+          "maximumHops": 4,
+          "expected": {
+            "reachable": false
+          }
+        }
+      ]
+    },
+    "refusals": {
+      "const": [
+        {
+          "id": "missing-fidelity",
+          "stage": "wire",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "remove",
+              "path": "/route/fidelity"
+            }
+          ],
+          "policyStatus": "existingOrWireContract"
+        },
+        {
+          "id": "missing-sniffs",
+          "stage": "wire",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "remove",
+              "path": "/route/sniffs"
+            }
+          ],
+          "policyStatus": "existingOrWireContract"
+        },
+        {
+          "id": "unknown-fidelity",
+          "stage": "wire",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "replace",
+              "path": "/route/fidelity",
+              "value": "assumedExact"
+            }
+          ],
+          "policyStatus": "existingOrWireContract"
+        },
+        {
+          "id": "nonboolean-sniffs",
+          "stage": "wire",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "replace",
+              "path": "/route/sniffs",
+              "value": "true"
+            }
+          ],
+          "policyStatus": "existingOrWireContract"
+        },
+        {
+          "id": "unknown-direction",
+          "stage": "wire",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "replace",
+              "path": "/direction",
+              "value": "both"
+            }
+          ],
+          "policyStatus": "existingOrWireContract"
+        },
+        {
+          "id": "contradictory-native-direction",
+          "stage": "publication",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "replace",
+              "path": "/direction",
+              "value": "export"
+            }
+          ],
+          "policyStatus": "existingOrWireContract",
+          "ownershipRule": "deriveNativeEndpointFromDirectionAndRequireDeclaredPluginNativeIdentity"
+        },
+        {
+          "id": "unknown-row-property",
+          "stage": "wire",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "replace",
+              "path": "/route/assumedSniff",
+              "value": false
+            }
+          ],
+          "policyStatus": "existingOrWireContract"
+        },
+        {
+          "id": "conflicting-plugin-owner",
+          "stage": "registration",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "registrationArgument",
+              "name": "pluginId",
+              "value": "foreign-plugin"
+            }
+          ],
+          "policyStatus": "existingOrWireContract"
+        },
+        {
+          "id": "identical-same-owner",
+          "stage": "registration",
+          "row": 0,
+          "expected": "idempotent",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "registrationArgument",
+              "name": "pluginId",
+              "value": "puzzle"
+            }
+          ],
+          "policyStatus": "existingOrWireContract"
+        },
+        {
+          "id": "changed-same-owner-properties",
+          "stage": "registration",
+          "row": 0,
+          "expected": "reject",
+          "graphUnchanged": true,
+          "mutations": [
+            {
+              "operation": "replace",
+              "path": "/route/sniffs",
+              "value": false
+            },
+            {
+              "operation": "registrationArgument",
+              "name": "pluginId",
+              "value": "puzzle"
+            }
+          ],
+          "policyStatus": "approvedNewHostPolicy"
+        }
+      ]
+    },
+    "independentGraphOracle": {
+      "const": {
+        "engine": "SQLite",
+        "program": "recursiveDirectedPaths",
+        "cyclePrevention": true,
+        "compare": [
+          "reachability",
+          "strongestMinimumFidelity",
+          "minimumHops"
+        ],
+        "tiePolicy": "anyValidEquallyOptimalPath",
+        "executed": false
+      }
+    }
+  },
+  "$defs": {
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native",
+        "foreign",
+        "direction",
+        "from",
+        "into",
+        "fidelity",
+        "sniffs"
+      ],
+      "properties": {
+        "native": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*@[^/]+/[^/]+$"
+        },
+        "foreign": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*@[^/]+/[^/]+$"
+        },
+        "from": {
+          "type": "string"
+        },
+        "into": {
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "import",
+            "export"
+          ]
+        },
+        "fidelity": {
+          "enum": [
+            "Exact",
+            "Canonical",
+            "Semantic",
+            "Lossy"
+          ]
+        },
+        "sniffs": {
+          "type": "boolean"
+        }
+      }
+    },
+    "publishedRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route",
+        "direction"
+      ],
+      "properties": {
+        "route": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "into",
+            "fidelity",
+            "sniffs"
+          ],
+          "properties": {
+            "from": {
+              "$ref": "#/$defs/dialect"
+            },
+            "into": {
+              "$ref": "#/$defs/dialect"
+            },
+            "fidelity": {
+              "enum": [
+                "Exact",
+                "Canonical",
+                "Semantic",
+                "Lossy"
+              ]
+            },
+            "sniffs": {
+              "type": "boolean"
+            }
+          }
+        },
+        "direction": {
+          "enum": [
+            "import",
+            "export"
+          ]
+        }
+      }
+    },
+    "dialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 
 use semio_framework_test_fixtures::fixture_path;
 use std::process::Command;
-use semio_framework_plugin_host_process_transport::{MAX_FRAME_BYTES, ProcessShardWatchdog, ProcessTransport, ShardRuntimeKind, now_ms};
+use semio_plugin_host_process_transport::{MAX_FRAME_BYTES, ProcessShardWatchdog, ProcessTransport, ShardRuntimeKind, now_ms};
 use std::path::Path;
 use std::io;
 #[cfg(test)]
@@ -15,58 +15,58 @@ use semio_framework_actor::ShardTransport as _;
 async fn a_data_frame_round_trips_arbitrary_bytes_including_zero_and_newline() {
     let payload = vec![0u8, 1, 2, b'\n', 255, 0u8];
     let mut buffer = Vec::new();
-    semio_framework_plugin_host_process_transport::write_frame(&mut buffer, semio_framework_plugin_host_process_transport::TAG_DATA, &payload).expect("write");
+    semio_plugin_host_process_transport::write_frame(&mut buffer, semio_plugin_host_process_transport::TAG_DATA, &payload).expect("write");
     let mut cursor = io::Cursor::new(buffer);
-    match semio_framework_plugin_host_process_transport::read_frame(&mut cursor).expect("read").expect("some frame") {
-        semio_framework_plugin_host_process_transport::Frame::Data(bytes) => assert_eq!(bytes, payload),
-        semio_framework_plugin_host_process_transport::Frame::Heartbeat => panic!("expected Data"),
+    match semio_plugin_host_process_transport::read_frame(&mut cursor).expect("read").expect("some frame") {
+        semio_plugin_host_process_transport::Frame::Data(bytes) => assert_eq!(bytes, payload),
+        semio_plugin_host_process_transport::Frame::Heartbeat => panic!("expected Data"),
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_heartbeat_frame_carries_no_payload_and_does_not_desync_the_next_frame() {
     let mut buffer = Vec::new();
-    semio_framework_plugin_host_process_transport::write_frame(&mut buffer, semio_framework_plugin_host_process_transport::TAG_HEARTBEAT, &[]).expect("write heartbeat");
-    semio_framework_plugin_host_process_transport::write_frame(&mut buffer, semio_framework_plugin_host_process_transport::TAG_DATA, b"after").expect("write data");
+    semio_plugin_host_process_transport::write_frame(&mut buffer, semio_plugin_host_process_transport::TAG_HEARTBEAT, &[]).expect("write heartbeat");
+    semio_plugin_host_process_transport::write_frame(&mut buffer, semio_plugin_host_process_transport::TAG_DATA, b"after").expect("write data");
     let mut cursor = io::Cursor::new(buffer);
-    assert!(matches!(semio_framework_plugin_host_process_transport::read_frame(&mut cursor).expect("read").expect("some"), semio_framework_plugin_host_process_transport::Frame::Heartbeat));
-    match semio_framework_plugin_host_process_transport::read_frame(&mut cursor).expect("read").expect("some") {
-        semio_framework_plugin_host_process_transport::Frame::Data(bytes) => assert_eq!(bytes, b"after"),
-        semio_framework_plugin_host_process_transport::Frame::Heartbeat => panic!("expected Data"),
+    assert!(matches!(semio_plugin_host_process_transport::read_frame(&mut cursor).expect("read").expect("some"), semio_plugin_host_process_transport::Frame::Heartbeat));
+    match semio_plugin_host_process_transport::read_frame(&mut cursor).expect("read").expect("some") {
+        semio_plugin_host_process_transport::Frame::Data(bytes) => assert_eq!(bytes, b"after"),
+        semio_plugin_host_process_transport::Frame::Heartbeat => panic!("expected Data"),
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn read_frame_reports_clean_eof_as_none_not_an_error() {
     let mut cursor = io::Cursor::new(Vec::<u8>::new());
-    assert!(semio_framework_plugin_host_process_transport::read_frame(&mut cursor).expect("EOF is Ok(None), not Err").is_none());
+    assert!(semio_plugin_host_process_transport::read_frame(&mut cursor).expect("EOF is Ok(None), not Err").is_none());
 }
 
 #[test]
 fn nonblocking_decoder_preserves_fragmented_and_concatenated_frames() {
     let mut encoded = Vec::new();
-    semio_framework_plugin_host_process_transport::write_frame(&mut encoded, semio_framework_plugin_host_process_transport::TAG_DATA, b"first").expect("first");
-    semio_framework_plugin_host_process_transport::write_frame(&mut encoded, semio_framework_plugin_host_process_transport::TAG_HEARTBEAT, &[]).expect("heartbeat");
-    semio_framework_plugin_host_process_transport::write_frame(&mut encoded, semio_framework_plugin_host_process_transport::TAG_DATA, b"second").expect("second");
+    semio_plugin_host_process_transport::write_frame(&mut encoded, semio_plugin_host_process_transport::TAG_DATA, b"first").expect("first");
+    semio_plugin_host_process_transport::write_frame(&mut encoded, semio_plugin_host_process_transport::TAG_HEARTBEAT, &[]).expect("heartbeat");
+    semio_plugin_host_process_transport::write_frame(&mut encoded, semio_plugin_host_process_transport::TAG_DATA, b"second").expect("second");
     let split_a = 3;
     let split_b = encoded.len() - 4;
-    let mut decoder = semio_framework_plugin_host_process_transport::Decoder::default();
+    let mut decoder = semio_plugin_host_process_transport::Decoder::default();
     for fragment in [&encoded[..split_a], &encoded[split_a..split_b], &encoded[split_b..]] {
         let mut cursor = io::Cursor::new(fragment);
-        assert!(matches!(decoder.poll(&mut cursor, fragment.len()).expect("decode fragment"), semio_framework_plugin_host_process_transport::PipeState::Open));
+        assert!(matches!(decoder.poll(&mut cursor, fragment.len()).expect("decode fragment"), semio_plugin_host_process_transport::PipeState::Open));
     }
-    assert_eq!(decoder.pop(), Some(semio_framework_plugin_host_process_transport::Frame::Data(b"first".to_vec())));
-    assert_eq!(decoder.pop(), Some(semio_framework_plugin_host_process_transport::Frame::Heartbeat));
-    assert_eq!(decoder.pop(), Some(semio_framework_plugin_host_process_transport::Frame::Data(b"second".to_vec())));
+    assert_eq!(decoder.pop(), Some(semio_plugin_host_process_transport::Frame::Data(b"first".to_vec())));
+    assert_eq!(decoder.pop(), Some(semio_plugin_host_process_transport::Frame::Heartbeat));
+    assert_eq!(decoder.pop(), Some(semio_plugin_host_process_transport::Frame::Data(b"second".to_vec())));
     assert_eq!(decoder.pop(), None);
 }
 
 #[test]
 fn nonblocking_decoder_rejects_oversized_prefix_before_payload_allocation() {
-    let mut prefix = vec![semio_framework_plugin_host_process_transport::TAG_DATA];
+    let mut prefix = vec![semio_plugin_host_process_transport::TAG_DATA];
     prefix.extend_from_slice(&((MAX_FRAME_BYTES as u32) + 1).to_le_bytes());
     let mut cursor = io::Cursor::new(prefix.clone());
-    let mut decoder = semio_framework_plugin_host_process_transport::Decoder::default();
+    let mut decoder = semio_plugin_host_process_transport::Decoder::default();
     let error = decoder.poll(&mut cursor, prefix.len()).expect_err("oversized prefix must fail");
     assert_eq!(error.kind(), io::ErrorKind::InvalidData);
 }
@@ -203,8 +203,8 @@ async fn an_externally_killed_child_is_detected_as_dead_without_this_type_callin
 ///
 /// ```text
 /// repo run @semio-tech/framework-os-scale-fixture:build-wasm
-/// SEMIO_SCALE_FIXTURE_WASM=<repo>/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm \
-///   cargo test -p semio-framework-plugin-host --lib -- --ignored process_shard_kill_is_detected
+/// SEMIO_SCALE_FIXTURE_WASM=<repo>/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_os_scale_fixture.wasm \
+///   cargo test -p semio-plugin-host --lib -- --ignored process_shard_kill_is_detected
 /// ```
 ///
 /// Sequence: spawn TWO process shards (`a`, `b`), activate one actor on each (`InstanceOpen`
@@ -241,8 +241,8 @@ async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_s
 
     let outcome_a = recv_outcome(&shard_a, 400).await.expect("shard a must reply to InstanceOpen with a real ShardOutcome");
     let outcome_b = recv_outcome(&shard_b, 400).await.expect("shard b must reply to InstanceOpen with a real ShardOutcome");
-    assert!(matches!(outcome_a, semio_framework_plugin_host_shard::ShardOutcome::Turn { actor: 1, .. }), "shard a: expected ShardOutcome::Turn, got {outcome_a:?}");
-    assert!(matches!(outcome_b, semio_framework_plugin_host_shard::ShardOutcome::Turn { actor: 2, .. }), "shard b: expected ShardOutcome::Turn, got {outcome_b:?}");
+    assert!(matches!(outcome_a, semio_plugin_host_shard::ShardOutcome::Turn { actor: 1, .. }), "shard a: expected ShardOutcome::Turn, got {outcome_a:?}");
+    assert!(matches!(outcome_b, semio_plugin_host_shard::ShardOutcome::Turn { actor: 2, .. }), "shard b: expected ShardOutcome::Turn, got {outcome_b:?}");
 
     let pid_a = shard_a.child_id().await.expect("shard a pid");
     let status = Command::new("kill").args(["-9", &pid_a.to_string()]).status().expect("run kill -9 on shard a");
@@ -262,12 +262,12 @@ async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_s
     let shard_a2 = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path, "scale-fixture-a".to_string(), "3".to_string(),fixture_path!("../../../../🪪️identity/⚙️configuration/🔣️.json").to_string_lossy().into_owned()]).await.expect("rebuild shard a");
     semio_framework_async::block_on(shard_a2.send(&instance_open_envelope(3, 1, "idle").await));
     let outcome_a2 = recv_outcome(&shard_a2, 400).await.expect("rebuilt shard a must reply");
-    assert!(matches!(outcome_a2, semio_framework_plugin_host_shard::ShardOutcome::Turn { actor: 3, .. }), "rebuilt shard a: expected ShardOutcome::Turn, got {outcome_a2:?}");
+    assert!(matches!(outcome_a2, semio_plugin_host_shard::ShardOutcome::Turn { actor: 3, .. }), "rebuilt shard a: expected ShardOutcome::Turn, got {outcome_a2:?}");
 
     assert!(shard_b.is_child_alive().await, "shard b must be unaffected by shard a's death");
     semio_framework_async::block_on(shard_b.send(&wake_envelope(2, 2).await));
     let outcome_b2 = recv_outcome(&shard_b, 400).await.expect("shard b must still respond after shard a's kill+rebuild");
-    assert!(matches!(outcome_b2, semio_framework_plugin_host_shard::ShardOutcome::Turn { actor: 2, .. }), "shard b second turn: expected ShardOutcome::Turn, got {outcome_b2:?}");
+    assert!(matches!(outcome_b2, semio_plugin_host_shard::ShardOutcome::Turn { actor: 2, .. }), "shard b second turn: expected ShardOutcome::Turn, got {outcome_b2:?}");
 
     semio_framework_async::block_on(shard_a2.kill());
     semio_framework_async::block_on(shard_b.kill());
@@ -280,7 +280,7 @@ async fn encode_envelope(actor: u64, seq: u64, payload: semio_framework_actor::P
     let envelope =
         semio_framework_actor::Envelope { to: semio_framework_actor::ActorId(actor), from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
     let mut bytes = Vec::new();
-    semio_framework_plugin_host_shard::ShardFrame::Envelope(envelope).pack_encode(&mut bytes).await;
+    semio_plugin_host_shard::ShardFrame::Envelope(envelope).pack_encode(&mut bytes).await;
     bytes
 }
 
@@ -304,11 +304,11 @@ async fn wake_envelope(actor: u64, seq: u64) -> Vec<u8> {
     encode_envelope(actor, seq, semio_framework_actor::Payload::Event { bytes: event_bytes }).await
 }
 
-async fn recv_outcome(transport: &ProcessTransport, attempts: u32) -> Option<semio_framework_plugin_host_shard::ShardOutcome> {
+async fn recv_outcome(transport: &ProcessTransport, attempts: u32) -> Option<semio_plugin_host_shard::ShardOutcome> {
     for _ in 0..attempts {
         if let Some(bytes) = semio_framework_async::block_on(transport.recv()) {
             let mut pos = 0usize;
-            return semio_framework_async::block_on(semio_framework_plugin_host_shard::ShardOutcome::pack_decode(&bytes, &mut pos)).ok();
+            return semio_framework_async::block_on(semio_plugin_host_shard::ShardOutcome::pack_decode(&bytes, &mut pos)).ok();
         }
         thread::sleep(Duration::from_millis(50));
     }

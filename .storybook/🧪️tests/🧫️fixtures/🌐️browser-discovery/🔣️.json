@@ -1,0 +1,18 @@
+{
+  "suites": [
+    ".storybook/🧪️tests/🧪️catalog-browser/🟦️.ts",
+    ".storybook/🧪️tests/🧪️visual-layout/🟦️.ts",
+    "🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎞️storybook-deck/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🎨️storybook-renderer/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-no-wasm/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-wasm/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/📚️storybook-plugins/🟦️.ts",
+    "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/◻️storybook-2d/🟦️.ts",
+    "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️storybook-spatial/🟦️.ts",
+    "✏️s/🧪️tests/🎭️storybook-end-to-end/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎨️storybook/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-new-stories/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-uncovered-components/🟦️.ts"
+  ],
+  "minimumTests": 143
+}

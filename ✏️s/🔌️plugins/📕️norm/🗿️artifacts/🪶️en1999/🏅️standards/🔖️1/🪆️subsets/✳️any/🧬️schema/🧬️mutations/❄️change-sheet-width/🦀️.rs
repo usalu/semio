@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSheetWidth where O
         record: "ChangedSheetWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flat width b of the cold-formed sheet", "Kaltgeformtes Blech: Ebene Breite b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flat width b of the cold-formed sheet", "Kaltgeformtes Blech: Ebene Breite b ändern")
     }
 }
 

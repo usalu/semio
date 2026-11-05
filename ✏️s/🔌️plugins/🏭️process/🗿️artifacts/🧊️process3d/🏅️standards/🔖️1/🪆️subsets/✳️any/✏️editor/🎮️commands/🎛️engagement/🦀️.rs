@@ -6,7 +6,7 @@ use semio_s_artifact_process_process3d_modes::windows::workpiece::set_active_uti
 use crate::{cursor::process3d_cursor, cursor::process3d_cursor_moves};
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️EngagementSubmit

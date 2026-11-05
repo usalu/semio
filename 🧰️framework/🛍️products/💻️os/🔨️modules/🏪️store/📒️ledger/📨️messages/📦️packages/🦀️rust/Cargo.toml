@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-store-message-ledger"
+name = "semio-os-store-message-ledger"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

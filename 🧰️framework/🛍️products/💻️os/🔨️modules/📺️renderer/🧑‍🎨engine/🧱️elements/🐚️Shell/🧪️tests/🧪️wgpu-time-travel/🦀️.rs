@@ -9,13 +9,13 @@
 //! prompt operated by keyboard alone, every staged editor kind in the Actions form and in a chrome dialog, and the
 //! history body the guest's REAL producer builds (paged transaction rows, Edit refused with its reason).
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_shell, test_app, tree_pointer_record};
+use semio_renderer_wgpu_fixtures::shell::{host_test_shell, test_app, tree_pointer_record};
 use super::*;
-use semio_framework_os_renderer_wgpu_program_bridge::OperationPublication;
+use semio_renderer_wgpu_program_bridge::OperationPublication;
 use semio_framework::kernel::{HistoryEntry, HistoryPatch, HistoryReprojection, HistoryTimeTravel, HistoryTimeTravelStage, InvocationResult};
 use semio_framework::{ActionArgDef, ActionArgOption, ArgPresentation, ArgSchema, DialogDefinition, DomainSelection};
-use semio_framework_plugin::app::time_travel::{history_row_window_path, TimeTravelInputRow, TimeTravelList, TimeTravelListItem};
-use semio_framework_plugin::app::{ui_history_panel, CommandView, HistoryMutationPage, HistoryMutationPages, HistoryView, MutationView, TimeTravelEditorPanel, TimeTravelPanel};
+use semio_plugin::app::time_travel::{history_row_window_path, TimeTravelInputRow, TimeTravelList, TimeTravelListItem};
+use semio_plugin::app::{ui_history_panel, CommandView, HistoryMutationPage, HistoryMutationPages, HistoryView, MutationView, TimeTravelEditorPanel, TimeTravelPanel};
 
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
 const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };

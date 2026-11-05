@@ -18,8 +18,8 @@ pub struct RemoveGeometryConnection {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RemoveGeometryConnection where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::add_geometry_connection::AddGeometryConnection> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "geometry-connection", kind: "remove-geometry-connection", record: "RemovedGeometryConnection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove connection \"{}\" from geometry \"{}\"", self.connection_id, self.id), &format!("Verbindung \"{}\" aus Geometrie \"{}\" entfernen", self.connection_id, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove connection \"{}\" from geometry \"{}\"", self.connection_id, self.id), &format!("Verbindung \"{}\" aus Geometrie \"{}\" entfernen", self.connection_id, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone(), self.connection_id.clone()]

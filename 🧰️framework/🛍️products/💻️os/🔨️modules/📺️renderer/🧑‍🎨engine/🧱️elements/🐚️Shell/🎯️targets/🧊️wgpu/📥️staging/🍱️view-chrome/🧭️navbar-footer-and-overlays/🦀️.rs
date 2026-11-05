@@ -163,7 +163,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 cursor.phase = if mobile { 7 } else { 4 };
             }
             4 => {
-                let rows = if semio_framework_os_renderer_wgpu_host_base::boot_locks().example_id.is_empty() { self.docs.session_example_rows(&self.plugins, &self.prefs) } else { Vec::new() };
+                let rows = if semio_renderer_wgpu_host_base::boot_locks().example_id.is_empty() { self.docs.session_example_rows(&self.plugins, &self.prefs) } else { Vec::new() };
                 let controls: Vec<ShellNavbarControl> = shell_example_control(&rows, matches!(&self.input.overlay_state, OverlayState::Dropdown(id) if id == "example"), self.prefs.locale_id == "de").into_iter().collect();
                 if !self.render_navbar_cluster_step(cursor, draw, atlas, icons, input, theme, &controls, btn_y, btn_h) {
                     return false;
@@ -430,7 +430,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 let Some(width) = self.navbar_control_width(atlas, theme, control) else { continue };
                 let Some(rect) = shell_chrome_clip_horizontal(Rect::new(x, btn_y, width, btn_h), ShellChromeBandSpan { left: x, right: cursor.right }) else { break };
                 let hovered = rect.contains(input.pointer_x, input.pointer_y);
-                let state = if hovered { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Hover } else if control.active { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Active } else { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Normal };
+                let state = if hovered { semio_renderer_wgpu_dock::shared_borders::BorderState::Hover } else if control.active { semio_renderer_wgpu_dock::shared_borders::BorderState::Active } else { semio_renderer_wgpu_dock::shared_borders::BorderState::Normal };
                 frames.push(ChromeBorderFrame { owner: control.control_id.clone(), rect: [rect.x, rect.y, rect.w, rect.h], state });
                 cursor.shared_border_rects.insert(control.control_id.clone(), rect);
                 x = rect.x + rect.w;
@@ -776,7 +776,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// tab. Packet W1j; React mounts the same pair as `AgentChatPanel`'s own header row. The
     /// transcript below it is still host-gapped (see `💬️AgentChatPanel/🎯️targets/🧊️wgpu`).
     pub fn render_agent_chat_header_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect) -> bool {
-                use semio_framework_os_renderer_wgpu_agent_elements::agent_chat_panel as chat;
+                use semio_renderer_wgpu_agent_elements::agent_chat_panel as chat;
         let Some(anchor) = PanelAnchor::ALL.into_iter().find(|anchor| self.dock.anchor_open(*anchor) && self.dock.anchor_state(*anchor).active_tab() == Some(chat::AGENT_CHAT_PANEL_ID)) else {
             return true;
         };
@@ -792,7 +792,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 let (value, x, max_w, size, color, y) = match cursor.scalar {
                     2 => (plan.title.clone(), plan.header.x + theme.padding_standard, (plan.dot.x - plan.header.x - theme.padding_standard * 2.0).max(1.0), theme.font_size_body, theme.text, baseline),
                     3 => {
-                        let x = plan.dot.x + semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_DOT_PX + semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_GAP_PX;
+                        let x = plan.dot.x + semio_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_DOT_PX + semio_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_GAP_PX;
                         (plan.status_text.clone(), x, (plan.header.x + plan.header.w - theme.padding_standard - x).max(1.0), theme.font_size_small, theme.text_muted, baseline)
                     }
                     _ => (
@@ -815,8 +815,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             }
             5 => {
                 let hit = Rect::new(plan.dot.x, plan.header.y, (plan.header.x + plan.header.w - plan.dot.x).max(1.0), plan.header.h);
-                self.chrome.chrome_build.tooltip_titles.insert(semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string(), semio_framework_os_renderer_wgpu_agent_elements::agent_presence::agent_presence_status_label(locale));
-                input.register_hit(HitTarget { rect: hit, event: None, control_id: Some(semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                self.chrome.chrome_build.tooltip_titles.insert(semio_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string(), semio_renderer_wgpu_agent_elements::agent_presence::agent_presence_status_label(locale));
+                input.register_hit(HitTarget { rect: hit, event: None, control_id: Some(semio_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
             }
             _ => return true,
         }

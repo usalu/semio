@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-scene-world3d"
+name = "semio-ui-scene-world3d"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,10 +23,10 @@ path = "../../🦀️.rs"
 
 [dependencies]
 protocol = { path = "../../../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
-semio-framework-ui-scene-doc = { path = "../../../📜️doc/📦️packages/🦀️rust" }
-semio-framework-ui-scene-modelling = { path = "../../../../📏️world3d-modelling/📦️packages/🦀️rust" }
-semio-framework-ui-scene-pack = { path = "../../../../📦️pack/📦️packages/🦀️rust" }
-semio-framework-ui-scene-pass = { path = "../../../../📐️math/🎞️pass/📦️packages/🦀️rust" }
+semio-ui-scene-doc = { path = "../../../📜️doc/📦️packages/🦀️rust" }
+semio-ui-scene-modelling = { path = "../../../../📏️world3d-modelling/📦️packages/🦀️rust" }
+semio-ui-scene-pack = { path = "../../../../📦️pack/📦️packages/🦀️rust" }
+semio-ui-scene-pass = { path = "../../../../📐️math/🎞️pass/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

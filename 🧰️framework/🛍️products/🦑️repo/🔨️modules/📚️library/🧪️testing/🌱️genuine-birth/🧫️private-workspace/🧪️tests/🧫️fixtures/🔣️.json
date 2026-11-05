@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "distinct immutable code root",
+      "patch": {
+        "codeRoot": "/code"
+      },
+      "accepted": true
+    },
+    {
+      "name": "same normal code root",
+      "patch": {
+        "codeRoot": "/workspace"
+      },
+      "accepted": true
+    },
+    {
+      "name": "absent code root",
+      "remove": true,
+      "accepted": false
+    },
+    {
+      "name": "empty code root",
+      "patch": {
+        "codeRoot": ""
+      },
+      "accepted": false
+    },
+    {
+      "name": "non-string code root",
+      "patch": {
+        "codeRoot": 2
+      },
+      "accepted": false
+    },
+    {
+      "name": "bounded code root",
+      "patch": {
+        "codeRoot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accepted": true
+    },
+    {
+      "name": "overlong code root",
+      "patch": {
+        "codeRoot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accepted": false
+    },
+    {
+      "name": "NUL code root",
+      "patch": {
+        "codeRoot": "/bad\u0000root"
+      },
+      "accepted": false
+    }
+  ],
+  "selections": [
+    {
+      "name": "actual witness run",
+      "header": [
+        "repo",
+        "run",
+        "@semio-tech/repo-lib:test-private-native-birth"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "actual Nx profile",
+      "header": [
+        "nx",
+        "run",
+        "@semio-tech/repo-lib:test-wasm-outputs:prototype"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "incidental excluded target",
+      "header": [
+        "repo",
+        "run",
+        "other:build",
+        "--exclude",
+        "@semio-tech/repo-lib:test-wasm-outputs"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "incidental flag value",
+      "header": [
+        "repo",
+        "run",
+        "--exclude",
+        "@semio-tech/repo-lib:test-wasm-outputs"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "wrong operation",
+      "header": [
+        "repo",
+        "show",
+        "@semio-tech/repo-lib:test-wasm-outputs"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "unknown issuer",
+      "header": [
+        "other",
+        "run",
+        "@semio-tech/repo-lib:test-wasm-outputs"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "missing selection",
+      "header": [],
+      "accepted": false
+    },
+    {
+      "name": "current canonical caching route",
+      "header": [
+        "repo",
+        "run",
+        "repo:test-wasm-outputs:release"
+      ],
+      "accepted": true
+    }
+  ],
+  "funding": [
+    {
+      "name": "unbounded parent with finite native grant",
+      "value": {
+        "remainingMilliseconds": null,
+        "maximumChildMilliseconds": 14400000,
+        "maximumBytes": 134217728,
+        "maximumLines": 1000000
+      },
+      "expected": {
+        "maximumMilliseconds": 14400000,
+        "maximumBytes": 16777216,
+        "maximumLines": 65536
+      }
+    },
+    {
+      "name": "parent is earlier",
+      "value": {
+        "remainingMilliseconds": 50,
+        "maximumChildMilliseconds": 100,
+        "maximumBytes": 1024,
+        "maximumLines": 4
+      },
+      "expected": {
+        "maximumMilliseconds": 50,
+        "maximumBytes": 1024,
+        "maximumLines": 4
+      }
+    },
+    {
+      "name": "child grant is earlier",
+      "value": {
+        "remainingMilliseconds": 200,
+        "maximumChildMilliseconds": 100,
+        "maximumBytes": 33554432,
+        "maximumLines": 131072
+      },
+      "expected": {
+        "maximumMilliseconds": 100,
+        "maximumBytes": 16777216,
+        "maximumLines": 65536
+      }
+    },
+    {
+      "name": "fractional residual never extends",
+      "value": {
+        "remainingMilliseconds": 50.9,
+        "maximumChildMilliseconds": 100,
+        "maximumBytes": 2048,
+        "maximumLines": 8
+      },
+      "expected": {
+        "maximumMilliseconds": 50,
+        "maximumBytes": 2048,
+        "maximumLines": 8
+      }
+    },
+    {
+      "name": "expired parent",
+      "value": {
+        "remainingMilliseconds": 0,
+        "maximumChildMilliseconds": 100,
+        "maximumBytes": 1024,
+        "maximumLines": 4
+      },
+      "expected": null
+    },
+    {
+      "name": "missing native funding",
+      "value": {
+        "remainingMilliseconds": 100,
+        "maximumChildMilliseconds": 0,
+        "maximumBytes": 1024,
+        "maximumLines": 4
+      },
+      "expected": null
+    }
+  ],
+  "records": [
+    {
+      "name": "bounded",
+      "metadataBytes": 4096,
+      "ownerBytes": 16,
+      "kind": "regular",
+      "accepted": true
+    },
+    {
+      "name": "metadata overflow",
+      "metadataBytes": 4097,
+      "ownerBytes": 1,
+      "kind": "regular",
+      "accepted": false
+    },
+    {
+      "name": "owner overflow",
+      "metadataBytes": 1,
+      "ownerBytes": 17,
+      "kind": "regular",
+      "accepted": false
+    },
+    {
+      "name": "metadata symlink",
+      "metadataBytes": 1,
+      "ownerBytes": 1,
+      "kind": "symlink",
+      "accepted": false
+    },
+    {
+      "name": "metadata hardlink",
+      "metadataBytes": 1,
+      "ownerBytes": 1,
+      "kind": "hardlink",
+      "accepted": false
+    }
+  ]
+}

@@ -28,7 +28,7 @@ use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::unsigned;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 fn connection(row:Row<'_>,column:usize)->Result<DwgBlockActionConnection,ValueError>{Ok(DwgBlockActionConnection{node_id:unsigned(row,column)?,name:row.text(column+1)?.into()})}
 fn project_indices(p:&mut Projection<'_,'_>,table:&'static str,id:i64,values:&[u32])->Result<(),ValueError>{for(index,value)in values.iter().enumerate(){p.insert(table,&[I(id),I(ordinal(index)?),I(i64::from(*value))])?;}Ok(())}

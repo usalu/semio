@@ -6,7 +6,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -28,7 +28,7 @@ pub fn handle_with_row(payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnaps
     if payload.name.trim().is_empty() {
         let current_name = row.map(|space| space.view.name.clone()).unwrap_or_default();
         let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": payload.space_id.clone(), "name": current_name })));
-        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(125), dialog_id: "renameSpace".into(), args }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(125), dialog_id: "renameSpace".into(), args }));
     }
     let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": payload.space_id.clone(), "name": payload.name.clone() })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.rename-space".into(), args }))

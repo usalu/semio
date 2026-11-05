@@ -321,7 +321,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
     /// NOT use `TimerWheel::spawn_driver`'s shared sink-calling mechanism, because that mechanism
     /// hands the completion sink the WHEEL's own internal `TimerId` bytes
     /// (`timer.id.0.to_le_bytes()`), and `TimerId`'s inner field is private outside
-    /// `semio-framework-os-services` with no accessor — there is no way to translate that back to
+    /// `semio-os-services` with no accessor — there is no way to translate that back to
     /// the GUEST's own chosen `SetTimer.id` from outside that crate (see the packet report's
     /// honest gaps: this is a real, confirmed os-services API gap, not a shortcut taken here). This
     /// executor instead reserves the quota slot via `arm`, then sleeps and fires the completion

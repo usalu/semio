@@ -19,8 +19,8 @@ pub struct ChangeBeamActionKind {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamActionKind where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_action_kind::ChangeBeamActionKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-action-kind", kind: "change-beam-action-kind", record: "ChangedBeamActionKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change kind of the beam action", "Art der Trägereinwirkung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change kind of the beam action", "Art der Trägereinwirkung ändern")
     }
 }
 

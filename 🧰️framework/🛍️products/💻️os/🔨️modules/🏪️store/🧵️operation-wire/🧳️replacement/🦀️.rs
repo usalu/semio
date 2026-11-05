@@ -1,6 +1,6 @@
 //! 🧬️ The installed receiver retains the exact replacement payload until every original typed projection returns.
 use crate::{ArtifactOperationWire,ArtifactOriginalOperationReceiving};
-use semio_framework_os_spr::InputReplacement;
+use semio_os_spr::InputReplacement;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneSource,RetainedOwnedProjection,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneSourceAdmission,RetainedCloneSourceTake};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeRetirementDecodeControl};

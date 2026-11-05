@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "wall", kind: "trim-extend-wall", record: "TrimExtendWall" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Trim or extend the {:?} of wall \"{}\" to wall \"{}\"", self.end, self.id, self.target), &format!("{:?} der Wand \"{}\" auf Wand \"{}\" kürzen oder verlängern", self.end, self.id, self.target))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Trim or extend the {:?} of wall \"{}\" to wall \"{}\"", self.end, self.id, self.target), &format!("{:?} der Wand \"{}\" auf Wand \"{}\" kürzen oder verlängern", self.end, self.id, self.target))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,4 +1,4 @@
-use semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog;
+use semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::ValueRefusalKind;
 

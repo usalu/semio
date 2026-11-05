@@ -101,7 +101,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                         "os.setThemeId" => "setThemeId",
                         _ => unreachable!(),
                     };
-                    self.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await
+                    self.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await
                 }
                 _ => Ok(()),
             }

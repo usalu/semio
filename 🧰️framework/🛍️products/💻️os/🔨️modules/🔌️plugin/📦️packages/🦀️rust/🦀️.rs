@@ -6,11 +6,11 @@
 // Answered structurally — Send comes from the concrete per-plugin enum at each call site, never
 // from a bound — so the lint is silenced here, never by adding `+ Send` or making a method sync.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
+extern crate semio_os_kernel as pack;
 
 pub use semio_framework_diagnostic::encode_fault_bytes;
 
@@ -24,7 +24,7 @@ pub use semio_framework_value_derive::{FromValue, ToValue};
 #[doc(hidden)]
 pub use semio_framework_diagnostic as __diagnostic;
 #[doc(hidden)]
-pub use semio_framework_os_kernel as __kernel;
+pub use semio_os_kernel as __kernel;
 #[doc(hidden)]
 pub use semio_framework_pack_json as __pack_json;
 #[doc(hidden)]

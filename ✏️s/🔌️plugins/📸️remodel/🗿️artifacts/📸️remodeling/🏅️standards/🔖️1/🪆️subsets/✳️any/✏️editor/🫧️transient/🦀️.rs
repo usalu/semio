@@ -33,7 +33,7 @@ semio_framework_value::artifact_retire_struct!(RemodelingWindowTransient { impor
 //#endregion 🔖️State
 
 //#region 🔖️Owner
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: RemodelingWindowTransient,
     mutation: RemodelingWindowTransientMutation,
     diff: RemodelingWindowTransientDiff,
@@ -46,7 +46,7 @@ semio_framework_plugin::transient_root! {
     fields: { import: Option<RemodelingImport> },
 }
 
-semio_framework_plugin::window_transient_owners! {
+semio_plugin::window_transient_owners! {
     state: RemodelingWindowTransient,
     mutation: RemodelingWindowTransientMutation,
     windows: {

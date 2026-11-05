@@ -6,9 +6,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -16,11 +16,11 @@ use crate::modes::view;
 use crate::modes::view::windows::report;
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use semio_s_artifact_norm_din18599_model::{DIN18599_DIALECT, DIN18599_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use semio_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect` is only reachable
 // through `app`, not yet in the crate-root re-export list.
-use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_ui_locale::Label;
+use semio_plugin::app::{Dialect, InteractionView};
+use semio_ui_locale::Label;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -65,7 +65,7 @@ impl ArtifactViewer for Din18599Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
-    fn reference_birth()->Option<fn()->Result<Din18599Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Din18599Snapshot,semio_plugin::Fault>>{Some(||{
         Ok(Din18599Snapshot::default())
     })}
 
@@ -85,23 +85,23 @@ impl ArtifactViewer for Din18599Viewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            report::BODY_KEY => report::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            report::BODY_KEY => report::render(doc.snapshot, view_state.locale).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_din18599_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_din18599_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(DIN18599_DIALECT)
         .document(["semio", "norm", "din18599"])
         .icon_id("check-circle")

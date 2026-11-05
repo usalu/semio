@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "elements", kind: "move-elements", record: "MoveElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} element(s) by ({}, {}) m", self.ids.len(), self.vector.x, self.vector.y), &format!("{} Element(e) um ({}, {}) m verschieben", self.ids.len(), self.vector.x, self.vector.y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move {} element(s) by ({}, {}) m", self.ids.len(), self.vector.x, self.vector.y), &format!("{} Element(e) um ({}, {}) m verschieben", self.ids.len(), self.vector.x, self.vector.y))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

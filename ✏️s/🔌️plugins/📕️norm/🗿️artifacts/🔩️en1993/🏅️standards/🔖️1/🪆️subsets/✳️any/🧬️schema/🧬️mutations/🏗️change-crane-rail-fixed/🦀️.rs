@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneRailFixed whe
         record: "ChangedCraneRailFixed",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Rail fixed to the flange (0/1) of the crane runway", "Kranbahn: Schiene am Flansch befestigt (0/1) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Rail fixed to the flange (0/1) of the crane runway", "Kranbahn: Schiene am Flansch befestigt (0/1) ändern")
     }
 }
 

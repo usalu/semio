@@ -13,9 +13,9 @@
 //! `commandFieldOrder`, `inviteTokens` and `redemptionStatusCodes` tables drive both this module's
 //! tests and the React twin's.
 
-use semio_framework_os_kernel::os_directory::{DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility};
+use semio_os_kernel::os_directory::{DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility};
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 //#region 🔖️Routes
 pub const DIRECTORY_COMMANDS_PATH_V1: &str = "/directory/commands";
@@ -137,7 +137,7 @@ fn member_access(role: DirectorySpaceRole) -> SpaceAccess {
 /// on a loaded hub — measured on hub 7800: `GET /directory/spaces` 25–58 s for 82 spaces, ticket 26/09/23
 /// WG8). Only what an event states exactly is applied: a membership change of another user on a listed
 /// space keeps its member count until the next list, which replaces the rows wholesale. Mirrors the
-/// directory read-model fold (`semio_framework_os_kernel::os_directory::fold`) projected onto the caller;
+/// directory read-model fold (`semio_os_kernel::os_directory::fold`) projected onto the caller;
 /// the React twin is `spaceRowsAfterEventsV1` (`🧰️framework/🔨️modules/📇️directory/🏘️spaces/🟦️.ts`), both held to the shared
 /// fixture's `receiptFolds`.
 pub fn space_rows_after_events(rows: &[SpaceRow], events: &[DirectoryEvent], user_id: &str) -> Vec<SpaceRow> {

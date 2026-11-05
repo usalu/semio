@@ -14,7 +14,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         command: &Generation3dCommand,
         snapshot: &Generation3dSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     ) -> Option<usize> {
         if matches!(command, Generation3dCommand::SetActiveExample(_)) {
             return GENERATION3D_RETAINED_CAPACITY.rows_for_items(1);
@@ -99,7 +99,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
             return session.close_step(grant);
         }
         if let Some(host) = self.host.take() {
-            self.host_retirement = Some(semio_framework_os_flow::FlowHostRetirement::new(host));
+            self.host_retirement = Some(semio_os_flow::FlowHostRetirement::new(host));
             return Ok(InteractiveJobCloseStep::Pending { progress: one });
         }
         if let Some(retirement) = self.host_retirement.as_mut() {
@@ -174,7 +174,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
 /// (`📓️flow-tick-coalescing-2026-09-14.md` §7 item 4).
 pub(super) struct Generation3dFlowEvalWindowWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) tessellate: preview_eval::PreviewTessellateReceive,
     pub(super) evaluation:preview_eval::PreviewEvalReceive,
     pub(super) complete: bool,
@@ -182,7 +182,7 @@ pub(super) struct Generation3dFlowEvalWindowWork {
 }
 
 impl Generation3dFlowEvalWindowWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), complete: false, closing: false } }
+    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), complete: false, closing: false } }
 }
 
 /// 🪟️ The preview window one chain route addresses, or `None` for a route that addresses none.
@@ -210,7 +210,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         command: &Generation3dCommand,
         _snapshot: &Generation3dSnapshot,
         _interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     ) -> Option<usize> {
         let (window_id, window_kind_id) = generation3d_flow_eval_window_address(command)?;
         let context = context?;
@@ -226,7 +226,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
     }
 
     fn receive_original_command(&mut self,command:&mut Generation3dCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if let Generation3dCommand::FlowTessellateResolve(payload)=command{self.tessellate.configure_scope([Some(flow_eval_tick::preview_body_key(&payload.window_kind_id)),Some(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN)],[Some(semio_s_artifact_procedural_3d_editor_panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT),Some(semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY)]);return self.tessellate.receive(payload,cx)}if let Generation3dCommand::FlowEvalResolve(payload)=command{self.evaluation.configure_scope([Some(flow_eval_tick::preview_body_key(&payload.window_kind_id)),Some(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN)],[Some(semio_s_artifact_procedural_3d_editor_panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT),Some(semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY)]);return self.evaluation.receive(payload,cx)}Ok(true)
+        if let Generation3dCommand::FlowTessellateResolve(payload)=command{self.tessellate.configure_scope([Some(flow_eval_tick::preview_body_key(&payload.window_kind_id)),Some(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN)],[Some(semio_s_artifact_procedural_3d_editor_panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT),Some(semio_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY)]);return self.tessellate.receive(payload,cx)}if let Generation3dCommand::FlowEvalResolve(payload)=command{self.evaluation.configure_scope([Some(flow_eval_tick::preview_body_key(&payload.window_kind_id)),Some(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN)],[Some(semio_s_artifact_procedural_3d_editor_panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT),Some(semio_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY)]);return self.evaluation.receive(payload,cx)}Ok(true)
     }
 
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<Generation3dPlayApp>>,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
@@ -283,8 +283,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         })?;
         self.complete = true;
         let window_transient = match publication {
-            semio_framework_os_flow::FlowEvalPublication::Retained => Vec::new(),
-            semio_framework_os_flow::FlowEvalPublication::Changed(eval_text) => vec![generation3d_addressed_preview_eval(window, eval_text)?],
+            semio_os_flow::FlowEvalPublication::Retained => Vec::new(),
+            semio_os_flow::FlowEvalPublication::Changed(eval_text) => vec![generation3d_addressed_preview_eval(window, eval_text)?],
         };
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
             emit,

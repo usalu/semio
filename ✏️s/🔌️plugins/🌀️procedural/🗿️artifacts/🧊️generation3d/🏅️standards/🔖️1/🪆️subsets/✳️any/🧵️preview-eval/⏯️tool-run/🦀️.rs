@@ -18,7 +18,7 @@ pub fn preview_eval_fault_notices() -> &'static [(&'static str, LocalizedLabel)]
 }
 
 fn preview_eval_session_closing() -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(PREVIEW_EVAL_SESSION_CLOSING), "the preview evaluation session is closing")
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(PREVIEW_EVAL_SESSION_CLOSING), "the preview evaluation session is closing")
 }
 
 /// 📜️ Source of record of the run's declaration (`🔣️.json` beside this file).
@@ -357,14 +357,14 @@ pub trait PreviewEvalRunOwner: std::any::Any + Send {
 pub(crate) const PREVIEW_EVAL_BOOKKEEPING_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
 
 pub(crate) fn run_action_effect(action: &str, args: semio_framework_value::DslValue) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(args), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(args), delay_ms: 0 }
 }
 
 /// 🚦️ What a surface's `pending_effects` owes the run for the attached `windows`: start a run once a
 /// window owes an evaluation, finalize a complete run whose document, settings or contributions moved
 /// on (the next poll then starts the fresh one), and wake a live run so it sees a changed roster. An
 /// aborted run stays down until a gesture owes its windows again.
-pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], run: Option<semio_framework_plugin::ToolRunPollView<'_>>, servable: bool, applied_edits: u64) -> Vec<Effect> {
+pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], run: Option<semio_plugin::ToolRunPollView<'_>>, servable: bool, applied_edits: u64) -> Vec<Effect> {
     let identifiers = windows.iter().map(|(window_id, _)| *window_id).collect::<Vec<_>>();
     let mut cursor = 0;
     let mut retained = false;

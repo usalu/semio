@@ -365,25 +365,25 @@ export function toolJobPublicationContracts(
   factoryBody: string,
   strings: ReadonlyMap<string, string>,
 ): Map<string, ToolJobPublicationLane[]> | undefined {
-  const header = factoryBody.match(/const\s+PUBLICATION_CONTRACTS\s*:\s*&'static\s*\[\s*(?:semio_framework_plugin::)?ArtifactToolPublicationContract\s*\]\s*=\s*/s);
+  const header = factoryBody.match(/const\s+PUBLICATION_CONTRACTS\s*:\s*&'static\s*\[\s*(?:semio_plugin::)?ArtifactToolPublicationContract\s*\]\s*=\s*/s);
   if (!header) return undefined;
   const valueAt = header.index! + header[0].length;
   const literal = factoryBody.startsWith("&[", valueAt) ? toolJobRustArray(factoryBody, valueAt + 1) : undefined;
   const expression = literal ? factoryBody.slice(valueAt, literal.end).trim() : factoryBody.slice(valueAt).match(/^([^;]+);/s)?.[1]?.trim();
   if (!expression) return undefined;
   const constant = expression.match(/^(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)$/)?.[1];
-  const declaration = constant ? source.search(new RegExp(`(?:pub(?:\\([^)]*\\))?\\s+)?const\\s+${constant}\\s*:\\s*&(?:'static\\s+)?\\[\\s*(?:semio_framework_plugin::)?ArtifactToolPublicationContract\\s*\\]\\s*=`)) : -1;
+  const declaration = constant ? source.search(new RegExp(`(?:pub(?:\\([^)]*\\))?\\s+)?const\\s+${constant}\\s*:\\s*&(?:'static\\s+)?\\[\\s*(?:semio_plugin::)?ArtifactToolPublicationContract\\s*\\]\\s*=`)) : -1;
   const open = declaration < 0 ? -1 : source.indexOf("[", source.indexOf("=", declaration));
   const array = open < 0 ? undefined : toolJobRustArray(source, open);
   const contracts = constant ? array?.body : literal?.body;
   if (!contracts) return undefined;
   const result = new Map<string, ToolJobPublicationLane[]>();
-  const row = /(?:semio_framework_plugin::)?ArtifactToolPublicationContract\s*\{\s*tool_id:\s*(?:"([^"]+)"|(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*))\s*,\s*lanes:\s*&\[([^\]]*)\]\s*\}/g;
+  const row = /(?:semio_plugin::)?ArtifactToolPublicationContract\s*\{\s*tool_id:\s*(?:"([^"]+)"|(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*))\s*,\s*lanes:\s*&\[([^\]]*)\]\s*\}/g;
   let match: RegExpExecArray | null;
   while ((match = row.exec(contracts))) {
     const toolId = match[1] ?? strings.get(match[2] ?? "");
     const names = match[3]!.split(",").map((lane) => lane.trim()).filter(Boolean);
-    const lanes = names.map((lane) => lane.match(/^(?:semio_framework_plugin::)?ArtifactToolPublicationLane::(HostOnly|Artifact|Config|WindowConfig|WindowTransient|Draft|Presence|Transient|Child|Interaction)$/)?.[1] as ToolJobPublicationLane | undefined);
+    const lanes = names.map((lane) => lane.match(/^(?:semio_plugin::)?ArtifactToolPublicationLane::(HostOnly|Artifact|Config|WindowConfig|WindowTransient|Draft|Presence|Transient|Child|Interaction)$/)?.[1] as ToolJobPublicationLane | undefined);
     if (lanes.some((lane) => lane === undefined)) return undefined;
     if (!toolId || result.has(toolId) || lanes.length === 0 || new Set(lanes).size !== lanes.length || (lanes.includes("HostOnly") && lanes.length !== 1)) return undefined;
     result.set(toolId, lanes as ToolJobPublicationLane[]);
@@ -447,7 +447,7 @@ export function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJob
   }
   const ownerFiles = new Map<string, { file: string; body: string }>();
   for (const [file, source] of files) {
-    const owner = /impl\s+(?:semio_framework_plugin::)?(ArtifactEditor|ArtifactApp|ArtifactViewer)\s+for\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
+    const owner = /impl\s+(?:semio_plugin::)?(ArtifactEditor|ArtifactApp|ArtifactViewer)\s+for\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
     let match: RegExpExecArray | null;
     while ((match = owner.exec(source))) {
       const open = source.indexOf("{", match.index);
@@ -460,7 +460,7 @@ export function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJob
   const production = [...files.values()].join("\n");
   const rows: ToolJobAppOwnedRow[] = [];
   for (const [factoryFile, source] of files) {
-    const implementation = /impl\s+(?:semio_framework_plugin::)?ArtifactOwnedToolJobFactory\s+for\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
+    const implementation = /impl\s+(?:semio_plugin::)?ArtifactOwnedToolJobFactory\s+for\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
     let match: RegExpExecArray | null;
     while ((match = implementation.exec(source))) {
       const factory = match[1]!;
@@ -469,9 +469,9 @@ export function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJob
       if (!block) break;
       implementation.lastIndex = block.end;
       const ownerExpression = toolJobResolveTypeAlias(source, block.body.match(/type\s+Owner\s*=\s*([^;]+)\s*;/)?.[1] ?? "").replaceAll(/\s+/g, "") || undefined;
-      const editorOwner = ownerExpression?.match(/^(?:semio_framework_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
-      const viewerOwner = ownerExpression?.match(/^(?:semio_framework_plugin::)?ViewerApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
-      const directOwner = editorOwner || viewerOwner ? undefined : ownerExpression?.match(/^(?:semio_framework_plugin::)?([A-Za-z_][A-Za-z0-9_]*)$/)?.[1];
+      const editorOwner = ownerExpression?.match(/^(?:semio_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
+      const viewerOwner = ownerExpression?.match(/^(?:semio_plugin::)?ViewerApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
+      const directOwner = editorOwner || viewerOwner ? undefined : ownerExpression?.match(/^(?:semio_plugin::)?([A-Za-z_][A-Za-z0-9_]*)$/)?.[1];
       const ownerTypeName = editorOwner ?? viewerOwner ?? directOwner;
       const toolExpression = block.body.match(/const\s+TOOL_IDS\s*:\s*&'static\s*\[\s*&'static\s+str\s*\]\s*=\s*([^;]+);/s)?.[1]?.trim();
       const owner = editorOwner ? ownerFiles.get(`ArtifactEditor\0${editorOwner}`) : viewerOwner ? ownerFiles.get(`ArtifactViewer\0${viewerOwner}`) : directOwner ? ownerFiles.get(`ArtifactApp\0${directOwner}`) : undefined;
@@ -673,7 +673,7 @@ export function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[
     return function_ ? { execution: function_.kind === "resumable" ? "resumable" : "bounded", values: function_.values } : undefined;
   };
   for (const [sourceFile, source] of files) {
-    const invocation = /(?:semio_framework_plugin::)?bounded_first_step_tool_proofs!\s*\{/g;
+    const invocation = /(?:semio_plugin::)?bounded_first_step_tool_proofs!\s*\{/g;
     let match: RegExpExecArray | null;
     while ((match = invocation.exec(source))) {
       const block = toolJobRustBlock(source, source.indexOf("{", match.index));
@@ -712,7 +712,7 @@ export function toolJobScanThenMonolithRows(files: ReadonlyMap<string, string>, 
   for (const [file, source] of files) {
     const resumable = proofs.filter((proof) => proof.sourceFile === file && proof.execution === "resumable");
     if (resumable.length === 0) continue;
-    const implementation = /impl(?:<[^>]+>)?\s+(?:semio_framework_plugin::retained_command::)?ArtifactCommandWork<[^{}]+>\s+for\s+[^\s<{]+(?:<[^>{]+>)?\s*\{/g;
+    const implementation = /impl(?:<[^>]+>)?\s+(?:semio_plugin::retained_command::)?ArtifactCommandWork<[^{}]+>\s+for\s+[^\s<{]+(?:<[^>{]+>)?\s*\{/g;
     let match: RegExpExecArray | null;
     while ((match = implementation.exec(source))) {
       const block = toolJobRustBlock(source, source.indexOf("{", match.index));

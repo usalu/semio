@@ -10,13 +10,13 @@
 
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_lowpoly_lowpoly_inferences::euler_degrees_to_quaternion;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, WindowKindDefinition};
+use semio_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, WindowKindDefinition};
 // 🚧️ SDK GAP: `MeshWindowKit`/`MeshView`/`WindowKit` (contract §2.6) are declared inside
-// `semio_framework_plugin`'s `app` module but are not in the curated crate-root `pub use app::{ … };`
+// `semio_plugin`'s `app` module but are not in the curated crate-root `pub use app::{ … };`
 // re-export list (W0-F's Gap-1 fix added the surface traits/adapters, not the window kits) — only
 // reachable through `app::` today. Flagged for W1-A in the migration report, same class of gap as
 // `ArtifactEditor`/`Dialect` before W0-F closed it.
-use semio_framework_plugin::app::{MeshView, MeshWindowKit, WindowKit};
+use semio_plugin::app::{MeshView, MeshWindowKit, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -66,7 +66,7 @@ fn world_instances_json(snapshot: &LowpolySnapshot) -> String {
 /// straight off the document. Every object renders the same fallback-box placeholder mesh geometry
 /// (real composed-child mesh resolution is an editor-side, engine-backed pipeline out of scope for a
 /// pure read).
-pub fn render(document: &LowpolySnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &LowpolySnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let meshes_json =
         serde_json::to_string(&[serde_json::json!({ "id": LOWPOLY_VIEW_FALLBACK_MESH_KIND, "data": Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(&mesh_from_kind(LOWPOLY_VIEW_FALLBACK_MESH_KIND))) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {

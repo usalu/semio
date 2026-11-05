@@ -18,11 +18,11 @@ use semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema;
 use semio_s_artifact_fem_3d_viewer::viewer::fem3d as viewer;
 use semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::FEM3D_DIALECT;
-use semio_framework_plugin::app::declarations::editor_surface;
-use semio_framework_plugin::app::declarations::viewer_surface;
-use semio_framework_plugin::app::declarations::SchemaDeclaration;
-use semio_framework_plugin::app::declarations::SubsetDeclaration;
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::editor_surface;
+use semio_plugin::app::declarations::viewer_surface;
+use semio_plugin::app::declarations::SchemaDeclaration;
+use semio_plugin::app::declarations::SubsetDeclaration;
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
@@ -69,9 +69,9 @@ pub fn fem3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem3d", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.fem.fem3d",
         artifact: ::semio_framework_schema_registry::FacetLeaves {
@@ -113,9 +113,9 @@ pub fn fem3d_artifact_inference_descriptor() -> ::semio_framework_schema_registr
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem3d.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/💡️inferences/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.fem.fem3d.inference",
         inference: ::semio_framework_schema_registry::FacetLeaves {

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertLocalFire where Op
         record: "InsertedLocalFire",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert localised fire {}", self.item.id), &format!("Lokaler Brand {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert localised fire {}", self.item.id), &format!("Lokaler Brand {} einfügen", self.item.id))
     }
 }
 

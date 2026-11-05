@@ -2,49 +2,49 @@ use crate::context;
 
 
 use super::*;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::AppDefinition;
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::AppRenderOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigSpec;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::create_default_layout;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::AppDefinition;
+use semio_plugin::AppIo;
+use semio_plugin::AppOperationContext;
+use semio_plugin::AppRenderOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigSpec;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::EphemeralEmit;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowMeasure;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::EphemeralEmit;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 
@@ -165,7 +165,7 @@ use crate::context::dispatch;
 use crate::context::fem3d_app;
 
 use crate::context::Fem3dApp;
-use semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip;
+use semio_plugin::artifact_app_laws::assert_undo_redo_round_trip;
 
 //#region 🔖️CommandSurface
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order — mirrors the exact
@@ -226,7 +226,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_through_text_and_binary() {
     for command in every_command() {
-        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
     }
 }
 
@@ -352,8 +352,8 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn manifest_labels_resolve_german_3d() {
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::Terminology;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
     let definition = create_fem3d_app();
     let window = definition.window_kinds.iter().find(|w| w.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
     assert_eq!(window.label.resolve(Terminology::Native, Locale::De), "Modell");
@@ -367,7 +367,7 @@ async fn manifest_labels_resolve_german_3d() {
 /// 📡️ Disconnected mounted edits catch up through their original events without replacing sibling intent.
 #[semio_framework_async_macros::async_test]
 async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_events() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     use crate::context::dispatch;
     use crate::context::fem3d_peer_app;
     async fn events(app: &context::Fem3dApp) -> Vec<protocol::MutationEnvelope> {
@@ -401,15 +401,15 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
     assert_ne!(first.snapshot().expect("disconnected first"), second.snapshot().expect("disconnected second"));
     let from_first = protocol::encode_envelopes(&events(&first).await);
     let from_second = protocol::encode_envelopes(&events(&second).await);
-    first.ingest_operations(&from_second, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("reconnect first");
-    second.ingest_operations(&from_first, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("reconnect second");
+    first.ingest_operations(&from_second, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("reconnect first");
+    second.ingest_operations(&from_first, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("reconnect second");
     let combined = first.snapshot().expect("combined first");
     assert_eq!(combined, second.snapshot().expect("combined second"));
     let node = combined.nodes.iter().find(|node| node.id == target).expect("combined target");
     assert_eq!(node.x, row["after"]["x"].as_f64().expect("x"));
     assert_eq!(node.y, row["after"]["y"].as_f64().expect("y"));
     assert_eq!(node.z, before.z);
-    let duplicates = first.ingest_operations(&from_second, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("duplicate catch-up");
+    let duplicates = first.ingest_operations(&from_second, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("duplicate catch-up");
     assert!(duplicates.iter().all(|report| !report.accepted));
     assert_eq!(first.snapshot().expect("unchanged duplicate"), combined);
     assert_eq!(events(&first).await.len(), events(&second).await.len());
@@ -419,7 +419,7 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
 async fn undo_restores_document_after_add_node() {
     let mut app = fem3d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
-    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🛡️ The same round trip for `addSupport`, the verb 🏗️fem3d's own bar presses. B3f measured it
@@ -432,7 +432,7 @@ async fn undo_restores_document_after_add_support() {
     let mut app = fem3d_app();
     let node_id = app.snapshot().expect("snapshot").nodes.first().map(|node| node.id.clone()).expect("the bundled example has nodes");
     let before = app.snapshot().expect("snapshot").supports.len();
-    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddSupport(add_support::AddSupport { node_id, fixed: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.to_vec() }), |app| app.snapshot().expect("snapshot").supports.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddSupport(add_support::AddSupport { node_id, fixed: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.to_vec() }), |app| app.snapshot().expect("snapshot").supports.len(), before, before + 1, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 
@@ -466,7 +466,7 @@ async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
     let mut app: Fem3dApp = fem3d_app();
     dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let media = Fem3dPlayApp::export_media("results:out", &doc).expect("results:out exports");
     assert_eq!(media.media_type.class, MediaClass::Data);
@@ -483,7 +483,7 @@ async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_results_out_errors_without_load_cases_3d() {
     let snapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::empty_fem3d_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let err = Fem3dPlayApp::export_media("results:out", &doc).expect_err("no load cases should error");
     assert!(matches!(err, MediaError::Payload(..)));
@@ -495,7 +495,7 @@ async fn import_media_geometry_in_adds_a_new_solid_3d() {
     let mut app: Fem3dApp = context::fem3d_empty_app().await;
     dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 30e9, g: 12.5e9 })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let json = semio_framework_pack_json::json!({
         "outline": [[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]],
@@ -541,14 +541,14 @@ async fn fem3d_io_declares_geometry_in_and_results_out_ports() {
     assert_eq!(io.artifact.component_kind, "fem3d");
 
     let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
-    assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
+    assert_eq!(geometry_in.direction, semio_plugin::MediaPortDirection::In);
     assert!(geometry_in.required, "geometry:in is a required input port");
     assert_eq!(geometry_in.media_type.class, MediaClass::ThreeD);
     assert_eq!(geometry_in.media_type.form, MediaForm::Any);
     assert_eq!(geometry_in.multiplicity, semio_framework::PortMultiplicity::One);
 
     let results_out = io.ports.iter().find(|port| port.id == "results:out").expect("results:out declared");
-    assert_eq!(results_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(results_out.direction, semio_plugin::MediaPortDirection::Out);
     assert!(!results_out.required, "results:out is optional");
     assert_eq!(results_out.kind_id.as_deref(), Some("computation.fem3d"));
     assert_eq!(results_out.media_type.class, MediaClass::Data);
@@ -560,10 +560,10 @@ async fn fem3d_io_declares_geometry_in_and_results_out_ports() {
 #[semio_framework_async_macros::async_test]
 async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
     let camera = semio_s_artifact_fem_3d_scene::viewport::INITIAL;
-    let decoded = semio_framework_pack_json::from_json_str::<semio_framework_os_kernel::Viewport3dOrbit>(&semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&camera), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let decoded = semio_framework_pack_json::from_json_str::<semio_os_kernel::Viewport3dOrbit>(&semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&camera), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(decoded, camera);
-    let custom = semio_framework_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None };
-    assert_eq!(semio_framework_pack_json::from_json_str::<semio_framework_os_kernel::Viewport3dOrbit>(&semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&custom), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), custom);
+    let custom = semio_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None };
+    assert_eq!(semio_framework_pack_json::from_json_str::<semio_os_kernel::Viewport3dOrbit>(&semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&custom), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), custom);
 }
 //#endregion 🎬️SceneRender
 use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
@@ -583,18 +583,18 @@ use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactor
 #[semio_framework_async_macros::async_test]
 async fn mounted_camera_and_interaction_presence_reach_peers_without_document_edits() {
     use semio_framework_value::FromValue;
-    use semio_framework_plugin::artifact_app_laws::assert_registered_presence_round_trip;
-    use semio_framework_plugin::artifact_app_laws::fixture_identity;
-    use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
+    use semio_plugin::artifact_app_laws::assert_registered_presence_round_trip;
+    use semio_plugin::artifact_app_laws::fixture_identity;
+    use semio_plugin::artifact_app_laws::fixture_mounted_policy;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
     let expected = protocol::PresenceWindowView::from_value(semio_framework_value::DslValue::from(&fixture["admission"][1]["value"])).expect("admitted shared camera");
     let boot = <Fem3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let node = boot.nodes.first().expect("bundled structural node");
     let selected = protocol::wire::encode_scoped_identity(&["node", &node.id]).expect("canonical node target");
     let window_kind = semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL;
-    let view = semio_framework_plugin::ViewModel { window_id: Some("model-presence".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "model-presence".into(), window_kind_id: window_kind.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = semio_plugin::ViewModel { window_id: Some("model-presence".into()), window_instances: vec![semio_plugin::ViewWindowInstance { id: "model-presence".into(), window_kind_id: window_kind.into() }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let protocol::PresenceViewKind::Orbit { position, target, up, .. } = expected.kind else { panic!("portable orbit pose") };
-    let command = Fem3dCommand::SetCamera(set_camera::SetCamera { camera: semio_framework_os_kernel::Viewport3dOrbit { position, target, up: Some(up), zoom: 1.0 } });
+    let command = Fem3dCommand::SetCamera(set_camera::SetCamera { camera: semio_os_kernel::Viewport3dOrbit { position, target, up: Some(up), zoom: 1.0 } });
     assert_registered_presence_round_trip::<EditorApp<Fem3dPlayApp>, _, _>(|| async { context::manifest() }, command, view, expected, ("fem3d", Some(("node", &selected))), fixture_mounted_policy(), &mut fixture_identity()).await;
 }
 

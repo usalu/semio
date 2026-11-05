@@ -10,19 +10,19 @@ use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_label, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH, WIRES_PLAY_APP_ID};
 use crate::schema::{dsl_id, board_snapshot_edges, wires_identities, wires_relationships};
 use crate::WiresComposed;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract::{Buildable, HasBase};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract::{Buildable, HasBase};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_BODY_ARTIFACT: &str = "reasoning.wires.document";
@@ -78,7 +78,7 @@ fn wires_relationship_document_label(wires: &semio_framework_value::DslValue, ed
 /// `PanelTreeBuilder::interaction_domain` stamps, so the per-row argument map is gone.
 fn pick_row(id: &str, label: impl AsRef<str>, description: Option<String>, granularity: &str) -> UiAssemblyResult<BuiltNode> {
     let admission = |reason: &'static str| PluginAssemblyError::new("ui.fixed-capacity", reason);
-    let mut row = semio_framework_ui_contract::tree_item(ui_label(label)?)
+    let mut row = semio_ui_contract::tree_item(ui_label(label)?)
         .try_id(id)
         .map_err(|_| admission("wires row id admission failed"))?
         .granularity(UiText::try_from_str(granularity).ok_or_else(|| admission("wires row granularity admission failed"))?);

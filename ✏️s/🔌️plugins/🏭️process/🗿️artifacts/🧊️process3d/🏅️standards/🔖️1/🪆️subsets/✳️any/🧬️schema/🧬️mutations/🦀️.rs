@@ -27,9 +27,9 @@
 //! the fresh leaves was reassigned a unique one within this facet, as part of this ticket's
 //! directory + glue trueing pass. See this facet's migration report for the emoji table.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[cfg(test)]

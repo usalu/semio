@@ -10,7 +10,7 @@ pub struct ChangeFastenerSpacingPerp { pub fastener_id: String, pub new_value: f
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFastenerSpacingPerp where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_fastener_spacing_perp::ChangeFastenerSpacingPerp> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fastener-spacing-perp", kind: "change-fastener-spacing-perp", record: "ChangedFastenerSpacingPerp" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change spacing a₂ across the grain of fastener {}", self.fastener_id), &format!("Abstand a₂ quer zur Faser von Fastener {} ändern", self.fastener_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change spacing a₂ across the grain of fastener {}", self.fastener_id), &format!("Abstand a₂ quer zur Faser von Fastener {} ändern", self.fastener_id)) }
     fn target(&self) -> Vec<String> { vec![self.fastener_id.clone()] }
 }
 

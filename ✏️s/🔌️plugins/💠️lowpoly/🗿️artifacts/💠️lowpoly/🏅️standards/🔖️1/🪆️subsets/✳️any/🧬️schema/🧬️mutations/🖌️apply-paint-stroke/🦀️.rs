@@ -85,13 +85,13 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "paint-stroke", kind: "apply-paint-stroke", record: "AppliedPaintStroke" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let count = self.points.len();
         let (dabs, tupfer) = if count == 1 { ("1 dab".to_string(), "1 Tupfer".to_string()) } else { (format!("{count} dabs"), format!("{count} Tupfern")) };
         if self.eraser {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Erase a stroke of {dabs} on layer {} of \"{}\"", self.layer_index, self.object_id), &format!("Einen Strich aus {tupfer} auf Ebene {} von \"{}\" radieren", self.layer_index, self.object_id))
+            semio_ui_locale::LocalizedLabel::native(&format!("Erase a stroke of {dabs} on layer {} of \"{}\"", self.layer_index, self.object_id), &format!("Einen Strich aus {tupfer} auf Ebene {} von \"{}\" radieren", self.layer_index, self.object_id))
         } else {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Paint a stroke of {dabs} on layer {} of \"{}\"", self.layer_index, self.object_id), &format!("Einen Strich aus {tupfer} auf Ebene {} von \"{}\" malen", self.layer_index, self.object_id))
+            semio_ui_locale::LocalizedLabel::native(&format!("Paint a stroke of {dabs} on layer {} of \"{}\"", self.layer_index, self.object_id), &format!("Einen Strich aus {tupfer} auf Ebene {} von \"{}\" malen", self.layer_index, self.object_id))
         }
     }
     fn target(&self) -> Vec<String> {

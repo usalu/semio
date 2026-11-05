@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "schedule", kind: "create-schedule", record: "CreateSchedule" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create schedule \"{}\"", self.schedule.name), &format!("Bauteilliste \"{}\" anlegen", self.schedule.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create schedule \"{}\"", self.schedule.name), &format!("Bauteilliste \"{}\" anlegen", self.schedule.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

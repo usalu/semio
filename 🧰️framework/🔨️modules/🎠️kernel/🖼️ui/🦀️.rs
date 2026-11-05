@@ -1,7 +1,7 @@
 //! 🖼️ Kernel UI delta: dirty scopes and the per-turn UI patch owners with their transports.
 
 use semio_framework_diagnostic::Fault;
-use semio_framework_ui_contract::UiValueRetirementStep;
+use semio_ui_contract::UiValueRetirementStep;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use serde::Deserialize;
@@ -165,14 +165,14 @@ fn union_body_keys(first: Vec<String>, second: Vec<String>) -> Vec<String> {
 
 //#region 🔖️UiPatch
 
-/// 🩹️ `wit-flip` (26/08/20): re-exported from `semio-framework-ui-contract`, the language-neutral
+/// 🩹️ `wit-flip` (26/08/20): re-exported from `semio-ui-contract`, the language-neutral
 /// contract crate's own `UiPatch`/`UiPatchOp` (`🦀️document.rs`) — this file no longer declares its
 /// own copy, so there is exactly one definition to keep in sync with `component.wit`'s
 /// `ui-patch`/`patch-op` (node-id addressed, not path addressed) rather than two that could drift.
-/// Requires a `semio-framework-ui-contract` dependency on every crate that `#[path]`-mounts this
+/// Requires a `semio-ui-contract` dependency on every crate that `#[path]`-mounts this
 /// file — see this packet's report for the exact registrar-request lines (this crate is not on the
 /// registrar-only list for `Cargo.toml`, so the dependency itself is not added here).
-pub use semio_framework_ui_contract::{PresenceUpdate, UiPatch, UiPatchOp};
+pub use semio_ui_contract::{PresenceUpdate, UiPatch, UiPatchOp};
 
 //#endregion 🔖️UiPatch
 //#region 🔖️TurnResult
@@ -237,7 +237,7 @@ struct UiTurnPatchRetireSlot {
 
 #[derive(Debug, Default)]
 struct UiTurnPatchContents {
-    pending: semio_framework_ui_contract::UiPendingPatch,
+    pending: semio_ui_contract::UiPendingPatch,
 }
 
 impl UiTurnPatchContents {
@@ -245,8 +245,8 @@ impl UiTurnPatchContents {
         self.pending.terminal_is_empty()
     }
 
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<semio_framework_ui_contract::UiValueRetirementStep, &'static str> {
-        use semio_framework_ui_contract::UiValueRetirementStep;
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<semio_ui_contract::UiValueRetirementStep, &'static str> {
+        use semio_ui_contract::UiValueRetirementStep;
         if items == 0 || bytes == 0 {
             return Ok(UiValueRetirementStep::default());
         }
@@ -874,8 +874,8 @@ impl UiTurnPatches {
         self.close_step_with_grant(1, 4096).expect("exact turn patch retirement").complete
     }
 
-    pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> Result<semio_framework_ui_contract::UiValueRetirementStep, &'static str> {
-        use semio_framework_ui_contract::UiValueRetirementStep;
+    pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> Result<semio_ui_contract::UiValueRetirementStep, &'static str> {
+        use semio_ui_contract::UiValueRetirementStep;
         if items == 0 || bytes == 0 {
             return Ok(UiValueRetirementStep::default());
         }

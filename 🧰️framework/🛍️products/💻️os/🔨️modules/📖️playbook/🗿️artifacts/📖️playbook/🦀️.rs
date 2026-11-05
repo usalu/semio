@@ -5,9 +5,9 @@
 //! Block `kind`s beyond [`PLAYBOOK_BUILTIN_KINDS`] are module-contributed
 //! (see the `"playbook.blockKind"` topic contribution in `semio-framework-manifest`).
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
-use semio_framework_os_kernel::os_store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as store;
+use semio_os_kernel::os_store;
 
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ pub use generation::{GenerationPlayRoot, GenerationRootRetirement};
 
 pub use builder_kit::{build_palette, build_playbook_list_scene, playbook_builder_action, render_playbook_builder, PlaybookBuilderConfig, PlaybookBuilderLabels, PLAYBOOK_BUILDER_LABELS_EN};
 /// 🧬️ Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
-/// `playbook::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
+/// `playbook::*` import surface (mirrors how `semio-plugin` flattened these before the move).
 pub use generation_forms::{
     add_generation, apply_generation_mutation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationMutation, GenerationPlayState,
 };
@@ -191,7 +191,7 @@ pub fn is_extension_block_kind(kind: &str) -> bool {
     !PLAYBOOK_BUILTIN_KINDS.contains(&kind)
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -338,27 +338,28 @@ pub fn initial_values(spec: &PlaybookSpec, overrides: &PlaybookValues) -> Playbo
 //#region 🔖️GenerationForms
 pub mod generation_forms {
     //! 🧬️ Shared Generate-mode state, CRUD, and declarative UI helpers for answering a `PlaybookSpec` as
-    //! a set of named "generations" (parameter presets) — moved here (from `semio-framework-plugin`) since
+    //! a set of named "generations" (parameter presets) — moved here (from `semio-plugin`) since
     //! it is typed end-to-end on `PlaybookSpec`/`PlaybookBlock`, i.e. playbook-domain code, not SDK code.
 
     use super::{default_value_for_block, flatten_playbook_blocks, DslValue, FromValue, PlaybookSpec, PlaybookValues, ToValue};
     #[cfg(test)] use super::{PlaybookBlock};
-    use semio_framework_ui_declaration::layout::ActionDescriptor;
-    use semio_framework_ui_locale::Label;
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::LocalizedLabel;
-    use semio_framework_ui_locale::Terminology;
+    use semio_ui_declaration::layout::ActionDescriptor;
+    use semio_ui_locale::Label;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::LocalizedLabel;
+    use semio_ui_locale::Terminology;
     
-    use semio_framework_ui_declaration::ui::UiNode;
-    use semio_framework_ui_declaration::ui::UiPresence;
-    use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
-    use semio_framework_ui_declaration::ui::UiTreeItemAction;
-    use semio_framework_ui_declaration::ui::UiTreeItemNode;
-    use semio_framework_ui_declaration::ui::UiTreeNode;
-    use semio_framework_ui_declaration::ui::UiTreeSectionNode;
+    use semio_ui_declaration::ui::UiNode;
+    use semio_ui_declaration::ui::UiPresence;
+    use semio_ui_declaration::ui::UiTreeActionPlacement;
+    use semio_ui_declaration::ui::UiTreeItemAction;
+    use semio_ui_declaration::ui::UiTreeItemNode;
+    use semio_ui_declaration::ui::UiTreeNode;
+    use semio_ui_declaration::ui::UiTreeSectionNode;
 
     //#region 🔖️Types
-    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
+    #[value(native_owned = "semio_framework_value_native_owned")]
     #[canonical_json(owner = semio_framework_pack_json)]
     #[value(rename_all = "camelCase")]
     pub struct FormGeneration {
@@ -367,7 +368,8 @@ pub mod generation_forms {
         pub values: PlaybookValues,
     }
 
-    #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+    #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
+    #[value(native_owned = "semio_framework_value_native_owned")]
     #[canonical_json(owner = semio_framework_pack_json)]
     #[value(rename_all = "camelCase")]
     pub struct GenerationPlayState {
@@ -684,13 +686,13 @@ pub mod builder_kit {
     //! 🧩️ Shared strict-list, Blockly-like builder engine: generic step/block CRUD operation-builders and
     //! [`BlockListScene`] rendering, reused by `playbook-plugin` (standalone) and `forms-plugin`
     //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app. Moved
-    //! here (from `semio-framework-plugin`) since it is entirely playbook-domain code.
+    //! here (from `semio-plugin`) since it is entirely playbook-domain code.
 
     use super::{DslValue, FromValue, PlaybookSpec};
     use semio_framework::ProgramContributionEntry;
-    use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_declaration::ui::{BlockListScene, BlockPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
-use semio_framework_ui_declaration::IconName;
+    use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::{BlockListScene, BlockPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
+use semio_ui_declaration::IconName;
 
     //#region 🔖️Config
     #[derive(Clone, Debug)]
@@ -757,13 +759,13 @@ use semio_framework_ui_declaration::IconName;
 
     pub fn build_playbook_list_scene(spec: &PlaybookSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>) -> BlockListScene {
         BlockListScene {
-            steps: spec.steps.iter().map(|step| semio_framework_ui_declaration::ui::BlockListStep {
+            steps: spec.steps.iter().map(|step| semio_ui_declaration::ui::BlockListStep {
                 id: step.id.clone(),title: step.title.clone(),description: step.description.clone(),target: None,
-                blocks: step.blocks.iter().map(|block| semio_framework_ui_declaration::ui::BlockListBlock {
+                blocks: step.blocks.iter().map(|block| semio_ui_declaration::ui::BlockListBlock {
                     id: block.id.clone(),label: block.label.clone(),kind: block.kind.clone(),description: block.description.clone(),target: None,
                 }).collect(),
             }).collect(),
-            palette: palette.iter().map(|entry| semio_framework_ui_declaration::ui::BlockListPaletteEntry {
+            palette: palette.iter().map(|entry| semio_ui_declaration::ui::BlockListPaletteEntry {
                 block_kind: entry.block_kind.clone(),label: entry.label.clone(),icon_id: entry.icon_id.as_str().to_owned(),
             }).collect(),
             selected_id: selected_id.map(String::from),

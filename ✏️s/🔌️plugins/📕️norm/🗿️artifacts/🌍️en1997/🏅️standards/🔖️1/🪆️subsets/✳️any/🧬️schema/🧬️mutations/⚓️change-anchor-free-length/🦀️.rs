@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorFreeLength w
         record: "ChangedAnchorFreeLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Free length L_free of the anchor", "Anker: Freie Länge L_frei ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Free length L_free of the anchor", "Anker: Freie Länge L_frei ändern")
     }
 }
 

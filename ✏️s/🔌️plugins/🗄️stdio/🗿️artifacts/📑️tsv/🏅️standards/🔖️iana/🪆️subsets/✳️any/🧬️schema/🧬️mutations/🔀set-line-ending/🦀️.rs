@@ -14,8 +14,8 @@ pub struct SetLineEnding {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetLineEnding {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "line-ending", kind: "set-line-ending", record: "SetLineEnding" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set line ending", "Zeilenende setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set line ending", "Zeilenende setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

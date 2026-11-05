@@ -1,6 +1,6 @@
 //! 🧱️ Genuine Block3d Native owned catalog address and scalar baselines.
 use semio_framework_test_original_snapshot_owners as original_owners;
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_block_3d_model::Block3dSnapshot;
 use crate::*;
@@ -47,7 +47,7 @@ fn assert_words(s: &Block3dSnapshot, w: u64) {
 }
 #[test]
 fn sqlite_snapshot_block3d_actual_bare_capability_is_present() {
-    assert!(<Block3dSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
+    assert!(<Block3dSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_block3d_actual_declared_codec_has_owned_sqlite_capability() {
@@ -264,7 +264,7 @@ fn sqlite_snapshot_block3d_actual_erased_declared_binary_text_retains_full_domai
 }
 
 mod populated_public_owner {
-use crate::sqlite_snapshot_tests::*;use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
+use crate::sqlite_snapshot_tests::*;use semio_plugin_reactor_app::__semio_dispatch_PluginApp;use semio_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<semio_s_artifact_block_3d_editor::Block3dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_block_3d_viewer::Block3dViewer>>),}
@@ -272,7 +272,7 @@ pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<semio_s_a
 struct PublicOwned(Option<Block3dSnapshot>);impl PublicOwned{fn new(value:Block3dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Block3dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Block3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(value);}}}
 fn exact(a:&Block3dSnapshot,b:&Block3dSnapshot){use semio_framework_value::{DslValue,Number,ToValue};fn same(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);same(a,b);}},_=>assert_eq!(a,b)}}same(&a.to_value(),&b.to_value());}
 
-fn register(){semio_framework_plugin::PluginBuilder::<semio_framework_plugin::app::NeedsLabel, PublicApps>::new("block").label("Populated public SQLite").version("0.0.1").package_id("semio:block").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}
+fn register(){semio_plugin::PluginBuilder::<semio_plugin::app::NeedsLabel, PublicApps>::new("block").label("Populated public SQLite").version("0.0.1").package_id("semio:block").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_block3d_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};

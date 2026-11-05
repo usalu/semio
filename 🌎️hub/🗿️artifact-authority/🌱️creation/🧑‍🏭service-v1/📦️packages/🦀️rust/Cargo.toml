@@ -28,6 +28,6 @@ semio-hub-directory = { workspace = true }
 semio-hub-directory-contract = { workspace = true }
 semio-hub-directory-service = { workspace = true }
 semio-hub-trusted-catalog = { workspace = true }
-directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 
 [dev-dependencies]

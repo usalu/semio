@@ -1,38 +1,38 @@
 //! 🛖️ Staged slice of the `operation-progress` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! ⏳️ The instance's operation-progress publication.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_operation::ArtifactOperationProgress;
-use semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_operation::ArtifactOperationProgress;
+use semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
 use semio_framework_value::DslValue;
 use semio_framework::Fault;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::Mutation;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_reactor_app::operation_progress::{decode_operation_cancellation, operation_cancellation_target_admitted, operation_progress_dirty_scope};
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::operation_progress::{decode_operation_cancellation, operation_cancellation_target_admitted, operation_progress_dirty_scope};
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_decl_emission::ActionMeta;
 use std::future::Future;
 use semio_framework::kernel::InvocationResult;
 use store::{MemberFactory, SpaceMember};
 use crate::jobs_components::ToolOperations;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::MutationDiff;
 use protocol::OpBinary;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp> ToolOperations<A> {
     pub fn operation_progress_snapshot(&self) -> Vec<ArtifactOperationProgress> {

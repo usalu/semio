@@ -15,17 +15,17 @@ async fn mounted_typing_edits_publish_previous_transaction_and_keep_latest_previ
 /// 🧺️ One-item original turns preserve the actual mutation backing and cancel only the unpublished replacement.
 #[test]
 fn original_typing_settlement_moves_actual_layout_leaves_and_keeps_cancelled_resident(){
- use semio_framework_plugin_typing_edit::OriginalTypingSettlement;
- use semio_framework_plugin_tool_run::tool_jobs_tool_machine::{TypingTag,ToolMachineRuntime};
+ use semio_plugin_typing_edit::OriginalTypingSettlement;
+ use semio_plugin_tool_run::tool_jobs_tool_machine::{TypingTag,ToolMachineRuntime};
  use semio_framework_tool_machine::{TypingLedger,TypingState};
  use semio_framework_value::{SharedUtf8,RetainedCloneGrant};
  use semio_framework_value::retirement::controlled::ControlledRetirement;
  use semio_framework_job::close_original_retained_step;
- type A=semio_framework_plugin::EditorApp<LayoutPlayApp>;
+ type A=semio_plugin::EditorApp<LayoutPlayApp>;
  for cancel in [false,true]{
-  let mut caller=artifact_app_laws::OriginalFixtureScope::admit();let mut ledger=TypingLedger::<LayoutMutation>::default();let mut clock_source=ToolMachineRuntime::<LayoutSnapshot,LayoutMutation,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation>::default();let metadata=window_meta(WINDOW);let base=[7;32];let unit=RetainedCloneGrant{maximum_items:1,..caller.cx().retained_grant()};let mut previous_pointer=std::ptr::null();let original_source=caller.cx().original_recipient_identity();let original_decoder=caller.cx().native_receiving_identity();
+  let mut caller=artifact_app_laws::OriginalFixtureScope::admit();let mut ledger=TypingLedger::<LayoutMutation>::default();let mut clock_source=ToolMachineRuntime::<LayoutSnapshot,LayoutMutation,semio_plugin::NoConfig,semio_plugin::NoConfigMutation>::default();let metadata=window_meta(WINDOW);let base=[7;32];let unit=RetainedCloneGrant{maximum_items:1,..caller.cx().retained_grant()};let mut previous_pointer=std::ptr::null();let original_source=caller.cx().original_recipient_identity();let original_decoder=caller.cx().native_receiving_identity();
   for (index,name) in ["Typing First","Typing Second"].into_iter().enumerate(){
-   let mut emit=semio_framework_plugin::Emit::<LayoutMutation,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoDraftMutation>::mutations(vec![LayoutMutation::RenameLayout(semio_s_artifact_layout_layout_mutations_content::rename_layout::RenameLayout{new_name:name.into()})]);
+   let mut emit=semio_plugin::Emit::<LayoutMutation,semio_plugin::NoConfigMutation,semio_plugin::NoDraftMutation>::mutations(vec![LayoutMutation::RenameLayout(semio_s_artifact_layout_layout_mutations_content::rename_layout::RenameLayout{new_name:name.into()})]);
    let mut tag=Some(TypingTag{window:WINDOW.into(),tool:"s.layout.layout#patchDocument".into(),buffer:"layout-title".into()});let mut owner=None;let pointer=match &emit.artifact_mutations[0]{LayoutMutation::RenameLayout(value)=>value.new_name.as_ptr(),_=>unreachable!()};let input=emit.artifact_mutations.as_ptr();let receipt=caller.cx().retained_progress();
    assert!(!caller.cx().with_retained_loan(Default::default(),|same|OriginalTypingSettlement::<A>::admit(index as u64+1,&base,&metadata.actor,&mut emit,0,||(tag.take().unwrap(),clock_source.clock()),same,&mut owner)).unwrap());assert!(tag.is_some());assert!(owner.is_none());assert_eq!(emit.artifact_mutations.as_ptr(),input);assert_eq!(caller.cx().retained_progress(),receipt);
    for _ in 0..2{assert!(!caller.cx().with_retained_loan(unit,|same|OriginalTypingSettlement::<A>::admit(index as u64+1,&base,&metadata.actor,&mut emit,0,||(tag.take().unwrap(),clock_source.clock()),same,&mut owner)).unwrap());assert!(tag.is_some());assert_eq!(emit.artifact_mutations.as_ptr(),input);}

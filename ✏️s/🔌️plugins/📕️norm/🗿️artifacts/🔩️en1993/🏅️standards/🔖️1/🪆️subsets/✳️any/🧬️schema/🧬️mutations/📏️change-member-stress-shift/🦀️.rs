@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberStressShift 
         record: "ChangedMemberStressShift",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stress and imperfection shift ΔT_σ of the member", "Bauteil: Spannungsanteil ΔT_σ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stress and imperfection shift ΔT_σ of the member", "Bauteil: Spannungsanteil ΔT_σ ändern")
     }
 }
 

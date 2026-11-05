@@ -3,7 +3,7 @@
 use super::*;
 
 // #region 🔖️Document
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum WidgetDescriptor {

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedCraneHorizo
         record: "ChangedAssumedCraneHorizontal",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed horizontal crane force", "Angenommene horizontale Kranlast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed horizontal crane force", "Angenommene horizontale Kranlast ändern")
     }
 }
 

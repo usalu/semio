@@ -5,7 +5,7 @@
 use super::*;
 use semio_framework_manifest_app_surface::{reserved_app_actions, reserved_editor_dialogs};
 use semio_framework_manifest_actions::{CapabilityAudience, InteractiveJobClassification, resolve_audience};
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("history-edit-actions fixture")

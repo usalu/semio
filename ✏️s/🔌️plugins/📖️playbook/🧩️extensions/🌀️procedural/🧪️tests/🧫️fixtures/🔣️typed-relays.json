@@ -1,0 +1,204 @@
+{
+  "role": "typedRelay",
+  "editable": false,
+  "cases": [
+    {
+      "name": "number",
+      "snapshot": {
+        "schema": "flow.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "widgets": [
+          {
+            "kind": "neuron",
+            "id": "source",
+            "neuronKind": "core.number",
+            "params": {
+              "value": 2
+            },
+            "input_ports": [],
+            "preview": false
+          },
+          {
+            "kind": "variable",
+            "id": "relay",
+            "name": "payload",
+            "schema": "number"
+          },
+          {
+            "kind": "outputPreview",
+            "id": "answer",
+            "preview": {},
+            "expanded": []
+          }
+        ],
+        "synapses": [
+          {
+            "id": "source-relay",
+            "from": "source",
+            "to": "relay",
+            "fromPort": "number",
+            "toPort": "payload"
+          },
+          {
+            "id": "relay-answer",
+            "from": "relay",
+            "to": "answer",
+            "fromPort": "payload",
+            "toPort": ""
+          }
+        ],
+        "layout": {}
+      },
+      "parameters": {
+        "source": {
+          "value": 7
+        },
+        "relay": "renamed-by-answer"
+      },
+      "expectedChannel": {
+        "$schema": "number",
+        "value": 7
+      },
+      "expectedInitialValues": {},
+      "expectedRelayName": "payload"
+    },
+    {
+      "name": "boolean",
+      "snapshot": {
+        "schema": "flow.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "widgets": [
+          {
+            "kind": "neuron",
+            "id": "source",
+            "neuronKind": "core.boolean",
+            "params": {
+              "value": false
+            },
+            "input_ports": [],
+            "preview": false
+          },
+          {
+            "kind": "variable",
+            "id": "relay",
+            "name": "payload",
+            "schema": "boolean"
+          },
+          {
+            "kind": "outputPreview",
+            "id": "answer",
+            "preview": {},
+            "expanded": []
+          }
+        ],
+        "synapses": [
+          {
+            "id": "source-relay",
+            "from": "source",
+            "to": "relay",
+            "fromPort": "boolean",
+            "toPort": "payload"
+          },
+          {
+            "id": "relay-answer",
+            "from": "relay",
+            "to": "answer",
+            "fromPort": "payload",
+            "toPort": ""
+          }
+        ],
+        "layout": {}
+      },
+      "parameters": {
+        "source": {
+          "value": true
+        },
+        "relay": "renamed-by-answer"
+      },
+      "expectedChannel": {
+        "$schema": "boolean",
+        "value": true
+      },
+      "expectedInitialValues": {},
+      "expectedRelayName": "payload"
+    },
+    {
+      "name": "structured",
+      "snapshot": {
+        "schema": "flow.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "widgets": [
+          {
+            "kind": "neuron",
+            "id": "source",
+            "neuronKind": "dictionary.pack",
+            "params": {
+              "count": 2,
+              "enabled": false,
+              "label": "Width"
+            },
+            "input_ports": [],
+            "preview": false
+          },
+          {
+            "kind": "variable",
+            "id": "relay",
+            "name": "payload",
+            "schema": "dictionary"
+          },
+          {
+            "kind": "outputPreview",
+            "id": "answer",
+            "preview": {},
+            "expanded": []
+          }
+        ],
+        "synapses": [
+          {
+            "id": "source-relay",
+            "from": "source",
+            "to": "relay",
+            "fromPort": "dictionary",
+            "toPort": "payload"
+          },
+          {
+            "id": "relay-answer",
+            "from": "relay",
+            "to": "answer",
+            "fromPort": "payload",
+            "toPort": ""
+          }
+        ],
+        "layout": {}
+      },
+      "parameters": {
+        "source": {
+          "count": 7,
+          "enabled": true,
+          "label": "Width"
+        },
+        "relay": "renamed-by-answer"
+      },
+      "expectedChannel": {
+        "$schema": "dictionary",
+        "count": 7,
+        "enabled": true,
+        "label": "Width"
+      },
+      "expectedInitialValues": {},
+      "expectedRelayName": "payload"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-contract-text-edit"
+name = "semio-ui-contract-text-edit"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -18,7 +18,7 @@ fn dialog_and_tour_text_advance_one_scalar_and_one_glyph_per_grant() {
 /// 🚫️ The retained Shell text boundary fails closed before shaping MAX + 1 bytes.
 #[test]
 fn dialog_and_tour_text_max_plus_one_fails_without_output() {
-    let value = "x".repeat(semio_framework_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES + 1);
+    let value = "x".repeat(semio_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES + 1);
     let identity = value.as_ptr();
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -62,8 +62,8 @@ fn dynamic_chrome_group_retains_every_glyph_and_border_opportunity() {
 /// 🧷 Resolved siblings keep one hover seam and one-output retained opportunities.
 #[test]
 fn shared_chrome_group_preserves_hover_seam_and_retained_hit_publication() {
-    use semio_framework_os_renderer_wgpu_shell_view_chrome::{chrome_border_plan, ChromeBorderFrame, render_retained_chrome_group_item_step_with_borders};
-    use semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState;
+    use semio_renderer_wgpu_shell_view_chrome::{chrome_border_plan, ChromeBorderFrame, render_retained_chrome_group_item_step_with_borders};
+    use semio_renderer_wgpu_dock::shared_borders::BorderState;
     let theme = Theme::light();
     let frames = [
         ChromeBorderFrame { owner: "a".into(), rect: [0.0, 0.0, 40.0, 20.0], state: BorderState::Active },
@@ -104,7 +104,7 @@ fn shared_chrome_group_preserves_hover_seam_and_retained_hit_publication() {
 /// 🚫️ A MAX + 1 chrome label is rejected before a retained owner or output is staged.
 #[test]
 fn dynamic_chrome_group_max_plus_one_is_identity_preserving() {
-    let value = "x".repeat(semio_framework_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES + 1);
+    let value = "x".repeat(semio_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES + 1);
     let identity = value.as_ptr();
     let mut atlas = FontAtlas::builtin();
     let theme = Theme::light();
@@ -227,14 +227,14 @@ fn every_chip_lays_out_at_least_its_labels_painted_width() {
                 let mut wrapped = DrawList::default();
                 let mut cursor = RetainedGlyphCursor::default();
                 for _ in 0..=label.chars().count() {
-                    if semio_framework_ui_wgpu_paint::paint_retained_glyph_step(label.as_str(), Rect::new(x, 0.0, box_w, theme.font_size_small), theme.font_size_small, color, &mut atlas, &mut wrapped, &mut cursor) == RetainedGlyphStep::Complete {
+                    if semio_ui_wgpu_paint::paint_retained_glyph_step(label.as_str(), Rect::new(x, 0.0, box_w, theme.font_size_small), theme.font_size_small, color, &mut atlas, &mut wrapped, &mut cursor) == RetainedGlyphStep::Complete {
                         break;
                     }
                 }
                 let baselines: Vec<f32> = wrapped.layers.iter().flat_map(|layer| layer.ui_instances.iter().map(|instance| instance.rect[1])).collect();
                 let lowest = baselines.iter().copied().fold(f32::NEG_INFINITY, f32::max);
                 let highest = baselines.iter().copied().fold(f32::INFINITY, f32::min);
-                assert!(lowest - highest < semio_framework_ui_theme::metrics::line_height(theme.font_size_small), "↩️ {label:?} wrapped onto a second line inside its own chip");
+                assert!(lowest - highest < semio_ui_theme::metrics::line_height(theme.font_size_small), "↩️ {label:?} wrapped onto a second line inside its own chip");
             }
         }
     }

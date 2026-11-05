@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeSlopeCircleCentreZ
         record: "ChangedSlopeCircleCentreZ",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Slip circle centre height above toe of the slope", "Böschung: Gleitkreismittelpunkt Höhe über Böschungsfuß ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Slip circle centre height above toe of the slope", "Böschung: Gleitkreismittelpunkt Höhe über Böschungsfuß ändern")
     }
 }
 

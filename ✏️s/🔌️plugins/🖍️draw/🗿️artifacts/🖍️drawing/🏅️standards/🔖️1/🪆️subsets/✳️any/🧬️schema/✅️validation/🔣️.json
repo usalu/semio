@@ -30,7 +30,8 @@
       "Unit opacity and RGBA channels",
       "Declared blend mode",
       "Finite gradient geometry; positive radial radius; non-empty unit stops",
-      "Finite nonnegative stroke width and dash lengths"
+      "Finite nonnegative stroke width and dash lengths",
+      "Explicit null fill or stroke clears paint; remaining nonnull paint keeps full admission."
     ],
     "assets": [
       "Positive unsigned dimensions",
@@ -43,6 +44,7 @@
     "Paged numeric/borrowed ancestry with funded reserve and close",
     "No path/layer/tree/key clone",
     "Exact cursor/program/index/ancestry birth and close receipts",
-    "Source issuer and projection path bound until final close"
+    "Source issuer and projection path bound until final close",
+    "Captured issuer, projection and value remain bound after admission finishes until final close; terminal advances admit only the original source."
   ]
 }

@@ -18,7 +18,7 @@ fn fem3d_scalar_publication_refuses_reused_counters_from_another_document() {
         base_revision: identity.base_revision,
         generation: identity.generation,
         canonical_base_revision: identity.canonical_base_revision,
-        mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: PAGE_GRANT, maintenance: PAGE_GRANT, close: PAGE_GRANT },
+        mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: PAGE_GRANT, maintenance: PAGE_GRANT, close: PAGE_GRANT },
     };
     let mut stale = exact;
     stale.canonical_base_revision[31] ^= 1;

@@ -1,6 +1,6 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` analysis-settings mutation kind against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same/🦀️.rs"]
 mod update_analysis_settings_edge_same_settings;

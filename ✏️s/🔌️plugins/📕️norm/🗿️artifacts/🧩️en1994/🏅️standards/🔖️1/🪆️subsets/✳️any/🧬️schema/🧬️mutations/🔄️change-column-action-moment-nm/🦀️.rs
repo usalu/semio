@@ -18,8 +18,8 @@ pub struct ChangeColumnActionMomentNm {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnActionMomentNm where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_action_moment_nm::ChangeColumnActionMomentNm> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-action-moment-nm", kind: "change-column-action-moment-nm", record: "ChangedColumnActionMomentNm" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic moment of the column action", "Charakteristisches Moment der Stützeneinwirkung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change characteristic moment of the column action", "Charakteristisches Moment der Stützeneinwirkung ändern")
     }
 }
 

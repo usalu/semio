@@ -19,7 +19,7 @@ use semio_s_artifact_process_process3d_model::next_step_id;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_s_artifact_process_process3d_model::{snapshot::MeasureKind, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::WorkingSolid};
 use machine::Command;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_tool_machine::{drive_chart_gesture, GestureChart, GesturePhase, ToolRefusal, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -123,8 +123,8 @@ fn world_emit(verb: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &Confi
     let placed = insert_step_emit(doc.snapshot, cfg.snapshot, step);
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
     let committed = process3d_world_commit(verb, seed, WorldToolRequest { mutations: placed.artifact_mutations })
-        .map_err(|refusal| Fault::new(semio_framework_plugin::FaultOrigin::Framework, semio_framework_plugin::FaultCode::new(refusal.code()), format!("gesture tool {verb:?} refused its dispatch")))?;
-    Ok(Emit { config_mutations: placed.config_mutations, effects, ..semio_framework_plugin::app::gesture_emit(committed, seed) })
+        .map_err(|refusal| Fault::new(semio_plugin::FaultOrigin::Framework, semio_plugin::FaultCode::new(refusal.code()), format!("gesture tool {verb:?} refused its dispatch")))?;
+    Ok(Emit { config_mutations: placed.config_mutations, effects, ..semio_plugin::app::gesture_emit(committed, seed) })
 }
 //#endregion 🛠️WorldTool
 

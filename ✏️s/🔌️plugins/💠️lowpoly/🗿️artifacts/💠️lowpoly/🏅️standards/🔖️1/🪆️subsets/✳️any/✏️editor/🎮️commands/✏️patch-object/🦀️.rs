@@ -8,7 +8,7 @@ use semio_s_artifact_lowpoly_lowpoly_mut_objects::change_object_smooth_shading::
 use semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object::RenameObject;
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

@@ -3,7 +3,7 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
     #[path = "."]
     pub mod serializers {
@@ -37,7 +37,7 @@ extern crate semio_framework_os_kernel as store;
     }
 
 use semio_s_artifact_stdio_semio_base::SemioConversion;
-use semio_framework_plugin::{serializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
+use semio_plugin::{serializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
 
 /// 🧾️ This direction's composer rows, built once.
 pub fn entries() -> &'static [ComposerEntry] {

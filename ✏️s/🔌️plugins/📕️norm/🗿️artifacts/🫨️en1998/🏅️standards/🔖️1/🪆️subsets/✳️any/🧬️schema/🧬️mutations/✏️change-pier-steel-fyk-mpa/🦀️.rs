@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangePierSteelFykMpa wh
         record: "ChangePierSteelFykMpa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change pier: Reinforcement yield strength f_yk (0 = not given)", "Pfeiler: Streckgrenze des Bewehrungsstahls f_yk (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change pier: Reinforcement yield strength f_yk (0 = not given)", "Pfeiler: Streckgrenze des Bewehrungsstahls f_yk (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-pier-steel-fyk-mpa".into()]

@@ -20,7 +20,7 @@
 //! blake3 `ContentHash`) and `ContentHash` itself as `DeterminismVerifier`'s digest type, since
 //! that's exactly the type `CommandReceipt.state_hash` carries per the frozen `db` facade API.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_ids::{ArtifactId, DbError};
 use pack::ContentHash;

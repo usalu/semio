@@ -15,7 +15,7 @@ use semio_framework_job_worker::BatchJobSession;use semio_framework_job_worker_a
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::mem::size_of;
 use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_os_renderer_wgpu_frame_actions::{FrameBuildInputs, FrameDirectives};
+use semio_renderer_wgpu_frame_actions::{FrameBuildInputs, FrameDirectives};
 
 //#region 📥️FrameBuildInputs
 //#endregion 📥️FrameBuildInputs
@@ -138,15 +138,15 @@ enum ActiveFramePhase {
     DeadlineAdmission { job: Option<FrameBuildJob>, params: Option<BatchJobParams>, cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>, admission: semio_framework_job_worker::WorkerJobSessionAdmission<FrameBuildJob,BatchJobSession<FrameBuildJob>> },
     Deadlines(BatchJobSession<FrameBuildJob>),
     ApplyPending(FrameDirectives),
-    Build(semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction),
-    Prepare(semio_framework_os_renderer_wgpu_app_runtime::AppFramePreparation),
+    Build(semio_renderer_wgpu_frame_transaction::FrameTransaction),
+    Prepare(semio_renderer_wgpu_app_runtime::AppFramePreparation),
     Terminal,
 }
 
 struct ActiveFrameBuild {
     retained: RetainedCloneGrant,
-    runtime: semio_framework_os_renderer_wgpu_app_runtime::AppMailbox,
-    handle: semio_framework_os_renderer_wgpu_app_runtime::AppHandle,
+    runtime: semio_renderer_wgpu_app_runtime::AppMailbox,
+    handle: semio_renderer_wgpu_app_runtime::AppHandle,
     operation: OperationId,
     generation: Generation,
     cancel: std::mem::ManuallyDrop<Option<CancelToken>>,
@@ -160,7 +160,7 @@ struct ActiveFrameBuild {
     deadline_acknowledged: bool,
     deadline_refused_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     overruns: semio_framework_trace::StepOverrunLedger,
-    completed: Option<semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation>,
+    completed: Option<semio_renderer_wgpu_app_runtime::AppFramePresentation>,
     closing: bool,
 }
 
@@ -168,7 +168,7 @@ enum ActiveFrameStep {
     Pending,
     Fault(semio_framework_value::ValueError),
     CloseFailure(OriginalTurnFailure),
-    Complete(Option<semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation>),
+    Complete(Option<semio_renderer_wgpu_app_runtime::AppFramePresentation>),
 }
 
 fn run_frame_owner_turn(cx: &mut StepContext<'_>, advance: impl FnOnce(&mut StepContext<'_>) -> ActiveFrameStep) -> Option<ActiveFrameStep> {
@@ -185,31 +185,31 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
     if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
     let empty = match phase {
         ActiveFramePhase::DeadlineAdmission { job, params, cancel_retirement, admission } => {
-            if !admission.terminal_is_empty() { return semio_framework_os_renderer_wgpu_app_runtime::frame_received_child(admission.close_step(cx),grant,admission.terminal_is_empty()) }
+            if !admission.terminal_is_empty() { return semio_renderer_wgpu_app_runtime::frame_received_child(admission.close_step(cx),grant,admission.terminal_is_empty()) }
             if params.is_some() {
-                if let Some(step)=semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+                if let Some(step)=semio_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
                 let original=params.take().expect("original deadline params remain held before paid transfer");
                 *cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(original.cancel));
-                return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
+                return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
             }
             if let Some(original)=cancel_retirement.as_mut() {
                 if !original.terminal_is_empty() {
-                    return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(match original.return_alias_step(witness,grant) {
+                    return semio_renderer_wgpu_app_runtime::frame_receive_close(match original.return_alias_step(witness,grant) {
                         Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
                         Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),
                         Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error),
                     },cx);
                 }
-                if let Some(step)=semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+                if let Some(step)=semio_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
                 *cancel_retirement=None;
-                return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
+                return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
             }
             if let Some(original)=job.as_mut() {
                 original.begin_close();
-                if !original.terminal_is_empty(){return semio_framework_os_renderer_wgpu_app_runtime::frame_received_child(original.close_step(cx),grant,original.terminal_is_empty())}
-                if let Some(step)=semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+                if !original.terminal_is_empty(){return semio_renderer_wgpu_app_runtime::frame_received_child(original.close_step(cx),grant,original.terminal_is_empty())}
+                if let Some(step)=semio_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
                 *job=None;
-                return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
+                return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
             }
             true
         }
@@ -219,7 +219,7 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
             match session.has_original_cancel_alias_witness(witness) {
-                Ok(true)=>return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(match session.return_original_cancel_alias_step(witness,grant) {
+                Ok(true)=>return semio_renderer_wgpu_app_runtime::frame_receive_close(match session.return_original_cancel_alias_step(witness,grant) {
                     Ok(Some(step))=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
                     Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>Ok(InteractiveJobCloseStep::Blocked),
                     Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>Err(error),
@@ -228,31 +228,31 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
                 Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(InteractiveJobCloseStep::Blocked),
                 Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
             }
-            if !session.terminal_is_empty() { let step=session.close_step(cx)?;return semio_framework_os_renderer_wgpu_app_runtime::frame_worker_child_step(step,grant,session.terminal_is_empty()).map_err(OriginalTurnFailure::from); }
+            if !session.terminal_is_empty() { let step=session.close_step(cx)?;return semio_renderer_wgpu_app_runtime::frame_worker_child_step(step,grant,session.terminal_is_empty()).map_err(OriginalTurnFailure::from); }
             true
         }
         ActiveFramePhase::ApplyPending(_) => true,
         ActiveFramePhase::Build(transaction) => {
-            if !transaction.terminal_is_empty() { return semio_framework_os_renderer_wgpu_app_runtime::frame_received_child(transaction.close_step(cx),grant,transaction.terminal_is_empty()); }
+            if !transaction.terminal_is_empty() { return semio_renderer_wgpu_app_runtime::frame_received_child(transaction.close_step(cx),grant,transaction.terminal_is_empty()); }
             true
         }
         ActiveFramePhase::Prepare(preparation) => {
-            if !preparation.terminal_is_empty() { return semio_framework_os_renderer_wgpu_app_runtime::frame_received_child(preparation.close_step(cx,Some(witness)), grant, preparation.terminal_is_empty()); }
+            if !preparation.terminal_is_empty() { return semio_renderer_wgpu_app_runtime::frame_received_child(preparation.close_step(cx,Some(witness)), grant, preparation.terminal_is_empty()); }
             true
         }
         ActiveFramePhase::Terminal => return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }),
     };
     if empty {
         let bytes = size_of::<ActiveFramePhase>();
-        if let Some(step) = semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant, bytes).map_err(|error|OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
+        if let Some(step) = semio_renderer_wgpu_app_runtime::frame_inline_gate(grant, bytes).map_err(|error|OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
         *phase = ActiveFramePhase::Terminal;
-        return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(bytes),cx);
+        return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(bytes),cx);
     }
     Ok(InteractiveJobCloseStep::Blocked)
 }
 
 impl ActiveFrameBuild {
-    fn new(runtime: semio_framework_os_renderer_wgpu_app_runtime::AppMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> Self {
+    fn new(runtime: semio_renderer_wgpu_app_runtime::AppMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> Self {
         let handle = runtime.downgrade();
         let phase = ActiveFramePhase::DeadlineAdmission { job:Some(FrameBuildJob::new(inputs)),params:None,cancel_retirement:None,admission:Default::default() };
         Self { retained, runtime, handle, operation, generation, cancel:std::mem::ManuallyDrop::new(Some(cancel)), cancel_retirement:None, presentation_generation:generation, preview_sequence: 0, phase, retiring_phase:None, deadline_receipt_received:false, deadline_outcome_pending:None, deadline_acknowledged:false, deadline_refused_receipt:None, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
@@ -266,15 +266,15 @@ impl ActiveFrameBuild {
         let grant=cx.retained_grant();
         if let Some(phase)=self.retiring_phase.as_mut(){
             let step=retire_active_phase(phase,cx,self.cancel.as_ref().unwrap())?;
-            if !matches!(step,InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){return semio_framework_os_renderer_wgpu_app_runtime::frame_received_child(Ok(step),grant,matches!(phase,ActiveFramePhase::Terminal))}
-            if let Some(step)=semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(cx.retained_grant(),0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+            if !matches!(step,InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){return semio_renderer_wgpu_app_runtime::frame_received_child(Ok(step),grant,matches!(phase,ActiveFramePhase::Terminal))}
+            if let Some(step)=semio_renderer_wgpu_app_runtime::frame_inline_gate(cx.retained_grant(),0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.retiring_phase=None;
-            return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
+            return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
         }
         if matches!(self.phase,ActiveFramePhase::Terminal) && (self.deadline_receipt_received || self.deadline_outcome_pending.is_some() || self.deadline_acknowledged || self.deadline_refused_receipt.is_some()){
-            if let Some(step)=semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+            if let Some(step)=semio_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.deadline_receipt_received=false;self.deadline_outcome_pending=None;self.deadline_acknowledged=false;self.deadline_refused_receipt=None;
-            return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
+            return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx);
         }
         let candidate_returned = match &mut self.phase {
             ActiveFramePhase::Build(transaction) => transaction.discard_presented_input_candidate(&self.runtime),
@@ -358,7 +358,7 @@ impl ActiveFrameBuild {
                 ActiveFramePhase::ApplyPending(directives) => std::mem::take(directives),
                 _ => return ActiveFrameStep::Pending,
             };
-            self.phase = ActiveFramePhase::Build(semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction::new(directives, self.operation, self.presentation_generation, self.retained));
+            self.phase = ActiveFramePhase::Build(semio_renderer_wgpu_frame_transaction::FrameTransaction::new(directives, self.operation, self.presentation_generation, self.retained));
             return ActiveFrameStep::Pending;
         }
         match &mut self.phase {
@@ -425,7 +425,7 @@ impl ActiveFrameBuild {
                 }
                 let transaction_step = transaction.step(&self.runtime, &self.handle, cx);
                 if self.overruns.admit(&watchdog.finish()).is_terminal() {
-                    if let semio_framework_os_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Complete(frame) = transaction_step {
+                    if let semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Complete(frame) = transaction_step {
                         let preparation = frame.into_preparation();
                         self.phase = ActiveFramePhase::Prepare(preparation);
                     }
@@ -433,20 +433,20 @@ impl ActiveFrameBuild {
                     return ActiveFrameStep::Pending;
                 }
                 match transaction_step {
-                    semio_framework_os_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Complete(frame) => {
+                    semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Complete(frame) => {
                         self.phase = ActiveFramePhase::Prepare(frame.into_preparation());
                         ActiveFrameStep::Pending
                     }
-                    semio_framework_os_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Pending => ActiveFrameStep::Pending,
-                    semio_framework_os_renderer_wgpu_frame_transaction::AppFrameTransactionStep::CloseFailure(failure)=>ActiveFrameStep::CloseFailure(failure),
-                    semio_framework_os_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Superseded => {
+                    semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Pending => ActiveFrameStep::Pending,
+                    semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::CloseFailure(failure)=>ActiveFrameStep::CloseFailure(failure),
+                    semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Superseded => {
                         if !transaction.discard_presented_input_candidate(&self.runtime) {
                             return ActiveFrameStep::Pending;
                         }
                         self.phase = ActiveFramePhase::Terminal;
                         ActiveFrameStep::Complete(None)
                     }
-                    semio_framework_os_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Fault => {
+                    semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Fault => {
                         self.cancel.as_ref().unwrap().cancel_now();
                         ActiveFrameStep::Pending
                     }
@@ -454,13 +454,13 @@ impl ActiveFrameBuild {
             }
             ActiveFramePhase::Prepare(preparation) => {
                 match preparation.drive_step(cx) {
-                    Ok(semio_framework_os_renderer_wgpu_app_runtime::FramePreparationStep::Complete)=>match preparation.take_presentation(cx) {
+                    Ok(semio_renderer_wgpu_app_runtime::FramePreparationStep::Complete)=>match preparation.take_presentation(cx) {
                         Ok(Some(frame))=>{self.completed=Some(frame);self.retiring_phase=Some(std::mem::replace(&mut self.phase,ActiveFramePhase::Terminal));ActiveFrameStep::Pending},
                         Ok(None)=>ActiveFrameStep::Pending,
                         Err(error)=>ActiveFrameStep::Fault(error),
                     },
-                    Ok(semio_framework_os_renderer_wgpu_app_runtime::FramePreparationStep::Pending)=>ActiveFrameStep::Pending,
-                    Ok(semio_framework_os_renderer_wgpu_app_runtime::FramePreparationStep::Cancelled|semio_framework_os_renderer_wgpu_app_runtime::FramePreparationStep::Fault)=>{self.cancel.as_ref().unwrap().cancel_now();ActiveFrameStep::Pending},
+                    Ok(semio_renderer_wgpu_app_runtime::FramePreparationStep::Pending)=>ActiveFrameStep::Pending,
+                    Ok(semio_renderer_wgpu_app_runtime::FramePreparationStep::Cancelled|semio_renderer_wgpu_app_runtime::FramePreparationStep::Fault)=>{self.cancel.as_ref().unwrap().cancel_now();ActiveFrameStep::Pending},
                     Err(failure)=>ActiveFrameStep::CloseFailure(failure),
                 }
             }
@@ -503,21 +503,21 @@ impl InteractiveJob for ActiveFrameBuild {
         if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if let Some(frame) = self.completed.as_mut() {
             if !frame.discard_presented_input_candidate(&self.runtime) { return Ok(InteractiveJobCloseStep::Blocked); }
-            if !frame.terminal_is_empty() { return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_child_step(frame.close_step(grant), grant, frame.terminal_is_empty()),cx); }
-            let bytes = size_of::<Option<semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation>>();
-            if let Some(step) = semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant, bytes).map_err(|error|OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
+            if !frame.terminal_is_empty() { return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_child_step(frame.close_step(grant), grant, frame.terminal_is_empty()),cx); }
+            let bytes = size_of::<Option<semio_renderer_wgpu_app_runtime::AppFramePresentation>>();
+            if let Some(step) = semio_renderer_wgpu_app_runtime::frame_inline_gate(grant, bytes).map_err(|error|OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
             self.completed = None;
-            return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(bytes),cx);
+            return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(bytes),cx);
         }
         if !matches!(self.phase,ActiveFramePhase::Terminal)||self.retiring_phase.is_some()||self.deadline_receipt_received||self.deadline_outcome_pending.is_some()||self.deadline_acknowledged||self.deadline_refused_receipt.is_some(){return self.retire_cancelled_phase(cx)}
         if let Some(original)=self.cancel.take(){
-            if let Some(step)=semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{*self.cancel=Some(original);return Ok(step)}
-            self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(original));return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(0),cx)
+            if let Some(step)=semio_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{*self.cancel=Some(original);return Ok(step)}
+            self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(original));return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx)
         }
         if let Some(original)=self.cancel_retirement.as_mut(){
-            if !original.terminal_is_empty(){return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(match original.return_alias_step(cx.original_cancel_token(),grant){Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)},cx)}
-            if let Some(step)=semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
-            self.cancel_retirement=None;return semio_framework_os_renderer_wgpu_app_runtime::frame_receive_close(semio_framework_os_renderer_wgpu_app_runtime::frame_inline_progress(0),cx)
+            if !original.terminal_is_empty(){return semio_renderer_wgpu_app_runtime::frame_receive_close(match original.return_alias_step(cx.original_cancel_token(),grant){Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)},cx)}
+            if let Some(step)=semio_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
+            self.cancel_retirement=None;return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx)
         }
         Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
     }
@@ -533,7 +533,7 @@ fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
 
 impl FrameBuildHandle {
     /// 🎟️ Admits and advances the existing frame owner with the initiating business authority.
-    pub fn poll_runtime_on_original_caller(&mut self,runtime:semio_framework_os_renderer_wgpu_app_runtime::AppMailbox,inputs:FrameBuildInputs,presentation_generation:Generation,cx:&mut StepContext<'_>)->Result<Option<semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation>,OriginalTurnFailure>{
+    pub fn poll_runtime_on_original_caller(&mut self,runtime:semio_renderer_wgpu_app_runtime::AppMailbox,inputs:FrameBuildInputs,presentation_generation:Generation,cx:&mut StepContext<'_>)->Result<Option<semio_renderer_wgpu_app_runtime::AppFramePresentation>,OriginalTurnFailure>{
         if cx.should_yield(){return Ok(None)}
         if self.original_refused_receipt.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame receiver retains its refused physical tuple").into())}
         if self.original_presentation_generation.is_some_and(|original|original!=presentation_generation){if let Some(session)=self.session.as_ref(){let _=session.begin_close();}else{return Ok(None)}}

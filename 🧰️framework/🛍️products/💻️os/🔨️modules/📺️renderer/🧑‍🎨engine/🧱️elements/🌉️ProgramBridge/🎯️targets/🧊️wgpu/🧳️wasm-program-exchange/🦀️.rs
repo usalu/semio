@@ -412,7 +412,7 @@ use semio_framework_value::ToValue;
         expect_done(&outcome.frames, seq)
     }
 
-    async fn exchange_document_backbone_binding(client: &KernelClient, command: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1) -> Result<Vec<Effect>, ProgramFault> {
+    async fn exchange_document_backbone_binding(client: &KernelClient, command: semio_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1) -> Result<Vec<Effect>, ProgramFault> {
         let instance = command.instance_id;
         let payload = command.encode()?;
         let mut outcome = client.exchange_events(instance, vec![Event::Message { source: MessageEndpoint::Shell { instance: PluginInstanceId(instance.to_string()) }, payload }]).await?;
@@ -428,7 +428,7 @@ use semio_framework_value::ToValue;
         if candidates.len() != 1 {
             return Err((format!("plugin document-backbone binding returned {} shell receipts", candidates.len())).into());
         }
-        semio_framework_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(candidates[0].1, &command)?;
+        semio_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(candidates[0].1, &command)?;
         outcome.effects.remove(candidates[0].0);
         Ok(outcome.effects)
     }
@@ -436,8 +436,8 @@ use semio_framework_value::ToValue;
     pub async fn bind_document_backbone(client: &KernelClient, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, ProgramFault> {
         exchange_document_backbone_binding(
             client,
-            semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
-                operation: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Bind,
+            semio_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
+                operation: semio_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Bind,
                 instance_id,
                 binding_generation,
                 uri: uri.to_string(),
@@ -449,8 +449,8 @@ use semio_framework_value::ToValue;
     pub async fn retire_document_backbone(client: &KernelClient, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, ProgramFault> {
         exchange_document_backbone_binding(
             client,
-            semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
-                operation: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Retire,
+            semio_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
+                operation: semio_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Retire,
                 instance_id,
                 binding_generation,
                 uri: uri.to_string(),

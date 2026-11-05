@@ -22,7 +22,7 @@ pub enum TableCell {
 // 🎬️ `Paint2dScene`, `IconRenderScene`, `VirtualFileSystemScene`, `TiledMapScene` (+ its default
 // fns and `base()`), `Board2dScene` (+ its default fns and `base()`), `InkCanvasScene` (+ its
 // default fn and `base()`), `GraphTimelineScene`, `DiffViewScene`, and `EventFeedScene` all moved
-// to `semio-framework-ui-scene` (see the re-export above).
+// to `semio-ui-scene` (see the re-export above).
 
 /** 🧩️ A palette entry for a block kind insertable into a [`BlockListScene`], contributed
      * either by the host app's own built-ins or by a `"playbook.blockKind"` topic contribution. */
@@ -35,7 +35,7 @@ pub struct BlockPaletteEntry {
     pub icon_id: IconName,
 }
 
-// 🎬️ `BlockListScene` itself moved to `semio-framework-ui-scene` (see the re-export above);
+// 🎬️ `BlockListScene` itself moved to `semio-ui-scene` (see the re-export above);
 // `BlockPaletteEntry` above is the host palette contribution projected into scene entries.
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]

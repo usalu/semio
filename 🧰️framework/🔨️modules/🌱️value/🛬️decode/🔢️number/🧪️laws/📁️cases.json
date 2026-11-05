@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "maximumScanBytes": 64,
+  "maximumSignificantDigits": 768,
+  "maximumNormalizedBytes": 776,
+  "simple": [
+    {
+      "word": "",
+      "valid": false
+    },
+    {
+      "word": " ",
+      "valid": false
+    },
+    {
+      "word": "+",
+      "valid": false
+    },
+    {
+      "word": "-",
+      "valid": false
+    },
+    {
+      "word": ".",
+      "valid": false
+    },
+    {
+      "word": ".5",
+      "valid": true
+    },
+    {
+      "word": "5.",
+      "valid": true
+    },
+    {
+      "word": "+01.0",
+      "valid": true
+    },
+    {
+      "word": "-0",
+      "valid": true
+    },
+    {
+      "word": "NaN",
+      "valid": true
+    },
+    {
+      "word": "+INF",
+      "valid": true
+    },
+    {
+      "word": "-infinity",
+      "valid": true
+    },
+    {
+      "word": "1e309",
+      "valid": true
+    },
+    {
+      "word": "1e-100000",
+      "valid": true
+    },
+    {
+      "word": "-1e-100000",
+      "valid": true
+    },
+    {
+      "word": "1_0",
+      "valid": false
+    },
+    {
+      "word": "1.2.3",
+      "valid": false
+    },
+    {
+      "word": "1e",
+      "valid": false
+    },
+    {
+      "word": "1e+",
+      "valid": false
+    },
+    {
+      "word": "e1",
+      "valid": false
+    },
+    {
+      "word": "NaNtail",
+      "valid": false
+    },
+    {
+      "word": "1x",
+      "valid": false
+    },
+    {
+      "word": "１",
+      "valid": false
+    },
+    {
+      "word": "0x1p0",
+      "valid": false
+    }
+  ],
+  "serdeFiniteWords": [
+    "0",
+    "-0.0",
+    "0.5",
+    "1.0",
+    "3.141592653589793",
+    "2.2250738585072014e-308",
+    "5e-324",
+    "1.7976931348623157e308"
+  ],
+  "midpoints": [
+    {
+      "numerator": "1",
+      "denominatorPower": 1075
+    },
+    {
+      "numerator": "9007199254740993",
+      "denominatorPower": 53
+    },
+    {
+      "numerator": "18014398509481983",
+      "denominatorPower": 1075
+    },
+    {
+      "numerator": "18014398509481983",
+      "denominatorPower": -970
+    }
+  ],
+  "midpointVariants": [
+    "exact",
+    "positiveTail",
+    "negativeTail",
+    "leadingZeroes",
+    "signed"
+  ],
+  "tailZeroes": [
+    0,
+    1,
+    32,
+    768,
+    4096,
+    12000
+  ],
+  "profiles": [
+    {
+      "items": 1,
+      "copyBytes": 4096,
+      "maximumCalls": 10000
+    },
+    {
+      "items": 512,
+      "copyBytes": 32768,
+      "maximumCalls": 200
+    }
+  ],
+  "original": {
+    "operation": 97146,
+    "generation": 17,
+    "fuel": 32768,
+    "clock": 1000,
+    "deadline": 1500,
+    "stockItems": 65536,
+    "stockCopyBytes": 134217728,
+    "stockCapacityBytes": 268435456,
+    "stockReleaseBytes": 536870912,
+    "depth": 4096
+  },
+  "cancelAtPhases": [
+    "bind",
+    "scan",
+    "interpret",
+    "ready"
+  ],
+  "deadlineAtPhases": [
+    "scan",
+    "interpret"
+  ],
+  "oracle": "original Rust f64::from_str on unbounded input outside observed frame; serde_json f64 on canonical finite words; exact binary64 bits including signed zero and NaN sign",
+  "quantum": {
+    "maximumWorkPerEvent": 1,
+    "maximumEvents": 200,
+    "maximumCursorBytes": 4096,
+    "cases": [
+      {
+        "kind": "repeat",
+        "prefix": "1",
+        "repeat": "0",
+        "count": 768,
+        "suffix": "5e-769",
+        "expectedBits": "3ff0000000000000"
+      },
+      {
+        "kind": "repeat",
+        "prefix": "-1",
+        "repeat": "0",
+        "count": 768,
+        "suffix": "5e-769",
+        "expectedBits": "bff0000000000000"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "1",
+        "denominatorPower": 1075,
+        "variant": "exact",
+        "expectedBits": "0000000000000000"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "1",
+        "denominatorPower": 1075,
+        "variant": "above",
+        "expectedBits": "0000000000000001"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "1",
+        "denominatorPower": 1075,
+        "variant": "below",
+        "expectedBits": "0000000000000000"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "9007199254740993",
+        "denominatorPower": 53,
+        "variant": "exact",
+        "expectedBits": "3ff0000000000000"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "9007199254740995",
+        "denominatorPower": 53,
+        "variant": "exact",
+        "expectedBits": "3ff0000000000002"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "9007199254740991",
+        "denominatorPower": 1075,
+        "variant": "exact",
+        "expectedBits": "0010000000000000"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "9007199254740991",
+        "denominatorPower": 1075,
+        "variant": "below",
+        "expectedBits": "000fffffffffffff"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "18014398509481983",
+        "denominatorPower": 1075,
+        "variant": "exact",
+        "expectedBits": "0020000000000000"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "18014398509481983",
+        "denominatorPower": -970,
+        "variant": "exact",
+        "expectedBits": "7ff0000000000000"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "18014398509481983",
+        "denominatorPower": -970,
+        "variant": "below",
+        "expectedBits": "7fefffffffffffff"
+      },
+      {
+        "kind": "midpoint",
+        "numerator": "18014398509481983",
+        "denominatorPower": -970,
+        "variant": "above",
+        "expectedBits": "7ff0000000000000"
+      },
+      {
+        "kind": "repeat",
+        "prefix": "9999999999999999999",
+        "repeat": "0",
+        "count": 32,
+        "suffix": "1e-51",
+        "expectedBits": "4024000000000000"
+      },
+      {
+        "kind": "literal",
+        "word": "1.9999999999999993",
+        "expectedBits": "3ffffffffffffffd"
+      },
+      {
+        "kind": "literal",
+        "word": "-0.000e-100000",
+        "expectedBits": "8000000000000000"
+      },
+      {
+        "kind": "literal",
+        "word": "-infinity",
+        "expectedBits": "fff0000000000000"
+      },
+      {
+        "kind": "literal",
+        "word": "1e+",
+        "expectedBits": null
+      }
+    ]
+  }
+}

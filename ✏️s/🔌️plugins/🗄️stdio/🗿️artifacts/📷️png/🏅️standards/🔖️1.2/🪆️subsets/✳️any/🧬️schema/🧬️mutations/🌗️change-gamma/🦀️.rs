@@ -17,8 +17,8 @@ pub struct ChangeGammaMutation {
 impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "gamma", kind: "change-gamma", record: "ChangeGamma" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change gamma", "Gamma ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change gamma", "Gamma ändern")
     }
 
     fn target(&self) -> Vec<String> {

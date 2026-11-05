@@ -1,8 +1,8 @@
 //! 🛠️ Instance components of the plugin SDK: pending reserved work, tool operations and tool machines.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
 
 #[path = "📥️staging/🏷️reserved/🦀️.rs"]
 pub mod reserved_preparation;

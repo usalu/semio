@@ -1,7 +1,7 @@
 //! 📚️ Example `de-office-compliant`.
 
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "de-office-compliant";
 pub fn label() -> LocalizedLabel {

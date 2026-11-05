@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAccidentalAssumedP
         record: "ChangedAccidentalAssumedPressure",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed accidental pressure of the accidental case", "Außergewöhnlicher Fall: Angenommener außergewöhnlicher Druck ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed accidental pressure of the accidental case", "Außergewöhnlicher Fall: Angenommener außergewöhnlicher Druck ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

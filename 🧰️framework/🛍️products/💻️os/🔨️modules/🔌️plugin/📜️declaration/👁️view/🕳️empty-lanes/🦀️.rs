@@ -50,8 +50,8 @@ impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackRecei
 #[path="genesis.rs"]mod genesis;
 pub use genesis::{NoConfigGenesisOwner,NoDraftGenesisOwner};
 
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -86,7 +86,7 @@ impl ::protocol::MutationDiff<NoConfig> for NoStateDiff {
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum NoConfigMutation {}
 
-semio_framework_os_kernel::original_ordinal_operation_receiving!(NoConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(NoConfigMutation);
 
 impl ::protocol::ColdMutation<NoConfig> for NoConfigMutation {
     type ReferenceDiff = NoStateDiff;
@@ -155,7 +155,7 @@ pub type NoDraftMutation = NoConfigMutation;
 pub struct NoPresence {}
 
 impl store::ArtifactPresenceSnapshot for NoPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         let grant = owner.remaining_grant();
         if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission")); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission")); }
@@ -165,7 +165,7 @@ impl store::ArtifactPresenceSnapshot for NoPresence {
         Ok(Self {})
     }
 
-    fn encode_presence_native(&self, owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
+    fn encode_presence_native(&self, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
         let grant = owner.remaining_grant();
         if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission")); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission")); }
@@ -201,8 +201,8 @@ impl ArtifactPack for NoPresence {
     }
 }
 
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoPresence {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoPresence {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -317,8 +317,8 @@ impl ArtifactPack for NoTransient {
     }
 }
 
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

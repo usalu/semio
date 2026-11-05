@@ -24,8 +24,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeActionCategory whe
         record: "ChangedActionCategory",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Action category of the member action", "Bauteileinwirkung: Einwirkungskategorie ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Action category of the member action", "Bauteileinwirkung: Einwirkungskategorie ändern")
     }
 }
 

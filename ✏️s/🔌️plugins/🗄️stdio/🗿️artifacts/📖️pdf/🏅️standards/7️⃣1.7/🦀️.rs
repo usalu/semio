@@ -11,7 +11,7 @@ pub mod io_registry {
     use crate::standards::v1_7::subsets::ua::io::PdfUaComposer;
     use crate::standards::v1_7::subsets::vt::io::PdfVtComposer;
     use crate::standards::v1_7::subsets::x::io::PdfXComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();

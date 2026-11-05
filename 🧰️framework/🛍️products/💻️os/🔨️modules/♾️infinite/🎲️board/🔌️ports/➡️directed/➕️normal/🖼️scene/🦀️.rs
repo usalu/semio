@@ -1,15 +1,15 @@
 //! 🖼️ Normal board scene and style components with the scene painting, style resolution and viewport functions over them.
 //!
-//! Crate `semio-framework-os-infinite-board-normal-scene`; a downward producer of the infinite board family.
+//! Crate `semio-os-infinite-board-normal-scene`; a downward producer of the infinite board family.
 
 #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
 #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure the call sites.")]
 
-use semio_framework_os_infinite_board_schema::{array, BoardPaletteOverlay, builtin_edge_tips, EdgeTipCatalogEntry, EdgeTipDef, EdgeTipGeometry};
-use semio_framework_os_infinite_board_engine::{BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, Camera, CanvasPalette, CompatSpecificity, Edge, EdgeData, EdgeKindDef, EdgeStrokePattern, GraphPortMode, GRID_WORLD_LARGE, GRID_WORLD_MEDIUM, GRID_WORLD_MICRO, GRID_WORLD_SMALL, HandleData, HandleKindDef, IconPaintCache, LinkCompatRule, NodeData, NodeKindDef, NodeKindHandleTemplate, RegionData, snap_region_scalar, WireData, WireKindDef};
-use semio_framework_os_infinite_board_normal_model::{board_draw_lod_label, BOARD_EVENT_BYTE_CAPACITY, BOARD_EVENT_PAYLOAD_BYTE_CAPACITY, BOARD_HANDLE_VITALS_CAP, BOARD_LOD_SCALE, BOARD_POINTER_BYTE_CAPACITY, BOARD_POINTER_ITEM_CAPACITY, BoardDrawLod, BoardEventFault, BoardNaming, BoardOwnedEvent, BoardPayloadBuilder, BoardPlacementNaming, BoardPointerSpan, brush_handle_alignment_delta, BrushCandidatePage, compat_pair_matches, DEFAULT_WIRE_KIND_ID, DropPreviewSnapshot, HANDLE_HIT_TOLERANCE_PX, handle_port_shapes_compatible, INDIRECT_HANDLE_MARKER_NODE_SCALE, INDIRECT_HANDLE_RING_GAP_NODE_SCALE, LINK_COMMIT_SNAP_TIGHT_PX, link_gesture_rule_applies_kind_strings, LINK_HANDLE_SNAP_EXTRA_PX, node_fill_for_style, node_stroke_for_style, NodeHandlePaintLayer, NormalPortError, parse_catalog_tip_slot, parse_compat_specificity, parse_css_color, parse_css_hex_color, reject_kind_catalog_row_legacy_label, resolve_handle_stroke_color, single_letter_port_families_compatible, WorldContentCache};
+use semio_os_infinite_board_schema::{array, BoardPaletteOverlay, builtin_edge_tips, EdgeTipCatalogEntry, EdgeTipDef, EdgeTipGeometry};
+use semio_os_infinite_board_engine::{BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, Camera, CanvasPalette, CompatSpecificity, Edge, EdgeData, EdgeKindDef, EdgeStrokePattern, GraphPortMode, GRID_WORLD_LARGE, GRID_WORLD_MEDIUM, GRID_WORLD_MICRO, GRID_WORLD_SMALL, HandleData, HandleKindDef, IconPaintCache, LinkCompatRule, NodeData, NodeKindDef, NodeKindHandleTemplate, RegionData, snap_region_scalar, WireData, WireKindDef};
+use semio_os_infinite_board_normal_model::{board_draw_lod_label, BOARD_EVENT_BYTE_CAPACITY, BOARD_EVENT_PAYLOAD_BYTE_CAPACITY, BOARD_HANDLE_VITALS_CAP, BOARD_LOD_SCALE, BOARD_POINTER_BYTE_CAPACITY, BOARD_POINTER_ITEM_CAPACITY, BoardDrawLod, BoardEventFault, BoardNaming, BoardOwnedEvent, BoardPayloadBuilder, BoardPlacementNaming, BoardPointerSpan, brush_handle_alignment_delta, BrushCandidatePage, compat_pair_matches, DEFAULT_WIRE_KIND_ID, DropPreviewSnapshot, HANDLE_HIT_TOLERANCE_PX, handle_port_shapes_compatible, INDIRECT_HANDLE_MARKER_NODE_SCALE, INDIRECT_HANDLE_RING_GAP_NODE_SCALE, LINK_COMMIT_SNAP_TIGHT_PX, link_gesture_rule_applies_kind_strings, LINK_HANDLE_SNAP_EXTRA_PX, node_fill_for_style, node_stroke_for_style, NodeHandlePaintLayer, NormalPortError, parse_catalog_tip_slot, parse_compat_specificity, parse_css_color, parse_css_hex_color, reject_kind_catalog_row_legacy_label, resolve_handle_stroke_color, single_letter_port_families_compatible, WorldContentCache};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_board_normal_model::board_property_retirement_credits;
+use semio_os_infinite_board_normal_model::board_property_retirement_credits;
 use semio_framework_canvas::{Affine, Circle, Color, CubicBez, FillRule, Point, Rect, Scene, Stroke, Vec2};
 use std::collections::{BTreeMap, BTreeSet};
 use serde::Deserialize;

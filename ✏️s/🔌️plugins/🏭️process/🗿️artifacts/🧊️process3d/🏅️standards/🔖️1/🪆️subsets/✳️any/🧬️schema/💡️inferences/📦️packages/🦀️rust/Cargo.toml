@@ -21,8 +21,8 @@ path = "../../🧪️tests/🔬️unit/🦀️.rs"
 
 [dependencies]
 semio-framework-3d-brep-engine = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
@@ -34,7 +34,7 @@ semio-s-artifact-stdio-semio-brep = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }

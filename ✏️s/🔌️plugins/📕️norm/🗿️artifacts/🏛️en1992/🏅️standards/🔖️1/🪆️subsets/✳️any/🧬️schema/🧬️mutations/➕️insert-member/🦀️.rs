@@ -18,8 +18,8 @@ pub struct InsertMember {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertMember where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::remove_member::RemoveMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "member", kind: "insert-member", record: "InsertedMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert member {}", self.member.id), &format!("Bauteil {} einfügen", self.member.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert member {}", self.member.id), &format!("Bauteil {} einfügen", self.member.id))
     }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }

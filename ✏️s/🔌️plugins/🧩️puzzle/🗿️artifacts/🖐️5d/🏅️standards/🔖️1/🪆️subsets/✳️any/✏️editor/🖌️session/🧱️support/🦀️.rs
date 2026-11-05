@@ -1,6 +1,6 @@
 //! 🧱️ Support of the puzzle 5d editor session: the reserved wire preflight, the job faults and checkpoints and the fixed-page step envelope the clipboard, paste and import jobs share.
 
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use std::collections::HashSet;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_RESERVED_PAGE_BYTES};
 use semio_framework_job::StepContext;

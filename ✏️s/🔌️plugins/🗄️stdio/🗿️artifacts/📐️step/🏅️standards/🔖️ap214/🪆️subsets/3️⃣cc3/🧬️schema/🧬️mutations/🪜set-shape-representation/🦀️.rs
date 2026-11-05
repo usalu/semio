@@ -21,8 +21,8 @@ pub struct SetShapeRepresentation {
 impl protocol::MutationKind<StepSnapshot, StepCc3Mutation> for SetShapeRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape-representation", kind: "set-shape-representation", record: "SetShapeRepresentation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

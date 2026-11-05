@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberWallStartYM 
         record: "ChangeMemberWallStartYM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plan y of the wall start point in the building plan (the wall runs from here along its direction by its length)", "Grundriss-y des Wandanfangspunkts im Gebäudegrundriss (die Wand verläuft von hier in ihrer Richtung um ihre Länge) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plan y of the wall start point in the building plan (the wall runs from here along its direction by its length)", "Grundriss-y des Wandanfangspunkts im Gebäudegrundriss (die Wand verläuft von hier in ihrer Richtung um ihre Länge) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-wall-start-ym".into()]

@@ -1,8 +1,8 @@
 //! 🧪️ Cross-layer mutation laws: graph-editor replay, touched regions, gesture leaves with their codec witnesses, store-backed mutation behavior and document restoration.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[path = "../🔬️app-fixture/🦀️.rs"]
 mod app_fixture;

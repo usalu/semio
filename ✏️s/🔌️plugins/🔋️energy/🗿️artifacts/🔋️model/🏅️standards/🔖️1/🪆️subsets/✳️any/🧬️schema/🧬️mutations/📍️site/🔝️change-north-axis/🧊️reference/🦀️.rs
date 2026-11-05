@@ -11,8 +11,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change building north axis to {}°", self.new_north_axis_deg), &format!("Nordachse des Gebäudes auf {}° ändern", self.new_north_axis_deg))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change building north axis to {}°", self.new_north_axis_deg), &format!("Nordachse des Gebäudes auf {}° ändern", self.new_north_axis_deg))
     }
 }
 

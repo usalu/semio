@@ -224,7 +224,7 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        semio_framework_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
+        semio_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn request_cancel(&mut self) {

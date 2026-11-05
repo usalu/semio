@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileGroupSpacing w
         record: "ChangedPileGroupSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Spacing s of the pile group", "Pfahlgruppe: Achsabstand s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Spacing s of the pile group", "Pfahlgruppe: Achsabstand s ändern")
     }
 }
 

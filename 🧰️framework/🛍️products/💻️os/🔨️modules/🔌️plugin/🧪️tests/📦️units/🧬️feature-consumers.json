@@ -13,7 +13,7 @@
       "const": 1
     },
     "consumer": {
-      "const": "semio-framework-plugin-testing-laws"
+      "const": "semio-plugin-testing-laws"
     },
     "dependencies": {
       "type": "array",

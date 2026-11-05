@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetExaggeration

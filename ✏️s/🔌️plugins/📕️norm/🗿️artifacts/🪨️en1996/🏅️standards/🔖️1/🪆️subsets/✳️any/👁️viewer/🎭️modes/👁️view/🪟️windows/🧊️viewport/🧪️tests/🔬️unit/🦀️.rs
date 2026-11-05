@@ -1,5 +1,5 @@
 use crate::modes::view::windows::viewport::*;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use semio_s_plugin_norm_app_surface::viewport3d::playback::PlaybackState;
 use semio_s_plugin_norm_app_surface::viewport3d::toolbar::ViewportView;
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;

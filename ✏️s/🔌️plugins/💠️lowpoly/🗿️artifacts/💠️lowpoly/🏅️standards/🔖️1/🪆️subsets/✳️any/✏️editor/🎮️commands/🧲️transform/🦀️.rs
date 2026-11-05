@@ -15,7 +15,7 @@ use semio_s_artifact_lowpoly_lowpoly_mut_geometry::{move_selection::MoveSelectio
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_3d::mesh::VertexId;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🎯️Selection
 /// 🎯️ The motion one gumball dispatch states, before it is bound to the selection's objects and vertices.

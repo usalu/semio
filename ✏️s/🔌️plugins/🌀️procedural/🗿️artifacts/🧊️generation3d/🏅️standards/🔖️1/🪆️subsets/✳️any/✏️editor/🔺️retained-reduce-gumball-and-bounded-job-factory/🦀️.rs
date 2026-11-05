@@ -7,17 +7,17 @@ use super::*;
 /// 🕹️ `nodeGraphEdit`/`deleteSelection`/`{translate,rotate,scale}Selection` read real `graph` selection
 /// directly off `protocol::InteractionState` (the raw, crate-public half of what `app::InteractionView`
 /// wraps) — plugin code cannot construct an `InteractionView` itself (`state`/`hover`/`peers` are
-/// `pub(crate)` to `semio_framework_plugin`), so this is the only way a retained-command-job reducer can
+/// `pub(crate)` to `semio_plugin`), so this is the only way a retained-command-job reducer can
 /// preserve the same real-selection behavior `Generation3dPlayApp::handle` gives those five commands above.
 #[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
 fn generation3d_retained_reduce(
     command: &Generation3dCommand,
     snapshot: &Generation3dSnapshot,
     config: &Generation3dConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     operation: &AppOperationContext,
     session: &mut FlowEvalSession,
     gumball: &mut semio_s_artifact_procedural_3d_transforms::GumballGestures,
@@ -95,7 +95,7 @@ pub(super) fn generation3d_gumball_command(command: &Generation3dCommand) -> boo
     generation3d_gumball_gesture(command).is_some()
 }
 
-pub(super) fn generation3d_component_targets<'a>(command: &'a Generation3dCommand, view: Option<&semio_framework_plugin::ViewModel>, granularity: Option<&str>, geometry: &'a [String], graph: &'a [String]) -> Option<&'a [String]> {
+pub(super) fn generation3d_component_targets<'a>(command: &'a Generation3dCommand, view: Option<&semio_plugin::ViewModel>, granularity: Option<&str>, geometry: &'a [String], graph: &'a [String]) -> Option<&'a [String]> {
     let components = semio_s_artifact_procedural_3d_mode_edit::windows::preview::edits_components(view, granularity);
     if matches!(command, Generation3dCommand::EditMeshSelection(_) | Generation3dCommand::KnifeMeshSelection(_)) || components && matches!(command, Generation3dCommand::DeleteSelection(_)) { return Some(geometry); }
     let explicit = match command {
@@ -116,15 +116,15 @@ pub(super) fn generation3d_component_targets<'a>(command: &'a Generation3dComman
 /// land on the same cache the next render reads.
 pub(super) struct Generation3dSessionCommandWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
-    source_read:Option<semio_framework_os_flow::FlowSourceRead>,
+    source_read:Option<semio_os_flow::FlowSourceRead>,
     source_read_ready:bool,
     pub(super) closing:bool,
 }
 
 impl Generation3dSessionCommandWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner, consumed: false,source_read:None,source_read_ready:false,closing:false }
     }
 }
@@ -142,13 +142,13 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         command: &Generation3dCommand,
         snapshot: &Generation3dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     ) -> Option<usize> {
         generation3d_bounded_extent(command, snapshot, interaction)
     }
 
     fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        if let Generation3dCommand::AddWidget(payload)=input.command{if payload.source_widget.is_some(){return match self.source_read.as_ref(){Some(source)if !self.source_read_ready=>source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes),Some(source)=>{let read=source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes)?;let command=command_work_step_demands::<EditorApp<Generation3dPlayApp>>(size_of::<Self>())?;Ok(semio_framework_value::RetirementDemand{copy_bytes:read.copy_bytes.saturating_add(command.copy_bytes),capacity_bytes:read.capacity_bytes.saturating_add(command.capacity_bytes),release_bytes:read.release_bytes.saturating_add(command.release_bytes),depth:read.depth.max(command.depth)})},None=>Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<semio_framework_os_flow::FlowSourceRead>(),depth:1,..Default::default()})}}}
+        if let Generation3dCommand::AddWidget(payload)=input.command{if payload.source_widget.is_some(){return match self.source_read.as_ref(){Some(source)if !self.source_read_ready=>source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes),Some(source)=>{let read=source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes)?;let command=command_work_step_demands::<EditorApp<Generation3dPlayApp>>(size_of::<Self>())?;Ok(semio_framework_value::RetirementDemand{copy_bytes:read.copy_bytes.saturating_add(command.copy_bytes),capacity_bytes:read.capacity_bytes.saturating_add(command.capacity_bytes),release_bytes:read.release_bytes.saturating_add(command.release_bytes),depth:read.depth.max(command.depth)})},None=>Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<semio_os_flow::FlowSourceRead>(),depth:1,..Default::default()})}}}
         command_work_step_demands::<EditorApp<Generation3dPlayApp>>(size_of::<Self>())
     }
 
@@ -162,15 +162,15 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
             return Err(Fault::from("generation3d-session-command-work-repeated"));
         }
         if let Generation3dCommand::AddWidget(payload)=input.command{if let Some(request)=payload.source_request()?{
-            if self.source_read.is_none(){let grant=_cx.retained_grant();let bytes=size_of::<semio_framework_os_flow::FlowSourceRead>();if _cx.is_cancelled()||_cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()})}self.source_read=Some(semio_framework_os_flow::FlowSourceRead::new(payload.source_revision_bytes()?));_cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}).map_err(|error|Fault::from(error.to_string()))?;return Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()})}
+            if self.source_read.is_none(){let grant=_cx.retained_grant();let bytes=size_of::<semio_os_flow::FlowSourceRead>();if _cx.is_cancelled()||_cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()})}self.source_read=Some(semio_os_flow::FlowSourceRead::new(payload.source_revision_bytes()?));_cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}).map_err(|error|Fault::from(error.to_string()))?;return Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()})}
             let read=self.source_read.as_mut().unwrap();
             if !self.source_read_ready{
                 let step=self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|owner.with_session_and_gumball(|session,_|read.step(&input.snapshot.host_snapshot,input.operation.canonical_base_revision,session,&request,_cx).map_err(|error|Fault::from(error.to_string()))))??;
                 let preview=r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes();
                 return match step{
-                    semio_framework_os_flow::FlowSourceReadStep::Working=>Ok(if read.step_progress()==Default::default(){ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview}}else{ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview}}),
-                    semio_framework_os_flow::FlowSourceReadStep::Refused(reason)=>Err(add_widget::source_fault(reason)),
-                    semio_framework_os_flow::FlowSourceReadStep::Ready=>{self.source_read_ready=true;Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview})},
+                    semio_os_flow::FlowSourceReadStep::Working=>Ok(if read.step_progress()==Default::default(){ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview}}else{ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview}}),
+                    semio_os_flow::FlowSourceReadStep::Refused(reason)=>Err(add_widget::source_fault(reason)),
+                    semio_os_flow::FlowSourceReadStep::Ready=>{self.source_read_ready=true;Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview})},
                 };
             }
             let windows=generation3d_preview_windows(input.context.and_then(|context|context.view_state.as_deref()));
@@ -178,9 +178,9 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
             let result=self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|{
                 let step=owner.with_session_and_gumball(|session,_|read.admit_current_output(&input.snapshot.host_snapshot,input.operation.canonical_base_revision,session,&request,_cx).map_err(|error|Fault::from(error.to_string())))??;
                 match step{
-                    semio_framework_os_flow::FlowCurrentOutputRead::Working=>Ok(ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()}),
-                    semio_framework_os_flow::FlowCurrentOutputRead::Refused(reason)=>Err(add_widget::source_fault(reason)),
-                    semio_framework_os_flow::FlowCurrentOutputRead::Ready(source)=>{
+                    semio_os_flow::FlowCurrentOutputRead::Working=>Ok(ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()}),
+                    semio_os_flow::FlowCurrentOutputRead::Refused(reason)=>Err(add_widget::source_fault(reason)),
+                    semio_os_flow::FlowCurrentOutputRead::Ready(source)=>{
                         let doc=ArtifactView::with_operation(input.snapshot,input.history,input.operation.clone());
                         let mut emit=add_widget::create_connected(payload,&doc,&source)?;
                         owner.owe_attached_previews_for_mutations(&windows,servable,&mut emit,input.operation.retained)?;
@@ -262,11 +262,11 @@ impl semio_framework::ToolJobFactory for Generation3dBoundedCommandJobFactory {
         generation3d_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBoundedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Generation3dBoundedCommandJobFactory {
     type Owner = EditorApp<Generation3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GENERATION3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;

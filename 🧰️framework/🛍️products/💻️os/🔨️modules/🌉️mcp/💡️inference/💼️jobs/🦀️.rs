@@ -17,10 +17,10 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use std::sync::OnceLock;
 use crate::inference::DeclaredInference;
-use semio_framework_os_mcp_catalog::catalog::{CapabilityDefinition, CapabilitySource, Catalog};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceEventPageV1, HubInferenceJobReceiptV1, HubInferenceServiceV1, INFERENCE_JOB_PAGE_SCHEMA, INFERENCE_PROPOSAL_DIGEST_DOMAIN, InferenceExecutionSiteV1, InferenceJobEventV1, InferenceJobPageV1, InferenceJobProgressV1, InferenceJobStateV1, InferenceProposalStateV1, InferenceProposalV1};
-use semio_framework_os_mcp_wire::job_registry::{JobEvent, JobSnapshot, JobStatus};
+use semio_os_mcp_catalog::catalog::{CapabilityDefinition, CapabilitySource, Catalog};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_inference_hub::hub_wire::{HubInferenceEventPageV1, HubInferenceJobReceiptV1, HubInferenceServiceV1, INFERENCE_JOB_PAGE_SCHEMA, INFERENCE_PROPOSAL_DIGEST_DOMAIN, InferenceExecutionSiteV1, InferenceJobEventV1, InferenceJobPageV1, InferenceJobProgressV1, InferenceJobStateV1, InferenceProposalStateV1, InferenceProposalV1};
+use semio_os_mcp_wire::job_registry::{JobEvent, JobSnapshot, JobStatus};
 
 //#region 🔖️Service
 

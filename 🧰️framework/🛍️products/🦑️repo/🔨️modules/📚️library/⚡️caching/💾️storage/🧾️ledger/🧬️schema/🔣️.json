@@ -20,13 +20,17 @@
       "additionalProperties": false,
       "required": [
         "repository",
-        "native"
+        "native",
+        "rust"
       ],
       "properties": {
         "repository": {
           "$ref": "#/$defs/root"
         },
         "native": {
+          "$ref": "#/$defs/root"
+        },
+        "rust": {
           "$ref": "#/$defs/root"
         }
       }
@@ -259,7 +263,8 @@
         "root": {
           "enum": [
             "repository",
-            "native"
+            "native",
+            "rust"
           ]
         },
         "kind": {
@@ -415,7 +420,8 @@
         "root": {
           "enum": [
             "repository",
-            "native"
+            "native",
+            "rust"
           ]
         },
         "directory": {

@@ -7,15 +7,15 @@
 
 use crate::schema::document_to_workflow;
 use crate::DagScene;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_os_kernel::Viewport2d;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_os_kernel::Viewport2d;
 
 //#region 🔖️Constants
 pub const DAG_VIEW_WINDOW_MAIN: &str = "dag-view-main";
@@ -55,7 +55,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(scene: &DagScene) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = document_to_workflow(scene);
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
-    scene_surface(DAG_VIEW_SURFACE_MAIN, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
+    scene_surface(DAG_VIEW_SURFACE_MAIN, semio_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 

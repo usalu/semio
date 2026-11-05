@@ -4,7 +4,7 @@
 //! artifact carries, since no external MIME registration exists for this dialect.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
@@ -16,10 +16,10 @@ pub mod artifact_items_4 {
 //#region 🔖️Declaration
 /// 🧾️ Defines `s.wfc.grid3d`'s immutable runtime capability leaves — standard/profile/schema/
 /// inference/composer/codec/localization, the same row set `s.puzzle.puzzle2d` declares.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.wfc.grid3d.standard.v1", "standard", "1", &[], None),
         ("s.wfc.grid3d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.wfc.grid3d.schema.artifact", "schema", "s.wfc.grid3d", &[("schema", "s.wfc.grid3d")], None),
@@ -46,23 +46,23 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// 🎭️ The closed app roster this artifact's declaration tree binds — its own editor and viewer, the
 /// exact bound `semio_s_artifact_puzzle_2d::artifact` carries.
 pub trait ArtifactApps:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::grid3d::Grid3dEditor>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::grid3d::Grid3dViewer>>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::grid3d::Grid3dEditor>>>
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::grid3d::Grid3dViewer>>>
 {
 }
 
 impl<PA> ArtifactApps for PA where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::grid3d::Grid3dEditor>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::grid3d::Grid3dViewer>>>
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::grid3d::Grid3dEditor>>>
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::grid3d::Grid3dViewer>>>
 {
 }
 
 /// 🌳️ This artifact's declaration tree root — the ONLY registration channel for schema/io/viewer/
 /// editor rows, mirroring `semio_s_artifact_puzzle_2d::artifact`.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<PA: ArtifactApps>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.grid3d").expect("canonical wfc grid3d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }

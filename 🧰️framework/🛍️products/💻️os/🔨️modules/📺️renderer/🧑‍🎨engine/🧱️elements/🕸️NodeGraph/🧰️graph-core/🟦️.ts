@@ -97,7 +97,7 @@ export function portValueTypes(port: NodeGraphPortRecord | undefined): readonly 
 }
 
 /** 🔌️ The ONE port-compatibility rule, in TypeScript — the twin of
- * `neural_engine::Registry::channel_compatible` and `semio_framework_os_flow::port_value_types_compatible`.
+ * `neural_engine::Registry::channel_compatible` and `semio_os_flow::port_value_types_compatible`.
  * A pair is refused only when both sides declare and the declared sets are disjoint, so an
  * undeclared channel is never retro-refused.
  *

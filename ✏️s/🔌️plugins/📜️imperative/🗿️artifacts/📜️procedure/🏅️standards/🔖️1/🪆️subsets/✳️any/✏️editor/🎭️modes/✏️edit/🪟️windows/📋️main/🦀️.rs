@@ -4,12 +4,12 @@
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::{ProcedureScene, Step};
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_WINDOW_MAIN: &str = "imperative-main";
@@ -67,7 +67,7 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     }
 }
 
-pub fn render(scene: &ProcedureScene, run_output_json: &str, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &ProcedureScene, run_output_json: &str, labels: &ImperativeLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let path = &scene.path;
     let mut rows = table_rows(&path.steps);
     if !run_output_json.is_empty() {

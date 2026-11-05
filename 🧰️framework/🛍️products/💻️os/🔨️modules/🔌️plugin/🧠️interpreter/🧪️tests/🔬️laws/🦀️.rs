@@ -1,4 +1,4 @@
-//! 🧪️ Companion white-box laws of `semio-framework-plugin-interpreter`.
+//! 🧪️ Companion white-box laws of `semio-plugin-interpreter`.
 
 #![cfg(test)]
 #![allow(unused_imports, unused_qualifications)]

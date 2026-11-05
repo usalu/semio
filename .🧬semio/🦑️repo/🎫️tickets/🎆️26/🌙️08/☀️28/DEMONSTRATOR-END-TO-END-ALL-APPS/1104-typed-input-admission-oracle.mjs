@@ -1,0 +1,4 @@
+import {readFileSync} from "node:fs";
+import Ajv from "ajv";
+const root="✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-commands/📥️provisional/🎛️input/🧬️admit/🧪️laws";
+const cases=JSON.parse(readFileSync(root+"/📁️cases.json","utf8"));const ajv=new Ajv({strict:false,allErrors:true});const shape=ajv.compile(JSON.parse(readFileSync(root+"/📐️schema.json","utf8")));if(!shape(cases))throw Error(JSON.stringify(shape.errors));const admit=ajv.compile(JSON.parse(readFileSync("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-widget-input/🧬️schema/🔣️.json","utf8")));for(const c of cases){if(admit(c.input)!==c.expected)throw Error(c.name)}console.log("PASS original typed input admission schema+Ajv cases="+cases.length+"; bounded native equality NOTRUN");

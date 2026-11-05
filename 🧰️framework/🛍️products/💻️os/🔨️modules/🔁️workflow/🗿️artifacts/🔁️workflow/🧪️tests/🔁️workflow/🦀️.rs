@@ -1,5 +1,5 @@
 //! 🧪️ Workflow artifact replay, connection, and serialization laws.
-use semio_framework_os_kernel::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_os_kernel::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use semio_framework_dsl_record::DslField as _;
 fn assert_workflow_manual_binding<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){
@@ -427,8 +427,8 @@ async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
     assert_eq!(code(WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into()], dx: 0.0, dy: 0.0 })).as_deref(), Some("mutation.no-op"));
     assert_eq!(code(WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "a".into()], dx: 1.0, dy: 1.0 })).as_deref(), Some("mutation.invariant"));
     let label = mutation.label();
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Move 2 workflow node(s) by (40, -12.5)");
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Arbeitsablaufknoten um (40; -12,5) verschieben");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Move 2 workflow node(s) by (40, -12.5)");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "2 Arbeitsablaufknoten um (40; -12,5) verschieben");
 }
 //#endregion 🔖️GestureLeaves
 

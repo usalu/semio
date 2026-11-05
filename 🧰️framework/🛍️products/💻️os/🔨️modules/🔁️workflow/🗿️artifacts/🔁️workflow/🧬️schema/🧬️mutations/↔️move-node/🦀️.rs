@@ -20,8 +20,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "workflow", kind: "move-node", record: "MovedWorkflowNode" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} verschieben", self.node_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} verschieben", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_id.clone()]

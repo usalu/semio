@@ -6,7 +6,7 @@ import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-t
  * NEVER inside Bash, matching the ticket's "Use the Browser pane for anything needing a page" rule for
  * anything that needs one.
  *
- * ⚠️ HONESTY SCOPE — read before trusting any row this file produces. `semio-framework-plugin` (the
+ * ⚠️ HONESTY SCOPE — read before trusting any row this file produces. `semio-plugin` (the
  * guest SDK) does not compile yet this session, so **no real fleet wasm component exists** to activate.
  * This harness therefore drives the REAL, production `ShardClient` (`🎭️actor/📦️packages/🟦️typescript/
  * 🧵️shard-client.ts` — unmodified, imported verbatim) against REAL browser `Worker`s, but each worker
@@ -151,7 +151,7 @@ export async function runBenchWebBudgets(input: BenchWebInput): Promise<BenchWeb
   const firstActorId = input.pluginIds[0]!;
   await client.activate(firstActorId, "stub://ok", [], STUB_BUDGET);
   const coldBootMs = performance.now() - t0;
-  rows.push({ id: 2, ok: true, measured: { coldBootMs, shardCount: input.shardCount }, note: "STUB-WORKER TIMING: real Worker pool spin-up + one real activate() round trip, NO real plugin wasm instantiated (semio-framework-plugin does not compile this session) — excludes the dominant real-world cold-boot cost. Lower bound only." });
+  rows.push({ id: 2, ok: true, measured: { coldBootMs, shardCount: input.shardCount }, note: "STUB-WORKER TIMING: real Worker pool spin-up + one real activate() round trip, NO real plugin wasm instantiated (semio-plugin does not compile this session) — excludes the dominant real-world cold-boot cost. Lower bound only." });
   //#endregion
 
   //#region 3️⃣ Activate 50 plugins + 50 extensions of plugin[0]: active_actors==100, shards==K, no shard>ceil(100/K)+1

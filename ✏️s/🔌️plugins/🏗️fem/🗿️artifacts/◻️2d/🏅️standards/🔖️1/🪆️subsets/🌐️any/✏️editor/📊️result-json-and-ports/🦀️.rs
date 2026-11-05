@@ -69,17 +69,17 @@ pub fn fem2d_io() -> AppIo {
         ports: vec![fem2d_geometry_in_port(), fem2d_results_out_port()],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.fem".into(), name: "FEM 2D".into(), dimension: "2d".into(), component_kind: "fem2d".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "2d.fem".into(), name: "FEM 2D".into(), dimension: "2d".into(), component_kind: "fem2d".into() },
     }
 }
 
 /// 🔌️ `geometry:in` — an externally authored 2D polygon-with-holes outline, imported as a new
 /// `FemRegion`.
-pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
-    semio_framework_plugin::MediaPortSpec {
+pub fn fem2d_geometry_in_port() -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
         id: "geometry:in".into(),
         label: "Geometry".into(),
-        direction: semio_framework_plugin::MediaPortDirection::In,
+        direction: semio_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: None,
         required: true,
@@ -89,11 +89,11 @@ pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
 
 /// 🔌️ `results:out` — every load case/combination's solved `semio_s_fem_model::StaticResult`, pinned to the
 /// `computation.fem2d` artifact kind.
-pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
-    semio_framework_plugin::MediaPortSpec {
+pub fn fem2d_results_out_port() -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
         id: "results:out".into(),
         label: "Results".into(),
-        direction: semio_framework_plugin::MediaPortDirection::Out,
+        direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         kind_id: Some("computation.fem2d".into()),
         required: false,

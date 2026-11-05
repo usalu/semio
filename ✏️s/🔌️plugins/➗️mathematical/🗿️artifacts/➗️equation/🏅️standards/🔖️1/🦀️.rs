@@ -8,7 +8,7 @@
 //! `## openQuestions`, mirrors `🎬️sequence`'s identical documented deviation).
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<A: crate::EquationApplication>() -> StandardDeclaration<A> {
@@ -95,9 +95,9 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 /// from this file's own `.setup()`: it registers the `EquationPlayApp` CONFIG/PRESENCE schema, an
 /// app-scope concern `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
 /// `register_app_schema_descriptor` is not in the §6 artifact-scoped set.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.mathematical.equation.standard.v1", "standard", "1", &[], None),
         ("s.mathematical.equation.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.mathematical.equation.schema.artifact", "schema", "s.mathematical.equation", &[("schema", "s.mathematical.equation")], None),
@@ -146,24 +146,24 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// deleted repo-wide only in W6); wiring them into this field too is real follow-up work, not
 /// required for the tree to register or for any law to hold (mirrors `🎬️sequence`'s and the stdio
 /// pilot's own documented deviation).
-pub fn artifact<A: EquationApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: EquationApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.mathematical.equation").expect("canonical mathematical.equation kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait EquationApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::equation::EquationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::equation::EquationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> EquationApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::equation::EquationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::equation::EquationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 

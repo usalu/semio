@@ -24,7 +24,7 @@ fn text_editor_window_attaches_the_editor_host_and_a_key_commits_the_react_actio
     let fields = action_fields(edit);
     assert_eq!(fields.iter().find(|(key, _)| key == "text").map(|(_, value)| value.as_str()), Some("alpha!"), "the edit carries the current document in the authored action field");
     assert_eq!(fields.iter().find(|(key, _)| key == "surfaceId").map(|(_, value)| value.as_str()), Some(surface_id));
-    assert_eq!(fields.iter().find(|(key, _)| key == semio_framework_ui_scene_views::TEXT_EDITOR_TYPING_BUFFER_ARG).map(|(_, value)| value.as_str()), Some(surface_id), "a live typed edit names its buffer, so the window folds it into ONE typing run");
+    assert_eq!(fields.iter().find(|(key, _)| key == semio_ui_scene_views::TEXT_EDITOR_TYPING_BUFFER_ARG).map(|(_, value)| value.as_str()), Some(surface_id), "a live typed edit names its buffer, so the window folds it into ONE typing run");
     let select = actions.iter().find(|action| action.action == "textSelect").expect("textSelect");
     let select_fields = serde_json::to_value(select.args.as_ref().unwrap()).expect("selection args");
     assert_eq!(select_fields, json!({ "surfaceId": surface_id, "start": 6, "end": 6 }));
@@ -148,7 +148,7 @@ fn text_editor_refuses_the_keys_the_shell_owns() {
 #[test]
 fn text_editor_renderer_keys_match_the_actual_react_fixture() {
     let _serialized = engine_surface_law_guard();
-    let fixture: Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).expect("neutral keyboard fixture");
+    let fixture: Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).expect("neutral keyboard fixture");
     for law in fixture["rendererKeys"].as_array().expect("renderer keys") {
         let id = law["id"].as_str().unwrap();
         drop_engine_surface(id);

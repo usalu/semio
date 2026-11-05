@@ -1,7 +1,7 @@
 //! 💼️ Original job replies cross the component boundary before caller receipt acknowledgement.
 use super::{input_to_wit,input_from_wit,progress_from_wit,cause_from_wit};
 use super::super::{wit_jobs, wit_reactor};
-use semio_framework_plugin_guest_contract::TurnFault;
+use semio_plugin_guest_contract::TurnFault;
 use semio_framework_actor::{OriginalJobBudget,OriginalJobSource,OriginalJobCallFailure,OriginalJobStartReply,OriginalJobStepReply,OriginalJobOutcome,OriginalJobOutputState,OriginalJobOutputReply,OriginalJobOutputChunk,OriginalJobOutputAckReply,OriginalJobCancelReply};
 pub fn budget_to_wit(budget:OriginalJobBudget)->wit_jobs::JobBudget{wit_jobs::JobBudget{input:input_to_wit(budget.input),retained_policy:super::grant_to_wit(budget.retained_policy),fuel:budget.fuel,deadline_us:budget.deadline_us,cancelled:budget.cancelled}}
 pub fn source_to_wit(source:OriginalJobSource)->wit_jobs::JobSource{wit_jobs::JobSource{job:source.job,kind:source.kind,input:source.input,checkpoint:source.checkpoint}}

@@ -12,7 +12,7 @@ use crate::mutations::pin_pixel;
 use crate::schema::snapshot::{pin_index, BitmapSnapshot};
 use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
 use crate::BitmapMutation;
-use semio_framework_plugin::{ArtifactView, Emit, Fault};
+use semio_plugin::{ArtifactView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
@@ -43,9 +43,9 @@ pub fn handle(payload: &PinSolution, doc: &ArtifactView<'_, BitmapSnapshot>) -> 
 /// already pinned to exactly this solution answers an EMPTY set.
 pub fn solution_operations(snapshot: &BitmapSnapshot, payload: &PinSolution) -> Result<Vec<BitmapMutation>, Fault> {
     if payload.contradiction {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.solution.contradiction"), "wfc.bitmap.solution.contradiction"));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.solution.contradiction"), "wfc.bitmap.solution.contradiction"));
     }
-    let indices = decode_base64(&payload.pixels).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.solution.pixels-invalid"), "wfc.bitmap.solution.pixels-invalid"))?;
+    let indices = decode_base64(&payload.pixels).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.solution.pixels-invalid"), "wfc.bitmap.solution.pixels-invalid"))?;
     let (width, height) = (snapshot.output.width, snapshot.output.height);
     if indices.len() != (width as usize) * (height as usize) {
         return Err(Fault::from(format!("wfc-bitmap-pin-solution-extent:{}!={width}x{height}", indices.len())));
@@ -56,7 +56,7 @@ pub fn solution_operations(snapshot: &BitmapSnapshot, payload: &PinSolution) -> 
         for x in 0..width {
             let color = u32::from(indices[(y as usize) * (width as usize) + (x as usize)]);
             if color as usize >= palette {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
             }
             if pin_index(snapshot, x, y).is_some_and(|at| snapshot.pinned[at].color == color) {
                 continue;

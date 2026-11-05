@@ -8,22 +8,22 @@
 use crate::viewer::epw::modes::view;
 use crate::viewer::epw::modes::view::windows::main;
 use crate::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 
 //#region 🔖️Dialect
 /// 🎯️ This surface's dialect coordinate — `s.stdio.epw@energyplus/*`. Kept as its own independent
@@ -69,15 +69,15 @@ impl ArtifactViewer for EpwViewer {
     const DIALECT: Dialect = EPW_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_EPW_DOCUMENT_SCHEMA;
 
-    fn register_tool_job_factories(registry:&mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_,semio_framework_plugin::ViewerApp<Self>>)->Result<(),Fault>{
-        let controller=registry.controller_id().to_string();registry.register(semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<semio_framework_plugin::ViewerApp<Self>>::new(&controller))
+    fn register_tool_job_factories(registry:&mut semio_plugin::ArtifactToolFactoryRegistry<'_,semio_plugin::ViewerApp<Self>>)->Result<(),Fault>{
+        let controller=registry.controller_id().to_string();registry.register(semio_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<semio_plugin::ViewerApp<Self>>::new(&controller))
     }
 
-    fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<semio_framework_plugin::ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_plugin::__job::StepContext<'_>)->Result<bool,semio_framework_plugin::__job::OriginalTurnFailure>{
-        semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_framework_plugin::ViewerApp<Self>>::admit_original(request,body,cx)
+    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<semio_plugin::ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_plugin::__job::StepContext<'_>)->Result<bool,semio_plugin::__job::OriginalTurnFailure>{
+        semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_plugin::ViewerApp<Self>>::admit_original(request,body,cx)
     }
 
-    fn reference_birth()->Option<fn()->Result<EpwSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<EpwSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot())
     })}
 
@@ -87,17 +87,17 @@ impl ArtifactViewer for EpwViewer {
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -105,7 +105,7 @@ impl ArtifactViewer for EpwViewer {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_epw_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_epw_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(EPW_VIEWER_DIALECT).document(["stdio", "epw"]).icon_id("cloud-sun").mode_def(view::definition()).default_mode_id(view::EPW_VIEW_MODE_ID).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

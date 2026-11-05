@@ -61,8 +61,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "used-extensions", kind: "reorder-used-extensions", record: "ReorderedUsedExtensions" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Reorder Used Extensions", "Verwendete Erweiterungen umordnen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Reorder Used Extensions", "Verwendete Erweiterungen umordnen")
     }
 
     fn target(&self) -> Vec<String> {

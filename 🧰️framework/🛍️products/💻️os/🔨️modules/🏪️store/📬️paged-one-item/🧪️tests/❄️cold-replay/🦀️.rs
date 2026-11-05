@@ -1,6 +1,6 @@
 //! ❄️ N cold edits saved in order and reopened from the base replay through `ColdMutationApplyFactory` to the same snapshot as an independent `serde_json` fold, and every inverse restores its pre-state.
 use super::*;
-use semio_framework_os_store_replay_operation::{ArtifactMutationSource, ArtifactReplayPreparation, ArtifactReplayPreparationContext, ArtifactReplayPreparationFactory, ArtifactReplayPreparationMode, ArtifactReplayPreparationRequest, ArtifactReplayPreparationStep};
+use semio_os_store_replay_operation::{ArtifactMutationSource, ArtifactReplayPreparation, ArtifactReplayPreparationContext, ArtifactReplayPreparationFactory, ArtifactReplayPreparationMode, ArtifactReplayPreparationRequest, ArtifactReplayPreparationStep};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, RetirementDemand};
 

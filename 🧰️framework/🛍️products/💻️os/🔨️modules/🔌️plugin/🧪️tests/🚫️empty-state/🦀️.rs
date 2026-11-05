@@ -1,6 +1,6 @@
 fn verify_empty_state<T>()
 where
-    T: semio_framework_value::FromValue + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Default + PartialEq + std::fmt::Debug,
+    T: semio_framework_value::FromValue + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Default + PartialEq + std::fmt::Debug,
 {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚫️empty-state/🔣️.json")).expect("empty-state fixture");
     for row in fixture["json"].as_array().expect("JSON vectors") {
@@ -26,8 +26,8 @@ where
 
 #[test]
 fn framework_empty_state_contract_rejects_foreign_fields_and_bytes() {
-    verify_empty_state::<semio_framework_plugin_decl_views::NoConfig>();
-    verify_empty_state::<semio_framework_plugin_decl_views::NoDraft>();
-    verify_empty_state::<semio_framework_plugin_decl_views::NoPresence>();
-    verify_empty_state::<semio_framework_plugin_decl_views::NoTransient>();
+    verify_empty_state::<semio_plugin_decl_views::NoConfig>();
+    verify_empty_state::<semio_plugin_decl_views::NoDraft>();
+    verify_empty_state::<semio_plugin_decl_views::NoPresence>();
+    verify_empty_state::<semio_plugin_decl_views::NoTransient>();
 }

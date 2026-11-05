@@ -1,5 +1,5 @@
 //! 🎬️ Actual DAG demo source owned by its artifact producer.
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 use semio_framework_graph_manifest::PropertyBag;
 /// 🎬️ Builds the original child-owned DAG demo presentation.
 pub fn dag_demo_host_snapshot()->DagHostSnapshot {

@@ -9,8 +9,8 @@ pub fn artifact_leaves() -> semio_framework_schema_registry::FacetLeaves {
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.lowpoly.lowpoly", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("../🔣️.json"), proto: "" }
 }

@@ -4,7 +4,7 @@ mod apply_directory_event_page {
 use crate::SHomeSnapshot;
 use crate::editor::home::config::HomeConfig;
 use crate::{editor::home::transient::DirectoryProjectionReceiptV1, editor::home::transient::HomeTransient};
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Fault};
 use super::super::apply_directory_event_page::*;
 use protocol::Mutation as _;
 
@@ -107,7 +107,7 @@ async fn sealed_page_replaces_projection_once_and_rejects_races() {
 /// 🚫️ The direct lane never lands a page: no transient item, no receipt, a named refusal.
 #[test]
 fn the_direct_lane_refuses_by_name() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let document = SHomeSnapshot::default();
     let view = ArtifactView::new(&document, &history);
     let config = HomeConfig::default();
@@ -119,10 +119,10 @@ fn the_direct_lane_refuses_by_name() {
 mod create_studio {
 use crate::SHomeSnapshot;
 use crate::editor::home::config::HomeConfig;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
+use semio_plugin::{ArtifactView, ConfigView, Effect};
 use super::super::create_studio::*;
-use semio_framework_os::list_os_space_catalog_entries;
-use semio_framework_plugin::{AppActionRegistry, EditorApp, HistoryView, PluginApp, VcsArtifactApp, artifact_app_laws};
+use semio_os::list_os_space_catalog_entries;
+use semio_plugin::{AppActionRegistry, EditorApp, HistoryView, PluginApp, VcsArtifactApp, artifact_app_laws};
 
 #[semio_framework_async_macros::async_test]
 async fn home_command_op_text_round_trips_every_variant() {
@@ -148,15 +148,15 @@ async fn home_command_op_text_round_trips_every_variant() {
 async fn registered_home_admits_its_retained_routes_at_interactive_dispatch() {
     let definition = crate::editor::home::create_home_app().await;
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::with_registry(EditorApp::<crate::editor::home::HomeApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::with_registry(EditorApp::<crate::editor::home::HomeApp>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     let routes = [
         crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }),
         crate::editor::home::HomeCommand::ApplyDirectoryEventPage(crate::editor::home::commands::apply_directory_event_page::ApplyDirectoryEventPage { page_json: "{}".into() }),
     ];
     for command in routes {
         let id = command.command_id();
-        let fault = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut home, &command, &artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect_err("a registry fixture owns no live instance");
+        let fault = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut home, &command, &artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect_err("a registry fixture owns no live instance");
         assert_ne!(fault.code.0.as_str(), "interactive-job.not-ui-safe", "{id} must be past the classification gate");
         assert_eq!(fault.code.0.as_str(), "interactive-job.live-instance", "{id} must fail only for the fixture's missing live instance");
     }
@@ -176,7 +176,7 @@ async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
         panic!("a temporary studio minted without a view session identity must be rejected");
     };
     assert_eq!((fault.code.0.as_str(), fault.message.as_str()), ("app.message", "s.home.create-studio.effect-authority-required"));
-    let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
+    let identity = semio_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
     let emit = handle_with_identity(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg, &identity, &mut authoring).expect("handle");
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "ephemeral create must not download");
@@ -204,7 +204,7 @@ mod promote_to_hub_space {
 use crate::SHomeSnapshot;
 use crate::editor::home::config::HomeConfig;
 use super::super::promote_to_hub_space::*;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, HistoryView};
+use semio_plugin::{ArtifactView, ConfigView, Effect, HistoryView};
 
 #[test]
 fn promote_relays_create_space_with_source_id() {
@@ -222,7 +222,7 @@ mod persist_locally {
 use crate::editor::home::config::HomeConfig;
 use crate::SHomeSnapshot;
 use super::super::persist_locally::*;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, HistoryView};
+use semio_plugin::{ArtifactView, ConfigView, Effect, HistoryView};
 
 #[test]
 fn empty_folder_opens_persist_dialog() {
@@ -274,12 +274,12 @@ async fn home_command_op_text_round_trips_every_variant() {
 mod copy_invite_link {
 use crate::SHomeSnapshot;
 use crate::editor::home::config::HomeConfig;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
+use semio_plugin::{ArtifactView, ConfigView, Effect};
 use super::super::copy_invite_link::*;
 
 #[semio_framework_async_macros::async_test]
 async fn copy_invite_link_relays_share_link_with_default_ttl() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
@@ -301,7 +301,7 @@ async fn copy_invite_link_relays_share_link_with_default_ttl() {
 
 #[semio_framework_async_macros::async_test]
 async fn explicit_ttl_is_respected() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
@@ -324,16 +324,16 @@ async fn explicit_ttl_is_respected() {
 mod create_space {
 use crate::SHomeSnapshot;
 use crate::editor::home::config::HomeConfig;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
+use semio_plugin::{ArtifactView, ConfigView, Effect};
 use super::super::create_space::*;
 
-async fn view<'a>(history: &'a semio_framework_plugin::HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
+async fn view<'a>(history: &'a semio_plugin::HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
     ArtifactView::new(doc_snapshot, history)
 }
 
 #[semio_framework_async_macros::async_test]
 async fn empty_name_opens_the_dialog_instead_of_relaying() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
@@ -344,7 +344,7 @@ async fn empty_name_opens_the_dialog_instead_of_relaying() {
 
 #[semio_framework_async_macros::async_test]
 async fn valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_args() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
@@ -367,7 +367,7 @@ async fn valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_
 
 #[semio_framework_async_macros::async_test]
 async fn blank_kind_and_visibility_default_to_atelier_and_private() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
@@ -391,11 +391,11 @@ mod delete_space {
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::{editor::home::config::HomeConfig, editor::home::config::HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit};
 use super::super::delete_space::*;
 
 async fn dispatch(payload: DeleteSpace) -> Emit<SHomeMutation, HomeConfigMutation> {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
@@ -439,12 +439,12 @@ async fn confirmed_delete_emits_the_replay_shell_command() {
 mod presence_heartbeat {
 use crate::SHomeSnapshot;
 use crate::editor::home::config::HomeConfig;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use super::super::presence_heartbeat::*;
 
 #[semio_framework_async_macros::async_test]
 async fn heartbeat_is_dispatchable_and_emits_nothing() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
@@ -460,11 +460,11 @@ mod rename_space {
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::{editor::home::config::HomeConfig, editor::home::config::HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit};
 use super::super::rename_space::*;
 
 fn dispatch(payload: RenameSpace, row: Option<&store::os_directory::DirectorySpace>) -> Emit<SHomeMutation, HomeConfigMutation> {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
@@ -516,7 +516,7 @@ async fn non_empty_name_relays_the_rename() {
 /// 🚫️ Without the retained job's captured projection there is no current name to seed: the direct lane refuses by name.
 #[test]
 fn the_direct_lane_refuses_by_name() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = ArtifactView::new(&doc_snapshot, &history);
     let config = HomeConfig::default();
@@ -528,16 +528,16 @@ fn the_direct_lane_refuses_by_name() {
 mod manage_space {
 use crate::SHomeSnapshot;
 use crate::editor::home::config::HomeConfig;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
+use semio_plugin::{ArtifactView, ConfigView, Effect};
 use super::super::manage_space::*;
 
-async fn doc_view<'a>(history: &'a semio_framework_plugin::HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
+async fn doc_view<'a>(history: &'a semio_plugin::HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
     ArtifactView::new(doc_snapshot, history)
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_space_id_relays_the_shell_administration_effect_without_a_local_mutation() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = doc_view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
@@ -558,7 +558,7 @@ async fn a_space_id_relays_the_shell_administration_effect_without_a_local_mutat
 
 #[semio_framework_async_macros::async_test]
 async fn an_empty_space_id_is_a_fault_not_a_blank_pane() {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_snapshot = SHomeSnapshot::default();
     let doc = doc_view(&history, &doc_snapshot).await;
     let config = HomeConfig::default();
@@ -571,9 +571,9 @@ mod share_space {
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::{editor::home::config::HomeConfig, editor::home::config::HomeConfigMutation};
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 use super::super::share_space::*;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, HistoryView};
+use semio_plugin::{ArtifactView, ConfigView, Effect, HistoryView};
 
 fn doc_view<'a>(history: &'a HistoryView, doc_snapshot: &'a SHomeSnapshot) -> ArtifactView<'a, SHomeSnapshot> {
     ArtifactView::new(doc_snapshot, history)

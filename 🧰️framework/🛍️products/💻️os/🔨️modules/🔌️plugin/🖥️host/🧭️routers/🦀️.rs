@@ -1,13 +1,13 @@
 //! 🧭️ The routers of the plugin host: IO, inference, plugin graph, mutation, instance directory, transaction coordinator, app and opening resolver.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use std::sync::{Arc, Mutex};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_plugin_guest_contract::{IoEntryRouteConflict, IoRouteConflict, PluginHostError};
-use semio_framework_plugin_host_post_turn_relay::PluginInstanceHandle;
+use semio_plugin_guest_contract::{IoEntryRouteConflict, IoRouteConflict, PluginHostError};
+use semio_plugin_host_post_turn_relay::PluginInstanceHandle;
 use semio_framework::PluginManifest;
 
 #[path = "🚪️io-router/🦀️.rs"]

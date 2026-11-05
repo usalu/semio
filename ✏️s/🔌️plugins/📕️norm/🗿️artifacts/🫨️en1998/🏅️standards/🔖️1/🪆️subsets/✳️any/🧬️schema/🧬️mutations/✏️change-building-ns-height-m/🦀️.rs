@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingNsHeightM 
         record: "ChangeBuildingNsHeightM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Non-structural element height z above the base", "Höhe z des nichttragenden Bauteils über dem Fußpunkt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Non-structural element height z above the base", "Höhe z des nichttragenden Bauteils über dem Fußpunkt ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-ns-height-m".into()]

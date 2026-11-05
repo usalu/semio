@@ -8,19 +8,19 @@ use crate::edit::windows::world::transient::Block3dBrushPreview;
 use semio_s_artifact_block_3d_editor_terminology::Block3dLabels;
 use crate::world::{visible_representations, world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json};
 use crate::BLOCK3D_PLAY_SURFACE_ID;
-use semio_framework_plugin::world3d_fit_json;
-use semio_framework_plugin::World3dScene;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::world3d_fit_json;
+use semio_plugin::World3dScene;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly (flow's `🌊️main` window does the same).
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
 pub const BLOCK3D_WINDOW_WORLD: &str = "block3d-world";
@@ -72,7 +72,7 @@ pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &
     scene.interaction_json = Some(world_interaction_json(active_utility));
     scene.fit_json = Some(world3d_fit_json(semio_s_artifact_block_3d_model::block3d_world_fit_revision(definition), semio_s_artifact_block_3d_model::BLOCK3D_FIT_PADDING, None));
     scene.domain_id = None;
-    semio_framework_plugin::scene_surface(BLOCK3D_PLAY_SURFACE_ID, ContractSurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(BLOCK3D_PLAY_SURFACE_ID, ContractSurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 

@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
+use semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn sum(left:usize,right:usize)->Result<usize>{left.checked_add(right).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"OBJ semantic cell extent overflow"))}

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-render-device"
+name = "semio-ui-render-device"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-render-shader-contract = { path = "../../../✨️shader-contract/📦️packages/🦀️rust" }
+semio-ui-render-shader-contract = { path = "../../../✨️shader-contract/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = "1.0.140"

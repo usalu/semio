@@ -16,12 +16,12 @@
 //! tested either way.
 
 //#region 🔖️IoDeclaration
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{PresentationMutation, PresentationSnapshot, ANIMATE_DIALECT, PRESENTATION_DOCUMENT_SCHEMA};
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
     fn entries() -> &'static [IoEntry] {
@@ -73,7 +73,7 @@ pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_st
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml;
     let (svg, width, height) = semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?)?;
-    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
+    let png_base64 = semio_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
     let frame = crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
     let source = crate::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None };
     let tiles = vec![crate::FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }];

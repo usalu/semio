@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "entries": [
+    "frame-worker",
+    "browser-boot",
+    "renderer-boot"
+  ],
+  "requiredWorkspaceImports": [
+    "@semio-tech/framework-actor/wire-turn",
+    "@semio-tech/framework-os/modules/renderer/engine/media/browser",
+    "@semio-tech/framework-os/modules/renderer/engine/media/browser/host",
+    "@semio-tech/ui/axes.json"
+  ],
+  "rejectionCases": [
+    {
+      "name": "Undeclared Workspace Binding",
+      "specifier": "@semio-tech/undeclared",
+      "accepted": false
+    },
+    {
+      "name": "Undeclared Relative Source",
+      "specifier": "./unowned.ts",
+      "accepted": false
+    }
+  ],
+  "specifierCases": [
+    {
+      "name": "Explicit Case Sensitive Export Subpath",
+      "specifier": "@semio-tech/ui/elements/Diagram/layout",
+      "accepted": true
+    },
+    {
+      "name": "Uppercase Package Name",
+      "specifier": "@semio-tech/UI/elements/Ports",
+      "accepted": false
+    },
+    {
+      "name": "Parent Segment",
+      "specifier": "@semio-tech/ui/elements/../Ports",
+      "accepted": false
+    },
+    {
+      "name": "Empty Segment",
+      "specifier": "@semio-tech/ui/elements//Ports",
+      "accepted": false
+    },
+    {
+      "name": "Wildcard Export",
+      "specifier": "@semio-tech/ui/elements/*",
+      "accepted": false
+    }
+  ]
+}

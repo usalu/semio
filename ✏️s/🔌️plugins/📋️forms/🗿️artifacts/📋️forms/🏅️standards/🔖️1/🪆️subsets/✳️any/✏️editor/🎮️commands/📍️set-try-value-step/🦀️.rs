@@ -1,9 +1,9 @@
 //! ⏱️ Hidden bounded Forms vector-value continuation.
 
 use crate::editor::forms::commands::set_try_value;
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️SetTryValueStep
 pub use set_try_value::SetTryValueStep;

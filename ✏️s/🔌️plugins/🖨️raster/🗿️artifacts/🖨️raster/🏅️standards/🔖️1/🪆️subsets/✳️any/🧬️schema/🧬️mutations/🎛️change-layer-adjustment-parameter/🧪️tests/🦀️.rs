@@ -19,11 +19,11 @@ fn adjustment_parameter_vectors_preserve_other_fields_and_exact_undo() {
         let mutation=RasterMutation::ChangeLayerAdjustmentParameter(payload.clone());
         let text=mutation.print_op();assert_eq!(RasterMutation::parse_op(&text).unwrap(),mutation);
         assert_eq!(RasterMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(),mutation);
-        let (after,messages)=semio_framework_os_kernel::apply_mutation(&before,&mutation).unwrap();assert!(messages.is_empty());
+        let (after,messages)=semio_os_kernel::apply_mutation(&before,&mutation).unwrap();assert!(messages.is_empty());
         if row["after"].is_null() {reference["layers"][0]["params"].as_object_mut().unwrap().remove(parameter);} else {reference["layers"][0]["params"][parameter]=row["after"].clone();}
         let expected:RasterSnapshot=semio_framework_pack_json::from_json_str(&reference.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(after,expected);
         let inverse=mutation.inverse(&before).expect("valid retained mutation inverse fixture").remove(0);
-        let (restored,messages)=semio_framework_os_kernel::apply_mutation(&after,&inverse).unwrap();assert!(messages.is_empty());assert_eq!(restored,before);
+        let (restored,messages)=semio_os_kernel::apply_mutation(&after,&inverse).unwrap();assert!(messages.is_empty());assert_eq!(restored,before);
         assert!(validate(&ChangeLayerAdjustmentParameter {expected:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.777)),..payload.clone()},&before).is_err());
         for invalid in fixture["invalid"].as_array().unwrap() {if let Some(value)=invalid["value"].as_f64() {assert!(validate(&ChangeLayerAdjustmentParameter {parameter:invalid["parameter"].as_str().unwrap().into(),value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(value)),..payload.clone()},&before).is_err());}}
         for document in [before,after,expected,restored] {retire(document);}

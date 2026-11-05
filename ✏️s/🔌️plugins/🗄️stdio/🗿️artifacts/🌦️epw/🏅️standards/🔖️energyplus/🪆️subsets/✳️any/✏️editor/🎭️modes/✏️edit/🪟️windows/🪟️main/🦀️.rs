@@ -7,13 +7,13 @@
 
 use crate::editor::epw::epw_row_revision;
 use crate::EpwSnapshot;
-use semio_framework_plugin::app::{EditableTableCell, TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{EditableTableCell, TableView, TableWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -73,7 +73,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `EpwSnapshot -> BuiltNode`: one row per hourly record, all 35 spec columns — every column is
 /// a real `set-cell` edit target (`EpwEditorCommand::SetCell`, keyed by row index + column name).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &EpwSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &EpwSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect::<Vec<_>>();
     let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
     let editable = document
@@ -85,15 +85,15 @@ pub fn render(document: &EpwSnapshot) -> semio_framework_plugin::UiAssemblyResul
             (0..columns.len()).map(move |column| (row, column, revision.clone()))
         })
         .map(|(row, column, revision)| {
-            let mut arguments = UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("epw.cell-arguments", "cell argument map capacity"))?;
-            arguments.try_insert("row".into(), UiValue::Number(row as f64)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("epw.cell-arguments", "row argument capacity"))?;
-            arguments.try_insert("column".into(), UiValue::Number(column as f64)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("epw.cell-arguments", "column argument capacity"))?;
+            let mut arguments = UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("epw.cell-arguments", "cell argument map capacity"))?;
+            arguments.try_insert("row".into(), UiValue::Number(row as f64)).map_err(|_| semio_plugin::PluginAssemblyError::new("epw.cell-arguments", "row argument capacity"))?;
+            arguments.try_insert("column".into(), UiValue::Number(column as f64)).map_err(|_| semio_plugin::PluginAssemblyError::new("epw.cell-arguments", "column argument capacity"))?;
             arguments
-                .try_insert("revision".into(), UiValue::Text(UiText::try_from_string(revision).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("epw.cell-revision", "row revision exceeds the UI text bound"))?))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("epw.cell-arguments", "revision argument capacity"))?;
+                .try_insert("revision".into(), UiValue::Text(UiText::try_from_string(revision).map_err(|_| semio_plugin::PluginAssemblyError::new("epw.cell-revision", "row revision exceeds the UI text bound"))?))
+                .map_err(|_| semio_plugin::PluginAssemblyError::new("epw.cell-arguments", "revision argument capacity"))?;
             Ok(EditableTableCell::new(row, column, "set-cell", UiValue::Map(arguments.finish())))
         })
-        .collect::<semio_framework_plugin::UiAssemblyResult<Vec<_>>>()?;
+        .collect::<semio_plugin::UiAssemblyResult<Vec<_>>>()?;
     TableWindowKit::render_editable_cells(&TableView { columns, rows }, "s.stdio.epw@energyplus/*#editor", &editable)
 }
 //#endregion 🔖️Render

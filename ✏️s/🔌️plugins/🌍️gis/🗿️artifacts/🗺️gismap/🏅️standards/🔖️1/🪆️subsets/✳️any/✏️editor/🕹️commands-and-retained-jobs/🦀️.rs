@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `Gis2dPlayApp::Command` — the SOLE dispatch surface for gis2d's own behavior, covering every
     /// action `create_gis2d_app` declares. Row order is the binary variant ordinal: appending is safe,
     /// reordering is a wire-format break.
@@ -116,7 +116,7 @@ impl GisMapWindowWork {
 }
 
 impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Gis2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Gis2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -129,16 +129,16 @@ impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
         command: &Gis2dCommand,
         _snapshot: &GisMapSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis2dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis2dPlayApp>>>,
     ) -> Option<usize> {
         (!self.completed && command.command_id() == self.tool_id).then_some(1)
     }
 
     fn step(
         &mut self,
-        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Gis2dPlayApp>>,
+        input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Gis2dPlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Gis2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Gis2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::from("gis-map-window-work-terminal"));
@@ -153,7 +153,7 @@ impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
             emit.window_config_mutations.push(map_config::addressed(view, mutation)?);
         }
         self.completed = true;
-        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+        Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -190,7 +190,7 @@ impl ToolJobFactory for Gis2dRetainedCommandJobFactory {
         gis2d_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GIS2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GIS2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 

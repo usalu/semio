@@ -3,12 +3,12 @@
 //! `computersJson` is built with `pack::json` (first-party `serde_json::Value` replacement)
 //! instead of a `#[derive(ToValue)]` DTO — `serde`/`serde_json` are fully gone from this crate,
 //! including at the `bundle.contributes_topic(...)` call, which now speaks
-//! `semio_framework_os_kernel::DslValue` end to end (ticket
+//! `semio_os_kernel::DslValue` end to end (ticket
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s `TopicContribution` seam).
 
 use semio_framework_pack_json as json;
 use semio_framework::DslValue;
-use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
+use semio_plugin::{ExecutionMode, ExtensionBundle};
 
 //#region 🔖️Manifest
 const EXTENSION_ID: &str = "cad-extension-spatial-shape";
@@ -28,7 +28,7 @@ fn computers_manifest() -> json::Value {
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
 // plain sync fn). `.mode`/`.contributes_topic` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
-// bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
+// bridged via `semio_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
 pub fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD Spatial Shape", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     let bundle = bundle.mode(ExecutionMode::Declarative);

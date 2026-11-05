@@ -29,8 +29,8 @@ pub fn update_layer_transform<Op: From<UpdateLayerTransform>>(layer_id: semio_fr
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdateLayerTransform where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdateLayerTransform> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer-transform", record: "UpdatedLayerTransform" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\" transform", self.layer_id), &format!("Transformation von Ebene \"{}\" aktualisieren", self.layer_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\" transform", self.layer_id), &format!("Transformation von Ebene \"{}\" aktualisieren", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.to_string_owner()]

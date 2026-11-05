@@ -12,7 +12,7 @@
 //!
 //! @see 🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🦀️.rs — the algebra and its randomized sequence laws
 
-pub use semio_framework_os_kernel as kernel;
+pub use semio_os_kernel as kernel;
 
 #[doc(hidden)]
 pub use semio_framework_value_derive as __value_derive;

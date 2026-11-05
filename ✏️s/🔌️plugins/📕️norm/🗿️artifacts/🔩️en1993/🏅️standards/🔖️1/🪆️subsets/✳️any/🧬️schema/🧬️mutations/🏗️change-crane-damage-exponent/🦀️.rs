@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneDamageExponen
         record: "ChangedCraneDamageExponent",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change S-N exponent m of the crane runway", "Kranbahn: Wöhlerlinienexponent m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change S-N exponent m of the crane runway", "Kranbahn: Wöhlerlinienexponent m ändern")
     }
 }
 

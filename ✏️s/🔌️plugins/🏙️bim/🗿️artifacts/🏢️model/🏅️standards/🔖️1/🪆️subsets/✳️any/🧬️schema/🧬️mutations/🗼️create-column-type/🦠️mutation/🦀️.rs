@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "column-type", kind: "create-column-type", record: "CreateColumnType" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create column type \"{}\"", self.column_type.name), &format!("Stützentyp \"{}\" anlegen", self.column_type.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create column type \"{}\"", self.column_type.name), &format!("Stützentyp \"{}\" anlegen", self.column_type.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -13,8 +13,8 @@ use semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot;
 fn installed() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_framework_os_flow::register_linked_flow_extension_installer("draw", semio_s_plugin_flow_draw::register);
-        semio_framework_os_flow::install_flow_extension_manifest("flow-extension-draw", &semio_s_plugin_flow_draw::extension_manifest_json()).expect("draw extension admission");
+        semio_os_flow::register_linked_flow_extension_installer("draw", semio_s_plugin_flow_draw::register);
+        semio_os_flow::install_flow_extension_manifest("flow-extension-draw", &semio_s_plugin_flow_draw::extension_manifest_json()).expect("draw extension admission");
     });
 }
 
@@ -48,7 +48,7 @@ fn bundled_example_exports_its_evaluated_rectangle_to_every_page_format() {
 fn unrecorded_example_defaults() -> Vec<String> {
     use semio_framework_artifact_flow_flow::neural::ColdRetire;
     use semio_framework_artifact_flow_flow::{default_neuron_params_from_info, Widget};
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let infos = semio_os_flow::flow_neuron_kind_info_map();
     let example = default_snapshot();
     let unrecorded = example.host_snapshot.widgets.iter().filter_map(|widget| match widget { Widget::Neuron { id, neuron_kind, params, .. } => Some((id, neuron_kind, params)), _ => None }).flat_map(|(id, kind, params)| {
         let declared = default_neuron_params_from_info(infos.get(kind));

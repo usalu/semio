@@ -29,7 +29,7 @@ pub fn validate_target(payload:&ChangeLayerAdjustmentParameter,layer:&RasterLaye
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerAdjustmentParameter where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb:"change",entity:"layer-adjustment-parameter",kind:"change-layer-adjustment-parameter",record:"ChangedLayerAdjustmentParameter" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Change adjustment parameter","Korrekturparameter ändern")}
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {semio_ui_locale::LocalizedLabel::native("Change adjustment parameter","Korrekturparameter ändern")}
     fn target(&self) -> Vec<String> {vec![self.layer_id.clone()]}
 }
 

@@ -16,8 +16,8 @@ pub struct SetAuxiliaryHeader {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetAuxiliaryHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "auxiliary-header", kind: "set-auxiliary-header", record: "SetAuxiliaryHeader" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set auxiliary header", "Hilfskopf setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set auxiliary header", "Hilfskopf setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

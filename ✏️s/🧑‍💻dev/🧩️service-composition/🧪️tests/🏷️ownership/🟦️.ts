@@ -60,14 +60,14 @@ export async function sDevCompositionSourceOwnershipV1(repoRoot:string):Promise<
   assert.equal(record(native.package).name, "semio-s-dev-services");
   for (const providers of [record(native.dependencies), record(record(nativeOwner.workspace).dependencies)]) assert(Object.keys(providers).every(key => !/gis|puzzle|hub/u.test(key)));
   assert.equal(native.features, undefined);
-  assert.equal(record(record(native.dependencies)["semio-framework-os-mcp"]).workspace, true);
-  assert.equal(record(record(native.dependencies)["semio-framework-os-renderer-wgpu"]).workspace, true);
+  assert.equal(record(record(native.dependencies)["semio-os-mcp"]).workspace, true);
+  assert.equal(record(record(native.dependencies)["semio-renderer-wgpu"]).workspace, true);
   const child = manifest(`${specific}/💡️services/📦️packages/🦀️rust/Cargo.toml`);
   assert.equal(record(child.package).name, "semio-s-dev-gis-services");
   assert.equal(record(record(child.dependencies)["semio-s-artifact-gis-gismap"]).workspace, true);
   assert.equal(record(record(child.dependencies)["semio-s-dev-services"]).workspace, true);
-  assert.equal(record(child.dependencies)["semio-framework-os-renderer-wgpu"], undefined);
-  assert.equal(record(child.dependencies)["semio-framework-os-mcp"], undefined);
+  assert.equal(record(child.dependencies)["semio-renderer-wgpu"], undefined);
+  assert.equal(record(child.dependencies)["semio-os-mcp"], undefined);
   assert.equal(child.features, undefined);
   assert.equal(record(record(child.dependencies)["semio-s-artifact-gis-gismap-mcp"]).workspace, true);
   assert(readFileSync(join(repoRoot, `${specific}/💡️services/⌨️entrypoint/🦀️.rs`), "utf8").includes("semio_s_dev_services::run_native_v1(semio_s_dev_gis_services::service_contributions_v1())"));

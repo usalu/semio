@@ -20,7 +20,7 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for CreateParagraphStyle
 where Op: protocol::Mutation<LayoutSnapshot, Diff = LayoutDiff> + From<crate::delete_paragraph_style::DeleteParagraphStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "paragraph-style", kind: "create-paragraph-style", record: "CreatedParagraphStyle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Create paragraph style", "Absatzformat erstellen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Create paragraph style", "Absatzformat erstellen") }
     fn target(&self) -> Vec<String> { vec![self.style.id.clone()] }
 }
 

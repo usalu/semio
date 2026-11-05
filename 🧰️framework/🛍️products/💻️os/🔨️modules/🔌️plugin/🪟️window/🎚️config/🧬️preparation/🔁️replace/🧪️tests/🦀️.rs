@@ -1,10 +1,10 @@
 //! 🧪️ The whole-record replace edit is admitted by its declared footprint, reaches Prepared through the real canonical sealer and closes under exact quoted grants.
-use semio_framework_plugin_window_config::{WindowConfigReplaceEdit, WindowConfigReplaceMutation};
+use semio_plugin_window_config::{WindowConfigReplaceEdit, WindowConfigReplaceMutation};
 use crate::window_config_tests::retained_pack_load_tests::{RetainedLoadCameraConfig as State, RetainedLoadCameraConfigMutation as Mutation};
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use std::sync::Arc;
-use semio_framework_os_kernel::snapshot_clone_preparation::{drive_one_item_preparation_law, RetainedCloneEdit, CONFIG_EDIT_RETAINED_BASELINE_BYTES};
+use semio_os_kernel::snapshot_clone_preparation::{drive_one_item_preparation_law, RetainedCloneEdit, CONFIG_EDIT_RETAINED_BASELINE_BYTES};
 
 impl WindowConfigReplaceMutation<State> for Mutation {
     fn replacement(&self) -> &State { let Self::Snapshot { config } = self; config }

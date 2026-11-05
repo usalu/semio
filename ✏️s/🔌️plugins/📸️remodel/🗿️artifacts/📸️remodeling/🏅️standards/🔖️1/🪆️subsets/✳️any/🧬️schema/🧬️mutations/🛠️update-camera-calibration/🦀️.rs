@@ -32,8 +32,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "camera-calibration", kind: "update-camera-calibration", record: "UpdatedCameraCalibration" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update camera calibration \"{}\"", self.camera.id), &format!("Kamerakalibrierung \"{}\" aktualisieren", self.camera.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update camera calibration \"{}\"", self.camera.id), &format!("Kamerakalibrierung \"{}\" aktualisieren", self.camera.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.camera.id.clone()]

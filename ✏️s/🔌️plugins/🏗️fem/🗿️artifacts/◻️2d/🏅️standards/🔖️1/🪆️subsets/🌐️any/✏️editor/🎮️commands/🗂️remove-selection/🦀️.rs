@@ -1,8 +1,8 @@
 //! 🗂️ 🗂️ Fem2d play app commands command — `remove-selection`.
 
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_combination;
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element;
@@ -16,10 +16,10 @@ use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use std::collections::HashMap;

@@ -20,9 +20,9 @@ semio-s-artifact-norm-en1998-io-text = { path = "../../📝️text/📦️packag
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
@@ -43,6 +43,6 @@ serde_json = { workspace = true }
 [dev-dependencies]
 semio-s-artifact-norm-en1998-io-text = { path = "../../📝️text/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }

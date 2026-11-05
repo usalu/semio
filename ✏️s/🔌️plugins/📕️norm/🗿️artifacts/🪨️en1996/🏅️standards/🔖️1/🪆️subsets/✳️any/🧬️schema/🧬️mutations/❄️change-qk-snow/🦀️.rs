@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeQKSnow where Op: p
         verb: "change", entity: "q-k-snow", kind: "change-qk-snow", record: "ChangedQKSnow",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic snow load", "Charakteristische Schneelast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change characteristic snow load", "Charakteristische Schneelast ändern")
     }
 }
 

@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "viewer-preferences", kind: "set-viewer-preferences", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set viewer-preferences", "Betrachtereinstellungen setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set viewer-preferences", "Betrachtereinstellungen setzen")
     }
 
     fn target(&self) -> Vec<String> {

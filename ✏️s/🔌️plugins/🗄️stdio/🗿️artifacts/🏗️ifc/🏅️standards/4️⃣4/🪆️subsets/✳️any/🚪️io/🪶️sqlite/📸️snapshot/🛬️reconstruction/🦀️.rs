@@ -1,7 +1,7 @@
 //! 🛬️ IFC4 reconstruction follows paid semantic row indexes and exclusive ordered ownership.
 use super::{identity,null,unsigned,sort_paid,REAL,IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcTypedValue, IfcValue};
 use crate::standards::v4::subsets::any::io::sqlite::snapshot::native;
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::{validate_ieee754_row,ieee754_is_null,read_binary64}};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::{validate_ieee754_row,ieee754_is_null,read_binary64}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::__rt::DecodedFieldOwner;
 use std::ops::Range;

@@ -1,18 +1,18 @@
 use super::*;
 use semio_framework_job::StepBudget;
 
-async fn fixture_windows(ids: &[&str]) -> semio_framework_plugin::WindowConfigOwnerRegistry {
-    let mut windows = semio_framework_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("results-fixture".into()));
+async fn fixture_windows(ids: &[&str]) -> semio_plugin::WindowConfigOwnerRegistry {
+    let mut windows = semio_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("results-fixture".into()));
     windows.register::<semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::config::Fem3dResultsWindowConfigOwner>().unwrap();
     for id in ids { windows.fixture_partition_authority(semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS, id).await.unwrap(); }
     windows
 }
 
-fn fixture_consumer(windows: &semio_framework_plugin::WindowConfigOwnerRegistry, id: &str) -> ConsumerKey {
+fn fixture_consumer(windows: &semio_plugin::WindowConfigOwnerRegistry, id: &str) -> ConsumerKey {
     ConsumerKey::Window(windows.borrow(semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS, id).unwrap().authority)
 }
 
-fn fixture_prepare_result(render: AppRenderOperationContext, doc: &Fem3dSnapshot, windows: &semio_framework_plugin::WindowConfigOwnerRegistry, id: &str, request: Fem3dResultRequest) {
+fn fixture_prepare_result(render: AppRenderOperationContext, doc: &Fem3dSnapshot, windows: &semio_plugin::WindowConfigOwnerRegistry, id: &str, request: Fem3dResultRequest) {
     let original = windows.borrow(semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS, id).unwrap();
     let (spec, source) = physical_parts(doc, request).unwrap();
     let grant = render.mounted_policy.preparation;
@@ -20,7 +20,7 @@ fn fixture_prepare_result(render: AppRenderOperationContext, doc: &Fem3dSnapshot
     let progress = MOUNTED.with(|registry| prepare_result_demand(&mut registry.borrow_mut(), render, ConsumerKey::Window(original.authority), id, spec, source, version, grant));
     let mut sequence = 0; let mut receipt = RetainedCloneProgress::default();
     let mut cx = StepContext::new(semio_framework_job::allocate_operation_id(), render.generation, StepBudget::new(64, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    semio_framework_plugin::MountedSnapshotReadPreparation { ready: false, progress }.record(grant, &mut cx).unwrap();
+    semio_plugin::MountedSnapshotReadPreparation { ready: false, progress }.record(grant, &mut cx).unwrap();
     assert_eq!(cx.retained_progress(), progress);
 }
 
@@ -163,7 +163,7 @@ async fn fem3d_request_families_share_identical_panes_and_preserve_physical_sour
     doc.load_cases = ["a", "b"].into_iter().map(|id| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: id.into(), name: id.into(), loads: vec![], self_weight: false }).collect();
     doc.combinations = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination { id: "a".into(), name: "a".into(), terms: Default::default() }];
     let identity = recovery_identity(8123, 39);
-    let render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: TEST_GRANT, maintenance: TEST_GRANT, close: TEST_GRANT } };
+    let render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: TEST_GRANT, maintenance: TEST_GRANT, close: TEST_GRANT } };
     let ids: Vec<&str> = corpus["requestWindows"].as_array().unwrap().iter().map(|row| row["window"].as_str().unwrap()).collect();
     let window_owners = fixture_windows(&ids).await;
     for row in corpus["requestWindows"].as_array().unwrap() {
@@ -174,7 +174,7 @@ async fn fem3d_request_families_share_identical_panes_and_preserve_physical_sour
     }
     MOUNTED.with(|registry| { let registry = registry.borrow(); assert_eq!((0..ACTIVE_CAPACITY).filter(|index| registry.requests.at(*index).is_some_and(|(_, scope, _)| scope == identity.app_instance_id)).count(), 6); let a = registry.requests.binding(identity.app_instance_id, fixture_consumer(&window_owners, "case-a")).unwrap(); assert_eq!(registry.requests.binding(identity.app_instance_id, fixture_consumer(&window_owners, "case-a-shared")), Some(a)); assert_eq!(registry.requests.references(a), 2); });
     doc.load_cases.reverse(); MOUNTED.with(|registry| { let registry = registry.borrow(); let owner = registry.requests.binding(identity.app_instance_id, fixture_consumer(&window_owners, "case-b")).unwrap(); assert_eq!(resolve_request(&registry, &doc, owner).unwrap().source, Fem3dResultSource::Case(0)); });
-    let windows: Vec<semio_framework_plugin::ViewWindowInstance> = corpus["requestWindows"].as_array().unwrap().iter().filter(|row| row["window"] != "case-a").map(|row| semio_framework_plugin::ViewWindowInstance { id: row["window"].as_str().unwrap().into(), window_kind_id: semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS.into() }).collect();
+    let windows: Vec<semio_plugin::ViewWindowInstance> = corpus["requestWindows"].as_array().unwrap().iter().filter(|row| row["window"] != "case-a").map(|row| semio_plugin::ViewWindowInstance { id: row["window"].as_str().unwrap().into(), window_kind_id: semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS.into() }).collect();
     let departed = fixture_consumer(&window_owners, "case-a");
     MOUNTED.with(|registry| { let mut registry = registry.borrow_mut(); let step = registry.requests.remove_consumer_controlled(render.app_instance_id, departed, TEST_GRANT).unwrap(); assert!(step.progress.fits(TEST_GRANT)); });
     MOUNTED.with(|registry| { let registry = registry.borrow(); let owner = registry.requests.binding(identity.app_instance_id, fixture_consumer(&window_owners, "case-a-shared")).unwrap(); assert_eq!(registry.requests.references(owner), 1); assert!(registry.requests.binding(identity.app_instance_id, fixture_consumer(&window_owners, "case-a")).is_none()); });
@@ -192,7 +192,7 @@ async fn fem3d_wide_physical_request_and_window_text_use_shared_granted_custody(
     let mut doc = Fem3dSnapshot::default(); doc.load_cases = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: source.clone(), name: "Wide".into(), loads: vec![], self_weight: false }];
     let window_owners = fixture_windows(&[window.as_str()]).await;
     let identity = recovery_identity(9167, 43); let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: SESSION_CLOSE_RELEASE_BYTES.max(65536), maximum_depth: SESSION_CLOSE_DEPTH };
-    let mut render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: RetainedCloneGrant { maximum_items: 0, ..grant }, maintenance: grant, close: grant } };
+    let mut render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: RetainedCloneGrant { maximum_items: 0, ..grant }, maintenance: grant, close: grant } };
     let request = Fem3dResultRequest { source: Fem3dResultSource::Case(0), ..Default::default() };
     fixture_prepare_result(render, &doc, &window_owners, &window, request); MOUNTED.with(|registry| assert!(registry.borrow().app_slots.lookup(identity.app_instance_id).is_none()));
     render.mounted_policy.preparation = grant;
@@ -214,7 +214,7 @@ fn fem3d_original_fault_and_cancel_terminal_receipts_prevent_implicit_resubmit()
         if kind == "cancelled" { let mut job = job; job.cancel(); drop(job); } else { drop(job); }
         MOUNTED.with(|registry| drain_recovery_state(&mut registry.borrow_mut(), identity, shell));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: SESSION_CLOSE_COPY_BYTES, maximum_capacity_bytes: 65536, maximum_release_bytes: SESSION_CLOSE_RELEASE_BYTES.max(65536), maximum_depth: SESSION_CLOSE_DEPTH };
-        let mut render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
+        let mut render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
         let doc = Fem3dSnapshot::default();
         for _ in 0..64 { assert!(!prepare_snapshot_admission(render, &doc, TEST_GRANT).ready); }
         assert_eq!(result_stage(Some(render), None), Some(if kind == "faulted" { "fem3d.failed" } else { "fem3d.cancelled" }));
@@ -791,7 +791,7 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
             let slot = owner.index();
             assert!(registry.pending[slot].is_none());
             registry.pending[slot] = pending.map(|app_instance_id| PendingSnapshot {
-                render: AppRenderOperationContext { app_instance_id, base_revision: RevisionId(1), generation: Generation(1), canonical_base_revision: [1; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } },
+                render: AppRenderOperationContext { app_instance_id, base_revision: RevisionId(1), generation: Generation(1), canonical_base_revision: [1; 32], mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } },
                 preflight: SnapshotPreflight::new(),
             });
             if pending.is_none() { registry.requests.remove_one_scoped_consumer(app); assert!(registry.requests.release(owner)); let lease = registry.app_slots.lookup(closing).unwrap(); assert!(registry.app_slots.release(closing, lease)); }

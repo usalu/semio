@@ -225,33 +225,33 @@ async fn missing_target_inverse_and_diff_are_no_ops() {
 // #region 🔖️OpText
 #[semio_framework_async_macros::async_test]
 async fn fem3d_op_text_round_trips_every_variant() {
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: FemNodeValue { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 }, index: None }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode { id: "n1".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_element::CreateElement {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: FemNodeValue { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 }, index: None }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode { id: "n1".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_element::CreateElement {
         element: Box::new(FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 }), index: None,
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement {
         id: "e1".into(),
         new_element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }),
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement { id: "e1".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement { id: "e1".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial {
         material: FemMaterialValue { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 }, index: None,
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial {
         id: "steel".into(),
         new_material: FemMaterialValue { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 },
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial { id: "steel".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial { id: "steel".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection {
         section: FemSection { id: "hea200".into(), name: "HEA200".into(), area: 0.00538, iy: 3.69e-5, iz: 1.33e-5, j: 6.0e-7 }, index: None,
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection {
         id: "hea200".into(),
         new_section: FemSection { id: "hea200".into(), name: "HEA200".into(), area: 0.00538, iy: 3.69e-5, iz: 1.33e-5, j: 6.0e-7 },
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: "hea200".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: "hea200".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid {
         solid: FemSolid {
             id: "sol1".into(),
             name: "Slab".into(),
@@ -265,10 +265,10 @@ async fn fem3d_op_text_round_trips_every_variant() {
             axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z,
         }, index: None,
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::delete_solid::DeleteSolid { id: "sol1".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() }, index: None }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport { id: "s1".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::delete_solid::DeleteSolid { id: "sol1".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() }, index: None }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport { id: "s1".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase {
         load_case: FemLoadCase {
             id: "point".into(),
             name: "Point Load".into(),
@@ -280,29 +280,29 @@ async fn fem3d_op_text_round_trips_every_variant() {
             self_weight: true,
         }, index: None,
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase { id: "point".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::AddLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase { id: "point".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::AddLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad {
         case_id: "point".into(),
         load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -5000.0 }), index: None,
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::RemoveLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad { case_id: "point".into(), load_id: "l1".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ChangeLoadCaseSelfWeight(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "point".into(), new_self_weight: true }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_combination::CreateCombination {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::RemoveLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad { case_id: "point".into(), load_id: "l1".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ChangeLoadCaseSelfWeight(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "point".into(), new_self_weight: true }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_combination::CreateCombination {
         combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35), ("live".into(), 1.5)]) }, index: None,
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_combination::DeleteCombination { id: "uls".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode { id: "n1".into(), new_node: FemNodeValue { id: "n1".into(), x: 1.5, y: -2.0, z: 3.25 } }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_combination::DeleteCombination { id: "uls".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode { id: "n1".into(), new_node: FemNodeValue { id: "n1".into(), x: 1.5, y: -2.0, z: 3.25 } }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad {
         case_id: "dead".into(),
         load_id: "l1".into(),
         new_load: Box::new(FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -900.0 }),
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ChangeLoadCaseName(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName { case_id: "dead".into(), new_name: "Dead Load".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ChangeLoadCaseName(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName { case_id: "dead".into(), new_name: "Dead Load".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination {
         id: "uls".into(),
         new_combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("dead".into(), 1.35), ("live".into(), 1.5)]) },
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::UpdateAnalysisSettings(semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings::UpdateAnalysisSettings {
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::UpdateAnalysisSettings(semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings::UpdateAnalysisSettings {
         settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
     }));
 }

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-os-renderer-wgpu-native-probe"
+name = "semio-renderer-wgpu-native-probe"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,45 +22,45 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-renderer-wgpu-app-runtime = { path = "../../../🏃️app-runtime/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-canvas2d-host = { path = "../../../🔄️canvas2d-host/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-shell-actions = { path = "../../../🔀️shell-actions/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-shell-pointer = { path = "../../../🖐️shell-pointer/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-shell-prefs = { path = "../../../🎛️shell-prefs/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-shell-sync = { path = "../../../🔃️shell-sync/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-shell-window-actions = { path = "../../../🪝️shell-window-actions/📦️packages/🦀️rust" }
+semio-renderer-wgpu-app-runtime = { path = "../../../🏃️app-runtime/📦️packages/🦀️rust" }
+semio-renderer-wgpu-canvas2d-host = { path = "../../../🔄️canvas2d-host/📦️packages/🦀️rust" }
+semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-actions = { path = "../../../🔀️shell-actions/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-pointer = { path = "../../../🖐️shell-pointer/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-prefs = { path = "../../../🎛️shell-prefs/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-sync = { path = "../../../🔃️shell-sync/📦️packages/🦀️rust" }
+semio-renderer-wgpu-shell-window-actions = { path = "../../../🪝️shell-window-actions/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-pack = { workspace = true }
-semio-framework-os-store-testing-doubles = { path = "../../../../../../../🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
+semio-os-store-testing-doubles = { path = "../../../../../../../🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
-semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-framework-os-kernel" }
-semio-framework-os-services = { workspace = true }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-os-kernel" }
+semio-os-services = { workspace = true }
 tokio = { version = "1", default-features = false, features = ["sync", "rt", "net", "time"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 semio-framework-async = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-os-kernel" }
 tokio = { version = "1", default-features = false, features = ["sync"] }
 wasm-bindgen = "0.2.106"
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-os-kernel" }

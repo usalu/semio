@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointActionShear w
         record: "ChangedJointActionShear",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear force per joint of the joint action", "Anschlusseinwirkung: Querkraft je Anschluss ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear force per joint of the joint action", "Anschlusseinwirkung: Querkraft je Anschluss ändern")
     }
 }
 

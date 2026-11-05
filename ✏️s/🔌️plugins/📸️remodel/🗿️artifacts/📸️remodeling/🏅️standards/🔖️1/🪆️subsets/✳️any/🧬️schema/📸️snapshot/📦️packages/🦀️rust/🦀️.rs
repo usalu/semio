@@ -1,6 +1,6 @@
 //! 📸️ remodeling model: the snapshot and its domain records, and the snapshot's text, binary and SQLite codecs.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 #[path = "."]

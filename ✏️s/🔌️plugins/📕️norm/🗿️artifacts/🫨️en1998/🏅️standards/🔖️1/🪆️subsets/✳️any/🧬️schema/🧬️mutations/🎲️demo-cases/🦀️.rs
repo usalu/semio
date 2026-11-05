@@ -2,9 +2,9 @@
 
 #![allow(unused_imports)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_s_artifact_norm_en1998_mutations::En1998Mutation;
 use semio_s_artifact_norm_en1998_mut_buildings::change_site_s_ap_r::ChangeSiteSApR;

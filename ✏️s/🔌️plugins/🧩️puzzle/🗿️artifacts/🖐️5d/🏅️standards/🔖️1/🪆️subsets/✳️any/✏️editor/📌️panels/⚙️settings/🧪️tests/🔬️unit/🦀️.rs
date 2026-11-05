@@ -1,58 +1,58 @@
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::view::Puzzle5dScene;
-use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_plugin::plugin_app_close_prelude::BuiltNode;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::interaction::ui_label;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Component, NumberStepperProps, Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::plugin_app_close_prelude::{ActionBinding, Component, NumberStepperProps, Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
 #[allow(unused_imports)]
-use semio_framework_plugin::ui_node_list;
+use semio_plugin::ui_node_list;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionFactory;
+use semio_plugin::ActionFactory;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiMapBuilder;
+use semio_plugin::UiMapBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiValue;
+use semio_plugin::UiValue;
 #[allow(unused_imports)]
-use semio_framework_ui_contract as ui;
+use semio_ui_contract as ui;
 use crate::editor::puzzle5d::panels::settings::*;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
 use crate::editor::puzzle5d::testkit::*;
 use crate::editor::puzzle5d::entities::empty_document;
 use crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::ViewWindowInstance;
+use semio_plugin::ViewModel;
+use semio_plugin::ViewWindowInstance;
 
 fn labels() -> &'static Puzzle5dLabels {
-    puzzle5d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("an admitted host label axis")
+    puzzle5d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("an admitted host label axis")
 }
 
 fn drain() {
     for _ in 0..4096 {
-        if semio_framework_ui_contract::close_built_node_page_one() {
+        if semio_ui_contract::close_built_node_page_one() {
             break;
         }
     }
     for _ in 0..4096 {
-        if semio_framework_ui_contract::close_ui_value_page_one() {
+        if semio_ui_contract::close_ui_value_page_one() {
             break;
         }
     }
@@ -102,10 +102,10 @@ fn the_settings_panel_authors_every_stepper_and_its_verb() {
 /// the host mounts none — an empty `windowId` would be refused as an unknown window instance.
 #[test]
 fn the_panel_addresses_the_focused_pane_and_none_without_one() {
-    assert_eq!(panel_window_id(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), None);
-    let focused = ViewModel { focused_window_id: Some("pane-2".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    assert_eq!(panel_window_id(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), None);
+    let focused = ViewModel { focused_window_id: Some("pane-2".into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     assert_eq!(panel_window_id(&focused), Some("pane-2"));
-    let roster = ViewModel { window_instances: vec![ViewWindowInstance { id: "pane-9".into(), window_kind_id: "puzzle5d-board".into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let roster = ViewModel { window_instances: vec![ViewWindowInstance { id: "pane-9".into(), window_kind_id: "puzzle5d-board".into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     assert_eq!(panel_window_id(&roster), Some("pane-9"));
 }
 

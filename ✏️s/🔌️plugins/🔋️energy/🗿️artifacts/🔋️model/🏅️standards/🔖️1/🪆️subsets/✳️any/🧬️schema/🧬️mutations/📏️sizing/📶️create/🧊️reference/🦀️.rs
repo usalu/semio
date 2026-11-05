@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "sizing-object", kind: "create-sizing-object", record: "CreatedSizingObject" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create sizing object {}", self.id.0), &format!("Auslegungsobjekt {} erstellen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create sizing object {}", self.id.0), &format!("Auslegungsobjekt {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

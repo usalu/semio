@@ -192,8 +192,8 @@ fn wheel_over_an_escaped_select_popup_scrolls_its_accepted_viewport_only() {
     leaf(&mut tree, Some(root), 2, text_ui("outer extent"), (0.0, 200.0, 120.0, 100.0));
     let mut router = EventRouter::new("wheel-select");
     router.toggle_select_popup(&mut tree, select);
-    let theme = semio_framework_ui_theme::Theme::default();
-    let popup = semio_framework_ui_select_behavior::select_popup_geometry(Rect::new(8.0, 62.0, 120.0, 22.4), 20, &theme, 100.0, 0.0, 0.0);
+    let theme = semio_ui_theme::Theme::default();
+    let popup = semio_ui_select_behavior::select_popup_geometry(Rect::new(8.0, 62.0, 120.0, 22.4), 20, &theme, 100.0, 0.0, 0.0);
     tree.node_mut(select).unwrap().state.select_popup = Some(popup);
     let event = UiEvent::Scroll { x: law["point"]["x"].as_f64().unwrap() as f32, y: law["point"]["y"].as_f64().unwrap() as f32, delta_x: 0.0, delta_y: law["delta"].as_f64().unwrap() as f32, modifiers: Default::default() };
     let commands = router.dispatch(&mut tree, root, &event);
@@ -216,7 +216,7 @@ fn wheel_over_an_escaped_select_popup_scrolls_its_accepted_viewport_only() {
         .collect();
     let stack = oracle.new_with_children(taffy::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() }, &rows).unwrap();
     oracle.compute_layout(stack, taffy::geometry::Size { width: taffy::style::AvailableSpace::MaxContent, height: taffy::style::AvailableSpace::MaxContent }).unwrap();
-    let maximum = oracle.layout(stack).unwrap().size.height + law["viewportPadding"].as_f64().unwrap() as f32 * 2.0 - semio_framework_ui_select_behavior::select_popup_viewport_rect(popup).h;
+    let maximum = oracle.layout(stack).unwrap().size.height + law["viewportPadding"].as_f64().unwrap() as f32 * 2.0 - semio_ui_select_behavior::select_popup_viewport_rect(popup).h;
     assert!((maximum - law["expectedMaximum"].as_f64().unwrap() as f32).abs() < 0.001);
     router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 20.0, y: 33.0, delta_x: 0.0, delta_y: 10_000.0, modifiers: Default::default() });
     assert!((tree.node(select).unwrap().state.scroll_offset.1 - maximum).abs() < 0.001);
@@ -235,8 +235,8 @@ fn keyboard_movement_reveals_the_highlighted_select_row_without_committing_it() 
     }
     let trigger = Rect::new(20.0, 120.0, fixture["triggerWidth"].as_f64().expect("trigger width") as f32, 22.4);
     let select = leaf(&mut tree, Some(root), 1, authored, (trigger.x, trigger.y, trigger.w, trigger.h));
-    let theme = semio_framework_ui_theme::Theme::default();
-    let popup = semio_framework_ui_select_behavior::select_popup_geometry(trigger, fixture["optionCount"].as_u64().expect("option count") as usize, &theme, tree.node(root).unwrap().layout.height, 0.0, 0.0);
+    let theme = semio_ui_theme::Theme::default();
+    let popup = semio_ui_select_behavior::select_popup_geometry(trigger, fixture["optionCount"].as_u64().expect("option count") as usize, &theme, tree.node(root).unwrap().layout.height, 0.0, 0.0);
     let mut router = EventRouter::new("select-reveal");
     router.focus.set_focus(&mut tree, Some(select), true);
     router.toggle_select_popup(&mut tree, select);
@@ -247,9 +247,9 @@ fn keyboard_movement_reveals_the_highlighted_select_row_without_committing_it() 
     let state = &tree.node(select).expect("mounted Select").state;
     assert_eq!(state.highlighted, Some(6));
     assert!(state.scroll_offset.1 > 0.0, "moving the active descendant to an offscreen row requests nearest-edge reveal");
-    let revealed = semio_framework_ui_select_behavior::select_popup_geometry(trigger, 7, &theme, tree.node(root).unwrap().layout.height, state.scroll_offset.1, 0.0);
-    let viewport = semio_framework_ui_select_behavior::select_popup_viewport_rect(revealed);
-    let row = semio_framework_ui_select_behavior::select_popup_row_rect(trigger, 6, revealed, &theme);
+    let revealed = semio_ui_select_behavior::select_popup_geometry(trigger, 7, &theme, tree.node(root).unwrap().layout.height, state.scroll_offset.1, 0.0);
+    let viewport = semio_ui_select_behavior::select_popup_viewport_rect(revealed);
+    let row = semio_ui_select_behavior::select_popup_row_rect(trigger, 6, revealed, &theme);
     assert!(row.y >= viewport.y - 0.001 && row.y + row.h <= viewport.y + viewport.h + 0.001, "the highlighted row is fully visible inside the accepted viewport");
     assert!(matches!(&tree.node(select).unwrap().spec.0, UiNode::Select(node) if node.value == "row-1"), "revealing a highlight does not commit it");
 }
@@ -360,7 +360,7 @@ fn releasing_off_the_captured_button_does_not_fire_its_action() {
 
 fn disabled_button_ui(id: &str) -> UiNode {
     let UiNode::Button(mut button) = button_ui(id) else { unreachable!("button_ui builds a button") };
-    button.presence.state = semio_framework_ui_declaration::ui::UiState::Disabled;
+    button.presence.state = semio_ui_declaration::ui::UiState::Disabled;
     UiNode::Button(button)
 }
 

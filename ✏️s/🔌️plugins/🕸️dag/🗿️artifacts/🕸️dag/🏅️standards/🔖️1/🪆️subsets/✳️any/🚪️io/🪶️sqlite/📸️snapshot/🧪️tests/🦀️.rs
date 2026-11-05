@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
 use store::{sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase};
 use semio_framework_test_original_snapshot_owners as original_owners;
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_framework_value::{FromValue, ToValue};
@@ -219,8 +219,8 @@ fn sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent() {
 
 mod public_owned {
     use crate::hoisted_snapshot_0::*;
-    use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
-    use semio_framework_plugin::plugin_app_close_prelude::*;
+    use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
+    use semio_plugin::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
         /// 🕸️ Exact two actual declared DAG surfaces close owning public persistence.
         pub(crate) enum DagSqliteApps: PluginApp {
@@ -235,7 +235,7 @@ mod public_owned {
         use store::sqlite_snapshot::{SqliteDatabaseLimits,SnapshotEncoding};
         use std::{io::Write,process::{Command,Stdio}};
         let contract=serde_json::from_str::<serde_json::Value>(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️public/🔣️.json")).unwrap();
-        let _plugin=semio_framework_plugin::PluginBuilder::<_, DagSqliteApps>::new("dag").label("DAG owning SQLite").version("0.1.0").package_id("semio:dag").declare_artifact(crate::artifact::<DagSqliteApps>()).try_build().unwrap();
+        let _plugin=semio_plugin::PluginBuilder::<_, DagSqliteApps>::new("dag").label("DAG owning SQLite").version("0.1.0").package_id("semio:dag").declare_artifact(crate::artifact::<DagSqliteApps>()).try_build().unwrap();
         let dialect=ArtifactDialect{artifact_kind:"s.dag.dag".into(),standard:"1".into(),subset:"*".into()};
         let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
         let export=io_route(&dialect,&sqlite,1).await.unwrap().value;

@@ -1,7 +1,7 @@
 //! ⚡️ The checked run admission seam above the run mutation vocabulary: a run mutation's own diff is built and its refusals are read here; the diff is applied by
 //! [`apply_run_operation_checked`] through the central applier.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_framework_artifact_workflow_run::{RunArtifact, RunDiff, RunMutation};
 

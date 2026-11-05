@@ -16,17 +16,17 @@
 pub mod config;
 
 use crate::scene::{energy_model_scene, EnergySceneStyle};
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::BuiltNode;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 /// 🪟️ The viewer manifest's window-kind id — the same spelling the editor's twin uses, since the two
@@ -93,7 +93,7 @@ pub fn render_with_camera(model: &impl crate::scene::EnergySceneModel, camera: O
     if let Some(window) = camera {
         scene.camera_json = window.camera.scene_camera_json();
     }
-    semio_framework_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 

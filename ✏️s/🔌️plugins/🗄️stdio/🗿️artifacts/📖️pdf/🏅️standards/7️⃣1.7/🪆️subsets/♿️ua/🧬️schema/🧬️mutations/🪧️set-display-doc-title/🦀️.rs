@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "display-doc-title", kind: "set-display-doc-title", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA display document title to {}", self.display), &format!("PDF/UA-Anzeige des Dokumenttitels auf {} setzen", self.display))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA display document title to {}", self.display), &format!("PDF/UA-Anzeige des Dokumenttitels auf {} setzen", self.display))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,21 +1,21 @@
 //! 🧪️ scene tests (🔬️unit): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::{World3dBuildContext, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_MESH_CAPACITY, world_mesh_ownership_grant, world_scene_raster_pool, WorldCursorWakeAuthority, WorldDynamicFault, WorldEnvironmentRecord, WorldEnvironmentShadowRecord, WorldEnvironmentSunRecord, WorldInteractionMeshRegistry};
-use semio_framework_os_infinite_world_components::{placeholder_triangle, placeholder_triangle_normal, TerrainTileMeshPayload, WorldPlaceholderKind, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
-use semio_framework_os_infinite_world_scene::{append_lod_grid_lines, bounded_reference_image, chunk_center, chunk_distance_visible, chunk_key_indices, collect_world3d_asset_bytes, decode_reference_image_bytes, environment_light_dir, GUMBALL_PLANE_MESH, hypsometric_color, mesh_style_paint, MeshStyleKind, MeshStyleState, parse_color, resolve_mesh_style, retain_ensured_world_draws, terrain_tile_url, world3d_style_paint, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_GRID_MAX_DIVISIONS, WorldAssetFault, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetResponsePage, WorldTerrainMeshCursor, WorldTerrainMeshPhase, WorldTerrainMeshStep};
+use semio_os_infinite_world_model::{World3dBuildContext, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_MESH_CAPACITY, world_mesh_ownership_grant, world_scene_raster_pool, WorldCursorWakeAuthority, WorldDynamicFault, WorldEnvironmentRecord, WorldEnvironmentShadowRecord, WorldEnvironmentSunRecord, WorldInteractionMeshRegistry};
+use semio_os_infinite_world_components::{placeholder_triangle, placeholder_triangle_normal, TerrainTileMeshPayload, WorldPlaceholderKind, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
+use semio_os_infinite_world_scene::{append_lod_grid_lines, bounded_reference_image, chunk_center, chunk_distance_visible, chunk_key_indices, collect_world3d_asset_bytes, decode_reference_image_bytes, environment_light_dir, GUMBALL_PLANE_MESH, hypsometric_color, mesh_style_paint, MeshStyleKind, MeshStyleState, parse_color, resolve_mesh_style, retain_ensured_world_draws, terrain_tile_url, world3d_style_paint, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_GRID_MAX_DIVISIONS, WorldAssetFault, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetResponsePage, WorldTerrainMeshCursor, WorldTerrainMeshPhase, WorldTerrainMeshStep};
 use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_world_scene::{build_terrain_tile_mesh_oracle, placeholder_mesh, TerrainMeshOracleData};
+use semio_os_infinite_world_scene::{build_terrain_tile_mesh_oracle, placeholder_mesh, TerrainMeshOracleData};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use semio_framework_os_infinite_world_scene::{environment_scene_shadow, world3d_shadow_role, World3dShadowGeometry, World3dShadowProfile, WORLD_REFERENCE_TEXTURE_BYTES};
+use semio_os_infinite_world_scene::{environment_scene_shadow, world3d_shadow_role, World3dShadowGeometry, World3dShadowProfile, WORLD_REFERENCE_TEXTURE_BYTES};
 use ui_scene::math::{Camera3d, CameraProjection3d, Instance3d, lod_grid_step_world, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneColorSource3d, SceneDraw3d, Vec3};
-use semio_framework_ui_prepared::PreparedRenderEviction;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::{Rgba, Theme};
-use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
+use semio_ui_prepared::PreparedRenderEviction;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::{Rgba, Theme};
+use semio_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{ICON_SHADOW_MAP_SIZE, SceneInstanceMaterial3d, WORLD_SHADOW_MAP_SIZE};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(test)] use semio_framework_ui_raster_owner::SceneRasterMeshSeal;
+#[cfg(test)] use semio_ui_raster_owner::SceneRasterMeshSeal;
 use ui_styling::metrics::tool_run;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -48,7 +48,7 @@ fn test_scene_raster_lease(width: u32, height: u32, profile: SceneRasterProfile,
     let descriptor = SceneRasterDescriptor { width, height, source_digest: [revision, revision.rotate_left(17)], source_revision: revision, profile, mesh };
     let pool = world_scene_raster_pool();
     let mut writer = None;
-    for _ in 0..=semio_framework_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
+    for _ in 0..=semio_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
         match pool.begin(descriptor, revision, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }) {
             SceneRasterBegin::Writer(candidate) => {
                 writer = Some(candidate);
@@ -297,7 +297,7 @@ fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     resources.ensure_world_plane_texture("image", test_scene_raster_lease(1, 1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None, 1));
     resources.ensure_world_plane_texture("image", test_scene_raster_lease(1, 1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None, 9));
     resources.evict_mesh("stale");
-    let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
+    let mut input = semio_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
@@ -720,8 +720,8 @@ fn the_gumball_plane_is_pinned_against_pool_eviction() {
 /// (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.4).
 #[test]
 fn the_mesh_style_table_is_reacts_whole_paint_table() {
-    let theme = semio_framework_ui_theme::Theme::light();
-    let rgba = |color: semio_framework_ui_theme::Rgba| [color.r, color.g, color.b, color.a];
+    let theme = semio_ui_theme::Theme::light();
+    let rgba = |color: semio_ui_theme::Rgba| [color.r, color.g, color.b, color.a];
     let (primary, secondary, tertiary) = (rgba(theme.celebrate[0]), rgba(theme.celebrate[1]), rgba(theme.celebrate[2]));
 
     let neutral = mesh_style_paint(&theme, MeshStyleKind::Neutral);
@@ -767,8 +767,8 @@ fn the_mesh_style_table_is_reacts_whole_paint_table() {
 /// are carried through the packed instance material instead of inferred from interaction flags.
 #[test]
 fn retained_color_provenance_and_static_material_policy_match_react() {
-    let light = semio_framework_ui_theme::Theme::light();
-    let dark = semio_framework_ui_theme::Theme::dark();
+    let light = semio_ui_theme::Theme::light();
+    let dark = semio_ui_theme::Theme::dark();
     let instance = |source| Instance3d { component_source: None,
         id: "fixture".into(),
         model: Mat4::identity(),
@@ -777,7 +777,7 @@ fn retained_color_provenance_and_static_material_policy_match_react() {
         hovered: false,
         material: ui_scene::math::SceneInstanceMaterial3d { color_source: source, ..Default::default() },
     };
-    let semantic = |theme: &semio_framework_ui_theme::Theme| world3d_style_paint(theme, MeshStyleState::default(), false, instance(ui_scene::math::SceneColorSource3d::SemanticNeutral));
+    let semantic = |theme: &semio_ui_theme::Theme| world3d_style_paint(theme, MeshStyleState::default(), false, instance(ui_scene::math::SceneColorSource3d::SemanticNeutral));
     assert_eq!(semantic(&light).color, [light.panel.r, light.panel.g, light.panel.b, light.panel.a * 0.8]);
     assert_eq!(semantic(&dark).color, [dark.panel.r, dark.panel.g, dark.panel.b, dark.panel.a * 0.8]);
     for source in [ui_scene::math::SceneColorSource3d::Authored, ui_scene::math::SceneColorSource3d::Environment] {

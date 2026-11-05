@@ -13,7 +13,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::di
 use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::SpacePatch;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::plugin_app_close_prelude::InputKind;
 
 use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
 use semio_s_artifact_bim_model_mut_any_100::standards::v1::subsets::any::schema::mutations::set_area_scheme;

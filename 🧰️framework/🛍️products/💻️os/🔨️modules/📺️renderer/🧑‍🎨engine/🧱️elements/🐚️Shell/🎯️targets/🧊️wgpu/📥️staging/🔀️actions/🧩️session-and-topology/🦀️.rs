@@ -53,7 +53,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             let selection = {
                 let programs: Vec<(&str, &semio_framework::PluginManifest)> = self.plugins.plugins.iter().map(|entry| (entry.plugin_id.as_str(), &entry.manifest)).collect();
                 let request = BootSelectionRequest { plugin_id: resolve_registry_plugin_id(&self.plugins.plugin_filter), app_id: resolve_playground_app_id(&self.plugins.plugin_filter) };
-                select_boot_program(&programs, request, boot_app_role(), semio_framework_os_renderer_wgpu_host_base::boot_app_id().as_deref())
+                select_boot_program(&programs, request, boot_app_role(), semio_renderer_wgpu_host_base::boot_app_id().as_deref())
             };
             let Some((index, app)) = selection else {
                 let plugin_id = resolve_registry_plugin_id(&self.plugins.plugin_filter).to_string();
@@ -161,7 +161,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             return Ok(());
         };
         debug_log(&format!("[TRACE] wgpu-shell session example {}", serde_json::json!({ "exampleId": example_id, "controller": controller_id })));
-        self.dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "exampleId": example_id }) }).await
+        self.dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "exampleId": example_id }) }).await
     }
 }
 

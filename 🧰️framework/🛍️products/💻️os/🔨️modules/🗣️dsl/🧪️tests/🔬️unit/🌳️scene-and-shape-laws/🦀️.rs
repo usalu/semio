@@ -43,7 +43,7 @@ impl pack::snapshot::ArtifactDsl for SceneDocument {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_framework_os_kernel::os_store::semio_format::split_text_preamble(text) {
+        let body = match semio_os_kernel::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -53,33 +53,33 @@ impl pack::snapshot::ArtifactDsl for SceneDocument {
     fn print_dsl(&self) -> String {
         let record = self.__dsl_to_record();
         let body = print(&record, &Self::__dsl_spec(), JoinMode::Document);
-        let envelope = semio_framework_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        semio_framework_os_kernel::os_store::semio_format::wrap_text(&envelope, &body)
+        let envelope = semio_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        semio_os_kernel::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl pack::snapshot::ArtifactPack for SceneDocument {
-    fn encode_pack_with(&self, options: &semio_framework_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, semio_framework_os_kernel::os_store::PackError> {
-        let inner = semio_framework_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+    fn encode_pack_with(&self, options: &semio_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, semio_os_kernel::os_store::PackError> {
+        let inner = semio_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            semio_framework_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1).map_err(|error| semio_framework_os_kernel::os_store::PackError::from(error.into_value_error()))?;
-        Ok(semio_framework_os_kernel::os_store::semio_format::wrap_binary(&envelope, &inner))
+            semio_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Pack, 1).map_err(|error| semio_os_kernel::os_store::PackError::from(error.into_value_error()))?;
+        Ok(semio_os_kernel::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &semio_framework_os_kernel::os_store::PackDecodeOptions) -> Result<Self, semio_framework_os_kernel::os_store::PackError> {
-        let (envelope, inner) = semio_framework_os_kernel::os_store::semio_format::unwrap_binary(bytes).map_err(|error| semio_framework_os_kernel::os_store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1) {
-            return Err(semio_framework_os_kernel::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+    fn decode_pack_with(bytes: &[u8], options: &semio_os_kernel::os_store::PackDecodeOptions) -> Result<Self, semio_os_kernel::os_store::PackError> {
+        let (envelope, inner) = semio_os_kernel::os_store::semio_format::unwrap_binary(bytes).map_err(|error| semio_os_kernel::os_store::PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Pack, 1) {
+            return Err(semio_os_kernel::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
-        let (record, _report) = semio_framework_os_kernel::os_pack::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(semio_framework_os_kernel::os_store::serialization::text_error_to_pack_error)
+        let (record, _report) = semio_os_kernel::os_pack::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(semio_os_kernel::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SceneDocument {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SceneDocument {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -95,7 +95,7 @@ async fn derived_enum_recursive_block_tree_and_map_and_nested_collections_round_
     let printed = <SceneDocument as pack::snapshot::ArtifactDsl>::print_dsl(&doc);
     let parsed = <SceneDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, doc, "recursive/nested-collection round trip diverged;\nprinted:\n{printed}");
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
 }
 
 // --- end-to-end derive test: single-field tuple ("newtype") variants (the `draw` pilot's
@@ -140,7 +140,7 @@ impl pack::snapshot::ArtifactDsl for ShapeDocument {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match semio_framework_os_kernel::os_store::semio_format::split_text_preamble(text) {
+        let body = match semio_os_kernel::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -150,33 +150,33 @@ impl pack::snapshot::ArtifactDsl for ShapeDocument {
     fn print_dsl(&self) -> String {
         let record = self.__dsl_to_record();
         let body = print(&record, &Self::__dsl_spec(), JoinMode::Document);
-        let envelope = semio_framework_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        semio_framework_os_kernel::os_store::semio_format::wrap_text(&envelope, &body)
+        let envelope = semio_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        semio_os_kernel::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl pack::snapshot::ArtifactPack for ShapeDocument {
-    fn encode_pack_with(&self, options: &semio_framework_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, semio_framework_os_kernel::os_store::PackError> {
-        let inner = semio_framework_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+    fn encode_pack_with(&self, options: &semio_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, semio_os_kernel::os_store::PackError> {
+        let inner = semio_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            semio_framework_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1).map_err(|error| semio_framework_os_kernel::os_store::PackError::from(error.into_value_error()))?;
-        Ok(semio_framework_os_kernel::os_store::semio_format::wrap_binary(&envelope, &inner))
+            semio_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Pack, 1).map_err(|error| semio_os_kernel::os_store::PackError::from(error.into_value_error()))?;
+        Ok(semio_os_kernel::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &semio_framework_os_kernel::os_store::PackDecodeOptions) -> Result<Self, semio_framework_os_kernel::os_store::PackError> {
-        let (envelope, inner) = semio_framework_os_kernel::os_store::semio_format::unwrap_binary(bytes).map_err(|error| semio_framework_os_kernel::os_store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1) {
-            return Err(semio_framework_os_kernel::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+    fn decode_pack_with(bytes: &[u8], options: &semio_os_kernel::os_store::PackDecodeOptions) -> Result<Self, semio_os_kernel::os_store::PackError> {
+        let (envelope, inner) = semio_os_kernel::os_store::semio_format::unwrap_binary(bytes).map_err(|error| semio_os_kernel::os_store::PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), semio_os_kernel::os_store::semio_format::Component::Pack, 1) {
+            return Err(semio_os_kernel::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
-        let (record, _report) = semio_framework_os_kernel::os_pack::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(semio_framework_os_kernel::os_store::serialization::text_error_to_pack_error)
+        let (record, _report) = semio_os_kernel::os_pack::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(semio_os_kernel::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ShapeDocument {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ShapeDocument {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -189,5 +189,5 @@ async fn derived_newtype_tuple_variants_round_trip() {
     assert!(printed.contains("circle c1 r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
     let parsed = <ShapeDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, doc, "newtype tuple-variant round trip diverged;\nprinted:\n{printed}");
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&doc);
 }

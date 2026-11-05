@@ -22,8 +22,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-command = { path = "../../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
-semio-framework-os-infinite-directed-presentation = { path = "../../../../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-os-infinite-directed-presentation = { path = "../../../../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -31,15 +31,15 @@ semio-framework-diagnostic = { path = "../../../../../../../../../🔨️modules
 semio-framework-dsl = { path = "../../../../../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-framework-graph-manifest = { path = "../../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
-semio-framework-os-store-one-item = { path = "../../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true, features = ["mutation-testing"] }
+semio-os-store-one-item = { path = "../../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }

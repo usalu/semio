@@ -1,10 +1,10 @@
 //! 🌳️ Native Tree integration laws share the semantic fixture and independent Skia color oracle.
 
 use super::*;
-use semio_framework_ui_tui_core::cell::attr;
-use semio_framework_ui_tui_core::event::{MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::Size;
-use semio_framework_ui_tui_core::theme::Rgb;
+use semio_ui_tui_core::cell::attr;
+use semio_ui_tui_core::event::{MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::Size;
+use semio_ui_tui_core::theme::Rgb;
 use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 
 fn click(x:u16,y:u16,clicks:u8,button:MouseButton)->MouseEvent { MouseEvent {kind:MouseKind::Down(button),pos:Pos{x,y},mods:0,clicks} }
@@ -44,7 +44,7 @@ fn tree_emphasis_fixture_matches_semantic_cells_and_independent_skia_color_plane
     let root = tree_fixture();
     assert_eq!(root.as_object().unwrap().get("emphasisAttribute").and_then(Value::as_str), Some("bold"));
     for appearance in [ui_styling::appearance::AppearanceName::Dark, ui_styling::appearance::AppearanceName::Light] {
-        for glyphs in [semio_framework_ui_tui_core::theme::GlyphSet::Unicode, semio_framework_ui_tui_core::theme::GlyphSet::Ascii] {
+        for glyphs in [semio_ui_tui_core::theme::GlyphSet::Unicode, semio_ui_tui_core::theme::GlyphSet::Ascii] {
             let mut theme = Theme::new(appearance);
             theme.set_glyphs(glyphs);
             for case in root.as_object().unwrap().get("cases").and_then(Value::as_array).unwrap() {
@@ -73,7 +73,7 @@ fn tree_emphasis_fixture_matches_semantic_cells_and_independent_skia_color_plane
                     let bg = match row.get("background").and_then(Value::as_str).unwrap() {
                         "active" => theme.role(Role::ActiveBase),
                         "hover" => theme.role(Role::HoverInteractive),
-                        _ => theme.surface(semio_framework_ui_tui_core::theme::Surface::Window),
+                        _ => theme.surface(semio_ui_tui_core::theme::Surface::Window),
                     };
                     let guides = row.get("guides").and_then(Value::as_array).unwrap();
                     let indent = tree.item(item).unwrap().depth * 2;
@@ -142,9 +142,9 @@ fn tree_clips_hover_guides_and_retains_keyboard_and_unfocused_selection() {
     let mut buf = CellBuffer::new(Size { width: 20, height: 8 }, sentinel);
     crate::tree::paint_tree(&tree, &theme, wide, &mut buf, false);
     let label = buf.get(6, 2).unwrap();
-    assert_eq!((label.fg, label.bg, label.attrs), (theme.role(Role::Foreground), theme.surface(semio_framework_ui_tui_core::theme::Surface::Window), attr::BOLD));
-    assert_eq!(crate::tree::tree_on_key(&mut tree, &semio_framework_ui_tui_core::event::KeyEvent { key: Key::Left, mods: 0 }), Some(WidgetSignal::SelectionChanged(1)));
-    assert_eq!(crate::tree::tree_on_key(&mut tree, &semio_framework_ui_tui_core::event::KeyEvent { key: Key::Right, mods: 0 }), Some(WidgetSignal::SelectionChanged(2)));
+    assert_eq!((label.fg, label.bg, label.attrs), (theme.role(Role::Foreground), theme.surface(semio_ui_tui_core::theme::Surface::Window), attr::BOLD));
+    assert_eq!(crate::tree::tree_on_key(&mut tree, &semio_ui_tui_core::event::KeyEvent { key: Key::Left, mods: 0 }), Some(WidgetSignal::SelectionChanged(1)));
+    assert_eq!(crate::tree::tree_on_key(&mut tree, &semio_ui_tui_core::event::KeyEvent { key: Key::Right, mods: 0 }), Some(WidgetSignal::SelectionChanged(2)));
 }
 
 #[test]

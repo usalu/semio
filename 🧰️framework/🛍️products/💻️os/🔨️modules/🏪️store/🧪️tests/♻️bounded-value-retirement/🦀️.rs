@@ -79,7 +79,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
                 let mut reverse = semio_framework_value_persistent::list::PagedList::new();
                 for value in &inverse { reverse.try_push(*value).unwrap(); }
                 let edit = Edit { id: law["edit"].as_str().unwrap().to_owned(), actor: Some(law["actor"].as_str().unwrap().into()), line: None, forwards: forwards.clone(), inverse: semio_framework_value::RetainedPublicationRoot::new(reverse), mutation_meta: Vec::with_capacity(3), verb: None, sequence_number: 1, started_at: "started".into(), finished_at: Some("finished".into()) };
-                let mut publisher = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+                let mut publisher = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
                 let view = publisher.view();
                 let reservation = edits.reserve_group_one(&view).unwrap();
                 edits.stage_group_reserved(reservation, edit, &view).unwrap_or_else(|_| panic!("original edit suffix"));
@@ -331,8 +331,8 @@ fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_
 
 #[test]
 fn original_retained_member_open_close_conserves_supplied_birth_and_physical_release() {
-    use semio_framework_os_store_testing_fixtures::DemoSnapshot;
-    use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
+    use semio_os_store_testing_fixtures::DemoSnapshot;
+    use semio_os_store_testing_fixtures::demo::DemoMutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["retainedMemberClose"];
     let demand = bounded_artifact_store_owners_birth_demand::<DemoSnapshot, DemoMutation>().unwrap();
@@ -346,7 +346,7 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(input).unwrap()).unwrap_or_else(|_| panic!("original input page"));
         pages.seal().unwrap();
         let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: law["artifactId"].as_str().unwrap().to_owned(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "demo".to_owned(), standard: "1".to_owned(), subset: "any".to_owned() } };
-        let request = member_open::MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), u64::MAX, target, None, pages, semio_framework_os_spr::ActorId(law["actor"].as_str().unwrap().into()));
+        let request = member_open::MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), u64::MAX, target, None, pages, semio_os_spr::ActorId(law["actor"].as_str().unwrap().into()));
         let mut owner = member_open::MemberStoreOpenRetained::new(request, owners);
         owner.stage_initial(DemoSnapshot::default()).unwrap_or_else(|_| panic!("original pending snapshot"));
         owner

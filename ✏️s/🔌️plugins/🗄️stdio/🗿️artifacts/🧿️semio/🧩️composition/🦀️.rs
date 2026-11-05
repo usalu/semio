@@ -34,12 +34,12 @@ pub const ALL: &[semio_s_artifact_stdio_semio_base::SemioConversion] = &[
 //#endregion 🔗️Conversions
 
 /// 🧾️ The semio artifact declared with every conversion of the family.
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_semio::declaration(definition, ALL)
 }
 
 /// 🗂️ The runtime assembly of the full semio artifact.
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("semio", semio_s_artifact_stdio_semio::definition()?, declaration)
 }
 

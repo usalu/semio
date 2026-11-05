@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::{GisMapSnapshot};
 use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_derived_children};
-use semio_framework_plugin::{ActionArgOption, ArtifactView, ConfigView, Emit, ExampleSource, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ActionArgOption, ArtifactView, ConfigView, Emit, ExampleSource, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Catalogue
@@ -55,7 +55,7 @@ pub mod set_active_example {
         if document.positions == next.positions && document.routes == next.routes && document.regions == next.regions {
             return Ok(Emit::default());
         }
-        Ok(semio_framework_plugin::app::document_load_emit(&next, crate::GIS_MAP_SCHEMA))
+        Ok(semio_plugin::app::document_load_emit(&next, crate::GIS_MAP_SCHEMA))
     }
 }
 //#endregion 🔖️SetActiveExample

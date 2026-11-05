@@ -12,7 +12,7 @@ pub(super) fn receive_fem_uncontrolled(value:&Fem3dSnapshotValue)->Result<Fem3dS
     let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
     let mut native=semio_framework_value::NativeDecodeControl::new(128*1024*1024,&mut callback);native.install_retirement_recipient(&mut recipient).map_err(|e|error("test.receiving",e.to_string()))?;
     let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:128*1024*1024,maximum_capacity_bytes:128*1024*1024,maximum_release_bytes:128*1024*1024,maximum_depth:128};
-    let mut owner=semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native,grant);
+    let mut owner=semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native,grant);
     Fem3dSnapshot::receive_authoring(&mut input,&mut owner).map_err(|e|error("test.receiving",e.to_string()))
 }
 #[cfg(test)]
@@ -117,7 +117,7 @@ impl Deserializer<IfcSnapshot> for FemIntoIfc {
     async fn deserialize(input:&IoPayload,control:&mut IoRunControl<'_,'_>)->IoResult<IfcSnapshot>{
         let IoPayload::Binary(bytes)=input else{return Err(IoError::from_value_error(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"FEM native snapshot pack required")));};
         let value=control.receive_nested::<Fem3dSnapshot,IfcSnapshot>(|slot,original|{
-            *slot=Some(<Fem3dSnapshot as semio_framework_os_kernel::ArtifactPackReceiving>::receive_pack(bytes,&mut original.snapshot_decode()?)?);
+            *slot=Some(<Fem3dSnapshot as semio_os_kernel::ArtifactPackReceiving>::receive_pack(bytes,&mut original.snapshot_decode()?)?);
             super::fem_build::receive(slot.as_ref().unwrap(),&mut original.snapshot_decode()?)
         }).map_err(IoError::from_value_error)?;
         Ok(IoOutcome{value,diagnostics:vec![loss("Native analytical export retains nodes, bars and zero roll frames, canonical material and section engineering values, boolean supports and explicit global nodal load components including signed zero. Self-weight, distributed or area loads, combinations, solids, isolated nodes and nonzero frame roll refuse atomically. New IFC identities and reference axes are authored; solver/display settings are omitted.")]})
@@ -126,7 +126,7 @@ impl Deserializer<IfcSnapshot> for FemIntoIfc {
 
 pub fn entries()->&'static[ComposerEntry] {
     static ENTRIES:OnceLock<Vec<ComposerEntry>>=OnceLock::new();
-    ENTRIES.get_or_init(||vec![semio_framework_plugin::composer_entry_of::<IfcToBim>(),semio_framework_plugin::composer_entry_of::<BimToIfc>(),semio_framework_plugin::composer_entry_of::<IfcToFem>(),semio_framework_plugin::composer_entry_of::<FemToIfc>()]).as_slice()
+    ENTRIES.get_or_init(||vec![semio_plugin::composer_entry_of::<IfcToBim>(),semio_plugin::composer_entry_of::<BimToIfc>(),semio_plugin::composer_entry_of::<IfcToFem>(),semio_plugin::composer_entry_of::<FemToIfc>()]).as_slice()
 }
 pub(super) fn io_entries()->Vec<IoEntry>{vec![original_pack::serializer::<IfcIntoBim>(),original_pack::deserializer::<BimIntoIfc>(),original_pack::serializer::<IfcIntoFem>(),original_pack::deserializer::<FemIntoIfc>()]}
 

@@ -1,8 +1,8 @@
 //! 👁️ View model handed to guests: view context capacities, public invocation capacity and UI refresh sections.
 
 use semio_framework_tool_run::ToolRunTraceCursor;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use serde::Deserialize;
@@ -131,7 +131,7 @@ pub struct TreeWindowRequest {
     ///
     /// 🔑️ The container's **window path**, not a bare node key: the node keys of its enclosing
     /// windowed containers, outermost first, then its own key, joined by
-    /// `semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR` (U+001F). A top-level section's path
+    /// `semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR` (U+001F). A top-level section's path
     /// IS its own key, so a flat request is unchanged; a nested one is
     /// `"fem3d-play-artifact.load-cases\u{1f}dead"`. Identity is the path rather than the key so that
     /// two containers reusing one entity id under different parents — a load case and a combination

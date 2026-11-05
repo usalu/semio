@@ -27,7 +27,7 @@
 //! name them in an enum without inverting that dependency graph. [`SurfaceRegistry::register`] lets
 //! each product crate hand this crate a monomorphized `fn(SurfaceKind) -> AnySurface` thunk instead —
 //! the enum's closed set exists, just one layer up, exactly where `ActiveBackend`'s real `cfg` aliases
-//! belong (`semio-framework-ui-host`, per that file's docstring).
+//! belong (`semio-ui-host`, per that file's docstring).
 
 use crate::{Bounds, Deadline, DeviceCapabilities, PhysicalSize, ResourceRegistry, SceneBuilder};
 use std::any::Any;

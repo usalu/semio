@@ -9,14 +9,14 @@
 //! whole document (see `tessellate_document`'s own doc comment for why the inference's single-
 //! `MeshTransfer` shape makes one merged mesh the honest choice over per-solid instancing).
 //! Triangle picking resolves to a real face/solid via `face_groups`' persistent-label `entityId`s
-//! (`semio_framework_plugin::mesh_from_indexed_with_face_groups`) — no more placeholder box.
+//! (`semio_plugin::mesh_from_indexed_with_face_groups`) — no more placeholder box.
 //! `SEMIO_BREP_VIEW_FALLBACK_MESH_KIND` is gone: an empty/invalid document now renders an empty
 //! mesh (zero triangles), not a fabricated stand-in shape.
 
 use crate::schema::inferences::{tessellate_document, BREP_INFERENCE_DEFAULT_DEFLECTION};
 #[cfg(test)] use semio_framework_3d_brep_representation::topology::Body;
 use crate::schema::snapshot::SemioBrepSnapshot;
-use semio_framework_plugin::{mesh_from_indexed_with_face_groups, world3d_camera_json, world3d_selection_json, BuiltNode, MeshData, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_plugin::{mesh_from_indexed_with_face_groups, world3d_camera_json, world3d_selection_json, BuiltNode, MeshData, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -69,7 +69,7 @@ fn world_instances_json() -> String {
 /// 👁️ Pure `SemioBrepSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioBrepSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &SemioBrepSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mesh_data = document_mesh_data(document);
     let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::json!({ "id": SEMIO_BREP_VIEW_MESH_ID, "data": semio_framework_pack_json::Value::from(mesh_data) })]));
     let view = MeshView {

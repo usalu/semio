@@ -37,7 +37,7 @@ fn window_config_from_world(value: &Puzzle5dWorldWindowConfig) -> Puzzle5dWindow
     }
 }
 
-pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, crate::editor::puzzle5d::config::Puzzle5dConfig>) -> Puzzle5dWindowConfig {
+pub fn config_from_view(view: &semio_plugin::ConfigView<'_, crate::editor::puzzle5d::config::Puzzle5dConfig>) -> Puzzle5dWindowConfig {
     if let Some(value) = view.window::<Puzzle5dBoardWindowConfigOwner>() {
         return window_config_from_board(value);
     }
@@ -47,7 +47,7 @@ pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, crate::edi
     Puzzle5dWindowConfig::default()
 }
 
-pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> Puzzle5dWindowConfig {
+pub fn config_from_snapshot(snapshot: Option<&semio_plugin::WindowConfigSnapshot>) -> Puzzle5dWindowConfig {
     if let Some(value) = snapshot.and_then(|snapshot| snapshot.get::<Puzzle5dBoardWindowConfigOwner>()) {
         return window_config_from_board(value);
     }
@@ -57,15 +57,15 @@ pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConf
     Puzzle5dWindowConfig::default()
 }
 
-pub fn transient_from_view(view: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>) -> Puzzle5dWindowTransient {
+pub fn transient_from_view(view: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>) -> Puzzle5dWindowTransient {
     view.window::<Puzzle5dBoardWindowTransientOwner>().or_else(|| view.window::<Puzzle5dWorldWindowTransientOwner>()).cloned().unwrap_or_default()
 }
 
-pub fn transient_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowTransientSnapshot>) -> Puzzle5dWindowTransient {
+pub fn transient_from_snapshot(snapshot: Option<&semio_plugin::WindowTransientSnapshot>) -> Puzzle5dWindowTransient {
     snapshot.and_then(|value| value.get::<Puzzle5dBoardWindowTransientOwner>().or_else(|| value.get::<Puzzle5dWorldWindowTransientOwner>())).cloned().unwrap_or_default()
 }
 
-pub fn kind_for_view(view: &semio_framework_plugin::ViewModel) -> Option<&str> {
+pub fn kind_for_view(view: &semio_plugin::ViewModel) -> Option<&str> {
     let id = view.window_id.as_deref()?;
     view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str())
 }
@@ -146,10 +146,10 @@ pub fn transient_from_runtime(runtime: &Puzzle5dRuntime, window_id: &str) -> Puz
     Puzzle5dWindowTransient { suggestion_menu: runtime.suggestion_menu.clone(), engagement_input: runtime.engagement_input_by_window.get(window_id).cloned().unwrap_or_default(), brush_candidate_index: runtime.brush_candidate_index }
 }
 
-pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle5dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle5d-window-required"))?;
+pub fn addressed_config(view: &semio_plugin::ViewModel, config: Puzzle5dWindowConfig) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("puzzle5d-window-required"))?;
     match kind_for_view(view) {
-        Some(PUZZLE5D_BOARD_WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(
+        Some(PUZZLE5D_BOARD_WINDOW_KIND_ID) => Ok(semio_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(
             id,
             Puzzle5dBoardWindowConfigMutation::Set(Puzzle5dBoardWindowConfigMutationSet {
                 patch: Puzzle5dBoardWindowConfigDiff::of(&Puzzle5dBoardWindowConfig {
@@ -163,7 +163,7 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle
                 }),
             }),
         )),
-        Some(PUZZLE5D_WORLD_WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dWorldWindowConfigOwner>(
+        Some(PUZZLE5D_WORLD_WINDOW_KIND_ID) => Ok(semio_plugin::WindowConfigMutation::of::<Puzzle5dWorldWindowConfigOwner>(
             id,
             Puzzle5dWorldWindowConfigMutation::Set(Puzzle5dWorldWindowConfigMutationSet {
                 patch: Puzzle5dWorldWindowConfigDiff::of(&Puzzle5dWorldWindowConfig {
@@ -184,16 +184,16 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle
                 }),
             }),
         )),
-        _ => Err(semio_framework_plugin::Fault::from("puzzle5d-window-kind-required")),
+        _ => Err(semio_plugin::Fault::from("puzzle5d-window-kind-required")),
     }
 }
 
-pub fn addressed_transient(view: &semio_framework_plugin::ViewModel, transient: Puzzle5dWindowTransient) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle5d-window-required"))?;
+pub fn addressed_transient(view: &semio_plugin::ViewModel, transient: Puzzle5dWindowTransient) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("puzzle5d-window-required"))?;
     let mutation = Puzzle5dWindowTransientMutation::Snapshot { transient };
     match kind_for_view(view) {
-        Some(PUZZLE5D_BOARD_WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle5dBoardWindowTransientOwner>(id, mutation)),
-        Some(PUZZLE5D_WORLD_WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle5dWorldWindowTransientOwner>(id, mutation)),
-        _ => Err(semio_framework_plugin::Fault::from("puzzle5d-window-kind-required")),
+        Some(PUZZLE5D_BOARD_WINDOW_KIND_ID) => Ok(semio_plugin::WindowTransientMutation::of::<Puzzle5dBoardWindowTransientOwner>(id, mutation)),
+        Some(PUZZLE5D_WORLD_WINDOW_KIND_ID) => Ok(semio_plugin::WindowTransientMutation::of::<Puzzle5dWorldWindowTransientOwner>(id, mutation)),
+        _ => Err(semio_plugin::Fault::from("puzzle5d-window-kind-required")),
     }
 }

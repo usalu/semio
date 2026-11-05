@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "catalog-entry", kind: "remove-catalog-entry", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove catalog entry {}", self.key), &format!("Katalogeintrag {} entfernen", self.key))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove catalog entry {}", self.key), &format!("Katalogeintrag {} entfernen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

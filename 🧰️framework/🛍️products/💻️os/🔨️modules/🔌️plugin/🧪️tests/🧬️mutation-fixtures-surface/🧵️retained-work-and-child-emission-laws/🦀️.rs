@@ -152,7 +152,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
     for stop in stops {
         let mut apps = Vec::new();
         let mut lanes = Vec::new();
-        let mut owner = semio_framework_os_kernel::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let mut owner = semio_os_kernel::os_vcs::ArtifactGroupVisibilityOwner::new();
         let visibility = owner.view();
         let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 262_144, maximum_capacity_bytes: 262_144, maximum_release_bytes: 262_144, maximum_depth: 64 };
         for _ in 0..3 {
@@ -284,7 +284,7 @@ async fn child_emission_private_group_row_frames_preserve_original_sources_on_ev
             let demand = group.retirement_demands(grant.maximum_copy_bytes).unwrap();
             assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
             let exact=grant;
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_group_caller.turn(exact,|same|semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(same,exact,demand,|incoming,loan|{let step=group.close_step(&mut *app.stores.store,&mut app.child_composition.children,&mut graph,&app.child_composition.child_content_root,incoming,loan)?;Ok((semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}).map_err(Into::into)).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_group_caller.turn(exact,|same|semio_plugin_ownership::bounded_ownership::original_lifecycle_step(same,exact,demand,|incoming,loan|{let step=group.close_step(&mut *app.stores.store,&mut app.child_composition.children,&mut graph,&app.child_composition.child_content_root,incoming,loan)?;Ok((semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}).map_err(Into::into)).unwrap());
             assert!(step.progress().unwrap().fits(exact));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().unwrap().retained_capacity_bytes, step.progress().unwrap().released_bytes));
         }

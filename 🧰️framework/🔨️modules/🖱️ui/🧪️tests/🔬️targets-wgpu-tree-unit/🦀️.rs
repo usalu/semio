@@ -1,6 +1,6 @@
 use super::*;
-use semio_framework_ui_declaration::ui::{UiNode, UiPresence, UiTextNode};
-use semio_framework_ui_locale::Label;
+use semio_ui_declaration::ui::{UiNode, UiPresence, UiTextNode};
+use semio_ui_locale::Label;
 use ui_contract::{Component, SeparatorProps};
 
 fn text(value: &str) -> UiNode {

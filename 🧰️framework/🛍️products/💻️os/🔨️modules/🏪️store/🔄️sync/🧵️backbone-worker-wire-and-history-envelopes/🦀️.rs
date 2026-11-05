@@ -58,7 +58,7 @@ pub mod backbone_worker_wire {
     pub fn encode_request(request: &BackboneWorkerRequest) -> Vec<u8> {
         let dsl = semio_framework_value::ToValue::to_value(request);
         let mut bytes = vec![MAGIC];
-        bytes.extend(semio_framework_os_pack::pack_rt::encode_wire_value(&dsl));
+        bytes.extend(semio_os_pack::pack_rt::encode_wire_value(&dsl));
         bytes
     }
 
@@ -67,14 +67,14 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = semio_framework_os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        let dsl = semio_os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
         semio_framework_value::FromValue::from_value(dsl).map_err(|error| error.to_string())
     }
 
     pub fn encode_response(response: &BackboneWorkerResponse) -> Vec<u8> {
         let dsl = semio_framework_value::ToValue::to_value(response);
         let mut bytes = vec![MAGIC];
-        bytes.extend(semio_framework_os_pack::pack_rt::encode_wire_value(&dsl));
+        bytes.extend(semio_os_pack::pack_rt::encode_wire_value(&dsl));
         bytes
     }
 
@@ -83,7 +83,7 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = semio_framework_os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        let dsl = semio_os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
         semio_framework_value::FromValue::from_value(dsl).map_err(|error| error.to_string())
     }
 }
@@ -96,7 +96,7 @@ pub mod backbone_worker_wire {
 /// actor's dedup set uses — computed here and ONLY here, so a locally-flushed edit's spr entry
 /// and the envelope built from re-reading that same spr always agree, fixing the actor's old
 /// self-re-ingest bug (mixing envelope op ids with raw JSON edit ids) by construction.
-async fn op_ids_of(edit: &semio_framework_os_spr::HistoryEdit) -> Vec<String> {
+async fn op_ids_of(edit: &semio_os_spr::HistoryEdit) -> Vec<String> {
     match &edit.meta {
         Some(metas) if metas.len() == edit.ops.len() => metas.iter().enumerate().map(|(index, meta)| meta.op_id.clone().unwrap_or_else(|| format!("{}#{index}", edit.id))).collect(),
         _ => (0..edit.ops.len()).map(|index| format!("{}#{index}", edit.id)).collect(),
@@ -113,7 +113,7 @@ pub fn document_archive_hash(archive: &[u8]) -> String {
 /// `parse_document_spr`, whose meta-absent branch mints fresh random ids on every read).
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
-    let log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
+    let log = semio_os_spr::decode_history(spr, &semio_os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
     let mut ids = std::collections::HashSet::new();
     for edit in &log.edits {
         ids.extend(op_ids_of(edit).await);
@@ -126,7 +126,7 @@ pub async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>,
 /// edit's operations in log order, then every history transition — a persisted document IS its
 /// genesis pack plus exactly these events.
 pub async fn spr_events(spr: &[u8], document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
-    let log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
+    let log = semio_os_spr::decode_history(spr, &semio_os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
     let mut events = Vec::new();
     for edit in &log.edits {
         events.extend(envelopes_from_history_edit(edit, document_id, schema, actor_identity_grant).await?);
@@ -140,23 +140,23 @@ pub async fn spr_events(spr: &[u8], document_id: &str, schema: &str, actor_ident
 /// `HistoryEdit` decoded off the spr bytes, so an appended external edit can flow through the
 /// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope_cold`). A binary-less op payload
 /// is a hard error — `.spr` is binary-only since B1, so every real op has one.
-pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryEdit, document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
+pub async fn envelopes_from_history_edit(edit: &semio_os_spr::HistoryEdit, document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
     if !actor_identity_batch_admits(edit.ops.len(),actor_identity_grant){return Err("original history identity batch exceeds caller lease authority".into());}
     for index in 0..edit.ops.len(){if edit.meta.as_ref().and_then(|metas|metas.get(index)).and_then(|meta|meta.author_id.as_ref()).or(edit.actor.as_ref()).is_none(){return Err(format!("edit {} op {index} has no authentic actor identity",edit.id));}}
     let op_ids = op_ids_of(edit).await;
     let mut identity_copied=0;
     let mut envelopes = Vec::with_capacity(edit.ops.len());
     for (index, op) in edit.ops.iter().enumerate() {
-        let payload = op.binary.as_deref().ok_or_else(|| format!("edit {} op {index} has no binary payload", edit.id)).and_then(|bytes| semio_framework_os_spr::CausalPayload::try_from_slice(bytes).map_err(ValueError::into_message))?;
+        let payload = op.binary.as_deref().ok_or_else(|| format!("edit {} op {index} has no binary payload", edit.id)).and_then(|bytes| semio_os_spr::CausalPayload::try_from_slice(bytes).map_err(ValueError::into_message))?;
         let meta = edit.meta.as_ref().and_then(|metas| metas.get(index));
         let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(MutationId).collect()).unwrap_or_default();
         let original_actor=meta.and_then(|meta|meta.author_id.as_ref()).or(edit.actor.as_ref()).expect("original actor presence validated before envelope birth");
         let(actor,receipt)=original_actor.admit_clone(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:actor_identity_grant.maximum_copy_bytes-identity_copied,..actor_identity_grant}).result.map_err(ValueError::into_message)?;identity_copied+=receipt.copied_bytes;
         let timestamp = match meta.and_then(|meta| meta.hlt) {
-            Some((actor, physical_ms, logical)) => semio_framework_os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
-            None => semio_framework_os_spr::HybridLogicalTimestamp::new(0, 0),
+            Some((actor, physical_ms, logical)) => semio_os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
+            None => semio_os_spr::HybridLogicalTimestamp::new(0, 0),
         };
-        let inverse_payload = semio_framework_os_spr::CausalPayload::try_from_slice(edit.inverse.get(index).and_then(|p| p.binary.as_deref()).unwrap_or_default()).map_err(ValueError::into_message)?;
+        let inverse_payload = semio_os_spr::CausalPayload::try_from_slice(edit.inverse.get(index).and_then(|p| p.binary.as_deref()).unwrap_or_default()).map_err(ValueError::into_message)?;
         envelopes.push(MutationEnvelope {
             mutation_id: MutationId(op_ids[index].clone()),
             document_id: ArtifactId(document_id.to_string()),
@@ -164,8 +164,8 @@ pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryE
             dependencies,
             observed: None,
             target: Vec::new(),
-            diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId(schema.to_string()), payload },
-            inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
+            diff: semio_os_spr::ArtifactDiff { schema: semio_os_spr::SchemaId(schema.to_string()), payload },
+            inverse: semio_os_spr::InverseMutation { schema: semio_os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
             timestamp,
             transaction: None, verb: edit.verb.clone(), line: edit.line.clone(),
         });
@@ -188,15 +188,15 @@ pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryE
 /// already resolved any contribution or transaction locally and shipped the resulting
 /// OWNER ops, so this side records exactly what it receives — an owner edit.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> semio_framework_os_spr::HistoryEdit {
-    semio_framework_os_spr::HistoryEdit {
+pub async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> semio_os_spr::HistoryEdit {
+    semio_os_spr::HistoryEdit {
         id: envelope.mutation_id.0.clone(),
         actor: Some(envelope.actor.0.clone()),
         started_at: now_ms().await.to_string(),
         finished_at: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
-        ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.to_vec_owner()) }],
-        inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.to_vec_owner()) }] },
-        meta: Some(vec![semio_framework_os_spr::HistoryOpMeta {
+        ops: vec![semio_os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.to_vec_owner()) }],
+        inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![semio_os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.to_vec_owner()) }] },
+        meta: Some(vec![semio_os_spr::HistoryOpMeta {
             op_id: Some(envelope.mutation_id.0.clone()),
             dependencies: envelope.dependencies.iter().map(|dependency| dependency.0.clone()).collect(),
             base_version: 0,
@@ -205,7 +205,7 @@ pub async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> semio_fr
             undo_policy: 0,
             payload_hash: None,
             group_id: None,
-            origin: semio_framework_os_spr::command::MutationOrigin::Owner,
+            origin: semio_os_spr::command::MutationOrigin::Owner,
             messages: Vec::new(),
             transaction: envelope.transaction.clone(),
         }]),
@@ -223,9 +223,9 @@ pub async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surfa
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    let scope = semio_framework_os_directory_client::encode_url_component(&format!("{space_id}/{document_id}"));
+    let scope = semio_os_directory_client::encode_url_component(&format!("{space_id}/{document_id}"));
     match surface {
-        Some(surface) => format!("{scheme}://{authority}/scopes/{scope}/document/ws?surface={}", semio_framework_os_directory_client::encode_url_component(surface)),
+        Some(surface) => format!("{scheme}://{authority}/scopes/{scope}/document/ws?surface={}", semio_os_directory_client::encode_url_component(surface)),
         None => format!("{scheme}://{authority}/scopes/{scope}/document/ws"),
     }
 }

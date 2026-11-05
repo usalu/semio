@@ -5,19 +5,19 @@
 //! `sequence_ui`'s own compiled window (`🎬️sequence/🎛️apps/🎬️sequence/🎭️modes/✏️edit/🪟️windows/🧬️compiled`).
 
 use crate::DagScene;
-use semio_framework_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
+use semio_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
 use semio_framework_artifact_infinite_dag::{dag_host_snapshot_from_document};
-use semio_framework_os_infinite_directed_presentation::{DagCamera};
+use semio_os_infinite_directed_presentation::{DagCamera};
 
 
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TextEditorScene;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TextEditorScene;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_WINDOW_COMPILED: &str = "dag-compiled-dag";
@@ -51,7 +51,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(scene: &DagScene, camera: &DagCamera) -> UiAssemblyResult<BuiltNode> {
     let document = semio_framework_artifact_infinite_dag::DagSnapshot { schema: crate::DAG_DOCUMENT_SCHEMA.into(), nodes: scene.nodes.clone(), edges: scene.edges.clone() };
     let fixture = dag_host_snapshot_from_document(&document, camera.clone());
-    scene_surface(DAG_PLAY_SURFACE_COMPILED, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &TextEditorScene::base(dag_host_snapshot_to_wire_literal(&fixture), Some("wire".into()), None))
+    scene_surface(DAG_PLAY_SURFACE_COMPILED, semio_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &TextEditorScene::base(dag_host_snapshot_to_wire_literal(&fixture), Some("wire".into()), None))
 }
 //#endregion 🔖️Render
 

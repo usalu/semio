@@ -1,93 +1,93 @@
 //! 🧪️ Unit 2 of the facade test host of `testing-laws`: out of line because its `#[path]` mounts must not pass through a module directory that does not exist.
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_emission::ActionMeta;
 use semio_framework::kernel::ActorId;
 #[cfg(test)]
-use semio_framework_plugin_command::AlternativeFact;
+use semio_plugin_command::AlternativeFact;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_app_builder::App;
+use semio_plugin_app_builder::App;
 use store::os_store::store_schema::ArtifactCommand;
 use pack::snapshot::ArtifactPack;
 use store::ArtifactStore;
 use store::ArtifactStoreInitializationAuthority;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
+use semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
 use std::collections::BTreeMap;
-use semio_framework_ui_runtime::ComponentTree;
+use semio_ui_runtime::ComponentTree;
 use store::ConfigStore;
 use semio_framework_value::DslValue;
 use semio_framework::FaultCode;
 use store::os_store::store_schema::HistoryLane;
 use semio_framework::kernel::HybridLogicalTimestamp;
 use protocol::LOCAL_ACTOR_ID;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use store::Mutation;
 use semio_framework::kernel::MutationId;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::history_view::MutationView;
+use semio_plugin_decl_views::history_view::MutationView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::NoTransientMutation;
+use semio_plugin_decl_views::NoTransientMutation;
 #[cfg(test)]
-use semio_framework_plugin_window_kits::NodeGraphDeleteDispatch;
-use semio_framework_plugin_testing_caller::OriginalFixtureCaller;
+use semio_plugin_window_kits::NodeGraphDeleteDispatch;
+use semio_plugin_testing_caller::OriginalFixtureCaller;
 use store::{ReferenceSpaceMember, SpaceMember};
 #[cfg(test)]
-use semio_framework_plugin_time_travel::SupersedeLedger;
+use semio_plugin_time_travel::SupersedeLedger;
 #[cfg(test)]
-use semio_framework_plugin_time_travel::SupersedeRecord;
+use semio_plugin_time_travel::SupersedeRecord;
 #[cfg(test)]
-use semio_framework_plugin_time_travel::SupersedeRole;
-use semio_framework_ui_locale::Terminology;
+use semio_plugin_time_travel::SupersedeRole;
+use semio_ui_locale::Terminology;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
+use semio_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
 use store::os_store::document_materialize::create_document_envelope;
 #[cfg(test)]
-use semio_framework_plugin_window_kits::delete_selection;
+use semio_plugin_window_kits::delete_selection;
 #[cfg(test)]
-use semio_framework_plugin_command::history_alternative_views;
+use semio_plugin_command::history_alternative_views;
 #[cfg(test)]
-use semio_framework_plugin_window_kits::node_graph_delete_selection_spec;
+use semio_plugin_window_kits::node_graph_delete_selection_spec;
 #[cfg(test)]
-use semio_framework_plugin_window_kits::nothing_selected;
-use semio_framework_plugin_time_travel as time_travel;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_kits::nothing_selected;
+use semio_plugin_time_travel as time_travel;
+use semio_ui_contract::*;
 use std::future::Future;
 use store::MemberFactory;
 #[cfg(test)]
-use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
+use semio_plugin_decl_emission::ArtifactMutationOutcome;
 #[cfg(test)]
-use semio_framework_plugin_composition_publication::PendingArtifactStorePublication;
+use semio_plugin_composition_publication::PendingArtifactStorePublication;
 #[cfg(test)]
-use semio_framework_plugin_retained_command::typed_operation::PendingPublicationOutcome;
+use semio_plugin_retained_command::typed_operation::PendingPublicationOutcome;
 #[cfg(test)]
-use semio_framework_plugin_window_config::WindowConfigMutation;
+use semio_plugin_window_config::WindowConfigMutation;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientMutation;
+use semio_plugin_window_transient::window_transient::WindowTransientMutation;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerBundle;
+use semio_plugin_window_transient::window_transient::WindowTransientOwnerBundle;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::ArtifactView;
+use semio_plugin_decl_views::ArtifactView;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::ConfigView;
+use semio_plugin_decl_views::ConfigView;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::DraftView;
+use semio_plugin_decl_views::DraftView;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::InteractionView;
+use semio_plugin_decl_views::InteractionView;
 #[cfg(test)]
-use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::UiAssemblyResult;
 #[cfg(test)]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 #[cfg(test)]
-use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
+use semio_plugin_window_config::WindowConfigOwnerRegistry;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use semio_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
 
 #[cfg(test)]
 #[path = "../../../../../🧪️tests/🧪️bounded-reload/🦀️.rs"]

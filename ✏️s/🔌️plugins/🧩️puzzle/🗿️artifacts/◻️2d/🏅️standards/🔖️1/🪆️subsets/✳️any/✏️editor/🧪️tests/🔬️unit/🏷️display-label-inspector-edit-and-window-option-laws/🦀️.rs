@@ -195,7 +195,7 @@ fn every_window_kind_declares_the_surface_kind_it_renders() {
         detail::definition(),
         selection::definition(),
     ] {
-        assert_eq!(definition.surface_kind, semio_framework_plugin::SurfaceKind::Board2d, "window kind {} renders a Board2d surface", definition.id);
+        assert_eq!(definition.surface_kind, semio_plugin::SurfaceKind::Board2d, "window kind {} renders a Board2d surface", definition.id);
     }
 }
 //#endregion 🌐️WindowOptionVerbs

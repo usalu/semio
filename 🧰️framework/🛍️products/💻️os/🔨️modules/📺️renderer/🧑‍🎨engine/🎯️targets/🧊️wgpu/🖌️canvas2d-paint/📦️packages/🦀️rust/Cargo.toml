@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-os-renderer-wgpu-canvas2d-paint"
+name = "semio-renderer-wgpu-canvas2d-paint"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

@@ -23,8 +23,8 @@ pub mod forms;
 macro_rules! history_identity {
     (|$identity:ident| $operation:expr) => {{
         let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-        let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
-        let mut $identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).unwrap_or_else(|_| unreachable!("flow authoring identity ceiling is a declared nonzero constant"));
+        let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
+        let mut $identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).unwrap_or_else(|_| unreachable!("flow authoring identity ceiling is a declared nonzero constant"));
         let result = $operation;
         drop($identity.pause().unwrap_or_else(|_| unreachable!("identity authority retains its receipt through one authoring call")));
         result
@@ -82,8 +82,8 @@ pub mod forms_bridge {
     use super::{FlowHostSnapshot, Widget};
 
     /// 🫴️ Hands each original widget's fields directly to the selected actual producer.
-    pub fn flow_host_snapshot_to_form_spec<P:crate::forms::FlowFormProducer>(host_snapshot:&FlowHostSnapshot,producer:&P)->P::Form {
-     let fields=host_snapshot.widgets.iter().filter_map(|widget|match widget {
+    pub fn flow_host_snapshot_to_form_spec<P:crate::forms::FlowFormProducer>(host_snapshot:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,producer:&P)->P::Form {
+     let fields=host_snapshot.widgets().iter().filter_map(|widget|match widget {
       Widget::InputSlider {id,label,value,min,max,step}=>Some(producer.slider(id,label,*value,*min,*max,*step)),
       Widget::InputNote {id,text}=>Some(producer.note(id,text)),
       Widget::InputImage {id,src}=>Some(producer.image(id,src)),

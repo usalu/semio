@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBearingSeatLengthM
         record: "ChangeBearingSeatLengthM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Available seat length of the deck on the support", "Vorhandene Auflagerlänge des Überbaus ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Available seat length of the deck on the support", "Vorhandene Auflagerlänge des Überbaus ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bearing-seat-length-m".into()]

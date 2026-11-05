@@ -207,7 +207,7 @@ pub fn build_demo_layout_snapshot() -> crate::snapshot::LayoutSnapshot {
     }
 }
 
-/// 🌉️ JSON bridge for `semio_framework_plugin::App::example`, which hardcodes `serde_json::from_str`
+/// 🌉️ JSON bridge for `semio_plugin::App::example`, which hardcodes `serde_json::from_str`
 /// on its `document_json` parameter (shared framework machinery, out of scope for this DSL migration) —
 /// derives the JSON from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
 pub fn layout_sample_document_json() -> String {

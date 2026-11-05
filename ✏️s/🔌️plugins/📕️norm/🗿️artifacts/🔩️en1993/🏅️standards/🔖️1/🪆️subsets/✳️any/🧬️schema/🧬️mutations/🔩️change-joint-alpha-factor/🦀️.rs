@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointAlphaFactor w
         record: "ChangedJointAlphaFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Effective length factor α (Figure 6.11) of the joint", "Anschluss: Faktor α der wirksamen Länge (Bild 6.11) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Effective length factor α (Figure 6.11) of the joint", "Anschluss: Faktor α der wirksamen Länge (Bild 6.11) ändern")
     }
 }
 

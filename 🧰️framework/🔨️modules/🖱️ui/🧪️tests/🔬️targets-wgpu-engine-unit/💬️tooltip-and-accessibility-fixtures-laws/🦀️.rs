@@ -8,7 +8,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
     let generation = 1;
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
     let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     assert!(ui.publish_document(window_id, tooltip_document(window_id, generation, label, shortcut)));
     drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
     let mut atlas = FontAtlas::builtin();
@@ -29,7 +29,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
         assert!((resolved.x - placement["expected"]["left"].as_f64().expect("left") as f32).abs() < 0.01);
         assert!((resolved.y - placement["expected"]["top"].as_f64().expect("top") as f32).abs() < 0.01);
         let expected_side = placement["expected"]["side"].as_str().expect("side");
-        assert!(matches!((expected_side, resolved.side), ("top", semio_framework_ui_wgpu_events::OverlaySide::Top) | ("bottom", semio_framework_ui_wgpu_events::OverlaySide::Bottom)));
+        assert!(matches!((expected_side, resolved.side), ("top", semio_ui_wgpu_events::OverlaySide::Top) | ("bottom", semio_ui_wgpu_events::OverlaySide::Bottom)));
     }
 
     let placement = &fixture["placements"][0];
@@ -89,7 +89,7 @@ fn tooltip_keeps_accepted_text_across_candidate_discard_and_retires_after_replac
     let window_id = "accepted-tooltip-text";
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
     let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     assert!(ui.publish_document(window_id, tooltip_document(window_id, 1, label, shortcut)));
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
     let mut atlas = FontAtlas::builtin();
@@ -127,10 +127,10 @@ fn tooltip_keeps_accepted_text_across_candidate_discard_and_retires_after_replac
     assert!(ui.windows.get(window_id).expect("tooltip window").presented_tooltip.is_none(), "accepting the replacement retires the old document label");
 }
 
-fn retained_walk_leaf(discriminant: u32, ordinal: u32, value: &str) -> semio_framework_ui_retained_tree::tree::Node {
-    semio_framework_ui_retained_tree::tree::Node::new(
-        semio_framework_ui_retained_tree::tree::NodeKey::Positional(discriminant, ordinal),
-        semio_framework_ui_retained_tree::tree::WidgetSpec(UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })),
+fn retained_walk_leaf(discriminant: u32, ordinal: u32, value: &str) -> semio_ui_retained_tree::tree::Node {
+    semio_ui_retained_tree::tree::Node::new(
+        semio_ui_retained_tree::tree::NodeKey::Positional(discriminant, ordinal),
+        semio_ui_retained_tree::tree::WidgetSpec(UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })),
     )
 }
 
@@ -321,10 +321,10 @@ fn reconcile_puzzle3d_settings(ui: &mut Ui, window_id: &str, law: &serde_json::V
     panic!("Puzzle3D Settings reconcile exceeded its fixed budget");
 }
 
-fn explicit_node(tree: &UiTree, key: &str) -> semio_framework_ui_arena::NodeId {
+fn explicit_node(tree: &UiTree, key: &str) -> semio_ui_arena::NodeId {
     let mut pending = vec![tree.root.expect("mounted document root")];
     while let Some(id) = pending.pop() {
-        if matches!(tree.node(id).map(|node| &node.key), Some(semio_framework_ui_retained_tree::tree::NodeKey::Explicit(found)) if found == key) {
+        if matches!(tree.node(id).map(|node| &node.key), Some(semio_ui_retained_tree::tree::NodeKey::Explicit(found)) if found == key) {
             return id;
         }
         pending.extend(tree.children(id));

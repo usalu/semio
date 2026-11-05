@@ -4,17 +4,17 @@
 use semio_framework::AppDefinition;
 use semio_framework::kernel::ActorId;
 use semio_framework::kernel::Rights;
-use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_decl_app::mount_natural_file_actions;
-use semio_framework_plugin_instance_app::VcsArtifactApp;
-use semio_framework_plugin_decl_surface::ArtifactEditor;
-use semio_framework_plugin_decl_surface::ArtifactViewer;
-use semio_framework_plugin_decl_surface::EditorApp;
-use semio_framework_plugin_decl_surface::ViewerApp;
-use semio_framework_plugin_decl_surface::artifact_codec_table;
-use semio_framework_plugin_decl_registry::declarations::SurfaceDeclaration;
-use semio_framework_plugin_decl_registry::declarations::stamp_fault_notices;
+use semio_plugin_window_kits::AppActionRegistry;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_decl_app::mount_natural_file_actions;
+use semio_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_decl_surface::ArtifactEditor;
+use semio_plugin_decl_surface::ArtifactViewer;
+use semio_plugin_decl_surface::EditorApp;
+use semio_plugin_decl_surface::ViewerApp;
+use semio_plugin_decl_surface::artifact_codec_table;
+use semio_plugin_decl_registry::declarations::SurfaceDeclaration;
+use semio_plugin_decl_registry::declarations::stamp_fault_notices;
 
 /// ✏️ Builds an editor `SurfaceDeclaration` from `E` — `def` is `Editor::builder(E::DIALECT)
 /// ...build_definition()`, same as `PluginBuilder::editor::<E>`. `rights: Rights::Write`
@@ -30,7 +30,7 @@ use semio_framework_plugin_decl_registry::declarations::stamp_fault_notices;
 /// 🚫️async: E4 fn-pointer slot — `E::app_schema()` is a genuine (pure, non-suspending)
 /// AFIT trait method; resolved synchronously via `resolve_ready` to fit the bare slot.
 pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
-    fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<PA, semio_framework::Fault> {
+    fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<PA, semio_framework::Fault> {
         ::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor, mounted_policy, identity)).map(PA::from)
     }
     fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -54,7 +54,7 @@ pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<Edi
 ///
 /// 🚫️async: E4 fn-pointer slot — see `editor_surface`'s `app_schema` doc.
 pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
-    fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<PA, semio_framework::Fault> {
+    fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<PA, semio_framework::Fault> {
         ::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor, mounted_policy, identity)).map(PA::from)
     }
     fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -84,14 +84,14 @@ pub type EditorSurfaceApp<E> = VcsArtifactApp<EditorApp<E>, <E as ArtifactEditor
 pub type ViewerSurfaceApp<V> = VcsArtifactApp<ViewerApp<V>, <V as ArtifactViewer>::Members>;
 
 /// 🌱️ Declares an editor whose only mounted constructor is its original retained producer.
-pub fn native_editor_surface<E:semio_framework_plugin_decl_surface::OriginalArtifactEditorBirth,PA:PluginApp>(mut definition:AppDefinition,factory:semio_framework_plugin_reactor_app::OriginalPluginAppFactory<PA>)->SurfaceDeclaration<PA>{
+pub fn native_editor_surface<E:semio_plugin_decl_surface::OriginalArtifactEditorBirth,PA:PluginApp>(mut definition:AppDefinition,factory:semio_plugin_reactor_app::OriginalPluginAppFactory<PA>)->SurfaceDeclaration<PA>{
  if definition.io.artifact_schema.is_empty(){definition.io.artifact_schema=E::DOCUMENT_SCHEMA.into()}
  if let Some(codec)=E::natural_file_codec(){mount_natural_file_actions(&mut definition,codec)}
  stamp_fault_notices::<EditorApp<E>>(&mut definition);
  SurfaceDeclaration{definition,original_factory:Some(factory),factory:None,app_schema:E::app_schema,document_schema:E::DOCUMENT_SCHEMA,codec:artifact_codec_table::<EditorApp<E>>(),mutation_roster:None,rights:Rights::Write}
 }
 /// 🌱️ Declares a viewer whose real read-only document source is admitted under its opening caller.
-pub fn native_viewer_surface<V:semio_framework_plugin_decl_surface::OriginalArtifactViewerBirth,PA:PluginApp>(mut definition:AppDefinition,factory:semio_framework_plugin_reactor_app::OriginalPluginAppFactory<PA>)->SurfaceDeclaration<PA>{
+pub fn native_viewer_surface<V:semio_plugin_decl_surface::OriginalArtifactViewerBirth,PA:PluginApp>(mut definition:AppDefinition,factory:semio_plugin_reactor_app::OriginalPluginAppFactory<PA>)->SurfaceDeclaration<PA>{
  if definition.io.artifact_schema.is_empty(){definition.io.artifact_schema=V::DOCUMENT_SCHEMA.into()}
  stamp_fault_notices::<ViewerApp<V>>(&mut definition);
  SurfaceDeclaration{definition,original_factory:Some(factory),factory:None,app_schema:V::app_schema,document_schema:V::DOCUMENT_SCHEMA,codec:artifact_codec_table::<ViewerApp<V>>(),mutation_roster:None,rights:Rights::Read}

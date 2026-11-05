@@ -94,7 +94,7 @@ pub struct DumpFrameStats {
     pub scene_passes: usize,
     pub scene_draws: usize,
     pub scene_instances: usize,
-    pub frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencySnapshot,
+    pub frame_latency: semio_renderer_wgpu_host_base::frame_latency::FrameLatencySnapshot,
 }
 
 /// 🧊️ One published preview mesh of one `World3d` surface, as the PAYLOAD states it — never as the
@@ -251,12 +251,12 @@ pub fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
 
 //#region 🔬️IntrospectionVisualFields
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-fn rgba_array(color: semio_framework_ui_theme::Rgba) -> [f32; 4] {
+fn rgba_array(color: semio_ui_theme::Rgba) -> [f32; 4] {
     [color.r, color.g, color.b, color.a]
 }
 
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-fn dim(color: semio_framework_ui_theme::Rgba, disabled: bool) -> semio_framework_ui_theme::Rgba {
+fn dim(color: semio_ui_theme::Rgba, disabled: bool) -> semio_ui_theme::Rgba {
     if disabled {
         color.with_alpha(color.a * 0.5)
     } else {
@@ -293,8 +293,8 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
         }
         UiNode::Button(button) => {
             let disabled = button.presence.state == UiState::Disabled;
-            let color = dim(semio_framework_ui_wgpu_layout::chrome::item_text(theme, false, hovered), disabled);
-            let bg = dim(semio_framework_ui_wgpu_layout::chrome::item_bg(theme, false, hovered), disabled);
+            let color = dim(semio_ui_wgpu_layout::chrome::item_text(theme, false, hovered), disabled);
+            let bg = dim(semio_ui_wgpu_layout::chrome::item_bg(theme, false, hovered), disabled);
             (Some(button.label.as_str().to_string()), Some(rgba_array(color)), Some(rgba_array(bg)), Some(theme.font_size_body))
         }
         UiNode::Separator(_) => (None, Some(rgba_array(theme.separator)), None, None),
@@ -309,15 +309,15 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
         }
         UiNode::Toggle(toggle) => {
             let pressed = toggle.presence.selected;
-            let color = semio_framework_ui_wgpu_layout::chrome::item_text(theme, pressed, hovered);
-            let bg = semio_framework_ui_wgpu_layout::chrome::item_bg(theme, pressed, hovered);
+            let color = semio_ui_wgpu_layout::chrome::item_text(theme, pressed, hovered);
+            let bg = semio_ui_wgpu_layout::chrome::item_bg(theme, pressed, hovered);
             let font_size = toggle.text.is_some().then_some(theme.font_size_body);
             (toggle.text.as_ref().map(|text| text.as_str().to_string()), Some(rgba_array(color)), Some(rgba_array(bg)), font_size)
         }
         UiNode::KeyValue(_) => (None, None, None, None),
         UiNode::Slider(_) => (None, None, None, None),
         UiNode::NumberStepper(stepper) => {
-            let (text, color) = if stepper.uniform { (format!("{:.3}", stepper.value), theme.text) } else { (semio_framework_ui_declaration::ui::UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted) };
+            let (text, color) = if stepper.uniform { (format!("{:.3}", stepper.value), theme.text) } else { (semio_ui_declaration::ui::UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted) };
             (Some(text), Some(rgba_array(color)), Some(rgba_array(theme.input_bg)), Some(theme.font_size_body))
         }
         UiNode::Ring(_) => (None, None, None, None),
@@ -342,8 +342,8 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
 /// `ui_wgpu::wgpu::paint`, so re-derived here from the same two already-`pub` inputs it reads):
 /// `presence.hover` counts as hovered too, unless the node is disabled.
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-fn effective_hovered(node: &semio_framework_ui_retained_tree::tree::Node, presence_hover: bool, disabled: bool) -> bool {
-    let live = node.flags.contains(semio_framework_ui_retained_tree::tree::NodeFlags::HOVERED);
+fn effective_hovered(node: &semio_ui_retained_tree::tree::Node, presence_hover: bool, disabled: bool) -> bool {
+    let live = node.flags.contains(semio_ui_retained_tree::tree::NodeFlags::HOVERED);
     if disabled {
         live
     } else {
@@ -361,7 +361,7 @@ fn effective_hovered(node: &semio_framework_ui_retained_tree::tree::Node, presen
 /// unlaid-out tree even when layout published (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[allow(clippy::too_many_arguments, reason = "one arg per walk-state accumulator; mirrors paint_node's own equally-wide signature")]
-pub fn walk_dump(tree: &semio_framework_ui_retained_tree::tree::UiTree, id: NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
+pub fn walk_dump(tree: &semio_ui_retained_tree::tree::UiTree, id: NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
     let Some(node) = tree.node(id) else { return };
     let ui_node = &node.spec.0;
     let presence = ui_node.presence();
@@ -373,7 +373,7 @@ pub fn walk_dump(tree: &semio_framework_ui_retained_tree::tree::UiTree, id: Node
     let abs_y = origin_y + layout_y;
     let disabled = presence.state == UiState::Disabled;
     let hovered = effective_hovered(node, presence.hover, disabled);
-    if focus_path.is_none() && node.flags.contains(semio_framework_ui_retained_tree::tree::NodeFlags::FOCUSED) {
+    if focus_path.is_none() && node.flags.contains(semio_ui_retained_tree::tree::NodeFlags::FOCUSED) {
         *focus_path = Some(path.clone());
     }
 
@@ -407,7 +407,7 @@ pub fn walk_dump(tree: &semio_framework_ui_retained_tree::tree::UiTree, id: Node
 /// is what makes the smaller pane of a two-pane mode layout measurable at all — the zero-arg export
 /// could only ever answer for the larger one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-pub(super) fn dump_window_id(engine: &semio_framework_ui_wgpu_engine::Ui, requested: Option<&str>) -> Option<String> {
+pub(super) fn dump_window_id(engine: &semio_ui_wgpu_engine::Ui, requested: Option<&str>) -> Option<String> {
     match requested {
         Some(id) if !id.is_empty() => engine.window_ids().find(|live| *live == id).map(str::to_string),
         _ => engine.window_ids().filter_map(|id| engine.viewport(id).map(|(w, h)| (id.to_string(), w * h))).max_by(|a, b| a.1.total_cmp(&b.1)).map(|(id, _)| id),
@@ -416,7 +416,7 @@ pub(super) fn dump_window_id(engine: &semio_framework_ui_wgpu_engine::Ui, reques
 
 /// 🪟️ Every window this engine currently tracks, so a dump that answers for one window can still
 /// name the others a caller could ask for.
-pub fn dump_window_ids(engine: &semio_framework_ui_wgpu_engine::Ui) -> Vec<String> {
+pub fn dump_window_ids(engine: &semio_ui_wgpu_engine::Ui) -> Vec<String> {
     engine.window_ids().map(str::to_string).collect()
 }
 //#endregion 🔬️IntrospectionWindowSelection

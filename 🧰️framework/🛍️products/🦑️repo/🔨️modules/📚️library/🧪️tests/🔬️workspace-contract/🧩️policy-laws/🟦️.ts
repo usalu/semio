@@ -166,7 +166,7 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
       mkdirSync(artifact, { recursive: true });
       writeFileSync(
         join(artifact, "🦀️.rs"),
-        ['pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {', '    semio_framework_plugin::ArtifactKindSpec {', '        id: "3d.mesh".into(),', "    }", "}"].join("\n"),
+        ['pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {', '    semio_plugin::ArtifactKindSpec {', '        id: "3d.mesh".into(),', "    }", "}"].join("\n"),
       );
       const legacy = policyCanonicalArtifactKindBreaches(root);
       expect(legacy.map((breach) => breach.kind)).toEqual(["composition/canonical-artifact-kind"]);
@@ -174,7 +174,7 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
 
       writeFileSync(
         join(artifact, "🦀️.rs"),
-        ['pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {', '    semio_framework_plugin::ArtifactKindSpec {', '        id: "s.probe.probe".into(),', "    }", "}"].join("\n"),
+        ['pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {', '    semio_plugin::ArtifactKindSpec {', '        id: "s.probe.probe".into(),', "    }", "}"].join("\n"),
       );
       expect(policyCanonicalArtifactKindBreaches(root)).toEqual([]);
 

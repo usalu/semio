@@ -21,18 +21,18 @@
 
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
 use semio_framework_pack_json::{Object, Value};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::world3d_sun_measures;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MeasureSelectItem;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::app::InteractionView;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::world3d_sun_measures;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MeasureSelectItem;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
@@ -73,7 +73,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 👁️ Preview shading mode selector — the read-only twin of the sibling surface's own chrome.
-pub fn show_mode_measure(show_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor) -> WindowMeasure {
+pub fn show_mode_measure(show_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<semio_plugin::DslValue>) -> ActionDescriptor) -> WindowMeasure {
     let current = if show_mode.is_empty() { "shaded" } else { show_mode };
     WindowMeasure::Select {
         id: "generation3d-view-measure-show".into(),
@@ -90,7 +90,7 @@ pub fn show_mode_measure(show_mode: &str, is_de: bool, viewer_action: impl Fn(&s
 }
 
 /// 🔬️ Level-of-detail selector — coarser LOD is the viewer's only mesh-payload size lever.
-pub fn lod_mode_measure(lod_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor) -> WindowMeasure {
+pub fn lod_mode_measure(lod_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<semio_plugin::DslValue>) -> ActionDescriptor) -> WindowMeasure {
     let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     WindowMeasure::Select {
         id: "generation3d-view-measure-lod".into(),
@@ -106,7 +106,7 @@ pub fn lod_mode_measure(lod_mode: &str, is_de: bool, viewer_action: impl Fn(&str
 }
 
 /// 🎚️ The Preview window's whole chrome row: show mode, LOD and the sun group.
-pub fn preview_window_measures(config: &Generation3dViewConfig, is_de: bool, viewer_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub fn preview_window_measures(config: &Generation3dViewConfig, is_de: bool, viewer_action: impl Fn(&str, Option<semio_plugin::DslValue>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
     vec![show_mode_measure(&config.show_mode, is_de, viewer_action), lod_mode_measure(&config.lod_mode, is_de, viewer_action), world3d_sun_measures("generation3d-view", &sun, is_de, viewer_action)]
 }
@@ -232,7 +232,7 @@ fn preview_mesh_signature(
     preview_ids: &[String],
     eval: &Value,
     host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
-    session: Option<&semio_framework_os_flow::FlowEvalSession>,
+    session: Option<&semio_os_flow::FlowEvalSession>,
 ) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -262,7 +262,7 @@ fn build_preview_mesh_table(
     host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
     tolerance: f64,
     show_mode: &str,
-    session: Option<&semio_framework_os_flow::FlowEvalSession>,
+    session: Option<&semio_os_flow::FlowEvalSession>,
 ) -> PreviewMeshTable {
     let mut meshes: Vec<Value> = Vec::new();
     let mut mesh_ids = std::collections::BTreeSet::new();
@@ -307,7 +307,7 @@ fn build_preview_mesh_table(
     PreviewMeshTable { signature, meshes_json: semio_framework_pack_json::to_string(&Value::Array(meshes)), mesh_ids, mesh_id_by_handle }
 }
 
-pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, config: &Generation3dViewConfig, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
+pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, config: &Generation3dViewConfig, session: Option<&semio_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
     if eval_json.is_empty() {
         return ViewPreviewPayload::default();
     }
@@ -388,7 +388,7 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// 👁️ Pure `(Generation3dSnapshot, Generation3dViewConfig, marks) -> BuiltNode` read: the camera,
 /// shading mode, LOD and sun all come from the viewer's own config, hover/selection from the
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, run: Option<&semio_framework_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_os_flow::FlowEvalSession>, run: Option<&semio_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = eval_json.unwrap_or_default();
     let payload = preview_payload(eval_json, &document.host_snapshot, config, session, marks);
     let selection_json = preview_selection_json(config, &payload);
@@ -403,14 +403,14 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
     let sun = config.sun();
     semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         SURFACE_ID,
-        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &semio_framework_ui_declaration::ui::World3dScene {
+        semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
+        &semio_ui_declaration::ui::World3dScene {
             status_json,
             fit_json: Some(fit_json),
             domain_id: Some(GENERATION3D_VIEW_INTERACTION_DOMAIN.into()),
             domain_granularity_id: Some(GENERATION3D_VIEW_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(
-                semio_framework_ui_declaration::ui::world3d_camera_json(config.preview_camera.position, config.preview_camera.target, config.preview_camera.fov),
+                semio_ui_declaration::ui::world3d_camera_json(config.preview_camera.position, config.preview_camera.target, config.preview_camera.fov),
                 payload.meshes_json,
                 payload.instances_json,
                 selection_json,
@@ -419,7 +419,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
         },
         labels.preview_canvas.as_str(),
         labels.preview_canvas_hint.as_str(),
-        semio_framework_ui_contract::Liveness::Polite,
+        semio_ui_contract::Liveness::Polite,
     )
 }
 //#endregion 🔖️Render

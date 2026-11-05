@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "regions", kind: "reorder-regions", record: "ReorderedRegions" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder region \"{}\" to {}", self.id, self.to_index), &format!("Region \"{}\" an Stelle {} verschieben", self.id, self.to_index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Reorder region \"{}\" to {}", self.id, self.to_index), &format!("Region \"{}\" an Stelle {} verschieben", self.id, self.to_index))
     }
 }
 

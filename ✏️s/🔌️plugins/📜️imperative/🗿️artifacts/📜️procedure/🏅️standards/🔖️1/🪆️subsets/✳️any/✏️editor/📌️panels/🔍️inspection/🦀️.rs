@@ -2,14 +2,14 @@
 
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::ProcedureScene;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_INSPECTOR: &str = "imperative.play.inspection";
@@ -35,11 +35,11 @@ pub fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `📌️panels/🔍️properties/🦀️.rs`: falls through to a step-count summary until a
 /// resolved-selection render path exists.
-pub fn render(scene: &ProcedureScene, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(scene: &ProcedureScene, labels: &ImperativeLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let path = &scene.path;
     let field = tree_item_desc("imperative-play-inspector.steps", labels.inspector_steps.as_str(), Some(path.steps.len().to_string()))?;
-    let mut fields = semio_framework_plugin::UiFixedList::default();
-    fields.try_push(field).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed inspector field admission failed"))?;
+    let mut fields = semio_plugin::UiFixedList::default();
+    fields.try_push(field).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed inspector field admission failed"))?;
     PanelTreeBuilder::new("imperative-play-inspector")?.section("imperative-play-inspector.summary", Some(crate::editor::procedure::ui_label(labels.inspection_title.as_str())?), true, fields)?.build()
 }
 //#endregion 🔖️Render

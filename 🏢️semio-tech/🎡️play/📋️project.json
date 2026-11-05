@@ -74,7 +74,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "deterministic", "reason": "check-without-outputs" }
+          "cache": {
+            "version": 1,
+            "class": "deterministic",
+            "reason": "check-without-outputs"
+          }
         }
       },
       "defaultConfiguration": "prototype"
@@ -140,7 +144,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "deterministic", "reason": "pure-function-of-inputs" }
+          "cache": {
+            "version": 1,
+            "class": "deterministic",
+            "reason": "pure-function-of-inputs"
+          }
         }
       },
       "defaultConfiguration": "prototype"
@@ -209,10 +217,23 @@
             "parameters": [
               {
                 "id": "generation",
-                "title": { "en": "Native build generation", "de": "Native Build-Generation" },
-                "description": { "en": "Fresh starts the release drivers from a cold generation instead of reusing retained native builds.", "de": "Fresh startet die Release-Treiber aus einer kalten Generation, statt behaltene native Builds wiederzuverwenden." },
+                "title": {
+                  "en": "Native build generation",
+                  "de": "Native Build-Generation"
+                },
+                "description": {
+                  "en": "Fresh starts the release drivers from a cold generation instead of reusing retained native builds.",
+                  "de": "Fresh startet die Release-Treiber aus einer kalten Generation, statt behaltene native Builds wiederzuverwenden."
+                },
                 "kind": "choice",
-                "values": [{ "id": "fresh", "env": { "SEMIO_NATIVE_BUILD_GENERATION": "fresh" } }]
+                "values": [
+                  {
+                    "id": "fresh",
+                    "env": {
+                      "SEMIO_NATIVE_BUILD_GENERATION": "fresh"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -475,7 +496,11 @@
               }
             ]
           },
-          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+          "cache": {
+            "version": 1,
+            "class": "managed-output",
+            "reason": "outputs-in-managed-store"
+          }
         }
       },
       "dependsOn": [],
@@ -515,7 +540,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -549,7 +578,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
@@ -567,7 +600,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
@@ -585,7 +622,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
@@ -603,7 +644,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
@@ -619,9 +664,118 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
+    },
+    "prepare-forms-e2e": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:activate-forms-react-prototype",
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts prepare-forms-test",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          },
+          "sourceInputObservation": "freshness"
+        }
+      },
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "serve-forms-e2e": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "prepare-forms-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve-forms-test",
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
+      },
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "continuousSharing": false,
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🟦️.tsx",
+            "{projectRoot}/🏗️builder/🌐️vite/🟦️.ts"
+          ]
+        }
+      },
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "test-e2e-forms": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "serve-forms-e2e"
+      ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test-forms",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test Forms End to End",
+              "de": "Formulare Durchgängig Testen"
+            },
+            "description": {
+              "en": "Verify Forms authoring, independent Flow questions and saved responses in an isolated browser service.",
+              "de": "Formularentwurf, unabhängige Flow-Fragen und gespeicherte Antworten in einem isolierten Browserdienst prüfen."
+            }
+          }
+        }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🧫️fixtures/🌊️embedded-flow.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/🧫️fixtures/📝️answer*.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/📄️value-source/🔣️.json"
+      ]
     }
   }
 }

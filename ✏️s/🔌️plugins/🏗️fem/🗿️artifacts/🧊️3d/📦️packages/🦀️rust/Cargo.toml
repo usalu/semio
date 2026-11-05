@@ -16,15 +16,15 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d-diff-document = { workspace = true }
 semio-s-fem-node = { path = "../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 semio-s-fem-material = { path = "../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-s-artifact-fem-3d-editor = { workspace = true }
 semio-s-artifact-fem-3d-io = { workspace = true }

@@ -17,7 +17,7 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for ReplaceDocument
 where Op: protocol::Mutation<LayoutSnapshot, Diff = LayoutDiff> + From<crate::replace_document::ReplaceDocument> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "document", kind: "replace-document", record: "ReplacedDocument" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Replace layout document", "Layoutdokument ersetzen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Replace layout document", "Layoutdokument ersetzen") }
     fn target(&self) -> Vec<String> { Vec::new() }
 }
 

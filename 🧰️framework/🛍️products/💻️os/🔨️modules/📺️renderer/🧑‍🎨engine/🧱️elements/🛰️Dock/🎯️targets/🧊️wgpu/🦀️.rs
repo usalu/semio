@@ -16,14 +16,14 @@ pub use border_paint::{window_silhouette_border_edges, SilhouetteBorderEdge};
 
 use semio_framework::AppDefinition;
 use std::collections::HashMap;
-use semio_framework_ui_wgpu_layout::chrome::chrome_item_text;
-use semio_framework_ui_wgpu_widget_kit::draw_text;
-use semio_framework_ui_declaration::layout::{even_window_layout, ActionDescriptor, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner};
-use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::{Level, Rgba, Theme};
-use semio_framework_ui_theme::geometry::Rect;
+use semio_ui_wgpu_layout::chrome::chrome_item_text;
+use semio_ui_wgpu_widget_kit::draw_text;
+use semio_ui_declaration::layout::{even_window_layout, ActionDescriptor, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner};
+use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState};
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::{Level, Rgba, Theme};
+use semio_ui_theme::geometry::Rect;
 
 #[path = "🧱️dock-types-and-window-state/🦀️.rs"]
 mod dock_types_and_window_state;

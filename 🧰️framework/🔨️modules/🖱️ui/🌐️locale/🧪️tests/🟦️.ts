@@ -69,7 +69,7 @@ test("UI native manifests have only canonical lower value and locale providers",
 });
 
 test("UI code has direct neutral value bindings without the product DSL alias", () => {
-  expect(source(fixture.ownership.uiRoot)).not.toContain("semio_framework_os_kernel");
+  expect(source(fixture.ownership.uiRoot)).not.toContain("semio_os_kernel");
   expect(existsSync(join(repoRoot, fixture.ownership.wgpuRoot))).toBe(false);
   for (const path of walk(fixture.ownership.wgpuTree, "🦀️.rs")) expect(source(path), path).not.toMatch(/pub\s+use\s+dsl::/);
 });
@@ -84,7 +84,7 @@ test("locale carriers and defining macro have one lower canonical physical owner
 });
 
 test("the retained node wire law names its actual neutral viewport owner", () => {
-  expect(source(fixture.ownership.wireTest)).not.toContain("semio_framework_os_kernel::Viewport2d");
+  expect(source(fixture.ownership.wireTest)).not.toContain("semio_os_kernel::Viewport2d");
   expect(source(fixture.ownership.wireTest)).toContain(fixture.ownership.viewport);
 });
 

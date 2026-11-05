@@ -8,7 +8,7 @@ const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../../🧫️fixtures/📚️bo
 const WINDOW_ICON_OVERRIDE_FIXTURE: &str = include_str!("../../🧫️fixtures/🪟️window-icon-overrides/🔣️.json");
 #[allow(non_snake_case)]
 fn WGPU_SHELL_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::shell_source()
+    semio_renderer_wgpu_test_support::shell_source()
 }
 
 /// 🪪️ A dialect with no coordinate at all — how this target spells the fixture's `"dialect": null`
@@ -40,7 +40,7 @@ fn parity_window_kinds() -> WindowKinds {
         id: "main".into(),
         label: LocalizedLabel::native("Main", "Haupt"),
         body_key: "main.body".into(),
-        surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+        surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         icon_id: "app-window".into(),
         options: Default::default(),
         actions: vec![],

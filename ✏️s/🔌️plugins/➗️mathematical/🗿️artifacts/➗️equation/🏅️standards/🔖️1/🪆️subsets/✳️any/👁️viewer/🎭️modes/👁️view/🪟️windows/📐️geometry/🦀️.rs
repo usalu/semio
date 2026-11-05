@@ -9,8 +9,8 @@
 //! construction (`ViewEmit`).
 
 use crate::EquationSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult};
+use semio_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_plugin::{BuiltNode, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = <TableWindowKit as WindowKit>::KIND_ID;
@@ -21,7 +21,7 @@ pub const BODY_KEY: &str = <TableWindowKit as WindowKit>::KIND_ID;
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::equation::create_equation_viewer`.
 /// The read-only `window_kind()` variant (never `editable_window_kind()`, which would declare the
 /// `set-cell` command a viewer cannot dispatch).
-pub fn definition() -> semio_framework_plugin::WindowKindDefinition {
+pub fn definition() -> semio_plugin::WindowKindDefinition {
     TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition

@@ -12,7 +12,7 @@ use directory::os_directory::{ArtifactFrontier, DocumentDescriptor, DocumentOpen
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use semio_framework::ContributedInferenceMetadata;
-use semio_framework_plugin::ArtifactInferenceService;
+use semio_plugin::ArtifactInferenceService;
 use semio_hub_inference_binding::MapInferenceProposalBindingV1;
 
 const GIS_MAP_BINDING_DOMAIN: &[u8] = b"semio.hub.gis-map-frozen-binding/v1\0";

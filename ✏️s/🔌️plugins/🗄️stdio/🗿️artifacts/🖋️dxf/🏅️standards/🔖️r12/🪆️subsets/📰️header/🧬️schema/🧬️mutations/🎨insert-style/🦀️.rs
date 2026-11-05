@@ -14,8 +14,8 @@ pub struct InsertStyle {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "style", kind: "insert-style", record: "InsertStyle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert style", "Textstil einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert style", "Textstil einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

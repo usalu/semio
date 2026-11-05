@@ -7,7 +7,7 @@ use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_code
 use semio_s_artifact_raster_raster_model::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use protocol::{ColdMutation, Mutation};
 
-use semio_framework_os_kernel as vcs;
+use semio_os_kernel as vcs;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
 fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
@@ -164,9 +164,9 @@ async fn resize_layer_is_a_graceful_no_op_on_a_group() {
 
 #[semio_framework_async_macros::async_test]
 async fn store_applies_layer_create() {
-    let mut store = RasterStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let mut store = RasterStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     store::os_store::test_support::close_plain_test_store(&mut store);
 }

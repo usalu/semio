@@ -4,10 +4,10 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use {semio_s_artifact_puzzle_3d_editor_dispatch::puzzle3d_handle_action, semio_s_artifact_puzzle_3d_editor_dispatch::Puzzle3dActionPrologue, semio_s_artifact_puzzle_3d_editor_dispatch::puzzle3d_shell_only_emit};
@@ -23,13 +23,13 @@ use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use {semio_framework_job::InteractiveJobCloseStep, semio_framework_job::StepContext};
-use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractionWrite;
+use semio_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractionWrite;
 use semio_framework_value::FromValue;
 use {semio_framework_pack_json::object, semio_framework_pack_json::to_string, semio_framework_pack_json::Value};
 use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
@@ -47,7 +47,7 @@ use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 /// 🐢️ The scope is [`UiDirtyScope::None`], not `Emit::effect`'s `Default` (which is `Full`): a work
 /// that refused published nothing, so there is nothing to repaint — the notice itself travels on the
 /// effect lane, which the host applies before it ever consults the scope.
-fn puzzle3d_notice_emit(view_state: Option<&semio_framework_plugin::ViewModel>, message: impl Fn(&Puzzle3dLabels) -> &'static str) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
+fn puzzle3d_notice_emit(view_state: Option<&semio_plugin::ViewModel>, message: impl Fn(&Puzzle3dLabels) -> &'static str) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
     let text = view_state.and_then(puzzle3d_labels).map_or_else(|| PUZZLE3D_LOCALIZATION_UNSUPPORTED.to_string(), |labels| message(labels).to_string());
     Emit { effects: vec![Effect::Notify { message: text }], ui_scope: UiDirtyScope::None, ..Default::default() }
 }
@@ -77,12 +77,12 @@ pub fn puzzle3d_retained_reduce<A: Puzzle3dEditor>(
     snapshot: &Puzzle3dPlaySnapshot,
     config: &Puzzle3dConfig,
     interaction: &protocol::InteractionState,
-    hover: &semio_framework_plugin::app::InteractionHoverState,
-    view_state: Option<&semio_framework_plugin::ViewModel>,
+    hover: &semio_plugin::app::InteractionHoverState,
+    view_state: Option<&semio_plugin::ViewModel>,
 ) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation>, Fault> {
     let runtime = window_ownership::runtime(config, &window_ownership::Puzzle3dWindowConfig::default(), &window_ownership::Puzzle3dWindowTransient::default(), view_state);
     if command.action_id() == "openAddObjectDialog" {
-        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }));
     }
     if command.action_id() == "worldPointerDown" {
         return Ok(Emit::default());

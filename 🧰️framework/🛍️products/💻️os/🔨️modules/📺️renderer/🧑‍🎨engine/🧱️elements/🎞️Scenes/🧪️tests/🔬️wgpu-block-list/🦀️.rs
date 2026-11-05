@@ -1,19 +1,19 @@
-use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
-use semio_framework_os_renderer_wgpu_scene_feeds::{accepted_block_list_accessibility_controls, acknowledge_block_list_accessibility_candidates, seal_block_list_accessibility_candidates};
+use semio_renderer_wgpu_contracts::framework_widget_context;
+use semio_renderer_wgpu_scene_feeds::{accepted_block_list_accessibility_controls, acknowledge_block_list_accessibility_candidates, seal_block_list_accessibility_candidates};
 use crate::{cancel_scene_list_transfer, passive_scene_pointer_button, passive_scene_pointer_move};
-use semio_framework_os_renderer_wgpu_scene_state::{BlockListChromeLabels, SceneModifiers, draw_ink_rect_outline, remember_scene_theme};
-use semio_framework_os_renderer_wgpu_scene_tables::{BlockListPlan, BlockListRole, block_list_accessibility_action_is_current, block_list_accessibility_activate, block_list_accessibility_controls, block_list_hit, block_list_plan, block_list_transfer_start, render_block_list};
+use semio_renderer_wgpu_scene_state::{BlockListChromeLabels, SceneModifiers, draw_ink_rect_outline, remember_scene_theme};
+use semio_renderer_wgpu_scene_tables::{BlockListPlan, BlockListRole, block_list_accessibility_action_is_current, block_list_accessibility_activate, block_list_accessibility_controls, block_list_hit, block_list_plan, block_list_transfer_start, render_block_list};
 use serde_json::{Value, json};
 use std::collections::HashMap;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_scene_views::BlockListScene;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::InputState;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_ui_theme::Theme;
+use semio_ui_wgpu_layout::chrome::UiDriverDrag;
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_scene_views::BlockListScene;
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::InputState;
 
 fn block_list_scene(surface_id: &str, controller_id: &str, steps: Value, palette: Value) -> UiComponentSceneNode {
     UiComponentSceneNode {

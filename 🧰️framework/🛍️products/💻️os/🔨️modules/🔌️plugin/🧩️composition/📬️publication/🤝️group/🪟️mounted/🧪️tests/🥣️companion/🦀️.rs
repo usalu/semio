@@ -1,12 +1,12 @@
-//! 🥣️ Companion tests of the mounted publication: the receipt byte, operation framing, host receipt and handle issuer laws, run against the public surface of `semio-framework-plugin-publication-mounted`.
+//! 🥣️ Companion tests of the mounted publication: the receipt byte, operation framing, host receipt and handle issuer laws, run against the public surface of `semio-plugin-publication-mounted`.
 //!
 //! 🧭️ The receipt laws sit below a wrapper of the receipt module that restates its imports; every fixture is read at run time from the mounted folder, so no document is compiled into the test closure.
 #![cfg(test)]
 
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 
 /// 📥️ Reads a committed language-agnostic fixture of the mounted laws at run time, by its path relative to the mounted folder, so the test closure stays inside the source gate instead of embedding the fixtures with `include_str!`.
 /// @see <https://doc.rust-lang.org/std/macro.include_str.html>

@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_artifact_flow_flow::neural::ColdRetire;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 
 fn dispatch(pages: &[(&str, u64, u64)]) -> Vec<Result<(), String>> {
     let snapshot = Generation3dSnapshot::default();
@@ -37,15 +37,15 @@ fn a_paged_run_installs_the_contributed_registry() {
     for outcome in dispatch(&addressed) {
         outcome.expect("every page of a well-formed run is admitted");
     }
-    assert_eq!(semio_framework_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "the assembler retains nothing once its last page lands");
-    assert!(semio_framework_os_flow::flow_extension_invocation_address("brep").is_ok(), "the contributed brep extension must be addressable after the run");
-    assert!(semio_framework_os_flow::flow_extension_invocation_address("math").is_ok(), "the contributed math extension must be addressable after the run");
+    assert_eq!(semio_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "the assembler retains nothing once its last page lands");
+    assert!(semio_os_flow::flow_extension_invocation_address("brep").is_ok(), "the contributed brep extension must be addressable after the run");
+    assert!(semio_os_flow::flow_extension_invocation_address("math").is_ok(), "the contributed math extension must be addressable after the run");
     assert_contributed_kind("brep.curve.polygon");
     assert_contributed_kind("math.vector");
 }
 
 fn contributed_kind_ids() -> Vec<String> {
-    let catalogue: serde_json::Value = serde_json::from_str(&semio_framework_os_flow::flow_neuron_kind_infos_json()).expect("operator catalogue JSON");
+    let catalogue: serde_json::Value = serde_json::from_str(&semio_os_flow::flow_neuron_kind_infos_json()).expect("operator catalogue JSON");
     catalogue.as_array().expect("catalogue array").iter().filter_map(|item| item["id"].as_str().map(str::to_string)).collect()
 }
 
@@ -55,7 +55,7 @@ fn assert_contributed_kind(kind: &str) {
 }
 
 /// ⚖️ LAW: the packaged brep `manifestJson` the host actually pushes must parse as
-/// [`semio_framework_os_flow::FlowExtensionManifest`]. `register_contributed_manifest` previously
+/// [`semio_os_flow::FlowExtensionManifest`]. `register_contributed_manifest` previously
 /// returned on parse failure, so invocation addresses still resolved while every operator stayed
 /// unknown (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
@@ -63,7 +63,7 @@ fn the_packaged_brep_manifest_parses_as_a_flow_extension_manifest() {
     let json = ::semio_framework_async::poll::resolve_ready(semio_s_plugin_flow_brep::extension_manifest_json());
     let third_party: serde_json::Value = serde_json::from_str(&json).expect("RFC 8259 brep manifest");
     assert!(third_party["contributes"]["operators"].as_array().unwrap().iter().any(|operator| operator["id"] == "brep.curve.polygon"), "third-party JSON names brep.curve.polygon");
-    let mut parsed: semio_framework_os_flow::FlowExtensionManifest = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("packaged brep manifest must parse as FlowExtensionManifest: {error}"));
+    let mut parsed: semio_os_flow::FlowExtensionManifest = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("packaged brep manifest must parse as FlowExtensionManifest: {error}"));
     let has_polygon = parsed.contributes.operators.iter().any(|operator| operator.id == "brep.curve.polygon");
     for operator in parsed.contributes.operators.drain(..) {
         operator.retire_cold();
@@ -128,7 +128,7 @@ fn an_out_of_order_run_is_refused_and_discarded() {
     let outcomes = dispatch(&[("[", 0, 3), ("]", 2, 3)]);
     outcomes[0].as_ref().expect("page 0 opens the run");
     assert_eq!(outcomes[1].as_ref().unwrap_err(), "flow.contributions-page-out-of-order");
-    assert_eq!(semio_framework_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "a refused run retains nothing");
+    assert_eq!(semio_os_flow::host_flow_extension_contributions_pending_bytes(), 0, "a refused run retains nothing");
 }
 
 /// ⚖️ LAW: an address outside its own run is refused before a byte is buffered.

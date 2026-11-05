@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "exports": [
+    "discoverPackages",
+    "readSemioMarkerSubTable",
+    "loadTaxonomy"
+  ],
+  "owners": [
+    "../../../../🔍️discovery/🔭️repository-scan/🟦️.ts",
+    "../../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts"
+  ],
+  "coordinator": ".storybook/📖️stories/🧭️coordination/🟦️.ts",
+  "publicEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🔍️discovery/🟦️.ts"
+}

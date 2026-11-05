@@ -106,7 +106,7 @@ impl store::ColdMutation<TestSnapshot> for InertLabelOp {
 
 /// ⏭️ Replays `drafts` from `from` on `document` to completion through its history-edit owners and answers the report.
 async fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnapshot, InertLabelOp>, document: &mut ArtifactStore<TestSnapshot, InertLabelOp>, drafts: &protocol::HistoryInputDrafts, from: &MutationId) -> protocol::ReplayReport {
-    let (policy,_)=original_time_travel_fixture_caller();let grant=policy.preparation;let mut receiving_job=semio_framework_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:policy.close});
+    let (policy,_)=original_time_travel_fixture_caller();let grant=policy.preparation;let mut receiving_job=semio_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:policy.close});
     let started = owners.run(document, time_travel::TimeTravelStoreCommand::StartReplay { drafts: drafts.clone(), from: from.clone() },None).await.expect("the replay starts");
     assert!(matches!(started, time_travel::TimeTravelStoreOutput::ReplayStarted(true)), "the store starts the Report replay");
     for _ in 0..65_536 {
@@ -124,8 +124,8 @@ const INERT_SCHEMA: &str = "semio.test.inert-label/v1";
 
 /// 🥊️ A document store over [`InertLabelOp`] holding count 1, label a, no children and count 5 — one edit each, authored
 /// by `local` — with the mutation ids of those four operations.
-async fn inert_document(mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<TestSnapshot, InertLabelOp>, Vec<MutationId>) {
-    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, InertLabelOp>(INERT_SCHEMA, "inert-label", TestSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+async fn inert_document(mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<TestSnapshot, InertLabelOp>, Vec<MutationId>) {
+    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, InertLabelOp>(INERT_SCHEMA, "inert-label", TestSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut document = Box::pin(ArtifactStore::new(genesis, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("the document store");
     document.install_operation_wire(store::ArtifactOperationWire::canonical());
     let (mut catalog, receipt)=bounded_document_store_owners::<TestSnapshot, InertLabelOp>(mounted_policy.preparation).unwrap_or_else(|_|panic!("original inert catalog admission")); let mut catalog_receipts=vec![(mounted_policy.preparation,receipt)]; while !catalog.constructor_is_complete(){let receipt=catalog.admit_constructor(mounted_policy.preparation).unwrap_or_else(|_|panic!("original inert catalog construction")); assert!(receipt.fits(mounted_policy.preparation)); catalog_receipts.push((mounted_policy.preparation,receipt));} assert!(catalog_receipts.iter().all(|(grant,receipt)|receipt.fits(*grant))); document.install_document_store_owners_exact(catalog);
@@ -138,7 +138,7 @@ async fn inert_document(mounted_policy:semio_framework_plugin_mounted_owner::Mou
 }
 
 /// 🪤️ Settles and retires the history-edit owners of an [`inert_document`], then closes it under its exact grant.
-fn close_inert(mut owners: time_travel::TimeTravelStoreState<TestSnapshot, InertLabelOp>, mut document: ArtifactStore<TestSnapshot, InertLabelOp>, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1) {
+fn close_inert(mut owners: time_travel::TimeTravelStoreState<TestSnapshot, InertLabelOp>, mut document: ArtifactStore<TestSnapshot, InertLabelOp>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1) {
     use time_travel::TimeTravelOwners;
     owners.settle(&document, TimeTravelStage::Inactive).expect("the owners settle");
     for _ in 0..65_536 {
@@ -171,9 +171,9 @@ fn close_inert(mut owners: time_travel::TimeTravelStoreState<TestSnapshot, Inert
 /// overwrite whose head holds the edit and skips the withdrawn operation.
 #[semio_framework_async_macros::async_test]
 async fn a_blocking_mutation_without_editable_inputs_is_withdrawn_and_the_review_becomes_ready() {
-    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();let mut receiving_job=semio_framework_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:mounted_policy.close});
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();let mut receiving_job=semio_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:mounted_policy.close});
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     use time_travel::{TimeTravelActionRefusal, TimeTravelCommit, TimeTravelStoreCommand, TimeTravelStoreOutput, TimeTravelStoreState};
     let schema = INERT_SCHEMA;
     let (mut document, ids) = inert_document(mounted_policy, &mut identity).await;
@@ -227,9 +227,9 @@ async fn a_blocking_mutation_without_editable_inputs_is_withdrawn_and_the_review
 /// overwrite.
 #[semio_framework_async_macros::async_test]
 async fn an_inverse_refusal_is_one_mutations_fatal_that_its_row_names_and_resolves() {
-    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();let mut receiving_job=semio_framework_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:mounted_policy.close});
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();let mut receiving_job=semio_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:mounted_policy.close});
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     use time_travel::{TimeTravelCommit, TimeTravelStoreCommand, TimeTravelStoreOutput, TimeTravelStoreState};
     let (mut document, ids) = inert_document(mounted_policy, &mut identity).await;
     let (count, label, children, tail) = (ids[0].clone(), ids[1].clone(), ids[2].clone(), ids[3].clone());
@@ -272,11 +272,11 @@ async fn an_inverse_refusal_is_one_mutations_fatal_that_its_row_names_and_resolv
 /// document and its revision stay what they were, and inside one that edits a draft, where the session stays what it was.
 #[semio_framework_async_macros::async_test]
 async fn hostile_history_edit_input_is_answered_never_panicked_on() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let text_arg = |key: &str, value: &str| (key.to_string(), DslValue::String(value.to_string()));

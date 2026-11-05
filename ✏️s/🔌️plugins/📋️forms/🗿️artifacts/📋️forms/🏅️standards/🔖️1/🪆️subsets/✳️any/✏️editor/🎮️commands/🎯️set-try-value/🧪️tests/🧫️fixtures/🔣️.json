@@ -1,0 +1,232 @@
+{
+  "cases": [
+    {
+      "name": "first parameter edit retains authored siblings",
+      "question": {
+        "id": "building",
+        "kind": "cad.parameter",
+        "label": "Building",
+        "required": true,
+        "params": {
+          "width": 2,
+          "height": 3,
+          "nullable": null,
+          "nested": {
+            "material": "wood"
+          }
+        }
+      },
+      "paramKey": "width",
+      "value": 5,
+      "expected": {
+        "width": 5,
+        "height": 3,
+        "nullable": null,
+        "nested": {
+          "material": "wood"
+        }
+      }
+    },
+    {
+      "name": "existing partial answer keeps its own siblings",
+      "question": {
+        "id": "building",
+        "kind": "cad.parameter",
+        "label": "Building",
+        "required": true,
+        "params": {
+          "width": 2,
+          "height": 3,
+          "nullable": null,
+          "nested": {
+            "material": "wood"
+          }
+        }
+      },
+      "before": {
+        "width": 7,
+        "height": 8
+      },
+      "paramKey": "width",
+      "value": 5,
+      "expected": {
+        "width": 5,
+        "height": 8
+      }
+    },
+    {
+      "name": "explicit null does not restore defaults",
+      "question": {
+        "id": "building",
+        "kind": "cad.parameter",
+        "label": "Building",
+        "required": true,
+        "params": {
+          "width": 2,
+          "height": 3,
+          "nullable": null,
+          "nested": {
+            "material": "wood"
+          }
+        }
+      },
+      "before": null,
+      "paramKey": "width",
+      "value": 5,
+      "expected": {
+        "width": 5
+      }
+    },
+    {
+      "name": "parameter can be set to explicit null",
+      "question": {
+        "id": "building",
+        "kind": "cad.parameter",
+        "label": "Building",
+        "required": true,
+        "params": {
+          "width": 2,
+          "height": 3,
+          "nullable": null,
+          "nested": {
+            "material": "wood"
+          }
+        }
+      },
+      "paramKey": "width",
+      "value": null,
+      "expected": {
+        "width": null,
+        "height": 3,
+        "nullable": null,
+        "nested": {
+          "material": "wood"
+        }
+      }
+    },
+    {
+      "name": "question without authored params starts empty",
+      "question": {
+        "id": "building",
+        "kind": "cad.parameter",
+        "label": "Building"
+      },
+      "paramKey": "width",
+      "value": 5,
+      "expected": {
+        "width": 5
+      }
+    },
+    {
+      "name": "control baseline excludes graph configuration",
+      "expected": {
+        "width": 5,
+        "height": 3
+      },
+      "question": {
+        "id": "building",
+        "kind": "flow",
+        "label": "Flow",
+        "params": {
+          "__flow": {
+            "schema": "flow.host_snapshot",
+            "widgets": [],
+            "synapses": []
+          },
+          "width": 2,
+          "height": 3
+        }
+      },
+      "initialValueJson": "{\"width\":2,\"height\":3}",
+      "paramKey": "width",
+      "value": 5
+    },
+    {
+      "name": "explicit null ignores control baseline",
+      "before": null,
+      "expected": {
+        "width": 5
+      },
+      "question": {
+        "id": "building",
+        "kind": "flow",
+        "label": "Flow",
+        "params": {
+          "__flow": {
+            "schema": "flow.host_snapshot",
+            "widgets": [],
+            "synapses": []
+          },
+          "width": 2,
+          "height": 3
+        }
+      },
+      "initialValueJson": "{\"width\":2,\"height\":3}",
+      "paramKey": "width",
+      "value": 5
+    },
+    {
+      "name": "existing answer ignores control baseline",
+      "before": {
+        "width": 7
+      },
+      "expected": {
+        "width": 5
+      },
+      "question": {
+        "id": "building",
+        "kind": "flow",
+        "label": "Flow",
+        "params": {
+          "__flow": {
+            "schema": "flow.host_snapshot",
+            "widgets": [],
+            "synapses": []
+          },
+          "width": 2,
+          "height": 3
+        }
+      },
+      "initialValueJson": "{\"width\":2,\"height\":3}",
+      "paramKey": "width",
+      "value": 5
+    },
+    {
+      "name": "empty control baseline is authoritative",
+      "question": {
+        "id": "building",
+        "kind": "flow",
+        "label": "Flow",
+        "params": {
+          "__flow": {
+            "schema": "flow.host_snapshot",
+            "widgets": [],
+            "synapses": []
+          },
+          "width": 2,
+          "height": 3
+        }
+      },
+      "initialValueJson": "{}",
+      "paramKey": "width",
+      "value": 5,
+      "expected": {
+        "width": 5
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "initial baseline must be an object",
+      "initialValueJson": "[]"
+    },
+    {
+      "name": "initial baseline cannot be null",
+      "initialValueJson": "null"
+    },
+    {
+      "name": "initial baseline must be valid JSON",
+      "initialValueJson": "{"
+    }
+  ]
+}

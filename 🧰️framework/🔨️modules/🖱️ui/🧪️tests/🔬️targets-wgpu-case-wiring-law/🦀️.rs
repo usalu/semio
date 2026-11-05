@@ -9,7 +9,7 @@
 //! - a case directory nobody mounts is a test file that never compiles and never runs, and
 //! - a mount whose target does not exist fails the WHOLE crate's `--tests` build with
 //!   `couldn't read …: No such file or directory` — not a warning, not one lane, the whole crate.
-//!   That is not hypothetical: it happened on 26/09/09 to `semio-framework-os-renderer-wgpu`, and
+//!   That is not hypothetical: it happened on 26/09/09 to `semio-renderer-wgpu`, and
 //!   was patched by committing an empty placeholder rather than by removing the dangling mount.
 //!
 //! Both are structural, so they are checked here instead of being rediscovered by a wedged build.

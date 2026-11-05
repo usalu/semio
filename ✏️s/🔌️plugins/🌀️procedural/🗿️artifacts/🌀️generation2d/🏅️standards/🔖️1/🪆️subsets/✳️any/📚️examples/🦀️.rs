@@ -1,5 +1,5 @@
 //! 📚️ Generation2d bundled examples: one module per authored example document.
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "."]
 pub mod demo {

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRailAlpha where Op
         record: "ChangedRailAlpha",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change rail classification factor α", "Klassifizierungsbeiwert α der Bahnlasten ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change rail classification factor α", "Klassifizierungsbeiwert α der Bahnlasten ändern")
     }
 }
 

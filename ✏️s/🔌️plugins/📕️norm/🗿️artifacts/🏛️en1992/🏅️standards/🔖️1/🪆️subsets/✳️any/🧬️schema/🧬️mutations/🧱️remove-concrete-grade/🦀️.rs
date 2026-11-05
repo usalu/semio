@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for RemoveConcreteGrade wher
         record: "RemovedConcreteGrade",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove concrete grade {}", self.index), &format!("Betonsorte {} entfernen", self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove concrete grade {}", self.index), &format!("Betonsorte {} entfernen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

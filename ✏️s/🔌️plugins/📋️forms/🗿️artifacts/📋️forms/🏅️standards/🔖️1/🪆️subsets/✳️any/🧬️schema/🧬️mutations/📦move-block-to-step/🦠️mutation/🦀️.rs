@@ -28,8 +28,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block-to-step", record: "MovedBlockToStep" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move block \"{}\" to step \"{}\"", self.block_id, self.to_step_id), &format!("Block \"{}\" nach Schritt \"{}\" verschieben", self.block_id, self.to_step_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move block \"{}\" to step \"{}\"", self.block_id, self.to_step_id), &format!("Block \"{}\" nach Schritt \"{}\" verschieben", self.block_id, self.to_step_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block_id.clone()]

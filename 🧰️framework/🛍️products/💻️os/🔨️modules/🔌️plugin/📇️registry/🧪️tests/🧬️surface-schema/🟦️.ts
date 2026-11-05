@@ -123,7 +123,7 @@ describe("surface-schema-projection", () => {
   });
 
   it("reads a surface's associated-type bindings through their last path segment", () => {
-    const component = "impl ArtifactEditor for X {\n    type Config = crate::cfg::HomeConfig;\n    type Presence = semio_framework_plugin::NoPresence;\n}";
+    const component = "impl ArtifactEditor for X {\n    type Config = crate::cfg::HomeConfig;\n    type Presence = semio_plugin::NoPresence;\n}";
     expect(surfaceSchemaBinding(component, "Config")).toBe("HomeConfig");
     expect(surfaceSchemaBinding(component, "Presence")).toBe("NoPresence");
     expect(surfaceSchemaTypeTail("a::b::C")).toBe("C");

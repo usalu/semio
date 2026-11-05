@@ -1,6 +1,6 @@
 //! 💾️ Natural GLB publication measures borrowed geometry fields and writes one final output buffer under the original encoder.
 use super::*;
-use semio_framework_os_kernel::NativeSnapshotEncodeOwner;
+use semio_os_kernel::NativeSnapshotEncodeOwner;
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonScalarBytes as Scalar};
 use semio_framework_value::NativeEncodeControl;
 struct Port<'a, 'b, 'c> {

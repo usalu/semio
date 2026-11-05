@@ -14,8 +14,8 @@ pub struct SetIdx1Present {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetIdx1Present {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "idx1-present", kind: "set-idx1-present", record: "SetIdx1Present" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set idx1 present", "idx1-Index vorhanden setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set idx1 present", "idx1-Index vorhanden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

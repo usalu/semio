@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeStageActivity wher
         record: "ChangedStageActivity",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change activity of the construction stage", "Bauphase: Tätigkeit ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change activity of the construction stage", "Bauphase: Tätigkeit ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

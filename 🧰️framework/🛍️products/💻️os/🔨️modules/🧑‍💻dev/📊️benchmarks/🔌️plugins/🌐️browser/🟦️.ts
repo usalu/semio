@@ -8,7 +8,7 @@ import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 const repoRoot = findWorkspaceRoot();
 
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 
 import { BenchBudgetDefinition, benchWebSkippedRow } from "../📋️plan/🟦️.ts";
 
@@ -26,7 +26,7 @@ import { runtimeBundleV1 } from "../../../../../../../🔨️modules/⚙️runti
  * own collab/studio-e2e scripts already use), and merges the raw per-budget measurements back onto
  * `BENCH_BUDGETS`'s id/description/threshold. See that file's own header doc for exactly what is REAL
  * (driven through the genuine `ShardClient`, real browser `Worker`s, real postMessage round trips) versus
- * STUB (no real fleet wasm exists yet — `semio-framework-plugin` does not compile this session — so each
+ * STUB (no real fleet wasm exists yet — `semio-plugin` does not compile this session — so each
  * worker runs a tiny protocol stub instead of the real generated `shardWorkerSource()`). `renderer` is
  * accepted for parity with the native row's `--renderer` flag and threaded into the report's metadata,
  * but the harness itself is renderer-agnostic: it measures the `ShardClient` transport layer, which react

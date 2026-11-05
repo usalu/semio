@@ -2,12 +2,12 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) plus its six foreign plugins' surface
 //! registrations (eight surfaces: four editor-only, two editor+viewer pairs).
 
-use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{Plugin, PluginApp};
-use semio_framework_plugin::declarations::{EditorSurfaceApp, ViewerSurfaceApp};
-use semio_framework_plugin::PluginBuilder;
-use semio_framework_plugin::kernel::{CapabilityId, CapabilityRequest};
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::{Plugin, PluginApp};
+use semio_plugin::declarations::{EditorSurfaceApp, ViewerSurfaceApp};
+use semio_plugin::PluginBuilder;
+use semio_plugin::kernel::{CapabilityId, CapabilityRequest};
 
 // 🎫️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `cad`'s W2 packet dissolved
 // `apps::cad` into `editor::cad`/`viewer::cad` (module path read off `cad`'s OWN

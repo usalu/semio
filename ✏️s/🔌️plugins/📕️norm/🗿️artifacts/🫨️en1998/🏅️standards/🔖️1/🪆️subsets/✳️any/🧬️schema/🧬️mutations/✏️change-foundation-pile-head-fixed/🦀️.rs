@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationPileHead
         record: "ChangeFoundationPileHeadFixed",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pile head fixed in the cap (1 = fixed, 0 = free)", "Pfahlkopf in der Platte eingespannt (1 = ja, 0 = frei) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pile head fixed in the cap (1 = fixed, 0 = free)", "Pfahlkopf in der Platte eingespannt (1 = ja, 0 = frei) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-pile-head-fixed".into()]

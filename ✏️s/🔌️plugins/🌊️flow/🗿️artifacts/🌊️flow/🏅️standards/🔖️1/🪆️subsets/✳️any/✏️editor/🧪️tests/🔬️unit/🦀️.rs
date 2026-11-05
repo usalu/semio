@@ -1,6 +1,6 @@
 use crate::editor::flow::commands::{add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport, open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_active_example, set_catalogue_sections, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_lod_mode, set_contributions, set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension};
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 use crate::editor::flow::modes::edit::windows::compiled;
 use crate::editor::flow::modes::generate::commands::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 use crate::editor::flow::modes::{edit, generate};
@@ -12,14 +12,14 @@ use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::FlowEvalSession;
 use semio_framework_artifact_flow_flow::{CameraJson, Widget};
 use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuRequest;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::WindowMeasure;
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::json;
 use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
@@ -28,7 +28,7 @@ use serde_json::Value;
 #[allow(unused_imports)]
 use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main;
 #[allow(unused_imports)]
@@ -48,65 +48,65 @@ use crate::FlowMutation;
 #[allow(unused_imports)]
 use flow::{flow_host_with_session, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
+use semio_os_infinite_directed_presentation::DagDrawLod;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
+use semio_plugin::app::{ChildEmitPreparation, InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppDefinition;
+use semio_plugin::AppDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::CommandDefinition;
+use semio_plugin::CommandDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
 use semio_framework::kernel::UiDirtyScope;
 #[allow(unused_imports)]
@@ -125,8 +125,8 @@ use crate::editor::flow::{FLOW_DIRECT_STORE_TOOL_IDS, FLOW_CHILD_GROUP_TOOL_IDS,
 
 use crate::editor::flow::*;
 use crate::editor::flow::unit_tests::context::{dispatch, every_command, flow_app, flow_app_with_registry, settle, FlowAppFixture};
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::{EditorApp, PluginApp};
+use semio_plugin::artifact_app_laws::meta;
+use semio_plugin::{EditorApp, PluginApp};
 
 #[test]
 fn retained_content_child_factory_is_exact_and_legacy_closed() {
@@ -138,23 +138,23 @@ fn retained_content_child_factory_is_exact_and_legacy_closed() {
         expected.map(|tool_id| semio_framework::ToolFactoryKey::new("s.flow.flow@1/*#editor", tool_id)).as_slice()
     );
     assert_eq!(semio_framework::ToolJobFactory::payload_schema_id(&factory), FLOW_DOCUMENT_SCHEMA);
-    assert_eq!(semio_framework::ToolJobFactory::classification(&factory), semio_framework_plugin::InteractiveJobClassification::Migrated);
+    assert_eq!(semio_framework::ToolJobFactory::classification(&factory), semio_plugin::InteractiveJobClassification::Migrated);
     assert_eq!(semio_framework::ToolJobFactory::execution_contract(&factory), semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),);
-    assert_eq!(<FlowChildGroupJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS, &expected);
-    let publication = <FlowChildGroupJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
+    assert_eq!(<FlowChildGroupJobFactory as semio_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS, &expected);
+    let publication = <FlowChildGroupJobFactory as semio_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     assert_eq!(publication.len(), expected.len());
     for (contract, tool_id) in publication.iter().zip(expected) {
         assert_eq!(contract.tool_id, tool_id);
-        assert_eq!(contract.lanes, &[semio_framework_plugin::ArtifactToolPublicationLane::Child]);
+        assert_eq!(contract.lanes, &[semio_plugin::ArtifactToolPublicationLane::Child]);
     }
     let proofs = <FlowPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs();
-    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len() + FLOW_CONTRIBUTIONS_TOOL_IDS.len());
+    assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_EVALUATION_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len() + FLOW_CONTRIBUTIONS_TOOL_IDS.len());
     assert_eq!(FLOW_CHILD_GROUP_TOOL_IDS, &expected);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires() {
-    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_plugin::app::TypedOperationResultLane;
     use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
 
     let fixture: Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
@@ -173,7 +173,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     )
     .await;
     assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
-    let lanes = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained addWidget publication and exact ACK").lanes;
+    let lanes = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained addWidget publication and exact ACK").lanes;
     assert_eq!(
         lanes,
         [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
@@ -199,7 +199,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     for _ in 0..100_000 {
         let demand = PluginApp::close_retirement_demands(&*app, 16_384).expect("Flow app close quote");
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(16_384), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), grant).expect("retained addWidget app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+        if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), grant).expect("retained addWidget app close"), semio_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -285,9 +285,9 @@ fn action_cohort_fixtures_match_the_exact_route_census() {
     assert_eq!(classified, declared, "the Flow census names exactly FlowCommand's rows");
 }
 
-async fn context_menu_items(app: &mut FlowAppFixture, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
-    let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface, window_instance_id: None, point: None };
-    serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await).unwrap_or(Value::Null)
+async fn context_menu_items(app: &mut FlowAppFixture, surface: Option<semio_plugin::ContextMenuSurfaceTarget>) -> Value {
+    let request = ContextMenuRequest { menu: semio_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface, window_instance_id: None, point: None };
+    serde_json::to_value(app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await).unwrap_or(Value::Null)
 }
 
 //#region 🔖️CommandSurface
@@ -367,8 +367,8 @@ async fn graph_interaction_domain_is_declared_topology_and_scoped_to_the_main_wi
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
     let document = FlowSnapshot::default();
-    let config = semio_framework_plugin::NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let config = semio_plugin::NoConfig::default();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = FlowPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
@@ -384,27 +384,27 @@ async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn undo_restores_fixture_after_add_widget() {
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, settle_history_verb, settle_registered_typed_operation};
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, settle_history_verb, settle_registered_typed_operation};
 
     let mut app = flow_app().await;
     let receiver = meta("local").instance_id;
     let child_id = app.snapshot().expect("snapshot").content.child_id.clone();
     let before = flow_child_node_count(&app, &child_id).await;
     dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0), label: None, action: None, format: None })).await;
-    settle_registered_typed_operation(&mut app.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addWidget child publication");
+    settle_registered_typed_operation(&mut app.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addWidget child publication");
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "addWidget must land one node in the content child");
-    settle_history_verb(&mut app.0, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(flow_child_node_count(&app, &child_id).await, before, "undo must retire the child-lane group");
-    settle_history_verb(&mut app.0, "redo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "redo", receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "redo must reapply the child-lane group");
-    close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🚚️ An absolute authored drop publishes one relative child edit and replays undo exactly.
 #[semio_framework_async_macros::async_test]
 async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
-    use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_plugin::artifact_app_laws::{settle_history_verb, settle_registered_typed_operation};
+    use semio_plugin::app::TypedOperationResultLane;
+    use semio_plugin::artifact_app_laws::{settle_history_verb, settle_registered_typed_operation};
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
     use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
 
@@ -416,13 +416,13 @@ async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
     let node = before.nodes.first().expect("genesis content node");
     let (x, y) = (node.position.x + 37.0, node.position.y - 23.0);
     dispatch(&mut app, FlowCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node.id.clone(), x, y })).await;
-    let lanes = settle_registered_typed_operation(&mut app.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("moveMediaNode publication").lanes;
+    let lanes = settle_registered_typed_operation(&mut app.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("moveMediaNode publication").lanes;
     assert_eq!(lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
     let after = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("moved child").document_pack_bytes().await.expect("moved pack")).expect("moved snapshot");
     let moved = after.nodes.iter().find(|candidate| candidate.id == node.id).expect("addressed node");
     assert_eq!((moved.position.x, moved.position.y), (x, y));
     assert_eq!(app.snapshot().expect("parent after move").content, parent.content);
-    settle_history_verb(&mut app.0, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     let restored = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("restored child").document_pack_bytes().await.expect("restored pack")).expect("restored snapshot");
     assert_eq!(restored, before);
 }
@@ -478,7 +478,7 @@ async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
 /// without a window view, which every retained flow reducer requires (`flow-window-view-required`).
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_on_disjoint_edits() {
-    use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
+    use semio_plugin::artifact_app_laws::settle_registered_typed_operation;
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
     use store::{snapshot::ArtifactPack, os_store::backbone::MemoryBackbone, SpaceMember, ReferenceSpaceMember};
     async fn probe(app: &FlowAppFixture) -> Vec<(String, i64, i64)> {
@@ -492,7 +492,7 @@ async fn two_instances_converge_on_disjoint_edits() {
         for _ in 0..100_000 {
             let demand = PluginApp::close_retirement_demands(&*app, 16_384).expect("Flow convergence app close quote");
             let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(16_384), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), grant).expect("Flow convergence app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+            if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), grant).expect("Flow convergence app close"), semio_plugin::PluginLifecycleStep::Complete(_)) {
                 return;
             }
         }
@@ -500,27 +500,27 @@ async fn two_instances_converge_on_disjoint_edits() {
     }
     let mut instance_a = flow_app_with_registry().await;
     let mut instance_b = flow_app_with_registry().await;
-    let metadata_a = semio_framework_plugin::ActionMeta { instance_id: 71, ..meta("actor-a") };
-    let metadata_b = semio_framework_plugin::ActionMeta { instance_id: 72, ..meta("actor-b") };
+    let metadata_a = semio_plugin::ActionMeta { instance_id: 71, ..meta("actor-a") };
+    let metadata_b = semio_plugin::ActionMeta { instance_id: 72, ..meta("actor-b") };
     instance_a.bind_instance_id(metadata_a.instance_id).await;
     instance_b.bind_instance_id(metadata_b.instance_id).await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://flow-convergence", "mem://flow-convergence").await;
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0), label: None, action: None, format: None }), &metadata_a, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a.0, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0), label: None, action: None, format: None }), &metadata_b, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its disjoint edit");
-    settle_registered_typed_operation(&mut instance_b.0, metadata_b.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0), label: None, action: None, format: None }), &metadata_a, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a.0, metadata_a.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0), label: None, action: None, format: None }), &metadata_b, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its disjoint edit");
+    settle_registered_typed_operation(&mut instance_b.0, metadata_b.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     let converged = probe(&instance_a).await;
     assert_eq!(converged, probe(&instance_b).await, "both instances must converge on the same content child");
     assert_eq!(converged.len(), genesis.len() + 2, "each instance holds both disjoint notes");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &metadata_a, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut instance_a.0, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &metadata_a, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
+    semio_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut instance_a.0, metadata_a.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
@@ -533,7 +533,7 @@ async fn two_instances_converge_on_disjoint_edits() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_includes_select_all_when_empty() {
     let mut app = flow_app_with_registry().await;
-    let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).await;
+    let menu = context_menu_items(&mut app, Some(semio_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).await;
     let menu_json = menu.to_string();
     assert!(menu_json.contains("selectAll"), "menu should be {menu_json}");
     assert!(menu_json.contains("Select All") || menu_json.contains("select-all"), "menu should be {menu_json}");
@@ -546,12 +546,12 @@ async fn context_menu_includes_select_all_when_empty() {
 /// `InteractionState` now and `ArtifactApp::context_menu` is not threaded an `InteractionView` this
 /// wave (see `flow_context_menu_items`'s doc comment) — the request's own `surface.selection` groups
 /// are the only way to feed a selection into the menu, mirroring what the real click caller carries.
-fn node_selection_surface(node_ids: &[&str]) -> semio_framework_plugin::ContextMenuSurfaceTarget {
-    semio_framework_plugin::ContextMenuSurfaceTarget {
+fn node_selection_surface(node_ids: &[&str]) -> semio_plugin::ContextMenuSurfaceTarget {
+    semio_plugin::ContextMenuSurfaceTarget {
         surface_id: "main".into(),
         kind: "nodeGraph".into(),
         hits: vec![],
-        selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: node_ids.iter().map(|id| id.to_string()).collect() }],
+        selection: vec![semio_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: node_ids.iter().map(|id| id.to_string()).collect() }],
         text: None,
     }
 }
@@ -589,18 +589,18 @@ async fn context_menu_at_selects_target_and_enables_preview() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_annotates_mixed_selection_counts_and_disables_delete_without_selection() {
     let mut app = flow_app_with_registry().await;
-    let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).await.to_string();
+    let empty = context_menu_items(&mut app, Some(semio_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).await.to_string();
     assert!(empty.contains(r#""reason":"Nothing selected""#) && !empty.contains(r#""action":"deleteSelection""#), "empty keeps delete disabled with its reason: {empty}");
 
     let menu = context_menu_items(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: "main".into(),
             kind: "nodeGraph".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
             selection: vec![
-                semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: (1..=8).map(|i| format!("n{i}")).collect() },
-                semio_framework_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: (1..=13).map(|i| format!("e{i}")).collect() },
+                semio_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: (1..=8).map(|i| format!("n{i}")).collect() },
+                semio_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: (1..=13).map(|i| format!("e{i}")).collect() },
             ],
             text: None,
         }),
@@ -617,11 +617,11 @@ async fn context_menu_for_edge_hit_uses_surface_edge_selection() {
     let mut app = flow_app_with_registry().await;
     let menu = context_menu_items(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: "main".into(),
             kind: "nodeGraph".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "edge".into(), id: "syn-1".into(), label: None }],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: vec!["syn-1".into()] }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: "edge".into(), id: "syn-1".into(), label: None }],
+            selection: vec![semio_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: vec!["syn-1".into()] }],
             text: None,
         }),
     )
@@ -635,21 +635,21 @@ async fn context_menu_for_edge_hit_uses_surface_edge_selection() {
 async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
     let mut app = flow_app_with_registry().await;
     let request = ContextMenuRequest {
-        menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-        surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        menu: semio_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+        surface: Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: "main".into(),
             kind: "nodeGraph".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
             selection: vec![
-                semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: (1..=8).map(|i| format!("n{i}")).collect() },
-                semio_framework_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: (1..=13).map(|i| format!("e{i}")).collect() },
+                semio_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: (1..=8).map(|i| format!("n{i}")).collect() },
+                semio_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: (1..=13).map(|i| format!("e{i}")).collect() },
             ],
             text: None,
         }),
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let menu = app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");
@@ -657,3 +657,6 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
     assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must be last: {menu:?}");
 }
 //#endregion 🔖️ContextMenu
+
+#[path="📥️native-resolve/🦀️.rs"]
+mod native_resolve_action_laws;

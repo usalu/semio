@@ -13,7 +13,7 @@ window_config! {
     #[dsl(block)]
     camera: store::Viewport3dOrbit = crate::editor::bim::modes::edit::windows::world::INITIAL_CAMERA;
     #[dsl(block)]
-    projection: semio_framework_plugin::WorldProjectionConfig = semio_framework_plugin::WorldProjectionConfig::default();
+    projection: semio_plugin::WorldProjectionConfig = semio_plugin::WorldProjectionConfig::default();
     isolated_storey: String = String::new();
     hidden_storeys: Vec<String> = Vec::new();
     isolated_elements: Vec<String> = Vec::new();

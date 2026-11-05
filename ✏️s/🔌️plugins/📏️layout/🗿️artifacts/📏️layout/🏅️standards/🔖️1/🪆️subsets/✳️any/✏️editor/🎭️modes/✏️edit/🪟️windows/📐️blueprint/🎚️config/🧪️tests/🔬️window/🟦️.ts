@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv/dist/2020.js";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { applyPatch } from "fast-json-patch";
 import { applyLayoutWindowConfigMutation, type LayoutWindowConfig, type LayoutWindowConfigMutation } from "../../🧬️schema/🟦️.ts";
 import { applyLayoutWindowTransientMutation, type LayoutWindowTransient, type LayoutWindowTransientMutation } from "../../../🫧️transient/🧬️schema/🟦️.ts";
@@ -30,7 +30,7 @@ const target = (instances: WindowInstance[], id: string, expectedKind: string): 
 };
 
 export function testLayoutWindowOwnershipOracle(): void {
-  const ajv = new Ajv({ strict: true, allErrors: true });
+  const ajv = semioSchemaAjvV1({ allErrors: true });
   assert(ajv.compile(configSchema)(fixture.baseConfig));
   assert(ajv.compile(transientSchema)(fixture.baseTransient));
   const documentBytes = JSON.stringify(fixture.document);

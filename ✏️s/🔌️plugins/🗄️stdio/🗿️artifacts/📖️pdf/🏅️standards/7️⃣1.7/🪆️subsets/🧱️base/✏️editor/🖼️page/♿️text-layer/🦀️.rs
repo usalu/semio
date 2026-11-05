@@ -72,7 +72,7 @@ pub fn text_layer_lines(snapshot: &PdfSnapshot, locale: Locale) -> Vec<(String, 
 }
 
 /// ♿️ The accessible text layer window body.
-pub fn render_text_layer(snapshot: &PdfSnapshot, locale: Locale) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+pub fn render_text_layer(snapshot: &PdfSnapshot, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     let error = |code: &'static str| PluginAssemblyError::new(code, "pdf text layer admission failed");
     let mut column = ui::column().try_id("pdf-text-layer").map_err(|_| error("pdf.text-layer.root-id"))?;
     for (id, line) in text_layer_lines(snapshot, locale) {

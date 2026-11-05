@@ -25,12 +25,12 @@ path = "../../🦀️.rs"
 semio-hub-inference = { workspace = true }
 serde_json = { workspace = true }
 semio-hub-gis = { workspace = true }
-directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 
 [dev-dependencies]
 semio-hub-inference-contract-laws = { workspace = true, features = ["testkit", "integration-fixtures"] }
 semio-hub-inference = { workspace = true, features = ["testkit", "integration-fixtures"] }
 tokio = { version = "1", features = ["full", "test-util"] }
-directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
 semio-framework-job = { workspace = true }

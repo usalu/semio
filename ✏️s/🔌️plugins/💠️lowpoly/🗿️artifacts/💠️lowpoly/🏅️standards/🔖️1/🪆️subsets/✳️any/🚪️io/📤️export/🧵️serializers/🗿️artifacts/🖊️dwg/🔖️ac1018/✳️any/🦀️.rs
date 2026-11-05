@@ -6,7 +6,7 @@
 //! 🔖 `IoFidelity::Lossy`: one polyface mesh of triangles — objects, names and paint do not survive.
 use crate::mesh_geometry::world_parts;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
-use semio_framework_plugin::MeshData;
+use semio_plugin::MeshData;
 use semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes;
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::mesh_to_dwg_drawing;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;

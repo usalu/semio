@@ -9,9 +9,9 @@
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
+use semio_os_kernel::Viewport2d;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "fem2d-view-model";
@@ -94,7 +94,7 @@ fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])>
 /// overlay, hardcoded `Viewport2d::default()` (a viewer has no persisted per-session camera —
 /// `Config = NoConfig`). No results overlay, no selection, no gumball — a viewer has no utilities
 /// that edit and emits no mutations by construction (`ViewEmit`).
-pub fn render(doc: &Fem2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let camera = Viewport2d::default();
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {

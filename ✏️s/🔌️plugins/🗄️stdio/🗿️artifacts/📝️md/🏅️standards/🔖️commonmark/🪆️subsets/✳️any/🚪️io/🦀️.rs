@@ -11,7 +11,7 @@
 pub mod derived_composition {
     use crate::standards::v_commonmark::subsets::any::io::MdAnalyzer;
     use crate::MdSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -50,7 +50,7 @@ pub use derived_composition::*;
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_commonmark::subsets::any::io::MdComposer as MdRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -76,7 +76,7 @@ pub mod text {
 
 pub mod derived_construction {
     use crate::{MdDiff, MdMutation, MdSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.md` snapshot.
@@ -124,7 +124,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::MdSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.md` parts.
@@ -141,13 +141,13 @@ pub mod derived_analysis {
     /// 🔍 Markdown has no magic bytes — sniff by actually running the real block parser
     /// and checking for structural (non-paragraph) blocks, which plain text never produces.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn looks_like_markdown(text: &str) -> semio_framework_plugin::io::Confidence {
+    fn looks_like_markdown(text: &str) -> semio_plugin::io::Confidence {
         if text.trim().is_empty() {
-            return semio_framework_plugin::io::Confidence::Low;
+            return semio_plugin::io::Confidence::Low;
         }
         let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
         if blocks.is_empty() {
-            return semio_framework_plugin::io::Confidence::Low;
+            return semio_plugin::io::Confidence::Low;
         }
         let has_structure = blocks.iter().any(|b| {
             !matches!(
@@ -157,9 +157,9 @@ pub mod derived_analysis {
             )
         });
         if has_structure {
-            semio_framework_plugin::io::Confidence::High
+            semio_plugin::io::Confidence::High
         } else {
-            semio_framework_plugin::io::Confidence::Medium
+            semio_plugin::io::Confidence::Medium
         }
     }
 
@@ -167,7 +167,7 @@ pub mod derived_analysis {
         type Parts = MdParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -179,11 +179,11 @@ pub mod derived_analysis {
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
                     Ok((_, inner)) => match String::from_utf8(inner) {
                         Ok(text) => looks_like_markdown(&text),
-                        Err(_) => semio_framework_plugin::io::Confidence::Low,
+                        Err(_) => semio_plugin::io::Confidence::Low,
                     },
                     Err(_) => match std::str::from_utf8(bytes) {
                         Ok(text) => looks_like_markdown(text),
-                        Err(_) => semio_framework_plugin::io::Confidence::Low,
+                        Err(_) => semio_plugin::io::Confidence::Low,
                     },
                 },
             }
@@ -192,20 +192,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = MdParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <MdSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <MdSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -223,7 +223,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec MdBuilderFacets {
         construction: MdBuilderConstruction,
         analysis: MdAnalyzerAnalysis,

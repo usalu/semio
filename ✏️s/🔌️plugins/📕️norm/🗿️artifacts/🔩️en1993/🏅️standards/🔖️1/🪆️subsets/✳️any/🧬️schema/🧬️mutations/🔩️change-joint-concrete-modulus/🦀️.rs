@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointConcreteModul
         record: "ChangedJointConcreteModulus",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Concrete modulus E_cm of the joint", "Anschluss: Beton-E-Modul E_cm ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Concrete modulus E_cm of the joint", "Anschluss: Beton-E-Modul E_cm ändern")
     }
 }
 

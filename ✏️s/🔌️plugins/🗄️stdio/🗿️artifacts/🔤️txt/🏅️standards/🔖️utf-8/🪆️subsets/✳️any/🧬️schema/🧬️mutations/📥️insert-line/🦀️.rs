@@ -49,8 +49,8 @@ impl InsertLineMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for InsertLineMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "line", kind: "insert-line", record: "InsertedLine" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert Line", "Zeile einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert Line", "Zeile einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-line".to_string()]

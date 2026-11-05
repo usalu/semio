@@ -104,7 +104,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// 🛠️ The TOOL half of the same reader — React's `toolMeasuresByToolId` ref, refreshed on the
     /// scope that names tools so a slider tick inside an armed tool's options repaints its leaf.
     pub async fn refresh_ui_rendered(&mut self, ask: UiDirtyScope, rendered: Option<ShellRenderedRefresh>) -> Result<(), String> {
-        let mut latency = semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_framework_os_renderer_wgpu_host_base::frame_latency::latest_frame_authority(), semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::ShellRefresh, 1);
+        let mut latency = semio_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_renderer_wgpu_host_base::frame_latency::latest_frame_authority(), semio_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::ShellRefresh, 1);
         let scope = core::mem::replace(&mut self.settle.owed_refresh_scope, UiDirtyScope::None).merged_with(ask);
         let Some(session) = self.docs.session.clone() else {
             return Ok(());
@@ -117,7 +117,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
         latency.set_work_items(live_windows.len());
         let measure_windows: Vec<String> = live_windows.iter().map(|(window_id, _)| window_id.clone()).collect();
         let mut refresh_effects = Vec::new();
-        let mut faults: Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)> = Vec::new();
+        let mut faults: Vec<(String, String, semio_renderer_wgpu_program_bridge::ProgramFault)> = Vec::new();
         let mut rendered = 0usize;
         let mut visited: Vec<String> = Vec::new();
         {

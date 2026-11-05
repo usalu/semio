@@ -2,9 +2,9 @@
 //! 271 meshes, KHR material extensions declared) decoded through the upgraded engine, not a
 //! hand-authored stub. Ticket ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION.
 
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::ExampleSource;
 use semio_framework_test_fixtures::repo_root;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 /// 🏷️ Stable example id for the navbar picker / `setActiveExample`.
 pub const ID: &str = "metabolism";
@@ -36,7 +36,7 @@ pub fn base_glb_bytes_digest() -> (&'static str, u64, &'static str) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn base_glb_bytes() -> &'static [u8] {
     let (name, ..) = base_glb_bytes_digest();
-    match semio_framework_plugin::reactor::package_asset(name) {
+    match semio_plugin::reactor::package_asset(name) {
         Some(bytes) => bytes,
         #[cfg(test)]
         None => repository_file(name),

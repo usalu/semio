@@ -24,8 +24,8 @@ pub fn delete_grip<Op: From<crate::delete_grip::DeleteGrip>>(id: String) -> Op {
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for DeleteGrip where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::create_grip::CreateGrip> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "grip", kind: "delete-grip", record: "DeletedGrip" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete grip \"{}\"", self.id), &format!("Griff \"{}\" löschen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete grip \"{}\"", self.id), &format!("Griff \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

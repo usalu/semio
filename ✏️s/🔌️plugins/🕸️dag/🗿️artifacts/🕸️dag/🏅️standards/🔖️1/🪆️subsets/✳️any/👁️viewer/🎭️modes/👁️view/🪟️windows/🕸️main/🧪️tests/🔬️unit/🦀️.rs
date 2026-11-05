@@ -1,6 +1,6 @@
 use crate::schema::document_to_workflow;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
 use crate::viewer::dag::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
@@ -15,8 +15,8 @@ async fn definition_declares_the_node_graph_surface_and_body_key() {
 async fn render_produces_a_read_only_node_graph_scene() {
     let document = crate::examples::demo::scene();
     let node = render(&document).expect("viewer surface");
-    let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = node.component else { panic!("viewer must produce a surface") };
-    let scene: NodeGraphScene = semio_framework_ui_scene::decode(&props).expect("node graph scene");
+    let semio_plugin::plugin_app_close_prelude::Component::Surface(props) = node.component else { panic!("viewer must produce a surface") };
+    let scene: NodeGraphScene = semio_ui_scene::decode(&props).expect("node graph scene");
     assert_eq!(scene.editable, Some(false));
     let (nodes, edges) = document_to_workflow(&document);
     assert_eq!(scene.nodes, nodes);

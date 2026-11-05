@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::{ValueError, ValueRefusalKind, NativeEncodeControl, DecodedValue};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
+use semio_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
 fn retire(value:DocxSnapshot){value.retire_sqlite_snapshot();}
 fn measured(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,limits:SqliteDatabaseLimits,native:&mut NativeEncodeControl<'_>)->Result<usize,ValueError>{
  native.begin_stage(0)?;let mut writer=OpcNativeWriter{control:native,output:None,count:0,rows:0,limits,encoding};write(snapshot,&mut writer)?;let count=writer.count;native.checkpoint()?;Ok(count)
@@ -13,7 +13,7 @@ pub(super) fn preflight(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control
   let result=(||{let count=measured(snapshot,encoding,limits,&mut native)?;if count>remaining.saturating_sub(native.owned_bytes()){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"DOCX prospective native output exceeds physical allowance"));}native.checkpoint()})();(result,native.owned_bytes())
  })?
 }
-pub(super) fn encode(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{let native_control=native_owner.native();
+pub(super) fn encode(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{let native_control=native_owner.native();
  let limits=control.limits();control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();
     let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{

@@ -1,18 +1,18 @@
 //! 🗃️ Close worker state, fixed instance registry, actor authority and the typed plugin runtime.
 
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
 use std::cell::{Cell, RefCell};
 use semio_framework::{Fault, FaultFrom};
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1;
-use semio_framework_plugin_plugin_program::{Plugin, PluginProgram};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
+use semio_plugin_plugin_program::{Plugin, PluginProgram};
+use semio_plugin_reactor_app::PluginApp;
 use crate::life_app_cell::RuntimeAppCell;
 use crate::life_cleanup_pumps::{RuntimeCloseCleanupPump, checked_runtime_close_generation, plugin_begin_instance_close};
 use crate::life_cleanup_vocabulary::{RuntimeCloseStatus, runtime_cleanup_fault};
 use serde_json::Value;
-use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 #[doc(hidden)]
 pub struct RuntimeCloseWorkerState<PA: PluginApp> {
     pub instance_id: u32,
@@ -214,8 +214,8 @@ pub struct RuntimeDocumentBackboneBindingV1 {
     pub channel: Option<store::os_store::backbone::ActorBackboneChannelOwner>,
 }
 impl RuntimeDocumentBackboneBindingV1 {
-    pub fn state(&self) -> semio_framework_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingStateV1 {
-        semio_framework_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingStateV1 { generation: self.generation, uri: self.uri.clone() }
+    pub fn state(&self) -> semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingStateV1 {
+        semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingStateV1 { generation: self.generation, uri: self.uri.clone() }
     }
 }
 #[cfg(test)]
@@ -236,7 +236,7 @@ pub struct PluginRuntime<PA: PluginApp> {
     pub live_cleanup_pressure: Cell<bool>,
     pub typed_continuation_cursor: Cell<usize>,
     pub close_generation: Cell<u64>,
-    pub local_interaction_query_generation: semio_framework_plugin_interaction::live::LocalInteractionQueryGeneration,
+    pub local_interaction_query_generation: semio_plugin_interaction::live::LocalInteractionQueryGeneration,
     pub instance_actors: RefCell<RuntimeInstanceRegistry<RuntimeActorAuthority>>,
     pub document_backbones: RefCell<RuntimeInstanceRegistry<RuntimeDocumentBackboneBindingV1>>,
 }

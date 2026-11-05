@@ -2,15 +2,15 @@
 //!
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏪️history`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
-use semio_framework_os_renderer_wgpu_shell_async::{HOST_STORAGE_SNAPSHOT_MAX_BYTES, debug_log};
+use semio_renderer_wgpu_shell_async::{HOST_STORAGE_SNAPSHOT_MAX_BYTES, debug_log};
 #[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
-use semio_framework_os_renderer_wgpu_shell_async::FilePrefsFlushState;
+use semio_renderer_wgpu_shell_async::FilePrefsFlushState;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_renderer_wgpu_shell_async::PrefsStore;
+use semio_renderer_wgpu_shell_async::PrefsStore;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::Lane;
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_renderer_wgpu_host_base::host_io_call;
+use semio_renderer_wgpu_host_base::host_io_call;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 

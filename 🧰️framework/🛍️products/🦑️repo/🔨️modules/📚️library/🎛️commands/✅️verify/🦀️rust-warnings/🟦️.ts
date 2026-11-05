@@ -28,9 +28,9 @@ function pluginCrateNames(root: string, includeSupport = false): string[] {
 
 /** 🎯️ Native test surfaces, WASI component libraries, and browser actor/renderer libraries. */
 export function rustWarningTargetScope(root: string, target: string | undefined): { packages: string[]; scopeArgs: string[]; targetArgs: string[]; packageArgs: Record<string, string[]> } {
-  const renderer = "semio-framework-os-renderer-wgpu";
+  const renderer = "semio-renderer-wgpu";
   if (target === "wasm32-wasip2") return { packages: pluginCrateNames(root), scopeArgs: ["--lib"], targetArgs: ["--target", target], packageArgs: {} };
   if (target === "wasm32-unknown-unknown") return { packages: ["semio-framework-actor", renderer], scopeArgs: ["--lib"], targetArgs: ["--target", target], packageArgs: {} };
   if (target && target !== "native") throw refuseVerifyV1("invalid","rust-warnings.unknown-target",{target:String(target)});
-  return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", renderer, ...pluginCrateNames(root, true)], scopeArgs: ["--all-targets"], targetArgs: [], packageArgs: { [renderer]: ["--features", "native-bin"], "semio-framework-os-kernel": ["--features", "native-bin"] } };
+  return { packages: ["semio-framework-actor", "semio-framework", "semio-os-kernel", renderer, ...pluginCrateNames(root, true)], scopeArgs: ["--all-targets"], targetArgs: [], packageArgs: { [renderer]: ["--features", "native-bin"], "semio-os-kernel": ["--features", "native-bin"] } };
 }

@@ -17,8 +17,8 @@ pub struct ChangeBeamSteelRootRadiusM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamSteelRootRadiusM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_steel_root_radius_m::ChangeBeamSteelRootRadiusM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-steel-root-radius-m", kind: "change-beam-steel-root-radius-m", record: "ChangedBeamSteelRootRadiusM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fillet radius r", "Ausrundungsradius r ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fillet radius r", "Ausrundungsradius r ändern")
     }
 }
 

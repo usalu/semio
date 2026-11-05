@@ -5,10 +5,10 @@
 
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -37,7 +37,7 @@ fn block_text(block: &DocxBlock) -> String {
 
 /// 👁️ Pure `DocxSnapshot -> BuiltNode` read: one `DocumentPage` per top-level `document.body` block.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &DocxSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let pages = document.project_document().unwrap_or_default().body.iter().map(|block| DocumentPage { text: block_text(block) }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
 }

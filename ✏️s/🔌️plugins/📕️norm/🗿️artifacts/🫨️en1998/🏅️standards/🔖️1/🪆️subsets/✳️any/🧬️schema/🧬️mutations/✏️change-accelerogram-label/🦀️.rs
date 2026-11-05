@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAccelerogramLabel 
         record: "ChangeAccelerogramLabel",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Record label (event, station)", "Bezeichnung der Aufzeichnung (Ereignis, Station) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Record label (event, station)", "Bezeichnung der Aufzeichnung (Ereignis, Station) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-accelerogram-label".into()]

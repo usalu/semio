@@ -9,14 +9,14 @@
 
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use crate::editor::gis2d::{gis2d_action, gis2d_layer_tree_item, ui_label, ui_value_map, ui_value_text, GIS_MAP_LAYER_IDS};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_BODY_CATALOGUE: &str = "gis2d.play.catalogue";
@@ -37,7 +37,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &Gis2dPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(labels: &Gis2dPlayLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     PanelTreeBuilder::new(GIS2D_PLAY_CATALOGUE_ROOT)?
         .window_section(windows, GIS2D_PLAY_CATALOGUE_LAYERS, Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, GIS_MAP_LAYER_IDS, |(id, _, icon)| {
             let args = ui_value_map([("layerId", ui_value_text(id)?)])?;

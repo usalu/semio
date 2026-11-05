@@ -54,7 +54,7 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
   cause, shared cargo target-dir lock contention from a concurrent session — and then threw
   `spawnSync cargo ETIMEDOUT` out of `runProbe` with no summary line at all.
   `📓️w14-final-audit.md` §5.3 measured the underlying blocker one day earlier (`unresolved import
-  component::component_persistent_local` in `semio-framework-plugin`, which sits in every generated
+  component::component_persistent_local` in `semio-plugin`, which sits in every generated
   host's dependency graph); this pass did NOT re-verify whether that is still the state, and says so
   rather than repeating it as fact. This subset's own plugin crate compiles clean at
   `cargo check --lib`. Second, this case reads no real-world

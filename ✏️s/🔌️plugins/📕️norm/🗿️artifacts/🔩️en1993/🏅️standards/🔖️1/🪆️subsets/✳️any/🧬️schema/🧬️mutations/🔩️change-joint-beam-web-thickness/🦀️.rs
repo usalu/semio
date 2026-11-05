@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointBeamWebThickn
         record: "ChangedJointBeamWebThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Joint: Beam web thickness t_wb (0 = not given)", "Anschluss: Trägerstegdicke t_wb (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Joint: Beam web thickness t_wb (0 = not given)", "Anschluss: Trägerstegdicke t_wb (0 = nicht angegeben) ändern")
     }
 }
 

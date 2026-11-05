@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for InsertElement where Op:
         record: "InsertedElement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert envelope element", "Hüllbauteil einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert envelope element", "Hüllbauteil einfügen")
     }
 }
 

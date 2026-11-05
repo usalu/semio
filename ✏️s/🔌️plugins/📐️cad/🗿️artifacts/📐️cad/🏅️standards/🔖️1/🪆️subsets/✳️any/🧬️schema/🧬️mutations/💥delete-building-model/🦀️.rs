@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "building-model", kind: "delete-building-model", record: "DeletedBuildingModel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete building-model child", "Gebäudemodell-Kind löschen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Delete building-model child", "Gebäudemodell-Kind löschen")
     }
     fn target(&self) -> Vec<String> {
         vec!["building_model".to_string()]

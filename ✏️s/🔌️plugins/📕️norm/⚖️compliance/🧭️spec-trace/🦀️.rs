@@ -2,7 +2,7 @@
 
 use crate::design_case::{evaluate_case, seed, CaseCatalogue};
 use crate::{AnnexChoice, CheckReport, CheckStatus};
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use std::collections::BTreeSet;
 
 /// 🌐️ Static bilingual text of a spec trace row: both languages are mandatory and no language is the default.

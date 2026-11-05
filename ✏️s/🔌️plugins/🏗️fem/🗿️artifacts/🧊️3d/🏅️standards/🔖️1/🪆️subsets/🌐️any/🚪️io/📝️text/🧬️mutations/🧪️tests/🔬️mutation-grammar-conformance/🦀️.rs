@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use protocol::OpText;
 use semio_framework_dsl_record::DslVariants;

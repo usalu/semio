@@ -13,8 +13,8 @@ pub struct SetFormat {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetFormat {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "format", kind: "set-format", record: "SetFormat" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set format", "Format setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set format", "Format setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

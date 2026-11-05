@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-flow-wasm-actions-a"
+name = "semio-os-flow-wasm-actions-a"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,12 +22,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-flow-wasm-domain = { path = "../../../🧩️domain-adapter/📦️packages/🦀️rust" }
-semio-framework-os-flow-host-core = { path = "../../../../🖥️host/🧱️flow-host-model/📦️packages/🦀️rust" }
+semio-os-flow-wasm-domain = { path = "../../../🧩️domain-adapter/📦️packages/🦀️rust" }
+semio-os-flow-host-core = { path = "../../../../🖥️host/🧱️flow-host-model/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-abi = { path = "../../../../../../../../🔨️modules/🌉️abi/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }

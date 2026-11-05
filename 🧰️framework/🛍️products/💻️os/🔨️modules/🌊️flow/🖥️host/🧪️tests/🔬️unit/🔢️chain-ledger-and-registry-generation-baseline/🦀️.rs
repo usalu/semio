@@ -75,7 +75,7 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
     let mut session = FlowEvalSession::new();
     prepare_fixture_window(&mut session);
     let generation = session.flow_extension_generation();
-    assert_eq!(generation, semio_framework_os_flow_operators::flow_extension_registry_generation(), "a fresh session is current with the registry it will evaluate against");
+    assert_eq!(generation, semio_os_flow_operators::flow_extension_registry_generation(), "a fresh session is current with the registry it will evaluate against");
     let cached = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
     session.seed_node_cache(17, cached);
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
@@ -186,13 +186,13 @@ fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::syn
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
-    let _serialized = semio_framework_os_flow_operators::registry::lock_flow_extension_registry_for_test();
-    semio_framework_os_flow_operators::registry::drain_flow_extension_registry_retirements();
+    let _serialized = semio_os_flow_operators::registry::lock_flow_extension_registry_for_test();
+    semio_os_flow_operators::registry::drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📔️registry/🧪️tests/🧫️fixtures/🔣️manifest-admission.json")).unwrap();
     let bump = &fixture["generationBump"];
     let source = host_with_test_bridge();
     let generation = source.eval_baseline_registry_generation();
-    assert_eq!(generation, semio_framework_os_flow_operators::flow_extension_registry_generation(), "a settled host is stamped with the registry it dispatched through");
+    assert_eq!(generation, semio_os_flow_operators::flow_extension_registry_generation(), "a settled host is stamped with the registry it dispatched through");
     let dispatches = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
 
     let mut settled = counting_replay_host_of(&source, &dispatches);
@@ -203,8 +203,8 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     assert_eq!(dispatches.load(std::sync::atomic::Ordering::Relaxed), 0, "control: a current baseline over an unchanged tree dispatches nothing");
     assert!(settled.pending_eval_widget_ids().is_empty(), "control: and owes no further work");
 
-    semio_framework_os_flow_operators::install_flow_extension_manifest(bump["pluginId"].as_str().unwrap(), bump["manifestJson"].as_str().unwrap()).expect("the fixture manifest installs");
-    assert_ne!(semio_framework_os_flow_operators::flow_extension_registry_generation(), generation, "installing a manifest replaces the registry");
+    semio_os_flow_operators::install_flow_extension_manifest(bump["pluginId"].as_str().unwrap(), bump["manifestJson"].as_str().unwrap()).expect("the fixture manifest installs");
+    assert_ne!(semio_os_flow_operators::flow_extension_registry_generation(), generation, "installing a manifest replaces the registry");
     let mut rearmed = counting_replay_host_of(&source, &dispatches);
     let (snapshot, channels) = source.eval_baseline();
     rearmed.install_eval_baseline(snapshot, channels, generation, FIXTURE_SESSION_GRANT).map_err(|(error, _, _)| error).unwrap();
@@ -214,9 +214,9 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     assert!(dispatches.load(std::sync::atomic::Ordering::Relaxed) > 0, "a superseded registry generation must re-dispatch the unchanged tree");
     assert_eq!(rearmed.preview_text(), source.preview_text(), "re-dispatching an unchanged tree reaches the same answer");
 
-    semio_framework_os_flow_operators::uninstall_flow_extension(bump["extensionId"].as_str().unwrap()).expect("the law leaves the process-wide registry as it found it");
+    semio_os_flow_operators::uninstall_flow_extension(bump["extensionId"].as_str().unwrap()).expect("the law leaves the process-wide registry as it found it");
     for _ in 0..100_000 {
-        if matches!(semio_framework_os_flow_operators::test_flow_registry_retirement_step(1,64),Ok(neural::RetainedCloneStep::Complete(_))) { break; }
+        if matches!(semio_os_flow_operators::test_flow_registry_retirement_step(1,64),Ok(neural::RetainedCloneStep::Complete(_))) { break; }
     }
     settled.retire_cold();
     rearmed.retire_cold();

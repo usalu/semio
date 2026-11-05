@@ -1,9 +1,9 @@
 use semio_framework_test_fixtures::fixture_bytes;
 
 #[allow(unused_imports)]
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::ExampleSource;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use crate::examples::demo::*;
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {

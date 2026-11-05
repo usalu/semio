@@ -4,11 +4,11 @@
 //#region 🔖️MediaRegistry
 // 🧬️ The workflow registry owns `register_*` and `export_os_app_instance_media_kind`, so both share one OnceLock. Keyed on
 // string format kind ids (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
-pub use semio_framework_os_host_workflow::{export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult};
+pub use semio_os_host_workflow::{export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult};
 
 /// 🗂️ Build a file-picker `accept` filter from stdio format kind ids (`dwg` / `stdio.dwg`).
-pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> Result<String, semio_framework_os_kernel::io::FormatRegistryError> {
-    semio_framework_os_kernel::io::format_accept_filter(format_artifact_kinds)
+pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> Result<String, semio_os_kernel::io::FormatRegistryError> {
+    semio_os_kernel::io::format_accept_filter(format_artifact_kinds)
 }
 //#endregion 🔖️MediaRegistry
 use serde_json::Value;
@@ -31,7 +31,7 @@ pub fn rasterize_svg_to_png_base64(svg: &str, width: u32, height: u32) -> Result
 /// 🖼️ Preserves the raster-export API where the shipped guest has no native renderer tier.
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub fn rasterize_svg_to_png_base64(_: &str, _: u32, _: u32) -> Result<String, String> {
-    Err("SVG rasterization requires the native semio-framework-os host".into())
+    Err("SVG rasterization requires the native semio-os host".into())
 }
 
 /// 📤️ Encodes the renderer's RGBA8 pixmap with the framework's own PNG codec.
@@ -61,7 +61,7 @@ pub fn svg_to_polylines(svg: &str) -> Result<Vec<SvgPolyline>, String> {
 /// 🪟️ Reports an unavailable native SVG parser tier.
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub fn svg_to_polylines(_: &str) -> Result<Vec<SvgPolyline>, String> {
-    Err("SVG path extraction requires the native semio-framework-os host".into())
+    Err("SVG path extraction requires the native semio-os host".into())
 }
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -171,7 +171,7 @@ pub fn register_2d_export_handlers(artifact_kind: &'static str, file_stem: &'sta
 pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework::MeshData, String>, exporter: Box<dyn semio_framework::mesh_io::MeshExporter>) {
     let format_kind = exporter.format_kind();
     register_os_media_export_handler_kind(artifact_kind, format_kind, move |doc| {
-        let descriptor = semio_framework_os_kernel::io::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown mesh export format kind `{format_kind}`"))?;
+        let descriptor = semio_os_kernel::io::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown mesh export format kind `{format_kind}`"))?;
         let extension = descriptor.extensions.first().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no extension claim"))?;
         let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no MIME claim"))?;
         let mesh = mesh_from_document(doc)?;

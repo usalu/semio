@@ -1,4 +1,4 @@
-/** 🛠️ `dev` command family: storybook, storybook-static and the MCP launchers.
+/** 🛠️ `dev` command family: Storybook, time-travel and the MCP launchers.
  * @see 📜️script.ts
  */
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -21,6 +21,13 @@ function requireRepoMcpBinary(root: string): string {
 //#region 🔖️DevScript
 export class DevScript extends Script {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "time-travel") {
+      const { issueRepositoryScriptProvidersV1 } = await import("../../🏃️process/🔌️providers/🟦️.ts");
+      issueRepositoryScriptProvidersV1(process.env);
+      const { runTimeTravelCli } = await import("../../../../../💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel/🟦️.ts");
+      await runTimeTravelCli(this.invocation, this.repoRoot, join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🧪️time-travel"), segments.slice(1));
+      return;
+    }
     if (segments[0] === "storybook") {
       await this.runStorybook(segments.slice(1));
       return;
@@ -33,7 +40,7 @@ export class DevScript extends Script {
       await this.runMcp(segments.slice(1));
       return;
     }
-    console.error(`[dev] unknown route ${JSON.stringify(segments.join(" "))}: expected storybook, storybook-static or mcp. Playgrounds are dashboard commands: \`repo dashboard run playground:<variant> --param renderer=react\` (list them with \`repo dashboard commands playground\`).`);
+    console.error(`[dev] unknown route ${JSON.stringify(segments.join(" "))}: expected storybook, storybook-static, time-travel or mcp. Playgrounds are dashboard commands: \`repo dashboard run playground:<variant> --param renderer=react\` (list them with \`repo dashboard commands playground\`).`);
     process.exit(1);
   }
 
@@ -110,7 +117,7 @@ export class DevScript extends Script {
     runCmd(process.execPath, ["x", "@modelcontextprotocol/inspector"], { cwd: this.root, ...daemonBudgetOpts() });
   }
 
-  /** 🌉️ Runs the `semio-os` MCP gateway (`semio-framework-os-mcp`) over stdio, which is what `.mcp.json` launches.
+  /** 🌉️ Runs the `semio-os` MCP gateway (`semio-os-mcp`) over stdio, which is what `.mcp.json` launches.
    * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (build task `@semio-tech/framework-os-mcp-rs:dev`).
    * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
   private async runMcpOs(extra: string[]): Promise<void> {

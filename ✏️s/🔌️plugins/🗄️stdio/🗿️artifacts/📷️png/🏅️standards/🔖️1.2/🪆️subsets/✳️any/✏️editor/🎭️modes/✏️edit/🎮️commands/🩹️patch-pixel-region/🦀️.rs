@@ -5,17 +5,17 @@ use crate::schema::snapshot::PngSnapshot;
 use crate::schema::operations::png_revision;
 use semio_s_artifact_stdio_contract::editing::raster::{RasterRegion, RasterRegionError, RasterRegionLimits, RasterRegionPlan};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArgSchema;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ArgSchema;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ACTION_ID: &str = "set-pixel-region";
 pub const PAYLOAD_SCHEMA: &str = "s.stdio.png.command.patch-pixel-region.v1";
@@ -144,7 +144,7 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PatchPixelRegionWork {
         ACTION_ID
     }
 
-    fn extent(&self, command: &PngEditCommand, snapshot: &PngSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>) -> Option<usize> {
+    fn extent(&self, command: &PngEditCommand, snapshot: &PngSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>) -> Option<usize> {
         let PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(command)) = command else { return None };
         CAPACITY.rows_for_items(command.validate(snapshot).ok()?.patch_count())
     }

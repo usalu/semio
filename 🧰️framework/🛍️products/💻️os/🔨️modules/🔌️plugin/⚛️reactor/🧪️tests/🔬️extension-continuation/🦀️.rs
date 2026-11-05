@@ -5,13 +5,13 @@
 //! ever dispatched. These tests drive the exact three calls `poll`'s event loop chains together.
 
 use semio_framework::kernel::Effect;
-use semio_framework_plugin_reactor_tasks::REGISTRY;
+use semio_plugin_reactor_tasks::REGISTRY;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::RequestOutcome;
-use semio_framework_plugin_reactor_tasks::tasks_extension_continuation::{append_extension_response_page, host, queue_extension_invocation, take_extension_response};
+use semio_plugin_reactor_tasks::tasks_extension_continuation::{append_extension_response_page, host, queue_extension_invocation, take_extension_response};
 
-fn brep_invocation(response_action: &str, request_json: &str) -> semio_framework_plugin_decl_emission::ExtensionInvocation {
-    semio_framework_plugin_decl_emission::ExtensionInvocation::new("brep", "tessellate", request_json, response_action)
+fn brep_invocation(response_action: &str, request_json: &str) -> semio_plugin_decl_emission::ExtensionInvocation {
+    semio_plugin_decl_emission::ExtensionInvocation::new("brep", "tessellate", request_json, response_action)
 }
 
 /// 📦️ The shape the SHELL puts on the ABI — `encodePackValue(JSON.parse(outputJson))`.
@@ -142,7 +142,7 @@ async fn the_echoed_correlation_drops_a_request_body_the_shell_could_not_have_se
         ("windowId".to_string(), semio_framework_value::DslValue::String("preview".to_string())),
         ("inputJson".to_string(), semio_framework_value::DslValue::String(body)),
     ]));
-    let req = queue_extension_invocation(2, &semio_framework_plugin_decl_emission::ExtensionInvocation::new("math", "evaluate", &request_json, "flowEvalResolve")).expect("continuation admission");
+    let req = queue_extension_invocation(2, &semio_plugin_decl_emission::ExtensionInvocation::new("math", "evaluate", &request_json, "flowEvalResolve")).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
     let (_, _, args, original_fault) = take_extension_response(req, Ok(packed_answer(r#"{"value":1}"#))).expect("a minted continuation must answer its own completion");
     assert_eq!(args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64), Some(77), "bounded correlation survives: {args:?}");
@@ -162,9 +162,9 @@ async fn a_packed_host_fault_round_trips_through_outcome_to_result() {
     let fault_json = serde_json::to_string(&fixture["fault"]).expect("fault object");
     let fault_value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&fault_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture fault is a DSL value");
     let fault: semio_framework::Fault = semio_framework_value::FromValue::from_value(fault_value).expect("fixture fault is a Fault");
-    let packed = semio_framework_plugin_actor_host::encode_fault_pack(&fault);
+    let packed = semio_plugin_actor_host::encode_fault_pack(&fault);
     assert!(serde_json::from_slice::<serde_json::Value>(&packed).is_err(), "the ABI fault arm must not be a JSON string: {packed:?}");
-    let decoded = semio_framework_plugin_actor_host::outcome_to_result(semio_framework::kernel::RequestOutcome::Err(packed)).expect_err("the err arm decodes a fault");
+    let decoded = semio_plugin_actor_host::outcome_to_result(semio_framework::kernel::RequestOutcome::Err(packed)).expect_err("the err arm decodes a fault");
     assert_eq!(decoded.code.0, "extension.missing");
     assert_eq!(decoded.message, "no such extension");
     let req = queue_extension_invocation(2, &brep_invocation("flowEvalResolve", r#"{"nodeHash":8}"#)).expect("continuation admission");

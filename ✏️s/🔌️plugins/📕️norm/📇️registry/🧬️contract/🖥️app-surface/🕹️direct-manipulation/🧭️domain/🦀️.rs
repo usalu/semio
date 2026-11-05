@@ -1,8 +1,8 @@
 //! 🧭️ Interaction domain generator: `norm.<variant>` with one granularity per scene entity kind plus `check` and `loadCase` for cross-selection. See [`super`].
 
 use crate::viewport3d::picking::{granularity, GRANULARITY_CHECK, GRANULARITY_LOAD_CASE};
-use semio_framework_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+use semio_ui_locale::LocalizedLabel;
 use semio_s_plugin_norm_structural_scene::EntityKind;
 
 pub const POINTER_CHANNEL: &str = "pointer";

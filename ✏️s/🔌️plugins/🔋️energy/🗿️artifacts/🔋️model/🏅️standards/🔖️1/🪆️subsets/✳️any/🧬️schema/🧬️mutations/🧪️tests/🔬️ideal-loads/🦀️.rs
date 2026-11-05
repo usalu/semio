@@ -1,6 +1,6 @@
 //! 🧪️ The `ideal-loads` domain's committed vectors, each held to the fixture laws through the aggregate.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_artifact_energy_model_mut_ideal_loads as ideal_loads_mutations;
 extern crate semio_s_artifact_energy_model_mut_ideal_loads_limits as ideal_loads_limits_mutations;

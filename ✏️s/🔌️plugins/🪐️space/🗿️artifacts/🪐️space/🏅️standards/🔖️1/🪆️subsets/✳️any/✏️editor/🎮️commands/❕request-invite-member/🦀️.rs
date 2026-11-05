@@ -5,15 +5,15 @@
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::kernel::Effect;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "request-invite-member")]
 pub struct RequestInviteMember {}
 
 pub fn handle(_payload: &RequestInviteMember, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(129), dialog_id: "inviteMember".into(), args: None }))
+    Ok(Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(129), dialog_id: "inviteMember".into(), args: None }))
 }
 
 //#region 🧪️Tests

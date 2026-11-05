@@ -32,14 +32,14 @@ use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 use std::time::Instant;
-use semio_framework_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
-use semio_framework_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, active_shell_connection};
-use semio_framework_os_mcp_bridge_codec::bridge::{BridgeInstanceRef, GatewayToShell};
-use semio_framework_os_mcp_catalog::catalog::{CapabilityOwner, Catalog};
-use semio_framework_os_mcp_foundation::base64_codec::{BASE64_ALPHABET, encode_base64};
-use semio_framework_os_mcp_foundation::reports::RevisionStamp;
-use semio_framework_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, MutationOrigin, PreparedOps};
-use semio_framework_os_mcp_port::policy::AgentPrincipal;
+use semio_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
+use semio_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, active_shell_connection};
+use semio_os_mcp_bridge_codec::bridge::{BridgeInstanceRef, GatewayToShell};
+use semio_os_mcp_catalog::catalog::{CapabilityOwner, Catalog};
+use semio_os_mcp_foundation::base64_codec::{BASE64_ALPHABET, encode_base64};
+use semio_os_mcp_foundation::reports::RevisionStamp;
+use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, MutationOrigin, PreparedOps};
+use semio_os_mcp_port::policy::AgentPrincipal;
 
 //#region 🔖️Base64
 

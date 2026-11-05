@@ -15,7 +15,7 @@ export function toolJobOriginalWorkerPumpScopeExact(body:string):boolean{
  }
  if(stack.map(row=>row.token).join("")!=="({({")return false;
  const [call,callback,closure,step]=stack;
- if(!code.slice(0,call!.at).endsWith("semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step"))return false;
+ if(!code.slice(0,call!.at).endsWith("semio_plugin_ownership::bounded_ownership::original_lifecycle_step"))return false;
  if(code.slice(call!.at+1,callback!.at)!=="cx,grant,demand,|cx,grant|")return false;
  if(code.slice(callback!.at+1,closure!.at)!=="letstep=")return false;
  if(code.slice(closure!.at,step!.at)!=="(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>")return false;

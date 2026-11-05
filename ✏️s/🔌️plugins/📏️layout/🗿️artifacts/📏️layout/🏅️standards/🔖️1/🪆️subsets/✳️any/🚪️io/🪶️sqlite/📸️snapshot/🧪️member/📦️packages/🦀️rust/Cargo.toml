@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [dev-dependencies]
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 pack = { workspace = true }

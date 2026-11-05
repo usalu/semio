@@ -7,7 +7,7 @@ use super::*;
 pub(super) async fn finish_exchange<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx: &mut semio_framework_job::StepContext<'_>,
     mut frames: Vec<protocol::AppFrame>,
     mut effect_bytes: Vec<Vec<u8>>,
@@ -18,7 +18,7 @@ pub(super) async fn finish_exchange<PA: PluginApp>(
     presence_terminal: Option<u64>,
     presence_terminal_fault: Option<Vec<u8>>,
     flags: ExchangeFlags,
-) -> Result<PluginExchangeOutput, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<PluginExchangeOutput, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     if flags.mutated {
         let effects = with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;

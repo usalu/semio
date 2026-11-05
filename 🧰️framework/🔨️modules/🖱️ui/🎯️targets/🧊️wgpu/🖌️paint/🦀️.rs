@@ -15,20 +15,20 @@
 //! one rest-state-only exception — no scrollable-viewport paint exists yet, out of every pass to
 //! date's scope.
 
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_wgpu_layout::chrome::{foreground_on_fill, item_bg, item_text, push_chrome_border, push_control_border, push_icon, UiDriverDrag, ICON_TINY, SIZE_TINY};
-use semio_framework_ui_declaration::ui::{UiControlNode, UiFieldNode, UiNode, UiPresence, UiProgressNode, UiSectionNode, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_layout::layout::tree_section_header_height;
-use semio_framework_ui_wgpu_layout::layout::{tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, TreeDragRole, TreeRowMetrics};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::{Level, Rgba, Theme};
-use semio_framework_ui_retained_tree::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
-use semio_framework_ui_wgpu_widget_kit::draw_text_on;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
-use semio_framework_ui_wgpu_controls::stepper::{push_stepper_chrome, push_stepper_icon};
+use semio_ui_arena::NodeId;
+use semio_ui_wgpu_layout::chrome::{foreground_on_fill, item_bg, item_text, push_chrome_border, push_control_border, push_icon, UiDriverDrag, ICON_TINY, SIZE_TINY};
+use semio_ui_declaration::ui::{UiControlNode, UiFieldNode, UiNode, UiPresence, UiProgressNode, UiSectionNode, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER};
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_layout::layout::tree_section_header_height;
+use semio_ui_wgpu_layout::layout::{tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, TreeDragRole, TreeRowMetrics};
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::{Level, Rgba, Theme};
+use semio_ui_retained_tree::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
+use semio_ui_wgpu_widget_kit::draw_text_on;
+use semio_ui_locale::Label;
+use semio_ui_declaration::ui::UiTreeActionPlacement;
+use semio_ui_wgpu_controls::stepper::{push_stepper_chrome, push_stepper_icon};
 
 #[path = "🔤️retained-glyph-and-node-cursors/🦀️.rs"]
 mod retained_glyph_and_node_cursors;

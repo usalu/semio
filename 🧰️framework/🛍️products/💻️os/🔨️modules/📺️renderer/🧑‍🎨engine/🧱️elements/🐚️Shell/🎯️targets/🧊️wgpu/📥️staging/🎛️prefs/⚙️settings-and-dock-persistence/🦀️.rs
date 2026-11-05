@@ -44,7 +44,7 @@ impl PrefsState {
                 value,
                 options.iter().map(|(value, key)| ((*value).to_string(), shell_chrome_string(*key, is_de).to_string())).collect(),
                 "setDriverField",
-                semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": *key }),
+                semio_renderer_wgpu_host_base::action_args_json!({ "key": *key }),
             ));
         }
         items.push(UiTreeItemNode {
@@ -82,7 +82,7 @@ impl PrefsState {
                 label: Label::data(shell_chrome_string("settings.driver.save", is_de)),
                 action: ActionDescriptor { controller_id: "framework".into(), action: "saveDriver".into(), args: None },
                 style: None,
-                presence: UiPresence { state: if self.driver_save_label.trim().is_empty() { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
+                presence: UiPresence { state: if self.driver_save_label.trim().is_empty() { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             })),
             ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
@@ -95,7 +95,7 @@ impl PrefsState {
                     id: Some("framework.settings.driver.delete".into()),
                     icon_id: IconName::Trash2,
                     label: Label::data(shell_chrome_string("settings.driver.delete", is_de)),
-                    action: ActionDescriptor { controller_id: "framework".into(), action: "deleteDriver".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": self.driver_id.clone() }) },
+                    action: ActionDescriptor { controller_id: "framework".into(), action: "deleteDriver".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": self.driver_id.clone() }) },
                     style: None,
                     presence: UiPresence::default(),
                     menu: None,
@@ -146,7 +146,7 @@ impl PrefsState {
             .map(|(dialect, role, value, options)| {
                 let mut choices = vec![(DEFAULT_APP_NONE_VALUE.to_string(), shell_chrome_string("settings.defaultApps.none", is_de).to_string())];
                 choices.extend(options);
-                settings_select_row_with(&format!("framework.settings.defaultApps.{dialect}.{role}"), &format!("{dialect} — {role}"), &value, choices, "setDefaultApp", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "row": format!("{dialect}/{role}") }))
+                settings_select_row_with(&format!("framework.settings.defaultApps.{dialect}.{role}"), &format!("{dialect} — {role}"), &value, choices, "setDefaultApp", semio_renderer_wgpu_host_base::action_args_json!({ "row": format!("{dialect}/{role}") }))
             })
             .collect();
         UiNode::Stack(UiStackNode {
@@ -199,10 +199,10 @@ impl PrefsState {
                 let kind = shell_chrome_string(if conflict.quarantined { "conflict.quarantined" } else { "conflict.degraded" }, is_de);
                 let selected = self.selected_conflict_id.as_deref() == Some(conflict.id.as_str());
                 let detail = selected.then(|| {
-                    let UiNode::ComponentScene(scene) = semio_framework_ui_declaration::ui::build_diff_view_scene(
+                    let UiNode::ComponentScene(scene) = semio_ui_declaration::ui::build_diff_view_scene(
                         format!("{row_id}.preview"),
                         "framework",
-                        semio_framework_ui_declaration::ui::DiffViewScene { before: String::new(), after: conflict.preview_after.clone(), language: Some("json".into()), mode: Some("unified".into()), domain_id: Some(conflict.id.clone()) },
+                        semio_ui_declaration::ui::DiffViewScene { before: String::new(), after: conflict.preview_after.clone(), language: Some("json".into()), mode: Some("unified".into()), domain_id: Some(conflict.id.clone()) },
                     ) else {
                         unreachable!("DiffView builder returns a ComponentScene")
                     };
@@ -212,7 +212,7 @@ impl PrefsState {
                     id: format!("{row_id}.{suffix}"),
                     label: Label::data(shell_chrome_string(label_key, is_de)),
                     icon_id: Some(icon),
-                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "resolveConflict".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "conflictId": conflict.id.clone(), "accept": accept }) }),
+                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "resolveConflict".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "conflictId": conflict.id.clone(), "accept": accept }) }),
                     ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
                 };
                 UiTreeItemNode {
@@ -220,7 +220,7 @@ impl PrefsState {
                     label: Label::data(format!("{kind} \u{2014} {} \u{2014} {}", conflict.code, conflict.message)),
                     icon_id: Some(IconName::TriangleAlert),
                     default_open: None,
-                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "selectConflict".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "conflictId": conflict.id.clone() }) }),
+                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "selectConflict".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "conflictId": conflict.id.clone() }) }),
                     items: Some(vec![verb("accept", "conflict.accept", IconName::Check, true), verb("discard", "conflict.discard", IconName::X, false)]),
                     detail,
                     presence: UiPresence { selected, ..UiPresence::default() },
@@ -250,7 +250,7 @@ impl PrefsState {
     pub fn framework_settings_tabs(&self) -> Vec<DockTabNode> {
         let is_de = self.locale_id == "de";
         let mut tabs = vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, shell_chrome_string("settings.tab.general", is_de), "settings-2", 0)];
-        if semio_framework_os_renderer_wgpu_host_base::boot_locks().theme_id.is_empty() {
+        if semio_renderer_wgpu_host_base::boot_locks().theme_id.is_empty() {
             tabs.push(DockTabNode::leaf(FRAMEWORK_SETTINGS_THEME_TAB_ID, shell_chrome_string("settings.tab.theme", is_de), "paintbrush", 1));
         }
         tabs.push(DockTabNode::leaf(FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, shell_chrome_string("settings.tab.keybindings", is_de), "circle-dot", 2));

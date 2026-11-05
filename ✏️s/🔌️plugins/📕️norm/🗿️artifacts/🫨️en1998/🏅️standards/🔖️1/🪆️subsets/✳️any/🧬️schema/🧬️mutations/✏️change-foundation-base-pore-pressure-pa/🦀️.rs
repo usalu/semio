@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationBasePore
         record: "ChangeFoundationBasePorePressurePa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pore water pressure u under the footing base (0 = none)", "Porenwasserdruck u unter der Fundamentsohle (0 = keiner) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pore water pressure u under the footing base (0 = none)", "Porenwasserdruck u unter der Fundamentsohle (0 = keiner) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-base-pore-pressure-pa".into()]

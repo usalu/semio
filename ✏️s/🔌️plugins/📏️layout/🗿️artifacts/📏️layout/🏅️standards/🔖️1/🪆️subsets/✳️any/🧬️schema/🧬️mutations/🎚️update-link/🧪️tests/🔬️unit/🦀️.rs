@@ -14,7 +14,7 @@ fn update_link_raises_resolution_and_switches_the_print_profile() {
     link.hash = "sha256:abc".into();
     link.dpi = 72;
     link.color_profile = Some("RGB".into());
-    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let labels = semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels(&view);
     let before = semio_s_artifact_layout_layout_editor_panels::preflight::run_layout_preflight(&base, labels);
     assert!(before.iter().any(|issue| issue.code == "asset.low_resolution"));

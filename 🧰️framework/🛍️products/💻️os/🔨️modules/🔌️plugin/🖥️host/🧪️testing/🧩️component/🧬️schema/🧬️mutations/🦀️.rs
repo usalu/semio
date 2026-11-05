@@ -1,6 +1,6 @@
 //! 🎬️ The fixture documents an empty mutation vocabulary.
 use crate::{Snapshot,Diff};
-use semio_framework_os_kernel::{os_spr as protocol,os_store as store};
+use semio_os_kernel::{os_spr as protocol,os_store as store};
 use semio_framework_value_derive::{ToValue,FromValue};
 #[derive(semio_framework_value::RetireOwned, Clone,Debug,PartialEq,ToValue,FromValue,semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -22,10 +22,10 @@ impl protocol::ColdMutation<Snapshot> for Mutation {
 }
 }
 /// 🕳️ An empty vocabulary has no kinds, so no operation of it is ever labelled.
-impl semio_framework_os_kernel::SemanticMutation<Snapshot> for Mutation {
-    fn kinds()->&'static[semio_framework_os_kernel::SemanticDescriptor]{&[]}
-    fn semantics(&self)->&'static semio_framework_os_kernel::SemanticDescriptor{match *self{}}
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel{match *self{}}
+impl semio_os_kernel::SemanticMutation<Snapshot> for Mutation {
+    fn kinds()->&'static[semio_os_kernel::SemanticDescriptor]{&[]}
+    fn semantics(&self)->&'static semio_os_kernel::SemanticDescriptor{match *self{}}
+    fn label(&self)->semio_ui_locale::LocalizedLabel{match *self{}}
     fn target(&self)->Vec<String>{match *self{}}
 }
 impl protocol::OpText for Mutation {

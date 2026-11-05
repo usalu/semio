@@ -5,8 +5,8 @@
 fn text_editor_phase_four_binding_retires_the_closed_host_and_preserves_its_sibling() {
     let _serialized = engine_surface_law_guard();
     let text = |id: &str| ENGINE_SURFACES.with(|cell| cell.borrow().get(id).and_then(|entry| entry.editor.as_ref()).map(|host| host.text().to_owned()));
-    use semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::{close_retained_surface_fixture, paint_retained_surface_in_window};
-    let fixture: serde_json::Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).unwrap();
+    use semio_renderer_wgpu_ui_engine_tests::surface_fixtures::{close_retained_surface_fixture, paint_retained_surface_in_window};
+    let fixture: serde_json::Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).unwrap();
     let law = &fixture["hostLifecycle"];
     let window_a = law["closingWindow"].as_str().unwrap();
     let window_b = law["siblingWindow"].as_str().unwrap();
@@ -93,7 +93,7 @@ fn paint2d_long_stroke_streams_ticks_then_commits_under_one_press() {
 #[test]
 fn paint2d_mask_stroke_publishes_one_paint_stroke_at_the_shared_target(){
     let _serialized=engine_surface_law_guard();
-    let fixture:Value=serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
+    let fixture:Value=serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case["assets"].as_object().unwrap().is_empty()){
         let surface_id=format!("paint2d-mask-{}",case["name"].as_str().unwrap());drop_engine_surface(&surface_id);
         let mut scene=paint2d_scene(&surface_id,"paintBrush",&["p"]);let paint=scene.paint_2d.as_mut().unwrap();paint.document_sync_json=case["document"].to_string();paint.paint_target="mask".into();paint.mask_value=96;

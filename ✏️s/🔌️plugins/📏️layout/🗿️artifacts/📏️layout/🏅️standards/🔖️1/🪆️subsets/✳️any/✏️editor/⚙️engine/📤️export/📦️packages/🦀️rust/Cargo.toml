@@ -30,9 +30,9 @@ semio-framework-action-bus = { path = "../../../../../../../../../../../../../..
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
@@ -41,7 +41,7 @@ semio-s-artifact-layout-layout-engine-json = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 semio-framework-pixels = { workspace = true }
 
-ui_render = { package = "semio-framework-ui-render", path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust" }
+ui_render = { package = "semio-ui-render", path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust" }
 semio-framework-2d-text-font = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📦️packages/🦀️rust" }
 semio-framework-2d-engine = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }

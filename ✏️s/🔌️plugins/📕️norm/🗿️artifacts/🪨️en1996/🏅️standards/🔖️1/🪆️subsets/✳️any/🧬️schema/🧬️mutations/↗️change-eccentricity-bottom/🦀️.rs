@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeEccentricityBottom
         record: "ChangedEccentricityBottom",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change bottom eccentricity", "Exzentrizität unten ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change bottom eccentricity", "Exzentrizität unten ändern")
     }
 }
 

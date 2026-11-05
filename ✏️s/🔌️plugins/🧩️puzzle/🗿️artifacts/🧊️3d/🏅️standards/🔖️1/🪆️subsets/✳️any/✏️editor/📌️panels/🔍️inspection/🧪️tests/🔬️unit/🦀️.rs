@@ -3,21 +3,21 @@
     use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
     use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_labels;
     use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_VORTEX};
-    use semio_framework_plugin::TreeWindowRequest;
-    use semio_framework_plugin::ViewModel;
+    use semio_plugin::TreeWindowRequest;
+    use semio_plugin::ViewModel;
 
     fn labels() -> &'static Puzzle3dLabels {
-        puzzle3d_labels(&ViewModel { terminology: semio_framework_ui_locale::Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }).expect("admitted host axis")
+        puzzle3d_labels(&ViewModel { terminology: semio_ui_locale::Terminology::Native, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }).expect("admitted host axis")
     }
 
     fn drain() {
         for _ in 0..4096 {
-            if semio_framework_ui_contract::close_built_node_page_one() {
+            if semio_ui_contract::close_built_node_page_one() {
                 break;
             }
         }
         for _ in 0..4096 {
-            if semio_framework_ui_contract::close_ui_value_page_one() {
+            if semio_ui_contract::close_ui_value_page_one() {
                 break;
             }
         }
@@ -36,7 +36,7 @@
     }
 
     fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-        ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+        ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
     }
 
     fn scene(ids: &[String]) -> (Puzzle3dScene, Puzzle3dInteractionSnapshot) {
@@ -67,7 +67,7 @@
     }
 
     fn json_of(node: BuiltNode) -> String {
-        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("inspector projection");
+        let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("inspector projection");
         drain();
         json
     }

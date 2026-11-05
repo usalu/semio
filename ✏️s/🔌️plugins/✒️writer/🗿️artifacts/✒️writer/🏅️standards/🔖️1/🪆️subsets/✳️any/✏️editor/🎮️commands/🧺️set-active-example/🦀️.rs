@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::{dag_jack_example_do
 use crate::editor::writer::editor_vocabulary::reset_document_effect;
 use crate::op::WriterMutation;
 use crate::WriterSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 use crate::schema::empty_writer_snapshot;
 use semio_framework_value_derive::{FromValue, ToValue};

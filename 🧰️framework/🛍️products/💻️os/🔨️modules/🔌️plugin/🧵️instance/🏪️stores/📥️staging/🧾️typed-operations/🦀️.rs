@@ -1,24 +1,24 @@
 //! 🪤️ Staged slice of the `typed-operations` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 🧾️ Typed operations of the mounted artifact instance: typed-operation publication, typed-command dispatch, configuration and the history panel.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use crate::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, SpaceMember};
-use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use protocol::OpText;
-use semio_framework_plugin_composition_publication::PendingArtifactStorePublication;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_composition_publication::PendingArtifactStorePublication;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
-use semio_framework_plugin_job::TypedOperationResultPage;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_plugin_job::TypedOperationResultPage;
+use semio_plugin_ownership::bounded_ownership::plugin_retirement_fault;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp> InstanceStores<A> {
     /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — THE point the reactor first owns a
@@ -116,13 +116,13 @@ impl<A: ArtifactApp> InstanceStores<A> {
         let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config receipt lost its captured window authority"))?;
         self.window_config_store.refresh_demands(authority, retained.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
         let step = self.window_config_store.refresh(authority, retained)?;
-        let (semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(progress) | semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(progress)) = step;
+        let (semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(progress) | semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(progress)) = step;
         if progress != RetainedCloneProgress::default() {
             assert!(mounted.publication_ownership_progress.is_none(), "window config refresh cannot overwrite an unreturned original receipt");
             mounted.publication_ownership_progress = Some((retained, progress));
             mounted.publication_progress = mounted.publication_progress.saturating_add(1);
         }
-        if matches!(step, semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(_)) { return Ok(false); }
+        if matches!(step, semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(_)) { return Ok(false); }
         Ok(true)
     }
 

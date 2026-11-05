@@ -39,10 +39,10 @@ impl ShardLoop {
     }
 
     /// 💼️ Funds the guest job crossings of `actor` from the Kernel-issued retained turn of its last grant.
-    pub(super) fn job_funds(&self, actor: u64) -> Result<semio_framework_plugin_host_guest_runtime::JobFunds, TurnFault> {
+    pub(super) fn job_funds(&self, actor: u64) -> Result<semio_plugin_host_guest_runtime::JobFunds, TurnFault> {
         let turn = self.granted_budgets.get(&actor).ok_or_else(|| TurnFault::Host(PluginHostError::NativeIo(IssuedShardTurn::refusal("job crossing has no Kernel-issued actor batch"))))?;
         let loan = semio_framework_actor::OriginalActorTurnLoan { retained_policy: turn.retained_policy, work_fuel: turn.work_fuel, deadline_us: turn.deadline_us };
-        semio_framework_plugin_host_guest_runtime::JobFunds::issued(*turn.original_input(), loan, turn.budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::NativeIo(error)))
+        semio_plugin_host_guest_runtime::JobFunds::issued(*turn.original_input(), loan, turn.budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::NativeIo(error)))
     }
 
     /// 🚦 terra-shard-lane piece 1: true for the two lanes that must jump a shard's queue ahead of

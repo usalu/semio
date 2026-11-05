@@ -1,6 +1,6 @@
 
 //! 🧬️ Direct DAG mutation leaves: roster, wire witnesses, codecs, inverses and wire index exactness through the artifact facade.
-use semio_framework_os_kernel::DiffAlgebra;
+use semio_os_kernel::DiffAlgebra;
 use semio_framework_artifact_infinite_dag_vcs::NodeMove;
 use semio_framework_artifact_infinite_dag_vcs::ReorderedNode;
 use super::*;

@@ -100,8 +100,8 @@ fn a_child_of_a_dragged_group_moves_once() {
 fn label_reads_the_drag() {
     let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     let label = mutation.label();
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 layers by (20, -10)");
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Ebenen um (20; -10) ziehen");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 2 layers by (20, -10)");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "2 Ebenen um (20; -10) ziehen");
 }
 
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.

@@ -15,8 +15,8 @@ pub struct SetEntityName {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetEntityName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-name", kind: "set-entity-name", record: "SetEntityName" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,5 +1,5 @@
 use crate::PlaybookSpec;
-use semio_framework_plugin::app::{TreeWindowKit, WindowKit};
+use semio_plugin::app::{TreeWindowKit, WindowKit};
 use crate::viewer::playbook::modes::view::windows::steps::*;
 use crate::playbook::{PlaybookBlock, PlaybookStep};
 
@@ -34,8 +34,8 @@ fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {
 
 /// 🪟️ A windowed tree carries `BuiltChildren`, which refuses a direct `serde` walk ("requires retained
 /// page transport"), so every assertion here reads the projected body the host actually receives.
-fn projected_body(node: semio_framework_plugin::BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the steps tree")
+fn projected_body(node: semio_plugin::BuiltNode) -> String {
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the steps tree")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -50,7 +50,7 @@ async fn definition_restamps_the_tree_window_kit_with_this_windows_own_id_and_bo
 async fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
     let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: vec![sample_block("b1", "Name", "text")] };
     let spec = spec_with_steps(Some("Recipe"), vec![step]);
-    let node = render(&spec, &semio_framework_plugin::TreeWindows::unhosted()).expect("steps tree");
+    let node = render(&spec, &semio_plugin::TreeWindows::unhosted()).expect("steps tree");
     let json = projected_body(node);
     assert!(json.contains("Intro"), "step title must appear as a root node label: {json}");
     assert!(json.contains("Name (text)"), "block label+kind must appear as a leaf node label: {json}");
@@ -60,7 +60,7 @@ async fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
 async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
     let step = PlaybookStep { id: "s1".into(), title: String::new(), description: None, blocks: Vec::new() };
     let spec = spec_with_steps(None, vec![step]);
-    let node = render(&spec, &semio_framework_plugin::TreeWindows::unhosted()).expect("steps tree");
+    let node = render(&spec, &semio_plugin::TreeWindows::unhosted()).expect("steps tree");
     let json = projected_body(node);
     assert!(json.contains("\"s1\""), "an empty step title must fall back to the step id: {json}");
 }
@@ -73,12 +73,12 @@ async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
 fn window_path(keys: &[&str]) -> String {
     let mut path = format!("{}-root", TreeWindowKit::KIND_ID);
     for key in keys {
-        path.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        path.push_str(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
         path.push_str(key);
     }
     path
 }
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 /// 👁️ The viewport the host reports for these laws. Deliberately small: a first paint is priced in
 /// real `UiValue` argument-arena credit, shared process-wide, and a law that materialised a full
@@ -93,7 +93,7 @@ fn oversized_spec(blocks: usize) -> crate::PlaybookSpec {
 
 /// 🧍️ The window body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(spec: &crate::PlaybookSpec, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     projected_body(render(spec, &TreeWindows::for_body(&view, PLAYBOOK_VIEW_BODY_STEPS)).expect("steps tree"))
 }
 

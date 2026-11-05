@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedLatPressureC
         record: "ChangedPlatedLatPressureCoef",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plate bending coefficient k of sigma = k p b²/t² for the panel aspect ratio and edge conditions (Timoshenko or Roark table, entered; table values not verified) of the plated panel", "Plattenfeld: Plattenbeiwert k von sigma = k p b²/t² für Seitenverhältnis und Lagerung (Tabelle nach Timoshenko oder Roark, eingegeben; Tabellenwerte ungeprüft) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plate bending coefficient k of sigma = k p b²/t² for the panel aspect ratio and edge conditions (Timoshenko or Roark table, entered; table values not verified) of the plated panel", "Plattenfeld: Plattenbeiwert k von sigma = k p b²/t² für Seitenverhältnis und Lagerung (Tabelle nach Timoshenko oder Roark, eingegeben; Tabellenwerte ungeprüft) ändern")
     }
 }
 

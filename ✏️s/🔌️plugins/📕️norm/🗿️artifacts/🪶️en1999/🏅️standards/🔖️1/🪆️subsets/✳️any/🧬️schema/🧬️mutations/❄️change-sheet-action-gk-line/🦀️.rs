@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSheetActionGKLine 
         record: "ChangedSheetActionGKLine",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permanent line load g_k of the cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech: Ständige Streckenlast g_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permanent line load g_k of the cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech: Ständige Streckenlast g_k ändern")
     }
 }
 

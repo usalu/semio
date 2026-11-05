@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -108,11 +108,11 @@ impl Default for Block5dSnapshot {
 pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
 
-use semio_framework_plugin::ArtifactKindSpec;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::OsMediaCapability;
+use semio_plugin::ArtifactKindSpec;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::OsMediaCapability;
 
 pub const BLOCK_5D_SCHEMA: &str = "block.5d";
 
@@ -123,7 +123,7 @@ pub const BLOCK_5D_SCHEMA: &str = "block.5d";
 /// own `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Lives at the ARTIFACT level (not under
 /// `editor`/`viewer`) so a viewer file can read it without ever importing through the sibling editor
 /// module.
-pub const BLOCK5D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.block.block5d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const BLOCK5D_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.block.block5d", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 /// 🔵️ The part's 2D-projection presentation (board node).
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -217,7 +217,7 @@ pub struct Block5dGripTemplate {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "5d.block".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Part Kind", "Bauteiltyp"),
+        label: semio_ui_locale::LocalizedLabel::native("Part Kind", "Bauteiltyp"),
         source_format: BLOCK_5D_SCHEMA.into(),
         component_kind: "block5d".into(),
         dimension: "5d".into(),

@@ -1,6 +1,6 @@
 //! 📏️ Hub binding limits, the network-budget wait, the refresh retry law and the component stream constants.
 
-use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
+use semio_os_mcp_hub_pair::binding_errors::HubBindingError;
 
 pub const HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS: usize = 4_096;
 
@@ -26,7 +26,7 @@ pub const HUB_AUTHORITY_SETTLE_WAIT_MS: u64 = HUB_BINDING_OPERATION_TIMEOUT_MS;
 
 /// ⏳️ How long a hub-bound call keeps waiting while the binding waits for its network byte budget to refill: one refill
 /// interval on top of the ordinary settle wait, so a call spans the refill instead of refusing inside it.
-pub const HUB_NETWORK_BUDGET_SETTLE_WAIT_MS: u64 = semio_framework_os_services::HTTP_BUCKET_REFILL_INTERVAL_MS + HUB_AUTHORITY_SETTLE_WAIT_MS;
+pub const HUB_NETWORK_BUDGET_SETTLE_WAIT_MS: u64 = semio_os_services::HTTP_BUCKET_REFILL_INTERVAL_MS + HUB_AUTHORITY_SETTLE_WAIT_MS;
 
 /// 💰️ The budget one authority refresh waits for before it runs again after its budget ran out: the session, the space page
 /// and one manifest per document, plus any descriptor it has not verified before.
@@ -39,7 +39,7 @@ pub const HUB_NETWORK_BUDGET_POLL_MS: u64 = 250;
 /// each wait to `report` as `(remaining, needed)`: a spent budget is a wait for its next refill turn, never a refusal.
 /// Only `cancel` ends the wait early.
 pub fn await_network_budget(
-    read: impl Fn() -> semio_framework_os_services::HttpPackageBudget,
+    read: impl Fn() -> semio_os_services::HttpPackageBudget,
     needed: u64,
     cancel: &semio_framework_async::CancelToken,
     mut report: impl FnMut(u64, u64),

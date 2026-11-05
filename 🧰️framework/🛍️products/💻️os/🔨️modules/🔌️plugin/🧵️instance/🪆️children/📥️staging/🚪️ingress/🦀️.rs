@@ -1,28 +1,28 @@
 //! 📀️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-children` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 #[cfg(test)]
-use semio_framework_plugin_child::ChildAdmissionTestState;
+use semio_plugin_child::ChildAdmissionTestState;
 use crate::children_components::ChildComposition;
-use semio_framework_plugin_child::{ChildContentRetirement, ChildMemberEntry, ChildMemberRegistrationError, ChildMemberRetirement, ChildStoreAdmission, DocumentClosureSourceView, MemberPath};
-use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKey, MemberKeyRef};
-use semio_framework_plugin_instance_history::history_components::CommandHistory;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_child::{ChildContentRetirement, ChildMemberEntry, ChildMemberRegistrationError, ChildMemberRetirement, ChildStoreAdmission, DocumentClosureSourceView, MemberPath};
+use semio_plugin_decl_views::child_view::{ChildContentView, MemberKey, MemberKeyRef};
+use semio_plugin_instance_history::history_components::CommandHistory;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 use crate::children_instance_root::genesis_member_schema;
 
 impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
@@ -31,7 +31,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// composition graph and the child content root are complete from the first frame — a saved
     /// archive of a never-edited document then carries its derivable members instead of relying on
     /// the loading side to re-derive them.
-    pub async fn seed_genesis_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn seed_genesis_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let mut genesis = Vec::new();
         {
             let snapshot = stores.store.snapshot_ref();
@@ -65,7 +65,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// while the retirements its own publications need are not yet admissible ([`Self::reclaim_child_retirements`]):
     /// the parent already holds every edit in order, the child it names follows once maintenance returned them, and
     /// the instance stays runnable meanwhile (`child_follow_awaits_retirement`).
-    pub async fn follow_derivable_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn follow_derivable_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let generation = stores.store.generation_now();
         if generation == self.followed_parent_generation || self.children.has_admission_in_flight() {
             return Ok(());
@@ -81,7 +81,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
                 let Some((slot, fields)) = projection.get(index) else { break };
                 let key = (slot.to_string(), fields.child_id.to_string());
                 if self.children.get(&key).is_none() {
-                    if semio_framework_plugin_child::member_is_retiring(&self.child_member_retirements, fields.artifact_id) {
+                    if semio_plugin_child::member_is_retiring(&self.child_member_retirements, fields.artifact_id) {
                         deferred = true;
                     } else if let Some(initial_pack) = A::genesis_child_pack(snapshot, slot, fields.child_id).map_err(|error| plugin_sdk_fault(error.into_message()))? {
                         let dialect = ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
@@ -232,7 +232,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         Ok(ChildStoreAdmission { key, expected, owner, member, graph, root_index, generation })
     }
 
-    pub(crate) async fn prepare_child_member(&self, admission: &ChildStoreAdmission, member: &mut M, restored: bool, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(ChildContentView, Option<usize>), Fault> {
+    pub(crate) async fn prepare_child_member(&self, admission: &ChildStoreAdmission, member: &mut M, restored: bool, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(ChildContentView, Option<usize>), Fault> {
         let member_identity=member.member_identity().ok_or_else(||plugin_sdk_fault("admitted child lacks its original declared dialect"))?;
         if member_identity.artifact_id!=admission.expected.artifact_id||member_identity.dialect!=&admission.expected.dialect||member_identity.owner!=Some(&admission.owner) {
             return Err(plugin_sdk_fault("child member does not match its exact admitted identity and ownership"));
@@ -316,7 +316,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     /// 🌱️ Restores one exact owned member and publishes its graph, map and snapshot together.
-    pub async fn open_child<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, envelope_pack: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn open_child<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, envelope_pack: &[u8], identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let slot = slot.into();
         let child_id = child_id.into();
         let expected = stores.declared_child_reference(&slot, &child_id, &dialect)?;
@@ -445,7 +445,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// `self.children` but absent from the graph is rejected as an `OwnershipViolation` the first
     /// time anything dispatches against it. Registering in one place and validating from the other
     /// is precisely the inconsistency this seeds away.
-    pub async fn register_child<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, mut member: M, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), ChildMemberRegistrationError<M>> {
+    pub async fn register_child<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, mut member: M, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), ChildMemberRegistrationError<M>> {
         let admission = match self.admit_child_member(stores, slot.into(), child_id.into(), dialect).await {
             Ok(admission) => admission,
             Err(fault) => return Err(ChildMemberRegistrationError { member: Some(member), fault }),
@@ -471,7 +471,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// one, and the parent's history is still perfectly valid without it.
     /// 📌️ One checkpoint-cascade unit: commits the child at `slot`/`child_id` when it is dirty,
     /// republishes its content root, and answers the pin its current checkpoint contributes.
-    pub async fn checkpoint_child_unit(&mut self, message: &str, authors: &[vcs::Author], key: MemberKeyRef<'_>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<vcs::CompositionPin>, Fault> {
+    pub async fn checkpoint_child_unit(&mut self, message: &str, authors: &[vcs::Author], key: MemberKeyRef<'_>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<vcs::CompositionPin>, Fault> {
         let publication_generation = self.admit_child_content_publication()?;
         let (reference, checkpoint_id) = {
             let entry = self.children.member_mut(key).ok_or_else(|| plugin_sdk_fault("checkpoint child authority changed during bounded publication"))?;
@@ -497,7 +497,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     /// ⏮️ One checkout-cascade unit: restores one live child to `pin`, or queues the pin.
-    pub async fn checkout_child_unit(&mut self, pin: &vcs::CompositionPin, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn checkout_child_unit(&mut self, pin: &vcs::CompositionPin, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let child_key = self.children.keyed_entries().find(|(_, entry)| entry.reference.artifact_id == pin.child_ref.artifact_id).map(|(key, _)| key.to_key());
         let Some(key) = child_key else {
             self.pending_child_pins.push(pin.clone());

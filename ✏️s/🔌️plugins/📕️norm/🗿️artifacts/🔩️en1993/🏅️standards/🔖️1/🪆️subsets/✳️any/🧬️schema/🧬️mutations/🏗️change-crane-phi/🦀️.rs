@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCranePhi where Op:
         record: "ChangedCranePhi",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Dynamic factor φ of the crane runway", "Kranbahn: Dynamischer Faktor φ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Dynamic factor φ of the crane runway", "Kranbahn: Dynamischer Faktor φ ändern")
     }
 }
 

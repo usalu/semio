@@ -13,8 +13,8 @@ fn every_corpus_fault_resolves_to_its_notice_framework_first() {
             fault = fault.with_param(name.clone(), value.as_str().unwrap());
         }
         fault.causes = declared["causes"].as_array().into_iter().flatten().map(|cause| FaultCause { retained_progress:None, message: String::new(), code: Some(FaultCode::new(cause["code"].as_str().unwrap().to_string())) }).collect();
-        let terminology = semio_framework_ui_locale::Terminology::parse(row["terminology"].as_str().unwrap()).unwrap();
-        let locale = semio_framework_ui_locale::Locale::parse(row["locale"].as_str().unwrap()).unwrap();
+        let terminology = semio_ui_locale::Terminology::parse(row["terminology"].as_str().unwrap()).unwrap();
+        let locale = semio_ui_locale::Locale::parse(row["locale"].as_str().unwrap()).unwrap();
         let actual = fault_notice(&fault, &notices, terminology, locale).map_or(Value::Null, |notice| json!({"code": notice.code, "text": notice.text}));
         assert_eq!(actual, row["expected"], "{}", row["id"]);
     }

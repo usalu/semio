@@ -33,12 +33,12 @@ use crate::lifted_canonical_edit as canonical_edit;
 
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_spr::command::ArtifactMessageSource;
+use semio_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{ActorId, HybridLogicalTimestamp, MutationId, UndoPolicy};
-use semio_framework_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
+use semio_os_spr::{ActorId, HybridLogicalTimestamp, MutationId, UndoPolicy};
+use semio_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
@@ -47,18 +47,18 @@ use semio_framework_value_snapshot_read::{SnapshotRead, artifact_retirement_box_
 
 use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_os_vcs::{Identified, Patchable};
-use semio_framework_os_pack::pack_rt;
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_vcs::{Identified, Patchable};
+use semio_os_pack::pack_rt;
+use semio_os_store_ledger::CursorRevisionAccumulator;
 
-use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
+use semio_os_store_canonical_json::ArtifactCanonicalJson;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use crate::lifted_canonical_edit::ArtifactStoreOneItemSealer;
 use crate::lifted_prepared_operation_wire::{ArtifactOperationWire, ArtifactPreparedOperationSource};
 use crate::lifted_text::ArtifactOperationText;
-use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
-use semio_framework_os_store_command::HistoryLane;
-use semio_framework_os_store_one_item::LaneItemReceipt;
+use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_os_store_command::HistoryLane;
+use semio_os_store_one_item::LaneItemReceipt;
 
 #[path = "🪪️authority/🦀️.rs"]
 mod publication_authority_retirement;
@@ -321,7 +321,7 @@ pub struct ArtifactStoreOneItemSeal {
 /// mutation inverse/diff/apply/encoding result inside its retained cursor before exposing this
 /// value. The store publication turn only validates fixed authorities and moves these owners.
 pub struct ArtifactStoreOneItemPrepared<P, Mutation> {
-    outcome_messages: Option<semio_framework_os_spr::command::MutationMessagePublication>,
+    outcome_messages: Option<semio_os_spr::command::MutationMessagePublication>,
     pub edit: Box<Edit<Mutation>>,
     pub post_snapshot: Arc<P>,
     pub next_clock: HybridLogicalTimestamp,
@@ -335,12 +335,12 @@ pub struct ArtifactStoreOneItemPrepared<P, Mutation> {
 
 impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
     /// 📨️ Captures an original diagnostic owner and its separately funded report copy.
-    pub fn record_outcome_messages(&mut self, messages: semio_framework_os_spr::command::MutationMessagePublication) {
+    pub fn record_outcome_messages(&mut self, messages: semio_os_spr::command::MutationMessagePublication) {
         assert!(self.outcome_messages.is_none() && messages.ready(), "sealed diagnostic transfer requires one ready original owner");
         self.outcome_messages = Some(messages);
     }
     /// 👁️ Borrows semantic rows without surrendering the candidate's original owner.
-    pub fn outcome_messages(&self) -> &[semio_framework_os_spr::MutationMessage] { self.outcome_messages.as_ref().map_or(&[], semio_framework_os_spr::command::MutationMessagePublication::original_messages) }
+    pub fn outcome_messages(&self) -> &[semio_os_spr::MutationMessage] { self.outcome_messages.as_ref().map_or(&[], semio_os_spr::command::MutationMessagePublication::original_messages) }
 
     /// 🌐️ Captures the original domain producer's measured foreign-step decision.
     pub fn record_foreign_step_presence(&mut self, presence: bool) { self.foreign_step_presence = Some(presence); }
@@ -402,7 +402,7 @@ impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
 
 /// 🧳️ The owners of a consumed sealed candidate, taken apart by the Store that stages or retires them.
 pub struct ArtifactStoreOneItemPreparedParts<P, Mutation> {
-    pub outcome_messages: Option<semio_framework_os_spr::command::MutationMessagePublication>,
+    pub outcome_messages: Option<semio_os_spr::command::MutationMessagePublication>,
     pub edit: Box<Edit<Mutation>>,
     pub post_snapshot: Arc<P>,
     pub next_clock: HybridLogicalTimestamp,
@@ -432,7 +432,7 @@ pub struct ArtifactStoreOneItemPreparationRequest<P, Input, Mutation> {
 /// rejected at admission instead of receiving false resumability credit.
 pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     /// 📨️ Borrows the semantic diagnostics owned by this exact structural preparation.
-    fn outcome_messages(&self) -> &[semio_framework_os_spr::MutationMessage] { &[] }
+    fn outcome_messages(&self) -> &[semio_os_spr::MutationMessage] { &[] }
 
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
     /// ⛽️ The entire latest advance reports actual work, including observed native work and failures, and resets on denial.
@@ -675,7 +675,7 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
         }
         if let Some(issuer) = self.issuer.as_ref() {
-            return match (issuer.begin)(std::mem::take(&mut self.inputs), child) {
+            return match (issuer.begin)(std::mem::take(&mut self.inputs), child).result {
                 Ok((owner, progress)) => { self.retirement = Some(owner); Ok(RetainedCloneStep::Progress(progress)) },
                 Err((error, original)) => { self.inputs = original; Err(error) },
             };
@@ -735,9 +735,9 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
 
 /// 🔄 Persistent store-side operation phases. Publication and ACK are distinct turns; close
 /// remains observable until the domain owner proves exact terminal emptiness.
-pub use semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase;
+pub use semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase;
 
-pub use semio_framework_os_store_one_item::ArtifactStoreOneItemAdvance;
+pub use semio_os_store_one_item::ArtifactStoreOneItemAdvance;
 
 #[cfg(test)]
 #[global_allocator]

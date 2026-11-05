@@ -7,11 +7,11 @@ use crate::{editor::wfc3d::modes::edit::windows::graph, editor::wfc3d::modes::ed
 use crate::editor::wfc3d::transient::Wfc3dTransient;
 use crate::{mutations::delete_slot, mutations::disconnect_slots, mutations::move_slot, mutations::pin_slot, mutations::resize_slot};
 use crate::{Wfc3dMutation, Wfc3dSnapshot, WFC3D_DIALECT, WFC3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use crate::editor::wfc3d::*;
 use crate::mutations::drag_slots;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_framework_test_fixtures::fixture_text;
 
 fn document() -> Wfc3dSnapshot {
@@ -271,7 +271,7 @@ fn every_declared_action_bridges_through_command_from_action() {
             if skip.contains(&action.id.as_str()) {
                 continue;
             }
-            <Wfc3dEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(&action.id, None, None).unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
+            <Wfc3dEditor as semio_plugin::ArtifactEditor>::command_from_action(&action.id, None, None).unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
             bridged += 1;
         }
     }
@@ -337,14 +337,14 @@ fn a_two_axis_move_or_resize_keeps_the_authored_third_axis() {
 /// every one of its panes reached `data-shell-error` instead of `data-shell-ready`.
 #[test]
 fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let tools: std::collections::BTreeSet<&str> = WFC_3D_RETAINED_TOOL_IDS.iter().copied().collect();
     let publication: std::collections::BTreeSet<&str> = <Wfc3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
     assert_eq!(publication, tools, "every owned tool declares exactly one publication-lane contract");
     for contract in <Wfc3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
         assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
     }
-    let proofs: std::collections::BTreeSet<&str> = <Wfc3dEditor as semio_framework_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
+    let proofs: std::collections::BTreeSet<&str> = <Wfc3dEditor as semio_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
     assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }
 
@@ -382,4 +382,4 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_wfc3d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", crate::editor::wfc3d::Wfc3dEditor, || semio_framework_plugin::App { definition: crate::editor::wfc3d::create_wfc3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::wfc3d::Wfc3dEditor, || semio_plugin::App { definition: crate::editor::wfc3d::create_wfc3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

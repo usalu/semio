@@ -2,7 +2,7 @@
 //!
 //! The app's typed `NoteCommand` enum — which used to share the old `📡️protocol` crate with this codec
 //! — is an APP concern, not an artifact one: it now lives in `✏️editor/🦀️.rs`, assembled
-//! from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
+//! from the `🎮️commands/*` payload modules by `semio_plugin::app_commands!`.
 
 use crate::standards::v1::subsets::any::schema::mutations::NoteMutation;
 use protocol::OpBinary;

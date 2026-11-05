@@ -47,7 +47,7 @@ fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
 /// `📓️w14b-generation3d-labels-preview-layout.md`).
 #[test]
 fn surface_content_height_measures_the_document_not_the_viewport_it_was_given() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("panel", &stack_ui(vec![button_ui("one", "One"), button_ui("two", "Two")]));
     drive_layout(&mut ui, "panel", 300.0, 780.0, &mut atlas);
@@ -71,7 +71,7 @@ fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
     for node in nodes {
         document.try_upsert_record(serde_json::from_value(node.clone()).expect("compact row record")).unwrap();
     }
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     assert!(ui.publish_document(surface, document));
     drive_scene_lifetime_reconcile(&mut ui, surface, 1);
@@ -118,7 +118,7 @@ fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
         }
         document
     };
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     assert!(ui.publish_document(surface, document(sequence[0]["generation"].as_u64().unwrap(), sequence[0]["presentation"].as_str().unwrap())));
     drive_scene_lifetime_reconcile(&mut ui, surface, 1);
@@ -151,11 +151,11 @@ fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
         ]);
         let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation:1, surface:SurfaceId::try_from(window.as_str()).unwrap(), revision:UiRevision(1), root:UiNodeId(0), layout_epoch:1, node_count:2 }).unwrap();
         for record in records.as_array().unwrap() { document.try_upsert_record(serde_json::from_value(record.clone()).unwrap()).unwrap(); }
-        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+        let mut ui = Ui::new(semio_ui_locale::Locale::En);
         assert!(ui.publish_document(&window, document));
         drive_scene_lifetime_reconcile(&mut ui, &window, 1);
         acknowledge_scene_lifetime_candidate(&mut ui, &window, index as u64 + 1);
-        let key = |name:&str, ctrl:bool| UiEvent::KeyDown { key:name.into(), modifiers:semio_framework_ui_wgpu_events::EventModifiers { ctrl, ..Default::default() } };
+        let key = |name:&str, ctrl:bool| UiEvent::KeyDown { key:name.into(), modifiers:semio_ui_wgpu_events::EventModifiers { ctrl, ..Default::default() } };
         ui.dispatch_event(&window, key("Tab",false));
         ui.dispatch_event(&window, key("a",true));
         ui.dispatch_event(&window, UiEvent::TextInput { text:law["submitted"].as_str().unwrap().into() });
@@ -180,7 +180,7 @@ fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
                 acknowledge_scene_lifetime_candidate(&mut ui, &window, index as u64 + 101);
             }
         }
-        let visible = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(&window).unwrap()).into_iter().find(|node|node.key == "draft/input").unwrap().value_text.unwrap();
+        let visible = semio_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(&window).unwrap()).into_iter().find(|node|node.key == "draft/input").unwrap().value_text.unwrap();
         assert_eq!(visible,law["expected"].as_str().unwrap(),"{}",law["name"]);
     }
 }
@@ -214,7 +214,7 @@ use semio_framework_job_worker_authority::{BatchJobParams,BatchDriveConfig};
 #[test]
 fn original_ui_worker_close_retains_whole_failure_and_original_cx(){
  let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🧵️original-close.json")).unwrap();
- for copy in law["copyGrants"].as_array().unwrap(){let mut ui=Ui::new(semio_framework_ui_locale::Locale::En);let id="original-worker-failure";let token=ui.try_admit_surface(id).unwrap();assert!(ui.begin_surface_close(token));let((failure,pointers),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original UI worker cause 源");let receipt=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"original separate UI receipt 源");let pointers=(primary.message.as_ptr(),receipt.message.as_ptr());({let original=semio_framework_job::OriginalTurnFailure::from(primary);semio_framework_job::OriginalTurnFailure{receipt_refusal:Some(receipt),context_refusal:None,..original}},pointers)});
+ for copy in law["copyGrants"].as_array().unwrap(){let mut ui=Ui::new(semio_ui_locale::Locale::En);let id="original-worker-failure";let token=ui.try_admit_surface(id).unwrap();assert!(ui.begin_surface_close(token));let((failure,pointers),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original UI worker cause 源");let receipt=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"original separate UI receipt 源");let pointers=(primary.message.as_ptr(),receipt.message.as_ptr());({let original=semio_framework_job::OriginalTurnFailure::from(primary);semio_framework_job::OriginalTurnFailure{receipt_refusal:Some(receipt),context_refusal:None,..original}},pointers)});
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.windows.get_token_mut(token).unwrap().retain_layout_close_failure("Layout.CloseSession",failure));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.as_u64().unwrap()as usize,maximum_capacity_bytes:262144,maximum_release_bytes:262144,maximum_depth:128};let mut sequence=0;let cancel=semio_framework_job::root_cancel_token();
   for denial in law["denials"].as_array().unwrap(){let denial=denial.as_str().unwrap();let mut receipt=Default::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(if denial=="work"{0}else{1},if denial=="deadline"{0}else{12345},semio_framework_job::RetainedCloneGrant{maximum_items:usize::from(denial!="items"),..grant}),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.close_surface_one(token,&mut cx));assert!(matches!(result.unwrap(),UiSurfaceCloseStep::Pending));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),Default::default());let original=ui.layout_retirement_failure(id).unwrap();assert_eq!((original.primary_value().unwrap().message.as_ptr(),original.receipt_refusal.as_ref().unwrap().message.as_ptr()),pointers);}
   let(mut born,mut freed)=(birth.requested_bytes,birth.released_bytes);for turn in 0..100000{if !ui.layout_retirement_failure_pending(id){break}let mut receipt=Default::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(1,12345,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.close_surface_one(token,&mut cx));assert!(matches!(result.unwrap(),UiSurfaceCloseStep::Pending));assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(turn<99999)}assert_eq!(born,freed);assert!(!ui.layout_retirement_failure_pending(id));assert!(ui.layout_retirement_refusal(id).is_none());close_surface_to_terminal(&mut ui,token);

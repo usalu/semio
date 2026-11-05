@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "trim-box", kind: "set-trim-box", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/X trim box on page {}", self.page_index), &format!("PDF/X-TrimBox auf Seite {} setzen", self.page_index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set PDF/X trim box on page {}", self.page_index), &format!("PDF/X-TrimBox auf Seite {} setzen", self.page_index))
     }
 
     fn target(&self) -> Vec<String> {

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorFixedDiamete
         record: "ChangedAnchorFixedDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Grout body diameter D of the anchor", "Anker: Verpresskörperdurchmesser D ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Grout body diameter D of the anchor", "Anker: Verpresskörperdurchmesser D ändern")
     }
 }
 

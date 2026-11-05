@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberDeflLimitRat
         record: "ChangedMemberDeflLimitRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change deflection limit l/… of the member", "Bauteil: Durchbiegungsgrenze l/… ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change deflection limit l/… of the member", "Bauteil: Durchbiegungsgrenze l/… ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

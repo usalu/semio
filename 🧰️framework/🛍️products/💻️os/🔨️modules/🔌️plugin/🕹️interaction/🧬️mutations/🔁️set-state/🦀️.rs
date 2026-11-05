@@ -20,8 +20,8 @@ impl protocol::MutationKind<InteractionState, InteractionConfigMutation> for Set
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "interaction-state", kind: "set-interaction-state", record: "SetInteractionState" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")
     }
 }
 

@@ -2,8 +2,8 @@ use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, se
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::SeverityCounts;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::ConfigView;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
 #[allow(unused_imports)]
@@ -15,23 +15,23 @@ use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{schedule
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels;
 #[allow(unused_imports)]
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::MeasureSelectItem;
+use semio_plugin::MeasureSelectItem;
 #[allow(unused_imports)]
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ViewModel;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementInput;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementStatus;
+use semio_plugin::WindowEngagementStatus;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::chrome::{measures, status, engagements, addressed_kind, problems};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
-use semio_framework_plugin::WindowConfigOwner;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::WindowConfigOwner;
+use semio_ui_locale::Locale;
 
 fn demo() -> ModelSnapshot {
     semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
@@ -39,7 +39,7 @@ fn demo() -> ModelSnapshot {
 
 fn measures_of(kind: &str, locale: Locale) -> Vec<WindowMeasure> {
     let view = view(locale, &[("window", kind)], Some("window"));
-    let cfg = ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None };
+    let cfg = ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None };
     measures(&demo(), &cfg, &view).remove("window").expect("the addressed window has measures")
 }
 

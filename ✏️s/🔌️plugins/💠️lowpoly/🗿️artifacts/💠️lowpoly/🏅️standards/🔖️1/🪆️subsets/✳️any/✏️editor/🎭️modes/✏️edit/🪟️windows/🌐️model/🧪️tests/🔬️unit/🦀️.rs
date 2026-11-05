@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use crate::context::{app, render};
@@ -14,7 +14,7 @@ async fn window_kind_actions_scope_mesh_ops_to_main_only() {
     let definition = semio_s_artifact_lowpoly_lowpoly_editor::create_lowpoly_app();
     let resolve = |window_id: &str| -> Vec<String> {
         let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
-        semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
+        semio_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
     };
     let main = resolve(semio_s_artifact_lowpoly_lowpoly_modes::windows::model::LOWPOLY_PLAY_WINDOW_MAIN);
     let uv = resolve(semio_s_artifact_lowpoly_lowpoly_modes::editor::lowpoly::modes::paint::windows::uv::LOWPOLY_PLAY_WINDOW_UV);

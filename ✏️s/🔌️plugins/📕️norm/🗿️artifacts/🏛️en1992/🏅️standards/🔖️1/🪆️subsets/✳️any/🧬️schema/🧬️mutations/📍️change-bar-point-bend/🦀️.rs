@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeBarPointBend where
         record: "ChangedBarPointBend",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change bend of the bar point", "Bewehrungsstab: Biegung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change bend of the bar point", "Bewehrungsstab: Biegung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.bar_id.clone()]

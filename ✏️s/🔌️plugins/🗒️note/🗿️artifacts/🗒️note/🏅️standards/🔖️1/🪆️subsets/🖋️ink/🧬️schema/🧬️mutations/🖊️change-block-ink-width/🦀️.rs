@@ -32,8 +32,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-ink-width", kind: "change-block-ink-width", record: "ChangedBlockInkWidth" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change block \"{}\" ink width to {}", self.id, self.new_stroke_width), &format!("Strichbreite von Block \"{}\" auf {} ändern", self.id, self.new_stroke_width))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change block \"{}\" ink width to {}", self.id, self.new_stroke_width), &format!("Strichbreite von Block \"{}\" auf {} ändern", self.id, self.new_stroke_width))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

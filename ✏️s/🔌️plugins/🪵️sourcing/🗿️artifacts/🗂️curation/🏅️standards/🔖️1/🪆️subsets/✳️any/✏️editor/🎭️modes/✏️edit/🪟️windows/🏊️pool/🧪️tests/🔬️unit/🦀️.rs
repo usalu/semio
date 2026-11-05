@@ -2,7 +2,7 @@ use crate::schema::{available_modules, filtered_stock};
 
 use crate::{CurationSnapshot, ObjectKind};
 use crate::editor::sourcing::config::SourcingCurationConfig;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::sourcing::modes::edit::windows::pool::{SOURCING_CURATION_BODY_POOL, definition, filter_bar, pool_kinds, pool_row, render};
 use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::config::SetContributionsEdit;
@@ -72,7 +72,7 @@ async fn pool_render_respects_query_filter() {
 async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let kind = crate::stock_of(&document).remove(0);
-    let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let row: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
     assert_eq!(row["id"], kind.id.as_str());
     assert_eq!(row["_drag"]["objectId"], kind.id.as_str());
@@ -87,7 +87,7 @@ async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability
 async fn pool_row_has_no_actions_column_and_only_a_curated_stepper() {
     let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let kind = crate::stock_of(&document).remove(0);
-    let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let uncurated: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
     assert!(uncurated.get("actions").is_none(), "the pool must not render a second +/- column");
     assert_eq!(uncurated["curated"]["kind"], "stepper");
@@ -114,9 +114,9 @@ async fn pool_sort_applies_only_to_its_own_columns() {
 #[semio_framework_async_macros::async_test]
 async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("bounded pool");
+    let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))).expect("bounded pool");
     assert_eq!(node.children.len(), 2, "filter row above the table");
-    let semio_framework_plugin::Component::Surface(props) = &node.children.get(1).expect("table surface").component else { panic!("expected a table surface") };
+    let semio_plugin::Component::Surface(props) = &node.children.get(1).expect("table surface").component else { panic!("expected a table surface") };
     let scene = crate::editor_unit_tests::context::table_scene_of(node.children.get(1).expect("table surface")).expect("complete retained table scene");
     assert!(node.children.get(0).expect("filter row").children.len() >= 6, "query, three modules, typology, availability and restock controls");
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
@@ -131,7 +131,7 @@ async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
 /// 🔍️ LAW: every filter control in the bar names a real command with the args the production bridge reads.
 #[semio_framework_async_macros::async_test]
 async fn the_filter_bar_binds_each_control_to_its_own_command() {
-    let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let bar = filter_bar(&SourcingCurationConfig::default(), labels).expect("bounded filter bar");
     let ids: Vec<String> = bar.children.iter().map(|child| child.key.as_str().to_string()).collect();
     for expected in ["sourcing-filter-query", "sourcing-filter-typology", "sourcing-filter-min-availability", "sourcing-pool-restock"] {
@@ -150,7 +150,7 @@ async fn definition_declares_the_table_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_pool_table_scene() {
     let mut app = new_app().await;
-    let has_surface = semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SOURCING_CURATION_BODY_POOL, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| root.children.iter().any(|child| matches!(child.component, semio_framework_plugin::Component::Surface(_)))).await.expect("render");
+    let has_surface = semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SOURCING_CURATION_BODY_POOL, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| root.children.iter().any(|child| matches!(child.component, semio_plugin::Component::Surface(_)))).await.expect("render");
     assert!(has_surface);
 }
 
@@ -203,15 +203,15 @@ async fn curation_add_updates_the_pool_stepper_and_curated_table() {
 /// already carries the contribution, which is what the host hands it.
 #[semio_framework_async_macros::async_test]
 async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
-    let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let cfg = SourcingCurationConfig { contributions_json: fake_contribution(), ..Default::default() };
     let toggles: Vec<String> = filter_bar(&cfg, labels).expect("bounded filter bar").children.iter().map(|child| child.key.as_str().to_string()).collect();
     assert!(toggles.iter().any(|id| id == "sourcing-filter-module-salvage"), "the contributed module gains its own filter toggle: {toggles:?}");
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let before: Vec<String> = pool_kinds(&document, &SourcingCurationConfig::default()).into_iter().map(|kind| kind.id).collect();
     assert!(!before.iter().any(|id| id == CONTRIBUTED_KIND_ID));
-    let history = semio_framework_plugin::HistoryView::empty();
-    let emit = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &semio_framework_plugin::ArtifactView::new(&document, &history), &semio_framework_plugin::ConfigView { snapshot: &cfg, window: None }).expect("restock");
+    let history = semio_plugin::HistoryView::empty();
+    let emit = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &semio_plugin::ArtifactView::new(&document, &history), &semio_plugin::ConfigView { snapshot: &cfg, window: None }).expect("restock");
     let restocked = emit
         .effects
         .into_iter()
@@ -260,7 +260,7 @@ async fn dispatching_set_contributions_installs_the_module_into_the_live_catalog
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
     assert!(!before.iter().any(|id| id == CONTRIBUTED_KIND_ID), "the contributed kind is absent before the push");
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: fake_contribution() })).await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("restock dispatch");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("restock dispatch");
     let restocked = settle(&mut app)
         .await
         .into_iter()
@@ -281,7 +281,7 @@ async fn dispatching_set_contributions_installs_the_module_into_the_live_catalog
 async fn the_restock_button_publishes_a_merged_catalogue_document() {
     let mut app = new_app().await;
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("restock dispatch");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("restock dispatch");
     let restocked = settle(&mut app)
         .await
         .into_iter()

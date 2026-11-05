@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-extension"
+name = "semio-os-extension"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-semio = { path = "../../../🧬️semio/📦️packages/🦀️rust" }
+semio-os-semio = { path = "../../../🧬️semio/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 

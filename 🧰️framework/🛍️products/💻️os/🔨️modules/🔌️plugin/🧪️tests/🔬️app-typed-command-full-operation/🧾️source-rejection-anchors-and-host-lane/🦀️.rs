@@ -84,7 +84,7 @@
         assert!(publisher.contains("typed_ui_outbox.push"));
         assert!(source.contains("typed operation can retain exactly one unacknowledged result page"));
 
-        let reactor = semio_framework_plugin_test_support::read_source_family_source(&fixture_path!("../../../..").join("⚛️reactor")).expect("the reactor family reads");
+        let reactor = semio_plugin_test_support::read_source_family_source(&fixture_path!("../../../..").join("⚛️reactor")).expect("the reactor family reads");
         assert!(reactor.contains("take_typed_operation_effect"));
         assert!(reactor.contains("take_typed_operation_event"));
         assert!(reactor.contains("take_typed_operation_ui_scope"));

@@ -1,8 +1,8 @@
 use super::*;
-use semio_framework_plugin::World3dScene;
+use semio_plugin::World3dScene;
 
 fn scene_of(node: &BuiltNode) -> World3dScene {
-    semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("the built node decodes back into a world scene")
+    semio_plugin::artifact_app_laws::built_surface_scene(node).expect("the built node decodes back into a world scene")
 }
 
 #[semio_framework_async_macros::async_test]

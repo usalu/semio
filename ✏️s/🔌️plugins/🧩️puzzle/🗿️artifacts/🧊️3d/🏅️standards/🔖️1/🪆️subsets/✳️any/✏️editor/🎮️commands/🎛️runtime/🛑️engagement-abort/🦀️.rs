@@ -3,7 +3,7 @@
 use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill_tool;
 use semio_framework_tool_run::{TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_fill_tool_active, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_DEFAULT_UTILITY};
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID;
 
 /// 🛑 Escape is the user saying "stop what is armed": the typed engagement line and the brush candidate
@@ -19,7 +19,7 @@ pub fn engagement_abort(ctx: &mut Puzzle3dActionCtx<'_>) {
     if puzzle3d_fill_tool_active(ctx.config) || ctx.scene.active_utility == semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID {
         if let Some(run) = fill_tool::live_fill_run(ctx.tool_run) {
             let args = semio_framework::dsl_value!({ TOOL_RUN_ARG_RUN_ID: run.identity.id.run.to_string(), TOOL_RUN_ARG_GENERATION: run.identity.generation });
-            ctx.effects.push(Effect::DispatchAction { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_ABORT_ACTION_ID.into(), args: Some(args), delay_ms: 0 });
+            ctx.effects.push(Effect::DispatchAction { req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_ABORT_ACTION_ID.into(), args: Some(args), delay_ms: 0 });
         }
         ctx.effects.push(Effect::SetActiveTool { tool_id: String::new() });
     }

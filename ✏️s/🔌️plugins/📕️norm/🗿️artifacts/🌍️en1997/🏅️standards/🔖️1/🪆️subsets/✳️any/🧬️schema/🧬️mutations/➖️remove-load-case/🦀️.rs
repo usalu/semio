@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveLoadCase where Op:
         verb: "remove", entity: "load-case", kind: "remove-load-case", record: "RemovedLoadCase",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove footing load case", "Fundament-Lastfall entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove footing load case", "Fundament-Lastfall entfernen")
     }
 }
 

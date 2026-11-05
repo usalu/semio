@@ -2,8 +2,8 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::set_rule_layout_points;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::Emit;
+use semio_plugin::NoConfigMutation;
 
 
 

@@ -36,7 +36,7 @@ test("a lane that wrote no provenance at all (a test or lint run, an empty lane)
   expect(existsSync(dir.sharedLedger)).toBe(false);
   expect(await retainLaneOutputsV1({...input(root),lane:join(root,"never-created")})).toMatchObject({published:0});
   let released=0;
-  expect(await withLaneRetentionV1({lane:{paths:{id:"ab12",build:join(root,"never-created")},release(){released++;}},shared:join(root,"also-never"),language:"en"},async()=>"ok")).toBe("ok");expect(released).toBe(1);
+  expect(await withLaneRetentionV1({lane:{paths:{id:"ab12",base:join(root,"never-created"),build:join(root,"never-created")},release(){released++;}},shared:join(root,"also-never"),language:"en"},async()=>"ok")).toBe("ok");expect(released).toBe(1);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -96,7 +96,7 @@ test("unrelated names, symbolic links, directories and oversize files are never 
 test("the lane is released only after its outputs are published, a failing body is still retained, and a failing retention after a good body is the error",async()=>{
  const root=scratch(),dir=layout(root);
  try{
-  const events:string[]=[],lane={paths:{id:"ab12",build:dir.lane},release(){events.push("release:"+existsSync(join(dir.sharedLedger,R+"a.json")));}};
+  const events:string[]=[],lane={paths:{id:"ab12",base:dir.lane,build:dir.lane},release(){events.push("release:"+existsSync(join(dir.sharedLedger,R+"a.json")));}};
   seed(dir.laneLedger,{[R+"a.json"]:"a"});
   expect(await withLaneRetentionV1({lane,shared:dir.shared,language:"en"},async()=>{events.push("body");return 7;})).toBe(7);
   expect(events).toEqual(["body","release:true"]);
@@ -134,7 +134,7 @@ test("six processes release into one shared ledger beside a trimmer: every recei
   for(let index=0;index<workers;index++)for(let item=0;item<count;item++)expect(JSON.parse(readFileSync(join(dir.sharedLedger,`${R}w${index}-${item}.json`),"utf8"))).toMatchObject({worker:index,item});
   expect(JSON.parse(readFileSync(join(dir.sharedLedger,R+"common.json"),"utf8"))).toEqual({common:true});
   expect([0,1,2,3,4,5]).toContain(JSON.parse(readFileSync(join(dir.sharedLedger,R+"race.json"),"utf8")).winner);
-  const leftovers=readPoolV1(join(root,"u"),Date.now()).flatMap(lane=>{try{return readdirSync(join(root,"u","l",lane.id,"b",rules.ledger));}catch{return[];}});
+  const leftovers=readPoolV1(join(root,"u"),Date.now()).flatMap(lane=>{try{return readdirSync(join(root,"u","l",lane.id,rules.ledger));}catch{return[];}});
   expect(leftovers.filter(name=>name!==R+"race.json")).toEqual([]);
   expect(leftovers.length).toBeLessThanOrEqual(workers-1);
   expect(readdirSync(dir.sharedLedger).filter(name=>name.startsWith(".")||name.endsWith(".tmp"))).toEqual([]);

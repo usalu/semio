@@ -20,8 +20,8 @@ pub struct SetUsemtl {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetUsemtl {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "usemtl", kind: "set-usemtl", record: "SetUsemtl" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set usemtl", "usemtl setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set usemtl", "usemtl setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

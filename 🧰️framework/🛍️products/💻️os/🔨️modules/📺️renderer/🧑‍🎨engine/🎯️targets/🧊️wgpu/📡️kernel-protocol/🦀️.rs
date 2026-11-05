@@ -2,13 +2,13 @@
 //!
 //! 🧭️ Native only: the bottom of the actor-kernel group. The module files stay in the renderer tree; this crate root mounts them and re-exports their surface.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store_sync;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store_sync;
 use semio_framework::kernel::{Budget as TurnBudget, Effect, Event, JobPlacement, MessageEndpoint, TurnResult};
 use semio_framework_actor::{ActorId, CapabilityGrant, JobOperation, JobProgressIdentity, JobProgressKind, JobReplayRecordHeader, JobReplayRequest, JobReplayRoute, JobTurn, Lane, PackageId, JOB_PROGRESS_ACTIVE_CAPACITY};
 use semio_framework_job::RetainedCloneGrant;
-use semio_framework_os_renderer_wgpu_contracts::ProgramFault;
-use semio_framework_os_renderer_wgpu_host_base::{plugin_catalog, run_renderer_io};
+use semio_renderer_wgpu_contracts::ProgramFault;
+use semio_renderer_wgpu_host_base::{plugin_catalog, run_renderer_io};
 use std::collections::HashMap;
 use std::future::Future;
 use std::path::PathBuf;
@@ -45,6 +45,6 @@ pub mod parallel_runtime;
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
 
-pub use semio_framework_os_renderer_wgpu_host_plumbing::{native_caller, native_launch};
-pub use semio_framework_os_renderer_wgpu_host_plumbing::native_io::{RendererSourceIoError, find_renderer_wasm_path, read_renderer_source_bytes};
-use semio_framework_os_renderer_wgpu_host_base::{renderer_worker_pool, RENDERER_IO_WAKE};
+pub use semio_renderer_wgpu_host_plumbing::{native_caller, native_launch};
+pub use semio_renderer_wgpu_host_plumbing::native_io::{RendererSourceIoError, find_renderer_wasm_path, read_renderer_source_bytes};
+use semio_renderer_wgpu_host_base::{renderer_worker_pool, RENDERER_IO_WAKE};

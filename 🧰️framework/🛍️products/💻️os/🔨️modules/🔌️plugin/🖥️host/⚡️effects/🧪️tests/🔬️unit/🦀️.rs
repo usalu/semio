@@ -16,7 +16,7 @@ use std::sync::atomic::AtomicUsize;
 async fn services<R: HostAsyncRuntime + 'static>(runtime: Arc<R>) -> AsyncServices<R> {
     AsyncServices {
         runtime: runtime.clone(),
-        http: Arc::new(HttpPool::new(Arc::new(semio_framework_os_services::UnwiredHttpTransport), Arc::new(ComputePool::new(4).await), 1_000_000, 8).await),
+        http: Arc::new(HttpPool::new(Arc::new(semio_os_services::UnwiredHttpTransport), Arc::new(ComputePool::new(4).await), 1_000_000, 8).await),
         storage: Arc::new(StorageScheduler::new(runtime.clone(), runtime.open_scope(ScopeOwner::Service("test-storage"), None).await, 4, 1_000_000).await),
         timers: Arc::new(TimerWheel::new(16).await),
         events: Arc::new(EventRouter::new()),

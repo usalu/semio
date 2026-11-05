@@ -1,9 +1,9 @@
 //! 📦️ Prestage operation bytes from exact borrowed typed sources, with inline retained traversal.
-use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
+use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::{ValueError, ValueRefusalKind};
-use semio_framework_os_pack::record::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure};
+use semio_os_pack::record::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure};
 use semio_framework_dsl_record::{BorrowedRecordSpec,native_encoding::FieldProjectionSource};
 
 #[path = "📝️text/🦀️.rs"]
@@ -16,7 +16,7 @@ pub use output::{ArtifactPreparedOperationOutput,ArtifactPreparedOperations,Arti
 #[path="🧳️replacement/🦀️.rs"]
 mod replacement;
 pub use replacement::OriginalReplacementReceiving;
-pub use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactOperationTargets, ArtifactOriginalOperationReceiving, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
+pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactOperationTargets, ArtifactOriginalOperationReceiving, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
 
 /// 📏️ One admitted operation-wire turn, independent of allocation and release axes.
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -259,28 +259,28 @@ pub fn operation_wire_preparation_factory_source_birth_demand<P: 'static, M: 'st
 }
 
 /// 🧵️ Constructs the funded wire authority around the original semantic preparation factory.
-pub fn operation_wire_preparation_factory<P: 'static, M: 'static>(factory: std::sync::Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>, source: for<'a> fn(&'a M) -> Option<ArtifactPreparedOperationSource<'a>>, schema: for<'a> fn(&'a M) -> Option<(&'a str, &'a str)>) -> std::sync::Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>> {
+pub fn operation_wire_preparation_factory<P: 'static, M: 'static>(factory: std::sync::Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>, source: for<'a> fn(&'a M) -> Option<ArtifactPreparedOperationSource<'a>>, schema: for<'a> fn(&'a M) -> Option<(&'a str, &'a str)>) -> std::sync::Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>> {
     std::sync::Arc::new(OperationWirePreparationFactory { factory, source, schema })
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct OperationWirePreparationFactory<P, M> {
     #[factory_child]
-    factory: std::sync::Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>,
+    factory: std::sync::Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>,
     source: for<'a> fn(&'a M) -> Option<ArtifactPreparedOperationSource<'a>>,
     schema: for<'a> fn(&'a M) -> Option<(&'a str, &'a str)>,
 }
 
-impl<P: 'static, M: 'static> semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for OperationWirePreparationFactory<P, M> {
-    fn begin_batch_digest(&self,edit:&mut Option<Box<semio_framework_os_spr::Edit<M>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_os_store_one_item_publication::batch_digest::ArtifactStoreBatchDigest<M>>,semio_framework_value::RetainedCloneProgress)>,ValueError>{self.factory.begin_batch_digest(edit,grant)}
+impl<P: 'static, M: 'static> semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for OperationWirePreparationFactory<P, M> {
+    fn begin_batch_digest(&self,edit:&mut Option<Box<semio_os_spr::Edit<M>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_os_store_one_item_publication::batch_digest::ArtifactStoreBatchDigest<M>>,semio_framework_value::RetainedCloneProgress)>,ValueError>{self.factory.begin_batch_digest(edit,grant)}
     fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> { (self.source)(mutation) }
     fn operation_schema_parts<'a>(&'a self, mutation: &'a M) -> Option<(&'a str, &'a str)> { (self.schema)(mutation) }
-    fn preflight(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<semio_framework_os_store_one_item::ArtifactStoreOneItemFootprint, String> { self.factory.preflight(mutation, lane) }
-    fn begin_demand(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> { self.factory.begin_demand(mutation, lane) }
-    fn begin_copy_byte_demand(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<usize, ValueError> { self.factory.begin_copy_byte_demand(mutation, lane) }
-    fn begin(&self, request: semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> { self.factory.begin(request, grant) }
-    fn stamped_clock(&self) -> Option<semio_framework_os_spr::HybridLogicalTimestamp> { self.factory.stamped_clock() }
-    fn stamped_mutation_id(&self) -> Option<&semio_framework_os_spr::MutationId> { self.factory.stamped_mutation_id() }
+    fn preflight(&self, mutation: &M, lane: semio_os_store_command::HistoryLane) -> Result<semio_os_store_one_item::ArtifactStoreOneItemFootprint, String> { self.factory.preflight(mutation, lane) }
+    fn begin_demand(&self, mutation: &M, lane: semio_os_store_command::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> { self.factory.begin_demand(mutation, lane) }
+    fn begin_copy_byte_demand(&self, mutation: &M, lane: semio_os_store_command::HistoryLane) -> Result<usize, ValueError> { self.factory.begin_copy_byte_demand(mutation, lane) }
+    fn begin(&self, request: semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> { self.factory.begin(request, grant) }
+    fn stamped_clock(&self) -> Option<semio_os_spr::HybridLogicalTimestamp> { self.factory.stamped_clock() }
+    fn stamped_mutation_id(&self) -> Option<&semio_os_spr::MutationId> { self.factory.stamped_mutation_id() }
 }
 
 

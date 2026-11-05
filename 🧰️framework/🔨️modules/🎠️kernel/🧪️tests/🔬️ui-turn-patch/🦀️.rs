@@ -52,7 +52,7 @@ fn ui_turn_patch_owner_normal_close_does_not_wait_for_arena() {
 #[test]
 fn ui_turn_patch_owner_typed_descendants_preserve_exact_one_byte_grants() {
     let _test_owner = own_ui_turn_patch_test();
-    use semio_framework_ui_contract as ui;
+    use semio_ui_contract as ui;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     for grant in fixture["byteGrants"].as_array().unwrap() {
         let surface = fixture["surface"].as_str().unwrap();
@@ -83,10 +83,10 @@ fn ui_turn_patch_owner_typed_descendants_preserve_exact_one_byte_grants() {
 
 fn patch(revision: u64) -> UiPatch {
     UiPatch {
-        surface: semio_framework_ui_contract::SurfaceId::try_from("turn.surface").expect("bounded surface"),
-        base_revision: semio_framework_ui_contract::UiRevision(revision.saturating_sub(1)),
-        revision: semio_framework_ui_contract::UiRevision(revision),
-        ops: semio_framework_ui_contract::UiPatchOps::default(),
+        surface: semio_ui_contract::SurfaceId::try_from("turn.surface").expect("bounded surface"),
+        base_revision: semio_ui_contract::UiRevision(revision.saturating_sub(1)),
+        revision: semio_ui_contract::UiRevision(revision),
+        ops: semio_ui_contract::UiPatchOps::default(),
     }
 }
 
@@ -103,7 +103,7 @@ fn ui_turn_patches_max_plus_one_returns_the_exact_patch_owner() {
         patches.try_push_ui_patch(patch(revision as u64)).expect("maximum owner");
     }
     let rejected = patches.try_push_ui_patch(patch(9_001)).expect_err("maximum plus one");
-    assert_eq!(rejected.revision, semio_framework_ui_contract::UiRevision(9_001));
+    assert_eq!(rejected.revision, semio_ui_contract::UiRevision(9_001));
     assert_eq!(patches.len(), UI_TURN_PATCHES_MAXIMUM);
     assert_eq!(patches.iter().map(|patch| patch.revision.0).collect::<Vec<_>>(), (1..=UI_TURN_PATCHES_MAXIMUM as u64).collect::<Vec<_>>());
     drop(patches);
@@ -117,7 +117,7 @@ fn refused_turn_patch_transfer_restores_the_exact_retirement_owner() {
     patches.try_push_ui_patch(patch(1)).expect("one patch");
     assert!(matches!(patches.try_transfer_one(Err::<(), UiPatch>), UiTurnPatchTransfer::Refused));
     assert_eq!(patches.len(), 1);
-    assert_eq!(patches.iter().next().map(|patch| patch.revision), Some(semio_framework_ui_contract::UiRevision(1)));
+    assert_eq!(patches.iter().next().map(|patch| patch.revision), Some(semio_ui_contract::UiRevision(1)));
     drop(patches);
     while !close_ui_turn_patch_owner_one() {}
 }
@@ -134,7 +134,7 @@ fn ui_turn_patches_fixed_serde_visitor_rejects_plus_one() {
 fn ui_turn_patches_close_retires_one_op_or_patch_owner_per_step() {
     let _test_owner = own_ui_turn_patch_test();
     let mut owner = patch(1);
-    owner.ops.try_push(UiPatchOp::SetRoot { id: semio_framework_ui_contract::UiNodeId(7) }).expect("one op");
+    owner.ops.try_push(UiPatchOp::SetRoot { id: semio_ui_contract::UiNodeId(7) }).expect("one op");
     let mut patches = UiTurnPatches::default();
     patches.try_push_ui_patch(owner).expect("one patch");
     for turn in 0..4096 {
@@ -171,7 +171,7 @@ fn ui_turn_patch_retirement_rejects_stale_epoch_release_and_closes_one_owner_per
     let stale = UiTurnPatchRetireKey { epoch: key.epoch.checked_add(1).expect("fixture epoch"), ..key };
     assert!(!arena.release_empty(stale));
     let mut owner = patch(1);
-    owner.ops.try_push(UiPatchOp::SetRoot { id: semio_framework_ui_contract::UiNodeId(7) }).expect("one op");
+    owner.ops.try_push(UiPatchOp::SetRoot { id: semio_ui_contract::UiNodeId(7) }).expect("one op");
     let mut contents = UiTurnPatchContents::default();
     *contents.pending.source_mut().unwrap() = Some(owner);
     arena.handback(key, contents).unwrap();
@@ -192,7 +192,7 @@ fn ui_turn_patch_transport_round_trip_is_single_claim_and_preserves_populated_ow
     let _test_owner = own_ui_turn_patch_test();
     let session = 70_001;
     let mut patch = patch(3);
-    patch.ops.try_push(UiPatchOp::SetRoot { id: semio_framework_ui_contract::UiNodeId(9) }).expect("one populated op");
+    patch.ops.try_push(UiPatchOp::SetRoot { id: semio_ui_contract::UiNodeId(9) }).expect("one populated op");
     let mut owner = UiTurnPatches::default();
     owner.try_push_ui_patch(patch).expect("one patch");
     let mut producer = UiTurnPatchTransportProducer::try_new(session, owner).expect("fixed transport admission");
@@ -209,7 +209,7 @@ fn ui_turn_patch_transport_round_trip_is_single_claim_and_preserves_populated_ow
         Err(_) => panic!("exact transport owner"),
     };
     let patch = owner.iter().next().expect("one patch");
-    assert_eq!(patch.revision, semio_framework_ui_contract::UiRevision(3));
+    assert_eq!(patch.revision, semio_ui_contract::UiRevision(3));
     assert_eq!(patch.ops.len(), 1);
     while !owner.close_step() {}
 }
@@ -233,7 +233,7 @@ fn ui_turn_patch_transport_admits_the_zero_actor_as_its_session() {
         Ok(owner) => owner,
         Err(_) => panic!("exact transport owner"),
     };
-    assert_eq!(owner.iter().next().expect("one patch").revision, semio_framework_ui_contract::UiRevision(4));
+    assert_eq!(owner.iter().next().expect("one patch").revision, semio_ui_contract::UiRevision(4));
     while !owner.close_step() {}
 }
 
@@ -355,7 +355,7 @@ fn ui_turn_patch_transport_poison_retains_exact_owner_until_explicit_test_recove
 #[test]
 fn ui_turn_patch_transport_handback_reports_exact_typed_descendant_bytes() {
     let _test_owner = own_ui_turn_patch_test();
-    use semio_framework_ui_contract as ui;
+    use semio_ui_contract as ui;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let surface = fixture["surface"].as_str().unwrap();
     let text = fixture["payload"].as_str().unwrap();

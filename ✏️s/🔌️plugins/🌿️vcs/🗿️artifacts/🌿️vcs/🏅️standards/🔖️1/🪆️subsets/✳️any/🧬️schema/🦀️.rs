@@ -101,7 +101,7 @@ pub fn vcs_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 /// (`derived_construction`/`derived_analysis`/`derived_composition`, all confirmed dead —
 /// zero repo-wide references outside this plugin) with the ordinary `Mutation`/`MutationDiff`
 /// algebra this subset needs; all io now goes exclusively through `io::io()` (design.md rule 3).
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::VcsSnapshot, crate::VcsDemoMutation>;
+pub type Construction = semio_plugin::app::SnapshotBuilder<crate::VcsSnapshot, crate::VcsDemoMutation>;
 //#endregion 🏗️Construction
 
 //#region 🧪️Tests

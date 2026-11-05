@@ -4,15 +4,15 @@
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use crate::terminology::Block2dLabels;
 use crate::ui_label;
-use semio_framework_plugin::plugin_app_close_prelude::{column, text};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::plugin_app_close_prelude::{column, text};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const BLOCK2D_WINDOW_BOARD: &str = "block2d-board";
@@ -54,7 +54,7 @@ fn line(id: &str, value: String) -> UiAssemblyResult<BuiltNode> {
 }
 
 pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiAssemblyResult<BuiltNode> {
-    let lines = semio_framework_plugin::ui_node_list([
+    let lines = semio_plugin::ui_node_list([
         line("block2d-play-board.summary", format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label })),
         line("block2d-play-board.counts", format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str())),
     ])?;

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { isAbsolute, join } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import Ajv from "ajv";
 import { afterEach, describe, expect, it } from "vitest";
 import {
@@ -128,4 +128,22 @@ describe("trusted stdio catalog", () => {
     expect(() => buildTrustedStdioCatalogV1(undefined, { receipts: [], openTargets: current.openTargets })).toThrow(/open target.*codec/);
     expect(() => buildTrustedStdioCatalogV1(undefined, { receipts, openTargets: [...current.openTargets, ...current.openTargets] })).toThrow(/duplicate open target/);
   });
+});
+
+it("binds every committed codec row to its actual protocol source", () => {
+  const root = join(import.meta.dirname, "../..");
+  const manifest = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const publication = manifest.publications.find((row: { id: string }) => row.id === "stdio-native-codecs");
+  const payload = JSON.parse(readFileSync(join(root, publication.source), "utf8"));
+  const receipts = loadFirstPartyStdioNativeCodecReceipts();
+  const bindings = publication.integrity.filter((row: { pointer: string }) => row.pointer.startsWith("/nativeCodecs/"));
+  expect(bindings).toHaveLength(payload.nativeCodecs.length);
+  for (const [index, codec] of payload.nativeCodecs.entries()) {
+    const receipt = receipts.find(row => row.factoryId === codec.factoryId);
+    expect(receipt, codec.factoryId).toBeDefined();
+    const matched = bindings.filter((row: { pointer: string }) => row.pointer === `/nativeCodecs/${index}/protocolSourceSha256`);
+    expect(matched, codec.factoryId).toHaveLength(1);
+    expect(resolve(root, matched[0].path), codec.factoryId).toBe(resolve(receipt!.protocolPath));
+    expect(createHash("sha256").update(readFileSync(receipt!.protocolPath)).digest("hex")).toBe(codec.protocolSourceSha256);
+  }
 });

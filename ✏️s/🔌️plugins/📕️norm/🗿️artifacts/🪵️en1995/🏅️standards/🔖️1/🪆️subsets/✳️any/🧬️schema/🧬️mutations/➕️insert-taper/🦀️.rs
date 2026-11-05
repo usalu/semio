@@ -10,7 +10,7 @@ pub struct InsertTaper { pub index: usize, pub taper: Taper }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertTaper where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_taper::RemoveTaper> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "taper", kind: "insert-taper", record: "InsertedTaper" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert taper {} at #{}", self.taper.id, self.index), &format!("Taper {} an #{} einfügen", self.taper.id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert taper {} at #{}", self.taper.id, self.index), &format!("Taper {} an #{} einfügen", self.taper.id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.taper.id.clone()] }
 }
 

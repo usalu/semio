@@ -136,7 +136,7 @@ impl PluginArtifactChannel {
                 self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 self.discard_instance(instance);
                 return Err(match error {
-                    semio_framework_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_framework_plugin_guest_contract::TurnFault::FuelExhausted => {
+                    semio_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_plugin_guest_contract::TurnFault::FuelExhausted => {
                         Fault { code: "budget.exceeded".to_string(), message: format!("AppCommand exceeded one turn's ceiling ({error}); the instance was discarded") }
                     }
                     error => Self::not_wired("execute_turn", error),

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertAction where Op: p
         record: "InsertedAction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert action {}", self.action.id), &format!("Einwirkung {} einfügen", self.action.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert action {}", self.action.id), &format!("Einwirkung {} einfügen", self.action.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

@@ -48,7 +48,7 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
 
     let driven1 = pump(&mut shard).await.expect("pump 1");
@@ -134,7 +134,7 @@ async fn a_framework_reserved_spawn_starts_live_hands_its_turn_to_the_host_and_r
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     assert_eq!(pump(&mut shard).await.expect("spawning turn"), 1);
     let reported = decode_outcomes(&probe.take_outbound().await).await.into_iter().find_map(|outcome| match outcome {
@@ -193,7 +193,7 @@ async fn cancel_job_effect_stops_a_job_before_it_is_ever_stepped() {
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
 
     let driven = pump(&mut shard).await.expect("pump");
@@ -231,7 +231,7 @@ async fn cancel_job_effect_failure_retires_the_actor_and_surfaces_the_typed_faul
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
 
     assert_eq!(pump(&mut shard).await.expect("spawn turn"), 1);

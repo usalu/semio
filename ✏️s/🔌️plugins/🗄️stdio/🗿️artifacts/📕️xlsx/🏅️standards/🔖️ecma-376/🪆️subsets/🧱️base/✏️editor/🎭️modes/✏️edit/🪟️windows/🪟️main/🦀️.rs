@@ -9,11 +9,11 @@ use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-use semio_framework_plugin::app::{editable_table_window_row_at, tree_window_item, tree_window_section, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::{BuiltNode, PluginAssemblyError, TreeWindows, UiLabel, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::app::{editable_table_window_row_at, tree_window_item, tree_window_section, TableWindowKit, WindowKit, WindowedEditableTableCell};
+use semio_plugin::plugin_app_close_prelude as ui;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::{BuiltNode, PluginAssemblyError, TreeWindows, UiLabel, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use std::collections::BTreeMap;
 
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -40,7 +40,7 @@ fn grid_extent(sheet: &XlsxSheet) -> (usize, usize) {
     (rows, columns)
 }
 
-fn cell_arguments(sheet_name: &str, row: u32, column: u32, revision: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn cell_arguments(sheet_name: &str, row: u32, column: u32, revision: &str) -> semio_plugin::UiAssemblyResult<UiValue> {
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("xlsx.cell-arguments", "cell argument map capacity"))?;
     arguments
         .try_insert("sheetName".into(), UiValue::Text(UiText::try_from_str(sheet_name).ok_or_else(|| PluginAssemblyError::new("xlsx.sheet-name", "worksheet name exceeds the UI text bound"))?))
@@ -61,8 +61,8 @@ fn render_sheet_grid(
     locale: Locale,
     windows: &TreeWindows<'_>,
     controller_id: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    publication_revision: semio_plugin::UiPublicationRevision,
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let cells: BTreeMap<(u32, u32), &XlsxCell> = sheet.cells.iter().map(|cell| ((cell.row, cell.col), cell)).collect();
     let worksheet = xlsx_worksheet_address(document, &sheet.name).map_err(|error| PluginAssemblyError::new("xlsx.worksheet-address", error))?;
     let (row_total, column_total) = grid_extent(sheet);
@@ -106,8 +106,8 @@ pub fn render_for_controller(
     locale: Locale,
     windows: &TreeWindows<'_>,
     controller_id: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    publication_revision: semio_plugin::UiPublicationRevision,
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let workbook = document.project_workbook().map_err(|error| PluginAssemblyError::new("xlsx.projection", error.to_string()))?;
     let ordinals: Vec<usize> = (0..workbook.sheets.len()).collect();
     tree_window_section(windows, "xlsx-sheets", ui::Label::default(), true, &ordinals, |ordinal| {
@@ -118,7 +118,7 @@ pub fn render_for_controller(
     })
 }
 
-pub fn render(document: &XlsxSnapshot, locale: Locale, windows: &TreeWindows<'_>, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &XlsxSnapshot, locale: Locale, windows: &TreeWindows<'_>, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     render_for_controller(document, locale, windows, BASE_CONTROLLER_ID, publication_revision)
 }
 

@@ -6,15 +6,15 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_plugin::WorldProjectionConfig;
+use semio_plugin::WorldProjectionConfig;
 
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::WorldSunConfig;
 use std::collections::HashMap;
 
 //#region 🔖️Defaults
@@ -329,8 +329,8 @@ impl pack::snapshot::ArtifactPack for Puzzle3dConfig {
         semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error))
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle3dConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle3dConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -600,7 +600,7 @@ impl protocol::OpBinary for Puzzle3dConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(Puzzle3dConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(Puzzle3dConfigMutation);
 impl protocol::OpText for Puzzle3dConfigMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }

@@ -11,10 +11,10 @@
 //! owns how every wgpu slider applies it and paints one tick per snap (`slider_tick_rects`).
 //! Not to be confused with the `Ring` element (a circular value control) — `Slider` is a linear track.
 
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
-use semio_framework_ui_theme::Rgba;
-use semio_framework_ui_wgpu_widget_kit::{draw_text_on, SliderMeta, WidgetContext};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
+use semio_ui_theme::Rgba;
+use semio_ui_wgpu_widget_kit::{draw_text_on, SliderMeta, WidgetContext};
 
 /// 🧲️ One tick per detent on `rail`, at the snap's axis position (`ui_contract::slider_axis_position`, the log
 /// axis for `log`) along the value track — which is left-to-right in every flow, as the thumb is
@@ -56,7 +56,7 @@ pub fn dial_point(face: DialFace, angle: f64, share: f32) -> (f32, f32) {
 
 /// 📡️ One radial tick per detent of a dial, from 62 % to 92 % of its radius at the detent's needle angle — the twin of
 /// React's dial `slider-tick` lines.
-pub fn dial_tick_lines(face: DialFace, slider: &semio_framework_ui_declaration::ui::UiSliderNode) -> impl Iterator<Item = [f32; 4]> + '_ {
+pub fn dial_tick_lines(face: DialFace, slider: &semio_ui_declaration::ui::UiSliderNode) -> impl Iterator<Item = [f32; 4]> + '_ {
     slider.snaps.iter().map(move |snap| {
         let angle = ui_contract::dial_angle(slider.axis_position(*snap));
         let (x0, y0) = dial_point(face, angle, 0.62);
@@ -68,7 +68,7 @@ pub fn dial_tick_lines(face: DialFace, slider: &semio_framework_ui_declaration::
 /// 👆️ The value a press or drag at `(x, y)` over a slider's track cell commits: a track reads the pointer's share of the
 /// cell, a dial its angle about the face (`ui_contract::dial_position`); the axis maps the share onto the travel and the
 /// shared pointer law steps and snaps it.
-pub fn slider_node_pointer_value(slider: &semio_framework_ui_declaration::ui::UiSliderNode, track: Rect, x: f32, y: f32) -> f64 {
+pub fn slider_node_pointer_value(slider: &semio_ui_declaration::ui::UiSliderNode, track: Rect, x: f32, y: f32) -> f64 {
     let position = match slider.appearance {
         ui_contract::SliderAppearance::Dial => {
             let face = dial_face(track);
@@ -82,7 +82,7 @@ pub fn slider_node_pointer_value(slider: &semio_framework_ui_declaration::ui::Ui
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
 pub fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, step: f64, snaps: &[f64], ready: Option<f64>, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
-    let presentation = semio_framework_ui_wgpu_layout::layout::slider_control_presentation(bounds, value, min, max, None, ctx.theme.gap_standard, ui_contract::FlowInline::Ltr).slider;
+    let presentation = semio_ui_wgpu_layout::layout::slider_control_presentation(bounds, value, min, max, None, ctx.theme.gap_standard, ui_contract::FlowInline::Ltr).slider;
     let range = (max - min).max(f64::EPSILON);
     let mut t = ((value - min) / range).clamp(0.0, 1.0);
     if !disabled && ctx.input.drag.active && ctx.input.drag.target_id.as_deref() == Some(id) {
@@ -91,7 +91,7 @@ pub fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, step: f
     }
     let selectable_max = ready.map_or(max, |extent| extent.clamp(min, max));
     let live = slider_pointer_value(min + t * range, min, max, step, snaps, ui_contract::UiNumberScale::Linear).clamp(min, selectable_max);
-    let live_presentation = semio_framework_ui_wgpu_layout::layout::slider_control_presentation(bounds, live, min, max, None, ctx.theme.gap_standard, ui_contract::FlowInline::Ltr).slider;
+    let live_presentation = semio_ui_wgpu_layout::layout::slider_control_presentation(bounds, live, min, max, None, ctx.theme.gap_standard, ui_contract::FlowInline::Ltr).slider;
     if !disabled {
         if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
             if let Some(on_change) = on_change {

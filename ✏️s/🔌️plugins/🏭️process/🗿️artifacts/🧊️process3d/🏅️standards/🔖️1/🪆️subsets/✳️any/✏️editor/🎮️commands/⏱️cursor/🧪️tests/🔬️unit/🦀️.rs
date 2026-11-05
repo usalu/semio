@@ -3,7 +3,7 @@
 
 use super::*;
 use semio_s_artifact_process_process3d_model::{snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::Workshop};
-use semio_framework_plugin::HistoryView;
+use semio_plugin::HistoryView;
 
 fn timeline(steps: usize) -> Process3dSnapshot {
     let step = |index: usize| ProcessStep { id: format!("step-{index}"), label: format!("Step {index}"), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.05, pose: Pose::default() } };

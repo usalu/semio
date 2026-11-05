@@ -6,6 +6,7 @@ use super::*;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(deny_unknown_fields)]
 pub struct SetTopLevel {
     pub root: JsonIJsonRoot,
 }
@@ -13,8 +14,8 @@ pub struct SetTopLevel {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetTopLevel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "top-level", kind: "set-top-level", record: "SetTopLevel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set top level", "Wurzelwert setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set top level", "Wurzelwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

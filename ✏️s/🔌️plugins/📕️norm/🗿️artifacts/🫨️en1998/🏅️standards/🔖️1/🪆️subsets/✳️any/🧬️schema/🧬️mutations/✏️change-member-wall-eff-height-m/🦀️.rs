@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberWallEffHeigh
         record: "ChangeMemberWallEffHeightM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Masonry wall effective height h_ef", "Wirksame Mauerwerkshöhe h_ef ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Masonry wall effective height h_ef", "Wirksame Mauerwerkshöhe h_ef ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-wall-eff-height-m".into()]

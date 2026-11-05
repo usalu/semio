@@ -3,29 +3,29 @@
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
 extern crate infinite_canvas as infinite_world;
-extern crate semio_framework_os_kernel as store_sync;
-use semio_framework_os_renderer_wgpu_shell_chrome_state::{ChromeState, window_measures_surface_id, window_projection_surface_id};
-use semio_framework_os_renderer_wgpu_shell_directory::DirectoryState;
-use semio_framework_os_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_TOOL_PANEL_TAB_PREFIX, WORLD_PROJECTION_TEMPLATES, WorldProjectionTemplate};
-use semio_framework_os_renderer_wgpu_shell_plugins::PluginState;
-use semio_framework_os_renderer_wgpu_shell_prefs::{ActiveSession, PrefsState, display_panel_body, dsl_value_as_json};
-use semio_framework_os_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState};
+extern crate semio_os_kernel as store_sync;
+use semio_renderer_wgpu_shell_chrome_state::{ChromeState, window_measures_surface_id, window_projection_surface_id};
+use semio_renderer_wgpu_shell_directory::DirectoryState;
+use semio_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_TOOL_PANEL_TAB_PREFIX, WORLD_PROJECTION_TEMPLATES, WorldProjectionTemplate};
+use semio_renderer_wgpu_shell_plugins::PluginState;
+use semio_renderer_wgpu_shell_prefs::{ActiveSession, PrefsState, display_panel_body, dsl_value_as_json};
+use semio_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState};
 use semio_framework::{AppDefinition, IconName, PanelGroup, ViewModel};
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_os_renderer_wgpu_program_bridge::ProgramBridgeEntry;
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_viewport::{Viewport3dAxonometricVariant, Viewport3dObliqueVariant, Viewport3dProjectionMode, Viewport3dProjectionSpec};
+use semio_renderer_wgpu_program_bridge::ProgramBridgeEntry;
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_ui_locale::Label;
+use semio_ui_viewport::{Viewport3dAxonometricVariant, Viewport3dObliqueVariant, Viewport3dProjectionMode, Viewport3dProjectionSpec};
 use semio_framework_value::{DslValue, FromValue};
 use serde_json::Value;
 use std::collections::{HashMap, VecDeque};
 use store_sync::{PresencePeer, PresenceWindowView};
 use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText};
-use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowEngagement, WindowMeasure};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindowRowExtent};
-use semio_framework_ui_declaration::utilities::UtilityNode;
+use semio_ui_declaration::layout::{ActionDescriptor, WindowEngagement, WindowMeasure};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindowRowExtent};
+use semio_ui_declaration::utilities::UtilityNode;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🧬️component/🦀️.rs"]
 mod staged_windows__component;

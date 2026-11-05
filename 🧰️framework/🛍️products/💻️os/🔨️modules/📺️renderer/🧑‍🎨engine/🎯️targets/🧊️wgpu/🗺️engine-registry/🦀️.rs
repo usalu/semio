@@ -4,8 +4,8 @@
 //! graph interaction and the engine diagnostics every engine family reads, the prepared engine canvas packets and the tutorial geometry.
 
 extern crate infinite_canvas as infinite_world;
-extern crate semio_framework_os_renderer_wgpu_asset_authority as asset_authority;
-extern crate semio_framework_os_renderer_wgpu_contracts as element_contracts;
+extern crate semio_renderer_wgpu_asset_authority as asset_authority;
+extern crate semio_renderer_wgpu_contracts as element_contracts;
 
 #[path = "../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🗂️engine-surface-registry/🦀️.rs"]
 pub mod engine_surface_registry;

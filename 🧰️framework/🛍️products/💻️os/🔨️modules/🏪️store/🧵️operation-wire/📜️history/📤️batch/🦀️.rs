@@ -1,6 +1,6 @@
 //! 📤️ Original history envelopes stream directly into the canonical paged backbone message.
 use super::ArtifactPreparedOperationOutput;
-use semio_framework_os_spr::MutationEnvelope;
+use semio_os_spr::MutationEnvelope;
 use semio_framework_replication_causal::binary::native_encoding::CausalEnvelopeWireCursor;
 use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};

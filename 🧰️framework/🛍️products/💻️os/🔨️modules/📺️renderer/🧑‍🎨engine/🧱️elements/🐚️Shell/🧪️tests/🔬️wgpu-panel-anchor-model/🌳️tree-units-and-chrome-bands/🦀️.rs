@@ -43,7 +43,7 @@ fn default_dock_display_branch_carries_the_framework_display_leaves() {
     assert_eq!(branch.children.iter().map(|child| child.id.as_str()).collect::<Vec<_>>(), expected);
     assert!(bottom_left.iter().any(|tab| tab.id == "fixture.display"), "🧭️ an app's display-group tab is a SIBLING of the branch, not one of its children");
     assert!(!branch.children.iter().any(|child| child.id == "fixture.display"));
-    let empty_app_shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let empty_app_shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(SessionCtx::of(&mut empty_app_shell).default_dock().tabs(PanelAnchor::BottomLeft).is_empty(), "🧭️ no session means no dock at all");
 }
 

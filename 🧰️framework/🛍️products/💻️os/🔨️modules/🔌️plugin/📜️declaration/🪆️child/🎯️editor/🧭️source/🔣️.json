@@ -71,6 +71,10 @@
           },
           "accepted": {
             "type": "boolean"
+          },
+          "maximumTurns": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       }

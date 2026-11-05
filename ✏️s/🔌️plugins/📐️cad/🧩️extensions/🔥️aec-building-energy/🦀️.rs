@@ -8,7 +8,7 @@
 
 use semio_framework_pack_json::{self as json, Value as JsonValue};
 use semio_framework::DslValue;
-use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
+use semio_plugin::{ExecutionMode, ExtensionBundle};
 use std::collections::BTreeMap;
 
 //#region 🔖️Manifest
@@ -60,7 +60,7 @@ fn computers_manifest() -> JsonValue {
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
 // plain sync fn). `.mode`/`.contributes_topic` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
-// bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
+// bridged via `semio_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
 pub fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Energy", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     let bundle = bundle.mode(ExecutionMode::Declarative);

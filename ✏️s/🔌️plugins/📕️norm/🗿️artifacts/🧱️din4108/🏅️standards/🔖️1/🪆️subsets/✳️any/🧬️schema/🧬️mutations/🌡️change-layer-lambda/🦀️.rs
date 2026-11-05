@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeLayerLambda where
         record: "ChangedLayerLambda",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change thermal conductivity λ of the layer", "Wärmeleitfähigkeit λ der Schicht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change thermal conductivity λ of the layer", "Wärmeleitfähigkeit λ der Schicht ändern")
     }
 }
 

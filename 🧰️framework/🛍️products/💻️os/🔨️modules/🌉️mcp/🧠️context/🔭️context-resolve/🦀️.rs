@@ -1,8 +1,8 @@
 //! 🔭️ Context resolve of the shell-channel crate: The live-shell artifact channel and context resolution.
 
 use crate::shell_channel::ChannelKind;
-use semio_framework_os_mcp_catalog::catalog::Catalog;
-use semio_framework_os_mcp_foundation::reports::ContextSummary;
+use semio_os_mcp_catalog::catalog::Catalog;
+use semio_os_mcp_foundation::reports::ContextSummary;
 
 //#region 🔖️TokenBudget
 

@@ -7,8 +7,8 @@ use super::*;
 //#region ShellTypes
 //#region 🔖️ChromeThreadBoundary
 pub struct RetainedContentFocus {
-    pub node: semio_framework_ui_arena::NodeId,
-    pub key: semio_framework_ui_retained_tree::tree::NodeKey,
+    pub node: semio_ui_arena::NodeId,
+    pub key: semio_ui_retained_tree::tree::NodeKey,
     pub kind: RetainedNodeFocusKind,
 }
 
@@ -30,7 +30,7 @@ pub struct ShellChromeBuildState {
     /// driver) actually suppress a hover tooltip on this target; before ticket 26/09/17 packet W15a
     /// the whole `UiDriver` vocabulary had zero readers anywhere in the wgpu tree, so every chrome
     /// control fired its tooltip under every driver.
-    pub driver: semio_framework_ui_wgpu_layout::chrome::UiDriverChrome,
+    pub driver: semio_ui_wgpu_layout::chrome::UiDriverChrome,
     pub tooltip_hover: Option<ChromeTooltipHover>,
     pub dialog_stack: Vec<ChromeDialogRequest>,
     pub tour_state: Option<ChromeTourState>,
@@ -52,11 +52,11 @@ pub struct ShellChromeBuildState {
     #[cfg(not(target_arch="wasm32"))]
     pub refused_kernel_fault:Option<semio_framework_actor::KernelError>,
     #[cfg(not(target_arch="wasm32"))]
-    pub refused_actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
+    pub refused_actor_call:Option<semio_plugin_host::original_actor_context::OriginalActorFixedCall>,
     /// 🌉️ MCP agent bridge consumer (presence + parked approvals), packet W1j.
-    pub agent: semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeState,
+    pub agent: semio_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeState,
     /// ✅️ The approvals modal's own open/dismiss state, alongside `agent.pending_approvals`.
-    pub agent_approvals: semio_framework_os_renderer_wgpu_agent_elements::agent_approvals::AgentApprovalsModel,
+    pub agent_approvals: semio_renderer_wgpu_agent_elements::agent_approvals::AgentApprovalsModel,
 }
 
 /// 🖥️ UI-thread persistence and platform integration state surrounding chrome construction.

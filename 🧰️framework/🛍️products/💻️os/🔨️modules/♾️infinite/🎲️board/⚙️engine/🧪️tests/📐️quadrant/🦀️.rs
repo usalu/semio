@@ -1,6 +1,6 @@
 //! 🧪️ engine tests (📐️quadrant): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_engine::{BoardEngine, CanvasPalette, IconPaintCache};
+use semio_os_infinite_board_engine::{BoardEngine, CanvasPalette, IconPaintCache};
 use semio_framework_canvas::Color;
 
 #[test]

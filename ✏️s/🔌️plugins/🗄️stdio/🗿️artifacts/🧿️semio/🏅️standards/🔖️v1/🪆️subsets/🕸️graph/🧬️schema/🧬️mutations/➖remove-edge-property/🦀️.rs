@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "edge-property", kind: "remove-edge-property", record: "RemovedEdgeProperty" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove property \"{}\" from edge \"{}\"", self.key, self.edge_id.value), &format!("Eigenschaft \"{}\" aus Kante \"{}\" entfernen", self.key, self.edge_id.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove property \"{}\" from edge \"{}\"", self.key, self.edge_id.value), &format!("Eigenschaft \"{}\" aus Kante \"{}\" entfernen", self.key, self.edge_id.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge_id.value.clone(), self.key.clone()]

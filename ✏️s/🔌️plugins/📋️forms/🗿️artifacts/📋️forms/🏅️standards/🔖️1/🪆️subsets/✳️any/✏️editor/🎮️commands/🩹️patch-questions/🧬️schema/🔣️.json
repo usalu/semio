@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "questionIds",
+    "field",
+    "valueJsonChunks"
+  ],
+  "properties": {
+    "questionIds": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      }
+    },
+    "field": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "paramKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "valueJsonChunks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 65,
+      "items": {
+        "type": "string",
+        "maxLength": 512
+      },
+      "description": "Each chunk is at most512 UTF8 bytes; at most32770 UTF8 bytes total, one JSON value. Target identity aggregate is at most8192 UTF8 bytes."
+    }
+  }
+}

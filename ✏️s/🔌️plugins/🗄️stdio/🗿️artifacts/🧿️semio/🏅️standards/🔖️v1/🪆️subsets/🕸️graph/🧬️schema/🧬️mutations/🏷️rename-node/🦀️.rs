@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node", kind: "rename-node", record: "RenamedNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename node \"{}\" to \"{}\"", self.id.value, self.new_id.value), &format!("Knoten \"{}\" in \"{}\" umbenennen", self.id.value, self.new_id.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename node \"{}\" to \"{}\"", self.id.value, self.new_id.value), &format!("Knoten \"{}\" in \"{}\" umbenennen", self.id.value, self.new_id.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]

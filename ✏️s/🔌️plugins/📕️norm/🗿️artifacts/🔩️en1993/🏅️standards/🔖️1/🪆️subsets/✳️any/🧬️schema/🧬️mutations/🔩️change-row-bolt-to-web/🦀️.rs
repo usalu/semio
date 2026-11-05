@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowBoltToWeb where
         record: "ChangedRowBoltToWeb",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bolt to web distance m of the joint row", "Schraubenreihe: Schraubenabstand zum Steg m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bolt to web distance m of the joint row", "Schraubenreihe: Schraubenabstand zum Steg m ändern")
     }
 }
 

@@ -1,13 +1,13 @@
 //! 🧾️ The HTTP transport surface: admission, options, event log, state handle, terminal records and the run handle.
 
 use semio_framework_async::{Job, ProcessKind, WorkerPoolConfig};
-use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
-use semio_framework_os_mcp_bridge::session::BridgeHandle;
-use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_server::mcp_server::McpServer;
-use semio_framework_os_mcp_wire::notify::{NotificationSink, NotificationSlot};
-use semio_framework_os_mcp_wire::protocol::JsonRpcNotification;
+use semio_os_kernel::os_directory::client::LocalHubCredential;
+use semio_os_mcp_bridge::session::BridgeHandle;
+use semio_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_server::mcp_server::McpServer;
+use semio_os_mcp_wire::notify::{NotificationSink, NotificationSlot};
+use semio_os_mcp_wire::protocol::JsonRpcNotification;
 use std::collections::VecDeque;
 use std::net::{IpAddr, Ipv4Addr, Shutdown, SocketAddr, TcpListener, TcpStream};
 use std::sync::{Arc, Condvar, Mutex};

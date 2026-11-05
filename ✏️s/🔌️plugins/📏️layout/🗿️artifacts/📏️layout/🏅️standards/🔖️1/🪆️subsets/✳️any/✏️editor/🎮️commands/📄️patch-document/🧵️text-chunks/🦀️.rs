@@ -35,13 +35,13 @@ pub fn dictionary_stamp(document: &semio_s_artifact_layout_layout_model::snapsho
 }
 
 /// ⚠️ A stale draft remains unapplied so the host can retain it for a refreshed retry.
-pub fn stale() -> semio_framework_plugin::Fault {
-    semio_framework_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::App, "layout.chunk.stale", "Content changed after this span was displayed. Refresh the editor and retry your change.")
+pub fn stale() -> semio_plugin::Fault {
+    semio_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::App, "layout.chunk.stale", "Content changed after this span was displayed. Refresh the editor and retry your change.")
 }
 
 /// 🛂️ Span and fingerprint admission is shared by text and typed byte inputs.
-pub fn guarded_range(field: &str, kind: &str, stamp: &str, length: usize) -> Result<Range<usize>, semio_framework_plugin::Fault> {
-    let invalid = || semio_framework_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::App, "layout.chunk.invalid", "The editing span is invalid. Refresh the editor and retry.");
+pub fn guarded_range(field: &str, kind: &str, stamp: &str, length: usize) -> Result<Range<usize>, semio_plugin::Fault> {
+    let invalid = || semio_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::App, "layout.chunk.invalid", "The editing span is invalid. Refresh the editor and retry.");
     let address = field.strip_prefix(kind).and_then(|rest| rest.strip_prefix('.')).ok_or_else(invalid)?;
     let mut parts = address.splitn(3, '.');
     let start = parts.next().and_then(|value| value.parse::<usize>().ok()).ok_or_else(invalid)?;
@@ -53,9 +53,9 @@ pub fn guarded_range(field: &str, kind: &str, stamp: &str, length: usize) -> Res
 }
 
 /// ✂️ A fresh bounded UTF-8 draft becomes a minimal native character splice.
-pub fn splice(content: &str, field: &str, value: &str, stamp: &str) -> Result<Option<(usize, usize, String)>, semio_framework_plugin::Fault> {
+pub fn splice(content: &str, field: &str, value: &str, stamp: &str) -> Result<Option<(usize, usize, String)>, semio_plugin::Fault> {
     let span=guarded_range(field,"chunk",stamp,content.len())?;
-    let old=content.get(span.clone()).ok_or_else(||semio_framework_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::App,"layout.chunk.invalid","The editing span must follow UTF-8 boundaries."))?;
+    let old=content.get(span.clone()).ok_or_else(||semio_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::App,"layout.chunk.invalid","The editing span must follow UTF-8 boundaries."))?;
     let prefix=content[..span.start].chars().count();
     Ok(crate::patch_frame::story_splice(old,value).map(|(offset,delete,insert)|(prefix+offset,delete,insert)))
 }

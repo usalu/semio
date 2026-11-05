@@ -7,7 +7,7 @@ use super::*;
 #[path = "shared-borders.rs"]
 mod shared_borders;
 pub use shared_borders::{chrome_border_plan, ChromeBorderFrame, ChromeBorderPaint};
-use semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState;
+use semio_renderer_wgpu_dock::shared_borders::BorderState;
 
 pub fn chrome_text_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, width: f32, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> Result<bool, ()> {
     match chrome_text_step(target, atlas, text, x, y, width, size, color, cursor) {
@@ -88,7 +88,7 @@ fn render_retained_chrome_group_item_step_with_trailing(
         }
         2 => {
             if let Some(label) = item.label {
-                if label.len() > semio_framework_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES {
+                if label.len() > semio_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES {
                     *group_phase = 0;
                     glyph.reset();
                     return RetainedChromeGroupStep::Fault;
@@ -705,7 +705,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         }
         let Some(document) = self.docs.window_projection_documents.remove(window_id) else { return true };
         let surface = window_projection_surface_id(window_id);
-        semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(&surface, ui_contract::UiFlow { inline: ui_contract::FlowInline::Rtl, block: ui_contract::FlowBlock::Down });
+        semio_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(&surface, ui_contract::UiFlow { inline: ui_contract::FlowInline::Rtl, block: ui_contract::FlowBlock::Down });
         if cursor.document.phase_name() == "viewport" {
             let selected_key = format!(
                 "{surface}/{WORLD_PROJECTION_PANE_PARENT}.{}.{}",
@@ -713,7 +713,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 semio_framework::element_id_segment(self.windows.world_projection_template_id(window_id, &self.surfaces))
             );
             if let Ok(header) = document.header() {
-                let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::stamp_ui_document_tree_selected_item(&surface, header.generation, &selected_key);
+                let _ = semio_renderer_wgpu_ui_engine::retained_document_consumer::stamp_ui_document_tree_selected_item(&surface, header.generation, &selected_key);
             }
         }
         let rect = window_projection_rect(window_id, window_rect, theme);
@@ -731,7 +731,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             let collapsed_sections = &mut self.input.collapsed_sections;
             let open_selects = &mut self.input.open_selects;
             let widget_maps = &mut self.input.widget_maps_staging;
-            let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface.as_str() };
+            let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface.as_str() };
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(rect);
@@ -761,7 +761,7 @@ pub fn window_projection_rect(window_id: &str, body: Rect, theme: &Theme) -> Rec
     let width = WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0));
     let bottom = body.y + body.h - theme.panel_inset - theme.control_height - theme.gap_standard;
     let available = (bottom - body.y - theme.panel_inset).max(0.0);
-    let height = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(&window_projection_surface_id(window_id)).unwrap_or(available).min(available).max(0.0);
+    let height = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(&window_projection_surface_id(window_id)).unwrap_or(available).min(available).max(0.0);
     Rect::new(body.x + body.w - theme.panel_inset - width, bottom - height, width, height)
 }
 

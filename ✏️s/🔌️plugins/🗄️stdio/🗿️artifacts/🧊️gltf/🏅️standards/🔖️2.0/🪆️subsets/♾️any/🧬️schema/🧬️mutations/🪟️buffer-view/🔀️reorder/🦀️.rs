@@ -69,8 +69,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "buffer-views", kind: "reorder-buffer-views", record: "ReorderedBufferViews" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Reorder Buffer Views", "Pufferansichten umordnen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Reorder Buffer Views", "Pufferansichten umordnen")
     }
 
     fn target(&self) -> Vec<String> {

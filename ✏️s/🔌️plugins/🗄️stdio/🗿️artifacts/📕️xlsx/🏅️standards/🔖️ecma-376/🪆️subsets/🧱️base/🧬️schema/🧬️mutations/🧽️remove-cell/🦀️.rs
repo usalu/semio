@@ -13,8 +13,8 @@ pub struct RemoveCell {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "cell", kind: "remove-cell", record: "RemoveCell" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove cell", "Zelle entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove cell", "Zelle entfernen")
     }
     fn target(&self) -> Vec<String> {
         let mut target = vec!["xmlParts".into(), self.address.part_path.clone(), "document".into(), "root".into()];

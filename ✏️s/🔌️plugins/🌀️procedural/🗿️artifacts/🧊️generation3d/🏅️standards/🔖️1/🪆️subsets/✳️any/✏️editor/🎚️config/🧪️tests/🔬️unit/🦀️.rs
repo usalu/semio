@@ -5,7 +5,7 @@ use protocol::{ColdMutation, Mutation};
 fn generation3d_config_default_matches_the_former_runtime_defaults() {
     let config = Generation3dConfig::default();
     assert_eq!(config.show_mode, "shaded");
-    assert_eq!(config.sun(), semio_framework_plugin::WorldSunConfig::default());
+    assert_eq!(config.sun(), semio_plugin::WorldSunConfig::default());
     let pack = <Generation3dConfig as pack::snapshot::ArtifactPack>::encode_pack_with(&config, &store::PackEncodeOptions::default()).expect("the app default must be pack-encodable before the registry constructs its store");
     assert_eq!(<Generation3dConfig as pack::snapshot::ArtifactPack>::decode_pack_with(&pack, &store::PackDecodeOptions::default()).expect("the app default pack must decode"), config);
 }
@@ -65,12 +65,12 @@ fn config_set_selected_generation_round_trips() {
 
 #[test]
 fn config_op_text_round_trips_every_variant() {
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetLodMode(SetLodMode { value: "coarse".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetShowMode(SetShowMode { value: "wireframe".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetCamera(SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: Generation3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSun(SetSun { json: "{}".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSelectedGeneration(SetSelectedGeneration { selected_generation_id: Some("g1".into()) }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetLodMode(SetLodMode { value: "coarse".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetShowMode(SetShowMode { value: "wireframe".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetCamera(SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: Generation3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSun(SetSun { json: "{}".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSelectedGeneration(SetSelectedGeneration { selected_generation_id: Some("g1".into()) }));
 }
 
 /// 📜️ Every leaf descriptor's `owner` must name a REAL directory that is an immediate child of this

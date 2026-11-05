@@ -1,6 +1,6 @@
 //! 🕰️ Authenticated history inspection and explicit maintenance use the ordinary cancellable worker.
 use super::*;
-use semio_framework_ui_tui_widgets::widget::InputState;
+use semio_ui_tui_widgets::widget::InputState;
 impl<H:SourceWindowPort> View<'_,H>{
  pub fn next_history_page(&mut self,index:usize){if self.source_job.is_some(){self.effects.push(Effect::Notice(Some(self.text().source_busy.as_str().into())));return;}let Body::Files(files)=self.port.window(index).body else{return;};match files.next_page(){Ok(request)=>self.request_source(index,request),Err(error)=>self.effects.push(Effect::Notice(Some(self.text().source_browser_error(error,None))))}}
  pub(super) fn adopt_history_result(&mut self,tui:&mut Tui,index:usize,response:Response){match response{

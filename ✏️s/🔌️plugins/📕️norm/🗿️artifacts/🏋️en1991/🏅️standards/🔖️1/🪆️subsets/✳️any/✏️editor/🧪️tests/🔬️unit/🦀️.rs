@@ -1,18 +1,18 @@
 pub(crate) mod context {
     use crate::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     /// ✏️ Adapts `create_en1991_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `context::new_app_with_registry` still expects (framework test context gap,
     /// see w0-f-report.md gap 3 — swap for the canonical helper once it lands).
-    pub fn en1991_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_en1991_app(), examples: Vec::new() }
+    pub fn en1991_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_en1991_app(), examples: Vec::new() }
     }
     
     /// 📜️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the app's paid close.
-    pub struct NormApp(pub VcsArtifactApp<EditorApp<En1991PlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct NormApp(pub VcsArtifactApp<EditorApp<En1991PlayApp>>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
     
     impl std::ops::Deref for NormApp {
         type Target = VcsArtifactApp<EditorApp<En1991PlayApp>>;
@@ -29,8 +29,8 @@ pub(crate) mod context {
     
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<En1991PlayApp>>(en1991_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<EditorApp<En1991PlayApp>>(en1991_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         NormApp(app, scope)
     }
@@ -38,7 +38,7 @@ pub(crate) mod context {
     /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it was
     /// driven to its terminal-empty shallow shell, so every fixture that mounts an app must end here.
     pub fn close(app: &mut NormApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
     
     pub async fn dispatch(app: &mut NormApp, command: En1991Command) -> InvocationResult {
@@ -48,10 +48,10 @@ pub(crate) mod context {
                 window_id: Some(checks::WINDOW_CHECKS.into()),
                 focused_window_id: Some(checks::WINDOW_CHECKS.into()),
                 window_instances: vec![ViewWindowInstance { id: checks::WINDOW_CHECKS.into(), window_kind_id: checks::WINDOW_CHECKS.into() }],
-                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
             });
         }
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -60,16 +60,16 @@ pub(crate) mod context {
     /// EVERY result page: a bare `maintenance_step` loop retires nothing and turns a publication fault
     /// into a silent timeout, which is exactly how ticket 26/09/18 slice B2b lost the real cause.
     pub async fn settle(app: &mut NormApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
     }
     
     pub async fn render(app: &mut NormApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render projection")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render projection")
     }
 }
 
 use crate::*;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 #[test]
 fn retained_command_dispositions_match_the_language_neutral_oracle() {
@@ -149,7 +149,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn declares_model_in_and_report_out_ports() {
     let ports = create_en1991_app().io.ports;
-    assert!(ports.iter().any(|port| port.id == "model:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
+    assert!(ports.iter().any(|port| port.id == "model:in" && port.direction == semio_plugin::MediaPortDirection::In));
     let report_out = ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
     assert_eq!(report_out.kind_id.as_deref(), Some(semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT).as_str()));
 }
@@ -200,10 +200,10 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     context::dispatch(&mut app, En1991Command::SetField(set_field::SetField { path: "altitude".into(), value_json: "321.0".into() })).await;
     let edited = app.snapshot().expect("projection");
     assert_ne!(edited, base, "the concrete setter moved the document");
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
     context::settle(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), base);
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "redo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("redo");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "redo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("redo");
     context::settle(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), edited);
     context::close(&mut app);
@@ -213,8 +213,8 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
-    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "report:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export report:out");
-    let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
+    let media = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "report:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export report:out");
+    let semio_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT));
     let value: serde_json::Value = serde_json::from_str(&json).expect("report json parses");
     let checks = value.get("checks").and_then(|c| c.as_array()).expect("checks array");
@@ -251,7 +251,7 @@ fn a_picked_entity_selects_its_governing_check_in_every_window() {
 }
 //#endregion 🛰️LiveWiring
 
-semio_framework_plugin::history_edit_acceptance_law!("norm", crate::En1991PlayApp, || semio_framework_plugin::App { definition: crate::create_en1991_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("norm", crate::En1991PlayApp, || semio_plugin::App { definition: crate::create_en1991_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
 
 //#region ♿️ScreenReader
 /// ♿️ Every check row, scene entity, handle and diagram of the default document has an accessible node (label, role, value or position) in English and German.
@@ -271,9 +271,9 @@ fn the_default_document_publishes_an_accessible_node_for_every_check_handle_and_
 /// 🎪️ The bridge-showcase DSL asset is offered by the palette with an English and a German title, decodes to the committed showcase document, evaluates and projects scene entities and diagrams without panicking.
 #[test]
 fn the_bridge_showcase_asset_decodes_to_the_showcase_fixture_and_evaluates_with_scene_and_diagrams() {
-    let source = <En1991PlayApp as semio_framework_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "bridge-showcase").expect("the palette offers the showcase asset");
-    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
-        assert!(!source.label().resolve(semio_framework_ui_locale::Terminology::Native, locale).trim().is_empty());
+    let source = <En1991PlayApp as semio_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "bridge-showcase").expect("the palette offers the showcase asset");
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        assert!(!source.label().resolve(semio_ui_locale::Terminology::Native, locale).trim().is_empty());
     }
     let document = semio_s_artifact_norm_en1991_io::text::snapshot::decode_en1991_dsl(&source.document()).expect("the showcase asset parses");
     assert_eq!(document, En1991Snapshot::full_showcase());

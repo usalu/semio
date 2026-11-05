@@ -16,8 +16,8 @@ pub struct InsertShape {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertShape {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "shape", kind: "insert-shape", record: "InsertShape" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert shape", "Form einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert shape", "Form einfügen")
     }
     fn target(&self) -> Vec<String> {
         std::iter::once(self.vacancy.container.part_path.clone()).chain(self.vacancy.container.node_path.iter().map(usize::to_string)).chain(std::iter::once(self.vacancy.index.to_string())).collect()

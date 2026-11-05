@@ -67,7 +67,7 @@ impl StagedFormRequestCursor {
         let fields=object(source)?;
         if !(3..=4).contains(&fields.len())||fields[self.root[0]].0!="token"||fields[self.root[1]].0!="args"||fields[self.root[2]].0!="locale"||self.root_seen&8!=0&&(fields[self.root[3]].0!="page"||self.owned_page.is_none()){return Err(invalid());}
         object(&fields[self.root[1]].1)?;
-        let locale=match text(&fields[self.root[2]].1)?{"en"=>semio_framework_ui_locale::Locale::En,"de"=>semio_framework_ui_locale::Locale::De,_=>return Err(invalid())};
+        let locale=match text(&fields[self.root[2]].1)?{"en"=>semio_ui_locale::Locale::En,"de"=>semio_ui_locale::Locale::De,_=>return Err(invalid())};
         let token=object(&fields[self.root[0]].1)?;
         if token.len()!=4{return Err(invalid());}
         for(index,name)in ["action","generation","revision","window"].iter().enumerate(){let field=&token[self.token[index]];if field.0!=*name||text(&field.1)?.is_empty(){return Err(invalid());}}

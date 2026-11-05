@@ -1,7 +1,7 @@
 //! 🪶️ Explicit TXT entities and controlled external UTF-8 carriers.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_utf_8::subsets::any::schema::snapshot::{LineEnding, TxtSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, Reconstruction, ordered_row_refs}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, Reconstruction, ordered_row_refs}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 #[path="🛫️encoding/🦀️.rs"]
@@ -36,7 +36,7 @@ fn count_lines(content: &str, ending: LineEnding, native: &mut NativeDecodeContr
     Ok(count)
 }
 
-use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshotHost for TxtSnapshot {
     
 
@@ -61,7 +61,7 @@ impl ArtifactSqliteSnapshotHost for TxtSnapshot {
         })
     }
 
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         original_encoding::encode(self,encoding,control,native_owner)
     }
 

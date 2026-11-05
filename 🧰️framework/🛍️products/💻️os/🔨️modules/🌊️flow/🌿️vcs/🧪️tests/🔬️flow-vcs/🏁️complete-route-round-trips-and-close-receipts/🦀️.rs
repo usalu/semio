@@ -61,11 +61,11 @@ fn sample_widget(id: &str) -> Widget {
 }
 
 fn round_trip(host_snapshot: &FlowHostSnapshot, operation: &FlowMutation) -> FlowHostSnapshot {
-    let forward = semio_framework_os_kernel::apply_diff_cold(operation.diff(host_snapshot).diff(), host_snapshot).expect("valid flow diff");
+    let forward = semio_os_kernel::apply_diff_cold(operation.diff(host_snapshot).diff(), host_snapshot).expect("valid flow diff");
     let inverse = operation.inverse(host_snapshot).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in inverse.iter().rev() {
-        let next = semio_framework_os_kernel::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("valid inverse flow diff");
+        let next = semio_os_kernel::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("valid inverse flow diff");
         restored.retire_cold();
         restored = next;
     }
@@ -102,9 +102,9 @@ fn set_layout_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_layout_drag_produces_one_edit() {
-    let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer), semio_framework_os_kernel::os_spr::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
-    semio_framework_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
-    let transaction = semio_framework_os_kernel::os_spr::TransactionRef { id: "tx-00000000000000f1".into(), tool: "s.flow@1/*#editor#drag".into() };
+    let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer), semio_os_kernel::os_spr::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
+    semio_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
+    let transaction = semio_os_kernel::os_spr::TransactionRef { id: "tx-00000000000000f1".into(), tool: "s.flow@1/*#editor#drag".into() };
     for y in [10.0, 20.0, 30.0] {
         history_identity!(|identity| store
             .dispatch(ArtifactCommand::AppendTransaction {
@@ -123,7 +123,7 @@ async fn a_streamed_layout_drag_produces_one_edit() {
 }
 
 /// 📜️ Exercises every `Widget` variant (including `Cluster`'s nested `Tree`/`flow` payload,
-/// `Dictionary`-bearing `params`/`preview`, and `BTreeSet` `expanded`) through the `semio_framework_os_kernel::os_dsl::` derive
+/// `Dictionary`-bearing `params`/`preview`, and `BTreeSet` `expanded`) through the `semio_os_kernel::os_dsl::` derive
 /// layer — the ground-truth proof for the `🔖️Dsl` region built on top of `FlowHostSnapshot`.
 #[test]
 fn flow_fixture_dsl_round_trips_including_cluster_widget() {
@@ -146,36 +146,36 @@ fn flow_fixture_dsl_round_trips_including_cluster_widget() {
         flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: semio_framework_value_ordered::ordered::OrderedMap::new(), previews: Vec::new() },
     });
     host_snapshot.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: semio_framework_value_ordered::ordered::OrderedSet::from(["a".to_string(), "b".to_string()]) });
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
     host_snapshot.retire_cold();
 }
 
-/// 📜️ Exercises `semio_framework_os_kernel::os_store::OpText` for every `FlowMutation` variant — the ground-truth proof for the
+/// 📜️ Exercises `semio_os_kernel::os_store::OpText` for every `FlowMutation` variant — the ground-truth proof for the
 /// mounted transparent direct-leaf aggregate.
 #[test]
 fn flow_operation_op_text_round_trips_every_variant() {
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::RemoveWidget(RemoveWidget { id: "w1".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::MoveWidget(MoveWidget { id: "w1".into(), to_index: 2 }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeWidget(ChangeWidget { id: "w1".into(), widget: sample_widget("w1") }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::RemoveWidget(RemoveWidget { id: "w1".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::MoveWidget(MoveWidget { id: "w1".into(), to_index: 2 }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeWidget(ChangeWidget { id: "w1".into(), widget: sample_widget("w1") }));
     let synapse = SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "y".into() };
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::AddSynapse(AddSynapse { index: 0, synapse: synapse.clone() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::RemoveSynapse(RemoveSynapse { id: "s1".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::MoveSynapse(MoveSynapse { id: "s1".into(), to_index: 1 }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeSynapse(ChangeSynapse { id: "s1".into(), synapse }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::AddSynapse(AddSynapse { index: 0, synapse: synapse.clone() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::RemoveSynapse(RemoveSynapse { id: "s1".into() }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::MoveSynapse(MoveSynapse { id: "s1".into(), to_index: 1 }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeSynapse(ChangeSynapse { id: "s1".into(), synapse }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] }));
+    semio_os_kernel::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] }));
 }
 
-/// 📜️ `semio_framework_os_kernel::os_store::test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowHostSnapshot,
+/// 📜️ `semio_os_kernel::os_store::test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowHostSnapshot,
 /// FlowMutation>` — proves the `Mutation`/`MutationDiff` (`🔖️Mutations`) and `OpText`
 /// (`🔖️OpText`) layers semio_compose_rs correctly end to end, matching every other converted crate's test.
 #[test]
 fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
     let document = FlowHostSnapshot::default();
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
-    semio_framework_os_kernel::os_store::test_support::assert_store_roundtrip(document, operation);
+    semio_os_kernel::os_store::test_support::assert_store_roundtrip(document, operation);
 }
 
 /// 🪪️ The framework fixture owns the canonical `flow.flow` Semio envelope and its default
@@ -184,25 +184,25 @@ fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
 fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
     let host_snapshot = FlowHostSnapshot::default();
     assert_eq!(<FlowHostSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(), "flow.flow");
-    let encoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack>::encode_pack_with(&host_snapshot, &semio_framework_os_kernel::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
-    let decoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(&encoded, &semio_framework_os_kernel::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
+    let encoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack>::encode_pack_with(&host_snapshot, &semio_os_kernel::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
+    let decoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(&encoded, &semio_os_kernel::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
     assert_eq!(decoded, host_snapshot);
 }
 
 /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): `FlowMutation`
-/// implements `semio_framework_os_kernel::os_spr::OpBinary` through the transparent direct-leaf aggregate and
+/// implements `semio_os_kernel::os_spr::OpBinary` through the transparent direct-leaf aggregate and
 /// its generic variant codec, so this covers the command envelope without adding another
 /// codec.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let envelope = create_document_envelope("test/v1", "test", FlowHostSnapshot::default(), None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer);
-    let mut store = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, semio_framework_os_kernel::os_spr::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    semio_framework_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
+    let mut store = ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, semio_os_kernel::os_spr::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    semio_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
     history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity).await).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<FlowHostSnapshot, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
+    semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<FlowHostSnapshot, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
     semio_framework_artifact_flow_flow::retire_flow_store_cold(store);
 }
 
@@ -211,8 +211,8 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 fn default_flow_example_dsl_round_trips() {
     let text = read_node("../📚️examples/🗣️.dsl.semio");
     let host_snapshot = <FlowHostSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&host_snapshot);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&host_snapshot);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&host_snapshot);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&host_snapshot);
     host_snapshot.retire_cold();
 }
 

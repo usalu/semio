@@ -1,9 +1,9 @@
 //! 🧪 Literal factory identity and actual typed-codec parity.
 
 use geo::BoundingRect;
-use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::{pack::snapshot::ArtifactPack, DslValue, FromValue, ColdMutation, Mutation, MutationDiff};
-use semio_framework_plugin::{ArtifactInferenceExecutionRequest, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_os_kernel as store;
+use semio_os_kernel::{pack::snapshot::ArtifactPack, DslValue, FromValue, ColdMutation, Mutation, MutationDiff};
+use semio_plugin::{ArtifactInferenceExecutionRequest, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_gis_gismap::{gis_map_inference_service, gis_map_snapshot_with_derived_children, infer_gis_map_controlled, GisMapSnapshot};
 use semio_hub_gis::native_codecs::native_codec_factory_receipts;
@@ -81,8 +81,8 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
             _ => panic!("unhandled GIS genesis dialect"),
         };
         let files = match identity.schema {
-            "gis.map" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(document_id).await,
-            "gis.terrain" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(document_id).await,
+            "gis.map" => semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(document_id).await,
+            "gis.terrain" => semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(document_id).await,
             _ => panic!("unhandled GIS genesis schema"),
         }
         .expect("package-owned GIS genesis");
@@ -94,8 +94,8 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
         for row in document_ids["cases"].as_array().unwrap().iter().filter(|row| row["accepted"] == false) {
             let hostile_id = row["documentId"].as_str().unwrap();
             let refused = match identity.schema {
-                "gis.map" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(hostile_id).await.is_err(),
-                "gis.terrain" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(hostile_id).await.is_err(),
+                "gis.map" => semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(hostile_id).await.is_err(),
+                "gis.terrain" => semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(hostile_id).await.is_err(),
                 _ => panic!("unhandled GIS genesis schema"),
             };
             assert!(refused, "GIS genesis admitted hostile document id {}", row["id"]);
@@ -125,7 +125,7 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
     .unwrap();
     assert_eq!(serde_json::to_value(&observed).unwrap(), fixture["checkpoints"]);
     assert_eq!(output.canonical_payload, gis_map_inference_service().infer(&request).unwrap().canonical_payload);
-    let value = semio_framework_os_kernel::pack_rt::decode_wire_value(&output.canonical_payload).unwrap();
+    let value = semio_os_kernel::pack_rt::decode_wire_value(&output.canonical_payload).unwrap();
     let inferred = <semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference as FromValue>::from_value(value).unwrap();
     assert_eq!([inferred.position_count, inferred.route_count, inferred.region_count], ["positionCount", "routeCount", "regionCount"].map(|key| fixture["expected"][key].as_u64().unwrap() as usize));
     let proposal = inferred.bounds_proposal(&snapshot, fixture["proposalJobId"].as_str().unwrap()).unwrap();
@@ -173,7 +173,7 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
         let output = infer_gis_map_controlled(&request, &mut |work| {
             calls += 1;
             if work == interruption["at"].as_u64().unwrap() {
-                return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new(error, "request stopped"));
+                return Err(semio_plugin::ArtifactInferenceExecutionError::new(error, "request stopped"));
             }
             Ok(())
         });
@@ -200,8 +200,8 @@ async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generat
         let schema = identity.schema;
         let codec = receipt.into_codec().expect("linked GIS codec");
         let guest = match schema {
-            "gis.map" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(document_id).await,
-            "gis.terrain" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(document_id).await,
+            "gis.map" => semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(document_id).await,
+            "gis.terrain" => semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(document_id).await,
             _ => panic!("unhandled GIS genesis schema"),
         }
         .expect("guest genesis producer");

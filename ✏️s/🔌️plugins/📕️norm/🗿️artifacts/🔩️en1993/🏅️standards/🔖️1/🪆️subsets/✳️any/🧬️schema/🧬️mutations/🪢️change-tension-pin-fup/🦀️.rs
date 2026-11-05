@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionPinFup wher
         record: "ChangedTensionPinFup",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pin tensile strength f_up of the tension component", "Zugglied: Bolzenzugfestigkeit f_up ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pin tensile strength f_up of the tension component", "Zugglied: Bolzenzugfestigkeit f_up ändern")
     }
 }
 

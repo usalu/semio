@@ -18,8 +18,8 @@ path = "../../🦀️.rs"
 [dependencies]
 
 semio-framework-job = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-procedural-3d-mutations = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -27,6 +27,6 @@ semio-framework-value = { path = "../../../../../../../../../🧰️framework/�
 [dev-dependencies]
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 

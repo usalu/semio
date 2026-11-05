@@ -1,9 +1,9 @@
 //! 🎮️ Interaction state: the state a frame checks out to every worker (shell, input, pointer capture, text streams) with its keyboard and pointer entry points, and the normalized-event dispatch that drives it; the frame-actions crate of the renderer partition, below the runtime mailbox (plan section 5.3, inversion I2).
 use super::*;
-use semio_framework_os_renderer_wgpu_host_plumbing::input_wire::{event_modifiers_to_pointer, key_action_from_dispatch, pointer_button_to_i16};
-use semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx;
-use semio_framework_os_renderer_wgpu_shell_session::SessionCtx;
-use semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx;
+use semio_renderer_wgpu_host_plumbing::input_wire::{event_modifiers_to_pointer, key_action_from_dispatch, pointer_button_to_i16};
+use semio_renderer_wgpu_shell_pointer::PointerCtx;
+use semio_renderer_wgpu_shell_session::SessionCtx;
+use semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx;
 use ui_render::{DispatchEvent, ImeEvent, PointerInfo, TextEditTarget};
 
 #[path = "🖐️world-touch/🦀️.rs"]
@@ -126,7 +126,7 @@ impl AppInteractionState {
     }
 
     pub fn has_pending_text_work(&self) -> bool {
-        self.input.text_buffer.runnable_work_pending() || self.input.retained_action_pending() || self.text_cancel_pending || semio_framework_os_renderer_wgpu_engine_text::text_editor::has_pending_text_editor_outbox()
+        self.input.text_buffer.runnable_work_pending() || self.input.retained_action_pending() || self.text_cancel_pending || semio_renderer_wgpu_engine_text::text_editor::has_pending_text_editor_outbox()
     }
 
     pub fn drive_text_operation(&mut self) {
@@ -139,7 +139,7 @@ impl AppInteractionState {
         if let Err(fault) = self.input.drive_text_step() {
             self.text_fault = Some(format!("text edit step failed: {fault:?}"));
         }
-        semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::sync_focused_table_editable_text_draft(&self.input);
+        semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::sync_focused_table_editable_text_draft(&self.input);
     }
 
     /// 📐️ The content root is LOGICAL (CSS) pixels, exactly like every chrome constant
@@ -160,7 +160,7 @@ impl AppInteractionState {
         }
         let surfaces: Vec<(String, String)> = self.shell.surfaces.board2d_states.keys().filter_map(|surface_id| self.shell.surfaces.board2d_states.get(surface_id).map(|surface| (surface_id.to_string(), surface.controller_id.clone()))).collect();
         for (surface_id, controller_id) in surfaces {
-            match semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_key_into(&surface_id, &controller_id, action, modifiers, &mut self.input) {
+            match semio_renderer_wgpu_engine_board::board2d::board2d_key_into(&surface_id, &controller_id, action, modifiers, &mut self.input) {
                 Ok(true) => return true,
                 Ok(false) => {}
                 Err(fault) => {
@@ -198,19 +198,19 @@ impl AppInteractionState {
     /// that duplication is gone, not just moved.
     pub async fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
         self.shell.dock.shell_hooks.note_touch(false);
-        if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_vfs_control_key(&action, &mut self.input) {
+        if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_vfs_control_key(&action, &mut self.input) {
             return;
         }
-        if semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_table_editable_text_key(&action, &modifiers, &mut self.input) {
+        if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_table_editable_text_key(&action, &modifiers, &mut self.input) {
             return;
         }
-        if semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_table_stepper_key(&action, &mut self.input) {
+        if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_table_stepper_key(&action, &mut self.input) {
             return;
         }
-        if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_ink_editor_key(&action, &modifiers, &mut self.input) {
+        if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_ink_editor_key(&action, &modifiers, &mut self.input) {
             return;
         }
-        if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_ink_surface_key(&action, &modifiers, &mut self.input) {
+        if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_ink_surface_key(&action, &modifiers, &mut self.input) {
             return;
         }
         if let KeyAction::Space(pressed) = &action {
@@ -220,16 +220,16 @@ impl AppInteractionState {
                 }
                 return;
             }
-            if semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
+            if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
                 return;
             }
             self.space_pressed = *pressed;
             return;
         }
-        if semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_node_graph_note_key(&action, &modifiers) {
+        if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_node_graph_note_key(&action, &modifiers) {
             return;
         }
-        if semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
+        if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
             return;
         }
         if action == KeyAction::Escape && self.shell.surfaces.world3d_states.values_mut().fold(false, |cancelled, state| infinite_world::world::world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene) || cancelled) {
@@ -250,7 +250,7 @@ impl AppInteractionState {
             self.input.pointer_y = y;
         }
         if pointer.kind == ui_render::PointerKind::Touch {
-            if let Some(target) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id).filter(|target| target.kind == semio_framework_ui_declaration::ui::SurfaceKind::World3d) {
+            if let Some(target) = semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id).filter(|target| target.kind == semio_ui_declaration::ui::SurfaceKind::World3d) {
                 let steps = world_touch::feed(&target.host_id, Default::default(), app_now_ms(), world_touch::Contact::Cancel);
                 if let Some(state) = self.shell.surfaces.world3d_states.get_mut(&target.host_id) {
                     if let Err(fault) = world_touch::apply(state, &steps, &self.modifiers, &mut Vec::new()) {
@@ -258,20 +258,20 @@ impl AppInteractionState {
                     }
                 }
             }
-            if let Some(target) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id) {
+            if let Some(target) = semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id) {
                 let outcome = match target.kind {
-                    semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => self
+                    semio_ui_declaration::ui::SurfaceKind::TiledMap => self
                         .shell
                         .surfaces.tiled_map_states
                         .get(&target.host_id)
                         .filter(|surface| surface.window_id == target.window_id)
-                        .map(|surface| semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
-                    semio_framework_ui_declaration::ui::SurfaceKind::Board2d => self
+                        .map(|surface| semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
+                    semio_ui_declaration::ui::SurfaceKind::Board2d => self
                         .shell
                         .surfaces.board2d_states
                         .get(&target.host_id)
                         .filter(|surface| surface.window_id == target.window_id)
-                        .map(|surface| semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
+                        .map(|surface| semio_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
                     _ => None,
                 };
                 if let Some(Err(fault)) = outcome {
@@ -304,8 +304,8 @@ impl AppInteractionState {
     }
 
     /// 🎡️ Applies one notch to the captured published scene, never to overlapping peers.
-    pub fn apply_scene_wheel(&mut self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget, x: f32, y: f32, delta: f32, modifiers: &PointerModifiers) -> Result<(), &'static str> {
-        use semio_framework_ui_declaration::ui::SurfaceKind;
+    pub fn apply_scene_wheel(&mut self, target: &semio_renderer_wgpu_contracts::ScenePointerTarget, x: f32, y: f32, delta: f32, modifiers: &PointerModifiers) -> Result<(), &'static str> {
+        use semio_ui_declaration::ui::SurfaceKind;
         if !self.shell.input.scene_pointer_target_is_published(target) {
             return Ok(());
         }
@@ -317,15 +317,15 @@ impl AppInteractionState {
         let outcome = match target.kind {
             SurfaceKind::World3d => self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| {
                 if state.session.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                    return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                 }
-                enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::wheel(x, y, delta, modifiers)).map(|_| ()).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits)
+                enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::wheel(x, y, delta, modifiers)).map(|_| ()).map_err(|_| semio_ui_action::BoundedActionFault::ItemCredits)
             }),
             SurfaceKind::NodeGraph => self.shell.surfaces.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                    return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                 }
-                let outcome = semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ());
+                let outcome = semio_renderer_wgpu_engine_graph::node_graph::node_graph_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ());
                 if outcome.is_ok() {
                     self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
                 }
@@ -333,15 +333,15 @@ impl AppInteractionState {
             }),
             SurfaceKind::TiledMap => self.shell.surfaces.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                    return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                 }
-                semio_framework_os_renderer_wgpu_engine_board::tiled_map::tiled_map_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ())
+                semio_renderer_wgpu_engine_board::tiled_map::tiled_map_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ())
             }),
             SurfaceKind::Board2d => self.shell.surfaces.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                    return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                 }
-                semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, &mut self.input).map(|_| ())
+                semio_renderer_wgpu_scene_text_vfs::board2d_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, &mut self.input).map(|_| ())
             }),
             _ => None,
         };
@@ -353,7 +353,7 @@ impl AppInteractionState {
     }
 
     pub async fn handle_pointer_button(&mut self, pointer: ui_render::PointerInfo, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
-        use semio_framework_ui_declaration::ui::SurfaceKind;
+        use semio_ui_declaration::ui::SurfaceKind;
         self.last_pointer_x = x;
         self.last_pointer_y = y;
         self.pointer_down = down;
@@ -365,17 +365,17 @@ impl AppInteractionState {
         self.input.pointer_y = y;
         self.input.pointer_down = down;
         if down && button == 0 {
-            semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::blur_focused_ink_editor_at(x, y, &mut self.input);
+            semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::blur_focused_ink_editor_at(x, y, &mut self.input);
         }
         let target = if down { self.shell.input.scene_pointer_target_at(x, y, &self.input, &self.theme) } else { None };
-        semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_table_editable_text_for_pointer(target.as_ref(), down, button, &mut self.input);
-        semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_text_editor_for_pointer(target.as_ref(), down, button);
-        semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_node_graph_caret_for_pointer(target.as_ref(), down, button);
-        semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_table_stepper_for_pointer(down, button);
-        semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::blur_focused_vfs_control_for_pointer(down, button);
+        semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_table_editable_text_for_pointer(target.as_ref(), down, button, &mut self.input);
+        semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_text_editor_for_pointer(target.as_ref(), down, button);
+        semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_node_graph_caret_for_pointer(target.as_ref(), down, button);
+        semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_table_stepper_for_pointer(down, button);
+        semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::blur_focused_vfs_control_for_pointer(down, button);
         let owner = if down {
             let Some(owner) = self.pointer_capture.press(pointer.id, if target.is_some() { PointerHitOwner::Surface } else { PointerHitOwner::Chrome }, x, y) else {
-                self.input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                self.input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
                 return;
             };
             owner
@@ -392,11 +392,11 @@ impl AppInteractionState {
             }
             return;
         }
-        let Some(target) = (if down { target } else { semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(pointer.id) }).filter(|target| self.shell.input.scene_pointer_target_is_published(target)) else { return };
-        if down && !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::claim_scene_pointer_owner(target.clone(), pointer.id) {
+        let Some(target) = (if down { target } else { semio_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(pointer.id) }).filter(|target| self.shell.input.scene_pointer_target_is_published(target)) else { return };
+        if down && !semio_renderer_wgpu_ui_engine::retained_ui_engine::claim_scene_pointer_owner(target.clone(), pointer.id) {
             self.pointer_capture.release(pointer.id);
             self.pointer_down = self.pointer_capture.any_active();
-            self.input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+            self.input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
             return;
         }
         if down && target.kind == SurfaceKind::World3d && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {
@@ -414,26 +414,26 @@ impl AppInteractionState {
                     let steps = world_touch::feed(host_id, touch_profile, app_now_ms(), contact);
                     world_touch::apply(state, &steps, &modifiers, &mut touch_gestures)
                 } else {
-                    enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits)
+                    enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| semio_ui_action::BoundedActionFault::ItemCredits)
                 }
             }),
             SurfaceKind::NodeGraph => {
                 let outcome = self.shell.surfaces.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                     if down {
-                        semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_down_into(host_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input).map(|_| ())
+                        semio_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_down_into(host_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input).map(|_| ())
                     } else {
-                        semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
+                        semio_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
                     }
                 });
-                semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::refresh_node_graph_caret_after_pointer(&target);
+                semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::refresh_node_graph_caret_after_pointer(&target);
                 outcome
             }
             SurfaceKind::TiledMap => self.shell.surfaces.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 let touch_handled = pointer.kind == ui_render::PointerKind::Touch
                     && if down {
-                        semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_down(host_id, surface.bounds, pointer.id, x, y)
+                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_down(host_id, surface.bounds, pointer.id, x, y)
                     } else {
-                        match semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, &mut self.input) {
+                        match semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, &mut self.input) {
                             Ok(handled) => handled,
                             Err(fault) => return Err(fault),
                         }
@@ -441,20 +441,20 @@ impl AppInteractionState {
                 if touch_handled {
                     Ok(())
                 } else if down {
-                    semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&target, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input).map(|_| ())
+                    semio_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&target, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input).map(|_| ())
                 } else {
-                    semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_up_into(host_id, &surface.surface_id, &surface.controller_id, surface.bounds, x, y, &mut self.input).map(|_| ())
+                    semio_renderer_wgpu_scene_feeds::tiled_map_pointer_up_into(host_id, &surface.surface_id, &surface.controller_id, surface.bounds, x, y, &mut self.input).map(|_| ())
                 }
             }),
             SurfaceKind::Board2d => self.shell.surfaces.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 let touch_handled = pointer.kind == ui_render::PointerKind::Touch
                     && if down {
-                        match semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_down_into(host_id, surface.bounds, pointer.id, x, y, &mut self.input) {
+                        match semio_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_down_into(host_id, surface.bounds, pointer.id, x, y, &mut self.input) {
                             Ok(handled) => handled,
                             Err(fault) => return Err(fault),
                         }
                     } else {
-                        match semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, &mut self.input) {
+                        match semio_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, &mut self.input) {
                             Ok(handled) => handled,
                             Err(fault) => return Err(fault),
                         }
@@ -462,9 +462,9 @@ impl AppInteractionState {
                 if touch_handled {
                     Ok(())
                 } else if down {
-                    semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_pointer_down_into(host_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &mut self.input)
+                    semio_renderer_wgpu_scene_text_vfs::board2d_pointer_down_into(host_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &mut self.input)
                 } else {
-                    semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
+                    semio_renderer_wgpu_scene_text_vfs::board2d_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
                 }
             }),
             _ => None,
@@ -480,7 +480,7 @@ impl AppInteractionState {
     }
 
     pub async fn handle_pointer_move(&mut self, pointer: ui_render::PointerInfo, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
-        use semio_framework_ui_declaration::ui::SurfaceKind;
+        use semio_ui_declaration::ui::SurfaceKind;
         let (drag_dx, drag_dy) = self.pointer_capture.advance(pointer.id, x, y).unwrap_or((0.0, 0.0));
         self.last_pointer_x = x;
         self.last_pointer_y = y;
@@ -493,7 +493,7 @@ impl AppInteractionState {
         self.input.pointer_down = down;
         self.shell.directory.presence_pointer = Some((x, y));
         let target = match self.pointer_capture.holder(pointer.id) {
-            Some(PointerHitOwner::Surface) => semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id),
+            Some(PointerHitOwner::Surface) => semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id),
             Some(PointerHitOwner::Chrome) => None,
             None => self.shell.input.scene_pointer_target_at(x, y, &self.input, &self.theme),
         }
@@ -522,7 +522,7 @@ impl AppInteractionState {
                 continue;
             };
             if enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_err() {
-                self.input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                self.input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
                 return;
             }
         }
@@ -535,7 +535,7 @@ impl AppInteractionState {
             if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::Board2d && target.host_id == *host_id) {
                 continue;
             }
-            if let Err(fault) = semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_pointer_leave_into(host_id, &surface.controller_id, modifiers.alt, &mut self.input) {
+            if let Err(fault) = semio_renderer_wgpu_scene_text_vfs::board2d_pointer_leave_into(host_id, &surface.controller_id, modifiers.alt, &mut self.input) {
                 self.input.record_action_fault(fault);
                 return;
             }
@@ -544,7 +544,7 @@ impl AppInteractionState {
             if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::TiledMap && target.host_id == *host_id && target.window_id == surface.window_id) {
                 continue;
             }
-            if let Err(fault) = semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_leave_into(host_id, &surface.surface_id, &surface.controller_id, &mut self.input) {
+            if let Err(fault) = semio_renderer_wgpu_scene_feeds::tiled_map_pointer_leave_into(host_id, &surface.surface_id, &surface.controller_id, &mut self.input) {
                 self.input.record_action_fault(fault);
                 return;
             }
@@ -557,17 +557,17 @@ impl AppInteractionState {
                 .surfaces.node_graph_states
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
-                .map(|surface| semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())),
+                .map(|surface| semio_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())),
             SurfaceKind::TiledMap => self
                 .shell
                 .surfaces.tiled_map_states
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
                 .map(|surface| {
-                    if pointer.kind == ui_render::PointerKind::Touch && semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y) {
+                    if pointer.kind == ui_render::PointerKind::Touch && semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y) {
                         Ok(())
                     } else {
-                        semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())
+                        semio_renderer_wgpu_scene_feeds::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())
                     }
                 }),
             SurfaceKind::Board2d => self
@@ -576,10 +576,10 @@ impl AppInteractionState {
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
                 .map(|surface| {
-                    if pointer.kind == ui_render::PointerKind::Touch && semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y) {
+                    if pointer.kind == ui_render::PointerKind::Touch && semio_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y) {
                         Ok(())
                     } else {
-                        semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
+                        semio_renderer_wgpu_scene_text_vfs::board2d_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
                     }
                 }),
             _ => None,
@@ -597,7 +597,7 @@ impl AppInteractionState {
 /// (`dispatch_actions`/world3d/graph/map/board call sites all branch on `0`/`1`/`2` verbatim).
 /// 📤️ P3a: the runtime mailbox invokes this for one retained cursor item per worker turn.
 pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mut DispatchEvent) {
-    semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("[TRACE] os_host dispatch_normalized_event {event:?}"));
+    semio_renderer_wgpu_host_base::log_debug(&format!("[TRACE] os_host dispatch_normalized_event {event:?}"));
     match event {
         DispatchEvent::PointerMove { pointer, x, y, modifiers } => {
             let (down, button, modifiers) = (app.pointer_down, app.pointer_button, event_modifiers_to_pointer(*modifiers));
@@ -634,10 +634,10 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
             }
         }
         DispatchEvent::Paste { text } => {
-            if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_ink_paste(text, false, &mut app.input) {
+            if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_ink_paste(text, false, &mut app.input) {
                 return;
             }
-            if semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_text(text, &mut app.input) {
+            if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_text(text, &mut app.input) {
                 return;
             }
             if let Err(error) = app.enqueue_text_operation(std::mem::take(text)) {
@@ -650,10 +650,10 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
             }
         }
         DispatchEvent::TextEditStart { stream, target, declared_bytes } if matches!(*target, TextEditTarget::Paste | TextEditTarget::PasteImageDataUrl) => {
-            match semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::start_focused_ink_clipboard_stream(*stream, *target == TextEditTarget::PasteImageDataUrl, *declared_bytes) {
+            match semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::start_focused_ink_clipboard_stream(*stream, *target == TextEditTarget::PasteImageDataUrl, *declared_bytes) {
                 Ok(true) => {}
                 Ok(false) => {
-                    let text_editor = if *target == TextEditTarget::Paste { semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::start_focused_text_editor_stream(*stream, *declared_bytes) } else { Ok(false) };
+                    let text_editor = if *target == TextEditTarget::Paste { semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::start_focused_text_editor_stream(*stream, *declared_bytes) } else { Ok(false) };
                     match text_editor {
                         Ok(true) => {}
                         Ok(false) => {
@@ -667,7 +667,7 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
                 Err(error) => app.text_fault = Some(error.to_string()),
             }
         }
-        DispatchEvent::TextEditStart { stream, target, declared_bytes } => match semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::start_focused_text_editor_stream(*stream, *declared_bytes) {
+        DispatchEvent::TextEditStart { stream, target, declared_bytes } => match semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::start_focused_text_editor_stream(*stream, *declared_bytes) {
             Ok(true) => {}
             Ok(false) => {
                 if let Err(error) = app.start_text_operation(*stream, *declared_bytes) {
@@ -676,9 +676,9 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
             }
             Err(error) => app.text_fault = Some(error.to_string()),
         },
-        DispatchEvent::TextEditChunk { stream, text } => match semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::push_focused_ink_clipboard_stream(*stream, text) {
+        DispatchEvent::TextEditChunk { stream, text } => match semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::push_focused_ink_clipboard_stream(*stream, text) {
             Ok(true) => {}
-            Ok(false) => match semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::push_focused_text_editor_stream(*stream, text) {
+            Ok(false) => match semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::push_focused_text_editor_stream(*stream, text) {
                 Ok(true) => {}
                 Ok(false) => {
                     if let Err(error) = app.push_text_operation(*stream, std::mem::take(text)) {
@@ -690,10 +690,10 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
             Err(error) => app.text_fault = Some(error.to_string()),
         },
         DispatchEvent::TextEditCommit { stream } => {
-            if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::commit_focused_ink_clipboard_stream(*stream, &mut app.input) {
+            if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::commit_focused_ink_clipboard_stream(*stream, &mut app.input) {
                 return;
             }
-            if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::commit_focused_text_editor_stream(*stream, &mut app.input) {
+            if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::commit_focused_text_editor_stream(*stream, &mut app.input) {
                 return;
             }
             if let Err(error) = app.commit_text_operation(*stream) {
@@ -701,10 +701,10 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
             }
         }
         DispatchEvent::TextEditAbort { stream } => {
-            if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::abort_focused_ink_clipboard_stream(*stream) {
+            if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::abort_focused_ink_clipboard_stream(*stream) {
                 return;
             }
-            if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::abort_focused_text_editor_stream(*stream) {
+            if semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::abort_focused_text_editor_stream(*stream) {
                 return;
             }
             if let Err(error) = app.abort_text_operation(*stream) {
@@ -712,7 +712,7 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
             }
         }
         DispatchEvent::Ime(ImeEvent::Commit { text }) => {
-            if semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_text(text, &mut app.input) {
+            if semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_text(text, &mut app.input) {
                 return;
             }
             if let Err(error) = app.enqueue_text_operation(std::mem::take(text)) {

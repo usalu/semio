@@ -158,7 +158,7 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
         }
     }
     let descriptors = ["note", "cad"].map(|plugin_id| load_package_descriptor(&find_plugin_entry(&registry, plugin_id).expect("registered above").owner_root).expect("committed descriptor"));
-    let catalog = Arc::new(compile(&CatalogSource { descriptors: descriptors.to_vec(), ..Default::default() }, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the real note+cad descriptors compile"));
+    let catalog = Arc::new(compile(&CatalogSource { descriptors: descriptors.to_vec(), ..Default::default() }, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("the real note+cad descriptors compile"));
     let first_app_verb = |plugin_id: &str| {
         catalog
             .entries

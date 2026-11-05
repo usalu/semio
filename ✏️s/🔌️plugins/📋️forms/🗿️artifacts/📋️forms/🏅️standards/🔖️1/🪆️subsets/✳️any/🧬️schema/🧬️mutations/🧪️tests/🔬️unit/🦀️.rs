@@ -300,8 +300,8 @@ fn block_field_changes_name_every_differing_field_in_order() {
 fn change_block_field_is_labelled_from_its_field() {
     let mutation = FormMutation::ChangeBlockField(ChangeBlockField { block_id: "q-area".into(), change: BlockField::Min(Some(1.0)) });
     let label = <FormMutation as SemanticMutation<FormsSnapshot>>::label(&mutation);
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Change minimum of question \"q-area\"");
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Minimum der Frage \"q-area\" ändern");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Change minimum of question \"q-area\"");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Minimum der Frage \"q-area\" ändern");
     assert_eq!(<FormMutation as SemanticMutation<FormsSnapshot>>::target(&mutation), vec!["q-area".to_string()]);
 }
 //#endregion 🎛️ChangeBlockField

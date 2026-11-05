@@ -15,7 +15,7 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetSupport>,
 {
 const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "support", kind: "set-support", record: "SetSupport" };
-fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("set support", "Ändern Auflager") }
+fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("set support", "Ändern Auflager") }
 fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

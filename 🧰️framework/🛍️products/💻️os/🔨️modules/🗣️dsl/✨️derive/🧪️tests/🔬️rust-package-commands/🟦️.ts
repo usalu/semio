@@ -83,7 +83,7 @@ export class CheckGeneratedScript extends BundleScript {
 export class ColdReferenceTestScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const {rest}=resolveTestLevel(segments);
-    await runAdmittedCargoTestsV1({manifestPath:join(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel-dsl-derive"],cwd:this.root,extraArgs:["--lib","cold_reference_",...rest],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env),this.root,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0));
+    await runAdmittedCargoTestsV1({manifestPath:join(this.root,"Cargo.toml"),packages:["semio-os-kernel-dsl-derive"],cwd:this.root,extraArgs:["--lib","cold_reference_",...rest],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env),this.root,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0));
   }
 }
 

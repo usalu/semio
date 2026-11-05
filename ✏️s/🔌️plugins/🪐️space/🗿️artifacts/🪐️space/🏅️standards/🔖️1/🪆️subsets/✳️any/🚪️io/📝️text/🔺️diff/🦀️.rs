@@ -1,6 +1,6 @@
 //! 🔺️ Physical diff representation.
 
-impl semio_framework_os_kernel::DiffText for crate::standards::v1::subsets::any::schema::diff::SSpaceDiff {
+impl semio_os_kernel::DiffText for crate::standards::v1::subsets::any::schema::diff::SSpaceDiff {
     fn print_diff(&self) -> String {
         semio_framework_pack_json::to_json_string(self)
     }

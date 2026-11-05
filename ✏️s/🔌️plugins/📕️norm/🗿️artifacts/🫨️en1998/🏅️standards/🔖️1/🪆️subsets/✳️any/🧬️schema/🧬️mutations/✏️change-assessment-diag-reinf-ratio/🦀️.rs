@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentDiagRein
         record: "ChangeAssessmentDiagReinfRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Diagonal reinforcement ratio ρ_d", "Diagonalbewehrungsgrad ρ_d ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Diagonal reinforcement ratio ρ_d", "Diagonalbewehrungsgrad ρ_d ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-diag-reinf-ratio".into()]

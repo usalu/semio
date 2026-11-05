@@ -7,15 +7,15 @@
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_s_artifact_cad_cad_config::CadConfigMutation;
 use semio_s_artifact_cad_cad_model::{snapshot::cad_pane_model, snapshot::cad_pane_model_slot, snapshot::CadPaneId, snapshot::CadSnapshot};
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use machine::Command;
 use semio_framework_diagnostic::Fault;
-use semio_framework_plugin::app::ChildEmitPreparation;
-use semio_framework_plugin::{ArtifactView, ChildContentView, Emit};
+use semio_plugin::app::ChildEmitPreparation;
+use semio_plugin::{ArtifactView, ChildContentView, Emit};
 use std::collections::VecDeque;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
 use {semio_s_artifact_stdio_semio_model::schema::mutations::drag_elements::DragElements, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_model::schema::mutations::rotate_elements::RotateElements, semio_s_artifact_stdio_semio_model::schema::mutations::scale_elements::ScaleElements, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation};
@@ -279,7 +279,7 @@ pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPane
     use semio_s_artifact_stdio_semio_model::schema::snapshot::GeometryRef;
     let refused = |message| Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.import-object-refused"), message);
     let operation = doc.operation_optional().filter(|operation| !operation.authoring_seed.is_empty()).ok_or_else(|| refused("geometry import requires exact operation authoring authority"))?;
-    let id = semio_framework_os_kernel::content_id("cad-geometry", format!("{}:{pane:?}", operation.authoring_seed).as_bytes());
+    let id = semio_os_kernel::content_id("cad-geometry", format!("{}:{pane:?}", operation.authoring_seed).as_bytes());
     let child_id = format!("brep-{id}");
     if doc.snapshot.breps.iter().any(|child| child.child_id == child_id) { return Err(refused("geometry import requires a fresh topology identity")); }
     let index = u32::try_from(doc.snapshot.breps.len()).map_err(|_| refused("topology sibling count exceeds the portable u32 domain"))?;
@@ -290,7 +290,7 @@ pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPane
         return Err(refused("geometry import requires an available composed model"));
     }
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
-    let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&imported.geometry)};
+    let genesis=semio_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&imported.geometry)};
     emit.artifact_mutations.push(CadMutation::CreateBrep(semio_s_artifact_cad_cad_mut_documents::create_brep::CreateBrep { child_id: child_id.clone(), target, index }));
     emit.child_preparations.push_front(ChildEmitPreparation::with_genesis::<SemioBrepSnapshot, SemioBrepMutation>("breps", child_id, genesis, Vec::new()));
     Ok(emit)

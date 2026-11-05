@@ -1,5 +1,5 @@
 use crate::PlaybookSpec;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::playbook::modes::builder::windows::source::*;
 
 #[test]

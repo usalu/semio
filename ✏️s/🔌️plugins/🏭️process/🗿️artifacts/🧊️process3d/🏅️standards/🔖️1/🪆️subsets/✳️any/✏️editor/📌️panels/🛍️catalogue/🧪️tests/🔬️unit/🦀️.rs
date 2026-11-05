@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_process_process3d_panels::catalogue::*;
@@ -8,14 +8,14 @@ use semio_s_artifact_process_process3d_kit::process3d_action;
 use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
 use semio_s_artifact_process_process3d_inferences::{validate_capability, validation_reason, ValidationContext};
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkingSolid, snapshot::WorkshopMachine};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 /// 🪵️ Both wood machines' capabilities render as tree items (labels present) whether the current
 /// stock satisfies their rules or not — `stock_validation_context` now checks real dimensions, so
@@ -65,9 +65,9 @@ async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
             ],
         }],
     };
-    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let node = render(&fixture, "[]", labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue renders");
-    let rendered = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("catalogue projection");
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let node = render(&fixture, "[]", labels, &semio_plugin::TreeWindows::unhosted()).expect("catalogue renders");
+    let rendered = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("catalogue projection");
     assert!(rendered.contains("process3d-catalogue.saw.shallowCrosscut"), "expected the violated capability item: {rendered}");
     assert!(rendered.contains("process3d-catalogue.saw.deepCrosscut"), "expected the satisfied capability item: {rendered}");
     assert!(rendered.contains("needs stock height"), "expected the violated rule's reason text: {rendered}");
@@ -82,7 +82,7 @@ async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
 }
 
 //#region 🪟️WindowLaws
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 /// 🔎️ `(total, offset, row keys)` of one container, read off a projected body.
 fn container_of(json: &str, key: &str) -> (u64, u64, Vec<String>) {
@@ -131,13 +131,13 @@ fn oversized_workshop() -> semio_s_artifact_process_process3d_model::snapshot::P
 
 /// 🚚️ Reads through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`.
 fn project(fixture: &semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot, windows: &TreeWindows<'_>) -> String {
-    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let node = render(fixture, "[]", labels, windows).expect("catalogue renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("catalogue projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("catalogue projection")
 }
 
 fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
-    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_CATALOGUE.into(), node_key: node_key.into(), open, offset, rows }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_CATALOGUE.into(), node_key: node_key.into(), open, offset, rows }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW (a): the capability section stamps its whole extent, materialises at most its slice, and

@@ -6,7 +6,7 @@
 use crate::editor::bitmap as editor;
 use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::bitmap as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use std::sync::OnceLock;
 
 /// 💡️ `::semio_framework_schema::` (the extern crate) vs the bare `schema` local import (this

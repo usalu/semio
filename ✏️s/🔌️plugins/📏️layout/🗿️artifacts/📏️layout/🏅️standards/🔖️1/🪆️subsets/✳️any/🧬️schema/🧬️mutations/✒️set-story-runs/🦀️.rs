@@ -23,7 +23,7 @@ pub struct SetStoryRuns {
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetStoryRuns where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_story_runs::SetStoryRuns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "story-runs", kind: "set-story-runs", record: "SetStoryRuns" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set style runs on story \"{}\"", self.id), &format!("Formate von Textfluss \"{}\" setzen", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Set style runs on story \"{}\"", self.id), &format!("Formate von Textfluss \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

@@ -6,13 +6,13 @@
 //! from the sibling editor module (`policyViewerPurityBreaches` forbids it outright).
 
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
-use {semio_framework_plugin::app::MeshView, semio_framework_plugin::app::MeshWindowKit};
-use semio_framework_plugin::WindowKit;
-use semio_framework_plugin::world3d_default_camera;
-use semio_framework_plugin::world3d_mesh_id_from_url;
-use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::WindowKindDefinition;
+use {semio_plugin::app::MeshView, semio_plugin::app::MeshWindowKit};
+use semio_plugin::WindowKit;
+use semio_plugin::world3d_default_camera;
+use semio_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -81,7 +81,7 @@ fn puzzle3d_view_meshes_json(document: &Puzzle3dSnapshot) -> String {
 /// 👁️ Pure `Puzzle3dSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
 /// camera — `Config = NoConfig`), no selection/gumball/engagement overlay, real objects read straight
 /// off the document through the framework `MeshWindowKit`.
-pub fn render(document: &Puzzle3dSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::BuiltNode> {
+pub fn render(document: &Puzzle3dSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::plugin_app_close_prelude::BuiltNode> {
     let view = MeshView { camera_json: world3d_default_camera(), meshes_json: puzzle3d_view_meshes_json(document), instances_json: puzzle3d_view_instances_json(document), selection_json: world3d_selection_json("pick", &[], None) };
     MeshWindowKit::render(&view)
 }

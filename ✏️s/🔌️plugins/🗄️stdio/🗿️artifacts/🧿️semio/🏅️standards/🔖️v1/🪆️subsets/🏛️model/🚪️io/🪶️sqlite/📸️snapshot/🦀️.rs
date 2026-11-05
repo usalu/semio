@@ -1,14 +1,14 @@
 //! 🏛️ Spatial hierarchy, physical elements, geometry identities and typed property relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
+use semio_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioModelSnapshot, SpatialNode, SpatialKind, SemioModelElement, ElementClass, GeometryRef, PropertySet, Property, PsetValue, ModelRelation, RelationKind};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🔍️ Resolves a paid literal Model identity with bounded text comparisons.
@@ -30,7 +30,7 @@ fn spatial_cycles(parents:&mut[(Option<usize>,u8)],out:&mut RowWriter<'_,'_>)->R
 fn entity_frontier<'a>(snapshot:&'a SemioModelSnapshot,out:&mut RowWriter<'_,'_>)->Result<Vec<(&'a str,i64)>,ValueError>{
  let count=snapshot.spatial.len().checked_add(snapshot.elements.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio Model entity extent overflow"))?;let phase=out.phase();let mut ids=out.allocate_frontier(count)?;
  for(ordinal,id)in snapshot.spatial.iter().map(|node|node.id.as_str()).chain(snapshot.elements.iter().map(|element|element.id.as_str())).enumerate(){out.checkpoint()?;ids.push((id,number(ordinal.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio Model entity identity overflow"))?)?));}
- out.sort_frontier(&mut ids,|a,b,control|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,phase,control))?;
+ out.sort_frontier(&mut ids,|a,b,control|semio_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,phase,control))?;
  for pair in ids.windows(2){if out.compare_text(pair[0].0,pair[1].0)?==std::cmp::Ordering::Equal{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio Model entity identity"))}}Ok(ids)
 }
 /// 📐️ Projects all ten exact placement words through the actual float column declaration.
@@ -42,7 +42,7 @@ pub fn visit_rows(snapshot:&SemioModelSnapshot,out:&mut RowWriter<'_,'_>)->Resul
  let entities=entity_frontier(snapshot,out)?;let mut parents=out.allocate_frontier(snapshot.spatial.len())?;
  for node in &snapshot.spatial{out.checkpoint()?;let parent=match &node.parent_id{None=>None,Some(id)=>Some(usize::try_from(spatial_reference(&entities,id,snapshot.spatial.len(),out)?-1).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?)};parents.push((parent,0u8));}
  spatial_cycles(&mut parents,out)?;let phase=out.phase();let mut relations=out.allocate_frontier(snapshot.relations.len())?;for edge in &snapshot.relations{out.checkpoint()?;relations.push(edge.id.as_str());}
- out.sort_frontier(&mut relations,|a,b,control|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a,b,phase,control))?;
+ out.sort_frontier(&mut relations,|a,b,control|semio_os_kernel::sqlite_snapshot::transfer::compare_text(a,b,phase,control))?;
  for pair in relations.windows(2){if out.compare_text(pair[0],pair[1])?==std::cmp::Ordering::Equal{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio Model relation identity"))}}
  out.insert_key("semio_model_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,node)in snapshot.spatial.iter().enumerate(){
@@ -89,17 +89,17 @@ fn relation(value:&RelationKind)->(&'static str,Option<&str>){match value{Relati
 fn restore_placement(row:SqliteRow<'_>)->Result<SemioTransform,ValueError>{Ok(SemioTransform{translation:SemioPoint3{x:row.real(1)?,y:row.real(2)?,z:row.real(3)?},rotation:SemioQuaternion{x:row.real(4)?,y:row.real(5)?,z:row.real(6)?,w:row.real(7)?},scale:SemioPoint3{x:row.real(8)?,y:row.real(9)?,z:row.real(10)?}})}
 impl ArtifactSqliteSnapshotHost for SemioModelSnapshot{
 fn retire_sqlite_snapshot(self){drop(native::Owned::new(self));}
-fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 
-fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
-fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{(|| -> Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})()}
+fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
+fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{(|| -> Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})()}
 
-fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
+fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{(|| -> Result<semio_os_kernel::io_schema::IoOutcome<()>,ValueError>{
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
 if dialect.artifact_kind!="s.stdio.semio"||dialect.standard!="v1"||(dialect.subset!="*"&&dialect.subset!="model"){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned snapshot dialect differs from its dedicated semantic subset"));}
 let row=database.table("semio_model_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
-control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
+control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_os_kernel::io_schema::IoOutcome::clean(()))})().map_err(semio_os_kernel::io_schema::IoError::from_value_error)}
 
 
 

@@ -289,11 +289,11 @@ fn a_graph_that_left_the_view_refits_and_one_that_did_not_is_left_alone() {
 fn every_captioned_zoom_band_names_the_node_instead_of_abbreviating_it() {
     let mut host = generation_3d_flow_host();
     host.set_viewport(483, 814, 1.0);
-    let records: Vec<semio_framework_ui_declaration::ui::NodeGraphOperatorRecord> = ["brep.curve.polygon", "math.vector", "brep.solid.extrude"]
+    let records: Vec<semio_ui_declaration::ui::NodeGraphOperatorRecord> = ["brep.curve.polygon", "math.vector", "brep.solid.extrude"]
         .into_iter()
         .map(|kind| {
             let (extension, name) = kind.rsplit_once('.').expect("dotted kind");
-            semio_framework_ui_declaration::ui::NodeGraphOperatorRecord {
+            semio_ui_declaration::ui::NodeGraphOperatorRecord {
                 id: kind.to_string(),
                 extension: extension.to_string(),
                 name: name.to_string(),

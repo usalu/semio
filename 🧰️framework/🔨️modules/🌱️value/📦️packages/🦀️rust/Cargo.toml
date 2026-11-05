@@ -26,6 +26,7 @@ path = "🦀️.rs"
 testkit = ["semio-framework-value-read/testkit"]
 
 [dependencies]
+semio-framework-value-equality = { path = "../../🌳️tree/🟰️equal/📦️packages/🦀️rust" }
 semio-framework-value-read = { path = "../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-value-sort = { path = "../../📶️sort/📦️packages/🦀️rust" }
 semio-framework-value-retained-map = { path="../../🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust" }

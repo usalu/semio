@@ -2,9 +2,9 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use flow::FlowEvalSession;
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
 use crate::editor::flow::edit_rules::ContentEdit;
 #[allow(unused_imports)]
@@ -12,7 +12,7 @@ use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit,
 #[allow(unused_imports)]
 use crate::{FlowMutation, FlowSnapshot};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::connect_media_ports::*;
@@ -31,7 +31,7 @@ macro_rules! drain_children {
 
 #[test]
 fn connection_keeps_the_original_typed_owner_until_publication() {
-    use semio_framework_plugin::app::ChildEmitPreparationStep;
+    use semio_plugin::app::ChildEmitPreparationStep;
     crate::editor::flow::unit_tests::context::install_first_party_light_flow_extensions_for_tests();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎮️commands/🔗️connect-media-ports/🧪️tests/🧫️fixtures/owned-connection/🔣️.json")).unwrap();
     assert_eq!(fixture["seedSource"], "publishedDemo");
@@ -58,8 +58,8 @@ fn connection_keeps_the_original_typed_owner_until_publication() {
             assert_eq!(emit.child_emits[0].slot, "content");
             let oracle: serde_json::Value = serde_json::from_slice(&serde_json::to_vec(&emit.child_emits[0]).unwrap()).unwrap();
             assert_eq!(oracle["ops"].as_array().unwrap().len(), fixture["acceptedOperations"].as_u64().unwrap() as usize);
-            let packed = semio_framework_plugin::app::ChildEmit::encode_groups(&emit.child_emits);
-            let decoded = semio_framework_plugin::app::ChildEmit::decode_groups(&packed).unwrap();
+            let packed = semio_plugin::app::ChildEmit::encode_groups(&emit.child_emits);
+            let decoded = semio_plugin::app::ChildEmit::decode_groups(&packed).unwrap();
             assert_eq!(serde_json::to_value(&decoded[0]).unwrap(), oracle);
             let empty = drain_children!(emit, fixture["closeSteps"].as_u64().unwrap(), fixture["closeGrant"].as_u64().unwrap() as usize);
             assert!(empty, "published wire prefix closes within the neutral grant census");

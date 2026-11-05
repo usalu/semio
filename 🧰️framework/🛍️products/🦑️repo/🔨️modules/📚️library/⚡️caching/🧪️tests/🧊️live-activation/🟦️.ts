@@ -43,7 +43,7 @@ export async function testWgpuLiveActivation(workspace: string, output: string, 
   assert.deepEqual(targetFor(activate).outputs, [`{workspaceRoot}/.cache/b/p/m/browser/${fixture.profile}/runtime/wgpu/${fixture.variant}`], "Uncached activation still owns its complete live output namespace");
   assert.deepEqual(targetFor(activate).dependsOn, [prepare]);
   const ts = require("typescript"), activationOwner = dirname(activationModule);
-  const definitions: readonly (readonly [string, readonly string[]])[] = [["🧰️preparation/🟦️.ts", ["PreparationScript"]], ["🏃️execution/🟦️.ts", ["ActivationScript"]], ["📥️installation/🟦️.ts", ["activationFilesDigest", "publishActivatedExtension"]]] as const;
+  const definitions: readonly (readonly [string, readonly string[]])[] = [["🧰️preparation/🟦️.ts", ["PreparationScript"]], ["🏃️execution/🟦️.ts", ["ActivationScript"]]] as const;
   const code = definitions.map(([file, names]) => {
     const source = ts.createSourceFile(file, readFileSync(join(activationOwner, file), "utf8"), ts.ScriptTarget.Latest, true);
     const nodes = source.statements.filter((node: any) => names.includes(node.name?.text));
@@ -67,6 +67,9 @@ import { appendFileSync, createReadStream, existsSync, mkdirSync, mkdtempSync, r
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { activationFilesDigest, collectActivationArtifactsV1 } from ${JSON.stringify(join(activationOwner, "🔖️identity/🟦️.ts"))};
+import { publishActivatedExtension } from ${JSON.stringify(join(activationOwner, "📥️installation/🟦️.ts"))};
+import { receiveScriptProcessInvocation } from ${JSON.stringify(join(workspace, "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"))};
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, activationSourceFreshnessDirectory, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from ${JSON.stringify(activationModule)};
 import { artifactFiles } from ${JSON.stringify(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts"))};
 import { stageRepositoryArtifacts } from ${JSON.stringify(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts"))};
@@ -92,7 +95,9 @@ if (operation === "materialize") {
   put(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET), "fonts");
 } else if (operation === "cancel") {
   const destination = join(repoRoot, "cancelled"), signal = AbortSignal.abort(new Error("Activation cancelled"));
-  await assert.rejects(() => publishActivatedExtension({ pluginId: fixture.plugin, role: "extension" }, join(moduleRoot, fixture.plugin), destination, "a".repeat(64), 1, signal), /Activation cancelled/);
+  await receiveScriptProcessInvocation(process.env, async original => {
+    await assert.rejects(() => publishActivatedExtension(repoRoot, original, { pluginId: fixture.plugin, directoryName: fixture.plugin, role: "extension" }, join(moduleRoot, fixture.plugin), destination, "a".repeat(64), 1, signal), /Activation cancelled/);
+  });
   assert.equal(existsSync(destination), false);
 } else {
   const before = existsSync(join(repoRoot, ".counts")) ? readFileSync(join(repoRoot, ".counts"), "utf8") : "";

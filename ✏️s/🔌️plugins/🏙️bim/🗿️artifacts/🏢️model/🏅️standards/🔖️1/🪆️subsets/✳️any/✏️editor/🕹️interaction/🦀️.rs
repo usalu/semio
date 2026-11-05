@@ -5,17 +5,17 @@ use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::or
 use semio_s_artifact_bim_model_entities::editor::bim::entities::ENTITIES;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::DomainTopology;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionTopology;
+use semio_plugin::MergeMode;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
 
 //#region 🔖️Constants
 pub const BIM_ELEMENT_DOMAIN: &str = "elements";

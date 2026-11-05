@@ -5,15 +5,15 @@ use crate::editor::shooting::modes::edit::windows::icon::options;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::standards::v1::subsets::any::io::text::snapshot::shooting_icon_render_request_json;
 use crate::ShootingSnapshot;
-use semio_framework_plugin::IconRenderScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::IconRenderScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_WINDOW_ICON: &str = "shooting-icon";
@@ -74,12 +74,12 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let (request_json, footer) = match (crate::active_shot(snapshot), crate::active_asset(snapshot)) {
         (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera, cfg.center_model), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),
     };
-    semio_framework_plugin::scene_surface(SHOOTING_PLAY_SURFACE_ICON, semio_framework_ui_contract::SurfaceKind::IconRender, &IconRenderScene { request_json, footer, frame_json: None })
+    semio_plugin::scene_surface(SHOOTING_PLAY_SURFACE_ICON, semio_ui_contract::SurfaceKind::IconRender, &IconRenderScene { request_json, footer, frame_json: None })
 }
 //#endregion 🔖️Render
 

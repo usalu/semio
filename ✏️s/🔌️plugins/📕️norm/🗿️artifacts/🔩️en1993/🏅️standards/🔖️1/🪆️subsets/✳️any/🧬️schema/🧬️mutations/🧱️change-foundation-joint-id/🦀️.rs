@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationJointId 
         record: "ChangedFoundationJointId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Base plate joint id of the foundation block", "Fundamentblock: Fußplatten-Anschluss-Id ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Base plate joint id of the foundation block", "Fundamentblock: Fußplatten-Anschluss-Id ändern")
     }
 }
 

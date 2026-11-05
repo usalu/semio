@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertImpactAction where
         record: "InsertedImpactAction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert impact action {}", self.item.id), &format!("Anpralleinwirkung {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert impact action {}", self.item.id), &format!("Anpralleinwirkung {} einfügen", self.item.id))
     }
 }
 

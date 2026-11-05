@@ -3,11 +3,11 @@
 //! 🧭️ Behind `testkit`: the monolith test unit held these functions in the node graph and EngineCanvas standalone law files; laws in the test bins name them through this crate.
 
 use super::engine_surface_attach::take_engine_surface_registrations;
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{begin_engine_surface_close_token, close_engine_surface_step, ENGINE_SURFACES};
-use semio_framework_os_renderer_wgpu_engine_registry::fixtures::with_engine_close_context;
-use semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::STAGED_ENGINE_SCENES;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::InputState;
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::{begin_engine_surface_close_token, close_engine_surface_step, ENGINE_SURFACES};
+use semio_renderer_wgpu_engine_registry::fixtures::with_engine_close_context;
+use semio_renderer_wgpu_engine_registry::prepared_engine_canvas::STAGED_ENGINE_SCENES;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::InputState;
 
 /// 🧹️ Drains one attached surface through the registry's OWN retirement ladder. `FlowHostSnapshot`'s
 /// ordered maps refuse to drop unretired, so a plain `remove` panics inside the registry mutex and

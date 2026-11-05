@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeTestVariationKnown
         record: "ChangedTestVariationKnown",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change known coefficient of variation V_X of the test series", "Versuchsreihe: Bekannter Variationskoeffizient V_X ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change known coefficient of variation V_X of the test series", "Versuchsreihe: Bekannter Variationskoeffizient V_X ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

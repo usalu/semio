@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileHammerEfficien
         record: "ChangedPileHammerEfficiency",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Hammer efficiency η_h of the pile", "Pfahl: Bärwirkungsgrad η_h ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Hammer efficiency η_h of the pile", "Pfahl: Bärwirkungsgrad η_h ändern")
     }
 }
 

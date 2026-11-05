@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangePatchCornerRadius 
         record: "ChangedPatchCornerRadius",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Corner radius r of the web patch load", "Stegeinzellast: Eckradius r ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Corner radius r of the web patch load", "Stegeinzellast: Eckradius r ändern")
     }
 }
 

@@ -61,7 +61,7 @@ test("actual native isolated law admits explicit owner registration and generic 
   expect(grammarErrors(lawTree.rootNode)).toBe(0);
   const law = lawTree.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === corpus.nativeLaw);
   expect(law).toBeDefined();
-  const names = calls(law!), registration = names.filter(node => node.name === "semio_framework_os_store_space::space_history_registration::register_sqlite_snapshot");
+  const names = calls(law!), registration = names.filter(node => node.name === "semio_os_store_space::space_history_registration::register_sqlite_snapshot");
   expect(registration.length).toBe(1);
   const before = names.filter(node => node.start < registration[0].start), after = names.filter(node => node.start > registration[0].start);
   for (const operation of ["io_export_sqlite_snapshot", "io_import_sqlite_snapshot"]) {
@@ -83,7 +83,7 @@ test("actual native isolated law admits explicit owner registration and generic 
   const hydration = parse(join(store, "🧾️document/📜️history/💧️hydration/🦀️.rs"));
   for (const node of [...constructors, hydration.rootNode]) expect(calls(node).filter(node => /(?:register_sqlite_snapshot|register_native_snapshot_codec|register_native_document_codec)(?:<|$)/.test(node.name))).toEqual([]);
   const binding = parse(join(store,"📜️space-history/🏠️space/📣️registration/🦀️.rs")), ownerRegistration = binding.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "register_sqlite_snapshot");
-  expect(calls(ownerRegistration!).some(node => node.name === "semio_framework_os_io::register_native_snapshot_codec")).toBe(true);
+  expect(calls(ownerRegistration!).some(node => node.name === "semio_os_io::register_native_snapshot_codec")).toBe(true);
   expect(ownerRegistration!.text.includes("SQLITE_SNAPSHOT_DIALECT")).toBe(true); expect(containsRust(ownerRegistration!, ["SpaceHistorySnapshot", ",", "SpaceHistoryMutation"])).toBe(true);
   } finally { for (const tree of trees) tree.delete(); parser.delete(); }
 });
@@ -255,7 +255,7 @@ test("neutral snapshot contracts and native bridge have no OS application import
  const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8"));expect(new Ajv2020({strict:true}).compile(schema)(corpus)).toBe(true);
  for(const reference of corpus.valueCases)expect(JSON.parse(JSON.stringify(reference))).toEqual(reference);
- for(const path of ["../📝️text/📸️snapshot/🦀️.rs","../💾️binary/📸️snapshot/🦀️.rs","🫴️native/🦀️.rs","../🪶️sqlite-snapshot/📸️snapshot/🦀️.rs"]){const source=readFileSync(join(owner,path),"utf8");expect(/crate::os_|semio_framework_os_kernel|ArtifactCodec|ArtifactStoreSnapshot|NativeSnapshotDecodeOwner/.test(source.replace(/^\s*\/\/.*$/gm,""))).toBe(false);}
+ for(const path of ["../📝️text/📸️snapshot/🦀️.rs","../💾️binary/📸️snapshot/🦀️.rs","🫴️native/🦀️.rs","../🪶️sqlite-snapshot/📸️snapshot/🦀️.rs"]){const source=readFileSync(join(owner,path),"utf8");expect(/crate::os_|semio_os_kernel|ArtifactCodec|ArtifactStoreSnapshot|NativeSnapshotDecodeOwner/.test(source.replace(/^\s*\/\/.*$/gm,""))).toBe(false);}
 });
 
 test("encoding-only native laws require representation contracts without Store publication capability",async()=>{

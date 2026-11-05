@@ -21,7 +21,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
@@ -45,7 +45,7 @@ testing = ["semio-s-artifact-stdio-gltf-model-snapshot/testing", "semio-s-artifa
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-dsl = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-s-artifact-stdio-gltf-model-schema = { path = "../../../../../📝️text/📸️snapshot/🧪️serde-oracle/📦️packages/🦀️rust", features = ["testing"] }
 semio-s-artifact-stdio-gltf-model-snapshot = { path = "../../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testing"] }

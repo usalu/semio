@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFatigueBandCycles 
         record: "ChangedFatigueBandCycles",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Number of cycles n_i of the fatigue band", "Ermüdungsband: Lastspielzahl n_i ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Number of cycles n_i of the fatigue band", "Ermüdungsband: Lastspielzahl n_i ändern")
     }
 }
 

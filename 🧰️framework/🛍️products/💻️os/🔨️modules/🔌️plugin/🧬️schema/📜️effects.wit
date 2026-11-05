@@ -52,7 +52,7 @@ interface effects {
     headers: list<tuple<string, string>>,
     body: option<pack>,
     /// ⚠️ Named `streaming`, not `stream` — `stream` is a WIT-reserved keyword (`wit-parser`
-    /// rejects it, discovered by packet B1's `cargo check -p semio-framework-plugin-host` failing
+    /// rejects it, discovered by packet B1's `cargo check -p semio-plugin-host` failing
     /// to parse this whole WIT package at this exact line; same reserved-word class as the peer
     /// W1-D report's own `from`/`into` finding). `semio_framework::kernel::Effect::HttpRequest`'s
     /// Rust-side field stays named `stream` — only the WIT record field is renamed.

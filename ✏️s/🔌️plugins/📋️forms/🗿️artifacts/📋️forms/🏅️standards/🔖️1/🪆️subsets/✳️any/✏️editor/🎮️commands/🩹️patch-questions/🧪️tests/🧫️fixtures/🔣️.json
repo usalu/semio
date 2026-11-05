@@ -1,0 +1,93 @@
+{
+  "cases": [
+    {
+      "name": "null",
+      "input": {
+        "questionIds": [
+          "q"
+        ],
+        "field": "default",
+        "value": null
+      },
+      "expected": null
+    },
+    {
+      "name": "scalar",
+      "input": {
+        "questionIds": [
+          "q"
+        ],
+        "field": "required",
+        "value": true
+      },
+      "expected": true
+    },
+    {
+      "name": "chunked text",
+      "input": {
+        "questionIds": [
+          "q"
+        ],
+        "field": "param",
+        "paramKey": "__flow",
+        "valueJsonChunks": [
+          "\"hello\""
+        ]
+      },
+      "expected": "hello"
+    }
+  ],
+  "invalid": [
+    {
+      "questionIds": [
+        "q"
+      ],
+      "field": "param",
+      "value": "x",
+      "valueJsonChunks": [
+        "\"x\""
+      ]
+    },
+    {
+      "questionIds": [
+        "q"
+      ],
+      "field": "param",
+      "valueJson": "\"x\""
+    },
+    {
+      "questionIds": [
+        "q"
+      ],
+      "field": "param",
+      "valueJsonChunks": []
+    },
+    {
+      "questionIds": [
+        "q"
+      ],
+      "field": "param",
+      "valueJsonChunks": [
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ]
+    },
+    {
+      "questionIds": [
+        "q"
+      ],
+      "field": "param",
+      "valueJsonChunks": [
+        3
+      ]
+    },
+    {
+      "questionIds": [
+        "q"
+      ],
+      "field": "param",
+      "valueJsonChunks": [
+        "{"
+      ]
+    }
+  ]
+}

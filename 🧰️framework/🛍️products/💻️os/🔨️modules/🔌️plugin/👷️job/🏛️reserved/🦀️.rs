@@ -1,15 +1,15 @@
 //! 🏛️ Framework reserved jobs, their routes, commits and pumps.
-use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
-use semio_framework_plugin_decl_app::tool_contract::BOUNDED_FIRST_STEP_FACTORY;
+use semio_plugin_decl_app::tool_contract::ToolOwnerWitness;
+use semio_plugin_decl_app::tool_contract::ArtifactReservedJob;
+use semio_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
+use semio_plugin_decl_app::tool_contract::BOUNDED_FIRST_STEP_FACTORY;
 use std::collections::BTreeSet;
 use std::collections::BTreeMap;
-use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
-use semio_framework_plugin_decl_app::is_time_travel_action_id;
+use semio_plugin_window_kits::AppActionRegistry;
+use semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
+use semio_plugin_decl_app::is_time_travel_action_id;
 use crate::lifted_job::is_tool_run_action_id;
-use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_framework_value::DslValue;
 /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
 use semio_framework::AppDefinition;
@@ -21,18 +21,18 @@ use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_decl_views::child_view::MemberKey;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_operation::ToolCancellationLease;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationContract;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolRegistration;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_views::child_view::MemberKey;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_operation::ToolCancellationLease;
+use semio_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof;
+use semio_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
+use semio_plugin_decl_app::tool_contract::ArtifactToolPublicationContract;
+use semio_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
+use semio_plugin_decl_app::tool_contract::ArtifactToolRegistration;
 use crate::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
 use crate::{retired};
 
@@ -56,8 +56,8 @@ macro_rules! framework_reserved_job {
             contract: semio_framework::ToolExecutionContract,
             operation: Option<semio_framework_job::Operation>,
             state: [u8; FRAMEWORK_RESERVED_STATE_BYTES],
-            pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
-            outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
+            pending: Option<semio_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
+            outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes,
             closing: bool,
         }
 
@@ -74,7 +74,7 @@ macro_rules! framework_reserved_job {
                     operation: None,
                     state: [0; FRAMEWORK_RESERVED_STATE_BYTES],
                     pending: None,
-                    outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),
+                    outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),
                     closing: false,
                 }
             }
@@ -105,8 +105,8 @@ macro_rules! framework_reserved_job {
                 }
                 if let Some(kind) = self.pending {
                     let source: &[u8] = match kind {
-                        semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault => concat!("framework reserved ", $route, " output exceeds its exact cap").as_bytes(),
-                        semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Commit => &self.raw,
+                        semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault => concat!("framework reserved ", $route, " output exceeds its exact cap").as_bytes(),
+                        semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Commit => &self.raw,
                         _ => &self.state,
                     };
                     let outcome = self.outcomes.advance(kind, source, cx)?;
@@ -120,7 +120,7 @@ macro_rules! framework_reserved_job {
                         self.stage = FrameworkReservedStage::Cursor;
                         cx.set_stage(concat!("framework-reserved-", $route, "-envelope"));
                         self.write_state();
-                        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Preview);
+                        self.pending = Some(semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Preview);
                     }
                     FrameworkReservedStage::Cursor => {
                         let envelope_remaining = self.raw.len().saturating_sub(self.envelope_cursor);
@@ -141,10 +141,10 @@ macro_rules! framework_reserved_job {
                             cx.set_stage(concat!("framework-reserved-", $route, "-commit-ready"));
                         }
                         self.write_state();
-                        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress: self.envelope_cursor.saturating_add(self.item_cursor) as u64 });
+                        self.pending = Some(semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress: self.envelope_cursor.saturating_add(self.item_cursor) as u64 });
                     }
                     FrameworkReservedStage::Retiring => {
-                        self.pending = Some(if self.raw.len() > self.contract.max_output_bytes { semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault } else { semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Commit });
+                        self.pending = Some(if self.raw.len() > self.contract.max_output_bytes { semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault } else { semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Commit });
                     }
                 }
                 Ok(None)
@@ -406,8 +406,8 @@ pub struct FrameworkConfigurationBinaryJob<A: ArtifactApp> {
     pub failure:ManuallyDrop<Option<OriginalConfigurationFailure>>,
     pub place:ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<OriginalConfigurationFailure>>>,
     pub state: [u8; 8],
-    pub pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
-    pub outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
+    pub pending: Option<semio_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
+    pub outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes,
     pub closing: bool,
 }
 
@@ -473,7 +473,7 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurat
 
 impl<A: ArtifactApp> FrameworkConfigurationBinaryJob<A> {
     fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
+        use semio_plugin_decl_app::tool_contract::ReservedOutcomeKind;
         if self.failure.is_some()||self.place.is_some(){if let Some(failure)=self.admit_failure(cx)?{return Err(failure)}return Ok(None)}
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
@@ -788,7 +788,7 @@ pub enum FrameworkReservedCommitStage<P,M:store::Mutation<P>+Sync> {
     Route { pins: Vec<vcs::CompositionPin> },
     CheckoutChildren { pins: Vec<vcs::CompositionPin>, next: usize, result: InvocationResult },
     Revert { edit_id: String, command:Option<store::os_store::ArtifactNativeVcsCommand<P,M>>, result:Option<store::os_store::ArtifactNativeVcsResult>, closing:bool },
-    Repin { pins:Option<Vec<vcs::CompositionPin>>, publication:Option<Box<semio_framework_os_store_engine_replay::repin::OriginalRepinPublication<M>>>, retirement:semio_framework_value::retained_clone::RetainedCloneClose, changed:bool, closing:bool },
+    Repin { pins:Option<Vec<vcs::CompositionPin>>, publication:Option<Box<semio_os_store_engine_replay::repin::OriginalRepinPublication<M>>>, retirement:semio_framework_value::retained_clone::RetainedCloneClose, changed:bool, closing:bool },
 }
 
 /// 📊️ Progress of the framework-reserved commit at the head of an app's commit queue: `applied` of

@@ -1,0 +1,15 @@
+# Original Intrinsic Value Equality
+
+Schema-first23 neutral typed cases preserve actual DslValue PartialEq, including UInt/Int numeric equality, float exact bits (signed zero/NaN/infinity), intrinsic bytes versus arrays, ordered duplicate object fields, and Unicode text. Independent Ajv+lodash tagged-tree/BigInt/float-buffer oracle is authored before implementation. Intended implementation reuses the existing first-party typed record/sequence equality cursor; no duplicate traversal, unsafe borrowed loans, JSON substitute or runtime external dependency. One first-party intrinsic->value-equality Cargo edge is coordinated with Runtime's native metadata owner. Native tests and production implementation are initially pending.
+
+## Mounted Source And Verification Scope
+
+Independent oracle actually completed0 for23 cases before implementation. The defining intrinsic module now implements Number inline equality using actual PartialEq and DslValue typed field roles through existing RetainedRecordEquality, RetainedSequenceEquality, tuple and string cursors. OriginalValueEquality binds exact original source-header identities without storing borrowed loans, owns only the existing typed frontier, and exposes full raw progress/work plus explicit controlled retirement and unconditional terminal Drop. Explicit first-party value facade reexports expose the owner/step; one existing intrinsic->value-equality production edge is added. No external runtime library or second comparison tree was introduced.
+
+Two native laws are authored:23cases×one/512item profiles×normal/cancel0/1/2/7, with independent finite source stock, exact denial, physical backing receipts and complete cursor release; and refusal of an equal but substituted source identity. Native typing/execution remains NOTRUN. Original full-editor one-fuel/200 acceptance is separate and remains pending. This source is ready for Runtime's current native capture.
+
+## Corrected Defining Owner After Actual Cargo Cycle Refusal
+
+The first native attempt genuinely terminated1 before compiler/tests at22:07:45.877Z. Cargo found a real production cycle: intrinsic -> equality -> retained-clone contract -> intrinsic. Root's earlier incomplete edge audit missed the retained-clone contract's production intrinsic dependency. This was not a DEV-cycle refusal and no native test ran.
+
+Root moved the authored comparison module/corpus/tests into the existing equality owner under value/🌳tree/🟰equal/🌱intrinsic. Equality owns its trait, so it implements that trait for genuine intrinsic DslValue/Number directly. Its existing DEV intrinsic edge becomes an explicit production edge; the lower intrinsic owner no longer depends on equality. The higher value facade explicitly depends on/reexports equality. No compatibility alias, copied implementation, guard change or external runtime dependency was introduced. All caller APIs remain the newly authored OriginalValueEquality/ValueEqualityStep; native revalidation is pending. Oracle input now points to the corrected defining owner.

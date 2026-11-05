@@ -3,9 +3,9 @@
 use crate::editor::rewriting::{TrinityRewritingCommand, TrinityRewritingPlayApp};
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
+use semio_plugin::app::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, Emit, Fault, HistoryView, InteractiveJobClassification, NoConfig, NoConfigMutation, NoDraftMutation,
     ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError,
 };
@@ -33,7 +33,7 @@ fn reduce(
     _config: &NoConfig,
     _history: &HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _hover: &semio_plugin::app::InteractionHoverState,
     context: Option<&ArtifactOwnedToolJobContext<Owner>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, NoDraftMutation>, Fault> {
@@ -41,7 +41,7 @@ fn reduce(
     match command {
         TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport::set_viewport(surface_id, viewport, view),
         TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode::set_lod_mode(value, view),
-        _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the rewriting window reducer received a command outside its tool roster")),
+        _ => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("app.command.tool-mismatch"), "the rewriting window reducer received a command outside its tool roster")),
     }
 }
 
@@ -71,7 +71,7 @@ impl ToolJobFactory for RewritingWindowConfigJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -83,16 +83,16 @@ impl ArtifactOwnedToolJobFactory for RewritingWindowConfigJobFactory {
         &[ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] }, ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::WindowConfig] }];
 }
 
-pub fn build_job(request: &mut Option<ArtifactOwnedToolJobRequest<Owner>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+pub fn build_job(request: &mut Option<ArtifactOwnedToolJobRequest<Owner>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
     if !TOOL_IDS.contains(&original.tool_id.as_str()) {
         return Ok(false);
     }
     if TrinityRewritingPlayApp::command_id(&original.command) != original.tool_id {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Rewriting command does not match its exact registered tool").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Rewriting command does not match its exact registered tool").into());
     }
     if extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the rewriting command exceeds the capacity of one bounded edit").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the rewriting command exceeds the capacity of one bounded edit").into());
     }
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityRewritingPlayApp::command_id, RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(TrinityRewritingPlayApp::command_id(&request.command), reduce, extent))
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityRewritingPlayApp::command_id, RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(TrinityRewritingPlayApp::command_id(&request.command), reduce, extent))
 }

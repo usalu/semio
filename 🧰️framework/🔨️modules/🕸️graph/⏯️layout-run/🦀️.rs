@@ -21,7 +21,7 @@ use semio_framework_tool_run::{
     ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_PROVISIONAL_OPS_MAX,
 };
 use serde::{Deserialize, Serialize};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Limits
 /// 🚰️ Estimated tick bytes after which an iteration or compaction tick is flushed (one 16 KiB job payload page).

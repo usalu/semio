@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnHoleStagger wh
         record: "ChangedConnHoleStagger",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change connection: Hole stagger s (0 = aligned hole lines)", "Anschluss: Lochversatz s (0 = fluchtende Lochlinien) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change connection: Hole stagger s (0 = aligned hole lines)", "Anschluss: Lochversatz s (0 = fluchtende Lochlinien) ändern")
     }
 }
 

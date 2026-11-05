@@ -1,18 +1,18 @@
 //! 🖱️ Selection requests join the framework interaction lane after the new layer is published.
 use super::{RASTER_INTERACTION_DOMAIN,RASTER_INTERACTION_GRANULARITY};
-use semio_framework_plugin::{Fault,RequestId,INTERACTION_SELECT_ACTION_ID};
+use semio_plugin::{Fault,RequestId,INTERACTION_SELECT_ACTION_ID};
 
 /// 🌳️ Gives framework selection validation the current layer membership and nesting.
-pub fn layer_topology(layers:&[semio_s_artifact_raster_raster_model::RasterLayerNode])->semio_framework_plugin::DomainTopology {
-    fn visit(layers:&[semio_s_artifact_raster_raster_model::RasterLayerNode],parent:Option<&str>,ordered:&mut Vec<semio_framework_plugin::TopologyNode>) {
+pub fn layer_topology(layers:&[semio_s_artifact_raster_raster_model::RasterLayerNode])->semio_plugin::DomainTopology {
+    fn visit(layers:&[semio_s_artifact_raster_raster_model::RasterLayerNode],parent:Option<&str>,ordered:&mut Vec<semio_plugin::TopologyNode>) {
         for layer in layers {
             let id=semio_s_artifact_raster_raster_model::layer_node_id(layer);
-            ordered.push(semio_framework_plugin::TopologyNode {id:id.into(),granularity:RASTER_INTERACTION_GRANULARITY.into(),parent:parent.map(str::to_owned)});
+            ordered.push(semio_plugin::TopologyNode {id:id.into(),granularity:RASTER_INTERACTION_GRANULARITY.into(),parent:parent.map(str::to_owned)});
             if let semio_s_artifact_raster_raster_model::RasterLayerNode::Group {children,..}=layer {visit(children,Some(id),ordered);}
         }
     }
     let mut ordered=Vec::new();visit(layers,None,&mut ordered);
-    semio_framework_plugin::DomainTopology {ordered}
+    semio_plugin::DomainTopology {ordered}
 }
 
 pub fn layer_selection_args(id:&str)->Result<semio_framework_value::DslValue,Fault> {

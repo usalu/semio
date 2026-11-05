@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeStoreyDrift where 
         record: "ChangedStoreyDrift",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Horizontal drift δ_H,Ed of the storey", "Geschoss: Horizontale Kopfverschiebung δ_H,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Horizontal drift δ_H,Ed of the storey", "Geschoss: Horizontale Kopfverschiebung δ_H,Ed ändern")
     }
 }
 

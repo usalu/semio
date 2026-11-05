@@ -7,8 +7,8 @@ use crate::editor::vcs as editor;
 use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::vcs as viewer;
 use crate::VCS_DIALECT;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {

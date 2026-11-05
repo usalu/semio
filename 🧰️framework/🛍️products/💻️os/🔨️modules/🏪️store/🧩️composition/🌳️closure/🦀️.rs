@@ -1,5 +1,5 @@
 //! 🌳️ Retained admission of one complete recursively owned document closure.
-use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_os_store_envelope::owner::OwnerRef;
 use semio_framework_composition_admission::{CHILD_RESTORE_MAXIMUM_FIELD_BYTES,ChildRestoreProjection,ChildRestoreProjectionError};
 use {semio_framework_artifact_reference::ArtifactRef};
 use semio_framework_job::{Generation, OperationId, StepContext};

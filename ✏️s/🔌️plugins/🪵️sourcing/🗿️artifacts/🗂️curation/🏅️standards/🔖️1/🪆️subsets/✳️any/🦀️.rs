@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::{io, schema};
 use crate::SOURCING_DIALECT;
 use crate::editor::sourcing as editor;
 use crate::viewer::sourcing as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use std::sync::OnceLock;
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {

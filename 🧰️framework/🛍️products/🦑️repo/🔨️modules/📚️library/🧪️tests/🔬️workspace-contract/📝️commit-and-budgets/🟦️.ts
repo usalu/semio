@@ -502,7 +502,7 @@ describe("nextest execution filters", () => {
 describe("resolveCargoPackageName", () => {
   test("resolves short lib names to full package names", () => {
     const root = getWorkspaceRoot();
-    expect(resolveCargoPackageName("db", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust"))).toBe("semio-framework-os-kernel-db");
+    expect(resolveCargoPackageName("db", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust"))).toBe("semio-os-kernel-db");
     expect(resolveCargoPackageName("semio-hub-architect", join(root, "🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust"))).toBe("semio-hub-architect");
     expect(resolveCargoPackageName("semio-hub-energy", join(root, "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust"))).toBe("semio-hub-energy");
   });
@@ -510,6 +510,6 @@ describe("resolveCargoPackageName", () => {
   test("resolves empty package list to local Cargo.toml package name", () => {
     const root = getWorkspaceRoot();
     const dbDir = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust");
-    expect(resolveCargoPackageNames([], dbDir)).toEqual(["semio-framework-os-kernel-db"]);
+    expect(resolveCargoPackageNames([], dbDir)).toEqual(["semio-os-kernel-db"]);
   });
 });

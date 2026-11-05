@@ -221,7 +221,7 @@ impl EnergySimulationRunJob {
     }
 
     /// 🌦️ Binds a real actor-minted linked weather reply before any numerical source is admitted.
-    pub fn with_linked_weather(mut self, receiver: semio_framework_plugin_actor_host::requests::SharedRequestReceiver, port: semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPort) -> Self {
+    pub fn with_linked_weather(mut self, receiver: semio_plugin_actor_host::requests::SharedRequestReceiver, port: semio_plugin_decl_views::tool_run_contract::ToolRunJobPort) -> Self {
         self.linked_weather=Some(super::weather::LinkedWeather::new(receiver,port));
         self.phase=EnergyRunPhase::Weather;
         self

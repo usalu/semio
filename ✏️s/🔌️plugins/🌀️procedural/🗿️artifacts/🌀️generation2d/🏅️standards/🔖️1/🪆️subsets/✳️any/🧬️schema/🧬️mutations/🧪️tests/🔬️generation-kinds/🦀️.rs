@@ -1,6 +1,6 @@
 //! 🧪️ Kind fixture laws of `create-generation`, `delete-generation`, `select-generation`: each committed scenario applied, inverted and diffed through the mutation union.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../➕create-generation/🧪️tests/🌱️appends/🦀️.rs"]
 mod create_generation_appends_generation_2_and_selects_it;

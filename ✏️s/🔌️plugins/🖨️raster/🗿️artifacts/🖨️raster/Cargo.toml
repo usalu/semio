@@ -169,13 +169,13 @@ path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/
 [workspace.dependencies.semio-framework-job-publication]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os]
+[workspace.dependencies.semio-os]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust"
-package = "semio-framework-os"
+package = "semio-os"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
-package = "semio-framework-os-kernel"
+package = "semio-os-kernel"
 
 [workspace.dependencies.semio-framework-pack-json]
 path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
@@ -183,9 +183,9 @@ path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/�
 [workspace.dependencies.semio-framework-pixels]
 path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
-package = "semio-framework-plugin"
+package = "semio-plugin"
 
 [workspace.dependencies.semio-framework-schema]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
@@ -194,11 +194,11 @@ package = "semio-framework-schema"
 [workspace.dependencies.semio-framework-schema-registry]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
-package = "semio-framework-ui-contract"
+package = "semio-ui-contract"
 
-[workspace.dependencies.semio-framework-ui-locale]
+[workspace.dependencies.semio-ui-locale]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value]

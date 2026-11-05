@@ -37,8 +37,8 @@ where
         vec!["text".to_string()]
     }
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Edit document text", "Dokumenttext bearbeiten")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Edit document text", "Dokumenttext bearbeiten")
     }
 }
 

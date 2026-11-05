@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSystemMaterial whe
         record: "ChangeSystemMaterial",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Material", "Baustoff ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Material", "Baustoff ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-system-material".into()]

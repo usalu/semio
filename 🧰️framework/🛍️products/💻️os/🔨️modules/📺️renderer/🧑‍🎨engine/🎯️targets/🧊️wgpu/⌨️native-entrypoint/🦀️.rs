@@ -24,11 +24,11 @@ pub(crate) fn drive_native_entrypoint<F: std::future::Future>(future: F) -> F::O
 
 /// ⌨️ Runs the native application with a caller-owned inventory of installed document services.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>, catalog:semio_framework_os_kernel::native_catalog::NativeCatalogV1) {
+pub fn run_native_entrypoint(services: Vec<semio_os_kernel::os_directory::client::InstalledServiceContributionV1>, catalog:semio_os_kernel::native_catalog::NativeCatalogV1) {
     crate::native_launch::install_native_launch_admission().expect("Native launch admission refused");
     crate::install_plugin_catalog_v1(catalog).expect("Native renderer catalog refused");
     use crate::{run_native, run_smoke};
-    use semio_framework_os_kernel::os_directory::identity::{claim_inherited_local_hub_credential, IdentityEnv};
+    use semio_os_kernel::os_directory::identity::{claim_inherited_local_hub_credential, IdentityEnv};
     use std::env;
     use std::path::PathBuf;
 

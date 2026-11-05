@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveLoadDispersal wher
         record: "RemovedLoadDispersal",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove load dispersal {}", self.id), &format!("Lastausbreitung {} entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove load dispersal {}", self.id), &format!("Lastausbreitung {} entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,7 +1,7 @@
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::entities::Puzzle5dDocument;
 use crate::editor::puzzle5d::view::Puzzle5dScene;
-use semio_framework_plugin::Board2dScene;
+use semio_plugin::Board2dScene;
 use semio_framework_pack_json::{json, Value};
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::config::Puzzle5dCamera2d;
@@ -22,11 +22,11 @@ use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, target_volume_fla
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::view::puzzle5d_scene_mode;
 #[allow(unused_imports)]
-use semio_framework_plugin::{SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_plugin::{SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 #[allow(unused_imports)]
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_os_infinite::BoardPlacementNaming;
+use semio_os_infinite::BoardPlacementNaming;
 
 use crate::editor::puzzle5d::modes::edit::windows::board2d::*;
 use crate::editor::puzzle5d::testkit::*;
@@ -47,7 +47,7 @@ fn board_document() -> Puzzle5dDocument {
     <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("projection"))).expect("document")
 }
 
-fn board_scene_with(interaction: crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime) -> semio_framework_plugin::Board2dScene {
+fn board_scene_with(interaction: crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime) -> semio_plugin::Board2dScene {
     puzzle5d_board_scene(&Puzzle5dScene { document: board_document(), runtime, active_utility: "select".into(), interaction })
 }
 
@@ -137,14 +137,14 @@ fn the_board_publishes_the_open_grip_suggestion_menu() {
 /// with its part selected — the suggest row the board host turns into its live submenu.
 #[test]
 fn a_board_handle_hit_is_the_grips_menu() {
-    let surface = semio_framework_plugin::ContextMenuSurfaceTarget {
+    let surface = semio_plugin::ContextMenuSurfaceTarget {
         surface_id: SURFACE_ID.into(),
         kind: "board2d".into(),
         hits: vec![
-            semio_framework_plugin::ContextMenuHit { domain: "handle".into(), id: "teil-ä:g1".into(), label: None },
-            semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "teil-ä".into(), label: None },
+            semio_plugin::ContextMenuHit { domain: "handle".into(), id: "teil-ä:g1".into(), label: None },
+            semio_plugin::ContextMenuHit { domain: "node".into(), id: "teil-ä".into(), label: None },
         ],
-        selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["teil-ä:g1".into()] }],
+        selection: vec![semio_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["teil-ä:g1".into()] }],
         text: None,
     };
     let selection = crate::editor::puzzle5d::interaction::Puzzle5dContextSelection::from_surface(Some(&surface));

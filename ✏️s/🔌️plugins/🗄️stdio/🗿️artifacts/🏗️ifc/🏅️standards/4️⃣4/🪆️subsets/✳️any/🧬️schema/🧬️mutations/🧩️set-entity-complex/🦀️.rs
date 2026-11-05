@@ -14,8 +14,8 @@ pub struct SetEntityComplex {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityComplex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-complex", kind: "set-entity-complex", record: "SetEntityComplex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set complex constituents", "Komplexe Bestandteile setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set complex constituents", "Komplexe Bestandteile setzen")
     }
 
     fn target(&self) -> Vec<String> {

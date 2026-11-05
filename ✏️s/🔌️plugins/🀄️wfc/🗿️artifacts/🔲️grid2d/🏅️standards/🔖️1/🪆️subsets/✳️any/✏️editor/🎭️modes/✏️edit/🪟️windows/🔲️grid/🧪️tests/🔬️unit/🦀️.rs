@@ -3,7 +3,7 @@
 
 use crate::editor::grid2d::window::effective_camera;
 use crate::schema::snapshot::Grid2dSnapshot;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::grid2d::modes::edit::windows::grid::*;
 use crate::editor::grid2d::window::Grid2dWindowConfig;
 use serde_json::Value;
@@ -18,7 +18,7 @@ fn the_window_declares_a_canvas_surface_with_a_registered_icon() {
     assert_eq!(window.id, WINDOW_KIND_ID);
     assert_eq!(window.body_key, BODY_KEY);
     assert_eq!(window.surface_kind, SurfaceKind::Canvas2d, "Board2d needs a per-app wasm board session no wfc app ships");
-    assert_eq!(window.icon_id, semio_framework_plugin::IconName::LayoutGrid);
+    assert_eq!(window.icon_id, semio_plugin::IconName::LayoutGrid);
 }
 
 /// 🖱️ Every verb `Canvas2dHost` dispatches on its own is declared, or the shell drops it with

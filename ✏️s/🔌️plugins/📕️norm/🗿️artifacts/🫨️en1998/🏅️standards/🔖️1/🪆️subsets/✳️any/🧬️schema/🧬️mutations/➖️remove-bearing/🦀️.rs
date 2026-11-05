@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for RemoveBearing where Op: 
         record: "RemoveBearing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove bearing", "Lager entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove bearing", "Lager entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

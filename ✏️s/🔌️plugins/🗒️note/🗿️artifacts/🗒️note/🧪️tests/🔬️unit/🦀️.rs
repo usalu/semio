@@ -143,7 +143,7 @@ async fn regenerate_committed_diff_fixtures() {
 #[semio_framework_async_macros::async_test]
 async fn note_genesis_produces_a_complete_zero_history_pair_at_a_server_minted_id() {
     let document_id = "artifact-11223344556677889900aabbccddeeff";
-    let pair = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>(document_id)
+    let pair = semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<crate::editor::note::NotePlayApp>>(document_id)
         .await
         .expect("note genesis pair");
     assert!(!pair.pack.is_empty(), "note genesis pack is empty");
@@ -167,10 +167,10 @@ async fn note_genesis_produces_a_complete_zero_history_pair_at_a_server_minted_i
 #[semio_framework_async_macros::async_test]
 async fn note_apply_ops_reduces_a_nonempty_batch_and_closes_its_store() {
     let document_id = "artifact-11223344556677889900aabbccddeeff";
-    let baseline = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>(document_id).await.expect("note genesis pair");
+    let baseline = semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<crate::editor::note::NotePlayApp>>(document_id).await.expect("note genesis pair");
     let op = <crate::schema::mutations::NoteMutation as protocol::OpBinary>::encode_op(&crate::schema::mutations::rename_note(Some("TC3e".into()))).expect("encode rename-note");
     let ops = store::os_spr::encode_ops_vec(&[op]);
-    let applied = semio_framework_plugin::artifact_app_apply_ops::<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>(&baseline.pack, &baseline.spr, &ops).await.expect("note apply-ops with a nonempty batch");
+    let applied = semio_plugin::artifact_app_apply_ops::<semio_plugin::EditorApp<crate::editor::note::NotePlayApp>>(&baseline.pack, &baseline.spr, &ops).await.expect("note apply-ops with a nonempty batch");
     assert!(!applied.pack.is_empty() && !applied.spr.is_empty(), "apply-ops produced an empty pair");
     let history = store::os_spr::decode_history(&applied.spr, &store::os_spr::DecodeOptions::default()).await.expect("applied history");
     assert_eq!(history.doc_id, document_id);

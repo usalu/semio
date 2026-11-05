@@ -4,10 +4,10 @@
 //! localized column labels resolve from the shared OS-owned view context.
 
 use crate::ProcedureScene;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -28,10 +28,10 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `ProcedureSnapshot -> UiNode` read: one row per top-level step (`index`, `id`, `kind`),
 /// localized headers from the shared view context, and no run-output row (the editor's own `run`
 /// view-action is a `Command`, and the viewer declares none).
-pub fn render(scene: &ProcedureScene, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &ProcedureScene, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let path = &scene.path;
     let rows = path.steps.iter().enumerate().map(|(index, step)| vec![(index + 1).to_string(), step.id.clone(), step.kind.clone()]).collect();
-    let columns = if view_state.locale == semio_framework_ui_locale::Locale::De { vec!["#".into(), "ID".into(), "Art".into()] } else { vec!["#".into(), "Id".into(), "Kind".into()] };
+    let columns = if view_state.locale == semio_ui_locale::Locale::De { vec!["#".into(), "ID".into(), "Art".into()] } else { vec!["#".into(), "Id".into(), "Kind".into()] };
     TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render

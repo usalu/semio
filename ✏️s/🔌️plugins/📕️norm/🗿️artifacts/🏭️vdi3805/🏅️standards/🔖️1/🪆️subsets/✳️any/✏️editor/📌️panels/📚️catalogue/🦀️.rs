@@ -1,11 +1,11 @@
 //! 📚️ VDI 3805 play app panel — examples plus Blatt code-list catalogue tables.
 
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
 use semio_s_plugin_norm_compliance::ClauseId;
@@ -159,11 +159,11 @@ pub fn reference_tables() -> Vec<CatalogueTable> {
 }
 
 pub fn render(
-    examples: Vec<semio_framework_plugin::ExampleSource>,
-    locale: semio_framework_ui_locale::Locale,
+    examples: Vec<semio_plugin::ExampleSource>,
+    locale: semio_ui_locale::Locale,
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 

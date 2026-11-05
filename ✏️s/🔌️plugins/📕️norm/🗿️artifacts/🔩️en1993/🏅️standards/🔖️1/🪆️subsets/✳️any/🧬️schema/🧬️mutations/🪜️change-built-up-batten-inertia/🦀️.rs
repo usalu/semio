@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpBattenInert
         record: "ChangedBuiltUpBattenInertia",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Batten second moment I_b of the built-up member", "Zusammengesetzter Stab: Bindeblech-Flächenmoment I_b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Batten second moment I_b of the built-up member", "Zusammengesetzter Stab: Bindeblech-Flächenmoment I_b ändern")
     }
 }
 

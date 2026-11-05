@@ -47,12 +47,12 @@ pub(super) fn retained_tree_node_step(
                 cursor.advance(1);
                 return RetainedNodePaintStep::Pending;
             }
-            if semio_framework_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() {
+            if semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() {
                 return retained_table_header_step(retained, tree_id, tree, bounds, theme, reversed, inline, &metrics, atlas, draw, cursor);
             }
-            let open = retained.tree_section_open(tree_id, &section.id, semio_framework_ui_wgpu_layout::layout::tree_section_default_open(section));
+            let open = retained.tree_section_open(tree_id, &section.id, semio_ui_wgpu_layout::layout::tree_section_default_open(section));
             let header_height = tree_section_header_height(section, &metrics);
-            let section_height = retained.explicit_child(tree_id, &section.id).map_or(header_height, |section_id| semio_framework_ui_wgpu_mounted_layout::live_tree_section_height(retained, section_id, section, &metrics));
+            let section_height = retained.explicit_child(tree_id, &section.id).map_or(header_height, |section_id| semio_ui_wgpu_mounted_layout::live_tree_section_height(retained, section_id, section, &metrics));
             let header_y = if reversed { cursor.row_y + section_height - header_height } else { cursor.row_y };
             if !cursor.chrome {
                 cursor.chrome = true;
@@ -91,7 +91,7 @@ pub(super) fn retained_tree_node_step(
         }
         2 => {
             let Some(section) = retained_tree_section_at(tree, cursor.section, reversed) else { return RetainedNodePaintStep::Fault };
-            let open = retained.tree_section_open(tree_id, &section.id, semio_framework_ui_wgpu_layout::layout::tree_section_default_open(section));
+            let open = retained.tree_section_open(tree_id, &section.id, semio_ui_wgpu_layout::layout::tree_section_default_open(section));
             if !open || section.items.is_empty() {
                 if reversed {
                     cursor.row_y += tree_section_header_height(section, &metrics);
@@ -184,7 +184,7 @@ pub(super) fn retained_tree_node_step(
                 return RetainedNodePaintStep::Pending;
             }
             let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
-            if semio_framework_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() {
+            if semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_some() {
                 return retained_table_cells_step(retained, tree_id, tree, item, row, font_size, theme, inline, &metrics, reversed, atlas, draw, cursor);
             }
             let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
@@ -265,7 +265,7 @@ pub(super) fn retained_tree_node_step(
             }
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
             let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
-            let slot = semio_framework_ui_wgpu_layout::layout::tree_row_action_rect(row.w, row.h, cursor.item, trailing, &metrics);
+            let slot = semio_ui_wgpu_layout::layout::tree_row_action_rect(row.w, row.h, cursor.item, trailing, &metrics);
             let result = retained_fixed_output(draw, |draw| {
                 if let Some(icons) = icons {
                     let on_hover_fill = item.presence.state == UiState::Previewed || item.presence.hover;

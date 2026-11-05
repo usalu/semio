@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "dimension", kind: "create-dimension", record: "CreateDimension" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create dimension \"{}\"", self.dimension.name), &format!("Bemaßung \"{}\" anlegen", self.dimension.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create dimension \"{}\"", self.dimension.name), &format!("Bemaßung \"{}\" anlegen", self.dimension.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

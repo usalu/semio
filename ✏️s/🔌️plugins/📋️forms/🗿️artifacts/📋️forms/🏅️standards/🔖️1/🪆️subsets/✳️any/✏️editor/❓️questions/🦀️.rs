@@ -2,7 +2,6 @@
 
 pub use semio_s_artifact_forms_forms_diff::editor::forms::questions::visibility;
 pub use semio_s_artifact_forms_forms_tests_3::editor::forms::questions::placement;
-pub use semio_s_artifact_forms_forms_diff::editor::forms::questions::extensions;
 
 use crate::{FormQuestion, FormVectorField};
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;

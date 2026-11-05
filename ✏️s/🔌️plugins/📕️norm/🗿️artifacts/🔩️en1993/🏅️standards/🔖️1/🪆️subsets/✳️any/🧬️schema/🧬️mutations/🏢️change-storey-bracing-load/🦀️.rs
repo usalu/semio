@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeStoreyBracingLoad 
         record: "ChangedStoreyBracingLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Sum of axial forces ΣN_Ed (bracing) of the storey", "Geschoss: Summe der Normalkräfte ΣN_Ed (Aussteifung) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Sum of axial forces ΣN_Ed (bracing) of the storey", "Geschoss: Summe der Normalkräfte ΣN_Ed (Aussteifung) ändern")
     }
 }
 

@@ -1,0 +1,34 @@
+{
+  "type": "array",
+  "minItems": 27,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "input",
+      "current",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "input": {
+        "type": "object",
+        "required": [
+          "type",
+          "value"
+        ]
+      },
+      "current": {},
+      "expected": {
+        "enum": [
+          "equal",
+          "different",
+          "refused"
+        ]
+      }
+    }
+  }
+}

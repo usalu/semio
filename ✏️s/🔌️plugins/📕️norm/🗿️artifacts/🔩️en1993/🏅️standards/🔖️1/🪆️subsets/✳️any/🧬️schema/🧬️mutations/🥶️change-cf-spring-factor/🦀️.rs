@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfSpringFactor whe
         record: "ChangedCfSpringFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Spring factor k_f (1 symmetric, 0 antisymmetric) of the cold-formed member", "Kaltprofil: Federfaktor k_f (1 symmetrisch, 0 antimetrisch) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Spring factor k_f (1 symmetric, 0 antisymmetric) of the cold-formed member", "Kaltprofil: Federfaktor k_f (1 symmetrisch, 0 antimetrisch) ändern")
     }
 }
 

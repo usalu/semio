@@ -10,7 +10,7 @@ pub struct RemoveDiaphragm { pub index: usize }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for RemoveDiaphragm where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::insert_diaphragm::InsertDiaphragm> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "diaphragm", kind: "remove-diaphragm", record: "RemovedDiaphragm" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove diaphragm #{}", self.index), &format!("Diaphragm #{} entfernen", self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove diaphragm #{}", self.index), &format!("Diaphragm #{} entfernen", self.index)) }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }
 

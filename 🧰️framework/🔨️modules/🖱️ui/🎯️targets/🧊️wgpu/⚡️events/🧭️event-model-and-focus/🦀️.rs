@@ -170,11 +170,11 @@ fn disclosure_header_band(tree: &UiTree, id: NodeId, rect: Rect, reversed: bool,
         (UiNode::Tree(owner), NodeKey::Explicit(key)) => owner.sections.iter().find(|section| &section.id == key),
         _ => None,
     });
-    let scoped_metrics = tree_metrics.map(|metrics| semio_framework_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, id, metrics));
+    let scoped_metrics = tree_metrics.map(|metrics| semio_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, id, metrics));
     match (tree_section, scoped_metrics.as_ref()) {
         (Some(section), Some(metrics)) => tree_section_header_band(rect, tree_section_header_height(section, metrics), reversed),
         (None, Some(metrics)) if tree.authored_tree_item(id).is_some() => tree_section_header_band(rect, metrics.row_height, reversed),
-        _ if matches!(tree.node(id).map(|node| &node.spec.0), Some(UiNode::Section(_))) => Rect::new(rect.x, rect.y, rect.w, semio_framework_ui_wgpu_mounted_layout::retained_section_title_height(tree, id).min(rect.h)),
+        _ if matches!(tree.node(id).map(|node| &node.spec.0), Some(UiNode::Section(_))) => Rect::new(rect.x, rect.y, rect.w, semio_ui_wgpu_mounted_layout::retained_section_title_height(tree, id).min(rect.h)),
         _ => Rect::new(rect.x, rect.y, rect.w, scoped_metrics.map_or(0.0, |metrics| metrics.row_height).min(rect.h)),
     }
 }
@@ -195,7 +195,7 @@ fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
         && stack.drop_action.is_none()
         && !node.flags.contains(NodeFlags::DRAG_SOURCE)
         && !tree.disclosure_is_interactive(id)
-        && !tree.authored_tree_item(id).and_then(|item| item.actions.as_deref()).is_some_and(|actions| actions.iter().any(|action| action.placement() == semio_framework_ui_declaration::ui::UiTreeActionPlacement::Row))
+        && !tree.authored_tree_item(id).and_then(|item| item.actions.as_deref()).is_some_and(|actions| actions.iter().any(|action| action.placement() == semio_ui_declaration::ui::UiTreeActionPlacement::Row))
 }
 
 //#region 🔖️TreeItemLookup

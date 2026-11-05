@@ -36,7 +36,7 @@ impl DocumentState {
         let action_json = semio_framework_pack_json::to_json_string(&invocation);
         let (tx, rx) = std::sync::mpsc::channel();
         let expected_for_task = expected.clone();
-        let pool = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
+        let pool = semio_renderer_wgpu_host_base::renderer_worker_pool();
         let task = ShellPoolFuture::spawn(pool, Lane::Io, async move {
             let outcome = match program.handle_action(instance_id, &action_json, &view_state).await {
                 Err(error) => ShellDirectoryHomePublicationOutcome::Rejected(error),

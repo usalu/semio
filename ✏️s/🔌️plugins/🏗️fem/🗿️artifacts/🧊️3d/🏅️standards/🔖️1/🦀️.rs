@@ -8,8 +8,8 @@
 //! `s.fem3d.codec.document.v1` row.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::MediaDeclaration;
-use semio_framework_plugin::app::declarations::StandardDeclaration;
+use semio_plugin::app::declarations::MediaDeclaration;
+use semio_plugin::app::declarations::StandardDeclaration;
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {

@@ -7,15 +7,15 @@
 use crate::schema::snapshot::{XmlNode};
 use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_to_text_checked};
 use crate::XmlSnapshot;
-use semio_framework_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -34,7 +34,7 @@ pub const XML_ROOT_NODE_ID: &str = "$";
 pub fn encode_node_path(path: &[usize]) -> String {
     let mut encoded = XML_ROOT_NODE_ID.to_string();
     for index in path {
-        encoded.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        encoded.push_str(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
         encoded.push_str(&index.to_string());
     }
     encoded
@@ -53,7 +53,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `XmlSnapshot -> BuiltNode`: an empty document renders a single placeholder leaf, otherwise
 /// the real element tree, child-index paths as node ids.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &XmlSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &XmlSnapshot, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let root = match &document.doc.root {
         Some(node) => node_view(XML_ROOT_NODE_ID.to_string(), node),
         None => TreeNodeView { id: XML_ROOT_NODE_ID.to_string(), label: "(empty document)".to_string(), children: Vec::new() },
@@ -68,8 +68,8 @@ pub fn render_editor(
     windows: &TreeWindows<'_>,
     controller_id: &str,
     revision: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    publication_revision: semio_plugin::UiPublicationRevision,
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let root = match &document.doc.root {
         Some(node) => node_view(XML_ROOT_NODE_ID.to_string(), node),
         None => TreeNodeView { id: XML_ROOT_NODE_ID.to_string(), label: "(empty document)".to_string(), children: Vec::new() },
@@ -82,13 +82,13 @@ pub fn render_editor(
         arguments.try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision)?)).ok()?;
         Some(EditableTreeNode::new(text, "set-node", UiValue::Map(arguments.finish())))
     })?;
-    let source = xml_document_to_text_checked(&document.doc).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.xml.invalid-document", message))?;
+    let source = xml_document_to_text_checked(&document.doc).map_err(|message| semio_plugin::PluginAssemblyError::new("stdio.xml.invalid-document", message))?;
     semio_s_artifact_stdio_contract::editing::render_file_source_editor("stdio-xml-source", source, "xml", "set-node", XML_ROOT_NODE_ID, revision, publication_revision, locale, tree)
 }
 
 fn node_at_path<'a>(root: &'a XmlNode, node_id: &str) -> Option<&'a XmlNode> {
     let mut node = root;
-    let mut segments = node_id.split(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+    let mut segments = node_id.split(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
     (segments.next()? == XML_ROOT_NODE_ID).then_some(())?;
     for segment in segments {
         let index = segment.parse::<usize>().ok()?;

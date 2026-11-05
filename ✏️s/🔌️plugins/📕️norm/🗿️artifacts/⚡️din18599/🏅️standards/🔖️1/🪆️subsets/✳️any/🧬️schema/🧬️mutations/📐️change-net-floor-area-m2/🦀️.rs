@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ChangeNetFloorAreaM2 w
         record: "ChangedNetFloorAreaM2",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change net floor area", "Nettogrundfläche ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change net floor area", "Nettogrundfläche ändern")
     }
 }
 

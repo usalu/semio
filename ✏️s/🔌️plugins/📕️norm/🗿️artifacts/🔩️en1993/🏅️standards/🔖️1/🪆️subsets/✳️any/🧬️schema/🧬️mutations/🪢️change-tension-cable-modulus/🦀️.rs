@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionCableModulu
         record: "ChangedTensionCableModulus",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cable modulus E of the tension component", "Zugglied: Seil-E-Modul E ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cable modulus E of the tension component", "Zugglied: Seil-E-Modul E ändern")
     }
 }
 

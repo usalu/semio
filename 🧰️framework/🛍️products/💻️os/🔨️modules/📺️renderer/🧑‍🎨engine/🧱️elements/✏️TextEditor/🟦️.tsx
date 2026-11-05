@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
 import { cn, ContextMenuController, ContextMenuTriggerButton, glassClass, Textarea, useLabel } from "@semio-tech/ui-react";
-import { textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
+import { textEditorActions, type ActionDescriptor, type ActionDispatchLifecycleV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
 import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { useClient } from "@semio-tech/framework-os-node-graph-rs/index";
 import { openSurfaceContextMenu, mapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
@@ -25,6 +25,7 @@ import { acceptTextEditorExplicitDraftCancellation, beginTextEditorExplicitDraft
 import { useEditorSurfaceState } from "./🧰️surface-state-and-delivery/🟦️.ts";
 import { useEditorSessionPresence } from "./👥️session-presence-and-caret/🟦️.ts";
 import { useEditorCompletionsRenameAndMenu, type EditorCore3 } from "./🔤️completions-rename-and-menu/🟦️.ts";
+import { admitTextEditorSourceDraftV1, changeTextEditorSourceDraftV1, parseTextEditorValueSourceV1, textEditorValueSourceActionV1, textEditorValueSourceEditIdentityV1, type TextEditorSourceDraftV1 } from "./📄️value-source/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️TextEditorHost
@@ -52,7 +53,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
   const tabTrapRef = useRef<TabTrapStateV1>({ armed: false, leaveMode: false });
   const [tabAnnouncement, setTabAnnouncement] = useState("");
   const editorLocale = typeof document !== "undefined" && document.documentElement.lang !== "" ? document.documentElement.lang : "en";
-  const { applyCompletion, cancelRename, caretScreenPosition, commitRename, completionIndex, completions, completionsOpen, contextMenu, contextMenuTitleLabel, descriptionId, dismissContextMenu, dispatch, editorLabel, emitSelection, invalid, lastHoverRangeRef, moveExplicitHistory, newlineGates, onSessionReady, openCompletions, presenceFrame, presenceWindowId, projectPeerCaret, publishCaretPresence, readOnly, readOnlyRef, renameDraft, renameInfo, renamePosition, requestContextMenu, scene, sessionEpoch, sessionFactory, sessionRef, setCompletionIndex, setCompletionsOpen, setContextMenu, setPresenceFrame, shellContextMenuFallback, sinkRef, startRename, surfaceRef, textEditorMenuKeysByActionId, updateRenamePreview , presenceRuntimeKey } = core;
+  const { applyCompletion, cancelRename, caretScreenPosition, commitRename, completionIndex, completions, completionsOpen, contextMenu, contextMenuTitleLabel, descriptionId, dismissContextMenu, dispatch, editorLabel, editorReady, emitSelection, invalid, lastHoverRangeRef, moveExplicitHistory, newlineGates, onSessionReady, openCompletions, presenceFrame, presenceWindowId, projectPeerCaret, publishCaretPresence, readOnly, readOnlyRef, renameDraft, renameInfo, renamePosition, requestContextMenu, scene, sessionEpoch, sessionFactory, sessionRef, setCompletionIndex, setCompletionsOpen, setContextMenu, setPresenceFrame, shellContextMenuFallback, sinkRef, startRename, surfaceRef, textEditorMenuKeysByActionId, updateRenamePreview , presenceRuntimeKey } = core;
   selectWordRef.current = (x, y) => {
     const session = sessionRef.current;
     if (!session) return;
@@ -61,7 +62,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
   };
 
   return (
-    <div ref={surfaceRef} className="relative min-h-0 flex-1">
+    <div ref={surfaceRef} className="relative min-h-0 flex-1" data-text-editor-ready={editorReady ? "true" : "false"} aria-busy={!editorReady}>
       <WasmCanvas className="absolute inset-0" sessionFactory={sessionFactory} onSessionReady={onSessionReady} enablePointer={false} />
       <TextPeerCaretsOverlayV1 windowId={presenceWindowId} project={projectPeerCaret} frame={presenceFrame + sessionEpoch} lineHeightPx={16} locale={typeof document !== "undefined" ? document.documentElement.lang : undefined} />
       <div
@@ -452,6 +453,8 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
         }}
         spellCheck={false}
         aria-readonly={readOnly}
+        readOnly={readOnly}
+        disabled={!editorReady}
         data-read-only={readOnly ? "" : undefined}
         aria-label={editorLabel}
         aria-describedby={descriptionId}
@@ -467,9 +470,63 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
 //#region TextEditorHost
 export function TextEditorHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.textEditor;
-  const isClient = useClient();
   const localDocumentOwner = useLocalDocumentOwnerV1();
   const localDocumentWindow = useLocalDocumentWindowV1() ?? node.surfaceId;
+  const valueSource = useMemo(() => parseTextEditorValueSourceV1(scene?.settingsJson), [scene?.settingsJson]);
+  const sourceScope = JSON.stringify([localDocumentOwner?.id ?? null, retainedTextEditorDraftKeyV1(localDocumentWindow, textEditorValueSourceEditIdentityV1(node.controllerId, node.surfaceId, valueSource))]);
+  const activeSourceScopeRef = useRef(sourceScope);
+  activeSourceScopeRef.current = sourceScope;
+  const sourceIssuedRef = useRef<Readonly<{ scope: string; text: string; scene: TextEditorScene | undefined }> | null>(null);
+  const [sourceDraft, setSourceDraft] = useState<Readonly<{ scope: string; value: TextEditorSourceDraftV1 }> | null>(null);
+  const sourceDraftRef = useRef(sourceDraft);
+  const writeSourceDraft = (value: TextEditorSourceDraftV1 | null) => {
+    const next = value === null ? null : { scope: sourceScope, value };
+    sourceDraftRef.current = next;
+    setSourceDraft(next);
+  };
+  const currentSourceDraft = sourceDraft?.scope === sourceScope ? sourceDraft.value : null;
+  const prepareSource = (text: string) => valueSource ? textEditorValueSourceActionV1(valueSource, { controllerId: node.controllerId, action: textEditorActions.edit, args: { text } }) : null;
+  const changeSource = (text: string) => {
+    const result = prepareSource(text), before = sourceDraftRef.current?.scope === sourceScope ? sourceDraftRef.current.value : null;
+    writeSourceDraft(changeTextEditorSourceDraftV1(before, text, scene?.buffer ?? "", result?.kind === "refused", sourceIssuedRef.current?.scope === sourceScope));
+  };
+  const sourceOwnerIsActive = () => localDocumentOwner?.active !== false;
+  const commitSource = async (text: string) => {
+    const scope = sourceScope, result = prepareSource(text);
+    if (!sourceOwnerIsActive() || result?.kind !== "dispatch" || text === scene?.buffer && sourceIssuedRef.current?.scope !== scope) return;
+    sourceIssuedRef.current = { scope, text, scene };
+    const outcome = await onAction(result.action);
+    if (!mountedRef.current || activeSourceScopeRef.current !== scope || !sourceOwnerIsActive() || typeof outcome !== "object" || outcome === null || !("kind" in outcome) || outcome.kind !== "applied" || sourceDraftRef.current?.scope !== scope) return;
+    writeSourceDraft(admitTextEditorSourceDraftV1(sourceDraftRef.current.value, text));
+  };
+  useEffect(() => {
+    const current = sourceDraftRef.current;
+    if (!scene) return;
+    const issued = sourceIssuedRef.current;
+    if (current?.scope === sourceScope && current.value.admitted === scene?.buffer && current.value.text === scene.buffer && (!issued || issued.scope === sourceScope && issued.text === scene.buffer && issued.scene !== scene)) {
+      sourceIssuedRef.current = null;
+      writeSourceDraft(null);
+    }
+  }, [scene, sourceScope, sourceDraft]);
+  useEffect(() => {
+    if (sourceDraftRef.current?.scope !== sourceScope) writeSourceDraft(null);
+    if (sourceIssuedRef.current?.scope !== sourceScope) sourceIssuedRef.current = null;
+    return localDocumentOwner?.subscribeRetirement(() => {
+      activeSourceScopeRef.current = "";
+      sourceIssuedRef.current = null;
+      writeSourceDraft(null);
+    });
+  }, [localDocumentOwner, sourceScope]);
+  const sourceOnAction = (action: ActionDescriptor, lifecycle?: ActionDispatchLifecycleV1) => {
+    if (!valueSource) return onAction(action, lifecycle);
+    if (action.action === textEditorActions.edit && action.args && typeof action.args === "object" && "text" in action.args && typeof action.args.text === "string") {
+      changeSource(action.args.text);
+      return commitSource(action.args.text);
+    }
+    const result = textEditorValueSourceActionV1(valueSource, action);
+    return result.kind === "dispatch" ? onAction(result.action, lifecycle) : undefined;
+  };
+  const isClient = useClient();
   const explicitDraft = useMemo(() => parseTextEditorExplicitDraftSettings(scene?.settingsJson), [scene?.settingsJson]);
   const draftScope = JSON.stringify([node.controllerId, node.surfaceId, explicitDraft?.editAction, explicitDraft?.editArgument, Object.entries(explicitDraft?.editArguments ?? {}).filter(([key]) => key !== "revision")]);
   const publication = { scope: draftScope, buffer: scene?.buffer ?? "", revision: explicitDraft?.publicationRevision ?? "" };
@@ -526,15 +583,17 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const documentPlaceholderLabel = useLabel("ui.host.documentPlaceholder");
   const languageDocumentLabel = useLabel("ui.host.languageDocument", { language: scene?.language });
+  const sourceTooLongLabel = useLabel("ui.host.sourceTextTooLong");
+  const discardSourceLabel = useLabel("ui.host.inputDraftDiscard");
 
   if (!scene) return <div className="semio-text-editor-empty">{emptySceneLabel}</div>;
 
   const currentDraft = draftState.surfaceId === draftScope ? draftState : createTextEditorExplicitDraft(draftScope, scene.buffer, publication.revision);
-  const draft = explicitDraft ? currentDraft.draft : scene.buffer;
+  const draft = explicitDraft ? currentDraft.draft : currentSourceDraft?.text ?? scene.buffer;
   const pending = currentDraft.pending !== null;
-  const failure = explicitDraft && (currentDraft.conflicted || currentDraft.failed) ? currentDraft.conflicted ? explicitDraft.conflictLabel : textEditorExplicitDraftFailureV1(explicitDraft, currentDraft.diagnostic) : null;
+  const failure = currentSourceDraft?.refused ? sourceTooLongLabel : explicitDraft && (currentDraft.conflicted || currentDraft.failed) ? currentDraft.conflicted ? explicitDraft.conflictLabel : textEditorExplicitDraftFailureV1(explicitDraft, currentDraft.diagnostic) : null;
   const statusId = `${node.surfaceId}.draft-status`;
-  const displayedScene = explicitDraft ? { ...scene, buffer: draft } : scene;
+  const displayedScene = explicitDraft || currentSourceDraft ? { ...scene, buffer: draft } : scene;
   const changeDraft = (text: string) => {
     updateDraft(changeTextEditorExplicitDraft(draftStateRef.current, draftScope, scene.buffer, text, publication.revision));
   };
@@ -579,7 +638,7 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
   return (
     <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId} data-dirty={explicitDraft && currentDraft.dirty ? "true" : "false"} aria-busy={explicitDraft && pending || undefined}>
       {isClient ? (
-        <WasmEditorSurface scene={displayedScene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} explicitDraft={explicitDraft} explicitDraftDirty={currentDraft.dirty} descriptionId={failure ? statusId : undefined} invalid={Boolean(failure)} onDraftChange={changeDraft} requestContextMenu={requestContextMenu} />
+        <WasmEditorSurface scene={displayedScene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={sourceOnAction} onSourceCommit={valueSource ? commitSource : undefined} label={valueSource?.label} readOnly={valueSource?.readOnly} explicitDraft={explicitDraft} explicitDraftDirty={currentDraft.dirty} descriptionId={failure ? statusId : undefined} invalid={Boolean(failure)} onDraftChange={valueSource ? changeSource : changeDraft} requestContextMenu={requestContextMenu} />
       ) : (
         <div className="relative min-h-0 flex-1">
           <HighlightedBuffer buffer={draft} tokens={tokens} />
@@ -590,13 +649,20 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
             rows={24}
             value={draft}
             placeholder={scene.language ? languageDocumentLabel : documentPlaceholderLabel}
-            aria-label={scene.language ? languageDocumentLabel : documentPlaceholderLabel}
+            aria-label={valueSource?.label ?? (scene.language ? languageDocumentLabel : documentPlaceholderLabel)}
+            readOnly={valueSource?.readOnly}
             aria-describedby={failure ? statusId : undefined}
             aria-invalid={Boolean(failure) || undefined}
-            onLazyChange={(value) => explicitDraft ? changeDraft(value) : onAction({ controllerId: node.controllerId, action: textEditorActions.edit, args: { surfaceId: node.surfaceId, text: value } })}
+            onLazyChange={(value) => { if (valueSource) { changeSource(value); void commitSource(value); } else if (explicitDraft) changeDraft(value); else sourceOnAction({ controllerId: node.controllerId, action: textEditorActions.edit, args: { surfaceId: node.surfaceId, text: value } }); }}
           />
         </div>
       )}
+      {valueSource && failure ? (
+        <div className="flex items-center gap-2 border-t border-border px-3 py-2">
+          <span id={statusId} role="alert" className="flex-1 text-xs text-destructive">{failure}</span>
+          <button type="button" className="rounded border border-border px-3 py-1 text-xs" onClick={() => { sourceIssuedRef.current = null; writeSourceDraft(null); }}>{discardSourceLabel}</button>
+        </div>
+      ) : null}
       {explicitDraft ? (
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-2">
           {failure ? <span id={statusId} role="alert" className="mr-auto break-words text-xs text-destructive">{failure}</span> : null}

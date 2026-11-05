@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for InsertStud where Op: pro
         record: "InsertedStud",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert stud {}", self.item.id), &format!("Kopfbolzendübel {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert stud {}", self.item.id), &format!("Kopfbolzendübel {} einfügen", self.item.id))
     }
 }
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingBeamMoment
         record: "ChangeBuildingBeamMomentSumNm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Sum of beam design resistances at the governing joint", "Summe der Balkenwiderstände am maßgebenden Knoten ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Sum of beam design resistances at the governing joint", "Summe der Balkenwiderstände am maßgebenden Knoten ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-beam-moment-sum-nm".into()]

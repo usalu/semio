@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRestraintTorsional
         record: "ChangedRestraintTorsionalSpring",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Continuous torsional spring c_θ of the restraint", "Halterung: Kontinuierliche Drehbettung c_θ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Continuous torsional spring c_θ of the restraint", "Halterung: Kontinuierliche Drehbettung c_θ ändern")
     }
 }
 

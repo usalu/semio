@@ -70,8 +70,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "primitive-attributes", kind: "reorder-primitive-attributes", record: "ReorderedPrimitiveAttributes" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Reorder Primitive Attributes", "Primitivattribute umordnen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Reorder Primitive Attributes", "Primitivattribute umordnen")
     }
 
     fn target(&self) -> Vec<String> {

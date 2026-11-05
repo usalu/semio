@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeSlopeWidth where O
         record: "ChangedSlopeWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Slope width along its axis (0 = plane strain) of the slope", "Böschung: Böschungsbreite in Achsrichtung (0 = ebener Verformungszustand) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Slope width along its axis (0 = plane strain) of the slope", "Böschung: Böschungsbreite in Achsrichtung (0 = ebener Verformungszustand) ändern")
     }
 }
 

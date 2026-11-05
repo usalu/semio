@@ -3,7 +3,7 @@
 
 use semio_s_artifact_cad_cad_config::CadDislocateOptions;
 use semio_s_artifact_cad_cad_kit::{cad_window_action, CAD_DISLOCATE_UTILITY_ID};
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 fn dislocate_option_args(option: &str) -> semio_framework_value::DslValue {
     semio_framework_value::DslValue::object([("option".to_string(), semio_framework_value::DslValue::String(option.to_string()))])

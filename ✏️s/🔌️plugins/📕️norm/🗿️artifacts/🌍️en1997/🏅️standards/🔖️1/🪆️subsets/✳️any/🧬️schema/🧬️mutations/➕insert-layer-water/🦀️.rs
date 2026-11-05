@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertLayerWater where O
         verb: "insert", entity: "layer-water", kind: "insert-layer-water", record: "InsertedLayerWater",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert layer water regime", "Wasserverhältnis der Schicht einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert layer water regime", "Wasserverhältnis der Schicht einfügen")
     }
 }
 

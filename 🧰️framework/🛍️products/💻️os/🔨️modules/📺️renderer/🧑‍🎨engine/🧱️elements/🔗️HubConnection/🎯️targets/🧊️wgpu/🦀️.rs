@@ -24,22 +24,22 @@ use crate::hub_sign_in::{
 use crate::space_browser::{filter_space_rows, invite_link, space_browser_label, space_row_invitable, space_row_summary, InviteRedemptionErrorCode, SpaceBrowserLabel, SpaceBrowserPhase, SpaceMemberPresence, SpaceRow};
 use semio_framework::IconName;
 use semio_framework_async::OperationContext;
-use semio_framework_os_kernel::os_directory::client::{DirectoryTransport, HttpMethod, HttpResponse, TransportError};
-use semio_framework_os_kernel::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationReadyV1};
-use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
+use semio_os_kernel::os_directory::client::{DirectoryTransport, HttpMethod, HttpResponse, TransportError};
+use semio_os_kernel::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationReadyV1};
+use semio_os_kernel::os_directory::DirectorySpaceRole;
 use semio_framework_value::DslValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use semio_framework_ui_declaration::ui::UiState;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_declaration::ui::UiButtonNode;
-use semio_framework_ui_declaration::ui::UiInputNode;
-use semio_framework_ui_declaration::ui::UiNode;
-use semio_framework_ui_declaration::ui::UiPresence;
-use semio_framework_ui_declaration::ui::UiStackNode;
-use semio_framework_ui_declaration::ui::UiTextNode;
+use semio_ui_declaration::ui::UiState;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_locale::Label;
+use semio_ui_locale::Locale;
+use semio_ui_declaration::ui::UiButtonNode;
+use semio_ui_declaration::ui::UiInputNode;
+use semio_ui_declaration::ui::UiNode;
+use semio_ui_declaration::ui::UiPresence;
+use semio_ui_declaration::ui::UiStackNode;
+use semio_ui_declaration::ui::UiTextNode;
 
 //#region 🆔️SurfaceIds
 /// 🆔️ The panel leaf id the shell registers and routes `/hub` to. Byte-identical to the React

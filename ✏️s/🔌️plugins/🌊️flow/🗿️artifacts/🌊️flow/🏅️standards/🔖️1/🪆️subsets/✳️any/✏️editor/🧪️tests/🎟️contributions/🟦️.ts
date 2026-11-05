@@ -30,17 +30,17 @@ assert.equal(testingSchemaExists(new URL("../../🧬️schema/🎟️contributio
  assert.ok(receiver.includes("cx.consume_retained(progress)"),"the original receiver records the actual child receipt");assertions++;
  assert.ok(receiver.indexOf("cx.consume_retained(progress)")<receiver.indexOf("match result"),"success and failed child effects reach the same context before result propagation");assertions++;
  assert.ok(receiver.includes("error.retained_progress()"));assert.ok(receiver.includes("progress==Default::default()"));assertions+=2;
- const work=source.slice(source.indexOf("impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowContributionsWork"),source.indexOf("struct FlowContributionsJobFactory"));
+ const work=source.slice(source.indexOf("impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowContributionsWork"),source.indexOf("struct FlowContributionsJobFactory"));
  assert.ok(work.includes("retire_flow_extension_registries_step(cx.retained_grant())"));assert.ok(work.includes("flow_contributions_registry_receipt(cx,maintenance)?"));assertions+=2;
  assert.ok(work.indexOf("flow_contributions_registry_receipt(cx,maintenance)?")<work.indexOf("set_contributions::install(payload, session)"));assertions++;
  assert.ok(work.includes("flow.registry-retirement-full"));assert.ok(work.includes("flow-contributions-retirement"));assertions+=2;
  const owner=source.match(/struct FlowContributionsWork\s*\{([^}]+)\}/)?.[1];assert(owner,"Actual contribution owner fields required");assert.deepEqual([...owner.matchAll(/^\s*(?:pub(?:\([^)]*\))?\s+)?(\w+)\s*:/gm)].map(match=>match[1]),fixture.ownerFields);assertions++;
- assert.ok(work.includes("semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(original)"));assertions++;
+ assert.ok(work.includes("semio_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(original)"));assertions++;
  assert.ok(work.includes("fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)")&&work.includes("close_original_nested_step(cx,|cx,grant|"));assertions++;
  assert.ok(work.includes("owner.step(grant)"));assert.ok(work.includes("owner.terminal_is_empty()"));assertions+=2;
  assert.equal(work.includes("self.instance_owner.take().is_some()"),false);assertions++;
  for(const field of ["copy_byte","capacity_byte","release_byte","depth"]){assert.ok(work.includes("next_close_"+field+"_demand"));assertions++;}
- const instance=source.slice(source.indexOf("impl semio_framework_plugin::ArtifactInstanceOperationOwner for FlowInstanceOperationOwner"),source.indexOf("pub struct FlowPlayApp"));
+ const instance=source.slice(source.indexOf("impl semio_plugin::ArtifactInstanceOperationOwner for FlowInstanceOperationOwner"),source.indexOf("pub struct FlowPlayApp"));
  assert.ok(instance.includes("session.retirement_step(child)"));assert.ok(instance.includes("session.close_step(child)"));assertions+=2;
  assert.ok(instance.includes("fn retirement_demands"));assert.ok(instance.includes("maximum_depth:grant.maximum_depth-1"));assertions+=2;
  assert.equal(instance.includes("maximum_items: usize, maximum_bytes: usize"),false);assertions++;

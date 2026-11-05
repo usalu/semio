@@ -1,7 +1,7 @@
 //! 📃️ Canonical document descendant traversal.
 use crate::*;
-use semio_framework_ui_contract_values::ui_typed_fields;
-use semio_framework_ui_contract_values::retirement_protocol::{maximum_depth,done,UI_TYPED_RETIREMENT_DEPTH};
+use semio_ui_contract_values::ui_typed_fields;
+use semio_ui_contract_values::retirement_protocol::{maximum_depth,done,UI_TYPED_RETIREMENT_DEPTH};
 crate::ui_document_field_catalog!(ui_typed_fields);
 ui_typed_fields!(UiPatch {0=>surface:SurfaceId,1=>base_revision:UiRevision,2=>revision:UiRevision,3=>ops:UiPatchOps});
 impl UiTypedRetire for UiPatchOp {

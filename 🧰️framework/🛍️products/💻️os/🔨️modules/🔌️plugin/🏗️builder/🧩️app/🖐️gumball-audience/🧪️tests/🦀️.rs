@@ -4,7 +4,7 @@
 
 use super::*;
 use semio_framework::manifest::{reserved_audience_violation, ActionDefinition, ActionKind};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

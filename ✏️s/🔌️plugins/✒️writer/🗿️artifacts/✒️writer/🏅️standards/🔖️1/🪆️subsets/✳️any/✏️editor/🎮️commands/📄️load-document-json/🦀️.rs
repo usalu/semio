@@ -3,7 +3,7 @@
 use crate::editor::writer::editor_vocabulary::reset_document_effect;
 use crate::op::WriterMutation;
 use crate::WriterSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️TextEdit

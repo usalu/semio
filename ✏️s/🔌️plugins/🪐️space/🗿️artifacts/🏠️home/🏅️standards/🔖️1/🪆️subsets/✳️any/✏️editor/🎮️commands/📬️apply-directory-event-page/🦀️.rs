@@ -8,8 +8,8 @@ use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation, HOME_DIRECTORY_PAGE_BYTES};
 use crate::editor::home::transient::{ApplyDirectoryPage, DirectoryPageAdmission, DirectoryProjectionReceiptV1, HomeDirectoryProjection, HomeTransient, HomeTransientMutation};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{AppEvent, ArtifactApp, ArtifactView, ConfigView, Emit, EphemeralEmit, Fault, FaultOrigin};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::{AppEvent, ArtifactApp, ArtifactView, ConfigView, Emit, EphemeralEmit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -76,7 +76,7 @@ where
         self.tool_id
     }
 
-    fn extent(&self, command: &A::Command, _snapshot: &A::Snapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
+    fn extent(&self, command: &A::Command, _snapshot: &A::Snapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
         (self.page_json)(command).filter(|page_json| page_json.len() <= HOME_DIRECTORY_PAGE_BYTES).map(|_| 1)
     }
 

@@ -1,6 +1,6 @@
 //! 🧪️ engine tests (↔️undirected-ports): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_engine::UndirectedPortGraphEngine;
+use semio_os_infinite_board_engine::UndirectedPortGraphEngine;
 
 #[test]
 fn undirected_port_graph_engine_alias() {

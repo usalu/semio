@@ -6,13 +6,13 @@ use crate::editor::puzzle2d::engine::board_host::PUZZLE_2D_BOARD_NAMING;
 use crate::editor::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{snapshot::board_snapshot_edges, snapshot::board_snapshot_nodes, snapshot::puzzle2d_action, snapshot::runtime_camera, snapshot::Puzzle2dScene, config::PUZZLE2D_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::Board2dScene;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementStatus;
+use semio_plugin::Board2dScene;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementStatus;
 use semio_framework_pack_json::{json,Value};
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_SURFACE_ID;
-use semio_framework_os_infinite_board_normal_scene::overlay_paint_state_json;
+use semio_os_infinite_board_normal_scene::overlay_paint_state_json;
 
 //#region 🔖️PaneCamera
 const PUZZLE2D_VIEWPORT_REF_SHORT_PX: f64 = 640.0;
@@ -194,9 +194,9 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
 /// 🖼️ The board-2d surface node for one pane — bound by each window's own `render()`. The snapshot rides
 /// as its own paged lane carrier (`Board2dSceneLane::Snapshot`), so a 180-node board is bounded by its
 /// carrier pages instead of by the 32 KiB surface doc that refused it outright.
-pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let scene = puzzle2d_board_scene(document_json, envelope, pane);
-    semio_framework_plugin::scene_surface(&format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), semio_framework_ui_contract::SurfaceKind::Board2d, &scene)
+    semio_plugin::scene_surface(&format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), semio_ui_contract::SurfaceKind::Board2d, &scene)
 }
 //#endregion 🔖️Canvas
 

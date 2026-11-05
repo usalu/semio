@@ -2,7 +2,7 @@
 use semio_framework_actor::{OriginalActorTurnWork,RetainedTurnInput};
 use semio_framework_job::{Generation,OperationId,OriginalTurnFailure,StepBudget,StepContext};
 use semio_framework_actor::retained_context::{OriginalActorAdmission,OriginalActorCall,OriginalActorContextError};
-use semio_framework_plugin_guest_contract::original_actor_context::{OriginalActorEntryFailure,OriginalActorGuestEntry};
+use semio_plugin_guest_contract::original_actor_context::{OriginalActorEntryFailure,OriginalActorGuestEntry};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_framework_trace::allocate_operation_id;
 

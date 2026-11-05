@@ -1,3 +1,4 @@
+export { splitUiTextChunks, joinUiTextChunks } from "../🌱️values/🔤️text-chunks/🟦️.ts";
 import type { InputKind, UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../🖼️presentation/🔢️number-format/🟦️.ts";
 

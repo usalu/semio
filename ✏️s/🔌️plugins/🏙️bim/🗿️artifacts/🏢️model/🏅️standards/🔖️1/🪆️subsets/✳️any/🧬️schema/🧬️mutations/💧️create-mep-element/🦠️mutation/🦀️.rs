@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "mep-element", kind: "create-mep-element", record: "CreateMepElement" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Route MEP element \"{}\"", self.mep.name), &format!("TGA-Element \"{}\" verlegen", self.mep.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Route MEP element \"{}\"", self.mep.name), &format!("TGA-Element \"{}\" verlegen", self.mep.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

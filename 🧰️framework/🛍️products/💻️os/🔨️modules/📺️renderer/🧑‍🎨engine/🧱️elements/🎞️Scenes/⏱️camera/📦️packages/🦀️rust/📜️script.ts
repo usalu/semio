@@ -16,14 +16,14 @@ class TestScript extends BundleScript {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
         const { rest } = resolveTestLevel(segments);
         if (rest.length) throw new Error("Camera storage receives its whole original owning package");
-        await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-renderer-camera"], cwd: this.root, extraArgs: ["--all-targets", "--no-fail-fast"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+        await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-renderer-camera"], cwd: this.root, extraArgs: ["--all-targets", "--no-fail-fast"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
     }
 }
 /** 🔑️ Verifies the original borrowed NodeKey through its Source and complete native camera owner. */
 class NodeKeyScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||!["source","native"].includes(segments[0]!))throw new Error("node-key requires source or native");
-  if(segments[0]==="native"){await runAdmittedCargoPackageTestsV1(["semio-framework-os-renderer-camera"],this.repoRoot,this.invocation,["--all-targets","--no-fail-fast"]);return;}
+  if(segments[0]==="native"){await runAdmittedCargoPackageTestsV1(["semio-renderer-camera"],this.repoRoot,this.invocation,["--all-targets","--no-fail-fast"]);return;}
   const source=resolve(this.root,"../../../../../🧪️tests/♻️frame-close/🟦️.ts");
   await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"camera:node-key-source",scriptInvocationBudget(this.invocation,120000),{env:process.env,signal:this.invocation.control.signal});
  }

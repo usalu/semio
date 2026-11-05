@@ -1,7 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` load mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/⏸️dup-load-id-4f4a0a/🦀️.rs"]
 mod add_load_edge_dup_load_id;

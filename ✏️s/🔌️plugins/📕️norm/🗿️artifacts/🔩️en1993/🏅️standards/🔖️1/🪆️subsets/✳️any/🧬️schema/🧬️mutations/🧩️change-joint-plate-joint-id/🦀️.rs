@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlateJointId 
         record: "ChangedJointPlateJointId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Joint id of the joint plate", "Anschlussblech: Anschluss-Id ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Joint id of the joint plate", "Anschlussblech: Anschluss-Id ändern")
     }
 }
 

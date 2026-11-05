@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for RemovePier where Op: pro
         record: "RemovedPier",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove pier", "Pfeiler entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove pier", "Pfeiler entfernen")
     }
 }
 

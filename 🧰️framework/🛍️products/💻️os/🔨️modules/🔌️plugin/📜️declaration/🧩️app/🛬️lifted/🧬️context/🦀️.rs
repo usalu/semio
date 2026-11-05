@@ -9,6 +9,9 @@ use std::mem::ManuallyDrop;
 mod original_fields;
 pub use original_fields::{ContextOwnedFields,ContextOriginalResidual,ContextRetirementParts,ContextToolRunMetadata,ContextToolRunSources};
 
+#[path="../../../👷️job/🎯️completion-and-owned-context/📥️provisional/🦀️.rs"]
+mod original_provisional;
+
 enum Source<A:ArtifactApp>{Admitted(SealedShared<ArtifactOwnedToolJobContext<A>>),Refused{original:ArtifactOwnedToolJobContext<A>,fault:ValueError}}
 
 /// 🔐️ No raw Arc, Weak or infallible alias cloning escapes the original context issuer.

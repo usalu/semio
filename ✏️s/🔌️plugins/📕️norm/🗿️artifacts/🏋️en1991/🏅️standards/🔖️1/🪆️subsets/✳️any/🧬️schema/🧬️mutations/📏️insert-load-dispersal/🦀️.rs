@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertLoadDispersal wher
         record: "InsertedLoadDispersal",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert load dispersal {}", self.item.id), &format!("Lastausbreitung {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert load dispersal {}", self.item.id), &format!("Lastausbreitung {} einfügen", self.item.id))
     }
 }
 

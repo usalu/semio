@@ -4,18 +4,18 @@ use super::*;
 
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
 where
-    P: store::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-    Mutation: ::semio_framework_os_kernel::StoreMutationFor<P>,
+    P: store::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+    Mutation: ::semio_os_kernel::StoreMutationFor<P>,
     M: SpaceMember + MemberFactory,
 {
     /// 🧹️ Keeps original custody until every child and separate parent transfer is admitted.
-    pub fn drive_rejected_members(&mut self, current_content: &ChildContentView,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-        let demand = self.replacement_member_retirement_demands(grant.maximum_copy_bytes).map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+    pub fn drive_rejected_members(&mut self, current_content: &ChildContentView,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let demand = self.replacement_member_retirement_demands(grant.maximum_copy_bytes).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
         let paid = || PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() });
-        let parent = |step: RetainedCloneStep, terminal: bool| -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-            let admitted = semio_framework_value::retained_clone::admit_retained_clone_close(child,step,terminal,"replacement original member child").map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+        let parent = |step: RetainedCloneStep, terminal: bool| -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+            let admitted = semio_framework_value::retained_clone::admit_retained_clone_close(child,step,terminal,"replacement original member child").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
             Ok(PluginLifecycleStep::Progress(admitted.progress()))
         };
         if self.closure.is_some() { drop(self.closure.take()); return Ok(paid()); }
@@ -35,7 +35,7 @@ where
         }
         if let Some(ingress) = self.active_member_ingress.as_mut() {
             if ingress.terminal_is_empty() { drop(self.active_member_ingress.take()); return Ok(paid()); }
-            let step = ingress.close_step(child).map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?; return parent(step,ingress.terminal_is_empty());
+            let step = ingress.close_step(child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?; return parent(step,ingress.terminal_is_empty());
         }
         if let Some(registry) = self.member_ingress.as_mut() {
             if registry.terminal_is_empty() { drop(self.member_ingress.take()); return Ok(paid()); }
@@ -44,7 +44,7 @@ where
         if let Some(registry) = self.displaced_content_retirements.as_mut() {
             let children = self.candidate_children.as_mut().ok_or_else(|| plugin_sdk_fault("replacement original displaced roots lost their member registry"))?;
             let current = self.candidate_content.as_ref().ok_or_else(|| plugin_sdk_fault("replacement original displaced roots lost their current root"))?;
-            if original_child_root_retirement_demands::<M>(registry,children,None,self.displaced_content_retirement_cursor,child.maximum_copy_bytes,true).map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?.is_none() { drop(self.displaced_content_retirements.take()); return Ok(paid()); }
+            if original_child_root_retirement_demands::<M>(registry,children,None,self.displaced_content_retirement_cursor,child.maximum_copy_bytes,true).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?.is_none() { drop(self.displaced_content_retirements.take()); return Ok(paid()); }
             let step = advance_original_child_root_retirement(registry,children,None,current,None,None,&mut self.displaced_content_retirement_cursor,child,true)?;
             return parent(step,registry.is_empty() && registry.slots.is_empty());
         }
@@ -55,14 +55,14 @@ where
             let inner = RetainedCloneGrant { maximum_copy_bytes: child.maximum_copy_bytes - reserved, ..child };
             let owners = ChildContentBorrowedOwners::none();
             let step = retirement.close_step(children,None,current_content,&owners,inner)?;
-            let step = semio_framework_value::retained_clone::admit_retained_clone_close(inner,step,retirement.terminal_is_empty(),"replacement original candidate root").map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(inner,step,retirement.terminal_is_empty(),"replacement original candidate root").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
             let receipt = step.progress();
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_bytes: receipt.copied_bytes + reserved, ..receipt }));
         }
         if self.candidate_content.is_some() { let content = self.candidate_content.take().expect("original candidate root remains retained"); *self.candidate_content_retirement = Some(ChildContentRetirement::new(content,true)); return Ok(paid()); }
         if let Some(composition) = self.candidate_composition.as_mut() {
             if composition.terminal_is_empty() { drop(self.candidate_composition.take()); return Ok(paid()); }
-            let step = composition.close_step(child).map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?; return parent(step,composition.terminal_is_empty());
+            let step = composition.close_step(child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?; return parent(step,composition.terminal_is_empty());
         }
         if let Some(pins) = self.displaced_pins.as_mut() {
             if pins.terminal_is_empty() { drop(self.displaced_pins.take()); return Ok(paid()); }
@@ -90,7 +90,7 @@ where
             return match cancel.close_step(child) .result {
                 Ok(step) => parent(step,cancel.terminal_is_empty()),
                 Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "replacement original cancellation retains its waiter or alias" }),
-                Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error)),
+                Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error)),
             };
         }
         if let Some(original) = self.cancel_signal.as_ref() {
@@ -104,17 +104,17 @@ where
         Ok(paid())
     }
 
-    pub fn drive_initializer(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub fn drive_initializer(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if self.state!=ActiveArtifactStoreReplacementState::Initializing{return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer awaits its actual replacement stage"});}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         let business_cancelled=self.cancelled();
         if let Some(rejected)=self.session_rejected.as_mut(){
-            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
+            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
             if rejected.admission_pending()&&!cx.is_cancelled()&&!business_cancelled{
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"artifact_store_replacement",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
                 let before=cx.retained_progress();
                 rejected.admit_pending(config,&mut self.session,cx)?;
-                return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+                return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
             }
 
             if rejected.terminal_is_empty(){
@@ -217,7 +217,7 @@ where
             if !store.close_owned_store_terminal_is_empty(){return Err(plugin_sdk_fault("retained replacement Store lost its exact granted disposer"));}
             let demand=RetirementDemand{copy_bytes:size_of_val(store)+size_of::<ActiveArtifactStoreReplacementState>(),release_bytes:size_of_val(&**store),depth:1,..Default::default()};
             if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-            return semio_framework_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|_|{
+            return semio_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|_|{
                 drop(self.retained_store.take());self.state=if self.member_owners_terminal_is_empty(){ActiveArtifactStoreReplacementState::Complete}else{ActiveArtifactStoreReplacementState::RetiringRejectedMembers};
                 Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}),false))
             });
@@ -225,13 +225,13 @@ where
         if disposer.terminal_is_empty(store){
             let demand=RetirementDemand{copy_bytes:size_of_val(disposer),release_bytes:size_of_val(&**disposer),depth:1,..Default::default()};
             if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-            return semio_framework_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|_|{
+            return semio_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|_|{
                 drop(self.retained_disposer.take());
                 Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}),false))
             });
         }
         let demand=disposer.retirement_demands(store,grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-        semio_framework_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|grant|{
+        semio_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|grant|{
             let step=disposer.close_step(store,grant)?;
             if matches!(step,PluginLifecycleStep::Complete(_))&&!disposer.terminal_is_empty(store){return Err(plugin_sdk_fault("replacement original disposer completed with retained Store owners"));}
             Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step},false))
@@ -264,8 +264,8 @@ where
 
 impl<P, Mutation, M> Drop for ActiveArtifactStoreReplacement<P, Mutation, M>
 where
-    P: store::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-    Mutation: ::semio_framework_os_kernel::StoreMutationFor<P>,
+    P: store::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+    Mutation: ::semio_os_kernel::StoreMutationFor<P>,
     M: SpaceMember + MemberFactory,
 {
     fn drop(&mut self) {

@@ -1,16 +1,16 @@
 pub mod context {
     
     use super::super::*;
-    use semio_framework_os::{ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity, apply_workflow_operation, register_app_io};
-    use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
-    use semio_framework_ui_locale::{LocalizedLabel};
-use semio_framework_plugin::{App, AppIo, HistoryView};
+    use semio_os::{ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity, apply_workflow_operation, register_app_io};
+    use semio_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
+    use semio_ui_locale::{LocalizedLabel};
+use semio_plugin::{App, AppIo, HistoryView};
     
     pub fn empty_history() -> HistoryView {
         HistoryView::empty()
     }
     
-    pub type SpaceVcsApp = semio_framework_plugin::VcsArtifactApp<SpaceApp>;
+    pub type SpaceVcsApp = semio_plugin::VcsArtifactApp<SpaceApp>;
     
     /// 🕹️ Creates a fixture with the real manifest registry and graph interaction domain.
     ///
@@ -18,20 +18,20 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
     /// `interactive-job.live-instance` unless the app's mounted live instance id equals the
     /// dispatching `ActionMeta`'s, and every fixture in this tree dispatches as `meta("local")`.
     pub async fn app_with_registry() -> SpaceVcsApp {
-        let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<SpaceApp, _>(create_space_app(), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
-        semio_framework_plugin::PluginApp::bind_instance_id(&mut app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+        let mut app = semio_plugin::artifact_app_laws::new_registered_app::<SpaceApp, _>(create_space_app(), semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
+        semio_plugin::PluginApp::bind_instance_id(&mut app, semio_plugin::artifact_app_laws::meta("local").instance_id).await;
         app
     }
     
-    pub async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
-        app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("dispatch")
+    pub async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_plugin::InvocationResult {
+        app.dispatch_typed(command, &semio_plugin::artifact_app_laws::meta("local")).await.expect("dispatch")
     }
 
     /// 🔁️ Dispatches one retained tool command and settles its publication — the admission receipt
     /// alone publishes nothing.
     pub(crate) async fn dispatch_settled(app: &mut SpaceVcsApp, command: SpaceCommand) {
         dispatch(app, command).await;
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.expect("typed operation publication");
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_plugin::artifact_app_laws::meta("local").instance_id).await.expect("typed operation publication");
     }
     
     /// 🕹️ Routes through `SpaceCommand::dispatch` (the `app_commands!`-generated, framework-fixed
@@ -76,7 +76,7 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
             .document(document.iter().map(|segment| segment.to_string()))
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .await
-            .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_framework_ui_contract::SurfaceKind::Canvas2d, "square-pen")
+            .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_ui_contract::SurfaceKind::Canvas2d, "square-pen")
             .await
             .io(AppIo::from_artifact(artifact_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
                 .await
@@ -210,8 +210,8 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
 //#endregion 🧪️RetainedConfigOracle
 use crate::demo_space_projection;
 use crate::unit_tests::context::{empty_history, studio_emit};
-use semio_framework_plugin::artifact_app_laws as plugin_laws;
-use semio_framework_plugin::{PluginApp, VcsArtifactApp};
+use semio_plugin::artifact_app_laws as plugin_laws;
+use semio_plugin::{PluginApp, VcsArtifactApp};
 use semio_hub_space_foundation::{S_PLAY_APP_ID, S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_PARAMETERS_BODY_KEY, S_STUDIO_EXAMPLES};
 
 //#region 🧪️RetainedCatalogOracle
@@ -262,9 +262,9 @@ impl SpaceRetainedCatalogOracle for SerdeJsonSpaceRetainedCatalogOracle {
 async fn retained_command_catalog_matches_the_serde_json_oracle() {
     let oracle = SerdeJsonSpaceRetainedCatalogOracle.summarize(include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
     let bounded_ids = SPACE_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
-    let host_only_ids = <SpaceCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+    let host_only_ids = <SpaceCommandJobFactory as semio_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
-        .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
+        .filter(|contract| contract.lanes == [semio_plugin::ArtifactToolPublicationLane::HostOnly])
         .map(|contract| contract.tool_id.to_string())
         .collect::<std::collections::BTreeSet<_>>();
     assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 40, batch: 0, migrated: 40, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
@@ -293,7 +293,7 @@ async fn initial_snapshot_is_empty_not_demo() {
 async fn node_graph_viewport_writes_typed_workflow_camera_config() {
     let projection = SpaceApp::initial_snapshot().await;
     let config = SpaceConfig::default();
-    let viewport = semio_framework_os_kernel::Viewport2d { x: 17.0, y: -9.0, zoom: 2.5 };
+    let viewport = semio_os_kernel::Viewport2d { x: 17.0, y: -9.0, zoom: 2.5 };
     let emit = context::studio_emit(&projection, &config, &SpaceCommand::NodeGraphViewport(semio_hub_space_commands_authoring::node_graph_viewport::NodeGraphViewport { viewport })).await.expect("viewport");
     assert!(emit.artifact_mutations.is_empty());
     let next = context::apply_config(&config, &emit.config_mutations).await;
@@ -305,7 +305,7 @@ async fn demo_document_has_instances_and_edges() {
     let projection = demo_space_projection().await;
     assert!(projection.graph.nodes.len() >= 5);
     assert!(!projection.graph.edges.is_empty());
-    let validation = semio_framework_os::validate_workflow(&projection.graph);
+    let validation = semio_os::validate_workflow(&projection.graph);
     assert!(validation.ok, "demo workflow must validate: {:?}", validation.errors);
 }
 
@@ -314,7 +314,7 @@ async fn space_window_kind_actions_scope_editing_to_workflow() {
     let definition = create_space_app().await.definition;
     let resolve = |window_id: &str| -> Vec<String> {
         let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
-        semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
+        semio_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
     };
     let graph = resolve(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW);
     let vfs = resolve(crate::modes::main::windows::media_vfs::S_PLAY_WINDOW_MEDIA_VFS);
@@ -354,7 +354,7 @@ async fn commit_checkpoint_round_trips_projection() {
     let before = app.snapshot().expect("projection").graph.nodes.len();
     let commit_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "message": "snapshot" }));
     let admitted = app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
     assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
     plugin_laws::close_registered_fixture_app(&mut app);
 }
@@ -368,7 +368,7 @@ async fn checkout_checkpoint_restores_projection() {
     context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     let commit_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "message": "after-first-spawn" }));
     let admitted = app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
     let after_first = app.snapshot().expect("projection").graph.nodes.len();
     assert!(after_first > before);
     let files = app.document_pack().await.expect("document pack");
@@ -379,13 +379,13 @@ async fn checkout_checkpoint_restores_projection() {
     assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
     let checkout_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "checkpointId": checkpoint_id }));
     let admitted = app.handle_action("checkoutCheckpoint", Some(&checkout_args), &plugin_laws::meta("local")).await.expect("checkout");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("checkout publication");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("checkout publication");
     assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), after_first);
     plugin_laws::close_registered_fixture_app(&mut app);
 }
 
 /// 🧪️ The definitional proof: two independent instances start from `SpaceApp::initial_snapshot()`
-/// (genuinely EMPTY — `paired_apps`/`new_app::<A>(semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into()))` never seed the bundled demo projection; this
+/// (genuinely EMPTY — `paired_apps`/`new_app::<A>(semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into()))` never seed the bundled demo projection; this
 /// test previously assumed otherwise and dispatched a rename against a node id that could never
 /// exist in either instance, which the missing-target guard correctly rejected once the crate could
 /// finally link and run this test for the first time), apply DISJOINT edits (A spawns a "draw"
@@ -451,11 +451,11 @@ async fn space_labels_resolve_native_english_by_default() {
     let config = SpaceConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let _app = SpaceApp::default();
-    let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("catalogue tree");
+    let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("catalogue tree");
     let catalogue_json = plugin_laws::project_and_retire_fixture_tree(catalogue_tree).expect("catalogue projection");
     assert!(catalogue_json.contains("\"Apps\""));
 
-    let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("parameters tree");
+    let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("parameters tree");
     let parameters_json = plugin_laws::project_and_retire_fixture_tree(parameters_tree).expect("parameters projection");
     assert!(parameters_json.contains("Add Parameter"));
     assert!(parameters_json.contains("\"Name\""));
@@ -467,10 +467,10 @@ async fn space_labels_resolve_native_english_by_default() {
 /// destructive `removeAppInstance` row is always the final top-level entry.
 #[semio_framework_async_macros::async_test]
 async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail() {
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
-    let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let registry = semio_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
+    let labels = semio_plugin::resolve_labels::<SStudioLabels>(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let selected_node_ids = vec!["node-1".to_string()];
-    let items = space_workflow_context_menu_items(&registry, labels, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), None, &selected_node_ids).await;
+    let items = space_workflow_context_menu_items(&registry, labels, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), None, &selected_node_ids).await;
     assert!(items.len() <= 9, "top-level context menu rows must stay within budget: {} rows", items.len());
     let last = items.last().expect("non-empty menu");
     assert_eq!(last.id, "remove-instance");
@@ -479,16 +479,16 @@ async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail()
 
 #[semio_framework_async_macros::async_test]
 async fn graph_hit_context_menu_owns_the_remove_target_argument() {
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
-    let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let surface = semio_framework_plugin::ContextMenuSurfaceTarget {
+    let registry = semio_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
+    let labels = semio_plugin::resolve_labels::<SStudioLabels>(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let surface = semio_plugin::ContextMenuSurfaceTarget {
         surface_id: semio_hub_space_foundation::S_PLAY_SURFACE_WORKFLOW.into(),
         kind: "nodeGraph".into(),
-        hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "instance-7".into(), label: None }],
+        hits: vec![semio_plugin::ContextMenuHit { domain: "node".into(), id: "instance-7".into(), label: None }],
         selection: Vec::new(),
         text: None,
     };
-    let items = space_workflow_context_menu_items(&registry, labels, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), Some(&surface), &[]).await;
+    let items = space_workflow_context_menu_items(&registry, labels, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), Some(&surface), &[]).await;
     let remove = items.iter().find(|item| item.action.as_deref() == Some("removeAppInstance")).expect("remove item");
     assert_eq!(remove.args.as_ref().and_then(|args| args.get("nodeId")).and_then(DslValue::as_str), Some("instance-7"));
 }

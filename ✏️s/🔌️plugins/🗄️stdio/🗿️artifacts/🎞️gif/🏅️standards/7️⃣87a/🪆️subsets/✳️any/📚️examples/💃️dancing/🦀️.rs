@@ -5,9 +5,9 @@
 //! ACTUALLY decoding the real fixture bytes via the 89a engine's real LZW/GCE/loop codec and
 //! serializing the resulting real snapshot.
 
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::ExampleSource;
 use semio_framework_test_fixtures::repo_root;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "dancing";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -29,7 +29,7 @@ pub const DANCING_GIF_ASSET_SHA256: &str = "494a93e5ca4714b17dad097353727a01efe7
 /// instance open. A host-less test reads the same repository file instead; any other caller without a delivery is a defect.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn dancing_gif_bytes() -> &'static [u8] {
-    match semio_framework_plugin::reactor::package_asset(DANCING_GIF_ASSET_NAME) {
+    match semio_plugin::reactor::package_asset(DANCING_GIF_ASSET_NAME) {
         Some(bytes) => bytes,
         #[cfg(test)]
         None => repository_file(),

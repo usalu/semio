@@ -3,7 +3,7 @@
 use crate::editor::gis2d::modes::edit::windows::map::config::{layer_visible, MapWindowConfig};
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use crate::editor::gis2d::constants_and_io::{gis2d_window_action, GIS_MAP_LAYER_IDS};
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 //#region 🔖️Option
 pub const GIS2D_LAYERS_MEASURE_ID: &str = "gis2d-play-window.layers";
@@ -17,7 +17,7 @@ pub fn measure(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> WindowMeasure
             label: Some(gis2d_layer_label(id, labels).into()),
             pressed: layer_visible(cfg, id),
             text: None,
-            on_change: gis2d_window_action("toggleLayerVisibility", Some(semio_framework_plugin::dsl_value!({ "layerId": id }))),
+            on_change: gis2d_window_action("toggleLayerVisibility", Some(semio_plugin::dsl_value!({ "layerId": id }))),
         })
         .collect();
     WindowMeasure::Group {

@@ -5,7 +5,7 @@ use {semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3, crate::sc
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
-use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
+use semio_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
 use semio_framework_value::retained_clone::{RetainedCloneRef, RetainedCloneStep};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;

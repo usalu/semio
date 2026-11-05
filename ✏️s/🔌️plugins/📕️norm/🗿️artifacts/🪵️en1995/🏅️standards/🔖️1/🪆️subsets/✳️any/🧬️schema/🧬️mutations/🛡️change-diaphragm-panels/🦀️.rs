@@ -10,7 +10,7 @@ pub struct ChangeDiaphragmPanels { pub diaphragm_id: String, pub new_value: u32 
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeDiaphragmPanels where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_diaphragm_panels::ChangeDiaphragmPanels> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "diaphragm-panels", kind: "change-diaphragm-panels", record: "ChangedDiaphragmPanels" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change sheathing panels n of diaphragm {}", self.diaphragm_id), &format!("Anzahl der Beplankungsplatten n von Diaphragm {} ändern", self.diaphragm_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change sheathing panels n of diaphragm {}", self.diaphragm_id), &format!("Anzahl der Beplankungsplatten n von Diaphragm {} ändern", self.diaphragm_id)) }
     fn target(&self) -> Vec<String> { vec![self.diaphragm_id.clone()] }
 }
 

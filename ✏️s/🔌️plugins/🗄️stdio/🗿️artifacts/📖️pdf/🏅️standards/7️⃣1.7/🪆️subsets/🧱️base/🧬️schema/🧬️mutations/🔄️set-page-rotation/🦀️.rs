@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-rotation", kind: "set-page-rotation", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} rotation to {}", self.index, self.rotation), &format!("Drehung von Seite {} auf {} setzen", self.index, self.rotation))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set page {} rotation to {}", self.index, self.rotation), &format!("Drehung von Seite {} auf {} setzen", self.index, self.rotation))
     }
 
     fn target(&self) -> Vec<String> {

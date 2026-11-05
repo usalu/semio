@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Flow Work Publication",
+  "type": "object",
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "source",
+    "expected",
+    "sameOriginalSource",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "type": "object"
+    },
+    "expected": {
+      "type": "object"
+    },
+    "sameOriginalSource": {
+      "const": true
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

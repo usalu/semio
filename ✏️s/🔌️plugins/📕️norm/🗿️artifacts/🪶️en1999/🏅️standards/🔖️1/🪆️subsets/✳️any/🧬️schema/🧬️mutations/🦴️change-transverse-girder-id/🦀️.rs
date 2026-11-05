@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeTransverseGirderId
         record: "ChangedTransverseGirderId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plate girder of the transverse stiffener", "Quersteife: Blechträger ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plate girder of the transverse stiffener", "Quersteife: Blechträger ändern")
     }
 }
 

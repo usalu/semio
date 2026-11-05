@@ -11,7 +11,7 @@ fn fixture() -> XlsxSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn transitional_editor_declares_its_dialect_and_main_window() {
     let definition = create_xlsx_transitional_editor();
-    assert_eq!(definition.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(definition.role, semio_plugin::AppRole::Editor);
     assert_eq!(definition.dialect, XLSX_TRANSITIONAL_DIALECT.into());
     assert_eq!(<XlsxTransitionalEditor as ArtifactEditor>::DIALECT, XLSX_TRANSITIONAL_DIALECT);
     assert!(definition.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
@@ -44,9 +44,9 @@ fn command_revision(command: &XlsxTransitionalEditorCommand) -> String {
     revision.clone()
 }
 
-semio_framework_plugin::history_edit_acceptance_law!(
+semio_plugin::history_edit_acceptance_law!(
     "stdio",
     super::XlsxTransitionalEditor,
-    || semio_framework_plugin::App { definition: super::create_xlsx_transitional_editor(), examples: Vec::new() },
+    || semio_plugin::App { definition: super::create_xlsx_transitional_editor(), examples: Vec::new() },
     "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base"
 );

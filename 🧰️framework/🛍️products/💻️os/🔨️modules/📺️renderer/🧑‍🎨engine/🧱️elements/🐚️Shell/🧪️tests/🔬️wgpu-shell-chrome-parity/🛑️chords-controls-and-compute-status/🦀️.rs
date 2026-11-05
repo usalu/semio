@@ -2,11 +2,11 @@
 
 //#region ⌨️Chords
 
-fn chord_key_action(key: &str) -> semio_framework_ui_wgpu_input::KeyAction {
+fn chord_key_action(key: &str) -> semio_ui_wgpu_input::KeyAction {
     match key {
-        "ArrowRight" => semio_framework_ui_wgpu_input::KeyAction::ArrowRight,
-        "ArrowLeft" => semio_framework_ui_wgpu_input::KeyAction::ArrowLeft,
-        other => semio_framework_ui_wgpu_input::KeyAction::Char(other.to_string()),
+        "ArrowRight" => semio_ui_wgpu_input::KeyAction::ArrowRight,
+        "ArrowLeft" => semio_ui_wgpu_input::KeyAction::ArrowLeft,
+        other => semio_ui_wgpu_input::KeyAction::Char(other.to_string()),
     }
 }
 
@@ -49,12 +49,12 @@ fn the_alt_axis_never_swallows_a_neighbouring_chord() {
     let accelerator = PointerModifiers { shift: false, ctrl: false, alt: false, meta: true };
     let with_alt = PointerModifiers { alt: true, ..accelerator };
     let bare = PointerModifiers::default();
-    assert!(!matches!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::Char("e".into()), &accelerator), Some(ShellShortcut::SurfaceRole(_))), "mod+e is not a role chord — mod+alt+e is");
-    assert_eq!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::Char("v".into()), &bare), None, "a bare `v` is ordinary text");
-    assert!(!matches!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::ArrowRight, &accelerator), Some(ShellShortcut::ModeStep(_))), "mod+arrowright is not a mode step — mod+alt+arrowright is");
-    assert!(is_reserved_shell_chord(&semio_framework_ui_wgpu_input::KeyAction::Char("f".into()), &accelerator), "mod+f stays the find chord");
-    assert!(!is_reserved_shell_chord(&semio_framework_ui_wgpu_input::KeyAction::Char("f".into()), &with_alt), "mod+alt+f belongs to whoever declares it, not to find");
-    assert!(!is_reserved_shell_chord(&semio_framework_ui_wgpu_input::KeyAction::Char("f".into()), &bare), "a bare `f` is never a reserved shell accelerator — app actions such as zoomToFlow own it");
+    assert!(!matches!(shell_shortcut_for(&semio_ui_wgpu_input::KeyAction::Char("e".into()), &accelerator), Some(ShellShortcut::SurfaceRole(_))), "mod+e is not a role chord — mod+alt+e is");
+    assert_eq!(shell_shortcut_for(&semio_ui_wgpu_input::KeyAction::Char("v".into()), &bare), None, "a bare `v` is ordinary text");
+    assert!(!matches!(shell_shortcut_for(&semio_ui_wgpu_input::KeyAction::ArrowRight, &accelerator), Some(ShellShortcut::ModeStep(_))), "mod+arrowright is not a mode step — mod+alt+arrowright is");
+    assert!(is_reserved_shell_chord(&semio_ui_wgpu_input::KeyAction::Char("f".into()), &accelerator), "mod+f stays the find chord");
+    assert!(!is_reserved_shell_chord(&semio_ui_wgpu_input::KeyAction::Char("f".into()), &with_alt), "mod+alt+f belongs to whoever declares it, not to find");
+    assert!(!is_reserved_shell_chord(&semio_ui_wgpu_input::KeyAction::Char("f".into()), &bare), "a bare `f` is never a reserved shell accelerator — app actions such as zoomToFlow own it");
 }
 
 //#endregion ⌨️Chords
@@ -80,7 +80,7 @@ fn the_cancel_contract_is_read_the_way_the_shared_fixture_declares() {
 #[test]
 fn a_live_surface_offers_exactly_the_overlay_controls_the_shared_fixture_declares() {
     let fixture: Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE).expect("🛑️ fixture parses");
-    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
+    let theme = semio_renderer_wgpu_host_base::resolve_theme("light");
     assert!((f64::from(theme.control_height) - fixture["controlHeightPx"].as_f64().expect("fixture control height")).abs() < 1e-6, "the fixture's declared control height must stay the theme's own token");
     let mut rows = 0;
     for case in fixture["surfaceControls"].as_array().expect("fixture surface rows") {
@@ -170,7 +170,7 @@ fn the_status_pill_speaks_the_readers_language_and_never_defaults_to_one() {
 /// paint on top of each other — and a surface too small to carry chrome carries neither.
 #[test]
 fn the_status_pill_leads_the_row_the_cancel_control_follows() {
-    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
+    let theme = semio_renderer_wgpu_host_base::resolve_theme("light");
     let computing =
         "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
@@ -198,7 +198,7 @@ fn a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settle
     let fixture: Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE).expect("⏳️ the surface-controls fixture parses");
     let timeline = &fixture["progressTimeline"];
     let minimum = timeline["minimumNonIdleFrames"].as_u64().expect("fixture minimum non-idle frames") as usize;
-    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
+    let theme = semio_renderer_wgpu_host_base::resolve_theme("light");
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
     for lane in ["evaluation", "cancelled"] {
         let frames = timeline[lane].as_array().unwrap_or_else(|| panic!("fixture {lane} frames"));
@@ -244,7 +244,7 @@ fn a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settle
 /// it — while the RELEASE path, which reaches the shell, is the phase `handle_shell_hit` ignores.
 #[test]
 fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
-    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
+    let theme = semio_renderer_wgpu_host_base::resolve_theme("light");
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
     let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
     let controls = surface_overlay_controls_for(&[], &[("procedural-preview", bounds, Some(computing))], &[], &theme, false);

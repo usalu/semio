@@ -1,6 +1,6 @@
 //! 🧪️ schema tests (🌳️tidy-tree): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_schema::{buchheim_positions, LayoutControl};
+use semio_os_infinite_board_schema::{buchheim_positions, LayoutControl};
 use std::collections::HashMap;
 
 #[test]

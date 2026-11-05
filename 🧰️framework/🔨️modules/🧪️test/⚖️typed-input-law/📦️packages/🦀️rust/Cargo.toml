@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
-semio-framework-os-kernel = { path = "../../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 

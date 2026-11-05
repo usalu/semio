@@ -1,15 +1,15 @@
 //! 🔽️ LAW: a retained Select keeps one window-local popup authority and translates it once at frame publication.
 
 use super::*;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_declaration::ui::{UiControlNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use semio_framework_ui_draw_contract::KIND_GLYPH;
-use semio_framework_ui_wgpu_events::PointerButton;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_hosting::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};
-use semio_framework_ui_retained_tree::tree::AcceptedLayout;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::{UiControlNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_ui_draw_contract::KIND_GLYPH;
+use semio_ui_wgpu_events::PointerButton;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_hosting::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};
+use semio_ui_retained_tree::tree::AcceptedLayout;
+use semio_ui_locale::Label;
+use semio_ui_theme::Theme;
 use semio_framework_test_fixtures::fixture_text;
 
 struct EmptySceneHost;
@@ -77,7 +77,7 @@ fn upward_tree_select(item_count: usize) -> UiNode {
     })
 }
 
-fn find_select(tree: &UiTree, id: semio_framework_ui_arena::NodeId) -> Option<semio_framework_ui_arena::NodeId> {
+fn find_select(tree: &UiTree, id: semio_ui_arena::NodeId) -> Option<semio_ui_arena::NodeId> {
     if tree.node(id).is_some_and(|node| matches!(&node.spec.0, UiNode::Select(_))) {
         return Some(id);
     }
@@ -140,7 +140,7 @@ fn actual_pointer_open_translates_bottom_and_top_popup_paint_and_hits_by_the_fra
         let trigger = rect(&test_case["triggerLocal"]);
         let expected_menu = rect(&test_case["menuGlobal"]);
         let expected_option = rect(&test_case["firstOptionGlobal"]);
-        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+        let mut ui = Ui::new(semio_ui_locale::Locale::En);
         ui.apply_tree("fixture", &select_tree(item_count));
         let mut atlas = FontAtlas::builtin();
         settle_layout(&mut ui, &mut atlas, viewport);
@@ -178,7 +178,7 @@ fn mounted_layout_pointer_open_frame_and_option_activation_share_one_local_autho
     let origin = &law["viewport"]["origin"];
     let size = &law["viewport"]["size"];
     let viewport = Rect::new(origin[0].as_f64().unwrap() as f32, origin[1].as_f64().unwrap() as f32, size[0].as_f64().unwrap() as f32, size[1].as_f64().unwrap() as f32);
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("fixture", &upward_tree_select(law["row"]["itemCount"].as_u64().unwrap() as usize));
     ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
@@ -193,7 +193,7 @@ fn mounted_layout_pointer_open_frame_and_option_activation_share_one_local_autho
     let opened = ui.dispatch_event("fixture", UiEvent::PointerUp { x, y, button: PointerButton::Primary, modifiers: Default::default() });
     let window = ui.windows.get("fixture").expect("fixture window");
     assert!(window.tree.node(select).is_some_and(|node| node.state.open), "actual pointer release must open the mounted Select: trigger={trigger:?} commands={opened:?}");
-    assert!(window.router.open_overlays().iter().any(|overlay| overlay.root == select && overlay.kind == semio_framework_ui_wgpu_events::OverlayKind::SelectPopup), "the mounted Select owns one open popup after the pointer sequence");
+    assert!(window.router.open_overlays().iter().any(|overlay| overlay.root == select && overlay.kind == semio_ui_wgpu_events::OverlayKind::SelectPopup), "the mounted Select owns one open popup after the pointer sequence");
     settle_layout(&mut ui, &mut atlas, viewport);
     let _ = settle_frame(&mut ui, &mut atlas, viewport);
 
@@ -210,7 +210,7 @@ fn mounted_layout_pointer_open_frame_and_option_activation_share_one_local_autho
     ui.dispatch_event("fixture", UiEvent::PointerDown { x: option_x, y: option_y, button: PointerButton::Primary, modifiers: Default::default() });
     let commands = ui.dispatch_event("fixture", UiEvent::PointerUp { x: option_x, y: option_y, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(commands.iter().any(|command| matches!(command, UiCommand::App { intent, .. } if intent.descriptor().action == "select")), "activating a globally published option routes through its window-local Select action");
-    assert!(commands.iter().any(|command| matches!(command, UiCommand::OverlayClosed { kind: semio_framework_ui_wgpu_events::OverlayKind::SelectPopup, .. })), "option activation retires the popup authority");
+    assert!(commands.iter().any(|command| matches!(command, UiCommand::OverlayClosed { kind: semio_ui_wgpu_events::OverlayKind::SelectPopup, .. })), "option activation retires the popup authority");
 }
 
 #[test]
@@ -219,7 +219,7 @@ fn normal_upward_tree_frame_paints_rows_and_each_inline_control_once_at_the_moun
     let origin = &law["viewport"]["origin"];
     let size = &law["viewport"]["size"];
     let viewport = Rect::new(origin[0].as_f64().unwrap() as f32, origin[1].as_f64().unwrap() as f32, size[0].as_f64().unwrap() as f32, size[1].as_f64().unwrap() as f32);
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("fixture", &upward_tree_select(law["row"]["itemCount"].as_u64().unwrap() as usize));
     ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
@@ -234,7 +234,7 @@ fn normal_upward_tree_frame_paints_rows_and_each_inline_control_once_at_the_moun
     let first_glyph_y = glyphs.iter().map(|glyph| glyph.rect[1]).fold(f32::INFINITY, f32::min);
     let trigger_global = Rect::new(viewport.x + trigger.x, viewport.y + trigger.y, trigger.w, trigger.h);
     let theme = Theme::default();
-    let metrics = semio_framework_ui_wgpu_layout::layout::TreeRowMetrics::from_theme(&theme);
+    let metrics = semio_ui_wgpu_layout::layout::TreeRowMetrics::from_theme(&theme);
     let row_global_y = trigger_global.y - (metrics.row_height - theme.control_height_small) * 0.5;
     let ink_ascent_slack = theme.font_size_body * 0.5;
     assert!(first_glyph_y >= row_global_y - ink_ascent_slack, "an Up Tree's label ink must share its mounted row band while allowing font ascent above the line box: first glyph y={first_glyph_y}, row y={row_global_y}, trigger={trigger_global:?}");

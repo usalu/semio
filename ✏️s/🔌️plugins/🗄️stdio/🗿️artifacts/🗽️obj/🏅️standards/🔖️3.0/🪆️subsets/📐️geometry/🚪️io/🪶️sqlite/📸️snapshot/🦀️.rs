@@ -2,17 +2,17 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
-use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,artifact::NativeEncodingBound};
+use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,artifact::NativeEncodingBound};
 use crate::standards::v3_0::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{Cell,RowWriter,FloatColumn,FloatRow};
+use semio_os_kernel::sqlite_snapshot::artifact::{Cell,RowWriter,FloatColumn,FloatRow};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 #[path="🫴️receiving/🦀️.rs"]
 pub mod receiving;
 const TABLES:[(&str,usize);14]=[("obj_document",3),("obj_vertex",15),("obj_texcoord",12),("obj_normal",12),("obj_face",3),("obj_face_vertex",9),("obj_group",4),("obj_group_face",6),("obj_object",4),("obj_object_face",6),("obj_face_boundary",4),("obj_material_range",7),("obj_smoothing_range",7),("obj_unknown_statement",6)];
-pub fn extent(limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{let bytes=ObjSnapshot::SQLITE_SCHEMA.split(';').map(str::trim).filter(|sql|!sql.is_empty()).try_fold(0usize,|sum,sql|sum.checked_add(sql.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ schema byte overflow")))?;let bytes=TABLES.iter().try_fold(bytes,|sum,(name,_)|sum.checked_add(name.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ table-name byte overflow")))?;if bytes>limits.max_schema_bytes||TABLES.len()>limits.max_tables||TABLES.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<2{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"OBJ copied authored schema extent exceeds caller limits"))}Ok(())}
+pub fn extent(limits:semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{let bytes=ObjSnapshot::SQLITE_SCHEMA.split(';').map(str::trim).filter(|sql|!sql.is_empty()).try_fold(0usize,|sum,sql|sum.checked_add(sql.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ schema byte overflow")))?;let bytes=TABLES.iter().try_fold(bytes,|sum,(name,_)|sum.checked_add(name.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ table-name byte overflow")))?;if bytes>limits.max_schema_bytes||TABLES.len()>limits.max_tables||TABLES.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<2{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"OBJ copied authored schema extent exceeds caller limits"))}Ok(())}
 const VERTEX_COLUMNS:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6)];
 const TEXCOORD_COLUMNS:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5)];
 const NORMAL_COLUMNS:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5)];
@@ -154,7 +154,7 @@ fn reconstruct_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSn
 }
 
 impl ArtifactSqliteSnapshotHost for ObjSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(|| -> Result<(),ValueError>{
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(|| -> Result<(),ValueError>{
         let units=self.faces.len().checked_add(self.groups.len()).and_then(|count|count.checked_add(self.objects.len())).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ native work count overflow"))?;control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,units)?;let mut rows=2usize.checked_add(self.faces.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ native row count overflow"))?;
         for count in[self.vertices.len(),self.texcoords.len(),self.normals.len(),self.faces.len(),self.groups.len(),self.objects.len(),self.usemtl.len(),self.smoothing_groups.len(),self.unknown_statements.len()]{rows=rows.checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ native row count overflow"))?;}control.check_rows(rows)?;let mut completed=0usize;
         for face in&self.faces{rows=rows.checked_add(face.vertices.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ native row count overflow"))?;control.check_rows(rows)?;completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,completed,units)?;}}
@@ -162,7 +162,7 @@ impl ArtifactSqliteSnapshotHost for ObjSnapshot {
         for object in&self.objects{rows=rows.checked_add(object.faces.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ native row count overflow"))?;control.check_rows(rows)?;completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,completed,units)?;}}control.checkpoint(SqliteSnapshotPhase::EncodeNative,completed,units)?;
         Ok(())})()?;self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,"stdio.obj",crate::standards::v3_0::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
     }
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,"stdio.obj",crate::standards::v3_0::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::admit_record(record,limits,native)?;crate::standards::v3_0::subsets::any::io::binary::snapshot::native_pack::reconstruct_record_controlled(record,native,limits.max_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,"stdio.obj",crate::standards::v3_0::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::admit_record(record,limits,native)?;crate::standards::v3_0::subsets::any::io::binary::snapshot::native_pack::reconstruct_record_controlled(record,native,limits.max_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{self.preflight_sqlite_encoding(_encoding,control)}
 
     fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(Some(self),None,control,owner)}

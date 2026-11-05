@@ -5,14 +5,14 @@ import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modul
 import { runScriptMain } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
-/** 🧠️ Type-checks the `semio-framework-plugin-ownership` owner crate. */
+/** 🧠️ Type-checks the `semio-plugin-ownership` owner crate. */
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runCargo(["check", "--manifest-path", "Cargo.toml", ...segments], this.root);
   }
 }
 
-/** 🧪️ Runs the `semio-framework-plugin-ownership` owner crate's library laws. */
+/** 🧪️ Runs the `semio-plugin-ownership` owner crate's library laws. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);

@@ -4,9 +4,9 @@ use super::*;
 use std::mem::ManuallyDrop;
 use semio_framework_value_retirement::retirement::controlled::ControlledRetirement;
 use semio_framework::ArtifactDialect;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_decl_emission::ChildEmit;
-use semio_framework_os_kernel::os_store::ArtifactStore;
+use semio_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_emission::ChildEmit;
+use semio_os_kernel::os_store::ArtifactStore;
 use semio_framework::Fault;
 
 //#region 🔖️Member
@@ -145,8 +145,8 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
+        P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_os_kernel::StoreMutationFor<P>,
     {
         let idle=RetainedCloneProgress::default();
         if self.grant.maximum_items==0{return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:idle,conflicts:0,read:None});}
@@ -293,8 +293,8 @@ impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
     type Output=Result<(bool,RetainedCloneProgress),Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
+        P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_os_kernel::StoreMutationFor<P>,
     {
         if self.grant.maximum_items==0{return Ok((false,Default::default()));}
         if self.owner.is_none(){
@@ -322,8 +322,8 @@ impl store::MemberStoreVisitor for ToolRunMemberEmissionRetire<'_>{
     type Output=Result<RetainedCloneStep,Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
+        P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_os_kernel::StoreMutationFor<P>,
     {
         if self.grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let typed=self.owner.as_any_mut().downcast_mut::<ToolRunMemberEmissionState<Mu>>().ok_or_else(||plugin_sdk_fault("member retirement owns another exact mutation type"))?;
@@ -343,8 +343,8 @@ impl store::MemberStoreVisitor for ToolRunMemberGeneration {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
+        P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_os_kernel::StoreMutationFor<P>,
     {
         store.generation()
     }
@@ -359,8 +359,8 @@ impl store::MemberStoreVisitor for ToolRunMemberRetire<'_>{
     type Output=Result<(Option<Box<dyn store::ErasedSnapshotRetirement>>,RetainedCloneProgress),Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
+        P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_os_kernel::StoreMutationFor<P>,
     {
         if self.grant.maximum_items==0{return Ok((None,Default::default()));}
         let state=self.owners.as_any_mut().downcast_mut::<ToolRunMemberState<P,Mu>>().ok_or_else(||plugin_sdk_fault("member alias retirement owns another exact Store type"))?;

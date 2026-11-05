@@ -1,6 +1,6 @@
 use semio_s_artifact_procedural_2d_editor_panels::catalogue::*;
 use crate::app_fixture::{app, close, render as render_body, render_with_view};
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_plugin::{TreeWindowRequest, ViewModel};
 
 const MODES_SECTION: &str = "procedural2d-play-catalogue.modes";
 const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
@@ -37,7 +37,7 @@ async fn opening_the_show_mode_section_materialises_its_rows() {
     let mut app = app().await;
     let view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: MODES_SECTION.into(), open: Some(true), offset: 1, rows: 2 }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let json = render_with_view(&mut app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
     close(app);
@@ -59,7 +59,7 @@ async fn opening_the_show_mode_section_materialises_its_rows() {
 /// section still states its three modes. Nothing summarises a remainder with `+n`.
 #[semio_framework_async_macros::async_test]
 async fn every_catalogue_section_stamps_its_total_and_none_continues() {
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let sections = semio_os_flow::flow_palette_catalogue_sections();
     assert!(sections.iter().any(|section| section.id == "inputs"), "inputs is a palette section");
     assert!(sections.iter().any(|section| section.id == "outputs"), "outputs is a palette section");
     assert!(sections.iter().any(|section| section.items.iter().any(|item| item.kind == "neuron")), "operator sections are neurons");
@@ -83,11 +83,11 @@ async fn every_catalogue_section_stamps_its_total_and_none_continues() {
 #[semio_framework_async_macros::async_test]
 async fn component_rows_drag_the_flow_widget_descriptor() {
     let inputs_json = {
-        let input_section = semio_framework_os_flow::flow_palette_catalogue_sections().into_iter().find(|section| section.id == "inputs").expect("inputs section");
+        let input_section = semio_os_flow::flow_palette_catalogue_sections().into_iter().find(|section| section.id == "inputs").expect("inputs section");
         let mut app = app().await;
         let view = ViewModel {
-            tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.inputs", semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR), open: Some(true), offset: 0, rows: input_section.items.len() as u32 }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.inputs", semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR), open: Some(true), offset: 0, rows: input_section.items.len() as u32 }],
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         let json = render_with_view(&mut app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
         close(app);
@@ -100,11 +100,11 @@ async fn component_rows_drag_the_flow_widget_descriptor() {
     assert!(slider_row.contains(FLOW_WIDGET_DRAG_MIME), "{slider_row}");
     assert!(slider_row.contains(r#""draggable":true"#), "{slider_row}");
 
-    let outputs = semio_framework_os_flow::flow_palette_catalogue_sections().into_iter().find(|section| section.id == "outputs").expect("outputs section");
+    let outputs = semio_os_flow::flow_palette_catalogue_sections().into_iter().find(|section| section.id == "outputs").expect("outputs section");
     let mut app = app().await;
     let view = ViewModel {
-        tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.outputs", semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR), open: Some(true), offset: 0, rows: outputs.items.len() as u32 }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.outputs", semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR), open: Some(true), offset: 0, rows: outputs.items.len() as u32 }],
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let json = render_with_view(&mut app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
     close(app);
@@ -121,15 +121,15 @@ async fn component_rows_drag_the_flow_widget_descriptor() {
     }
     assert!(saw_format, "an export row drag carries format: {json}");
     assert!(saw_action, "an action row drag carries action: {json}");
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let sections = semio_os_flow::flow_palette_catalogue_sections();
     if let Some((section, index, neuron_kind)) = sections.iter().find_map(|section| {
         section.items.iter().position(|item| item.kind == "neuron").map(|index| (section, index, section.items[index].neuron_kind.clone().unwrap_or_default()))
     }) {
         let mut neuron_app = crate::app_fixture::app().await;
-        let node_key = format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.{}", semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR, section.id);
+        let node_key = format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.{}", semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR, section.id);
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key, open: Some(true), offset: index as u32, rows: 1 }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         let json = render_with_view(&mut neuron_app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
         close(neuron_app);

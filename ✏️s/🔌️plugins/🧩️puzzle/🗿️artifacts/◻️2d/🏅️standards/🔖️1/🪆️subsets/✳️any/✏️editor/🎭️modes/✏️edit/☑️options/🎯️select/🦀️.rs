@@ -6,18 +6,18 @@
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::{puzzle2d_action, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_NODE};
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> WindowMeasure {
     let kinds = runtime.selectable_kinds;
-    let toggle = |suffix: &str, icon: &str, label: semio_framework_ui_locale::LabelText, granularity: &str, pressed: bool| WindowMeasure::Toggle {
+    let toggle = |suffix: &str, icon: &str, label: semio_ui_locale::LabelText, granularity: &str, pressed: bool| WindowMeasure::Toggle {
         id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-select-{suffix}"),
         icon_id: icon.into(),
         label: Some(label.into()),
         pressed,
         text: None,
-        on_change: puzzle2d_action("setSelectableKind", Some(semio_framework_plugin::dsl_value!({ "kind": granularity }))),
+        on_change: puzzle2d_action("setSelectableKind", Some(semio_plugin::dsl_value!({ "kind": granularity }))),
     };
     WindowMeasure::Group {
         id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-select"),

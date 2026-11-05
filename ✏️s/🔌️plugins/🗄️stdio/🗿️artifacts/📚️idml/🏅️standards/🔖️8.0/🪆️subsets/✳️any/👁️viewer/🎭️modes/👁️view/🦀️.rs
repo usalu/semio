@@ -1,7 +1,7 @@
 //! 👁️ Idml viewer — the `view` mode: the read-only twin of the editor's single Document window.
 
-use semio_framework_plugin::{ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::{ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_ui_locale::LocalizedLabel;
 
 #[path = "🪟️windows/🪟️main/🦀️.rs"]
 pub mod main;

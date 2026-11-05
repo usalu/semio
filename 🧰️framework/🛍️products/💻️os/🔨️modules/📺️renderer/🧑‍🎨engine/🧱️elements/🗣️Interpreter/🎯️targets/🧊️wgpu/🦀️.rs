@@ -11,10 +11,10 @@
 //! `crate::interpreter::...` are unchanged because the children are re-exported below. The shared contracts
 //! (`WorkerCell`, `FrameworkWidgetContext`, `ScenePointerTarget`, `RasterUploadRefusal`) live in `crate::element_contracts`.
 
-use semio_framework_os_renderer_wgpu_ui_engine::render_plan_validator;
+use semio_renderer_wgpu_ui_engine::render_plan_validator;
 pub use render_plan_validator::{validate_component_scene, RenderPlanLimits, RENDER_PLAN_LIMITS};
 
-use semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine;
+use semio_renderer_wgpu_ui_engine::retained_ui_engine;
 pub use retained_ui_engine::{
     active_retained_drag_sessions, cancel_scene_pointer, canvas_catalogue_drag_over,
     canvas_catalogue_drop, captured_scene_pointer, claim_scene_pointer_at,
@@ -32,7 +32,7 @@ pub(crate) use retained_ui_engine::{
     UI_ENGINE_LOCALE_UNRESOLVED,
 };
 
-use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus;
+use semio_renderer_wgpu_ui_engine_focus::text_and_table_focus;
 pub(crate) use text_and_table_focus::sync_focused_table_editable_text_draft;
 pub use text_and_table_focus::{
     apply_focused_node_graph_note_key, apply_focused_table_editable_text_key,
@@ -42,7 +42,7 @@ pub use text_and_table_focus::{
     refresh_node_graph_caret_after_pointer,
 };
 
-use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus;
+use semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus;
 pub use ink_and_vfs_focus::{
     abort_focused_ink_clipboard_stream, abort_focused_text_editor_stream,
     apply_focused_ink_editor_key, apply_focused_ink_paste, apply_focused_ink_surface_key,
@@ -59,7 +59,7 @@ pub use ink_and_vfs_focus::{
 ))]
 pub use ink_and_vfs_focus::{close_clipboard_io_step, drive_clipboard_io_step};
 
-use semio_framework_os_renderer_wgpu_ui_engine::scene_interaction;
+use semio_renderer_wgpu_ui_engine::scene_interaction;
 pub use scene_interaction::{
     close_scene_interaction_step, drive_scene_interaction_step,
     scene_interaction_terminal_is_empty, surface_context_menu_target,
@@ -69,29 +69,29 @@ pub(crate) use scene_interaction::{
     progress_presented_input_candidate, PresentedInputCandidateProgress,
 };
 
-use semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer;
+use semio_renderer_wgpu_ui_engine::retained_document_consumer;
 pub use retained_document_consumer::{begin_ui_document_opportunity, UiDocumentFrameCursor};
 pub(crate) use retained_document_consumer::{
     render_ui_document_step, set_ui_document_flow, set_ui_presence_notes,
     stamp_ui_document_tree_selected_item,
 };
 
-use semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading;
+use semio_renderer_wgpu_scene_canvas2d::ui_image_loading;
 pub(crate) use ui_image_loading::current_ui_image_key;
 pub use ui_image_loading::{
     apply_ui_image_bytes, framework_widget_context, take_ui_image_asset_fault,
 };
 
-use semio_framework_os_renderer_wgpu_ui_engine_dump::introspection;
+use semio_renderer_wgpu_ui_engine_dump::introspection;
 #[cfg(target_arch = "wasm32")]
 pub use introspection::{
     dump_accessibility, dump_board2d, dump_chrome, dump_frame_stats, dump_mesh_stats,
     dump_structure,
 };
 
-use semio_framework_os_renderer_wgpu_ui_engine_dump::mesh_and_board2d_stats;
+use semio_renderer_wgpu_ui_engine_dump::mesh_and_board2d_stats;
 
-use semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger;
+use semio_renderer_wgpu_ui_engine_dump::chrome_ledger;
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) use chrome_ledger::native_accessibility_windows;
 pub use chrome_ledger::{

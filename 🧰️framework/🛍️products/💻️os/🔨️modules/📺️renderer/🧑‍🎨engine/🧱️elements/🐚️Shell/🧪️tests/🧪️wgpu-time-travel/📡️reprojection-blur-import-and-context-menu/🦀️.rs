@@ -22,7 +22,7 @@ fn paint_reprojection_band(shell: &mut ShellState) -> (usize, Vec<HitTarget<Acti
 /// controls; without a reprojection nothing is announced or painted.
 #[test]
 fn every_history_reprojection_is_announced_outside_the_history_panel() {
-    let fixture: Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-reprojection/🔣️.json")).expect("the shared history-reprojection fixture parses");
+    let fixture: Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-reprojection/🔣️.json")).expect("the shared history-reprojection fixture parses");
     let theme = Theme::light();
     let mut shell = session_shell();
     assert!(OverlaysViewCtx::of(&mut shell).history_reprojection_accessibility_node(1).is_none() && paint_reprojection_band(&mut shell).0 == 0, "nothing replays, nothing is announced or painted");
@@ -155,7 +155,7 @@ fn a_decoded_video_is_a_cancellable_task_that_frees_a_started_stream() {
     let (mut shell, _) = importing_shell();
     shell.opening.import_transfers.clear();
     assert!(!shell.opening.begin_media_frames_transfer("test.controller".into(), Vec::new(), &shell.docs), "no pick, no task");
-    let frame = |action: &str, index: usize| ActionDescriptor { controller_id: "test.controller".into(), action: action.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "name": "clip.mp4", "index": index }) };
+    let frame = |action: &str, index: usize| ActionDescriptor { controller_id: "test.controller".into(), action: action.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "name": "clip.mp4", "index": index }) };
     assert!(shell.opening.begin_media_frames_transfer("test.controller".into(), vec![frame("importVideoFramePayload", 0), frame("importVideoFramePayload", 1), frame("importVideoDone", 2)], &shell.docs));
     let transfer = shell.opening.import_transfers.front().expect("the stream").clone();
     assert_eq!((transfer.lane, transfer.file.as_str(), transfer.total, transfer.chunks.back().map(|last| last.action.as_str())), (TransferLane::VideoFrames, "clip.mp4", 3, Some("importVideoDone")), "every frame, then done, waits in order: {transfer:?}");
@@ -183,7 +183,7 @@ fn a_decoded_video_is_a_cancellable_task_that_frees_a_started_stream() {
 /// the menu open, while an enabled row stays actionable.
 #[test]
 fn a_disabled_context_menu_row_is_reachable_and_tells_its_reason() {
-    let paste = shell_context_menu_item_from_spec(semio_framework_ui_layout::layout::ContextMenuItemSpec { id: "menu.paste".into(), label: Some("Paste".into()), action: Some("paste".into()), ..Default::default() }.disabled_because("The clipboard is empty".into()), "ctrl", false);
+    let paste = shell_context_menu_item_from_spec(semio_ui_layout::layout::ContextMenuItemSpec { id: "menu.paste".into(), label: Some("Paste".into()), action: Some("paste".into()), ..Default::default() }.disabled_because("The clipboard is empty".into()), "ctrl", false);
     assert_eq!((paste.disabled, paste.reason.as_deref(), paste.painted_label()), (true, Some("The clipboard is empty"), "Paste \u{b7} The clipboard is empty".to_string()));
     let action = |verb: &str| Some(ActionDescriptor { controller_id: "ctrl".into(), action: verb.into(), args: None });
     let items = vec![
@@ -198,7 +198,7 @@ fn a_disabled_context_menu_row_is_reachable_and_tells_its_reason() {
 
     let mut shell = session_shell();
     shell.input.context_menu = Some(ContextMenuState { items: items.clone(), active: vec![2], ..Default::default() });
-    assert!(matches!(shell.input.context_menu_handle_key(semio_framework_ui_wgpu_input::KeyAction::Enter), ContextMenuKeyOutcome::Ignored), "Enter on a disabled row fires nothing");
+    assert!(matches!(shell.input.context_menu_handle_key(semio_ui_wgpu_input::KeyAction::Enter), ContextMenuKeyOutcome::Ignored), "Enter on a disabled row fires nothing");
     assert!(shell.input.context_menu.is_some(), "and keeps the menu open");
 
     let menu = shell.input.context_menu.clone().expect("open");

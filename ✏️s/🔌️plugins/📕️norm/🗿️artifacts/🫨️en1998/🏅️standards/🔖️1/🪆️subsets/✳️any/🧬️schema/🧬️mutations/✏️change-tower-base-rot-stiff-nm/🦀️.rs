@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTowerBaseRotStiffN
         record: "ChangeTowerBaseRotStiffNm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Rotational stiffness of the foundation under the tower base in N·m per rad (0 = fixed base)", "Drehfedersteifigkeit der Gründung unter dem Turmfuß in N·m je rad (0 = Einspannung) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Rotational stiffness of the foundation under the tower base in N·m per rad (0 = fixed base)", "Drehfedersteifigkeit der Gründung unter dem Turmfuß in N·m je rad (0 = Einspannung) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-tower-base-rot-stiff-nm".into()]

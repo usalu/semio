@@ -3,16 +3,16 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the block3d-play app; one field per label makes every locale
 // combination compile-checked. No separate reuse-terminology concept, so reuse repeats native.
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     pub struct Block3dLabels {
         window_world: native_en "Object Kind", native_de "Objektart", reuse_en "Object Kind", reuse_de "Objektart";
         name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
@@ -34,8 +34,8 @@ semio_framework_ui_locale::app_labels! {
 }
 
 /// 🗣️ Resolves the active `Block3dLabels` cell from the shared view state.
-pub fn block3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Block3dLabels {
-    semio_framework_plugin::resolve_labels::<Block3dLabels>(view_state)
+pub fn block3d_labels(view_state: &semio_plugin::ViewModel) -> &'static Block3dLabels {
+    semio_plugin::resolve_labels::<Block3dLabels>(view_state)
 }
 //#endregion 🔖️Labels
 

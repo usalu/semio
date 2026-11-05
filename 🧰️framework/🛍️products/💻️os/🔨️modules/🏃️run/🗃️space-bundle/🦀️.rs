@@ -10,7 +10,7 @@ use super::*;
 /// superseding the pre-W4 flat `space.os.pack`/`<artifact_ref>.pack` layout, whose filenames were
 /// stale leftovers from the dissolved `OsDocument`):
 /// - root: `space.space.pack`+`space.space.spr` — the space manifest slot (the `OsDocument` VCS
-///   envelope's binary pack+dsl form — see `semio_framework_os::encode_os_space_payload`; today this
+///   envelope's binary pack+dsl form — see `semio_os::encode_os_space_payload`; today this
 ///   still carries a `workflow::WorkflowSnapshot`/`WorkflowMutation` pair per the os-core dissolve's
 ///   `## The inversion`, not yet a real `space::SpaceSnapshot` manifest — wiring the ROOT slot's
 ///   actual decoded type to `SpaceSnapshot` is later-wave work, this rewrite is the path/filename

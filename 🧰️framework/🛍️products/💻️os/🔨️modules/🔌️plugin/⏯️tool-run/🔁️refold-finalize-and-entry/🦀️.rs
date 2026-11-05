@@ -4,7 +4,7 @@ use super::*;
 use semio_framework::Fault;
 use semio_framework::FaultOrigin;
 use semio_framework::FaultCode;
-use semio_framework_os_kernel::DslValue;
+use semio_os_kernel::DslValue;
 use std::collections::BTreeSet;
 
 //#region 🔖️Ledger
@@ -59,7 +59,7 @@ pub struct ToolRunFinalize<A: ArtifactApp> {
 pub struct ToolRunEntry<A: ArtifactApp> {
     pub retired_next:Option<Box<ToolRunEntry<A>>>,
     pub native:crate::original_native_tick::OriginalToolRunNativeState,
-    pub operations:semio_framework_plugin_tool_run_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>,
+    pub operations:semio_plugin_tool_run_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>,
     pub tool_id: String,
     pub actor: semio_framework_value::SharedUtf8,
     pub definition: ToolRunDefinition,

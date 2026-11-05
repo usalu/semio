@@ -7,8 +7,8 @@ use super::windows::{Body, Dashboard, Kind};
 use dashboard_preferences::Change;
 use dashboard_preferences::keymap::{Scope, SEND_PREFIX};
 use dashboard_wire::ipc::SessionStatus;
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_widgets::widget::WidgetState;
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_widgets::widget::WidgetState;
 
 /// 🎬️ What activating a row does.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -67,8 +67,8 @@ impl Dashboard {
         self.refresh_pane(tui,index);
     }
 
-    pub fn editor_key(&mut self,tui:&mut Tui,index:usize,key:&semio_framework_ui_tui_core::event::KeyEvent)->bool {
-        use semio_framework_ui_tui_core::event::{Key,mods};
+    pub fn editor_key(&mut self,tui:&mut Tui,index:usize,key:&semio_ui_tui_core::event::KeyEvent)->bool {
+        use semio_ui_tui_core::event::{Key,mods};
         let Body::KeymapEditor(editor)=&mut self.windows[index].body else{return false};
         if editor.editing.is_none(){return false;}
         match key.key{
@@ -117,8 +117,8 @@ impl Dashboard {
                 let mut rows=vec![(text.diagnostics_hint.as_str().into(),RowAction::None)];
                 for (index,failure) in self.diagnostics.events().enumerate().rev(){
                     let mut line=String::new();
-                    for cluster in semio_framework_ui_tui_core::text::clusters(&failure.display(text)){
-                        if cluster=="\n"||semio_framework_ui_tui_core::text::display_width(&(line.clone()+cluster))>width.max(1){if !line.is_empty(){rows.push((std::mem::take(&mut line),RowAction::Diagnostic(index)));}}
+                    for cluster in semio_ui_tui_core::text::clusters(&failure.display(text)){
+                        if cluster=="\n"||semio_ui_tui_core::text::display_width(&(line.clone()+cluster))>width.max(1){if !line.is_empty(){rows.push((std::mem::take(&mut line),RowAction::Diagnostic(index)));}}
                         if cluster!="\n"{line.push_str(cluster);}
                     }
                     if !line.is_empty(){rows.push((line,RowAction::Diagnostic(index)));}
@@ -181,9 +181,9 @@ impl Dashboard {
         window.pane.reveal();
         let (offset, selected) = (window.pane.offset, window.pane.selected);
         let items: Vec<String> = window.pane.rows.iter().skip(offset).take(page).map(|(text, _)| text.clone()).collect();
-        let statuses: Vec<Option<semio_framework_ui_tui_core::theme::Status>> = window.pane.rows.iter().skip(offset).take(page).map(|(_, action)| match action { RowAction::Session(id) => self.sessions.get(id).map(Self::status_of), _ => None }).collect();
+        let statuses: Vec<Option<semio_ui_tui_core::theme::Status>> = window.pane.rows.iter().skip(offset).take(page).map(|(_, action)| match action { RowAction::Session(id) => self.sessions.get(id).map(Self::status_of), _ => None }).collect();
         let node = self.windows[index].list;
-        let unchanged = matches!(&tui.scene.node(node).content, semio_framework_ui_tui_frame::scene::NodeContent::Widget(WidgetState::List(list)) if list.items == items && list.selected == selected - offset && list.statuses == statuses);
+        let unchanged = matches!(&tui.scene.node(node).content, semio_ui_tui_frame::scene::NodeContent::Widget(WidgetState::List(list)) if list.items == items && list.selected == selected - offset && list.statuses == statuses);
         if unchanged { return; }
         if let Some(WidgetState::List(list)) = tui.scene.node_mut(node).widget() {
             list.marks = vec![false; items.len()];

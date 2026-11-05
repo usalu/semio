@@ -52,7 +52,7 @@ impl<P, M> Default for BoundedTransientPreparationFactory<P, M> {
 impl<P, M> store::ArtifactEphemeralOneItemPreparationFactory<P, M> for BoundedTransientPreparationFactory<P, M>
 where
     P: Clone + Send + Sync + 'static,
-    M: semio_framework_os_kernel::StoreMutationFor<P>,
+    M: semio_os_kernel::StoreMutationFor<P>,
 {
     fn preflight(&self, mutation: &M) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
         let retained_bytes = protocol::OpBinary::encode_op(mutation).map_err(|error| error.to_string())?.len();
@@ -69,7 +69,7 @@ where
 impl<P, M> store::ArtifactEphemeralOneItemPreparation<P, M> for BoundedTransientPreparation<P, M>
 where
     P: Clone + Send + Sync + 'static,
-    M: semio_framework_os_kernel::StoreMutationFor<P>,
+    M: semio_os_kernel::StoreMutationFor<P>,
 {
     /// 🎒️ The byte cost is admitted by `preflight` against the one-item bound, so the per-turn grant
     /// PACES the ladder rather than authorising the apply. Gating the apply on
@@ -86,7 +86,7 @@ where
         if self.prepared.is_none() {
             progress.copied_items = 1;
             let request = self.request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "transient preparation lost its request"))?;
-            let outcome = <M as semio_framework_os_kernel::ColdMutation<P>>::diff(&request.mutation, request.base.as_ref());
+            let outcome = <M as semio_os_kernel::ColdMutation<P>>::diff(&request.mutation, request.base.as_ref());
             if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
                 return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "transient mutation was rejected against its captured base"));
             }
@@ -264,7 +264,7 @@ impl<P, M> Default for BoundedTransientStoreDisposer<P, M> {
 impl<P, M> BoundedTransientStoreDisposer<P, M>
 where
     P: Clone + Default,
-    M: semio_framework_os_kernel::StoreMutationFor<P>,
+    M: semio_os_kernel::StoreMutationFor<P>,
 {
     fn owns_terminal(&self, owner: &store::TransientStore<P, M>) -> bool {
         owner.generation_now() == self.terminal_generation && self.terminal_root.as_ref().and_then(Weak::upgrade).is_some_and(|root| Arc::ptr_eq(&root, &owner.current_root()))
@@ -274,7 +274,7 @@ where
 impl<P, M> ArtifactOwnedDisposer<store::TransientStore<P, M>> for BoundedTransientStoreDisposer<P, M>
 where
     P: Clone + Default + pack::snapshot::ArtifactDsl + Send + Sync + 'static,
-    M: semio_framework_os_kernel::StoreMutationFor<P>,
+    M: semio_os_kernel::StoreMutationFor<P>,
 {
     /// 🎒️ Same paging as the root retirement above.
     fn close_step(&mut self, owner: &mut store::TransientStore<P, M>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
@@ -335,7 +335,7 @@ mod native;
 pub use native::bounded_transient_preparation_factory;
 
 pub fn bounded_transient_root_retirement_factory<P>() -> Arc<dyn store::SnapshotRetirementFactory<P>>
-where P: semio_framework_value::retirement::RetireOwned + semio_framework_os_kernel::StoreState + semio_framework_os_kernel::StoreState {
+where P: semio_framework_value::retirement::RetireOwned + semio_os_kernel::StoreState + semio_os_kernel::StoreState {
     Arc::new(semio_framework_value_factory::SharedValueRetirementFactory::<P>::default())
 }
 

@@ -12,7 +12,7 @@ pub struct NativeCloseKey {
 semio_framework_value::artifact_retire_leaf!(NativeCloseKey);
 
 impl NativeCloseKey {
-    pub fn capture<PA: semio_framework_plugin_reactor_app::PluginApp + 'static>(lifetime: ActorInstanceLifetime, lease: &crate::life_instance_registry::instance_lifetime::PluginInstanceCloseLease<PA>) -> Result<Self, &'static str> {
+    pub fn capture<PA: semio_plugin_reactor_app::PluginApp + 'static>(lifetime: ActorInstanceLifetime, lease: &crate::life_instance_registry::instance_lifetime::PluginInstanceCloseLease<PA>) -> Result<Self, &'static str> {
         let (instance, allocation) = lease.allocation_identity();
         if !lifetime.is_valid() || lifetime.instance_id != instance {
             return Err("native close allocation does not match guest lifetime");
@@ -296,7 +296,7 @@ type NativeCell<PA> = GuestLifecycleCell<NativeLifetimeOwner<PA>>;
 
 /// 🧷️ The native allocation and every close participant remain attached until terminal ACK.
 #[doc(hidden)]
-pub struct NativeLifetimeOwner<PA: semio_framework_plugin_reactor_app::PluginApp> {
+pub struct NativeLifetimeOwner<PA: semio_plugin_reactor_app::PluginApp> {
     pub lease: crate::life_instance_registry::instance_lifetime::PluginInstanceCloseLease<PA>,
     pub key: NativeCloseKey,
     pub request: Option<ActorInstanceCloseRequest>,
@@ -305,7 +305,7 @@ pub struct NativeLifetimeOwner<PA: semio_framework_plugin_reactor_app::PluginApp
     pub released: [bool; 4],
 }
 
-impl<PA: semio_framework_plugin_reactor_app::PluginApp> NativeLifetimeOwner<PA> {
+impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifetimeOwner<PA> {
     pub fn from_lease(lifetime: ActorInstanceLifetime, lease: crate::life_instance_registry::instance_lifetime::PluginInstanceCloseLease<PA>) -> Result<Self, semio_framework::Fault> {
         let key = NativeCloseKey::capture(lifetime, &lease).map_err(crate::life_reactor_close::reactor_close_fault)?;
         Ok(Self { lease, key, request: None, reserved: [false; 4], active: [false; 4], released: [false; 4] })
@@ -366,14 +366,14 @@ impl<PA: semio_framework_plugin_reactor_app::PluginApp> NativeLifetimeOwner<PA> 
             crate::with_state(|pending| pending.borrow_mut().activate_close_instance(self.key)).map_err(crate::life_reactor_close::reactor_close_fault)?;
             self.active[2] = true;
         }
-        semio_framework_plugin_reactor_tasks::JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().close_instance(self.key.instance()));
+        semio_plugin_reactor_tasks::JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().close_instance(self.key.instance()));
         Ok(Some((request, self.lease.close_generation().ok_or_else(|| crate::life_reactor_close::reactor_close_fault("native close generation missing"))?)))
     }
 }
 
-impl<PA: semio_framework_plugin_reactor_app::PluginApp> terminal_owner::Sealed for NativeLifetimeOwner<PA> {}
+impl<PA: semio_plugin_reactor_app::PluginApp> terminal_owner::Sealed for NativeLifetimeOwner<PA> {}
 
-impl<PA: semio_framework_plugin_reactor_app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwner<PA> {
+impl<PA: semio_plugin_reactor_app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwner<PA> {
     fn terminal_is_empty<P: ClosePeers + ?Sized>(&self, peers: &P) -> Result<bool, semio_framework::Fault> {
         if !self.lease.is_retired()? {
             return Ok(false);
@@ -428,7 +428,7 @@ impl<PA: semio_framework_plugin_reactor_app::PluginApp> GuestLifetimeOwner for N
 
 #[doc(hidden)]
 
-pub struct NativeLifetimeSlot<PA: semio_framework_plugin_reactor_app::PluginApp> {
+pub struct NativeLifetimeSlot<PA: semio_plugin_reactor_app::PluginApp> {
     pub cell: NativeCell<PA>,
     pub native_created: bool,
     pub pending_creation: ManuallyDrop<Option<crate::life_cleanup_pumps::PendingNativeCreation<PA>>>,
@@ -437,18 +437,18 @@ pub struct NativeLifetimeSlot<PA: semio_framework_plugin_reactor_app::PluginApp>
 
 /// 🗃️ Fixed allocation-bound ownership belongs to the typed runtime, never a copied thread-local key.
 #[doc(hidden)]
-pub struct NativeLifecycleRegistry<PA: semio_framework_plugin_reactor_app::PluginApp> {
-    pub slots: semio_framework_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots<NativeLifetimeSlot<PA>>,
+pub struct NativeLifecycleRegistry<PA: semio_plugin_reactor_app::PluginApp> {
+    pub slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots<NativeLifetimeSlot<PA>>,
     pub serial: GuestLifecycleSerial,
     pub cursor: usize,
 }
 
-impl<PA: semio_framework_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
+impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
     pub fn new() -> Self {
-        Self { slots: semio_framework_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots::new(), serial: GuestLifecycleSerial::new(0), cursor: 0 }
+        Self { slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots::new(), serial: GuestLifecycleSerial::new(0), cursor: 0 }
     }
     pub fn index(instance: u32) -> usize {
-        instance as usize % semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS
+        instance as usize % semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS
     }
     pub fn admit(&mut self, open: ActorInstanceOpenRequest) -> Result<bool, &'static str> {
         if !open.is_valid() {
@@ -486,10 +486,10 @@ impl<PA: semio_framework_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<
         Some(semio_framework::kernel::ActorUiPatchReceipt { lifetime: slot.cell.lifetime(), patch_sequence: slot.patch_sequence })
     }
     pub fn next_work(&mut self) -> Option<u32> {
-        let index = (0..semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS)
-            .map(|offset| (self.cursor + offset) % semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS)
+        let index = (0..semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS)
+            .map(|offset| (self.cursor + offset) % semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS)
             .find(|index| self.slots.get(*index).is_some_and(|slot| !slot.cell.is_live() || slot.cell.owner().is_some_and(|owner| owner.request.is_some())))?;
-        self.cursor = (index + 1) % semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
+        self.cursor = (index + 1) % semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
         self.slots.get(index).map(|slot| slot.cell.lifetime().instance_id)
     }
     pub fn has_work(&self) -> bool {
@@ -514,7 +514,7 @@ impl<PA: semio_framework_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<
     }
 }
 
-impl<PA: semio_framework_plugin_reactor_app::PluginApp> Drop for NativeLifecycleRegistry<PA> {
+impl<PA: semio_plugin_reactor_app::PluginApp> Drop for NativeLifecycleRegistry<PA> {
     /// 🧹️ The teardown contract: every lifetime this registry handed out reached its terminal exact
     /// ACK before the registry itself went away. It is asserted only on the ORDINARY drop path.
     /// While the thread is already unwinding, a panic raised here is a panic inside a destructor

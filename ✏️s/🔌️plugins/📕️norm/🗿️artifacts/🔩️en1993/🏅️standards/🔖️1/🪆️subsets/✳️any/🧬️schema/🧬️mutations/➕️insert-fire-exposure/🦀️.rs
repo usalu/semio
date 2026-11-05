@@ -10,7 +10,7 @@ pub struct InsertFireExposure { pub index: Option<usize>, pub fire_exposure: Fir
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertFireExposure where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_fire_exposure::RemoveFireExposure> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "fire-exposure", kind: "insert-fire-exposure", record: "InsertedFireExposure" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert fire exposure at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Brandbeanspruchung an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert fire exposure at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Brandbeanspruchung an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

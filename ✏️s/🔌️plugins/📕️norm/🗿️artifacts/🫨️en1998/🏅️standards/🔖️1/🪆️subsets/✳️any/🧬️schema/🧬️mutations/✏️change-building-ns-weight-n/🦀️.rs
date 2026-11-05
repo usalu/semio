@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingNsWeightN 
         record: "ChangeBuildingNsWeightN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Non-structural element weight W_a", "Gewicht des nichttragenden Bauteils W_a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Non-structural element weight W_a", "Gewicht des nichttragenden Bauteils W_a ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-ns-weight-n".into()]

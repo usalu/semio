@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeBarLayerLapLength 
         record: "ChangedBarLayerLapLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change lap length l₀ of the bar layer", "Bewehrungslage: Übergreifungslänge l₀ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change lap length l₀ of the bar layer", "Bewehrungslage: Übergreifungslänge l₀ ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.layer_id.clone()]

@@ -29,7 +29,7 @@ pub struct InkBlockCursor {
 }
 
 impl InkBlockCursor {
-    pub fn next(&mut self, document: &InkInteractionDocument) -> Result<Option<Value>, semio_framework_ui_action::BoundedActionFault> {
+    pub fn next(&mut self, document: &InkInteractionDocument) -> Result<Option<Value>, semio_ui_action::BoundedActionFault> {
         let block = document.block(self.index)?;
         if block.is_some() {
             self.index += 1;
@@ -63,7 +63,7 @@ pub struct InkInteractionJob {
     pub(super) pending_remove_id: Option<String>,
 }
 
-fn checked_ink_drag(surface_id: &str) -> Result<Option<SceneDragMode>, semio_framework_ui_action::BoundedActionFault> {
+fn checked_ink_drag(surface_id: &str) -> Result<Option<SceneDragMode>, semio_ui_action::BoundedActionFault> {
     SCENE_STATE.with(|cell| {
         let states = cell.borrow();
         let Some(mode) = states.get(surface_id).and_then(|state| state.drag.as_ref()).map(|drag| &drag.mode) else {
@@ -73,36 +73,36 @@ fn checked_ink_drag(surface_id: &str) -> Result<Option<SceneDragMode>, semio_fra
         match mode {
             SceneDragMode::InkMove { origins, .. } => {
                 if origins.len() > INK_INTERACTION_ITEM_CAPACITY {
-                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                    return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                 }
                 for id in origins.keys() {
-                    bytes = bytes.checked_add(id.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+                    bytes = bytes.checked_add(id.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
                 }
             }
             SceneDragMode::InkResize { handle, selected_ids, .. } => {
                 if selected_ids.len() > INK_INTERACTION_ITEM_CAPACITY {
-                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                    return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                 }
                 bytes = handle.len();
                 for id in selected_ids {
-                    bytes = bytes.checked_add(id.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+                    bytes = bytes.checked_add(id.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
                 }
             }
             SceneDragMode::InkStroke { block_id } => bytes = block_id.len(),
             SceneDragMode::InkEraser { mode } => bytes = mode.len(),
             _ => {}
         }
-        if bytes > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+        if bytes > semio_ui_action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(semio_ui_action::BoundedActionFault::ByteCredits);
         }
         Ok(Some(mode.clone()))
     })
 }
 
 impl InkInteractionJob {
-    pub fn new(generation: u64, surface_generation: u64, pointer_id: Option<ui_render::PointerId>, scene: &UiComponentSceneNode, event: InkInteractionEvent) -> Result<Option<Self>, semio_framework_ui_action::BoundedActionFault> {
+    pub fn new(generation: u64, surface_generation: u64, pointer_id: Option<ui_render::PointerId>, scene: &UiComponentSceneNode, event: InkInteractionEvent) -> Result<Option<Self>, semio_ui_action::BoundedActionFault> {
         if generation == 0 || surface_generation == 0 {
-            return Err(semio_framework_ui_action::BoundedActionFault::Structure);
+            return Err(semio_ui_action::BoundedActionFault::Structure);
         }
         let Some(ink) = scene.ink_canvas.as_ref() else {
             return Ok(None);
@@ -113,25 +113,25 @@ impl InkInteractionJob {
         let Some(document) = checked_ink_document(scene)? else {
             return Ok(None);
         };
-        let selected_ids: Vec<String> = serde_json::from_str(&ink.selection_json).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let selected_ids: Vec<String> = serde_json::from_str(&ink.selection_json).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
         if selected_ids.len() > INK_INTERACTION_ITEM_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+            return Err(semio_ui_action::BoundedActionFault::ItemCredits);
         }
         let mut selected_bytes = 0usize;
         for id in &selected_ids {
             if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
-                return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
+                return Err(semio_ui_action::BoundedActionFault::StringCredits);
             }
-            selected_bytes = selected_bytes.checked_add(id.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+            selected_bytes = selected_bytes.checked_add(id.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
         }
-        if selected_bytes > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+        if selected_bytes > semio_ui_action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(semio_ui_action::BoundedActionFault::ByteCredits);
         }
         let camera = SCENE_STATE.with(|cell| cell.borrow().get(&scene.host_id).and_then(|state| state.ink_camera)).map(|(x, y, zoom)| InkCameraF { x, y, zoom }).unwrap_or_else(|| InkCameraF::from(document.camera.clone()));
         let drag = checked_ink_drag(&scene.host_id)?;
         let utility = document.active_utility.clone().unwrap_or_else(|| "selectDirect".to_owned());
         if utility.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
+            return Err(semio_ui_action::BoundedActionFault::StringCredits);
         }
         Ok(Some(Self {
             generation,
@@ -159,9 +159,9 @@ impl InkInteractionJob {
         }))
     }
 
-    pub fn step(&mut self, generation: u64, scene: &UiComponentSceneNode, inner: Rect, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<InkInteractionStep, semio_framework_ui_action::BoundedActionFault> {
+    pub fn step(&mut self, generation: u64, scene: &UiComponentSceneNode, inner: Rect, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<InkInteractionStep, semio_ui_action::BoundedActionFault> {
         if generation != self.generation {
-            return Err(semio_framework_ui_action::BoundedActionFault::Structure);
+            return Err(semio_ui_action::BoundedActionFault::Structure);
         }
         if self.stage == InkInteractionStage::Complete {
             return Ok(InkInteractionStep::Complete);
@@ -185,13 +185,13 @@ impl InkInteractionJob {
         self.surface_generation == surface_generation && self.pointer_id == Some(pointer_id)
     }
 
-    fn scan_one(&mut self, scene: &UiComponentSceneNode, inner: Rect) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    fn scan_one(&mut self, scene: &UiComponentSceneNode, inner: Rect) -> Result<bool, semio_ui_action::BoundedActionFault> {
         match self.event {
             InkInteractionEvent::PointerDown { x, y, button, .. } if button == 0 && (self.utility == "eraserStroke" || self.utility == "eraserPoint") => {
                 if self.push_pending_eraser_event()? {
                     return Ok(false);
                 }
-                let document = self.document.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+                let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
                 let Some(block) = self.block_cursor.next(document)? else {
                     self.events.seal()?;
                     return Ok(true);
@@ -233,7 +233,7 @@ impl InkInteractionJob {
         }
     }
 
-    fn push_pending_eraser_event(&mut self) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    fn push_pending_eraser_event(&mut self) -> Result<bool, semio_ui_action::BoundedActionFault> {
         if let Some(remove_id) = self.pending_remove_id.as_deref() {
             self.events.push(&json!({ "operation": "removeBlock", "blockId": remove_id }))?;
             self.pending_remove_id = None;
@@ -247,13 +247,13 @@ impl InkInteractionJob {
         Ok(false)
     }
 
-    fn prepare_eraser_block(block: &Value, x: f64, y: f64, radius: f64, points_only: bool) -> Result<Option<(String, InkRawPages)>, semio_framework_ui_action::BoundedActionFault> {
+    fn prepare_eraser_block(block: &Value, x: f64, y: f64, radius: f64, points_only: bool) -> Result<Option<(String, InkRawPages)>, semio_ui_action::BoundedActionFault> {
         if ink_item_kind(block) != "stroke" || !ink_hits_point(block, x, y, radius) {
             return Ok(None);
         }
         let id = ink_item_id(block);
         if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
+            return Err(semio_ui_action::BoundedActionFault::StringCredits);
         }
         if !points_only {
             return Ok(Some((id.to_owned(), InkRawPages::default())));
@@ -263,7 +263,7 @@ impl InkInteractionJob {
             return Ok(None);
         }
         if fragments.len() > INK_INTERACTION_ITEM_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+            return Err(semio_ui_action::BoundedActionFault::ItemCredits);
         }
         for fragment in &fragments {
             let mut nodes = 0usize;
@@ -271,9 +271,9 @@ impl InkInteractionJob {
         }
         let mut encoded = InkRawPages::default();
         for fragment in fragments {
-            let raw = serde_json::to_string(&fragment).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
+            let raw = serde_json::to_string(&fragment).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
             if raw.len() > INK_INTERACTION_DOCUMENT_BYTE_CAPACITY {
-                return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+                return Err(semio_ui_action::BoundedActionFault::ByteCredits);
             }
             encoded.push(&raw)?;
         }
@@ -288,7 +288,7 @@ impl InkInteractionJob {
         Some(json!({ "kind": "drag", "ids": origins.keys().collect::<Vec<_>>(), "dx": (x - *start_x) as f64 / zoom, "dy": (y - *start_y) as f64 / zoom }).to_string())
     }
 
-    fn scan_drag_event(&mut self, scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, commit: bool) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    fn scan_drag_event(&mut self, scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, commit: bool) -> Result<bool, semio_ui_action::BoundedActionFault> {
         if matches!(self.drag.as_ref(), Some(SceneDragMode::InkMove { .. })) {
             self.events.seal()?;
             return Ok(true);
@@ -297,7 +297,7 @@ impl InkInteractionJob {
             if self.push_pending_eraser_event()? {
                 return Ok(false);
             }
-            let document = self.document.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+            let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
             let Some(block) = self.block_cursor.next(document)? else {
                 self.events.seal()?;
                 return Ok(true);
@@ -311,13 +311,13 @@ impl InkInteractionJob {
             }
             return Ok(false);
         }
-        let document = self.document.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let Some(block) = self.block_cursor.next(document)? else {
             self.events.seal()?;
             return Ok(true);
         };
         let id = ink_item_id(&block);
-        let event = match self.drag.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)? {
+        let event = match self.drag.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)? {
             SceneDragMode::InkResize { handle, from, start_x, start_y, selected_ids } if selected_ids.iter().any(|selected| selected == id) => {
                 let dx = (x - *start_x) as f64 / self.camera.zoom.max(0.0001);
                 let dy = (y - *start_y) as f64 / self.camera.zoom.max(0.0001);
@@ -327,7 +327,7 @@ impl InkInteractionJob {
             }
             SceneDragMode::InkStroke { block_id } if block_id == id => {
                 let mut updated = SCENE_STATE
-                    .with(|cell| -> Result<Option<Value>, semio_framework_ui_action::BoundedActionFault> {
+                    .with(|cell| -> Result<Option<Value>, semio_ui_action::BoundedActionFault> {
                         let states = cell.borrow();
                         let Some(value) = states.get(&scene.host_id).and_then(|state| state.ink_overrides.get(id)) else {
                             return Ok(None);
@@ -343,12 +343,12 @@ impl InkInteractionJob {
                     let block_y = ink_item_num(&updated, "y");
                     if let Some(points) = updated.get_mut("points").and_then(Value::as_array_mut) {
                         if points.len() == INK_INTERACTION_ITEM_CAPACITY {
-                            return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+                            return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                         }
                         points.push(json!([world_x - block_x, world_y - block_y]));
                     }
                 }
-                let update_json = serde_json::to_string(&updated).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
+                let update_json = serde_json::to_string(&updated).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
                 self.stroke_update = Some((id.to_owned(), InkOwnedRaw::new(&update_json)?));
                 Some(json!({ "operation": "updateBlock", "blockId": id, "block": updated }))
             }
@@ -360,8 +360,8 @@ impl InkInteractionJob {
         Ok(false)
     }
 
-    fn scan_marquee(&mut self, inner: Rect, x: f32, y: f32, start_x: f32, start_y: f32) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
-        let document = self.document.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+    fn scan_marquee(&mut self, inner: Rect, x: f32, y: f32, start_x: f32, start_y: f32) -> Result<bool, semio_ui_action::BoundedActionFault> {
+        let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let Some(block) = self.block_cursor.next(document)? else {
             return Ok(true);
         };
@@ -372,9 +372,9 @@ impl InkInteractionJob {
         let rectangle = InkBoundsF { x: world_x0.min(world_x1), y: world_y0.min(world_y1), w: (world_x1 - world_x0).abs(), h: (world_y1 - world_y0).abs() };
         if ink_item_bounds(&block).intersects(&rectangle) {
             let Some(id) = ink_interaction_id(&block) else { return Ok(false) };
-            let bytes = self.result_bytes.checked_add(id.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
-            if self.result_ids.len() == INK_SELECTION_ITEM_CAPACITY || bytes > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY {
-                return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+            let bytes = self.result_bytes.checked_add(id.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
+            if self.result_ids.len() == INK_SELECTION_ITEM_CAPACITY || bytes > semio_ui_action::ACTION_STRING_BYTE_CAPACITY {
+                return Err(semio_ui_action::BoundedActionFault::ByteCredits);
             }
             self.result_ids.push(id.to_owned());
             self.result_bytes = bytes;
@@ -382,8 +382,8 @@ impl InkInteractionJob {
         Ok(false)
     }
 
-    fn scan_hit(&mut self, inner: Rect, x: f32, y: f32) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
-        let document = self.document.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+    fn scan_hit(&mut self, inner: Rect, x: f32, y: f32) -> Result<bool, semio_ui_action::BoundedActionFault> {
+        let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let Some(block) = self.block_cursor.next(document)? else {
             return Ok(true);
         };
@@ -392,7 +392,7 @@ impl InkInteractionJob {
             if !ink_item_locked(&block) && ink_item_bounds(&block).contains_point(world_x, world_y) {
                 let id = ink_item_id(&block);
                 if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
-                    return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
+                    return Err(semio_ui_action::BoundedActionFault::StringCredits);
                 }
                 Some((id.to_owned(), (ink_item_num(&block, "x"), ink_item_num(&block, "y"))))
             } else {
@@ -408,7 +408,7 @@ impl InkInteractionJob {
         Ok(false)
     }
 
-    pub(crate) fn publish(&mut self, scene: &UiComponentSceneNode, inner: Rect, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    pub(crate) fn publish(&mut self, scene: &UiComponentSceneNode, inner: Rect, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
         match self.event {
             InkInteractionEvent::PointerDown { x, y, button, shift } => self.publish_down(scene, inner, x, y, button, shift, input),
             InkInteractionEvent::PointerUp { x, y } => {

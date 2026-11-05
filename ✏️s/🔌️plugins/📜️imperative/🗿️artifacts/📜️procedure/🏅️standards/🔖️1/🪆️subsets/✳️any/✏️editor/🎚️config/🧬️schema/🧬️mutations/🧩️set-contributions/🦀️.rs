@@ -14,8 +14,8 @@ pub struct SetContributions {
 impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetContributions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "contributions_json", kind: "set-contributions", record: "SetContributions" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["contributions_json".into()]

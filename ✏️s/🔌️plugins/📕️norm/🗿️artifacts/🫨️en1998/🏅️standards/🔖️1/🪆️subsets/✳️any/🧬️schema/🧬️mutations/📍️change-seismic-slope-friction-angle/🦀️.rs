@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSeismicSlopeFricti
         record: "ChangedSeismicSlopeYaw",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slope: Friction angle", "Böschung: Reibungswinkel ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slope: Friction angle", "Böschung: Reibungswinkel ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

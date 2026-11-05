@@ -14,8 +14,8 @@ pub struct SetLayer {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer", record: "SetLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set layer", "Layer setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set layer", "Layer setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

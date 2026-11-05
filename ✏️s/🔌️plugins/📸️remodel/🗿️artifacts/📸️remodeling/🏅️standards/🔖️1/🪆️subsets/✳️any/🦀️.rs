@@ -12,8 +12,8 @@ use semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io;
 use io::text;
 use semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema;
 use semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 
 /// 📚️ The registry in `✏️editor/📚️examples/🦀️.rs` is the single append-only source; this is only
 /// its `&'static` projection.
@@ -34,9 +34,9 @@ pub fn remodeling_artifact_schema_descriptor() -> semio_framework_schema_registr
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
 pub fn subset<PA>() -> SubsetDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling::RemodelingViewer>>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingPlayApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling::RemodelingViewer>>>,
 {
     SubsetDeclaration {
         dialect: semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DIALECT,
@@ -56,7 +56,7 @@ where
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::RemodelingAnalyzer;
     use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-    use {store::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,store::io::ComposeError,store::io::ComposeSource,store::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {store::io::AnalyzeSource,semio_plugin::ArtifactComposition,store::io::ComposeError,store::io::ComposeSource,store::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
 
@@ -95,10 +95,10 @@ pub use derived_composition::*;
 /// native composer, which the OS document-open path still resolves by `IoKey`. The eight
 /// `compose_export_*` rows that sat beside it are deleted (see this file's module doc); every foreign
 /// hop now lives on the typed `io()` channel below.
-pub fn native_composer_entries() -> &'static [semio_framework_plugin::app::ComposerEntry] {
+pub fn native_composer_entries() -> &'static [semio_plugin::app::ComposerEntry] {
     use crate::standards::v1::subsets::any::RemodelingComposer;
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::app::ComposerEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::composer_entry_of::<RemodelingComposer>()]).as_slice()
+    static ENTRIES: std::sync::OnceLock<Vec<semio_plugin::app::ComposerEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_plugin::composer_entry_of::<RemodelingComposer>()]).as_slice()
 }
 //#endregion 🚪️NativeComposer
 
@@ -106,15 +106,15 @@ pub fn native_composer_entries() -> &'static [semio_framework_plugin::app::Compo
 /// 🚪️ This subset's complete io surface on the framework's `io_mechanism` channel — the five native
 /// `dsl::LanguageSpec`s plus one `IoEntry` per registered foreign hop, preflighted and registered by
 /// `commit_artifact_declarations` (one `io_register` per subset).
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
     use semio_s_artifact_remodel_remodeling_write::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use semio_s_artifact_remodel_remodeling_read::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
     use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
     use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DIALECT;
     use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DOCUMENT_SCHEMA;
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
     /// 🗣️ The five hand-authored `dsl::LanguageSpec`s this subset carries — `OnceLock` because
@@ -221,7 +221,7 @@ pub mod derived_construction {
     use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
     use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
     use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct RemodelingBuilderConstruction {
@@ -271,7 +271,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-    use {store::io::Analysis,store::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {store::io::Analysis,store::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct RemodelingParts {
@@ -284,27 +284,27 @@ pub mod derived_analysis {
         type Parts = RemodelingParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
+            semio_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = RemodelingParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <RemodelingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -316,7 +316,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec RemodelingBuilderFacets {
         construction: RemodelingBuilderConstruction,
         analysis: RemodelingAnalyzerAnalysis,

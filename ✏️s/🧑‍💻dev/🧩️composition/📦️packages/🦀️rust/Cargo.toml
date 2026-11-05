@@ -64,22 +64,22 @@ semio-s-artifact-procedural-3d-terminology = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-playbook-playbook.workspace = true
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-spatial-kernel-semio-session = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-s-artifact-procedural-generation2d = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-framework-os-flow = { workspace = true }
+semio-os-flow = { workspace = true }
 semio-s-plugin-flow-draw = { workspace = true }
 semio-s-artifact-sequence-sequence = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel-neural-engine = { workspace = true }
+semio-os-kernel-neural-engine = { workspace = true }
 semio-s-imperative = { workspace = true }
 semio-s-plugin-imperative-math = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust" }
 semio-s-plugin-imperative-text = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust" }
 semio-s-plugin-imperative-effect = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust" }
 semio-s-plugin-imperative-control = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-semio = { workspace = true }
 
 semio-s-artifact-procedural-generation3d = { workspace = true }
@@ -89,13 +89,13 @@ semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
+semio-ui-contract = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 parry3d = "0.17"
 fnv = "1.0.7"
-ui_scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-semio-framework-ui-declaration = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
+semio-ui-declaration = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [[test]]
 name = "generation3d-example-geometry"
@@ -131,8 +131,8 @@ name = "generation3d-app-laws-editor-surface"
 path = "../../🧪️tests/🧊️generation3d/🕹️editor-surface-laws/🦀️.rs"
 
 [dependencies]
-semio-framework-os-infinite-directed-presentation = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-os-infinite-directed-presentation = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

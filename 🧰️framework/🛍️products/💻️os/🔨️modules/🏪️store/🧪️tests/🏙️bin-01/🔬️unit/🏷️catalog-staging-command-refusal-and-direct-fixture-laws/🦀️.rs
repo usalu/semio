@@ -19,19 +19,19 @@ async fn original_member_group_stage_and_adoption_preserve_physical_receipts_and
  let policy=&fixture["grant"];let n=|axis:&str|policy[axis].as_u64().unwrap()as usize;
  let grant=ArtifactStoreOneItemGrant{maximum_items:n("items"),maximum_copy_bytes:n("copy"),maximum_capacity_bytes:n("capacity"),maximum_release_bytes:n("release"),maximum_depth:n("depth")};
  let before=fixture["before"].as_i64().unwrap()as i32;let after=fixture["after"].as_i64().unwrap()as i32;
- let mut store=ArtifactStore::new(create_document_envelope::<DemoSnapshot,DemoMutation>("demo/v1","original-group-receipts",DemoSnapshot{n:Some(before)},None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+ let mut store=ArtifactStore::new(create_document_envelope::<DemoSnapshot,DemoMutation>("demo/v1","original-group-receipts",DemoSnapshot{n:Some(before)},None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
  let mutation=DemoMutation::SetN(SetN{n:after});
  let mut publication=store.begin_member_apply_batch(semio_framework_job::OperationId(919),store.generation(),store.content_revision_now(),fixture["actor"].as_str().unwrap().into(),vec![mutation.clone()]).unwrap_or_else(|_|panic!("original installed member factory admits its typed fixture"));
  let authority=publication.authority.as_ref().unwrap();
- let mut stage=semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot,DemoMutation>::empty_batch_stage(authority);stage.edit=Some(Box::new(semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot,DemoMutation>::empty_batch_edit(authority)));
+ let mut stage=semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot,DemoMutation>::empty_batch_stage(authority);stage.edit=Some(Box::new(semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot,DemoMutation>::empty_batch_edit(authority)));
  let id=fixture["edit"].as_str().unwrap();stage.applied_edit_id=id.into();stage.tail_edit_id=id.into();stage.post=Some(Arc::new(DemoSnapshot{n:Some(after)}));stage.local_actor=Some(authority.actor().into());stage.folded=1;stage.completed_items=1;stage.digest=[7;32];
  stage.mutation_retirement=(*store.owners.mutation_retirement_factory).clone();stage.snapshot_retirement=(*store.owners.snapshot_retirement_factory).clone();stage.unit_flags.reserve_exact(2);
  let edit=stage.edit.as_mut().unwrap();edit.id=id.into();edit.actor=Some(authority.actor_utf8().clone());edit.forwards.push(mutation);edit.inverse.push(DemoMutation::SetN(SetN{n:before}));edit.mutation_meta.push(MutationMeta{mutation_id:Some(MutationId(fixture["mutation"].as_str().unwrap().into())),dependencies:Vec::new(),base_version:0,author_id:Some(ActorId(authority.actor_utf8().clone().into())),timestamp:authority.next_clock(),undo_policy:UndoPolicy::ExactBaseOnly,payload_hash:None,semantic_kind:None,label:None,group_id:None,origin:protocol::MutationOrigin::Owner,transaction:None});
-  let diagnostic_rows:Vec<_>=fixture["diagnostics"].as_array().unwrap().iter().map(|row|semio_framework_os_spr::MutationMessage{level:semio_framework_diagnostic::Severity::from_value(row["level"].clone().into()).unwrap(),code:row["code"].as_str().unwrap().to_owned().into(),message:row["message"].as_str().unwrap().to_owned(),target:row["target"].as_array().unwrap().iter().map(|target|target.as_str().unwrap().to_owned()).collect(),op_index:Some(row["opIndex"].as_u64().unwrap()as u32)}).collect();let diagnostic_pointers:Vec<_>=diagnostic_rows.iter().map(|row|row.message.as_ptr()).collect();let mut diagnostic_owner=semio_framework_os_spr::command::MutationMessagePublication::new(diagnostic_rows);while !diagnostic_owner.ready(){diagnostic_owner.advance(grant.retained_grant()).unwrap();}stage.diagnostics=semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage::from_publication(Some(diagnostic_owner));
+  let diagnostic_rows:Vec<_>=fixture["diagnostics"].as_array().unwrap().iter().map(|row|semio_os_spr::MutationMessage{level:semio_framework_diagnostic::Severity::from_value(row["level"].clone().into()).unwrap(),code:row["code"].as_str().unwrap().to_owned().into(),message:row["message"].as_str().unwrap().to_owned(),target:row["target"].as_array().unwrap().iter().map(|target|target.as_str().unwrap().to_owned()).collect(),op_index:Some(row["opIndex"].as_u64().unwrap()as u32)}).collect();let diagnostic_pointers:Vec<_>=diagnostic_rows.iter().map(|row|row.message.as_ptr()).collect();let mut diagnostic_owner=semio_os_spr::command::MutationMessagePublication::new(diagnostic_rows);while !diagnostic_owner.ready(){diagnostic_owner.advance(grant.retained_grant()).unwrap();}stage.diagnostics=semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage::from_publication(Some(diagnostic_owner));
 publication.stage=Some(Box::new(stage));publication.phase=ArtifactStoreOneItemPublicationPhase::Publishing;
  let original_stage=std::ptr::from_ref(publication.stage.as_ref().unwrap().as_ref());let original_flags=publication.stage.as_ref().unwrap().unit_flags.as_ptr();
- let mut publisher=semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();let visibility=publisher.view();
- publication.group_preparation=Some(semio_framework_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation::new(&visibility,None,None));
+ let mut publisher=semio_os_vcs::ArtifactGroupVisibilityOwner::new();let visibility=publisher.view();
+ publication.group_preparation=Some(semio_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation::new(&visibility,None,None));
  let mut prepared=false;let mut births=0;let mut releases=0;
  for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){
   let(step,heap)=original_heap(||store.parts().stage_apply_batch_group(&mut publication,&visibility,ArtifactStoreOneItemGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step,ArtifactStoreOneItemPreparationStep::Blocked);assert_eq!((heap.0,heap.1),(0,0));
@@ -78,10 +78,10 @@ fn command_decode_canonical_pack_refusal_preserves_all_value_causes(){
   let allocation=cause.message.as_ptr();let refusal=pack::PackRefusal::from(cause);
   let(command,requested,released)=semio_framework_trace_memory_testing::observe_backing(||CommandDecodeError::from(refusal));
   assert_eq!((requested,released),(0,0),"typed joins do not allocate or retire copied diagnostics");
-  let CommandDecodeError::Layout(semio_framework_os_spr::ProtocolError::Pack(pack::PackError::Refusal(pack::PackRefusal::ValueRefusal(value))))=&command else{panic!("original typed layout refusal");};
+  let CommandDecodeError::Layout(semio_os_spr::ProtocolError::Pack(pack::PackError::Refusal(pack::PackRefusal::ValueRefusal(value))))=&command else{panic!("original typed layout refusal");};
   assert_eq!(value.kind,kind);assert_eq!(value.message.as_ptr(),allocation);
   assert_eq!(command.to_string(),format!("command layout: {}",row["display"].as_str().unwrap()));
-  let protocol=std::error::Error::source(&command).unwrap().downcast_ref::<semio_framework_os_spr::ProtocolError>().unwrap();
+  let protocol=std::error::Error::source(&command).unwrap().downcast_ref::<semio_os_spr::ProtocolError>().unwrap();
   let wrapped=std::error::Error::source(protocol).unwrap().downcast_ref::<pack::PackError>().unwrap();
   let original=std::error::Error::source(wrapped).unwrap().downcast_ref::<ValueError>().unwrap();assert!(std::ptr::eq(value,original));
   let reference=serde_json::json!({"kind":row["kind"],"message":row["display"].as_str().unwrap().strip_prefix("schema error: ").unwrap()});
@@ -92,10 +92,10 @@ fn command_decode_canonical_pack_refusal_preserves_all_value_causes(){
 #[test]
 fn command_decode_canonical_pack_refusal_retains_actual_reader_and_operation_sources(){
  let mut reader=pack::ByteReader::new(&[0x80]);let refusal=reader.read_varint_u64().unwrap_err();let kind=refusal.kind();
- let command=CommandDecodeError::from(refusal);let CommandDecodeError::Layout(semio_framework_os_spr::ProtocolError::Pack(error))=&command else{panic!("actual primitive layout cause");};assert_eq!(error.refusal_kind(),Some(kind));
- let source=std::error::Error::source(&command).unwrap().downcast_ref::<semio_framework_os_spr::ProtocolError>().unwrap();assert!(std::ptr::eq(source,match &command{CommandDecodeError::Layout(error)=>error,_=>unreachable!()}));
+ let command=CommandDecodeError::from(refusal);let CommandDecodeError::Layout(semio_os_spr::ProtocolError::Pack(error))=&command else{panic!("actual primitive layout cause");};assert_eq!(error.refusal_kind(),Some(kind));
+ let source=std::error::Error::source(&command).unwrap().downcast_ref::<semio_os_spr::ProtocolError>().unwrap();assert!(std::ptr::eq(source,match &command{CommandDecodeError::Layout(error)=>error,_=>unreachable!()}));
  let mut reader=pack::ByteReader::new(&[]);let refusal=reader.read_u8().unwrap_err();let operation=CommandDecodeError::Operation{index:7,error:refusal.into()};
- let CommandDecodeError::Operation{index,error}=&operation else{unreachable!()};assert_eq!(*index,7);assert!(std::ptr::eq(error,std::error::Error::source(&operation).unwrap().downcast_ref::<semio_framework_os_spr::ProtocolError>().unwrap()));
+ let CommandDecodeError::Operation{index,error}=&operation else{unreachable!()};assert_eq!(*index,7);assert!(std::ptr::eq(error,std::error::Error::source(&operation).unwrap().downcast_ref::<semio_os_spr::ProtocolError>().unwrap()));
 }
 
 #[test]

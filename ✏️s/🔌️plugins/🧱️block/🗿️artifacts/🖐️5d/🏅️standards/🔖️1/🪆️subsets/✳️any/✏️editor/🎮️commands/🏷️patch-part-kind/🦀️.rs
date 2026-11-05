@@ -3,7 +3,7 @@
 use semio_s_artifact_block_5d_mutations::Block5dMutation;
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use crate::config::{Block5dConfig, Block5dConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_block_5d_mut_part_kind::rename_part_kind::rename_part_kind;
 use semio_s_artifact_block_5d_mut_part_kind::change_part_kind_label::change_part_kind_label;

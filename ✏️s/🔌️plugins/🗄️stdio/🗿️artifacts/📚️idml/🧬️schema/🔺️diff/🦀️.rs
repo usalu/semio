@@ -1,7 +1,7 @@
 //! 🔺️ Ordered sparse IDML member changes with atomic package validation.
 use std::collections::{HashMap, HashSet};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use crate::{IdmlSnapshot, schema::IdmlPart};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]

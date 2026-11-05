@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "questionKind",
+    "snapshot",
+    "expected",
+    "locales",
+    "windowUi"
+  ],
+  "properties": {
+    "questionKind": {
+      "const": "procedural3d"
+    },
+    "snapshot": {
+      "type": "object",
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ],
+      "properties": {
+        "schema": {
+          "const": "flow.host_snapshot"
+        },
+        "camera": {
+          "type": "object"
+        },
+        "widgets": {
+          "type": "array",
+          "minItems": 28,
+          "maxItems": 28,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "kind"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^c[0-3]-"
+              },
+              "kind": {
+                "enum": [
+                  "inputSlider",
+                  "neuron",
+                  "outputPreview"
+                ]
+              }
+            }
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "minItems": 24,
+          "maxItems": 24,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "from",
+              "to",
+              "fromPort",
+              "toPort"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "fromPort": {
+                "type": "string"
+              },
+              "toPort": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "layout": {
+          "type": "object",
+          "minProperties": 28,
+          "maxProperties": 28
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "widgets",
+        "synapses",
+        "polygonSides",
+        "columns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "widgets": {
+          "const": 28
+        },
+        "synapses": {
+          "const": 24
+        },
+        "polygonSides": {
+          "const": 120
+        },
+        "columns": {
+          "const": 4
+        }
+      }
+    },
+    "locales": {
+      "type": "object",
+      "required": [
+        "en-US",
+        "de-DE"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en-US": {
+          "type": "object",
+          "required": [
+            "cancel",
+            "stopped"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "cancel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stopped": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "de-DE": {
+          "type": "object",
+          "required": [
+            "cancel",
+            "stopped"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "cancel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stopped": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "windowUi": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tab",
+        "group",
+        "template"
+      ],
+      "properties": {
+        "tab": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group": {
+          "type": "string",
+          "minLength": 1
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

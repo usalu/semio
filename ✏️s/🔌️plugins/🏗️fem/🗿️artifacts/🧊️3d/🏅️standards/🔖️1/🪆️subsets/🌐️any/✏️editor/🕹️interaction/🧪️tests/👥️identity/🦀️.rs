@@ -4,10 +4,10 @@ use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::remove_selection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::HistoryView;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::HistoryView;
+use semio_plugin::NoConfig;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
@@ -139,8 +139,8 @@ fn public_json_identity_admission_refuses_invalid_owners_and_controlled_scratch_
 
 #[test]
 fn snapshot_identity_admission_preserves_namespaces_and_refuses_invalid_owners() {
-    use semio_framework_os_kernel::os_store::ArtifactDsl;
-    use semio_framework_os_kernel::os_store::ArtifactPack;
+    use semio_os_kernel::os_store::ArtifactDsl;
+    use semio_os_kernel::os_store::ArtifactPack;
     let doc = collision_document();
     let value = reference(&doc);
     assert!(value.validate_interaction_identities().is_ok());

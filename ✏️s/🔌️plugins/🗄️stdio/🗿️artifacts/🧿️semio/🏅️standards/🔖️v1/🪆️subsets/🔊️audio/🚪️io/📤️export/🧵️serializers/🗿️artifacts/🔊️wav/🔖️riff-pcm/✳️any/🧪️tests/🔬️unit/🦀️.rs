@@ -4,7 +4,7 @@ use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChanne
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioTag;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA;
-use semio_framework_plugin::ArtifactDeserializer;
+use semio_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn real_world_audio_no_tags() -> SemioAudioSnapshot {

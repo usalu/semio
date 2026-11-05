@@ -68,6 +68,26 @@
         "rectangle",
         "ellipse"
       ]
+    },
+    "transform": {
+      "type": "object",
+      "required": [
+        "position",
+        "rotation",
+        "scale"
+      ],
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/vector"
+        },
+        "rotation": {
+          "$ref": "#/$defs/quaternion"
+        },
+        "scale": {
+          "$ref": "#/$defs/vector"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "$defs": {
@@ -78,6 +98,14 @@
       },
       "minItems": 3,
       "maxItems": 3
+    },
+    "quaternion": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
     }
   }
 }

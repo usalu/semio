@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../../.."
-name = "semio-framework-os-renderer-wgpu-native-runtime-modules"
+name = "semio-renderer-wgpu-native-runtime-modules"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

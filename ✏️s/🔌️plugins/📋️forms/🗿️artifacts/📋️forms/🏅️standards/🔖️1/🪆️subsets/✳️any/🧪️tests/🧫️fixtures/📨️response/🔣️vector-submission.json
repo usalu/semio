@@ -1,0 +1,169 @@
+{
+  "definition": {
+    "steps": [
+      {
+        "id": "intro",
+        "title": "Introduction",
+        "blocks": [
+          {
+            "id": "show",
+            "label": "Show Position",
+            "kind": "boolean"
+          }
+        ]
+      },
+      {
+        "id": "coordinates",
+        "title": "Coordinates",
+        "blocks": [
+          {
+            "id": "position",
+            "kind": "vector",
+            "label": "Position",
+            "required": true,
+            "min": 1,
+            "max": 5,
+            "step": 2,
+            "fields": [
+              {
+                "key": "x"
+              },
+              {
+                "key": "y"
+              }
+            ],
+            "condition": {
+              "kind": "var",
+              "name": "show"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "id": "response-a",
+    "submittedAt": 1790545740000,
+    "definitionVersion": "revision-a"
+  },
+  "cases": [
+    {
+      "name": "vector answer snapshots",
+      "values": {
+        "show": true,
+        "position": [
+          1,
+          5
+        ]
+      },
+      "expected": {
+        "response": {
+          "id": "response-a",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "revision-a",
+          "answers": [
+            {
+              "questionId": "show",
+              "label": "Show Position",
+              "kind": "boolean",
+              "value": true
+            },
+            {
+              "questionId": "position",
+              "label": "Position",
+              "kind": "vector",
+              "value": [
+                1,
+                5
+              ]
+            }
+          ]
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "vector minimum blocks submission",
+      "values": {
+        "show": true,
+        "position": [
+          -1,
+          3
+        ]
+      },
+      "expected": {
+        "response": null,
+        "errors": [
+          {
+            "questionId": "position",
+            "code": "range"
+          }
+        ]
+      }
+    },
+    {
+      "name": "vector maximum blocks submission",
+      "values": {
+        "show": true,
+        "position": [
+          3,
+          7
+        ]
+      },
+      "expected": {
+        "response": null,
+        "errors": [
+          {
+            "questionId": "position",
+            "code": "range"
+          }
+        ]
+      }
+    },
+    {
+      "name": "vector step blocks submission",
+      "values": {
+        "show": true,
+        "position": [
+          3,
+          4
+        ]
+      },
+      "expected": {
+        "response": null,
+        "errors": [
+          {
+            "questionId": "position",
+            "code": "step"
+          }
+        ]
+      }
+    },
+    {
+      "name": "hidden invalid vector omitted",
+      "values": {
+        "show": false,
+        "position": [
+          999,
+          999
+        ]
+      },
+      "expected": {
+        "response": {
+          "id": "response-a",
+          "submittedAt": 1790545740000,
+          "definitionVersion": "revision-a",
+          "answers": [
+            {
+              "questionId": "show",
+              "label": "Show Position",
+              "kind": "boolean",
+              "value": false
+            }
+          ]
+        },
+        "errors": []
+      }
+    }
+  ]
+}

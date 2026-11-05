@@ -3,8 +3,8 @@
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, ClipboardSetting, FocusedNodeSetting, SpaceIdSetting};
 
 use semio_framework_artifact_space_space::{empty_space_snapshot, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
-use semio_framework_os::{create_backbone_document, WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os::{create_backbone_document, WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "open-space")]

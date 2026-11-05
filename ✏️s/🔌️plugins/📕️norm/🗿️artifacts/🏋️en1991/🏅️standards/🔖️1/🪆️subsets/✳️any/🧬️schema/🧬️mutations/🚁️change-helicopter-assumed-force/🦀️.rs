@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeHelicopterAssumedF
         record: "ChangedHelicopterAssumedForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed equivalent static force of the helicopter landing", "Hubschrauberlandung: Angenommene statische Ersatzkraft ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed equivalent static force of the helicopter landing", "Hubschrauberlandung: Angenommene statische Ersatzkraft ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

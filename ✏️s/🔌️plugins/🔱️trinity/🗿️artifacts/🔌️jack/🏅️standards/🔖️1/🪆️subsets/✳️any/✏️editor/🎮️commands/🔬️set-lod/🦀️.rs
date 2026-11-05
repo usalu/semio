@@ -2,9 +2,9 @@
 
 use crate::editor::jack::window_config::{addressed, JackGraphWindowConfigMutation, SetLodMode};
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, ViewModel};
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, ViewModel};
 
-pub fn set_lod_mode(value: &str, view: Option<&ViewModel>) -> Result<Emit<TrinityGraphMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn set_lod_mode(value: &str, view: Option<&ViewModel>) -> Result<Emit<TrinityGraphMutation, semio_plugin::NoConfigMutation>, Fault> {
     let view = view.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("jack.window-required"), "Jack LOD requires a host window context"))?;
     if value.len() > 64 {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("jack.lod"), "LOD identifier exceeds its 64-byte bound"));

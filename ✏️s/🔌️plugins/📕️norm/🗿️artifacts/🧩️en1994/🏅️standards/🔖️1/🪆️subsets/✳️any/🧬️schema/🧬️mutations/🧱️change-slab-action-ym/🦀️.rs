@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSlabActionYM where
         record: "ChangedSlabActionYM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slab position of the point force across the width of the slab action", "Deckeneinwirkung: Deckeneinwirkung: Position der Einzellast quer zur Breite ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slab position of the point force across the width of the slab action", "Deckeneinwirkung: Deckeneinwirkung: Position der Einzellast quer zur Breite ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.slab_id.clone(), self.id.clone()]

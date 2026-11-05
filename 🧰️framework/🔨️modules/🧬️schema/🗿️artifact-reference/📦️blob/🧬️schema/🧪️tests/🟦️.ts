@@ -14,5 +14,5 @@ test("blob identity has one small independent schema owner and exact neutral JSO
  expect(Object.keys(manifest.dependencies).sort()).toEqual(["semio-framework-pack-json","semio-framework-value","serde"]);
  const accepts=new Ajv({strict:true}).compile(schema);
  for(const row of fixture.cases){if(row.json.includes("1844674407370955161"))continue;expect(accepts(JSON.parse(row.json)),row.json).toBe(row.accepted);}
- const source=readFileSync(join(root,"🦀️.rs"),"utf8");expect(source).toContain("artifact_retire_struct!(BlobRef");expect(source).not.toContain("semio_framework_os_kernel");expect(source).not.toContain("crate::{FromValue");
+ const source=readFileSync(join(root,"🦀️.rs"),"utf8");expect(source).toContain("artifact_retire_struct!(BlobRef");expect(source).not.toContain("semio_os_kernel");expect(source).not.toContain("crate::{FromValue");
 });

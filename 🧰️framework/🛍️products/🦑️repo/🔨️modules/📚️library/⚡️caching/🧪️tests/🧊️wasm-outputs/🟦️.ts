@@ -1,107 +1,62 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import path, { delimiter, dirname, join } from "node:path";
-import {type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,acquireCompilerCapacityLeaseV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {acquireCargoBuildLeaseV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import { cargoDirectories } from "../../🦀️cargo/🗂️directories/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {runWasmOutputRefusalV1} from "./📥️purpose/🟦️.ts";
+import {createHash} from "node:crypto";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {createRequire} from "node:module";
+import {dirname,join,relative,resolve} from "node:path";
+import {pathToFileURL} from "node:url";
+import {type ScriptInvocation,scriptInvocationEnvironment} from "@semio-tech/process/routing";
+import {requestedCompilerAdmissionControlV1,compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "@semio-tech/process/compiler-capacity";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/execution";
+import {cargoProvenancePhysicalControlV1} from "@semio-tech/process/native-build";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {withRepositoryCompilerStoreV1,withRepositoryCacheStoreV1,preparedBinaryen} from "@semio-tech/repo-lib/storage";
+import {withRepositoryCargoResolutionV1,repositoryCargoNetworkV1} from "@semio-tech/repo-lib/cargo";
+import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts,readNativeCallerAuthorityV1} from "@semio-tech/repo-lib/artifacts";
+import {resolveWasmBindgenBin} from "../../../🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
+import {withCompilerWorkspaceSharedWriteV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+import type {RuntimeWasmObservationV1} from "../../../🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts";
 
-/** 🧊️ Executes restored renderer artifacts and compares them with an independent native Trunk build. */
-export async function testWgpuWasmOutputs(workspace: string, output: string, invocation:ScriptInvocation): Promise<void> {
-  const control=scriptCompilerAdmissionControlV1(invocation,"test:wgpu-wasm",600000),compiler=cargoDirectories(workspace),leases=join(workspace,".cache/b/l/m/data");
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️wasm-outputs/🔣️.json"), "utf8"));
-  const packagePath = join(fixture.owner, "📦️packages/🦀️rust"), project = JSON.parse(readFileSync(join(workspace, fixture.owner, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
-  assert.equal(project.metadata.nativeRoot, packagePath, "Renderer compiler inputs must resolve from the Cargo owner");
-  const ts = require("typescript"), consumerText = readFileSync(join(workspace, fixture.consumer), "utf8"), consumer = ts.createSourceFile("vite.ts", consumerText, ts.ScriptTarget.Latest, true);
-  let directoryExpression = "";
-  const visit = (node: any) => { if (ts.isVariableDeclaration(node) && node.name.getText(consumer) === "rendererModulesDir") directoryExpression = node.initializer.getText(consumer); ts.forEachChild(node, visit); };
-  visit(consumer);
-  assert.match(consumerText, /find: "\/renderer-modules\/wgpu", replacement: rendererModulesDir/);
-  const rendererDirectory = new Function("path", "playDir", "buildMode", `return ${directoryExpression};`);
-  const consumerRoot = path.resolve(workspace, dirname(fixture.consumer), "../..");
-  for (const row of fixture.profiles) {
-    const target = project.targets[row.target];
-    assert.equal(target?.cache, true, `${row.target} must cache its compiler deliverables`);
-    assert.deepEqual(target.outputs.map((path:string)=>path.replaceAll("{options.env.SEMIO_BUILD_MODE}",row.profile)), [`{workspaceRoot}/${packagePath}/${row.output}`]);
-    assert.ok(target.dependsOn.includes("workspace:deps-trunk"));
-    assert.ok(target.dependsOn.includes("workspace:deps-wasm-opt"));
-    assert.ok(target.options.command.endsWith(" build"));
-    assert.deepEqual(target.configurations[row.profile].args,[row.profile]);
-    assert.equal(rendererDirectory(path, consumerRoot, row.profile), join(workspace, packagePath, row.output));
-  }
-  const compilerOwner = join(workspace, fixture.owner, "🏗️compiler/🌐️wasm/📜️script.ts");
-  const bundle = await require("esbuild").build({ entryPoints: [compilerOwner], absWorkingDir: workspace, bundle: true, packages: "external", platform: "node", format: "esm", write: false, metafile: true });
-  assert.ok(!Object.keys(bundle.metafile.inputs).some(path => path.endsWith("🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts")), "Finite renderer compilation must not import browser/application tests or live stores");
-  const root = mkdtempSync(join(output, "w"));
-  const put = (path: string, value: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), value); };
-  const bindgen = (Bun.TOML.parse(readFileSync(join(workspace, "Cargo.lock"), "utf8")) as any).package.find((row: any) => row.name === "wasm-bindgen").version;
-  put("Cargo.toml", `[package]\nname=${JSON.stringify(fixture.crate)}\nversion="0.1.0"\nedition="2024"\n[lib]\npath="🦀️.rs"\ncrate-type=["cdylib"]\n[dependencies]\nwasm-bindgen="=${bindgen}"\n[workspace]\n`);
-  put("🦀️.rs", fixture.rust.replace("VALUE", String(fixture.values[0])));
-  put("package.json", JSON.stringify({ name: "wgpu-wasm-fixture", private: true, type: "module" }));
-  put("nx.json", JSON.stringify({ useDaemonProcess: false, cacheDirectory: ".nx/cache" }));
-  put(".gitignore", "node_modules\n.nx\ndist\nstate\noracle\n.runs\n.🧬semio\n");
-  const targets = {wasm:{executor:"nx:run-commands",cache:true,inputs:["{projectRoot}/Cargo.toml","{projectRoot}/Cargo.lock","{projectRoot}/🦀️.rs","{projectRoot}/📜️script.ts"],outputs:["{projectRoot}/dist/wasm-{options.env.SEMIO_BUILD_MODE}"],options:{command:"repo ./📜️script.ts build",args:["prototype"],cwd:"."},configurations:Object.fromEntries(fixture.profiles.map((row:any)=>[row.profile,{args:[row.profile],env:{SEMIO_BUILD_MODE:row.profile}}])),defaultConfiguration:"prototype"}};
-  put("project.json", JSON.stringify({ name: "renderer", targets }));
-  put("📜️script.ts", `import { appendFileSync } from "node:fs";\nimport { buildTrunkRenderer } from ${JSON.stringify(compilerOwner)};\nimport {phaseCompilerAdmissionControlV1} from ${JSON.stringify(join(workspace,"🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts"))};\nawait buildTrunkRenderer({ rustPackageRoot: process.cwd(), componentRoot: process.cwd(), workspace: ${JSON.stringify(workspace)}, toolWorkspace: ${JSON.stringify(workspace)}, profile: process.argv[3], control:phaseCompilerAdmissionControlV1(new AbortController().signal,120000,()=>undefined,()=>new Promise(done=>setImmediate(done))),stateRoot: process.cwd()+"/s" });\nappendFileSync(".runs", process.argv[3] + "\\n");\n`);
-  symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
-  const env: NodeJS.ProcessEnv = { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_REPO_ROOT: root, CARGO_TARGET_DIR: join(root, "t"), CARGO_BUILD_BUILD_DIR: compiler.build, TRUNK_BUILD_DIST: join(root, "forbidden"), TRUNK_BUILD_RELEASE: "true", TRUNK_TOOLS_WASM_BINDGEN: "0.0.0" };
-  delete env.NX_SKIP_NX_CACHE;
-  const execute = async (args: string[], environment = env) => {
-    let stdout="",stderr="";try{await runOwnedCommand(args[0]!,args.slice(1),root,"test:wgpu-wasm",compilerAdmissionBudgetV1(control),{env:environment,signal:control.signal,stdout:"stderr",output:{maximumBytes:134217728,maximumLines:65536},onLine:(line,stream)=>{if(stream==="stdout")stdout+=line+"\n";else stderr+=line+"\n";},onProgress:async()=>{await control.publish({resource:"test:wgpu-wasm",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}});}catch(error){throw Error(stdout+stderr,{cause:error});}return stdout;
-  };
-  const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js"), runs = () => readFileSync(join(root, ".runs"), "utf8").trim().split("\n").length;
-  await execute(["cargo", "generate-lockfile", "--offline"]);
-  const run = (profile: string) => execute(["node", cli, "run", "renderer:wasm", "--configuration="+profile,"--outputStyle=static"]);
-  const files = (directory: string): Map<string, Buffer> => new Map(readdirSync(directory, { recursive: true, withFileTypes: true }).filter(row => row.isFile()).map(row => [join(row.parentPath, row.name).slice(directory.length + 1), readFileSync(join(row.parentPath, row.name))]));
-  const value = async (path: string) => JSON.parse(await execute(["node", "--input-type=module", "-e", `import { readFileSync } from "node:fs"; import { pathToFileURL } from "node:url"; const module = await import(pathToFileURL(process.argv[1].replace(/_bg.wasm$/, ".js")).href); await module.default({ module_or_path: readFileSync(process.argv[1]) }); console.log(JSON.stringify({ value: module.answer() }));`, path])).value;
-  const { preparedBinaryen } = await import("@semio-tech/nx-bootstrap-tools/wasm");
-  const oracleEnv: NodeJS.ProcessEnv = { ...env, PATH: `${dirname(preparedBinaryen(workspace))}${delimiter}${env.PATH}`, CARGO_TARGET_DIR: join(root, "state/oracle-target") };
-  for (const key of Object.keys(oracleEnv)) if (key.startsWith("TRUNK_") || ["NO_COLOR", "FORCE_COLOR"].includes(key)) delete oracleEnv[key];
-  const oracle = async (profile: string, expected: number) => {
-    put("oracle/index.html", `<!doctype html><html><head><link data-trunk rel="rust" href="../Cargo.toml" data-cargo-profile="${profile}" data-wasm-opt="${profile==="release"?"z":"0"}" data-type="worker" data-bindgen-target="web" /></head><body></body></html>\n`);
-    put("oracle/Trunk.toml", `required_version="=0.21.14"\noffline=true\n[build]\ntarget="index.html"\ndist="dist"\nlocked=true\nfrozen=true\nfilehash=false\nrelease=${profile === "release"}\n[tools]\nwasm_bindgen="${bindgen}"\nwasm_opt="version_130"\n`);
-    const original={...oracleEnv,SEMIO_BUILD_MODE:profile},capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory:leases,control,environment:original});let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;try{lease=await acquireCargoBuildLeaseV1({directory:leases,buildDirectory:compiler.build,targetDirectory:compiler.target,args:["--profile",profile],signal:control.signal,control});await execute(["trunk", "build", "--config", join(root, "oracle/Trunk.toml"), "--skip-version-check", "--offline", "true"],{...original,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),CARGO_BUILD_JOBS:String(capacity.parallelism)});}finally{lease?.release();capacity.release();}
-    assert.equal(await value(join(root, "oracle/dist", `${fixture.crate}_bg.wasm`)), expected);
-    for (const extension of [".js", "_bg.wasm"]) assert.deepEqual(readFileSync(join(root, "oracle/dist", `${fixture.crate}${extension}`)), readFileSync(join(root, `dist/wasm-${profile}`, `${fixture.crate}${extension}`)), "Renderer bytes must match the independent native Trunk oracle");
-  };
-  let count = 0;
-  for (const row of fixture.profiles) {
-    await run(row.profile); assert.equal(runs(), ++count);
-    const published = join(root, row.output), bytes = files(published), wasm = join(published, `${fixture.crate}_bg.wasm`);
-    assert.equal(await value(wasm), fixture.values[0]);
-    assert.deepEqual([...bytes.keys()].filter(name => name !== ".semio-artifact.json").sort(), fixture.deliverables.map((suffix: string) => fixture.crate + suffix).sort(), "Publish each compiler artifact once without duplicate aliases");
-    assert.ok(![...bytes.keys()].some(name => /plugin-modules|extension-modules|assets|target|staging/.test(name)));
-    await run(row.profile); assert.equal(runs(), count);
-    rmSync(published, { recursive: true });
-    await run(row.profile); assert.equal(runs(), count);
-    assert.deepEqual(files(published), bytes);
-    assert.equal(await value(wasm), fixture.values[0]);
-    await oracle(row.profile, fixture.values[0]);
-    const fixtureConsumer = join(root, path.relative(workspace, consumerRoot)), fixtureRenderer = rendererDirectory(path, fixtureConsumer, row.profile);
-    if (!existsSync(dirname(fixtureRenderer))) {
-      mkdirSync(dirname(dirname(fixtureRenderer)), { recursive: true });
-      symlinkSync(join(root, "dist"), dirname(fixtureRenderer), process.platform === "win32" ? "junction" : "dir");
-    }
-    const server = await require("vite").createServer({ configFile: false, root, publicDir: false, cacheDir: join(root, "state/vite"), resolve: { alias: [{ find: "/renderer-modules/wgpu", replacement: fixtureRenderer }] }, server: { port: 0, host: "127.0.0.1", watch: null, fs: { allow: [root] } }, logLevel: "silent" });
-    try {
-      await server.listen();
-      const address = server.httpServer.address(), response = await fetch(`http://127.0.0.1:${address.port}/renderer-modules/wgpu/${fixture.crate}_bg.wasm`);
-      assert.equal(response.status, 200);
-      assert.deepEqual(Buffer.from(await response.arrayBuffer()), readFileSync(wasm), "The real Vite consumer must serve restored compiler bytes");
-    } finally { await server.close(); }
-  }
-  put("🦀️.rs", fixture.rust.replace("VALUE", String(fixture.values[1])));
-  await run("prototype"); assert.equal(runs(), ++count);
-  const published = join(root, "dist/wasm-prototype"), wasm = join(published, `${fixture.crate}_bg.wasm`);
-  assert.equal(await value(wasm), fixture.values[1]);
-  await oracle("prototype", fixture.values[1]);
-  assert.equal(existsSync(join(root, "forbidden")), false, "Ambient Trunk configuration must not redirect owned outputs");
-  const retained = files(published);
-  put("🦀️.rs", "compile_error!(\"preserve the last successful renderer\");\n");
-  await assert.rejects(run("prototype"), /preserve the last successful renderer/);
-  assert.deepEqual(files(published), retained);
-  assert.ok(!existsSync(join(root, "s/staging")) || readdirSync(join(root, "s/staging")).length === 0);
-  rmSync(root, { recursive: true, force: true });
+/** 🧊️ Executes owned browser bytes, restores publication without compiling and checks independent tool output. */
+export async function testWgpuWasmOutputs(workspace:string,output:string,invocation:ScriptInvocation,parent:CompilerAdmissionControl):Promise<void>{
+ const control=requestedCompilerAdmissionControlV1(parent,600000),authority=readNativeCallerAuthorityV1(invocation.capabilities),mode=authority.original.buildMode,codeRoot=authority.codeRoot,environment=scriptInvocationEnvironment(invocation,{...process.env,SEMIO_BUILD_MODE:mode}),require=createRequire(import.meta.url),fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🧊️wasm-outputs/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../🧫️fixtures/🧊️wasm-outputs/schema.json",import.meta.url),"utf8")),Ajv=require("ajv").default??require("ajv");
+ assert.equal(new Ajv({strict:true}).validate(schema,fixture),true);assert.notEqual(resolve(workspace),resolve(codeRoot),"Actual output law requires its private OS workspace");
+ const packagePath=fixture.owner+"/📦️packages/🦀️rust",project=JSON.parse(readFileSync(join(codeRoot,fixture.owner,"📦️packages/🟦️typescript/📋️project.json"),"utf8"));
+ assert.equal(project.metadata.nativeRoot,packagePath);
+ for(const row of fixture.profiles){const target=project.targets[row.target];assert.equal(target.cache,true);assert.deepEqual(target.outputs,fixture.targetOutputs);assert.ok(target.dependsOn.includes("workspace:deps-browser-wasm"));assert.ok(target.dependsOn.includes("workspace:deps-wasm-opt"));assert.deepEqual(target.configurations[row.profile].args,[row.profile]);}
+ const ts=require("typescript"),consumerText=readFileSync(join(codeRoot,fixture.consumer),"utf8"),tree=ts.createSourceFile("consumer.ts",consumerText,ts.ScriptTarget.Latest,true);let expression="";
+ const inspect=(node:any):void=>{if(ts.isVariableDeclaration(node)&&node.name.getText(tree)==="rendererModulesDir")expression=node.initializer.getText(tree);ts.forEachChild(node,inspect);};inspect(tree);assert.ok(expression);assert.match(consumerText,/find: "\/renderer-modules\/wgpu", replacement: rendererModulesDir/);const consumerDirectory=Function("stagedInputs","return "+expression);
+ const compilerOwner=join(codeRoot,fixture.owner,"🏗️compiler/🌐️wasm/📜️script.ts"),{buildWasmRenderer}=await import(pathToFileURL(compilerOwner).href),{rendererWasmPublicationV1}=await import(pathToFileURL(join(dirname(compilerOwner),"📦️publication/🟦️.ts")).href),root=mkdtempSync(join(output,"wasm-")),put=(name:string,text:string)=>{const path=join(root,name);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,text);},hash=(path:string)=>createHash("sha256").update(readFileSync(path)).digest("hex"),files=(directory:string)=>new Map(readdirSync(directory,{recursive:true,withFileTypes:true}).filter(row=>row.isFile()&&row.name!==".semio-artifact.json").map(row=>[relative(directory,join(row.parentPath,row.name)).replaceAll("\\","/"),readFileSync(join(row.parentPath,row.name))]));
+ const lock=Bun.TOML.parse(readFileSync(join(codeRoot,"Cargo.lock"),"utf8"))as{package:{name:string;version:string}[]},versions=[...new Set(lock.package.filter(row=>row.name==="wasm-bindgen").map(row=>row.version))];assert.equal(versions.length,1);
+ put("Cargo.toml",'cargo-features='+JSON.stringify(fixture.cargoFeatures)+'\n[package]\nname='+JSON.stringify(fixture.crate)+'\nversion="0.1.0"\nedition="2024"\n[lib]\npath="🦀️.rs"\ncrate-type=["cdylib"]\n[workspace]\n');put("🦀️.rs",fixture.rust.replace("VALUE",String(fixture.values[0])));
+ const execute=async(command:string,args:readonly string[],cwd:string,actual:CompilerAdmissionControl,env:Readonly<Record<string,string|undefined>>)=>{const result=await captureOwnedCommandResultV1(command,args,cwd,{control:actual,env,output:{maximumBytes:Math.min(16777216,readNativeCallerAuthorityV1(invocation.capabilities).transport.maximumBytes),maximumLines:Math.min(65536,readNativeCallerAuthorityV1(invocation.capabilities).transport.maximumLines)}});assert.equal(result.signal,null,result.stderr);assert.equal(result.status,0,result.stderr);return result.stdout;};
+ const value=async(path:string)=>{const code='import {readFileSync} from "node:fs";import {pathToFileURL} from "node:url";const module=await import(pathToFileURL(process.argv[1].replace(/_bg.wasm$/,".js")).href);const bytes=readFileSync(process.argv[1]);const compiled=new WebAssembly.Module(bytes);const exports=await module.default({module_or_path:bytes});console.log(JSON.stringify({value:exports.answer(),exports:WebAssembly.Module.exports(compiled)}));';const result=JSON.parse(await execute("node",["--input-type=module","-e",code,path],root,control,environment));assert.ok(result.exports.some((row:{name:string;kind:string})=>row.name===fixture.wasmExport.name&&row.kind===fixture.wasmExport.kind));return result.value;};
+ await withRepositoryCompilerStoreV1(workspace,mode,control,environment,(store,actual)=>withRepositoryCargoResolutionV1({workspace,invocation,consumption:{kind:"resolution"},cwd:root,manifest:join(root,"Cargo.toml"),args:["generate-lockfile","--manifest-path",join(root,"Cargo.toml"),"--offline"],environment:store.environment,control:actual,storage:store.storage,network:repositoryCargoNetworkV1(invocation,workspace)},async input=>{await execute("cargo",input.selections[0]!.arguments,root,input.control,input.environment);}));
+ let builds=0;
+ const build=async()=>{builds++;return buildWasmRenderer({rustPackageRoot:root,componentRoot:root,workspace,profile:mode,invocation,control,environment})as Promise<RuntimeWasmObservationV1>;};
+ const receipt=await build(),published=receipt.outputDirectory,wasm=join(published,fixture.crate+"_bg.wasm"),original=files(published);
+ const observed=JSON.parse(readFileSync(receipt.compiler.path,"utf8"));for(const flag of ["--locked","--offline","--frozen"])assert.ok(observed.args.includes(flag),"Actual browser Cargo must consume "+flag);assert.equal(observed.args.filter((arg:string)=>arg==="--profile").length,1);assert.equal(observed.args[observed.args.indexOf("--profile")+1],mode);
+ assert.equal(receipt.profile,mode);assert.equal(receipt.transformations[0]!.tool.version,"wasm-bindgen "+versions[0]);assert.equal(await value(wasm),fixture.values[0]);assert.deepEqual([...original.keys()].sort(),fixture.deliverables.map((suffix:string)=>fixture.crate+suffix).sort());assert.equal(consumerDirectory({renderer:{directory:published}}),published);
+ await withRepositoryCacheStoreV1(workspace,"products",invocation,control,products=>withRepositoryCompilerStoreV1(workspace,mode,products.control,environment,async(store,actual)=>{
+  const {runtimeWasmObservationCurrentV1,runtimeCargoObservationCurrentV1}=await import("../../../🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts");
+  if(typeof observed.buildDirectory!=="string")throw Error("Actual completed compiler directory required");requireNativeStoragePathV1(store.root,observed.buildDirectory);
+  const current=async()=>{const physical=new CurrentPhysicalOwnerV1(workspace,cargoProvenancePhysicalControlV1({cancelled:()=>actual.signal.aborted,remainingMs:()=>compilerAdmissionBudgetV1(actual),onProgress:()=>{}}));return runtimeWasmObservationCurrentV1(receipt,{root:workspace,codeRoot,profile:mode,manifest:join(root,"Cargo.toml"),workspaceManifest:join(root,"Cargo.toml"),outputDirectory:published,owner:compilerOwner,physical,compilerCurrent:(observation,physical)=>runtimeCargoObservationCurrentV1(observation,{root:workspace,cwd:observation.cwd,outDirectory:"",buildDirectory:observed.buildDirectory,cargoHome:resolve(store.environment.CARGO_HOME!),physical})});};
+  assert.ok(await current(),"Actual compiler and persistent transformation receipt must be current");
+  const expected=rendererWasmPublicationV1(products.root,{version:1,owner:relative(workspace,root).replaceAll("\\","/"),mode});assert.equal(expected.directory,published);
+  const binding=receipt.transformations[0]!,outAt=binding.arguments.indexOf("--out-dir"),bindingRoot=binding.arguments[outAt+1]!;assert.ok(bindingRoot);
+  const retained=new Map(binding.outputs.map(file=>[relative(bindingRoot,file.path).replaceAll("\\","/"),file.path]));if(mode==="release")retained.set(fixture.crate+"_bg.wasm",receipt.transformations[1]!.outputs[0]!.path);
+  for(const fact of [receipt.raw,receipt.compiler,...receipt.transformations.flatMap(stage=>[stage.input,...stage.outputs])]){requireNativeStoragePathV1(store.root,fact.path);assert.equal(hash(fact.path),fact.sha256);}
+  for(const stage of receipt.transformations){const tool=stage.kind==="wasm-bindgen"?realpathSync(resolveWasmBindgenBin(codeRoot,store.environment)):realpathSync(preparedBinaryen(codeRoot));assert.equal(stage.tool.path,tool);assert.equal(hash(tool),stage.tool.sha256);}
+  const before=builds;await withRepositoryArtifactDestinationV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:actual,directory:published},async destination=>{await stageRepositoryArtifacts(destination,expected.owner,new Map());assert.equal(existsSync(wasm),false);await stageRepositoryArtifacts(destination,expected.owner,retained);});assert.equal(builds,before);assert.deepEqual(files(published),original);assert.ok(await current(),"Restored publication must retain current actual compiler and transformation evidence");assert.equal(await value(wasm),fixture.values[0]);
+  const damaged=Buffer.from(original.get(fixture.crate+"_bg.wasm")!);damaged[0]=damaged[0]!^1;writeFileSync(join(root,"tampered.wasm"),damaged);const tampered=new Map(retained);tampered.set(fixture.crate+"_bg.wasm",join(root,"tampered.wasm"));await withRepositoryArtifactDestinationV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:actual,directory:published},async destination=>{await stageRepositoryArtifacts(destination,expected.owner,tampered);});assert.equal(await current(),undefined,"Actual modified publication must be refused");await withRepositoryArtifactDestinationV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:actual,directory:published},destination=>stageRepositoryArtifacts(destination,expected.owner,retained));assert.ok(await current());assert.deepEqual(files(published),original);
+  const scratch=mkdtempSync(join(store.captureDirectory,"wasm-ref-")),bindgen=realpathSync(resolveWasmBindgenBin(codeRoot,store.environment));assert.equal(bindgen,binding.tool.path);
+  try{await withCompilerWorkspaceSharedWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),actual,async writer=>{await execute(bindgen,[receipt.raw.path,"--target","web","--no-typescript","--out-name",fixture.crate,"--out-dir",scratch],root,writer,store.environment);if(mode==="release"){const optimizer=realpathSync(preparedBinaryen(codeRoot));await execute(optimizer,[join(scratch,fixture.crate+"_bg.wasm"),"-Oz","-o",join(scratch,"optimized.wasm")],root,writer,store.environment);const oracle=files(scratch);oracle.set(fixture.crate+"_bg.wasm",oracle.get("optimized.wasm")!);oracle.delete("optimized.wasm");assert.deepEqual(oracle,original);}else assert.deepEqual(files(scratch),original);});}finally{rmSync(scratch,{recursive:true,force:true});}
+ }));
+ const server=await require("vite").createServer({configFile:false,root,publicDir:false,cacheDir:join(root,"vite"),resolve:{alias:[{find:"/renderer-modules/wgpu",replacement:consumerDirectory({renderer:{directory:published}})}]},server:{port:0,host:"127.0.0.1",watch:null,fs:{allow:[root,published]}},logLevel:"silent"});
+ try{await server.listen();const address=server.httpServer.address(),response=await fetch("http://127.0.0.1:"+address.port+"/renderer-modules/wgpu/"+fixture.crate+"_bg.wasm",{signal:control.signal});assert.equal(response.status,200);assert.deepEqual(Buffer.from(await response.arrayBuffer()),readFileSync(wasm));}finally{await server.close();}
+ put("🦀️.rs",fixture.rust.replace("VALUE",String(fixture.values[1])));const changed=await build();assert.equal(changed.outputDirectory,published);assert.equal(await value(wasm),fixture.values[1]);assert.notDeepEqual(files(published),original);
+ const retained=files(published),compilerHash=hash(changed.compiler.path);put("🦀️.rs",fixture.negative.source);const refusal=await runWasmOutputRefusalV1(workspace,output,root,mode,invocation,control);assert.deepEqual(validateJsonSchemaSubset(schema.definitions.Receipt,refusal,schema),[]);assert.equal(new Ajv({strict:true}).validate({...schema.definitions.Receipt,definitions:schema.definitions},refusal),true);for(const patch of [{complete:false},{id:"other"},{mode:"debug"},{wireSha256:"bad"},{extra:true}]){const value={...refusal,...patch};assert.ok(validateJsonSchemaSubset(schema.definitions.Receipt,value,schema).length);assert.equal(new Ajv({strict:true}).validate({...schema.definitions.Receipt,definitions:schema.definitions},value),false);}assert.deepEqual(files(published),retained);assert.equal(hash(changed.compiler.path),compilerHash);assert.equal(builds,2);
+ rmSync(root,{recursive:true,force:true});
 }

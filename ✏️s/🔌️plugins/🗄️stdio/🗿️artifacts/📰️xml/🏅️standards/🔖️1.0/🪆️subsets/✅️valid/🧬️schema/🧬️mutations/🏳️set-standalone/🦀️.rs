@@ -13,8 +13,8 @@ pub struct SetStandalone {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "standalone", kind: "set-standalone", record: "SetStandalone" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set standalone", "Standalone-Deklaration setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set standalone", "Standalone-Deklaration setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

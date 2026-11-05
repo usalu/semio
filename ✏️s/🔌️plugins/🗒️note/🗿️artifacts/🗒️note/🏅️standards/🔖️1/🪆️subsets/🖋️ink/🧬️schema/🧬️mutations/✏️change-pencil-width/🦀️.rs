@@ -31,7 +31,7 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "pencil-width", kind: "change-pencil-width", record: "ChangedPencilWidth" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         crate::schema::note_setting_label(("pencil width", "Stiftbreite"), self.new_width.map(crate::schema::note_label_number))
     }
     fn target(&self) -> Vec<String> {

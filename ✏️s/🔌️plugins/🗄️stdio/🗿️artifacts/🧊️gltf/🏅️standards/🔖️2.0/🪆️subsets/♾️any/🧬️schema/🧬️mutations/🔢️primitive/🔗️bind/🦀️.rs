@@ -68,8 +68,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "primitive-indices", kind: "bind-primitive-indices", record: "BoundPrimitiveIndices" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Bind Primitive Indices", "Primitivindizes binden")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Bind Primitive Indices", "Primitivindizes binden")
     }
 
     fn target(&self) -> Vec<String> {

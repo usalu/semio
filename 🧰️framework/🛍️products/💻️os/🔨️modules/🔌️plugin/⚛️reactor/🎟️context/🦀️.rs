@@ -1,5 +1,5 @@
 //! 🌉️ OS guest entries compose the defining General Actor context with original job and wire ownership; the vocabulary lives in the guest contract, the wasm export bindings here.
-pub use semio_framework_plugin_guest_contract::original_actor_context::*;
+pub use semio_plugin_guest_contract::original_actor_context::*;
 use semio_framework_actor::RetainedTurnInput;
 use semio_framework_job::{StepBudget, StepContext};
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};

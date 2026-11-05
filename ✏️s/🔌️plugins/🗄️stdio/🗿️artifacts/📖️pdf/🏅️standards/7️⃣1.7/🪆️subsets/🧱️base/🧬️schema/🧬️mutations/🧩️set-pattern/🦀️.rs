@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "pattern", kind: "set-pattern", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set pattern {}", self.pattern.id), &format!("Muster {} setzen", self.pattern.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set pattern {}", self.pattern.id), &format!("Muster {} setzen", self.pattern.id))
     }
 
     fn target(&self) -> Vec<String> {

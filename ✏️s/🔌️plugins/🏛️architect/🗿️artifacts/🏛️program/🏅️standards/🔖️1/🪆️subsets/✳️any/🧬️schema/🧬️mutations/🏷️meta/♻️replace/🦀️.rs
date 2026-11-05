@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "meta", kind: "replace-meta", record: "ReplacedMeta" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace document metadata \"{}\"", self.new_meta.title), &format!("Dokumentmetadaten \"{}\" ersetzen", self.new_meta.title))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace document metadata \"{}\"", self.new_meta.title), &format!("Dokumentmetadaten \"{}\" ersetzen", self.new_meta.title))
     }
 }
 

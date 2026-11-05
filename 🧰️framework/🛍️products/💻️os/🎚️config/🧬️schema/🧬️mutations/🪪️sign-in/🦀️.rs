@@ -1,8 +1,8 @@
 //! 🪪️ `SignIn` is the authoritative direct Rust leaf for establishing an OS identity session.
 
-use semio_framework_os_kernel::ColdMutation;
-use semio_framework_os_kernel::ColdMutationDiff;
-use semio_framework_os_kernel::ColdDiffAlgebra;
+use semio_os_kernel::ColdMutation;
+use semio_os_kernel::ColdMutationDiff;
+use semio_os_kernel::ColdDiffAlgebra;
 use super::super::SettingEdit;
 use super::sign_out::SignOut;
 use super::IdentityConfigMutation;
@@ -126,8 +126,8 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Sign in \"{}\"", self.email), &format!("Als \"{}\" anmelden", self.email))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Sign in \"{}\"", self.email), &format!("Als \"{}\" anmelden", self.email))
     }
 
     fn target(&self) -> Vec<String> {
@@ -135,7 +135,7 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
+impl semio_os_command::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
     fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
         let identity = Identity::from(self);
         if base.0.as_ref() == Some(&identity) {

@@ -24,9 +24,20 @@ export type ContributorInstance = {
   readonly handle: ExternalSlotContributor;
   readonly instance: Promise<number>;
   pending: Promise<unknown>;
+  instanceId?: number;
+  viewState?: PluginViewState;
+  dispatchControllerId?: string;
   body?: BuiltNode;
   hash?: string;
 };
+
+/** 🎯️ Binds child-owned controls to one leased actor while preserving parent-owned answer controls. */
+export function bindContributorActionsV1(node: BuiltNode, controllerId: string, dispatchControllerId: string): BuiltNode {
+  const originalBindings = node.bindings ?? [], originalChildren = node.children ?? [];
+  const bindings = originalBindings.map(binding => binding.action.scope === controllerId ? { ...binding, action: { ...binding.action, scope: dispatchControllerId } } : binding);
+  const children = originalChildren.map(child => bindContributorActionsV1(child, controllerId, dispatchControllerId));
+  return bindings.every((binding, index) => binding === originalBindings[index]) && children.every((child, index) => child === originalChildren[index]) ? node : { ...node, bindings, children };
+}
 
 export type ExternalSlotResolverContext = {
   readonly plugins: ReadonlyMap<string, ExternalSlotContributor>;
@@ -101,6 +112,9 @@ export async function resolveExternalSlots(node: BuiltNode, context: ExternalSlo
       used.add(entry);
       const refresh = entry.pending.catch(() => {}).then(async () => {
         const instanceId = await entry.instance;
+        entry.instanceId = instanceId;
+        entry.viewState = viewState;
+        entry.dispatchControllerId = `contributor:${JSON.stringify([pluginId, instanceId])}`;
         if (!current()) throw new Error("extension surface retired");
         const sectionRequest = { key: "extension", bodyKey: window.bodyKey, ...(entry.hash === undefined ? {} : { hash: entry.hash }) };
         const response = await entry.handle.refreshUi(instanceId, { viewState, windows: [sectionRequest] });
@@ -118,7 +132,7 @@ export async function resolveExternalSlots(node: BuiltNode, context: ExternalSlo
         return value as BuiltNode;
       });
       entry.pending = refresh;
-      const body = await visit(await refresh, [...path, "body"], [...ancestors, addressKey]);
+      const body = await visit(bindContributorActionsV1(await refresh, app.controllerId, entry.dispatchControllerId!), [...path, "body"], [...ancestors, addressKey]);
       return { ...node, component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null }, children: [body] };
     } catch (error) {
       if (!current()) return node;

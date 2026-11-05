@@ -33,8 +33,8 @@ serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 semio-hub-inference-binding = { workspace = true }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true }
-directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-plugin = { workspace = true }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 
 [dev-dependencies]
 semio-hub-directory-service = { workspace = true }
@@ -45,6 +45,6 @@ semio-hub-inference = { workspace = true, features = ["testkit", "integration-fi
 semio-hub-trusted-catalog = { workspace = true, features = ["testkit", "integration-fixtures"] }
 semio-s-artifact-gis-gismap = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
-directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }

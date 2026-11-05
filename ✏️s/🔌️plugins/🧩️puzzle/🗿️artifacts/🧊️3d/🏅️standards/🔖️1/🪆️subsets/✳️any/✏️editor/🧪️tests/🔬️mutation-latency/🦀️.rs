@@ -262,10 +262,10 @@ struct Puzzle3dTurnCensus {
     objects: usize,
     translate_turns: usize,
     translate_units: u64,
-    translate_census: semio_framework_plugin::app::TypedOperationUnitCensus,
+    translate_census: semio_plugin::app::TypedOperationUnitCensus,
     delete_turns: usize,
     delete_units: u64,
-    delete_census: semio_framework_plugin::app::TypedOperationUnitCensus,
+    delete_census: semio_plugin::app::TypedOperationUnitCensus,
 }
 
 impl Puzzle3dTurnCensus {
@@ -335,7 +335,7 @@ async fn b54_measures_the_turns_and_units_one_mutation_costs_per_document_size()
 /// whose steps are all document-independent: 17 store units (stage the batch, prepare the item, fold it,
 /// retire its preparation owner, validate the cursor, preflight, commit, mint the receipt), 3
 /// acknowledgeable result pages, 1 slot retirement. [`Puzzle3dApp`]'s ladder now drives a bounded RUN of
-/// units per turn ([`semio_framework_plugin::app::TYPED_OPERATION_PUBLICATION_PUMPS`]), so what a turn
+/// units per turn ([`semio_plugin::app::TYPED_OPERATION_PUBLICATION_PUMPS`]), so what a turn
 /// costs is the number of pages the host must ACKNOWLEDGE — a protocol constant — not the number of
 /// steps the machine takes.
 ///

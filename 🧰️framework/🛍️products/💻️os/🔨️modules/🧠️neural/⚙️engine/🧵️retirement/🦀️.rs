@@ -24,8 +24,8 @@ enum Owner {
 
 /// 🔒️ Keeps one original domain root inline and every additional frame in admitted custody.
 #[must_use = "nested value retirement must reach terminal-empty before drop"]
-pub struct ValueRetirement { root:Option<ControlledRetirement<Owner>>, owners:RetirementQueue }
-impl Default for ValueRetirement {fn default()->Self {Self {root:None,owners:RetirementQueue::default()}}}
+pub struct ValueRetirement { root:Option<ControlledRetirement<Owner>>, owners:RetirementQueue,last_work:u64 }
+impl Default for ValueRetirement {fn default()->Self {Self {root:None,owners:RetirementQueue::default(),last_work:0}}}
 macro_rules! domain_admission {
     ($name:ident,$variant:ident,$type:ty) => {
         pub fn $name(&mut self,value:$type,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,$type)> {
@@ -34,7 +34,7 @@ macro_rules! domain_admission {
     };
 }
 impl ValueRetirement {
-    fn from_owner(value:Owner)->Self {Self {root:Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("Neural domain retirement refused: {error}"))),owners:RetirementQueue::default()}}
+    fn from_owner(value:Owner)->Self {Self {root:Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("Neural domain retirement refused: {error}"))),owners:RetirementQueue::default(),last_work:0}}
     pub fn from_value(value:Value)->Self {Self::from_owner(Owner::Value(value))}
     pub fn from_dictionary(value:Dictionary)->Self {Self::from_value(Value::Dictionary(value))}
     pub fn from_shared(value:Arc<Value>)->Self {Self::from_owner(Owner::Shared(value))}
@@ -52,13 +52,13 @@ impl ValueRetirement {
     pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.owners.terminal_is_empty()}
     pub fn next_reserve_capacity_byte_demand(&self)->Result<usize,ValueError> {self.owners.next_reserve_capacity_byte_demand()}
     pub fn next_reserve_depth_demand(&self)->Result<usize,ValueError> {Ok(self.owners.reserve_demand()?.depth)}
-    pub fn reserve_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {self.owners.reserve_step(grant).result}
+    pub fn reserve_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {let turn=self.owners.reserve_step(grant);self.last_work=turn.work;turn.result}
     pub const fn domain_frame_birth_bytes()->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Owner>()}
     fn admit_domain(&mut self,value:Owner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Owner)> {
-        if self.root.is_some() {return self.owners.admit_owned(value,grant).result;}
+        self.last_work=0;if self.root.is_some(){let turn=self.owners.admit_owned(value,grant);self.last_work=turn.work;return turn.result;}
         if grant.maximum_items==0 {return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Neural original handoff requires one admitted item"),value));}
         if grant.maximum_depth==0 {return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"Neural original handoff requires admitted depth"),value));}
-        match ControlledRetirement::new(value) {Ok(owner)=>{self.root=Some(owner);Ok(RetainedCloneProgress {copied_items:1,..Default::default()})},Err(error)=>Err(error)}
+        match ControlledRetirement::new(value) {Ok(owner)=>{self.root=Some(owner);self.last_work=1;Ok(RetainedCloneProgress {copied_items:1,..Default::default()})},Err(error)=>Err(error)}
     }
     domain_admission!(push_value,Value,Value);
     domain_admission!(push_shared,Shared,Arc<Value>);
@@ -74,20 +74,22 @@ impl ValueRetirement {
     pub fn text(&mut self,value:String,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,String)> {
         self.push_value(Value::Atom(Atom::String(value)),grant).map_err(|(error,value)|match value {Value::Atom(Atom::String(value))=>(error,value),_=>unreachable!("original string admission kind")})
     }
-    pub fn push_owned<T:RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,T)> {self.owners.admit_owned(value,grant).result}
+    pub fn push_owned<T:RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,T)> {let turn=self.owners.admit_owned(value,grant);self.last_work=turn.work;turn.result}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_copy_byte_demand(),ControlledRetirement::next_copy_byte_demand)}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_capacity_byte_demand(copy),|owner|owner.next_capacity_byte_demand(copy))}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_release_byte_demand(),ControlledRetirement::next_release_byte_demand)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_depth_demand(),ControlledRetirement::next_depth_demand)}
+    /// 🧾️ Preserves the actual final child work on success, denial and refusal.
+    pub fn last_turn_work(&self)->u64{self.last_work}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let Some(root)=self.root.as_mut() else {return self.owners.step(grant).result;};
-        let step=root.step(grant)?;
+        self.last_work=0;let Some(root)=self.root.as_mut() else {let turn=self.owners.step(grant);self.last_work=turn.work;return turn.result;};
+        let result=root.step(grant);self.last_work=root.last_turn_work();let step=result?;
         let progress=admit_retained_clone_close(grant,step,root.terminal_is_empty(),"Neural original inline root")?.progress();
         if root.terminal_is_empty() {self.root=None;}
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
 }
-impl Drop for ValueRetirement {fn drop(&mut self) {assert!(std::thread::panicking()||self.terminal_is_empty(),"neural values must finish explicit domain retirement before drop");}}
+impl Drop for ValueRetirement {fn drop(&mut self) {assert!(self.terminal_is_empty(),"neural values must finish explicit domain retirement before drop");}}
 impl RetireOwned for ValueRetirement {
     fn retirement(self)->Box<dyn RetirementCursor> {Box::new(self)}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
@@ -97,7 +99,7 @@ impl RetirementCursor for ValueRetirement {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.root.as_ref().map_or_else(||self.owners.next_demand(body),|owner|owner.next_demand(body))}
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep as Step;
-        match Self::close_step(self,grant) {Err(error)=>Step::Failure(error,0),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete(0),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress,1)}
+        let result=Self::close_step(self,grant);let work=self.last_turn_work();match result {Err(error)=>Step::Failure(error,work),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete(work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)) if work!=0||progress!=Default::default()=>Step::Progress(progress,work),Ok(_)=>Step::BudgetExhausted}
     }
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}

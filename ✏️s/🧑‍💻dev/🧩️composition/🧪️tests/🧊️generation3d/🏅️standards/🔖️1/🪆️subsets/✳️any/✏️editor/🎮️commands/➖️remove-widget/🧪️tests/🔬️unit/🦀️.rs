@@ -33,7 +33,7 @@ async fn patch_flow_widgets_recomputes_preview_geometry() {
     let mut app = app().await;
     let before_fixture = context::snapshot(&app).host_snapshot.clone();
     let mut before_session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
-    let mut before_host = semio_framework_os_flow::flow_host_with_session(&before_fixture, &before_session);
+    let mut before_host = semio_os_flow::flow_host_with_session(&before_fixture, &before_session);
     before_session.sync(&before_host);
     while before_session.tick(&mut before_host, None) {}
     before_host.retire_cold();
@@ -45,7 +45,7 @@ async fn patch_flow_widgets_recomputes_preview_geometry() {
     dispatch(&mut app, Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) })).await;
     let after_fixture = context::snapshot(&app).host_snapshot.clone();
     let mut after_session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
-    let mut after_host = semio_framework_os_flow::flow_host_with_session(&after_fixture, &after_session);
+    let mut after_host = semio_os_flow::flow_host_with_session(&after_fixture, &after_session);
     after_session.sync(&after_host);
     while after_session.tick(&mut after_host, None) {}
     after_host.retire_cold();

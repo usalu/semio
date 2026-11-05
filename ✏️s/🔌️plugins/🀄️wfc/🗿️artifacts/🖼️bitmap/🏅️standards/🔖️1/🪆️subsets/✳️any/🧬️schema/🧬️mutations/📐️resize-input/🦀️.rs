@@ -32,8 +32,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "input", kind: "resize-input", record: "ResizedInput" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize input to {}×{}", self.width, self.height), &format!("Größe der Eingabe auf {}×{} ändern", self.width, self.height))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Resize input to {}×{}", self.width, self.height), &format!("Größe der Eingabe auf {}×{} ändern", self.width, self.height))
     }
 }
 

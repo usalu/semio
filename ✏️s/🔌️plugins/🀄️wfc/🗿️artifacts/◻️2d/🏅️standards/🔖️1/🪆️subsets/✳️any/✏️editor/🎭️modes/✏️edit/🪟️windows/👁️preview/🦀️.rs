@@ -15,15 +15,15 @@ use crate::editor::wfc2d::modes::edit::tools::fill::{self, Wfc2dFillTickPayload}
 use crate::editor::wfc2d::transient::{assigned_tile, Wfc2dTransient};
 use crate::schema::snapshot::{Wfc2dBitmapMedia, Wfc2dColor, Wfc2dImageMedia, Wfc2dPathSegment, Wfc2dSegmentCubic, Wfc2dSegmentQuad, Wfc2dSegmentTo, Wfc2dTile, Wfc2dTileMedia, Wfc2dVectorMedia};
 use crate::Wfc2dSnapshot;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::ToolRunView;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WFC_2D_PREVIEW_WINDOW: &str = "wfc-2d-preview";
@@ -221,7 +221,7 @@ pub fn preview_layers_json(document: &Wfc2dSnapshot, transient: &Wfc2dTransient,
 pub fn render(document: &Wfc2dSnapshot, transient: &Wfc2dTransient, tool_run: Option<&ToolRunView>, camera_x: f64, camera_y: f64, zoom: f64) -> UiAssemblyResult<BuiltNode> {
     let fill = live_fill_payload(tool_run);
     let layers = preview_layers_json(document, transient, fill.as_ref());
-    scene_surface(WFC_2D_PREVIEW_SURFACE, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(camera_x, camera_y, zoom, layers))
+    scene_surface(WFC_2D_PREVIEW_SURFACE, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(camera_x, camera_y, zoom, layers))
 }
 //#endregion 🔖️Render
 

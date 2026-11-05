@@ -53,8 +53,8 @@ semio-hub-trusted-catalog-fixtures = { workspace = true }
 semio-s-artifact-gis-gismap = { workspace = true }
 semio-framework-schema = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
-directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
-db = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
+db = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-os-kernel-db", features = ["claimed-backend-laws"] }
 serde_json = { workspace = true }
 semio-framework-job = { workspace = true }
 protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }

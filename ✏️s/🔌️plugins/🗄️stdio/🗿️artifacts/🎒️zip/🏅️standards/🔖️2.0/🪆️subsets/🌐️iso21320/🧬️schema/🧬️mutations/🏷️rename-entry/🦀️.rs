@@ -15,8 +15,8 @@ pub struct RenameEntry {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RenameEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "entry", kind: "rename-entry", record: "RenameEntry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Rename entry", "Eintrag umbenennen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Rename entry", "Eintrag umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

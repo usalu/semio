@@ -1,7 +1,7 @@
 //! 🧊️ EN 1997 play app — the 3D viewport window: the projected ground model with strata, groundwater, footings, walls, slopes, piles and failure mechanisms.
 
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use semio_s_artifact_norm_en1997_scene::live_scene_of;
 use semio_s_plugin_norm_app_surface::direct_manipulation::InsertSpec;

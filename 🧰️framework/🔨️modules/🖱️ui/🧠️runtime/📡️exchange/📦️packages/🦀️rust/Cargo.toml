@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-runtime-exchange"
+name = "semio-ui-runtime-exchange"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,4 +22,4 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

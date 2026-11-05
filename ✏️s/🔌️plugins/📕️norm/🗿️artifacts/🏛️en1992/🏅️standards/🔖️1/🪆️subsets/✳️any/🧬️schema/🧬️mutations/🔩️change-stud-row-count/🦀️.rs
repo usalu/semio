@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeStudRowCount where
         record: "ChangedStudRowCount",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change studs per row of the stud row", "Dübelreihe: Dübel je Reihe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change studs per row of the stud row", "Dübelreihe: Dübel je Reihe ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.stud_row_id.clone()]

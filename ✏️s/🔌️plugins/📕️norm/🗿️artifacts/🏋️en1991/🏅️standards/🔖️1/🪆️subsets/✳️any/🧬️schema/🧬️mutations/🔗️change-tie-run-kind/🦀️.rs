@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeTieRunKind where O
         record: "ChangedTieRunKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tie kind (0 peripheral, 1 internal) of the tie run", "Zuggliedstrang: Zuggliedart (0 Randzugglied, 1 Innenzugglied) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tie kind (0 peripheral, 1 internal) of the tie run", "Zuggliedstrang: Zuggliedart (0 Randzugglied, 1 Innenzugglied) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

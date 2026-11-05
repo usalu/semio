@@ -6,7 +6,7 @@ use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::t
 use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetDocument

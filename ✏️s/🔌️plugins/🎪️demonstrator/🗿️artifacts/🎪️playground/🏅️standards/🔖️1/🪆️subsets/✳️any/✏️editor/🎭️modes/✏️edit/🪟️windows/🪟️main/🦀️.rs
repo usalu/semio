@@ -2,12 +2,12 @@
 //! buffer, built from the framework's `TextWindowKit` (contract §2.6).
 
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use semio_framework_plugin::app::{TextEditView, TextWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{TextEditView, TextWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Pure `PlaygroundSnapshot -> UiNode` read: the document's one `schema` metadata string as the kit's explicit draft — edited
 /// locally, one framework-catalog `textEdit` on Apply; it and the surface's own `changeSchema` manifest action both
 /// dispatch through `PlaygroundEditor::handle`'s one `PlaygroundCommand::ChangeSchema` row.
-pub fn render(document: &PlaygroundSnapshot, locale: Locale, publication_revision: semio_framework_ui_contract::UiPublicationRevision) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &PlaygroundSnapshot, locale: Locale, publication_revision: semio_ui_contract::UiPublicationRevision) -> UiAssemblyResult<BuiltNode> {
     TextWindowKit::render_editable(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: document.schema.clone(), language: Some("playground".into()), revision: None, publication_revision }, locale)
 }
 //#endregion 🔖️Render

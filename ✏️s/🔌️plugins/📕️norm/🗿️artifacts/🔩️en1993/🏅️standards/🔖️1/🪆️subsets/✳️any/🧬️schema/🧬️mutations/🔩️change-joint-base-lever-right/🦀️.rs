@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointBaseLeverRigh
         record: "ChangedJointBaseLeverRight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Lever arm right z_r of the joint", "Anschluss: Hebelarm rechts z_r ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Lever arm right z_r of the joint", "Anschluss: Hebelarm rechts z_r ändern")
     }
 }
 

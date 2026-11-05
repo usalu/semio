@@ -3,7 +3,7 @@
 use crate::editor::sourcing::modes::edit::windows::grid::config::{GridWindowConfig, GRID_INSTANCE_DISPLAY_LINE_BEHIND, GRID_INSTANCE_DISPLAY_REPRESENTATIVE, GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT};
 use crate::editor::sourcing::editor_vocabulary::sourcing_window_action;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_plugin::{MeasureSelectItem, WindowMeasure};
 
 pub const SOURCING_GRID_INSTANCE_DISPLAY_MEASURE_ID: &str = "sourcing-grid-window.instance-display";
 

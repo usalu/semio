@@ -28,8 +28,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Download, FileChooser, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "@semio-tech/framework-os-dev/parity/execution";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import {ensureRepositoryBrowserPathV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, driveRenderedEdit, fillStagedArgument, keyOf, readMatrixPins, readShell, roleOf, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness, type MatrixPins, type MatrixProgram, type MatrixRenderedEdit } from "@semio-tech/framework-os-dev/testing/program-matrix";
 import { createKind, openSweepSpace, stagedKinds, type HubDocumentSweepOptions, type HubSweepRow } from "../🗂️document-sweep/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
@@ -674,7 +674,7 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
   mkdirSync(outDir, { recursive: true });
   const out = join(outDir, "io-matrix.json");
   const log = (line: string): void => console.log(`[io-matrix] ${line}`);
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: !options.headed, args: ["--use-angle=metal"] });
   const context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, acceptDownloads: true, locale: options.locale === "de" ? "de-DE" : "en-US" });

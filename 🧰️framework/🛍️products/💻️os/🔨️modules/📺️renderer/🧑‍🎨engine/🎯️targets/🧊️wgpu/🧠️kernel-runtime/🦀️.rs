@@ -15,17 +15,17 @@
 //!
 //! 🧭️ Native only. The facade of the four kernel crates plus the scale-bench scenario driver; it re-exports exactly the surface the renderer consumers name.
 
-pub use semio_framework_os_renderer_wgpu_host_base::KernelPoolFuture;
-pub use semio_framework_os_renderer_wgpu_kernel_pool::KernelClient;
+pub use semio_renderer_wgpu_host_base::KernelPoolFuture;
+pub use semio_renderer_wgpu_kernel_pool::KernelClient;
 #[cfg(any(test, feature = "testkit"))]
-pub use semio_framework_os_renderer_wgpu_kernel_protocol::CANCELLED_KERNEL_TURNS;
-pub use semio_framework_os_renderer_wgpu_kernel_protocol::{CreateAppBorrowed, CreateAppSourceFailure, CreateAppSourceFailureKind, open_create_app_source, read_native_component, take_job_progress_presentation, ExchangeOutcome, JobProgressPresentationLease, KernelCloseHandle, KernelCloseStatus, MountedProductReplayAdmission};
+pub use semio_renderer_wgpu_kernel_protocol::CANCELLED_KERNEL_TURNS;
+pub use semio_renderer_wgpu_kernel_protocol::{CreateAppBorrowed, CreateAppSourceFailure, CreateAppSourceFailureKind, open_create_app_source, read_native_component, take_job_progress_presentation, ExchangeOutcome, JobProgressPresentationLease, KernelCloseHandle, KernelCloseStatus, MountedProductReplayAdmission};
 
 use semio_framework::kernel::TurnResult;
 use semio_framework_actor::ActivationEvent;
-use semio_framework_os_renderer_wgpu_contracts::ProgramFault;
-use semio_framework_os_renderer_wgpu_host_base::{actor_budget_from_turn_budget, run_renderer_io};
-use semio_framework_os_renderer_wgpu_kernel_protocol::parallel_runtime;
+use semio_renderer_wgpu_contracts::ProgramFault;
+use semio_renderer_wgpu_host_base::{actor_budget_from_turn_budget, run_renderer_io};
+use semio_renderer_wgpu_kernel_protocol::parallel_runtime;
 
 #[cfg(test)]
 use semio_framework::kernel::{Effect, Event, JobPlacement, UiPatch as KernelUiPatch};
@@ -34,11 +34,11 @@ use semio_framework_actor::{
     ActorId, JobOperation, JobProgressIdentity, JobProgressKind, JobReplayLog, JobReplayPublicationKind, JobReplayPublicationPolicy, JobReplayRecordHeader, JobReplayRequest, JobReplayRoute, JobTurn, Lane, JOB_PROGRESS_ACTIVE_CAPACITY,
 };
 #[cfg(test)]
-use semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool;
+use semio_renderer_wgpu_host_base::renderer_worker_pool;
 #[cfg(test)]
-use semio_framework_os_renderer_wgpu_kernel_pool::KernelFuture;
+use semio_renderer_wgpu_kernel_pool::KernelFuture;
 #[cfg(test)]
-use semio_framework_os_renderer_wgpu_kernel_protocol::{
+use semio_renderer_wgpu_kernel_protocol::{
     kernel_request_interleavable, mounted_product_replay_profile, mounted_product_replay_recovery_registry, mounted_product_replay_refusal_registry, mounted_product_replay_worker_slot, CreateAppRequestOwner, ExchangeSurfaceDocument,
     JobProgressPresentationBridge, KernelCloseSubmission, KernelCloseSubmissionRegistry, KernelOutcome, KernelRequest, KernelRequestQueue, MountedProductReplayAdmissionPermit, MountedProductReplayAuthority, MountedProductReplayCheckpoint,
     MountedProductReplayClaim, MountedProductReplayExpected, MountedProductReplayRecoveryOwner, MountedProductReplayRecoveryToken, MountedProductReplayRefusalCause, MountedProductReplayRefusalToken, MountedProductReplayRequest, QueuedKernelEvent,
@@ -46,7 +46,7 @@ use semio_framework_os_renderer_wgpu_kernel_protocol::{
     KERNEL_REQUEST_QUEUE_CAPACITY, PRODUCT_REPLAY_INPUT_BYTES, PRODUCT_REPLAY_KIND_BYTES, PRODUCT_REPLAY_PROFILE_COUNT, TURN_BUDGET, TURN_REQUESTS_BETWEEN_SLICES,
 };
 #[cfg(test)]
-use semio_framework_os_renderer_wgpu_kernel_retained::{
+use semio_renderer_wgpu_kernel_retained::{
     mounted_replay_recovery_registry, CommandDocumentPageReservation, CommandDocumentRetirementRegistry, CommandDocumentRetirementState, MountedJobReplay, MountedReplayRecoveryRegistry, PendingSurfaceRejection, PendingSurfaceRejectionRegistry,
     RetainedSurface, RetainedSurfaceRegistry, RetainedSurfaceSlot, COMMAND_DOCUMENT_RETIREMENT_CAPACITY, RETAINED_SURFACE_CAPACITY,
 };
@@ -70,11 +70,11 @@ use std::time::Duration;
 use ui_contract::{SurfaceId, UiDocumentBuilder, UiDocumentLease, UiFixedList, UiRevision, UI_DOCUMENT_LEASE_SLOTS};
 
 #[cfg(test)]
-use semio_framework_os_renderer_wgpu_kernel_pool::*;
+use semio_renderer_wgpu_kernel_pool::*;
 #[cfg(test)]
-use semio_framework_os_renderer_wgpu_kernel_protocol::*;
+use semio_renderer_wgpu_kernel_protocol::*;
 #[cfg(test)]
-use semio_framework_os_renderer_wgpu_kernel_retained::*;
+use semio_renderer_wgpu_kernel_retained::*;
 
 #[path = "../🧊️renderer/📊️scale-bench/🦀️.rs"]
 pub mod scale_bench;

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationLiqUnitW
         record: "ChangeFoundationLiqUnitWtNM3",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Total unit weight of the soil above the layer", "Wichte des Bodens über der Schicht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Total unit weight of the soil above the layer", "Wichte des Bodens über der Schicht ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-liq-unit-wt-nm3".into()]

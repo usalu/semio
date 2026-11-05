@@ -10,8 +10,8 @@ fn original_targets_preserve_authored_path_without_fallback(){
 #[test]
 fn installed_original_history_digest_preserves_borrowed_staged_inverse(){
     use semio_framework_value::FromValue;
-    use semio_framework_os_spr::Edit;
-    use semio_framework_os_store_ledger::native_digest::NativeEditDigest;
+    use semio_os_spr::Edit;
+    use semio_os_store_ledger::native_digest::NativeEditDigest;
     use semio_framework_value_persistent::list::PagedList;
     fn step<M>(wire:ArtifactOperationWire<M>,cursor:&mut NativeEditDigest,edit:&Edit<M>,inverse:&PagedList<M,{usize::MAX}>,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{wire.advance_history_digest(cursor,edit,inverse,grant)}
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../📒️ledger/🔏️digest/🔣️.json" )).unwrap();

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedFlangeInduce
         record: "ChangedPlatedFlangeInducedK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flange-induced buckling k (0.3/0.4/0.55) of the plated panel", "Plattenfeld: Gurtinduziertes Beulen k (0,3/0,4/0,55) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flange-induced buckling k (0.3/0.4/0.55) of the plated panel", "Plattenfeld: Gurtinduziertes Beulen k (0,3/0,4/0,55) ändern")
     }
 }
 

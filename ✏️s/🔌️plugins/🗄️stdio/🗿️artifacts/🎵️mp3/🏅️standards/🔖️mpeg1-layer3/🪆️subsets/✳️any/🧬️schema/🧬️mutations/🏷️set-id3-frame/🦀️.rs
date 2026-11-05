@@ -25,8 +25,8 @@ impl SetId3Frame {
 impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetId3Frame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "id3-frame", kind: "set-id3-frame", record: "SetId3Frame" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set ID3 frame", "ID3-Frame setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set ID3 frame", "ID3-Frame setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["id3v2".into(), self.frame.id.clone()]

@@ -113,7 +113,7 @@ where
         Ok(())
     }
 
-    pub fn replace_causal_dag_retained(&mut self, store_log: &mut StoreLog<P, Mutation>, next: semio_framework_os_spr::MutationDag) -> Result<(), VcsError> {
+    pub fn replace_causal_dag_retained(&mut self, store_log: &mut StoreLog<P, Mutation>, next: semio_os_spr::MutationDag) -> Result<(), VcsError> {
         self.displaced_retirements.reserve(1)?;
         let previous = std::mem::replace(&mut *store_log.dag, next);
         self.displaced_retirements.push_reserved(Box::new(ArtifactStoreMutationDagRetirement::new(previous)));
@@ -329,7 +329,7 @@ where
     /// const's own doc for the reasoning.
     pub fn prune_resolved_conflicts(&mut self, store_log: &mut StoreLog<P, Mutation>) -> Result<(), VcsError> {
         while store_log.envelope.conflicts.len() > Self::RESOLVED_CONFLICT_CAP {
-            let Some(index) = store_log.envelope.conflicts.iter().position(|conflict| conflict.status != semio_framework_os_spr::ConflictStatus::Open) else { break };
+            let Some(index) = store_log.envelope.conflicts.iter().position(|conflict| conflict.status != semio_os_spr::ConflictStatus::Open) else { break };
             self.displaced_retirements.reserve(1)?;
             let conflict = store_log.envelope.conflicts.remove(index);
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreConflictRetirement::new(conflict)));

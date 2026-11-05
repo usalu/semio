@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallWallFrictionDe
         record: "ChangedWallWallFrictionDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change wall friction deg of the retaining wall", "Stützwand: Wandreibungswinkel δ in Grad ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change wall friction deg of the retaining wall", "Stützwand: Wandreibungswinkel δ in Grad ändern")
     }
 }
 

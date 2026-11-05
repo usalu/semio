@@ -22,8 +22,8 @@ pub struct ChangeLoad {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeLoad where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeLoad> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load", kind: "change-load", record: "ChangedLoad" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change load \"{}\"", self.id), &format!("Last \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change load \"{}\"", self.id), &format!("Last \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.case_id.clone(), self.id.clone()] }
 }

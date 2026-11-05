@@ -8,7 +8,7 @@ fn text_editor_outbox_preserves_local_echo_during_temporary_action_credit_pressu
     let scene = text_editor_scene(id, "alpha");
     assert!(sync_engine_scene(&scene, "editor-credit-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
     let mut input = InputState::<ActionDescriptor>::default();
-    for _ in 0..semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
+    for _ in 0..semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
         input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
     }
     assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::Char("!".into()), &PointerModifiers::default(), &mut input), Ok(true));
@@ -40,11 +40,11 @@ fn text_editor_outbox_preserves_local_echo_during_temporary_action_credit_pressu
 #[test]
 fn text_editor_host_signals_end_the_typing_run_with_the_corpus_reasons() {
     let _serialized = engine_surface_law_guard();
-    let corpus: serde_json::Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/✂️text-splice/🔣️.json")).expect("text-splice corpus");
+    let corpus: serde_json::Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/✂️text-splice/🔣️.json")).expect("text-splice corpus");
     for row in corpus["hostSignals"].as_array().expect("host signals") {
         let (signal, commit) = (row["signal"].as_str().expect("signal"), row["commit"].as_str().expect("commit"));
         if signal == "idle" {
-            assert_eq!((commit, semio_framework_ui_scene_views::TEXT_EDITOR_TYPING_IDLE_MS), ("idle", 750), "the idle bound ends the run as `idle`");
+            assert_eq!((commit, semio_ui_scene_views::TEXT_EDITOR_TYPING_IDLE_MS), ("idle", 750), "the idle bound ends the run as `idle`");
             continue;
         }
         let id = format!("text-editor-signal-{signal}");
@@ -188,7 +188,7 @@ fn text_editor_scene_echoes_never_overwrite_newer_unsent_local_text() {
 
 #[test]
 fn text_editor_delivery_state_matches_the_neutral_local_echo_ledger() {
-    let fixture: Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/🔁️local-echo/🔣️.json")).expect("neutral local echo fixture");
+    let fixture: Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/🔁️local-echo/🔣️.json")).expect("neutral local echo fixture");
     for law in fixture["cases"].as_array().unwrap() {
         let id = law["id"].as_str().unwrap();
         let mut state = TextEditorDeliveryState::default();
@@ -241,7 +241,7 @@ fn text_editor_delivery_state_matches_the_neutral_local_echo_ledger() {
 #[test]
 fn text_editor_production_key_route_replays_chromiums_neutral_typing_sequences() {
     let _serialized = engine_surface_law_guard();
-    let fixture: Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).unwrap();
     for law in fixture["sequences"].as_array().unwrap() {
         let id = law["id"].as_str().unwrap();
         drop_engine_surface(id);

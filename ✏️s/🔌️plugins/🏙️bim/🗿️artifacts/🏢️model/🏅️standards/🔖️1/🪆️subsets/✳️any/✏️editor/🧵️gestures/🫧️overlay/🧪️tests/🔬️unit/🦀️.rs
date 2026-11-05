@@ -1,5 +1,5 @@
 use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Style;
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
 #[allow(unused_imports)]

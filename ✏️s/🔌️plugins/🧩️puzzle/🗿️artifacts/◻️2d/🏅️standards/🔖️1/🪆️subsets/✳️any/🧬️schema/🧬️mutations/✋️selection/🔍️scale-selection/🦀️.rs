@@ -44,10 +44,10 @@ where
 
     
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (factor_en, factor_de) = puzzle2d_selection_number(self.factor);
         let (en, de) = puzzle2d_selection_items(self.targets.len());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by a factor of {factor_en}"), &format!("{de} um den Faktor {factor_de} skalieren"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Scale {en} by a factor of {factor_en}"), &format!("{de} um den Faktor {factor_de} skalieren"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.iter().map(PagedUtf8::to_string_owner).collect()

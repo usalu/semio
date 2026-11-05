@@ -25,7 +25,7 @@ const FRAMEWORK = "🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs";
 /** 🧫️ A contract-conforming miniature repo: a run-declaring tool and utility, a discovered run tool, an undeclared legacy command, framework constants and a trace host. */
 const CLEAN: Readonly<Record<string, string>> = {
   [TOOL]: `//! 🧹️ Sweep tool. Prose such as FILL_TRIED_RING never counts.
-use semio_framework_plugin::{LocalizedLabel, ToolDefinition, ToolRunDefinition, WindowMeasure};
+use semio_plugin::{LocalizedLabel, ToolDefinition, ToolRunDefinition, WindowMeasure};
 
 pub const TOOL_ID: &str = "sweep";
 
@@ -38,7 +38,7 @@ pub fn count_measure(value: f64) -> WindowMeasure {
 }
 `,
   [COMMAND]: `//! 🧹️ \`sweep-step\` command.
-use semio_framework_plugin::{Effect, Emit, TOOL_RUN_START_ACTION_ID};
+use semio_plugin::{Effect, Emit, TOOL_RUN_START_ACTION_ID};
 
 pub fn sweep_step(ctx: &mut SweepCtx<'_>) -> Emit {
     Emit::mutations(ctx.take_ops())

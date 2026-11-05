@@ -41,8 +41,12 @@ boolean_operation!(Intersect, BooleanOp::Intersect);
 /// 🔒️ Every step re-acquires the process-global kernel lock through [`with_kernel`] and hands the
 /// job the body again, which is what makes the job retainable across host turns: it borrows
 /// nothing.
+#[derive(semio_framework_value::RetireOwned)]
+enum BooleanOriginalOwner{Job(BrepBooleanJob),Answer(String)}
 struct BrepBooleanOperatorJob {
-    pub(super) session: Session,
+    pub(super) session: Option<Session>,
+    session_close:Option<SessionCapture>,
+    closing:Option<semio_framework_value::retirement::controlled::ControlledRetirement<BooleanOriginalOwner>>,
     job: Option<BrepBooleanJob>,
     answered: Option<GeometryHandle>,
     value_retirement: neural_engine::ValueRetirement,
@@ -71,10 +75,10 @@ impl BrepBooleanOperatorJob {
         let admitted = session.with_kernel(|kernel| {
             let admission = kernel.boolean_job_sync(&a, &b, op).map_err(|error| map_kernel_error(&error))?;
             Ok(match admission {
-                BrepBooleanAdmission::Answered(handle) => BrepBooleanOperatorJob { session: session.clone(), job: None, answered: Some(handle), value_retirement: Default::default(), receipt: Default::default(), cancelled: false, progress: neural_engine::OperatorProgress { units_done: 1, units_total: 1, phase: "complete" } },
+                BrepBooleanAdmission::Answered(handle) => BrepBooleanOperatorJob { session: Some(session.clone()), session_close:None, closing:None, job: None, answered: Some(handle), value_retirement: Default::default(), receipt: Default::default(), cancelled: false, progress: neural_engine::OperatorProgress { units_done: 1, units_total: 1, phase: "complete" } },
                 BrepBooleanAdmission::Job(job) => {
                     let progress = job.progress();
-                    BrepBooleanOperatorJob { session: session.clone(), job: Some(job), answered: None, value_retirement: Default::default(), receipt: Default::default(), cancelled: false, progress: neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() } }
+                    BrepBooleanOperatorJob { session: Some(session.clone()), session_close:None, closing:None, job: Some(job), answered: None, value_retirement: Default::default(), receipt: Default::default(), cancelled: false, progress: neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() } }
                 }
             })
         });
@@ -99,8 +103,16 @@ impl BrepBooleanOperatorJob {
         session.with_kernel(|kernel| Ok(channel_output("solid", geometry_dict(kernel, handle)?)))
     }
 
+    fn close_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        use semio_framework_value::RetirementDemand as D;
+        if let Some(owner)=self.closing.as_ref(){return owner.selected_demand(copy)}
+        if self.job.is_some()||self.answered.is_some(){return Ok(D{copy_bytes:std::mem::size_of::<BooleanOriginalOwner>()+std::mem::size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<BooleanOriginalOwner>>>(),depth:1,..Default::default()})}
+        if !self.value_retirement.terminal_is_empty(){return Ok(D{copy_bytes:self.value_retirement.next_copy_byte_demand()?,capacity_bytes:self.value_retirement.next_capacity_byte_demand(copy)?,release_bytes:self.value_retirement.next_release_byte_demand()?,depth:self.value_retirement.next_depth_demand()?})}
+        if self.session.is_some(){return Ok(D{depth:1,..Default::default()})}self.session_close.as_ref().map_or(Ok(Default::default()),|owner|Ok(D{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?}))
+    }
+
     pub(super) fn terminal_is_empty(&self) -> bool {
-        self.job.is_none() && self.answered.is_none() && self.value_retirement.terminal_is_empty()
+        self.job.is_none() && self.answered.is_none() && self.closing.is_none() && self.value_retirement.terminal_is_empty() && self.session.is_none() && self.session_close.as_ref().is_none_or(SessionCapture::terminal_is_empty)
     }
 }
 
@@ -133,33 +145,18 @@ impl neural_engine::OperatorJob for BrepBooleanOperatorJob {
         }
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        if self.job.is_some() || self.answered.is_some() { return Ok(0); }
-        self.value_retirement.next_copy_byte_demand()
-    }
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        if self.job.is_some() || self.answered.is_some() { return Ok(0); }
-        self.value_retirement.next_capacity_byte_demand(maximum_copy_bytes)
-    }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        if self.job.is_some() || self.answered.is_some() { return Ok(0); }
-        self.value_retirement.next_release_byte_demand()
-    }
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        if self.job.is_some() || self.answered.is_some() { return Ok(1); }
-        self.value_retirement.next_depth_demand()
-    }
-
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
-        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if self.job.take().is_some() || self.answered.take().is_some() {
-            self.cancelled = true;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
-        }
-        let step = self.value_retirement.close_step(semio_framework_value::RetainedCloneGrant { maximum_items: 1, ..grant })?;
-        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+        use semio_framework_value::{RetainedCloneProgress as P,RetainedCloneStep as S,RetainedWorkOutcome as Raw};
+        let mut work=0;let result=(||{if self.terminal_is_empty(){return Ok(S::Complete(Default::default()))}let d=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(S::Progress(Default::default()))}
+        if let Some(owner)=self.closing.as_mut(){let result=owner.step(grant);work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.closing=None}return Ok(S::Progress(step.progress()))}
+        if self.job.is_some()||self.answered.is_some(){let value=if let Some(job)=self.job.take(){BooleanOriginalOwner::Job(job)}else{BooleanOriginalOwner::Answer(self.answered.take().unwrap().0)};self.closing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_|unreachable!("the actual Boolean payload declares full retirement")));self.cancelled=true;work=1;return Ok(S::Progress(P{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+        if !self.value_retirement.terminal_is_empty(){let result=self.value_retirement.close_step(grant);work=self.value_retirement.last_turn_work();return result.map(|step|S::Progress(step.progress()))}
+        if let Some(session)=self.session.take(){self.session_close=Some(SessionCapture::owned(session));work=1;return Ok(S::Progress(P{copied_items:1,..Default::default()}))}let turn=self.session_close.as_mut().unwrap().close_original_step(grant);work=turn.work;if self.session_close.as_ref().is_some_and(SessionCapture::terminal_is_empty){self.session_close=None}turn.result
+        })();Raw{result,work}
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -178,7 +175,7 @@ impl BrepBooleanOperatorJob {
         let Some(job) = self.job.as_mut() else {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"boolean job carries neither an answer nor a plan").into());
         };
-        let step=self.session.step_boolean_job(job,cx)?;
+        let step=self.session.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Boolean session is absent"))?.step_boolean_job(job,cx)?;
         match step {
             BrepBooleanStep::Working(progress) => {
                 self.progress = neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() };

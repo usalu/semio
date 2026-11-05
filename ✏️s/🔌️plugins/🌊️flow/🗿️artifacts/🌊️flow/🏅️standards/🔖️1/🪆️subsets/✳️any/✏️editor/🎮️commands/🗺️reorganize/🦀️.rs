@@ -1,13 +1,13 @@
 //! 🔄️ 🔄️ Flow play app commands command — `reorganize`.
 
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
 use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit, host_from_snapshot};
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Reorganize

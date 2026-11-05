@@ -2,11 +2,11 @@ use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::testkit::*;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::PluginApp;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::InteractionTarget;
+use semio_plugin::kernel::Effect;
+use semio_plugin::PluginApp;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowMeasure;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
 
@@ -14,12 +14,12 @@ fn node_of(app: &Puzzle2dApp, id: &str) -> Value {
     board_snapshot_nodes(&fixture_of(app)).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).cloned().expect("node")
 }
 
-fn submit(app: &mut Puzzle2dApp, line: &str) -> semio_framework_plugin::InvocationResult {
+fn submit(app: &mut Puzzle2dApp, line: &str) -> semio_plugin::InvocationResult {
     dispatch(app, "engagementSubmit", Some(&json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "value": line })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).unwrap_or_else(|fault| panic!("engagementSubmit {line:?}: {fault:?}"))
 }
 
 fn rendered_fill_count(app: &mut Puzzle2dApp) -> f64 {
-    let measures = ::semio_framework_async::poll::resolve_ready(app.tool_measures(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
+    let measures = ::semio_framework_async::poll::resolve_ready(app.tool_measures(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)));
     let Some([WindowMeasure::Group { children, .. }]) = measures.get(fill::TOOL_ID).map(Vec::as_slice) else { panic!("fill tool measure group") };
     let Some(WindowMeasure::Number { value, .. }) = children.first() else { panic!("fill count number") };
     *value

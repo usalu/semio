@@ -24,7 +24,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             log_debug_diagnostic(&format!("[TRACE] asset ready kind={:?} url={} bytes={}", probe.owner().kind(), probe.owner().url(), probe.owner().received_bytes()));
             if matches!(probe.owner(), RendererAssetFetchOwner::Shared(_)) && matches!(probe.owner().kind(), WorldAssetRequestKind::Glb) {
                 let Some(asset) = probe.take_ready_mesh_asset() else { return RendererAssetDecodeTurnKind::Pending };
-                match semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::publish(probe.owner().owner().token(), asset) {
+                match semio_renderer_wgpu_icon_host::icon_export::asset::publish(probe.owner().owner().token(), asset) {
                     Ok(()) => probe.finish_ready_mesh(),
                     Err(asset) => {
                         probe.restore_ready_mesh_asset(asset);
@@ -35,8 +35,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             }
             if let Some(bytes) = Self::take_shared_asset_bytes(probe) {
                 match probe.owner().kind() {
-                    WorldAssetRequestKind::UiImage { id } => semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::apply_ui_image_bytes(id.as_str(), probe.owner().url(), &bytes),
-                    kind @ WorldAssetRequestKind::MapTile { .. } => semio_framework_os_renderer_wgpu_engine_board::tiled_map::apply_map_tile_bytes(kind, &bytes),
+                    WorldAssetRequestKind::UiImage { id } => semio_renderer_wgpu_scene_canvas2d::ui_image_loading::apply_ui_image_bytes(id.as_str(), probe.owner().url(), &bytes),
+                    kind @ WorldAssetRequestKind::MapTile { .. } => semio_renderer_wgpu_engine_board::tiled_map::apply_map_tile_bytes(kind, &bytes),
                     _ => {}
                 }
                 probe.begin_close();
@@ -263,8 +263,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     /// 🧹️ Keeps one closing component's asset authority reachable until its exact borrowers return.
-    pub fn close_component_asset_step(&self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget) -> bool {
-        if !matches!(target.kind, semio_framework_ui_declaration::ui::SurfaceKind::World3d | semio_framework_ui_declaration::ui::SurfaceKind::IconRender) {
+    pub fn close_component_asset_step(&self, target: &semio_renderer_wgpu_contracts::ScenePointerTarget) -> bool {
+        if !matches!(target.kind, semio_ui_declaration::ui::SurfaceKind::World3d | semio_ui_declaration::ui::SurfaceKind::IconRender) {
             return true;
         }
         let surface_token = {
@@ -378,7 +378,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 drop(authority);
                 if !cancelled {
                     if matches!(owner.kind(), WorldAssetRequestKind::Glb) {
-                        semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), "asset transport was unavailable");
+                        semio_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), "asset transport was unavailable");
                     }
                     Self::record_rejected_asset(&("asset transport was unavailable", owner.kind(), owner.url().to_string()));
                 }
@@ -403,7 +403,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
         let source_digest = [u64::from_str_radix(&digest[..16], 16).map_err(|_| "reference image source digest is invalid")?, u64::from_str_radix(&digest[16..32], 16).map_err(|_| "reference image source digest is invalid")?];
         let descriptor = SceneRasterDescriptor { width, height, source_digest, source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
-        if descriptor.byte_len().is_none_or(|bytes| bytes > semio_framework_ui_raster_owner::SCENE_RASTER_ITEM_BYTES) {
+        if descriptor.byte_len().is_none_or(|bytes| bytes > semio_ui_raster_owner::SCENE_RASTER_ITEM_BYTES) {
             return Err("reference image exceeded fixed RGBA credits");
         }
         let owner = fetch.generation().wrapping_add(fetch.revision().rotate_left(17)).max(1);

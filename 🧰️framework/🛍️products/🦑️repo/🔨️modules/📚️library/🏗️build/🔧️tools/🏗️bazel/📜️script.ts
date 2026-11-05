@@ -219,7 +219,7 @@ export async function bazelFilesystemSourceFilesV1(root:string,invocation:Script
 }
 
 /** 🚫️ The directory names of build outputs and bookkeeping: the filesystem fallback never enters one; the witness of the git universe enters one exactly when git does not ignore it ({@link bazelIgnoredAmongV1}), because git's listing, not the name, decides what the planner admits (a nested `.🧬semio` a tool left in a package, a `target` below `🧫️fixtures` that `.gitignore` un-ignores). */
-const BAZEL_SOURCE_EXCLUDED_V1:ReadonlySet<string>=new Set([".git",".🧬semio",".cache",".nx","node_modules","target","dist","build","coverage",".venv","__pycache__"]);
+const BAZEL_SOURCE_EXCLUDED_V1:ReadonlySet<string>=new Set([".git",".🧬semio",".cache", ".r",".nx","node_modules","target","dist","build","coverage",".venv","__pycache__"]);
 const BAZEL_GIT_ENVIRONMENT_V1=["GIT_DIR","GIT_WORK_TREE","GIT_INDEX_FILE","GIT_CONFIG_GLOBAL","GIT_CONFIG_SYSTEM","GIT_CONFIG_NOSYSTEM","GIT_EXCLUDE","GIT_CEILING_DIRECTORIES","GIT_DISCOVERY_ACROSS_FILESYSTEM","HOME","XDG_CONFIG_HOME"] as const;
 
 /** 📋️ Reads the tracked-file listing of the given pathspecs: the answer the index gives and the half of the git universe that the filesystem does not show. */

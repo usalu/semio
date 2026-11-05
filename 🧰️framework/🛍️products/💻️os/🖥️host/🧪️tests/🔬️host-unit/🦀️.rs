@@ -5,8 +5,8 @@ mod tests {
     use {semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::MediaClass,semio_framework::MediaForm,semio_framework::MediaType,semio_framework::MediaWireFormat,semio_framework::ModeDefinition,semio_framework::PluginManifest,semio_framework::WindowKindDefinition};
     use std::sync::Arc;
     use store::{os_store::backbone::MemoryBackbone, os_store::backbone::MemoryBackbonePort};
-    use semio_framework_ui_locale::LocalizedLabel;
-    use semio_framework_ui_declaration::ui::SurfaceKind;
+    use semio_ui_locale::LocalizedLabel;
+    use semio_ui_declaration::ui::SurfaceKind;
 
     include!("🔌️plugin-registry-and-hot-swap/🦀️.rs");
 

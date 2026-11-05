@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "references", kind: "replace-references", record: "ReplacedReferences" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace references for \"{}\"", self.model_definition_id), &format!("Referenzen für \"{}\" ersetzen", self.model_definition_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace references for \"{}\"", self.model_definition_id), &format!("Referenzen für \"{}\" ersetzen", self.model_definition_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone()]

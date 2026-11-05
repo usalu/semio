@@ -3,20 +3,20 @@
 //! editor module — built directly from the shared artifact-level `Block2dSnapshot`.
 
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::column;
-use semio_framework_plugin::plugin_app_close_prelude::text;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
-use semio_framework_ui_contract::Label;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::plugin_app_close_prelude::column;
+use semio_plugin::plugin_app_close_prelude::text;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::plugin_app_close_prelude::HasChildren;
+use semio_ui_contract::Label;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "block2d-view-board";

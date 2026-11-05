@@ -19,7 +19,7 @@
 //! `.claude/plans/the-final-goal-for-jolly-spindle.md` — this wave builds the mechanism, not the
 //! full 32-standard fan-in.
 
-use semio_framework_os_pack_tools::SchemaResolver;
+use semio_os_pack_tools::SchemaResolver;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 

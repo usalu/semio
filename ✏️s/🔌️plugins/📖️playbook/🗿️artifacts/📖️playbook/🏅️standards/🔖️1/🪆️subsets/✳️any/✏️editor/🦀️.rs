@@ -24,46 +24,46 @@ use crate::schema::default_block;
 use crate::{artifact_kind, playbook_add_block_leaves, playbook_add_step_leaves, playbook_composed_spec, playbook_flow_content, playbook_flow_emit, steps_from_flow_content, PlaybookSnapshot, PlaybookSpec, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionKind;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaError;
+use semio_plugin::MediaPayload;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -81,7 +81,7 @@ const PLAYBOOK_IMPORTED_STEP_ID: &str = "imported";
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `PlaybookPlayApp::Command` — the SOLE dispatch surface for playbook's own behavior, assembled
     /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
@@ -159,10 +159,10 @@ pub struct PlaybookPlayApp;
 /// before its app-owned bounded retirement authority detached` trap on this path; the framework
 /// re-stamps the log with the live mount's identity before hydration sees it
 /// (`store::os_store::text_format::stamp_document_spr_identity`), so no app ever states its own mount.
-pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_framework_plugin::Effect {
+pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_plugin::Effect {
     let pack = <PlaybookSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("playbook", PLAYBOOK_DOCUMENT_SCHEMA));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+    semio_plugin::Effect::LoadDocument { pack, spr }
 }
 
 //#region 🧵️RetainedCommands
@@ -247,7 +247,7 @@ fn playbook_command_from_action(action: &str, args: Option<&semio_framework_valu
         "updatePlaybook" => Ok(PlaybookCommand::UpdatePlaybook(update_playbook::UpdatePlaybook { value: text(&["value", "title"], "") })),
         "setContributions" => Ok(PlaybookCommand::SetContributions(set_contributions::SetContributions { json: text(&["json", "value"], "{}") })),
         "setActiveExample" => Ok(PlaybookCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
-        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{other}' is not one of this app's declared verbs"))),
+        other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("app.command.unsupported"), format!("action '{other}' is not one of this app's declared verbs"))),
     }
 }
 
@@ -256,13 +256,13 @@ fn playbook_retained_reduce(
     command: &PlaybookCommand,
     snapshot: &PlaybookSnapshot,
     config: &PlaybookConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PlaybookPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PlaybookPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, NoDraftMutation>, Fault> {
-    let children = context.map(|context| semio_framework_plugin::ChildContentView::clone(&context.children)).unwrap_or_default();
+    let children = context.map(|context| semio_plugin::ChildContentView::clone(&context.children)).unwrap_or_default();
     command.dispatch(&ArtifactView::with_children(snapshot, history, children).bound_to_operation(operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
@@ -292,7 +292,7 @@ impl ToolJobFactory for PlaybookRetainedCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         playbook_retained_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: PLAYBOOK_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: PLAYBOOK_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -327,10 +327,10 @@ impl ArtifactEditor for PlaybookPlayApp {
     type ConfigMutation = PlaybookConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::app::NoTransient;
-    type TransientMutation = semio_framework_plugin::app::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::app::NoTransient;
+    type TransientMutation = semio_plugin::app::NoTransientMutation;
 
     type Command = PlaybookCommand;
 
@@ -351,20 +351,20 @@ impl ArtifactEditor for PlaybookPlayApp {
     /// declared none at all, so the first real document publication answered
     /// `returned snapshot read requires its exact owned-snapshot retirement factory` and the whole
     /// interaction chain stopped one step short of the document.
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
     /// 👥️ A disposer is not a retirement owner. `PresenceStore::local_read` fails closed with
@@ -377,18 +377,18 @@ impl ArtifactEditor for PlaybookPlayApp {
     /// presence type needs a bounded owner over that type instead, as 🪐️space's Home does
     /// (`HomePresenceRetirementFactory`, ticket 26/09/18 S10 §2.9a — the same defect, same week).
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<PlaybookPlayApp>,
         owner_file: "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.playbook.playbook@1/*#editor",
@@ -404,16 +404,16 @@ impl ArtifactEditor for PlaybookPlayApp {
         registry.register(PlaybookRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !PLAYBOOK_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id || playbook_retained_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Playbook command does not match its exact registered tool or exceeds its declared extent").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Playbook command does not match its exact registered tool or exceeds its declared extent").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, PlaybookCommand::command_id, PLAYBOOK_RETAINED_RAW_BYTES, PLAYBOOK_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, playbook_retained_reduce, playbook_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, PlaybookCommand::command_id, PLAYBOOK_RETAINED_RAW_BYTES, PLAYBOOK_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, playbook_retained_reduce, playbook_retained_extent))
     }
 
     fn app_schema() -> Option<semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -435,11 +435,11 @@ impl ArtifactEditor for PlaybookPlayApp {
         crate::playbook_fault_notices()
     }
 
-    fn reference_birth()->Option<fn()->Result<PlaybookSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<PlaybookSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::empty_playbook_snapshot())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(playbook_io())
     }
 
@@ -460,7 +460,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         doc: &ArtifactView<'_, PlaybookSnapshot>,
         cfg: &ConfigView<'_, PlaybookConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
@@ -503,16 +503,16 @@ impl ArtifactEditor for PlaybookPlayApp {
         Ok(playbook_child_leaves_emit(doc.snapshot, leaves))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let spec = || playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new(fault.code.0, fault.message));
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+        let spec = || playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new(fault.code.0, fault.message));
         match body_key {
-            PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_framework_plugin::built_to_component_tree(builder_window::render(&spec()?, cfg.snapshot)?)),
-            PLAYBOOK_PLAY_BODY_CHANGES => Ok(semio_framework_plugin::built_to_component_tree(changes_window::render(&spec()?)?)),
-            PLAYBOOK_PLAY_BODY_STEPS => Ok(semio_framework_plugin::built_to_component_tree(steps_window::render(&spec()?)?)),
-            PLAYBOOK_PLAY_BODY_ACTIVITY => Ok(semio_framework_plugin::built_to_component_tree(activity_window::render(&spec()?)?)),
-            PLAYBOOK_PLAY_BODY_SOURCE => Ok(semio_framework_plugin::built_to_component_tree(source_window::render(&spec()?)?)),
-            PLAYBOOK_PLAY_BODY_FILES => Ok(semio_framework_plugin::built_to_component_tree(files_window::render(&spec()?, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_plugin::built_to_component_tree(builder_window::render(&spec()?, cfg.snapshot)?)),
+            PLAYBOOK_PLAY_BODY_CHANGES => Ok(semio_plugin::built_to_component_tree(changes_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_STEPS => Ok(semio_plugin::built_to_component_tree(steps_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_ACTIVITY => Ok(semio_plugin::built_to_component_tree(activity_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_SOURCE => Ok(semio_plugin::built_to_component_tree(source_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_FILES => Ok(semio_plugin::built_to_component_tree(files_window::render(&spec()?, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -522,7 +522,7 @@ impl ArtifactEditor for PlaybookPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_playbook_play_app() -> semio_plugin::AppDefinition {
     Editor::builder(PLAYBOOK_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
         .document(["semio", "playbook"])
@@ -554,7 +554,7 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("updatePlaybook", InteractiveJobClassification::Migrated)
         .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
         .action_with(
-            semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file")
+            semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file")
                 .with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]),
         )
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
@@ -614,7 +614,7 @@ pub mod artifact_items_3 {
 use crate::{PlaybookSnapshot, PlaybookSpec, artifact_kind, empty_playbook_snapshot};
 use crate::{PLAYBOOK_FLOW_SLOT, PLAYBOOK_GENESIS_FLOW_ID, flow_content_snapshot_from_steps, steps_from_flow_content};
 use semio_framework_artifact_playbook_playbook as playbook;
-use semio_framework_plugin::{ChildContentView, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ChildContentView, Fault, FaultCode, FaultOrigin};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️ComposeOnRead
@@ -632,8 +632,8 @@ pub fn playbook_fault(code: &'static str, message: impl Into<String>) -> Fault {
 }
 
 /// 🏡️ The localized notice of every refusal this artifact raises (design §20.12), declared by its editor and viewer.
-pub fn playbook_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn playbook_fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+    use semio_ui_locale::LocalizedLabel;
     static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
         [
             (PLAYBOOK_FLOW_UNAVAILABLE, LocalizedLabel::native("The playbook's steps are not loaded yet.", "Die Schritte des Playbooks sind noch nicht geladen.")),
@@ -700,15 +700,15 @@ pub mod artifact_items_4 {
 use crate::{PlaybookBlock, PlaybookSnapshot, PlaybookStep};
 use crate::{PLAYBOOK_BLOCK_PARAM_PREFIX, PLAYBOOK_FLOW_SLOT, PLAYBOOK_STEP_NODE_KIND, playbook_block_param_key, playbook_chain, playbook_sequence_edge, playbook_step_from_node, playbook_step_node, playbook_step_order};
 use crate::{PLAYBOOK_BLOCK_DUPLICATE, PLAYBOOK_BLOCK_MISSING, PLAYBOOK_FLOW_CONTENT, PLAYBOOK_STEP_DUPLICATE, PLAYBOOK_STEP_MISSING, playbook_fault};
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_s_artifact_stdio_semio_flow::{schema::mutations::insert_edge, schema::mutations::insert_node, schema::mutations::remove_edge, schema::mutations::remove_node, schema::mutations::remove_node_param, schema::mutations::set_node_param, schema::mutations::SemioFlowMutation};
 use semio_s_artifact_stdio_semio_flow::{schema::snapshot::FlowNode as SemioFlowNode, schema::snapshot::SemioFlowSnapshot};
 use std::collections::BTreeSet;
 
 //#region 🔖️ChildLane
 /// 📢️ The `ChildEmit` that publishes `leaves` on `snapshot`'s `flow` child — the ONE lane every content edit takes.
-pub fn playbook_flow_emit(snapshot: &PlaybookSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_framework_plugin::app::ChildEmitPreparation {
-    semio_framework_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>(PLAYBOOK_FLOW_SLOT, snapshot.flow.child_id.as_str(), leaves)
+pub fn playbook_flow_emit(snapshot: &PlaybookSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_plugin::app::ChildEmitPreparation {
+    semio_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>(PLAYBOOK_FLOW_SLOT, snapshot.flow.child_id.as_str(), leaves)
 }
 
 /// 🪢️ The leaves that make `content`'s step chain read `order`: every `sequence` edge the new chain drops is removed first, every

@@ -8,7 +8,7 @@ use crate::modes::edit::windows::blueprint::transform::{layout_transform_dispatc
 use semio_s_artifact_layout_layout_diff::layout_frame_selection_pivot;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// ✋️ `translateSelection` — moves the frames by `{dx, dy}` page units.

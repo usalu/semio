@@ -18,7 +18,7 @@ fn figure_tile_frame_arg_fields() -> Vec<ActionArgDef> {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_animate_presentation_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::ANIMATE_DIALECT)
             .document(["semio", "animate"])
             .artifact_kind(crate::artifact_kind())
@@ -40,18 +40,18 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .mutation("patchTileCrops", LocalizedLabel::native("Patch Tile Crops", "Kachelzuschnitte aktualisieren"))
             .mutation("setSource", LocalizedLabel::native("Set Source", "Quelle festlegen"))
             .mutation("setFrame", LocalizedLabel::native("Set Frame", "Rahmen festlegen"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("clearTiles", LocalizedLabel::native("Clear Tiles", "Kacheln leeren"))
             .action_destructive("clearTiles")
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
-            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
-            .action_with(semio_framework_plugin::ActionDefinition::new("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"), ActionKind::Shell, "copy"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"), ActionKind::Shell, "download"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand"))
-            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
-            .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
-            .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementSubmit", semio_plugin::CapabilityAudience::Input)
+            .action_with(semio_plugin::ActionDefinition::new("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"), ActionKind::Shell, "copy"))
+            .action_with(semio_plugin::ActionDefinition::new("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"), ActionKind::Shell, "download"))
+            .action_with(semio_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand"))
+            .action_audience("engagementInput", semio_plugin::CapabilityAudience::Input)
+            .action_with(semio_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
+            .action_audience("canvasPointerDown", semio_plugin::CapabilityAudience::Input)
             .view_action("noMutation", LocalizedLabel::native("No Operation", "Keine Aktion"))
             .action_args("seedGrid", vec![
                 ActionArgDef::number("rows", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(&2),
@@ -128,7 +128,7 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .action_describe("copyPrompt", LocalizedLabel::native("Writes a tile-morph prompt describing the source image and every tile to a downloaded tile-morph-prompt.md file on the user's machine.", "Schreibt einen Tile-Morph-Prompt, der das Quellbild und jede Kachel beschreibt, in eine heruntergeladene Datei tile-morph-prompt.md auf dem Rechner des Nutzers."))
             .action_describe("exportVideoFromDeck", LocalizedLabel::native("Renders the deck (one slide per tile), or the presentation scene given as JSON in scene, to an H.264 MP4 video on this device and downloads it; its progress and a cancel control are in the Task Manager.", "Rendert das Deck (eine Folie pro Kachel) oder die als JSON in scene übergebene Präsentationsszene auf diesem Gerät als H.264-MP4-Video und lädt es herunter; Fortschritt und Abbruch stehen im Task-Manager."))
             .action_describe("resetGrid", LocalizedLabel::native("Replaces every tile of the deck with the default 3 by 5 grid cut from the source image; the previous tiles are discarded.", "Ersetzt alle Kacheln des Decks durch das Standardraster von 3 mal 5 aus dem Quellbild; die bisherigen Kacheln werden verworfen."))
-            .action_audience("noMutation", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("noMutation", semio_plugin::CapabilityAudience::Chrome)
             .action_destructive("seedGrid")
             .action_destructive("setSource")
             .action_destructive("copyPrompt")

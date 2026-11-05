@@ -17,8 +17,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-kind", kind: "change-node-kind", record: "ChangedNodeKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node \"{}\" kind to {}", self.id.value, self.new_kind), &format!("Art von Knoten \"{}\" auf {} ändern", self.id.value, self.new_kind))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change node \"{}\" kind to {}", self.id.value, self.new_kind), &format!("Art von Knoten \"{}\" auf {} ändern", self.id.value, self.new_kind))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]

@@ -23,7 +23,7 @@
       "const": 1
     },
     "package": {
-      "const": "semio-framework-plugin-child-group-wire-laws"
+      "const": "semio-plugin-child-group-wire-laws"
     },
     "target": {
       "type": "string"

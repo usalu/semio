@@ -9,7 +9,7 @@ use pack::snapshot::ArtifactPack;
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection/hover no longer live here —
 /// they broadcast automatically via the framework's typed `PresenceInteraction` (assembled from the
 /// "blocks" domain's `InteractionState`, zero app code).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
@@ -77,8 +77,8 @@ impl ArtifactPack for NotePresence {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NotePresence {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NotePresence {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -101,9 +101,9 @@ fn note_presence_is_terminal_empty(presence: &NotePresence) -> bool {
 semio_framework_value::artifact_retire_struct!(NotePresence { camera_x, camera_y, camera_zoom });
 
 /// 🧹️ Replaces the live local root with Note's exact empty presence and retires its peer roster.
-pub fn note_presence_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<NotePresence, NotePresenceMutation>>> {
+pub fn note_presence_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<NotePresence, NotePresenceMutation>>> {
     Box::new(
-        semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(NotePresence::default()), note_presence_is_terminal_empty)
+        semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(NotePresence::default()), note_presence_is_terminal_empty)
             .expect("default Note presence is terminal-empty"),
     )
 }

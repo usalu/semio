@@ -15,11 +15,16 @@ export function testLayoutMutationTransport(schemaOracle: (mutation: unknown) =>
     deepStrictEqual(layoutMutationFromNativeJson(layoutMutationNativeJson(mutation)), mutation, vector.name + ': roundtrip');
     deepStrictEqual(vector.input, saved, vector.name + ': immutable');
   }
+  for (const vector of vectors.schemaRefusals) {
+    strictEqual(schemaOracle(vector.input), false, vector.name + ': independent schema');
+    throws(() => layoutMutationFromNativeJson(vector.input), vector.name);
+    throws(() => parseLayoutMutation(vector.input), vector.name + ': canonical parser');
+  }
   for (const vector of [...vectors.refusals,...pageDrawing.refusals]) throws(() => layoutMutationFromNativeJson(vector), 'malformed native command');
   throws(() => parseLayoutMutation({ ChangePageWidth: { id: 'p', newWidth: 1 } }), 'canonical float words are required');
   throws(() => parseLayoutMutation({ CreateLayer: { pageId: 'p', id: 'l', name: 'L', index: null } }), 'canonical boolean presence is required');
   const nan = { ChangePageWidth: { id: 'p', newWidth: binary64(NaN) } };
   deepStrictEqual(parseLayoutMutation(nan), nan);
   throws(() => layoutMutationNativeJson(nan), 'finite JSON refuses NaN without corrupting canonical bits');
-  return { variants: new Set(cases.flatMap(vector=>Object.keys(vector.input))).size, defaults: vectors.defaults.length, refusals: vectors.refusals.length + pageDrawing.refusals.length + 3 };
+  return { variants: new Set(cases.flatMap(vector=>Object.keys(vector.input))).size, defaults: vectors.defaults.length, refusals: vectors.schemaRefusals.length + vectors.refusals.length + pageDrawing.refusals.length + 3 };
 }

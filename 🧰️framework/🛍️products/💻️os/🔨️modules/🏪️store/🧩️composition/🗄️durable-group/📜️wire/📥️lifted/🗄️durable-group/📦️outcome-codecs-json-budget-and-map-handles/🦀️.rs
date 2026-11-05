@@ -10,7 +10,7 @@ impl DurableUnboundOneItemOutcomeV1 {
         let options = PackDecodeOptions {
             verification: PackVerificationLevel::Full,
             preserve_unknown: true,
-            limits: semio_framework_os_pack::PackLimits {
+            limits: semio_os_pack::PackLimits {
                 max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
                 max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
                 max_symbols: 128,
@@ -19,8 +19,8 @@ impl DurableUnboundOneItemOutcomeV1 {
                 max_total_alloc: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
             },
         };
-        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+        let (envelope, inner) = semio_os_semio::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let file = ::semio_framework_async::poll::resolve_ready(pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -48,7 +48,7 @@ impl DurableUnboundOneItemOutcomeV1 {
 impl DurableStorePreparedOutcomeV1 {
     pub fn from_prepared<P, Mutation>(recovery_schema: &str, prepared: &ArtifactStoreOneItemPrepared<P, Mutation>) -> Result<Self, DurableOwnedGroupDecisionError>
     where
-        P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
+        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot,
         Mutation: ValueToValue + ValueFromValue,
     {
         let authority = &prepared.authority();
@@ -96,7 +96,7 @@ impl DurableStorePreparedOutcomeV1 {
 
     pub fn verify_inverse<P, Mutation>(&self) -> Result<DurableStoreVerifiedOutcomeV1<P, Mutation>, DurableOwnedGroupDecisionError>
     where
-        P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
+        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot,
         Mutation: ValueToValue + ValueFromValue,
     {
         if self.sha256 != semio_framework_hash::sha256_hex(&self.pack) {
@@ -114,7 +114,7 @@ impl DurableStorePreparedOutcomeV1 {
         let post_options = PackDecodeOptions {
             verification: PackVerificationLevel::Full,
             preserve_unknown: true,
-            limits: semio_framework_os_pack::PackLimits {
+            limits: semio_os_pack::PackLimits {
                 max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
                 max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
                 max_symbols: 128,
@@ -164,7 +164,7 @@ pub fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
 }
 
 pub fn valid_edit_identity_header<Mutation>(edit:&Edit<Mutation>)->bool{valid_identity(&edit.id)&&edit.actor.as_deref().is_none_or(valid_identity)&&edit.line.as_deref().is_none_or(valid_identity)}
-pub fn valid_edit_identity_metadata(meta:&semio_framework_os_spr::MutationMeta)->bool{meta.mutation_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.author_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.semantic_kind.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.group_id.as_deref().is_none_or(valid_identity)}
+pub fn valid_edit_identity_metadata(meta:&semio_os_spr::MutationMeta)->bool{meta.mutation_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.author_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.semantic_kind.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.group_id.as_deref().is_none_or(valid_identity)}
 
 impl DurableBoundOneItemOutcomeV1 {
     pub fn decode_canonical_pack(bytes: &[u8]) -> Result<Self, DurableOwnedGroupDecisionError> {
@@ -174,7 +174,7 @@ impl DurableBoundOneItemOutcomeV1 {
         let options = PackDecodeOptions {
             verification: PackVerificationLevel::Full,
             preserve_unknown: true,
-            limits: semio_framework_os_pack::PackLimits {
+            limits: semio_os_pack::PackLimits {
                 max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
                 max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
                 max_symbols: 128,
@@ -183,8 +183,8 @@ impl DurableBoundOneItemOutcomeV1 {
                 max_total_alloc: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
             },
         };
-        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+        let (envelope, inner) = semio_os_semio::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let file = ::semio_framework_async::poll::resolve_ready(pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -256,32 +256,32 @@ impl ArtifactDsl for DurableUnboundOneItemOutcomeV1 {
     }
 
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = semio_framework_os_semio::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
+        let body = semio_os_semio::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
         let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Dsl, 1).expect("valid unbound outcome envelope");
-        semio_framework_os_semio::wrap_text(&envelope, &body)
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Dsl, 1).expect("valid unbound outcome envelope");
+        semio_os_semio::wrap_text(&envelope, &body)
     }
 }
 
 impl ArtifactPack for DurableUnboundOneItemOutcomeV1 {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(semio_framework_os_semio::wrap_binary(&envelope, &inner))
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
+        Ok(semio_os_semio::wrap_binary(&envelope, &inner))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+        let (envelope, inner) = semio_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1) {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unbound outcome pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(semio_framework_os_store_text_io::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(semio_os_store_text_io::text_error_to_pack_error)
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
@@ -289,8 +289,8 @@ impl ArtifactPack for DurableUnboundOneItemOutcomeV1 {
     }
 }
 
-impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DurableUnboundOneItemOutcomeV1 {
-    fn reference_snapshot_codec()->Option<semio_framework_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_framework_os_store_text_io::reference_snapshot_codec::<Self>())}
+impl semio_os_store_text_io::ArtifactStoreSnapshot for DurableUnboundOneItemOutcomeV1 {
+    fn reference_snapshot_codec()->Option<semio_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_os_store_text_io::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -303,32 +303,32 @@ impl ArtifactDsl for DurableBoundOneItemOutcomeV1 {
     }
 
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = semio_framework_os_semio::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
+        let body = semio_os_semio::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
         let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Dsl, 1).expect("valid bound outcome envelope");
-        semio_framework_os_semio::wrap_text(&envelope, &body)
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Dsl, 1).expect("valid bound outcome envelope");
+        semio_os_semio::wrap_text(&envelope, &body)
     }
 }
 
 impl ArtifactPack for DurableBoundOneItemOutcomeV1 {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(semio_framework_os_semio::wrap_binary(&envelope, &inner))
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
+        Ok(semio_os_semio::wrap_binary(&envelope, &inner))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+        let (envelope, inner) = semio_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1) {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "bound outcome pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(semio_framework_os_store_text_io::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(semio_os_store_text_io::text_error_to_pack_error)
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
@@ -336,8 +336,8 @@ impl ArtifactPack for DurableBoundOneItemOutcomeV1 {
     }
 }
 
-impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DurableBoundOneItemOutcomeV1 {
-    fn reference_snapshot_codec()->Option<semio_framework_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_framework_os_store_text_io::reference_snapshot_codec::<Self>())}
+impl semio_os_store_text_io::ArtifactStoreSnapshot for DurableBoundOneItemOutcomeV1 {
+    fn reference_snapshot_codec()->Option<semio_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_os_store_text_io::reference_snapshot_codec::<Self>())}
 
 
 }

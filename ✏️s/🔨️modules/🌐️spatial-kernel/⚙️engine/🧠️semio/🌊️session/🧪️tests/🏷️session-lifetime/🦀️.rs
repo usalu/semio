@@ -1,6 +1,6 @@
 //! 🌐️ Explicit geometry instances, authority isolation and neutral host lifecycle laws.
 use semio_s_spatial_kernel_semio_session::{Session};
-use semio_framework_os_flow::{geometry::{GeometryPort, GeometryStep,GeometryPortRetirement}, FlowEvalSession};
+use semio_os_flow::{geometry::{GeometryPort, GeometryStep,GeometryPortRetirement}, FlowEvalSession};
 use serde_json::{json,Value};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 fn transition_grant()->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}}
@@ -161,8 +161,8 @@ fn a_neutral_flow_session_closes_its_explicitly_supplied_geometry_authority() {
     assert!(retirement.terminal_is_empty());
     assert_eq!(&*calls.lock().unwrap(),&["close","retire","drop"]);
     let calls = std::sync::Arc::new(std::sync::Mutex::new(Vec::with_capacity(16)));
-    let host = semio_framework_os_flow::FlowHost::default().with_geometry_port(Box::new(RecordingPort { calls:calls.clone(),sealed:std::sync::atomic::AtomicBool::new(false),terminal:false,inline:[0;8192] }));
-    let mut host = semio_framework_os_flow::FlowHostRetirement::new(host);
+    let host = semio_os_flow::FlowHost::default().with_geometry_port(Box::new(RecordingPort { calls:calls.clone(),sealed:std::sync::atomic::AtomicBool::new(false),terminal:false,inline:[0;8192] }));
+    let mut host = semio_os_flow::FlowHostRetirement::new(host);
     assert!(host.close_page(0,3).is_err());
     assert!(host.close_page(1,0).is_err());
     assert_eq!(&*calls.lock().unwrap(),&["close"]);
@@ -170,7 +170,7 @@ fn a_neutral_flow_session_closes_its_explicitly_supplied_geometry_authority() {
     assert!(host.terminal_nonopaque_is_empty());
     assert_eq!(&*calls.lock().unwrap(),&["close","retire","drop"]);
     let calls = std::sync::Arc::new(std::sync::Mutex::new(Vec::with_capacity(16)));
-    semio_framework_os_flow::FlowHost::default().with_geometry_port(Box::new(RecordingPort { calls:calls.clone(),sealed:std::sync::atomic::AtomicBool::new(false),terminal:false,inline:[0;8192] })).retire_cold();
+    semio_os_flow::FlowHost::default().with_geometry_port(Box::new(RecordingPort { calls:calls.clone(),sealed:std::sync::atomic::AtomicBool::new(false),terminal:false,inline:[0;8192] })).retire_cold();
     assert_eq!(&*calls.lock().unwrap(),&["close","retire","drop"]);
 }
 

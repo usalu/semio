@@ -1,12 +1,12 @@
 use crate::NoteBlockNode;
-use semio_framework_plugin::app::IoPayload;
+use semio_plugin::app::IoPayload;
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 #[allow(unused_imports)]
 use crate::{NoteTextParagraph, NoteTextRun};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
-use {semio_framework_plugin::app::io_dispatch, semio_framework_artifact_reference::Dialect, semio_framework_plugin::app::ErasedComposeSource, semio_framework_plugin::app::IoDirection, semio_framework_plugin::app::IoKey, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::app::io_dispatch, semio_framework_artifact_reference::Dialect, semio_plugin::app::ErasedComposeSource, semio_plugin::app::IoDirection, semio_plugin::app::IoKey, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
 #[allow(unused_imports)]
@@ -28,7 +28,7 @@ use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLay
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 use crate::standards::v1::subsets::any::io::*;
-use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
+use semio_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload as ForeignPayload;
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::{
     io::{decode_pdf, encode_pdf},
@@ -47,7 +47,7 @@ async fn note_pdf14_page_contract_matches_the_json_oracle() {
         let text: String = crate::note_block_text(content).iter().flat_map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str())).collect();
         let imported = serde_json::json!({"width": width, "height": height, "text": text});
         assert_eq!(imported, row["expectedImport"]);
-        let exported = crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::base::NoteIntoPdf::serialize(&note, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("PDF export").value;
+        let exported = crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::base::NoteIntoPdf::serialize(&note, &semio_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("PDF export").value;
         let ForeignPayload::Binary(bytes) = exported else { panic!("binary PDF export") };
         assert!(bytes.starts_with(b"%PDF-1.4"));
         let pdf = decode_pdf(&bytes).expect("exported PDF decode");

@@ -4,7 +4,7 @@ use post_fixture::PostFixture;
 use super::*;
 use crate::{PageLayersDelta,PageLayersModification,PageLayerRemoval,PageLayerInsertion,PageLayerRelocation,LayerPatch};
 use semio_s_artifact_layout_layout_model::Layer;
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use super::super::setters::OwnedPatch;
 use protocol::{RetainedDiffApply,RetainedDiffPreflightAdvance,MutationMessage};
 use semio_framework_value::retained_clone::RetainedCloneSource;

@@ -1,7 +1,7 @@
 //! ⏲️ Task spawn, records, resumes and extension invocation queue of the plugin reactor.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 
 #[path = "🧮️fixed-slots/🦀️.rs"]
 pub mod tasks_fixed_slots;
@@ -19,12 +19,12 @@ pub mod tasks_render_bindings;
 #[path = "🧪️tests/🦀️.rs"]
 pub mod tests;
 use std::cell::RefCell;
-use semio_framework_plugin_actor_host::{executor, requests};
+use semio_plugin_actor_host::{executor, requests};
 use tasks_instance_metadata::{InstanceMetadataRegistry};
 use tasks_render_bindings::{JobRenderBindingRegistry};
 use tasks_task_lane::{FixedResumeQueue, TaskRecordRegistry};
 
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     /// 📮️ One `RequestRegistry` per actor (today: shared process-wide, matching the "one actor per
     /// app instance is the default" granularity design-abi.md §4 names — a multi-instance pooled
     /// actor is opt-in first-party-only future work, out of this wave).

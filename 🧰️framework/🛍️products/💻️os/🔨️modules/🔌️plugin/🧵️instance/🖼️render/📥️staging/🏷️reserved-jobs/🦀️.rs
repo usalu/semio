@@ -1,21 +1,21 @@
 //! 🎽️ Staged `reserved-jobs` members of the `instance-render` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🏷️ The inputs of the reserved action and media jobs.
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_emission::{ActionMeta, Emit};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion};
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_app::tool_contract::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion};
+use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_framework_value::DslValue;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, Media};
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use crate::render_bundle::RenderCtx;
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
     pub async fn build_artifact_reserved_action_job(&mut self, action: &str, args: Option<&DslValue>, raw_wire: Vec<u8>, meta: &ActionMeta, source_binding:semio_framework::action_bus::OriginalToolSourceBinding) -> Result<Option<(ArtifactReservedToolJob, ArtifactToolCompletion<A>)>, Fault> {

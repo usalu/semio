@@ -1,7 +1,7 @@
 //! 📦️ A private completed native body stays retained until original publication or paid close.
 use super::StagedScalarCursor;
-use semio_framework_ui_contract::BuiltNode;
-use semio_framework_ui_runtime::ComponentTree;
+use semio_ui_contract::BuiltNode;
+use semio_ui_runtime::ComponentTree;
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};

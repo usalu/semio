@@ -664,7 +664,7 @@ fn batch_script(root: &Path) -> (PathBuf, SessionCommand) {
 #[cfg(windows)]
 mod windows {
     use super::*;
-    use semio_framework_ui_tui_terminal::pty::{resolve_program, Pty, PtySize};
+    use semio_ui_tui_terminal::pty::{resolve_program, Pty, PtySize};
 
     fn plain(bytes: &[u8]) -> String {
         let text = String::from_utf8_lossy(bytes);

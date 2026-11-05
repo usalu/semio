@@ -4,7 +4,7 @@
 //#region 🔖️ActionBridge
 use super::*;
 use semio_framework_value::DslValue;
-use semio_framework_plugin::{FaultCode, FaultOrigin};
+use semio_plugin::{FaultCode, FaultOrigin};
 
 fn snake(key: &str) -> String {
     let mut out = String::with_capacity(key.len() + 4);

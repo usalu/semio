@@ -504,6 +504,7 @@ export type UiTranslationSchema = {
       readonly emptyScene: UiLabelValue;
       readonly inputDraftConflict: UiLabelValue;
       readonly inputDraftDiscard: UiLabelValue;
+      readonly sourceTextTooLong: UiLabelValue;
       /** 📊️ The polite status under a windowed table: which of its rows are materialised. */
       readonly tableRowRange: UiLabelValue;
       readonly preview: UiLabelValue;

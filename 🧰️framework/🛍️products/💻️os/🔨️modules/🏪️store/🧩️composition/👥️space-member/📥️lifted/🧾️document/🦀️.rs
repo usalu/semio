@@ -1,10 +1,10 @@
 //! 📥️ Items of `document_materialize` that belong to `os-store-space-member` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧾️document/🦀️.rs`.
-use semio_framework_os_spr::{Mutation, OpBinary};
-use semio_framework_os_vcs::VcsError;
-use semio_framework_os_store_space_schema::{ArtifactEnvelope, ArtifactEnvelopeOwners};
-use semio_framework_os_store_ledger::fold_envelope_history;
-use semio_framework_os_store_ledger::ColdReplayProjection;
-use semio_framework_os_store_replay::fold_effective_edit;
+use semio_os_spr::{Mutation, OpBinary};
+use semio_os_vcs::VcsError;
+use semio_os_store_space_schema::{ArtifactEnvelope, ArtifactEnvelopeOwners};
+use semio_os_store_ledger::fold_envelope_history;
+use semio_os_store_ledger::ColdReplayProjection;
+use semio_os_store_replay::fold_effective_edit;
 pub async fn edit_ids_for_changes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, change_ids: &[String]) -> Vec<String>
 where
     Mutation: Clone,
@@ -20,7 +20,7 @@ where
 }
 
 /// 🔂️ Full raw fold of `initial_snapshot` over every `applied_edit_ids` edit's `forwards`.
-/// `semio_framework_os_spr::command::Mutation::reconcile` and its diagnostic-bag-returning twin
+/// `semio_os_spr::command::Mutation::reconcile` and its diagnostic-bag-returning twin
 /// `materialize_document_snapshot_with_conflicts` are GONE
 /// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6/C10) — concurrent-merge
 /// arbitration is now `ArtifactStore::ingest_remote`/`resolve_conflict`'s job against
@@ -28,7 +28,7 @@ where
 pub async fn materialize_document_snapshot<P, Mutation, I, S>(envelope: &ArtifactEnvelopeOwners<P, Mutation>, applied_edit_ids: I) -> Result<P, VcsError>
 where
     P: Clone,
-    Mutation: self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
+    Mutation: self::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {

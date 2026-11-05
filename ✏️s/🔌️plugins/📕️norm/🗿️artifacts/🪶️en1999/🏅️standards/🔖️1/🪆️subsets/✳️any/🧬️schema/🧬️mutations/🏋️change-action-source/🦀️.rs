@@ -24,8 +24,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeActionSource where
         record: "ChangedActionSource",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change source of the member action", "Bauteileinwirkung: Quelle ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change source of the member action", "Bauteileinwirkung: Quelle ändern")
     }
 }
 

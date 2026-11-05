@@ -1,8 +1,8 @@
 //! 🔚️ Publication phase of the reactor turn: validates and stages the patch receipt, prepares the caller's output and either publishes the turn result or hands every transferred patch back. See [`super`].
 
 use super::*;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 
 /// 🔚️ Stages the patch emission of one built turn result, finishes the focused lifecycle turn and publishes the result; a failed preparation returns every transferred patch to its pending slot.
 pub(super) fn publish_turn_result<PA: PluginApp, T, Prepared>(

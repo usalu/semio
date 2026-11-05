@@ -1,7 +1,7 @@
 use super::*;
 
 fn text(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node), |root| serde_json::to_string(root).expect("window projects"))
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |root| serde_json::to_string(root).expect("window projects"))
 }
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity};
 use std::collections::BTreeSet;
@@ -25,7 +25,7 @@ fn actions_are_localized_and_registered_as_interactive() {
     assert_eq!(definition.label, LocalizedLabel::native("Energy simulation", "Energiesimulation"));
     for action in &own {
         assert!(
-            semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, Locale::En) != action.label.resolve(terminology, Locale::De)),
+            semio_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, Locale::En) != action.label.resolve(terminology, Locale::De)),
             "action {} is not really translated",
             action.id
         );
@@ -86,7 +86,7 @@ fn the_result_field_action_offers_exactly_the_published_fields_and_the_window_re
     assert_eq!(action.kind, ActionKind::View, "recolouring reads the document, it never mutates it");
     let arg = action.args.iter().find(|arg| arg.id == "field").expect("the field argument");
     let options: Vec<&str> = match &arg.schema {
-        semio_framework_plugin::ArgSchema::String { options, .. } => options.iter().map(|option| option.value.as_str()).collect(),
+        semio_plugin::ArgSchema::String { options, .. } => options.iter().map(|option| option.value.as_str()).collect(),
         other => panic!("the field argument is a single-choice select, found {other:?}"),
     };
     assert_eq!(options, ResultField::ALL.iter().map(|field| field.id()).collect::<Vec<_>>(), "every published field is offerable and nothing else is");

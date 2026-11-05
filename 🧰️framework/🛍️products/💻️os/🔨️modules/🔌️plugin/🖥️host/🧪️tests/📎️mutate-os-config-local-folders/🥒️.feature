@@ -10,7 +10,7 @@ Feature: Apply every typed local-folder binding mutation to its committed specif
   `os-config-local-folders-mutation-semantics` no-oracle decision in `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ Like its local-catalog sibling, this case lives under `🔌️plugin/🖥️host`; its Rust subject
-  links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  links the owning crate `semio-os-config` directly, declared as a subject host package in
   `../../🔮️oracles/🔣️.json`.
 
   Two kinds close the vocabulary: an attachment is an UPSERT keyed on `documentId` (a re-attachment replaces the binding,

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeElementKind where
         record: "ChangedElementKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change element type", "Bauteilart ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change element type", "Bauteilart ändern")
     }
 }
 

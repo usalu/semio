@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAccelerogramBuildi
         record: "ChangeAccelerogramBuildingId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Building whose fundamental period sets the period range", "Gebäude, dessen Grundschwingzeit den Periodenbereich bestimmt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Building whose fundamental period sets the period range", "Gebäude, dessen Grundschwingzeit den Periodenbereich bestimmt ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-accelerogram-building-id".into()]

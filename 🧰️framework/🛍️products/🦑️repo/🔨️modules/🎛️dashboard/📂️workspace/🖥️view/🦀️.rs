@@ -2,13 +2,13 @@
 use semio_framework_filesystem_workspace::{Document,Entry,EntryRevision,Error,Progress,Workspace,Stage,ErrorKind};
 pub use semio_framework_filesystem_workspace::commands::{Request,EntryAction,DocumentBuffer,BrowserState};
 use semio_framework_filesystem_workspace::commands::{self,EntryForm,HistoryForm,HistoryAction,Response,Message};
-pub use semio_framework_ui_tui_core::{event::KeyEvent,signal::WidgetSignal};
-use semio_framework_ui_tui_core::event::{mods,Key,Event};
-pub use semio_framework_ui_tui_frame::scene::NodeId;
-use semio_framework_ui_tui_frame::scene::NodeContent;
-pub use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_widgets::widget::{EditorState,WidgetState};
-pub use semio_framework_ui_tui_terminal::backend::Waker;
+pub use semio_ui_tui_core::{event::KeyEvent,signal::WidgetSignal};
+use semio_ui_tui_core::event::{mods,Key,Event};
+pub use semio_ui_tui_frame::scene::NodeId;
+use semio_ui_tui_frame::scene::NodeContent;
+pub use semio_ui_tui_engine::Tui;
+use semio_ui_tui_widgets::widget::{EditorState,WidgetState};
+pub use semio_ui_tui_terminal::backend::Waker;
 pub use dashboard_preferences::keymap::Keymap;
 use dashboard_labels::{labels,DashboardLabels};
 pub use ui_locale::Locale;
@@ -78,9 +78,9 @@ fn blocked_path(job:Option<&Job>,pending:Option<&(String,Request)>,path:&str)->b
 
 /// 🖼️ Mounts the sole source body widgets under an app-owned body root.
 pub fn mount(tui:&mut Tui,root:NodeId,kind:Kind)->(NodeId,NodeId){
-    use semio_framework_ui_tui_frame::{scene::Node,layout::{Constraint,Dimension}};
-    use semio_framework_ui_tui_widgets::widget::{LabelState,Align,ListState};
-    let caption=tui.scene.add(root,Node::new(NodeContent::Widget(WidgetState::Label(LabelState{text:String::new(),align:Align::Left,role:semio_framework_ui_tui_core::theme::Role::MutedForeground}))));
+    use semio_ui_tui_frame::{scene::Node,layout::{Constraint,Dimension}};
+    use semio_ui_tui_widgets::widget::{LabelState,Align,ListState};
+    let caption=tui.scene.add(root,Node::new(NodeContent::Widget(WidgetState::Label(LabelState{text:String::new(),align:Align::Left,role:semio_ui_tui_core::theme::Role::MutedForeground}))));
     tui.scene.node_mut(caption).set_constraint(Constraint{width:Dimension::Weight(1),height:Dimension::Cells(1),..Default::default()});
     let widget=match kind{Kind::Files=>WidgetState::List(ListState::new(Vec::new())),Kind::Document=>{let mut editor=EditorState::new("",1_048_576);editor.read_only=true;WidgetState::Editor(editor)}};
     let list=tui.scene.add(root,Node::new(NodeContent::Widget(widget)));
@@ -200,7 +200,7 @@ impl<H:SourceWindowPort> View<'_,H> {
         let node = self.port.window(index).list;
         let Body::Files(files) = self.port.window_mut(index).body else { return };
         if files.form.is_some() || files.history_form.is_some() { return; }
-        if let Some(widget)=tui.scene.node_mut(node).widget() { if !matches!(widget,WidgetState::List(_)){*widget=WidgetState::List(semio_framework_ui_tui_widgets::widget::ListState::new(Vec::new()));} }
+        if let Some(widget)=tui.scene.node_mut(node).widget() { if !matches!(widget,WidgetState::List(_)){*widget=WidgetState::List(semio_ui_tui_widgets::widget::ListState::new(Vec::new()));} }
         let items=files.rows();
         if let Some(WidgetState::List(list)) = tui.scene.node_mut(node).widget() { list.selected = list.selected.min(items.len().saturating_sub(1)); list.marks = vec![false; items.len()]; list.items = items; }
     }
@@ -211,7 +211,7 @@ impl<H:SourceWindowPort> View<'_,H> {
         if let Body::Files(files) = self.port.window_mut(index).body {
             match key.key {
                 Key::Char(c) if key.mods & (mods::CTRL | mods::ALT) == 0 && !c.is_control() && files.query.len() + c.len_utf8() <= 256 => files.query.push(c),
-                Key::Backspace if !files.query.is_empty() => { files.query.truncate(semio_framework_ui_tui_core::text::previous_boundary(&files.query, files.query.len())); }
+                Key::Backspace if !files.query.is_empty() => { files.query.truncate(semio_ui_tui_core::text::previous_boundary(&files.query, files.query.len())); }
                 Key::Backspace | Key::Esc => request = Some(files.browse_parent()),
                 _ => { let signals = tui.dispatch(&Event::Key(*key)); self.on_signals(tui, signals); return; }
             }

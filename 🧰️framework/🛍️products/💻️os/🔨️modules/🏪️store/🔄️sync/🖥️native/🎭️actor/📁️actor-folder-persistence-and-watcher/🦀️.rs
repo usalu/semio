@@ -81,7 +81,7 @@ impl ArtifactActor {
         let Some(folder) = self.folder.as_ref() else { return FolderProbe::Absent };
         match folder.read_archive().await {
             Ok(None) => FolderProbe::Absent,
-            Ok(Some(bytes)) => match semio_framework_os_spr::decode_document_archive_bytes(&bytes).await {
+            Ok(Some(bytes)) => match semio_os_spr::decode_document_archive_bytes(&bytes).await {
                 Err(error) => FolderProbe::Unreadable(format!("the folder archive does not decode: {error}")),
                 Ok(_) if self.folder_held_hash.as_deref() == Some(document_archive_hash(&bytes).as_str()) => FolderProbe::Held,
                 Ok(_) => FolderProbe::Foreign,
@@ -96,7 +96,7 @@ impl ArtifactActor {
         self.folder_write_failures = self.folder_write_failures.max(1);
         self.folder_retry_at = None;
         if first {
-            self.emit(self.folder_conflict(semio_framework_diagnostic::Severity::Error, "externalDivergence", "the folder changed while local edits are not yet saved".into()));
+            self.emit(self.folder_conflict(semio_framework_diagnostic::Severity::Error, "externalDivergence", "the folder changed while local edits are not yet saved"));
         }
         self.emit_status_if_changed().await;
     }
@@ -116,7 +116,7 @@ impl ArtifactActor {
     /// 🧱️ The pack and spr new edits append to: the unsaved newest archive when one is held, else the acknowledged state.
     async fn working_pack_spr(&mut self) -> Option<(Vec<u8>, Vec<u8>)> {
         match self.unsaved.as_deref() {
-            Some(bytes) => semio_framework_os_spr::decode_document_archive_bytes(bytes).await.ok().map(|archive| (archive.parent_pack, archive.parent_spr)),
+            Some(bytes) => semio_os_spr::decode_document_archive_bytes(bytes).await.ok().map(|archive| (archive.parent_pack, archive.parent_spr)),
             None => Some((self.current_pack.clone()?, self.current_spr.clone()?)),
         }
     }
@@ -149,14 +149,14 @@ impl ArtifactActor {
             FolderProbe::Unreadable(message) => self.block_folder("folderReadFailed", message).await,
             FolderProbe::Foreign => self.diverge_folder().await,
             _ => {
-                if let Ok(archive) = semio_framework_os_spr::decode_document_archive_bytes(&bytes).await {
+                if let Ok(archive) = semio_os_spr::decode_document_archive_bytes(&bytes).await {
                     self.commit_archive(bytes, archive.parent_pack, archive.parent_spr).await;
                 }
             }
         }
     }
 
-    pub(super) async fn persist_archive(&mut self, bytes: Vec<u8>, archive: semio_framework_os_spr::DocumentArchivePack) {
+    pub(super) async fn persist_archive(&mut self, bytes: Vec<u8>, archive: semio_os_spr::DocumentArchivePack) {
         if let Ok(op_ids) = spr_op_ids(&archive.parent_spr).await {
             self.known_op_ids = op_ids;
         }
@@ -169,13 +169,13 @@ impl ArtifactActor {
     pub(super) async fn persist_genesis(&mut self, pack: Vec<u8>) {
         if let Some(current) = self.current_pack.as_ref() {
             if *current != pack {
-                self.emit(self.folder_conflict(semio_framework_diagnostic::Severity::Error, "genesisMismatch", "the attached store names a different initial snapshot than the persisted document".into()));
+                self.emit(self.folder_conflict(semio_framework_diagnostic::Severity::Error, "genesisMismatch", "the attached store names a different initial snapshot than the persisted document"));
             }
             return;
         }
-        let spr = semio_framework_os_store_text_io::text_format::empty_document_spr(&self.document_id, &self.schema).await;
-        let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
-        if let Ok(bytes) = semio_framework_os_spr::encode_document_archive_bytes(&archive) {
+        let spr = semio_os_store_text_io::text_format::empty_document_spr(&self.document_id, &self.schema).await;
+        let archive = semio_os_spr::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
+        if let Ok(bytes) = semio_os_spr::encode_document_archive_bytes(&archive) {
             self.persist_archive(bytes, archive).await;
         }
     }
@@ -187,13 +187,13 @@ impl ArtifactActor {
             return;
         }
         let Some((pack, spr)) = self.working_pack_spr().await else { return };
-        let mut new_edits: Vec<semio_framework_os_spr::HistoryEdit> = Vec::new();
-        let mut new_transitions: Vec<semio_framework_os_spr::HistoryTransitionRecord> = Vec::new();
+        let mut new_edits: Vec<semio_os_spr::HistoryEdit> = Vec::new();
+        let mut new_transitions: Vec<semio_os_spr::HistoryTransitionRecord> = Vec::new();
         let mut admitted: Vec<String> = Vec::new();
         for envelope in envelopes.iter().filter(|envelope| self.known_op_ids.insert(envelope.mutation_id.0.clone())) {
             admitted.push(envelope.mutation_id.0.clone());
-            if semio_framework_os_spr::is_history_transition(envelope) {
-                new_transitions.push(semio_framework_os_spr::HistoryTransitionRecord::from_envelope(envelope));
+            if semio_os_spr::is_history_transition(envelope) {
+                new_transitions.push(semio_os_spr::HistoryTransitionRecord::from_envelope(envelope));
             } else {
                 new_edits.push(history_edit_from_envelope(envelope).await);
             }
@@ -201,7 +201,7 @@ impl ArtifactActor {
         if new_edits.is_empty() && new_transitions.is_empty() {
             return;
         }
-        let Ok(new_spr) = semio_framework_os_store_text_io::text_format::append_history_events_to_spr(&spr, &new_edits, &new_transitions).await else {
+        let Ok(new_spr) = semio_os_store_text_io::text_format::append_history_events_to_spr(&spr, &new_edits, &new_transitions).await else {
             for id in &admitted {
                 self.known_op_ids.remove(id);
             }
@@ -217,7 +217,7 @@ impl ArtifactActor {
             return;
         }
         let Some((pack, spr)) = self.working_pack_spr().await else { return };
-        let Ok((spr, retracted)) = semio_framework_os_store_engine_checkpoint_graph::retract_history_transitions_from_spr(&spr, refused).await else { return };
+        let Ok((spr, retracted)) = semio_os_store_engine_checkpoint_graph::retract_history_transitions_from_spr(&spr, refused).await else { return };
         for id in &retracted {
             self.known_op_ids.remove(id);
         }
@@ -228,12 +228,12 @@ impl ArtifactActor {
     async fn persist_spr(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
         let base = self.unsaved.as_deref().or(self.current_archive.as_deref());
         let mut archive = match base {
-            Some(bytes) => semio_framework_os_spr::decode_document_archive_bytes(bytes).await.ok(),
+            Some(bytes) => semio_os_spr::decode_document_archive_bytes(bytes).await.ok(),
             None => None,
         }
-        .unwrap_or(semio_framework_os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr.clone(), members: Vec::new() });
+        .unwrap_or(semio_os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr.clone(), members: Vec::new() });
         archive.parent_spr = spr.clone();
-        if let Ok(bytes) = semio_framework_os_spr::encode_document_archive_bytes(&archive) {
+        if let Ok(bytes) = semio_os_spr::encode_document_archive_bytes(&archive) {
             self.commit_archive(bytes, pack, spr).await;
         }
     }
@@ -274,7 +274,7 @@ impl ArtifactActor {
             Err(_) => return,
         };
         self.folder_bootstrapped = true;
-        let archive = match semio_framework_os_spr::decode_document_archive_bytes(&bytes).await {
+        let archive = match semio_os_spr::decode_document_archive_bytes(&bytes).await {
             Ok(archive) => archive,
             Err(error) => return self.block_folder("folderArchiveCorrupt", format!("the folder archive does not decode: {error}")).await,
         };
@@ -293,7 +293,7 @@ impl ArtifactActor {
             let Ok(events) = spr_events(&spr, &self.document_id, &self.schema,self.actor_identity_grant).await else { return };
             let mut appended: Vec<MutationEnvelope> = events.into_iter().filter(|event| new_ids.contains(&event.mutation_id.0)).collect();
             for envelope in &mut appended {
-                if envelope.timestamp == semio_framework_os_spr::HybridLogicalTimestamp::new(0, 0) {
+                if envelope.timestamp == semio_os_spr::HybridLogicalTimestamp::new(0, 0) {
                     envelope.timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
                 }
             }
@@ -305,9 +305,9 @@ impl ArtifactActor {
             let _ = self.deliver_remote_operations(appended).await;
         } else if !lost.is_empty() {
             if !self.pending_batches.is_empty() || !self.outbox.is_empty() {
-                self.emit(self.folder_conflict(semio_framework_diagnostic::Severity::Error, "externalDivergence", "external history diverged while local operations are pending".into()));
+                self.emit(self.folder_conflict(semio_framework_diagnostic::Severity::Error, "externalDivergence", "external history diverged while local operations are pending"));
             } else {
-                self.emit(self.folder_conflict(semio_framework_diagnostic::Severity::Warning, "externalHistoryReplaced", "the folder no longer holds operations this document had acknowledged; the document is reloaded from the folder".into()));
+                self.emit(self.folder_conflict(semio_framework_diagnostic::Severity::Warning, "externalHistoryReplaced", "the folder no longer holds operations this document had acknowledged; the document is reloaded from the folder"));
                 self.known_op_ids = file_ids;
                 self.current_pack = Some(pack.clone());
                 self.current_spr = Some(spr.clone());
@@ -346,6 +346,6 @@ pub(super) async fn folder_watch_path_for(path: &Path) -> PathBuf {
 
 /// 👁️ Creates the owned non-recursive watcher; its first probe establishes a
 /// baseline and later snapshots feed the actor's existing 200 ms debounce.
-pub(super) fn install_watcher(watch_path: &Path, pool: Arc<semio_framework_async::WorkerPool>, readiness: Arc<dyn Fn() + Send + Sync>) -> semio_framework_os_services::OwnedFileChangeWatcher {
-    semio_framework_os_services::OwnedFileChangeWatcher::new(watch_path, pool, readiness)
+pub(super) fn install_watcher(watch_path: &Path, pool: Arc<semio_framework_async::WorkerPool>, readiness: Arc<dyn Fn() + Send + Sync>) -> semio_os_services::OwnedFileChangeWatcher {
+    semio_os_services::OwnedFileChangeWatcher::new(watch_path, pool, readiness)
 }

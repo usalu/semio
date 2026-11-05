@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-kernel-db-io-driver"
+name = "semio-os-kernel-db-io-driver"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,21 +23,21 @@ name = "db_io_driver"
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["dep:semio-framework-os-kernel-db-durability", "semio-framework-os-kernel-db-io-core/testkit"]
+testkit = ["dep:semio-os-kernel-db-durability", "semio-os-kernel-db-io-core/testkit"]
 
 [dependencies]
-semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-io-registry = { path = "../../../📇️io-registry/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust", optional = true }
+semio-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-registry = { path = "../../../📇️io-registry/📦️packages/🦀️rust" }
+semio-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
+semio-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust", optional = true }
 semio-framework-async = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-async-testkit = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

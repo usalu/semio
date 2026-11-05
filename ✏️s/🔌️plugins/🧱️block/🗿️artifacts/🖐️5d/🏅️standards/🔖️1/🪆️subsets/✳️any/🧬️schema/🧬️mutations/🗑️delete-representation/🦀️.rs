@@ -24,8 +24,8 @@ pub fn delete_representation<Op: From<crate::delete_representation::DeleteRepres
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for DeleteRepresentation where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::create_representation::CreateRepresentation> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "representation", kind: "delete-representation", record: "DeletedRepresentation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete representation \"{}\"", self.id), &format!("Repräsentation \"{}\" löschen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete representation \"{}\"", self.id), &format!("Repräsentation \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

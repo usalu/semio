@@ -2,9 +2,9 @@
 //! 🖌️ Overview-window utility — Brush: places compatible nodes into open handle slots. Its live
 //! `☑️options/🖌️brush` measure group, tagged with this utility's id.
 
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
 
 pub const UTILITY_ID: &str = "brush";
 

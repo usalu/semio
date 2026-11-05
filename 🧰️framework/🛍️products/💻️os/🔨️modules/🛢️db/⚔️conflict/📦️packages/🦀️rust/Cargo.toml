@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-kernel-db-conflict"
+name = "semio-os-kernel-db-conflict"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,8 +23,8 @@ name = "db_conflict"
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-state = { path = "../../../🔘️state/📦️packages/🦀️rust" }
+semio-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
+semio-os-kernel-db-state = { path = "../../../🔘️state/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 

@@ -65,7 +65,13 @@ semio-framework-ui-layout = { path = "../../../../../../../../../🔨️modules/
 semio_framework_ui_runtime = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
 
 [dev-dependencies]
+semio-framework-actor = { workspace = true }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
 semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-plugin-testing-caller = { path = "../../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
+
+[[test]]
+name = "original-surface-view-read"
+path = "../../🧪️tests/original-view-read.rs"
+required-features = ["original-actor-context-testing"]

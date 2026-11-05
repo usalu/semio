@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "tile", kind: "rename-tile", record: "RenamedTile" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename tile to \"{}\"", self.new_name), &format!("Kachel in \"{}\" umbenennen", self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename tile to \"{}\"", self.new_name), &format!("Kachel in \"{}\" umbenennen", self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 
 [dependencies]
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-s-artifact-energy-model-mut-boundary = { workspace = true }
 semio-s-artifact-energy-model-mut-construction = { workspace = true }
 semio-s-artifact-energy-model-mut-fenestration = { workspace = true }

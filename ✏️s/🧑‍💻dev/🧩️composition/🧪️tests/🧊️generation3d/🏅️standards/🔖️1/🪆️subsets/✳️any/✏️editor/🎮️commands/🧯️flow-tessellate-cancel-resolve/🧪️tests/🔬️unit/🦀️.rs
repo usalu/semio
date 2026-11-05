@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 
 /// ⚖️ LAW: folding the geometry extension's cancel acknowledgement arms NOTHING. The gesture already
 /// left every latch quiescent; an acknowledgement that re-armed would restart the chain the user
@@ -15,7 +15,7 @@ fn the_cancel_acknowledgement_arms_nothing() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let mut session = FlowEvalSession::new();
-    let hash = semio_framework_os_flow::preview_tessellate_node_hash("brep:solid-1", 0.05_f64.to_bits());
+    let hash = semio_os_flow::preview_tessellate_node_hash("brep:solid-1", 0.05_f64.to_bits());
     assert!(session.note_pending_tessellate(hash, "brep:solid-1".into()));
     session.note_window_extensions_in_flight("procedural-preview-test", 1);
     session.cancel_preview_evaluation("procedural-preview-test");

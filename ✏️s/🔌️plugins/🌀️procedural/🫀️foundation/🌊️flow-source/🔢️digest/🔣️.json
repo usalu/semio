@@ -1,0 +1,80 @@
+{
+  "cases": [
+    {
+      "id": "document-empty",
+      "parts": [
+        "{}"
+      ],
+      "provisionalGeneration": "0",
+      "expected": "c735b81983dc908e"
+    },
+    {
+      "id": "document-native",
+      "parts": [
+        "{\"schema\":\"flow.host_snapshot\",\"camera\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0},\"widgets\":[],\"synapses\":[],\"layout\":{}}"
+      ],
+      "provisionalGeneration": "0",
+      "expected": "81a4a89241ac69cf"
+    },
+    {
+      "id": "empty-selection",
+      "parts": [
+        "{}",
+        "{}",
+        ""
+      ],
+      "provisionalGeneration": "0",
+      "expected": "0760784d6cadb39c"
+    },
+    {
+      "id": "unicode-selection",
+      "parts": [
+        "{\"λ\":\"漢字\"}",
+        "{\"generations\":[]}",
+        "ä/東京"
+      ],
+      "provisionalGeneration": "7",
+      "expected": "0568038c28f1bc42"
+    },
+    {
+      "id": "raw-selection",
+      "parts": [
+        "{}",
+        "{}",
+        "\"\\\n\u001f"
+      ],
+      "provisionalGeneration": "1",
+      "expected": "968489940d1ac83e"
+    },
+    {
+      "id": "separator-collision",
+      "parts": [
+        "a\u001fb",
+        "c",
+        ""
+      ],
+      "provisionalGeneration": "13",
+      "expected": "e2aae24fbbc4e248"
+    },
+    {
+      "id": "signed-zero",
+      "parts": [
+        "{\"x\":-0.0}",
+        "[]",
+        "a"
+      ],
+      "provisionalGeneration": "18446744073709551615",
+      "expected": "c37f016bc1dbd96f"
+    },
+    {
+      "id": "all-empty",
+      "parts": [
+        "",
+        "",
+        ""
+      ],
+      "provisionalGeneration": "42",
+      "expected": "7a278c763127bcc6"
+    }
+  ]
+}

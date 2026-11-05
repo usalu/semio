@@ -142,7 +142,7 @@ pub struct WidgetState {
     /// `value`: arrowing through a popup moves this and nothing else, and only `Enter` commits.
     /// Written by `events::EventRouter::route_select_key`, read by `paint`'s popup rows.
     pub highlighted: Option<usize>,
-    pub select_popup: Option<semio_framework_ui_select_behavior::SelectPopupGeometry>,
+    pub select_popup: Option<semio_ui_select_behavior::SelectPopupGeometry>,
 }
 
 /// 📏️ Resolved rect from the last taffy layout pass, in the node's **parent-relative** coordinate
@@ -217,7 +217,7 @@ pub struct Node {
     /// testkit's declarative `apply_tree` path) — such a node has no surface/revision to be stale
     /// against and keeps firing the bare `ActionDescriptor` its spec carries, exactly as React keeps
     /// `onAction` for its own unowned scene hosts.
-    pub intent: Option<semio_framework_ui_action::UiIntentBindings>,
+    pub intent: Option<semio_ui_action::UiIntentBindings>,
 }
 
 impl Node {

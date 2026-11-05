@@ -1,6 +1,6 @@
 //! 🧪️ engine tests (➡️directed-normal): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_engine::DirectedGraphEngine;
+use semio_os_infinite_board_engine::DirectedGraphEngine;
 
 #[test]
 fn directed_graph_engine_alias() {

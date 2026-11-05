@@ -7,8 +7,8 @@ use crate::editor::grid3d as editor;
 use crate::standards::v1::subsets::any::schema;
 use crate::viewer::grid3d as viewer;
 use crate::WFC_GRID3D_DIALECT;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {

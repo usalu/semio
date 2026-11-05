@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertPrestressSteel whe
         record: "InsertedPrestressSteel",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert prestressing steel {}", self.prestress_steel.id), &format!("Spannstahl {} einfügen", self.prestress_steel.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert prestressing steel {}", self.prestress_steel.id), &format!("Spannstahl {} einfügen", self.prestress_steel.id))
     }
 }
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for RemoveFatigueDetail wher
         record: "RemovedFatigueDetail",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove fatigue detail", "Ermüdungsdetail entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove fatigue detail", "Ermüdungsdetail entfernen")
     }
 }
 

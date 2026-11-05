@@ -4,7 +4,7 @@ use super::*;
 
 impl FlowHost {
     /// 🌳️ Recomputes widget positions from the current graph using layered tree layout.
-    pub fn reorganize(&mut self,opts:&DagLayoutOptions,control:&mut semio_framework_os_infinite::board::schema::layout::LayoutControl<'_>)->Result<(),FlowCoreError>{
+    pub fn reorganize(&mut self,opts:&DagLayoutOptions,control:&mut semio_os_infinite::board::schema::layout::LayoutControl<'_>)->Result<(),FlowCoreError>{
         let mut dag=DagHost::from_host_snapshot_without_layout(self.build_dag_host_snapshot_v1());dag.viewport.canvas_theme=self.dag.viewport.canvas_theme;
         dag.graph.reorganize(opts,control)?;self.begin_change();self.dag=dag;self.sync_from_dag();
         let placed: Vec<String> = self.host_snapshot.layout.keys().cloned().collect();

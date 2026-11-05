@@ -10,7 +10,7 @@ pub struct ChangeTaperSide { pub taper_id: String, pub new_value: semio_s_artifa
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTaperSide where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_taper_side::ChangeTaperSide> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "taper-side", kind: "change-taper-side", record: "ChangedTaperSide" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change tapered face of taper {}", self.taper_id), &format!("Angeschnittener Rand von Taper {} ändern", self.taper_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change tapered face of taper {}", self.taper_id), &format!("Angeschnittener Rand von Taper {} ändern", self.taper_id)) }
     fn target(&self) -> Vec<String> { vec![self.taper_id.clone()] }
 }
 

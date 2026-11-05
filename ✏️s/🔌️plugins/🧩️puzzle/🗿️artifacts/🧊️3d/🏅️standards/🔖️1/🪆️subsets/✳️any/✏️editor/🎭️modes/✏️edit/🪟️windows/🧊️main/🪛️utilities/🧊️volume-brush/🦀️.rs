@@ -7,10 +7,10 @@ use semio_framework_pack_json::json;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowMeasure;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowMeasure;
 
 pub const UTILITY_ID: &str = "volumeBrush";
 

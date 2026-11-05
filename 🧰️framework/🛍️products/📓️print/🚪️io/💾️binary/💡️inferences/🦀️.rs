@@ -1,16 +1,16 @@
 //! 📦️ Chart inference transport binds binary admission, native text output and canonical publication.
 use crate::{ChartSnapshot,inferences,io};
 
-pub fn execute_chart_inference(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>, _cx: &mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
+pub fn execute_chart_inference(request: &semio_plugin::ArtifactInferenceExecutionRequest<'_>, _cx: &mut semio_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_plugin::ArtifactInferenceExecutionStep, semio_plugin::ArtifactInferenceExecutionError> {
     execute_chart_inference_controlled(request, &mut |_| {
-        if semio_framework_plugin::app::inference_cancelled(request.cancellation_id)?{Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("artifact-inference.cancelled","chart inference cancelled"))}else{Ok(())}
+        if semio_plugin::app::inference_cancelled(request.cancellation_id)?{Err(semio_plugin::ArtifactInferenceExecutionError::new("artifact-inference.cancelled","chart inference cancelled"))}else{Ok(())}
     }).map(|execution|execution.into_step(true))
 }
 
 /// 🚦️ The controlled service binds progress, cancellation and allocation/work budgets.
-pub fn execute_chart_inference_controlled(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>, checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError>) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
+pub fn execute_chart_inference_controlled(request: &semio_plugin::ArtifactInferenceExecutionRequest<'_>, checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_plugin::ArtifactInferenceExecutionError>) -> Result<semio_plugin::ArtifactInferenceExecution, semio_plugin::ArtifactInferenceExecutionError> {
     use semio_framework_value::{FromValue, ToValue};
-    use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError as Error, WireArtifactInferenceCacheMode};
+    use semio_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError as Error, WireArtifactInferenceCacheMode};
     if request.cancellation_id.trim().is_empty() || request.budgets.work_units == 0 || request.budgets.recursion_depth == 0 || request.canonical_payload.len() as u64 > request.budgets.allocation_bytes {
         return Err(Error::new("print.chart.inference.admission", "cancellation identity and sufficient non-zero budgets are required"));
     }

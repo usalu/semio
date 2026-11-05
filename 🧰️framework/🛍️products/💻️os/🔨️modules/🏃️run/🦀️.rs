@@ -47,11 +47,11 @@ use semio_framework_async::{CancelToken, OperationContext, TraceId};
 // `.compile`/`.instantiate` method-call syntax now that `runtime` below is the concrete
 // `GuestRuntimes` enum, not `dyn GuestRuntime` (a `dyn Trait` receiver resolves its methods without
 // the trait in scope; a concrete enum implementing it does not).
-use semio_framework_plugin_host::GuestRuntime;
+use semio_plugin_host::GuestRuntime;
 // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the shared
-// kernel-activation facade — see `semio-framework-os`'s own `🎠️activation/🦀️.rs` module doc for why it
+// kernel-activation facade — see `semio-os`'s own `🎠️activation/🦀️.rs` module doc for why it
 // lives in the product's host crate rather than in the wgpu target's `ParallelRuntime`.
-use semio_framework_os::activation::NativeKernelRuntime;
+use semio_os::activation::NativeKernelRuntime;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};

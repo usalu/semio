@@ -62,8 +62,8 @@ pub fn jack_working_scene_for_handle(handle:&JackContentChild)->Result<JackWorki
 pub const JACK_SELF_FUNDED_BODY_BYTES: usize = 65_536;
 
 /// 🏇️ The mounted-owner policy every Trinity component declares for its preparation, maintenance and close lanes.
-pub fn trinity_mounted_owner_policy() -> semio_framework_plugin::MountedOwnerPolicyV1 {
-    semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT
+pub fn trinity_mounted_owner_policy() -> semio_plugin::MountedOwnerPolicyV1 {
+    semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT
 }
 
 /// 🎟️ Funds exactly one turn from the owner's own published quote, for callers no scheduler grants (standalone stores, fixtures and local scratch owners).
@@ -94,14 +94,14 @@ pub fn retire_owned_to_terminal<T: RetireOwned>(value: T) -> Result<(), ValueErr
     drive_retirement_to_terminal(owner)
 }
 /// 📢️ The localized notices of jack's own refusal codes (design §20.12).
-pub fn jack_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-    static NOTICES: std::sync::LazyLock<[(&str, semio_framework_ui_locale::LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
+pub fn jack_fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&str, semio_ui_locale::LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
         [
-            ("trinity.jack.content-missing", semio_framework_ui_locale::LocalizedLabel::native("The component graph of this Jack document is not loaded.", "Der Bauteilgraph dieses Jack-Dokuments ist nicht geladen.")),
-            ("trinity.jack.content-dialect", semio_framework_ui_locale::LocalizedLabel::native("The component graph of this Jack document is not supported by its graph composition.", "Der Bauteilgraph dieses Jack-Dokuments ist wird von seiner Graph-Komposition nicht unterstützt.")),
-            ("trinity.jack.content-unreadable", semio_framework_ui_locale::LocalizedLabel::native("The component graph holds a value Jack cannot read.", "Der Bauteilgraph enthält einen Wert, den Jack nicht lesen kann.")),
-            ("trinity.jack.layout-run.start", semio_framework_ui_locale::LocalizedLabel::native("The reorganize run could not start.", "Der Neuanordnungslauf konnte nicht starten.")),
-            ("trinity.jack.retained-capacity", semio_framework_ui_locale::LocalizedLabel::native("This edit is too large to apply in one step.", "Diese Änderung ist zu groß, um sie in einem Schritt anzuwenden.")),
+            ("trinity.jack.content-missing", semio_ui_locale::LocalizedLabel::native("The component graph of this Jack document is not loaded.", "Der Bauteilgraph dieses Jack-Dokuments ist nicht geladen.")),
+            ("trinity.jack.content-dialect", semio_ui_locale::LocalizedLabel::native("The component graph of this Jack document is not supported by its graph composition.", "Der Bauteilgraph dieses Jack-Dokuments ist wird von seiner Graph-Komposition nicht unterstützt.")),
+            ("trinity.jack.content-unreadable", semio_ui_locale::LocalizedLabel::native("The component graph holds a value Jack cannot read.", "Der Bauteilgraph enthält einen Wert, den Jack nicht lesen kann.")),
+            ("trinity.jack.layout-run.start", semio_ui_locale::LocalizedLabel::native("The reorganize run could not start.", "Der Neuanordnungslauf konnte nicht starten.")),
+            ("trinity.jack.retained-capacity", semio_ui_locale::LocalizedLabel::native("This edit is too large to apply in one step.", "Diese Änderung ist zu groß, um sie in einem Schritt anzuwenden.")),
         ]
     });
     NOTICES.as_slice()

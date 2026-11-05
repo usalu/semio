@@ -10,7 +10,7 @@ pub struct PendingReprojection<P, Mutation>
 where
     Mutation: MutationContract<P>,
 {
-    pub transitions: Vec<semio_framework_os_spr::MutationEnvelope>,
+    pub transitions: Vec<semio_os_spr::MutationEnvelope>,
     pub local: Option<PendingLocalStep>,
     pub replay: Option<([u8; 32], EditReplay<P, Mutation>)>,
 }
@@ -29,7 +29,7 @@ where
 /// announced yet), the head `(line, checkpoint)` it moves this replica to, and whether it finalizes a supersession — whose
 /// report must not block finalizing, or the step is refused with nothing of it recorded.
 pub struct PendingLocalStep {
-    pub envelopes: Vec<semio_framework_os_spr::MutationEnvelope>,
+    pub envelopes: Vec<semio_os_spr::MutationEnvelope>,
     pub head: (Option<String>, Option<String>),
     pub finalizing: bool,
 }
@@ -44,6 +44,6 @@ pub enum TailStep {
 /// ⏩️ Where one advance of a deferred reprojection left it.
 pub enum ReprojectionAdvance {
     Pending(ReplayProgress),
-    Adopted(Vec<semio_framework_os_spr::EditMessages>),
+    Adopted(Vec<semio_os_spr::EditMessages>),
 }
 

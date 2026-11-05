@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmThickness
         record: "ChangeDiaphragmThicknessM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Diaphragm thickness t", "Scheibendicke t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Diaphragm thickness t", "Scheibendicke t ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-thickness-m".into()]

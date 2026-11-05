@@ -3,8 +3,8 @@
 use crate::empty_wires_snapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot;
 use crate::WiresMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧬️ Manifest `.example` id for the metabolism fixture. The subset registers exactly one example

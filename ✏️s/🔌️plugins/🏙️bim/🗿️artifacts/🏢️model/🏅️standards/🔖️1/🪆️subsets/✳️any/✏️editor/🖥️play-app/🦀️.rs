@@ -11,30 +11,30 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema:
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::{BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_framework_artifact_reference::Dialect;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::InteractionView;
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
+use semio_plugin::AppIo;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DraftView;
+use semio_plugin::DslValue;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::TreeWindows;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowMeasure;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
 use std::collections::HashMap;
 use crate::editor::bim::{args_bridge};
 use crate::editor::bim::*;
@@ -62,7 +62,7 @@ fn problems_of(doc: &ArtifactView<'_, ModelSnapshot>) -> semio_s_artifact_bim_mo
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn render_body(instance: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, elements: &[String], library: &[String], hover: &[String], preview: &semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+pub(crate) fn render_body(instance: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, elements: &[String], library: &[String], hover: &[String], preview: &semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let snapshot = doc.snapshot;
     let labels = bim_labels(view_state);
     let utility = semio_s_artifact_bim_model_kit::editor::bim::utilities::active(view_state);
@@ -107,13 +107,13 @@ pub(crate) fn render_body(instance: semio_s_artifact_bim_model_inferences::stand
         semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination::CLASHES_KEY => semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination::render_clashes(snapshot, inference, labels, &windows()),
         semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination::RULES_KEY => semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination::render_rules(snapshot, inference, labels, &windows()),
         semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination::ISSUES_KEY => semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination::render_issues(snapshot, labels, &windows()),
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error()),
+        _ => semio_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error()),
     })?;
-    Ok(semio_framework_plugin::built_to_component_tree(accessible_surface(node, body_key, labels)?))
+    Ok(semio_plugin::built_to_component_tree(accessible_surface(node, body_key, labels)?))
 }
 
 /// ♿️ The accessible name of a window or panel body, and for a drawing surface how to drive it without a pointer; a body this table does not know keeps its own node.
-fn accessible_surface(node: semio_framework_plugin::BuiltNode, body_key: &str, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn accessible_surface(node: semio_plugin::BuiltNode, body_key: &str, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let (name, description) = match body_key {
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::BODY_KEY => (labels.window_plan, Some(labels.surface_plan_describe)),
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::BODY_KEY => (labels.window_world, Some(labels.surface_world_describe)),
@@ -150,8 +150,8 @@ impl ArtifactEditor for BimModelApp {
     type DraftMutation = NoDraftMutation;
     type Presence = BimPresence;
     type PresenceMutation = BimPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
     type Command = BimCommand;
 
     const DIALECT: Dialect = BIM_MODEL_DIALECT;
@@ -164,20 +164,20 @@ impl ArtifactEditor for BimModelApp {
         registry.register(BimCommandJobFactory::new(&controller))
     }
 
-    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
         Box::<semio_s_artifact_bim_model_gestures::editor::bim::gestures::GestureOwner>::default()
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !BIM_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id || bim_bounded_extent(&original.command).is_none() {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Bim command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Bim command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimCommand::command_id, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match &*request.command {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimCommand::command_id, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match &*request.command {
             BimCommand::ExportScheduleCsv(_) => Box::new(export_schedule_csv::ScheduleCsvWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::AnalyseModel(_) => Box::new(analyse_model::AnalyseWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::ExportModel(_) => Box::new(export_model::ModelExportWork::new(tool_id, request.instance_operation_owner.clone())),
@@ -190,7 +190,7 @@ impl ArtifactEditor for BimModelApp {
         Some(app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<ModelSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<ModelSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot())
     })}
 
@@ -206,23 +206,23 @@ impl ArtifactEditor for BimModelApp {
         None
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Presence, Self::PresenceMutation>())
+        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Presence, Self::PresenceMutation>())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::register(registry)?;
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::register(registry)?;
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::register(registry)?;
@@ -230,7 +230,7 @@ impl ArtifactEditor for BimModelApp {
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::register(registry)
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         semio_s_artifact_bim_model_dispatch_context::editor::bim::transient::register(registry)
     }
 
@@ -238,8 +238,8 @@ impl ArtifactEditor for BimModelApp {
         Ok(semio_framework_value::RetirementDemand::default())
     }
 
-    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(semio_framework_plugin::PluginLifecycleStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress::default()))
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure> {
+        Ok(semio_plugin::PluginLifecycleStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress::default()))
     }
 
     fn mounted_job_close_demands(_instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
@@ -282,25 +282,25 @@ impl ArtifactEditor for BimModelApp {
         command.dispatch(doc, cfg, &mut ctx)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         render_body(None, body_key, doc, cfg, view_state, &[], &[], &[], &Default::default())
     }
 
-    fn render_with_instance_operation_owner(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render_with_instance_operation_owner(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         render_body(Some(owner), body_key, doc, cfg, view_state, &[], &[], &[], &Default::default())
     }
 
     fn render_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, ModelSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         use semio_s_artifact_bim_model_interaction::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
         let preview = semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview::from_text(&semio_s_artifact_bim_model_dispatch_context::editor::bim::transient::current(transient).preview);
         render_body(Some(owner), body_key, doc, cfg, view_state, &selection_ids(interaction, BIM_ELEMENT_DOMAIN), &selection_ids(interaction, BIM_LIBRARY_DOMAIN), &hover_ids(interaction, BIM_ELEMENT_DOMAIN), &preview)
@@ -317,7 +317,7 @@ impl ArtifactEditor for BimModelApp {
         doc: &ArtifactView<'_, ModelSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        _transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let selected = selection_ids(interaction, semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN).len();

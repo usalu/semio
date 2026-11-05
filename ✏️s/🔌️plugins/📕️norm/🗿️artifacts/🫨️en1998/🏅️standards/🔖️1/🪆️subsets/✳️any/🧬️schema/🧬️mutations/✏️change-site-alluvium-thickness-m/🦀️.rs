@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteAlluviumThickn
         record: "ChangeSiteAlluviumThicknessM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Thickness of the surface alluvium layer (E indicator, 0 = none)", "Mächtigkeit der oberflächennahen Alluvionsschicht (E-Kennzeichen, 0 = keine) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Thickness of the surface alluvium layer (E indicator, 0 = none)", "Mächtigkeit der oberflächennahen Alluvionsschicht (E-Kennzeichen, 0 = keine) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-alluvium-thickness-m".into()]

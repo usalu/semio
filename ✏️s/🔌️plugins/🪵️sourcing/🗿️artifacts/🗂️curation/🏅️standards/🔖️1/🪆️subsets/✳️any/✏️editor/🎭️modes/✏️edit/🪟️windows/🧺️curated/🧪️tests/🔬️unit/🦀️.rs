@@ -2,7 +2,7 @@ use crate::editor::sourcing::terminology::SourcingLabels;
 
 use crate::{CurationSnapshot, SortDirection};
 use crate::editor::sourcing::config::SourcingCurationConfig;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::sourcing::modes::edit::windows::curated::{SOURCING_CURATION_BODY_CURATED, curated_row_actions, curated_rows, definition, render};
 use crate::Filters;
 use crate::editor::sourcing::SourcingCurationCommand;
@@ -20,7 +20,7 @@ fn curated_document() -> CurationSnapshot {
 }
 
 fn labels() -> &'static SourcingLabels {
-    crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -42,7 +42,7 @@ async fn renders_curated_table_scene() {
 async fn curated_columns_are_sortable_and_echo_the_active_sort() {
     let cfg = SourcingCurationConfig { filters: Filters { sort: Some(crate::TableSort { column_id: "count".into(), direction: crate::SortDirection::Desc }), ..Default::default() }, ..Default::default() };
     let node = render(&curated_document(), &cfg, labels()).expect("bounded curated table");
-    let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("expected a table surface") };
+    let semio_plugin::Component::Surface(props) = &node.component else { panic!("expected a table surface") };
     let scene = crate::editor_unit_tests::context::table_scene_of(&node).expect("complete retained table scene");
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
     for index in 0..3 {

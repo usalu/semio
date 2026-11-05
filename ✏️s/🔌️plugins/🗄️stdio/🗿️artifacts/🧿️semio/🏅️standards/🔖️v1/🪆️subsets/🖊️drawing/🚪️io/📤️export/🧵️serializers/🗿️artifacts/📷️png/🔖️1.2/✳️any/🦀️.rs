@@ -16,14 +16,14 @@
 //! @see https://www.w3.org/TR/SVG11/painting.html
 //! @see https://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 #[cfg(test)] use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
 #[cfg(test)] use semio_s_artifact_stdio_semio_drawing::schema::snapshot::PathSegment;
 use semio_s_artifact_stdio_semio_drawing::schema::geometry::{Affine, Subpath, compose_affine, distance, flatten, semio_transform_affine, transform_point};
-use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::{schema::snapshot::{PngImage, PngColorType}, PngSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };

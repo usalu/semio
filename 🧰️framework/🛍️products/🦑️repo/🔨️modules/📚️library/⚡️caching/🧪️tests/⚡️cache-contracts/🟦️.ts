@@ -158,7 +158,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(shared?.cache, row.supportCache);
       const supportRoot = `{projectRoot}/${row.modules}`;
       assert.deepEqual(shared.outputs, [supportRoot, `{projectRoot}/${row.canonicalModules}`].flatMap(base => [`${base}/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim`, `${base}/🪞️vendor/🔤️guestslim-typst-fonts.bin`, `${base}/🧵️shard`]), "browser support owns the preview2 shims, the typst font asset every served module root needs, and the shard worker");
-      assert.deepEqual(shared.dependsOn, ["semio-framework-os-infinite:fonts"], "browser support stages the font the fonts target publishes");
+      assert.deepEqual(shared.dependsOn, ["semio-os-infinite:fonts"], "browser support stages the font the fonts target publishes");
     }
     for (const row of vectors.releaseOrchestrators) {
       const target = contracts.find((project) => project.name === row.project)?.targets[row.target];

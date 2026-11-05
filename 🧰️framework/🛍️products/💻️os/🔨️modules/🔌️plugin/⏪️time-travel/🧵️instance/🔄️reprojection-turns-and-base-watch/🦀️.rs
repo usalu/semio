@@ -10,7 +10,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// code on the row — a local step whose replay would leave errors reads [`HISTORY_STEP_BLOCKED_CODE`] — until the next
     /// dispatch dismisses it ([`Self::dismiss_refused_reprojection`]). Nothing left waiting lifts a pause (audit W2A-8): the
     /// next remote change is driven again.
-    pub(super) async fn step_reprojection_turn(&mut self, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    pub(super) async fn step_reprojection_turn(&mut self, deadline_us: u64, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         let generation = self.stores.store.generation();
         let local = self.stores.store.local_step_pending();
         let stepped = self.stores.store.step_reprojection(Some(deadline_us)).await;
@@ -114,7 +114,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// the edited mutation stay the pending ones when a remote edit sorts before it; a target that vanished (undone
     /// remotely, document replaced, the edited member gone) exits the session, since nothing it drafted is addressable
     /// anymore. Answers whether the base moved.
-    pub(super) async fn watch_time_travel_base(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<bool, Fault> {
+    pub(super) async fn watch_time_travel_base(&mut self, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<bool, Fault> {
         let base = self.shared().time_travel_base();
         if base == Some(self.time_travel.session.base) {
             return Ok(false);

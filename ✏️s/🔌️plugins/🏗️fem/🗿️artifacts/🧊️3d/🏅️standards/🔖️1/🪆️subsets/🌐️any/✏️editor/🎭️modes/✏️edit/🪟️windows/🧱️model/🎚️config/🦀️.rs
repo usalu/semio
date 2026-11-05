@@ -46,8 +46,8 @@ impl pack::snapshot::ArtifactPack for Fem3dModelWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Fem3dModelWindowConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Fem3dModelWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -133,7 +133,7 @@ fn inverse(&self, base: &Fem3dModelWindowConfig) -> Result<Vec<Self>, semio_fram
     }
 }
 
-impl semio_framework_plugin::WindowConfigApplyMutation<Fem3dModelWindowConfig> for Fem3dModelWindowConfigMutation {
+impl semio_plugin::WindowConfigApplyMutation<Fem3dModelWindowConfig> for Fem3dModelWindowConfigMutation {
     fn exchange(self, post: &mut Fem3dModelWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::Update(Fem3dModelWindowConfigUpdate { mut patch }) = self;
         if let Some(value) = patch.camera.as_mut() {
@@ -152,7 +152,7 @@ impl semio_framework_plugin::WindowConfigApplyMutation<Fem3dModelWindowConfig> f
 
 pub struct Fem3dModelWindowConfigOwner;
 
-impl semio_framework_plugin::WindowConfigOwner for Fem3dModelWindowConfigOwner {
+impl semio_plugin::WindowConfigOwner for Fem3dModelWindowConfigOwner {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -161,43 +161,43 @@ impl semio_framework_plugin::WindowConfigOwner for Fem3dModelWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 16_384;
     type State = Fem3dModelWindowConfig;
     type Mutation = Fem3dModelWindowConfigMutation;
-    type Edit = semio_framework_plugin::WindowConfigApplyEdit<Fem3dModelWindowConfig, Fem3dModelWindowConfigMutation>;
+    type Edit = semio_plugin::WindowConfigApplyEdit<Fem3dModelWindowConfig, Fem3dModelWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
-        std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+        std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new())
     }
-    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>()}
-    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant)}
+    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin::bounded_window_config_preparation_source_birth::<Self>()}
+    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_plugin::bounded_window_config_store_owners::<Self>(grant)}
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
+        semio_plugin::bounded_window_config_preparation_factory::<Self>()
     }
-    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_disposer_birth::<Self>() }
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-        semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
+    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_plugin::bounded_window_config_store_disposer_birth::<Self>() }
+    fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+        semio_plugin::bounded_window_config_store_disposer::<Self>()
     }
 }
 
-pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Fem3dModelWindowConfig {
+pub fn current<C>(view: &semio_plugin::ConfigView<'_, C>) -> Fem3dModelWindowConfig {
     view.window::<Fem3dModelWindowConfigOwner>().cloned().unwrap_or_default()
 }
 
 /// 🪟️ The captured model-window partition, or `None` when the projection captured another window.
-pub fn captured<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Option<Fem3dModelWindowConfig> {
+pub fn captured<C>(view: &semio_plugin::ConfigView<'_, C>) -> Option<Fem3dModelWindowConfig> {
     view.window::<Fem3dModelWindowConfigOwner>().cloned()
 }
 
 /// 🎚️ The whole-record publication into one exact model-window partition.
-pub fn addressed_to(window_id: &str, config: Fem3dModelWindowConfig) -> semio_framework_plugin::WindowConfigMutation {
-    semio_framework_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(window_id, Fem3dModelWindowConfigMutation::Update(Fem3dModelWindowConfigUpdate { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&config)) }))
+pub fn addressed_to(window_id: &str, config: Fem3dModelWindowConfig) -> semio_plugin::WindowConfigMutation {
+    semio_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(window_id, Fem3dModelWindowConfigMutation::Update(Fem3dModelWindowConfigUpdate { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&config)) }))
 }
 
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Fem3dModelWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("fem.window.required: command has no addressed window instance"))?;
-    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("fem.window.stale: addressed window instance is not open"))?;
-    if kind != <Fem3dModelWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID {
-        return Err(semio_framework_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
+pub fn addressed(view: &semio_plugin::ViewModel, config: Fem3dModelWindowConfig) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("fem.window.required: command has no addressed window instance"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_plugin::Fault::from("fem.window.stale: addressed window instance is not open"))?;
+    if kind != <Fem3dModelWindowConfigOwner as semio_plugin::WindowConfigOwner>::WINDOW_KIND_ID {
+        return Err(semio_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(id, Fem3dModelWindowConfigMutation::Update(Fem3dModelWindowConfigUpdate { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&config)) })))
+    Ok(semio_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(id, Fem3dModelWindowConfigMutation::Update(Fem3dModelWindowConfigUpdate { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&config)) })))
 }
 
 #[cfg(test)]
@@ -209,8 +209,8 @@ mod tests;
 fn bounded_store_disposer_birth_matches_layout() {
     type Owner = Fem3dModelWindowConfigOwner;
     let law: serde_json::Value = serde_json::from_str(include_str!("disposer-birth.json")).expect("neutral disposer birth law");
-    let demand = <Owner as semio_framework_plugin::WindowConfigOwner>::store_disposer_birth().expect("explicit bounded disposer birth");
-    let disposer = <Owner as semio_framework_plugin::WindowConfigOwner>::build_store_disposer();
+    let demand = <Owner as semio_plugin::WindowConfigOwner>::store_disposer_birth().expect("explicit bounded disposer birth");
+    let disposer = <Owner as semio_plugin::WindowConfigOwner>::build_store_disposer();
     assert_eq!(demand.capacity_bytes, std::alloc::Layout::for_value(disposer.as_ref()).size());
     assert_eq!(demand.depth, law["depth"].as_u64().unwrap() as usize);
     assert_eq!(demand.copy_bytes, law["copyBytes"].as_u64().unwrap() as usize);

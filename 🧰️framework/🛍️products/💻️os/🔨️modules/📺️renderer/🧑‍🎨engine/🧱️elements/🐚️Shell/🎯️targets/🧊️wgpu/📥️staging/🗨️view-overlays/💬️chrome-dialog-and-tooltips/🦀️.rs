@@ -25,7 +25,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         }
-        let surface = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID;
+        let surface = semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID;
         match cursor.phase {
             0 => {
                 overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
@@ -57,13 +57,13 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 };
                 let content = Rect::new(rect.x + theme.padding_standard, rect.y + theme.padding_standard, (rect.w - theme.padding_standard * 2.0).max(1.0), (rect.h - theme.padding_standard * 2.0).max(1.0));
                 let controller = self.docs.document_controller_id(&self.plugins);
-                semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(surface, ui_contract::UiFlow::DEFAULT);
+                semio_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(surface, ui_contract::UiFlow::DEFAULT);
                 let complete = {
                     let scroll_offsets = &mut self.input.scroll_offsets;
                     let collapsed_sections = &mut self.input.collapsed_sections;
                     let open_selects = &mut self.input.open_selects;
                     let widget_maps = &mut self.input.widget_maps_staging;
-                    let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface };
+                    let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface };
                     let viewport_height_for_widgets = overlay.screen_height();
                     let mut ctx = framework_widget_context(overlay, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);
@@ -94,12 +94,12 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// 🛂️ Paints the Space Administration sheet — packet W15e, the chrome half of the lane W1e made
     /// transport-complete on both targets and nothing ever rendered.
     pub fn render_space_administration_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
-                use semio_framework_os_renderer_wgpu_hub_workspace::space_administration::SpaceAdministrationPaintOp as Op;
+                use semio_renderer_wgpu_hub_workspace::space_administration::SpaceAdministrationPaintOp as Op;
         let Some(plan) = self.directory.space_administration_plan(&self.prefs) else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         };
-        let ops = semio_framework_os_renderer_wgpu_hub_workspace::space_administration::space_administration_paint_ops(&plan, width, height, theme, self.prefs.active_locale());
+        let ops = semio_renderer_wgpu_hub_workspace::space_administration::space_administration_paint_ops(&plan, width, height, theme, self.prefs.active_locale());
         let Some(op) = ops.get(cursor.scalar) else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
@@ -182,7 +182,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// ✅️ This frame's flat paint program for the approvals modal — rebuilt per opportunity (it is
     /// pure and small) so the retained step only has to carry an index, not a nested cursor.
     pub fn agent_approvals_paint_ops(&self, width: f32, height: f32, theme: &Theme) -> Vec<AgentApprovalPaintOp> {
-                use semio_framework_os_renderer_wgpu_agent_elements::agent_approvals as approvals;
+                use semio_renderer_wgpu_agent_elements::agent_approvals as approvals;
         let locale = self.prefs.active_locale();
         let pad = theme.padding_standard;
         let line_h = theme.font_size_small * 1.6;
@@ -222,7 +222,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 ops.push(AgentApprovalPaintOp::Text { value: approval_line.text, x: row.x, y: row.y + theme.font_size_small + index as f32 * line_h, max_w: row.w.max(1.0), size: theme.font_size_small, color });
             }
             for (decision, rect) in approvals::approval_decision_rects(row, theme) {
-                let label_color = if matches!(decision, semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ApprovalDecision::Deny) { theme.error } else { theme.text };
+                let label_color = if matches!(decision, semio_renderer_wgpu_agent_elements::agent_bridge::ApprovalDecision::Deny) { theme.error } else { theme.text };
                 ops.push(AgentApprovalPaintOp::Fill { rect, color: theme.button });
                 ops.push(AgentApprovalPaintOp::Text {
                     value: approvals::approvals_decision_label(decision, locale),
@@ -551,13 +551,13 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         let (text_w, text_h) = atlas.measure_text(&text, theme.font_size_small);
         let content_w = text_w + padding * 2.0;
         let content_h = text_h + padding * 2.0;
-        let scratch_tree = semio_framework_ui_retained_tree::tree::UiTree::new();
-        let (x, y) = semio_framework_ui_wgpu_events::resolve_overlay_placement(
+        let scratch_tree = semio_ui_retained_tree::tree::UiTree::new();
+        let (x, y) = semio_ui_wgpu_events::resolve_overlay_placement(
             &scratch_tree,
-            semio_framework_ui_wgpu_events::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y },
+            semio_ui_wgpu_events::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y },
             (content_w, content_h),
             (width, height),
-            semio_framework_ui_wgpu_events::OverlayKind::Tooltip.default_placement(),
+            semio_ui_wgpu_events::OverlayKind::Tooltip.default_placement(),
             ui_contract::FlowInline::Ltr,
         );
         let region = overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));

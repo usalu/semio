@@ -1,32 +1,32 @@
 //! 🪒️ Staged slice of the `typed-operations` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🧾️ Typed operations of the mounted artifact instance: typed-operation publication, typed-command dispatch, configuration and the history panel.
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_demand_grant, plugin_retirement_fault};
-use semio_framework_plugin_decl_views::AppRenderOperationContext;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactToolCompletionValue, TYPED_OPERATION_FAULT_PAGE_BYTES, TypedOperationResultLane};
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_demand_grant, plugin_retirement_fault};
+use semio_plugin_decl_views::AppRenderOperationContext;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactToolCompletionValue, TYPED_OPERATION_FAULT_PAGE_BYTES, TypedOperationResultLane};
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
-use semio_framework_plugin_job::{INTERACTIVE_TURN_WORKER_PUMPS, INTERACTIVE_TURN_WORKER_WALL_US, TypedOperationResultPage, TypedOperationResultToken};
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_job::{INTERACTIVE_TURN_WORKER_PUMPS, INTERACTIVE_TURN_WORKER_WALL_US, TypedOperationResultPage, TypedOperationResultToken};
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, SpaceMember};
-use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
-use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
-use semio_framework_plugin_command::command_admission::PendingLatestWinsCommand;
+use semio_plugin_command::command_admission::PendingLatestWinsCommand;
 use crate::jobs_components::{PendingReserved, ToolOperations};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_job::reserved_jobs::QualifiedToolProof;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_job::reserved_jobs::QualifiedToolProof;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError};
-use semio_framework_plugin_command::command_admission::original_latest_key::ToolLatestWinsKeyCopy;
-use semio_framework_plugin_interaction::interaction_topology::is_inline_interaction_verb;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_command::command_admission::original_latest_key::ToolLatestWinsKeyCopy;
+use semio_plugin_interaction::interaction_topology::is_inline_interaction_verb;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp> PendingReserved<A> {
     pub fn receive_configuration_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.pending_configuration_failure.is_none()&&self.pending_configuration_failure_place.is_none(){return Ok(false)}if self.pending_configuration_identity!=Some((cx.operation(),cx.generation())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration failure requires its unchanged original caller").into())}if let Some(failure)=crate::jobs_components::admit_pending_domain_failure(&mut *self.pending_configuration_failure,&mut *self.pending_configuration_failure_place,cx)?{return Err(failure)}Ok(true)}
@@ -50,7 +50,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// 🛑️ ONE operation's structural fault is that operation's fault, never the turn's:
     /// see [`Self::fault_typed_operation_worker`].
     /// 🏃️ Spends ONE host turn's grant on consecutive worker steps of one mounted operation: every step receives what the turn still owns, the receipts are summed into the one original receipt the host takes, and the drive hands the turn back when the grant is exhausted, a step made no progress, the operation left the worker stage or its close mode changed.
-    pub fn drive_typed_operation_worker(&mut self, mounted_policy: &semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn drive_typed_operation_worker(&mut self, mounted_policy: &semio_plugin_mounted_owner::MountedOwnerPolicyV1,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let retained=cx.retained_grant();let started_us=cx.now_us();
         let mut turn: Option<(bool, RetainedCloneGrant)> = None;
         let mut spent = RetainedCloneProgress::default();
@@ -61,13 +61,13 @@ impl<A: ArtifactApp> ToolOperations<A> {
             let closing=operation.terminal_seen||operation.user_cancel_requested||cx.is_cancelled()||operation.producer_request_retirement.is_some()||operation.session_rejected.is_some()||operation.worker_outcome_pending;
             if turn.is_some_and(|(kind,_)|kind!=closing){break;}
             let policy=if closing{mounted_policy.close}else{mounted_policy.preparation};
-            let (_,turn_grant)=*turn.get_or_insert((closing,semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy,retained)));
-            let grant=semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent));
+            let (_,turn_grant)=*turn.get_or_insert((closing,semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy,retained)));
+            let grant=semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy,semio_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent));
             let stepped=cx.with_retained_loan(grant,|same|operation.drive_worker_step(same));
             let progress=match &stepped{Ok(step)=>step.progress().unwrap_or_default(),Err(failure)=>failure.retained_progress()};
             spent=spent.checked_add(progress)?;
             if let Err(fault)=stepped{failure=Some(fault);break;}
-            if progress.copied_items==0||semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent).maximum_items==0{break;}
+            if progress.copied_items==0||semio_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent).maximum_items==0{break;}
             if cx.should_yield()||started_us.is_some_and(|started_us|cx.now_us().is_some_and(|now_us|now_us.saturating_sub(started_us)>=INTERACTIVE_TURN_WORKER_WALL_US)){break;}
         }
         if spent!=RetainedCloneProgress::default(){
@@ -246,7 +246,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// by `ToolLatestWinsRegistry::advance`, and a sibling that was accepted and started leaves its
     /// closing update behind, so gating the drive on `active_operation == Some(operation)` let a
     /// restarting front-of-FIFO command wait forever on a registry no one would advance.
-    pub fn advance_latest_wins_admission_unit(&mut self, stores: &mut InstanceStores<A>,pending:&mut PendingLatestWinsCommand<A>,retained:RetainedCloneGrant)->Result<bool,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn advance_latest_wins_admission_unit(&mut self, stores: &mut InstanceStores<A>,pending:&mut PendingLatestWinsCommand<A>,retained:RetainedCloneGrant)->Result<bool,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if retained.maximum_items==0||retained.maximum_depth==0{return Ok(false);}
         let operation=pending.operation.operation.0;
         if pending.lease.as_ref().is_none_or(|lease|lease.token.is_cancelled_now()){pending.closing=true;}
@@ -257,17 +257,17 @@ impl<A: ArtifactApp> ToolOperations<A> {
         if pending.lookup_started{if let Some(accepted)=self.latest_wins_keys.take_outcome(operation){pending.accepted=accepted;pending.closing=!accepted;if !accepted{pending.lease.as_ref().expect("original pending lease").cancel();}pending.record_original_receipt(retained,RetainedCloneProgress{copied_items:1,..Default::default()})?;}else{let step=self.latest_wins_keys.advance(retained)?;pending.record_original_receipt(retained,step.progress())?;}return Ok(false);}
         if let Some(key)=pending.key.as_ref(){if let Some(progress)=self.latest_wins_keys.begin(operation,key,pending.lease.as_ref().expect("original pending lease"),retained)?{pending.lookup_started=self.latest_wins_keys.active_operation==Some(operation);pending.record_original_receipt(retained,progress)?;}else{let step=self.latest_wins_keys.advance(retained)?;pending.record_original_receipt(retained,step.progress())?;}return Ok(false);}
         let admission=pending.admission.as_ref().expect("original pending admission");let QualifiedToolProof::AppOwned(registration)=&admission.proof else{return Err(plugin_sdk_fault("latest-wins admission lost its concrete factory").into());};let command=pending.command.as_ref().expect("original pending command");let target=(registration.latest_wins_target)(command.as_ref()).ok_or_else(||plugin_sdk_fault("latest-wins original command lost its borrowed target"))?;let parts=[&*stores.store.envelope().id,&*registration.key.controller_id,&*registration.key.tool_id,target];
-        if pending.key_copy.is_none(){if let Some((copy,progress))=ToolLatestWinsKeyCopy::admit_original(pending.metadata()?.instance_id,parts,retained).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?{pending.key_copy=Some(copy);pending.record_original_receipt(retained,progress)?;}return Ok(false);}
+        if pending.key_copy.is_none(){if let Some((copy,progress))=ToolLatestWinsKeyCopy::admit_original(pending.metadata()?.instance_id,parts,retained).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?{pending.key_copy=Some(copy);pending.record_original_receipt(retained,progress)?;}return Ok(false);}
         let copy=pending.key_copy.as_mut().expect("original key byte cursor");
-        if copy.part>4{if let Some((key,progress))=copy.take_key(retained).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?{pending.key=Some(key);pending.record_original_receipt(retained,progress)?;}return Ok(false);}
-        let step=copy.advance(parts,retained).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;pending.record_original_receipt(retained,step.progress())?;Ok(false)
+        if copy.part>4{if let Some((key,progress))=copy.take_key(retained).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?{pending.key=Some(key);pending.record_original_receipt(retained,progress)?;}return Ok(false);}
+        let step=copy.advance(parts,retained).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;pending.record_original_receipt(retained,step.progress())?;Ok(false)
     }
 
     pub fn can_admit_typed_operation(&self, operation: u64) -> bool {
         self.tool_operations.can_insert(operation) && self.typed_operation_reservations[operation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS].is_none()
     }
 
-    pub fn close_configuration_failure(&mut self, pending: &mut PendingReserved<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{if pending.pending_configuration_source.is_some_and(|source|!source.matches(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration retirement refused different original source roots or clock").into())}if let Some(worker)=pending.pending_configuration_worker.as_mut(){worker.cancel();let permit=pending.pending_configuration_permit.as_ref().expect("configuration close retains its original permit");let done=cx.with_retained_loan(grant,|same|worker.close_step(same,permit.lease.cancel_token())).map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;if done{let mut worker=pending.pending_configuration_worker.take().unwrap();if let Some(failure)=worker.take_failure(){assert!(pending.pending_configuration_failure.is_none());*pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(failure));}assert!(worker.terminal_is_empty());}return Ok(PluginLifecycleStep::Progress(Default::default()))}let demand=pending.configuration_failure_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{if let Some(owner)=pending.pending_configuration_completion.as_mut(){if owner.terminal_is_empty(){pending.pending_configuration_completion.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(owner)=pending.pending_configuration_command_close.as_mut(){if owner.terminal_is_empty(){pending.pending_configuration_command_close.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(command)=pending.pending_configuration_command.take(){match ControlledRetirement::new(command){Ok(owner)=>pending.pending_configuration_command_close=Some(owner),Err((error,command))=>{*pending.pending_configuration_command=Some(command);return Err(error.into())}}return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}if let Some(permit)=pending.pending_configuration_permit.take(){self.finish_reserved_emit_producer(permit);return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}if let Some(owner)=pending.pending_configuration_retirement.as_mut(){if owner.terminal_is_empty(){pending.pending_configuration_retirement.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(place)=pending.pending_configuration_failure_place.as_mut(){if place.terminal_is_empty(){*pending.pending_configuration_failure_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=place.close_step(grant).result?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(source)=pending.pending_configuration_failure.take(){match ControlledRetirement::new(source){Ok(owner)=>pending.pending_configuration_retirement=Some(owner),Err((error,source))=>{*pending.pending_configuration_failure=Some(source);return Err(error.into())}}return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}pending.pending_configuration_identity=None;pending.pending_configuration_source=None;pending.pending_configuration_rejected=false;Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))})}
+    pub fn close_configuration_failure(&mut self, pending: &mut PendingReserved<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{if pending.pending_configuration_source.is_some_and(|source|!source.matches(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration retirement refused different original source roots or clock").into())}if let Some(worker)=pending.pending_configuration_worker.as_mut(){worker.cancel();let permit=pending.pending_configuration_permit.as_ref().expect("configuration close retains its original permit");let done=cx.with_retained_loan(grant,|same|worker.close_step(same,permit.lease.cancel_token())).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;if done{let mut worker=pending.pending_configuration_worker.take().unwrap();if let Some(failure)=worker.take_failure(){assert!(pending.pending_configuration_failure.is_none());*pending.pending_configuration_failure=Some(semio_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(failure));}assert!(worker.terminal_is_empty());}return Ok(PluginLifecycleStep::Progress(Default::default()))}let demand=pending.configuration_failure_demands(grant.maximum_copy_bytes)?;semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{if let Some(owner)=pending.pending_configuration_completion.as_mut(){if owner.terminal_is_empty(){pending.pending_configuration_completion.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(owner)=pending.pending_configuration_command_close.as_mut(){if owner.terminal_is_empty(){pending.pending_configuration_command_close.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(command)=pending.pending_configuration_command.take(){match ControlledRetirement::new(command){Ok(owner)=>pending.pending_configuration_command_close=Some(owner),Err((error,command))=>{*pending.pending_configuration_command=Some(command);return Err(error.into())}}return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}if let Some(permit)=pending.pending_configuration_permit.take(){self.finish_reserved_emit_producer(permit);return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}if let Some(owner)=pending.pending_configuration_retirement.as_mut(){if owner.terminal_is_empty(){pending.pending_configuration_retirement.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(place)=pending.pending_configuration_failure_place.as_mut(){if place.terminal_is_empty(){*pending.pending_configuration_failure_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=place.close_step(grant).result?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(source)=pending.pending_configuration_failure.take(){match ControlledRetirement::new(source){Ok(owner)=>pending.pending_configuration_retirement=Some(owner),Err((error,source))=>{*pending.pending_configuration_failure=Some(source);return Err(error.into())}}return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}pending.pending_configuration_identity=None;pending.pending_configuration_source=None;pending.pending_configuration_rejected=false;Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))})}
 
     /// 🪪️ The immutable identity this instance's live document revision is observed under — the ONE
     /// derivation every entry point that hands a plugin an [`ArtifactView`] stamps into it
@@ -276,7 +276,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// `puzzle3d_view_session_key`) read `None` on the four view-only lanes and ran cold against a
     /// session-less app; deriving the identity here — not per call site — makes that key total.
     /// 🚫️async: E1 pure identity projection over already-owned store fields — see R9.
-    pub fn live_render_operation(&self, mounted_policy: &semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, stores: &InstanceStores<A>) -> AppRenderOperationContext {
+    pub fn live_render_operation(&self, mounted_policy: &semio_plugin_mounted_owner::MountedOwnerPolicyV1, stores: &InstanceStores<A>) -> AppRenderOperationContext {
         let canonical_base_revision = stores.store.content_revision();
         let [lane_0, lane_1, lane_2, lane_3, lane_4, lane_5, lane_6, lane_7, ..] = canonical_base_revision;
         AppRenderOperationContext {

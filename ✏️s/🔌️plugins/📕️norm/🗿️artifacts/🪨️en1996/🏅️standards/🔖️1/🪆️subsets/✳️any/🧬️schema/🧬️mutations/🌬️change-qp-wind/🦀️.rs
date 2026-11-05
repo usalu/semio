@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeQPWind where Op: p
         verb: "change", entity: "q-p-wind", kind: "change-qp-wind", record: "ChangedQPWind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change peak wind pressure", "Böengeschwindigkeitsdruck ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change peak wind pressure", "Böengeschwindigkeitsdruck ändern")
     }
 }
 

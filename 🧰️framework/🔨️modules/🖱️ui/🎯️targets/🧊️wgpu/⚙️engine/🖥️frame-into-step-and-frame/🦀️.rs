@@ -7,8 +7,8 @@ use super::*;
 impl Ui {
     /// 🧱️ Advances one retained UI node into an engine-owned transaction and appends the balanced
     /// candidate to the caller's unpublished frame only at the accepted Publish boundary.
-    pub fn frame_into_step<H: SceneHost>(&mut self, window_id: &str, viewport: semio_framework_ui_theme::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>, target: &mut DrawList) -> UiFrameStep {
-        let semio_framework_ui_theme::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
+    pub fn frame_into_step<H: SceneHost>(&mut self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>, target: &mut DrawList) -> UiFrameStep {
+        let semio_ui_theme::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
         let overlay_chrome = self.retained_overlay_chrome(window_id);
@@ -224,7 +224,7 @@ impl Ui {
             RetainedPaintPhase::Overlays => match frame.overlay_chrome.get(frame.overlay_index).copied().flatten() {
                 Some(placement) => {
                     frame.overlay_index = frame.overlay_index.saturating_add(1);
-                    let bounds = semio_framework_ui_theme::geometry::Rect::new(offset_x + placement.x, offset_y + placement.y, placement.width, placement.height);
+                    let bounds = semio_ui_theme::geometry::Rect::new(offset_x + placement.x, offset_y + placement.y, placement.width, placement.height);
                     if retained_overlay_chrome_step(&mut frame.candidate, viewport_rect, bounds, placement.backdrop, &theme) {
                         UiFrameStep::Pending
                     } else {

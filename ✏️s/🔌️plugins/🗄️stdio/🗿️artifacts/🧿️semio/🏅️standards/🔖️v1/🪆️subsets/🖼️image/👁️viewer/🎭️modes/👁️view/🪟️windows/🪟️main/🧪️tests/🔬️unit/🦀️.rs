@@ -1,5 +1,5 @@
 use crate::schema::snapshot::SemioImageSnapshot;
-use semio_framework_plugin::MeshWindowKit;
+use semio_plugin::MeshWindowKit;
 use crate::viewer::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

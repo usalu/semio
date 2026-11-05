@@ -1,7 +1,7 @@
 use crate::standards::v_v3::subsets::any::io::bmp_png_preview;
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
-use semio_framework_plugin::app::ImageWindowKit;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::ImageWindowKit;
+use semio_ui_locale::Locale;
 use crate::editor::bmp::modes::edit::windows::main::{image_view};
 use crate::editor::bmp::modes::edit::windows::main::*;
 
@@ -31,6 +31,6 @@ async fn invalid_projection_keeps_the_artifact_mounted_with_a_localized_state() 
     let node = render(&document, Locale::De).expect("invalid display capability does not reject the artifact window");
     assert_eq!(node.key.as_str(), ImageWindowKit::KIND_ID);
     assert_eq!(node.children.len(), 1);
-    let semio_framework_plugin::Component::Text(text) = &node.children[0].component else { panic!("explicit unavailable state") };
+    let semio_plugin::Component::Text(text) = &node.children[0].component else { panic!("explicit unavailable state") };
     assert_eq!(text.value.0.as_str(), "Vorschau nicht verfügbar");
 }

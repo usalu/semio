@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-flow-component"
+name = "semio-os-flow-component"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "The browser module of `semio-framework-os-flow`: the one cdylib wasm-bindgen links, holding no code of its own"
+description = "The browser module of `semio-os-flow`: the one cdylib wasm-bindgen links, holding no code of its own"
 
 [lints]
 workspace = true
@@ -23,4 +23,4 @@ crate-type = ["cdylib"]
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-flow = { path = "../../../📦️packages/🦀️rust" }
+semio-os-flow = { path = "../../../📦️packages/🦀️rust" }

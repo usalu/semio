@@ -2,8 +2,8 @@
 
 use crate::standards::v1::subsets::any::schema::ast::{QueryResult, QueryResultKind};
 use semio_framework_graph_manifest::PropertyValue;
-use semio_framework_plugin::{scene_surface, BuiltNode, NodeGraphScene, TableScene, UiAssemblyResult};
-use semio_framework_ui_contract::SurfaceKind;
+use semio_plugin::{scene_surface, BuiltNode, NodeGraphScene, TableScene, UiAssemblyResult};
+use semio_ui_contract::SurfaceKind;
 
 fn property_value_to_string(value: &PropertyValue) -> String {
     match value {
@@ -36,7 +36,7 @@ fn result_to_table(parsed: &QueryResult) -> (String, String) {
 
 pub fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResult>, error: Option<&str>) -> UiAssemblyResult<BuiltNode> {
     if let Some(error) = error {
-        return semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(error)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.query.error-label", "the query error exceeds its UI label bound"));
+        return semio_plugin::built_text_node(semio_ui_locale::Label::data(error)).map_err(|_| semio_plugin::PluginAssemblyError::new("trinity.query.error-label", "the query error exceeds its UI label bound"));
     }
     let empty = QueryResult::table(Vec::new(), Vec::new());
     let result = result.unwrap_or(&empty);

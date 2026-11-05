@@ -2,7 +2,7 @@
 
 use semio_s_artifact_norm_en1993_mutations::En1993Mutation;
 use semio_s_artifact_norm_en1993_model::En1993Snapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload

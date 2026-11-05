@@ -222,10 +222,10 @@ impl Ui {
         let (commands, layout_changed) = {
             let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
             let record = tree.document()?.record(document_id)?;
-            let virtual_select_value = (record.key.as_str() != node_key).then(|| semio_framework_ui_wgpu_hosting::accessibility::select_accessibility_option_value(record, node_key)).flatten();
-            let virtual_slider_editor = record.key.as_str() != node_key && semio_framework_ui_wgpu_hosting::accessibility::is_slider_accessibility_editor(record, node_key);
+            let virtual_select_value = (record.key.as_str() != node_key).then(|| semio_ui_wgpu_hosting::accessibility::select_accessibility_option_value(record, node_key)).flatten();
+            let virtual_slider_editor = record.key.as_str() != node_key && semio_ui_wgpu_hosting::accessibility::is_slider_accessibility_editor(record, node_key);
             let segmented_select = matches!(&record.component, ui_contract::Component::Select(select) if select.appearance == ui_contract::SelectAppearance::Segmented);
-            let virtual_row_action = (record.key.as_str() != node_key).then(|| semio_framework_ui_wgpu_hosting::accessibility::row_accessibility_action(record, node_key)).flatten();
+            let virtual_row_action = (record.key.as_str() != node_key).then(|| semio_ui_wgpu_hosting::accessibility::row_accessibility_action(record, node_key)).flatten();
             if record.key.as_str() != node_key && virtual_select_value.is_none() && !virtual_slider_editor && virtual_row_action.is_none() {
                 return None;
             }

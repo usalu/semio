@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertLoadCase where Op:
         verb: "insert", entity: "load-case", kind: "insert-load-case", record: "InsertedLoadCase",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert footing load case", "Fundament-Lastfall einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert footing load case", "Fundament-Lastfall einfügen")
     }
 }
 

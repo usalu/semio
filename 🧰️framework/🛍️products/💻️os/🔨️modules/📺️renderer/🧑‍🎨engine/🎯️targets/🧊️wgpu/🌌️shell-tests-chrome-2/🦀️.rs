@@ -5,30 +5,30 @@
 #![cfg(test)]
 
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition};
-use semio_framework_os_renderer_wgpu_dock as dock;
-use semio_framework_os_renderer_wgpu_dock::*;
-use semio_framework_os_renderer_wgpu_dock::{
+use semio_renderer_wgpu_dock as dock;
+use semio_renderer_wgpu_dock::*;
+use semio_renderer_wgpu_dock::{
     DockDragKind, DockDragPayload, DockDropZone, DockNode, DockPath, DockRenderContext, DockSide, DockStackTab, DockState, MODE_DOCK_TAB_MAX_WIDTH_PX, SPLIT_MIN_FRACTION, WindowSilhouette, WindowSilhouetteEdge, WindowSilhouetteSpan,
     compute_dock_drop_zone, compute_tab_insert_index, dock_cap_depth, dock_node_to_layout_root, dock_tab_actions, dock_tab_content_width, resolve_split_side, split_drop_preview_in_body, truncate_label_to_width,
 };
-use semio_framework_os_renderer_wgpu_engine_board::tiled_map;
-use semio_framework_os_renderer_wgpu_shell_commands::resolved_execute_args;
-use semio_framework_os_renderer_wgpu_shell_dock::resolve_window_utilities;
-use semio_framework_os_renderer_wgpu_shell_docs::{SpacePanelState, SpawnedAppEntry, key_event_matches_chord, take_spawned_entry};
-use semio_framework_os_renderer_wgpu_shell_prefs::labels;
-use semio_framework_os_renderer_wgpu_shell_session::SessionCtx;
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_renderer_wgpu_engine_board::tiled_map;
+use semio_renderer_wgpu_shell_commands::resolved_execute_args;
+use semio_renderer_wgpu_shell_dock::resolve_window_utilities;
+use semio_renderer_wgpu_shell_docs::{SpacePanelState, SpawnedAppEntry, key_event_matches_chord, take_spawned_entry};
+use semio_renderer_wgpu_shell_prefs::labels;
+use semio_renderer_wgpu_shell_session::SessionCtx;
+use semio_renderer_wgpu_shell_state::ShellState;
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use semio_framework_value::ToValue;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
-use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowLayout, WindowMeasure, WindowStackCorner};
-use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::{ActionDescriptor, WindowLayout, WindowMeasure, WindowStackCorner};
+use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧱️elements/🛰️Dock/🧪️tests/🔬️wgpu-shell-bound/🦀️.rs"]

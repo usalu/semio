@@ -24,8 +24,8 @@ pub struct ChangeViewportView {
 impl protocol::MutationKind<NormViewportWindowConfig, NormViewportWindowConfigMutation> for ChangeViewportView {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "viewport-view", kind: "change-viewport-view", record: "ChangedViewportView" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change viewport view", "Ansicht des Modellfensters ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change viewport view", "Ansicht des Modellfensters ändern")
     }
 }
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ChangeHeatedVolumeM3 w
         record: "ChangedHeatedVolumeM3",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change heated building volume", "Beheiztes Gebäudevolumen ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change heated building volume", "Beheiztes Gebäudevolumen ändern")
     }
 }
 

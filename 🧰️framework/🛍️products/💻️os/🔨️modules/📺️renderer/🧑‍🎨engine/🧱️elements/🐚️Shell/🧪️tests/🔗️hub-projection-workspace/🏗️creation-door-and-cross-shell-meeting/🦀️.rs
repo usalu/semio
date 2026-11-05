@@ -19,22 +19,22 @@ fn a_live_hub_artifact_is_created_through_the_wgpu_creation_door() {
     let refusal = sign_in_live(&mut shell, &origin, &live_env("SEMIO_HUB_LIVE_EMAIL"), &live_env("SEMIO_HUB_LIVE_PASSWORD"));
     assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SignedIn, "first refusal {refusal:?}");
     let space_name = format!("wg8 door {}", chrome_now_ms() as u64);
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
     let space_id = shell.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).expect("the created space is listed");
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
     let creation = &shell.directory.hub_workspace.creation;
     let kinds: Vec<(String, String, String)> = creation.catalog.iter().flat_map(|catalog| catalog.kinds.iter()).map(|kind| (kind.kind_id.clone(), kind.label.en.clone(), kind.label.de.clone())).collect();
     println!("wg8-door catalog={} kinds={kinds:?}", creation.catalog_phase.as_str());
     assert_eq!(creation.catalog_phase, HubArtifactCatalogPhase::Ready);
     let kind_id = kinds.first().map(|(kind_id, _, _)| kind_id.clone()).expect("the catalog offers a kind");
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Door artifact")]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Door artifact")]);
     let started = std::time::Instant::now();
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
     let mut trail = Vec::new();
     while started.elapsed() < std::time::Duration::from_secs(150) {
-        let observed = shell.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+        let observed = shell.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
         if trail.last() != Some(&observed) {
             trail.push(observed);
         }
@@ -47,14 +47,14 @@ fn a_live_hub_artifact_is_created_through_the_wgpu_creation_door() {
     let operation = shell.directory.hub_workspace.creation.operation.clone().expect("the door holds its creation");
     println!("wg8-door kind={kind_id} trail={trail:?} after={:?} ready={:?}", started.elapsed(), operation.ready);
     for locale in [Locale::En, Locale::De] {
-        let tree = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
+        let tree = semio_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
         let mut phases = Vec::new();
         hub_attribute_values(&tree, "data-semio-hub-artifact-creation-phase", &mut phases);
         println!("wg8-door tree locale={locale:?} phase={phases:?}");
     }
     assert_eq!(operation.phase, SpaceArtifactCreationPhaseV1::Ready);
     assert!(operation.ready.as_ref().is_some_and(|ready| ready.kind_id == kind_id && ready.artifact_id.starts_with("artifact-")));
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
 }
 
 /// 🌉️ The file handshake between the native half of the cross-shell journey and its browser driver
@@ -98,7 +98,7 @@ impl CrossShellHandshake {
 /// mirror into the shell's pointer-state maps exactly as they would under a GPU. Answers the painted boards.
 #[cfg(not(target_arch = "wasm32"))]
 fn paint_session_windows(shell: &mut ShellState, body: Rect) -> Vec<String> {
-    let _serialized = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
+    let _serialized = semio_renderer_wgpu_engine_registry::engine_surface_law_guard();
     let controller = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
     let mut windows: Vec<String> = shell.docs.window_ui.keys().cloned().collect();
     windows.sort();
@@ -144,28 +144,28 @@ impl CrossShellMeeting {
         let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
         let variant = live_env("SEMIO_PLUGIN");
         let mut ledger = CollaborationLedger::default();
-        let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
-        let mut a = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let plugins = drive(semio_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+        let mut a = ShellState::new(plugins, variant, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
 
         let retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
         let a_user = a.directory.hub_workspace.session.user_id.clone();
         ledger.record("1-a-signs-in", a.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn, format!("A={} {a_user:?} retried-after={retry:?}", a.directory.hub_workspace.session.phase.as_str()));
 
         let space_name = format!("wg8 cross-shell {}", chrome_now_ms() as u64);
-        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
-        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
+        hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+        hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
         let space_id = a.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
         shell_command(&mut a, "os.directory.upsert-member", &[("spaceId", space_id.as_str()), ("email", b_email.as_str()), ("role", "author")]);
-        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+        hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
         let kind_id = a.directory.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == schema)).map(|kind| kind.kind_id.clone()).unwrap_or_default();
-        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
-        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Cross-shell board")]);
-        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
+        hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+        hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Cross-shell board")]);
+        hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
         let creation_started = std::time::Instant::now();
         let mut creation_trail = Vec::new();
         while creation_started.elapsed() < std::time::Duration::from_secs(600) && !a.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening)
         {
-            let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+            let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
             if creation_trail.last() != Some(&observed) {
                 creation_trail.push(observed);
             }
@@ -212,7 +212,7 @@ impl CrossShellMeeting {
     fn finish(mut self) {
         let failed: Vec<&str> = self.ledger.steps.iter().filter(|(_, passed, _)| !passed).map(|(step, _, _)| *step).collect();
         self.handshake.publish("done", serde_json::json!({ "failed": failed }));
-        hub_verb(&mut self.a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+        hub_verb(&mut self.a, semio_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
         assert!(failed.is_empty(), "cross-shell steps failed: {failed:?}");
     }
 }

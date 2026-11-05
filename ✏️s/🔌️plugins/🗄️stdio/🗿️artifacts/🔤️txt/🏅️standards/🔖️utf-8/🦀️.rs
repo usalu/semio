@@ -6,7 +6,7 @@
 //! (`mimes: ["text/plain"], extensions: [".txt"]`) — not invented.
 
 use crate::standards::v_utf_8::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 /// 🌳️ `standard "utf-8"`'s complete declaration — one subset, `any`.
@@ -25,8 +25,8 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../📜️artifact
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
-use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::ArtifactDefinitionError;
+use semio_plugin::io::FormatDescriptor;
+use semio_plugin::ArtifactDefinitionError;
 
 pub fn formats() -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
@@ -51,15 +51,15 @@ pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
 
 //#region 🧩️ArtifactItems6
 pub mod artifact_items_6 {
-    use semio_framework_plugin::declarations;
+    use semio_plugin::declarations;
 use crate::{formats};
 use crate::{STDIO_TXT_DOCUMENT_SCHEMA};
 use crate::{native_codec};
 use crate::TxtApps;
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
-use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+use semio_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 pub use crate::schema::mutations::TxtMutation;
 pub use crate::schema::snapshot::TxtSnapshot;
 
@@ -95,7 +95,7 @@ pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration
 /// comment for the `localization: &[]` deferral rationale (identical here).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact() -> declarations::ArtifactDeclaration<TxtApps> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.txt").expect("canonical stdio.txt kind"), localization: &[], standards: vec![crate::standards::v_utf_8::standard()] }
 }
@@ -105,7 +105,7 @@ pub fn artifact() -> declarations::ArtifactDeclaration<TxtApps> {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.txt".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Txt", "Txt"),
+        label: semio_ui_locale::LocalizedLabel::native("Txt", "Txt"),
         source_format: STDIO_TXT_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

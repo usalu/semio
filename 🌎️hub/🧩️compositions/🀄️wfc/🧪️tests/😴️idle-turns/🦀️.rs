@@ -10,8 +10,8 @@
 //!
 //! The regression this law was written against is `📓️idle-turns-2026-09-10.md`: `status=MoreWork
 //! effects=0 patches=0` on 512 consecutive turns and 4 437 B/turn of guest linear memory.
-use semio_framework_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
+use semio_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
+use semio_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
 
 /// 🧮️ Weighs every allocation the idle turns make, so the growth law reads bytes rather than pages.
 #[global_allocator]
@@ -73,8 +73,8 @@ fn open_event(app_id: &str, instance_id: u32) -> Event {
     }
 }
 
-async fn turn(runtime: &WfcRuntime, events: Vec<Event>) -> semio_framework_plugin::kernel::TurnResult {
-    semio_framework_plugin::reactor::poll_kernel(runtime, events, None, None, idle_budget()).await.expect("wfc idle turn")
+async fn turn(runtime: &WfcRuntime, events: Vec<Event>) -> semio_plugin::kernel::TurnResult {
+    semio_plugin::reactor::poll_kernel(runtime, events, None, None, idle_budget()).await.expect("wfc idle turn")
 }
 
 async fn acknowledge(runtime: &WfcRuntime, receipt: ActorInstanceLifecycleReceipt) {
@@ -104,7 +104,7 @@ struct IdleReading {
 }
 
 fn record(sources: &mut std::collections::BTreeMap<String, usize>) -> bool {
-    let armed = semio_framework_plugin::reactor::last_turn_more_work_sources();
+    let armed = semio_plugin::reactor::last_turn_more_work_sources();
     let key = match (armed.any(), armed.typed_operation_contended) {
         (true, _) => armed.names().join("+"),
         (false, true) => "settled(contended)".into(),

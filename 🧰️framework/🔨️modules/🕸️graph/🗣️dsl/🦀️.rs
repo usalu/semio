@@ -4,7 +4,7 @@
 //! DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MATHEND — see that wave's report
 //! for why the framework/plugin split hypothesis was measured and rejected (real coupling between
 //! `DslIdiom` and the language-service surface). `dsl_core` (crate-root alias for
-//! `semio_framework_os_kernel`, renamed from `dsl` by this same wave to free that name for this
+//! `semio_os_kernel`, renamed from `dsl` by this same wave to free that name for this
 //! module) is this file's own `os_dsl`/`dsl`-derive dependency.
 
 #![allow(async_fn_in_trait)]

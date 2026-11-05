@@ -1,10 +1,10 @@
 //! ✏️ Every catalog editor declares, parses, and replays the complete editing contract.
 
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
-use semio_framework_os_kernel::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use semio_os_kernel::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_value::{DslValue, ToValue};
-use semio_framework_plugin::app::EditorSurfaceApp;
-use semio_framework_plugin::{artifact_app_laws, AppActionRegistry, AppDefinition, ArtifactEditor, EditorApp, InteractiveJobClassification, PluginApp};
+use semio_plugin::app::EditorSurfaceApp;
+use semio_plugin::{artifact_app_laws, AppActionRegistry, AppDefinition, ArtifactEditor, EditorApp, InteractiveJobClassification, PluginApp};
 use semio_s_artifact_stdio_contract::editing::{SnapshotEditingEditor, SNAPSHOT_EDIT_ACTION_IDS};
 use std::collections::BTreeSet;
 
@@ -101,7 +101,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
         assert_eq!(replay.encode_op().unwrap(), bytes, "replay preserves every argument of {id}");
     }
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| EditorSurfaceApp::<E>::with_registry(EditorApp::<E>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
+    let mut app = semio_plugin::with_authoring_identity!(|identity| EditorSurfaceApp::<E>::with_registry(EditorApp::<E>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
     let family = definition.id.strip_prefix("s.stdio.").unwrap().split('@').next().unwrap();
     let edits = &fixture["snapshotEdits"];
     let case = edits.get(&definition.id).or_else(|| edits.get(family)).unwrap_or_else(|| panic!("{} needs a meaningful edit fixture", definition.id));
@@ -146,25 +146,25 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
         assert_eq!(E::Mutation::decode_op(&binary).expect("native mutation binary replay").encode_op().unwrap(), binary);
         assert_eq!(E::Mutation::parse_op(&mutation.print_op()).expect("native mutation text replay").encode_op().unwrap(), binary);
         inverses.push(mutation.inverse(&projected).expect("valid native detail inverse"));
-        projected = semio_framework_os_kernel::apply_diff_cold(mutation.diff(&projected).diff(), &projected).expect("native detail diff applies");
+        projected = semio_os_kernel::apply_diff_cold(mutation.diff(&projected).diff(), &projected).expect("native detail diff applies");
     }
     assert_eq!(snapshot_json(&projected), after, "{} native event must preserve every other detail", definition.id);
     for mutations in inverses.into_iter().rev() {
         for mutation in mutations {
-            projected = semio_framework_os_kernel::apply_diff_cold(mutation.diff(&projected).diff(), &projected).expect("native inverse applies");
+            projected = semio_os_kernel::apply_diff_cold(mutation.diff(&projected).diff(), &projected).expect("native inverse applies");
         }
     }
     assert_eq!(snapshot_json(&projected), before, "{} inverse restores the complete snapshot", definition.id);
     app.bind_instance_id(artifact_app_laws::meta("local").instance_id).await;
-    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
-        let view = semio_framework_plugin::ViewModel {
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        let view = semio_plugin::ViewModel {
             active_mode_id: Some(definition.default_mode_id.clone()),
             active_window_kind_id: Some(details.into()),
             window_id: Some("editor-catalog-details".into()),
             focused_window_id: Some("editor-catalog-details".into()),
             window_instances: vec![semio_framework::ViewWindowInstance { id: "editor-catalog-details".into(), window_kind_id: details.into() }],
             locale,
-            ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
+            ..semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native)
         };
         let tree = app.render(semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY, None, &view).await.expect("real localized details render");
         let projection = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("details have valid bounded UI structure");
@@ -182,12 +182,12 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
         },
         arguments,
     };
-    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action_invocation(&invocation, Some(&definition.default_mode_id), &artifact_app_laws::meta("local"), &mut identity).await).expect("host-addressed detail action");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("detail action publishes");
+    semio_plugin::with_authoring_identity!(|identity| app.handle_action_invocation(&invocation, Some(&definition.default_mode_id), &artifact_app_laws::meta("local"), &mut identity).await).expect("host-addressed detail action");
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("detail action publishes");
     assert_eq!(snapshot_json(&app.snapshot().unwrap()), after, "{} addressed action changes persisted details", definition.id);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(snapshot_json(&app.snapshot().unwrap()), before, "{} undo restores every detail", definition.id);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(snapshot_json(&app.snapshot().unwrap()), after, "{} redo restores the complete edit", definition.id);
     let saved = app.snapshot().unwrap().encode_pack();
     let reopened = E::Snapshot::decode_pack(&saved).expect("saved artifact reopens");
@@ -235,7 +235,7 @@ fn independent_sqlite_catalog_file(bytes: &[u8], native: &semio_framework::Artif
 }
 
 async fn assert_sqlite_snapshot_editor<E: ArtifactEditor>() {
-    use semio_framework_os_kernel::io::io_mechanism::{io_entries, io_identify, io_route};
+    use semio_os_kernel::io::io_mechanism::{io_entries, io_identify, io_route};
     use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, SQLITE_SNAPSHOT};
     stdio_packages_assembled();
     let native: semio_framework::ArtifactDialect = E::DIALECT.into();
@@ -256,7 +256,7 @@ async fn assert_sqlite_snapshot_editor<E: ArtifactEditor>() {
         assert_eq!(io_identify(&database).await, vec![(sqlite.clone(), Confidence::High)]);
         let restored = semio_s_artifact_stdio_contract::testing::io_run(&import, database, Default::default(), &mut |_| true).await.expect("shipped editor SQLite import").value;
         if restored != payload {
-            use semio_framework_os_kernel as store;
+            use semio_os_kernel as store;
             if let (IoPayload::Binary(before),IoPayload::Binary(after))=(&payload,&restored){
                 let (before_envelope,before_body)=store::semio_format::unwrap_binary(before).unwrap();
                 let (after_envelope,after_body)=store::semio_format::unwrap_binary(after).unwrap();

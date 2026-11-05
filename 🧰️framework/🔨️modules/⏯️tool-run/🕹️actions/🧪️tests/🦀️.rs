@@ -8,7 +8,7 @@ use semio_framework_manifest_app_surface::testkit::app_with;
 use semio_framework_manifest_actions::{CLEAR_SELECTION_ACTION_ID, InteractiveJobClassification, SELECT_ALL_ACTION_ID, ToolDefinition, UtilityDefinition, clipboard_action_definitions, history_action_definitions};
 use semio_framework_manifest_app_surface::{interaction_action_definitions, reserved_window_actions};
 use semio_framework_interaction::InteractionDefinition;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 use semio_framework_value::{FromValue, ToValue};
 use serde::Deserialize;
 

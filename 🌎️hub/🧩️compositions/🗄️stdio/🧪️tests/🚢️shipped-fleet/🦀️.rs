@@ -3,9 +3,9 @@
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework::{AppRole, PackageDescriptor};
-use semio_framework_plugin::kernel::ActivationEvent;
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
-use semio_framework_plugin::{ArtifactRuntimeCapabilityRequirement, Plugin, PluginApp, PluginAssemblyError};
+use semio_plugin::kernel::ActivationEvent;
+use semio_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
+use semio_plugin::{ArtifactRuntimeCapabilityRequirement, Plugin, PluginApp, PluginAssemblyError};
 use semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_ACTION_IDS;
 use semio_s_artifact_stdio_contract::ArtifactAssembly;
 use std::collections::{BTreeMap, BTreeSet};
@@ -36,11 +36,11 @@ fn coordinate(dialect: &semio_framework::ArtifactDialect) -> String {
 }
 
 fn describe<PA: PluginApp>(bundle: Result<Plugin<PA>, PluginAssemblyError>) -> PackageDescriptor {
-    let runtime = PluginRuntime::<PA>::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
+    let runtime = PluginRuntime::<PA>::new(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     let bundle = bundle.unwrap_or_else(|error| panic!("outward component assembly rejected: {error:?}"));
     install_plugin_bundle_result(&runtime, Ok(bundle));
-    let bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
-    semio_framework_value::FromValue::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("descriptor bytes")).expect("strict descriptor")
+    let bytes = ::semio_framework_async::poll::resolve_ready(semio_plugin::describe::describe_plugin(&runtime));
+    semio_framework_value::FromValue::from_value(semio_os_kernel::pack_rt::decode_wire_value(&bytes).expect("descriptor bytes")).expect("strict descriptor")
 }
 
 /// 📦️ The stdio component and its nine family components.
@@ -187,20 +187,20 @@ async fn the_shipped_assembly_publishes_every_editor_document_schema_and_a_json_
             assert!(semio_framework_schema_registry::artifact_schema_descriptor_registered(kind), "{} ({}) edits {kind}, whose document schema its package's assembly must publish", app.id, package.id);
         }
     }
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<semio_framework_plugin::EditorApp<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>, _>(async {
-        semio_framework_plugin::App { definition: semio_s_artifact_stdio_json::editor::json_any::create_json_editor(), examples: Vec::new() }
-    }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity)
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<semio_plugin::EditorApp<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>, _>(async {
+        semio_plugin::App { definition: semio_s_artifact_stdio_json::editor::json_any::create_json_editor(), examples: Vec::new() }
+    }, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity)
     .await);
-    let meta = semio_framework_plugin::artifact_app_laws::meta("local");
+    let meta = semio_plugin::artifact_app_laws::meta("local");
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     let source = r#"{"edited":["node",1,true]}"#;
     let args = DslValue::Object(vec![("nodeId".into(), DslValue::String("$".into())), ("revision".into(), DslValue::String(revision)), ("value".into(), DslValue::String(source.into()))]);
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-node", Some(args), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).expect("the shipped json editor admits a revision-bound root node edit");
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("the node edit publishes");
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-node", Some(args), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).expect("the shipped json editor admits a revision-bound root node edit");
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("the node edit publishes");
     let edited = semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_text(&app.snapshot().expect("json snapshot").value);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&edited).expect("the edited document is JSON"), serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle"), "the published document is exactly the applied source");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 /// 🧪️ The environment variable naming the one package [`package_runtime_probe`] assembles in its child process.
@@ -267,10 +267,10 @@ fn requirement_is_live(requirement: &ArtifactRuntimeCapabilityRequirement) -> bo
             None => semio_framework_schema_registry::artifact_schema_descriptor_registered(&value("schema")),
         },
         "inference" => semio_framework_schema_registry::artifact_inference_descriptor_registered(&value("schema")),
-        "codec" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::os_store::codec_registry::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
-        "composer" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| coordinate(writes) == value("dialect")),
-        "subset-validator" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| coordinate(&semio_framework::ArtifactDialect::from(dialect)) == value("validated-dialect")),
-        "representation" => values("extension").iter().filter_map(|extension| semio_framework_os_kernel::io::format_descriptor(extension.trim_start_matches('.')).expect("the format catalog")).any(|format| format.mimes.iter().cloned().collect::<BTreeSet<_>>() == values("mime") && format.extensions.iter().cloned().collect::<BTreeSet<_>>() == values("extension")),
+        "codec" => ::semio_framework_async::poll::resolve_ready(semio_os_kernel::os_store::codec_registry::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
+        "composer" => ::semio_framework_async::poll::resolve_ready(semio_os_kernel::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| coordinate(writes) == value("dialect")),
+        "subset-validator" => ::semio_framework_async::poll::resolve_ready(semio_os_kernel::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| coordinate(&semio_framework::ArtifactDialect::from(dialect)) == value("validated-dialect")),
+        "representation" => values("extension").iter().filter_map(|extension| semio_os_kernel::io::format_descriptor(extension.trim_start_matches('.')).expect("the format catalog")).any(|format| format.mimes.iter().cloned().collect::<BTreeSet<_>>() == values("mime") && format.extensions.iter().cloned().collect::<BTreeSet<_>>() == values("extension")),
         "grammar" => true,
         other => panic!("unknown runtime capability category {other}"),
     }
@@ -375,7 +375,7 @@ async fn sqlite_snapshot_primary_declared_owner_census() {
         }
     }
     for (kind, schema, owner) in &rows {
-        let Some(codec) = semio_framework_os_kernel::os_store::codec_registry::document_codec(schema).await.expect("actual document codec registry") else {
+        let Some(codec) = semio_os_kernel::os_store::codec_registry::document_codec(schema).await.expect("actual document codec registry") else {
             failures.push(format!("{kind} schema={schema} owner={owner}: absent installed document codec"));
             continue;
         };
@@ -394,7 +394,7 @@ async fn sqlite_snapshot_primary_declared_owner_census() {
 /// 🏃️ Every authored Runtime dialect retains its actual concrete owner in the installed codec and both SQLite routes.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_declared_binding_census() {
-    use semio_framework_os_kernel::io::io_mechanism::{io_route, native_snapshot_sqlite_schema, preflight_native_snapshots, NativeSnapshotRegistration};
+    use semio_os_kernel::io::io_mechanism::{io_route, native_snapshot_sqlite_schema, preflight_native_snapshots, NativeSnapshotRegistration};
     use semio_framework::io_schema::{IoFidelity, SQLITE_SNAPSHOT};
     use semio_framework::ArtifactDialect;
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🔣️.json")).unwrap();
@@ -416,7 +416,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
         if expected_provider.snapshot_type.is_none() { failures.push(format!("{label}: declared provider erases concrete Snapshot TypeId")); }
         macro_rules! typed_snapshot_owner {
             ($snapshot:ty, $mutation:ty, $schema:literal) => {
-                (std::any::TypeId::of::<$snapshot>(), <$snapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, semio_framework_os_kernel::bare_artifact_codec::<$snapshot, $mutation>($schema))
+                (std::any::TypeId::of::<$snapshot>(), <$snapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, semio_os_kernel::bare_artifact_codec::<$snapshot, $mutation>($schema))
             };
         }
         let (expected_type, expected_sql, typed_codec) = match (declared.artifact_kind, declared.standard.0, declared.subset.0, codec.schema.as_str()) {
@@ -515,7 +515,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
         assert_eq!(expected_provider.snapshot_type, Some(expected_type), "declared provider uses independently authored concrete owner");
         assert_eq!(expected_provider.schema.as_ref(), expected_sql, "declared SQL schema belongs to independently authored concrete owner");
         assert!(expected_provider.identical_to(typed_codec.snapshot_sqlite.as_ref().expect("independent concrete owner semantic provider")), "declared SQL/hooks differ from independently authored concrete owner");
-        match semio_framework_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap() {
+        match semio_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap() {
             Some(installed) if installed.snapshot_sqlite.as_ref().is_some_and(|provider| provider.identical_to(&expected_provider)) => {},
             _ => failures.push(format!("{label}: installed schema codec differs from declared Snapshot type/SQL/hooks")),
         }
@@ -549,7 +549,7 @@ fn primary_snapshot_physical_rows(bytes: &[u8]) -> serde_json::Value {
 /// 📸️ Runs ordinary public Binary/Text I/O and preserves the full concrete Snapshot owner.
 async fn assert_primary_snapshot_payload<S>(snapshot: S, row: &serde_json::Value)
 where S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactDsl + PartialEq + std::fmt::Debug {
-    use semio_framework_os_kernel::io::io_mechanism::{io_identify, io_route};
+    use semio_os_kernel::io::io_mechanism::{io_identify, io_route};
     use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, SQLITE_SNAPSHOT};
     use semio_framework::ArtifactDialect;
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
@@ -581,8 +581,8 @@ where S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactDsl + PartialEq 
 /// 🌳️ The actual public declaration trees agree with the Runtime owner installed by normal builders.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_new_declaration_trees() {
-    async fn check<PA: PluginApp>(tree: semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>, expected: &serde_json::Value) {
-        use semio_framework_os_kernel::io::io_mechanism::native_snapshot_sqlite_schema;
+    async fn check<PA: PluginApp>(tree: semio_plugin::app::declarations::ArtifactDeclaration<PA>, expected: &serde_json::Value) {
+        use semio_os_kernel::io::io_mechanism::native_snapshot_sqlite_schema;
         assert_eq!(tree.kind.as_str(), expected["kind"].as_str().unwrap());
         assert_eq!(tree.standards.len(), 1, "complete authored public tree standard roster");
         for standard in tree.standards {
@@ -596,7 +596,7 @@ async fn sqlite_snapshot_primary_new_declaration_trees() {
                 assert_eq!(codec.schema, expected["schema"].as_str().unwrap());
                 let declared = codec.snapshot_sqlite.as_ref().expect("public tree semantic SQLite owner");
                 assert!(declared.snapshot_type.is_some());
-                let installed = semio_framework_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap().expect("installed public tree document codec");
+                let installed = semio_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap().expect("installed public tree document codec");
                 assert!(installed.snapshot_sqlite.as_ref().unwrap().identical_to(declared));
                 assert_eq!(native_snapshot_sqlite_schema(&subset.dialect.into()).unwrap(), declared.schema.as_ref());
             }
@@ -643,9 +643,9 @@ async fn sqlite_snapshot_primary_geojson_public_payload() {
     assert_eq!(snapshot.to_serde_value(), independent);
     assert!(semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance(&snapshot).iter().all(|diagnostic| !matches!(diagnostic.severity, semio_framework::Severity::Error | semio_framework::Severity::Fatal)));
     assert_primary_snapshot_payload(snapshot, row).await;
-    use semio_framework_os_kernel::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+    use semio_os_kernel::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
     let native = semio_framework::ArtifactDialect { artifact_kind: row["kind"].as_str().unwrap().into(), standard: row["standard"].as_str().unwrap().into(), subset: row["subset"].as_str().unwrap().into() };
-    let export = semio_framework_os_kernel::io::io_mechanism::io_route(&native, &semio_framework::io_schema::SQLITE_SNAPSHOT.into(), 1).await.unwrap().value;
+    let export = semio_os_kernel::io::io_mechanism::io_route(&native, &semio_framework::io_schema::SQLITE_SNAPSHOT.into(), 1).await.unwrap().value;
     for invalid in row["invalidNaturalTexts"].as_array().unwrap() {
         let invalid = JsonSnapshot::from_value(parse_json_text(invalid.as_str().unwrap()).unwrap());
         for payload in [semio_framework::io_schema::IoPayload::Binary(invalid.encode_pack()), semio_framework::io_schema::IoPayload::Text(invalid.print_dsl())] {

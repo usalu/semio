@@ -10,7 +10,7 @@ use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
 use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::INDEX;
 use semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation;
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};
 

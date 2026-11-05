@@ -2,11 +2,11 @@ use crate::editor::bmp::modes::edit::windows::main;
 use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
 use crate::BMP_DIALECT;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
 use semio_s_artifact_stdio_contract::editing;
 use crate::editor::bmp::{bmp_editor_command_from_action};
 use crate::editor::bmp::*;
@@ -50,11 +50,11 @@ fn direct_snapshot() -> BmpSnapshot {
 
 fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str) -> Vec<BmpMutation> {
     let reader=std::sync::Arc::new(snapshot.clone());let snapshot=reader.as_ref();
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "bmp-paint-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "bmp-paint-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new(tool_id);
     assert_eq!(work.extent(command, snapshot, &interaction, None), paint_region::CAPACITY.rows_for_items(1));
@@ -62,7 +62,7 @@ fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str
     for _ in 0..paint_region::MAXIMUM_INTERACTIVE_ROWS as usize + 2 {
         let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx =
             semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
-        match work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation) }, &mut cx).expect("BMP paint work step") {
+        match work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation) }, &mut cx).expect("BMP paint work step") {
             ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).expect("localized progress").contains("de")),
             ArtifactCommandWorkStep::Complete(emit) => {work.begin_close();for _ in 0..10000{if matches!(close_work(&mut work).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete{..}){assert!(work.terminal_is_empty());return emit.artifact_mutations;}}panic!("BMP paint retained result did not close");},
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::CompleteWithEphemeral { .. } | ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("unexpected BMP paint work step"),
@@ -103,11 +103,11 @@ async fn image_window_exposes_bilingual_profile_specific_paint_controls() {
     assert_eq!((indexed.args.len(), direct.args.len()), (5, 8));
     assert_eq!(indexed.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     assert_eq!(direct.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
-    assert!(indexed.args.iter().chain(&direct.args).all(|argument| argument.required && matches!(argument.schema, semio_framework_plugin::ArgSchema::Number { integer: true, .. })));
-    assert_eq!(indexed.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Paint Indexed Region");
-    assert_eq!(indexed.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Indexbereich malen");
-    assert_eq!(direct.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Paint Direct Region");
-    assert_eq!(direct.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Direktfarbbereich malen");
+    assert!(indexed.args.iter().chain(&direct.args).all(|argument| argument.required && matches!(argument.schema, semio_plugin::ArgSchema::Number { integer: true, .. })));
+    assert_eq!(indexed.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Paint Indexed Region");
+    assert_eq!(indexed.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Indexbereich malen");
+    assert_eq!(direct.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Paint Direct Region");
+    assert_eq!(direct.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Direktfarbbereich malen");
 }
 
 #[test]
@@ -145,16 +145,16 @@ fn retained_indexed_paint_keeps_duplicate_color_indices_distinct() {
 
 #[test]
 fn cancelled_retained_paint_discards_revision_without_publication() {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
     let reader=std::sync::Arc::new(direct_snapshot());let snapshot=reader.as_ref();
     let command = direct_command();
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "bmp-paint-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "bmp-paint-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new(paint_region::DIRECT_ACTION_ID);
-    let input = ArtifactCommandInputs { command: &command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation) };
+    let input = ArtifactCommandInputs { command: &command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation) };
     let mut sequence = 0;
     let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "bmp-paint-region-copy", .. }));
@@ -167,11 +167,11 @@ fn cancelled_retained_paint_discards_revision_without_publication() {
     assert_eq!(snapshot, &direct_snapshot());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::bmp::BmpEditor, || semio_framework_plugin::App { definition: crate::editor::bmp::create_bmp_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️v3/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::bmp::BmpEditor, || semio_plugin::App { definition: crate::editor::bmp::create_bmp_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️v3/🪆️subsets/✳️any");
 
 fn close_work(work: &mut paint_region::PaintRegionWork) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let step = semio_framework_plugin::retained_command::ArtifactCommandWork::<semio_framework_plugin::EditorApp<BmpEditor>>::close_step(work, scope.cx());
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let step = semio_plugin::retained_command::ArtifactCommandWork::<semio_plugin::EditorApp<BmpEditor>>::close_step(work, scope.cx());
     scope.retire();
     step
 }
@@ -188,7 +188,7 @@ fn window_declares_the_paint_actions_as_editable_image_window_actions() {
     let definition = main::definition();
     for id in [paint_region::INDEXED_ACTION_ID, paint_region::DIRECT_ACTION_ID] {
         let action = definition.actions.iter().find(|action| action.id == id).expect("paint action is a window action");
-        assert_eq!(action.kind, semio_framework_plugin::ActionKind::Mutation);
+        assert_eq!(action.kind, semio_plugin::ActionKind::Mutation);
     }
 }
 

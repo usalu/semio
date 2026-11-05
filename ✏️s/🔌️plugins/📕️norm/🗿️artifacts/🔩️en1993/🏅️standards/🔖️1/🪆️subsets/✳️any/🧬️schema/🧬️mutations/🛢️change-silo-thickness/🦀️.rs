@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloThickness wher
         record: "ChangedSiloThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shell thickness t of the silo shell", "Silo-Schale: Schalendicke t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shell thickness t of the silo shell", "Silo-Schale: Schalendicke t ändern")
     }
 }
 

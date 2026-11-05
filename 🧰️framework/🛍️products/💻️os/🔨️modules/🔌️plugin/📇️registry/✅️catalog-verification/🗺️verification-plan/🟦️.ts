@@ -1,5 +1,5 @@
 /** 🗺️ Verification plan of the catalog verification: the bounded dependency order of catalog nodes and the cancellable, progress reporting execution of the plan. */
-import { CATALOG_ID } from "../../🔎️discovery/🟦️.ts";
+import { CATALOG_ID } from "../../🔎️discovery/🧬️schema/🟦️.ts";
 import { CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, type CatalogVerificationControl, type CatalogVerificationExecutor, type CatalogVerificationNode, type CatalogVerificationResult, type CatalogVerificationStatus } from "../🟦️.ts";
 import { boundedCatalogDiagnostic } from "../🛡️guards/🟦️.ts";
 

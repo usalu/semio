@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberColdFormingR
         record: "ChangedMemberColdFormingRadius",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cold-forming bend radius r (0 = none) of the member", "Bauteil: Kaltumformradius r (0 = keiner) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cold-forming bend radius r (0 = none) of the member", "Bauteil: Kaltumformradius r (0 = keiner) ändern")
     }
 }
 

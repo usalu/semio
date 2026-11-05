@@ -24,9 +24,9 @@ semio-s-fem-app-surface = { path = "../../../../../../../../../../⚙️engine/�
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-scene = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-scene = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-registry = { workspace = true }
 semio-s-artifact-fem-3d-editor-visual-job = { workspace = true }

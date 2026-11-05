@@ -17,7 +17,8 @@ import { auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage } f
 import { auditPluginCatalogSources } from "../../✅️catalog-verification/🔎️source-audit/🟦️.ts";
 import { createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier } from "../../✅️catalog-verification/🏗️fresh-build-verifier/🟦️.ts";
 import { executeCatalogVerificationPlan, orderCatalogNodes } from "../../✅️catalog-verification/🗺️verification-plan/🟦️.ts";
-import { rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair, verifySemanticDescriptorPairBytesV1 } from "../../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { rejectPlaceholderCatalogIdentity, verifySemanticDescriptorPairBytesV1 } from "../../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { validateCatalogDescriptorPair } from "../../✅️catalog-verification/🧬️descriptor-pair/📁️filesystem/🟦️.ts";
 import { sha256CatalogArtifact } from "../../✅️catalog-verification/📥️artifact-io/🟦️.ts";
 import { auditInteractiveJobClassificationDrift, shippedComponentFindings } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";

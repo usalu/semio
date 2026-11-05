@@ -2,9 +2,9 @@
 #[path="🏛️host/🦀️.rs"]
 mod original_host_configuration;
 pub use original_host_configuration::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[doc(hidden)]
 #[path = "🛬️lifted/📦️preparation/🦀️.rs"]
@@ -17,7 +17,7 @@ pub mod surface_contract;
 use crate::child_emit_preparation::ChildEmitPreparation;
 use crate::child_emit_preparation::ChildEmitPreparationStep;
 use crate::child_emit_preparation::OwnedChildEmit;
-use semio_framework_plugin_window_config::WindowConfigMutation;
+use semio_plugin_window_config::WindowConfigMutation;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework::{kernel::{AppEvent, Effect, SchemaId}, Fault, FaultCode, FaultOrigin, ViewModel};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -29,11 +29,11 @@ use std::future::Future;
 #[allow(unused_imports)]
 use std::pin::Pin;
 /// 🚪️ `io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
-/// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
+/// `semio-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
 /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
 /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
 /// 2). Defined in `semio_framework` so plugins and the OS product
 /// share one definition without an inverted dependency; re-exported here verbatim.
@@ -41,10 +41,10 @@ use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_decl_views::NoConfigMutation;
-use semio_framework_plugin_decl_views::NoDraftMutation;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_decl_views::NoConfigMutation;
+use semio_plugin_decl_views::NoDraftMutation;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 
 /// 📤️ What a pure `ArtifactApp::handle` emits: zero-or-more typed document operations (applied
 /// through the document store with a true inverse) and zero-or-more typed config operations (applied
@@ -255,7 +255,7 @@ impl<Mutation, ConfigMutation, DraftMutation> AsyncTask<Mutation, ConfigMutation
 /// follow-up dispatch stays attributed to the same actor/instance even if a different one is
 /// active by the time the task resolves.
 pub struct TaskCtx {
-    pub host: semio_framework_plugin_actor_host::Host,
+    pub host: semio_plugin_actor_host::Host,
     pub meta: ActionMeta,
 }
 
@@ -478,10 +478,43 @@ impl ChildEmit {
 }
 
 impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, DraftMutation> {
+    /// 📥️ Quotes complete backing growth or one original preparation header transfer.
+    pub fn child_preparation_admission_demands(&self)->Result<RetirementDemand,ValueError>{
+        let cell=size_of::<ChildEmitPreparation>();let length=self.child_preparations.len();let capacity=self.child_preparations.capacity();
+        let bytes=|count:usize|count.checked_mul(cell).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation directory extent overflow"));
+        if length==capacity{return Ok(RetirementDemand{copy_bytes:bytes(length)?.checked_mul(2).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation directory move overflow"))?,capacity_bytes:bytes(length.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation directory length overflow"))?)?,release_bytes:bytes(capacity)?,depth:1})}
+        Ok(RetirementDemand{copy_bytes:bytes(2)?,depth:1,..Default::default()})
+    }
+    /// 🪢️ Retains the exact source through reserve refusal, then moves it only in a separate funded event.
+    pub fn admit_child_preparation_original(&mut self,original:&mut Option<ChildEmitPreparation>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep>{
+        if original.is_none(){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+        let demand=match self.child_preparation_admission_demands(){Ok(demand)=>demand,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}};
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+        let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+        if self.child_preparations.len()==self.child_preparations.capacity(){
+            if self.child_preparations.try_reserve_exact(1).is_err(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original preparation directory birth refused")),work:1}}
+            progress.retained_capacity_bytes=self.child_preparations.capacity()*size_of::<ChildEmitPreparation>();progress.released_bytes=demand.release_bytes;
+            return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:1}
+        }
+        self.child_preparations.push_back(original.take().unwrap());
+        semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(progress)),work:1}
+    }
     /// 🎭️ Prepares the wire form of the front preparation: an applying typed source becomes the incremental encoder's source first, so its operations leave in the same order and the owned batch is never built.
-    pub fn prepare_child_preview_one(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{
-        if let Some(front)=self.child_preparations.front_mut().filter(|owner|owner.next_owned_capacity_byte_demand()!=0){front.begin_preview();}
-        self.prepare_child_one(grant)
+    pub fn prepare_child_preview_one(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{self.prepare_child_preview_original(grant).result}
+    /// 📐️ Quotes the actual front vector conversion before its normal wire preparation.
+    pub fn child_preview_preparation_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(mut demand)=self.child_preparations.front().and_then(ChildEmitPreparation::preview_demands){demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original preview header depth overflow"))?;return Ok(demand)}
+        self.child_preparation_demands(body)
+    }
+    /// 🎬️ Converts at most the genuine front source inside its original header grant.
+    pub fn prepare_child_preview_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<ChildEmitPreparationStep,Fault>{
+        if self.child_preparations.front().and_then(ChildEmitPreparation::preview_demands).is_some(){
+            let demand=match self.child_preview_preparation_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(crate::child_emit_preparation::retirement_refusal_fault(&error)),work:0}};
+            if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return semio_framework_value::RetainedWorkOutcome{result:Ok(ChildEmitPreparationStep::Pending(Default::default())),work:0}}
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let outcome=self.child_preparations.front_mut().unwrap().begin_preview_original(child);
+            return semio_framework_value::RetainedWorkOutcome{work:outcome.work,result:outcome.result.map(|(_,progress)|ChildEmitPreparationStep::Pending(progress)).map_err(|error|crate::child_emit_preparation::retirement_refusal_fault(&error))}
+        }
+        self.prepare_child_original(grant)
     }
     /// 📏️ Quotes the next original preparation effect without creating its caller authority.
     pub fn child_preparation_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -495,12 +528,14 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
         let mut demand=preparation.step_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original child preparation depth overflow"))?;let _=body;Ok(demand)
     }
     /// 📨️ Advances exactly one original preparation, directory or source transfer effect.
-    pub fn prepare_child_one(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{
+    pub fn prepare_child_one(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{self.prepare_child_original(grant).result}
+    /// 🧮️ Preserves each original child delegate work receipt on success and refusal.
+    pub fn prepare_child_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<ChildEmitPreparationStep,Fault>{let mut work=0;let result=(||{
         let idle=RetainedCloneProgress::default();
         if self.child_preparations.is_empty()&&self.child_preparations.capacity()==0{return Ok(ChildEmitPreparationStep::Ready(idle));}
         let demand=self.child_preparation_demands(grant.maximum_copy_bytes).map_err(|error|crate::child_emit_preparation::retirement_refusal_fault(&error))?;
         if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(ChildEmitPreparationStep::Pending(idle));}
-        let Some(preparation)=self.child_preparations.front_mut()else{
+        work=1;let Some(preparation)=self.child_preparations.front_mut()else{
             self.child_preparations=std::collections::VecDeque::new();
             return Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));
         };
@@ -512,18 +547,18 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
             return Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes,released_bytes:demand.release_bytes}));
         }
         if !preparation.preparation_is_ready(){
-            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=preparation.step(child)?;
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let result=preparation.step(child);work=preparation.last_turn_work();let step=result?;
             if !step.progress().fits(child){return Err(plugin_sdk_fault("original child preparation exceeded its caller grant"));}
             return Ok(match step{ChildEmitPreparationStep::Ready(progress)=>ChildEmitPreparationStep::Pending(progress),step=>step});
         }
         if owned{
-            let Some((child,progress))=preparation.take_ready_owned_qualified(grant).map_err(|error|crate::child_emit_preparation::retirement_refusal_fault(&error))?else{return Ok(ChildEmitPreparationStep::Pending(idle))};
+            let result=preparation.take_ready_owned_qualified(grant);work=preparation.last_turn_work();let Some((child,progress))=result.map_err(|error|crate::child_emit_preparation::retirement_refusal_fault(&error))?else{return Ok(ChildEmitPreparationStep::Pending(idle))};
             if !progress.fits(grant){return Err(plugin_sdk_fault("original child source transfer exceeded its caller grant"));}
             self.owned_child_emits.push(child);return Ok(ChildEmitPreparationStep::Pending(progress));
         }
         let child=preparation.take_ready().ok_or_else(||plugin_sdk_fault("child-emission-ready-without-complete-owned-prefix"))?;self.child_emits.push(child);
         Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,..idle}))
-    }
+    })();semio_framework_value::RetainedWorkOutcome{result,work}}
 
     /// 📏️ Borrows the next child close frontier without deriving caller authority from it.
     pub fn child_close_demands(&self, body: usize) -> Result<Option<RetirementDemand>, ValueError> {
@@ -554,18 +589,20 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
     }
 
     /// ♻️ Keeps original child owners until their supplied grant admits one real release or transfer.
-    pub fn close_child_one(&mut self, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, Fault> {
+    pub fn close_child_one(&mut self, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, Fault> {self.close_child_original(grant).result}
+    /// 🧮️ Preserves each original child delegate work receipt on success and refusal.
+    pub fn close_child_original(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<Option<PluginLifecycleStep>,Fault> {let mut work=0;let result=(||{
         let Some(demand) = self.child_close_demands(grant.maximum_copy_bytes).map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))? else { return Ok(None); };
         if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("original emitted child close exceeds supplied depth")); }
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(Some(PluginLifecycleStep::Progress(Default::default()))); }
-        let child_grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        work=1;let child_grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(preparation) = self.child_preparations.front_mut() {
             if preparation.terminal_is_empty() {
                 self.child_preparations.pop_front();
                 return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })));
             }
             preparation.begin_close();
-            let step = preparation.close_step(child_grant)?;
+            let result=preparation.close_step(child_grant);work=preparation.last_turn_work();let step=result?;
             if let Some(progress) = step.progress() { if !progress.fits(child_grant) { return Err(plugin_sdk_fault("original child preparation exceeded its supplied grant")); } }
             if matches!(step, PluginLifecycleStep::Complete(_)) && !preparation.terminal_is_empty() { return Err(plugin_sdk_fault("original child preparation completed with retained owners")); }
             return Ok(Some(match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), step => step }));
@@ -573,7 +610,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
         if self.child_preparations.capacity() != 0 { self.child_preparations = std::collections::VecDeque::new(); }
         else if let Some(child) = self.owned_child_emits.last_mut() {
             if child.terminal_is_empty() { self.owned_child_emits.pop(); return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
-            let step = child.close_granted(child_grant).map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))?;
+            let result=child.close_granted(child_grant);work=child.last_turn_work();let step=result.map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted typed child").map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))?;
             return Ok(Some(PluginLifecycleStep::Progress(step.progress())));
         }
@@ -586,7 +623,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
         }
         else { self.child_emits = Vec::new(); }
         Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })))
-    }
+    })();semio_framework_value::RetainedWorkOutcome{result,work}}
 
     /// 🎟️ Returns ready child backing to the caller's persistent parent; typed preparations retain their original physical close contract.
     pub fn return_child_one<const N: usize>(&mut self, parent: &mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<N>, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, Fault> {

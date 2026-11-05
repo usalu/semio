@@ -1,7 +1,7 @@
 //! 🖼️ CAD reference mutations: visibility, lock, width, placement, media and list replacement of references.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 //#region 🧩️Modules
 #[path = "."]

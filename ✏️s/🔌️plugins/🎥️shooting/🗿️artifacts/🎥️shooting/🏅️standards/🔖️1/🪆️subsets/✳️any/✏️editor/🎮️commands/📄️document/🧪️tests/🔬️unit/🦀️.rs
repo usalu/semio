@@ -1,13 +1,13 @@
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
 use crate::ShootingSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
+use semio_plugin::{ArtifactView, ConfigView, Effect};
 #[allow(unused_imports)]
 use crate::editor::shooting::config::ShootingConfigMutation;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Emit, Fault};
+use semio_plugin::{Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::shooting::commands::document::*;
@@ -20,12 +20,12 @@ use crate::editor::shooting::ShootingCommand;
 /// job), same as the already-migrated `fem2d` sibling's `commands::example` tests.
 #[semio_framework_async_macros::async_test]
 async fn reset_snapshot_restores_default_snapshot() {
-    use semio_framework_plugin::Effect;
+    use semio_plugin::Effect;
     let mut app = shooting_app().await;
     dispatch(&mut app, ShootingCommand::AddShot(crate::editor::shooting::commands::shot::add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() })).await;
     assert_eq!(app.snapshot().expect("snapshot").shots.len(), 3);
     let snapshot = app.snapshot().expect("snapshot");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = ShootingConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
@@ -40,9 +40,9 @@ async fn reset_snapshot_restores_default_snapshot() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_hexagonal_cut_concrete_forest_left() {
-    use semio_framework_plugin::Effect;
+    use semio_plugin::Effect;
     let snapshot = crate::empty_shooting_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = ShootingConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };

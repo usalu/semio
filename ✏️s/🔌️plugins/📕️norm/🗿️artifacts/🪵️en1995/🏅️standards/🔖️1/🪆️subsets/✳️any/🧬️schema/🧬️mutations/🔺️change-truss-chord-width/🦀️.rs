@@ -10,7 +10,7 @@ pub struct ChangeTrussChordWidth { pub truss_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTrussChordWidth where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_truss_chord_width::ChangeTrussChordWidth> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "truss-chord-width", kind: "change-truss-chord-width", record: "ChangedTrussChordWidth" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change chord width of truss {}", self.truss_id), &format!("Gurtbreite von Truss {} ändern", self.truss_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change chord width of truss {}", self.truss_id), &format!("Gurtbreite von Truss {} ändern", self.truss_id)) }
     fn target(&self) -> Vec<String> { vec![self.truss_id.clone()] }
 }
 

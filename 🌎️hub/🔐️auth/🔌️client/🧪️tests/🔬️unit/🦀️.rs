@@ -66,14 +66,14 @@ fn a_group_or_world_readable_credential_file_is_refused() {
     std::fs::write(&path, document(&[])).expect("credential written");
 
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).expect("mode 644");
-    let refused = semio_framework_os_mcp::agent_credential::read_delegated_credential_file_v1(&path, &[hub_agent_credential_protocol_v1()]).map(|(_, credential)| credential).expect_err("a world-readable credential is refused");
+    let refused = semio_os_mcp::agent_credential::read_delegated_credential_file_v1(&path, &[hub_agent_credential_protocol_v1()]).map(|(_, credential)| credential).expect_err("a world-readable credential is refused");
     assert!(refused.message.contains("chmod 600"), "the refusal names the remedy: {}", refused.message);
 
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o640)).expect("mode 640");
-    assert!(semio_framework_os_mcp::agent_credential::read_delegated_credential_file_v1(&path, &[hub_agent_credential_protocol_v1()]).map(|(_, credential)| credential).is_err(), "a group-readable credential is refused");
+    assert!(semio_os_mcp::agent_credential::read_delegated_credential_file_v1(&path, &[hub_agent_credential_protocol_v1()]).map(|(_, credential)| credential).is_err(), "a group-readable credential is refused");
 
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).expect("mode 600");
-    let credential = semio_framework_os_mcp::agent_credential::read_delegated_credential_file_v1(&path, &[hub_agent_credential_protocol_v1()]).map(|(_, credential)| credential).expect("a 0600 credential is admitted");
+    let credential = semio_os_mcp::agent_credential::read_delegated_credential_file_v1(&path, &[hub_agent_credential_protocol_v1()]).map(|(_, credential)| credential).expect("a 0600 credential is admitted");
     assert_eq!(credential.scope_id(), "space-a");
 
     let _ = std::fs::remove_dir_all(&directory);
@@ -146,7 +146,7 @@ fn actual_native_exchange_uses_the_injected_owner_route_and_preserves_origin_and
     fixture["credential"]["hubOrigin"] = serde_json::json!(origin);
     let credential = decode_hub_agent_credential_v1(&serde_json::to_vec(&fixture["credential"]).unwrap()).unwrap();
     let protocol = hub_agent_credential_protocol_v1();
-    assert!(semio_framework_os_mcp::workspace::remote::exchange_delegated_session_v1("http://127.0.0.1:1", &credential, protocol).is_err());
+    assert!(semio_os_mcp::workspace::remote::exchange_delegated_session_v1("http://127.0.0.1:1", &credential, protocol).is_err());
     let response = serde_json::to_vec(&fixture["grant"]).unwrap();
     let server = std::thread::spawn(move || {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
@@ -175,7 +175,7 @@ fn actual_native_exchange_uses_the_injected_owner_route_and_preserves_origin_and
         peer.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", response.len()).as_bytes()).unwrap();
         peer.write_all(&response).unwrap();
     });
-    let grant = semio_framework_os_mcp::workspace::remote::exchange_delegated_session_v1(&origin, &credential, protocol).unwrap();
+    let grant = semio_os_mcp::workspace::remote::exchange_delegated_session_v1(&origin, &credential, protocol).unwrap();
     assert_eq!(grant.agent_principal_id, "agent:fixture"); assert_eq!(grant.space_id, "space-a");
     assert!(!format!("{grant:?}").contains("session.v1."));
     server.join().unwrap();

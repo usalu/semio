@@ -16,8 +16,8 @@ pub struct SetApplicationHistory {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetApplicationHistory {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "application-history", kind: "set-application-history", record: "SetApplicationHistory" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set application history", "Anwendungsverlauf setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set application history", "Anwendungsverlauf setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

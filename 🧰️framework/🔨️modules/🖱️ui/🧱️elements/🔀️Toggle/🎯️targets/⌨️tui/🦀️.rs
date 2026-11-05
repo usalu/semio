@@ -2,12 +2,12 @@
 //! flips with Space, Enter or a click. Wired as a crate-root sibling module of `crate::tui::widget`
 //! (see that mod's `pub use crate::tui::toggle::ToggleState;`).
 
-use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
-use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
-use semio_framework_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
-use semio_framework_ui_tui_core::signal::WidgetSignal;
+use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::text::{display_width, elide, Elision};
+use semio_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use semio_ui_tui_core::signal::WidgetSignal;
 
 /// 🎛️ A labelled switch.
 pub struct ToggleState {

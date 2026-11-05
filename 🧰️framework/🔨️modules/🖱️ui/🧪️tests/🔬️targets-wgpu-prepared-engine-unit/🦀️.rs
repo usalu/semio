@@ -1,6 +1,6 @@
 use super::*;
-use semio_framework_ui_prepared::{PreparedRenderJob, PreparedRenderInput, DrawMeasureCursor};
-use semio_framework_ui_prepared::testing::{prepared_process_guard, drive_preparation_until_terminal, close_packet_step, close_job_step};
+use semio_ui_prepared::{PreparedRenderJob, PreparedRenderInput, DrawMeasureCursor};
+use semio_ui_prepared::testing::{prepared_process_guard, drive_preparation_until_terminal, close_packet_step, close_job_step};
 use std::mem::size_of;
 use semio_framework_test_fixtures::fixture_text;
 
@@ -18,12 +18,12 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
     let revision = law["sceneRevision"].as_u64().unwrap();
     let generation = law["previewGeneration"].as_u64().unwrap();
     let limit = law["retirementTurns"].as_u64().unwrap() as usize;
-    let mut gpu = match semio_framework_async::block_on(semio_framework_ui_wgpu_render::GpuContext::headless(width, height)) {
+    let mut gpu = match semio_framework_async::block_on(semio_ui_wgpu_render::GpuContext::headless(width, height)) {
         Ok(gpu) => gpu,
         Err(error) => { assert!(error.starts_with("offscreen adapter:"), "{error}");  return; }
     };
 
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let reference = tiny_skia::Pixmap::new(width, height).unwrap();
     let rgba: [u8; 4] = serde_json::from_value(law["rgba"].clone()).unwrap();
     assert!(reference.data().chunks_exact(4).all(|pixel| pixel == rgba));
@@ -80,7 +80,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
             for index in 0..packet.command_pages().len() { match packet.command_pages().get(index).and_then(|command| command.draw_cursor()) { Some(DrawMeasureCursor::PassInstance { translucent: false, .. }) => paths[0] += 1, Some(DrawMeasureCursor::PassInstance { translucent: true, .. }) => paths[1] += 1, Some(DrawMeasureCursor::PassMaterialInstance { .. }) => paths[2] += 1, _ => {} } }
             assert_eq!(paths, [1; 3]);
             assert_eq!(law["drawPaths"], serde_json::json!(["opaque", "translucent", "material"]));
-            let witness = semio_framework_ui_wgpu_render::RasterTextureWitness { scene_revision: revision, preview_generation: generation, operation: (case_index * law["versions"].as_array().unwrap().len() + version_index) as u64 + 1 };
+            let witness = semio_ui_wgpu_render::RasterTextureWitness { scene_revision: revision, preview_generation: generation, operation: (case_index * law["versions"].as_array().unwrap().len() + version_index) as u64 + 1 };
             gpu.begin_raster_ownership(witness).unwrap();
             gpu.seal_raster_ownership(witness).unwrap();
             let mut cursor = gpu.begin_prepared_present(&packet, witness).unwrap();
@@ -125,7 +125,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
     for _ in 0..limit { if gpu.close_raster_table_step().unwrap() { break; } }
     assert!(gpu.raster_table_terminal_is_empty());
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 /// 🖥️ LAW: grid uniforms stay in logical scene units at every device scale; only the
@@ -133,8 +133,8 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
 #[test]
 fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_physically() {
     let _guard = prepared_process_guard();
-    use semio_framework_ui_wgpu_render::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
-    use semio_framework_ui_draw_contract::ScissorRect;
+    use semio_ui_wgpu_render::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
+    use semio_ui_draw_contract::ScissorRect;
     use ui_scene::math::ProceduralGrid3d;
     let grid = ProceduralGrid3d { plane_z: 2.001, camera_plane_projection: [7.0, -4.0, 2.001], cell_size: 2.5, fade_distance: 18.0, cell_color: [0.2, 0.3, 0.4] };
     let at_one = World3dGridUniforms::from_grid(&grid);
@@ -155,7 +155,7 @@ fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_p
 #[test]
 fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🌌️prepared-scene-ui-stacking/🔣️.json")).expect("neutral scene/UI stacking fixture");
     let steps = fixture["steps"].as_array().expect("authored stacking steps");
     let mut draw = DrawList::default();
@@ -163,7 +163,7 @@ fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
         let rect = std::array::from_fn(|index| step["rect"][index].as_f64().expect("rect scalar") as f32);
         let rgba = std::array::from_fn::<_, 4, _>(|index| step["rgba"][index].as_u64().expect("color scalar") as f32 / 255.0);
         match step["op"].as_str().expect("operation") {
-            "solid" => draw.push_solid(rect, semio_framework_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
+            "solid" => draw.push_solid(rect, semio_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
             "scene" => draw.push_scene_pass(ui_scene::math::ScenePass3d { viewport: rect, ..Default::default() }),
             op => panic!("unknown fixture operation {op}"),
         }
@@ -211,13 +211,13 @@ fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
     while !close_job_step(&mut job,&mut close_caller) {}
     assert_eq!(order, expected, "an opaque pane authored after World must remain after that exact scene pass in prepared commands");
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🪜️prepared-scene-overlay-stacking/🔣️.json")).expect("neutral scene/overlay stacking fixture");
     let steps = fixture["steps"].as_array().expect("source stacking steps");
     let mut draw = DrawList::default();
@@ -225,10 +225,10 @@ fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() 
         let rect = std::array::from_fn(|index| step["rect"][index].as_f64().expect("rect scalar") as f32);
         let rgba = std::array::from_fn::<_, 4, _>(|index| step["rgba"][index].as_u64().expect("color scalar") as f32 / 255.0);
         match (step["op"].as_str().expect("operation"), step["route"].as_str().expect("route")) {
-            ("solid", "normal") => draw.push_solid(rect, semio_framework_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
+            ("solid", "normal") => draw.push_solid(rect, semio_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
             ("solid", "overlay") => {
                 draw.begin_overlay_route();
-                draw.push_solid(rect, semio_framework_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3]));
+                draw.push_solid(rect, semio_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3]));
                 draw.end_overlay_route();
             }
             ("raster", "normal") => draw.push_raster_quad(step["rasterKey"].as_str().expect("raster key"), rect, [0.0, 0.0, 1.0, 1.0], 1.0),
@@ -291,13 +291,13 @@ fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() 
     while !close_job_step(&mut job,&mut close_caller) {}
     assert_eq!(order, expected, "an inline overlay follows its own layer's scene but stays behind a later covering layer");
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🪟️prepared-glass-stacking/🔣️.json")).expect("neutral glass stacking fixture");
     let steps = fixture["steps"].as_array().expect("authored steps");
     let mut draw = DrawList::default();
@@ -308,11 +308,11 @@ fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
         match step["op"].as_str().expect("operation") {
             "solid" => {
                 let color = rgba();
-                draw.push_solid(rect(), semio_framework_ui_theme::Rgba::new(color[0], color[1], color[2], color[3]));
+                draw.push_solid(rect(), semio_ui_theme::Rgba::new(color[0], color[1], color[2], color[3]));
             }
             "glass" => {
                 let color = rgba();
-                current_glass = Some(draw.push_glass(rect(), 0.0, semio_framework_ui_theme::GlassStyle { tint: semio_framework_ui_theme::Rgba::new(color[0], color[1], color[2], color[3]), alpha: color[3], blur_px: 0.0, saturate: 1.0 }));
+                current_glass = Some(draw.push_glass(rect(), 0.0, semio_ui_theme::GlassStyle { tint: semio_ui_theme::Rgba::new(color[0], color[1], color[2], color[3]), alpha: color[3], blur_px: 0.0, saturate: 1.0 }));
             }
             "begin" => draw.begin_glass_content(current_glass.expect("preceding glass")),
             "end" => draw.end_glass_content(),
@@ -363,5 +363,5 @@ fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
     while !close_job_step(&mut job,&mut close_caller) {}
     assert_eq!(order, expected, "a partial popup covers earlier panel text, and resumed parent content follows nested content");
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }

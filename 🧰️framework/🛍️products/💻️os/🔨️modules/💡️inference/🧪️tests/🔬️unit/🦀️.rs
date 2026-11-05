@@ -527,9 +527,9 @@ async fn an_eviction_storm_with_a_budget_of_one_entry_stays_correct_and_within_b
 
 //#region 🧪️SessionGate
 struct Touching(&'static [&'static str]);
-impl semio_framework_os_command::DiffRegions for Touching {
-    fn touches(&self) -> semio_framework_os_command::TouchedPaths {
-        semio_framework_os_command::TouchedPaths::new(self.0.iter().copied())
+impl semio_os_command::DiffRegions for Touching {
+    fn touches(&self) -> semio_os_command::TouchedPaths {
+        semio_os_command::TouchedPaths::new(self.0.iter().copied())
     }
 }
 
@@ -674,15 +674,15 @@ impl InferredField<EditSnapshot> for EditSum {
     fn compute(snapshot: &EditSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         snapshot.weights.get(key).copied().unwrap_or(0) + parents.iter().sum::<i64>()
     }
-    fn touched_by(_snapshot: &EditSnapshot, key: &Self::Key, touched: &semio_framework_os_command::TouchedPaths) -> bool {
+    fn touched_by(_snapshot: &EditSnapshot, key: &Self::Key, touched: &semio_os_command::TouchedPaths) -> bool {
         touched.intersects_parts(&["weights", key])
     }
 }
 
 struct Strings(Vec<String>);
-impl semio_framework_os_command::DiffRegions for Strings {
-    fn touches(&self) -> semio_framework_os_command::TouchedPaths {
-        semio_framework_os_command::TouchedPaths::new(self.0.iter().cloned())
+impl semio_os_command::DiffRegions for Strings {
+    fn touches(&self) -> semio_os_command::TouchedPaths {
+        semio_os_command::TouchedPaths::new(self.0.iter().cloned())
     }
 }
 
@@ -791,12 +791,12 @@ async fn the_chain_hash_equals_the_merkle_node_it_replaced_and_the_default_touch
     let folded = semio_framework_hash::merkle_node(&[&semio_framework_hash::hash(&own).to_hex()], children);
     assert_eq!(hex(&DepHash::chain("f", 1, b"input", &[b, a]).0), folded, "the chain hash equals the merkle node over the hex of the sorted parents");
     let snapshot = base_snapshot().await;
-    assert!(WeightSum::touched_by(&snapshot, &"root".to_string(), &semio_framework_os_command::TouchedPaths::default()));
+    assert!(WeightSum::touched_by(&snapshot, &"root".to_string(), &semio_os_command::TouchedPaths::default()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn touched_paths_match_a_part_with_slashes_and_ancestors_without_splitting() {
-    let touched = semio_framework_os_command::TouchedPaths::new(["walls/a/b/axis", "storeys"]);
+    let touched = semio_os_command::TouchedPaths::new(["walls/a/b/axis", "storeys"]);
     assert!(touched.intersects_parts(&["walls", "a/b"]) && touched.intersects_parts(&["walls", "a", "b"]) && touched.intersects_parts(&["walls"]));
     assert!(touched.intersects_parts(&["storeys", "st-1"]), "a coarse write region covers every row beneath it");
     assert!(!touched.intersects_parts(&["walls", "a/c"]) && !touched.intersects_parts(&["wall"]) && !touched.intersects_parts(&["walls", "a/bb"]));

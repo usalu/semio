@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeThermalElementType
         record: "ChangedThermalElementType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change element type for thermal actions", "Bauteiltyp für Temperatureinwirkungen ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change element type for thermal actions", "Bauteiltyp für Temperatureinwirkungen ändern")
     }
 }
 

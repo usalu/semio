@@ -11,7 +11,7 @@
         "bases": [
           "b/*",
           "t/*",
-          "u/l/*/b",
+          "u/l/*",
           "u/l/*/t",
           "components/*/b",
           "components/*/t"
@@ -29,7 +29,13 @@
           "namespace": "semio.cargo.build-lease/v1",
           "directoryFromStore": ".cache/b/l/m/data",
           "maximumAncestors": 12
-        }
+        },
+        "laneBase": "u/l/*",
+        "excludedLaneChildren": [
+          "t",
+          "v",
+          "m"
+        ]
       }
     },
     "Reason": {
@@ -187,6 +193,32 @@
         "reason.pressure": {
           "en": "image below its free-space floor",
           "de": "Image unter der Freiraum-Untergrenze"
+        }
+      }
+    },
+    "Discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directories",
+        "expected"
+      ],
+      "properties": {
+        "directories": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expected": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

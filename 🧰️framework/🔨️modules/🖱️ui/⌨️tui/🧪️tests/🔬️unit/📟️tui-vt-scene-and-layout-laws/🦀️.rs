@@ -1,11 +1,11 @@
 // 📟️ Tui vt, scene and layout laws: the vt screen cursor, wrap, scroll region, sgr, alternate screen and resize, the scene node accessors and removal and the column and window layout operations.
 
 //#region 🔖️Vt
-fn vt_screen(w: u16, h: u16) -> semio_framework_ui_tui_vt::VtScreen {
-    semio_framework_ui_tui_vt::VtScreen::new(Size { width: w, height: h }, 100)
+fn vt_screen(w: u16, h: u16) -> semio_ui_tui_vt::VtScreen {
+    semio_ui_tui_vt::VtScreen::new(Size { width: w, height: h }, 100)
 }
 
-fn vt_row(screen: &semio_framework_ui_tui_vt::VtScreen, y: u16) -> String {
+fn vt_row(screen: &semio_ui_tui_vt::VtScreen, y: u16) -> String {
     (0..screen.size.width).filter_map(|x| screen.cell_at(x, y)).map(|c| c.ch).filter(|&c| c != '\0').collect()
 }
 
@@ -173,7 +173,7 @@ fn layout_distribute_weight_remainder_goes_to_earliest_child_on_ties() {
 
 #[test]
 fn window_layout_split_resize_move_zoom_and_tabs() {
-    use semio_framework_ui_tui_frame::layout::{WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, activate_stack_tab, cycle_stack_tab, move_window_to_stack, resize_window, solve_window_layout, split_window, zoom_window};
+    use semio_ui_tui_frame::layout::{WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, activate_stack_tab, cycle_stack_tab, move_window_to_stack, resize_window, solve_window_layout, split_window, zoom_window};
     let mut layout =
         WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { size: None, active_window_kind_id: Some("a".into()), children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None, corner: None }] }), zoomed: None };
     assert!(split_window(&mut layout, "a", "row", "b", None));

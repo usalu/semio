@@ -8,14 +8,14 @@
 //! the `textEdit`/`textSelect` pair every keystroke commits).
 
 use super::node_graph_attach_tests::action_fields;
-use semio_framework_os_renderer_wgpu_engine_attach::drop_engine_surface;
+use semio_renderer_wgpu_engine_attach::drop_engine_surface;
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_ui_layout::layout::UiPresence;
-use semio_framework_ui_scene_plane::Paint2dScene;
-use semio_framework_ui_scene_views::TextEditorScene;
-use semio_framework_ui_wgpu_input::InputState;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_layout::layout::UiPresence;
+use semio_ui_scene_plane::Paint2dScene;
+use semio_ui_scene_views::TextEditorScene;
+use semio_ui_wgpu_input::InputState;
 
 include!("🧰️scene-fixtures-and-drains/🦀️.rs");
 

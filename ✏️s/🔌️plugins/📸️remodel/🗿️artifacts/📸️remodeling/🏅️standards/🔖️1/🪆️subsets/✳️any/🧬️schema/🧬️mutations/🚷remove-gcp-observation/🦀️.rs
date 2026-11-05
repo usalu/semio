@@ -33,8 +33,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "gcp", kind: "remove-gcp-observation", record: "RemovedGcpObservation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove observation {} from GCP \"{}\"", self.observation_index, self.id), &format!("Beobachtung {} aus GCP \"{}\" entfernen", self.observation_index, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove observation {} from GCP \"{}\"", self.observation_index, self.id), &format!("Beobachtung {} aus GCP \"{}\" entfernen", self.observation_index, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

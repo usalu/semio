@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "cell-size", kind: "change-cell-size", record: "ChangedCellSize" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change cell size to {} × {}", self.cell_width, self.cell_height), &format!("Zellengröße auf {} × {} ändern", self.cell_width, self.cell_height))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change cell size to {} × {}", self.cell_width, self.cell_height), &format!("Zellengröße auf {} × {} ändern", self.cell_width, self.cell_height))
     }
 }
 

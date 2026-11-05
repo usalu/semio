@@ -12,75 +12,75 @@ use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use crate::standards::v1::subsets::any::schema::graph::{TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactKindSpec;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactKindSpec;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::NodeGraphEdgeRecord;
-use semio_framework_plugin::NodeGraphNodeRecord;
-use semio_framework_plugin::NodeGraphPortRecord;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
-use semio_framework_os_kernel::Viewport2d;
-// 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Effect;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::NodeGraphEdgeRecord;
+use semio_plugin::NodeGraphNodeRecord;
+use semio_plugin::NodeGraphPortRecord;
+use semio_plugin::PanelGroup;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
+use semio_plugin::WindowMeasure;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_os_kernel::Viewport2d;
+// 🩹️ `InteractionView` is not re-exported at `semio_plugin`'s crate root (unlike
 // `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
 // (itself `pub mod`). Flagged as a likely framework oversight, not fixed here (framework file).
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
+use semio_plugin::app::InteractionView;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
@@ -119,8 +119,8 @@ pub fn reset_document_effect(snapshot: &JackSnapshot) -> Effect {
     Effect::LoadDocument { pack, spr }
 }
 
-pub fn jack_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(TRINITY_JACK_PLAY_CONTROLLER_ID).action(action, args)
+pub fn jack_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(TRINITY_JACK_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🪟️ Binds window chrome through its retained renderer action descriptor.
@@ -129,45 +129,45 @@ pub fn jack_window_action(action: &str, args: Option<semio_framework_pack_json::
 }
 
 /// 🏷️ Admits resolved Jack text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "Jack UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "Jack UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🧠️ The language editor reads its query workspace from the exact published child.
-pub fn graph_from_document<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(snapshot:&JackSnapshot,children:&semio_framework_plugin::app::ChildContentView)->semio_framework_plugin::UiAssemblyResult<crate::standards::v1::subsets::any::schema::memory::Graph>{let scene=crate::standards::v1::subsets::any::schema::composition::jack_scene_from_children::<C>(snapshot,children).map_err(|fault|semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable",fault.message))?;crate::standards::v1::subsets::any::schema::memory::Graph::with_scene(snapshot.clone(),scene).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable",error.to_string()))}
+pub fn graph_from_document<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(snapshot:&JackSnapshot,children:&semio_plugin::app::ChildContentView)->semio_plugin::UiAssemblyResult<crate::standards::v1::subsets::any::schema::memory::Graph>{let scene=crate::standards::v1::subsets::any::schema::composition::jack_scene_from_children::<C>(snapshot,children).map_err(|fault|semio_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable",fault.message))?;crate::standards::v1::subsets::any::schema::memory::Graph::with_scene(snapshot.clone(),scene).map_err(|error|semio_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable",error.to_string()))}
 
 /// 🩹️ Delegates to `crate::standards::v1::subsets::any::schema::graph::parse_port_key` (the one place the `nodeId@portId`
 /// convention is owned) instead of hand-rolling a second splitter here.
@@ -202,22 +202,22 @@ pub fn content_to_workflow(camera:&crate::standards::v1::subsets::any::schema::g
 /// `trinity.graph` document) plus one extra fan-out output port, `graph:out`, so a jack window can
 /// feed its live query-graph projection into other graph-consuming workflow nodes (e.g. `rewriting`'s
 /// `graph:in`).
-pub fn jack_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn jack_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: TRINITY_GRAPH_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
-        ports: vec![semio_framework_plugin::MediaPortSpec {
+        ports: vec![semio_plugin::MediaPortSpec {
             id: "graph:out".into(),
             label: "Graph".into(),
-            direction: semio_framework_plugin::MediaPortDirection::Out,
+            direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
             kind_id: Some("graph.trinity".into()),
             required: false,
-            multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            multiplicity: semio_plugin::PortMultiplicity::Many,
         }],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "graph.trinity".into(), name: "Trinity Graph".into(), dimension: "graph".into(), component_kind: "trinity".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "graph.trinity".into(), name: "Trinity Graph".into(), dimension: "graph".into(), component_kind: "trinity".into() },
     }
 }
 //#endregion 🔖️Io

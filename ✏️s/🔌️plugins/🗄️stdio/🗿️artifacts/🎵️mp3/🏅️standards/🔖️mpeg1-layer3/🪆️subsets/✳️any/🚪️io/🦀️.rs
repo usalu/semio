@@ -3,7 +3,7 @@
 pub mod derived_composition {
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
     use crate::standards::mpeg1_layer3::subsets::any::io::Mp3Analyzer;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
 
@@ -43,7 +43,7 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") }, store::bare_artifact_codec::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA))
+        semio_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") }, store::bare_artifact_codec::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -399,8 +399,8 @@ pub mod playback {
     use super::{Mp3EncodeAdvance, Mp3EncodeCursor, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
     use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
     use semio_framework_job::Operation;
-    use semio_framework_plugin::app::ArtifactOutputChunks;
-    use semio_framework_plugin::{ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity};
+    use semio_plugin::app::ArtifactOutputChunks;
+    use semio_plugin::{ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity};
     use semio_s_artifact_stdio_contract::media_export::{IncrementalMediaAdvance, IncrementalMediaExportJob, IncrementalMediaExportSpec};
     use std::marker::PhantomData;
     use std::sync::Arc;
@@ -413,8 +413,8 @@ pub mod playback {
     pub const MEDIA_TYPE: MediaType = MediaType { class: MediaClass::Presentation, form: MediaForm::Sequence };
     pub const CONTRACT: ToolExecutionContract = ToolExecutionContract::resumable(4_096, 4_096, 1, ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES, 2_000, 64, 1);
 
-    pub fn app_io() -> semio_framework_plugin::AppIo {
-        semio_framework_plugin::AppIo {
+    pub fn app_io() -> semio_plugin::AppIo {
+        semio_plugin::AppIo {
             artifact_schema: STDIO_MP3_DOCUMENT_SCHEMA.into(),
             artifact_media_type: MEDIA_TYPE,
             ports: vec![MediaPortSpec {
@@ -428,7 +428,7 @@ pub mod playback {
             }],
             export_formats: Vec::new(),
             import_formats: Vec::new(),
-            artifact: semio_framework_plugin::ArtifactPresentation { id: "stdio.mp3".into(), name: "MP3 Audio".into(), dimension: "time".into(), component_kind: "audio".into() },
+            artifact: semio_plugin::ArtifactPresentation { id: "stdio.mp3".into(), name: "MP3 Audio".into(), dimension: "time".into(), component_kind: "audio".into() },
         }
     }
 
@@ -487,7 +487,7 @@ pub mod playback {
             CONTRACT
         }
 
-        semio_framework_plugin::retained_command::reserved_tool_job_factory_admission!();
+        semio_plugin::retained_command::reserved_tool_job_factory_admission!();
     }
 
     impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> ArtifactOwnedToolJobFactory for Mp3MediaExportJobFactory<A> {
@@ -506,7 +506,7 @@ pub mod playback {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::mpeg1_layer3::subsets::any::io::Mp3Composer as Mp3RawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -530,7 +530,7 @@ pub mod derived_construction {
     #[cfg(test)] use crate::apply_mutation;
 
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Mp3BuilderConstruction {
@@ -571,7 +571,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::mpeg1_layer3::subsets::any::io;
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Mp3Parts {
@@ -584,24 +584,24 @@ pub mod derived_analysis {
         type Parts = Mp3Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
-                        return semio_framework_plugin::io::Confidence::High;
+                        return semio_plugin::io::Confidence::High;
                     }
                     let marker = STDIO_MP3_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
                     if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_MP3_DOCUMENT_SCHEMA) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -610,20 +610,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Mp3Parts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Mp3Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Mp3Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -635,7 +635,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec Mp3BuilderFacets {
         construction: Mp3BuilderConstruction,
         analysis: Mp3AnalyzerAnalysis,

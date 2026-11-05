@@ -16,8 +16,8 @@ pub struct SetVersionInfo {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetVersionInfo {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "version-info", kind: "set-version-info", record: "SetVersionInfo" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set version info", "Versionsinfo setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set version info", "Versionsinfo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

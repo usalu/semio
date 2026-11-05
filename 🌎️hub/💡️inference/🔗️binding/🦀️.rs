@@ -10,11 +10,11 @@
 use std::sync::Arc;
 
 use pack::snapshot::ArtifactPack;
-use semio_framework_os_kernel::os_spr::{HybridLogicalTimestamp, Mutation, OpBinary, OpText};
-use semio_framework_os_kernel::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
-use semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot;
-use semio_framework_os_kernel::os_store::ArtifactStore;
-use semio_framework_plugin::{ArtifactInferenceExecutionError, ArtifactInferenceService, WireArtifactInferenceBudget};
+use semio_os_kernel::os_spr::{HybridLogicalTimestamp, Mutation, OpBinary, OpText};
+use semio_os_kernel::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot;
+use semio_os_kernel::os_store::ArtifactStore;
+use semio_plugin::{ArtifactInferenceExecutionError, ArtifactInferenceService, WireArtifactInferenceBudget};
 use semio_framework_value::{FromValue, ToValue};
 
 /// 🚫️ Why a binding refused; the hub maps each refusal onto its own stable route or commit taxonomy.
@@ -84,11 +84,11 @@ pub trait MapInferenceProposalBindingV1: Send + Sync {
 /// require of their parameters.
 pub trait ComposedMapCommitBindingV1: Sized + Send + Sync + 'static {
     type ParentSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type ParentMutation: Mutation<Self::ParentSnapshot> + semio_framework_os_kernel::os_spr::ColdMutation<Self::ParentSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type ParentMutation: Mutation<Self::ParentSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::ParentSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
     type DrawingSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type DrawingMutation: Mutation<Self::DrawingSnapshot> + semio_framework_os_kernel::os_spr::ColdMutation<Self::DrawingSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type DrawingMutation: Mutation<Self::DrawingSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::DrawingSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
     type ValueSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type ValueMutation: Mutation<Self::ValueSnapshot> + semio_framework_os_kernel::os_spr::ColdMutation<Self::ValueSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type ValueMutation: Mutation<Self::ValueSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::ValueSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
 
     /// 🎯️ The exact member ids a fixed-three undo requires, in stable-member order.
     const COMMIT_MEMBERS: [&'static str; 2];

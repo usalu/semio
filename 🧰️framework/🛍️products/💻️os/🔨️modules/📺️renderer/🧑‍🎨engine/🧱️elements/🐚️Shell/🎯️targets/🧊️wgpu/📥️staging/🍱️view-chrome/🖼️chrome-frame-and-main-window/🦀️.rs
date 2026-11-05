@@ -47,7 +47,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             self.chrome.chrome_build.introduction_seen.insert(seen_key.clone(), seen);
             self.docs.auto_start_introduction(&seen_key, seen, &mut self.chrome, &self.tutorial);
         } else if let Some(seen_key) = self.chrome.chrome_present.maintenance.introduction_write.take() {
-            if semio_framework_os_renderer_wgpu_host_base::boot_brand().persists_introduction_seen() {
+            if semio_renderer_wgpu_host_base::boot_brand().persists_introduction_seen() {
                 let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{seen_key}");
                 stored_field_set(&key, "true");
             }
@@ -128,7 +128,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             let item = ChromeGroupItem { control_id: "", icon_id: None, label: Some(label), active: false, disabled: false, kind: HitKind::Button };
             logo_title += theme.gap_standard + retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0);
         }
-        let rows = if semio_framework_os_renderer_wgpu_host_base::boot_locks().example_id.is_empty() { self.docs.session_example_rows(&self.plugins, &self.prefs) } else { Vec::new() };
+        let rows = if semio_renderer_wgpu_host_base::boot_locks().example_id.is_empty() { self.docs.session_example_rows(&self.plugins, &self.prefs) } else { Vec::new() };
         let examples: Vec<ShellNavbarControl> = shell_example_control(&rows, matches!(&self.input.overlay_state, OverlayState::Dropdown(id) if id == "example"), self.prefs.locale_id == "de").into_iter().collect();
         let modes = self.docs.session.as_ref().map(|session| shell_mode_controls(&session.app, session.view_state.active_mode_id.as_deref(), self.prefs.active_terminology(), self.prefs.active_locale())).unwrap_or_default();
         let roles = self.docs
@@ -205,7 +205,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     pub fn plan_dock_windows(&mut self, rect: Rect, theme: &Theme, atlas: &mut FontAtlas) {
         self.dock.dock_canvas_bounds = rect;
         self.dock.dock_axis_separator = 0.0;
-        self.dock.dock.mobile = self.chrome.screen_w <= semio_framework_os_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+        self.dock.dock.mobile = self.chrome.screen_w <= semio_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
         self.dock.shell_hooks.note_selection(self.input.interaction_selection.values().any(|selection| !selection.ids.is_empty()));
         if let Some(session) = self.docs.session.as_ref() {
             if let Some(key) = self.dock.shell_hooks.prefs_to_load(&session.plugin_id, &session.app.id) {
@@ -213,7 +213,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             }
         }
         if let Some(session) = self.docs.session.as_ref() {
-            self.dock.shell_hooks.note_platform(&session.plugin_id, semio_framework_os_renderer_wgpu_host_base::host_platform_prefs());
+            self.dock.shell_hooks.note_platform(&session.plugin_id, semio_renderer_wgpu_host_base::host_platform_prefs());
         }
         self.dock.observe_device_hooks(&self.docs, self.chrome.screen_w, if self.prefs.locale_id == "de" { "de" } else { "en" });
         self.dock.dock_view = self.dock.dock.render_view(self.dock.dock_drag.as_ref().map(|drag| &drag.payload));
@@ -227,7 +227,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         }
         let (labels, _icon_ids) = self.dock.dock_chrome_maps(&self.prefs, &self.docs, &self.windows);
         for (window_id, label) in &labels {
-            note_dock_control_name(window_id, semio_framework_os_renderer_wgpu_dock::DockControlName::Body(label), self.prefs.locale_id == "de");
+            note_dock_control_name(window_id, semio_renderer_wgpu_dock::DockControlName::Body(label), self.prefs.locale_id == "de");
         }
         let (bodies, silhouettes) = self.dock.dock_view.stack_body_rects_with_silhouettes(rect, theme, &labels, atlas);
         self.dock.dock_drop_tab_bars = self.dock.dock_view.stack_corner_tab_bar_rects(rect, theme, atlas, &labels);
@@ -406,13 +406,13 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     ) -> Option<bool> {
         let controller = self.docs.document_controller_id(&self.plugins);
         let document = self.docs.panel_documents.remove(window)?;
-        semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(window, anchor.flow());
+        semio_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(window, anchor.flow());
         let complete = {
             let scroll_offsets = &mut self.input.scroll_offsets;
             let collapsed_sections = &mut self.input.collapsed_sections;
             let open_selects = &mut self.input.open_selects;
             let widget_maps = &mut self.input.widget_maps_staging;
-            let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window };
+            let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window };
             let viewport_height_for_widgets = panel_draw.screen_height();
             let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(content);
@@ -636,7 +636,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     let collapsed_sections = &mut self.input.collapsed_sections;
                     let open_selects = &mut self.input.open_selects;
                     let widget_maps = &mut self.input.widget_maps_staging;
-                    let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window.as_str() };
+                    let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window.as_str() };
                     let viewport_height_for_widgets = panel_draw.screen_height();
                     let mut ctx = framework_widget_context(panel_draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);

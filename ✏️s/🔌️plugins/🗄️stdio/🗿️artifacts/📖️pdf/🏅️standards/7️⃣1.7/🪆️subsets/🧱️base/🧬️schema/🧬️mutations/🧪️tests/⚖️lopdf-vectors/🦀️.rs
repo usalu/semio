@@ -20,7 +20,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfPage};
 #[allow(unused_imports)]
 use semio_framework_value::{DslValue, FromValue, ToValue};
 #[allow(unused_imports)]
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_plugin::{Fault, FaultCode, FaultOrigin};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector, SnapshotEditEvent};
 use crate::standards::v1_7::subsets::base::schema::mutations::*;

@@ -1,0 +1,460 @@
+{
+  "cases": [
+    {
+      "name": "First Y Edit Retains Displayed Siblings",
+      "question": {
+        "id": "vector",
+        "label": "Vector",
+        "kind": "vector",
+        "fields": [
+          {
+            "key": "x",
+            "value": 1
+          },
+          {
+            "key": "y",
+            "value": 2
+          },
+          {
+            "key": "z",
+            "value": 3
+          }
+        ]
+      },
+      "change": {
+        "vectorIndex": 1
+      },
+      "value": 9,
+      "displayed": [
+        1,
+        2,
+        3
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/1",
+          "value": 9
+        }
+      ],
+      "expected": [
+        1,
+        9,
+        3
+      ]
+    },
+    {
+      "name": "First Z Edit Retains Displayed Siblings",
+      "question": {
+        "id": "vector",
+        "label": "Vector",
+        "kind": "vector",
+        "fields": [
+          {
+            "key": "x",
+            "value": 1
+          },
+          {
+            "key": "y",
+            "value": 2
+          },
+          {
+            "key": "z",
+            "value": 3
+          }
+        ]
+      },
+      "change": {
+        "vectorIndex": 2
+      },
+      "value": 9,
+      "displayed": [
+        1,
+        2,
+        3
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/2",
+          "value": 9
+        }
+      ],
+      "expected": [
+        1,
+        2,
+        9
+      ]
+    },
+    {
+      "name": "Explicit Vector Default Remains the Initial Answer",
+      "question": {
+        "id": "vector",
+        "label": "Vector",
+        "kind": "vector",
+        "fields": [
+          {
+            "key": "x",
+            "value": 1
+          },
+          {
+            "key": "y",
+            "value": 2
+          },
+          {
+            "key": "z",
+            "value": 3
+          }
+        ],
+        "default": [
+          4,
+          5,
+          6
+        ]
+      },
+      "change": {
+        "vectorIndex": 1
+      },
+      "value": 9,
+      "displayed": [
+        4,
+        5,
+        6
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/1",
+          "value": 9
+        }
+      ],
+      "expected": [
+        4,
+        9,
+        6
+      ]
+    },
+    {
+      "name": "Existing Vector Answer Retains Its Siblings",
+      "question": {
+        "id": "vector",
+        "label": "Vector",
+        "kind": "vector",
+        "fields": [
+          {
+            "key": "x",
+            "value": 1
+          },
+          {
+            "key": "y",
+            "value": 2
+          },
+          {
+            "key": "z",
+            "value": 3
+          }
+        ]
+      },
+      "before": [
+        10,
+        20,
+        30
+      ],
+      "change": {
+        "vectorIndex": 1
+      },
+      "value": 9,
+      "displayed": [
+        10,
+        20,
+        30
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/1",
+          "value": 9
+        }
+      ],
+      "expected": [
+        10,
+        9,
+        30
+      ]
+    },
+    {
+      "name": "A Partial Vector Uses the Same Fallbacks as Its Controls",
+      "question": {
+        "id": "vector",
+        "label": "Vector",
+        "kind": "vector",
+        "fields": [
+          {
+            "key": "x",
+            "value": 1
+          },
+          {
+            "key": "y",
+            "value": 2
+          },
+          {
+            "key": "z",
+            "value": 3
+          }
+        ]
+      },
+      "before": [
+        10
+      ],
+      "change": {
+        "vectorIndex": 1
+      },
+      "value": 9,
+      "displayed": [
+        10,
+        2,
+        3
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/1",
+          "value": 9
+        }
+      ],
+      "expected": [
+        10,
+        9,
+        3
+      ]
+    },
+    {
+      "name": "A Null Vector Starts From Its Displayed Controls When Edited",
+      "question": {
+        "id": "vector",
+        "label": "Vector",
+        "kind": "vector",
+        "fields": [
+          {
+            "key": "x",
+            "value": 1
+          },
+          {
+            "key": "y",
+            "value": 2
+          },
+          {
+            "key": "z",
+            "value": 3
+          }
+        ]
+      },
+      "before": null,
+      "change": {
+        "vectorIndex": 1
+      },
+      "value": 9,
+      "displayed": [
+        1,
+        2,
+        3
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/1",
+          "value": 9
+        }
+      ],
+      "expected": [
+        1,
+        9,
+        3
+      ]
+    },
+    {
+      "name": "First Multi Toggle Removes a Selected Default",
+      "question": {
+        "id": "choices",
+        "label": "Choices",
+        "kind": "multi",
+        "default": [
+          "a",
+          "b"
+        ],
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          },
+          {
+            "value": "c",
+            "label": "C"
+          }
+        ]
+      },
+      "change": {
+        "optionValue": "a"
+      },
+      "value": true,
+      "displayed": [
+        "a",
+        "b"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/0"
+        }
+      ],
+      "expected": [
+        "b"
+      ]
+    },
+    {
+      "name": "First Multi Toggle Retains Selected Defaults",
+      "question": {
+        "id": "choices",
+        "label": "Choices",
+        "kind": "multi",
+        "default": [
+          "a",
+          "b"
+        ],
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          },
+          {
+            "value": "c",
+            "label": "C"
+          }
+        ]
+      },
+      "change": {
+        "optionValue": "c"
+      },
+      "value": true,
+      "displayed": [
+        "a",
+        "b"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/-",
+          "value": "c"
+        }
+      ],
+      "expected": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "name": "An Explicit Null Multi Answer Does Not Restore Defaults",
+      "question": {
+        "id": "choices",
+        "label": "Choices",
+        "kind": "multi",
+        "default": [
+          "a",
+          "b"
+        ],
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          },
+          {
+            "value": "c",
+            "label": "C"
+          }
+        ]
+      },
+      "before": null,
+      "change": {
+        "optionValue": "a"
+      },
+      "value": true,
+      "displayed": [],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/-",
+          "value": "a"
+        }
+      ],
+      "expected": [
+        "a"
+      ]
+    },
+    {
+      "name": "An Existing Multi Answer Remains Authoritative",
+      "question": {
+        "id": "choices",
+        "label": "Choices",
+        "kind": "multi",
+        "default": [
+          "a",
+          "b"
+        ],
+        "options": [
+          {
+            "value": "a",
+            "label": "A"
+          },
+          {
+            "value": "b",
+            "label": "B"
+          },
+          {
+            "value": "c",
+            "label": "C"
+          }
+        ]
+      },
+      "before": [
+        "b"
+      ],
+      "change": {
+        "optionValue": "b"
+      },
+      "value": false,
+      "displayed": [
+        "b"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/0"
+        }
+      ],
+      "expected": []
+    }
+  ],
+  "invalidChanges": [
+    {},
+    {
+      "vectorIndex": 1,
+      "optionValue": "a"
+    },
+    {
+      "vectorIndex": -1
+    }
+  ]
+}

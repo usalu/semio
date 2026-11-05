@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-tui-frame"
+name = "semio-ui-tui-frame"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -22,5 +22,5 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
-semio-framework-ui-tui-widgets = { path = "../../../🧩️widgets/📦️packages/🦀️rust" }
+semio-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-widgets = { path = "../../../🧩️widgets/📦️packages/🦀️rust" }

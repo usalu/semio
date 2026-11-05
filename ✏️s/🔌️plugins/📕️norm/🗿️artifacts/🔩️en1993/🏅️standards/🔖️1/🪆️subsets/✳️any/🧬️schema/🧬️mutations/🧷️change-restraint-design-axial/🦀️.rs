@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRestraintDesignAxi
         record: "ChangedRestraintDesignAxial",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design axial force N_Ed of the restraint", "Halterung: Bemessungsnormalkraft N_Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design axial force N_Ed of the restraint", "Halterung: Bemessungsnormalkraft N_Ed ändern")
     }
 }
 

@@ -1,3 +1,4 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 🥾️ Boot budget of the served `s` React shell: what the user waits for when the shell starts — the serve answering its
  * first request (when the harness had to start it), one COLD boot in a fresh browser context and one WARM reload in the
  * same context.
@@ -17,8 +18,7 @@ import { cpus, loadavg, tmpdir } from "node:os";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { BrowserContext, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { devServePortV1, ensureDevServe, type DevServerV1 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import { awaitBeacon } from "../🧮️program-matrix/🟦️.ts";
@@ -195,8 +195,8 @@ async function measureLoad(page: Page, navigate: () => Promise<unknown>, deadlin
 
 /** 🥾️ One cold boot in a fresh persistent browser profile (a real HTTP disk cache, like the user's browser), then one warm
  * reload in it; the profile is deleted afterwards. */
-export async function runBootBudget(options: Readonly<{ baseUrl: string; serveReadyMs: number | null; headed: boolean; signal: AbortSignal }>): Promise<BootMeasurementV1> {
-  ensureParityPlaywrightBrowsersPath();
+export async function runBootBudget(repoRoot: string, options: Readonly<{ baseUrl: string; serveReadyMs: number | null; headed: boolean; signal: AbortSignal }>): Promise<BootMeasurementV1> {
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const profile = mkdtempSync(join(tmpdir(), "semio-boot-budget-"));
   const context: BrowserContext = await chromium.launchPersistentContext(profile, { headless: !options.headed, viewport: { width: 1440, height: 900 }, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
@@ -267,7 +267,7 @@ export async function runBootBudgetCli(repoRoot: string, defaultOutDir: string, 
         return;
       }
       try {
-        const measured = await runBootBudget({ baseUrl: serve.url, serveReadyMs, headed: segments.includes("--headed"), signal: controller.signal });
+        const measured = await runBootBudget(repoRoot, { baseUrl: serve.url, serveReadyMs, headed: segments.includes("--headed"), signal: controller.signal });
         const verdict = controller.signal.aborted ? { status: "fail" as const, timingJudged: false, violations: ["cancelled"] } : judgeBootBudgetV1(fixture.budget, measured);
         const reportPath = join(outDir, "boot.json");
         writeFileSync(reportPath, `${JSON.stringify({ baseUrl: serve.url, reused: serve.reused, measured, verdict }, null, 1)}\n`);

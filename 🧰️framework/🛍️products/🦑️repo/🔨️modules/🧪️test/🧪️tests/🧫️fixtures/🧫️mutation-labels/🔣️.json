@@ -68,7 +68,7 @@
     },
     {
       "id": "commit-with-a-computed-label-qualified-and-turbofished",
-      "rust": "fn edit(mutation: Op, description: String) -> Result<Emit<Op, Cfg>, Fault> {\n    let first = semio_framework_plugin::Emit::commit(vec![mutation.clone()], description.clone());\n    let second = Emit::<Op, Cfg>::commit(vec![mutation], format!(\"Edit {}\", description));\n    Ok(first.merge(second))\n}\n",
+      "rust": "fn edit(mutation: Op, description: String) -> Result<Emit<Op, Cfg>, Fault> {\n    let first = semio_plugin::Emit::commit(vec![mutation.clone()], description.clone());\n    let second = Emit::<Op, Cfg>::commit(vec![mutation], format!(\"Edit {}\", description));\n    Ok(first.merge(second))\n}\n",
       "sites": [
         { "trait": "Emit", "implementor": "commit", "verdict": "labelHandwritten", "texts": [[null, null]] },
         { "trait": "Emit", "implementor": "commit", "verdict": "labelHandwritten", "texts": [["Edit {}", null]] }
@@ -76,7 +76,7 @@
     },
     {
       "id": "described-emission-literals",
-      "rust": "fn fill(mutation: Op, description: Option<String>) -> Result<Emit<Op, Cfg>, Fault> {\n    if mutation.is_empty() {\n        return Ok(Emit { effects: start_fill_effects(), description: Some(\"Commit fill\".into()), ..Default::default() });\n    }\n    Ok(semio_framework_plugin::Emit { artifact_mutations: vec![mutation], description, ..Default::default() })\n}\n",
+      "rust": "fn fill(mutation: Op, description: Option<String>) -> Result<Emit<Op, Cfg>, Fault> {\n    if mutation.is_empty() {\n        return Ok(Emit { effects: start_fill_effects(), description: Some(\"Commit fill\".into()), ..Default::default() });\n    }\n    Ok(semio_plugin::Emit { artifact_mutations: vec![mutation], description, ..Default::default() })\n}\n",
       "sites": [
         { "trait": "Emit", "implementor": "description", "verdict": "labelHandwritten", "texts": [["Commit fill", null]] },
         { "trait": "Emit", "implementor": "description", "verdict": "labelHandwritten", "texts": [[null, null]] }

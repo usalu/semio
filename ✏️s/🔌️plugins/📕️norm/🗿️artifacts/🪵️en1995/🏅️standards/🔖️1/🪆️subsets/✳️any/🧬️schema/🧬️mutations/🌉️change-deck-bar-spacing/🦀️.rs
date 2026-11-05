@@ -10,7 +10,7 @@ pub struct ChangeDeckBarSpacing { pub deck_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeDeckBarSpacing where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_deck_bar_spacing::ChangeDeckBarSpacing> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "deck-bar-spacing", kind: "change-deck-bar-spacing", record: "ChangedDeckBarSpacing" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change prestress bar spacing s of deck {}", self.deck_id), &format!("Abstand s der Spannstäbe von Deck {} ändern", self.deck_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change prestress bar spacing s of deck {}", self.deck_id), &format!("Abstand s der Spannstäbe von Deck {} ändern", self.deck_id)) }
     fn target(&self) -> Vec<String> { vec![self.deck_id.clone()] }
 }
 

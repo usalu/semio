@@ -30,7 +30,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
         let mut driver=(contribution.create)(scope.clone(),true);
         if driver.intend(action,payload).is_err() {return;}
         self.directory.inference_port_status=Some(InstalledServiceStatusV1 {owner:owner.into(),service_id:service_id.into(),payload:driver.status()});
-        self.directory.inference_port=Some(ShellInferenceRunner::start(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(),client,std::sync::Arc::new(port),self.directory.directory_ctx(),contribution,scope,driver));
+        self.directory.inference_port=Some(ShellInferenceRunner::start(semio_renderer_wgpu_host_base::renderer_worker_pool(),client,std::sync::Arc::new(port),self.directory.directory_ctx(),contribution,scope,driver));
     }
 
     //#endregion 💡️InferencePort

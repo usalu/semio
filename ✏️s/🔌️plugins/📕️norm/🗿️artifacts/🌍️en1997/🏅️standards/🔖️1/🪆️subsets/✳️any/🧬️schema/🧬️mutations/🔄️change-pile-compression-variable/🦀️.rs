@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileCompressionVar
         record: "ChangedPileCompressionVariable",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Variable compression Q_k of the pile", "Pfahl: Veränderliche Druckkraft Q_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Variable compression Q_k of the pile", "Pfahl: Veränderliche Druckkraft Q_k ändern")
     }
 }
 

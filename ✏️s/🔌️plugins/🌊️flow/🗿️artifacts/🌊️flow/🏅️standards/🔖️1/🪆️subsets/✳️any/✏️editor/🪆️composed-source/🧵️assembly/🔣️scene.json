@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "owner-before-cache",
+      "events": [
+        "birth",
+        "alias",
+        "retire-owner",
+        "retire-alias"
+      ],
+      "counts": [
+        1,
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "cache-before-owner",
+      "events": [
+        "birth",
+        "alias",
+        "retire-alias",
+        "retire-owner"
+      ],
+      "counts": [
+        1,
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "owner-only",
+      "events": [
+        "birth",
+        "retire-owner"
+      ],
+      "counts": [
+        1,
+        0
+      ]
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 //! 🙋️ Approval coordinator of the consent crate: Stdio lines, elicitation and the approval coordinator.
 
 use crate::elicitation::{ElicitationAction, ElicitationSlot, ElicitationUnavailable};
-use semio_framework_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
-use semio_framework_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, active_shell_connection};
-use semio_framework_os_mcp_bridge_codec::bridge::{ApprovalDecision, ApprovalWithdrawal, GatewayToShell};
-use semio_framework_os_mcp_foundation::rendezvous::live_os_sessions;
-use semio_framework_os_mcp_wire::notify::active_request_cancel_requested;
+use semio_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
+use semio_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, active_shell_connection};
+use semio_os_mcp_bridge_codec::bridge::{ApprovalDecision, ApprovalWithdrawal, GatewayToShell};
+use semio_os_mcp_foundation::rendezvous::live_os_sessions;
+use semio_os_mcp_wire::notify::active_request_cancel_requested;
 
 //#region 🔖️ApprovalCoordinator
 

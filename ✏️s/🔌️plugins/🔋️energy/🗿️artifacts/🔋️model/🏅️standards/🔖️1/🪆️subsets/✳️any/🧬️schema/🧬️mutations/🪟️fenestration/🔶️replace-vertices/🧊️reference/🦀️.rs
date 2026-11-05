@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "fenestration", kind: "replace-fenestration-vertices", record: "ReplacedFenestrationVertices" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace fenestration {} with a {}-vertex polygon", self.id.0, self.new_vertices_m.len()), &format!("Fenster {} durch ein Polygon mit {} Ecken ersetzen", self.id.0, self.new_vertices_m.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace fenestration {} with a {}-vertex polygon", self.id.0, self.new_vertices_m.len()), &format!("Fenster {} durch ein Polygon mit {} Ecken ersetzen", self.id.0, self.new_vertices_m.len()))
     }
 
     fn target(&self) -> Vec<String> {

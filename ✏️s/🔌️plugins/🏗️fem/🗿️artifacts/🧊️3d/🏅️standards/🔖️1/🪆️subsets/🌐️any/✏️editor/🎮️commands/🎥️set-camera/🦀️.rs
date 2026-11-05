@@ -1,17 +1,17 @@
 //! 🎥️ 🎥️ FEM 3D app commands command — `set-camera`.
 
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_os_kernel::Viewport3dOrbit;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_os_kernel::Viewport3dOrbit;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 
@@ -26,7 +26,7 @@ pub fn handle(_payload: &SetCamera, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg
     Err(Fault::from("fem3d.camera.window-context-required"))
 }
 
-pub fn handle_window(payload: &SetCamera, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+pub fn handle_window(payload: &SetCamera, cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     payload.camera.validate().map_err(|error| Fault::from(error.to_string()))?;
     let camera = payload.camera;
     let id = view.window_id.as_deref().ok_or_else(|| Fault::from("fem3d.camera.window-required"))?;

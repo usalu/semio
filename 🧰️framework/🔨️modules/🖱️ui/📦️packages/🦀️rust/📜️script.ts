@@ -10,14 +10,14 @@ import { resolveTestLevel, testLevelBudgetMs } from "../../../🏃️process/�
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { buildBudgetMs, cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 📦️ The carved native UI crates the `ui` gates cover: the terminal tier, the wgpu tiers and their laws. */
-export const UI_TUI_PACKAGES = ["semio-framework-ui-tui-core", "semio-framework-ui-tui-vt", "semio-framework-ui-tui-terminal", "semio-framework-ui-tui-widgets", "semio-framework-ui-tui-frame", "semio-framework-ui-tui-engine", "semio-framework-ui-tui-host", "semio-framework-ui-tui-unit-laws", "semio-framework-ui-tui-vt-laws", "semio-framework-ui-tui-laws"];
-export const UI_WGPU_PACKAGES = ["semio-framework-ui-wgpu-light", "semio-framework-ui-wgpu-input", "semio-framework-ui-wgpu-layout", "semio-framework-ui-wgpu-mounted-layout", "semio-framework-ui-wgpu-widget-kit", "semio-framework-ui-wgpu-controls", "semio-framework-ui-wgpu-events", "semio-framework-ui-wgpu-paint", "semio-framework-ui-wgpu-paint-reference", "semio-framework-ui-wgpu-widgets", "semio-framework-ui-wgpu-hosting", "semio-framework-ui-wgpu-engine-surface", "semio-framework-ui-wgpu-engine", "semio-framework-ui-wgpu-input-laws", "semio-framework-ui-wgpu-layout-laws", "semio-framework-ui-wgpu-mounted-layout-laws", "semio-framework-ui-wgpu-events-laws", "semio-framework-ui-wgpu-events-control-laws", "semio-framework-ui-wgpu-paint-laws", "semio-framework-ui-wgpu-engine-laws", "semio-framework-ui-wgpu-engine-scene-laws", "semio-framework-ui-wgpu-laws"];
-export const UI_TEST_PACKAGES = ["semio-framework-ui", ...UI_TUI_PACKAGES, ...UI_WGPU_PACKAGES];
-export const UI_TEST_FEATURES = "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native";
-export const UI_TUI_WASM_PACKAGES = ["semio-framework-ui-tui-core", "semio-framework-ui-tui-vt", "semio-framework-ui-tui-terminal", "semio-framework-ui-tui-widgets", "semio-framework-ui-tui-frame", "semio-framework-ui-tui-engine"];
-export const UI_TUI_BINDGEN_PACKAGES = ["semio-framework-ui-tui-host"];
-export const UI_WGPU_LIGHT_PACKAGES = ["semio-framework-ui-wgpu-light", "semio-framework-ui-wgpu-input"];
-export const UI_WGPU_ENGINE_WASM_PACKAGES = ["semio-framework-ui-wgpu-engine"];
+export const UI_TUI_PACKAGES = ["semio-ui-tui-core", "semio-ui-tui-vt", "semio-ui-tui-terminal", "semio-ui-tui-widgets", "semio-ui-tui-frame", "semio-ui-tui-engine", "semio-ui-tui-host", "semio-ui-tui-unit-laws", "semio-ui-tui-vt-laws", "semio-ui-tui-laws"];
+export const UI_WGPU_PACKAGES = ["semio-ui-wgpu-light", "semio-ui-wgpu-input", "semio-ui-wgpu-layout", "semio-ui-wgpu-mounted-layout", "semio-ui-wgpu-widget-kit", "semio-ui-wgpu-controls", "semio-ui-wgpu-events", "semio-ui-wgpu-paint", "semio-ui-wgpu-paint-reference", "semio-ui-wgpu-widgets", "semio-ui-wgpu-hosting", "semio-ui-wgpu-engine-surface", "semio-ui-wgpu-engine", "semio-ui-wgpu-input-laws", "semio-ui-wgpu-layout-laws", "semio-ui-wgpu-mounted-layout-laws", "semio-ui-wgpu-events-laws", "semio-ui-wgpu-events-control-laws", "semio-ui-wgpu-paint-laws", "semio-ui-wgpu-engine-laws", "semio-ui-wgpu-engine-scene-laws", "semio-ui-wgpu-laws"];
+export const UI_TEST_PACKAGES = ["semio-ui", ...UI_TUI_PACKAGES, ...UI_WGPU_PACKAGES];
+export const UI_TEST_FEATURES = "semio-ui-tui-terminal/native,semio-ui-tui-unit-laws/native";
+export const UI_TUI_WASM_PACKAGES = ["semio-ui-tui-core", "semio-ui-tui-vt", "semio-ui-tui-terminal", "semio-ui-tui-widgets", "semio-ui-tui-frame", "semio-ui-tui-engine"];
+export const UI_TUI_BINDGEN_PACKAGES = ["semio-ui-tui-host"];
+export const UI_WGPU_LIGHT_PACKAGES = ["semio-ui-wgpu-light", "semio-ui-wgpu-input"];
+export const UI_WGPU_ENGINE_WASM_PACKAGES = ["semio-ui-wgpu-engine"];
 
 /** ⚙️ Registers the native UI package and its semantic UI-axis generator commands. */
 
@@ -36,12 +36,12 @@ class TestScript extends BundleScript {
     }
     if(segments[0]==="original-presented-source-native"){
       if(segments.length!==1)throw new Error("original presented source accepts no arguments");
-      await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-ui-wgpu-engine-scene-laws"],cwd:this.root,signal:this.invocation.control.signal,remainingMilliseconds:()=>scriptInvocationBudget(this.invocation,0),extraArgs:["--offline","--lib","-E","test(original_presented_tree_alias_same_caller_denials_no_owner_copy_and_paid_return)","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);return;
+      await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-ui-wgpu-engine-scene-laws"],cwd:this.root,signal:this.invocation.control.signal,remainingMilliseconds:()=>scriptInvocationBudget(this.invocation,0),extraArgs:["--offline","--lib","-E","test(original_presented_tree_alias_same_caller_denials_no_owner_copy_and_paid_return)","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);return;
     }
     if (segments[0] === "mounted-admission-native") {
       if (segments.length !== 1) throw new Error("Expected test mounted-admission-native");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-wgpu-engine-laws"], cwd: this.root, extraArgs: ["--lib", "--offline", "-E", "test(original_layout_admission_params_cancel_and_full_error_close_with_system_receipts) | test(original_ui_worker_close_)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-ui-wgpu-engine-laws"], cwd: this.root, extraArgs: ["--lib", "--offline", "-E", "test(original_layout_admission_params_cancel_and_full_error_close_with_system_receipts) | test(original_ui_worker_close_)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
       return;
     }
     if (segments[0] === "text-editor") {
@@ -85,7 +85,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "physical-close-native") {
       if (segments.length !== 1) throw new Error("Expected test physical-close-native");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-wgpu-engine-scene-laws"], cwd: this.root, extraArgs: ["--lib", "--offline", "-E", "test(physical_job_close)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-ui-wgpu-engine-scene-laws"], cwd: this.root, extraArgs: ["--lib", "--offline", "-E", "test(physical_job_close)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
       return;
     }
     if (segments[0] === "prepared-close") {
@@ -123,7 +123,7 @@ class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
     const check = (packages: string[], ...args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), ...packages.flatMap(name => ["-p", name]), ...args],this.root,process.env,buildBudgetMs());
     await check(UI_TUI_WASM_PACKAGES, "--target", "wasm32-unknown-unknown");
-    await check(UI_TUI_BINDGEN_PACKAGES, "--target", "wasm32-unknown-unknown", "--features", "semio-framework-ui-tui-host/bindgen");
+    await check(UI_TUI_BINDGEN_PACKAGES, "--target", "wasm32-unknown-unknown", "--features", "semio-ui-tui-host/bindgen");
     await check(UI_WGPU_LIGHT_PACKAGES, "--target", "wasm32-wasip2");
   }
 }

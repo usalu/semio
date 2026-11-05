@@ -5,19 +5,19 @@
 //! @see 🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json
 
 #[cfg(test)]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
 use semio_framework_value::DslValue;
 use std::future::Future;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 #[cfg(test)]
-use semio_framework_plugin_window_kits::{NodeGraphDeleteDispatch, delete_selection, node_graph_delete_selection_spec, nothing_selected};
+use semio_plugin_window_kits::{NodeGraphDeleteDispatch, delete_selection, node_graph_delete_selection_spec, nothing_selected};
 #[cfg(test)]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_ui_contract::*;
 use semio_framework_tool_machine::{node_graph_edit_rows, NodeGraphEditRow};
 use semio_framework::ViewModel;
 
@@ -32,13 +32,13 @@ pub fn ids(values: &[&str]) -> Vec<String> {
 /// verb carries no row; an empty selection dispatches nothing; and the ambient row stays refused by the shared decoder.
 #[test]
 fn a_menu_delete_names_its_selection_as_one_delete_row() {
-    let en = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let en = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let label = delete_selection();
     let spec = node_graph_delete_selection_spec(label.resolve(en.terminology, en.locale), &en, &ids(&["a", "b"]), &ids(&["s1"]), NodeGraphDeleteDispatch::ViaNodeGraphEdit);
     assert_eq!((spec.id.as_str(), spec.action.as_deref(), spec.destructive), ("delete-selection", Some("nodeGraphEdit"), Some(true)));
     let args = spec.args.expect("the delete row");
     assert_eq!(node_graph_edit_rows(&args), Ok(vec![NodeGraphEditRow::Delete { node_ids: ids(&["a", "b"]), synapse_ids: ids(&["s1"]) }]));
-    let de = ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native);
+    let de = ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native);
     let edges_only = node_graph_delete_selection_spec(label.resolve(de.terminology, de.locale), &de, &[], &ids(&["s1", "s2"]), NodeGraphDeleteDispatch::ViaNodeGraphEdit);
     assert_eq!(node_graph_edit_rows(&edges_only.args.expect("the delete row")), Ok(vec![NodeGraphEditRow::Delete { node_ids: Vec::new(), synapse_ids: ids(&["s1", "s2"]) }]));
     let direct = node_graph_delete_selection_spec(label.resolve(en.terminology, en.locale), &en, &ids(&["a"]), &[], NodeGraphDeleteDispatch::Direct);

@@ -4,9 +4,9 @@
 //! `ShootingSnapshot` lives in `📸️snapshot/🧬️schema` and is re-exported here. Domain records and
 //! patch types stay in this root component.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -103,10 +103,10 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 /// file. Left bare it would now resolve to THIS file's own `io_registry` module below, which has a
 /// different, incompatible return type (`&'static [&'static ComposerEntry]`, wrapping the real registry's
 /// owned entries) — not the `&'static [ComposerEntry]` `.composers()` expects.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.shooting.shooting.standard.v1", "standard", "1", &[], None),
         ("s.shooting.shooting.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.shooting.shooting.schema.artifact", "schema", "s.shooting.shooting", &[("schema", "s.shooting.shooting")], None),
@@ -136,13 +136,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::shooting_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::shooting_artifact_inference_descriptor()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::app::EditorApp<editor::shooting::ShootingPlayApp>>()
+        .document_codec::<semio_plugin::app::EditorApp<editor::shooting::ShootingPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

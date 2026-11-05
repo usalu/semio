@@ -1,0 +1,386 @@
+[
+  {
+    "name": "CreateWidget",
+    "wire": {
+      "mutation": "createWidget",
+      "index": 0,
+      "widget": {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "Grüße🧱"
+      }
+    },
+    "expected": {
+      "mutation": "createWidget",
+      "index": 0,
+      "widget": {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "Grüße🧱"
+      }
+    }
+  },
+  {
+    "name": "DeleteWidget",
+    "wire": {
+      "mutation": "deleteWidget",
+      "id": "n"
+    },
+    "expected": {
+      "mutation": "deleteWidget",
+      "id": "n"
+    }
+  },
+  {
+    "name": "ConnectSynapse",
+    "wire": {
+      "mutation": "connectSynapse",
+      "index": 0,
+      "synapse": {
+        "id": "w",
+        "from": "a",
+        "to": "b",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    },
+    "expected": {
+      "mutation": "connectSynapse",
+      "index": 0,
+      "synapse": {
+        "id": "w",
+        "from": "a",
+        "to": "b",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    }
+  },
+  {
+    "name": "DisconnectSynapse",
+    "wire": {
+      "mutation": "disconnectSynapse",
+      "id": "w"
+    },
+    "expected": {
+      "mutation": "disconnectSynapse",
+      "id": "w"
+    }
+  },
+  {
+    "name": "MoveWidget",
+    "wire": {
+      "mutation": "moveWidget",
+      "id": "n",
+      "layout": {
+        "x": 3,
+        "y": -2
+      }
+    },
+    "expected": {
+      "mutation": "moveWidget",
+      "id": "n",
+      "layout": {
+        "x": 3,
+        "y": -2
+      }
+    }
+  },
+  {
+    "name": "UpdateCamera",
+    "wire": {
+      "mutation": "updateCamera",
+      "camera": {
+        "x": 4,
+        "y": 5,
+        "zoom": 2
+      }
+    },
+    "expected": {
+      "mutation": "updateCamera",
+      "camera": {
+        "x": 4,
+        "y": 5,
+        "zoom": 2
+      }
+    }
+  },
+  {
+    "name": "ChangeSchema",
+    "wire": {
+      "mutation": "changeSchema",
+      "newSchema": "flow"
+    },
+    "expected": {
+      "mutation": "changeSchema",
+      "newSchema": "flow"
+    }
+  },
+  {
+    "name": "CreateGeneration",
+    "wire": {
+      "mutation": "createGeneration",
+      "generation": {
+        "id": "g",
+        "name": "One",
+        "values": {
+          "n": "x"
+        }
+      },
+      "index": 0
+    },
+    "expected": {
+      "mutation": "createGeneration",
+      "generation": {
+        "id": "g",
+        "name": "One",
+        "values": {
+          "n": "x"
+        }
+      },
+      "index": 0
+    }
+  },
+  {
+    "name": "DeleteGeneration",
+    "wire": {
+      "mutation": "deleteGeneration",
+      "id": "g"
+    },
+    "expected": {
+      "mutation": "deleteGeneration",
+      "id": "g"
+    }
+  },
+  {
+    "name": "RenameGeneration",
+    "wire": {
+      "mutation": "renameGeneration",
+      "id": "g",
+      "newName": "Zwei"
+    },
+    "expected": {
+      "mutation": "renameGeneration",
+      "id": "g",
+      "newName": "Zwei"
+    }
+  },
+  {
+    "name": "ChangeGenerationValue",
+    "wire": {
+      "mutation": "changeGenerationValue",
+      "id": "g",
+      "questionId": "n",
+      "newValue": {
+        "nested": [
+          1,
+          true,
+          null
+        ]
+      }
+    },
+    "expected": {
+      "mutation": "changeGenerationValue",
+      "id": "g",
+      "questionId": "n",
+      "newValue": {
+        "nested": [
+          1,
+          true,
+          null
+        ]
+      }
+    }
+  },
+  {
+    "name": "ChangeSliderValue",
+    "wire": {
+      "mutation": "changeSliderValue",
+      "id": "n",
+      "value": 4.5
+    },
+    "expected": {
+      "mutation": "changeSliderValue",
+      "id": "n",
+      "value": 4.5
+    }
+  },
+  {
+    "name": "MoveNodes",
+    "wire": {
+      "mutation": "moveNodes",
+      "ids": [
+        "n",
+        "m"
+      ],
+      "dx": 2,
+      "dy": 3
+    },
+    "expected": {
+      "mutation": "moveNodes",
+      "ids": [
+        "n",
+        "m"
+      ],
+      "dx": 2,
+      "dy": 3
+    }
+  },
+  {
+    "name": "SelectGeneration",
+    "wire": {
+      "mutation": "selectGeneration",
+      "generationId": "g"
+    },
+    "expected": {
+      "mutation": "selectGeneration",
+      "generationId": "g"
+    }
+  },
+  {
+    "name": "UpdateWidget",
+    "wire": {
+      "mutation": "updateWidget",
+      "widget": {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "next"
+      }
+    },
+    "expected": {
+      "mutation": "updateWidget",
+      "widget": {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "next"
+      }
+    }
+  },
+  {
+    "name": "UpdateSynapse",
+    "wire": {
+      "mutation": "updateSynapse",
+      "synapse": {
+        "id": "w",
+        "from": "b",
+        "to": "c",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    },
+    "expected": {
+      "mutation": "updateSynapse",
+      "synapse": {
+        "id": "w",
+        "from": "b",
+        "to": "c",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    }
+  },
+  {
+    "name": "DeleteWidgetPosition",
+    "wire": {
+      "mutation": "deleteWidgetPosition",
+      "id": "n"
+    },
+    "expected": {
+      "mutation": "deleteWidgetPosition",
+      "id": "n"
+    }
+  },
+  {
+    "name": "DragTransforms",
+    "wire": {
+      "mutation": "dragTransforms",
+      "targets": [
+        "n"
+      ],
+      "dx": 1,
+      "dy": 2,
+      "dz": 3
+    },
+    "expected": {
+      "mutation": "dragTransforms",
+      "targets": [
+        "n"
+      ],
+      "dx": 1,
+      "dy": 2,
+      "dz": 3
+    }
+  },
+  {
+    "name": "RotateTransforms",
+    "wire": {
+      "mutation": "rotateTransforms",
+      "targets": [
+        "n"
+      ],
+      "ax": 0,
+      "ay": 0,
+      "az": 1,
+      "angle": 0.5
+    },
+    "expected": {
+      "mutation": "rotateTransforms",
+      "targets": [
+        "n"
+      ],
+      "ax": 0,
+      "ay": 0,
+      "az": 1,
+      "angle": 0.5
+    }
+  },
+  {
+    "name": "ScaleTransforms",
+    "wire": {
+      "mutation": "scaleTransforms",
+      "targets": [
+        "n"
+      ],
+      "sx": 2,
+      "sy": 3,
+      "sz": 4
+    },
+    "expected": {
+      "mutation": "scaleTransforms",
+      "targets": [
+        "n"
+      ],
+      "sx": 2,
+      "sy": 3,
+      "sz": 4
+    }
+  },
+  {
+    "name": "ChangeWidgetInput",
+    "wire": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "number",
+      "value": 7
+    },
+    "expected": {
+      "mutation": "changeWidgetInput",
+      "id": "n",
+      "channel": "value",
+      "type": "number",
+      "value": 7
+    }
+  },
+  {
+    "name": "ChangeGenerationPreview",
+    "wire": {
+      "mutation": "changeGenerationPreview",
+      "text": "preview"
+    },
+    "expected": {
+      "mutation": "changeGenerationPreview",
+      "text": "preview"
+    }
+  }
+]

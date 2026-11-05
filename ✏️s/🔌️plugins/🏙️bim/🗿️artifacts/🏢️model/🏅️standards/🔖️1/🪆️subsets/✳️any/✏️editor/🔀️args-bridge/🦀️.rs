@@ -1,10 +1,10 @@
 //! 🔀️ Host-action bridge of the BIM editor: folds the shell `{action, args}` vocabulary into the closed `BimCommand` enum. See [`super`].
 
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Fault;
+use semio_plugin::DslValue;
+use semio_plugin::Fault;
 //#region 🔖️ActionBridge
 use crate::editor::bim::*;
-use semio_framework_plugin::{FaultCode, FaultOrigin};
+use semio_plugin::{FaultCode, FaultOrigin};
 
 fn snake(key: &str) -> String {
     key.chars().flat_map(|ch| if ch.is_ascii_uppercase() { vec!['_', ch.to_ascii_lowercase()] } else { vec![ch] }).collect()

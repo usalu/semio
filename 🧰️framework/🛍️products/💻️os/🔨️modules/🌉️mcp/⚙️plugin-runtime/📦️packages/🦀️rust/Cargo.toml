@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-mcp-plugin-runtime"
+name = "semio-os-mcp-plugin-runtime"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -32,22 +32,22 @@ semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️act
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-sync = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
-semio-framework-os-mcp-schema = { path = "../../../📐️schema-contract/📦️packages/🦀️rust" }
-semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
-semio-framework-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust" }
-semio-framework-os-mcp-probe-document = { path = "../../../🔬️probe-document/📦️packages/🦀️rust" }
+semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-os-mcp-schema = { path = "../../../📐️schema-contract/📦️packages/🦀️rust" }
+semio-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
+semio-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust" }
+semio-os-mcp-probe-document = { path = "../../../🔬️probe-document/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-plugin = { path = "../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
-semio-framework-plugin-guest-contract = { workspace = true }
-semio-framework-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+semio-plugin = { path = "../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
+semio-plugin-guest-contract = { workspace = true }
+semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

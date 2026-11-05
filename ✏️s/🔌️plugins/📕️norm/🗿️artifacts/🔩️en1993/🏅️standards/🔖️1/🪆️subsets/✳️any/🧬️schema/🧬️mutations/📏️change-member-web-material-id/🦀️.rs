@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberWebMaterialI
         record: "ChangedMemberWebMaterialId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Web material of a hybrid girder (empty = the member material; the flanges keep the member material) of the member", "Bauteil: Stegwerkstoff eines Hybridträgers (leer = Bauteilwerkstoff; die Gurte behalten den Bauteilwerkstoff) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Web material of a hybrid girder (empty = the member material; the flanges keep the member material) of the member", "Bauteil: Stegwerkstoff eines Hybridträgers (leer = Bauteilwerkstoff; die Gurte behalten den Bauteilwerkstoff) ändern")
     }
 }
 

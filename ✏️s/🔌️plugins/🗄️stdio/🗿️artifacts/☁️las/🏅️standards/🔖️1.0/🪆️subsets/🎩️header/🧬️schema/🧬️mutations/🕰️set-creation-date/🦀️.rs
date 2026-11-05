@@ -16,8 +16,8 @@ pub struct SetCreationDate {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetCreationDate {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "creation-date", kind: "set-creation-date", record: "SetCreationDate" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set creation date", "Erstellungsdatum setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set creation date", "Erstellungsdatum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

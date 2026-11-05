@@ -2,7 +2,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::{RetainedEquality as EqualityDerive,RetireOwned as RetireDerive,ToValue};
-use crate::retained_clone::RetainedCloneSource;
+use semio_framework_value_clone_source::RetainedCloneSource;
 #[derive(Debug,PartialEq,RetireDerive,EqualityDerive)]#[value(crate="crate")]
 enum Node{Pair((String,u64)),Bool(bool),UInt(u64),Int(i64),Float(f64),Text(String),Bytes(Vec<u8>),Sequence(Vec<Node>),Record(Vec<Field>),Variant{tag:String,value:Box<Node>},Optional(Option<Box<Node>>)}
 #[derive(Debug,PartialEq,RetireDerive,EqualityDerive)]#[value(crate="crate")]
@@ -12,7 +12,14 @@ struct CodecSkipped{visible:u64,#[value(skip)]hidden:String}
 fn parse(row:&serde_json::Value)->Node{match row["kind"].as_str().unwrap(){
  "pair"=>Node::Pair((row["first"]["value"].as_str().unwrap().to_owned(),row["second"]["value"].as_str().unwrap().parse().unwrap())),"chain"=>{let mut value=parse(&row["leaf"]);for _ in 0..row["depth"].as_u64().unwrap(){value=Node::Variant{tag:"node".into(),value:Box::new(Node::Sequence(vec![value]))};}value},"bool"=>Node::Bool(row["value"].as_bool().unwrap()),"u64"=>Node::UInt(row["value"].as_str().unwrap().parse().unwrap()),"i64"=>Node::Int(row["value"].as_str().unwrap().parse().unwrap()),"f64"=>Node::Float(f64::from_bits(u64::from_str_radix(row["word"].as_str().unwrap(),16).unwrap())),"text"=>Node::Text(row["value"].as_str().unwrap().to_owned()),"bytes"=>Node::Bytes(row["value"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect()),"sequence"=>Node::Sequence(row["items"].as_array().unwrap().iter().map(parse).collect()),"record"=>Node::Record(row["fields"].as_array().unwrap().iter().map(|f|Field{name:f["name"].as_str().unwrap().to_owned(),value:parse(&f["value"])}).collect()),"variant"=>Node::Variant{tag:row["tag"].as_str().unwrap().to_owned(),value:Box::new(parse(&row["value"]))},"optional"=>Node::Optional(if row["value"].is_null(){None}else{Some(Box::new(parse(&row["value"])))}),_=>panic!("undeclared equality fixture kind")}}
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes.max(257),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
-fn source<T:RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T>{let d=RetainedCloneSource::<T>::owned_constructor_demand::<()>();RetainedCloneSource::admit_owned(value,(),grant(RetirementDemand{copy_bytes:RetainedCloneSource::<T>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()})).result.map_err(|(e,..)|e).unwrap().0}
+fn source<T:RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T>{
+ let mut admission=RetainedCloneSource::<T>::admission_owned(value,());let mut output=None;
+ for _ in 0..64{
+  if admission.phase()=="ready"{admission.take_output(&mut output,grant(RetirementDemand{depth:1,..Default::default()})).result.unwrap();break}
+  let d=admission.next_demand().unwrap();admission.advance(grant(d)).result.unwrap();
+ }
+ assert!(admission.terminal_is_empty());output.unwrap()
+}
 fn close_source<T:RetireOwned+Sync+'static>(source:&mut RetainedCloneSource<T>){let mut work=close_work_policy::Work::new();while !source.terminal_is_empty(){let d=source.next_close_demand(4096).unwrap();assert!(d.copy_bytes<=4096);let g=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};let(step,heap)=crate::observe_retirement_allocations(||source.close_step(g).result.unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));work.observe(step.progress()==Default::default()&&!source.terminal_is_empty()&&source.next_close_demand(4096).unwrap()==d);}}
 fn close<T:RetainedEquality>(owner:&mut RetainedEqualityOwner<T>,mut born:usize,mut released:usize){owner.begin_close();let mut turns=0;while !owner.terminal_is_empty(){let d=owner.close_demand(4096).unwrap();assert!(d.copy_bytes<=4096);let g=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};let(step,heap)=crate::observe_retirement_allocations(||owner.close_step(RetainedCloneGrant{maximum_items:0,..g}).result.unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));if d.release_bytes>0{let(step,heap)=crate::observe_retirement_allocations(||owner.close_step(RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..g}).result.unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}let(step,heap)=crate::observe_retirement_allocations(||owner.close_step(g).result.unwrap());let p=step.progress();assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;released+=heap.1;turns+=1;assert!(turns<10000);}assert_eq!(born,released);}
 #[test]

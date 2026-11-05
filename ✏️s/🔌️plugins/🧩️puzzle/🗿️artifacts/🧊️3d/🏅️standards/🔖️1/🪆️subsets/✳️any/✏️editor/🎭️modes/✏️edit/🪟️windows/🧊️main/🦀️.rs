@@ -19,9 +19,9 @@ use super::utilities;
 use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_localized;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_model::quat_rotate_vector, semio_s_artifact_puzzle_3d_editor_snapshot::target_volume_scale_json, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneMetadata, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dInteractionSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dVortex, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_SHOW_ALWAYS};
-use {semio_framework_plugin::world3d_camera_projection_json, semio_framework_plugin::world3d_chunking_json, semio_framework_plugin::world3d_environment_json, semio_framework_plugin::world3d_fit_json, semio_framework_plugin::World3dScene, semio_framework_plugin::world3d_selection_json, semio_framework_plugin::SurfaceKind, semio_framework_plugin::WindowEngagement, semio_framework_plugin::WindowEngagementInput, semio_framework_plugin::WindowEngagementSlot, semio_framework_plugin::WindowKindDefinition, semio_framework_plugin::WindowMeasure, semio_framework_plugin::WindowOptions, semio_framework_plugin::ToolRunView};
+use {semio_plugin::world3d_camera_projection_json, semio_plugin::world3d_chunking_json, semio_plugin::world3d_environment_json, semio_plugin::world3d_fit_json, semio_plugin::World3dScene, semio_plugin::world3d_selection_json, semio_plugin::SurfaceKind, semio_plugin::WindowEngagement, semio_plugin::WindowEngagementInput, semio_plugin::WindowEngagementSlot, semio_plugin::WindowKindDefinition, semio_plugin::WindowMeasure, semio_plugin::WindowOptions, semio_plugin::ToolRunView};
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 use serde_json::json;
 use serde_json::Value;
 use std::hash::Hash;
@@ -52,7 +52,7 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement(envelope, labels, None)) },
         actions: Vec::new(),
         utilities: vec![semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::volume_brush::UTILITY_ID.into(), utilities::world_relocate::UTILITY_ID.into()],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(PUZZLE3D_INTERACTION_DOMAIN)],
+        interactions: vec![semio_plugin::InteractionRef::new(PUZZLE3D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -168,8 +168,8 @@ fn framing_bounds(scene_snapshot: &Puzzle3dSceneSnapshot) -> ([f64; 3], f64) {
 /// 📷️ The projection a pane opens under, from the display template its layout entry declares
 /// ([`TEMPLATE_TOP`] / [`TEMPLATE_PERSPECTIVE`], stitched in `🎭️modes/✏️edit/🦀️.rs`): the Top pane is
 /// an orthographic plan, every other instance keeps the three-point default.
-fn framing_projection(window_id: &str) -> semio_framework_plugin::WorldProjectionConfig {
-    let mut projection = semio_framework_plugin::WorldProjectionConfig::default();
+fn framing_projection(window_id: &str) -> semio_plugin::WorldProjectionConfig {
+    let mut projection = semio_plugin::WorldProjectionConfig::default();
     if window_id == WINDOW_INSTANCE_TOP {
         projection.kind = "orthographic".into();
         projection.orthographic_view = "top".into();
@@ -186,7 +186,7 @@ pub fn framed_camera(window_id: &str, scene_snapshot: &Puzzle3dSceneSnapshot) ->
     let (target, span) = framing_bounds(scene_snapshot);
     let projection = framing_projection(window_id);
     let distance = (span * PUZZLE3D_FRAMING_SPANS).max(PUZZLE3D_FRAMING_MINIMUM_DISTANCE);
-    let (position, up) = semio_framework_plugin::world3d_projection_pose(&projection, target, distance);
+    let (position, up) = semio_plugin::world3d_projection_pose(&projection, target, distance);
     semio_s_artifact_puzzle_3d_editor_config::Puzzle3dCamera { position, target, zoom: 1.0, up: Some(up), projection }
 }
 
@@ -375,7 +375,7 @@ pub fn world_references_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
 }
 
 /// 🖌️ How many placement candidates ONE suggestion popup publishes. The scene surface it travels on is
-/// a fixed-capacity payload (`semio_framework_ui_scene::encode`), and a vortex on a richly catalogued
+/// a fixed-capacity payload (`semio_ui_scene::encode`), and a vortex on a richly catalogued
 /// document resolves arbitrarily many collision-free candidates — an unbounded list would make the whole
 /// 3D render of that window fail closed the moment the popup opened. It is also the interaction answer:
 /// a picker the user reads at a glance shows a bounded page, and `cycleBrushCandidate` walks the rest.
@@ -515,7 +515,7 @@ pub fn render(
     instances_delta_json: Option<String>,
     interaction: &Puzzle3dInteractionSnapshot,
     suggestions: Option<&BrushSuggestionsFound>,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let vortices = world_vortices_json(&envelope.scene_snapshot, &envelope.runtime, interaction, envelope.active_utility.as_str());
     let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope, interaction));
     scene.instances_delta_json = instances_delta_json;
@@ -530,7 +530,7 @@ pub fn render(
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.scene_snapshot), PUZZLE3D_FIT_PADDING, None));
     scene.domain_id = Some(PUZZLE3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT.into());
-    semio_framework_plugin::scene_surface(SURFACE_VIEWPORT, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_VIEWPORT, semio_ui_contract::SurfaceKind::World3d, &scene)
 }
 
 /// 🤝️ The engagement HUD for this window: the select/brush/fill switcher lives in the framework
@@ -561,7 +561,7 @@ pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: O
         }),
         control: None,
         controls: None,
-        status: Some(vec![semio_framework_plugin::WindowEngagementStatus { id: "puzzle3d-world-status".into(), text: format!("{object_count} {objects_label} · {attraction_count} {attractions_label}") }]),
+        status: Some(vec![semio_plugin::WindowEngagementStatus { id: "puzzle3d-world-status".into(), text: format!("{object_count} {objects_label} · {attraction_count} {attractions_label}") }]),
         possible_engagements: None,
     }
 }
@@ -583,7 +583,7 @@ mod vortex_payload_laws;
 /// once per window body, engagement and measure; through the `Value` projection bridge it cost 12 ms of a
 /// 33 ms main window render on a 100-placement fill run (unoptimized native), growing with the document, so
 /// a live tool run's refreshes slowed as the run placed objects.
-pub fn scene_for(snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: &str) -> Puzzle3dScene {
+pub fn scene_for(snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_plugin::ViewModel>, window_id: &str) -> Puzzle3dScene {
     let active_utility = puzzle3d_scene_active_utility(config, view_state, Some(window_id));
     let mut scene = scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility);
     frame_unset_camera(&mut scene, window_id);

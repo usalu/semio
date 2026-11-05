@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpChordFlange
         record: "ChangedBuiltUpChordFlangeThk",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Chord outline flange thickness t_f (wall thickness of hollow sections) of the built-up member", "Zusammengesetzter Stab: Flanschdicke t_f der Gurtkontur (Wanddicke bei Hohlprofilen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Chord outline flange thickness t_f (wall thickness of hollow sections) of the built-up member", "Zusammengesetzter Stab: Flanschdicke t_f der Gurtkontur (Wanddicke bei Hohlprofilen) ändern")
     }
 }
 

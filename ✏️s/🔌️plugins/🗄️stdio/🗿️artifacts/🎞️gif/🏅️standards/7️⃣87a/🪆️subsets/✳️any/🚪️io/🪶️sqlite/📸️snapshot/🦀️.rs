@@ -1,14 +1,14 @@
 //! 🎞️ GIF87a's individually authored indexed-image SQLite projection.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v87a::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 
 pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
 fn ownership(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::OwnershipLimit,message)}
 fn allocation(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::AllocationFailed,message)}
 
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, reconstruct_text, ordered_row_refs}, validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, reconstruct_text, ordered_row_refs}, validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 
 fn unsigned(row: &SqliteRow, column: usize) -> Result<u32,ValueError> { u32::try_from(row.integer(column)?).map_err(|error|invalid(error.to_string())) }
@@ -22,19 +22,19 @@ fn palette(out:&mut Projection<'_,'_>,header:&str,entries:&str,owner:i64,palette
 fn read_palette(header:Option<&&SqliteRow>,colors:Option<&Vec<&SqliteRow>>,control:&mut SqliteSnapshotControl<'_>)->Result<Option<GifColorTable>,ValueError>{let Some(header)=header else{return Ok(None)};let mut entries=Vec::new();for row in colors.into_iter().flatten(){if entries.len()%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,entries.len(),0)?;}entries.push(GifRgb{r:byte(row,3)?,g:byte(row,4)?,b:byte(row,5)?});}Ok(Some(GifColorTable{sorted:flag(header,1)?,colors:entries}))}
 fn read_pixels(rows:Option<&Vec<&SqliteRow>>,_width:u32,_height:u32,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<u8>,ValueError>{let rows=rows.map(Vec::as_slice).unwrap_or_default();control.check_value_bytes(rows.len())?;let mut indices=Vec::new();indices.try_reserve_exact(rows.len()).map_err(|_|allocation("GIF index allocation"))?;for(ordinal,row)in rows.iter().enumerate(){if ordinal%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,ordinal,rows.len())?;}if row.integer(2)?!=ordinal as i64{return Err(invalid("GIF index ordinals must be dense"));}indices.push(byte(row,3)?);}Ok(indices)}
 
-fn palette_bound(table:Option<&GifColorTable>,bound:&mut semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound<'_,'_>)->Result<(),ValueError>{if let Some(table)=table{bound.add(4096)?;bound.repeated(table.colors.len(),4096)?;for _ in &table.colors{bound.add(64)?;}}Ok(())}
+fn palette_bound(table:Option<&GifColorTable>,bound:&mut semio_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound<'_,'_>)->Result<(),ValueError>{if let Some(table)=table{bound.add(4096)?;bound.repeated(table.colors.len(),4096)?;for _ in &table.colors{bound.add(64)?;}}Ok(())}
 
 impl ArtifactSqliteSnapshotHost for GifSnapshot {
- fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   self.preflight_sqlite_snapshot_encoding(encoding,control)?;
   let mut rows=1usize;if let Some(palette)=&self.gct{rows=rows.checked_add(1).and_then(|value|value.checked_add(palette.colors.len())).ok_or_else(||work("GIF entity count overflow"))?;}control.check_rows(rows)?;
   for image in &self.images{rows=rows.checked_add(1).and_then(|value|value.checked_add(image.indices.len())).ok_or_else(||work("GIF entity count overflow"))?;if let Some(palette)=&image.lct{rows=rows.checked_add(1).and_then(|value|value.checked_add(palette.colors.len())).ok_or_else(||work("GIF entity count overflow"))?;}control.check_rows(rows)?;control.checkpoint(SqliteSnapshotPhase::EncodeNative,rows,0)?;}
   control.check_rows(rows)?;
   store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let encoding=match payload{store::io_schema::IoPayload::Binary(_)=>semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,store::io_schema::IoPayload::Text(_)=>semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text};let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;snapshot.preflight_sqlite_snapshot_encoding(encoding,control)?;Ok(snapshot)}
- fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
-  let mut bound=semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;bound.add(32768)?;bound.repeated(self.schema.len(),32)?;palette_bound(self.gct.as_ref(),&mut bound)?;
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let encoding=match payload{store::io_schema::IoPayload::Binary(_)=>semio_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,store::io_schema::IoPayload::Text(_)=>semio_os_kernel::sqlite_snapshot::SnapshotEncoding::Text};let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;snapshot.preflight_sqlite_snapshot_encoding(encoding,control)?;Ok(snapshot)}
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
+  let mut bound=semio_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;bound.add(32768)?;bound.repeated(self.schema.len(),32)?;palette_bound(self.gct.as_ref(),&mut bound)?;
   bound.repeated(self.images.len(),16384)?;for image in &self.images{bound.repeated(image.indices.len(),16)?;palette_bound(image.lct.as_ref(),&mut bound)?;}
   bound.finish()
  }

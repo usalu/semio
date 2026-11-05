@@ -14,9 +14,9 @@
 //! holds by construction. MUST NOT import anything from the sibling `✏️editor` module
 //! (`policyViewerPurityBreaches`).
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -84,17 +84,17 @@ pub fn default_view_show_mode() -> String {
     "shaded".into()
 }
 
-/// 🌞️ Serialized default [`semio_framework_plugin::WorldSunConfig`] — stored as raw JSON because
+/// 🌞️ Serialized default [`semio_plugin::WorldSunConfig`] — stored as raw JSON because
 /// `WorldSunConfig` is a framework type without a `semio_framework_dsl_record_derive::DslRecord` impl.
 pub fn default_view_sun_json() -> String {
-    semio_framework_pack_json::to_json_string(&semio_framework_plugin::WorldSunConfig::default())
+    semio_framework_pack_json::to_json_string(&semio_plugin::WorldSunConfig::default())
 }
 //#endregion 🔖️ViewCamera
 
 //#region 🔖️Config
 /// ⚙️ `Generation3dViewer`'s real `ArtifactViewer::Config` — persisted local view state that
 /// round-trips through the config `ArtifactStore` with a true `inverse` per leaf.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation3dviewcfg")]
 #[artifact(id = "procedural.generation3dviewcfg")]
@@ -107,7 +107,7 @@ pub struct Generation3dViewConfig {
     /// 🎥️ The 3D preview viewport camera.
     #[dsl(block)]
     pub preview_camera: Generation3dViewCamera,
-    /// 🔐️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
+    /// 🔐️ JSON-encoded `semio_plugin::WorldSunConfig`.
     #[value(default = "default_view_sun_json")]
     pub sun_json: String,
     /// 🎨️ What this surface is looking at, in the picker's own three states: `None` — nothing has
@@ -138,7 +138,7 @@ impl Default for Generation3dViewConfig {
 
 impl Generation3dViewConfig {
     /// 🔍️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed value.
-    pub fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
+    pub fn sun(&self) -> semio_plugin::WorldSunConfig {
         semio_framework_pack_json::from_json_str(&self.sun_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
     }
 
@@ -209,8 +209,8 @@ impl pack::snapshot::ArtifactPack for Generation3dViewConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dViewConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dViewConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

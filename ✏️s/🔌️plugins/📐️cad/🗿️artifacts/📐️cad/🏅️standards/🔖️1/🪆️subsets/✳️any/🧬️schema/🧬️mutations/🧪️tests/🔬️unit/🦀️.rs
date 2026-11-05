@@ -67,7 +67,7 @@ async fn every_variant_registers_an_approved_semantic_descriptor() {
 
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `store::os_spr::protocol_laws`, the same `semio_framework_os_kernel` alias every
+/// (reachable here as `store::os_spr::protocol_laws`, the same `semio_os_kernel` alias every
 /// other law/round-trip assertion in this crate already goes through), exercised against the
 /// three most structurally distinct new variants: a fixed-slot create/delete pair
 /// (`create-shape-model`), a Vec-collection create/delete pair (`create-drawing`), and a

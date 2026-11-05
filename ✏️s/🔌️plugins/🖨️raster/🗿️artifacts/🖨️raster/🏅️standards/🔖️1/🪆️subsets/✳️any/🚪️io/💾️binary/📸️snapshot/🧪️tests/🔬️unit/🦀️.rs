@@ -118,8 +118,8 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore};
 
-    let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(ArtifactCommand::Apply {
@@ -140,7 +140,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
                 }),
             })],
             transaction: None,
-        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
+        }, &mut semio_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

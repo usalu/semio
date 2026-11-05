@@ -79,57 +79,29 @@ impl RetireOwned for BudgetedInputMerge {
     fn controlled_retirement_supported()->bool{true}
 }
 
-#[derive(semio_framework_value::RetireOwned)]
-#[value(send_only)]
-struct OwnedEntryFields{base:Option<Dictionary>,key:Option<String>,value:Option<Value>,shared_key:Option<semio_framework_value_ordered::ordered::SharedOwner<String>>,shared_value:Option<semio_framework_value_ordered::ordered::SharedOwner<Value>>,update:Option<UpdateCursor<Value>>,child:Option<ControlledRetirement<InputClose>>}
-/// 📝️ Admits one new original dictionary entry before its existing ordered update frontier.
-pub struct BudgetedOwnedEntry{fields:ManuallyDrop<Option<OwnedEntryFields>>,retirement:Option<ControlledRetirement<OwnedEntryFields>>,phase:u8,closing:bool,progress:RetainedCloneProgress}
+/// 📝️ Dictionary entry construction uses the canonical original ordered-map producer.
+pub struct BudgetedOwnedEntry{entry:semio_framework_value_ordered::ordered::OriginalOwnedEntry<Value>}
 impl BudgetedOwnedEntry{
- /// 🌱️ Moves the original dictionary, key, and value inline with no allocation or destruction.
- pub fn new(base:Dictionary,key:String,value:Value)->Self{Self{fields:ManuallyDrop::new(Some(OwnedEntryFields{base:Some(base),key:Some(key),value:Some(value),shared_key:None,shared_value:None,update:None,child:None})),retirement:None,phase:0,closing:false,progress:Default::default()}}
- /// 🔗️ Moves an exact immutable source value lease while admitting only its new key header.
- pub fn from_shared_value(base:Dictionary,key:String,value:semio_framework_value_ordered::ordered::SharedOwner<Value>)->Self{Self{fields:ManuallyDrop::new(Some(OwnedEntryFields{base:Some(base),key:Some(key),value:None,shared_key:None,shared_value:Some(value),update:None,child:None})),retirement:None,phase:0,closing:false,progress:Default::default()}}
- /// 📥️ Moves the exact original shared key and value into the existing ordered update owner.
- pub fn from_shared(base:Dictionary,key:semio_framework_value_ordered::ordered::SharedOwner<String>,value:semio_framework_value_ordered::ordered::SharedOwner<Value>)->Self{Self{fields:ManuallyDrop::new(Some(OwnedEntryFields{base:Some(base),key:None,value:None,shared_key:Some(key),shared_value:Some(value),update:None,child:None})),retirement:None,phase:2,closing:false,progress:Default::default()}}
- pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
- pub fn next_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if self.closing{return self.next_close_demands(copy)}let fields=self.fields.as_ref().unwrap();if let Some(child)=fields.child.as_ref(){return BudgetedInputMerge::demands(child,copy)}if self.phase==3{let update=fields.update.as_ref().unwrap();return Ok(RetirementDemand{copy_bytes:update.next_copy_byte_demand(),capacity_bytes:update.next_capacity_byte_demand()?,depth:update.next_depth_demand(),..Default::default()})}Ok(RetirementDemand{capacity_bytes:match self.phase{0=>semio_framework_value_ordered::ordered::SharedOwner::<String>::allocation_bytes(),1=>if fields.shared_value.is_none(){semio_framework_value_ordered::ordered::SharedOwner::<Value>::allocation_bytes()}else{0},_=>0},depth:1,..Default::default()})}
- /// ⏱️ Forwards the actual update or child receipt without cold header creation or discarded owners.
- pub fn step(&mut self,grant:RetainedCloneGrant)->Result<Option<Dictionary>,ValueError>{self.progress=Default::default();let result=self.advance(grant);result.map_err(|error|error.with_retained_progress(self.progress))}
- fn advance(&mut self,grant:RetainedCloneGrant)->Result<Option<Dictionary>,ValueError>{if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original owned entry is closing"))}if grant.maximum_items==0{return Ok(None)}let demand=self.next_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original owned entry exceeds admitted depth"))}if self.phase!=5&&self.phase!=7&&(grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes){return Ok(None)}let fields=self.fields.as_mut().unwrap();self.progress.copied_items=1;match self.phase{
-  0=>match semio_framework_value_ordered::ordered::SharedOwner::admit(fields.key.take().ok_or_else(||ValueError::invariant("key absent"))?,grant).result{Ok((key,progress))=>{fields.shared_key=Some(key);self.progress=progress;self.phase=1;},Err((error,key))=>{fields.key=Some(key);self.progress=error.retained_progress();return Err(error)}},
-  1=>if fields.shared_value.is_some(){self.phase=2;}else{match semio_framework_value_ordered::ordered::SharedOwner::admit(fields.value.take().ok_or_else(||ValueError::invariant("value absent"))?,grant).result{Ok((value,progress))=>{fields.shared_value=Some(value);self.progress=progress;self.phase=2;},Err((error,value))=>{fields.value=Some(value);self.progress=error.retained_progress();return Err(error)}}},
-  2=>{fields.update=Some(fields.base.as_ref().unwrap().pairs().begin_set_shared(fields.shared_key.take().unwrap(),fields.shared_value.take().unwrap()));self.phase=3;},
-  3=>{let update=fields.update.as_mut().ok_or_else(||ValueError::invariant("update absent"))?;let result=update.advance(grant).result;self.progress=result.as_ref().map_or_else(|error|error.retained_progress(),|step|step.progress());result?;if update.is_complete(){self.phase=4;}},
-  4=>{let result=fields.update.as_mut().unwrap().take_result().unwrap();let previous=std::mem::replace(&mut fields.base.as_mut().unwrap().pairs,result);fields.child=Some(ControlledRetirement::new(InputClose::Dictionary(Dictionary{pairs:previous})).unwrap_or_else(|_|unreachable!("original entry dictionary fields declare closure")));self.phase=5;},
-  5|7=>{let child=fields.child.as_mut().unwrap();let result=child.step(grant);self.progress=child.step_progress();result?;if child.terminal_is_empty(){fields.child=None;self.phase+=1;}},
-  6=>{fields.child=Some(ControlledRetirement::new(InputClose::Update(fields.update.take().unwrap())).unwrap_or_else(|_|unreachable!("original entry update fields declare closure")));self.phase=7;},
-  8=>{self.phase=9;return Ok(fields.base.take())},
-  _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned entry output was already handed off")),
- }Ok(None)}
- /// 🛑️ Preserves all accepted source owners for the original typed close frontier.
- pub fn begin_close(&mut self){self.closing=true;}
- pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.retirement.as_ref(){return BudgetedInputMerge::demands(owner,copy)}Ok(RetirementDemand{depth:usize::from(self.fields.is_some()),..Default::default()})}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.progress=Default::default();let result=self.close_source(grant);if let Ok(step)=&result{self.progress=step.progress()}result.map_err(|error|error.with_retained_progress(self.progress))}
- fn close_source(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned entry close was not requested"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if let Some(owner)=self.retirement.as_mut(){let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.retirement=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original owned entry handoff requires depth"))}self.retirement=Some(ControlledRetirement::new(self.fields.take().unwrap()).unwrap_or_else(|_|unreachable!("original entry source declares every field")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
- pub fn terminal_is_empty(&self)->bool{self.closing&&self.fields.is_none()&&self.retirement.is_none()}
-}
-impl Drop for BudgetedOwnedEntry{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original owned entry must finish explicit closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
-struct OwnedEntryRetirement(BudgetedOwnedEntry);
-impl RetirementCursor for OwnedEntryRetirement{
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress(),1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}}
- fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
- fn allows_admitted_narrow_work(&self)->bool{true}
- fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.next_close_demands(copy).ok().map(|demand|demand.capacity_bytes)}
- fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_demands(0).ok().map(|demand|demand.release_bytes)}
- fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.depth)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+ /// 🌱️ Moves the actual original dictionary and entry into the shared producer.
+ pub fn new(base:Dictionary,key:String,value:Value)->Self{Self{entry:semio_framework_value_ordered::ordered::OriginalOwnedEntry::new(base.pairs,key,value)}}
+ /// 🔗️ Moves the exact source value lease while admitting its original key header.
+ pub fn from_shared_value(base:Dictionary,key:String,value:semio_framework_value_ordered::ordered::SharedOwner<Value>)->Self{Self{entry:semio_framework_value_ordered::ordered::OriginalOwnedEntry::from_shared_value(base.pairs,key,value)}}
+ /// 📥️ Moves the actual original shared entry into the same update owner.
+ pub fn from_shared(base:Dictionary,key:semio_framework_value_ordered::ordered::SharedOwner<String>,value:semio_framework_value_ordered::ordered::SharedOwner<Value>)->Self{Self{entry:semio_framework_value_ordered::ordered::OriginalOwnedEntry::from_shared(base.pairs,key,value)}}
+ pub fn step_progress(&self)->RetainedCloneProgress{self.entry.step_progress()}
+ pub fn last_turn_work(&self)->u64{self.entry.last_turn_work()}
+ pub fn next_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{self.entry.next_demands(copy)}
+ /// ⏱️ Publishes the exact map as a dictionary without cloning source or replacement ownership.
+ pub fn step(&mut self,grant:RetainedCloneGrant)->Result<Option<Dictionary>,ValueError>{self.entry.advance(grant).result.map(|output|output.map(|pairs|Dictionary{pairs}))}
+ pub fn begin_close(&mut self){self.entry.begin_close()}
+ pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{self.entry.next_close_demands(copy)}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.entry.close_step(grant).result}
+ pub fn terminal_is_empty(&self)->bool{self.entry.terminal_is_empty()}
 }
 impl RetireOwned for BudgetedOwnedEntry{
- fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(OwnedEntryRetirement(self))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OwnedEntryRetirement>())}
- fn controlled_retirement_supported()->bool{true}
+ fn retirement(self)->Box<dyn RetirementCursor>{self.entry.retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{self.entry.retirement_birth_bytes()}
+ fn controlled_retirement_supported()->bool{<semio_framework_value_ordered::ordered::OriginalOwnedEntry<Value>as RetireOwned>::controlled_retirement_supported()}
 }
 
 #[cfg(test)]

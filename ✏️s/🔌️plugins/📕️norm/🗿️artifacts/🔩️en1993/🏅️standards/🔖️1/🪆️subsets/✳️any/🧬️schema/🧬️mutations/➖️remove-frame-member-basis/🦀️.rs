@@ -10,7 +10,7 @@ pub struct RemoveFrameMemberBasis { pub index: usize }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveFrameMemberBasis where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_frame_member_basis::InsertFrameMemberBasis> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "frame-member-basis", kind: "remove-frame-member-basis", record: "RemovedFrameMemberBasis" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove member force basis #{}", self.index), &format!("Kraftgrundlage des Bauteils #{} entfernen", self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove member force basis #{}", self.index), &format!("Kraftgrundlage des Bauteils #{} entfernen", self.index)) }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }
 

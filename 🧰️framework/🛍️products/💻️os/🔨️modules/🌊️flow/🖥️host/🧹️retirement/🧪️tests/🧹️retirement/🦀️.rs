@@ -1,12 +1,12 @@
 //! 🧪️ Actual-grant session byte retirement, final cache ownership, and strict lifecycle guards.
 
 use super::*;
-use semio_framework_os_infinite::board::ports::directed_dag::DagHostRetirement;
+use semio_os_infinite::board::ports::directed_dag::DagHostRetirement;
 // 🧬️ `DagCamera`/`IoPortSpec` are the dag ARTIFACT crate's own records; `crate::dag` glob-imports them
 // privately, so they are named at their source rather than through that re-export.
-use semio_framework_os_infinite_directed_presentation::{DagCamera};
+use semio_os_infinite_directed_presentation::{DagCamera};
 
-use semio_framework_os_infinite_directed_presentation::{IoPortSpec};
+use semio_os_infinite_directed_presentation::{IoPortSpec};
 
 //#region 🧪️SessionRetirement
 #[test]
@@ -16,7 +16,7 @@ fn original_preview_retention_preserves_roster_and_closes_one_original_row_per_t
     for copy in [1,3,64]{
         let ((mut session,roster),heap)=observe(||{let mut session=FlowEvalSession::new();for handle in law["handles"].as_array().unwrap(){let handle=handle.as_str().unwrap().to_owned();session.preview_mesh_by_handle.insert(handle.clone(),MeshData{paint_texture_base64:Some(handle.repeat(257)),..Default::default()});session.preview_diagnostics_by_handle.insert(handle.clone(),handle.repeat(129));}let roster=law["roster"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect::<Vec<_>>();(session,roster)});
         let original=heap.requested_bytes-heap.released_bytes;let roster_pointer=roster.as_ptr();let mesh=session.preview_mesh_by_handle.get("live-高").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr();
-        let (result,heap)=observe(||session.begin_retain_preview_meshes(roster));assert!(result.is_ok());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.state.preview_retention.as_ref().unwrap().roster.as_ref().unwrap().as_ptr(),roster_pointer);
+        let (result,heap)=observe(||session.begin_retain_preview_meshes(roster));assert!(result.is_ok());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.test_preview_retention_roster_pointer().unwrap(),roster_pointer);
         let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,..Default::default()};let (denied,heap)=observe(||session.retain_preview_meshes_step(zero).unwrap());assert_eq!(denied.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         let mut born=0;let mut freed=0;let mut turns=0;
         while !session.preview_retention_terminal_is_empty(){turns+=1;assert!(turns<100000);let demand=session.next_preview_retention_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len();let (step,heap)=observe(||session.retain_preview_meshes_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress(),session.preview_retention_step_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(before-(session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len())<=1);}
@@ -265,7 +265,7 @@ fn original_baseline_publication_admits_arc_headers_and_leases_same_payload(){
     assert_eq!((lease.requested_bytes,lease.released_bytes),(0,0));
     assert!(Arc::ptr_eq(snapshot.as_ref().unwrap(),host.previous_snapshot.as_ref().unwrap()));assert!(Arc::ptr_eq(channels.as_ref().unwrap(),host.previous_channels.as_ref().unwrap()));
     assert_eq!(match channels.as_ref().unwrap().outputs.get("out").unwrap().get("payload").unwrap(){NeuralValue::Atom(Atom::String(text))=>text.as_ptr(),_=>unreachable!()},payload);
-    session.previous_snapshot=snapshot;session.previous_channels=channels;
+    session.receive_eval_baseline_sources(snapshot,channels,session.flow_extension_generation,RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("original baseline admission refused"));
     let (_,alias)=observe(||{drop(host.previous_snapshot.take());drop(host.previous_channels.take());});
     assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));host.retire_cold();
     close(session,1,source.requested_bytes-source.released_bytes+born);
@@ -317,7 +317,7 @@ fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_wor
             session.preview_mesh_by_handle.insert("mesh".into(),MeshData{paint_texture_base64:Some(preview.clone()),..Default::default()});
             session.pending_tessellate_by_hash.insert(1,"pending".into());
             session.live_geometry_handles.insert("geometry".into(),());
-            session.previous_channels=Some(Arc::new(EvalChannels{outputs:HistoryFoldIndex::from([("output".into(),Dictionary::new().insert("label",NeuralValue::Atom(Atom::String(preview.clone()))))]),inputs:HistoryFoldIndex::new()}));
+            session.receive_eval_baseline_sources(None,Some(Arc::new(EvalChannels{outputs:HistoryFoldIndex::from([("output".into(),Dictionary::new().insert("label",NeuralValue::Atom(Atom::String(preview.clone()))))]),inputs:HistoryFoldIndex::new()})),session.flow_extension_generation,RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("original baseline admission refused"));
             session.neural_cache().seed(1,Dictionary::new().insert("label",NeuralValue::Atom(Atom::String(text.clone())))).unwrap_or_else(|_|panic!("original cache admission contended"));
             session
         });
@@ -349,12 +349,12 @@ fn original_host_retirement_preserves_whole_source_and_full_close_receipts(){
  flow_extension_registry_generation();
  for copy in law["copyGrants"].as_array().unwrap(){
   let (host,source_heap)=observe(||{
-   let mut host=FlowHost::default();let baseline=host.graph.host_snapshot.clone();assert!(host.history_store_from_baseline(baseline).is_some(),"original Host store authority installed");
+   let mut host=FlowHost::default();let baseline=host.host_snapshot.clone();let envelope=create_document_envelope(FLOW_DOCUMENT_SCHEMA,"original-retirement-host",baseline,None,&::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer);host.history_store=Some(semio_framework_async::poll::resolve_ready(FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(envelope,semio_os_kernel::os_spr::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into()))).unwrap());assert!(host.history_store.is_some(),"original Host store authority installed");
    let mut text=String::with_capacity(law["capacityBytes"].as_u64().unwrap()as usize);text.push_str(&law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap()as usize));assert_eq!(text.len(),law["utf8Bytes"].as_u64().unwrap()as usize);
    host.host_catalogue_json=text;host.edited_note=Some(String::from("retained-original-note"));host
   });
   let source_bytes=source_heap.requested_bytes-source_heap.released_bytes;let pointers=(host.host_catalogue_json.as_ptr(),host.edited_note.as_ref().unwrap().as_ptr());
-  let (mut retirement,handoff)=observe(||FlowHostRetirement::new(host));assert_eq!((handoff.requested_bytes,handoff.released_bytes),(0,0));let source=retirement.state.source.as_ref().unwrap();assert_eq!((source.host_catalogue_json.as_ptr(),source.edited_note.as_ref().unwrap().as_ptr()),pointers);
+  let (mut retirement,handoff)=observe(||FlowHostRetirement::new(host));assert_eq!((handoff.requested_bytes,handoff.released_bytes),(0,0));assert_eq!(retirement.test_source_text_identity(),Some(pointers));
   let(mut born,mut freed,mut turns,mut stalled)=(0,0,0,0);
   while !retirement.terminal_is_empty(){
    turns+=1;assert!(turns<law["maximumTurns"].as_u64().unwrap());let copy=copy.as_u64().unwrap()as usize;
@@ -404,8 +404,8 @@ fn original_dag_host_retirement_preserves_source_and_independent_physical_receip
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
  for copy in [1,3,64]{
   let(mut owner,minimum_bytes)=dag_retirement_fixture();
-  let original=owner.original().unwrap().host_snapshot.schema.as_ptr();
-  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant::default()).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.original().unwrap().host_snapshot.schema.as_ptr(),original);
+  let original=owner.original().unwrap().graph.host_snapshot.schema.as_ptr();
+  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant::default()).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.original().unwrap().graph.host_snapshot.schema.as_ptr(),original);
   let(mut born,mut freed,mut turns)=(0,0,0);
   while !owner.terminal_is_empty(){turns+=1;assert!(turns<262144);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_close_release_byte_demand().unwrap(),maximum_depth:owner.next_close_depth_demand().unwrap()};
    if grant.maximum_capacity_bytes>0{let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
@@ -515,13 +515,13 @@ fn a_gesture_that_changed_nothing_retires_its_history_baseline() {
 "#;
     let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
     let mut host = FlowHost::from_host_snapshot(fixture);
-    host.viewport.set_viewport(1280, 800, 1.0);
+    host.set_viewport(1280, 800, 1.0);
     host.rebuild_dag();
     for _ in 0..3 {
         host.pointer_down_screen(4.0, 4.0, 0, false, false, false, false);
         host.pointer_up_screen(4.0, 4.0, false, false, false);
     }
-    assert!(!host.pointer.widget_drag_active(), "a bare press and release leaves no gesture in flight");
+    assert!(!host.widget_drag_active(), "a bare press and release leaves no gesture in flight");
     host.retire_cold();
 }
 
@@ -550,7 +550,7 @@ fn arming_a_second_history_baseline_retires_the_first() {
 "#;
     let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
     let mut host = FlowHost::from_host_snapshot(fixture);
-    host.viewport.set_viewport(1280, 800, 1.0);
+    host.set_viewport(1280, 800, 1.0);
     host.rebuild_dag();
     let pan = |x: f64, y: f64| dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x, y, button: 1, shift: false, ctrl_or_meta: false, alt: false, pan: true };
     for turn in 0..8 {

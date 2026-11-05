@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-mcp-wire"
+name = "semio-os-mcp-wire"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -29,4 +29,4 @@ semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }

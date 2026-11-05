@@ -107,7 +107,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_docx_strict_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxStrictMutation) -> protocol::MutationOutcome<DocxDiff> {
-    let outcome = ::semio_framework_os_kernel::ColdMutation::diff(mutation, snapshot);
+    let outcome = ::semio_os_kernel::ColdMutation::diff(mutation, snapshot);
     match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;

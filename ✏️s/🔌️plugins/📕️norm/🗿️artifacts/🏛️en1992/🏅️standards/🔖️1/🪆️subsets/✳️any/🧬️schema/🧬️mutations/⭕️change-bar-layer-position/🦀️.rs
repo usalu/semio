@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeBarLayerPosition w
         record: "ChangedBarLayerPosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change position of the bar layer", "Bewehrungslage: position ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change position of the bar layer", "Bewehrungslage: position ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.layer_id.clone()]

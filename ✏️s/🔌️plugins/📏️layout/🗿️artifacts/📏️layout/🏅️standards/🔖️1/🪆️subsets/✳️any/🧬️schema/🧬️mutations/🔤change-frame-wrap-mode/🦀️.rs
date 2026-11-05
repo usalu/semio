@@ -24,8 +24,8 @@ pub struct ChangeFrameWrapMode {
 impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameWrapMode where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_wrap_mode::ChangeFrameWrapMode> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-wrap-mode", kind: "change-frame-wrap-mode", record: "ChangedFrameWrapMode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" wrap mode", self.frame_id), &format!("Umbruchmodus von Rahmen \"{}\" ändern", self.frame_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" wrap mode", self.frame_id), &format!("Umbruchmodus von Rahmen \"{}\" ändern", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

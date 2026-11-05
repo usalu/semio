@@ -1,11 +1,11 @@
 use crate::editor::playbook::config::PlaybookConfig;
 use crate::PLAYBOOK_BUILTIN_KINDS;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::playbook::modes::builder::windows::builder::{build_palette};
 use crate::editor::playbook::modes::builder::windows::builder::*;
 use crate::editor::playbook::unit_tests::context::{live_spec, playbook_app};
 use crate::editor::playbook::PLAYBOOK_PLAY_BODY_BUILDER as BODY_BUILDER;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_block_list_surface_and_body_key() {
@@ -39,9 +39,9 @@ async fn render_builder_palette_includes_topic_contributed_block_kinds() {
 #[semio_framework_async_macros::async_test]
 async fn render_builder_emits_playbook_list_component_scene() {
     let mut app = playbook_app().await;
-    let scene: semio_framework_ui_scene::BlockListScene = semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, BODY_BUILDER, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| {
-        let semio_framework_ui_contract::Component::Surface(props) = &root.component else { panic!("builder must render a semantic surface") };
-        semio_framework_ui_scene::decode(props).expect("block-list payload")
+    let scene: semio_ui_scene::BlockListScene = semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, BODY_BUILDER, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| {
+        let semio_ui_contract::Component::Surface(props) = &root.component else { panic!("builder must render a semantic surface") };
+        semio_ui_scene::decode(props).expect("block-list payload")
     }).await.expect("builder surface");
     let expected = live_spec(&app).await;
     assert_eq!(scene.steps.len(),expected.steps.len());

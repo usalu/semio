@@ -6,7 +6,7 @@ use crate::editor::puzzle5d::commands::add_target_volume;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_framework_pack_json::Value;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
@@ -43,125 +43,125 @@ use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::window as window_ownership;
 #[allow(unused_imports)]
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
+use semio_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDescriptor;
+use semio_plugin::ActionDescriptor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactPresentation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedJob;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedToolInput;
+use semio_plugin::ArtifactReservedToolInput;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedToolJob;
+use semio_plugin::ArtifactReservedToolJob;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactReservedToolJobRequest;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolCompletion;
+use semio_plugin::ArtifactToolCompletion;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::EphemeralEmit;
+use semio_plugin::EphemeralEmit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::DialogDefinition;
+use semio_plugin::DialogDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTarget;
+use semio_plugin::InteractionTarget;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionWrite;
+use semio_plugin::InteractionWrite;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::Media;
+use semio_plugin::Media;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaClass;
+use semio_plugin::MediaClass;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaError;
+use semio_plugin::MediaError;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaForm;
+use semio_plugin::MediaForm;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortDirection;
+use semio_plugin::MediaPortDirection;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortSpec;
+use semio_plugin::MediaPortSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::PortMultiplicity;
+use semio_plugin::PortMultiplicity;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolRef;
+use semio_plugin::ToolRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolExecutionContract;
+use semio_plugin::ToolExecutionContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
 #[allow(unused_imports)]
 use semio_framework_job::{InteractiveJob, Operation, StepContext};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use semio_framework_value::{FromValue, ToValue};
 #[allow(unused_imports)]
@@ -188,7 +188,7 @@ use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORL
 
 use crate::editor::puzzle5d::*;
 use crate::editor::puzzle5d::testkit::*;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 fn volumes(app: &Puzzle5dTestApp) -> Vec<semio_framework_pack_json::Value> {
     projection_of(app).get("targetVolumes").and_then(semio_framework_pack_json::Value::as_array).cloned().unwrap_or_default()
@@ -266,7 +266,7 @@ async fn set_target_volume_flag_writes_one_flag_at_a_time() {
 /// and the target-volume verbs alike; and a set-verb without its value is refused at the command boundary, never defaulted.
 #[semio_framework_async_macros::async_test]
 async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
-    fn edits(result: &semio_framework_plugin::InvocationResult) -> usize {
+    fn edits(result: &semio_plugin::InvocationResult) -> usize {
         result.history_patch.as_ref().map_or(0, |patch| patch.upserts.iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).map(|entry| entry.seq).collect::<std::collections::BTreeSet<_>>().len())
     }
     let mut app = app();
@@ -374,7 +374,7 @@ fn the_volume_brush_is_bound_to_the_world_window_with_its_three_voxel_sliders() 
     let bound = |kind: &str| definition.window_kinds.iter().find(|window| window.id == kind).expect("a declared window").utilities.iter().any(|utility| utility.as_str() == world3d::utilities::volume_brush::UTILITY_ID);
     assert!(bound(world3d::WINDOW_KIND_ID), "the world window must bind the volume brush");
     assert!(!bound(board2d::WINDOW_KIND_ID), "the board pane paints projections, it does not paint volumes");
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("labels");
+    let labels = puzzle5d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("labels");
     let measures = world3d::utilities::volume_brush::voxel_dim_measures(&crate::editor::puzzle5d::config::Puzzle5dRuntime::default(), labels);
     assert_eq!(measures.len(), 3, "width, depth and height");
 }

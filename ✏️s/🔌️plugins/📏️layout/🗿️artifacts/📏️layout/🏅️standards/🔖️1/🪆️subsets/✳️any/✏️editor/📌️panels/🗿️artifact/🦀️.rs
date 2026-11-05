@@ -18,23 +18,23 @@ use crate::terminology::LayoutLabels;
 use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text, LAYOUT_GRANULARITY_ELEMENT, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_APP_ID};
 use semio_s_artifact_layout_layout_model::{Frame, LAYOUT_DOCUMENT_SCHEMA};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::InteractionTarget;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_BODY_ARTIFACT: &str = "layout.play.artifact";
@@ -112,15 +112,15 @@ fn layout_tree_item(
     label: impl Into<Label>,
     description: Option<String>,
     icon_id: Option<String>,
-    action: Option<(semio_framework_plugin::ActionId, Option<UiValue>)>,
+    action: Option<(semio_plugin::ActionId, Option<UiValue>)>,
     granularity: Option<&str>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let label = label.into();
     let mut item = match action {
         Some(action) => tree_item_with_action(id, label.as_str(), description.clone(), action)?,
         None => tree_item_desc(id, label.as_str(), description.clone())?,
     };
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         if props.description.is_none() {
             props.description = match description {
                 Some(value) => Some(UiText::try_from_string(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout row description admission failed"))?),
@@ -148,7 +148,7 @@ struct StyleRow {
     description: String,
 }
 
-fn selection_args(ids: impl IntoIterator<Item = String>, merge: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn selection_args(ids: impl IntoIterator<Item = String>, merge: &str) -> semio_plugin::UiAssemblyResult<UiValue> {
     let mut targets: UiFixedList<InteractionTarget> = UiFixedList::default();
     for id in ids {
         targets.try_push(InteractionTarget { granularity: LAYOUT_GRANULARITY_ELEMENT.into(), id }).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout selection target admission failed"))?;
@@ -167,7 +167,7 @@ fn selection_args(ids: impl IntoIterator<Item = String>, merge: &str) -> semio_f
 /// interaction domain; `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?` below has the framework's
 /// renderer translate row hover into `interactionHover` and stamp presence from `InteractionState`,
 /// replacing the deleted `.selected()?`/`.highlighted()?`/`.selection_change()` calls.
-pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let frames: Vec<_> = doc.pages.iter().flat_map(|page| page.frames.iter().map(move |frame| (page, frame))).collect();
     let layers: Vec<_> = doc.pages.iter().flat_map(|page| page.layers.iter().map(move |layer| (page, layer))).collect();
     let styles: Vec<StyleRow> = doc

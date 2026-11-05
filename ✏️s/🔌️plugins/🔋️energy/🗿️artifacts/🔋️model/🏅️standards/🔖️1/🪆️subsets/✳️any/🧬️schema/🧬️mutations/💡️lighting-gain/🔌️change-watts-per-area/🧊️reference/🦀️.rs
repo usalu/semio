@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "lighting-gain", kind: "change-lighting-gain-watts-per-area", record: "ChangedLightingGainWattsPerArea" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Lighting Gain Watts Per Area of lighting gain {}", self.id.0), &format!("Leistung pro Fläche von Beleuchtungswärmegewinn {} ändern", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Lighting Gain Watts Per Area of lighting gain {}", self.id.0), &format!("Leistung pro Fläche von Beleuchtungswärmegewinn {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeFireRei where Op: 
         record: "ChangedFireRei",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fire resistance REI", "Feuerwiderstand REI ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fire resistance REI", "Feuerwiderstand REI ändern")
     }
 }
 

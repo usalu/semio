@@ -14,8 +14,8 @@ use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::GraphEditor;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, InteractionWrite};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, InteractionWrite};
 use semio_framework_tool_machine::{authoring_clock, Scrub, ScrubInput, ToolStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -116,7 +116,7 @@ pub(crate) fn mesh_operation_rows(host_snapshot: &FlowHostSnapshot, operation: &
 /// 🧩️ Inserts a source-scoped topology selector and feature through the recorder's declared graph edits.
 fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granularity: &str, target: &semio_s_artifact_procedural_3d_editor_selection::ComponentTarget<'_>) -> Result<(String, String), String> {
     if target.granularity != granularity || !matches!(operation, "filletEdges" | "chamferEdges" | "shell" | "draft" | "defeature") { return Err("The B-Rep operation requires matching edge or face selection".into()); }
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let infos = semio_os_flow::flow_neuron_kind_info_map();
     let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()), _ => None }).ok_or("The selected geometry no longer exists")?;
     let source = infos.get(&source_kind).and_then(|info| info.outputs.iter().find(|port| port.name == target.channel)).ok_or("The selected geometry output is unavailable")?;
     let collection = source.cardinality.is_collection() || source.value_types.iter().any(|kind| kind == "list") && !source.value_types.iter().any(|kind| kind == "geometry");
@@ -159,7 +159,7 @@ fn insert_mesh_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
     let (target, _) = component_group(ids)?;
     if target.granularity != granularity { return Err("The operation requires matching face, edge, or vertex selection".into()); }
     if target.index != 0 { return Err("Extract one mesh from the list before editing its components".into()); }
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let infos = semio_os_flow::flow_neuron_kind_info_map();
     let kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()), _ => None }).ok_or("The selected mesh no longer exists")?;
     let source = infos.get(&kind).ok_or("The selected mesh operator is unavailable")?;
     if !source.outputs.iter().any(|port| port.name == target.channel && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) { return Err("Select a single indexed mesh output; convert B-Rep geometry to a mesh first".into()); }

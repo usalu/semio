@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-font-kelly-slab-latin-regular"
+name = "semio-font-kelly-slab-latin-regular"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

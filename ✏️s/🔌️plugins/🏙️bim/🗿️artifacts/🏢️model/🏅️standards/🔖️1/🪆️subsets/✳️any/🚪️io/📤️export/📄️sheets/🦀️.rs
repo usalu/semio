@@ -9,7 +9,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use std::collections::BTreeMap;
 
 #[path = "📖️pdf/🦀️.rs"]
@@ -69,7 +69,7 @@ pub struct ModelIntoSheetsPdf;
 impl Serializer<ModelSnapshot> for ModelIntoSheetsPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let bytes = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, from, |inferred| sheets_pdf(from, inferred, None, &TitleLabels::english()))
             .map_err(|error| error.to_string())
             .and_then(|written| written)

@@ -14,7 +14,7 @@ import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtim
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-os-kernel-dsl-derive"], this.repoRoot, this.invocation, rest);
   }
 }
 

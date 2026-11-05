@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::ast::QueryResult;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "trinity.jackresultswindowtransient")]
 #[dsl(layout = "lines")]

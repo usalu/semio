@@ -1,26 +1,26 @@
 /// 🔐️ Authenticated hub workspace: the empty catalog, the authenticated hub workspace fixture, its snapshot-only resources, retained discovery and the one live link per app bound.
 
 fn empty_catalog() -> Arc<Catalog> {
-    Arc::new(compile(&CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
+    Arc::new(compile(&CatalogSource::default(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
 }
 
 fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap();
     let ready = &fixture["cases"]["memberReady"];
-    let page = semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::parse_canonical_json(ready["responses"][1]["canonicalBody"].as_str().unwrap()).unwrap();
-    let semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::Author { space, members, documents, .. } = page else { panic!("author administration page fixture") };
-    let members: Vec<semio_framework_os_kernel::os_directory::MemberView> =
-        members.rows.into_iter().map(|row| semio_framework_os_kernel::os_directory::MemberView { user_id: row.user_id, email: row.email, display_name: row.display_name, role: row.role }).collect();
+    let page = semio_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::parse_canonical_json(ready["responses"][1]["canonicalBody"].as_str().unwrap()).unwrap();
+    let semio_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::Author { space, members, documents, .. } = page else { panic!("author administration page fixture") };
+    let members: Vec<semio_os_kernel::os_directory::MemberView> =
+        members.rows.into_iter().map(|row| semio_os_kernel::os_directory::MemberView { user_id: row.user_id, email: row.email, display_name: row.display_name, role: row.role }).collect();
     let documents = documents.rows;
     let view = documents[0].clone();
     let scope = DocumentScope::new("space-a", "shared-doc");
-    let digest = semio_framework_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&view.descriptor).unwrap();
-    let document = remote::AuthorizedDocumentView { scope: scope.clone(), descriptor_digest_v1: semio_framework_os_kernel::os_directory::io::binary::artifact_hash::hex_lower(digest.as_bytes()), view };
+    let digest = semio_os_kernel::os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&view.descriptor).unwrap();
+    let document = remote::AuthorizedDocumentView { scope: scope.clone(), descriptor_digest_v1: semio_os_kernel::os_directory::io::binary::artifact_hash::hex_lower(digest.as_bytes()), view };
     let snapshot = AuthorizedDescriptorSnapshot { authenticated_user_id: "user-a".to_string(), session_expires_at_ms: i64::MAX, space, membership: members[0].clone(), observed_event_seq: 8, documents: HashMap::from([(scope, document)]) };
     let binding = Arc::new(HubRemoteBinding::new("https://hub.invalid", "space-a").unwrap());
     binding.install_snapshot_for_test(snapshot);
     let corpus: serde_json::Value = serde_json::from_str(fixture_text("../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
-    let mut lease: semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
+    let mut lease: semio_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
     lease.scope = DocumentScope::new("space-a", "shared-doc");
     let (descriptor, descriptor_bytes) = catalog_contract_descriptor();
     lease.package.plugin_id = descriptor.manifest.plugin_id.clone();
@@ -30,7 +30,7 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     lease.package.descriptor_byte_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
     lease.descriptor.sha256 = lease.package.descriptor_byte_sha256.clone();
     lease.descriptor.byte_length = descriptor_bytes.len() as u64;
-    lease.package.component_receipt = semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: lease.package.plugin_id.clone(), package_id: lease.package.package_id.clone(), wasm_sha256: lease.package.component_sha256.clone(), wasm_bytes: lease.component.byte_length, semantic_descriptor_sha256: lease.package.descriptor_byte_sha256.clone(), ..lease.package.component_receipt.clone() };
+    lease.package.component_receipt = semio_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: lease.package.plugin_id.clone(), package_id: lease.package.package_id.clone(), wasm_sha256: lease.package.component_sha256.clone(), wasm_bytes: lease.component.byte_length, semantic_descriptor_sha256: lease.package.descriptor_byte_sha256.clone(), ..lease.package.component_receipt.clone() };
     binding.install_catalog_for_test(vec![remote::AuthorizedPackageSelection { scope: lease.scope.clone(), descriptor_digest_v1: lease.descriptor_digest_v1.clone(), lease, descriptor }]);
     let mut workspace = HeadlessWorkspace::new(WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string() }, "forged-local-principal".to_string(), vec!["admin".to_string()], empty_catalog());
     workspace.catalog = Arc::new(WorkspaceCatalog::following(Arc::clone(&binding)).expect("the fixture's authority compiles"));
@@ -89,7 +89,7 @@ fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallb
     let selected = inference_list.meta.as_ref().expect("ready tools/list selection metadata");
     assert_eq!(selected["semio"]["hubSelectedPackages"][0]["package"]["pluginId"], "contract-test");
     assert_ne!(selected["semio"]["hubSelectedPackages"][0]["package"]["componentSha256"], "");
-    assert_eq!(selected["semio"]["hubSelectedPackages"][0]["package"]["executionProtocol"]["appChannelVersion"], semio_framework_os_kernel::os_spr::CHANNEL_VERSION);
+    assert_eq!(selected["semio"]["hubSelectedPackages"][0]["package"]["executionProtocol"]["appChannelVersion"], semio_os_kernel::os_spr::CHANNEL_VERSION);
     let inference_result = server.tools.call("inference_list", serde_json::json!({})).expect("inference_list registered");
     assert!(!inference_result.is_error);
     assert_eq!(inference_result.structured_content.as_ref().expect("inference roster")["declared"][0]["owner"], "contract-test");

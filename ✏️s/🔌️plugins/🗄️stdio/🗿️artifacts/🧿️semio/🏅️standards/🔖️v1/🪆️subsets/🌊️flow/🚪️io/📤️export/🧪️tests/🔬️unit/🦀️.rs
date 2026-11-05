@@ -4,7 +4,7 @@ use crate::serializers::artifacts::json::v_rfc8259::any::SemioFlowToJson;
 use semio_s_artifact_stdio_semio_flow_import::deserializers::artifacts::json::v_rfc8259::any::SemioFlowFromJson;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
+use semio_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn node(id: &str) -> FlowNode {

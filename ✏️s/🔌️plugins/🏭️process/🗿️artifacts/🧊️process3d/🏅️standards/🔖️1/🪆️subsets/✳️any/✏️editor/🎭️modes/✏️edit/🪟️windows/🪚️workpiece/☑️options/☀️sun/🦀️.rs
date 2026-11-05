@@ -2,7 +2,7 @@
 //! built entirely by the shared SDK helper `world3d_sun_measures`. Its command handlers live in
 //! `🎮️commands/☀️sun`.
 
-use semio_framework_plugin::{world3d_sun_measures, ActionDescriptor, WindowMeasure, WorldSunConfig};
+use semio_plugin::{world3d_sun_measures, ActionDescriptor, WindowMeasure, WorldSunConfig};
 
 //#region 🔖️Measure
 pub fn measure(sun: &WorldSunConfig, is_de: bool) -> WindowMeasure {

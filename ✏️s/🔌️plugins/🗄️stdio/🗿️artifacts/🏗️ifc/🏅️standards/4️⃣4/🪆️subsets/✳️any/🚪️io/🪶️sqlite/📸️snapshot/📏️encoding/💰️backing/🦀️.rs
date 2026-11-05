@@ -1,6 +1,6 @@
 //! 📏️ IFC4 cells and file bounds share the original iterator with one paid identity index.
 use super::*;
-use semio_framework_os_kernel::sqlite_snapshot::artifact;
+use semio_os_kernel::sqlite_snapshot::artifact;
 fn sum(left:usize,right:usize)->Result<usize,ValueError>{left.checked_add(right).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Part21 semantic extent overflow"))}
 struct Census{rows:usize,bytes:usize}
 impl Census{

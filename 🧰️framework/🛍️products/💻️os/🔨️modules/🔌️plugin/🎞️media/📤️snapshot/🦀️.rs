@@ -1,5 +1,5 @@
 //! 📸️ Original snapshot leases produce canonical native Pack through the existing media actor protocol.
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use crate::{ArtifactApp,ArtifactMediaExportJobRequest,ArtifactReservedJob,ArtifactReservedToolJob,ArtifactOwnedToolJobFactory,ArtifactToolPublicationContract,ArtifactToolPublicationLane};
 use crate::app::{ArtifactMediaExportCompletion,ArtifactMediaExportCredit,ArtifactMediaExportResult,ArtifactOutputChunks,ArtifactSnapshotCloseLease};
 use semio_framework::{Fault,MediaClass,MediaForm,MediaType,ToolExecutionContract,ToolFactoryKey,ToolJobFactory,InteractiveJobClassification};
@@ -8,7 +8,7 @@ use semio_framework_job_publication::RetainedJobPublication;
 use semio_framework_dsl_record::{BorrowedDslRecord,native_encoding::FieldProjectionSource};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_ownership::bounded_ownership::{plugin_typed_owner_demand,plugin_typed_owner_step,plugin_grant_funds};
+use semio_plugin_ownership::bounded_ownership::{plugin_typed_owner_demand,plugin_typed_owner_step,plugin_grant_funds};
 use pack::record::BorrowedPackDocumentCursor;
 use std::{sync::Arc,mem::ManuallyDrop};
 pub const SNAPSHOT_PACK_PORT:&str="semio.snapshot.pack";

@@ -2,7 +2,7 @@
 use super::DslValue;
 use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,own_with,refused,costed};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
-use semio_framework_plugin::action_staging::StagedFormRequest;
+use semio_plugin::action_staging::StagedFormRequest;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneSourceTake,RetainedCloneStep,retained_clone_grant_admits},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::mem::{ManuallyDrop,size_of};
 type Source=RetainedCloneSource<StagedFormRequest>;

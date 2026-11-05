@@ -44,8 +44,8 @@ fn every_facet_row_keeps_the_contract_number_range_and_detent_laws() {
         let name = case["name"].as_str().expect("case name");
         let Some(facets) = serde_json::from_value::<ActionArgDef>(case["def"].clone()).expect("descriptor").number_facets(Locale::En) else { continue };
         let travel = (facets.min.unwrap_or(f64::NEG_INFINITY), facets.max.unwrap_or(f64::INFINITY));
-        assert!(semio_framework_ui_contract::snaps_are_valid(facets.snaps.iter().copied(), travel.0, travel.1), "{name}: detents obey the detent law");
-        assert!(semio_framework_ui_contract::number_range_is_valid(facets.min, facets.max, facets.scale, facets.display_factor, Some(&facets.limits), facets.snaps.iter().copied()), "{name}: the limits admit the key range and every detent");
+        assert!(semio_ui_contract::snaps_are_valid(facets.snaps.iter().copied(), travel.0, travel.1), "{name}: detents obey the detent law");
+        assert!(semio_ui_contract::number_range_is_valid(facets.min, facets.max, facets.scale, facets.display_factor, Some(&facets.limits), facets.snaps.iter().copied()), "{name}: the limits admit the key range and every detent");
     }
 }
 

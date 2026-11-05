@@ -1,10 +1,10 @@
 //! 👁️ WFC 3D viewer — the `view` mode: one full-pane preview of the solved assembly.
 
 use crate::viewer::wfc3d::modes::view::windows::preview;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const WFC_3D_VIEW_MODE_ID: &str = "view";
 

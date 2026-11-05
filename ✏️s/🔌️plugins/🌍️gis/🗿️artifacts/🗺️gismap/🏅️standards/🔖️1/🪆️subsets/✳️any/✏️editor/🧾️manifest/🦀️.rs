@@ -7,22 +7,22 @@ use crate::editor::gis2d::modes::edit::windows::map;
 use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::standards::v1::subsets::any::artifact_declaration::artifact_kind;
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::Editor;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MergeMode;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
 
 //#region 🔖️Manifest
 /// 🗣️ The manifest-time localized names of [`GIS_MAP_LAYER_IDS`], in the same order — the static twin
@@ -61,7 +61,7 @@ fn gis2d_feature_id_arg() -> ActionArgDef {
     ActionArgDef::text("featureId", LocalizedLabel::native("Feature", "Objekt")).default_value(&"")
 }
 
-pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_gis2d_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::GISMAP_DIALECT).document(["semio", "gis", "2d"])
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Verfolgen"])
@@ -190,14 +190,14 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("deleteFeature", LocalizedLabel::native("Removes one feature by id from a collection of the map.", "Entfernt ein Objekt anhand seiner Id aus einer Sammlung der Karte."))
             .action_describe("openSource", LocalizedLabel::native("Opens the selected feature's source URL through the host.", "Öffnet die Quell-URL des ausgewählten Objekts über den Host."))
             .action_describe("proposeBoundsRegion", LocalizedLabel::native("Asks the inference service to propose a bounds region for human review; it never writes the map itself.", "Bittet den Inferenzdienst, eine Begrenzungsregion zur menschlichen Prüfung vorzuschlagen; die Karte selbst wird nie geschrieben."))
-            .action_audience("toggleLayerVisibility", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("fitWorld", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("setRenderMode", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("setVectorStyle", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("setLodMode", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("focusFeature", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("setLayerStrokeScale", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("toggleLayerVisibility", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("fitWorld", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("setRenderMode", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("setVectorStyle", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("setLodMode", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("focusFeature", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("setLayerStrokeScale", semio_plugin::CapabilityAudience::Chrome)
             .build_definition()
 }
 //#endregion 🔖️Manifest

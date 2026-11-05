@@ -1,7 +1,7 @@
 use crate::editor::animate::config::PresentationConfig;
 use crate::editor::animate::support::PresentationDispatchCtx;
 use crate::PresentationSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 #[allow(unused_imports)]
 use crate::editor::animate::config::PresentationConfigMutation;
 #[allow(unused_imports)]
@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 #[allow(unused_imports)]
 use crate::{standards::v1::subsets::any::schema::tile_grid::populate_tile_drafts_from_grid, standards::v1::subsets::any::schema::tile_grid::FigureTileGridSeedSpec};
 #[allow(unused_imports)]
-use semio_framework_plugin::{Emit, Fault};
+use semio_plugin::{Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::animate::commands::seed_grid::*;
@@ -33,11 +33,11 @@ async fn seed_grid_action_adds_tiles() {
 /// on the emitted effect rather than through `app.snapshot()`.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_demo_emits_a_reset_effect_after_seed() {
-    use semio_framework_plugin::Effect;
+    use semio_plugin::Effect;
     let mut app = presentation_app().await;
     dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
     let deck = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&deck, &history);
     let cfg_snapshot = PresentationConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
@@ -61,16 +61,16 @@ async fn set_active_example_demo_emits_a_reset_effect_after_seed() {
 #[semio_framework_async_macros::async_test]
 async fn clear_tiles_action_empties_tiles_and_clears_the_selection_inline() {
     use crate::editor::animate::support::PRESENTATION_INTERACTION_DOMAIN;
-    use semio_framework_plugin::{artifact_app_laws, Effect, PluginApp};
+    use semio_plugin::{artifact_app_laws, Effect, PluginApp};
     let mut app = presentation_app_with_registry().await;
     let instance_id = artifact_app_laws::meta("local").instance_id;
     app.bind_instance_id(instance_id).await;
     dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("seed settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("seed settles");
     dispatch(&mut app, PresentationCommand::ClearTiles(clear_tiles::ClearTiles {})).await;
-    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("clear settles");
+    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("clear settles");
     assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "the clearing interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert!(app.interaction_state().await.selection.get(PRESENTATION_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()), "the tiles selection is empty after the inline clear");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

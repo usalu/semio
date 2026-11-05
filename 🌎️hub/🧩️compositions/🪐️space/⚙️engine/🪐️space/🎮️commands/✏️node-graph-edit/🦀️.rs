@@ -3,9 +3,9 @@
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_hub_space_foundation::S_PLAY_APP_ID;
 use semio_framework_artifact_workflow_workflow::MoveNodes;
-use semio_framework_os::workflow::{DisconnectEdge, RemoveNode};
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os::workflow::{DisconnectEdge, RemoveNode};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_tool_machine::{node_drag_emit, NodeDragRecord, NodeGraphEditRow};
 
 /// 🪪️ The verb a node-graph tool transaction is scoped by: `<appId>#nodeGraphEdit`.

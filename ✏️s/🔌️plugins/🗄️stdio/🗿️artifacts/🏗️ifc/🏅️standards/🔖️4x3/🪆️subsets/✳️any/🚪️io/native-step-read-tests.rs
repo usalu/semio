@@ -22,7 +22,7 @@ fn actual_original_step_receiver_preserves_complete_literal_graph() {
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new(128 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
+    let mut owner = semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
     let graph = read(&source, &mut owner).unwrap();
     assert_eq!(graph.entities[0].id, u64::MAX);
     assert_eq!(graph.entities[0].complex.len(), 1);
@@ -44,7 +44,7 @@ fn actual_original_step_refusal_keeps_original_utf8_offset() {
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new(128 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
+    let mut owner = semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
     let error = read(&source, &mut owner).unwrap_err();
     assert_eq!(error.offset, expected);
     assert_eq!(error.cause.kind, ValueRefusalKind::InvalidValue);
@@ -72,7 +72,7 @@ fn original_step_denied_axes_do_not_publish_or_replace_authority() {
             3 => g.maximum_release_bytes = 0,
             _ => g.maximum_depth = 0,
         };
-        let mut owner = semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, g);
+        let mut owner = semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, g);
         assert!(read(&source, &mut owner).is_err());
         drop(owner);
         assert_eq!((native.ledger_identity(), native.retirement_recipient_identity()), identity);
@@ -92,7 +92,7 @@ fn original_step_reader_consumes_all_owned_lexical_witnesses() {
         let mut recipient = NativeDecodeRetirementRecipient::new();
         let mut native = NativeDecodeControl::new(128 * 1024 * 1024, &mut callback);
         native.install_retirement_recipient(&mut recipient).unwrap();
-        let mut owner = semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
+        let mut owner = semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
         let result = read(&source, &mut owner);
         drop(owner);
         if let Some(expected) = row["expected"].as_str() {
@@ -116,7 +116,7 @@ fn original_step_reader_consumes_all_owned_lexical_witnesses() {
         let mut recipient = NativeDecodeRetirementRecipient::new();
         let mut native = NativeDecodeControl::new(128 * 1024 * 1024, &mut callback);
         native.install_retirement_recipient(&mut recipient).unwrap();
-        let graph = read(&source, &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant())).unwrap();
+        let graph = read(&source, &mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant())).unwrap();
         assert_eq!(graph.entities[0].name, row["nameAfter"].as_str().unwrap());
         let expected = if let Some(binary) = row["binary"].as_str() { IfcValue::Binary(binary.into()) } else { IfcValue::String(row["value"].as_str().unwrap().into()) };
         assert_eq!(graph.entities[0].args[0], expected);
@@ -136,7 +136,7 @@ fn original_step_reader_checks_the_46_pinned_official_sources() {
         let mut recipient = NativeDecodeRetirementRecipient::new();
         let mut native = NativeDecodeControl::new(128 * 1024 * 1024, &mut callback);
         native.install_retirement_recipient(&mut recipient).unwrap();
-        let graph = read(&source, &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant())).unwrap_or_else(|e| panic!("{}: {e}", row["file"]));
+        let graph = read(&source, &mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant())).unwrap_or_else(|e| panic!("{}: {e}", row["file"]));
         let expected = super::super::parse_ifc4x3_step(&text).unwrap();
         assert_eq!(graph.entities.len(), row["entities"].as_u64().unwrap() as usize, "independent IfcOpenShell entity count: {}", row["file"]);
         assert_eq!(graph, expected, "{}", row["file"]);
@@ -158,7 +158,7 @@ fn original_step_heap_receipts_and_completed_cancellation_prefixes_share_one_rec
     let mut native = NativeDecodeControl::new(128 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
     let ((result, progress), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
-        let mut owner = semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
+        let mut owner = semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
         let result = read(&source, &mut owner);
         (result, owner.progress())
     });
@@ -172,7 +172,7 @@ fn original_step_heap_receipts_and_completed_cancellation_prefixes_share_one_rec
         native.install_retirement_recipient(&mut recipient).unwrap();
         let identity = (native.ledger_identity(), native.retirement_recipient_identity());
         let ((result, mut progress), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
-            let mut owner = semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
+            let mut owner = semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, grant());
             let result = read(&source, &mut owner);
             (result, owner.progress())
         });

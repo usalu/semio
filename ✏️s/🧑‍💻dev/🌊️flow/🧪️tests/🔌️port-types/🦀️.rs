@@ -9,9 +9,9 @@
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
 // #region 🔖️Imports
-use semio_framework_os_flow::{port_value_types_compatible, widget_port_value_types, PortSide};
+use semio_os_flow::{port_value_types_compatible, widget_port_value_types, PortSide};
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
-use semio_framework_os_flow::{FlowHost, FlowHostRetirement};
+use semio_os_flow::{FlowHost, FlowHostRetirement};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -155,7 +155,7 @@ fn the_flow_host_refuses_the_drop_and_keeps_the_displaced_wire() {
     let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone())).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     let before: Vec<(String, String, String, String)> = host.host_snapshot.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.from_port.clone(), synapse.to.clone(), synapse.to_port.clone())).collect();
     let refusal = host.connect_ports("extrusion-axis", "vectorOut", "extrude", "wire");
-    assert!(matches!(refusal, Err(semio_framework_os_flow::FlowCoreError::IncompatiblePortTypes { .. })), "the drop must be refused, got {refusal:?}");
+    assert!(matches!(refusal, Err(semio_os_flow::FlowCoreError::IncompatiblePortTypes { .. })), "the drop must be refused, got {refusal:?}");
     let after: Vec<(String, String, String, String)> = host.host_snapshot.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.from_port.clone(), synapse.to.clone(), synapse.to_port.clone())).collect();
     assert_eq!(after, before, "a refused drop must leave the graph byte-identical");
     assert!(after.contains(&("profile".into(), "wire".into(), "extrude".into(), "wire".into())), "the profile wire the drop would have displaced must survive");

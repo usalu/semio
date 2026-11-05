@@ -15,8 +15,8 @@ pub mod space_history_document;
 pub mod space_history_mutations;
 #[path = "📥️lifted/♻️retirement/🦀️.rs"]
 pub mod lifted_retirement_integration;
-pub use semio_framework_os_store_envelope::*;
-pub use semio_framework_os_store_cursor::{ArtifactCursor, ArtifactCursorOwners};
-pub use semio_framework_os_store_command::{ArtifactCommand, HistoryLane, OpenToolTransaction, SupersedeInput};
-pub use semio_framework_os_store_projection::*;
+pub use semio_os_store_envelope::*;
+pub use semio_os_store_cursor::{ArtifactCursor, ArtifactCursorOwners};
+pub use semio_os_store_command::{ArtifactCommand, HistoryLane, OpenToolTransaction, SupersedeInput};
+pub use semio_os_store_projection::*;
 

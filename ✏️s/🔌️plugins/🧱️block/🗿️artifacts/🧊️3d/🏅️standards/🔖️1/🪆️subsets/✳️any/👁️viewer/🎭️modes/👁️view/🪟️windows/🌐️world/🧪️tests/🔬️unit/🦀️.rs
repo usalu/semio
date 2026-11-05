@@ -12,7 +12,7 @@ async fn definition_declares_the_shared_mesh_window_kind() {
 async fn render_produces_a_scene_node_for_the_empty_document() {
     let document = semio_s_artifact_block_3d_schema::empty_block3d_snapshot();
     let node = render(&document).expect("the empty document must still assemble a scene surface");
-    assert!(matches!(node.component, semio_framework_plugin::Component::Surface(_)));
+    assert!(matches!(node.component, semio_plugin::Component::Surface(_)));
 }
 
 /// 🎯️ A viewer declares no camera action at all (`Block3dViewCommand::Noop`) and boots on the
@@ -24,7 +24,7 @@ async fn render_stages_a_one_shot_fit_for_the_booted_example() {
     let document = semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot();
     assert!(!document.representations.is_empty(), "the booted example must carry the representation whose mesh this window frames");
     let node = render(&document).expect("the booted example assembles its world surface");
-    let scene: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
+    let scene: World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
     let fit = scene.fit_json.as_deref().expect("the viewer's world window must publish a fit lane");
     assert!(fit.contains("\"enabled\":true"), "the fit lane must be enabled, else the authored camera is the only framing: {fit}");
     assert!(fit.contains(&format!("\"revision\":{}", semio_s_artifact_block_3d_model::block3d_world_fit_revision(&document))), "the lane must carry this document's own identity revision: {fit}");

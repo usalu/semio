@@ -7,8 +7,8 @@ use super::*;
 //#region 🔖️IdentityPure
 /// 🛟️ One rebootstrap reseed: the control the actor raised, the pair fetch in flight, and when to ask again after a failure.
 pub struct ShellSyncReseed {
-    pub control: semio_framework_os_kernel::os_directory::RebootstrapRequired,
-    pub pending: Option<ShellDetached<Result<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1, String>>>,
+    pub control: semio_os_kernel::os_directory::RebootstrapRequired,
+    pub pending: Option<ShellDetached<Result<semio_os_kernel::os_directory::CanonicalCheckpointPairV1, String>>>,
     pub retry_at_ms: f64,
 }
 
@@ -18,8 +18,8 @@ pub struct ShellSyncReseed {
 pub struct ShellHubDocumentSeed {
     pub client: std::sync::Arc<ShellDirectoryClient>,
     pub ctx: OperationContext,
-    pub scope: semio_framework_os_kernel::os_directory::DocumentScope,
-    pub checkpoint: semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1,
+    pub scope: semio_os_kernel::os_directory::DocumentScope,
+    pub checkpoint: semio_os_kernel::os_directory::DocumentOpenCheckpointV1,
 }
 
 /// 🧷️ An open whose host half is prepared — the prior document retired, the socket surface and

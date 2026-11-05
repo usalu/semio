@@ -1,12 +1,12 @@
 //! 🎯️ Bounded Try-value work addressed to one exact Forms Try window lease.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{try_value_content_id, FormsTryValues, FormsTryWindowLease, FormsTryWindowTransient, MAX_TRY_VALUE_ENTRIES};
 use crate::{op::FormMutation, FormsSnapshot};
 use semio_framework_pack_json::{Object, Value};
 use semio_framework_value::SharedUtf8;
 use semio_framework::kernel::{Effect, UiDirtyScope};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::de::Deserializer;
@@ -103,12 +103,14 @@ impl semio_framework_dsl_record::DslField for ChunkAddressableJson {
 pub struct SetTryValue {
     pub key: String,
     pub value_json: Option<ChunkAddressableJson>,
+    pub value_json_chunks: Option<Vec<String>>,
     pub input_id: Option<String>,
     pub input_index: Option<u64>,
     pub input_count: Option<u64>,
     pub option_value: Option<String>,
     pub vector_index: Option<u64>,
     pub param_key: Option<String>,
+    pub initial_value_json_chunks: Option<Vec<String>>,
     pub window_id: String,
     pub window_kind_id: String,
 }
@@ -163,12 +165,12 @@ pub fn input_registry() -> &'static Mutex<FormsInputRegistry> { INPUT_REGISTRY.g
 
 #[derive(Clone)]
 pub struct StagedCommandInput {
-    pub operation: semio_framework_plugin::AppOperationContext,
+    pub operation: semio_plugin::AppOperationContext,
     pub source: Arc<str>,
 }
 
 pub fn stage_command_input(
-    operation: &semio_framework_plugin::AppOperationContext,
+    operation: &semio_plugin::AppOperationContext,
     lease: &FormsTryWindowLease,
     semantic_id: &str,
     input_id: &str,
@@ -217,7 +219,7 @@ pub fn stage_command_input(
     Ok(Some(StagedCommandInput { operation: operation.clone(), source: Arc::from(source) }))
 }
 
-fn cancel_inputs(operation: &semio_framework_plugin::AppOperationContext, lease: &FormsTryWindowLease) {
+fn cancel_inputs(operation: &semio_plugin::AppOperationContext, lease: &FormsTryWindowLease) {
     input_registry().lock().expect("forms input registry lock").buffers.retain(|key, _| {
         key.app_id != operation.app_instance_id.to_string()
             || key.document_id != operation.parent_document_id
@@ -257,7 +259,7 @@ static SESSIONS: OnceLock<Mutex<BTreeMap<FormsJobKey, TryValueSession>>> = OnceL
 
 fn sessions() -> &'static Mutex<BTreeMap<FormsJobKey, TryValueSession>> { SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new())) }
 
-pub fn cancel_pending_generations(operation: &semio_framework_plugin::AppOperationContext, lease: &FormsTryWindowLease) {
+pub fn cancel_pending_generations(operation: &semio_plugin::AppOperationContext, lease: &FormsTryWindowLease) {
     cancel_inputs(operation, lease);
     sessions().lock().expect("forms Try sessions lock").retain(|key, _| {
         key.app_id != operation.app_instance_id.to_string()
@@ -269,7 +271,7 @@ pub fn cancel_pending_generations(operation: &semio_framework_plugin::AppOperati
     });
 }
 
-fn job_key(operation: &semio_framework_plugin::AppOperationContext, lease: &FormsTryWindowLease) -> FormsJobKey {
+fn job_key(operation: &semio_plugin::AppOperationContext, lease: &FormsTryWindowLease) -> FormsJobKey {
     FormsJobKey {
         app_id: operation.app_instance_id.to_string(),
         document_id: operation.parent_document_id.clone(),
@@ -335,7 +337,7 @@ fn validate_target(window_id: &str, window_kind_id: &str, lease: &FormsTryWindow
 }
 
 fn start(
-    operation: &semio_framework_plugin::AppOperationContext,
+    operation: &semio_plugin::AppOperationContext,
     lease: &FormsTryWindowLease,
     transient: &FormsTryWindowTransient,
     work: TryValueWork,
@@ -359,12 +361,22 @@ fn start(
 
 pub fn start_window(
     payload: &SetTryValue,
-    operation: &semio_framework_plugin::AppOperationContext,
+    operation: &semio_plugin::AppOperationContext,
     transient: &FormsTryWindowTransient,
     lease: &FormsTryWindowLease,
 ) -> Result<TryWindowCommandOutput, Fault> {
+    if payload.key.is_empty() || payload.key.len() > 512 || payload.window_id.is_empty() || payload.window_id.len() > 512 || payload.window_kind_id != "forms-try" || payload.input_id.as_ref().is_some_and(|value| value.is_empty() || value.len() > 512) || payload.param_key.as_ref().is_some_and(|value| value.is_empty() || value.len() > 128) || payload.option_value.as_ref().is_some_and(|value| value.len() > 512) { return Err(fault("forms.try-value.target-invalid", "the Forms answer target exceeds its bounded metadata")); }
     validate_target(&payload.window_id, &payload.window_kind_id, lease)?;
+    if payload.vector_index.is_some() && payload.option_value.is_some() { return Err(fault("forms.try-value.input-invalid", "a partial answer cannot mix vector and option changes")); }
+    if let Some(chunks) = &payload.initial_value_json_chunks {
+        if chunks.is_empty() || chunks.len() > semio_ui_contract::UI_VALUE_MAX_ITEMS || chunks.iter().any(|chunk| chunk.len() > semio_ui_contract::UI_TEXT_MAX_BYTES) || chunks.iter().try_fold(0usize, |bytes, chunk| bytes.checked_add(chunk.len())).is_none_or(|bytes| bytes > MAX_COMMAND_INPUT_BYTES) { return Err(fault("forms.try-value.input-too-large", "the initial Forms answer exceeds its bounded UTF-8 chunks")); }
+    }
     if payload.key.len() > 512 { return Err(fault("forms.try-value.key-too-large", "the Forms Try-value key exceeds 512 UTF-8 bytes")); }
+    if let Some(chunks) = &payload.value_json_chunks {
+        if payload.value_json.is_some() || payload.input_id.is_some() || payload.input_index.is_some() || payload.input_count.is_some() { return Err(fault("forms.try-value.input-invalid", "a complete chunked answer cannot mix input transports")); }
+        let source = semio_ui_contract::UiValue::join_text_chunks(chunks.iter().map(String::as_str), MAX_COMMAND_INPUT_BYTES).map_err(|_| fault("forms.try-value.input-too-large", "the complete Forms answer exceeds its bounded UTF-8 chunks"))?;
+        return start(operation, lease, transient, TryValueWork::Single { payload: payload.clone(), source: Arc::from(source) });
+    }
     if payload.value_json.is_none() && payload.option_value.is_none() { return Ok(TryWindowCommandOutput::emit(Emit::default())); }
     let input_count = payload.input_count.unwrap_or(1);
     if input_count > 1 && payload.input_id.is_none() { return Err(fault("forms.try-value.input-id-required", "multi-chunk Forms input requires an explicit input id")); }
@@ -378,7 +390,7 @@ pub fn start_window(
 
 pub fn start_bulk_window(
     source: Arc<str>,
-    operation: &semio_framework_plugin::AppOperationContext,
+    operation: &semio_plugin::AppOperationContext,
     transient: &FormsTryWindowTransient,
     lease: &FormsTryWindowLease,
 ) -> Result<TryWindowCommandOutput, Fault> {
@@ -389,15 +401,32 @@ fn materialize(values: &FormsTryValues, key: &str) -> Option<String> {
     values.iter_chunks().into_iter().find(|(candidate, _)| candidate == key).map(|(_, chunks)| chunks.iter().map(|chunk| chunk.as_str()).collect())
 }
 
-fn apply_single(values: &FormsTryValues, payload: &SetTryValue, source: &str) -> Result<FormsTryValues, Fault> {
+fn apply_single(snapshot: &FormsSnapshot, values: &FormsTryValues, payload: &SetTryValue, source: &str) -> Result<FormsTryValues, Fault> {
     if values.get_json(&payload.key).is_none() && values.len() >= MAX_TRY_VALUE_ENTRIES {
         return Err(fault("forms.try-value.too-many-entries", "Forms Try values are limited to 64 entries"));
     }
-    let incoming = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null);
-    let current = materialize(values, &payload.key).and_then(|raw| semio_framework_pack_json::parse(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).unwrap_or(Value::Null);
-    let value = if let Some(index) = payload.vector_index.and_then(|index| usize::try_from(index).ok()) {
-        let mut array = match current { Value::Array(array) => array, _ => Vec::new() };
-        if index < array.len() { array[index] = incoming; } else if index == array.len() { array.push(incoming); }
+    let incoming = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("forms.try-value.input-invalid", "the complete Forms answer must be valid JSON"))?;
+    let question = if payload.param_key.is_some() || payload.vector_index.is_some() || payload.option_value.is_some() { snapshot.definition.steps.iter().flat_map(|step| step.blocks.iter()).find(|question| question.id == payload.key) } else { None };
+    let current = materialize(values, &payload.key).and_then(|raw| semio_framework_pack_json::parse(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok());
+    let current = match current {
+        Some(value) => value,
+        None if payload.param_key.is_some() => if let Some(chunks) = &payload.initial_value_json_chunks {
+            let raw = semio_ui_contract::UiValue::join_text_chunks(chunks.iter().map(String::as_str), MAX_COMMAND_INPUT_BYTES).map_err(|_| fault("forms.try-value.initial-value-invalid", "the initial parameter answer has invalid UTF-8 chunks"))?;
+            let value = semio_framework_pack_json::parse(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("forms.try-value.initial-value-invalid", "the initial parameter answer must be a JSON object"))?;
+            if !matches!(value, Value::Object(_)) { return Err(fault("forms.try-value.initial-value-invalid", "the initial parameter answer must be a JSON object")); }
+            value
+        } else {
+            question.and_then(|question| question.params.as_ref().map(semio_framework_pack_json::from_dsl_value)).unwrap_or(Value::Null)
+        },
+        None if payload.vector_index.is_some() || payload.option_value.is_some() => question.map(|question| semio_framework_pack_json::from_dsl_value(&crate::schema::default_value_for_question(question))).unwrap_or(Value::Null),
+        None => Value::Null,
+    };
+    let value = if let Some(index) = payload.vector_index {
+        let index = usize::try_from(index).map_err(|_| fault("forms.try-value.vector-index-invalid", "the vector component is outside its question"))?;
+        let fields = question.and_then(|question| question.fields.as_deref()).unwrap_or(&[]);
+        if index >= fields.len() { return Err(fault("forms.try-value.vector-index-invalid", "the vector component is outside its question")); }
+        let mut array: Vec<_> = fields.iter().enumerate().map(|(position, field)| current.as_array().and_then(|array| array.get(position)).cloned().unwrap_or_else(|| Value::from(field.value.unwrap_or(0.0)))).collect();
+        array[index] = incoming;
         Value::Array(array)
     } else if let Some(option) = &payload.option_value {
         let mut array = match current { Value::Array(array) => array, _ => Vec::new() };
@@ -410,7 +439,9 @@ fn apply_single(values: &FormsTryValues, payload: &SetTryValue, source: &str) ->
     } else {
         incoming
     };
-    Ok(with_raw(values, &payload.key, &semio_framework_pack_json::to_string(&value)))
+    let raw = semio_framework_pack_json::to_string(&value);
+    if raw.len() > MAX_COMMAND_INPUT_BYTES { return Err(fault("forms.try-value.input-too-large", "the complete Forms answer exceeds 16,384 UTF-8 bytes")); }
+    Ok(with_raw(values, &payload.key, &raw))
 }
 
 fn with_raw(values: &FormsTryValues, key: &str, raw: &str) -> FormsTryValues {
@@ -445,7 +476,7 @@ fn apply_bulk(values: &FormsTryValues, source: &str) -> Result<FormsTryValues, F
     result
 }
 
-fn validate_continuation(payload: &SetTryValueStep, operation: &semio_framework_plugin::AppOperationContext, lease: &FormsTryWindowLease) -> Result<(), Fault> {
+fn validate_continuation(payload: &SetTryValueStep, operation: &semio_plugin::AppOperationContext, lease: &FormsTryWindowLease) -> Result<(), Fault> {
     if payload.app_id != operation.app_instance_id.to_string()
         || payload.document_id != operation.parent_document_id
         || payload.base_revision != operation.canonical_base_revision_hex()
@@ -457,8 +488,9 @@ fn validate_continuation(payload: &SetTryValueStep, operation: &semio_framework_
 }
 
 pub fn advance_window(
+    snapshot: &FormsSnapshot,
     payload: &SetTryValueStep,
-    operation: &semio_framework_plugin::AppOperationContext,
+    operation: &semio_plugin::AppOperationContext,
     transient: &FormsTryWindowTransient,
     lease: &FormsTryWindowLease,
 ) -> Result<TryWindowCommandOutput, Fault> {
@@ -469,7 +501,7 @@ pub fn advance_window(
         return Err(fault("forms.try-value.checkpoint-stale", "the Forms continuation baseline changed"));
     }
     let try_values = match session.work {
-        TryValueWork::Single { payload, source } => apply_single(&transient.try_values, &payload, &source)?,
+        TryValueWork::Single { payload, source } => apply_single(snapshot, &transient.try_values, &payload, &source)?,
         TryValueWork::Bulk { source } => apply_bulk(&transient.try_values, &source)?,
     };
     Ok(TryWindowCommandOutput::transient(FormsTryWindowTransient { try_values }))

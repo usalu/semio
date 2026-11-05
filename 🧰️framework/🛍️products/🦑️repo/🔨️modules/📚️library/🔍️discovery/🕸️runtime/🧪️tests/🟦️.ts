@@ -18,7 +18,7 @@ import {receiveScriptProcessInvocation} from "../../../../../../../🔨️module
 import {withIssuedLawStorageV1,lawSourceBoundaryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧪️testing/🦀️cargo/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeFixturePathV1 } from "../🟦️.ts";
-import { cargoDepInfoChecksumsV1, cargoDepInfoResolvedChecksumsV1, cargoDepInfoSourcesV1, encodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { cargoDepInfoChecksumsV1, cargoDepInfoResolvedChecksumsV1, cargoDepInfoSourcesV1, encodeCargoProvenanceV1, decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import{privateRepositoryWorkspaceV1}from"../../../🧪️testing/🧫️private-repository/🟦️.ts";
 const owner = resolve(import.meta.dir, "..");
 const examples = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).examples;
@@ -324,37 +324,16 @@ test("fresh browser compiler bytes require the same actual mounted output",async
  for(const row of rows){const artifact=runtimeBrowserArtifactV1(row.path,row.compiled,()=>row.mounted??undefined);expect(artifact.current).toBe(row.current);expect(artifact.compiledSha256).toBe(new Bun.CryptoHasher("sha256").update(row.compiled).digest("hex"));expect(artifact.mountedSha256).toBe(row.mounted===null?null:new Bun.CryptoHasher("sha256").update(row.mounted).digest("hex"));}
 });
 
- test("Trunk raw compiler query and actual mounted outputs bind exact bytes", async()=>{
-  const {runtimeTrunkCompilationV1}=await import("../🔎️verification/🟦️.ts"),row=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).trunkOutputs;
+ test("Wasm raw compiler query and actual mounted outputs bind exact bytes", async()=>{
+  const {runtimeWasmCompilationV1}=await import("../🔎️verification/🟦️.ts"),row=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).wasmOutputs;
   const hash=(bytes:string)=>new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),rawSha256=hash(row.raw),outputs=Object.entries(row.outputs).map(([path,bytes])=>({path,sha256:hash(String(bytes))}));
-  const receipt={rawSha256,querySha256:rawSha256,outputs},admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeTrunkCompilationV1`)!;
+  const receipt={rawSha256,compiledSha256:rawSha256,outputs},admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeWasmCompilationV1`)!;
   expect(admit(receipt),JSON.stringify(admit.errors)).toBe(true);
-  expect(runtimeTrunkCompilationV1(receipt,(path:string)=>row.outputs[path])).toEqual([]);
-  expect(runtimeTrunkCompilationV1({...receipt,querySha256:"0".repeat(64)},(path:string)=>row.outputs[path])).toHaveLength(1);
-  expect(runtimeTrunkCompilationV1(receipt,()=>undefined)).toHaveLength(2);
-  expect(runtimeTrunkCompilationV1(receipt,(path:string)=>row.outputs[path]+" changed")).toHaveLength(2);
+  expect(runtimeWasmCompilationV1(receipt,(path:string)=>row.outputs[path])).toEqual([]);
+  expect(runtimeWasmCompilationV1({...receipt,compiledSha256:"0".repeat(64)},(path:string)=>row.outputs[path])).toHaveLength(1);
+  expect(runtimeWasmCompilationV1(receipt,()=>undefined)).toHaveLength(2);
+  expect(runtimeWasmCompilationV1(receipt,(path:string)=>row.outputs[path]+" changed")).toHaveLength(2);
  });
-
-test("actual Trunk compiled transformation retains current mounted bytes after temporary cleanup",async()=>withBuildTestInvocationV1(async original=>{
- const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Caller-owned artifact directory required");
- const directory=join(artifacts,"t"),packageRoot=join(directory,"owner"),build=sharedCompiler;mkdirSync(join(packageRoot,"src"),{recursive:true});
- const bindgenVersion=(Bun.TOML.parse(readFileSync(join(process.cwd(),"Cargo.lock"),"utf8")) as {package:{name:string;version:string}[]}).package.find(row=>row.name==="wasm-bindgen")!.version;
- writeFileSync(join(packageRoot,"Cargo.toml"),'[package]\nname="runtime-trunk-neutral"\nversion="0.1.0"\nedition="2021"\n[workspace]\n[lib]\ncrate-type=["cdylib"]\n[dependencies]\nwasm-bindgen="='+bindgenVersion+'"\n');
- writeFileSync(join(packageRoot,"src/lib.rs"),'#[wasm_bindgen::prelude::wasm_bindgen] pub fn value()->u32{7}\n');
- const root=process.cwd(),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),admission=scriptCompilerAdmissionControlV1(original,"runtime:trunk",120000),environment=scriptInvocationEnvironment(original,{...process.env,CARGO_BUILD_BUILD_DIR:build,CARGO_TARGET_DIR:join(directory,"target")}),nativeOwner=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts");
- const {cargoStreamingStatus}=await import("../../../🏃️process/🟦️.ts");expect(await originalCargoStreamingV1(["generate-lockfile","--manifest-path",join(packageRoot,"Cargo.toml"),"--offline"],packageRoot,environment,30000)).toBe(0);
- const {buildTrunkRenderer}=await import(nativeOwner);await buildTrunkRenderer({rustPackageRoot:packageRoot,componentRoot:packageRoot,workspace:root,profile:mode,control:admission,toolWorkspace:root,stateRoot:join(directory,"trunk-state"),environment});
- const ledger=join(build,"semio-trunk-provenance"),path=readdirSync(ledger).map(name=>join(ledger,name,"trunk.json")).filter(path=>{try{return resolve(JSON.parse(readFileSync(path,"utf8")).manifest)===resolve(join(packageRoot,"Cargo.toml"))}catch{return false}}).sort((a,b)=>JSON.parse(readFileSync(b,"utf8")).observedAtMs-JSON.parse(readFileSync(a,"utf8")).observedAtMs)[0]!,receipt=JSON.parse(readFileSync(path,"utf8"));
- const {runtimeTrunkObservationCurrentV1,runtimeCargoObservationCurrentV1}=await import("../🔎️verification/🟦️.ts"),{CurrentPhysicalOwnerV1}=await import("@semio-tech/framework-filesystem/observation/current"),started=performance.now(),control={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>false,remainingMs:()=>60000-(performance.now()-started),onProgress:(event:unknown)=>{}};
- const context=()=>{const physical=new CurrentPhysicalOwnerV1(root,control);return{root,profile:mode,manifest:join(packageRoot,"Cargo.toml"),outputDirectory:join(packageRoot,"dist/wasm-"+mode),owner:nativeOwner,physical,compilerCurrent:(observation:Parameters<typeof runtimeCargoObservationCurrentV1>[0],physical:Parameters<typeof runtimeCargoObservationCurrentV1>[1]["physical"])=>runtimeCargoObservationCurrentV1(observation,{root,cwd:observation.cwd,outDirectory:"",buildDirectory:build,cargoHome:resolve(process.env.CARGO_HOME??join(homedir(),".cargo")),physical})};};
- const admitTrunk=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeTrunkObservationV1`)!;expect(admitTrunk(receipt),JSON.stringify(admitTrunk.errors)).toBe(true);
- expect(await runtimeTrunkObservationCurrentV1({...receipt,builtAtMs:NaN},context())).toBeUndefined();expect(await runtimeTrunkObservationCurrentV1({...receipt,observedAtMs:undefined},context())).toBeUndefined();
- expect(await runtimeTrunkObservationCurrentV1(receipt,context())).toBeDefined();expect(await runtimeTrunkObservationCurrentV1({...receipt,raw:{...receipt.raw,sha256:"0".repeat(64)}},context())).toBeUndefined();
- const wasm=receipt.outputs.find((output:{path:string})=>output.path.endsWith("_bg.wasm"))!,bytes=readFileSync(wasm.path),module=await WebAssembly.compile(bytes);expect(WebAssembly.Module.exports(module).some(entry=>entry.name==="value")).toBe(true);
- const bindings=await import(receipt.outputs.find((output:{path:string})=>output.path.endsWith(".js"))!.path);await bindings.default({module_or_path:bytes});expect(bindings.value()).toBe(7);
- const hash=new Bun.CryptoHasher("sha256").update(bytes).digest("hex");expect(hash).toBe(wasm.sha256);writeFileSync(wasm.path,Buffer.concat([bytes,Buffer.from("changed")]));expect(await runtimeTrunkObservationCurrentV1(receipt,context())).toBeUndefined();writeFileSync(wasm.path,bytes);
- writeFileSync(join(directory,"verified-receipt.json"),JSON.stringify({path,receipt,actualValue:bindings.value(),independentWasmSha256:hash},null,2)+"\n");
-}),120000);
 
  test("actual rustc consumed-byte checksums refuse edits before completed receipt observation",async()=>{
  const {blake3}=await import("@noble/hashes/blake3.js"),{runtimeCargoConsumedInputsV1}=await import("../🔎️verification/🟦️.ts");
@@ -497,5 +476,5 @@ for(const vector of JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixt
 
 /** 🌊️ Actual runtime compiler fixtures retain their original incoming process authority. */
 async function originalCargoStreamingV1(args:readonly string[],cwd:string,environment:NodeJS.ProcessEnv,budgetMilliseconds:number):Promise<number>{
- return withBuildTestInvocationV1(invocation=>withIssuedLawStorageV1(invocation,new AbortController().signal,async law=>{const {cargoStreamingStatus}=await import("../../../🏃️process/🟦️.ts");const policy={version:1 as const,mode:readBuildMode(process.env.SEMIO_BUILD_MODE),cwd,compilerConfiguration:join(process.cwd(),".cargo/config.toml"),buildDirectory:environment.CARGO_BUILD_BUILD_DIR!,leaseDirectory:join(repository.root,".cache/b/l/m/data"),captureDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,budgetMs:budgetMilliseconds};return cargoStreamingStatus(args,cwd,{...environment,...law.environment},{invocation,control:scriptCompilerAdmissionControlV1(invocation,"runtime:cargo-streaming",budgetMilliseconds),policy,storage:law.storage,sourceBoundary:lawSourceBoundaryV1});}));
+ return withBuildTestInvocationV1(invocation=>withIssuedLawStorageV1(invocation,new AbortController().signal,async law=>{const {cargoStreamingStatus}=await import("../../../🏃️process/🟦️.ts");const policy={version:1 as const,mode:readBuildMode(process.env.SEMIO_BUILD_MODE),cwd,compilerConfiguration:join(process.cwd(),".cargo/config.toml"),buildDirectory:law.environment.CARGO_BUILD_BUILD_DIR!,leaseDirectory:join(repository.root,".cache/b/l/m/data"),captureDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,budgetMs:budgetMilliseconds};return cargoStreamingStatus(args,cwd,{...environment,...law.environment},{invocation,control:scriptCompilerAdmissionControlV1(invocation,"runtime:cargo-streaming",budgetMilliseconds),policy,storage:law.storage,sourceBoundary:lawSourceBoundaryV1});}));
 }

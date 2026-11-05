@@ -37,89 +37,89 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 #[allow(unused_imports)]
 use semio_framework::kernel::UiDirtyScope;
 #[allow(unused_imports)]
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
+use semio_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionRef;
+use semio_plugin::ActionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactPresentation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DialogDefinition;
+use semio_plugin::DialogDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTarget;
+use semio_plugin::InteractionTarget;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionVerb;
+use semio_plugin::InteractionVerb;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaClass;
+use semio_plugin::MediaClass;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaForm;
+use semio_plugin::MediaForm;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortDirection;
+use semio_plugin::MediaPortDirection;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortSpec;
+use semio_plugin::MediaPortSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::PortMultiplicity;
+use semio_plugin::PortMultiplicity;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use semio_framework_pack_json::{json, Value};
 #[allow(unused_imports)]
@@ -127,7 +127,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
+use semio_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::kit::*;
 #[allow(unused_imports)]
@@ -135,11 +135,11 @@ use crate::editor::puzzle2d::retained::*;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::session::*;
 use crate::editor::puzzle2d::*;
-use semio_framework_plugin::artifact_app_laws::declared_verb_agent_divergences;
-use semio_framework_plugin::artifact_app_laws::declared_verb_probe;
-use semio_framework_plugin::artifact_app_laws::declared_verb_wrote_document;
-use semio_framework_plugin::artifact_app_laws::probe_agent_lane;
-use semio_framework_plugin::artifact_app_laws::DeclaredVerbOutcome;
+use semio_plugin::artifact_app_laws::declared_verb_agent_divergences;
+use semio_plugin::artifact_app_laws::declared_verb_probe;
+use semio_plugin::artifact_app_laws::declared_verb_wrote_document;
+use semio_plugin::artifact_app_laws::probe_agent_lane;
+use semio_plugin::artifact_app_laws::DeclaredVerbOutcome;
 
 /// 🤖️ The verbs the semio MCP coverage battery (`plugin-coverage-check`) tries on a fresh puzzle 2d document, in its order —
 /// every one was refused `interactive-job.preview-unsupported` before the agent lane ran the editor's own job.
@@ -156,7 +156,7 @@ const AGENT_LANE_DIVERGENCES: &[&str] = &["createEdge"];
 /// transaction, never settles without it.
 #[semio_framework_async_macros::async_test]
 async fn the_agent_lane_runs_the_puzzle2d_editors_own_tool_command_job() {
-    let probes = probe_agent_lane::<semio_framework_plugin::EditorApp<Puzzle2dPlayApp>, <Puzzle2dPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_puzzle2d_app, None, BATTERY_VERBS, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let probes = probe_agent_lane::<semio_plugin::EditorApp<Puzzle2dPlayApp>, <Puzzle2dPlayApp as semio_plugin::ArtifactEditor>::Members>(create_puzzle2d_app, None, BATTERY_VERBS, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     let outcomes = probes.iter().map(|probe| format!("{}: shell {:?} / agent {:?}", probe.verb, probe.windows.iter().map(|window| &window.staged).collect::<Vec<_>>(), probe.agent)).collect::<Vec<_>>();
     for probe in &probes {
         assert!(!matches!(&probe.agent, Some(DeclaredVerbOutcome::Unreachable { code, .. }) if code != "interactive-job.agent-lane-uncarried"), "{} is refused before its job ran: {outcomes:#?}", probe.verb);

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabPointNormalStre
         record: "ChangedLabPointNormalStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Normal stress σ / mean stress p of the laboratory test point", "Laborversuchspunkt: Normalspannung σ / mittlere Spannung p ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Normal stress σ / mean stress p of the laboratory test point", "Laborversuchspunkt: Normalspannung σ / mittlere Spannung p ändern")
     }
 }
 

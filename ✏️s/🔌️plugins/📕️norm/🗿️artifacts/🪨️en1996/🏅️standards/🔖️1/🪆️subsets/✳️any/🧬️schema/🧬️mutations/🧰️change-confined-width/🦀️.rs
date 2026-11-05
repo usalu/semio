@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeConfinedWidth wher
         record: "ChangedConfinedWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change confining element column width", "Stützenbreite (Einfassungselement) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change confining element column width", "Stützenbreite (Einfassungselement) ändern")
     }
 }
 

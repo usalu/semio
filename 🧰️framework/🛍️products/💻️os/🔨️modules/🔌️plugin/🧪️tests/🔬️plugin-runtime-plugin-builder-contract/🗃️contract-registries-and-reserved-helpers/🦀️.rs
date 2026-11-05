@@ -15,11 +15,11 @@ pub fn meta() -> ActionMeta {
 
     #[doc(hidden)]
 pub async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::InvocationResult {
-        semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.expect("settle reserved")
+        semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.expect("settle reserved")
     }
 
     #[doc(hidden)]
-pub async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::InvocationResult {
+pub async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::InvocationResult {
         let admitted = artifact_app_laws::dispatch_fixture_action(app, action, args.cloned(), &meta(), identity, cx, artifact_app_laws::fixture_mounted_policy().maintenance).await.expect(action);
         settle_reserved(app, admitted, cx).await
     }
@@ -29,12 +29,12 @@ pub async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, ar
     /// store's terminal-empty Drop witness by `close_step` alone — that authority is exactly what
     /// `maintenance_step` pumps, one bounded unit per stage rotation.
     #[doc(hidden)]
-pub fn drain_and_close_fixture(app: &mut VcsArtifactApp<TestApp>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) {
+pub fn drain_and_close_fixture(app: &mut VcsArtifactApp<TestApp>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) {
         for _ in 0..64 {
             for _ in 0..MAINTENANCE_STAGES {
                 let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
                 let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes).expect("original fixture maintenance quote");
-                semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
+                semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
             }
         }
         artifact_app_laws::close_registered_fixture_app(app,mounted_policy,cx).expect("original fixture terminal close");
@@ -42,19 +42,19 @@ pub fn drain_and_close_fixture(app: &mut VcsArtifactApp<TestApp>, mounted_policy
 
     /// 🧹️ [`drain_and_close_fixture`] for a composed fixture that owns members.
     #[doc(hidden)]
-pub fn drain_and_close_composed_fixture(app: &mut VcsArtifactApp<TestApp, TestMembers>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) {
+pub fn drain_and_close_composed_fixture(app: &mut VcsArtifactApp<TestApp, TestMembers>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) {
         for _ in 0..64 {
             for _ in 0..MAINTENANCE_STAGES {
                 let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
                 let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes).expect("original fixture maintenance quote");
-                semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
+                semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
             }
         }
         artifact_app_laws::close_registered_fixture_app(app,mounted_policy,cx).expect("original fixture terminal close");
     }
 
     #[doc(hidden)]
-pub fn close_reserved_app(app: &mut VcsArtifactApp<TestApp>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) {
+pub fn close_reserved_app(app: &mut VcsArtifactApp<TestApp>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut semio_framework_job::StepContext<'_>) {
         artifact_app_laws::close_registered_fixture_app(app, mounted_policy,cx).expect("original fixture terminal close");
     }
 
@@ -122,7 +122,7 @@ pub async fn contract_registry() -> AppActionRegistry {
     /// `one_framework_reserved_route_fits_a_bounded_thread_stack` pins. One `resolve_ready` per
     /// statement drops each temporary at its own semicolon instead.
     #[doc(hidden)]
-pub fn declare_test_app_verbs(builder: semio_framework_plugin_app_builder::AppBuilder) -> semio_framework_plugin_app_builder::AppBuilder {
+pub fn declare_test_app_verbs(builder: semio_plugin_app_builder::AppBuilder) -> semio_plugin_app_builder::AppBuilder {
         let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("increment", LocalizedLabel::data("Increment")));
         let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("setLabel", LocalizedLabel::data("Set Label")));
         let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("streamLabel", LocalizedLabel::data("Stream Label")));
@@ -182,7 +182,7 @@ pub async fn migrated_contract_registry() -> AppActionRegistry {
     /// instance (`dispatch_typed_command_inner` refuses `interactive-job.live-instance` otherwise),
     /// and it retires its stores before `ArtifactStore::drop` can fire its terminal-empty witness.
     #[doc(hidden)]
-pub struct ContractApp(VcsArtifactApp<TestApp>, semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1);
+pub struct ContractApp(VcsArtifactApp<TestApp>, semio_plugin_mounted_owner::MountedOwnerPolicyV1);
 
     impl std::ops::Deref for ContractApp {
         type Target = VcsArtifactApp<TestApp>;

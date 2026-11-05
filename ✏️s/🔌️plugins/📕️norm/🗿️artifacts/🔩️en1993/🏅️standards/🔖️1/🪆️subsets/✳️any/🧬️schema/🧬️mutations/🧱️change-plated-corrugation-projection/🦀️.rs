@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedCorrugationP
         record: "ChangedPlatedCorrugationProjection",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Corrugated web: horizontal projection a_1 of the inclined fold of the plated panel", "Plattenfeld: Trapezstegblech: waagerechte Projektion a_1 der geneigten Falte ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Corrugated web: horizontal projection a_1 of the inclined fold of the plated panel", "Plattenfeld: Trapezstegblech: waagerechte Projektion a_1 der geneigten Falte ändern")
     }
 }
 

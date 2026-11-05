@@ -1,6 +1,6 @@
 use crate::PresentationSnapshot;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_ui_contract::BuiltNode;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_ui_contract::BuiltNode;
 #[allow(unused_imports)]
 use crate::editor::animate::terminology::AnimatePresentationLabels;
 #[allow(unused_imports)]
@@ -8,26 +8,26 @@ use crate::editor::animate::support::ui_label;
 #[allow(unused_imports)]
 use crate::{editor::animate::support::PRESENTATION_INTERACTION_DOMAIN, editor::animate::support::PRESENTATION_INTERACTION_GRANULARITY, editor::animate::support::PRESENTATION_PLAY_APP_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_desc;
+use semio_plugin::tree_item_desc;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use crate::editor::animate::panels::artifact::*;
 use crate::editor::animate::unit_tests::context::{presentation_app, render as render_body};
 use crate::editor::animate::PresentationCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_seeded_tiles() {
-    use semio_framework_plugin::artifact_app_laws::meta;
+    use semio_plugin::artifact_app_laws::meta;
     let mut app = presentation_app().await;
     crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 })).await;
     let document = render_body(&mut app, PRESENTATION_PLAY_BODY_ARTIFACT).await;
@@ -49,7 +49,7 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 // the row's own target id, (d) pick rows carry a granularity and no binding of their own while the
 // tree root carries exactly one `interactionSelect`.
 use crate::editor::animate::terminology::animate_presentation_labels;
-use semio_framework_plugin::{Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_plugin::{Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
 
 const TILES_SECTION: &str = "animate-presentation-play.tiles";
 const OVERSIZED: usize = 200;
@@ -101,13 +101,13 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_deck_stamps_the_full_total_and_materialises_at_most_its_slice() {
     let deck = oversized_deck(OVERSIZED);
-    let tree = render(&deck, animate_presentation_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&deck, animate_presentation_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     let tiles = window_law_node(&tree, TILES_SECTION);
     assert_eq!(window_law_extent(tiles), (OVERSIZED as u32, 0));
     assert!(tiles.children.len() < OVERSIZED, "only the first-paint slice is materialised: {}", tiles.children.len());
@@ -118,7 +118,7 @@ async fn an_oversized_deck_stamps_the_full_total_and_materialises_at_most_its_sl
 async fn a_closed_section_stamps_its_total_and_builds_no_children() {
     let deck = oversized_deck(OVERSIZED);
     let view = window_law_view(vec![window_law_request(TILES_SECTION, Some(false), 0, 32)]);
-    let tree = render(&deck, animate_presentation_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, PRESENTATION_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&deck, animate_presentation_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, PRESENTATION_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let tiles = window_law_node(&tree, TILES_SECTION);
     assert_eq!(window_law_extent(tiles), (OVERSIZED as u32, 0));
     assert_eq!(tiles.children.len(), 0);
@@ -128,7 +128,7 @@ async fn a_closed_section_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_tile_id() {
     let deck = oversized_deck(OVERSIZED);
     let view = window_law_view(vec![window_law_request(TILES_SECTION, Some(true), 40, 6)]);
-    let tree = render(&deck, animate_presentation_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, PRESENTATION_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&deck, animate_presentation_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, PRESENTATION_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let tiles = window_law_node(&tree, TILES_SECTION);
     assert_eq!(window_law_extent(tiles), (OVERSIZED as u32, 40));
     assert_eq!(window_law_keys(tiles), (40..46).map(|index| format!("tile-{index:03}")).collect::<Vec<_>>());
@@ -137,12 +137,12 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_tile_i
 #[semio_framework_async_macros::async_test]
 async fn pick_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let deck = oversized_deck(3);
-    let tree = render(&deck, animate_presentation_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&deck, animate_presentation_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     for row in window_law_node(&tree, TILES_SECTION).children.iter() {
         let Component::TreeItem(props) = &row.component else { panic!("{} is not a tree row", row.key.as_str()) };
-        assert_eq!(props.granularity.as_ref().map(semio_framework_plugin::UiText::as_str), Some("tile"));
+        assert_eq!(props.granularity.as_ref().map(semio_plugin::UiText::as_str), Some("tile"));
         assert!(row.bindings.is_empty(), "{} must not pay for its own activate binding", row.key.as_str());
     }
 }

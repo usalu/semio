@@ -72,8 +72,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "scene", kind: "create-scene", record: "CreatedScene" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Create Scene", "Szene erstellen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Create Scene", "Szene erstellen")
     }
 
     fn target(&self) -> Vec<String> {

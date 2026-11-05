@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 #[path = "../../../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_process_process3d_modes::windows::workpiece::*;
@@ -9,25 +9,25 @@ use semio_s_artifact_process_process3d_modes::windows::workpiece::options;
 use semio_s_artifact_process_process3d_inferences::processed_mesh;
 use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessWorkingScene};
 use semio_framework_pack_json as json;
-use semio_framework_plugin::app::WindowKit;
-use semio_framework_plugin::mesh_from_kind;
-use semio_framework_plugin::world3d_camera_json;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MeshView;
-use semio_framework_plugin::MeshWindowKit;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementControl;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::app::WindowKit;
+use semio_plugin::mesh_from_kind;
+use semio_plugin::world3d_camera_json;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MeshView;
+use semio_plugin::MeshWindowKit;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementControl;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
+use semio_plugin::WorldSunConfig;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_world3d_surface_and_body_key() {

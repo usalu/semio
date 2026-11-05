@@ -4,18 +4,18 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::AppIo;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
 use crate::editor::bim::{BIM_RETAINED_PAYLOAD_SCHEMA, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS};
 use crate::editor::bim::*;
 use semio_s_artifact_bim_model_tests::editor::bim::presence;
@@ -30,7 +30,7 @@ pub fn bim_io() -> AppIo {
         ports: vec![],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.bim-model".into(), name: "BIM Model".into(), dimension: "3d".into(), component_kind: "bim".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "3d.bim-model".into(), name: "BIM Model".into(), dimension: "3d".into(), component_kind: "bim".into() },
     }
 }
 //#endregion 🔖️Io
@@ -47,12 +47,12 @@ pub(crate) fn bim_bounded_extent(command: &BimCommand) -> Option<usize> {
 /// 🧵️ The single step of a bounded command: dispatches against the retained roots with the addressed window's config and the local presence, and publishes the presence the handler asked for.
 pub(crate) struct BimCommandWork {
     pub(crate) tool_id: &'static str,
-    pub(crate) owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(crate) owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(crate) completed: bool,
 }
 
 impl BimCommandWork {
-    pub(crate) fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub(crate) fn new(tool_id: &'static str, owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, owner, completed: false }
     }
 }
@@ -62,7 +62,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
         self.tool_id
     }
 
-    fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
+    fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
         (!self.completed && command.command_id() == self.tool_id).then(|| bim_bounded_extent(command)).flatten()
     }
 
@@ -124,11 +124,11 @@ impl semio_framework::ToolJobFactory for BimCommandJobFactory {
         bim_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BIM_BOUNDED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BIM_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BimCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for BimCommandJobFactory {
     type Owner = EditorApp<BimModelApp>;
     const TOOL_IDS: &'static [&'static str] = BIM_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = BIM_MODEL_DOCUMENT_SCHEMA;

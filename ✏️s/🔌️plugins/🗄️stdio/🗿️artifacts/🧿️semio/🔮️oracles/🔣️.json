@@ -17,7 +17,7 @@
     },
     {
       "implementation": "rust",
-      "package": "semio-framework-os-kernel",
+      "package": "semio-os-kernel",
       "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
       "rationale": "🧱️ A subset adapter's subject half applies its derived diffs through the kernel's `apply_diff`, the one dispatch path production uses."
     }

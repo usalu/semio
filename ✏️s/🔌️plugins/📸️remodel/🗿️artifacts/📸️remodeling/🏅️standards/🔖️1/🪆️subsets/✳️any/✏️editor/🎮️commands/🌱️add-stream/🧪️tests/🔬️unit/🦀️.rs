@@ -2,7 +2,7 @@ use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands
 use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::media;
 use crate::editor::remodeling::unit_tests::context::{app_with_registry, dispatch, render_json};
 use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
-use semio_framework_plugin::artifact_app_laws;
+use semio_plugin::artifact_app_laws;
 
 /// 🖥️ The mounted path the react host drives: a registry-backed app answers before its bounded retained
 /// publication lands, so the settle is what makes the stream visible — to the snapshot AND to the Media
@@ -29,8 +29,8 @@ async fn a_settled_add_stream_appends_one_uncalibrated_stream_the_media_panel_co
 async fn an_unknown_camera_is_refused_before_the_publication() {
     let mut app = app_with_registry().await;
     let instance = artifact_app_laws::meta("local").instance_id;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RemodelingCommand::AddStream(AddStream { name: "Stream".into(), kind: "image-sequence".into(), camera_id: "cam-0".into() }), &artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the bounded route admits the command; the handler faults inside the publication");
-    let fault = match artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RemodelingCommand::AddStream(AddStream { name: "Stream".into(), kind: "image-sequence".into(), camera_id: "cam-0".into() }), &artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the bounded route admits the command; the handler faults inside the publication");
+    let fault = match artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
         Err(fault) => fault,
         Ok(receipt) => panic!("an unknown camera is a lane fault, never a phantom edit: {:?}", receipt.lanes),
     };

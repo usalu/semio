@@ -22,8 +22,8 @@ pub struct DeletePage {
 impl<Op> MutationKind<LayoutSnapshot, Op> for DeletePage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_page::CreatePage> + From<crate::set_page_spread::SetPageSpread> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "page", kind: "delete-page", record: "DeletedPage" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete page \"{}\"", self.id), &format!("Seite \"{}\" löschen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete page \"{}\"", self.id), &format!("Seite \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

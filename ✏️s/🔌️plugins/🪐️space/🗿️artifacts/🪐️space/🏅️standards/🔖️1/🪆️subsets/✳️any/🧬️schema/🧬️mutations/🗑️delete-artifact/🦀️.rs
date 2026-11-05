@@ -21,8 +21,8 @@ pub fn delete_artifact(id: String) -> SSpaceMutation {
 impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for DeleteArtifact {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "artifact", kind: "delete-artifact", record: "DeletedArtifact" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete artifact \"{}\"", self.id), &format!("Artefakt \"{}\" löschen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete artifact \"{}\"", self.id), &format!("Artefakt \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

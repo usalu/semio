@@ -1,4 +1,4 @@
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
 use crate::{editor::shooting::config::ShootingConfig, editor::shooting::config::ShootingConfigMutation};
 #[allow(unused_imports)]
@@ -22,7 +22,7 @@ use semio_framework_pack_json::json;
 #[allow(unused_imports)]
 use semio_framework_pack_json::Value;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::shooting::commands::asset::*;
@@ -51,7 +51,7 @@ async fn import_asset_names_and_activates_the_new_asset() {
 
 #[semio_framework_async_macros::async_test]
 async fn import_asset_request_declares_the_glb_accept_filter() {
-    use semio_framework_plugin::Effect;
+    use semio_plugin::Effect;
     let mut app = shooting_app().await;
     let result = dispatch(&mut app, ShootingCommand::ImportAssetRequest(import_asset_request::ImportAssetRequest {})).await;
     match &result.requested_effects[0] {

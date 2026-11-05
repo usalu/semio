@@ -6,8 +6,8 @@ use semio_s_artifact_draw_drawing_scene::preparation::{DocumentVectorJob, Docume
 use semio_s_artifact_draw_drawing_scene::retirement::ScenePlanCloseJob;
 use semio_s_artifact_draw_drawing_scene_paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PreparedSceneCloseJob, PaintedSceneLimits};
 use semio_framework::kernel::{Effect,JobPlacement};
-use semio_framework_plugin::{AppRenderOperationContext,ArtifactView,Fault,PluginLifecycleStep};
-use semio_framework_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,IoRunControl,JobStep,SqliteSnapshotControl};
+use semio_plugin::{AppRenderOperationContext,ArtifactView,Fault,PluginLifecycleStep};
+use semio_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,IoRunControl,JobStep,SqliteSnapshotControl};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use std::{cell::RefCell,rc::Rc};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
@@ -97,18 +97,18 @@ impl BoundedJob for GeometryJob{
  fn terminal_drop_is_shallow(&self)->bool{self.input.is_none()&&self.restored.is_none()}
 }
 fn input(slot:usize,identity:SceneIdentity,job:u64)->Vec<u8>{let mut bytes=Vec::with_capacity(63);bytes.push(1);bytes.extend_from_slice(&(slot as u16).to_le_bytes());bytes.extend_from_slice(&identity.instance.to_le_bytes());bytes.extend_from_slice(&identity.base.to_le_bytes());bytes.extend_from_slice(&identity.generation.to_le_bytes());bytes.extend_from_slice(&identity.revision);bytes.extend_from_slice(&job.to_le_bytes());bytes}
-fn geometry_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>,_cx:&StepContext<'_>)->Result<RetainedCloneGrant,ValueError>{semio_framework_plugin::reactor::jobs::original_job_admission_demands::<GeometryJob>(input,restored)}
+fn geometry_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>,_cx:&StepContext<'_>)->Result<RetainedCloneGrant,ValueError>{semio_plugin::reactor::jobs::original_job_admission_demands::<GeometryJob>(input,restored)}
 fn geometry_admit(job:u64,input:&mut Option<Vec<u8>>,restored:&mut Option<Vec<u8>>,cx:&mut StepContext<'_>)->Result<Option<Box<dyn BoundedJob>>,ValueError>{
  let invalid=|message:&'static str|ValueError::literal(ValueRefusalKind::InvalidValue,message);
  let bytes=input.as_deref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"drawing.geometry.input"))?;
  if bytes.len()!=63||bytes[0]!=1||u64::from_le_bytes(bytes[55..63].try_into().unwrap())!=job||job&!COUNTER_MAX!=TAG{return Err(invalid("drawing.geometry.input"));}
  let slot=usize::from(u16::from_le_bytes(bytes[1..3].try_into().unwrap()));let identity=SceneIdentity{instance:u32::from_le_bytes(bytes[3..7].try_into().unwrap()),base:u64::from_le_bytes(bytes[7..15].try_into().unwrap()),generation:u64::from_le_bytes(bytes[15..23].try_into().unwrap()),revision:bytes[23..55].try_into().unwrap()};
  let shell=MOUNTED.with(|r|{let r=r.borrow();let shell=r.shells.get(slot).ok_or_else(||invalid("drawing.geometry.slot"))?.clone();if !shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_some_and(|state|state.job_id==job&&state.identity.matches(identity))){return Err(invalid("drawing.geometry.stale-factory"));}Ok(shell)})?;
- semio_framework_plugin::reactor::jobs::admit_original_job(input,restored,cx,move |input,restored|GeometryJob{shell,slot,identity,job,input:Some(input),restored})
+ semio_plugin::reactor::jobs::admit_original_job(input,restored,cx,move |input,restored|GeometryJob{shell,slot,identity,job,input:Some(input),restored})
 }
 thread_local!{static REGISTERED:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
 /// 🏭️ Register the genuine host factory before any render can spawn work.
-pub fn initialize(){MOUNTED.with(|r|{let _=r.borrow().counter;});if !REGISTERED.with(std::cell::Cell::get)&&semio_framework_plugin::reactor::jobs::register_bounded_job_kind(KIND,BoundedJobFactory{admit:geometry_admit,demands:geometry_demands}){REGISTERED.with(|registered|registered.set(true));}}
+pub fn initialize(){MOUNTED.with(|r|{let _=r.borrow().counter;});if !REGISTERED.with(std::cell::Cell::get)&&semio_plugin::reactor::jobs::register_bounded_job_kind(KIND,BoundedJobFactory{admit:geometry_admit,demands:geometry_demands}){REGISTERED.with(|registered|registered.set(true));}}
 /// 🔍️ Reserve a free retained shell before requesting the genuine source read.
 pub fn prepare(render:AppRenderOperationContext,document:&DrawingSnapshot)->bool{prepare_source(identity(render),document)}
 fn prepare_source(id:SceneIdentity,document:&DrawingSnapshot)->bool{

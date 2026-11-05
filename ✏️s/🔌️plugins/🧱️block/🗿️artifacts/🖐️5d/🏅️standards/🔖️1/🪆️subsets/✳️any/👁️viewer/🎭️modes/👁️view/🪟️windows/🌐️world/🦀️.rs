@@ -10,8 +10,8 @@ use semio_s_artifact_block_5d_model::Block5dSnapshot;
 // `//#region 🔖️WindowKits` region nested inside `pub mod app { … }` but are NOT in the crate-root
 // curated `pub use app::{ … };` re-export list (unlike `ArtifactViewer`/`Viewer`/`ViewEmit`, whose
 // Gap 1 already closed) — only reachable through `app::`. Flagged in this packet's migration report.
-use semio_framework_plugin::app::{MeshView, MeshWindowKit, WindowKit};
-use semio_framework_plugin::{world3d_camera_projection_json, world3d_meshes_json_from_kinds, world3d_meshes_json_from_urls, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
+use semio_plugin::app::{MeshView, MeshWindowKit, WindowKit};
+use semio_plugin::{world3d_camera_projection_json, world3d_meshes_json_from_kinds, world3d_meshes_json_from_urls, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
 
 //#region 🔖️Constants
 /// 👁️ `MeshWindowKit::KIND_ID` — frozen id/body-key pair (contract §2.6): `"framework.window.mesh"`.

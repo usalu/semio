@@ -1,7 +1,7 @@
 //! 🧪️ Viewer surface — read-only by construction, bound to the same dialect, two windows.
 
 use crate::WFC_BITMAP_DIALECT;
-use semio_framework_plugin::ArtifactViewer;
+use semio_plugin::ArtifactViewer;
 use crate::viewer::bitmap::*;
 
 #[test]

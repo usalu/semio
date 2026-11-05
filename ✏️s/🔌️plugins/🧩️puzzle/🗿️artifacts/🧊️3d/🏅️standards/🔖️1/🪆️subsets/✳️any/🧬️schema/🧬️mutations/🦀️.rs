@@ -8,9 +8,9 @@
 //! The native editor owns its immutable play root; semantic mutation authority remains the
 //! canonical typed snapshot and its typed diff algebra.
 
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as vcs;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as dsl;
 extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 pub use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
@@ -173,9 +173,6 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(test)]
-#[path = "🧪️tests/🧪️selection-time-travel/🦀️.rs"]
-mod selection_time_travel;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️committed-fixtures/🦀️.rs"]

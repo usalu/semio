@@ -2,8 +2,8 @@
 
 use crate::op::EquationMutation;
 use crate::EquationSnapshot;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_os_kernel::Viewport2d;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 /// 👁️ Config-only: the node-graph viewport never touches the document — it's written into `cfg`,

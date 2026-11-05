@@ -206,13 +206,13 @@ pub mod examples {
     pub mod flowers_24;
 
     /// 📇️ Every bundled example, in the order the editor's example picker offers them.
-    pub fn sources() -> Vec<semio_framework_plugin::ExampleSource> {
+    pub fn sources() -> Vec<semio_plugin::ExampleSource> {
         vec![rooms_16::source(), flowers_24::source()]
     }
 
     /// 📇️ The same roster as a `&'static` slice, which is the shape `SubsetDeclaration` takes.
-    pub fn example_source_slice() -> &'static [semio_framework_plugin::ExampleSource] {
-        static EXAMPLES: std::sync::OnceLock<Vec<semio_framework_plugin::ExampleSource>> = std::sync::OnceLock::new();
+    pub fn example_source_slice() -> &'static [semio_plugin::ExampleSource] {
+        static EXAMPLES: std::sync::OnceLock<Vec<semio_plugin::ExampleSource>> = std::sync::OnceLock::new();
         EXAMPLES.get_or_init(sources).as_slice()
     }
 

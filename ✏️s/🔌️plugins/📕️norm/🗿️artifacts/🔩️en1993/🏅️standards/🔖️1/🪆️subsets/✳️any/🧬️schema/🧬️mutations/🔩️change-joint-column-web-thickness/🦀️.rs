@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointColumnWebThic
         record: "ChangedJointColumnWebThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Column web thickness t_wc of the joint", "Anschluss: Stützenstegdicke t_wc ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Column web thickness t_wc of the joint", "Anschluss: Stützenstegdicke t_wc ändern")
     }
 }
 

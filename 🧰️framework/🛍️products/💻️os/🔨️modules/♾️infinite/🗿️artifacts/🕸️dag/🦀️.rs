@@ -1,10 +1,10 @@
 //! 🕸️ Independently composable DAG data and mutation contracts.
 #[cfg(all(target_arch="wasm32",not(target_env="p2")))]
 extern crate semio_framework_async as wasm_bindgen_futures;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-pub use semio_framework_os_kernel::{os_dsl, os_pack, os_spr, os_store};
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+pub use semio_os_kernel::{os_dsl, os_pack, os_spr, os_store};
 #[path = "🧵️retained/🦀️.rs"]
 mod retained;
 pub use retained::DagMemberStoreProducer;
@@ -13,7 +13,7 @@ mod demo;
 pub use demo::dag_demo_host_snapshot;
 use crate::os_store::document_materialize::create_document_envelope;
 use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactStore};
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 pub use semio_framework_artifact_infinite_dag_vcs::{
     ActorId,
     DAG_DOCUMENT_SCHEMA,
@@ -65,7 +65,7 @@ pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 
 /// 🏭️ Creates a DAG store with the exact snapshot, mutation, and cursor retirement owners installed.
 pub async fn create_dag_store(id: &str, snapshot: DagSnapshot, actor: ActorId) -> Result<DagStore, crate::os_store::VcsError> {
-    let mut store = DagStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(DAG_DOCUMENT_SCHEMA, id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), actor).await?;
+    let mut store = DagStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(DAG_DOCUMENT_SCHEMA, id, snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), actor).await?;
     crate::os_store::install_funded_member_store_owners(&mut store,&crate::DagMemberStoreProducer)?;
     Ok(store)
 }

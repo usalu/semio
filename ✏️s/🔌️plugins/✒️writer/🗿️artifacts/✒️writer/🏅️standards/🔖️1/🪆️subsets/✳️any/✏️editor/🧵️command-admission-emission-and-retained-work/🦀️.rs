@@ -48,12 +48,12 @@ pub(super) fn writer_ast_topology(document: &WriterSnapshot) -> DomainTopology {
 /// entry makes sense for them), so they stay bespoke `.item(...)` rows per `Menu::of`'s escape hatch;
 /// `requestCompletions`/`lintDocument`/`formatDocument`/`commitRename` are declared actions and resolve
 /// through `.action(...)` against `registry`.
-pub(super) fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&ContextMenuTextContext>, view_state: &semio_framework_plugin::ViewModel) -> Vec<ContextMenuItemSpec> {
-    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
+pub(super) fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&ContextMenuTextContext>, view_state: &semio_plugin::ViewModel) -> Vec<ContextMenuItemSpec> {
+    let is_de = view_state.locale == semio_ui_locale::Locale::De;
     let can_suggest = text.is_some_and(|t| t.has_completions);
     let has_selection = text.is_some_and(|t| t.has_selection);
     let can_rename = text.is_some_and(|t| t.can_rename);
-    let reason = semio_framework_plugin::nothing_selected().resolve(view_state.terminology, view_state.locale).to_string();
+    let reason = semio_plugin::nothing_selected().resolve(view_state.terminology, view_state.locale).to_string();
     let bespoke = |id: &str, label: &str, icon: &str, action: &str, disabled: bool| {
         let row = ContextMenuItemSpec { id: id.into(), label: Some(label.into()), icon: Some(icon.into()), action: Some(action.into()), ..Default::default() };
         if disabled {
@@ -171,7 +171,7 @@ fn writer_command_admitted(command: &WriterCommand, snapshot: &WriterSnapshot, w
 fn writer_command_emit(
     command: &WriterCommand,
     snapshot: &WriterSnapshot,
-    view_state: Option<&semio_framework_plugin::ViewModel>,
+    view_state: Option<&semio_plugin::ViewModel>,
     window_config: Option<&WriterMainWindowConfig>,
     window_transient: Option<&WriterMainWindowTransient>,
 ) -> Result<(Emit<WriterMutation, NoConfigMutation>, EphemeralEmit<EditorApp<WriterPlayApp>>), &'static str> {
@@ -327,7 +327,7 @@ impl WriterRetainedCommandWork {
     }
 }
 
-fn writer_window_transient<'a>(context: Option<&'a semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WriterPlayApp>>>) -> Option<&'a WriterMainWindowTransient> {
+fn writer_window_transient<'a>(context: Option<&'a semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WriterPlayApp>>>) -> Option<&'a WriterMainWindowTransient> {
     context.and_then(|context| context.window_transient.as_ref()).and_then(|snapshot| snapshot.get::<WriterMainWindowTransientOwner>())
 }
 
@@ -336,7 +336,7 @@ impl ArtifactCommandWork<EditorApp<WriterPlayApp>> for WriterRetainedCommandWork
         self.tool_id
     }
 
-    fn extent(&self, command: &WriterCommand, snapshot: &WriterSnapshot, _interaction: &protocol::InteractionState, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WriterPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &WriterCommand, snapshot: &WriterSnapshot, _interaction: &protocol::InteractionState, context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WriterPlayApp>>>) -> Option<usize> {
         writer_command_admitted(command, snapshot, writer_window_transient(context)).then_some(1)
     }
 
@@ -390,7 +390,7 @@ impl ToolJobFactory for WriterCommandJobFactory {
         ToolExecutionContract::resumable(MAX_WRITER_COMMAND_RAW_BYTES, MAX_WRITER_COMMAND_DECODED_ITEMS, 1, MAX_WRITER_COMMAND_WORK_ITEMS, 2_000, 1, 1)
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: MAX_WRITER_COMMAND_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: MAX_WRITER_COMMAND_RAW_BYTES, checkpoint_resume: true);
 
 }
 
@@ -398,25 +398,25 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
     type Owner = EditorApp<WriterPlayApp>;
     const TOOL_IDS: &'static [&'static str] = WRITER_COMMAND_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setText", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "textSplice", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitRename", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestCompletions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "lintDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "textSelect", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLineNumbers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSetting", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract {
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setText", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "textSplice", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "openDocument", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "commitRename", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "requestCompletions", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "lintDocument", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "textSelect", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "toggleLineNumbers", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSetting", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract {
             tool_id: "engagementSubmit",
-            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient],
+            lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::WindowConfig, semio_plugin::ArtifactToolPublicationLane::WindowTransient],
         },
     ];
 }

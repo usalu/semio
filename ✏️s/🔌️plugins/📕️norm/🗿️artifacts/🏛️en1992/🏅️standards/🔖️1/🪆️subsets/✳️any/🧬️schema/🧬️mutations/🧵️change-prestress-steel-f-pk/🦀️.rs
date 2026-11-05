@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangePrestressSteelFPk 
         record: "ChangedPrestressSteelFPk",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change f pk of the prestressing steel", "Spannstahl: f pk ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change f pk of the prestressing steel", "Spannstahl: f pk ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.grade_id.clone()]

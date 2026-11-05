@@ -14,7 +14,7 @@ export default defineConfig({
     name: "@semio-tech/semio-tech-play",
     environment: "node",
     server: { deps: { external: [/\/🦑️repo\/🔨️modules\/📚️library\//] } },
-    include: [],
+    include: ["./🧪️tests/🧪️forms-scope/🟦️.ts"],
     includeSource: ["./🪧️brand.ts", "./🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts", "./🔨️modules/🧩️runtime/🟦️.ts", "./🔨️modules/🧩️runtime/📦️assets/🟦️.ts", "./🔨️modules/🧩️runtime/♻️activation/🟦️.ts", "./🔨️modules/📦️site/📄pages/🟦️.ts", "./🔨️modules/📦️site/🆕️fresh-build/🟦️.ts"],
     passWithNoTests: false,
   },

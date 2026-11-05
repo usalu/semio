@@ -69,8 +69,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "morph-targets", kind: "reorder-morph-targets", record: "ReorderedMorphTargets" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Reorder Morph Targets", "Morphziele umordnen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Reorder Morph Targets", "Morphziele umordnen")
     }
 
     fn target(&self) -> Vec<String> {

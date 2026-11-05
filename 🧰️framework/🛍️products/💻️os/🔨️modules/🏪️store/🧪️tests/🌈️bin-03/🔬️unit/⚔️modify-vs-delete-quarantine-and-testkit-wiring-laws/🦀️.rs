@@ -2,7 +2,7 @@
 
 /// 🛰️ A `DeleteN` at an earlier HLC and a `SetN` at a later HLC — replayed in HLC order, the
 /// `SetN` lands on an already-deleted target and raises `mutation.target-missing` (Error).
-async fn modify_vs_delete_envelopes() -> (semio_framework_os_spr::MutationEnvelope, semio_framework_os_spr::MutationEnvelope) {
+async fn modify_vs_delete_envelopes() -> (semio_os_spr::MutationEnvelope, semio_os_spr::MutationEnvelope) {
     let delete = mutation_envelope_at("deleter", "op-delete", DemoMutation::DeleteN(DeleteN {}), HybridLogicalTimestamp::new(1, 100), Vec::new());
     let modify = mutation_envelope_at("modifier", "op-modify", DemoMutation::SetN(SetN { n: 42 }), HybridLogicalTimestamp::new(2, 200), Vec::new());
     (delete, modify)
@@ -10,7 +10,7 @@ async fn modify_vs_delete_envelopes() -> (semio_framework_os_spr::MutationEnvelo
 
 #[semio_framework_async_macros::async_test]
 async fn modify_vs_delete_quarantines_under_normal_and_vigilant() {
-    for policy in [semio_framework_os_spr::MergePolicy::Normal, semio_framework_os_spr::MergePolicy::Vigilant] {
+    for policy in [semio_os_spr::MergePolicy::Normal, semio_os_spr::MergePolicy::Vigilant] {
         let mut store = fresh_demo_store().await;
         store.set_merge_policy(policy);
         let (delete, modify) = modify_vs_delete_envelopes().await;
@@ -24,8 +24,8 @@ async fn modify_vs_delete_quarantines_under_normal_and_vigilant() {
         assert_eq!(store.applied_edit_ids(), pre_merge_ids.as_slice(), "{policy:?}: applied_edit_ids stays pre-merge on reject");
         let conflict_id = report.conflict.clone().expect("a reject must raise a conflict");
         let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded on the store");
-        assert_eq!(conflict.status, semio_framework_os_spr::ConflictStatus::Open);
-        assert!(matches!(conflict.kind, semio_framework_os_spr::ConflictKind::Quarantined { .. }), "{policy:?}: a rejected batch quarantines, it never degrades");
+        assert_eq!(conflict.status, semio_os_spr::ConflictStatus::Open);
+        assert!(matches!(conflict.kind, semio_os_spr::ConflictKind::Quarantined { .. }), "{policy:?}: a rejected batch quarantines, it never degrades");
         assert!(store.open_conflicts().any(|conflict| conflict.id == conflict_id));
     }
 }
@@ -33,7 +33,7 @@ async fn modify_vs_delete_quarantines_under_normal_and_vigilant() {
 #[semio_framework_async_macros::async_test]
 async fn modify_vs_delete_applies_under_laissez_faire_with_a_degraded_conflict() {
     let mut store = fresh_demo_store().await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    store.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     let (delete, modify) = modify_vs_delete_envelopes().await;
     store.ingest_remote(delete).await.expect("delete applies cleanly");
     let report = store.ingest_remote(modify).await.expect("LaissezFaire only rejects Fatal");
@@ -43,8 +43,8 @@ async fn modify_vs_delete_applies_under_laissez_faire_with_a_degraded_conflict()
     assert!(report.replayed.iter().any(|edit_messages| edit_messages.messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "an Error message must be reported");
     let conflict_id = report.conflict.expect("worst >= Warning must raise a Degraded conflict");
     let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded");
-    assert!(matches!(conflict.kind, semio_framework_os_spr::ConflictKind::Degraded { .. }));
-    assert_eq!(conflict.status, semio_framework_os_spr::ConflictStatus::Open);
+    assert!(matches!(conflict.kind, semio_os_spr::ConflictKind::Degraded { .. }));
+    assert_eq!(conflict.status, semio_os_spr::ConflictStatus::Open);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -76,12 +76,12 @@ async fn empty_store_replays_a_remote_event_log_in_hlc_order_and_keeps_its_local
     remote.ingest_remote(earlier).await.expect("remote receives earlier edit second");
 
     let mut local = fresh_demo_store().await;
-    local.set_merge_policy(semio_framework_os_spr::MergePolicy::Vigilant);
+    local.set_merge_policy(semio_os_spr::MergePolicy::Vigilant);
     for event in remote.event_log().expect("remote event log") {
         local.ingest_remote(event).await.expect("local replays the remote events");
     }
 
-    assert_eq!(local.0.merge_policy(), semio_framework_os_spr::MergePolicy::Vigilant, "the receiving store's local-only policy is never carried by events");
+    assert_eq!(local.0.merge_policy(), semio_os_spr::MergePolicy::Vigilant, "the receiving store's local-only policy is never carried by events");
     assert_eq!(local.snapshot().expect("replayed snapshot"), DemoSnapshot { n: Some(20) });
     assert_eq!(local.applied_edit_ids(), &["earlier-op".to_string(), "later-op".to_string()], "replay orders events by HLC rather than by log or arrival order");
     assert_eq!(local.conflicts(), remote.conflicts());
@@ -89,7 +89,7 @@ async fn empty_store_replays_a_remote_event_log_in_hlc_order_and_keeps_its_local
 
 #[semio_framework_async_macros::async_test]
 async fn a_backbone_genesis_of_another_document_is_refused_without_mutation() {
-    let foreign = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(5) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let foreign = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(5) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let (channel, remote) = ChannelBackbone::pair("genesis").await;
     remote.push(BackboneMessage::Genesis { pack: foreign.envelope().vcs.genesis.pack().to_vec() }).await.expect("push foreign genesis");
     let mut target = fresh_demo_store().await;
@@ -106,39 +106,39 @@ async fn a_backbone_genesis_of_another_document_is_refused_without_mutation() {
 #[semio_framework_async_macros::async_test]
 async fn quarantine_accept_equals_laissez_faire_result() {
     let mut quarantined = fresh_demo_store().await;
-    quarantined.set_merge_policy(semio_framework_os_spr::MergePolicy::Normal);
+    quarantined.set_merge_policy(semio_os_spr::MergePolicy::Normal);
     let (delete, modify) = modify_vs_delete_envelopes().await;
     quarantined.ingest_remote(delete.clone()).await.expect("delete applies cleanly");
     let reject_report = quarantined.ingest_remote(modify.clone()).await.expect("reject is a report");
     assert!(!reject_report.accepted);
     let conflict_id = reject_report.conflict.expect("conflict raised");
-    quarantined.resolve_conflict(&conflict_id.0, semio_framework_os_spr::ConflictResolution::Accept).await.expect("accept");
+    quarantined.resolve_conflict(&conflict_id.0, semio_os_spr::ConflictResolution::Accept).await.expect("accept");
 
     let mut laissez_faire = fresh_demo_store().await;
-    laissez_faire.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    laissez_faire.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     laissez_faire.ingest_remote(delete).await.expect("delete applies cleanly");
     laissez_faire.ingest_remote(modify).await.expect("modify applies under LaissezFaire");
 
     assert_eq!(quarantined.snapshot().expect("snapshot"), laissez_faire.snapshot().expect("snapshot"));
     assert_eq!(quarantined.applied_edit_ids(), laissez_faire.applied_edit_ids());
-    assert_eq!(quarantined.conflicts().iter().filter(|conflict| conflict.status == semio_framework_os_spr::ConflictStatus::Open).count(), 0, "no Open conflict remains — accept must not raise a second conflict");
-    assert_eq!(quarantined.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("original conflict kept").status, semio_framework_os_spr::ConflictStatus::Accepted);
+    assert_eq!(quarantined.conflicts().iter().filter(|conflict| conflict.status == semio_os_spr::ConflictStatus::Open).count(), 0, "no Open conflict remains — accept must not raise a second conflict");
+    assert_eq!(quarantined.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("original conflict kept").status, semio_os_spr::ConflictStatus::Accepted);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn quarantine_discard_preserves_state() {
     let mut store = fresh_demo_store().await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::Normal);
+    store.set_merge_policy(semio_os_spr::MergePolicy::Normal);
     let (delete, modify) = modify_vs_delete_envelopes().await;
     store.ingest_remote(delete).await.expect("delete applies cleanly");
     let pre_discard = store.snapshot().expect("pre-discard snapshot");
     let pre_discard_ids = store.applied_edit_ids().to_vec();
     let reject_report = store.ingest_remote(modify).await.expect("reject is a report");
     let conflict_id = reject_report.conflict.expect("conflict raised");
-    store.resolve_conflict(&conflict_id.0, semio_framework_os_spr::ConflictResolution::Discard).await.expect("discard");
+    store.resolve_conflict(&conflict_id.0, semio_os_spr::ConflictResolution::Discard).await.expect("discard");
     assert_eq!(store.snapshot().expect("snapshot"), pre_discard, "a discarded batch must never be applied");
     assert_eq!(store.applied_edit_ids(), pre_discard_ids.as_slice());
-    assert_eq!(store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict kept").status, semio_framework_os_spr::ConflictStatus::Discarded);
+    assert_eq!(store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict kept").status, semio_os_spr::ConflictStatus::Discarded);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -147,12 +147,12 @@ async fn ledger_matches_a_fresh_replay_of_the_same_envelopes() {
     let modify_edit_id = modify.mutation_id.0.clone();
 
     let mut first = fresh_demo_store().await;
-    first.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    first.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     first.ingest_remote(delete.clone()).await.expect("delete applies cleanly");
     first.ingest_remote(modify.clone()).await.expect("modify applies under LaissezFaire");
 
     let mut replay = fresh_demo_store().await;
-    replay.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    replay.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     replay.ingest_remote(delete).await.expect("delete applies cleanly");
     replay.ingest_remote(modify).await.expect("modify applies under LaissezFaire");
 
@@ -195,7 +195,7 @@ async fn applied_edit_ids_stay_sorted_by_hlc_after_a_backdated_remote_insert() {
 
 #[semio_framework_async_macros::async_test]
 async fn testkit_law_modify_vs_delete_holds_under_normal_and_vigilant() {
-    for policy in [semio_framework_os_spr::MergePolicy::Normal, semio_framework_os_spr::MergePolicy::Vigilant] {
+    for policy in [semio_os_spr::MergePolicy::Normal, semio_os_spr::MergePolicy::Vigilant] {
         let mut store = fresh_demo_store().await;
         store.set_merge_policy(policy);
         let (delete, modify) = modify_vs_delete_envelopes().await;
@@ -203,34 +203,34 @@ async fn testkit_law_modify_vs_delete_holds_under_normal_and_vigilant() {
         let pre_merge = store.snapshot().expect("pre-merge snapshot");
         let report = store.ingest_remote(modify).await.expect("a policy rejection is a MergeReport, not an Err");
         let post_merge = store.snapshot().expect("post-merge snapshot");
-        semio_framework_os_spr::protocol_laws::assert_modify_vs_delete(policy, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n.is_some()).await;
+        semio_os_spr::protocol_laws::assert_modify_vs_delete(policy, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n.is_some()).await;
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn testkit_law_modify_vs_delete_holds_under_laissez_faire() {
     let mut store = fresh_demo_store().await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    store.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     let (delete, modify) = modify_vs_delete_envelopes().await;
     store.ingest_remote(delete).await.expect("delete applies cleanly");
     let pre_merge = store.snapshot().expect("pre-merge snapshot");
     let report = store.ingest_remote(modify).await.expect("LaissezFaire only rejects Fatal");
     let post_merge = store.snapshot().expect("post-merge snapshot");
-    semio_framework_os_spr::protocol_laws::assert_modify_vs_delete(semio_framework_os_spr::MergePolicy::LaissezFaire, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n.is_some()).await;
+    semio_os_spr::protocol_laws::assert_modify_vs_delete(semio_os_spr::MergePolicy::LaissezFaire, &pre_merge, &post_merge, &report, store.conflicts(), |snapshot: &DemoSnapshot| snapshot.n.is_some()).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn testkit_law_chronological_determinism_holds_for_a_real_modify_vs_delete_batch() {
     let (delete, modify) = modify_vs_delete_envelopes().await;
     let envelopes = [delete, modify];
-    semio_framework_os_spr::protocol_laws::assert_chronological_determinism(envelopes.len(), 7, 6, async |order| {
+    semio_os_spr::protocol_laws::assert_chronological_determinism(envelopes.len(), 7, 6, async |order| {
         let mut store = fresh_demo_store().await;
         for &index in order {
             store.ingest_remote(envelopes[index].clone()).await.expect("real store ingest must not hard-error even when the batch ends up quarantined");
         }
         let snapshot = store.snapshot().expect("snapshot");
         let applied = store.applied_edit_ids().to_vec();
-        let conflict_ids: Vec<semio_framework_os_spr::ConflictId> = store.conflicts().iter().map(|conflict| conflict.id.clone()).collect();
+        let conflict_ids: Vec<semio_os_spr::ConflictId> = store.conflicts().iter().map(|conflict| conflict.id.clone()).collect();
         (snapshot, applied, conflict_ids)
     })
     .await;
@@ -239,21 +239,21 @@ async fn testkit_law_chronological_determinism_holds_for_a_real_modify_vs_delete
 #[semio_framework_async_macros::async_test]
 async fn testkit_law_quarantine_accept_equals_laissez_faire_via_real_store() {
     let mut quarantined = fresh_demo_store().await;
-    quarantined.set_merge_policy(semio_framework_os_spr::MergePolicy::Normal);
+    quarantined.set_merge_policy(semio_os_spr::MergePolicy::Normal);
     let (delete, modify) = modify_vs_delete_envelopes().await;
     quarantined.ingest_remote(delete.clone()).await.expect("delete applies cleanly");
     let reject_report = quarantined.ingest_remote(modify.clone()).await.expect("reject is a report");
     let conflict_id = reject_report.conflict.expect("conflict raised");
-    quarantined.resolve_conflict(&conflict_id.0, semio_framework_os_spr::ConflictResolution::Accept).await.expect("accept");
+    quarantined.resolve_conflict(&conflict_id.0, semio_os_spr::ConflictResolution::Accept).await.expect("accept");
 
     let mut laissez_faire = fresh_demo_store().await;
-    laissez_faire.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    laissez_faire.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     laissez_faire.ingest_remote(delete).await.expect("delete applies cleanly");
     laissez_faire.ingest_remote(modify).await.expect("modify applies under LaissezFaire");
 
     let accepted_state = quarantined.snapshot().expect("accepted snapshot");
     let laissez_faire_state = laissez_faire.snapshot().expect("laissez-faire snapshot");
-    semio_framework_os_spr::protocol_laws::assert_quarantine_accept_equals_laissez_faire(&accepted_state, &laissez_faire_state).await;
+    semio_os_spr::protocol_laws::assert_quarantine_accept_equals_laissez_faire(&accepted_state, &laissez_faire_state).await;
 }
 
 /// 🗃️ `relayed`: every edit id this store's persisted history (`applied_edit_ids`) could ever
@@ -263,16 +263,16 @@ async fn testkit_law_quarantine_accept_equals_laissez_faire_via_real_store() {
 #[semio_framework_async_macros::async_test]
 async fn testkit_law_quarantine_discard_preserves_state_via_real_store() {
     let mut store = fresh_demo_store().await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::Normal);
+    store.set_merge_policy(semio_os_spr::MergePolicy::Normal);
     let (delete, modify) = modify_vs_delete_envelopes().await;
     store.ingest_remote(delete).await.expect("delete applies cleanly");
     let pre_discard = store.snapshot().expect("pre-discard snapshot");
     let reject_report = store.ingest_remote(modify.clone()).await.expect("reject is a report");
     let conflict_id = reject_report.conflict.expect("conflict raised");
-    store.resolve_conflict(&conflict_id.0, semio_framework_os_spr::ConflictResolution::Discard).await.expect("discard");
+    store.resolve_conflict(&conflict_id.0, semio_os_spr::ConflictResolution::Discard).await.expect("discard");
     let post_discard = store.snapshot().expect("post-discard snapshot");
     let relayed = store.applied_edit_ids().to_vec();
-    semio_framework_os_spr::protocol_laws::assert_quarantine_discard_preserves_state(&pre_discard, &post_discard, std::slice::from_ref(&modify.mutation_id.0), &relayed).await;
+    semio_os_spr::protocol_laws::assert_quarantine_discard_preserves_state(&pre_discard, &post_discard, std::slice::from_ref(&modify.mutation_id.0), &relayed).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -281,12 +281,12 @@ async fn testkit_law_ledger_matches_replay_via_real_store() {
     let modify_edit_id = modify.mutation_id.0.clone();
 
     let mut first = fresh_demo_store().await;
-    first.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    first.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     first.ingest_remote(delete.clone()).await.expect("delete applies cleanly");
     first.ingest_remote(modify.clone()).await.expect("modify applies under LaissezFaire");
 
     let mut replay = fresh_demo_store().await;
-    replay.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    replay.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     replay.ingest_remote(delete).await.expect("delete applies cleanly");
     replay.ingest_remote(modify).await.expect("modify applies under LaissezFaire");
 
@@ -296,13 +296,13 @@ async fn testkit_law_ledger_matches_replay_via_real_store() {
     replayed.insert(modify_edit_id.clone(), replay.messages_for_edit(&modify_edit_id).to_vec());
     assert!(!ledger[&modify_edit_id].is_empty(), "the modify edit must have raised a message for this law to be meaningful");
 
-    semio_framework_os_spr::protocol_laws::assert_ledger_matches_replay(&ledger, &replayed).await;
+    semio_os_spr::protocol_laws::assert_ledger_matches_replay(&ledger, &replayed).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn testkit_law_conflict_spr_round_trip_via_real_store() {
     let mut store = fresh_demo_store().await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::Normal);
+    store.set_merge_policy(semio_os_spr::MergePolicy::Normal);
     let (delete, modify) = modify_vs_delete_envelopes().await;
     store.ingest_remote(delete).await.expect("delete applies cleanly");
     let report = store.ingest_remote(modify).await.expect("reject is a report");
@@ -310,20 +310,20 @@ async fn testkit_law_conflict_spr_round_trip_via_real_store() {
     let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded").clone();
 
     let pack_bytes = DemoSnapshot { n: Some(0) }.encode_pack();
-    let encode = async |conflict: &semio_framework_os_spr::Conflict| -> Vec<u8> {
-        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let encode = async |conflict: &semio_os_spr::Conflict| -> Vec<u8> {
+        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.conflicts = vec![conflict.clone()];
         let bytes = print_document_spr(&envelope).await.expect("encode conflict via the real .spr codec");
         retire_demo_envelope(envelope);
         bytes
     };
-    let decode = async |bytes: &[u8]| -> semio_framework_os_spr::Conflict {
-        let parsed = parse_document_spr::<DemoSnapshot, DemoMutation>(&pack_bytes, bytes, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("decode conflict via the real .spr codec");
+    let decode = async |bytes: &[u8]| -> semio_os_spr::Conflict {
+        let parsed = parse_document_spr::<DemoSnapshot, DemoMutation>(&pack_bytes, bytes, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("decode conflict via the real .spr codec");
         let conflict = parsed.envelope.conflicts.first().cloned().expect("one conflict round-tripped");
         retire_demo_envelope(parsed.envelope);
         conflict
     };
-    semio_framework_os_spr::protocol_laws::assert_conflict_spr_round_trip(&conflict, encode, decode).await;
+    semio_os_spr::protocol_laws::assert_conflict_spr_round_trip(&conflict, encode, decode).await;
 }
 
 //#endregion 🔖️TestkitLawWiring

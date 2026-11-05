@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for RemoveFireScenario where
         record: "RemovedFireScenario",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove fire scenario", "Brandszenario entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove fire scenario", "Brandszenario entfernen")
     }
 }
 

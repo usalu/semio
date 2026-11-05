@@ -2,22 +2,21 @@
 
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::editor_vocabulary::{flow_graph_edge_target_id, flow_graph_node_target_id, pick_item, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID};
-use crate::editor::flow::host::with_live_host_snapshot;
 use crate::schema::{widget_id, widget_kind_label, widget_tree_label};
 use crate::FlowSnapshot;
-use semio_framework_ui_contract::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 /// 🏷️ Converts document-tree titles into the panel builder's `Label`.
-fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<Label> {
+fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<Label> {
     Label::try_from(value.as_ref().to_string()).map_err(|error| PluginAssemblyError::new("ui.document", error))
 }
 
@@ -46,18 +45,19 @@ pub fn definition() -> PanelTabDefinition {
 ///
 /// 🪟️ Both sections are windowed: the host's `TreeWindows` decide which slice of an unbounded widget
 /// or synapse list this render materialises, and every section stamps its full `total`.
-pub fn render(snapshot: &FlowSnapshot, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    with_live_host_snapshot(snapshot, |live| render_live(live, labels, windows))
+pub fn render(snapshot: &FlowSnapshot, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let live=snapshot.read_source().map_err(|error|PluginAssemblyError::new("flow.source",error.into_message()))?;
+    render_live(&live, labels, windows)
 }
 
-fn render_live(live: &semio_framework_artifact_flow_flow::FlowHostSnapshot, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_live(live: &dyn semio_framework_artifact_flow_flow::FlowSnapshotSource, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     PanelTreeBuilder::new("flow-play-document")?
         .window_section_or_placeholder(
             windows,
             "flow-play-document.widgets",
             Some(ui_label(labels.widgets.as_str())?),
             true,
-            &live.widgets,
+            live.widgets(),
             |widget| pick_item(flow_graph_node_target_id(widget_id(widget)), ui_label(widget_tree_label(widget))?, Some(widget_kind_label(widget).into()), "node"),
             labels.none_placeholder.as_str(),
         )?
@@ -66,7 +66,7 @@ fn render_live(live: &semio_framework_artifact_flow_flow::FlowHostSnapshot, labe
             "flow-play-document.synapses",
             Some(ui_label(labels.synapses.as_str())?),
             false,
-            &live.synapses,
+            live.synapses(),
             |synapse| pick_item(flow_graph_edge_target_id(&synapse.id), ui_label(format!("{} → {}", synapse.from, synapse.to))?, Some(format!("{} → {}", synapse.from_port, synapse.to_port)), "edge"),
             labels.none_placeholder.as_str(),
         )?

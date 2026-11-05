@@ -11,9 +11,9 @@
 //! `ViewEmit` by construction.
 
 use semio_s_space_core::HomeTableLabels;
-use semio_framework_plugin::app::{table_window_row, TableWindowKit, TreeWindows, WindowKit};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{table_window_row, TableWindowKit, TreeWindows, WindowKit};
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const S_HOME_VIEW_WINDOW: &str = "s-home-view-main";
@@ -37,10 +37,10 @@ pub fn definition() -> WindowKindDefinition {
 /// test in this crate's test binary — a `DirectoryReadModel::default()` alone is NOT enough to reach an
 /// empty row list, since the local catalog half is unconditionally unioned in and never guaranteed
 /// empty once any other test has created a studio).
-pub fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], labels: &HomeTableLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], labels: &HomeTableLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     if rows.is_empty() {
-        return semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(labels.empty_message.as_str().to_string()))
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.empty", "empty table text admission failed"));
+        return semio_plugin::built_text_node(semio_ui_locale::Label::data(labels.empty_message.as_str().to_string()))
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.table.empty", "empty table text admission failed"));
     }
     let columns = [labels.column_name.as_str(), labels.column_kind.as_str(), labels.column_visibility.as_str(), labels.column_members.as_str(), labels.column_updated.as_str(), labels.column_origin.as_str()];
     TableWindowKit::render_rows(windows, labels.table_name.as_str(), &columns, None, rows, |row| {
@@ -52,8 +52,8 @@ pub fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], labels: &HomeTable
 /// 👁️ No `SHomeSnapshot` argument: exactly like the editor's own main-window render, Home's table rows
 /// are derived entirely from the folded hub directory rows (`hub_spaces`, in id order, from the app transient) + the live
 /// studio catalog, never from the artifact document itself.
-pub fn render<'a>(hub_spaces: impl IntoIterator<Item = &'a store::os_directory::DirectorySpace>, retired_local_studio_ids: &[String], view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let labels = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
+pub fn render<'a>(hub_spaces: impl IntoIterator<Item = &'a store::os_directory::DirectorySpace>, retired_local_studio_ids: &[String], view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let labels = semio_plugin::resolve_labels::<HomeTableLabels>(view_state);
     let rows = match semio_s_space_core::home_session_identity(view_state) {
         Some(identity) => ::semio_framework_async::poll::resolve_ready(semio_s_space_core::home_space_rows(hub_spaces, &identity.user_id, retired_local_studio_ids)),
         None => Vec::new(),

@@ -9,7 +9,7 @@ use directory::os_directory::schema::{DocumentBrowserActorSourceV1, DocumentOpen
 use directory::os_directory::{DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use semio_framework::{DslValue, PackageDescriptor, Version};
 use semio_framework_hash::{Hasher, Sha256};
-use semio_framework_plugin_host::PackageRef;
+use semio_plugin_host::PackageRef;
 use semio_hub_trusted_catalog_contract::{TRUSTED_BUNDLE_MAX_PROFILES, TRUSTED_CATALOG_MAX_OPEN_TARGETS, TRUSTED_COMPONENT_MAX_BYTES, TRUSTED_DESCRIPTOR_MAX_BYTES, TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION, TRUSTED_PACKAGE_MAX_DEPENDENCIES, TRUSTED_READ_CHUNK_BYTES, TRUSTED_RELATIVE_PATH_MAX_BYTES, TrustedCatalogGenerationRoot, TrustedCatalogRelativePathV1, append_document_open_catalog_field, catalog, catalog_error, decode_digest, dual_hash, ensure_count, sha256, valid_identity, valid_open_identity, valid_package_id, validate_file, validate_identity, verify_digest, verify_length};
 use semio_hub_trusted_catalog_contract::schema::{TRUSTED_BUNDLE_SCHEMA_VERSION, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1};
 use semio_hub_artifact_authority::adapters::{TRUSTED_CATALOG_MAX_CODECS, TRUSTED_CATALOG_MAX_PACKAGES};

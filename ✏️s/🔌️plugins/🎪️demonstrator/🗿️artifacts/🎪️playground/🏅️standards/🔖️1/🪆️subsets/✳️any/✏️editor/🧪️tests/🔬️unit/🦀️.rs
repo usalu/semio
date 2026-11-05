@@ -4,35 +4,35 @@ use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::PLAYGROUND_DIALECT;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey};
 use semio_framework_pack_json::{parse, Value};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Editor;
+use semio_plugin::NoConfig;
 use crate::editor::playground::{PLAYGROUND_RETAINED_PAYLOAD_SCHEMA, PLAYGROUND_RETAINED_RAW_BYTES, PLAYGROUND_RETAINED_WORK_ITEMS, playground_retained_extent, PlaygroundCommandJobFactory};
 pub(crate) mod context {
     //! 🧪️ `context::assert_declared_actions_bridge_to_commands`'s signature is still
     //! `fn(manifest: fn() -> App)` (framework test context gap, `📓️w0-f-report.md` Gap 3) — `App { definition,
     //! examples }` shape kept alive here purely to satisfy that call.
     use crate::editor::playground::{create_playground_editor, PlaygroundEditor};
-    use semio_framework_plugin::App;
+    use semio_plugin::App;
 
     pub fn playground_editor_manifest_for_tests() -> App {
         App { definition: create_playground_editor(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("demonstrator", PlaygroundEditor, playground_editor_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("demonstrator", PlaygroundEditor, playground_editor_manifest_for_tests, "../..");
 }
 
 use crate::editor::playground::*;
-use semio_framework_plugin::{EditorApp, HistoryView};
+use semio_plugin::{EditorApp, HistoryView};
 
 static RETAINED_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
 
 #[test]
 fn create_playground_editor_builds_a_definition_for_the_editor_role() {
     let def = create_playground_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, PLAYGROUND_DIALECT.into());
 }
 
@@ -81,14 +81,14 @@ async fn change_schema_command_mutates_the_schema_field() {
 
 #[semio_framework_async_macros::async_test]
 async fn registry_backed_editor_installs_its_exact_bounded_command_proof() {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
+    semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
     assert!(PlaygroundEditor::command_from_action("noSuchAction", None, None).is_err());
 }
 

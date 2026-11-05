@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeSlopeCircleRadius 
         record: "ChangedSlopeCircleRadius",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Slip circle radius (0 = search critical circle) of the slope", "Böschung: Gleitkreisradius (0 = kritischen Kreis suchen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Slip circle radius (0 = search critical circle) of the slope", "Böschung: Gleitkreisradius (0 = kritischen Kreis suchen) ändern")
     }
 }
 

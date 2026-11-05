@@ -30,5 +30,5 @@ use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyResult, MutationDiff};
 
-semio_framework_os_kernel::diff_text!(crate::standards::v_ac1024::subsets::any::schema::diff::DwgDiff);
+semio_os_kernel::diff_text!(crate::standards::v_ac1024::subsets::any::schema::diff::DwgDiff);
 }

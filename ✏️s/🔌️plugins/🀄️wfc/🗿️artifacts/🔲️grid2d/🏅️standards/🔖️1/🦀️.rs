@@ -5,7 +5,7 @@
 //! MIME registration exists for a semio-native dialect.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
@@ -14,7 +14,7 @@ pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
 
 //#region 🧩️ArtifactItems2
 pub mod artifact_items_2 {
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 pub use crate::standards::v1::subsets::any::schema::snapshot::WFC_GRID2D_DOCUMENT_SCHEMA;
 
 //#region 🔖️ArtifactKind
@@ -24,7 +24,7 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::WFC_GRID2D_DOCUMEN
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.wfcgrid2d".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D Grid", "2D-Gitter"),
+        label: semio_ui_locale::LocalizedLabel::native("2D Grid", "2D-Gitter"),
         source_format: WFC_GRID2D_DOCUMENT_SCHEMA.into(),
         component_kind: "wfcgrid2d".into(),
         dimension: "2d".into(),
@@ -45,10 +45,10 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod artifact_items_3 {
 //#region 🔖️Declaration
 /// 🧾️ Defines `s.wfc.grid2d`'s immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.wfc.grid2d.standard.v1", "standard", "1", &[], None),
         ("s.wfc.grid2d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.wfc.grid2d.schema.artifact", "schema", "s.wfc.grid2d", &[("schema", "s.wfc.grid2d")], None),
@@ -81,23 +81,23 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 /// 🎭️ The two app bounds this artifact's declaration tree threads through `standard()`/`subset()`.
 pub trait ArtifactApps:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::grid2d::Grid2dEditor>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::grid2d::Grid2dViewer>>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::grid2d::Grid2dEditor>>>
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::grid2d::Grid2dViewer>>>
 {
 }
 
 impl<PA> ArtifactApps for PA where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::grid2d::Grid2dEditor>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::grid2d::Grid2dViewer>>>
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::grid2d::Grid2dEditor>>>
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::grid2d::Grid2dViewer>>>
 {
 }
 
 /// 🌳️ This artifact's declaration tree root — the ONLY registration channel for
 /// schema/io/viewer/editor rows. `definition()` above is the separate capability-row channel.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<PA: ArtifactApps>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.grid2d").expect("canonical wfc grid2d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }

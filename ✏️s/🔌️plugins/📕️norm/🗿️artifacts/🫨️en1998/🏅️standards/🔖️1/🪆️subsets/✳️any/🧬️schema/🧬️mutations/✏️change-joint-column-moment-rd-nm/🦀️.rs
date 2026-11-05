@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeJointColumnMomentR
         record: "ChangeJointColumnMomentRdNm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Sum of the design flexural resistances of the columns at the joint, ΣM_Rc", "Summe der Bemessungsbiegewiderstände der Stützen am Knoten, ΣM_Rc ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Sum of the design flexural resistances of the columns at the joint, ΣM_Rc", "Summe der Bemessungsbiegewiderstände der Stützen am Knoten, ΣM_Rc ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-joint-column-moment-rd-nm".into()]

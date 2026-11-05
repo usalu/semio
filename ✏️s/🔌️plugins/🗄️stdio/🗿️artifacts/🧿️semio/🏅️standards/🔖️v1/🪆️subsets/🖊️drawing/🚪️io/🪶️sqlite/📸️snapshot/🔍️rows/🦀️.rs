@@ -1,6 +1,6 @@
 //! 🔍️ Original scalar row indexes retain Drawing relationship order through cancellation.
 use super::{SqliteRow,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,float_columns};
-use semio_framework_os_kernel::sqlite_snapshot::transfer;
+use semio_os_kernel::sqlite_snapshot::transfer;
 const TABLES:&[(&str,usize);16]=&[("semio_drawing_document",8),("semio_drawing_style",14),("semio_drawing_layer",7),("semio_drawing_node",2),("semio_drawing_path",2),("semio_drawing_text",5),("semio_drawing_group",11),("semio_drawing_image",7),("semio_drawing_child",4),("semio_drawing_segment",4),("semio_drawing_move",3),("semio_drawing_line",3),("semio_drawing_cubic",7),("semio_drawing_quad",5),("semio_drawing_arc",8),("semio_drawing_close",1)];
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 #[derive(semio_framework_value::RetireOwned)]

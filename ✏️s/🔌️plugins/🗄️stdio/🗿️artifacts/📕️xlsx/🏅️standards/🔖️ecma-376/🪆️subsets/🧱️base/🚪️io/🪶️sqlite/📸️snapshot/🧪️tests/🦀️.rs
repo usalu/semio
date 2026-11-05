@@ -1,6 +1,6 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 fn fixture() -> XlsxSnapshot {
     semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
@@ -139,12 +139,12 @@ fn sqlite_snapshot_xlsx_partial_part_reconstruction_retires_deep_completed_docum
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_xlsx_actual_declaration_exposes_complete_typed_snapshot() {
-    use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
-    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("XLSX SQLite").version("0.0.1").package_id("semio:stdio").artifact(semio_s_artifact_stdio_xlsx::declaration(semio_s_artifact_stdio_xlsx::definition().unwrap()).unwrap()).try_build().unwrap();
+    use {semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("XLSX SQLite").version("0.0.1").package_id("semio:stdio").artifact(semio_s_artifact_stdio_xlsx::declaration(semio_s_artifact_stdio_xlsx::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let snapshot = fixture();
-    let file = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
-    let restored = async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;
+    let file = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
+    let restored = async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;
     assert_eq!(restored, snapshot);
     restored.retire_sqlite_snapshot();
     snapshot.retire_sqlite_snapshot();
@@ -155,7 +155,7 @@ fn sqlite_snapshot_xlsx_actual_erased_native_boundaries_retain_all_owned_fields(
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
-    let codec = <XlsxSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
+    let codec = <XlsxSnapshot as semio_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
@@ -190,7 +190,7 @@ fn sqlite_snapshot_xlsx_deep_erased_native_input_output_are_interior_cancellable
             let snapshot = Owner(Some(snapshot));
             let limits = SqliteDatabaseLimits::default();
             let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
-            let codec = <XlsxSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
+            let codec = <XlsxSnapshot as semio_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
                 let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
                 let expected_database = db.clone();
@@ -307,7 +307,7 @@ fn sqlite_snapshot_xlsx_native_grammar_describes_the_actual_owned_fields() {
     let text = <XlsxSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
     let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
     let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
-    assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
+    assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros())
         .expect("selected grammar fragments")
         .recognize(&format!("{}\n{body}", envelope.envelope_id()))
         .unwrap());
@@ -351,8 +351,8 @@ fn sqlite_snapshot_xlsx_complete_literal_native_file_matches_independent_fixture
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_xlsx_exact_named_owner_declarations_preserve_warnings_and_reject_foreign_state() {
-    use semio_framework_os_kernel::io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot};
-    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
+    use semio_os_kernel::io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot};
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
         .label("XLSX exact owned subsets")
         .version("0.0.1")
         .package_id("semio:stdio")
@@ -378,19 +378,19 @@ async fn sqlite_snapshot_xlsx_exact_named_owner_declarations_preserve_warnings_a
         assert_eq!(expected[0].severity, semio_framework_diagnostic::Severity::Warning);
         let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: subset.into() };
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-            let outcome = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap();
+            let outcome = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap();
             assert_eq!(format!("{:?}", outcome.diagnostics), format!("{:?}", expected));
-            let restored = async{let original_file_dialect=&dialect;let original_file_input=&outcome.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap();
+            let restored = async{let original_file_dialect=&dialect;let original_file_input=&outcome.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap();
             assert_eq!(format!("{:?}", restored.diagnostics), format!("{:?}", expected));
             assert_eq!(restored.value, snapshot);
             restored.value.retire_sqlite_snapshot();
             let foreign = semio_framework_artifact_reference::ArtifactDialect { subset: if subset == "strict" { "transitional".into() } else { "strict".into() }, ..dialect.clone() };
-            assert!(async{let original_file_dialect=&foreign;let original_file_input=&outcome.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.is_err());
+            assert!(async{let original_file_dialect=&foreign;let original_file_input=&outcome.value;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<XlsxSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.is_err());
         }
         let part = snapshot.xml_part_mut(&main).unwrap();
         let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. } = part.document.root.as_mut().unwrap() else { panic!("typed workbook root") };
         attrs.iter_mut().find(|attr| attr.name == "xmlns").unwrap().value = "invalid namespace".into();
-        assert!(async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());
+        assert!(async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());
         snapshot.retire_sqlite_snapshot();
     }
 }

@@ -1,5 +1,5 @@
-use semio_framework_plugin::ArtifactEditor as _;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::ArtifactEditor as _;
+use semio_ui_locale::{Locale, Terminology};
 use semio_s_artifact_norm_en1993_io::binary::snapshot::{decode_en1993_pack, encode_en1993_pack};
 use semio_s_artifact_norm_en1993_io::text::snapshot::{decode_en1993_dsl, decode_en1993_snapshot_json, encode_en1993_dsl};
 use semio_s_artifact_norm_en1993_model::En1993Snapshot;

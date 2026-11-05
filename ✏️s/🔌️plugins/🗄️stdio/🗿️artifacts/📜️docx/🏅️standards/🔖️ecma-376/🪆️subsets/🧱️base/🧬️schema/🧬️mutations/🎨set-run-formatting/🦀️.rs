@@ -16,8 +16,8 @@ pub struct SetRunFormatting {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunFormatting {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run-formatting", kind: "set-run-formatting", record: "SetRunFormatting" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set run formatting", "Formatierung des Textlaufs setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set run formatting", "Formatierung des Textlaufs setzen")
     }
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.part_path.clone()).chain(self.address.node_path.iter().map(usize::to_string)).collect()

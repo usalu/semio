@@ -2,8 +2,8 @@
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_hub_space_operations::{resolve_future, workflow_parameter_bindings_to_os, workflow_parameters_to_os};
-use semio_framework_os::{materialize_os_app_instance_document_json, WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{plugin_app_close_prelude::Value, ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os::{materialize_os_app_instance_document_json, WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{plugin_app_close_prelude::Value, ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "export-media")]
@@ -29,7 +29,7 @@ pub fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapshot>, _
                 .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
                 .map(|descriptor| descriptor.short_id)
                 .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{}`", payload.format)))?;
-            let result = semio_framework_os::export_os_app_instance_media_kind(node, &document_value, &format_kind).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.export"), error))?;
+            let result = semio_os::export_os_app_instance_media_kind(node, &document_value, &format_kind).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.export"), error))?;
             Ok(Emit::effect(Effect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }))
         }
         None => Ok(Emit::default()),

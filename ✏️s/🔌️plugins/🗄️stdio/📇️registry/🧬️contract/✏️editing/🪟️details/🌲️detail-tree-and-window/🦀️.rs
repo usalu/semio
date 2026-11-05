@@ -351,7 +351,7 @@ fn render_snapshot_details_provider_at_revision<P: SnapshotDetailsProvider + ?Si
     let labels = labels(locale);
     let mut builder = ui_contract::tree().try_id(ROOT_ID).map_err(|_| error("ui.snapshot-details.root-id"))?;
     if provider.has_source() {
-        let source = semio_framework_plugin::tree_window_section(windows, SOURCE_ID, label(labels.source)?, false, &[()], |_| {
+        let source = semio_plugin::tree_window_section(windows, SOURCE_ID, label(labels.source)?, false, &[()], |_| {
             let source = provider.source().ok_or_else(|| error("ui.snapshot-details.source-unavailable"))?;
             source_row(source, labels, publication_revision)
         })?;
@@ -378,7 +378,7 @@ fn render_snapshot_details_provider_at_revision<P: SnapshotDetailsProvider + ?Si
             detail_child(provider, &[], &value, index - usize::from(controls), count, labels, controller_id, windows, publication_revision)
         })?
     } else {
-        semio_framework_plugin::tree_window_section(windows, ROOT_SECTION_ID, label(labels.details)?, true, &[()], |_| detail_node(provider, &[], labels.details, None, None, labels, controller_id, windows, publication_revision))?
+        semio_plugin::tree_window_section(windows, ROOT_SECTION_ID, label(labels.details)?, true, &[()], |_| detail_node(provider, &[], labels.details, None, None, labels, controller_id, windows, publication_revision))?
     };
     builder.try_child(fields).map_err(|_| error("ui.snapshot-details.fields"))?.try_build().map_err(|_| error("ui.snapshot-details.root"))
 }
@@ -393,7 +393,7 @@ pub fn render_snapshot_details_provider_revisioned<P: SnapshotDetailsProvider + 
     render_snapshot_details_provider_at_revision(provider, locale, controller_id, windows, Some(publication_revision))
 }
 
-pub fn render_snapshot_details<S: ArtifactDsl + ToValue>(doc: &semio_framework_plugin::ArtifactView<'_, S>, locale: Locale, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+pub fn render_snapshot_details<S: ArtifactDsl + ToValue>(doc: &semio_plugin::ArtifactView<'_, S>, locale: Locale, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let publication_revision = window_kit_artifact_publication_revision(doc)?;
     render_snapshot_details_provider_at_revision(&DslSnapshotDetailsProvider::new_with_schema_hint(doc.snapshot, Some(controller_id)), locale, controller_id, windows, Some(publication_revision))
 }

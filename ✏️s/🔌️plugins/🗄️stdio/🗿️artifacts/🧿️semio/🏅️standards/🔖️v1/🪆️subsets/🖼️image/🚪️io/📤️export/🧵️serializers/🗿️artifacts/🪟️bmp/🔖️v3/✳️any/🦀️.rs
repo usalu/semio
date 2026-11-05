@@ -2,7 +2,7 @@
 //! v3 profile. Alpha and later frames have no representation in that target profile.
 
 use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
-use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_bmp::{standards::v_v3::subsets::any::io::bmp_direct_rgb24_from_rgba8, BmpSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };

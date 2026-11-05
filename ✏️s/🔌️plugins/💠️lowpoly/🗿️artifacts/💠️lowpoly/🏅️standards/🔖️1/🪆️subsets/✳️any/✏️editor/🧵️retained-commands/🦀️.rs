@@ -322,7 +322,7 @@ impl LowpolyRetainedCommandWork {
 }
 
 impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWork {
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn tool_id(&self) -> &'static str {
@@ -337,9 +337,9 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
         (lowpoly_command_disposition(command.command_id()).is_some()).then_some(2)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
         if self.complete {
             return Err(Fault::from("lowpoly-retained-work-repeated"));
         }
@@ -456,7 +456,7 @@ impl ToolJobFactory for LowpolyCommandJobFactory {
         lowpoly_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: LOWPOLY_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: LOWPOLY_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
 }
 
@@ -464,75 +464,75 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
     type Owner = EditorApp<LowpolyPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LOWPOLY_MIGRATED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchObject", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addPaintLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveObject", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActivePaintLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setUtilityParam", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleShowEdges", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "replaceSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportMesh", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadMeshRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importMeshFile", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract {
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "patchObject", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "addPaintLayer", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveObject", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setActivePaintLayer", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setUtilityParam", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "toggleShowEdges", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importSnapshotJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "replaceSnapshotJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "exportMesh", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "loadMeshRequest", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importMeshFile", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract {
             tool_id: "duplicateObject",
-            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient],
+            lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::Transient],
         },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintSample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "extrude", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "inset", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "bevel", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loopCut", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "subdivide", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "triangulate", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "mirror", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "decimate", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "flipFaces", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "merge", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "dissolve", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "snap", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleSmooth", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "unwrapActive", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "markUvSeam", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "clearSeam", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract {
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "paintSample", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "extrude", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "inset", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "bevel", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "loopCut", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "subdivide", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "triangulate", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "mirror", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "decimate", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "flipFaces", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "merge", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "dissolve", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "snap", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "toggleSmooth", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "unwrapActive", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "markUvSeam", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "clearSeam", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Transient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract {
             tool_id: "paintStroke",
-            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient],
+            lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::Transient],
         },
-        semio_framework_plugin::ArtifactToolPublicationContract {
+        semio_plugin::ArtifactToolPublicationContract {
             tool_id: "paintAt",
-            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient],
+            lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::Transient],
         },
-        semio_framework_plugin::ArtifactToolPublicationContract {
+        semio_plugin::ArtifactToolPublicationContract {
             tool_id: "canvasPointerDown",
-            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient],
+            lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::Transient],
         },
-        semio_framework_plugin::ArtifactToolPublicationContract {
+        semio_plugin::ArtifactToolPublicationContract {
             tool_id: "canvasPointerMove",
-            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient],
+            lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::Transient],
         },
-        semio_framework_plugin::ArtifactToolPublicationContract {
+        semio_plugin::ArtifactToolPublicationContract {
             tool_id: "canvasPointerUp",
-            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient],
+            lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::Transient],
         },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintFill", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "fillBucket", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract {
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "paintFill", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "fillBucket", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract {
             tool_id: "addPrimitive",
-            lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient],
+            lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::Transient],
         },
     ];
 }

@@ -2,11 +2,11 @@
 
 use crate::PlaybookSpec;
 use semio_framework_value::ToValue;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_scene::TableScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_scene::TableScene;
 
 pub const PLAYBOOK_PLAY_WINDOW_STEPS: &str = "playbook-steps";
 pub const PLAYBOOK_PLAY_BODY_STEPS: &str = "playbook.play.steps";
@@ -48,8 +48,8 @@ pub fn scene(spec: &PlaybookSpec) -> TableScene {
     TableScene::base(semio_framework_pack_json::to_json_string(&columns), semio_framework_pack_json::to_json_string(&rows))
 }
 
-pub fn render(spec: &PlaybookSpec) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_STEPS, semio_framework_ui_contract::SurfaceKind::Table, &scene(spec))
+pub fn render(spec: &PlaybookSpec) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_STEPS, semio_ui_contract::SurfaceKind::Table, &scene(spec))
 }
 
 #[cfg(test)]

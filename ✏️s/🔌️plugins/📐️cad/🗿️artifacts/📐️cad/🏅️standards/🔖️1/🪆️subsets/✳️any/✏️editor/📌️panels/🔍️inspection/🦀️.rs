@@ -7,21 +7,21 @@ use semio_s_artifact_cad_cad_kit::{cad_pane_suffix, ui_label, ui_value_map, ui_v
 use semio_s_artifact_cad_cad_model::geometry::CadObject;
 use semio_s_artifact_cad_cad_inferences::object_scale_json;
 use semio_s_artifact_cad_cad_model::{snapshot::CadNode, snapshot::CadPaneId};
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
@@ -47,7 +47,7 @@ pub fn definition() -> PanelTabDefinition {
 const ROOT: &str = "cad-play-inspector";
 
 fn push(fields: &mut UiFixedList<BuiltNode>, node: UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<()> {
-    fields.try_push(node?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "cad inspector field admission failed"))
+    fields.try_push(node?).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "cad inspector field admission failed"))
 }
 
 /// 🧾️ One read-only `label` / `value` row.

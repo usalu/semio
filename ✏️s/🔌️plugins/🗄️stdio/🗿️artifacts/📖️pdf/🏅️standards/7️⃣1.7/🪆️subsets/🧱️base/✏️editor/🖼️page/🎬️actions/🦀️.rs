@@ -160,57 +160,57 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
 }
 
 /// 🖱️ A page edit, or a canvas hit that redispatches selection and leaves the PDF unchanged.
-pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Result<semio_framework_plugin::Emit<PdfMutation>, Fault> {
+pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Result<semio_plugin::Emit<PdfMutation>, Fault> {
     match action {
-        "canvasPointerMove" | "canvasPointerUp" => Ok(semio_framework_plugin::Emit::default()),
+        "canvasPointerMove" | "canvasPointerUp" => Ok(semio_plugin::Emit::default()),
         "canvasPointerDown" => {
             let effect = pointer_down_effect(snapshot, payload)?;
-            Ok(semio_framework_plugin::Emit::effect(effect))
+            Ok(semio_plugin::Emit::effect(effect))
         }
         _ => {
             let mutations = apply_payload(snapshot, action, payload)?;
-            Ok(semio_framework_plugin::Emit { artifact_mutations: mutations, ..Default::default() })
+            Ok(semio_plugin::Emit { artifact_mutations: mutations, ..Default::default() })
         }
     }
 }
 
 /// 🎯 Declares the page-object selection domain and points the page window at it.
-pub fn install_object_interaction(definition: &mut semio_framework_plugin::AppDefinition) {
-    definition.interactions.push(semio_framework_plugin::InteractionDefinition {
+pub fn install_object_interaction(definition: &mut semio_plugin::AppDefinition) {
+    definition.interactions.push(semio_plugin::InteractionDefinition {
         id: OBJECT_DOMAIN.into(),
         label: LocalizedLabel::native("Objects", "Objekte"),
-        granularities: vec![semio_framework_plugin::GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "square".into() }],
-        hierarchy: semio_framework_plugin::HierarchyProvider::Flat,
-        hover: semio_framework_plugin::HoverSpec::default(),
-        selection: semio_framework_plugin::SelectionSpec {
-            modes: vec![semio_framework_plugin::SelectionMode::Multiple, semio_framework_plugin::SelectionMode::Single],
-            methods: vec![semio_framework_plugin::SelectionMethod::Pick],
-            merges: vec![semio_framework_plugin::MergeMode::Replace, semio_framework_plugin::MergeMode::Invertive],
+        granularities: vec![semio_plugin::GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "square".into() }],
+        hierarchy: semio_plugin::HierarchyProvider::Flat,
+        hover: semio_plugin::HoverSpec::default(),
+        selection: semio_plugin::SelectionSpec {
+            modes: vec![semio_plugin::SelectionMode::Multiple, semio_plugin::SelectionMode::Single],
+            methods: vec![semio_plugin::SelectionMethod::Pick],
+            merges: vec![semio_plugin::MergeMode::Replace, semio_plugin::MergeMode::Invertive],
             transitive: false,
             broadcast: true,
         },
     });
     for window in definition.window_kinds.iter_mut() {
         if window.id == WINDOW_KIND_ID {
-            window.interactions = vec![semio_framework_plugin::InteractionRef::new(OBJECT_DOMAIN)];
+            window.interactions = vec![semio_plugin::InteractionRef::new(OBJECT_DOMAIN)];
         }
     }
 }
 
-fn pointer_down_effect(snapshot: &PdfSnapshot, payload: &str) -> Result<semio_framework_plugin::Effect, Fault> {
+fn pointer_down_effect(snapshot: &PdfSnapshot, payload: &str) -> Result<semio_plugin::Effect, Fault> {
     let value: Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
     let extend = value.get("extra").and_then(Value::as_str) == Some("shift") || value.get("shift").and_then(Value::as_bool).unwrap_or(false) || json_f64(&value, "shift") >= 0.5;
     let merge = if extend { "invertive" } else { "replace" };
     Ok(match hit_test(snapshot, json_f64(&value, "x"), json_f64(&value, "y")) {
         Some(id) => select_effect(&id, merge),
-        None => semio_framework_plugin::Effect::DispatchAction { req: semio_framework_plugin::RequestId(113), action: semio_framework_plugin::CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 },
+        None => semio_plugin::Effect::DispatchAction { req: semio_plugin::RequestId(113), action: semio_plugin::CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 },
     })
 }
 
-fn select_effect(id: &str, merge: &str) -> semio_framework_plugin::Effect {
-    semio_framework_plugin::Effect::DispatchAction {
-        req: semio_framework_plugin::RequestId(115),
-        action: semio_framework_plugin::INTERACTION_SELECT_ACTION_ID.into(),
+fn select_effect(id: &str, merge: &str) -> semio_plugin::Effect {
+    semio_plugin::Effect::DispatchAction {
+        req: semio_plugin::RequestId(115),
+        action: semio_plugin::INTERACTION_SELECT_ACTION_ID.into(),
         args: Some(semio_framework_value::DslValue::from(json!({ "domainId": OBJECT_DOMAIN, "targets": json!([{ "granularity": "object", "id": id }]).to_string(), "merge": merge, "method": "pick" }))),
         delay_ms: 0,
     }

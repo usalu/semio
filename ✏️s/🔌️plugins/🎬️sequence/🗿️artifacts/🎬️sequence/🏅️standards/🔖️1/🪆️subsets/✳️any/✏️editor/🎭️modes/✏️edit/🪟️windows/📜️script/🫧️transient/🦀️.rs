@@ -10,7 +10,7 @@ pub struct SequenceScriptWindowTransient {
 
 semio_framework_value::artifact_retire_struct!(SequenceScriptWindowTransient { last_run_json });
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: SequenceScriptWindowTransient,
     mutation: SequenceScriptWindowTransientMutation,
     diff: SequenceScriptWindowTransientDiff,
@@ -23,7 +23,7 @@ semio_framework_plugin::transient_root! {
     fields: { last_run_json: String },
 }
 
-semio_framework_plugin::window_transient_owners! {
+semio_plugin::window_transient_owners! {
     state: SequenceScriptWindowTransient,
     mutation: SequenceScriptWindowTransientMutation,
     windows: {

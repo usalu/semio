@@ -1,5 +1,5 @@
 //! 🎟️ Focused integration tests call the same production actor entry and canonical neutral law bodies.
-use semio_framework_plugin::reactor::original_actor_context::original_laws;
+use semio_plugin::reactor::original_actor_context::original_laws;
 #[global_allocator]
 static ORIGINAL_OUTPUT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[test]
@@ -11,7 +11,7 @@ fn original_owned_output(){original_laws::original_owned_output_loan_keeps_paid_
 #[test]
 fn original_wit_output(){original_laws::original_job_output_paged_source_identity_cpu_denials_system_and_paid_ack()}
 #[test]
-fn original_surface_retry(){semio_framework_plugin::reactor::patches::original_retry_laws::pending_mounted_render_survives_denied_original_retry_without_heap_or_lost_schedule()}
+fn original_surface_retry(){semio_plugin::reactor::patches::original_retry_laws::pending_mounted_render_survives_denied_original_retry_without_heap_or_lost_schedule()}
 
 #[test]
-fn original_manifest_receiving(){semio_framework_plugin::plugin_runtime::original_manifest_receiving_law()}
+fn original_manifest_receiving(){semio_plugin::plugin_runtime::original_manifest_receiving_law()}

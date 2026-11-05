@@ -4,8 +4,8 @@ use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
-use semio_framework_ui_locale::LabelText;
+use semio_plugin::plugin_app_close_prelude::InputKind;
+use semio_ui_locale::LabelText;
 
 //#region 🔖️Types
 pub type LabelOf = fn(&BimLabels) -> LabelText;

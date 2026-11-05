@@ -1,7 +1,7 @@
 use super::*;
 use crate::catalog::{ifc_attribute_declarations, ifc4x3_catalog};
 use crate::details::Ifc4x3DetailsProvider;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{SnapshotDetailPathSegment as P, SnapshotDetailsProvider};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcValue};
@@ -195,7 +195,7 @@ fn editor_uses_the_distinct_4x3_dialect() {
     assert_eq!(<Ifc4x3AnyEditor as ArtifactEditor>::DIALECT.standard.0, "4x3");
     assert_eq!(IFC4X3_DOCUMENT_SCHEMA, fixture["identities"]["document"].as_str().unwrap());
     assert_eq!(Ifc4x3AnyEditor::initial_snapshot().schema, fixture["identities"]["graph"].as_str().unwrap());
-    assert_eq!(create_ifc4x3_any_editor().role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(create_ifc4x3_any_editor().role, semio_plugin::AppRole::Editor);
 }
 
 #[test]
@@ -243,7 +243,7 @@ fn revisioned_host_render_has_localized_named_controls_and_controller_bindings()
     let snapshot = IfcSnapshot { entities: vec![IfcEntity { id: 1, name: "IFCCARTESIANPOINT".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Real(0.0)])], complex: Vec::new() }], ..Default::default() };
     for (locale, attribute_label) in [(Locale::En, "Attributes"), (Locale::De, "Attribute")] {
         let rendered =
-            editing::render_snapshot_details_provider_revisioned(&Ifc4x3DetailsProvider::new(&snapshot), semio_framework_ui_contract::UiPublicationRevision(42), locale, IFC4X3_CONTROLLER, &semio_framework_plugin::TreeWindows::unhosted()).unwrap();
+            editing::render_snapshot_details_provider_revisioned(&Ifc4x3DetailsProvider::new(&snapshot), semio_ui_contract::UiPublicationRevision(42), locale, IFC4X3_CONTROLLER, &semio_plugin::TreeWindows::unhosted()).unwrap();
         let independent_serialization = serde_json::to_string(&rendered).unwrap();
         assert!(independent_serialization.contains("Coordinates"));
         assert!(independent_serialization.contains(attribute_label));
@@ -358,7 +358,7 @@ fn binary_select_values_have_a_control_and_invalid_bits_never_publish() {
 
 #[test]
 fn model_and_details_windows_share_the_ifc4x3_editor() {
-    use semio_framework_plugin::{MeshWindowKit, WindowKit};
+    use semio_plugin::{MeshWindowKit, WindowKit};
     let definition = create_ifc4x3_any_editor();
     let independent = serde_json::to_value(&definition).unwrap();
     let kinds = independent["windowKinds"].as_array().unwrap();
@@ -554,8 +554,8 @@ fn prepare_retained_edit(event: &editing::SnapshotEditEvent, snapshot: &IfcSnaps
     retained_edit_case(event, snapshot, None).0.unwrap()
 }
 
-fn reference_operation_wire(source: semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Vec<u8> {
-    use semio_framework_plugin::plugin_app_close_prelude::store;
+fn reference_operation_wire(source: semio_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Vec<u8> {
+    use semio_plugin::plugin_app_close_prelude::store;
     let mut cursor = store::ArtifactPreparedOperationCursor::default();
     let mut result = Vec::new();
     let mut chunk = [0; 64];
@@ -620,8 +620,8 @@ fn retained_edit_control_case(
     wire_cancel: Option<usize>,
     expected_fault: Option<&str>,
 ) -> (Option<Emit<IfcMutation, NoConfigMutation, NoDraftMutation>>, usize, usize) {
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWorkStep};
+    use semio_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWorkStep};
     let snapshot = std::sync::Arc::new(snapshot.clone());
     let mut command = Ifc4x3EditCommand::EditSnapshot { event: event.clone() };
     let mut work = crate::details::IfcDetailsWork::<Ifc4x3AnyEditor, crate::details::Ifc4x3DetailsProfile>::new(event.action_id());
@@ -649,13 +649,13 @@ fn retained_edit_control_case(
         .map(maximum_text)
         .max()
         .unwrap_or(0);
-    let mut caller = semio_framework_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     let grant = retained_contiguous_owner_loan();
     assert!(cx.with_retained_loan(grant, |cx| work.receive_original_command(&mut command, cx)).unwrap());
     assert_eq!(<Ifc4x3AnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_event(&command).unwrap().action_id(), event.action_id());
-    let operation = semio_framework_plugin::AppOperationContext {
+    let operation = semio_plugin::AppOperationContext {
         app_instance_id: 1,
         parent_document_id: "ifc-retained-derived".into(),
         operation_id: cx.operation().0,
@@ -665,10 +665,10 @@ fn retained_edit_control_case(
         authoring_seed: "ifc-retained-derived".into(),
     };
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let input = ArtifactCommandInputs::<semio_framework_plugin::EditorApp<Ifc4x3AnyEditor>> {
+    let hover = semio_plugin::app::InteractionHoverState::default();
+    let input = ArtifactCommandInputs::<semio_plugin::EditorApp<Ifc4x3AnyEditor>> {
         command: &command,
         snapshot: &snapshot,
         snapshot_owner: Some(&snapshot),
@@ -706,7 +706,7 @@ fn retained_edit_control_case(
     if let Some(last) = emit.as_ref().and_then(|emit| emit.artifact_mutations.last()) {
         let inverse = protocol::ColdMutation::inverse(last, snapshot.as_ref()).unwrap();
         if let Some(inverse) = inverse.first() {
-            use semio_framework_plugin::plugin_app_close_prelude::store;
+            use semio_plugin::plugin_app_close_prelude::store;
             let expected = reference_operation_wire(store::ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: store::ArtifactCanonicalTreeSource::view(inverse) }, &mut cx);
             let inverse_view = work.borrowed_inverse_wire(&emit.as_ref().unwrap().artifact_mutations);
             let actual = reference_operation_wire(store::ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: &inverse_view }, &mut cx);
@@ -769,10 +769,10 @@ fn same_primary_empty_global_id_matches_direct_retained_and_inverse() {
 
 #[test]
 fn actual_publication_wire_matches_neutral_cases_and_json_escaping() {
-    use semio_framework_plugin::plugin_app_close_prelude::store;
+    use semio_plugin::plugin_app_close_prelude::store;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔎️details/🧪️tests/wire.json")).unwrap();
     let snapshot = IfcSnapshot { entities: vec![IfcEntity { id: 1, name: "IFCPROPERTYSINGLEVALUE".into(), args: vec![IfcValue::String("old".into()), IfcValue::Unset, IfcValue::Unset, IfcValue::Unset], complex: Vec::new() }], ..Default::default() };
-    let mut caller = semio_framework_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     for case in fixture["cases"].as_array().unwrap() {
@@ -916,7 +916,7 @@ fn type_rows_keep_constant_payload_size_with_large_existing_values() {
 
 #[test]
 fn large_existing_argument_preparation_yields_and_cancels_before_emission() {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWorkStep};
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWorkStep};
     let snapshot = std::sync::Arc::new(IfcSnapshot {
         entities: vec![IfcEntity {
             id: 1,
@@ -935,11 +935,11 @@ fn large_existing_argument_preparation_yields_and_cancels_before_emission() {
     assert!(<Ifc4x3AnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
     let command = Ifc4x3EditCommand::EditSnapshot { event };
     let mut work = <Ifc4x3AnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_work(editing::SET_SNAPSHOT_VALUE_ACTION_ID);
-    let mut caller = semio_framework_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     let grant = editing::fixture_mounted_owner_policy().preparation;
-    let operation = semio_framework_plugin::AppOperationContext {
+    let operation = semio_plugin::AppOperationContext {
         app_instance_id: 1,
         parent_document_id: "ifc-retained-argument".into(),
         operation_id: cx.operation().0,
@@ -949,10 +949,10 @@ fn large_existing_argument_preparation_yields_and_cancels_before_emission() {
         authoring_seed: "ifc-retained-argument".into(),
     };
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let input = ArtifactCommandInputs::<semio_framework_plugin::EditorApp<Ifc4x3AnyEditor>> {
+    let hover = semio_plugin::app::InteractionHoverState::default();
+    let input = ArtifactCommandInputs::<semio_plugin::EditorApp<Ifc4x3AnyEditor>> {
         command: &command,
         snapshot: &snapshot,
         snapshot_owner: Some(&snapshot),

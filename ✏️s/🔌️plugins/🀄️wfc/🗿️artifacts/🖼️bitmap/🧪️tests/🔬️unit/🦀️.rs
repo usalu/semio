@@ -272,8 +272,8 @@ mod mount_contract {
 
     #[test]
     fn editor_and_viewer_share_the_bitmap_dialect() {
-        assert_eq!(<crate::editor::bitmap::BitmapEditor as semio_framework_plugin::ArtifactEditor>::DIALECT, WFC_BITMAP_DIALECT);
-        assert_eq!(<crate::viewer::bitmap::BitmapViewer as semio_framework_plugin::ArtifactViewer>::DIALECT, WFC_BITMAP_DIALECT);
+        assert_eq!(<crate::editor::bitmap::BitmapEditor as semio_plugin::ArtifactEditor>::DIALECT, WFC_BITMAP_DIALECT);
+        assert_eq!(<crate::viewer::bitmap::BitmapViewer as semio_plugin::ArtifactViewer>::DIALECT, WFC_BITMAP_DIALECT);
     }
 
     #[test]
@@ -327,8 +327,8 @@ mod mount_contract {
 
     #[test]
     fn example_labels_are_localized_en_and_de() {
-        assert_eq!(rooms_16::label(), semio_framework_ui_locale::LocalizedLabel::native("Rooms 16", "Räume 16"));
-        assert_eq!(flowers_24::label(), semio_framework_ui_locale::LocalizedLabel::native("Flowers 24", "Blumen 24"));
+        assert_eq!(rooms_16::label(), semio_ui_locale::LocalizedLabel::native("Rooms 16", "Räume 16"));
+        assert_eq!(flowers_24::label(), semio_ui_locale::LocalizedLabel::native("Flowers 24", "Blumen 24"));
     }
 }
 //#endregion 🧩️MountContract

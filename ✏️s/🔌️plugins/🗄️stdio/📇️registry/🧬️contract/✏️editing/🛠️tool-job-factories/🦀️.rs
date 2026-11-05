@@ -33,7 +33,7 @@ impl<E: BoundedNativeEditingEditor> ToolJobFactory for BoundedNativeEditToolJobF
         E::native_edit_execution_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: E::NATIVE_MAXIMUM_RAW_BYTES, checkpoint_resume: E::NATIVE_CHECKPOINT_RESUME);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: E::NATIVE_MAXIMUM_RAW_BYTES, checkpoint_resume: E::NATIVE_CHECKPOINT_RESUME);
 }
 
 impl<E: BoundedNativeEditingEditor> ArtifactOwnedToolJobFactory for BoundedNativeEditToolJobFactory<E> {
@@ -53,10 +53,10 @@ pub(super) fn bounded_native_edit_reduce<E: BoundedNativeEditingEditor>(
     command: &E::Command,
     snapshot: &E::Snapshot,
     _config: &E::Config,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &kernel::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<E::Mutation, E::ConfigMutation, E::DraftMutation>, Fault> {
     if !E::NATIVE_TOOL_IDS.contains(&E::command_id(command)) {
@@ -73,16 +73,16 @@ pub fn admit_bounded_native_command<C: OpBinary>(command: &C, maximum_bytes: usi
     Ok(encoded.len())
 }
 
-pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<E>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<E>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
     if !E::NATIVE_TOOL_IDS.contains(&original.tool_id.as_str()) {
         return Ok(false);
     }
     if E::command_id(&original.command) != original.tool_id {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "bounded native edit command does not match its addressed tool").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "bounded native edit command does not match its addressed tool").into());
     }
     let tool_id = E::command_id(&original.command);
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, E::command_id, E::NATIVE_MAXIMUM_RAW_BYTES, E::NATIVE_MAXIMUM_WORK_ITEMS, E::NATIVE_CHECKPOINT_RESUME, |_request| E::native_edit_work(tool_id))
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, E::command_id, E::NATIVE_MAXIMUM_RAW_BYTES, E::NATIVE_MAXIMUM_WORK_ITEMS, E::NATIVE_CHECKPOINT_RESUME, |_request| E::native_edit_work(tool_id))
 }
 
 pub fn bounded_native_edit_bounded_first_step_proofs<E: BoundedNativeEditingEditor>(owner_file: &'static str, controller_id: &'static str, artifact_schema: &'static str) -> Vec<ArtifactBoundedFirstStepProof> {
@@ -203,7 +203,7 @@ impl<E: SnapshotEditingEditor> ToolJobFactory for SnapshotEditToolJobFactory<E> 
         snapshot_edit_execution_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl<E: SnapshotEditingEditor> ArtifactOwnedToolJobFactory for SnapshotEditToolJobFactory<E> {
@@ -243,10 +243,10 @@ fn snapshot_edit_reduce<E: SnapshotEditingEditor>(
     command: &E::Command,
     snapshot: &E::Snapshot,
     _config: &E::Config,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &kernel::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<E::Mutation, E::ConfigMutation, E::DraftMutation>, Fault> {
     let event = E::snapshot_edit_event(command).ok_or_else(|| edit_fault("snapshot-edit.command-mismatch", "snapshot edit factory received a native command"))?;
@@ -260,33 +260,33 @@ pub(super) fn snapshot_edit_contextual_once<T>(consumed:&mut bool,cx:&mut semio_
 
 pub(crate) struct SnapshotEditWork<E:SnapshotEditingEditor>{tool_id:&'static str,consumed:bool,marker:std::marker::PhantomData<fn()->E>}
 impl<E:SnapshotEditingEditor> SnapshotEditWork<E>{pub(crate) fn new(tool_id:&'static str)->Self{Self{tool_id,consumed:false,marker:std::marker::PhantomData}}}
-impl<E:SnapshotEditingEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<E>> for SnapshotEditWork<E>{
+impl<E:SnapshotEditingEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<E>> for SnapshotEditWork<E>{
     fn tool_id(&self)->&'static str{self.tool_id}
-    fn extent(&self,command:&E::Command,snapshot:&E::Snapshot,interaction:&kernel::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>)->Option<usize>{snapshot_edit_extent::<E>(command,snapshot,interaction)}
-    fn work_demands(&self,_input:&semio_framework_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<E>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+    fn extent(&self,command:&E::Command,snapshot:&E::Snapshot,interaction:&kernel::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>)->Option<usize>{snapshot_edit_extent::<E>(command,snapshot,interaction)}
+    fn work_demands(&self,_input:&semio_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<E>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
     fn terminal_frame_release_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
     fn reports_progress(&self)->bool{false}
-    fn step(&mut self,input:&semio_framework_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<E>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<E>>,semio_framework_job::OriginalTurnFailure>{
+    fn step(&mut self,input:&semio_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<E>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<E>>,semio_framework_job::OriginalTurnFailure>{
         snapshot_edit_contextual_once(&mut self.consumed,cx,|cx|{
             let event=E::snapshot_edit_event(input.command).ok_or_else(||edit_fault("snapshot-edit.command-mismatch","snapshot edit factory received a native command"))?;
-            E::snapshot_edit_emit_in_context(event,input.snapshot,cx).map(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete)
+            E::snapshot_edit_emit_in_context(event,input.snapshot,cx).map(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete)
         }).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
-pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<E>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<E>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
     if !SNAPSHOT_EDIT_ACTION_IDS.contains(&original.tool_id.as_str()) {
         return Ok(false);
     }
     let Some(event) = E::snapshot_edit_event(&original.command) else {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "snapshot edit tool received a native command").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "snapshot edit tool received a native command").into());
     };
     if event.action_id() != original.tool_id {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "snapshot edit command does not match its addressed tool").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "snapshot edit command does not match its addressed tool").into());
     }
     let tool_id = event.action_id();
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, snapshot_edit_command_id::<E>, SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, SNAPSHOT_EDIT_WORK_CAPACITY.work_items(), false, |request| BoundedArtifactCommandWork::new(tool_id, snapshot_edit_reduce::<E>, snapshot_edit_extent::<E>))
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, snapshot_edit_command_id::<E>, SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, SNAPSHOT_EDIT_WORK_CAPACITY.work_items(), false, |request| BoundedArtifactCommandWork::new(tool_id, snapshot_edit_reduce::<E>, snapshot_edit_extent::<E>))
 }
 
 pub fn snapshot_edit_bounded_first_step_proofs<E: SnapshotEditingEditor>(owner_file: &'static str, controller_id: &'static str, artifact_schema: &'static str) -> Vec<ArtifactBoundedFirstStepProof> {

@@ -1,6 +1,6 @@
 //! 🌱️ The framework interaction lane declares its actual empty native State, intrinsic Pack wire and retirement catalog.
-use semio_framework_os_kernel as store;
-use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_os_kernel as store;
+use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use std::mem::size_of;
 struct EmptyInteraction;

@@ -3,7 +3,7 @@
 use super::*;
 
 //#region NodeGraph
-pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, _ctrl: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, _ctrl: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     let planned = ENGINE_SURFACES.with(|cell| {
@@ -27,7 +27,7 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
         return Ok(false);
     }
     let Some(wire_surface_id) = engine_surface_wire_id(surface_id) else { return Ok(false) };
-    let mut reservation = input.reserve_actions(items, items * semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let mut reservation = input.reserve_actions(items, items * semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
     reservation.publish_with_checked(|| {
         ENGINE_SURFACES.with(|cell| {
@@ -73,8 +73,8 @@ pub fn node_graph_pointer_down_into(
     ctrl: bool,
     alt: bool,
     space_pressed: bool,
-    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
-) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let pan = node_graph_pan_gesture(button, alt, space_pressed);
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
@@ -89,7 +89,7 @@ pub fn node_graph_pointer_down_into(
     node_graph_bounded_publish(surface_id, controller_id, plan, snapshot, input)
 }
 
-pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     let intent = flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Move, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false };
@@ -106,7 +106,7 @@ pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner
 /// 🫃️ The bounded path's one dispatch point: the interaction actions this gesture CHANGED, plus
 /// the node moves it commits when it ends a drag, reserved exactly and published atomically with the
 /// host mutation. A gesture that changed nothing reserves nothing — see `📌️GraphInteractionChange`.
-fn node_graph_bounded_publish(surface_id: &str, controller_id: &str, plan: NodeGraphPointerPlan, snapshot: GraphInteractionSnapshot, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+fn node_graph_bounded_publish(surface_id: &str, controller_id: &str, plan: NodeGraphPointerPlan, snapshot: GraphInteractionSnapshot, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let edits = plan_node_graph_edits(surface_id, &plan);
     let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), snapshot, node_graph_interaction_domain(surface_id).as_deref())?;
     let items = dispatch.item_count() + usize::from(!edits.is_empty());
@@ -114,7 +114,7 @@ fn node_graph_bounded_publish(surface_id: &str, controller_id: &str, plan: NodeG
         return Ok(commit_node_graph_pointer(surface_id, plan));
     }
     let Some(wire_surface_id) = engine_surface_wire_id(surface_id) else { return Ok(false) };
-    let mut reservation = input.reserve_actions(items, items * semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let mut reservation = input.reserve_actions(items, items * semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
     write_graph_edit_action(&mut reservation, controller_id, &edits)?;
     reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
@@ -139,7 +139,7 @@ fn plan_node_graph_edits(surface_id: &str, plan: &NodeGraphPointerPlan) -> Vec<f
     })
 }
 
-pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     let intent = flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Up, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false };
@@ -177,12 +177,12 @@ pub struct GraphInteractionSnapshot {
     /// emits `granularity: "handle"` with exactly this id — which is what makes hover bidirectional
     /// between the graph and a `World3d` preview keyed by the same channel id.
     pub hovered_handle: Option<String>,
-    pub viewport: semio_framework_os_kernel::Viewport2d,
+    pub viewport: semio_os_kernel::Viewport2d,
 }
 
 enum NodeGraphWheelPlan {
     Flow(flow::FlowWheelPlan),
-    Dag(semio_framework_os_node_graph::GraphWheelPlan),
+    Dag(semio_os_node_graph::GraphWheelPlan),
 }
 
 pub(super) enum NodeGraphPointerPlan {
@@ -199,21 +199,21 @@ impl NodeGraphWheelPlan {
     }
 }
 
-pub(super) fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> semio_framework_ui_action::BoundedActionFault {
+pub(super) fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> semio_ui_action::BoundedActionFault {
     match fault {
-        flow::dag::DagInteractionPlanFault::NodeCredits => semio_framework_ui_action::BoundedActionFault::NodeCredits,
-        flow::dag::DagInteractionPlanFault::StringCredits => semio_framework_ui_action::BoundedActionFault::StringCredits,
-        flow::dag::DagInteractionPlanFault::Unsupported => semio_framework_ui_action::BoundedActionFault::Structure,
+        flow::dag::DagInteractionPlanFault::NodeCredits => semio_ui_action::BoundedActionFault::NodeCredits,
+        flow::dag::DagInteractionPlanFault::StringCredits => semio_ui_action::BoundedActionFault::StringCredits,
+        flow::dag::DagInteractionPlanFault::Unsupported => semio_ui_action::BoundedActionFault::Structure,
     }
 }
 
-pub fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, semio_framework_ui_action::BoundedActionFault> {
-    let viewport = semio_framework_os_kernel::Viewport2d { x: camera[0], y: camera[1], zoom: camera[2] };
-    viewport.validate().map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
+pub fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, semio_ui_action::BoundedActionFault> {
+    let viewport = semio_os_kernel::Viewport2d { x: camera[0], y: camera[1], zoom: camera[2] };
+    viewport.validate().map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
     let mut parts = Vec::with_capacity(node_ids.len() + 2);
     parts.extend([hovered_id.as_deref().unwrap_or_default(), hovered_handle.as_deref().unwrap_or_default()]);
     parts.extend(node_ids.iter().map(String::as_str));
-    semio_framework_ui_action::checked_action_string_bytes(&parts)?;
+    semio_ui_action::checked_action_string_bytes(&parts)?;
     Ok(GraphInteractionSnapshot { node_ids, hovered_id, hovered_handle, viewport })
 }
 

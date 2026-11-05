@@ -10,7 +10,7 @@ pub struct ChangeTrussBays { pub truss_id: String, pub new_value: u32 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTrussBays where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_truss_bays::ChangeTrussBays> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "truss-bays", kind: "change-truss-bays", record: "ChangedTrussBays" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change bays n of truss {}", self.truss_id), &format!("Anzahl der Felder n von Truss {} ändern", self.truss_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change bays n of truss {}", self.truss_id), &format!("Anzahl der Felder n von Truss {} ändern", self.truss_id)) }
     fn target(&self) -> Vec<String> { vec![self.truss_id.clone()] }
 }
 

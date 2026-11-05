@@ -3,8 +3,8 @@ use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView,ConfigView,Emit,Fault};
 pub use semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve;
 
 /// 🪪️ A direct synchronous dispatch has no original retained source or receiver authority.

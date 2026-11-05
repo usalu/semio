@@ -2,11 +2,11 @@
 
 #[test]
 fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
-    use semio_framework_plugin_reactor_lifecycle::PendingPatchAuthority;
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
+    use semio_plugin_reactor_lifecycle::PendingPatchAuthority;
     use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📨️pending/🧪️tests/🧫️fixtures/🩹️receipt.json")).unwrap();
     let surface = fixture["issued"]["surface"].as_str().unwrap();
@@ -67,18 +67,18 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
 
 #[test]
 fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_aba_without_authority_loss() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let mut published = Some(published(&tracker, "71:ack",cx));
     let revision = published.as_ref().unwrap().revision().0;
     let mut ack = None;
-    let admitted = semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes();
-    assert!(!semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut published, &mut ack, "72:wrong", revision, admitted).unwrap());
+    let admitted = semio_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes();
+    assert!(!semio_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut published, &mut ack, "72:wrong", revision, admitted).unwrap());
     assert!(published.as_ref().unwrap().matches("71:ack", revision));
-    assert!(semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut published, &mut ack, "71:ack", revision, admitted).unwrap());
+    assert!(semio_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut published, &mut ack, "71:ack", revision, admitted).unwrap());
     {
         let mut state = tracker.state.borrow_mut();
         let slot = state.slots.iter_mut().flatten().find(|slot| slot.surface.as_ref() == "71:ack").expect("published surface");
@@ -102,10 +102,10 @@ fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_ab
 
 #[test]
 fn cap_plus_one_returns_the_exact_tree_owner() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
         let mut state = tracker.state.borrow_mut();
@@ -138,7 +138,7 @@ fn cap_plus_one_returns_the_exact_tree_owner() {
 /// which is no longer possible now that a reservation is priced by its own body (ticket
 /// 26/09/02/PUZZLE-3D-END-TO-END wave B58).
 fn fill_resident_aggregate() -> Vec<ui_contract::UiResidentPermit> {
-    let floor = semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES;
+    let floor = semio_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES;
     let mut remaining = ui_contract::UI_RESIDENT_AGGREGATE_BYTES - ui_contract::UiResidentPermit::snapshot().expect("readable ledger").bytes;
     let mut held = Vec::new();
     while remaining >= floor {
@@ -163,15 +163,15 @@ fn release_resident_aggregate(held: Vec<ui_contract::UiResidentPermit>) {
 
 #[test]
 fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["residentCapacity"];
-    let aggregate = semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES;
-    let limits = semio_framework_ui_runtime::SurfaceReconcileLimits::default();
-    let floor = semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES;
+    let aggregate = semio_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES;
+    let limits = semio_ui_runtime::SurfaceReconcileLimits::default();
+    let floor = semio_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES;
     assert_eq!(aggregate, fixture["aggregateCeilingBytes"].as_u64().unwrap() as usize);
     assert_eq!(limits.max_bytes, law["reservationBytes"].as_u64().unwrap() as usize);
     for row in law["cases"].as_array().unwrap() {
@@ -194,7 +194,7 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
     let first = ui_contract::UiResidentPermit::snapshot().unwrap();
     assert_eq!(
         first,
-        ui_contract::UiResidentSnapshot { bytes: fixed_bytes + floor, items: semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_ITEMS, used_slots: 1 },
+        ui_contract::UiResidentSnapshot { bytes: fixed_bytes + floor, items: semio_ui_runtime::SURFACE_RECONCILE_FLOOR_ITEMS, used_slots: 1 },
         "one mounted reservation is priced at the reconcile FLOOR, never at the per-surface ceiling {}",
         limits.max_bytes
     );

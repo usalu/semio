@@ -106,8 +106,8 @@ pub fn request_canvas_pointer_gesture_cancel_for_host(host_id: &str) {
     });
 }
 
-pub fn write_scene_action_batch(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, actions: &[ActionDescriptor], commit: impl FnOnce()) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
-    let bytes = actions.iter().try_fold(0usize, |sum, action| sum.checked_add(scene_action_bytes(action)?).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits))?;
+pub fn write_scene_action_batch(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, actions: &[ActionDescriptor], commit: impl FnOnce()) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let bytes = actions.iter().try_fold(0usize, |sum, action| sum.checked_add(scene_action_bytes(action)?).ok_or(semio_ui_action::BoundedActionFault::ByteCredits))?;
     let mut batch = input.reserve_actions(actions.len(), bytes)?;
     for action in actions {
         write_scene_action_to_batch(&mut batch, action, scene_action_bytes(action)?)?;
@@ -142,8 +142,8 @@ pub struct SceneModifiers {
     pub meta: bool,
 }
 
-impl From<semio_framework_ui_wgpu_events::EventModifiers> for SceneModifiers {
-    fn from(modifiers: semio_framework_ui_wgpu_events::EventModifiers) -> Self {
+impl From<semio_ui_wgpu_events::EventModifiers> for SceneModifiers {
+    fn from(modifiers: semio_ui_wgpu_events::EventModifiers) -> Self {
         Self { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
     }
 }
@@ -310,7 +310,7 @@ pub struct TableButtonAccessibilityCell {
 
 //#region 🧭️TiledMapRetirement
 pub fn retire_tiled_map_scene_identity(owner: &crate::element_contracts::ScenePointerTarget) -> bool {
-    if owner.kind != semio_framework_ui_declaration::ui::SurfaceKind::TiledMap {
+    if owner.kind != semio_ui_declaration::ui::SurfaceKind::TiledMap {
         return false;
     }
     let (retired_interaction, retired_hover) = SCENE_STATE.with(|cell| {
@@ -331,7 +331,7 @@ pub fn retire_tiled_map_scene_identity(owner: &crate::element_contracts::ScenePo
         (interaction, hover)
     });
     if retired_interaction {
-        semio_framework_os_renderer_wgpu_engine_board::tiled_map::retire_map_interaction_owner(owner);
+        semio_renderer_wgpu_engine_board::tiled_map::retire_map_interaction_owner(owner);
     }
     retired_interaction || retired_hover
 }

@@ -3,11 +3,11 @@
 //! exists for are no longer compiled out of the browser build.
 
 use super::{decode_directory_door_response, encode_directory_door_binary_request, encode_directory_door_request, DIRECTORY_DOOR_OP, DIRECTORY_HTTP_TIMEOUT_MS};
-use semio_framework_os_kernel::os_directory::client::{HttpMethod, TransportError};
+use semio_os_kernel::os_directory::client::{HttpMethod, TransportError};
 
 #[allow(non_snake_case)]
 fn SHELL_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::shell_source()
+    semio_renderer_wgpu_test_support::shell_source()
 }
 
 //#region 🧪️Wire

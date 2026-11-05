@@ -584,11 +584,11 @@ pub struct WorldMarqueePublishJob {
     pub gesture: WorldMarqueeGesture,
     pub results: WorldMarqueeResultPages,
     pub merge: &'static str,
-    pub prepared: Option<semio_framework_ui_action::PreparedClaimedActionBatch>,
-    pub draft: Option<semio_framework_ui_action::BoundedClaimedActionDraft>,
+    pub prepared: Option<semio_ui_action::PreparedClaimedActionBatch>,
+    pub draft: Option<semio_ui_action::BoundedClaimedActionDraft>,
     /// 🎯️ The page's `targets` value BEING BUILT — one JSON-encoded string, assembled one target per
     /// bounded step. See [`INTERACTION_TARGETS_OPEN`] for why the arg is text rather than an array.
-    pub targets: Box<[u8; semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY]>,
+    pub targets: Box<[u8; semio_ui_action::ACTION_STRING_BYTE_CAPACITY]>,
     pub targets_len: u16,
     pub page: u8,
     pub stage: u16,
@@ -607,13 +607,13 @@ fn world_find_bytes(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 impl WorldMarqueePublishJob {
     pub fn new(generation: u64, gesture: WorldMarqueeGesture, results: WorldMarqueeResultPages, shift: bool, ctrl: bool) -> Self {
         let merge = world_merge_mode(shift, ctrl).wire_label();
-        Self { generation, gesture, results, merge, prepared: None, draft: None, targets: Box::new([0; semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY]), targets_len: 0, page: 0, stage: 0, published: false }
+        Self { generation, gesture, results, merge, prepared: None, draft: None, targets: Box::new([0; semio_ui_action::ACTION_STRING_BYTE_CAPACITY]), targets_len: 0, page: 0, stage: 0, published: false }
     }
 
-    fn push_targets(&mut self, parts: &[&str]) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    fn push_targets(&mut self, parts: &[&str]) -> Result<(), semio_ui_action::BoundedActionFault> {
         let mut len = usize::from(self.targets_len);
         for part in parts {
-            let end = len.checked_add(part.len()).filter(|end| *end <= semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+            let end = len.checked_add(part.len()).filter(|end| *end <= semio_ui_action::ACTION_STRING_BYTE_CAPACITY).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
             self.targets[len..end].copy_from_slice(part.as_bytes());
             len = end;
         }
@@ -621,8 +621,8 @@ impl WorldMarqueePublishJob {
         Ok(())
     }
 
-    fn targets_text(&self) -> Result<&str, semio_framework_ui_action::BoundedActionFault> {
-        core::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)
+    fn targets_text(&self) -> Result<&str, semio_ui_action::BoundedActionFault> {
+        core::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| semio_ui_action::BoundedActionFault::Structure)
     }
 
     /// 🎯️ Whether this page's `targets` already names the exact `(granularity, id)` pair.
@@ -660,21 +660,21 @@ impl WorldMarqueePublishJob {
     /// delimiters per target instead of once left an empty page two bytes short, and the shortfall
     /// surfaced on the LAST string of the action (`method`), faulting the whole publish
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
-    pub fn page_credit(&self, session_state: &WorldSessionState, interaction_state: &WorldInteractionState, page: usize) -> Result<usize, semio_framework_ui_action::BoundedActionFault> {
+    pub fn page_credit(&self, session_state: &WorldSessionState, interaction_state: &WorldInteractionState, page: usize) -> Result<usize, semio_ui_action::BoundedActionFault> {
         let target_count = usize::from(self.results.lens[page]);
         let target_keys = target_count
             .checked_mul(INTERACTION_TARGETS_OPEN.len() + INTERACTION_TARGETS_MIDDLE.len() + INTERACTION_TARGETS_TAIL.len() + 1)
             .and_then(|bytes| bytes.checked_add(INTERACTION_TARGETS_ARRAY_OPEN.len() + INTERACTION_TARGETS_ARRAY_CLOSE.len()))
-            .ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
-        let granularities = target_count.checked_mul(maximum_instance_interaction_granularity_bytes(session_state, interaction_state)).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
-        let id_prefix = if session_state.bound_domain_id.is_some() { 0 } else { target_count.checked_mul(session_state.surface_id.len() + WORLD_ITEM_PATH_DELIMITER.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)? };
-        semio_framework_ui_action::checked_action_string_bytes(&[&session_state.controller_id, "interactionSelect", "domainId", resolved_domain_id(session_state), "targets", "merge", self.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])?
+            .ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
+        let granularities = target_count.checked_mul(maximum_instance_interaction_granularity_bytes(session_state, interaction_state)).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
+        let id_prefix = if session_state.bound_domain_id.is_some() { 0 } else { target_count.checked_mul(session_state.surface_id.len() + WORLD_ITEM_PATH_DELIMITER.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)? };
+        semio_ui_action::checked_action_string_bytes(&[&session_state.controller_id, "interactionSelect", "domainId", resolved_domain_id(session_state), "targets", "merge", self.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])?
             .checked_add(target_keys)
             .and_then(|bytes| bytes.checked_add(granularities))
             .and_then(|bytes| bytes.checked_add(id_prefix))
             .and_then(|bytes| bytes.checked_add(usize::from(self.results.id_bytes[page])))
-            .filter(|bytes| *bytes <= semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)
-            .ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)
+            .filter(|bytes| *bytes <= semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)
+            .ok_or(semio_ui_action::BoundedActionFault::ByteCredits)
     }
 
     /// 💥️ `then`, never `then_some`: `then_some`'s argument is evaluated EAGERLY, so `self.stage - 3`
@@ -687,7 +687,7 @@ impl WorldMarqueePublishJob {
     /// 🎯️ One TARGET per bounded step, appended to this page's `targets` text — the whole value is
     /// handed to the builder once, at `target_stage_end`. The id is the TOPOLOGY target the rendered
     /// instance stands for, deduplicated, exactly as a pick's is.
-    pub fn step(&mut self, session_state: &WorldSessionState, interaction_state: &WorldInteractionState, generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, semio_framework_ui_action::BoundedActionFault> {
+    pub fn step(&mut self, session_state: &WorldSessionState, interaction_state: &WorldInteractionState, generation: u64, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, semio_ui_action::BoundedActionFault> {
         if context.should_yield() {
             return Ok(WorldInteractionStep::Pending);
         }
@@ -711,7 +711,7 @@ impl WorldMarqueePublishJob {
                 *credit = self.page_credit(session_state, interaction_state, page)?;
             }
             let claims = input.claim_actions(&credits[..usize::from(self.results.page_len)])?;
-            self.prepared = Some(semio_framework_ui_action::PreparedClaimedActionBatch::new(claims));
+            self.prepared = Some(semio_ui_action::PreparedClaimedActionBatch::new(claims));
             context.consume_fuel(1);
             return Ok(WorldInteractionStep::Pending);
         }
@@ -723,7 +723,7 @@ impl WorldMarqueePublishJob {
         }
         let page = usize::from(self.page);
         if self.draft.is_none() {
-            let claim = self.prepared.as_ref().and_then(|batch| batch.claim(page)).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+            let claim = self.prepared.as_ref().and_then(|batch| batch.claim(page)).ok_or(semio_ui_action::BoundedActionFault::Structure)?;
             self.draft = Some(input.draft_claimed_action(claim, &session_state.controller_id, "interactionSelect")?);
             context.consume_fuel(1);
             return Ok(WorldInteractionStep::Pending);
@@ -735,10 +735,10 @@ impl WorldMarqueePublishJob {
             .and_then(|index| self.results.pages[page][index])
             .map(|result| match result {
                 WorldMarqueeResult::Object(token) => Ok(token),
-                WorldMarqueeResult::Component { .. } => Err(semio_framework_ui_action::BoundedActionFault::Structure),
+                WorldMarqueeResult::Component { .. } => Err(semio_ui_action::BoundedActionFault::Structure),
             })
             .transpose()?;
-        let entry = token.map(|token| interaction_state.interaction_objects.resolve(token).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)).transpose()?;
+        let entry = token.map(|token| interaction_state.interaction_objects.resolve(token).ok_or(semio_ui_action::BoundedActionFault::Structure)).transpose()?;
         if self.stage >= 3 && self.stage < target_stage_end {
             let entry = entry.expect("marquee token resolved");
             let id = instance_interaction_id(interaction_state, entry.id.as_str());
@@ -765,7 +765,7 @@ impl WorldMarqueePublishJob {
         }
         if self.stage == target_stage_end {
             self.push_targets(&["]"])?;
-            let targets = core::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
+            let targets = core::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
             self.draft.as_mut().expect("marquee page draft").builder().string(Some("targets"), targets)?;
             self.stage += 1;
             context.consume_fuel(1);
@@ -792,7 +792,7 @@ impl WorldMarqueePublishJob {
         Ok(WorldInteractionStep::Pending)
     }
 
-    pub fn close_step(&mut self, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    pub fn close_step(&mut self, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
         if self.draft.take().is_some() {
             return false;
         }
@@ -820,39 +820,39 @@ pub struct WorldComponentMarqueePublishJob {
     pub results: WorldMarqueeResultPages,
     pub kind: WorldComponentKind,
     pub merge: &'static str,
-    pub targets: Box<[u8; semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY]>,
+    pub targets: Box<[u8; semio_ui_action::ACTION_STRING_BYTE_CAPACITY]>,
     pub targets_len: u16,
     result_cursor: u8,
     targets_ready: bool,
-    pub claim: Option<semio_framework_ui_action::BoundedActionClaim>,
-    pub draft: Option<semio_framework_ui_action::BoundedClaimedActionDraft>,
-    pub prepared: Option<semio_framework_ui_action::PreparedClaimedAction>,
+    pub claim: Option<semio_ui_action::BoundedActionClaim>,
+    pub draft: Option<semio_ui_action::BoundedClaimedActionDraft>,
+    pub prepared: Option<semio_ui_action::PreparedClaimedAction>,
     pub stage: u16,
     pub published: bool,
 }
 
 impl WorldComponentMarqueePublishJob {
     pub fn new(generation: u64, gesture: WorldMarqueeGesture, results: WorldMarqueeResultPages, kind: WorldComponentKind, shift: bool, ctrl: bool) -> Self {
-        Self { generation, gesture, results, kind, merge: world_merge_mode(shift, ctrl).wire_label(), targets: Box::new([0; semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY]), targets_len: 0, result_cursor: 0, targets_ready: false, claim: None, draft: None, prepared: None, stage: 0, published: false }
+        Self { generation, gesture, results, kind, merge: world_merge_mode(shift, ctrl).wire_label(), targets: Box::new([0; semio_ui_action::ACTION_STRING_BYTE_CAPACITY]), targets_len: 0, result_cursor: 0, targets_ready: false, claim: None, draft: None, prepared: None, stage: 0, published: false }
     }
 
-    fn push_targets(&mut self, text: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
-        let end = usize::from(self.targets_len).checked_add(text.len()).filter(|end| *end <= self.targets.len()).ok_or(semio_framework_ui_action::BoundedActionFault::StringCredits)?;
+    fn push_targets(&mut self, text: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
+        let end = usize::from(self.targets_len).checked_add(text.len()).filter(|end| *end <= self.targets.len()).ok_or(semio_ui_action::BoundedActionFault::StringCredits)?;
         self.targets[usize::from(self.targets_len)..end].copy_from_slice(text.as_bytes()); self.targets_len = end as u16; Ok(())
     }
 
     fn targets_text(&self) -> &str { std::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).expect("component targets retain valid UTF-8") }
 
-    fn targets_step(&mut self, session_state: &WorldSessionState, interaction_state: &WorldInteractionState, scene_state: &WorldSceneState) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    fn targets_step(&mut self, session_state: &WorldSessionState, interaction_state: &WorldInteractionState, scene_state: &WorldSceneState) -> Result<bool, semio_ui_action::BoundedActionFault> {
         if self.targets_len == 0 { self.push_targets("[")?; return Ok(false); }
         let index = usize::from(self.result_cursor);
         if index < usize::from(self.results.lens[0]) {
-            let Some(WorldMarqueeResult::Component { object, id }) = self.results.pages[0][index] else { return Err(semio_framework_ui_action::BoundedActionFault::Structure); };
-            let entry = interaction_state.interaction_objects.resolve(object).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+            let Some(WorldMarqueeResult::Component { object, id }) = self.results.pages[0][index] else { return Err(semio_ui_action::BoundedActionFault::Structure); };
+            let entry = interaction_state.interaction_objects.resolve(object).ok_or(semio_ui_action::BoundedActionFault::Structure)?;
             let target = WorldComponentTarget::new(interaction_state, scene_state, entry, self.kind, id)?;
             let mut row = WorldInteractionText::default();
             let parts = if session_state.bound_domain_id.is_some() { ["", "", target.as_str()] } else { [&session_state.surface_id, WORLD_ITEM_PATH_DELIMITER, target.as_str()] };
-            world_write_interaction_target(&mut row, self.kind.as_str(), &parts).map_err(|_| semio_framework_ui_action::BoundedActionFault::StringCredits)?;
+            world_write_interaction_target(&mut row, self.kind.as_str(), &parts).map_err(|_| semio_ui_action::BoundedActionFault::StringCredits)?;
             if index > 0 { self.push_targets(",")?; }
             self.push_targets(row.as_str())?;
             self.result_cursor += 1;
@@ -862,7 +862,7 @@ impl WorldComponentMarqueePublishJob {
         Ok(true)
     }
 
-    pub fn step(&mut self, session_state: &WorldSessionState, interaction_state: &WorldInteractionState, scene_state: &WorldSceneState, generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, semio_framework_ui_action::BoundedActionFault> {
+    pub fn step(&mut self, session_state: &WorldSessionState, interaction_state: &WorldInteractionState, scene_state: &WorldSceneState, generation: u64, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> Result<WorldInteractionStep, semio_ui_action::BoundedActionFault> {
         if context.should_yield() { return Ok(WorldInteractionStep::Pending); }
         if self.gesture.revision != session_state.interaction_revision || self.generation != generation { return Ok(WorldInteractionStep::Stale); }
         if self.published {
@@ -872,12 +872,12 @@ impl WorldComponentMarqueePublishJob {
         }
         if !self.targets_ready { self.targets_ready = self.targets_step(session_state, interaction_state, scene_state)?; context.consume_fuel(1); return Ok(WorldInteractionStep::Pending); }
         if self.claim.is_none() {
-            let credits = semio_framework_ui_action::checked_action_string_bytes(&[&session_state.controller_id, "interactionSelect", "domainId", resolved_domain_id(session_state), "targets", self.targets_text(), "merge", self.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])?;
+            let credits = semio_ui_action::checked_action_string_bytes(&[&session_state.controller_id, "interactionSelect", "domainId", resolved_domain_id(session_state), "targets", self.targets_text(), "merge", self.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])?;
             self.claim = Some(input.claim_action(credits)?); context.consume_fuel(1); return Ok(WorldInteractionStep::Pending);
         }
         if self.draft.is_none() && self.prepared.is_none() { self.draft = Some(input.draft_claimed_action(self.claim.expect("component marquee claim"), &session_state.controller_id, "interactionSelect")?); context.consume_fuel(1); return Ok(WorldInteractionStep::Pending); }
         if let Some(prepared) = self.prepared.take() { input.publish_prepared_claimed_action(prepared)?; self.claim = None; self.published = true; context.consume_fuel(1); return Ok(WorldInteractionStep::Pending); }
-        let targets = std::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let targets = std::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
         let draft = self.draft.as_mut().expect("component marquee draft");
         match self.stage {
             0 => draft.builder().begin_object(None)?,
@@ -891,7 +891,7 @@ impl WorldComponentMarqueePublishJob {
         self.stage += 1; context.consume_fuel(1); Ok(WorldInteractionStep::Pending)
     }
 
-    pub fn close_step(&mut self, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    pub fn close_step(&mut self, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
         if self.prepared.take().is_some() || self.draft.take().is_some() { return false; }
         if let Some(claim) = self.claim.take() { if input.release_action_claim(claim).is_err() { self.claim = Some(claim); } return false; }
         if self.targets_len > 0 { self.targets_len = 0; return false; }

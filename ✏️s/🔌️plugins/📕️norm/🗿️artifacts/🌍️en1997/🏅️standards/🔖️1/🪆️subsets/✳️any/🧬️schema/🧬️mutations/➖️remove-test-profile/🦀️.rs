@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveTestProfile where 
         verb: "remove", entity: "test-profile", kind: "remove-test-profile", record: "RemovedTestProfile",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove pile test profile", "Pfahl-Probebelastungsprofil entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove pile test profile", "Pfahl-Probebelastungsprofil entfernen")
     }
 }
 

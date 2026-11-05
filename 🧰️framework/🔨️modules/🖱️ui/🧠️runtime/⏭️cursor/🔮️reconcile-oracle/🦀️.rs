@@ -125,7 +125,7 @@ impl SurfaceReconcileOracle {
         }
     }
 
-    /// 💰️ Wire-cost estimate for `candidate_ops`, delegated to [`semio_framework_ui_contract_validation::patch_byte_estimate`]
+    /// 💰️ Wire-cost estimate for `candidate_ops`, delegated to [`semio_ui_contract_validation::patch_byte_estimate`]
     /// via a throwaway single-purpose [`ui_contract::UiPatch`] — the byte-accounting logic (including
     /// which fields even count as "text") lives once, in the contract crate that also enforces
     /// `max_patch_bytes`, and is never duplicated here.
@@ -135,7 +135,7 @@ impl SurfaceReconcileOracle {
             ops.try_push(op.credited_clone().expect("test patch-op alias credit")).expect("test patch remains bounded");
         }
         let probe = ui_contract::UiPatch { surface: self.surface.clone(), base_revision: ui_contract::UiRevision::default(), revision: ui_contract::UiRevision::default(), ops };
-        semio_framework_ui_contract_validation::patch_byte_estimate(&probe)
+        semio_ui_contract_validation::patch_byte_estimate(&probe)
     }
 
     /// 👶️ Diffs `new_children` against `old_child_ids` under `parent_id`, matching purely by

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFireSectionFactor 
         record: "ChangedFireSectionFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Section factor A_m/V of the fire exposure", "Brandbeanspruchung: Profilfaktor A_m/V ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Section factor A_m/V of the fire exposure", "Brandbeanspruchung: Profilfaktor A_m/V ändern")
     }
 }
 

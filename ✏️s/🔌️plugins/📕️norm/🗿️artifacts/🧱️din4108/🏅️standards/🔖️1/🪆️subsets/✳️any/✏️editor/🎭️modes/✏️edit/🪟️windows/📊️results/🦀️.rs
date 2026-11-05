@@ -2,8 +2,8 @@
 
 use semio_s_plugin_norm_compliance::NormHost;
 use crate::Din4108Family;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_RESULTS: &str = "norm-din4108-results";
@@ -20,7 +20,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host: &NormHost<Din4108Family>, windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_ui_locale::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(host: &NormHost<Din4108Family>, windows: &semio_plugin::TreeWindows<'_>, locale: semio_ui_locale::Locale, controller_id: Option<&'static str>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     semio_s_plugin_norm_app_surface::render_checks(host.report(), windows, locale, controller_id)
 }
 //#endregion 🔖️Render

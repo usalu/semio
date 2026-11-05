@@ -11,11 +11,11 @@ use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewPlane;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::DslValue;
+use semio_plugin::InteractionRef;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "bim-edit-section";
@@ -81,15 +81,15 @@ pub fn records(drawing: Option<&semio_s_artifact_bim_model_plan_linework::standa
 
 /// 📐️ Renders the section window.
 #[allow(clippy::too_many_arguments)]
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     render_over(snapshot, inference, config, selection, utility, revision, labels, &[])
 }
 
 /// 📐️ [`render`] with the records of the authoring overlay (storey top handles, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let drawing = active_view(snapshot, config).and_then(|view| inference.view_linework.get(&view));
-    let framing = drawing.filter(|_| !config.framed).and_then(|drawing| semio_s_artifact_bim_model_plan_linework::render::plan::canvas_bounds(&drawing.lines)).map(|bounds| semio_framework_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 });
+    let framing = drawing.filter(|_| !config.framed).and_then(|drawing| semio_s_artifact_bim_model_plan_linework::render::plan::canvas_bounds(&drawing.lines)).map(|bounds| semio_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 });
     let mut records = records(drawing, selection, utility, labels);
     records.extend(overlay.iter().cloned());
     canvas_surface(SURFACE_ID, config.viewport, framing, &records)

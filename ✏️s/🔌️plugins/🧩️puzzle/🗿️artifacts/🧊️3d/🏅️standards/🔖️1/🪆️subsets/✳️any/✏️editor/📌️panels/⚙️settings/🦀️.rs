@@ -6,15 +6,15 @@
 //! (modifier-driven) in the framework's model now, with no equivalent "default" setting.
 
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::{Buildable, HasBase, HasChildren};
 use {semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
-use {semio_framework_plugin::plugin_app_close_prelude::ActionBinding, semio_framework_plugin::plugin_app_close_prelude::BuiltNode, semio_framework_plugin::plugin_app_close_prelude::Component, semio_framework_plugin::plugin_app_close_prelude::NumberStepperProps, semio_framework_plugin::plugin_app_close_prelude::Trigger};
-use semio_framework_plugin::ActionFactory;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_ui_contract as ui;
+use {semio_plugin::plugin_app_close_prelude::ActionBinding, semio_plugin::plugin_app_close_prelude::BuiltNode, semio_plugin::plugin_app_close_prelude::Component, semio_plugin::plugin_app_close_prelude::NumberStepperProps, semio_plugin::plugin_app_close_prelude::Trigger};
+use semio_plugin::ActionFactory;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const PANEL_TAB_ID: &str = "puzzle3d.panel.settings";
@@ -28,43 +28,43 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn stepper_window_args(window_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let text = semio_framework_plugin::UiText::try_from_str(window_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.text", "settings window id admission failed"))?;
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.map", "settings window map admission failed"))?;
-    builder.push("windowId".to_owned(), semio_framework_plugin::UiValue::Text(text)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.map.entry", "settings window map entry admission failed"))?;
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+fn stepper_window_args(window_id: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let text = semio_plugin::UiText::try_from_str(window_id).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.action.text", "settings window id admission failed"))?;
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.action.map", "settings window map admission failed"))?;
+    builder.push("windowId".to_owned(), semio_plugin::UiValue::Text(text)).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.action.map.entry", "settings window map entry admission failed"))?;
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
-fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str, window_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str, window_id: &str) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, Some(stepper_window_args(window_id)?))?;
     let mut control = BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: true, ..Default::default() }))
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper admission failed"))?;
-    control.bindings.try_push(ActionBinding { trigger: Trigger::Change, action, args, capability: None }).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper binding admission failed"))?;
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper admission failed"))?;
+    control.bindings.try_push(ActionBinding { trigger: Trigger::Change, action, args, capability: None }).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper binding admission failed"))?;
     ui::field(ui_label(label)?)
         .try_id(id)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.field", "settings field id admission failed"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.field", "settings field id admission failed"))?
         .try_child(control)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.field", "settings field child admission failed"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.field", "settings field child admission failed"))?
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.field", "settings field admission failed"))
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.field", "settings field admission failed"))
 }
 
 /// ⚙️ Renders the app settings for ONE window instance. Every stepper tags that instance as `windowId`
 /// so a split layout cannot silently retune the pane the user is not looking at.
-pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, window_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, window_id: &str) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let runtime = &envelope.runtime;
     ui::section(ui_label(if window_id.is_empty() { labels.settings.as_str().to_string() } else { format!("{} — {window_id}", labels.settings.as_str()) })?)
         .try_id("puzzle3d-play-settings")
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.section", "settings section id admission failed"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.section", "settings section id admission failed"))?
         .default_open(true)
-        .try_children(semio_framework_plugin::ui_node_list([
+        .try_children(semio_plugin::ui_node_list([
             stepper_field("puzzle3d-play-settings.contact-tolerance", labels.contact_tolerance.as_str(), runtime.contact_tolerance, 0.001, "setBrushPlacementContactTolerance", window_id),
             stepper_field("puzzle3d-play-settings.proximity-radius", labels.proximity_radius.as_str(), runtime.proximity_radius, 0.1, "setProximityRadius", window_id),
             stepper_field("puzzle3d-play-settings.chunk-size", labels.chunk_size.as_str(), runtime.chunk_size, 1.0, "setChunkSize", window_id),
             stepper_field("puzzle3d-play-settings.grid-spacing", labels.spacing.as_str(), runtime.grid_spacing, 0.5, "setGridSpacing", window_id),
         ])?)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.section", "settings children admission failed"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.section", "settings children admission failed"))?
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.section", "settings section admission failed"))
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.section", "settings section admission failed"))
 }
 //#endregion 🔖️Render

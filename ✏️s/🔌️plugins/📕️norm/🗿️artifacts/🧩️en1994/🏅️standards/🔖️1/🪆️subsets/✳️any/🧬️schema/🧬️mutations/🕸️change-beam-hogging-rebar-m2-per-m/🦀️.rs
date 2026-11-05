@@ -17,8 +17,8 @@ pub struct ChangeBeamHoggingRebarM2PerM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamHoggingRebarM2PerM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_hogging_rebar_m2_per_m::ChangeBeamHoggingRebarM2PerM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-hogging-rebar-m2-per-m", kind: "change-beam-hogging-rebar-m2-per-m", record: "ChangedBeamHoggingRebarM2PerM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change hogging reinforcement per metre", "Stützbewehrung je Meter ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change hogging reinforcement per metre", "Stützbewehrung je Meter ändern")
     }
 }
 

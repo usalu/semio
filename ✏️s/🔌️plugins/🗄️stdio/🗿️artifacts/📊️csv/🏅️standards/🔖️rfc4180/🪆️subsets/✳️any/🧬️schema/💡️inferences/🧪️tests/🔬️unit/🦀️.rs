@@ -31,7 +31,7 @@ mod conformance_laws {
         let grammar_text = crate::standards::v_rfc4180::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO;
         let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
         assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar);
-        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let fixture = crate::examples::demo::PRIMARY_TEXT;
         let (_, body) = store::semio_format::split_text_preamble(fixture).expect("real preamble");
         let ok = recognizer.recognize(body).expect("recognize should not error");

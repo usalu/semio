@@ -18,8 +18,8 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetL
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layout to {:?}", self.layout), &format!("Layout auf {:?} setzen", self.layout))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set layout to {:?}", self.layout), &format!("Layout auf {:?} setzen", self.layout))
     }
 
     fn target(&self) -> Vec<String> {

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeTieRunPsi where Op
         record: "ChangedTieRunPsi",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change combination factor psi (psi_1 or psi_2) of the tie run", "Zuggliedstrang: Kombinationsbeiwert psi (psi_1 oder psi_2) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change combination factor psi (psi_1 or psi_2) of the tie run", "Zuggliedstrang: Kombinationsbeiwert psi (psi_1 oder psi_2) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

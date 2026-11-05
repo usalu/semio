@@ -1,6 +1,6 @@
 //! 🧪️ Each bundled example's committed DSL asset decodes to exactly the model the example claims.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_examples as examples;
 extern crate semio_s_artifact_energy_model_inferences as inferences;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;

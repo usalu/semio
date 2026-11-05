@@ -90,7 +90,7 @@ pub fn mint_artifact_id(existing: &[SpaceArtifactRow], now_ms: u64) -> String {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️TableProjection
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ The space app table's strings (worker-brief task 1: name · id · kind · subset · updated · updated-by ·
     /// presence) — the single source both the editor's and the viewer's `main` window render from (neutral
     /// schema-layer helper so the viewer never has to import from `✏️editor`, `policyViewerPurityBreaches`). The

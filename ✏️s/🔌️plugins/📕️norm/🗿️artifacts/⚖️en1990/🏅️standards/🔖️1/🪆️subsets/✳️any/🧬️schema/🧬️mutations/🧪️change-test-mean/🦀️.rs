@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeTestMean where Op:
         record: "ChangedTestMean",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change sample mean m of the test series", "Versuchsreihe: Stichprobenmittel m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change sample mean m of the test series", "Versuchsreihe: Stichprobenmittel m ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

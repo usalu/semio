@@ -29,8 +29,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UpdateNodePo
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "workflow", kind: "update-node-ports", record: "UpdatedWorkflowNodePorts" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update workflow node ports", "Arbeitsablaufknotenanschlüsse aktualisieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Update workflow node ports", "Arbeitsablaufknotenanschlüsse aktualisieren")
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into()]

@@ -28,8 +28,8 @@ pub fn update_layer_trace_params<Op: From<UpdateLayerTraceParams>>(layer_id: sem
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdateLayerTraceParams where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdateLayerTraceParams> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer-trace-params", record: "UpdatedLayerTraceParams" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\" trace params", self.layer_id), &format!("Nachzeichnungsparameter von Ebene \"{}\" aktualisieren", self.layer_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\" trace params", self.layer_id), &format!("Nachzeichnungsparameter von Ebene \"{}\" aktualisieren", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.to_string_owner()]

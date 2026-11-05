@@ -3,10 +3,10 @@
 use crate::standards::v1_2::subsets::any::io::png_preview;
 use crate::schema::snapshot::PngNativeProfile;
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
-use semio_framework_plugin::app::{ImageView, ImageWindowKit};
-use semio_framework_plugin::{Buildable, BuiltNode, HasBase, WindowKindDefinition, WindowKit};
-use semio_framework_ui_contract::{self as ui, Label};
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::{ImageView, ImageWindowKit};
+use semio_plugin::{Buildable, BuiltNode, HasBase, WindowKindDefinition, WindowKit};
+use semio_ui_contract::{self as ui, Label};
+use semio_ui_locale::Locale;
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
@@ -18,7 +18,7 @@ pub fn definition() -> WindowKindDefinition {
     definition
 }
 
-pub fn render(snapshot: &PngSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &PngSnapshot, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let accessory = native_profile_accessory(snapshot, locale)?;
     match image_view(snapshot) {
         Ok(view) => ImageWindowKit::render_with_accessory(&view, accessory),
@@ -26,8 +26,8 @@ pub fn render(snapshot: &PngSnapshot, locale: Locale) -> semio_framework_plugin:
     }
 }
 
-fn native_profile_accessory(snapshot: &PngSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    snapshot.validate().map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.png.native-profile", message))?;
+fn native_profile_accessory(snapshot: &PngSnapshot, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    snapshot.validate().map_err(|message| semio_plugin::PluginAssemblyError::new("stdio.png.native-profile", message))?;
     let layout = &snapshot.image;
     let profile = match layout.color_type {
         crate::schema::snapshot::PngColorType::Palette => PngNativeProfile::Indexed,
@@ -68,15 +68,15 @@ fn native_profile_accessory(snapshot: &PngSnapshot, locale: Locale) -> semio_fra
         Locale::En => format!("Native paint: {profile_name}, {}-bit samples{range}{interlace}", layout.bit_depth),
         Locale::De => format!("Natives Malen: {profile_name}, {}-Bit-Abtastwerte{range}{interlace}", layout.bit_depth),
     };
-    ui::text(Label::try_from(text.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("stdio.png.native-profile", "native profile label exceeds UI bound"))?)
+    ui::text(Label::try_from(text.as_str()).map_err(|_| semio_plugin::PluginAssemblyError::new("stdio.png.native-profile", "native profile label exceeds UI bound"))?)
         .try_id("png-native-profile-control")
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("stdio.png.native-profile", "native profile control id admission"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("stdio.png.native-profile", "native profile control id admission"))?
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("stdio.png.native-profile", "native profile control build admission"))
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("stdio.png.native-profile", "native profile control build admission"))
 }
 
-fn image_view(snapshot: &PngSnapshot) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
-    let preview = png_preview(snapshot).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.png.preview", message))?;
+fn image_view(snapshot: &PngSnapshot) -> semio_plugin::UiAssemblyResult<ImageView> {
+    let preview = png_preview(snapshot).map_err(|message| semio_plugin::PluginAssemblyError::new("stdio.png.preview", message))?;
     Ok(ImageView { width: preview.width, height: preview.height, mime: "image/png".into(), base64: crate::base64_standard(&preview.bytes) })
 }
 

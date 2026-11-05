@@ -129,13 +129,13 @@ async fn layer_transform_controls_publish_independent_reversible_edits(){
     use semio_s_artifact_raster_raster_model::{create_layer_of_kind, layer_node_id};
     use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
     use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
     for kind in ["pixel","group"] {
         let mut source=empty_raster_snapshot();source.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&source.layers[0]).to_owned();
-        let envelope=store::os_store::document_materialize::create_document_envelope::<RasterSnapshot,RasterMutation>(semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA,"transform-controls",source,None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let envelope=store::os_store::document_materialize::create_document_envelope::<RasterSnapshot,RasterMutation>(semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA,"transform-controls",source,None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files=store::os_store::text_format::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
-        let mut app=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();let mut history=vec![app.snapshot().unwrap()];
+        let mut app=context::app().await;semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();let mut history=vec![app.snapshot().unwrap()];
         for row in fixture["controls"].as_array().unwrap(){
             context::dispatch(&mut app,RasterCommand::PatchLayer(PatchLayer {layer_id:id.clone(),field:row["field"].as_str().unwrap().into(),value:row["value"].to_string()})).await;
             let next=app.snapshot().unwrap();

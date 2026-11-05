@@ -62,8 +62,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "sampler", kind: "create-sampler", record: "CreatedSampler" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Create Sampler", "Sampler erstellen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Create Sampler", "Sampler erstellen")
     }
 
     fn target(&self) -> Vec<String> {

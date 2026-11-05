@@ -4,14 +4,14 @@ use semio_framework_test_fixtures::fixture_text;
 use std::time::Duration;
 use std::time::Instant;
 use crate::shell_channel::{ChannelKind, SHELL_CHANNEL_PAYLOAD_VERSION, SessionChannelBinding, ShellArtifactChannel, decode_app_frame, decode_base64, encode_app_command};
-use semio_framework_os_mcp_bridge::session::BridgeHandle;
-use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
-use semio_framework_os_mcp_bridge_codec::bridge::{BridgeFlags, BridgeInstanceRef, ShellToGateway};
-use semio_framework_os_mcp_catalog::catalog::Catalog;
-use semio_framework_os_mcp_foundation::base64_codec::encode_base64;
-use semio_framework_os_mcp_foundation::reports::RevisionStamp;
-use semio_framework_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, InferenceCancel, MutationOrigin, PreparedOps};
-use semio_framework_os_mcp_port::policy::AgentPrincipal;
+use semio_os_mcp_bridge::session::BridgeHandle;
+use semio_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_os_mcp_bridge_codec::bridge::{BridgeFlags, BridgeInstanceRef, ShellToGateway};
+use semio_os_mcp_catalog::catalog::Catalog;
+use semio_os_mcp_foundation::base64_codec::encode_base64;
+use semio_os_mcp_foundation::reports::RevisionStamp;
+use semio_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, InferenceCancel, MutationOrigin, PreparedOps};
+use semio_os_mcp_port::policy::AgentPrincipal;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

@@ -17,8 +17,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "storey", kind: "delete-storey", record: "DeleteStorey" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete storey \"{}\" with everything on it", self.id), &format!("Geschoss \"{}\" samt Inhalt löschen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete storey \"{}\" with everything on it", self.id), &format!("Geschoss \"{}\" samt Inhalt löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

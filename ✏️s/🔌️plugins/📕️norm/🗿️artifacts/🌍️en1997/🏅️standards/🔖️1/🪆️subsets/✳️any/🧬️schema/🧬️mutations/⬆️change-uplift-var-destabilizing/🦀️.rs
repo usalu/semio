@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeUpliftVarDestabili
         record: "ChangedUpliftVarDestabilizing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change variable destabilizing of the uplift case", "Auftriebsfall: Veränderlich, destabilisierend ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change variable destabilizing of the uplift case", "Auftriebsfall: Veränderlich, destabilisierend ändern")
     }
 }
 

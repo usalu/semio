@@ -1,7 +1,7 @@
 //! 📣️ Replay invalidation, announcements and transactions: the projection invalidation, the pending reports, the suffix replay, the announcement and admission of transitions, the append and the open transaction. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🔄️ Invalidates projections after a verified replay that did not otherwise change history.
     pub fn invalidate_after_replay(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>) -> Result<ArtifactProjectionInvalidation, VcsError> {
@@ -81,7 +81,7 @@ where
         edits: &impl ReplayEdits<Mutation>,
         schema: &str,
         supersessions: &EffectiveSupersessions,
-        policy: semio_framework_os_spr::MergePolicy,
+        policy: semio_os_spr::MergePolicy,
     ) -> Result<EditReplayResult<P, Mutation>, VcsError> {
         EditReplay::new(ReplayMode::Merge(policy), base, order.to_vec(), k, schema, supersessions.clone(), edits)?.run(edits)
     }
@@ -107,7 +107,7 @@ if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !pu
     /// foreign operation its author had observed (advisory, never an ordering constraint) and queues
     /// them for this command's outbound announcement. Announcement happens when the command authors
     /// them, so an edit made during a connection shortage names what its author saw THEN.
-    pub(super) fn announce_operations(&mut self, store_log: &mut StoreLog<P, Mutation>, mut operations: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<(), VcsError> {
+    pub(super) fn announce_operations(&mut self, store_log: &mut StoreLog<P, Mutation>, mut operations: Vec<semio_os_spr::MutationEnvelope>) -> Result<(), VcsError> {
         for operation in &mut operations {
             if operation.observed.is_none() {
                 operation.observed = store_log.observed_foreign_operation(&operation.actor.0);
@@ -116,7 +116,7 @@ if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !pu
         for operation in &operations {
             match store_log.dag.seed_applied(operation.mutation_id.clone()) {
                 Ok(()) => {}
-                Err(rejected) if rejected.error == semio_framework_os_spr::MutationDagError::Duplicate => {}
+                Err(rejected) if rejected.error == semio_os_spr::MutationDagError::Duplicate => {}
                 Err(rejected) => return Err(VcsError::ValidationFailed(rejected.error.to_string())),
             }
         }
@@ -126,8 +126,8 @@ if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !pu
 
     /// 📥️ Admits remote history transitions the causal graph released: known ones must repeat
     /// their established payload, new ones join the log, and the projection follows the fold.
-    pub async fn admit_remote_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, transitions: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
-        let mut fresh: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
+    pub async fn admit_remote_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, transitions: Vec<semio_os_spr::MutationEnvelope>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+        let mut fresh: Vec<semio_os_spr::MutationEnvelope> = Vec::new();
         for envelope in transitions {
             store_log.admit_history_shape(std::slice::from_ref(&envelope))?;
             let pending = self.pending_reprojection.as_ref().map_or(&[][..], |pending| pending.transitions.as_slice());
@@ -166,7 +166,7 @@ if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !pu
     /// refused to it. Answers the retracted ids.
     pub async fn retract_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, refused: &[String]) -> Result<Vec<String>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let actor = store_log.transition_actor();
-        let own: Vec<&semio_framework_os_spr::MutationEnvelope> = store_log.envelope.transitions.iter().filter(|transition| transition.actor == actor).collect();
+        let own: Vec<&semio_os_spr::MutationEnvelope> = store_log.envelope.transitions.iter().filter(|transition| transition.actor == actor).collect();
         let retracted = transition_retraction_closure(&own, |transition| transition.mutation_id.0.as_str(), |transition| transition.dependencies.iter().map(|dependency| dependency.0.as_str()).collect(), refused);
         if retracted.is_empty() {
             return Ok(retracted);
@@ -199,18 +199,18 @@ if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !pu
     /// top a tail step just moved there with nothing happening since (`Redo`), authored by that edit's own actor. The fold then
     /// moves exactly that edit between the stacks (`crate::os_spr::fold_history_for`): a `Revert` pushes it onto the redo
     /// stack, a `Reinstate` takes it back at its own HLC position, which is the tail (design §20.14, D22).
-    pub fn tail_step(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, store_live: &StoreLive<P, Mutation>, envelope: &semio_framework_os_spr::MutationEnvelope) -> Option<TailStep> {
+    pub fn tail_step(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, store_live: &StoreLive<P, Mutation>, envelope: &semio_os_spr::MutationEnvelope) -> Option<TailStep> {
         let frontier = store_live.fold_frontier.filter(|_| self.fold_is_live(store_live) && !store_live.current_detached && store_log.envelope.viewer_checkpoint_id.is_none() && store_log.envelope.open_transaction.is_none())?;
         if envelope.timestamp.cmp_key() <= frontier {
             return None;
         }
-        let (step, mutation_ids, edit_id) = match semio_framework_os_spr::history_transition_from_envelope(envelope).ok()?? {
-            semio_framework_os_spr::HistoryTransition::Revert { mutation_ids } if store_log.redo_edit_ids.admits_one() => (TailStep::Undo, mutation_ids, store_log.applied_edit_ids.last()?),
-            semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids } if store_live.tail_step_generation == Some(store_cursor.generation) && store_log.applied_edit_ids.admits_one() => (TailStep::Redo, mutation_ids, store_log.redo_edit_ids.last()?),
+        let (step, mutation_ids, edit_id) = match semio_os_spr::history_transition_from_envelope(envelope).ok()?? {
+            semio_os_spr::HistoryTransition::Revert { mutation_ids } if store_log.redo_edit_ids.admits_one() => (TailStep::Undo, mutation_ids, store_log.applied_edit_ids.last()?),
+            semio_os_spr::HistoryTransition::Reinstate { mutation_ids } if store_live.tail_step_generation == Some(store_cursor.generation) && store_log.applied_edit_ids.admits_one() => (TailStep::Redo, mutation_ids, store_log.redo_edit_ids.last()?),
             _ => return None,
         };
         let edit = store_log.envelope.vcs.edits.find_near(|edit| edit.id == *edit_id)?;
-        let owned: HashSet<MutationId> = semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().collect();
+        let owned: HashSet<MutationId> = semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().collect();
         let exact = mutation_ids.len() == owned.len() && mutation_ids.iter().all(|mutation_id| owned.contains(mutation_id));
         (exact && edit.actor.as_deref().is_none_or(|actor| actor == envelope.actor.0.as_str())).then_some(step)
     }

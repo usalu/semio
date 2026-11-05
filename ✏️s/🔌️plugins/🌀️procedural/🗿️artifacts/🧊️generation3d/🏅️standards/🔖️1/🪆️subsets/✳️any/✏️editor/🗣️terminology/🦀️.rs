@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 3D flow app; one field per label makes every locale combination compile-checked.
     pub struct Generation3dLabels {
         catalogue_inputs: native_en "Inputs", native_de "Eingaben", reuse_en "Inputs", reuse_de "Eingaben";
@@ -703,8 +703,8 @@ pub fn generation3d_input_name<'a>(labels: &'a Generation3dLabels, id: &str, nam
 }
 
 /// 🗣️ Resolves the active label set from the shared view model.
-pub fn generation3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Generation3dLabels {
-    semio_framework_plugin::resolve_labels::<Generation3dLabels>(view_state)
+pub fn generation3d_labels(view_state: &semio_plugin::ViewModel) -> &'static Generation3dLabels {
+    semio_plugin::resolve_labels::<Generation3dLabels>(view_state)
 }
 
 //#endregion 🔖️Labels

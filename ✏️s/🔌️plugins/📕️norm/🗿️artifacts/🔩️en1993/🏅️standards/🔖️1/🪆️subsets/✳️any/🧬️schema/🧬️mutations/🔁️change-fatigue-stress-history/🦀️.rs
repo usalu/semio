@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFatigueStressHisto
         record: "ChangedFatigueStressHistory",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stress history Δσ in N/mm² as numbers separated by spaces; rainflow counted into the blocks of the damage sum when the spectrum is empty of the fatigue detail", "Ermüdungsdetail: Spannungsgeschichte σ in N/mm² als durch Leerzeichen getrennte Zahlen; wird bei leerem Kollektiv mit Rainflow in die Blöcke der Schadenssumme gezählt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stress history Δσ in N/mm² as numbers separated by spaces; rainflow counted into the blocks of the damage sum when the spectrum is empty of the fatigue detail", "Ermüdungsdetail: Spannungsgeschichte σ in N/mm² als durch Leerzeichen getrennte Zahlen; wird bei leerem Kollektiv mit Rainflow in die Blöcke der Schadenssumme gezählt ändern")
     }
 }
 

@@ -6,7 +6,7 @@ use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework::DslValue;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ExportModel
@@ -56,7 +56,7 @@ pub mod load_model_request {
         _cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(111), accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false, args: None }))
+        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_plugin::RequestId(111), accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false, args: None }))
     }
 }
 //#endregion 🔖️LoadModelRequest

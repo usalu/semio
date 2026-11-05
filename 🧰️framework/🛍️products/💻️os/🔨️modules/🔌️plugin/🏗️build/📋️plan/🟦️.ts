@@ -33,12 +33,7 @@ const WGPU_SCRIPT_PATH = join(WGPU_PACKAGE_ROOT, "📜️script.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
-/** 🎭️ Playwright is a TEST-ONLY dependency, loaded lazily by the harness commands below. The
- * specifier is held in a constant so no bundler can statically resolve it: `⚙️vite.config.ts` imports
- * this module for its Vite plugins, and a literal `import("playwright")` makes bun follow the dynamic
- * import while LOADING THE CONFIG — dragging `playwright-core` into a browser build and failing on its
- * uninstalled optional `chromium-bidi`. Runtime behaviour is identical. */
-const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
+
 
 /** 🎯 Ensures the wasip2 rustc target is installed for plugin component builds. */
 function ensureWasmTarget(): void {
@@ -96,4 +91,4 @@ function resolveCatalogFilterPluginId(filterPlugin?: string, catalog: CatalogSel
   return filterPlugin && !projectedHostPluginFilter(catalog, filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 
-export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, discoverPluginBuildCatalog, ensureWasmTarget, playgroundCatalog, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };
+export { PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, discoverPluginBuildCatalog, ensureWasmTarget, playgroundCatalog, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };

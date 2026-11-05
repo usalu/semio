@@ -1,16 +1,16 @@
 //! 🧲️ World3d interaction cursors: ray, object and component picking, marquee selection and gumball gestures.
 //!
-//! Crate `semio-framework-os-infinite-world-cursors`; a downward producer of the infinite world family (wasi-excluded except tests).
+//! Crate `semio-os-infinite-world-cursors`; a downward producer of the infinite world family (wasi-excluded except tests).
 
 #![cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 
-use semio_framework_os_infinite_world_model::{ROTATE_SELECTION_ACTION_ID, SCALE_SELECTION_ACTION_ID, TRANSLATE_SELECTION_ACTION_ID, WORLD_INTERACTION_BYTE_CAPACITY, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_MARQUEE_POINT_CAPACITY, WORLD_INTERACTION_MESH_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, world_pick_keys_match, world_pick_target_ray_score, WorldCancelReason, WorldFlatAction, WorldFlatActionKind, WorldInteractionMeshRegistry, WorldInteractionMeshToken, WorldInteractionObjectKind, WorldInteractionObjectRegistry, WorldInteractionObjectSlot, WorldInteractionObjectToken, WorldInteractionPlan, WorldInteractionSpan, WorldInteractionState, WorldInteractionStep, WorldMeshSource, WorldSessionState};
-use semio_framework_os_infinite_world_components::{GumballHandle, world3d_declares_action, World3dSceneGumballConfigRecord, WORLD_COMPONENT_TARGET_BYTE_CAPACITY, world_mesh_component_id, world_mesh_triangle, world_mesh_vertex, WorldCameraState, WorldComponentAddress, WorldGumballState, WorldSceneState, WorldSelectionState};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_os_infinite_world_model::{ROTATE_SELECTION_ACTION_ID, SCALE_SELECTION_ACTION_ID, TRANSLATE_SELECTION_ACTION_ID, WORLD_INTERACTION_BYTE_CAPACITY, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_MARQUEE_POINT_CAPACITY, WORLD_INTERACTION_MESH_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, world_pick_keys_match, world_pick_target_ray_score, WorldCancelReason, WorldFlatAction, WorldFlatActionKind, WorldInteractionMeshRegistry, WorldInteractionMeshToken, WorldInteractionObjectKind, WorldInteractionObjectRegistry, WorldInteractionObjectSlot, WorldInteractionObjectToken, WorldInteractionPlan, WorldInteractionSpan, WorldInteractionState, WorldInteractionStep, WorldMeshSource, WorldSessionState};
+use semio_os_infinite_world_components::{GumballHandle, world3d_declares_action, World3dSceneGumballConfigRecord, WORLD_COMPONENT_TARGET_BYTE_CAPACITY, world_mesh_component_id, world_mesh_triangle, world_mesh_vertex, WorldCameraState, WorldComponentAddress, WorldGumballState, WorldSceneState, WorldSelectionState};
+use semio_ui_declaration::layout::ActionDescriptor;
 use ui_scene::math::{axis_rotate_angle, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, Mat4, Mesh3dField, ray_aabb_slab, ray_plane_point, ray_segment_distance, Vec3};
-use semio_framework_ui_theme::geometry::Rect;
+use semio_ui_theme::geometry::Rect;
 use semio_framework::{MergeMode, SelectionMethod};
-use semio_framework_ui_viewport::Viewport3dProjectionSpec;
+use semio_ui_viewport::Viewport3dProjectionSpec;
 
 /// 🎛️ The gumball config THIS surface offers: the plugin-authored one when it published one,
 /// otherwise the single-mode fallback for its `transformMode`.
@@ -210,12 +210,12 @@ pub(crate) const INTERACTION_TARGETS_TAIL: &str = "\"}";
 /// surface. A miss on any of the three spans is an EMPTY target list — the clear, which the fixture's
 /// `background-click-clears` case requires to be a dispatch rather than a silence.
 pub struct WorldInteractionText {
-    pub bytes: [u8; semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY],
+    pub bytes: [u8; semio_ui_action::ACTION_STRING_BYTE_CAPACITY],
     pub len: usize,
 }
 
 impl Default for WorldInteractionText {
-    fn default() -> Self { Self { bytes: [0; semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY], len: 0 } }
+    fn default() -> Self { Self { bytes: [0; semio_ui_action::ACTION_STRING_BYTE_CAPACITY], len: 0 } }
 }
 
 impl std::fmt::Write for WorldInteractionText {

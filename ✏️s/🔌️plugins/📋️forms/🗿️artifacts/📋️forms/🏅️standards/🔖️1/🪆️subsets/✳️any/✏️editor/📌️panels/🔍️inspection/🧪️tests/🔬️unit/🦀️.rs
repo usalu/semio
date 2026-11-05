@@ -1,4 +1,4 @@
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 use crate::editor::forms::panels::inspection::*;
 use crate::editor::forms::unit_tests::context::{forms_app, render as render_body};
 use crate::editor::forms::FORMS_PLAY_BODY_INSPECTION as BODY_INSPECTION;

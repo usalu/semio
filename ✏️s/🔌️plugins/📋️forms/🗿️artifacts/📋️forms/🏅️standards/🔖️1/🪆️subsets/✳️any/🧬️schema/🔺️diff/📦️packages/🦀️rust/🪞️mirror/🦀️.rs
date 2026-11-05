@@ -107,8 +107,6 @@ pub mod editor {
         pub mod questions {
             #[path = "../../../../../✏️editor/❓️questions/🫥️visibility/🦀️.rs"]
             pub mod visibility;
-            #[path = "../../../../../✏️editor/❓️questions/🧩️extensions/🦀️.rs"]
-            pub mod extensions;
         }
         pub use semio_s_artifact_forms_forms_tests::editor::forms::terminology;
         pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
@@ -122,3 +120,6 @@ pub mod editor {
         }
     }
 }
+
+#[path = "../../../../../🧩️extensions/🦀️.rs"]
+pub mod question_extensions;

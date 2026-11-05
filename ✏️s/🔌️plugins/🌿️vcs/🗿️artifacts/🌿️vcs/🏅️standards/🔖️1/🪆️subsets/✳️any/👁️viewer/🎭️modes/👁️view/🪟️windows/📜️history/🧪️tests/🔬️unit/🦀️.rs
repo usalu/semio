@@ -1,5 +1,5 @@
 use crate::VcsSnapshot;
-use semio_framework_plugin::HistoryView;
+use semio_plugin::HistoryView;
 use crate::viewer::vcs::modes::view::windows::history::{VCS_UNTITLED_LABEL, history_tree_view};
 use crate::viewer::vcs::modes::view::windows::history::*;
 
@@ -41,6 +41,6 @@ async fn a_document_without_checkpoints_still_paints_its_own_row() {
     assert!(view.roots[0].children.is_empty());
     let untitled = crate::VcsSnapshot { title: String::new(), ..genesis.clone() };
     assert_eq!(history_tree_view(&untitled, &HistoryView::empty()).roots[0].label, VCS_UNTITLED_LABEL);
-    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&genesis, &HistoryView::empty()).expect("render"))).expect("projection");
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(render(&genesis, &HistoryView::empty()).expect("render"))).expect("projection");
     assert!(projection.contains(&genesis.title), "{projection}");
 }

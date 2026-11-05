@@ -1,8 +1,8 @@
 use semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io as io_root;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
-use semio_framework_plugin::{ ArtifactDeserializer};
+use semio_plugin::{ ArtifactDeserializer};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
 use semio_s_artifact_stdio_stl::standards::v_ascii::engine::decode_stl_ascii;
@@ -23,7 +23,7 @@ impl Deserializer<RemodelingSnapshot> for StlIntoRemodeling {
             _ => Confidence::None,
         }
     }
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<RemodelingSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<RemodelingSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "stl→remodeling: expected a text ascii-stl payload".to_string())));
         };

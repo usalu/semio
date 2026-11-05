@@ -5,7 +5,7 @@ use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 #[test]
 fn preview_replacement_publication_and_retirement_obey_tiny_grants() {
-    use semio_framework_plugin::WindowTransientOwner;
+    use semio_plugin::WindowTransientOwner;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔀️codec/🔣️.json")).unwrap();
     let owners = Block3dWorldWindowTransientOwner::build_owners();
     for row in fixture["cases"].as_array().unwrap() {
@@ -46,7 +46,7 @@ fn preview_partition_matches_language_neutral_json_oracle() {
         let preview = serde_json::from_value::<Option<Block3dBrushPreview>>(step["preview"].clone()).expect("preview");
         let mutation = Block3dWorldWindowTransientMutation::from(SetBrushPreview { preview });
         let state = typed.entry(window_id.clone()).or_default();
-        *state = protocol::apply_diff_cold(::semio_framework_os_kernel::ColdMutation::diff(&mutation, state).diff(), state).expect("valid transient diff");
+        *state = protocol::apply_diff_cold(::semio_os_kernel::ColdMutation::diff(&mutation, state).diff(), state).expect("valid transient diff");
         oracle.insert(window_id, step["preview"].clone());
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
     }

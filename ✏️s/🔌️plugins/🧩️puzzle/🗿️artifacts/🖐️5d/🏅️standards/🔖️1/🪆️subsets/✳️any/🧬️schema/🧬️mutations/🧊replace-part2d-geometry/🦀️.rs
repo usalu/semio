@@ -27,8 +27,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace part \"{}\" 2d geometry", self.id), &format!("2D-Geometrie von Bauteil \"{}\" ersetzen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace part \"{}\" 2d geometry", self.id), &format!("2D-Geometrie von Bauteil \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

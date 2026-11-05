@@ -1,6 +1,6 @@
 //! 🗣️ Remodeling play app — the complete UI label set. ONE `app_labels!` block, never split (TEMPLATE §4).
 
-use semio_framework_ui_locale::app_labels;
+use semio_ui_locale::app_labels;
 
 app_labels! {
     /// 🗣️ Complete UI label set for the remodeling play app; one field per label makes every locale
@@ -93,6 +93,6 @@ app_labels! {
 }
 
 /// 🌐️ Resolves the label set for the config's current BCP-47 locale tag.
-pub fn remodeling_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static RemodelingLabels {
-    semio_framework_plugin::resolve_labels::<RemodelingLabels>(view_state)
+pub fn remodeling_labels(view_state: &semio_plugin::ViewModel) -> &'static RemodelingLabels {
+    semio_plugin::resolve_labels::<RemodelingLabels>(view_state)
 }

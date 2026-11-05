@@ -1,5 +1,5 @@
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use crate::editor::mp3::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
@@ -16,7 +16,7 @@ async fn render_produces_a_scene_node_for_the_default_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_transport_is_ready_only_with_a_live_revision_bound_resource_and_explains_otherwise_in_both_locales() {
-    use semio_framework_plugin::app::{MediaCapabilityStatus, MediaResource};
+    use semio_plugin::app::{MediaCapabilityStatus, MediaResource};
     let resource = MediaResource { controller_id: "s.stdio.mp3@mpeg1-layer3/*#editor".into(), app_instance_id: 1, parent_document_id: "document".into(), output_port: "playback:out".into(), revision: "7".into(), generation: "1".into() };
     for locale in [Locale::En, Locale::De] {
         let ready = view(&Mp3Snapshot::default(), locale, Some(resource.clone()), None);

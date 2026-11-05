@@ -4,8 +4,8 @@
 //! tiled map host with its tile fetch reservation.
 
 extern crate infinite_canvas as infinite_world;
-extern crate semio_framework_os_renderer_wgpu_asset_authority as asset_authority;
-extern crate semio_framework_os_renderer_wgpu_contracts as element_contracts;
+extern crate semio_renderer_wgpu_asset_authority as asset_authority;
+extern crate semio_renderer_wgpu_contracts as element_contracts;
 
 #[path = "../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🎲️board2d/🦀️.rs"]
 pub mod board2d;

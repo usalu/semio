@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "annual-schedule", kind: "remove-annual-schedule-rule", record: "RemovedAnnualScheduleRule" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove rule {} of annual schedule {}", self.index, self.id.0), &format!("Regel {} aus Jahreszeitplan {} entfernen", self.index, self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove rule {} of annual schedule {}", self.index, self.id.0), &format!("Regel {} aus Jahreszeitplan {} entfernen", self.index, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

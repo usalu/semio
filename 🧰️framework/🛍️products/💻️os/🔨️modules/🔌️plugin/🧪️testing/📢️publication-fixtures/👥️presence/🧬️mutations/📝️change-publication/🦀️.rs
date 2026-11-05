@@ -63,12 +63,12 @@ impl MutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePu
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change publication presence to {}", self.revision), &format!("Veröffentlichungspräsenz auf {} ändern", self.revision))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change publication presence to {}", self.revision), &format!("Veröffentlichungspräsenz auf {} ändern", self.revision))
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePublicationPresence {
+impl semio_os_command::ColdMutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePublicationPresence {
     fn diff(&self, _base: &PublicationPresence) -> MutationOutcome<crate::publication_fixture::presence::PublicationPresenceDiff> {
         MutationOutcome::new(crate::publication_fixture::presence::PublicationPresenceDiff { revision: Some(self.revision) })
     }

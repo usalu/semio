@@ -5,7 +5,7 @@ use semio_s_artifact_draw_drawing_geometry::editing::{edit_path, PathEdit, PathP
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
+use semio_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 use std::collections::{BTreeMap,BTreeSet};
 use semio_framework_value::paged::PagedUtf8;
 

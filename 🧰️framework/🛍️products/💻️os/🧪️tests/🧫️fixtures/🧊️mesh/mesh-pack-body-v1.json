@@ -1,5 +1,5 @@
 {
-  "_comment": "🧊️ Cross-language golden wire vector for the brep preview mesh `pack` record body. Rust encodes and decodes these exact bytes in semio-framework-os-flow's brep_geometry unit tests; TypeScript decodes the same bytes in 🧪️mesh-pack-decode via decodeMeshPackBody.",
+  "_comment": "🧊️ Cross-language golden wire vector for the brep preview mesh `pack` record body. Rust encodes and decodes these exact bytes in semio-os-flow's brep_geometry unit tests; TypeScript decodes the same bytes in 🧪️mesh-pack-decode via decodeMeshPackBody.",
   "mesh": {
     "positions": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
     "normals": [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],

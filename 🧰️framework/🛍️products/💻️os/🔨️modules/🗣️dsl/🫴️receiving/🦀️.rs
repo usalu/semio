@@ -6,7 +6,7 @@ pub use semio_framework_value_native_owned::OriginalReceivingPrimary;
 pub use protocol::{OpBinaryReceiving,OpBinaryReceivingCursor};
 use semio_framework_value::{RetainedCloneStep, RetirementDemand, ValueRefusalKind, retirement::{RetireOwned, RetirementCursor, RetirementStep}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use semio_framework_os_pack::record::RetainedRecordReceiving;
+use semio_os_pack::record::RetainedRecordReceiving;
 use std::mem::{ManuallyDrop,size_of};
 /// 🎞️ Implements an authored ordinal operation only through its actual owned receiving capability.
 #[macro_export]
@@ -70,7 +70,7 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
   let turn=match self.phase{
    4 if !match self.record.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("record absent").into()),work:0}}.is_ready()=>match self.record.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("record absent").into()),work:0}}.step(source,native,grant_child(grant)),
    5 if !match self.binding.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("binding absent").into()),work:0}}.is_ready()=>match self.binding.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("binding absent").into()),work:0}}.step(&mut self.generic.value,native,body,grant_child(grant)),
-   3=>{let result=self.spec();match result{Err(e)=>RetainedWorkOutcome{result:Err(e.into()),work:0},Ok((_,spec))=>{let turn=RetainedRecordReceiving::admit(source,(self.position,self.range.1),spec,semio_framework_os_pack::PackLimits::default(),grant_child(grant));let result=turn.result.map(|owner|match owner{Some((owner,p))=>{self.record=Some(owner);self.phase=4;p},None=>Default::default()});Self::fixed_post(native,grant,RetainedWorkOutcome{result,work:turn.work})}}},
+   3=>{let result=self.spec();match result{Err(e)=>RetainedWorkOutcome{result:Err(e.into()),work:0},Ok((_,spec))=>{let turn=RetainedRecordReceiving::admit(source,(self.position,self.range.1),spec,semio_os_pack::PackLimits::default(),grant_child(grant));let result=turn.result.map(|owner|match owner{Some((owner,p))=>{self.record=Some(owner);self.phase=4;p},None=>Default::default()});Self::fixed_post(native,grant,RetainedWorkOutcome{result,work:turn.work})}}},
    4=>{let mut original=None;let turn=match self.record.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("record absent").into()),work:0}}.take_into(&mut original,grant_child(grant));if let Some(value)=original{*self.generic.value=Some(FieldValue::Record(value));self.phase=5}Self::fixed_post(native,grant,turn)},
    5=>{let turn=match self.binding.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("binding absent").into()),work:0}}.take_into(&mut self.output.value,grant_child(grant));if self.output.value.is_some(){self.phase=6}Self::post(native,grant,turn)},
    _=>{

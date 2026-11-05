@@ -528,7 +528,7 @@ const POLICY_REGISTRATION_FAMILY_FNS = [
   "register_artifact_descriptor",
 ] as const;
 const POLICY_REGISTRATION_FAMILY_RE = new RegExp(String.raw`\b(${POLICY_REGISTRATION_FAMILY_FNS.join("|")})\b`);
-const POLICY_REGISTRATION_OS_PATH_RE = /\bsemio_framework_os::/;
+const POLICY_REGISTRATION_OS_PATH_RE = /\bsemio_os::/;
 
 /** 🧭️True when `relPath` sits inside a `🗿️artifacts/<kind>/…/⚙️engine/…` subtree — the sole currently-compliant interim registration site per 📓️w0-a-escape-hatch.md §2a. */
 function policyRegistrationIsEngineSite(relPath: string): boolean {
@@ -558,7 +558,7 @@ function policyRegistrationBreach(relPath: string, lineNo: number, isEngine: boo
     scope: relPath,
     line: lineNo,
     priority: "medium",
-    reason: 'APA: registration/IO for a kind belongs to that kind\'s own artifact ⚙️engine — a 🔧️setup facet, app file, pane, panel, command handler, or plugin root calling the global registration family (or reaching into semio_framework_os::) mutates OS-host state from the wrong layer, and can register a kind the caller doesn\'t even own (💠️lowpoly registering "3d.mesh" — w0-a §2b-§2d; the 🎪️demonstrator half of that exemplar is RESOLVED, ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2 moved its process/procedural/gis/cad registrations to those owners and dropped its semio-framework-os dependency, so a demonstrator hit here is now a regression, not a known backlog).',
+    reason: 'APA: registration/IO for a kind belongs to that kind\'s own artifact ⚙️engine — a 🔧️setup facet, app file, pane, panel, command handler, or plugin root calling the global registration family (or reaching into semio_os::) mutates OS-host state from the wrong layer, and can register a kind the caller doesn\'t even own (💠️lowpoly registering "3d.mesh" — w0-a §2b-§2d; the 🎪️demonstrator half of that exemplar is RESOLVED, ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2 moved its process/procedural/gis/cad registrations to those owners and dropped its semio-os dependency, so a demonstrator hit here is now a regression, not a known backlog).',
     solution: `Delete the ${what} call at ${relPath}:${lineNo} and move the registration into the owning artifact's own 🗿️artifacts/<kind>/…/⚙️engine/ (or, for register_app_io/register_os_fixture_json, into the app's own declarative registration path once M1 lands).`,
   };
 }
@@ -567,7 +567,7 @@ function policyRegistrationBreach(relPath: string, lineNo: number, isEngine: boo
  * 🪝️Declarative registration: under `✏️s/🔌️plugins/`, flags (a) `.setup(` inside a `Plugin::builder(…)`
  * chain — registration must be declarative data, not an imperative callback (M1 retires `PluginBuilder`'s
  * `setup: Option<fn()>`); (b) any call to the exhaustive global registration family; (c) any
- * `semio_framework_os::` path reference (the OS host crate is forbidden to plugins). (b)/(c) are split into
+ * `semio_os::` path reference (the OS host crate is forbidden to plugins). (b)/(c) are split into
  * two separable kinds: a call inside the owning artifact's own `⚙️engine` is the currently-compliant
  * interim shape (migration backlog); the same call anywhere else (`🔧️setup/`, `🎛️apps/`, `📌️panels/`,
  * `🎮️commands/`, or the plugin root) is a live architecture violation. (`🎪️panes/` used to head that
@@ -611,7 +611,7 @@ function policyDeclarativeRegistrationBreaches(repoRoot: string): BreachRecord[]
       const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
       const fnMatch = codeOnly.match(POLICY_REGISTRATION_FAMILY_RE);
       if (fnMatch) breaches.push(policyRegistrationBreach(relPath, lineNo, isEngine, "family-call", `${fnMatch[1]}(...)`));
-      if (POLICY_REGISTRATION_OS_PATH_RE.test(codeOnly)) breaches.push(policyRegistrationBreach(relPath, lineNo, isEngine, "os-host-path", "semio_framework_os::"));
+      if (POLICY_REGISTRATION_OS_PATH_RE.test(codeOnly)) breaches.push(policyRegistrationBreach(relPath, lineNo, isEngine, "os-host-path", "semio_os::"));
     });
   }
   return breaches;
@@ -623,12 +623,12 @@ function policyDeclarativeRegistrationBreaches(repoRoot: string): BreachRecord[]
 const POLICY_PLUGIN_DEP_ALLOWLIST = new Set<string>();
 
 /** ✅️What a plugin legitimately needs per 📓️w0-d-sdk-surface.md §3.1: the plugin SDK, the os-kernel crate, the 3d crates (base plus the four brep crates of the wave E4 cut) where genuinely used, and schema. Everything else pointing into 🧰️framework/ is a bypass of the curated SDK surface. */
-const POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST = new Set(["semio-framework-plugin", "semio-framework-os-kernel", "semio-framework-3d", "semio-framework-3d-brep-polynomial", "semio-framework-3d-brep-vector", "semio-framework-3d-brep-tolerance", "semio-framework-3d-brep-curve", "semio-framework-3d-brep-surface", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-intersect", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-tessellation", "semio-framework-3d-brep-validation", "semio-framework-3d-brep-analysis", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine", "semio-framework-schema"]);
+const POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST = new Set(["semio-plugin", "semio-os-kernel", "semio-framework-3d", "semio-framework-3d-brep-polynomial", "semio-framework-3d-brep-vector", "semio-framework-3d-brep-tolerance", "semio-framework-3d-brep-curve", "semio-framework-3d-brep-surface", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-intersect", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-tessellation", "semio-framework-3d-brep-validation", "semio-framework-3d-brep-analysis", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine", "semio-framework-schema"]);
 /** 🎉️serde-family third-party crates are always allowed regardless of how they're declared (version-pinned, not path-pointed at 🧰️framework, so they never reach this rule's path filter anyway — kept for defense in depth). */
 const POLICY_PLUGIN_DEP_SERDE_RE = /^serde(_json|-wasm-bindgen)?$/;
 
 /**
- * 🔣️Exact `semio_framework_os::` symbols each plugin's own `.rs` files use (📓️w0-d-sdk-surface.md §3.2)
+ * 🔣️Exact `semio_os::` symbols each plugin's own `.rs` files use (📓️w0-d-sdk-surface.md §3.2)
  * — keyed by plugin owner dir name, folded into the breach `solution` so the SDK re-export fix is
  * obvious from the breach alone. An empty array means the dependency is declared but 0 uses were found
  * (UNVERIFIED why — w0-d flags ✒️writer/📐️cad/🔱️trinity/🖍️draw as likely stale/unused declarations).
@@ -639,7 +639,7 @@ const POLICY_PLUGIN_DEP_OS_SYMBOLS: Readonly<Record<string, readonly string[]>> 
   "🌍️gis": ["DwgColor", "DwgEntity", "register_2d_export_handlers", "register_dwg_import_handler"],
   // 🎪️ BANNED, not downgraded (ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION
   // D2): the demonstrator's twelve foreign-kind registrations moved to their owners (📐️cad, 🌍️gis),
-  // and `semio-framework-os` is gone from its Cargo.toml. The empty array is the ratchet — if the
+  // and `semio-os` is gone from its Cargo.toml. The empty array is the ratchet — if the
   // dependency is ever reintroduced, `policyPluginDependencyAllowlistBreaches` flags it with no
   // carve-out to soften the message.
   "🎪️demonstrator": [],
@@ -664,7 +664,7 @@ function policyPluginOwnerFromApaPath(relPath: string): string {
   return relPath.slice(POLICY_APA_PLUGINS_ROOT.length + 1).split("/")[0] ?? "";
 }
 
-/** 🔎️Every `[dependencies]` / `[target.'cfg(...)'.dependencies]` section header's byte offset (start of the section body) in `content`, matching the shape 🧩️puzzle's cfg-gated `semio-framework-os` dependency actually uses (📓️w0-d-sdk-surface.md §3.2). Deliberately excludes `[dev-dependencies]` — dev/test-time deps are out of this rule's runtime-purity scope. */
+/** 🔎️Every `[dependencies]` / `[target.'cfg(...)'.dependencies]` section header's byte offset (start of the section body) in `content`, matching the shape 🧩️puzzle's cfg-gated `semio-os` dependency actually uses (📓️w0-d-sdk-surface.md §3.2). Deliberately excludes `[dev-dependencies]` — dev/test-time deps are out of this rule's runtime-purity scope. */
 const POLICY_PLUGIN_DEP_SECTION_RE = /^\[(?:dependencies|target\.[^\]]*\.dependencies)\]\s*$/gm;
 const POLICY_PLUGIN_DEP_ANY_SECTION_RE = /^\[[^\]]*\]\s*$/gm;
 const POLICY_PLUGIN_DEP_LINE_RE = /^([A-Za-z0-9_.-]+)\s*=\s*\{([^}]*)\}\s*$/gm;
@@ -673,7 +673,7 @@ const POLICY_PLUGIN_DEP_LINE_RE = /^([A-Za-z0-9_.-]+)\s*=\s*\{([^}]*)\}\s*$/gm;
  * ⛓️Plugin dependency allowlist: parses every `[dependencies]`/`[target.'cfg(...)'.dependencies]` block
  * in every `Cargo.toml` under `✏️s/🔌️plugins/<owner>/.../📦️packages/🦀️rust/` and flags every dependency whose
  * `path =` points into `🧰️framework/` and whose crate name (the `package = "..."` override, or the TOML
- * key) is outside `POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST`. `semio-framework-os` (the HOST crate) is the
+ * key) is outside `POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST`. `semio-os` (the HOST crate) is the
  * headline forbidden one and gets its own kind + the exact offending symbol list in `solution`.
  */
 function policyPluginDependencyAllowlistBreaches(repoRoot: string): BreachRecord[] {
@@ -708,25 +708,25 @@ function policyPluginDependencyAllowlistBreaches(repoRoot: string): BreachRecord
         const crateName = pkgMatch ? pkgMatch[1]! : key;
         if (POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST.has(crateName) || POLICY_PLUGIN_DEP_SERDE_RE.test(crateName)) continue;
         const lineNo = policyLineOfIndex(content, start + m.index);
-        const isOsHost = crateName === "semio-framework-os";
+        const isOsHost = crateName === "semio-os";
         const symbols = isOsHost ? (POLICY_PLUGIN_DEP_OS_SYMBOLS[owner] ?? []) : [];
         breaches.push({
           id: `plugin-dependency-allowlist-${relPath}-${crateName}`,
           summary: isOsHost
-            ? `"${relPath}" depends on the forbidden HOST crate "semio-framework-os"${symbols.length ? ` (uses: ${symbols.join(", ")})` : " (0 semio_framework_os:: uses found — likely a stale/unused dependency)"}`
+            ? `"${relPath}" depends on the forbidden HOST crate "semio-os"${symbols.length ? ` (uses: ${symbols.join(", ")})` : " (0 semio_os:: uses found — likely a stale/unused dependency)"}`
             : `"${relPath}" depends on framework crate "${crateName}", outside the plugin dependency allowlist`,
           kind: isOsHost ? "taxonomy/plugin-dependency-os-host" : "taxonomy/plugin-dependency-allowlist",
           scope: relPath,
           line: lineNo,
           priority: "medium",
           reason: isOsHost
-            ? "APA/M3: semio-framework-os is the OS HOST crate — plugins may depend only on semio-framework-plugin, the os-kernel crate, semio-framework-3d and its semio-framework-3d-brep-* crates, semio-framework-schema, and serde-family third-party crates; the host crate's types/fns must be re-exported through the SDK instead (📓️w0-d-sdk-surface.md §3.2)."
-            : "APA/M3: the plugin dependency allowlist is semio-framework-plugin + the os-kernel crate + semio-framework-3d and semio-framework-3d-brep-* (where genuinely used) + semio-framework-schema + serde-family — every other framework crate is a bypass of the curated SDK surface (📓️w0-d-sdk-surface.md §3.1).",
+            ? "APA/M3: semio-os is the OS HOST crate — plugins may depend only on semio-plugin, the os-kernel crate, semio-framework-3d and its semio-framework-3d-brep-* crates, semio-framework-schema, and serde-family third-party crates; the host crate's types/fns must be re-exported through the SDK instead (📓️w0-d-sdk-surface.md §3.2)."
+            : "APA/M3: the plugin dependency allowlist is semio-plugin + the os-kernel crate + semio-framework-3d and semio-framework-3d-brep-* (where genuinely used) + semio-framework-schema + serde-family — every other framework crate is a bypass of the curated SDK surface (📓️w0-d-sdk-surface.md §3.1).",
           solution: isOsHost
             ? symbols.length > 0
-              ? `Remove "${crateName}" from ${relPath} and add explicit re-exports for [${symbols.join(", ")}] to semio_framework_plugin's tail block instead (M3).`
-              : `Remove the unused "${crateName}" dependency from ${relPath} — 0 semio_framework_os:: uses found in this crate's own .rs files (double-check build.rs/feature-gated code before deleting).`
-            : `Remove "${crateName}" from ${relPath}, or add an explicit re-export for whatever it provides to semio_framework_plugin's SDK surface (M3) instead of depending on the framework crate directly.`,
+              ? `Remove "${crateName}" from ${relPath} and add explicit re-exports for [${symbols.join(", ")}] to semio_plugin's tail block instead (M3).`
+              : `Remove the unused "${crateName}" dependency from ${relPath} — 0 semio_os:: uses found in this crate's own .rs files (double-check build.rs/feature-gated code before deleting).`
+            : `Remove "${crateName}" from ${relPath}, or add an explicit re-export for whatever it provides to semio_plugin's SDK surface (M3) instead of depending on the framework crate directly.`,
         });
       }
     }

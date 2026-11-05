@@ -3,7 +3,7 @@ use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::{layer_base, find_drawing_layer, find_drawing_layer_location, selected_drawing_layers, drawing_layer_is_locked};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 
 pub fn plan(document:&DrawingSnapshot,ids:&[String])->Result<(Vec<DrawingMutation>,Vec<String>),Fault> {
     let selected=selected_drawing_layers(document,ids);

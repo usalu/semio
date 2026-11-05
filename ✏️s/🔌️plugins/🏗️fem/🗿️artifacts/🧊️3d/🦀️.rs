@@ -1,10 +1,10 @@
 //! 🏙️ FEM 3D artifact — document entity types (constitutional: general).
 
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 
 
 
@@ -15,22 +15,22 @@ extern crate semio_framework_os_kernel as vcs;
 // #region 🔖️Register
 /// 🧩️ Application wrappers supported by this artifact declaration.
 pub trait ArtifactApps:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp>>>
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>>>
 {
 }
 
 impl<PA> ArtifactApps for PA where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>>>
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp>>>
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>>>
 {
 }
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.fem.fem3d.standard.v1", "standard", "1", &[], None),
         ("s.fem.fem3d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.fem.fem3d.schema.artifact", "schema", "s.fem.fem3d", &[("schema", "s.fem.fem3d")], None),
@@ -70,8 +70,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<PA: ArtifactApps>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.fem.fem3d").expect("canonical fem3d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }

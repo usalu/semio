@@ -133,13 +133,13 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for RasterSnapsh
  
  
  fn retire_sqlite_snapshot(self){retire_snapshot(self)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let maximum_rows=control.limits().max_rows;
   store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),crate::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    let document=crate::io::text::snapshot::record::RasterNativeDocument::__dsl_from_record_controlled(record,native)?;document.into_snapshot(maximum_rows,native)
   })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
- fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   let maximum_rows=control.limits().max_rows;
   store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),crate::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
    let document=crate::io::text::snapshot::record::RasterNativeDocument::from_snapshot(self,maximum_rows,native)?;

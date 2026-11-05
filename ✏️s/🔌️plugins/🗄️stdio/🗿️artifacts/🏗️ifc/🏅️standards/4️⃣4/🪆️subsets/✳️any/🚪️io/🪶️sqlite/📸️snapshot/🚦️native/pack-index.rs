@@ -1,7 +1,7 @@
 //! 🗺️ Original-funded flat locators project the canonical literal Pack while borrowing every authored payload.
 use super::{IfcSnapshot, IfcTypedValue, IfcValue};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as V, projection_path_error};
-use semio_framework_os_kernel::NativeSnapshotEncodeOwner as Owner;
+use semio_os_kernel::NativeSnapshotEncodeOwner as Owner;
 use semio_framework_value::retirement::RetireOwned as RetireOwnedTrait;
 use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind};
 use std::mem::size_of;

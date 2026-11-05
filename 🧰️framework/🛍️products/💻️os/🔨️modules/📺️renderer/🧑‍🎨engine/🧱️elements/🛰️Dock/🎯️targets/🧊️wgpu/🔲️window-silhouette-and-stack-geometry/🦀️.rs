@@ -297,7 +297,7 @@ pub(super) fn dock_text(ctx: &mut DockRenderContext<'_>, text: &str, x: f32, y: 
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     let viewport_height = ctx.draw.screen_height();
-    let mut widget_ctx = semio_framework_os_renderer_wgpu_contracts::framework_widget_context(ctx.draw, None, ctx.atlas, Some(ctx.icons), ctx.input, ctx.theme, &mut scroll, &mut collapsed, &mut selects, None, viewport_height);
+    let mut widget_ctx = semio_renderer_wgpu_contracts::framework_widget_context(ctx.draw, None, ctx.atlas, Some(ctx.icons), ctx.input, ctx.theme, &mut scroll, &mut collapsed, &mut selects, None, viewport_height);
     draw_text(&mut widget_ctx, text, x, y, size, color);
 }
 //#endregion DockFreeFunctions

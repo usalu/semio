@@ -115,7 +115,7 @@ pub fn diff_semio_presentation_mutation(mutation: &SemioPresentationMutation, ba
 
 
 /// ↩️ `SemioPresentationMutation`'s own computed inverse, reachable from OUTSIDE this crate.
-/// `protocol` is a private `extern crate semio_framework_os_kernel as protocol` alias in
+/// `protocol` is a private `extern crate semio_os_kernel as protocol` alias in
 /// `🦀️.rs`, so an external caller — an owner-root test adapter is exactly that — cannot bring
 /// `protocol::Mutation` into scope and therefore cannot call the trait method at all. This
 /// wrapper's signature names only types this subset already exports (`kit`'s precedent for the same
@@ -123,7 +123,7 @@ pub fn diff_semio_presentation_mutation(mutation: &SemioPresentationMutation, ba
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_presentation_mutation_inverse(mutation: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
     Ok({
-    ::semio_framework_os_kernel::ColdMutation::inverse(mutation, base)?
+    ::semio_os_kernel::ColdMutation::inverse(mutation, base)?
 
     })
 }

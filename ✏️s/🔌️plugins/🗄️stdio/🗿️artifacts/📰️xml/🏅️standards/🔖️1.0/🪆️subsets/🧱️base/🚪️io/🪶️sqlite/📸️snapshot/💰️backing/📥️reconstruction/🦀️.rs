@@ -1,8 +1,8 @@
 //! 📥️ Actual XML forests and document fields are reconstructed from paid typed relations.
 use super::super::*;
 use super::rows::{invalid, Groups, Identities};
-use semio_framework_os_kernel::sqlite_snapshot::transfer::reserve;
-use semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled;
+use semio_os_kernel::sqlite_snapshot::transfer::reserve;
+use semio_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled;
 type Result<T> = std::result::Result<T, ValueError>;
 const PHASE: SqliteSnapshotPhase = SqliteSnapshotPhase::ReconstructSnapshot;
 struct Forest(Vec<Option<XmlNode>>);

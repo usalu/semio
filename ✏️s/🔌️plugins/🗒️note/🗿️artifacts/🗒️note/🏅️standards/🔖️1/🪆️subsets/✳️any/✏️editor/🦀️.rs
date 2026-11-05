@@ -19,40 +19,40 @@ use crate::op::NoteMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
 use crate::{NOTE_DOCUMENT_SCHEMA};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppDefinition;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::AppDefinition;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::DraftView;
+use semio_plugin::DslValue;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MergeMode;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::UtilityCategory;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 
@@ -100,8 +100,8 @@ impl ArtifactEditor for NotePlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = NotePresence;
     type PresenceMutation = NotePresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = NoteCommand;
 
@@ -116,8 +116,8 @@ impl ArtifactEditor for NotePlayApp {
     }
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<NotePlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<NotePlayApp>,
         owner_file: "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.note.note@1/*#editor",
         artifact_schema: "note.document",
@@ -160,19 +160,19 @@ impl ArtifactEditor for NotePlayApp {
         }
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         crate::editor::note::retained::register(registry)
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         crate::editor::note::retained::build(request, output, cx)
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         crate::editor::note::window::register_config(registry)
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         crate::editor::note::window::register_transient(registry)
     }
 
@@ -180,16 +180,16 @@ impl ArtifactEditor for NotePlayApp {
         Some(crate::editor::note::retained::artifact_preparation_factory())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -200,23 +200,23 @@ impl ArtifactEditor for NotePlayApp {
         Some(std::sync::Arc::new(semio_framework_value::SharedValueRetirementFactory::<NotePresence>::default()))
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(crate::editor::note::presence::note_presence_store_disposer())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     fn app_schema() -> Option<semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(note_app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<NoteSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<NoteSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(empty_note_snapshot())
     })}
 
@@ -240,7 +240,7 @@ impl ArtifactEditor for NotePlayApp {
         doc: &ArtifactView<'_, NoteSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<NoteMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -266,7 +266,7 @@ impl ArtifactEditor for NotePlayApp {
 })())
 }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let document = doc.snapshot;
         let window = crate::editor::note::window::config_from_view(cfg);
         let labels = note_play_labels(view_state);
@@ -274,37 +274,37 @@ impl ArtifactEditor for NotePlayApp {
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => composite::render(document, &window.camera, active_utility),
             NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, &crate::NoteCamera::default(), active_utility),
-            NOTE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, NOTE_PLAY_BODY_ARTIFACT)),
+            NOTE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_plugin::TreeWindows::for_body(view_state, NOTE_PLAY_BODY_ARTIFACT)),
             NOTE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, active_utility, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note diagnostic text admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note diagnostic text admission failed")),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, NoteSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key != NOTE_PLAY_BODY_COMPOSITE {
             return Self::render(body_key, doc, cfg, view_state);
         }
         let window = crate::editor::note::window::config_from_view(cfg);
         let preview = crate::editor::note::window::transient_from_view(transient).ink_tool.map(|state| ink_apply_events::note_ink_tool_preview(doc.snapshot, &state));
-        composite::render_with_interaction(preview.as_ref().unwrap_or(doc.snapshot), &window.camera, note_active_utility(view_state), interaction).map(semio_framework_plugin::built_to_component_tree)
+        composite::render_with_interaction(preview.as_ref().unwrap_or(doc.snapshot), &window.camera, note_active_utility(view_state), interaction).map(semio_plugin::built_to_component_tree)
 
         })();
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
         let config = crate::editor::note::window::config_from_view(cfg);
@@ -319,8 +319,8 @@ impl ArtifactEditor for NotePlayApp {
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, NoteSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
@@ -335,7 +335,7 @@ impl ArtifactEditor for NotePlayApp {
         }
     }
 
-    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
         let config = crate::editor::note::window::config_from_view(cfg);
@@ -486,51 +486,51 @@ pub fn create_note_app() -> AppDefinition {
             .action_destructive("setActiveExample")
             .action_destructive("loadDocumentJson")
             .action_destructive("saveDownload")
-            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("navigatorEngagementInput", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("inkApplyEvents", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nudgeSelectionUp", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nudgeSelectionDown", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nudgeSelectionLeft", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nudgeSelectionRight", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nudgeSelectionUpFast", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nudgeSelectionDownFast", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nudgeSelectionLeftFast", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("nudgeSelectionRightFast", semio_framework_plugin::CapabilityAudience::Input)
-            .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSubdivisions", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridOpacity", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSnapGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setPencilWidth", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setEraserRadius", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addBlock", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("moveBlock", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteBlock", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("duplicateBlock", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchBlocks", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("loadDocumentJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("inkApplyEvents", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelectionUp", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelectionDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelectionLeft", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelectionRight", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelectionUpFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelectionDownFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelectionLeftFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nudgeSelectionRightFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("navigatorEngagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("saveDownload", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_audience("engagementSubmit", semio_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_plugin::CapabilityAudience::Input)
+            .action_audience("navigatorEngagementInput", semio_plugin::CapabilityAudience::Input)
+            .action_audience("inkApplyEvents", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionUp", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionDown", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionLeft", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionRight", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionUpFast", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionDownFast", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionLeftFast", semio_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionRightFast", semio_plugin::CapabilityAudience::Input)
+            .action_interactive_job("setGridVisible", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSpacing", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSubdivisions", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridOpacity", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSnapEnabled", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSnapGridSpacing", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setPencilWidth", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setEraserRadius", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBlock", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveBlock", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteBlock", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateBlock", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchBlocks", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadDocumentJson", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("inkApplyEvents", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionUp", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionDown", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionLeft", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionRight", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionUpFast", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionDownFast", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionLeftFast", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nudgeSelectionRightFast", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCameraZoom", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("navigatorEngagementInput", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveDownload", semio_plugin::InteractiveJobClassification::Migrated)
             .utility(note_utility("selectDirect", LocalizedLabel::native("Direct", "Direkt"), "text-cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", LocalizedLabel::native("Marquee", "Rahmenauswahl"), "selection", "Select", UtilityCategory::Selection))
             .utility(note_utility("text", LocalizedLabel::native("Text", "Text"), "type", "Block", UtilityCategory::Utilities))

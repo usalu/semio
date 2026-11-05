@@ -18,8 +18,8 @@ pub type RemoveMemberPayload = RemoveMemberMutation;
 impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveMemberMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "member", kind: "remove-member", record: "RemovedMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove Member", "Eigenschaft entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove Member", "Eigenschaft entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-member".to_string()]

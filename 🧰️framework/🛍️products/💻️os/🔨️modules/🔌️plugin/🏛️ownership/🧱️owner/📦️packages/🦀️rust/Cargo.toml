@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-plugin-ownership"
+name = "semio-plugin-ownership"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -28,7 +28,7 @@ semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust"
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
@@ -37,14 +37,14 @@ serde_json = "1.0.140"
 semio-framework-job-worker = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 
-semio-framework-os-store-replay = { path = "../../../../../🏪️store/🔁️replay/📦️packages/🦀️rust" }
+semio-os-store-replay = { path = "../../../../../🏪️store/🔁️replay/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-projection = { path = "../../../../../../../../🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 
 semio-framework-hash = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-replay-operation = { path = "../../../../../🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
+semio-os-store-replay-operation = { path = "../../../../../🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }

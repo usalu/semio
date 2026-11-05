@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDerailmentDistance
         record: "ChangedDerailmentDistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change distance d from the track axis of the derailment case", "Entgleisungsfall: Abstand d von der Gleisachse ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change distance d from the track axis of the derailment case", "Entgleisungsfall: Abstand d von der Gleisachse ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

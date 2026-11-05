@@ -2,8 +2,8 @@
 
 mod document {
 use crate::ProcedureScene;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use super::super::document::*;
 use crate::editor::procedure::unit_tests::context::{imperative_app, render as render_body};
 
@@ -28,7 +28,7 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 // the row's own target id, (d) pick rows carry a granularity and no binding of their own while the
 // tree root carries exactly one `interactionSelect`.
 use crate::editor::procedure::terminology::imperative_labels;
-use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
 
 const STEPS_SECTION: &str = "imperative-play-document.steps";
 const OVERSIZED: usize = 200;
@@ -81,13 +81,13 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_procedure_stamps_the_full_total_and_materialises_at_most_its_slice() {
     let document = oversized_procedure(OVERSIZED);
-    let tree = render(&document, imperative_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, imperative_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 0));
     assert!(steps.children.len() < OVERSIZED, "only the first-paint slice is materialised: {}", steps.children.len());
@@ -98,7 +98,7 @@ async fn an_oversized_procedure_stamps_the_full_total_and_materialises_at_most_i
 async fn a_closed_section_stamps_its_total_and_builds_no_children() {
     let document = oversized_procedure(OVERSIZED);
     let view = window_law_view(vec![window_law_request(STEPS_SECTION, Some(false), 0, 32)]);
-    let tree = render(&document, imperative_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, IMPERATIVE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&document, imperative_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, IMPERATIVE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 0));
     assert_eq!(steps.children.len(), 0);
@@ -108,7 +108,7 @@ async fn a_closed_section_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_canonical_step_row_id() {
     let document = oversized_procedure(OVERSIZED);
     let view = window_law_view(vec![window_law_request(STEPS_SECTION, Some(true), 70, 5)]);
-    let tree = render(&document, imperative_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, IMPERATIVE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&document, imperative_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, IMPERATIVE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 70));
     assert_eq!(window_law_keys(steps), (70..75).map(|index| step_row_id(&format!("step-{index:03}"))).collect::<Vec<_>>());
@@ -117,12 +117,12 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_canonical_
 #[semio_framework_async_macros::async_test]
 async fn pick_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let document = oversized_procedure(3);
-    let tree = render(&document, imperative_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, imperative_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     for row in window_law_node(&tree, STEPS_SECTION).children.iter() {
         let Component::TreeItem(props) = &row.component else { panic!("{} is not a tree row", row.key.as_str()) };
-        assert_eq!(props.granularity.as_ref().map(semio_framework_plugin::UiText::as_str), Some("step"));
+        assert_eq!(props.granularity.as_ref().map(semio_plugin::UiText::as_str), Some("step"));
         assert!(row.bindings.is_empty(), "{} must not pay for its own activate binding", row.key.as_str());
     }
 }
@@ -147,8 +147,8 @@ use semio_framework_test_fixtures::fixture_text;
 use crate::editor::procedure::terminology::ImperativeLabels;
 use super::super::inspection::*;
 
-fn project(node: semio_framework_plugin::BuiltNode) -> serde_json::Value {
-    let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
+fn project(node: semio_plugin::BuiltNode) -> serde_json::Value {
+    let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("retire semantic tree");
     serde_json::from_str(&text).expect("independent UI oracle")
 }
 
@@ -157,10 +157,10 @@ fn imperative_semantic_panels_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
     let document = crate::procedure_derivable_scene(&crate::ProcedureSnapshot::default()).expect("the default procedure document derives its scene");
     for row in vectors["cases"].as_array().expect("locales") {
-        let labels = semio_framework_plugin::resolve_labels::<ImperativeLabels>(&semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) });
-        let tree = project(crate::editor::procedure::panels::document::render(&document, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
+        let labels = semio_plugin::resolve_labels::<ImperativeLabels>(&semio_plugin::ViewModel { locale: semio_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_ui_locale::Terminology::Native) });
+        let tree = project(crate::editor::procedure::panels::document::render(&document, labels, &semio_plugin::TreeWindows::unhosted()).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["document"]);
-        let catalogue = crate::editor::procedure::panels::catalogue::render(labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue");
+        let catalogue = crate::editor::procedure::panels::catalogue::render(labels, &semio_plugin::TreeWindows::unhosted()).expect("catalogue");
         let actions = catalogue.children[0].children.iter().map(|node| serde_json::to_value(&node.bindings[0].args).expect("independent action oracle")).collect::<Vec<_>>();
         let tree = project(catalogue);
         assert_eq!(tree["children"][0]["component"]["label"], row["catalogue"]);
@@ -171,8 +171,8 @@ fn imperative_semantic_panels_match_the_json_oracle() {
         assert_eq!(tree["children"][0]["component"]["label"], row["inspection"]);
         assert_eq!(tree["children"][0]["children"][0]["component"]["label"], row["steps"]);
         let node = crate::editor::procedure::modes::edit::windows::main::render(&document, &vectors["runOutput"].to_string(), labels).expect("table");
-        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("table surface") };
-        let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("packed table");
+        let semio_plugin::Component::Surface(props) = &node.component else { panic!("table surface") };
+        let scene: semio_ui_scene::TableScene = semio_ui_scene::decode(props).expect("packed table");
         let columns: Vec<serde_json::Value> = serde_json::from_str::<Vec<serde_json::Value>>(&scene.columns_json).expect("columns oracle").into_iter().map(|column| column["label"].clone()).collect();
         assert_eq!(serde_json::Value::Array(columns.clone()), row["columns"]);
         let rows: Vec<serde_json::Value> = serde_json::from_str::<Vec<serde_json::Value>>(&scene.rows_json)
@@ -184,8 +184,8 @@ fn imperative_semantic_panels_match_the_json_oracle() {
         project(node);
     }
     for node in [crate::editor::procedure::modes::edit::windows::script::render(&document).expect("editor text"), crate::viewer::procedure::modes::view::windows::script::render(&document).expect("viewer text")] {
-        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("text surface") };
-        let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("packed text");
+        let semio_plugin::Component::Surface(props) = &node.component else { panic!("text surface") };
+        let scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(props).expect("packed text");
         assert_eq!(scene.language.as_deref(), Some("imperative"));
         assert_eq!(serde_json::from_str::<serde_json::Value>(scene.settings_json.as_deref().expect("settings")).expect("settings oracle"), vectors["settings"]);
         project(node);

@@ -21,13 +21,13 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         #[cfg(not(target_arch = "wasm32"))]
         let (native_asset_http, native_asset_https, native_asset_http_runtime, native_asset_http_scope, native_asset_http_cancel) = {
             let pool = renderer_worker_pool();
-            let runtime = Arc::new(semio_framework_os_services::TokioHostRuntime::with_pool(pool.clone()));
+            let runtime = Arc::new(semio_os_services::TokioHostRuntime::with_pool(pool.clone()));
             let scope = runtime.open_scope_now(semio_framework_async::ScopeOwner::Service("renderer_asset_http"), None);
-            let compute = Arc::new(semio_framework_os_services::ComputePool::with_pool(2, pool));
-            let http_transport = Arc::new(semio_framework_os_services::SocketHttpTransport::new(compute.clone(), runtime.clone(), scope.clone()));
-            let https_transport = Arc::new(semio_framework_os_kernel::os_directory::client::native::UreqStreamingHttpTransport::new(compute, runtime.clone(), scope.clone()));
-            let http = Arc::new(semio_framework_os_services::HttpPool::new_with_async_transport_now(http_transport, 256 * 1024 * 1024, 1));
-            let https = Arc::new(semio_framework_os_services::HttpPool::new_with_async_transport_now(https_transport, 256 * 1024 * 1024, 1));
+            let compute = Arc::new(semio_os_services::ComputePool::with_pool(2, pool));
+            let http_transport = Arc::new(semio_os_services::SocketHttpTransport::new(compute.clone(), runtime.clone(), scope.clone()));
+            let https_transport = Arc::new(semio_os_kernel::os_directory::client::native::UreqStreamingHttpTransport::new(compute, runtime.clone(), scope.clone()));
+            let http = Arc::new(semio_os_services::HttpPool::new_with_async_transport_now(http_transport, 256 * 1024 * 1024, 1));
+            let https = Arc::new(semio_os_services::HttpPool::new_with_async_transport_now(https_transport, 256 * 1024 * 1024, 1));
             (http, https, runtime, scope, semio_framework_async::CancelToken::root_now())
         };
         Self(Arc::new(RuntimeMailboxInner {
@@ -106,7 +106,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         self.0.try_lock()
     }
 
-    pub fn publish_hub_document_status(&self, document_key: String, remote: semio_framework_os_renderer_wgpu_contracts::ShellHubRemoteV1) -> bool {
+    pub fn publish_hub_document_status(&self, document_key: String, remote: semio_renderer_wgpu_contracts::ShellHubRemoteV1) -> bool {
         let Ok(mut runtime) = self.try_lock() else { return false };
         let Some(interaction) = runtime.interaction_mut() else { return false };
         interaction.shell.sync.publish_hub_document_status(document_key, remote);
@@ -154,28 +154,28 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         self.0.world_cursor_wake.close_step() && self.0.world_cursor_wake.terminal_is_empty()
     }
 
-    pub fn close_component_world_step(&self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
+    pub fn close_component_world_step(&self, target: &semio_renderer_wgpu_contracts::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
         let Ok(mut runtime)=self.try_lock() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
         let Some(interaction)=runtime.interaction_mut() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
         interaction.shell.surfaces.close_component_world_step(target,grant,context)
     }
 
-    pub fn begin_engine_surface_close(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, ()> {
-        semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::begin_engine_surface_close_token(token)
+    pub fn begin_engine_surface_close(&self, token: semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, ()> {
+        semio_renderer_wgpu_engine_registry::engine_surface_registry::begin_engine_surface_close_token(token)
     }
 
-    pub fn close_engine_surface_step(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+    pub fn close_engine_surface_step(&self, token: semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>) -> bool {
         let Ok(mut runtime) = self.try_lock() else {
             return false;
         };
         let Some(interaction) = runtime.interaction_mut() else {
             return false;
         };
-        semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::close_engine_surface_step(token, context, &mut interaction.input)
+        semio_renderer_wgpu_engine_registry::engine_surface_registry::close_engine_surface_step(token, context, &mut interaction.input)
     }
 
-    pub fn engine_surface_terminal_is_empty(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, ()> {
-        semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_terminal_nonopaque_is_empty(token)
+    pub fn engine_surface_terminal_is_empty(&self, token: semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, ()> {
+        semio_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_terminal_nonopaque_is_empty(token)
     }
 
     pub fn close_input_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
@@ -213,8 +213,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             return Ok(false);
         }
         let Some(interaction) = runtime.interaction_mut() else { return Ok(true) };
-        if !semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut interaction.input, cx)? { return Ok(false); }
-        Ok(interaction.input.close_step_with_receipt(|receipt| { settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled); }).is_ok_and(|complete| complete) && interaction.input.terminal_is_empty())
+        if !semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut interaction.input, cx)? { return Ok(false); }
+        Ok(interaction.input.close_step_with_receipt(|receipt| { settle_renderer_action_receipt(receipt, semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled); }).is_ok_and(|complete| complete) && interaction.input.terminal_is_empty())
     }
 
 }

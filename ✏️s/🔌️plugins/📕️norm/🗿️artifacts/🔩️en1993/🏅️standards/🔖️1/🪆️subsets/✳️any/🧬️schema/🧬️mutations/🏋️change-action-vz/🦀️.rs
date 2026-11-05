@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeActionVz where Op:
         record: "ChangedActionVz",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear force V_z,Ed of the member action", "Bauteileinwirkung: Querkraft V_z,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear force V_z,Ed of the member action", "Bauteileinwirkung: Querkraft V_z,Ed ändern")
     }
 }
 

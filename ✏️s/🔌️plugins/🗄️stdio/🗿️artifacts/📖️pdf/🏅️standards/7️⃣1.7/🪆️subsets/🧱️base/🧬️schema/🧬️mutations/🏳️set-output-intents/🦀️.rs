@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "output-intents", kind: "set-output-intents", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set {} output intents", self.intents.len()), &format!("{} Ausgabebedingungen setzen", self.intents.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set {} output intents", self.intents.len()), &format!("{} Ausgabebedingungen setzen", self.intents.len()))
     }
 
     fn target(&self) -> Vec<String> {

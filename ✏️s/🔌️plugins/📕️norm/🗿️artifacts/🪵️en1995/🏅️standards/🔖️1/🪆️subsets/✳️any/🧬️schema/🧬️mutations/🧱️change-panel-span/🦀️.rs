@@ -10,7 +10,7 @@ pub struct ChangePanelSpan { pub panel_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangePanelSpan where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_panel_span::ChangePanelSpan> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "panel-span", kind: "change-panel-span", record: "ChangedPanelSpan" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change span of panel {}", self.panel_id), &format!("Spannweite von Panel {} ändern", self.panel_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change span of panel {}", self.panel_id), &format!("Spannweite von Panel {} ändern", self.panel_id)) }
     fn target(&self) -> Vec<String> { vec![self.panel_id.clone()] }
 }
 

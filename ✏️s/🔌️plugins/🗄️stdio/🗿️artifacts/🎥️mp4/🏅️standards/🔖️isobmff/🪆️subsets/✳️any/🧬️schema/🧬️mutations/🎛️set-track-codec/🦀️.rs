@@ -17,8 +17,8 @@ pub struct SetTrackCodec {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackCodec {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "track-codec", kind: "set-track-codec", record: "SetTrackCodec" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set track codec", "Codec der Spur setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set track codec", "Codec der Spur setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

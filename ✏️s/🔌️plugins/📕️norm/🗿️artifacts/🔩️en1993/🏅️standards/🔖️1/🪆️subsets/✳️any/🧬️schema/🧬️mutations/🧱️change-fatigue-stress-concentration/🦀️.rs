@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFatigueStressConce
         record: "ChangedFatigueStressConcentration",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change stress range: Stress concentration k_f", "Spannungsschwingbreite: Spannungskonzentration k_f ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change stress range: Stress concentration k_f", "Spannungsschwingbreite: Spannungskonzentration k_f ändern")
     }
 }
 

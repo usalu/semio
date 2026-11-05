@@ -3,12 +3,12 @@ use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_comb
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_combination;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
@@ -22,7 +22,7 @@ fn demo() -> Fem2dSnapshot {
 }
 
 fn emit(snapshot: &Fem2dSnapshot, payload: PatchCombination) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(snapshot, &history);
     let config = NoConfig::default();
     handle(&payload, &doc, &ConfigView { snapshot: &config, window: None })

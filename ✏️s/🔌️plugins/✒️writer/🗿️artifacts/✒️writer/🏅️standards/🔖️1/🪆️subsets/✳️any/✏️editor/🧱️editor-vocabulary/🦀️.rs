@@ -1,6 +1,6 @@
 //! 🧱️ Writer editor core: the app id, the UI value factories, the interaction ids, the typed media I/O surface and the whole-document reset effect every other layer of the editor builds on.
 
-use semio_framework_plugin::{ActionDescriptor, AppIo, MediaClass, MediaForm, MediaType};
+use semio_plugin::{ActionDescriptor, AppIo, MediaClass, MediaForm, MediaType};
 use pack::snapshot::ArtifactPack;
 use serde::{Deserialize, Serialize};
 use semio_framework::kernel::Effect;
@@ -16,45 +16,45 @@ pub fn writer_action(action: &str, args: Option<semio_framework_value::DslValue>
 }
 
 /// 🏷️ Admits display text into a bounded semantic label.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    value.as_ref().try_into().map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub use semio_framework_plugin::ui_node_list;
+pub use semio_plugin::ui_node_list;
 
 /// 🕹️ The `ast` interaction domain this app declares, and its only granularity — the document tree
 /// binds the domain once and stamps this granularity on every AST row.
@@ -71,18 +71,18 @@ pub fn writer_io() -> AppIo {
     AppIo {
         artifact_schema: WRITER_DOCUMENT_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
-        ports: vec![semio_framework_plugin::MediaPortSpec {
+        ports: vec![semio_plugin::MediaPortSpec {
             id: "text:out".into(),
             label: "Text".into(),
-            direction: semio_framework_plugin::MediaPortDirection::Out,
+            direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
             kind_id: Some("text.document".into()),
             required: false,
-            multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            multiplicity: semio_plugin::PortMultiplicity::Many,
         }],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "text.document".into(), name: "Text Document".into(), dimension: "text".into(), component_kind: "writer".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "text.document".into(), name: "Text Document".into(), dimension: "text".into(), component_kind: "writer".into() },
     }
 }
 

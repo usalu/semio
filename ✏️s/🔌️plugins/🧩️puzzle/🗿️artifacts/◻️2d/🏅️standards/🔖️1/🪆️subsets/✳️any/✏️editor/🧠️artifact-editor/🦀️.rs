@@ -9,7 +9,7 @@ use crate::mirror::editor::puzzle2d::modes::edit::windows::detail;
 use crate::mirror::editor::puzzle2d::modes::edit::windows::selection;
 use std::collections::HashMap;
 use crate::Puzzle2dMutation;
-use semio_framework_plugin::NoPresence as Puzzle2dPresence;
+use semio_plugin::NoPresence as Puzzle2dPresence;
 use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::presence::Puzzle2dPresenceMutation;
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework::kernel::ClipboardFragment;
@@ -29,8 +29,8 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = Puzzle2dPresence;
     type PresenceMutation = Puzzle2dPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
     type Command = Puzzle2dCommand;
 
     /// 🐁️ The six framework interaction verbs answered out of this app's OWN narrow scopes instead of
@@ -54,16 +54,16 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// classifies it) — what `selectAll` enumerates and what keeps a selection inside the document. A host fact never
     /// reaches this editor: the window's gesture slot ends an open gesture on a blur, a lost capture, a utility switch,
     /// a closing window, a frozen document and a moved base.
-    fn interaction_topology(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle2dConfig>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+    fn interaction_topology(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle2dConfig>) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError> {
         let document = doc.snapshot.typed();
         let mut ordered = Vec::new();
         for node in &document.nodes {
-            ordered.push(semio_framework_plugin::TopologyNode { id: node.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None });
-            ordered.extend(node.handles.iter().map(|handle| semio_framework_plugin::TopologyNode { id: handle.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_HANDLE.into(), parent: Some(node.id.to_string_owner()) }));
+            ordered.push(semio_plugin::TopologyNode { id: node.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None });
+            ordered.extend(node.handles.iter().map(|handle| semio_plugin::TopologyNode { id: handle.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_HANDLE.into(), parent: Some(node.id.to_string_owner()) }));
         }
-        ordered.extend(document.edges.iter().map(|edge| semio_framework_plugin::TopologyNode { id: edge.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_EDGE.into(), parent: None }));
-        ordered.extend(document.target_regions.iter().map(|region| semio_framework_plugin::TopologyNode { id: region.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None }));
-        Ok(semio_framework_plugin::InteractionTopology { domains: std::collections::BTreeMap::from([(PUZZLE2D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered })]) })
+        ordered.extend(document.edges.iter().map(|edge| semio_plugin::TopologyNode { id: edge.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_EDGE.into(), parent: None }));
+        ordered.extend(document.target_regions.iter().map(|region| semio_plugin::TopologyNode { id: region.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None }));
+        Ok(semio_plugin::InteractionTopology { domains: std::collections::BTreeMap::from([(PUZZLE2D_INTERACTION_DOMAIN.to_string(), semio_plugin::DomainTopology { ordered })]) })
     }
 
     /// 🪧️ A history-edit reference chip names its board entity as the outliner does ([`puzzle2d_entity_label`]).
@@ -81,41 +81,41 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(std::sync::Arc::new(Puzzle2dArtifactStorePreparationFactory))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     /// 👥️ Canonical window views own camera publication, leaving the app presence root empty.
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default Puzzle2d presence is the exact empty terminal")))
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default Puzzle2d presence is the exact empty terminal")))
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         window::register_config(registry)
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         window::register_transient(registry)
     }
 
@@ -132,7 +132,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// when it is actually switched to: warming them here parsed the Concrete Forest and Nakagin documents on
     /// every construction of this app — every mount, and every `codec` call of a hub creating or validating a
     /// document, where the interpreter paid for two documents the snapshot never reads.
-    fn reference_birth()->Option<fn()->Result<Puzzle2dPlaySnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Puzzle2dPlaySnapshot,semio_plugin::Fault>>{Some(||{
         Ok(Puzzle2dPlaySnapshot::new(crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot()))
     })}
 
@@ -153,7 +153,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let args = args.as_ref();
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         if let Some(flag) = puzzle2d_flag_value_argument(action) {
-            args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle2d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
+            args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("puzzle2d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
         }
         let args = args.map(semio_framework_pack_json::from_dsl_value);
         Puzzle2dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 2D action '{action}'")))
@@ -166,7 +166,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -181,7 +181,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
         let revision = doc.operation_optional().map(|operation| puzzle2d_revision_hex(&operation.canonical_base_revision));
         let base_revision = revision.as_ref().map_or("", |hex| std::str::from_utf8(hex).expect("lowercase hexadecimal is ASCII"));
-        puzzle2d_dispatch_emit::<Self>(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, base_revision, &semio_framework_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())
+        puzzle2d_dispatch_emit::<Self>(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, base_revision, &semio_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())
             .map(|(emit, _)| emit)
     }
 
@@ -193,7 +193,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// rebuilt from the next dispatch anyway. Without this hook (and the proofs below) both verbs fell
     /// through to `admit_command_json` and failed closed with `interactive-job.missing-factory`, so
     /// the Fill tool tab could not even be selected.
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = Puzzle2dRetainedCommandProofs::proofs();
         proofs.extend(Puzzle2dHostConfigurationProofs::proofs());
         proofs
@@ -204,19 +204,19 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         registry.register(Puzzle2dRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original puzzle2d producer request is absent"))?;
         if !PUZZLE2D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {return Ok(false);}
         if original.command.action_id()!=original.tool_id {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"puzzle2d-command-tool-mismatch").into());}
         let tool_id=original.command.action_id();
         macro_rules! work {
             (|$request:ident| $make:expr) => {
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,Puzzle2dCommand::action_id,PUZZLE2D_COMMAND_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,|$request|{let _=&$request;$make})
+                semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,Puzzle2dCommand::action_id,PUZZLE2D_COMMAND_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,|$request|{let _=&$request;$make})
             };
         }
         macro_rules! owned {
             ($owner:ty,|$scope:ident| $make:expr) => {
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(request,output,cx,Puzzle2dCommand::action_id,PUZZLE2D_COMMAND_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,<$owner>::original_birth_demands()?,|_request,$scope|$make)
+                semio_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(request,output,cx,Puzzle2dCommand::action_id,PUZZLE2D_COMMAND_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,<$owner>::original_birth_demands()?,|_request,$scope|$make)
             };
         }
         match tool_id {
@@ -236,15 +236,15 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// ⏯️ Builds the fill tool run's jobs (`ToolRunDefinition.runJob` / `.revalidateJob`): the run job over the run's
     /// base with the config's requested count, resuming from the ledger's checkpoint and provisional ops, and the
     /// revalidate job over the committed head.
-    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
+    fn build_tool_run_job(request: semio_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_plugin::ToolRunJob>, Fault> {
         if request.tool_id != fill::TOOL_ID {
             return Ok(None);
         }
         Ok(Some(match request.purpose {
-            semio_framework_plugin::ToolRunJobPurpose::Run => {
+            semio_plugin::ToolRunJobPurpose::Run => {
                 Box::new(fill_run::Puzzle2dFillRunJob::new(request.identity, request.snapshot, crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET, request.config.fill_count, request.checkpoint, request.provisional).map_err(Fault::from)?)
             }
-            semio_framework_plugin::ToolRunJobPurpose::Revalidate => Box::new(fill_run::Puzzle2dFillRevalidateJob::new(
+            semio_plugin::ToolRunJobPurpose::Revalidate => Box::new(fill_run::Puzzle2dFillRevalidateJob::new(
                 request.identity,
                 request.snapshot,
                 request.provisional,
@@ -339,24 +339,24 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,Puzzle2dImportJob>(source,body,cx)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         Self::render_body(body_key, doc, cfg, view_state, &Puzzle2dWindowTransient::default(), Puzzle2dInteractionSnapshot::default())
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin::plugin_app_close_prelude::semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+    ) -> semio_plugin::plugin_app_close_prelude::semio_plugin_ownership::sdk_fault::OriginalRenderResult<semio_plugin::ComponentTree> {
         Self::render_body(body_key, doc, cfg, view_state, &window::transient_from_view(transient), Puzzle2dInteractionSnapshot::from_interaction(interaction)).map(Some).map_err(Into::into)
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let labels = puzzle2d_labels(view_state);
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
@@ -368,8 +368,8 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
@@ -380,7 +380,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         HashMap::from([(window_id.to_string(), edit::canvas::puzzle2d_engagement(&envelope, &puzzle_board_host(), window_kind, puzzle2d_labels(view_state)))])
     }
 
-    fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = puzzle2d_labels(view_state);
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
@@ -394,7 +394,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         HashMap::from([(window_id.to_string(), measures)])
     }
 
-    fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_kind = window::kind_for_view(view_state).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
         let envelope = puzzle2d_scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
@@ -403,12 +403,12 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     }
 
     fn context_menu(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         _cfg: &ConfigView<'_, Puzzle2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        view_state: &semio_plugin::ViewModel,
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         Self::context_menu_body(request, doc, view_state, &Puzzle2dInteractionSnapshot::default(), registry)
     }
 
@@ -417,25 +417,25 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// user selected; the surface's own hits/selection win when present, so a right-click on an
     /// unselected node still targets that node.
     fn context_menu_with_request_context(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         _cfg: &ConfigView<'_, Puzzle2dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         interaction: &InteractionView<'_>,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         Self::context_menu_body(request, doc, view_state, &Puzzle2dInteractionSnapshot::from_interaction(interaction), registry)
     }
 }
 
 impl Puzzle2dPlayApp {
     fn context_menu_body(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         interaction: &Puzzle2dInteractionSnapshot,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         let mut selected: Vec<String> = request.surface.as_ref().map(|surface| surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
         if selected.is_empty() {
             selected = interaction.selected.clone();

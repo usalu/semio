@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-ui-draw-contract"
+name = "semio-ui-draw-contract"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,12 +24,12 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
-semio-framework-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
-semio-framework-ui-scene-pass = { path = "../../../../../../🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
-semio-framework-ui-scene-camera = { path = "../../../../../../🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
-semio-framework-ui-scene-algebra = { path = "../../../../../../🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust" }
-semio-framework-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
+semio-ui-scene-pass = { path = "../../../../../../🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
+semio-ui-scene-camera = { path = "../../../../../../🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
+semio-ui-scene-algebra = { path = "../../../../../../🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
 bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"] }

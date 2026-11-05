@@ -126,7 +126,7 @@ impl AppRuntime {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
                 let grant = context.retained_grant();
-                let step = semio_framework_ui_prepared::PreparedAtlasPages::close_abandoned_step(grant);
+                let step = semio_ui_prepared::PreparedAtlasPages::close_abandoned_step(grant);
                 match frame_prepared_abandonment_complete(grant, step,context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedGpuAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
@@ -141,7 +141,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedInputAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, semio_framework_ui_prepared::PreparedRenderInput::close_abandoned_step(grant),context) {
+                match frame_prepared_abandonment_complete(grant, semio_ui_prepared::PreparedRenderInput::close_abandoned_step(grant),context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedJobAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -149,7 +149,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedJobAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, semio_framework_ui_prepared::PreparedRenderJob::close_abandoned_step(grant),context) {
+                match frame_prepared_abandonment_complete(grant, semio_ui_prepared::PreparedRenderJob::close_abandoned_step(grant),context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -157,7 +157,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, semio_framework_ui_prepared::PreparedRenderReceiver::close_abandoned_step(grant),context) {
+                match frame_prepared_abandonment_complete(grant, semio_ui_prepared::PreparedRenderReceiver::close_abandoned_step(grant),context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PacketAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -165,7 +165,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PacketAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, semio_framework_ui_prepared::PreparedRenderPacket::close_abandoned_step(grant),context) {
+                match frame_prepared_abandonment_complete(grant, semio_ui_prepared::PreparedRenderPacket::close_abandoned_step(grant),context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::Text,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -193,7 +193,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::ThemeResolve;
             }
             FrameBuildPhase::ThemeResolve => {
-                self.theme = semio_framework_os_renderer_wgpu_shell_docs::resolve_theme_for_ids(self.shell.chrome.active_theme_id_for_frame(), &self.shell.prefs.appearance_id);
+                self.theme = semio_renderer_wgpu_shell_docs::resolve_theme_for_ids(self.shell.chrome.active_theme_id_for_frame(), &self.shell.prefs.appearance_id);
                 cursor.phase = FrameBuildPhase::ThemeAppearance;
             }
             FrameBuildPhase::ThemeAppearance => {
@@ -223,14 +223,14 @@ impl AppRuntime {
             FrameBuildPhase::WheelDeadline => {
                 if build_directives.wheel_zoom_deadline_cleared && self.wheel_zoom_deadline_ms > 0.0 && app_now_ms() >= self.wheel_zoom_deadline_ms {
                     self.wheel_zoom_deadline_ms = 0.0;
-                    semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_wheel_zoom_active();
+                    semio_renderer_wgpu_engine_graph::node_graph::node_graph_clear_wheel_zoom_active();
                 }
                 cursor.phase = FrameBuildPhase::RetainedClock;
             }
             FrameBuildPhase::RetainedClock => {
                 if let Some((window_id, surface)) = self.shell.input.retained_clock_surface(cursor.retained_clock_index).map(|(id, surface)| (id.to_owned(), surface)) {
                     cursor.retained_clock_index += 1;
-                    if let Some(step) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::advance_retained_window_clock(&window_id, surface, &mut self.input) {
+                    if let Some(step) = semio_renderer_wgpu_ui_engine::retained_ui_engine::advance_retained_window_clock(&window_id, surface, &mut self.input) {
                         if let Some(deadline) = step.next_deadline {
                             cursor.retained_clock_deadline = Some(cursor.retained_clock_deadline.map_or(deadline, |current| current.min(deadline)));
                         }
@@ -277,7 +277,7 @@ impl AppRuntime {
                         if let Some(atlas) = cell.borrow_mut().take() {
                             observed = true;
                             self.icons = atlas;
-                            match semio_framework_ui_prepared::PreparedAtlasPages::try_new(self.icons.width, self.icons.height, 4, self.icons.pixels.len(), semio_framework_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: cursor.retained }) {
+                            match semio_ui_prepared::PreparedAtlasPages::try_new(self.icons.width, self.icons.height, 4, self.icons.pixels.len(), semio_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: cursor.retained }) {
                                 Ok((pages, progress)) => { cursor.icon_pages = Some(pages); pending = context.consume_retained(progress).is_ok(); }
                                 Err(error) => { let _ = context.consume_retained(error.retained_progress()); }
                             }
@@ -303,13 +303,13 @@ impl AppRuntime {
                         return FrameBuildBoundaryStep::Pending;
                     }
                     let Some(pages) = cursor.icon_pages.take() else { return FrameBuildBoundaryStep::Fault("frame icon atlas pages lost ownership") };
-                    cursor.icon_upload = Some(semio_framework_ui_prepared::PreparedRenderUpload::IconAtlasPages { pixels: pages });
+                    cursor.icon_upload = Some(semio_ui_prepared::PreparedRenderUpload::IconAtlasPages { pixels: pages });
                 }
                 cursor.phase = FrameBuildPhase::Tutorial;
             }
             FrameBuildPhase::Tutorial => {
                 let wall_now_ms = app_now_ms();
-                semio_framework_os_renderer_wgpu_shell_window_actions::WindowActionsCtx::of(&mut self.shell).tutorial_tick(wall_now_ms);
+                semio_renderer_wgpu_shell_window_actions::WindowActionsCtx::of(&mut self.shell).tutorial_tick(wall_now_ms);
                 if let Some(runtime) = handle.upgrade().map(RuntimeMailbox) {
                     let deadline = semio_framework_job::default_now_us().and_then(|now| AppInteractionState::wake_deadline(self.shell.surfaces.next_chrome_deadline(now as f64 / 1_000_000.0, wall_now_ms, &self.shell.chrome, &self.shell.tutorial), now as f64 / 1_000_000.0, wall_now_ms));
                     runtime.publish_shell_clock_deadline(deadline);
@@ -320,7 +320,7 @@ impl AppRuntime {
                 match cursor.engine_packets.prepare_step(context) { Ok(true) => cursor.phase = FrameBuildPhase::EngineResources, Ok(false) => return FrameBuildBoundaryStep::Pending, Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure) }
             }
             FrameBuildPhase::EngineResources => {
-                let resources=cursor.engine_resources.get_or_insert_with(semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasBuildContext::default);
+                let resources=cursor.engine_resources.get_or_insert_with(semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasBuildContext::default);
                 match resources.prepare_step(context){Ok(true)=>cursor.phase=FrameBuildPhase::WorldResources,Ok(false)=>return FrameBuildBoundaryStep::Pending,Err(failure)=>return FrameBuildBoundaryStep::CloseFailure(failure)}
             }
             FrameBuildPhase::WorldResources => {
@@ -341,14 +341,14 @@ impl AppRuntime {
                 let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
                 let Some(interaction) = interaction.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost interaction state") };
                 let Some(world_resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") };
-                let complete=match semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).render_chrome_step(&mut cursor.chrome,draw,overlay,atlas,icons,&mut interaction.input,&interaction.theme,world_resources,context){Ok(complete)=>complete,Err(failure)=>return FrameBuildBoundaryStep::CloseFailure(failure)};
+                let complete=match semio_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).render_chrome_step(&mut cursor.chrome,draw,overlay,atlas,icons,&mut interaction.input,&interaction.theme,world_resources,context){Ok(complete)=>complete,Err(failure)=>return FrameBuildBoundaryStep::CloseFailure(failure)};
                 if complete {
-                    let input_candidate = match semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&interaction.theme) {
+                    let input_candidate = match semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&interaction.theme) {
                         Ok(witness) => witness,
                         Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
                     };
                     cursor.input_candidate = Some(input_candidate);
-                    semio_framework_os_renderer_wgpu_shell_session::SessionCtx::of(&mut interaction.shell).sync_engine_surface_states();
+                    semio_renderer_wgpu_shell_session::SessionCtx::of(&mut interaction.shell).sync_engine_surface_states();
                     cursor.phase = FrameBuildPhase::JobProgressTake;
                 }
             }
@@ -374,7 +374,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::ResourceInput;
             }
             FrameBuildPhase::ResourceInput => {
-                match semio_framework_ui_prepared::PreparedRenderInput::try_new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, DrawList::empty(), None, 0.0) {
+                match semio_ui_prepared::PreparedRenderInput::try_new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, DrawList::empty(), None, 0.0) {
                     Ok(input) => cursor.resource_input = Some(input),
                     Err(rejected) => {
                         cursor.input_rejected = Some(rejected);
@@ -408,7 +408,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::EngineTransfer => {
                 let Some(resources) = cursor.engine_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame transfer lost engine resources") };
-                if !semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::stage_engine_packet_step(resources) {
+                if !semio_renderer_wgpu_engine_registry::prepared_engine_canvas::stage_engine_packet_step(resources) {
                     return FrameBuildBoundaryStep::Pending;
                 }
                 match resources.take_packet_step() {
@@ -487,7 +487,7 @@ impl AppRuntime {
             FrameFinishPhase::Deferred => {
                 cursor.flush_tutorial = !self.shell.tutorial.tutorial_pending_document_ops.is_empty();
                 cursor.shell_maintenance = self.shell.surfaces.chrome_maintenance_pending(&self.shell.chrome);
-                cursor.settle = semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut self.shell).settle_pump_pending();
+                cursor.settle = semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut self.shell).settle_pump_pending();
                 cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= SHELL_SYNC_PUMP_INTERVAL_MS;
                 if cursor.pump_sync {
                     self.last_sync_pump_ms = app_now_ms();
@@ -498,7 +498,7 @@ impl AppRuntime {
                 if cursor.icon_pages.is_none() {
                     if self.icon_rebuild.is_none() { cursor.phase = FrameFinishPhase::GlyphUpload; return FrameFinishBoundaryStep::Pending; }
                     let Some(atlas) = self.drive_icon_raster_step() else { return FrameFinishBoundaryStep::Pending };
-                    let result = semio_framework_ui_prepared::PreparedAtlasPages::try_new(atlas.width, atlas.height, 1, atlas.pixels.len(), semio_framework_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained });
+                    let result = semio_ui_prepared::PreparedAtlasPages::try_new(atlas.width, atlas.height, 1, atlas.pixels.len(), semio_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained });
                     self.icons = atlas;
                     let (pages, progress) = match result { Ok(result) => result, Err(error) => { let _ = context.consume_retained(error.retained_progress()); return FrameFinishBoundaryStep::Fault("frame icon atlas page admission failed"); } };
                     cursor.icon_pages = Some(pages);
@@ -516,7 +516,7 @@ impl AppRuntime {
                 if !complete { return FrameFinishBoundaryStep::Pending; }
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame icon transfer lost resource input") };
                 let Some(pages) = cursor.icon_pages.take() else { return FrameFinishBoundaryStep::Fault("frame icon atlas pages lost ownership") };
-                if let Err(rejected) = input.try_push_upload(semio_framework_ui_prepared::PreparedRenderUpload::IconAtlasPages { pixels: pages }) {
+                if let Err(rejected) = input.try_push_upload(semio_ui_prepared::PreparedRenderUpload::IconAtlasPages { pixels: pages }) {
                     partial.upload_rejected = Some(rejected);
                     return FrameFinishBoundaryStep::Fault("frame icon upload fixed admission was refused");
                 }
@@ -533,7 +533,7 @@ impl AppRuntime {
                     if next > input.limits.max_upload_items {
                         return FrameFinishBoundaryStep::Fault("frame glyph upload credits exceeded");
                     }
-                    let Ok((pages, progress)) = semio_framework_ui_prepared::PreparedAtlasPages::try_new(self.atlas.width, self.atlas.height, 1, self.atlas.pixels.len(), semio_framework_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained }) else {
+                    let Ok((pages, progress)) = semio_ui_prepared::PreparedAtlasPages::try_new(self.atlas.width, self.atlas.height, 1, self.atlas.pixels.len(), semio_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained }) else {
                         return FrameFinishBoundaryStep::Fault("frame glyph atlas page admission failed");
                     };
                     cursor.glyph_pages = Some(pages);
@@ -556,7 +556,7 @@ impl AppRuntime {
                 }
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame glyph transfer lost resource input") };
                 let Some(pages) = cursor.glyph_pages.take() else { return FrameFinishBoundaryStep::Fault("frame glyph atlas pages lost ownership") };
-                if let Err(upload) = input.try_push_upload(semio_framework_ui_prepared::PreparedRenderUpload::GlyphAtlasPages { pixels: pages }) {
+                if let Err(upload) = input.try_push_upload(semio_ui_prepared::PreparedRenderUpload::GlyphAtlasPages { pixels: pages }) {
                     partial.upload_rejected = Some(upload);
                     return FrameFinishBoundaryStep::Fault("frame glyph upload fixed admission was refused");
                 }
@@ -578,10 +578,10 @@ impl AppRuntime {
                     && self
                         .shell.input
                         .scene_pointer_target_at(self.last_pointer_x, self.last_pointer_y, &self.input, &self.theme)
-                        .filter(|target| target.kind == semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph)
+                        .filter(|target| target.kind == semio_ui_declaration::ui::SurfaceKind::NodeGraph)
                         .and_then(|target| {
                             self.shell.surfaces.node_graph_states.get(&target.host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                                semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_connection_cursor_active(
+                                semio_renderer_wgpu_engine_graph::node_graph::node_graph_connection_cursor_active(
                                     &target.host_id,
                                     f64::from(self.last_pointer_x - surface.bounds.x),
                                     f64::from(self.last_pointer_y - surface.bounds.y),
@@ -598,7 +598,7 @@ impl AppRuntime {
             }
             FrameFinishPhase::Draw => {
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame draw transfer lost resource input") };
-                input.time_seconds = semio_framework_os_renderer_wgpu_host_plumbing::deadlines::ui_animation_seconds(semio_framework_job::default_now_us());
+                input.time_seconds = semio_renderer_wgpu_host_plumbing::deadlines::ui_animation_seconds(semio_framework_job::default_now_us());
                 cursor.phase = FrameFinishPhase::Overlay;
             }
             FrameFinishPhase::Overlay => {

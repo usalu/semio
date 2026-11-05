@@ -1,6 +1,6 @@
 //! 🏛️ The authentic registered tool catalog retains its original rows through paid shared metadata leases.
 use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolPublicContract,ArtifactToolRegistration};
+use semio_plugin_decl_app::tool_contract::{ArtifactToolPublicContract,ArtifactToolRegistration};
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use std::{sync::Arc,mem::{ManuallyDrop,size_of}};

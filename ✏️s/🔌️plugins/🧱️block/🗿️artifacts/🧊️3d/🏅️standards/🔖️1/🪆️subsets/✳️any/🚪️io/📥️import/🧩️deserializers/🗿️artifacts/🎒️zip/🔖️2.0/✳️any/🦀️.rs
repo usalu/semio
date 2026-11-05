@@ -11,7 +11,7 @@ use semio_s_artifact_block_3d_io_write::serializers::artifacts::zip::v2_0::any::
 use crate::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
 use crate::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
 use semio_s_artifact_block_3d_model::Block3dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip;
@@ -47,7 +47,7 @@ impl Deserializer<Block3dSnapshot> for ZipIntoBlock3d {
             _ => Confidence::None,
         }
     }
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Block3dSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Block3dSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "zip→block3d: expected a binary zip payload".to_string())));
         };

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "stored",
+          "query",
+          "matches"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "stored": {
+            "$ref": "#/$defs/key"
+          },
+          "query": {
+            "$ref": "#/$defs/key"
+          },
+          "matches": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance",
+        "revision",
+        "generation",
+        "root"
+      ],
+      "properties": {
+        "instance": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{2}$"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "root": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

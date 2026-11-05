@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for RemoveSection where Op: 
         record: "RemovedSection",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove section", "Querschnitt entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove section", "Querschnitt entfernen")
     }
 }
 

@@ -64,10 +64,10 @@ pub fn shooting_bounded_reduce(
     command: &ShootingCommand,
     snapshot: &ShootingSnapshot,
     config: &ShootingConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ShootingPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ShootingPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, Fault> {
     if !SHOOTING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
@@ -75,6 +75,67 @@ pub fn shooting_bounded_reduce(
     }
     let mut ctx = ShootingDispatchCtx { selected_asset_ids: interaction.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default() };
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None }, &mut ctx)
+}
+
+pub struct ShootingCommandWork {
+    tool_id: &'static str,
+    consumed: bool,
+}
+
+impl ShootingCommandWork {
+    pub fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, consumed: false }
+    }
+}
+
+impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<ShootingPlayApp>> for ShootingCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &ShootingCommand, snapshot: &ShootingSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ShootingPlayApp>>>) -> Option<usize> {
+        (!self.consumed && command.command_id() == self.tool_id).then(|| shooting_bounded_extent(command, snapshot, interaction)).flatten()
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
+    fn reports_progress(&self) -> bool {
+        false
+    }
+
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<ShootingPlayApp>>, _cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<ShootingPlayApp>>, semio_plugin::__job::OriginalTurnFailure> {
+        use semio_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.consumed || input.command.command_id() != self.tool_id {
+            return Err(Fault::from("shooting-command-work-terminal").into());
+        }
+        self.consumed = true;
+        let emit = shooting_bounded_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation)?;
+        if !emit.config_mutations.iter().any(|mutation| matches!(mutation, ShootingConfigMutation::SetShotSelection(_) | ShootingConfigMutation::SetCamera(_))) {
+            return Ok(ArtifactCommandWorkStep::Complete(emit));
+        }
+        let mut presence = input.context.and_then(|context| context.presence_view()).map(|view| view.local.clone()).unwrap_or_default();
+        for mutation in &emit.config_mutations {
+            match mutation {
+                ShootingConfigMutation::SetShotSelection(selection) => {
+                    presence.selected_shot_ids = selection.shot_ids.clone();
+                }
+                ShootingConfigMutation::SetCamera(camera) => {
+                    presence.camera = camera.camera.clone();
+                }
+                _ => {}
+            }
+        }
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
+            emit,
+            ephemeral: semio_plugin::EphemeralEmit {
+                presence: vec![ShootingPresenceMutation::ReplacePresence(crate::editor::shooting::presence::ReplacePresence { presence })],
+                transient: Vec::new(),
+                window_transient: Vec::new(),
+            },
+        })
+    }
 }
 
 pub struct ShootingCommandJobFactory {
@@ -107,11 +168,11 @@ impl semio_framework::ToolJobFactory for ShootingCommandJobFactory {
         shooting_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SHOOTING_BOUNDED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SHOOTING_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobFactory {
     type Owner = EditorApp<ShootingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = SHOOTING_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
@@ -134,17 +195,17 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobF
         ArtifactToolPublicationContract { tool_id: "setActiveShotShape", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchShots", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchAssets", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "addShot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addShot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence] },
         ArtifactToolPublicationContract { tool_id: "addAsset", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "importAsset", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "resetSnapshot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "loadSavedCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence] },
+        ArtifactToolPublicationContract { tool_id: "loadSavedCamera", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence] },
         ArtifactToolPublicationContract { tool_id: "setCenterModel", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setShotSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setShotSelection", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence] },
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "saveDownload", lanes: &[ArtifactToolPublicationLane::HostOnly] },

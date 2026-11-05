@@ -1,6 +1,6 @@
 //! 🏘️ Authored IFC4 native example and explicit Part21 exchange asset.
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 pub const ICON: &str = "file";

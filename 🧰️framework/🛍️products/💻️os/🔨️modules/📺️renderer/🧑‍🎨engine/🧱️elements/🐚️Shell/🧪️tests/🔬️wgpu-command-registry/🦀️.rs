@@ -1,18 +1,18 @@
-use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
-use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
+use semio_renderer_wgpu_fixtures::shell::test_app;
+use semio_os_kernel::os_directory::io::text::directory_command_sha256;
 use super::*;
 use {semio_framework::ActionArgControl,semio_framework::ActionKind,semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::CommandDefinition,semio_framework::CommandOwnerAddress,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::PanelGroup,semio_framework::PanelTabDefinition,semio_framework::PanelTabKind,semio_framework::PluginManifest,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 
 fn test_shell_state() -> ShellState {
-    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
 }
 
 #[test]
 fn window_action_context_nested_menu_actions_preserve_the_clicked_window() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔬️window-action-context/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let spec = semio_framework_ui_layout::layout::ContextMenuItemSpec { id: "nested".into(), action: Some("setValue".into()), args: (!case["args"].is_null()).then(|| semio_framework::DslValue::from(&case["args"])), ..Default::default() };
-        let group = semio_framework_ui_layout::layout::ContextMenuItemSpec { id: "group".into(), children: Some(vec![spec]), ..Default::default() };
+        let spec = semio_ui_layout::layout::ContextMenuItemSpec { id: "nested".into(), action: Some("setValue".into()), args: (!case["args"].is_null()).then(|| semio_framework::DslValue::from(&case["args"])), ..Default::default() };
+        let group = semio_ui_layout::layout::ContextMenuItemSpec { id: "group".into(), children: Some(vec![spec]), ..Default::default() };
         let mut items = vec![shell_context_menu_item_from_spec(group, "test", false)];
         scope_context_menu_items(&mut items, fixture["clickedWindowId"].as_str().unwrap());
         let actual: Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(items[0].children[0].action.as_ref().unwrap().args.as_ref().unwrap()).to_string()).unwrap();
@@ -35,9 +35,9 @@ fn window_action_context_fallback_uses_the_clicked_window_kind() {
     let right = fixture["clickedWindowId"].as_str().unwrap();
     shell.windows.active_window_id = Some(left.into());
     shell.dock.dock.root =
-        semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", semio_framework_ui_layout::layout::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", semio_framework_ui_layout::layout::WindowStackCorner::TopLeft)], active: left.into() };
+        semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", semio_ui_layout::layout::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", semio_ui_layout::layout::WindowStackCorner::TopLeft)], active: left.into() };
     shell.dock.dock_drop_bodies = vec![(Vec::new(), Rect::new(100.0, 0.0, 100.0, 100.0), right.into())];
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     let mut input = InputState::<ActionDescriptor>::default();
     PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &Theme::light());
     semio_framework_async::block_on(PointerCtx::of(&mut shell).open_context_menu(125.0, 25.0, None));
@@ -50,7 +50,7 @@ fn window_action_context_fallback_uses_the_clicked_window_kind() {
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Default)]
 struct DirectoryBootstrapFakeTransport {
-    responses: std::sync::Arc<std::sync::Mutex<std::collections::VecDeque<semio_framework_os_kernel::os_directory::client::HttpResponse>>>,
+    responses: std::sync::Arc<std::sync::Mutex<std::collections::VecDeque<semio_os_kernel::os_directory::client::HttpResponse>>>,
     urls: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
 }
 
@@ -67,8 +67,8 @@ impl DirectoryWsConnection for DirectoryBootstrapFakeWs {
     fn send_binary(&mut self, _bytes: Vec<u8>) -> Result<(), TransportError> {
         Ok(())
     }
-    fn try_recv_text(&mut self) -> Result<semio_framework_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
-        Ok(self.close_code.take().map_or(semio_framework_os_kernel::os_directory::client::DirectoryWsPoll::Pending, |code| semio_framework_os_kernel::os_directory::client::DirectoryWsPoll::Closed(Some(code))))
+    fn try_recv_text(&mut self) -> Result<semio_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
+        Ok(self.close_code.take().map_or(semio_os_kernel::os_directory::client::DirectoryWsPoll::Pending, |code| semio_os_kernel::os_directory::client::DirectoryWsPoll::Closed(Some(code))))
     }
     fn close(&mut self) {}
 }
@@ -80,20 +80,20 @@ impl DirectoryTransport for DirectoryBootstrapFakeTransport {
     async fn http(
         &self,
         _ctx: &OperationContext,
-        _method: semio_framework_os_kernel::os_directory::client::HttpMethod,
+        _method: semio_os_kernel::os_directory::client::HttpMethod,
         url: &str,
         _bearer: Option<&str>,
         _body: Option<Vec<u8>>,
-    ) -> Result<semio_framework_os_kernel::os_directory::client::HttpResponse, TransportError> {
+    ) -> Result<semio_os_kernel::os_directory::client::HttpResponse, TransportError> {
         self.urls.lock().expect("fake directory urls").push(url.to_string());
         self.responses.lock().expect("fake directory responses").pop_front().ok_or_else(|| TransportError::Io("missing fake response".into()))
     }
 
-    async fn get_accepting(&self, _ctx: &OperationContext, _url: &str, _bearer: Option<&str>, _accept: &str) -> Result<semio_framework_os_kernel::os_directory::client::HttpResponse, TransportError> {
+    async fn get_accepting(&self, _ctx: &OperationContext, _url: &str, _bearer: Option<&str>, _accept: &str) -> Result<semio_os_kernel::os_directory::client::HttpResponse, TransportError> {
         Err(TransportError::Io("binary reads are outside the page fixture".into()))
     }
 
-    fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<semio_framework_os_kernel::os_directory::client::HttpResponse, TransportError> {
+    fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<semio_os_kernel::os_directory::client::HttpResponse, TransportError> {
         Err(TransportError::Io("socket grant is outside the page fixture".into()))
     }
 
@@ -104,7 +104,7 @@ impl DirectoryTransport for DirectoryBootstrapFakeTransport {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn directory_page_json(after: u64, through: u64, has_more: bool, _receipt_seed: char) -> String {
-    let mut page = semio_framework_os_kernel::os_directory::DirectoryEventPageV1 {
+    let mut page = semio_os_kernel::os_directory::DirectoryEventPageV1 {
         schema: "semio.directory.event-page.v1".into(),
         session_binding_sha256: "a".repeat(64),
         authorization_generation: 9,
@@ -125,7 +125,7 @@ fn directory_test_context() -> OperationContext {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn directory_test_runner(since: u64) -> std::sync::Arc<ShellDirectoryRunner> {
-    let pool = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
+    let pool = semio_renderer_wgpu_host_base::renderer_worker_pool();
     let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(pool.clone()));
     let scope = runtime.open_scope_now(ScopeOwner::Service("directory-bootstrap-law"), None);
     let compute = std::sync::Arc::new(ComputePool::with_pool(1, pool.clone()));
@@ -191,11 +191,11 @@ impl DirectoryBootstrapFakeHome {
 #[cfg(not(target_arch = "wasm32"))]
 fn space_administration_test_page(members: &[(&str, DirectorySpaceRole, bool)], invites: &[(&str, i64, bool)]) -> String {
     let mut page = DirectorySpaceAdministrationPageV1::Author {
-        schema: semio_framework_os_kernel::os_directory::DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA.into(),
+        schema: semio_os_kernel::os_directory::DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA.into(),
         session_binding_sha256: "a".repeat(64),
         authorization_generation: 5,
         space_id: "space-admin-01".into(),
-        space: semio_framework_os_kernel::os_directory::MemberSpaceViewV1 {
+        space: semio_os_kernel::os_directory::MemberSpaceViewV1 {
             id: "space-admin-01".into(),
             name: "Administered".into(),
             kind: DirectorySpaceKind::Studio,
@@ -208,12 +208,12 @@ fn space_administration_test_page(members: &[(&str, DirectorySpaceRole, bool)], 
             created_at_ms: 1,
             updated_at_ms: 2,
         },
-        members: semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationMemberWindowV1 {
+        members: semio_os_kernel::os_directory::DirectorySpaceAdministrationMemberWindowV1 {
             rows: members.iter().map(|(user_id, role, owner)| DirectorySpaceAdministrationMemberRowV1 { user_id: (*user_id).into(), email: format!("{user_id}@example.invalid"), display_name: (*user_id).into(), role: *role, owner: *owner }).collect(),
             next_cursor: None,
         },
-        documents: semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationDocumentWindowV1 { rows: Vec::new(), next_cursor: None },
-        invites: semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationInviteWindowV1 {
+        documents: semio_os_kernel::os_directory::DirectorySpaceAdministrationDocumentWindowV1 { rows: Vec::new(), next_cursor: None },
+        invites: semio_os_kernel::os_directory::DirectorySpaceAdministrationInviteWindowV1 {
             rows: invites
                 .iter()
                 .map(|(invite_id, created_at_ms, revoked)| DirectorySpaceAdministrationInviteRowV1 {
@@ -246,7 +246,7 @@ fn space_administration_operation_drives_a_real_directory_client_through_its_fin
     semio_framework_async::block_on(async {
         let canonical = space_administration_test_page(&[("user-a", DirectorySpaceRole::Author, true), ("user-b", DirectorySpaceRole::Spectator, false)], &[("invite-live", 400, false), ("invite-dead", 200, true)]);
         let transport = DirectoryBootstrapFakeTransport::default();
-        transport.responses.lock().expect("fake responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: canonical.clone().into_bytes() });
+        transport.responses.lock().expect("fake responses").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: canonical.clone().into_bytes() });
         let client = DirectoryClient::new(transport.clone(), "http://hub.test");
         let mut operation = ShellSpaceAdministrationOperationV1::open(1, "space-admin-01");
         assert_eq!(operation.phase(), ShellSpaceAdministrationPhaseV1::Loading);
@@ -301,7 +301,7 @@ fn space_administration_operation_drives_a_real_directory_client_through_its_fin
         let ShellSpaceAdministrationTurnV1::FetchPage { cursor } = operation.turn() else { panic!("a receipt is always followed by a mandatory refresh") };
         assert_eq!(cursor, None);
         assert_eq!(operation.phase(), ShellSpaceAdministrationPhaseV1::Refreshing);
-        transport.responses.lock().expect("fake responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: canonical.clone().into_bytes() });
+        transport.responses.lock().expect("fake responses").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: canonical.clone().into_bytes() });
         let refreshed = client.space_administration_page(&directory_test_context(), "space-admin-01", None).await.expect("refreshed page");
         assert!(operation.apply_page(refreshed.canonical_json().to_string(), refreshed.page().clone()));
         assert_eq!(operation.phase(), ShellSpaceAdministrationPhaseV1::Ready);
@@ -320,7 +320,7 @@ fn space_administration_operation_terminates_on_denial_stale_and_indeterminate_t
         let canonical = space_administration_test_page(&[("user-a", DirectorySpaceRole::Author, true)], &[]);
         for (status, expected) in [(401u16, ShellSpaceAdministrationPhaseV1::Denied), (404, ShellSpaceAdministrationPhaseV1::Denied), (409, ShellSpaceAdministrationPhaseV1::Stale), (503, ShellSpaceAdministrationPhaseV1::Failed)] {
             let transport = DirectoryBootstrapFakeTransport::default();
-            transport.responses.lock().expect("fake responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status, body: Vec::new() });
+            transport.responses.lock().expect("fake responses").push_back(semio_os_kernel::os_directory::client::HttpResponse { status, body: Vec::new() });
             let client = DirectoryClient::new(transport, "http://hub.test");
             let mut operation = ShellSpaceAdministrationOperationV1::open(2, "space-admin-01");
             let _ = operation.turn();
@@ -334,7 +334,7 @@ fn space_administration_operation_terminates_on_denial_stale_and_indeterminate_t
         }
 
         let transport = DirectoryBootstrapFakeTransport::default();
-        transport.responses.lock().expect("fake responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: canonical.into_bytes() });
+        transport.responses.lock().expect("fake responses").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: canonical.into_bytes() });
         let client = DirectoryClient::new(transport, "http://hub.test");
         let mut operation = ShellSpaceAdministrationOperationV1::open(3, "space-admin-01");
         let _ = operation.turn();
@@ -358,10 +358,10 @@ fn directory_home_bootstrap_waits_for_terminal_config_ack_and_retains_home_acros
     semio_framework_async::block_on(async {
         let transport = DirectoryBootstrapFakeTransport::default();
         for body in [directory_page_json(3, 5, true, 'b'), directory_page_json(5, 8, false, 'c')] {
-            transport.responses.lock().expect("fake responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: body.into_bytes() });
+            transport.responses.lock().expect("fake responses").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: body.into_bytes() });
         }
         let client = DirectoryClient::new(transport.clone(), "http://hub.test");
-        let mut home = DirectoryHomeProjection::new("s".into(), 41, test_app(Vec::new(), Vec::new()), ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("retained Home");
+        let mut home = DirectoryHomeProjection::new("s".into(), 41, test_app(Vec::new(), Vec::new()), ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("retained Home");
         home.bootstrap = DirectoryEventPageBootstrapV1::new(7, 3).expect("fixture epoch");
         let first = client.event_page(&directory_test_context(), 3).await.expect("first canonical page");
         let first_for_home = first.clone();
@@ -406,12 +406,12 @@ fn directory_home_bootstrap_waits_for_terminal_config_ack_and_retains_home_acros
 fn directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss() {
     semio_framework_async::block_on(async {
         let transport = DirectoryBootstrapFakeTransport::default();
-        transport.responses.lock().expect("fake responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(3, 8, false, 'b').into_bytes() });
+        transport.responses.lock().expect("fake responses").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(3, 8, false, 'b').into_bytes() });
         let client = DirectoryClient::new(transport, "http://hub.test");
-        let mut home = DirectoryHomeProjection::new("s".into(), 41, test_app(Vec::new(), Vec::new()), ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("retained Home");
+        let mut home = DirectoryHomeProjection::new("s".into(), 41, test_app(Vec::new(), Vec::new()), ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("retained Home");
         home.bootstrap = DirectoryEventPageBootstrapV1::new(7, 3).expect("fixture epoch");
         let failed_transport = DirectoryBootstrapFakeTransport::default();
-        failed_transport.responses.lock().expect("fake failure").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 503, body: Vec::new() });
+        failed_transport.responses.lock().expect("fake failure").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 503, body: Vec::new() });
         let failed_client = DirectoryClient::new(failed_transport.clone(), "http://hub.test");
         assert!(matches!(failed_client.event_page(&directory_test_context(), 3).await, Err(DirectoryClientError::Http { status: 503, .. })));
         assert_eq!(home.bootstrap.after(), 3, "transport failure cannot advance the committed cursor");
@@ -422,7 +422,7 @@ fn directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss
         assert_eq!(home.retry_at_ms, 1_050);
         let page = DirectoryClient::new(
             DirectoryBootstrapFakeTransport {
-                responses: std::sync::Arc::new(std::sync::Mutex::new(std::collections::VecDeque::from([semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(3, 8, false, 'c').into_bytes() }]))),
+                responses: std::sync::Arc::new(std::sync::Mutex::new(std::collections::VecDeque::from([semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(3, 8, false, 'c').into_bytes() }]))),
                 urls: Default::default(),
             },
             "http://hub.test",
@@ -440,7 +440,7 @@ fn directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss
         assert!(matches!(home.wake(false), Ok(None)), "duplicate live wake coalesces while the page refetch is already pending");
         home.bootstrap = DirectoryEventPageBootstrapV1::new(7, 8).expect("restore live fixture");
         let live_page_transport = DirectoryBootstrapFakeTransport::default();
-        live_page_transport.responses.lock().expect("responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(8, 8, false, 'd').into_bytes() });
+        live_page_transport.responses.lock().expect("responses").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(8, 8, false, 'd').into_bytes() });
         let page = DirectoryClient::new(live_page_transport, "http://hub.test").event_page(&directory_test_context(), 8).await.expect("empty live page");
         let ack = home.bootstrap.present(page).expect("live page");
         assert!(matches!(home.bootstrap.acknowledge(&ack), Ok(DirectoryBootstrapTransition::Live { since: 8 })));
@@ -448,7 +448,7 @@ fn directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss
         assert_eq!(home.bootstrap.bootstrap_epoch(), 8);
         assert!(home.bootstrap.acknowledge(&ack).is_err(), "a stale epoch receipt cannot revive the retired stream");
         let rebootstrap_transport = DirectoryBootstrapFakeTransport::default();
-        rebootstrap_transport.responses.lock().expect("rebootstrap response").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(0, 0, false, 'e').into_bytes() });
+        rebootstrap_transport.responses.lock().expect("rebootstrap response").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(0, 0, false, 'e').into_bytes() });
         let rebootstrap_page = DirectoryClient::new(rebootstrap_transport, "http://hub.test").event_page(&directory_test_context(), 0).await.expect("rebootstrap page");
         let rebootstrap_ack = home.bootstrap.present(rebootstrap_page).expect("rebootstrap page admission");
         assert!(matches!(home.bootstrap.acknowledge(&rebootstrap_ack), Ok(DirectoryBootstrapTransition::Live { since: 0 })));
@@ -463,15 +463,15 @@ fn directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss
         assert_eq!(home.bootstrap.after(), 0, "terminal identity close restarts from raw cursor zero");
         assert!(home.bootstrap.acknowledge(&rebootstrap_ack).is_err(), "pre-terminal epoch receipt cannot revive the retired stream");
         let pending_transport = DirectoryBootstrapFakeTransport::default();
-        pending_transport.responses.lock().expect("pending response").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(0, 13, false, 'e').into_bytes() });
+        pending_transport.responses.lock().expect("pending response").push_back(semio_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(0, 13, false, 'e').into_bytes() });
         let pending_page = DirectoryClient::new(pending_transport, "http://hub.test").event_page(&directory_test_context(), 0).await.expect("pending page");
         let pending_ack = home.bootstrap.present(pending_page).expect("pending page admission");
         let pending_epoch = home.bootstrap.bootstrap_epoch();
         let page_cancel = CancelToken::root_now();
         let (late_tx, late_rx) = std::sync::mpsc::channel::<ShellDirectoryPageResult>();
-        let page_task = ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, std::future::pending::<()>());
+        let page_task = ShellPoolFuture::spawn(semio_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, std::future::pending::<()>());
         let (late_home_tx, late_home_rx) = std::sync::mpsc::channel::<ShellDirectoryHomePublicationResult>();
-        let home_task = ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, std::future::pending::<()>());
+        let home_task = ShellPoolFuture::spawn(semio_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, std::future::pending::<()>());
         home.page_cancel = Some(page_cancel.clone());
         home.page_rx = Some(late_rx);
         home.page_task = Some(page_task.clone());
@@ -552,7 +552,7 @@ fn fullscreen_command_requests_the_host_transition() {
 #[test]
 fn build_os_commands_terminology_options_include_app_terminologies() {
     let mut shell = test_shell_state();
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     let terminology_command = shell.docs.build_os_commands(&shell.chrome).into_iter().find(|command| command.id == "os.setTerminology").expect("terminology command present");
     let ActionArgControl::Select { options } = &terminology_command.args[0].control() else {
         panic!("expected a select control");
@@ -652,7 +652,7 @@ fn command_panel_fixture_maps_every_owner_to_actionable_tree_rows() {
 fn resolved_zero_argument_command_executes_once_and_a_stale_key_is_rejected() {
     let mut shell = test_shell_state();
     shell.dock.layout_override = Some(shell.dock.dock.to_window_layout());
-    let execute = |value: &str| ActionDescriptor { controller_id: "framework".into(), action: "executeResolvedCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) };
+    let execute = |value: &str| ActionDescriptor { controller_id: "framework".into(), action: "executeResolvedCommand".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": value }) };
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(execute("stale:os.resetDock"))).expect("stale key is a no-op");
     assert!(shell.dock.layout_override.is_some());
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(execute("os:os.resetDock"))).expect("live reset executes");
@@ -672,7 +672,7 @@ fn argument_command_ingress_toggles_only_a_live_owner_qualified_form() {
     assert_eq!(shell.commands.expanded_command_id.as_deref(), Some(key.as_str()));
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(action)).expect("second toggle closes");
     assert_eq!(shell.commands.expanded_command_id, None);
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setCommandExpanded".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": "mode:retired:stale" }) }))
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setCommandExpanded".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": "mode:retired:stale" }) }))
         .expect("stale toggle is a no-op");
     assert_eq!(shell.commands.expanded_command_id, None);
 }
@@ -696,7 +696,7 @@ fn command_category_label_titleizes_hyphenated_ids() {
 #[test]
 fn command_search_items_stages_arg_commands_and_tags_os_category() {
     let mut shell = test_shell_state();
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     let items = shell.docs.command_search_items(&shell.chrome, &shell.plugins, &shell.prefs);
     let appearance = items.iter().find(|item| item.id == "command.os.os.setAppearance").expect("one staged appearance command present");
     assert_eq!(appearance.label, "Set Appearance…");
@@ -712,7 +712,7 @@ fn command_search_items_stages_arg_commands_and_tags_os_category() {
 #[test]
 fn apply_os_command_reset_dock_clears_layout_override_locally() {
     let mut shell = test_shell_state();
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell.dock.layout_override = Some(shell.dock.dock.to_window_layout());
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.resetDock", None)).expect("reset dock never errors");
     assert!(shell.dock.layout_override.is_none());
@@ -721,7 +721,7 @@ fn apply_os_command_reset_dock_clears_layout_override_locally() {
 #[test]
 fn apply_os_command_set_locale_dispatches_through_framework_controller() {
     let mut shell = test_shell_state();
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
     assert_eq!(shell.prefs.locale_id, "de");
 }
@@ -757,7 +757,7 @@ fn apply_os_command_set_theme_id_updates_active_theme() {
 #[test]
 fn build_command_panel_ui_groups_rows_under_category_headers() {
     let mut shell = test_shell_state();
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     let UiNode::Tree(panel) = shell.docs.build_command_panel_ui(&shell.chrome, &shell.plugins, &shell.prefs) else {
         panic!("expected a Tree root");
     };

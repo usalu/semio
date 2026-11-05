@@ -5,7 +5,7 @@
 
 use semio_framework_test_fixtures::fixture_path;
 
-pub use semio_framework_ui_host::*;
+pub use semio_ui_host::*;
 use semio_framework_abi::AbiEvent;
 use ui_render::{DispatchEvent, ImeEvent, PointerButton, PointerKind};
 
@@ -58,5 +58,5 @@ mod enqueue_tests;
 mod window;
 
 pub mod event {
-    pub use semio_framework_ui_host::*;
+    pub use semio_ui_host::*;
 }

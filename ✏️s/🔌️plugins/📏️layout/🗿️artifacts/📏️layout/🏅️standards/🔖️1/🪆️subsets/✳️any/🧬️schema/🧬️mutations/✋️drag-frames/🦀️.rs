@@ -36,10 +36,10 @@ impl DragFrames {
 impl<Op> MutationKind<LayoutSnapshot, Op> for DragFrames where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "frames", kind: "drag-frames", record: "DraggedFrames" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (layout_label_number(self.dx), layout_label_number(self.dy));
         let (en, de) = layout_label_frames(self.targets.len());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en})"), &format!("{de} um ({dx_de}; {dy_de}) ziehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en})"), &format!("{de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone()]

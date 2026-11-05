@@ -21,7 +21,7 @@ test("the General entrypoint owns only General package dependencies in every cha
 });
 test("the General entrypoint exports no specific registry or compatibility thunk",()=>{
  const source=readFileSync(resolve(framework,"📦️packages/🦀️rust/🦀️.rs"),"utf8").replace(/\/\/[^\n]*/g,"");
- expect(source.includes("semio_framework_os_kernel")).toBe(false);
+ expect(source.includes("semio_os_kernel")).toBe(false);
  const exported=exportedNames(source);
  for(const name of fixture.specificExports)expect(exported.has(name),name).toBe(false);
 });

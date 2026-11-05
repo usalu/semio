@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeEmbWallBackfillGam
         record: "ChangedEmbWallBackfillGamma",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Soil unit weight γ of the embedded wall", "Eingespannte Wand: Bodenwichte γ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Soil unit weight γ of the embedded wall", "Eingespannte Wand: Bodenwichte γ ändern")
     }
 }
 

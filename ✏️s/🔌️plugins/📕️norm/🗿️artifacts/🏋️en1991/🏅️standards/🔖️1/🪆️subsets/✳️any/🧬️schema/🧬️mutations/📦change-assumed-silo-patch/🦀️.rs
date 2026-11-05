@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedSiloPatch w
         record: "ChangedAssumedSiloPatch",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed silo patch load", "Angenommene Silo-Teilflächenlast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed silo patch load", "Angenommene Silo-Teilflächenlast ändern")
     }
 }
 

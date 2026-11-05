@@ -1,14 +1,14 @@
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, TreeWindows};
+use semio_plugin::UiText;
+use semio_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, TreeWindows};
 use crate::WriterSnapshot;
 use crate::editor::writer::panels::document::{WRITER_PLAY_BODY_ARTIFACT, definition, jack_ast_to_tree_item, render};
 use crate::editor_unit_tests::context::{app_with_jack, new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree_for_jack() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = new_app().await;
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app_over(&mut app.0, WRITER_PLAY_BODY_ARTIFACT, Some(&crate::standards::v1::subsets::any::io::text::snapshot::jack_example_json()), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app_over(&mut app.0, WRITER_PLAY_BODY_ARTIFACT, Some(&crate::standards::v1::subsets::any::io::text::snapshot::jack_example_json()), &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");
     assert!(json.contains("\"type\":\"tree\""));
     assert!(json.contains("Query"));
 }
@@ -46,7 +46,7 @@ async fn document_falls_back_to_a_plain_section_for_non_jack_documents() {
 // tree root carries exactly one `interactionSelect`.
 use crate::editor::writer::terminology::writer_play_labels;
 use crate::schema::JackAstNode;
-use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_plugin::{BuiltNode, Component, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
 
 const AST_SECTION: &str = "writer-play-document.ast";
 const OVERSIZED: usize = 200;
@@ -77,7 +77,7 @@ fn window_law_request(node_key: &str, open: Option<bool>, offset: u32, rows: u32
 /// 🌳️ These two laws call `jack_ast_to_tree_item` DIRECTLY, so the AST root is the outermost
 /// windowed container and the path of a level below it is `root␟<id>`.
 fn ast_window_path(node_key: &str) -> String {
-    format!("root{}{node_key}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+    format!("root{}{node_key}", semio_plugin::TREE_WINDOW_PATH_SEPARATOR)
 }
 
 fn window_law_node<'a>(root: &'a BuiltNode, key: &str) -> &'a BuiltNode {
@@ -115,7 +115,7 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -151,13 +151,13 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_ast_id
 #[semio_framework_async_macros::async_test]
 async fn ast_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let document = crate::WriterSnapshot { language_id: "jack".into(), document: crate::document_child_handle_with_text("doc", "match Wall\n", "jack"), ..crate::WriterSnapshot::default() };
-    let tree = render(&document, writer_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, writer_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     let ast = window_law_node(&tree, AST_SECTION);
     let row = ast.children.iter().next().expect("an AST root row");
     let Component::TreeItem(props) = &row.component else { panic!("{} is not a tree row", row.key.as_str()) };
-    assert_eq!(props.granularity.as_ref().map(semio_framework_plugin::UiText::as_str), Some("node"));
+    assert_eq!(props.granularity.as_ref().map(semio_plugin::UiText::as_str), Some("node"));
     assert!(row.bindings.is_empty(), "a pick row must not pay for its own activate binding");
 }
 

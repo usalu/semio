@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_os_pack::CodecId;
+use semio_os_pack::CodecId;
 use crate::format::{SprWriter, WriteOptions};
 use crate::history::{HistoryEdit, HistoryLog, HistoryTransitionRecord, OpPayload};
 use crate::wire::{DictBuilder, REC_EDIT, REQUIRED_HASH_CHAIN};

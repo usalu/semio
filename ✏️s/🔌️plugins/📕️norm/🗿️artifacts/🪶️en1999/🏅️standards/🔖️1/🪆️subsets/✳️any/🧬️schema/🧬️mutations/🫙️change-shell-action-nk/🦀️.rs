@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeShellActionNK wher
         record: "ChangedShellActionNK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic axial force N_k of the shell action", "Schaleneinwirkung: Charakteristische Normalkraft N_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic axial force N_k of the shell action", "Schaleneinwirkung: Charakteristische Normalkraft N_k ändern")
     }
 }
 

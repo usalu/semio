@@ -87,10 +87,10 @@ pub(super) fn block3d_retained_reduce(
     command: &Block3dCommand,
     snapshot: &Block3dSnapshot,
     config: &Block3dConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &crate::protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Block3dMutation, Block3dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
@@ -117,7 +117,7 @@ impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork
         command: &Block3dCommand,
         _snapshot: &Block3dSnapshot,
         _interaction: &crate::protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
     ) -> Option<usize> {
         let view_state = context.and_then(|context| context.view_state.as_deref())?;
         let targets_world = view_state.active_window_kind_id.as_deref() == Some(world::BLOCK3D_WINDOW_WORLD)
@@ -155,7 +155,7 @@ impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork
             }
             _ => return Err(Fault::from("block3d-window-preview-route-mismatch")),
         };
-        let mutation = semio_framework_plugin::WindowTransientMutation::of::<Block3dWorldWindowTransientOwner>(
+        let mutation = semio_plugin::WindowTransientMutation::of::<Block3dWorldWindowTransientOwner>(
             window_id,
             SetBrushPreview { preview }.into(),
         );
@@ -195,7 +195,7 @@ impl semio_framework::ToolJobFactory for Block3dRetainedCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         block3d_bounded_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BLOCK3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BLOCK3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 

@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "wall", kind: "set-wall-type-of", record: "SetWallTypeOf" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set type of wall \"{}\" to \"{}\"", self.id, self.wall_type), &format!("Typ von Wand \"{}\" auf \"{}\" setzen", self.id, self.wall_type))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set type of wall \"{}\" to \"{}\"", self.id, self.wall_type), &format!("Typ von Wand \"{}\" auf \"{}\" setzen", self.id, self.wall_type))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

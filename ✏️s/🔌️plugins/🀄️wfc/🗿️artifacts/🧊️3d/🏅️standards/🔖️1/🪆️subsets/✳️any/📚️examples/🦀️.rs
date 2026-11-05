@@ -10,12 +10,12 @@ pub mod two_room_corridor;
 pub mod wall_roof_facade_strip;
 
 /// 📇️ Every bundled example, in the order the editor's example picker offers them.
-pub fn sources() -> Vec<semio_framework_plugin::ExampleSource> {
+pub fn sources() -> Vec<semio_plugin::ExampleSource> {
     vec![two_room_corridor::source(), wall_roof_facade_strip::source(), tower_stack::source()]
 }
 
 /// 📇️ The same roster as a `&'static` slice, for the subset declaration.
-pub fn example_source_slice() -> &'static [semio_framework_plugin::ExampleSource] {
-    static EXAMPLES: std::sync::OnceLock<Vec<semio_framework_plugin::ExampleSource>> = std::sync::OnceLock::new();
+pub fn example_source_slice() -> &'static [semio_plugin::ExampleSource] {
+    static EXAMPLES: std::sync::OnceLock<Vec<semio_plugin::ExampleSource>> = std::sync::OnceLock::new();
     EXAMPLES.get_or_init(sources).as_slice()
 }

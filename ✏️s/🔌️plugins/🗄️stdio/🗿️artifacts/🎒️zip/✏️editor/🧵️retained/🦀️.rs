@@ -2,8 +2,8 @@
 
 use super::{edit_node, entry_node_id, fault, require_revision, validate_text, COMMENT_NODE_ID, ENTRY_NODE_PREFIX};
 use crate::{ZipMutation, ZipSnapshot};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{ArtifactEditor, EditorApp, Emit, Fault, NoConfigMutation, NoDraftMutation};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::{ArtifactEditor, EditorApp, Emit, Fault, NoConfigMutation, NoDraftMutation};
 use std::marker::PhantomData;
 
 pub const CHECKPOINT_BYTES: usize = 96;
@@ -158,7 +158,7 @@ where
         WORKSPACE_IDENTITY
     }
 
-    fn extent(&self, command: &E::Command, _snapshot: &ZipSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>) -> Option<usize> {
+    fn extent(&self, command: &E::Command, _snapshot: &ZipSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>) -> Option<usize> {
         let (_, value, _) = (self.arguments)(command).ok()?;
         validate_text(value).ok()?;
         Some(2)

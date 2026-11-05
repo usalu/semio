@@ -7,25 +7,25 @@
 //! Domain-neutral session: `semio_framework_time_travel`; store read API: `ArtifactStore::{state_before,
 //! begin_report_replay, replay_report, commit_finished_replay}`.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
+extern crate semio_os_kernel as pack;
 use semio_framework::ActionArgDef;
 use semio_framework::{Fault, FaultCode, FaultOrigin, ArtifactDialect};
 use semio_framework::kernel::{HistoryPatch, MutationId, UiDirtyScope};
-use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKey};
-use semio_framework_plugin_child::MemberPath;
-use semio_framework_plugin_tool_run::ToolRunLedger;
+use semio_plugin_decl_views::child_view::{ChildContentView, MemberKey};
+use semio_plugin_child::MemberPath;
+use semio_plugin_tool_run::ToolRunLedger;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::ManuallyDrop;
-use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-use semio_framework_plugin_command::HISTORY_UNIT_SPANS_DOCUMENTS_CODE;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_plugin_command::HISTORY_UNIT_SPANS_DOCUMENTS_CODE;
+use semio_plugin_decl_app::ArtifactApp;
 use pack::snapshot::ArtifactPack;
 use store::ArtifactStore;
 use std::mem::size_of;
-use semio_framework_plugin_tool_run as tool_run;
+use semio_plugin_tool_run as tool_run;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use semio_framework_value::DslValue;
@@ -33,25 +33,25 @@ use semio_framework_value_derive::FromValue;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use semio_framework::kernel::HybridLogicalTimestamp;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use store::Mutation;
 use protocol::OpBinary;
 use protocol::OpText;
 use semio_framework_value_derive::ToValue;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::MutationDiff;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 use semio_framework::kernel::{HistoryReprojectionKind, HistoryTimeTravel, HistoryTimeTravelProblem, HistoryTimeTravelReview, HistoryTimeTravelStage, RequestId};
 use semio_framework::{mutation_input_defs, reference_id_text, registered_input_schema_document, ArgSchema, InputSchemaError};
 use semio_framework::history_edit::HISTORY_EDIT_ARG_GENERATION;
 use semio_framework_time_travel::{TimeTravelBase, TimeTravelEvent, TimeTravelLabel, TimeTravelRefusal, TimeTravelReview, TimeTravelSession, TimeTravelStage, TimeTravelTarget, TIME_TRAVEL_BUSY_CODE, TIME_TRAVEL_EDITOR_CLOSED_CODE, TIME_TRAVEL_INVALID_INPUT_CODE, TIME_TRAVEL_NAME_INVALID_CODE, TIME_TRAVEL_NAME_REQUIRED_CODE, TIME_TRAVEL_NOT_EDITABLE_CODE, TIME_TRAVEL_NOT_WITHDRAWABLE_CODE, TIME_TRAVEL_NO_SELECTION_CODE, TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE, TIME_TRAVEL_UNKNOWN_INPUT_CODE, TIME_TRAVEL_UNKNOWN_MUTATION_CODE};
 use store::ErasedSnapshotRetirement;
-#[cfg(test)] use semio_framework_os_kernel::HistoryPageStack;
+#[cfg(test)] use semio_os_kernel::HistoryPageStack;
 use semio_framework::kernel::{HistoryMutationEntry, HistoryMutationMessage, HistoryReprojection};
 use semio_framework::{input_label_glossary, ActionArgControl, ActionArgOption, ArgPresentation, OptionSource, SnapSource};
 use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ARG_EDIT, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_PATH, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_ARG_VALUE, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, HISTORY_EDIT_DISCARD_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_INPUT_INSERT, HISTORY_EDIT_INPUT_REMOVE, HISTORY_EDIT_RERUN_ACTION_ID, HISTORY_EDIT_USE_SELECTION_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
@@ -73,11 +73,11 @@ pub use crate::original_retirement::tests::assert_discard_publication_original;
 #[cfg(test)]
 pub use crate::original_retirement::tests::native_original_actor_grant;
 
-pub use semio_framework_plugin_time_travel_panel::panel_pointer::*;
+pub use semio_plugin_time_travel_panel::panel_pointer::*;
 
-pub use semio_framework_plugin_time_travel_panel::panel_sections::*;
+pub use semio_plugin_time_travel_panel::panel_sections::*;
 
-pub use semio_framework_plugin_command::lifted_command::*;
+pub use semio_plugin_command::lifted_command::*;
 
 #[path = "⏱️limits-and-outcomes/🦀️.rs"]
 mod limits_and_outcomes;

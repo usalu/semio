@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileGroupBaseCohes
         record: "ChangedPileGroupBaseCohesion",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Block base c_u of the pile group", "Pfahlgruppe: Blocksohle c_u ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Block base c_u of the pile group", "Pfahlgruppe: Blocksohle c_u ändern")
     }
 }
 

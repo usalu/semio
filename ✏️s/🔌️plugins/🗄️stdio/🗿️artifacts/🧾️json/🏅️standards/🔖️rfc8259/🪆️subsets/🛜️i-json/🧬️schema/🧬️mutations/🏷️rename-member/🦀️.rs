@@ -6,6 +6,7 @@ use super::*;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(deny_unknown_fields)]
 pub struct RenameMember {
     pub path: JsonPath,
     pub from: String,
@@ -15,8 +16,8 @@ pub struct RenameMember {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RenameMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "member", kind: "rename-member", record: "RenameMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Rename member", "Eigenschaft umbenennen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Rename member", "Eigenschaft umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

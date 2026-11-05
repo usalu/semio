@@ -6,6 +6,7 @@ use super::*;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(deny_unknown_fields)]
 pub struct UpsertMember {
     pub path: JsonPath,
     pub key: String,
@@ -18,8 +19,8 @@ pub struct UpsertMember {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for UpsertMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "member", kind: "upsert-member", record: "UpsertMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Upsert member", "Eigenschaft einfügen oder aktualisieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Upsert member", "Eigenschaft einfügen oder aktualisieren")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

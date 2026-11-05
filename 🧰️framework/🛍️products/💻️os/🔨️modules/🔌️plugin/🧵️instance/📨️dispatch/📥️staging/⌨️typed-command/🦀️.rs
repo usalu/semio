@@ -1,45 +1,45 @@
 //! 🏂️ Staged `typed-command` members of the `instance-dispatch` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! ⌨️ Typed command admission and start: roots capture, wire admission, import media and configuration commands.
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
-use semio_framework_plugin_command::command_admission::{AdmittedToolCommand, PendingLatestWinsCommand};
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_decl_emission::{ActionMeta, Emit};
+use semio_plugin_command::command_admission::{AdmittedToolCommand, PendingLatestWinsCommand};
 use semio_framework::{AppRole, Fault, FaultCode, FaultFrom, FaultOrigin, Media};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle};
+use semio_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle};
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_plugin_decl_media::ArtifactOutputChunks;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
+use semio_plugin_decl_media::ArtifactOutputChunks;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_views::child_view::ChildContentView;
 use crate::dispatch_bundle::DispatchCtx;
 use semio_framework_value::{DslValue, RetirementDemand, ValueError};
-use semio_framework_plugin_job::reserved_jobs::{FrameworkConfigurationBinaryJob, FrameworkConfigurationBinaryStage, QualifiedToolProof,QualifiedToolView};
+use semio_plugin_job::reserved_jobs::{FrameworkConfigurationBinaryJob, FrameworkConfigurationBinaryStage, QualifiedToolProof,QualifiedToolView};
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
-use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
-use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use semio_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
+use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
-use semio_framework_plugin_decl_views::PeerPresenceRoot;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_decl_views::PeerPresenceRoot;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_plugin_operation::ToolCancellationLease;
-use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
-use semio_framework_plugin_job::lifted_full_operation_job::{TypedCommandFullOperationJob, TypedCommandFullOperationPhase};
-use semio_framework_plugin_job::{TypedCommandRoots, artifact_owned_tool_birth_grant, artifact_owned_tool_handoff_grant};
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of;
-use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::removed;
+use semio_plugin_operation::ToolCancellationLease;
+use semio_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_plugin_job::lifted_full_operation_job::{TypedCommandFullOperationJob, TypedCommandFullOperationPhase};
+use semio_plugin_job::{TypedCommandRoots, artifact_owned_tool_birth_grant, artifact_owned_tool_handoff_grant};
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
+use semio_plugin_instance_docs::docs_instance_root::artifact_handle_of;
+use semio_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
+use semio_plugin_instance_docs::docs_maintenance_ladder::removed;
 
 impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
-    pub async fn dispatch_typed_command_inner(&mut self,source:&mut semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,tool_tag:&mut Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag>,metadata:&mut Option<ActionMeta>,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+    pub async fn dispatch_typed_command_inner(&mut self,source:&mut semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,tool_tag:&mut Option<semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag>,metadata:&mut Option<ActionMeta>,_identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         if !source.admit(cx)?{return Ok(None)}
         if source.receipt.is_some(){return source.advance_receipt(cx)}
         if !source.capture_metadata(metadata,cx)?{return Ok(None)}
@@ -63,7 +63,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let operation=source.operation.unwrap();let id=operation.operation.0;
         if !self.tools.latest_wins_commands.can_insert(id)||self.tools.typed_operation_reservations[id as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(id){return Err(plugin_sdk_fault("typed pending source lost its original fixed registry reservation").into())}
         let revision=self.stores.store.content_revision_now();if operation.generation.0!=self.stores.store.generation_now()||operation.base_revision.0!=u64::from_be_bytes(revision[..8].try_into().unwrap()){return Err(plugin_sdk_fault("typed pending source changed its canonical capture frontier").into())}
-        let receipt=semio_framework_plugin_job::original_emission::OriginalEmissionReceipt::capture(operation,cx)?;
+        let receipt=semio_plugin_job::original_emission::OriginalEmissionReceipt::capture(operation,cx)?;
         let body=source.original_body()?;let decoder=source.original_decoder()?;let binding=source.original_binding()?;
         let mut pending=None;
         if source.handoff(cx,&mut pending,&mut *self.tool_machines,tool_tag,|source|PendingLatestWinsCommand{
@@ -209,7 +209,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let producer_request = Some(ArtifactOwnedToolJobRequest {
             source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,
-                command: semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,retained_wire.as_ref().expect("original typed wire remains retained"),semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
+                command: semio_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,retained_wire.as_ref().expect("original typed wire remains retained"),semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
                 input: retained_wire.take(),
                 checkpoint: None,
                 operation,
@@ -273,7 +273,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 terminal_seen: false,
                 worker_resume_pending: false,
                 publication: None,
-                tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None, pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                tool_stage:semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None, pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                 pending_child_publication: None,
                 owned_child_group: None,
                 owned_child_committed: false,
@@ -288,7 +288,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 publication_checkpoint: None,
                 publication_ownership_progress: None,
                 original_retirement_receipt:None,
-                actor_capture: None,actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture::new(),
+                actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),
                 publication_attempt: 0,
                 ui_pending: false,
                 progress: None,
@@ -338,7 +338,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     /// 🧮️ B1: dispatches a binary-encoded `store::os_store::store_schema::ArtifactCommand<A::ConfigMutation>` against
     /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
     /// `apply_config_bytes` whole-record-replace legacy path).
-    pub async fn dispatch_config_command_inner(&mut self,command_bytes:&mut Vec<u8>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+    pub async fn dispatch_config_command_inner(&mut self,command_bytes:&mut Vec<u8>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         if self.pending.pending_configuration_source.is_some_and(|source|!source.matches(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration source refused different original roots or clock").into())}
         if self.pending.pending_configuration_rejected{self.tools.close_configuration_failure(&mut self.pending,cx,self.mounted_policy.close).map_err(semio_framework_job::OriginalTurnFailure::from)?;return Ok(None)}
         if cx.is_cancelled(){if self.pending.pending_configuration_source.is_some(){self.pending.pending_configuration_rejected=true;self.tools.close_configuration_failure(&mut self.pending,cx,self.mounted_policy.close).map_err(semio_framework_job::OriginalTurnFailure::from)?;return Ok(None)}return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"configuration caller cancelled before any source was admitted").into())}
@@ -347,17 +347,17 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             let done=self.pending.pending_configuration_worker.as_mut().unwrap().advance(cx,permit.lease.cancel_token())?;
             if !done{return Ok(None)}
             let mut worker=self.pending.pending_configuration_worker.take().unwrap();let operation=worker.semantic_operation();let failure=worker.take_failure();assert!(worker.terminal_is_empty());drop(worker);
-            if let Some(failure)=failure{self.pending.pending_configuration_rejected=true;*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(failure));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}
+            if let Some(failure)=failure{self.pending.pending_configuration_rejected=true;*self.pending.pending_configuration_failure=Some(semio_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(failure));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}
             let live=self.stores.store.content_revision();let revision=semio_framework_job::RevisionId(u64::from_be_bytes(live[..8].try_into().expect("revision lane width")));
-            if !matches!(semio_framework_job::validate_commit(&operation,revision,semio_framework_job::Generation(self.stores.store.generation())),semio_framework_job::CommitValidation::Accepted){self.pending.pending_configuration_rejected=true;*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration worker completed against a stale revision or generation").into()));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}
+            if !matches!(semio_framework_job::validate_commit(&operation,revision,semio_framework_job::Generation(self.stores.store.generation())),semio_framework_job::CommitValidation::Accepted){self.pending.pending_configuration_rejected=true;*self.pending.pending_configuration_failure=Some(semio_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration worker completed against a stale revision or generation").into()));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}
             let command=self.pending.pending_configuration_completion.as_ref().unwrap().original.as_ref().unwrap().lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration binary job completed without a decoded command"))?;
-            match command{Ok(command)=>*self.pending.pending_configuration_command=Some(command),Err(source)=>{self.pending.pending_configuration_rejected=true;self.pending.pending_configuration_source=Some(semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx));*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}}
+            match command{Ok(command)=>*self.pending.pending_configuration_command=Some(command),Err(source)=>{self.pending.pending_configuration_rejected=true;self.pending.pending_configuration_source=Some(semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx));*self.pending.pending_configuration_failure=Some(semio_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}}
             return self.finish_configuration_command(meta,identity,cx).await
         }
         if self.pending.receive_configuration_failure(cx)?{return Ok(None)}
         if self.pending.pending_configuration_permit.is_some()&&self.pending.pending_configuration_command.is_some(){return self.finish_configuration_command(meta,identity,cx).await}
         let proof=self.tools.qualified_tool_proof(&*self.stores,"configuration-binary")?;let key=proof.key();
-        let admission=match self.tools.tool_jobs.admit_exact_wire(key.controller_id,key.tool_id,proof.schema_id(),command_bytes){Ok(admission)=>admission,Err(source)=>{*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Admission(source));self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}};
+        let admission=match self.tools.tool_jobs.admit_exact_wire(key.controller_id,key.tool_id,proof.schema_id(),command_bytes){Ok(admission)=>admission,Err(source)=>{*self.pending.pending_configuration_failure=Some(semio_plugin_job::reserved_jobs::OriginalConfigurationFailure::Admission(source));self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}};
         if !matches!(proof,QualifiedToolView::FrameworkOwned(_)|QualifiedToolView::AppOwned(_))||proof.contract().max_decoded_items<1||!proof.admits::<A>(&admission){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration producer failed its exact owner/factory/schema/contract admission").into())}
         if self.pending.pending_configuration_permit.is_none(){let Some(authority)=self.admit_reserved_emit_producer("configuration-binary",meta,cx)?else{return Ok(None)};self.pending.pending_configuration_permit=Some(authority);self.pending.pending_configuration_source=Some(semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx));self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));return Ok(None)}
         if self.pending.pending_configuration_identity!=Some((cx.operation(),cx.generation())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration admission requires its unchanged original receiving caller").into())}
@@ -365,14 +365,14 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<Completion<A::ConfigMutation>>();let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(None)}
         let decoded=std::sync::Arc::new(std::sync::Mutex::new(None));cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}).expect("exact original configuration completion preflight remains exclusive");cx.consume_fuel(1);
         self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));
-        self.pending.pending_configuration_completion=Some(semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement{original:ManuallyDrop::new(Some(decoded.clone())),payload:None});
-        let job=FrameworkConfigurationBinaryJob::<A>{raw:std::mem::take(command_bytes),cursor:0,stage:FrameworkConfigurationBinaryStage::Envelope,operation:Some(self.pending.pending_configuration_permit.as_ref().unwrap().operation),decoded:ManuallyDrop::new(Some(decoded)),decoded_close:None,receiving:ManuallyDrop::new(None),native:semio_framework_job_native_decode::OriginalNativeDecodeSource::empty(semio_framework_job_native_decode::OriginalNativeDecodePolicy{maximum_owned_bytes:semio_framework_plugin_job::reserved_jobs::FRAMEWORK_CONFIGURATION_NATIVE_OWNED_BYTES}),failure:ManuallyDrop::new(None),place:ManuallyDrop::new(None),state:[0;8],pending:None,outcomes:semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),closing:false};
+        self.pending.pending_configuration_completion=Some(semio_plugin_job::reserved_jobs::ConfigurationDecodeRetirement{original:ManuallyDrop::new(Some(decoded.clone())),payload:None});
+        let job=FrameworkConfigurationBinaryJob::<A>{raw:std::mem::take(command_bytes),cursor:0,stage:FrameworkConfigurationBinaryStage::Envelope,operation:Some(self.pending.pending_configuration_permit.as_ref().unwrap().operation),decoded:ManuallyDrop::new(Some(decoded)),decoded_close:None,receiving:ManuallyDrop::new(None),native:semio_framework_job_native_decode::OriginalNativeDecodeSource::empty(semio_framework_job_native_decode::OriginalNativeDecodePolicy{maximum_owned_bytes:semio_plugin_job::reserved_jobs::FRAMEWORK_CONFIGURATION_NATIVE_OWNED_BYTES}),failure:ManuallyDrop::new(None),place:ManuallyDrop::new(None),state:[0;8],pending:None,outcomes:semio_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),closing:false};
         let operation=self.pending.pending_configuration_permit.as_ref().unwrap().operation;
-        self.pending.pending_configuration_worker=Some(semio_framework_plugin_job::reserved_jobs::configuration_worker::ConfigurationWorker::new(job,operation,proof.contract().max_output_bytes,proof.contract().max_work_units_per_step,self.mounted_policy.preparation,self.mounted_policy.close,cx));
+        self.pending.pending_configuration_worker=Some(semio_plugin_job::reserved_jobs::configuration_worker::ConfigurationWorker::new(job,operation,proof.contract().max_output_bytes,proof.contract().max_work_units_per_step,self.mounted_policy.preparation,self.mounted_policy.close,cx));
         Ok(None)
     }
 
-    async fn finish_configuration_command(&mut self,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+    async fn finish_configuration_command(&mut self,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         if self.pending.pending_configuration_identity!=Some((cx.operation(),cx.generation())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration commit requires its unchanged original caller").into())}
         if let Some(owner)=self.pending.pending_configuration_completion.as_mut(){
             let demand=if owner.terminal_is_empty(){RetirementDemand{depth:1,..Default::default()}}else{owner.demand(cx.retained_grant().maximum_copy_bytes)?};
@@ -384,6 +384,6 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         if permit.is_cancelled().await{return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),"configuration binary was cancelled before config-store commit").into())}
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         let command=self.pending.pending_configuration_command.take().expect("configuration commit retains its original typed command");cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
-        let dispatched=self.stores.config_store.dispatch(command,identity).await;let permit=self.pending.pending_configuration_permit.take().unwrap();self.tools.finish_reserved_emit_producer(permit);if let Err(source)=dispatched{*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Store(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}self.pending.pending_configuration_identity=None;self.pending.pending_configuration_source=None;self.pending.pending_configuration_rejected=false;self.history.cache=None;Ok(Some(ToolOperations::<A>::empty_result("configCommand", meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await))
+        let dispatched=self.stores.config_store.dispatch(command,identity).await;let permit=self.pending.pending_configuration_permit.take().unwrap();self.tools.finish_reserved_emit_producer(permit);if let Err(source)=dispatched{*self.pending.pending_configuration_failure=Some(semio_plugin_job::reserved_jobs::OriginalConfigurationFailure::Store(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}self.pending.pending_configuration_identity=None;self.pending.pending_configuration_source=None;self.pending.pending_configuration_rejected=false;self.history.cache=None;Ok(Some(ToolOperations::<A>::empty_result("configCommand", meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await))
     }
 }

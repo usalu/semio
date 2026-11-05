@@ -17,11 +17,11 @@
 //! emptied stack still minted a window with an EMPTY id, and the Focus chip journaled a
 //! `shell.windowMaximize` command React declares nowhere.
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
+use semio_renderer_wgpu_fixtures::shell::test_app;
 use super::*;
 use semio_framework::manifest::Keybinding;
 use semio_framework::{ActionDefinition, ActionKind, AppDefinition, WindowKinds};
-use semio_framework_ui_wgpu_input::InputState;
+use semio_ui_wgpu_input::InputState;
 
 /// 🪟️ The journey's own two world panes and the window kind both instantiate — a Row of two
 /// single-tab stacks, which is what makes the caps read `dock.tab.0.…` and `dock.tab.1.…`.
@@ -30,9 +30,9 @@ const PERSPECTIVE: &str = "puzzle3d-main-perspective";
 const CANVAS: Rect = Rect::new(0.0, 0.0, 1600.0, 1000.0);
 
 fn journey_dock() -> DockState {
-    let stack = |window_id: &str| semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance(window_id, "main", WindowStackCorner::TopLeft)], active: window_id.to_string() };
+    let stack = |window_id: &str| semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance(window_id, "main", WindowStackCorner::TopLeft)], active: window_id.to_string() };
     let mut dock = DockState::default();
-    dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Row(vec![(stack(TOP), 0.5), (stack(PERSPECTIVE), 0.5)]);
+    dock.root = semio_renderer_wgpu_dock::DockNode::Row(vec![(stack(TOP), 0.5), (stack(PERSPECTIVE), 0.5)]);
     dock.sync_active_window(TOP);
     dock
 }
@@ -40,13 +40,13 @@ fn journey_dock() -> DockState {
 /// 🧪️ The shell the journey reaches at `window-cap-focus`: a live session whose single window kind
 /// declares `engagementAbort` (puzzle3d's own `escape` verb) and a dock holding both panes.
 fn journey_shell(keybindings: Vec<Keybinding>) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let app = test_app(Vec::new(), Vec::new());
     let mut kind = app.window_kinds.first().clone();
     kind.actions = vec![ActionDefinition::new("engagementAbort", LocalizedLabel::data("Abort"), ActionKind::Interaction, "eye")];
     let mut app = AppDefinition { window_kinds: WindowKinds::try_from(vec![kind]).expect("one window kind"), ..app };
     app.keybindings = keybindings;
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell.dock.dock = journey_dock();
     shell.windows.active_window_id = Some(TOP.to_string());
     shell
@@ -298,7 +298,7 @@ fn escape_with_a_docked_owner_dispatches_the_apps_engagement_abort() {
     let mut shell = journey_shell(vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "test".into(), action: "engagementAbort".into(), args: None } }]);
     shell.input.overlay_state = OverlayState::Dropdown("example".into());
     let mut input = InputState::<ActionDescriptor>::default();
-    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input));
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input));
     assert_eq!(shell.input.overlay_state, OverlayState::None, "⎋️ the same keydown dismisses the picker");
     assert!(shell.chrome.transient_notice().is_none(), "⎋️ a docked owner answers the verb — no unowned-chord banner");
     assert_eq!(outcome.err().as_deref(), Some("action program missing"), "⎋️ …and `engagementAbort` crossed the dispatch funnel");
@@ -313,7 +313,7 @@ fn escape_with_an_empty_dock_is_the_hinted_no_op_run_19_measured() {
     let mut shell = journey_shell(vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "test".into(), action: "engagementAbort".into(), args: None } }]);
     assert!(shell.dock.dock.close_window(TOP) && shell.dock.dock.close_window(PERSPECTIVE));
     let mut input = InputState::<ActionDescriptor>::default();
-    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input));
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input));
     assert!(outcome.is_ok(), "⎋️ nothing is dispatched at all");
     assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⎋️ the verb resolved and found no window to address");
 }

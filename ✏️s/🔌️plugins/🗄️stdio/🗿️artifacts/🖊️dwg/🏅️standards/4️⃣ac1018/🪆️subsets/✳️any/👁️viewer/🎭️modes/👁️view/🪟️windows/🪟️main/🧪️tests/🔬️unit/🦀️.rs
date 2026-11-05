@@ -1,6 +1,6 @@
 use super::*;
-use semio_framework_plugin::app::ImageWindowKit;
-use semio_framework_plugin::WindowKit;
+use semio_plugin::app::ImageWindowKit;
+use semio_plugin::WindowKit;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_image_window_kit() {

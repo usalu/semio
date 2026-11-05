@@ -1,7 +1,7 @@
 //! 📦️ A completed native initializer lends the unchanged Store allocation without a second birth.
 use semio_framework_job::*;
-use semio_framework_os_kernel as store;
-use semio_framework_plugin_window_config::{WindowConfigInitializationOwners,WindowConfigOwner};
+use semio_os_kernel as store;
+use semio_plugin_window_config::{WindowConfigInitializationOwners,WindowConfigOwner};
 use semio_framework_value::RetainedCloneGrant;
 use store::ArtifactStoreInitializationAuthority;
 const TURN:RetainedCloneGrant=RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};

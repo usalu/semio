@@ -11,7 +11,7 @@ pub use semio_s_plugin_norm_app_surface_viewport3d as viewport3d;
 pub use semio_s_plugin_norm_app_surface_visual_chrome::*;
 
 /// 🧵️ Retained norm command output with empty application config and draft lanes.
-pub type NormRetainedCommandResult<M> = Result<Emit<M, NoConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
+pub type NormRetainedCommandResult<M> = Result<Emit<M, NoConfigMutation, semio_plugin::NoDraftMutation>, Fault>;
 
 pub use semio_s_plugin_norm_app_surface_entity_editing as entity_editing;
 

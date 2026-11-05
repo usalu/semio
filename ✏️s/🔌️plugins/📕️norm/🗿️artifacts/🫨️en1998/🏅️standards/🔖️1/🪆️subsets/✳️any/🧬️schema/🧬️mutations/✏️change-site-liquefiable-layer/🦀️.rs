@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteLiquefiableLay
         record: "ChangeSiteLiquefiableLayer",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Liquefiable or sensitive soil deposits (ground type S2)", "Verflüssigungsfähige oder empfindliche Böden (Baugrundklasse S2) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Liquefiable or sensitive soil deposits (ground type S2)", "Verflüssigungsfähige oder empfindliche Böden (Baugrundklasse S2) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-liquefiable-layer".into()]

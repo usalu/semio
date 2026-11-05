@@ -1,5 +1,5 @@
 //! 🎨️ Explicit indexed bitmap entities retain every current native literal without a codec carrier.
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,Projection,RowWriter}};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,Projection,RowWriter}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 const ALPHABET:&[u8;64]=b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

@@ -1,6 +1,6 @@
 //! 🧪️ Selected SET constructors preserve all original member drafts under progressive original loans.
 use super::*;
-use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 pub(super) fn retire<T:RetireOwned>(caller:&mut OriginalWorkFixture,owner:&mut Option<T>){let mut close=RetainedCloneClose::default();for turn in 0..100000{if owner.is_none()&&close.is_empty(){break;}let demand=close.next_owner_demands::<T>(owner.is_some(),&None,4096).unwrap();caller.turn(OriginalWorkFixture::stock(),|cx|cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,demand,|grant|if close.is_empty(){own_with(close.begin_granted(owner,grant), invalid)}else{close.step_granted(grant)})?;Ok(())})).unwrap();assert!(turn<99999);}assert!(owner.is_none()&&close.is_empty());}
 fn source()->DslValue{let raw="a".repeat(63)+"€"+&"ä".repeat(40);DslValue::Object(vec![("name".into(),DslValue::String("IFCPROPERTYSETDEFINITIONSET".into())),("items".into(),DslValue::Array(vec![DslValue::Object(vec![("kind".into(),DslValue::String("aggregate".into())),("value".into(),DslValue::Array(["7".to_owned(),"7".to_owned(),"".to_owned(),"-".to_owned(),raw].into_iter().map(|raw|DslValue::Object(vec![("kind".into(),DslValue::String("reference".into())),("value".into(),DslValue::String(raw))])).collect()))])]))])}
 #[test]

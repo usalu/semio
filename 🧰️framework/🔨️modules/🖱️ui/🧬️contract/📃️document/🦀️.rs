@@ -18,9 +18,9 @@ use std::sync::Mutex;
 
 //#region 🔖️Document
 
-use semio_framework_ui_contract_identity::{SurfaceId,UiNodeId,UiRevision};
+use semio_ui_contract_identity::{SurfaceId,UiNodeId,UiRevision};
 use crate::{TransitionHint,UiNodeBindings};
-use semio_framework_ui_contract_budget::{UI_DOCUMENT_NODES,UI_NODE_BINDINGS,UI_DOCUMENT_PATCH_OPS};
+use semio_ui_contract_budget::{UI_DOCUMENT_NODES,UI_NODE_BINDINGS,UI_DOCUMENT_PATCH_OPS};
 
 
 //#region 🌳️Snapshot
@@ -774,7 +774,7 @@ impl UiDocumentLease {
     /// 📜️ The payload of a document published as a paged-text carrier: the depth-first concatenation
     /// of every `Component::Text` leaf's packed payload under the root. This is the retained wire
     /// home of every reserved `UiRefreshSection` surface (`framework.section.measures`,
-    /// `framework.section.catalogue`, …) that `semio_framework_plugin::app::paged_text_carrier`
+    /// `framework.section.catalogue`, …) that `semio_plugin::app::paged_text_carrier`
     /// publishes; the walk follows the record graph, so any page order reassembles byte-identically.
     ///
     /// See `🧬️contract/🧪️tests/🧫️fixtures/📜️paged-text.json`.

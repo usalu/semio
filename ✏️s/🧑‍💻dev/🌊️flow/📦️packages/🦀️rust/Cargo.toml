@@ -14,11 +14,11 @@ workspace = true
 
 [dev-dependencies]
 semio-s-spatial-kernel-semio-session.workspace = true
-semio-framework-os-flow.workspace = true
+semio-os-flow.workspace = true
 semio-framework-artifact-flow-flow.workspace = true
 semio-framework.workspace = true
 serde_json.workspace = true
-neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 semio-s-plugin-flow-brep = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust" }
 semio-s-plugin-flow-primitive = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust" }
 semio-s-plugin-flow-math = { path = "../../../../🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust" }

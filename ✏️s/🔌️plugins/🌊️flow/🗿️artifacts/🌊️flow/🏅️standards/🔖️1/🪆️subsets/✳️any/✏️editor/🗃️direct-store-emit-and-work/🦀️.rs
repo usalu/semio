@@ -28,7 +28,7 @@ pub const FLOW_DIRECT_STORE_TOOL_IDS: &[&str] = &[
 
 pub(super) const FLOW_DIRECT_STORE_RAW_BYTES: usize = 16_384;
 
-pub(super) fn flow_direct_store_emit(command: &FlowCommand, config: &FlowMainWindowConfig, view: &semio_framework_plugin::ViewModel) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+pub(super) fn flow_direct_store_emit(command: &FlowCommand, config: &FlowMainWindowConfig, view: &semio_plugin::ViewModel) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let mut next = config.clone();
     match command {
         FlowCommand::NodeGraphViewport(payload) => {
@@ -84,7 +84,7 @@ fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowC
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     let preview = host.evaluate();
     host.retire_cold().map_err(crate::editor::flow::host::value_fault)?;
-    preview.map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.evaluation"), error.to_string()))
+    preview.map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.evaluation"), error.to_string()))
 }
 
 pub(super) fn generation_window_transient(
@@ -92,8 +92,8 @@ pub(super) fn generation_window_transient(
     snapshot: &FlowSnapshot,
     config: &FlowMainWindowConfig,
     current: &main::transient::FlowWindowTransient,
-    view: &semio_framework_plugin::ViewModel,
-) -> Result<Option<semio_framework_plugin::WindowTransientMutation>, Fault> {
+    view: &semio_plugin::ViewModel,
+) -> Result<Option<semio_plugin::WindowTransientMutation>, Fault> {
     let (action, args) = match command {
         FlowCommand::AddGeneration(_) => ("addGeneration", None),
         FlowCommand::RemoveGeneration(payload) => ("removeGeneration", Some(semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone()))]))),

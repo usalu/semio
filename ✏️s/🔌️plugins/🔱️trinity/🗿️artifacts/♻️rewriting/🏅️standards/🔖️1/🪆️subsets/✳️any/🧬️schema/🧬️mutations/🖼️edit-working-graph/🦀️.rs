@@ -28,8 +28,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "working-graph", kind: "edit-working-graph", record: "EditedWorkingGraph" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Edit working-graph", "Ausgangszustand bearbeiten")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Edit working-graph", "Ausgangszustand bearbeiten")
     }
 }
 

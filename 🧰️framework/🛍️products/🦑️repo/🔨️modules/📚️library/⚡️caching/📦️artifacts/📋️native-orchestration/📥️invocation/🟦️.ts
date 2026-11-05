@@ -20,6 +20,7 @@ export interface NativeOwnerCapabilities {
   readonly version: 1;
   readonly buildMode:"prototype"|"release";
   readonly repositoryRoot: string;
+  readonly codeRoot: string;
   readonly artifactDirectory: string;
   readonly command: Readonly<{ kind: "native-owner-command"; manifest: string; workingDirectory: string; program: string; arguments: readonly string[] }>;
   readonly transport: Readonly<{ maximumBytes: number; maximumLines: number }>;
@@ -38,6 +39,7 @@ export function readNativeOwnerCapabilities(value: unknown): NativeOwnerCapabili
 export interface NativeOrchestrationCallerV1 {
  readonly tool?:"nx"|"bazel";
  readonly workspaceRoot:string;
+ readonly codeRoot:string;
  readonly buildMode:"prototype"|"release";
  readonly arguments:readonly string[];
  readonly selection:readonly string[];
@@ -45,12 +47,12 @@ export interface NativeOrchestrationCallerV1 {
  readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>;
 }
 /** 🧲️ Projects either current native role while retaining its exact declared capabilities. */
-export function readNativeCallerAuthorityV1(value:unknown):Readonly<{role:"native-owner-command"|"build-orchestration";repositoryRoot:string;artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];original:NativeOwnerCapabilities|NativeOrchestrationCallerV1}>{
+export function readNativeCallerAuthorityV1(value:unknown):Readonly<{role:"native-owner-command"|"build-orchestration";repositoryRoot:string;codeRoot:string;artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];original:NativeOwnerCapabilities|NativeOrchestrationCallerV1}>{
  if(value&&typeof value==="object"&&"native" in value){
   const refusals=validateJsonSchemaSubset(value&&typeof value==="object"&&"tool" in value?buildCallerSchema:callerSchema,value);if(refusals.length)throw Error("Original native caller capabilities required: "+refusals.slice(0,4).join("; "));
-  const caller=value as NativeOrchestrationCallerV1;return{role:"build-orchestration",repositoryRoot:caller.workspaceRoot,...caller.native,original:caller};
+  const caller=value as NativeOrchestrationCallerV1;return{role:"build-orchestration",repositoryRoot:caller.workspaceRoot,codeRoot:caller.codeRoot,...caller.native,original:caller};
  }
- const caller=readNativeOwnerCapabilities(value);return{role:"native-owner-command",repositoryRoot:caller.repositoryRoot,artifactDirectory:caller.artifactDirectory,transport:caller.transport,child:caller.child,network:caller.network,original:caller};
+ const caller=readNativeOwnerCapabilities(value);return{role:"native-owner-command",repositoryRoot:caller.repositoryRoot,codeRoot:caller.codeRoot,artifactDirectory:caller.artifactDirectory,transport:caller.transport,child:caller.child,network:caller.network,original:caller};
 }
 /** 🏠️ Reads the repository root of any admitted caller principal: a native owner command, the build orchestration, or the finite Nx daemon service that names its repository itself and holds no native grants. */
 export function callerRepositoryRootV1(value:unknown):string{

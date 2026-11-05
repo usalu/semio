@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFallingMass where 
         record: "ChangedFallingMass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change falling mass m of the falling load", "Fallende Last: Fallende Masse m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change falling mass m of the falling load", "Fallende Last: Fallende Masse m ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

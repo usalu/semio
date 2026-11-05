@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFloorArea where Op
         record: "ChangedFloorArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change floor area", "Deckenfläche ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change floor area", "Deckenfläche ändern")
     }
 }
 

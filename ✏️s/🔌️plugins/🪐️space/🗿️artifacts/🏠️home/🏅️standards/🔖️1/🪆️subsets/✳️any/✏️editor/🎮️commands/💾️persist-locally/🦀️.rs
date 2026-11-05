@@ -13,7 +13,7 @@
 use crate::editor::home::config::{local_studio_id_is_admissible, HomeConfig, HomeConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "persist-locally")]
@@ -25,7 +25,7 @@ pub struct PersistLocally {
 /// 🗨️ The folder dialog a folder-less persist opens, seeded with the studio id.
 pub fn folder_dialog(space_id: &str) -> Emit<SHomeMutation, HomeConfigMutation> {
     let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": space_id })));
-    Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(127), dialog_id: "persistLocally".into(), args })
+    Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(127), dialog_id: "persistLocally".into(), args })
 }
 
 pub fn handle(payload: &PersistLocally, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
@@ -51,15 +51,15 @@ pub fn validate(space_id: &str, folder_path: &str) -> Result<(), Fault> {
 /// 💾️ Stage two — the one folder + catalog write, the draft retirement, then the catalog generation bump.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn commit(space_id: &str, folder_path: &str, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    use semio_framework_os::{document_backbone_ref, encode_backbone_payload, OsBackbonePort as _};
-    let refused = |error: semio_framework_os::VcsError| Fault::new(FaultOrigin::App, "s.home.persist-locally.io-failed", format!("persisting {space_id} into {folder_path} failed: {error:?}"));
+    use semio_os::{document_backbone_ref, encode_backbone_payload, OsBackbonePort as _};
+    let refused = |error: semio_os::VcsError| Fault::new(FaultOrigin::App, "s.home.persist-locally.io-failed", format!("persisting {space_id} into {folder_path} failed: {error:?}"));
     let uri = format!("folder://{folder_path}");
-    let port = semio_framework_os::open_folder_space_backbone(folder_path).map_err(refused)?;
+    let port = semio_os::open_folder_space_backbone(folder_path).map_err(refused)?;
     let mut document = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::resolve_studio_document(space_id)).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.persist-locally.unknown-studio", format!("no local studio {space_id} exists")))?;
     document.backbone = Some(::semio_framework_async::poll::resolve_ready(document_backbone_ref(&uri)));
     port.write(&uri, &encode_backbone_payload(&document).map_err(refused)?).map_err(refused)?;
     ::semio_framework_async::poll::resolve_ready(semio_s_space_core::register_studio_port(space_id, port));
-    semio_framework_os::host::admit_os_space_document(document, &::semio_framework_async::poll::resolve_ready(semio_s_space_core::catalog_port())).map_err(refused)?;
+    semio_os::host::admit_os_space_document(document, &::semio_framework_async::poll::resolve_ready(semio_s_space_core::catalog_port())).map_err(refused)?;
     let draft_port = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::draft_backbone_port());
     ::semio_framework_async::poll::resolve_ready(semio_s_space_core::ephemeral_draft_catalog()).discard_draft(&draft_port, space_id);
     Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(doc.snapshot.catalog_generation + 1)]))

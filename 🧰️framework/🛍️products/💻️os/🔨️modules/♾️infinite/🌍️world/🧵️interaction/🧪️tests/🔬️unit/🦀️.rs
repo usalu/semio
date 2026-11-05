@@ -1,14 +1,14 @@
 //! 🧪️ interaction tests (🔬️unit): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::WorldEnvironmentRecord;
-use semio_framework_os_infinite_world_cursors::{selection_method_wire_str, WORLD_INTERACTION_DOMAIN_ID};
-use semio_framework_os_infinite_world_scene::{mesh_id_from_url, srgb_to_linear};
-use semio_framework_os_infinite_world_interaction::{brush_preview_mesh_id, environment_clear_color, world_interaction_definition};
+use semio_os_infinite_world_model::WorldEnvironmentRecord;
+use semio_os_infinite_world_cursors::{selection_method_wire_str, WORLD_INTERACTION_DOMAIN_ID};
+use semio_os_infinite_world_scene::{mesh_id_from_url, srgb_to_linear};
+use semio_os_infinite_world_interaction::{brush_preview_mesh_id, environment_clear_color, world_interaction_definition};
 use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_world_interaction::merge_u32_ids;
+use semio_os_infinite_world_interaction::merge_u32_ids;
 use semio_framework::{HierarchyProvider, MergeMode, SelectionMethod};
-use semio_framework_ui_theme::Rgba;
+use semio_ui_theme::Rgba;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
 

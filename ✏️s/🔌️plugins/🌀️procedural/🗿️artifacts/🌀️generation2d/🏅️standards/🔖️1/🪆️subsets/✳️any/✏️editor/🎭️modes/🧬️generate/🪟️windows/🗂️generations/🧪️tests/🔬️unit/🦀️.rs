@@ -1,11 +1,11 @@
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use semio_s_artifact_procedural_2d_mode_generate::windows::generations::*;
 use semio_s_artifact_procedural_2d_editor_commands::add_generation;
 use crate::app_fixture::{app, close, dispatch, render as render_body, render_with_view, Generation2dApp};
-use semio_framework_os_kernel::os_store::snapshot_read;
+use semio_os_kernel::os_store::snapshot_read;
 use semio_s_artifact_procedural_2d_editor::Generation2dCommand;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_plugin::{TreeWindowRequest, ViewModel};
 
 /// 🗂️ The generate-mode window renders BOTH of its sections against an untouched document: the
 /// generations list (empty placeholder) and the actions section carrying the add row. The fixture
@@ -53,7 +53,7 @@ fn generations_window(json: &str) -> (u64, u64, Vec<String>) {
 fn generations_view(open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
     ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_GENERATIONS.into(), node_key: GENERATION2D_PLAY_GENERATIONS_SECTION.into(), open, offset, rows }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 

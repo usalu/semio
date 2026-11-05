@@ -1,7 +1,7 @@
 //! ✏️ DIN 4108 play app — the `edit` mode: the inputs/results authoring layout.
 
 use crate::modes::edit::windows::{inputs, results};
-use semio_framework_plugin::{create_default_layout, ModeDefinition, WindowLayout};
+use semio_plugin::{create_default_layout, ModeDefinition, WindowLayout};
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::din4108::create_din4108_app`. Every norm app declares

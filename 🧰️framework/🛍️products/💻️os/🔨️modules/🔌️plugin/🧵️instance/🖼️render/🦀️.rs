@@ -1,8 +1,8 @@
 //! 🖼️ Render side of the mounted artifact instance: composition graph, interaction state, render, media jobs and media export.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
+extern crate semio_os_kernel as pack;
 
 #[path = "📥️staging/📜️history-view/🦀️.rs"]
 pub mod render_history_view;

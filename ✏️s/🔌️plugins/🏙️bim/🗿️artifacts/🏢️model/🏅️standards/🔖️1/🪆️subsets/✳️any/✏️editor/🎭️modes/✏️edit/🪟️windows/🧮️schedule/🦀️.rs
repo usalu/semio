@@ -13,14 +13,14 @@ use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, ScheduleField, ScheduleKey, ScheduleOp};
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TableCell;
-use semio_framework_plugin::UiTreeActionPlacement;
-use semio_framework_plugin::UiTreeItemAction;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_locale::Label;
+use semio_plugin::DslValue;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TableCell;
+use semio_plugin::UiTreeActionPlacement;
+use semio_plugin::UiTreeItemAction;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_locale::Label;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "bim-edit-schedule";
@@ -41,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
-        interactions: vec![semio_framework_plugin::InteractionRef::new(BIM_ELEMENT_DOMAIN)],
+        interactions: vec![semio_plugin::InteractionRef::new(BIM_ELEMENT_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -87,13 +87,13 @@ fn column_value(id: &str, label: &str) -> DslValue {
     DslValue::object([("id".to_string(), DslValue::String(id.into())), ("label".to_string(), DslValue::String(label.into())), ("sortable".to_string(), DslValue::Bool(false))])
 }
 
-fn table(columns: Vec<DslValue>, rows: Vec<DslValue>, granularity: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut scene = semio_framework_plugin::TableScene::base(semio_framework_pack_json::to_json_string(&DslValue::Array(columns)), semio_framework_pack_json::to_json_string(&DslValue::Array(rows)));
+fn table(columns: Vec<DslValue>, rows: Vec<DslValue>, granularity: Option<&str>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let mut scene = semio_plugin::TableScene::base(semio_framework_pack_json::to_json_string(&DslValue::Array(columns)), semio_framework_pack_json::to_json_string(&DslValue::Array(rows)));
     if let Some(granularity) = granularity {
         scene.domain_id = Some(BIM_ELEMENT_DOMAIN.into());
         scene.domain_granularity_id = Some(granularity.into());
     }
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Table, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Table, &scene)
 }
 //#endregion 🔖️Cells
 
@@ -139,7 +139,7 @@ pub fn preset_label(labels: &BimLabels, key: &str) -> String {
     .to_string()
 }
 
-fn list_surface(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn list_surface(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let columns = vec![column_value("name", labels.column_name.as_str()), column_value("detail", labels.field_category.as_str()), column_value("rows", labels.sch_rows.as_str()), column_value("actions", labels.sch_actions.as_str())];
     table(columns, list_rows(snapshot, inference, labels), None)
 }
@@ -191,7 +191,7 @@ pub fn row_kind(snapshot: &ModelSnapshot, inference: &ModelInference, id: &str) 
     semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding(snapshot, element).filter(|row| !row.library).map(|row| row.kind.to_string())
 }
 
-fn table_surface(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn table_surface(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let Some(schedule) = snapshot.schedules.get(&config.schedule) else { return list_surface(snapshot, inference, labels) };
     let (columns, rows) = table_parts(schedule, inference, &config.schedule, labels);
     table(columns, rows, row_kind(snapshot, inference, &config.schedule).as_deref())
@@ -299,7 +299,7 @@ pub fn editor_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Ve
     rows
 }
 
-fn editor_surface(snapshot: &ModelSnapshot, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn editor_surface(snapshot: &ModelSnapshot, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let columns = vec![column_value("part", labels.sch_part.as_str()), column_value("item", labels.sch_item.as_str()), column_value("value", labels.sch_value.as_str()), column_value("actions", labels.sch_actions.as_str())];
     table(columns, editor_rows(snapshot, &config.schedule, labels), None)
 }
@@ -307,7 +307,7 @@ fn editor_surface(snapshot: &ModelSnapshot, config: &config::BimScheduleWindowCo
 
 //#region 🔖️Render
 /// 🧮️ Renders the schedule window: the list without a chosen schedule, else its table or its definition editor.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     if !snapshot.schedules.contains_key(&config.schedule) {
         return list_surface(snapshot, inference, labels);
     }

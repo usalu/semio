@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeLayerMu where Op:
         record: "ChangedLayerMu",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change vapour diffusion resistance factor μ of the layer", "Wasserdampf-Diffusionswiderstandszahl μ der Schicht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change vapour diffusion resistance factor μ of the layer", "Wasserdampf-Diffusionswiderstandszahl μ der Schicht ändern")
     }
 }
 

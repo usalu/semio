@@ -3,9 +3,9 @@
 use super::*;
 
 /// 🎟️ The explicit mounted owner policy every acceptance instance runs under.
-pub(super) fn acceptance_policy() -> semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 {
+pub(super) fn acceptance_policy() -> semio_plugin_mounted_owner::MountedOwnerPolicyV1 {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-    semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+    semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
 }
 
 /// 🪪️ The acceptance actor's action meta on the registered instance.
@@ -22,13 +22,13 @@ where
 {
     let mut args = Some(DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect()));
     let mut meta=Some(acceptance_meta());
-    let outcome=semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| async{
+    let outcome=semio_plugin_testing_laws::with_authoring_identity!(|identity| async{
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
             if cx.should_yield(){break}
             let result=app.handle_action(action,&mut args,&mut meta,&mut identity,cx).await.map_err(|fault|AcceptanceError::from(fault).context(format!("{action} faulted")))?;
             if let Some(result)=result{return match result.output.get("rejected").and_then(DslValue::as_str){Some(code)=>Err(format!("{action} was refused: {code}").into()),None=>Ok(())}}
         }
-        Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance action remains pending at caller opportunity limit")).into())
+        Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance action remains pending at caller opportunity limit")).into())
     }.await);
     let mut input=semio_framework_value::retirement::controlled::ControlledRetirement::new(args).unwrap_or_else(|_|panic!("original acceptance action input supports controlled retirement"));
     let loan=acceptance_policy().close;
@@ -47,11 +47,11 @@ where
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-        if cx.should_yield(){return Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance driver exhausted caller opportunity")).into())}
+        if cx.should_yield(){return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance driver exhausted caller opportunity")).into())}
         if done(app) {
             return Ok(());
         }
-        semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| app.advance_typed_operation_publication(&mut identity,cx).await)?;
+        semio_plugin_testing_laws::with_authoring_identity!(|identity| app.advance_typed_operation_publication(&mut identity,cx).await)?;
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     Err((format!(
@@ -84,19 +84,19 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+    let mut app = semio_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
         assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         let mut files = app.document_text().await.map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the document does not print".into())))?;
         if files.dsl != base {
             files.dsl = base.to_string();
-            semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::load_document_text(&mut app, &files, &mut identity,cx).await).map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the base document does not load".into())))?;
+            semio_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::load_document_text(&mut app, &files, &mut identity,cx).await).map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the base document does not load".into())))?;
         }
         for (index, op) in ops.iter().enumerate() {
             let applied = app.stores.store.mutation_ops().map_or(0, |applied| applied.len());
             let receipt =
-                semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity).await).map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
+                semio_plugin_testing_laws::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity).await).map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
             if matches!(receipt.worst, Some(semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
                 return Err(AcceptanceSeedFault::Operation(index, format!("the seed edit does not apply cleanly: {:?}", receipt.messages)));
             }

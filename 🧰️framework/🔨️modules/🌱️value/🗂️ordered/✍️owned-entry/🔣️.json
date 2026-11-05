@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "maximumTurns": 10000,
+  "cancelAfter": [
+    0,
+    1,
+    2,
+    3,
+    7,
+    17
+  ],
+  "stock": {
+    "items": 65536,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 33554432,
+    "depth": 4096,
+    "fuel": 32768
+  },
+  "cases": [
+    {
+      "id": "first",
+      "base": [],
+      "key": "a",
+      "value": 1,
+      "expected": [
+        [
+          "a",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "replace",
+      "base": [
+        [
+          "a",
+          1
+        ],
+        [
+          "b",
+          2
+        ]
+      ],
+      "key": "a",
+      "value": 3,
+      "expected": [
+        [
+          "a",
+          3
+        ],
+        [
+          "b",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "unicode",
+      "base": [
+        [
+          "a",
+          1
+        ],
+        [
+          "β",
+          2
+        ]
+      ],
+      "key": "新",
+      "value": 4,
+      "expected": [
+        [
+          "a",
+          1
+        ],
+        [
+          "β",
+          2
+        ],
+        [
+          "新",
+          4
+        ]
+      ]
+    },
+    {
+      "id": "empty-key",
+      "base": [
+        [
+          "a",
+          1
+        ]
+      ],
+      "key": "",
+      "value": 7,
+      "expected": [
+        [
+          "",
+          7
+        ],
+        [
+          "a",
+          1
+        ]
+      ]
+    }
+  ],
+  "comparison": {
+    "key": "abcdefgh",
+    "zeroWork": 0,
+    "firstByte": 97,
+    "zeroHex": "",
+    "oneHex": "61"
+  }
+}

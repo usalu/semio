@@ -37,7 +37,7 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
             menu: None,
             interaction_domain: None,
         });
-        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+        let mut ui = Ui::new(semio_ui_locale::Locale::En);
         let mut atlas = FontAtlas::builtin();
         let mut draw = DrawList::default();
         let bounds = Rect::new(120.0, 300.0, 300.0, 48.0);
@@ -56,8 +56,8 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
         }
         assert!(completed, "{label}: retained frame completes");
         let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
-        assert!(instances.iter().filter(|item| item.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).count() >= label.chars().filter(|ch| !ch.is_whitespace()).count(), "{label}: label glyphs are emitted");
-        assert!(instances.iter().all(|item| item.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH), "{label}: an idle action row has no opaque control chrome covering its glyphs");
+        assert!(instances.iter().filter(|item| item.params[2] == semio_ui_draw_contract::KIND_GLYPH).count() >= label.chars().filter(|ch| !ch.is_whitespace()).count(), "{label}: label glyphs are emitted");
+        assert!(instances.iter().all(|item| item.params[2] == semio_ui_draw_contract::KIND_GLYPH), "{label}: an idle action row has no opaque control chrome covering its glyphs");
         assert!(ui.window_hit_targets("tree-paint").iter().any(|hit| hit.action.is_some()), "{label}: suppressing identity paint must retain activation");
     }
 }
@@ -232,7 +232,7 @@ fn every_ui_node_kind_has_a_widget_kit_arm_that_paints() {
 //#region 🔬️IntrospectionTests
 #[test]
 fn window_ids_viewport_tree_and_theme_expose_private_window_state() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     assert_eq!(ui.window_ids().count(), 0);
     assert_eq!(ui.viewport("win"), None);
     assert!(ui.tree("win").is_none());

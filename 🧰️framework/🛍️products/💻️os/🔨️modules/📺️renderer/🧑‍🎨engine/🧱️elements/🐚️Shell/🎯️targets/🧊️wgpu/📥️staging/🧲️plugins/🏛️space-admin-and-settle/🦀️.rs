@@ -20,7 +20,7 @@ pub struct ShellPluginFault {
     #[cfg(not(target_arch="wasm32"))]
     pub kernel:Option<semio_framework_actor::KernelError>,
     #[cfg(not(target_arch="wasm32"))]
-    pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
+    pub actor_call:Option<semio_plugin_host::original_actor_context::OriginalActorFixedCall>,
 }
 
 /// 🧯 One SURFACE whose `render_with_document` failed, kept as data for exactly the reason
@@ -39,7 +39,7 @@ pub struct ShellSurfaceFault {
     #[cfg(not(target_arch="wasm32"))]
     pub kernel:Option<semio_framework_actor::KernelError>,
     #[cfg(not(target_arch="wasm32"))]
-    pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
+    pub actor_call:Option<semio_plugin_host::original_actor_context::OriginalActorFixedCall>,
 }
 
 //#endregion 🧯️BootProgramSelection

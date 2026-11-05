@@ -107,10 +107,10 @@ path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️p
 [workspace.dependencies.semio-framework-dsl]
 path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-locale]
+[workspace.dependencies.semio-ui-locale]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-schema-composition]
@@ -134,9 +134,9 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packa
 [workspace.dependencies.semio-framework-value-native-owned]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
-package = "semio-framework-os-kernel"
+package = "semio-os-kernel"
 
 [workspace.dependencies.semio-framework-schema]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
@@ -145,9 +145,9 @@ package = "semio-framework-schema"
 [workspace.dependencies.semio-framework-3d-brep-engine]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
-package = "semio-framework-plugin"
+package = "semio-plugin"
 
 [workspace.dependencies.semio-framework]
 path = "../../../../../🧰️framework/📦️packages/🦀️rust"

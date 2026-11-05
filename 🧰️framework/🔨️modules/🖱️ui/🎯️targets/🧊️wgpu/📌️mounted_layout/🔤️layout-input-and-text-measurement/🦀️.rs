@@ -84,7 +84,7 @@ pub(super) trait OwnedTextWorker: Send {
 
 #[derive(Default)]
 pub(super) struct DeterministicTextWorker {
-    pub(super) kerning: semio_framework_ui_text::PairKerning,
+    pub(super) kerning: semio_ui_text::PairKerning,
     #[cfg(test)]
     pub(super) cancel_after_shape: Option<semio_framework_job::CancelToken>,
     #[cfg(test)]
@@ -119,13 +119,13 @@ impl DeterministicTextWorker{
 
 impl OwnedTextWorker for DeterministicTextWorker {
     fn shape_one(&mut self, input: RetainedGlyphInput, next: Option<char>) -> RetainedGlyphPreview {
-        let advance = semio_framework_ui_text::font_advance_em(semio_framework_ui_text::TextFace::Sans, input.scalar) * DEFAULT_TEXT_SIZE_PX;
-        let kerning = next.map_or(0.0, |right| self.kerning.em(semio_framework_ui_text::TextFace::Sans, input.scalar, right) * DEFAULT_TEXT_SIZE_PX);
+        let advance = semio_ui_text::font_advance_em(semio_ui_text::TextFace::Sans, input.scalar) * DEFAULT_TEXT_SIZE_PX;
+        let kerning = next.map_or(0.0, |right| self.kerning.em(semio_ui_text::TextFace::Sans, input.scalar, right) * DEFAULT_TEXT_SIZE_PX);
         #[cfg(test)]
         if let Some(cancel) = self.cancel_after_shape.as_ref() {
             cancel.cancel_now();
         }
-        RetainedGlyphPreview { scalar: input.scalar, advance, kerning, height: semio_framework_ui_text::line_height(DEFAULT_TEXT_SIZE_PX), generation: 0, revision: 0, atlas_page: 0, atlas_offset: 0, atlas_length: 0 }
+        RetainedGlyphPreview { scalar: input.scalar, advance, kerning, height: semio_ui_text::line_height(DEFAULT_TEXT_SIZE_PX), generation: 0, revision: 0, atlas_page: 0, atlas_offset: 0, atlas_length: 0 }
     }
 }
 
@@ -206,7 +206,7 @@ fn measure_glyph_range(
     if end <= start {
         return (0.0, 0.0);
     }
-    let line = semio_framework_ui_text::line_height(size);
+    let line = semio_ui_text::line_height(size);
     let scale = size / DEFAULT_TEXT_SIZE_PX;
     let advance = |cursor: usize| previews.get(cursor).map_or(0.0, |preview| preview.advance * scale);
     let kerning = |cursor: usize| if cursor > start { previews.get(cursor - 1).map_or(0.0, |preview| preview.kerning * scale) } else { 0.0 };
@@ -283,12 +283,12 @@ pub(super) fn composite_chrome(node: &LayoutInputNode, glyphs: &ui_contract::UiF
     match node.chrome {
         ChromeTextRanges::None => None,
         ChromeTextRanges::Section { title } => {
-            let title_height = title.map(|range| measure_glyph_range(glyphs, previews, range, SECTION_TITLE_FONT_SIZE, MeasureConstraint::Definite(width), false).1.max(semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT));
+            let title_height = title.map(|range| measure_glyph_range(glyphs, previews, range, SECTION_TITLE_FONT_SIZE, MeasureConstraint::Definite(width), false).1.max(semio_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT));
             let metrics = section_chrome_metrics(title_height, 0.0);
             Some((metrics.top, metrics.bottom))
         }
         ChromeTextRanges::Field { description, error, .. } => {
-            let detail_height = |range: GlyphRange| measure_glyph_range(glyphs, previews, range, FIELD_DETAIL_FONT_SIZE, MeasureConstraint::Definite(width), false).1.max(semio_framework_ui_text::line_height(FIELD_DETAIL_FONT_SIZE));
+            let detail_height = |range: GlyphRange| measure_glyph_range(glyphs, previews, range, FIELD_DETAIL_FONT_SIZE, MeasureConstraint::Definite(width), false).1.max(semio_ui_text::line_height(FIELD_DETAIL_FONT_SIZE));
             let metrics = field_chrome_metrics(description.map(detail_height), 0.0, error.map(detail_height), gap);
             Some((metrics.top, metrics.bottom))
         }

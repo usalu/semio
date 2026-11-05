@@ -176,15 +176,15 @@
   "dependencyCases": [
     {
       "id": "qualified-needs-direct-not-transitive",
-      "source": "use semio_framework_ui_contract_budget::TREE_WINDOW_BODY_NODE_BUDGET;",
+      "source": "use semio_ui_contract_budget::TREE_WINDOW_BODY_NODE_BUDGET;",
       "declared": [
-        "semio_framework_ui_contract_values"
+        "semio_ui_contract_values"
       ],
       "required": [
-        "semio_framework_ui_contract_budget"
+        "semio_ui_contract_budget"
       ],
       "missing": [
-        "semio_framework_ui_contract_budget"
+        "semio_ui_contract_budget"
       ]
     },
     {

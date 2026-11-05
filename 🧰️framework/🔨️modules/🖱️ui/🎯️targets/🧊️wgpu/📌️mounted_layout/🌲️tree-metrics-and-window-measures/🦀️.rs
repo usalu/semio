@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🧵️MountedLayoutText
-pub const LAYOUT_NODE_CREDITS: usize = semio_framework_ui_wgpu_layout::flex::FLEX_NODE_CREDITS;
+pub const LAYOUT_NODE_CREDITS: usize = semio_ui_wgpu_layout::flex::FLEX_NODE_CREDITS;
 
 pub const LAYOUT_GLYPH_CREDITS: usize = 16_384;
 
@@ -121,9 +121,9 @@ pub fn retained_section_title_height(tree: &UiTree, id: NodeId) -> f32 {
     }
     node.first_child
         .and_then(|child| tree.accepted_layout(child))
-        .map(|child| (child.y - semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_BODY_GAP).max(semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT))
-        .or_else(|| tree.accepted_layout(id).map(|owner| (owner.height - semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_BODY_GAP - semio_framework_ui_wgpu_layout::flex::SECTION_TRAILING_MARGIN).max(semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT)))
-        .unwrap_or(semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT)
+        .map(|child| (child.y - semio_ui_wgpu_layout::flex::SECTION_TITLE_BODY_GAP).max(semio_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT))
+        .or_else(|| tree.accepted_layout(id).map(|owner| (owner.height - semio_ui_wgpu_layout::flex::SECTION_TITLE_BODY_GAP - semio_ui_wgpu_layout::flex::SECTION_TRAILING_MARGIN).max(semio_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT)))
+        .unwrap_or(semio_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT)
 }
 
 /// 🔖️ Classifies the synthesized row `id` against the `Tree` that owns it — a section row when its
@@ -146,7 +146,7 @@ pub(super) fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<Layou
                 return Some(LayoutNodeKind::TableRow { height: live_tree_item_height(tree, id, item, &metrics, 0), actions: table_actions_width_of(owner, &metrics), lead });
             }
             let section = owner.sections.iter().find(|section| &section.id == key)?;
-            let expanded = tree.disclosure_open(id).unwrap_or_else(|| semio_framework_ui_wgpu_layout::layout::tree_section_default_open(section));
+            let expanded = tree.disclosure_open(id).unwrap_or_else(|| semio_ui_wgpu_layout::layout::tree_section_default_open(section));
             let header = tree_section_header_height(section, &metrics);
             let height = live_tree_section_height(tree, id, section, &metrics);
             Some(LayoutNodeKind::TreeSection { header, height, expanded, reversed })
@@ -250,15 +250,15 @@ pub fn document_row_action_id(tree: &UiTree, id: NodeId, index: usize) -> Option
 /// 📏️ A table's trailing actions column: one `layout::tree_row_action_rect` slot per action of its widest materialised row, as
 /// React sizes its actions track by the widest action strip.
 pub fn table_actions_width_of(node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
-    semio_framework_ui_wgpu_layout::layout::table_actions_width(node.sections.iter().flat_map(|section| section.items.iter()).map(|item| item.actions.as_ref().map_or(0, Vec::len)).max().unwrap_or(0), metrics)
+    semio_ui_wgpu_layout::layout::table_actions_width(node.sections.iter().flat_map(|section| section.items.iter()).map(|item| item.actions.as_ref().map_or(0, Vec::len)).max().unwrap_or(0), metrics)
 }
 
-pub fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &semio_framework_ui_declaration::ui::UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
+pub fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &semio_ui_declaration::ui::UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
     if !section.presence.visible() {
         return 0.0;
     }
     let header = tree_section_header_height(section, metrics);
-    if !tree.disclosure_open(id).unwrap_or_else(|| semio_framework_ui_wgpu_layout::layout::tree_section_default_open(section)) {
+    if !tree.disclosure_open(id).unwrap_or_else(|| semio_ui_wgpu_layout::layout::tree_section_default_open(section)) {
         return header;
     }
     let (lead, trail) = tree_window_spacer_px(section.window.as_ref(), section.items.len());
@@ -266,7 +266,7 @@ pub fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &semio_frame
 }
 
 /// 🪟️ The leading spacer a windowed container places before `key`, when `key` is its FIRST materialised child.
-fn window_lead(window: Option<&semio_framework_ui_declaration::ui::UiTreeWindow>, first: Option<&UiTreeItemNode>, key: &str) -> f32 {
+fn window_lead(window: Option<&semio_ui_declaration::ui::UiTreeWindow>, first: Option<&UiTreeItemNode>, key: &str) -> f32 {
     match (window, first) {
         (Some(window), Some(first)) if first.id == key => tree_window_spacer_px(Some(window), 0).0,
         _ => 0.0,
@@ -322,7 +322,7 @@ pub fn tree_window_measures(tree: &UiTree, theme: &Theme, viewport: (f32, f32), 
         }
         let Some(node) = tree.node(id) else { continue };
         if let UiNode::Tree(owner) = &node.spec.0 {
-            let frame = *frame.get_or_insert_with(|| scroll_frame_of(tree, id).unwrap_or(semio_framework_ui_theme::geometry::Rect::new(0.0, 0.0, viewport.0, viewport.1)));
+            let frame = *frame.get_or_insert_with(|| scroll_frame_of(tree, id).unwrap_or(semio_ui_theme::geometry::Rect::new(0.0, 0.0, viewport.0, viewport.1)));
             measure_tree_windows(tree, id, owner, &metrics, frame, reversed, &mut containers);
             continue;
         }
@@ -334,7 +334,7 @@ pub fn tree_window_measures(tree: &UiTree, theme: &Theme, viewport: (f32, f32), 
 }
 
 /// 📜️ The painted box of the nearest scrolling ancestor of `id` — the viewport its rows scroll through.
-fn scroll_frame_of(tree: &UiTree, id: NodeId) -> Option<semio_framework_ui_theme::geometry::Rect> {
+fn scroll_frame_of(tree: &UiTree, id: NodeId) -> Option<semio_ui_theme::geometry::Rect> {
     let mut cursor = tree.node(id)?.parent;
     while let Some(ancestor) = cursor {
         let node = tree.node(ancestor)?;
@@ -346,7 +346,7 @@ fn scroll_frame_of(tree: &UiTree, id: NodeId) -> Option<semio_framework_ui_theme
     None
 }
 
-fn measure_tree_windows(tree: &UiTree, id: NodeId, owner: &UiTreeNode, metrics: &TreeRowMetrics, frame: semio_framework_ui_theme::geometry::Rect, reversed: bool, out: &mut Vec<TreeWindowContainerMeasure>) {
+fn measure_tree_windows(tree: &UiTree, id: NodeId, owner: &UiTreeNode, metrics: &TreeRowMetrics, frame: semio_ui_theme::geometry::Rect, reversed: bool, out: &mut Vec<TreeWindowContainerMeasure>) {
     let metrics = metrics.with_presentation(owner.presentation);
     if document_table(tree, id).is_some() {
         let Some(section) = owner.sections.first() else { return };
@@ -358,7 +358,7 @@ fn measure_tree_windows(tree: &UiTree, id: NodeId, owner: &UiTreeNode, metrics: 
     }
     for section in owner.sections.iter().filter(|section| section.presence.visible()) {
         let Some(section_id) = tree.explicit_child(id, &section.id) else { continue };
-        if !tree.disclosure_open(section_id).unwrap_or_else(|| semio_framework_ui_wgpu_layout::layout::tree_section_default_open(section)) {
+        if !tree.disclosure_open(section_id).unwrap_or_else(|| semio_ui_wgpu_layout::layout::tree_section_default_open(section)) {
             continue;
         }
         if let (Some(window), Some(rect)) = (section.window.as_ref().filter(|window| window.total > 0), tree.absolute_rect(section_id)) {
@@ -375,7 +375,7 @@ fn measure_tree_windows(tree: &UiTree, id: NodeId, owner: &UiTreeNode, metrics: 
 }
 
 #[allow(clippy::too_many_arguments, reason = "one recursion frame of the measurement walk: the node, its spec, the path so far and the shared viewport")]
-fn measure_item_windows(tree: &UiTree, id: NodeId, item: &UiTreeItemNode, parent_path: Option<&str>, frame: semio_framework_ui_theme::geometry::Rect, reversed: bool, depth: usize, out: &mut Vec<TreeWindowContainerMeasure>) {
+fn measure_item_windows(tree: &UiTree, id: NodeId, item: &UiTreeItemNode, parent_path: Option<&str>, frame: semio_ui_theme::geometry::Rect, reversed: bool, depth: usize, out: &mut Vec<TreeWindowContainerMeasure>) {
     if depth >= TREE_ROW_MAX_DEPTH || !item.presence.visible() || !tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) {
         return;
     }
@@ -404,12 +404,12 @@ fn measure_item_windows(tree: &UiTree, id: NodeId, item: &UiTreeItemNode, parent
 fn push_window_measure(
     tree: &UiTree,
     key: &str,
-    window: &semio_framework_ui_declaration::ui::UiTreeWindow,
+    window: &semio_ui_declaration::ui::UiTreeWindow,
     length: usize,
-    rect: semio_framework_ui_theme::geometry::Rect,
+    rect: semio_ui_theme::geometry::Rect,
     band: f32,
     rows: &[NodeId],
-    frame: semio_framework_ui_theme::geometry::Rect,
+    frame: semio_ui_theme::geometry::Rect,
     reversed: bool,
     out: &mut Vec<TreeWindowContainerMeasure>,
 ) {

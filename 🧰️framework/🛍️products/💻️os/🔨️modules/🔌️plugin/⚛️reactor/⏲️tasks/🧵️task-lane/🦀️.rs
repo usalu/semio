@@ -3,7 +3,7 @@
 use crate::{INSTANCE_METADATA, REACTOR_EXECUTOR, TASK_EXECUTOR, TASK_RECORDS, TASK_RESUMES};
 use crate::tasks_fixed_slots::{REACTOR_TASK_SLOTS, ReactorFixedSlots};
 use std::collections::VecDeque;
-use semio_framework_plugin_actor_host::executor;
+use semio_plugin_actor_host::executor;
 use crate::tasks_extension_continuation::{host, host_for_instance};
 
 /// 🧵️ A task retains its instance and optional checkpoint restart command.
@@ -85,7 +85,7 @@ pub enum TaskResumeOutcome {
 #[doc(hidden)]
 pub struct PendingResume {
     pub instance: u32,
-    pub meta: semio_framework_plugin_decl_emission::ActionMeta,
+    pub meta: semio_plugin_decl_emission::ActionMeta,
     pub outcome: TaskResumeOutcome,
 }
 
@@ -209,7 +209,7 @@ fn instance_task_quota(instance: u32) -> u64 {
 /// cancels the live one FIRST — its future (and anything it owns, including a parked
 /// `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
 #[doc(hidden)]
-pub fn spawn_task<M, C, D>(instance: u32, meta: &semio_framework_plugin_decl_emission::ActionMeta, task: semio_framework_plugin_decl_emission::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
+pub fn spawn_task<M, C, D>(instance: u32, meta: &semio_plugin_decl_emission::ActionMeta, task: semio_plugin_decl_emission::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
 where
     M: ::protocol::OpBinary + 'static,
     C: ::protocol::OpBinary + 'static,
@@ -242,7 +242,7 @@ where
             let detached = TASK_EXECUTOR.with(|executor| executor.detach(previous));
             let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(previous));
             if detached.is_none() && record.is_none() {
-                semio_framework_plugin_decl_emission::dispose_cold_task_run(run);
+                semio_plugin_decl_emission::dispose_cold_task_run(run);
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.supersession-pending"), "keyed task supersession found no exact previous owner to dispose"));
             }
             drop(record);
@@ -253,29 +253,29 @@ where
     let reservation = match TASK_EXECUTOR.with(|executor| executor.reserve()) {
         Ok(reservation) => reservation,
         Err(message) => {
-            semio_framework_plugin_decl_emission::dispose_cold_task_run(run);
+            semio_plugin_decl_emission::dispose_cold_task_run(run);
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message));
         }
     };
     let task_id = reservation.id();
     if !TASK_RECORDS.with(|records| records.borrow().can_insert(task_id)) {
-        semio_framework_plugin_decl_emission::dispose_cold_task_run(run);
+        semio_plugin_decl_emission::dispose_cold_task_run(run);
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.record-capacity"), "fixed task record authority rejected an executor-reserved direct slot"));
     }
     TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, restart }));
 
-    let ctx = semio_framework_plugin_decl_emission::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
+    let ctx = semio_plugin_decl_emission::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
     let resume_instance = instance;
     let resume_meta = meta.clone();
-    let mut cold_run = semio_framework_plugin_decl_emission::ColdTaskRun::new(run);
+    let mut cold_run = semio_plugin_decl_emission::ColdTaskRun::new(run);
     reservation.install(Box::pin(async move {
         let future = cold_run.take().run(ctx);
         let outcome = match future.await {
-            Ok(semio_framework_plugin_decl_emission::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
-            Ok(semio_framework_plugin_decl_emission::TaskResolution::Emit(emit)) => {
+            Ok(semio_plugin_decl_emission::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
+            Ok(semio_plugin_decl_emission::TaskResolution::Emit(emit)) => {
                 Some(TaskResumeOutcome::Emit { artifact_ops: encode_mutation_lane(&emit.artifact_mutations).await, config_ops: encode_mutation_lane(&emit.config_mutations).await, draft_ops: encode_mutation_lane(&emit.draft_mutations).await })
             }
-            Ok(semio_framework_plugin_decl_emission::TaskResolution::Done) => None,
+            Ok(semio_plugin_decl_emission::TaskResolution::Done) => None,
             Err(fault) => Some(TaskResumeOutcome::Fault(fault)),
         };
         TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(task_id)));

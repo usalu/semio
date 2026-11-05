@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangePierReinforcementR
         record: "ChangePierReinforcementRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change pier: Longitudinal reinforcement ratio A_s/(b h) (0 = not given)", "Pfeiler: Längsbewehrungsgrad A_s/(b h) (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change pier: Longitudinal reinforcement ratio A_s/(b h) (0 = not given)", "Pfeiler: Längsbewehrungsgrad A_s/(b h) (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-pier-reinforcement-ratio".into()]

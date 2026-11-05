@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-kernel-db-storage-sqlite"
+name = "semio-os-kernel-db-storage-sqlite"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,22 +23,22 @@ name = "db_storage_sqlite"
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-io-driver = { path = "../../../🚦️io-driver/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-io-registry = { path = "../../../📇️io-registry/📦️packages/🦀️rust" }
+semio-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
+semio-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-driver = { path = "../../../🚦️io-driver/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-registry = { path = "../../../📇️io-registry/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rusqlite = { version = "0.38.0", features = ["blob", "bundled"] }
 
 [dev-dependencies]
-semio-framework-os-kernel-db-actor = { path = "../../../../🎭️actor/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-kernel-db-io-driver = { path = "../../../🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel-db-actor = { path = "../../../../🎭️actor/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel-db-io-driver = { path = "../../../🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
 serde_json = { workspace = true }

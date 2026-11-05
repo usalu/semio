@@ -1,6 +1,6 @@
 //! ⏪️ The reserved history-edit verbs of the time-travel session and their finalize dialog, contributed to every hosting app.
 
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_manifest_actions::{ActionDefinition, ActionKind};
 use semio_framework_manifest_address::ActionRef;
 use semio_framework_manifest_app_surface::{DIALOG_CHOICE_ARG, DialogChoice, DialogDefinition, ReservedContribution};
@@ -229,7 +229,7 @@ pub fn history_edit_finalize_dialog() -> DialogDefinition {
         .choice(
             DialogChoice::new(HISTORY_EDIT_CHOICE_OVERWRITE, LocalizedLabel::native("Overwrite", "Überschreiben"), ActionRef::new(HISTORY_EDIT_COMMIT_ACTION_ID))
                 .description(LocalizedLabel::native("Replaces the edited mutations in every alternative that contains them.", "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält."))
-                .tone(semio_framework_ui_contract::Tone::Danger)
+                .tone(semio_ui_contract::Tone::Danger)
                 .destructive(),
         )
 }
@@ -246,9 +246,9 @@ pub const RESERVED: ReservedContribution = ReservedContribution::new("historyEdi
 //#endregion 🔖️HistoryEdit
 
 #[cfg(test)]
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 #[cfg(test)]
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Terminology;
 #[cfg(test)]
 use semio_framework_value::FromValue;
 #[cfg(test)]

@@ -41,14 +41,14 @@ fn original_interpreter_deadline_uses_exact_units_and_original_clock_boundary(){
  static SNAPSHOT_CLOCK:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
  let clock=||Some(SNAPSHOT_CLOCK.load(std::sync::atomic::Ordering::Acquire));
  let runtime=OwnedRuntime::new(clock);
- let compiled=runtime.compile_component(&super::owned_runtime_tests::owned_channel_guest(semio_framework_os_kernel::CHANNEL_VERSION)).unwrap();
+ let compiled=runtime.compile_component(&super::owned_runtime_tests::owned_channel_guest(semio_os_kernel::CHANNEL_VERSION)).unwrap();
  let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
  let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
  let mut identity=crate::test_native_authority::original(&mut observer,&mut recipient);
  for row in fixture["snapshot"].as_array().unwrap(){
   SNAPSHOT_CLOCK.store(row["now"].as_str().unwrap().parse().unwrap(),std::sync::atomic::Ordering::Release);
   let mut state=runtime.instantiate_actor(&compiled).unwrap();let mut input=Some(Vec::new());state.begin_snapshot(OwnedSnapshotOperation::Export,&mut input).unwrap();assert!(input.is_none());
-  let mut receiver=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(&mut identity);let mut observed=None;
+  let mut receiver=semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(&mut identity);let mut observed=None;
   let actual=state.resume_snapshot(OwnedSnapshotOperation::Export,64,row["deadline"].as_str().unwrap().parse().unwrap(),|fuel,_|observed=Some(fuel),None,&mut receiver);
   if row["expired"].as_bool().unwrap(){assert!(matches!(actual,Err(TurnFault::DeadlineExceeded)));assert_eq!(observed,Some(0));assert_eq!(state.pending_snapshot().unwrap(),Some((OwnedSnapshotOperation::Export,0)));}else{assert!(matches!(actual,Err(TurnFault::Trapped(_))));}
  }

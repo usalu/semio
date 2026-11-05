@@ -3,19 +3,19 @@
 use crate::editor::note::modes::edit::windows::composite::options;
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::{NoteCamera, NoteSnapshot};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::InkCanvasInteractionDomain;
-use semio_framework_plugin::InkCanvasScene;
-use semio_framework_plugin::InteractionView;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_plugin::InkCanvasInteractionDomain;
+use semio_plugin::InkCanvasScene;
+use semio_plugin::InteractionView;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_WINDOW_COMPOSITE: &str = "note-composite";
@@ -97,7 +97,7 @@ pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input
 /// against.
 pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiAssemblyResult<BuiltNode> {
     let document_json = crate::note_canvas_document_json(document, camera);
-    semio_framework_plugin::scene_surface(surface_id, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
+    semio_plugin::scene_surface(surface_id, semio_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
 }
 
 pub fn render_with_interaction(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, interaction: &InteractionView<'_>) -> UiAssemblyResult<BuiltNode> {
@@ -106,7 +106,7 @@ pub fn render_with_interaction(document: &NoteSnapshot, camera: &NoteCamera, act
     let selection: Vec<String> = interaction.selection(crate::editor::note::support::NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
     scene.selection_json = serde_json::to_string(&selection).expect("note interaction selection is JSON-safe");
     scene.hovered_id = interaction.hover(crate::editor::note::support::NOTE_INTERACTION_BLOCKS, "pointer").ids.first().and_then(|id| crate::schema::block_id_from_tree_row_id(id));
-    semio_framework_plugin::scene_surface(NOTE_PLAY_SURFACE_COMPOSITE, semio_framework_ui_contract::SurfaceKind::InkCanvas, &scene)
+    semio_plugin::scene_surface(NOTE_PLAY_SURFACE_COMPOSITE, semio_ui_contract::SurfaceKind::InkCanvas, &scene)
 }
 
 pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str) -> UiAssemblyResult<BuiltNode> {

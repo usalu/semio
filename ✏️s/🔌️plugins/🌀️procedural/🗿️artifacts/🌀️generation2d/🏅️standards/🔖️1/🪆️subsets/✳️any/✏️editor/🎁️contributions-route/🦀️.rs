@@ -32,7 +32,7 @@ pub fn generation2d_contributions_contract() -> ToolExecutionContract {
 
 /// 🧩️ Installs one contributions page against the app instance's retained session.
 pub(super) struct Generation2dContributionsWork {
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
 }
 
@@ -46,7 +46,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
         command: &Generation2dCommand,
         snapshot: &Generation2dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     ) -> Option<usize> {
         generation2d_bounded_extent(command, snapshot, interaction)
     }
@@ -118,11 +118,11 @@ impl semio_framework::ToolJobFactory for Generation2dContributionsJobFactory {
         generation2d_contributions_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION2D_CONTRIBUTIONS_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION2D_CONTRIBUTIONS_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dContributionsJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Generation2dContributionsJobFactory {
     type Owner = EditorApp<Generation2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GENERATION2D_CONTRIBUTIONS_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
@@ -132,7 +132,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dContrib
 pub(super) struct Generation2dBoundedCommandJobFactoryProofs;
 
 impl Generation2dBoundedCommandJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Generation2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.procedural.generation2d@1/*#editor",
@@ -170,7 +170,7 @@ impl Generation2dBoundedCommandJobFactoryProofs {
 pub(super) struct Generation2dContributionsJobFactoryProofs;
 
 impl Generation2dContributionsJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Generation2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.procedural.generation2d@1/*#editor",
@@ -183,7 +183,7 @@ impl Generation2dContributionsJobFactoryProofs {
 }
 //#endregion 🧩️ContributionsRoute
 
-pub(super) fn generation2d_bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+pub(super) fn generation2d_bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
     let mut proofs = Generation2dBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
     proofs.extend(Generation2dContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
     proofs

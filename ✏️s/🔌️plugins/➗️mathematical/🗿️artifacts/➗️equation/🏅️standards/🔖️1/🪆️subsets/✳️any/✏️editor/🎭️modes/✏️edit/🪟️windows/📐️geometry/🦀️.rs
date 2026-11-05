@@ -2,13 +2,13 @@
 
 use crate::editor::equation::geometry_layers_json;
 use crate::EquationGeometry;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const MATH_PLAY_WINDOW_GEOMETRY: &str = "math-geometry";
@@ -40,9 +40,9 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(geometry: &EquationGeometry) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(
+    semio_plugin::scene_surface(
         MATH_PLAY_BODY_GEOMETRY,
-        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
+        semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

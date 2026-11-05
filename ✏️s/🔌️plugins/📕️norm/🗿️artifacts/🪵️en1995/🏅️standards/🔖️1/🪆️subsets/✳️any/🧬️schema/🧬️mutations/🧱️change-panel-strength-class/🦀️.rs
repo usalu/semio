@@ -11,7 +11,7 @@ pub struct ChangePanelStrengthClass { pub panel_id: String, pub new_value: Stren
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangePanelStrengthClass where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_panel_strength_class::ChangePanelStrengthClass> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "panel-strength-class", kind: "change-panel-strength-class", record: "ChangedPanelStrengthClass" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change strength class of the layers of panel {}", self.panel_id), &format!("Festigkeitsklasse der Lagen von Panel {} ändern", self.panel_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change strength class of the layers of panel {}", self.panel_id), &format!("Festigkeitsklasse der Lagen von Panel {} ändern", self.panel_id)) }
     fn target(&self) -> Vec<String> { vec![self.panel_id.clone()] }
 }
 

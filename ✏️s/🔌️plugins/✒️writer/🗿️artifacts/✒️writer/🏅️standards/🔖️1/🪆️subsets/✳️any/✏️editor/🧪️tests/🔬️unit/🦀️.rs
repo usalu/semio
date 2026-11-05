@@ -1,18 +1,18 @@
 use semio_framework_test_fixtures::fixture_text;
 
 pub(crate) mod context {
-    use semio_framework_plugin::app::EditorApp;
-    use semio_framework_plugin::WindowMeasure;
+    use semio_plugin::app::EditorApp;
+    use semio_plugin::WindowMeasure;
     use crate::op::WriterMutation;
     use crate::WriterSnapshot;
     use crate::editor::writer::{WriterCommand, WriterPlayApp, create_writer_app};
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as framework_new_app_with_registry_and_members, settle_registered_typed_operation};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as framework_new_app_with_registry_and_members, settle_registered_typed_operation};
+    use semio_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     pub const WRITER_TEST_WINDOW_ID: &str = "writer-main-test";
     
     pub fn main_window_view() -> ViewModel {
-        ViewModel { window_id: Some(WRITER_TEST_WINDOW_ID.into()), window_instances: vec![ViewWindowInstance { id: WRITER_TEST_WINDOW_ID.into(), window_kind_id: WRITER_PLAY_WINDOW_KIND.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+        ViewModel { window_id: Some(WRITER_TEST_WINDOW_ID.into()), window_instances: vec![ViewWindowInstance { id: WRITER_TEST_WINDOW_ID.into(), window_kind_id: WRITER_PLAY_WINDOW_KIND.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
     }
     
     /// 🏔️ WriterPlayApp implements the AUTHORING trait ArtifactEditor, not the runtime ArtifactApp --
@@ -25,7 +25,7 @@ pub(crate) mod context {
     /// shallow-shell witness`), so `Drop` runs `close_registered_fixture_app` for every test that returns
     /// early — a panicking test leaves the witness alone so the FIRST failure stays the reported one.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct WriterApp(pub MountedWriterApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct WriterApp(pub MountedWriterApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for WriterApp {
         type Target = MountedWriterApp;
@@ -43,15 +43,15 @@ pub(crate) mod context {
     impl Drop for WriterApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
     
     /// 🧪️ Constructs the Writer app with its declared command registry.
     pub async fn new_app() -> WriterApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = framework_new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(writer_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = framework_new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(writer_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         WriterApp(app, scope)
     }
@@ -59,11 +59,11 @@ pub(crate) mod context {
     /// 📱️ Adapts create_writer_app's AppDefinition (contract 2.4) into the App { definition, examples }
     /// shape artifact_app_laws::new_app_with_registry/assert_declared_actions_bridge_to_commands still expect --
     /// framework test context gap (framework crate outside this packet's lease), not modifiable here.
-    fn writer_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_writer_app(), examples: Vec::new() }
+    fn writer_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_writer_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("writer", WriterPlayApp, writer_app_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("writer", WriterPlayApp, writer_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn new_app_with_registry() -> WriterApp {
@@ -80,10 +80,10 @@ pub(crate) mod context {
         let mut app = new_app().await;
         let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
         let (schema, id) = (document.schema.clone(), document.id.clone());
-        let envelope = store::os_store::document_materialize::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let envelope = store::os_store::document_materialize::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print jack document pack");
         retire_writer_envelope(envelope);
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load jack");
+        semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load jack");
         app
     }
 
@@ -100,12 +100,12 @@ pub(crate) mod context {
     pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
         let mut meta = meta("local");
         meta.view_state = Some(main_window_view());
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         result.requested_effects.extend(drain_typed_operations(app).await);
         for effect in &result.requested_effects {
-            if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
+            if let semio_plugin::Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
+                semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -114,8 +114,8 @@ pub(crate) mod context {
     /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
     /// committed through its reserved job, then published — all three steps or the projection never moves.
     pub async fn history_verb(app: &mut WriterApp, action: &str) -> InvocationResult {
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
-        let settled = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
+        let settled = semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
         drain_typed_operations(app).await;
         settled
     }
@@ -132,8 +132,8 @@ pub(crate) mod context {
     /// ticket 26/09/09/PROCEDURAL-3D-END-TO-END fixed inside the helper). It also takes ONE page
     /// per turn where the helper drains every presented page, so a command publishing an artifact
     /// AND a config lane reported only one of them.
-    pub async fn drain_typed_operations(app: &mut WriterApp) -> Vec<semio_framework_plugin::Effect> {
-        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("Writer retained operations did not settle: {fault:?}"));
+    pub async fn drain_typed_operations(app: &mut WriterApp) -> Vec<semio_plugin::Effect> {
+        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("Writer retained operations did not settle: {fault:?}"));
         receipt.effects
     }
     
@@ -146,21 +146,21 @@ pub(crate) mod context {
     pub async fn type_delivery(app: &mut WriterApp, action: &str, mut args: Vec<(String, semio_framework_value::DslValue)>, now_ms: u64) -> InvocationResult {
         let mut meta = meta("local");
         meta.view_state = Some(main_window_view());
-        args.push((semio_framework_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String(WRITER_TYPING_BUFFER.into())));
+        args.push((semio_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String(WRITER_TYPING_BUFFER.into())));
         app.set_tool_clock_ms(Some(now_ms));
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(semio_framework_value::DslValue::Object(args)), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("typing delivery {action}: {fault:?}"));
+        let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(semio_framework_value::DslValue::Object(args)), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("typing delivery {action}: {fault:?}"));
         drain_typed_operations(app).await;
         result
     }
 
     /// 🏁️ The host's commit signal for the main text window's run (`reason`, no edit) at `now_ms`.
     pub async fn end_typing_run(app: &mut WriterApp, action: &str, reason: &str, now_ms: u64) -> InvocationResult {
-        let args = vec![(semio_framework_plugin::TYPING_COMMIT_ARG.to_string(), semio_framework_value::DslValue::String(reason.into()))];
+        let args = vec![(semio_plugin::TYPING_COMMIT_ARG.to_string(), semio_framework_value::DslValue::String(reason.into()))];
         type_delivery(app, action, args, now_ms).await
     }
 
     pub async fn render(app: &mut WriterApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &main_window_view(), app.1.cx()).await.expect("render json")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &main_window_view(), app.1.cx()).await.expect("render json")
     }
     
     pub async fn main_window_measures(app: &mut WriterApp) -> Vec<WindowMeasure> {
@@ -168,9 +168,9 @@ pub(crate) mod context {
     }
 }
 
-use semio_framework_plugin::{AppActionRegistry, ArtifactView, ConfigView, ContextMenuRequest, ContextMenuTextContext, HierarchyProvider, MediaError, MediaPayload, NoConfig, WindowMeasure};
+use semio_plugin::{AppActionRegistry, ArtifactView, ConfigView, ContextMenuRequest, ContextMenuTextContext, HierarchyProvider, MediaError, MediaPayload, NoConfig, WindowMeasure};
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin::app::EditorApp;
+use semio_plugin::app::EditorApp;
 #[cfg(test)]
 use serde_json::Value;
 use crate::{WRITER_DOCUMENT_SCHEMA, WriterSnapshot, writer_text};
@@ -183,11 +183,11 @@ use crate::editor::writer::{WriterCommand, WriterPlayApp, create_writer_app};
 use crate::editor::writer::WriterArtifactPreparationFactory;
 use crate::editor::writer::editor_vocabulary::{reset_document_effect, WriterChapterPayload};
 use crate::editor_unit_tests::context::{new_app_with_registry, WriterApp};
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
-async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
-    let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "writer.play".into(), args: None }, surface, window_instance_id: None, point: None };
-    serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await).unwrap_or(Value::Null)
+async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_plugin::ContextMenuSurfaceTarget>) -> Value {
+    let request = ContextMenuRequest { menu: semio_plugin::UiMenuRef { id: "writer.play".into(), args: None }, surface, window_instance_id: None, point: None };
+    serde_json::to_value(app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await).unwrap_or(Value::Null)
 }
 
 /// 🧾️ The live-load wire exactly as the host streams it: `vcs.initialPack` is the snapshot's
@@ -198,7 +198,7 @@ fn writer_envelope_wire() -> Vec<u8> {
     let snapshot = crate::schema::empty_writer_snapshot();
     let snapshot_hex = <WriterSnapshot as ArtifactPack>::encode_pack(&snapshot).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = format!("{{\"schema\":\"{WRITER_DOCUMENT_SCHEMA}\",\"id\":\"writer-live-load\",\"vcs\":{{\"initialPack\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}").into_bytes();
-    let envelope = store::os_store::document_materialize::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     crate::editor_unit_tests::context::retire_writer_envelope(envelope);
     wire
 }
@@ -328,7 +328,7 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one() {
     }
 }
 
-fn admit_writer_envelope(app: &mut WriterApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_writer_envelope(app: &mut WriterApp, wire: &[u8]) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Writer live envelope ingress credits");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -341,11 +341,11 @@ fn admit_writer_envelope(app: &mut WriterApp, wire: &[u8]) -> semio_framework_pl
     handle
 }
 
-fn drive_writer_live_load(app: &mut WriterApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_writer_live_load(app: &mut WriterApp, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..100_000 {
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Writer live maintenance turn");
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Writer live maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Writer live load advancement");
-        if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+        if matches!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }
         std::thread::yield_now();
@@ -359,7 +359,7 @@ async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_suc
     let base_generation = app.artifact_generation_now();
     let handle = admit_writer_envelope(&mut app, &writer_envelope_wire());
     assert_eq!(handle.generation, base_generation);
-    assert_eq!(drive_writer_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(drive_writer_live_load(&mut app, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("first exact Writer load acknowledgement"));
     assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate Writer load acknowledgement is a no-op"));
@@ -378,7 +378,7 @@ async fn writer_live_envelope_cancel_closes_retained_pages_without_publication()
     let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Writer first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Writer page admission failed: {fault:?}"));
     app.cancel_artifact_envelope_load(handle).expect("cancel exact Writer ingress");
-    assert_eq!(drive_writer_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    assert_eq!(drive_writer_live_load(&mut app, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.artifact_generation_now(), base_generation);
 }
 
@@ -526,7 +526,7 @@ async fn ast_interaction_domain_is_declared_topology_and_transitive_on_the_main_
 async fn interaction_topology_walks_the_jack_ast_into_parent_links() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = WriterPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
@@ -543,7 +543,7 @@ async fn interaction_topology_walks_the_jack_ast_into_parent_links() {
 async fn interaction_topology_is_empty_for_non_jack_documents() {
     let document = crate::schema::empty_writer_snapshot();
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = WriterPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
@@ -560,13 +560,13 @@ async fn writer_io_declares_the_extra_text_out_port() {
     assert!(ports.iter().any(|port| port.id == "artifact:out"));
     let text_out = ports.iter().find(|port| port.id == "text:out").expect("text:out port declared");
     assert_eq!(text_out.kind_id.as_deref(), Some("text.document"));
-    assert_eq!(text_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+    assert_eq!(text_out.multiplicity, semio_plugin::PortMultiplicity::Many);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn export_media_text_out_projects_the_document_as_a_chapter() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_view = ArtifactView::new(&document, &history);
     let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
@@ -579,7 +579,7 @@ async fn export_media_text_out_projects_the_document_as_a_chapter() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_rejects_unknown_ports() {
     let document = crate::schema::empty_writer_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_view = ArtifactView::new(&document, &history);
     assert!(matches!(WriterPlayApp::export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
 }
@@ -593,13 +593,13 @@ async fn export_media_rejects_unknown_ports() {
 async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let registry = AppActionRegistry::from_definition(&create_writer_app());
     let request = ContextMenuRequest {
-        menu: semio_framework_plugin::UiMenuRef { id: WRITER_PLAY_BODY_MAIN.into(), args: None },
-        surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        menu: semio_plugin::UiMenuRef { id: WRITER_PLAY_BODY_MAIN.into(), args: None },
+        surface: Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: "writer.play".into(),
             kind: "textEditor".into(),
             hits: Vec::new(),
@@ -609,7 +609,7 @@ async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
         window_instance_id: None,
         point: None,
     };
-    let items = WriterPlayApp::context_menu(&request, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), &registry);
+    let items = WriterPlayApp::context_menu(&request, &doc, &cfg, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), &registry);
     assert!(items.len() <= 9, "top-level writer context menu should stay progressively disclosed: {items:?}");
     assert_eq!(items.last().map(|item| item.id.as_str()), Some("writer-cut"), "cut must stay the trailing destructive item: {items:?}");
     assert_eq!(items.last().and_then(|item| item.destructive), Some(true), "trailing writer-cut must be marked destructive: {items:?}");
@@ -618,7 +618,7 @@ async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_via_the_registry_still_starts_with_select_token() {
     let mut app = new_app_with_registry().await;
-    let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "writer.play".into(), kind: "textEditor".into(), hits: vec![], selection: vec![], text: None })).await;
+    let menu = context_menu_items(&mut app, Some(semio_plugin::ContextMenuSurfaceTarget { surface_id: "writer.play".into(), kind: "textEditor".into(), hits: vec![], selection: vec![], text: None })).await;
     assert!(menu.to_string().contains("writer-select-token"), "menu should be {menu}");
 }
 //#endregion 🔖️ContextMenu
@@ -657,10 +657,10 @@ async fn window_engagements_include_format_and_lint_possible_engagements() {
 #[semio_framework_async_macros::async_test]
 async fn writer_labels_resolve_native_english_by_default_across_every_surface() {
     let mut app = context::new_app().await;
-    let inspection_json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, WRITER_PLAY_BODY_INSPECTION, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");
+    let inspection_json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, WRITER_PLAY_BODY_INSPECTION, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");
     assert!(inspection_json.contains("\"Artifact\""), "{inspection_json}");
     assert!(!inspection_json.contains("Artefakt"), "{inspection_json}");
-    let catalogue_json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, WRITER_PLAY_BODY_CATALOGUE, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");
+    let catalogue_json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, WRITER_PLAY_BODY_CATALOGUE, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");
     assert!(catalogue_json.contains("\"Language\""));
     assert!(catalogue_json.contains("Cypher-inspired"));
     let engagements = app.window_engagements(&context::main_window_view()).await;
@@ -684,20 +684,20 @@ async fn writer_labels_resolve_native_english_by_default_across_every_surface() 
 /// (`document-archive-replacement.closure-rejected`).
 #[semio_framework_async_macros::async_test]
 async fn demo_example_load_settles_through_the_host_document_archive_door() {
-    use semio_framework_plugin::{artifact_app_laws, PluginApp};
+    use semio_plugin::{artifact_app_laws, PluginApp};
     let mut app = new_app_with_registry().await;
     let instance = 7;
     app.bind_instance_id(instance).await;
-    let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &WriterCommand::SetActiveExample(crate::editor::writer::commands::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
+    let meta = semio_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &WriterCommand::SetActiveExample(crate::editor::writer::commands::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
-        if let Some(semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
+        if let Some(semio_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
             loaded = Some((pack, spr));
         }
         app.take_typed_operation_event();
@@ -711,12 +711,12 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     PluginApp::begin_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
         std::thread::yield_now();
     }
     let status = status.expect("archive load reaches a terminal state");
@@ -739,6 +739,6 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         .collect();
     assert_eq!(body, crate::writer_text(&snapshot), "the genesis-derived document member must carry the loaded document's authored body");
     assert!(!body.is_empty(), "the genesis-derived document member must not be empty after a member-less archive load");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🔖️ExampleArchiveLoad

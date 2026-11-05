@@ -13,8 +13,8 @@ pub struct ChangeZoneIlluminance {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZoneIlluminance where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_illuminance::ChangeZoneIlluminance> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-illuminance", kind: "change-zone-illuminance", record: "ChangeZoneIlluminance" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change maintained illuminance of the zone", "Wartungswert der Beleuchtungsstärke der Zone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change maintained illuminance of the zone", "Wartungswert der Beleuchtungsstärke der Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
 }

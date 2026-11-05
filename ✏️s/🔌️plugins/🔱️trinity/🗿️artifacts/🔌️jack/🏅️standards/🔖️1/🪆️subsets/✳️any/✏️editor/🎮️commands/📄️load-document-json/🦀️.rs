@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use semio_framework_plugin::{Emit, NoConfigMutation};
+use semio_plugin::{Emit, NoConfigMutation};
 
 pub fn load_document_json(json: &str) -> Emit<TrinityGraphMutation, NoConfigMutation> {
     match JackSnapshot::from_json(json) {

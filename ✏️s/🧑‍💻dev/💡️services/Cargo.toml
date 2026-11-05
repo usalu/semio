@@ -27,13 +27,13 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
   edition = "2021"
   rust-version = "1.95"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-mcp]
+[workspace.dependencies.semio-os-mcp]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-renderer-wgpu]
+[workspace.dependencies.semio-renderer-wgpu]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
 
 [workspace.lints.rust]

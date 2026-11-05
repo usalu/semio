@@ -59,7 +59,7 @@ impl Default for NormPresence {
 #[macro_export]
 macro_rules! __norm_lane_store {
     ($record:ident, $diff:ident, $mutation:ident, $lane_trait:ident, $lane_ty:ty, $state:ident, $of_state:ident, $extension:literal, $owner:literal, $emoji:literal, $semantic:literal, $display:literal, $presence:tt) => {
-        #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
+        #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
         #[value(rename_all = "camelCase", default)]
         #[artifact(extension = $extension)]
         #[dsl(layout = "lines")]

@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "color-space", kind: "set-color-space", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set color-space {}", self.color_space.name), &format!("Farbraum {} setzen", self.color_space.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set color-space {}", self.color_space.name), &format!("Farbraum {} setzen", self.color_space.name))
     }
 
     fn target(&self) -> Vec<String> {

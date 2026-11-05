@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumCharacters": 256,
+        "fingerprintCharacters": 16,
+        "codegenUnitCharacters": 25,
+        "codegenDisambiguatorCharacters": 7,
+        "recipeCharacters": 32,
+        "extensions": [
+          "rmeta",
+          "rlib",
+          "so",
+          "dylib",
+          "dll",
+          "lib",
+          "a",
+          "pdb",
+          "d"
+        ],
+        "maximumDiagnosticPaths": 16
+      }
+    },
+    "Unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packageName",
+        "name",
+        "platform",
+        "profileName",
+        "kind",
+        "operation"
+      ],
+      "properties": {
+        "packageName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profileName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "library",
+            "binary",
+            "proc-macro",
+            "build-script",
+            "build-script-run",
+            "test",
+            "documentation"
+          ]
+        },
+        "operation": {
+          "enum": [
+            "build",
+            "check",
+            "test",
+            "doc",
+            "doctest",
+            "run-custom-build"
+          ]
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "flavor",
+        "buildDirectory",
+        "units",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "flavor": {
+          "enum": [
+            "posix",
+            "win32"
+          ]
+        },
+        "buildDirectory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Unit"
+          }
+        },
+        "expected": {
+          "type": "boolean"
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Case"
+          }
+        }
+      }
+    }
+  },
+  "$id": "semio:process/cargo/path-envelope/v1",
+  "title": "Cargo Compiler Path Envelope"
+}

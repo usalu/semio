@@ -1,7 +1,7 @@
 //! 🪜️ Process3d step mutations: create, delete, rename, reorder, enable, re-origin and re-measure steps.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 //#region 🧩️Modules
 #[path = "."]

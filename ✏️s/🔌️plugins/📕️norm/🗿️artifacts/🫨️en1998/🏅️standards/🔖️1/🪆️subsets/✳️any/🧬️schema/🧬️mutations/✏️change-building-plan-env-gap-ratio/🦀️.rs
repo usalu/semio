@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingPlanEnvGap
         record: "ChangeBuildingPlanEnvGapRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Area between plan outline and convex envelope per floor area", "Fläche zwischen Grundriss und konvexer Hülle je Geschossfläche ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Area between plan outline and convex envelope per floor area", "Fläche zwischen Grundriss und konvexer Hülle je Geschossfläche ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-plan-env-gap-ratio".into()]

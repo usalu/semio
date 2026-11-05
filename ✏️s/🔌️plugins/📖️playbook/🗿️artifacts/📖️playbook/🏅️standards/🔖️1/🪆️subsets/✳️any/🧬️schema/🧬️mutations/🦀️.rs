@@ -88,7 +88,7 @@ mod tests;
 //#region 🧩️ArtifactItems
 pub mod artifact_items {
 use semio_framework_artifact_playbook_playbook as playbook;
-use {semio_framework_plugin::ArtifactKindSpec, semio_framework_artifact_reference::Dialect, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactKindSpec, semio_framework_artifact_reference::Dialect, semio_plugin::MediaClass, semio_plugin::MediaForm, semio_plugin::MediaType, semio_plugin::OsMediaCapability, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 
 //#region 🔖️Types
 pub use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookSpec, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA};
@@ -119,7 +119,7 @@ pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.playbook".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Playbook", "Playbook"),
+        label: semio_ui_locale::LocalizedLabel::native("Playbook", "Playbook"),
         source_format: PLAYBOOK_DOCUMENT_SCHEMA.into(),
         component_kind: "playbook".into(),
         dimension: "text".into(),

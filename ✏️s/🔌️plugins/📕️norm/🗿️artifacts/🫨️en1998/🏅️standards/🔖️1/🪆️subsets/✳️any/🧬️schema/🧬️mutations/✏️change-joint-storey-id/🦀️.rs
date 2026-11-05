@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeJointStoreyId wher
         record: "ChangeJointStoreyId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Storey whose slab level the joint sits at", "Geschoss, auf dessen Deckenhöhe der Knoten liegt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Storey whose slab level the joint sits at", "Geschoss, auf dessen Deckenhöhe der Knoten liegt ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-joint-storey-id".into()]

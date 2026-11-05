@@ -13,10 +13,10 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
@@ -31,9 +31,9 @@ use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 use semio_framework_pack_json::Value;
 use machine::Command;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowMeasure;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowMeasure;
 use semio_framework_tool_machine::GestureChart;
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_tool_machine::ToolYield;

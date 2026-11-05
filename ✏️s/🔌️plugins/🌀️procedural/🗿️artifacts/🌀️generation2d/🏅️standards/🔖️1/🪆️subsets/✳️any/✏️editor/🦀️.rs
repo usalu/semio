@@ -8,9 +8,9 @@
 //! one passthrough per node.
 #![allow(clippy::result_large_err)]
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_s_artifact_procedural_2d_editor_commands::add_generation;
 use semio_s_artifact_procedural_2d_editor_commands::add_widget;
@@ -62,59 +62,59 @@ use semio_s_artifact_procedural_2d_model::GENERATION2D_DIALECT;
 use semio_s_artifact_procedural_2d_model::GENERATION_2D_SCHEMA;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactReservedJob;
-use semio_framework_plugin::ArtifactReservedToolInput;
-use semio_framework_plugin::ArtifactReservedToolJob;
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
-use semio_framework_plugin::ArtifactToolCompletion;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
+use semio_plugin::app::InteractionView;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedToolInput;
+use semio_plugin::ArtifactReservedToolJob;
+use semio_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactToolCompletion;
+use semio_plugin::ArtifactView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::ToolRunJob;
-use semio_framework_plugin::ToolRunJobPurpose;
-use semio_framework_plugin::ToolRunJobRequest;
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Effect;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::ToolRunJob;
+use semio_plugin::ToolRunJobPurpose;
+use semio_plugin::ToolRunJobRequest;
+use semio_plugin::TopologyNode;
 use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalRunLink;
 use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalRunOwner;
 use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalSessions;
@@ -155,7 +155,7 @@ pub use graph_interaction_and_render::*;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `Generation2dPlayApp::Command` — the SOLE dispatch surface for generation2d's own behavior.
     /// Each row states BOTH the manifest action id (`command_id()`) and the `dsl` wire keyword
     /// order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
@@ -228,7 +228,7 @@ pub fn prepare_command(command: &Generation2dCommand, doc: &ArtifactView<'_, Gen
     }
 }
 
-pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_generation2d_app() -> semio_plugin::AppDefinition {
     Editor::builder(GENERATION2D_DIALECT)
         .document(["semio", "procedural", "2d"])
         .artifact_kind(artifact_kind())
@@ -266,13 +266,13 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_with(categorized_action("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View, "actions"))
         .view_action("setEvalOutputs", LocalizedLabel::native("Set Eval Outputs", "Auswertungsausgaben festlegen"))
         .action_with(ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Canvas-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
-        .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("canvasPointerDown", semio_plugin::CapabilityAudience::Input)
         .action_with(ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Canvas-Zeiger bewegt"), ActionKind::View, "mouse-pointer"))
-        .action_audience("canvasPointerMove", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("canvasPointerMove", semio_plugin::CapabilityAudience::Input)
         .action_with(ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Canvas-Zeiger losgelassen"), ActionKind::View, "mouse-pointer"))
-        .action_audience("canvasPointerUp", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("canvasPointerUp", semio_plugin::CapabilityAudience::Input)
         .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
-        .action_audience("canvasWheel", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("canvasWheel", semio_plugin::CapabilityAudience::Input)
         .action_with(categorized_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View, "methods"))
         .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
         .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated)
@@ -361,8 +361,8 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_describe("connectMediaPorts", LocalizedLabel::native("Connects an output port of one widget to an input port of another; an incompatible connection changes nothing.", "Verbindet einen Ausgangsport eines Widgets mit einem Eingangsport eines anderen; eine unverträgliche Verbindung ändert nichts."))
         .action_describe("generate", LocalizedLabel::native("Switches the editor to its generate view, which shows the generation list and the result of the selected generation.", "Schaltet den Editor in seine Generieren-Ansicht, die die Generationsliste und das Ergebnis der ausgewählten Generation zeigt."))
         .action_describe("setEvalOutputs", LocalizedLabel::native("Hands the editor evaluated generator outputs (JSON) computed elsewhere so it can show them; the document is not changed.", "Übergibt dem Editor anderswo berechnete Generatorausgaben (JSON), damit er sie zeigt; das Dokument ändert sich nicht."))
-        .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
-        .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("nodeGraphEdit", semio_plugin::CapabilityAudience::Input)
+        .action_audience("nodeGraphViewport", semio_plugin::CapabilityAudience::Chrome)
         .action_destructive("reorganize")
         .build_definition()
 }
@@ -386,3 +386,93 @@ pub mod examples {
 }
 #[path = "🌉️wasm/🦀️.rs"]
 pub mod wasm;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🦀️.rs"]
+mod retained_flow_source;
+
+#[path="../../../../../../../🫀️foundation/🧬️generation/🌊️flow-overlay/🦀️.rs"]
+mod retained_flow_overlay;
+
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🧬️generation/🌊️flow-overlay/🧪️laws/🦀️.rs"]
+mod retained_flow_overlay_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🔢️digest/🦀️.rs"]
+mod retained_preview_digest;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📥️provisional/🦀️.rs"]
+mod retained_provisional_source;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📋️rows/🦀️.rs"]
+mod retained_scratch_rows;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📋️rows/🧪️tests/🦀️.rs"]
+mod retained_scratch_rows_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🔎️rows/🦀️.rs"]
+mod retained_scratch_scan;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🔎️rows/🧪️tests/🦀️.rs"]
+mod retained_scratch_scan_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/✏️host-scratch/🦀️.rs"]
+mod retained_host_scratch;
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🎟️driver/🦀️.rs"]
+mod retained_scratch_driver;
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📋️projection/🦀️.rs"]
+mod retained_projected_clone;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/✏️host-scratch/🧪️laws/🦀️.rs"]
+mod retained_host_scratch_laws;
+
+#[cfg(test)]
+fn host_scratch_test_domain()->retained_host_scratch::HostScratchDomain{retained_host_scratch::HostScratchDomain::Generation2d}
+
+#[cfg(test)]
+fn host_scratch_test_original(source:&semio_framework_artifact_flow_flow::FlowHostSnapshot,wire:&serde_json::Value)->semio_framework_artifact_flow_flow::FlowHostSnapshot{let mut snapshot=Generation2dSnapshot{host_snapshot:source.clone(),generation:Default::default()};let mutation:Generation2dMutation=semio_framework_pack_json::from_json_str(&wire.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let _=semio_s_artifact_procedural_2d_mutations::central_apply::apply_generation2d_mutation(&mut snapshot,&mutation);mutation.retire_cold();let result=std::mem::take(&mut snapshot.host_snapshot);snapshot.retire_cold();result}
+
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📋️projection/🧪️laws/🦀️.rs"]
+mod retained_projected_clone_laws;
+
+use semio_s_artifact_procedural_2d_model::{GenerationPlayState,FormGeneration};
+
+#[path="../../../../../../../🫀️foundation/🧬️generation/🧵️fold/🦀️.rs"]
+mod retained_generation_fold;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🧪️caller/🦀️.rs"]
+mod retained_scratch_testing;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🧬️generation/🧵️fold/🧪️tests.rs"]
+mod retained_generation_fold_laws;
+
+#[cfg(test)]
+fn generation_fold_test_original(source:&GenerationPlayState,wire:&serde_json::Value)->(GenerationPlayState,bool){let mut snapshot=Generation2dSnapshot{host_snapshot:Default::default(),generation:source.clone().into()};let mutation:Generation2dMutation=semio_framework_pack_json::from_json_str(&wire.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let accepted=semio_s_artifact_procedural_2d_mutations::central_apply::apply_generation2d_mutation(&mut snapshot,&mutation).is_ok();mutation.retire_cold();let result=snapshot.generation.as_state().clone();snapshot.retire_cold();(result,accepted)}
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📥️provisional/✏️fold/🦀️.rs"]
+mod retained_native_provisional_fold;
+
+#[path="🧵️retained-commands/📥️provisional/✏️dispatch/🦀️.rs"]
+mod retained_provisional_dispatch;
+
+#[cfg(test)]
+type HostScratchFixtureMutation=Generation2dMutation;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📥️provisional/🔁️replay/🦀️.rs"]
+mod retained_provisional_replay;
+
+type NativeProvisionalAdditional=retained_native_provisional_fold::NeverAdditional;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🎬️scene/🦀️.rs"]
+mod retained_provisional_scene;
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🎬️scene/🧷️base.rs"]
+mod retained_scene_base;
+
+#[cfg(test)]
+type ProvisionalSceneTestApp=EditorApp<Generation2dPlayApp>;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🎬️scene/🧪️.rs"]
+mod retained_provisional_scene_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📇️catalogue/🦀️.rs"]
+mod retained_catalogue_lifecycle;

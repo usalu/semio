@@ -3,13 +3,13 @@ use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::io;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot as pack;
 use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, IFC_DIALECT};
 use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::house;
-use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
+use semio_os_kernel::io::io_mechanism::IoEntryDirection;
 use semio_framework::io_schema::IoPayload;
 
 #[path = "../🪶️sqlite/🦀️.rs"]
 mod sqlite;
 
-fn entry(direction: IoEntryDirection) -> &'static semio_framework_os_kernel::io::io_mechanism::IoEntry {
+fn entry(direction: IoEntryDirection) -> &'static semio_os_kernel::io::io_mechanism::IoEntry {
     io().entries.iter().find(|entry| entry.direction == direction && (entry.from == IFC_DIALECT || entry.into == IFC_DIALECT)).expect("the IFC entry")
 }
 
@@ -46,7 +46,7 @@ fn the_io_declaration_lists_the_native_pack_and_text_codec_and_every_foreign_hop
     use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::ModelIntoSvg;
     use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::{Ifc2x3IntoModel, Ifc4IntoModel};
     use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot as text;
-    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
+    use semio_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     let declaration = io();
     assert_eq!(declaration.native.codec.schema, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA);
     let model = house();

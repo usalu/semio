@@ -10,7 +10,7 @@
 //! this crate as op payloads are — it stores/hashes/frames them, never decodes them; only
 //! `decode_base`'s caller knows how to turn embedded bytes into `P`.
 
-use semio_framework_os_pack::{ByteReader, ByteWriter};
+use semio_os_pack::{ByteReader, ByteWriter};
 use crate::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, VerificationLevel, HEADER_SIZE};
 use protocol::ProtocolError;
 use crate::wire::{DictReader, ProtocolLimits, RecordHasher};

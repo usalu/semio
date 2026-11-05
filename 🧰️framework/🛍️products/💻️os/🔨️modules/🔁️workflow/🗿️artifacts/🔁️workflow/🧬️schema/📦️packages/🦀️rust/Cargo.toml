@@ -23,20 +23,20 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-schema-state = { path = "../../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-os-command = { path = "../../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-artifact-workflow-workflow-graph = { path = "../../../🕸️graph/📦️packages/🦀️rust" }
 semio-framework-artifact-workflow-workflow-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-store-one-item = { path = "../../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-os-store-one-item = { path = "../../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-manifest-media = { path = "../../../../../../../../../🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust" }

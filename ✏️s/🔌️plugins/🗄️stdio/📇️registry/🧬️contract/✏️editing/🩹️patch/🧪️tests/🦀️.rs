@@ -373,16 +373,16 @@ fn a_patch_input_schema_types_the_value_by_the_snapshot_sub_schema_and_reads_as_
         let candidate = |payload: &serde_json::Value| serde_json::json!({ "patch": { "operation": patch.operation(), "path": path, "value": payload } }).to_string();
         assert!(validator.validate_json(&candidate(&row["valid"])).is_ok(), "{} admits its valid value", row["id"]);
         assert!(validator.validate_json(&candidate(&row["invalid"])).is_err(), "{} refuses its invalid value", row["id"]);
-        let inputs = semio_framework_plugin::mutation_input_defs(&text, &resolve_value).unwrap_or_else(|error| panic!("{}: {error}", row["id"]));
+        let inputs = semio_plugin::mutation_input_defs(&text, &resolve_value).unwrap_or_else(|error| panic!("{}: {error}", row["id"]));
         assert_eq!(inputs.iter().map(|input| input.id.as_str()).collect::<Vec<_>>(), ["/patch"], "{}", row["id"]);
     }
     for (patch, inputs) in
         [(SnapshotPatch::Remove { path: "/title".into() }, 0usize), (SnapshotPatch::Rename { path: "/metadata/k".into(), key: "j".into() }, 1), (SnapshotPatch::Move { from: "/list/0".into(), path: "/list/1".into(), index: None }, 0)]
     {
         let text = snapshot_patch_input_schema_text(snapshot, &patch, &resolve).unwrap();
-        let read = semio_framework_plugin::mutation_input_defs(&text, &resolve_value).unwrap();
-        let semio_framework_plugin::ArgSchema::Object { fields } = &read[0].schema else { panic!("{patch:?} reads one patch object") };
-        assert_eq!(fields.iter().filter(|field| field.presentation != Some(semio_framework_plugin::ArgPresentation::Hidden)).count(), inputs, "{patch:?}");
+        let read = semio_plugin::mutation_input_defs(&text, &resolve_value).unwrap();
+        let semio_plugin::ArgSchema::Object { fields } = &read[0].schema else { panic!("{patch:?} reads one patch object") };
+        assert_eq!(fields.iter().filter(|field| field.presentation != Some(semio_plugin::ArgPresentation::Hidden)).count(), inputs, "{patch:?}");
     }
 }
 
@@ -409,8 +409,8 @@ fn every_operation_round_trips_its_wire_and_labels_itself_in_every_locale() {
             let field=<SnapshotPatch as semio_framework_dsl_record::DslField>::to_value(&patch);assert_eq!(<SnapshotPatch as semio_framework_dsl_record::DslField>::from_value(&field).unwrap(),patch,"{id}: borrowed value carrier");
             assert_eq!(SnapshotPatch::decode_op(&patch.encode_op().unwrap()).unwrap(), patch, "{id}");
             let label = snapshot_patch_label(&patch);
-            for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
-                assert!(!label.resolve(semio_framework_ui_locale::Terminology::Native, locale).is_empty(), "{id}");
+            for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+                assert!(!label.resolve(semio_ui_locale::Terminology::Native, locale).is_empty(), "{id}");
             }
         }
     }

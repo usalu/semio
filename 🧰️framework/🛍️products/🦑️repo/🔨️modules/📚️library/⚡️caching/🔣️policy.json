@@ -192,6 +192,7 @@
     ".git",
     ".nx",
     ".cache",
+    ".r",
     "target",
     "dist",
     "📤️dist",
@@ -275,7 +276,7 @@
         "SEMIO_PLUGIN_PROFILE",
         "SEMIO_DISABLE_WASM_OPT",
         "SEMIO_WASM_OPT",
-        "SEMIO_WASM_BINDGEN_BIN",
+        "SEMIO_TOOL_WASM_BINDGEN",
         "RUSTC_BOOTSTRAP",
         "CARGO_UNSTABLE_EMBED_METADATA",
         "SEMIO_WASM_OPT_BIN",
@@ -649,7 +650,8 @@
       "capacityBytes": 103080263680,
       "filesystemBytes": 103079215104,
       "maximumWorkspaceBytes": 4294967296,
-      "maximumArtifactBytes": 1073741824
+      "maximumArtifactBytes": 1073741824,
+      "partition": "rust"
     },
     "sourceBoundary": {
       "version": 1,

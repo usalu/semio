@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "grid-line", kind: "create-grid-line", record: "CreateGridLine" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create grid line \"{}\"", self.grid_line.label), &format!("Rasterlinie \"{}\" anlegen", self.grid_line.label))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create grid line \"{}\"", self.grid_line.label), &format!("Rasterlinie \"{}\" anlegen", self.grid_line.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

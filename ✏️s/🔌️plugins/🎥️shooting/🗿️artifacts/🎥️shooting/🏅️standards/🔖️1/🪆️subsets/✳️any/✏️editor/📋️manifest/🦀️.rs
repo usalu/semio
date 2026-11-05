@@ -6,11 +6,11 @@ use super::*;
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_shooting_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::SHOOTING_DIALECT)
             .document(["semio", "shooting"])
             .artifact_kind(crate::artifact_kind())
-            .artifact_kind(semio_framework_plugin::ArtifactKindSpec {
+            .artifact_kind(semio_plugin::ArtifactKindSpec {
                 id: "2d.image".into(),
                 label: LocalizedLabel::native("2D Image", "2D-Bild"),
                 source_format: "2d.image".into(),
@@ -65,9 +65,9 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setShotSelection", LocalizedLabel::native("Set Shot Selection", "Aufnahmeauswahl festlegen"))
             .view_action("setCenterModel", LocalizedLabel::native("Set Center Model", "Modellzentrierung festlegen"))
             .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
-            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerDown", semio_plugin::CapabilityAudience::Input)
             .view_action("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"))
-            .action_audience("worldPointerMove", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerMove", semio_plugin::CapabilityAudience::Input)
             .interaction(InteractionDefinition {
                 id: SHOOTING_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Assets", "Objekte"),
@@ -180,7 +180,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("importAssetRequest", LocalizedLabel::native("Opens the host's file picker for a GLB model; the chosen file is then imported as a new asset.", "Öffnet die Dateiauswahl des Hosts für ein GLB-Modell; die gewählte Datei wird dann als neues Objekt importiert."))
             .action_describe("exportActiveShot", LocalizedLabel::native("Renders the active shot and writes it as a PNG or SVG file named after the shot to the user's machine.", "Rendert die aktive Aufnahme und schreibt sie als PNG- oder SVG-Datei mit dem Namen der Aufnahme auf den Rechner des Nutzers."))
             .action_describe("exportAllShots", LocalizedLabel::native("Renders every shot and writes each as a PNG or SVG file named after its shot to the user's machine.", "Rendert alle Aufnahmen und schreibt jede als PNG- oder SVG-Datei mit dem Namen ihrer Aufnahme auf den Rechner des Nutzers."))
-            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
             .action_destructive("importSnapshotJson")
             .build_definition()
 }

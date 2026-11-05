@@ -212,7 +212,7 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../../ðŸ“
 pub mod artifact_items_8 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }

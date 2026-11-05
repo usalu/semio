@@ -1,7 +1,7 @@
 //! 📸️ Workflow snapshot: the `os.workflow` persisted artifact with its bindings, snapshot validation and native snapshot codecs.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as store;
 
 use semio_framework_artifact_workflow_workflow_graph::*;
 use semio_framework::{MediaForm, MediaPortSpec, MediaType, MediaWireFormat};
@@ -34,7 +34,7 @@ pub struct WorkflowOutputBinding {
 /// its parameters/bindings, and its declared collection-level inputs/outputs. Absorbs os-core's
 /// dissolved `OsSnapshot` (`programs` moved to `space::SpaceSnapshot`, `active_plugin_id`/
 /// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[artifact(id = "os.workflow")]
 pub struct WorkflowSnapshot {

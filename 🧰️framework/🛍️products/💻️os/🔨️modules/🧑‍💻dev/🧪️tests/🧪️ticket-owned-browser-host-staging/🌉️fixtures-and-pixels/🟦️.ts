@@ -1,8 +1,10 @@
+import {PLAYWRIGHT_MODULE_SPECIFIER} from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import {ensureRepositoryBrowserPathV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 🌉️ The scale fixture artifacts, the linked session engines and the owned parity pixel comparison of the ticket-owned browser host staging suite. */
 import { createTestKit, type TestDependencies, type TestSource } from "../🧰️test-kit/🟦️.ts";
 
 export async function registerFixtureAndPixelTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies, source: TestSource): Promise<void> {
-  const { PLAYWRIGHT_MODULE_SPECIFIER, checkScaleFixtureArtifacts, compareOwnedParityPixels, cropOwnedParityRgba, decodeParityScreenshot, dirname, encodeParityDiff, ensureParityPlaywrightBrowsersPath, fileURLToPath, join, linkedSessionEngines, readFileSync, renderScaleFixtureArtifacts, repoRoot, scaleFixtureGeneratedDir } = dependencies;
+  const { checkScaleFixtureArtifacts, compareOwnedParityPixels, cropOwnedParityRgba, decodeParityScreenshot, dirname, encodeParityDiff, fileURLToPath, join, linkedSessionEngines, readFileSync, renderScaleFixtureArtifacts, repoRoot, scaleFixtureGeneratedDir } = dependencies;
   const { describe, expect, it } = vitest;
   const { devContractModule, itLong } = createTestKit(vitest, dependencies, source);
 
@@ -221,7 +223,7 @@ export async function registerFixtureAndPixelTests(vitest: NonNullable<ImportMet
     });
 
     itLong("preserves fixed CSS color, alpha, and diagnostic marker pixels through Canvas PNGs", async () => {
-      ensureParityPlaywrightBrowsersPath();
+      ensureRepositoryBrowserPathV1(repoRoot,process.env);
       const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
       const browser = await chromium.launch({ headless: true });
       try {

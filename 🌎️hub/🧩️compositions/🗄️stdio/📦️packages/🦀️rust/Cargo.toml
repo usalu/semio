@@ -32,8 +32,8 @@ semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-hash = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 pack = { workspace = true }
@@ -53,11 +53,11 @@ serde_json = { workspace = true }
 [dev-dependencies]
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 blake3 = "1.8.2"
 sha2 = "0.10.9"
 semio-framework-async-macros = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 # 🧾️ The family libraries, linked so the shipped-fleet
 # census law can describe every stdio package and the editor catalogue reaches every editor.

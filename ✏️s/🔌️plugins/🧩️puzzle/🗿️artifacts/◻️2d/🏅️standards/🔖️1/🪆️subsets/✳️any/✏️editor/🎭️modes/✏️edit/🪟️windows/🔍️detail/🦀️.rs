@@ -6,12 +6,12 @@ use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::options;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {crate::editor::puzzle2d::terminology::puzzle2d_localized, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementSlot;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementSlot;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_BODY_KEY;
@@ -31,7 +31,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: Vec::new(),
-        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN)],
+        interactions: vec![semio_plugin::InteractionRef::new(crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -48,7 +48,7 @@ pub fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document_json: &str, envelope: &Puzzle2dScene) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document_json: &str, envelope: &Puzzle2dScene) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     edit::canvas::render_canvas(document_json, envelope, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID)
 }
 

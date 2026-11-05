@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSheetActionTorsion
         record: "ChangedSheetActionTorsionK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic torque T_k of the cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech: Charakteristisches Torsionsmoment T_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic torque T_k of the cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech: Charakteristisches Torsionsmoment T_k ändern")
     }
 }
 

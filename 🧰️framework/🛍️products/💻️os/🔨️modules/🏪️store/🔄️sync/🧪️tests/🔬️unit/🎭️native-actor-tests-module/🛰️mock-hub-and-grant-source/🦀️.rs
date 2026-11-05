@@ -33,47 +33,47 @@
         trace: Arc<std::sync::Mutex<Vec<&'static str>>>,
     }
 
-    impl semio_framework_os_directory_client::HubSocketGrantSource for MockHubSocketGrantSource {
+    impl semio_os_directory_client::HubSocketGrantSource for MockHubSocketGrantSource {
         fn admit_document_socket(
             &self,
             _ctx: &semio_framework_async::OperationContext,
             space_id: &str,
             document_id: &str,
-            expectation: &semio_framework_os_directory_client::DocumentSocketExpectationV1,
+            expectation: &semio_os_directory_client::DocumentSocketExpectationV1,
             _client_instance_id: &str,
             _timeout_ms: u64,
-        ) -> Result<semio_framework_os_directory_client::DocumentSocketAdmissionV1, semio_framework_os_directory_client::DirectoryClientError> {
+        ) -> Result<semio_os_directory_client::DocumentSocketAdmissionV1, semio_os_directory_client::DirectoryClientError> {
             self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("grant.entered");
             let expires_at_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("system clock after epoch").as_millis().saturating_add(u128::from(self.plan_window_ms)).min(i64::MAX as u128) as i64;
-            let admission = semio_framework_os_directory_client::DocumentSocketAdmissionV1 {
-                socket: semio_framework_os_directory_client::DocumentSocketGrantReceiptV1 {
+            let admission = semio_os_directory_client::DocumentSocketAdmissionV1 {
+                socket: semio_os_directory_client::DocumentSocketGrantReceiptV1 {
                     schema: "semio.hub.document-socket-grant/v1".into(),
                     protocol: "semio.session.v1".into(),
                     actor_id: self.actor_id.clone(),
                     expires_at_ms,
                 },
-                authority: semio_framework_os_directory_client::DocumentSocketAuthorityV1 {
+                authority: semio_os_directory_client::DocumentSocketAuthorityV1 {
                     admitted_lease: expectation.lease.clone(),
                     hub_origin: self.hub_origin.clone(),
-                    browser_actor: semio_framework_os_directory::DocumentOpenBrowserActorV1::None,
+                    browser_actor: semio_os_directory::DocumentOpenBrowserActorV1::None,
                     expires_at_unix_ms: u64::try_from(expires_at_ms).expect("positive mock expiry"),
-                    scope: semio_framework_os_directory::DocumentScope::new(space_id, document_id),
+                    scope: semio_os_directory::DocumentScope::new(space_id, document_id),
                     descriptor_digest_v1: "4".repeat(64),
-                    catalog: semio_framework_os_directory::DocumentOpenCatalogV1 { generation_id: "5".repeat(64) },
-                    package: semio_framework_os_directory::DocumentOpenPackageV1 {
+                    catalog: semio_os_directory::DocumentOpenCatalogV1 { generation_id: "5".repeat(64) },
+                    package: semio_os_directory::DocumentOpenPackageV1 {
                         plugin_id: "mock-plugin".into(),
                         package_id: "semio:mock-plugin".into(),
                         version: "1.0.0".into(),
                         component_sha256: "6".repeat(64),
                         component_blake3: "7".repeat(64),
                         descriptor_byte_sha256: "8".repeat(64),
-                        execution_protocol: semio_framework_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_framework_os_spr::CHANNEL_VERSION },
-                        component_receipt: semio_framework_plugin_component_receipt::ComponentReceiptV1 {
-                            schema: semio_framework_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+                        execution_protocol: semio_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_os_spr::CHANNEL_VERSION },
+                        component_receipt: semio_plugin_component_receipt::ComponentReceiptV1 {
+                            schema: semio_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                             plugin_id: "mock-plugin".into(),
                             package_id: "semio:mock-plugin".into(),
-                            profile: semio_framework_plugin_component_receipt::ComponentProfileV1::Release,
-                            target: semio_framework_plugin_component_receipt::COMPONENT_TARGET.into(),
+                            profile: semio_plugin_component_receipt::ComponentProfileV1::Release,
+                            target: semio_plugin_component_receipt::COMPONENT_TARGET.into(),
                             wasm_sha256: "6".repeat(64),
                             wasm_bytes: 1024,
                             semantic_descriptor_sha256: "8".repeat(64),
@@ -82,30 +82,30 @@
                             provenance_sha256: "4".repeat(64),
                         },
                     },
-                    artifact: semio_framework_os_directory::DocumentOpenArtifactV1 { kind: "mock.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
-                    parent_dialect: semio_framework_os_directory::DocumentOpenParentDialectV1 { artifact_kind: "mock.document".into(), standard: "1".into(), subset: "*".into() },
+                    artifact: semio_os_directory::DocumentOpenArtifactV1 { kind: "mock.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
+                    parent_dialect: semio_os_directory::DocumentOpenParentDialectV1 { artifact_kind: "mock.document".into(), standard: "1".into(), subset: "*".into() },
                     pack_schema_hash: expectation.pack_schema_hash,
-                    surface: semio_framework_os_directory::DocumentOpenSurfaceV1 {
+                    surface: semio_os_directory::DocumentOpenSurfaceV1 {
                         surface_id: expectation.requested_surface_id.clone().unwrap_or_else(|| "mock.surface".into()),
                         app_id: "mock.app".into(),
                         window_kind_id: "mock.window".into(),
-                        role: semio_framework_os_directory::DocumentOpenSurfaceRoleV1::Editor,
-                        renderer_target: semio_framework_os_directory::DocumentOpenRendererTargetV1::Wgpu,
+                        role: semio_os_directory::DocumentOpenSurfaceRoleV1::Editor,
+                        renderer_target: semio_os_directory::DocumentOpenRendererTargetV1::Wgpu,
                     },
-                    grant: semio_framework_os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
-                    checkpoint: semio_framework_os_directory::DocumentOpenCheckpointV1 {
+                    grant: semio_os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
+                    checkpoint: semio_os_directory::DocumentOpenCheckpointV1 {
                         checkpoint_id: "9".repeat(64),
                         descriptor_digest_v1: "4".repeat(64),
-                        baseline_frontier: semio_framework_os_directory::ArtifactFrontier {
+                        baseline_frontier: semio_os_directory::ArtifactFrontier {
                             document_id: document_id.to_string(),
                             head_edit_ordinal: 0,
                             head_edit_id: String::new(),
                             last_commit_seq: 0,
-                            chain_hash: semio_framework_os_directory::ArtifactHash::new([0; 32]),
+                            chain_hash: semio_os_directory::ArtifactHash::new([0; 32]),
                         },
                         aggregate_sha256: "a".repeat(64),
                     },
-                    revalidation: semio_framework_os_directory::DocumentOpenRevalidationV1 { directory_revision: 1, membership_generation: 1, session_generation: Some(1), share_generation: None },
+                    revalidation: semio_os_directory::DocumentOpenRevalidationV1 { directory_revision: 1, membership_generation: 1, session_generation: Some(1), share_generation: None },
                 },
             };
             self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("grant.returned");
@@ -119,7 +119,7 @@
 
     /// ⏳️ [`configure_mock_hub`] with the admission plan's exchange window the grant source answers.
     fn configure_mock_hub_with_plan_window(host: &ArtifactHost, hub_origin: &str, actor_fill: char, hub: &MockHub, plan_window_ms: u64) {
-        host.set_local_hub_credential(Arc::new(semio_framework_os_directory_client::LocalHubCredential::test(hub_origin, &format!("session.v1.{}.{}", actor_fill.to_string().repeat(32), actor_fill.to_string().repeat(64)))));
+        host.set_local_hub_credential(Arc::new(semio_os_directory_client::LocalHubCredential::test(hub_origin, &format!("session.v1.{}.{}", actor_fill.to_string().repeat(32), actor_fill.to_string().repeat(64)))));
         host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource { hub_origin: hub_origin.into(), actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)), plan_window_ms, trace: hub.trace.clone() }));
     }
 

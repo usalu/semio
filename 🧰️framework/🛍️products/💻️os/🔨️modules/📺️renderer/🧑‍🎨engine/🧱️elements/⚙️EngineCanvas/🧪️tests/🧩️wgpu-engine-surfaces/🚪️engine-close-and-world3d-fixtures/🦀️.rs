@@ -36,12 +36,12 @@ fn a_component_engine_close_retires_only_its_exact_staged_host_and_preserves_the
 
 struct PaintedFrame {
     draw: DrawList,
-    world3d_states: semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceMap<World3dState>,
+    world3d_states: semio_renderer_wgpu_contracts::AdmittedSurfaceMap<World3dState>,
 }
 
 /// 🎬️ Drives the REAL production paint — `scenes::render_component_scene_step` through a real
 /// `FrameworkWidgetContext` and a real `SceneEngineHosts`, not the attach functions directly.
-fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceMap<World3dState>) -> PaintedFrame {
+fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: semio_renderer_wgpu_contracts::AdmittedSurfaceMap<World3dState>) -> PaintedFrame {
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -53,14 +53,14 @@ fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: semio_framewo
     let mut world3d_states = states;
     let mut world_resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
     {
-        let mut ctx = semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
-        let mut cursor = semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor::default();
+        let mut ctx = semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
+        let mut cursor = semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor::default();
         for _ in 0..4096 {
-            match semio_framework_os_renderer_wgpu_scene_render::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, 1) {
-                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending => continue,
-                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Complete => break,
-                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault => panic!("engine surface scene paint faulted"),
+            match semio_renderer_wgpu_scene_render::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, 1) {
+                semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending => continue,
+                semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Complete => break,
+                semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault => panic!("engine surface scene paint faulted"),
             }
         }
     }
@@ -121,7 +121,7 @@ fn drive_world3d_ladder(state: &mut World3dState) {
 /// the first paint STAGES the mesh-wire bridge, the ladder seals it, and only the next paint's
 /// `sync_world3d_state` picks the sealed lease up and opens the snapshot apply.
 fn attach_and_settle_world3d(scene: &UiComponentSceneNode, bounds: Rect, surface_id: &str) -> PaintedFrame {
-    let mut frame = paint_scene(scene, bounds, semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceMap::default());
+    let mut frame = paint_scene(scene, bounds, semio_renderer_wgpu_contracts::AdmittedSurfaceMap::default());
     assert!(frame.world3d_states.contains_key(surface_id), "the first painted frame constructs the World3d host in the shell's own map");
     for turn in 0..16 {
         drive_world3d_ladder(frame.world3d_states.get_mut(surface_id).expect("attached world state"));
@@ -149,5 +149,5 @@ fn publish_world3d_intent(state: &mut World3dState, intent: WorldInteractionInte
         assert!(!faulted, "the world interaction authority faulted on turn {turn}");
         assert!(turn < 8_191, "the world interaction authority drained its queue within its turn ceiling");
     }
-    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
+    semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }

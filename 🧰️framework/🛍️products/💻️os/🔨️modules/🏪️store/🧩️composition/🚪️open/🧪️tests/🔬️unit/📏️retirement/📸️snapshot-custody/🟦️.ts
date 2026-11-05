@@ -340,7 +340,7 @@ test("member and hydration paid turns preserve the original physical wallet",asy
  expect(source.includes("pub fn member_step_grant")).toBe(true);expect(source.includes("pub fn record_member_step")).toBe(true);
  expect(source.includes("cx.consume_retained(progress)")).toBe(true);
  for(const axis of ["items","copy_bytes","capacity_bytes","release_bytes","depth"])expect(source.includes("grant.maximum_"+axis+".min(caller.maximum_"+axis+")")).toBe(true);
- expect(operation.includes("let grant = semio_framework_os_store_member_open::member_step_grant(cx, grant);")).toBe(true);expect(operation.includes("semio_framework_os_store_member_open::record_member_step(cx, progress)")).toBe(true);
+ expect(operation.includes("let grant = semio_os_store_member_open::member_step_grant(cx, grant);")).toBe(true);expect(operation.includes("semio_os_store_member_open::record_member_step(cx, progress)")).toBe(true);
  expect(hydration.includes("member_open::member_step_grant(cx, grant)")).toBe(true);expect(hydration.includes("member_open::record_member_step(cx, progress)")).toBe(true);
  expect(hydration.includes("match progress_fuel(progress) { Ok(fuel) => cx.consume_fuel(fuel)")).toBe(false);
  for(const [name,input]of [["open",source],["operation",operation]]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
@@ -443,7 +443,7 @@ test("current shared actor native callers retain genuine lease and original buff
  const request=fs.readFileSync(path.join(base,"🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs"),"utf8"),hydration=fs.readFileSync(path.join(base,"🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs"),"utf8"),history=fs.readFileSync(path.join(base,"📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"),"utf8");
  expect(request.includes("request.actor.0.capacity()")).toBe(false);expect(hydration.includes("owner.actor.0.capacity()")).toBe(false);
  expect(request.includes("request.closing_actor.as_ref().unwrap().as_ptr()")).toBe(true);expect(request.includes("SharedUtf8::admit(actor")).toBe(true);
- expect(history.includes("|value,output,native,body|")).toBe(true);expect(history.includes("body.admit_frontier(")).toBe(true);expect(history.includes("body.record_progress(")).toBe(true);expect(history.includes("*output=Some(())")).toBe(true);expect(history.includes("semio_framework_os_io::control::NativeSnapshotDecodeOwner::new(&mut original_native,caller_grant())")).toBe(true);
+ expect(history.includes("|value,output,native,body|")).toBe(true);expect(history.includes("body.admit_frontier(")).toBe(true);expect(history.includes("body.record_progress(")).toBe(true);expect(history.includes("*output=Some(())")).toBe(true);expect(history.includes("semio_os_io::control::NativeSnapshotDecodeOwner::new(&mut original_native,caller_grant())")).toBe(true);
  const law=JSON.parse(fs.readFileSync(path.join(base,"🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  expect(law.physicalCloseGrant.maximumCopyBytes).toBe(4096);
  for(const row of law.cases){const bytes=new TextEncoder().encode(row.text),original=Buffer.allocUnsafeSlow(row.capacityBytes);original.set(bytes);expect(bytes.byteLength).toBe(Buffer.byteLength(row.text,"utf8"));expect(original.byteLength).toBe(row.capacityBytes);expect(original.subarray(0,bytes.length).toString("utf8")).toBe(row.text);}

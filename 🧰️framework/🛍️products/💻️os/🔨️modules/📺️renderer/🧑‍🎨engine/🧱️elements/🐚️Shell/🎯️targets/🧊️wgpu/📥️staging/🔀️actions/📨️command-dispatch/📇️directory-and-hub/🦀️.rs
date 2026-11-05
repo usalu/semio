@@ -185,8 +185,8 @@ impl<'ctx> ActionsCtx<'ctx> {
                 }
                 hub_action::CREATE_SPACE => {
                     let name = self.directory.hub_workspace.space_name_draft.clone();
-                    if let Some(command) = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::create_space_command(&name, DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private) {
-                        self.directory.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Submitting;
+                    if let Some(command) = semio_renderer_wgpu_hub_contracts::space_browser::create_space_command(&name, DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private) {
+                        self.directory.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Submitting;
                         self.directory.dispatch_directory_command(command).await;
                         self.directory.hub_workspace.space_name_draft.clear();
                         self.directory.start_hub_spaces_reload();
@@ -246,7 +246,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         }
         let Some(client) = self.directory.directory_client.clone() else { return false };
         let now_ms = directory_now_ms();
-        if semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::space_artifact_creation_unreachable(operation.last_answered_at_ms, now_ms) {
+        if semio_renderer_wgpu_hub_workspace::hub_connection::space_artifact_creation_unreachable(operation.last_answered_at_ms, now_ms) {
             if let Some(current) = self.directory.hub_workspace.creation.operation.as_mut() {
                 current.phase = SpaceArtifactCreationPhaseV1::Indeterminate;
             }
@@ -269,7 +269,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             current.submitted = true;
             current.cancel_sent |= cancellation;
             let answered_at_ms = directory_now_ms();
-            current.next_poll_at_ms = answered_at_ms.saturating_add(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::space_artifact_creation_poll_delay_ms(current.polls));
+            current.next_poll_at_ms = answered_at_ms.saturating_add(semio_renderer_wgpu_hub_workspace::hub_connection::space_artifact_creation_poll_delay_ms(current.polls));
             current.polls = current.polls.saturating_add(1);
             if receipt.is_ok() {
                 current.last_answered_at_ms = answered_at_ms;
@@ -411,7 +411,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let seed_cancel = prepared.seed.as_ref().map(|seed| seed.ctx.cancel.clone());
         let pending = ShellDetached::spawn({
             let (plugin, instance_id, seed) = (prepared.plugin.clone(), prepared.session.instance_id, prepared.seed.clone());
-            async move { seed_hub_document(plugin, instance_id, seed).await.map(ShellDocumentOpenAnswer::Seeded).map_err(semio_framework_os_renderer_wgpu_program_bridge::ProgramFault::from) }
+            async move { seed_hub_document(plugin, instance_id, seed).await.map(ShellDocumentOpenAnswer::Seeded).map_err(semio_renderer_wgpu_program_bridge::ProgramFault::from) }
         });
         let mut opening = opening.unwrap_or_else(|| ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Seeding, session.plugin_id.clone(), session.app.id.clone(), None, None));
         opening.phase = ShellDocumentOpenPhase::Seeding;
@@ -580,7 +580,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             let mut dirty = false;
             let mut rebootstrap = false;
-            let mut live_events: Vec<semio_framework_os_kernel::os_directory::DirectoryEvent> = Vec::new();
+            let mut live_events: Vec<semio_os_kernel::os_directory::DirectoryEvent> = Vec::new();
             for message in runner.drain() {
                 match message {
                     DirectoryStreamMessage::Event { event } => {
@@ -635,7 +635,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     }
                     Err(DirectoryClientError::Transport(TransportError::Io(_) | TransportError::DeadlineExceeded | TransportError::BudgetExhausted) | DirectoryClientError::Http { status: 500..=599, .. }) => {
                         if let Some(home) = self.directory.directory_home.as_mut() {
-                            home.retry_at_ms = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().now_ms().saturating_add(DirectoryHomeProjection::RETRY_DELAY_MS);
+                            home.retry_at_ms = semio_renderer_wgpu_host_base::renderer_worker_pool().now_ms().saturating_add(DirectoryHomeProjection::RETRY_DELAY_MS);
                         }
                     }
                     Err(DirectoryClientError::Cancelled | DirectoryClientError::Transport(TransportError::Cancelled)) => {}
@@ -687,7 +687,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                                 self.chrome.error = Some(detail);
                             } else if rebootstrap {
                                 let _ = home.begin_epoch(0);
-                            } else if home.retry(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().now_ms(), &expected.receipt_sha256).is_err() {
+                            } else if home.retry(semio_renderer_wgpu_host_base::renderer_worker_pool().now_ms(), &expected.receipt_sha256).is_err() {
                                 home.close();
                                 self.chrome.error = Some("retained Home directory rejection no longer matches the pending page".into());
                             }

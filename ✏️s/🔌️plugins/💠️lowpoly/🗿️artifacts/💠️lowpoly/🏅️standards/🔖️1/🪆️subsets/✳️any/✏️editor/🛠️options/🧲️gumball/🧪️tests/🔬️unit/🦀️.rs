@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_lowpoly_lowpoly_options::gumball::*;
@@ -6,11 +6,11 @@ use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
 use semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_window_action;
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
 use semio_s_artifact_lowpoly_lowpoly_view::{utility_param_bool, utility_params_value, GUMBALL_MOVE_PARAM, GUMBALL_ROTATE_PARAM, GUMBALL_SCALE_PARAM};
-use semio_framework_ui_locale::LabelText;
-use semio_framework_plugin::WindowMeasure;
+use semio_ui_locale::LabelText;
+use semio_plugin::WindowMeasure;
 use crate::context::{action_meta, app, dispatch};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 /// 🎛️ Every handle group is on by default, and a `setUtilityParam` toggle switches exactly one off —
 /// which the Model scene's `gumballConfig` and the window toggle both report.

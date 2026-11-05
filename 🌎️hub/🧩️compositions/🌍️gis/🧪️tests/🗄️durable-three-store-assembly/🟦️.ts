@@ -62,7 +62,7 @@ export class DurableThreeStoreAssemblyNativeCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisDurableThreeStoreAssembly(this.repoRoot);
     const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, groups: [
-        { package: "semio-framework-os-store-durable-group-tests", target: { kind: "lib" }, laws: [
+        { package: "semio-os-store-durable-group-tests", target: { kind: "lib" }, laws: [
           "durable_map_three_store_assembly_uses_exact_gis_factories_and_binds_one_decision",
           "durable_map_three_store_assembly_late_member_rejection_closes_prior_publications_before_owner_handoff",
           "durable_map_three_store_assembly_cancellation_before_journal_restores_all_three_frontiers",

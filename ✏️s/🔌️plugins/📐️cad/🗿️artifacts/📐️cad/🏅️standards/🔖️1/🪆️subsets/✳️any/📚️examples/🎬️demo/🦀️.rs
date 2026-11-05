@@ -1,7 +1,7 @@
 //! 📚️ Example `demo`.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[cfg(test)]
@@ -9,8 +9,8 @@ extern crate semio_framework_os_kernel as store;
 mod art_cad_demo_tests;
 //#endregion 🧩️Modules
 
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 pub fn label() -> LocalizedLabel {

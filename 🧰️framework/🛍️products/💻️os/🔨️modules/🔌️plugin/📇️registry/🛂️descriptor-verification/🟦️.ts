@@ -4,7 +4,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { CATALOG_DESCRIPTOR_PACK_FILENAME, StrictCatalogDescriptor } from "../✅️catalog-verification/🟦️.ts";
 import { boundedCatalogDiagnostic } from "../✅️catalog-verification/🛡️guards/🟦️.ts";
-import { rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair } from "../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { rejectPlaceholderCatalogIdentity } from "../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { validateCatalogDescriptorPair } from "../✅️catalog-verification/🧬️descriptor-pair/📁️filesystem/🟦️.ts";
 import { DESCRIPTOR_JSON_REL_PATH, DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 
 

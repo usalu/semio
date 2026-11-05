@@ -1,10 +1,10 @@
 //! 👁️ `s.wfc.grid3d` viewer — the `view` mode: one full-pane preview of the solved grid.
 
 use crate::viewer::grid3d::modes::view::windows::preview;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const GRID3D_VIEW_MODE_ID: &str = "view";
 

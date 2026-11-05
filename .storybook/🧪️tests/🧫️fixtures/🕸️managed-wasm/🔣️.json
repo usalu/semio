@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "id": "source-root",
+      "package": "@semio-tech/framework-os-node-graph-rs",
+      "suffix": "",
+      "resolution": "source"
+    },
+    {
+      "id": "source-host-export",
+      "package": "@semio-tech/framework-os-node-graph-rs",
+      "suffix": "/index",
+      "resolution": "source"
+    },
+    {
+      "id": "source-undeclared-export",
+      "package": "@semio-tech/framework-os-node-graph-rs",
+      "suffix": "/undeclared",
+      "resolution": "source-refused"
+    },
+    {
+      "id": "source-generated-module",
+      "package": "@semio-tech/framework-os-node-graph-rs",
+      "suffix": "/framework_os_node_graph.js",
+      "resolution": "managed"
+    },
+    {
+      "id": "generated-root",
+      "package": "@semio-tech/puzzle-wasm",
+      "suffix": "",
+      "resolution": "managed"
+    },
+    {
+      "id": "generated-undeclared-file",
+      "package": "@semio-tech/puzzle-wasm",
+      "suffix": "/index",
+      "resolution": "refused"
+    }
+  ]
+}

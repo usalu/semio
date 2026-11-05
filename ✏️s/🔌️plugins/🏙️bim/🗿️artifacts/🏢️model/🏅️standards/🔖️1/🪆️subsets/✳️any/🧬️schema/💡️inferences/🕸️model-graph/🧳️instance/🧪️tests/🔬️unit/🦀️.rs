@@ -2,7 +2,7 @@ use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::InferenceError;
-use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, UpdateReport};
 #[allow(unused_imports)]

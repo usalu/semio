@@ -2,10 +2,10 @@
 
 #[test]
 fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let fixture = &fixture["cancelledAdmission"];
     for drop_grant in [false, true] {
@@ -32,10 +32,10 @@ fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation()
 
 #[test]
 fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut outputs = SurfaceReconcileOutputs::default();
     let mut reservations = Vec::new();
@@ -66,10 +66,10 @@ fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full(
 
 #[test]
 fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_and_box() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let tracker = PatchTracker::new();
     {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from("72:producer-unwind").unwrap()).unwrap();let mut source=Some(leaf("root", "owned-é"));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
@@ -101,10 +101,10 @@ fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_a
 
 #[test]
 fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owners() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let tracker = PatchTracker::new();
     {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from("73:producer-source").unwrap()).unwrap();let mut source=Some(leaf("owned-root", "é"));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
@@ -145,10 +145,10 @@ fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owner
 
 #[test]
 fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["capturedLifetime"];
     let instance = law["instance"].as_u64().unwrap() as u32;
@@ -200,10 +200,10 @@ fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generati
 
 #[test]
 fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let key = NativeCloseKey::fixture(76, 1);
     let mut grant = tracker.reserve_mounted(ui_contract::SurfaceId::try_from("76:grant").unwrap(), key).unwrap();
@@ -229,10 +229,10 @@ fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
 
 #[test]
 fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_overadmission() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["concurrentAdmission"];
     let mut occupied = SurfaceReconcileOutputs::default();
@@ -247,7 +247,7 @@ fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_ove
         let barrier = barrier.clone();
         let tx = tx.clone();
         workers.push(std::thread::spawn(move || {
-            let mut worker_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored concurrent instance caller");let mut worker_context=worker_caller.context();let cx=&mut worker_context;
+            let mut worker_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored concurrent instance caller");let mut worker_context=worker_caller.context();let cx=&mut worker_context;
             let tracker = PatchTracker::new();
             let mut surface = ui_contract::SurfaceId::try_from(format!("{instance}:concurrent")).unwrap();
             let key = NativeCloseKey::fixture(instance, 1);

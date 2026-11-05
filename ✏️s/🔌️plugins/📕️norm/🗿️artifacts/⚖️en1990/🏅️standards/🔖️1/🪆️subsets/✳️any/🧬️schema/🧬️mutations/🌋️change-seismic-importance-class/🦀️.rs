@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeSeismicImportanceC
         record: "ChangedSeismicImportanceClass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change importance class of the seismic action", "Erdbebeneinwirkung: Bedeutungskategorie ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change importance class of the seismic action", "Erdbebeneinwirkung: Bedeutungskategorie ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

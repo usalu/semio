@@ -2,8 +2,8 @@
 
 use super::*;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::ArtifactView;
+use semio_plugin::NoConfig;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️GesturePreview
@@ -50,8 +50,8 @@ async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
     let DrawingMutation::CreateLayer(created) = &up.artifact_mutations[0] else { panic!("a shape drag creates a layer") };
     let label = <DrawingMutation as protocol::SemanticMutation<DrawingSnapshot>>::label(&up.artifact_mutations[0]);
     let id = layer_id(&created.layer).to_string();
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), format!("Create layer \"{id}\""));
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), format!("Ebene \"{id}\" erstellen"));
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), format!("Create layer \"{id}\""));
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), format!("Ebene \"{id}\" erstellen"));
     assert_eq!(session.preview().phase, canvas_pointer_down::DrawingGesturePreviewPhase::Idle, "the committed projection is terminal idle");
     assert!(session.tool.at_rest());
 }
@@ -88,8 +88,8 @@ async fn two_gestures_are_two_transactions_and_a_cancel_is_zero_trace() {
 }
 
 //#region 🧵️BatchedSamplesAndCancel
-fn session_with(utility: &str) -> (DrawingSession, DrawingSnapshot, NoConfig, semio_framework_plugin::HistoryView) {
-    (semio_s_artifact_draw_drawing_editor::identity_test::session(utility, ""), default_drawing_document("empty", None), NoConfig::default(), semio_framework_plugin::HistoryView::empty())
+fn session_with(utility: &str) -> (DrawingSession, DrawingSnapshot, NoConfig, semio_plugin::HistoryView) {
+    (semio_s_artifact_draw_drawing_editor::identity_test::session(utility, ""), default_drawing_document("empty", None), NoConfig::default(), semio_plugin::HistoryView::empty())
 }
 
 /// 🧵️ LAW (design L4 / §2 D): a batch of four samples leaves the shape drag exactly where four

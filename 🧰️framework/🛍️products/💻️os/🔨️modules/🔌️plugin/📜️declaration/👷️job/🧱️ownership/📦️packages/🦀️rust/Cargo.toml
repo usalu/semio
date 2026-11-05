@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-plugin-original-job-ownership"
+name = "semio-plugin-original-job-ownership"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,7 +24,7 @@ reserved-producer-testing = ["dep:serde_json", "dep:semio-framework-trace"]
 semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "../../../../../../../../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", optional = true }
 semio-framework-trace = { path = "../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust", optional = true }

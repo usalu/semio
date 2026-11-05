@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionFUk where O
         record: "ChangedTensionFUk",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic breaking strength F_uk of the tension component", "Zugglied: Charakteristische Bruchkraft F_uk ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic breaking strength F_uk of the tension component", "Zugglied: Charakteristische Bruchkraft F_uk ändern")
     }
 }
 

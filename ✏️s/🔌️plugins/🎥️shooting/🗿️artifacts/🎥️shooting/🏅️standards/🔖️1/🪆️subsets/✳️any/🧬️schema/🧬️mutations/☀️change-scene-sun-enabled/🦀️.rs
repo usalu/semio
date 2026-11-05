@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-sun-enabled", kind: "change-scene-sun-enabled", record: "ChangedSceneSunEnabled" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("{} sun", if self.new_enabled { "Enable" } else { "Disable" }), &format!("{} Sonne", if self.new_enabled { "Aktivieren" } else { "Deaktivieren" }))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("{} sun", if self.new_enabled { "Enable" } else { "Disable" }), &format!("{} Sonne", if self.new_enabled { "Aktivieren" } else { "Deaktivieren" }))
     }
 }
 

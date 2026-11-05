@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedStiffenerSpa
         record: "ChangedPlatedStiffenerSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Longitudinal stiffener spacing s (equal subpanels, n = b/s - 1 stiffeners; 0 = the single stiffener of the stiffener fields) of the plated panel", "Plattenfeld: Längssteifenabstand s (gleiche Teilfelder, n = b/s - 1 Steifen; 0 = die einzelne Steife der Steifenfelder) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Longitudinal stiffener spacing s (equal subpanels, n = b/s - 1 stiffeners; 0 = the single stiffener of the stiffener fields) of the plated panel", "Plattenfeld: Längssteifenabstand s (gleiche Teilfelder, n = b/s - 1 Steifen; 0 = die einzelne Steife der Steifenfelder) ändern")
     }
 }
 

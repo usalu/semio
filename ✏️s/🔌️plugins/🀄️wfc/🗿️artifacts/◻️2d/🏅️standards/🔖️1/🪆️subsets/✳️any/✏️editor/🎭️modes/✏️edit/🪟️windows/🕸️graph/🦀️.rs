@@ -20,20 +20,20 @@
 //! wire between. Edge direction on screen is the authored `from`→`to`, which the solver symmetrises.
 
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphEdgeRecord;
-use semio_framework_plugin::NodeGraphNodeRecord;
-use semio_framework_plugin::NodeGraphPortRecord;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::scene_surface;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphEdgeRecord;
+use semio_plugin::NodeGraphNodeRecord;
+use semio_plugin::NodeGraphPortRecord;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 use store::Viewport2d;
 
 //#region 🔖️Constants
@@ -224,7 +224,7 @@ pub fn render(view: &impl SlotGraphView, camera: GraphCamera, selection: &[Strin
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
     scene_surface(
         WFC_GRAPH_SURFACE,
-        semio_framework_ui_contract::SurfaceKind::NodeGraph,
+        semio_ui_contract::SurfaceKind::NodeGraph,
         &NodeGraphScene { editable: Some(true), selection: selection.to_vec(), ..NodeGraphScene::base(nodes, edges, viewport) },
     )
 }

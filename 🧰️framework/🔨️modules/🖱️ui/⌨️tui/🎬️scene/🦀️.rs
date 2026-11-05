@@ -1,8 +1,8 @@
 use crate::chrome::ChromeState;
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::geometry::{Pos, Rect};
 use crate::layout::{Constraint, WindowLayout};
-use semio_framework_ui_tui_core::theme::{Role, Surface};
-use semio_framework_ui_tui_widgets::widget::WidgetState;
+use semio_ui_tui_core::theme::{Role, Surface};
+use semio_ui_tui_widgets::widget::WidgetState;
 
 pub const LAYOUT_DIRTY: u8 = 1;
 pub const PAINT_DIRTY: u8 = 2;

@@ -1,10 +1,10 @@
 //! 🪟️ Mounted editor pane laws over the bundled BESTEST case 600: it loads into the native owner, one action applies natively and undoes and redoes through history.
 #![cfg(test)]
 
-use semio_framework_os_kernel::{os_store, ActorId, LOCAL_ACTOR_ID};
-use semio_framework_plugin::artifact_app_laws as laws;
-use semio_framework_plugin::{App, DslValue, EditorApp, MountedOwnerPolicyV1, PluginApp as _, VcsArtifactApp, ViewModel};
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_os_kernel::{os_store, ActorId, LOCAL_ACTOR_ID};
+use semio_plugin::artifact_app_laws as laws;
+use semio_plugin::{App, DslValue, EditorApp, MountedOwnerPolicyV1, PluginApp as _, VcsArtifactApp, ViewModel};
+use semio_ui_locale::{Locale, Terminology};
 use semio_s_artifact_energy_model_editor::{create_energy_model_editor, examples, EnergyModelEditor};
 use semio_s_artifact_energy_model_editor_commands::SET_NODE_ACTION_ID;
 use semio_s_artifact_energy_model_mutations::EnergyModelMutation;
@@ -30,7 +30,7 @@ async fn bestest_pane() -> Pane {
     laws::dispatch_fixture_action(&mut pane.0, "setActiveExample", Some(args), &laws::meta("local"), &mut laws::fixture_identity(), pane.1.cx(), MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("dispatch the load-example action");
     let published = laws::settle_registered_typed_operation(&mut pane.0, receiver, laws::fixture_mounted_policy(), &mut laws::fixture_identity(), pane.1.cx()).await.expect("load-example publication");
     let (pack, spr) = published.effects.iter().find_map(|effect| match effect {
-        semio_framework_plugin::plugin_app_close_prelude::Effect::LoadDocument { pack, spr } => Some((pack.clone(), spr.clone())),
+        semio_plugin::plugin_app_close_prelude::Effect::LoadDocument { pack, spr } => Some((pack.clone(), spr.clone())),
         _ => None,
     }).expect("the load-example command publishes a LoadDocument effect");
     laws::load_document(&mut pane.0, &os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut laws::fixture_identity(), pane.1.cx()).await.expect("case 600 crosses the archive door");

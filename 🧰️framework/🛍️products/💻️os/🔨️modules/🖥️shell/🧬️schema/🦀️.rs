@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 // 🧬️ `#[derive(ToValue, FromValue)]`, additive alongside serde
 // (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). This crate is
 // kernel-free, so `dsl_core` (mirroring the alias every other framework crate uses for the
-// DslValue runtime, e.g. `🕸️graph`'s `extern crate semio_framework_os_kernel as dsl_core`) here
+// DslValue runtime, e.g. `🕸️graph`'s `extern crate semio_os_kernel as dsl_core`) here
 // resolves to `protocol::value` instead — used only by the hand-written `ShellCommand` bridge
 // below; every derived container names it explicitly via `#[value(crate = "::protocol::value")]`.
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -177,7 +177,7 @@ mod capabilities;
 pub use capabilities::*;
 
 //#region 🎨️UiPreferences
-pub use semio_framework_os_config::opening_config::{UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme};
+pub use semio_os_config::opening_config::{UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme};
 //#endregion 🎨️UiPreferences
 
 //#region 🧪️tests

@@ -21,7 +21,7 @@ fn sample_record(name: &str, age: u64, active: bool) -> semio_framework_dsl_reco
 fn sample_pack_bytes(name: &str, age: u64, active: bool) -> Vec<u8> {
     let spec = sample_spec();
     let record = sample_record(name, age, active);
-    semio_framework_os_pack::record::encode_document(&spec, &record, &semio_framework_os_pack::record::EncodeOptions::default()).unwrap()
+    semio_os_pack::record::encode_document(&spec, &record, &semio_os_pack::record::EncodeOptions::default()).unwrap()
 }
 //#endregion 🔖️Fixtures
 

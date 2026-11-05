@@ -15,32 +15,32 @@ use crate::editor::space_index::modes::edit;
 use crate::editor::space_index::modes::edit::windows::main;
 use crate::editor::space_index::panels::members as members_panel;
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::app::Dialect;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::built_to_component_tree;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::ActionRef;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DialogDefinition;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::app::Dialect;
+use semio_plugin::app::InteractionView;
+use semio_plugin::built_to_component_tree;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionFactory;
+use semio_plugin::ActionRef;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
+use semio_plugin::DialogDefinition;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::UiAssemblyResult;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Actions
@@ -48,47 +48,47 @@ use semio_framework_2d_compute::EngineHandles;
 /// mirrors `draw_play_action`'s precedent (`🖍️draw`'s editor root).
 pub const SPACE_INDEX_CONTROLLER_ID: &str = "s.space.space@1/*#editor";
 
-pub fn space_index_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+pub fn space_index_action(action: &str, args: Option<semio_plugin::UiValue>) -> UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
     ActionFactory::new(SPACE_INDEX_CONTROLLER_ID).action(action, args)
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 //#endregion 🔖️Actions
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `SpaceIndexEditor::Command` — the SOLE dispatch surface for the index editor's own behavior:
     /// the four frozen document mutations, plus the opening/deletion-confirm/directory-relay/presence
     /// commands lane 2-B adds on top (worker-brief tasks 2–3). Row order is the binary variant
@@ -140,21 +140,21 @@ const SPACE_INDEX_RETAINED_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 /// 🛣️ Read off each handler's own `Emit`: the four document commands publish `artifact_mutations`,
 /// the two directory/presence folds publish `config_mutations`, and every `Effect`-only relay
 /// publishes nothing at all.
-const SPACE_INDEX_RETAINED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "createArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "touchArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestDeleteArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openArtifactWith", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "foldDirectoryEvents", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "inviteMember", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeMember", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setVisibility", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "copyInviteLink", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestInviteMember", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+const SPACE_INDEX_RETAINED_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "createArtifact", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteArtifact", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "renameArtifact", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "touchArtifact", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "requestDeleteArtifact", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "openArtifact", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "openArtifactWith", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "foldDirectoryEvents", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "inviteMember", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "removeMember", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setVisibility", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "copyInviteLink", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "requestInviteMember", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
 ];
 
 fn space_index_retained_contract() -> semio_framework::ToolExecutionContract {
@@ -170,11 +170,11 @@ fn space_index_retained_reduce(
     command: &SpaceIndexCommand,
     snapshot: &SSpaceSnapshot,
     config: &SpaceIndexConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SpaceIndexEditor>>>,
-    operation: &semio_framework_plugin::AppOperationContext,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<SpaceIndexEditor>>>,
+    operation: &semio_plugin::AppOperationContext,
 ) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation, NoDraftMutation>, Fault> {
     if space_index_retained_extent(command, snapshot, interaction).is_none() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.index.retained.route"), "the bounded space index reducer rejects an unregistered tool"));
@@ -193,8 +193,8 @@ impl SpaceIndexRetainedCommandJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for SpaceIndexRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<SpaceIndexEditor>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<SpaceIndexEditor>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<semio_plugin::EditorApp<SpaceIndexEditor>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<semio_plugin::EditorApp<SpaceIndexEditor>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -212,15 +212,15 @@ impl semio_framework::ToolJobFactory for SpaceIndexRetainedCommandJobFactory {
         space_index_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SPACE_INDEX_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SPACE_INDEX_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceIndexRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<SpaceIndexEditor>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for SpaceIndexRetainedCommandJobFactory {
+    type Owner = semio_plugin::EditorApp<SpaceIndexEditor>;
     const TOOL_IDS: &'static [&'static str] = SPACE_INDEX_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = SPACE_INDEX_RETAINED_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = SPACE_INDEX_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
 
@@ -230,7 +230,7 @@ pub struct SpaceIndexEditor;
 
 impl ArtifactEditor for SpaceIndexEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = SSpaceSnapshot;
@@ -249,8 +249,8 @@ impl ArtifactEditor for SpaceIndexEditor {
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<SpaceIndexEditor>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<SpaceIndexEditor>,
         owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.space.space@1/*#editor",
         artifact_schema: "s.space",
@@ -277,36 +277,36 @@ impl ArtifactEditor for SpaceIndexEditor {
     /// retirement owner. `Presence = NoPresence` here, so the framework's own `NoPresence`-typed
     /// owners fit exactly, as the sibling 🏠️home editor's bounded `HomePresence` ones do for its real
     /// presence type.
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(SpaceIndexRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !SPACE_INDEX_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "space index command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "space index command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SpaceIndexCommand::command_id, SPACE_INDEX_RETAINED_RAW_BYTES, SPACE_INDEX_RETAINED_WORK_ITEMS, false, |request| semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, space_index_retained_reduce, space_index_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SpaceIndexCommand::command_id, SPACE_INDEX_RETAINED_RAW_BYTES, SPACE_INDEX_RETAINED_WORK_ITEMS, false, |request| semio_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, space_index_retained_reduce, space_index_retained_extent))
     }
 
-    fn reference_birth()->Option<fn()->Result<SSpaceSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<SSpaceSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(SSpaceSnapshot::default())
     })}
 
@@ -318,7 +318,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         command: &SpaceIndexCommand,
         doc: &ArtifactView<'_, SSpaceSnapshot>,
         cfg: &ConfigView<'_, SpaceIndexConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
@@ -370,18 +370,18 @@ impl ArtifactEditor for SpaceIndexEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => Ok(built_to_component_tree(main::render(doc.snapshot, cfg.snapshot, view_state)?)),
-            members_panel::SPACE_INDEX_BODY_MEMBERS => Ok(built_to_component_tree(members_panel::render(cfg.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, members_panel::SPACE_INDEX_BODY_MEMBERS))?)),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            members_panel::SPACE_INDEX_BODY_MEMBERS => Ok(built_to_component_tree(members_panel::render(cfg.snapshot, &semio_plugin::TreeWindows::for_body(view_state, members_panel::SPACE_INDEX_BODY_MEMBERS))?)),
+            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️SpaceIndexEditor
 
 //#region 🔖️Manifest
-pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_space_index_editor() -> semio_plugin::AppDefinition {
     Editor::builder(SPACE_INDEX_DIALECT)
         .document(["semio", "s", "space", "index"])
         .artifact_kind(crate::artifact_kind())
@@ -425,11 +425,11 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
         .action_args(
             "createArtifact",
-            vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::artifact_kind("kindChoice", LocalizedLabel::native("Kind", "Art"), vec![semio_framework_plugin::AppRole::Editor]).required()],
+            vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::artifact_kind("kindChoice", LocalizedLabel::native("Kind", "Art"), vec![semio_plugin::AppRole::Editor]).required()],
         )
         .dialog(
             DialogDefinition::new("createArtifact", LocalizedLabel::native("Create Artifact", "Artefakt erstellen"), ActionRef::new("createArtifact"))
-                .args(vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::artifact_kind("kindChoice", LocalizedLabel::native("Kind", "Art"), vec![semio_framework_plugin::AppRole::Editor]).required()])
+                .args(vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::artifact_kind("kindChoice", LocalizedLabel::native("Kind", "Art"), vec![semio_plugin::AppRole::Editor]).required()])
                 .submit_label(LocalizedLabel::native("Create", "Erstellen")),
         )
         .dialog(
@@ -457,8 +457,8 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .action_describe("removeMember", LocalizedLabel::native("Removes one member from this space on the hub; they lose access to its artifacts.", "Entfernt ein Mitglied auf dem Hub aus diesem Space; es verliert den Zugriff auf dessen Artefakte."))
         .action_describe("setVisibility", LocalizedLabel::native("Sets who can find this space on the hub (such as private or public).", "Legt fest, wer diesen Space auf dem Hub finden kann (etwa privat oder öffentlich)."))
         .action_describe("copyInviteLink", LocalizedLabel::native("Asks the hub to mint an invite link with the given role for this space and copies it to the clipboard.", "Lässt den Hub einen Einladungslink mit der angegebenen Rolle für diesen Space erzeugen und kopiert ihn in die Zwischenablage."))
-        .action_audience("foldDirectoryEvents", semio_framework_plugin::CapabilityAudience::Chrome)
-        .action_audience("presenceHeartbeat", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("foldDirectoryEvents", semio_plugin::CapabilityAudience::Chrome)
+        .action_audience("presenceHeartbeat", semio_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -8,22 +8,22 @@
 
 use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::inferred_kind_entries, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::kind_catalog_entries, semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction::ui_label, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dScene, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::tree_item_with_action_draggable;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action_draggable;
+use semio_plugin::ActionFactory;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
 
@@ -77,14 +77,14 @@ fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) ->
     semio_framework_pack_json::object([(PUZZLE2D_CATALOGUE_DRAG_MIME.to_string(), Value::String(payload.to_string()))])
 }
 
-fn add_node_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn add_node_args(kind_id: &str) -> semio_plugin::UiAssemblyResult<UiValue> {
     let kind = UiText::try_from_str(kind_id).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue kind admission failed"))?;
     let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue action map admission failed"))?;
     args.push("kind".into(), kind).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue action entry admission failed"))?;
     Ok(UiValue::Map(args.finish()))
 }
 
-fn kind_catalog_item(section_id: &str, slice: &str, entry: &Value) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn kind_catalog_item(section_id: &str, slice: &str, entry: &Value) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let actions = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID);
     let kind_id = entry.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "puzzle2d catalogue kind id is required"))?;
     let id = format!("{section_id}.{kind_id}");
@@ -98,7 +98,7 @@ fn kind_catalog_item(section_id: &str, slice: &str, entry: &Value) -> semio_fram
     }
 }
 
-pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let snapshot = &envelope.board_snapshot;
     let inferred_nodes = inferred_kind_entries(snapshot, "nodes");
     let inferred_handles = inferred_kind_entries(snapshot, "handles");

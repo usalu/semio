@@ -1,12 +1,12 @@
 //! 🪞️ Delegating accessors and reads: the store accessors that delegate to the wire, cursor, log, owners and live components. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
 
 
@@ -54,10 +54,10 @@ where
     #[inline] pub fn envelope_view(&self) -> ArtifactEnvelopeView<'_, P, Mutation> { self.log.envelope_view() }
 
     /// 🪞️ Delegates to [`StoreWire::applied_edit_ids`].
-    #[inline] pub fn applied_edit_ids(&self) -> &semio_framework_os_vcs::HistoryPageStack<String> { self.wire.applied_edit_ids(&self.log) }
+    #[inline] pub fn applied_edit_ids(&self) -> &semio_os_vcs::HistoryPageStack<String> { self.wire.applied_edit_ids(&self.log) }
 
     /// 🪞️ Delegates to [`StoreWire::redo_edit_ids`].
-    #[inline] pub fn redo_edit_ids(&self) -> &semio_framework_os_vcs::HistoryPageStack<String> { self.wire.redo_edit_ids(&self.log) }
+    #[inline] pub fn redo_edit_ids(&self) -> &semio_os_vcs::HistoryPageStack<String> { self.wire.redo_edit_ids(&self.log) }
 
     /// 🪞️ Delegates to [`StoreLog::current_checkpoint_id`].
     #[inline] pub fn current_checkpoint_id(&self) -> Option<&str> { self.log.current_checkpoint_id() }
@@ -181,7 +181,7 @@ where
     #[inline] pub(super) fn prepare_document_root_commit(&mut self, additional_displaced_owners: usize) -> Result<ArtifactStoreDocumentRootCommitAuthority<P, Mutation>, VcsError> { self.live.prepare_document_root_commit(&mut self.owners, additional_displaced_owners) }
 
     /// 🪞️ Delegates to [`StoreLive::commit_document_roots_retained`].
-    #[inline] pub(super) fn commit_document_roots_retained( &mut self, next_envelope: ArtifactEnvelope<P, Mutation>, next_current: Arc<P>, next_dag: semio_framework_os_spr::MutationDag, next_tail: Option<(String, Arc<P>)>, authority: ArtifactStoreDocumentRootCommitAuthority<P, Mutation>, ) { self.live.commit_document_roots_retained(&mut self.log, &mut self.owners, next_envelope, next_current, next_dag, next_tail, authority) }
+    #[inline] pub(super) fn commit_document_roots_retained( &mut self, next_envelope: ArtifactEnvelope<P, Mutation>, next_current: Arc<P>, next_dag: semio_os_spr::MutationDag, next_tail: Option<(String, Arc<P>)>, authority: ArtifactStoreDocumentRootCommitAuthority<P, Mutation>, ) { self.live.commit_document_roots_retained(&mut self.log, &mut self.owners, next_envelope, next_current, next_dag, next_tail, authority) }
 
     /// 🪞️ Delegates to [`StoreCursor::push_revision_replacement_reserved`].
     #[inline] pub fn push_revision_replacement_reserved(&mut self, next: CursorRevisionAccumulator) { self.cursor.push_revision_replacement_reserved(&mut self.owners, next) }
@@ -199,7 +199,7 @@ where
     #[inline] pub fn replace_backbone_retained(&mut self, next: Option<Backbones>) -> Result<(), VcsError> { self.wire.replace_backbone_retained(&mut self.owners, next) }
 
     /// 🪞️ Delegates to [`StoreOwners::replace_causal_dag_retained`].
-    #[inline] fn replace_causal_dag_retained(&mut self, next: semio_framework_os_spr::MutationDag) -> Result<(), VcsError> { self.owners.replace_causal_dag_retained(&mut self.log, next) }
+    #[inline] fn replace_causal_dag_retained(&mut self, next: semio_os_spr::MutationDag) -> Result<(), VcsError> { self.owners.replace_causal_dag_retained(&mut self.log, next) }
 
     /// 🪞️ Delegates to [`StoreOwners::reserve_edit_history_slot`].
     #[inline] pub fn reserve_edit_history_slot(&mut self) -> Result<ArtifactStoreHistoryCommitReservation, VcsError> { self.owners.reserve_edit_history_slot(&mut self.log) }
@@ -262,10 +262,10 @@ where
     #[inline] pub fn outstanding_snapshot_read_count(&self) -> usize { self.owners.outstanding_snapshot_read_count() }
 
     /// 🪞️ Delegates to [`StoreLive::fold_current`].
-    #[inline] pub async fn fold_current(&self) -> Result<P, VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.live.fold_current(&self.log).await }
+    #[inline] pub async fn fold_current(&self) -> Result<P, VcsError> where P: Clone, Mutation: semio_os_spr::ColdMutation<P> { self.live.fold_current(&self.log).await }
 
     /// 🪞️ Delegates to [`StoreReplay::replay_suffix_partitioned`].
-    #[inline] pub fn replay_suffix_partitioned( base: Arc<P>, order: &[String], k: usize, edits: &impl ReplayEdits<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, policy: semio_framework_os_spr::MergePolicy, ) -> Result<EditReplayResult<P, Mutation>, VcsError> { StoreReplay::<P, Mutation>::replay_suffix_partitioned(base, order, k, edits, schema, supersessions, policy) }
+    #[inline] pub fn replay_suffix_partitioned( base: Arc<P>, order: &[String], k: usize, edits: &impl ReplayEdits<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, policy: semio_os_spr::MergePolicy, ) -> Result<EditReplayResult<P, Mutation>, VcsError> { StoreReplay::<P, Mutation>::replay_suffix_partitioned(base, order, k, edits, schema, supersessions, policy) }
 
     /// 🪞️ Delegates to [`StoreLog::ensure_open_conflict_capacity`].
     #[inline] fn ensure_open_conflict_capacity(&self, additional_open: usize) -> Result<(), VcsError> { self.log.ensure_open_conflict_capacity(additional_open) }
@@ -274,19 +274,19 @@ where
     #[inline] pub fn prune_resolved_conflicts(&mut self) -> Result<(), VcsError> { self.owners.prune_resolved_conflicts(&mut self.log) }
 
     /// 🪞️ Delegates to [`StoreLog::conflicts`].
-    #[inline] pub fn conflicts(&self) -> &[semio_framework_os_spr::Conflict] { self.log.conflicts() }
+    #[inline] pub fn conflicts(&self) -> &[semio_os_spr::Conflict] { self.log.conflicts() }
 
     /// 🪞️ Delegates to [`StoreLog::open_conflicts`].
-    #[inline] pub fn open_conflicts(&self) -> impl Iterator<Item = &semio_framework_os_spr::Conflict> { self.log.open_conflicts() }
+    #[inline] pub fn open_conflicts(&self) -> impl Iterator<Item = &semio_os_spr::Conflict> { self.log.open_conflicts() }
 
     /// 🪞️ Delegates to [`StoreLog::merge_policy`].
-    #[inline] pub fn merge_policy(&self) -> semio_framework_os_spr::MergePolicy { self.log.merge_policy() }
+    #[inline] pub fn merge_policy(&self) -> semio_os_spr::MergePolicy { self.log.merge_policy() }
 
     /// 🪞️ Delegates to [`StoreLog::set_merge_policy`].
-    #[inline] pub fn set_merge_policy(&mut self, policy: semio_framework_os_spr::MergePolicy) { self.log.set_merge_policy(policy) }
+    #[inline] pub fn set_merge_policy(&mut self, policy: semio_os_spr::MergePolicy) { self.log.set_merge_policy(policy) }
 
     /// 🪞️ Delegates to [`StoreLog::messages_for_edit`].
-    #[inline] pub fn messages_for_edit(&self, edit_id: &str) -> &[semio_framework_os_spr::MutationMessage] { self.log.messages_for_edit(edit_id) }
+    #[inline] pub fn messages_for_edit(&self, edit_id: &str) -> &[semio_os_spr::MutationMessage] { self.log.messages_for_edit(edit_id) }
 
     /// 🪞️ Delegates to [`StoreLog::trunk_alternative_id`].
     #[inline] pub fn trunk_alternative_id(&self) -> String { self.log.trunk_alternative_id() }
@@ -304,8 +304,8 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🪞️ Delegates to [`StoreWire::ensure_durable_group_idle`].
     #[inline] pub fn ensure_durable_group_idle(&self) -> Result<(), VcsError> { self.wire.ensure_durable_group_idle() }
@@ -322,8 +322,8 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🪞️ Delegates to [`StoreCursor::finish_derived_report_replay`].
     /// 🎁️ Moves the completed original result while preserving all typed source and recipient identity.

@@ -5,9 +5,9 @@
 //! raster upload. Each element imports these from here, so no element has to reach into a sibling element for a type.
 
 use std::sync::{Mutex, MutexGuard};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_wgpu_widget_kit::WidgetContext;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_arena::NodeId;
+use semio_ui_wgpu_widget_kit::WidgetContext;
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 
@@ -38,7 +38,7 @@ impl<T> WorkerCell<T> {
 /// 🧪️ The calling test thread's own instance of the worker-cell state at `key`, built by the cell's `initialize` on first
 /// use. Every renderer `WorkerCell` (this module's, the scenes' and the engine canvas') resolves through it under `cfg(test)`.
 #[cfg(any(test, feature = "testkit"))]
-pub use semio_framework_os_renderer_wgpu_thread_isolation::isolated_cell as test_worker_cell;
+pub use semio_renderer_wgpu_thread_isolation::isolated_cell as test_worker_cell;
 
 impl<T: 'static> WorkerCell<T> {
     pub fn state(&self) -> &Mutex<T> {
@@ -76,9 +76,9 @@ pub struct ScenePointerTarget {
     pub host_id: String,
     pub window_id: String,
     pub surface_id: String,
-    pub kind: semio_framework_ui_declaration::ui::SurfaceKind,
+    pub kind: semio_ui_declaration::ui::SurfaceKind,
     pub node: NodeId,
-    pub key: semio_framework_ui_retained_tree::tree::NodeKey,
+    pub key: semio_ui_retained_tree::tree::NodeKey,
     pub window_generation: u64,
     pub component_generation: u64,
 }
@@ -96,8 +96,8 @@ impl ScenePointerTarget {
             && self.key == other.key
     }
 
-    pub fn component_witness(&self) -> semio_framework_ui_retained_tree::reconcile::UiComponentSceneWitness<'_> {
-        semio_framework_ui_retained_tree::reconcile::UiComponentSceneWitness {
+    pub fn component_witness(&self) -> semio_ui_retained_tree::reconcile::UiComponentSceneWitness<'_> {
+        semio_ui_retained_tree::reconcile::UiComponentSceneWitness {
             document_id: self.document_id,
             host_id: &self.host_id,
             window_id: &self.window_id,
@@ -110,8 +110,8 @@ impl ScenePointerTarget {
     }
 }
 
-impl From<semio_framework_ui_retained_tree::reconcile::UiRetiredComponentScene> for ScenePointerTarget {
-    fn from(retired: semio_framework_ui_retained_tree::reconcile::UiRetiredComponentScene) -> Self {
+impl From<semio_ui_retained_tree::reconcile::UiRetiredComponentScene> for ScenePointerTarget {
+    fn from(retired: semio_ui_retained_tree::reconcile::UiRetiredComponentScene) -> Self {
         Self {
             document_id: retired.document_id,
             host_id: retired.host_id,
@@ -128,15 +128,15 @@ impl From<semio_framework_ui_retained_tree::reconcile::UiRetiredComponentScene> 
 
 #[cfg(any(test, feature = "testkit"))]
 pub fn fixture_scene_pointer_target(window_id: &str, surface_id: &str, key: &str) -> ScenePointerTarget {
-    let mut arena = semio_framework_ui_arena::Arena::new();
+    let mut arena = semio_ui_arena::Arena::new();
     ScenePointerTarget {
         document_id: ui_contract::UiNodeId(1),
         host_id: surface_id.into(),
         window_id: window_id.into(),
         surface_id: surface_id.into(),
-        kind: semio_framework_ui_declaration::ui::SurfaceKind::TiledMap,
+        kind: semio_ui_declaration::ui::SurfaceKind::TiledMap,
         node: arena.insert(()),
-        key: semio_framework_ui_retained_tree::tree::NodeKey::Explicit(key.into()),
+        key: semio_ui_retained_tree::tree::NodeKey::Explicit(key.into()),
         window_generation: 1,
         component_generation: 1,
     }

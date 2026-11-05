@@ -21,12 +21,12 @@ semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-2d-compute = { workspace = true }
 semio-framework-job = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-block-3d-editor-commands = { workspace = true }
@@ -44,8 +44,8 @@ semio-framework-async = { path = "../../../../../../../../../../../../🧰️fra
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-block-3d-schema = { workspace = true }
 semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
 serde_json = { workspace = true }

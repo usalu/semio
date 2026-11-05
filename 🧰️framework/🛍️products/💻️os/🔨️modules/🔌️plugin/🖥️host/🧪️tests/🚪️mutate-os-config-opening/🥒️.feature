@@ -11,7 +11,7 @@ Feature: Apply every typed opening-preferences mutation to its committed specifi
   `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ Two things about this case are unusual and both are deliberate. First, the case lives under
-  `🔌️plugin/🖥️host`; its Rust subject links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  `🔌️plugin/🖥️host`; its Rust subject links the owning crate `semio-os-config` directly, declared as a subject host package in
   `../../🔮️oracles/🔣️.json`. Second, the same
   crate compiles the sibling merge-policy and identity vocabularies, but this feature remains scoped
   to opening preferences and their two committed vectors.

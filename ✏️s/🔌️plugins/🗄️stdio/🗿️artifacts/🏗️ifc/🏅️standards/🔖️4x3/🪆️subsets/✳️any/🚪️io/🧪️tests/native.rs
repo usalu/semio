@@ -1,7 +1,7 @@
 //! 🧪 Native source and registered composition contracts over shared informative IFC inputs.
 use super::*;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin::{ArtifactComposer, ArtifactSerializer};
+use semio_plugin::{ArtifactComposer, ArtifactSerializer};
 
 fn minimal(data: &str) -> String {
     format!("ISO-10303-21;HEADER;FILE_DESCRIPTION(('test'),'2;1');FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('IFC4X3_ADD2'));ENDSEC;DATA;{data}ENDSEC;END-ISO-10303-21;")
@@ -71,7 +71,7 @@ fn composer_and_exporter_use_the_registered_dialects() {
 
 #[test]
 fn erased_entries_execute_natural_source_and_native_pack_routes() {
-    use semio_framework_plugin::io::{ErasedComposeSource, IoPayload};
+    use semio_plugin::io::{ErasedComposeSource, IoPayload};
     let text = minimal("#1=IFCCARTESIANPOINT((0.,1.));");
     let input = TxtSnapshot::from_body(&text);
     let import = entries().iter().find(|entry| entry.writes == IFC4X3_DIALECT && entry.reads.contains(&TXT_DIALECT)).unwrap();

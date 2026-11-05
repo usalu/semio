@@ -51,13 +51,13 @@ mod snapshot_codec {
 use super::*;
 use semio_s_artifact_procedural_2d_model::*;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
+use semio_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
-use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snapshot;
-use semio_framework_os_flow::render_scene_json;
+use semio_os_flow::forms_bridge::apply_generation_values_to_host_snapshot;
+use semio_os_flow::render_scene_json;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactDsl;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
@@ -204,13 +204,13 @@ pub use snapshot_codec::*;
 mod snapshot_wire_codec {
 use semio_s_artifact_procedural_2d_model::*;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
+use semio_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
-use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snapshot;
-use semio_framework_os_flow::render_scene_json;
+use semio_os_flow::forms_bridge::apply_generation_values_to_host_snapshot;
+use semio_os_flow::render_scene_json;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactDsl;
 /// 🧬️ Entities this module's schema exports and its crate declares elsewhere.

@@ -1,5 +1,5 @@
-use semio_framework_plugin_instance_jobs::{jobs_instance_root::OriginalRenderTreeIdentity, jobs_render::work::OriginalRenderWork};
-use semio_framework_plugin_testing_laws::OriginalWorkFixture;
+use semio_plugin_instance_jobs::{jobs_instance_root::OriginalRenderTreeIdentity, jobs_render::work::OriginalRenderWork};
+use semio_plugin_testing_laws::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 fn grant() -> RetainedCloneGrant {

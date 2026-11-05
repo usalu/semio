@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionPinInnerThi
         record: "ChangedTensionPinInnerThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pin inner plate thickness c of the tension component", "Zugglied: Innere Laschendicke c ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pin inner plate thickness c of the tension component", "Zugglied: Innere Laschendicke c ändern")
     }
 }
 

@@ -3,11 +3,11 @@
 
 use semio_s_plugin_norm_compliance::NormHost;
 use crate::En1994Family;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_INSPECTION: &str = "norm.en1994.play.inspection";
@@ -20,7 +20,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host: &NormHost<En1994Family>, selected_check_index: Option<u32>, locale: semio_framework_ui_locale::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(host: &NormHost<En1994Family>, selected_check_index: Option<u32>, locale: semio_ui_locale::Locale, controller_id: Option<&'static str>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     semio_s_plugin_norm_app_surface::render_inspection(host.report(), selected_check_index, locale, controller_id)
 }
 //#endregion 🔖️Render

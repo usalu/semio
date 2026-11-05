@@ -67,7 +67,7 @@ impl Ui {
     /// ephemeral presence into the immutable document record. The generation fence prevents a late
     /// host update from decorating a replacement document that reused the same surface id.
     pub fn stamp_tree_selected_item(&mut self, window_id: &str, generation: u64, selected_key: &str) -> bool {
-        fn stamp_items(items: &mut [semio_framework_ui_declaration::ui::UiTreeItemNode], selected_key: &str, changed: &mut bool) -> bool {
+        fn stamp_items(items: &mut [semio_ui_declaration::ui::UiTreeItemNode], selected_key: &str, changed: &mut bool) -> bool {
             let mut matched = false;
             for item in items {
                 let selected = item.id == selected_key;
@@ -92,7 +92,7 @@ impl Ui {
         while let Some(id) = pending.pop() {
             pending.extend(window.tree.children(id));
             let is_item = window.tree.authored_tree_item(id).is_some();
-            let row_selected = is_item && window.tree.node(id).is_some_and(|node| matches!(&node.key, semio_framework_ui_retained_tree::tree::NodeKey::Explicit(key) if key == selected_key));
+            let row_selected = is_item && window.tree.node(id).is_some_and(|node| matches!(&node.key, semio_ui_retained_tree::tree::NodeKey::Explicit(key) if key == selected_key));
             let Some(node) = window.tree.node_mut(id) else { continue };
             if is_item {
                 let presence = node.spec.0.presence_mut();

@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_os_vcs::ArtifactGroupVisibilityOwner;
+use semio_os_vcs::ArtifactGroupVisibilityOwner;
 #[semio_framework_async_macros::async_test]
 async fn composition_group_siblings_commit_without_post_flip_allocation_or_stale_tokens() {
     let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🌳️graph/🤝️group/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();

@@ -1,33 +1,33 @@
 //! ⚙️ S Studio app — headless compute over the kernel-owned `WorkflowSnapshot` (constitutional:
 //! engine, kept app-level since this app owns no document-side `🗿️artifacts` node — see
 //! `🦀️.rs`'s module doc for the full rationale). Every function here computes over
-//! `semio_framework_os::{WorkflowSnapshot, WorkflowMutation}` (a foreign type owned by the kernel
+//! `semio_os::{WorkflowSnapshot, WorkflowMutation}` (a foreign type owned by the kernel
 //! `workflow` crate via os-core's re-export) — building `WorkflowMutation` values from arguments is
 //! still pure compute, not an `apply_X_mutation` match on a locally-owned enum.
 
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 use semio_s_space_core::*;
 
-use semio_framework_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
-use semio_framework_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge};
+use semio_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
+use semio_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge};
 
-use semio_framework_os_infinite_directed_presentation::{DagNodeKind, DagNodeSpec, IoPortSpec};
+use semio_os_infinite_directed_presentation::{DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_pack_json::Value;
-use semio_framework_os::workflow::{AddNode, AddParameter, ChangeParameter};
-use semio_framework_os::{
+use semio_os::workflow::{AddNode, AddParameter, ChangeParameter};
+use semio_os::{
     create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
     MediaContract, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot,
 };
 use std::collections::HashMap;
-use semio_framework_os::workflow::ConnectPorts;
-use semio_framework_plugin::Effect;
+use semio_os::workflow::ConnectPorts;
+use semio_plugin::Effect;
 use semio_hub_space_foundation::config::SpaceConfig;
-use semio_framework_os::WorkflowEdge;
+use semio_os::WorkflowEdge;
 
 //#region 🔖️SyncBridge
 /// 🌉️ `app_commands!`'s generated `dispatch(doc, cfg)` (framework-fixed, `🧰️framework/🛍️products/
@@ -82,7 +82,7 @@ pub async fn add_parameter_operation(parameter_type: &WorkflowParameterType, nam
     WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(create_default_workflow_parameter(parameter_type, name, None).await) })
 }
 
-/// 🚧️ Local reimplementation of `semio_framework_os::patch_workflow_parameter` (ported verbatim,
+/// 🚧️ Local reimplementation of `semio_os::patch_workflow_parameter` (ported verbatim,
 /// `serde_json::Value` swapped for `pack::json::Value`): FRAMEWORK GAP, report not fixed here — the
 /// real `patch_workflow_parameter` still takes `&serde_json::Value`, and this crate no longer depends
 /// on `serde_json` in production (only as a dev-dependency test oracle), so the framework function is
@@ -219,7 +219,7 @@ pub async fn negotiate_media_connect(projection: &WorkflowSnapshot, source_node_
 // wave. `flatten_media_vfs_rows` is kept as a minimal compiling stub (always empty) so this crate's
 // callers still compile; `media_port_label` still has a real body since it doesn't depend on the
 // deleted types.
-pub async fn flatten_media_vfs_rows(_parent_id: &str, _graph: &semio_framework_os::Workflow, _bindings: &[WorkflowParameterBinding], _parameters: &[WorkflowParameter], _rows: &mut Vec<Value>) {}
+pub async fn flatten_media_vfs_rows(_parent_id: &str, _graph: &semio_os::Workflow, _bindings: &[WorkflowParameterBinding], _parameters: &[WorkflowParameter], _rows: &mut Vec<Value>) {}
 
 pub async fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &WorkflowParameter>) -> String {
     if let Some(id) = workflow_parameter_id_from_port_id(port_id) {
@@ -292,25 +292,25 @@ pub async fn compiled_dag_wire_literal(projection: &WorkflowSnapshot) -> String 
 // `WorkflowParameter`/`WorkflowParameterBinding`/`WorkflowParameterType`. These two parameter
 // vocabularies are a known, intentionally-deferred duplication — this bridge converts between them at
 // the few call sites that still need the os-core registry-facing shape.
-pub async fn workflow_parameter_type_to_os(kind: &WorkflowParameterType) -> semio_framework_os::OsParameterType {
+pub async fn workflow_parameter_type_to_os(kind: &WorkflowParameterType) -> semio_os::OsParameterType {
     match kind {
-        WorkflowParameterType::Numeric => semio_framework_os::OsParameterType::Numeric,
-        WorkflowParameterType::Categorical => semio_framework_os::OsParameterType::Categorical,
-        WorkflowParameterType::Toggle => semio_framework_os::OsParameterType::Toggle,
-        WorkflowParameterType::Text => semio_framework_os::OsParameterType::Text,
+        WorkflowParameterType::Numeric => semio_os::OsParameterType::Numeric,
+        WorkflowParameterType::Categorical => semio_os::OsParameterType::Categorical,
+        WorkflowParameterType::Toggle => semio_os::OsParameterType::Toggle,
+        WorkflowParameterType::Text => semio_os::OsParameterType::Text,
     }
 }
 
-pub async fn workflow_parameter_to_os(parameter: &WorkflowParameter) -> semio_framework_os::OsParameter {
+pub async fn workflow_parameter_to_os(parameter: &WorkflowParameter) -> semio_os::OsParameter {
     match parameter {
-        WorkflowParameter::Numeric { id, name, value, min, max, step } => semio_framework_os::OsParameter::Numeric { id: id.clone(), name: name.clone(), value: *value, min: *min, max: *max, step: *step },
-        WorkflowParameter::Categorical { id, name, value, options } => semio_framework_os::OsParameter::Categorical { id: id.clone(), name: name.clone(), value: value.clone(), options: options.clone() },
-        WorkflowParameter::Toggle { id, name, value } => semio_framework_os::OsParameter::Toggle { id: id.clone(), name: name.clone(), value: *value },
-        WorkflowParameter::Text { id, name, value } => semio_framework_os::OsParameter::Text { id: id.clone(), name: name.clone(), value: value.clone() },
+        WorkflowParameter::Numeric { id, name, value, min, max, step } => semio_os::OsParameter::Numeric { id: id.clone(), name: name.clone(), value: *value, min: *min, max: *max, step: *step },
+        WorkflowParameter::Categorical { id, name, value, options } => semio_os::OsParameter::Categorical { id: id.clone(), name: name.clone(), value: value.clone(), options: options.clone() },
+        WorkflowParameter::Toggle { id, name, value } => semio_os::OsParameter::Toggle { id: id.clone(), name: name.clone(), value: *value },
+        WorkflowParameter::Text { id, name, value } => semio_os::OsParameter::Text { id: id.clone(), name: name.clone(), value: value.clone() },
     }
 }
 
-pub async fn workflow_parameters_to_os(parameters: &[WorkflowParameter]) -> Vec<semio_framework_os::OsParameter> {
+pub async fn workflow_parameters_to_os(parameters: &[WorkflowParameter]) -> Vec<semio_os::OsParameter> {
     let mut out = Vec::with_capacity(parameters.len());
     for parameter in parameters {
         out.push(workflow_parameter_to_os(parameter).await);
@@ -318,11 +318,11 @@ pub async fn workflow_parameters_to_os(parameters: &[WorkflowParameter]) -> Vec<
     out
 }
 
-pub async fn workflow_parameter_binding_to_os(binding: &WorkflowParameterBinding) -> semio_framework_os::OsParameterFieldBinding {
-    semio_framework_os::OsParameterFieldBinding { parameter_id: binding.parameter_id.clone(), node_id: binding.node_id.clone(), field_path: binding.field_path.clone() }
+pub async fn workflow_parameter_binding_to_os(binding: &WorkflowParameterBinding) -> semio_os::OsParameterFieldBinding {
+    semio_os::OsParameterFieldBinding { parameter_id: binding.parameter_id.clone(), node_id: binding.node_id.clone(), field_path: binding.field_path.clone() }
 }
 
-pub async fn workflow_parameter_bindings_to_os(bindings: &[WorkflowParameterBinding]) -> Vec<semio_framework_os::OsParameterFieldBinding> {
+pub async fn workflow_parameter_bindings_to_os(bindings: &[WorkflowParameterBinding]) -> Vec<semio_os::OsParameterFieldBinding> {
     let mut out = Vec::with_capacity(bindings.len());
     for binding in bindings {
         out.push(workflow_parameter_binding_to_os(binding).await);
@@ -332,14 +332,14 @@ pub async fn workflow_parameter_bindings_to_os(bindings: &[WorkflowParameterBind
 
 /// 🌉️ Whether `parameter`'s type is compatible with a registered app parameter-field's declared
 /// `OsParameterType` — the inspector panel's single call site for this bridge.
-pub async fn workflow_parameter_fits_os_type(parameter: &WorkflowParameter, target: &semio_framework_os::OsParameterType) -> bool {
+pub async fn workflow_parameter_fits_os_type(parameter: &WorkflowParameter, target: &semio_os::OsParameterType) -> bool {
     let kind = match parameter {
         WorkflowParameter::Numeric { .. } => WorkflowParameterType::Numeric,
         WorkflowParameter::Categorical { .. } => WorkflowParameterType::Categorical,
         WorkflowParameter::Toggle { .. } => WorkflowParameterType::Toggle,
         WorkflowParameter::Text { .. } => WorkflowParameterType::Text,
     };
-    semio_framework_os::os_parameter_types_compatible(&workflow_parameter_type_to_os(&kind).await, target)
+    semio_os::os_parameter_types_compatible(&workflow_parameter_type_to_os(&kind).await, target)
 }
 //#endregion 🔖️OsParameterBridge
 
@@ -356,10 +356,10 @@ struct AppRegistrationRow {
 /// 📇️ Registers every pushed app into this instance's own OS registry — the wasm-hosted twin of
 /// `PluginHost::load_plugin`'s `register_app_io`, so `workflow_palette()` and the catalogue see the
 /// host's live roster.
-pub async fn apply_app_registrations(json: &str) -> Result<(), semio_framework_plugin::Fault> {
-    let rows: Vec<AppRegistrationRow> = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| semio_framework_plugin::Fault::from("s.space.app-registrations-malformed"))?;
+pub async fn apply_app_registrations(json: &str) -> Result<(), semio_plugin::Fault> {
+    let rows: Vec<AppRegistrationRow> = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| semio_plugin::Fault::from("s.space.app-registrations-malformed"))?;
     for row in &rows {
-        semio_framework_os::register_app_io(&row.plugin_id, &row.app);
+        semio_os::register_app_io(&row.plugin_id, &row.app);
     }
     Ok(())
 }

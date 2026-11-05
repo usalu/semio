@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-scene-views"
+name = "semio-ui-scene-views"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,8 +25,8 @@ path = "../../🦀️.rs"
 protocol = { path = "../../../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-json-source-sink = { path = "../../../../../../🎒️pack/🔤️json/🛫️encode/🫳️borrowed/📦️packages/🦀️rust" }
-semio-framework-ui-scene-doc = { path = "../../../📜️doc/📦️packages/🦀️rust" }
-semio-framework-ui-scene-pack = { path = "../../../../📦️pack/📦️packages/🦀️rust" }
+semio-ui-scene-doc = { path = "../../../📜️doc/📦️packages/🦀️rust" }
+semio-ui-scene-pack = { path = "../../../../📦️pack/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

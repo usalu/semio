@@ -11,7 +11,7 @@ use crate::editor::note::window::NoteCompositeWindowTransient;
 pub struct NoteDispatchCtx {
     pub selected_block_ids: Vec<String>,
     pub id_owner: crate::schema::NoteIdOwner,
-    pub view_state: Option<semio_framework_plugin::ViewModel>,
+    pub view_state: Option<semio_plugin::ViewModel>,
     pub window_transient: NoteCompositeWindowTransient,
-    pub window_transient_owner: Option<semio_framework_plugin::WindowTransientSnapshot>,
+    pub window_transient_owner: Option<semio_plugin::WindowTransientSnapshot>,
 }

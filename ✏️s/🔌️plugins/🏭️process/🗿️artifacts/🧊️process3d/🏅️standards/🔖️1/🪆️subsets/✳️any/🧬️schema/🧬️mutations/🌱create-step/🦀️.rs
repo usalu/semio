@@ -27,8 +27,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.label), &format!("Schritt \"{}\" erstellen", self.step.label))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.label), &format!("Schritt \"{}\" erstellen", self.step.label))
     }
 
     fn target(&self) -> Vec<String> {

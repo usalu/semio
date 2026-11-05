@@ -14,8 +14,8 @@ pub struct InsertTableRow {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertTableRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "table-row", kind: "insert-table-row", record: "InsertTableRow" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert table row", "Tabellenzeile einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert table row", "Tabellenzeile einfügen")
     }
 
     fn target(&self) -> Vec<String> {

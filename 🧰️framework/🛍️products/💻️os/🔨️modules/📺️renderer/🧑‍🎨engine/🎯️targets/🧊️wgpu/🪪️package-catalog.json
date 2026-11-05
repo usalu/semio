@@ -6,7 +6,7 @@
   "packageRelativePath": "📦️packages/🦀️rust",
   "nodePackageRelativePath": "📦️packages/🟦️typescript",
   "identity": {
-    "cargoPackageName": "semio-framework-os-renderer-wgpu",
+    "cargoPackageName": "semio-renderer-wgpu",
     "nodePackageName": "@semio-tech/framework-renderer-wgpu",
     "projectName": "@semio-tech/framework-renderer-wgpu"
   },

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-os-renderer-wgpu-native-platform"
+name = "semio-renderer-wgpu-native-platform"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -27,8 +27,8 @@ path = "../../🦀️.rs"
 accesskit = "0.25.1"
 accesskit_winit = { version = "0.34.1", default-features = false, features = ["rwh_06"] }
 serde_json = "1.0.140"
-ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-ui-render" }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]

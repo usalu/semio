@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedThickness wh
         record: "ChangedPlatedThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plate thickness t of the plated panel", "Plattenfeld: Blechdicke t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plate thickness t of the plated panel", "Plattenfeld: Blechdicke t ändern")
     }
 }
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeConstructionLoadMa
         record: "ChangedConstructionLoadMagnitude",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change load Q_c,i as area load of the construction load", "Bauzustandslast: Last Q_c,i als Flächenlast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change load Q_c,i as area load of the construction load", "Bauzustandslast: Last Q_c,i als Flächenlast ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

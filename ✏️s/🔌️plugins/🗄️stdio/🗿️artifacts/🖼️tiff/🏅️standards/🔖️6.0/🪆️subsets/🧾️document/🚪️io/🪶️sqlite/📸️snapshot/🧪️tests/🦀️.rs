@@ -3,12 +3,12 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::{standards::v6_0::subsets::document::schema::snapshot::TiffBinary32, standards::v6_0::subsets::document::schema::snapshot::TiffIfd, standards::v6_0::subsets::document::schema::snapshot::TiffSampleBlock, standards::v6_0::subsets::document::schema::snapshot::TiffTag, standards::v6_0::subsets::document::schema::snapshot::TiffFieldType};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::artifact::FloatColumn, sqlite_snapshot::artifact::read_binary32, sqlite_snapshot::artifact::validate_ieee754_row, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::artifact::reconstruct_blob};
+use semio_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::artifact::FloatColumn, sqlite_snapshot::artifact::read_binary32, sqlite_snapshot::artifact::validate_ieee754_row, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::artifact::reconstruct_blob};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io_schema::IoError;
+use semio_os_kernel::io_schema::IoError;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v6_0::subsets::document::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
 #[path = "🚦️cohort/🦀️.rs"]
 mod cohort;
@@ -76,7 +76,7 @@ fn sqlite_snapshot_tiff_erased_native_preserves_complete_custom_owner() {
     let neutral: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧾️native-owner/🔣️.json")).expect("closed neutral owner");
     let snapshot:TiffSnapshot=semio_framework_pack_json::from_json_str(&neutral.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() };
-    let codec = <TiffSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
+    let codec = <TiffSnapshot as semio_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         let imported = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema, &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, Default::default()), native_owner)).expect("erased native import");
         let decoded = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| TiffSnapshot::decode_sqlite_snapshot_native(&imported.value, &mut SqliteSnapshotControl::new(&mut |_| true, Default::default()), native_owner)).expect("decode imported full owner");
@@ -89,10 +89,10 @@ fn sqlite_snapshot_tiff_erased_native_preserves_complete_custom_owner() {
 #[test]
 fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     use pack::record as pack_rt;
-    let owner = <crate::editor::tiff_any::TiffAnyEditor as semio_framework_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
+    let owner = <crate::editor::tiff_any::TiffAnyEditor as semio_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let original_spec = crate::standards::v6_0::subsets::document::io::text::snapshot::spec();
     let original_record = crate::standards::v6_0::subsets::document::io::text::snapshot::to_record(&owner);
-    let maximum = semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
+    let maximum = semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
     let mut observer = |_| true;
     let mut native = semio_framework_value::NativeEncodeControl::new(maximum, &mut observer);
     let paid_spec = crate::standards::v6_0::subsets::document::io::text::snapshot::spec_producer().encode(&mut native).unwrap();
@@ -111,7 +111,7 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     assert_eq!(original,record_join,"paid RecordValue changes ordinary body");
     assert_eq!(original,spec_join,"paid RecordSpec changes ordinary body");
     assert_eq!(original,controlled,"controlled encoder changes exact body");
-    let shipped = semio_framework_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_framework_os_kernel::PackEncodeOptions::default()).unwrap();
+    let shipped = semio_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_os_kernel::PackEncodeOptions::default()).unwrap();
     assert_eq!(shipped,original,"actual shipped ArtifactPack runtime must use the same intrinsic Record authority as SQLite");
 }
 

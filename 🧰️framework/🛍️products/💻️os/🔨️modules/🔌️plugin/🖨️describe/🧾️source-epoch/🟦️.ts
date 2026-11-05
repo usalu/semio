@@ -2,7 +2,7 @@ import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import { createHash } from "node:crypto";
 import { lstatSync } from "node:fs";
 import { isAbsolute, join, relative } from "node:path";
-import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import type { ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 export type FreshComponentRequestV1 = Readonly<{
   pluginId: string;

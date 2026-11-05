@@ -1,7 +1,7 @@
 //! 🧊️ EN 1990 play app — the 3D viewport window: the projected structure with utilisation colouring, deflected shapes and the load glyphs of the active combination.
 
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use semio_s_artifact_norm_en1990_scene::live_scene_of;
 use semio_s_plugin_norm_app_surface::direct_manipulation::InsertSpec;

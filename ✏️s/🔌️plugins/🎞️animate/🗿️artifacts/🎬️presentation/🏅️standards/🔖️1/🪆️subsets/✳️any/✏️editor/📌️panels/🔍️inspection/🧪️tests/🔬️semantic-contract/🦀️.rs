@@ -5,26 +5,26 @@ use crate::{editor::animate::support::ui_label, editor::animate::support::ui_nod
 #[allow(unused_imports)]
 use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_desc;
+use semio_plugin::tree_item_desc;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use crate::editor::animate::panels::inspection::*;
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 
 fn project(node: BuiltNode) -> serde_json::Value {
-    let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
+    let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("retire semantic tree");
     serde_json::from_str(&text).expect("independent UI oracle")
 }
 
@@ -36,8 +36,8 @@ fn presentation_semantic_panels_match_the_json_oracle() {
     let document = crate::default_presentation_snapshot();
     let (_, tiles) = crate::presentation_working_scene(&document);
     for row in vectors["cases"].as_array().expect("locales") {
-        let labels = semio_framework_plugin::resolve_labels::<AnimatePresentationLabels>(&semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) });
-        let tree = project(crate::editor::animate::panels::artifact::render(&document, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
+        let labels = semio_plugin::resolve_labels::<AnimatePresentationLabels>(&semio_plugin::ViewModel { locale: semio_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_ui_locale::Terminology::Native) });
+        let tree = project(crate::editor::animate::panels::artifact::render(&document, labels, &semio_plugin::TreeWindows::unhosted()).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["tiles"]);
         let catalogue = crate::editor::animate::panels::catalogue::render(&document, labels).expect("catalogue");
         let grid_args: Vec<serde_json::Value> = catalogue.children[0].children.iter().skip(1).take(2).map(|node| serde_json::to_value(&node.bindings[0].args).expect("independent binding oracle")).collect();
@@ -62,8 +62,8 @@ fn presentation_semantic_panels_match_the_json_oracle() {
         assert_eq!(fields[1]["component"]["description"], tiles.len().to_string());
     }
     for node in [crate::editor::animate::modes::main::windows::tile_editor::render(&document).expect("editor canvas"), crate::viewer::animate::modes::view::windows::tile_editor::render(&document).expect("viewer canvas")] {
-        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
-        let scene: semio_framework_plugin::Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
+        let semio_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
+        let scene: semio_plugin::Canvas2dScene = semio_ui_scene::decode(props).expect("packed canvas");
         assert_eq!(scene.camera_x, vectors["canvas"]["cameraX"].as_f64().expect("camera x"));
         assert_eq!(scene.camera_y, vectors["canvas"]["cameraY"].as_f64().expect("camera y"));
         assert_eq!(scene.zoom, vectors["canvas"]["zoom"].as_f64().expect("zoom"));

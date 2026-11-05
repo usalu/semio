@@ -2,11 +2,11 @@
 //! carried by the framework's paged `TextWindowKit` scene.
 
 use crate::BinarySnapshot;
-use semio_framework_plugin::app::{TextEditView, TextWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{TextEditView, TextWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `BinarySnapshot -> BuiltNode`: every byte as contiguous lowercase hex, plus a trailing informational byte-count
 /// comment, as the kit's explicit draft (structured text: edited locally, ONE `textEdit` on Apply carrying the change set the editor made).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BinarySnapshot, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BinarySnapshot, locale: Locale, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let total = document.bytes.len();
     let hex: String = document.bytes.iter().map(|byte| format!("{byte:02x}")).collect();
     let text = format!("{hex}\n# total bytes: {total}");

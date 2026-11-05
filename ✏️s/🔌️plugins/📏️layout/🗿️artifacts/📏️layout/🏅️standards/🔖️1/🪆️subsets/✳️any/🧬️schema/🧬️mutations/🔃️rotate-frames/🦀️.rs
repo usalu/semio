@@ -43,10 +43,10 @@ impl RotateFrames {
 impl<Op> MutationKind<LayoutSnapshot, Op> for RotateFrames where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> + From<crate::rotate_frame::RotateFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "frames", kind: "rotate-frames", record: "RotatedFrames" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (degrees_en, degrees_de) = layout_label_number(self.angle.to_degrees());
         let (en, de) = layout_label_frames(self.targets.len());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone()]

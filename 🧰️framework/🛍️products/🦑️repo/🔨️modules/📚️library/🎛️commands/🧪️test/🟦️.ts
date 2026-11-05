@@ -59,7 +59,7 @@ export class TestScript extends Script {
       return;
     }
     if (rest[0] === "storybook") {
-      await this.runStorybookPlaywright();
+      await this.runStorybookPlaywright(rest.slice(1));
       return;
     }
     if (rest[0] === "outcome-law-gate") {
@@ -170,7 +170,8 @@ export class TestScript extends Script {
     });
   }
 
-  private async runStorybookPlaywright(): Promise<void> {
+  private async runStorybookPlaywright(extraArgs: readonly string[] = []): Promise<void> {
+    await (await import("../../🧪️testing/🌐️browser/🧰️preparation/🟦️.ts")).prepareRepositoryBrowserV1(this.root,this.invocation);
     const preferred = Number(process.env.STORYBOOK_PORT ?? 6010);
     const storybookPort = String(await this.pickStorybookStaticPort(preferred, 50));
     const baseUrl = `http://127.0.0.1:${storybookPort}/`;
@@ -180,8 +181,8 @@ export class TestScript extends Script {
       env: { ...process.env, STORYBOOK_PORT: storybookPort },
     });
     try {
-      await this.waitForUrl(new URL("🌐️.html", baseUrl).href, 120000);
-      runCmd(process.execPath, ["x", "playwright", "test", "--config", ".storybook/🧪️tests/🧪️browser-runner/🟦️.ts"], {
+      await this.waitForUrl(new URL("index.json", baseUrl).href, 120000);
+      runCmd(process.execPath, ["x", "--bun", "playwright", "test", "--config", ".storybook/🧪️tests/🧪️browser-runner/🟦️.ts", ...extraArgs], {
         cwd: this.root,
         env: {
           ...process.env,

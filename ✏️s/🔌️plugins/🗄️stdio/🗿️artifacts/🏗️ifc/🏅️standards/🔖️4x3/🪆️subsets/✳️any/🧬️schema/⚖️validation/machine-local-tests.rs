@@ -1,6 +1,6 @@
 //! 🧪️ Issued local rules evaluate the received candidate and preserve unknown as incomplete.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcComplexType;
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::SetEntityArg;
 fn grant() -> RetainedCloneGrant {

@@ -7,7 +7,7 @@ use infinite_world::world::{
     WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken, WorldAssetResponsePage, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES,
     WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
-use semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceToken;
+use semio_renderer_wgpu_contracts::AdmittedSurfaceToken;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 

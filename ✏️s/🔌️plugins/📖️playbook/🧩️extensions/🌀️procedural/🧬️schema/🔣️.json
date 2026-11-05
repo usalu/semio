@@ -35,6 +35,118 @@
           "exclusiveMinimum": 0
         }
       }
+    },
+    "EmbeddedFlowParameters": {
+      "type": "object",
+      "properties": {
+        "__flow": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 16384
+            },
+            {
+              "type": "object",
+              "required": [
+                "schema",
+                "widgets",
+                "synapses"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "flow.host_snapshot"
+                },
+                "widgets": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "kind"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "not": {
+                          "const": "__flow"
+                        }
+                      },
+                      "kind": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "label": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "description": "The shared UI label also enforces a 512-byte UTF-8 bound."
+                      }
+                    }
+                  },
+                  "maxItems": 32
+                },
+                "synapses": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  },
+                  "maxItems": 64
+                }
+              },
+              "description": "Authored flow: at most 16384 UTF-8 bytes, nesting depth 32, 32 unique widgets, 64 unique connected synapses. The __flow widget identity is reserved for document configuration."
+            }
+          ]
+        }
+      },
+      "required": [
+        "__flow"
+      ],
+      "additionalProperties": true,
+      "description": "Only inputSlider, inputNote and inputImage widgets contribute answer controls. Variable widgets relay authored named typed channels and never rename from answers."
+    },
+    "EvaluateEmbeddedFlow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "payloadJsonChunks",
+        "bodyKey"
+      ],
+      "properties": {
+        "payloadJsonChunks": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          }
+        },
+        "bodyKey": {
+          "enum": [
+            "preview",
+            "flowPreview",
+            "proceduralPreview"
+          ]
+        }
+      }
+    },
+    "QuestionControlTransport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blueprintEncodedBytes",
+        "answerEncodedBytes"
+      ],
+      "properties": {
+        "blueprintEncodedBytes": {
+          "const": 32770
+        },
+        "answerEncodedBytes": {
+          "const": 16384
+        }
+      },
+      "description": "Encoded JSON-value UTF8 budgets for question source commits; raw authored graphs retain their separate 16384-byte admission."
     }
   }
 }

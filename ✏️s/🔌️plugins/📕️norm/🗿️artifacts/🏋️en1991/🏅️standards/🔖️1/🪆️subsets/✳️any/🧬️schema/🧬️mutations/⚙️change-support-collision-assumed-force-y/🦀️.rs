@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeSupportCollisionAs
         record: "ChangedSupportCollisionAssumedForceY",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change support collision: Assumed force across driving direction", "Stützenanprall: Angesetzte Kraft quer zur Fahrtrichtung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change support collision: Assumed force across driving direction", "Stützenanprall: Angesetzte Kraft quer zur Fahrtrichtung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

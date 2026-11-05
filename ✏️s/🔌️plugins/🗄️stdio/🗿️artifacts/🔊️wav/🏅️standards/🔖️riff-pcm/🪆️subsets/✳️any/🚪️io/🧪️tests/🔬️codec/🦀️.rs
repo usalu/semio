@@ -321,7 +321,7 @@ fn a_sample_edit_retains_the_list_info_chunk_and_its_position_and_ffprobe_still_
 /// 🔊️ Proves the actual WAV native codec, its compiled protocol identity and publishes the receipt the native-codec projection consumes.
 #[test]
 fn owned_fixture_publication_reports_canonical_logical_carriers() {
-    use semio_framework_os_kernel as store;
+    use semio_os_kernel as store;
     use store::snapshot::{ArtifactDsl, ArtifactPack};
     let snapshot = decode_wav(&real_fixture()).expect("decode real fixture");
     let text = snapshot.print_dsl();

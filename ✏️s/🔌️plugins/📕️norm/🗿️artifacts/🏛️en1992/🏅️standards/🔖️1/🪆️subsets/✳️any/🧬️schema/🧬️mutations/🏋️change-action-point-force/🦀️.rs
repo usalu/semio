@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeActionPointForce w
         record: "ChangedActionPointForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change point load of the member action", "Bauteileinwirkung: Einzellast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change point load of the member action", "Bauteileinwirkung: Einzellast ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.action_id.clone()]

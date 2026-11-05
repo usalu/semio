@@ -18,7 +18,7 @@ pub fn validate_target(payload:&ChangeLayerLocked,layer:&semio_s_artifact_raster
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerLocked where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_locked::ChangeLayerLocked> {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"change",entity:"layer-lock",kind:"change-layer-locked",record:"ChangedLayerLocked"};
 
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Change layer protection","Ebenenschutz ändern")}
+    fn label(&self)->semio_ui_locale::LocalizedLabel {semio_ui_locale::LocalizedLabel::native("Change layer protection","Ebenenschutz ändern")}
     fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
 }
 

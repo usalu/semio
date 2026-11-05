@@ -1,8 +1,8 @@
 use super::*;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::{UiButtonNode, UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
 use semio_framework_job_worker::OriginalWorkerFixtureCaller;
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 
 #[global_allocator]
 static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
@@ -334,7 +334,7 @@ fn mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once
 }
 
 //#region 📐️AuthoredLayoutRects
-use semio_framework_ui_retained_tree::tree::{Node, NodeFlags, NodeKey, WidgetSpec};
+use semio_ui_retained_tree::tree::{Node, NodeFlags, NodeKey, WidgetSpec};
 use ui_contract::{Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, Sizing, SpaceToken, StackLayout};
 
 /// 🧪️ The arena is what layout reads, so a fixture mounts nodes straight into it with the AUTHORED
@@ -347,7 +347,7 @@ fn mount(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, 
 }
 
 fn leaf() -> UiNode {
-    UiNode::Separator(semio_framework_ui_declaration::ui::UiSeparatorNode { presence: UiPresence::default(), menu: None })
+    UiNode::Separator(semio_ui_declaration::ui::UiSeparatorNode { presence: UiPresence::default(), menu: None })
 }
 
 fn fixed_leaf_spec() -> LayoutSpec {
@@ -491,7 +491,7 @@ fn mounted_layout_prices_a_text_run_with_the_atlas_pair_kerning() {
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
     assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), 1_000.0, 400.0));
     let (_, _, width, _) = solved(&tree, text);
-    let mut atlas = semio_framework_ui_text::FontAtlas::shaped_default();
+    let mut atlas = semio_ui_text::FontAtlas::shaped_default();
     let kerned = atlas.measure_text(value, DEFAULT_TEXT_SIZE_PX).0;
     let unkerned: f32 = value.chars().map(|ch| atlas.ensure_glyph(ch, DEFAULT_TEXT_SIZE_PX).advance).sum();
     assert!(unkerned - kerned > 0.5, "the pangram kerns: {unkerned} vs {kerned}");
@@ -524,7 +524,7 @@ fn composite_intrinsic_and_layout(tree: &mut UiTree, root: NodeId, width: f32) -
 fn geometry_button() -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some("geometry.control".into()),
-        icon_id: semio_framework_ui_declaration::IconName::CircleDot,
+        icon_id: semio_ui_declaration::IconName::CircleDot,
         label: Label::data("Control"),
         action: ActionDescriptor { controller_id: "geometry".into(), action: "change".into(), args: None },
         style: None,
@@ -599,7 +599,7 @@ fn a_host_content_slot_reserves_the_band_its_host_declared() {
         &mut tree,
         Some(root),
         1,
-        UiNode::ExternalSlot(semio_framework_ui_declaration::ui::UiExternalSlotNode {
+        UiNode::ExternalSlot(semio_ui_declaration::ui::UiExternalSlotNode {
             plugin_id: "framework".into(),
             app_id: "shell".into(),
             body_key: "framework.chat.transcript".into(),

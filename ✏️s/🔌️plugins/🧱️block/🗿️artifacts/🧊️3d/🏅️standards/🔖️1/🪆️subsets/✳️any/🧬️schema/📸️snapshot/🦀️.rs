@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -88,12 +88,12 @@ pub mod json_transport;
 pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
 
-use semio_framework_plugin::ArtifactKindSpec;
+use semio_plugin::ArtifactKindSpec;
 
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::OsMediaCapability;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::OsMediaCapability;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitType;
 
 pub const BLOCK_3D_SCHEMA: &str = "block.3d";
@@ -298,7 +298,7 @@ impl Block3dWindowView {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.block".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Object Kind", "Objekttyp"),
+        label: semio_ui_locale::LocalizedLabel::native("Object Kind", "Objekttyp"),
         source_format: BLOCK_3D_SCHEMA.into(),
         component_kind: "block3d".into(),
         dimension: "3d".into(),
@@ -320,7 +320,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `definition()` above; `standard`/`subset` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
 /// `s.block.block3d@1/*#editor` / `s.block.block3d@1/*#viewer`, exactly the contract §1 grammar.
-pub const BLOCK3D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.block.block3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const BLOCK3D_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.block.block3d", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 extern crate self as semio_s_artifact_block_3d_model;
 extern crate semio_framework_pack as pack;

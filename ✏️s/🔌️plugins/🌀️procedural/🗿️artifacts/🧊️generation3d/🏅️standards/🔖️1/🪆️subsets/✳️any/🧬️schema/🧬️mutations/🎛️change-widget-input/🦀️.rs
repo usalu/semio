@@ -28,7 +28,8 @@ pub const CHANGE_WIDGET_INPUT_MAXIMUM_CHANNEL: usize = 256;
 pub const CHANGE_WIDGET_INPUT_LABEL_TEXT: usize = 32;
 
 /// ➡️ A plane literal — an origin point and a normal vector.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WidgetInputPlane {
@@ -37,7 +38,8 @@ pub struct WidgetInputPlane {
 }
 
 /// 🔣️ One typed input literal — on the wire `{type, value}`, a point or a vector as `[x, y, z]`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "type", content = "value", rename_all = "camelCase")]
 pub enum WidgetInputValue {
@@ -183,7 +185,8 @@ impl WidgetInputValue {
 
 //#region 🔖️ChangeWidgetInput
 /// ⌨️ Sets input `channel` of operator `id` to the typed literal `input` (a text source's `text` to its text).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -285,9 +288,9 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "widget-input", kind: "change-widget-input", record: "ChangedWidgetInput" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (en, de) = self.input.label();
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set input \"{}\" of \"{}\" to {en}", self.channel, self.id), &format!("Eingang \"{}\" von \"{}\" auf {de} setzen", self.channel, self.id))
+        semio_ui_locale::LocalizedLabel::native(&format!("Set input \"{}\" of \"{}\" to {en}", self.channel, self.id), &format!("Eingang \"{}\" von \"{}\" auf {de} setzen", self.channel, self.id))
     }
 
     fn target(&self) -> Vec<String> {

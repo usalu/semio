@@ -1,6 +1,6 @@
 //! 📤️ Literal XML rows and borrowed traversal frontiers are admitted before creation.
 use super::super::*;
-use semio_framework_os_kernel::sqlite_snapshot::{
+use semio_os_kernel::sqlite_snapshot::{
     artifact::{Cell, Projection},
     transfer::reserve,
 };

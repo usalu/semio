@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedLongitudinal
         record: "ChangedPlatedLongitudinalInertia",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Longitudinal stiffener I_sl,1 of the plated panel", "Plattenfeld: Längssteife I_sl,1 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Longitudinal stiffener I_sl,1 of the plated panel", "Plattenfeld: Längssteife I_sl,1 ändern")
     }
 }
 

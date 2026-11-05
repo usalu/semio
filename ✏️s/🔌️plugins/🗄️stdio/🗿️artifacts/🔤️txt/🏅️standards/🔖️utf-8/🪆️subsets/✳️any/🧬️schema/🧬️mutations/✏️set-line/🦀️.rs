@@ -48,8 +48,8 @@ impl SetLineMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "line", kind: "set-line", record: "SetLine" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Line", "Zeile setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Line", "Zeile setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-line".to_string()]

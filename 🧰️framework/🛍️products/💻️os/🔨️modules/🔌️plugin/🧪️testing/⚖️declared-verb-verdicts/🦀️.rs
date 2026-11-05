@@ -9,7 +9,7 @@
                 ArgSchema::String { options, .. } if options.len() == 1 => vec![DslValue::String(options[0].value.clone())],
                 _ => declared_argument_alternatives(argument).map(|(first, second)| vec![first, second]).unwrap_or_default(),
             };
-            let schema = argument.json_schema(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
+            let schema = argument.json_schema(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En);
             let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&semio_framework_pack_json::to_json_string(&schema)).map_err(|error| format!("required argument {} schema cannot be validated: {error}", argument.id))?;
             let value = candidates
                 .into_iter()
@@ -30,9 +30,9 @@
     pub enum DeclaredVerbOutcome {
         /// 🚪️ The dispatch infrastructure refused the verb before any handler ran (`interactive-job.*`,
         /// `app.command.unsupported`) — the declared verb cannot be invoked at all.
-        Unreachable { code: String, detail: String, failure:Option<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> },
+        Unreachable { code: String, detail: String, failure:Option<semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> },
         /// 🛑️ The handler refused this invocation by name.
-        Refused { code: String, detail: String, failure:Option<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> },
+        Refused { code: String, detail: String, failure:Option<semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> },
         /// ✅️ The operation settled; see [`DeclaredVerbEffect`].
         Settled(DeclaredVerbEffect),
     }

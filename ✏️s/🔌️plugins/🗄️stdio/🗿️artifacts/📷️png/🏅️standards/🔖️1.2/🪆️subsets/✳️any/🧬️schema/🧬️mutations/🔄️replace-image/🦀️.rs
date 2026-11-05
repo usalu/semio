@@ -10,7 +10,7 @@ pub struct ReplaceImage {#[dsl(block)] pub image:PngImage}
 impl protocol::MutationKind<PngSnapshot,PngMutation> for ReplaceImage {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor{verb:"replace",entity:"image",kind:"replace-image",record:"ReplaceImage"};
 
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native("Replace native image","Natives Bild ersetzen")}
+    fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native("Replace native image","Natives Bild ersetzen")}
     fn target(&self)->Vec<String>{vec!["image".into()]}
 }
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeSecondLaneWe
         record: "ChangedBridgeSecondLaneWeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Second lane mean weight Q_m2 of the bridge fatigue", "Brückenermüdung: Mittleres Gewicht zweiter Fahrstreifen Q_m2 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Second lane mean weight Q_m2 of the bridge fatigue", "Brückenermüdung: Mittleres Gewicht zweiter Fahrstreifen Q_m2 ändern")
     }
 }
 

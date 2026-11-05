@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-kernel-dsl-derive"
+name = "semio-os-kernel-dsl-derive"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -19,6 +19,6 @@ proc-macro = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel-dsl-derive-expand = { path = "../../🧩️expand/📦️packages/🦀️rust" }
+semio-os-kernel-dsl-derive-expand = { path = "../../🧩️expand/📦️packages/🦀️rust" }
 semio-framework-native-build-compiler-resources = { path = "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/📦️packages/🦀️rust" }
 

@@ -1,7 +1,7 @@
 //! 🪟️ Manifest and media of the norm app surface: the mode, window and panel definitions, the artifact kind spec and the media export and import. See [`super`].
 
 use super::*;
-use semio_framework_plugin::{ActionArgDef, WindowLayoutAxisNode, WindowLayoutChild};
+use semio_plugin::{ActionArgDef, WindowLayoutAxisNode, WindowLayoutChild};
 
 //#region 🔖️Manifest
 /// ✏️ The `edit` mode definition — identical for all fifteen apps.
@@ -36,12 +36,12 @@ pub fn visual_window_id(variant: &str, role: &str) -> String {
     format!("norm-{variant}-{role}")
 }
 
-fn view_action(id: &str, en: &str, de: &str, icon: &str, args: Vec<ActionArgDef>) -> semio_framework_plugin::ActionDefinition {
-    semio_framework_plugin::ActionDefinition { args, ..semio_framework_plugin::ActionDefinition::new(id, LocalizedLabel::native(en, de), semio_framework_plugin::ActionKind::View, icon) }
+fn view_action(id: &str, en: &str, de: &str, icon: &str, args: Vec<ActionArgDef>) -> semio_plugin::ActionDefinition {
+    semio_plugin::ActionDefinition { args, ..semio_plugin::ActionDefinition::new(id, LocalizedLabel::native(en, de), semio_plugin::ActionKind::View, icon) }
 }
 
 /// ⌨️ The window actions of the documented keyboard shortcuts, one per distinct shortcut action with the shortcut's English and German label; the shell dispatches a key the norm hook answered with an action to exactly these ids. The focus shortcuts are no app actions: the hook answers them with the framework `focusWindow` verb, which every window kind has through the palette.
-pub fn shortcut_action_definitions() -> Vec<semio_framework_plugin::ActionDefinition> {
+pub fn shortcut_action_definitions() -> Vec<semio_plugin::ActionDefinition> {
     let mut seen = std::collections::HashSet::new();
     crate::accessibility::focus_order::shortcuts()
         .into_iter()
@@ -60,8 +60,8 @@ pub fn viewport_window_definition(variant: &str, label: LocalizedLabel, body_key
     let number = |name: &str, en: &str, de: &str| ActionArgDef::number(name, LocalizedLabel::native(en, de)).required();
     WindowKindDefinition {
         surface_kind: SurfaceKind::World3d,
-        utilities: vec![semio_framework_plugin::UtilityRef::new("transform")],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(format!("norm.{variant}"))],
+        utilities: vec![semio_plugin::UtilityRef::new("transform")],
+        interactions: vec![semio_plugin::InteractionRef::new(format!("norm.{variant}"))],
         actions: vec![
             view_action("viewportSetCamera", "Set camera", "Kamera setzen", "camera", vec![text("preset", "Preset", "Voreinstellung")]),
             view_action("viewportFrame", "Frame", "Einpassen", "maximize", vec![text("target", "Target (all, selection, worst)", "Ziel (alle, Auswahl, kritischster)")]),
@@ -90,7 +90,7 @@ pub fn viewport_window_definition(variant: &str, label: LocalizedLabel, body_key
 /// 📈️ The 2D diagram window kind: a `Canvas2d` surface bound to the same interaction domain so a pick in 3D switches the diagrams.
 pub fn diagram_window_definition(variant: &str, label: LocalizedLabel, body_key: &str, icon_id: &str) -> WindowKindDefinition {
     WindowKindDefinition {
-        interactions: vec![semio_framework_plugin::InteractionRef::new(format!("norm.{variant}"))],
+        interactions: vec![semio_plugin::InteractionRef::new(format!("norm.{variant}"))],
         actions: vec![view_action("diagramSelect", "Select diagram", "Diagramm wählen", "chart-line", vec![ActionArgDef::text("diagram", LocalizedLabel::native("Diagram", "Diagramm")).required()]), view_action("diagramToggleTable", "Toggle table", "Tabelle umschalten", "table", Vec::new())],
         ..window_definition(&visual_window_id(variant, "diagrams"), label, body_key, icon_id)
     }
@@ -139,19 +139,19 @@ pub fn visual_layout_id(device: crate::viewport3d::config::DeviceClass) -> Strin
     format!("norm-visual-{}", match device { DeviceClass::Desktop => "desktop", DeviceClass::Mobile => "mobile", DeviceClass::Tablet => "tablet" })
 }
 
-fn named_device_layout(device: &str, layout: impl Fn(crate::viewport3d::config::DeviceClass) -> WindowLayout) -> semio_framework_plugin::NamedLayout {
+fn named_device_layout(device: &str, layout: impl Fn(crate::viewport3d::config::DeviceClass) -> WindowLayout) -> semio_plugin::NamedLayout {
     use crate::viewport3d::config::DeviceClass;
     let (class, en) = match device { "mobile" => (DeviceClass::Mobile, "Mobile"), "tablet" => (DeviceClass::Tablet, "Tablet"), _ => (DeviceClass::Desktop, "Desktop") };
-    semio_framework_plugin::create_named_layout(visual_layout_id(class), en, layout(class), "builtin", None, None)
+    semio_plugin::create_named_layout(visual_layout_id(class), en, layout(class), "builtin", None, None)
 }
 
 /// 📱️ The editor layout of `device` (`desktop`, `mobile` or `tablet`) at the default preferences, declared as a named layout so a shell can switch by device class.
-pub fn edit_named_layout(variant: &str, device: &str) -> semio_framework_plugin::NamedLayout {
+pub fn edit_named_layout(variant: &str, device: &str) -> semio_plugin::NamedLayout {
     named_device_layout(device, |class| visual_layout(variant, class))
 }
 
 /// 📱️ The viewer layout of `device` at the default preferences, see [`edit_named_layout`].
-pub fn view_named_layout(variant: &str, device: &str) -> semio_framework_plugin::NamedLayout {
+pub fn view_named_layout(variant: &str, device: &str) -> semio_plugin::NamedLayout {
     named_device_layout(device, |class| view_layout_with(variant, class, &crate::device_profiles::LayoutPrefs::default()))
 }
 
@@ -271,7 +271,7 @@ pub fn norm_io(variant: &str, artifact_schema: &str) -> AppIo {
 pub fn export_media<F>(port: &str, variant: &str, artifact_schema: &str, document: &F::Document) -> Result<Media, MediaError>
 where
     F: NormFamily,
-    F::Document: pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    F::Document: pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
 {
     if port == "report:out" {
         let report = F::live_report(document);

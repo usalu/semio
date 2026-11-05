@@ -54,20 +54,20 @@ impl AppBuilder {
         for tab in &self.panel_tabs {
             validate_panel_tab_spec(&self.id, tab, &mut panel_tab_ids);
         }
-        if panel_tab_ids.insert(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()) {
+        if panel_tab_ids.insert(semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()) {
             self.panel_tabs.push(PanelTabSpec::framework(
-                PanelTabKind::App(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
-                LocalizedLabel::native(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
+                PanelTabKind::App(semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
+                LocalizedLabel::native(semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
                 PanelGroup::Settings,
                 Some(FRAMEWORK_HISTORY_BODY_KEY.to_string()),
                 Vec::new(),
             ));
         }
         let declares_tool_run = self.tools.iter().any(|tool| tool.run.is_some()) || self.utilities.iter().any(|utility| utility.run.is_some());
-        if declares_tool_run && panel_tab_ids.insert(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()) {
+        if declares_tool_run && panel_tab_ids.insert(semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()) {
             self.panel_tabs.push(PanelTabSpec::framework(
-                PanelTabKind::App(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()),
-                LocalizedLabel::native(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL, "Werkzeugläufe"),
+                PanelTabKind::App(semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()),
+                LocalizedLabel::native(semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL, "Werkzeugläufe"),
                 PanelGroup::Details,
                 Some(FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()),
                 Vec::new(),

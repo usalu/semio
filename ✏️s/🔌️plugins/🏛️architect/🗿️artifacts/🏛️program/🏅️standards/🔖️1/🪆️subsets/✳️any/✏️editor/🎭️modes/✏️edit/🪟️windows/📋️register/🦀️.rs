@@ -3,12 +3,12 @@
 use crate::editor::architect::catalog::register_entities;
 use crate::editor::architect::chrome::{entity_id_from_json, entity_name_from_json};
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-use semio_framework_plugin::{BlockListScene,BlockListStep,BlockListBlock,BlockListPaletteEntry};
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::{BlockListScene,BlockListStep,BlockListBlock,BlockListPaletteEntry};
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -42,11 +42,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let register = cfg.active_register.as_str();
     let entities = register_entities(program, register);
     if entities.is_empty() {
-        return semio_framework_plugin::built_text_node(Label::data(format!("No entities in register '{register}'."))).map_err(|_| crate::editor::architect::editor_vocabulary::ui_capacity_error());
+        return semio_plugin::built_text_node(Label::data(format!("No entities in register '{register}'."))).map_err(|_| crate::editor::architect::editor_vocabulary::ui_capacity_error());
     }
 
     let steps: Vec<BlockListStep> = entities
@@ -59,7 +59,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowCo
         .collect();
     let palette=vec![BlockListPaletteEntry {block_kind:register.into(),label:register.into(),icon_id:"square".into()}];
     let scene = BlockListScene { steps, palette, selected_id: None, dragging_id: None, domain_id: None };
-    semio_framework_plugin::scene_surface(ARCHITECT_BODY_REGISTER, semio_framework_ui_contract::SurfaceKind::BlockList, &scene)
+    semio_plugin::scene_surface(ARCHITECT_BODY_REGISTER, semio_ui_contract::SurfaceKind::BlockList, &scene)
 }
 //#endregion 🔖️Render
 

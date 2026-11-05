@@ -1,9 +1,9 @@
 //! 🫳️ Typed DWG row ownership, unsigned word pairs and bounded reconstruction.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::sqlite_snapshot::{validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase};
+use semio_os_kernel::sqlite_snapshot::{validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase};
 use std::collections::{BTreeMap,BTreeSet};
 use super::number::Row;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 
 pub struct Reader<'db,'c,'p> {
     database: &'db SqliteDatabase,

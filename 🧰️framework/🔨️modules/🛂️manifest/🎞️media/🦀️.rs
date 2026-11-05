@@ -2,7 +2,7 @@
 
 use semio_framework_hash::Sha256;
 use semio_framework_pack_json::ArtifactCanonicalJsonText as Text;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::Number;

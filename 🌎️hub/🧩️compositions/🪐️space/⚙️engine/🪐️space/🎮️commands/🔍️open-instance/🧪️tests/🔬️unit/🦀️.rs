@@ -3,7 +3,7 @@
 use crate::demo_space_projection;
 use semio_hub_space_app::SpaceCommand;
 use semio_hub_space_app::unit_tests::context::{apply_config, seed_draw_plugin, studio_emit};
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 use semio_hub_space_foundation::config::{FocusedNodeSetting, SpaceConfig, SpaceConfigMutation};
 use semio_hub_space_commands_authoring::open_instance::OpenInstance;
 

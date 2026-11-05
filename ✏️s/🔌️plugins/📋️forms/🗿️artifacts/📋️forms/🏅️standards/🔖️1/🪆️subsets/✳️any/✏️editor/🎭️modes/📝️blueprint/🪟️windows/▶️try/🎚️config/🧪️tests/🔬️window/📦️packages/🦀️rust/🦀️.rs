@@ -1,6 +1,6 @@
 //! 🔬️ config-tests of `semio-s-artifact-forms-forms` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[cfg(test)]
 pub use semio_framework_artifact_playbook_playbook::PlaybookStep as FormStep;
@@ -48,10 +48,6 @@ pub mod editor {
     #[path = "."]
     pub mod forms {
         pub use semio_s_artifact_forms_forms_forms::editor::forms::*;
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
-        }
         pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
         pub use semio_s_artifact_forms_forms_commands::editor::forms::commands;
         #[path = "."]
@@ -76,3 +72,5 @@ pub mod editor {
         }
     }
 }
+
+pub use semio_s_artifact_forms_forms_config::forms_config;

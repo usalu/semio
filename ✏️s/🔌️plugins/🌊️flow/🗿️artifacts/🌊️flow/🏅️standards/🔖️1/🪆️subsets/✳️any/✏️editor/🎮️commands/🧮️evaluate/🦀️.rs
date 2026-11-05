@@ -6,9 +6,9 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Arm

@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertFooting where Op: 
         verb: "insert", entity: "footing", kind: "insert-footing", record: "InsertedFooting",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert footing", "Fundament einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert footing", "Fundament einfügen")
     }
 }
 

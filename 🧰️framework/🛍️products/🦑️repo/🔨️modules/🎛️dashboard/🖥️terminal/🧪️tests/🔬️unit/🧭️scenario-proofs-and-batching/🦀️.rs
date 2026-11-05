@@ -42,7 +42,7 @@ fn the_configured_start_action_needs_one_click() {
 
 #[test]
 fn glyph_capabilities_preserve_the_framework_width_policy() {
-    use semio_framework_ui_tui_core::text::WidthMode;
+    use semio_ui_tui_core::text::WidthMode;
     let (mut dashboard, mut tui) = view();
     dashboard.apply_capabilities(&mut tui, true);
     assert_eq!(tui.width_mode(), WidthMode::Scalar);

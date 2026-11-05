@@ -10,7 +10,7 @@ pub struct ChangeCutoutCentreHeight { pub cutout_id: String, pub new_value: f64 
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeCutoutCentreHeight where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_cutout_centre_height::ChangeCutoutCentreHeight> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cutout-centre-height", kind: "change-cutout-centre-height", record: "ChangedCutoutCentreHeight" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change hole centre above the bottom of cutout {}", self.cutout_id), &format!("Lochmitte über der Unterkante von Cutout {} ändern", self.cutout_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change hole centre above the bottom of cutout {}", self.cutout_id), &format!("Lochmitte über der Unterkante von Cutout {} ändern", self.cutout_id)) }
     fn target(&self) -> Vec<String> { vec![self.cutout_id.clone()] }
 }
 

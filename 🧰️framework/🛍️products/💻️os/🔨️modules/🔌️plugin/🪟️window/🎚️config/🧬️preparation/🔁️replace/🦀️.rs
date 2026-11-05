@@ -1,5 +1,5 @@
 //! 🔁️ Whole-record replace edit for fixed-size window configs: copies the replacement into the post record, boxes the previous record as the inverse row, and retires both through original custody.
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use store::snapshot_clone_preparation::RetainedEditCustody;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 use semio_framework_value::retirement::RetireOwned;
@@ -28,7 +28,7 @@ pub struct WindowConfigReplaceCursor<S: Copy + RetireOwned + 'static, M: RetireO
 }
 
 impl<S, M> RetainedCloneEdit<S, M> for WindowConfigReplaceEdit<S, M>
-where S: RetainedClone + Copy + RetireOwned + ::semio_framework_os_kernel::StoreState, M: WindowConfigReplaceMutation<S> + RetireOwned
+where S: RetainedClone + Copy + RetireOwned + ::semio_os_kernel::StoreState, M: WindowConfigReplaceMutation<S> + RetireOwned
 {
     type Cursor = WindowConfigReplaceCursor<S, M>;
     fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, &'static str> {
@@ -45,7 +45,7 @@ where S: RetainedClone + Copy + RetireOwned + ::semio_framework_os_kernel::Store
     }
 }
 
-impl<S: Copy + RetireOwned + ::semio_framework_os_kernel::StoreState, M: RetireOwned + 'static> WindowConfigReplaceCursor<S, M> {
+impl<S: Copy + RetireOwned + ::semio_os_kernel::StoreState, M: RetireOwned + 'static> WindowConfigReplaceCursor<S, M> {
     #[doc(hidden)]
     pub fn normal_demand(&self) -> RetirementDemand {
         let (copy_bytes, capacity_bytes) = match self.stage {
@@ -60,7 +60,7 @@ impl<S: Copy + RetireOwned + ::semio_framework_os_kernel::StoreState, M: RetireO
 }
 
 impl<S, M> RetainedCloneEditCursor<S, M> for WindowConfigReplaceCursor<S, M>
-where S: RetainedClone + Copy + RetireOwned + ::semio_framework_os_kernel::StoreState, M: WindowConfigReplaceMutation<S> + RetireOwned
+where S: RetainedClone + Copy + RetireOwned + ::semio_os_kernel::StoreState, M: WindowConfigReplaceMutation<S> + RetireOwned
 {
     fn next_work_demand(&self,_:RetainedCloneRef<'_,S>,_:&S,_:RetainedCloneRef<'_,M>,_:usize)->Result<u64,ValueError>{Ok(1)}
     fn last_turn_work(&self)->u64{self.last_work}

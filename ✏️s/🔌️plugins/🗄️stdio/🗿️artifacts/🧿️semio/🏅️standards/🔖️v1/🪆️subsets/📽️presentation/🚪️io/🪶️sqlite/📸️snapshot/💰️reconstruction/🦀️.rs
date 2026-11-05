@@ -1,7 +1,7 @@
 //! 📽️ Original presentation shape fields and shared document blocks remain in one caller workspace.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
-use semio_framework_os_kernel::sqlite_snapshot::{transfer,artifact::{RowIndexStorage,reconstruct_text_into,reconstruct_blob_into}};
+use semio_os_kernel::sqlite_snapshot::{transfer,artifact::{RowIndexStorage,reconstruct_text_into,reconstruct_blob_into}};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace;
 use {semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock, semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::{BlockReconstructionStorage, reconstruct_block_collections_into}};
 

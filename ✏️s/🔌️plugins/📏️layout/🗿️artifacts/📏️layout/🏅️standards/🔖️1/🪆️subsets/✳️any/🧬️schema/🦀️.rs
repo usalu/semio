@@ -2,14 +2,14 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use crate::snapshot::LayoutSnapshot;
 use semio_framework_artifact_reference::{Dialect, StandardId};
 use semio_framework_value::DslValue as Value;
@@ -729,7 +729,7 @@ pub struct GridSettings {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.layout".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Layout", "Layout"),
+        label: semio_ui_locale::LocalizedLabel::native("Layout", "Layout"),
         source_format: LAYOUT_DOCUMENT_SCHEMA.into(),
         component_kind: "layout".into(),
         dimension: "2d".into(),

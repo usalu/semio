@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpPlanes wher
         record: "ChangedBuiltUpPlanes",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Planes of lacing or battens n of the built-up member", "Zusammengesetzter Stab: Ebenen der Vergitterung oder Bindebleche n ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Planes of lacing or battens n of the built-up member", "Zusammengesetzter Stab: Ebenen der Vergitterung oder Bindebleche n ändern")
     }
 }
 

@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "split", entity: "slab", kind: "split-slab", record: "SplitSlab" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Split slab \"{}\" along the line through ({}, {}) and ({}, {})", self.id, self.line_start.x, self.line_start.y, self.line_end.x, self.line_end.y), &format!("Decke \"{}\" entlang der Linie durch ({}, {}) und ({}, {}) teilen", self.id, self.line_start.x, self.line_start.y, self.line_end.x, self.line_end.y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Split slab \"{}\" along the line through ({}, {}) and ({}, {})", self.id, self.line_start.x, self.line_start.y, self.line_end.x, self.line_end.y), &format!("Decke \"{}\" entlang der Linie durch ({}, {}) und ({}, {}) teilen", self.id, self.line_start.x, self.line_start.y, self.line_end.x, self.line_end.y))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

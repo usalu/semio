@@ -1,6 +1,6 @@
 //! 🗃️ Borrowed final rows prepare derived cache owners before one-header commits.
 use semio_s_artifact_layout_layout_model::{Page,ParentPage,Layer};
-use semio_framework_os_kernel::ApplyCapability;
+use semio_os_kernel::ApplyCapability;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,sort::{HeapSortCursor,HeapSortWork},retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use std::{cmp::Ordering,mem::{size_of,ManuallyDrop}};
 /// 👁 Stable registration lends final row IDs without materializing Page or Frame payloads.

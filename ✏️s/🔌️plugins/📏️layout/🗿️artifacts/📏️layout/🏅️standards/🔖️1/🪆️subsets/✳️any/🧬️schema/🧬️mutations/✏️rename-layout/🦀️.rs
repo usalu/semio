@@ -19,8 +19,8 @@ pub struct RenameLayout {
 impl<Op> MutationKind<LayoutSnapshot, Op> for RenameLayout where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rename_layout::RenameLayout> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "layout", kind: "rename-layout", record: "RenamedLayout" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_name), &format!("Dokument in \"{}\" umbenennen", self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_name), &format!("Dokument in \"{}\" umbenennen", self.new_name))
     }
 }
 

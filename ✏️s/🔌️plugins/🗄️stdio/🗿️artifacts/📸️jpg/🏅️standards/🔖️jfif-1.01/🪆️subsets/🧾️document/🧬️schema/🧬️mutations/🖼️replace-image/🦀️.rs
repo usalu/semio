@@ -7,7 +7,7 @@ use crate::{JpgSnapshot,JpgImage,JpgDiff,JpgMutation};
 pub struct ReplaceImage {pub image:JpgImage}
 impl protocol::MutationKind<JpgSnapshot,JpgMutation> for ReplaceImage {
  const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor{verb:"replace",entity:"image",kind:"replace-image",record:"ReplaceImage"};
- fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native("Replace image","Bild ersetzen")}
+ fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native("Replace image","Bild ersetzen")}
  fn target(&self)->Vec<String>{vec!["image".into()]}
 }
 impl protocol::ColdMutationKind<JpgSnapshot,JpgMutation> for ReplaceImage {

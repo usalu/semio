@@ -11,8 +11,8 @@ pub type ConfigStore<C, ConfigMutation> = ArtifactStore<C, ConfigMutation>;
 /// 🗃️ The composer of one store: the six components of [`StoreLog`], [`StoreOwners`], [`StoreWire`], [`StoreCursor`], [`StoreLive`] and [`StoreReplay`], the use cases that need several of them and the delegates of the public surface.
 pub struct ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     pub log: StoreLog<P, Mutation>,
     pub owners: StoreOwners<P, Mutation>,
@@ -24,8 +24,8 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🧩️ Splits the composer into its component borrows.
     #[inline]
@@ -43,14 +43,14 @@ where
 /// 🎚️ Atomically adopts a retained config runtime after typed Pack and history validation.
 pub fn config_store_from_initialized_runtime_with_owners<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, mut owners: DocumentStoreOwners<P, Mutation>) -> ConfigStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator, supersessions, read_registry) = runtime.into_parts();
     let current_checkpoint_id = cursor.checkpoint_id.clone();
     let previous_cursor=envelope.cursor.replace(cursor);
     let mut displaced_retirements=ArtifactStoreDisplacedRetirements::new();
-    if let Some(previous)=previous_cursor{displaced_retirements.push_reserved(Box::new(semio_framework_os_store_read::ArtifactStoreCursorRetirement::new(previous)));}
+    if let Some(previous)=previous_cursor{displaced_retirements.push_reserved(Box::new(semio_os_store_read::ArtifactStoreCursorRetirement::new(previous)));}
     let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
     assert!(read_registry.publish_authority(generation,content_revision),"initialized Store must publish its exact original snapshot authority before visibility");
     let factory_retirement_tickets = owners.take_factory_retirement_tickets();
@@ -65,7 +65,7 @@ where
             current_checkpoint_id: std::mem::ManuallyDrop::new(current_checkpoint_id),
             local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
             authoring_verb: None,
-            merge_policy: semio_framework_os_spr::MergePolicy::default(),
+            merge_policy: semio_os_spr::MergePolicy::default(),
             clock,
             initial_digest,
             operation_wire: Some(owners.operation_wire),

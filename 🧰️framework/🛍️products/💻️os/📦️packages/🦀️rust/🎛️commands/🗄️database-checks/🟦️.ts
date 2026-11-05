@@ -47,10 +47,10 @@ export class PagedHistoryStackScript extends BundleScript {
     const canonical = storeCanonicalEditSealerSelfTests();
     console.log("paged-history-canonical-oracles: " + JSON.stringify(canonical));
     if (args[0] === "--native") {
-      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-os-kernel", target: { kind: "lib", name: "semio_os_kernel" }, laws: [
           "os_vcs::tests::paged_history_stack_traversal_follows_the_portable_deque_vectors",
           "os_vcs::tests::history_branch_provenance_follows_portable_required_wire_vectors",
-        ] }, { package: "semio-framework-os-store-tests-09", target: { kind: "lib" }, laws: [
+        ] }, { package: "semio-os-store-tests-09", target: { kind: "lib" }, laws: [
           "edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally",
           "canonical_authority_final_unicode_strings_retire_under_single_byte_grants",
         ] }]});
@@ -103,7 +103,7 @@ export class DatabaseHistoryCompletionCheckScript extends BundleScript {
     console.log("database-history-completion-check: behavior-oracles=retained sqlite-publication=" + fixture.publication.length);
     if (segments[0] !== "--native") return;
     const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
-        package: "semio-framework-os-kernel-db",
+        package: "semio-os-kernel-db",
         target: { kind: "lib", name: "db" },
         cargoArgs: ["--all-features"],
         laws: [
@@ -197,7 +197,7 @@ export class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
     console.log("database-catalog-read-ownership-check: behavior-oracles=retained sqlite-transfers=" + fixture.transfers.length + " sqlite-completion=" + fixture.completion.length + " sqlite-recovery=" + fixture.recovery.length);
     if (segments[0] !== "--native") return;
     const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
-        package: "semio-framework-os-kernel-db",
+        package: "semio-os-kernel-db",
         target: { kind: "lib", name: "db" },
         cargoArgs: ["--all-features"],
         laws: [
@@ -317,7 +317,7 @@ export class DatabaseCapabilityCompletionCheckScript extends BundleScript {
     if (segments[0] !== "--native") return;
     const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
-          package: "semio-framework-os-kernel-db",
+          package: "semio-os-kernel-db",
           target: { kind: "lib", name: "db" },
           cargoArgs: ["--all-features"],
           laws: [
@@ -408,7 +408,7 @@ export class DatabaseShutdownCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
           {
-            package: "semio-framework-os-kernel-db",
+            package: "semio-os-kernel-db",
             target: { kind: "lib", name: "db" },
             laws: [
               "db_engine::tests::database_shutdown_cancellation_preserves_exact_retry_owners",
@@ -482,7 +482,7 @@ export class DbErrorOwnershipCheckScript extends BundleScript {
     }
     if (segments[0] === "--native") {
       if (selectedLaw && !laws.includes(selectedLaw)) throw new Error("db-error-ownership-check requires an authored exact law");
-      await runAdmittedExactCargoLawsV1({ control: exactCargoCallerControlV1(this.invocation, "exact-cargo:caller", 0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: selectedLaw ? [selectedLaw] : laws }] });
+      await runAdmittedExactCargoLawsV1({ control: exactCargoCallerControlV1(this.invocation, "exact-cargo:caller", 0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-os-kernel-db", target: { kind: "lib", name: "db" }, laws: selectedLaw ? [selectedLaw] : laws }] });
     }
   }
 }

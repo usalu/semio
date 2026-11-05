@@ -1,4 +1,4 @@
-use semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect;
+use semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect;
 
 /// 🔌️ The manifest is assembled synchronously — five artifacts, five routed inferences, ten apps.
 #[test]
@@ -50,7 +50,7 @@ macro_rules! wfc_examples_law {
             let expected_ids: Vec<&str> = $sources.iter().map(|source| source.id()).collect();
             assert!(expected_ids.len() >= 2, "every wfc artifact ships at least a tiny and a real-world example");
             for app in [&editor, &viewer] {
-                let registered_ids: Vec<&str> = semio_framework_plugin::manifest::examples_for_app(&plugin.manifest.examples, app).into_iter().map(|example| example.id.as_str()).collect();
+                let registered_ids: Vec<&str> = semio_plugin::manifest::examples_for_app(&plugin.manifest.examples, app).into_iter().map(|example| example.id.as_str()).collect();
                 assert_eq!(registered_ids, expected_ids, "{} must offer the authored example order", app.id);
             }
         }

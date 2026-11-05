@@ -1,0 +1,426 @@
+[
+  {
+    "name": "Empty Actual Authority",
+    "initial": {},
+    "writes": [],
+    "expected": [],
+    "live": [],
+    "matches": true
+  },
+  {
+    "name": "One Actual Gesture",
+    "initial": {
+      "left": [
+        "shape"
+      ]
+    },
+    "writes": [],
+    "expected": [
+      [
+        "left",
+        [
+          "shape"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "left",
+        [
+          "shape"
+        ]
+      ]
+    ],
+    "matches": true
+  },
+  {
+    "name": "UTF8 Lexical Windows",
+    "initial": {
+      "β": [
+        "b"
+      ],
+      "a": [
+        "a"
+      ],
+      "東京": [
+        "j"
+      ],
+      "🧱": [
+        "s"
+      ]
+    },
+    "writes": [],
+    "expected": [
+      [
+        "a",
+        [
+          "a"
+        ]
+      ],
+      [
+        "β",
+        [
+          "b"
+        ]
+      ],
+      [
+        "東京",
+        [
+          "j"
+        ]
+      ],
+      [
+        "🧱",
+        [
+          "s"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "a",
+        [
+          "a"
+        ]
+      ],
+      [
+        "β",
+        [
+          "b"
+        ]
+      ],
+      [
+        "東京",
+        [
+          "j"
+        ]
+      ],
+      [
+        "🧱",
+        [
+          "s"
+        ]
+      ]
+    ],
+    "matches": true
+  },
+  {
+    "name": "Replace Keeps Original IDs",
+    "initial": {
+      "left": [
+        "old",
+        "part@meshOut#0.vertex.2"
+      ]
+    },
+    "writes": [
+      {
+        "window": "left",
+        "ids": [
+          "new"
+        ]
+      }
+    ],
+    "expected": [
+      [
+        "left",
+        [
+          "old",
+          "part@meshOut#0.vertex.2"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "left",
+        [
+          "new"
+        ]
+      ]
+    ],
+    "matches": false
+  },
+  {
+    "name": "Remove Keeps Original Gesture",
+    "initial": {
+      "left": [
+        "old"
+      ]
+    },
+    "writes": [
+      {
+        "window": "left",
+        "ids": null
+      }
+    ],
+    "expected": [
+      [
+        "left",
+        [
+          "old"
+        ]
+      ]
+    ],
+    "live": [],
+    "matches": false
+  },
+  {
+    "name": "Insert Does Not Alter Captured Roster",
+    "initial": {
+      "left": [
+        "old"
+      ]
+    },
+    "writes": [
+      {
+        "window": "right",
+        "ids": [
+          "new"
+        ]
+      }
+    ],
+    "expected": [
+      [
+        "left",
+        [
+          "old"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "left",
+        [
+          "old"
+        ]
+      ],
+      [
+        "right",
+        [
+          "new"
+        ]
+      ]
+    ],
+    "matches": false
+  },
+  {
+    "name": "Absent Abort Does Not Invalidate",
+    "initial": {
+      "left": [
+        "old"
+      ]
+    },
+    "writes": [
+      {
+        "window": "missing",
+        "ids": null
+      }
+    ],
+    "expected": [
+      [
+        "left",
+        [
+          "old"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "left",
+        [
+          "old"
+        ]
+      ]
+    ],
+    "matches": true
+  },
+  {
+    "name": "Repeated Stream Invalidates Even Same Value",
+    "initial": {
+      "left": [
+        "old"
+      ]
+    },
+    "writes": [
+      {
+        "window": "left",
+        "ids": [
+          "old"
+        ]
+      }
+    ],
+    "expected": [
+      [
+        "left",
+        [
+          "old"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "left",
+        [
+          "old"
+        ]
+      ]
+    ],
+    "matches": false
+  },
+  {
+    "name": "Abort Then Reopen Does Not Reuse Source",
+    "initial": {
+      "left": [
+        "old"
+      ]
+    },
+    "writes": [
+      {
+        "window": "left",
+        "ids": null
+      },
+      {
+        "window": "left",
+        "ids": [
+          "new"
+        ]
+      }
+    ],
+    "expected": [
+      [
+        "left",
+        [
+          "old"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "left",
+        [
+          "new"
+        ]
+      ]
+    ],
+    "matches": false
+  },
+  {
+    "name": "Multiple Writes Preserve Every Original",
+    "initial": {
+      "a": [
+        "A"
+      ],
+      "b": [
+        "B"
+      ]
+    },
+    "writes": [
+      {
+        "window": "a",
+        "ids": [
+          "newA"
+        ]
+      },
+      {
+        "window": "b",
+        "ids": null
+      },
+      {
+        "window": "c",
+        "ids": [
+          "C"
+        ]
+      }
+    ],
+    "expected": [
+      [
+        "a",
+        [
+          "A"
+        ]
+      ],
+      [
+        "b",
+        [
+          "B"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "a",
+        [
+          "newA"
+        ]
+      ],
+      [
+        "c",
+        [
+          "C"
+        ]
+      ]
+    ],
+    "matches": false
+  },
+  {
+    "name": "Empty Addressed IDs Remain Original Data",
+    "initial": {
+      "left": []
+    },
+    "writes": [],
+    "expected": [
+      [
+        "left",
+        []
+      ]
+    ],
+    "live": [
+      [
+        "left",
+        []
+      ]
+    ],
+    "matches": true
+  },
+  {
+    "name": "Long Unicode Source",
+    "initial": {
+      "Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱": [
+        "α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂",
+        "x"
+      ]
+    },
+    "writes": [
+      {
+        "window": "other",
+        "ids": [
+          "z"
+        ]
+      }
+    ],
+    "expected": [
+      [
+        "Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱",
+        [
+          "α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂",
+          "x"
+        ]
+      ]
+    ],
+    "live": [
+      [
+        "Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱Grüße🧱",
+        [
+          "α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂α🙂",
+          "x"
+        ]
+      ],
+      [
+        "other",
+        [
+          "z"
+        ]
+      ]
+    ],
+    "matches": false
+  }
+]

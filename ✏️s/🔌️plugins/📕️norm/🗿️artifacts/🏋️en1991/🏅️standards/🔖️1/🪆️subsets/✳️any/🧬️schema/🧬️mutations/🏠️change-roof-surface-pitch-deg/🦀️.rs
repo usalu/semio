@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRoofSurfacePitchDe
         record: "ChangedRoofSurfacePitchDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change pitch of the roof surface", "Dachfläche: Neigung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change pitch of the roof surface", "Dachfläche: Neigung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -29,23 +29,23 @@ impl<P> ArtifactDerivedSnapshot<P> {
 
 /// ⏪️ Store-owned history replay whose input edits and projection origin cannot be supplied by the caller.
 pub struct ArtifactDerivedReplay<P, Mu: Mutation<P>> {
-        pub history_source:Option<semio_framework_os_store_replay_operation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
-    pub replacement_wire:semio_framework_os_store_operation_wire::OriginalOperationWireComparison<Mu>,
+        pub history_source:Option<semio_os_store_replay_operation::native::history::OriginalHistorySource<semio_os_spr::Edit<Mu>>>,
+    pub replacement_wire:semio_os_store_operation_wire::OriginalOperationWireComparison<Mu>,
     pub replacement_foreign:bool,
     pub original_history_issuance:u64,
     pub original_decode:Option<(u64,u64)>,
-    pub original_selection:Option<semio_framework_os_vcs::OriginalHistoryEditSelection>,
+    pub original_selection:Option<semio_os_vcs::OriginalHistoryEditSelection>,
     pub original_order:Option<(usize,usize)>,
-    pub target:semio_framework_os_store_operation_wire::OriginalCommonTarget,
+    pub target:semio_os_store_operation_wire::OriginalCommonTarget,
     pub target_operation:Option<(usize,usize,u8)>,
-    pub replacement:semio_framework_os_store_operation_wire::OriginalReplacementReceiving<Mu>,
+    pub replacement:semio_os_store_operation_wire::OriginalReplacementReceiving<Mu>,
     pub replacement_operation:Option<(usize,usize,bool)>,
     pub replacement_phase:u8,
     pub history_input:Option<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>,
-    pub history_issuer:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<semio_framework_os_spr::Edit<Mu>>>>,
+    pub history_issuer:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<semio_os_spr::Edit<Mu>>>>,
     pub history_issuer_close:Option<semio_framework_value::FactoryAuthority>,
     pub history_operation:Option<(usize,usize)>,
-    pub failed_operation:Option<semio_framework_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>,
+    pub failed_operation:Option<semio_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>,
     pub preparation_receipt:RetainedCloneProgress,
 pub replay: Option<EditReplay<P, Mu>>,
     pub plan: Option<HistoryReadPlan>,
@@ -105,11 +105,11 @@ impl ArtifactCheckpointSelection{
 
 /// 🕰️ A generation-fenced cursor resolving a preview's inputs and folding its prefix under the caller's deadline.
 pub struct ArtifactDerivedHistoryPreview<P, Mu: Mutation<P>> {
-        pub derived_operation:Option<semio_framework_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>,
-    pub history_source:Option<semio_framework_os_store_replay_operation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
+        pub derived_operation:Option<semio_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>,
+    pub history_source:Option<semio_os_store_replay_operation::native::history::OriginalHistorySource<semio_os_spr::Edit<Mu>>>,
     pub checkpoint:Option<ArtifactCheckpointSelection>,
     pub history_input:Option<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>,
-    pub history_issuer:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<semio_framework_os_spr::Edit<Mu>>>>,
+    pub history_issuer:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<semio_os_spr::Edit<Mu>>>>,
     pub history_issuer_close:Option<semio_framework_value::FactoryAuthority>,
     pub displaced_operation:Option<Arc<P>>,
     pub operation_close:Option<Box<dyn ErasedSnapshotRetirement>>,
@@ -168,7 +168,7 @@ impl<P, Mu: Mutation<P>> Drop for ArtifactDerivedHistoryPreview<P, Mu> {
 }
 
 pub struct HistoryReadPlan {
-    pub original_selection:Option<semio_framework_os_vcs::OriginalHistoryEditSelection>,
+    pub original_selection:Option<semio_os_vcs::OriginalHistoryEditSelection>,
     pub original_order:Option<(usize,usize)>,
     pub original_supersessions:bool,
     pub native_phase:u8,
@@ -179,8 +179,8 @@ pub struct HistoryReadPlan {
     pub positions: protocol::HistoryFoldIndex<MutationId, (usize, usize)>,
     pub first_input: usize,
     pub last_draft: Option<usize>,
-    pub order: semio_framework_os_vcs::HistoryPageStack<String>,
-    pub counts: semio_framework_os_vcs::HistoryPageStack<u32>,
+    pub order: semio_os_vcs::HistoryPageStack<String>,
+    pub counts: semio_os_vcs::HistoryPageStack<u32>,
     pub cursor: usize,
     pub located_target: bool,
     pub located_draft: Option<MutationId>,
@@ -197,7 +197,7 @@ pub struct HistoryReadPlan {
 impl HistoryReadPlan {
     pub fn new(target: Option<MutationId>, drafts: protocol::HistoryInputDrafts, edits: usize, report: bool) -> Self {
         Self {
-            original_selection:None,original_order:None,original_supersessions:false,native_phase:0,native_row:0,native_schema:String::new(),target, drafts, positions: protocol::HistoryFoldIndex::new(), first_input: edits, last_draft: None, order: semio_framework_os_vcs::HistoryPageStack::empty(), counts: semio_framework_os_vcs::HistoryPageStack::empty(), cursor: 0, located_target: false, located_draft: None, located_inputs: false, operations: 0,
+            original_selection:None,original_order:None,original_supersessions:false,native_phase:0,native_row:0,native_schema:String::new(),target, drafts, positions: protocol::HistoryFoldIndex::new(), first_input: edits, last_draft: None, order: semio_os_vcs::HistoryPageStack::empty(), counts: semio_os_vcs::HistoryPageStack::empty(), cursor: 0, located_target: false, located_draft: None, located_inputs: false, operations: 0,
             supersessions: EffectiveSupersessions::new(), copied: None, copying_drafts: false, report,
             progress: ReplayProgress { done: 0, total: 0 }, finished: false,
         }
@@ -264,7 +264,7 @@ where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
         let preview=self.preview.as_ref()?;
         if preview.checkpoint.is_some(){return Some(Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ArtifactCheckpointSelection>>(),depth:1,..Default::default()}))}
         if !preview.drafts.terminal_is_empty() {return Some(Ok(RetirementDemand {depth:1,..Default::default()}));}
-                if let Some(owner)=preview.derived_operation.as_ref(){return Some(if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>>(),depth:1,..Default::default()})}else if owner.is_closing(){owner.next_demand(body)}else{Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})});}
+                if let Some(owner)=preview.derived_operation.as_ref(){return Some(if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>>(),depth:1,..Default::default()})}else if owner.is_closing(){owner.next_demand(body)}else{Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})});}
         if let Some(owner)=preview.operation_close.as_ref(){return Some(semio_framework_value::factory_ticket_demands(owner,body));}
         if preview.displaced_operation.is_some(){return Some(Ok(RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()}));}
         if let Some(id)=preview.operation_identity.as_ref(){return Some(Ok(RetirementDemand{copy_bytes:size_of::<MutationId>(),release_bytes:id.0.capacity(),depth:1,..Default::default()}));}

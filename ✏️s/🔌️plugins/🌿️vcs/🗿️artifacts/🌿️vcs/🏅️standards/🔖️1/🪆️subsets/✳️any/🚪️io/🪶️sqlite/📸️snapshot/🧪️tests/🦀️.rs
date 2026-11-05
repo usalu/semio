@@ -5,8 +5,8 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::VcsSnapshot;
 
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
-use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,plugin_app_close_prelude::*};
-use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,plugin_app_close_prelude::*};
+use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🌿️ The real VCS declaration's editor and viewer application closure.
  enum SqliteApps:PluginApp{
@@ -94,7 +94,7 @@ fn sqlite_snapshot_vcs_typed_tag_collection_declares_its_own_interior_workload()
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_vcs_actual_declaration_mount_exports_and_imports_queryable_files(){
  use store::io::io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot};
- semio_framework_plugin::PluginBuilder::<_, SqliteApps>::new("vcs").label("VCS owned SQLite").version("0.0.1").package_id("semio:vcs").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();
+ semio_plugin::PluginBuilder::<_, SqliteApps>::new("vcs").label("VCS owned SQLite").version("0.0.1").package_id("semio:vcs").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();
  let codec=store::os_store::codec_registry::document_codec(crate::VCS_DOCUMENT_SCHEMA).await.unwrap().unwrap();assert!(codec.snapshot_sqlite.is_some());
  let mut snapshot=fixture();for word in laws()["signed64"].as_array().unwrap(){snapshot.counter=word.as_str().unwrap().parse().unwrap();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect();let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));assert_eq!(async{let original_file_dialect=&dialect();let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<VcsSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value,snapshot);}}
 }

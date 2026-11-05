@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeRetainingWallHeigh
         record: "ChangeRetainingWallHeightM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Wall height", "Wandhöhe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Wall height", "Wandhöhe ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-retaining-wall-height-m".into()]

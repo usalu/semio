@@ -1,0 +1,183 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "base": {},
+      "key": "gain",
+      "value": {
+        "$schema": "number",
+        "value": 2.5
+      },
+      "expected": {
+        "gain": {
+          "$schema": "number",
+          "value": 2.5
+        }
+      }
+    },
+    {
+      "name": "replace",
+      "base": {
+        "gain": {
+          "$schema": "text",
+          "value": "old"
+        },
+        "other": false
+      },
+      "key": "gain",
+      "value": {
+        "$schema": "number",
+        "value": 3
+      },
+      "expected": {
+        "gain": {
+          "$schema": "number",
+          "value": 3
+        },
+        "other": false
+      }
+    },
+    {
+      "name": "replace-wired",
+      "base": {
+        "gain": "wire:source",
+        "$schema": "plane"
+      },
+      "key": "gain",
+      "value": {
+        "$schema": "number",
+        "value": 4
+      },
+      "expected": {
+        "gain": {
+          "$schema": "number",
+          "value": 4
+        },
+        "$schema": "plane"
+      }
+    },
+    {
+      "name": "unicode",
+      "base": {
+        "保持": "yes"
+      },
+      "key": "Leistung 💠",
+      "value": {
+        "$schema": "text",
+        "value": "Grüße 中文"
+      },
+      "expected": {
+        "保持": "yes",
+        "Leistung 💠": {
+          "$schema": "text",
+          "value": "Grüße 中文"
+        }
+      }
+    },
+    {
+      "name": "empty-key",
+      "base": {
+        "stable": 7
+      },
+      "key": "",
+      "value": false,
+      "expected": {
+        "stable": 7,
+        "": false
+      }
+    },
+    {
+      "name": "equal",
+      "base": {
+        "value": {
+          "$schema": "number",
+          "value": 2
+        }
+      },
+      "key": "value",
+      "value": {
+        "$schema": "number",
+        "value": 2
+      },
+      "expected": {
+        "value": {
+          "$schema": "number",
+          "value": 2
+        }
+      }
+    },
+    {
+      "name": "nested",
+      "base": {
+        "stable": {
+          "0": {
+            "$schema": "number",
+            "value": 1
+          },
+          "1": {
+            "$schema": "number",
+            "value": 2
+          },
+          "$schema": "list"
+        }
+      },
+      "key": "plane",
+      "value": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "expected": {
+        "stable": {
+          "0": {
+            "$schema": "number",
+            "value": 1
+          },
+          "1": {
+            "$schema": "number",
+            "value": 2
+          },
+          "$schema": "list"
+        },
+        "plane": {
+          "$schema": "plane",
+          "origin": {
+            "$schema": "point",
+            "x": 1,
+            "y": 2,
+            "z": 3
+          },
+          "normal": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 0,
+            "z": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "schema-key",
+      "base": {
+        "$schema": "old",
+        "x": 1
+      },
+      "key": "$schema",
+      "value": "new",
+      "expected": {
+        "$schema": "new",
+        "x": 1
+      }
+    }
+  ]
+}

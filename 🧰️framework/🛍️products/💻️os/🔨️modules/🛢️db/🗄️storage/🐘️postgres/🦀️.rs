@@ -32,7 +32,7 @@
 //! transaction — stronger than `db_storage::FsStorage`'s documented in-process-only mutex, since
 //! Postgres gives us a genuine row lock across concurrent connections/processes for free.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 //#region 🔖️Connection
 use db_durability::{DurabilityClass, EpochFence};

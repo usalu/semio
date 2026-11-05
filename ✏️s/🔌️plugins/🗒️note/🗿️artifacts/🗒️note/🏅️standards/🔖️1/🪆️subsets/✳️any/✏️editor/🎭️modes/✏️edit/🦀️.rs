@@ -1,10 +1,10 @@
 //! ✏️ Note play app — the `edit` mode: the default two-window canvas layout (composite + navigator).
 
 use crate::editor::note::modes::edit::windows::{composite, navigator};
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const NOTE_PLAY_MODE_EDIT: &str = "edit";
 

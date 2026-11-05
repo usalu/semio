@@ -1,12 +1,12 @@
 use super::*;
 use protocol::{ColdMutation, Mutation, SemanticMutation};
-use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_s_artifact_cad_cad_mut_nodes::create_node::CreateNode;
 use semio_s_artifact_cad_cad_model::snapshot::CadNode;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_building_import_profile() {
-    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let mut original_caller=semio_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
     let manifest = bundle().into_manifest_cold(&mut cx).unwrap();
     let topic_contribution = &manifest.topic_contributions[0];
     assert_eq!(topic_contribution.topic, "cad.computer");
@@ -24,7 +24,7 @@ async fn bundle_contributes_building_import_profile() {
 /// registration gate accepted it; this test additionally pins the exact ids landed.
 #[semio_framework_async_macros::async_test]
 async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_contribution() {
-    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let mut original_caller=semio_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
     let manifest = bundle().into_manifest_cold(&mut cx).unwrap();
     assert_eq!(manifest.extends, "cad");
     assert_eq!(manifest.dependencies[0].plugin_id, "cad");
@@ -69,7 +69,7 @@ async fn contribution_onto_cad_requires_a_declared_dependency() {
 /// `CadMutation::kinds()` roster.
 #[semio_framework_async_macros::async_test]
 async fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_kind() {
-    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let mut original_caller=semio_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
     let mutation_id = bundle().into_manifest_cold(&mut cx).unwrap().contributions[0].mutations[0].mutation_id.clone();
     let hash_at = mutation_id.rfind('#').expect("contributed id has a #");
     assert!(mutation_id[hash_at + 1..].contains(':'), "contributed id must carry the contributor ':' segment");
@@ -116,7 +116,7 @@ async fn contributed_inference_computes_a_real_building_summary() {
         dependencies: &[],
     };
 
-    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let mut original_caller=semio_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
     let step = infer_building_structure_summary(&request, &mut cx).expect("inference succeeds");
     let execution = step.execution.expect("terminal inference execution");
     let decoded_value = pack_rt::decode_wire_value(&execution.canonical_payload.expect("summary payload")).expect("summary decodes");

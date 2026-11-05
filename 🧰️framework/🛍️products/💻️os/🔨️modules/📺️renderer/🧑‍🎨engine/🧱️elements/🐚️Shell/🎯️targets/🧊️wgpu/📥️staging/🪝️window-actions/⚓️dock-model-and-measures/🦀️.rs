@@ -29,7 +29,7 @@ pub fn refresh_scope_label(scope: &UiDirtyScope) -> String {
 /// progress subscriber). Its own scope when it has one; a COMPLETION that patched history and dirtied nothing else still
 /// owes the reserved History body the row it minted; progress with a patch alone moves the band and re-renders nothing;
 /// a lossy lane (`resync`) owes everything.
-pub fn operation_publication_refresh(publication: &semio_framework_os_renderer_wgpu_program_bridge::OperationPublication) -> UiDirtyScope {
+pub fn operation_publication_refresh(publication: &semio_renderer_wgpu_program_bridge::OperationPublication) -> UiDirtyScope {
     if publication.resync {
         return UiDirtyScope::Full;
     }
@@ -37,7 +37,7 @@ pub fn operation_publication_refresh(publication: &semio_framework_os_renderer_w
         return publication.ui_scope.clone();
     }
     if publication.completed && publication.history_patch.is_some() {
-        return UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![semio_framework_ui_declaration::layout::FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false };
+        return UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![semio_ui_declaration::layout::FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false };
     }
     UiDirtyScope::None
 }

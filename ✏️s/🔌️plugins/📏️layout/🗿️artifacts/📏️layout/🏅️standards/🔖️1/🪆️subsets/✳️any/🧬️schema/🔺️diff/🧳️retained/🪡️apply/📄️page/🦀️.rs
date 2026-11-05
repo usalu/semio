@@ -1,7 +1,7 @@
 //! 📄️ Page nested changes admit every identity version before moving original row owners.
 use crate::*;
 use semio_s_artifact_layout_layout_model::{Page,Frame,Layer,PageOverride,LayoutRect};
-use semio_framework_os_kernel::ApplyCapability;
+use semio_os_kernel::ApplyCapability;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use super::{final_list::{FinalList,VacantRow},super::{chained_plan::{ChainedPlan,Address,Modification},positional_chain::PositionalChain,borrowed_lists::{BorrowedChain,BorrowedPositionalChain},keyed_plan::{Origin,PlanAdvance},setters::OwnedPatch}};
 use std::mem::size_of;

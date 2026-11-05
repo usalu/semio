@@ -135,7 +135,7 @@ impl App {
     }
 
     /// 🗂️ Resource kinds declared via `.artifact_kind(...)` — see `AppDefinition.artifact_kinds`
-    /// (round-trips through the plugin manifest; `semio_framework_os`'s artifact catalog registry
+    /// (round-trips through the plugin manifest; `semio_os`'s artifact catalog registry
     /// consumes it from there at plugin registration time).
     pub async fn from_builder(builder: AppBuilder) -> Self {
         Self { definition: builder.build_definition(), examples: Vec::new() }

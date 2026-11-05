@@ -1,13 +1,13 @@
-//! 📖️ terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
+//! 📖️ terminology×locale combination is compile-checked by `semio_plugin::app_labels!`
 //! 🗣️ Puzzle 3d play app — the complete UI label set: one field per label, so every
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunCounter;
@@ -21,18 +21,18 @@ use semio_s_artifact_puzzle_3d_model::FillRunCounter;
 use semio_s_artifact_puzzle_3d_model::FillRunReason;
 
 use semio_s_artifact_puzzle_3d_model::FillRunStage;
-use semio_framework_ui_locale::AppLabels;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::AppLabels;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
 use semio_framework_tool_run::ToolRunCounterDefinition;
 use semio_framework_tool_run::ToolRunReasonDefinition;
 use semio_framework_tool_run::ToolRunStageDefinition;
 use semio_framework_tool_run::ToolRunVerdict;
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 3d app; one field per label, all four locale×terminology cells required.
     pub struct Puzzle3dLabels {
         objects: native_en "Objects", native_de "Objekte", reuse_en "Building components", reuse_de "Baukomponenten";
@@ -152,7 +152,7 @@ pub fn puzzle3d_label_axes(locale_tag: &str, terminology_tag: &str) -> Option<(L
 
 /// 🗣️ Resolves the active label set from the canonical host view axes, failing closed through
 /// [`puzzle3d_label_axes`] whenever the host names an axis this app never authored.
-pub fn puzzle3d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle3dLabels> {
+pub fn puzzle3d_labels(view_state: &semio_plugin::ViewModel) -> Option<&'static Puzzle3dLabels> {
     let (locale, terminology) = puzzle3d_label_axes(view_state.locale.as_str(), view_state.terminology.as_str())?;
     Some(Puzzle3dLabels::labels(locale, terminology))
 }

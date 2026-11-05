@@ -1,19 +1,19 @@
 
 use super::*;
 use semio_hub_space_foundation::S_PLAY_PARAMETERS_BODY_KEY;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn labels() -> &'static SStudioLabels {
-    semio_framework_plugin::resolve_labels::<SStudioLabels>(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    semio_plugin::resolve_labels::<SStudioLabels>(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 fn project(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("parameters tree projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("parameters tree projection")
 }
 
 /// 🪟️ A workflow an order of magnitude past one viewport — the subject of every window law below.
 async fn oversized_workflow(count: usize) -> WorkflowSnapshot {
-    let mut projection = semio_framework_os::empty_workflow_snapshot().await;
+    let mut projection = semio_os::empty_workflow_snapshot().await;
     projection.parameters = (0..count)
         .map(|index| WorkflowParameter::Numeric { id: format!("parameter-{index}"), name: format!("Parameter {index}"), value: index as f64, min: Some(0.0), max: Some(100.0), step: Some(1.0) })
         .collect();
@@ -22,7 +22,7 @@ async fn oversized_workflow(count: usize) -> WorkflowSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(projection: &WorkflowSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     project(render(projection, labels(), &TreeWindows::for_body(&view, S_PLAY_PARAMETERS_BODY_KEY)).expect("render"))
 }
 
@@ -33,12 +33,12 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 /// 🔑️ The **window path** the host addresses one parameter's field window by: the enclosing list
 /// section's key, then the parameter's own key, joined by `TREE_WINDOW_PATH_SEPARATOR`.
 fn parameter_path(id: &str) -> String {
-    format!("{S_PLAY_PARAMETERS_LIST_KEY}{}s-play-parameters.{id}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+    format!("{S_PLAY_PARAMETERS_LIST_KEY}{}s-play-parameters.{id}", semio_plugin::TREE_WINDOW_PATH_SEPARATOR)
 }
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_the_add_parameter_header() {
-    let projection = semio_framework_os::empty_workflow_snapshot().await;
+    let projection = semio_os::empty_workflow_snapshot().await;
     let json = project(render(&projection, labels(), &TreeWindows::unhosted()).expect("render"));
     assert!(json.contains("addParameter"), "header must carry the add-parameter action: {json}");
     assert!(json.contains("parameter"), "empty parameter count copy must render: {json}");

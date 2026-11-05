@@ -7,7 +7,7 @@
 //!
 //! @see ../🔮️oracles/🔣️.json — the manifest this inventory is compared with.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use protocol::Mutation;
 use semio_s_artifact_stdio_semio::schema::mutations::SemioMutation;

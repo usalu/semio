@@ -4,8 +4,8 @@ use crate::editor_domain::editor_laws::context::{app_with_registry, render as re
 use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::with_host;
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 fn document_rows_law() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json") }
 

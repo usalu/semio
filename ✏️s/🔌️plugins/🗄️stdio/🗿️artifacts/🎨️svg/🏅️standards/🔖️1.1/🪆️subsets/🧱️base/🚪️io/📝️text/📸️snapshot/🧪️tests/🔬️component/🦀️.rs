@@ -11,12 +11,12 @@ use crate::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 use crate::schema::snapshot::*;
 use crate::standards::v1_1::subsets::base::io::text::snapshot::attributes::*;
 use protocol::MutationDiff;
-use semio_framework_plugin::ArtifactBuilder;
+use semio_plugin::ArtifactBuilder;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration, XmlQuote};
 use crate::schema::snapshot::{SvgNode};
 
 fn assert_owned_literal_roundtrip(snapshot:&SvgSnapshot){
-    use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding}};
+    use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding}};
     let text=crate::standards::v1_1::subsets::base::io::text::snapshot::encode_snapshot(snapshot);
     assert_eq!(crate::standards::v1_1::subsets::base::io::text::snapshot::decode_snapshot(&text).expect("literal structured text state"),*snapshot);
     let mut binary=Vec::new();

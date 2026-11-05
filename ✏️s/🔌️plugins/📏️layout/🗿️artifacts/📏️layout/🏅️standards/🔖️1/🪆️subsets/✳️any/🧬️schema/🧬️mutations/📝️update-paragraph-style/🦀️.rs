@@ -28,8 +28,8 @@ pub struct UpdateParagraphStyle {
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateParagraphStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_paragraph_style::UpdateParagraphStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "paragraph-style", kind: "update-paragraph-style", record: "UpdatedParagraphStyle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update paragraph style \"{}\"", self.name), &format!("Absatzformat \"{}\" aktualisieren", self.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update paragraph style \"{}\"", self.name), &format!("Absatzformat \"{}\" aktualisieren", self.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

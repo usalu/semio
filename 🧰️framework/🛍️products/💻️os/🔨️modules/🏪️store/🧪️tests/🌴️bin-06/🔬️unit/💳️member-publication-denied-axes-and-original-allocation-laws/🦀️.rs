@@ -5,7 +5,7 @@ async fn member_owned_publication_birth_refuses_without_allocating_or_transferri
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧩️composition/📨️emission/📦️owned/🌱️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["rows"].as_array().unwrap() {
-        let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "birth-refusal", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "birth-refusal", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         member.log.envelope.active_alternative_id = row["line"].as_str().map(str::to_owned);
         let mut factory = DemoOneItemPreparationFactory::admissible();
         factory.stamped_mutation_id = row["stampedId"].as_str().map(|id| MutationId(id.into()));
@@ -103,7 +103,7 @@ fn artifact_store_group_visibility_retires_original_noncopy_atomic_with_exact_fr
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["visibilityRetirement"].as_array().unwrap() {
-        let mut publisher = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+        let mut publisher = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
         if row["committed"].as_bool().unwrap() { assert!(publisher.commit()); }
         let view = publisher.view();
         drop(publisher);
@@ -126,7 +126,7 @@ fn artifact_store_group_visibility_retires_original_noncopy_atomic_with_exact_fr
             assert_eq!((allocated, released), (0, 0));
             match step { RetirementStep::ProcessedBytes(bytes) => { assert!(bytes <= 1); copied += bytes; }, RetirementStep::Complete(_) => break, _ => panic!("atomic-only owner has no hidden heap work") }
         }
-        assert_eq!(copied, std::mem::size_of::<semio_framework_os_vcs::ArtifactGroupVisibility>());
+        assert_eq!(copied, std::mem::size_of::<semio_os_vcs::ArtifactGroupVisibility>());
         assert!(cursor.terminal_is_empty());
         assert_eq!(cursor.terminal_release_bytes(), Some(extent));
         let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(cursor));

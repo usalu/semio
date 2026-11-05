@@ -2,7 +2,7 @@
 
 use crate::editor::jack::transient::results_window::{schema};
 use crate::editor::jack::transient::results_window::*;
-use semio_framework_plugin::WindowTransientOwner;
+use semio_plugin::WindowTransientOwner;
 
 /// 🎟️ One five-currency one-item grant whose byte currencies all equal `bytes`.
 fn one_item_grant(items: usize, bytes: usize) -> store::os_store::one_item::ArtifactStoreOneItemGrant {

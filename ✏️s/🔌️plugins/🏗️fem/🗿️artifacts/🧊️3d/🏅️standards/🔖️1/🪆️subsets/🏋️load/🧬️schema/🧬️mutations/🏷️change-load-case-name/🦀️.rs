@@ -26,8 +26,8 @@ where
     Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-name", record: "ChangedLoadCaseName" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename case \"{}\" to \"{}\"", self.case_id, self.new_name), &format!("Lastfall \"{}\" in \"{}\" umbenennen", self.case_id, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename case \"{}\" to \"{}\"", self.case_id, self.new_name), &format!("Lastfall \"{}\" in \"{}\" umbenennen", self.case_id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]

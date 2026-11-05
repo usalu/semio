@@ -1,13 +1,13 @@
 //! 🛬️ Original caller authorities for artifact tests: the native snapshot owners and SQLite recipient every snapshot codec receives from its caller.
 //!
-//! Mounted by `#[path]` into the test modules of artifact crates that depend on `semio_framework_os_kernel` and `semio_framework_value`.
+//! Mounted by `#[path]` into the test modules of artifact crates that depend on `semio_os_kernel` and `semio_framework_value`.
 //!
 //! @see 🏪️store `NativeSnapshotDecodeOwner` / `NativeSnapshotEncodeOwner`, `SqliteSnapshotControl::install_native_retirement_recipient`.
 
-use semio_framework_os_kernel::io::io_mechanism::{io_run_with_snapshot_control, IoRunControl};
-use semio_framework_os_kernel::io_schema::{IoPayload, IoResult, IoRoute};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
-use semio_framework_os_kernel::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use semio_os_kernel::io::io_mechanism::{io_run_with_snapshot_control, IoRunControl};
+use semio_os_kernel::io_schema::{IoPayload, IoResult, IoRoute};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
+use semio_os_kernel::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl, RetainedCloneGrant};

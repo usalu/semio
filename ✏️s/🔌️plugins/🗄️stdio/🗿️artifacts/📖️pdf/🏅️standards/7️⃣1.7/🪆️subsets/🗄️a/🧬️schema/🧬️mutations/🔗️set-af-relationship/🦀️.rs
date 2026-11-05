@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "af-relationship", kind: "set-af-relationship", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set AF relationship for \"{}\"", self.file_name), &format!("AF-Beziehung für \"{}\" setzen", self.file_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set AF relationship for \"{}\"", self.file_name), &format!("AF-Beziehung für \"{}\" setzen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,7 +1,7 @@
 //! 📐️ Geometry computation owned by the named flow artifact inference provider.
 
 use super::{module_registry, SessionCapture};
-use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferencePayloadContract, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceCacheMode};
+use semio_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferencePayloadContract, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceCacheMode};
 
 pub const GEOMETRY_INFERENCE_SCHEMA: &str = "s.flow-extension-brep.geometry";
 pub const GEOMETRY_ARTIFACT_KIND: &str = "s.flow.flow";
@@ -12,19 +12,19 @@ impl GeometryInferenceContext {
     pub fn new(session:SessionCapture)->Self {let evaluation=flow_extension_sdk::ExtensionEvaluationResources::new(module_registry(&session));Self {session,evaluation:std::sync::Mutex::new(evaluation),normal:std::sync::Mutex::new(None),tessellation:super::tessellation::TessellationResources::new()}}
     pub(crate) fn evaluation(&self)->std::sync::MutexGuard<'_,flow_extension_sdk::ExtensionEvaluationResources> {self.evaluation.lock().unwrap_or_else(std::sync::PoisonError::into_inner)}
     pub fn session(&self)->&SessionCapture {&self.session}
-    pub fn evaluate_raw(&self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::ExtensionInvokeStep,semio_framework::Fault>{flow_extension_sdk::evaluate_invoke_json(&mut self.evaluation(),source,cx)}
-    pub fn tessellate_raw(&self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::ExtensionInvokeStep,semio_framework::Fault>{self.tessellation.invoke(&self.session,source,cx)}
+    pub fn evaluate_raw(&self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin::ExtensionInvokeStep,semio_framework::Fault>{flow_extension_sdk::evaluate_invoke_json(&mut self.evaluation(),source,cx)}
+    pub fn tessellate_raw(&self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin::ExtensionInvokeStep,semio_framework::Fault>{self.tessellation.invoke(&self.session,source,cx)}
     pub fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
-        use semio_framework_plugin::ExtensionResourceOwner;
+        use semio_plugin::ExtensionResourceOwner;
         if !self.tessellation.terminal_is_empty(){return self.tessellation.retirement_demands(copy);}
         let evaluation=self.evaluation();
         if let Some(owner)=self.normal.lock().expect("original geometry cursor").as_ref(){return owner.retirement_demands(evaluation.registry(),copy);}
         if !evaluation.terminal_is_empty(){return evaluation.retirement_demands(copy);}
         Ok(semio_framework_value::RetirementDemand {copy_bytes:self.session.next_close_copy_byte_demand()?,capacity_bytes:self.session.next_close_capacity_byte_demand(copy)?,release_bytes:self.session.next_close_release_byte_demand()?,depth:self.session.next_close_depth_demand()?})
     }
-    pub fn begin_close(&mut self) {self.tessellation.begin_close();if let Some(owner)=self.normal.get_mut().expect("exclusive geometry cursor").as_mut(){owner.begin_close();}semio_framework_plugin::ExtensionResourceOwner::begin_close(self.evaluation.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner));}
-    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_plugin::{ExtensionResourceOwner,PluginLifecycleStep};
+    pub fn begin_close(&mut self) {self.tessellation.begin_close();if let Some(owner)=self.normal.get_mut().expect("exclusive geometry cursor").as_mut(){owner.begin_close();}semio_plugin::ExtensionResourceOwner::begin_close(self.evaluation.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner));}
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin::PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_plugin::{ExtensionResourceOwner,PluginLifecycleStep};
         if !self.tessellation.terminal_is_empty(){let step=self.tessellation.close_step(cx)?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
         let evaluation=self.evaluation.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner);
         if let Some(owner)=self.normal.get_mut().expect("exclusive geometry cursor").as_mut(){let step=owner.close_step(evaluation.registry(),cx)?;if owner.terminal_is_empty(){*self.normal.get_mut().expect("exclusive geometry cursor")=None;}return Ok(PluginLifecycleStep::Progress(step.progress()));}
@@ -33,7 +33,7 @@ impl GeometryInferenceContext {
         let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{semio_framework_value::RetainedWorkOutcome{result:self.session.close_step(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.session.terminal_is_empty(),"original geometry inference session")),work:1}})?;
         Ok(PluginLifecycleStep::retained(semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress()),self.terminal_is_empty()))
     }
-    pub fn terminal_is_empty(&self)->bool {let evaluation=self.evaluation();self.tessellation.terminal_is_empty()&&self.normal.lock().is_ok_and(|owner|owner.is_none())&&semio_framework_plugin::ExtensionResourceOwner::terminal_is_empty(&*evaluation)&&self.session.terminal_is_empty()}
+    pub fn terminal_is_empty(&self)->bool {let evaluation=self.evaluation();self.tessellation.terminal_is_empty()&&self.normal.lock().is_ok_and(|owner|owner.is_none())&&semio_plugin::ExtensionResourceOwner::terminal_is_empty(&*evaluation)&&self.session.terminal_is_empty()}
 }
 
 use semio_framework_value::retirement::RetireOwned;
@@ -74,11 +74,11 @@ impl GeometryInferenceTurn{
   let available=cx.retained_grant();let demand=self.retirement_demands(registry,available.maximum_copy_bytes)?;if cx.should_yield()||available.maximum_items==0||available.maximum_copy_bytes<demand.copy_bytes||available.maximum_capacity_bytes<demand.capacity_bytes||available.maximum_release_bytes<demand.release_bytes||available.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}cx.consume_fuel(1);
   let result=self.close_raw(registry,RetainedCloneGrant{maximum_items:1,..available});cx.consume_fuel(std::mem::take(&mut self.work));let receipt=match &result{Ok(step)=>step.progress(),Err(primary)=>primary.retained_progress()};let receipt_refusal=cx.consume_retained(receipt).err();match result{Ok(step)=>{if let Some(original)=receipt_refusal{self.failure=Some(GeometryInferenceFailure{primary:original.into(),receipt_refusal:None});}Ok(step)},Err(primary)=>{self.failure=Some(GeometryInferenceFailure{primary,receipt_refusal});Ok(RetainedCloneStep::Progress(receipt))}}
  }
- fn step(&mut self,registry:Option<&neural_engine::SharedRegistry>,request:&ArtifactInferenceExecutionRequest<'_>,cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
+ fn step(&mut self,registry:Option<&neural_engine::SharedRegistry>,request:&ArtifactInferenceExecutionRequest<'_>,cx:&mut semio_plugin::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
   self.normal_posted=false;let before=cx.retained_progress();let mut result=self.step_original(registry,request,cx);cx.consume_fuel(std::mem::take(&mut self.work));if !self.normal_posted{let receipt=match &result{Ok(step)=>step.retained_progress,Err(original)=>original.retained_progress};cx.consume_fuel(receipt.copied_items as u64);if let Err(refusal)=cx.consume_retained(receipt){if let Some(failure)=&mut self.failure{failure.receipt_refusal=Some(refusal)}else{self.failure=Some(GeometryInferenceFailure{primary:refusal.into(),receipt_refusal:None});self.begin_close();}if let Ok(step)=&mut result{self.discarded_execution=step.execution.take();step.terminal=false;}}}
   let receipt=geometry_delta(before,cx.retained_progress());match &mut result{Ok(step)=>step.retained_progress=receipt,Err(original)=>original.retained_progress=receipt}result
  }
- fn step_original(&mut self,registry:Option<&neural_engine::SharedRegistry>,request:&ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
+ fn step_original(&mut self,registry:Option<&neural_engine::SharedRegistry>,request:&ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_plugin::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
   let available=cx.retained_grant();let grant=RetainedCloneGrant{maximum_items:available.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),..available};let pending=|retained_progress|ArtifactInferenceExecutionStep{execution:None,retained_progress,terminal:false};
   if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(pending(Default::default()))}
   if self.failure.is_some()||self.failure_place.is_some(){self.normal_posted=true;let admitted=geometry_admit_failure(&mut self.failure,&mut self.failure_place,cx).map_err(|error|ArtifactInferenceExecutionError::original(error,false))?;return match admitted{Some(error)=>Err(ArtifactInferenceExecutionError::original(error,false)),None=>Ok(pending(Default::default()))}}
@@ -148,7 +148,7 @@ pub(crate) fn geometry_operator_quality(registry: &neural_engine::Registry, oper
     super::NODE_KERNEL_METHOD.iter().find(|(id, _)| *id == operator).map(|(_, method)| format!("{:?}", super::operation_quality(method))).unwrap_or_else(|| "Unsupported".into())
 }
 
-fn infer_geometry(request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn std::any::Any, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
+fn infer_geometry(request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn std::any::Any, cx:&mut semio_plugin::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
  let context=context.downcast_ref::<GeometryInferenceContext>().ok_or_else(||ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::InvalidValue,"geometry inference requires its original execution owner"),true))?;
  if request.canonical_payload.len()as u64>request.budgets.allocation_bytes{return Err(ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::OwnershipLimit,"geometry source exceeds original allocation authority"),true))}
  let mut evaluation=context.evaluation();let mut owner=context.normal.lock().expect("original geometry cursor");if owner.is_none(){if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false})}if (request.operation,request.generation)!=(cx.operation().0,cx.generation().0){return Err(ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::OwnershipLimit,"geometry inference requires its actual initiating context"),true))}cx.original_source_parent().map_err(|error|ArtifactInferenceExecutionError::original(error.into(),true))?;cx.consume_retained(geometry_item()).map_err(|error|ArtifactInferenceExecutionError::original(error.into(),true))?;cx.consume_fuel(1);*owner=Some(GeometryInferenceTurn::new(request));return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:geometry_item(),terminal:false})}

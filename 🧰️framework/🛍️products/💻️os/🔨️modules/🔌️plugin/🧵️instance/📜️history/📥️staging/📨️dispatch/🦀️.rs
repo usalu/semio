@@ -3,23 +3,23 @@
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use std::collections::{BTreeSet, HashSet};
 use crate::history_components::CommandHistory;
-use semio_framework_plugin_command::{CommandLogAppend, HistoryViewPatch, HistoryViewStamp};
-use semio_framework_plugin_decl_views::history_view::{CommandLogEntry, HistoryView};
-use semio_framework_plugin_decl_emission::{Emit, TransactionPhase};
+use semio_plugin_command::{CommandLogAppend, HistoryViewPatch, HistoryViewStamp};
+use semio_plugin_decl_views::history_view::{CommandLogEntry, HistoryView};
+use semio_plugin_decl_emission::{Emit, TransactionPhase};
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_time_travel as time_travel;
+use semio_ui_contract::*;
+use semio_plugin_time_travel as time_travel;
 
 impl<A: ArtifactApp> CommandHistory<A> {
     /// 🧾️ Appends one entry to the session command log. `timestamp: None` stamps "now"
@@ -105,7 +105,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
     }
 
     /// 🪃️ Empty streamed aborts retain their original transaction and replay source until zero-trace publication and paid closure complete.
-    pub fn close_streamed_transaction_unit(&mut self, stores: &mut InstanceStores<A>, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, pending:&mut Option<Box<semio_framework_os_store_engine_replay::abort::OriginalStreamAbort<A::Snapshot,A::Mutation>>>, completed:&mut bool, cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub fn close_streamed_transaction_unit(&mut self, stores: &mut InstanceStores<A>, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, pending:&mut Option<Box<semio_os_store_engine_replay::abort::OriginalStreamAbort<A::Snapshot,A::Mutation>>>, completed:&mut bool, cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if *completed{return Ok(true)}
         let Some(transaction) = emit.transaction.as_ref() else { return Ok(true) };
         let abort = emit.transaction_phase == TransactionPhase::Abort;
@@ -114,7 +114,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
             if let Some(owner)=pending.as_mut(){
                 if owner.published(){
                     if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&mut stores.store,cx))?;return Ok(false)}
-                    let mut d=semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();d.copy_bytes+=1;
+                    let mut d=semio_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();d.copy_bytes+=1;
                     cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{*pending=None;*completed=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;
                     return Ok(*completed)
                 }
@@ -122,7 +122,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
                 return Ok(false)
             }
             if stores.store.open_transaction().is_none(){let mut admitted=None;semio_framework_job::admit_original_construction(cx,&mut admitted,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:1,capacity_bytes:0,release_bytes:0,depth:1},|_|{*completed=true;semio_framework_value::RetainedWorkOutcome{result:Ok(((),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})),work:1}})?;return Ok(*completed)}
-            semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::admit(&stores.store,&transaction.id,cx,pending)?;
+            semio_os_store_engine_replay::abort::OriginalStreamAbort::admit(&stores.store,&transaction.id,cx,pending)?;
             return Ok(false)
         }
         let open = stores.store.open_transaction().is_some_and(|open| open.transaction.id == transaction.id);

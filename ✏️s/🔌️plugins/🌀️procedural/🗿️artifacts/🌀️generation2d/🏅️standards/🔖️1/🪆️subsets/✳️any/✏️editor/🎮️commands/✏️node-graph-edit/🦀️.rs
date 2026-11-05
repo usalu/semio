@@ -15,9 +15,9 @@ use semio_s_artifact_procedural_2d_mut_widgets::move_nodes;
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_os_flow::{FlowEvalSession, FlowHost};
+use semio_os_flow::{FlowEvalSession, FlowHost};
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -101,7 +101,7 @@ fn apply_rows(doc: &ArtifactView<'_, Generation2dSnapshot>, rows: &[NodeGraphEdi
         });
         if let Err(error) = retired {
             for leaf in leaves { leaf.retire_cold(); }
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()));
+            return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.retained"), error.into_message()));
         }
     }
     if let Some(reason) = refusal {

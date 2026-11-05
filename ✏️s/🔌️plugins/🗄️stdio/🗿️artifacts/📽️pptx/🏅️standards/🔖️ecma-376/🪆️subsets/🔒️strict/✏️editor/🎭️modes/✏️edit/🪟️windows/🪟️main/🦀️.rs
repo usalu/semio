@@ -5,12 +5,12 @@
 //! the surface root's `PptxStrictEditorCommand::SetPage` for the honest multi-shape scope note).
 
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
-use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -39,16 +39,16 @@ fn editable_pages(document: &PptxSnapshot) -> Result<Vec<EditableDocumentPage>, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PptxSnapshot, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &PptxSnapshot, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     DocumentWindowKit::render_editable_windowed(
-        &EditableDocumentView { pages: editable_pages(document).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("pptx.projection", error))?, publication_revision },
+        &EditableDocumentView { pages: editable_pages(document).map_err(|error| semio_plugin::PluginAssemblyError::new("pptx.projection", error))?, publication_revision },
         &TreeWindows::unhosted(),
         Locale::En,
     )
 }
 
-pub fn render_windowed(document: &PptxSnapshot, windows: &TreeWindows<'_>, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("pptx.projection", error))?, publication_revision }, windows, locale)
+pub fn render_windowed(document: &PptxSnapshot, windows: &TreeWindows<'_>, locale: Locale, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document).map_err(|error| semio_plugin::PluginAssemblyError::new("pptx.projection", error))?, publication_revision }, windows, locale)
 }
 //#endregion 🔖️Render
 

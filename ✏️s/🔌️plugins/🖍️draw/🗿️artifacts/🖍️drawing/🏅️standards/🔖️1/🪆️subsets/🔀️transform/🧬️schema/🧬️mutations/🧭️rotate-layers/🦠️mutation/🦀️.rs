@@ -27,10 +27,10 @@ pub fn rotate_layers<Op: From<RotateLayers>>(targets: semio_framework_value_pers
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for RotateLayers where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::update_layer_transform::mutation::UpdateLayerTransform> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "layers", kind: "rotate-layers", record: "RotatedLayers" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (degrees_en, degrees_de) = drawing_label_number(self.angle.to_degrees());
         let (en, de) = drawing_label_layers(self.targets.len());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.iter().map(|target| target.to_string_owner()).collect()

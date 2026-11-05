@@ -3,18 +3,18 @@
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::editor::procedure::{IMPERATIVE_INTERACTION_GRANULARITY, IMPERATIVE_INTERACTION_STEPS, IMPERATIVE_PLAY_APP_ID};
 use crate::ProcedureScene;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_ARTIFACT: &str = "imperative.play.artifact";
@@ -53,7 +53,7 @@ pub fn definition() -> PanelTabDefinition {
 ///
 /// 🪟️ A procedure with more steps than one node's fixed child capacity used to fail the whole render
 /// with `ui.fixed-capacity`; the section is windowed now and always stamps the real step `total`.
-pub fn render(scene: &ProcedureScene, labels: &ImperativeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &ProcedureScene, labels: &ImperativeLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let path = &scene.path;
     let indexed: Vec<_> = path.steps.iter().enumerate().collect();
     PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)?
@@ -65,7 +65,7 @@ pub fn render(scene: &ProcedureScene, labels: &ImperativeLabels, windows: &TreeW
             &indexed,
             |(index, step)| {
                 let mut node = tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))?;
-                if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+                if let semio_plugin::Component::TreeItem(props) = &mut node.component {
                     props.granularity = Some(UiText::try_from_str(IMPERATIVE_INTERACTION_GRANULARITY).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "imperative step granularity admission failed"))?);
                 }
                 Ok(node)

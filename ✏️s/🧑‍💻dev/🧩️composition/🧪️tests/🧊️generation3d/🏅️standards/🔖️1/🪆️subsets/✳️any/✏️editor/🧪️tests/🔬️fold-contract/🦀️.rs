@@ -13,8 +13,8 @@ use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry};
-use semio_framework_plugin::app::TypedOperationResultLane;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::app::TypedOperationResultLane;
+use semio_plugin::PluginApp;
 
 /// 📚️ Every bundled example the picker offers — the same eight `each_example_loads_distinct_fixture_and_preview_geometry` walks.
 const BUNDLED_EXAMPLES: [&str; 8] = [
@@ -87,7 +87,7 @@ fn unrecorded_example_defaults() -> Vec<String> {
     use semio_framework_artifact_flow_flow::neural::ColdRetire;
     use semio_framework_artifact_flow_flow::{default_neuron_params_from_info, Widget};
     use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH;
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let infos = semio_os_flow::flow_neuron_kind_info_map();
     BUNDLED_EXAMPLES.iter().copied().chain([PROCEDURAL_EXAMPLE_MESH_WORKBENCH]).flat_map(|example_id| {
         let read = SnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
         let unrecorded: Vec<String> = read.host_snapshot.widgets.iter().filter_map(|widget| match widget { Widget::Neuron { id, neuron_kind, params, .. } => Some((id, neuron_kind, params)), _ => None }).flat_map(|(id, kind, params)| {
@@ -127,13 +127,13 @@ macro_rules! set_active_example_publishes {
                 let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
                 let mut app = app_with_registry().await;
                 let before = live_widget_ids(&app);
-                semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": $example }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
+                semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": $example }).into()), &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
                 let receipt = context::settle(&mut app).await;
                 assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "{} published a fault lane", $example);
                 let after = live_widget_ids(&app);
                 assert_eq!(after, bundled_widget_ids($example), "{} did not reach the store: the published document is not the example's fixture", $example);
                 assert!(after != before || $example == PROCEDURAL_EXAMPLE_HEX_COLUMN, "{} left the document untouched", $example);
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+                semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
             }
         )+
     };
@@ -162,5 +162,5 @@ async fn interaction_select_publishes_through_the_retained_typed_path() {
     let settled = context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     eprintln!("interactionSelect published: effects={}", settled.requested_effects.len());
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

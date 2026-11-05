@@ -1,0 +1,50 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "widgets",
+      "values",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "widgets": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "values": {
+        "type": "object"
+      },
+      "expected": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "kind",
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

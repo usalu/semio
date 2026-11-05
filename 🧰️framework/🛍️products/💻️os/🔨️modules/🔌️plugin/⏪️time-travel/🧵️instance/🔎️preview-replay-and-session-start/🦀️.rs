@@ -4,8 +4,8 @@ use super::*;
 use semio_framework::Fault;
 use semio_framework::FaultOrigin;
 use semio_framework::FaultCode;
-use semio_framework_plugin_child::MemberPath;
-use semio_framework_plugin_decl_emission::HostEvent;
+use semio_plugin_child::MemberPath;
+use semio_plugin_decl_emission::HostEvent;
 use semio_framework::MutationId;
 use semio_framework::Effect;
 
@@ -73,7 +73,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// every open window, so an open gesture there ends first. With `withdraw` (a history row's Withdraw, design §22.1)
     /// the session opens on a withdrawn draft and needs no editable inputs — refused only where the store's supersede law
     /// lets no withdrawal through; on the mutation already being edited it is the editor's own Withdraw.
-    pub(super) async fn begin_time_travel(&mut self, args: Option<&DslValue>, withdraw: bool, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<TimeTravelActionOutcome, Fault> {
+    pub(super) async fn begin_time_travel(&mut self, args: Option<&DslValue>, withdraw: bool, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<TimeTravelActionOutcome, Fault> {
         let Some(mutation) = time_travel_arg_text(args, HISTORY_EDIT_ARG_MUTATION_ID) else { return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::UnknownMutation)) };
         let store = time_travel_arg_text(args, HISTORY_EDIT_ARG_STORE).filter(|store| !store.is_empty());
         let session = &self.time_travel.session;

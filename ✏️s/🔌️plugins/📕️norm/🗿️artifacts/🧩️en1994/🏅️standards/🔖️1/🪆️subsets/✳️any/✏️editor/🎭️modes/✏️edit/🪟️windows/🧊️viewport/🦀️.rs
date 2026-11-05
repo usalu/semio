@@ -1,7 +1,7 @@
 //! 🧊️ EN 1994 play app — the 3D viewport window: the projected steel scene with utilisation colouring, supports, loads and joints.
 
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_artifact_norm_en1994_scene::live_scene_of;
 use semio_s_plugin_norm_app_surface::direct_manipulation::InsertSpec;

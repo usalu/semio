@@ -1,0 +1,372 @@
+[
+  {
+    "name": "Original Cache Pin",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "borrow",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 1,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Original Selected Pin",
+    "present": true,
+    "selected": true,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "borrow",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 1,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Genuine Absent View",
+    "present": false,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "borrow",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Repeated Ready Borrow",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "borrow",
+      "borrow",
+      "borrow",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 3,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Busy Registry Never Transfers",
+    "present": true,
+    "selected": false,
+    "events": [
+      "busy",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Zero Grant Never Transfers",
+    "present": true,
+    "selected": false,
+    "events": [
+      "denied",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Cancellation Before Lock",
+    "present": true,
+    "selected": false,
+    "events": [
+      "cancel",
+      "lock",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 1,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Cancellation Locked",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "cancel",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Cancellation Selected",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "cancel",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Cancellation Moved",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "cancel",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Cancellation Admitted",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "cancel",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 0,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Borrow Before Ready Refuses",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "borrow",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 1,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Foreign Registry",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "foreign-registry",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 1,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Foreign Caller",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "foreign-caller",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 1,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Foreign Decoder",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "foreign-decoder",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 1,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Foreign Selection",
+    "present": true,
+    "selected": false,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "foreign-selection",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 0,
+      "refused": 1,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Actual Actor Epochs Cache",
+    "present": true,
+    "selected": false,
+    "actorEpochs": 2,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "borrow",
+      "next-actor-epoch",
+      "borrow",
+      "foreign-caller",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 2,
+      "refused": 1,
+      "clones": 0
+    }
+  },
+  {
+    "name": "Actual Actor Epochs Selected",
+    "present": true,
+    "selected": true,
+    "actorEpochs": 2,
+    "events": [
+      "lock",
+      "select",
+      "move",
+      "admit",
+      "borrow",
+      "next-actor-epoch",
+      "borrow",
+      "foreign-caller",
+      "close",
+      "return",
+      "unlock"
+    ],
+    "expected": {
+      "restored": true,
+      "borrowed": 2,
+      "refused": 1,
+      "clones": 0
+    }
+  }
+]

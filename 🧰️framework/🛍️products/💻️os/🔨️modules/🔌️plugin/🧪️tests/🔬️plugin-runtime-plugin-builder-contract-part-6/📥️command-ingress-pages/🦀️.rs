@@ -25,13 +25,13 @@
     /// 🚚️ Drives a whole page set to its terminal ingress status exactly as a shard does: hand the owner's
     /// next page (the wire carries at most one per turn), observe the status it produced, repeat. Returns
     /// whether it completed, the turns it spent and the pages the owner declared.
-    async fn drive_one_page_set(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, driver: &mut semio_framework::kernel::CommandBatchDriver,cx:&mut semio_framework_job::StepContext<'_>) -> (bool, usize, usize) {
+    async fn drive_one_page_set(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, driver: &mut semio_framework::kernel::CommandBatchDriver,cx:&mut semio_framework_job::StepContext<'_>) -> (bool, usize, usize) {
         let mut turns = 0;
         let mut declared = 0;
         let mut carried = driver.next_page().expect("the host owner produces its first page");
         loop {
             declared = declared.max(carried.as_ref().map_or(0, |(cursor, _)| cursor.page_count as usize));
-            let result = semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut None, carried.take(), None, command_page_authority_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            let result = semio_plugin_reactor_turn::poll_kernel(runtime, &mut None, carried.take(), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns, declared),
@@ -57,10 +57,10 @@
     /// fails for every page count under that pacing, which is what makes it discriminating.
     #[semio_framework_async_macros::async_test]
     async fn a_command_page_set_reaches_its_terminal_status_in_one_turn_per_page() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original ingress fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original ingress fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
-        let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-        semio_framework_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
+        let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_022;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-set".into())]).await.lifecycle_receipt.expect("Captured receipt");
         let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
@@ -78,7 +78,7 @@
                 "a {declared}-page command spent {turns} turns reaching its terminal ingress status (ceiling {}) — the ingress is stepping a per-move ladder the host has to drive from outside",
                 declared + INGRESS_TURN_SLACK
             );
-            assert_eq!(semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "a {declared}-page command must leave no retained ingress owner");
+            assert_eq!(semio_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "a {declared}-page command must leave no retained ingress owner");
         }
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     
@@ -144,12 +144,12 @@
     /// to splice a command together out of the wrong bytes.
     #[semio_framework_async_macros::async_test]
     async fn a_command_page_that_is_not_the_next_one_is_refused_by_its_order() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original ingress fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original ingress fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let fixture: CommandIngressDisorderFixture =
             serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/📄️pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses");
-        let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-        semio_framework_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
+        let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_031;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-order".into())]).await.lifecycle_receipt.expect("Captured receipt");
         let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
@@ -161,7 +161,7 @@
             assert_eq!(pages.len(), row.pages, "row {} must cut into {} pages", row.name, row.pages);
             for (delivery, page_index) in row.deliver.iter().copied().enumerate() {
                 let (cursor, page) = pages[page_index].clone();
-                let result = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, Some((cursor, page)), None, command_page_authority_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+                let result = semio_plugin_reactor_turn::poll_kernel(&runtime, &mut None, Some((cursor, page)), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
                 match (&result.command_ingress, delivery == row.rejected_delivery) {
                     (semio_framework::kernel::CommandIngressStatus::Fault { fault, .. }, true) => {
                         assert_eq!(fault.as_slice(), b"plugin.command-page-order", "row {} delivery {delivery} must be refused by its order", row.name);
@@ -173,7 +173,7 @@
                     break;
                 }
             }
-            assert_eq!(semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "row {} must leave no retained ingress owner behind", row.name);
+            assert_eq!(semio_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "row {} must leave no retained ingress owner behind", row.name);
         }
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     
@@ -200,10 +200,10 @@
     /// `📓️a2-mcp-plugin-host-instance-open.md` §6.1, `📓️r2-reactor-retained-command-owner.md`).
     #[semio_framework_async_macros::async_test]
     async fn an_abandoned_ingress_owner_never_answers_the_command_the_host_is_driving() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original ingress fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original ingress fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
-        let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-        semio_framework_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
+        let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_024;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "abandoned-ingress-owner".into())]).await.lifecycle_receipt.expect("Captured receipt");
         let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
@@ -213,13 +213,13 @@
         let line = "p".repeat(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1);
         let mut abandoned = command_page_authority_driver(instance, abandoned_seq, &protocol::AppCommand::CommandText { seq: abandoned_seq, line }).await;
         let first = abandoned.next_page().expect("the abandoned owner produces its first page").expect("a two-page command has a first page");
-        let opened = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, Some(first), None, command_page_authority_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+        let opened = semio_plugin_reactor_turn::poll_kernel(&runtime, &mut None, Some(first), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
         assert!(
             matches!(opened.command_ingress, semio_framework::kernel::CommandIngressStatus::PageAccepted(_)),
             "the guest accepts the first page of a two-page command: {:?}",
             opened.command_ingress
         );
-        assert_eq!(semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy(), 1, "a half-assembled command is retained");
+        assert_eq!(semio_plugin_reactor_turn::retained_command_ingress_occupancy(), 1, "a half-assembled command is retained");
         drop(abandoned);
 
         let seq = 4_097;
@@ -227,7 +227,7 @@
         let mut completed = false;
         for turn in 0..INGRESS_TURNS_PER_COMMAND {
             let carried = driver.next_page().expect("the host owner produces its pages");
-            let result = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, carried, None, command_page_authority_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            let result = semio_plugin_reactor_turn::poll_kernel(&runtime, &mut None, carried, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
             let progress = driver.observe(&result.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).unwrap_or_else(|fault| {
                 panic!("turn {turn}: the guest answered {:?} for the command this host owns as seq {seq}: {}: {}", result.command_ingress, fault.code.0, fault.message)
             });
@@ -242,12 +242,12 @@
         }
         assert!(completed, "the command the host drives never completed in {INGRESS_TURNS_PER_COMMAND} turns — the abandoned owner still holds the ingress lane");
         for _ in 0..INGRESS_TURNS_PER_COMMAND {
-            if semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy() == 0 {
+            if semio_plugin_reactor_turn::retained_command_ingress_occupancy() == 0 {
                 break;
             }
-            semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, command_page_authority_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            semio_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
         }
-        assert_eq!(semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "the superseded owner retires on its own budget instead of pinning the authority");
+        assert_eq!(semio_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "the superseded owner retires on its own budget instead of pinning the authority");
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original ingress fixture paid terminal retirement");result

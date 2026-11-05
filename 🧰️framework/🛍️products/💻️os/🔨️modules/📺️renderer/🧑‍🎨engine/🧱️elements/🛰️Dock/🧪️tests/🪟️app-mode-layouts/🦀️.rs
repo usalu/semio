@@ -5,19 +5,19 @@
 //! focus — and it must re-seed when the mode changes. The shell's chrome walk paints exactly the
 //! rects this solves (`ShellState::plan_dock_windows`), so a mode whose layout the dock ignores is
 //! a mode whose second window has no engine surface.
-use semio_framework_os_renderer_wgpu_dock::*;
+use semio_renderer_wgpu_dock::*;
 use std::collections::HashMap;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::layout::WindowLayout;
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::layout::WindowLayout;
 
 use semio_framework_test_fixtures::fixture_text;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 use serde_json::Value;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_layout::layout::NamedLayout;
-use semio_framework_ui_layout::layout::WindowOptions;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_layout::layout::NamedLayout;
+use semio_ui_layout::layout::WindowOptions;
 
 //#region 🧫️FixtureModel
 #[derive(serde::Deserialize)]
@@ -111,7 +111,7 @@ fn fixture_window_kind(kind: &FixtureWindowKind) -> WindowKindDefinition {
         id: kind.id.clone(),
         label: LocalizedLabel::data(&kind.label),
         body_key: format!("{}.body", kind.id),
-        surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+        surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
         icon_id: "app-window".into(),
         options: WindowOptions::default(),
         actions: vec![],

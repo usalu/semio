@@ -8,15 +8,15 @@ use super::*;
 pub async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_os_spr::ColdMutation<P> + 'static,
 {
     let mut schema = String::new();
     let mut id = String::new();
     let mut edits: Vec<Edit<Mutation>> = Vec::new();
-    let mut transitions: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
+    let mut transitions: Vec<semio_os_spr::MutationEnvelope> = Vec::new();
     let mut inverse_by_edit: HashMap<String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>> = HashMap::new();
     let mut metadata_by_edit: HashMap<String, HashMap<u32, MutationMeta>> = HashMap::new();
-    let mut messages_by_edit: HashMap<String, Vec<semio_framework_os_spr::MutationMessage>> = HashMap::new();
+    let mut messages_by_edit: HashMap<String, Vec<semio_os_spr::MutationMessage>> = HashMap::new();
     let mut message_order = Vec::new();
     let mut conflicts = Vec::new();
     let mut saw_doc = false;
@@ -84,19 +84,19 @@ where
             }
             OpsHeaderLine::Revert { id: transition_id, actor, clock, after, operations } => {
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Revert { mutation_ids: mutation_ids(operations) })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_os_spr::HistoryTransition::Revert { mutation_ids: mutation_ids(operations) })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Reinstate { id: transition_id, actor, clock, after, operations } => {
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids(operations) })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids(operations) })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Commit { id: transition_id, actor, clock, after, checkpoint, parent, change, operations, description, saved, by, message, at, line } => {
-                let authors = by.into_iter().map(|author| semio_framework_os_spr::Author { id: author.id, name: author.name, avatar: author.avatar }).collect();
-                let checkpoint = semio_framework_os_spr::TransitionCheckpoint {
+                let authors = by.into_iter().map(|author| semio_os_spr::Author { id: author.id, name: author.name, avatar: author.avatar }).collect();
+                let checkpoint = semio_os_spr::TransitionCheckpoint {
                     checkpoint_id: checkpoint,
                     parent_id: parent,
                     change_id: change,
@@ -109,34 +109,34 @@ where
                     line_id: ops_line_provenance(line)?,
                 };
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Commit(checkpoint))
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_os_spr::HistoryTransition::Commit(checkpoint))
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Branch { id: transition_id, actor, clock, after, alternative, name, checkpoint } => {
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Branch { alternative_id: alternative, name, checkpoint_id: checkpoint })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_os_spr::HistoryTransition::Branch { alternative_id: alternative, name, checkpoint_id: checkpoint })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Checkout { id: transition_id, actor, clock, after, checkpoint, alternative } => {
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Checkout { checkpoint_id: checkpoint, alternative_id: alternative })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_os_spr::HistoryTransition::Checkout { checkpoint_id: checkpoint, alternative_id: alternative })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Repin { id: transition_id, actor, clock, after, checkpoint, pinned, pins } => {
-                let pins = pins.into_iter().map(|pin| semio_framework_os_spr::TransitionPin { child_uri: pin.child, checkpoint_id: pin.checkpoint }).collect();
+                let pins = pins.into_iter().map(|pin| semio_os_spr::TransitionPin { child_uri: pin.child, checkpoint_id: pin.checkpoint }).collect();
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Repin { checkpoint_id: checkpoint, pinned_checkpoint_id: pinned, pins })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_os_spr::HistoryTransition::Repin { checkpoint_id: checkpoint, pinned_checkpoint_id: pinned, pins })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Supersede { id: transition_id, actor, clock, after, scope, inputs, observed } => {
-                let inputs = inputs.into_iter().map(semio_framework_os_spr::SupersededInput::try_from).collect::<Result<Vec<_>, _>>().map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?;
-                let supersede = semio_framework_os_spr::TransitionSupersede { scope, inputs };
+                let inputs = inputs.into_iter().map(semio_os_spr::SupersededInput::try_from).collect::<Result<Vec<_>, _>>().map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?;
+                let supersede = semio_os_spr::TransitionSupersede { scope, inputs };
                 supersede.validate().map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(line_no, 1)))?;
-                let mut envelope = transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Supersede(supersede))
+                let mut envelope = transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_os_spr::HistoryTransition::Supersede(supersede))
                     .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?;
                 envelope.observed = observed.map(MutationId);
                 transitions.push(envelope);
@@ -200,7 +200,7 @@ where
         for message in &messages {
             validate_persisted_message(message, Some(edit.forwards.len())).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
         }
-        edit_messages.push(semio_framework_os_spr::EditMessages { edit_id, messages });
+        edit_messages.push(semio_os_spr::EditMessages { edit_id, messages });
     }
     let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "ops edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
     transitions.sort_by(|left, right| (left.timestamp.cmp_key(), left.mutation_id.0.as_str()).cmp(&(right.timestamp.cmp_key(), right.mutation_id.0.as_str())));
@@ -218,7 +218,7 @@ where
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
         transitions:ArtifactHistoryLedger::try_from_preflighted(transitions).map_err(|_|TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"ops transition capacity exceeded".to_string(),TextSpan::at(1,1)))?,
-        history_shape: semio_framework_os_spr::HistoryShape::Document,
+        history_shape: semio_os_spr::HistoryShape::Document,
         open_transaction: None,
         viewer_checkpoint_id: None,
     });
@@ -231,7 +231,7 @@ where
 pub async fn settle_parsed_envelope<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + 'static,
+    Mutation: super::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary + 'static,
 {
     let settled = match project_envelope_history(&mut envelope) {
         Ok(supersessions) => validate_durable_history(&envelope).await.map(|()| supersessions),
@@ -275,7 +275,7 @@ where
 pub async fn parse_document_text<P, Mutation>(dsl: &str, ops: &str, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + ArtifactDsl + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_os_spr::ColdMutation<P> + 'static,
 {
     let initial_snapshot = P::parse_dsl(dsl)?;
     replay_ops(initial_snapshot, ops, producer).await
@@ -287,7 +287,7 @@ where
 pub async fn parse_document_pack<P, Mutation>(pack: &[u8], spr: &[u8], producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_os_spr::ColdMutation<P> + 'static,
 {
     parse_document_spr(pack, spr, producer).await
 }

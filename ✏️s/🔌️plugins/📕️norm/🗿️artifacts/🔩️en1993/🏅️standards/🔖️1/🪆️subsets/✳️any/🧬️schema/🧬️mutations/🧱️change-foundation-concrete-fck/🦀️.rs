@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationConcrete
         record: "ChangedFoundationConcreteFck",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Concrete characteristic strength f_ck of the foundation block", "Fundamentblock: Charakteristische Betondruckfestigkeit f_ck ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Concrete characteristic strength f_ck of the foundation block", "Fundamentblock: Charakteristische Betondruckfestigkeit f_ck ändern")
     }
 }
 

@@ -1,5 +1,5 @@
-use semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect;
-use semio_framework_plugin::ViewerApp;
+use semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect;
+use semio_plugin::ViewerApp;
 
 /// 🧪️ Contract §2.5 — the read-only guarantee for a viewer whose ONE verb travels the RETAINED route.
 /// `artifact_app_laws::assert_viewer_never_mutates` drives `ViewerApp::handle`, the STATELESS adapter
@@ -20,7 +20,7 @@ async fn energy_model_viewer_never_mutates() {
     for action in &actions {
         assert_eq!(
             action.semantics.execution.interactive_job,
-            semio_framework_plugin::InteractiveJobClassification::Migrated,
+            semio_plugin::InteractiveJobClassification::Migrated,
             "viewer action '{}' must travel the retained route — the stateless ViewEmit seam has no store lane a viewer may write",
             action.id
         );
@@ -43,9 +43,9 @@ async fn energy_model_editor_and_viewer_share_dialect() {
 /// `interactive-job.catalog-authority` … `generated_migrated=false`, `migrated={}` (tool `setCamera`).
 #[semio_framework_async_macros::async_test]
 async fn new_viewer_builds_a_runnable_energy_model_viewer_app() {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&semio_s_artifact_energy_model_viewer::create_energy_model_viewer());
-    let mut app: semio_framework_plugin::app::VcsArtifactApp<ViewerApp<semio_s_artifact_energy_model_viewer::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers> =
-        semio_framework_plugin::app::VcsArtifactApp::with_registry(ViewerApp::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), scope.cx()).expect("original caller paid app close");
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let registry = semio_plugin::AppActionRegistry::from_definition(&semio_s_artifact_energy_model_viewer::create_energy_model_viewer());
+    let mut app: semio_plugin::app::VcsArtifactApp<ViewerApp<semio_s_artifact_energy_model_viewer::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers> =
+        semio_plugin::app::VcsArtifactApp::with_registry(ViewerApp::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::artifact_app_laws::fixture_mounted_policy(), scope.cx()).expect("original caller paid app close");
 }

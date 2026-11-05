@@ -131,7 +131,7 @@ impl Puzzle3dAddObjectKindWork {
 
 }
 
-impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dAddObjectKindWork {
+impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dAddObjectKindWork {
     fn tool_id(&self) -> &'static str {
         "addObjectKind"
     }
@@ -141,21 +141,21 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
     /// conflated "nothing to do" with "over capacity", and the preflight reported *"puzzle command
     /// exceeds fixed semantic work capacity"* for every `addObjectKind` after `setActiveExample ""`
     /// cleared the catalogs.
-    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let Some(catalogs) = snapshot.typed().meta.kind_catalogs.as_ref() else { return Some(3) };
         let items = catalogs.objects.len().checked_add(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT.checked_mul(2)?)?.checked_add(3)?;
         (items <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         semio_s_plugin_puzzle_retained::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let catalogs = snapshot.typed().meta.kind_catalogs.as_ref();
         match self.stage {
             Puzzle3dAddObjectKindStage::Decode => {
@@ -244,7 +244,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 self.mutation = Some(semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object(object, None));
                 self.stage = Puzzle3dAddObjectKindStage::Complete;
                 let artifact_mutations = self.catalog_mutation.take().into_iter().chain(self.mutation.take()).collect();
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     artifact_mutations,
                     ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addObjectKind")),
                     interaction_writes: vec![InteractionWrite::replace(PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_GRANULARITY_OBJECT, [object_id])],

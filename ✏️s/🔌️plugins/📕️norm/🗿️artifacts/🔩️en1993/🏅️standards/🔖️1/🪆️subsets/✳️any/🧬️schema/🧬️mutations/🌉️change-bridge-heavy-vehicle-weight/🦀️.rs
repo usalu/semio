@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeHeavyVehicle
         record: "ChangedBridgeHeavyVehicleWeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Mean gross weight Q_m1 of the bridge fatigue", "Brückenermüdung: Mittleres Gesamtgewicht Q_m1 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Mean gross weight Q_m1 of the bridge fatigue", "Brückenermüdung: Mittleres Gesamtgewicht Q_m1 ändern")
     }
 }
 

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 //#endregion 📦️Imports
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_os_dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -17,24 +17,24 @@ pub struct SetN {
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
-impl semio_framework_os_spr::MutationKind<DemoSnapshot, ValidatedMutation> for SetN {
-    const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "n", kind: "set-n", record: "SetN" };
+impl semio_os_spr::MutationKind<DemoSnapshot, ValidatedMutation> for SetN {
+    const SEMANTICS: semio_os_spr::SemanticDescriptor = semio_os_spr::SemanticDescriptor { verb: "set", entity: "n", kind: "set-n", record: "SetN" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set N", "N setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set N", "N setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["n".into()]
     }
 }
 
-impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, ValidatedMutation> for SetN {
-    fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
+impl semio_os_spr::ColdMutationKind<DemoSnapshot, ValidatedMutation> for SetN {
+    fn diff(&self, _base: &DemoSnapshot) -> semio_os_spr::MutationOutcome<DemoDiff> {
         if self.n < 0 {
-            return semio_framework_os_spr::MutationOutcome::fatal("mutation.invariant", "n must be non-negative", ["n"]);
+            return semio_os_spr::MutationOutcome::fatal("mutation.invariant", "n must be non-negative", ["n"]);
         }
-        semio_framework_os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n)))
+        semio_os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n)))
     }
     fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<ValidatedMutation>, semio_framework_value::ValueError> {
     Ok((|| {

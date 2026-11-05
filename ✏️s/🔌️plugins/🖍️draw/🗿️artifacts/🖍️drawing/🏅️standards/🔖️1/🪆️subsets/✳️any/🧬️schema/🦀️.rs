@@ -2,9 +2,9 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 use crate::stroke::StrokeCap;
@@ -743,15 +743,15 @@ pub fn default_drawing_trace_params() -> DrawingTraceParams {
 
 /// 🏷️ The `2d.drawing` artifact kind declaration — lifted out of the old bundle manifest's
 /// `.artifact_kind(...)` call so the app's manifest stitch can reuse it verbatim.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "2d.drawing".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D Drawing", "2D-Zeichnung"),
+        label: semio_ui_locale::LocalizedLabel::native("2D Drawing", "2D-Zeichnung"),
         source_format: "drawing.document".into(),
         component_kind: "drawing".into(),
         dimension: "2d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::TwoD, form: semio_plugin::MediaForm::Vector },
         schema: "drawing.document".into(),
         export_formats: vec![],
         import_formats: vec![],

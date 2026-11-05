@@ -6,13 +6,13 @@
 async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_operation_id() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️replica-edit-identity.json")).expect("replica identity fixture");
     let mut edit_ids = std::collections::HashSet::new();
     let mut operation_ids = std::collections::HashSet::new();
     for _ in 0..fixture["replicas"].as_u64().expect("replica count") {
         let genesis = DemoSnapshot { n: Some(fixture["genesisN"].as_i64().expect("genesis n") as i32) };
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["artifactSchema"].as_str().expect("schema"), fixture["documentId"].as_str().expect("document"), genesis, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["artifactSchema"].as_str().expect("schema"), fixture["documentId"].as_str().expect("document"), genesis, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         for gesture in fixture["gestures"].as_array().expect("gestures") {
             let mutations = gesture["ops"]
@@ -29,7 +29,7 @@ async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_oper
         }
         let edits = &store.log.envelope.vcs.edits;
         assert_eq!(edits.len() as u64, fixture["expect"]["editsPerReplica"].as_u64().expect("edits per replica"));
-        let operations: Vec<String> = edits.iter().flat_map(|edit| semio_framework_os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(edit)).map(|id| id.0).collect();
+        let operations: Vec<String> = edits.iter().flat_map(|edit| semio_os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(edit)).map(|id| id.0).collect();
         assert_eq!(operations.len() as u64, fixture["expect"]["operationIdsPerReplica"].as_u64().expect("operations per replica"));
         edit_ids.extend(edits.iter().map(|edit| edit.id.clone()));
         operation_ids.extend(operations);
@@ -46,12 +46,12 @@ async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_oper
 async fn dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🫳️child-dispatch/🔣️.json")).expect("neutral borrowed child declaration");
     let parent_ref=semio_framework_artifact_reference::ArtifactRef{artifact_id:fixture["parent"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.demoparent".into(),standard:"1".into(),subset:"*".into()}};
     let child_ref=semio_framework_artifact_reference::ArtifactRef{artifact_id:fixture["child"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.demochild".into(),standard:"1".into(),subset:"*".into()}};
-    let mut parent=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&parent_ref.artifact_id,DemoSnapshot{n:Some(0)},None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let mut child=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&child_ref.artifact_id,DemoSnapshot{n:Some(0)},None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut parent=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&parent_ref.artifact_id,DemoSnapshot{n:Some(0)},None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut child=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&child_ref.artifact_id,DemoSnapshot{n:Some(0)},None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let mut coordinator=CompositionCoordinator::new().await;
     coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id,fixture["slot"].as_str().unwrap(),&child_ref.artifact_id).await.unwrap();
     let source=vec![ValidatedMutation::SetN(ValidatedSetN{n:fixture["invalidN"].as_i64().unwrap() as i32}).encode_op().unwrap()];
@@ -59,7 +59,7 @@ async fn dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal() {
     let bytes=source[0].as_ptr();
     let cells=source.as_ptr();
     let schema=SchemaId(fixture["opSchema"].as_str().unwrap().into());
-    let labels=[semio_framework_ui_locale::LocalizedLabel::data(fixture["label"].as_str().unwrap().to_owned())];
+    let labels=[semio_ui_locale::LocalizedLabel::data(fixture["label"].as_str().unwrap().to_owned())];
     let dispatch=ChildDispatch::borrowed(child_ref,&source,&schema,&labels);
     assert_eq!(dispatch.ops.as_ptr(),cells);
     assert_eq!(dispatch.ops[0].as_ptr(),bytes);
@@ -67,7 +67,7 @@ async fn dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal() {
     assert_eq!(dispatch.labels.as_ptr(),labels.as_ptr());
     let mut children=[(&mut child,dispatch)];
     let result=coordinator.dispatch_group(&parent_ref,&mut parent,&mut children,Vec::new(),Vec::new(),GroupMeta::default(), &mut identity).await;
-    assert!(matches!(result,Err(VcsError::Rejected{policy:semio_framework_os_spr::MergePolicy::Normal,..})));
+    assert!(matches!(result,Err(VcsError::Rejected{policy:semio_os_spr::MergePolicy::Normal,..})));
     assert_eq!(children[0].1.ops.as_ptr(),cells);
     assert_eq!(children[0].1.ops[0].as_ptr(),bytes);
     assert_eq!(children[0].1.ops[0],expected);
@@ -86,7 +86,7 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
     static ENCODED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     static DECODED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     struct GenesisLawProducer;
-    impl semio_framework_os_vcs::io::binary::genesis::ArtifactGenesisProducer<GenesisLawSnapshot> for GenesisLawProducer {
+    impl semio_os_vcs::io::binary::genesis::ArtifactGenesisProducer<GenesisLawSnapshot> for GenesisLawProducer {
         fn encode_genesis_pack(&self,snapshot:&GenesisLawSnapshot) -> Result<Vec<u8>, ValueError> { ENCODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); Ok(format!("{{\"n\":{}}}", snapshot.n).into_bytes()) }
         fn decode_genesis_pack(&self,pack: &[u8]) -> Result<GenesisLawSnapshot, ValueError> { DECODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); let value: serde_json::Value = serde_json::from_slice(pack).unwrap(); Ok(GenesisLawSnapshot { n: value["n"].as_i64().unwrap() }) }
     }
@@ -97,7 +97,7 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
     for row in fixture["packs"].as_array().unwrap() {
         let raw = row["hex"].as_str().unwrap();
         let bytes: Vec<u8> = raw.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
-        let stored:AdmittedArtifactGenesis<GenesisLawSnapshot> = semio_framework_os_vcs::io::text::genesis::native_genesis_from_value(DslValue::String(raw.into()),&GenesisLawProducer).unwrap();
+        let stored:AdmittedArtifactGenesis<GenesisLawSnapshot> = semio_os_vcs::io::text::genesis::native_genesis_from_value(DslValue::String(raw.into()),&GenesisLawProducer).unwrap();
         assert_eq!(stored.facts().snapshot().n, row["decoded"]["n"].as_i64().unwrap());
         assert_eq!(stored.pack(), bytes);
         assert_eq!(stored.to_value(), DslValue::String(raw.into()));
@@ -113,20 +113,20 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
     assert_eq!(DECODED.load(std::sync::atomic::Ordering::SeqCst), 2);
     assert_eq!(born.facts().digest(), digests[0]);
     assert_ne!(digests[0], digests[1]);
-    assert!(semio_framework_os_vcs::io::text::genesis::decode_genesis_hex_controlled("7B",&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4096,&mut |_|true)).is_err());
+    assert!(semio_os_vcs::io::text::genesis::decode_genesis_hex_controlled("7B",&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4096,&mut |_|true)).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn opened_actor_ownership_obeys_the_neutral_law() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
     let actors = &fixture["actors"];
     let actor = ActorId(actors["opened"].as_str().unwrap().into());
-    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actor-genesis-law", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut real = semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, actor.clone()).await.unwrap();
-    real.install_document_store_owners_exact(complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actor-genesis-law", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut real = semio_os_store_engine::lifted_store::ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, actor.clone()).await.unwrap();
+    real.install_document_store_owners_exact(complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     assert!(Arc::ptr_eq(&*real.live.current, &real.envelope().vcs.genesis.facts().share_snapshot()));
     let mut live = ArtifactStore(real, Some(close_test_store::<DemoSnapshot, DemoMutation>));
     live.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.unwrap();
@@ -141,15 +141,15 @@ async fn opened_actor_ownership_obeys_the_neutral_law() {
     live.dispatch(ArtifactCommand::Undo, &mut identity).await.unwrap();
     assert_eq!(live.envelope().transitions.last().unwrap().actor.0.as_str(), actors["transitionAuthor"].as_str().unwrap());
     let files = print_document_pack(live.envelope()).await.unwrap();
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap();
-    let mut reopened = semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(parsed.into_envelope(), actor.clone()).await.unwrap();
-    reopened.install_document_store_owners_exact(complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap();
+    let mut reopened = semio_os_store_engine::lifted_store::ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(parsed.into_envelope(), actor.clone()).await.unwrap();
+    reopened.install_document_store_owners_exact(complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     assert_eq!(reopened.local_actor_id().0.as_str(), actors["reopened"].as_str().unwrap());
     close_test_store(&mut reopened);
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap();
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap();
     let mut candidate = parsed.into_envelope();
     candidate.vcs.edits.iter_mut().next().unwrap().actor = None;
-    assert!(semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(candidate, actor).await.is_err());
+    assert!(semio_os_store_engine::lifted_store::ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(candidate, actor).await.is_err());
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -209,24 +209,24 @@ fn stored_genesis_capture_is_bounded_and_cancellable() {
 async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
     for config in [false, true] {
         for row in fixture["retainedAdmissions"].as_array().unwrap() {
             let initial = DemoSnapshot { n: Some(0) };
-            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actorless-hydration", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-            if config { envelope.history_shape = semio_framework_os_spr::HistoryShape::Config; }
+            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actorless-hydration", initial.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+            if config { envelope.history_shape = semio_os_spr::HistoryShape::Config; }
             else { envelope.dialect = Some(semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() }); }
-            let mut live = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+            let mut live = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
             live.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.unwrap();
             let files = print_document_pack(live.envelope()).await.unwrap();
-            let mut history = semio_framework_os_spr::decode_history(&files.spr, &semio_framework_os_spr::DecodeOptions::default()).await.unwrap();
+            let mut history = semio_os_spr::decode_history(&files.spr, &semio_os_spr::DecodeOptions::default()).await.unwrap();
             history.edits[0].actor = row["editAuthor"].as_str().map(semio_framework_value::SharedUtf8::from);
             history.edits[0].meta.as_mut().unwrap()[0].author_id = row["operationAuthor"].as_str().map(semio_framework_value::SharedUtf8::from);
             let actor = ActorId(fixture["actors"]["opened"].as_str().unwrap().into());
             let mut rejected = false;
             if config {
-                let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), 0, 65536, actor);
+                let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), 0, 65536, actor);
                 for _ in 0..1_000_000 { match hydration.advance(physical_test_close_grant()) { ConfigStoreHydrationStep::Pending(_) => {}, ConfigStoreHydrationStep::Rejected(diagnostic) => {  rejected = true; break; }, ConfigStoreHydrationStep::Ready(mut store) => { close_test_store(&mut store); break; } } }
                 let mut closed = false;
                 for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } let step=hydration.close_step(physical_test_close_grant()).result.unwrap();assert!(step.progress().fits(physical_test_close_grant())); }
@@ -234,7 +234,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
             } else {
                 let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: live.envelope().id.clone(), dialect: live.envelope().dialect.clone().unwrap() };
                 let (operation, generation) = (semio_framework_job::OperationId(801), semio_framework_job::Generation(1));
-                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.facts().digest(), history, expected, None, "demo/v1".into(), complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
+                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.facts().digest(), history, expected, None, "demo/v1".into(), complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
                 let mut sequence = 0;
                 for _ in 0..1_000_000 {
                     let mut original_retained_progress_13=semio_framework_value::RetainedCloneProgress::default();

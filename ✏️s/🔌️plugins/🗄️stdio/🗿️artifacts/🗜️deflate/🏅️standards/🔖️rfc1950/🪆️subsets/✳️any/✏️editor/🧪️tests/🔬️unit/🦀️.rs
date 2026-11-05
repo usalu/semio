@@ -3,15 +3,15 @@ use crate::editor::deflate::modes::edit::windows::main;
 use crate::schema::mutations::set_compression_params;
 use crate::schema::mutations::set_payload;
 use crate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
 use crate::editor::deflate::{parse_header_summary, deflate_text_emit};
 use crate::editor::deflate::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_deflate_editor_builds_a_definition_for_the_editor_role() {
     let def = create_deflate_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, DEFLATE_EDITOR_DIALECT.into());
 }
 
@@ -29,8 +29,8 @@ async fn editor_declares_the_main_window() {
 #[semio_framework_async_macros::async_test]
 async fn parse_header_summary_round_trips_a_rendered_snapshot() {
     let document = DeflateSnapshot { compression_method: 8, window_bits: 9, compression_level_hint: crate::schema::snapshot::DeflateLevelHint::Maximum, dict_id: Some(7), payload: vec![9, 9], ..DeflateSnapshot::default() };
-    let node = main::render(&document, semio_framework_ui_locale::Locale::En, semio_framework_plugin::UiPublicationRevision(23)).expect("render");
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
+    let node = main::render(&document, semio_ui_locale::Locale::En, semio_plugin::UiPublicationRevision(23)).expect("render");
+    let scene: semio_ui_scene::TextEditorScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
     let (method, window_bits, level_hint, dict_id) = parse_header_summary(&scene.buffer).expect("well-formed summary must parse");
     assert_eq!(method, 8);
     assert_eq!(window_bits, 9);
@@ -110,7 +110,7 @@ fn compression_params_reject_header_fields_outside_their_four_bits() {
     assert_eq!(adapter_error.code, "snapshot-edit.schema-identity");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::deflate::DeflateEditor, || semio_framework_plugin::App { definition: crate::editor::deflate::create_deflate_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️rfc1950/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::deflate::DeflateEditor, || semio_plugin::App { definition: crate::editor::deflate::create_deflate_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️rfc1950/🪆️subsets/✳️any");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_zlib_files_round_trip_and_agree_with_the_independent_zlib_codec() {

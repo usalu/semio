@@ -1,6 +1,6 @@
 //! 🚦️ Actual SVG fields retain the existing structured native state protocol.
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use store::{io_schema::IoPayload,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, native_encoding::NativeEncodeProgress};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
@@ -41,7 +41,7 @@ pub(crate) fn preflight(value:&SvgSnapshot,encoding:SnapshotEncoding,control:&mu
   let result=count(value,encoding,&mut native,limits).map(|_|());(result,native.owned_bytes())
  })?
 }
-pub(crate) fn encode(value:&SvgSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{let native_control=native_owner.native();
+pub(crate) fn encode(value:&SvgSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{let native_control=native_owner.native();
  let limits=control.limits();control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();
     let result=native_control.scoped_maximum(match native_before.checked_add(remaining){Some(maximum)=>maximum,None=>return(Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)}, |native| {native.scoped_observer(&mut |event:NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{

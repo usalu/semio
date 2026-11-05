@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeRhInt where Op: p
         record: "ChangedRhInt",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change indoor relative humidity", "Relative Raumluftfeuchte ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change indoor relative humidity", "Relative Raumluftfeuchte ändern")
     }
 }
 

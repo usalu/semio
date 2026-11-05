@@ -9,7 +9,7 @@ const dependencies=(source:string):string[]=>{const parsed=requireRecord(runtime
 export function registerComputeConsumerTests(descriptor:ComputeConsumerDescriptor,schema:UnknownRecord,read:(path:string)=>string):void{
  test("closed compute consumer descriptor agrees with independent schema admission",()=>{const validate=new Ajv({strict:true}).compile(schema);expect(validate(descriptor)).toBe(true);expect(validateJsonSchemaSubset(schema,descriptor)).toEqual([]);for(const hostile of [{...descriptor,extra:true},{...descriptor,bindings:[]},{...descriptor,bindings:["ForeignEngine"]}]){expect(validate(hostile)).toBe(false);expect(validateJsonSchemaSubset(schema,hostile).length).toBeGreaterThan(0);}});
  test("actual consumer directly binds the canonical compute family",()=>{
-  const source=read(descriptor.source);for(const name of descriptor.bindings)expect(source).toContain("semio_framework_2d_compute::"+name);expect(source).not.toMatch(/\b(?:store|semio_framework_os_kernel)::Engine(?:Handles|Cache|Key|Handle|Fault|Rep)?\b|\bKernelEngineHandle\b/);
+  const source=read(descriptor.source);for(const name of descriptor.bindings)expect(source).toContain("semio_framework_2d_compute::"+name);expect(source).not.toMatch(/\b(?:store|semio_os_kernel)::Engine(?:Handles|Cache|Key|Handle|Fault|Rep)?\b|\bKernelEngineHandle\b/);
   const manifest=read(descriptor.manifest),native=dependencies(manifest),oracle=TOML.parse(manifest);expect(native).toEqual(Object.keys(oracle.dependencies??{}));expect(Object.keys(oracle.dependencies??{}),descriptor.id).toContain("semio-framework-2d-compute");
   expect(verifyComputeConsumer(descriptor,{read,dependencies})).toEqual({directDependency:true,bindings:descriptor.bindings});
  });

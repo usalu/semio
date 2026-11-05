@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "commands": [
+    "connectMediaPorts",
+    "reorganize"
+  ],
+  "receiving": [
+    "donate-original-command-header",
+    "advance-original-command-admission",
+    "capture-preborn-registry-generation",
+    "retain-published-infos-header",
+    "bind-canonical-snapshot-issuer",
+    "take-current-original-snapshot-read",
+    "seal-actual-read",
+    "borrow-original-source-references"
+  ],
+  "laws": [
+    "no-command-clone",
+    "no-snapshot-clone",
+    "no-fabricated-reference-or-issuer",
+    "same-original-operation-generation-and-addresses",
+    "all-refused-and-partial-owners-retained",
+    "full-raw-close-work-forwarded"
+  ]
+}

@@ -9,7 +9,7 @@
 #[path="🗃️page-cache/🦀️.rs"]pub mod page_cache;
 use crate::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use protocol::{RetainedDiffApply,RetainedDiffPreflightAdvance,RetainedDiagnosticPreparation,RetainedDiagnosticSpec,MutationMessage,MutationMessageLedgerRetirement,ApplyCapability};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{size_of,ManuallyDrop};

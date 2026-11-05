@@ -17,10 +17,10 @@ impl ArtifactEditor for FormsPlayApp {
     type ConfigMutation = FormsConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = FormsCommand;
 
@@ -46,43 +46,43 @@ impl ArtifactEditor for FormsPlayApp {
         Some(std::sync::Arc::new(FormsStorePreparationFactory::<FormsConfig, FormsConfigMutation>::new("forms-config-retained")))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         try_window::config::register(registry)
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         try_window::transient::register(registry)
     }
 
@@ -102,71 +102,34 @@ impl ArtifactEditor for FormsPlayApp {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(FormsBoundedCommandJobFactory::new(&controller))
+        registry.register(FormsBoundedCommandJobFactory::new(&controller))?;
+        registry.register(FormsPagedValueCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !FORMS_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the forms command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the forms command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
         let maximum_work_items = if tool_id == "exportResponses" { crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport::work_items(&original.snapshot.responses) } else { 1 };
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, FormsCommand::command_id, FORMS_RETAINED_RAW_BYTES, maximum_work_items, false, |request| FormsWindowCommandWork::new(tool_id))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, FormsCommand::command_id, forms_tool_raw_bytes(tool_id), maximum_work_items, false, |request| FormsWindowCommandWork::new(tool_id))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: EditorApp<FormsPlayApp>,
-        owner_file: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.forms.forms@1/*#editor",
-        artifact_schema: "forms.form",
-        factory: "FormsBoundedCommandJobFactory",
-        factory_type: FormsBoundedCommandJobFactory,
-        tools: {
-            "setTryValue" => forms_bounded_contract(),
-            "setTryValues" => forms_bounded_contract(),
-            "resetTry" => forms_bounded_contract(),
-            "previousStep" => forms_bounded_contract(),
-            "nextStep" => forms_bounded_contract(),
-            "submit" => forms_bounded_contract(),
-            "setContributions" => forms_bounded_contract(),
-            "addStep" => forms_bounded_contract(),
-            "patchStep" => forms_bounded_contract(),
-            "removeStep" => forms_bounded_contract(),
-            "moveStep" => forms_bounded_contract(),
-            "updateForm" => forms_bounded_contract(),
-            "addBlock" => forms_bounded_contract(),
-            "removeBlock" => forms_bounded_contract(),
-            "patchQuestions" => forms_bounded_contract(),
-            "patchQuestionOptions" => forms_bounded_contract(),
-            "addQuestionOption" => forms_bounded_contract(),
-            "removeQuestionOption" => forms_bounded_contract(),
-            "patchVectorField" => forms_bounded_contract(),
-            "addVectorField" => forms_bounded_contract(),
-            "removeVectorField" => forms_bounded_contract(),
-            "moveBlock" => forms_bounded_contract(),
-            "dropQuestionKind" => forms_bounded_contract(),
-            "setSpecJson" => forms_bounded_contract(),
-            "setActiveExample" => forms_bounded_contract(),
-            "exportSnapshot" => forms_bounded_contract(),
-            "exportResponses" => forms_bounded_contract(),
-            "discardResponse" => forms_bounded_contract(),
-            "setTryValueStep" => forms_bounded_contract(),
-        }
-    }
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> { forms_command_proofs() }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::editor::forms::config::schema::app_schema_descriptor())
+        Some(crate::forms_config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<FormsSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<FormsSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::schema::empty_forms_snapshot())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(forms_io())
     }
 
@@ -192,7 +155,7 @@ impl ArtifactEditor for FormsPlayApp {
         doc: &ArtifactView<'_, FormsSnapshot>,
         cfg: &ConfigView<'_, FormsConfig>,
         _interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
@@ -230,64 +193,64 @@ impl ArtifactEditor for FormsPlayApp {
     /// typed `form.dictionary` intrinsic object keyed by question id — no `cfg` parameter reaches this method, so
     /// this is the form's authored defaults, not a live in-progress Try-wizard session (which lives
     /// in the exact Try window config and transient owners).
-    fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_plugin::Media, MediaError> {
         match port {
             "artifact:out" => {
                 let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
-                Ok(semio_framework_plugin::Media {
+                Ok(semio_plugin::Media {
                     media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
                     payload: MediaPayload::Structured { schema: FORMS_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
                 })
             }
             "dictionary:out" => {
                 let dictionary=crate::schema::configured_dictionary(doc.snapshot).map_err(|error|MediaError::Payload(port.to_string(),error.into_message()))?;
-                Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value:dictionary.into_intrinsic() } })
+                Ok(semio_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value:dictionary.into_intrinsic() } })
             }
             _ => Err(MediaError::NotImplemented),
         }
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let labels = forms_play_labels(view_state);
         let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, view_state, None),
-            responses::results::BODY => responses::results::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, responses::results::BODY)),
+            responses::results::BODY => responses::results::render(spec, labels, &semio_plugin::TreeWindows::for_body(view_state, responses::results::BODY)),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::FormsTryWindowTransient::default(), labels, view_state),
-            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
-            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
-            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, &[], view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_INSPECTION)),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, view_state, &semio_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
+            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, &[], view_state, &semio_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_INSPECTION)),
+            _ => return semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, FormsSnapshot>,
         cfg: &ConfigView<'_, FormsConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let labels = forms_play_labels(view_state);
         let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, view_state, interaction.selection(FORMS_INTERACTION_FIELDS).ids.first().map(String::as_str)),
-            responses::results::BODY => responses::results::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, responses::results::BODY)),
+            responses::results::BODY => responses::results::render(spec, labels, &semio_plugin::TreeWindows::for_body(view_state, responses::results::BODY)),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::current(transient), labels, view_state),
-            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
-            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
-            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, &interaction.selection(FORMS_INTERACTION_FIELDS).ids, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_INSPECTION)),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, view_state, &semio_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
+            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, &interaction.selection(FORMS_INTERACTION_FIELDS).ids, view_state, &semio_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_INSPECTION)),
+            _ => return semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
 
         })();
         rendered.map(Some).map_err(Into::into)

@@ -1,8 +1,8 @@
 //! 👥️ Process 3d presence — shareable live ephemeral state + mutations.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 //#region 🧩️Modules
@@ -16,7 +16,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of process3d engagement and camera state.
-#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "process3d.presence")]
 #[dsl(layout = "lines")]
@@ -157,8 +157,8 @@ impl ArtifactPack for Process3dPresence {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Process3dPresence {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Process3dPresence {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -304,8 +304,8 @@ impl store::SnapshotRetirementFactory<Process3dPresence> for Process3dPresenceRe
 }
 
 /// 🧹️ The close-lane disposer paired with [`Process3dPresenceRetirementFactory`].
-pub fn process3d_presence_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Process3dPresence, Process3dPresenceMutation>>> {
-    Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Process3dPresence::default()), process3d_presence_is_terminal_empty).expect("the default process3d presence root holds no engagement input"))
+pub fn process3d_presence_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Process3dPresence, Process3dPresenceMutation>>> {
+    Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Process3dPresence::default()), process3d_presence_is_terminal_empty).expect("the default process3d presence root holds no engagement input"))
 }
 //#endregion 🧹️Retirement
 

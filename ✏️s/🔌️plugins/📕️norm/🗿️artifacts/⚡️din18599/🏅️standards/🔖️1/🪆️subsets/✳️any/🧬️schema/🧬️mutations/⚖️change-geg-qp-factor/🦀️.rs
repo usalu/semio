@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ChangeGegQpFactor wher
         record: "ChangedGegQpFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change GEG primary energy requirement factor", "GEG-Anforderungsfaktor für den Primärenergiebedarf ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change GEG primary energy requirement factor", "GEG-Anforderungsfaktor für den Primärenergiebedarf ändern")
     }
 }
 

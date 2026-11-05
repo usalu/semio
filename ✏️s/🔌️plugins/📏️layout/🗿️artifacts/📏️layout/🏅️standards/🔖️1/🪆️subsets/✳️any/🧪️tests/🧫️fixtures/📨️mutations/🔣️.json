@@ -2400,5 +2400,16 @@
         }
       }
     }
+  ],
+  "schemaRefusals": [
+    {
+      "name": "parent cannot mutate child drawing text",
+      "input": {
+        "SetDrawingText": {
+          "index": 0,
+          "text": "Title"
+        }
+      }
+    }
   ]
 }

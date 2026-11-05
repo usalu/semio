@@ -529,9 +529,15 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/**/*"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
@@ -554,6 +560,9 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ],
+      "dependsOn": [
+        "test-wasm-compiler"
       ]
     },
     "test-socket-snapshot-sqlite-source": {
@@ -867,7 +876,11 @@
               "de": "Andocktests oder eine Renderer-Sitzung auswählen."
             }
           },
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
@@ -952,7 +965,11 @@
               "de": "Medienprüfungen mit explizitem Server und Sprache ausführen."
             }
           },
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
@@ -1192,7 +1209,7 @@
         "{projectRoot}/.🧾️store/wasm.json"
       ],
       "dependsOn": [
-        "workspace:deps-trunk",
+        "workspace:deps-browser-wasm",
         "workspace:deps-wasm-opt"
       ],
       "options": {
@@ -1329,7 +1346,11 @@
       "defaultConfiguration": "prototype",
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
     },
@@ -1430,7 +1451,11 @@
               "de": "Prüfungen des eingebetteten Browsers mit ausgewählter Konfiguration ausführen."
             }
           },
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
@@ -1580,6 +1605,32 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test-original-browser-output-native"
+      }
+    },
+    "test-wasm-compiler": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts test-wasm-compiler",
+        "cwd": "{projectRoot}"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/🧪️tests/🟦️.ts"
+          ]
+        }
       }
     }
   },

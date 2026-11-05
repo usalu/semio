@@ -2,14 +2,14 @@
 
 use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_ui_locale::Terminology;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_WINDOW_GENERATIONS: &str = "generation2d-generations";
@@ -44,7 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(generation: &GenerationPlayState, selected_id: Option<&str>, locale: Locale, terminology: Terminology, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(generation: &GenerationPlayState, selected_id: Option<&str>, locale: Locale, terminology: Terminology, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     semio_s_procedural_core_semantic_ui::generation_tree(GENERATION2D_PLAY_APP_ID, GENERATION2D_PLAY_GENERATE_PREFIX, generation, selected_id, locale, terminology, windows)
 }
 //#endregion 🔖️Render

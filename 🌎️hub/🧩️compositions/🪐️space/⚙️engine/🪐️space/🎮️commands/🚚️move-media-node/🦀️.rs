@@ -4,8 +4,8 @@
 use crate::node_graph_edit::space_node_drag_emit;
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_artifact_workflow_workflow::MoveNodes;
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 /// 🪪️ The verb a `moveMediaNode` tool transaction is scoped by.
 pub const MOVE_MEDIA_NODE_VERB: &str = "moveMediaNode";

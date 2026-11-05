@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTankFillingRatio w
         record: "ChangeTankFillingRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Filling ratio", "Füllgrad ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Filling ratio", "Füllgrad ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-tank-filling-ratio".into()]

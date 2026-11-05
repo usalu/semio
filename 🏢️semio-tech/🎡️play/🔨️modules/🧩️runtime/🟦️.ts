@@ -52,9 +52,9 @@ export function playPaneClosureRoot(row: PlaygroundBuildTarget): { readonly id: 
 }
 
 /** 🧩️ The union of the component closures the panes load — each pane boots its own plugin's closure. */
-export function playRuntimeComponentIds(): string[] {
+export function playRuntimeComponentIds(targets: readonly PlaygroundBuildTarget[] = PLAY_RUNTIME_TARGETS): string[] {
   const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS];
-  return [...new Set(PLAY_RUNTIME_TARGETS.flatMap(row => runtimeComponentClosure(components, [playPaneClosureRoot(row)]) as string[]))].sort();
+  return [...new Set(targets.flatMap(row => runtimeComponentClosure(components, [playPaneClosureRoot(row)]) as string[]))].sort();
 }
 
 export type PlayRuntimeModuleLayout = {
@@ -63,9 +63,9 @@ export type PlayRuntimeModuleLayout = {
 };
 
 /** 🛣️ Maps the complete runtime closure to its public deployment directories. */
-export function playRuntimeModuleLayout(): PlayRuntimeModuleLayout {
+export function playRuntimeModuleLayout(targets: readonly PlaygroundBuildTarget[] = PLAY_RUNTIME_TARGETS): PlayRuntimeModuleLayout {
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
-  const ids = playRuntimeComponentIds();
+  const ids = playRuntimeComponentIds(targets);
   return {
     pluginModuleDirNames: [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...ids.filter(id => byId.get(id)!.role === "plugin").map(id => moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES))],
     extensionModuleDirNames: ids.filter(id => byId.get(id)!.role === "extension").map(id => moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES)),

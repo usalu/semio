@@ -28,9 +28,9 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 use machine::Command;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowMeasure;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowMeasure;
 use semio_framework_tool_machine::GestureChart;
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_tool_machine::ToolYield;

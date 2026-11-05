@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-one-item"
+name = "semio-os-store-one-item"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -31,12 +31,12 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 semio-framework-value-snapshot-projection = { path = "../../../../../../../🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 semio-framework-diagnostic = { path="../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }

@@ -1,13 +1,13 @@
-//! 🏃️ `semio-framework-plugin-interpreter-runtime`: the owned interpreter as a guest runtime ([`OwnedRuntime`]). It compiles a
-//! `world actor` component for the repository-owned interpreter (`semio-framework-plugin-interpreter`), runs its actor turns,
+//! 🏃️ `semio-plugin-interpreter-runtime`: the owned interpreter as a guest runtime ([`OwnedRuntime`]). It compiles a
+//! `world actor` component for the repository-owned interpreter (`semio-plugin-interpreter`), runs its actor turns,
 //! jobs, checkpoints and pure `codec` exports under instruction fuel, and answers every host import a guest can observe, in
-//! the vocabulary of `semio-framework-plugin-guest-contract`. A tool that only describes or verifies components links this and
+//! the vocabulary of `semio-plugin-guest-contract`. A tool that only describes or verifies components links this and
 //! no JIT.
 //! @see https://webassembly.github.io/spec/core/exec/index.html
-use semio_framework_plugin_guest_contract::{decode_guest_fault_bytes, identity_turn_fault, operation_authority, original_actor_context, sqlite_wire, validate_cold_page, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, JobBudget, JobStep, PluginHostError, TurnFault};
-use semio_framework_plugin_interpreter::{CoreError, CoreStepOutcome, HostCall, OwnedSemioArtifact, OwnedSemioExport, OwnedSemioInstance, StepControl, Value};
+use semio_plugin_guest_contract::{decode_guest_fault_bytes, identity_turn_fault, operation_authority, original_actor_context, sqlite_wire, validate_cold_page, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, JobBudget, JobStep, PluginHostError, TurnFault};
+use semio_plugin_interpreter::{CoreError, CoreStepOutcome, HostCall, OwnedSemioArtifact, OwnedSemioExport, OwnedSemioInstance, StepControl, Value};
 use semio_framework::kernel::{Budget, Event, TurnResult};
-use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiving;
+use semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiving;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::{Arc, Mutex};
 
@@ -24,7 +24,7 @@ const OWNED_RUNTIME_SOURCE: &str = concat!(
 
 /// 🛂️ The neutral test caller admission the plugin host's runtime laws share; this crate's laws drive part of it.
 #[cfg(test)]
-pub(crate) use semio_framework_plugin_host_operation::test_native_authority;
+pub(crate) use semio_plugin_host_operation::test_native_authority;
 
 #[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🧫️fixtures/🌱️channel/🦀️.rs"]

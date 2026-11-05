@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationBaseFric
         record: "ChangeFoundationBaseFrictionDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Interface friction angle δ of the footing base for the seismic sliding resistance (V − u) tan δ / γ_Rd (0 = no friction credited)", "Sohlreibungswinkel δ der Fundamentsohle für den Gleitwiderstand (V − u) tan δ / γ_Rd (0 = keine Reibung angesetzt) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Interface friction angle δ of the footing base for the seismic sliding resistance (V − u) tan δ / γ_Rd (0 = no friction credited)", "Sohlreibungswinkel δ der Fundamentsohle für den Gleitwiderstand (V − u) tan δ / γ_Rd (0 = keine Reibung angesetzt) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-base-friction-deg".into()]

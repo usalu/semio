@@ -57,7 +57,7 @@ async fn right_clicking_an_unselected_object_opens_that_object_menu_not_an_empty
     let object_id = first_object_id(&app);
     let menu = context_menu_for_hit(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await;
     let mut ids: Vec<String> = Vec::new();
-    let mut walk: Vec<&semio_framework_plugin::ContextMenuItemSpec> = menu.iter().collect();
+    let mut walk: Vec<&semio_plugin::ContextMenuItemSpec> = menu.iter().collect();
     while let Some(item) = walk.pop() {
         ids.push(item.id.clone());
         walk.extend(item.children.iter().flatten());
@@ -72,11 +72,11 @@ async fn right_clicking_an_unselected_object_opens_that_object_menu_not_an_empty
 /// delete just because the press landed on a particular member.
 #[semio_framework_async_macros::async_test]
 async fn a_hit_inside_the_selection_keeps_the_whole_selection_as_the_menu_subject() {
-    use semio_framework_plugin::ContextMenuHit;
-    use semio_framework_plugin::ContextMenuRequest;
-    use semio_framework_plugin::ContextMenuSelectionGroup;
-    use semio_framework_plugin::ContextMenuSurfaceTarget;
-    use semio_framework_plugin::UiMenuRef;
+    use semio_plugin::ContextMenuHit;
+    use semio_plugin::ContextMenuRequest;
+    use semio_plugin::ContextMenuSelectionGroup;
+    use semio_plugin::ContextMenuSurfaceTarget;
+    use semio_plugin::UiMenuRef;
     let mut app = app().await;
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [4.0, 0.0, 0.0] })), None).await.expect("addObjectKind");
     let ids: Vec<String> = projection_of(&app).get("objects").and_then(Value::as_array).expect("objects").iter().filter_map(|object| object.get("id").and_then(Value::as_str)).map(str::to_string).collect();
@@ -265,7 +265,7 @@ async fn nakagin_app() -> Puzzle3dApp {
     let mut app = app().await;
     let action_meta = app.meta("local");
     let (raw, cx) = app.parts();
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, "setActiveExample", Some(semio_framework_pack_json::to_dsl_value(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN }))), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample mints its retained whole-document operation");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, "setActiveExample", Some(semio_framework_pack_json::to_dsl_value(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN }))), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample mints its retained whole-document operation");
     settle(&mut app).await;
     app
 }
@@ -307,7 +307,7 @@ async fn the_nakagin_world_scene_publishes_every_lane_under_the_page_cap_with_th
 
     let interaction = parse(census.assembled.interaction_json.as_deref().expect("the interaction lane reassembles"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("interaction lane is json");
     assert_eq!(interaction.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true), "the law only measures the popup-open scene");
-    let instances = census.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
+    let instances = census.lane(semio_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
     assert!(parse(&census.assembled.instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances lane is json").as_array().is_some_and(|array| array.len() > 100), "Nakagin publishes its whole catalog of objects through the instances lane");
     eprintln!(
         "nakagin popup-open world scene: spine={}B of {}B, {} lanes carrying {}B total ({}), widest lane={}B in {} leaves",
@@ -319,7 +319,7 @@ async fn the_nakagin_world_scene_publishes_every_lane_under_the_page_cap_with_th
         instances.bytes,
         instances.leaves
     );
-    eprintln!("nakagin lane paging: {}", census.lanes.iter().map(|lane| format!("{}={}leaves@depth{}", lane.key.trim_start_matches(semio_framework_plugin::WORLD3D_SCENE_LANE_KEY_PREFIX), lane.leaves, lane.leaf_depth)).collect::<Vec<_>>().join(" "));
+    eprintln!("nakagin lane paging: {}", census.lanes.iter().map(|lane| format!("{}={}leaves@depth{}", lane.key.trim_start_matches(semio_plugin::WORLD3D_SCENE_LANE_KEY_PREFIX), lane.leaves, lane.leaf_depth)).collect::<Vec<_>>().join(" "));
     assert!(census.payload_bytes() > census.capacity, "this law is only meaningful while the Nakagin payload is past what one fixed doc could ever hold");
 }
 
@@ -341,8 +341,8 @@ async fn a_nakagin_lane_that_did_not_change_does_not_republish_on_a_partial_refr
     select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).await.expect("interactionSelect");
     let picked = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
     let changed: Vec<&str> = picked.lanes.iter().filter(|lane| before.lane(&lane.key).is_none_or(|previous| previous.declared_hash != lane.declared_hash)).map(|lane| lane.key.as_str()).collect();
-    assert!(!changed.contains(&semio_framework_plugin::World3dSceneLane::Instances.body_key()), "a selection change must not republish the instances lane");
-    assert_eq!(picked.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).map(|lane| lane.declared_hash.as_str()), before.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).map(|lane| lane.declared_hash.as_str()));
+    assert!(!changed.contains(&semio_plugin::World3dSceneLane::Instances.body_key()), "a selection change must not republish the instances lane");
+    assert_eq!(picked.lane(semio_plugin::World3dSceneLane::Instances.body_key()).map(|lane| lane.declared_hash.as_str()), before.lane(semio_plugin::World3dSceneLane::Instances.body_key()).map(|lane| lane.declared_hash.as_str()));
 }
 //#endregion 🚚️PagedSceneCarrier
 
@@ -561,7 +561,7 @@ fn the_brush_utility_declares_a_read_only_tool_run_through_the_manifest() {
     let actions: Vec<&str> = dispatchable_actions(&definition).into_iter().map(|action| action.id.as_str()).collect();
     assert!(!actions.contains(&"suggestionsTick"), "the suggestions tick loop is gone");
     assert!(actions.contains(&"targetBrushSuggestions"));
-    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("admitted host axis");
     let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
     assert_eq!(find_measure_select(&main::window_measures(&scene, labels), "puzzle3d-brush-placement"), None, "the candidate search's readout is the framework ToolRun panel, not a picker");
 }

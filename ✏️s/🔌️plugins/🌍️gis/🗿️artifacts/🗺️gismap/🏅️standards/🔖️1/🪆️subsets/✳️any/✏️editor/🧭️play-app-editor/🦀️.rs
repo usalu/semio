@@ -25,7 +25,7 @@ fn select_feature_action_args(feature_id: &str) -> semio_framework_value::DslVal
 /// 🕹️ `selected_ids` is the live `"features"` domain selection when this is reached through
 /// `context_menu_with_request_context`, and empty through the interaction-less `context_menu` twin —
 /// it is what decides whether `clearSelection` renders enabled or disabled with its reason.
-async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, view_state: &semio_framework_plugin::ViewModel, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+async fn gis2d_context_menu_items(registry: &semio_plugin::AppActionRegistry, view_state: &semio_plugin::ViewModel, surface: Option<&semio_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_plugin::ContextMenuItemSpec> {
     let hits = surface.map_or(&[][..], |s| s.hits.as_slice());
     let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
     if let Some(feature) = feature {
@@ -38,27 +38,27 @@ async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRe
         }
         return menu.build();
     }
-    Menu::of(registry, view_state).action("selectAll").action("fitWorld").destructive("clearSelection").when(selected_ids.is_empty(), |menu| menu.disabled_because(&semio_framework_plugin::nothing_selected())).build()
+    Menu::of(registry, view_state).action("selectAll").action("fitWorld").destructive("clearSelection").when(selected_ids.is_empty(), |menu| menu.disabled_because(&semio_plugin::nothing_selected())).build()
 }
 
 impl Gis2dPlayApp {
     /// 🖼️ The one render implementation both trait entry points share.
-    fn render_body(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, interaction: &Gis2dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel, interaction: &Gis2dInteractionSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let config = &map_config::current(cfg);
         let labels = gis2d_labels(view_state);
         match body_key {
-            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config, interaction).map(semio_framework_plugin::built_to_component_tree),
-            document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::GIS2D_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
-            catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
-            inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, config, interaction, labels).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config, interaction).map(semio_plugin::built_to_component_tree),
+            document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels, &semio_plugin::TreeWindows::for_body(view_state, document_panel::GIS2D_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
+            catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE)).map(semio_plugin::built_to_component_tree),
+            inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, config, interaction, labels).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 
 impl ArtifactEditor for Gis2dPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
@@ -69,10 +69,10 @@ impl ArtifactEditor for Gis2dPlayApp {
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = Gis2dCommand;
 
@@ -83,7 +83,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         Some(std::sync::Arc::new(Gis2dOneItemPreparationFactory::<Self::Snapshot, Self::Mutation>::default()))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Gis2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.gis.gismap@1/*#editor",
@@ -101,35 +101,35 @@ impl ArtifactEditor for Gis2dPlayApp {
         registry.register(Gis2dRetainedCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !GIS2D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the gis map command does not match its exact registered tool or exceeds its declared extent").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the gis map command does not match its exact registered tool or exceeds its declared extent").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis2dCommand::command_id, GIS2D_RETAINED_RAW_BYTES, GIS2D_RETAINED_WORK_ITEMS, false, |request| GisMapWindowWork::new(tool_id))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis2dCommand::command_id, GIS2D_RETAINED_RAW_BYTES, GIS2D_RETAINED_WORK_ITEMS, false, |request| GisMapWindowWork::new(tool_id))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::host::owned::gis_map_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         map_config::register(registry)
     }
 
-    fn reference_birth()->Option<fn()->Result<GisMapSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<GisMapSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
@@ -177,7 +177,7 @@ impl ArtifactEditor for Gis2dPlayApp {
                 };
                 let incoming = gis_map_document_from_descriptor_json(json);
                 let loaded = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: incoming.positions, routes: incoming.routes, regions: incoming.regions, ..doc.snapshot.clone() });
-                Ok(semio_framework_plugin::app::document_load_emit(&loaded, Self::DOCUMENT_SCHEMA))
+                Ok(semio_plugin::app::document_load_emit(&loaded, Self::DOCUMENT_SCHEMA))
             }
             "artifact:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -185,7 +185,7 @@ impl ArtifactEditor for Gis2dPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let snapshot = <GisMapSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                Ok(semio_framework_plugin::app::document_load_emit(&snapshot, Self::DOCUMENT_SCHEMA))
+                Ok(semio_plugin::app::document_load_emit(&snapshot, Self::DOCUMENT_SCHEMA))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -271,7 +271,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         doc: &ArtifactView<'_, GisMapSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<GisMapMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -287,7 +287,7 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] (exports, tests, the
     /// framework's own default body): one render implementation against an empty domain.
-    fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         Self::render_body(body_key, doc, cfg, view_state, &Gis2dInteractionSnapshot::default())
     }
 
@@ -295,23 +295,23 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// render and threads it into the map window, so a `TiledMapHost` feature pick round-trips back
     /// as a highlighted feature and a hover popup instead of dying in the framework's store.
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, GisMapSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         Self::render_body(body_key, doc, cfg, view_state, &Gis2dInteractionSnapshot::from_interaction(interaction))
 
         })();
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn window_measures(doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = &map_config::current(cfg);
         HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(doc.snapshot, config, gis2d_labels(view_state)))])
     }
@@ -319,12 +319,12 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// 🖱️ Interaction-less twin of [`Self::context_menu_with_request_context`] — an empty `"features"`
     /// domain, so `clearSelection` renders disabled.
     fn context_menu(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        view_state: &semio_plugin::ViewModel,
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         ::semio_framework_async::poll::resolve_ready(async { gis2d_context_menu_items(registry, view_state, request.surface.as_ref(), &[]).await })
     }
 
@@ -333,13 +333,13 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// map surface's own painted ids, so the surface field alone would leave the row permanently
     /// disabled (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     fn context_menu_with_request_context(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         interaction: &InteractionView<'_>,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         let selected = Gis2dInteractionSnapshot::from_interaction(interaction).ids;
         ::semio_framework_async::poll::resolve_ready(async { gis2d_context_menu_items(registry, view_state, request.surface.as_ref(), &selected).await })
     }

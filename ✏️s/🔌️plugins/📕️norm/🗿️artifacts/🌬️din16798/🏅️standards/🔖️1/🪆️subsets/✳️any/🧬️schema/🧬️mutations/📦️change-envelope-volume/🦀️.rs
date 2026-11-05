@@ -12,8 +12,8 @@ pub struct ChangeEnvelopeVolume {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeEnvelopeVolume where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_envelope_volume::ChangeEnvelopeVolume> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "envelope-volume", kind: "change-envelope-volume", record: "ChangeEnvelopeVolume" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change enclosed volume", "Luftvolumen der Gebäudehülle ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change enclosed volume", "Luftvolumen der Gebäudehülle ändern")
     }
 }
 

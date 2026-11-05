@@ -3,7 +3,7 @@
 use semio_framework_abi::{AbiBytes, AbiControl, AbiErrorCode, AbiEvent, AbiMessage, AbiOperation, AbiPage, AbiPort, AbiPortPoll, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatusCode, AbiWorkBudget};
 use ui_render::{CursorRequest, DispatchEvent, FrameScheduler, ImeDirective, InvalidationReason, PhysicalSize};
 
-pub use semio_framework_ui_host::*;
+pub use semio_ui_host::*;
 
 pub mod browser {
 }

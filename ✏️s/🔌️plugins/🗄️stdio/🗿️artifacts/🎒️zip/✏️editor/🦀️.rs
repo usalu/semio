@@ -2,20 +2,20 @@
 
 use crate::schema::mutations::set_archive_comment;
 use crate::{ZipMutation, ZipSnapshot};
-use semio_framework_plugin::app::{TextDraftView, TextWindowKit};
-use semio_framework_plugin::tree_window_indexed_section;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::HasBase;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin};
-use semio_framework_ui_contract as ui;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::{TextDraftView, TextWindowKit};
+use semio_plugin::tree_window_indexed_section;
+use semio_plugin::tree_window_item;
+use semio_plugin::BuiltNode;
+use semio_plugin::HasBase;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin};
+use semio_ui_contract as ui;
+use semio_ui_locale::Locale;
 
 #[path = "🧵️retained/🦀️.rs"]
 pub mod retained;

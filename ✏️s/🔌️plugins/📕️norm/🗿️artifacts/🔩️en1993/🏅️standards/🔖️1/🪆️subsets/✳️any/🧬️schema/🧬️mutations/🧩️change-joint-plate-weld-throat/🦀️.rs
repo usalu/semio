@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlateWeldThro
         record: "ChangedJointPlateWeldThroat",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Weld throat thickness a of the joint plate", "Anschlussblech: Nahtdicke a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Weld throat thickness a of the joint plate", "Anschlussblech: Nahtdicke a ändern")
     }
 }
 

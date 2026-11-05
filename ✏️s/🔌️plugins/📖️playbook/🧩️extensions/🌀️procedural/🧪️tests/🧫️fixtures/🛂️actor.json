@@ -8,7 +8,11 @@
   "blockKind": "buildingComponent",
   "windowBodies": [
     "params",
-    "preview"
+    "preview",
+    "flowParams",
+    "flowPreview",
+    "proceduralParams",
+    "proceduralPreview"
   ],
   "formsLabels": {
     "native": {

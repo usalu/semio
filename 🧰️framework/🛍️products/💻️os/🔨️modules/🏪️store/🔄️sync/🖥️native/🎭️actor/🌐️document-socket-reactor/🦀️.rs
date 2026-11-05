@@ -1,7 +1,7 @@
 //! 🌐️ The owned port to the process's document-socket I/O reactor: the one place a caller outside this crate meets the reactor, with no Tokio type in any signature. See [`super`].
 
 use super::actor_runner_scheduling_terminal_and_spawn::document_socket_io_reactor;
-use semio_framework_os_store_sync::ArtifactEvent;
+use semio_os_store_sync::ArtifactEvent;
 use std::future::Future;
 use tokio::sync::broadcast;
 

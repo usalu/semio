@@ -183,8 +183,8 @@ impl SpliceTextMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SpliceTextMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "text", kind: "splice-text", record: "EditedText" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Edit Text", "Text bearbeiten")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Edit Text", "Text bearbeiten")
     }
     fn target(&self) -> Vec<String> {
         vec!["splice-text".to_string()]

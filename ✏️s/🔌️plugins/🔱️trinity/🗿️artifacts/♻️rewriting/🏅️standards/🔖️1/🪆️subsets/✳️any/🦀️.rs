@@ -21,8 +21,8 @@ use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::viewer::rewriting as viewer;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use crate::standards::v1::subsets::any::schema::model::{REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {

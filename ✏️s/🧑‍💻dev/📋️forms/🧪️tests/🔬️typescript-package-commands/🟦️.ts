@@ -11,7 +11,7 @@ if (segments[0] === "forms-try-window-ownership") {
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(configRoot, "../🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window/🟦️.ts")], { cwd: context.repoRoot });
     if (segments[1] === "native") {
       const { runCargo } = await import("@semio-tech/repo-lib/cargo");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-forms-forms", "--lib", "forms_try_window_ownership_", "--", "--nocapture"], context.repoRoot);
+      await runCargo(["test", "--manifest-path", "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/Cargo.toml", "-p", "semio-s-artifact-forms-forms-config-tests", "--lib", "forms_try_window_", "--", "--nocapture"], context.repoRoot);
     }
     return;
   }

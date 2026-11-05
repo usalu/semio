@@ -4,7 +4,7 @@ use crate::demo_space_projection;
 use semio_hub_space_app::SpaceCommand;
 use semio_hub_space_app::unit_tests::context::{apply_config, studio_emit};
 use serde_json::json;
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 use semio_hub_space_commands_media::export_media::ExportMedia;
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 
@@ -22,7 +22,7 @@ const DWG_FORMAT_ID: &str = "s.stdio.dwg.standard.ac1018.representation.document
 #[semio_framework_async_macros::async_test]
 async fn export_media_emits_download_effect_and_import_requests_file_open() {
     semio_hub_space_app::unit_tests::context::seed_draw_plugin().await;
-    semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
+    semio_os_kernel::io::register_format_descriptors([semio_os_kernel::io::FormatDescriptor {
         kind_id: DWG_FORMAT_ID.into(),
         short_id: DWG_FORMAT_ID.into(),
         aliases: Vec::new(),
@@ -36,10 +36,10 @@ async fn export_media_emits_download_effect_and_import_requests_file_open() {
     }])
     .await
     .expect("register neutral format descriptor");
-    semio_framework_os::workflow::register_os_media_export_handler_kind("2d.drawing", DWG_FORMAT_ID, |_doc| {
-        Ok(semio_framework_os::OsMediaExportResult { data: base64_codec::base64_standard_encode(b"space-home-io-test"), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
+    semio_os::workflow::register_os_media_export_handler_kind("2d.drawing", DWG_FORMAT_ID, |_doc| {
+        Ok(semio_os::OsMediaExportResult { data: base64_codec::base64_standard_encode(b"space-home-io-test"), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
     });
-    semio_framework_os::workflow::register_os_media_import_handler_kind("2d.drawing", DWG_FORMAT_ID, |bytes| {
+    semio_os::workflow::register_os_media_import_handler_kind("2d.drawing", DWG_FORMAT_ID, |bytes| {
         if bytes != b"space-home-io-test" {
             return Err("unexpected neutral carrier bytes".into());
         }

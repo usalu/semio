@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-backend-webgpu"
+name = "semio-ui-backend-webgpu"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,7 +23,7 @@ backend-testing = ["ui_render/backend-testing"]
 
 [dependencies]
 bytemuck = { version = "1.24.0", features = ["derive"] }
-ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-ui-render" }
 semio-framework-abi = { path = "../../../../../../🌉️abi/📦️packages/🦀️rust" }
 
 # 🌐️ wgpu is confined to THIS crate and to browser builds. Natively we hand-write D3D12/Metal/Vulkan,

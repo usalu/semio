@@ -3,7 +3,7 @@ use dashboard_registry::{graph_file, verb_of, verb_rank, CommandId, Facts, Graph
 use dashboard_repo_domain::{RepoAction, RepoImplementation};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json");
 

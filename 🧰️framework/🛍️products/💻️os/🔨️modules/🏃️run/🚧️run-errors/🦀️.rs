@@ -43,7 +43,7 @@ pub enum RunError {
     Host(String),
     Original(semio_framework_job::OriginalTurnFailure),
     Kernel(semio_framework_actor::KernelError),
-    ActorCall(semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall),
+    ActorCall(semio_plugin_host::original_actor_context::OriginalActorFixedCall),
     Frame(semio_framework_actor::pack::PackError),
     /// 🤝️ The guest itself was refused at admission (`ActivationRefusal.fault`, e.g. `plugin.channel-mismatch` with its
     /// `guest`/`host` params): the structured fault, so the runner's caller tells its localized notice.
@@ -58,7 +58,7 @@ pub enum RunError {
     /// 🛑️ `SpaceRunner`'s `OperationContext.cancel` was cancelled — checked at the top of
     /// `compute_node`, before that node's `open`/`exchange`, so a cancelled run stops before its
     /// NEXT node rather than mid-exchange (an in-flight `exchange` future is not itself
-    /// preemptible — same honest limitation `semio-framework-os-services::ComputePool` documents).
+    /// preemptible — same honest limitation `semio-os-services::ComputePool` documents).
     Cancelled,
 }
 
@@ -113,7 +113,7 @@ impl std::error::Error for RunError {
 
 /// 🚪️ An activation that installed no actor, as the runner reports it: the guest's own admission fault when it carries
 /// one (audit F1), else the host's reason in words.
-pub fn activation_refusal_error(refusal: semio_framework_plugin_host::activation::ActivationRefusal) -> RunError {
+pub fn activation_refusal_error(refusal: semio_plugin_host::activation::ActivationRefusal) -> RunError {
     match refusal.fault {
         Some(fault) => RunError::Refused(fault),
         None => RunError::Host(refusal.reason),

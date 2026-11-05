@@ -2,10 +2,10 @@
 
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use semio_framework_plugin::kernel::UiDirtyScope;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_plugin::kernel::UiDirtyScope;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use semio_framework_pack_json::Value;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_PROXIMITY_RADIUS, puzzle5d_editor_projection, puzzle5d_grip_full_id, puzzle5d_value_as_f64_3, puzzle5d_value_as_f64_4, quat_rotate_vector};
@@ -100,9 +100,9 @@ impl Puzzle5dProximityConnectWork {
         self.stage = Puzzle5dProximityConnectStage::Candidate;
     }
 
-    pub fn complete<A: Puzzle5dEditor>(&mut self) -> semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>> {
+    pub fn complete<A: Puzzle5dEditor>(&mut self) -> semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>> {
         self.stage = Puzzle5dProximityConnectStage::Complete;
-        semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() })
+        semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() })
     }
 }
 
@@ -114,12 +114,12 @@ impl Puzzle5dProximityConnectWork {
     }
 }
 
-impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dProximityConnectWork {
+impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dProximityConnectWork {
     fn tool_id(&self) -> &'static str {
         "proximityConnect"
     }
 
-    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let projection = puzzle5d_editor_projection(snapshot);
         let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
         let fasteners = projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
@@ -128,15 +128,15 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
             return Err(Fault::from("puzzle5d-proximity-connect-work-capacity"));

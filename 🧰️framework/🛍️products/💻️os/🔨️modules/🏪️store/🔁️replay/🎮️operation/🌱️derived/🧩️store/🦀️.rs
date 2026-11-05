@@ -6,7 +6,7 @@ fn funded(grant:RetainedCloneGrant,demand:RetirementDemand)->bool { grant.maximu
 fn header<T>()->RetirementDemand { RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()} }
 fn refusal(message:&'static str)->ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated,message) }
 impl<P,M> ArtifactStore<P,M>
-where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P> {
+where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P> {
     /// 🎟️ Quotes the installed original producer before any projection alias transfers.
     pub fn derived_operation_birth_demand(&self,source:&ArtifactDerivedSnapshot<P>)->Result<RetirementDemand,ValueError> {
         self.admit_derived_source(&source.registry,source.generation,source.revision).map_err(|_|refusal("derived operation requires this Store's current original source"))?;

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionThreadFacto
         record: "ChangedTensionThreadFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Thread factor k_t (0 = no rod) of the tension component", "Zugglied: Gewindefaktor k_t (0 = keine Stange) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Thread factor k_t (0 = no rod) of the tension component", "Zugglied: Gewindefaktor k_t (0 = keine Stange) ändern")
     }
 }
 

@@ -1,9 +1,9 @@
 use super::*;
-use semio_framework_plugin::ArtifactViewer;
+use semio_plugin::ArtifactViewer;
 
 #[test]
 fn view_tessellate_envelope_fits_the_declared_wire_bound() {
-    let maximum = semio_framework_os_flow::mesh::tessellate_envelope_maximum_bytes();
+    let maximum = semio_os_flow::mesh::tessellate_envelope_maximum_bytes();
     assert!(maximum <= GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES, "one tessellate step envelope is at most {maximum} bytes but the viewer's declared wire bound is {GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES}");
     assert!(maximum > GENERATION3D_VIEW_RAW_BYTES, "a transfer unit that still fits the gesture quota needs no route of its own");
     assert_eq!(generation3d_view_flow_eval_contract().max_raw_wire_bytes, GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES, "the registered contract and the factory-side wire cap are one bound");

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBearingDevice wher
         record: "ChangeBearingDevice",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Device type (fixed, elastomeric, sliding, isolator)", "Lagerart (fest, Elastomer, gleitend, Isolator) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Device type (fixed, elastomeric, sliding, isolator)", "Lagerart (fest, Elastomer, gleitend, Isolator) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bearing-device".into()]

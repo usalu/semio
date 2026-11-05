@@ -38,15 +38,15 @@ pub fn inspection_model(steps: &[crate::FormStep], selected: &[String]) -> schem
     schema::FormsInspection { scope: "question".into(), ids: questions.iter().map(|question| question.id.clone()).collect(), fields }
 }
 use crate::{forms_steps, FormsSnapshot};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_plugin::ui_node_list;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";
@@ -68,11 +68,11 @@ pub fn definition() -> PanelTabDefinition {
 /// 🛠️ Every editable row emits an existing typed command; selection stays ephemeral and framework-owned.
 pub fn render(
     spec: &FormsSnapshot,
-    config: &crate::editor::forms::config::FormsConfig,
+    config: &crate::forms_config::FormsConfig,
     selected: &[String],
-    view: &semio_framework_plugin::ViewModel,
-    windows: &semio_framework_plugin::TreeWindows<'_>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    view: &semio_plugin::ViewModel,
+    windows: &semio_plugin::TreeWindows<'_>,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     use controls::*;
     use crate::editor::forms::support::{ui_value_map, ui_value_text};
     let labels = crate::editor::forms::terminology::forms_play_labels(view);
@@ -111,7 +111,7 @@ pub fn render(
             }
             if crate::schema::is_extension_question_kind(&question.kind) {
                 let contributions = crate::editor::forms::contributions::parse_contributions(config);
-                let extension = crate::editor::forms::contributions::render_extension_question(question, &semio_framework_pack_json::Object::new(), &contributions, crate::editor::forms::questions::extensions::ExtensionSurface::Blueprint, true, labels)?;
+                let extension = crate::editor::forms::contributions::render_extension_question(question, &semio_framework_pack_json::Object::new(), &contributions, crate::question_extensions::ExtensionSurface::Blueprint, true, labels)?;
                 panel = panel.section(format!("{ROOT}.extension"), Some(ui_label(labels.parameters.as_str())?), true, ui_node_list([Ok(extension)])?)?;
             }
             panel = panel.section(format!("{ROOT}.question.actions"), None, true, ui_node_list([button(&format!("{ROOT}.question.remove"), labels.remove.as_str(), "removeBlock", arguments(vec![("questionId", ui_value_text(&question.id)?)])?)])?)?;

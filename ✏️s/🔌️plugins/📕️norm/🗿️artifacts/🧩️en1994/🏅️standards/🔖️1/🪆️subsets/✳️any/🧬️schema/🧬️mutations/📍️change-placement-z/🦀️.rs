@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangePlacementZ where O
         record: "ChangedPlacementZ",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change origin z of the placement", "Platzierung: Ursprung z ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change origin z of the placement", "Platzierung: Ursprung z ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

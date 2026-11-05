@@ -23,7 +23,7 @@ semio-framework-job = { workspace = true }
 semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-s-plugin-wfc-engine-foundation = { path = "../../../🏛️foundation/📦️packages/🦀️rust" }
@@ -31,5 +31,5 @@ semio-s-plugin-wfc-engine-kernel = { path = "../../../🧠️kernel/📦️packa
 semio-s-plugin-wfc-engine-solve = { path = "../../../🧗️solve/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["mutation-testing"] }
 serde_json = { workspace = true }

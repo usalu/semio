@@ -1,17 +1,17 @@
-use semio_framework_plugin_reactor_turn_limits::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
-use semio_framework_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR, instance_lifetime};
-use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::REACTOR_TASK_SLOTS;
-use semio_framework_plugin_reactor_lifecycle::life_reactor_close::{ReactorCloseRegistry, activate_reactor_close, reactor_close_complete, release_reactor_close, reserve_reactor_close};
+use semio_plugin_reactor_turn_limits::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
+use semio_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR, instance_lifetime};
+use semio_plugin_reactor_tasks::tasks_fixed_slots::REACTOR_TASK_SLOTS;
+use semio_plugin_reactor_lifecycle::life_reactor_close::{ReactorCloseRegistry, activate_reactor_close, reactor_close_complete, release_reactor_close, reserve_reactor_close};
 #[cfg(test)]
-use semio_framework_ui_runtime::SurfaceReconcileReadyPatch;
+use semio_ui_runtime::SurfaceReconcileReadyPatch;
 use semio_framework::kernel::UiPatch;
-use semio_framework_plugin_reactor_patches as patches;
-use semio_framework_ui_contract as ui_contract;
-use semio_framework_plugin_reactor_turn::turn_close_step::step_reactor_close;
+use semio_plugin_reactor_patches as patches;
+use semio_ui_contract as ui_contract;
+use semio_plugin_reactor_turn::turn_close_step::step_reactor_close;
 
 #[test]
 fn patch_frame_limit_does_not_limit_internal_reconciliation_steps() {
-    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     assert_eq!(reconcile_step_opportunities(512), 512);
@@ -29,7 +29,7 @@ fn patch_frame_limit_does_not_limit_internal_reconciliation_steps() {
 /// in `✏️s/🔌️plugins/🌀️procedural/🧪️tests/🚪️close-ladder/🦀️.rs`, which links a non-test framework.
 #[test]
 fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_steps() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("closed finite original reactor fixture authority");
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("closed finite original reactor fixture authority");
     let mut cx=caller.context();
     let instance = 991u32;
     let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
@@ -55,7 +55,7 @@ fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_st
 
 /// 🌍️ A world-3d scene the size the puzzle 3d editor publishes for the Nakagin Capsule Tower
 /// (measured 2026-09-10: 11 lanes, 56 794 payload bytes, the `instances` lane 55 154 of them).
-fn nakagin_scale_world_scene() -> semio_framework_ui_scene::World3dScene {
+fn nakagin_scale_world_scene() -> semio_ui_scene::World3dScene {
     let instances = (0..180)
         .map(|index| {
             format!(
@@ -65,7 +65,7 @@ fn nakagin_scale_world_scene() -> semio_framework_ui_scene::World3dScene {
         .collect::<Vec<_>>()
         .join(",");
     let meshes = (0..14).map(|index| format!(r#"{{"id":"mesh:capsule_{index}","url":"/mesh/capsule_{index}.glb"}}"#)).collect::<Vec<_>>().join(",");
-    let mut scene = semio_framework_ui_scene::World3dScene::base("{}".into(), format!("[{meshes}]"), format!("[{instances}]"), r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#.into());
+    let mut scene = semio_ui_scene::World3dScene::base("{}".into(), format!("[{meshes}]"), format!("[{instances}]"), r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#.into());
     scene.vortices_json = Some("[]".into());
     scene.attractions_json = Some("[]".into());
     scene.target_volumes_json = Some("[]".into());
@@ -82,8 +82,8 @@ fn nakagin_scale_world_scene() -> semio_framework_ui_scene::World3dScene {
 /// ways — and hands back the patch the turn would emit plus the reconcile turns it took at the
 /// production per-turn opportunity budget.
 fn publish_nakagin_world_patch(surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> (ui_contract::UiPatch, usize, usize) {
-    let node = semio_framework_plugin_window_transient::scene_surface("puzzle3d-main-perspective", semio_framework_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
-    let tree = semio_framework_plugin_window_transient::built_to_component_tree(node);
+    let node = semio_plugin_window_transient::scene_surface("puzzle3d-main-perspective", semio_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
+    let tree = semio_plugin_window_transient::built_to_component_tree(node);
     let opportunities = reconcile_step_opportunities(50_000_000);
     let patches = patches::PatchTracker::new();
     patches.begin(surface.to_string(), tree).expect("mounted admission");
@@ -106,7 +106,7 @@ fn publish_nakagin_world_patch(surface: &str,cx:&mut semio_framework_job::StepCo
     let mut ready = owner.expect("published patch");
     let mut payload = ui_contract::UiPendingPatch::default();
     let mut published = None;
-    ready.publish_into(&mut payload, &mut published, semio_framework_ui_runtime::SurfaceReconcileReadyPatch::required_publish_bytes()).expect("publication grant");
+    ready.publish_into(&mut payload, &mut published, semio_ui_runtime::SurfaceReconcileReadyPatch::required_publish_bytes()).expect("publication grant");
     let patch = payload.source_mut().expect("payload").take().expect("published patch");
     while !ready.close_step_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("ready close").complete {}
     if let Some(mut published) = published {
@@ -152,7 +152,7 @@ fn retirement_turns(patch: ui_contract::UiPatch, items_per_unit: usize, bytes_pe
 /// pins the pacing that made it necessary as still visibly expensive.
 #[test]
 fn a_nakagin_scale_world_publication_reconciles_and_retires_within_a_handful_of_reactor_turns() {
-    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let (patch, reconcile_turns, reconcile_steps) = publish_nakagin_world_patch("1:puzzle3d-main-perspective",cx);
@@ -171,8 +171,8 @@ fn a_nakagin_scale_world_publication_reconciles_and_retires_within_a_handful_of_
 /// tracker mounted so the caller can retire the surface owner through the terminal ladder — the
 /// retained half W-S2 measured only through the emitted patch.
 fn mount_and_publish_nakagin_world(surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> (patches::PatchTracker, ui_contract::UiPatch) {
-    let node = semio_framework_plugin_window_transient::scene_surface("puzzle3d-main-perspective", semio_framework_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
-    let tree = semio_framework_plugin_window_transient::built_to_component_tree(node);
+    let node = semio_plugin_window_transient::scene_surface("puzzle3d-main-perspective", semio_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
+    let tree = semio_plugin_window_transient::built_to_component_tree(node);
     let tracker = patches::PatchTracker::new();
     tracker.begin(surface.to_string(), tree).expect("mounted admission");
     let mut owner = None;
@@ -189,7 +189,7 @@ fn mount_and_publish_nakagin_world(surface: &str,cx:&mut semio_framework_job::St
     let mut ready = owner.expect("published patch");
     let mut payload = ui_contract::UiPendingPatch::default();
     let mut published = None;
-    ready.publish_into(&mut payload, &mut published, semio_framework_ui_runtime::SurfaceReconcileReadyPatch::required_publish_bytes()).expect("publication grant");
+    ready.publish_into(&mut payload, &mut published, semio_ui_runtime::SurfaceReconcileReadyPatch::required_publish_bytes()).expect("publication grant");
     let patch = payload.source_mut().expect("payload").take().expect("published patch");
     while !ready.close_step_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("ready close").complete {}
     if let Some(mut published) = published {
@@ -204,10 +204,10 @@ fn mount_and_publish_nakagin_world(surface: &str,cx:&mut semio_framework_job::St
 /// U5 §6b: its rows are ordinary `TableRow` built nodes, never a second retire arena of their own.
 #[test]
 fn a_nakagin_scale_world_turn_retires_every_ladder_within_a_handful_of_reactor_turns() {
-    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 3u32;
     let (tracker, patch) = mount_and_publish_nakagin_world(&format!("{instance}:puzzle3d-main-perspective"),cx);
     let mut world = ui_contract::UiPendingPatch::default();
@@ -231,7 +231,7 @@ fn a_nakagin_scale_world_turn_retires_every_ladder_within_a_handful_of_reactor_t
             }
         }
         for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
-            if semio_framework_ui_runtime::close_surface_reconcile_handback_one().expect("surface handback retirement") {
+            if semio_ui_runtime::close_surface_reconcile_handback_one().expect("surface handback retirement") {
                 break;
             }
         }
@@ -261,10 +261,10 @@ fn a_nakagin_scale_world_turn_retires_every_ladder_within_a_handful_of_reactor_t
 /// and it names the slot state in its own failure message so a red run says WHICH family held it.
 #[test]
 fn a_retired_surface_publication_leaves_its_slot_reservable_for_the_next_dirty_render() {
-    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 11u32;
     let surface = format!("{instance}:puzzle3d-main-perspective");
     let (tracker, patch) = mount_and_publish_nakagin_world(&surface,cx);
@@ -280,7 +280,7 @@ fn a_retired_surface_publication_leaves_its_slot_reservable_for_the_next_dirty_r
                 steps += 1;
                 tracker.drive_one(cx).expect("original patch fixture semantic step");
                 tracker.close_step(cx).expect("original patch fixture close step");
-                let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one();
+                let _ = semio_ui_runtime::close_surface_reconcile_handback_one();
             }
         }
     };

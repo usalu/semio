@@ -13,7 +13,7 @@ pub fn cad_dislocate_utility() -> UtilityDefinition {
 }
 
 /// 🧰️ The single Dislocate utility ref exposed independently by each world-3d window.
-pub fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
+pub fn cad_dislocate_utility_refs() -> Vec<semio_plugin::UtilityRef> {
     vec![CAD_DISLOCATE_UTILITY_ID.into()]
 }
 
@@ -24,8 +24,8 @@ pub fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
 /// `crate::standards::v1::subsets::any::io::InteractionSpec` (a CAD-artifact DSL
 /// type for engagement statecharts, `🗿️artifacts/📐️cad/…/🎬️interaction-spec/🦀️.rs`) —
 /// unrelated, pre-existing, untouched by this migration.
-pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefinition {
-    use semio_framework_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+pub fn cad_interaction_definition() -> semio_plugin::InteractionDefinition {
+    use semio_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
     InteractionDefinition {
         id: CAD_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Mesh", "Netz"),
@@ -47,7 +47,7 @@ pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefini
     }
 }
 
-pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_cad_app() -> semio_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_cad_cad_model::snapshot::CAD_DIALECT).document(["semio", "cad"])
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
@@ -146,26 +146,26 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("saveCurrent")
             .action_destructive("saveSelected")
             .action_destructive("saveInPlay")
-            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("engagementPossibleSelect", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("engagementRepeatLast", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("worldPointerMove", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("referenceHover", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("setProjectionParam", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("engagementSubmit", semio_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_plugin::CapabilityAudience::Input)
+            .action_audience("engagementPossibleSelect", semio_plugin::CapabilityAudience::Input)
+            .action_audience("engagementRepeatLast", semio_plugin::CapabilityAudience::Input)
+            .action_audience("engagementAbort", semio_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerDown", semio_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerMove", semio_plugin::CapabilityAudience::Input)
+            .action_audience("referenceHover", semio_plugin::CapabilityAudience::Input)
+            .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("setProjectionParam", semio_plugin::CapabilityAudience::Chrome)
             .utility(cad_dislocate_utility())
             .window_kind_utilities(shape::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(building::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(energy::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(structure_classic::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .interaction(cad_interaction_definition())
-            .window_kind_interactions(shape::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
-            .window_kind_interactions(building::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
-            .window_kind_interactions(energy::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
-            .window_kind_interactions(structure_classic::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(shape::WINDOW_KIND_ID, vec![semio_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(building::WINDOW_KIND_ID, vec![semio_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(energy::WINDOW_KIND_ID, vec![semio_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(structure_classic::WINDOW_KIND_ID, vec![semio_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
             .panel_tab_def(document::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())

@@ -10,10 +10,10 @@ use crate::context::Fem2dApp;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::HistoryView;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::HistoryView;
+use semio_plugin::NoConfig;
 use pack::snapshot::ArtifactDsl;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
@@ -31,7 +31,7 @@ fn x_of(app: &Fem2dApp, id: &str) -> f64 {
 }
 
 fn english(row: &HistoryEntry) -> String {
-    row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
+    row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string()
 }
 
 /// 🧭️ The unmounted route commits a one-shot as the relative `move-selection` leaf — never a per-tick amend — and

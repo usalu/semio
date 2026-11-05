@@ -6,17 +6,17 @@ extern crate infinite_canvas as infinite_world;
 use crate::os_host::OsHostRetirement;
 use infinite_world::world::{World3dState, WorldAssetRequestKind, WorldAssetResponsePage, begin_world3d_dynamic_retirement, step_world3d_dynamic_retirement, world3d_dynamic_retirement_terminal_is_empty};
 use semio_framework_job::RetainedCloneGrant;
-use semio_framework_os_renderer_wgpu_app_runtime::AppMailbox;
-use semio_framework_os_renderer_wgpu_asset_authority::{RendererAssetFetchOwner, RendererAssetSealStep};
-use semio_framework_os_renderer_wgpu_contracts::{SCENE_SURFACE_CAPACITY, fixture_scene_pointer_target};
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry;
+use semio_renderer_wgpu_app_runtime::AppMailbox;
+use semio_renderer_wgpu_asset_authority::{RendererAssetFetchOwner, RendererAssetSealStep};
+use semio_renderer_wgpu_contracts::{SCENE_SURFACE_CAPACITY, fixture_scene_pointer_target};
+use semio_renderer_wgpu_engine_registry::engine_surface_registry;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions;
+use semio_renderer_wgpu_host_base::pump_renderer_io_sessions;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_runtime_mailbox::NativeAssetPageTestBarrier;
-use semio_framework_os_renderer_wgpu_scene_state::{ComponentSurfaceCloseRequest, ComponentSurfaceCloseToken};
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_renderer_wgpu_runtime_mailbox::NativeAssetPageTestBarrier;
+use semio_renderer_wgpu_scene_state::{ComponentSurfaceCloseRequest, ComponentSurfaceCloseToken};
+use semio_renderer_wgpu_shell_state::ShellState;
+use semio_ui_locale::{Locale, Terminology};
 use serde_json::Value;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -39,7 +39,7 @@ fn terminal_os_host_retirement_state() -> OsHostRetirementState {
         frame_build: None,
         surface_resize: None,
         engine_surfaces: PairedEngineSurfaceClose {
-            scan: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::ENGINE_SURFACE_CAPACITY,
+            scan: semio_renderer_wgpu_engine_registry::engine_surface_registry::ENGINE_SURFACE_CAPACITY,
             token: None,
             cpu_present: false,
             gpu_present: false,
@@ -85,7 +85,7 @@ fn runtime_with_component_worlds() -> AppMailbox {
 
 #[cfg(test)]
 fn runtime_with_component_world_asset_urls(world_a_url: &str, world_b_url: &str) -> AppMailbox {
-    let mut shell = semio_framework_os_renderer_wgpu_shell_state::ShellState::new(Vec::new(), "component-asset-close".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = semio_renderer_wgpu_shell_state::ShellState::new(Vec::new(), "component-asset-close".to_string(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     for (host_id, surface_id, url) in [("component-world-a", "document-world-a", world_a_url), ("component-world-b", "document-world-b", world_b_url)] {
         let mut state = infinite_world::world::World3dState::new(surface_id.to_string(), format!("{surface_id}.controller"));
         infinite_world::world::reserve_world3d_asset_request(&mut state.session, &mut state.assets, infinite_world::world::WorldAssetRequestKind::Glb, url).expect("the exact World admits its asset request");
@@ -193,13 +193,13 @@ impl Drop for StalledNativeAssetServer {
 #[cfg(test)]
 fn retire_component_world_fixture(runtime: &AppMailbox) {
     for (host_id, surface_id, key) in [("component-world-a", "document-world-a", "world-a"), ("component-world-b", "document-world-b", "world-b")] {
-        let mut target = semio_framework_os_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", surface_id, key);
+        let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", surface_id, key);
         target.host_id = host_id.into();
-        target.kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+        target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
         let mut asset_terminal = false;
         for _ in 0..262_144 {
             asset_terminal = runtime.close_component_asset_step(&target);
-            let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+            let _ = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
             if asset_terminal {
                 break;
             }
@@ -263,8 +263,8 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     let runtime = runtime_with_component_worlds();
     let fetch_a = runtime.take_renderer_asset_step().expect("World A's real asset owner is checked out");
     let token_a = match &fetch_a {
-        semio_framework_os_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, .. } => *surface_token,
-        semio_framework_os_renderer_wgpu_asset_authority::RendererAssetFetchOwner::Shared(_) => panic!("the component fixture must own the fetched asset"),
+        semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, .. } => *surface_token,
+        semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::Shared(_) => panic!("the component fixture must own the fetched asset"),
     };
     let (expected_a, token_b) = {
         let runtime = runtime.try_lock().expect("the fixture runtime is locally available");
@@ -273,9 +273,9 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     };
     assert_eq!(token_a, expected_a);
     assert_ne!(token_a, token_b);
-    let mut target = semio_framework_os_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".to_string();
-    target.kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let request = ComponentSurfaceCloseRequest { token: ComponentSurfaceCloseToken(1), owner: target, engine_token: None };
     let mut close = ComponentSurfaceCloseOwner::new(request);
     let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
@@ -298,17 +298,17 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
         (interaction.shell.surfaces.world3d_states.token("component-world-a").is_none(), interaction.shell.surfaces.world3d_states.token("component-world-b") == Some(token_b))
     };
     let mut fetch_b = None;
-    for _ in 0..semio_framework_os_renderer_wgpu_contracts::SCENE_SURFACE_CAPACITY {
+    for _ in 0..semio_renderer_wgpu_contracts::SCENE_SURFACE_CAPACITY {
         if let Some(owner) = runtime.take_renderer_asset_step() {
             fetch_b = Some(owner);
             break;
         }
     }
     let fetch_b = fetch_b.expect("a bounded surface scan finds World B's surviving request");
-    let fetched_b_exactly = matches!(&fetch_b, semio_framework_os_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, .. } if *surface_token == token_b);
+    let fetched_b_exactly = matches!(&fetch_b, semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, .. } if *surface_token == token_b);
     match &fetch_b {
-        semio_framework_os_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, .. } => assert_eq!(*surface_token, token_b),
-        semio_framework_os_renderer_wgpu_asset_authority::RendererAssetFetchOwner::Shared(_) => panic!("World B's request remains component-owned"),
+        semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, .. } => assert_eq!(*surface_token, token_b),
+        semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::Shared(_) => panic!("World B's request remains component-owned"),
     }
     assert!(runtime.return_renderer_asset_owner(fetch_b).is_ok(), "World B's owner returns unchanged");
     retire_component_world_fixture(&runtime);
@@ -324,7 +324,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
 fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_contention() {
     let runtime = runtime_with_component_worlds();
     let mut fetch = runtime.take_renderer_asset_step().expect("World A request");
-    assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), semio_framework_os_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted));
+    assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted));
     fetch.owner_mut().push_page(infinite_world::world::WorldAssetResponsePage::try_from_owned(vec![41; 7]).unwrap()).unwrap();
     let token = fetch.owner().token();
     runtime.retain_native_asset_handoff(fetch, None, true, false);
@@ -346,7 +346,7 @@ fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_cont
     };
     runtime.try_lock().unwrap().interaction = Some(interaction);
     let returned = runtime.pump_native_asset_handoff_step(false);
-    let mut completed = (0..semio_framework_os_renderer_wgpu_contracts::SCENE_SURFACE_CAPACITY).find_map(|_| runtime.take_completed_renderer_asset_step()).expect("the same sealed response returns to its decoder lane");
+    let mut completed = (0..semio_renderer_wgpu_contracts::SCENE_SURFACE_CAPACITY).find_map(|_| runtime.take_completed_renderer_asset_step()).expect("the same sealed response returns to its decoder lane");
     let completed_token = completed.owner().token();
     completed.begin_close();
     for _ in 0..4096 {
@@ -370,12 +370,12 @@ fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_cont
 fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_its_sibling() {
     let runtime = runtime_with_component_worlds();
     let mut fetch = runtime.take_renderer_asset_step().expect("World A request");
-    assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), semio_framework_os_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted));
+    assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted));
     fetch.owner_mut().push_page(infinite_world::world::WorldAssetResponsePage::try_from_owned(vec![41; 7]).unwrap()).unwrap();
     runtime.retain_native_asset_handoff(fetch, None, true, false);
-    let mut target = semio_framework_os_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".into();
-    target.kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let close_with_checked_out_response = runtime.close_component_asset_step(&target);
     let cancelled = runtime.pump_native_asset_handoff_step(false);
     let returned = runtime.pump_native_asset_handoff_step(false);
@@ -386,7 +386,7 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
             break;
         }
     }
-    let sibling = (0..semio_framework_os_renderer_wgpu_contracts::SCENE_SURFACE_CAPACITY).find_map(|_| runtime.take_renderer_asset_step()).expect("World B request survives");
+    let sibling = (0..semio_renderer_wgpu_contracts::SCENE_SURFACE_CAPACITY).find_map(|_| runtime.take_renderer_asset_step()).expect("World B request survives");
     let sibling_current = runtime.renderer_asset_current(&sibling);
     assert!(runtime.return_renderer_asset_owner(sibling).is_ok());
     let fault = runtime.0.frame_fault.lock().unwrap().clone();
@@ -406,8 +406,8 @@ fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
     let runtime = runtime_with_component_worlds();
     let fetch = runtime.take_renderer_asset_step().expect("World A request");
     let (surface_token, unavailable_url) = match &fetch {
-        semio_framework_os_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, owner, .. } => (*surface_token, owner.url().to_string()),
-        semio_framework_os_renderer_wgpu_asset_authority::RendererAssetFetchOwner::Shared(_) => panic!("the fixture request is World-owned"),
+        semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, owner, .. } => (*surface_token, owner.url().to_string()),
+        semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::Shared(_) => panic!("the fixture request is World-owned"),
     };
     runtime.retain_native_asset_handoff(fetch, None, false, true);
     let interaction = runtime.try_lock().unwrap().interaction.take().unwrap();
@@ -444,9 +444,9 @@ fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_sing
     let runtime = runtime_with_component_world_asset_urls(&server.url("/world-a.glb"), &server.url("/world-b.glb"));
     assert!(runtime.pump_native_asset(), "World A enters the real native fetch lane");
     let stalled_head_observed = server.stalled_head.recv_timeout(cleanup_deadline).is_ok();
-    let mut target = semio_framework_os_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = transport["stalledHostId"].as_str().expect("stalled host id").to_string();
-    target.kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let deadline = std::time::Instant::now() + observation_deadline;
     let mut sibling_started_while_stalled = false;
     let mut close_terminal = false;
@@ -505,9 +505,9 @@ fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_s
     let runtime = runtime_with_component_world_asset_urls(&server.url("/world-a.glb"), &server.url("/world-b.glb"));
     assert!(runtime.pump_native_asset(), "World A enters the real native fetch lane");
     let withheld_request_observed = server.stalled_request.recv_timeout(cleanup_deadline).is_ok();
-    let mut target = semio_framework_os_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = transport["stalledHostId"].as_str().expect("stalled host id").to_string();
-    target.kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let deadline = std::time::Instant::now() + observation_deadline;
     let mut sibling_started_while_head_withheld = false;
     let mut close_terminal = false;
@@ -570,23 +570,23 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
         let owner = runtime.try_lock().expect("local page fixture runtime");
         owner.interaction.as_ref().expect("local page fixture interaction").shell.surfaces.world3d_states.token("component-world-a").expect("World A surface token")
     };
-    let barrier = std::sync::Arc::new(semio_framework_os_renderer_wgpu_runtime_mailbox::NativeAssetPageTestBarrier { surface_token, entered: AtomicBool::new(false), release: AtomicBool::new(false) });
+    let barrier = std::sync::Arc::new(semio_renderer_wgpu_runtime_mailbox::NativeAssetPageTestBarrier { surface_token, entered: AtomicBool::new(false), release: AtomicBool::new(false) });
     *runtime.0.native_asset_page_barrier.lock().expect("install local page test barrier") = Some(barrier.clone());
     assert!(runtime.pump_native_asset(), "World A enters the real local-file fetch lane");
     let observation_deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while !barrier.entered.load(Ordering::Acquire) && std::time::Instant::now() < observation_deadline {
-        let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+        let _ = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
         std::thread::yield_now();
     }
     let entered = barrier.entered.load(Ordering::Acquire);
-    let mut target = semio_framework_os_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".into();
-    target.kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
+    target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let _ = runtime.close_component_asset_step(&target);
     barrier.release.store(true, Ordering::Release);
     let handback_deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while runtime.0.native_asset_fetching.load(Ordering::Acquire) && std::time::Instant::now() < handback_deadline {
-        let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+        let _ = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
         std::thread::yield_now();
     }
     let (published_cancelled_bytes, retained_page_bytes, seal) = runtime
@@ -611,7 +611,7 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
     let mut close_terminal = false;
     for _ in 0..4096 {
         close_terminal |= runtime.close_component_asset_step(&target);
-        let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+        let _ = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
         if close_terminal {
             break;
         }

@@ -29,7 +29,7 @@ export const MCP_ARTIFACT_REL = "🧰️framework/🛍️products/💻️os/🔨
 /** 📦️ Where the optimized distribution binary is staged. Separate from {@link MCP_ARTIFACT_REL} so a
  * release build never clobbers the dev-loop artifact `.mcp.json` and every black-box gate exec. */
 export const MCP_RELEASE_ARTIFACT_REL = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release";
-export const MCP_CARGO_PACKAGE = "semio-framework-os-mcp";
+export const MCP_CARGO_PACKAGE = "semio-os-mcp";
 export const MCP_BINARY_NAME = "semio-os-mcp";
 /** 🏗️ The cargo profiles this crate's build targets produce. */
 export type McpBuildProfile = "debug" | "release";
@@ -807,7 +807,7 @@ export async function runMcpClientEndToEnd(repoRoot: string, folder: string, pin
 //#endregion 🔖️ClientEndToEnd
 
 //#region 🔖️GatewaySourceTree
-/** 🌳️ The library roots of the producer crates the gateway splits into (`semio-framework-os-mcp-*` plus the `semio-framework-os-mcp` facade); each one mounts the module files it owns, so the gateway's whole Rust text is the union of their module trees. */
+/** 🌳️ The library roots of the producer crates the gateway splits into (`semio-os-mcp-*` plus the `semio-os-mcp` facade); each one mounts the module files it owns, so the gateway's whole Rust text is the union of their module trees. */
 export const MCP_GATEWAY_CRATE_ROOTS: readonly string[] = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧱️foundation/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️wire/🦀️.rs",
@@ -834,31 +834,31 @@ export const MCP_GATEWAY_CRATE_ROOTS: readonly string[] = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/🦀️.rs",
 ];
 
-/** 📦️ Every cargo package the gateway splits into: the `semio-framework-os-mcp` facade (library, binary and integration laws) and its producer crates. Native test routes run all of them. */
+/** 📦️ Every cargo package the gateway splits into: the `semio-os-mcp` facade (library, binary and integration laws) and its producer crates. Native test routes run all of them. */
 export const MCP_GATEWAY_PACKAGES: readonly string[] = [
-  "semio-framework-os-mcp",
-  "semio-framework-os-mcp-foundation",
-  "semio-framework-os-mcp-wire",
-  "semio-framework-os-mcp-schema",
-  "semio-framework-os-mcp-catalog",
-  "semio-framework-os-mcp-capabilities",
-  "semio-framework-os-mcp-port",
-  "semio-framework-os-mcp-bridge-codec",
-  "semio-framework-os-mcp-bridge",
-  "semio-framework-os-mcp-consent",
-  "semio-framework-os-mcp-probe-document",
-  "semio-framework-os-mcp-plugin-runtime",
-  "semio-framework-os-mcp-inference-hub",
-  "semio-framework-os-mcp-hub-pair",
-  "semio-framework-os-mcp-hub-remote",
-  "semio-framework-os-mcp-shell-channel",
-  "semio-framework-os-mcp-routing",
-  "semio-framework-os-mcp-dispatch",
-  "semio-framework-os-mcp-workspace",
-  "semio-framework-os-mcp-tools-inference",
-  "semio-framework-os-mcp-tools-gateway",
-  "semio-framework-os-mcp-server",
-  "semio-framework-os-mcp-http-transport",
+  "semio-os-mcp",
+  "semio-os-mcp-foundation",
+  "semio-os-mcp-wire",
+  "semio-os-mcp-schema",
+  "semio-os-mcp-catalog",
+  "semio-os-mcp-capabilities",
+  "semio-os-mcp-port",
+  "semio-os-mcp-bridge-codec",
+  "semio-os-mcp-bridge",
+  "semio-os-mcp-consent",
+  "semio-os-mcp-probe-document",
+  "semio-os-mcp-plugin-runtime",
+  "semio-os-mcp-inference-hub",
+  "semio-os-mcp-hub-pair",
+  "semio-os-mcp-hub-remote",
+  "semio-os-mcp-shell-channel",
+  "semio-os-mcp-routing",
+  "semio-os-mcp-dispatch",
+  "semio-os-mcp-workspace",
+  "semio-os-mcp-tools-inference",
+  "semio-os-mcp-tools-gateway",
+  "semio-os-mcp-server",
+  "semio-os-mcp-http-transport",
 ];
 
 /** 📖️ Reads the gateway's whole production Rust text as the one text the unsplit crate held: every module file below `🌉️mcp` outside the test, generated and package directories, in path order. A crate root mounts its sibling module files from outside its own directory, so the tree reader cannot follow them; the directory walk is the single enumeration instead. */

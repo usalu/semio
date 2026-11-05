@@ -1,12 +1,12 @@
 use crate::editor::flow::editor_vocabulary::FLOW_INTERACTION_GRAPH;
 use crate::editor::flow::modes::edit::windows::main::options;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_ui_declaration::ui::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowMeasure;
+use semio_ui_declaration::ui::NodeGraphScene;
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 #[allow(unused_imports)]
-use crate::editor::flow::host::{with_host_from_snapshot, with_live_host_snapshot};
+use crate::editor::flow::host::{with_host_from_snapshot};
 #[allow(unused_imports)]
 use crate::editor::flow::editor_vocabulary::{FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_HANDLE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_PLAY_WINDOW_MAIN};
 #[allow(unused_imports)]
@@ -16,29 +16,29 @@ use crate::FlowSnapshot;
 #[allow(unused_imports)]
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
+use semio_os_infinite_directed_presentation::DagHostSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::scene_surface;
+use semio_plugin::scene_surface;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::Viewport2d;
-#[allow(unused_imports)] use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_os_kernel::Viewport2d;
+#[allow(unused_imports)] use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphPortRecord};
 use crate::editor::flow::modes::edit::windows::main::*;
 use crate::editor::flow::unit_tests::context::{flow_app, flow_app_closing, main_window_measures, render as render_body, select_graph};
 
 fn rendered_node_graph_scene(rendered: &str) -> serde_json::Value {
-    let scene: NodeGraphScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(rendered).expect("rendered nodeGraph scene");
+    let scene: NodeGraphScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(rendered).expect("rendered nodeGraph scene");
     serde_json::to_value(scene).expect("nodeGraph scene json")
 }
 

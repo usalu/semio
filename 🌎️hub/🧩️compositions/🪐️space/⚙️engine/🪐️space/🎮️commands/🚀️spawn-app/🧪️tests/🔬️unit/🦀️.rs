@@ -6,7 +6,7 @@ use semio_hub_space_app::unit_tests::context::{apply_mutations, seed_draw_plugin
 use std::collections::HashSet;
 use semio_hub_space_foundation::config::{ActiveNodeSetting, SpaceConfig, SpaceConfigMutation};
 use semio_hub_space_commands_authoring::spawn_app::SpawnApp;
-use semio_framework_os::WorkflowMutation;
+use semio_os::WorkflowMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
@@ -103,7 +103,7 @@ async fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_on_spawn() {
-    use semio_framework_plugin::artifact_app_laws;
+    use semio_plugin::artifact_app_laws;
     seed_draw_plugin().await;
     let mut app = semio_hub_space_app::unit_tests::context::app_with_registry().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();

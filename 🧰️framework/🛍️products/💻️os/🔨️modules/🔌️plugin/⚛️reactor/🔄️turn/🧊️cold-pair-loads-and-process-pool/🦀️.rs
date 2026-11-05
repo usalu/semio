@@ -15,7 +15,7 @@ use super::*;
 /// answer is never sent to the newer transfer's turns. The newer pages answer `Backpressure` with the stale cursor until the
 /// registry has retired the stale owner (`accept_page`, one bounded step per attempt); the host resends them fresh. A load
 /// that already reached a terminal state refuses the cancel and finishes as it ended.
-pub(super) async fn supersede_cold_pair_document_load<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, lifetime: semio_framework::kernel::ActorInstanceLifetime, transfer_generation: u64) {
+pub(super) async fn supersede_cold_pair_document_load<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, lifetime: semio_framework::kernel::ActorInstanceLifetime, transfer_generation: u64) {
     let stale = COLD_PAIR_DOCUMENT_LOAD.with(|slot| {
         slot.borrow_mut().as_mut().filter(|pending| pending.cursor.lifetime == lifetime && pending.cursor.transfer_generation < transfer_generation && !pending.superseded).map(|pending| {
             pending.superseded = true;
@@ -23,11 +23,11 @@ pub(super) async fn supersede_cold_pair_document_load<PA: semio_framework_plugin
         })
     });
     if let Some(operation) = stale {
-        let _ = semio_framework_plugin_runtime_ops::ops_document::plugin_cancel_document_archive_load(runtime, lifetime.instance_id, operation).await;
+        let _ = semio_plugin_runtime_ops::ops_document::plugin_cancel_document_archive_load(runtime, lifetime.instance_id, operation).await;
     }
 }
 
-pub(super) async fn step_cold_pair_document_load<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, pending: cold_pair::ColdPairDocumentLoad, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
+pub(super) async fn step_cold_pair_document_load<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, pending: cold_pair::ColdPairDocumentLoad, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
     use protocol::DocumentArchiveLoadState;
     use semio_framework::kernel::ColdPairIngressStatus;
     let lifetime = pending.cursor.lifetime;
@@ -36,7 +36,7 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_framework_plugin_reac
     if live.is_none() {
         return finish(pending.load, Err(b"cold-pair.not-live".to_vec()));
     }
-    let status = match semio_framework_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, lifetime.instance_id, pending.operation, identity, cx).await {
+    let status = match semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, lifetime.instance_id, pending.operation, identity, cx).await {
         Ok(status) => status,
         Err(fault) => return finish(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&fault))),
     };
@@ -45,7 +45,7 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_framework_plugin_reac
         COLD_PAIR_DOCUMENT_LOAD.with(|slot| *slot.borrow_mut() = Some(pending));
         return ColdPairIngressStatus::Loading(cursor);
     }
-    let acknowledged = semio_framework_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, lifetime.instance_id, pending.operation).await;
+    let acknowledged = semio_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, lifetime.instance_id, pending.operation).await;
     let result = match (status.state, acknowledged) {
         (_, Err(fault)) => Err(semio_framework_diagnostic::encode_fault_bytes(&fault)),
         (DocumentArchiveLoadState::Ready, Ok(())) => Ok(()),
@@ -58,7 +58,7 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_framework_plugin_reac
 /// 📸️ Drives every checkpoint-restored document load by one poll (`📓️api-stepped-document-load.md` §4). A terminal load
 /// is acknowledged; a faulted one reaches the instance's shell as a fault, a cancelled one keeps the initial document.
 /// A closed instance's load is dropped with it. Answers whether any load still runs.
-pub(super) async fn step_restored_document_loads<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
+pub(super) async fn step_restored_document_loads<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, effects: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
     use protocol::DocumentArchiveLoadState;
     let operation = checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION;
     let loads = RESTORED_DOCUMENT_LOADS.with(|loads| std::mem::take(&mut *loads.borrow_mut()));
@@ -67,7 +67,7 @@ pub(super) async fn step_restored_document_loads<PA: semio_framework_plugin_reac
         if INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).is_none()) {
             continue;
         }
-        let status = match semio_framework_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance, operation, identity, cx).await {
+        let status = match semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance, operation, identity, cx).await {
             Ok(status) => status,
             Err(fault) => {
                 effects.push(shell_fault_effect(instance, &fault));
@@ -78,7 +78,7 @@ pub(super) async fn step_restored_document_loads<PA: semio_framework_plugin_reac
             running.push(instance);
             continue;
         }
-        match semio_framework_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, instance, operation).await {
+        match semio_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, instance, operation).await {
             Err(fault) => effects.push(shell_fault_effect(instance, &fault)),
             Ok(()) if status.state == DocumentArchiveLoadState::Fault => effects.push(shell_fault_effect(instance, &semio_framework_diagnostic::decode_fault_bytes(&status.fault))),
             Ok(()) => {}
@@ -89,7 +89,7 @@ pub(super) async fn step_restored_document_loads<PA: semio_framework_plugin_reac
     pending
 }
 
-pub(super) fn fill_turn_patch_page<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, budget_bytes: usize) -> Result<(semio_framework::kernel::UiTurnPatches, Option<ActorUiPatchReceipt>), semio_framework::Fault> {
+pub(super) fn fill_turn_patch_page<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, budget_bytes: usize) -> Result<(semio_framework::kernel::UiTurnPatches, Option<ActorUiPatchReceipt>), semio_framework::Fault> {
     let page = take_turn_patch_page(budget_bytes)?;
     let instance = page.iter().next().and_then(|patch| parse_surface_instance(&patch.surface.0));
     let receipt = instance.and_then(|instance| runtime.guest_lifetimes.borrow_mut().next_patch_receipt(instance));
@@ -131,7 +131,7 @@ pub(super) fn pump_process_worker_pool() -> bool {
 }
 
 /// 🧊️ Accepts the inbound cold document pair page, begins its document load and steps the pending load; returns the ingress status this turn answers.
-pub(super) async fn drive_cold_pair_ingress<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
+pub(super) async fn drive_cold_pair_ingress<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
     let mut cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Idle;
     let cold_pair_page_lifetime = cold_pair_page.as_ref().map(|page| page.header.lifetime);
     if let Some(page) = cold_pair_page {
@@ -150,7 +150,7 @@ pub(super) async fn drive_cold_pair_ingress<PA: semio_framework_plugin_reactor_a
             let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
             let load = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().begin_load(lifetime, transfer_generation, live));
             match load.map(|load| cold_pair::ColdPairDocumentLoad::new(load, transfer_generation, terminal_cursor)) {
-                Some(pending) => match semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, lifetime.instance_id, pending.operation, pending.archive()).await {
+                Some(pending) => match semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, lifetime.instance_id, pending.operation, pending.archive()).await {
                     Ok(()) => COLD_PAIR_DOCUMENT_LOAD.with(|slot| *slot.borrow_mut() = Some(pending)),
                     Err(fault) => cold_pair_ingress = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().finish_load(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&fault)), live)),
                 },

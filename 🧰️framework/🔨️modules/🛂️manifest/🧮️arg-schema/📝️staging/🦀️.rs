@@ -127,14 +127,14 @@ pub struct StagedFormDiagnostic {
 pub struct StagedFormRequest {
     pub token: StagedFormToken,
     pub args: DslValue,
-    pub locale: semio_framework_ui_locale::Locale,
+    pub locale: semio_ui_locale::Locale,
     #[serde(skip_serializing_if="Option::is_none")]
     #[value(skip_serializing_if="Option::is_none")]
     pub page:Option<StagedFormPage>,
 }
 impl StagedFormRequest{
     /// 📨️ Match one admitted donor to the actual real window without inspecting command values.
-    pub fn context_matches(&self,window:Option<&str>,locale:semio_framework_ui_locale::Locale)->bool{self.token.admitted()&&window.is_some_and(|window|!window.is_empty()&&self.token.window==window)&&self.locale==locale}
+    pub fn context_matches(&self,window:Option<&str>,locale:semio_ui_locale::Locale)->bool{self.token.admitted()&&window.is_some_and(|window|!window.is_empty()&&self.token.window==window)&&self.locale==locale}
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(deny_unknown_fields)]

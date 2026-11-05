@@ -311,8 +311,8 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
     struct TerminalDisposer<const N: usize>([u8; N]);
     impl<const N: usize> ArtifactStoreOwnedDisposer<DemoSnapshot, DemoMutation> for TerminalDisposer<N> {
         fn close_step(&mut self, _: &mut ArtifactStoreCloseView<'_, DemoSnapshot, DemoMutation>, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
-        fn terminal_is_empty(&self, _: &dyn semio_framework_os_store_engine_owners::lifted_store::ArtifactStoreCloseHost<DemoSnapshot, DemoMutation>) -> bool { true }
-        fn demands(&self, _: &dyn semio_framework_os_store_engine_owners::lifted_store::ArtifactStoreCloseHost<DemoSnapshot, DemoMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
+        fn terminal_is_empty(&self, _: &dyn semio_os_store_engine_owners::lifted_store::ArtifactStoreCloseHost<DemoSnapshot, DemoMutation>) -> bool { true }
+        fn demands(&self, _: &dyn semio_os_store_engine_owners::lifted_store::ArtifactStoreCloseHost<DemoSnapshot, DemoMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
         fn close_uninstalled_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn uninstalled_demands(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
         fn uninstalled_terminal_is_empty(&self) -> bool { true }
@@ -327,9 +327,9 @@ fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::Retain
         fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     }
     async fn check<const N: usize>(row: &serde_json::Value, admission: usize, failures: &mut Vec<(usize, usize, usize, usize)>) {
-        let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "terminal-disposer", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-        let mut store = semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
-        store.install_document_store_owners_exact(complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+        let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "terminal-disposer", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut store = semio_os_store_engine::lifted_store::ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
+        store.install_document_store_owners_exact(complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         close_test_store(&mut store);
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;

@@ -99,7 +99,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// app does not declare is ignored — a url is not a place to hard-fail a shell, the same rule
     /// `ChromeRole::from_boot_env` follows for `?role=`.
     pub fn apply_boot_mode(&mut self) {
-        let Some(mode_id) = semio_framework_os_renderer_wgpu_host_base::boot_app_mode() else { return };
+        let Some(mode_id) = semio_renderer_wgpu_host_base::boot_app_mode() else { return };
         let Some(session) = self.docs.session.as_mut() else { return };
         if !session.app.modes.iter().any(|mode| mode.id == mode_id) {
             debug_log(&format!("[TRACE] wgpu-shell boot mode {mode_id:?} is not declared by app {} — keeping {}", session.app.id, session.app.default_mode_id));
@@ -127,7 +127,7 @@ impl<'ctx> SessionCtx<'ctx> {
             .find(|entry| entry.plugin_id == session.plugin_id)
             .map(|entry| shell_offered_examples(&entry.manifest.examples, &session.app).into_iter().map(|example| example.id.clone()).collect())
             .unwrap_or_default();
-        let resolved = resolve_boot_example_id(self.plugins.active_example_id.as_deref().unwrap_or(""), &examples, semio_framework_os_renderer_wgpu_host_base::boot_app_example().as_deref());
+        let resolved = resolve_boot_example_id(self.plugins.active_example_id.as_deref().unwrap_or(""), &examples, semio_renderer_wgpu_host_base::boot_app_example().as_deref());
         self.plugins.active_example_id = (!resolved.is_empty()).then_some(resolved);
         let app_id = self.docs.dock_store_app_id();
         if self.dock.dock_loaded_app_id != app_id {
@@ -264,7 +264,7 @@ impl<'ctx> SessionCtx<'ctx> {
     }
 
     /// 🪟️ The host-owned fields every refresh restamps onto the session's view state — including the tree windows this shell's
-    /// observer measured (`tree_windows`/`tree_viewport_rows`, [`semio_framework_os_renderer_wgpu_shell_dock::TreeWindowScheduler::view_state_fields`]), the
+    /// observer measured (`tree_windows`/`tree_viewport_rows`, [`semio_renderer_wgpu_shell_dock::TreeWindowScheduler::view_state_fields`]), the
     /// same pair React's `TreeWindowHostV1::viewStateFields` stamps (`🛠️ShellHelpers/🟦️.tsx`).
     pub fn live_view_state(&self, session: &ActiveSession) -> ViewModel {
         let mut view_state = session.view_state.clone();
@@ -276,7 +276,7 @@ impl<'ctx> SessionCtx<'ctx> {
         }
         view_state.active_utility_by_window_id = self.windows.active_utility_by_window.clone();
         view_state.tool_run_trace_cursor_by_window_id = infinite_world::world::world3d_tool_run_trace_cursors(self.surfaces.world3d_states.values());
-        view_state.tool_run_trace_cursor_by_window_id.extend(semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::board2d_tool_run_trace_cursors());
+        view_state.tool_run_trace_cursor_by_window_id.extend(semio_renderer_wgpu_engine_attach::engine_surface_attach::board2d_tool_run_trace_cursors());
         if !spawned {
             view_state.focused_window_id = self.windows.active_window_id.clone();
         }
@@ -346,7 +346,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// `submit_turn`, which wedged `boot_shell` itself and took every later pointer event with it
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md`). "Once
     /// per app instance" is what the first line of this doc promises; the failure path now keeps it.
-    pub async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>) {
+    pub async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>>) {
         let body_key = semio_framework::UiRefreshSection::Catalogue.body_key();
         let fetched = match read_ahead {
             Some(fetched) => fetched,
@@ -438,9 +438,9 @@ pub fn panel_json(state: &SpacePanelState) -> Result<String, String> {
 /// `ChromeRole` (that is the type its chrome reads); the boot app selection needs the manifest's
 /// own spelling, and the two are wire-identical by contract (`"viewer"`/`"editor"`).
 pub fn boot_app_role() -> semio_framework::manifest::AppRole {
-    match semio_framework_os_renderer_wgpu_host_base::boot_app_role() {
-        semio_framework_ui_declaration::role_chrome::ChromeRole::Viewer => semio_framework::manifest::AppRole::Viewer,
-        semio_framework_ui_declaration::role_chrome::ChromeRole::Editor => semio_framework::manifest::AppRole::Editor,
+    match semio_renderer_wgpu_host_base::boot_app_role() {
+        semio_ui_declaration::role_chrome::ChromeRole::Viewer => semio_framework::manifest::AppRole::Viewer,
+        semio_ui_declaration::role_chrome::ChromeRole::Editor => semio_framework::manifest::AppRole::Editor,
     }
 }
 

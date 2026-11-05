@@ -28,8 +28,8 @@ fn step_round_trip_preserves_prior_handles_and_import_claims() {
     drop_port(other);
     session.close();
 }
-fn drop_port(port:Box<dyn semio_framework_os_flow::geometry::GeometryPort>) {
-    semio_framework_os_flow::geometry::GeometryPortRetirement::new(port).retire_cold();
+fn drop_port(port:Box<dyn semio_os_flow::geometry::GeometryPort>) {
+    semio_os_flow::geometry::GeometryPortRetirement::new(port).retire_cold();
 }
 #[test]
 fn step_operations_obey_retirement_and_closed_authority() {

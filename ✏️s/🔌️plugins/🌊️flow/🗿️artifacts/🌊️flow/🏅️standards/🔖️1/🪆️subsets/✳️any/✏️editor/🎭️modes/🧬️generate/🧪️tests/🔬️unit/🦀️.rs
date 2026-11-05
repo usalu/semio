@@ -2,19 +2,19 @@ use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATE_FORM, FLO
 #[allow(unused_imports)]
 use crate::editor::flow::modes::generate::windows::{form, generations, preview};
 #[allow(unused_imports)]
-use semio_framework_plugin::create_default_layout;
+use semio_plugin::create_default_layout;
 #[allow(unused_imports)]
-use semio_framework_plugin::create_named_layout;
+use semio_plugin::create_named_layout;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::CommandDefinition;
+use semio_plugin::CommandDefinition;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::ModeDefinition;
+use semio_plugin::ModeDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::NamedLayout;
+use semio_plugin::NamedLayout;
 use crate::editor::flow::modes::generate::*;
 
 #[semio_framework_async_macros::async_test]

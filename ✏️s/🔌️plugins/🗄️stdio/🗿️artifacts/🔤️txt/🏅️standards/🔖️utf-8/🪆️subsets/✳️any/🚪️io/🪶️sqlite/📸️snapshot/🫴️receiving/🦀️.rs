@@ -1,11 +1,11 @@
 //! 🫴️ TXT semantic rows and ordered lines remain in original paid receiving custody.
 use super::{LineEnding,TxtSnapshot};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Direction,Projection,Scalar,AuthoredTable,cell,text_cell,row,push_row,sort,ordinal,validate_schema,check_database,settle}};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Direction,Projection,Scalar,AuthoredTable,cell,text_cell,row,push_row,sort,ordinal,validate_schema,check_database,settle}};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
 use store::NativeSnapshotBodyWallet;
 use std::{cell::{Cell,RefCell},mem::size_of};
 type Result<T>=std::result::Result<T,ValueError>;
-type Port<'a,'b,'c>=semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::Port<'a,'b,'c,NativeSnapshotBodyWallet>;
+type Port<'a,'b,'c>=semio_os_kernel::sqlite_snapshot::artifact::receiving::Port<'a,'b,'c,NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 const NAMES:[&str;2]=["text_document","text_line"];
 fn refused(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}

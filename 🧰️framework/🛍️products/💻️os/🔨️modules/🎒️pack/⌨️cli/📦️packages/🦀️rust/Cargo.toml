@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-pack-tools"
+name = "semio-os-pack-tools"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-pack = { path = "../../../📦️packages/🦀️rust" }
+semio-os-pack = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-pack-source = { path = "../../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 

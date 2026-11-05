@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertOpening where Op: 
         record: "InsertedOpening",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert opening {}", self.opening.id), &format!("Öffnung {} einfügen", self.opening.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert opening {}", self.opening.id), &format!("Öffnung {} einfügen", self.opening.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

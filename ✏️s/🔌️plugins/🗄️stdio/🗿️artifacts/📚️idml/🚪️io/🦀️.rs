@@ -1,5 +1,5 @@
 //! 🚪️ IDML native text, pack and operation representations over intrinsic package fields.
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind};
 use semio_framework_pack::{snapshot::{ArtifactDsl, ArtifactPack}, PackError};
 use semio_framework_diagnostic::{TextError, TextSpan};

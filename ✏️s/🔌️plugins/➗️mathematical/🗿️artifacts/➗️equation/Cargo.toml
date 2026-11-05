@@ -48,7 +48,7 @@ path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️package
 [workspace.dependencies.semio-framework-number]
 path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-tool-machine]

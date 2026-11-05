@@ -1,20 +1,20 @@
 //! 🖥️ Surface mounting, rendering, UI refresh sections and the context menu.
 
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_ui_runtime::ComponentTree;
-use semio_framework_ui_layout::layout::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_ui_runtime::ComponentTree;
+use semio_ui_layout::layout::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
 use serde::{Deserialize, Serialize};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework::kernel::Effect;
 use semio_framework::{Fault, FaultFrom, ViewModel};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_plugin_program::{PluginProgram, decode_wire_serialized};
-use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_plugin_program::{PluginProgram, decode_wire_serialized};
+use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 use serde_json::Value;
 use crate::ops_wire_limits::find_instance;
-use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
-use semio_framework_ui_contract as ui_contract;
-use semio_framework_plugin_runtime_instances::inst_wire_frames::{with_instances_mut, with_instances_turn_mut};
+use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_ui_contract as ui_contract;
+use semio_plugin_runtime_instances::inst_wire_frames::{with_instances_mut, with_instances_turn_mut};
 #[path="staged.rs"]
 pub mod staged_context;
 /// 📏️ Both bounds are DERIVED from the one language-neutral view-context contract

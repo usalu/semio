@@ -5,7 +5,7 @@ fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refres
     let fixture = theme_publication_fixture();
     let surface = fixture["surfaceId"].as_str().expect("surface id");
     assert!(!fixture["requiresGuestRefresh"].as_bool().expect("guest refresh contract"));
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.chrome.chrome_build.preferences.theme_id = "semio".into();
     shell.chrome.chrome_build.preferences.custom_themes.remove("custom.retained-publication");
     shell.prefs.clear_theme_draft();
@@ -42,7 +42,7 @@ fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refres
 
 #[test]
 fn invalid_theme_field_and_import_inputs_keep_the_exact_retained_revision() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let surface = FRAMEWORK_SETTINGS_THEME_TAB_ID;
     let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(surface).expect("initial Theme publication").expect("Theme retained document");
     let before = initial.header().expect("initial Theme header");
@@ -193,7 +193,7 @@ fn the_metrics_section_is_two_levels_and_names_both_coordinates() {
     let open_ids = theme_editor_control_ids(&open);
     let key = document.metrics[&section].keys().next().expect("🎨️ a metric section has entries");
     assert!(open_ids.contains(&format!("framework.settings.theme.metrics.{section}.{key}")), "🎨️ the open section shows its rows");
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.prefs.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({ "section": section, "key": key, "value": "42" }), &shell.chrome);
     assert_eq!(shell.prefs.theme_document(&shell.chrome).metrics[&section][key], ThemeNumber::Scalar(42.0), "🎨️ React's `setThemeMetric(section, key, value)`");
 }

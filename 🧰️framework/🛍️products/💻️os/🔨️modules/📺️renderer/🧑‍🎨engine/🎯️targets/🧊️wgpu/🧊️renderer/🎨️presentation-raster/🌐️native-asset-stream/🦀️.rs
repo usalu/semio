@@ -64,7 +64,7 @@ async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeM
         cancel: cancel.clone(),
         capability: None,
     };
-    let request = semio_framework_os_services::HttpRequest { method: "GET".into(), url: fetch.url().to_owned(), headers: Vec::new(), body: Vec::new() };
+    let request = semio_os_services::HttpRequest { method: "GET".into(), url: fetch.url().to_owned(), headers: Vec::new(), body: Vec::new() };
     let pool = if fetch.url().starts_with("https://") { &mailbox.0.native_asset_https } else { &mailbox.0.native_asset_http };
     let mut transport = None;
     let response = pool

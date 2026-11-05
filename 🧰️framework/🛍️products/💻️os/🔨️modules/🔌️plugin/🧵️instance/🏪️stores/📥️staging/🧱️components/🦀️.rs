@@ -1,29 +1,29 @@
 //! 🧺️ The instance components of `instance-stores`: ConstructorState, InstanceStores, PeerRoster, ActionIngress, LocalInteraction (WP6, plan section 7.3).
-use semio_framework_plugin_ownership::original_store_genesis::OriginalStoreSlot;
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry};
+use semio_plugin_ownership::original_store_genesis::OriginalStoreSlot;
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember};
-use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase, OriginalCatalogConstructor};
+use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase, OriginalCatalogConstructor};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
-use semio_framework_plugin_decl_views::{InteractionHoverState, PeerPresenceRoot};
+use semio_plugin_interaction::mutations::InteractionConfigMutation;
+use semio_plugin_decl_views::{InteractionHoverState, PeerPresenceRoot};
 use std::mem::ManuallyDrop;
 use protocol::OpText;
-use semio_framework_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication, PresenceRosterOutcome};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication, PresenceRosterOutcome};
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_plugin_child::SnapshotReadReturnPump;
-use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
-use semio_framework_ui_contract::*;
+use semio_plugin_child::SnapshotReadReturnPump;
+use semio_plugin_window_config::WindowConfigOwnerRegistry;
+use semio_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use semio_ui_contract::*;
 
 /// 🪣️ Store-constructor state: the receipts, units and lane of the four original catalogue constructors.
 pub struct ConstructorState<A: ArtifactApp> {
@@ -169,7 +169,7 @@ impl<A: ArtifactApp> PeerRoster<A> {
     /// 👁️ Retired read custody borrows the immutable empty value without allocating a replacement root.
     pub fn peer_presence_root(&self)->&PeerPresenceRoot{self.peer_presence.as_deref().unwrap_or(&PeerPresenceRoot::EMPTY)}
     /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
-    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_roster_publications,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_roster_outcomes,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_presence_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.presence_peer_retirements,64)?])}
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_roster_publications,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_roster_outcomes,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_presence_retirements,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.presence_peer_retirements,64)?])}
 
     /// 🪤️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new() -> Self {Self::from_original(std::sync::Arc::new(PeerPresenceRoot::empty()),semio_framework_job::CancelToken::root_now())}
@@ -197,21 +197,21 @@ impl<A: ArtifactApp> PeerRoster<A> {
         }
     }
 
-    pub fn admit_presence_ingress(&mut self, admission: semio_framework_plugin_peer::PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64) {
+    pub fn admit_presence_ingress(&mut self, admission: semio_plugin_peer::PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64) {
         let slot = crate::stores_components::InstanceStores::<A>::peer_roster_slot(admission.generation);
         assert_eq!(command.seq(), admission.seq, "Presence cursor sequence is bound by its unforgeable reservation");
         assert_eq!(self.peer_roster_reservations[slot], Some((admission.generation, admission.seq)), "Presence reservation remains live under the app's exclusive owner");
         assert!(self.peer_roster_publications.can_insert(admission.generation), "Presence publication slot was reserved before cursor construction");
         let generation = admission.generation;
-        self.peer_roster_publications.insert_admitted(generation, semio_framework_plugin_peer::PeerRosterPublication::<A>::new(admission, now_ms, command));
+        self.peer_roster_publications.insert_admitted(generation, semio_plugin_peer::PeerRosterPublication::<A>::new(admission, now_ms, command));
     }
 
-    pub fn reject_presence_ingress(&mut self, admission: semio_framework_plugin_peer::PresenceRosterAdmission, command: semio_framework::kernel::FixedCommandPage, fault: semio_framework::Fault) {
+    pub fn reject_presence_ingress(&mut self, admission: semio_plugin_peer::PresenceRosterAdmission, command: semio_framework::kernel::FixedCommandPage, fault: semio_framework::Fault) {
         let slot = crate::stores_components::InstanceStores::<A>::peer_roster_slot(admission.generation);
         assert_eq!(self.peer_roster_reservations[slot], Some((admission.generation, admission.seq)), "malformed Presence owner retains its exact reservation");
         assert!(self.peer_roster_publications.can_insert(admission.generation), "malformed Presence cleanup uses its pre-reserved publication slot");
         let generation = admission.generation;
-        self.peer_roster_publications.insert_admitted(generation, semio_framework_plugin_peer::PeerRosterPublication::<A>::rejected(admission, command, fault));
+        self.peer_roster_publications.insert_admitted(generation, semio_plugin_peer::PeerRosterPublication::<A>::rejected(admission, command, fault));
     }
 }
 
@@ -239,9 +239,9 @@ impl ActionIngress {
 
 /// 🎷️ Local interaction: the framework-owned live query, topology authority, hover and snapshot read returns.
 pub struct LocalInteraction<A: ArtifactApp> {
-    pub local_interaction_query: Option<semio_framework_plugin_interaction::live::LocalInteractionLiveQuery<A::Snapshot, A::Config>>,
+    pub local_interaction_query: Option<semio_plugin_interaction::live::LocalInteractionLiveQuery<A::Snapshot, A::Config>>,
     pub local_interaction_query_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
-    pub local_interaction_authority: semio_framework_plugin_interaction::authority::LocalInteractionTopologyAuthority,
+    pub local_interaction_authority: semio_plugin_interaction::authority::LocalInteractionTopologyAuthority,
     pub snapshot_read_return_stage: u8,
     pub local_interaction_query_turn: bool,
     pub local_interaction_emitted_bytes: u128,

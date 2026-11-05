@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "empty",
+      "count": 0,
+      "payload": "",
+      "repeat": 0,
+      "accepted": true
+    },
+    {
+      "id": "ascii",
+      "count": 3,
+      "payload": "a",
+      "repeat": 10,
+      "accepted": true
+    },
+    {
+      "id": "multibyte",
+      "count": 3,
+      "payload": "🧬",
+      "repeat": 8000,
+      "accepted": true
+    },
+    {
+      "id": "exact-byte-boundary",
+      "count": 1,
+      "payload": "a",
+      "repeat": 65484,
+      "accepted": true
+    },
+    {
+      "id": "overlong-singleton",
+      "count": 1,
+      "payload": "a",
+      "repeat": 65536,
+      "accepted": false
+    },
+    {
+      "id": "ordered-count-boundary",
+      "count": 259,
+      "payload": "a",
+      "repeat": 1,
+      "accepted": true
+    }
+  ]
+}

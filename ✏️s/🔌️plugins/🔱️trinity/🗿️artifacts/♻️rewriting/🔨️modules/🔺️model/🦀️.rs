@@ -1,6 +1,6 @@
 //! 🔺️ Rewriting model: the `LayoutPoint` record, the rule schema id and the dialect coordinate every surface of this artifact shares.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️Types
 /// 📍️ Local `{x, y}` twin for a bare `(f64, f64)` tuple — the DSL engine's `DslField` binding has no
@@ -49,7 +49,7 @@ semio_framework_value::artifact_retire_struct!(LayoutPoint { x, y });
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.rewriting".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Trinity Rewrite Rule", "Trinity-Umschreibregel"),
+        label: semio_ui_locale::LocalizedLabel::native("Trinity Rewrite Rule", "Trinity-Umschreibregel"),
         source_format: REWRITE_RULE_SCHEMA.into(),
         component_kind: "trinity".into(),
         dimension: "text".into(),

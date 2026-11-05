@@ -1,8 +1,8 @@
 use crate::CsvSnapshot;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::TreeWindows;
+use semio_ui_locale::Locale;
 use crate::editor::csv::modes::edit::windows::main::*;
-use semio_framework_plugin::Component;
+use semio_plugin::Component;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_structurally_editable_table_window() {
@@ -22,9 +22,9 @@ async fn render_splits_header_from_windowed_data_rows_and_binds_structure() {
         records: vec![crate::CsvRecord { fields: vec![crate::CsvField { value: "name".into(), quoted: false }] }, crate::CsvRecord { fields: vec![crate::CsvField { value: "ada".into(), quoted: false }] }],
     };
     let revision = "fedcba9876543210000000000000000000000000000000000000000000000000";
-    let node = render_revisioned(&document, revision, semio_framework_plugin::UiPublicationRevision(18364758544493064720), semio_framework_ui_locale::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    let node = render_revisioned(&document, revision, semio_plugin::UiPublicationRevision(18364758544493064720), semio_ui_locale::Locale::En, &semio_plugin::TreeWindows::unhosted()).expect("render");
     assert!(matches!(node.component, Component::Container(_)));
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("declarative table json");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("declarative table json");
     for witness in ["name", "ada", revision, "18364758544493064720", "publicationRevision", "set-cell", "set-header", "add-row", "add-column", "remove-row", "remove-column"] {
         assert!(json.contains(witness), "missing {witness} in {json}");
     }

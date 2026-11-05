@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentStrpYiel
         record: "ChangeAssessmentStrpYieldMpa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stirrup yield strength f_yw", "Bügelfließgrenze f_yw ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stirrup yield strength f_yw", "Bügelfließgrenze f_yw ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-strp-yield-mpa".into()]

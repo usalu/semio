@@ -7,7 +7,7 @@
 //! real, carried-over value — same documented shape `📓️w4-sequence-report.md` used for `🎬️sequence`.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 //#region 🔖️Standard
@@ -21,8 +21,8 @@ pub mod artifact_items_6 {
 use crate::{WRITER_DIALECT};
 
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.writer.writer")?)
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.schema.artifact")?, ArtifactCapabilityKind::schema())
@@ -70,24 +70,24 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `.artifact(declaration())` + `.editor::<>()`/`.viewer::<>()` channel is deleted in the SAME pass
 /// (plugin root `🦀️.rs`), never coexisting with this. `kind` uses `WRITER_DIALECT`'s own
 /// `artifact_kind` ("s.writer.writer") — the documented canonical coordinate, not guessed.
-pub fn artifact<A: WriterApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: WriterApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse(WRITER_DIALECT.artifact_kind).expect("canonical writer kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// ✒️ Application variants required to assemble the Writer artifact.
 pub trait WriterApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::writer::WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::writer::WriterViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::writer::WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::writer::WriterViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> WriterApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::writer::WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::writer::WriterViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::writer::WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::writer::WriterViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 //#endregion 🔖️Declaration

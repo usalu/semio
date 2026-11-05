@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for InsertTowerVariable wher
         record: "InsertTowerVariable",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert tower variable", "Turm-Nutzlast einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert tower variable", "Turm-Nutzlast einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-tower-variable".into()]

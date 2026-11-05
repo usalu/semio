@@ -25,8 +25,8 @@ pub fn resize_vortex<Op: From<crate::resize_vortex::ResizeVortex>>(id: String, n
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ResizeVortex where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::resize_vortex::ResizeVortex> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "vortex", kind: "resize-vortex", record: "ResizedVortex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize vortex \"{}\"", self.id), &format!("Größe von Wirbel \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Resize vortex \"{}\"", self.id), &format!("Größe von Wirbel \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

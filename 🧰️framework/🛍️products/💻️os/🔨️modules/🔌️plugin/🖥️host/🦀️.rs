@@ -7,7 +7,7 @@ pub mod activation;
 #[path = "🎁️package-assets/🦀️.rs"]
 pub mod package_assets;
 
-use semio_framework_plugin_guest_contract::PluginHostError;
+use semio_plugin_guest_contract::PluginHostError;
 use semio_framework::FaultFrom;
 pub use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework_value_derive::FromValue;
@@ -113,7 +113,7 @@ impl SessionLanePack {
     }
 
     /// 🧾 Applies guest `AppFrame::Emit` op bytes onto this lane via `ArtifactCodec` when `schema` is set.
-    pub async fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>, identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    pub async fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>, identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         if ops.is_empty() {
             return;
         }

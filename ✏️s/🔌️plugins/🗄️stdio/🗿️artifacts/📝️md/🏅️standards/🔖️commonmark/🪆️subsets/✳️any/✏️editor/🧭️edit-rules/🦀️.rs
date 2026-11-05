@@ -5,7 +5,7 @@
 
 use crate::standards::v_commonmark::subsets::any::schema::mutations::{insert_block, remove_block, replace_block, set_inlines, MdMutation, MdPathStep};
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::{MdBlock, MdSnapshot};
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::{FromValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, SnapshotEditEvent};
 

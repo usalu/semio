@@ -1,5 +1,5 @@
 //! ⚠️ Original command Pack refusal retains its complete native failure and borrowed projection.
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
 #[derive(Debug,semio_framework_value::RetireOwned)]
 pub struct OriginalCommandPackFailure{pub original:store::os_pack::PackRefusal}

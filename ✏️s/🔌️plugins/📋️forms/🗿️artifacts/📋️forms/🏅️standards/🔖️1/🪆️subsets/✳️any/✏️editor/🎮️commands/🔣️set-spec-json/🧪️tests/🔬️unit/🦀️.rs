@@ -1,6 +1,6 @@
-use crate::editor::forms::config::FormsConfig;
+use crate::forms_config::FormsConfig;
 use crate::FormsSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use crate::editor::forms::commands::set_spec_json::*;
 use crate::forms_steps;
 use crate::editor::forms::commands::set_active_example::SetActiveExample;
@@ -42,7 +42,7 @@ async fn set_spec_json_replaces_the_document() {
 async fn set_spec_json_with_invalid_json_reports_a_fault() {
     let mut app = forms_app().await;
     let before = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let config = FormsConfig::default();
     let outcome = handle(&SetSpecJson { json: "not json".into() }, &ArtifactView::new(&before, &history), &ConfigView { snapshot: &config, window: None });
     assert!(outcome.is_err());
@@ -56,7 +56,7 @@ fn canonical_import_vectors_preserve_document_identity_and_answers() {
     use protocol::{ColdMutation, Mutation};
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/📥️import/🔣️.json")).unwrap();
     let current: FormsSnapshot = semio_framework_pack_json::from_json_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/💾️persistence/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let config = FormsConfig::default();
     for case in vectors["cases"].as_array().unwrap() {
         let outcome = handle(&SetSpecJson { json: case["source"].as_str().unwrap().into() }, &ArtifactView::new(&current, &history), &ConfigView { snapshot: &config, window: None });

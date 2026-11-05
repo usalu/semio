@@ -17,14 +17,14 @@ pub struct ActionArgNumberFacets {
     pub min: Option<f64>,
     pub max: Option<f64>,
     pub step: Option<f64>,
-    pub appearance: semio_framework_ui_contract::SliderAppearance,
-    pub scale: semio_framework_ui_contract::UiNumberScale,
+    pub appearance: semio_ui_contract::SliderAppearance,
+    pub scale: semio_ui_contract::UiNumberScale,
     pub unit: Option<String>,
     pub display_unit: Option<String>,
     pub display_factor: Option<f64>,
     pub precision: Option<u16>,
     pub snaps: Vec<f64>,
-    pub limits: semio_framework_ui_contract::UiNumberLimits,
+    pub limits: semio_ui_contract::UiNumberLimits,
 }
 
 impl ActionArgNumberFacets {
@@ -61,7 +61,7 @@ impl ActionArgDef {
     /// 🎛️ The [`ActionArgNumberFacets`] of the control [`Self::control`] derives, its refusals in `locale` — `None` unless
     /// the input is a number field, stepper, slider, dial or vector.
     pub fn number_facets(&self, locale: Locale) -> Option<ActionArgNumberFacets> {
-        use semio_framework_ui_contract::{SliderAppearance, UiNumberBound, UiNumberLimits, UiNumberScale};
+        use semio_ui_contract::{SliderAppearance, UiNumberBound, UiNumberLimits, UiNumberScale};
         let (hard_min, hard_max, min_exclusive, max_exclusive) = match &self.schema {
             ArgSchema::Number { min, max, min_exclusive, max_exclusive, .. } => (*min, *max, *min_exclusive, *max_exclusive),
             ArgSchema::Vector { min, max, .. } => (*min, *max, false, false),
@@ -74,7 +74,7 @@ impl ActionArgDef {
             unit: unit.as_deref().map(action_arg_unit_symbol),
             display_unit: display_unit.as_deref().map(action_arg_unit_symbol),
             display_factor,
-            precision: precision.map(|precision| u16::try_from(precision).unwrap_or(u16::MAX).min(semio_framework_ui_contract::UI_NUMBER_PRECISION_MAX)),
+            precision: precision.map(|precision| u16::try_from(precision).unwrap_or(u16::MAX).min(semio_ui_contract::UI_NUMBER_PRECISION_MAX)),
             snaps,
             ..ActionArgNumberFacets::default()
         };
@@ -89,10 +89,10 @@ impl ActionArgDef {
         };
         let shown_unit = facets.shown_unit().map(ToOwned::to_owned);
         let bound = |value: f64, exclusive: bool, below: bool| {
-            let text = semio_framework_ui_contract::ui_number_display_text(value, facets.display_factor, None);
+            let text = semio_ui_contract::ui_number_display_text(value, facets.display_factor, None);
             let text = shown_unit.as_ref().map_or_else(|| text.clone(), |unit| format!("{text} {unit}"));
             let refusal = action_arg_bound_refusal(below, exclusive, locale).replace("{bound}", &text);
-            UiNumberBound { value, exclusive, refusal: Some(semio_framework_ui_contract::Label(semio_framework_ui_contract::UiText::clipped(&refusal))) }
+            UiNumberBound { value, exclusive, refusal: Some(semio_ui_contract::Label(semio_ui_contract::UiText::clipped(&refusal))) }
         };
         let limits = UiNumberLimits { min: hard_min.map(|value| bound(value, min_exclusive, true)), max: hard_max.map(|value| bound(value, max_exclusive, false)) };
         let (low, high) = (facets.min.unwrap_or(f64::NEG_INFINITY), facets.max.unwrap_or(f64::INFINITY));

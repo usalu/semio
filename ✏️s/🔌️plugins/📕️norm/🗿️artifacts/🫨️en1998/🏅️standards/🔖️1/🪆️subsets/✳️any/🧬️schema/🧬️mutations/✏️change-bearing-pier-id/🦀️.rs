@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBearingPierId wher
         record: "ChangeBearingPierId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pier carrying the bearing (empty = abutment)", "Tragender Pfeiler (leer = Widerlager) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pier carrying the bearing (empty = abutment)", "Tragender Pfeiler (leer = Widerlager) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bearing-pier-id".into()]

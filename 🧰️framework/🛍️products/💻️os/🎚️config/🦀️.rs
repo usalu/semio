@@ -1,7 +1,7 @@
 //! 🎚️ Canonical OS configuration schema and mutation contracts.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 #[path = "."]
 pub mod opening_config {
@@ -9,7 +9,7 @@ pub mod opening_config {
     mod component;
     pub use component::*;
 
-    /// 🪝️ Test hook of the companion crates `semio-framework-os-config-tests-1` and `-2`: the private schema module, public only behind the `testkit` feature.
+    /// 🪝️ Test hook of the companion crates `semio-os-config-tests-1` and `-2`: the private schema module, public only behind the `testkit` feature.
     #[cfg(feature = "testkit")]
     #[doc(hidden)]
     pub mod testkit {

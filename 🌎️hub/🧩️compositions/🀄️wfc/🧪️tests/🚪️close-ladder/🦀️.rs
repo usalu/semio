@@ -5,9 +5,9 @@
 //! Each close turn is one browser worker round trip, so a ladder whose turn count grows with the
 //! retained session is a role switch whose wall time grows with it — the exact regression
 //! `📓️close-ladder-2026-09-10.md` measured on procedural.
-use semio_framework_os_kernel as store;
-use semio_framework_plugin::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, AppInstanceId, Budget, Event};
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_pack, PluginRuntime};
+use semio_os_kernel as store;
+use semio_plugin::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, AppInstanceId, Budget, Event};
+use semio_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_pack, PluginRuntime};
 
 type WfcRuntime = PluginRuntime<semio_hub_wfc::WfcApps>;
 
@@ -44,8 +44,8 @@ fn open_event(app_id: &str) -> Event {
     }
 }
 
-async fn turn(runtime: &WfcRuntime, events: Vec<Event>) -> semio_framework_plugin::kernel::TurnResult {
-    semio_framework_plugin::reactor::poll_kernel(runtime, events, None, None, close_budget()).await.expect("wfc close-ladder turn")
+async fn turn(runtime: &WfcRuntime, events: Vec<Event>) -> semio_plugin::kernel::TurnResult {
+    semio_plugin::reactor::poll_kernel(runtime, events, None, None, close_budget()).await.expect("wfc close-ladder turn")
 }
 
 async fn acknowledge(runtime: &WfcRuntime, receipt: ActorInstanceLifecycleReceipt) {
@@ -80,10 +80,10 @@ async fn settled_document_pack(runtime: &WfcRuntime) -> store::os_store::seriali
 /// reactor turns, so the retained window transients, the history ledger and the engagement frames all
 /// grow with the session length.
 async fn replay_session(runtime: &WfcRuntime, loads: usize, turns_per_load: usize) {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     for _ in 0..loads {
         let pack = settled_document_pack(runtime).await;
-        semio_framework_plugin::artifact_app_laws::plugin_load_document(runtime, CLOSE_INSTANCE, &pack, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("the instance reloads its own document");
+        semio_plugin::artifact_app_laws::plugin_load_document(runtime, CLOSE_INSTANCE, &pack, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("the instance reloads its own document");
         for _ in 0..turns_per_load {
             turn(runtime, Vec::new()).await;
         }

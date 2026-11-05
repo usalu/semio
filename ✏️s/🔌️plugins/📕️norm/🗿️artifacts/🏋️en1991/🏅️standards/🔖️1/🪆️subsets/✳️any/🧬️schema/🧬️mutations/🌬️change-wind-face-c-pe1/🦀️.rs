@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindFaceCPe1 where
         record: "ChangedWindFaceCPe1",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change external pressure cpe,1 of the wind face", "Windfläche: Außendruckbeiwert cpe,1 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change external pressure cpe,1 of the wind face", "Windfläche: Außendruckbeiwert cpe,1 ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -37,18 +37,18 @@ pub const WFC_2D_INFERENCE_REQUEST_SCHEMA: &str = r#"{
 
 /// 📜️ The whole published contract for `s.wfc.wfc2d.solve`: request schema, result schema, the
 /// unit its bounded job counts, and the artifact binding that makes it callable at all.
-pub const WFC_2D_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePayloadContract = semio_framework_plugin::ArtifactInferencePayloadContract {
+pub const WFC_2D_INFERENCE_CONTRACT: semio_plugin::ArtifactInferencePayloadContract = semio_plugin::ArtifactInferencePayloadContract {
     payload_schema_id: WFC_2D_INFERENCE_PAYLOAD_SCHEMA,
     input_schema: WFC_2D_INFERENCE_REQUEST_SCHEMA,
     output_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"),
     progress_unit: "slots",
-    artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
+    artifact_binding: Some(semio_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
     commit: None,
 };
 
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.
-pub const fn wfc2d_inference_metadata() -> semio_framework_plugin::ArtifactInferenceServiceMetadata {
-    semio_framework_plugin::ArtifactInferenceServiceMetadata {
+pub const fn wfc2d_inference_metadata() -> semio_plugin::ArtifactInferenceServiceMetadata {
+    semio_plugin::ArtifactInferenceServiceMetadata {
         owner: "wfc",
         artifact_kind: "s.wfc.wfc2d",
         artifact_schema: "s.wfc.wfc2d",
@@ -73,7 +73,7 @@ pub struct Wfc2dInferenceRequest {
     /// `inference_run` with `artifactId` never has to state a snapshot it could not type: the
     /// gateway binds the document here and the guest decodes it into its own snapshot below.
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub document: Option<semio_framework_plugin::ArtifactDocumentPayload>,
+    pub document: Option<semio_plugin::ArtifactDocumentPayload>,
     pub checkpoint: Option<Vec<u8>>,
 }
 
@@ -812,7 +812,7 @@ impl semio_framework::ToolJobFactory for Wfc2dInferenceJobFactory {
         semio_framework::ToolExecutionContract::resumable(16 << 20, MAX_WFC_2D_TILES + MAX_WFC_2D_SLOTS + MAX_WFC_2D_RULES + MAX_WFC_2D_EDGES, 4_096, MAX_WFC_2D_OUTPUT_BYTES, 7_500, 1, 1)
     }
 
-    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Wfc2dInferenceJob::new(operation, payload));
+    semio_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Wfc2dInferenceJob::new(operation, payload));
 }
 
 /// 💡️ Descriptor for the `s.wfc.wfc2d.solve` inference — five handcrafted facet leaves.

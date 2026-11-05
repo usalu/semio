@@ -2,8 +2,8 @@
 
 use crate::editor::grid2d::modes::edit::windows::preview;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ToolRunJobPort;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunTraceKind};
 use std::sync::Arc;
 use crate::editor::grid2d::modes::edit::tools::fill::*;

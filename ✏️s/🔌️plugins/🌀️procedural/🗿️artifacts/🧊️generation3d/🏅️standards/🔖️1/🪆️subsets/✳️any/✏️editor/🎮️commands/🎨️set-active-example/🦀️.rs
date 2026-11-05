@@ -11,11 +11,11 @@ use semio_s_artifact_procedural_3d_model::is_generation3d_example_id;
 use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::CameraJson;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 
 /// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded document — a bundled example
 /// here, an imported file in `📥️import-document` — keeping every other display option (preview

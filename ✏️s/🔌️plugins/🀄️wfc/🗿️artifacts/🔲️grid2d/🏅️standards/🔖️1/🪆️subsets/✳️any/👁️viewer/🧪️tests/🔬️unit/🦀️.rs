@@ -2,15 +2,15 @@
 
 use crate::viewer::grid2d::modes::view::windows::preview;
 use crate::{Grid2dSnapshot, WFC_GRID2D_DIALECT};
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::Viewer;
 use crate::viewer::grid2d::*;
 
 #[test]
 fn the_viewer_builds_a_definition_for_the_viewer_role() {
     let definition = create_grid2d_viewer();
-    assert_eq!(definition.role, semio_framework_plugin::AppRole::Viewer);
+    assert_eq!(definition.role, semio_plugin::AppRole::Viewer);
     assert_eq!(definition.dialect, WFC_GRID2D_DIALECT.into());
 }
 
@@ -21,7 +21,7 @@ fn the_viewer_declares_one_read_only_window() {
     let window = definition.window_kinds.first();
     assert_eq!(window.id, preview::WINDOW_KIND_ID);
     assert!(
-        window.actions.iter().all(|action| action.kind != semio_framework_plugin::ActionKind::Mutation),
+        window.actions.iter().all(|action| action.kind != semio_plugin::ActionKind::Mutation),
         "a viewer may carry framework-reserved rows but never a mutation verb"
     );
     assert!(window.utilities.is_empty());
@@ -74,7 +74,7 @@ fn a_pinned_cell_draws_its_tile_media_while_a_masked_cell_draws_nothing() {
 /// went red on 2026-09-22 when a new tool reached `TOOL_IDS` and the proofs but not the lane contracts.
 #[test]
 fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let tools: std::collections::BTreeSet<&str> = GRID2D_VIEW_TOOL_IDS.iter().copied().collect();
     assert_eq!(<Grid2dViewCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, GRID2D_VIEW_TOOL_IDS);
     let publication: std::collections::BTreeSet<&str> = <Grid2dViewCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
@@ -82,7 +82,7 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
     for contract in <Grid2dViewCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
         assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
         assert!(
-            !contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1,
+            !contract.lanes.contains(&semio_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1,
             "tool {} mixes the HostOnly lane with a publishing lane",
             contract.tool_id
         );

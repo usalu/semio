@@ -257,7 +257,23 @@
         "semio": {
           "wasmPackageSourceV1": {
             "version": 1,
-            "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust"
+            "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust",
+            "compileOutputs": [
+              {
+                "specifier": "@semio-tech/flow-core",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/flow_core.js",
+                "declarations": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/flow_core.d.ts"
+              },
+              {
+                "specifier": "@semio-tech/flow-core/🌐️flow-browser.js",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🌐️browser/🟨️.js",
+                "declarations": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🌐️browser/🟦️.d.ts"
+              },
+              {
+                "specifier": "@semio-tech/flow-core/🖥️flow-host.js",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🖥️host/🟨️.js"
+              }
+            ]
           },
           "sourceInputObservation": "freshness",
           "closure": {
@@ -424,7 +440,7 @@
     }
   },
   "implicitDependencies": [
-    "semio-framework-os-flow"
+    "semio-os-flow"
   ],
   "namedInputs": {
     "flowBrowserProduction": [

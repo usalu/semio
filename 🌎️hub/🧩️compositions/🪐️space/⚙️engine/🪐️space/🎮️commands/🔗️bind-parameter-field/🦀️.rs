@@ -1,9 +1,9 @@
 //! 🔢️ 🔢️ S Studio app command — `bind-parameter-field`.
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::workflow::{BindParameterField as BindParameterFieldMutation, UnbindParameterField as UnbindParameterFieldMutation};
-use semio_framework_os::{WorkflowMutation, WorkflowParameterBinding, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os::workflow::{BindParameterField as BindParameterFieldMutation, UnbindParameterField as UnbindParameterFieldMutation};
+use semio_os::{WorkflowMutation, WorkflowParameterBinding, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "bind-parameter-field")]

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeStudRowSpacingRadi
         record: "ChangedStudRowSpacingRadial",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change radial stud spacing s_r of the stud row", "Dübelreihe: Radialer Dübelabstand s_r ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change radial stud spacing s_r of the stud row", "Dübelreihe: Radialer Dübelabstand s_r ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.stud_row_id.clone()]

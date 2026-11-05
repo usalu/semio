@@ -3,15 +3,15 @@
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::{pick_item, DAG_PLAY_APP_ID, DAG_PLAY_INTERACTION_DOMAIN};
 use crate::DagScene;
-use semio_framework_os_infinite_directed_presentation::dag_node_kind_tag;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_os_infinite_directed_presentation::dag_node_kind_tag;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_ARTIFACT: &str = "dag.play.artifact";
@@ -38,12 +38,12 @@ pub fn definition() -> PanelTabDefinition {
 ///
 /// 🪟️ Both sections are windowed — the crate is literally the "infinite DAG", so neither node nor
 /// edge count is bounded; the host's `TreeWindows` decide the slice and every section stamps `total`.
-pub fn render(scene: &DagScene, labels: &DagPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(scene: &DagScene, labels: &DagPlayLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     PanelTreeBuilder::new("dag-play-document")?
         .window_section_or_placeholder(
             windows,
             "dag-play-document.nodes",
-            Some(semio_framework_ui_contract::Label::try_from(labels.nodes.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "outline heading admission failed"))?),
+            Some(semio_ui_contract::Label::try_from(labels.nodes.as_str()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "outline heading admission failed"))?),
             true,
             &scene.nodes,
             |node| pick_item(node.id.clone(), if node.name.is_empty() { node.id.clone() } else { node.name.clone() }, Some(dag_node_kind_tag(&node.kind).into()), "node"),
@@ -52,7 +52,7 @@ pub fn render(scene: &DagScene, labels: &DagPlayLabels, windows: &TreeWindows<'_
         .window_section_or_placeholder(
             windows,
             "dag-play-document.edges",
-            Some(semio_framework_ui_contract::Label::try_from(labels.edges.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "outline heading admission failed"))?),
+            Some(semio_ui_contract::Label::try_from(labels.edges.as_str()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "outline heading admission failed"))?),
             false,
             &scene.edges,
             |edge| pick_item(edge.id.clone(), format!("{} → {}", edge.source, edge.target), Some(edge.id.clone()), "edge"),

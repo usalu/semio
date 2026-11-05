@@ -22,14 +22,14 @@ async fn inspector_shows_no_selection_by_default() {
 #[test]
 fn inspector_slider_control_rides_on_a_tree_row() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(
+    let fixture = semio_os_flow::FlowHost::parse_host_snapshot_json(
         r#"{"schema":"flow.host_snapshot","camera":{"x":0.0,"y":0.0,"zoom":1.0},"widgets":[{"kind":"inputSlider","id":"height","label":"Height","value":3.0,"min":0.0,"max":10.0,"step":0.5}],"synapses":[],"layout":{"height":{"x":0.0,"y":0.0}}}"#,
     )
     .expect("law fixture parses");
-    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let tree = render(&fixture, &["height".to_string()], labels, &semio_framework_plugin::TreeWindows::unhosted(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native, &[], "{}", "{}", true).expect("inspector builds");
+    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let tree = render(&fixture, &["height".to_string()], labels, &semio_plugin::TreeWindows::unhosted(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native, &[], "{}", "{}", true).expect("inspector builds");
     fixture.retire_cold();
-    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("inspector projects");
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).expect("inspector projects");
     let projection: serde_json::Value = serde_json::from_str(&projection).expect("inspector projection json");
     let rows = projection["children"][0]["children"].as_array().cloned().unwrap_or_default();
     let value_row = rows.iter().find(|row| row["key"] == "procedural-play-inspector.value").unwrap_or_else(|| panic!("the inspector renders a value row: {projection}"));
@@ -48,13 +48,13 @@ fn inspector_slider_control_rides_on_a_tree_row() {
 fn inspector_exposes_typed_operator_fields_and_connected_sources() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     crate::flow_operators::installed();
-    let mut host = semio_framework_os_flow::FlowHost::default();
-    host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
+    let mut host = semio_os_flow::FlowHost::default();
+    host.set_neuron_kind_info_map(semio_os_flow::flow_neuron_kind_info_map());
     let source = host.add_widget(r#"{"kind":"inputSlider","id":"width"}"#, 0.0, 0.0).unwrap();
     let shape = host.add_widget(r#"{"kind":"neuron","id":"shape","neuronKind":"brep.mesh.box"}"#, 200.0, 0.0).unwrap();
-    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let tree = render(&host.host_snapshot, &[shape.clone()], labels, &semio_framework_plugin::TreeWindows::unhosted(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native, &[], "{}", "{}", true).unwrap();
-    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let tree = render(&host.host_snapshot, &[shape.clone()], labels, &semio_plugin::TreeWindows::unhosted(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native, &[], "{}", "{}", true).unwrap();
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
     let projection: serde_json::Value = serde_json::from_str(&projection).unwrap();
     let rows = projection["children"][0]["children"].as_array().unwrap();
     let row = rows.iter().find(|row| row["key"] == "procedural-play-inspector.input.width").unwrap();
@@ -62,8 +62,8 @@ fn inspector_exposes_typed_operator_fields_and_connected_sources() {
     assert!(row["children"][0]["bindings"].to_string().contains("setWidgetInput"));
     assert!(row["children"][0]["bindings"].to_string().contains("commit"));
     host.connect_ports(&source, "number", &shape, "width").unwrap();
-    let tree = render(&host.host_snapshot, &[shape], labels, &semio_framework_plugin::TreeWindows::unhosted(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native, &[], "{}", "{}", true).unwrap();
-    let connected = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+    let tree = render(&host.host_snapshot, &[shape], labels, &semio_plugin::TreeWindows::unhosted(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native, &[], "{}", "{}", true).unwrap();
+    let connected = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
     assert!(connected.contains("Connected"));
     assert!(!connected.contains("procedural-play-inspector.input.width.input"));
     host.retire_cold();
@@ -74,7 +74,7 @@ fn inspector_exposes_typed_operator_fields_and_connected_sources() {
 fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized() {
     use semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot;
     use semio_s_artifact_procedural_3d_model::with_host;
-    use semio_framework_ui_locale::{Locale, Terminology};
+    use semio_ui_locale::{Locale, Terminology};
     use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     crate::flow_operators::installed();
@@ -107,8 +107,8 @@ fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized
         for (locale, locale_key, labels) in [(Locale::En, "en", &Generation3dLabels::NATIVE_EN), (Locale::De, "de", &Generation3dLabels::NATIVE_DE)] {
             for status in fixture["selectedBrepControls"]["statuses"].as_array().unwrap() {
                 let statuses = serde_json::json!({"selected":{"status":status}}).to_string();
-                let built = render(&snapshot.host_snapshot, &["selected".into()], labels, &semio_framework_plugin::TreeWindows::unhosted(), locale, Terminology::Native, &[], &evaluation, &statuses, true).unwrap();
-                let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(built)).unwrap();
+                let built = render(&snapshot.host_snapshot, &["selected".into()], labels, &semio_plugin::TreeWindows::unhosted(), locale, Terminology::Native, &[], &evaluation, &statuses, true).unwrap();
+                let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
                 let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
                 for expected in case["controls"].as_array().unwrap() {
                     let control = node(&tree, &format!("procedural-play-inspector.input.{}.input", expected["channel"].as_str().unwrap())).unwrap_or_else(|| panic!("{projection}"));
@@ -148,7 +148,7 @@ fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized
                     assert!(text.contains(match status.as_str().unwrap() { "stale" => labels.mesh_output_stale.as_str(), "error" => labels.mesh_output_error.as_str(), _ => expected["expectedText"].as_str().unwrap() }), "{}: {projection}", case["id"]);
                     assert!(!text.contains("setWidgetInput"));
                 }
-                assert!(semio_framework_plugin::artifact_app_laws::document_input_commit_findings(&tree, &|name| name == "setWidgetInput").is_empty());
+                assert!(semio_plugin::artifact_app_laws::document_input_commit_findings(&tree, &|name| name == "setWidgetInput").is_empty());
                 assert_eq!(semio_framework_pack_json::to_json_string(&*snapshot), before);
             }
         }
@@ -165,9 +165,9 @@ fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized
             std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
             let before = semio_framework_pack_json::to_json_string(&*snapshot);
             for (locale, labels) in [(Locale::En, &Generation3dLabels::NATIVE_EN), (Locale::De, &Generation3dLabels::NATIVE_DE)] {
-                let view = semio_framework_plugin::ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: GENERATION_3D_PLAY_BODY_INSPECTION.into(), node_key: key.clone(), open: Some(true), offset: window["offset"].as_u64().unwrap() as u32, rows: window["rows"].as_u64().unwrap() as u32 }], ..semio_framework_plugin::ViewModel::new(locale, Terminology::Native) };
-                let built = render(&snapshot.host_snapshot, &["selected".into()], labels, &semio_framework_plugin::TreeWindows::for_body(&view, GENERATION_3D_PLAY_BODY_INSPECTION), locale, Terminology::Native, &[], &evaluation, "{}", true).unwrap();
-                let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(built)).unwrap();
+                let view = semio_plugin::ViewModel { tree_windows: vec![semio_plugin::TreeWindowRequest { body_key: GENERATION_3D_PLAY_BODY_INSPECTION.into(), node_key: key.clone(), open: Some(true), offset: window["offset"].as_u64().unwrap() as u32, rows: window["rows"].as_u64().unwrap() as u32 }], ..semio_plugin::ViewModel::new(locale, Terminology::Native) };
+                let built = render(&snapshot.host_snapshot, &["selected".into()], labels, &semio_plugin::TreeWindows::for_body(&view, GENERATION_3D_PLAY_BODY_INSPECTION), locale, Terminology::Native, &[], &evaluation, "{}", true).unwrap();
+                let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
                 let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
                 for (index, expected) in window["expected"].as_array().unwrap().iter().enumerate() {
                     let row = node(&tree, &format!("{key}.{}", window["offset"].as_u64().unwrap() as usize + index)).unwrap_or_else(|| panic!("{projection}"));

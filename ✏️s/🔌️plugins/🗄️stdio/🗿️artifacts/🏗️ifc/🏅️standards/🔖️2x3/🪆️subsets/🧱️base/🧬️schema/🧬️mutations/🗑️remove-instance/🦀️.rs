@@ -13,8 +13,8 @@ pub struct RemoveInstance {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for RemoveInstance {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "instance", kind: "remove-instance", record: "RemoveInstance" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove instance", "Instanz entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove instance", "Instanz entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

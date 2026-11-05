@@ -1,8 +1,8 @@
 //! 👥️ 👥️ S Studio app command — `presence-heartbeat`.
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "presence-heartbeat")]
@@ -17,7 +17,7 @@ pub fn handle(_payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, WorkflowSnap
 /// 🪪️ Accepts a heartbeat only with the current host-owned session identity and never persists a copy.
 pub fn handle_with_identity(
     _payload: &PresenceHeartbeat,
-    identity: &semio_framework_plugin::ViewSessionIdentity,
+    identity: &semio_plugin::ViewSessionIdentity,
     _doc: &ArtifactView<'_, WorkflowSnapshot>,
     _cfg: &ConfigView<'_, SpaceConfig>,
 ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {

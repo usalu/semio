@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFatigueModelLane w
         record: "ChangedFatigueModelLane",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fatigue model: Lane number", "Ermüdungsmodell: Fahrstreifennummer ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fatigue model: Lane number", "Ermüdungsmodell: Fahrstreifennummer ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

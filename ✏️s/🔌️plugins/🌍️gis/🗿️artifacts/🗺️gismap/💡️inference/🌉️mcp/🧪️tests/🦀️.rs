@@ -1,7 +1,7 @@
-use semio_framework_os_mcp::GatewayErrorCode;
+use semio_os_mcp::GatewayErrorCode;
 
 use super::*;
-use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::DocumentScope;
 use semio_framework_async::OperationContext;
 use semio_framework_async::{CancelToken, TraceId};
 
@@ -85,7 +85,7 @@ fn hub_inference_jobs_path(scope:&DocumentScope,_route:&str)->String {
 
 #[test]
 fn owner_codec_declares_only_bounded_closed_request_fields() {
-    let port=semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::compile("gis",semio_s_artifact_gis_gismap::inference_client::declaration()).unwrap();
+    let port=semio_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::compile("gis",semio_s_artifact_gis_gismap::inference_client::declaration()).unwrap();
     let request=HubInferenceSubmitRequestV1::new(GIS_MAP_INFERENCE_SERVICE_ID,sample_job_id(),1000);
     let payload=dsl(&serde_json::to_value(request).unwrap()).unwrap();
     let encoded=encode("submit",&payload).unwrap();
@@ -245,11 +245,11 @@ fn neutral_job_pages_refuse_foreign_jobs_and_private_payloads() {
 
 #[test]
 fn installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_execution() {
-    use semio_framework_os_mcp::{catalog::{CatalogSource,compile},workspace::HeadlessWorkspace,protocol::{ToolRegistry,InMemoryToolRegistry}};
+    use semio_os_mcp::{catalog::{CatalogSource,compile},workspace::HeadlessWorkspace,protocol::{ToolRegistry,InMemoryToolRegistry}};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🗺️discovery/🔣️.json")).unwrap();
     let repo=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(9).unwrap();
-    let descriptor=semio_framework_os_mcp::workspace::load_package_descriptor(&repo.join("🌎️hub/🧩️compositions/🌍️gis")).unwrap();
-    let catalog=std::sync::Arc::new(compile(&CatalogSource {descriptors:vec![descriptor],..Default::default()},semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native).unwrap());
+    let descriptor=semio_os_mcp::workspace::load_package_descriptor(&repo.join("🌎️hub/🧩️compositions/🌍️gis")).unwrap();
+    let catalog=std::sync::Arc::new(compile(&CatalogSource {descriptors:vec![descriptor],..Default::default()},semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native).unwrap());
     let output=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).expect("select generated output for owner discovery");
     let folder=output.join("owner-discovery");std::fs::create_dir_all(&folder).unwrap();
     let workspace=std::sync::Arc::new(HeadlessWorkspace::open_folder(folder,"agent:test".into(),Vec::new(),catalog).unwrap());

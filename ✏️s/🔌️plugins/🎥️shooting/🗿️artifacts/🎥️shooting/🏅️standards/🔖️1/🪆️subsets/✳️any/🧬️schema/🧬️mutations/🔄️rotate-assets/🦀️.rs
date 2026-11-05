@@ -24,10 +24,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "assets", kind: "rotate-assets", record: "RotatedAssets" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.asset_ids.len() {
-            1 => semio_framework_ui_locale::LocalizedLabel::native("Rotate 1 asset", "1 Asset drehen"),
-            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {count} assets"), &format!("{count} Assets drehen")),
+            1 => semio_ui_locale::LocalizedLabel::native("Rotate 1 asset", "1 Asset drehen"),
+            count => semio_ui_locale::LocalizedLabel::native(&format!("Rotate {count} assets"), &format!("{count} Assets drehen")),
         }
     }
     fn target(&self) -> Vec<String> {

@@ -10,7 +10,7 @@ use super::*;
 /// 🌳️ Builds a plugin from `declaration` and asserts every subset ends up registered in the
 /// schema registry, the io registry (when it declares any `IoEntry` rows), and the app router
 /// (manifest apps) — "nothing is silently dropped" (Task 4, law 1/3).
-pub async fn assert_declaration_tree_registers_all<PA: PluginApp>(plugin_id: &str, declaration: semio_framework_plugin_decl_registry::declarations::ArtifactDeclaration<PA>) {
+pub async fn assert_declaration_tree_registers_all<PA: PluginApp>(plugin_id: &str, declaration: semio_plugin_decl_registry::declarations::ArtifactDeclaration<PA>) {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let expected_schema_ids: Vec<&'static str> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter().map(|subset| subset.schema.descriptor.id)).collect();
@@ -20,12 +20,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
     let expected_surface_ids: Vec<String> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| [subset.editor.definition.id.clone(), subset.viewer.definition.id.clone()]).collect();
 
-    let plugin = semio_framework_plugin_builder::PluginBuilder::new(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
+    let plugin = semio_plugin_builder::PluginBuilder::new(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
 
     for id in &expected_schema_ids {
         assert!(::semio_framework_schema_registry::artifact_schema_descriptor_registered(id), "schema descriptor {id:?} must be registered");
     }
-    let live_io_entries = semio_framework_os_kernel::io::io_mechanism::io_entries();
+    let live_io_entries = semio_os_kernel::io::io_mechanism::io_entries();
     for (from, into) in &expected_io_pairs {
         let mut found = false;
         for entry in live_io_entries.iter() {
@@ -46,18 +46,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// descriptors share an id with different content) — asserts the schema AND io registries are
 /// byte-for-byte unchanged after the rejection: a preflight-failing declaration leaves ZERO
 /// rows behind (Task 4, law 2/3).
-pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: semio_framework_plugin_decl_registry::declarations::ArtifactDeclaration<PA>) {
+pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: semio_plugin_decl_registry::declarations::ArtifactDeclaration<PA>) {
     let schema_count_before = ::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len());
-    let io_count_before = semio_framework_os_kernel::io::io_mechanism::io_entries().len();
-    let result = semio_framework_plugin_builder::PluginBuilder::new(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
+    let io_count_before = semio_os_kernel::io::io_mechanism::io_entries().len();
+    let result = semio_plugin_builder::PluginBuilder::new(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
     assert!(result.is_err(), "a declaration that fails preflight must not build a plugin");
     assert_eq!(::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len()), schema_count_before, "schema registry must be unchanged after a rejected declaration");
-    assert_eq!(semio_framework_os_kernel::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");
+    assert_eq!(semio_os_kernel::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");
 }
 
 /// 🌳️ Every subset's editor/viewer surface id must equal `surface_app_id(&dialect, role)` —
 /// pure, no registration (Task 4, law 3/3).
-pub async fn assert_subset_declaration_ids_are_derived<PA: PluginApp>(declaration: &semio_framework_plugin_decl_registry::declarations::ArtifactDeclaration<PA>) {
+pub async fn assert_subset_declaration_ids_are_derived<PA: PluginApp>(declaration: &semio_plugin_decl_registry::declarations::ArtifactDeclaration<PA>) {
     for standard in &declaration.standards {
         for subset in &standard.subsets {
             let dialect: semio_framework_artifact_reference::ArtifactDialect = subset.dialect.into();

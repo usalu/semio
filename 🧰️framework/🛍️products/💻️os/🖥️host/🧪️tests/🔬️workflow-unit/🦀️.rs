@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_framework_os_host_registry::register_artifact_descriptor;
+    use semio_os_host_registry::register_artifact_descriptor;
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 
     /// 🎯️🆕️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1b task 1: the real
@@ -17,7 +17,7 @@ mod tests {
     /// do NOT start with the pack magic header.
     #[test]
     fn export_via_io_mechanism_writes_raw_bytes_not_a_pack_container() {
-        use semio_framework_os_kernel::io::io_mechanism::{IoEntry, IoEntryDirection, io_register};
+        use semio_os_kernel::io::io_mechanism::{IoEntry, IoEntryDirection, io_register};
         use semio_framework::io_schema::{CARRIER_BINARY, IoFidelity, IoOutcome, IoPayload as NewIoPayload};
 
         const TEST_KIND: &str = "3d.__w1b_export_bug_proof";
@@ -27,7 +27,7 @@ mod tests {
         /// own export path -- a genuinely independent check of the OLD pack format's header.
         const PACK_MAGIC: [u8; 8] = [0x89, b'S', b'E', b'M', 0x0D, 0x0A, 0x1A, 0x0A];
 
-        fn run(payload: &NewIoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> semio_framework::io_schema::IoResult<NewIoPayload> {
+        fn run(payload: &NewIoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> semio_framework::io_schema::IoResult<NewIoPayload> {
             let NewIoPayload::Text(json) = payload else {
                 return Err(semio_framework::io_schema::IoError { cause: semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a text native payload"), diagnostics: Vec::new() });
             };
@@ -41,7 +41,7 @@ mod tests {
 
         register_artifact_descriptor(&semio_framework::ArtifactKindSpec {
             id: TEST_KIND.to_string(),
-            label: semio_framework_ui_locale::LocalizedLabel::native("W1b Export Bug Proof", "W1b-Exportfehlernachweis"),
+            label: semio_ui_locale::LocalizedLabel::native("W1b Export Bug Proof", "W1b-Exportfehlernachweis"),
             source_format: TEST_KIND.to_string(),
             component_kind: "__w1b_export_bug_proof".to_string(),
             dimension: "data".to_string(),
@@ -55,7 +55,7 @@ mod tests {
         });
         assert_eq!(os_artifact_dialect(TEST_KIND).to_coordinate(), "s.__w1b_export_bug_proof@1/*", "catalog-derived dialect must exactly match the dialect the test IoEntry was registered under");
 
-        resolve_kernel_future(semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
+        resolve_kernel_future(semio_os_kernel::io::register_format_descriptors([semio_os_kernel::io::FormatDescriptor {
             kind_id: "stdio.__w1b_export_bug_proof_fmt".to_string(),
             short_id: "w1bproof".to_string(),
             aliases: Vec::new(),
@@ -108,7 +108,7 @@ mod tests {
         assert_eq!(sanitize_export_file_stem(&"x".repeat(400), "k").len(), 100);
         let wide = sanitize_export_file_stem(&"\u{1F3E0}".repeat(100), "k");
         assert!(wide.len() <= 100 && wide.chars().all(|character| character == '\u{1F3E0}') && wide.chars().count() == 25, "the cap counts bytes at a character boundary");
-        resolve_kernel_future(semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
+        resolve_kernel_future(semio_os_kernel::io::register_format_descriptors([semio_os_kernel::io::FormatDescriptor {
             kind_id: "stdio.__w1b_export_bug_proof_fmt".to_string(),
             short_id: "w1bproof".to_string(),
             aliases: Vec::new(),

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationFootingW
         record: "ChangeFoundationFootingWidthM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Footing width B of the seismic bearing check (0 = no check)", "Fundamentbreite B für den Erdbebengrundbruch (0 = kein Nachweis) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Footing width B of the seismic bearing check (0 = no check)", "Fundamentbreite B für den Erdbebengrundbruch (0 = kein Nachweis) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-footing-width-m".into()]

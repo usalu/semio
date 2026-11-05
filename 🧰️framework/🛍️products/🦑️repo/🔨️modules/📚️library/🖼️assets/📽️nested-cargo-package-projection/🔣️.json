@@ -9,7 +9,7 @@
       "semanticOwnerRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
       "workspaceKind": "repository",
       "identity": {
-        "cargoPackageName": "semio-framework-os-renderer-wgpu",
+        "cargoPackageName": "semio-renderer-wgpu",
         "nodePackageName": "@semio-tech/framework-renderer-wgpu",
         "projectName": "@semio-tech/framework-renderer-wgpu"
       },

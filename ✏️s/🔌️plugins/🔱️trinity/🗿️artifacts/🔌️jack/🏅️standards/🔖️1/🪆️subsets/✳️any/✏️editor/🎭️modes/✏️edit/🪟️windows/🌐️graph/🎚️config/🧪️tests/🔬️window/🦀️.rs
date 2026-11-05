@@ -2,7 +2,7 @@
 
 use crate::editor::jack::window_config::*;
 use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
-use semio_framework_plugin::WindowConfigOwner;
+use semio_plugin::WindowConfigOwner;
 
 #[test]
 fn jack_graph_window_config_mutations_match_the_independent_patch_trace() {
@@ -27,14 +27,14 @@ fn jack_graph_window_config_mutations_match_the_independent_patch_trace() {
 
 #[test]
 fn jack_graph_window_config_command_uses_the_trusted_concrete_window() {
-    use semio_framework_plugin::{ViewModel, ViewWindowInstance};
+    use semio_plugin::{ViewModel, ViewWindowInstance};
     let view = ViewModel {
         window_id: Some("graph-right".into()),
         window_instances: vec![
             ViewWindowInstance { id: "graph-left".into(), window_kind_id: JackGraphWindowConfigOwner::WINDOW_KIND_ID.into() },
             ViewWindowInstance { id: "graph-right".into(), window_kind_id: JackGraphWindowConfigOwner::WINDOW_KIND_ID.into() },
         ],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let emit = crate::editor::jack::commands::set_lod_mode::set_lod_mode("compact", Some(&view)).unwrap();
     assert!(emit.artifact_mutations.is_empty());

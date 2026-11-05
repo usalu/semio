@@ -14,7 +14,7 @@
 /// asserts the surface is unmoved by them.
 #[test]
 fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operators() {
-    let _serialized = semio_framework_os_flow_operators::registry::lock_flow_extension_registry_for_test();
+    let _serialized = semio_os_flow_operators::registry::lock_flow_extension_registry_for_test();
     const OPERATORS: usize = 500;
     let operators = (0..OPERATORS)
         .map(|index| format!(r#"{{"id":"bulk.op{index}","extension":"bulk","name":"Bulk Operator {index}","abbreviation":"B{index}","icon":"box","summary":"Bulk catalogue operator {index} with a deliberately verbose summary line","inputs":[],"outputs":[]}}"#))
@@ -29,16 +29,16 @@ fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operat
 
     let fixture = FlowHostSnapshot::default();
     let extras = flow_backed_node_graph_extras(&fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
-    let scene = semio_framework_ui_declaration::ui::NodeGraphScene {
+    let scene = semio_ui_declaration::ui::NodeGraphScene {
         editable: Some(true),
         capabilities_json: extras.capabilities_json,
         lod_json: extras.lod_json,
         host_snapshot_json: extras.host_snapshot_json,
         eval_json: extras.eval_json,
         status_json: extras.status_json,
-        ..semio_framework_ui_declaration::ui::NodeGraphScene::base(Vec::new(), Vec::new(), semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 })
+        ..semio_ui_declaration::ui::NodeGraphScene::base(Vec::new(), Vec::new(), semio_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 })
     };
-    let props = semio_framework_ui_declaration::ui::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &scene).expect("a node-graph surface must fit the fixed admission with 500 operators registered");
+    let props = semio_ui_declaration::ui::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &scene).expect("a node-graph surface must fit the fixed admission with 500 operators registered");
     let surface_bytes = props.doc.bytes.as_slice().len();
     println!("[STATS] node-graph surface with {registered} registered operators: surface={surface_bytes} B of {} B, app catalogue={catalogue_bytes} B", ui_contract::UI_FIXED_BYTES);
     assert!(surface_bytes < ui_contract::UI_FIXED_BYTES, "surface is {surface_bytes} B, over the {} B fixed admission", ui_contract::UI_FIXED_BYTES);
@@ -50,7 +50,7 @@ fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operat
 
 #[test]
 fn contributed_extension_manifest_installs_catalogue_operator() {
-    let _serialized = semio_framework_os_flow_operators::registry::lock_flow_extension_registry_for_test();
+    let _serialized = semio_os_flow_operators::registry::lock_flow_extension_registry_for_test();
     let manifest = r#"{"schema":"flow.extension","id":"stubext","name":"Stub","version":"0.0.1","activationEvents":[],"contributes":{"schemas":[],"operators":[{"id":"stubext.echo","extension":"stubext","name":"Echo","abbreviation":"Echo","icon":"emoji:📣️","summary":"Echo","inputs":[],"outputs":[]}],"widgets":[],"commands":[],"settings":[]}}"#;
     install_flow_extension_manifest("stub-plugin", manifest).expect("stub extension admission");
     assert!(flow_extension_registry().operator_info("stubext.echo").is_some());
@@ -202,7 +202,7 @@ fn node_graph_extras_preserve_the_scene_contract_with_and_without_a_session() {
         let result = flow_backed_node_graph_extras(&fixture, case["lodMode"].as_str().unwrap(), lod["proximityDistance"].as_f64().unwrap(), lod["gridVisible"].as_bool().unwrap(), lod["gridSnapEnabled"].as_bool().unwrap(), lod["gridFactor"].as_f64().unwrap(), has_session.then_some(&session));
         fixture.retire_cold();
         session.retire_cold();
-        let extras = result.unwrap();
+        let extras = result;
         let actual: serde_json::Value = serde_json::from_str(extras.lod_json.as_deref().unwrap()).unwrap();
         assert_eq!(actual.as_object().unwrap().len(), lod.as_object().unwrap().len());
         for (key, expected) in lod.as_object().unwrap() {
@@ -226,6 +226,8 @@ fn borrowed_flow_dag_and_compiled_projection_equal_the_original_host(){
  let dag=FlowHost::project_dag_snapshot(&host.host_snapshot,&host.kind_infos);
  assert_eq!(semio_framework_pack_json::to_json_string(&dag),semio_framework_pack_json::to_json_string(&host.dag.graph.host_snapshot));
  assert_eq!(FlowHost::project_compiled_wire_literal(&host.host_snapshot,&host.kind_infos),host.compiled_wire_literal());
+ host.set_viewport(1280,800,1.0);
+ for selection in [vec![],vec!["slider".to_owned()],vec!["slider".to_owned(),"add".to_owned()],vec!["missing".to_owned()]]{host.set_selection(&selection);assert_eq!(FlowHost::project_focus_selection_camera(&host.host_snapshot,&host.kind_infos,&selection,1280,800,1.2),host.focus_selection_camera(1.2));}
  host.retire_cold().unwrap();
 }
 
@@ -234,4 +236,36 @@ fn borrowed_flow_source_view_identity_uses_original_fields_not_temporary_headers
  let host=host_with_test_fixture();let source=&host.host_snapshot;let first=semio_framework_artifact_flow_flow::FlowSnapshotView{schema:&source.schema,camera:&source.camera,widgets:&source.widgets,synapses:&source.synapses,layout:&source.layout};let second=semio_framework_artifact_flow_flow::FlowSnapshotView{schema:&source.schema,camera:&source.camera,widgets:&source.widgets,synapses:&source.synapses,layout:&source.layout};
  use semio_framework_artifact_flow_flow::FlowSnapshotSource;assert_eq!(first.source_identity(),second.source_identity());assert_eq!(first.source_identity(),source.source_identity());assert_ne!(&first as*const _ as usize,&second as*const _ as usize);
  assert_eq!(semio_framework_pack_json::to_json_string(&first),semio_framework_pack_json::to_json_string(source));host.retire_cold().unwrap();
+}
+
+#[test]
+fn borrowed_flow_projection_preserves_normalized_duplicate_node_positions(){
+ let mut source=FlowHostSnapshot::default();let mut duplicate=source.widgets[0].clone();if let Widget::InputSlider{value,..}=&mut duplicate{*value=99.0;}source.widgets.insert(1,duplicate);
+ let host=FlowHost::from_host_snapshot(source.clone());
+ let actual=FlowHost::project_dag_snapshot(&source,&host.kind_infos);
+ let projected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&actual)).unwrap();
+ let original:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&host.dag.graph.host_snapshot)).unwrap();
+ assert_eq!(projected,original);
+ let seeds=FlowHost::project_seeds(&source);let original_seeds=host.build_seeds();
+ let projected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&seeds)).unwrap();let original:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&original_seeds)).unwrap();assert_eq!(projected,original);seeds.retire_cold();original_seeds.retire_cold();
+ source.retire_cold();host.retire_cold().unwrap();
+}
+
+#[test]
+fn borrowed_flow_source_identity_covers_camera_and_complete_schema_span(){
+ use semio_framework_artifact_flow_flow::{FlowSnapshotSource,FlowSnapshotView,FlowSourceIdentity};
+ let contract:serde_json::Value=serde_json::from_str(include_str!("source-identity.json")).unwrap();
+ assert_eq!(std::mem::size_of::<FlowSourceIdentity>(),contract["fieldCount"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());
+ let host=host_with_test_fixture();let source=&host.host_snapshot;
+ let first=FlowSnapshotView{schema:&source.schema,camera:&source.camera,widgets:&source.widgets,synapses:&source.synapses,layout:&source.layout};
+ for case in contract["cases"].as_array().unwrap(){
+  let camera=CameraJson{x:source.camera.x,y:source.camera.y,zoom:source.camera.zoom};
+  let schema=if case["difference"]=="schemaLength"{&source.schema[..source.schema.len()-1]}else{source.schema.as_str()};
+  let second=FlowSnapshotView{schema,camera:if case["difference"]=="camera"{&camera}else{&source.camera},widgets:&source.widgets,synapses:&source.synapses,layout:&source.layout};
+  assert_eq!(first.schema.as_ptr(),second.schema.as_ptr());
+  assert_eq!(first.source_identity()==second.source_identity(),case["equal"].as_bool().unwrap(),"{}",case["difference"]);
+  if case["difference"]=="camera"{assert_ne!(first.source_identity().camera,second.source_identity().camera)}
+  if case["difference"]=="schemaLength"{assert_ne!(first.source_identity().schema_length,second.source_identity().schema_length)}
+ }
+ host.retire_cold().unwrap();
 }

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedStiffenerAre
         record: "ChangedPlatedStiffenerArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stiffener area A_sl (gross) of the plated panel", "Plattenfeld: Steifenfläche A_sl (brutto) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stiffener area A_sl (gross) of the plated panel", "Plattenfeld: Steifenfläche A_sl (brutto) ändern")
     }
 }
 

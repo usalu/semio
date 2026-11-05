@@ -1,0 +1,27 @@
+//! 🧬️ Forms app configuration mutations.
+
+use crate::forms_config::*;
+#[path = "📸️replace/🦀️.rs"]
+mod replace_config;
+pub use replace_config::ReplaceConfig;
+#[path = "🧩️set/🦀️.rs"]
+mod set_contributions;
+pub use set_contributions::SetContributions;
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[mutations(snapshot = FormsConfig, diff = FormsConfigDiff, schema = "forms.config", reference = FormsConfig, reference_diff = FormsConfigDiff)]
+pub enum FormsConfigMutation {
+    #[dsl(key = "replace-config")]
+    ReplaceConfig(ReplaceConfig),
+    #[dsl(key = "set-contributions")]
+    SetContributions(SetContributions),
+}
+
+
+
+
+
+//#region 🌉️TestBridge
+
+//#endregion 🌉️TestBridge

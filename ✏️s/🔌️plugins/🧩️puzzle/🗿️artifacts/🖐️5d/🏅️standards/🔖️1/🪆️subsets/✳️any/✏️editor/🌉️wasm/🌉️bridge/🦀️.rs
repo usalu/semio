@@ -7,7 +7,7 @@
 pub use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::wasm::bridge::fault_bridge;
 
 use crate::editor::puzzle5d::Puzzle5dPlayApp;
-use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
+use semio_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
 use semio_s_plugin_puzzle_jobs::BrowserCaller;
 use std::cell::{Cell, RefCell};
 use wasm_bindgen::prelude::*;
@@ -26,13 +26,13 @@ fn js_fault(error: impl ToString) -> JsValue {
 
 /// 🧯️ Surfaces a value refusal to JavaScript as the structured fault its message names.
 fn value_to_js(error: semio_framework_value::ValueError) -> JsValue {
-    fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message()))
+    fault_bridge::fault_to_js(semio_plugin::Fault::from(error.into_message()))
 }
 
 /// 🧯️ Surfaces a lifecycle failure to JavaScript: the original fault when the cause is one, else the whole cause.
-fn lifecycle_to_js(failure: semio_framework_plugin::PluginLifecycleFailure) -> JsValue {
+fn lifecycle_to_js(failure: semio_plugin::PluginLifecycleFailure) -> JsValue {
     match failure.primary {
-        semio_framework_plugin::PluginLifecyclePrimary::Fault(fault) => fault_bridge::fault_to_js(fault),
+        semio_plugin::PluginLifecyclePrimary::Fault(fault) => fault_bridge::fault_to_js(fault),
         other => js_fault(format!("{other:?}")),
     }
 }
@@ -78,11 +78,11 @@ impl Puzzle5dArtifactVcs {
     /// never have admitted a typed command anyway (`admit_command_wire_with_proof`).
     pub fn create() -> js_sys::Promise {
         semio_framework_async::future_to_promise(async {
-            let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::puzzle5d::create_puzzle5d_app());
-            let mounted_policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+            let registry = semio_plugin::AppActionRegistry::from_definition(&crate::editor::puzzle5d::create_puzzle5d_app());
+            let mounted_policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
             let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-            let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(PUZZLE5D_IDENTITY_CEILING_BYTES, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).map_err(js_fault)?;
-            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle5dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.map_err(fault_bridge::fault_to_js)?;
+            let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(PUZZLE5D_IDENTITY_CEILING_BYTES, &mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).map_err(js_fault)?;
+            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle5dPlayApp>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.map_err(fault_bridge::fault_to_js)?;
             let caller = BrowserCaller::admit(mounted_policy.maintenance).map_err(value_to_js)?;
             Ok(Self { app: RefCell::new(app), caller: RefCell::new(caller), closed: Cell::new(false) }.into())
         })
@@ -122,7 +122,7 @@ impl Puzzle5dArtifactVcs {
     #[wasm_bindgen(js_name = pollEnvelopeLoad)]
     pub fn poll_envelope_load(&self, handle: &Puzzle5dEnvelopeLoadHandle) -> Result<u8, JsValue> {
         let mut app = self.app.borrow_mut();
-        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_plugin::Fault::from(error.into_message())))?;
         let poll = self
             .caller
             .borrow_mut()
@@ -164,7 +164,7 @@ impl Puzzle5dArtifactVcs {
             let mut app = self.app.borrow_mut();
             let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(value_to_js)?;
             let step = caller.turn(|cx| app.close_step(cx, funded_turn(demand))).map_err(value_to_js)?.map_err(lifecycle_to_js)?;
-            if !matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+            if !matches!(step, semio_plugin::PluginLifecycleStep::Complete(_)) {
                 return Ok(false);
             }
             self.closed.set(true);

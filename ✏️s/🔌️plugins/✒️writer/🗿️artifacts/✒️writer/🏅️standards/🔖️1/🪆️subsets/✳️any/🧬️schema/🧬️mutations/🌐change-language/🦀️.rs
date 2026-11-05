@@ -36,8 +36,8 @@ where
         vec!["language_id".to_string()]
     }
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change document language to \"{}\"", self.new_language_id), &format!("Dokumentsprache auf \"{}\" ändern", self.new_language_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change document language to \"{}\"", self.new_language_id), &format!("Dokumentsprache auf \"{}\" ändern", self.new_language_id))
     }
 }
 

@@ -22,10 +22,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "register-row", kind: "replace-register-row", record: "ReplacedRegisterRow" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let label = self.row.key().label();
         let name = &self.row.header().name;
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace {} \"{name}\"", label.en), &format!("{} \"{name}\" ersetzen", label.de))
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace {} \"{name}\"", label.en), &format!("{} \"{name}\" ersetzen", label.de))
     }
     fn target(&self) -> Vec<String> {
         vec![self.row.header().id.0.clone()]

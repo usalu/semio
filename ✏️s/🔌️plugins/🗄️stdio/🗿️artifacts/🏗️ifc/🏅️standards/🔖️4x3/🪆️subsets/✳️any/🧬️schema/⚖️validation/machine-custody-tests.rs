@@ -1,6 +1,6 @@
 //! 🧪 Terminal, diagnostic and population owners remain under the initiating original receipt until controlled close.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 
 const INTEGER: ExpressExpression = ExpressExpression { kind: ExpressExpressionKind::Integer, offset: 0, text: Some("1"), operator: None, name: None, operands: &[], entries: &[] };
 static BROKEN_SCALAR: ExpressExpression = ExpressExpression { kind: ExpressExpressionKind::Binary, operator: Some("+"), operands: &[INTEGER], ..INTEGER };

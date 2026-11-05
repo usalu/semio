@@ -12,12 +12,12 @@
 //! 🔖 glTF is the one mesh target that carries every `SemioTopology`, so a wire or point preview
 //! exports as a real `mode: 0/1/3` primitive instead of erroring.
 use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
-use semio_framework_plugin::ArtifactSerializer;
+use semio_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value::{DslValue, FromValue, ToValue};
-use semio_framework_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshData};
+use semio_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshData};
 use semio_framework_value::NativeEncodeControl;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessor;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;

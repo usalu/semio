@@ -45,8 +45,8 @@ function toolJobConcreteFactoryExact(files: ReadonlyMap<string, string>, proof: 
     return start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start))?.body;
   };
   const factory = implementation("ToolJobFactory", "semio_framework(?:_plugin)?");
-  const owned = implementation("ArtifactOwnedToolJobFactory", "semio_framework_plugin");
-  const canonicalOwner = (owner: string) => owner.replaceAll(/\s+/g, "").replace(/^semio_framework_plugin::/, "");
+  const owned = implementation("ArtifactOwnedToolJobFactory", "semio_plugin");
+  const canonicalOwner = (owner: string) => owner.replaceAll(/\s+/g, "").replace(/^semio_plugin::/, "");
   if (!factory || !owned || !/type\s+Job\s*=/.test(factory) || !/fn\s+create_job\s*\(/.test(factory) || !/fn\s+execution_contract\s*\(/.test(factory)
     || canonicalOwner(toolJobResolveTypeAlias(source, owned.match(/type\s+Owner\s*=\s*([^;]+);/)?.[1] ?? "")) !== canonicalOwner(proof.ownerTypeName)) return false;
   const listExpression = owned.match(/const\s+TOOL_IDS\s*:[^=]+=\s*([^;]+);/)?.[1]?.trim();
@@ -315,12 +315,12 @@ export function toolJobProofCatalogFailures(files: ReadonlyMap<string, string>, 
     if (!identities.add(identity)) failures.push(`duplicate bounded reducer proof identity ${identity}`);
     if (!publicKeys.add(publicKey)) failures.push(`ambiguous bounded reducer public key ${publicKey}`);
     const source = files.get(proof.sourceFile) ?? "";
-    const editorOwner = proof.ownerTypeName.match(/^(?:semio_framework_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
-    const viewerOwner = proof.ownerTypeName.match(/^(?:semio_framework_plugin::)?ViewerApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
-    const directOwner = editorOwner || viewerOwner ? undefined : proof.ownerTypeName.match(/^(?:semio_framework_plugin::)?([A-Za-z_][A-Za-z0-9_]*)$/)?.[1];
+    const editorOwner = proof.ownerTypeName.match(/^(?:semio_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
+    const viewerOwner = proof.ownerTypeName.match(/^(?:semio_plugin::)?ViewerApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
+    const directOwner = editorOwner || viewerOwner ? undefined : proof.ownerTypeName.match(/^(?:semio_plugin::)?([A-Za-z_][A-Za-z0-9_]*)$/)?.[1];
     const owner = editorOwner ?? viewerOwner ?? directOwner;
     const ownerTrait = editorOwner ? "ArtifactEditor" : viewerOwner ? "ArtifactViewer" : directOwner ? "ArtifactApp" : undefined;
-    const ownerPattern = owner && ownerTrait ? new RegExp(`impl\\s+(?:semio_framework_plugin::)?${ownerTrait}\\s+for\\s+${owner}\\s*\\{`) : undefined;
+    const ownerPattern = owner && ownerTrait ? new RegExp(`impl\\s+(?:semio_plugin::)?${ownerTrait}\\s+for\\s+${owner}\\s*\\{`) : undefined;
     const ownerStart = ownerPattern ? source.search(ownerPattern) : -1;
     const ownerOpen = ownerStart < 0 ? -1 : source.indexOf("{", ownerStart);
     const ownerImpl = ownerOpen < 0 ? undefined : toolJobRustBlock(source, ownerOpen);

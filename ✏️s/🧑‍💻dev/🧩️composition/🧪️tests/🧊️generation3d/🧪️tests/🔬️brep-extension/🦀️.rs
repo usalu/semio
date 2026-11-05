@@ -10,15 +10,15 @@
 //! declares (`✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️.rs`'s `bundle()`), so this serves the real
 //! kernel, not a stub (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
-use semio_framework_plugin::artifact_app_laws::{settle_extension_invocations, PendingExtensionInvocation, SettledExtensionInvocations};
-use semio_framework_plugin::{ActionMeta, Fault, FaultCode, FaultOrigin, PluginApp};
+use semio_plugin::artifact_app_laws::{settle_extension_invocations, PendingExtensionInvocation, SettledExtensionInvocations};
+use semio_plugin::{ActionMeta, Fault, FaultCode, FaultOrigin, PluginApp};
 
 fn bad_request(capability: &str, detail: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::Plugin, FaultCode::new(format!("extension.{capability}.bad-request")), detail.into())
 }
 
 static GEOMETRY_CONTEXT: std::sync::Mutex<Option<semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext>> = std::sync::Mutex::new(None);
-static MATH_CONTEXT: std::sync::Mutex<Option<semio_framework_os_flow::ExtensionEvaluationResources>> = std::sync::Mutex::new(None);
+static MATH_CONTEXT: std::sync::Mutex<Option<semio_os_flow::ExtensionEvaluationResources>> = std::sync::Mutex::new(None);
 
 /// 🎟️ Borrows the original packaged geometry execution owner across every fixture hop.
 pub(crate) fn with_geometry_context<T>(operation: impl FnOnce(&semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext) -> T) -> T {
@@ -28,8 +28,8 @@ pub(crate) fn with_geometry_context<T>(operation: impl FnOnce(&semio_s_plugin_fl
 
 /// 🧹️ Releases the existing fixture execution owners through their bounded close authority.
 pub(crate) fn retire_execution_owners() {
-    use semio_framework_plugin::{ExtensionResourceOwner, PluginLifecycleStep};
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    use semio_plugin::{ExtensionResourceOwner, PluginLifecycleStep};
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut geometry = GEOMETRY_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     if let Some(owner) = geometry.as_mut() {
         owner.begin_close();
@@ -62,12 +62,12 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
     match (pending.extension_id.as_str(), pending.capability.as_str()) {
         (BREP_EXTENSION_PLUGIN_ID, "evaluate") => {
             use semio_s_plugin_flow_brep::geometry_inference::{GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA};
-            let service = semio_framework_plugin::artifact_inference_service(GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA).map_err(|error| bad_request("evaluate", error.message))?.ok_or_else(|| bad_request("evaluate", "geometry inference is not registered"))?;
-            let payload: semio_framework_os_flow::EvaluateRequest = semio_framework_pack_json::from_json_str(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("evaluate", error.to_string()))?;
-            let units = if payload.round_units > 0 { payload.round_units } else if payload.budget > 0 { payload.budget } else { semio_framework_os_flow::EVALUATE_STEP_BUDGET as u64 };
+            let service = semio_plugin::artifact_inference_service(GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA).map_err(|error| bad_request("evaluate", error.message))?.ok_or_else(|| bad_request("evaluate", "geometry inference is not registered"))?;
+            let payload: semio_os_flow::EvaluateRequest = semio_framework_pack_json::from_json_str(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("evaluate", error.to_string()))?;
+            let units = if payload.round_units > 0 { payload.round_units } else if payload.budget > 0 { payload.budget } else { semio_os_flow::EVALUATE_STEP_BUDGET as u64 };
             let cancellation_id = if payload.cancellation_id.is_empty() { "previewEval" } else { &payload.cancellation_id };
-            let budget = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 64 * 1024 * 1024, work_units: units, recursion_depth: 64 };
-            let request = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id, previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Incremental, canonical_payload: pending.request_json.as_bytes(), dependencies: &[] };
+            let budget = semio_plugin::WireArtifactInferenceBudget { allocation_bytes: 64 * 1024 * 1024, work_units: units, recursion_depth: 64 };
+            let request = semio_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id, previous_state: None, requested_cache_mode: semio_plugin::WireArtifactInferenceCacheMode::Incremental, canonical_payload: pending.request_json.as_bytes(), dependencies: &[] };
             let execution = with_geometry_context(|owner| service.infer_with_context(&request, owner));
             let execution = execution.map_err(|error| bad_request("evaluate", error.message))?;
             Ok(execution.canonical_payload)
@@ -75,18 +75,18 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
         (MATH_EXTENSION_PLUGIN_ID, "evaluate") => {
             let mut context = MATH_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
             let owner = context.get_or_insert_with(|| {
-                let mut registry = semio_framework_os_flow::neural::Registry::new();
+                let mut registry = semio_os_flow::neural::Registry::new();
                 semio_s_plugin_flow_math::register(&mut registry);
-                semio_framework_os_flow::ExtensionEvaluationResources::new(registry)
+                semio_os_flow::ExtensionEvaluationResources::new(registry)
             });
-            semio_framework_os_flow::evaluate_invoke_json(owner.registry(), pending.request_json.as_bytes()).map_err(|error| bad_request("evaluate", error))
+            semio_os_flow::evaluate_invoke_json(owner.registry(), pending.request_json.as_bytes()).map_err(|error| bad_request("evaluate", error))
         }
         (BREP_EXTENSION_PLUGIN_ID, "tessellate") => {
             let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("tessellate", error.to_string()))?;
             let handle = request.get("handle").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| bad_request("tessellate", "missing field `handle`"))?;
             let tolerance = request.get("tolerance").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(0.05);
             let budget = request.get("budget").and_then(semio_framework_pack_json::Value::as_f64).map_or(24, |value| (value as usize).max(1));
-            let wall_micros = request.get("wallMicros").and_then(semio_framework_pack_json::Value::as_f64).map_or(semio_framework_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
+            let wall_micros = request.get("wallMicros").and_then(semio_framework_pack_json::Value::as_f64).map_or(semio_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
             let chunk = request.get("chunk").and_then(semio_framework_pack_json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
             Ok(crate::flow_operators::geometry_session().tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
         }
@@ -94,10 +94,10 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
             let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("evaluateCancel", error.to_string()))?;
             with_geometry_context(|owner| {
                 let retired = match (request.get("operatorId").and_then(semio_framework_pack_json::Value::as_str), request.get("nodeHash").and_then(semio_framework_pack_json::Value::as_f64)) {
-                    (Some(operator), Some(hash)) => usize::from(semio_framework_os_flow::cancel_evaluation(owner.registry(), operator, hash.max(0.0) as u64)),
-                    _ => semio_framework_os_flow::cancel_all_evaluations(owner.registry()),
+                    (Some(operator), Some(hash)) => usize::from(semio_os_flow::cancel_evaluation(owner.registry(), operator, hash.max(0.0) as u64)),
+                    _ => semio_os_flow::cancel_all_evaluations(owner.registry()),
                 };
-                Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".into(), semio_framework_pack_json::Value::Bool(true)), ("retired".into(), semio_framework_pack_json::Value::from(retired as u64)), ("pending".into(), semio_framework_pack_json::Value::Bool(semio_framework_os_flow::evaluation_retirement_pending(owner.registry())))] )).into_bytes())
+                Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".into(), semio_framework_pack_json::Value::Bool(true)), ("retired".into(), semio_framework_pack_json::Value::from(retired as u64)), ("pending".into(), semio_framework_pack_json::Value::Bool(semio_os_flow::evaluation_retirement_pending(owner.registry())))] )).into_bytes())
             })
         }
         (BREP_EXTENSION_PLUGIN_ID, "tessellateCancel") => {
@@ -125,7 +125,7 @@ pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &Acti
     settle_extension_invocations(app, receiver, action_meta, &mut |pending| {
         let outcome = serve(pending);
         outcome
-    }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)
+    }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
     .await
     .expect("in-process brep extension round trip")
 }
@@ -141,7 +141,7 @@ pub async fn dispatch_effect_command<P: PluginApp>(app: &mut P, command_id: &str
     };
     let app_id = app.app_id().await.to_string();
     let address = CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: command_id.to_string() };
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_command(app, &address, arguments, None, action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map(|_| ()).map_err(|failure| Fault::from(format!("{failure:?}")))
+    semio_plugin::artifact_app_laws::dispatch_fixture_command(app, &address, arguments, None, action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map(|_| ()).map_err(|failure| Fault::from(format!("{failure:?}")))
 }
 
 /// 🧾️ What one driven `previewEval` run did: the hops it dispatched (and to which windows), the
@@ -162,18 +162,18 @@ pub struct PreviewRunReceipt {
 /// `PluginApp::handle_action`, every hop the run's port hands the host redispatched as the typed command
 /// the shell sends, every extension invocation answered by `serve`. Stops once nothing is owed, pending
 /// or outstanding and the run rests in a terminal or complete state.
-pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_framework_plugin::ViewModel, initial: &[semio_framework_plugin::Effect], serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, Fault>, cx: &mut semio_framework_job::StepContext<'_>) -> PreviewRunReceipt {
-    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
-    use semio_framework_plugin::Effect;
+pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_plugin::ViewModel, initial: &[semio_plugin::Effect], serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, Fault>, cx: &mut semio_framework_job::StepContext<'_>) -> PreviewRunReceipt {
+    use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+    use semio_plugin::Effect;
     let action_meta = ActionMeta { view_state: Some(shell_view.clone()), ..meta("local") };
     let mut receipt = PreviewRunReceipt::default();
     let mut effects: Vec<Effect> = initial.to_vec();
     for _ in 0..100_000 {
         effects.extend(app.pending_effects(Some(shell_view)).await);
         if app.has_pending_typed_operations() {
-            effects.extend(settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("the run's driver turns settle").effects);
+            effects.extend(settle_registered_typed_operation(app, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("the run's driver turns settle").effects);
         }
-        let settled = settle_extension_invocations(app, action_meta.instance_id, &action_meta, serve, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("in-process extension round trip");
+        let settled = settle_extension_invocations(app, action_meta.instance_id, &action_meta, serve, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("in-process extension round trip");
         receipt.answered += settled.answered;
         effects.extend(settled.effects);
         let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut effects)
@@ -188,9 +188,9 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_fra
             return receipt;
         }
         for (action, args) in dispatches {
-            if semio_framework_plugin::is_tool_run_action_id(&action) {
+            if semio_plugin::is_tool_run_action_id(&action) {
                 receipt.run_actions.push(action.clone());
-                semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(app, &action, args.clone(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
+                semio_plugin::artifact_app_laws::dispatch_fixture_action(app, &action, args.clone(), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
                 continue;
             }
             if action == "flowEvalTick" {
@@ -199,8 +199,8 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_fra
             }
             receipt.releases += usize::from(action == "flowEvalRelease");
             dispatch_effect_command(app, &action, args.as_ref(), &action_meta, cx).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
-            let hop = settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("retained publication");
-            assert!(!hop.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted in the retained job ladder: args={args:?}");
+            let hop = settle_registered_typed_operation(app, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("retained publication");
+            assert!(!hop.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted in the retained job ladder: args={args:?}");
             effects.extend(hop.effects);
         }
     }
@@ -208,16 +208,16 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_fra
 }
 
 /// 🚦️ The framework run actions a refresh over `shell_view` owes the `previewEval` run right now.
-pub async fn owed_run_actions<P: PluginApp>(app: &mut P, shell_view: &semio_framework_plugin::ViewModel) -> Vec<String> {
+pub async fn owed_run_actions<P: PluginApp>(app: &mut P, shell_view: &semio_plugin::ViewModel) -> Vec<String> {
     run_actions(&app.pending_effects(Some(shell_view)).await)
 }
 
 /// 🚦️ The framework run actions an effect list carries.
-pub fn run_actions(effects: &[semio_framework_plugin::Effect]) -> Vec<String> {
+pub fn run_actions(effects: &[semio_plugin::Effect]) -> Vec<String> {
     effects
         .iter()
         .filter_map(|effect| match effect {
-            semio_framework_plugin::Effect::DispatchAction { action, .. } if semio_framework_plugin::is_tool_run_action_id(action) => Some(action.clone()),
+            semio_plugin::Effect::DispatchAction { action, .. } if semio_plugin::is_tool_run_action_id(action) => Some(action.clone()),
             _ => None,
         })
         .collect()

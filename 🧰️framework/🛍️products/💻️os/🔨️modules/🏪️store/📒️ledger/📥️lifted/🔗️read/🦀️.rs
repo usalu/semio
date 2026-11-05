@@ -2,9 +2,9 @@
 use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{Edit, Mutation, MutationMeta};
-use semio_framework_os_vcs::Author;
-use semio_framework_os_vcs::{Alternative, Change, Checkpoint};
+use semio_os_spr::{Edit, Mutation, MutationMeta};
+use semio_os_vcs::Author;
+use semio_os_vcs::{Alternative, Change, Checkpoint};
 use semio_framework_value_snapshot_read::*;
 pub struct ArtifactStoreStringRetirement {
     pub owner: semio_framework_value::retirement::controlled::ControlledRetirement<String>,
@@ -84,7 +84,7 @@ pub struct ArtifactStoreHistoryMetadataRetirementState {
     pub strings: [Option<String>; 8],
     string_list: Vec<String>,
     pub authors: Vec<Author>,
-    pub pins: Vec<semio_framework_os_vcs::CompositionPin>,
+    pub pins: Vec<semio_os_vcs::CompositionPin>,
     active_bytes: Option<Vec<u8>>,
 }
 
@@ -104,7 +104,7 @@ impl ArtifactStoreHistoryMetadataRetirement {
         Self::from_parts([Some(id), Some(name), None, None, None, None, None, None], checkpoint_ids, Vec::new(), Vec::new())
     }
 
-    fn from_parts(strings: [Option<String>; 8], string_list: Vec<String>, authors: Vec<Author>, pins: Vec<semio_framework_os_vcs::CompositionPin>) -> Self {
+    fn from_parts(strings: [Option<String>; 8], string_list: Vec<String>, authors: Vec<Author>, pins: Vec<semio_os_vcs::CompositionPin>) -> Self {
         Self { state: std::mem::ManuallyDrop::new(Some(ArtifactStoreHistoryMetadataRetirementState { strings, string_list, authors, pins, active_bytes: None })) }
     }
 }
@@ -112,7 +112,7 @@ impl ArtifactStoreHistoryMetadataRetirement {
 impl ArtifactStoreHistoryMetadataRetirement {
     fn retained_backing_bytes(state: &ArtifactStoreHistoryMetadataRetirementState) -> Result<usize, ValueError> {
         let mut bytes = 0usize;
-        for extent in [state.string_list.capacity().checked_mul(size_of::<String>()), state.authors.capacity().checked_mul(size_of::<Author>()), state.pins.capacity().checked_mul(size_of::<semio_framework_os_vcs::CompositionPin>())] {
+        for extent in [state.string_list.capacity().checked_mul(size_of::<String>()), state.authors.capacity().checked_mul(size_of::<Author>()), state.pins.capacity().checked_mul(size_of::<semio_os_vcs::CompositionPin>())] {
             bytes = extent.and_then(|extent| bytes.checked_add(extent)).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history metadata backing extent overflow"))?;
         }
         Ok(bytes)

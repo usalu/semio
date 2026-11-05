@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-contract-values"
+name = "semio-ui-contract-values"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -22,9 +22,9 @@ testkit = []
 
 [dependencies]
 semio-framework-job = { path="../../../../../🧵️job/📦️packages/🦀️rust" }
-semio-framework-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
-semio-framework-ui-contract-text = { path = "../../../🔤️text/📦️packages/🦀️rust" }
-semio-framework-ui-contract-identity = { path = "../../../🆔️identity/📦️packages/🦀️rust" }
+semio-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
+semio-ui-contract-text = { path = "../../../🔤️text/📦️packages/🦀️rust" }
+semio-ui-contract-identity = { path = "../../../🆔️identity/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 serde = { workspace = true, features = ["derive"] }

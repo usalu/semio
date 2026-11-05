@@ -1,31 +1,31 @@
 //! ⏳️ Local operation status and exact cancellation controls shared by artifact editors.
-use semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
-use semio_framework_plugin_operation::ArtifactOperationProgress;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
+use semio_plugin_operation::ArtifactOperationProgress;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
-use semio_framework_ui_contract::{BuiltNode, *};
+use semio_ui_contract::{BuiltNode, *};
 use semio_framework_value::DslValue;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
 use crate::PluginApp;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
-use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
 use semio_framework::kernel::UiDirtyScope;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use serde_json::Value;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 
 pub fn decode_operation_cancellation(value: &DslValue) -> Option<(u64, u64)> {
     let DslValue::Object(fields) = value else { return None };
@@ -56,7 +56,7 @@ pub fn operation_progress_dirty_scope(changed: bool, declared: impl FnOnce() -> 
     changed.then(declared).filter(|scope| *scope != UiDirtyScope::None)
 }
 
-pub use semio_framework_plugin_decl_app::operation_progress::cancellation_result_lane;
+pub use semio_plugin_decl_app::operation_progress::cancellation_result_lane;
 
 pub fn operation_cancellation_target_admitted(present: bool, terminal: bool, cancellable: bool) -> bool {
     present && !terminal && cancellable
@@ -64,7 +64,7 @@ pub fn operation_cancellation_target_admitted(present: bool, terminal: bool, can
 
 /// 📶️ A localized, keyboard-accessible control group observing the operation's current lease.
 pub fn operation_progress_controls(status: &[ArtifactOperationProgress], controller: &str, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    use semio_framework_ui_contract::Label as UiLabel;
+    use semio_ui_contract::Label as UiLabel;
     let mut groups = BuiltChildren::default();
     for operation in status {
         let key = format!("framework.operation.{:016x}", operation.operation_id);

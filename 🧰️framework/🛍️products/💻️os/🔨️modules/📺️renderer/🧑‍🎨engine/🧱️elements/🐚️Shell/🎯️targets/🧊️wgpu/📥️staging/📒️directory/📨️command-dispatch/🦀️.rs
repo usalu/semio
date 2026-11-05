@@ -121,8 +121,8 @@ impl DirectoryState {
         while let Some(request) = self.directory_commands.head().cloned() {
             let outcome = client.command(&self.directory_command_ctx(), &request).await.map(|canonical| canonical.receipt);
             if let (Ok(receipt), Some(identity)) = (&outcome, self.identity.as_ref()) {
-                self.hub_workspace.rows = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::space_rows_after_events(&self.hub_workspace.rows, &receipt.events, &identity.user_id);
-                self.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready;
+                self.hub_workspace.rows = semio_renderer_wgpu_hub_contracts::space_browser::space_rows_after_events(&self.hub_workspace.rows, &receipt.events, &identity.user_id);
+                self.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready;
             }
             if !self.directory_commands.settle(outcome) {
                 break;
@@ -255,9 +255,9 @@ impl DirectoryState {
         let cancel = ctx.cancel.clone();
         let transport = self.directory_transport.clone();
         self.hub_sign_in_task = Some(ShellHubTask::spawn(cancel, async move {
-            let result = match semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::run_hub_sign_in(&transport, &ctx, &origin, &credential).await {
-                semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::HubSignInOutcome::Failed { code, retry_after_seconds } => return ShellHubSignInAnswer::Failed { code, retry_after_seconds },
-                semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::HubSignInOutcome::Minted(result) => result,
+            let result = match semio_renderer_wgpu_hub_workspace::hub_connection::run_hub_sign_in(&transport, &ctx, &origin, &credential).await {
+                semio_renderer_wgpu_hub_workspace::hub_connection::HubSignInOutcome::Failed { code, retry_after_seconds } => return ShellHubSignInAnswer::Failed { code, retry_after_seconds },
+                semio_renderer_wgpu_hub_workspace::hub_connection::HubSignInOutcome::Minted(result) => result,
             };
             let Ok(credential) = LocalHubCredential::from_minted_session(&origin, &result.token) else {
                 return ShellHubSignInAnswer::Failed { code: HubSignInErrorCode::InvalidResponse, retry_after_seconds: None };
@@ -288,13 +288,13 @@ impl DirectoryState {
     /// 🎟️ One invitation, issued as a sealed `create-invite` command and read back from that
     /// command's OWN receipt — the only place the one-shot capability ever appears.
     pub async fn run_hub_create_invite_turn(&mut self, space_id: &str) {
-        let Some(command) = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::create_invite_command(space_id, DirectorySpaceRole::Spectator, semio_framework_os_renderer_wgpu_hub_contracts::space_browser::INVITE_TTL_CHOICES_SECS_V1[1]) else { return };
+        let Some(command) = semio_renderer_wgpu_hub_contracts::space_browser::create_invite_command(space_id, DirectorySpaceRole::Spectator, semio_renderer_wgpu_hub_contracts::space_browser::INVITE_TTL_CHOICES_SECS_V1[1]) else { return };
         if self.identity.is_none() || self.directory_client.is_none() {
             return;
         }
         let request = DirectoryCommandRequestV1::new(mint_directory_command_request_id(), command);
         let request_id = request.request_id.clone();
-        self.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Submitting;
+        self.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Submitting;
         self.directory_commands.admit_first(request);
         self.flush_pending_directory_commands().await;
         match self.directory_commands.result(&request_id) {
@@ -303,21 +303,21 @@ impl DirectoryState {
                     DirectoryCommandResultV1::Invite { invite_token } => Some(invite_token.clone()),
                     DirectoryCommandResultV1::None => None,
                 };
-                self.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready;
+                self.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready;
             }
-            Some(ShellDirectoryCommandResultV1::Failed(_)) | None => self.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Failed,
+            Some(ShellDirectoryCommandResultV1::Failed(_)) | None => self.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Failed,
         }
     }
 
     /// 🎟️ Redeems the pasted capability against the selected hub, then reloads the list — a
     /// redemption that changed nothing visible would leave the human guessing.
     pub async fn run_hub_redeem_turn(&mut self) {
-        let Some(token) = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::parse_invite_token(&self.hub_workspace.invite_draft) else {
-            self.hub_workspace.redemption_error = Some(semio_framework_os_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::InvalidInvite);
+        let Some(token) = semio_renderer_wgpu_hub_contracts::space_browser::parse_invite_token(&self.hub_workspace.invite_draft) else {
+            self.hub_workspace.redemption_error = Some(semio_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::InvalidInvite);
             return;
         };
         let Some(client) = self.directory_client.clone() else {
-            self.hub_workspace.redemption_error = Some(semio_framework_os_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::Unauthorized);
+            self.hub_workspace.redemption_error = Some(semio_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::Unauthorized);
             return;
         };
         match client.redeem_invite(&self.directory_command_ctx(), &token).await {
@@ -326,13 +326,13 @@ impl DirectoryState {
                 self.hub_workspace.invite_draft.clear();
                 self.start_hub_spaces_reload();
             }
-            Err(DirectoryClientError::Unauthorized) => self.hub_workspace.redemption_error = Some(semio_framework_os_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::Unauthorized),
-            Err(DirectoryClientError::Http { status, .. }) => self.hub_workspace.redemption_error = Some(semio_framework_os_renderer_wgpu_hub_contracts::space_browser::invite_redemption_error_from_status(status)),
-            Err(DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::Cancelled)) => {
-                self.hub_workspace.redemption_error = Some(semio_framework_os_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::Cancelled)
+            Err(DirectoryClientError::Unauthorized) => self.hub_workspace.redemption_error = Some(semio_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::Unauthorized),
+            Err(DirectoryClientError::Http { status, .. }) => self.hub_workspace.redemption_error = Some(semio_renderer_wgpu_hub_contracts::space_browser::invite_redemption_error_from_status(status)),
+            Err(DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_os_kernel::os_directory::client::TransportError::Cancelled)) => {
+                self.hub_workspace.redemption_error = Some(semio_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::Cancelled)
             }
-            Err(DirectoryClientError::Decode(_)) => self.hub_workspace.redemption_error = Some(semio_framework_os_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::InvalidInvite),
-            Err(_) => self.hub_workspace.redemption_error = Some(semio_framework_os_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::Unreachable),
+            Err(DirectoryClientError::Decode(_)) => self.hub_workspace.redemption_error = Some(semio_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::InvalidInvite),
+            Err(_) => self.hub_workspace.redemption_error = Some(semio_renderer_wgpu_hub_contracts::space_browser::InviteRedemptionErrorCode::Unreachable),
         }
     }
 
@@ -346,13 +346,13 @@ impl DirectoryState {
             task.cancel();
         }
         let Some(client) = self.directory_client.clone() else {
-            self.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale;
+            self.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale;
             return;
         };
-        self.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Loading;
+        self.hub_workspace.phase = semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Loading;
         let ctx = self.directory_ctx();
         let cancel = ctx.cancel.clone();
-        self.hub_spaces_task = Some(ShellHubTask::spawn(cancel, async move { client.spaces(&ctx).await.map(|entries| semio_framework_os_renderer_wgpu_hub_contracts::space_browser::space_rows(&entries)).map_err(|_| ()) }));
+        self.hub_spaces_task = Some(ShellHubTask::spawn(cancel, async move { client.spaces(&ctx).await.map(|entries| semio_renderer_wgpu_hub_contracts::space_browser::space_rows(&entries)).map_err(|_| ()) }));
     }
 
     /// 🔐️ Whether no hub workspace request is in flight.
@@ -376,7 +376,7 @@ impl DirectoryState {
             DirectorySpaceAdministrationPageV1::Member { members, .. } | DirectorySpaceAdministrationPageV1::Author { members, .. } => members.rows.clone(),
             DirectorySpaceAdministrationPageV1::Public { .. } => Vec::new(),
         };
-        self.hub_workspace.members = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::space_member_presence(&rows, &self.hub_online_user_ids());
+        self.hub_workspace.members = semio_renderer_wgpu_hub_contracts::space_browser::space_member_presence(&rows, &self.hub_online_user_ids());
     }
 
     /// 👥️ The hub identities the presence lane currently sees. A peer with no hub identity
@@ -435,7 +435,7 @@ impl DirectoryState {
             return;
         }
         let Some(client) = self.directory_client.clone() else { return };
-        let pool = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
+        let pool = semio_renderer_wgpu_host_base::renderer_worker_pool();
         let now_ms = pool.now_ms();
         let Some((epoch, after)) = self
             .directory_home
@@ -499,7 +499,7 @@ impl DirectoryState {
         let client = self.directory_client.clone().ok_or("directory client is unavailable")?;
         let stream = client.stream_acknowledged(since).map_err(|error| error.to_string())?;
         let context = self.directory_ctx();
-        let runner = ShellDirectoryRunner::start(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), stream, context);
+        let runner = ShellDirectoryRunner::start(semio_renderer_wgpu_host_base::renderer_worker_pool(), stream, context);
         let home = self.directory_home.as_mut().ok_or("retained Home projection is unavailable")?;
         if home.closed || home.stream.is_some() {
             runner.cancel();
@@ -518,7 +518,7 @@ impl DirectoryState {
         self.identity_env = Some(env.clone());
         let (tx, rx) = std::sync::mpsc::channel::<Result<IdentityOutcome, String>>();
         let transport = self.directory_transport.clone();
-        let pool = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
+        let pool = semio_renderer_wgpu_host_base::renderer_worker_pool();
         let mut ctx = self.directory_ctx();
         ctx.deadline_ms = Some(pool.now_ms().saturating_add(5_000));
         self.identity_bootstrap_task = Some(ShellPoolFuture::spawn(pool, Lane::Io, async move {

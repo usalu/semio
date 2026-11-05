@@ -3,9 +3,9 @@
 use crate::examples::demo;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🎨️ The navbar example id. An empty id is the picker's cleared row.
@@ -18,10 +18,10 @@ pub struct SetActiveExample {
 
 /// 🗃️ The whole-document load an example switch answers with. A `LoadDocument` effect is NOT an edit: it carries no mutation rows, no diff and no history
 /// row; the runtime composes the loaded document's content child through `genesis_child_pack`, so the example is exactly what the window, the next verb and a reload see.
-pub fn load_document_effect(document: &FlowSnapshot) -> semio_framework_plugin::Effect {
+pub fn load_document_effect(document: &FlowSnapshot) -> semio_plugin::Effect {
     let pack = <FlowSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("flow", crate::FLOW_DOCUMENT_SCHEMA));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+    semio_plugin::Effect::LoadDocument { pack, spr }
 }
 
 /// 🎨️ Resolves the navbar example id to the document it loads: the published `demo` or the default graph.
@@ -31,7 +31,7 @@ pub fn set_active_example_document(payload: &SetActiveExample) -> Result<FlowSna
     } else if payload.example_id == demo::ID {
         demo::snapshot_from_text(demo::PRIMARY_TEXT).map_err(|error| Fault::from(error.to_string()))
     } else {
-        Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.example-unknown"), format!("setActiveExample has no example \"{}\"", payload.example_id)))
+        Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.example-unknown"), format!("setActiveExample has no example \"{}\"", payload.example_id)))
     }
 }
 

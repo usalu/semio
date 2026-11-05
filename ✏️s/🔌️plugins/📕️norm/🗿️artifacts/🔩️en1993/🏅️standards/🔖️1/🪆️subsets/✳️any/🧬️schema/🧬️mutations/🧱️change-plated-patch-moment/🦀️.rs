@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedPatchMoment 
         record: "ChangedPlatedPatchMoment",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Moment with patch load M_Ed of the plated panel", "Plattenfeld: Moment bei Lasteinleitung M_Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Moment with patch load M_Ed of the plated panel", "Plattenfeld: Moment bei Lasteinleitung M_Ed ändern")
     }
 }
 

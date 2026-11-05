@@ -28,8 +28,8 @@ pub struct SetPart {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "part", kind: "set-part", record: "SetPart" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set part", "Paketteil setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set part", "Paketteil setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

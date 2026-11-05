@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-plugin-reactor-core"
+name = "semio-plugin-reactor-core"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,23 +25,23 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
-semio-framework-plugin-actor-host = { path = "../../../🌐host/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-app = { path = "../../🔌️app/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-lifecycle = { path = "../../📨️pending/📦️packages/🦀️rust" }
-semio-framework-plugin-runtime-instances = { path = "../../🏃️runtime/📦️instances/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-patches = { path = "../../🩹️patches/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-surfaces = { path = "../../📥️cold-pair/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-tasks = { path = "../../⏲️tasks/📦️packages/🦀️rust" }
+semio-plugin-actor-host = { path = "../../../🌐host/📦️packages/🦀️rust" }
+semio-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-plugin-reactor-app = { path = "../../🔌️app/📦️packages/🦀️rust" }
+semio-plugin-reactor-lifecycle = { path = "../../📨️pending/📦️packages/🦀️rust" }
+semio-plugin-runtime-instances = { path = "../../🏃️runtime/📦️instances/📦️packages/🦀️rust" }
+semio-plugin-reactor-patches = { path = "../../🩹️patches/📦️packages/🦀️rust" }
+semio-plugin-reactor-surfaces = { path = "../../📥️cold-pair/📦️packages/🦀️rust" }
+semio-plugin-reactor-tasks = { path = "../../⏲️tasks/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
-semio-framework-plugin-plugin-program = { path = "../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
-semio_framework_ui_runtime = { path = "../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
+semio-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
+semio-plugin-plugin-program = { path = "../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
+semio_ui_runtime = { path = "../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-ui-runtime" }
 
 [dev-dependencies]

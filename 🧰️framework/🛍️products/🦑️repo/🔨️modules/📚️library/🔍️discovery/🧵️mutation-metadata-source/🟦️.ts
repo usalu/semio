@@ -16,8 +16,8 @@ export interface MutationMetadataSourceProof { readonly accepted: boolean; reado
 
 const MUTATION_METADATA_PROVIDERS: readonly MutationMetadataProviderIdentity[] = [
   { role: "lower-contract", manifestLocator: "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml", packageName: "semio-framework-replication", libraryName: "protocol", procMacro: false },
-  { role: "os-facade", manifestLocator: "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", packageName: "semio-framework-os-kernel", libraryName: "semio_framework_os_kernel", procMacro: false },
-  { role: "metadata-derive", manifestLocator: "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml", packageName: "semio-framework-os-kernel-dsl-derive", libraryName: "dsl_derive", procMacro: true },
+  { role: "os-facade", manifestLocator: "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", packageName: "semio-os-kernel", libraryName: "semio_os_kernel", procMacro: false },
+  { role: "metadata-derive", manifestLocator: "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml", packageName: "semio-os-kernel-dsl-derive", libraryName: "dsl_derive", procMacro: true },
 ];
 
 function mutationMetadataProvider(binding: CargoProviderBinding): MutationMetadataProviderIdentity | null {

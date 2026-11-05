@@ -16,17 +16,17 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-s-artifact-stdio-dwg-read = { workspace = true }
 
 [dev-dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-binary = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-s-artifact-stdio-dwg-diff = { workspace = true }

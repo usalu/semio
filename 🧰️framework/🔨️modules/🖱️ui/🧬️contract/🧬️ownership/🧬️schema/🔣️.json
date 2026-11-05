@@ -14,7 +14,7 @@
       "const": 1
     },
     "owner": {
-      "const": "semio-framework-ui-contract"
+      "const": "semio-ui-contract"
     },
     "valueOwner": {
       "const": "semio-framework-value"

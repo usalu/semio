@@ -76,9 +76,9 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 
 /// 🔖️ This artifact's declaration freezes its schema, inference, codec, composer, and language
 /// contributions before plugin assembly.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.cad.cad.standard.v1", "standard", "1", &[], None),
         ("s.cad.cad.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.cad.cad.schema.artifact", "schema", "s.cad.cad", &[("schema", "s.cad.cad")], None),
@@ -108,13 +108,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::cad_artifact_schema_descriptor())
         .inferences([semio_s_artifact_cad_cad_inferences::cad_artifact_inference_descriptor()])
         .composers(semio_s_artifact_cad_cad_io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::app::EditorApp<semio_s_artifact_cad_cad_editor::CadPlayApp>>()
+        .document_codec::<semio_plugin::app::EditorApp<semio_s_artifact_cad_cad_editor::CadPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️ArtifactKind

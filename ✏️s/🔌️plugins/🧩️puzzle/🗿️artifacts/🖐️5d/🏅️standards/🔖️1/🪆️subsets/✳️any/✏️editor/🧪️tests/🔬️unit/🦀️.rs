@@ -11,23 +11,23 @@ use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::panels::{catalogue, artifact as artifact_panel, inspection};
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
 use crate::editor::puzzle5d::window as window_ownership;
-use semio_framework_plugin::kernel::{Effect, PasteAnchor, PastePlacement};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::PortMultiplicity;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::kernel::{Effect, PasteAnchor, PastePlacement};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::PortMultiplicity;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::WindowMeasure;
 use semio_framework_pack_json::{parse, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -54,95 +54,95 @@ use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutati
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
 #[allow(unused_imports)]
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, UiDirtyScope};
+use semio_plugin::kernel::{ClipboardError, ClipboardFragment, UiDirtyScope};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDescriptor;
+use semio_plugin::ActionDescriptor;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactPresentation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedJob;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedToolInput;
+use semio_plugin::ArtifactReservedToolInput;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedToolJob;
+use semio_plugin::ArtifactReservedToolJob;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactReservedToolJobRequest;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolCompletion;
+use semio_plugin::ArtifactToolCompletion;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::EphemeralEmit;
+use semio_plugin::EphemeralEmit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::DialogDefinition;
+use semio_plugin::DialogDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTarget;
+use semio_plugin::InteractionTarget;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionWrite;
+use semio_plugin::InteractionWrite;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaError;
+use semio_plugin::MediaError;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortDirection;
+use semio_plugin::MediaPortDirection;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortSpec;
+use semio_plugin::MediaPortSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolRef;
+use semio_plugin::ToolRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolExecutionContract;
+use semio_plugin::ToolExecutionContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
 #[allow(unused_imports)]
 use semio_framework_job::{InteractiveJob, Operation, StepContext};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use semio_framework_value::{FromValue, ToValue};
 #[allow(unused_imports)]
@@ -161,20 +161,20 @@ use crate::editor::puzzle5d::dispatch::puzzle5d_handle_action;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::puzzle5d_inspector_nudge;
 use crate::editor::puzzle5d::{Puzzle5dRetainedCommandJobFactory};
-semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle5dPlayApp, puzzle5d_app_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle5dPlayApp, puzzle5d_app_manifest_for_tests, "../..");
 use crate::editor::puzzle5d::testkit::*;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use crate::editor::puzzle5d::*;
 
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuRequest;
 
-use semio_framework_plugin::ContextMenuSelectionGroup;
+use semio_plugin::ContextMenuSelectionGroup;
 
-use semio_framework_plugin::ContextMenuSurfaceTarget;
+use semio_plugin::ContextMenuSurfaceTarget;
 
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
-use semio_framework_plugin::UiMenuRef;
+use semio_plugin::UiMenuRef;
 
 #[path = "⚖️laws-and-rendering/🦀️.rs"]
 mod laws_and_rendering;

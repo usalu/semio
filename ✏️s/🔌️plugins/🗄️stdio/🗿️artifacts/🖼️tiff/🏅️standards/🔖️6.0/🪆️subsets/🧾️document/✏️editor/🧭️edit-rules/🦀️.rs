@@ -41,7 +41,7 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../../�
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
@@ -49,7 +49,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.tiff".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Tiff", "Tiff"),
+        label: semio_ui_locale::LocalizedLabel::native("Tiff", "Tiff"),
         source_format: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -70,7 +70,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod artifact_items_8 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }

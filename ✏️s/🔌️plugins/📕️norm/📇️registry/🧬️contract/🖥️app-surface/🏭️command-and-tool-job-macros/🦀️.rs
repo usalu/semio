@@ -26,7 +26,7 @@ macro_rules! norm_command_from_action {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command,
         /// for the two editors whose `setSnapshot` payload carries DSL TEXT rather than a decoded
         /// snapshot struct.
-        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework_plugin::Fault>) -> Result<$command, semio_framework_plugin::Fault> {
+        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_plugin::Fault>) -> Result<$command, semio_plugin::Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
             let args = args.as_ref();
             match action {
@@ -51,9 +51,9 @@ macro_rules! norm_command_from_action {
                     check_id: $crate::check_id_arg(args),
                     remedy_index: $crate::index_arg(args, "remedyIndex") as u32,
                 })),
-                other => Err(semio_framework_plugin::Fault::new(
-                    semio_framework_plugin::FaultOrigin::App,
-                    semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
+                other => Err(semio_plugin::Fault::new(
+                    semio_plugin::FaultOrigin::App,
+                    semio_plugin::FaultCode::new("norm.unhandled-action"),
                     format!("action '{other}' is not one of this app's declared verbs (setSelectedCheckIndex/setField/insertItem/removeItem/applyRemedy)"),
                 )),
             }
@@ -63,7 +63,7 @@ macro_rules! norm_command_from_action {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command.
         /// `setSnapshot` carries the whole compliance document, so its argument is that document's own
         /// camelCase JSON projection (exactly what the Inputs window renders).
-        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework_plugin::Fault>) -> Result<$command, semio_framework_plugin::Fault> {
+        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_plugin::Fault>) -> Result<$command, semio_plugin::Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
             let args = args.as_ref();
             match action {
@@ -140,10 +140,10 @@ macro_rules! norm_command_from_action {
                     Some((action, direction)) => Ok($command::ViewportAct(viewport_act::ViewportAct { action: action.to_string(), text: None, number: Some(direction) })),
                     None => match $crate::host_entity_call(other, &$crate::host_context()) {
                         Some(Ok((tool, tool_args))) => Self::command_from_action(tool, &mut Some(tool_args), original_fault),
-                        Some(Err(message)) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.host-route"), message)),
-                        None => Err(semio_framework_plugin::Fault::new(
-                            semio_framework_plugin::FaultOrigin::App,
-                            semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
+                        Some(Err(message)) => Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("norm.host-route"), message)),
+                        None => Err(semio_plugin::Fault::new(
+                            semio_plugin::FaultOrigin::App,
+                            semio_plugin::FaultCode::new("norm.unhandled-action"),
                             format!("action '{other}' is not one of this app's declared verbs (setSelectedCheckIndex/setField/insertItem/removeItem/applyRemedy/setFields/previewRemedy/clearPreview/cancelEvaluation/evaluateUnits/viewportAct/copyEntities/duplicateEntities/pasteEntities/moveEntity/deleteEntities/norm.shortcut.<step>)"),
                         )),
                     },
@@ -155,7 +155,7 @@ macro_rules! norm_command_from_action {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command.
         /// `setSnapshot` carries the whole compliance document, so its argument is that document's own
         /// camelCase JSON projection (exactly what the Inputs window renders).
-        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework_plugin::Fault>) -> Result<$command, semio_framework_plugin::Fault> {
+        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_plugin::Fault>) -> Result<$command, semio_plugin::Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
             let args = args.as_ref();
             match action {
@@ -180,9 +180,9 @@ macro_rules! norm_command_from_action {
                     check_id: $crate::check_id_arg(args),
                     remedy_index: $crate::index_arg(args, "remedyIndex") as u32,
                 })),
-                other => Err(semio_framework_plugin::Fault::new(
-                    semio_framework_plugin::FaultOrigin::App,
-                    semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
+                other => Err(semio_plugin::Fault::new(
+                    semio_plugin::FaultOrigin::App,
+                    semio_plugin::FaultCode::new("norm.unhandled-action"),
                     format!("action '{other}' is not one of this app's declared verbs (setSelectedCheckIndex/setField/insertItem/removeItem/applyRemedy)"),
                 )),
             }
@@ -196,8 +196,8 @@ macro_rules! norm_command_from_action {
 #[macro_export]
 macro_rules! norm_context_menu {
     () => {
-        fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, doc: &semio_framework_plugin::ArtifactView<'_, Self::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel, _registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-            $crate::live_context_menu::<Self>(request, doc.snapshot, view_state.locale == semio_framework_ui_locale::Locale::De)
+        fn context_menu(request: &semio_plugin::ContextMenuRequest, doc: &semio_plugin::ArtifactView<'_, Self::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel, _registry: &semio_plugin::AppActionRegistry) -> Vec<semio_plugin::ContextMenuItemSpec> {
+            $crate::live_context_menu::<Self>(request, doc.snapshot, view_state.locale == semio_ui_locale::Locale::De)
         }
     };
 }
@@ -219,7 +219,7 @@ macro_rules! norm_owned_tool_job_factory {
                 Self($crate::NormBoundedCommandJobFactory::<$app>::new(controller_id))
             }
 
-            pub fn register(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<$app>>) -> Result<(), semio_framework_plugin::Fault> {
+            pub fn register(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<$app>>) -> Result<(), semio_plugin::Fault> {
                 let controller = registry.controller_id().to_string();
                 registry.register(Self::new(&controller))
             }
@@ -237,7 +237,7 @@ macro_rules! norm_owned_tool_job_factory {
                 semio_framework::ToolJobFactory::payload_schema_id(&self.0)
             }
 
-            fn classification(&self) -> semio_framework_plugin::InteractiveJobClassification {
+            fn classification(&self) -> semio_plugin::InteractiveJobClassification {
                 semio_framework::ToolJobFactory::classification(&self.0)
             }
 
@@ -254,11 +254,11 @@ macro_rules! norm_owned_tool_job_factory {
             }
         }
 
-        impl semio_framework_plugin::ArtifactOwnedToolJobFactory for $factory {
-            type Owner = semio_framework_plugin::EditorApp<$app>;
+        impl semio_plugin::ArtifactOwnedToolJobFactory for $factory {
+            type Owner = semio_plugin::EditorApp<$app>;
             const TOOL_IDS: &'static [&'static str] = <$app as $crate::NormRetainedEditor>::TOOL_IDS;
-            const DOCUMENT_SCHEMA: &'static str = <$app as semio_framework_plugin::ArtifactEditor>::DOCUMENT_SCHEMA;
-            const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = <$app as $crate::NormRetainedEditor>::PUBLICATION_CONTRACTS;
+            const DOCUMENT_SCHEMA: &'static str = <$app as semio_plugin::ArtifactEditor>::DOCUMENT_SCHEMA;
+            const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = <$app as $crate::NormRetainedEditor>::PUBLICATION_CONTRACTS;
         }
     };
 }

@@ -15,22 +15,22 @@
 
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::object_scale_json, semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_editor_snapshot::target_volume_scale_json, semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dInteractionSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dReference, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dVortex, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_ATTRACTION, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_REFERENCE, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_TARGET_VOLUME, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_VORTEX, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ui_node_list;
+use semio_plugin::ActionFactory;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.inspector";
@@ -53,8 +53,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-fn error(scope: &'static str) -> semio_framework_plugin::PluginAssemblyError {
-    semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", scope)
+fn error(scope: &'static str) -> semio_plugin::PluginAssemblyError {
+    semio_plugin::PluginAssemblyError::new("ui.inspection.fields", scope)
 }
 
 fn push(fields: &mut UiFixedList<BuiltNode>, node: UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<()> {
@@ -75,7 +75,7 @@ fn vec4(value: [f64; 4]) -> String {
 }
 
 fn text_value(value: &str) -> UiAssemblyResult<UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| error("puzzle3d inspector action text admission failed"))
+    semio_plugin::UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| error("puzzle3d inspector action text admission failed"))
 }
 
 /// 🪙️ The flag row's `ids` argument list. The process-wide argument arena, not a row quota, is the
@@ -83,7 +83,7 @@ fn text_value(value: &str) -> UiAssemblyResult<UiValue> {
 /// every id it names. There is no page cursor to reconcile it with any more — the row window the ids
 /// SECTION shows is host-owned and independent of what one action argument can carry.
 fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| error("puzzle3d inspector action list admission failed"))?;
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| error("puzzle3d inspector action list admission failed"))?;
     for id in ids {
         if builder.push(text_value(id)?).is_err() {
             break;
@@ -95,7 +95,7 @@ fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
 /// 🩹️ One `patchInspector` toggle row — flips a boolean `field` (`hidden`/`locked`) on every id in
 /// `ids`, the two fields that command accepts for any entity.
 fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, entity: &str, ids: &[String], field: &str, pressed: bool) -> UiAssemblyResult<()> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle3d inspector action map admission failed"))?;
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle3d inspector action map admission failed"))?;
     for (key, value) in [("entity", text_value(entity)?), ("field", text_value(field)?), ("ids", id_list_value(ids)?), ("value", UiValue::Bool(!pressed))] {
         builder.push(key.to_owned(), value).map_err(|_| error("puzzle3d inspector action map entry admission failed"))?;
     }

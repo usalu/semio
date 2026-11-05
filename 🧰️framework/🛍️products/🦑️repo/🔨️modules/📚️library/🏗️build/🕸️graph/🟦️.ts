@@ -237,7 +237,7 @@ export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvoca
 
 /** 🚶️ Whether the workspace walk enters a directory: not a generated, cache or dependency directory, not a build artifact directory of an extension host, not a collection directory below anything but a module member and not the composition directory. The one rule of the walk of every file inventory and of the advance of the membership frontier. */
 export function buildWalkDescendsV1():(name:string,path:string,parent:string)=>boolean {
-  const cachePolicy=graphDeclarationV1("../../⚡️caching/🔣️policy.json"),ownership=graphDeclarationV1("../../🗂️workspaces/🔣️policy.json"),excluded=new Set([...cachePolicy.generatedDirectories,".git",".🧬semio",".nx",".cache","node_modules","dist","target",".venv","venv","__pycache__",".pytest_cache",".next",".turbo","temp","🗑️generated"]);
+  const cachePolicy=graphDeclarationV1("../../⚡️caching/🔣️policy.json"),ownership=graphDeclarationV1("../../🗂️workspaces/🔣️policy.json"),excluded=new Set([...cachePolicy.generatedDirectories,".git",".🧬semio",".nx",".cache", ".r","node_modules","dist","target",".venv","venv","__pycache__",".pytest_cache",".next",".turbo","temp","🗑️generated"]);
   return (name,path,parent)=>!isOpaqueSourcePathV1(path)&&!excluded.has(name)&&!name.startsWith("extension-host-build-")&&!(ownership.collections.names.includes(name)&&parent.split("/").at(-1)!==ownership.collections.moduleMember)&&path!=="compose";
 }
 

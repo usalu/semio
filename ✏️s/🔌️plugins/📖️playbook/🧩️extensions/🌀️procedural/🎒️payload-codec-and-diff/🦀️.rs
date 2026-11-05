@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "procmodule")]
@@ -17,6 +17,9 @@ pub struct ModuleRenderPayload {
     #[dsl(value)]
     #[value(default = "default_params_field")]
     pub(super) params: DslValue,
+    #[dsl(value)]
+    #[value(default = "default_params_field")]
+    pub(super) authored_params: DslValue,
     pub(super) question_id: String,
     pub(super) controller_id: String,
     pub(super) surface: String,
@@ -65,8 +68,8 @@ impl pack::snapshot::ArtifactPack for ModuleRenderPayload {
     }
 }
 
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ModuleRenderPayload {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ModuleRenderPayload {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -90,6 +93,7 @@ pub(super) fn default_payload() -> ModuleRenderPayload {
     ModuleRenderPayload {
         example_id: "hexagonal-mushroom-column".into(),
         params: json_to_dsl_value(&semio_framework_pack_json::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })),
+        authored_params: DslValue::Null,
         question_id: String::new(),
         controller_id: String::new(),
         surface: "try".into(),
@@ -111,6 +115,8 @@ pub struct ModulePayloadDiff {
     #[value(skip_serializing_if = "Option::is_none")]
     pub params: Option<DslValue>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub authored_params: Option<DslValue>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub question_id: Option<String>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub controller_id: Option<String>,
@@ -130,6 +136,7 @@ impl protocol::ColdMutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
         if other.params.is_some() {
             self.params = other.params;
         }
+        if other.authored_params.is_some() { self.authored_params = other.authored_params; }
         if other.question_id.is_some() {
             self.question_id = other.question_id;
         }
@@ -153,6 +160,7 @@ impl protocol::ColdMutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
         if let Some(value) = &self.params {
             next.params = value.clone();
         }
+        if let Some(value) = &self.authored_params { next.authored_params = value.clone(); }
         if let Some(value) = &self.question_id {
             next.question_id = value.clone();
         }
@@ -172,7 +180,7 @@ impl protocol::ColdMutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
 
 impl protocol::DiffAlgebra<ModuleRenderPayload> for ModulePayloadDiff {
     fn is_empty(&self) -> bool {
-        self.example_id.is_none() && self.params.is_none() && self.question_id.is_none() && self.controller_id.is_none() && self.surface.is_none() && self.interactive.is_none()
+        self.example_id.is_none() && self.params.is_none() && self.authored_params.is_none() && self.question_id.is_none() && self.controller_id.is_none() && self.surface.is_none() && self.interactive.is_none()
     }
 }
 
@@ -181,6 +189,7 @@ impl protocol::ColdDiffAlgebra<ModuleRenderPayload> for ModulePayloadDiff {
         Self {
             example_id: self.example_id.as_ref().map(|_| base.example_id.clone()),
             params: self.params.as_ref().map(|_| base.params.clone()),
+            authored_params: self.authored_params.as_ref().map(|_| base.authored_params.clone()),
             question_id: self.question_id.as_ref().map(|_| base.question_id.clone()),
             controller_id: self.controller_id.as_ref().map(|_| base.controller_id.clone()),
             surface: self.surface.as_ref().map(|_| base.surface.clone()),
@@ -190,3 +199,12 @@ impl protocol::ColdDiffAlgebra<ModuleRenderPayload> for ModulePayloadDiff {
 }
 //#endregion 🔖️DocumentMutation
 //#endregion 🔖️Payload
+
+pub(super) fn effective_params(payload: &ModuleRenderPayload) -> Value {
+    let mut authored = params_as_json(&payload.authored_params);
+    let current = params_as_json(&payload.params);
+    if let (Some(base), Some(overrides)) = (authored.as_object_mut(), current.as_object()) {
+        for (key, value) in overrides { base.insert(key.clone(), value.clone()); }
+        authored
+    } else if authored.as_object().is_some() { authored } else { current }
+}

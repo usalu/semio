@@ -3,8 +3,8 @@
 use semio_s_artifact_bim_model_kit::editor::bim::kit::{path, path_record, text_record, Paint};
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::PlacedViewport;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::DslValue;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 #[allow(unused_imports)]
@@ -20,11 +20,11 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::INK;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::{records, definition, WINDOW_KIND_ID, BODY_KEY, active_sheet, placed_records, pick, handle_of, title_labels};

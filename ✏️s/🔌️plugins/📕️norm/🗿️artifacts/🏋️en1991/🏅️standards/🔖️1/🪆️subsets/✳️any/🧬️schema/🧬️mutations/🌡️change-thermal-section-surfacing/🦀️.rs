@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeThermalSectionSurf
         record: "ChangedThermalSectionSurfacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change surfacing (0 none, 1 waterproofed, 2 50 mm, 3 100 mm, 4 150 mm) of the thermal section", "Temperaturquerschnitt: Belag (0 keiner, 1 Abdichtung, 2 50 mm, 3 100 mm, 4 150 mm) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change surfacing (0 none, 1 waterproofed, 2 50 mm, 3 100 mm, 4 150 mm) of the thermal section", "Temperaturquerschnitt: Belag (0 keiner, 1 Abdichtung, 2 50 mm, 3 100 mm, 4 150 mm) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

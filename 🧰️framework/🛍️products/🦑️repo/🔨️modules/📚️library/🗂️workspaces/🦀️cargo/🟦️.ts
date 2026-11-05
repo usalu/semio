@@ -3,13 +3,13 @@ import selectionSchema from"./🧬️schema/🎯️selection.json"with{type:"jso
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,requireMaterializedPathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{readPhysicalCargoSourceV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {captureOwnedCommandResultV1,readOwnedCommandEncodingContextV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./🛠️preparation/📦️storage/🟦️.ts";
 import type {CargoPreparationControlV1,CargoWorkspaceControlV1,CargoWorkspaceProgressV1} from "./🛠️preparation/🎛️control/🟦️.ts";
 import {createHash} from "node:crypto";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1,cargoPreparationProgramSourcesV1,type CargoPreparationObservationV1} from "./🛠️preparation/🧾️custody/🟦️.ts";
+import {readCargoPreparationProgramContextV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1,cargoPreparationProgramSourcesV1,type CargoPreparationObservationV1} from "./🛠️preparation/🧾️custody/🟦️.ts";
 import {cargoPreparationWitnessHoldsV1,observeCargoPhysicalV1,type CargoPhysicalObservationsV1,type CargoPhysicalOperationKindV1} from "./🛠️preparation/👁️witness/🟦️.ts";
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
@@ -460,7 +460,9 @@ export function cargoPreparationInvocationCurrentV1(storage:CargoPreparationStor
 export async function prepareCargoWorkspaceInvocation(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<void>{
  const request=cargoWorkspacePreparationInvocationV1(storage,root,args,cwd,environment);if(!request||cargoPreparationInvocationCurrentV1(storage,root,request))return;
  const result=await captureOwnedCommandResultV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});
- if(result.status!==0||result.signal!==null)throw Error("Native Cargo owner preparation failed status="+result.status+" signal="+result.signal+": "+(result.stderr||result.stdout).slice(-2048));
+ if(result.status!==0||result.signal!==null){
+  const encoding=readOwnedCommandEncodingContextV1(result.stderr)||readOwnedCommandEncodingContextV1(result.stdout),program=readCargoPreparationProgramContextV1(result.stderr)||readCargoPreparationProgramContextV1(result.stdout);throw Error("Native Cargo owner preparation failed status="+result.status+" signal="+result.signal+(encoding?" encoding="+JSON.stringify(encoding):"")+(program?" preparation="+JSON.stringify(program):"")+": "+(result.stderr||result.stdout).slice(-2048));
+ }
 }
 
 export interface CargoWorkspaceSelectionViewV1{readonly scope:CargoWorkspaceScope;readonly control:ResourceLeaseControl;readonly inputs:readonly Readonly<{path:string;digest:string;bytes:number}>[];recheck():Promise<void>}

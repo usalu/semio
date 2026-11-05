@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "plant-loop", kind: "rename-plant-loop", record: "RenamedPlantLoop" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change plant loop {} name to {:?}", self.id.0, self.new_name), &format!("Name von Anlagenkreislauf {} auf {:?} ändern", self.id.0, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change plant loop {} name to {:?}", self.id.0, self.new_name), &format!("Name von Anlagenkreislauf {} auf {:?} ändern", self.id.0, self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

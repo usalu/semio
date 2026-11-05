@@ -2,7 +2,7 @@
 
 //#region 🩹️CheckedDefects
 /// 🎯️ Every action id one built context menu dispatches, groups and submenus included.
-fn context_menu_action_ids(items: &[semio_framework_plugin::ContextMenuItemSpec], into: &mut Vec<(String, String)>) {
+fn context_menu_action_ids(items: &[semio_plugin::ContextMenuItemSpec], into: &mut Vec<(String, String)>) {
     for item in items {
         if let Some(action) = item.action.as_deref() {
             into.push((item.id.clone(), action.to_string()));
@@ -65,7 +65,7 @@ async fn every_context_menu_row_dispatches_a_declared_action() {
 /// [`PUZZLE3D_OBJECT_KIND_OPTIONS_MAX`], with a default that IS one of them.
 #[semio_framework_async_macros::async_test]
 async fn the_add_object_dialog_offers_every_object_kind_of_both_examples() {
-    use semio_framework_plugin::ArgSchema;
+    use semio_plugin::ArgSchema;
     let definition = create_puzzle3d_app();
     let expected: Vec<String> = [&*CONCRETE_FOREST_EXAMPLE_SNAPSHOT, &*NAKAGIN_EXAMPLE_SNAPSHOT]
         .into_iter()
@@ -110,7 +110,7 @@ async fn exactly_one_add_object_row_is_menu_vocabulary_and_it_opens_the_dialog()
     assert!(opener.in_palette, "the dialog opener IS the user-facing add-object row");
     assert!(!parametrized.in_palette, "the dialog's parametrized verb must not publish a second identical row");
     fn label(action: &ActionDefinition) -> &str {
-        action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En)
+        action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En)
     }
     assert!(label(opener).starts_with(label(parametrized)), "both rows describe the same verb, which is exactly why only one may be offered: {:?} vs {:?}", label(opener), label(parametrized));
     let visible: Vec<&str> = actions.iter().filter(|action| action.in_palette && label(action).starts_with("Add Object")).map(|action| action.id.as_str()).collect();
@@ -296,7 +296,7 @@ async fn escaping_the_armed_fill_tool_cancels_the_plan_and_disarms_the_tool() {
 /// none (a notice on the happy path would be noise, and would hide the real ones).
 #[semio_framework_async_macros::async_test]
 async fn a_refused_placement_surfaces_exactly_one_notice() {
-    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+    let notices = |result: &semio_plugin::InvocationResult| -> Vec<String> {
         result
             .requested_effects
             .iter()

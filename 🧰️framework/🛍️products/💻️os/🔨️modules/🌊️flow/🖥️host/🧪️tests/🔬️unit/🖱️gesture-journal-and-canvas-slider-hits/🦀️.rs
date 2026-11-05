@@ -191,7 +191,7 @@ fn reorganize_overwrites_saved_layout_left_to_right() {
     host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: -900.0, y: -900.0 });
     host.host_snapshot.layout.insert("preview".into(), WidgetLayout { x: -900.0, y: -900.0 });
     host.rebuild_dag();
-    let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);host.reorganize(&semio_framework_os_infinite::board::schema::layout::DagLayoutOptions::default(),&mut control).unwrap();
+    let mut progress=|_|true;let mut control=semio_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);host.reorganize(&semio_os_infinite::board::schema::layout::DagLayoutOptions::default(),&mut control).unwrap();
     let slider = host.host_snapshot.layout.get("slider").expect("slider layout");
     let add = host.host_snapshot.layout.get("add").expect("add layout");
     let preview = host.host_snapshot.layout.get("preview").expect("preview layout");

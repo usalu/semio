@@ -23,7 +23,7 @@ impl ShellInputState {
 
     /// 🎬️ Admits only the exact published scene hit while its originating surface remains live.
     pub fn retained_scene_hit_is_live(&self, hit: &HitTarget<ActionDescriptor>, x: f32, y: f32) -> bool {
-        use semio_framework_ui_declaration::ui::SurfaceKind;
+        use semio_ui_declaration::ui::SurfaceKind;
         let Some(control) = hit.control_id.as_deref() else { return false };
         let Some((rect, scene)) = self.retained_scene_hits.get(control) else { return false };
         let window = &scene.window_id;
@@ -35,7 +35,7 @@ impl ShellInputState {
             SurfaceKind::NodeGraph | SurfaceKind::Board2d | SurfaceKind::TiledMap => hit.kind == HitKind::ScrollRegion,
             _ => false,
         };
-        kind_matches && semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(scene)
+        kind_matches && semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(scene)
     }
 
     /// 🖼️ Resolves the exact live Canvas2d scene beneath a secondary press before its context menu opens.
@@ -43,11 +43,11 @@ impl ShellInputState {
         let control = hit.control_id.as_deref()?;
         let scene_entry = self.retained_scene_hits.get(control);
         let owner_entry = self.retained_hit_windows.get(control);
-        let live = owner_entry.and_then(|(window_id, body)| semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(window_id, x - body.x, y - body.y));
+        let live = owner_entry.and_then(|(window_id, body)| semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(window_id, x - body.x, y - body.y));
         let (rect, scene) = scene_entry?;
         let (window_id, body) = owner_entry?;
         let live = live?;
-        (*rect == hit.rect && rect.contains(x, y) && body.contains(x, y) && scene.kind == semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d && scene.window_id == *window_id && live.kind == semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d && live == *scene)
+        (*rect == hit.rect && rect.contains(x, y) && body.contains(x, y) && scene.kind == semio_ui_declaration::ui::SurfaceKind::Canvas2d && scene.window_id == *window_id && live.kind == semio_ui_declaration::ui::SurfaceKind::Canvas2d && live == *scene)
             .then(|| (window_id.clone(), *body))
     }
 
@@ -70,8 +70,8 @@ impl ShellInputState {
         } else if self.retained_body_rects_staging.len() < 256 {
             self.retained_body_rects_staging.push((window_id.to_string(), body));
         }
-        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_accessibility_visible_document(window_id);
-        for (control_id, scene, rect) in semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::register_clipped_retained_hit_targets(window_id, body, input) {
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::note_accessibility_visible_document(window_id);
+        for (control_id, scene, rect) in semio_renderer_wgpu_ui_engine::retained_ui_engine::register_clipped_retained_hit_targets(window_id, body, input) {
             if let Some(scene) = scene {
                 self.retained_scene_hits_staging.insert(control_id.clone(), (rect, scene));
             } else {
@@ -82,46 +82,46 @@ impl ShellInputState {
     }
 
     /// 🎬️ Lends the accepted original geometry and owner roster to the same caller's media producer.
-    pub fn drive_presented_media_slots(&self,cursor:&mut semio_framework_os_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,output:&mut Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let geometry=&self.presented_input_geometry;let source=semio_framework_os_renderer_wgpu_media_slots::original_collect::PresentedRosterSource{bodies:&geometry.retained_body_rects,surfaces:&geometry.retained_surfaces,owners:&geometry.media_owners,panels:&geometry.panel_rects,docks:&geometry.dock_window_plan,blocked:geometry.media_blocked};semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::drive_presented_media_slots(&source,cursor,output,cx)
+    pub fn drive_presented_media_slots(&self,cursor:&mut semio_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,output:&mut Vec<semio_renderer_wgpu_media_slots::PresentedMediaSlot>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let geometry=&self.presented_input_geometry;let source=semio_renderer_wgpu_media_slots::original_collect::PresentedRosterSource{bodies:&geometry.retained_body_rects,surfaces:&geometry.retained_surfaces,owners:&geometry.media_owners,panels:&geometry.panel_rects,docks:&geometry.dock_window_plan,blocked:geometry.media_blocked};semio_renderer_wgpu_ui_engine_dump::chrome_ledger::drive_presented_media_slots(&source,cursor,output,cx)
     }
 
     /// 🧭 Resolves one timer owner from this shell's GPU-accepted retained surface roster.
-    pub fn retained_clock_surface(&self, index: usize) -> Option<(&str, semio_framework_ui_wgpu_engine::UiSurfaceToken)> {
+    pub fn retained_clock_surface(&self, index: usize) -> Option<(&str, semio_ui_wgpu_engine::UiSurfaceToken)> {
         self.presented_input_geometry.retained_surfaces.get(index).map(|(id, surface)| (id.as_str(), *surface))
     }
 
     pub fn presented_retained_clock_deadline(&self) -> Option<f64> {
-        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::presented_retained_clock_deadline(&self.presented_input_geometry.retained_surfaces)
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::presented_retained_clock_deadline(&self.presented_input_geometry.retained_surfaces)
     }
 
     pub fn presented_input_candidate_matches(&self, witness: PresentedInputCandidateWitness) -> bool {
-        self.presented_input_candidate == Some(witness) && semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::presented_input_candidate_matches(witness.0)
+        self.presented_input_candidate == Some(witness) && semio_renderer_wgpu_ui_engine_dump::chrome_ledger::presented_input_candidate_matches(witness.0)
     }
 
-    pub fn progress_presented_input_candidate(&self, input: &mut InputState<ActionDescriptor>, witness: PresentedInputCandidateWitness) -> semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress {
+    pub fn progress_presented_input_candidate(&self, input: &mut InputState<ActionDescriptor>, witness: PresentedInputCandidateWitness) -> semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress {
         if self.presented_input_candidate != Some(witness) {
-            return semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale;
+            return semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale;
         }
-        semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::progress_presented_input_candidate(witness.0, input)
+        semio_renderer_wgpu_ui_engine::scene_interaction::progress_presented_input_candidate(witness.0, input)
     }
 
     pub fn discard_presented_input_candidate(&mut self, witness: PresentedInputCandidateWitness) -> bool {
         if self.presented_input_candidate != Some(witness) {
             return false;
         }
-        if !semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::discard_presented_input_candidate(witness.0) {
+        if !semio_renderer_wgpu_ui_engine_dump::chrome_ledger::discard_presented_input_candidate(witness.0) {
             return false;
         }
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_host_temporal_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_table_stepper_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_table_editable_text_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_table_button_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_vfs_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_block_list_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_event_feed_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_world3d_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::discard_graph_timeline_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_host_temporal_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_table_stepper_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_table_editable_text_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_table_button_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_vfs_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_block_list_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_event_feed_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_world3d_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::discard_graph_timeline_accessibility_candidates(witness.0);
         self.presented_input_candidate = None;
         true
     }
@@ -173,18 +173,18 @@ impl ShellInputState {
     /// nothing, or a plain container — and `update_hover` clears the chain by its own rule. No
     /// sentinel coordinate, and no second notion of "outside".
     pub fn route_retained_pointer_move(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, input: &mut InputState<ActionDescriptor>) {
-        let captured = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(pointer_id).and_then(|window_id| self.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
+        let captured = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(pointer_id).and_then(|window_id| self.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
         let current = captured.or_else(|| input.hit_at(x, y).cloned().and_then(|hit| self.retained_hit_window(&hit)));
         if let Some(previous) = self.retained_hover_window.clone() {
             if current.as_ref().map(|(window_id, _)| window_id.as_str()) != Some(previous.as_str()) {
                 if let Some(body) = self.retained_window_body_rect(&previous) {
-                    let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&previous, pointer_id, semio_framework_ui_wgpu_events::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
+                    let _ = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&previous, pointer_id, semio_ui_wgpu_events::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
                 }
             }
         }
         self.retained_hover_window = current.as_ref().map(|(window_id, _)| window_id.clone());
         let Some((window_id, body)) = current else { return };
-        let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_framework_ui_wgpu_events::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
+        let _ = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_ui_wgpu_events::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
     }
 
     //#endregion 🎯️RetainedPointerRouting
@@ -232,7 +232,7 @@ impl ShellInputState {
     }
 
     /// 🧲️ Resolves one published scene identity after the shell's modal and panel layers.
-    pub fn scene_pointer_target_at(&self, x: f32, y: f32, input: &InputState<ActionDescriptor>, theme: &Theme) -> Option<semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget> {
+    pub fn scene_pointer_target_at(&self, x: f32, y: f32, input: &InputState<ActionDescriptor>, theme: &Theme) -> Option<semio_renderer_wgpu_contracts::ScenePointerTarget> {
         if self.pointer_input_is_modal() || self.pointer_is_over_open_panel(x, y, theme) {
             return None;
         }
@@ -241,12 +241,12 @@ impl ShellInputState {
             return None;
         }
         let (_, target) = self.retained_scene_hits.get(hit.control_id.as_deref()?)?;
-        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(target).then(|| target.clone())
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(target).then(|| target.clone())
     }
 
     /// 🖼️ Captured input may outlive its rectangle, but never its published scene owner.
-    pub fn scene_pointer_target_is_published(&self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget) -> bool {
-        self.retained_scene_hits.values().any(|(_, published)| published == target) && semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(target)
+    pub fn scene_pointer_target_is_published(&self, target: &semio_renderer_wgpu_contracts::ScenePointerTarget) -> bool {
+        self.retained_scene_hits.values().any(|(_, published)| published == target) && semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(target)
     }
 
     /// 🪟️ A press anywhere inside a window's own box ACTIVATES that window — React's
@@ -295,7 +295,7 @@ impl ShellInputState {
         }
         if let Some((surface, body)) = self.retained_hit_window(&hit) {
             let modifiers = retained_event_modifiers(input);
-            let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, semio_framework_ui_wgpu_events::UiEvent::Scroll { x: x - body.x, y: y - body.y, delta_x, delta_y, modifiers }, input);
+            let _ = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, semio_ui_wgpu_events::UiEvent::Scroll { x: x - body.x, y: y - body.y, delta_x, delta_y, modifiers }, input);
             return true;
         }
         if hit.kind != HitKind::ScrollRegion {

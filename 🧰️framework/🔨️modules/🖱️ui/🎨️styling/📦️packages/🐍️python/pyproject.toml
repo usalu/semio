@@ -3,7 +3,7 @@ requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "semio-framework-ui-styling"
+name = "semio-ui-styling"
 version = "0.1.0"
 requires-python = ">=3.14,<3.15"
 dependencies = []

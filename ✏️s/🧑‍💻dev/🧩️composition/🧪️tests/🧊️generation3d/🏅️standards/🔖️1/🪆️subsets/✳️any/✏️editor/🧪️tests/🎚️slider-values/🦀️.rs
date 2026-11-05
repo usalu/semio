@@ -21,7 +21,7 @@ use crate::editor_domain::editor_laws::context::{self, app_with_registry};
 use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -94,7 +94,7 @@ fn oracle_reading(example_id: &str, slider_id: &str, value: f64, lod_mode: &str)
     with_host(&read.host_snapshot, |host| {
         host.set_slider_value(slider_id, value);
         let eval_json = host.evaluate().unwrap_or_default();
-        let mut session = semio_framework_os_flow::FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
+        let mut session = semio_os_flow::FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
         crate::flow_operators::resolve_preview_geometry(&eval_json, &host.host_snapshot, lod_mode, &mut session);
         let payload = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload(&eval_json, &host.host_snapshot, &config, Some(&session), &semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks::default());
         let mut widget_errors = widget_errors_of(semio_s_artifact_procedural_3d_preview_eval::preview_status_json(&eval_json, &host.host_snapshot).as_deref());
@@ -109,7 +109,7 @@ fn oracle_reading(example_id: &str, slider_id: &str, value: f64, lod_mode: &str)
 /// 🩺️ Why an evaluation that named no error still put nothing on screen: the kernel's own refusal of
 /// each preview handle, read straight off the tessellator. Without this the oracle would call a value
 /// "empty" where the product is entitled to call it faulted, and the law could not tell the two apart.
-fn tessellation_refusals(eval_json: &str, host: &semio_framework_os_flow::FlowHost, tolerance: f64) -> BTreeMap<String, String> {
+fn tessellation_refusals(eval_json: &str, host: &semio_os_flow::FlowHost, tolerance: f64) -> BTreeMap<String, String> {
     let Ok(eval) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return BTreeMap::new() };
     let mut refusals = BTreeMap::new();
     for widget_id in semio_s_artifact_procedural_3d_preview_eval::preview_widget_ids(&host.host_snapshot) {
@@ -194,7 +194,7 @@ struct DeliveredPreview {
 /// contentless `$kernel: ""`. A refusal read that way names nothing, so a row whose kernel genuinely
 /// refuses the value looked like a silent empty payload.
 fn delivered_preview(preview_body_json: &str) -> DeliveredPreview {
-    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
     let status: serde_json::Value = serde_json::from_str(world.status_json.as_deref().unwrap_or("{}")).expect("preview status json");
     let mut widget_errors = widget_errors_of(world.status_json.as_deref());
     for entry in status.get("diagnostics").and_then(serde_json::Value::as_array).cloned().unwrap_or_default() {
@@ -223,7 +223,7 @@ fn set_slider_args(slider_id: &str, value: f64, gesture: &str, commit: bool) -> 
 /// 🎚️ One press, driven the way the host lane drives it: a `drag` lets each round trip settle before
 /// offering the next value, a `burst` lands every value of the press before any evaluation answers —
 /// which is exactly how a value supersedes an evaluation already in flight.
-async fn drive_slider_press(app: &mut context::Generation3dAppFixture, flow_view: &semio_framework_plugin::ViewModel, slider_id: &str, values: &[f64], burst: bool, gesture: &str) {
+async fn drive_slider_press(app: &mut context::Generation3dAppFixture, flow_view: &semio_plugin::ViewModel, slider_id: &str, values: &[f64], burst: bool, gesture: &str) {
     let last = values.len().saturating_sub(1);
     let mut carried = Vec::new();
     for (index, value) in values.iter().enumerate() {
@@ -254,7 +254,7 @@ async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes()
     let (flow_view, preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let mut faults: Vec<String> = Vec::new();
     for row in &fixture.rows {
-        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": row.example }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
+        semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": row.example }).into()), &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
         let switched = context::settle(&mut app).await;
         context::drive_preview_run(&mut app, &flow_view, &switched.effects).await;
         let authored = authored_slider_value(&row.example, &row.slider);
@@ -287,7 +287,7 @@ async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes()
         }
     }
     assert!(faults.is_empty(), "a moved slider did not converge on its value's geometry:\n{}", faults.join("\n"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ Everything one released value owes, as a list of what it failed rather than the first

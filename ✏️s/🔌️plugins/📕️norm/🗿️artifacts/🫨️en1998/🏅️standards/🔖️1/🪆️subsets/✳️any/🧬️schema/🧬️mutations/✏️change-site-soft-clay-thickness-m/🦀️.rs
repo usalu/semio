@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteSoftClayThickn
         record: "ChangeSiteSoftClayThicknessM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Thickness of a soft clay or silt layer with high plasticity index (S1 indicator, 0 = none)", "Mächtigkeit einer weichen Ton- oder Schluffschicht mit hoher Plastizitätszahl (S1-Kennzeichen, 0 = keine) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Thickness of a soft clay or silt layer with high plasticity index (S1 indicator, 0 = none)", "Mächtigkeit einer weichen Ton- oder Schluffschicht mit hoher Plastizitätszahl (S1-Kennzeichen, 0 = keine) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-soft-clay-thickness-m".into()]

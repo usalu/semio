@@ -1,27 +1,17 @@
-//! 🧩️ puzzle2d -> json
-//!
-//! 🩹️ `stdio_gap`/foreign-lag fix — see the paired import leaf's doc comment (same wave,
-//! `JsonSnapshot.value: serde_json::Value` -> stdio's own `JsonValue`). Routes through
-//! `JsonSnapshot::from_value` (stdio's own real reverse `serde_json::Value -> JsonValue` bridge,
-//! no hand-rolled converter here) and stdio's own real `write_json_pretty` for `serialize_bytes`
-//! (the previous `serde_json::to_vec_pretty(&value)` would have serialized the internally-tagged
-//! `JsonValue` shape verbatim, not real JSON text — a latent bug this fix also corrects).
-//!
-//! 🩹️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: no longer
-//! routes through `serde_json::to_value` — `Puzzle2dSnapshot` only derives `Serialize` under
-//! `#[cfg(test)]` now. `dsl::ToValue::to_value` (first-party) -> `semio_framework_pack_json::from_dsl_value`
-//! (`DslValue` -> stdio's own `JsonValue`) instead, same shape the sibling `block2d` leaf already
-//! uses.
+//! 📤️ Declared Puzzle2d JSON preserves every typed binary64 word.
 use crate::Puzzle2dSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::JsonSnapshot;
-use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
+
+/// 📜️ The authoritative declared field-wire schema; native snapshot state has a separate schema.
+pub const JSON_SCHEMA: &str = crate::standards::v1::subsets::any::io::puzzle2d_json::SCHEMA;
 
 pub fn register() {}
 
 pub fn serialize(snapshot: &Puzzle2dSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
-    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let raw = semio_framework_value::ToValue::to_value(snapshot);
+    let raw = crate::standards::v1::subsets::any::io::puzzle2d_json::convert(raw, false)
+        .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("puzzle2d->json: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     Ok(JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&raw)))
 }
 

@@ -1,7 +1,7 @@
 //! 🧳️ Canonical Store preparation drives the genuine original semantic, identity and hash owners.
 use crate::ArtifactStoreOneItemLiveAuthority;
-use semio_framework_os_spr::Edit;
-use semio_framework_os_spr::command::{ArtifactCanonicalEditAuthority, ArtifactCanonicalEditAuthorityCursor, ArtifactCanonicalEditIdentityCursor};
+use semio_os_spr::Edit;
+use semio_os_spr::command::{ArtifactCanonicalEditAuthority, ArtifactCanonicalEditAuthorityCursor, ArtifactCanonicalEditIdentityCursor};
 use protocol::io::text::canonical::ArtifactCanonicalEditSealCursor;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,paged::PagedUtf8,retirement::{RetireOwned,controlled::ControlledRetirement,arc_custody::SharedControlledRetirement},retained_clone::{RetainedCloneSourceAdmission,RetainedCloneBinding,RetainedCloneSource,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};

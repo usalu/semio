@@ -9,7 +9,7 @@
 //! addressing (`surface`/`revision`/`node`/`node_key`) that makes [`intent_is_stale`] and
 //! [`BoundedActionQueue::admit_intent`] possible; a descriptor never could.
 
-use semio_framework_ui_layout::layout::ActionDescriptor;
+use semio_ui_layout::layout::ActionDescriptor;
 use semio_framework_value::{DslValue, Number};
 
 #[path = "🧭️intent-address-and-sequencer/🦀️.rs"]

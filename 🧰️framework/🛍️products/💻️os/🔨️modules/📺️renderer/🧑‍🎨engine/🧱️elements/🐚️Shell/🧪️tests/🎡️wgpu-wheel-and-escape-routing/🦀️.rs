@@ -9,14 +9,14 @@
 //! | `zoom-wheel` | `interactionHover`, `noteWorldNavigation`, `setCamera` | `interactionHover` | the notch resolved the window's own `ScrollRegion`, whose id names no `.pane`/`.map` surface, so `wheel_reaches_scene_surface` refused and the world never saw it (`🗑️generated/w11a-parity-run-14/wgpu/console.txt:19476`, `wheel apply … hit=Some(ScrollRegion) control=Some("") propagates=false`) |
 //! | `example-picker-dismiss` | `engagementAbort` | (none) | the open picker made `idle` false, so the app-keybinding rung never ran, and the sync Escape arm closed the picker and returned |
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe, test_app};
+use semio_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe, test_app};
 use super::*;
 use infinite_world::world::World3dState;
 use semio_framework::manifest::Keybinding;
 
 #[allow(non_snake_case)]
 fn WGPU_RENDERER_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+    semio_renderer_wgpu_test_support::renderer_source()
 }
 const WORLD_JOURNAL_SEQUENCES: &str = include_str!("../../../🌐️World3dHost/🧪️tests/🧫️fixtures/📜️journal-sequences.json");
 
@@ -26,7 +26,7 @@ const PANE: (f32, f32, f32, f32) = (534.4, 54.4, 1062.4, 913.6);
 const AIM: (f32, f32) = (PANE.0 + PANE.2 * 0.7, PANE.1 + PANE.3 * 0.45);
 
 fn shell_with_pane() -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let _ = shell.surfaces.world3d_states.try_insert("puzzle3d-main-perspective".into(), World3dState::new("puzzle3d-main-perspective".into(), "app.controller".into()));
     if let Some(state) = shell.surfaces.world3d_states.get_mut("puzzle3d-main-perspective") {
         state.session.bounds = Rect::new(PANE.0, PANE.1, PANE.2, PANE.3);
@@ -89,10 +89,10 @@ fn a_wheel_outside_every_scene_rect_stays_with_the_chrome_that_owns_it() {
 //#region ⎋️DismissableLayers
 
 fn shell_with_escape_binding() -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut app = test_app(Vec::new(), Vec::new());
     app.keybindings = vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "app.controller".into(), action: "engagementAbort".into(), args: None } }];
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -100,7 +100,7 @@ fn shell_with_escape_binding() -> ShellState {
 /// picker — and says so, so the caller can decide whether the chord carries on.
 #[test]
 fn escape_dismisses_every_open_dismissable_layer_at_once() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(!shell.input.dismiss_dismissable_layers(), "⎋️ nothing open, nothing dismissed");
     shell.input.overlay_state = OverlayState::Dropdown("example".into());
     shell.input.open_selects.insert("widget.select".into(), true);
@@ -116,7 +116,7 @@ fn escape_dismisses_every_open_dismissable_layer_at_once() {
 #[test]
 fn the_palette_and_find_overlays_are_not_dismissable_layers() {
     for overlay in [OverlayState::Search, OverlayState::Find] {
-        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         shell.input.overlay_state = overlay.clone();
         assert!(!shell.input.dismiss_dismissable_layers(), "🧯️ {overlay:?} is a dialog, not a dismissable layer");
         assert_eq!(shell.input.overlay_state, overlay);
@@ -139,13 +139,13 @@ fn escape_under_an_open_picker_still_reaches_the_app_keybinding_rung() {
     let mut swallowed = shell_with_escape_binding();
     let mut input = InputState::<ActionDescriptor>::default();
     swallowed.input.overlay_state = OverlayState::Search;
-    semio_framework_async::block_on(PointerCtx::of(&mut swallowed).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
+    semio_framework_async::block_on(PointerCtx::of(&mut swallowed).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
     assert!(swallowed.chrome.transient_notice().is_none(), "🧯️ a focus-trapping dialog DOES swallow the chord, which is React's editable-target rule");
 
     let mut shell = shell_with_escape_binding();
     let mut input = InputState::<ActionDescriptor>::default();
     shell.input.overlay_state = OverlayState::Dropdown("example".into());
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
     assert_eq!(shell.input.overlay_state, OverlayState::None, "⎋️ the picker is dismissed by the same keydown");
     assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⎋️ and the app's own escape binding was still resolved and addressed");
 }
@@ -163,15 +163,15 @@ fn escape_under_an_open_picker_still_reaches_the_app_keybinding_rung() {
 /// and `redo` (`🗑️generated/w12c-parity-run-17/`).
 #[test]
 fn an_unowned_app_chord_falls_through_to_the_framework_edit_verbs() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut app = test_app(Vec::new(), Vec::new());
     app.keybindings = vec![Keybinding { keys: "mod+z".into(), action: ActionDescriptor { controller_id: "app.controller".into(), action: "undo".into(), args: None } }];
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers { meta: true, ..PointerModifiers::default() };
 
-    assert!(shell.docs.match_app_keybinding(&semio_framework_ui_wgpu_input::KeyAction::Char("z".into()), &modifiers, &shell.chrome).is_some(), "⌨️ the app claims the chord");
-    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Char("z".into()), &modifiers, &mut input));
+    assert!(shell.docs.match_app_keybinding(&semio_ui_wgpu_input::KeyAction::Char("z".into()), &modifiers, &shell.chrome).is_some(), "⌨️ the app claims the chord");
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Char("z".into()), &modifiers, &mut input));
     assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⌨️ the app rung ran and found no window to address");
     assert_eq!(outcome.err().as_deref(), Some("action program missing"), "⌨️ and the framework's own undo still crossed the dispatch funnel");
 }

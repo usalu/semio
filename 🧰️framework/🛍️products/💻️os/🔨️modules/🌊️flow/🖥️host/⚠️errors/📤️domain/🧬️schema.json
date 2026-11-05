@@ -1,0 +1,1672 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 38,
+      "maxItems": 38,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Json"
+              },
+              "code": {
+                "const": "flow.json"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "json"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "WidgetIdExists"
+              },
+              "code": {
+                "const": "flow.widget-id-exists"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "widgetIdExists"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "UnknownWidget"
+              },
+              "code": {
+                "const": "flow.unknown-widget"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "unknownWidget"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "UnknownNeuronWidget"
+              },
+              "code": {
+                "const": "flow.unknown-neuron-widget"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "unknownNeuronWidget"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "NotVariadicInput"
+              },
+              "code": {
+                "const": "flow.not-variadic-input"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "notVariadicInput"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "NotVariadicOutput"
+              },
+              "code": {
+                "const": "flow.not-variadic-output"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "notVariadicOutput"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "NotNeuron"
+              },
+              "code": {
+                "const": "flow.not-neuron"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "notNeuron"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "WidgetNotNeuron"
+              },
+              "code": {
+                "const": "flow.widget-not-neuron"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "widgetNotNeuron"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "MaxInputPortsReached"
+              },
+              "code": {
+                "const": "flow.max-input-ports-reached"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "maxInputPortsReached"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "MaxOutputPortsReached"
+              },
+              "code": {
+                "const": "flow.max-output-ports-reached"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "maxOutputPortsReached"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "UnknownInputPort"
+              },
+              "code": {
+                "const": "flow.unknown-input-port"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "unknownInputPort"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "UnknownOutputPort"
+              },
+              "code": {
+                "const": "flow.unknown-output-port"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "unknownOutputPort"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "NoOutputPort"
+              },
+              "code": {
+                "const": "flow.no-output-port"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "noOutputPort"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "NoInputPort"
+              },
+              "code": {
+                "const": "flow.no-input-port"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "noInputPort"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "UnknownSynapse"
+              },
+              "code": {
+                "const": "flow.unknown-synapse"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "unknownSynapse"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "UnknownWidgetLayout"
+              },
+              "code": {
+                "const": "flow.unknown-widget-layout"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "unknownWidgetLayout"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "UnknownCluster"
+              },
+              "code": {
+                "const": "flow.unknown-cluster"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "unknownCluster"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "WidgetNotCluster"
+              },
+              "code": {
+                "const": "flow.widget-not-cluster"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "widgetNotCluster"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "UnknownSharedPayload"
+              },
+              "code": {
+                "const": "flow.unknown-shared-payload"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "unknownSharedPayload"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "HistoryRefused"
+              },
+              "code": {
+                "const": "flow.history-refused"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "value"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "historyRefused"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "SelfConnection"
+              },
+              "code": {
+                "const": "flow.self-connection"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "selfConnection"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "SelfInsertion"
+              },
+              "code": {
+                "const": "flow.self-insertion"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "selfInsertion"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "CycleWouldBeCreated"
+              },
+              "code": {
+                "const": "flow.cycle-would-be-created"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "cycleWouldBeCreated"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "ConnectionAlreadyExists"
+              },
+              "code": {
+                "const": "flow.connection-already-exists"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "connectionAlreadyExists"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "CollapseNeedsTwoWidgets"
+              },
+              "code": {
+                "const": "flow.collapse-needs-two-widgets"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "collapseNeedsTwoWidgets"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "CollapseUnknownWidgets"
+              },
+              "code": {
+                "const": "flow.collapse-unknown-widgets"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "collapseUnknownWidgets"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "CollapseContainsClusters"
+              },
+              "code": {
+                "const": "flow.collapse-contains-clusters"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "collapseContainsClusters"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "widget",
+              "min",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "MinInputPorts"
+              },
+              "code": {
+                "const": "flow.min-input-ports"
+              },
+              "widget": {
+                "type": "string"
+              },
+              "min": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "widget",
+                  "min"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "minInputPorts"
+                  },
+                  "widget": {
+                    "type": "string"
+                  },
+                  "min": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "widget",
+              "min",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "MinOutputPorts"
+              },
+              "code": {
+                "const": "flow.min-output-ports"
+              },
+              "widget": {
+                "type": "string"
+              },
+              "min": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "widget",
+                  "min"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "minOutputPorts"
+                  },
+                  "widget": {
+                    "type": "string"
+                  },
+                  "min": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "source",
+              "sourceType",
+              "target",
+              "targetType",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "IncompatiblePortTypes"
+              },
+              "code": {
+                "const": "flow.incompatible-port-types"
+              },
+              "source": {
+                "type": "string"
+              },
+              "sourceType": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "targetType": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "source",
+                  "sourceType",
+                  "target",
+                  "targetType"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "incompatiblePortTypes"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "sourceType": {
+                    "type": "string"
+                  },
+                  "target": {
+                    "type": "string"
+                  },
+                  "targetType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "dagVariant",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Dag"
+              },
+              "code": {
+                "const": "flow.dag"
+              },
+              "dagVariant": {
+                "const": "SnapshotRootNotObject"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "dag"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "dag"
+                  },
+                  "dag": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "variant"
+                    ],
+                    "properties": {
+                      "variant": {
+                        "const": "snapshotRootNotObject"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "dagVariant",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Dag"
+              },
+              "code": {
+                "const": "flow.dag"
+              },
+              "dagVariant": {
+                "const": "SchemaMismatch"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "dag"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "dag"
+                  },
+                  "dag": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "variant"
+                    ],
+                    "properties": {
+                      "variant": {
+                        "const": "schemaMismatch"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "dagVariant",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Dag"
+              },
+              "code": {
+                "const": "flow.dag"
+              },
+              "dagVariant": {
+                "const": "NodesMissing"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "dag"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "dag"
+                  },
+                  "dag": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "variant"
+                    ],
+                    "properties": {
+                      "variant": {
+                        "const": "nodesMissing"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "dagVariant",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Dag"
+              },
+              "code": {
+                "const": "flow.dag"
+              },
+              "dagVariant": {
+                "const": "UnknownAlignMode"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "dag"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "dag"
+                  },
+                  "dag": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "variant",
+                      "value"
+                    ],
+                    "properties": {
+                      "variant": {
+                        "const": "unknownAlignMode"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "dagVariant",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Dag"
+              },
+              "code": {
+                "const": "flow.dag"
+              },
+              "dagVariant": {
+                "const": "UnknownWidget"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "dag"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "dag"
+                  },
+                  "dag": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "variant",
+                      "value"
+                    ],
+                    "properties": {
+                      "variant": {
+                        "const": "unknownWidget"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "dagVariant",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Dag"
+              },
+              "code": {
+                "const": "flow.dag"
+              },
+              "dagVariant": {
+                "const": "CanvasTheme"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "dag"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "dag"
+                  },
+                  "dag": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "variant",
+                      "value"
+                    ],
+                    "properties": {
+                      "variant": {
+                        "const": "canvasTheme"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "dagVariant",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Dag"
+              },
+              "code": {
+                "const": "flow.dag"
+              },
+              "dagVariant": {
+                "const": "GridFactorOutOfRange"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "dag"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "dag"
+                  },
+                  "dag": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "variant"
+                    ],
+                    "properties": {
+                      "variant": {
+                        "const": "gridFactorOutOfRange"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "code",
+              "dagVariant",
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "variant": {
+                "const": "Dag"
+              },
+              "code": {
+                "const": "flow.dag"
+              },
+              "dagVariant": {
+                "const": "Json"
+              },
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "dag"
+                ],
+                "properties": {
+                  "variant": {
+                    "const": "dag"
+                  },
+                  "dag": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "variant",
+                      "value"
+                    ],
+                    "properties": {
+                      "variant": {
+                        "const": "json"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use ui_contract::UiDocumentLease;
 #[cfg(not(target_arch = "wasm32"))]
 use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_SLOTS, UI_DOCUMENT_NODES, UI_DOCUMENT_PATCH_OPS};
-use semio_framework_ui_declaration::layout::{WindowEngagement, WindowMeasure};
+use semio_ui_declaration::layout::{WindowEngagement, WindowMeasure};
 
 #[cfg(target_arch = "wasm32")]
 use js_sys::{Array, Function, Reflect};
@@ -27,11 +27,11 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_kernel_pool::KernelClient;
+use semio_renderer_wgpu_kernel_pool::KernelClient;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_kernel_protocol::{ExchangeOutcome, MountedProductReplayAdmission};
+use semio_renderer_wgpu_kernel_protocol::{ExchangeOutcome, MountedProductReplayAdmission};
 
-pub use semio_framework_os_renderer_wgpu_contracts::ProgramFault;
+pub use semio_renderer_wgpu_contracts::ProgramFault;
 
 #[path = "🧳️wasm-program-exchange/🦀️.rs"]
 mod wasm_program_exchange_child;

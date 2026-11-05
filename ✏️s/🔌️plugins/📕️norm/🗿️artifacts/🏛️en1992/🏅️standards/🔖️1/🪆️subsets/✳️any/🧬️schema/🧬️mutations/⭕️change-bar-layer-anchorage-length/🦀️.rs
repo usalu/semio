@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeBarLayerAnchorageL
         record: "ChangedBarLayerAnchorageLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change anchorage length l_bd of the bar layer", "Bewehrungslage: Verankerungslänge l_bd ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change anchorage length l_bd of the bar layer", "Bewehrungslage: Verankerungslänge l_bd ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.layer_id.clone()]

@@ -19,7 +19,7 @@ fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T) {
 #[test]
 fn actual_registered_txt_ifc_route_returns_an_original_native_graph_pack() {
     use pack::snapshot::ArtifactPack;
-    use semio_framework_os_kernel::io::{io_mechanism::IoRunControl, io_schema::IoPayload};
+    use semio_os_kernel::io::{io_mechanism::IoRunControl, io_schema::IoPayload};
     let source = TxtSnapshot::from_body(include_str!("triangulated.ifc"));
     let input = IoPayload::Binary(source.encode_pack());
     let mut receive = |_| true;

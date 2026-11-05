@@ -4,14 +4,14 @@ use crate::editor::flow::modes::edit::tools::drag::flow_drag_tool_emit;
 use crate::editor::flow::commands::patch_flow_widgets::widget_field_leaf;
 use semio_framework_tool_machine::{node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
 use crate::editor::flow::host::{apply_canvas_options, flow_content_leaves_emit, seed_host_catalogue, sync_host_selection_domains};
 use crate::editor::flow::editor_vocabulary::FLOW_GRAPH_OPERATION_RAW_BYTES;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::{neural::ColdRetire, FlowEvalSession};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 

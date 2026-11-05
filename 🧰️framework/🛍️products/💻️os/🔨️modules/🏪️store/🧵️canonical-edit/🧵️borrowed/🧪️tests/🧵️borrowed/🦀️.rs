@@ -1,19 +1,19 @@
 //! 🌳️ Language-neutral borrowed-map, lifetime, and worker replay laws.
 
-use semio_framework_os_store_canonical_json::{ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, value};
+use semio_os_store_canonical_json::{ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, value};
 use std::sync::Arc;
-use semio_framework_os_store_canonical_json::borrowed::{ArtifactCanonicalJsonArray, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonValue};
+use semio_os_store_canonical_json::borrowed::{ArtifactCanonicalJsonArray, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonValue};
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, FromValue, RetirementDemand, ToValue, ValueError};
-use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
-use semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
+use semio_os_store_ledger::CursorRevisionAccumulator;
 use serde::{Deserialize, Serialize};
-use semio_framework_os_spr::Edit;
+use semio_os_spr::Edit;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_snapshot_read::artifact_retirement_box_close_step;
-use semio_framework_os_store_ledger as ledger;
-use semio_framework_os_store_test_support as test_support; use super::canonical_edit_tests as tests;
+use semio_os_store_ledger as ledger;
+use semio_os_store_test_support as test_support; use super::canonical_edit_tests as tests;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 //#region 🪪️LifetimeOracle
@@ -326,7 +326,7 @@ fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_ca
 }
 /// 📏️ The canonical bytes the original edit must seal to, projected independently through serde.
 fn expected_json(edit: &Edit<MapMutation>) -> Vec<u8> {
-    serde_json::to_vec(&test_support::SerdeValue(&semio_framework_os_store_ledger::CursorRevisionAccumulator::revision_value(edit))).unwrap()
+    serde_json::to_vec(&test_support::SerdeValue(&semio_os_store_ledger::CursorRevisionAccumulator::revision_value(edit))).unwrap()
 }
 
 /// 🎟️ Funds exactly the next quoted preparation turn: one item and the sealer's own five quoted currencies.
@@ -436,4 +436,4 @@ fn borrowed_map_indexed_depth_refusal_and_deep_originals_seal_under_the_depth_gr
 }
 //#endregion 🧪️BorrowedMapLaws
 
-fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }
+fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }

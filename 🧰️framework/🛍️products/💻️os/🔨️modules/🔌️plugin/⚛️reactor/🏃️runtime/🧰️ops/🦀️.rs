@@ -1,7 +1,7 @@
 //! ⚙️ Runtime operations of the plugin SDK: wire limits, codecs, document ops, media, surfaces, render, refresh, context menu, command ingress and typed operations.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 
 /// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
 #[cfg(test)]
@@ -30,4 +30,5 @@ pub mod ops_typed_operations;
 #[path = "🧪️tests/🦀️.rs"]
 pub mod tests;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as dsl;
+

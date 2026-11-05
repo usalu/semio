@@ -20,11 +20,11 @@ use crate::standards::v1::subsets::any::schema::mutations::{rotate_selection_3d,
 #[allow(unused_imports)]
 use machine::Command;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::UtilityDefinition;
+use semio_plugin::UtilityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use semio_framework_tool_machine::{GestureChart, ToolYield};
 #[allow(unused_imports)]

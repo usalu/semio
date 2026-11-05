@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "area-scheme", kind: "create-area-scheme", record: "CreateAreaScheme" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create area scheme \"{}\"", self.area_scheme.name), &format!("Flächenschema \"{}\" anlegen", self.area_scheme.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create area scheme \"{}\"", self.area_scheme.name), &format!("Flächenschema \"{}\" anlegen", self.area_scheme.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

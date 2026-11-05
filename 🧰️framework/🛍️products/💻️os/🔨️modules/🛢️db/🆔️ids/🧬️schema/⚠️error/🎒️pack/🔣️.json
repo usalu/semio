@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "properties": {
     "schemaVersion": { "const": 1 },
-    "owner": { "const": "semio-framework-os-kernel-db" },
+    "owner": { "const": "semio-os-kernel-db" },
     "definingErrorOwner": { "const": "semio-framework-pack-error" },
     "rule": { "const": { "typedCause": "Pack", "preserveKind": true, "preserveOriginalMessageAllocation": true, "messageClassification": false } },
     "cases": {

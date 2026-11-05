@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingNsPeriodS 
         record: "ChangeBuildingNsPeriodS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Non-structural element period T_a", "Eigenperiode des nichttragenden Bauteils T_a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Non-structural element period T_a", "Eigenperiode des nichttragenden Bauteils T_a ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-ns-period-s".into()]

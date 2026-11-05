@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeWeldRunProcess whe
         record: "ChangedWeldRunProcess",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Welding process of the weld run", "Schweißnaht: Schweißverfahren ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Welding process of the weld run", "Schweißnaht: Schweißverfahren ändern")
     }
 }
 

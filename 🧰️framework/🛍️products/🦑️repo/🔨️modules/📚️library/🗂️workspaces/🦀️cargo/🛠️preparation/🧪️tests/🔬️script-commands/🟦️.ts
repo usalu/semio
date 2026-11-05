@@ -1,3 +1,7 @@
+import{requireIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{writeOwnedCommandOutputV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import custodySchema from"../../🧾️custody/🧬️schema/🔣️.json"with{type:"json"};
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
@@ -22,17 +26,16 @@ function captureProgram(root:string,entry:string):Readonly<{sourceRoot:string;so
  for(const ownerRoot of new Set([root,sourceRoot]))for(const name of ["bun.lock","bun.lockb"]){const path=resolve(ownerRoot,name);(ownerRoot===root?configuration:resolverConfiguration).set(path,cargoPreparationInputV1(ownerRoot,path,"file"));}
  return{sourceRoot,sources:[...files.values()],resolverInputs:[...resolverConfiguration.values()],inputs:[...configuration.values()],resolutions};
 }
-/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
-export async function runScriptProgram(): Promise<void> {
-  
-  
-  if(true){
-   if(process.argv[2]==="capture-program"){
-    if(process.argv.length!==5)throw new Error("capture-program <root> <entry>");console.log(JSON.stringify(captureProgram(process.argv[3]!,process.argv[4]!)));
-   }else if(process.argv[2]==="resolve-program"){
-    if(process.argv.length!==3)throw new Error("resolve-program accepts only its owned input stream");
-    const edges=JSON.parse(await Bun.stdin.text());if(!Array.isArray(edges)||edges.some(edge=>typeof edge.source!=="string"||typeof edge.specifier!=="string"))throw new Error("Invalid program resolution request");
-    console.log(JSON.stringify(edges.map(edge=>Bun.resolveSync(edge.specifier,dirname(edge.source)))));
-   }else throw new Error("Select capture-program or resolve-program");
-  }
+/** 📤️ Publishes complete bounded JSON beneath the actual nonrenewable Original. */
+async function publishCargoPreparationProgramV1(value:unknown,control:ResourceLeaseControl):Promise<void>{
+ checkResourceLeaseControl(control);const encoded=JSON.stringify(value);if(encoded===undefined)throw Error("Complete preparation JSON output required");const text=encoded+"\n";if(Buffer.byteLength(text)>custodySchema.$defs.CargoPreparationControlProtocolV1.const.maximumCaptureBytes)throw Error("Preparation JSON output exceeds capture capacity");await writeOwnedCommandOutputV1(process.stdout,text,control);
+}
+/** 🏃️ Runs the declared resolver operation and joins its complete structured output. */
+export async function runScriptProgram(control:ResourceLeaseControl):Promise<void>{
+ requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);
+ if(process.argv[2]==="capture-program"){
+  if(process.argv.length!==5)throw Error("capture-program <root> <entry>");await publishCargoPreparationProgramV1(captureProgram(process.argv[3]!,process.argv[4]!),control);
+ }else if(process.argv[2]==="resolve-program"){
+  if(process.argv.length!==3)throw Error("resolve-program accepts only its owned input stream");const edges=JSON.parse(await Bun.stdin.text());if(!Array.isArray(edges)||edges.some(edge=>typeof edge.source!=="string"||typeof edge.specifier!=="string"))throw Error("Invalid program resolution request");await publishCargoPreparationProgramV1(edges.map(edge=>Bun.resolveSync(edge.specifier,dirname(edge.source))),control);
+ }else throw Error("Select capture-program or resolve-program");
 }

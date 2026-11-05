@@ -14,8 +14,8 @@ impl Fem2dRetainedCommandJobFactory {
 }
 
 impl ToolJobFactory for Fem2dRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Fem2dPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Fem2dPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Fem2dPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Fem2dPlayApp>>;
 
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
@@ -33,7 +33,7 @@ impl ToolJobFactory for Fem2dRetainedCommandJobFactory {
         fem2d_retained_contract()
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: FEM2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: FEM2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
     
 }

@@ -5,14 +5,14 @@ use super::*;
 //#region 📮️RuntimeMailbox
 pub struct AppPresenter {
     pub gpu: GpuContext,
-    pub engine: semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter,
-    pub gate: semio_framework_ui_prepared::PreparedRenderGate,
+    pub engine: semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter,
+    pub gate: semio_ui_prepared::PreparedRenderGate,
     pub runtime: AppMailbox,
     pub presentation_authority: RuntimePresentationAuthority,
     pub raster_operation_authority: RuntimeRasterOperationAuthority,
     pub window: Option<Arc<Window>>,
     #[cfg(target_arch = "wasm32")]
-    pub offscreen_token: Option<semio_framework_ui_prepared::OffscreenPresentToken>,
+    pub offscreen_token: Option<semio_ui_prepared::OffscreenPresentToken>,
     pub last_cursor: Option<(SemioCursor, bool)>,
     pub pending: Option<AppPresentCursor>,
     pub retirement: Option<AppPresentedRetirement>,
@@ -152,17 +152,17 @@ impl AppPresentPhase {
 }
 
 pub(super) struct AppPresentCursor {
-    pub(super) media_collect:semio_framework_os_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,
-    pub(super) media_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>>>,
-    pub(super) media_slots: Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>,
+    pub(super) media_collect:semio_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,
+    pub(super) media_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<semio_renderer_wgpu_media_slots::PresentedMediaSlot>>>,
+    pub(super) media_slots: Vec<semio_renderer_wgpu_media_slots::PresentedMediaSlot>,
     pub(super) has_animated_primitives: bool,
     pub(super) frame: AppFramePresentation,
     pub(super) phase: AppPresentPhase,
     pub(super) engine: usize,
     pub(super) upload: usize,
-    pub(super) witness: Option<semio_framework_ui_prepared::PreparedPresenterWitness>,
+    pub(super) witness: Option<semio_ui_prepared::PreparedPresenterWitness>,
     pub(super) raster_witness: Option<ui_gpu::RasterTextureWitness>,
-    pub(super) raster_keep: semio_framework_ui_prepared::PreparedRasterKeepCursorV1,
+    pub(super) raster_keep: semio_ui_prepared::PreparedRasterKeepCursorV1,
     pub(super) raster_keep_steps: usize,
     pub(super) input_wait: AppPresentInputWait,
     pub(super) input_progress: u64,
@@ -172,7 +172,7 @@ pub(super) struct AppPresentCursor {
 }
 
 pub(super) struct AppPresentedRetirement {
-    pub(super) previous: Option<semio_framework_ui_prepared::PreparedRenderPacket>,
+    pub(super) previous: Option<semio_ui_prepared::PreparedRenderPacket>,
     pub(super) completed_frame: Option<AppFramePresentation>,
     pub(super) raster: RasterCandidateRetirement,
     pub(super) acknowledged_eviction: usize,
@@ -205,39 +205,39 @@ pub enum AppPresentStep {
         retained_control_deadline: Option<f64>,
         shell_clock_deadline: Option<f64>,
         has_animated_primitives: bool,
-        media_slots: Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>,
+        media_slots: Vec<semio_renderer_wgpu_media_slots::PresentedMediaSlot>,
     },
 }
 
 impl AppPresenter {
-    pub fn engine_surface_token_at(&self, index: usize) -> Option<semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken> {
+    pub fn engine_surface_token_at(&self, index: usize) -> Option<semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken> {
         self.engine.surface_token_at(index)
     }
 
-    pub fn begin_engine_surface_close(&mut self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> bool {
+    pub fn begin_engine_surface_close(&mut self, token: semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> bool {
         self.engine.begin_surface_close(token)
     }
 
-    pub fn close_engine_surface_step(&mut self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, String> {
+    pub fn close_engine_surface_step(&mut self, token: semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, String> {
         self.engine.close_surface_step(&mut self.gpu, token)
     }
 
-    pub fn engine_surface_terminal_is_empty(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> bool {
+    pub fn engine_surface_terminal_is_empty(&self, token: semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> bool {
         self.engine.surface_terminal_is_empty(token)
     }
 
     pub fn begin_engine_raster_close(&mut self, host_id: &str) -> Result<bool, String> {
-        let key = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
+        let key = semio_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
         self.gpu.begin_exact_raster_close(&key)
     }
 
     pub fn close_engine_raster_step(&mut self, host_id: &str) -> Result<bool, String> {
-        let key = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
+        let key = semio_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
         self.gpu.close_exact_raster_step(&key)
     }
 
     pub fn engine_raster_terminal_is_empty(&self, host_id: &str) -> bool {
-        semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).is_some_and(|key| self.gpu.exact_raster_terminal_is_empty(&key))
+        semio_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).is_some_and(|key| self.gpu.exact_raster_terminal_is_empty(&key))
     }
 
     pub fn engine_surfaces_terminal_is_empty(&self) -> bool {

@@ -7,10 +7,10 @@
 
 use crate::schema::snapshot::DeflateLevelHint;
 use crate::DeflateSnapshot;
-use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TextView, TextWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -52,7 +52,7 @@ fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 /// 👁️ Pure `DeflateSnapshot -> BuiltNode` read: the same `key=value` header summary as the sibling
 /// authoring surface, always `read_only: true`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DeflateSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &DeflateSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown here)",
         document.compression_method,

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeAnchorFUk where Op
         record: "ChangedAnchorFUk",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic steel tensile strength f_uk of the anchor", "Dübel: Charakteristische Zugfestigkeit des Stahls f_uk ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change characteristic steel tensile strength f_uk of the anchor", "Dübel: Charakteristische Zugfestigkeit des Stahls f_uk ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.anchor_id.clone()]

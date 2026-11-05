@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-services-native-paths"
+name = "semio-os-services-native-paths"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-name = "semio_framework_os_services_native_paths"
+name = "semio_os_services_native_paths"
 path = "🦀️.rs"
 
 [dependencies]

@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "cell-pin", kind: "unpin-cell", record: "ClearedCellPin" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unpin cell ({}, {})", self.x, self.y), &format!("Fixierung von Zelle ({}, {}) aufheben", self.x, self.y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Unpin cell ({}, {})", self.x, self.y), &format!("Fixierung von Zelle ({}, {}) aufheben", self.x, self.y))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{},{}", self.x, self.y)]

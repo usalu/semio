@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeTendonPointX where
         record: "ChangedTendonPointX",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change coordinate x along the member of the tendon point", "Spanngliedpunkt: Koordinate x entlang des Bauteils ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change coordinate x along the member of the tendon point", "Spanngliedpunkt: Koordinate x entlang des Bauteils ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.tendon_point_id.clone()]

@@ -10,7 +10,7 @@ pub struct InsertPanelLayer { pub panel_id: String, pub index: usize, pub layer:
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertPanelLayer where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_panel_layer::RemovePanelLayer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "panel-layer", kind: "insert-panel-layer", record: "InsertedPanelLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert layer {} into panel {} at #{}", self.layer.id, self.panel_id, self.index), &format!("Lage {} in Platte {} an #{} einfügen", self.layer.id, self.panel_id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert layer {} into panel {} at #{}", self.layer.id, self.panel_id, self.index), &format!("Lage {} in Platte {} an #{} einfügen", self.layer.id, self.panel_id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.panel_id.clone(), self.layer.id.clone()] }
 }
 

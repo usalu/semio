@@ -7,7 +7,7 @@
 
 #[cfg(test)]
 use crate::editor::remodeling::commands::import_frame_payload;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::blur_gate_admits;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::sharpness_score;
@@ -26,7 +26,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧾️ImportTransaction

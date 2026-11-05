@@ -4,9 +4,9 @@
 use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, TurnResult as KernelTurnResult};
 use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, Decision, Envelope, FailureEscalation, Kernel, KernelError, Lane, PackageId, ShardKind, WindowId};
 use semio_framework_async::WorkerPool;
-use semio_framework_plugin_host::shard::executor::{OutcomeSink, ShardExecutor};
-use semio_framework_plugin_host::shard::{to_actor_turn_result, ShardFrame, ShardOutcome};
-use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes};
+use semio_plugin_host::shard::executor::{OutcomeSink, ShardExecutor};
+use semio_plugin_host::shard::{to_actor_turn_result, ShardFrame, ShardOutcome};
+use semio_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -20,7 +20,7 @@ pub struct ParallelRuntime {
     guest_runtime: Arc<GuestRuntimes>,
     shards: Vec<Arc<ShardExecutor>>,
     outcomes: Arc<OutcomeSink>,
-    dispatch: semio_framework_plugin_host::shard::grant::OriginalShardDispatch,
+    dispatch: semio_plugin_host::shard::grant::OriginalShardDispatch,
     dispatch_bytes: Vec<u8>,
 }
 
@@ -30,7 +30,7 @@ impl ParallelRuntime {
     /// pool-scheduled, only actually running a job once its first `ShardFrame` arrives via
     /// [`Self::activate`]/[`Self::tick_and_dispatch`]. `exclusive_reserve`/`grants_per_tick` pass
     /// straight through to `Kernel::new` — see that constructor's own doc for what each controls.
-    pub async fn new(pool: Arc<WorkerPool>, guest_runtime: Arc<GuestRuntimes>, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32, mut identity_issuers:impl FnMut(u16)->semio_framework_plugin_host::shard::OriginalShardIdentityIssuer) -> Self {
+    pub async fn new(pool: Arc<WorkerPool>, guest_runtime: Arc<GuestRuntimes>, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32, mut identity_issuers:impl FnMut(u16)->semio_plugin_host::shard::OriginalShardIdentityIssuer) -> Self {
         let shard_count = shard_count.max(1);
         let kernel = Kernel::new(ShardKind::Native, shard_count, exclusive_reserve, grants_per_tick).await;
         let outcomes = OutcomeSink::new();
@@ -74,10 +74,10 @@ impl ParallelRuntime {
         compiled: &CompiledHandle,
         caps: &[BrokerCapabilityGrant],
         instantiate_budget: &TurnBudget,
-    ) -> Result<ActorId, semio_framework_plugin_host::activation::ActivationRefusal> {
+    ) -> Result<ActorId, semio_plugin_host::activation::ActivationRefusal> {
         let request = semio_framework_actor::activation::KernelActivationRequest { package, plugin_ordinal, kind, lane, window, event, retained: instantiate_budget.retained,loan:semio_framework_actor::OriginalActorTurnLoan{retained_policy:instantiate_budget.retained_policy,work_fuel:instantiate_budget.work_fuel,deadline_us:instantiate_budget.deadline_us} };
-        let reservation = self.kernel.reserve_activation(request).await.map_err(|refused| semio_framework_plugin_host::activation::ActivationRefusal::host(format!("Kernel activation refused: {:?}", refused.reason)))?;
-        semio_framework_plugin_host::activation::install_actor(&mut self.kernel, &self.guest_runtime, &self.shards, reservation, compiled, caps, instantiate_budget).await
+        let reservation = self.kernel.reserve_activation(request).await.map_err(|refused| semio_plugin_host::activation::ActivationRefusal::host(format!("Kernel activation refused: {:?}", refused.reason)))?;
+        semio_plugin_host::activation::install_actor(&mut self.kernel, &self.guest_runtime, &self.shards, reservation, compiled, caps, instantiate_budget).await
     }
 
     /// ✉️ `Kernel::submit` — enqueues onto the actor's DRR mailbox; drained by the NEXT
@@ -99,7 +99,7 @@ impl ParallelRuntime {
     pub fn dispatch_refusal(&self) -> Option<&semio_framework_actor::pack::PackError> { self.dispatch.refusal() }
     pub fn pending_decision(&self) -> Option<&Decision> { self.dispatch.decision() }
 
-    pub async fn tick_and_dispatch(&mut self, now_ms: u64, budget_for: impl Fn(ActorId, semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> Result<Decision, semio_framework_actor::pack::PackError> {
+    pub async fn tick_and_dispatch(&mut self, now_ms: u64, budget_for: impl Fn(ActorId, semio_plugin_host::shard::grant::ShardResourceBudget) -> semio_plugin_host::shard::grant::ShardResourceBudget) -> Result<Decision, semio_framework_actor::pack::PackError> {
         if self.dispatch.decision().is_none() {
             for shard in &self.shards {
                 if let Some((_, instance)) = shard.take_unclaimed_registration() {
@@ -115,7 +115,7 @@ impl ParallelRuntime {
                 return Err(self.dispatch.refuse(semio_framework_actor::pack::PackError::InvalidLifecycle("original grant shard is absent")));
             };
             let lane = grant.envelopes.first().map_or(Lane::Maintenance, |envelope| envelope.lane);
-            let budget = budget_for(grant.actor, semio_framework_plugin_host::shard::grant::ShardResourceBudget::from_original(&grant.budget));
+            let budget = budget_for(grant.actor, semio_plugin_host::shard::grant::ShardResourceBudget::from_original(&grant.budget));
             if let Err(error) = ShardFrame::pack_encode_grant(grant, budget, &mut self.dispatch_bytes).await {
                 return Err(self.dispatch.refuse(error));
             }
@@ -162,7 +162,7 @@ impl ParallelRuntime {
 
     /// 🧯️ Transfers the first failure a shard drive retained with no outcome to carry it (a replay
     /// seed that failed between turns, a malformed frame), so a host fault names its real cause.
-    pub fn take_shard_failure(&self) -> Option<semio_framework_plugin_guest_contract::PluginHostError> {
+    pub fn take_shard_failure(&self) -> Option<semio_plugin_guest_contract::PluginHostError> {
         self.shards.iter().find_map(|shard| shard.take_failure())
     }
 

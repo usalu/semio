@@ -19,7 +19,7 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for DeleteParentPage
 where Op: protocol::Mutation<LayoutSnapshot, Diff = LayoutDiff> + From<crate::create_parent_page::CreateParentPage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "parent-page", kind: "delete-parent-page", record: "DeletedParentPage" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Delete parent page", "Mustervorlage löschen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Delete parent page", "Mustervorlage löschen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

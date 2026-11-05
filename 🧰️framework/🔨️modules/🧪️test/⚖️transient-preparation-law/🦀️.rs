@@ -2,8 +2,8 @@
 //!
 //! Mounted by `#[path]` into integration test binaries of artifact crates that own a `WindowTransientOwner`.
 
-use semio_framework_os_kernel::{ColdMutation, self as store, os_spr::Mutation as _};
-use semio_framework_plugin::{WindowTransientOwner, WindowTransientOwnerBundle};
+use semio_os_kernel::{ColdMutation, self as store, os_spr::Mutation as _};
+use semio_plugin::{WindowTransientOwner, WindowTransientOwnerBundle};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use std::{fmt::Debug, sync::Arc};
 

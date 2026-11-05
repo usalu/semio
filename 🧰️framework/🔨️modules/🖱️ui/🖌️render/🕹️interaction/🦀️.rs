@@ -2,7 +2,7 @@
 //! focus, drag, overlay and edit routing, and the invalidation/deadline scheduler that decides when a
 //! window renders again.
 //!
-//! Sits above the packet crate (an element's [`Bounds`] is its [`LayoutRect`](semio_framework_ui_render_packet::LayoutRect))
+//! Sits above the packet crate (an element's [`Bounds`] is its [`LayoutRect`](semio_ui_render_packet::LayoutRect))
 //! and below the element model, which registers into the dispatch tree during prepaint.
 
 #[path = "../🖱️dispatch/🦀️.rs"]

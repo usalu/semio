@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeTieCapacity where 
         record: "ChangedTieCapacity",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tie or anchor tie design resistance", "Bemessungswiderstand Anker (Anker) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tie or anchor tie design resistance", "Bemessungswiderstand Anker (Anker) ändern")
     }
 }
 

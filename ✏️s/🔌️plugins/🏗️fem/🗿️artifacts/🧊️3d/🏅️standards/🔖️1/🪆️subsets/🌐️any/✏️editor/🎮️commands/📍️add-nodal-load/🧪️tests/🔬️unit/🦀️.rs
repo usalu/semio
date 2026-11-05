@@ -1,16 +1,16 @@
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_nodal_load::*;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_bar;
@@ -113,7 +113,7 @@ async fn add_combination_invalid_terms_json_is_a_no_op() {
 #[semio_framework_async_macros::async_test]
 async fn a_named_missing_case_is_not_redirected_to_another_case() {
     let app = app_with_load_case().await;
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let snapshot = app.snapshot().expect("snapshot");
     let view = ArtifactView::new(&snapshot, &history);
     let load = FemLoad::Nodal { id: "new-load".into(), node_id: "node".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx, value: 1.0 };

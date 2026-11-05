@@ -4,18 +4,18 @@ fn idle_receipt() -> semio_framework_actor::RetainedTurnReceipt { original_retai
 
 use std::sync::Mutex;
 use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobOperation, JobPublication, JobReplayRequest, JobStepOutcome, JobTurn, PackageHash, PackageId, Payload};
-use semio_framework_plugin_host_shard::{AdmissionLimit, CancelCursor, DeferredAuthority, FixedOwnerRing, IssuedShardTurn, JOB_REPLAY_ABI_BYTES, JOB_REPLAY_KIND_PAGE_CAPACITY, JOB_REPLAY_SEED_PAGES, JOB_REPLAY_SEED_PAGE_BYTES, JobAuthority, MountedReplaySeed, ReplaySeedCloseReason, ReplaySeedPhase, ReplaySpawnRefusal, SHARD_DEFERRED_ITEMS, ShardDrive, ShardFrame, ShardLoop, ShardOutcome, ShardTransports, TerminalFrameOverflow, split_frame_credit, to_actor_turn_result, try_replay_abi_buffer, turn_events};
+use semio_plugin_host_shard::{AdmissionLimit, CancelCursor, DeferredAuthority, FixedOwnerRing, IssuedShardTurn, JOB_REPLAY_ABI_BYTES, JOB_REPLAY_KIND_PAGE_CAPACITY, JOB_REPLAY_SEED_PAGES, JOB_REPLAY_SEED_PAGE_BYTES, JobAuthority, MountedReplaySeed, ReplaySeedCloseReason, ReplaySeedPhase, ReplaySpawnRefusal, SHARD_DEFERRED_ITEMS, ShardDrive, ShardFrame, ShardLoop, ShardOutcome, ShardTransports, TerminalFrameOverflow, split_frame_credit, to_actor_turn_result, try_replay_abi_buffer, turn_events};
 use std::sync::Arc;
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
-use semio_framework_plugin_host_guest_runtime::{GuestInstanceState, GuestRuntime, GuestRuntimes, PackageRef};
+use semio_plugin_host_guest_runtime::{GuestInstanceState, GuestRuntime, GuestRuntimes, PackageRef};
 use std::collections::HashMap;
-use semio_framework_plugin_guest_contract::{JobStep, PluginHostError};
+use semio_plugin_guest_contract::{JobStep, PluginHostError};
 use std::sync::atomic::Ordering;
 use std::mem::size_of;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_plugin_host_shard::{LoopbackTransport, fixture_instance_close_event, fixture_instance_close_request, replay_test_authority};
+use semio_plugin_host_shard::{LoopbackTransport, fixture_instance_close_event, fixture_instance_close_request, replay_test_authority};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_plugin_host_guest_runtime::{MockGuestRuntime, RecordingRuntime};
+use semio_plugin_host_guest_runtime::{MockGuestRuntime, RecordingRuntime};
 
 include!("🎫️issued-batches-pump-and-actor-lifecycle/🦀️.rs");
 include!("🚀️spawn-and-cancel-job-effects/🦀️.rs");

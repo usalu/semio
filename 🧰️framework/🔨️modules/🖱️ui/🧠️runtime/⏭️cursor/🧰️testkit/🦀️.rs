@@ -1,7 +1,7 @@
 //! 🧰️ Shared fixtures of the reconcile suites — bounded tree builders, snapshot oracles and the process-wide resident-ledger guard that serialises the laws admitting into the shared ledgers. Exposed under the `testkit` feature so the authority crate's suites build their trees the same way.
 
-use semio_framework_ui_runtime_presentation::{ComponentTree, TreeNode};
-pub use semio_framework_ui_runtime_reconcile_primitives::testkit::{RegistryGuard, registry_guard};
+use semio_ui_runtime_presentation::{ComponentTree, TreeNode};
+pub use semio_ui_runtime_reconcile_primitives::testkit::{RegistryGuard, registry_guard};
 
 //#region 🔖️Fixtures
 pub fn ui_text(value: &str) -> ui_contract::UiText {

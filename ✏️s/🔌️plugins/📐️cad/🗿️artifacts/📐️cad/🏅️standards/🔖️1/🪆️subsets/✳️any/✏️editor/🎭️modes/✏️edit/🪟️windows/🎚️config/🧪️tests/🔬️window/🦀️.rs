@@ -1,12 +1,12 @@
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 use semio_s_artifact_cad_cad_modes::windows::config::*;
 use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
 use semio_s_artifact_cad_cad_config::{CadConfig, cad_sun_config_to_world};
 use semio_s_artifact_cad_cad_kit::{CadPlayRuntime, cad_runtime_from};
 use semio_s_artifact_cad_cad_transient::CadWorldWindowTransient;
-use semio_framework_plugin::{ConfigView, Fault, ViewModel};
+use semio_plugin::{ConfigView, Fault, ViewModel};
 use std::collections::HashMap;
 use semio_s_artifact_cad_cad_config::{CadDislocateOptions, CadSunConfig};
 use semio_s_artifact_cad_cad_modes::{windows::building, windows::energy, windows::shape, windows::structure_classic};
@@ -61,7 +61,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                 use semio_s_artifact_cad_cad_commands::utility::set_dislocate_option;
                 use semio_s_artifact_cad_cad_editor::{create_cad_app, CadCommand, CadPlayApp};
                 use semio_s_artifact_cad_cad_model::snapshot::CadCamera;
-                use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowMeasure};
+                use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowMeasure};
 
                 /// 🪪️ The live instance this law's app is mounted on — the receiver of every typed
                 /// operation page it publishes.
@@ -76,21 +76,21 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                 /// 🔁️ Settles through the framework's own host-shaped drain — the pages belong to the
                 /// instance this app is MOUNTED on (`INSTANCE`), and a drain reading any other receiver
                 /// leaves every page unacknowledged, so the operation never retires and the law times out.
-                async fn drain(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<usize, String> {
-                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
-                    Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
+                async fn drain(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, cx: &mut semio_plugin::StepContext<'_>) -> Result<usize, String> {
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                    Ok(receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::WindowConfig).count())
                 }
 
-                async fn dispatch(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel, command: CadCommand, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), String> {
-                    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { instance_id: INSTANCE, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                async fn dispatch(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel, command: CadCommand, cx: &mut semio_plugin::StepContext<'_>) -> Result<(), String> {
+                    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { instance_id: INSTANCE, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
                     if drain(app, cx).await? != 1 {
                         return Err("CAD command did not publish exactly one exact-window config result".into());
                     }
                     Ok(())
                 }
 
-                async fn scene(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::World3dScene, String> {
-                    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, shape::BODY_KEY, view, cx).await.map_err(|error| format!("{error:?}"))?;
+                async fn scene(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel, cx: &mut semio_plugin::StepContext<'_>) -> Result<semio_plugin::World3dScene, String> {
+                    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, shape::BODY_KEY, view, cx).await.map_err(|error| format!("{error:?}"))?;
                     artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
                 }
 
@@ -120,7 +120,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     None
                 }
 
-                async fn assert_exact_state(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, left: &ViewModel, right: &ViewModel, expected: &serde_json::Value, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), String> {
+                async fn assert_exact_state(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, left: &ViewModel, right: &ViewModel, expected: &serde_json::Value, cx: &mut semio_plugin::StepContext<'_>) -> Result<(), String> {
                     let left_scene = scene(app, left, cx).await?;
                     let right_scene = scene(app, right, cx).await?;
                     let left_camera: serde_json::Value = serde_json::from_str(&left_scene.camera_json).map_err(|error| error.to_string())?;
@@ -168,12 +168,12 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                         ViewWindowInstance { id: wrong_id.into(), window_kind_id: building::config::CadBuildingWindowConfigOwner::WINDOW_KIND_ID.into() },
                         ViewWindowInstance { id: "cad-panel".into(), window_kind_id: "cad-document-panel".into() },
                     ],
-                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                    ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
                 };
                 let left = view.for_window_instance(left_id).expect("left window");
                 let right = view.for_window_instance(right_id).expect("right window");
-                let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 app.bind_instance_id(INSTANCE).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -226,9 +226,9 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     if owners != expected_owners {
                         return Err(format!("CAD exact-window pack ownership changed, expected one pack per declared world window {expected_owners:?}: {owners:?}"));
                     }
-                    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+                    semio_plugin::artifact_app_laws::load_document(&mut app, &document_before, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
                     assert_exact_state(&mut app, &left, &right, expected, scope.cx()).await?;
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                     reopened.bind_instance_id(REOPENED_INSTANCE).await;
                     let mut loaded: Result<(), String> = Ok(());
                     for pack in packs {
@@ -241,9 +241,9 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                         Ok(()) => assert_exact_state(&mut reopened, &left, &right, expected, scope.cx()).await,
                         Err(error) => Err(error),
                     };
-                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                     restored?;
-                    let stale = ViewModel { window_id: Some("cad-missing".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+                    let stale = ViewModel { window_id: Some("cad-missing".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
                     if addressed(&stale, CadWorldWindowConfig::default()).is_ok() {
                         return Err("CAD accepted a stale window identity".into());
                     }
@@ -261,7 +261,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                 if let Err(error) = &outcome {
                     eprintln!("CAD exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 outcome.expect("CAD exact-window ownership runtime law");
             })
         })
@@ -285,7 +285,7 @@ fn cad_rendered_world_window_app_reaches_its_exact_terminal_close_witness() {
         .spawn(|| {
             block_on_cad_window_ownership(async {
                 use semio_s_artifact_cad_cad_editor::{create_cad_app, CadPlayApp};
-                use semio_framework_plugin::{artifact_app_laws, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
+                use semio_plugin::{artifact_app_laws, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
                 fn manifest() -> App {
                     App { definition: create_cad_app(), examples: Vec::new() }
@@ -293,14 +293,14 @@ fn cad_rendered_world_window_app_reaches_its_exact_terminal_close_witness() {
 
                 let view = ViewModel {
                     window_instances: vec![ViewWindowInstance { id: "cad-shape-left".into(), window_kind_id: shape::config::CadShapeWindowConfigOwner::WINDOW_KIND_ID.into() }],
-                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                    ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
                 };
                 let left = view.for_window_instance("cad-shape-left").expect("left window");
-                let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 app.bind_instance_id(93).await;
-                let _json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, shape::BODY_KEY, &left, scope.cx()).await.expect("retire the rendered CAD tree");
-                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                let _json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, shape::BODY_KEY, &left, scope.cx()).await.expect("retire the rendered CAD tree");
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
             })
         })
         .expect("spawn CAD render close law")
@@ -319,7 +319,7 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
         .spawn(|| {
             block_on_cad_window_ownership(async {
                 use semio_s_artifact_cad_cad_editor::{create_cad_app, CadPlayApp};
-                use semio_framework_plugin::{artifact_app_laws, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, VcsArtifactApp, WindowConfigOwner};
+                use semio_plugin::{artifact_app_laws, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, VcsArtifactApp, WindowConfigOwner};
 
                 fn manifest() -> App {
                     App { definition: create_cad_app(), examples: Vec::new() }
@@ -330,28 +330,28 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
                         ViewWindowInstance { id: "cad-shape-left".into(), window_kind_id: shape::config::CadShapeWindowConfigOwner::WINDOW_KIND_ID.into() },
                         ViewWindowInstance { id: "cad-building".into(), window_kind_id: building::config::CadBuildingWindowConfigOwner::WINDOW_KIND_ID.into() },
                     ],
-                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                    ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
                 };
-                let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+                let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
                 let mut source: Box<VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>> =
-                    Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                    Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 source.bind_instance_id(95).await;
                 let _measures = source.window_measures(&view).await;
                 let packs = source.window_config_packs().await.expect("CAD window config packs");
                 assert_eq!(packs.len(), 2, "both declared world windows materialize a partition: {:?}", packs.iter().map(|pack| pack.window_id.clone()).collect::<Vec<_>>());
-                artifact_app_laws::close_registered_fixture_app(&mut *source, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                artifact_app_laws::close_registered_fixture_app(&mut *source, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 drop(source);
 
                 let expected: Vec<(String, String, Vec<u8>, Vec<u8>)> = packs.iter().map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone(), pack.files.pack.clone(), pack.files.spr.clone())).collect();
-                let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(96).await;
                 for pack in packs {
                     reopened.load_window_config_pack(pack).await.expect("reload the exact CAD window config pack");
                 }
                 let reloaded: Vec<(String, String, Vec<u8>, Vec<u8>)> =
                     reopened.window_config_packs().await.expect("reopened CAD window config packs").into_iter().map(|pack| (pack.window_id, pack.window_kind_id, pack.files.pack, pack.files.spr)).collect();
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 assert_eq!(reloaded, expected, "a reopened CAD window config partition must be byte-exact with the one it was printed from");
             })
         })

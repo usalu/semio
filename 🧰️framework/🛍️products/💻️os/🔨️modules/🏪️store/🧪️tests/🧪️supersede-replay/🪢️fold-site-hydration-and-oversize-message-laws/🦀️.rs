@@ -2,9 +2,9 @@
 
 //#region 🧪️FoldSiteLaws
 /// 📨️ A supersession `remote` authored on another replica: one input replacing `target`, stamped past every local clock.
-fn remote_supersession(document: &str, target: &MutationId, replacement: protocol::InputReplacement, logical: u64) -> semio_framework_os_spr::MutationEnvelope {
-    let transition = semio_framework_os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs: vec![protocol::SupersededInput { target: target.clone(), replacement }] });
-    semio_framework_os_spr::history_transition_envelope(&transition, &ArtifactId(document.into()), &ActorId("remote-editor".into()), vec![target.clone()], HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical })
+fn remote_supersession(document: &str, target: &MutationId, replacement: protocol::InputReplacement, logical: u64) -> semio_os_spr::MutationEnvelope {
+    let transition = semio_os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs: vec![protocol::SupersededInput { target: target.clone(), replacement }] });
+    semio_os_spr::history_transition_envelope(&transition, &ArtifactId(document.into()), &ActorId("remote-editor".into()), vec![target.clone()], HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical })
 }
 
 /// 🧵️ Every edit's inverse by edit id: what a load recomputes and every fold site must agree on.
@@ -18,9 +18,9 @@ fn inverses(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> BTreeMap<Strin
 #[semio_framework_async_macros::async_test]
 async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state() {
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() };
-    let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-superseded", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-superseded", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(dialect.clone());
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     apply(&mut store, vec![set(1)]).await;
     apply(&mut store, vec![add(2)]).await;
     apply(&mut store, vec![add(3), add(4)]).await;
@@ -28,8 +28,8 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
     fixture_author(&mut store, ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(set(10))), input(&ids[2], None)] }).await.expect("a clean supersession");
     assert_eq!(store.snapshot_ref().n, Some(16));
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let reference = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let history = semio_framework_os_spr::decode_history(&files.spr, &semio_framework_os_spr::DecodeOptions::default()).await.expect("history decodes");
+    let reference = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let history = semio_os_spr::decode_history(&files.spr, &semio_os_spr::DecodeOptions::default()).await.expect("history decodes");
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "member-superseded".into(), dialect };
     let (operation, generation) = (semio_framework_job::OperationId(3), semio_framework_job::Generation(5));
     let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(
@@ -70,7 +70,7 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
     assert_eq!(member.0.content_revision(), store.0.content_revision(), "and the live store's");
     let text = print_document_text(store.envelope()).await.expect("text prints");
     assert!(text.ops.lines().any(|line| line.starts_with("supersede")), "the text mirror carries the supersede line");
-    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text mirror parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text mirror parses").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(mirrored.snapshot_ref().n, Some(16));
     assert_eq!(mirrored.supersessions(), store.supersessions());
     assert_eq!(mirrored.0.content_revision(), store.0.content_revision());
@@ -84,15 +84,15 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
     assert_ne!(opened, author);
     for config in [false, true] {
         let initial = DemoSnapshot { n: Some(fixture["initial"].as_i64().unwrap() as i32) };
-        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "opened-actor-hydration", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-        if config { envelope.history_shape = semio_framework_os_spr::HistoryShape::Config; }
+        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "opened-actor-hydration", initial.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        if config { envelope.history_shape = semio_os_spr::HistoryShape::Config; }
         else { envelope.dialect = Some(semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() }); }
-        let mut source = semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(author.into())).await.unwrap();
+        let mut source = semio_os_store_engine::lifted_store::ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(author.into())).await.unwrap();
         source.install_document_store_owners_exact(fixture_demo_owners());
         let mut source = ArtifactStore(source, Some(close_test_store::<DemoSnapshot, DemoMutation>));
         apply(&mut source, vec![set(fixture["stored"].as_i64().unwrap() as i32)]).await;
         let files = print_document_pack(source.envelope()).await.unwrap();
-        let history = semio_framework_os_spr::decode_history(&files.spr, &semio_framework_os_spr::DecodeOptions::default()).await.unwrap();
+        let history = semio_os_spr::decode_history(&files.spr, &semio_os_spr::DecodeOptions::default()).await.unwrap();
         assert_eq!(history.edits.last().unwrap().actor.as_deref(), Some(author));
         let mut hydrated = None;
         if config {
@@ -136,7 +136,7 @@ async fn cancelled_hydration_retires_the_same_original_opened_actor_owner() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️opened-hydration-actor/🔣️.json")).unwrap();
     let source = demo_store("cancelled-opened-actor", Some(0)).await;
     let files = print_document_pack(source.envelope()).await.unwrap();
-    let history = semio_framework_os_spr::decode_history(&files.spr, &semio_framework_os_spr::DecodeOptions::default()).await.unwrap();
+    let history = semio_os_spr::decode_history(&files.spr, &semio_os_spr::DecodeOptions::default()).await.unwrap();
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: source.envelope().id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
     let mut receipts = Vec::new();
     for actor in fixture["retiredActors"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()) {
@@ -186,20 +186,20 @@ async fn an_input_breaking_the_supersede_law_folds_as_a_fatal_no_op_at_every_sit
     assert_eq!(store.state_before(&ids[2], &protocol::HistoryInputDrafts::new()).expect("state before").n, Some(1));
     assert_eq!(materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("materialized").n, Some(1));
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair loads").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair loads").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.snapshot_ref().n, Some(1));
     assert_eq!(outcomes_by_mutation(&reloaded.mutation_outcomes().unwrap()), outcomes);
     let text = print_document_text(store.envelope()).await.expect("text prints");
-    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text mirror loads").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text mirror loads").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(mirrored.snapshot_ref().n, Some(1));
     let refused =
-        replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &semio_framework_os_spr::encode_envelopes(std::slice::from_ref(&garbage)), || Ok(fixture_demo_owners())).await;
-    assert!(matches!(&refused, Err(VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.invariant")), "{refused:?}");
+        replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &semio_os_spr::encode_envelopes(std::slice::from_ref(&garbage)), || Ok(fixture_demo_owners())).await;
+    assert!(matches!(&refused, Err(VcsError::Rejected { policy: semio_os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.invariant")), "{refused:?}");
     let repair = remote_supersession("garbage", &ids[1], draft(Some(add(5))), 2);
-    let repaired = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &semio_framework_os_spr::encode_envelopes(&[garbage, repair]), || Ok(fixture_demo_owners()))
+    let repaired = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &semio_os_spr::encode_envelopes(&[garbage, repair]), || Ok(fixture_demo_owners()))
         .await
         .expect("a repaired ledger checks in");
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&repaired.pack, &repaired.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&repaired.pack, &repaired.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(9));
     test_support::retire_parsed_document(parsed);
 }
@@ -211,8 +211,8 @@ async fn an_input_breaking_the_supersede_law_folds_as_a_fatal_no_op_at_every_sit
 #[semio_framework_async_macros::async_test]
 async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
     const OPERATIONS: usize = 200;
-    let bytes = |entry: &[semio_framework_os_spr::MutationMessage], edit_id: &str| entry.iter().fold(edit_id.len(), |total, message| total + message.code.0.len() + message.message.len() + message.target.iter().map(String::len).sum::<usize>());
-    let dropped = |entry: &[semio_framework_os_spr::MutationMessage]| -> usize {
+    let bytes = |entry: &[semio_os_spr::MutationMessage], edit_id: &str| entry.iter().fold(edit_id.len(), |total, message| total + message.code.0.len() + message.message.len() + message.target.iter().map(String::len).sum::<usize>());
+    let dropped = |entry: &[semio_os_spr::MutationMessage]| -> usize {
         let summary = entry.last().expect("a bounded entry ends with its summary");
         assert_eq!((summary.code.0.as_str(), summary.level), ("mutation.cascade", semio_framework_diagnostic::Severity::Info));
         summary.message.strip_suffix(" more messages").expect("the summary counts what it drops").parse().expect("a count")
@@ -242,7 +242,7 @@ async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
     assert_eq!(kept + dropped(&failed), OPERATIONS);
     assert_eq!(failed.last().unwrap().op_index, Some(kept as u32), "the summary sits at the first dropped operation");
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("a bounded ledger loads").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("a bounded ledger loads").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.messages_for_edit(&bulk), failed.as_slice(), "load bounds the recomputed messages identically");
     assert_eq!(outcomes_by_mutation(&reloaded.mutation_outcomes().unwrap()), outcomes_by_mutation(&store.mutation_outcomes().unwrap()));
 }
@@ -258,12 +258,12 @@ async fn check_in_judges_the_folded_ledger_not_its_intermediate_states() {
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
     let breaking = remote_supersession("intermediate", &ids[0], protocol::InputReplacement::Withdrawn, 0);
     let healing = remote_supersession("intermediate", &ids[0], draft(Some(DemoMutation::AssignN(AssignN { n: Some(7) }))), 1);
-    let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_spr::encode_envelopes(std::slice::from_ref(&breaking)), || Ok(fixture_demo_owners())).await;
-    assert!(matches!(&refused, Err(VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
-    let healed = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_spr::encode_envelopes(&[breaking, healing]), || Ok(fixture_demo_owners()))
+    let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_spr::encode_envelopes(std::slice::from_ref(&breaking)), || Ok(fixture_demo_owners())).await;
+    assert!(matches!(&refused, Err(VcsError::Rejected { policy: semio_os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
+    let healed = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_spr::encode_envelopes(&[breaking, healing]), || Ok(fixture_demo_owners()))
         .await
         .expect("a ledger whose final history is clean checks in");
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&healed.pack, &healed.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&healed.pack, &healed.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(8));
     test_support::retire_parsed_document(parsed);
 }
@@ -272,21 +272,21 @@ async fn check_in_judges_the_folded_ledger_not_its_intermediate_states() {
 /// setting: `restore 5`, `delete`, then the peer's `add 1` (kept with its error under a laissez-faire policy), then undo.
 async fn interior_revert_store(early_exit: bool) -> ArtifactStore<DemoSnapshot, DemoMutation> {
     let mut store = demo_store("interior", None).await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::LaissezFaire);
+    store.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
     if early_exit {
         store.enable_convergence_early_exit();
     }
     apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
     apply(&mut store, vec![DemoMutation::DeleteN(DeleteN {})]).await;
-    let peer = semio_framework_os_spr::MutationEnvelope {
+    let peer = semio_os_spr::MutationEnvelope {
         mutation_id: MutationId("peer-add".into()),
         document_id: ArtifactId("interior".into()),
         actor: ActorId("peer".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&add(1).encode_op().unwrap()).unwrap() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&Vec::new()).unwrap() },
+        diff: semio_os_spr::ArtifactDiff { schema: SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&add(1).encode_op().unwrap()).unwrap() },
+        inverse: semio_os_spr::InverseMutation { schema: SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&Vec::new()).unwrap() },
         timestamp: HybridLogicalTimestamp { actor: 4, physical_ms: u64::MAX / 2, logical: 0 },
         transaction: None,
         verb: None,
@@ -355,7 +355,7 @@ async fn a_supersession_of_a_redo_edit_keeps_revisions_order_independent() {
     assert_eq!(late.redo_edit_ids().len(), 2);
     assert_eq!(late.0.content_revision(), early.0.content_revision());
     let files = print_document_pack(late.envelope()).await.expect("pair prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.0.content_revision(), late.0.content_revision(), "and a fresh load agrees");
 }
 //#endregion 🧪️FoldSiteLaws

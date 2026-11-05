@@ -3,13 +3,13 @@ use semio_s_fem_app_surface::FemResultsAnimation;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
 
 fn labels() -> &'static Fem2dLabels {
-    semio_framework_plugin::resolve_labels::<Fem2dLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    semio_plugin::resolve_labels::<Fem2dLabels>(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 fn panel_json(window: &Fem2dResultsWindowConfig) -> String {
     let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let node = render(&doc, Some(window), None, "results-left", labels()).expect("results panel admission");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection")
 }
 
 /// 📊️ LAW: every section of the panel renders, and every control binds the command that owns the
@@ -64,15 +64,15 @@ async fn results_panel_source_select_offers_cases_and_combinations() {
 /// panel that tags one pane while the command writes another is the split-layout bug this closes.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
-    let config = semio_framework_plugin::NoConfig::default();
-    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
-    let split = semio_framework_plugin::ViewModel {
+    let config = semio_plugin::NoConfig::default();
+    let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
+    let split = semio_plugin::ViewModel {
         window_instances: vec![
-            semio_framework_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
-            semio_framework_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
+            semio_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
+            semio_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
         ],
         focused_window_id: Some("results-left".into()),
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let tag = semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::results_window_instance_id(&split).expect("a panel projection resolves a results window");
     assert_eq!(tag, "results-left", "the panel tags the focused results pane");
@@ -88,7 +88,7 @@ async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
 async fn results_panel_without_a_captured_window_offers_a_toggle_and_a_focus_hint() {
     let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let node = render(&doc, None, None, "results-left", labels()).expect("results panel admission");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(json.contains(labels().focus_results_hint.as_str()), "{json}");
     assert!(json.contains(&format!("{} / {}", labels().play.as_str(), labels().pause.as_str())), "{json}");
     assert!(json.contains("fem2d-play-results.transport.play"), "{json}");

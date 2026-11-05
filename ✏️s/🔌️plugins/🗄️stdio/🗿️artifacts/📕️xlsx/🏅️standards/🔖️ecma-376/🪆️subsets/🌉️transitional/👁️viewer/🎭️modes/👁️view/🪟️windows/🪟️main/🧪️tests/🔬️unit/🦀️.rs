@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::Component;
+use semio_plugin::Component;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_table_window() {
@@ -18,7 +18,7 @@ async fn render_delegates_to_the_read_only_worksheet_grid() {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }],
         ..Default::default()
     });
-    let node = render(&document, semio_framework_ui_locale::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    let node = render(&document, semio_ui_locale::Locale::En, &semio_plugin::TreeWindows::unhosted()).expect("render");
     fn table(node: &BuiltNode) -> Option<&BuiltNode> {
         matches!(node.component, Component::Table(_)).then_some(node).or_else(|| node.children.iter().find_map(table))
     }

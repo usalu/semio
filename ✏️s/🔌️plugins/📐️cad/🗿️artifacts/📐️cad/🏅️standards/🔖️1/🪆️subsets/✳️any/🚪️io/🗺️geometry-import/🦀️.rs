@@ -5,7 +5,7 @@ use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CAD_DRAWIN
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_cad_cad_model::geometry::*;
-use semio_framework_plugin::{ArtifactSerializer, MeshData};
+use semio_plugin::{ArtifactSerializer, MeshData};
 use semio_framework_3d_brep_engine::{Brep, BrepKernel};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
@@ -154,7 +154,7 @@ impl CadComposedPane {
 pub struct CadComposedPanes([CadComposedPane; 4]);
 impl CadComposedPanes {
     /// 🧲️ Composes `snapshot`'s pane handles with their live child content.
-    pub fn compose(snapshot: &CadSnapshot, children: &semio_framework_plugin::ChildContentView) -> Self {
+    pub fn compose(snapshot: &CadSnapshot, children: &semio_plugin::ChildContentView) -> Self {
         use semio_s_artifact_cad_cad_model::geometry::objects_from_model_snapshot;
         Self(CadPaneId::all().map(|pane| {
             let Some(handle) = cad_pane_model(snapshot, pane) else { return CadComposedPane::default() };
@@ -167,7 +167,7 @@ impl CadComposedPanes {
             };
             let mut geometry = genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane)).cloned().unwrap_or_default();
             for child in snapshot.breps.iter().filter(|child| objects.iter().any(|object| object.solid_handle.as_ref() == Some(&child.child_id))) {
-                geometry.owned_meshes.insert(child.child_id.clone(), std::sync::Arc::new(semio_framework_plugin::MeshData::default()));
+                geometry.owned_meshes.insert(child.child_id.clone(), std::sync::Arc::new(semio_plugin::MeshData::default()));
                 if let Ok(content) = children.typed_read::<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>("breps", &child.child_id) {
                     geometry.owned_breps.insert(child.child_id.clone(), std::sync::Arc::new((*content).clone()));
                     if let Ok(mesh) = semio_s_artifact_cad_cad_model::geometry::mesh_from_owned_brep(&content) {

@@ -12,8 +12,8 @@ use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview;
 use crate::viewer_domain::viewer_laws::context;
 use crate::viewer_domain::viewer_laws::context::{app, dispatch_with_view, run_actions, view_shell_view};
 use semio_s_artifact_procedural_3d_viewer::Generation3dViewCommand;
-use semio_framework_plugin::app::TypedOperationResultLane;
-use semio_framework_plugin::ArtifactViewer;
+use semio_plugin::app::TypedOperationResultLane;
+use semio_plugin::ArtifactViewer;
 
 /// 📜️ The language-agnostic picker table both surfaces answer — the viewer's own half is `viewer`.
 fn example_switch_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json") }
@@ -38,10 +38,10 @@ const EVERY_BUNDLED_EXAMPLE: &[&str] = &[
 /// states, and the whole point of the option on the config leaf.
 fn viewed_node_ids(example_id: Option<&str>) -> Vec<String> {
     let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
+    let history = semio_plugin::HistoryView::empty();
+    let doc = semio_plugin::ArtifactView::new(&snapshot, &history);
     let config = Generation3dViewConfig { active_example_id: example_id.map(str::to_string), ..Generation3dViewConfig::default() };
-    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
     let topology = <semio_s_artifact_procedural_3d_viewer::Generation3dViewer as ArtifactViewer>::interaction_topology(&doc, &cfg).expect("the valid example fixture admits interaction topology");
     let ids = topology.domains.get("graph").expect("graph domain").ordered.iter().filter(|node| node.granularity == "node" && node.parent.is_none()).map(|node| node.id.clone()).collect();
     snapshot.retire_cold();
@@ -181,7 +181,7 @@ async fn an_unpublished_example_id_is_refused() {
 async fn an_unattached_surface_starts_no_run() {
     let _serial = context::lock();
     let mut app = app().await;
-    let receipt = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    let receipt = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
         .await
         .expect("the switch settles without an attached preview");
     assert!(run_actions(&receipt.effects).is_empty(), "no attached preview window means no run start");

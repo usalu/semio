@@ -38,14 +38,14 @@ fn rewriting_document_reduce(
     command: &TrinityRewritingCommand,
     state: &RewritingSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityRewritingPlayApp>>>,
-    operation: &semio_framework_plugin::AppOperationContext,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityRewritingPlayApp>>>,
+    operation: &semio_plugin::AppOperationContext,
 ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     use crate::editor::rewriting::commands;
-    let children = || context.map(|context| context.children.as_ref()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.rewriting.child-refused"), "the retained document command carries no child view"));
+    let children = || context.map(|context| context.children.as_ref()).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("trinity.rewriting.child-refused"), "the retained document command carries no child view"));
     Ok(match command {
         TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => commands::node_graph_edit::node_graph_edit(state, children()?, surface_id, operations_json, &operation.authoring_seed)?,
         TrinityRewritingCommand::SetLhsJson { value } => commands::set_lhs::set_lhs(state, value)?,
@@ -57,7 +57,7 @@ fn rewriting_document_reduce(
         TrinityRewritingCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes::patch_nodes(state, children()?, node_ids, interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
         TrinityRewritingCommand::Reorganize => commands::reorganize::reorganize(state),
         TrinityRewritingCommand::AddWorkingNode { kind, name, x, y } => commands::add_working_node_command::add_working_node_command(state, children()?, kind.as_deref(), name.as_deref(), *x, *y)?,
-        _ => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the rewriting document reducer received a command outside its tool roster")),
+        _ => return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("app.command.tool-mismatch"), "the rewriting document reducer received a command outside its tool roster")),
     })
 }
 
@@ -72,8 +72,8 @@ impl RewritingDocumentJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for RewritingDocumentJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<TrinityRewritingPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<TrinityRewritingPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<TrinityRewritingPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<TrinityRewritingPlayApp>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -87,37 +87,37 @@ impl semio_framework::ToolJobFactory for RewritingDocumentJobFactory {
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
         rewriting_document_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: REWRITING_DOCUMENT_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: REWRITING_DOCUMENT_RAW_BYTES, checkpoint_resume: false);
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RewritingDocumentJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for RewritingDocumentJobFactory {
     type Owner = EditorApp<TrinityRewritingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = REWRITING_DOCUMENT_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addRuleClause", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "resetRule", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchNodes", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLhsJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setRhsJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addWorkingNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "addRuleClause", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "resetRule", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setParameter", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "patchNodes", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setLhsJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setRhsJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "addWorkingNode", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
     ];
 }
 
-pub(super) fn rewriting_build_document_tool_job(request: &mut Option<semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<TrinityRewritingPlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
-    use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+pub(super) fn rewriting_build_document_tool_job(request: &mut Option<semio_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<TrinityRewritingPlayApp>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
     let tool_id = TrinityRewritingPlayApp::command_id(&original.command);
     if tool_id != original.tool_id {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Rewriting command does not match its exact registered tool").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Rewriting command does not match its exact registered tool").into());
     }
     if rewriting_document_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the rewriting command exceeds the capacity of one bounded edit").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the rewriting command exceeds the capacity of one bounded edit").into());
     }
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityRewritingPlayApp::command_id, REWRITING_DOCUMENT_RAW_BYTES, 1, false, |request| Box::new(BoundedArtifactCommandWork::new(tool_id, rewriting_document_reduce, rewriting_document_extent)))
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityRewritingPlayApp::command_id, REWRITING_DOCUMENT_RAW_BYTES, 1, false, |request| Box::new(BoundedArtifactCommandWork::new(tool_id, rewriting_document_reduce, rewriting_document_extent)))
 }
 //#endregion 🧵️RetainedDocumentCommands

@@ -19,11 +19,11 @@ mod retirement_and_finish;
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     pub fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
-        let grant = semio_framework_os_store_member_open::member_step_grant(cx, grant);
+        let grant = semio_os_store_member_open::member_step_grant(cx, grant);
         if let Some(diagnostic) = self.diagnostic {
             return PersistedDocumentHydrationStep::Rejected(diagnostic);
         }

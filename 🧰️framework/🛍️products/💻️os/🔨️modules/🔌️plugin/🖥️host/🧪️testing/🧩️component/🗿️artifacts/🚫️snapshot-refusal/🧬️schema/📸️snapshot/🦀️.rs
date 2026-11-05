@@ -1,5 +1,5 @@
 //! 🚫️ Complete typed document owned by the selected compiled refusal contributors.
-use semio_framework_os_kernel::os_store as store;
+use semio_os_kernel::os_store as store;
 use semio_framework_value_derive::{ToValue,FromValue};
 #[derive(Clone,Debug,Default,PartialEq,ToValue,FromValue,semio_framework_dsl_record_derive::DslRecord)]
 #[value(deny_unknown_fields)]

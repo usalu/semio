@@ -25,8 +25,8 @@ pub fn remove_representation_tag<Op: From<crate::remove_representation_tag::Remo
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for RemoveRepresentationTag where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::add_representation_tag::AddRepresentationTag> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "representation-tag", kind: "remove-representation-tag", record: "RemovedRepresentationTag" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove tag \"{}\" from representation \"{}\"", self.tag, self.id), &format!("Tag \"{}\" aus Repräsentation \"{}\" entfernen", self.tag, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove tag \"{}\" from representation \"{}\"", self.tag, self.id), &format!("Tag \"{}\" aus Repräsentation \"{}\" entfernen", self.tag, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

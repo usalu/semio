@@ -5,18 +5,18 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::{diagnosti
 use semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination as coordination_panel;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ActionArgDef;
+use semio_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_plugin::ActionDefinition;
+use semio_plugin::Editor;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::LocalizedLabel;
 use crate::editor::bim::*;
 
 //#region 🔖️Manifest
 fn bim_action_args(id: &str) -> Vec<ActionArgDef> {
     let label = BimLabels::localized;
-    let text = |name: &'static str, pick: fn(&BimLabels) -> semio_framework_ui_locale::LabelText| ActionArgDef::text(name, label(pick));
+    let text = |name: &'static str, pick: fn(&BimLabels) -> semio_ui_locale::LabelText| ActionArgDef::text(name, label(pick));
     let ids = || ActionArgDef::text_list("ids", label(|labels| labels.arg_entities));
     match id {
         "createEntity" => vec![text("kind", |labels| labels.arg_kind).required(), text("parent", |labels| labels.arg_container), text("name", |labels| labels.arg_name)],
@@ -66,7 +66,7 @@ fn framework_panel_tab(id: &str, label: LocalizedLabel, group: PanelGroup, child
 }
 
 /// 🧱️ The editor manifest: one definition per taxonomy node.
-pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_bim_app() -> semio_plugin::AppDefinition {
     let mut builder = Editor::builder(BIM_MODEL_DIALECT)
         .document(["semio", "bim"])
         .artifact_kind(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::artifact_kind())
@@ -114,7 +114,7 @@ pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
         let described = ActionDefinition { in_palette: !pointer, ..action.with_args(bim_action_args(&id)) };
         builder = builder.action_with(described).action_interactive_job(&id, InteractiveJobClassification::Migrated);
         if pointer {
-            builder = builder.action_audience(&id, semio_framework_plugin::CapabilityAudience::Input);
+            builder = builder.action_audience(&id, semio_plugin::CapabilityAudience::Input);
         }
     }
     builder = builder.action_destructive("deleteSelection");

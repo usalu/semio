@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../../../../.."
-name = "semio-framework-os-native-runtime-reader"
+name = "semio-os-native-runtime-reader"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -21,4 +21,4 @@ path = "🦀️.rs"
 serde.workspace = true
 serde_json.workspace = true
 sha2 = "0.10.9"
-semio-framework-os-renderer-wgpu-native-runtime-modules = { path = "../../../../📦️packages/🦀️rust" }
+semio-renderer-wgpu-native-runtime-modules = { path = "../../../../📦️packages/🦀️rust" }

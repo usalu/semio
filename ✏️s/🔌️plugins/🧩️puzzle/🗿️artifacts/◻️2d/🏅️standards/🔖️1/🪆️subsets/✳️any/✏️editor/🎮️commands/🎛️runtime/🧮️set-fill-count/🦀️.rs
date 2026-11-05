@@ -3,7 +3,7 @@
 //! continues, a lower retracts the provisional tail); the command itself never touches the document.
 
 use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 #[cfg(test)] use semio_framework_pack_json::{json};
 
@@ -11,9 +11,9 @@ use semio_framework_pack_json::Value;
 /// public command rather than writing the config behind the tool-run driver's back.
 pub fn request(count: u32) -> Effect {
     Effect::DispatchAction {
-        req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
+        req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: "setFillCount".into(),
-        args: Some(semio_framework_plugin::dsl_value!({ "value": count })),
+        args: Some(semio_plugin::dsl_value!({ "value": count })),
         delay_ms: 0,
     }
 }

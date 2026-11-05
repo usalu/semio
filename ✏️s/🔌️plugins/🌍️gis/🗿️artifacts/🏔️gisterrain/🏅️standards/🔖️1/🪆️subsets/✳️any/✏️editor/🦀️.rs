@@ -14,44 +14,44 @@ use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
 use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppIo;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
 use serde_json::Value;
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
@@ -76,18 +76,18 @@ pub fn gis3d_io() -> AppIo {
         ports: vec![gis3d_map_in_port(), gis3d_scene_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::GISTERRAIN_DIALECT.artifact_kind.into(), name: "GIS Terrain".into(), dimension: "3d".into(), component_kind: "gisterrain".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: crate::GISTERRAIN_DIALECT.artifact_kind.into(), name: "GIS Terrain".into(), dimension: "3d".into(), component_kind: "gisterrain".into() },
     }
 }
 
 /// 🔌️ `map:in` — a `2d.map` producer (gis2d's `map:out`) feeding an overlay pin layer into this
 /// terrain (see `GisTerrainSnapshot::imported_map`). `One`/optional: exactly one map may
 /// be draped onto a terrain at a time, and a terrain with no upstream edge is valid.
-pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
-    semio_framework_plugin::MediaPortSpec {
+pub fn gis3d_map_in_port() -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
         id: "map:in".into(),
         label: "Map".into(),
-        direction: semio_framework_plugin::MediaPortDirection::In,
+        direction: semio_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: Some(semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind.into()),
         required: false,
@@ -98,11 +98,11 @@ pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🎭️ `scene:out` — this terrain as `3d.mesh` (kind already registered by lowpoly; reused verbatim,
 /// not redeclared — WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). `Many`/optional: several
 /// downstream consumers may fan out from one terrain, and a terrain with no downstream edge is valid.
-pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
-    semio_framework_plugin::MediaPortSpec {
+pub fn gis3d_scene_out_port() -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
         id: "scene:out".into(),
         label: "Scene".into(),
-        direction: semio_framework_plugin::MediaPortDirection::Out,
+        direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         kind_id: Some("3d.mesh".into()),
         required: false,
@@ -131,7 +131,7 @@ pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Media {
 //#endregion 🔖️Io
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `Gis3dPlayApp::Command` — the SOLE dispatch surface for gis3d's own behavior, covering every
     /// action `create_gis3d_app` declares. Row order is the binary variant ordinal: appending is safe,
     /// reordering is a wire-format break.
@@ -186,10 +186,10 @@ fn gis3d_retained_reduce(
     command: &Gis3dCommand,
     snapshot: &GisTerrainSnapshot,
     config: &NoConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis3dPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<GisTerrainMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     if let Gis3dCommand::SetCamera(payload) = command {
@@ -229,11 +229,11 @@ impl ToolJobFactory for Gis3dCommandJobFactory {
         gis3d_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GIS3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GIS3D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFactory {
     type Owner = EditorApp<Gis3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GIS3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
@@ -410,7 +410,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 
 impl ArtifactEditor for Gis3dPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = GisTerrainSnapshot;
@@ -421,8 +421,8 @@ impl ArtifactEditor for Gis3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::editor::gis3d::presence::Gis3dPresence;
     type PresenceMutation = crate::editor::gis3d::presence::Gis3dPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = Gis3dCommand;
 
@@ -434,14 +434,14 @@ impl ArtifactEditor for Gis3dPlayApp {
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<terrain::config::GisTerrainWindowConfigOwner>()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Gis3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.gis.gisterrain@1/*#editor",
@@ -460,22 +460,22 @@ impl ArtifactEditor for Gis3dPlayApp {
         registry.register(Gis3dCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !GIS3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the gis terrain command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the gis terrain command does not match its exact registered tool").into());
         }
         if gis3d_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
             return Err(Fault::from("gis3d-command-payload-too-large").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent))
     }
 
-    fn reference_birth()->Option<fn()->Result<GisTerrainSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<GisTerrainSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_terrain_document())
     })}
 
@@ -556,7 +556,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         doc: &ArtifactView<'_, GisTerrainSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<GisTerrainMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -571,21 +571,21 @@ impl ArtifactEditor for Gis3dPlayApp {
     }
 
     /// 🧮️ Empty app config; camera state belongs to the exact registered terrain-window owner.
-    fn config_spec() -> semio_framework_plugin::ConfigSpec {
-        semio_framework_plugin::ConfigSpec::default()
+    fn config_spec() -> semio_plugin::ConfigSpec {
+        semio_plugin::ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, terrain::config::current(cfg)).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, terrain::config::current(cfg)).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Gis3dPlayApp
 
 //#region 🔖️Manifest
-pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_gis3d_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::GISTERRAIN_DIALECT)
             .document(["semio", "gis", "3d"])
             .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
@@ -611,15 +611,15 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
                 },
             })
             .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
-            .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
+            .action_with(semio_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_plugin::ActionKind::View, "camera"))
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+            .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_args("setActiveExample", vec![
-                semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID),
+                semio_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID),
             ])
             .action_args("setExaggeration", vec![
-                semio_framework_plugin::ActionArgDef::slider("value", LocalizedLabel::native("Exaggeration", "Überhöhung"), GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM).default_value(&GIS3D_EXAGGERATION_STAGED_DEFAULT),
+                semio_plugin::ActionArgDef::slider("value", LocalizedLabel::native("Exaggeration", "Überhöhung"), GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM).default_value(&GIS3D_EXAGGERATION_STAGED_DEFAULT),
             ])
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setExaggeration", InteractiveJobClassification::Migrated)
@@ -631,7 +631,7 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .interactive_jobs(InteractiveJobClassification::Migrated)
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole terrain with one of the plugin's bundled terrain examples, by example id.", "Ersetzt das gesamte Gelände durch eines der mitgelieferten Geländebeispiele, anhand der Beispiel-Id."))
             .action_describe("setExaggeration", LocalizedLabel::native("Sets the vertical exaggeration factor the terrain surface is drawn with.", "Legt den Überhöhungsfaktor fest, mit dem die Geländeoberfläche gezeichnet wird."))
-            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
             .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -1,4 +1,4 @@
-use semio_framework_plugin_window_transient::window_transient::WindowTransientMutation;
+use semio_plugin_window_transient::window_transient::WindowTransientMutation;
 use crate::ArtifactApp;
 
 /// 👥️🫧️ The two EPHEMERAL lanes' emission, deliberately separate from {@link Emit}.

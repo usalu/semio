@@ -7,26 +7,26 @@
 
 use semio_framework::kernel::{ActorId, MutationId};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use std::future::Future;
 use protocol::{LOCAL_ACTOR_ID, OpBinary, OpText};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 use store::os_store::document_materialize::create_document_envelope;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_testing_laws::with_authoring_identity;
-use semio_framework_ui_contract::*;
+use semio_plugin_testing_laws::with_authoring_identity;
+use semio_ui_contract::*;
 
 /// 🧾️ The applied history rows of `patch` that a tool transaction keyed — what one released node drag must add exactly one of.
 pub fn node_drag_transaction_rows(patch: &semio_framework::kernel::HistoryPatch) -> Vec<&semio_framework::kernel::HistoryEntry> {
@@ -39,7 +39,7 @@ pub fn node_drag_transaction_rows(patch: &semio_framework::kernel::HistoryPatch)
 /// edit otherwise.
 pub async fn assert_node_drag_edits_replay_like_a_fresh_fold<P, Mu>(guest: &str, schema: &str, base: &P, log: &[Mu], edits: &[(usize, Mu)], fold: impl Fn(&mut P, &Mu))
 where
-    P: Clone + PartialEq + std::fmt::Debug + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    P: Clone + PartialEq + std::fmt::Debug + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + store::ColdMutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     let fresh = |leaves: &[Mu]| {
@@ -50,10 +50,10 @@ where
         state
     };
     for (index, edited) in edits {
-        let mut store = ArtifactStore::<P, Mu>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
+        let mut store = ArtifactStore::<P, Mu>::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
         store::install_unscheduled_catalog(&mut store, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<P, Mu>()).unwrap_or_else(|error| panic!("{guest}: the drag history catalog installs: {error:?}"));
         for leaf in log {
-            semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], transaction: None }, &mut identity).await).unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));
+            semio_plugin_testing_laws::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], transaction: None }, &mut identity).await).unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().unwrap_or_else(|error| panic!("{guest}: the applied operations read: {error:?}")).into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids.get(*index).cloned().unwrap_or_else(|| panic!("{guest}: edit #{index} names no logged leaf of {}", ids.len()));
@@ -69,7 +69,7 @@ where
         let result = replay.finish().unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} finishes: {error:?}"));
         assert!(!store.replay_report(&result).unwrap_or_else(|error| panic!("{guest}: the report of edit #{index} reads: {error:?}")).blocks_finalize(), "{guest}: a re-offset or re-targeted drag never blocks finalizing");
         assert_eq!(result.state().unwrap_or_else(|| panic!("{guest}: the replay of edit #{index} reached no state")).as_ref(), &expected, "{guest}: the replay of edit #{index} equals the fresh fold of the edited log");
-        semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).unwrap_or_else(|error| panic!("{guest}: the overwrite of edit #{index} commits: {error:?}"));
+        semio_plugin_testing_laws::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).unwrap_or_else(|error| panic!("{guest}: the overwrite of edit #{index} commits: {error:?}"));
         assert_eq!(store.snapshot_ref(), &expected, "{guest}: the overwritten history of edit #{index} folds to the edited state");
         store.close_owned_unscheduled().unwrap_or_else(|error| panic!("{guest}: the drag history store retires: {error:?}"));
         assert!(store.close_owned_terminal_is_empty(), "{guest}: the drag history store retires to its terminal-empty shell");

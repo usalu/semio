@@ -1,11 +1,11 @@
 //! ↩️ Reset one exact Forms Try window.
 
 use crate::editor::forms::commands::set_try_value::{cancel_pending_generations, TryWindowCommandOutput};
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::config::FormsTryWindowConfig;
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{FormsTryWindowLease, FormsTryWindowTransient};
 use crate::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -18,7 +18,7 @@ pub struct ResetTry {
 
 pub fn handle_window(
     payload: &ResetTry,
-    operation: &semio_framework_plugin::AppOperationContext,
+    operation: &semio_plugin::AppOperationContext,
     lease: &FormsTryWindowLease,
 ) -> Result<(TryWindowCommandOutput, FormsTryWindowConfig), Fault> {
     if !lease.matches(&payload.window_id, &payload.window_kind_id, lease.window_generation, lease.document_generation) {

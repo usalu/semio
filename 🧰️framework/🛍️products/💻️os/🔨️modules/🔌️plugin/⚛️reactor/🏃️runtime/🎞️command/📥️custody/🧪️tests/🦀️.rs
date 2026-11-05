@@ -1,10 +1,10 @@
 //! 🎟️ Actual failed media command retirement returns the same native cause through one finite initiating caller.
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework::FaultFrom;
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use crate::ops_ingress::{PluginCommandIngress, PluginCommandIngressStep};
-use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_plugin_plugin_program::PluginProgram;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use serde_json::Value;
 use semio_framework_job::{OriginalJobFixtureCaller, OriginalTurnFailure};

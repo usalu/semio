@@ -26,8 +26,8 @@ pub fn move_vortex<Op: From<crate::move_vortex::MoveVortex>>(id: String, new_pos
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for MoveVortex where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::move_vortex::MoveVortex> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "vortex", kind: "move-vortex", record: "MovedVortex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move vortex \"{}\"", self.id), &format!("Wirbel \"{}\" verschieben", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move vortex \"{}\"", self.id), &format!("Wirbel \"{}\" verschieben", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

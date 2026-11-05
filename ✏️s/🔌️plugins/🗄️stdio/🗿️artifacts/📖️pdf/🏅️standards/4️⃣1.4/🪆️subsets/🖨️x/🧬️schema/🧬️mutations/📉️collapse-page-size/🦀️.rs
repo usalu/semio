@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "page", kind: "collapse-page-size", record: "ResizedPage" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Collapse page width to zero", "Seitenbreite auf null setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Collapse page width to zero", "Seitenbreite auf null setzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -5,7 +5,7 @@ pub mod io_registry {
         use crate::standards::v1_1::subsets::base::io::SvgComposer as SvgRawAnyComposer;
         use crate::standards::v1_1::subsets::basic::io::SvgBasicComposer;
         use crate::standards::v1_1::subsets::tiny::io::SvgTinyComposer;
-        use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+        use semio_plugin::{composer_entry_of, io::ComposerEntry};
         use std::sync::OnceLock;
 
         static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -15,7 +15,7 @@ pub mod io_registry {
             ENTRIES.get_or_init(|| vec![composer_entry_of::<SvgRawAnyComposer>(), composer_entry_of::<SvgTinyComposer>(), composer_entry_of::<SvgBasicComposer>()]).as_slice()
         }
     }
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
+    use {semio_plugin::io::register_composer_entries,semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "brep", kind: "create-brep", record: "CreatedBrep" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create brep child {}", self.child_id), &format!("B-Rep-Kind {} erstellen", self.child_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create brep child {}", self.child_id), &format!("B-Rep-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["brep".to_string()]

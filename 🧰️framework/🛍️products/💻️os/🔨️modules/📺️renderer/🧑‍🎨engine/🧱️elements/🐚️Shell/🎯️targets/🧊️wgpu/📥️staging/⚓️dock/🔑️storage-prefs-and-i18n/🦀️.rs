@@ -8,14 +8,14 @@ use super::*;
 //#region 🌉️AgentBridgeConfigDoor
 /// 🌉️ Takes whatever the hook left, exactly once.
 #[cfg(target_arch = "wasm32")]
-pub fn take_pending_agent_bridge_config() -> Option<Option<semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeConfig>> {
+pub fn take_pending_agent_bridge_config() -> Option<Option<semio_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeConfig>> {
     PENDING_AGENT_BRIDGE_CONFIG.with(|slot| slot.borrow_mut().take())
 }
 
 /// 🖥️ Native has no equivalent hook and deliberately no environment discovery either: a native
 /// embedder holds the shell directly and calls `ShellState::set_agent_bridge_config`.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn take_pending_agent_bridge_config() -> Option<Option<semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeConfig>> {
+pub fn take_pending_agent_bridge_config() -> Option<Option<semio_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeConfig>> {
     None
 }
 
@@ -33,7 +33,7 @@ pub fn take_pending_agent_bridge_config() -> Option<Option<semio_framework_os_re
 /// every referrer; putting it here keeps it where React keeps it.
 #[cfg(target_arch = "wasm32")]
 thread_local! {
-    pub static PENDING_AGENT_BRIDGE_CONFIG: std::cell::RefCell<Option<Option<semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeConfig>>> = const { std::cell::RefCell::new(None) };
+    pub static PENDING_AGENT_BRIDGE_CONFIG: std::cell::RefCell<Option<Option<semio_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeConfig>>> = const { std::cell::RefCell::new(None) };
 }
 //#endregion 🌉️AgentBridgeConfigDoor
 //#endregion ShellChrome

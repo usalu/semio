@@ -1,8 +1,8 @@
 //! 📄️ Instance components of the plugin SDK: media transfers and envelope jobs.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
 
 #[path = "📥️staging/⏪️time-travel/🦀️.rs"]
 pub mod docs_time_travel;

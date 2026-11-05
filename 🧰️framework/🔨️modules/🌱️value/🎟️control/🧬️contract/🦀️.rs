@@ -1,4 +1,6 @@
 //! 🎟️ Original physical grant, progress and typed refusal contracts.
+/// 📃️ The largest payload one bulk vector copy turn moves, equal to the ABI page so a bitwise run is never longer than one page of work.
+pub const RETAINED_CLONE_BULK_PAGE_BYTES: usize = 64 * 1024;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RetainedCloneGrant {

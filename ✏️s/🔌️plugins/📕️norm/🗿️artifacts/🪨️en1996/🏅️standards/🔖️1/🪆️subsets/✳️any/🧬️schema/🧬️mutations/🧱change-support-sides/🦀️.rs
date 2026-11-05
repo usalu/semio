@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeSupportSides where
         record: "ChangedSupportSides",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change number of supported sides", "Anzahl der gehaltenen Ränder ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change number of supported sides", "Anzahl der gehaltenen Ränder ändern")
     }
 }
 

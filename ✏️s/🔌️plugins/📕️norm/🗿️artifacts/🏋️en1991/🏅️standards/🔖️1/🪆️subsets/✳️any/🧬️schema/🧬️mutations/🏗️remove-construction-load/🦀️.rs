@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveConstructionLoad w
         record: "RemovedConstructionLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove construction load {}", self.id), &format!("Bauzustandslast {} entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove construction load {}", self.id), &format!("Bauzustandslast {} entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -27,16 +27,23 @@ fn response_events_match_shared_vectors_and_undo() {
 
 #[test]
 fn submission_checks_every_step_and_keeps_visible_answers() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json")).unwrap();
-    let definition = semio_framework_pack_json::from_json_str(&fixture["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    for case in fixture["cases"].as_array().unwrap() {
-        let values = semio_framework_pack_json::from_json_str(&case["values"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let result = crate::standards::v1::subsets::any::schema::response::prepare_response(&definition, &values, "response-a".into(), 1790545740000, "revision-a".into());
-        let actual = match result {
-            Ok(response) => serde_json::json!({ "response": serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&response)).unwrap(), "errors": [] }),
-            Err(errors) => serde_json::json!({ "response": null, "errors": serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&errors)).unwrap() }),
-        };
-        assert_eq!(actual, case["expected"], "{}", case["name"]);
+    for fixture_text in [fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json"), fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️vector-submission.json")] {
+        let fixture: serde_json::Value = serde_json::from_str(fixture_text).unwrap();
+        let definition = semio_framework_pack_json::from_json_str(&fixture["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        for case in fixture["cases"].as_array().unwrap() {
+            let values = semio_framework_pack_json::from_json_str(&case["values"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            let result = crate::standards::v1::subsets::any::schema::response::prepare_response(&definition, &values, "response-a".into(), 1790545740000, "revision-a".into());
+            let actual = match result {
+                Ok(response) => {
+                    let json = semio_framework_pack_json::to_json_string(&response);
+                    let restored = semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::response::FormsResponse>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+                    assert_eq!(restored, response, "{}", case["name"]);
+                    serde_json::json!({ "response": serde_json::from_str::<serde_json::Value>(&json).unwrap(), "errors": [] })
+                },
+                Err(errors) => serde_json::json!({ "response": null, "errors": serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&errors)).unwrap() }),
+            };
+            assert_eq!(actual, case["expected"], "{}", case["name"]);
+        }
     }
 }
 

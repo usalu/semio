@@ -1,7 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` node and element mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 #[path = "../../🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/📐️braces-the-upper-d96634/🦀️.rs"]
 mod create_element_braces_the_upper_storey_with_a_chs_diagonal;
 #[path = "../../🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🚫️rejects/🦀️.rs"]

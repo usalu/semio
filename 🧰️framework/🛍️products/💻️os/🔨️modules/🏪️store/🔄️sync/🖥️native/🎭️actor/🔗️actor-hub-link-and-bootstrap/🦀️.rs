@@ -52,7 +52,7 @@ impl ArtifactActor {
     /// drop the socket and ask the host for the pair ([`ArtifactEvent::RebootstrapRequired`]); the actor dials again only
     /// once the host re-seeded it ([`Self::reseed_hub_document`]) — never into a Welcome it would have to refuse, and never
     /// after an outage backoff (the rebuild's own close is not a shortage).
-    pub async fn require_artifact_rebootstrap(&mut self, control: semio_framework_os_directory::RebootstrapRequired) {
+    pub async fn require_artifact_rebootstrap(&mut self, control: semio_os_directory::RebootstrapRequired) {
         self.requeue_pending_batches();
         self.abort_artifact_bootstrap();
         self.current_pack = None;
@@ -114,7 +114,7 @@ impl ArtifactActor {
             self.schedule_reconnect().await;
             return;
         };
-        let expectation = semio_framework_os_directory_client::DocumentSocketExpectationV1 { artifact_schema: schema, pack_schema_hash, requested_surface_id: surface, lease: self.document_execution_target_lease.clone() };
+        let expectation = semio_os_directory_client::DocumentSocketExpectationV1 { artifact_schema: schema, pack_schema_hash, requested_surface_id: surface, lease: self.document_execution_target_lease.clone() };
         let client_instance_id = format!("native-document-{:016x}", self.hlc_seed);
         let actor_identity_grant=self.actor_identity_grant;
         if !actor_identity_admission_admits(actor_identity_grant){self.schedule_reconnect().await;return;}
@@ -137,7 +137,7 @@ impl ArtifactActor {
             if base_url.trim_end_matches('/') != admission.authority.hub_origin.trim_end_matches('/') {
                 return Err(DocumentConnectFailure::Short);
             }
-            let semio_framework_os_directory_client::DocumentSocketAdmissionV1 { mut socket, authority } = admission;
+            let semio_os_directory_client::DocumentSocketAdmissionV1 { mut socket, authority } = admission;
             let url = hub_ws_url(
                 &authority.hub_origin,
                 &authority.scope.space_id,
@@ -314,14 +314,14 @@ impl ArtifactActor {
     }
 
     pub async fn install_artifact_bootstrap(&mut self, pending: PendingArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
-        let codec = semio_framework_os_store_codec_registry::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {:?}", self.schema))?;
+        let codec = semio_os_store_codec_registry::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {:?}", self.schema))?;
         if codec.pack_schema_hash().await.map_err(|error| error.to_string())? != pending.pack_schema_hash {
             return Err("artifact bootstrap codec changed during transfer".into());
         }
         codec.print_mirror(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
         let op_ids = spr_op_ids(&pair.spr).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
-        let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: pair.pack.clone(), parent_spr: pair.spr.clone(), members: Vec::new() };
-        let archive_bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
+        let archive = semio_os_spr::DocumentArchivePack { parent_pack: pair.pack.clone(), parent_spr: pair.spr.clone(), members: Vec::new() };
+        let archive_bytes = semio_os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
         let previous = self.current_archive.clone();
         if let Some(folder) = self.folder.as_ref() {
             folder.write_archive(&archive_bytes).await.map_err(|error| format!("artifact bootstrap persistence failed: {error}"))?;
@@ -365,10 +365,10 @@ impl ArtifactActor {
         Ok(())
     }
 
-    async fn replay_local_outbox_after_bootstrap(&mut self) -> Result<(), semio_framework_os_vcs::VcsError> {
+    async fn replay_local_outbox_after_bootstrap(&mut self) -> Result<(), semio_os_vcs::VcsError> {
         #[cfg(any(test, feature = "testing"))]
         if std::mem::take(&mut self.fail_bootstrap_local_replay_once) {
-            return Err(semio_framework_os_vcs::VcsError::Backbone("injected bootstrap local replay failure".into()));
+            return Err(semio_os_vcs::VcsError::Backbone("injected bootstrap local replay failure".into()));
         }
         self.remote.push(BackboneMessage::from_envelopes(&self.outbox)).await
     }
@@ -417,7 +417,7 @@ impl ArtifactActor {
                 wire_version: 1,
                 protocol_version: 1,
                 schema: self.schema.clone(),
-                pack_schema_hash: semio_framework_os_store_codec_registry::document_codec(&self.schema).await.ok().flatten().map_or([0u8; 32], |codec| codec.pack_schema_hash),
+                pack_schema_hash: semio_os_store_codec_registry::document_codec(&self.schema).await.ok().flatten().map_or([0u8; 32], |codec| codec.pack_schema_hash),
                 resume_token: self.resume_token.clone(),
                 frontier: self.server_frontier.clone(),
             },

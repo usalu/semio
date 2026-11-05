@@ -21,12 +21,12 @@ use super::screen_2d;
 use super::fem2d_load_glyph;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_os_kernel::Viewport2d;
+use semio_os_kernel::Viewport2d;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::ViewModel;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -95,7 +95,7 @@ pub fn fem2d_active_utility(view: &ViewModel) -> &str {
 }
 
 pub fn fem2d_addressed_window_id(view: &ViewModel, fault: &str) -> Result<String, Fault> {
-    view.window_id.clone().ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.canvas.window-required"), format!("{fault}: the gesture names no window")))
+    view.window_id.clone().ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.canvas.window-required"), format!("{fault}: the gesture names no window")))
 }
 
 fn fem2d_selection_method_for_utility(utility: &str) -> Option<&'static str> {

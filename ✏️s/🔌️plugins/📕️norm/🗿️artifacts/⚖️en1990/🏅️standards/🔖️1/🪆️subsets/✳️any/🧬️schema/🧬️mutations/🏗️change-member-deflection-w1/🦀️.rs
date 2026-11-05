@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberDeflectionW1
         record: "ChangedMemberDeflectionW1",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change deflection w1 (permanent, instantaneous) of the member", "Bauteil: Durchbiegung w1 (ständig, Anfangswert) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change deflection w1 (permanent, instantaneous) of the member", "Bauteil: Durchbiegung w1 (ständig, Anfangswert) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

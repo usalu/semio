@@ -1,5 +1,5 @@
 {
-  "name": "semio-framework-os-flow-host-source",
+  "name": "semio-os-flow-host-source",
   "projectType": "library",
   "tags": [
     "scope:framework",

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberSecondOrderA
         record: "ChangedMemberSecondOrderAnalysis",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change second-order analysis used (0 = first order, 1 = second order) of the member", "Bauteil: Theorie 2. Ordnung angesetzt (0 = Theorie 1. Ordnung, 1 = 2. Ordnung) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change second-order analysis used (0 = first order, 1 = second order) of the member", "Bauteil: Theorie 2. Ordnung angesetzt (0 = Theorie 1. Ordnung, 1 = 2. Ordnung) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

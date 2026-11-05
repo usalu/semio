@@ -74,7 +74,7 @@ fn truncated_input_errs_not_panics() {
 
 #[test]
 fn viewport_projection_pack_round_trips_every_shared_mode_orientation_pair() {
-    use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionPreferences, Viewport3dProjectionSpec};
+    use semio_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionPreferences, Viewport3dProjectionSpec};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     let preferences: Viewport3dProjectionPreferences = serde_json::from_value(fixture["defaultPreferences"].clone()).unwrap();
@@ -107,11 +107,11 @@ fn viewport_projection_pack_round_trips_every_shared_mode_orientation_pair() {
 
 #[test]
 fn viewport_projection_pack_outside_control_fov_matches_native_projection_math() {
-    use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+    use semio_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 
     let spec = Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::ThreePoint { fov: 130.0 }, orientation: Viewport3dProjectionOrientation::Free {} };
     let decoded: Viewport3dProjectionSpec = from_bytes(&to_bytes(&spec).unwrap()).unwrap();
-    let mut camera = semio_framework_ui_scene_camera::Camera3d::default();
+    let mut camera = semio_ui_scene_camera::Camera3d::default();
     let Viewport3dProjectionMode::ThreePoint { fov } = decoded.mode else { panic!("unexpected projection mode") };
     camera.fov_y = (fov as f32).to_radians();
     let matrix = camera.view_proj(1600.0, 900.0);
@@ -120,7 +120,7 @@ fn viewport_projection_pack_outside_control_fov_matches_native_projection_math()
 
 #[test]
 fn viewport_projection_pack_rejects_nonfinite_active_values() {
-    use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+    use semio_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 
     let invalid = Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::ThreePoint { fov: f64::NAN }, orientation: Viewport3dProjectionOrientation::Free {} };
     let bytes = to_bytes(&invalid).unwrap();
@@ -129,9 +129,9 @@ fn viewport_projection_pack_rejects_nonfinite_active_values() {
 
 #[test]
 fn viewport_projection_render_math_matches_the_shared_three_oracle() {
-    use semio_framework_ui_scene_algebra::{Mat4Math, Vec3Math};
-    use semio_framework_ui_scene_camera::{frame_projection_orbit_to_spec_bounds, projection_spec_matrix, projection_spec_orientation_look, projection_spec_project_ndc, projection_spec_unproject_ndc, Camera3d, CameraProjection3d, OrbitController, WORLD_PROJECTION_FRAME_PADDING};
-    use semio_framework_ui_viewport::Viewport3dProjectionSpec;
+    use semio_ui_scene_algebra::{Mat4Math, Vec3Math};
+    use semio_ui_scene_camera::{frame_projection_orbit_to_spec_bounds, projection_spec_matrix, projection_spec_orientation_look, projection_spec_project_ndc, projection_spec_unproject_ndc, Camera3d, CameraProjection3d, OrbitController, WORLD_PROJECTION_FRAME_PADDING};
+    use semio_ui_viewport::Viewport3dProjectionSpec;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     let parity = &fixture["renderParity"];

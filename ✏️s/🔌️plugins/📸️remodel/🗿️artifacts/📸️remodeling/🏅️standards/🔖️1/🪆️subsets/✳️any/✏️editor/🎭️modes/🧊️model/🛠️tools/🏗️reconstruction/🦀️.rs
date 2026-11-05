@@ -4,8 +4,8 @@
 //! jobs (`crate::editor::remodeling::reconstruction_session`).
 
 use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruction_session::reconstruction_run_definition;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ToolDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ToolDefinition;
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = "reconstruction";

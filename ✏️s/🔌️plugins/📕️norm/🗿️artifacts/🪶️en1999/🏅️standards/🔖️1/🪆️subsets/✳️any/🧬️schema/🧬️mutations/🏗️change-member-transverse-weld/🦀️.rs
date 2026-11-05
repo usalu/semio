@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeMemberTransverseWe
         record: "ChangedMemberTransverseWeld",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Localized transverse weld of the member", "Bauteil: Örtliche Querschweißnaht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Localized transverse weld of the member", "Bauteil: Örtliche Querschweißnaht ändern")
     }
 }
 

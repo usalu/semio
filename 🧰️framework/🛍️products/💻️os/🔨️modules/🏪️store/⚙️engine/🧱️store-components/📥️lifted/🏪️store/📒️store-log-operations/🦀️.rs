@@ -91,7 +91,7 @@ where
         self.operation_wire
     }
 
-    fn take_string_at_retained(target: &mut std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>, position: usize) -> String {
+    fn take_string_at_retained(target: &mut std::mem::ManuallyDrop<semio_os_vcs::HistoryPageStack<String>>, position: usize) -> String {
         target.remove(position)
     }
 
@@ -134,7 +134,7 @@ where
         if additional_open == 0 {
             return Ok(());
         }
-        let open_now = self.envelope.conflicts.iter().filter(|conflict| conflict.status == semio_framework_os_spr::ConflictStatus::Open).count();
+        let open_now = self.envelope.conflicts.iter().filter(|conflict| conflict.status == semio_os_spr::ConflictStatus::Open).count();
         if open_now + additional_open > Self::OPEN_CONFLICT_CAP {
             return Err(VcsError::ValidationFailed(format!(
                 "open conflict backlog is at capacity ({open_now} of {} open, {additional_open} more pending) — resolve existing open conflicts before this artifact can record another",
@@ -146,30 +146,30 @@ where
 
     /// ⚔️ Every conflict this store has ever raised (`Open`, `Accepted`, and `Discarded`
     /// alike) — see {@link conflicts} field doc.
-    pub fn conflicts(&self) -> &[semio_framework_os_spr::Conflict] {
+    pub fn conflicts(&self) -> &[semio_os_spr::Conflict] {
         &self.envelope.conflicts
     }
 
     /// ⚔️ The subset of {@link conflicts} still `Open` — what a UI's Conflicts panel lists.
-    pub fn open_conflicts(&self) -> impl Iterator<Item = &semio_framework_os_spr::Conflict> {
-        self.envelope.conflicts.iter().filter(|conflict| conflict.status == semio_framework_os_spr::ConflictStatus::Open)
+    pub fn open_conflicts(&self) -> impl Iterator<Item = &semio_os_spr::Conflict> {
+        self.envelope.conflicts.iter().filter(|conflict| conflict.status == semio_os_spr::ConflictStatus::Open)
     }
 
     /// ⚖️ This store's local `crate::os_spr::MergePolicy` (see the field doc).
-    pub fn merge_policy(&self) -> semio_framework_os_spr::MergePolicy {
+    pub fn merge_policy(&self) -> semio_os_spr::MergePolicy {
         self.merge_policy
     }
 
     /// ⚖️ Sets this store's local `crate::os_spr::MergePolicy`. Local/authority state only —
     /// never wire-carried, never part of shared history; takes effect starting with the NEXT
     /// `dispatch`/`ingest_remote` call.
-    pub fn set_merge_policy(&mut self, policy: semio_framework_os_spr::MergePolicy) {
+    pub fn set_merge_policy(&mut self, policy: semio_os_spr::MergePolicy) {
         self.merge_policy = policy;
     }
 
     /// 📒️ Every `crate::os_spr::MutationMessage` `edit_id`'s own replay raised — empty for an
     /// edit that raised none (including an unknown `edit_id`), never an error (see the field doc).
-    pub fn messages_for_edit(&self, edit_id: &str) -> &[semio_framework_os_spr::MutationMessage] {
+    pub fn messages_for_edit(&self, edit_id: &str) -> &[semio_os_spr::MutationMessage] {
         self.envelope.edit_messages.get_by_id(edit_id).map_or(&[], |entry| entry.messages.as_slice())
     }
 
@@ -177,7 +177,7 @@ where
     /// 🌳️ The id of this document's trunk — the implicit root line, a first-class alternative listed first in
     /// `envelope().vcs.alternatives` (with an empty name the UI localizes) once a commit made on it gives it a chain.
     pub fn trunk_alternative_id(&self) -> String {
-        semio_framework_os_spr::trunk_alternative_id(&ArtifactId(self.envelope.id.clone()))
+        semio_os_spr::trunk_alternative_id(&ArtifactId(self.envelope.id.clone()))
     }
 
     /// 🚉️ The line the document is on: the active branched alternative, or the trunk while none is.
@@ -221,7 +221,7 @@ where
     /// 🪪️ The wire operations `edit_id` owns — the replica-neutral identity transitions name.
     pub fn edit_mutation_ids(&self, edit_id: &str) -> Result<Vec<MutationId>, VcsError> {
         let edit = self.envelope.vcs.edits.find_near(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
-        Ok(semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit))
+        Ok(semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit))
     }
 
     /// 🌱️ The transition that brought `checkpoint_id` into being — a `Commit`, or the
@@ -231,9 +231,9 @@ where
             .transitions
             .iter()
             .rev()
-            .find(|envelope| match semio_framework_os_spr::history_transition_from_envelope(envelope) {
-                Ok(Some(semio_framework_os_spr::HistoryTransition::Commit(checkpoint))) => checkpoint.checkpoint_id == checkpoint_id,
-                Ok(Some(semio_framework_os_spr::HistoryTransition::Repin { pinned_checkpoint_id, .. })) => pinned_checkpoint_id == checkpoint_id,
+            .find(|envelope| match semio_os_spr::history_transition_from_envelope(envelope) {
+                Ok(Some(semio_os_spr::HistoryTransition::Commit(checkpoint))) => checkpoint.checkpoint_id == checkpoint_id,
+                Ok(Some(semio_os_spr::HistoryTransition::Repin { pinned_checkpoint_id, .. })) => pinned_checkpoint_id == checkpoint_id,
                 _ => false,
             })
             .map(|envelope| envelope.mutation_id.clone())
@@ -246,18 +246,18 @@ where
             .transitions
             .iter()
             .rev()
-            .find(|envelope| matches!(semio_framework_os_spr::history_transition_from_envelope(envelope), Ok(Some(semio_framework_os_spr::HistoryTransition::Branch { alternative_id: registered, .. })) if registered == alternative_id))
+            .find(|envelope| matches!(semio_os_spr::history_transition_from_envelope(envelope), Ok(Some(semio_os_spr::HistoryTransition::Branch { alternative_id: registered, .. })) if registered == alternative_id))
             .map(|envelope| envelope.mutation_id.clone())
     }
 
     /// ✉️ `edit`'s operations as causal wire envelopes — one per forward operation.
-    pub fn operation_envelopes(&self, edit: &Edit<Mutation>) -> Result<Vec<semio_framework_os_spr::MutationEnvelope>, VcsError> {
+    pub fn operation_envelopes(&self, edit: &Edit<Mutation>) -> Result<Vec<semio_os_spr::MutationEnvelope>, VcsError> {
         self.operation_envelopes_since(edit, 0)
     }
 
     /// ✂️ The envelopes of `edit`'s operations from position `from` on: the range an amend appended.
-    pub fn operation_envelopes_since(&self, edit: &Edit<Mutation>, from: usize) -> Result<Vec<semio_framework_os_spr::MutationEnvelope>, VcsError> {
-        semio_framework_os_spr::mutation_envelopes_from_edit_since::<P, Mutation>(edit, from, &ArtifactId(self.envelope.id.clone()), &SchemaId(self.envelope.schema.clone())).map_err(|error| VcsError::Serialize(error.to_string()))
+    pub fn operation_envelopes_since(&self, edit: &Edit<Mutation>, from: usize) -> Result<Vec<semio_os_spr::MutationEnvelope>, VcsError> {
+        semio_os_spr::mutation_envelopes_from_edit_since::<P, Mutation>(edit, from, &ArtifactId(self.envelope.id.clone()), &SchemaId(self.envelope.schema.clone())).map_err(|error| VcsError::Serialize(error.to_string()))
     }
 
     /// 👁️ The newest operation of an author other than `actor` this replica has applied — how far
@@ -265,7 +265,7 @@ where
     /// arrival order, which is the hub's commit order; an undone edit was seen all the same.
     pub fn observed_foreign_operation(&self, actor: &str) -> Option<MutationId> {
         let edit = self.envelope.vcs.edits.iter().rev().find(|edit| edit.actor.as_deref().is_some_and(|author| author != actor))?;
-        semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).pop()
+        semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).pop()
     }
 
     /// 🌾️ Marks every recorded event applied in the causal graph, so a peer's later events that
@@ -273,12 +273,12 @@ where
     pub fn seed_known_events(&mut self) -> Result<(), VcsError> {
         let mut identities: Vec<MutationId> = self.envelope.transitions.iter().map(|transition| transition.mutation_id.clone()).collect();
         for edit in &self.envelope.vcs.edits {
-            identities.extend(semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit));
+            identities.extend(semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit));
         }
         for identity in identities {
             match self.dag.seed_applied(identity) {
                 Ok(()) => {}
-                Err(rejected) if rejected.error == semio_framework_os_spr::MutationDagError::Duplicate => {}
+                Err(rejected) if rejected.error == semio_os_spr::MutationDagError::Duplicate => {}
                 Err(rejected) => return Err(VcsError::ValidationFailed(rejected.error.to_string())),
             }
         }
@@ -287,10 +287,10 @@ where
 
     /// 🗂️ Refuses the first of `envelopes` whose transition this store's [`crate::os_spr::HistoryShape`] does not hold —
     /// with `HistoryShape` — or that does not decode, before any of them is recorded.
-    pub fn admit_history_shape(&self, envelopes: &[semio_framework_os_spr::MutationEnvelope]) -> Result<(), VcsError> {
+    pub fn admit_history_shape(&self, envelopes: &[semio_os_spr::MutationEnvelope]) -> Result<(), VcsError> {
         let shape = self.envelope.history_shape;
         for envelope in envelopes {
-            if let Some(kind) = semio_framework_os_spr::history_transition_from_envelope(envelope).map_err(|error| VcsError::Deserialize(error.to_string()))?.map(|transition| transition.kind()).filter(|kind| !shape.admits(*kind)) {
+            if let Some(kind) = semio_os_spr::history_transition_from_envelope(envelope).map_err(|error| VcsError::Deserialize(error.to_string()))?.map(|transition| transition.kind()).filter(|kind| !shape.admits(*kind)) {
                 return Err(VcsError::HistoryShape { shape, kind });
             }
         }
@@ -303,10 +303,10 @@ where
     }
 
     /// 📧️ The envelope of one locally authored transition at `timestamp`, declaring `target` as the address it writes.
-    pub fn transition_envelope(&self, transition: &semio_framework_os_spr::HistoryTransition, dependencies: Vec<MutationId>, target: Vec<String>, timestamp: HybridLogicalTimestamp) -> semio_framework_os_spr::MutationEnvelope {
+    pub fn transition_envelope(&self, transition: &semio_os_spr::HistoryTransition, dependencies: Vec<MutationId>, target: Vec<String>, timestamp: HybridLogicalTimestamp) -> semio_os_spr::MutationEnvelope {
         let actor = self.transition_actor();
-        let mut envelope = semio_framework_os_spr::history_transition_envelope(transition, &ArtifactId(self.envelope.id.clone()), &actor, dependencies, timestamp);
-        if matches!(transition, semio_framework_os_spr::HistoryTransition::Supersede(_)) {
+        let mut envelope = semio_os_spr::history_transition_envelope(transition, &ArtifactId(self.envelope.id.clone()), &actor, dependencies, timestamp);
+        if matches!(transition, semio_os_spr::HistoryTransition::Supersede(_)) {
             envelope.observed = self.observed_foreign_operation(&actor.0);
         }
         envelope.target = target;
@@ -315,7 +315,7 @@ where
 
     /// 🧮️ The full fold of the event log at this replica's head ([`fold_envelope_history`]) — O(history), so never on the
     /// path of a local edit that joins the fold as its tail ([`Self::folded_tail`]).
-    pub fn fold_live_log(&self) -> Result<semio_framework_os_spr::HistoryFold, VcsError> {
+    pub fn fold_live_log(&self) -> Result<semio_os_spr::HistoryFold, VcsError> {
         #[cfg(test)]
         hot_path_census::count(|census| census.folds += 1);
         fold_envelope_history(&self.envelope)
@@ -338,9 +338,9 @@ where
     //#region 🔖️DeferredReprojection
     /// 🪐️ The history fold of the event log with a waiting change joined — its remote transitions, and its local step's
     /// transitions at the head that step moves to — touching nothing.
-    pub fn pending_fold(&self, pending: &PendingReprojection<P, Mutation>) -> Result<semio_framework_os_spr::HistoryFold, VcsError> {
+    pub fn pending_fold(&self, pending: &PendingReprojection<P, Mutation>) -> Result<semio_os_spr::HistoryFold, VcsError> {
         let local = pending.local.as_ref();
-        let candidates: Vec<semio_framework_os_spr::MutationEnvelope> = pending.transitions.iter().chain(local.map_or(&[][..], |local| local.envelopes.as_slice())).cloned().collect();
+        let candidates: Vec<semio_os_spr::MutationEnvelope> = pending.transitions.iter().chain(local.map_or(&[][..], |local| local.envelopes.as_slice())).cloned().collect();
         let head = local.map_or_else(|| envelope_viewer_head(&self.envelope), |local| self.viewer_head(&local.head));
         self.prospective_fold_at(&candidates, &head)
     }
@@ -349,7 +349,7 @@ where
     //#region 🔖️Supersede
     /// 🪴️ Authors into `envelopes` the commit of every pending edit (when one is pending or no checkpoint exists) and a
     /// `Branch` of `name` at the resulting head, answering the new alternative's id.
-    pub async fn author_head_alternative(&self, name: String, clock: &mut HybridLogicalTimestamp, envelopes: &mut Vec<semio_framework_os_spr::MutationEnvelope>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    pub async fn author_head_alternative(&self, name: String, clock: &mut HybridLogicalTimestamp, envelopes: &mut Vec<semio_os_spr::MutationEnvelope>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         let pending = uncommitted_edit_ids(&self.envelope, &*self.applied_edit_ids).await;
         let checkpoint_id = if !pending.is_empty() || self.envelope.vcs.checkpoints.is_empty() {
             if self.applied_edit_ids.is_empty() {
@@ -371,17 +371,17 @@ where
             None => self.checkpoint_origin(&checkpoint_id).into_iter().collect(),
         };
         clock.tick(now_ms());
-        envelopes.push(self.transition_envelope(&semio_framework_os_spr::HistoryTransition::Branch { alternative_id: alternative_id.clone(), name, checkpoint_id }, dependencies, Vec::new(), *clock));
+        envelopes.push(self.transition_envelope(&semio_os_spr::HistoryTransition::Branch { alternative_id: alternative_id.clone(), name, checkpoint_id }, dependencies, Vec::new(), *clock));
         Ok(alternative_id)
     }
 
     /// 🔮️ The history fold of the event log with `candidates` joined, touching nothing.
-    pub fn prospective_fold(&self, candidates: &[semio_framework_os_spr::MutationEnvelope]) -> Result<semio_framework_os_spr::HistoryFold, VcsError> {
+    pub fn prospective_fold(&self, candidates: &[semio_os_spr::MutationEnvelope]) -> Result<semio_os_spr::HistoryFold, VcsError> {
         self.prospective_fold_at(candidates, &envelope_viewer_head(&self.envelope))
     }
 
     /// 🧐️ [`Self::prospective_fold`] for `head` instead of this replica's head.
-    pub fn prospective_fold_at(&self, candidates: &[semio_framework_os_spr::MutationEnvelope], head: &semio_framework_os_spr::ViewerHead) -> Result<semio_framework_os_spr::HistoryFold, VcsError> {
+    pub fn prospective_fold_at(&self, candidates: &[semio_os_spr::MutationEnvelope], head: &semio_os_spr::ViewerHead) -> Result<semio_os_spr::HistoryFold, VcsError> {
         let mut transitions:Vec<_> = self.envelope.transitions.iter().cloned().collect();
         transitions.extend(candidates.iter().cloned());
         fold_event_log::<P, Mutation>(&self.envelope.id, &self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts, head)
@@ -410,13 +410,13 @@ where
     }
 
     /// 🧿️ The fold head of `(line, checkpoint)`: an absent line (or the trunk's id) is the trunk.
-    pub fn viewer_head(&self, (line, checkpoint): &(Option<String>, Option<String>)) -> semio_framework_os_spr::ViewerHead {
+    pub fn viewer_head(&self, (line, checkpoint): &(Option<String>, Option<String>)) -> semio_os_spr::ViewerHead {
         let trunk = self.trunk_alternative_id();
-        semio_framework_os_spr::ViewerHead { line_id: line.clone().filter(|line| *line != trunk).unwrap_or(trunk), checkpoint_id: checkpoint.clone() }
+        semio_os_spr::ViewerHead { line_id: line.clone().filter(|line| *line != trunk).unwrap_or(trunk), checkpoint_id: checkpoint.clone() }
     }
 
     /// 🚩️ The `Commit` transition (with its dependencies and new checkpoint id) grouping every applied-but-uncommitted edit.
-    pub async fn pending_checkpoint_transition(&self, message: Option<String>, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(semio_framework_os_spr::HistoryTransition, Vec<MutationId>, String), VcsError> {
+    pub async fn pending_checkpoint_transition(&self, message: Option<String>, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(semio_os_spr::HistoryTransition, Vec<MutationId>, String), VcsError> {
         let pending = uncommitted_edit_ids(&self.envelope, &*self.applied_edit_ids).await;
         if pending.is_empty() {
             return Err(VcsError::ValidationFailed(EMPTY_CHECKPOINT_MESSAGE.to_string()));
@@ -436,17 +436,17 @@ where
         let mut dependencies = mutation_ids.clone();
         dependencies.extend(parent_id.as_deref().and_then(|parent_id| self.checkpoint_origin(parent_id)));
         dependencies.extend(self.envelope.active_alternative_id.as_deref().and_then(|line_id| self.alternative_origin(line_id)));
-        let authors = authors.into_iter().map(|author| semio_framework_os_spr::Author { id: author.id, name: author.name, avatar: author.avatar }).collect();
+        let authors = authors.into_iter().map(|author| semio_os_spr::Author { id: author.id, name: author.name, avatar: author.avatar }).collect();
         let checkpoint =
-            semio_framework_os_spr::TransitionCheckpoint { checkpoint_id: checkpoint_id.clone(), parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp, line_id: self.envelope.active_alternative_id.clone() };
-        Ok((semio_framework_os_spr::HistoryTransition::Commit(checkpoint), dependencies, checkpoint_id))
+            semio_os_spr::TransitionCheckpoint { checkpoint_id: checkpoint_id.clone(), parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp, line_id: self.envelope.active_alternative_id.clone() };
+        Ok((semio_os_spr::HistoryTransition::Commit(checkpoint), dependencies, checkpoint_id))
     }
 
     //#endregion 🔖️HistoryLane
     /// 📸️ The whole document as its persisted `pack` (genesis) + `spr` (event log) bytes —
     /// for export and archive persistence; replicas never exchange it (they exchange events).
     pub async fn snapshot_pack(&self) -> Result<ArtifactPackFiles, VcsError>
-    where P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
+    where P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot,
     {
         print_document_pack(&self.envelope).await
     }
@@ -467,7 +467,7 @@ where
     /// 📜️ Every event of this replica's log as causal envelopes: each edit's operations in
     /// ledger order, then every history transition in HLC order. An open tool transaction's edit is not in the shared log
     /// before its commit.
-    pub fn event_log(&self) -> Result<Vec<semio_framework_os_spr::MutationEnvelope>, VcsError> {
+    pub fn event_log(&self) -> Result<Vec<semio_os_spr::MutationEnvelope>, VcsError> {
         let mut events = Vec::new();
         for edit in self.envelope.vcs.edits.iter().filter(|edit| self.envelope.holds_committed_edit(&edit.id)) {
             events.extend(self.operation_envelopes(edit)?);
@@ -480,7 +480,7 @@ where
     /// no transport of its own, so its composing parent announces this on the member's behalf under the
     /// member's `(slot, child_id)` lane the moment the parent attaches a backbone.
     pub fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> {
-        Ok(semio_framework_os_spr::encode_envelopes(&self.event_log()?))
+        Ok(semio_os_spr::encode_envelopes(&self.event_log()?))
     }
 
     /// 📤️ Seeds this replica's TAIL edit into its own causal dag and hands back exactly the
@@ -490,33 +490,33 @@ where
         let Some(edit) = self.envelope.vcs.edits.last().filter(|edit| self.envelope.holds_committed_edit(&edit.id)) else { return Ok(Vec::new()) };
         let document_id = ArtifactId(self.envelope.id.clone());
         let schema = SchemaId(self.envelope.schema.clone());
-        let op_envelopes = semio_framework_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
+        let op_envelopes = semio_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
         for op_envelope in &op_envelopes {
             match self.dag.seed_applied(op_envelope.mutation_id.clone()) {
                 Ok(()) => {}
-                Err(rejected) if rejected.error == semio_framework_os_spr::MutationDagError::Duplicate => {}
+                Err(rejected) if rejected.error == semio_os_spr::MutationDagError::Duplicate => {}
                 Err(rejected) => return Err(VcsError::ValidationFailed(rejected.error.to_string())),
             }
         }
-        Ok(semio_framework_os_spr::encode_envelopes(&op_envelopes))
+        Ok(semio_os_spr::encode_envelopes(&op_envelopes))
     }
 
     pub fn backbone_ref(&self) -> Option<&ArtifactBackboneRef> {
         self.envelope.backbone.as_ref()
     }
 
-    pub fn assert_equivalent_remote_envelope(&self, existing: &Edit<Mutation>, incoming: &semio_framework_os_spr::MutationEnvelope) -> Result<(), VcsError> {
+    pub fn assert_equivalent_remote_envelope(&self, existing: &Edit<Mutation>, incoming: &semio_os_spr::MutationEnvelope) -> Result<(), VcsError> {
         let document_id = ArtifactId(self.envelope.id.clone());
         let schema = SchemaId(self.envelope.schema.clone());
-        let established = semio_framework_os_spr::mutation_envelope_from_edit::<P, Mutation>(existing, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
+        let established = semio_os_spr::mutation_envelope_from_edit::<P, Mutation>(existing, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
         if established.len() == 1 && established.first().is_some_and(|candidate| Self::same_operation_identity_and_payload(candidate, incoming)) {
             return Ok(());
         }
         Err(VcsError::ValidationFailed(format!("remote mutation id {} conflicts with its established payload", incoming.mutation_id.0)))
     }
 
-    pub fn assert_equivalent_remote_mutation(&self, incoming: &semio_framework_os_spr::MutationEnvelope) -> Result<(), VcsError> {
-        if semio_framework_os_spr::is_history_transition(incoming) {
+    pub fn assert_equivalent_remote_mutation(&self, incoming: &semio_os_spr::MutationEnvelope) -> Result<(), VcsError> {
+        if semio_os_spr::is_history_transition(incoming) {
             return match self.envelope.transitions.iter().find(|known| known.mutation_id == incoming.mutation_id) {
                 Some(known) if Self::same_operation_identity_and_payload(known, incoming) => Ok(()),
                 Some(_) => Err(VcsError::ValidationFailed(format!("remote transition {} conflicts with its established payload", incoming.mutation_id.0))),
@@ -526,7 +526,7 @@ where
         let document_id = ArtifactId(self.envelope.id.clone());
         let schema = SchemaId(self.envelope.schema.clone());
         for edit in &self.envelope.vcs.edits {
-            for established in semio_framework_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))? {
+            for established in semio_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))? {
                 if established.mutation_id == incoming.mutation_id {
                     return if Self::same_operation_identity_and_payload(&established, incoming) { Ok(()) } else { Err(VcsError::ValidationFailed(format!("remote mutation id {} conflicts with its established payload", incoming.mutation_id.0))) };
                 }
@@ -537,7 +537,7 @@ where
 
     /// 🚫️async: E1 pure field comparison, consumed only through `is_some_and`/`Iterator::all`
     /// sync closures — see R9.
-    pub fn same_operation_identity_and_payload(left: &semio_framework_os_spr::MutationEnvelope, right: &semio_framework_os_spr::MutationEnvelope) -> bool {
+    pub fn same_operation_identity_and_payload(left: &semio_os_spr::MutationEnvelope, right: &semio_os_spr::MutationEnvelope) -> bool {
         left.mutation_id == right.mutation_id && left.document_id == right.document_id && left.diff.schema == right.diff.schema && left.diff.payload == right.diff.payload
     }
 

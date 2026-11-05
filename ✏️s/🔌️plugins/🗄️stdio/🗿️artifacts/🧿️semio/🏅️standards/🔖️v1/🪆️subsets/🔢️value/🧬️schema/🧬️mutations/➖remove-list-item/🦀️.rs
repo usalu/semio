@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "list-item", kind: "remove-list-item", record: "RemoveListItem" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove list item", "Listenelement entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove list item", "Listenelement entfernen")
     }
 
     fn target(&self) -> Vec<String> {

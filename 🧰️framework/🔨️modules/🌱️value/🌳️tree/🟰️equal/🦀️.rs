@@ -1,5 +1,7 @@
 //! 🟰️ Typed equality reads original fields directly and retains every funded traversal frontier.
-use crate::{RetirementDemand,ValueError,ValueRefusalKind,RetainedEqualityElement,RetainedSliceEquality,retirement::RetireOwned,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use crate::{RetirementDemand,ValueError,ValueRefusalKind,RetainedEqualityElement,RetainedSliceEquality,retirement::RetireOwned};
+use semio_framework_value_clone_source::{RetainedCloneRef,RetainedCloneBinding};
+use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits};
 use std::mem::size_of;
 
 /// 🌳️ The original immutable caller keeps sources stable; constructors inspect no source and allocate no payload/frontier.

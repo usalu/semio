@@ -18,7 +18,7 @@ pub fn generation3d_view_action(action: &str, args: Option<semio_framework::DslV
 pub(super) const GENERATION3D_VIEW_PREVIEW_KINDS: &[&str] = &[preview::WINDOW_KIND_ID];
 
 /// 🪟️ Every attached viewer preview window, off the shell's trusted `ViewModel` roster.
-pub(super) fn generation3d_view_preview_windows(view: Option<&semio_framework_plugin::ViewModel>) -> Vec<(&str, &'static str)> {
+pub(super) fn generation3d_view_preview_windows(view: Option<&semio_plugin::ViewModel>) -> Vec<(&str, &'static str)> {
     preview_eval::attached_preview_windows(view, GENERATION3D_VIEW_PREVIEW_KINDS)
 }
 
@@ -130,7 +130,7 @@ impl preview_eval::PreviewEvalRunOwner for Generation3dViewInstanceOperationOwne
     }
 }
 
-impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dViewInstanceOperationOwner {
+impl semio_plugin::ArtifactInstanceOperationOwner for Generation3dViewInstanceOperationOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
@@ -149,8 +149,8 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dView
     /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
     /// until `begin_close`, and reporting that from the live maintenance ladder spends the
     /// runtime's zero-progress credit every idle turn.
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
-        use semio_framework_plugin::PluginLifecycleStep;
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
+        use semio_plugin::PluginLifecycleStep;
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         if !self.closing {
             return Ok(PluginLifecycleStep::Complete(Default::default()));
@@ -174,7 +174,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dView
         Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         self.closing = true;
         if let Some(session) = self.eval_session.as_mut() {
             session.begin_close();
@@ -189,7 +189,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dView
 //#endregion 🔖️InstanceOperationOwner
 
 //#region 🔖️Command
-semio_framework_plugin::view_commands! {
+semio_plugin::view_commands! {
     /// 👁️ `Generation3dViewer::Command` — the SOLE dispatch surface for the read-only surface's own
     /// behavior, covering EVERY declared action. Row order is the binary variant ordinal: appending
     /// is safe, reordering is a wire-format break. `dispatch` returns `ViewEmit`, so no row of this

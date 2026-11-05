@@ -10,25 +10,25 @@ use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.docx@ecma-376/transitional`. Duplicated (not imported) in the
@@ -56,7 +56,7 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(DocxTransition
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build_set_page_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, Fault> {
     semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::preparation::prepare_set_run_text(snapshot, address, text)
-        .map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))
+        .map_err(|message| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))
 }
 
 fn build_set_run_formatting_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, bold: bool, italic: bool, underline: bool) -> Result<Option<DocxMutation>, Fault> {
@@ -64,7 +64,7 @@ fn build_set_run_formatting_mutation(snapshot: &DocxSnapshot, address: &DocxXmlA
 }
 
 fn docx_action_fault(code: &'static str, message: impl Into<String>) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message)
 }
 
 fn required_docx_xml_address(args: Option<&semio_framework_value::DslValue>) -> Result<DocxXmlAddress, Fault> {
@@ -131,12 +131,12 @@ impl ArtifactEditor for DocxTransitionalEditor {
     const DOCUMENT_SCHEMA: &'static str = STDIO_DOCX_DOCUMENT_SCHEMA;
 
     /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec {
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec {
             format_kind: "s.stdio.docx@ecma-376",
             extension: ".docx",
             media_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -144,12 +144,12 @@ impl ArtifactEditor for DocxTransitionalEditor {
         })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
@@ -182,11 +182,11 @@ impl ArtifactEditor for DocxTransitionalEditor {
                 italic: semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::required_docx_bool_argument(args, "italic")?,
                 underline: semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::required_docx_bool_argument(args, "underline")?,
             }),
-            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.unhandled-action"), format!("unknown docx editor action '{other}'"))),
+            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.docx.unhandled-action"), format!("unknown docx editor action '{other}'"))),
         })
     }
 
-    fn reference_birth()->Option<fn()->Result<DocxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<DocxSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
             body: vec![semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default())],
             styles: Vec::new(),
@@ -199,8 +199,8 @@ impl ArtifactEditor for DocxTransitionalEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -217,20 +217,20 @@ impl ArtifactEditor for DocxTransitionalEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render_windowed(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.docx@ecma-376/transitional#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -272,7 +272,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_docx_transitional_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_docx_transitional_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(DOCX_TRANSITIONAL_EDITOR_DIALECT)
         .document(["semio", "stdio", "docx"])
         .icon_id("file-text")

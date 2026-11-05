@@ -7,16 +7,16 @@ use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRAR
 use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::Buildable;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::HasBase;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_ui_locale::Label;
+use semio_plugin::Buildable;
+use semio_plugin::BuiltNode;
+use semio_plugin::HasBase;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_ui_locale::Label;
 
 //#region 🔖️Constants
 /// 🪪️ The unique id of this panel tab, a child of the framework catalogue tab.
@@ -56,7 +56,7 @@ fn roster(snapshot: &ModelSnapshot, family: &'static EntityKind) -> Vec<Row> {
 }
 
 fn entry_row(snapshot: &ModelSnapshot, family: &EntityKind, id: &str) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_ui_contract::tree_item(ui_label(&(family.name)(snapshot, id).unwrap_or_else(|| id.to_string()))?)
+    semio_ui_contract::tree_item(ui_label(&(family.name)(snapshot, id).unwrap_or_else(|| id.to_string()))?)
         .try_id(id)
         .map_err(|_| ui_capacity_error())?
         .icon(ui_text(family.icon)?)

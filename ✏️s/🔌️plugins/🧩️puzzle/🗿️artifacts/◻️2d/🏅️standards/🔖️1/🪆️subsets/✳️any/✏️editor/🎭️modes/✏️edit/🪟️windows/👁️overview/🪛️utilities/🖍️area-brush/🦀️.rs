@@ -6,11 +6,11 @@
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::puzzle2d_action;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowMeasure;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowMeasure;
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 pub const UTILITY_ID: &str = "areaBrush";
@@ -33,7 +33,7 @@ pub fn extent_measures(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -
         loading: None,
         waiting: None,
         disabled: None,
-        on_change: puzzle2d_action("setAreaBrushSize", Some(semio_framework_plugin::dsl_value!({ "axis": axis }))),
+        on_change: puzzle2d_action("setAreaBrushSize", Some(semio_plugin::dsl_value!({ "axis": axis }))),
     };
     vec![axis_slider("w", labels.width, runtime.area_brush_width), axis_slider("h", labels.height, runtime.area_brush_height)]
 }

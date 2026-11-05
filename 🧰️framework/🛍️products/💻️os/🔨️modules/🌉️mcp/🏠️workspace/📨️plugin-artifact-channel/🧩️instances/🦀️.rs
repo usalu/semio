@@ -65,12 +65,12 @@ impl PluginArtifactChannel {
             .collect();
         let budget = headless_open_budget();
         let mut guest = semio_framework_async::block_on(self.runtime.instantiate(&self.compiled, actor, &caps, &budget)).map_err(|error| match error {
-            semio_framework_plugin_guest_contract::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
+            semio_plugin_guest_contract::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
             other => Self::not_wired("instantiate", other),
         })?;
         let assets = find_repo_root()
             .map_err(|error| Fault { code: "package-assets.root".to_string(), message: error.to_string() })
-            .and_then(|root| semio_framework_plugin_host::package_assets::package_file_assets(&root, &self.descriptor.assets).map_err(|message| Fault { code: "package-assets.refused".to_string(), message }))?;
+            .and_then(|root| semio_plugin_host::package_assets::package_file_assets(&root, &self.descriptor.assets).map_err(|message| Fault { code: "package-assets.refused".to_string(), message }))?;
         let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
@@ -93,10 +93,10 @@ impl PluginArtifactChannel {
                         return Ok(());
                     }
                 }
-                Err(error) if semio_framework_plugin_host::retryable_lifecycle_turn(&error, &events) => {
+                Err(error) if semio_plugin_host::retryable_lifecycle_turn(&error, &events) => {
                     owed.splice(0..0, events);
                 }
-                Err(error @ (semio_framework_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_framework_plugin_guest_contract::TurnFault::FuelExhausted)) => {
+                Err(error @ (semio_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_plugin_guest_contract::TurnFault::FuelExhausted)) => {
                     semio_framework_async::block_on(self.runtime.drop_instance(guest));
                     return Err(Fault { code: "budget.exceeded".to_string(), message: format!("InstanceOpen exceeded one turn's ceiling ({error}); the guest never came up") });
                 }

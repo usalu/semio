@@ -1,5 +1,5 @@
 //! 🧳️ One original borrowed payload becomes bounded UI values through existing arena ownership.
-use semio_framework_ui_contract::{UiMapBuilder,UiListBuilder,UiText,UiValue,UiTypedRetirementCursor};
+use semio_ui_contract::{UiMapBuilder,UiListBuilder,UiText,UiValue,UiTypedRetirementCursor};
 use semio_framework_value::{DslValue,Number,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use std::mem::{ManuallyDrop,size_of};
@@ -65,7 +65,7 @@ impl StagedPayloadCursor{
             StagedPayloadKind::Null=>UiValue::Null,StagedPayloadKind::Bool(value)=>UiValue::Bool(value),StagedPayloadKind::Number(value)if value.is_finite()&&! (value==0.0&&value.is_sign_negative())=>UiValue::Number(value),
             StagedPayloadKind::Text(value)=>UiValue::Text(UiText::try_from_str(value).ok_or_else(resource)?),
             StagedPayloadKind::Map(len)|StagedPayloadKind::List(len)=>{
-                if self.depth==STAGED_PAYLOAD_DEPTH||len>semio_framework_ui_contract::UI_VALUE_MAX_ITEMS||matches!(node.value,StagedPayloadKind::Map(_))&&len>STAGED_PAYLOAD_MAP_MEMBERS{return Err(resource());}
+                if self.depth==STAGED_PAYLOAD_DEPTH||len>semio_ui_contract::UI_VALUE_MAX_ITEMS||matches!(node.value,StagedPayloadKind::Map(_))&&len>STAGED_PAYLOAD_MAP_MEMBERS{return Err(resource());}
                 let collection=match node.value{StagedPayloadKind::Map(_)=>UiMapBuilder::try_new_initialized().map_err(|reason|ValueError::literal(ValueRefusalKind::UnsupportedOwner,reason))?.map(|value|Collection::Map(ManuallyDrop::new(value))),_=>UiListBuilder::try_new_initialized().map_err(|reason|ValueError::literal(ValueRefusalKind::UnsupportedOwner,reason))?.map(|value|Collection::List(ManuallyDrop::new(value)))};
                 let Some(collection)=collection else{return Ok(false)};self.frames[self.depth]=Some(Frame{collection,parent_key:key,next:0,len});self.depth+=1;return Ok(true);
             },

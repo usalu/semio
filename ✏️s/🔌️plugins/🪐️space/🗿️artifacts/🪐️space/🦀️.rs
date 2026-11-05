@@ -6,9 +6,9 @@
 //! real editor/viewer UI and any composer wiring).
 
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
 #[path = "🫀️index/🦀️.rs"]
@@ -25,8 +25,8 @@ pub use semio_s_artifact_space_space_schema::{SPACE_INDEX_DIALECT, S_SPACE_INDEX
 /// `.inferences(...)`/`.composers(...)` calls this wave: the index has no bespoke text inference and no
 /// stdio import/export composer this ticket needs (C4 only asks for the snapshot + the four mutations +
 /// the projection helper).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.space.space")?)
         .capability(
@@ -48,10 +48,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.space's typed runtime declaration.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::sspace_index_schema_descriptor())
-        .document_codec::<semio_framework_plugin::EditorApp<editor::space_index::SpaceIndexEditor>>()
+        .document_codec::<semio_plugin::EditorApp<editor::space_index::SpaceIndexEditor>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

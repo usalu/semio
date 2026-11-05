@@ -1,5 +1,5 @@
 //! ⚖️ Runtime proof that the DAG parent's document lane stays an explicit fail-closed denial: its mutation vocabulary is uninhabited, every graph edit is a child-lane leaf, so no document preparation factory exists to bind.
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_s_artifact_dag_dag::editor::dag::DagPlayApp;
 
 /// 🕳️ The uninhabited parent vocabulary supplies no document preparation factory.

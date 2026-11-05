@@ -1,5 +1,5 @@
 //! 🧪️ Actual original gesture headers, aliases and private decisions obey independent grants.
-use semio_framework_plugin_decl_views::gesture_contract::{GestureCapture, GestureSlot};
+use semio_plugin_decl_views::gesture_contract::{GestureCapture, GestureSlot};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_shared_issuance::SealedShared;

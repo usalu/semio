@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorTestFactor w
         record: "ChangedAnchorTestFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Correlation factor ξ_a of the anchor", "Anker: Korrelationsbeiwert ξ_a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Correlation factor ξ_a of the anchor", "Anker: Korrelationsbeiwert ξ_a ändern")
     }
 }
 

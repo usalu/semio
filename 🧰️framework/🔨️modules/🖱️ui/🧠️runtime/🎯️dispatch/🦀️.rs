@@ -18,7 +18,7 @@
 //! below is plain sync by owner ruling U1, which supersedes this program's general async-everything
 //! default for exactly this crate.
 
-use semio_framework_ui_runtime_exchange::Command;
+use semio_ui_runtime_exchange::Command;
 
 //#region 🔖️Intent
 

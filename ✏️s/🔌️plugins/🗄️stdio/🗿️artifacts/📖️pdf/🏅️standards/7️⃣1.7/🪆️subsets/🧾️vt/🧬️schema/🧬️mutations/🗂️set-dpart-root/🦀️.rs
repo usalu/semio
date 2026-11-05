@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dpart-root", kind: "set-dpart-root", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT document partition {}", self.job), &format!("PDF/VT-Dokumentpartition {} setzen", self.job))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT document partition {}", self.job), &format!("PDF/VT-Dokumentpartition {} setzen", self.job))
     }
 
     fn target(&self) -> Vec<String> {

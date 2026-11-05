@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmMaterial 
         record: "ChangeDiaphragmMaterial",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Diaphragm material (concrete, timber, steel-deck)", "Scheibenwerkstoff (Beton, Holz, Stahlprofiltafel) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Diaphragm material (concrete, timber, steel-deck)", "Scheibenwerkstoff (Beton, Holz, Stahlprofiltafel) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-material".into()]

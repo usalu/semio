@@ -18,7 +18,7 @@ if (segments[0] === "framework-flow-physical-retirement") {
     if (segments[1] === "native") {
       const { runCargo } = await import("../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "ordered_physical_retirement_", "--", "--nocapture", "--test-threads=1"], context.repoRoot);
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel-neural-engine", "--lib", "neural_physical_retirement_", "--", "--nocapture", "--test-threads=1"], context.repoRoot);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel-neural-engine", "--lib", "neural_physical_retirement_", "--", "--nocapture", "--test-threads=1"], context.repoRoot);
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-artifact-flow-flow-copy", "--lib", "flow_physical_retirement_", "--", "--nocapture", "--test-threads=1"], context.repoRoot);
     } else {
       flowTypedRetirementSelfTests();

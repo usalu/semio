@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::WindowTransientOwner;
+use semio_plugin::WindowTransientOwner;
 
 /// ⚖️ LAW: the owner is keyed by THIS window kind — a tick addressed at any other kind can never
 /// capture this authority, which is what makes the addressed chain refuse a wrong-window dispatch

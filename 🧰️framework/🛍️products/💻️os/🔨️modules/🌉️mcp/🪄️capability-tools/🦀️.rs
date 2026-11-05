@@ -1,8 +1,8 @@
 //! 🪄️ Capability tools of the catalog crate: Capability catalog types and compiler, deterministic search, conformance and plugin descriptor discovery.
 
 use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityOwner};
-use semio_framework_os_mcp_foundation::reports::SearchHit;
-use semio_framework_os_mcp_wire::protocol::Tool;
+use semio_os_mcp_foundation::reports::SearchHit;
+use semio_os_mcp_wire::protocol::Tool;
 
 //#region 🔖️Tools
 

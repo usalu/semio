@@ -1,8 +1,8 @@
 //! 🏷️ Typed and host action producers share the same original bounded tag capture.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_instance_extension::InstanceExtension;
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::{ToolTag,OriginalToolTagCapture,OriginalToolTagSource,OriginalToolTagKind,OriginalToolWindow};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_instance_extension::InstanceExtension;
+use semio_plugin_tool_run::tool_jobs_tool_machine::{ToolTag,OriginalToolTagCapture,OriginalToolTagSource,OriginalToolTagKind,OriginalToolWindow};
 use semio_framework_tool_machine::{TypingCommit,ToolAbortReason,SCRUB_GESTURE_ARG,SCRUB_COMMIT_ARG,SCRUB_ABORT_ARG,TYPING_BUFFER_ARG,TYPING_COMMIT_ARG};
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_job::{StepContext,OriginalTurnFailure,close_original_retained_step};

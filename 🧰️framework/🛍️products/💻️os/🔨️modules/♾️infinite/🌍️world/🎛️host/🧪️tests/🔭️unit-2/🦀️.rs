@@ -1,37 +1,37 @@
 //! 🧪️ host tests (🔭️unit-2): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::{tool_run_trace, TRANSLATE_SELECTION_ACTION_ID, World3dBuildContext, WORLD_INTERACTION_OBJECT_CAPACITY, world_mesh_ownership_grant, world_reference_width, world_scene_raster_pool, WorldCancelReason, WorldCursorWakeAuthority, WorldDrawRebuildDescriptor, WorldDrawRebuildStep, WorldDrawRegistry, WorldInteractionIntent, WorldInteractionObjectKind, WorldInteractionPhase, WorldInteractionStep, WorldReferenceRecord, WorldSceneRaster, WorldTerrainStyle};
-use semio_framework_os_infinite_world_components::{GumballHandle, set_world3d_declared_actions, world_mesh_component_id, WorldFaceOverlayMeshCursor, WorldFaceOverlayMeshStep, WorldFaceOverlayScan, WorldFaceOverlayScanStep, WorldPlaceholderOwner};
-use semio_framework_os_infinite_world_cursors::{live_world3d_mesh_version, resolved_domain_granularity_id, resolved_domain_id, WORLD_INTERACTION_DOMAIN_ID, WORLD_ITEM_GRANULARITY_ID, WorldComponentKind, WorldComponentMarqueePublishJob, WorldComponentPickCursor, WorldComponentPickPurpose, WorldGumballCommitJob, WorldGumballGesture, WorldGumballPhase, WorldGumballPickCursor, WorldInteractionAuthorityStep, WorldMarqueeGesture, WorldMarqueePickCursor, WorldMarqueeResult, WorldObjectPickCursor, WorldObjectPickPurpose, WorldRayPickCursor, WorldRayPickPurpose};
-use semio_framework_os_infinite_world_scene::{apply_terrain_style_if_changed_state, apply_world3d_terrain_tile_bytes, environment_light_dir, GUMBALL_PLANE_MESH, offer_missing_mesh_fetches, parse_color, reset_world3d_brush_mesh_registry, retire_cancelled_world3d_asset_step, return_world3d_asset, scene_lod, step_world3d_brush_mesh_announce, step_world3d_terrain_retirement, sync_world3d_brush_mesh_feedback, take_next_world3d_asset, terrain_tile_mesh_key, terrain_tile_url, world3d_brush_mesh_announce_pending, WORLD_BRUSH_MESH_MAX_PAGES, WorldAssetRequestKind, WorldTerrainMeshPublicationStep};
+use semio_os_infinite_world_model::{tool_run_trace, TRANSLATE_SELECTION_ACTION_ID, World3dBuildContext, WORLD_INTERACTION_OBJECT_CAPACITY, world_mesh_ownership_grant, world_reference_width, world_scene_raster_pool, WorldCancelReason, WorldCursorWakeAuthority, WorldDrawRebuildDescriptor, WorldDrawRebuildStep, WorldDrawRegistry, WorldInteractionIntent, WorldInteractionObjectKind, WorldInteractionPhase, WorldInteractionStep, WorldReferenceRecord, WorldSceneRaster, WorldTerrainStyle};
+use semio_os_infinite_world_components::{GumballHandle, set_world3d_declared_actions, world_mesh_component_id, WorldFaceOverlayMeshCursor, WorldFaceOverlayMeshStep, WorldFaceOverlayScan, WorldFaceOverlayScanStep, WorldPlaceholderOwner};
+use semio_os_infinite_world_cursors::{live_world3d_mesh_version, resolved_domain_granularity_id, resolved_domain_id, WORLD_INTERACTION_DOMAIN_ID, WORLD_ITEM_GRANULARITY_ID, WorldComponentKind, WorldComponentMarqueePublishJob, WorldComponentPickCursor, WorldComponentPickPurpose, WorldGumballCommitJob, WorldGumballGesture, WorldGumballPhase, WorldGumballPickCursor, WorldInteractionAuthorityStep, WorldMarqueeGesture, WorldMarqueePickCursor, WorldMarqueeResult, WorldObjectPickCursor, WorldObjectPickPurpose, WorldRayPickCursor, WorldRayPickPurpose};
+use semio_os_infinite_world_scene::{apply_terrain_style_if_changed_state, apply_world3d_terrain_tile_bytes, environment_light_dir, GUMBALL_PLANE_MESH, offer_missing_mesh_fetches, parse_color, reset_world3d_brush_mesh_registry, retire_cancelled_world3d_asset_step, return_world3d_asset, scene_lod, step_world3d_brush_mesh_announce, step_world3d_terrain_retirement, sync_world3d_brush_mesh_feedback, take_next_world3d_asset, terrain_tile_mesh_key, terrain_tile_url, world3d_brush_mesh_announce_pending, WORLD_BRUSH_MESH_MAX_PAGES, WorldAssetRequestKind, WorldTerrainMeshPublicationStep};
 use semio_framework_test_fixtures::fixture_text;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use semio_framework_os_infinite_world_scene::{sort_world3d_translucent_material_draws, World3dShadowProfile};
+use semio_os_infinite_world_scene::{sort_world3d_translucent_material_draws, World3dShadowProfile};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_world_scene::TerrainMeshOracleData;
-use semio_framework_os_infinite_world_bridge::{append_component_overlays, append_gumball_geometry, apply_world3d_initial_projection_seed, apply_world3d_projection_spec, begin_world3d_draw_rebuild, begin_world3d_dynamic_retirement, DecodedMeshPaintImage, publish_world3d_asset_mesh_lease, sync_world3d_projection_content_frame, sync_world3d_scene_selection, world3d_draw_rebuild_admit_draw, world3d_draw_rebuild_admit_instance, world3d_draw_rebuild_seal, world3d_draw_rebuild_terminal_is_empty, world3d_live_camera_json, World3dCameraFitStep, World3dSceneBridgeStep, World3dSnapshotApplyStep, world_reference_plane_size, world_reference_visual, WorldInteractionRegistryBuildCursor};
-use semio_framework_os_infinite_world_interaction::{apply_decoded_mesh_paint_image, apply_world_action_preview, begin_world3d_interaction_close, close_world3d_interaction_step, enqueue_world3d_event, publish_world3d_plan_step, resolve_world_context_menu_target, step_world3d_draw_rebuild, step_world3d_terrain, store_mesh, sync_terrain_state, world3d_interaction_terminal_is_empty, world_merge_code};
+use semio_os_infinite_world_scene::TerrainMeshOracleData;
+use semio_os_infinite_world_bridge::{append_component_overlays, append_gumball_geometry, apply_world3d_initial_projection_seed, apply_world3d_projection_spec, begin_world3d_draw_rebuild, begin_world3d_dynamic_retirement, DecodedMeshPaintImage, publish_world3d_asset_mesh_lease, sync_world3d_projection_content_frame, sync_world3d_scene_selection, world3d_draw_rebuild_admit_draw, world3d_draw_rebuild_admit_instance, world3d_draw_rebuild_seal, world3d_draw_rebuild_terminal_is_empty, world3d_live_camera_json, World3dCameraFitStep, World3dSceneBridgeStep, World3dSnapshotApplyStep, world_reference_plane_size, world_reference_visual, WorldInteractionRegistryBuildCursor};
+use semio_os_infinite_world_interaction::{apply_decoded_mesh_paint_image, apply_world_action_preview, begin_world3d_interaction_close, close_world3d_interaction_step, enqueue_world3d_event, publish_world3d_plan_step, resolve_world_context_menu_target, step_world3d_draw_rebuild, step_world3d_terrain, store_mesh, sync_terrain_state, world3d_interaction_terminal_is_empty, world_merge_code};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_world_interaction::{marquee_select_action, pick_hover_action, pick_instance_at, pick_select_action, resolved_item_id};
-use semio_framework_os_infinite_world_host::{apply_runtime_draw_flags, step_world3d_camera_fit, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, sync_world3d_state, world3d_cursor_work_pending, world3d_dynamic_retirement_terminal_is_empty, world3d_tool_run_trace_cursors, World3dState};
+use semio_os_infinite_world_interaction::{marquee_select_action, pick_hover_action, pick_instance_at, pick_select_action, resolved_item_id};
+use semio_os_infinite_world_host::{apply_runtime_draw_flags, step_world3d_camera_fit, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, sync_world3d_state, world3d_cursor_work_pending, world3d_dynamic_retirement_terminal_is_empty, world3d_tool_run_trace_cursors, World3dState};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_world_host::handle_world3d_pointer_button;
+use semio_os_infinite_world_host::handle_world3d_pointer_button;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use semio_framework_os_infinite_world_host::render_world_3d;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_os_infinite_world_host::render_world_3d;
+use semio_ui_declaration::layout::ActionDescriptor;
 use ui_scene::math::{Camera3d, camera_grid_fade_distance, CameraProjection3d, Instance3d, lod_grid_step_world, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneDraw3d, Vec3};
-use semio_framework_ui_wgpu_input::PointerModifiers;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::{Rgba, Theme};
-use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dPresentation, World3dPresentationClear, World3dScene};
+use semio_ui_wgpu_input::PointerModifiers;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::{Rgba, Theme};
+use semio_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dPresentation, World3dPresentationClear, World3dScene};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Mutex;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{SceneMaterialDraw3d, SceneMaterialKind3d, SceneShadowRole3d, SceneViewportMask3d, WORLD_SHADOW_MAP_SIZE};
-#[cfg(test)] use semio_framework_ui_raster_owner::SceneRasterMeshSeal;
+#[cfg(test)] use semio_ui_raster_owner::SceneRasterMeshSeal;
 use semio_framework_tool_run::{ToolRunTraceCursor, ToolRunTraceDelta};
-use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+use semio_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -51,7 +51,7 @@ fn test_scene_raster_lease(width: u32, height: u32, profile: SceneRasterProfile,
     let descriptor = SceneRasterDescriptor { width, height, source_digest: [revision, revision.rotate_left(17)], source_revision: revision, profile, mesh };
     let pool = world_scene_raster_pool();
     let mut writer = None;
-    for _ in 0..=semio_framework_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
+    for _ in 0..=semio_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
         match pool.begin(descriptor, revision, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }) {
             SceneRasterBegin::Writer(candidate) => {
                 writer = Some(candidate);
@@ -74,7 +74,7 @@ fn test_world_scene_raster(width: u32, height: u32, fill: u8) -> WorldSceneRaste
     WorldSceneRaster { identity: lease.identity(), pending: Mutex::new(Some(lease)) }
 }
 
-pub(crate) fn take_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub(crate) fn take_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));

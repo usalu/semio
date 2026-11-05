@@ -14,8 +14,8 @@ pub struct SetProductPlacement {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProductPlacement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "product-placement", kind: "set-product-placement", record: "SetProductPlacement" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set product placement", "Produktplatzierung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set product placement", "Produktplatzierung setzen")
     }
 
     fn target(&self) -> Vec<String> {

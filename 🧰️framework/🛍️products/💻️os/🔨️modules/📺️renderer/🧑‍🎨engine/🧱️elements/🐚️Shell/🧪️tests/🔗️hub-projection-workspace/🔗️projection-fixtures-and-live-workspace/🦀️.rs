@@ -1,7 +1,7 @@
 /// 🔗️ Projection fixtures and live workspace: the hub projection fixture records, the route overlay and summary laws, the resolution band and the live sign-in to the retained workspace.
 
 fn shell() -> ShellState {
-    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
 }
 
 #[derive(Deserialize)]
@@ -34,7 +34,7 @@ fn hub_command_opens_the_route_overlay_without_adding_a_default_dock_tab() {
     assert!(shell.directory.hub_workspace_open);
     assert_eq!(shell.opening.uri_history.get(shell.opening.uri_index).map(String::as_str), Some("/hub"));
     assert!(shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs).iter().any(|id| id == FRAMEWORK_HUB_PANEL_ID), "the overlay keeps its retained body publication");
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_hub_workspace_action(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CLOSE_WORKSPACE, None));
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_hub_workspace_action(semio_renderer_wgpu_hub_workspace::hub_connection::action::CLOSE_WORKSPACE, None));
     assert!(!shell.directory.hub_workspace_open);
 }
 
@@ -126,7 +126,7 @@ fn settle_hub_workspace(shell: &mut ShellState) {
     while !shell.directory.hub_workspace_settled() {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+            let _ = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
             drive(ActionsCtx::of(&mut shell).pump_directory_events());
         }
         #[cfg(target_arch = "wasm32")]
@@ -165,24 +165,24 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
     assert!(shell.directory.hub_workspace_open);
     assert_eq!(shell.directory.hub_workspace.presence(), HubSessionPresence::SignedOut);
     assert_eq!(shell.sync.hub_connection_state(&shell.directory), HubConnectionState::SignedOut);
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin.as_str())]);
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin.as_str())]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
     assert_eq!(shell.directory.hub_workspace.origin(), origin.trim_end_matches('/'));
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", email.as_str())]);
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", password.as_str())]);
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_IN, &[]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", email.as_str())]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", password.as_str())]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_IN, &[]);
     println!("wg6-live sign-in phase={} error={:?} user={:?} display={:?}", shell.directory.hub_workspace.session.phase.as_str(), shell.directory.hub_workspace.session.error, shell.directory.hub_workspace.session.user_id, shell.directory.hub_workspace.display_name);
     assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SignedIn, "error {:?}", shell.directory.hub_workspace.session.error);
     assert!(shell.directory.hub_workspace.password_draft.is_empty(), "the password never outlives its request");
     assert!(shell.directory.hub_workspace.display_name.is_some());
     assert_eq!(shell.sync.hub_connection_state(&shell.directory), HubConnectionState::Online, "a verified session on a reachable hub with nothing attached");
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
     println!("wg6-live spaces phase={} rows={:?}", shell.directory.hub_workspace.phase.as_str(), shell.directory.hub_workspace.rows.iter().map(|row| (row.name.as_str(), row.id.as_str(), row.access.as_str())).collect::<Vec<_>>());
-    assert_eq!(shell.directory.hub_workspace.phase, semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready);
+    assert_eq!(shell.directory.hub_workspace.phase, semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready);
     let created = shell.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).expect("the created space is listed").id.clone();
     for locale in [Locale::En, Locale::De] {
-        let tree = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
+        let tree = semio_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
         let mut spaces = Vec::new();
         hub_attribute_values(&tree, "data-semio-hub-space", &mut spaces);
         let mut phases = Vec::new();
@@ -191,7 +191,7 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
         assert!(spaces.contains(&created), "{locale:?} tree lists the created space");
         assert_eq!(phases, vec![HubSessionPhase::SignedIn.as_str().to_string()]);
     }
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", created.as_str())]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", created.as_str())]);
     println!(
         "wg6-live open space={:?} members={:?} uri={:?}",
         shell.directory.hub_workspace.open_space_id,
@@ -200,7 +200,7 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
     );
     assert_eq!(shell.directory.hub_workspace.open_space_id.as_deref(), Some(created.as_str()));
     assert!(shell.directory.hub_workspace.members.iter().any(|member| member.owner), "the creator is listed as the owner");
-    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
     assert_eq!(shell.directory.hub_workspace.presence(), HubSessionPresence::SignedOut);
     assert!(shell.directory.hub_workspace.rows.is_empty());
 }

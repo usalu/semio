@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_dsl_record::__rt::DecodedFieldOwner;
 use semio_framework_value::FromValue;
-use semio_framework_os_kernel::sqlite_snapshot::{artifact::reconstruct_text,transfer::reserve};
+use semio_os_kernel::sqlite_snapshot::{artifact::reconstruct_text,transfer::reserve};
 #[path="🔍️rows/🦀️.rs"]
 mod rows;
 fn retire_header(value:LasHeader){<String as FromValue>::retire_decoded(value.system_identifier);<String as FromValue>::retire_decoded(value.generating_software)}

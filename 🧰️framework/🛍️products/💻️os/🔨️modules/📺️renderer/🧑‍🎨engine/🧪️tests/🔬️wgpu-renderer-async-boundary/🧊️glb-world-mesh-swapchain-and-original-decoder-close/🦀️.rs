@@ -114,7 +114,7 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
         begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response, step_world3d_dynamic_retirement,
         take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
     };
-    let glb: &[u8] = semio_framework_os_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let glb: &[u8] = semio_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let url = "/mesh/🧊️capsule_J.glb";
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     reserve_world3d_asset_request(&mut state.session, &mut state.assets, WorldAssetRequestKind::Glb, url).unwrap();
@@ -291,7 +291,7 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
         "the frame that created the bridge is retired one bounded unit before external ownership detaches the surface"
     );
 
-    let frame_job = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+    let frame_job = semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
     let transient = frame_job.split("pub fn retire_for_component_surface_close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{").nth(1).expect("the reusable frame handoff");
     let transient = &transient[..transient.find("fn retire_original_frame_step").expect("the shared original retirement ladder")];
     assert!(transient.contains("self.retire_original_frame_step(cx)?&&!self.has_live_session()"), "the same generation may be readmitted once the original ladder drained");
@@ -347,9 +347,9 @@ fn original_engine_packet_pages_require_actual_birth_and_release_grants() {
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(owner.terminal_is_empty());
     assert_eq!(fixture["enginePacketBacking"]["pageSlots"], FRAME_ENGINE_PACKET_PAGE_SLOTS);
-    let layout = std::alloc::Layout::array::<Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>>(FRAME_ENGINE_PACKET_PAGE_SLOTS).unwrap();
+    let layout = std::alloc::Layout::array::<Option<semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>>(FRAME_ENGINE_PACKET_PAGE_SLOTS).unwrap();
     assert!(layout.size() <= grant.maximum_capacity_bytes);
-    let mut caller = semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(grant);
+    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(grant);
     for refused in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_capacity_bytes: layout.size() - 1, ..grant }, RetainedCloneGrant { maximum_copy_bytes: layout.size() - 1, ..grant }] {
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(|cx|cx.with_retained_loan(refused, |cx|owner.prepare_step(cx))));
         assert_eq!(step.unwrap(), false);
@@ -402,7 +402,7 @@ fn cancelled_dispatch_future_preserves_original_interaction_event_and_paid_sourc
     let runtime=native_reference_runtime();let interaction=frame_maintenance_test_owner(511,0).interaction.take().unwrap();assert!(runtime.reserve_interaction_future());
     let mut text=String::with_capacity(law["capacity"].as_u64().unwrap()as usize);text.push_str(law["text"].as_str().unwrap());let pointer=text.as_ptr();let capacity=text.capacity();
     let mut events=ui_host::DrainedEvents::default();events.discrete[0]=Some(ui_host::DiscreteEvent{event:ui_render::DispatchEvent::Paste{text},generation:ui_host::InputGeneration(1)});
-    let grant=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(grant);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();let mut cursor=RuntimeDispatchCursor::new(events,original);
+    let grant=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(grant);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();let mut cursor=RuntimeDispatchCursor::new(events,original);
     caller.turn(|cx|{cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).unwrap();cx.consume_fuel(1);cursor.inflight=cursor.take_next();});
     let future=RuntimeDispatchReturn{mailbox:runtime.clone(),revision:511,cursor:Some(cursor),interaction:Some(interaction)}.run();drop(future);
     let mut completion=runtime.0.completions.lock().unwrap().take_at(0).expect("cancellation returns exact reserved custody");let RuntimeApply::ResumeDispatch{interaction,cursor}=&mut completion.apply else{panic!("original dispatch return")};assert!(interaction.is_some());let mut cursor=cursor.take().expect("original cursor remains owned");

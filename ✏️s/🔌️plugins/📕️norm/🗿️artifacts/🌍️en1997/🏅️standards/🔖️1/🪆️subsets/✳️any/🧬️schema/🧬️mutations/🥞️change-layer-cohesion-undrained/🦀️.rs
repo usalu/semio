@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerCohesionUndra
         record: "ChangedLayerCohesionUndrained",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Undrained shear strength c_u of the soil layer", "Bodenschicht: Undränierte Scherfestigkeit c_u ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Undrained shear strength c_u of the soil layer", "Bodenschicht: Undränierte Scherfestigkeit c_u ändern")
     }
 }
 

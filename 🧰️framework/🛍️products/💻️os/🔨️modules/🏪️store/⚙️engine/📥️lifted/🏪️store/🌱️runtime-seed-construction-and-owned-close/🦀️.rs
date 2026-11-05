@@ -1,51 +1,51 @@
 //! 🌱️ Runtime seed, construction and owned close: the preflight and adoption of the runtime seed, the store construction, the state and checkpoint pins and the owned demands and close steps. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
-use semio_framework_os_store_replay::PrefixSnapshot;
-use semio_framework_os_store_engine_close::StoreCloseWitness as _;
+use semio_os_spr::ColdMutation;
+use semio_os_store_replay::PrefixSnapshot;
+use semio_os_store_engine_close::StoreCloseWitness as _;
 use semio_framework_value::RetirementDemand;
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     pub fn preflight_runtime_seed(identities: &[MutationId]) -> Result<(), VcsError> {
         let mut unique = HashSet::new();
         for identity in identities {
-            if identity.0.len() > semio_framework_os_spr::causal::MUTATION_DAG_IDENTIFIER_BYTES {
+            if identity.0.len() > semio_os_spr::causal::MUTATION_DAG_IDENTIFIER_BYTES {
                 return Err(VcsError::ValidationFailed("runtime causal seed identity exceeds its exact byte capacity".into()));
             }
             unique.insert(identity.0.as_str());
-            if unique.len() > semio_framework_os_spr::causal::MUTATION_DAG_CAPACITY {
+            if unique.len() > semio_os_spr::causal::MUTATION_DAG_CAPACITY {
                 return Err(VcsError::ValidationFailed("runtime causal seed exceeds its exact identity capacity".into()));
             }
         }
         Ok(())
     }
 
-    pub fn adopt_runtime_seed(identities: Vec<MutationId>) -> (semio_framework_os_spr::MutationDag, Vec<String>) {
-        let mut dag = semio_framework_os_spr::MutationDag::new();
+    pub fn adopt_runtime_seed(identities: Vec<MutationId>) -> (semio_os_spr::MutationDag, Vec<String>) {
+        let mut dag = semio_os_spr::MutationDag::new();
         let mut rejected = Vec::new();
         for identity in identities {
             match dag.seed_applied(identity) {
                 Ok(()) => {}
-                Err(owner) if owner.error == semio_framework_os_spr::MutationDagError::Duplicate => rejected.push(owner.mutation_id.0),
+                Err(owner) if owner.error == semio_os_spr::MutationDagError::Duplicate => rejected.push(owner.mutation_id.0),
                 Err(_) => unreachable!("prevalidated causal seed admission cannot fail after owner adoption"),
             }
         }
         (dag, rejected)
     }
 
-    fn seed_runtime_state(envelope: &ArtifactEnvelope<P, Mutation>, replica: u64) -> Result<(semio_framework_os_spr::MutationDag, i32, HybridLogicalTimestamp, Vec<String>), VcsError> {
+    fn seed_runtime_state(envelope: &ArtifactEnvelope<P, Mutation>, replica: u64) -> Result<(semio_os_spr::MutationDag, i32, HybridLogicalTimestamp, Vec<String>), VcsError> {
         let mut identities = Vec::new();
         let mut edit_sequence = 0;
         let mut clock = HybridLogicalTimestamp::new(replica, now_ms());
         for edit in &envelope.vcs.edits {
             edit_sequence = edit_sequence.max(edit.sequence_number);
             identities.push(MutationId(edit.id.clone()));
-            identities.extend(semio_framework_os_spr::mutation_ids_for_edit(edit));
+            identities.extend(semio_os_spr::mutation_ids_for_edit(edit));
             for meta in &edit.mutation_meta {
                 clock.merge(&meta.timestamp);
             }
@@ -76,7 +76,7 @@ where
     /// into a process abort instead of the `VcsError` the caller is meant to read. The candidate lives
     /// in a slot {@link construct} empties only on success; whatever is left is detached here.
     pub async fn new<C:ArtifactStorePublication<P>>(envelope: ArtifactEnvelope<P, Mutation>, actor: ActorId) -> Result<Self, VcsError>
-    where Mutation: semio_framework_os_spr::ColdMutation<P> {
+    where Mutation: semio_os_spr::ColdMutation<P> {
         let mut candidate = Some(envelope);
         let constructed = Self::construct::<C>(&mut candidate, actor).await;
         if let Some(rejected) = candidate {
@@ -86,11 +86,11 @@ where
     }
 
     pub async fn construct<C:ArtifactStorePublication<P>>(candidate: &mut Option<ArtifactEnvelope<P, Mutation>>, actor: ActorId) -> Result<Self, VcsError>
-    where Mutation: semio_framework_os_spr::ColdMutation<P> {
+    where Mutation: semio_os_spr::ColdMutation<P> {
         let envelope = candidate.as_mut().expect("artifact store construction holds its candidate envelope");
         if actor.0.trim().is_empty() { return Err(VcsError::ValidationFailed("opened actor identity cannot be empty".into())); }
         validate_durable_history(envelope).await?;
-        let semio_framework_os_spr::HistoryFold { applied: loaded_applied_edit_ids, redo: loaded_redo_edit_ids, checkpoint: current_checkpoint_id, alternative, supersessions, .. } = fold_envelope_history(envelope)?;
+        let semio_os_spr::HistoryFold { applied: loaded_applied_edit_ids, redo: loaded_redo_edit_ids, checkpoint: current_checkpoint_id, alternative, supersessions, .. } = fold_envelope_history(envelope)?;
         envelope.active_alternative_id = alternative;
         validate_history_lanes(envelope, &loaded_applied_edit_ids, &loaded_redo_edit_ids).await?;
         let current = if loaded_applied_edit_ids.is_empty() { envelope.vcs.genesis.facts().share_snapshot() } else { Arc::new(Self::fold_history(envelope, &loaded_applied_edit_ids, &supersessions).await?) };
@@ -130,7 +130,7 @@ where
                 current_checkpoint_id: std::mem::ManuallyDrop::new(current_checkpoint_id),
                 local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
                 authoring_verb: None,
-                merge_policy: semio_framework_os_spr::MergePolicy::default(),
+                merge_policy: semio_os_spr::MergePolicy::default(),
                 clock,
                 initial_digest,
                 operation_wire: None,
@@ -186,7 +186,7 @@ where
 
     /// ♻️ Sole public reload API: adopts `envelope`'s event log and derives every position from
     /// it — a reload replays history, it never injects a cursor.
-    pub async fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<CommandReceipt, VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
+    pub async fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<CommandReceipt, VcsError> where Mutation: semio_os_spr::ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         self.set_state(envelope).await?;
         self.cursor.last_projection_cause = Some(ArtifactProjectionCause::Reset);
@@ -214,7 +214,7 @@ where
         self.ensure_durable_group_idle()?;
         let envelope = candidate.as_mut().expect("a reload holds its candidate envelope");
         validate_durable_history(envelope).await?;
-        let semio_framework_os_spr::HistoryFold { applied: applied_edit_ids, redo: redo_edit_ids, checkpoint: current_checkpoint_id, alternative, supersessions, .. } = fold_envelope_history(envelope)?;
+        let semio_os_spr::HistoryFold { applied: applied_edit_ids, redo: redo_edit_ids, checkpoint: current_checkpoint_id, alternative, supersessions, .. } = fold_envelope_history(envelope)?;
         envelope.active_alternative_id = alternative;
         validate_history_lanes(envelope, &applied_edit_ids, &redo_edit_ids).await?;
         let current = Self::fold_history(envelope, &applied_edit_ids, &supersessions).await?;
@@ -270,7 +270,7 @@ where
     /// pins rather than merely storing them beside it, and records the re-identification as a
     /// `Repin` transition so every replica and every reload derives the same identity.
     #[must_use]
-    pub async fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<semio_framework_os_vcs::CompositionPin>) -> Result<ArtifactProjectionInvalidation, VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
+    pub async fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<semio_os_vcs::CompositionPin>) -> Result<ArtifactProjectionInvalidation, VcsError> where Mutation: semio_os_spr::ColdMutation<P> {
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 
         self.ensure_durable_group_idle()?;
@@ -286,9 +286,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactRe
             return Err(VcsError::ValidationFailed(format!("rederived checkpoint identity {next_id} collides with established history")));
         }
         let dependencies = self.checkpoint_origin(&previous_id).into_iter().collect();
-        let pins = pins.iter().map(|pin| semio_framework_os_spr::TransitionPin { child_uri: pin.child_ref.to_uri(), checkpoint_id: pin.checkpoint_id.clone() }).collect();
+        let pins = pins.iter().map(|pin| semio_os_spr::TransitionPin { child_uri: pin.child_ref.to_uri(), checkpoint_id: pin.checkpoint_id.clone() }).collect();
         self.replace_pending_report_retained(PendingCommandReport::default())?;
-        self.commit_transition(semio_framework_os_spr::HistoryTransition::Repin { checkpoint_id: previous_id, pinned_checkpoint_id: next_id, pins }, dependencies).await?;
+        self.commit_transition(semio_os_spr::HistoryTransition::Repin { checkpoint_id: previous_id, pinned_checkpoint_id: next_id, pins }, dependencies).await?;
         self.flush_outbound().await?;
         self.invalidate_projections(ArtifactProjectionCause::Checkpoint)
     }
@@ -297,14 +297,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactRe
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🏗️ Atomically adopts a domain-validated initialization runtime. Every
     /// history/reference/snapshot owner was prepared under the caller's StepContext before this
     /// non-suspending move; no validation or collection traversal occurs at publication.
     pub fn initialized_runtime_adoption_demands(envelope:&ArtifactEnvelope<P,Mutation>,runtime:&ArtifactStoreInitializationRuntime<P>)->Result<RetirementDemand,ValueError>{
-        let checkpoint=runtime.current_checkpoint_id.as_ref().map_or(0,String::len);let ring=PREFIX_SNAPSHOT_RING_CAPACITY.checked_mul(size_of::<PrefixSnapshot<P>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"initialized prefix ring extent overflow"))?;let displaced=semio_framework_os_store_read::ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY.checked_mul(size_of::<Box<dyn ErasedSnapshotRetirement>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"initialized displaced queue extent overflow"))?;let previous=envelope.cursor.as_ref().map_or(0,|_|size_of::<semio_framework_os_store_read::ArtifactStoreCursorRetirement>());Ok(RetirementDemand{copy_bytes:2*previous+size_of::<Self>()+size_of::<ArtifactStoreInitializationRuntime<P>>()+size_of::<ArtifactEnvelope<P,Mutation>>()+size_of::<DocumentStoreOwners<P,Mutation>>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>()+size_of::<u64>()+size_of::<[u8;32]>()+checkpoint,capacity_bytes:ring+displaced+checkpoint+previous,depth:1,release_bytes:0})
+        let checkpoint=runtime.current_checkpoint_id.as_ref().map_or(0,String::len);let ring=PREFIX_SNAPSHOT_RING_CAPACITY.checked_mul(size_of::<PrefixSnapshot<P>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"initialized prefix ring extent overflow"))?;let displaced=semio_os_store_read::ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY.checked_mul(size_of::<Box<dyn ErasedSnapshotRetirement>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"initialized displaced queue extent overflow"))?;let previous=envelope.cursor.as_ref().map_or(0,|_|size_of::<semio_os_store_read::ArtifactStoreCursorRetirement>());Ok(RetirementDemand{copy_bytes:2*previous+size_of::<Self>()+size_of::<ArtifactStoreInitializationRuntime<P>>()+size_of::<ArtifactEnvelope<P,Mutation>>()+size_of::<DocumentStoreOwners<P,Mutation>>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>()+size_of::<u64>()+size_of::<[u8;32]>()+checkpoint,capacity_bytes:ring+displaced+checkpoint+previous,depth:1,release_bytes:0})
     }
 
     pub fn from_initialized_runtime_with_owners(envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: DocumentStoreOwners<P, Mutation>) -> Self {

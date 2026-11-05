@@ -3,7 +3,7 @@ use super::*;
 use std::alloc::GlobalAlloc as _;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
 use semio_framework_value::{RetainedCloneGrant,retirement::RetireOwned};
-use semio_framework_ui_scene::{TextSplice,TextSpliceComposition};
+use semio_ui_scene::{TextSplice,TextSpliceComposition};
 struct Refusing;
 thread_local!{static REFUSE:std::cell::Cell<usize>=const{std::cell::Cell::new(0)}}
 /// 🛡️ SAFETY: every method forwards the unchanged layout to the sound `HeapWitness` allocator or returns null for the one refused size, which the `GlobalAlloc` contract permits.

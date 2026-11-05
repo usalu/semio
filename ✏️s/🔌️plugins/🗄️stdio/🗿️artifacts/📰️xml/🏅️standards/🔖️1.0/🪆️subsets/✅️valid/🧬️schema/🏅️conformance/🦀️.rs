@@ -37,8 +37,8 @@ use semio_framework_diagnostic::{Diagnostic,FaultCode,FaultScope,Severity,TextSp
     }
 
     /// ⏱️ Checks owned validity with cancellation inside the literal boundary collections.
-    pub fn check_valid_conformance_controlled(snapshot: &XmlSnapshot, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, semio_framework_os_kernel::sqlite_snapshot::ValueError> {
-        check_conformance(snapshot, &mut |completed, total| control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, completed, total))
+    pub fn check_valid_conformance_controlled(snapshot: &XmlSnapshot, control: &mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, semio_os_kernel::sqlite_snapshot::ValueError> {
+        check_conformance(snapshot, &mut |completed, total| control.checkpoint(semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, completed, total))
     }
 
     pub fn check_conformance(snapshot: &XmlSnapshot, progress: &mut dyn FnMut(usize, usize) -> Result<(), semio_framework_value::ValueError>) -> Result<Vec<Diagnostic>, semio_framework_value::ValueError> {

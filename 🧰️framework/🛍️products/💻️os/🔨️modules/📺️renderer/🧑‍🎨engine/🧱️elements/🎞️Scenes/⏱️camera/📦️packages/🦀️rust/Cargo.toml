@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-os-renderer-camera"
+name = "semio-renderer-camera"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,4 +23,4 @@ semio-framework-value = { workspace = true }
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-ui-retained-tree = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust" }
+semio-ui-retained-tree = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust" }

@@ -2,15 +2,15 @@
 
 use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATE_PREVIEW;
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use semio_framework_ui_declaration::ui::TextEditorScene;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_declaration::ui::TextEditorScene;
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
@@ -43,7 +43,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(transient: &FlowWindowTransient) -> UiAssemblyResult<BuiltNode> {
-    let mut generation_owner = transient.generation().map_err(|error| semio_framework_plugin::PluginAssemblyError::new("ui.generate-preview", error.into_message()))?;
+    let mut generation_owner = transient.generation().map_err(|error| semio_plugin::PluginAssemblyError::new("ui.generate-preview", error.into_message()))?;
     let generation = generation_owner.as_mut();
     let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(FLOW_PLAY_PREVIEW_PLACEHOLDER);
     let scene = TextEditorScene::base(text.to_string(), Some("json".into()), None);

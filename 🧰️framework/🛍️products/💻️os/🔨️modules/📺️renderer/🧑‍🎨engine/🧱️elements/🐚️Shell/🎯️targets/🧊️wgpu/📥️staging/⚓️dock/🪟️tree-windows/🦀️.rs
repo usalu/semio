@@ -5,7 +5,7 @@
 use super::*;
 use super::UiDirtyScope;
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_ui_wgpu_light::tree_window::{served_requests, TreeWindowRequest, TreeWindowServedMemory};
+use semio_ui_wgpu_light::tree_window::{served_requests, TreeWindowRequest, TreeWindowServedMemory};
 
 /// 🪟️ One body's host-owned tree state, keyed by window path (`TreeWindowBodyState`).
 #[derive(Clone, Debug, Default)]
@@ -19,12 +19,12 @@ impl ShellDockState {
     /// 🪟️ Measures one retained body that just finished a paint and reports its windows (React's `useTreeWindowObserver` measure):
     /// the served rule places each window, the scheduler decides whether that changes anything.
     pub fn observe_tree_windows(&mut self, surface_id: &str, docs: &DocumentState) {
-        let Some((viewport_height, containers)) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::tree_window_measures(surface_id) else { return };
+        let Some((viewport_height, containers)) = semio_renderer_wgpu_ui_engine::retained_ui_engine::tree_window_measures(surface_id) else { return };
         let body = self.tree_window_body_key(surface_id, docs);
         let memory = self.tree_window_served.remove(&body).unwrap_or_default();
         let (requests, memory) = served_requests(&containers, viewport_height, &memory, ui_contract::TREE_WINDOW_BODY_NODE_BUDGET);
         self.tree_window_served.insert(body.clone(), memory);
-        let row_px = f64::from(semio_framework_ui_wgpu_layout::layout::tree_window_row_extent_px(semio_framework_ui_declaration::ui::UiTreeWindowRowExtent::Standard));
+        let row_px = f64::from(semio_ui_wgpu_layout::layout::tree_window_row_extent_px(semio_ui_declaration::ui::UiTreeWindowRowExtent::Standard));
         let viewport_rows = ((viewport_height / row_px).ceil() as u32).max(1);
         let now = semio_framework_job::default_now_us().map_or(0, |now| now / 1_000);
         self.tree_windows.report(&body, &requests, viewport_rows, now);

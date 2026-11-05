@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSectionIt where Op
         record: "ChangedSectionIt",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Torsion constant I_t of the section", "Querschnitt: Torsionsträgheitsmoment I_t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Torsion constant I_t of the section", "Querschnitt: Torsionsträgheitsmoment I_t ändern")
     }
 }
 

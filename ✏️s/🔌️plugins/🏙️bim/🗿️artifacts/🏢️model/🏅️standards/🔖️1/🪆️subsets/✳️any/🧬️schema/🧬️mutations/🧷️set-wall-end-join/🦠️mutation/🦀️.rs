@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "wall", kind: "set-wall-end-join", record: "SetWallEndJoin" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the {:?} join of wall \"{}\" to {}", self.end, self.id, self.join.map_or("automatic".to_string(), |join| format!("{join:?}"))), &format!("Verbindung am Wandende {:?} von \"{}\" auf {} setzen", self.end, self.id, self.join.map_or("automatisch".to_string(), |join| format!("{join:?}"))))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set the {:?} join of wall \"{}\" to {}", self.end, self.id, self.join.map_or("automatic".to_string(), |join| format!("{join:?}"))), &format!("Verbindung am Wandende {:?} von \"{}\" auf {} setzen", self.end, self.id, self.join.map_or("automatisch".to_string(), |join| format!("{join:?}"))))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

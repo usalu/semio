@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "timeline-name", kind: "set-timeline-name", record: "SetTimelineName" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set timeline name", "Zeitleistenname setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set timeline name", "Zeitleistenname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

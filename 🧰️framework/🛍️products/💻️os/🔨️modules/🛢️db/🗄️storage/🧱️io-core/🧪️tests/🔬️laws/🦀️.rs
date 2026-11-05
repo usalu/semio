@@ -1,4 +1,4 @@
-//! 🧪️ Companion white-box laws of `semio-framework-os-kernel-db-io-core`.
+//! 🧪️ Companion white-box laws of `semio-os-kernel-db-io-core`.
 
 #![cfg(test)]
 #![allow(unused_imports, unused_qualifications)]

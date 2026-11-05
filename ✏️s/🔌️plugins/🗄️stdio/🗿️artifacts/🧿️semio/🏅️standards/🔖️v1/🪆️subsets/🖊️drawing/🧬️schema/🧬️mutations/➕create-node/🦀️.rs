@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node in layer #{} at #{}", self.parent.layer, self.index), &format!("Knoten in Ebene #{} an #{} erstellen", self.parent.layer, self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create node in layer #{} at #{}", self.parent.layer, self.index), &format!("Knoten in Ebene #{} an #{} erstellen", self.parent.layer, self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.parent.layer.to_string(), self.index.to_string()]

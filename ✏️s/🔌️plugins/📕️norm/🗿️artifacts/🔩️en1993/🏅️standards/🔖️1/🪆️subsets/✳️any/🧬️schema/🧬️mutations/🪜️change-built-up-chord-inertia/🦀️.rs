@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpChordInerti
         record: "ChangedBuiltUpChordInertia",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Chord second moment I_ch (in plane) of the built-up member", "Zusammengesetzter Stab: Gurt-Flächenmoment I_ch (in der Ebene) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Chord second moment I_ch (in plane) of the built-up member", "Zusammengesetzter Stab: Gurt-Flächenmoment I_ch (in der Ebene) ändern")
     }
 }
 

@@ -1,9 +1,9 @@
 use semio_framework_plugin::WindowKit;
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
-use semio_framework_plugin::app::TableWindowKit;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::TableWindowKit;
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_ui_locale::Locale;
 use crate::editor::bcf::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
@@ -17,13 +17,13 @@ async fn definition_declares_the_editable_table_window_kit() {
 async fn render_produces_a_table_node_for_the_default_document() {
     let document = BcfSnapshot::default();
     for locale in [Locale::En, Locale::De] {
-        render(&document, locale, semio_framework_plugin::UiPublicationRevision(23)).expect("default document table renders");
+        render(&document, locale, semio_plugin::UiPublicationRevision(23)).expect("default document table renders");
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn render_binds_each_topic_cell_to_its_address_and_snapshot_revision() {
-    use semio_framework_plugin::{Component, UiValue};
+    use semio_plugin::{Component, UiValue};
     fn node_by_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
         if node.key.as_str() == key {
             return Some(node);
@@ -33,7 +33,7 @@ async fn render_binds_each_topic_cell_to_its_address_and_snapshot_revision() {
     let mut document = BcfSnapshot::default();
     document.topics.push(Default::default());
     document.topics[0].title = "Issue".into();
-    let node = render_revisioned(&document, "store-revision", semio_framework_plugin::UiPublicationRevision(23), Locale::En, &TreeWindows::unhosted()).expect("render table");
+    let node = render_revisioned(&document, "store-revision", semio_plugin::UiPublicationRevision(23), Locale::En, &TreeWindows::unhosted()).expect("render table");
     let row = node_by_key(&node, "topic-0").expect("topic row");
     let cell = node_by_key(row, "cell-1").expect("title cell");
     let Component::Input(props) = &cell.component else { panic!("the title cell is an editable input") };

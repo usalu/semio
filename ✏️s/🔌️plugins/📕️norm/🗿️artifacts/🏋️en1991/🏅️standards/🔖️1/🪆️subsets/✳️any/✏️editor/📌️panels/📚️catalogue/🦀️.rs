@@ -4,11 +4,11 @@ use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, Catalogue
 use semio_s_artifact_norm_en1991_checks::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
 use semio_s_artifact_norm_en1991_checks::{na_de, part_1_1, part_1_3, part_1_4};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1991.play.catalogue";
@@ -115,10 +115,10 @@ fn wind_qp_na_b3() -> CatalogueTable {
 }
 
 //#region 🔖️Render
-pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(examples: Vec<semio_plugin::ExampleSource>, locale: semio_ui_locale::Locale, controller_id: &'static str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut tables = reference_tables();
     tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1991", &<semio_s_artifact_norm_en1991_checks::catalogue::En1991Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

@@ -1,7 +1,7 @@
 //! 📇️ SpaceIndexEditor commands command — `fold-directory-events`. Config-only (never touches the
 //! shared `SSpaceSnapshot` document — contract §C4: space name/kind/visibility/members are
 //! directory-owned, never duplicated into the index document). Reuses the OS's own pure
-//! `semio_framework_os::os_directory::fold_all` (contract §C1) rather than re-deriving the fold
+//! `semio_os::os_directory::fold_all` (contract §C1) rather than re-deriving the fold
 //! logic here — the shell is expected to pass the FULL event history it holds for this space each
 //! dispatch (this command carries no cursor of its own, so a partial/delta batch would silently
 //! regress the folded members/visibility).
@@ -14,8 +14,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation, SpaceIndexDirectoryProjection, SpaceIndexMember};
-use semio_framework_os_kernel::os_directory::{fold_all, DirectoryEvent, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os_kernel::os_directory::{fold_all, DirectoryEvent, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "fold-directory-events")]

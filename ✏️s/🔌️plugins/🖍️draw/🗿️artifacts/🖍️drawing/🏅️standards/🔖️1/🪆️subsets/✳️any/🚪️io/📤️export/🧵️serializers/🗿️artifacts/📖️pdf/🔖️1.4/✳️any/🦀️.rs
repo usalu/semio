@@ -19,7 +19,7 @@ use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
 use semio_s_artifact_draw_drawing_model::{DrawingSceneGroup, DrawingSceneNode};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop, PathSegment, StrokeStyle};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use std::collections::{BTreeMap, BTreeSet};
@@ -37,8 +37,8 @@ pub struct DrawingIntoPdf;
 impl Serializer<DrawingSnapshot> for DrawingIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    const OWNED_FACTORY: Option<semio_framework_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::owned::PDF_FACTORY);
-    async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    const OWNED_FACTORY: Option<semio_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::owned::PDF_FACTORY);
+    async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren, control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let _ = control;
         let bytes = drawing_document_to_pdf(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DrawingIntoPdf: {message}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))

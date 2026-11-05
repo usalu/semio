@@ -156,7 +156,7 @@
     /// (ticket 26/09/18, slice F1).
     #[semio_framework_async_macros::async_test]
     async fn a_stack_default_layout_is_one_stack_root_of_window_leaves() {
-        use semio_framework_ui_layout::layout::{WindowLayoutRoot, create_stack_layout};
+        use semio_ui_layout::layout::{WindowLayoutRoot, create_stack_layout};
         let layout = create_default_layout(&["tile-editor".into()], "stack", None, Some(&["Tile editor".into()]));
         let WindowLayoutRoot::Stack(root) = &layout.root else {
             panic!("a stack request must mint a stack ROOT, not an axis wearing the stack discriminator");

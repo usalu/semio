@@ -10,7 +10,7 @@
 use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolySelection, snapshot::LowpolySnapshot, snapshot::LOWPOLY_PAINT_TEXTURE_SIZE};
 use semio_framework_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, Vec3, VertexId};
-use semio_framework_plugin::MeshData;
+use semio_plugin::MeshData;
 use std::collections::HashMap;
 
 #[path = "⚠️errors/🦀️.rs"]

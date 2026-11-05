@@ -18,8 +18,8 @@ pub struct InsertVmlPart {
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for InsertVmlPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vml-part", kind: "insert-vml-part", record: "InsertVmlPart" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert VML part", "VML-Paketteil einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert VML part", "VML-Paketteil einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

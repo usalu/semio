@@ -14,7 +14,7 @@ impl SettleState {
             return;
         }
         let (sender, receiver) = std::sync::mpsc::channel();
-        semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().submit(
+        semio_renderer_wgpu_host_base::renderer_worker_pool().submit(
             Lane::Io,
             Box::new(move || {
                 let _ = sender.send(operation());
@@ -30,7 +30,7 @@ impl SettleState {
             return;
         }
         let (sender, receiver) = std::sync::mpsc::channel();
-        let task = ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, async move {
+        let task = ShellPoolFuture::spawn(semio_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, async move {
             let _ = sender.send(operation.await);
         });
         self.shell_io_pending.push_back(PendingShellIo { receiver, task: Some(task) });

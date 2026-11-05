@@ -1,26 +1,26 @@
 //! ⏪️ Original actor retirement quotes and admits each retained physical frontier independently.
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework::{ActionArgDef, ArgSchema, FaultFrom};
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, Mutation, MutationDiff};
 use semio_framework_value::DslValue;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use protocol::{OpBinary, OpText};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_time_travel::{TimeTravelBase, TimeTravelEvent, TimeTravelSession, TimeTravelStage, TimeTravelTarget};
 use crate::{TimeTravelEditor, TimeTravelLedger, TimeTravelMemberMetadata, TimeTravelOwners, TimeTravelStoreState};
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 use store::ErasedSnapshotRetirement;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, FactoryAuthority, FactoryOwnedRetirement, close_factory_ticket, factory_ticket_demands};
 use std::mem::{size_of, size_of_val};
@@ -79,7 +79,7 @@ pub use crate::original_retirement::tests::assert_pending_command_original;
 pub use crate::original_retirement::tests::assert_discard_publication_original;
 #[cfg(test)]
 pub use crate::original_retirement::tests::native_original_actor_grant;
-impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,Mu: ::semio_framework_os_kernel::StoreMutationFor<P> {
+impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState,Mu: ::semio_os_kernel::StoreMutationFor<P> {
  pub(crate) fn original_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(demand)=self.discard_effects_retirement_demands(body)?{return Ok(demand)}
   if let Some(owner)=self.preview_derived.as_ref().filter(|owner|owner.is_closing()){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::os_store::ArtifactDerivedOperation<P,Mu>>>(),depth:1,..Default::default()})}else{owner.next_demand(body)};}

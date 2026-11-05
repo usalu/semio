@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "beam-type", kind: "create-beam-type", record: "CreateBeamType" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create beam type \"{}\"", self.beam_type.name), &format!("Trägertyp \"{}\" anlegen", self.beam_type.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create beam type \"{}\"", self.beam_type.name), &format!("Trägertyp \"{}\" anlegen", self.beam_type.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

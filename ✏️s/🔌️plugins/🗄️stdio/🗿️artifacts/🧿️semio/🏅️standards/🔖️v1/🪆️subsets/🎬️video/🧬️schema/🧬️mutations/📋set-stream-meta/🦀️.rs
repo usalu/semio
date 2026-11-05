@@ -19,8 +19,8 @@ pub struct SetStreamMeta {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetStreamMeta {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "stream-meta", kind: "set-stream-meta", record: "SetStreamMeta" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set stream meta", "Datenstrom-Metadaten setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set stream meta", "Datenstrom-Metadaten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

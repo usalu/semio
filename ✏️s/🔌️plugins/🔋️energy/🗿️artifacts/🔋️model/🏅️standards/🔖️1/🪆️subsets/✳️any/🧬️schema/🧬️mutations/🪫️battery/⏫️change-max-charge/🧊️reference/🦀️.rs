@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "battery", kind: "change-battery-max-charge", record: "ChangedBatteryMaxCharge" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Battery Max Charge of battery {}", self.id.0), &format!("Maximale Ladeleistung von Batterie {} ändern", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Battery Max Charge of battery {}", self.id.0), &format!("Maximale Ladeleistung von Batterie {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

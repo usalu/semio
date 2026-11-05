@@ -1,5 +1,5 @@
 //! 🛂️ Complete borrowed CSV cells precede the controlled typed constructor.
-use super::*;use semio_framework_dsl_record::{FieldValue,RecordValue};use semio_framework_value::ValueRefusalKind; use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotPhase,artifact::{Cell,RowWriter}};
+use super::*;use semio_framework_dsl_record::{FieldValue,RecordValue};use semio_framework_value::ValueRefusalKind; use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;use semio_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotPhase,artifact::{Cell,RowWriter}};
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 pub fn field(value:&RecordValue,id:u16)->Result<&FieldValue,ValueError>{value.get(id).ok_or_else(||invalid("required native field is absent"))}
 fn list(value:&FieldValue)->Result<&[FieldValue],ValueError>{match value{FieldValue::List(values)=>Ok(values),_=>Err(invalid("native list shape differs"))}}
@@ -14,7 +14,7 @@ fn write(root:&RecordValue,total:usize,p:&mut RowWriter<'_,'_>)->Result<(),Value
 /// 🫳️ Reads every required declared slot and all exact SQL storage-class cells before binding.
 pub fn admit(root:&RecordValue,native:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  let rows=list(field(root,2)?)?;let mut total=1usize;for row in rows{let cells=list(field(record(row)?,0)?)?;total=total.checked_add(1).and_then(|n|n.checked_add(cells.len())).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native row count overflow"))?;}
- native.scoped_stage(|native|{native.begin_stage(total)?;let mut completed=0;let mut progress=|event:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{let delta=event.completed.saturating_sub(completed);completed=event.completed;native.advance(delta).is_ok()};let mut control=SqliteSnapshotControl::new(&mut progress,limits);let bounds=control.limits();if CsvSnapshot::SQLITE_SCHEMA.len()>bounds.max_schema_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"authored native schema exceeds caller limit"))}if bounds.max_tables<3||bounds.max_columns<5{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"authored native table or column extent exceeds caller limit"))}let mut writer=RowWriter::borrowed(&mut control,SqliteSnapshotPhase::DecodeNative)?;write(root,total,&mut writer)?;writer.finish_borrowed()?;Ok(())})
+ native.scoped_stage(|native|{native.begin_stage(total)?;let mut completed=0;let mut progress=|event:semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{let delta=event.completed.saturating_sub(completed);completed=event.completed;native.advance(delta).is_ok()};let mut control=SqliteSnapshotControl::new(&mut progress,limits);let bounds=control.limits();if CsvSnapshot::SQLITE_SCHEMA.len()>bounds.max_schema_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"authored native schema exceeds caller limit"))}if bounds.max_tables<3||bounds.max_columns<5{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"authored native table or column extent exceeds caller limit"))}let mut writer=RowWriter::borrowed(&mut control,SqliteSnapshotPhase::DecodeNative)?;write(root,total,&mut writer)?;writer.finish_borrowed()?;Ok(())})
 }
 
 /// 📏️ Quotes the original CSV record and field topology without creating destination ownership.
@@ -28,7 +28,7 @@ fn binding_demands_with_checkpoint(root:&RecordValue,mut checkpoint:impl FnMut()
  Ok(semio_framework_value::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copied,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:6})
 }
 /// 🧵️ Receives each original CSV row and field before its children can allocate or cancel.
-pub fn bind(root:&RecordValue,output:&mut Option<CsvSnapshot>,native:&mut NativeDecodeControl<'_>,wallet:&mut semio_framework_os_kernel::NativeSnapshotBodyWallet)->Result<(),ValueError>{
+pub fn bind(root:&RecordValue,output:&mut Option<CsvSnapshot>,native:&mut NativeDecodeControl<'_>,wallet:&mut semio_os_kernel::NativeSnapshotBodyWallet)->Result<(),ValueError>{
  if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"CSV native destination must be empty"))}
  let demand=binding_demands_with_checkpoint(root,||native.checkpoint())?;wallet.admit_frontier(demand)?;
  if native.owned_bytes().checked_add(demand.maximum_capacity_bytes).is_none_or(|extent|extent>native.maximum_bytes()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"CSV typed destination exceeds original native ceiling"))}

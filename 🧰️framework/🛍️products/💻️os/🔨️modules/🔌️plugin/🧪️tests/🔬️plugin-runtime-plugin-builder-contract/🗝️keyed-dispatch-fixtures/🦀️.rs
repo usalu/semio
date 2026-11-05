@@ -44,18 +44,18 @@ pub struct KeyedTestCommandDisposer {
             Ok(if self.moved { Default::default() } else { semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<TestCommand>(), depth: 1, ..Default::default() } })
         }
 
-        fn close_step(&mut self, command: &mut TestCommand, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, Fault> {
+        fn close_step(&mut self, command: &mut TestCommand, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, Fault> {
             use semio_framework_value::retained_clone::RetainedCloneProgress;
-            if grant.maximum_items == 0 { return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
-            let demand = self.retirement_demands(command, grant.maximum_copy_bytes).map_err(semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
-            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
+            if grant.maximum_items == 0 { return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
+            let demand = self.retirement_demands(command, grant.maximum_copy_bytes).map_err(semio_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
             if !self.moved {
                 self.pending = Some(std::mem::replace(command, TestCommand::NoopMutation));
                 self.moved = true;
-                return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<TestCommand>(), ..Default::default() }));
+                return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<TestCommand>(), ..Default::default() }));
             }
-            let step = if self.active.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant) }.map_err(semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
-            Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::retained(step, self.terminal_is_empty(command)))
+            let step = if self.active.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant) }.map_err(semio_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
+            Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::retained(step, self.terminal_is_empty(command)))
         }
 
         fn terminal_is_empty(&self, command: &TestCommand) -> bool { self.moved && self.pending.is_none() && self.active.is_none() && matches!(command, TestCommand::NoopMutation) }
@@ -71,11 +71,11 @@ pub struct KeyedTestJobSources {
         pub snapshot: Option<std::sync::Arc<TestSnapshot>>,
         pub config: Option<std::sync::Arc<TestConfig>>,
         pub history: Option<std::sync::Arc<HistoryView>>,
-        pub window_config: Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
+        pub window_config: Option<semio_plugin_window_config::WindowConfigSnapshot>,
         pub interaction: Option<std::sync::Arc<InteractionState>>,
         pub hover: Option<std::sync::Arc<InteractionHoverState>>,
         pub context: Option<ArtifactOwnedContextHandle<KeyedTestApp>>,
-        pub instance_owner: Option<semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
+        pub instance_owner: Option<semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
         pub output: Option<ArtifactOutputChunks>,
         pub parent_document_id: Option<String>,
         pub authoring_seed: Option<String>,
@@ -106,7 +106,7 @@ pub struct KeyedTestJobSources {
     #[doc(hidden)]
 pub struct KeyedTestJob {
         pub sources: Option<KeyedTestJobSources>,
-        pub rejected: Option<semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection<KeyedTestApp>>,
+        pub rejected: Option<semio_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection<KeyedTestApp>>,
         pub admitted: bool,
         pub retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
         pub command: Option<Box<TestCommand>>,
@@ -165,7 +165,7 @@ pub struct KeyedTestJob {
         }
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        semio_framework_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
+        semio_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -266,7 +266,7 @@ fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operati
         type Transient = NoTransient;
         type TransientMutation = NoTransientMutation;
         type Command = TestCommand;
-        semio_framework_plugin_decl_app::bounded_first_step_tool_proofs! {
+        semio_plugin_decl_app::bounded_first_step_tool_proofs! {
             owner: KeyedTestApp, owner_file: "plugin/🦀️.rs", controller: "s.test.keyed@1/*#editor", artifact_schema: "semio.test/v1",
             factory: "KeyedTestFactory", factory_type: KeyedTestFactory,
             contract: ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 500, 1, 1), tools: ["compositeEdit"]
@@ -294,19 +294,19 @@ job})}
             TestApp::<false>::build_draft_store_disposer()
         }
         fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-            Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_store_disposer())
+            Some(semio_plugin_decl_views::presence_retirement::no_presence_store_disposer())
         }
         fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_store_disposer())
+            Some(semio_plugin_decl_views::transient_retirement::no_transient_store_disposer())
         }
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_peer_retirement_factory())
+            Some(semio_plugin_decl_views::presence_retirement::no_presence_peer_retirement_factory())
         }
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_local_root_retirement_factory())
+            Some(semio_plugin_decl_views::presence_retirement::no_presence_local_root_retirement_factory())
         }
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-            Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_local_root_retirement_factory())
+            Some(semio_plugin_decl_views::transient_retirement::no_transient_local_root_retirement_factory())
         }
         fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework::Fault>>{Some(||{
             Ok(TestSnapshot::default())

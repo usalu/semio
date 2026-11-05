@@ -1,7 +1,7 @@
 //! 🧾️ EN 1994 play app — the properties window: the typed unit-aware inspector with the entity outliner, focused on the selected check's entity.
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_plugin_norm_app_surface::{render_inspector_with_cases, NormSelection};
 

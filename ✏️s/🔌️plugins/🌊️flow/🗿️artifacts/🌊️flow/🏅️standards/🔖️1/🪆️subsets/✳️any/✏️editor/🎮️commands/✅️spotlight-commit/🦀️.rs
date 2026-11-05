@@ -1,11 +1,11 @@
 //! 🕸️ 🎯️ Flow play app commands command — `spotlight-commit`.
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 pub use crate::editor::flow::commands::node_graph_edit::FlowNodeGraphEditOp;
 

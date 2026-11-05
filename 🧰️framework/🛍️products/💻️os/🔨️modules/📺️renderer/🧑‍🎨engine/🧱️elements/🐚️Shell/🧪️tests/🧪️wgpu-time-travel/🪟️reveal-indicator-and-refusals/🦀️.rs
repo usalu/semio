@@ -128,7 +128,7 @@ fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_r
     assert_eq!(rows.len(), before + 1, "the completion's row is in the projection");
     assert!(rows.iter().any(|entry| entry.key() == "seq:41"));
     assert!(shell.settle.owed_refresh_scope.wants_window_body("board"), "the progress scope is owed: {:?}", shell.settle.owed_refresh_scope);
-    assert!(shell.settle.owed_refresh_scope.wants_panel_body(semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY), "the History body owes the minted row: {:?}", shell.settle.owed_refresh_scope);
+    assert!(shell.settle.owed_refresh_scope.wants_panel_body(semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY), "the History body owes the minted row: {:?}", shell.settle.owed_refresh_scope);
     assert!(!shell.settle.owed_refresh_scope.wants_window_body("another"), "one merged pass, never a full one");
     assert!(PointerCtx::of(&mut shell).settle_pump_pending(), "the settle lane refreshes without a dispatch");
     assert!(shell.chrome.transient_notice().is_none(), "a completion is told by its rows, not by a notice");
@@ -145,10 +145,10 @@ fn a_refused_completion_is_told_as_a_notice() {
     let notice = shell.chrome.transient_notice().expect("the refused completion is told");
     assert!(notice.message.contains("noncanonical bytes"), "the notice names what was refused: {}", notice.message);
     assert!(shell.settle.owed_refresh_scope.asks_for_nothing(), "a fault alone re-renders nothing");
-    let unreadable = semio_framework_os_renderer_wgpu_program_bridge::operation_publications_from_json("{\"completed\":true}");
+    let unreadable = semio_renderer_wgpu_program_bridge::operation_publications_from_json("{\"completed\":true}");
     assert_eq!(unreadable.len(), 1);
     assert!(unreadable[0].fault.as_deref().is_some_and(|fault| fault.starts_with("wgpu-bridge.operation-publication.unreadable")) && unreadable[0].resync, "an unreadable answer is a fault and a re-read: {unreadable:?}");
-    let mangled = semio_framework_os_renderer_wgpu_program_bridge::operation_publications_from_json("[{\"completed\":true,\"historyPatch\":{\"cursor\":\"seven\"}}]");
+    let mangled = semio_renderer_wgpu_program_bridge::operation_publications_from_json("[{\"completed\":true,\"historyPatch\":{\"cursor\":\"seven\"}}]");
     assert!(mangled[0].fault.as_deref().is_some_and(|fault| fault.contains("historyPatch")) && mangled[0].resync, "an unreadable entry names its member: {mangled:?}");
     assert_eq!(operation_publication_refresh(&mangled[0]), UiDirtyScope::Full);
 }
@@ -159,12 +159,12 @@ fn a_refused_completion_is_told_as_a_notice() {
 #[test]
 fn every_operation_publication_owes_what_the_shared_corpus_says() {
     let corpus: Value = serde_json::from_str(include_str!("../../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️operation-publication/🔣️.json")).expect("the shared operation-publication corpus parses");
-    assert_eq!(corpus["historyBodyKey"].as_str(), Some(semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY));
+    assert_eq!(corpus["historyBodyKey"].as_str(), Some(semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY));
     let rows = corpus["rows"].as_array().expect("the corpus rows");
     assert!(rows.len() >= 7, "the corpus covers completion, progress, fault and resync");
     for row in rows {
         let name = row["name"].as_str().expect("name");
-        let read = semio_framework_os_renderer_wgpu_program_bridge::operation_publications_from_json(&Value::Array(vec![row["publication"].clone()]).to_string());
+        let read = semio_renderer_wgpu_program_bridge::operation_publications_from_json(&Value::Array(vec![row["publication"].clone()]).to_string());
         assert_eq!(read.len(), 1, "{name}");
         let publication = &read[0];
         assert_eq!(publication.completed, row["publication"]["completed"].as_bool().expect("completed"), "{name}");
@@ -217,7 +217,7 @@ fn history_refusals_are_localized_notices_carrying_their_code() {
     }
     assert!(history_refusal_notice("app.command.rejected: conflicting edit", Locale::En).is_none());
     assert!(history_refusal_of_fault("app.command.rejected: the history.transition-refusedness of it", Locale::En).is_none(), "a code inside a word is no code");
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.prefs.locale_id = "de".into();
     shell.prefs.note_dispatch_fault("history.unknown-target: edit-9#0", &mut shell.chrome);
     let notice = shell.chrome.transient_notice().expect("a banner is showing");
@@ -231,7 +231,7 @@ fn history_refusals_are_localized_notices_carrying_their_code() {
 /// covered.
 #[test]
 fn every_command_rejection_is_told_from_its_codes_in_both_locales() {
-    let corpus: Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️command-rejection/🔣️.json")).expect("the shared command-rejection corpus parses");
+    let corpus: Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️command-rejection/🔣️.json")).expect("the shared command-rejection corpus parses");
     let rows = corpus["rows"].as_array().expect("the corpus rows");
     let mut codes = std::collections::BTreeSet::new();
     for row in rows {

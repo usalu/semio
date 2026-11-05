@@ -235,7 +235,7 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       cache: true,
       outputs: [],
       inputs: [transitiveOutputs],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", ...rendererEngines, ...engines, ...bootComponents],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-os-infinite:fonts", ...rendererEngines, ...engines, ...bootComponents],
       options: { command: `repo ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       }, "deterministic", "check-without-outputs");
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile} --port ${wgpuPort}`, ...(composition===undefined?{}:{env:{SEMIO_WGPU_COMPOSITION_PATH:composition}}) } }, "continuous", "serves-until-stopped");
@@ -251,7 +251,7 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       cache: true,
       outputs: [],
       inputs: [transitiveOutputs],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", `${wgpuProject.name}:wasm`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...bootComponents],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-os-infinite:fonts", `${wgpuProject.name}:wasm`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...bootComponents],
       options: { command: `repo ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       }, "deterministic", "check-without-outputs");
     }
@@ -264,7 +264,7 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       metadata: orchestrator,
       outputs: [storeReceiptOutputV1(name)],
       inputs: ["production", "^production", "viteBundleSources", transitiveOutputs, ...ownerSources(selected), ...contributionSources, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `repo ${JSON.stringify(buildPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", "semio-framework-canvas:stage-runtime-assets", `${flowProject.name}:wasm`, ...distributionEngines, ...engines, ...selectedComponents, "@semio-tech/assets:build"],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-os-infinite:fonts", "semio-framework-canvas:stage-runtime-assets", `${flowProject.name}:wasm`, ...distributionEngines, ...engines, ...selectedComponents, "@semio-tech/assets:build"],
       options: { command: `repo ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
     }, "deterministic", "pure-function-of-inputs");
     result[`build-${playground.variant}-react`] = {

@@ -2,11 +2,11 @@ use super::encode::{InputModes, MouseEncoding, MouseReporting};
 use super::history::{reflow, History, Row, Spot};
 use super::palette::{flag, Palette, XTERM_BG, XTERM_FG};
 use super::parser::VtParser;
-use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
-use semio_framework_ui_tui_core::text::char_cells;
-use semio_framework_ui_tui_core::theme::Rgb;
-use semio_framework_ui_tui_core::signal::CursorShape;
+use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use semio_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_ui_tui_core::text::char_cells;
+use semio_ui_tui_core::theme::Rgb;
+use semio_ui_tui_core::signal::CursorShape;
 
 #[path = "🧊️screen-grid-and-state/🦀️.rs"]
 mod screen_grid_and_state;

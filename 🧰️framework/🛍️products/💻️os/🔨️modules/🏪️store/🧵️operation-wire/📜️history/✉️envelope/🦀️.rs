@@ -1,5 +1,5 @@
 //! ✉️ Canonical history envelopes move actual admitted payloads and bound original header fragments.
-use semio_framework_os_spr::{ActorId,ArtifactId,SchemaId,MutationId,MutationEnvelope,ArtifactDiff,InverseMutation,CausalPayload,HybridLogicalTimestamp,HISTORY_TRANSITION_SCHEMA};
+use semio_os_spr::{ActorId,ArtifactId,SchemaId,MutationId,MutationEnvelope,ArtifactDiff,InverseMutation,CausalPayload,HybridLogicalTimestamp,HISTORY_TRANSITION_SCHEMA};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneClose,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};
 /// 🪡️ This pure codec reborrows text whose enclosing original publisher retains its genuine source fence.

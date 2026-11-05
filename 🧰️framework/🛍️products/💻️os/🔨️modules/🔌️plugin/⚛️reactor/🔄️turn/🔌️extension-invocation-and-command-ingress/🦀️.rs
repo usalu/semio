@@ -39,7 +39,7 @@ impl RetainedExtensionInvocation{
         }
         if self.result.is_some(){cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.begin_source_close();return Ok(None)}
         let Some((capability,payload,_))=self.source.as_ref()else{return Ok(None)};
-        let answer=match semio_framework_plugin_extension::extension_runtime_lift::extension_invoke(capability,payload,cx).await{Ok(answer)=>answer,Err(cause)=>{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Fault(cause)));return Ok(None)}};
+        let answer=match semio_plugin_extension::extension_runtime_lift::extension_invoke(capability,payload,cx).await{Ok(answer)=>answer,Err(cause)=>{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Fault(cause)));return Ok(None)}};
         if let Some(cause)=answer.refusal{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Turn(cause)));if let Some(payload)=answer.payload{self.refused_output=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(payload).unwrap_or_else(|_|unreachable!("original refused bytes declare typed retirement")))}return Ok(None)}
         let Some(payload)=answer.payload else{return Ok(None)};
         self.result=Some(semio_framework::kernel::RequestOutcome::Ok(payload));
@@ -67,12 +67,12 @@ pub fn receive_retained_extension_invocation(index:usize,owner:RetainedExtension
 
 #[doc(hidden)]
 pub enum CommandIngressOwner {
-    ReservedPresence { cursor: semio_framework::kernel::CommandPageCursor, admission: semio_framework_plugin_peer::PresenceRosterAdmission, page: semio_framework::kernel::FixedCommandPage },
+    ReservedPresence { cursor: semio_framework::kernel::CommandPageCursor, admission: semio_plugin_peer::PresenceRosterAdmission, page: semio_framework::kernel::FixedCommandPage },
     Presence { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64 },
     PendingPresencePage { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64, page: semio_framework::kernel::FixedCommandPage },
     GenericAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
     ClosingAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
-    Generic { cursor: semio_framework::kernel::CommandPageCursor, command: semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress },
+    Generic { cursor: semio_framework::kernel::CommandPageCursor, command: semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress },
 }
 
 #[doc(hidden)]
@@ -123,9 +123,9 @@ fn retire_command_ingress(state: CommandIngressOwner,cx:&mut semio_framework_job
                 Some(CommandIngressOwner::ClosingAssembly { cursor, pages })
             }
         }
-        CommandIngressOwner::Generic { cursor, command } if matches!(command,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}) => match command.retire_failed_step_on_original(cx){
-            semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(command)=>Some(CommandIngressOwner::Generic{cursor,command}),
-            semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),
+        CommandIngressOwner::Generic { cursor, command } if matches!(command,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}) => match command.retire_failed_step_on_original(cx){
+            semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(command)=>Some(CommandIngressOwner::Generic{cursor,command}),
+            semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),
         },
         CommandIngressOwner::Generic { cursor, command } => command.retire_step().map(|command| CommandIngressOwner::Generic { cursor, command }),
     })
@@ -213,11 +213,11 @@ pub fn retained_command_ingress_occupancy() -> usize {
 /// bundle answers the bundle's own typed refusal (`extension.inactive`/
 /// `extension.missing`), never silence: dropping the event stranded every caller's
 /// parked request forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(super) async fn drive_extension_turn<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, effects: &mut Vec<Effect>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+pub(super) async fn drive_extension_turn<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, effects: &mut Vec<Effect>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     if let Some(effect)=advance_retained_extension_invocation(cx).await?{effects.push(effect);}
     let original_extension_grant = runtime.mounted_owner_policy().close;
     let remaining=cx.retained_grant();
     let extension_grant = semio_framework_value::RetainedCloneGrant { maximum_items: original_extension_grant.maximum_items.min(remaining.maximum_items),maximum_copy_bytes:original_extension_grant.maximum_copy_bytes.min(remaining.maximum_copy_bytes),maximum_capacity_bytes:original_extension_grant.maximum_capacity_bytes.min(remaining.maximum_capacity_bytes),maximum_release_bytes:original_extension_grant.maximum_release_bytes.min(remaining.maximum_release_bytes),maximum_depth:original_extension_grant.maximum_depth.min(remaining.maximum_depth) };
-    let (extension_retirement_work, _) = cx.with_retained_loan(extension_grant,|same|semio_framework_plugin_extension::extension_runtime_lift::extension_retirement_turn(same))?;
+    let (extension_retirement_work, _) = cx.with_retained_loan(extension_grant,|same|semio_plugin_extension::extension_runtime_lift::extension_retirement_turn(same))?;
     Ok(extension_retirement_work)
 }

@@ -418,7 +418,7 @@ impl DrawingTool {
 /// 📤️ What one tool step publishes: ONE edit stamped with the transaction for a commit, nothing otherwise; a refused event
 /// is a fault (the tool broke its own transaction law) and publishes nothing.
 pub fn drawing_tool_emit(step: Result<ToolStep<DrawingMutation>, ToolRefusal>) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-    match step.map_err(|refusal| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(refusal.code()), "the Drawing canvas tool refused its own transaction"))? {
+    match step.map_err(|refusal| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(refusal.code()), "the Drawing canvas tool refused its own transaction"))? {
         ToolStep::Committed(transaction, mutations) => {
             let effects = created_layer_effects(&mutations);
             let mut emit = Emit::commit_transaction(transaction, mutations);

@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeGKSlab where Op: p
         verb: "change", entity: "g-k-slab", kind: "change-gk-slab", record: "ChangedGKSlab",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slab permanent action Gk", "Ständige Deckenlast Gk ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slab permanent action Gk", "Ständige Deckenlast Gk ändern")
     }
 }
 

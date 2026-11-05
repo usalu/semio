@@ -14,7 +14,7 @@ use semio_s_artifact_procedural_3d_mesh_bridge::base64_encode;
 use semio_s_artifact_procedural_3d_mesh_bridge::import_document;
 use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_plugin::ArtifactDeserializer;
+use semio_plugin::ArtifactDeserializer;
 use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_s_artifact_stdio_stl::StlSnapshot;

@@ -1,31 +1,31 @@
 //! 🧸️ Native installed Toy producer advances its real transaction and borrowed pages before granted closure.
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
-use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
-use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use semio_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
+use semio_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStoreInitializationAuthority, Mutation, MutationDiff};
-use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
+use semio_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
 use store::os_store::backbone::Backbone;
-use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, *};
-use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
+use semio_ui_contract::{Buildable, HasBase, HasChildren, *};
+use semio_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
 use semio_framework::{FaultFrom, *};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_plugin_window_kits::{LabelAxes, WindowKit};
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin_tests_06::tool_run_support_1::original_toy_emission::OriginalToyEmission;
-use semio_framework_plugin_tests_06::tool_run_support_1::original_toy_unit::OriginalToyUnit;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_plugin_tests_06::tool_run_support_1::original_toy_emission::OriginalToyEmission;
+use semio_plugin_tests_06::tool_run_support_1::original_toy_unit::OriginalToyUnit;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_plugin_program::PluginProgram;
 use semio_framework_job::StepContext;
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTick, ToolRunTickWriter};
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
-use semio_framework_plugin_tests_06::tool_run_support_1::{ToyRunJob, ToyRunJobOriginal, toy_fixture_caller_policy};
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_tests_06::tool_run_support_1::{ToyRunJob, ToyRunJobOriginal, toy_fixture_caller_policy};
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 #[test]
 fn original_installed_toy_job_preserves_transaction_wire_borrowed_outcomes_and_physical_receipts(){
  use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeView, StepContext, StepBudget, OperationId, Generation, CancelToken};

@@ -1,6 +1,6 @@
 //! 🧪️ The committed media mutation vectors `streams`: one implementation case per fixture bundle, each checked against its vector by the shared law library.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_s_artifact_remodel_remodeling_mut_vectors as vectors;
 

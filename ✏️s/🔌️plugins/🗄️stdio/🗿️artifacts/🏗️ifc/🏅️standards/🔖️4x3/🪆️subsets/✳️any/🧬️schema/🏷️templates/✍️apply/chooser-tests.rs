@@ -1,7 +1,7 @@
 //! 🔽️ The real addressed template action exposes the entire release without an implicit choice.
 use super::*;
-use semio_framework_plugin::{ActionArgControl, ArgSchema};
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::{ActionArgControl, ArgSchema};
+use semio_ui_locale::{Locale, Terminology};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[test]

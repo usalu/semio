@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "fix", entity: "slot", kind: "pin-slot", record: "Fixed" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Pin slot \"{}\" to tile \"{}\"", self.id, self.tile_id), &format!("Slot \"{}\" auf Kachel \"{}\" fixieren", self.id, self.tile_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Pin slot \"{}\" to tile \"{}\"", self.id, self.tile_id), &format!("Slot \"{}\" auf Kachel \"{}\" fixieren", self.id, self.tile_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

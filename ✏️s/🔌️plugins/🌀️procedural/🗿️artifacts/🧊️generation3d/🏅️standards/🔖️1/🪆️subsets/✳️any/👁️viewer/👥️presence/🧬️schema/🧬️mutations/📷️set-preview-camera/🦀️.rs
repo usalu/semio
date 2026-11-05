@@ -15,8 +15,8 @@ pub struct SetPreviewCamera {
 impl protocol::MutationKind<Generation3dViewPresence, Generation3dViewPresenceMutation> for SetPreviewCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-camera", kind: "set-preview-camera", record: "SetPreviewCamera" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Preview Camera", "Vorschaukamera setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Preview Camera", "Vorschaukamera setzen")
     }
 
     fn target(&self) -> Vec<String> {

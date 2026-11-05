@@ -13,7 +13,7 @@
 //! (`step_text` ↔ `SemioBrepSnapshot`, in `🚪️io/🦀️.rs`) already uses for STEP.
 
 use semio_framework_value::DslValue;
-use semio_framework_plugin::MeshData;
+use semio_plugin::MeshData;
 use semio_framework_3d_brep_engine::mesh_data_from_mesh_transfer;
 use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle}, semio_framework_3d_brep_representation::contract::Vec3};
 use std::collections::HashMap;

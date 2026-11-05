@@ -1,7 +1,7 @@
 //! 🪶️ Unmounted authored SQLite mapping adds paid literal-field copies after its owning baseline.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_v3::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
@@ -29,7 +29,7 @@ fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<
         let row_order = match self.row_order { BmpRowOrder::BottomUp => "bottom_up", BmpRowOrder::TopDown => "top_down" };
         control.check_value_bytes(count.checked_mul(64).and_then(|count| self.palette.len().checked_mul(56).and_then(|palette| count.checked_add(palette))).and_then(|count| count.checked_add(96)).and_then(|count| count.checked_add(self.schema.len())).and_then(|count| count.checked_add(row_order.len())).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"BMP value size overflow"))?)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
-        database.table_mut("bmp_document")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(semio_framework_os_kernel::sqlite_snapshot::artifact::project_text(control, &self.schema)?), SqliteValue::Integer(i64::from(self.header_size)), SqliteValue::Integer(i64::from(self.width)), SqliteValue::Integer(i64::from(self.height)), SqliteValue::Text(row_order.into()), SqliteValue::Integer(i64::from(self.planes)), SqliteValue::Integer(i64::from(self.bits_per_pixel)), SqliteValue::Integer(i64::from(self.compression)), SqliteValue::Integer(i64::from(self.image_size)), SqliteValue::Integer(i64::from(self.x_pixels_per_meter)), SqliteValue::Integer(i64::from(self.y_pixels_per_meter)), SqliteValue::Integer(i64::from(self.colors_used)), SqliteValue::Integer(i64::from(self.colors_important))] });
+        database.table_mut("bmp_document")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(semio_os_kernel::sqlite_snapshot::artifact::project_text(control, &self.schema)?), SqliteValue::Integer(i64::from(self.header_size)), SqliteValue::Integer(i64::from(self.width)), SqliteValue::Integer(i64::from(self.height)), SqliteValue::Text(row_order.into()), SqliteValue::Integer(i64::from(self.planes)), SqliteValue::Integer(i64::from(self.bits_per_pixel)), SqliteValue::Integer(i64::from(self.compression)), SqliteValue::Integer(i64::from(self.image_size)), SqliteValue::Integer(i64::from(self.x_pixels_per_meter)), SqliteValue::Integer(i64::from(self.y_pixels_per_meter)), SqliteValue::Integer(i64::from(self.colors_used)), SqliteValue::Integer(i64::from(self.colors_important))] });
         for (ordinal, entry) in self.palette.iter().enumerate() {
             if ordinal % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, ordinal, total)?; }
             let ordinal = i64::try_from(ordinal).map_err(|error|invalid(error.to_string()))?;
@@ -76,6 +76,6 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
             pixels[position * 4..position * 4 + 4].copy_from_slice(&[byte(row, 4)?, byte(row, 5)?, byte(row, 6)?, byte(row, 7)?]);
         }
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, total, total)?;
-        Ok(Self { schema: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, document.text(1)?)?, header_size: unsigned(document, 2)?, width, height, row_order, planes: word(document, 6)?, bits_per_pixel: word(document, 7)?, compression: unsigned(document, 8)?, image_size: unsigned(document, 9)?, x_pixels_per_meter: signed(document, 10)?, y_pixels_per_meter: signed(document, 11)?, colors_used: unsigned(document, 12)?, colors_important: unsigned(document, 13)?, palette, pixels })
+        Ok(Self { schema: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, document.text(1)?)?, header_size: unsigned(document, 2)?, width, height, row_order, planes: word(document, 6)?, bits_per_pixel: word(document, 7)?, compression: unsigned(document, 8)?, image_size: unsigned(document, 9)?, x_pixels_per_meter: signed(document, 10)?, y_pixels_per_meter: signed(document, 11)?, colors_used: unsigned(document, 12)?, colors_important: unsigned(document, 13)?, palette, pixels })
     }
 }

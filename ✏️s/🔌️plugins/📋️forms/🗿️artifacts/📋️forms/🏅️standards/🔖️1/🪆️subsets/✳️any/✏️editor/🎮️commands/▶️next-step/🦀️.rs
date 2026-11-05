@@ -1,12 +1,12 @@
 //! ▶️ Advance one exact Forms Try window when its visible step is valid.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::effective_try_values;
 use crate::editor::forms::modes::blueprint::windows::try_wizard::config::FormsTryWindowConfig;
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::FormsTryWindowTransient;
 use crate::schema::can_advance;
 use crate::{forms_steps, op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

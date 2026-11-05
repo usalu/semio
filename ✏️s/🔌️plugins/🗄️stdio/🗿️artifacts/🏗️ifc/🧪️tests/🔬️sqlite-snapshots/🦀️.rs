@@ -1,6 +1,6 @@
 //! 🧪️ The IFC4 and IFC2x3 owned SQLite snapshot laws, run against the artifact's actual declaration.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod ifc4_snapshot_tests;

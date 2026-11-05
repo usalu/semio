@@ -7,12 +7,12 @@ use crate::editor::bitmap::modes::edit::tools::fill as fill_tool;
 use crate::{editor::bitmap::modes::edit::windows::input, editor::bitmap::modes::edit::windows::output};
 use crate::{editor::bitmap::transient::BitmapTransient, editor::bitmap::transient::BitmapTransientMutation, editor::bitmap::transient::SetSolve};
 use crate::{WFC_BITMAP_DIALECT, WFC_BITMAP_DOCUMENT_SCHEMA};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
 use crate::editor::bitmap::*;
 use crate::{BitmapMutation, BitmapSnapshot};
 use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
@@ -123,7 +123,7 @@ fn the_brush_verb_and_utility_are_declared_and_answered() {
     let window = definition.window_kinds.iter().find(|window| window.id == input::WFC_BITMAP_WINDOW_INPUT).expect("the input window is declared");
     let action = window.actions.iter().find(|action| action.id == "paint-stroke").expect("'paint-stroke' is catalogued");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "'paint-stroke' would be dispatch-dead");
-    assert!(action.args.iter().any(|arg| arg.id == "points" && arg.required && matches!(arg.schema, semio_framework_plugin::ArgSchema::Array { .. })));
+    assert!(action.args.iter().any(|arg| arg.id == "points" && arg.required && matches!(arg.schema, semio_plugin::ArgSchema::Array { .. })));
     assert!(window.utilities.iter().any(|utility| utility.as_str() == input::utilities::brush::UTILITY_ID));
     for retired in ["stroke-begin", "stroke-extend", "stroke-commit"] {
         assert!(!BITMAP_TOOL_IDS.contains(&retired), "'{retired}' was replaced by the brush tool");
@@ -192,13 +192,13 @@ fn every_declared_action_bridges_to_the_command_it_names() {
 /// framework joins all four at registration and fails closed on any disagreement.
 #[test]
 fn the_retained_tool_roster_agrees_with_itself_and_with_the_manifest() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     assert_eq!(<BitmapEditorCommand as protocol::OpBinary>::TOOL_JOB_IDS, BITMAP_TOOL_IDS);
     assert_eq!(<BitmapCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, BITMAP_TOOL_IDS);
     let contracts: Vec<&str> = <BitmapCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
     assert_eq!(contracts, BITMAP_TOOL_IDS.to_vec());
     assert!(<BitmapCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().all(|contract| !contract.lanes.is_empty()));
-    let proofs: Vec<&str> = <BitmapEditor as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(semio_framework_plugin::ArtifactBoundedFirstStepProof::tool_id).collect();
+    let proofs: Vec<&str> = <BitmapEditor as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(semio_plugin::ArtifactBoundedFirstStepProof::tool_id).collect();
     assert_eq!(proofs, BITMAP_TOOL_IDS.to_vec());
 
     let definition = create_bitmap_editor();
@@ -246,7 +246,7 @@ fn the_manifest_declares_the_fill_tool_on_edit_mode() {
 
 #[test]
 fn solve_starts_the_fill_run_instead_of_writing_set_solve() {
-    use semio_framework_plugin::{AppOperationContext, Effect, HistoryView};
+    use semio_plugin::{AppOperationContext, Effect, HistoryView};
     let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let history = HistoryView::empty();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "wfc-bitmap-fill".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() };
@@ -260,7 +260,7 @@ fn a_partial_fill_render_differs_from_empty_and_finished() {
     use crate::editor::bitmap::modes::edit::tools::fill::payload_from_assignment;
     use crate::editor::bitmap::modes::edit::windows::output::{self, config::BitmapOutputWindowConfig};
     use crate::editor::bitmap::transient::BitmapTransient;
-    use semio_framework_plugin::ToolRunView;
+    use semio_plugin::ToolRunView;
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
 
     let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
@@ -319,4 +319,4 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_bitmap_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", crate::editor::bitmap::BitmapEditor, || semio_framework_plugin::App { definition: crate::editor::bitmap::create_bitmap_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::bitmap::BitmapEditor, || semio_plugin::App { definition: crate::editor::bitmap::create_bitmap_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

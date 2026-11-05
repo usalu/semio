@@ -9,8 +9,8 @@ use semio_s_artifact_cad_cad_inferences::{cad_camera_distance, cad_camera_projec
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_value::DslValue;
 use semio_s_artifact_cad_cad_model::{snapshot::CadCamera, snapshot::CadPaneId};
-use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetCamera

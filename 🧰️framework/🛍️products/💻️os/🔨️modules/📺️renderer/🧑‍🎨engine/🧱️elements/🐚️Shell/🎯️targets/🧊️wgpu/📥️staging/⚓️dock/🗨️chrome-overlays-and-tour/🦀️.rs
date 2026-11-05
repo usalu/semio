@@ -38,19 +38,19 @@ impl ShellDockState {
         for inbound in chrome.chrome_build.agent.take_inbound_shell_commands() {
             let seq = inbound.seq();
             let (ok, fault) = match inbound {
-                semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::FocusWindow { window_id, .. } => {
+                semio_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::FocusWindow { window_id, .. } => {
                     windows.active_window_id = window_id;
                     changed = true;
                     (true, None)
                 }
-                semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::RevealPanelTab { tab_id, .. } => match self.reveal_dock_tab(&tab_id) {
+                semio_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::RevealPanelTab { tab_id, .. } => match self.reveal_dock_tab(&tab_id) {
                     Some(_) => {
                         changed = true;
                         (true, None)
                     }
                     None => (false, Some(format!("this shell's dock hosts no `{tab_id}` panel tab"))),
                 },
-                semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::Acknowledge { .. } => (true, None),
+                semio_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::Acknowledge { .. } => (true, None),
             };
             chrome.chrome_build.agent.settle_shell_command(seq, ok, fault);
         }

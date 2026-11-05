@@ -1,13 +1,13 @@
 //! 🎬️ Workflow, VFS snapshot types, and media export registry.
 extern crate semio_framework_value_derive as value_derive;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 // #region workflow
 
 // 🧬️ Kernel re-exports — the persisted graph model itself (`Workflow`/`WorkflowNode`/`WorkflowEdge`/
 // `WorkflowMediaPort`/`WorkflowPosition`/`MediaContract`/`WorkflowDelivery`/
 // `plan_workflow`/`workflow_node_for_app`/`placeholder_media_contract`/`empty_workflow`) lives in
-// the `semio-framework-os-kernel-workflow` crate (dependency name `workflow`) — see its
+// the `semio-os-kernel-workflow` crate (dependency name `workflow`) — see its
 // `🔖️InstanceIdentity` doc. Re-exported here so every existing `crate::workflow::X` call site in
 // this file keeps working unchanged. `workflow::validate_workflow` (dangling-edge + cycle checks
 // only) is re-exported under a different name because this module's own `validate_workflow` (below)
@@ -16,7 +16,7 @@ extern crate semio_framework_os_kernel as store;
 // 🧬️ `WorkflowSnapshot`/`WorkflowMutation`/`WorkflowParameter*`/`WorkflowInput*`/`WorkflowOutputBinding`
 // absorb os-core's dissolved `OsSnapshot`/`OsMutation`/`instance::OsParameter*` (see `## The
 // inversion` in the plan) — re-exported here too so every `crate::workflow::X` call site (and every
-// downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
+// downstream crate importing via `semio_os::workflow::X`/`semio_os::X`) keeps a
 // single source of truth for the workflow document vocabulary.
 pub use semio_framework_artifact_workflow_workflow::{
     apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
@@ -27,8 +27,8 @@ pub use semio_framework_artifact_workflow_workflow::{
     S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };
 
-use semio_framework_os_host_instance::create_os_id;
-use semio_framework_os_host_registry::{os_app_registration, os_artifact_descriptor, os_artifact_dialect, resolve_kernel_future, OsArtifactDescriptor};
+use semio_os_host_instance::create_os_id;
+use semio_os_host_registry::{os_app_registration, os_artifact_descriptor, os_artifact_dialect, resolve_kernel_future, OsArtifactDescriptor};
 use {semio_framework::media_types_compatible,semio_framework_artifact_reference::ArtifactDialect,semio_framework::MediaCompat,semio_framework::MediaWireFormat};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -74,9 +74,9 @@ fn negotiate_wire_format(source: &OsArtifactDescriptor, target: &OsArtifactDescr
     }
     if !source.export_stdio_kinds.is_empty() && !target.import_stdio_kinds.is_empty() {
         for kind in &source.export_stdio_kinds {
-            let format_kind = semio_framework_os_kernel::io::format_descriptor(kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source stdio format kind `{kind}`"))?.kind_id;
+            let format_kind = semio_os_kernel::io::format_descriptor(kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source stdio format kind `{kind}`"))?.kind_id;
             for other in &target.import_stdio_kinds {
-                let target_format_kind = semio_framework_os_kernel::io::format_descriptor(other).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown target stdio format kind `{other}`"))?.kind_id;
+                let target_format_kind = semio_os_kernel::io::format_descriptor(other).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown target stdio format kind `{other}`"))?.kind_id;
                 if target_format_kind == format_kind {
                     return Ok(Some(MediaWireFormat::Binary { format_kind }));
                 }
@@ -93,15 +93,15 @@ fn negotiate_wire_format(source: &OsArtifactDescriptor, target: &OsArtifactDescr
 /// the full rationale — consults the live typed IO registry as a supplement to the
 /// `export_stdio_kinds`/`import_stdio_kinds` static lists, catching drift between the two.
 fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Result<Option<String>, String> {
-    use semio_framework_os_kernel::io::IoDirection;
-    let target_reads: HashSet<&str> = resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(target_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
+    use semio_os_kernel::io::IoDirection;
+    let target_reads: HashSet<&str> = resolve_kernel_future(semio_os_kernel::io::dialects_for(target_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
     if target_reads.contains(source_kind) {
-        let descriptor = semio_framework_os_kernel::io::format_descriptor(source_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
+        let descriptor = semio_os_kernel::io::format_descriptor(source_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
         return Ok(Some(descriptor.kind_id));
     }
-    let source_reads: HashSet<&str> = resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(source_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
+    let source_reads: HashSet<&str> = resolve_kernel_future(semio_os_kernel::io::dialects_for(source_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
     if let Some(candidate) = target_reads.intersection(&source_reads).next() {
-        let descriptor = semio_framework_os_kernel::io::format_descriptor(candidate).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
+        let descriptor = semio_os_kernel::io::format_descriptor(candidate).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
         return Ok(Some(descriptor.kind_id));
     }
     Ok(None)
@@ -454,7 +454,7 @@ pub fn build_os_workflow_operator_infos(graph: &Workflow, parameters: &[Workflow
 /// `String` (just the `artifact_kind` segment, no `@standard/subset`) because this function's own
 /// two remaining callers (`registry_shared_stdio_dialect` below, and the OLD `io_dispatch`
 /// fallback paths in `registry_export_media`/`registry_import_media`) both talk to the OLD
-/// `semio_framework_os_kernel::io::dialects_for`/`IoKey` registry (debt D2), whose `Dialect.artifact_kind`
+/// `semio_os_kernel::io::dialects_for`/`IoKey` registry (debt D2), whose `Dialect.artifact_kind`
 /// is a bare `&str` with no standard/subset fields of its own -- the NEW io-mechanism path below
 /// builds a full `ArtifactDialect` directly from `os_artifact_dialect`, not from this function.
 fn native_dialect_kind(workflow_kind: &str) -> String {
@@ -468,7 +468,7 @@ fn dialect_names_format(dialect: &semio_framework_artifact_reference::Dialect, f
 }
 //#endregion 🔖️IoDialectBridge
 //#region 🔖️MediaCapability
-pub use semio_framework_os_host_registry::os_resource_media_capability;
+pub use semio_os_host_registry::os_resource_media_capability;
 /// 🗂️ Defined in `semio_framework` alongside `ArtifactKindSpec`; re-exported here
 /// verbatim. `os_resource_media_capability` is a registry lookup (see `crate::registry`) driven by each
 /// app's declared `ArtifactKindSpec.media_capability` instead of a hardcoded per-app match.
@@ -487,7 +487,7 @@ impl OsMediaExportResult {
     /// 📤️ Build an export result from raw bytes + stdio format kind id (the legacy format enum was retired —
     /// ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
     pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
-        let entry = semio_framework_os_kernel::io::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+        let entry = semio_os_kernel::io::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
         let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
         let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
         let data = if entry.is_binary { base64_codec::base64_standard_encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
@@ -517,7 +517,7 @@ pub fn sanitize_export_file_stem(name: &str, fallback: &str) -> String {
 
 /// 🏷️ Names an export after its document: the registered stem is replaced while the format's extension stays authoritative.
 fn name_export_after_document(mut result: OsMediaExportResult, format_kind: &str, stem: &str) -> OsMediaExportResult {
-    let extension = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten().and_then(|row| row.extensions.first().cloned());
+    let extension = semio_os_kernel::io::format_descriptor(format_kind).ok().flatten().and_then(|row| row.extensions.first().cloned());
     result.file_name = match extension {
         Some(extension) if result.file_name.ends_with(&extension) => format!("{stem}{extension}"),
         _ => result.file_name,
@@ -550,7 +550,7 @@ pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &
 
 /// 📤️ Export that stops at its next IO checkpoint once `cancel` fires; the refusal is the exact string `media export was cancelled`.
 pub fn export_os_app_instance_media_kind_cancellable(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str, cancel: &semio_framework_async::CancelToken) -> Result<OsMediaExportResult, String> {
-    let format_kind = semio_framework_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+    let format_kind = semio_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
     let stem = sanitize_export_file_stem(&node.label, &node.yields);
     if let Some(result) = registry_export_media(&node.yields, &format_kind, source_document, &stem, cancel) {
         return result;
@@ -584,7 +584,7 @@ const HOST_IO_BYTES_PER_ITEM: usize = 64;
 /// to [`HOST_IO_MINIMUM_BYTES`]..[`HOST_IO_MAXIMUM_BYTES`] - and every native decode, encode and SQLite callback observes `cancel`,
 /// so a cancelled export or import stops at its next checkpoint with its partial owners returned to the controls.
 fn host_io_run(route: &semio_framework::io_schema::IoRoute, payload: semio_framework::io_schema::IoPayload, cancel: &semio_framework_async::CancelToken) -> HostIoRun {
-    use semio_framework_os_kernel::io::io_mechanism::{io_run_with_snapshot_control, IoRunControl};
+    use semio_os_kernel::io::io_mechanism::{io_run_with_snapshot_control, IoRunControl};
     let input = match &payload {
         semio_framework::io_schema::IoPayload::Text(text) => text.len(),
         semio_framework::io_schema::IoPayload::Binary(bytes) => bytes.len(),
@@ -597,7 +597,7 @@ fn host_io_run(route: &semio_framework::io_schema::IoRoute, payload: semio_frame
     let mut encode = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut encode_callback);
     let mut control = IoRunControl::new(&mut decode, &mut encode, grant);
     let mut snapshot_callback = |_| !cancel.is_cancelled_now();
-    let mut snapshot = semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut snapshot_callback, Default::default());
+    let mut snapshot = semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut snapshot_callback, Default::default());
     let mut input = Some(payload);
     match resolve_kernel_future(io_run_with_snapshot_control(route, &mut input, &mut control, &mut snapshot)) {
         Ok(outcome) => HostIoRun::Done(outcome.value),
@@ -626,10 +626,10 @@ fn host_io_run(route: &semio_framework::io_schema::IoRoute, payload: semio_frame
 /// `registry_export_media` below falls through to the OLD path for every production caller until
 /// W2+ cuts real subsets over -- this is debt D2's "coexist, do not bridge" shape, not a silent gap.
 fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, source_document: &Value, file_stem: &str, cancel: &semio_framework_async::CancelToken) -> Option<Result<OsMediaExportResult, String>> {
-    use semio_framework_os_kernel::io::io_mechanism::io_route;
+    use semio_os_kernel::io::io_mechanism::io_route;
     use semio_framework::io_schema::{IoPayload as NewIoPayload, CARRIER_BINARY, CARRIER_TEXT};
 
-    let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
+    let is_binary = semio_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
     let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
     let route = resolve_kernel_future(io_route(artifact_dialect, &carrier, 3)).ok()?.value;
     let json_text = serde_json::to_string(source_document).ok()?;
@@ -661,9 +661,9 @@ fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, fo
 /// io-mechanism yet -- W6 deletes this function outright. Never merged with the new path above;
 /// `registry_export_media` picks ONE or the other per call, never blends their results.
 fn registry_export_media_via_composer_registry(artifact_kind: &str, format_kind: &str, source_document: &Value, file_stem: &str) -> Option<Result<OsMediaExportResult, String>> {
-    use {semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload};
+    use {semio_os_kernel::io::ErasedComposeSource,semio_os_kernel::io::IoDirection,semio_os_kernel::io::IoKey,semio_os_kernel::io::IoPayload};
     let native_kind = native_dialect_kind(artifact_kind);
-    let target = match resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
+    let target = match resolve_kernel_future(semio_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
         Ok(dialects) => dialects.into_iter().find(|dialect| dialect_names_format(dialect, format_kind))?,
         Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
     };
@@ -676,11 +676,11 @@ fn registry_export_media_via_composer_registry(artifact_kind: &str, format_kind:
         format_standard: target.standard.0.to_string(),
         format_subset: target.subset.0.to_string(),
     };
-    let composer = resolve_kernel_future(semio_framework_os_kernel::io::resolve(&key)).ok()?;
+    let composer = resolve_kernel_future(semio_os_kernel::io::resolve(&key)).ok()?;
     let json_bridge = *composer.reads.iter().find(|dialect| dialect.standard.0 == JSON_INTERCHANGE_STANDARD)?;
     let json_text = serde_json::to_string(source_document).ok()?;
     let sources = [ErasedComposeSource { dialect: json_bridge, payload: IoPayload::Text(json_text) }];
-    let composed = resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&key, &sources)).ok()?;
+    let composed = resolve_kernel_future(semio_os_kernel::io::io_dispatch(&key, &sources)).ok()?;
     let bytes = match composed.payload {
         IoPayload::Binary(b) => b,
         IoPayload::Text(t) => t.into_bytes(),
@@ -700,8 +700,8 @@ fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document
     registry_export_media_via_composer_registry(artifact_kind, format_kind, source_document, file_stem)
 }
 
-pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Result<Option<String>, semio_framework_os_kernel::io::FormatRegistryError> {
-    Ok(semio_framework_os_kernel::io::format_descriptor(format_artifact_kind)?.and_then(|row| row.extensions.first().cloned()))
+pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Result<Option<String>, semio_os_kernel::io::FormatRegistryError> {
+    Ok(semio_os_kernel::io::format_descriptor(format_artifact_kind)?.and_then(|row| row.extensions.first().cloned()))
 }
 
 pub type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
@@ -724,7 +724,7 @@ pub fn import_os_app_instance_media_kind(node: &WorkflowNode, data: &[u8], forma
 
 /// 📥️ Import that stops at its next IO checkpoint once `cancel` fires; the refusal is the exact string `media import was cancelled`.
 pub fn import_os_app_instance_media_kind_cancellable(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str, cancel: &semio_framework_async::CancelToken) -> Result<Value, String> {
-    let format_kind = semio_framework_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+    let format_kind = semio_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
     if let Some(result) = registry_import_media(&node.yields, &format_kind, data, cancel) {
         return result;
     }
@@ -744,10 +744,10 @@ pub fn import_os_app_instance_media_kind_cancellable(node: &WorkflowNode, data: 
 /// this is a SINGLE `io_route(carrier -> artifact_dialect)` + `io_run`, never `io_identify` --
 /// `io_identify` is for the genuinely-unknown-dialect "open this file" case, not this one.
 fn registry_import_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, data: &[u8], cancel: &semio_framework_async::CancelToken) -> Option<Result<Value, String>> {
-    use semio_framework_os_kernel::io::io_mechanism::io_route;
+    use semio_os_kernel::io::io_mechanism::io_route;
     use semio_framework::io_schema::{IoPayload as NewIoPayload, CARRIER_BINARY, CARRIER_TEXT};
 
-    let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
+    let is_binary = semio_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
     let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
     let carrier_payload = if is_binary { NewIoPayload::Binary(data.to_vec()) } else { NewIoPayload::Text(String::from_utf8(data.to_vec()).ok()?) };
     let route = resolve_kernel_future(io_route(&carrier, artifact_dialect, 3)).ok()?.value;
@@ -772,13 +772,13 @@ fn registry_import_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, fo
 /// working, UNCHANGED logic, as the fallback for artifacts that have not migrated onto the new
 /// io-mechanism yet -- W6 deletes this function outright.
 fn registry_import_media_via_composer_registry(artifact_kind: &str, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
-    use semio_framework_os_kernel::io::ErasedComposeSource;
-    use semio_framework_os_kernel::io::IoDirection;
-    use semio_framework_os_kernel::io::IoKey;
-    use semio_framework_os_kernel::io::IoPayload;
+    use semio_os_kernel::io::ErasedComposeSource;
+    use semio_os_kernel::io::IoDirection;
+    use semio_os_kernel::io::IoKey;
+    use semio_os_kernel::io::IoPayload;
     let native_kind = native_dialect_kind(artifact_kind);
 
-    let source_dialect = match resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Import)) {
+    let source_dialect = match resolve_kernel_future(semio_os_kernel::io::dialects_for(&native_kind, IoDirection::Import)) {
         Ok(dialects) => dialects.into_iter().find(|dialect| dialect_names_format(dialect, format_kind))?,
         Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
     };
@@ -792,9 +792,9 @@ fn registry_import_media_via_composer_registry(artifact_kind: &str, format_kind:
         format_subset: source_dialect.subset.0.to_string(),
     };
     let sources = [ErasedComposeSource { dialect: source_dialect, payload: IoPayload::Binary(data.to_vec()) }];
-    let native = resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&import_key, &sources)).ok()?;
+    let native = resolve_kernel_future(semio_os_kernel::io::io_dispatch(&import_key, &sources)).ok()?;
 
-    let export_dialect = match resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
+    let export_dialect = match resolve_kernel_future(semio_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
         Ok(dialects) => dialects.into_iter().find(|dialect| dialect.standard.0 == JSON_INTERCHANGE_STANDARD)?,
         Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
     };
@@ -808,7 +808,7 @@ fn registry_import_media_via_composer_registry(artifact_kind: &str, format_kind:
         format_subset: export_dialect.subset.0.to_string(),
     };
     let native_sources = [ErasedComposeSource { dialect: native.dialect, payload: native.payload }];
-    let json_out = resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&export_key, &native_sources)).ok()?;
+    let json_out = resolve_kernel_future(semio_os_kernel::io::io_dispatch(&export_key, &native_sources)).ok()?;
     let bytes = match json_out.payload {
         IoPayload::Binary(b) => b,
         IoPayload::Text(t) => t.into_bytes(),

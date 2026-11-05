@@ -17,8 +17,8 @@ pub struct ChangeReliabilityClass {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeReliabilityClass where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::change_reliability_class::ChangeReliabilityClass> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "reliability-class", kind: "change-reliability-class", record: "ChangedReliabilityClass" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change reliability class to {:?}", self.new_reliability_class), &format!("Zuverlässigkeitsklasse auf {:?} ändern", self.new_reliability_class))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change reliability class to {:?}", self.new_reliability_class), &format!("Zuverlässigkeitsklasse auf {:?} ändern", self.new_reliability_class))
     }
 }
 

@@ -5,9 +5,9 @@
 //! moved node (`📋️tool-run-contract.md` §3.7, `📓️wave-W3-F.md` §3).
 
 use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity, layout_run_job, layout_run_overlay_positions, LayoutRunConfig, LayoutRunEdge, LayoutRunEncodeError, LayoutRunGraph, LayoutRunNode, LayoutRunOpEncoder, LayoutRunPoint, LayoutRunResume};
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, ToolDefinition, ToolRunJob};
+use semio_plugin::{Fault, FaultCode, FaultOrigin, ToolDefinition, ToolRunJob};
 use semio_framework_tool_run::{JobKindId, ToolRunIdentity};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 
 use std::collections::{BTreeSet, HashMap};

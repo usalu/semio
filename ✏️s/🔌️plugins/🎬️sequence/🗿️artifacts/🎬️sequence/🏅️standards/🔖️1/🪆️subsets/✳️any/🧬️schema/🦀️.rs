@@ -69,9 +69,9 @@ pub fn sequence_artifact_schema_descriptor() -> semio_framework_schema_registry:
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.sequence.sequence", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.sequence.sequence",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" },
@@ -110,7 +110,7 @@ pub fn sequence_artifact_schema_descriptor() -> semio_framework_schema_registry:
 /// `SequenceComposer` cluster outright: construction is a plain snapshot+mutation build (no custom
 /// analysis/composition logic this subset needs beyond the ordinary `Mutation`/`MutationDiff`
 /// algebra), so the trivial-subset shape applies verbatim.
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<SequenceSnapshot, SequenceMutation>;
+pub type Construction = semio_plugin::app::SnapshotBuilder<SequenceSnapshot, SequenceMutation>;
 //#endregion 🏗️Construction
 
 //#region 🔁️Re-exports
@@ -431,8 +431,8 @@ pub fn genesis_sequence_child_pack(document: &SequenceSnapshot, slot: &str, chil
 //#region 🧩️ArtifactItems5
 pub mod artifact_items_5 {
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.sequence.sequence")?)
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.schema.artifact")?, ArtifactCapabilityKind::schema())

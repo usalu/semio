@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorTestPullOutR
         record: "ChangedAnchorTestPullOutRes",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Suitability-test pull-out resistance R_a,m of the anchor test", "Ankerprüfung: Herausziehwiderstand Eignungsprüfung R_a,m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Suitability-test pull-out resistance R_a,m of the anchor test", "Ankerprüfung: Herausziehwiderstand Eignungsprüfung R_a,m ändern")
     }
 }
 

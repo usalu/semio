@@ -16,8 +16,8 @@ pub struct SetFileSchema {
 impl protocol::MutationKind<StepSnapshot, StepCc4Mutation> for SetFileSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-schema", kind: "set-file-schema", record: "SetFileSchema" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set FILE_SCHEMA to [{}]", self.schemas.join(", ")), &format!("FILE_SCHEMA auf [{}] setzen", self.schemas.join(",")))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set FILE_SCHEMA to [{}]", self.schemas.join(", ")), &format!("FILE_SCHEMA auf [{}] setzen", self.schemas.join(",")))
     }
 
     fn target(&self) -> Vec<String> {

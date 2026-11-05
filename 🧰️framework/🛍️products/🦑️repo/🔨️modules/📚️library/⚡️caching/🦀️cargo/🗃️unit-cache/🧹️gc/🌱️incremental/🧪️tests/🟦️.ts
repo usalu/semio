@@ -1,4 +1,5 @@
 import {expect,test} from "bun:test";
+import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -41,8 +42,8 @@ function session(root:string,crate:string,name:string,ageMs:number,bytes:number,
 test("discovery finds the incremental directories of the declared bases and nothing else",()=>{
  const store=mkdtempSync(join(tmpdir(),"sinc-"));
  try{
-  for(const path of ["b/p/prototype/incremental","b/p/wasm32-unknown-unknown/prototype/incremental","b/r/debug/incremental","t/p/release/incremental","u/l/d1/b/prototype/incremental","components/f1/b/prototype/incremental","tmp/x/incremental","cargo/home/registry/incremental"])mkdirSync(join(store,path),{recursive:true});
-  expect(incrementalRootsV1(store).map(path=>path.slice(store.length+1))).toEqual(["b/p/prototype/incremental","b/p/wasm32-unknown-unknown/prototype/incremental","b/r/debug/incremental","components/f1/b/prototype/incremental","t/p/release/incremental","u/l/d1/b/prototype/incremental"]);
+  for(const path of ["b/p/prototype/incremental","b/p/wasm32-unknown-unknown/prototype/incremental","b/r/debug/incremental","t/p/release/incremental","u/l/d1/prototype/incremental","components/f1/b/prototype/incremental","tmp/x/incremental","cargo/home/registry/incremental"])mkdirSync(join(store,path),{recursive:true});
+  expect(incrementalRootsV1(store).map(path=>path.slice(store.length+1))).toEqual(["b/p/prototype/incremental","b/p/wasm32-unknown-unknown/prototype/incremental","b/r/debug/incremental","components/f1/b/prototype/incremental","t/p/release/incremental","u/l/d1/prototype/incremental"]);
  }finally{rmSync(store,{recursive:true,force:true});}
 });
 
@@ -91,3 +92,5 @@ test("reclaiming before a reservation refuses removes superseded sessions, keeps
   try{expect(claim).toBeDefined();expect(await reclaimUnitStorageV1(store,1)).toBe(0);}finally{claim?.release();}
  }finally{rmSync(store,{recursive:true,force:true});}
 });
+
+test("canonical lane discovery separates build profiles from marker namespaces and preserves explicit target ownership",()=>{const root=mkdtempSync(join(tmpdir(),"lane-scan-"));try{for(const path of fixture.discovery.directories)mkdirSync(join(root,path),{recursive:true});expect(new Ajv({strict:false}).validate({...schema, $ref:"#/definitions/Discovery"},fixture.discovery)).toBe(true);const found=incrementalRootsV1(root);expect(found.map(path=>path.slice(root.length+1).replaceAll("\\","/")).sort()).toEqual(fixture.discovery.expected);expect(existsSync(join(root,"u/l/d1/v/prototype/incremental"))).toBe(true);expect(existsSync(join(root,"u/l/d1/m/prototype/incremental"))).toBe(true);}finally{rmSync(root,{recursive:true,force:true});}});

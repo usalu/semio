@@ -2,11 +2,11 @@
 
 use semio_s_plugin_norm_compliance::NormHost;
 use crate::En1997Family;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_ARTIFACT: &str = "norm.en1997.play.artifact";
@@ -19,7 +19,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host: &NormHost<En1997Family>, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(host: &NormHost<En1997Family>, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     semio_s_plugin_norm_app_surface::render_summary(host, locale)
 }
 //#endregion 🔖️Render

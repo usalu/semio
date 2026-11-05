@@ -12,8 +12,8 @@ use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInput
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_value::ToValue as _;
 
@@ -33,7 +33,7 @@ pub struct SetWidgetInput {
 }
 
 /// 📃️ Computes one absolute ordered list value, validating indices, element type and cardinality before publication.
-pub(crate) fn edit_collection_value(types: &[String], current: Option<&semio_framework_value::DslValue>, payload: &SetWidgetInput, cardinality: &semio_framework_os_flow::neural::Cardinality) -> Result<WidgetInputValue, String> {
+pub(crate) fn edit_collection_value(types: &[String], current: Option<&semio_framework_value::DslValue>, payload: &SetWidgetInput, cardinality: &semio_os_flow::neural::Cardinality) -> Result<WidgetInputValue, String> {
     if !cardinality.is_collection() { return Err("Select a collection input".into()); }
     let schema = current.and_then(|value| value.get("0")).and_then(|value| value.get("$schema")).and_then(semio_framework_value::DslValue::as_str).or_else(|| types.first().map(String::as_str)).ok_or("Select a supported collection type")?;
     if !types.iter().any(|kind| kind == schema) { return Err("Collection item type does not match its port".into()); }
@@ -117,7 +117,7 @@ pub(crate) fn input_leaf(host_snapshot: &FlowHostSnapshot, payload: &SetWidgetIn
     }
     let Widget::Neuron { neuron_kind, params, .. } = widget else { return Err("Select an operator input or a text source".into()) };
     if host_snapshot.synapses.iter().any(|synapse| synapse.to == payload.widget_id && synapse.to_port == payload.channel) { return Err("This input is connected; edit its source or disconnect it first".into()); }
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let infos = semio_os_flow::flow_neuron_kind_info_map();
     let port = infos.get(neuron_kind).and_then(|info| info.inputs.iter().find(|input| input.name == payload.channel)).ok_or("The selected operator input is unavailable")?;
     let stored = params.get(&payload.channel).map(|value| value.to_value());
     let current = stored.clone().or_else(|| port.default.as_ref().map(|value| value.to_value()));
@@ -138,7 +138,7 @@ pub fn mesh_source_text(host: &FlowHostSnapshot, widget_id: &str, channel: &str)
         Widget::InputNote { id, text } if channel == "text" && host.synapses.iter().any(|wire| wire.from == *id && wire.to_port == "data" && host.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == &wire.to && neuron_kind == "brep.mesh.construct"))) => Ok((id.clone(), "text".into(), text.clone())),
         Widget::Neuron { id, neuron_kind, params, .. } if channel == "data" && neuron_kind == "brep.mesh.construct" => {
             if let Some(wire) = host.synapses.iter().find(|wire| wire.to == *id && wire.to_port == "data") { return mesh_source_text(host, &wire.from, "text"); }
-            let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+            let infos = semio_os_flow::flow_neuron_kind_info_map();
             let value = params.get("data").or_else(|| infos.get(neuron_kind).and_then(|info| info.inputs.iter().find(|port| port.name == "data")).and_then(|port| port.default.as_ref())).ok_or("Choose a mesh source")?.to_value();
             let text = value.get("value").and_then(semio_framework_value::DslValue::as_str).or_else(|| value.as_str()).ok_or("Mesh source must be text")?;
             Ok((id.clone(), "data".into(), text.into()))
@@ -369,8 +369,8 @@ pub(crate) fn widget_facet_leaf(host: &FlowHostSnapshot, payload: &SetWidgetInpu
     let next = match (payload.facet.as_deref(), widget, payload.channel.as_str()) {
         (Some("variableName"), Widget::Variable { id, schema, .. }, "name") => Widget::Variable { id: id.clone(), name: value.into(), schema: schema.clone() },
         (Some("variableSchema"), Widget::Variable { id, name, .. }, "schema") => {
-            if !semio_framework_os_flow::flow_operator_registry().schema_ids().iter().any(|schema| schema == value) { return Err("Choose a registered variable type".into()); }
-            let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+            if !semio_os_flow::flow_operator_registry().schema_ids().iter().any(|schema| schema == value) { return Err("Choose a registered variable type".into()); }
+            let infos = semio_os_flow::flow_neuron_kind_info_map();
             for wire in &host.synapses {
                 let endpoint = if wire.to == *id && wire.from != *id { Some((&wire.from, &wire.from_port, false)) } else if wire.from == *id && wire.to != *id { Some((&wire.to, &wire.to_port, true)) } else { None };
                 let Some((target, port, incoming)) = endpoint else { continue; };

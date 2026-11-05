@@ -2,8 +2,8 @@
 
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
 use crate::{GraphNodeId, SemioGraphMutation, SemioValue, SemioValueEntry, WiresMutation, WiresSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_graph::schema::mutations::create_node::CreateNode;

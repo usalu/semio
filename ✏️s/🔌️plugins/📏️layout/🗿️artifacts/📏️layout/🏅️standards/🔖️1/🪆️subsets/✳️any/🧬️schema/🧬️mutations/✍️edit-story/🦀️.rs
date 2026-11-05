@@ -28,8 +28,8 @@ pub struct EditStory {
 impl<Op> MutationKind<LayoutSnapshot, Op> for EditStory where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::edit_story::EditStory> + From<crate::set_story_runs::SetStoryRuns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "story", kind: "edit-story", record: "EditedStory" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit story \"{}\"", self.id), &format!("Textfluss \"{}\" bearbeiten", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Edit story \"{}\"", self.id), &format!("Textfluss \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -2,13 +2,13 @@
 //! the user hid. A window config, not an app config: two open world windows orbit and filter independently, and a read-only surface
 //! writes nothing to the artifact lane.
 
-use semio_framework_plugin::{WorldProjectionConfig, apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
+use semio_plugin::{WorldProjectionConfig, apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🧊️ Orbit pose, projection preset bank and hidden storey ids of one world window. `framed` turns true with the first camera gesture and
 /// from then on suppresses the one-shot fit to the model.
-#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]

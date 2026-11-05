@@ -25,7 +25,7 @@ async fn imperative_io_declares_result_out_reusing_the_computation_procedure_kin
     let port = &io.ports[0];
     assert_eq!(port.id, "result:out");
     assert_eq!(port.kind_id.as_deref(), Some("computation.procedure"));
-    assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(port.direction, semio_plugin::MediaPortDirection::Out);
     assert_eq!(port.multiplicity, semio_framework::PortMultiplicity::Many);
     assert!(!port.required);
 }

@@ -329,7 +329,7 @@ pub struct StdioTransport {
     decoder: Mutex<framing::Decoder>,
     pub inbound: Mutex<VecDeque<Vec<u8>>>,
     alive: Arc<AtomicBool>,
-    _heartbeat: semio_framework_plugin_host_engine::PeriodicPoolTimer,
+    _heartbeat: semio_plugin_host_engine::PeriodicPoolTimer,
 }
 
 impl StdioTransport {
@@ -348,7 +348,7 @@ impl StdioTransport {
         let heartbeat = {
             let alive = alive.clone();
             let stdout = stdout.clone();
-            semio_framework_plugin_host_engine::PeriodicPoolTimer::start(&semio_framework_plugin_host_engine::plugin_host_worker_pool(), heartbeat_interval_ms, move || {
+            semio_plugin_host_engine::PeriodicPoolTimer::start(&semio_plugin_host_engine::plugin_host_worker_pool(), heartbeat_interval_ms, move || {
                 if !alive.load(Ordering::SeqCst) {
                     return false;
                 }

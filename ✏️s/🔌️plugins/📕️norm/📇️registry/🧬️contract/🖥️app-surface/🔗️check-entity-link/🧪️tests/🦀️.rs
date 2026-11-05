@@ -75,7 +75,7 @@ fn selecting_a_check_selects_the_owner_entity_and_frames_it() {
     assert_eq!(ids(&part), ids(&focus_of_check(&report, &scene, 0, CameraPreset::Iso).expect("focus")), "a part check selects the entity whose id is the owner");
     let effect = focus_effect("norm.en9101", &focus).expect("a selection effect");
     match effect {
-        semio_framework_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) } => {
+        semio_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) } => {
             assert_eq!(action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
             let text = |key: &str| args.get(key).and_then(DslValue::as_str).map(str::to_owned).unwrap_or_default();
             assert_eq!((text("domainId").as_str(), text("merge").as_str(), text("method").as_str()), ("norm.en9101", "replace", "pick"));

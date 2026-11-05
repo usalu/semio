@@ -1,10 +1,10 @@
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
 use semio_s_artifact_lowpoly_lowpoly_model::{standards::v1::subsets::any::io::text::snapshot::default_snapshot, standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace};
 use semio_s_artifact_lowpoly_lowpoly_model::*;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_PAINT_TEXTURE_SIZE;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::MeshData;
+use semio_plugin::MeshData;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::empty_paint_pixels;
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberDetailing wh
         record: "ChangeMemberDetailing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change member detailing conformity", "Konformität der konstruktiven Durchbildung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change member detailing conformity", "Konformität der konstruktiven Durchbildung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-detailing".into()]

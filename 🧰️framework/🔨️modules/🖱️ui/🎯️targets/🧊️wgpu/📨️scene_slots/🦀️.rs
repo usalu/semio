@@ -9,12 +9,12 @@
 //! arena-stored `UiNode` — never a second parallel structure — so a host reading a slot's payload is
 //! reading the exact same data `paint::paint_node` would have painted a placeholder for.
 
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiImageNode, UiNode};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_retained_tree::tree::UiTree;
+use semio_ui_arena::NodeId;
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiImageNode, UiNode};
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_text::FontAtlas;
+use semio_ui_retained_tree::tree::UiTree;
 
 /// 🎒️ A `SceneSlot`'s borrowed payload — points directly at the leaf's own `UiNode` variant stored
 /// in the retained `UiTree`'s arena, never a clone.
@@ -30,7 +30,7 @@ pub enum SlotContent<'tree> {
 pub struct SceneSlot<'tree> {
     pub node: NodeId,
     pub document_id: Option<ui_contract::UiNodeId>,
-    pub key: &'tree semio_framework_ui_retained_tree::tree::NodeKey,
+    pub key: &'tree semio_ui_retained_tree::tree::NodeKey,
     pub component_generation: u64,
     pub rect: Rect,
     pub content: SlotContent<'tree>,

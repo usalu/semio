@@ -43,7 +43,7 @@ fn dispatch(shell: &mut ShellState, action: &str, args: Value) {
 
 #[test]
 fn settings_general_publishes_all_react_driver_controls_and_localized_dirty_state() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let fixture = fixture();
     let ui = shell.docs.build_settings_general_ui(&shell.chrome, &shell.prefs);
     let value = serde_json::to_value(&ui).expect("settings ui");
@@ -70,19 +70,19 @@ fn settings_general_publishes_all_react_driver_controls_and_localized_dirty_stat
 
 #[test]
 fn draft_is_live_selection_clears_it_and_save_delete_use_owned_preferences() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let fixture = fixture();
     dispatch(&mut shell, "setDriverField", fixture["transitions"]["edit"].clone());
     assert!(shell.prefs.driver_draft.is_some());
     assert_eq!(shell.prefs.driver_document(&shell.chrome).config["labels"], "icons");
-    assert_eq!(shell.chrome.chrome_build.driver.labels, semio_framework_ui_wgpu_layout::chrome::UiDriverLabels::Icons, "draft changes live chrome");
+    assert_eq!(shell.chrome.chrome_build.driver.labels, semio_ui_wgpu_layout::chrome::UiDriverLabels::Icons, "draft changes live chrome");
     assert!(shell.chrome.chrome_build.preferences.custom_drivers.is_empty(), "draft never persists");
 
     dispatch(&mut shell, "setDriver", serde_json::json!({ "value": fixture["transitions"]["select"]["selected"] }));
     assert!(shell.prefs.driver_draft.is_none(), "selection clears draft");
     assert_eq!(shell.prefs.driver_id, "compact");
-    assert_eq!(shell.chrome.chrome_build.driver.tooltips, semio_framework_ui_wgpu_layout::chrome::UiDriverTooltips::None);
-    assert_eq!(shell.chrome.chrome_build.driver.drag, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Surface);
+    assert_eq!(shell.chrome.chrome_build.driver.tooltips, semio_ui_wgpu_layout::chrome::UiDriverTooltips::None);
+    assert_eq!(shell.chrome.chrome_build.driver.drag, semio_ui_wgpu_layout::chrome::UiDriverDrag::Surface);
 
     dispatch(&mut shell, "setDriverField", serde_json::json!({ "key": "labelTier", "value": "beginner" }));
     dispatch(&mut shell, "setDriverSaveLabel", serde_json::json!({ "value": fixture["transitions"]["save"]["label"] }));
@@ -102,13 +102,13 @@ fn draft_is_live_selection_clears_it_and_save_delete_use_owned_preferences() {
     assert!(!shell.chrome.chrome_build.preferences.custom_drivers.contains_key(saved_id));
     assert_eq!(shell.prefs.driver_id, "default");
     assert!(shell.prefs.driver_draft.is_none());
-    assert_eq!(shell.chrome.chrome_build.driver, semio_framework_ui_wgpu_layout::chrome::UiDriverChrome::DEFAULT);
+    assert_eq!(shell.chrome.chrome_build.driver, semio_ui_wgpu_layout::chrome::UiDriverChrome::DEFAULT);
 }
 
 #[test]
 fn driver_rows_localize_only_closed_builtins_and_preserve_authored_custom_labels() {
     let fixture = fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     dispatch(&mut shell, "setDriverField", serde_json::json!({ "key": "labelTier", "value": "beginner" }));
     dispatch(&mut shell, "setDriverSaveLabel", serde_json::json!({ "value": "Focus Flow" }));
     dispatch(&mut shell, "saveDriver", serde_json::json!({}));

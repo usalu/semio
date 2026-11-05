@@ -1,7 +1,7 @@
 //! 📤️ Semio image to a newly authored PNG 1.2 RGBA8 source.
 
 use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
-use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::{
     schema::snapshot::{PngImage, PngColorType, PngTextChunk, PngTextKind},
     PngSnapshot,

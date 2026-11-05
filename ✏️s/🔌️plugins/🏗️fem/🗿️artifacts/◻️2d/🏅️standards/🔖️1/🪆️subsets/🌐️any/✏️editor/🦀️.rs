@@ -53,8 +53,8 @@ use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::inspection as 
 use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::results as results_panel;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::results_window_instance_id;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::editor::fem2d::modes::edit;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
@@ -69,45 +69,45 @@ use semio_framework::ToolExecutionContract;
 use semio_framework::ToolFactoryKey;
 use semio_framework::ToolJobFactory;
 use semio_framework::ToolJobFactoryError;
-use semio_framework_plugin::app::Dialect;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::built_text_node;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::AppIo;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigSpec;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::app::Dialect;
+use semio_plugin::app::InteractionView;
+use semio_plugin::built_text_node;
+use semio_plugin::create_default_layout;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::AppIo;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigSpec;
+use semio_plugin::ConfigView;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 
@@ -116,7 +116,7 @@ use semio_framework_2d_compute::EngineHandles;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `Fem2dPlayApp::Command` — the SOLE dispatch surface for fem2d's own behavior, assembled from
     /// the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`,
     /// the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case

@@ -1,6 +1,6 @@
 //! 🧵️ Durable planning retains bounded output around the original canonical byte producer.
 use super::*;
-use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
+use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 use super::{DurableBorrowedValue,DurableBorrowedDecisionFields};
 /// 🪪️ Projects the same owned decision into canonical wire fields without cloning its payloads.

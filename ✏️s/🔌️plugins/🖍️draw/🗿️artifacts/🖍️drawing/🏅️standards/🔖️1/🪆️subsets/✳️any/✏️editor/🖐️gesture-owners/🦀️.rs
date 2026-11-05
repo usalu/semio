@@ -20,13 +20,13 @@ fn drawing_gesture_release_grant() -> semio_framework_value::retained_clone::Ret
 /// additionally write the exact Canvas `WindowTransient` snapshot — `canvasPointerDown` through
 /// `advance_trace_pointer`, `canvasEscape` through its own trace cancellation — carry the config lane
 /// as well. Under-declaring a lane that is actually emitted faults at publication time.
-pub(super) const DRAWING_GESTURE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasDoubleClick", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasCommitDraft", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasEscape", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
+pub(super) const DRAWING_GESTURE_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "canvasDoubleClick", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "canvasCommitDraft", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "canvasEscape", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
 ];
 
 pub struct DrawingGestureOperationOwner {
@@ -319,7 +319,7 @@ impl DrawingInstanceOperationOwner {
     }
 }
 
-impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceOperationOwner {
+impl semio_plugin::ArtifactInstanceOperationOwner for DrawingInstanceOperationOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
@@ -328,19 +328,19 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
         Ok(if self.operations.is_empty() { Default::default() } else { semio_framework_value::RetirementDemand { release_bytes: DRAWING_GESTURE_RAW_BYTES, depth: 4, ..Default::default() } })
     }
 
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
             match self.operations.close_step(cx)? {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress == Default::default() && !self.operations.is_empty() => continue,
-                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(semio_framework_plugin::PluginLifecycleStep::Blocked { reason: "Drawing gesture close owner awaits a non-empty grant" }),
-                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => return Ok(semio_framework_plugin::PluginLifecycleStep::Progress(progress)),
-                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => return Ok(semio_framework_plugin::PluginLifecycleStep::Complete(progress)),
+                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(semio_plugin::PluginLifecycleStep::Blocked { reason: "Drawing gesture close owner awaits a non-empty grant" }),
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => return Ok(semio_plugin::PluginLifecycleStep::Progress(progress)),
+                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => return Ok(semio_plugin::PluginLifecycleStep::Complete(progress)),
             }
         }
-        Ok(semio_framework_plugin::PluginLifecycleStep::Progress(Default::default()))
+        Ok(semio_plugin::PluginLifecycleStep::Progress(Default::default()))
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         self.closing = true;
         if !self.close_begun {
             for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {

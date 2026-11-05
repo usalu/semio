@@ -3,11 +3,11 @@
 //! inspector and the results/playback panel all resolve their nouns, field names and verbs here, so
 //! a term is spelled once per locale and never drifts between two panels showing the same entity.
 
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::ViewModel;
+use semio_ui_locale::Locale;
+use semio_plugin::ViewModel;
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the fem2d app; one field per label makes every locale combination compile-checked.
     pub struct Fem2dLabels {
         artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";
@@ -140,7 +140,7 @@ pub fn fem2d_is_de_locale(view_state: &ViewModel) -> bool {
 
 /// 🗣️ Resolves the active fem2d label set from the OS-owned view context.
 pub fn fem2d_labels(view_state: &ViewModel) -> &'static Fem2dLabels {
-    semio_framework_plugin::resolve_labels::<Fem2dLabels>(view_state)
+    semio_plugin::resolve_labels::<Fem2dLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 
@@ -152,18 +152,18 @@ pub const FEM2D_APP_ID: &str = "fem2d-play";
 pub const FEM2D_PLAY_CONTROLLER_ID: &str = FEM2D_APP_ID;
 
 /// 🏷️ Admits resolved fem2d text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d UI label admission failed"))
 }
 
 /// 🎛️ Mints one fem2d-controller action for a panel row or control binding.
-pub fn fem2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(FEM2D_PLAY_CONTROLLER_ID).action(action, args)
+pub fn fem2d_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(FEM2D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🎛️ Window-measure action binding — same controller scope as [`fem2d_action`], without the UI assembly envelope.
-pub fn fem2d_measure_action(action: &str, args: Option<semio_framework_pack_json::Value>) -> semio_framework_plugin::ActionDescriptor {
-    semio_framework_plugin::ActionDescriptor { controller_id: FEM2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
+pub fn fem2d_measure_action(action: &str, args: Option<semio_framework_pack_json::Value>) -> semio_plugin::ActionDescriptor {
+    semio_plugin::ActionDescriptor { controller_id: FEM2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
 }
 //#endregion 🎛️Controller
 

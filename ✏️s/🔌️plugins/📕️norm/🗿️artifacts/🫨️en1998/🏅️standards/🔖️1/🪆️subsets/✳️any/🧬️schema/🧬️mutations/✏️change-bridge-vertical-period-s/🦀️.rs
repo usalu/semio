@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgeVerticalPeri
         record: "ChangeBridgeVerticalPeriodS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Fundamental period T_v of the deck in the vertical direction (0 = no vertical action; EN 1998-2 3.2)", "Grundschwingzeit T_v des Überbaus in vertikaler Richtung (0 = keine Vertikalwirkung; EN 1998-2 3.2) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Fundamental period T_v of the deck in the vertical direction (0 = no vertical action; EN 1998-2 3.2)", "Grundschwingzeit T_v des Überbaus in vertikaler Richtung (0 = keine Vertikalwirkung; EN 1998-2 3.2) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-vertical-period-s".into()]

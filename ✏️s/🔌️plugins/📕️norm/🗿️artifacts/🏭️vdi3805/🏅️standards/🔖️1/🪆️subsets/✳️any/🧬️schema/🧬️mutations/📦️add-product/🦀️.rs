@@ -18,8 +18,8 @@ pub struct AddProduct {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddProduct where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::remove_product::RemoveProduct> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "product", kind: "add-product", record: "AddedProduct" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create product \"{}\"", self.product.identity.article_number), &format!("Produkt \"{}\" erstellen", self.product.identity.article_number))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create product \"{}\"", self.product.identity.article_number), &format!("Produkt \"{}\" erstellen", self.product.identity.article_number))
     }
     fn target(&self) -> Vec<String> {
         vec![self.product.identity.article_number.clone()]

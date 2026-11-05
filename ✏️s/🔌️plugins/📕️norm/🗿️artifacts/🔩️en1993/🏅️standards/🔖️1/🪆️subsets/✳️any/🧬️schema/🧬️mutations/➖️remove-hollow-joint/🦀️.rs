@@ -10,7 +10,7 @@ pub struct RemoveHollowJoint { pub index: usize }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveHollowJoint where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_hollow_joint::InsertHollowJoint> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "hollow-joint", kind: "remove-hollow-joint", record: "RemovedHollowJoint" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove hollow joint #{}", self.index), &format!("Hohlprofilknoten #{} entfernen", self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove hollow joint #{}", self.index), &format!("Hohlprofilknoten #{} entfernen", self.index)) }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }
 

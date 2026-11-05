@@ -1,5 +1,5 @@
 //! ⚖️ Real-store authoring: a raster document edit authors, applies, undoes and redoes through the raster editor's own catalog and the runtime's canonical operation wire.
-use semio_framework_plugin::{authoring_law::author_through_document_store, EditorApp};
+use semio_plugin::{authoring_law::author_through_document_store, EditorApp};
 use semio_framework_value::ToValue;
 use semio_s_artifact_raster_raster_editor::RasterPlayApp;
 use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterTransform};

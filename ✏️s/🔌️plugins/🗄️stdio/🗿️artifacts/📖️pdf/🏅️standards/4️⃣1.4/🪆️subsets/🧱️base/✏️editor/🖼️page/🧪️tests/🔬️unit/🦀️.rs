@@ -1,26 +1,26 @@
 //! 🧪️ Own PDF 1.4 page drafts, mutation inverses and address admission.
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, ResizePage};
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::app::DocumentWindowKit;
+use semio_plugin::TreeWindows;
+use semio_plugin::app::DocumentWindowKit;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_contract::UiPublicationRevision;
-use semio_framework_ui_locale::Locale;
+use semio_ui_contract::UiPublicationRevision;
+use semio_ui_locale::Locale;
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use crate::standards::v1_4::subsets::base::schema::mutations::{InsertPage, RemovePage, MovePage, ReplacePageText};
 #[allow(unused_imports)]
 use protocol::{ColdMutation, Mutation, OpText};
 #[allow(unused_imports)]
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition, PluginAssemblyError, UiAssemblyResult, Buildable, HasBase, UiText};
+use semio_plugin::{Fault, FaultCode, FaultOrigin, ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition, PluginAssemblyError, UiAssemblyResult, Buildable, HasBase, UiText};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{EditableDocumentPage, EditableDocumentView, WindowKit};
+use semio_plugin::app::{EditableDocumentPage, EditableDocumentView, WindowKit};
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude as ui;
+use semio_plugin::plugin_app_close_prelude as ui;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use crate::editor::pdf14::page::{index};
 use crate::editor::pdf14::page::*;
 use protocol::{MutationDiff, OpBinary};
@@ -46,7 +46,7 @@ fn own14_page_view_retains_the_exact_publication_and_each_addressed_text() {
     }
     for locale in [Locale::En, Locale::De] {
         let node = render_windowed(&document, revision, &TreeWindows::unhosted(), locale).unwrap();
-        let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
         assert!(projection.contains("page-0-item-0"));
         assert!(projection.contains("page-1-item-0"));
     }

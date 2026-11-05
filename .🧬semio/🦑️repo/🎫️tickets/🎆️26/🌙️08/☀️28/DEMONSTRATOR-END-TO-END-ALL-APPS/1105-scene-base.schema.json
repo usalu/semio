@@ -1,0 +1,36 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "base",
+      "first",
+      "second",
+      "expectedFirst",
+      "expectedSecond",
+      "expectedBase"
+    ],
+    "properties": {
+      "base": {
+        "type": "integer"
+      },
+      "first": {
+        "type": "integer"
+      },
+      "second": {
+        "type": "integer"
+      },
+      "expectedFirst": {
+        "type": "integer"
+      },
+      "expectedSecond": {
+        "type": "integer"
+      },
+      "expectedBase": {
+        "type": "integer"
+      }
+    }
+  }
+}

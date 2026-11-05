@@ -5,8 +5,8 @@
 //! target enables it through a dev-dependency on this crate, which has no dependency of its own, so enabling it never pulls a heavy crate
 //! into the test closure. [`ISOLATED`] reports the ask and [`isolated_cell`] holds the per-thread instances.
 //!
-//! @see `semio-framework-os-renderer-wgpu-scene-state` — `SceneCell`
-//! @see `semio-framework-os-renderer-wgpu-contracts` — `test_worker_cell`
+//! @see `semio-renderer-wgpu-scene-state` — `SceneCell`
+//! @see `semio-renderer-wgpu-contracts` — `test_worker_cell`
 
 use std::any::Any;
 use std::cell::RefCell;

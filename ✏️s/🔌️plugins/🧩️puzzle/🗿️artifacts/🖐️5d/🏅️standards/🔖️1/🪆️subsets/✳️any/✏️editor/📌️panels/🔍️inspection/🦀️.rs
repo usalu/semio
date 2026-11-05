@@ -35,23 +35,23 @@ use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::{part_scal
 
 
 
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ui_node_list;
+use semio_plugin::ActionFactory;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.inspector";
@@ -96,14 +96,14 @@ fn vec4(value: [f64; 4]) -> String {
 }
 
 fn text_value(value: &str) -> UiAssemblyResult<UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| error("puzzle5d inspector action text admission failed"))
+    semio_plugin::UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| error("puzzle5d inspector action text admission failed"))
 }
 
 /// 🪙️ The mutating row's id-argument list. The process-wide argument arena, not a row quota, is the
 /// ceiling: ids are admitted until the fixed list refuses one, and a shorter list still edits every id
 /// it names.
 fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| error("puzzle5d inspector action list admission failed"))?;
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| error("puzzle5d inspector action list admission failed"))?;
     for id in ids {
         if builder.push(text_value(id)?).is_err() {
             break;
@@ -113,7 +113,7 @@ fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
 }
 
 fn action_map(entries: [(&'static str, UiValue); 3]) -> UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector action map admission failed"))?;
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector action map admission failed"))?;
     for (key, value) in entries {
         builder.push(key.to_owned(), value).map_err(|_| error("puzzle5d inspector action map entry admission failed"))?;
     }
@@ -137,7 +137,7 @@ fn patch_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, verb: &
 /// 🙈️ One `setSelectionFlag` toggle row — flips `hidden`/`locked` on every id in `ids`. `value` is the
 /// state the click ASKS FOR, always the inverse of the row's current one.
 fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, ids: &[String], field: &'static str, pressed: bool) -> UiAssemblyResult<()> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector flag map admission failed"))?;
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector flag map admission failed"))?;
     for (key, value) in [("entity", text_value(PUZZLE5D_GRANULARITY_PART)?), ("flag", text_value(field)?), ("ids", id_list_value(ids)?), ("value", UiValue::Bool(!pressed))] {
         builder.push(key.to_owned(), value).map_err(|_| error("puzzle5d inspector flag entry admission failed"))?;
     }
@@ -147,7 +147,7 @@ fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, ids: &[S
 /// 🧊️ A target volume's own flag toggle — `setTargetVolumeFlag {flag, id, value}`, 5G's verb, because
 /// `setSelectionFlag` only ever writes the part slice. Keys ascend: `flag`, `id`, `value`.
 fn volume_flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, volume_id: &str, field: &'static str, pressed: bool) -> UiAssemblyResult<()> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector volume flag map admission failed"))?;
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector volume flag map admission failed"))?;
     for (key, value) in [("flag", text_value(field)?), ("id", text_value(volume_id)?), ("value", UiValue::Bool(!pressed))] {
         builder.push(key.to_owned(), value).map_err(|_| error("puzzle5d inspector volume flag entry admission failed"))?;
     }

@@ -1,18 +1,18 @@
 //! 📥️ Items of `owned_schema_decode` that belong to `os-store-owned-schema-fields` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/📦️codec/🧬️owned-schema/🦀️.rs`.
-use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreOperationRowsRetirement;
-use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
+use semio_os_store_ledger::edit_retirement::ArtifactStoreOperationRowsRetirement;
+use semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::FromValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{Edit, Mutation};
+use semio_os_spr::{Edit, Mutation};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
-use semio_framework_os_store_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use semio_framework_os_store_read::ArtifactStoreOperationRowOwners;
+use semio_os_store_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
+use semio_os_store_read::ArtifactStoreOperationRowOwners;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_os_vcs::ArtifactVcs;
-use semio_framework_os_store_ledger::ArtifactEditMessageLedger;
+use semio_os_vcs::ArtifactVcs;
+use semio_os_store_ledger::ArtifactEditMessageLedger;
 use semio_framework_pack_json_retained_schema::*;
 
 #[path = "🗂️envelope-field-constants-and-authority-traits/🦀️.rs"]

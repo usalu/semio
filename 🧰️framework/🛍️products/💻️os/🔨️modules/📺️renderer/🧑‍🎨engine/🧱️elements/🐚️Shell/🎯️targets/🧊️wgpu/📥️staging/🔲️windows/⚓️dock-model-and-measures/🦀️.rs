@@ -12,8 +12,8 @@ use super::*;
 /// and their optional inline header slider. Utility-scoped groups belong to the utility rail.
 /// See `🧑‍🎨engine/🧫️fixtures/📏️window-measures/🔣️.json`.
 pub fn window_measures_overlay_records(window_id: &str, measures: &[WindowMeasure], active_utility_id: Option<&str>) -> Result<Option<Vec<ui_contract::UiNodeRecord>>, String> {
-    let partition = semio_framework_ui_declaration::layout::partition_window_measures(measures, active_utility_id)
-        .map_err(|measure| format!("window '{window_id}' authored more than {} measures, refused at {measure:?}", semio_framework_ui_declaration::layout::WINDOW_MEASURE_PARTITION_CAPACITY))?;
+    let partition = semio_ui_declaration::layout::partition_window_measures(measures, active_utility_id)
+        .map_err(|measure| format!("window '{window_id}' authored more than {} measures, refused at {measure:?}", semio_ui_declaration::layout::WINDOW_MEASURE_PARTITION_CAPACITY))?;
     if partition.general.is_empty() {
         return Ok(None);
     }
@@ -162,9 +162,9 @@ impl WindowState {
     /// 🎬️ Installs one canonical engagements section and retires its transport lease before the
     /// shell republishes Actions/Search bodies. A malformed payload reports a fault and preserves
     /// the last valid snapshot.
-    pub fn install_window_engagements_section(&mut self, document: UiDocumentLease, faults: &mut Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)>, docs: &mut DocumentState) -> Result<(), String> {
+    pub fn install_window_engagements_section(&mut self, document: UiDocumentLease, faults: &mut Vec<(String, String, semio_renderer_wgpu_program_bridge::ProgramFault)>, docs: &mut DocumentState) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Engagements.body_key();
-        let engagements = semio_framework_os_renderer_wgpu_program_bridge::window_engagements_from_section(&document);
+        let engagements = semio_renderer_wgpu_program_bridge::window_engagements_from_section(&document);
         docs.retire_one_surface_document(Some(document))?;
         match engagements {
             Ok(engagements) => self.window_engagements = engagements,
@@ -174,7 +174,7 @@ impl WindowState {
     }
 
     /// 🎬️ Reads the canonical reserved engagements surface on either ProgramBridge backend.
-    pub async fn refresh_window_engagements(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>, faults: &mut Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)>, docs: &mut DocumentState) -> Result<(), String> {
+    pub async fn refresh_window_engagements(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>>, faults: &mut Vec<(String, String, semio_renderer_wgpu_program_bridge::ProgramFault)>, docs: &mut DocumentState) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Engagements.body_key();
         let section = match read_ahead {
             Some(section) => section,
@@ -195,9 +195,9 @@ impl WindowState {
         program: &ProgramBridgeEntry,
         instance_id: u32,
         view_state: &ViewModel,
-        read_ahead: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>,
+        read_ahead: Option<Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>>,
         windows: &[String],
-        faults: &mut Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)>, docs: &mut DocumentState
+        faults: &mut Vec<(String, String, semio_renderer_wgpu_program_bridge::ProgramFault)>, docs: &mut DocumentState
     ) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Measures.body_key();
         let section = match read_ahead {
@@ -206,7 +206,7 @@ impl WindowState {
         };
         let measures = match section {
             Ok(document) => {
-                let measures = semio_framework_os_renderer_wgpu_program_bridge::window_measures_from_section(&document).map_err(semio_framework_os_renderer_wgpu_program_bridge::ProgramFault::from);
+                let measures = semio_renderer_wgpu_program_bridge::window_measures_from_section(&document).map_err(semio_renderer_wgpu_program_bridge::ProgramFault::from);
                 docs.retire_one_surface_document(Some(document))?;
                 measures
             }
@@ -239,7 +239,7 @@ impl WindowState {
     /// [`ShellState::tool_measures`] — the wgpu twin of React's `toolMeasuresByToolId` ref, which its
     /// `buildToolTabs` `resolveTree` reads fresh at render time. A read failure reports a surface
     /// fault and leaves the previous roster rather than blanking every armed tool's options.
-    pub async fn refresh_tool_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>, faults: &mut Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)>, docs: &mut DocumentState) -> Result<(), String> {
+    pub async fn refresh_tool_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, semio_renderer_wgpu_program_bridge::ProgramFault>>, faults: &mut Vec<(String, String, semio_renderer_wgpu_program_bridge::ProgramFault)>, docs: &mut DocumentState) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Tools.body_key();
         let section = match read_ahead {
             Some(section) => section,
@@ -247,7 +247,7 @@ impl WindowState {
         };
         let measures = match section {
             Ok(document) => {
-                let measures = semio_framework_os_renderer_wgpu_program_bridge::tool_measures_from_section(&document).map_err(semio_framework_os_renderer_wgpu_program_bridge::ProgramFault::from);
+                let measures = semio_renderer_wgpu_program_bridge::tool_measures_from_section(&document).map_err(semio_renderer_wgpu_program_bridge::ProgramFault::from);
                 docs.retire_one_surface_document(Some(document))?;
                 measures
             }
@@ -278,11 +278,11 @@ impl WindowState {
             serde_json::to_string(&records).map_err(|error| error.to_string())?.hash(&mut hasher);
             hasher.finish()
         };
-        let generation = semio_framework_ui_wgpu_engine_surface::ui_document_ingress_generation(self.window_measures_minted.get(surface).copied(), revision);
+        let generation = semio_ui_wgpu_engine_surface::ui_document_ingress_generation(self.window_measures_minted.get(surface).copied(), revision);
         self.window_measures_minted.insert(surface.to_string(), (revision, generation));
         let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(revision), root: Some(ui_contract::UiNodeId(1)), layout_epoch: 0 };
         let surface_id = SurfaceId::try_from(surface).map_err(|_| format!("shell surface '{surface}' exceeds the retained contract"))?;
-        UiDocumentLease::try_publish(surface_id, identity, records).map_err(|error| semio_framework_os_renderer_wgpu_program_bridge::retained_publication_refusal(surface, error))
+        UiDocumentLease::try_publish(surface_id, identity, records).map_err(|error| semio_renderer_wgpu_program_bridge::retained_publication_refusal(surface, error))
     }
 
     /// 🎛️ React's Window Options fold state: `useState(true)` — the rail starts FOLDED and is opened
@@ -297,7 +297,7 @@ impl WindowState {
         let width = self.measures_width.get(window_id).copied().unwrap_or(theme.window_measures_default_width).min((body.w - theme.panel_inset * 2.0).max(0.0));
         let top = theme.panel_inset + theme.control_height + theme.gap_standard;
         let available = (body.h - top - theme.panel_inset).max(0.0);
-        let height = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(&window_measures_surface_id(window_id)).unwrap_or(available).min(available).max(0.0);
+        let height = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(&window_measures_surface_id(window_id)).unwrap_or(available).min(available).max(0.0);
         Rect::new(body.x + body.w - width - theme.panel_inset, body.y + top, width, height)
     }
 }

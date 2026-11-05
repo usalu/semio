@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeTIntC where Op: p
         record: "ChangedTIntC",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change indoor air temperature", "Raumlufttemperatur ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change indoor air temperature", "Raumlufttemperatur ändern")
     }
 }
 

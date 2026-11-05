@@ -1,6 +1,6 @@
 //! 📨️ A completed replay's original messages move into canonical grouped receipt storage without cloning payload fields.
 use crate::PendingCommandReport;
-use semio_framework_os_spr::{ReplayReport,EditMessages,MutationMessage};
+use semio_os_spr::{ReplayReport,EditMessages,MutationMessage};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use std::mem::{ManuallyDrop,size_of};

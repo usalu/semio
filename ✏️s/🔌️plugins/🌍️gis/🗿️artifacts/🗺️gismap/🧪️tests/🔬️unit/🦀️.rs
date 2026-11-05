@@ -1,6 +1,6 @@
 use super::*;
 use geo::BoundingRect;
-use semio_framework_plugin::{ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_plugin::{ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_framework_test_fixtures::fixture_text;
 
 fn vector_snapshot(case: &serde_json::Value) -> GisMapSnapshot {
@@ -18,7 +18,7 @@ fn execute(
     budgets: &WireArtifactInferenceBudget,
     cancellation_id: &str,
     cache_mode: WireArtifactInferenceCacheMode,
-) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
+) -> Result<semio_plugin::ArtifactInferenceExecutionStep, semio_plugin::ArtifactInferenceExecutionError> {
     let pack = <GisMapSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot);
     gis_map_inference_service().infer(&ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: b"gis-map-v1", budgets, cancellation_id, previous_state: None, requested_cache_mode: cache_mode, canonical_payload: &pack, dependencies: &[] })
 }
@@ -72,7 +72,7 @@ async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payl
         assert_eq!(first.quality, "exact");
         assert!(first.complete);
         let inference =
-            <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_value::FromValue>::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&first.canonical_payload).expect("canonical inference payload"))
+            <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_value::FromValue>::from_value(semio_os_kernel::pack_rt::decode_wire_value(&first.canonical_payload).expect("canonical inference payload"))
                 .expect("typed inference");
         let expected = &case["expected"];
         assert_eq!(inference.position_count as u64, expected["positionCount"].as_u64().expect("position count"));

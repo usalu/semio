@@ -3,7 +3,7 @@ use super::*;
 use super::clause::IfcBodyClause;
 use super::super::preparation::IfcMvdPreparation;
 use super::tessellation_tests::{graph, loan, request};
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::{retained_clone::RetainedCloneClose, retirement::RetireOwned};
 fn prepare(caller: &mut OriginalWorkFixture, source: &Arc<IfcSnapshot>, input: &Arc<IfcBodyConceptRequest>) -> IfcMvdPreparation<IfcBodyConceptRequest> {
     let mut work = IfcMvdPreparation::default();

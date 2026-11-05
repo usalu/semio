@@ -17,8 +17,8 @@ async fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::test]
 async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() {
-    use semio_framework_os_directory_client::{DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, DocumentSocketGrantReceiptV1, HubSocketGrantSource, LocalHubCredential};
-    use semio_framework_os_directory::{DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentScope};
+    use semio_os_directory_client::{DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, DocumentSocketGrantReceiptV1, HubSocketGrantSource, LocalHubCredential};
+    use semio_os_directory::{DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentScope};
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     struct BoundSource {
@@ -32,7 +32,7 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
             _ctx: &semio_framework_async::OperationContext,
             space_id: &str,
             document_id: &str,
-            expectation: &semio_framework_os_directory_client::DocumentSocketExpectationV1,
+            expectation: &semio_os_directory_client::DocumentSocketExpectationV1,
             _client_instance_id: &str,
             _timeout_ms: u64,
         ) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
@@ -47,7 +47,7 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
                 authority: DocumentSocketAuthorityV1 {
                     admitted_lease: expectation.lease.clone(),
                     hub_origin: self.trusted_origin.clone(),
-                    browser_actor: semio_framework_os_directory::DocumentOpenBrowserActorV1::None,
+                    browser_actor: semio_os_directory::DocumentOpenBrowserActorV1::None,
                     expires_at_unix_ms: u64::try_from(i64::MAX).expect("positive max"),
                     scope: DocumentScope::new(space_id, document_id),
                     descriptor_digest_v1: "4".repeat(64),
@@ -59,13 +59,13 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
                         component_sha256: "6".repeat(64),
                         component_blake3: "7".repeat(64),
                         descriptor_byte_sha256: "8".repeat(64),
-                        execution_protocol: semio_framework_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_framework_os_spr::CHANNEL_VERSION },
-                        component_receipt: semio_framework_plugin_component_receipt::ComponentReceiptV1 {
-                            schema: semio_framework_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+                        execution_protocol: semio_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_os_spr::CHANNEL_VERSION },
+                        component_receipt: semio_plugin_component_receipt::ComponentReceiptV1 {
+                            schema: semio_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                             plugin_id: "trusted-plugin".into(),
                             package_id: "semio:trusted-plugin".into(),
-                            profile: semio_framework_plugin_component_receipt::ComponentProfileV1::Release,
-                            target: semio_framework_plugin_component_receipt::COMPONENT_TARGET.into(),
+                            profile: semio_plugin_component_receipt::ComponentProfileV1::Release,
+                            target: semio_plugin_component_receipt::COMPONENT_TARGET.into(),
                             wasm_sha256: "6".repeat(64),
                             wasm_bytes: 1024,
                             semantic_descriptor_sha256: "8".repeat(64),
@@ -85,15 +85,15 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
                         renderer_target: DocumentOpenRendererTargetV1::Wgpu,
                     },
                     grant: DocumentOpenGrantV1 { read: true, write: true, observe: true },
-                    checkpoint: semio_framework_os_directory::DocumentOpenCheckpointV1 {
+                    checkpoint: semio_os_directory::DocumentOpenCheckpointV1 {
                         checkpoint_id: "9".repeat(64),
                         descriptor_digest_v1: "4".repeat(64),
-                        baseline_frontier: semio_framework_os_directory::ArtifactFrontier {
+                        baseline_frontier: semio_os_directory::ArtifactFrontier {
                             document_id: document_id.to_string(),
                             head_edit_ordinal: 0,
                             head_edit_id: String::new(),
                             last_commit_seq: 0,
-                            chain_hash: semio_framework_os_directory::ArtifactHash::new([0; 32]),
+                            chain_hash: semio_os_directory::ArtifactHash::new([0; 32]),
                         },
                         aggregate_sha256: "a".repeat(64),
                     },
@@ -194,14 +194,14 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
     async fn check_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
         let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|error| panic!("read {name}: {error}"));
         assert_eq!(encode_client_frame(frame, lane).await, bytes, "{name} committed bytes");
-        let (decoded_lane, decoded) = semio_framework_os_spr::decode_client_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
+        let (decoded_lane, decoded) = semio_os_spr::decode_client_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
         assert_eq!(decoded_lane, lane, "{name} lane round trip");
         assert_eq!(&decoded, frame, "{name} frame round trip");
     }
 
     async fn check_server(dir: &std::path::Path, name: &str, frame: &ServerFrame, lane: Lane) {
         let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|error| panic!("read {name}: {error}"));
-        assert_eq!(semio_framework_os_spr::encode_server_frame(frame, lane).await, bytes, "{name} committed bytes");
+        assert_eq!(semio_os_spr::encode_server_frame(frame, lane).await, bytes, "{name} committed bytes");
         let (decoded_lane, decoded) = decode_server_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
         assert_eq!(decoded_lane, lane, "{name} lane round trip");
         assert_eq!(&decoded, frame, "{name} frame round trip");
@@ -215,19 +215,19 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op")).unwrap() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op")).unwrap() },
-        timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
+        diff: semio_os_spr::ArtifactDiff { schema: semio_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op")).unwrap() },
+        inverse: semio_os_spr::InverseMutation { schema: semio_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op")).unwrap() },
+        timestamp: semio_os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
         transaction: None, verb: None, line: None,
     };
 
     let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None };
     let hello_bytes = encode_client_frame(&hello, Lane::Command).await;
-    let (hello_lane, decoded_hello) = semio_framework_os_spr::decode_client_frame(&hello_bytes).await.expect("decode current socket hello");
+    let (hello_lane, decoded_hello) = semio_os_spr::decode_client_frame(&hello_bytes).await.expect("decode current socket hello");
     assert_eq!(hello_lane, Lane::Command, "current socket hello lane round trip");
     assert_eq!(decoded_hello, hello, "current socket hello frame round trip");
     let rejected_hello = std::fs::read(fixtures_dir.join("🚫️legacy-client-hello-rejected/💾️.bin")).expect("read rejected obsolete hello");
-    assert!(semio_framework_os_spr::decode_client_frame(&rejected_hello).await.is_err(), "obsolete hello must reject");
+    assert!(semio_os_spr::decode_client_frame(&rejected_hello).await.is_err(), "obsolete hello must reject");
     check_client(&fixtures_dir, "🕹️client-commands/💾️.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command).await;
     check_client(&fixtures_dir, "🚩️client-frontier-advertise/💾️.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command).await;
     check_client(&fixtures_dir, "📣️client-preview-publish/💾️.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview).await;
@@ -243,7 +243,7 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         Lane::Command,
     )
     .await;
-    check_server(&fixtures_dir, "🧩️server-snapshot-chunk/💾️.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: semio_framework_os_spr::SnapshotChunkBytes::try_from_slice(&[1, 2, 3, 4]).unwrap() }, Lane::Command).await;
+    check_server(&fixtures_dir, "🧩️server-snapshot-chunk/💾️.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: semio_os_spr::SnapshotChunkBytes::try_from_slice(&[1, 2, 3, 4]).unwrap() }, Lane::Command).await;
     check_server(&fixtures_dir, "🏁️server-snapshot-done/💾️.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
     check_server(&fixtures_dir, "🎮️server-commands/💾️.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".into()), frontier: frontier.clone() }, Lane::Command).await;
     check_server(
@@ -289,9 +289,9 @@ async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
         dependencies: vec![MutationId("op-1".to_string())],
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op")).unwrap() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op")).unwrap() },
-        timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
+        diff: semio_os_spr::ArtifactDiff { schema: semio_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op")).unwrap() },
+        inverse: semio_os_spr::InverseMutation { schema: semio_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op")).unwrap() },
+        timestamp: semio_os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
         transaction: None, verb: None, line: None,
     }
 }
@@ -309,28 +309,28 @@ async fn sample_presence_peer_with_interaction() -> PresencePeer {
         user_id: Some("user-9".to_string()),
         role: Some("owner".to_string()),
         drag_ghost_json: None,
-        interaction: Some(semio_framework_os_spr::PresenceInteraction {
+        interaction: Some(semio_os_spr::PresenceInteraction {
             app_id: "space".to_string(),
             domains: vec![
-                semio_framework_os_spr::PresenceDomain { domain: "outline".to_string(), granularity: "task".to_string(), selected: vec!["t1".to_string(), "t2".to_string()], hovered: vec![] },
-                semio_framework_os_spr::PresenceDomain { domain: "board".to_string(), granularity: "card".to_string(), selected: vec![], hovered: vec!["c1".to_string()] },
-                semio_framework_os_spr::PresenceDomain { domain: "canvas".to_string(), granularity: "node".to_string(), selected: vec!["n9".to_string()], hovered: vec!["n9".to_string(), "n10".to_string()] },
+                semio_os_spr::PresenceDomain { domain: "outline".to_string(), granularity: "task".to_string(), selected: vec!["t1".to_string(), "t2".to_string()], hovered: vec![] },
+                semio_os_spr::PresenceDomain { domain: "board".to_string(), granularity: "card".to_string(), selected: vec![], hovered: vec!["c1".to_string()] },
+                semio_os_spr::PresenceDomain { domain: "canvas".to_string(), granularity: "node".to_string(), selected: vec!["n9".to_string()], hovered: vec!["n9".to_string(), "n10".to_string()] },
             ],
         }),
         color: Some(5),
         surface: Some("s.space.home@1/*#editor".to_string()),
         views: vec![
-            semio_framework_os_spr::PresenceWindowView {
+            semio_os_spr::PresenceWindowView {
                 window_id: "w1".to_string(),
                 space: "world".to_string(),
-                kind: semio_framework_os_spr::PresenceViewKind::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0], fov: 45.0 },
+                kind: semio_os_spr::PresenceViewKind::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0], fov: 45.0 },
                 size: [1024.0, 768.0],
                 pointer: Some([0.5, 0.5, 0.5]),
                 ray_origin: Some([1.0, 2.0, 3.0]),
             },
-            semio_framework_os_spr::PresenceWindowView { window_id: "w2".to_string(), space: "canvas".to_string(), kind: semio_framework_os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None },
+            semio_os_spr::PresenceWindowView { window_id: "w2".to_string(), space: "canvas".to_string(), kind: semio_os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None },
         ],
-        ui: Some(semio_framework_os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
+        ui: Some(semio_os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
         tool_run: None,
         principal_kind: None, active_tool: None, history_edit: None,
         typing: Vec::new(),
@@ -349,15 +349,15 @@ async fn sample_presence_peer_with_interaction() -> PresencePeer {
 async fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
     let mut producer = PresenceHeartbeatProducer::new(100);
     let mut first = sample_presence_peer_with_interaction().await;
-    first.views = vec![semio_framework_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_framework_os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
+    first.views = vec![semio_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
     assert_eq!(producer.offer(1_000, first.clone()), Some(first));
 
     let mut intermediate = sample_presence_peer_with_interaction().await;
-    intermediate.views = vec![semio_framework_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_framework_os_spr::PresenceViewKind::Canvas { x: 3.0, y: 4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
+    intermediate.views = vec![semio_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_os_spr::PresenceViewKind::Canvas { x: 3.0, y: 4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
     assert_eq!(producer.offer(1_040, intermediate), None);
 
     let mut latest = sample_presence_peer_with_interaction().await;
-    latest.views = vec![semio_framework_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_framework_os_spr::PresenceViewKind::Canvas { x: 5.0, y: 6.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
+    latest.views = vec![semio_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_os_spr::PresenceViewKind::Canvas { x: 5.0, y: 6.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
     assert_eq!(producer.offer(1_099, latest.clone()), None);
     assert_eq!(producer.pending(), Some(&latest));
     assert_eq!(producer.offer(1_100, latest.clone()), Some(latest));
@@ -366,21 +366,21 @@ async fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_lat
 
 #[semio_framework_async_macros::async_test]
 async fn presence_tool_run_summary_is_byte_credited_and_last_writer_wins() {
-    let run = |state, completed, total| semio_framework_os_spr::PresenceToolRun { tool_id: "fill".into(), state, stage: 1, completed, total };
+    let run = |state, completed, total| semio_os_spr::PresenceToolRun { tool_id: "fill".into(), state, stage: 1, completed, total };
     let bare = sample_presence_peer_with_interaction().await;
     let mut indeterminate = bare.clone();
-    indeterminate.tool_run = Some(run(semio_framework_os_spr::PresenceToolRunState::Starting, 0, None));
+    indeterminate.tool_run = Some(run(semio_os_spr::PresenceToolRunState::Starting, 0, None));
     let mut determinate = bare.clone();
-    determinate.tool_run = Some(run(semio_framework_os_spr::PresenceToolRunState::Running, 42, Some(100)));
+    determinate.tool_run = Some(run(semio_os_spr::PresenceToolRunState::Running, 42, Some(100)));
     let bytes = |peer: &PresencePeer| artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer.clone()) }).expect("presence fits the mailbox");
     assert!(bytes(&bare) < bytes(&indeterminate) && bytes(&indeterminate) < bytes(&determinate), "tool run id, counters and total contribute byte credit");
-    assert_eq!(semio_framework_os_spr::decode_presence_peer(&presence_to_bytes(&determinate).await).await.expect("tool run presence decodes"), determinate);
+    assert_eq!(semio_os_spr::decode_presence_peer(&presence_to_bytes(&determinate).await).await.expect("tool run presence decodes"), determinate);
 
     let mut producer = PresenceHeartbeatProducer::new(100);
     assert_eq!(producer.offer(1_000, indeterminate.clone()), Some(indeterminate));
     assert_eq!(producer.offer(1_050, determinate.clone()), None);
     let mut finalized = determinate.clone();
-    finalized.tool_run = Some(run(semio_framework_os_spr::PresenceToolRunState::Finalized, 100, Some(100)));
+    finalized.tool_run = Some(run(semio_os_spr::PresenceToolRunState::Finalized, 100, Some(100)));
     assert_eq!(producer.offer(1_080, finalized.clone()), None);
     assert_eq!(producer.pending(), Some(&finalized), "the newest tool run summary replaces pending progress");
     assert_eq!(producer.offer(1_100, finalized.clone()), Some(finalized));
@@ -400,7 +400,7 @@ async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
     assert!(matches!(cmd_rx.try_recv(), Some(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == first));
 
     let mut latest = sample_presence_peer_with_interaction().await;
-    latest.ui = Some(semio_framework_os_spr::PresenceUi { hovered_path: Some("row[0]#changed".into()), focused_path: None, pressed_path: None });
+    latest.ui = Some(semio_os_spr::PresenceUi { hovered_path: Some("row[0]#changed".into()), focused_path: None, pressed_path: None });
     assert!(!host.presence_heartbeat("doc", 550, latest.clone()));
     assert!(cmd_rx.try_recv().is_none(), "sub-interval offer must not publish");
     assert!(host.presence_heartbeat("doc", 600, latest.clone()));
@@ -420,19 +420,19 @@ async fn artifact_host_presence_heartbeat_stamps_the_observed_tool_run_summary()
     let runner = native_actor::retained_turn_fixtures::fixture_runner_handle(host.core().pool.clone(), 1, cmd_rx.close_handle());
     let key = ArtifactDocumentKey::local("doc");
     host.core().insert_document(key.clone(), OpenDocument { generation: 1, cancel: semio_framework_async::CancelToken::root_now(), cmd_tx, events, presence: PresenceHeartbeatProducer::new(100), runner });
-    let run = |state, completed, total| semio_framework_os_spr::PresenceToolRun { tool_id: "fill".into(), state, stage: 0, completed, total };
+    let run = |state, completed, total| semio_os_spr::PresenceToolRun { tool_id: "fill".into(), state, stage: 0, completed, total };
 
     let mut renderer_peer = sample_presence_peer_with_interaction().await;
-    renderer_peer.tool_run = Some(run(semio_framework_os_spr::PresenceToolRunState::Running, 9, Some(4)));
+    renderer_peer.tool_run = Some(run(semio_os_spr::PresenceToolRunState::Running, 9, Some(4)));
     assert!(host.presence_heartbeat_key(&key, 1_000, renderer_peer.clone()));
     let Some(ArtifactActorMsg::PresenceHeartbeat { peer }) = cmd_rx.try_recv() else { panic!("first heartbeat publishes") };
     assert_eq!(peer.tool_run.as_ref().map(|tool_run| (tool_run.completed, tool_run.total)), Some((4, Some(4))), "an unobserved renderer summary is still clamped");
 
-    assert!(host.observe_presence_tool_run_key(&key, Some(run(semio_framework_os_spr::PresenceToolRunState::Complete, 120, Some(100)))));
+    assert!(host.observe_presence_tool_run_key(&key, Some(run(semio_os_spr::PresenceToolRunState::Complete, 120, Some(100)))));
     assert!(host.presence_heartbeat_key(&key, 1_100, sample_presence_peer_with_interaction().await));
     let Some(ArtifactActorMsg::PresenceHeartbeat { peer }) = cmd_rx.try_recv() else { panic!("second heartbeat publishes") };
-    assert_eq!(peer.tool_run, Some(run(semio_framework_os_spr::PresenceToolRunState::Complete, 100, Some(100))), "the observed summary is stamped, completed clamped to total");
-    assert_eq!(semio_framework_os_spr::decode_presence_peer(&presence_to_bytes(&peer).await).await.expect("the stamped peer decodes"), *peer);
+    assert_eq!(peer.tool_run, Some(run(semio_os_spr::PresenceToolRunState::Complete, 100, Some(100))), "the observed summary is stamped, completed clamped to total");
+    assert_eq!(semio_os_spr::decode_presence_peer(&presence_to_bytes(&peer).await).await.expect("the stamped peer decodes"), *peer);
 
     assert!(host.observe_presence_tool_run_key(&key, None));
     assert!(host.presence_heartbeat_key(&key, 1_200, renderer_peer));
@@ -447,13 +447,13 @@ async fn artifact_host_presence_heartbeat_stamps_the_observed_tool_run_summary()
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
-    let edit = semio_framework_os_spr::HistoryEdit { line: None,
+    let edit = semio_os_spr::HistoryEdit { line: None,
         id: "ext-1".into(),
         actor: Some("peer".into()),
         started_at: "0".into(),
         finished_at: None, verb: None,
-        ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
-        inverse: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
+        ops: vec![semio_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
+        inverse: vec![semio_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
         meta: None, lane: None,
     };
     let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1", semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).await.expect("envelopes from history edit");

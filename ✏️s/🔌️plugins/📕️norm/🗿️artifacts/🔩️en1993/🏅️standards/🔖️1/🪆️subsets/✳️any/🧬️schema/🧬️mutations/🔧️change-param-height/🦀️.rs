@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeParamHeight where 
         record: "ChangedParamHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Height h (diameter d for CHS) of the parametric section", "Parametrischer Querschnitt: Höhe h (Durchmesser d bei CHS) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Height h (diameter d for CHS) of the parametric section", "Parametrischer Querschnitt: Höhe h (Durchmesser d bei CHS) ändern")
     }
 }
 

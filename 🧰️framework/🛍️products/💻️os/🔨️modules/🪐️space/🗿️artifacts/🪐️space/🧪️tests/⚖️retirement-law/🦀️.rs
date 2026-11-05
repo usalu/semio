@@ -6,7 +6,7 @@ static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWit
 use semio_framework_test_typed_input_law as typed_input_law;
 
 use semio_framework_artifact_space_space::{empty_space_snapshot, CollectionRef, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, S_SPACE_SCHEMA};
-use semio_framework_os_kernel::{self as store, os_store::test_support::{close_plain_test_store, dispatch_test_command}};
+use semio_os_kernel::{self as store, os_store::test_support::{close_plain_test_store, dispatch_test_command}};
 use typed_input_law::{typed_command_retirement_law, typed_input_retirement_law};
 
 fn user(id: &str) -> SpaceUser {
@@ -48,8 +48,8 @@ async fn a_space_manifest_edit_applies_undoes_and_redoes_through_its_real_catalo
     for (label, mutation) in mutations() {
         let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<SpaceSnapshot, SpaceMutation>().unwrap_or_else(|error| panic!("{label}: the bounded catalog is funded: {error}"));
         let initial = demo_space();
-        let envelope = store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "space-retirement-law", initial.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-        let mut space = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, store::os_spr::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the law space store");
+        let envelope = store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "space-retirement-law", initial.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut space = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, store::os_spr::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the law space store");
         store::install_unscheduled_catalog(&mut space, Ok(owners)).unwrap_or_else(|_| panic!("{label}: the bounded catalog installs"));
         dispatch_test_command(&mut space, store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await.unwrap_or_else(|error| panic!("{label}: apply: {error}"));
         let applied = space.snapshot().expect("applied snapshot");

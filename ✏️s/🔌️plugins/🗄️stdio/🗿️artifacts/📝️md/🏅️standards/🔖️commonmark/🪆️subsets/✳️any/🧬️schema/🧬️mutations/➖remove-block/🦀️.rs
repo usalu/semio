@@ -14,8 +14,8 @@ pub struct RemoveBlock {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for RemoveBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "block", kind: "remove-block", record: "RemoveBlock" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove block", "Block entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove block", "Block entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

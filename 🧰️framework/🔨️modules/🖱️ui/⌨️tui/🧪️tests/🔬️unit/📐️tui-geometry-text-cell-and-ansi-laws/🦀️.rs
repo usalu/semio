@@ -46,9 +46,9 @@ fn rect_split_top_and_split_bottom_partition_rect() {
 //#region 🔖️Text
 #[test]
 fn text_char_cells_zero_and_wide() {
-    assert_eq!(semio_framework_ui_tui_core::text::char_cells('a'), 1);
-    assert_eq!(semio_framework_ui_tui_core::text::char_cells('世'), 2);
-    assert_eq!(semio_framework_ui_tui_core::text::char_cells('\u{200b}'), 0, "a zero-width space occupies no cells");
+    assert_eq!(semio_ui_tui_core::text::char_cells('a'), 1);
+    assert_eq!(semio_ui_tui_core::text::char_cells('世'), 2);
+    assert_eq!(semio_ui_tui_core::text::char_cells('\u{200b}'), 0, "a zero-width space occupies no cells");
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn text_cell_width_unicode_goldens() {
     assert_eq!(display_width("a\u{0000}\u{001b}b"), 2, "C0 controls add no cell");
     assert_eq!(display_width("界面"), 4, "CJK wide scalars occupy two cells");
     assert_eq!(display_width("🙂"), 2, "emoji presentation scalars occupy two cells");
-    assert_eq!(semio_framework_ui_tui_core::text::char_cells('\u{200d}'), 0, "the zero-width joiner adds no cell");
+    assert_eq!(semio_ui_tui_core::text::char_cells('\u{200d}'), 0, "the zero-width joiner adds no cell");
     assert_eq!(display_width("👩\u{200d}💻"), 2, "a ZWJ sequence is one two-cell glyph");
 }
 
@@ -185,7 +185,7 @@ fn parser_ctrl_char_maps_to_char_with_ctrl_mod() {
     let mut parser = AnsiParser::new();
     let mut events = Vec::new();
     parser.feed(&[0x01, 0x03], &mut events);
-    assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('a'), mods: semio_framework_ui_tui_core::event::mods::CTRL }), Event::Key(KeyEvent { key: Key::Char('c'), mods: semio_framework_ui_tui_core::event::mods::CTRL })]);
+    assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('a'), mods: semio_ui_tui_core::event::mods::CTRL }), Event::Key(KeyEvent { key: Key::Char('c'), mods: semio_ui_tui_core::event::mods::CTRL })]);
 }
 
 #[test]
@@ -193,7 +193,7 @@ fn parser_alt_prefixed_char_sets_alt_mod() {
     let mut parser = AnsiParser::new();
     let mut events = Vec::new();
     parser.feed(b"\x1bj", &mut events);
-    assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('j'), mods: semio_framework_ui_tui_core::event::mods::ALT })]);
+    assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('j'), mods: semio_ui_tui_core::event::mods::ALT })]);
 }
 
 #[test]
@@ -244,7 +244,7 @@ fn parser_control_keys_enter_tab_backspace() {
         events,
         vec![
             Event::Key(KeyEvent { key: Key::Enter, mods: 0 }),
-            Event::Key(KeyEvent { key: Key::Char('j'), mods: semio_framework_ui_tui_core::event::mods::CTRL }),
+            Event::Key(KeyEvent { key: Key::Char('j'), mods: semio_ui_tui_core::event::mods::CTRL }),
             Event::Key(KeyEvent { key: Key::Tab, mods: 0 }),
             Event::Key(KeyEvent { key: Key::Backspace, mods: 0 }),
             Event::Key(KeyEvent { key: Key::Backspace, mods: 0 }),

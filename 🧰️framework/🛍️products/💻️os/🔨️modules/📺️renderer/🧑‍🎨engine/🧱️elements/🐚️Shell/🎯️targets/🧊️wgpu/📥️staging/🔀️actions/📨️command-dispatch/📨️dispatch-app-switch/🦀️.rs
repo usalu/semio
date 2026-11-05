@@ -130,7 +130,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                                 ShellIoCompletion::Actions(vec![ActionDescriptor {
                                     controller_id: session.app.controller_id,
                                     action: "bindSpaceFile".into(),
-                                    args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "spaceId": space_id, "filePath": path.display().to_string() }),
+                                    args: semio_renderer_wgpu_host_base::action_args_json!({ "spaceId": space_id, "filePath": path.display().to_string() }),
                                 }])
                             });
                         }
@@ -384,7 +384,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             self.plugins.plugins.retain(|entry| entry.plugin_id != extension_id);
             self.as_window_actions().push_contributions().await?;
             self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
-            if let Err(error) = semio_framework_os_renderer_wgpu_program_bridge::retire_js_extension(extension_id).await {
+            if let Err(error) = semio_renderer_wgpu_program_bridge::retire_js_extension(extension_id).await {
                 let recovery = self.plugins.load_extension_record(record.clone()).await;
                 self.as_window_actions().push_contributions().await?;
                 self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
@@ -469,7 +469,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             }
             let session = self.docs.session.clone().ok_or("space session missing")?;
             let program = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).ok_or("space program missing")?;
-            let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "openSpace".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "spaceId": space_id }) };
+            let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "openSpace".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "spaceId": space_id }) };
             let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
             let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await.map_err(|refusal| self.prefs.note_refused_open(refusal, &mut self.chrome))?;
             for effect in &result.requested_effects {

@@ -82,8 +82,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "non-tiny-content", kind: "strip-non-tiny", record: "StripNonTiny" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Strip non-Tiny content", "Nicht-Tiny-Inhalte entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Strip non-Tiny content", "Nicht-Tiny-Inhalte entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,16 +1,16 @@
-use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
-use semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions;
-use semio_framework_os_renderer_wgpu_scene_feeds::{HistoryColumnAuthorJson, HistoryColumnJson, acknowledge_graph_timeline_accessibility_candidates, graph_timeline_accessibility_activate, graph_timeline_accessibility_controls, graph_timeline_avatar_initials, graph_timeline_hit, graph_timeline_label_track_width, graph_timeline_layout, graph_timeline_painted_label_track, graph_timeline_scene_label_track, history_avatar_image_id, history_graph_width, history_lane_count, history_lane_x, history_row_lane_guides, render_graph_timeline, seal_graph_timeline_accessibility_candidates, stage_graph_timeline_accessibility_controls};
-use semio_framework_os_renderer_wgpu_scene_render::scene_list_hit;
-use semio_framework_os_renderer_wgpu_scene_state::SceneModifiers;
+use semio_renderer_wgpu_contracts::framework_widget_context;
+use semio_renderer_wgpu_frame_actions::collect_fixture_actions;
+use semio_renderer_wgpu_scene_feeds::{HistoryColumnAuthorJson, HistoryColumnJson, acknowledge_graph_timeline_accessibility_candidates, graph_timeline_accessibility_activate, graph_timeline_accessibility_controls, graph_timeline_avatar_initials, graph_timeline_hit, graph_timeline_label_track_width, graph_timeline_layout, graph_timeline_painted_label_track, graph_timeline_scene_label_track, history_avatar_image_id, history_graph_width, history_lane_count, history_lane_x, history_row_lane_guides, render_graph_timeline, seal_graph_timeline_accessibility_candidates, stage_graph_timeline_accessibility_controls};
+use semio_renderer_wgpu_scene_render::scene_list_hit;
+use semio_renderer_wgpu_scene_state::SceneModifiers;
 use serde_json::json;
 use std::collections::HashMap;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::HitKind;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::HitKind;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_ui_theme::Theme;
+use semio_ui_wgpu_layout::chrome::UiDriverDrag;
 
 pub fn column(id: &str, lane: usize, parent: Option<&str>) -> HistoryColumnJson {
     HistoryColumnJson { checkpoint_id: id.to_string(), labels: Vec::new(), authors: Vec::new(), parent_checkpoint_id: parent.map(str::to_string), description: None, mutation_level: None, lane }
@@ -79,7 +79,7 @@ fn layout_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧪️tests/🧫️fixtures/🎨️layout/🔣️.json")).expect("shared GraphTimeline layout fixture")
 }
 
-pub fn drain_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub fn drain_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     collect_fixture_actions(input)
 }
 
@@ -105,7 +105,7 @@ fn author_scene(authors: serde_json::Value) -> UiComponentSceneNode {
         board2d: None,
         icon_render: None,
         ink_canvas: None,
-        graph_timeline: Some(semio_framework_ui_scene_views::GraphTimelineScene { columns_json: json!([{ "checkpointId": checkpoint_id, "authors": authors, "description": "authored", "lane": 0 }]).to_string() }),
+        graph_timeline: Some(semio_ui_scene_views::GraphTimelineScene { columns_json: json!([{ "checkpointId": checkpoint_id, "authors": authors, "description": "authored", "lane": 0 }]).to_string() }),
         diff_view: None,
         event_feed: None,
         block_list: None,
@@ -113,13 +113,13 @@ fn author_scene(authors: serde_json::Value) -> UiComponentSceneNode {
     }
 }
 
-fn paint_author_scene(scene: &UiComponentSceneNode) -> semio_framework_ui_draw_contract::DrawList {
-    paint_timeline_scene(scene, Rect::new(0.0, 0.0, 400.0, 100.0), &mut semio_framework_ui_text::FontAtlas::builtin())
+fn paint_author_scene(scene: &UiComponentSceneNode) -> semio_ui_draw_contract::DrawList {
+    paint_timeline_scene(scene, Rect::new(0.0, 0.0, 400.0, 100.0), &mut semio_ui_text::FontAtlas::builtin())
 }
 
-fn paint_timeline_scene(scene: &UiComponentSceneNode, bounds: Rect, atlas: &mut semio_framework_ui_text::FontAtlas) -> semio_framework_ui_draw_contract::DrawList {
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+fn paint_timeline_scene(scene: &UiComponentSceneNode, bounds: Rect, atlas: &mut semio_ui_text::FontAtlas) -> semio_ui_draw_contract::DrawList {
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -187,9 +187,9 @@ fn graph_timeline_paints_every_author_and_never_reuses_a_replaced_avatar_source(
 /// among the parent-connector line's vertices, not that opaque `theme.separator` is absent.
 #[test]
 fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -213,7 +213,7 @@ fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
         board2d: None,
         icon_render: None,
         ink_canvas: None,
-        graph_timeline: Some(semio_framework_ui_scene_views::GraphTimelineScene {
+        graph_timeline: Some(semio_ui_scene_views::GraphTimelineScene {
             columns_json: json!([
                 { "checkpointId": "b", "lane": 0, "parentCheckpointId": "a" },
                 { "checkpointId": "a", "lane": 0 },
@@ -242,7 +242,7 @@ fn shared_layout_contract_drives_paint_hit_accessibility_and_mutation_badge_geom
     let viewport = &fixture["viewport"];
     let bounds = Rect::new(0.0, 0.0, viewport["width"].as_f64().unwrap() as f32, viewport["height"].as_f64().unwrap() as f32);
     let theme = Theme::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::shaped_default();
+    let mut atlas = semio_ui_text::FontAtlas::shaped_default();
     let mut scene = author_scene(json!([]));
     scene.host_id = "timeline-layout".into();
     scene.controller_id = "timeline-layout-controller".into();
@@ -304,7 +304,7 @@ fn row_press_dispatches_checkout_checkpoint_for_the_row_under_the_pointer() {
         board2d: None,
         icon_render: None,
         ink_canvas: None,
-        graph_timeline: Some(semio_framework_ui_scene_views::GraphTimelineScene { columns_json: json!([{ "checkpointId": "b", "lane": 0, "parentCheckpointId": "a" }, { "checkpointId": "a", "lane": 0 }]).to_string() }),
+        graph_timeline: Some(semio_ui_scene_views::GraphTimelineScene { columns_json: json!([{ "checkpointId": "b", "lane": 0, "parentCheckpointId": "a" }, { "checkpointId": "a", "lane": 0 }]).to_string() }),
         diff_view: None,
         event_feed: None,
         block_list: None,
@@ -333,9 +333,9 @@ fn checkpoint_regions_match_react_without_activating_descriptions() {
     scene.graph_timeline.as_mut().unwrap().columns_json = fixture["columns"].to_string();
     let values = fixture["bounds"].as_array().unwrap();
     let bounds = Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32);
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::shaped_default();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::shaped_default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -370,7 +370,7 @@ fn accepted_checkpoint_accessibility_uses_selectable_geometry_and_exact_action()
     let values = fixture["bounds"].as_array().unwrap();
     let bounds = Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32);
     let theme = Theme::default();
-    let controls = graph_timeline_accessibility_controls(&scene, bounds, &theme, graph_timeline_scene_label_track(&scene, &theme, &mut semio_framework_ui_text::FontAtlas::shaped_default()));
+    let controls = graph_timeline_accessibility_controls(&scene, bounds, &theme, graph_timeline_scene_label_track(&scene, &theme, &mut semio_ui_text::FontAtlas::shaped_default()));
     let control = controls.iter().find(|control| control.checkpoint_id == expected["checkpointId"].as_str().unwrap()).expect("checkpoint accessibility control").clone();
     assert_eq!(control.key, expected["key"].as_str().unwrap());
     assert_eq!(control.label, expected["accessibleName"].as_str().unwrap());
@@ -384,7 +384,7 @@ fn accepted_checkpoint_accessibility_uses_selectable_geometry_and_exact_action()
     stage_graph_timeline_accessibility_controls(&scene.host_id, controls);
     seal_graph_timeline_accessibility_candidates(921);
     acknowledge_graph_timeline_accessibility_candidates(921);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     graph_timeline_accessibility_activate(&scene, &control.key, &mut input).expect("accepted checkpoint").expect("bounded action");
     let actions = drain_actions(&mut input);
     assert_eq!(actions.len(), 1);

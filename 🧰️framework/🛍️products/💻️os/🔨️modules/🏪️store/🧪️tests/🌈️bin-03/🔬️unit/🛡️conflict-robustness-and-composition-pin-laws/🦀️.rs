@@ -12,7 +12,7 @@
 async fn replay_suffix_partitioned_errors_loudly_on_a_ghost_edit_id_instead_of_silently_dropping_it() {
     let edits: HashMap<String, Edit<DemoMutation>> = HashMap::new();
     let order = vec!["ghost-edit".to_string()];
-    let error = semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix_partitioned(Arc::new(DemoSnapshot { n: Some(0) }), &order, 0, &edits, "demo/v1", &EffectiveSupersessions::new(), semio_framework_os_spr::MergePolicy::Normal)
+    let error = semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix_partitioned(Arc::new(DemoSnapshot { n: Some(0) }), &order, 0, &edits, "demo/v1", &EffectiveSupersessions::new(), semio_os_spr::MergePolicy::Normal)
         .err()
         .expect("a ghost edit id must be a loud, typed VcsError");
     assert_eq!(error, VcsError::UnknownEdit("ghost-edit".into()));
@@ -25,7 +25,7 @@ async fn replay_suffix_partitioned_errors_loudly_on_a_ghost_edit_id_instead_of_s
 #[semio_framework_async_macros::async_test]
 async fn edits_for_ids_errors_loudly_on_a_ghost_edit_id_instead_of_silently_filtering_it() {
     let edits: HashMap<String, Edit<DemoMutation>> = HashMap::new();
-    let error = semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::edits_for_ids(&["ghost-edit".to_string()], &edits).expect_err("an id that resolves to nothing must fail loudly, never vanish from the mutation-id set");
+    let error = semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::edits_for_ids(&["ghost-edit".to_string()], &edits).expect_err("an id that resolves to nothing must fail loudly, never vanish from the mutation-id set");
     assert_eq!(error, VcsError::UnknownEdit("ghost-edit".into()));
 }
 
@@ -34,15 +34,15 @@ async fn edits_for_ids_errors_loudly_on_a_ghost_edit_id_instead_of_silently_filt
 /// replay logic (these tests push it directly onto `envelope.conflicts`, bypassing `ingest_
 /// remote`/`resolve_conflict` entirely, exactly like the existing hand-built conflict fixtures
 /// in `🔖️PreviewWireTests` above).
-async fn synthetic_open_conflict(seed: u64) -> semio_framework_os_spr::Conflict {
-    let kind = semio_framework_os_spr::ConflictKind::Degraded { edit_ids: vec![format!("synthetic-edit-{seed}")] };
+async fn synthetic_open_conflict(seed: u64) -> semio_os_spr::Conflict {
+    let kind = semio_os_spr::ConflictKind::Degraded { edit_ids: vec![format!("synthetic-edit-{seed}")] };
     let artifact = ArtifactId("demo".into());
     let mutation_ids = vec![MutationId(format!("synthetic-op-{seed}"))];
     let timestamp = HybridLogicalTimestamp::new(seed, seed);
-    semio_framework_os_spr::Conflict {
-        id: semio_framework_os_spr::ConflictId::new(&kind, &artifact, &mutation_ids, &timestamp).await,
+    semio_os_spr::Conflict {
+        id: semio_os_spr::ConflictId::new(&kind, &artifact, &mutation_ids, &timestamp).await,
         kind,
-        status: semio_framework_os_spr::ConflictStatus::Open,
+        status: semio_os_spr::ConflictStatus::Open,
         messages: Vec::new(),
         actors: vec![ActorId(format!("synthetic-actor-{seed}").into())],
         timestamp,
@@ -55,13 +55,13 @@ async fn conflict_retirement_cursors_quarantined_payloads_messages_actors_and_id
     envelope.dependencies = (0..32).map(|index| MutationId(format!("dependency-{index}-{}", "d".repeat(128)))).collect();
     envelope.diff.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&vec![7; 16 * 1024]).unwrap();
     envelope.inverse.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&vec![3; 16 * 1024]).unwrap();
-    let kind = semio_framework_os_spr::ConflictKind::Quarantined { envelopes: vec![envelope] };
+    let kind = semio_os_spr::ConflictKind::Quarantined { envelopes: vec![envelope] };
     let timestamp = HybridLogicalTimestamp::new(41, 43);
-    let conflict = semio_framework_os_spr::Conflict {
-        id: semio_framework_os_spr::ConflictId::new(&kind, &ArtifactId("conflict-document".repeat(64)), &[MutationId("conflict-mutation".repeat(64))], &timestamp).await,
+    let conflict = semio_os_spr::Conflict {
+        id: semio_os_spr::ConflictId::new(&kind, &ArtifactId("conflict-document".repeat(64)), &[MutationId("conflict-mutation".repeat(64))], &timestamp).await,
         kind,
-        status: semio_framework_os_spr::ConflictStatus::Open,
-        messages: vec![semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", "message".repeat(256)).at(["target".repeat(256)])],
+        status: semio_os_spr::ConflictStatus::Open,
+        messages: vec![semio_os_spr::MutationMessage::fatal("mutation.invariant", "message".repeat(256)).at(["target".repeat(256)])],
         actors: vec![ActorId("actor".repeat(256).into())],
         timestamp,
     };
@@ -77,11 +77,11 @@ async fn conflict_retirement_cursors_quarantined_payloads_messages_actors_and_id
 #[semio_framework_async_macros::async_test]
 async fn ingest_remote_refuses_a_new_open_conflict_once_the_backlog_is_at_capacity() {
     let mut store = fresh_demo_store().await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::Normal);
+    store.set_merge_policy(semio_os_spr::MergePolicy::Normal);
     let (delete, modify) = modify_vs_delete_envelopes().await;
     store.ingest_remote(delete).await.expect("the delete alone raises no message and always applies");
 
-    let cap = semio_framework_os_store_engine::lifted_store::StoreLog::<DemoSnapshot, DemoMutation>::OPEN_CONFLICT_CAP;
+    let cap = semio_os_store_engine::lifted_store::StoreLog::<DemoSnapshot, DemoMutation>::OPEN_CONFLICT_CAP;
     for seed in 0..cap as u64 {
         store.0.log.envelope.conflicts.push(synthetic_open_conflict(seed).await);
     }
@@ -105,14 +105,14 @@ async fn ingest_remote_refuses_a_new_open_conflict_once_the_backlog_is_at_capaci
 #[semio_framework_async_macros::async_test]
 async fn resolved_conflicts_are_pruned_oldest_first_once_the_ledger_exceeds_its_cap_while_open_ones_survive() {
     let mut store = fresh_demo_store().await;
-    let cap = semio_framework_os_store_engine::lifted_store::StoreOwners::<DemoSnapshot, DemoMutation>::RESOLVED_CONFLICT_CAP;
+    let cap = semio_os_store_engine::lifted_store::StoreOwners::<DemoSnapshot, DemoMutation>::RESOLVED_CONFLICT_CAP;
     let open = synthetic_open_conflict(u64::MAX).await;
     store.0.log.envelope.conflicts.push(open.clone());
     let overflow: u64 = 20;
     let resolved_count = cap as u64 + overflow;
     for seed in 0..resolved_count {
         let mut resolved = synthetic_open_conflict(seed).await;
-        resolved.status = semio_framework_os_spr::ConflictStatus::Accepted;
+        resolved.status = semio_os_spr::ConflictStatus::Accepted;
         store.0.log.envelope.conflicts.push(resolved);
     }
     assert_eq!(store.conflicts().len(), resolved_count as usize + 1);
@@ -120,8 +120,8 @@ async fn resolved_conflicts_are_pruned_oldest_first_once_the_ledger_exceeds_its_
     store.0.prune_resolved_conflicts().expect("bounded resolved-conflict retirement");
 
     assert_eq!(store.conflicts().len(), cap, "pruning must bring the ledger back down to the cap");
-    assert!(store.conflicts().iter().any(|conflict| conflict.id == open.id && conflict.status == semio_framework_os_spr::ConflictStatus::Open), "the Open conflict must never be evicted, no matter how far over cap the resolved backlog grows");
-    let surviving_seeds: HashSet<u64> = store.conflicts().iter().filter(|conflict| conflict.status == semio_framework_os_spr::ConflictStatus::Accepted).map(|conflict| conflict.timestamp.physical_ms).collect();
+    assert!(store.conflicts().iter().any(|conflict| conflict.id == open.id && conflict.status == semio_os_spr::ConflictStatus::Open), "the Open conflict must never be evicted, no matter how far over cap the resolved backlog grows");
+    let surviving_seeds: HashSet<u64> = store.conflicts().iter().filter(|conflict| conflict.status == semio_os_spr::ConflictStatus::Accepted).map(|conflict| conflict.timestamp.physical_ms).collect();
     assert_eq!(surviving_seeds.len(), cap - 1);
     for evicted_seed in 0..=overflow {
         assert!(!surviving_seeds.contains(&evicted_seed), "seed {evicted_seed} was among the oldest resolved conflicts and must be pruned first");
@@ -142,7 +142,7 @@ async fn resolved_conflicts_are_pruned_oldest_first_once_the_ledger_exceeds_its_
 #[semio_framework_async_macros::async_test]
 async fn quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_batch() {
     let mut store = fresh_demo_store().await;
-    store.set_merge_policy(semio_framework_os_spr::MergePolicy::Normal);
+    store.set_merge_policy(semio_os_spr::MergePolicy::Normal);
 
     let a = mutation_envelope_at("actor-a", "op-a", DemoMutation::AddN(AddN { delta: 5 }), HybridLogicalTimestamp::new(1, 100), Vec::new());
     store.ingest_remote(a).await.expect("op-a commits cleanly the first time, on a fresh n=0 target");
@@ -165,9 +165,9 @@ async fn quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_
 
     let conflict_id = report.conflict.expect("the mixed quarantine batch must raise one conflict");
     let conflict = store.conflicts().iter().find(|conflict| conflict.id == conflict_id).expect("conflict recorded on the store");
-    assert_eq!(conflict.status, semio_framework_os_spr::ConflictStatus::Open);
+    assert_eq!(conflict.status, semio_os_spr::ConflictStatus::Open);
     match &conflict.kind {
-        semio_framework_os_spr::ConflictKind::Quarantined { envelopes } => assert_eq!(envelopes.len(), 2, "both op-a (retroactive) and op-c (new) must be quarantined TOGETHER in one conflict"),
+        semio_os_spr::ConflictKind::Quarantined { envelopes } => assert_eq!(envelopes.len(), 2, "both op-a (retroactive) and op-c (new) must be quarantined TOGETHER in one conflict"),
         other => panic!("expected a Quarantined conflict, got {other:?}"),
     }
     assert_eq!(store.conflicts().len(), 1, "op-a's clean first commit never raised a conflict of its own — only this one mixed-batch conflict must exist");
@@ -177,31 +177,31 @@ async fn quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_
 
 #[semio_framework_async_macros::async_test]
 async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).await.expect("checkpoint");
     let original_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
     let before = owned_test_envelope(&store).await;
-    let invalid = semio_framework_os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
+    let invalid = semio_os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
 
     assert!(store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![invalid]).await.is_err());
     assert_eq!(store.envelope(), &before);
 
-    let pin = semio_framework_os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: "child".into(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
+    let pin = semio_os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: "child".into(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
     store.set_checkpoint_composition_pins(&original_checkpoint_id, vec![pin]).await.expect("valid pin update");
     let rederived = &store.envelope().vcs.checkpoints[0];
     assert_ne!(rederived.id, original_checkpoint_id);
     assert_eq!(rederived.composition_pins.len(), 1);
-    let mut revalidated = semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(owned_test_envelope(&store).await, store.local_actor_id().clone()).await.expect("a persisted pinned checkpoint must validate its rederived identity");
-    revalidated.install_document_store_owners_exact(complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let mut revalidated = semio_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(owned_test_envelope(&store).await, store.local_actor_id().clone()).await.expect("a persisted pinned checkpoint must validate its rederived identity");
+    revalidated.install_document_store_owners_exact(complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     close_test_store(&mut revalidated);
     retire_demo_envelope(before);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn materialize_replays_forward_mutations() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
     assert_eq!(store.envelope().vcs.edits.len(), 1);
@@ -209,8 +209,8 @@ async fn materialize_replays_forward_mutations() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(0));

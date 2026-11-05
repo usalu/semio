@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "image", kind: "set-image", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set image {}", self.image.id), &format!("Bild {} setzen", self.image.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set image {}", self.image.id), &format!("Bild {} setzen", self.image.id))
     }
 
     fn target(&self) -> Vec<String> {

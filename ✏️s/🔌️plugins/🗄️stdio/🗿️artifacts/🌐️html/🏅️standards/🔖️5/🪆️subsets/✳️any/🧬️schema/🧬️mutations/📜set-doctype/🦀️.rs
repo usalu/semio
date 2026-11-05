@@ -15,8 +15,8 @@ pub struct SetDoctype {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetDoctype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "doctype", kind: "set-doctype", record: "SetDoctype" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set doctype", "Dokumenttyp setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set doctype", "Dokumenttyp setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

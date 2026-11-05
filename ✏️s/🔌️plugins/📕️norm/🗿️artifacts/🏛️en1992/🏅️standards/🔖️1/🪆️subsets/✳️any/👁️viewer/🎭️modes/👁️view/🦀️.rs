@@ -1,7 +1,7 @@
 //! 👁️ EN 1992 viewer — the `view` mode: the read-only model, checks and diagrams over the same scene the editor projects — ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 only requires "at least one window" for a viewer packet.
 
-use semio_framework_plugin::{ModeDefinition, WindowLayout};
+use semio_plugin::{ModeDefinition, WindowLayout};
 use semio_s_plugin_norm_app_surface::{device_profiles::LayoutPrefs, viewport3d::config::DeviceClass};
 
 //#region 🔖️Definition

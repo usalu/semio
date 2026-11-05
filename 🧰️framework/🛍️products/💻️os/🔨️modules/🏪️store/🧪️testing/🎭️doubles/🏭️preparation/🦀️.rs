@@ -2,20 +2,20 @@
 //!
 //! 🧭️ Moved from the former store unit test module; the items are `pub` because the test crates of the Store use them through the public API only.
 
-use semio_framework_os_store_testing_prelude::*;
-use semio_framework_os_store_testing_fixtures::*;
+use semio_os_store_testing_prelude::*;
+use semio_os_store_testing_fixtures::*;
 use crate::*;
-use semio_framework_os_spr::ColdMutation as _;
-use semio_framework_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
-use semio_framework_os_store_testing_fixtures::lossy::{LossyMutation, SetN as LossySetN};
-use semio_framework_os_store_testing_fixtures::severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation};
-use semio_framework_os_store_testing_fixtures::timestamped::{SetN as TimestampedSetN, TimestampedMutation};
-use semio_framework_os_store_testing_fixtures::validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation};
+use semio_os_spr::ColdMutation as _;
+use semio_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
+use semio_os_store_testing_fixtures::lossy::{LossyMutation, SetN as LossySetN};
+use semio_os_store_testing_fixtures::severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation};
+use semio_os_store_testing_fixtures::timestamped::{SetN as TimestampedSetN, TimestampedMutation};
+use semio_os_store_testing_fixtures::validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEdit;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEditCursor;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEditStep;
-use semio_framework_os_store_snapshot_clone::RetainedClonePreparationFactory;
+use semio_os_store_snapshot_clone::RetainedCloneEdit;
+use semio_os_store_snapshot_clone::RetainedCloneEditCursor;
+use semio_os_store_snapshot_clone::RetainedCloneEditStep;
+use semio_os_store_snapshot_clone::RetainedClonePreparationFactory;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
 use semio_framework_pack_json_retained_schema::testing::{OWNED_SCHEMA_TEST_FIELDS, owned_schema_test_cursor, drive_owned_schema, schema_test_close_grant};
 use semio_framework_value::testing::physical_test_close_grant;
@@ -145,7 +145,7 @@ pub struct DemoOneItemPreparation {
     pub mutation: Option<DemoMutation>,
     pub authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     pub prepared: Option<ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>>,
-    pub semantic_refusal: std::mem::ManuallyDrop<Option<semio_framework_os_spr::MutationApplyError>>,
+    pub semantic_refusal: std::mem::ManuallyDrop<Option<semio_os_spr::MutationApplyError>>,
     pub pending_edit: Option<Edit<DemoMutation>>,
     pub pending_post: Option<Arc<DemoSnapshot>>,
     pub sealer: Option<ArtifactStoreOneItemSealer<DemoSnapshot, DemoMutation>>,

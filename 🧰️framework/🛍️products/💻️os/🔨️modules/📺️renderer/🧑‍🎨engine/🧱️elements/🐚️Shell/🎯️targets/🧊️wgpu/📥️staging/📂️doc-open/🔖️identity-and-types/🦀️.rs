@@ -61,16 +61,16 @@ pub enum ShellDocumentOpenAnswer {
         plugin_id: String,
         app_id: String,
         program: Option<ProgramBridgeEntry>,
-        checkpoint: semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1,
+        checkpoint: semio_os_kernel::os_directory::DocumentOpenCheckpointV1,
     },
     Instantiated(u32),
-    Seeded(Option<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1>),
+    Seeded(Option<semio_os_kernel::os_directory::CanonicalCheckpointPairV1>),
 }
 
 /// ⏳️ The resolution step a hub document open is on, as its band reads it ([`ShellDocumentOpening::resolve_step`]).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn document_open_resolve_step_code(step: semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep) -> u8 {
-    use semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep;
+pub fn document_open_resolve_step_code(step: semio_os_kernel::os_directory::client::ExecutionTargetModuleStep) -> u8 {
+    use semio_os_kernel::os_directory::client::ExecutionTargetModuleStep;
     match step {
         ExecutionTargetModuleStep::Lease => 0,
         ExecutionTargetModuleStep::Component => 1,
@@ -84,7 +84,7 @@ pub fn document_open_resolve_step_code(step: semio_framework_os_kernel::os_direc
 pub struct ShellDocumentOpenTarget {
     pub document_id: String,
     pub schema: String,
-    pub checkpoint: Option<semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1>,
+    pub checkpoint: Option<semio_os_kernel::os_directory::DocumentOpenCheckpointV1>,
 }
 
 /// 🚪️ The one document open this shell runs at a time (`os.open-artifact`), advanced by the frame pump
@@ -100,7 +100,7 @@ pub struct ShellDocumentOpening {
     pub plugin_id: String,
     pub app_id: String,
     pub document: Option<ShellDocumentOpenTarget>,
-    pub pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>>,
+    pub pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, semio_renderer_wgpu_program_bridge::ProgramFault>>>,
     pub prepared: Option<ShellPreparedDocumentOpen>,
     /// 🛑️ The token the detached hub resolution's requests check; cancelling the open cancels it.
     pub cancel: Option<CancelToken>,
@@ -110,7 +110,7 @@ pub struct ShellDocumentOpening {
 
 impl ShellDocumentOpening {
     /// 🚪️ An open whose first detached step is `pending`, in `phase`.
-    pub fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>>) -> Self {
+    pub fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, semio_renderer_wgpu_program_bridge::ProgramFault>>>) -> Self {
         Self { label, phase, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app_id, document, pending, prepared: None, cancel: None, resolve_step: std::sync::Arc::default() }
     }
 
@@ -136,7 +136,7 @@ pub fn document_socket_surface_from_descriptor(plugin_id: &str, package_id: Opti
 /// surface the shell requested. Anything else would lend the document actor a kind identity for
 /// code that is not running here.
 pub fn document_execution_target_admitted(
-    lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1,
+    lease: &semio_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1,
     plugin_id: &str,
     package_id: Option<&str>,
     component_sha256: Option<&str>,

@@ -5,7 +5,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::di
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, IssuePriority, IssueStatus, Point3, SectionBox};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Issue, ModelSnapshot};
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::coordination::latest_moment;
 #[allow(unused_imports)]
@@ -23,7 +23,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::di
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IssueViewpoint, Point2, ViewCamera};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_move_storey::editor::bim::commands::coordinate::{framing, MIN_DISTANCE, section_around, SECTION_MARGIN, ViewClash, handle, RaiseIssue, CaptureViewpoint, RestoreViewpoint};
@@ -32,7 +32,7 @@ use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::run;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 static FRAME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json"));
 

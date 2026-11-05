@@ -1,7 +1,7 @@
 import {existsSync,lstatSync,readdirSync,realpathSync,rmSync} from "node:fs";
 import {join,sep} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
-import {cacheLedgerV1,cacheRootDirectoryV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {CACHE_ROOT_IDS_V1,cacheLedgerV1,cacheRootDirectoryV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {undeclaredEntriesV1} from "../../../🧹️cache-gc/🏃️runner/🟦️.ts";
 import type {DoctorPolicyV1} from "../../🟦️.ts";
 import type {DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
@@ -84,7 +84,7 @@ export const cachesProbeV1:DoctorProbeV1=Object.freeze({
   }
   const ledger=cacheLedgerV1(),retired:string[]=[],undeclared:string[]=[];
   for(const row of ledger.retirements)if(existsSync(join(cacheRootDirectoryV1(ports.root,ledger,row.root),...row.directory.split("/"))))retired.push(row.root+":"+row.directory);
-  for(const root of ["repository","native"] as const){
+  for(const root of CACHE_ROOT_IDS_V1){
    ports.signal.throwIfAborted();
    for(const name of await undeclaredEntriesV1(ports.root,ledger,root))undeclared.push(root+":"+name);
   }

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationPileUpVs
         record: "ChangeFoundationPileUpVsMS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear wave velocity of the upper layer", "Scherwellengeschwindigkeit der oberen Schicht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear wave velocity of the upper layer", "Scherwellengeschwindigkeit der oberen Schicht ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-pile-up-vs-ms".into()]

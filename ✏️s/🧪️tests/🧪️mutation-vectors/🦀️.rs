@@ -12,7 +12,7 @@
 //! and the binary op codec unchanged, every kind is covered by an applied vector or a wire witness, and every leaf
 //! descriptor declares exactly the outcome classes production dispatch reaches from its vectors.
 
-use semio_framework_os_kernel::{apply_diff_cold, ColdMutation, Mutation, OpBinary, SemanticMutation};
+use semio_os_kernel::{apply_diff_cold, ColdMutation, Mutation, OpBinary, SemanticMutation};
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
@@ -218,7 +218,7 @@ where
     for bundle in applied_vectors {
         let mutation: M = decode(&bundle.join(MUTATION));
         let before: S = decode(&bundle.join(BEFORE));
-        semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        semio_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
     }
 }
 //#endregion 🧫️Table

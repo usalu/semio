@@ -349,7 +349,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   assert(homeBinary.includes("ArtifactStore::new(envelope).await") && homeBinary.includes(".dispatch(store::os_store::store_schema::ArtifactCommand::Apply") && homeBinary.includes(" }).await.expect"), "Home document codec law does not await the current Store construction and dispatch boundary");
   assert(catalogGenerationSource.includes("dsl::from_dsl_value(pack::json_to_dsl_value(&json))") && !catalogGenerationSource.includes("serde_json::from_str(BEFORE)"), "Home snapshot fixture bypasses the first-party value codec");
   assert(!spaceEngine.includes("Some(&json!(") && !spaceEngine.includes("Some(&pack::json!(") && spaceEngine.match(/pack::json_to_dsl_value\(&pack::json!\(/g)?.length === 3, "Space checkpoint tests do not convert first-party JSON into the current DSL action boundary");
-  const pluginImports = (source: string): string[] => source.match(/use semio_framework_plugin::\{([^}]*)\};/)?.[1]!.split(",").map((name) => name.trim()) ?? [];
+  const pluginImports = (source: string): string[] => source.match(/use semio_plugin::\{([^}]*)\};/)?.[1]!.split(",").map((name) => name.trim()) ?? [];
   assert(["LocalizedLabel", "WindowKindDefinition"].every((name) => pluginImports(editor).includes(name)) && !editor.includes("let UiNode::") && ["IconName", "WindowKindDefinition"].every((name) => pluginImports(spaceEditor).includes(name)) && !spaceEditor.includes("let UiNode::"), "Home or Space row tests do not use the current fixed BuiltNode projection");
   assert(!spaceViewer.includes("let UiNode::") && spaceViewer.includes("BuiltTreeRetirement::new"), "Space viewer rows bypass the current fixed BuiltNode projection and retirement boundary");
   assert(homeViewerApp.includes("create_home_viewer().await") && homeViewerApp.includes("project_and_retire_fixture_tree(tree)"), "Home viewer fixtures do not await and retire the current manifest/render boundaries");
@@ -378,7 +378,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const spaceAppFixtures = `${workflowWindow}\n${compiledDagWindow}\n${spawnApp}`;
   assert(!spaceAppFixtures.includes("VcsArtifactApp::new(crate::engine::space::SpaceApp::default())") && !spaceAppFixtures.includes("VcsArtifactApp::<crate::engine::space::SpaceApp>::new") && spaceAppFixtures.match(/crate::engine::space::unit_tests::context::app_with_registry\(\)\.await/g)?.length === 4, "Space window and spawn fixtures bypass the registered app constructor");
   const fixedPanelFixtures = `${inspectionPanel}\n${parametersPanel}`;
-  assert(!fixedPanelFixtures.includes("pack::to_json_string(&node)") && fixedPanelFixtures.match(/project_and_retire_fixture_tree\(semio_framework_plugin::ComponentTree \{ root: node \}\)/g)?.length === 3, "Space panel fixtures serialize retained BuiltNode owners instead of projecting and retiring them");
+  assert(!fixedPanelFixtures.includes("pack::to_json_string(&node)") && fixedPanelFixtures.match(/project_and_retire_fixture_tree\(semio_plugin::ComponentTree \{ root: node \}\)/g)?.length === 3, "Space panel fixtures serialize retained BuiltNode owners instead of projecting and retiring them");
   assert(spaceShared.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 3 && homeViewerApp.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 1, "Home or Space surface tests leave the async test context future unpolled");
   assert(createStudio.includes("resolve_ready(crate::register_studio_port(&entry.id, port))") && exportMedia.includes("payload.document_json.parse::<Value>()") && setAppRegistrations.includes("resolve_ready(crate::engine::space::engine::apply_app_registrations(&payload.json))"), "Synchronous Space command handlers leave an async registry side effect unpolled");
   for (const law of [
@@ -407,14 +407,14 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
           {
-            package: "semio-framework-plugin-host-imports",
+            package: "semio-plugin-host-imports",
             target: { kind: "lib" },
             laws: [
               "effect_conversion_tests::request_inference_proposal_preserves_the_closed_kind",
             ],
           },
           {
-            package: "semio-framework-os-host-media-raster",
+            package: "semio-os-host-media-raster",
             target: { kind: "lib" },
             laws: [
               "registrar_tests::svg_path_extraction_preserves_transformed_geometry",

@@ -396,7 +396,7 @@
       "root": "native",
       "path": "b/r",
       "kind": "area",
-      "id": "rust"
+      "id": "held-rust-image"
     },
     {
       "root": "repository",
@@ -716,6 +716,28 @@
       "  repository:tools/nx-tooling: 8.00 GiB (mindestens) (vor 2 h erfasst)",
       "Nicht deklarierte Einträge (werden nach 14 Tagen Nichtbenutzung eingesammelt)",
       "  repository:e1: ? (nicht gemessen)"
+    ]
+  },
+  "compactRust": {
+    "root": "rust",
+    "directory": ".r",
+    "partitionDirectory": "i",
+    "absoluteDirectory": "/work/semio/.r/i",
+    "cases": [
+      {
+        "path": "i",
+        "kind": "area",
+        "id": "rust"
+      },
+      {
+        "path": "i/m/u/l/p123456",
+        "kind": "area",
+        "id": "rust"
+      },
+      {
+        "path": "other",
+        "kind": "undeclared"
+      }
     ]
   }
 }

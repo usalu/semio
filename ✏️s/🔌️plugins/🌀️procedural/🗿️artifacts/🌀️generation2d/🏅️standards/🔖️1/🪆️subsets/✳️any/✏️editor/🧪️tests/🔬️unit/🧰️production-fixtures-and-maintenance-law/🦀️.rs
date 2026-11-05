@@ -105,7 +105,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
     (wire, expected, expected_digest)
 }
 
-fn admit_production_envelope(app: &mut Generation2dApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_production_envelope(app: &mut Generation2dApp, wire: &[u8]) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P2 production ingress credits");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -118,11 +118,11 @@ fn admit_production_envelope(app: &mut Generation2dApp, wire: &[u8]) -> semio_fr
     handle
 }
 
-fn drive_production_envelope(app: &mut Generation2dApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_production_envelope(app: &mut Generation2dApp, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one P2 production maintenance turn");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one P2 production maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("P2 production load advancement");
-        if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+        if matches!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }
         std::thread::yield_now();
@@ -138,7 +138,7 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_publishes_through_
     let base_generation = accepted.artifact_generation_now();
     let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
     let handle = admit_production_envelope(&mut accepted, &wire);
-    assert_eq!(drive_production_envelope(&mut accepted, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(drive_production_envelope(&mut accepted, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
     let snapshot = production_read(accepted.snapshot().expect("accepted P2 production snapshot"));
     let expected = production_read(expected);
@@ -162,8 +162,8 @@ async fn vcs_artifact_app_maintenance_swap_rejects_the_stale_replacement_and_kee
     let first = admit_production_envelope(&mut app, &first_wire);
     let second = admit_production_envelope(&mut app, &second_wire);
     let polls = [drive_production_envelope(&mut app, first), drive_production_envelope(&mut app, second)];
-    let ready = semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready;
-    let fault = semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault;
+    let ready = semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready;
+    let fault = semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault;
     assert_eq!(polls.iter().filter(|poll| **poll == ready).count(), 1, "exactly one racing replacement publishes: {polls:?}");
     assert_eq!(polls.iter().filter(|poll| **poll == fault).count(), 1, "the stale replacement faults: {polls:?}");
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1, "the rejected replacement does not advance the live generation");

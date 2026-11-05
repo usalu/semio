@@ -2,7 +2,7 @@
 
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Baluster, DoorLeaves, EndJoin, Infill, LocationLine, MaterialCategory, OpeningKind, Point2, Profile, RiserKind, RoofShape, Slope, StairFlight, StairStringer, StringerKind, Swing, TopConstraint, Vertex};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::BTreeMap;
 

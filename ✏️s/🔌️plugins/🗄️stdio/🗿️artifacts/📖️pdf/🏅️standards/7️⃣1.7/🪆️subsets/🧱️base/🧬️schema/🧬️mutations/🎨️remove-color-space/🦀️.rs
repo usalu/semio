@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "color-space", kind: "remove-color-space", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove color-space {}", self.name), &format!("Farbraum {} entfernen", self.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove color-space {}", self.name), &format!("Farbraum {} entfernen", self.name))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,6 +1,6 @@
 //! 🗣️ Drawing play app — the complete UI label set (constitutional: was `ui`'s Locale/Terminology region).
 
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the drawing app; one field per label makes every locale combination compile-checked.
     pub struct DrawingPlayLabels {
         add_ellipse: native_en "Add Ellipse", native_de "Ellipse hinzufügen", reuse_en "Add Ellipse", reuse_de "Ellipse hinzufügen";

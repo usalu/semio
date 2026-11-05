@@ -1,5 +1,5 @@
 //! 🚪️ Exercises the original command's production retirement provider at its public boundary.
-pub use semio_framework_os_kernel::os_store;
+pub use semio_os_kernel::os_store;
 
 #[global_allocator]
 static ORIGINAL_OWNER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

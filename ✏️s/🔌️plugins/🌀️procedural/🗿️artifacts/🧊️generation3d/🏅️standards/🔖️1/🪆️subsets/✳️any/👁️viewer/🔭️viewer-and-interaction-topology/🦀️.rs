@@ -6,7 +6,7 @@ use super::*;
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
 fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
-    let dag = semio_framework_os_flow::FlowHost::project_dag_snapshot(host_snapshot, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let dag = semio_os_flow::FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
     let (graph_nodes, _) = semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&dag);
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
@@ -16,7 +16,7 @@ fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_f
 #[derive(Default, Clone, Copy)]
 pub struct Generation3dViewer;
 
-impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
+impl semio_plugin::ArtifactViewer for Generation3dViewer {
     /// 📣️ The localized notices of the viewer's refusal codes (design §20.12): the document-level ones.
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         semio_s_artifact_procedural_3d_model::generation3d_document_fault_notices()
@@ -27,7 +27,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// projection is honestly empty; without it every replacement faulted with `viewer did not declare
     /// a loaded-parent child projection`.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_CHILD_PROJECTION), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_CHILD_PROJECTION), error.to_string()))
     }
 
     type Snapshot = Generation3dSnapshot;
@@ -44,7 +44,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
     /// 🎛️ The viewer's `setCamera`/`setShowMode`/`setLodMode`/sun tools all publish onto the CONFIG
@@ -55,7 +55,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, ViewerApp<Self>>) -> Result<(), Fault> {
@@ -70,12 +70,12 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// 🧠️ One retained `FlowEvalSession` per viewer instance — see
     /// [`Generation3dViewInstanceOperationOwner`]. Without it every chain hop would fold its answer
     /// into a session that died with the command that built it.
-    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
         Box::new(Generation3dViewInstanceOperationOwner::new())
     }
 
     /// 🪟️ The viewer preview window's retained evaluation publication.
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         registry.register::<preview::transient::Generation3dViewPreviewWindowTransientOwner>()
     }
 
@@ -102,7 +102,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// 📚️ Servability is asked of the graph the run will actually evaluate — the VIEWED document — not
     /// of the one this session happens to have open. They are different documents the moment the
     /// navbar names an example (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::Effect> {
+    fn pending_effects(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_plugin::ViewModel>) -> Vec<semio_plugin::Effect> {
         let windows = generation3d_view_preview_windows(view);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
         let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
@@ -128,8 +128,8 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         Ok(Some(Box::new(preview_eval::PreviewEvalRunJob::<Generation3dViewInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !GENERATION3D_VIEW_TOOL_IDS.contains(&original.tool_id.as_str())
             && !GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())
             && !GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str())
@@ -139,13 +139,13 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the generation 3d view command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the generation 3d view command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
         let contributions = GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
         let example = GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&tool_id);
         let flow_eval = GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&tool_id);
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Generation3dViewCommand::command_id, if contributions {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Generation3dViewCommand::command_id, if contributions {
                 GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES
             } else if flow_eval {
                 GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES
@@ -171,7 +171,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// 🧾️ ALL THREE factories' proofs, in registration order. The bounded rows read their contract
     /// off `generation3d_view_bounded_contract()` instead of respelling `8_192, 32, 32, …` seven
     /// times — one declared quantity, one place.
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = generation3d_view_route_first_step_tool_proofs();
         proofs.extend(generation3d_view_flow_first_step_tool_proofs());
         proofs
@@ -256,7 +256,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         command.command_id()
     }
 
-    fn reference_birth()->Option<fn()->Result<Generation3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Generation3dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot())
     })}
 
@@ -267,7 +267,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         command.dispatch(doc, cfg)
@@ -316,7 +316,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
 
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
         let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state));
         viewed.retire();
@@ -332,15 +332,15 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// captures authority for), and a surface rendered before any tick landed still has to paint
     /// its empty world rather than evaluate itself.
     fn render_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let preview_eval_text = transient
             .window::<preview::transient::Generation3dViewPreviewWindowTransientOwner>()
             .and_then(|state| state.preview_eval_text.as_deref())
@@ -350,13 +350,13 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
         let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run(), &marks, labels)));
         viewed.retire();
-        tree.map_err(|original|semio_framework_plugin::OriginalRenderFailure::from(semio_framework_job::OriginalTurnFailure::from(original)))?.map(Some).map_err(Into::into)
+        tree.map_err(|original|semio_plugin::OriginalRenderFailure::from(semio_framework_job::OriginalTurnFailure::from(original)))?.map(Some).map_err(Into::into)
     }
 
     /// 🎚️ The Preview window's chrome: show mode, LOD and the sun group, all bound to this viewer's
     /// own actions so the read-only surface's window controls actually do something.
-    fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
+    fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let is_de = view_state.locale == semio_ui_locale::Locale::De;
         HashMap::from([(preview::WINDOW_KIND_ID.to_string(), preview::preview_window_measures(cfg.snapshot, is_de, generation3d_view_action))])
     }
 }
@@ -369,14 +369,14 @@ fn generation3d_view_render_body(
     config: &Generation3dViewConfig,
     eval_json: Option<&str>,
     session: Option<&FlowEvalSession>,
-    run: Option<&semio_framework_plugin::ToolRunView>,
+    run: Option<&semio_plugin::ToolRunView>,
     marks: &preview::Generation3dViewMarks,
     labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let node = match body_key {
         preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels),
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+        _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
-    Ok(semio_framework_plugin::built_to_component_tree(node))
+    Ok(semio_plugin::built_to_component_tree(node))
 }
 //#endregion 🔖️Viewer

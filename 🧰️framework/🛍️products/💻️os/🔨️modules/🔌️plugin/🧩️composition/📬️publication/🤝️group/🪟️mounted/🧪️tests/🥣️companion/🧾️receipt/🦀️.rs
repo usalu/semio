@@ -1,5 +1,5 @@
 //! 🧾️ The mounted receipt laws: byte owners, operation framing, host receipts and the child document handle issuer.
-pub use semio_framework_plugin_publication_mounted::mounted_child_group_receipt::*;
+pub use semio_plugin_publication_mounted::mounted_child_group_receipt::*;
 use semio_framework::kernel::ArtifactHandle;
 use semio_framework::kernel::ArtifactVersion;
 use semio_framework::kernel::HybridLogicalTimestamp;

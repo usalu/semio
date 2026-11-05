@@ -25,19 +25,19 @@ impl pack::snapshot::ArtifactDsl for PptxSnapshot {
         "stdio.pptx"
     }
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        native::decode_text(text, &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()))
+        native::decode_text(text, &mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()))
             .map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         match native::encode_standalone(
             self,
-            semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,
-            &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()),
+            semio_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,
+            &mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()),
         )
         .expect("PPTX native ownership admission")
         {
-            semio_framework_os_kernel::io_schema::IoPayload::Text(text) => text,
-            semio_framework_os_kernel::io_schema::IoPayload::Binary(_) => unreachable!(),
+            semio_os_kernel::io_schema::IoPayload::Text(text) => text,
+            semio_os_kernel::io_schema::IoPayload::Binary(_) => unreachable!(),
         }
     }
 }

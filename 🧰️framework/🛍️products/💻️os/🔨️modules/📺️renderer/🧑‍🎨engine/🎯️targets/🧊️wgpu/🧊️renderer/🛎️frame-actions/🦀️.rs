@@ -91,28 +91,28 @@ fn dispatch_event_retained_capacity(event:&ui_render::DispatchEvent)->usize{
 /// 🧾️ Carries a renderer-local receipt beside the unchanged domain action.
 pub struct FrameActionEnvelope {
     pub descriptor: ActionDescriptor,
-    pub receipt: Option<semio_framework_ui_action::ActionQueueReceipt>,
+    pub receipt: Option<semio_ui_action::ActionQueueReceipt>,
     pub cancelled: bool,
 }
 
 /// 🧾️ Routes a renderer-local completion to the exact owner that admitted it.
-pub fn settle_renderer_action_receipt(receipt: semio_framework_ui_action::ActionQueueReceipt, outcome: semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome<'_>) {
+pub fn settle_renderer_action_receipt(receipt: semio_ui_action::ActionQueueReceipt, outcome: semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome<'_>) {
     match receipt.source {
-        semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor => semio_framework_os_renderer_wgpu_engine_text::text_editor::settle_text_editor_action_receipt(receipt, outcome),
-        semio_framework_ui_action::ActionQueueReceiptSource::RetainedInput => {
-            let discard = matches!(outcome, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(reason) if semio_framework_os_renderer_wgpu_shell_prefs::dispatch_refusal_discards_input_draft(reason));
-            semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::settle_retained_input_receipt(receipt, discard);
+        semio_ui_action::ActionQueueReceiptSource::CanvasTextEditor => semio_renderer_wgpu_engine_text::text_editor::settle_text_editor_action_receipt(receipt, outcome),
+        semio_ui_action::ActionQueueReceiptSource::RetainedInput => {
+            let discard = matches!(outcome, semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(reason) if semio_renderer_wgpu_shell_prefs::dispatch_refusal_discards_input_draft(reason));
+            semio_renderer_wgpu_ui_engine::retained_ui_engine::settle_retained_input_receipt(receipt, discard);
         }
     }
 }
 
 /// 🛟️ Settles the checked-out receipt even when its async dispatch future is cancelled.
 pub struct FrameActionReceiptOwner {
-    pub receipt: Option<semio_framework_ui_action::ActionQueueReceipt>,
+    pub receipt: Option<semio_ui_action::ActionQueueReceipt>,
 }
 
 impl FrameActionReceiptOwner {
-    pub fn settle(&mut self, outcome: semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome<'_>) {
+    pub fn settle(&mut self, outcome: semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome<'_>) {
         if let Some(receipt) = self.receipt.take() {
             settle_renderer_action_receipt(receipt, outcome);
         }
@@ -121,27 +121,27 @@ impl FrameActionReceiptOwner {
 
 impl Drop for FrameActionReceiptOwner {
     fn drop(&mut self) {
-        self.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
+        self.settle(semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
     }
 }
 
 impl FrameActionEnvelope {
     pub fn cancel(self) {
         if let Some(receipt) = self.receipt {
-            settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
+            settle_renderer_action_receipt(receipt, semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
         }
     }
 }
 
-impl From<semio_framework_ui_action::QueuedActionDescriptor> for FrameActionEnvelope {
-    fn from(queued: semio_framework_ui_action::QueuedActionDescriptor) -> Self {
+impl From<semio_ui_action::QueuedActionDescriptor> for FrameActionEnvelope {
+    fn from(queued: semio_ui_action::QueuedActionDescriptor) -> Self {
         Self { descriptor: queued.descriptor, receipt: queued.receipt, cancelled: false }
     }
 }
 
 /// 📦️ Fixed FIFO ownership for admitted frame actions; refusal returns the identical action.
 struct FrameActionBatchOwner {
-    slots: [Option<FrameActionEnvelope>; semio_framework_ui_action::ACTION_BATCH_ITEM_CAPACITY],
+    slots: [Option<FrameActionEnvelope>; semio_ui_action::ACTION_BATCH_ITEM_CAPACITY],
     expected: u8,
     len: u8,
     source_remaining: u8,
@@ -165,7 +165,7 @@ pub struct FrameActionOwners {
     pub len: usize,
     pub batch: Option<FrameActionBatchOwner>,
     closing: Option<semio_framework_value_retirement::retirement::controlled::ControlledRetirement<(String, String, Option<semio_framework_value::DslValue>)>>,
-    closing_receipt: Option<semio_framework_ui_action::ActionQueueReceipt>,
+    closing_receipt: Option<semio_ui_action::ActionQueueReceipt>,
 }
 
 impl Default for FrameActionOwners {
@@ -181,7 +181,7 @@ enum FrameActionBatchStage {
 }
 
 impl FrameActionOwners {
-    pub fn try_push_queued(&mut self, action: semio_framework_ui_action::QueuedActionDescriptor) -> Result<(), semio_framework_ui_action::QueuedActionDescriptor> {
+    pub fn try_push_queued(&mut self, action: semio_ui_action::QueuedActionDescriptor) -> Result<(), semio_ui_action::QueuedActionDescriptor> {
         if self.batch.is_some() || self.len == self.slots.len() {
             return Err(action);
         }
@@ -195,7 +195,7 @@ impl FrameActionOwners {
         Ok(())
     }
 
-    pub fn try_push_queued_pair(&mut self, first: semio_framework_ui_action::QueuedActionDescriptor, second: semio_framework_ui_action::QueuedActionDescriptor) -> Result<(), (semio_framework_ui_action::QueuedActionDescriptor, semio_framework_ui_action::QueuedActionDescriptor)> {
+    pub fn try_push_queued_pair(&mut self, first: semio_ui_action::QueuedActionDescriptor, second: semio_ui_action::QueuedActionDescriptor) -> Result<(), (semio_ui_action::QueuedActionDescriptor, semio_ui_action::QueuedActionDescriptor)> {
         if self.batch.is_some() || self.len.checked_add(2).is_none_or(|len| len > self.slots.len()) {
             return Err((first, second));
         }
@@ -225,7 +225,7 @@ impl FrameActionOwners {
     }
 
     fn begin_batch(&mut self, expected: usize) -> bool {
-        if self.batch.is_some() || expected == 0 || expected > semio_framework_ui_action::ACTION_BATCH_ITEM_CAPACITY || self.len.checked_add(expected).is_none_or(|len| len > self.slots.len()) {
+        if self.batch.is_some() || expected == 0 || expected > semio_ui_action::ACTION_BATCH_ITEM_CAPACITY || self.len.checked_add(expected).is_none_or(|len| len > self.slots.len()) {
             return false;
         }
         self.batch = Some(FrameActionBatchOwner::new(expected));
@@ -310,7 +310,7 @@ impl FrameActionOwners {
             match input.take_action_step() {
                 Ok(Some(action)) => {
                     if let Some(receipt) = action.receipt() {
-                        settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
+                        settle_renderer_action_receipt(receipt, semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
                     }
                     batch.source_remaining -= 1;
                     return Some(Ok(FrameInputActionStep::Pending));
@@ -344,7 +344,7 @@ impl FrameActionOwners {
     fn close_retained_action_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if self.closing_receipt.is_some() {
             if !frame_action_metadata(cx)? { return Ok(false); }
-            settle_renderer_action_receipt(self.closing_receipt.take().unwrap(), semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
+            settle_renderer_action_receipt(self.closing_receipt.take().unwrap(), semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
             return Ok(false);
         }
         if let Some(owner) = self.closing.as_mut() {
@@ -437,7 +437,7 @@ pub fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, act
     };
     if !actions.consume_batch_source() {
         if let Some(receipt) = action.receipt() {
-            settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
+            settle_renderer_action_receipt(receipt, semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
         }
         return fail_frame_action_batch(input, actions, "bounded frame input action batch source accounting faulted");
     }
@@ -446,7 +446,7 @@ pub fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, act
         Ok(action) => FrameActionEnvelope::from(action),
         Err(_) => {
             if let Some(receipt) = receipt {
-                settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
+                settle_renderer_action_receipt(receipt, semio_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
             }
             return fail_frame_action_batch(input, actions, "bounded frame input action failed materialization");
         }

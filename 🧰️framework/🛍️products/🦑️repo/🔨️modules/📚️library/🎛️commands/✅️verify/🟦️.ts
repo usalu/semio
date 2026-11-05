@@ -193,7 +193,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     }
     if (segments[0] === "host-ownership") {
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "--", "--nocapture", "--test-threads=1", ...["concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-renderer-wgpu", "--lib", "--", "--nocapture", "--test-threads=1", ...["concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]], this.root);
       return;
     }
     
@@ -208,7 +208,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       testContentIdOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "artifact_addressing", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel", "--lib", "artifact_addressing", "--", "--nocapture"], this.root);
       return;
     }
     
@@ -219,7 +219,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       testRecursiveOwnedDocumentReplacementOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", segments[2] ?? "retained_window_input", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-plugin", "--lib", segments[2] ?? "retained_window_input", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "publication-retirement-authority") {
@@ -227,7 +227,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       testPublicationRetirementAuthorityOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "publication_retirement", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-plugin", "--lib", "publication_retirement", "--", "--nocapture"], this.root);
       return;
     }
     
@@ -245,7 +245,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       runCmd(runtimeExecutableV1(), [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", this.root + "/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts"], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "snapshot_read_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel", "--lib", "snapshot_read_", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -256,7 +256,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const { testSemioEnvelopeIdentity } = await import(ownerRoot + "/🧪️tests/🪪️envelope-identity/🟦️.ts");
       testSemioEnvelopeIdentity();
       runCmd(runtimeExecutableV1(), [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", ownerRoot + "/🧪️tests/🪪️envelope-identity/🟦️.ts"], { cwd: this.root });
-      if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "semio_envelope_identity", "--", "--nocapture"], this.root);
+      if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel", "--lib", "semio_envelope_identity", "--", "--nocapture"], this.root);
       return;
     }
     
@@ -278,7 +278,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     }
     if (segments[0] === "shared-value-canonical-json") {
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "shared_value_canonical_json", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel", "--lib", "shared_value_canonical_json", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "shared-value-clone") {
@@ -319,7 +319,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     
     if (segments[0] === "store-reload-publication") {
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "artifact_store_reset_preserves_capacity_for_retained_batch_publication", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel", "--lib", "artifact_store_reset_preserves_capacity_for_retained_batch_publication", "--", "--nocapture"], this.root);
       return;
     }
     
@@ -339,7 +339,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       testWindowConfigRetainedPackLoadFixture();
       runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_retained_pack_load_", "--", "--nocapture", "--test-threads=1"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-plugin", "--lib", "window_config_retained_pack_load_", "--", "--nocapture", "--test-threads=1"], this.root);
       return;
     }
     
@@ -360,7 +360,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     }
     if (segments[0] === "ephemeral-transfer-preparation") {
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "ephemeral_transfer_preparation", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel", "--lib", "ephemeral_transfer_preparation", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "owned-document-closure") {
@@ -369,7 +369,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🟦️.ts")], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "owned_document_closure", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel", "--lib", "owned_document_closure", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -386,8 +386,8 @@ export abstract class VerifyScript extends VerifyGateLanes {
       runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-viewport", "--lib", "viewport_ownership_", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "viewport_ownership_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-ui-viewport", "--lib", "viewport_ownership_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-os-kernel", "--lib", "viewport_ownership_", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -400,8 +400,8 @@ export abstract class VerifyScript extends VerifyGateLanes {
       runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-viewport", "--lib", "viewport_projection_", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-scene", "--lib", "viewport_projection_pack_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-ui-viewport", "--lib", "viewport_projection_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-ui-scene", "--lib", "viewport_projection_pack_", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -421,9 +421,9 @@ export abstract class VerifyScript extends VerifyGateLanes {
         if (nativePhase === undefined || nativePhase === "renderer-host") {
           runCmd(runtimeExecutableV1(), [join(surfaceRoot, "📜️script.ts"), "wasm"], { cwd: surfaceRoot, env: { ...process.env, SEMIO_WORKSPACE_ROOT: this.root, REPO_ROOT: this.root } });
           for (const [packageName, filters] of [
-            ["semio-framework-ui-scene", ["typed_scene_neutral_catalog_matches_native_serde_contracts"]],
+            ["semio-ui-scene", ["typed_scene_neutral_catalog_matches_native_serde_contracts"]],
             ["semio-framework-surface-node-graph", ["scene_retained_tests::"]],
-            ["semio-framework-os-renderer-wgpu", ["node_graph_attach_tests", "concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]],
+            ["semio-renderer-wgpu", ["node_graph_attach_tests", "concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]],
           ] as const) {
             for (const filter of filters) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--lib", filter, "--", "--nocapture"], this.root);
           }
@@ -501,7 +501,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
         for (const [packageName, filters] of [
           ["semio-framework-replication", ["retained_paged_list_capacity_admission_and_exact_release_grants"]],
           ["semio-framework-pack", ["retained_symbol_table_", "retained_pack_catalog_", "write_then_read_round_trip_with_compressed_segment_and_chunk"]],
-          ["semio-framework-os-kernel", ["retained_value_", "retained_record_body_"]],
+          ["semio-os-kernel", ["retained_value_", "retained_record_body_"]],
           ["semio-s-artifact-procedural-2d-host", ["every_fourteen_variant_decodes_through_retained_structural_grants"]],
           ["semio-s-artifact-procedural-2d-io-binary", ["retained_mounted_laws"]],
           ["semio-s-artifact-procedural-generation3d", ["every_fourteen_variant_decodes_through_retained_structural_grants"]],
@@ -530,7 +530,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "value::list::", "--", "--nocapture"], this.root);
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-contract", "--lib", "fixed_list_", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-ui-contract", "--lib", "fixed_list_", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "framework-variant-field-casing") {
@@ -545,7 +545,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "framework_empty_state_contract_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-plugin", "--lib", "framework_empty_state_contract_", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -557,7 +557,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_pack_identity_", "--", "--nocapture", "--test-threads=1"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-plugin", "--lib", "window_config_pack_identity_", "--", "--nocapture", "--test-threads=1"], this.root);
       }
       return;
     }
@@ -594,7 +594,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "video_render", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-raster", "--lib", "video", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "wire_effect_round_trip", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-plugin", "--lib", "wire_effect_round_trip", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-animate-presentation", "--lib", "export_video", "--", "--nocapture"], this.root);
       }
       return;
@@ -606,7 +606,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "file_open_import", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "file_open_import", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-renderer-wgpu", "--lib", "file_open_import", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -616,7 +616,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "ui_dirty_scope", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "ui_dirty_scope", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-renderer-wgpu", "--lib", "ui_dirty_scope", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -642,7 +642,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
       for (const filter of ["window_action_context", "apply_drop_committed_queues_the_merged_action_into_input"]) {
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", filter, "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-renderer-wgpu", "--lib", filter, "--", "--nocapture"], this.root);
       }
       return;
     }

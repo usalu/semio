@@ -1,5 +1,5 @@
 //! ⚖️ Flow snapshot representation laws: the relational and native owner capability, the package schema oracle and the normal Store registration, driven through the public document API.
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 pub use semio_framework_artifact_flow_flow_document::*;
 
 #[cfg(test)]

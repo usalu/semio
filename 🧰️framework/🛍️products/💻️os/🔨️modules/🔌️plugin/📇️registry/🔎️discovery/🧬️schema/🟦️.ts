@@ -3,6 +3,9 @@ import identity from "../../../../../../../📦️packages/🟦️typescript/�
 import { parseInstallationDirectoryV1, type InstallationDirectoryV1 } from "../../../../../../../📦️packages/🟦️typescript/🪪️identity/📁️installation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
+export const CATALOG_ID = new RegExp(contract.$defs.ComponentSourceOwnerV1.properties.pluginId.pattern);
+export const COMPONENT_PACKAGE_ID = new RegExp(contract.$defs.ComponentSourceOwnerV1.properties.packageId.pattern);
+
 export type PluginHostMetadata = { readonly landingAppId: string; readonly hostAppId: string };
 export type ComponentSourceOwnerV1 = {
   readonly pluginId: string;

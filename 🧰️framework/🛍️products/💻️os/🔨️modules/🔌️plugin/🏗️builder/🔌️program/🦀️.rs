@@ -1,7 +1,7 @@
 //! 🔌️ The assembled plugin program and its app instances.
 #![allow(async_fn_in_trait)]
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[doc(hidden)]
 #[path = "../../⚛️reactor/🪟️surfaces/🦀️.rs"]
@@ -22,36 +22,36 @@ pub mod inference_gateway;
 #[allow(unused_imports)]
 pub use inference_gateway::*;
 use semio_framework::AppDefinition;
-use semio_framework_plugin_decl_registry::plugin_program::AppFactory;
+use semio_plugin_decl_registry::plugin_program::AppFactory;
 use semio_framework::manifest::{CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
 use semio_framework::{kernel::{ActorId, ArtifactKind, CapabilityRequirement, InvocationResult, Rights, Scope}, ActionKind, CommandDefinition, Fault, PluginManifest};
 use std::collections::{HashMap, HashSet};
 /// 🗂️ `OsMediaCapability`/`ArtifactKindSpec` now live in `semio-framework-core` (both this crate and
-/// `semio-framework-os` already depend on it) the same way the legacy format enum used to — re-exported
+/// `semio-os` already depend on it) the same way the legacy format enum used to — re-exported
 /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
-/// `semio_framework_os`'s artifact catalog registry share one definition.
+/// `semio_os`'s artifact catalog registry share one definition.
 use semio_framework::ArtifactKindSpec;
-use semio_framework_plugin_reactor_app::NoPluginApp;
-use semio_framework_plugin_app_builder::App;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_decl_registry::FlowExtensionDescriptor;
-use semio_framework_plugin_decl_registry::HostMediaHandlerDescriptor;
-use semio_framework_plugin_decl_registry::HostMediaRuntimeError;
-use semio_framework_plugin_decl_registry::MeshImportRequest;
-use semio_framework_plugin_decl_registry::MeshImportResult;
-use semio_framework_plugin_decl_registry::TwoDSvgExportRequest;
-use semio_framework_plugin_decl_registry::TwoDSvgExportResult;
-use semio_framework_plugin_identity::ArtifactDefinitionRegistry;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionError;
+use semio_plugin_reactor_app::NoPluginApp;
+use semio_plugin_app_builder::App;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_registry::FlowExtensionDescriptor;
+use semio_plugin_decl_registry::HostMediaHandlerDescriptor;
+use semio_plugin_decl_registry::HostMediaRuntimeError;
+use semio_plugin_decl_registry::MeshImportRequest;
+use semio_plugin_decl_registry::MeshImportResult;
+use semio_plugin_decl_registry::TwoDSvgExportRequest;
+use semio_plugin_decl_registry::TwoDSvgExportResult;
+use semio_plugin_identity::ArtifactDefinitionRegistry;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionError;
 use crate::inference_gateway::wire_artifact_infer_from_cold;
 use crate::artifact_inference::wire_list_artifact_inference_services_with_routes;
-use semio_framework_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry;
-use semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest;
-use semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult;
-use semio_framework_plugin_job::reserved_jobs::join_framework_shared_action_dispositions;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_decl_surface::ArtifactCodecTableV1;
+use semio_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry;
+use semio_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest;
+use semio_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult;
+use semio_plugin_job::reserved_jobs::join_framework_shared_action_dispositions;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_decl_surface::ArtifactCodecTableV1;
 
 /// 🗃️ sdk-dedyn (O1/§1.5): generic over the per-plugin app enum `PA: PluginApp` — replaces
 /// `Box<dyn PluginApp>`.
@@ -72,7 +72,7 @@ pub type PluginCommandHandler = Box<dyn Fn(&semio_framework::manifest::CommandIn
 pub trait PluginProgram: Send {
     type App: PluginApp;
     fn manifest(&self) -> PluginManifest;
-    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<Self::App>, Fault>;
+    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<Self::App>, Fault>;
     fn handle_plugin_command(&self, invocation: &semio_framework::manifest::CommandInvocationView<'_>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
 }
 
@@ -142,7 +142,7 @@ impl<PA: PluginApp> Plugin<PA> {
     }
 
     /// 🪪️ Reads every prefilter codec binding frozen by the plugin declaration plan.
-    pub fn artifact_codec_bindings(&self) -> &[semio_framework_os_kernel::io::ArtifactCodecBinding] {
+    pub fn artifact_codec_bindings(&self) -> &[semio_os_kernel::io::ArtifactCodecBinding] {
         self.runtime.document_bindings()
     }
 
@@ -276,7 +276,7 @@ impl<PA: PluginApp> Plugin<PA> {
         self
     }
 
-    pub fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<PA>, Fault> {
+    pub fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<PA>, Fault> {
         self.apps.get(app_id).and_then(|factory|factory.create.map(|create|create(&factory.definition,actor,mounted_policy,identity))).transpose()
     }
 
@@ -292,10 +292,10 @@ impl<PA: PluginApp> Plugin<PA> {
     /// 🕳️ Every native definition source was returned and retired before program disposal.
     pub fn original_definitions_terminal_is_empty(&self)->bool{self.apps.values().all(|factory|factory.registration.is_none()&&factory.definition.terminal_is_empty())}
 
-    pub fn admit_original_app(&self,app_id:&str,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn semio_framework_plugin_reactor_app::OriginalPluginAppConstruction<PA>>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let factory=self.apps.get(app_id).and_then(|factory|factory.original_factory).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered app has no original native construction capability"))?;(factory.begin)(cx,output)}
+    pub fn admit_original_app(&self,app_id:&str,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn semio_plugin_reactor_app::OriginalPluginAppConstruction<PA>>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let factory=self.apps.get(app_id).and_then(|factory|factory.original_factory).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered app has no original native construction capability"))?;(factory.begin)(cx,output)}
 
     /// ▶️ Borrows the same immutable registered definition while the original construction retains every partial owner.
-    pub fn advance_original_app(&self,app_id:&str,actor:&str,instance_id:u32,policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,construction:&mut dyn semio_framework_plugin_reactor_app::OriginalPluginAppConstruction<PA>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<PA>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let factory=self.apps.get(app_id).filter(|factory|factory.original_factory.is_some()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original construction lost its registered native declaration"))?;construction.advance(semio_framework_plugin_reactor_app::OriginalPluginAppSource{definition:&factory.definition,definition_source:factory.definition.original_source().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native declaration lost its original registered source"))?,registration:factory.registration.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native declaration lost its original registration source"))?.as_ref(),actor,instance_id,policy},cx,output)}
+    pub fn advance_original_app(&self,app_id:&str,actor:&str,instance_id:u32,policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1,construction:&mut dyn semio_plugin_reactor_app::OriginalPluginAppConstruction<PA>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<PA>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let factory=self.apps.get(app_id).filter(|factory|factory.original_factory.is_some()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original construction lost its registered native declaration"))?;construction.advance(semio_plugin_reactor_app::OriginalPluginAppSource{definition:&factory.definition,definition_source:factory.definition.original_source().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native declaration lost its original registered source"))?,registration:factory.registration.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native declaration lost its original registration source"))?.as_ref(),actor,instance_id,policy},cx,output)}
 
     /// 👁️ Native opening checks the declared capability without constructing any app.
     pub fn has_original_app_factory(&self,app_id:&str)->bool{self.apps.get(app_id).is_some_and(|factory|factory.original_factory.is_some())}
@@ -320,7 +320,7 @@ impl<PA: PluginApp> PluginProgram for Plugin<PA> {
         self.manifest.clone()
     }
 
-    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<PA>, Fault> {
+    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<PA>, Fault> {
         Plugin::create_app(self, app_id, actor, mounted_policy, identity)
     }
 

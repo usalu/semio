@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmSpanM whe
         record: "ChangeDiaphragmSpanM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Span L between the lateral load resisting systems (0 = building plan extent along the action)", "Spannweite L zwischen den aussteifenden Systemen (0 = Grundrissabmessung in Richtung der Einwirkung) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Span L between the lateral load resisting systems (0 = building plan extent along the action)", "Spannweite L zwischen den aussteifenden Systemen (0 = Grundrissabmessung in Richtung der Einwirkung) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-span-m".into()]

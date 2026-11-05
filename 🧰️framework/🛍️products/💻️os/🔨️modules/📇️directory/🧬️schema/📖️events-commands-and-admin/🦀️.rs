@@ -398,7 +398,7 @@ pub(crate) fn valid_directory_command_request_id(value: &str) -> bool {
 /// 🆕️ Mints one fresh 32-hex nonzero idempotency correlation from the platform identity boundary.
 /// It is a correlation, never a capability: knowing one grants nothing.
 pub fn mint_directory_command_request_id() -> String {
-    semio_framework_os_identity::time_ordered_id().chars().filter(|character| *character != '-').collect()
+    semio_os_identity::time_ordered_id().chars().filter(|character| *character != '-').collect()
 }
 
 impl DirectoryCommandRequestV1 {

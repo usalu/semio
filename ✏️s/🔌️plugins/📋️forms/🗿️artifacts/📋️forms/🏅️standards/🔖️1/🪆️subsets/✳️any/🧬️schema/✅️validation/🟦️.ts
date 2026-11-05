@@ -29,7 +29,17 @@ export function answerError(question: FormQuestion, value: DslValue): AnswerErro
     case "multi":{if(value.kind!=="array")return"type";const seen=new Set<string>();return value.items.some(item=>item.kind!=="text"||seen.has(item.value)||!question.options?.some(option=>option.value===item.value)||(seen.add(item.value),false))?"option":null;}
     case "date": return value.kind!=="text" ? "type" : validDate(value.value) ? null : "date";
     case "color": return value.kind!=="text" ? "type" : /^#[0-9a-fA-F]{6}$/.test(value.value) ? null : "color";
-    case "vector": return value.kind!=="array" || value.items.length !== (question.fields?.length ?? 0) || value.items.some(item => {const number=formsValueNumber(item);return number===undefined||!Number.isFinite(number);}) ? "vector" : null;
+    case "vector": {
+      if (value.kind!=="array" || value.items.length !== (question.fields?.length ?? 0)) return "vector";
+      const numbers = value.items.map(formsValueNumber);
+      if (numbers.some(number => number===undefined || !Number.isFinite(number))) return "vector";
+      if (numbers.some(number => question.min!==undefined && number! < question.min || question.max!==undefined && number! > question.max)) return "range";
+      if (question.step!==undefined && numbers.some(number => {
+        const ticks = (number! - (question.min ?? 0)) / question.step!;
+        return !Number.isFinite(ticks) || Math.abs(ticks - Math.round(ticks)) > 1e-9;
+      })) return "step";
+      return null;
+    }
     default: return value.kind==="object" ? null : "type";
   }
 }

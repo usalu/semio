@@ -93,10 +93,10 @@ pub struct TestAppCommandInputs {
     controller_id:Option<String>,
     tool_id:Option<String>,
     schema_id:Option<String>,
-    pub window_config: Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
+    pub window_config: Option<semio_plugin_window_config::WindowConfigSnapshot>,
     pub interaction_state: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionState>>,
     pub interaction_hover: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionHoverState>>,
-    pub instance_operation_owner: Option<semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
+    pub instance_operation_owner: Option<semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
     pub output_chunks: Option<ArtifactOutputChunks>,
 }
 
@@ -118,7 +118,7 @@ impl TestAppCommandInputs {
 #[doc(hidden)]
 pub struct TestAppCommandJob<const RETAINED: bool, const TOOLS: u8> {
     pub residual: Option<TestAppCommandInputs>,
-    pub rejected: Option<semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection<TestApp<RETAINED, TOOLS>>>,
+    pub rejected: Option<semio_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection<TestApp<RETAINED, TOOLS>>>,
     pub admitted: bool,
     pub metadata: Option<AppOperationContext>,
     pub command: Option<Box<TestCommand>>,
@@ -191,7 +191,7 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        semio_framework_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
+        semio_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -359,7 +359,7 @@ impl<const RETAINED: bool, const TOOLS: u8> ArtifactOwnedToolJobFactory for Test
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: TEST_RESTART_TOOL, lanes: &[ArtifactToolPublicationLane::Artifact] }];
 }#[doc(hidden)]
 pub fn reactor_native_lifecycle_budget() -> Budget {
-    Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16)
+    Budget::from_retained(semio_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16)
 }
 
 #[doc(hidden)]
@@ -372,11 +372,11 @@ pub fn reactor_native_lifecycle_open(instance: u32, request_sequence: u64, actor
 }
 
 #[doc(hidden)]
-pub async fn reactor_native_lifecycle_poll(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, events: Vec<Event>) -> TurnResult {
+pub async fn reactor_native_lifecycle_poll(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, events: Vec<Event>) -> TurnResult {
     assert!(events.len() <= 1, "a reactor turn admits at most one event");
     for attempt in 0..64 {
         let mut event = events.first().cloned();
-        match semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut event, None, None, reactor_native_lifecycle_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
+        match semio_plugin_reactor_turn::poll_kernel(runtime, &mut event, None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
             Ok(result) => return result,
             Err(failure) if failure.primary_fault().is_some_and(|fault| fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable) => {
                 eprintln!("retained lifecycle exact-event deadline retry={} events={:?}", attempt + 1, events);
@@ -389,18 +389,18 @@ pub async fn reactor_native_lifecycle_poll(runtime: &semio_framework_plugin_reac
 }
 
 #[doc(hidden)]
-pub async fn reactor_native_lifecycle_ack(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, receipt: ActorInstanceLifecycleReceipt) {
+pub async fn reactor_native_lifecycle_ack(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, receipt: ActorInstanceLifecycleReceipt) {
     reactor_native_lifecycle_poll(runtime, vec![Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt })]).await;
 }
 
 #[doc(hidden)]
-pub async fn reactor_native_lifecycle_finish(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, lifetime: ActorInstanceLifetime, request_sequence: u64) {
+pub async fn reactor_native_lifecycle_finish(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, lifetime: ActorInstanceLifetime, request_sequence: u64) {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt as Receipt, Event};
     let request = ActorInstanceCloseRequest { lifetime, request_sequence };
     let first = reactor_native_lifecycle_poll(runtime, vec![Event::InstanceClose(request)]).await.lifecycle_receipt.expect("accepted native close");
     let Receipt::Accepted { close_generation, .. } = first else { panic!("close must publish Accepted before Retired") };
     assert!(close_generation > 0);
-    assert!(semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(runtime, lifetime.instance_id).is_err());
+    assert!(semio_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(runtime, lifetime.instance_id).is_err());
     let duplicate = reactor_native_lifecycle_poll(runtime, vec![Event::InstanceClose(request)]).await.lifecycle_receipt;
     assert_eq!(duplicate, Some(first), "duplicate exact close retains the same native generation");
     reactor_native_lifecycle_ack(runtime, first).await;
@@ -410,7 +410,7 @@ pub async fn reactor_native_lifecycle_finish(runtime: &semio_framework_plugin_re
         if let Some(receipt @ Receipt::Retired { .. }) = turn.lifecycle_receipt {
             let lifetimes = runtime.guest_lifetimes.borrow();
             let owner = lifetimes.get(lifetime.instance_id).unwrap().cell.owner().unwrap();
-            assert!(semio_framework_plugin_reactor_lifecycle::instance_lifetime::GuestLifetimeOwner::terminal_is_empty(owner, &semio_framework_plugin_reactor_core::ReactorClosePeers).unwrap(), "Retired must prove actual native emptiness");
+            assert!(semio_plugin_reactor_lifecycle::instance_lifetime::GuestLifetimeOwner::terminal_is_empty(owner, &semio_plugin_reactor_core::ReactorClosePeers).unwrap(), "Retired must prove actual native emptiness");
             retired = Some(receipt);
             break;
         }
@@ -447,8 +447,8 @@ macro_rules! recursive_fixture_snapshot {
                 <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::from(error))
             }
         }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $snapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $snapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -513,14 +513,14 @@ impl ArtifactApp for SingleDocumentApp {
     /// 📚️ The refresh poll's whole-document replacement, minted the way every app mints one:
     /// `encode_pack` plus a bare `store::os_store::text_format::empty_document_spr` naming the APP, not the live store.
     /// This lane never passed through the runtime's identity stamp.
-    async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &semio_framework_plugin_decl_views::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
+    async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &semio_plugin_decl_views::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
         let pack = <TestSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() });
         let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(Self::APP_ID, Self::DOCUMENT_SCHEMA));
         vec![Effect::LoadDocument { pack, spr }]
     }
 
     async fn render(_body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        built_text_to_component_tree(semio_framework_ui_locale::Label::data("Single-document fixture"))
+        built_text_to_component_tree(semio_ui_locale::Label::data("Single-document fixture"))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -532,8 +532,8 @@ impl ArtifactApp for SingleDocumentApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        Ok(bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+    ) -> semio_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
+        Ok(bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -570,14 +570,14 @@ pub type SingleDocumentAppUnderTest = VcsArtifactApp<SingleDocumentApp, TestMemb
 
 #[doc(hidden)]
 pub async fn drive_single_document_archive(app: &mut SingleDocumentAppUnderTest, operation: u64, cx:&mut semio_framework_job::StepContext<'_>) -> protocol::DocumentArchiveLoadStatus {
-    semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
+    semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
     for _ in 0..1_000_000 {
-        let status = Box::pin(PluginApp::poll_document_archive_load(app, operation, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx)).await.expect("single-document archive operation status");
+        let status = Box::pin(PluginApp::poll_document_archive_load(app, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx)).await.expect("single-document archive operation status");
         if matches!(status.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             return status;
         }
         let demand = PluginApp::maintenance_retirement_demands(app, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("single-document archive maintenance quote");
-        let _ = PluginApp::maintenance_step(app,cx, RetainedCloneGrant { maximum_depth: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_depth, ..plugin_demand_grant(demand) }).expect("single-document archive maintenance step");
+        let _ = PluginApp::maintenance_step(app,cx, RetainedCloneGrant { maximum_depth: semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_depth, ..plugin_demand_grant(demand) }).expect("single-document archive maintenance step");
         semio_framework_async::yield_once().await;
     }
     panic!("single-document archive exceeded its public maintenance progress authority")

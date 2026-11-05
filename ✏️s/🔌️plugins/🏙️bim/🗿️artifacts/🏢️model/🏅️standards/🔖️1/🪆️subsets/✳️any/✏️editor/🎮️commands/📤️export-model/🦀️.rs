@@ -14,9 +14,9 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
 /// 🧾️ The formats of an export, in the order the window chrome lists them.
@@ -169,7 +169,7 @@ impl ExportJob {
 /// 🧵️ The retained-command shell of an [`ExportJob`]: one step per call, the framework yields between steps and tells the work when the user cancelled.
 pub struct ModelExportWork {
     tool_id: &'static str,
-    owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     job: Option<ExportJob>,
     failure:Option<protocol::InferenceWorkFailure>,
     original:Option<ExportModel>,
@@ -178,7 +178,7 @@ pub struct ModelExportWork {
 
 impl ModelExportWork {
     /// 🏗️ The work of tool `tool_id`.
-    pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub fn new(tool_id: &'static str, owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, owner, job: None,failure:None,original:None,read:None }
     }
 }
@@ -199,7 +199,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for ModelExportWork {
 
     fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.read.is_none()&&self.job.is_none()&&self.failure.is_none()}
 
-    fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
+    fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
         (self.job.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 

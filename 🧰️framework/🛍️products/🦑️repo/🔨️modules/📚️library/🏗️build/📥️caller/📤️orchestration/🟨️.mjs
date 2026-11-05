@@ -30,7 +30,7 @@ export function projectBuildOrchestrationCapabilitiesV1(envelope,workspaceRoot,t
  if(typeof tool!=="string"||!/^[a-z][a-z0-9-]{0,31}$/u.test(tool)||resolve(workspaceRoot)!==workspaceRoot||!(conforms(callerSchema,caller)&&caller.tool===tool&&caller.arguments[0]==="repo"||nativeSchemas.has(tool)&&conforms(nativeSchemas.get(tool).schema,caller)&&caller.arguments[0]===nativeSchemas.get(tool).namespace)||resolve(caller.workspaceRoot)!==workspaceRoot)throw Error("Original orchestration caller required");
  const parent=request(admitted.task),children=admitted.targets.find(row=>key(row)===key(admitted.task)).delegation.children,launches=[parent,...children.map(request)];
  for(const selected of[admitted.task,...children])if(selected.configuration!==undefined&&selected.configuration!==caller.buildMode)throw Error("Original orchestration build mode changed");
- const result={tool,workspaceRoot,arguments:parent,selection:parent,buildMode:caller.buildMode,native:caller.native,launches};if(!conforms(callerSchema,result))throw Error("Closed neutral orchestration caller required");return result;
+ const result={tool,workspaceRoot,codeRoot:caller.codeRoot,arguments:parent,selection:parent,buildMode:caller.buildMode,native:caller.native,launches};if(!conforms(callerSchema,result))throw Error("Closed neutral orchestration caller required");return result;
 }
 
 /** 🔏️ Compares the entire bounded declaration closure with its immutable portable graph. */

@@ -6,12 +6,12 @@ use dashboard_wire::client::Message;
 use dashboard_wire::ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus};
 use std::sync::Arc;
 use ui_styling::appearance::AppearanceName;
-use semio_framework_ui_tui_frame::{chrome::ChromeState,scene::NodeContent};
-use semio_framework_ui_tui_widgets::widget::{TreeState,WidgetState};
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::{Pos, Size};
-use semio_framework_ui_tui_core::theme::{Status, Theme};
+use semio_ui_tui_frame::{chrome::ChromeState,scene::NodeContent};
+use semio_ui_tui_widgets::widget::{TreeState,WidgetState};
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_core::event::{mods, Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::{Pos, Size};
+use semio_ui_tui_core::theme::{Status, Theme};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
 
@@ -125,14 +125,14 @@ impl FeedbackBackend {
     fn new(failure:Option<&'static str>,cleanup:bool)->Self{Self{failure,cleanup,copy_fails:false,entered:0,left:0,waits:0,copied:Vec::new()}}
     fn check(&self,operation:&str)->std::io::Result<()>{if self.failure==Some(operation){Err(std::io::Error::other(format!("fixture {operation}")))}else{Ok(())}}
 }
-impl semio_framework_ui_tui_terminal::backend::TerminalBackend for FeedbackBackend {
+impl semio_ui_tui_terminal::backend::TerminalBackend for FeedbackBackend {
     fn enter(&mut self)->std::io::Result<()>{self.entered+=1;self.check("enter")}
     fn leave(&mut self)->std::io::Result<()>{self.left+=1;if self.cleanup{Err(std::io::Error::other("fixture leave"))}else{Ok(())}}
     fn size(&self)->std::io::Result<Size>{Ok(Size{width:80,height:24})}
-    fn capabilities(&self)->semio_framework_ui_tui_terminal::backend::Capabilities{semio_framework_ui_tui_terminal::backend::detect_capabilities(&|_|None,false)}
-    fn present(&mut self,_:&semio_framework_ui_tui_terminal::ansi::AnsiPatch,_:Option<semio_framework_ui_tui_core::signal::CursorSpec>)->std::io::Result<()>{self.check("present")}
+    fn capabilities(&self)->semio_ui_tui_terminal::backend::Capabilities{semio_ui_tui_terminal::backend::detect_capabilities(&|_|None,false)}
+    fn present(&mut self,_:&semio_ui_tui_terminal::ansi::AnsiPatch,_:Option<semio_ui_tui_core::signal::CursorSpec>)->std::io::Result<()>{self.check("present")}
     fn wait(&mut self,_:Option<std::time::Instant>)->std::io::Result<Vec<Event>>{self.check("wait")?;self.waits+=1;assert!(self.waits<=2);Ok(if self.waits==1{vec![Event::Wake]}else{vec![ctrl('b'),key('d')]})}
-    fn waker(&self)->semio_framework_ui_tui_terminal::backend::Waker{semio_framework_ui_tui_terminal::backend::Waker::new(||{})}
+    fn waker(&self)->semio_ui_tui_terminal::backend::Waker{semio_ui_tui_terminal::backend::Waker::new(||{})}
     fn copy(&mut self,text:&str)->std::io::Result<()>{self.copied.push(text.into());if self.copy_fails{Err(std::io::Error::other("fixture clipboard"))}else{Ok(())}}
 }
 

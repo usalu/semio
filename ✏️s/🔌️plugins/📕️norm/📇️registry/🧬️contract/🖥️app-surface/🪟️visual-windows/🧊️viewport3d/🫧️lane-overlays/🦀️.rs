@@ -9,7 +9,7 @@ use semio_s_plugin_norm_structural_scene::{EntityKind, Handle, HandleKind, Struc
 use crate::accessibility::{resolve_variant, A11yPrefs};
 use crate::{DragPreview, GhostSource, LaneFrame, PeerLane};
 use semio_s_plugin_norm_structural_scene::colour_maps::Variant;
-use semio_framework_plugin::{World3dAnnotation, World3dAnnotationLayer, World3dMarker, World3dMarkerShape, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX};
+use semio_plugin::{World3dAnnotation, World3dAnnotationLayer, World3dMarker, World3dMarkerShape, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX};
 
 /// 🏷️ English and German name of an entity kind for the insert ghost.
 pub fn kind_name(kind: EntityKind) -> (&'static str, &'static str) {

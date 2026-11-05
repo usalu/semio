@@ -16,8 +16,8 @@ use super::*;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: PartialEq + semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: PartialEq + semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🟰️ Lets every Report replay of this store stop where its state meets the live projection's state after the same
     /// prefix (`Arc::ptr_eq`, then `PartialEq`), splicing the unchanged tail instead of replaying it.
@@ -57,7 +57,7 @@ pub struct AppliedMutation<'a, Mutation> {
     pub meta: Option<&'a MutationMeta>,
     pub transaction: Option<&'a protocol::TransactionRef>,
     pub supersession: Option<&'a protocol::EffectiveSupersession>,
-    pub effective: &'static semio_framework_os_spr::MutationLeafDescriptor,
+    pub effective: &'static semio_os_spr::MutationLeafDescriptor,
     /// 🫷️ The cross-artifact unit the operation belongs to, `None` when it is its own unit ([`ArtifactStore::unit_id`]): an
     /// operation of a unit takes no supersession in one document alone.
     pub unit: Option<String>,
@@ -123,18 +123,18 @@ pub fn transition_retraction_closure<'a, T>(transitions: &'a [T], identity: impl
 /// 📦️ `envelopes`, in authoring order, as the fewest document-backbone batches its declaration admits
 /// (`crate::os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_*`): a committed tool transaction of many operations leaves as several
 /// batches the hub takes one by one, never as one batch it refuses as undeclared.
-pub fn document_backbone_batches(envelopes: Vec<semio_framework_os_spr::MutationEnvelope>) -> Vec<Vec<semio_framework_os_spr::MutationEnvelope>> {
+pub fn document_backbone_batches(envelopes: Vec<semio_os_spr::MutationEnvelope>) -> Vec<Vec<semio_os_spr::MutationEnvelope>> {
     const FRAMING_BYTES: usize = 16;
     let mut batches = Vec::new();
-    let mut batch: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
+    let mut batch: Vec<semio_os_spr::MutationEnvelope> = Vec::new();
     let (mut bytes, mut dependencies, mut segments) = (FRAMING_BYTES, 0usize, 0usize);
     for envelope in envelopes {
         let mut encoded = Vec::new();
-        semio_framework_os_spr::encode_envelope(&envelope, &mut encoded);
-        let full = bytes + encoded.len() > semio_framework_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES
-            || batch.len() == semio_framework_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES
-            || dependencies + envelope.dependencies.len() > semio_framework_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES
-            || segments + envelope.target.len() > semio_framework_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS;
+        semio_os_spr::encode_envelope(&envelope, &mut encoded);
+        let full = bytes + encoded.len() > semio_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES
+            || batch.len() == semio_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES
+            || dependencies + envelope.dependencies.len() > semio_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES
+            || segments + envelope.target.len() > semio_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS;
         if full && !batch.is_empty() {
             batches.push(std::mem::take(&mut batch));
             (bytes, dependencies, segments) = (FRAMING_BYTES, 0, 0);

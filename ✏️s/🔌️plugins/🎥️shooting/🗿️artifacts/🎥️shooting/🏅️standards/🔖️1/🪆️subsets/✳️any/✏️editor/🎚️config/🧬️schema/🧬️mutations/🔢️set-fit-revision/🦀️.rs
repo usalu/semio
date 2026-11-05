@@ -14,8 +14,8 @@ pub struct SetFitRevision {
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetFitRevision {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "fit-revision", kind: "set-fit-revision", record: "SetFitRevision" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Fit Revision", "Einpassungsrevision setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Fit Revision", "Einpassungsrevision setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["fit_revision".into()]

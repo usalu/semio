@@ -14,8 +14,8 @@ pub struct SetProjectUnits {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProjectUnits {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "project-units", kind: "set-project-units", record: "SetProjectUnits" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set project units", "Projekteinheiten setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set project units", "Projekteinheiten setzen")
     }
 
     fn target(&self) -> Vec<String> {

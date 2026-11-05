@@ -38,7 +38,7 @@ const DEFAULTS: readonly (readonly [string, RegExp])[] = [
 ];
 const PLACEHOLDER = /\{([A-Za-z_][A-Za-z0-9_]*)\}/gu;
 const TAGS = new Set(["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "zh"]);
-const SKIP_DIRECTORIES = new Set(["node_modules", "🧪️tests", "🧫️fixtures", ".git", "target", "dist", ".cache", "🗑️generated"]);
+const SKIP_DIRECTORIES = new Set(["node_modules", "🧪️tests", "🧫️fixtures", ".git", "target", "dist", ".cache", ".r", "🗑️generated"]);
 const OWN_DIRECTORY = "⚖️laws/🗣️language-catalogs/";
 const LAW_ROOTS = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", "🧰️framework/🔨️modules/🏃️process"] as const;
 const SOURCE_FILE = /\.(?:ts|mts|mjs|cjs)$/u;

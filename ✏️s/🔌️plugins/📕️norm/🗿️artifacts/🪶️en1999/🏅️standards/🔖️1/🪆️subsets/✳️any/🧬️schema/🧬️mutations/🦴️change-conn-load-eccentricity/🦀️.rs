@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnLoadEccentrici
         record: "ChangedConnLoadEccentricity",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change connection: Load eccentricity to the fastener group centroid (0 = concentric)", "Anschluss: Lastexzentrizität zum Schwerpunkt der Verbindungsmittelgruppe (0 = zentrisch) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change connection: Load eccentricity to the fastener group centroid (0 = concentric)", "Anschluss: Lastexzentrizität zum Schwerpunkt der Verbindungsmittelgruppe (0 = zentrisch) ändern")
     }
 }
 

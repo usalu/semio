@@ -24,8 +24,8 @@ pub fn scale_camera2d<Op: From<crate::scale_camera2d::ScaleCamera2d>>(new_zoom: 
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ScaleCamera2d where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::scale_camera2d::ScaleCamera2d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "camera2d", kind: "scale-camera2d", record: "ScaledCamera2d" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale camera to {}", self.new_zoom), &format!("Kamerazoom auf {} setzen", self.new_zoom))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Scale camera to {}", self.new_zoom), &format!("Kamerazoom auf {} setzen", self.new_zoom))
     }
 }
 

@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "element-classification", kind: "remove-element-classification", record: "RemoveElementClassification" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove classification {} of \"{}\"", self.system, self.id), &format!("Klassifizierung {} von \"{}\" entfernen", self.system, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove classification {} of \"{}\"", self.system, self.id), &format!("Klassifizierung {} von \"{}\" entfernen", self.system, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

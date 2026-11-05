@@ -1,14 +1,14 @@
 //! 🔁️ Host sync and ui scopes: the board host content and runtime sync and the window and selection ui dirty scopes. See [`super`].
 
 use super::*;
-use semio_framework_os_infinite_board_normal_focus::set_selection_ids;
-use semio_framework_os_infinite_board_normal_gestures::set_transform_flags;
+use semio_os_infinite_board_normal_focus::set_selection_ids;
+use semio_os_infinite_board_normal_gestures::set_transform_flags;
 
 /// 🧱️ The expensive half of syncing `host` from `envelope`: a full `clear_scene()` + rebuild of
 /// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the snapshot
 /// content actually changed — gated by `last_synced_fixture` in `handle`.
 pub fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
-    let _ = {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&envelope.board_snapshot.to_string(),&mut control)};
+    let _ = {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&envelope.board_snapshot.to_string(),&mut control)};
     if let Some(json) = board_kind_catalogs_json_or_inferred(&envelope.board_snapshot) {
         let _ = host.style.set_board_kind_catalogs_from_json(&json);
     }

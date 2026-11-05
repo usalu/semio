@@ -1,7 +1,7 @@
 use super::*;
 use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
-use semio_framework_plugin::ArtifactDeserializer;
+use semio_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_semio_mesh() -> SemioMeshSnapshot {

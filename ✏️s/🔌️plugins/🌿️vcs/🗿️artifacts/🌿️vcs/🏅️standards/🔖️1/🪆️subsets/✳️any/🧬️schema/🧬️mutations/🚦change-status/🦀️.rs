@@ -23,8 +23,8 @@ pub fn change_status(new_status: String) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeStatus {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-status", record: "ChangedVcsStatus" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change status to \"{}\"", self.new_status), &format!("Status auf \"{}\" ändern", self.new_status))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change status to \"{}\"", self.new_status), &format!("Status auf \"{}\" ändern", self.new_status))
     }
 }
 

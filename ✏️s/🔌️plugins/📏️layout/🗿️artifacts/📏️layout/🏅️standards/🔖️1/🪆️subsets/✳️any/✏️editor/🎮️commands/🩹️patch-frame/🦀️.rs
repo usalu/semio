@@ -1,6 +1,6 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-frame`.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use crate::modes::edit::windows::blueprint::config::current;
 use semio_s_artifact_layout_layout_mutations_frames::change_frame_columns::ChangeFrameColumns;
 use semio_s_artifact_layout_layout_mutations_frames::change_frame_fill::ChangeFrameFill;
@@ -22,7 +22,7 @@ use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::text_to_rgba;
 use semio_s_artifact_layout_layout_model::{Frame, Page, PageOverride, TextStyleRun};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "📖️parent/🦀️.rs"]
@@ -320,7 +320,7 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
 mod open_tests {
     use super::*;
     use semio_framework::kernel::Effect;
-    use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
+    use semio_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
 
     fn emit_open(kind: &str, artifact_ref: &str, frame_id: &str) -> Emit<LayoutMutation, NoConfigMutation> {
         let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();

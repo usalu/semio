@@ -10,24 +10,24 @@ use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
 use semio_s_artifact_draw_drawing_model::{DrawingArtboard, PathSegment};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_value::DslValue;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 pub const SET_CAMERA_ACTION_ID: &str = "setCamera";
 
 /// 📷️ Local camera navigation is available in a read-only canvas.
-fn set_camera_action() -> semio_framework_plugin::ActionDefinition {
-    let mut action = semio_framework_plugin::ActionDefinition::bounded_catalog(SET_CAMERA_ACTION_ID,LocalizedLabel::native("Set Camera","Kamera festlegen"),semio_framework_plugin::ActionKind::View)
-        .with_args(vec![semio_framework_plugin::ActionArgDef::text("camera",LocalizedLabel::native("Camera","Kamera")).required()]);
-    action.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+fn set_camera_action() -> semio_plugin::ActionDefinition {
+    let mut action = semio_plugin::ActionDefinition::bounded_catalog(SET_CAMERA_ACTION_ID,LocalizedLabel::native("Set Camera","Kamera festlegen"),semio_plugin::ActionKind::View)
+        .with_args(vec![semio_plugin::ActionArgDef::text("camera",LocalizedLabel::native("Camera","Kamera")).required()]);
+    action.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
     action.in_palette = false;
     action
 }
@@ -79,7 +79,7 @@ pub fn render_with_camera(document: &DrawingSnapshot,config: &config::DrawingVie
     for node in &scene_nodes {
         records.push(semio_framework_value::ToValue::to_value(node));
     }
-    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_framework_plugin::Canvas2dFraming { revision: 0,bounds: semio_s_artifact_draw_drawing_geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_plugin::Canvas2dFraming { revision: 0,bounds: semio_s_artifact_draw_drawing_geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension

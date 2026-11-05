@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberFastenerDiam
         record: "ChangeMemberFastenerDiameterMm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Timber fastener diameter d (0 = not a timber connection)", "Verbindungsmitteldurchmesser d (0 = keine Holzverbindung) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Timber fastener diameter d (0 = not a timber connection)", "Verbindungsmitteldurchmesser d (0 = keine Holzverbindung) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-fastener-diameter-mm".into()]

@@ -1,6 +1,6 @@
 //! 📜️ The scene payload contract: the `SceneDoc` trait every product scene implements, the lane carriers and references, the pack wire macro and the shared value-codec primitives.
 //!
-//! Carved out of the former `semio-framework-ui-scene` scenes module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
+//! Carved out of the former `semio-ui-scene` scenes module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 //!
 //! The 15 product scene payloads — one per [`ui_contract::SurfaceKind`] wire tag — relocated
 //! verbatim from `ui_wgpu`'s `🎯️targets/🧊️wgpu/🦀️component.rs` (ticket
@@ -23,7 +23,7 @@
 //! decree (ticket ruling E6), not the `pub async fn` they arrived as in `ui_wgpu`.
 
 use protocol::value::{DslValue, FromValue, ToValue, ValueError};
-use semio_framework_ui_scene_pack::{from_bytes, to_bytes, PackError};
+use semio_ui_scene_pack::{from_bytes, to_bytes, PackError};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SceneDoc
@@ -109,7 +109,7 @@ macro_rules! scene_pack_wire {
 
 //#region 🔖️ValueCodecHelpers
 /// 🧰️ Shared object-entry primitives every hand-written `ToValue`/`FromValue` impl below builds on
-/// — `#[derive(ToValue, FromValue)]` hardcodes `::semio_framework_os_kernel::…` paths (see this
+/// — `#[derive(ToValue, FromValue)]` hardcodes `::semio_os_kernel::…` paths (see this
 /// crate's `Cargo.toml` docstring), which this wasm-safe, os-kernel-free crate must never depend on,
 /// so every scene/record type is encoded/decoded by hand against `protocol::value::` directly.
 /// Mirrors serde semantics exactly: an `Option<T>` field decodes to `None` when its key is absent

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiloHeightM where 
         record: "ChangeSiloHeightM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Silo height", "Silohöhe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Silo height", "Silohöhe ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-silo-height-m".into()]

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeSiloMu where Op: p
         record: "ChangedSiloMu",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change wall friction coefficient μ", "Wandreibungsbeiwert μ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change wall friction coefficient μ", "Wandreibungsbeiwert μ ändern")
     }
 }
 

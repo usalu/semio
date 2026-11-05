@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-plugin-instance-children"
+name = "semio-plugin-instance-children"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,30 +22,30 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-plugin-window-kits-rich = { path = "../../../../🪟️window-kits/🧱️rich/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
-semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
-semio-framework-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
-semio-framework-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
-semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
+semio-plugin-window-kits-rich = { path = "../../../../🪟️window-kits/🧱️rich/📦️packages/🦀️rust" }
+semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
+semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
+semio-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
+semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
-semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
-semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
+semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
+semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 
 [features]
 artifact-app-testing = []

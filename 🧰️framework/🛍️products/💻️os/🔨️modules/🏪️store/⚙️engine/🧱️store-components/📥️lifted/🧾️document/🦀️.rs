@@ -1,8 +1,8 @@
 //! 📥️ Items of `document_materialize` that belong to `os-store-engine-core` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧾️document/🦀️.rs`.
-use semio_framework_os_spr::Mutation;
+use semio_os_spr::Mutation;
 use std::collections::HashSet;
-use semio_framework_os_store_space_schema::ArtifactEnvelope;
-use semio_framework_os_store_initialization_runtime::lifted_document_materialize::now_ms;
+use semio_os_store_space_schema::ArtifactEnvelope;
+use semio_os_store_initialization_runtime::lifted_document_materialize::now_ms;
 /// 🕰️ Single timestamp source for `Edit.started_at`/`Checkpoint.timestamp` — re-exported so
 /// callers outside this crate (e.g. the framework session command log) stamp entries in the
 /// exact same format.

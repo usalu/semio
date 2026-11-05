@@ -9,8 +9,8 @@ use crate::editor::puzzle2d::panels::settings;
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::kernel::Effect;
+use semio_plugin::ArtifactEditor;
 use semio_framework_pack_json::Value;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::snapshot::{puzzle2d_scene_for, puzzle2d_scene_with, PUZZLE2D_GENERIC_TOOL_IDS, PUZZLE2D_RETAINED_TOOL_IDS, PUZZLE2D_ADD_NODE_DIALOG_ID, puzzle2d_active_utility, puzzle2d_addresses_locked_entity, puzzle2d_entity_label, puzzle2d_interaction_definition, puzzle2d_node_kind_arg, puzzle2d_select_scope, puzzle2d_selected_node_ids, puzzle2d_selection_is_locked, puzzle2d_window_and_engagements_scope, puzzle2d_window_only_scope};
@@ -35,87 +35,87 @@ use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutati
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::window::{self, Puzzle2dWindowConfig, Puzzle2dWindowTransient};
 #[allow(unused_imports)]
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, PastePlacement};
+use semio_plugin::kernel::{ClipboardError, ClipboardFragment, PastePlacement};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionRef;
+use semio_plugin::ActionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactPresentation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DialogDefinition;
+use semio_plugin::DialogDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTarget;
+use semio_plugin::InteractionTarget;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionVerb;
+use semio_plugin::InteractionVerb;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaClass;
+use semio_plugin::MediaClass;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaForm;
+use semio_plugin::MediaForm;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortDirection;
+use semio_plugin::MediaPortDirection;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortSpec;
+use semio_plugin::MediaPortSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::PortMultiplicity;
+use semio_plugin::PortMultiplicity;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use semio_framework_pack_json::json;
 #[allow(unused_imports)]
@@ -123,7 +123,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
+use semio_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::kit::*;
 #[allow(unused_imports)]
@@ -144,25 +144,25 @@ include!("🕹️gumball-region-set-verb-and-snapshot-laws/🦀️.rs");
 #[semio_framework_async_macros::async_test]
 async fn mounted_camera_and_interaction_presence_reaches_peers_without_document_edits() {
     use semio_framework_value::FromValue;
-    use semio_framework_plugin::ArtifactEditor;
-    use semio_framework_plugin::EditorApp;
-    use semio_framework_plugin::artifact_app_laws::assert_presence_round_trip;
-    use semio_framework_plugin::artifact_app_laws::fixture_identity;
-    use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
-    use semio_framework_plugin::artifact_app_laws::meta;
-    use semio_framework_plugin::artifact_app_laws::paired_registered_apps;
-    use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
-    use semio_framework_plugin::artifact_app_laws::with_document_view;
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::ArtifactEditor;
+    use semio_plugin::EditorApp;
+    use semio_plugin::artifact_app_laws::assert_presence_round_trip;
+    use semio_plugin::artifact_app_laws::fixture_identity;
+    use semio_plugin::artifact_app_laws::fixture_mounted_policy;
+    use semio_plugin::artifact_app_laws::meta;
+    use semio_plugin::artifact_app_laws::paired_registered_apps;
+    use semio_plugin::artifact_app_laws::settle_registered_typed_operation;
+    use semio_plugin::artifact_app_laws::with_document_view;
+    use semio_plugin::PluginApp;
     let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable shared presence fixture");
     let expected = protocol::PresenceWindowView::from_value(semio_framework_pack_json::to_dsl_value(&fixture["admission"][0]["value"])).expect("admitted shared camera");
     let kind = semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID;
     let view = window_view(kind, &expected.window_id);
     let protocol::PresenceViewKind::Canvas { x, y, zoom } = expected.kind else { panic!("portable canvas pose") };
     let command = <Puzzle2dPlayApp as ArtifactEditor>::command_from_action("setCamera", Some(&semio_framework_value::DslValue::from(&json!({"camera": {"x": x, "y": y, "zoom": zoom}})))).expect("typed shared camera command");
-    let mut identity=fixture_identity();let policy=fixture_mounted_policy();let mut scope=semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let(mut a,mut b)=paired_registered_apps::<EditorApp<Puzzle2dPlayApp>,_,_>("mem://puzzle-presence-real-node",||async{semio_framework_plugin::App{definition:create_puzzle2d_app(),examples:Vec::new()}},policy,&mut identity).await;
-    let setup=<Puzzle2dPlayApp as ArtifactEditor>::command_from_action("addNode",Some(&semio_framework_value::DslValue::from(&json!({"kind":"node"})))).expect("registered source entity command");semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut a,&setup,&meta("local"),policy,&mut identity,scope.cx()).await.expect("source node event admission");settle_registered_typed_operation(&mut a,meta("local").instance_id,policy,&mut identity,scope.cx()).await.expect("source node event publication");b.tick_backbone(&mut identity,scope.cx()).await.expect("peer receives original node event");
+    let mut identity=fixture_identity();let policy=fixture_mounted_policy();let mut scope=semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let(mut a,mut b)=paired_registered_apps::<EditorApp<Puzzle2dPlayApp>,_,_>("mem://puzzle-presence-real-node",||async{semio_plugin::App{definition:create_puzzle2d_app(),examples:Vec::new()}},policy,&mut identity).await;
+    let setup=<Puzzle2dPlayApp as ArtifactEditor>::command_from_action("addNode",Some(&semio_framework_value::DslValue::from(&json!({"kind":"node"})))).expect("registered source entity command");semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut a,&setup,&meta("local"),policy,&mut identity,scope.cx()).await.expect("source node event admission");settle_registered_typed_operation(&mut a,meta("local").instance_id,policy,&mut identity,scope.cx()).await.expect("source node event publication");b.tick_backbone(&mut identity,scope.cx()).await.expect("peer receives original node event");
     let selected=with_document_view(&mut a,|doc|doc.snapshot.typed().nodes.first().expect("actual published source node").id.to_string_owner()).await.expect("original source document lease");
     assert_eq!(a.document_pack().await.expect("source shared document"),b.document_pack().await.expect("peer shared document"),"original source events converge before ephemeral interaction");
     assert_presence_round_trip(&mut a,&mut b,command,view,expected,(PUZZLE2D_INTERACTION_DOMAIN,Some((PUZZLE2D_GRANULARITY_NODE,selected.as_str()))),policy,&mut identity).await;

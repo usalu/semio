@@ -17,8 +17,8 @@ pub struct ChangeBeamConcreteECmPa {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamConcreteECmPa where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_concrete_e_cm_pa::ChangeBeamConcreteECmPa> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-concrete-e-cm-pa", kind: "change-beam-concrete-e-cm-pa", record: "ChangedBeamConcreteECmPa" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change concrete modulus E_cm of the beam slab", "Elastizitätsmodul E_cm der Trägerplatte ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change concrete modulus E_cm of the beam slab", "Elastizitätsmodul E_cm der Trägerplatte ändern")
     }
 }
 

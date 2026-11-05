@@ -1,0 +1,29 @@
+{
+  "events": [
+    {
+      "id": "denied",
+      "admitted": false,
+      "delegateWork": 7,
+      "expectedWork": 0
+    },
+    {
+      "id": "original-child",
+      "admitted": true,
+      "delegateWork": 2,
+      "expectedWork": 2
+    },
+    {
+      "id": "original-refusal",
+      "admitted": true,
+      "delegateWork": 3,
+      "expectedWork": 3
+    },
+    {
+      "id": "own-shell",
+      "admitted": true,
+      "delegateWork": 1,
+      "expectedWork": 1
+    }
+  ],
+  "expectedTotal": 6
+}

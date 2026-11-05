@@ -2,9 +2,9 @@
 //! 🖱️ 2D-window utility — Select: the default pointer utility (rectangle/lasso marquee plus click
 //! instead, so this node stays under `◻️2d`.
 
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
 
 pub const UTILITY_ID: &str = "select";
 

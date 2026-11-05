@@ -1,3 +1,4 @@
+import {useLabel} from "@semio-tech/ui-react";
 // #region 🧲️Header
 // 💻️ ✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-board/🧪️.story.tsx
 // Specs: Host the framework renderer's `🖥️Board2dHost` for Storybook + Playwright selection/camera/utility checks.
@@ -6,9 +7,11 @@
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useCallback, useMemo, useState, type ReactElement } from "react";
+import { useCallback, useMemo, useState, type KeyboardEvent, type ReactElement } from "react";
 
 import { Board2dHost } from "@semio-tech/framework-renderer-react";
+import { BoardSessionFactoryContext, resolveAppSurfaceSessionFactory } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
+import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-renderer-react";
 
 //#region StoryTypes
@@ -171,7 +174,7 @@ function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, ar
         fixture: {
           ...fixture,
           nodes: fixture.nodes.filter((node) => !selected.has(node.id)),
-          edges: fixture.edges.filter((edge) => !selected.has(edge.id) && !selected.has(String(edge.source)) && !selected.has(String(edge.target))),
+          edges: fixture.edges.filter((edge) => !selected.has(edge.id) && !selected.has(String(edge.source).split(":")[0]) && !selected.has(String(edge.target).split(":")[0])),
         },
         runtime: { ...runtime, selectedIds: [] },
       };
@@ -325,19 +328,34 @@ const STORY_BRUSH_OPEN_SLOT_FIXTURE: StoryPuzzle2dFixture = {
 
 //#region StoryHost
 function Board2dStoryHost({ initialFixture, initialRuntime, interactive }: { readonly initialFixture: StoryPuzzle2dFixture; readonly initialRuntime: Partial<StoryPuzzle2dRuntime>; readonly interactive: boolean }): ReactElement {
+  const boardLabel=useLabel("ui.diagram.label");
+  const factory = useMemo(() => resolveAppSurfaceSessionFactory(PUZZLE_BOARD_SESSION_FACTORIES, { pluginId: "puzzle", appId: "s.puzzle.puzzle2d@1/*#editor", instanceId: 1 }), []);
   const [state, setState] = useState<StoryPuzzle2dState>(() => ({ fixture: initialFixture, runtime: { ...STORY_DEFAULT_RUNTIME, ...initialRuntime } }));
 
   const onAction = useCallback((descriptor: ActionDescriptor): void => {
     setState((current) => reduceStoryPuzzle2dAction(current, descriptor.action, storyActionArguments(descriptor.args)));
   }, []);
 
+  const onKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>): void => {
+    if (!interactive || event.defaultPrevented || event.nativeEvent.isComposing || event.altKey || event.shiftKey) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || target.isContentEditable || target.closest("input, textarea, select, [role=textbox]")) return;
+    const action = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a" ? "selectAll" : !event.ctrlKey && !event.metaKey && event.key === "Delete" ? "deleteSelection" : null;
+    if (!action) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setState((current) => reduceStoryPuzzle2dAction(current, action, undefined));
+  }, [interactive]);
+
   const node = useMemo(() => buildStorySceneNode(state, interactive), [state, interactive]);
   const debug = useMemo(() => JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, activeUtility: state.runtime.activeUtility, nodeCount: state.fixture.nodes.length, edgeCount: state.fixture.edges.length }), [state]);
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
-      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <Board2dHost node={node} onAction={onAction} />
+      <div role="group" aria-label={boardLabel} tabIndex={interactive ? 0 : -1} onKeyDown={onKeyDown} onPointerDownCapture={(event) => { if (interactive && event.target instanceof HTMLCanvasElement) event.currentTarget.focus({ preventScroll: true }); }} style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
+        <BoardSessionFactoryContext.Provider value={factory}>
+          <Board2dHost node={node} onAction={onAction} />
+        </BoardSessionFactoryContext.Provider>
       </div>
       <pre data-testid="puzzle2d-board-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {debug}

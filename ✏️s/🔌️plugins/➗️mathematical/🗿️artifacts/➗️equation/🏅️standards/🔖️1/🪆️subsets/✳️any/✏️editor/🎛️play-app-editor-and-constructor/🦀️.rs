@@ -19,10 +19,10 @@ impl ArtifactEditor for EquationPlayApp {
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = EquationCommand;
 
@@ -37,43 +37,43 @@ impl ArtifactEditor for EquationPlayApp {
         Some(Arc::new(EquationStorePreparationFactory::<Self::Snapshot, Self::Mutation>::default()))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
     fn build_config_store_disposer() -> ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+        Some(semio_plugin::no_config_store_disposer())
     }
 
     fn build_draft_store_disposer() -> ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<EquationGraphWindowConfigOwner>()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<EquationPlayApp>,
         owner_file: "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.mathematical.equation@1/*#editor",
@@ -97,17 +97,17 @@ impl ArtifactEditor for EquationPlayApp {
         registry.register(EquationCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !EQUATION_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Equation command does not match its exact retained tool registration").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Equation command does not match its exact retained tool registration").into());
         }
         let extent = equation_command_extent(&original.command, &original.snapshot).ok_or_else(|| Fault::from("equation-command-capacity"))?;
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, EquationCommand::command_id, EQUATION_RETAINED_RAW_BYTES, EQUATION_RETAINED_WORK_ITEMS, false, |request| { let operation_context = AppOperationContext {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, EquationCommand::command_id, EQUATION_RETAINED_RAW_BYTES, EQUATION_RETAINED_WORK_ITEMS, false, |request| { let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,
@@ -127,11 +127,11 @@ impl ArtifactEditor for EquationPlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<EquationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<EquationSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(EquationSnapshot::default())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(equation_io())
     }
 
@@ -182,7 +182,7 @@ impl ArtifactEditor for EquationPlayApp {
         doc: &ArtifactView<'_, EquationSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<EquationMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -219,13 +219,13 @@ impl ArtifactEditor for EquationPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let node = match body_key {
             MATH_PLAY_BODY_GRAPH => graph_window::render(&doc.snapshot.graph.clone(), &graph_window::config::current(cfg).cloned().unwrap_or_default().camera),
             MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&doc.snapshot.geometry.clone()),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => return semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️EquationPlayApp
@@ -242,7 +242,7 @@ impl ArtifactEditor for EquationPlayApp {
 /// in the migration report). The subset's own `📚️examples/🎬️demo` facet
 /// (`crate::examples::...`, real content, pre-existing) is the modern,
 /// role-agnostic replacement surface for example registration.
-pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_equation_app() -> semio_plugin::AppDefinition {
     Editor::builder(EQUATION_DIALECT)
         .document(["semio", "equation"])
         .artifact_kind(crate::artifact_kind())
@@ -257,7 +257,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .mutation("setDirected", LocalizedLabel::native("Set Directed", "Gerichtet festlegen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
         .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
-        .action_with(semio_framework_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_framework_plugin::ActionKind::View, "camera"))
+        .action_with(semio_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_plugin::ActionKind::View, "camera"))
         .mutation("editPoints", LocalizedLabel::native("Edit Points", "Punkte bearbeiten"))
         .action_interactive_job("editEquation", InteractiveJobClassification::Migrated)
         .action_interactive_job("setAlgorithm", InteractiveJobClassification::Migrated)
@@ -266,7 +266,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("editPoints", InteractiveJobClassification::Migrated)
-        .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+        .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         .action_args("setActiveExample", vec![
@@ -303,7 +303,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .action_describe("addNode", LocalizedLabel::native("Adds one node to the equation's graph at x, y, named with the first free id.", "Fügt dem Graphen der Gleichung einen Knoten an x, y hinzu, benannt mit der ersten freien Id."))
         .action_describe("editPoints", LocalizedLabel::native("Applies the supplied points as the point repositionings, insertions and removals that differ from the equation's geometry.", "Wendet die übergebenen Punkte als die Punktverschiebungen, -einfügungen und -entfernungen an, die von der Geometrie der Gleichung abweichen."))
         .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole equation document with the bundled demo example; any other example id changes nothing.", "Ersetzt das gesamte Gleichungsdokument durch das mitgelieferte Demo-Beispiel; jede andere Beispiel-Id ändert nichts."))
-        .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("nodeGraphViewport", semio_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest

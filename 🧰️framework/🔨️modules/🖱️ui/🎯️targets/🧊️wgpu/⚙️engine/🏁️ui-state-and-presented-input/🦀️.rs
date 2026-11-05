@@ -40,13 +40,13 @@ pub(super) const _: fn() = || {
 pub struct RetainedInputDraft {
     pub surface: UiSurfaceToken,
     pub node: NodeId,
-    pub key: semio_framework_ui_retained_tree::tree::NodeKey,
+    pub key: semio_ui_retained_tree::tree::NodeKey,
     pub text: String,
-    pub action: semio_framework_ui_declaration::layout::ActionDescriptor,
+    pub action: semio_ui_declaration::layout::ActionDescriptor,
 }
 
 impl Ui {
-    pub fn new(locale: semio_framework_ui_locale::Locale) -> Self {
+    pub fn new(locale: semio_ui_locale::Locale) -> Self {
         Self {
             windows: UiSurfaceRegistry::default(),
             document_generation: 0,
@@ -65,7 +65,7 @@ impl Ui {
     }
 
     /// 🌐️ Re-sets the language the engine's own chrome strings resolve in — the host's resolved locale changed.
-    pub fn set_locale(&mut self, locale: semio_framework_ui_locale::Locale) {
+    pub fn set_locale(&mut self, locale: semio_ui_locale::Locale) {
         self.shell.set_locale(locale);
     }
 
@@ -189,7 +189,7 @@ impl Ui {
     }
 
     /// 📐️ Resolves the exact candidate scene node and painted rectangle for one presented node.
-    pub fn candidate_scene_geometry_for_presented_node(&self, window_id: &str, witness: u64, presented_node: NodeId) -> Option<(NodeId, semio_framework_ui_theme::geometry::Rect)> {
+    pub fn candidate_scene_geometry_for_presented_node(&self, window_id: &str, witness: u64, presented_node: NodeId) -> Option<(NodeId, semio_ui_theme::geometry::Rect)> {
         let node = self.candidate_scene_node_for_presented_node(window_id, witness, presented_node)?;
         Some((node, self.windows.get(window_id)?.tree.absolute_rect(node)?))
     }

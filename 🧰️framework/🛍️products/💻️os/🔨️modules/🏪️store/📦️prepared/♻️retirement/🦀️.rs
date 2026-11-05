@@ -2,15 +2,15 @@
 use crate::ArtifactStoreOneItemPreparedParts;
 use std::sync::Arc;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, ValueError};
-use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
+use semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
 use crate::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
-use semio_framework_os_spr::{Edit, HybridLogicalTimestamp};
+use semio_os_spr::{Edit, HybridLogicalTimestamp};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_framework_value::{FactoryAuthority,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneBirthDemand}};
 use std::mem::ManuallyDrop;
 /// 🧳️ An owning cancellation cursor retains every original prepared allocation and declared issuer.
-pub struct ArtifactStorePreparedRetirement<P,M>{pub outcome_messages:ManuallyDrop<Option<semio_framework_os_spr::command::MutationMessagePublication>>,pub fold_digest:[u8;32],pub fold_clock:HybridLogicalTimestamp,pub foreign_step_presence:Option<bool>,pub edit:ManuallyDrop<Option<Box<Edit<M>>>>,unboxed:ManuallyDrop<Option<Edit<M>>>,pub post:ManuallyDrop<Option<Arc<P>>>,pub authority:ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,pub strings:ManuallyDrop<[Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>;3]>,pub mutation_factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,pub snapshot_factory:ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,pub active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,pub factories:ManuallyDrop<[Option<FactoryAuthority>;2]>}
+pub struct ArtifactStorePreparedRetirement<P,M>{pub outcome_messages:ManuallyDrop<Option<semio_os_spr::command::MutationMessagePublication>>,pub fold_digest:[u8;32],pub fold_clock:HybridLogicalTimestamp,pub foreign_step_presence:Option<bool>,pub edit:ManuallyDrop<Option<Box<Edit<M>>>>,unboxed:ManuallyDrop<Option<Edit<M>>>,pub post:ManuallyDrop<Option<Arc<P>>>,pub authority:ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,pub strings:ManuallyDrop<[Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>;3]>,pub mutation_factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,pub snapshot_factory:ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,pub active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,pub factories:ManuallyDrop<[Option<FactoryAuthority>;2]>}
 impl<P,M> ArtifactStoreOneItemPrepared<P,M>{
  /// 📏️ The exact cursor frame is priced before any original owner moves.
  pub fn retirement_birth_demand()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:size_of::<ArtifactStorePreparedRetirement<P,M>>(),depth:1}}

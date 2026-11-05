@@ -7,12 +7,12 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema:
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_s_artifact_bim_model_gestures::editor::bim::commands::gesture_keys::{handle, GestureTurn, GestureTurnBack, GestureQuarter, GestureMirror, GestureNext, GesturePrevious, GestureRaise, GestureLower, GestureSystem, KEYBINDINGS};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{demo, run};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::ArtifactEditor;
+use semio_ui_locale::Locale;
 
 #[semio_framework_async_macros::async_test]
 async fn a_gesture_key_outside_the_retained_route_is_refused_because_no_gesture_can_hear_it() {

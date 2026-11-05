@@ -21,7 +21,7 @@
 //! DRR-computed, throttle-scaled per-turn budget now travels WITH the envelopes it grants
 //! ([`ShardFrame::Grant`]) instead of `pump` re-deriving one from local constants.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "🔁️lifecycle/🦀️.rs"]
 mod lifecycle;
@@ -39,8 +39,8 @@ pub mod grant;
 pub use identity::{OriginalShardIdentity,OriginalShardIdentityIssuer,ShardIdentityPolicy,native_identity_issuer};
 pub use lifecycle::{ShardActorAllocation, ShardRegistrationReason, ShardRegistrationRejected};
 
-use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
-use semio_framework_plugin_guest_contract::{JobStep, PluginHostError, TurnFault};
+use semio_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
+use semio_plugin_guest_contract::{JobStep, PluginHostError, TurnFault};
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};

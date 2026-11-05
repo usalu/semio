@@ -8,7 +8,7 @@ fn original_scalar_field_retirement_keeps_every_native_owner_and_physical_receip
     use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneGrant};
     let law:Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️scalar-field/🔣️.json")).unwrap();
     let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
-    use semio_framework_ui_scene_mesh::testkit::observe_retirement_allocations as observe;
+    use semio_ui_scene_mesh::testkit::observe_retirement_allocations as observe;
     for row in fixture()["valid"].as_array().unwrap().iter().filter(|row|row["def"]=="scalarField") {
         let (source,heap)=observe(||serde_json::from_value::<World3dScalarField>(row["normalized"].clone()).unwrap());
         assert!(json_eq(&serde_json::to_value(&source).unwrap(),&row["normalized"]));
@@ -35,8 +35,8 @@ fn original_scalar_field_retirement_keeps_every_native_owner_and_physical_receip
 #[test]
 fn original_projection_record_retirement_uses_exact_scalar_owner_receipts() {
     use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneGrant};
-    use semio_framework_ui_viewport::{Viewport3dProjectionSpec,Viewport3dProjectionFramePolicy};
-    use semio_framework_ui_scene_mesh::testkit::observe_retirement_allocations as observe;
+    use semio_ui_viewport::{Viewport3dProjectionSpec,Viewport3dProjectionFramePolicy};
+    use semio_ui_scene_mesh::testkit::observe_retirement_allocations as observe;
     let law:Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️scalar-field/🔣️.json")).unwrap();
     let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
     for row in law["projections"].as_array().unwrap() {
@@ -212,8 +212,8 @@ fn number(value: &Value) -> f64 {
 
 fn camera_view_proj(fixture: &Value) -> ([f32; 16], f32, f32) {
     use semio_framework_geometry::Vec3;
-    use semio_framework_ui_scene_algebra::Mat4Math;
-    use semio_framework_ui_scene_camera::{Camera3d, CameraProjection3d};
+    use semio_ui_scene_algebra::Mat4Math;
+    use semio_ui_scene_camera::{Camera3d, CameraProjection3d};
     let camera = &fixture["camera"];
     let point = |key: &str| Vec3 { x: number(&camera[key][0]) as f32, y: number(&camera[key][1]) as f32, z: number(&camera[key][2]) as f32 };
     let (width, height) = (number(&fixture["size"]["width"]) as f32, number(&fixture["size"]["height"]) as f32);
@@ -341,4 +341,4 @@ fn a_section_unit_normal_points_to_the_removed_side() {
 //#endregion 🔖️Overlay
 
 #[global_allocator]
-static OBSERVED_ALLOCATOR: semio_framework_ui_scene_mesh::testkit::ObservedAllocator = semio_framework_ui_scene_mesh::testkit::ObservedAllocator;
+static OBSERVED_ALLOCATOR: semio_ui_scene_mesh::testkit::ObservedAllocator = semio_ui_scene_mesh::testkit::ObservedAllocator;

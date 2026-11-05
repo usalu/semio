@@ -1,7 +1,7 @@
 //! 📚️ Example `demo`.
 use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 pub fn label() -> LocalizedLabel {

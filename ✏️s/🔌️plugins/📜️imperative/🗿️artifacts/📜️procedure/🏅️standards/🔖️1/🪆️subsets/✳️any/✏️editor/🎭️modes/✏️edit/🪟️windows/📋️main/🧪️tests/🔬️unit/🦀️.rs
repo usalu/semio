@@ -18,7 +18,7 @@ async fn run_command_expands_scope_into_readable_rows_without_truncation() {
     let mut app = imperative_app().await;
     dispatch(&mut app, ImperativeCommand::Run(run::Run {})).await;
     let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN).await;
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::TableScene>(&json).expect("table scene");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene::<semio_plugin::TableScene>(&json).expect("table scene");
     assert!(scene.rows_json.contains("log.print"), "main table lists default path steps after run: {}", scene.rows_json);
     assert!(scene.rows_json.contains("run-output"), "the run's scope expands into readable rows: {}", scene.rows_json);
 }

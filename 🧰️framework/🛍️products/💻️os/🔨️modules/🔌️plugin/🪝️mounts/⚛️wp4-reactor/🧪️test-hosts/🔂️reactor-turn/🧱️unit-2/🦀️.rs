@@ -4,10 +4,10 @@ use semio_framework::kernel::Event;
 use std::mem::ManuallyDrop;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::RequestOutcome;
-use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
+use semio_plugin_reactor_lifecycle::instance_lifetime;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
-use semio_framework_plugin_reactor_turn as turn;
+use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
+use semio_plugin_reactor_turn as turn;
 
 #[doc(hidden)]
 #[cfg(test)]

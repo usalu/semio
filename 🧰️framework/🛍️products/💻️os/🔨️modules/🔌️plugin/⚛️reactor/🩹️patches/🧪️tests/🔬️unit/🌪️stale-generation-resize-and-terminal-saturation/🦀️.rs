@@ -2,10 +2,10 @@
 
 #[test]
 fn stale_generation_fault_is_publicly_retrievable() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let generation = tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
     reject_current(&tracker, "main");
@@ -23,10 +23,10 @@ fn stale_generation_fault_is_publicly_retrievable() {
 
 #[test]
 fn resize_storm_coalesces_to_one_deferred_surface_owner() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let generation = tracker.begin("7:main".into(), leaf("root", "a")).expect("admitted");
     for _ in 0..128 {
@@ -49,10 +49,10 @@ fn resize_storm_coalesces_to_one_deferred_surface_owner() {
 
 #[test]
 fn effects_publish_in_admission_order_even_when_later_tree_finishes_first() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("1:first".into(), leaf("root", "a")).expect("first");
     tracker.begin("1:second".into(), leaf("root", "b")).expect("second");
@@ -67,10 +67,10 @@ fn effects_publish_in_admission_order_even_when_later_tree_finishes_first() {
 
 #[test]
 fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_slot() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let old = tracker.begin("9:first".into(), leaf("root", "a")).expect("old generation");
     reject_current(&tracker, "9:first");
@@ -92,10 +92,10 @@ fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_sl
 
 #[test]
 fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_stale_publish() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️surface-close.json")).unwrap();
     let instance = fixture["instance"].as_u64().unwrap() as u32;
     let surface = |key: &str| fixture["surfaces"][key].as_str().unwrap();
@@ -139,10 +139,10 @@ fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_st
 
 #[test]
 fn terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
         let mut state = tracker.state.borrow_mut();
@@ -175,10 +175,10 @@ fn terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed() 
 
 #[test]
 fn terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     saturate_terminals(&tracker, 51, 510_000);
     tracker.retain_unadmitted("51:queued".into(), leaf("root", "queued")).expect("pre-admitted owner");
@@ -190,12 +190,12 @@ fn terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion() 
 
 #[test]
 fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
-    let identifier_bytes = semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_identifier_bytes;
+    let identifier_bytes = semio_ui_runtime::SurfaceReconcileLimits::default().max_identifier_bytes;
     tracker.begin(format!("52:{}", "x".repeat(identifier_bytes)), leaf("root", "rejected")).expect("fixed surface slot");
     assert!(tracker.state.borrow().rejected.iter().any(Option::is_some), "identifier cap produces an exact rejected owner");
     saturate_terminals(&tracker, 52, 520_000);
@@ -207,10 +207,10 @@ fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
 
 #[test]
 fn terminal_full_plus_matching_surface_advances_capacity_before_conversion() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
         let mut state = tracker.state.borrow_mut();

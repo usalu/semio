@@ -58,11 +58,11 @@ pub fn text_editor_wheel_into(scene: &UiComponentSceneNode, delta: f32) -> bool 
 
 pub(super) fn emit_text_editor_actions(
     scene: &UiComponentSceneNode,
-    _input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+    _input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
     edited: bool,
     projected_document_bytes: impl FnOnce(&EditorHost) -> usize,
     mutate: impl FnOnce(&mut EditorHost),
-) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+) -> Result<bool, semio_ui_action::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(&scene.host_id) else {
@@ -85,8 +85,8 @@ pub(super) fn emit_text_editor_actions(
             mutate(host);
             if edited {
                 if before.as_deref() != Some(host.text()) {
-                    let changes = entry.editor_delivery.explicit_changes.as_deref().and_then(|json| serde_json::from_str::<Vec<semio_framework_ui_declaration::ui::DraftChange>>(json).ok()).unwrap_or_default();
-                    entry.editor_delivery.explicit_changes = Some(ui_wgpu::wgpu::draft_changes_json(&semio_framework_ui_declaration::ui::compose_draft_step(&changes, before.as_deref().unwrap_or_default(), host.text())));
+                    let changes = entry.editor_delivery.explicit_changes.as_deref().and_then(|json| serde_json::from_str::<Vec<semio_ui_declaration::ui::DraftChange>>(json).ok()).unwrap_or_default();
+                    entry.editor_delivery.explicit_changes = Some(ui_wgpu::wgpu::draft_changes_json(&semio_ui_declaration::ui::compose_draft_step(&changes, before.as_deref().unwrap_or_default(), host.text())));
                     if entry.editor_delivery.explicit_past.len() == TEXT_EDITOR_PENDING_ECHO_CAPACITY {
                         entry.editor_delivery.explicit_past.pop_front();
                     }
@@ -100,11 +100,11 @@ pub(super) fn emit_text_editor_actions(
             return Ok(true);
         }
         let projected_bytes = projected_document_bytes(host);
-        if edited && projected_bytes > semio_framework_ui_action::RETAINED_ACTION_STRING_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+        if edited && projected_bytes > semio_ui_action::RETAINED_ACTION_STRING_BYTE_CAPACITY {
+            return Err(semio_ui_action::BoundedActionFault::ByteCredits);
         }
         if edited {
-            semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "textEdit", "surfaceId", &scene.surface_id, "text"])?;
+            semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "textEdit", "surfaceId", &scene.surface_id, "text"])?;
         } else {
             text_editor_action_bytes(scene, None)?;
         }
@@ -124,10 +124,10 @@ pub enum TextEditorActionOutcome<'a> {
     Cancelled,
 }
 
-fn text_editor_delivery_bytes(snapshot: &TextEditorDeliverySnapshot, include_edit: bool, include_selection: bool) -> Result<(usize, usize, usize), semio_framework_ui_action::BoundedActionFault> {
-    let edit = if include_edit { semio_framework_ui_action::checked_action_string_bytes(&[&snapshot.controller_id, "textEdit", "surfaceId", &snapshot.surface_id, "text", &snapshot.text, semio_framework_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG, &snapshot.surface_id])? } else { 0 };
-    let selection = if include_selection { semio_framework_ui_action::checked_action_string_bytes(&[&snapshot.controller_id, "textSelect", "surfaceId", &snapshot.surface_id, "start", "end"])? } else { 0 };
-    let total = edit.checked_add(selection).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+fn text_editor_delivery_bytes(snapshot: &TextEditorDeliverySnapshot, include_edit: bool, include_selection: bool) -> Result<(usize, usize, usize), semio_ui_action::BoundedActionFault> {
+    let edit = if include_edit { semio_ui_action::checked_action_string_bytes(&[&snapshot.controller_id, "textEdit", "surfaceId", &snapshot.surface_id, "text", &snapshot.text, semio_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG, &snapshot.surface_id])? } else { 0 };
+    let selection = if include_selection { semio_ui_action::checked_action_string_bytes(&[&snapshot.controller_id, "textSelect", "surfaceId", &snapshot.surface_id, "start", "end"])? } else { 0 };
+    let total = edit.checked_add(selection).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
     Ok((edit, selection, total))
 }
 
@@ -148,18 +148,18 @@ pub fn has_pending_text_editor_outbox() -> bool {
 
 /// 🏁️ Queues one typing-run commit signal (`textEdit` with `typing` + `typingCommit`, no text): the window publishes the run as
 /// ONE edit. `false` when the batch has no credit this frame (the run stays open and the next frame retries).
-fn write_text_editor_typing_commit(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, run: &TextEditorTypingRun, reason: &str) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&run.controller_id, "textEdit", "surfaceId", &run.surface_id, semio_framework_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG, &run.surface_id, semio_framework_ui_declaration::ui::TEXT_EDITOR_TYPING_COMMIT_ARG, reason])?;
+fn write_text_editor_typing_commit(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, run: &TextEditorTypingRun, reason: &str) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&run.controller_id, "textEdit", "surfaceId", &run.surface_id, semio_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG, &run.surface_id, semio_ui_declaration::ui::TEXT_EDITOR_TYPING_COMMIT_ARG, reason])?;
     let mut batch = match input.reserve_actions(1, bytes) {
         Ok(batch) => batch,
-        Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) => return Ok(false),
+        Err(semio_ui_action::BoundedActionFault::ItemCredits | semio_ui_action::BoundedActionFault::ByteCredits) => return Ok(false),
         Err(fault) => return Err(fault),
     };
     batch.action(&run.controller_id, "textEdit", bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("surfaceId"), &run.surface_id)?;
-        builder.string(Some(semio_framework_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG), &run.surface_id)?;
-        builder.string(Some(semio_framework_ui_declaration::ui::TEXT_EDITOR_TYPING_COMMIT_ARG), reason)?;
+        builder.string(Some(semio_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG), &run.surface_id)?;
+        builder.string(Some(semio_ui_declaration::ui::TEXT_EDITOR_TYPING_COMMIT_ARG), reason)?;
         builder.end_container()
     })?;
     batch.publish_with_checked(|| true)?;
@@ -189,18 +189,18 @@ pub fn semio_wgpu_host_page_hidden() {
 /// ⏱️ Ends the first typing run that was ended ([`end_text_editor_typing`]) or idles past
 /// [`ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS`] once its editor has nothing in flight, with ONE commit signal naming why. An end
 /// that finds no run left (the window already took a caret move) is dropped. `true` when a signal went out this frame.
-fn drive_text_editor_typing_end(registry: &mut EngineSurfaceRegistry, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, now_ms: f64) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+fn drive_text_editor_typing_end(registry: &mut EngineSurfaceRegistry, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, now_ms: f64) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let ended = registry.slots.iter().position(|slot| {
         slot.value.as_ref().is_some_and(|surface| {
             let delivery = &surface.editor_delivery;
             delivery.active.is_none()
                 && delivery.latest.is_none()
                 && delivery.publication.is_none()
-                && (delivery.typing_end.is_some() || delivery.typing.as_ref().is_some_and(|run| now_ms - run.last_ms >= semio_framework_ui_declaration::ui::TEXT_EDITOR_TYPING_IDLE_MS as f64))
+                && (delivery.typing_end.is_some() || delivery.typing.as_ref().is_some_and(|run| now_ms - run.last_ms >= semio_ui_declaration::ui::TEXT_EDITOR_TYPING_IDLE_MS as f64))
         })
     });
     let Some(index) = ended else { return Ok(false) };
-    let delivery = &mut registry.slots[index].value.as_mut().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?.editor_delivery;
+    let delivery = &mut registry.slots[index].value.as_mut().ok_or(semio_ui_action::BoundedActionFault::Structure)?.editor_delivery;
     let Some(run) = delivery.typing.clone() else {
         delivery.typing_end = None;
         return Ok(false);
@@ -213,7 +213,7 @@ fn drive_text_editor_typing_end(registry: &mut EngineSurfaceRegistry, input: &mu
     Ok(false)
 }
 
-pub fn drive_text_editor_outbox_step(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn drive_text_editor_outbox_step(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let now_ms = text_editor_now_ms();
@@ -227,26 +227,26 @@ pub fn drive_text_editor_outbox_step(input: &mut semio_framework_ui_wgpu_input::
         else {
             return Ok(false);
         };
-        let Some(slot) = registry.slots.get(index) else { return Err(semio_framework_ui_action::BoundedActionFault::Structure) };
+        let Some(slot) = registry.slots.get(index) else { return Err(semio_ui_action::BoundedActionFault::Structure) };
         let source = EngineSurfaceToken { slot: index as u16, generation: slot.generation };
-        let surface = slot.value.as_ref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
-        let snapshot = surface.editor_delivery.latest.clone().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let surface = slot.value.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+        let snapshot = surface.editor_delivery.latest.clone().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let include_edit = !surface.editor_delivery.read_only && !surface.editor_delivery.guest_has_text(&snapshot.text);
         let include_selection = !surface.editor_delivery.selection_undeclared;
         if !include_edit && !include_selection {
-            registry.slots[index].value.as_mut().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?.editor_delivery.latest = None;
+            registry.slots[index].value.as_mut().ok_or(semio_ui_action::BoundedActionFault::Structure)?.editor_delivery.latest = None;
             registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
             return Ok(true);
         }
-        if include_edit && snapshot.text.len() > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY {
+        if include_edit && snapshot.text.len() > semio_ui_action::ACTION_STRING_BYTE_CAPACITY {
             let descriptor = ActionDescriptor {
                 controller_id: snapshot.controller_id.clone(),
                 action: "textEdit".into(),
-                args: Some(semio_framework::DslValue::Object(vec![("surfaceId".into(), semio_framework::DslValue::String(snapshot.surface_id.clone())), (semio_framework_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG.into(), semio_framework::DslValue::String(snapshot.surface_id.clone()))])),
+                args: Some(semio_framework::DslValue::Object(vec![("surfaceId".into(), semio_framework::DslValue::String(snapshot.surface_id.clone())), (semio_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG.into(), semio_framework::DslValue::String(snapshot.surface_id.clone()))])),
             };
-            let action = semio_framework_ui_action::RetainedStringAction::new(descriptor, "text".into(), snapshot.text.len())?;
+            let action = semio_ui_action::RetainedStringAction::new(descriptor, "text".into(), snapshot.text.len())?;
             let publication = TextEditorDeliveryPublication { source: snapshot.text.clone(), action, snapshot, include_selection };
-            registry.slots[index].value.as_mut().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?.editor_delivery.publication = Some(publication);
+            registry.slots[index].value.as_mut().ok_or(semio_ui_action::BoundedActionFault::Structure)?.editor_delivery.publication = Some(publication);
             registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
             return Ok(true);
         }
@@ -256,31 +256,31 @@ pub fn drive_text_editor_outbox_step(input: &mut semio_framework_ui_wgpu_input::
                 if !write_text_editor_typing_commit(input, &run, "selectionJump")? {
                     return Ok(false);
                 }
-                let delivery = &mut registry.slots[index].value.as_mut().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?.editor_delivery;
+                let delivery = &mut registry.slots[index].value.as_mut().ok_or(semio_ui_action::BoundedActionFault::Structure)?.editor_delivery;
                 delivery.typing = None;
                 delivery.typing_end = None;
             }
         }
-        let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let (edit_bytes, selection_bytes, batch_bytes) = text_editor_delivery_bytes(&snapshot, include_edit, include_selection)?;
         let mut batch = match input.reserve_actions(usize::from(include_edit) + usize::from(include_selection), batch_bytes) {
             Ok(batch) => batch,
-            Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) => return Ok(false),
+            Err(semio_ui_action::BoundedActionFault::ItemCredits | semio_ui_action::BoundedActionFault::ByteCredits) => return Ok(false),
             Err(fault) => return Err(fault),
         };
         if include_edit {
             batch.action(&snapshot.controller_id, "textEdit", edit_bytes, |builder| {
-                builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor, token, member: 0, abort_correlation_on_error: true })?;
+                builder.set_receipt(semio_ui_action::ActionQueueReceipt { source: semio_ui_action::ActionQueueReceiptSource::CanvasTextEditor, token, member: 0, abort_correlation_on_error: true })?;
                 builder.begin_object(None)?;
                 builder.string(Some("surfaceId"), &snapshot.surface_id)?;
                 builder.string(Some("text"), &snapshot.text)?;
-                builder.string(Some(semio_framework_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG), &snapshot.surface_id)?;
+                builder.string(Some(semio_ui_declaration::ui::TEXT_EDITOR_TYPING_BUFFER_ARG), &snapshot.surface_id)?;
                 builder.end_container()
             })?;
         }
         if include_selection {
             batch.action(&snapshot.controller_id, "textSelect", selection_bytes, |builder| {
-                builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor, token, member: 1, abort_correlation_on_error: false })?;
+                builder.set_receipt(semio_ui_action::ActionQueueReceipt { source: semio_ui_action::ActionQueueReceiptSource::CanvasTextEditor, token, member: 1, abort_correlation_on_error: false })?;
                 builder.begin_object(None)?;
                 builder.string(Some("surfaceId"), &snapshot.surface_id)?;
                 builder.integer(Some("start"), snapshot.start as i64)?;
@@ -288,7 +288,7 @@ pub fn drive_text_editor_outbox_step(input: &mut semio_framework_ui_wgpu_input::
                 builder.end_container()
             })?;
         }
-        let next_sequence = registry.next_text_editor_receipt.checked_add(1).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let next_sequence = registry.next_text_editor_receipt.checked_add(1).ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         batch.publish_with_checked(|| {
             let Some(slot) = registry.slots.get_mut(index).filter(|slot| slot.generation == source.generation) else { return false };
             let Some(surface) = slot.value.as_mut() else { return false };

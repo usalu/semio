@@ -4,13 +4,13 @@ use semio_s_artifact_draw_drawing_editor::{DRAWING_GESTURE_RAW_BYTES, DRAWING_GE
 use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 use semio_framework_job::{InteractiveJob as _, InteractiveJobCloseStep};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 use semio_framework_diagnostic::FaultOrigin;
 use semio_framework_diagnostic::FaultCode;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::Fault;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::Fault;
 
 fn grant(items: usize, bytes: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 32 }
@@ -23,10 +23,10 @@ fn released(items: usize, bytes: usize) -> InteractiveJobCloseStep {
 #[test]
 fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch() {
     let mut emit: Emit<DrawingMutation, NoConfigMutation, NoDraftMutation> = Emit::default();
-    emit.child_emits.push(semio_framework_plugin::app::ChildEmit::open("member","drawing-child",0));
-    let rejected = semio_framework_plugin::app::ArtifactToolCompletionRejection::<semio_framework_plugin::EditorApp<DrawingPlayApp>> {
+    emit.child_emits.push(semio_plugin::app::ChildEmit::open("member","drawing-child",0));
+    let rejected = semio_plugin::app::ArtifactToolCompletionRejection::<semio_plugin::EditorApp<DrawingPlayApp>> {
         emit: Ok(emit),
-        ephemeral: semio_framework_plugin::EphemeralEmit::default(),
+        ephemeral: semio_plugin::EphemeralEmit::default(),
         fault: Fault::new(FaultOrigin::Framework, FaultCode::new("test.completion-rejected"), "injected completion rejection"),
     };
     let mut job = DrawingGestureOperationJob {
@@ -220,8 +220,8 @@ fn mounted_vector_gesture_preview_requires_all_captured_full_width_source_lanes(
 /// protocol under the framework page grant — the registry's shared cursor must not strand a slot.
 #[test]
 fn drawing_instance_owner_close_reaches_every_slot_parity() {
-    use semio_framework_plugin::ArtifactInstanceOperationOwner as _;
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    use semio_plugin::ArtifactInstanceOperationOwner as _;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut owner = DrawingInstanceOperationOwner::new();
     for operation in 0..3u64 {
         assert!(owner.operations.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
@@ -232,7 +232,7 @@ fn drawing_instance_owner_close_reaches_every_slot_parity() {
             break;
         }
         let step = owner.close_step(scope.cx(), grant(1, page)).expect("instance owner close step");
-        if let semio_framework_plugin::PluginLifecycleStep::Progress(progress) = step {
+        if let semio_plugin::PluginLifecycleStep::Progress(progress) = step {
             assert!(progress.copied_items <= 1 && progress.released_bytes <= page, "one page per step: {step:?}");
         }
     }
@@ -268,8 +268,8 @@ fn drawing_gesture_admission_retires_the_retiring_owner_in_its_residue_class() {
 /// page per 64-slot cursor lap.
 #[test]
 fn drawing_gesture_maintenance_retires_a_cancelled_owner_promptly() {
-    use semio_framework_plugin::ArtifactInstanceOperationOwner as _;
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    use semio_plugin::ArtifactInstanceOperationOwner as _;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut owner = DrawingInstanceOperationOwner::new();
     let live = key(448, 3);
     assert!(owner.operations.admit(live, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());

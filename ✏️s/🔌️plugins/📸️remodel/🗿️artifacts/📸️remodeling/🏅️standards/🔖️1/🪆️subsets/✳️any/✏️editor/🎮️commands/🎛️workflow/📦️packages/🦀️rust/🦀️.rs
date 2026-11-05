@@ -1,6 +1,6 @@
 //! 🎛️ remodeling workflow commands: calibration, GCPs, parameters, clearing, view state and QC export.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "."]
 pub mod editor {

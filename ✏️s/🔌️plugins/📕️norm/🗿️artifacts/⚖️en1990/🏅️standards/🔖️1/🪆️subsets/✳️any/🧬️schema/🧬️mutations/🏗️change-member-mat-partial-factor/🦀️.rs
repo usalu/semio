@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberMatPartialFa
         record: "ChangedMemberMatPartialFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change material partial factor γ_m of the member", "Bauteil: Teilsicherheitsbeiwert des Materials γ_m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change material partial factor γ_m of the member", "Bauteil: Teilsicherheitsbeiwert des Materials γ_m ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Physical Recheck Comparison",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "expected",
+    "observed"
+  ],
+  "properties": {
+    "kind": {
+      "const": "physical-file-comparison"
+    },
+    "expected": {
+      "$ref": "#/definitions/operand"
+    },
+    "observed": {
+      "$ref": "#/definitions/operand"
+    }
+  },
+  "definitions": {
+    "operand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byteLength",
+        "sha256"
+      ],
+      "properties": {
+        "byteLength": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

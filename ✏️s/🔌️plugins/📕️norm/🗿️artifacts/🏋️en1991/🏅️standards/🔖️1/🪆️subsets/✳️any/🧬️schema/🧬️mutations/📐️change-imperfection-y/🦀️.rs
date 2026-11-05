@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeImperfectionY wher
         record: "ChangedImperfectionY",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change plan position y of the execution imperfection", "Ausführungsimperfektion: Position y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change plan position y of the execution imperfection", "Ausführungsimperfektion: Position y ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -93,7 +93,7 @@ class TestScript extends BundleScript {
     console.log(`checkpoint-actor-oracle cases=${checkpointActorOracle(this.repoRoot)}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
       const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [
-          { package: "semio-framework-plugin-tests-14", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_4::retained_command_child_emit_prepublication_close_and_rejected_handoff_are_bounded"],
+          { package: "semio-plugin-tests-14", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_4::retained_command_child_emit_prepublication_close_and_rejected_handoff_are_bounded"],
           },
         ], progress(event) {
           console.log(`retained-child-close ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -130,7 +130,7 @@ class MediaTurnSourceScript extends BundleScript{
 class MediaTurnNativeScript extends MediaTurnSourceScript{
  async run(segments:string[]):Promise<void>{
   await super.run(segments);
-  await runAdmittedCargoPackageTestsV1(["semio-framework-plugin-tests-03"],this.root,this.invocation,["--offline","--test","media-turn","--features","media-turn-testing","--","--nocapture"]);
+  await runAdmittedCargoPackageTestsV1(["semio-plugin-tests-03"],this.root,this.invocation,["--offline","--test","media-turn","--features","media-turn-testing","--","--nocapture"]);
  }
 }
 
@@ -177,7 +177,7 @@ class OutputRetirementNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-output-retirement-native accepts no arguments");
     if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: process.env,groups: [{ package: "semio-framework-plugin-tests-09", target: { kind: "lib" }, laws: ["segmented_download_contract::segmented_output_original_full_grant_physical_retirement"] }],progress(event) {  }});
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: process.env,groups: [{ package: "semio-plugin-tests-09", target: { kind: "lib" }, laws: ["segmented_download_contract::segmented_output_original_full_grant_physical_retirement"] }],progress(event) {  }});
     for (const receipt of receipts) {}
   }
 }
@@ -205,7 +205,7 @@ class SchemaDocumentAuthorityCheckScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("Unsupported schema document authority argument");
     console.log(`schema-document-authority oracle=${schemaDocumentAuthorityOracle()}`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-framework-plugin-tests-15", target: { kind: "lib" }, laws: ["builder_test_hosts::builder_unit_1::schema_document_authority_tests::schema_document_authority_follows_portable_owner_corpus"] }], progress(event) { console.log(`schema-document-authority ${event.stage}: ${event.law ?? ""}`); } });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-plugin-tests-15", target: { kind: "lib" }, laws: ["builder_test_hosts::builder_unit_1::schema_document_authority_tests::schema_document_authority_follows_portable_owner_corpus"] }], progress(event) { console.log(`schema-document-authority ${event.stage}: ${event.law ?? ""}`); } });
     console.log(`schema-document-authority native-laws=${receipts.length}`);
   }
 }
@@ -226,7 +226,7 @@ class ArtifactAdmissionCheckScript extends BundleScript {
       "strict_artifact_identity_matches_independent_neutral_fixture",
       "strict_artifact_identity_owned_tree_and_definition_channels_publish",
     ];
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, laws }], progress(event) {
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-plugin", target: { kind: "lib" }, laws }], progress(event) {
         console.log(`artifact-admission ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
       } });
     console.log(`artifact-admission-laws: ${JSON.stringify(receipts)}`);
@@ -244,11 +244,11 @@ class GuestLifecycleCheckScript extends BundleScript {
     console.log(`guest-lifecycle-oracle cases=${guestLifecycleOracle()} patch-cases=${issuedPatchOracle()}`);
     if (!segments.includes("--native")) return;
     const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 86_400_000, lawMilliseconds: 60_000 }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" }, groups: [
-        { package: "semio-framework-plugin-tests-01", target: { kind: "lib" }, laws: ["runtime_instances_test_hosts::runtime_cleanup_fault_vector_tests::non_fault_status_reprs_never_collide_with_a_fault_variant"],
-        }, { package: "semio-framework-plugin-tests-10", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_2::instance_lifetime_close_does_not_publish_terminal_before_watchdog", "plugin_builder_contract_tests_2::instance_lifetime_close_deadline_resume_never_reenters_completed_work", "plugin_builder_contract_tests_2::instance_lifetime_close_late_physical_step_retains_its_exact_outcome", "plugin_builder_contract_tests_2::instance_lifetime_close_deadline_submit_refusal_preserves_candidate", "plugin_builder_contract_tests_2::instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward_authority", "plugin_builder_contract_tests_2::instance_lifetime_close_fault_outcome_dominates_complete_progress"],
-        }, { package: "semio-framework-plugin-reactor-lifecycle", target: { kind: "lib" }, laws: ["issued_receipt_tests::reactor_issued_patch_ack_and_rejection_match_neutral_exact_tuple", "issued_receipt_tests::reactor_issued_parallel_patch_slots_and_duplicate_ack_remain_independent", "issued_receipt_tests::reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry", "issued_receipt_tests::reactor_acknowledged_patch_slots_retire_without_instance_close", "instance_lifetime_patch_close_tests::guest_instance_lifecycle_pending_patch_handback_preserves_rejected_owner_and_exact_bytes", "instance_lifetime::tests::guest_instance_lifecycle_ack_fault_keeps_exact_receipt_and_owner", "instance_lifetime::tests::guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated_after_late_clock", "instance_lifetime::tests::guest_instance_lifecycle_same_activation_reopen_rejects_old_authority"],
-        }, { package: "semio-framework-plugin-reactor-patches", target: { kind: "lib" }, laws: ["tests::issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner"],
-        }, { package: "semio-framework-plugin-tests-11", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_6::reactor_native_lifecycle_retains_exact_close_until_ack", "plugin_builder_contract_tests_6::reactor_native_lifecycle_rejects_foreign_and_colliding_owners", "plugin_builder_contract_tests_6::reactor_native_lifecycle_output_failure_preserves_ack_and_owner", "plugin_builder_contract_tests_6::reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_ack"],
+        { package: "semio-plugin-tests-01", target: { kind: "lib" }, laws: ["runtime_instances_test_hosts::runtime_cleanup_fault_vector_tests::non_fault_status_reprs_never_collide_with_a_fault_variant"],
+        }, { package: "semio-plugin-tests-10", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_2::instance_lifetime_close_does_not_publish_terminal_before_watchdog", "plugin_builder_contract_tests_2::instance_lifetime_close_deadline_resume_never_reenters_completed_work", "plugin_builder_contract_tests_2::instance_lifetime_close_late_physical_step_retains_its_exact_outcome", "plugin_builder_contract_tests_2::instance_lifetime_close_deadline_submit_refusal_preserves_candidate", "plugin_builder_contract_tests_2::instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward_authority", "plugin_builder_contract_tests_2::instance_lifetime_close_fault_outcome_dominates_complete_progress"],
+        }, { package: "semio-plugin-reactor-lifecycle", target: { kind: "lib" }, laws: ["issued_receipt_tests::reactor_issued_patch_ack_and_rejection_match_neutral_exact_tuple", "issued_receipt_tests::reactor_issued_parallel_patch_slots_and_duplicate_ack_remain_independent", "issued_receipt_tests::reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry", "issued_receipt_tests::reactor_acknowledged_patch_slots_retire_without_instance_close", "instance_lifetime_patch_close_tests::guest_instance_lifecycle_pending_patch_handback_preserves_rejected_owner_and_exact_bytes", "instance_lifetime::tests::guest_instance_lifecycle_ack_fault_keeps_exact_receipt_and_owner", "instance_lifetime::tests::guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated_after_late_clock", "instance_lifetime::tests::guest_instance_lifecycle_same_activation_reopen_rejects_old_authority"],
+        }, { package: "semio-plugin-reactor-patches", target: { kind: "lib" }, laws: ["tests::issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner"],
+        }, { package: "semio-plugin-tests-11", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_6::reactor_native_lifecycle_retains_exact_close_until_ack", "plugin_builder_contract_tests_6::reactor_native_lifecycle_rejects_foreign_and_colliding_owners", "plugin_builder_contract_tests_6::reactor_native_lifecycle_output_failure_preserves_ack_and_owner", "plugin_builder_contract_tests_6::reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_ack"],
         },
       ], progress(event) {
         console.log(`guest-lifecycle ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -275,7 +275,7 @@ class ColdDocumentPairIngressCheckScript extends BundleScript {
             "cold_pair_tests::cold_pair_ingress_decode_refuses_noncanonical_authority_before_publication",
           ],
         },
-        { package: "semio-framework-plugin-reactor-surfaces", target: { kind: "lib" }, laws: ["tests::cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once", "tests::cold_pair_ingress_rechecks_live_and_rejects_hostile_pages_without_displacement", "tests::cold_pair_ingress_keeps_the_structural_owner_across_load_cancel_and_bounded_close", "tests::cold_pair_ingress_final_live_fence_rejects_post_await_revocation", "tests::cold_pair_ingress_charges_aggregate_reserved_capacity_until_final_close", "tests::cold_pair_ingress_is_an_exact_retained_native_close_participant", "tests::cold_pair_header_requires_an_active_checkpoint_frontier_and_exact_hashes"],
+        { package: "semio-plugin-reactor-surfaces", target: { kind: "lib" }, laws: ["tests::cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once", "tests::cold_pair_ingress_rechecks_live_and_rejects_hostile_pages_without_displacement", "tests::cold_pair_ingress_keeps_the_structural_owner_across_load_cancel_and_bounded_close", "tests::cold_pair_ingress_final_live_fence_rejects_post_await_revocation", "tests::cold_pair_ingress_charges_aggregate_reserved_capacity_until_final_close", "tests::cold_pair_ingress_is_an_exact_retained_native_close_participant", "tests::cold_pair_header_requires_an_active_checkpoint_frontier_and_exact_hashes"],
         },
       ], progress(event) { console.log(`cold-document-pair-ingress ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
     console.log(`cold-document-pair-ingress-receipts: ${JSON.stringify(receipts)}`);
@@ -297,7 +297,7 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
           laws: ["causal::tests::document_backbone_batch_fixture_is_exact_bounded_and_u64_safe"],
         },
         {
-          package: "semio-framework-os-store-sync-tests-1",
+          package: "semio-os-store-sync-tests-1",
           target: { kind: "lib" },
           laws: [
             "sync_tests::document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal",
@@ -305,14 +305,14 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
           ],
         },
         {
-          package: "semio-framework-os-store-sync-native",
+          package: "semio-os-store-sync-native",
           target: { kind: "lib" },
           laws: [
             "native_actor::retained_turn_fixtures::retained_readiness_wake_after_turn_release_is_observed_once",
             "native_actor::retained_turn_fixtures::cancellation_cannot_complete_before_an_inflight_turn_returns_its_exact_owner",
           ],
         },
-        { package: "semio-framework-plugin-actor-host", target: { kind: "lib" }, laws: ["document_backbone_binding::tests::document_backbone_op_binary_is_exact_canonical_and_bounded", "document_backbone_binding::tests::document_backbone_binding_reducer_preserves_generation_and_live_owner"],
+        { package: "semio-plugin-actor-host", target: { kind: "lib" }, laws: ["document_backbone_binding::tests::document_backbone_op_binary_is_exact_canonical_and_bounded", "document_backbone_binding::tests::document_backbone_binding_reducer_preserves_generation_and_live_owner"],
         },
       ], progress(event) { console.log(`document-backbone-binding ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
     console.log(`document-backbone-binding-receipts: ${JSON.stringify(receipts)}`);
@@ -332,14 +332,14 @@ class CanonicalArchitectureScript extends BundleScript {
     console.log(`extension-retirement-oracle cases=${extensionRetirementOracle(this.repoRoot)}`);
     console.log(`source-freshness-oracle cases=${await sourceFreshnessOracle(this.repoRoot,nextestArtifactLocation(this.repoRoot).directory)}`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-framework-plugin-extension", target: { kind: "lib" }, laws: ["artifact_inference::artifact_inference_service_tests::artifact_inference_context_preserves_execution_and_registry_identity"],
-      }, { package: "semio-framework-plugin-surface-fixture", target: { kind: "lib" }, laws: ["surface::media_owner_context::media_export_request_context_preserves_exact_supplied_owner"],
-      }, { package: "semio-framework-plugin-declared-verdict", target: { kind: "lib" }, laws: ["declared_verb_verdict_tests::declared_bridge_required_arguments_match_neutral_schemas"],
-      }, { package: "semio-framework-plugin-testing-acceptance", target: { kind: "lib" }, laws: ["ui_action_laws::tests::language_neutral_action_collections_agree_with_json_pointer_oracle"],
-      }, { package: "semio-framework-plugin-tests-14", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_4::a_command_reaches_both_ephemeral_lanes_without_touching_history"],
-      }, { package: "semio-framework-plugin-tests-11", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_6::a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched"],
-      }, { package: "semio-framework-plugin-tests-09", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_5::peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root", "plugin_builder_contract_tests_5::peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority"],
-      }, { package: "semio-framework-plugin-tests-06", target: { kind: "lib" }, laws: ["extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_preserves_zero_cancel_progress_and_terminal_owner", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_replacement_retains_old_and_backpressured_candidates", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_rejects_false_terminal_and_exceeded_grants", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_runs_through_suspend_and_exported_poll", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_refuses_implicit_live_drop_and_disposes_cold_explicitly", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_admits_exact_backing_and_boxed_shell_allocations"],
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-plugin-extension", target: { kind: "lib" }, laws: ["artifact_inference::artifact_inference_service_tests::artifact_inference_context_preserves_execution_and_registry_identity"],
+      }, { package: "semio-plugin-surface-fixture", target: { kind: "lib" }, laws: ["surface::media_owner_context::media_export_request_context_preserves_exact_supplied_owner"],
+      }, { package: "semio-plugin-declared-verdict", target: { kind: "lib" }, laws: ["declared_verb_verdict_tests::declared_bridge_required_arguments_match_neutral_schemas"],
+      }, { package: "semio-plugin-testing-acceptance", target: { kind: "lib" }, laws: ["ui_action_laws::tests::language_neutral_action_collections_agree_with_json_pointer_oracle"],
+      }, { package: "semio-plugin-tests-14", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_4::a_command_reaches_both_ephemeral_lanes_without_touching_history"],
+      }, { package: "semio-plugin-tests-11", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_6::a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched"],
+      }, { package: "semio-plugin-tests-09", target: { kind: "lib" }, laws: ["plugin_builder_contract_tests_5::peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root", "plugin_builder_contract_tests_5::peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority"],
+      }, { package: "semio-plugin-tests-06", target: { kind: "lib" }, laws: ["extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_preserves_zero_cancel_progress_and_terminal_owner", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_replacement_retains_old_and_backpressured_candidates", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_rejects_false_terminal_and_exceeded_grants", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_runs_through_suspend_and_exported_poll", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_refuses_implicit_live_drop_and_disposes_cold_explicitly", "extension_test_hosts::extension_retirement_tests::extension_bundle_resource_retirement_admits_exact_backing_and_boxed_shell_allocations"],
       }],progress(event) { console.log(`canonical-architecture-command ${event.stage}: ${event.law ?? ""}`); }});
     console.log(`canonical-architecture-command receipts=${receipts.length}`);
   }
@@ -359,7 +359,7 @@ class CommandIngressConsumerScript extends BundleScript {
 class SnapshotSqliteAdmissionScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
  if(segments.length)throw new Error("test-snapshot-sqlite-admission accepts no arguments");
- await runAdmittedCargoPackageTestsV1(["semio-framework-plugin-abi", "semio-framework-plugin-host-guest-laws", "semio-framework-plugin-host-test-component", "semio-framework-plugin-tests-18"], this.repoRoot, this.invocation, ["--lib","sqlite_snapshot_"]);
+ await runAdmittedCargoPackageTestsV1(["semio-plugin-abi", "semio-plugin-host-guest-laws", "semio-plugin-host-test-component", "semio-plugin-tests-18"], this.repoRoot, this.invocation, ["--lib","sqlite_snapshot_"]);
  }
 }
 
@@ -369,11 +369,11 @@ class SnapshotSqliteRefusalScript extends BundleScript {
   const [mode,...rest]=segments;
   if(rest.length || mode===undefined || !["source","native","host-native"].includes(mode))throw new Error("test-snapshot-sqlite-refusal requires source, native or host-native");
   if(mode==="host-native"){
-   const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd:this.repoRoot,env:process.env,groups:[{ package: "semio-framework-plugin-host-guest-laws", target: { kind: "lib" }, laws: ["sqlite_refusal_tests::sqlite_snapshot_guest_refusal_host_preserves_causes_diagnostics_and_actual_vm_cancellation"] }, { package: "semio-framework-plugin-host-guest-runtime", target: { kind: "lib" }, laws: ["snapshot_call::metadata::tests::original_snapshot_scalar_metadata_borrows_actual_json_without_heap", "snapshot_call::metadata::tests::original_snapshot_scalar_metadata_cancellation_keeps_source_and_ceiling", "snapshot_call::tests::original_snapshot_pending_fuel_preserves_original_completed_ceiling"] },{package:"semio-framework-plugin-interpreter",target:{kind:"lib"},laws:["operation::input::tests::original_snapshot_input_cancellation_retains_actual_json_backing"]}],progress(event){}});
+   const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd:this.repoRoot,env:process.env,groups:[{ package: "semio-plugin-host-guest-laws", target: { kind: "lib" }, laws: ["sqlite_refusal_tests::sqlite_snapshot_guest_refusal_host_preserves_causes_diagnostics_and_actual_vm_cancellation"] }, { package: "semio-plugin-host-guest-runtime", target: { kind: "lib" }, laws: ["snapshot_call::metadata::tests::original_snapshot_scalar_metadata_borrows_actual_json_without_heap", "snapshot_call::metadata::tests::original_snapshot_scalar_metadata_cancellation_keeps_source_and_ceiling", "snapshot_call::tests::original_snapshot_pending_fuel_preserves_original_completed_ceiling"] },{package:"semio-plugin-interpreter",target:{kind:"lib"},laws:["operation::input::tests::original_snapshot_input_cancellation_retains_actual_json_backing"]}],progress(event){}});
    return;
   }
   if(mode==="native"){
-   await runAdmittedCargoPackageTestsV1(["semio-framework-plugin-host-guest-laws", "semio-framework-plugin-tests-18"], this.repoRoot, this.invocation, ["--lib","sqlite_snapshot_guest_refusal_"]);
+   await runAdmittedCargoPackageTestsV1(["semio-plugin-host-guest-laws", "semio-plugin-tests-18"], this.repoRoot, this.invocation, ["--lib","sqlite_snapshot_guest_refusal_"]);
    return;
   }
   const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
@@ -389,7 +389,7 @@ class RetainedMetadataScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw new Error("test-retained-metadata accepts no arguments");
     if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-    const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS??3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd:this.root,env:process.env,groups:[{ package: "semio-framework-plugin-retained-command", target:{kind:"lib"}, laws: ["metadata_retirement::tests::retained_command_metadata_preserves_original_history_and_physical_authority"]}],progress(event){}});
+    const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS??3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd:this.root,env:process.env,groups:[{ package: "semio-plugin-retained-command", target:{kind:"lib"}, laws: ["metadata_retirement::tests::retained_command_metadata_preserves_original_history_and_physical_authority"]}],progress(event){}});
   }
 }
 
@@ -402,7 +402,7 @@ class RetainedRawScript extends BundleScript {
   const lease=resolve(this.root,"../../♻️cancellation/📦️lease/🧪️tests/🟦️.ts");await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),lease,resolve(this.root,"../../🧵️retained-command/🪟️mounted/♻️frontier/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
   if(segments[0]==="source")return;
   if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd:this.root,env:process.env,groups:[{ package: "semio-framework-plugin-tests-12", target:{kind:"lib"}, laws: ["plugin_builder_contract_tests_7::retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement"]}, { package: "semio-framework-plugin-retained-command", target:{kind:"lib"}, laws: ["admission::tests::retained_raw_admission_has_no_failure_destructor_or_undeclared_allocation"]}],progress(event){}});
+  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd:this.root,env:process.env,groups:[{ package: "semio-plugin-tests-12", target:{kind:"lib"}, laws: ["plugin_builder_contract_tests_7::retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement"]}, { package: "semio-plugin-retained-command", target:{kind:"lib"}, laws: ["admission::tests::retained_raw_admission_has_no_failure_destructor_or_undeclared_allocation"]}],progress(event){}});
  }
 }
 
@@ -414,7 +414,7 @@ class RetainedStructuralRefusalScript extends BundleScript {
   await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧵️retained-command/🪟️mounted/🚨️structural-refusal/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:120_000,throwOnFailure:true});
   if(segments[0]==="source")return;
   if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd:this.root,env:process.env,groups:[{ package: "semio-framework-plugin-tests-09", target:{kind:"lib"}, laws: ["job_tool_run_host_2::tool_run_tests_2::a_mounted_operation_reports_the_structural_refusal_it_retains"]}],progress(event){console.log(`[TRACE] retained-structural-refusal ${event.stage}`);}});
+  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd:this.root,env:process.env,groups:[{ package: "semio-plugin-tests-09", target:{kind:"lib"}, laws: ["job_tool_run_host_2::tool_run_tests_2::a_mounted_operation_reports_the_structural_refusal_it_retains"]}],progress(event){console.log(`[TRACE] retained-structural-refusal ${event.stage}`);}});
   console.log(`[TRACE] retained-structural-refusal receipts=${receipts.length}`);
  }
 }
@@ -428,7 +428,7 @@ class WindowMutationScript extends BundleScript{
   await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),file,prepared,read,refresh],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
   if(segments[0]==="source")return;
   if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120000 },cwd:this.root,env:process.env,groups:[{ package: "semio-framework-plugin-tests-19", target:{kind:"lib"}, laws: ["window_mutation_tests::tests::window_original_mutation_wrappers_have_exact_physical_custody"]}],progress(event){}});
+  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120000 },cwd:this.root,env:process.env,groups:[{ package: "semio-plugin-tests-19", target:{kind:"lib"}, laws: ["window_mutation_tests::tests::window_original_mutation_wrappers_have_exact_physical_custody"]}],progress(event){}});
  }
 }
 /** 🗂️ Qualifies original paged window registry order and independently funded retirement. */
@@ -436,7 +436,7 @@ class WindowRegistryScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||segments[0]===undefined||!["source","native"].includes(segments[0]))throw new Error("test-window-registry requires source or native");
   if(segments[0]==="native"){
-   await runAdmittedCargoPackageTestsV1(["semio-framework-plugin-tests-19"], this.repoRoot, this.invocation, ["--lib","window_config_paged_registry","--","--nocapture"]);
+   await runAdmittedCargoPackageTestsV1(["semio-plugin-tests-19"], this.repoRoot, this.invocation, ["--lib","window_config_paged_registry","--","--nocapture"]);
    return;
   }
   const file=resolve(this.root,"../../🪟️window/🎚️config/🗂️registry/🧪️tests/🟦️.ts");
@@ -455,7 +455,7 @@ class ReservedRetirementScript extends BundleScript{
   await runBudgetedTestCommand(process.execPath,["test",original],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
   if(segments[0]==="source")return;
   if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3600000, listMilliseconds: 60000, lawMilliseconds: 120000 },cwd:this.root,env:process.env,groups:[{ package: "semio-framework-plugin-tests-12", target:{kind:"lib"}, laws: ["plugin_builder_contract_tests_7::original_reserved_job_currency_law_retains_spare_backing_until_exact_release"]}]});
+  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3600000, listMilliseconds: 60000, lawMilliseconds: 120000 },cwd:this.root,env:process.env,groups:[{ package: "semio-plugin-tests-12", target:{kind:"lib"}, laws: ["plugin_builder_contract_tests_7::original_reserved_job_currency_law_retains_spare_backing_until_exact_release"]}]});
  }
 }
 
@@ -465,7 +465,7 @@ class MountedReceivingScript extends BundleScript {
     if (segments.length) throw new Error("test-mounted-receiving accepts no arguments");
     const artifactDir = process.env.SEMIO_TEST_ARTIFACT_DIR;
     if (!artifactDir) throw new Error("mounted receiving requires explicit owned artifact storage");
-      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { version:1, buildMilliseconds:300000, listMilliseconds:60000, lawMilliseconds:60000, transport:{maximumBuildOutputBytes:268435456,maximumNativeOutputBytes:8388608} },cwd: this.root,env: process.env,nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, cargoArgs: ["--offline"], laws: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { version:1, buildMilliseconds:300000, listMilliseconds:60000, lawMilliseconds:60000, transport:{maximumBuildOutputBytes:268435456,maximumNativeOutputBytes:8388608} },cwd: this.root,env: process.env,nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-plugin", target: { kind: "lib" }, cargoArgs: ["--offline"], laws: [
           "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_does_not_publish_terminal_before_watchdog",
           "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_deadline_resume_never_reenters_completed_work",
           "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_late_physical_step_retains_its_exact_outcome",
@@ -511,12 +511,12 @@ class OriginalCommandReceivingSource extends BundleScript{
 }
 /** 🦀️ Runs the owning lower Store command and envelope receiving laws. */
 class OriginalCommandReceivingNative extends OriginalCommandReceivingSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_command_receiving_)","--","--nocapture"]);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runAdmittedCargoPackageTestsV1(["semio-os-kernel"],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_command_receiving_)","--","--nocapture"]);}
 }
 /** 🪢️ Checks the original lifecycle context and whole paired cause against independent neutral oracles. */
 class OriginalLifecycleSource extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",resolve(import.meta.dirname,"../../🏛️ownership/⚠️failure/🧪️tests/🟦️.ts"),resolve(import.meta.dirname,"../../🧪️tests/🧾️document-archive-load-legs/🟦️.ts")],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});}}
 /** 🦀️ Runs actual lifecycle failure and context source preservation laws. */
-class OriginalLifecycleNative extends OriginalLifecycleSource{async run():Promise<void>{await super.run();await runAdmittedCargoPackageTestsV1(["semio-framework-plugin-ownership", "semio-framework-plugin-tests-11"],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_lifecycle_)","--","--nocapture"]);}}
+class OriginalLifecycleNative extends OriginalLifecycleSource{async run():Promise<void>{await super.run();await runAdmittedCargoPackageTestsV1(["semio-plugin-ownership", "semio-plugin-tests-11"],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_lifecycle_)","--","--nocapture"]);}}
 
 /** 📤️ Original bounded output and exact paid acknowledgement against independent neutral semantics. */
 class OriginalPagedOutputSource extends BundleScript{
@@ -532,7 +532,7 @@ class OriginalInferenceCloseSource extends BundleScript {
 }
 /** 🦀️ Same inference source and canonical scalar wire, real System receipts and terminal physical close. */
 class OriginalInferenceCloseNative extends OriginalInferenceCloseSource {
- async run(args:string[]):Promise<void>{await super.run(args);await runAdmittedCargoPackageTestsV1(["semio-framework-os-inference"],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_inferred_source_scope_refuses_foreign_root_with_same_business_identity) | test(original_inferred_scope_refuses_foreign_clock_binding_on_same_parent_and_function) | test(original_inferred_values_same_source_donor_denials_partial_cancel_and_full_paid_close) | test(original_stepped_driver_matches_neutral_dag_for_each_finite_turn) | test(original_stepped_cache_option_preserves_values_without_unfunded_cache_publication) | test(original_stepped_cancel_retains_finished_rows_and_closes_pending_before_source) | test(a_failing_compute_is_an_error_naming_the_entity_and_keeps_the_values_before_it)","--","--nocapture"]);await runAdmittedCargoPackageTestsV1([],this.root,this.invocation,["--offline","--lib","-E","test(original_inference_session_same_source_full_paid_close_and_terminal_drop_zero) | test(original_inference_session_second_arc_alias_same_payload_paid_extract_full_close) | test(original_entry_full_failure_borrowed_publication_same_source_denials_and_paid_close)","--","--nocapture"]);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runAdmittedCargoPackageTestsV1(["semio-os-inference"],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_inferred_source_scope_refuses_foreign_root_with_same_business_identity) | test(original_inferred_scope_refuses_foreign_clock_binding_on_same_parent_and_function) | test(original_inferred_values_same_source_donor_denials_partial_cancel_and_full_paid_close) | test(original_stepped_driver_matches_neutral_dag_for_each_finite_turn) | test(original_stepped_cache_option_preserves_values_without_unfunded_cache_publication) | test(original_stepped_cancel_retains_finished_rows_and_closes_pending_before_source) | test(a_failing_compute_is_an_error_naming_the_entity_and_keeps_the_values_before_it)","--","--nocapture"]);await runAdmittedCargoPackageTestsV1([],this.root,this.invocation,["--offline","--lib","-E","test(original_inference_session_same_source_full_paid_close_and_terminal_drop_zero) | test(original_inference_session_second_arc_alias_same_payload_paid_extract_full_close) | test(original_entry_full_failure_borrowed_publication_same_source_denials_and_paid_close)","--","--nocapture"]);}
 }
 /** 🎟️ Original queued worker source and exact paid alias/admission use independent neutral oracles. */
 class OriginalPendingWorkerSource extends BundleScript {
@@ -564,7 +564,7 @@ class CameraPresenceContractScript extends BundleScript {
     await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),file],this.repoRoot,"presence-source-types",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:8388608,maximumLines:65536}});
     const { testCameraPresenceContract } = await import("../../👥️presence/📷️camera/🧪️tests/🟦️.ts");
     if (segments[0] === "source") return;
-    const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:native.buildBudgetMs,lawMilliseconds:native.assertionBudgets[native.level]},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"lib",name:"semio_framework_plugin"},cargoArgs:["--locked"],laws:["component::plugin_runtime::plugin_builder_contract_tests::ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs"]}]});
+    const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:native.buildBudgetMs,lawMilliseconds:native.assertionBudgets[native.level]},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-plugin":manifest},groups:[{package:"semio-plugin",target:{kind:"lib",name:"semio_plugin"},cargoArgs:["--locked"],laws:["component::plugin_runtime::plugin_builder_contract_tests::ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs"]}]});
   }
 }
 /** 🏭️ Verifies real producer/source custody corpora against independent schema and physical-effect oracles. */
@@ -608,7 +608,7 @@ class RemoteIngestPrefixScript extends BundleScript {
   const {Database}={ Database: SqliteDatabaseV1 },oracle=new Database(":memory:");
   try{oracle.exec("CREATE TABLE accepted(id TEXT PRIMARY KEY,payload TEXT NOT NULL CHECK(payload='valid'),amount INTEGER NOT NULL)");for(const row of law.cases){this.invocation.control.signal.throwIfAborted();oracle.exec("DELETE FROM accepted");let refused=false,notifications=0;for(const step of row.steps){try{const result=oracle.query("INSERT INTO accepted VALUES('original',?,1) ON CONFLICT DO NOTHING").run(step==="malformed"?"malformed":"valid");notifications+=Number(result.changes);}catch{refused=true;break;}}const value=oracle.query("SELECT COALESCE(SUM(amount),0) AS count FROM accepted").get()as{count:number};assert.equal(refused,row.refused,row.name);assert.equal(value.count,row.count,row.name);assert.equal(notifications,row.notifications,row.name);}}
   finally{oracle.close();}
-  if(args[0]==="native")await runAdmittedCargoPackageTestsV1(["semio-framework-plugin"],this.root,this.invocation,["--lib","accepted_remote_prefix_notifies_before_later_refusal","--no-fail-fast","--success-output","immediate"]);
+  if(args[0]==="native")await runAdmittedCargoPackageTestsV1(["semio-plugin"],this.root,this.invocation,["--lib","accepted_remote_prefix_notifies_before_later_refusal","--no-fail-fast","--success-output","immediate"]);
  }
 }
 
@@ -621,7 +621,7 @@ class SnapshotBuilderOwnershipScript extends BundleScript {
     if (args[0] === "native") {
       const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");
       assert.equal(resolve(native.manifestPath),manifest);
-      const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,env:process.env,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"test",name:"snapshot_builder_ownership"},cargoArgs:["--locked"],laws:["fixture::snapshot_builder_retires_original_owners_on_success_and_refusal"]}]});
+      const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,env:process.env,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-plugin":manifest},groups:[{package:"semio-plugin",target:{kind:"test",name:"snapshot_builder_ownership"},cargoArgs:["--locked"],laws:["fixture::snapshot_builder_retires_original_owners_on_success_and_refusal"]}]});
       assert.equal(receipts[0]!.assertions,1);
     }
   }
@@ -633,7 +633,7 @@ class CompletionRejectionCloseScript extends BundleScript {
     if(args.length!==1||!["source","native"].includes(args[0]!))throw new Error("test-completion-rejection-close source|native");
     await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🧵️retained-command/🧪️tests/♻️completion-rejection/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
     const {completionRejectionOracle}=await import("../../🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts");
-    if(args[0]==="native")await runAdmittedCargoPackageTestsV1(["semio-framework-plugin"],this.root,this.invocation,["--lib","retained_rejected_completion_closes_original_artifact_and_ephemeral_owners","--no-fail-fast"]);
+    if(args[0]==="native")await runAdmittedCargoPackageTestsV1(["semio-plugin"],this.root,this.invocation,["--lib","retained_rejected_completion_closes_original_artifact_and_ephemeral_owners","--no-fail-fast"]);
   }
 }
 router.register("test-completion-rejection-close",CompletionRejectionCloseScript);
@@ -643,7 +643,7 @@ class SnapshotReadPreparationScript extends BundleScript {
   if(args.length!==1||!["source","native"].includes(args[0]!))throw new Error("test-snapshot-read-preparation source|native");
   await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../📜️declaration/👁️view/📸️preparation/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
   await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../⏪️time-travel/♻️retirement/🧪️tests/🟦️.ts"),"-t","original ZST"],{cwd:this.repoRoot,budgetMs:15000});
-  if(args[0]==="native"){const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-plugin":manifest},nativeEnv:{RUST_MIN_STACK:native.rustMinStack},groups:[{package:"semio-framework-plugin",target:{kind:"test",name:"mounted_snapshot_preparation"},cargoArgs:["--locked","--features","artifact-app-testing"],laws:["receipts::mounted_snapshot_preparation_records_original_receipts_before_readiness","mounted_snapshot_preparation_boundary_uses_original_context_and_readiness","mounted_pending_source_version_compares_complete_original_authority"]}]});}
+  if(args[0]==="native"){const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-plugin":manifest},nativeEnv:{RUST_MIN_STACK:native.rustMinStack},groups:[{package:"semio-plugin",target:{kind:"test",name:"mounted_snapshot_preparation"},cargoArgs:["--locked","--features","artifact-app-testing"],laws:["receipts::mounted_snapshot_preparation_records_original_receipts_before_readiness","mounted_snapshot_preparation_boundary_uses_original_context_and_readiness","mounted_pending_source_version_compares_complete_original_authority"]}]});}
  }
 }
 router.register("test-snapshot-read-preparation",SnapshotReadPreparationScript);
@@ -655,7 +655,7 @@ class OriginalTickPayloadSourcesScript extends BundleScript{
   await runRepositoryCommand(this.invocation,process.execPath,["test",file],this.repoRoot,"original-tick-payload-sources",sourcePolicy);
   await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),file],this.repoRoot,"original-tick-payload-source-types",sourcePolicy);
   if(args[0]==="source")return;const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);
-  await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"test",name:"original_tick_payload_sources"},cargoArgs:["--locked"],laws:["original_payload::tests::original_tick_payload_preserves_same_context_authority_and_cancellation"]}]});
+  await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-plugin":manifest},groups:[{package:"semio-plugin",target:{kind:"test",name:"original_tick_payload_sources"},cargoArgs:["--locked"],laws:["original_payload::tests::original_tick_payload_preserves_same_context_authority_and_cancellation"]}]});
  }
 }
 router.register("test-original-tick-payload-sources",OriginalTickPayloadSourcesScript);
@@ -668,12 +668,12 @@ class ResultPublicationScript extends BundleScript {
   await runRepositoryCommand(this.invocation,process.execPath,["test",file],this.repoRoot,"result-publication-source",policy);
   await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types",runtimeTypeEnvironmentV1(),file],this.repoRoot,"result-publication-source-types",policy);
   if(args[0]==="source")return;const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);
-  await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"lib"},cargoArgs:["--locked"],laws:["component::plugin_runtime::result_publication::tests::native_page_batch_preserves_eight_original_loans_through_funded_receiving","component::plugin_runtime::result_publication::tests::native_page_batch_cancellation_preserves_original_source_and_partial_destination_custody","component::plugin_runtime::result_publication::tests::native_page_publication_cancel_after_birth_keeps_destination_before_ack","component::plugin_runtime::plugin_builder_contract_tests::concurrent_typed_operations_hand_every_presentable_page_to_one_turn","component::plugin_runtime::plugin_builder_contract_tests::original_result_batch_retains_eight_under_separate_original_input","component::plugin_runtime::plugin_builder_contract_tests::retained_operation_continues_after_command_admission_until_publication_and_retirement","component::plugin_runtime::plugin_builder_contract_tests::retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires","component::plugin_runtime::plugin_builder_contract_tests::a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled"]}]});
+  await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-plugin":manifest},groups:[{package:"semio-plugin",target:{kind:"lib"},cargoArgs:["--locked"],laws:["component::plugin_runtime::result_publication::tests::native_page_batch_preserves_eight_original_loans_through_funded_receiving","component::plugin_runtime::result_publication::tests::native_page_batch_cancellation_preserves_original_source_and_partial_destination_custody","component::plugin_runtime::result_publication::tests::native_page_publication_cancel_after_birth_keeps_destination_before_ack","component::plugin_runtime::plugin_builder_contract_tests::concurrent_typed_operations_hand_every_presentable_page_to_one_turn","component::plugin_runtime::plugin_builder_contract_tests::original_result_batch_retains_eight_under_separate_original_input","component::plugin_runtime::plugin_builder_contract_tests::retained_operation_continues_after_command_admission_until_publication_and_retirement","component::plugin_runtime::plugin_builder_contract_tests::retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires","component::plugin_runtime::plugin_builder_contract_tests::a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled"]}]});
  }
 }
 router.register("test-result-publication",ResultPublicationScript);
 /** 🏠️ Validates genuine Window catalog source admission, paired issuer identity and caller-funded closure. */
-class OriginalWindowCatalogScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length!==1||!['source','native'].includes(args[0]!))throw new Error('test-original-window-catalog source|native');const {originalWindowCatalogOracle}=await import('../../🪟️window/🎚️config/🏠️catalog/🧪️tests/🟦️.ts');originalWindowCatalogOracle();if(args[0]==='source')return;const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,'Cargo.toml');await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:240000,listMilliseconds:30000,lawMilliseconds:30000},cwd:this.repoRoot,env:process.env,manifestPaths:{'semio-framework-plugin':manifest},groups:[{package:'semio-framework-plugin',target:{kind:'lib'},cargoArgs:['--locked'],laws:['component::window_config::original_catalog_tests::original_window_catalog_sources_and_tickets_match_physical_original_grants']}]});}}
+class OriginalWindowCatalogScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length!==1||!['source','native'].includes(args[0]!))throw new Error('test-original-window-catalog source|native');const {originalWindowCatalogOracle}=await import('../../🪟️window/🎚️config/🏠️catalog/🧪️tests/🟦️.ts');originalWindowCatalogOracle();if(args[0]==='source')return;const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,'Cargo.toml');await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:240000,listMilliseconds:30000,lawMilliseconds:30000},cwd:this.repoRoot,env:process.env,manifestPaths:{'semio-plugin':manifest},groups:[{package:'semio-plugin',target:{kind:'lib'},cargoArgs:['--locked'],laws:['component::window_config::original_catalog_tests::original_window_catalog_sources_and_tickets_match_physical_original_grants']}]});}}
 router.register('test-original-window-catalog',OriginalWindowCatalogScript);
 /** 🫴️ Validates exact original artifact document source receiving against independent codecs and native custody laws. */
 class OriginalDocumentReceivingScript extends BundleScript {
@@ -683,7 +683,7 @@ class OriginalDocumentReceivingScript extends BundleScript {
   await runRepositoryCommand(this.invocation,process.execPath,["test",file],this.repoRoot,"original-document-receiving-source",policy);
   if(args[0]==="source")return;
   const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);
-  await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"lib"},cargoArgs:["--locked"],laws:["component::artifact_inference::document_receiving::tests::artifact_document_original_pair_receiving_preserves_exact_sources_and_physical_receipts","component::artifact_inference::document_receiving::tests::artifact_document_original_receiving_refusal_cancellation_and_foreign_source_retain_partial_custody"]}]});
+  await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-plugin":manifest},groups:[{package:"semio-plugin",target:{kind:"lib"},cargoArgs:["--locked"],laws:["component::artifact_inference::document_receiving::tests::artifact_document_original_pair_receiving_preserves_exact_sources_and_physical_receipts","component::artifact_inference::document_receiving::tests::artifact_document_original_receiving_refusal_cancellation_and_foreign_source_retain_partial_custody"]}]});
  }
 }
 router.register("test-original-document-receiving",OriginalDocumentReceivingScript);
@@ -696,7 +696,7 @@ class ReservedRegistryScript extends BundleScript{
   await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),file],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});
   await runBudgetedTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});
   if(args[0]==="source")return;
-  await runAdmittedCargoPackageTestsV1(["semio-framework-plugin"],this.root,this.invocation,["--offline","--lib","-E","test(reserved_registry_original_body_bytes_and_actual_receipts_share_one_source) | test(reserved_registry_original_body_work_denials_preserve_input_and_last_unit_progress) | test(reserved_registry_original_partial_output_cancel_keeps_backings_until_same_source_close) | test(reserved_registry_original_expired_clock_closes_partial_output_without_renewal) | test(reserved_registry_original_expired_clock_closes_failed_and_bounded_slot_owners) | test(reserved_registry_original_global_close_rejects_foreign_source_and_keeps_expired_clock) | test(reserved_registry_original_child_release_denial_preserves_last_work_unit)","--","--nocapture"]);
+  await runAdmittedCargoPackageTestsV1(["semio-plugin"],this.root,this.invocation,["--offline","--lib","-E","test(reserved_registry_original_body_bytes_and_actual_receipts_share_one_source) | test(reserved_registry_original_body_work_denials_preserve_input_and_last_unit_progress) | test(reserved_registry_original_partial_output_cancel_keeps_backings_until_same_source_close) | test(reserved_registry_original_expired_clock_closes_partial_output_without_renewal) | test(reserved_registry_original_expired_clock_closes_failed_and_bounded_slot_owners) | test(reserved_registry_original_global_close_rejects_foreign_source_and_keeps_expired_clock) | test(reserved_registry_original_child_release_denial_preserves_last_work_unit)","--","--nocapture"]);
  }
 }
 router.register("test-reserved-registry",ReservedRegistryScript);

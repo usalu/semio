@@ -59,8 +59,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "default-scene", kind: "unbind-default-scene", record: "UnboundDefaultScene" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Unbind Default Scene", "Bindung der Standardszene aufheben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Unbind Default Scene", "Bindung der Standardszene aufheben")
     }
 
     fn target(&self) -> Vec<String> {

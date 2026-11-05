@@ -9,27 +9,27 @@ use crate::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession, FlowHost};
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::plugin_app_close_prelude::{Trigger, UiAssemblyResult};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::plugin_app_close_prelude::HasStackLayout;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphHover;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphPortRecord};
+use semio_os_flow::{flow_backed_node_graph_extras, FlowEvalSession, FlowHost};
+use semio_os_kernel::Viewport2d;
+use semio_plugin::plugin_app_close_prelude::{Trigger, UiAssemblyResult};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::plugin_app_close_prelude::HasStackLayout;
+use semio_plugin::tree_item;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_window_item;
+use semio_plugin::ActionFactory;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphHover;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";
@@ -67,7 +67,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The LOD chrome measure for this window — collected fresh per frame, never frozen into the manifest.
-pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
+pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Option<semio_plugin::DslValue>) -> semio_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
     let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     vec![WindowMeasure::Select {
         id: "generation3d-measure-lod".into(),
@@ -84,7 +84,7 @@ pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Opt
                     (_, true) => "Mittel",
                     (_, false) => "Medium",
                 };
-                semio_framework_plugin::MeasureSelectItem { id: format!("generation3d-measure-lod-{mode}"), value: (*mode).into(), label: label.into() }
+                semio_plugin::MeasureSelectItem { id: format!("generation3d-measure-lod-{mode}"), value: (*mode).into(), label: label.into() }
             })
             .collect(),
         on_change: on_change("setLodMode", None),
@@ -145,7 +145,7 @@ fn node_ports<'a>(node: &'a NodeGraphNodeRecord, labels: &Generation3dLabels) ->
 fn port_row(port: &NodeGraphPortRecord, directions: String) -> UiAssemblyResult<BuiltNode> {
     let name = port.label.as_deref().filter(|label| !label.is_empty()).unwrap_or(port.id.as_str());
     let mut node = tree_item_desc(&port.id, name, Some(directions))?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
         props.granularity = Some(semio_s_procedural_core_semantic_ui::ui_text(GENERATION_3D_INTERACTION_GRANULARITY)?);
     }
     Ok(node)
@@ -160,10 +160,10 @@ fn node_row(windows: &TreeWindows<'_>, node: &NodeGraphNodeRecord, status: Optio
     let ports = node_ports(node, labels);
     let targets = graph_targets_json(GENERATION_3D_GRAPH_GRANULARITY_NODE, &node.id);
     let (hover, hover_args) = factory.action(
-        semio_framework_plugin::INTERACTION_HOVER_ACTION_ID,
+        semio_plugin::INTERACTION_HOVER_ACTION_ID,
         Some(semio_s_procedural_core_semantic_ui::ui_value_map([("channel", semio_s_procedural_core_semantic_ui::ui_value_text(GENERATION_3D_INTERACTION_CHANNEL)?), ("domainId", semio_s_procedural_core_semantic_ui::ui_value_text(GENERATION_3D_INTERACTION_DOMAIN)?), ("targets", semio_s_procedural_core_semantic_ui::ui_value_text(&targets)?)])?),
     )?;
-    let builder = semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(node.label.as_deref().unwrap_or(node.id.as_str()))?);
+    let builder = semio_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(node.label.as_deref().unwrap_or(node.id.as_str()))?);
     let mut builder = builder.try_id(&node.id).map_err(|_| outline_error("node-row.id"))?.granularity(semio_s_procedural_core_semantic_ui::ui_text(GENERATION_3D_GRAPH_GRANULARITY_NODE)?);
     if let Some(status) = status {
         builder = builder.description(semio_s_procedural_core_semantic_ui::ui_text(status)?);
@@ -176,7 +176,7 @@ fn node_row(windows: &TreeWindows<'_>, node: &NodeGraphNodeRecord, status: Optio
 /// endpoints so the graph's topology reads off the outline without the canvas.
 fn wire_row(edge: &NodeGraphEdgeRecord) -> UiAssemblyResult<BuiltNode> {
     let mut node = tree_item(&edge.id, format!("{}@{} → {}@{}", edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id))?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
         props.granularity = Some(semio_s_procedural_core_semantic_ui::ui_text(GENERATION_3D_GRAPH_GRANULARITY_EDGE)?);
     }
     Ok(node)
@@ -237,8 +237,8 @@ fn kind_extension_name(kind: &str) -> (String, String) {
 /// the OS workflow window seeds `NodeGraphScene.operators` so the canvas can lay ports out without
 /// waiting for the app-static catalogue (which may not have been contributed yet). Built-in `core.*`
 /// widgets are omitted: the engine already knows them. Never the registered catalogue.
-fn document_operator_records(dag: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
-    let catalogue = semio_framework_os_flow::flow_operator_catalogue_records();
+fn document_operator_records(dag: &semio_os_infinite_directed_presentation::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
+    let catalogue = semio_os_flow::flow_operator_catalogue_records();
     let node_by_id: std::collections::BTreeMap<&str, &NodeGraphNodeRecord> = nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut kinds: Vec<String> = Vec::new();
     for spec in &dag.nodes {
@@ -303,15 +303,15 @@ fn graph_find_items(nodes: &[NodeGraphNodeRecord], category: &str) -> Vec<NodeGr
 //#region 🔖️Render
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
-    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
     let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
     let operators = document_operator_records(&dag, &nodes);
     let viewport = Viewport2d { x: host_snapshot.camera.x, y: host_snapshot.camera.y, zoom: host_snapshot.camera.zoom };
-    let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
     let surface = semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_MAIN,
-        semio_framework_ui_contract::SurfaceKind::NodeGraph,
+        semio_ui_contract::SurfaceKind::NodeGraph,
         &NodeGraphScene {
             editable: Some(true),
             capabilities_json: flow_extras.capabilities_json,
@@ -328,10 +328,10 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
         },
         labels.graph_canvas.as_str(),
         labels.graph_canvas_hint.as_str(),
-        semio_framework_ui_contract::Liveness::Off,
+        semio_ui_contract::Liveness::Off,
     )?;
     let surface = semio_s_procedural_core_semantic_ui::activatable_scene_surface(surface, GENERATION_3D_PLAY_APP_ID, "activateSelection", "Enter")?;
-    semio_framework_ui_contract::column()
+    semio_ui_contract::column()
         .grow(true)
         .try_id("procedural-play-main.body")
         .map_err(|_| outline_error("body.id"))?

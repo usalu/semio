@@ -1,11 +1,11 @@
 use super::*;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::set_gumball_flag;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ViewModel;
 
 #[test]
 fn transform_options_group_is_tagged_for_transform_utility() {
-    let labels = semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let group = measure(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), labels);
+    let labels = semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let group = measure(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), labels);
     let WindowMeasure::Group { id, active_utility_id, children, .. } = group else { panic!("group") };
     assert_eq!(id, format!("{FEM2D_PLAY_CONTROLLER_ID}-utility-options-transform"));
     assert_eq!(active_utility_id.as_deref(), Some(UTILITY_ID));

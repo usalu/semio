@@ -1,12 +1,12 @@
 use super::{IconGpuPngExport, IconGpuPngRejected};
 use ui_gpu::GpuContext;
-use semio_framework_ui_prepared::PreparedRenderPacket;
+use semio_ui_prepared::PreparedRenderPacket;
 use semio_framework_job::{Generation, JobOutcomeKind, OperationId, OriginalJobFixtureCaller, RetainedCloneGrant};
-use semio_framework_ui_prepared::testing::{close_job_step, drain_abandoned_preparations, drive_preparation_until_terminal};
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_draw_contract::UiInstance;
-use semio_framework_ui_prepared::{PreparedRenderInput, PreparedRenderJob};
-use semio_framework_ui_theme::Rgba;
+use semio_ui_prepared::testing::{close_job_step, drain_abandoned_preparations, drive_preparation_until_terminal};
+use semio_ui_draw_contract::DrawList;
+use semio_ui_draw_contract::UiInstance;
+use semio_ui_prepared::{PreparedRenderInput, PreparedRenderJob};
+use semio_ui_theme::Rgba;
 
 const TURN: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: 65536, maximum_release_bytes: 16 * 1024 * 1024, maximum_depth: 64 };
 const STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: usize::MAX / 4, maximum_capacity_bytes: usize::MAX / 4, maximum_release_bytes: usize::MAX / 4, maximum_depth: 64 };

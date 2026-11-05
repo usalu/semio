@@ -291,10 +291,10 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
                     let viewport_h = tree.root.and_then(|root| tree.accepted_layout(root)).map_or(0.0, |layout| layout.height);
                     let opening_index = node.state.select_popup.is_none().then(|| node.state.highlighted.or_else(|| select.items.iter().position(|item| item.value == select.value))).flatten();
                     let (offset, direction) = (node.state.scroll_offset.1, node.state.scroll_offset.0);
-                    let mut popup = semio_framework_ui_select_behavior::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, offset, direction);
+                    let mut popup = semio_ui_select_behavior::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, offset, direction);
                     if let Some(index) = opening_index {
-                        let revealed = semio_framework_ui_select_behavior::select_revealed_scroll(popup, index);
-                        popup = semio_framework_ui_select_behavior::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, revealed, 0.0);
+                        let revealed = semio_ui_select_behavior::select_revealed_scroll(popup, index);
+                        popup = semio_ui_select_behavior::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, revealed, 0.0);
                     }
                     cursor.select_menu_top = popup.menu.y - trigger.y;
                     cursor.select_first_row = popup.first_row;
@@ -369,7 +369,7 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
             // next frame instead of minting a second copy, and ledgered on the tree so the document
             // reconcile can retire it before it relinks the arena (`UiTree::mint_composite_row`).
             let row = tree.node(id).and_then(|node| match &node.spec.0 {
-                UiNode::Select(select) => select.items.get(cursor.item).map(|item| (semio_framework_ui_retained_tree::reconcile::select_item_row(select, item), item.value.clone())),
+                UiNode::Select(select) => select.items.get(cursor.item).map(|item| (semio_ui_retained_tree::reconcile::select_item_row(select, item), item.value.clone())),
                 _ => None,
             });
             let Some((spec, key)) = row else { return retained_sync_fault(cursor, line!()) };
@@ -403,14 +403,14 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
         RetainedInteractiveSyncPhase::SelectWrite => {
             let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
             let spec = tree.node(id).and_then(|node| match &node.spec.0 {
-                UiNode::Select(select) => select.items.get(cursor.item).map(|item| semio_framework_ui_retained_tree::reconcile::select_item_row(select, item)),
+                UiNode::Select(select) => select.items.get(cursor.item).map(|item| semio_ui_retained_tree::reconcile::select_item_row(select, item)),
                 _ => None,
             });
             let Some(spec) = spec else { return retained_sync_fault(cursor, line!()) };
             let rect = if cursor.item >= cursor.select_first_row && cursor.item < cursor.select_last_row {
                 let Some(trigger) = tree.absolute_rect(id) else { return retained_sync_fault(cursor, line!()) };
                 let Some(popup) = tree.node(id).and_then(|node| node.state.select_popup) else { return retained_sync_fault(cursor, line!()) };
-                let absolute = semio_framework_ui_select_behavior::select_popup_row_hit_rect(trigger, cursor.item, popup, theme);
+                let absolute = semio_ui_select_behavior::select_popup_row_hit_rect(trigger, cursor.item, popup, theme);
                 Rect::new(absolute.x - trigger.x, absolute.y - trigger.y, absolute.w, absolute.h)
             } else {
                 Rect::new(0.0, 0.0, 0.0, 0.0)
@@ -527,17 +527,17 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
 /// and React's own `resolveSelectPlacement`-derived rules are reconciled; `menu_top` is that
 /// module's collision-aware answer (see `select_menu_top_for`).
 pub fn select_popup_row_rect(select_w: f32, index: usize, menu_top: f32, theme: &Theme) -> Rect {
-    semio_framework_ui_select_behavior::select_row_rect(select_w, index, menu_top, theme)
+    semio_ui_select_behavior::select_row_rect(select_w, index, menu_top, theme)
 }
 
 /// 🔎️ `select_menu_top` for a retained `Select`, resolving its two viewport inputs from the tree:
 /// the node's own absolute top and the root's laid-out height. A popup with no room below its
 /// trigger flips above it, exactly as React's `SelectContent` does.
 pub fn select_menu_top_for(tree: &UiTree, id: NodeId, select_h: f32, items: usize, theme: &Theme) -> f32 {
-    let menu_h = semio_framework_ui_select_behavior::select_menu_height(items, theme);
-    let absolute_y = semio_framework_ui_wgpu_events::node_abs_rect(tree, id).map_or(0.0, |rect| rect.y);
+    let menu_h = semio_ui_select_behavior::select_menu_height(items, theme);
+    let absolute_y = semio_ui_wgpu_events::node_abs_rect(tree, id).map_or(0.0, |rect| rect.y);
     let viewport_h = tree.root.and_then(|root| tree.accepted_layout(root)).map_or(0.0, |layout| layout.height);
-    semio_framework_ui_select_behavior::select_menu_top(absolute_y, select_h, menu_h, viewport_h)
+    semio_ui_select_behavior::select_menu_top(absolute_y, select_h, menu_h, viewport_h)
 }
 //#endregion 🔖️InteractiveStateSync
 // #endregion paint

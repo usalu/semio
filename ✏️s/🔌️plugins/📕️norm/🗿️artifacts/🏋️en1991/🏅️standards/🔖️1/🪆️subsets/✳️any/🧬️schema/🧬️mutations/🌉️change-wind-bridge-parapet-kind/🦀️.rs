@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindBridgeParapetK
         record: "ChangedWindBridgeParapetKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change parapet kind (0 none, 1 open, 2 solid) of the bridge wind case", "Brückenwindfall: Geländerart (0 keine, 1 offen, 2 geschlossen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change parapet kind (0 none, 1 open, 2 solid) of the bridge wind case", "Brückenwindfall: Geländerart (0 keine, 1 offen, 2 geschlossen) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

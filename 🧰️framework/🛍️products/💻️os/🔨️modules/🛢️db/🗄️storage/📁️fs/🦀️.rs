@@ -1,6 +1,6 @@
 //! 📁️ Db filesystem storage backend.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_durability::{DurabilityClass, EpochFence};
 use db_ids::{ArtifactId, DbError, check_len};

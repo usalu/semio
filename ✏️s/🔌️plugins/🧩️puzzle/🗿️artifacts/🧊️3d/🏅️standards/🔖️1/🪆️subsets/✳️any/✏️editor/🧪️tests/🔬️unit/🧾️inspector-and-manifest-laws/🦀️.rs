@@ -128,7 +128,7 @@ fn leftover_ids_name_object_empty_persist_vortex_from_state_wires_inspection_sna
     let mut state = protocol::InteractionState::default();
     state.selection.insert("vortex".into(), protocol::DomainSelection { granularity: String::new(), ids: Vec::new(), anchor_id: None });
     state.selection.insert("leftover".into(), protocol::DomainSelection { granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), ids: vec!["seed-left-001".into()], anchor_id: None });
-    let interaction = Puzzle3dInteractionSnapshot::from_state(&state, &semio_framework_plugin::app::InteractionHoverState::default());
+    let interaction = Puzzle3dInteractionSnapshot::from_state(&state, &semio_plugin::app::InteractionHoverState::default());
     assert_eq!(interaction.selected, vec!["seed-left-001".to_string()], "leftover.ids must land on the snapshot Inspection reads");
     assert_eq!(interaction.granularity, PUZZLE3D_GRANULARITY_OBJECT);
 }
@@ -229,7 +229,7 @@ async fn app_definition_declares_its_four_panel_tabs() {
 /// `command_id` via the shared framework harness.
 #[semio_framework_async_macros::async_test]
 async fn every_declared_action_bridges_to_a_command() {
-    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_tests).await;
+    semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_tests).await;
     assert!(Puzzle3dPlayApp::command_from_action("noSuchAction", None, None).is_err());
 }
 
@@ -252,8 +252,8 @@ async fn every_declared_action_round_trips_through_the_command_enum() {
 /// directly via `.resolve(Terminology, Locale)` — no shell round-trip needed to assert on it.
 #[semio_framework_async_macros::async_test]
 async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::Terminology;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
     let definition = create_puzzle3d_app();
     let def = &definition;
     let (terminology, locale) = (Terminology::Reuse, Locale::De);
@@ -267,11 +267,11 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
     let arg = dialog.args.iter().find(|entry| entry.id == "objectKind").expect("objectKind arg");
     assert_eq!(arg.label.resolve(terminology, locale), "Art");
     match arg.control() {
-        semio_framework_plugin::ActionArgControl::Select { options } => {
+        semio_plugin::ActionArgControl::Select { options } => {
             assert!(!options.is_empty() && options.len() <= PUZZLE3D_OBJECT_KIND_OPTIONS_MAX, "the objectKind select offers the declared examples' bounded catalog rows; observed {}", options.len());
             for option in options {
                 assert!(!option.value.is_empty(), "every offered object kind names a catalog row");
-                assert_eq!(option.label.resolve(terminology, locale), option.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "catalog row {} is document data and must not be re-authored per axis", option.value);
+                assert_eq!(option.label.resolve(terminology, locale), option.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "catalog row {} is document data and must not be re-authored per axis", option.value);
             }
         }
         _ => panic!("objectKind arg is not a select"),
@@ -282,11 +282,11 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
     assert_eq!(def.utilities.iter().find(|entry| entry.id == semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID).expect("transform utility").label.resolve(terminology, locale), "Transformieren");
     let framework_interaction_actions = [
         INTERACTION_SELECT_ACTION_ID,
-        semio_framework_plugin::INTERACTION_HOVER_ACTION_ID,
-        semio_framework_plugin::CLEAR_SELECTION_ACTION_ID,
-        semio_framework_plugin::SELECT_ALL_ACTION_ID,
-        semio_framework_plugin::SET_SELECTION_MODE_ACTION_ID,
-        semio_framework_plugin::SET_INTERACTION_GRANULARITY_ACTION_ID,
+        semio_plugin::INTERACTION_HOVER_ACTION_ID,
+        semio_plugin::CLEAR_SELECTION_ACTION_ID,
+        semio_plugin::SELECT_ALL_ACTION_ID,
+        semio_plugin::SET_SELECTION_MODE_ACTION_ID,
+        semio_plugin::SET_INTERACTION_GRANULARITY_ACTION_ID,
     ];
     for entry in actions() {
         if framework_interaction_actions.contains(&entry.id.as_str()) {
@@ -299,8 +299,8 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
 
 #[semio_framework_async_macros::async_test]
 async fn app_definition_labels_stay_english_native_without_brand_locks() {
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::Terminology;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
     let definition = create_puzzle3d_app();
     let def = &definition;
     let (terminology, locale) = (Terminology::Native, Locale::En);
@@ -314,7 +314,7 @@ async fn app_definition_labels_stay_english_native_without_brand_locks() {
 #[semio_framework_async_macros::async_test]
 async fn document_and_kinds_trees_use_german_reuse_section_labels() {
     let mut app = app().await;
-    app.set_label_axes(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Reuse);
+    app.set_label_axes(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Reuse);
     let document_json = render_body(&mut app, artifact::BODY_KEY).await.to_string();
     let kinds = render_body(&mut app, catalogue::BODY_KEY).await.to_string();
     let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
@@ -365,7 +365,7 @@ async fn tool_registry_declares_fill_tool() {
 /// a bounce too, which is exactly why Escape could never leave Fill in the browser.
 #[semio_framework_async_macros::async_test]
 async fn fill_flow_only_disarms_the_tool_when_the_user_aborts() {
-    let empty_tool = |result: &semio_framework_plugin::InvocationResult| {
+    let empty_tool = |result: &semio_plugin::InvocationResult| {
         result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty()))
     };
     let mut app = app().await;

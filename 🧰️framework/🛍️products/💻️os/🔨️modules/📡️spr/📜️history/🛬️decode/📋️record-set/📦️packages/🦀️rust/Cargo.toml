@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-os-history-record-decode"
+name = "semio-os-history-record-decode"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -31,6 +31,6 @@ semio-framework-value-native-owned = { path = "../../../../../../../../../🔨�
 semio-framework-diagnostic = { path = "../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-os-history-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-history-codec = { path = "../../../../⚙️codec/📦️packages/🦀️rust" }
-semio-framework-os-history-identity = { path = "../../../../🛂️identity/📦️packages/🦀️rust" }
+semio-os-history-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-history-codec = { path = "../../../../⚙️codec/📦️packages/🦀️rust" }
+semio-os-history-identity = { path = "../../../../🛂️identity/📦️packages/🦀️rust" }

@@ -1,7 +1,7 @@
 //! 🌍 MCP projection of the same closed GIS client contract used by native and browser hosts.
 use semio_s_artifact_gis_gismap::inference_schema::*;
 use semio_framework_value::{DslValue,ToValue,FromValue};
-use semio_framework_os_mcp::inference::*;
+use semio_os_mcp::inference::*;
 
 /// 📦 Actual installed owner codecs for the outward MCP executable.
 pub fn gis_map_mcp_protocol_v1()->RemoteInferenceProtocolV1 {
@@ -56,7 +56,7 @@ fn page(value:DslValue,job:&str)->Result<DslValue,InferenceRouteErrorV1> {
     if !page.validate(job) {return Err(InferenceRouteErrorV1::Invalid);}
     projection(page.to_value())
 }
-fn approval(value:DslValue,scope:&semio_framework_os_kernel::os_directory::DocumentScope,job:&str,hash:&str)->Result<DslValue,InferenceRouteErrorV1> {
+fn approval(value:DslValue,scope:&semio_os_kernel::os_directory::DocumentScope,job:&str,hash:&str)->Result<DslValue,InferenceRouteErrorV1> {
     let receipt=GisMapInferenceApprovalReceiptV1::from_value(value).map_err(|_|InferenceRouteErrorV1::Invalid)?;
     if !receipt.validate(job,hash) || receipt.undo.expected_current.document_id!=scope.document_id {return Err(InferenceRouteErrorV1::Conflict);}
     projection(receipt.to_value())

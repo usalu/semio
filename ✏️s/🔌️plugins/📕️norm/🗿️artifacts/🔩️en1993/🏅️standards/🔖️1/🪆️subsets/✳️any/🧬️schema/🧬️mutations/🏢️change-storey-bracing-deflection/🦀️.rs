@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeStoreyBracingDefle
         record: "ChangedStoreyBracingDeflection",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bracing in-plane deflection δ_q of the storey", "Geschoss: Auslenkung der Aussteifung δ_q ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bracing in-plane deflection δ_q of the storey", "Geschoss: Auslenkung der Aussteifung δ_q ändern")
     }
 }
 

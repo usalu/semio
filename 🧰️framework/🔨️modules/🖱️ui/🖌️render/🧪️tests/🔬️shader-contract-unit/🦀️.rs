@@ -153,7 +153,7 @@ fn vertex_attribute_offsets_fit_declared_stride() {
 
 //#region ⚖️WgpuTargetShaderAgreement
 /// 📄️ The wgpu target's own `🎨️shaders/🦀️.rs` verbatim. `ui_render` must NOT depend on
-/// `semio-framework-ui` (the dependency runs the other way for every other seam), so the law below
+/// `semio-ui` (the dependency runs the other way for every other seam), so the law below
 /// reads that crate's source text instead of its constants — the only way to tie two copies of the
 /// same WGSL together without inverting the crate graph.
 const WGPU_TARGET_SHADERS_SOURCES: [&str; 4] = [

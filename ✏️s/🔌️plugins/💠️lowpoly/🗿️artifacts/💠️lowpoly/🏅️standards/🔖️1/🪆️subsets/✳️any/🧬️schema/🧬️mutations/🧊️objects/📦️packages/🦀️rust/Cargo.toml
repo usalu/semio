@@ -20,9 +20,9 @@ name = "lowpoly_objects_mutations"
 path = "../../🧪️tests/🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
@@ -32,7 +32,7 @@ serde = { workspace = true }
 [dev-dependencies]
 semio-framework-schema-validator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }
 serde_json = { workspace = true }

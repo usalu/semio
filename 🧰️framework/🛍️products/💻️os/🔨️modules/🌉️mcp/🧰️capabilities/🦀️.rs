@@ -1,6 +1,6 @@
 //! 🧰️ Gateway capability declarations and the core catalog.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "../💡️inference/🧰️capability-declarations/🦀️.rs"]
 pub mod capability_declarations;

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeTieRunY where Op: 
         record: "ChangedTieRunY",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change plan position y of the tie run", "Zuggliedstrang: Position y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change plan position y of the tie run", "Zuggliedstrang: Position y ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

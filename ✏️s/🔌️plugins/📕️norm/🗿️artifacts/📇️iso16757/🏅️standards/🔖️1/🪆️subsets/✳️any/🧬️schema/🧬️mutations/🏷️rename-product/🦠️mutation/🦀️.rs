@@ -17,8 +17,8 @@ pub struct RenameProduct {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RenameProduct where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::rename_product::mutation::RenameProduct> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "product", kind: "rename-product", record: "RenamedProduct" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename product \"{}\" to \"{}\"", self.id, self.new_name), &format!("Produkt \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename product \"{}\" to \"{}\"", self.id, self.new_name), &format!("Produkt \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

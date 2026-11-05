@@ -2,26 +2,26 @@
 //!
 //! 📤️ Native mounted publication command history and composed history navigation.
 use semio_framework::{ActionKind,Fault,FaultCode,FaultOrigin};
-use semio_framework_plugin_decl_emission::TransactionPhase;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::TransactionPhase;
+use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
 use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef};
 use store::os_store::composition_coordinator::CompositionCoordinator;
 use crate::dispatch_bundle::DispatchCtx;
-use semio_framework_plugin_instance_extension::InstanceExtension;
-use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
+use semio_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_docs::docs_components::MediaTransfers;
 use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
-use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use semio_framework::{AppEvent, AppRole, ArtifactHandle, ArtifactDiff, ArtifactVersion, ActorId, DslValue, Effect, HybridLogicalTimestamp, InvocationId, InvocationResult, InverseMutation, KernelMutation, MutationId, SchemaId, UndoGroup, UndoPolicy};
 use semio_framework::kernel::{EditRef, UiDirtyScope};
-use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
-use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
-use semio_framework_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
-use semio_framework_plugin_instance_docs::docs_instance_root::{artifact_handle_of, tool_transaction_shape_fault, viewer_read_only_fault};
-use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
-use semio_framework_plugin_job::{EmitWire, TransactionProposalDraft};
-use semio_framework_plugin_child::ChildContentRetirement;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
+use semio_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
+use semio_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
+use semio_plugin_instance_docs::docs_instance_root::{artifact_handle_of, tool_transaction_shape_fault, viewer_read_only_fault};
+use semio_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_plugin_job::{EmitWire, TransactionProposalDraft};
+use semio_plugin_child::ChildContentRetirement;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use store::os_store::composition_coordinator::{ChildDispatch, GroupMeta};
 use semio_framework::FaultFrom;
 
@@ -32,7 +32,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     /// the host sees it (ticket 26/09/16/INPUT-CAUSALITY-LEDGER: the inline interaction fold),
     /// which no registry-less typed command can reach and no reserved route carries.
     #[cfg(test)]
-    pub async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    pub async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         self.dispatch_emit(verb, emit, meta, identity, cx).await
     }
 
@@ -50,7 +50,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     /// world overlay still lands), and one diagnostic per verb that could not be applied.
     /// A failed carrier applies no verb: its pick did not happen. The typed-operation ladder,
     /// which never enters here, has its own twin ([`Self::publish_mounted_typed_inline_interaction_unit`]).
-    pub async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    pub async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         if !emit.owned_child_emits.is_empty()||emit.owned_child_emits.capacity()!=0||!emit.child_preparations.is_empty()||emit.child_preparations.capacity()!=0{
             return self.mount_original_emit_publication(verb, emit, meta, None, cx).await;
         }
@@ -139,7 +139,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     ///
     /// ⏪️ No memory `inverse` for an edit-linked row — the VCS edit's own `Mutation::inverse`
     /// is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
-    async fn dispatch_emit_inner(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    async fn dispatch_emit_inner(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         MediaTransfers::<A>::mint_extension_invocations(meta.instance_id, &mut emit)?;
         let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, transaction, transaction_phase, effects, extension_invocations, events, ui_scope, child_emits, owned_child_emits, child_preparations, interaction_writes, tasks } = emit;
         assert!(owned_child_emits.is_empty()&&owned_child_emits.capacity()==0,"applying retained children require their staged publication owner");
@@ -322,7 +322,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     /// `txn_id` on every member it touches, so the gateway's `TransactionUndo{group_id: txn_id}` moves them all.
     /// The parent's tail edit (when the group touched the parent) carries the prepared origin like a solitary
     /// commit does. Returns the parent's edit id, else the first touched child's.
-    pub async fn commit_transaction_group(&mut self, txn_id: &str, ops: Vec<A::Mutation>, children: Vec<ChildEmit>, origin: protocol::MutationOrigin, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, Fault> {
+    pub async fn commit_transaction_group(&mut self, txn_id: &str, ops: Vec<A::Mutation>, children: Vec<ChildEmit>, origin: protocol::MutationOrigin, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, Fault> {
         let parent_edits_before = self.stores.store.envelope().vcs.edits.len();
         let result = self
             .dispatch_emit_group(&format!("transaction:{txn_id}"), &ops, &children, Vec::new(), Vec::new(), UiDirtyScope::Full, meta, Some(txn_id.to_string()), None, identity)
@@ -339,7 +339,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     /// owned children) whose tail carries `group_id` through `CompositionCoordinator::undo_group`/`redo_group`,
     /// republishing each moved child's content like the shell lane's group history does. A group no member
     /// carries is refused by name, exactly like the solitary path.
-    pub async fn transaction_group_history(&mut self, action: &str, group_id: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn transaction_group_history(&mut self, action: &str, group_id: &str, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         self.child_composition.admit_child_content_publication_span(self.child_composition.children.len())?;
         let parent_id = self.stores.store.envelope().id.clone();
         let parent_dialect: ArtifactDialect = A::DIALECT.into();
@@ -437,7 +437,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         ui_scope: UiDirtyScope,
         meta: &ActionMeta,
         group_id: Option<String>,
-        transaction: Option<protocol::TransactionRef>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+        transaction: Option<protocol::TransactionRef>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         if !artifact_mutations.is_empty() {
             self.media.require_operation_emitting_kind(verb, self.tools.declared_dispatch_kind(&*self.host_events, verb))?;
         }

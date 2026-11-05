@@ -1,0 +1,179 @@
+{
+  "cases": [
+    {
+      "name": "unmount during attachment",
+      "update": false,
+      "closeBefore": true,
+      "settle": "resolve",
+      "expected": [
+        "attach-start",
+        "attach-complete",
+        "free"
+      ],
+      "errors": [],
+      "renderFailure": false,
+      "freeFailure": false,
+      "selection": {
+        "method": "rectangle",
+        "nodes": true,
+        "edges": true,
+        "handles": true
+      },
+      "expectedSelectionOptions": [],
+      "refreshAfter": false
+    },
+    {
+      "name": "scene update and resize during attachment",
+      "update": true,
+      "closeBefore": true,
+      "settle": "resolve",
+      "expected": [
+        "attach-start",
+        "attach-complete",
+        "free"
+      ],
+      "errors": [],
+      "renderFailure": false,
+      "freeFailure": false,
+      "selection": {
+        "method": "rectangle",
+        "nodes": true,
+        "edges": true,
+        "handles": true
+      },
+      "expectedSelectionOptions": [],
+      "refreshAfter": false
+    },
+    {
+      "name": "attachment rejection after unmount",
+      "update": false,
+      "closeBefore": true,
+      "settle": "reject",
+      "expected": [
+        "attach-start",
+        "attach-error",
+        "free"
+      ],
+      "errors": [],
+      "renderFailure": false,
+      "freeFailure": false,
+      "selection": {
+        "method": "rectangle",
+        "nodes": true,
+        "edges": true,
+        "handles": true
+      },
+      "expectedSelectionOptions": [],
+      "refreshAfter": false
+    },
+    {
+      "name": "successful attachment publishes the live session",
+      "update": false,
+      "closeBefore": false,
+      "settle": "resolve",
+      "expected": [
+        "attach-start",
+        "attach-complete",
+        "free"
+      ],
+      "errors": [],
+      "renderFailure": false,
+      "freeFailure": false,
+      "selection": {
+        "method": "lasso",
+        "nodes": true,
+        "edges": false,
+        "handles": false
+      },
+      "expectedSelectionOptions": [
+        [
+          "lasso",
+          "replace",
+          true,
+          false,
+          false
+        ],
+        [
+          "lasso",
+          "replace",
+          true,
+          false,
+          false
+        ]
+      ],
+      "refreshAfter": true
+    },
+    {
+      "name": "live attachment rejection reaches the error boundary",
+      "update": false,
+      "closeBefore": false,
+      "settle": "reject",
+      "expected": [
+        "attach-start",
+        "attach-error",
+        "free"
+      ],
+      "errors": [
+        "attach refused"
+      ],
+      "renderFailure": false,
+      "freeFailure": false,
+      "selection": {
+        "method": "rectangle",
+        "nodes": true,
+        "edges": true,
+        "handles": true
+      },
+      "expectedSelectionOptions": [],
+      "refreshAfter": false
+    },
+    {
+      "name": "rendering failure reaches the error boundary",
+      "update": false,
+      "closeBefore": false,
+      "settle": "resolve",
+      "renderFailure": true,
+      "freeFailure": false,
+      "expected": [
+        "attach-start",
+        "attach-complete",
+        "free"
+      ],
+      "errors": [
+        "render refused"
+      ],
+      "selection": {
+        "method": "rectangle",
+        "nodes": true,
+        "edges": true,
+        "handles": true
+      },
+      "expectedSelectionOptions": [],
+      "refreshAfter": false
+    },
+    {
+      "name": "attachment and release failures retain both errors",
+      "update": false,
+      "closeBefore": false,
+      "settle": "reject",
+      "renderFailure": false,
+      "freeFailure": true,
+      "expected": [
+        "attach-start",
+        "attach-error",
+        "free"
+      ],
+      "errors": [
+        "attach refused; release failed: free refused"
+      ],
+      "selection": {
+        "method": "rectangle",
+        "nodes": true,
+        "edges": true,
+        "handles": true
+      },
+      "expectedSelectionOptions": [],
+      "refreshAfter": false
+    }
+  ]
+}

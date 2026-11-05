@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for RemoveStorey where Op: p
         record: "RemoveStorey",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove storey", "Geschoss entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove storey", "Geschoss entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec![self.building_id.clone(), self.id.clone()]

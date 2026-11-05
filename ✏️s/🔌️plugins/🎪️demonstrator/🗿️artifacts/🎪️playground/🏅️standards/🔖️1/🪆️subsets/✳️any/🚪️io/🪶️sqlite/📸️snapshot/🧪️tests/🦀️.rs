@@ -1,6 +1,6 @@
 use store::{sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteDatabaseLimits, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_test_original_snapshot_owners as original_owners;
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
@@ -16,7 +16,7 @@ fn sqlite_snapshot_playground_actual_bare_owner_has_capability() {
 async fn sqlite_snapshot_playground_actual_declaration_registers_both_io_directions() {
     use store::io::io_mechanism::io_route;use original_owners::io_run;
     use {semio_framework_artifact_reference::ArtifactDialect,store::io_schema::IoPayload,store::io_schema::SQLITE_SNAPSHOT};
-    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("demonstrator")
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("demonstrator")
         .label("Playground SQLite Declaration")
         .version("0.0.1")
         .package_id("semio:demonstrator")
@@ -55,7 +55,7 @@ fn sqlite_snapshot_playground_authored_single_table_is_independently_queryable()
 }
 #[test]
 fn sqlite_snapshot_playground_actual_erased_native_formats_use_queryable_parent() {
-    use semio_framework_os_kernel::sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl};
+    use semio_os_kernel::sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl};
     let codec = store::bare_artifact_codec::<PlaygroundSnapshot, crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(crate::PLAYGROUND_DOCUMENT_SCHEMA);
     let provider = codec.snapshot_sqlite.expect("Playground declared snapshot capability missing");
     assert_eq!(provider.snapshot_type, Some(std::any::TypeId::of::<PlaygroundSnapshot>()));
@@ -186,7 +186,7 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
         sqlite_snapshot::*,
         os_store::serialization::ArtifactSqliteSnapshotHost,
     };
-    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("demonstrator")
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("demonstrator")
         .label("Playground Typed SQLite Declaration")
         .version("0.0.1")
         .package_id("semio:demonstrator")

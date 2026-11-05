@@ -8,9 +8,7 @@ import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import { artifactFiles } from "@semio-tech/framework-plugin/browser-bundle/distribution/inventory";
 
 
-import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
-
-import { createHash } from "node:crypto";
+import { constants as fsConstants, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
@@ -53,17 +51,6 @@ import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODUL
 
 
 
-/** 🔏️ Includes every completed module/support byte in its runtime activation identity. */
-async function activationFilesDigest(files: ReadonlyMap<string, string>, signal: AbortSignal): Promise<string> {
-  const hash = createHash("sha256");
-  for (const [name, path] of [...files].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
-    signal.throwIfAborted();
-    hash.update(JSON.stringify([name.replaceAll("\\", "/"), statSync(path).size]) + "\n");
-    for await (const chunk of createReadStream(path, { signal })) hash.update(chunk);
-  }
-  return hash.digest("hex");
-}
-
 /** 🧩️ Installs source-owned extensions into this development variant's runtime namespace. */
 async function publishActivatedExtension(workspace:string,invocation:ScriptInvocation,target:DeployedRegistryEntryV1,source:string,installRoot:string,artifactSha256:string,rebuiltAt:number,signal:AbortSignal):Promise<void>{
  const mode=readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode,phase=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(invocation,"browser:extension-activation",0),0,signal),policy=publicationSchema.definitions.Protocol.const;
@@ -77,4 +64,4 @@ async function publishActivatedExtension(workspace:string,invocation:ScriptInvoc
  })))));
 }
 
-export { activationFilesDigest, publishActivatedExtension };
+export { publishActivatedExtension };

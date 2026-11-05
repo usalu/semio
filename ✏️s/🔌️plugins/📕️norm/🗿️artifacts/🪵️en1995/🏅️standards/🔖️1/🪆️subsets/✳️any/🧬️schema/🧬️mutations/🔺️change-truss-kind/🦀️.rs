@@ -10,7 +10,7 @@ pub struct ChangeTrussKind { pub truss_id: String, pub new_value: semio_s_artifa
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTrussKind where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_truss_kind::ChangeTrussKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "truss-kind", kind: "change-truss-kind", record: "ChangedTrussKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change web pattern of truss {}", self.truss_id), &format!("Strebenbild von Truss {} ändern", self.truss_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change web pattern of truss {}", self.truss_id), &format!("Strebenbild von Truss {} ändern", self.truss_id)) }
     fn target(&self) -> Vec<String> { vec![self.truss_id.clone()] }
 }
 

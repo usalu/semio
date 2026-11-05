@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertSupportCollision w
         record: "InsertedSupportCollision",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert support collision {}", self.item.id), &format!("Stützenanprall {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert support collision {}", self.item.id), &format!("Stützenanprall {} einfügen", self.item.id))
     }
 }
 

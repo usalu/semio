@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerActionForce w
         record: "ChangedTowerActionForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic force of the tower leg action", "Turmstiel-Einwirkung: Charakteristische Kraft ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic force of the tower leg action", "Turmstiel-Einwirkung: Charakteristische Kraft ändern")
     }
 }
 

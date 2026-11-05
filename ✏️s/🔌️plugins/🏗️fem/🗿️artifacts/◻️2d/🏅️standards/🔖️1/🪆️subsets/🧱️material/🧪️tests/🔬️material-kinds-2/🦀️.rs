@@ -1,7 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` material mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 #[path = "../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🗑️drops/🦀️.rs"]
 mod delete_material_drops_the_unreferenced_s235_material_from_the_steel_frame;
 #[path = "../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-30f7a2/🦀️.rs"]

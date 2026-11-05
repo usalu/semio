@@ -1,0 +1,102 @@
+[
+  {
+    "scopes": [
+      {
+        "id": "ui",
+        "wasmPackages": []
+      }
+    ],
+    "catalog": [
+      "surface",
+      "editor",
+      "puzzle",
+      "cad"
+    ],
+    "expected": []
+  },
+  {
+    "scopes": [
+      {
+        "id": "puzzle/2d",
+        "wasmPackages": [
+          "surface",
+          "puzzle"
+        ]
+      }
+    ],
+    "catalog": [
+      "surface",
+      "editor",
+      "puzzle",
+      "cad"
+    ],
+    "expected": [
+      "surface",
+      "puzzle"
+    ]
+  },
+  {
+    "scopes": [
+      {
+        "id": "puzzle/2d",
+        "wasmPackages": [
+          "surface",
+          "puzzle"
+        ]
+      },
+      {
+        "id": "puzzle/3d",
+        "wasmPackages": [
+          "surface",
+          "puzzle"
+        ]
+      }
+    ],
+    "catalog": [
+      "surface",
+      "editor",
+      "puzzle",
+      "cad"
+    ],
+    "expected": [
+      "surface",
+      "puzzle"
+    ]
+  },
+  {
+    "scopes": [
+      {
+        "id": "cad",
+        "wasmPackages": [
+          "cad"
+        ]
+      }
+    ],
+    "catalog": [
+      "surface",
+      "editor",
+      "puzzle",
+      "cad"
+    ],
+    "expected": [
+      "cad"
+    ]
+  },
+  {
+    "scopes": [
+      {
+        "id": "unknown",
+        "wasmPackages": [
+          "missing"
+        ]
+      }
+    ],
+    "catalog": [
+      "surface",
+      "editor",
+      "puzzle",
+      "cad"
+    ],
+    "expected": null
+  }
+]

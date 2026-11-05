@@ -1,9 +1,9 @@
 use crate::schema::block_tree_row_id;
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 use crate::editor::note::unit_tests::context::{note_app, render as render_body};
 use crate::editor::note::NOTE_PLAY_BODY_ARTIFACT as BODY_ARTIFACT;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 /// 🩹️ Pre-existing bug fixed here (confirmed via `git log --date=iso`: `SetActiveExample`'s
 /// `reset_document_effect`/`Effect::LoadDocument` conversion — and this very test — both
@@ -19,12 +19,12 @@ async fn renders_document_tree() {
     let mut app = note_app().await;
     let document = crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot();
     let files = {
-        let seed = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<semio_s_artifact_note_note_schema::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+        let seed = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<semio_s_artifact_note_note_schema::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
             .await
             .expect("seed store for the semio example");
         store::os_store::text_format::print_document_pack(seed.envelope()).await.expect("print semio example document pack")
     };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load semio example");
+    semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load semio example");
     let json = render_body(&mut app, BODY_ARTIFACT).await;
     assert!(json.contains("\"type\":\"tree\""));
     assert!(json.contains("Welcome"));
@@ -52,7 +52,7 @@ async fn note_labels_resolve_native_by_default() {
 use crate::editor::note::panels::document::render;
 use crate::editor::note::terminology::note_play_labels;
 use crate::NoteBlockNode;
-use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};
 
 const BLOCKS_SECTION: &str = "note-play-blocks.blocks";
 const ADD_SECTION: &str = "note-play-blocks.add";
@@ -108,13 +108,13 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_document_stamps_the_full_total_at_every_level() {
     let document = oversized_note_document(OVERSIZED);
-    let tree = render(&document, note_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, note_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     let blocks = window_law_node(&tree, BLOCKS_SECTION);
     assert_eq!(window_law_extent(blocks), (OVERSIZED as u32, 0));
     assert!(blocks.children.len() < OVERSIZED, "only the first-paint slice is materialised: {}", blocks.children.len());
@@ -128,7 +128,7 @@ async fn an_oversized_document_stamps_the_full_total_at_every_level() {
 #[semio_framework_async_macros::async_test]
 async fn the_quick_add_rows_live_in_their_own_fixed_section() {
     let document = oversized_note_document(4);
-    let tree = render(&document, note_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, note_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(window_law_node(&tree, ADD_SECTION).children.len(), 5);
     assert!(window_law_keys(window_law_node(&tree, BLOCKS_SECTION)).iter().all(|key| key.starts_with("note-play-block")), "content rows only");
 }
@@ -137,7 +137,7 @@ async fn the_quick_add_rows_live_in_their_own_fixed_section() {
 async fn a_closed_section_stamps_its_total_and_builds_no_children() {
     let document = oversized_note_document(OVERSIZED);
     let view = window_law_view(vec![window_law_request(BLOCKS_SECTION, Some(false), 0, 32)]);
-    let tree = render(&document, note_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&document, note_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, BODY_ARTIFACT)).expect("the document tree builds");
     let blocks = window_law_node(&tree, BLOCKS_SECTION);
     assert_eq!(window_law_extent(blocks), (OVERSIZED as u32, 0));
     assert_eq!(blocks.children.len(), 0);
@@ -147,7 +147,7 @@ async fn a_closed_section_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_block_row_id() {
     let document = oversized_note_document(OVERSIZED);
     let view = window_law_view(vec![window_law_request(BLOCKS_SECTION, Some(true), 60, 6)]);
-    let tree = render(&document, note_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&document, note_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, BODY_ARTIFACT)).expect("the document tree builds");
     let blocks = window_law_node(&tree, BLOCKS_SECTION);
     assert_eq!(window_law_extent(blocks), (OVERSIZED as u32, 60));
     let expected: Vec<String> = (60..66).map(|index| crate::schema::block_tree_row_id(&note_group(format!("block-{index:03}"), Vec::new()))).collect();
@@ -157,12 +157,12 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_block_row_
 #[semio_framework_async_macros::async_test]
 async fn pick_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let document = oversized_note_document(3);
-    let tree = render(&document, note_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, note_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     for row in window_law_node(&tree, BLOCKS_SECTION).children.iter() {
         let Component::TreeItem(props) = &row.component else { panic!("{} is not a tree row", row.key.as_str()) };
-        assert_eq!(props.granularity.as_ref().map(semio_framework_plugin::UiText::as_str), Some("block"));
+        assert_eq!(props.granularity.as_ref().map(semio_plugin::UiText::as_str), Some("block"));
         assert!(row.bindings.is_empty(), "{} must not pay for its own activate binding", row.key.as_str());
     }
 }

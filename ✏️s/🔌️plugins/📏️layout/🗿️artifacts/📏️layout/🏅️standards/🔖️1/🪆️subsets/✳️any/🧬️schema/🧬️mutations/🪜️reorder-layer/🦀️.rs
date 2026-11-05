@@ -21,7 +21,7 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for ReorderLayer
 where Op: protocol::Mutation<LayoutSnapshot, Diff = LayoutDiff> + From<crate::reorder_layer::ReorderLayer> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "layer", kind: "reorder-layer", record: "ReorderedLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Reorder layer", "Ebene umordnen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Reorder layer", "Ebene umordnen") }
     fn target(&self) -> Vec<String> { vec![self.page_id.clone(), self.layer_id.clone()] }
 }
 

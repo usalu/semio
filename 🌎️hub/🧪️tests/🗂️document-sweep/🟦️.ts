@@ -25,8 +25,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { BrowserContext, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "@semio-tech/framework-os-dev/parity/execution";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import {ensureRepositoryBrowserPathV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 import { FAULT, NOISE, awaitBeacon, click, dismissIntroduction, mutateUndoRedo, readMatrixPins, readShell, unfoldActionsRail, withDevServe, type MatrixRenderedEdit } from "@semio-tech/framework-os-dev/testing/program-matrix";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
@@ -327,10 +327,10 @@ async function sweepKind(page: Page, kind: { kindId: string; plugin: string; val
 
 /** 🗂️ Runs the sweep over every selected creatable kind in one persistent profile; the report is rewritten after every kind
  * and the signal ends the run after the current kind. */
-export async function runHubDocumentSweep(options: HubDocumentSweepOptions): Promise<{ rows: HubSweepRow[]; kinds: string[]; cancelled: boolean; fatal?: string }> {
+export async function runHubDocumentSweep(repoRoot:string, options: HubDocumentSweepOptions): Promise<{ rows: HubSweepRow[]; kinds: string[]; cancelled: boolean; fatal?: string }> {
   requireIssuedResourceControlInvocationV1(options.phaseControl,options.invocation);
   mkdirSync(options.outDir, { recursive: true });
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   if(options.publicationProof&&(options.kinds.length||options.cancel!==null||!options.reopen))throw Error("publication proof requires the normal complete selected actor sweep with reopen and active child cancellation");
   const observation=()=>{const started=Date.now();return{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>options.signal.aborted,remainingMs:()=>options.sagaMs-(Date.now()-started),onProgress:(step:{phase:string;bytes:number;totalBytes:number})=>console.log(`[hub-sweep] physical file ${step.phase} ${step.bytes}/${step.totalBytes}`)};};
   const selected=options.publicationProof?await (await import("../../🏗️bootstrap/🎭️actors/🟦️.ts")).loadCurrentDevelopmentActorsV1(options.publicationProof.root,observation(),options.invocation,options.phaseControl):undefined;
@@ -438,7 +438,7 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
   await withRequestedIssuedResourceControlV1(phaseControl,0,async phase=>{
   await withAcceptanceRecord(repoRoot, "hub-document-sweep", () => withDevServe(repoRoot, "hub-document-sweep", { serveUrl, hubUrl, locale, signal: phase.signal, startedAt }, async (baseUrl) => {
     const outDir = join(resolve(flagValue(segments, "--out") ?? defaultOutDir), tag);
-    const report = await runHubDocumentSweep({
+    const report = await runHubDocumentSweep(repoRoot, {
       baseUrl,
       locale,
       email: process.env.OS_HUB_PROBE_EMAIL ?? "user1@semio.dev",

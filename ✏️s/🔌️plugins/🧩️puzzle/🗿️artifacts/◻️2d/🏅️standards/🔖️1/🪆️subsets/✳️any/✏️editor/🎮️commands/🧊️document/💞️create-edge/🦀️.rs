@@ -1,7 +1,7 @@
 //! 💞️ `create-edge` command.
 
 use {crate::editor::puzzle2d::snapshot::puzzle2d_handle_kind, crate::editor::puzzle2d::snapshot::puzzle2d_kinds_compatible, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 
 /// 🔗️ Connects two handles into one edge: the pair must resolve to two different handles of the

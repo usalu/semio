@@ -13,7 +13,7 @@ use semio_s_artifact_layout_layout_mutations_content::update_spread::UpdateSprea
 use semio_s_artifact_layout_layout_model::text_to_rgba;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "🧩️structure/🦀️.rs"]

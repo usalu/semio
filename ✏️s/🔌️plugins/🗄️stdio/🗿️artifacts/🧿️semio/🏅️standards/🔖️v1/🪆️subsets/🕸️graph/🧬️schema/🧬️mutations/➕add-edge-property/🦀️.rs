@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "edge-property", kind: "add-edge-property", record: "AddedEdgeProperty" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add property \"{}\" to edge \"{}\"", self.property.key, self.edge_id.value), &format!("Eigenschaft \"{}\" zu Kante \"{}\" hinzufügen", self.property.key, self.edge_id.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add property \"{}\" to edge \"{}\"", self.property.key, self.edge_id.value), &format!("Eigenschaft \"{}\" zu Kante \"{}\" hinzufügen", self.property.key, self.edge_id.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge_id.value.clone()]

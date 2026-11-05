@@ -1,6 +1,6 @@
 use crate::editor::shooting::modes::edit::windows::icon::options;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use crate::editor::shooting::config::ShootingConfig;
 #[allow(unused_imports)]
@@ -10,19 +10,19 @@ use crate::standards::v1::subsets::any::io::text::snapshot::shooting_icon_render
 #[allow(unused_imports)]
 use crate::ShootingSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::IconRenderScene;
+use semio_plugin::IconRenderScene;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementInput;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementStatus;
+use semio_plugin::WindowEngagementStatus;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 use crate::editor::shooting::modes::edit::windows::icon::*;
 use crate::editor::shooting::unit_tests::context::{icon_window_measures, shooting_app};
 use serde_json::{json, Value};

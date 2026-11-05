@@ -1,0 +1,12 @@
+{
+  "manifest": "🌎️hub/🧩️compositions/🎥️shooting/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+  "cratePath": "🌎️hub/🧩️compositions/🎥️shooting/🧩️component/📦️packages/🦀️rust",
+  "variant": "shooting",
+  "app": "s.shooting.shooting@1/*#editor",
+  "contribution": "✏️s/🧑‍💻dev/🎭️variants/🎥️shooting/🧬️schema/🔣️.json",
+  "ownerRoot": "✏️s/🧑‍💻dev/🎭️variants/🎥️shooting",
+  "ports": {
+    "react": 6019,
+    "wgpu": 6119
+  }
+}

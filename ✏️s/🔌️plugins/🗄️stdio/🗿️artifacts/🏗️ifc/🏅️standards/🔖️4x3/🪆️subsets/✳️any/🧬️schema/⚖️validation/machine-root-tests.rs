@@ -1,6 +1,6 @@
 //! 🪟 Prepared original source queries retain writable aliases without lending canonical fields.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 #[path = "machine-root-fixtures.rs"]
 mod fixtures;
 use fixtures::*;

@@ -6,9 +6,9 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
@@ -16,24 +16,24 @@ use crate::modes::view;
 use crate::modes::view::windows::canvas;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::{DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Emit, FaultCode, FaultOrigin, HistoryView, InteractiveJobClassification, NoDraftMutation, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, ViewerApp};
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Emit, FaultCode, FaultOrigin, HistoryView, InteractiveJobClassification, NoDraftMutation, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, ViewerApp};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 
@@ -97,7 +97,7 @@ impl protocol::OpBinary for DrawingViewCommand {
 }
 
 /// 📷️ Validates a viewer camera and publishes only the addressed local window configuration.
-fn camera_emit(command: &DrawingViewCommand, view: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn camera_emit(command: &DrawingViewCommand, view: Option<&semio_plugin::ViewModel>) -> Result<Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let DrawingViewCommand::SetCamera { camera } = command;
     let camera: store::Viewport2d = semio_framework_pack_json::from_json_str(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(error.to_string()))?;
     camera.validate().map_err(|error| Fault::from(error.to_string()))?;
@@ -131,8 +131,8 @@ fn drawing_view_reduce(
     _config: &NoConfig,
     _history: &HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<DrawingViewer>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<DrawingViewer>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     camera_emit(command, context.and_then(|context| context.view_state.as_deref()))
@@ -148,7 +148,7 @@ impl DrawingViewCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ToolJobFactory for DrawingViewCommandJobFactory {
+impl semio_plugin::ToolJobFactory for DrawingViewCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<ViewerApp<DrawingViewer>>;
     type Job = ArtifactRetainedCommandJob<ViewerApp<DrawingViewer>>;
 
@@ -168,11 +168,11 @@ impl semio_framework_plugin::ToolJobFactory for DrawingViewCommandJobFactory {
         drawing_view_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: DRAWING_VIEW_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: DRAWING_VIEW_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingViewCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingViewCommandJobFactory {
     type Owner = ViewerApp<DrawingViewer>;
     const TOOL_IDS: &'static [&'static str] = DRAWING_VIEW_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
@@ -209,18 +209,18 @@ impl ArtifactViewer for DrawingViewer {
         semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.child-projection"), error.to_string()))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot,Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot,Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot,Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot,Self::Mutation>::new()))
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config,Self::ConfigMutation>>>> { Some(semio_framework_plugin::no_config_store_disposer()) }
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence,Self::PresenceMutation>>>> { Some(semio_framework_plugin::no_presence_store_disposer()) }
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient,Self::TransientMutation>>>> { Some(semio_framework_plugin::no_transient_store_disposer()) }
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(semio_framework_plugin::no_presence_peer_retirement_factory()) }
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(semio_framework_plugin::no_presence_local_root_retirement_factory()) }
-    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> { Some(semio_framework_plugin::no_transient_local_root_retirement_factory()) }
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config,Self::ConfigMutation>>>> { Some(semio_plugin::no_config_store_disposer()) }
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence,Self::PresenceMutation>>>> { Some(semio_plugin::no_presence_store_disposer()) }
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient,Self::TransientMutation>>>> { Some(semio_plugin::no_transient_store_disposer()) }
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(semio_plugin::no_presence_peer_retirement_factory()) }
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(semio_plugin::no_presence_local_root_retirement_factory()) }
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> { Some(semio_plugin::no_transient_local_root_retirement_factory()) }
 
-    fn reference_birth()->Option<fn()->Result<DrawingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<DrawingSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_drawing_document("empty", None))
     })}
 
@@ -230,7 +230,7 @@ impl ArtifactViewer for DrawingViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Err(Fault::from("drawing-viewer-retained-route-required"))
@@ -246,7 +246,7 @@ impl ArtifactViewer for DrawingViewer {
         command_from_action(action, args)
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<canvas::config::DrawingViewerCanvasWindowConfigOwner>()
     }
 
@@ -255,19 +255,19 @@ impl ArtifactViewer for DrawingViewer {
         registry.register(DrawingViewCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !DRAWING_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.action_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the Drawing view command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the Drawing view command does not match its exact registered tool").into());
         }
         let tool_id = original.command.action_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, DrawingViewCommand::action_id, DRAWING_VIEW_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, drawing_view_reduce, drawing_view_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, DrawingViewCommand::action_id, DRAWING_VIEW_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, drawing_view_reduce, drawing_view_extent))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<DrawingViewer>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.draw.drawing@1/*#viewer",
@@ -279,20 +279,20 @@ impl ArtifactViewer for DrawingViewer {
     }
 
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let root = match body_key {
             canvas::BODY_KEY => canvas::render_with_camera(doc.snapshot,&canvas::config::current(cfg)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("drawing.viewer.body.label", "the fixed Drawing viewer label exceeds its UI bound")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_plugin::PluginAssemblyError::new("drawing.viewer.body.label", "the fixed Drawing viewer label exceeds its UI bound")),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(root))
+        Ok(semio_plugin::built_to_component_tree(root))
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_drawing_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(DRAWING_DIALECT).document(["semio", "drawing"]).icon_id("drawing").mode_def(view::definition()).default_mode_id(view::DRAWING_VIEW_MODE_VIEW).window_kind_def(canvas::definition()).default_layout(view::layout()).action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome).build_definition()
+pub fn create_drawing_viewer() -> semio_plugin::AppDefinition {
+    Viewer::builder(DRAWING_DIALECT).document(["semio", "drawing"]).icon_id("drawing").mode_def(view::definition()).default_mode_id(view::DRAWING_VIEW_MODE_VIEW).window_kind_def(canvas::definition()).default_layout(view::layout()).action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome).build_definition()
 }
 //#endregion 🔖️Manifest
 

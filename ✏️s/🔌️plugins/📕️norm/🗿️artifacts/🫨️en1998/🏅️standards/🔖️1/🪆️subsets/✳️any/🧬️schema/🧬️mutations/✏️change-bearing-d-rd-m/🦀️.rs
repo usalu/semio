@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBearingDRdM where 
         record: "ChangeBearingDRdM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Displacement capacity of the bearing", "Verschiebungskapazität des Lagers ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Displacement capacity of the bearing", "Verschiebungskapazität des Lagers ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bearing-d-rd-m".into()]

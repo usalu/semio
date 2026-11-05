@@ -3,10 +3,10 @@
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
-use semio_framework_plugin::{kernel::PasteAnchor, kernel::PastePlacement};
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::{kernel::PasteAnchor, kernel::PastePlacement};
+use semio_plugin::ActionDescriptor;
+use semio_plugin::InteractionTarget;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_value::{FromValue, ToValue};
 use semio_framework_pack_json::Value;
 use std::collections::HashSet;

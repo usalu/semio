@@ -23,8 +23,8 @@ impl SetViewpointSnapshot {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointSnapshot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "viewpoint-snapshot", kind: "set-viewpoint-snapshot", record: "SetViewpointSnapshot" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set viewpoint snapshot", "Blickpunkt-Schnappschuss setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set viewpoint snapshot", "Blickpunkt-Schnappschuss setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRailLoadGroupLoadG
         record: "ChangedRailLoadGroupLoadGroup",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change rail load group: Load group (gr11 to gr31)", "Eisenbahn-Lastgruppe: Lastgruppe (gr11 bis gr31) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change rail load group: Load group (gr11 to gr31)", "Eisenbahn-Lastgruppe: Lastgruppe (gr11 bis gr31) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

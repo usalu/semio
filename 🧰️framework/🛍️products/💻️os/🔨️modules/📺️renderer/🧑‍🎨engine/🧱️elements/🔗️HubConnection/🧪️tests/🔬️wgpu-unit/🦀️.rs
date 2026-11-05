@@ -27,8 +27,8 @@ fn row(id: &str, access: SpaceAccess) -> SpaceRow {
     SpaceRow {
         id: id.to_string(),
         name: format!("Space {id}"),
-        kind: semio_framework_os_kernel::os_directory::DirectorySpaceKind::Studio,
-        visibility: semio_framework_os_kernel::os_directory::DirectorySpaceVisibility::Private,
+        kind: semio_os_kernel::os_directory::DirectorySpaceKind::Studio,
+        visibility: semio_os_kernel::os_directory::DirectorySpaceVisibility::Private,
         access,
         role: Some(DirectorySpaceRole::Author),
         member_count: 2,

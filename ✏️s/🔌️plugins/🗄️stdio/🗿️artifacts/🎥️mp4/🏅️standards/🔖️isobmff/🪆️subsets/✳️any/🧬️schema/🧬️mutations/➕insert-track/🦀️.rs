@@ -16,8 +16,8 @@ pub struct InsertTrack {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for InsertTrack {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "track", kind: "insert-track", record: "InsertTrack" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert track", "Spur einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert track", "Spur einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

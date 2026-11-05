@@ -1,7 +1,7 @@
 //! 📚️ A completed replay prepares its cursor and revision metadata without changing visible history.
 use crate::{CursorRevisionAccumulator,CursorRevisionRecord,native_digest::{NativeEditDigest,NativeEffectiveDigest,with_operation_identity}};
-use semio_framework_os_spr::{Edit,Mutation,MutationId};
-use semio_framework_os_vcs::{ArtifactHistoryKey,HistoryPageStack};
+use semio_os_spr::{Edit,Mutation,MutationId};
+use semio_os_vcs::{ArtifactHistoryKey,HistoryPageStack};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_framework_value_persistent::list::PagedList;
 use std::mem::{ManuallyDrop,size_of};

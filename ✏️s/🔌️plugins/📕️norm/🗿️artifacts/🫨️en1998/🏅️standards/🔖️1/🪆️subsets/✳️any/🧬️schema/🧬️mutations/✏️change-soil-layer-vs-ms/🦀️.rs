@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSoilLayerVsMS wher
         record: "ChangeSoilLayerVsMS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear wave velocity v_s", "Scherwellengeschwindigkeit v_s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear wave velocity v_s", "Scherwellengeschwindigkeit v_s ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-soil-layer-vs-ms".into()]

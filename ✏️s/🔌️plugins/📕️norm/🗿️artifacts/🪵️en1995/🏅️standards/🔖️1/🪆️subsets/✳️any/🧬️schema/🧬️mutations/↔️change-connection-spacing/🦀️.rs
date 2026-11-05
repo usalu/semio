@@ -10,7 +10,7 @@ pub struct ChangeConnectionSpacing { pub connection_id: String, pub new_value: f
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeConnectionSpacing where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_spacing::ChangeConnectionSpacing> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-spacingM", kind: "change-connection-spacing", record: "ChangedConnectionSpacing" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Spacing a₁ of connection {}", self.connection_id), &format!("Abstand a₁ von Verbindung {} ändern", self.connection_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Spacing a₁ of connection {}", self.connection_id), &format!("Abstand a₁ von Verbindung {} ändern", self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
 }
 

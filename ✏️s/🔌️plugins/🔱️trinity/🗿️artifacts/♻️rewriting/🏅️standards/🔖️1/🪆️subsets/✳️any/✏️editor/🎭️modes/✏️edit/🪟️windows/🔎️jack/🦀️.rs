@@ -9,9 +9,9 @@
 //! `occurrences_json` is left unset until a future wave threads interaction state through `render`.
 
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::{scene_surface, BuiltNode, TextEditorScene, UiAssemblyResult};
-use semio_framework_ui_contract::SurfaceKind;
+use semio_plugin::NoConfig;
+use semio_plugin::{scene_surface, BuiltNode, TextEditorScene, UiAssemblyResult};
+use semio_ui_contract::SurfaceKind;
 
 pub fn render(state: &RewritingSnapshot, _cfg: &NoConfig) -> UiAssemblyResult<BuiltNode> {
     let query = crate::editor::rewriting::document::compiled_jack_query(state);

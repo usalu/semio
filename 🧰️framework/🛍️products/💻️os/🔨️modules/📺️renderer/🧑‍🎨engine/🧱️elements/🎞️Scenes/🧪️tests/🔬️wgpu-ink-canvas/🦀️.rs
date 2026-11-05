@@ -1,14 +1,14 @@
-use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
-use semio_framework_os_renderer_wgpu_scene_state::{InkBoundsF, SceneDrag, SceneDragMode, mutate_scene_state, scene_state};
+use semio_renderer_wgpu_contracts::framework_widget_context;
+use semio_renderer_wgpu_scene_state::{InkBoundsF, SceneDrag, SceneDragMode, mutate_scene_state, scene_state};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, HashMap};
 use super::{InkCameraF, InkClipboardContentKind, InkDocumentJson, InkInteractionEvent, InkInteractionJob, InkInteractionStep, cancel_ink_edit, clear_ink_pointer_state, draw_ink_item, ink_clipboard_copy_text, ink_clipboard_paste_into, ink_edit_for_point, ink_edit_screen_rect, ink_item_bounds, ink_item_id, ink_items_at_point, ink_pointer_cancel_into, ink_resize_bounds, ink_screen_to_world, ink_snap_coordinate, ink_world_to_screen, render_ink_canvas};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::HitKind;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_layout::layout::UiPresence;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::HitKind;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
+use semio_ui_theme::Theme;
+use semio_ui_layout::layout::UiPresence;
 
 fn sample_block(id: &str, x: f64, y: f64, w: f64, h: f64) -> Value {
     json!({
@@ -89,7 +89,7 @@ fn clipboard_scene(fixture: &Value, selection: &Value) -> UiComponentSceneNode {
         tiled_map: None,
         board2d: None,
         icon_render: None,
-        ink_canvas: Some(semio_framework_ui_scene_plane::InkCanvasScene {
+        ink_canvas: Some(semio_ui_scene_plane::InkCanvasScene {
             document_json: serde_json::to_string(&fixture["document"]).unwrap(),
             selection_json: serde_json::to_string(selection).unwrap(),
             hovered_id: None,
@@ -116,7 +116,7 @@ fn domain_scene(fixture: &Value, utility: &str) -> UiComponentSceneNode {
     ink.document_json = serde_json::to_string(&document).expect("document JSON");
     ink.selection_json = fixture["scene"]["selectionJson"].as_str().expect("selection JSON").into();
     ink.hovered_id = fixture["scene"]["hoveredId"].as_str().map(str::to_owned);
-    ink.interaction_domain = Some(semio_framework_ui_scene_plane::InkCanvasInteractionDomain {
+    ink.interaction_domain = Some(semio_ui_scene_plane::InkCanvasInteractionDomain {
         id: fixture["scene"]["interactionDomain"]["id"].as_str().expect("interaction domain id").into(),
         granularity_id: fixture["scene"]["interactionDomain"]["granularityId"].as_str().expect("interaction domain granularity").into(),
     });
@@ -124,7 +124,7 @@ fn domain_scene(fixture: &Value, utility: &str) -> UiComponentSceneNode {
 }
 
 fn run_domain_interaction(scene: &UiComponentSceneNode, event: InkInteractionEvent) -> Option<ActionDescriptor> {
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut job = InkInteractionJob::new(1, 1, Some(ui_render::PointerId(7)), scene, event).expect("bounded interaction").expect("interactive scene");
     let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
     for _ in 0..32 {
@@ -191,7 +191,7 @@ fn shared_clipboard_snapshot_copies_order_and_publishes_text_svg_and_recursive_b
     assert_eq!(copied["blocks"].as_array().unwrap().iter().map(ink_item_id).collect::<Vec<_>>(), vec!["group-a", "image-a", "text-a"]);
     assert!(copied.get("assets").is_none());
 
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let target = (fixture["paste"]["target"]["x"].as_f64().unwrap(), fixture["paste"]["target"]["y"].as_f64().unwrap());
     let payload = serde_json::to_string(&fixture["paste"]["blocks"]["payload"]).unwrap();
     assert!(ink_clipboard_paste_into(&scene, target, InkClipboardContentKind::Text, &payload, &mut input).unwrap());
@@ -300,9 +300,9 @@ fn item_card_background_uses_the_background_token_not_panel() {
         block_list: None,
         menu: None,
     };
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -345,7 +345,7 @@ fn active_ink_editor_registers_a_retained_accessible_input_over_the_surface() {
         tiled_map: None,
         board2d: None,
         icon_render: None,
-        ink_canvas: Some(semio_framework_ui_scene_plane::InkCanvasScene {
+        ink_canvas: Some(semio_ui_scene_plane::InkCanvasScene {
             document_json: serde_json::to_string(&law["document"]).expect("document serializes"),
             selection_json: "[]".into(),
             hovered_id: None,
@@ -366,9 +366,9 @@ fn active_ink_editor_registers_a_retained_accessible_input_over_the_surface() {
     edit.screen_rect = ink_edit_screen_rect(&edit, InkCameraF { x: 0.0, y: 0.0, zoom: 1.0 }, bounds);
     mutate_scene_state(surface_id, |state| state.ink_edit = Some(edit));
 
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();

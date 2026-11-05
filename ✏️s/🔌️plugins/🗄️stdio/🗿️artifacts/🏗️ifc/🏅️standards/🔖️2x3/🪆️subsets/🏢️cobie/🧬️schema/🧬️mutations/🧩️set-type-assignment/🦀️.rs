@@ -16,8 +16,8 @@ pub struct SetTypeAssignment {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetTypeAssignment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "type-assignment", kind: "set-type-assignment", record: "SetTypeAssignment" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set type assignment", "Typzuordnung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set type assignment", "Typzuordnung setzen")
     }
 
     fn target(&self) -> Vec<String> {

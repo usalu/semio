@@ -475,7 +475,7 @@ pub fn runtime_dir() -> PathBuf {
 /// the shells and editors that start views, and it is shallow on purpose: `sun_path` holds 104 bytes on macOS and 108 on Linux.
 #[cfg(unix)]
 pub fn user_socket_dir() -> PathBuf {
-    PathBuf::from("/tmp").join(format!("semio-dashboard-{}", semio_framework_ui_tui_terminal::pty::user_id()))
+    PathBuf::from("/tmp").join(format!("semio-dashboard-{}", semio_ui_tui_terminal::pty::user_id()))
 }
 
 /// 🔌 Where a daemon named `key` listens: `<runtime>/<key>.sock` while `fits` accepts that path, else

@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_lowpoly_lowpoly_commands::object::*;
@@ -8,7 +8,7 @@ use semio_s_artifact_lowpoly_lowpoly_view::resolve_active_object_id;
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySnapshot};
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::context::{act, app, dispatch, dispatch_refused, select, select_face};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;

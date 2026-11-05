@@ -5,10 +5,10 @@ use semio_framework::Fault;
 
 //#region 🩹️RailVerbLaws
 /// 🕹️ Dispatches `action` with rail-staged text `args` (the Actions pane's own shape) and settles it.
-pub(super) async fn dispatch_rail(app: &mut JackTestApp, action: &str, args: &[(&str, &str)],cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin::PluginLifecycleFailure> {
+pub(super) async fn dispatch_rail(app: &mut JackTestApp, action: &str, args: &[(&str, &str)],cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin::PluginLifecycleFailure> {
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::Object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_pack_json::Value::String((*value).to_string()))).collect()));
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,action,Some(args),&meta("local"),&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await?;
-    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.map(|_| ())
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,action,Some(args),&meta("local"),&mut semio_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await?;
+    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(),cx).await.map(|_| ())
 }
 
 /// ⚖️ LAW: `patchNodes` pressed from the rail with an EMPTY `nodeIds` renames the selected nodes, and a
@@ -53,9 +53,9 @@ async fn a_rail_patch_nodes_is_undone_and_redone_as_one_local_edit() {
         select_ast(&mut app, &ids.iter().map(String::as_str).collect::<Vec<_>>(),cx).await;
         dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Undo")],cx).await.expect("patch the selection");
         assert_eq!(node_names(&app, Some(&ids)).await, vec!["S15 Undo".to_string(); selected], "{selected} selected");
-        artifact_app_laws::settle_history_verb(&mut app.app, "undo", JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await;
+        artifact_app_laws::settle_history_verb(&mut app.app, "undo", JACK_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await;
         assert_eq!(node_names(&app, Some(&ids)).await, before, "undo restores all {selected} renamed nodes");
-        artifact_app_laws::settle_history_verb(&mut app.app, "redo", JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await;
+        artifact_app_laws::settle_history_verb(&mut app.app, "redo", JACK_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await;
         assert_eq!(node_names(&app, Some(&ids)).await, vec!["S15 Undo".to_string(); selected], "redo renames all {selected} again");
     
     app.close(cx);
@@ -69,9 +69,9 @@ async fn a_rail_patch_nodes_is_undone_and_redone_as_one_local_edit() {
 /// 🕹️ Presses one argument-less framework verb (`selectAll`, `clearSelection`, `undo`, `redo`) the whole way a shell
 /// does: admission, its reserved job, then the typed publication.
 async fn framework_verb(app: &mut JackTestApp, action: &str,cx:&mut semio_framework_job::StepContext<'_>) {
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,action,None,&meta("local"),&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved job: {fault:?}"));
-    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,action,None,&meta("local"),&mut semio_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved job: {fault:?}"));
+    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(),cx).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
 }
 
 /// ⏪️ LAW: the shell's own round trip — `selectAll`, `patchNodes` with an empty `nodeIds`, a neutral
@@ -112,7 +112,7 @@ async fn a_loaded_example_keeps_the_local_users_patch_undoable() {
     let mut app = new_app().await;
     let example = SemioJackComposition::initial_snapshot();
     let handle = admit_jack_envelope(&mut app, &jack_envelope_wire_of(example),cx);
-    assert_eq!(drive_jack_live_load(&mut app, handle,cx), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(drive_jack_live_load(&mut app, handle,cx), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("exact load acknowledgement"));
     let before = node_names(&app, None).await;
     assert!(!before.is_empty(), "the curated example has nodes");
@@ -197,7 +197,7 @@ async fn the_text_gesture_verbs_are_kept_off_the_rail() {
 
     let definition = create_trinity_jack_app();
     let editor = definition.window_kinds.iter().find(|window| window.id == "trinity-jack-editor").expect("the query editor window");
-    let actions = semio_framework_plugin::resolve_window_actions(&definition, editor);
+    let actions = semio_plugin::resolve_window_actions(&definition, editor);
     for gesture in ["textEdit", "textSelect"] {
         let action = actions.iter().find(|action| action.id == gesture).expect("the query editor still declares its text-host gesture");
         assert!(!action.in_palette, "{gesture} is a text-host gesture, never a rail row");

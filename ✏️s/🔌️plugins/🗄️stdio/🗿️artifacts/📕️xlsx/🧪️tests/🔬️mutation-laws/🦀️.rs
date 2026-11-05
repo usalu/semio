@@ -1,6 +1,6 @@
 //! 🧪️ The xlsx mutation laws, as an integration target over the artifact's public API.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/✍️set-cell/🧪️tests/🧮️widens/🦀️.rs"]
 mod tests_set_cell_widens_the_total_formula_to_a_third_row;

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeGroundReadingMeasu
         record: "ChangedGroundReadingMeasurement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Reading measurement of the investigation reading", "Erkundungsmesswert: Messwert ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Reading measurement of the investigation reading", "Erkundungsmesswert: Messwert ändern")
     }
 }
 

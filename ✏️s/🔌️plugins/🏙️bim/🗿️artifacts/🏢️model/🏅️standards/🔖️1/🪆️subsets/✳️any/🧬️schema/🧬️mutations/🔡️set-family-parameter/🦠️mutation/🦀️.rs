@@ -36,8 +36,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "family-parameter", kind: "set-family-parameter", record: "SetFamilyParameter" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set parameter \"{}\" of family \"{}\"", self.name, self.family), &format!("Parameter \"{}\" der Familie \"{}\" setzen", self.name, self.family))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set parameter \"{}\" of family \"{}\"", self.name, self.family), &format!("Parameter \"{}\" der Familie \"{}\" setzen", self.name, self.family))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{}.{}", self.family, self.name)]

@@ -16,7 +16,7 @@ async fn renders_this_standards_catalogue_headline() {
 
 fn projected(locale: Locale) -> String {
     let node = render(semio_s_artifact_norm_en1995_examples::examples(), locale, "norm.catalogue").expect("catalogue");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project")
 }
 
 #[test]

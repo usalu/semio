@@ -17,8 +17,8 @@ pub struct ChangeStructureKind {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeStructureKind where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_structure_kind::ChangeStructureKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "structure-kind", kind: "change-structure-kind", record: "ChangedStructureKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change structure type", "Tragwerksart ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change structure type", "Tragwerksart ändern")
     }
 }
 

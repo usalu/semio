@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeBarLayerLapShare w
         record: "ChangedBarLayerLapShare",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change lapped share of bars of the bar layer", "Bewehrungslage: Gestoßener Anteil der Stäbe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change lapped share of bars of the bar layer", "Bewehrungslage: Gestoßener Anteil der Stäbe ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.layer_id.clone()]

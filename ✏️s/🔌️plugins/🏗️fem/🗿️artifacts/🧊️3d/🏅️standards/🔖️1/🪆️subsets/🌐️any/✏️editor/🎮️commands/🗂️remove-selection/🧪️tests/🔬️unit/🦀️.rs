@@ -3,12 +3,12 @@ use crate::context::dispatch;
 use crate::context::fem3d_empty_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use protocol::{ColdMutation, Mutation};
-use semio_framework_os_command::SemanticMutation;
+use semio_os_command::SemanticMutation;
 
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::FromValue;
-#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
-#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_plugin::component::ArtifactView;
+#[cfg(test)] use semio_plugin::component::NoConfig;
 #[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 #[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 
@@ -17,7 +17,7 @@ fn vector() -> DslValue {
 }
 
 fn removal(base: &Fem3dSnapshot, ids: Vec<String>) -> Vec<Fem3dMutation> {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(base, &history);
     let config = NoConfig::default();
     handle(&RemoveSelection { ids }, &doc, &ConfigView { snapshot: &config, window: None }).unwrap().artifact_mutations

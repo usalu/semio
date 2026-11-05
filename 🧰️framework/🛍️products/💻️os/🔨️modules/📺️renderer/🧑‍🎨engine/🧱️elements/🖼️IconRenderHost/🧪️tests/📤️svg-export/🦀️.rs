@@ -2,8 +2,8 @@ use infinite_world::world::World3dMeshAsset;
 use super::IconSvgExport;
 use ui_scene::math::Mesh3dField;
 use infinite_world::world::{World3dMeshAppearance, World3dPrimitiveMaterial};
-use semio_framework_ui_scene_mesh::{mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, Mesh3dSchema};
-use semio_framework_ui_scene_pass::{SceneAuthoredMaterial3d, SceneMaterialAlpha3d};
+use semio_ui_scene_mesh::{mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, Mesh3dSchema};
+use semio_ui_scene_pass::{SceneAuthoredMaterial3d, SceneMaterialAlpha3d};
 
 pub fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/📤️svg-export/🔣️.json")).expect("SVG export fixture")
@@ -180,4 +180,41 @@ fn svg_export_cancellation_retires_the_exact_asset_without_publication() {
     }
     assert!(export.terminal_is_empty());
     assert!(export.take_svg().is_none());
+}
+
+#[test]
+fn svg_export_applies_subject_transform_before_projection() {
+    let transforms: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️icon-transform/🔣️.json")).expect("transform fixture");
+    let case = &transforms["cases"][1];
+    let mut local = fixture();
+    local["camera"]["position"] = serde_json::json!([3,5,30]);
+    local["camera"]["target"] = serde_json::json!([3,5,7]);
+    local["geometry"]["positions"] = case["localPoints"].clone();
+    local["geometry"]["normals"] = serde_json::json!([[0,0,1],[0,0,1],[0,0,1]]);
+    local["geometry"]["indices"] = serde_json::json!([0,1,2]);
+    let mut transformed_request: serde_json::Value = serde_json::from_str(&request(&local)).expect("request");
+    transformed_request["transform"] = case["transform"].clone();
+    let mut expected = local.clone();
+    expected["geometry"]["positions"] = case["worldPoints"].clone();
+    let render = |request: &str, asset| {
+        let mut export = IconSvgExport::new(request, asset).expect("SVG export");
+        let mut steps = 0;
+        while !export.advance().expect("SVG step") { steps += 1; assert!(steps < 256); }
+        String::from_utf8(export.take_svg().expect("SVG bytes")).expect("SVG text")
+    };
+    for fit in [false, true] {
+        transformed_request["fit"] = serde_json::json!({"enabled":fit,"padding":1.25});
+        let mut expected_request: serde_json::Value = serde_json::from_str(&request(&expected)).expect("baked request");
+        expected_request["fit"] = transformed_request["fit"].clone();
+        let generation = if fit { 0x5356_4706 } else { 0x5356_4704 };
+        let actual = render(&transformed_request.to_string(), asset(generation, &local));
+        let expected = render(&expected_request.to_string(), asset(generation + 1, &expected));
+        assert!(actual.contains("<path "), "transformed geometry must render");
+        assert_eq!(actual.matches("<path ").count(), expected.matches("<path ").count());
+        let numbers = |text: &str| text.split(|ch: char| !ch.is_ascii_digit() && ch != '.' && ch != '-').filter_map(|part| part.parse::<f64>().ok()).collect::<Vec<_>>();
+        let actual = numbers(&actual);
+        let expected = numbers(&expected);
+        assert_eq!(actual.len(), expected.len());
+        for (actual, expected) in actual.iter().zip(expected) { assert!((actual - expected).abs() < 1e-3, "fit={fit}"); }
+    }
 }

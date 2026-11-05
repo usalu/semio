@@ -13,8 +13,8 @@ pub struct SetEditorSettings {
 impl protocol::MutationKind<WriterMainWindowConfig, WriterMainWindowConfigMutation> for SetEditorSettings {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-editor-settings", kind: "set-editor-settings", record: "SetEditorSettings" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Editor Settings", "Editoreinstellungen des Schreibfensters setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Writer Window Editor Settings", "Editoreinstellungen des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["editor_settings".into()]

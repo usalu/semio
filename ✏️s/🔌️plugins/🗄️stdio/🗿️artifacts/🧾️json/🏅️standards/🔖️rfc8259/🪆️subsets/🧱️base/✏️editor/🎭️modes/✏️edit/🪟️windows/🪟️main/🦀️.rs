@@ -8,15 +8,15 @@
 use crate::schema::snapshot::{JsonMember, JsonValue};
 use crate::standards::v_rfc8259::subsets::base::io::text::snapshot::{write_json_pretty};
 use crate::JsonSnapshot;
-use semio_framework_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -60,7 +60,7 @@ pub fn member_segment(index: usize) -> String {
 pub fn encode_path_id(segments: &[String]) -> String {
     let mut path = JSON_ROOT_NODE_ID.to_string();
     for segment in segments {
-        path.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        path.push_str(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
         path.push_str(segment);
     }
     path
@@ -78,7 +78,7 @@ pub fn node_at_path_id<'a>(document: &'a JsonSnapshot, node_id: &str) -> Option<
     if node_id == JSON_ROOT_NODE_ID {
         return Some(value);
     }
-    let mut segments = node_id.split(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+    let mut segments = node_id.split(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
     (segments.next()? == JSON_ROOT_NODE_ID).then_some(())?;
     for segment in segments {
         value = match value {
@@ -107,7 +107,7 @@ fn scalar_label(value: &JsonValue) -> Option<String> {
 /// object members keep source order, array elements keep position, scalars show their literal
 /// value inline.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &JsonSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &JsonSnapshot, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     TreeWindowKit::render_windowed(&TreeView { roots: vec![node_view(JSON_ROOT_NODE_ID.to_string(), None, &document.value)] }, windows)
 }
 
@@ -118,8 +118,8 @@ pub fn render_editor(
     windows: &TreeWindows<'_>,
     controller_id: &str,
     revision: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    publication_revision: semio_plugin::UiPublicationRevision,
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let view = TreeView { roots: vec![node_view(JSON_ROOT_NODE_ID.to_string(), None, &document.value)] };
     let tree = TreeWindowKit::render_editable_nodes_windowed(&view, windows, controller_id, |path, _| {
         let source = write_json_pretty(node_at_path_id(document, path)?);

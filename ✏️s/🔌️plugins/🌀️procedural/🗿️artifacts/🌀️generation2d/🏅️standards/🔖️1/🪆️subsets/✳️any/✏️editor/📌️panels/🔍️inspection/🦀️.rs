@@ -3,14 +3,14 @@
 use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
 use semio_s_artifact_procedural_2d_terminology::Generation2dLabels;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use semio_framework_plugin::tree_item;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_BODY_INSPECTION: &str = "generation2d.play.inspection";
@@ -32,8 +32,8 @@ pub fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md), so the
 /// selected-widget-details view degrades to its "no selection" default until a future wave threads
 /// interaction into render. Flagged as a discovered framework gap, not worked around here.
-pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let items = semio_framework_plugin::ui_node_list([
+pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, labels: &Generation2dLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let items = semio_plugin::ui_node_list([
         tree_item("procedural2d-play-inspector.schema", format!("{} flow.host_snapshot", labels.schema_prefix.as_str())),
         tree_item("procedural2d-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), document.host_snapshot.widgets.len())),
         tree_item("procedural2d-play-inspector.show-mode", format!("{} {}", labels.show_mode_prefix.as_str(), config.show_mode)),

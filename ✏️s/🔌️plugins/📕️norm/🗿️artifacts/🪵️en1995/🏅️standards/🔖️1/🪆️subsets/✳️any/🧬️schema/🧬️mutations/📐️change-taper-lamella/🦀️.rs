@@ -10,7 +10,7 @@ pub struct ChangeTaperLamella { pub taper_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTaperLamella where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_taper_lamella::ChangeTaperLamella> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "taper-lamella", kind: "change-taper-lamella", record: "ChangedTaperLamella" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change lamella thickness t_lam of taper {}", self.taper_id), &format!("Lamellendicke t_lam von Taper {} ändern", self.taper_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change lamella thickness t_lam of taper {}", self.taper_id), &format!("Lamellendicke t_lam von Taper {} ändern", self.taper_id)) }
     fn target(&self) -> Vec<String> { vec![self.taper_id.clone()] }
 }
 

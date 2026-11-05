@@ -33,14 +33,14 @@ pub mod editor {
 use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
 use semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_window_action;
 use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::terminology::LowpolyLabels, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
-use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure};
-use semio_framework_ui_locale::LabelText;
+use semio_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure};
+use semio_ui_locale::LabelText;
 
 use crate::windows::model;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const LOWPOLY_PLAY_MODE_EDIT: &str = "edit";
 

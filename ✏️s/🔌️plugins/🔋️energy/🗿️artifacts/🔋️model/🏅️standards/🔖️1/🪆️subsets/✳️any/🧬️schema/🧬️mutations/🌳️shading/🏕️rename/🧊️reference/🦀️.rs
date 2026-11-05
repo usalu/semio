@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "shading-surface", kind: "rename-shading-surface", record: "RenamedShadingSurface" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename shading surface {} to \"{}\"", self.id.0, self.new_name), &format!("Verschattungsfläche {} in \"{}\" umbenennen", self.id.0, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename shading surface {} to \"{}\"", self.id.0, self.new_name), &format!("Verschattungsfläche {} in \"{}\" umbenennen", self.id.0, self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

@@ -26,34 +26,34 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_ui_contract::Label as UiLabel;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_ui_contract::Label as UiLabel;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels;
-use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::TreeWindowRequest;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_ui_contract::TreeWindow;
-use semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX;
+use semio_plugin::plugin_app_close_prelude::Component;
+use semio_plugin::ComponentTree;
+use semio_ui_locale::Locale;
+use semio_plugin::TreeWindowRequest;
+use semio_plugin::ViewModel;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_ui_contract::TreeWindow;
+use semio_ui_contract::UI_BUILT_CHILDREN_MAX;
 
 //#region 🔖️Fixtures
 fn demo() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
@@ -61,11 +61,11 @@ fn demo() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema:
 }
 
 fn english() -> &'static Fem2dLabels {
-    fem2d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    fem2d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 fn german() -> &'static Fem2dLabels {
-    fem2d_labels(&ViewModel { locale: Locale::De, ..ViewModel::new(Locale::De, semio_framework_ui_locale::Terminology::Native) })
+    fem2d_labels(&ViewModel { locale: Locale::De, ..ViewModel::new(Locale::De, semio_ui_locale::Terminology::Native) })
 }
 
 /// 🪟️ A host viewport tall enough to hold the demo whole, with the three sections the author leaves
@@ -86,7 +86,7 @@ const OPENED_ROWS: u32 = 8;
 
 fn wide_view() -> ViewModel {
     let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, OPENED_ROWS)).collect();
-    ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 fn build_for(document: &Fem2dSnapshot, labels: &Fem2dLabels, view: &ViewModel) -> BuiltNode {
@@ -98,7 +98,7 @@ fn build(document: &Fem2dSnapshot, labels: &Fem2dLabels) -> BuiltNode {
 }
 
 fn projection(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(node)).expect("fixture projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(node)).expect("fixture projection")
 }
 
 fn section_node<'a>(tree: &'a BuiltNode, suffix: &str) -> &'a BuiltNode {
@@ -149,11 +149,11 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 /// outermost first, then its own key (`TreeWindows::path_of`). A load-case row is a row of the
 /// `load-cases` section's window, so a host request for it names the whole path, never the bare id.
 fn load_case_path(case_id: &str) -> String {
-    format!("{TREE_NAMESPACE}.load-cases{}{}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR, semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id("loadCase", case_id).expect("case identity"))
+    format!("{TREE_NAMESPACE}.load-cases{}{}", semio_plugin::TREE_WINDOW_PATH_SEPARATOR, semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id("loadCase", case_id).expect("case identity"))
 }
 
 fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// 🧱️ A document an order of magnitude past one viewport: 60 nodes and a 40-load wind case.
@@ -286,7 +286,7 @@ async fn scalars_and_overlong_labels_stay_inside_the_ui_text_envelope() {
     document.regions.push(FemRegion { id: "r1".into(), name: "R".repeat(900), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], holes: Vec::new(), thickness: 0.2, material_id: "concrete".into(), mesh_size: 1.0 });
     let tree = build(&document, labels);
     let clipped = row_labels(section_node(&tree, "regions")).remove(0);
-    assert!(clipped.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES, "clipped to {} bytes", clipped.len());
+    assert!(clipped.len() <= semio_ui_contract::UI_TEXT_MAX_BYTES, "clipped to {} bytes", clipped.len());
     assert!(clipped.ends_with('…'), "an overlong region name is clipped, not refused");
 }
 
@@ -393,7 +393,7 @@ async fn an_oversized_document_stamps_every_extent_and_materialises_one_viewport
         assert_eq!(window_of(wind).total, 40, "a case row announces every load it owns");
     }
     let total = 1 + tree.children.iter().map(|section| 1 + section.children.iter().map(|row| 1 + row.children.len()).sum::<usize>()).sum::<usize>();
-    assert!(total < semio_framework_ui_contract::UI_DOCUMENT_NODES, "one first paint stays inside one UI document: {total}");
+    assert!(total < semio_ui_contract::UI_DOCUMENT_NODES, "one first paint stays inside one UI document: {total}");
     let json = projection(tree);
     assert!(!json.contains(".more"), "a windowed container never mints a continuation key: {json}");
     assert!(!json.contains("\"+"), "a windowed container never mints a `+N` label: {json}");

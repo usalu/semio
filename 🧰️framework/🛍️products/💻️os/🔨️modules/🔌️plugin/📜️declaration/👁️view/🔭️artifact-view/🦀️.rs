@@ -1,7 +1,7 @@
 //! 🔭️ The read-only view of an app document, the pending view of a poll and the materialized snapshot, history and undo reads of the view. See [`super`].
 
 use super::*;
-use semio_framework_plugin_operation::ArtifactOperationProgress;
+use semio_plugin_operation::ArtifactOperationProgress;
 
 /// 🧾️ Read-only view of an app's document handed to `ArtifactApp::handle_action`/`render`:
 /// the materialized snapshot plus the history metadata (checkpoints/alternatives/undo state)
@@ -147,7 +147,7 @@ impl<'a, P> ArtifactView<'a, P> {
     }
 
     /// 🎯️ Borrows a real typed child under this same original parent read and canonical operation revision.
-    pub fn child_editor_read<S: pack::snapshot::ArtifactPack + store::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState>(&self,key:crate::child_view::MemberKeyRef<'_>)->Result<crate::child_view::child_editor::read::ChildEditorRead<'_,S>,Fault>{let(parent,revision)=if let Some(operation)=self.operation.as_ref(){if self.parent_document_id.is_some_and(|parent|parent!=operation.parent_document_id){return Err(plugin_sdk_fault("child editor parent identity differs from original command"));}(operation.parent_document_id.as_str(),&operation.canonical_base_revision)}else if let Some(operation)=self.render_operation.as_ref(){(self.parent_document_id.ok_or_else(||plugin_sdk_fault("child editor requires its real parent artifact identity"))?,&operation.canonical_base_revision)}else{return Err(plugin_sdk_fault("child editor requires an original parent command or render operation"));};self.children.editor_read_at(key,self.snapshot as*const P as usize,parent,revision)}
+    pub fn child_editor_read<S: pack::snapshot::ArtifactPack + store::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState>(&self,key:crate::child_view::MemberKeyRef<'_>)->Result<crate::child_view::child_editor::read::ChildEditorRead<'_,S>,Fault>{let(parent,revision)=if let Some(operation)=self.operation.as_ref(){if self.parent_document_id.is_some_and(|parent|parent!=operation.parent_document_id){return Err(plugin_sdk_fault("child editor parent identity differs from original command"));}(operation.parent_document_id.as_str(),&operation.canonical_base_revision)}else if let Some(operation)=self.render_operation.as_ref(){(self.parent_document_id.ok_or_else(||plugin_sdk_fault("child editor requires its real parent artifact identity"))?,&operation.canonical_base_revision)}else{return Err(plugin_sdk_fault("child editor requires an original parent command or render operation"));};self.children.editor_read_at(key,self.snapshot as*const P as usize,parent,revision)}
 
     /// 🪪️ Returns the actual public job authority for command handlers.
     pub fn operation(&self) -> Result<&AppOperationContext, Fault> {

@@ -1,8 +1,8 @@
 //! 🌿️ VCS artifact — the document entity the `vcs-play` app edits.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 pub use semio_s_artifact_vcs_vcs_inferences::{VCS_DOCUMENT_SCHEMA};
@@ -17,9 +17,9 @@ pub use semio_s_artifact_vcs_vcs_v1::{artifact};
 pub use semio_s_artifact_vcs_vcs_tests::{VcsApplication};
 
 impl<A> VcsApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::vcs::VcsPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::vcs::VcsViewer>>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<editor::vcs::VcsPlayApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<viewer::vcs::VcsViewer>>>
 {
 }
 

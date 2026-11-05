@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-config-merge-policy"
+name = "semio-os-config-merge-policy"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,12 +14,12 @@ id = "os-config-merge-policy"
 workspace = true
 
 [lib]
-name = "semio_framework_os_config_merge_policy"
+name = "semio_os_config_merge_policy"
 path = "../../🧬️schema/🦀️.rs"
 
 [dependencies]
-semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }

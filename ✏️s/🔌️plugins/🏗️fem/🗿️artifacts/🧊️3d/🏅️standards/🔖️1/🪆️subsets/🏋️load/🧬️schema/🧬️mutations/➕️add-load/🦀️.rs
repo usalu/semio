@@ -30,8 +30,8 @@ where
     Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "load", kind: "add-load", record: "AddedLoad" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add load \"{}\" to case \"{}\"", load_id(&self.load), self.case_id), &format!("Last \"{}\" zu Lastfall \"{}\" hinzufügen", load_id(&self.load), self.case_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add load \"{}\" to case \"{}\"", load_id(&self.load), self.case_id), &format!("Last \"{}\" zu Lastfall \"{}\" hinzufügen", load_id(&self.load), self.case_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]

@@ -51,11 +51,11 @@ fn retained_fixture() -> serde_json::Value {
 }
 
 fn close_store(mut store: store::ArtifactStore<Process3dSnapshot, Process3dMutation>) {
-    use semio_framework_plugin::ArtifactOwnedDisposer;
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
+    use semio_plugin::ArtifactOwnedDisposer;
+    let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
         let demand = disposer.retirement_demands(&store, PROCESS3D_OWNER_BYTES).expect("the store quotes its next close turn");
-        if matches!(disposer.close_step(&mut store, process3d_demand_grant(demand)), Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_))) {
+        if matches!(disposer.close_step(&mut store, process3d_demand_grant(demand)), Ok(semio_plugin::PluginLifecycleStep::Complete(_))) {
             break;
         }
     }
@@ -190,18 +190,18 @@ fn owned_store(label: &str, operation_value: u64) -> store::ArtifactStore<Proces
 }
 
 fn owned_store_measured(label: &str, _operation_value: u64, budget: &mut ReplacementPhaseBudget) -> store::ArtifactStore<Process3dSnapshot, Process3dMutation> {
-    let mut caller = semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("original fixture caller");
+    let mut caller = semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("original fixture caller");
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut context = caller.context().with_original_decoder(&mut decoder);
     let operation = context.operation();
     let generation = context.generation();
     let mut snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
-    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, label, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, label, snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut authority = store::ArtifactStoreReplayInitializer::<Process3dSnapshot, Process3dMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>::new(envelope, semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let mut complete = false;
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
-        let turn = measure_phase(budget, 0, || match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context).expect("fixture initializer turn") {
+        let turn = measure_phase(budget, 0, || match semio_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context).expect("fixture initializer turn") {
             Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Some(true),
             Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => panic!("fixture initializer cancelled"),
             Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => panic!("fixture initializer faulted"),
@@ -217,8 +217,8 @@ fn owned_store_measured(label: &str, _operation_value: u64, budget: &mut Replace
     drop(context);
     let fuel = caller.retire_decoder(&mut decoder, fuel).expect("fixture decoder retirement");
     caller.retire(fuel).expect("fixture caller retirement");
-    let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("fixture candidate handoff");
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
+    let candidate = semio_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("fixture candidate handoff");
+    assert!(semio_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
     drop(authority);
     candidate
 }
@@ -227,14 +227,14 @@ fn owned_store_measured(label: &str, _operation_value: u64, budget: &mut Replace
 fn actual_atomic_publication_is_fail_closed_and_retires_stale_candidate() {
     let operation = semio_framework_job::OperationId(u64::MAX - 313);
     let generation = semio_framework_job::Generation(51);
-    let token = semio_framework_plugin::DocumentStorePublicationToken::mint(operation, generation, 7);
+    let token = semio_plugin::DocumentStorePublicationToken::mint(operation, generation, 7);
     let stale_live = semio_framework_job::Generation(52);
     let mut live = owned_store("last-valid", u64::MAX - 316);
     let stale = owned_store("stale-candidate", u64::MAX - 315);
     let accepted = owned_store("accepted-candidate", u64::MAX - 314);
 
-    let stale = match semio_framework_plugin::publish_document_store_candidate_if_authoritative(&mut live, stale, || {
-        token.validate_live(semio_framework_plugin::DocumentStoreLivePublication::new(operation, stale_live, 7))
+    let stale = match semio_plugin::publish_document_store_candidate_if_authoritative(&mut live, stale, || {
+        token.validate_live(semio_plugin::DocumentStoreLivePublication::new(operation, stale_live, 7))
     }) {
         Err((_fault, stale)) => stale,
         Ok(displaced) => {
@@ -245,8 +245,8 @@ fn actual_atomic_publication_is_fail_closed_and_retires_stale_candidate() {
     assert_eq!(live.snapshot_root().stock_label, "last-valid");
     close_store(stale);
 
-    let displaced = match semio_framework_plugin::publish_document_store_candidate_if_authoritative(&mut live, accepted, || {
-        token.validate_live(semio_framework_plugin::DocumentStoreLivePublication::new(operation, generation, 7))
+    let displaced = match semio_plugin::publish_document_store_candidate_if_authoritative(&mut live, accepted, || {
+        token.validate_live(semio_plugin::DocumentStoreLivePublication::new(operation, generation, 7))
     }) {
         Ok(displaced) => displaced,
         Err((_fault, rejected)) => {
@@ -287,19 +287,19 @@ const REPLACEMENT_BUDGET_ROUNDS: u64 = 3;
 /// 🏪️ Drives one whole real store replacement — initializer to displaced-store retirement — and
 /// hands back what each phase's single most expensive unit cost.
 fn measure_one_store_replacement(round: u64) -> ReplacementPhaseBudget {
-    use semio_framework_plugin::ArtifactOwnedDisposer;
+    use semio_plugin::ArtifactOwnedDisposer;
     let operation = semio_framework_job::OperationId(u64::MAX - 313);
     let generation = semio_framework_job::Generation(51);
-    let token = semio_framework_plugin::DocumentStorePublicationToken::mint(operation, generation, 7);
+    let token = semio_plugin::DocumentStorePublicationToken::mint(operation, generation, 7);
     let mut budget = ReplacementPhaseBudget::default();
 
     let mut live = owned_store_measured("budget-live", u64::MAX - 318 - round * 2, &mut budget);
     let candidate = owned_store_measured("budget-candidate", u64::MAX - 317 - round * 2, &mut budget);
 
     let displaced = match measure_phase(&mut budget, 1, || {
-        let disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
-        let published = semio_framework_plugin::publish_document_store_candidate_if_authoritative(&mut live, candidate, || {
-            token.validate_live(semio_framework_plugin::DocumentStoreLivePublication::new(operation, generation, 7))
+        let disposer = semio_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
+        let published = semio_plugin::publish_document_store_candidate_if_authoritative(&mut live, candidate, || {
+            token.validate_live(semio_plugin::DocumentStoreLivePublication::new(operation, generation, 7))
         });
         (disposer, published)
     }) {
@@ -313,10 +313,10 @@ fn measure_one_store_replacement(round: u64) -> ReplacementPhaseBudget {
     assert_eq!(live.snapshot_root().stock_label, "budget-candidate");
 
     let mut displaced = displaced;
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
+    let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
         let demand = disposer.retirement_demands(&displaced, PROCESS3D_OWNER_BYTES).expect("the displaced store quotes its next close turn");
-        if matches!(measure_phase(&mut budget, 2, || disposer.close_step(&mut displaced, process3d_demand_grant(demand))), Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_))) {
+        if matches!(measure_phase(&mut budget, 2, || disposer.close_step(&mut displaced, process3d_demand_grant(demand))), Ok(semio_plugin::PluginLifecycleStep::Complete(_))) {
             break;
         }
     }

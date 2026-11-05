@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeWeldRunStart where
         record: "ChangedWeldRunStart",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Run start / position x_s of the weld run", "Schweißnaht: Nahtanfang / Lage x_s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Run start / position x_s of the weld run", "Schweißnaht: Nahtanfang / Lage x_s ändern")
     }
 }
 

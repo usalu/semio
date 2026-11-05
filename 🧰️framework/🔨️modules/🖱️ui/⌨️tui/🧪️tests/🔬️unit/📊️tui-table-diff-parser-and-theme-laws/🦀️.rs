@@ -126,7 +126,7 @@ fn parser_roundtrip_arrow_keys_with_modifiers() {
     match &events[0] {
         Event::Key(k) => {
             assert_eq!(k.key, Key::Right);
-            assert_eq!(k.mods, semio_framework_ui_tui_core::event::mods::CTRL);
+            assert_eq!(k.mods, semio_ui_tui_core::event::mods::CTRL);
         }
         _ => panic!("expected key event"),
     }
@@ -186,7 +186,7 @@ fn text_display_width_and_truncate() {
 
 #[test]
 fn theme_light_and_dark_differ() {
-    use semio_framework_ui_tui_core::theme::{Role, Surface};
+    use semio_ui_tui_core::theme::{Role, Surface};
     let light = Theme::new(AppearanceName::Light);
     let dark = Theme::new(AppearanceName::Dark);
     assert_ne!(light.surface(Surface::Base), dark.surface(Surface::Base));
@@ -200,7 +200,7 @@ fn theme_light_and_dark_differ() {
 
 #[test]
 fn wasm_host_feed_and_render_smoke() {
-    let mut host = semio_framework_ui_tui_host::WasmHost::new(40, 10, true);
+    let mut host = semio_ui_tui_host::WasmHost::new(40, 10, true);
     host.feed(b"\r");
     let patch = host.render();
     assert!(!patch.is_empty());

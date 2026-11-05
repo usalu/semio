@@ -33,8 +33,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace vortex \"{}\" on object \"{}\"", self.vortex_id, self.object_id), &format!("Wirbel \"{}\" an Objekt \"{}\" ersetzen", self.vortex_id, self.object_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace vortex \"{}\" on object \"{}\"", self.vortex_id, self.object_id), &format!("Wirbel \"{}\" an Objekt \"{}\" ersetzen", self.vortex_id, self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone(), self.vortex_id.clone()]

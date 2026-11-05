@@ -1,6 +1,6 @@
 //! 🧫️ One committed quintet of a mutation vector: its raw texts read from the fixture mirror, and the typed views the laws start from.
 
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use semio_framework_pack_json::{from_json_str, parse, JsonMemberPolicy, Value};
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;

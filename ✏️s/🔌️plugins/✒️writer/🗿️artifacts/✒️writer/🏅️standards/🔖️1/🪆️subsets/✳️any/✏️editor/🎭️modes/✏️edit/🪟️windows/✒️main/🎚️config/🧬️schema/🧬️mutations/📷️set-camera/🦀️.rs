@@ -13,8 +13,8 @@ pub struct SetCamera {
 impl protocol::MutationKind<WriterMainWindowConfig, WriterMainWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-camera", kind: "set-camera", record: "SetCamera" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Camera", "Kamera des Schreibfensters setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Writer Window Camera", "Kamera des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]

@@ -1,6 +1,6 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` load case mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🌬️appends/🦀️.rs"]
 mod create_load_case_appends_a_wind_case_pushing_on_the_column_head;

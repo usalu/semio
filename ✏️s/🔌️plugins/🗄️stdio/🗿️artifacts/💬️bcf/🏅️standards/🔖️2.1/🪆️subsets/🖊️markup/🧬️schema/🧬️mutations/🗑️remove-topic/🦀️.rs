@@ -13,8 +13,8 @@ pub struct RemoveTopic {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveTopic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "topic", kind: "remove-topic", record: "RemoveTopic" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove topic", "Thema entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove topic", "Thema entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

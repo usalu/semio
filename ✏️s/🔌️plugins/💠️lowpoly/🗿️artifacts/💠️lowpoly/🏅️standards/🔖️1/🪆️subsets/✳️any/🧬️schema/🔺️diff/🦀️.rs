@@ -1,8 +1,8 @@
 //! 🧬️ Lowpoly diff schema — sparse edits over the artifact: a positional object row delta whose patches carry the object's own
 //! field patch, an ordered list of paint-layer edits and an ordered list of selection motions applied to its mesh.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -537,7 +537,7 @@ impl LowpolySelectionMotion {
 
     /// 🏷️ The history label of moving `vertices` (every vertex when 0) of `object_id`: "Move 2 vertices of "obj-1" by
     /// (0.5, 0, 0)" / "2 Eckpunkte von "obj-1" um (0,5; 0; 0) verschieben", and the rotate and scale twins.
-    pub fn label(&self, object_id: &str, vertices: usize) -> semio_framework_ui_locale::LocalizedLabel {
+    pub fn label(&self, object_id: &str, vertices: usize) -> semio_ui_locale::LocalizedLabel {
         let number = |value: f32, german: bool| {
             let text = format!("{}", (f64::from(value) * 1_000.0).round() / 1_000.0);
             if german { text.replace('.', ",") } else { text }
@@ -549,12 +549,12 @@ impl LowpolySelectionMotion {
             count => (format!("{count} vertices of \"{object_id}\""), format!("{count} Eckpunkte von \"{object_id}\"")),
         };
         match self {
-            Self::Offset(offset) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {en} by ({})", triple(offset, false)), &format!("{de} um ({}) verschieben", triple(offset, true))),
+            Self::Offset(offset) => semio_ui_locale::LocalizedLabel::native(&format!("Move {en} by ({})", triple(offset, false)), &format!("{de} um ({}) verschieben", triple(offset, true))),
             Self::Turn { axis, angle, .. } => {
                 let degrees = angle.to_degrees();
-                semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {}° about ({})", number(degrees, false), triple(axis, false)), &format!("{de} um die Achse ({}) um {}° drehen", triple(axis, true), number(degrees, true)))
+                semio_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {}° about ({})", number(degrees, false), triple(axis, false)), &format!("{de} um die Achse ({}) um {}° drehen", triple(axis, true), number(degrees, true)))
             }
-            Self::Stretch { factor, .. } => semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({})", triple(factor, false)), &format!("{de} mit ({}) skalieren", triple(factor, true))),
+            Self::Stretch { factor, .. } => semio_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({})", triple(factor, false)), &format!("{de} mit ({}) skalieren", triple(factor, true))),
         }
     }
 }

@@ -18,43 +18,43 @@ impl ArtifactEditor for Block3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = semio_s_artifact_block_3d_editor_presence::Block3dPresence;
     type PresenceMutation = semio_s_artifact_block_3d_editor_presence::Block3dPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = Block3dCommand;
 
     const DIALECT: Dialect = BLOCK3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<crate::store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<crate::store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<crate::store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn crate::store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn crate::store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<crate::store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(Box::new(
-            semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
+            semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
                 .expect("default Block3d presence is the exact empty terminal"),
         ))
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<crate::store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -68,7 +68,7 @@ impl ArtifactEditor for Block3dPlayApp {
         Some(std::sync::Arc::new(Block3dConfigStorePreparationFactory))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Block3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.block.block3d@1/*#editor",
@@ -107,20 +107,20 @@ impl ArtifactEditor for Block3dPlayApp {
         registry.register(crate::Block3dRetainedCommandJobFactory::new(&controller_id))
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         registry.register::<Block3dWorldWindowTransientOwner>()
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !BLOCK3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id || block3d_retained_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "block3d-retained-command-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "block3d-retained-command-tool-mismatch").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Block3dCommand::command_id, BLOCK3D_RETAINED_RAW_BYTES, BLOCK3D_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match tool_id {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Block3dCommand::command_id, BLOCK3D_RETAINED_RAW_BYTES, BLOCK3D_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match tool_id {
             "worldSurfaceHover" | "worldSurfaceLeave" | "worldSurfacePlace" => Box::new(crate::Block3dWindowPreviewWork::new(tool_id)),
             _ => Box::new(BoundedArtifactCommandWork::new(tool_id, block3d_retained_reduce, block3d_retained_extent)),
         } })
@@ -129,11 +129,11 @@ impl ArtifactEditor for Block3dPlayApp {
     /// 🚀️ Boots on the `hexagonal-cut-concrete-forest-left` fixture instead of the empty document —
     /// the `World3d` window renders `representations[].mesh_url`, so an empty boot document painted an
     /// empty scene until a client dispatched `setActiveExample`. See `dsl::block3d_boot_snapshot`.
-    fn reference_birth()->Option<fn()->Result<Block3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Block3dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(block3d_io())
     }
 
@@ -207,7 +207,7 @@ impl ArtifactEditor for Block3dPlayApp {
         command: &Block3dCommand,
         doc: &ArtifactView<'_, Block3dSnapshot>,
         cfg: &ConfigView<'_, Block3dConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -236,14 +236,14 @@ impl ArtifactEditor for Block3dPlayApp {
 })())
 }
 
-    fn window_measures(doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<semio_plugin::WindowMeasure>> {
         let labels = block3d_labels(view_state);
         let mut measures = HashMap::new();
         measures.insert(BLOCK3D_DEFAULT_WINDOW_ID.into(), world::window_measures(doc.snapshot, cfg.snapshot, BLOCK3D_DEFAULT_WINDOW_ID, labels));
         measures
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let labels = block3d_labels(view_state);
         let active_representation_id = cfg.snapshot.active_representation_id.as_deref();
         let node = match body_key {
@@ -254,24 +254,24 @@ impl ArtifactEditor for Block3dPlayApp {
                 view_state.active_utility_id.as_deref().unwrap_or(BLOCK3D_UTILITY_SELECT),
                 None,
             )?,
-            document_panel::BLOCK3D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::BLOCK3D_BODY_ARTIFACT))?,
-            inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BLOCK3D_BODY_INSPECTOR))?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d unknown-body label admission failed"))?,
+            document_panel::BLOCK3D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, document_panel::BLOCK3D_BODY_ARTIFACT))?,
+            inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::BLOCK3D_BODY_INSPECTOR))?,
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d unknown-body label admission failed"))?,
         };
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Block3dSnapshot>,
         cfg: &ConfigView<'_, Block3dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == world::BLOCK3D_BODY_WORLD {
             let preview = transient.window::<Block3dWorldWindowTransientOwner>().and_then(|window| window.brush_preview.as_ref());
             let root = world::render(
@@ -281,7 +281,7 @@ impl ArtifactEditor for Block3dPlayApp {
                 view_state.active_utility_id.as_deref().unwrap_or(BLOCK3D_UTILITY_SELECT),
                 preview,
             )?;
-            return Ok(semio_framework_plugin::built_to_component_tree(root));
+            return Ok(semio_plugin::built_to_component_tree(root));
         }
         Self::render(body_key, doc, cfg, view_state)
 

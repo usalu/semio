@@ -14,8 +14,8 @@ pub struct SetCamera {
 impl protocol::MutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "window-camera", kind: "set-camera", record: "SetCamera" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Window Camera", "Fensterkamera setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Window Camera", "Fensterkamera setzen")
     }
 
     fn target(&self) -> Vec<String> {

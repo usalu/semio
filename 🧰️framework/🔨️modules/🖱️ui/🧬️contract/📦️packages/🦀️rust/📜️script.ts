@@ -12,7 +12,7 @@ import { resolve } from "node:path";
 import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedCargoCommandV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** ⚙️ Runs the `semio-framework-ui-contract` test suite and the guest-target compile gates.
+/** ⚙️ Runs the `semio-ui-contract` test suite and the guest-target compile gates.
  *
  * The wasm gates are the point of this crate: the contract is what `wasm32-wasip2` plugin components
  * and `wasm32-unknown-unknown` browser renderers both speak, so a dependency that fails either target
@@ -44,7 +44,7 @@ class BuiltTreeRetirementScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testBuiltTreeRetirementFixture();
     if (segments.length === 1 && segments[0] === "--oracle-only") return;
-    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-framework-ui-contract": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,cargoArgs: segments,groups: [{ package: "semio-framework-ui-contract", target: { kind: "lib" }, laws: [
+    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-ui-contract": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,cargoArgs: segments,groups: [{ package: "semio-ui-contract", target: { kind: "lib" }, laws: [
         "built_tree_retirement_closes_all_typed_fields_and_preserves_foreign_values",
         "built_tree_retirement_closes_full_page_chain_beyond_observer_depth",
         "built_child_retirement_contention_retains_exact_page",
@@ -82,7 +82,7 @@ class ConformanceScript extends BundleScript {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
     console.log(`conformance-corpus-catalog cases=${conformanceCorpusSelfTests()}`);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-contract-validation"], cwd: this.root, extraArgs: ["--all-features", ...rest, "--", "conformance::"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-ui-contract-validation"], cwd: this.root, extraArgs: ["--all-features", ...rest, "--", "conformance::"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 //#endregion 🔖️conformance
@@ -91,7 +91,7 @@ class ConformanceScript extends BundleScript {
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    const check = (args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-contract", ...args],packageRoot,process.env,buildBudgetMs());
+    const check = (args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-ui-contract", ...args],packageRoot,process.env,buildBudgetMs());
     await check(["--target", "wasm32-wasip2"]);
     await check(["--target", "wasm32-unknown-unknown"]);
     await check(["--target", "wasm32-wasip2", "--features", "typegen"]);
@@ -109,7 +109,7 @@ function generatedUiContractPath(root: string): string {
 /** 🧬️ Runs the owned schema export test, optionally writing its deterministic projection. */
 async function runTypegenExportTest(original:ScriptInvocation,phaseControl:ResourceLeaseControl,workspace:string,root: string, outPath?: string): Promise<void> {
   const env = outPath === undefined ? process.env : { ...process.env, SEMIO_TYPEGEN_OUT: outPath };
-  await runAdmittedCargoCommandV1(original,phaseControl,workspace,["test","--manifest-path",resolve(root,"Cargo.toml"),"-p","semio-framework-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],root,env,buildBudgetMs());
+  await runAdmittedCargoCommandV1(original,phaseControl,workspace,["test","--manifest-path",resolve(root,"Cargo.toml"),"-p","semio-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],root,env,buildBudgetMs());
 }
 
 class GenerateScript extends BundleScript {
@@ -129,7 +129,7 @@ class PreviewGeneratedScript extends BundleScript {
     let content: Buffer;
     try {
       const outPath = join(temp, basename(targetPath));
-      await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["test","--locked","--manifest-path",join(this.root,"Cargo.toml"),"-p","semio-framework-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],this.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
+      await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["test","--locked","--manifest-path",join(this.root,"Cargo.toml"),"-p","semio-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],this.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
       content = readFileSync(outPath);
     } finally {
       rmSync(temp, { recursive: true, force: true });

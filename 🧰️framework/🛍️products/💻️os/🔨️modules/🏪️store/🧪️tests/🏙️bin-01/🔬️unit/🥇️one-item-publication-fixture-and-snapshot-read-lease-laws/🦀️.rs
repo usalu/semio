@@ -42,7 +42,7 @@ impl SerdeOneItemPublicationOracle {
 fn one_item_publication_fixture_matches_the_third_party_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(ONE_ITEM_PUBLICATION_FIXTURE).expect("language-neutral one-item publication fixture");
     let oracle = SerdeOneItemPublicationOracle::from_host_snapshot(&fixture);
-    assert_eq!(fixture["capacities"]["historyItems"], semio_framework_os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY);
+    assert_eq!(fixture["capacities"]["historyItems"], semio_os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY);
     for case in fixture["admissionCases"].as_array().expect("admission cases") {
         let actual = oracle.admits(case["workItems"].as_u64().expect("work items") as usize, case["retainedBytes"].as_u64().expect("retained bytes") as usize);
         assert_eq!(actual, case["accepted"].as_bool().expect("accepted"), "{}", case["id"]);

@@ -1,6 +1,6 @@
 //! 🔌️ Typed Directory transport and native/browser credential ownership.
-pub use semio_framework_os_directory::{schema,io};
-pub use semio_framework_os_directory::*;
+pub use semio_os_directory::{schema,io};
+pub use semio_os_directory::*;
 pub use semio_framework_value::{DslValue,ToValue,FromValue,ValueError};
 #[path="../🦀️.rs"]
 pub mod client;

@@ -1,0 +1,4 @@
+import {readFileSync} from "node:fs";import {Database} from "bun:sqlite";import Ajv from "ajv";
+const t=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/";
+const rows=JSON.parse(readFileSync(t+"1105-scene-base.cases.json","utf8"));const valid=new Ajv({allErrors:true}).compile(JSON.parse(readFileSync(t+"1105-scene-base.schema.json","utf8")));if(!valid(rows))throw Error(JSON.stringify(valid.errors));
+const db=new Database(":memory:");db.run("create table base(value integer)");for(const row of rows){db.run("delete from base");db.run("insert into base values (?)",row.base);const actual=db.query("select value as expectedBase,value+? as expectedFirst,value+? as expectedSecond from base").get(row.first,row.second);for(const k of Object.keys(actual))if(actual[k]!==row[k])throw Error(k);}db.close();console.log("Ajv and independent immutable SQLite base passed 3 same-base cases.");

@@ -1,27 +1,27 @@
 use semio_framework::kernel::ArtifactHandle;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_child::ChildMemberRegistry;
+use semio_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_child::ChildMemberRegistry;
 use crate::mounted_child_group_receipt_group::command::CommandAppend;
-use semio_framework_plugin_decl_views::history_view::CommandLogEntry;
+use semio_plugin_decl_views::history_view::CommandLogEntry;
 use semio_framework_value::DslValue;
 use store::MemberFactory;
 use crate::mounted_child_group_identity::MountedChildGroupIdentityIssuer;
 use crate::mounted_child_group_receipt_group::command::entry::MountedCommandEntry;
 use crate::mounted_child_group_receipt_group::command::PagedCommandLog;
-use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
+use semio_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_value::RetirementDemand;
-use semio_framework_plugin_decl_views::history_view::ShellHistoryReplay;
+use semio_plugin_decl_views::history_view::ShellHistoryReplay;
 use store::SpaceMember;
 use semio_framework_value::ValueError;
 use crate::mounted_child_group_receipt;
 use crate::mounted_child_group_receipt::mounted_nested_retirement_demand;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use crate::mounted_child_group_receipt_group::receipt_members::MountedGroupMemberReceipts;
 use crate::mounted_child_group_receipt_group::MountedGroupReceiptOutput;
@@ -78,7 +78,7 @@ impl<M:SpaceMember+MemberFactory> MountedPrivateChildGroup<M> {
         Ok(release(0, 2))
     }
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.record.is_none()&&self.displaced_shell_redo.capacity()==0&&self.append.is_none()&&self.command.is_none()&&self.receipts.is_none()&&self.publication.is_none()&&self.parent_batch.is_none()&&self.group_id.is_none()&&self.identity.terminal_is_empty()&&self.parent_issuer_closed}
-    pub fn close_step(&mut self,parent:&mut impl SpaceMember,registry:&mut ChildMemberRegistry<M>,graph:&mut store::os_store::composition_coordinator::CompositionGraph,live:&ChildContentView,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn close_step(&mut self,parent:&mut impl SpaceMember,registry:&mut ChildMemberRegistry<M>,graph:&mut store::os_store::composition_coordinator::CompositionGraph,live:&ChildContentView,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         use semio_framework_job::InteractiveJobCloseStep;
         let pending=|step:RetainedCloneStep| InteractiveJobCloseStep::Pending{progress:step.progress()};

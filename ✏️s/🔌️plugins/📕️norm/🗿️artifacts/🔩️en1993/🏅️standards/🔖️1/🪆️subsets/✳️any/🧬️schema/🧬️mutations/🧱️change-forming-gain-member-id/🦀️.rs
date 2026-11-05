@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFormingGainMemberI
         record: "ChangedFormingGainMemberId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change forming gain: Cold-formed section", "Kaltverfestigung: Kaltprofil ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change forming gain: Cold-formed section", "Kaltverfestigung: Kaltprofil ändern")
     }
 }
 

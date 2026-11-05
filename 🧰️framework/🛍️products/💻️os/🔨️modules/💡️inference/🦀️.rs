@@ -21,7 +21,7 @@ static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedA
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_os_command::TouchedPaths;
+use semio_os_command::TouchedPaths;
 use std::any::Any;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;

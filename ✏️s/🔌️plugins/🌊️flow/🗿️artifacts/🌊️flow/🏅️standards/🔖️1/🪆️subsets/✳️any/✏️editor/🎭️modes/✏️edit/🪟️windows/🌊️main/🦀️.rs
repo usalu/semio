@@ -1,24 +1,23 @@
 //! 🌊️ Flow play app — the main node-graph window: the editable flow canvas.
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::host::{with_live_host_snapshot};
 use crate::editor::flow::editor_vocabulary::{FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_HANDLE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_INTERACTION_GRAPH, FLOW_PLAY_WINDOW_MAIN};
 use crate::editor::flow::modes::edit::windows::main::options;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::FlowSnapshot;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene};
+use semio_os_infinite_directed_presentation::DagHostSnapshot;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_os_kernel::Viewport2d;
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_MAIN: &str = "flow.play.main";
@@ -91,12 +90,15 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<No
 
 //#region 🔖️Render
 pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> UiAssemblyResult<BuiltNode> {
-    let (nodes,edges)=with_live_host_snapshot(snapshot,|live|dag_host_snapshot_to_workflow(&flow::FlowHost::project_dag_snapshot(live,&flow::flow_neuron_kind_info_map())));
+    let live=snapshot.read_source().map_err(|error|semio_plugin::PluginAssemblyError::new("flow.source",error.into_message()))?;
+    render_source(&live,config,session,selection)
+}
+
+/// 🏞️ Renders the already retained execution source.
+pub fn render_source(live:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,config:&FlowMainWindowConfig,session:&FlowEvalSession,selection:&[String])->UiAssemblyResult<BuiltNode>{
+    let (nodes,edges)=dag_host_snapshot_to_workflow(&flow::FlowHost::project_dag_snapshot(live,&flow::flow_neuron_kind_info_map()));
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let (snapshot_json, flow_extras) = with_live_host_snapshot(snapshot, |live| {
-        let extras = flow_backed_node_graph_extras(live, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
-        (extras.host_snapshot_json.is_none().then(|| semio_framework_pack_json::to_json_string(live)),extras)
-    });
+    let flow_extras=flow_backed_node_graph_extras(live,&config.lod_mode,config.proximity_distance,config.grid_visible,config.grid_snap_enabled,config.grid_factor,Some(session));
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     let scene = NodeGraphScene {
         editable: Some(true),
@@ -108,7 +110,7 @@ pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &
         }),
         capabilities_json: flow_extras.capabilities_json,
         lod_json: flow_extras.lod_json,
-        host_snapshot_json: flow_extras.host_snapshot_json.or(snapshot_json),
+        host_snapshot_json: flow_extras.host_snapshot_json,
         eval_json: flow_extras.eval_json,
         status_json: flow_extras.status_json,
         selection: selection.to_vec(),

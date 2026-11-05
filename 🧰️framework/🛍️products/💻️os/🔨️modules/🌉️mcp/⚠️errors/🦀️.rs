@@ -1,5 +1,5 @@
 //! ⚠️ Gateway-domain error type and its JSON-RPC/MCP-tool-result projections, shared by every
-//! capability surface `semio-framework-os-mcp` exposes. The code set mirrors
+//! capability surface `semio-os-mcp` exposes. The code set mirrors
 //! `📋️master.md` §3.3 verbatim (frozen — a later packet that needs a new failure mode maps it onto
 //! one of these twelve, it does not add a thirteenth). This facet has ZERO dependency on
 //! `crate::protocol` — errors flow outward TO the protocol layer (which builds a JSON-RPC error

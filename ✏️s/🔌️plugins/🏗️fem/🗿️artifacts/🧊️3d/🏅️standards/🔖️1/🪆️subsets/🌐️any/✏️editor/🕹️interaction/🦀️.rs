@@ -11,17 +11,17 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::app::InteractionView;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MergeMode;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::ViewModel;
 
 //#region 🔖️Constants
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_element_endpoints;
@@ -200,10 +200,10 @@ fn targets_json<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)]) -> String {
 
 /// 🕹️ Asks the shell to redispatch `interactionSelect` for these targets — selection is
 /// framework-owned state, so an app never writes it, it only reports WHICH ids to select.
-pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)], merge: &str, method: &str) -> Result<Effect, semio_framework_plugin::Fault> {
+pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)], merge: &str, method: &str) -> Result<Effect, semio_plugin::Fault> {
     for (kind, identity) in targets {
-        let segments = protocol::wire::decode_scoped_identity(identity.as_ref()).map_err(|_| semio_framework_plugin::Fault::from("fem3d.interaction.identity-refused"))?;
-        if segments.first().copied() != Some(kind.as_ref()) || fem3d_entity_id(identity.as_ref()).is_none() { return Err(semio_framework_plugin::Fault::from("fem3d.interaction.identity-refused")); }
+        let segments = protocol::wire::decode_scoped_identity(identity.as_ref()).map_err(|_| semio_plugin::Fault::from("fem3d.interaction.identity-refused"))?;
+        if segments.first().copied() != Some(kind.as_ref()) || fem3d_entity_id(identity.as_ref()).is_none() { return Err(semio_plugin::Fault::from("fem3d.interaction.identity-refused")); }
     }
     Ok(Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),

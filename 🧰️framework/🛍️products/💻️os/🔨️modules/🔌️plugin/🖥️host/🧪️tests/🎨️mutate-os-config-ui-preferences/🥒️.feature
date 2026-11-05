@@ -11,7 +11,7 @@ Feature: Apply every typed UI-preferences mutation to its committed specificatio
   `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ This case lives beside its opening-preferences, merge-policy and identity siblings under
-  `🔌️plugin/🖥️host`; its Rust subject links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  `🔌️plugin/🖥️host`; its Rust subject links the owning crate `semio-os-config` directly, declared as a subject host package in
   `../../🔮️oracles/🔣️.json`.
 
   Nine kinds close this vocabulary because `UiPreferences` holds nine preferences and each kind

@@ -1,4 +1,4 @@
-use semio_framework_os_kernel::Patchable;
+use semio_os_kernel::Patchable;
 use semio_s_artifact_process_process3d_config::Process3dConfigSetCursor;
 use semio_s_artifact_process_process3d_model::snapshot::{artifact_kind, brep_snapshot_for_working_solid, empty_process3d_snapshot, flow_node_from_process_step, flow_snapshot_for_steps, process_step_from_flow_node, process_steps_from_flow_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, StepOrigin, StockQuantity, WorkingSolid, Workshop, WorkshopMachine, WorkshopMachinePatch, PROCESS_3D_SCHEMA};
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
@@ -106,10 +106,10 @@ fn sample_workshop() -> Workshop {
 #[semio_framework_async_macros::async_test]
 async fn workshop_dsl_round_trips_through_document() {
     let snapshot = Process3dSnapshot { workshop: sample_workshop(), ..empty_process3d_snapshot() };
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
 }
 
-/// 🔤️ `ToValue`/`FromValue` (`semio_framework_value_derive`) over `semio_framework_os_kernel::
+/// 🔤️ `ToValue`/`FromValue` (`semio_framework_value_derive`) over `semio_os_kernel::
 /// json::{to_json_string, from_json_str}` — the `serde_json::to_string`/`from_str` replacement
 /// every `process-extension-*` catalog crate's `machinesJson` payload routes through instead
 /// (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).

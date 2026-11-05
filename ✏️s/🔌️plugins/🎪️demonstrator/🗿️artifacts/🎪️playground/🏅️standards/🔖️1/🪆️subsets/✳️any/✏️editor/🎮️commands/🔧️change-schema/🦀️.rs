@@ -6,7 +6,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema as ChangeSchemaMutation;
 use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]

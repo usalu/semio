@@ -1,0 +1,472 @@
+[
+  {
+    "name": "Number",
+    "input": {
+      "type": "number",
+      "value": 3.5
+    },
+    "current": {
+      "$schema": "number",
+      "value": 3.5
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Text",
+    "input": {
+      "type": "text",
+      "value": "Grüße🧱"
+    },
+    "current": {
+      "$schema": "text",
+      "value": "Grüße🧱"
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Boolean",
+    "input": {
+      "type": "boolean",
+      "value": false
+    },
+    "current": {
+      "$schema": "boolean",
+      "value": false
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Point",
+    "input": {
+      "type": "point",
+      "value": [
+        1,
+        2,
+        3
+      ]
+    },
+    "current": {
+      "$schema": "point",
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Vector",
+    "input": {
+      "type": "vector",
+      "value": [
+        -1,
+        0,
+        1
+      ]
+    },
+    "current": {
+      "$schema": "vector",
+      "x": -1,
+      "y": 0,
+      "z": 1
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Plane",
+    "input": {
+      "type": "plane",
+      "value": {
+        "origin": [
+          1,
+          2,
+          3
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    "current": {
+      "$schema": "plane",
+      "origin": {
+        "$schema": "point",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "normal": {
+        "$schema": "vector",
+        "x": 0,
+        "y": 0,
+        "z": 1
+      }
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Number List",
+    "input": {
+      "type": "numberList",
+      "value": [
+        1,
+        2
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "number",
+        "value": 1
+      },
+      "1": {
+        "$schema": "number",
+        "value": 2
+      }
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Text List",
+    "input": {
+      "type": "textList",
+      "value": [
+        "",
+        "🧱"
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "text",
+        "value": ""
+      },
+      "1": {
+        "$schema": "text",
+        "value": "🧱"
+      }
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Boolean List",
+    "input": {
+      "type": "booleanList",
+      "value": [
+        true,
+        false
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "boolean",
+        "value": true
+      },
+      "1": {
+        "$schema": "boolean",
+        "value": false
+      }
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Point List",
+    "input": {
+      "type": "pointList",
+      "value": [
+        [
+          1,
+          2,
+          3
+        ]
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "point",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      }
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Vector List",
+    "input": {
+      "type": "vectorList",
+      "value": [
+        [
+          0,
+          1,
+          0
+        ]
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "vector",
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Changed Number",
+    "input": {
+      "type": "number",
+      "value": 2
+    },
+    "current": {
+      "$schema": "number",
+      "value": 1
+    },
+    "expected": "different"
+  },
+  {
+    "name": "Changed Text",
+    "input": {
+      "type": "text",
+      "value": "next"
+    },
+    "current": {
+      "$schema": "text",
+      "value": "old"
+    },
+    "expected": "different"
+  },
+  {
+    "name": "Changed List Length",
+    "input": {
+      "type": "numberList",
+      "value": [
+        1,
+        2
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "number",
+        "value": 1
+      }
+    },
+    "expected": "different"
+  },
+  {
+    "name": "Empty List",
+    "input": {
+      "type": "pointList",
+      "value": []
+    },
+    "current": {
+      "$schema": "list"
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Strict Number Carrier",
+    "input": {
+      "type": "number",
+      "value": 1
+    },
+    "current": {
+      "$schema": "number",
+      "value": true
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "Scalar List Shape",
+    "input": {
+      "type": "numberList",
+      "value": [
+        1
+      ]
+    },
+    "current": {
+      "$schema": "number",
+      "value": 1
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "List Scalar Shape",
+    "input": {
+      "type": "number",
+      "value": 1
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "number",
+        "value": 1
+      }
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "Missing Canonical List Item",
+    "input": {
+      "type": "numberList",
+      "value": [
+        1
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "01": {
+        "$schema": "number",
+        "value": 1
+      }
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "Missing Numeric List Gap",
+    "input": {
+      "type": "numberList",
+      "value": [
+        1,
+        2
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "number",
+        "value": 1
+      },
+      "2": {
+        "$schema": "number",
+        "value": 2
+      }
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "Mixed List Carriers",
+    "input": {
+      "type": "numberList",
+      "value": [
+        1,
+        2
+      ]
+    },
+    "current": {
+      "$schema": "list",
+      "0": {
+        "$schema": "number",
+        "value": 1
+      },
+      "1": {
+        "$schema": "boolean",
+        "value": true
+      }
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "Point Missing Lane",
+    "input": {
+      "type": "point",
+      "value": [
+        1,
+        2,
+        3
+      ]
+    },
+    "current": {
+      "$schema": "point",
+      "x": 1,
+      "y": 2
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "Plane Wrong Normal Type",
+    "input": {
+      "type": "plane",
+      "value": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    "current": {
+      "$schema": "plane",
+      "origin": {
+        "$schema": "point",
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "normal": {
+        "$schema": "point",
+        "x": 0,
+        "y": 0,
+        "z": 1
+      }
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "Scalar Extra Data Preserved",
+    "input": {
+      "type": "number",
+      "value": 1
+    },
+    "current": {
+      "$schema": "number",
+      "value": 1,
+      "extra": "retained"
+    },
+    "expected": "equal"
+  },
+  {
+    "name": "Unknown Schema",
+    "input": {
+      "type": "number",
+      "value": 1
+    },
+    "current": {
+      "$schema": "unknown",
+      "value": 1
+    },
+    "expected": "refused"
+  },
+  {
+    "name": "Untyped Atom",
+    "input": {
+      "type": "number",
+      "value": 1
+    },
+    "current": 1,
+    "expected": "refused"
+  },
+  {
+    "name": "Cross Window Text",
+    "input": {
+      "type": "text",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🧱bbbbbbbbbbbbb"
+    },
+    "current": {
+      "$schema": "text",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🧱bbbbbbbbbbbbx"
+    },
+    "expected": "different"
+  }
+]

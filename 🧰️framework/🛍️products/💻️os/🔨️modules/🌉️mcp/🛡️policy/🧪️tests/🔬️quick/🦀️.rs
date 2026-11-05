@@ -10,16 +10,16 @@ use std::sync::Arc;
 use std::sync::OnceLock;
 use crate::approval_coordinator::{ApprovalChannel, ApprovalCoordinator, ApprovalRequest, ApprovalResolution};
 use crate::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines, SystemElicitationClock};
-use semio_framework_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
-use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
-use semio_framework_os_mcp_bridge_codec::bridge::{ApprovalDecision, GatewayToShell, ShellToGateway};
-use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
-use semio_framework_os_mcp_foundation::handles::{HandleTable, SessionHandle};
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
-use semio_framework_os_mcp_wire::job_registry::job_registry;
-use semio_framework_os_mcp_wire::notify::{active_request_cancel_requested, enter_request_scope};
-use semio_framework_os_mcp_wire::protocol::ClientFeatures;
+use semio_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
+use semio_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_os_mcp_bridge_codec::bridge::{ApprovalDecision, GatewayToShell, ShellToGateway};
+use semio_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_foundation::handles::{HandleTable, SessionHandle};
+use semio_os_mcp_port::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
+use semio_os_mcp_wire::job_registry::job_registry;
+use semio_os_mcp_wire::notify::{active_request_cancel_requested, enter_request_scope};
+use semio_os_mcp_wire::protocol::ClientFeatures;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operations",
+    "profiles",
+    "cancelAfter",
+    "operation",
+    "generation",
+    "fuel",
+    "stock",
+    "clock",
+    "deadline",
+    "oracle",
+    "descriptors",
+    "sliderFields"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "operations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "connect",
+          "selfConnect",
+          "disconnect",
+          "unknownDisconnect",
+          "remove",
+          "add",
+          "insertInput",
+          "insertOutput",
+          "reorganize",
+          "addOccupied",
+          "addTrimmed",
+          "addBlank",
+          "addSlider",
+          "addSliderRange",
+          "addSliderDefaults"
+        ]
+      },
+      "minItems": 15,
+      "maxItems": 15
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "copyBytes",
+          "calls"
+        ],
+        "properties": {
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "calls": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "cancelAfter": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fuel": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "clock": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "deadline": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "oracle": {
+      "type": "string"
+    },
+    "descriptors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "addSlider",
+        "addSliderRange",
+        "addSliderDefaults"
+      ],
+      "properties": {
+        "addSlider": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputSlider"
+            },
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            }
+          }
+        },
+        "addSliderRange": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputSlider"
+            },
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            }
+          }
+        },
+        "addSliderDefaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputSlider"
+            },
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "sliderFields": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "addSlider",
+        "addSliderRange",
+        "addSliderDefaults"
+      ],
+      "properties": {
+        "addSlider": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        },
+        "addSliderRange": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        },
+        "addSliderDefaults": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

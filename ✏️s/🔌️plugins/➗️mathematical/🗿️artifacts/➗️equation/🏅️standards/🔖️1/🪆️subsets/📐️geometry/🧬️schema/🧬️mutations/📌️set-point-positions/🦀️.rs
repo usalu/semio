@@ -53,8 +53,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "point-positions", kind: "set-point-positions", record: "SetPointPositions" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} point(s)", self.positions.len()), &format!("Positionen von {} Punkt(en) setzen", self.positions.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} point(s)", self.positions.len()), &format!("Positionen von {} Punkt(en) setzen", self.positions.len()))
     }
     fn target(&self) -> Vec<String> {
         equation_point_targets(&self.indices())

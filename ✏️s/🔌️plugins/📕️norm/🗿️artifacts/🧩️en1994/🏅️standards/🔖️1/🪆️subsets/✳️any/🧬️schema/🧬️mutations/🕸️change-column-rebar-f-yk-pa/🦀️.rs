@@ -17,8 +17,8 @@ pub struct ChangeColumnRebarFYkPa {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnRebarFYkPa where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_rebar_f_yk_pa::ChangeColumnRebarFYkPa> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-rebar-f-yk-pa", kind: "change-column-rebar-f-yk-pa", record: "ChangedColumnRebarFYkPa" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change column reinforcement strength f_yk", "Bewehrungsfestigkeit f_yk der Stütze ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change column reinforcement strength f_yk", "Bewehrungsfestigkeit f_yk der Stütze ändern")
     }
 }
 

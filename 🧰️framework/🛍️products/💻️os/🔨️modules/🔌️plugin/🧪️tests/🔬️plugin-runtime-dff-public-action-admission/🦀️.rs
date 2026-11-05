@@ -16,15 +16,15 @@ mod dff_public_action_admission_tests {
     }
 
     #[doc(hidden)]
-pub fn owner(controller_id: &str) -> semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness {
+pub fn owner(controller_id: &str) -> semio_plugin_decl_app::tool_contract::ToolOwnerWitness {
         let owner_type_name = match controller_id {
-            "s.draw.draw@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_draw::editor::draw::DrawPlayApp>",
-            "s.flow.flow@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_flow::editor::flow::FlowPlayApp>",
-            "s.forms.forms@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_forms::editor::forms::FormsPlayApp>",
-            "s.remodel.remodel@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_remodel::editor::remodel::RemodelPlayApp>",
+            "s.draw.draw@1/*#editor" => "semio_plugin::app::EditorApp<semio_s_plugin_draw::editor::draw::DrawPlayApp>",
+            "s.flow.flow@1/*#editor" => "semio_plugin::app::EditorApp<semio_s_plugin_flow::editor::flow::FlowPlayApp>",
+            "s.forms.forms@1/*#editor" => "semio_plugin::app::EditorApp<semio_s_plugin_forms::editor::forms::FormsPlayApp>",
+            "s.remodel.remodel@1/*#editor" => "semio_plugin::app::EditorApp<semio_s_plugin_remodel::editor::remodel::RemodelPlayApp>",
             _ => "unproved::Owner",
         };
-        semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness::test_with_name(owner_type_name)
+        semio_plugin_decl_app::tool_contract::ToolOwnerWitness::test_with_name(owner_type_name)
     }
 
     /// 🧾️ The interactive wire caps are no longer a frozen framework table keyed by verb: since the
@@ -33,7 +33,7 @@ pub fn owner(controller_id: &str) -> semio_framework_plugin_decl_app::tool_contr
     /// the rows the four Draw/Flow/Forms editors contribute, restated so the laws below drive the
     /// landed lookup instead of an empty contract slice (which declares NO bound at all, so every
     /// oversized body was admitted).
-    fn dff_public_contracts() -> Vec<semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract> {
+    fn dff_public_contracts() -> Vec<semio_plugin_decl_app::tool_contract::ArtifactToolPublicContract> {
         [
             ("s.forms.forms@1/*#editor", "setTryValue", 16_384usize),
             ("s.forms.forms@1/*#editor", "setTryValueStep", 16_384),
@@ -42,7 +42,7 @@ pub fn owner(controller_id: &str) -> semio_framework_plugin_decl_app::tool_contr
             ("s.flow.flow@1/*#editor", "duplicateWidgetStep", 8_192),
         ]
         .into_iter()
-        .map(|(controller_id, tool_id, max_raw_wire_bytes)| semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract {
+        .map(|(controller_id, tool_id, max_raw_wire_bytes)| semio_plugin_decl_app::tool_contract::ArtifactToolPublicContract {
             owner: owner(controller_id),
             controller_id: controller_id.to_string(),
             tool_id: tool_id.to_string(),
@@ -119,7 +119,7 @@ pub fn owner(controller_id: &str) -> semio_framework_plugin_decl_app::tool_contr
 
     #[test]
     fn retained_receiver_lookup_requires_a_live_instance_without_decoding_source() {
-        let runtime=PluginRuntime::<semio_framework_plugin_reactor_app::NoPluginApp>::new(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()).expect("explicit original mounted owner policy");
+        let runtime=PluginRuntime::<semio_plugin_reactor_app::NoPluginApp>::new(semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()).expect("explicit original mounted owner policy");
         let refusal=match runtime_instance_cell(&runtime,1){Err(refusal)=>refusal,Ok(_)=>panic!("absent original instance must refuse")};
         assert!(refusal.message.contains("unknown instance"));
     }
@@ -135,7 +135,7 @@ pub fn owner(controller_id: &str) -> semio_framework_plugin_decl_app::tool_contr
 
     #[test]
     fn action_entry_points_drive_spawn_admit_instead_of_awaiting_the_retained_job() {
-        let source = semio_framework_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../⚛️reactor/🏃️runtime/🦀️.rs")).expect("the runtime module tree reads");
+        let source = semio_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../⚛️reactor/🏃️runtime/🦀️.rs")).expect("the runtime module tree reads");
         let exchange_start = source.find("protocol::AppCommand::Command { seq, command, view_state }").expect("reactor command exchange");
         let exchange_end = source[exchange_start..].find("protocol::AppCommand::CommandText").map(|offset| exchange_start + offset).expect("reactor command exchange boundary");
         let exchange = &source[exchange_start..exchange_end];

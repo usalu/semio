@@ -1,7 +1,7 @@
 //! 🧬️ BIM model artifact schema: the descriptor that publishes every facet leaf (artifact, snapshot, diff, mutations) of
 //! `s.bim.model` in every schema language. The Rust types live in the sibling family folders.
 
-use {semio_framework_artifact_reference::Dialect, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId, semio_framework_plugin::ArtifactKindSpec, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability};
+use {semio_framework_artifact_reference::Dialect, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId, semio_plugin::ArtifactKindSpec, semio_plugin::MediaClass, semio_plugin::MediaForm, semio_plugin::MediaType, semio_plugin::OsMediaCapability};
 
 //#region 🪪️Identity
 /// 🪪️ The document schema identity of the artifact.
@@ -15,7 +15,7 @@ pub const BIM_MODEL_DIALECT: Dialect = Dialect { artifact_kind: "s.bim.model", s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.bim-model".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("BIM Model", "BIM-Modell"),
+        label: semio_ui_locale::LocalizedLabel::native("BIM Model", "BIM-Modell"),
         source_format: "bim.model".into(),
         component_kind: "bim".into(),
         dimension: "3d".into(),
@@ -59,9 +59,9 @@ pub fn bim_model_artifact_schema_descriptor() -> semio_framework_schema_registry
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.bim.model",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: "", proto: "" },

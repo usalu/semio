@@ -102,7 +102,7 @@ pub use fixed_file_storage::{
 };
 
 //#region 🧬️Tests
-/// 🪝️ Test hook of the companion crate `semio-framework-os-services-tests`: the private service modules, public only behind the `testkit` feature.
+/// 🪝️ Test hook of the companion crate `semio-os-services-tests`: the private service modules, public only behind the `testkit` feature.
 #[cfg(feature = "testkit")]
 #[doc(hidden)]
 pub mod testkit {

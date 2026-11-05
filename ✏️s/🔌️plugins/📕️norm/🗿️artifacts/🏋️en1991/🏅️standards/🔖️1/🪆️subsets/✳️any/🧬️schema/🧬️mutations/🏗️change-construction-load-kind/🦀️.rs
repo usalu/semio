@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeConstructionLoadKi
         record: "ChangedConstructionLoadKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change load kind (0 Q_ca, 1 Q_cb, 2 Q_cc, 3 Q_cd, 4 Q_ce, 5 Q_cf) of the construction load", "Bauzustandslast: Lastart (0 Q_ca, 1 Q_cb, 2 Q_cc, 3 Q_cd, 4 Q_ce, 5 Q_cf) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change load kind (0 Q_ca, 1 Q_cb, 2 Q_cc, 3 Q_cd, 4 Q_ce, 5 Q_cf) of the construction load", "Bauzustandslast: Lastart (0 Q_ca, 1 Q_cb, 2 Q_cc, 3 Q_cd, 4 Q_ce, 5 Q_cf) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

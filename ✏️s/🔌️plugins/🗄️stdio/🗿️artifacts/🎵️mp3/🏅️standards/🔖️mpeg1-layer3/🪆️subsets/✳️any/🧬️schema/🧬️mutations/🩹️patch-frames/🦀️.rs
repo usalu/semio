@@ -27,8 +27,8 @@ impl PatchFrames {
 impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for PatchFrames {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "frames", kind: "patch-frames", record: "PatchFrames" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Patch frames", "Frames bearbeiten")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Patch frames", "Frames bearbeiten")
     }
     fn target(&self) -> Vec<String> {
         vec!["frames".into(), self.index.to_string()]

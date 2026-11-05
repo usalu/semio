@@ -5,8 +5,8 @@
 //! click is a one-shot press. The argument names are the `🛠️tool-machine` scrub fixture's.
 
 use super::*;
-use semio_framework_ui_declaration::ui::{UiInputNode, UiPresence, UiRingNode, UiStackNode};
-use semio_framework_ui_retained_tree::tree::WidgetSpec;
+use semio_ui_declaration::ui::{UiInputNode, UiPresence, UiRingNode, UiStackNode};
+use semio_ui_retained_tree::tree::WidgetSpec;
 use semio_framework_test_fixtures::fixture_text;
 
 fn binding() -> ActionDescriptor {
@@ -85,7 +85,7 @@ fn up(x: f32, y: f32) -> UiEvent {
 }
 
 fn track() -> Rect {
-    slider_control_presentation(Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, semio_framework_ui_theme::Theme::default().gap_standard, FlowInline::Ltr).slider.track_cell
+    slider_control_presentation(Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, semio_ui_theme::Theme::default().gap_standard, FlowInline::Ltr).slider.track_cell
 }
 
 #[test]

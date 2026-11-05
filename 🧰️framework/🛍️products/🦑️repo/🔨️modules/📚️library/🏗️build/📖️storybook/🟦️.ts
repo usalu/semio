@@ -4,7 +4,7 @@ import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/�
 
 //#region 🔖️StorybookDiscoveryGuard
 const UI_STORYBOOK_DISCOVERY_BASELINE = { entries: 231, stories: 170, docs: 61, inputs: 61 } as const;
-const STORYBOOK_MDX_SKIP_DIRS = new Set(["node_modules", "compose", ".🧬semio", ".git", ".nx", "target", "dist", "storybook-static"]);
+const STORYBOOK_MDX_SKIP_DIRS = new Set(["node_modules", ".cache", ".r", ".venv", "compose", ".🧬semio", ".git", ".nx", "target", "dist", "storybook-static"]);
 
 /** 📖️ Rejects MDX inputs inside the retired-transform non-Compose ownership boundary. */
 export function assertNoOwnedStorybookMdx(root: string): void {

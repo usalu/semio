@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "mesh", kind: "create-mesh", record: "CreatedMesh" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create mesh child {}", self.child_id), &format!("Netzkind {} erstellen", self.child_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create mesh child {}", self.child_id), &format!("Netzkind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["mesh".to_string()]

@@ -2,7 +2,7 @@ use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{categories, Diagnostic, Severity};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_holding, kind_of};
 #[allow(unused_imports)]
@@ -10,17 +10,17 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, ui_capacity_e
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::{item, leaf};
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::diagnostics::{CLIP, clip};
@@ -28,9 +28,9 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::diagnostic
 use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ViewModel;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 
 static DEFECTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json"));
 static CLEAN: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json"));
@@ -43,7 +43,7 @@ fn model(text: &str) -> (ModelSnapshot, ModelInference) {
 
 fn text_with(snapshot: &ModelSnapshot, inference: &ModelInference, view: &ViewModel) -> String {
     let node = render(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(view), &TreeWindows::for_body(view, BODY_KEY)).expect("the panel renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 fn text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {
@@ -139,7 +139,7 @@ async fn the_notes_group_is_closed_until_the_author_opens_it() {
     assert!(closed.contains("Notes (1)") && closed.contains("Errors (1)") && closed.contains("uses the missing wall type"), "{closed}");
     assert!(!closed.contains("prints nothing"), "a closed group builds no rows: {closed}");
     let mut view = ViewModel::new(Locale::En, Terminology::Native);
-    view.tree_windows = vec![semio_framework_plugin::TreeWindowRequest { body_key: BODY_KEY.into(), node_key: format!("{ROOT}.note"), open: Some(true), offset: 0, rows: 20 }];
+    view.tree_windows = vec![semio_plugin::TreeWindowRequest { body_key: BODY_KEY.into(), node_key: format!("{ROOT}.note"), open: Some(true), offset: 0, rows: 20 }];
     let opened = text_with(&snapshot, &inference, &view);
     assert!(opened.contains("prints nothing"), "{opened}");
 }

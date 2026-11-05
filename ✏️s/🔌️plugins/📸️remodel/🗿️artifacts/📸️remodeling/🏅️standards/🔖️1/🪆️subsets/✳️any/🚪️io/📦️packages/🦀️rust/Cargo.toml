@@ -23,10 +23,10 @@ pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
-semio-framework-os = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }
 semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }

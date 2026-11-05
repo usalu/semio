@@ -119,16 +119,16 @@ pub fn mutation_ids(ids: Vec<String>) -> Vec<MutationId> {
 }
 
 /// 🖨️ One transition envelope as its semantic `.ops` line.
-pub fn ops_line_from_transition(envelope: &semio_framework_os_spr::MutationEnvelope) -> Result<OpsHeaderLine, VcsError> {
-    let transition = semio_framework_os_spr::history_transition_from_envelope(envelope).map_err(|error| VcsError::Serialize(error.to_string()))?.ok_or_else(|| VcsError::Serialize(format!("{} is not a history transition", envelope.mutation_id.0)))?;
+pub fn ops_line_from_transition(envelope: &semio_os_spr::MutationEnvelope) -> Result<OpsHeaderLine, VcsError> {
+    let transition = semio_os_spr::history_transition_from_envelope(envelope).map_err(|error| VcsError::Serialize(error.to_string()))?.ok_or_else(|| VcsError::Serialize(format!("{} is not a history transition", envelope.mutation_id.0)))?;
     let id = envelope.mutation_id.0.clone();
     let actor = envelope.actor.0.clone();
     let clock = print_clock(&envelope.timestamp);
     let after = operation_ids(&envelope.dependencies);
     Ok(match transition {
-        semio_framework_os_spr::HistoryTransition::Revert { mutation_ids } => OpsHeaderLine::Revert { id, actor, clock, after, operations: operation_ids(&mutation_ids) },
-        semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids } => OpsHeaderLine::Reinstate { id, actor, clock, after, operations: operation_ids(&mutation_ids) },
-        semio_framework_os_spr::HistoryTransition::Commit(checkpoint) => OpsHeaderLine::Commit {
+        semio_os_spr::HistoryTransition::Revert { mutation_ids } => OpsHeaderLine::Revert { id, actor, clock, after, operations: operation_ids(&mutation_ids) },
+        semio_os_spr::HistoryTransition::Reinstate { mutation_ids } => OpsHeaderLine::Reinstate { id, actor, clock, after, operations: operation_ids(&mutation_ids) },
+        semio_os_spr::HistoryTransition::Commit(checkpoint) => OpsHeaderLine::Commit {
             id,
             actor,
             clock,
@@ -144,12 +144,12 @@ pub fn ops_line_from_transition(envelope: &semio_framework_os_spr::MutationEnvel
             at: checkpoint.timestamp,
             line: checkpoint.line_id.into_iter().collect(),
         },
-        semio_framework_os_spr::HistoryTransition::Branch { alternative_id, name, checkpoint_id } => OpsHeaderLine::Branch { id, actor, clock, after, alternative: alternative_id, name, checkpoint: checkpoint_id },
-        semio_framework_os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id } => OpsHeaderLine::Checkout { id, actor, clock, after, checkpoint: checkpoint_id, alternative: alternative_id },
-        semio_framework_os_spr::HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins } => {
+        semio_os_spr::HistoryTransition::Branch { alternative_id, name, checkpoint_id } => OpsHeaderLine::Branch { id, actor, clock, after, alternative: alternative_id, name, checkpoint: checkpoint_id },
+        semio_os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id } => OpsHeaderLine::Checkout { id, actor, clock, after, checkpoint: checkpoint_id, alternative: alternative_id },
+        semio_os_spr::HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins } => {
             OpsHeaderLine::Repin { id, actor, clock, after, checkpoint: checkpoint_id, pinned: pinned_checkpoint_id, pins: pins.into_iter().map(|pin| OpsPin { child: pin.child_uri, checkpoint: pin.checkpoint_id }).collect() }
         }
-        semio_framework_os_spr::HistoryTransition::Supersede(supersede) => {
+        semio_os_spr::HistoryTransition::Supersede(supersede) => {
             OpsHeaderLine::Supersede { id, actor, clock, after, scope: supersede.scope, inputs: supersede.inputs.into_iter().map(OpsSupersededInput::from).collect(), observed: envelope.observed.as_ref().map(|observed| observed.0.clone()) }
         }
     })
@@ -157,8 +157,8 @@ pub fn ops_line_from_transition(envelope: &semio_framework_os_spr::MutationEnvel
 
 /// 🧾️ Rebuilds the transition envelope a `.ops` transition line describes, refusing a line
 /// whose printed id is not the content-addressed id of what it states.
-pub fn transition_from_ops_line(document_id: &str, id: String, actor: semio_framework_value::SharedUtf8, clock: &str, after: Vec<String>, transition: semio_framework_os_spr::HistoryTransition) -> Result<semio_framework_os_spr::MutationEnvelope, String> {
-    let envelope = semio_framework_os_spr::history_transition_envelope(&transition, &ArtifactId(document_id.to_string()), &ActorId(actor), mutation_ids(after), parse_clock(clock)?);
+pub fn transition_from_ops_line(document_id: &str, id: String, actor: semio_framework_value::SharedUtf8, clock: &str, after: Vec<String>, transition: semio_os_spr::HistoryTransition) -> Result<semio_os_spr::MutationEnvelope, String> {
+    let envelope = semio_os_spr::history_transition_envelope(&transition, &ArtifactId(document_id.to_string()), &ActorId(actor), mutation_ids(after), parse_clock(clock)?);
     if envelope.mutation_id.0 != id {
         return Err(format!("transition line {id} does not match its content-addressed id {}", envelope.mutation_id.0));
     }
@@ -180,7 +180,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     for checkpoint in fold.checkpoints {
         let mut composition_pins = Vec::with_capacity(checkpoint.pins.len());
         for pin in checkpoint.pins {
-            composition_pins.push(semio_framework_os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef::parse_uri(&pin.child_uri).map_err(VcsError::Deserialize)?, checkpoint_id: pin.checkpoint_id });
+            composition_pins.push(semio_os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef::parse_uri(&pin.child_uri).map_err(VcsError::Deserialize)?, checkpoint_id: pin.checkpoint_id });
         }
         let authors = checkpoint.authors.into_iter().map(|author| Author { id: author.id, name: author.name, avatar: author.avatar }).collect();
         checkpoints.push(Checkpoint { id: checkpoint.id, change_ids: checkpoint.change_ids, parent_id: checkpoint.parent_id, authors, message: checkpoint.message, timestamp: checkpoint.timestamp, composition_pins });
@@ -202,7 +202,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 pub fn replay_loaded_history<P, Mutation, I, S>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<P, VcsError>
 where
     P: Clone + 'static,
-    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + 'static,
+    Mutation: super::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary + 'static,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
@@ -216,7 +216,7 @@ where
 pub fn loaded_history_replay<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<EditReplay<P, Mutation>, VcsError>
 where
     P: Clone,
-    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
+    Mutation: super::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
@@ -229,7 +229,7 @@ where
 pub fn adopt_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, mut result: EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
 where
     P: Clone + 'static,
-    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + 'static,
+    Mutation: super::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary + 'static,
 {
     let adopted = take_loaded_replay(envelope, &mut result);
     let retired = result.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message()));
@@ -245,7 +245,7 @@ where
 pub fn take_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, result: &mut EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
 where
     P: Clone,
-    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
+    Mutation: super::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary,
 {
     fill_supersession_targets::<P, Mutation>(envelope)?;
     for (edit_id, inverse) in result.take_rebased_undo_rows() {
@@ -276,14 +276,14 @@ where
 {
     let mut originals: HashMap<MutationId, &Mutation> = HashMap::new();
     for edit in envelope.vcs.edits.iter() {
-        originals.extend(semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()));
+        originals.extend(semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()));
     }
     let mut targets = Vec::new();
     for (index, transition) in envelope.transitions.iter().enumerate() {
         if !transition.target.is_empty() {
             continue;
         }
-        if let Some(semio_framework_os_spr::HistoryTransition::Supersede(supersede)) = semio_framework_os_spr::history_transition_from_envelope(transition).map_err(|error| VcsError::Deserialize(error.to_string()))? {
+        if let Some(semio_os_spr::HistoryTransition::Supersede(supersede)) = semio_os_spr::history_transition_from_envelope(transition).map_err(|error| VcsError::Deserialize(error.to_string()))? {
             targets.push((index, supersession_address::<P, Mutation>(&supersede, &envelope.schema, |target| originals.get(target).copied())));
         }
     }

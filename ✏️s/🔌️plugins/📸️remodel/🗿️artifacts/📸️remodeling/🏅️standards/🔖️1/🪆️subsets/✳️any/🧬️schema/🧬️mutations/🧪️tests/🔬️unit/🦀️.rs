@@ -23,7 +23,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoSource;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::WatertightReportSnapshot;
 use protocol::SemanticMutation;
-use semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law;
+use semio_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law;
 
 /// ⚖️ Both inverse laws at once: sequential replay restores the base, and the inverse rows' diffs sum to the negative diff.
 async fn laws<P, Op>(base: &P, mutation: &Op)

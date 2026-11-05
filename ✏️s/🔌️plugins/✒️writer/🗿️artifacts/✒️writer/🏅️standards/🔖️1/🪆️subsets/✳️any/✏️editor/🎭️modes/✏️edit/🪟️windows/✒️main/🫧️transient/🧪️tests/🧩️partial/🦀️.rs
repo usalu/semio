@@ -2,7 +2,7 @@
 
 use crate::editor::writer::modes::edit::windows::main::transient::{publication};
 use crate::editor::writer::modes::edit::windows::main::transient::*;
-use semio_framework_plugin::WindowTransientOwner;
+use semio_plugin::WindowTransientOwner;
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]

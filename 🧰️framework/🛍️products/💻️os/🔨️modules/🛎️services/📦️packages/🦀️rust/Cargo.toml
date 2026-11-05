@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-services"
+name = "semio-os-services"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -14,7 +14,7 @@ id = "os-services"
 workspace = true
 
 [lib]
-name = "semio_framework_os_services"
+name = "semio_os_services"
 path = "🦀️.rs"
 
 [features]

@@ -3,9 +3,9 @@
 #![allow(clippy::result_large_err)]
 #![cfg_attr(test, recursion_limit = "256")]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use crate::schema::snapshot::GisMapSnapshot;
 pub use crate::standards::v1::subsets::any::schema::diff::GisMapDiff;

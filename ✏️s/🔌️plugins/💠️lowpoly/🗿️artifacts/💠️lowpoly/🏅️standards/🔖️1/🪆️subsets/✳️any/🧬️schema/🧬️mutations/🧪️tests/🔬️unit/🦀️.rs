@@ -11,7 +11,7 @@ fn tiny_object(id: &str, name: &str) -> LowpolyObject {
 
 //#region ⚖️SemanticLaws
 /// ⚖️ `assert_mutation_inverse_law`/`assert_mutation_diff_absorb_law` (`protocol::os_spr::protocol_laws`,
-/// reachable via this crate's existing `semio-framework-os-kernel` dependency — no new Cargo
+/// reachable via this crate's existing `semio-os-kernel` dependency — no new Cargo
 /// dependency needed) against an id-keyed create/delete pair and a scalar rename.
 #[semio_framework_async_macros::async_test]
 async fn create_object_obeys_the_inverse_and_absorb_laws() {

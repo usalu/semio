@@ -1,13 +1,13 @@
 use crate::{editor::shooting::commands::camera, editor::shooting::commands::document, editor::shooting::commands::scene};
 use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::DslValue;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::WindowMeasure;
 use crate::{editor::shooting::commands::asset::add_asset, editor::shooting::commands::asset::import_asset, editor::shooting::commands::asset::import_asset_request, editor::shooting::commands::asset::patch_assets, editor::shooting::commands::asset::set_active_asset};
 use crate::{editor::shooting::commands::camera::load_saved_camera, editor::shooting::commands::camera::save_camera, editor::shooting::commands::camera::set_camera, editor::shooting::commands::camera::set_shot_camera};
 use crate::{editor::shooting::commands::export::export_active_shot, editor::shooting::commands::export::export_all_shots};
@@ -40,83 +40,83 @@ use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 #[allow(unused_imports)]
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+use semio_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppOperationContext;
+use semio_plugin::AppOperationContext;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactOwnedToolJobRequest;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::FaultCode;
+use semio_plugin::FaultCode;
 #[allow(unused_imports)]
-use semio_framework_plugin::FaultOrigin;
+use semio_plugin::FaultOrigin;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::Media;
+use semio_plugin::Media;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaError;
+use semio_plugin::MediaError;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::OsMediaCapability;
+use semio_plugin::OsMediaCapability;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::UtilityDefinition;
+use semio_plugin::UtilityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 #[allow(unused_imports)]
@@ -125,14 +125,14 @@ pub(crate) mod context {
     use crate::editor::shooting::*;
 use crate::{editor::shooting::commands::camera, editor::shooting::commands::document, editor::shooting::commands::scene};
 use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::DslValue;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::WindowMeasure;
 use crate::{editor::shooting::commands::asset::add_asset, editor::shooting::commands::asset::import_asset, editor::shooting::commands::asset::import_asset_request, editor::shooting::commands::asset::patch_assets, editor::shooting::commands::asset::set_active_asset};
 use crate::{editor::shooting::commands::camera::load_saved_camera, editor::shooting::commands::camera::save_camera, editor::shooting::commands::camera::set_camera, editor::shooting::commands::camera::set_shot_camera};
 use crate::{editor::shooting::commands::export::export_active_shot, editor::shooting::commands::export::export_all_shots};
@@ -141,10 +141,10 @@ use crate::{editor::shooting::commands::gumball::rotate_selection, editor::shoot
 use crate::{editor::shooting::commands::scene::set_ambient_intensity, editor::shooting::commands::scene::set_material_roughness, editor::shooting::commands::scene::set_shadow_enabled, editor::shooting::commands::scene::set_sun_azimuth, editor::shooting::commands::scene::set_sun_elevation, editor::shooting::commands::scene::set_sun_intensity, editor::shooting::commands::scene::toggle_sun};
 use crate::{editor::shooting::commands::selection::set_center_model, editor::shooting::commands::selection::set_shot_selection, editor::shooting::commands::selection::world_pointer_down, editor::shooting::commands::selection::world_pointer_move};
 use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::commands::shot::patch_shots, editor::shooting::commands::shot::set_active_shot, editor::shooting::commands::shot::set_active_shot_format, editor::shooting::commands::shot::set_active_shot_label, editor::shooting::commands::shot::set_active_shot_shape};
-    use semio_framework_plugin::app::EditorApp;
-    use semio_framework_plugin::artifact_app_laws::{self, meta, new_app_with_registry};
-    use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_plugin::{Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::app::EditorApp;
+    use semio_plugin::artifact_app_laws::{self, meta, new_app_with_registry};
+    use semio_plugin::app::TypedOperationResultLane;
+    use semio_plugin::{Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
     /// 🧪️ The registered, MOUNTED fixture app every editor test drives — bound to
     /// [`SHOOTING_TEST_INSTANCE`] so typed commands reach their retained routes, and retired through the
@@ -154,7 +154,7 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<ShootingPlayApp>` builds it.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the paid app close.
-    pub struct ShootingApp(pub VcsArtifactApp<EditorApp<ShootingPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct ShootingApp(pub VcsArtifactApp<EditorApp<ShootingPlayApp>>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for ShootingApp {
         type Target = VcsArtifactApp<EditorApp<ShootingPlayApp>>;
@@ -172,7 +172,7 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     impl Drop for ShootingApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -184,19 +184,19 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     /// examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands` still
     /// expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this packet's
     /// lease).
-    pub fn shooting_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_shooting_app(), examples: Vec::new() }
+    pub fn shooting_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_shooting_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("shooting", ShootingPlayApp, shooting_app_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("shooting", ShootingPlayApp, shooting_app_manifest_for_tests, "../..");
 
     /// 🧪️ Registry-backed and bound — the bare `new_app` carries an empty `AppActionRegistry`, and
     /// `tool_job_registration` admits a `bounded_first_step_tool_proofs!` row only when its id is
     /// `Migrated` in the LIVE registry, so a bare instance faults at construction with
     /// `interactive-job.catalog-authority` now that every verb is a bounded tool.
     pub async fn shooting_app() -> ShootingApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(SHOOTING_TEST_INSTANCE).await;
         ShootingApp(app, scope)
     }
@@ -211,13 +211,13 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     /// apply any `LoadDocument` the way the host would.
     pub async fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> Dispatched {
         let mut identity = artifact_app_laws::fixture_identity();
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("settle the typed operation");
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("dispatch");
+        let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut identity, app.1.cx()).await.expect("test host applies load-document effect");
+                semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut identity, app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         Dispatched { result, lanes: settled.lanes }
@@ -228,7 +228,7 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     /// a gesture leaves.
     pub async fn dispatch_rows(app: &mut ShootingApp, command: ShootingCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
         let mut identity = artifact_app_laws::fixture_identity();
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("dispatch");
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("dispatch");
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut rows = Vec::new();
         while app.has_pending_typed_operations() {
@@ -250,7 +250,7 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
 
     /// 🧹️ One cooperative-maintenance unit of `app`: the mounted policy's maintenance grant, widened to the owner's own quote on every axis the way the plugin runtime funds a lifecycle turn.
     pub fn maintain(app: &mut ShootingApp, body: usize) {
-        let policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
+        let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
         let demand = app.maintenance_retirement_demands(body).expect("maintenance quote");
         app.0.maintenance_step(app.1.cx(), semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: policy.maximum_items, maximum_copy_bytes: policy.maximum_copy_bytes.max(demand.copy_bytes), maximum_capacity_bytes: policy.maximum_capacity_bytes.max(demand.capacity_bytes), maximum_release_bytes: policy.maximum_release_bytes.max(demand.release_bytes), maximum_depth: policy.maximum_depth.max(demand.depth) }).expect("maintenance step");
     }
@@ -278,27 +278,27 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
 
     /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
     pub async fn history_verb(app: &mut ShootingApp, verb: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, SHOOTING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
     pub async fn render(app: &mut ShootingApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("project and retire semantic tree")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("project and retire semantic tree")
     }
     
-    pub async fn world_scene(app: &mut ShootingApp) -> semio_framework_plugin::World3dScene {
-        semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SHOOTING_PLAY_BODY_SCENE, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| semio_framework_plugin::artifact_app_laws::built_surface_scene(root)).await.expect("render scene").expect("assembled 3D scene")
+    pub async fn world_scene(app: &mut ShootingApp) -> semio_plugin::World3dScene {
+        semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SHOOTING_PLAY_BODY_SCENE, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| semio_plugin::artifact_app_laws::built_surface_scene(root)).await.expect("render scene").expect("assembled 3D scene")
     }
     
-    pub async fn icon_scene(app: &mut ShootingApp) -> semio_framework_plugin::IconRenderScene {
-        semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SHOOTING_PLAY_BODY_ICON, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| match &root.component {
-            semio_framework_plugin::Component::Surface(props) => semio_framework_ui_scene::decode(props),
+    pub async fn icon_scene(app: &mut ShootingApp) -> semio_plugin::IconRenderScene {
+        semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SHOOTING_PLAY_BODY_ICON, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| match &root.component {
+            semio_plugin::Component::Surface(props) => semio_ui_scene::decode(props),
             _ => panic!("icon surface"),
         }).await.expect("render icon").expect("packed icon scene")
     }
     
     /// 🪟️ The two default-layout panes — window chrome (`window_engagements`/`window_measures`) is keyed
     /// by window INSTANCE and only projected for instances the view state carries.
-    pub fn view(locale: semio_framework_ui_locale::Locale) -> ViewModel {
+    pub fn view(locale: semio_ui_locale::Locale) -> ViewModel {
         ViewModel {
             locale,
             window_id: Some(SHOOTING_PLAY_WINDOW_SCENE.into()),
@@ -306,25 +306,25 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
                 ViewWindowInstance { id: SHOOTING_PLAY_WINDOW_SCENE.into(), window_kind_id: SHOOTING_PLAY_WINDOW_SCENE.into() },
                 ViewWindowInstance { id: SHOOTING_PLAY_WINDOW_ICON.into(), window_kind_id: SHOOTING_PLAY_WINDOW_ICON.into() },
             ],
-            ..ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(locale, semio_ui_locale::Terminology::Native)
         }
     }
 
     pub async fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-        app.window_measures(&view(semio_framework_ui_locale::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
+        app.window_measures(&view(semio_ui_locale::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
     }
     
     pub async fn icon_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-        app.window_measures(&view(semio_framework_ui_locale::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
+        app.window_measures(&view(semio_ui_locale::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
     }
 }
 
 use crate::editor::shooting::*;
 use crate::editor::shooting::ui_helpers_and_io::*;
 use context::{dispatch, shooting_app, shooting_app_with_registry, ShootingApp};
-use semio_framework_plugin::app::EditorApp;
-use semio_framework_plugin::artifact_app_laws;
-use semio_framework_plugin::{Effect, PluginApp};
+use semio_plugin::app::EditorApp;
+use semio_plugin::artifact_app_laws;
+use semio_plugin::{Effect, PluginApp};
 use serde_json::{json, Value};
 
 fn default_camera(position: [f64; 3]) -> crate::ShootingCamera {
@@ -379,7 +379,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
     let mut command_ids = every_command().iter().map(|command| command.command_id().to_string()).collect::<std::collections::BTreeSet<_>>();
     command_ids.insert("setActiveUtility".to_string());
     let bounded_ids = SHOOTING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
-    let host_only_ids = <ShootingCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+    let host_only_ids = <ShootingCommandJobFactory as semio_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
         .filter(|contract| contract.lanes == [ArtifactToolPublicationLane::HostOnly])
         .map(|contract| contract.tool_id.to_string())
@@ -578,7 +578,7 @@ async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
         );
     }
     let mut app = shooting_app().await;
-    let engagements = app.window_engagements(&context::view(semio_framework_ui_locale::Locale::En)).await;
+    let engagements = app.window_engagements(&context::view(semio_ui_locale::Locale::En)).await;
     assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].options.is_none(), "the gumball selector moved to the host-derived utility bar");
     assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].status.as_ref().unwrap()[0].text.contains("assets"));
     assert!(engagements[SHOOTING_PLAY_WINDOW_ICON].status.as_ref().unwrap()[0].text.contains("256×256"));
@@ -593,8 +593,8 @@ async fn interaction_select_is_reachable_as_a_framework_injected_action_under_re
     let mut app = shooting_app_with_registry().await;
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).unwrap();
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("the selection admission settles");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("the selection admission settles");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -619,7 +619,7 @@ async fn shooting_labels_resolve_native_english_by_default() {
     let catalogue_json = context::render(&mut app, SHOOTING_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Add Shot"));
     assert!(catalogue_json.contains("SVG Rectangle"));
-    let engagements = app.window_engagements(&context::view(semio_framework_ui_locale::Locale::En)).await;
+    let engagements = app.window_engagements(&context::view(semio_ui_locale::Locale::En)).await;
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_SCENE].input.as_ref().unwrap().placeholder.as_deref(), Some("Camera label"));
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_ICON].input.as_ref().unwrap().placeholder.as_deref(), Some("Shot label"));
 }
@@ -627,8 +627,8 @@ async fn shooting_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn shooting_labels_resolve_native_german() {
     let mut app = shooting_app().await;
-    let view_state = context::view(semio_framework_ui_locale::Locale::De);
-    let document_json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, SHOOTING_PLAY_BODY_ARTIFACT, &view_state, app.1.cx()).await.expect("retire document tree");
+    let view_state = context::view(semio_ui_locale::Locale::De);
+    let document_json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, SHOOTING_PLAY_BODY_ARTIFACT, &view_state, app.1.cx()).await.expect("retire document tree");
     assert!(document_json.contains("Aufnahmen"));
     assert!(document_json.contains("Objekte"));
     let engagements = app.window_engagements(&view_state).await;
@@ -641,7 +641,7 @@ async fn shooting_labels_resolve_native_german() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = shooting_app().await;
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🎥️ `SetCamera` is config-only — dragging the viewport camera through several ticks must never
@@ -679,7 +679,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         |app| {
             let snapshot = app.snapshot().expect("snapshot");
             (crate::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
-        },semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        },semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -689,7 +689,7 @@ async fn ingest_operations_is_idempotent_for_shooting() {
     artifact_app_laws::assert_registered_ingest_idempotent::<EditorApp<ShootingPlayApp>, String, _, _>(
         || async { context::shooting_app_manifest_for_tests() },
         ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }),
-        |app| crate::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        |app| crate::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone(),semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -720,7 +720,7 @@ async fn shooting_io_mirrors_the_declared_artifact_kind() {
 async fn shooting_io_declares_the_photos_out_port() {
     let io = shooting_io();
     let port = io.ports.iter().find(|port| port.id == "photos:out").expect("photos:out declared");
-    assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(port.direction, semio_plugin::MediaPortDirection::Out);
     assert_eq!(port.kind_id.as_deref(), Some("2d.image"));
     assert!(!port.required);
     assert_eq!(port.multiplicity, semio_framework::PortMultiplicity::Many);
@@ -771,15 +771,15 @@ async fn every_example_load_settles_through_the_host_document_archive_door() {
     use set_active_example::{SetActiveExample, SHOOTING_EXAMPLE_DEFAULT_ID, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT};
     for (archive_id, example_id) in [(91_u64, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT), (92, SHOOTING_EXAMPLE_DEFAULT_ID)] {
         let mut app = shooting_app().await;
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ShootingCommand::SetActiveExample(SetActiveExample { example_id: example_id.into() }), &artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("setActiveExample is admitted");
-        let settled = artifact_app_laws::settle_registered_typed_operation(&mut app.0, context::SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the example settles");
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ShootingCommand::SetActiveExample(SetActiveExample { example_id: example_id.into() }), &artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("setActiveExample is admitted");
+        let settled = artifact_app_laws::settle_registered_typed_operation(&mut app.0, context::SHOOTING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the example settles");
         let loaded = settled.effects.into_iter().find_map(|effect| if let Effect::LoadDocument { pack, spr } = effect { Some((pack, spr)) } else { None });
         let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
         let expected = <ShootingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a shooting document");
         PluginApp::begin_document_archive_load(&mut app.0, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
         let mut status = None;
         for _ in 0..1_000_000 {
-            let polled = PluginApp::poll_document_archive_load(&mut app.0, archive_id, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
+            let polled = PluginApp::poll_document_archive_load(&mut app.0, archive_id, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
             if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
                 status = Some(polled);
                 break;
@@ -794,3 +794,68 @@ async fn every_example_load_settles_through_the_host_document_archive_door() {
     }
 }
 //#endregion 🔖️ExampleLoad
+
+#[semio_framework_async_macros::async_test]
+async fn new_shot_keeps_captured_camera_after_viewport_navigation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📷️shot-camera/🔣️.json")).expect("camera fixture");
+    let captured: [f64; 3] = serde_json::from_value(fixture["captured"].clone()).expect("captured position");
+    let navigated: [f64; 3] = serde_json::from_value(fixture["navigated"].clone()).expect("navigated position");
+    let mut app = shooting_app().await;
+    dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(captured) })).await;
+    dispatch(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() })).await;
+    dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(navigated) })).await;
+    let snapshot = app.snapshot().expect("snapshot");
+    let shot = crate::active_shot(&snapshot).expect("new shot");
+    let camera = crate::shooting_resolve_shot_camera(&snapshot, shot, &default_camera(navigated));
+    let expected: [f64; 3] = serde_json::from_value(fixture["expected"].clone()).expect("expected position");
+    assert_eq!(camera.position, expected);
+    assert!(shot.camera_id.is_some());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_camera_and_selection_publish_presence_and_preserve_each_other() {
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👥️presence/🔣️.json")).expect("presence fixture");
+    let selected: Vec<String> = serde_json::from_value(expected["selectedShotIds"].clone()).expect("selection oracle");
+    let position: [f64; 3] = serde_json::from_value(expected["cameraPosition"].clone()).expect("camera oracle");
+    let mut app = shooting_app().await;
+    let initial = app.snapshot().expect("initial document");
+    dispatch(&mut app, ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: selected.clone() })).await;
+    dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(position) })).await;
+    let local = app.stores.presence_store.local();
+    assert_eq!(serde_json::json!({"selectedShotIds": local.selected_shot_ids, "cameraPosition": local.camera.position}), expected);
+    dispatch(&mut app, ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: Vec::new() })).await;
+    assert!(app.stores.presence_store.local().selected_shot_ids.is_empty());
+    assert_eq!(app.stores.presence_store.local().camera.position, position);
+    let lane = semio_plugin::PluginApp::ephemeral_snapshot(&app.0).await;
+    assert!(lane.presence_generation > 0);
+    assert!(!lane.presence.is_empty());
+    assert_eq!(app.snapshot().expect("document after presence"), initial);
+    let mut peer = shooting_app().await;
+    let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant {
+        maximum_items: policy.maximum_items,
+        maximum_copy_bytes: policy.maximum_copy_bytes,
+        maximum_capacity_bytes: policy.maximum_capacity_bytes,
+        maximum_release_bytes: policy.maximum_release_bytes,
+        maximum_depth: policy.maximum_depth,
+    };
+    semio_plugin::artifact_app_laws::assert_presence_round_trip(&app.0, &mut peer.0, "shooting-presence-source", |presence| (presence.selected_shot_ids.clone(), presence.camera.position), (Vec::<String>::new(), position), peer.1.cx(), grant).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn saved_camera_load_and_new_shot_publish_the_same_ephemeral_presence() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👥️presence/🔣️.json")).expect("presence fixture");
+    let position: [f64; 3] = serde_json::from_value(fixture["cameraPosition"].clone()).expect("camera oracle");
+    let mut app = shooting_app().await;
+    dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(position) })).await;
+    dispatch(&mut app, ShootingCommand::SaveCamera(save_camera::SaveCamera { label: "Presence Camera".into() })).await;
+    let camera_id = app.snapshot().expect("saved camera document").saved_cameras.last().expect("saved camera").id.clone();
+    dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera([9.0, 8.0, 7.0]) })).await;
+    dispatch(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() })).await;
+    let selected = app.stores.presence_store.local().selected_shot_ids.clone();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0], crate::active_shot(&app.snapshot().expect("new shot document")).expect("new active shot").id);
+    dispatch(&mut app, ShootingCommand::LoadSavedCamera(load_saved_camera::LoadSavedCamera { id: camera_id })).await;
+    assert_eq!(app.stores.presence_store.local().camera.position, position);
+    assert_eq!(app.stores.presence_store.local().selected_shot_ids, selected);
+}

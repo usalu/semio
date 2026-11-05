@@ -1,10 +1,10 @@
 //! 🧹️ Cleanup fault, maintenance status and close status vocabulary of the runtime lifecycle.
 
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_plugin_plugin_program::{Plugin, PluginProgram};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_plugin_program::{Plugin, PluginProgram};
+use semio_plugin_reactor_app::PluginApp;
 /// 🩺️ The single cause taxonomy shared by both supervisory cleanup loops (live maintenance and
 /// close), replacing the bare magic `u8` fault constants: every store site names its own cause,
 /// so the one decode site per loop can emit a distinct `plugin.internal.*` wire fault code

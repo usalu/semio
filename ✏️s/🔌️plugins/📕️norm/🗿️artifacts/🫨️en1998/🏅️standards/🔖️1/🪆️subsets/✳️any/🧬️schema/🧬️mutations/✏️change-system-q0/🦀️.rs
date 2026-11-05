@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSystemQ0 where Op:
         record: "ChangeSystemQ0",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Basic behaviour factor q₀", "Grundwert Verhaltensbeiwert q₀ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Basic behaviour factor q₀", "Grundwert Verhaltensbeiwert q₀ ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-system-q0".into()]

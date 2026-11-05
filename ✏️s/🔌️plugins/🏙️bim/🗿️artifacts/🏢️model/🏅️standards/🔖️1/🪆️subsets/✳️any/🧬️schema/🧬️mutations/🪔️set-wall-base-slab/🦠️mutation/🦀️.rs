@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "wall", kind: "set-wall-base-slab", record: "SetWallBaseSlab" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Attach the base of wall \"{}\" to {}", self.id, self.slab.as_deref().map_or("the storey".to_string(), |slab| format!("slab \"{slab}\""))), &format!("Basis der Wand \"{}\" an {} anbinden", self.id, self.slab.as_deref().map_or("das Geschoss".to_string(), |slab| format!("Decke \"{slab}\""))))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Attach the base of wall \"{}\" to {}", self.id, self.slab.as_deref().map_or("the storey".to_string(), |slab| format!("slab \"{slab}\""))), &format!("Basis der Wand \"{}\" an {} anbinden", self.id, self.slab.as_deref().map_or("das Geschoss".to_string(), |slab| format!("Decke \"{slab}\""))))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

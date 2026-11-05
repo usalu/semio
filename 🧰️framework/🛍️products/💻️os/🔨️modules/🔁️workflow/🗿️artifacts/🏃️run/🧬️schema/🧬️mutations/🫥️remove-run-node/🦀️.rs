@@ -18,8 +18,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for RemoveRunNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "run-node", kind: "remove-run-node", record: "RemovedRunNode" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove run node {}", self.node_id), &format!("Laufknoten {} zurücknehmen", self.node_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove run node {}", self.node_id), &format!("Laufknoten {} zurücknehmen", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_id.clone()]

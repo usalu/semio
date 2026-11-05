@@ -8,18 +8,18 @@
 use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use crate::FlowSnapshot;
 use flow::{flow_backed_node_graph_extras, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_os_infinite_directed_presentation::DagHostSnapshot;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_os_kernel::Viewport2d;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "flow-view-main";
@@ -85,18 +85,14 @@ fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGr
     (nodes, edges)
 }
 
-/// 👁️ Pure `FlowSnapshot -> BuiltNode` read: a fresh, throwaway `FlowEvalSession` built for this call only
-/// (never persisted — a viewer has no `Transient`/`Config` lane to hold one), the artifact's own pure
-/// LOD/grid/proximity defaults (`Config = NoConfig` means there is no persisted per-session camera or
-/// canvas state to read), no selection, no preview-off overlay.
+/// 👁️ Projects the original composed scene with the viewer canvas defaults.
 pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let live = document.to_host_snapshot();
+    let live=document.read_source().map_err(|error|semio_plugin::PluginAssemblyError::new("flow.source",error.into_message()))?;
     let (nodes,edges)=dag_host_snapshot_to_workflow(&flow::FlowHost::project_dag_snapshot(&live,&flow::flow_neuron_kind_info_map()));
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let snapshot_json = Some(semio_framework_pack_json::to_json_string(document));
     let mut flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, None);
     flow_extras.status_json=Some(flow::initial_flow_status_json(&live));
-    live.retire_cold();
     let scene = NodeGraphScene {
         editable: Some(false),
         capabilities_json: flow_extras.capabilities_json,

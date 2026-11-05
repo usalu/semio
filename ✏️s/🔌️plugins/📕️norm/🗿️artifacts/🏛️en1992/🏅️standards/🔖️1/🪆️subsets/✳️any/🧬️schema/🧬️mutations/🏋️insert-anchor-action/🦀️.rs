@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertAnchorAction where
         record: "InsertedAnchorAction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert anchor action {}", self.anchor_action.id), &format!("Dübeleinwirkung {} einfügen", self.anchor_action.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert anchor action {}", self.anchor_action.id), &format!("Dübeleinwirkung {} einfügen", self.anchor_action.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.anchor_id.clone()]

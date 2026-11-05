@@ -1,8 +1,8 @@
 //! 🌦️ Captured linked EPW bytes remain under original request, decoding and numerical source custody.
 use semio_framework_job::{OriginalTurnFailure, StepContext};
-use semio_framework_plugin_actor_host::requests::SharedRequestReceiver;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPort;
-use semio_framework_os_kernel::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving;
+use semio_plugin_actor_host::requests::SharedRequestReceiver;
+use semio_plugin_decl_views::tool_run_contract::ToolRunJobPort;
+use semio_os_kernel::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving;
 use semio_s_plugin_energy_engine_sim_retirement::energy_outcome;
 use semio_framework_value_native_owned::OriginalReceivingPrimary;
 use semio_framework_value::{RetainedWorkOutcome,RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};

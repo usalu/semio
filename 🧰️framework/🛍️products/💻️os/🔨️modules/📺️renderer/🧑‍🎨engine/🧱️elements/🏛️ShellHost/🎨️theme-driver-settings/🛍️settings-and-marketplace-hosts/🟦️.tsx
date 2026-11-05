@@ -13,7 +13,8 @@ import { createFrameworkMarketplacePanelTab, type MarketplaceExtensionEntry, typ
 import { hubCatalogOnlyPluginsV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 import type { TrustedPluginModuleIndexV1 } from "@semio-tech/framework/plugin-module";
 import { AgentChatPanel } from "../../../💬️AgentChatPanel/🟦️.tsx";
-import { TaskManagerWindow, installTasksV1, spawnedJobTasksV1, taskManagerToolRunIdV1, toolCallTasksV1, toolRunTasksV1, videoRenderExportTasksV1, type TaskManagerDocumentTransferV1, type TaskManagerSourcesV1, type TaskManagerTaskV1 } from "../../../🧵️TaskManager/🟦️.tsx";
+import { TaskManagerWindow, installTasksV1, spawnedJobTasksV1, taskManagerToolRunIdV1, toolCallTasksV1, toolRunTasksV1, videoRenderExportTasksV1, iconRenderExportTasksV1, type TaskManagerDocumentTransferV1, type TaskManagerSourcesV1, type TaskManagerTaskV1 } from "../../../🧵️TaskManager/🟦️.tsx";
+import { cancelIconExport, iconExportJobsSnapshot, subscribeIconExportJobs, type IconExportRow } from "../../../🖼️IconRenderHost/📤️export/🟦️.ts";
 import { cancelVideoRenderExportV1, subscribeVideoRenderExportJobsV1, videoRenderExportJobsSnapshotV1 } from "../../../🎥️VideoRenderHost/🟦️.ts";
 import { cancelSpawnedJobV1, pluginRuntimeActivationRegistryV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { HUB_CATALOG_REFRESH_MS } from "../../🔌️extension-runtime/🟦️.ts";
@@ -269,7 +270,7 @@ export function useMarketplaceHostAndTaskManager({ registry, extensionIdSet, plu
    * reads through stable `sources`, so a job advancing re-renders the window, never the dock. */
   const taskManagerShellTasksRef = useRef<readonly TaskManagerTaskV1[]>([]);
   const taskManagerListenersRef = useRef(new Set<() => void>());
-  const taskManagerTasksCacheRef = useRef<{ readonly jobs: readonly SpawnedJobRowV1[]; readonly exports: readonly VideoRenderJobRow[]; readonly shell: readonly TaskManagerTaskV1[]; readonly transfers: readonly TaskManagerTaskV1[]; readonly tasks: readonly TaskManagerTaskV1[] } | null>(null);
+  const taskManagerTasksCacheRef = useRef<{ readonly jobs: readonly SpawnedJobRowV1[]; readonly exports: readonly VideoRenderJobRow[]; readonly icons: readonly IconExportRow[]; readonly shell: readonly TaskManagerTaskV1[]; readonly transfers: readonly TaskManagerTaskV1[]; readonly tasks: readonly TaskManagerTaskV1[] } | null>(null);
   const documentTransferFlightRef = useRef(false);
   const documentTransfersRef = useRef(new Map<string, { readonly transfer: TaskManagerDocumentTransferV1; readonly abort: AbortController }>());
   const documentTransferTasksRef = useRef<readonly TaskManagerTaskV1[]>([]);
@@ -286,7 +287,7 @@ export function useMarketplaceHostAndTaskManager({ registry, extensionIdSet, plu
     else if (task.lane === "activation") pluginInstallAbortsRef.current.get(task.id.slice("install:".length))?.abort();
     else if (task.lane === "toolRun") fireToolRunControl(task, "abort");
     else if (task.lane === "documentTransfer") documentTransfersRef.current.get(task.id.slice("documentTransfer:".length))?.abort.abort();
-    else if (task.lane === "export") cancelVideoRenderExportV1(task.id);
+    else if (task.lane === "export") { if (!cancelIconExport(task.id)) cancelVideoRenderExportV1(task.id); }
     else agentBridge.cancelToolCall(task.id.slice("tool:".length));
   };
   const taskManagerSuspendRef = useRef<(task: TaskManagerTaskV1, suspend: boolean) => void>(() => undefined);
@@ -298,22 +299,25 @@ export function useMarketplaceHostAndTaskManager({ registry, extensionIdSet, plu
     tasks: () => {
       const jobs = spawnedJobsSnapshotV1();
       const exports = videoRenderExportJobsSnapshotV1();
+      const icons = iconExportJobsSnapshot();
       const shell = taskManagerShellTasksRef.current;
       const transfers = documentTransferTasksRef.current;
       const cached = taskManagerTasksCacheRef.current;
-      if (cached && cached.jobs === jobs && cached.exports === exports && cached.shell === shell && cached.transfers === transfers) return cached.tasks;
-      const tasks = [...spawnedJobTasksV1(jobs), ...videoRenderExportTasksV1(exports, uiLocaleRef.current), ...shell, ...transfers];
-      taskManagerTasksCacheRef.current = { jobs, exports, shell, transfers, tasks };
+      if (cached && cached.jobs === jobs && cached.exports === exports && cached.icons === icons && cached.shell === shell && cached.transfers === transfers) return cached.tasks;
+      const tasks = [...spawnedJobTasksV1(jobs), ...videoRenderExportTasksV1(exports, uiLocaleRef.current), ...iconRenderExportTasksV1(icons, uiLocaleRef.current), ...shell, ...transfers];
+      taskManagerTasksCacheRef.current = { jobs, exports, icons, shell, transfers, tasks };
       return tasks;
     },
     subscribe: (listener) => {
       taskManagerListenersRef.current.add(listener);
       const unsubscribeJobs = subscribeSpawnedJobsV1(listener);
       const unsubscribeExports = subscribeVideoRenderExportJobsV1(listener);
+      const unsubscribeIcons = subscribeIconExportJobs(listener);
       return () => {
         taskManagerListenersRef.current.delete(listener);
         unsubscribeJobs();
         unsubscribeExports();
+        unsubscribeIcons();
       };
     },
     cancel: (task) => taskManagerCancelRef.current(task),

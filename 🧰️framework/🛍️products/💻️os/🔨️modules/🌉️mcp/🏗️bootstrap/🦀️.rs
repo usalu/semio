@@ -13,12 +13,12 @@
 //! that protected authority without copying it into argv, a URL, a file, logs, or protocol output.
 
 use crate::root::{HttpOptions, HubOptions, StdioOptions, run_http, run_stdio};
-use semio_framework_os_mcp_capabilities::catalog_source_discovery::discover_catalog_source;
-use semio_framework_os_mcp_catalog::catalog::{audit_source, description_findings};
-use semio_framework_os_mcp_foundation::agent_credential::{AgentCredentialSource, CredentialExchangeProtocolV1, install_credential_exchange_protocols_v1};
-use semio_framework_os_mcp_inference_hub::service::{RemoteInferenceProtocolV1, install_remote_inference_protocols_v1};
-use semio_framework_os_mcp_port::policy::AutoApprovePolicy;
-use semio_framework_os_mcp_schema::schema::schema_mirror_json;
+use semio_os_mcp_capabilities::catalog_source_discovery::discover_catalog_source;
+use semio_os_mcp_catalog::catalog::{audit_source, description_findings};
+use semio_os_mcp_foundation::agent_credential::{AgentCredentialSource, CredentialExchangeProtocolV1, install_credential_exchange_protocols_v1};
+use semio_os_mcp_inference_hub::service::{RemoteInferenceProtocolV1, install_remote_inference_protocols_v1};
+use semio_os_mcp_port::policy::AutoApprovePolicy;
+use semio_os_mcp_schema::schema::schema_mirror_json;
 
 //#region 🔖️Args
 
@@ -98,7 +98,7 @@ fn parse_credential_fd(raw: &str, stdio_mode: bool) -> Result<i32, String> {
 }
 
 /// 🎟️ Reads the required independently authored Host policies without scalar conversion or renewal.
-fn read_host_driver_policy(path:&str)->Result<semio_framework_plugin_host::GuestRelayDriverPolicy,String>{let original=std::fs::read_to_string(path).map_err(|error|error.to_string())?;semio_framework_pack_json::from_json_str(&original,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())}
+fn read_host_driver_policy(path:&str)->Result<semio_plugin_host::GuestRelayDriverPolicy,String>{let original=std::fs::read_to_string(path).map_err(|error|error.to_string())?;semio_framework_pack_json::from_json_str(&original,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())}
 
 pub(crate) fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOptions, String> {
     let mut host_driver_policy = None;
@@ -272,7 +272,7 @@ fn compile_component_worker() -> Result<(), String> {
     let (engine, out) = (engine.ok_or("--engine is required")?, out.ok_or("--out is required")?);
     let mut bytes = Vec::new();
     std::io::stdin().read_to_end(&mut bytes).map_err(|error| format!("reading the component from stdin: {error}"))?;
-    semio_framework_plugin_host::compile_component_isolated(&engine, &bytes, &out).map_err(|error| error.to_string())
+    semio_plugin_host::compile_component_isolated(&engine, &bytes, &out).map_err(|error| error.to_string())
 }
 
 /// 🪞️ `semio-os-mcp schemas` prints the `os.mcp` scope's whole draft-07 schema document on stdout —
@@ -310,7 +310,7 @@ pub fn run_mcp_entrypoint(services:Vec<RemoteInferenceProtocolV1>, credentials: 
         std::process::exit(1);
     }
     if has_local_credential
-        && semio_framework_os_kernel::os_directory::identity::claim_inherited_local_hub_credential("mcp").is_err()
+        && semio_os_kernel::os_directory::identity::claim_inherited_local_hub_credential("mcp").is_err()
     {
         eprintln!("[semio-os-mcp] protected MCP credential claim failed");
         std::process::exit(1);

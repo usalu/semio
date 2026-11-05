@@ -1,8 +1,8 @@
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::ToolRunJobPort;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::ViewModel;
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::Effect;
+use semio_plugin::ToolRunJobPort;
+use semio_plugin::ToolRunView;
+use semio_plugin::ViewModel;
 use semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID;
 use semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID;
 use semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID;
@@ -89,12 +89,12 @@ fn a_hop_carries_the_window_id_and_kind_it_was_addressed_to() {
 /// generation session of its own, and no other window kind evaluates anything.
 #[test]
 fn every_target_row_names_the_session_its_window_kind_evaluates() {
-    use semio_framework_plugin::ViewWindowInstance;
+    use semio_plugin::ViewWindowInstance;
     for row in fixture()["targets"]["rows"].as_array().unwrap() {
         let kind = text(&row["kind"]);
         let expected = (!row["target"].is_null()).then(|| target_of(&row["target"]));
         assert_eq!(semio_s_artifact_procedural_2d_editor_commands::flow_eval_tick::generation2d_preview_target(kind), expected, "{kind}");
-        let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
         assert_eq!(semio_s_artifact_procedural_2d_editor_commands::flow_eval_tick::generation2d_preview_windows(Some(&view)).iter().map(|(_, _, target)| *target).collect::<Vec<_>>(), expected.into_iter().collect::<Vec<_>>(), "{kind}: roster");
     }
     assert!(attached_preview_windows(None, &[("generation2d-preview", PreviewEvalTarget::Document)]).is_empty(), "no roster before the first surface");
@@ -388,7 +388,7 @@ fn every_gesture_rearm_row_owes_one_hop_per_preview_and_at_most_one_start() {
             link.requested = None;
         }
 
-        let mut emit = semio_framework_plugin::Emit::<u8>::default();
+        let mut emit = semio_plugin::Emit::<u8>::default();
         emit.artifact_mutations = vec![0_u8; mutations];
         let owes = owe_attached_previews_for_mutations(sessions.parts(), &mut link, &windows, servable, &mut emit);
         assert_eq!(owes, expected["owes"].as_bool().unwrap(), "{id}: a gesture owes the previews exactly when it moved the document");
@@ -419,7 +419,7 @@ fn every_gesture_rearm_row_owes_one_hop_per_preview_and_at_most_one_start() {
         let mut spinning = Sessions::new();
         let mut spinning_link = PreviewEvalRunLink::default();
         stage(&mut spinning, &mut spinning_link);
-        let mut spinning_emit = semio_framework_plugin::Emit::<u8>::default();
+        let mut spinning_emit = semio_plugin::Emit::<u8>::default();
         spinning_emit.artifact_mutations = vec![0_u8; mutations];
         owe_attached_previews_for_mutations(spinning.parts(), &mut spinning_link, &windows, servable, &mut spinning_emit);
         let starts = spinning_emit.effects.len() + replay_pending_effects(&mut spinning, &mut spinning_link, &windows, polls, lag, servable, poll_start_view);
@@ -465,4 +465,30 @@ fn a_preview_eval_digest_separates_its_parts() {
     assert_eq!(preview_eval_digest(&["a", "b"]), preview_eval_digest(&["a", "b"]));
     assert_ne!(preview_eval_digest(&["ab", ""]), preview_eval_digest(&["a", "b"]));
     assert_ne!(preview_eval_digest(&["hostSnapshot", "g1"]), preview_eval_digest(&["hostSnapshot", "g2"]));
+}
+
+
+#[test]
+fn evaluation_request_uses_actual_origin_and_native_reactor_identity(){
+    let law=fixture();let row=&law["evaluationWire"];
+    for resume in [false,true]{
+        let pending=semio_framework_artifact_flow_flow::neural::PendingExtensionEval{neuron_id:text(&row["neuronId"]).into(),extension_id:text(&row["extensionId"]).into(),operator_id:text(&row["operatorId"]).into(),input_json:text(&row["inputJson"]).into(),node_hash:row["nodeHash"].as_u64().unwrap()};
+        let invocation=extension_invocation(pending,resume,text(&row["dependencyJson"]).into(),text(&row["windowId"]),text(&row["windowKindId"]));
+        let actual:serde_json::Value=serde_json::from_str(&invocation.request_json).unwrap();
+        let expected=serde_json::json!({"neuronId":row["neuronId"],"operatorId":row["operatorId"],"inputJson":if resume{""}else{text(&row["inputJson"])},"dependencyJson":if resume{""}else{text(&row["dependencyJson"])},"operatorVersion":format!("registry:{};geometry:1;policy:1",semio_os_flow::flow_extension_registry_generation()),"nodeHash":row["nodeHash"],"resume":resume,"windowId":row["windowId"],"windowKindId":row["windowKindId"],"extensionId":row["extensionId"]});
+        assert_eq!(actual,expected);assert_eq!(actual.as_object().unwrap().len(),row["requiredKeys"].as_array().unwrap().len());
+        for key in row["authorityFieldsAbsent"].as_array().unwrap(){assert!(actual.get(text(key)).is_none());}
+        assert_eq!(invocation.extension_id,row["extensionId"]);assert_eq!(invocation.capability,"evaluate");assert_eq!(invocation.response_action,"flowEvalResolve");
+    }
+}
+
+
+#[test]
+fn evaluated_target_slots_match_the_neutral_last_write_law(){
+ let data=fixture();
+ for row in data["evaluatedTargets"].as_array().unwrap(){
+  let mut link=PreviewEvalRunLink::default();
+  for step in row["steps"].as_array().unwrap(){link.note_evaluated(target_of(&step[0]),step[1].as_u64().unwrap());}
+  for(target,key)in [(PreviewEvalTarget::Document,"document"),(PreviewEvalTarget::Generation,"generation")]{assert_eq!(link.evaluated_digest(target),row["expected"].get(key).and_then(serde_json::Value::as_u64));}
+ }
 }

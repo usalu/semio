@@ -2,7 +2,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{FromValue, ToValue};
 use protocol::{ColdMutation, Mutation, ColdMutationDiff,MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use std::fmt::Debug;
 
 #[doc(hidden)]
@@ -104,7 +104,7 @@ where
 
 pub(super) fn assert_codecs<S, M, L>(operation: fn(i32) -> M)
 where
-    S: Clone + Debug + PartialEq + ToValue + FromValue + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    S: Clone + Debug + PartialEq + ToValue + FromValue + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
     M: Mutation<S> + Debug + PartialEq + OpText + OpBinary,
     M::Diff: ToValue + FromValue,
     L: ToValue + FromValue,
@@ -177,7 +177,7 @@ where
 fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
     use crate::declarations_fixture_tests::fixture::Std1StrictSnapshot;
     use crate::declarations_fixture_tests::fixture::StrictFromAny;
-    let check = <StrictFromAny as semio_framework_os_kernel::io::io_mechanism::Deserializer<Std1StrictSnapshot>>::CONFORMANCE.expect("strict profile check");
+    let check = <StrictFromAny as semio_os_kernel::io::io_mechanism::Deserializer<Std1StrictSnapshot>>::CONFORMANCE.expect("strict profile check");
     for row in cases()["conformance"].as_array().expect("conformance cases") {
         let snapshot = Std1StrictSnapshot { value: i32_value(&row["value"]) };
         assert_eq!(check(&snapshot).is_empty(), row["accept"].as_bool().expect("accept"));

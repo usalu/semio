@@ -11,7 +11,7 @@ use super::*;
 /// no cryptographic uniqueness need) — collisions would require two `semio-wgpu-native` processes
 /// booting the same pid at the same millisecond, which the OS itself already rules out.
 pub fn mint_shell_session_id() -> String {
-    format!("wgpu-{}", semio_framework_os_kernel::os_identity::time_ordered_id())
+    format!("wgpu-{}", semio_os_kernel::os_identity::time_ordered_id())
 }
 
 /// 🔐️ The hub origin the hub workspace's local-bootstrap entry names — slice WG6's twin of AU3
@@ -22,7 +22,7 @@ pub fn mint_shell_session_id() -> String {
 /// base url the directory client already uses.
 pub fn shell_hub_bootstrap_origin() -> String {
     let declared = shell_directory_request_base_url();
-    semio_framework_os_renderer_wgpu_hub_contracts::hub_sign_in::parse_hub_origin(&declared).unwrap_or(declared)
+    semio_renderer_wgpu_hub_contracts::hub_sign_in::parse_hub_origin(&declared).unwrap_or(declared)
 }
 
 /// 🌐️ The native directory client's network byte budget per minute. It carries the largest bounded answer the
@@ -30,7 +30,7 @@ pub fn shell_hub_bootstrap_origin() -> String {
 /// 64 MiB) — twice over: at the old 10 MB a 17.7 MB block component was refused mid-body
 /// (`os.directory-client exhausted its network_bytes_per_min budget`, gate run 23 on hub 7800 B2).
 #[cfg(not(target_arch = "wasm32"))]
-pub const SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE: u64 = 2 * semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
+pub const SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE: u64 = 2 * semio_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
 
 //#endregion 🔖️IdentityPure
 //#region ShellTypes

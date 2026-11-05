@@ -40,7 +40,7 @@
 //! to `db_compact`'s "online compaction with manifest CAS + fencing" — `retain_from` here is the
 //! safe, mechanical pruning primitive that caller is expected to call after fencing itself.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_durability::EpochFence;
 use db_durability::Frontier;

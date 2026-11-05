@@ -27,8 +27,8 @@ where
     Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_combination::DeleteCombination>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "combination", kind: "create-combination", record: "CreatedCombination" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create combination \"{}\"", self.combination.id), &format!("Kombination \"{}\" erstellen", self.combination.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create combination \"{}\"", self.combination.id), &format!("Kombination \"{}\" erstellen", self.combination.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.combination.id.clone()]

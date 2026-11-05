@@ -2,13 +2,13 @@
 //! scrolls vertically and horizontally by key, wheel and scroll bar. Wired as a crate-root sibling module of
 //! `crate::tui::widget` (see that mod's `pub use crate::tui::scrollable::ScrollableState;`).
 
-use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
-use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use semio_framework_ui_tui_core::rows::paint_scroll_bar;
-use semio_framework_ui_tui_core::text::{display_width, window_cells};
-use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
-use semio_framework_ui_tui_core::signal::WidgetSignal;
+use semio_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::rows::paint_scroll_bar;
+use semio_ui_tui_core::text::{display_width, window_cells};
+use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::signal::WidgetSignal;
 use std::cell::Cell as Shared;
 
 const WHEEL_LINES: isize = 3;

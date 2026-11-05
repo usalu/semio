@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedPatchLength 
         record: "ChangedPlatedPatchLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stiff bearing length s_s of the plated panel", "Plattenfeld: Lasteinleitungslänge s_s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stiff bearing length s_s of the plated panel", "Plattenfeld: Lasteinleitungslänge s_s ändern")
     }
 }
 

@@ -1,11 +1,11 @@
 //! 🕸️ Workflow graph model: media contracts and ports, nodes and edges, declared inputs, validation, planning and parameters.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, PortMultiplicity};
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use std::collections::{HashMap, HashSet};
 
 pub const WORKFLOW_SCHEMA: &str = "workflow.graph";

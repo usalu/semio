@@ -11,7 +11,7 @@ Feature: Apply every typed merge-policy mutation to its committed specification 
   `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ Like its opening-preferences sibling, this case lives under `🔌️plugin/🖥️host`; its Rust subject
-  links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  links the owning crate `semio-os-config` directly, declared as a subject host package in
   `../../🔮️oracles/🔣️.json`.
 
   The vocabulary closes at ONE kind, and that is a statement about the record rather than an

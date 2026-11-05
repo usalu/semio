@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberTorquePositi
         record: "ChangedMemberTorquePosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Position of the point torque as a fraction of the member length of the member", "Bauteil: Lage des Einzeltorsionsmoments als Bruchteil der Bauteillänge ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Position of the point torque as a fraction of the member length of the member", "Bauteil: Lage des Einzeltorsionsmoments als Bruchteil der Bauteillänge ändern")
     }
 }
 

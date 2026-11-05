@@ -1,15 +1,15 @@
 use super::*;
 use neural_engine::ColdRetire;
-use semio_framework_os_infinite::board::schema::dag_input::DagChannelDirection;
-use semio_framework_os_infinite::board::ports::directed_dag::{camera_content_coverage, label_overlay_rows_for_node_spec};
-use semio_framework_os_flow_vcs::forms_bridge;
+use semio_os_infinite::board::schema::dag_input::DagChannelDirection;
+use semio_os_infinite::board::ports::directed_dag::{camera_content_coverage, label_overlay_rows_for_node_spec};
+use semio_os_flow_vcs::forms_bridge;
 use canvas::camera::{world_to_screen, Camera, Viewport};
 use canvas::Point;
 use dag::{computation_node_width, slider_widget_height, HandleRole};
 use semio_framework_graph_dsl::{WireEdge, WireNode};
 use semio_framework_graph_manifest::PropertyBag;
 use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo};
-use semio_framework_os_infinite_directed_presentation::DagPreviewContent;
+use semio_os_infinite_directed_presentation::DagPreviewContent;
 // 🌿️ The flow ARTIFACT crate's own vcs surface — `crate::vcs` glob-imports it privately, so the
 // undo/redo law names it at its source.
 use semio_framework_artifact_flow_flow::FlowEnvelope;

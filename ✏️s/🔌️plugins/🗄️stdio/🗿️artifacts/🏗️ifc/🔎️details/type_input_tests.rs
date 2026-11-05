@@ -139,12 +139,12 @@ fn original_required_type_input_every_receiving_candidate_and_domain_prefix_canc
         }
     }
 }
-fn guidance_request() -> semio_framework_plugin::action_staging::StagedFormRequest {
-    use semio_framework_plugin::action_staging::*;
+fn guidance_request() -> semio_plugin::action_staging::StagedFormRequest {
+    use semio_plugin::action_staging::*;
     StagedFormRequest {
         token: StagedFormToken { action: editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(), window: "original-type-window".into(), generation: "1".into(), revision: "0".repeat(64) },
         args: DslValue::Object(vec![("path".into(), DslValue::String("/entities/0".into())), ("value".into(), DslValue::Object(vec![("$ifcType".into(), DslValue::String("IFCMATERIALPROFILE".into()))]))]),
-        locale: semio_framework_ui_locale::Locale::En,
+        locale: semio_ui_locale::Locale::En,
         page: None,
     }
 }
@@ -176,7 +176,7 @@ fn retire_guidance<T: semio_framework_value::retirement::RetireOwned + 'static>(
 }
 #[test]
 fn original_type_guidance_denies_each_published_axis_before_source_or_output_changes() {
-    use semio_framework_plugin_decl_staged_form::StagedBodySource;
+    use semio_plugin_decl_staged_form::StagedBodySource;
     let snapshot = source(&contract()["cases"][0]);
     let alternate = Arc::new(snapshot.as_ref().clone());
     let mut caller = OriginalWorkFixture::new();

@@ -6,7 +6,7 @@ static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWit
 #[path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/🦀️.rs"]
 mod typed_input_law;
 
-use semio_framework_plugin::{authoring_law::author_through_document_store, ArtifactEditor, EditorApp};
+use semio_plugin::{authoring_law::author_through_document_store, ArtifactEditor, EditorApp};
 use semio_s_artifact_block_3d_editor::Block3dPlayApp;
 use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_label::change_object_kind_label;
 use semio_s_artifact_block_3d_mut_representations::create_representation::create_representation;

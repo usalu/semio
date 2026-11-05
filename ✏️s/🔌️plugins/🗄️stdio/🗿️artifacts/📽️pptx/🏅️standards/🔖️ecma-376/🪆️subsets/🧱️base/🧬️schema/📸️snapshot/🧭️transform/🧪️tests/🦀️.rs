@@ -1,7 +1,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_pptx_base_vocabulary::transform::from_value;
 use semio_s_artifact_stdio_pptx_base_vocabulary::transform::to_value;
-use semio_framework_os_kernel::DslValue;
+use semio_os_kernel::DslValue;
 use serde_json::Value as Json;
 #[cfg(test)]
 #[test]

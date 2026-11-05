@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "render-mode", kind: "set-render-mode", record: "SetRenderMode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set render mode", "Darstellungsmodus setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set render mode", "Darstellungsmodus setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["renderMode".into()]

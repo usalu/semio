@@ -62,7 +62,7 @@ fn a_dialog_round_trips_its_choices_and_omits_them_when_it_has_none() {
     let fixture = fixture();
     let dialog = fixture_dialog(&fixture);
     let choice = &dialog.choices[0];
-    assert_eq!((choice.tone, choice.destructive), (semio_framework_ui_contract::Tone::Danger, true));
+    assert_eq!((choice.tone, choice.destructive), (semio_ui_contract::Tone::Danger, true));
     assert_eq!(serde_json::to_value(&dialog).expect("dialog wire")["choices"], fixture["dialog"]["choices"]);
     let plain = DialogDefinition::new("plain", LocalizedLabel::native("Plain", "Schlicht"), ActionRef::new("ok"));
     assert!(serde_json::to_value(&plain).expect("plain wire").get("choices").is_none());

@@ -18,11 +18,11 @@ use serde_json::Value;
 const FIXTURE: &str = include_str!("../🧫️fixtures/🧾️frame-action-ledger/🔣️.json");
 #[allow(non_snake_case)]
 fn RENDERER_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+    semio_renderer_wgpu_test_support::renderer_source()
 }
 #[allow(non_snake_case)]
 fn FRAME_JOB_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs")
+    semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs")
 }
 
 fn close_original_deferred(cursor: &mut FrameDeferredCursor, caller: &mut crate::fixture_original_turn::FixtureTurnV1) {
@@ -41,7 +41,7 @@ fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_pay
     for row in rows {
         batch
             .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
-                builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
+                builder.set_receipt(semio_ui_action::ActionQueueReceipt { source: semio_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
                     token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
                     member: row["member"].as_u64().unwrap() as u8,
                     abort_correlation_on_error: row["abort"].as_bool().unwrap(),

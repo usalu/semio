@@ -1,6 +1,6 @@
 //! 🧪️ Retained source receiving observes the same fifteen independently authored graph populations.
 use super::{overlay::*, receive::*};
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 #[test]

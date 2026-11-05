@@ -27,8 +27,8 @@ impl PaintIndexedRegion {
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for PaintIndexedRegion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "indexed-region", kind: "paint-indexed-region", record: "PaintIndexedRegion" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Paint indexed region", "Indizierten Bereich malen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Paint indexed region", "Indizierten Bereich malen")
     }
 
     fn target(&self) -> Vec<String> {

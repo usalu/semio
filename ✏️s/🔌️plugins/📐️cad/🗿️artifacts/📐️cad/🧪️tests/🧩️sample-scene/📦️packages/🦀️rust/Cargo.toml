@@ -17,8 +17,8 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-s-artifact-cad-cad-model = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

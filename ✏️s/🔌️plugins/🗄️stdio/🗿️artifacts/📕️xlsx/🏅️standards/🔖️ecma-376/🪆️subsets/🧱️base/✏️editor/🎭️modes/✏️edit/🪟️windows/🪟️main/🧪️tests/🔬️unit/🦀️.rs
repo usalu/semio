@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::{plugin_app_close_prelude::UiMap, Component, Trigger};
+use semio_plugin::{plugin_app_close_prelude::UiMap, Component, Trigger};
 
 fn descendants<'a>(node: &'a BuiltNode, out: &mut Vec<&'a BuiltNode>) {
     out.push(node);
@@ -42,7 +42,7 @@ async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() 
             .collect();
         let sheet_name = case["sheetName"].as_str().unwrap();
         let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: sheet_name.into(), cells }], ..Default::default() });
-        let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_framework_plugin::UiPublicationRevision(23)).expect("grid render");
+        let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_plugin::UiPublicationRevision(23)).expect("grid render");
         let mut nodes = Vec::new();
         descendants(&node, &mut nodes);
         let table = nodes.iter().find(|node| matches!(node.component, Component::Table(_))).expect("materialized sheet table");
@@ -77,7 +77,7 @@ async fn german_grid_localizes_axes_without_rewriting_column_coordinates() {
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Leer".into(), cells: Vec::new() }], ..Default::default() });
-    let node = render(&document, Locale::De, &TreeWindows::unhosted(), semio_framework_plugin::UiPublicationRevision(23)).unwrap();
+    let node = render(&document, Locale::De, &TreeWindows::unhosted(), semio_plugin::UiPublicationRevision(23)).unwrap();
     let mut nodes = Vec::new();
     descendants(&node, &mut nodes);
     let table = nodes.iter().find(|node| matches!(node.component, Component::Table(_))).unwrap();

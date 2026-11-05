@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePileShearArea wher
         record: "ChangedPileShearArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear area A_v of the pile", "Pfahl: Schubfläche A_v ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear area A_v of the pile", "Pfahl: Schubfläche A_v ändern")
     }
 }
 

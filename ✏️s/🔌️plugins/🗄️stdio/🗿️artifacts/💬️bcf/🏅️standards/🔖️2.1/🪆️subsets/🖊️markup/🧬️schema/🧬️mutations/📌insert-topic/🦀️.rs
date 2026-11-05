@@ -15,8 +15,8 @@ pub struct InsertTopic {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertTopic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "topic", kind: "insert-topic", record: "InsertTopic" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert topic", "Thema einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert topic", "Thema einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

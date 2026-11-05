@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRailLoadGroupFacto
         record: "ChangedRailLoadGroupFactorLongitudinal",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change rail load group: Longitudinal component factor", "Eisenbahn-Lastgruppe: Faktor der Längskomponente ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change rail load group: Longitudinal component factor", "Eisenbahn-Lastgruppe: Faktor der Längskomponente ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

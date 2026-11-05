@@ -331,7 +331,7 @@ fn prepared_geometry_merge_preserves_surface_metadata_or_refuses_incompatible_do
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let meshes = fixture["cases"].as_array().unwrap().iter().map(|row| {
         let value = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap()
+        semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap()
     }).collect::<Vec<_>>();
     for row in fixture["mergeSurface"]["cases"].as_array().unwrap() {
         let parts = row["parts"].as_array().unwrap().iter().map(|index| meshes[index.as_u64().unwrap() as usize].clone()).collect::<Vec<_>>();
@@ -388,7 +388,7 @@ fn prepared_surface_channels_enter_the_editable_mesh_without_loss() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let owned = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&owned)).unwrap();
+        let mesh = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&owned)).unwrap();
         let document = mesh_bridge::import_mesh_data(&mesh).unwrap();
         let (operator, data) = mesh_bridge::imported_source(&document).unwrap();
         let operator = operator.to_string();
@@ -401,7 +401,7 @@ fn prepared_surface_channels_enter_the_editable_mesh_without_loss() {
         let mut prepared = fixture["cases"][0]["prepared"].clone();
         prepared[row["field"].as_str().unwrap()] = row["value"].clone();
         let owned = semio_framework_pack_json::parse(&prepared.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&owned)).unwrap();
+        let mesh = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&owned)).unwrap();
         assert!(mesh_bridge::import_mesh_data(&mesh).is_err(), "{}", row["id"]);
     }
 }
@@ -465,7 +465,7 @@ fn prepared_surface_exports_keep_the_supported_channels() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let value = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let prepared = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
+        let prepared = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
         let output = mesh_bridge::semio_mesh_from_mesh_data(&prepared).unwrap();
         let primitive = &output.meshes[0].primitives[0];
         assert_eq!(primitive.positions.len(), 3);
@@ -496,7 +496,7 @@ fn prepared_face_surface_channels_expand_with_independent_triangle_area() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["faceChannels"].as_array().unwrap() {
         let source = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();
+        let mesh = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();
         let output = mesh_bridge::semio_mesh_from_mesh_data(&mesh).unwrap();
         let primitive = &output.meshes[0].primitives[0];
         let positions: Vec<_> = primitive.positions.iter().flat_map(|point| [point.x, point.y, point.z]).collect();
@@ -616,7 +616,7 @@ fn gltf_authored_attribute_palettes_restore_editable_source_domains() {
     let metadata:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔁️authored-attributes/🔣️.json")).unwrap();
     let prepared=&fixture["gltfExport"]["prepared"];
     let value=semio_framework_pack_json::parse(&prepared.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mesh=semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
+    let mesh=semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
     let exported=export::serialize_prepared_meshes(&[mesh]).unwrap();
     for row in metadata["cases"].as_array().unwrap() {
         let mut source=exported.clone();
@@ -664,7 +664,7 @@ fn prepared_surface_format_diagnostics_are_fixture_driven() {
     for row in fixture["diagnostics"].as_array().unwrap() {
         let source = &fixture["cases"][row["case"].as_u64().unwrap() as usize]["prepared"];
         let value = semio_framework_pack_json::parse(&source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let prepared = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
+        let prepared = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
         let actual = document_io::format_diagnostics(&[prepared], row["format"].as_str().unwrap());
         assert_eq!(actual.iter().map(|diagnostic| diagnostic.code).collect::<Vec<_>>(), row["codes"].as_array().unwrap().iter().map(|code| code.as_str().unwrap()).collect::<Vec<_>>());
     }
@@ -675,7 +675,7 @@ fn prepared_surface_format_diagnostics_are_fixture_driven() {
             if let Some(attributes) = row["extraAttributes"].as_object() { for (name, value) in attributes { source["attributes"][name] = value.clone(); } }
             if let Some(fields) = row["extraMaterial"].as_object() { for (name, value) in fields { source["materials"]["red"][name] = value.clone(); } }
             let value = semio_framework_pack_json::parse(&source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-            semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap()
+            semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap()
         }).collect();
         let actual = document_io::format_diagnostics(&meshes, row["format"].as_str().unwrap());
         assert_eq!(actual.iter().map(|diagnostic| diagnostic.code).collect::<Vec<_>>(), row["codes"].as_array().unwrap().iter().map(|code| code.as_str().unwrap()).collect::<Vec<_>>(), "{}", row["id"]);
@@ -691,7 +691,7 @@ fn prepared_surface_export_preserves_partial_materials_with_owning_defaults() {
         let mut source = fixture["cases"][1]["prepared"].clone();
         source["materials"]["red"] = row["source"].clone();
         let value = semio_framework_pack_json::parse(&source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
+        let mesh = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
         let output = mesh_bridge::semio_mesh_from_mesh_data(&mesh).unwrap();
         let material = &output.materials[0];
         for (index, value) in [material.base_color.r, material.base_color.g, material.base_color.b, material.base_color.a].into_iter().enumerate() { assert!((value as f64-row["expected"]["baseColor"][index].as_f64().unwrap()).abs()<1e-7); }
@@ -723,7 +723,7 @@ fn prepared_surface_export_scope_uses_the_existing_graph_connections() {
 /// 📄️ The real registry preserves imported graph documents and retires its rebuilt roots.
 #[test]
 fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_snapshot() {
-    use {semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource,semio_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use semio_s_artifact_procedural_3d_io_import as import;
     use semio_s_artifact_procedural_3d_io::io_registry;
     let contract = fixture()["registryText"].clone();
@@ -763,7 +763,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let row = &fixture["gltfExport"];
     let value = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mut mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
+    let mut mesh = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
     mesh.component_references = serde_json::from_value(row["componentReferences"].clone()).unwrap();
     mesh.validate_component_references().unwrap();
     let cutoff_case: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
@@ -771,7 +771,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     let mut mask = mesh.clone();
     let semio_framework_value::DslValue::Object(fields) = mask.materials.get_mut("paint").unwrap() else { panic!("owned material fields") };
     fields.iter_mut().find(|(name, _)| name == "alphaCutoff").unwrap().1 = semio_framework_value::ToValue::to_value(&cutoff);
-    let mask = semio_framework_plugin::MeshData::from_value(semio_framework_value::ToValue::to_value(&mask)).unwrap();
+    let mask = semio_plugin::MeshData::from_value(semio_framework_value::ToValue::to_value(&mask)).unwrap();
     let masked = any::serialize_prepared_meshes(std::slice::from_ref(&mask)).unwrap();
     assert_eq!(masked.document.materials[0].alpha_cutoff as f64, cutoff);
     let output = any::serialize_prepared_meshes(std::slice::from_ref(&mesh)).unwrap();
@@ -842,7 +842,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     let mut edge_source = row["prepared"].clone();
     edge_source["attributes"]["edgeLabel"] = row["edgeAttribute"].clone();
     let edge_value = semio_framework_pack_json::parse(&edge_source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let edge_mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&edge_value)).unwrap();
+    let edge_mesh = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&edge_value)).unwrap();
     let edge_output = any::serialize_prepared_meshes(std::slice::from_ref(&edge_mesh)).unwrap();
     let edge_metadata = serde_json::to_value(edge_output.document.meshes[0].primitives[0].extras.as_ref().unwrap()).unwrap();
     assert_eq!(edge_metadata["semioAttributes"]["edgeLabel"]["values"], row["edgeAttribute"]["values"]);
@@ -850,7 +850,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     let mut edge_uv_source = row["prepared"].clone();
     edge_uv_source["attributes"]["edgeUv"] = row["edgeUvAttribute"].clone();
     let edge_uv_value = semio_framework_pack_json::parse(&edge_uv_source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let edge_uv_mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&edge_uv_value)).unwrap();
+    let edge_uv_mesh = semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&edge_uv_value)).unwrap();
     let edge_uv_output = any::serialize_prepared_meshes(std::slice::from_ref(&edge_uv_mesh)).expect("unused Edge UV palette does not replace surface UV sampling");
     let edge_uv_metadata = serde_json::to_value(edge_uv_output.document.meshes[0].primitives[0].extras.as_ref().unwrap()).unwrap();
     assert_eq!(edge_uv_metadata["semioAttributes"]["edgeUv"]["values"], row["edgeUvAttribute"]["values"]);
@@ -859,7 +859,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     seam_only["attributes"].as_object_mut().unwrap().retain(|name, _| row["seamOnlyAttributes"].as_array().unwrap().iter().any(|value| value.as_str() == Some(name)));
     let parse = |value: &serde_json::Value| {
         let value = semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap()
+        semio_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap()
     };
     let seam_only = any::serialize_prepared_meshes(&[parse(&seam_only)]).unwrap();
     let primitive_seam = &seam_only.document.meshes[0].primitives[0];
@@ -887,15 +887,15 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
         use semio_s_artifact_procedural_3d_export_document as editor;
         use semio_s_artifact_procedural_3d_viewer_commands::export_document as viewer;
         let snapshot = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot::default();
-        let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: Vec::new(), command_filter: semio_framework_plugin::app::HistoryCommandFilter::default() };
-        let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
+        let history = semio_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: Vec::new(), command_filter: semio_plugin::app::HistoryCommandFilter::default() };
+        let doc = semio_plugin::ArtifactView::new(&snapshot, &history);
         let editor = editor::emit(&editor::ExportDocument { format: "gltf".into(), widget_id: None }, &doc, Some(std::slice::from_ref(&mesh))).unwrap();
         let viewer = viewer::emit(&viewer::ExportDocument { format: "gltf".into() }, &doc, Some(std::slice::from_ref(&mesh))).unwrap();
         assert!(editor.artifact_mutations.is_empty());
         for effects in [&editor.effects, &viewer.effects] {
             assert_eq!(effects.len(), 1);
             match &effects[0] {
-                semio_framework_plugin::Effect::DownloadMediaExport { data, filename, mime_type, .. } => { assert_eq!(data.as_bytes(), bytes.as_slice()); assert!(filename.ends_with(".gltf")); assert_eq!(mime_type, &envelope.mime_type); },
+                semio_plugin::Effect::DownloadMediaExport { data, filename, mime_type, .. } => { assert_eq!(data.as_bytes(), bytes.as_slice()); assert!(filename.ends_with(".gltf")); assert_eq!(mime_type, &envelope.mime_type); },
                 _ => panic!("rich glTF command must publish exactly one download"),
             }
         }

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfBBar where Op: p
         record: "ChangedCfBBar",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Notional flat width b_p of the cold-formed member", "Kaltprofil: Rechnerische ebene Breite b_p ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Notional flat width b_p of the cold-formed member", "Kaltprofil: Rechnerische ebene Breite b_p ändern")
     }
 }
 

@@ -1,6 +1,6 @@
 /// ⏪️ Undo, redo and gesture journal laws: the add widget undo and redo, the leaf names and the journal rows of widget, wire, layout and selection gestures and their undo order.
 
-/// ↩️ Exercises the standard `semio_framework_os_kernel::os_store::ArtifactStore<FlowHostSnapshot, FlowMutation>` undo/redo
+/// ↩️ Exercises the standard `semio_os_kernel::os_store::ArtifactStore<FlowHostSnapshot, FlowMutation>` undo/redo
 /// mechanism directly (the same one `FlowHost::undo`/`redo` are built on) — add a widget, undo,
 /// confirm it's gone, redo, confirm it's back — in place of the old test's direct assertions on a
 /// hand-rolled `Vec<FlowHostSnapshot>` snapshot stack.
@@ -16,8 +16,8 @@ async fn undo_redo_add_widget() {
     assert_eq!(operations.len(), 2, "add_widget emits its add-widget and change-layout leaves at the gesture site");
 
     let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer);
-    let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(envelope, semio_framework_os_kernel::os_spr::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
-    semio_framework_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
+    let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(envelope, semio_os_kernel::os_spr::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
+    semio_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
     history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, &mut identity).await).expect("apply add-widget operations");
     let applied = store.snapshot().expect("projection");
     assert_eq!(applied.widgets.len(), count_before + 1);

@@ -181,7 +181,7 @@ pub fn guest_asset_declarations() -> Vec<RuntimeAssetDeclaration> {
 }
 
 /// 📥️ Answers a declared package asset name with the bytes the host delivered, `None` when it delivered none
-/// (`semio_framework_plugin::reactor::package_asset` in a guest).
+/// (`semio_plugin::reactor::package_asset` in a guest).
 pub type PackageAssetReader = fn(&str) -> Option<&'static [u8]>;
 
 static GUEST_READER: OnceLock<PackageAssetReader> = OnceLock::new();

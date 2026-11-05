@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertCharacteristicBasi
         verb: "insert", entity: "characteristic-basis", kind: "insert-characteristic-basis", record: "InsertedCharacteristicBasis",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert characteristic value basis", "Grundlage des charakteristischen Werts einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert characteristic value basis", "Grundlage des charakteristischen Werts einfügen")
     }
 }
 

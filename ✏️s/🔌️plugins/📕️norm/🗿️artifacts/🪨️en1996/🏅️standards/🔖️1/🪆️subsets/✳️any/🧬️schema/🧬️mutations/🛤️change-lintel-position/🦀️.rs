@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeLintelPosition whe
         record: "ChangedLintelPosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change lintel lintel position x", "Sturzlage x (Sturz) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change lintel lintel position x", "Sturzlage x (Sturz) ändern")
     }
 }
 

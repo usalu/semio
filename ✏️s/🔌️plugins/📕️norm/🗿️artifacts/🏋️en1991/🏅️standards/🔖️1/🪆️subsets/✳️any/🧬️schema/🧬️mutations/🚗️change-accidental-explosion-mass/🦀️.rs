@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAccidentalExplosio
         record: "ChangedAccidentalExplosionMass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change explosion charge mass of the accidental case", "Außergewöhnlicher Fall: Explosionsmasse ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change explosion charge mass of the accidental case", "Außergewöhnlicher Fall: Explosionsmasse ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

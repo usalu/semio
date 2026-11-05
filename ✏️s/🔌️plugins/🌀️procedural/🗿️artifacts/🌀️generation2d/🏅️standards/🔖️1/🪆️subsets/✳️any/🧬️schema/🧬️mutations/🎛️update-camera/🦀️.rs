@@ -9,7 +9,8 @@ use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️UpdateCamera
 /// 📷 `update-camera` payload — the fixture's new camera position/zoom.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_pack_json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -28,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update camera to ({}, {}, zoom {})", self.camera.x, self.camera.y, self.camera.zoom), &format!("Kamera auf ({}, {}, Zoom {}) aktualisieren", self.camera.x, self.camera.y, self.camera.zoom))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update camera to ({}, {}, zoom {})", self.camera.x, self.camera.y, self.camera.zoom), &format!("Kamera auf ({}, {}, Zoom {}) aktualisieren", self.camera.x, self.camera.y, self.camera.zoom))
     }
 }
 

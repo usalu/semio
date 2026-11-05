@@ -2,7 +2,7 @@
 use semio_s_artifact_raster_raster_editor::config::RasterConfig;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::find_layer;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use semio_s_artifact_raster_raster_editor::commands::duplicate_layer::*;
 use protocol::{ColdMutation, Mutation};
 use semio_framework_test_fixtures::fixture_text;
@@ -27,7 +27,7 @@ fn assert_copy(source:&semio_s_artifact_raster_raster_model::RasterLayerNode,cop
 fn duplicate_keeps_parent_properties_and_undo() {
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎮️commands/📋️duplicate-layer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut document=empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let history=semio_framework_plugin::HistoryView::empty();let doc=ArtifactView::new(&document,&history);
+    let history=semio_plugin::HistoryView::empty();let doc=ArtifactView::new(&document,&history);
     let config=RasterConfig::default();let cfg=ConfigView {snapshot:&config,window:None};
     for row in fixture["cases"].as_array().unwrap() {
         let id=row["id"].as_str().unwrap();
@@ -37,9 +37,9 @@ fn duplicate_keeps_parent_properties_and_undo() {
         assert_eq!(create.parent_id.as_deref(),row["parentId"].as_str(),"{id}");assert_eq!(create.index,row["index"].as_u64().unwrap() as usize,"{id}");
         assert_copy(find_layer(&document.layers,id).unwrap(),&create.layer);
         let copy_id=layer_node_id(&create.layer).to_owned();
-        let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&operation).unwrap();assert!(messages.is_empty());
+        let (next,messages)=semio_os_kernel::apply_mutation(&document,&operation).unwrap();assert!(messages.is_empty());
         assert!(find_layer(&next.layers,&copy_id).is_some());assert_eq!(find_layer(&next.layers,id),find_layer(&document.layers,id));
-        let inverse=operation.inverse(&document).expect("valid retained mutation inverse fixture").pop().unwrap();let (restored,messages)=semio_framework_os_kernel::apply_mutation(&next,&inverse).unwrap();assert!(messages.is_empty());assert_eq!(restored,document);
+        let inverse=operation.inverse(&document).expect("valid retained mutation inverse fixture").pop().unwrap();let (restored,messages)=semio_os_kernel::apply_mutation(&next,&inverse).unwrap();assert!(messages.is_empty());assert_eq!(restored,document);
         inverse.retire_cold();operation.retire_cold();retire_raster_snapshot(next);retire_raster_snapshot(restored);
     }
     for row in fixture["invalid"].as_array().unwrap() {let result=handle(&DuplicateLayer {layer_id:row["id"].as_str().unwrap().into()},&doc,&cfg);assert!(result.is_err(),"{}",row["id"]);assert!(result.err().unwrap().message.contains(row["error"].as_str().unwrap()));}

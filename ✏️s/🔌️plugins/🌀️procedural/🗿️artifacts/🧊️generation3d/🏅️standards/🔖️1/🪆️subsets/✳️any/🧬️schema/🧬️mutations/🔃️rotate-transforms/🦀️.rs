@@ -10,7 +10,8 @@ use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️RotateTransforms
 /// 🔃️ Composes the rotation by `angle` radians about the world axis `(ax, ay, az)` after every addressed operator's own.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -33,10 +34,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "transforms", kind: "rotate-transforms", record: "RotatedTransforms" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (en, de) = generation3d_label_number(self.angle.to_degrees());
         let (items_en, items_de) = generation3d_label_items(self.targets.len(), "shape(s)", "Form(en)");
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {items_en} by {en}°"), &format!("{items_de} um {de}° drehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Rotate {items_en} by {en}°"), &format!("{items_de} um {de}° drehen"))
     }
 
     fn target(&self) -> Vec<String> {

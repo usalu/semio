@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationBlockLen
         record: "ChangedFoundationBlockLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Block length a_2 (along the plate length) of the foundation block", "Fundamentblock: Blocklänge a_2 (entlang der Plattenlänge) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Block length a_2 (along the plate length) of the foundation block", "Fundamentblock: Blocklänge a_2 (entlang der Plattenlänge) ändern")
     }
 }
 

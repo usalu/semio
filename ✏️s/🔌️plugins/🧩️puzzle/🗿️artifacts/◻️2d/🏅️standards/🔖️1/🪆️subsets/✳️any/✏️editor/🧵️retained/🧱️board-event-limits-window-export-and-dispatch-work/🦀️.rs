@@ -52,22 +52,22 @@ pub fn puzzle2d_revision_hex(revision: &[u8; 32]) -> [u8;64] {
     for (index,byte) in revision.iter().copied().enumerate(){output[index*2]=digits[(byte>>4)as usize];output[index*2+1]=digits[(byte&15)as usize];}output
 }
 
-impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dWindowCommandWork<A> {
+impl<A: Puzzle2dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dWindowCommandWork<A> {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
 
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         (self.extent)(command, snapshot, interaction)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-window-work-repeated"));
         }
@@ -75,15 +75,15 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         let window_config = window::config_from_snapshot_or_document(window_config_snapshot, snapshot.value());
         let window_transient = window::transient_from_snapshot(context.and_then(|context| context.window_transient.as_ref()));
-        let window_kind = window_config_snapshot.map(semio_framework_plugin::WindowConfigSnapshot::window_kind_id).or_else(|| view_state.and_then(window::kind_for_view)).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+        let window_kind = window_config_snapshot.map(semio_plugin::WindowConfigSnapshot::window_kind_id).or_else(|| view_state.and_then(window::kind_for_view)).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
         let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-        let detached = semio_framework_plugin::app::GestureSlot::detached();
+        let detached = semio_plugin::app::GestureSlot::detached();
         let gesture = context.map_or(&detached, |context| context.gesture());
         let revision=puzzle2d_revision_hex(&input.operation.canonical_base_revision);
         let base_revision=std::str::from_utf8(&revision).expect("lowercase hexadecimal is ASCII");
         let (emit, ephemeral) = puzzle2d_dispatch_emit::<A>(command, snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), &selection, &input.operation.authoring_seed, base_revision, gesture, None)?;
         self.consumed = true;
-        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
+        Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -99,32 +99,32 @@ pub struct Puzzle2dExportWork {
     consumed: bool,
 }
 
-impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dExportWork {
+impl<A: Puzzle2dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dExportWork {
     fn tool_id(&self) -> &'static str {
         "exportSnapshot"
     }
 
-    fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         Some(1)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-export-work-repeated"));
         }
         self.consumed = true;
         Ok(match export_snapshot::puzzle2d_export_publication(snapshot.value())? {
-            export_snapshot::Puzzle2dExportPublication::Inline(effect) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() }),
-            export_snapshot::Puzzle2dExportPublication::Segmented(download) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { download: download, ephemeral: Default::default() },
-            export_snapshot::Puzzle2dExportPublication::Refused(message) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
+            export_snapshot::Puzzle2dExportPublication::Inline(effect) => semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() }),
+            export_snapshot::Puzzle2dExportPublication::Segmented(download) => semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { download: download, ephemeral: Default::default() },
+            export_snapshot::Puzzle2dExportPublication::Refused(message) => semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
         })
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -149,13 +149,13 @@ pub fn puzzle2d_dispatch_emit<A: Puzzle2dEditor>(
     window_config: &Puzzle2dWindowConfig,
     window_transient: &Puzzle2dWindowTransient,
     window_kind: &str,
-    view_state: Option<&semio_framework_plugin::ViewModel>,
+    view_state: Option<&semio_plugin::ViewModel>,
     active_utility: &str,
     selection: &protocol::DomainSelection,
     authoring_seed: &str,
     base_revision: &str,
-    gesture: &semio_framework_plugin::app::GestureSlot<Puzzle2dMutation>,
-    operation: Option<semio_framework_plugin::AppOperationContext>,
+    gesture: &semio_plugin::app::GestureSlot<Puzzle2dMutation>,
+    operation: Option<semio_plugin::AppOperationContext>,
 ) -> Result<(Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, EphemeralEmit<EditorApp<A>>), Fault> {
     let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
     let before = document.value();
@@ -213,7 +213,7 @@ pub fn puzzle2d_dispatch_emit<A: Puzzle2dEditor>(
             "setSelectionLocked" => set_selection_flag::set_selection_flag_value(ctx, args, "locked"),
             "addNode" => add_node::add_node(ctx, args),
             "patchInspectorNodes" => patch_inspector::patch_inspector(ctx, args),
-            "forceLayout" | "reorganize" => {let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);force_layout::force_layout(ctx,&mut control)},
+            "forceLayout" | "reorganize" => {let mut progress=|_|true;let mut control=semio_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);force_layout::force_layout(ctx,&mut control)},
             "setCamera" => set_camera::set_camera(ctx, args),
             "focusSelection" => focus_selection::focus_selection(ctx),
             "engagementInput" => engagement_input::engagement_input(ctx, args),
@@ -235,7 +235,7 @@ pub fn puzzle2d_dispatch_emit<A: Puzzle2dEditor>(
             "setBrushPlacementOverlapBudget" => set_brush_placement_overlap_budget::set_brush_placement_overlap_budget(ctx, args),
             "engagementRepeatLast" => engagement_repeat_last::engagement_repeat_last(ctx),
             "openAddNodeDialog" => {
-                ctx.effects.push(Effect::OpenDialog { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), dialog_id: PUZZLE2D_ADD_NODE_DIALOG_ID.into(), args: None });
+                ctx.effects.push(Effect::OpenDialog { req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0), dialog_id: PUZZLE2D_ADD_NODE_DIALOG_ID.into(), args: None });
                 *ctx.ui_scope = UiDirtyScope::None;
             }
             "setBrushKindWeights" => set_brush_kind_weights::set_brush_kind_weights(ctx, args),
@@ -331,8 +331,8 @@ pub fn puzzle2d_active_example_reduce(
     snapshot: &Puzzle2dPlaySnapshot,
     config: &Puzzle2dConfig,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _view_state: Option<&semio_framework_plugin::ViewModel>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _view_state: Option<&semio_plugin::ViewModel>,
 ) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault> {
     puzzle2d_active_example_emit(command, snapshot, config)
 }

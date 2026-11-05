@@ -2,7 +2,7 @@
 
 #[test]
 fn retained_pane_actions_address_the_concrete_window_before_guest_admission() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture = pane_owner_fixture();
     for case in fixture["cases"].as_array().unwrap() {
         let owner = case["window"].as_str().unwrap();
@@ -11,7 +11,7 @@ fn retained_pane_actions_address_the_concrete_window_before_guest_admission() {
         let controller_id = shell.docs.session.as_ref().unwrap().app.controller_id.clone();
         shell.plugins.plugins.clear();
         let result =
-            semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id, action: semio_framework::SET_ACTIVE_UTILITY_ACTION_ID.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowId": surface, "utilityId": "owner-brush" }) }));
+            semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id, action: semio_framework::SET_ACTIVE_UTILITY_ACTION_ID.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "windowId": surface, "utilityId": "owner-brush" }) }));
         assert_eq!(result.unwrap_err(), "action program missing", "fixture stops at guest admission");
         assert_eq!(shell.windows.active_utility_for_window(owner), Some("owner-brush"), "{} canonical host utility scope", case["kind"]);
         assert_eq!(shell.windows.active_utility_by_window.len(), 1, "{} one concrete owner", case["kind"]);
@@ -58,7 +58,7 @@ fn retained_focus_panel_shell(surface: &str) -> ShellState {
 
 #[test]
 fn retained_panel_focus_routes_keyboard_without_activating_an_application_window() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture = pane_owner_fixture();
     let surface = fixture["panel"]["surface"].as_str().unwrap();
     let previous = fixture["previousWindow"].as_str().unwrap();
@@ -66,21 +66,21 @@ fn retained_panel_focus_routes_keyboard_without_activating_an_application_window
     shell.windows.active_window_id = Some(previous.into());
     let mut document = shell.windows.publish_surface_records(surface, pane_owner_select_records()).unwrap();
     let mut input = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
-    let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "pane-owner-select").expect("the published pane exposes its exact accessible address");
+    let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "pane-owner-select").expect("the published pane exposes its exact accessible address");
     let focused = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap();
     let active = shell.windows.active_window_id.clone();
     let open_focus = SessionCtx::of(&mut shell).retained_keyboard_focus().map(|(surface, _)| surface);
     shell.dock.anchor_state_mut(PanelAnchor::BottomRight).visible = false;
     let hidden_focus = SessionCtx::of(&mut shell).retained_keyboard_focus();
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
-    let hidden_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    let hidden_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     shell.dock.anchor_state_mut(PanelAnchor::BottomRight).visible = true;
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_some(), "the same visible retained owner recovers without a synthetic focus event");
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
     let closed_focus = SessionCtx::of(&mut shell).retained_keyboard_focus();
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
-    let closed_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    let closed_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     while !document.close_step() {}
     assert!(focused);
     assert_eq!(active.as_deref(), Some(previous));
@@ -93,12 +93,12 @@ fn retained_panel_focus_routes_keyboard_without_activating_an_application_window
 
 #[test]
 fn same_surface_keyed_successor_retains_keyboard_focus_without_a_synthetic_focus_event() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "focus-lifecycle-keyed-successor";
     let mut shell = retained_focus_panel_shell(surface);
     let mut initial = shell.windows.publish_surface_records(surface, pane_owner_select_records_with("stable-select", "system")).expect("initial keyed document publishes");
     let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
-    let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "stable-select").expect("the published pane exposes its exact accessible address");
+    let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "stable-select").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     let before = SessionCtx::of(&mut shell).retained_keyboard_focus().expect("the initial keyed node owns keyboard focus");
 
@@ -106,22 +106,22 @@ fn same_surface_keyed_successor_retains_keyboard_focus_without_a_synthetic_focus
     input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
     let after = SessionCtx::of(&mut shell).retained_keyboard_focus().expect("the keyed successor retains keyboard focus");
     assert_eq!(after, before, "key reconciliation preserves the exact focused node identity");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the retained Select opens before commit");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
-    assert_eq!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setAppearance"]);
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the retained Select opens before commit");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    assert_eq!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setAppearance"]);
     while !initial.close_step() {}
     while !successor.close_step() {}
 }
 
 #[test]
 fn successor_that_removes_the_focused_key_cannot_receive_retained_keyboard_input() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "focus-lifecycle-removed-key";
     let mut shell = retained_focus_panel_shell(surface);
     let mut initial = shell.windows.publish_surface_records(surface, pane_owner_select_records_with("retired-select", "system")).expect("initial removable document publishes");
     let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
-    let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "retired-select").expect("the published pane exposes its exact accessible address");
+    let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "retired-select").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_some());
 
@@ -129,20 +129,20 @@ fn successor_that_removes_the_focused_key_cannot_receive_retained_keyboard_input
     input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
     assert!(shell.chrome.chrome_build.content_has_focus(surface), "the shell receives no invented blur command");
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_none(), "the removed focused node generation cannot route into its replacement");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the replacement receives no keyboard action without its own focus event");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the replacement receives no keyboard action without its own focus event");
     while !initial.close_step() {}
     while !successor.close_step() {}
 }
 
 #[test]
 fn same_key_changed_control_kind_cannot_inherit_retained_keyboard_focus() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "focus-lifecycle-changed-kind";
     let mut shell = retained_focus_panel_shell(surface);
     let mut initial = shell.windows.publish_surface_records(surface, pane_owner_select_records_with("polymorphic-control", "system")).expect("initial Select document publishes");
     let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
-    let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "polymorphic-control").expect("the published pane exposes its exact accessible address");
+    let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "polymorphic-control").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_some());
 
@@ -150,15 +150,15 @@ fn same_key_changed_control_kind_cannot_inherit_retained_keyboard_focus() {
     input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
     assert!(shell.chrome.chrome_build.content_has_focus(surface), "document reconciliation emits no synthetic blur");
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_none(), "a same-key replacement control kind cannot inherit its predecessor's focus");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).unwrap();
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the replacement Input receives no Enter commit without its own focus event");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).unwrap();
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the replacement Input receives no Enter commit without its own focus event");
     while !initial.close_step() {}
     while !successor.close_step() {}
 }
 
 #[test]
 fn retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_blur() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture = pane_owner_fixture();
     let cases = fixture["cases"].as_array().unwrap();
     let mut shell = host_test_shell();
@@ -175,13 +175,13 @@ fn retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_b
     for kind in fixture["focusSequence"].as_array().unwrap() {
         let row = cases.iter().find(|row| &row["kind"] == kind).unwrap();
         let surface = row["surface"].as_str().unwrap();
-        let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "pane-owner-select").expect("the published pane exposes its exact accessible address");
+        let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "pane-owner-select").expect("the published pane exposes its exact accessible address");
         let accepted = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap();
         observations.push((accepted, shell.windows.active_window_id.clone(), SessionCtx::of(&mut shell).retained_keyboard_focus().map(|(surface, _)| surface), previous.as_ref().is_some_and(|old| shell.chrome.chrome_build.content_has_focus(old))));
         previous = Some(surface.into());
     }
     let blurred = cases.iter().find(|row| row["kind"] == fixture["lateBlur"]).unwrap()["surface"].as_str().unwrap();
-    let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(blurred, "pane-owner-select").expect("the published pane exposes its exact accessible address");
+    let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(blurred, "pane-owner-select").expect("the published pane exposes its exact accessible address");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Blur, &mut input)).unwrap();
     let final_focus = SessionCtx::of(&mut shell).retained_keyboard_focus().map(|(surface, _)| surface);
     for mut document in documents {
@@ -203,10 +203,10 @@ fn pane_owner_fixture() -> Value {
 
 #[test]
 fn retained_pane_pointer_activation_preserves_the_concrete_window_owner() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture = pane_owner_fixture();
     for case in fixture["cases"].as_array().unwrap() {
-        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         let owner = case["window"].as_str().unwrap();
         let surface = case["surface"].as_str().unwrap();
         let previous = fixture["previousWindow"].as_str().unwrap();
@@ -223,7 +223,7 @@ fn retained_pane_pointer_activation_preserves_the_concrete_window_owner() {
 
 #[test]
 fn retained_pane_accessibility_and_keyboard_focus_keep_surface_and_window_distinct() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture = pane_owner_fixture();
     for case in fixture["cases"].as_array().unwrap() {
         let owner = case["window"].as_str().unwrap();
@@ -233,7 +233,7 @@ fn retained_pane_accessibility_and_keyboard_focus_keep_surface_and_window_distin
         let mut document = shell.windows.publish_surface_records(surface, records).expect("pane document publishes");
         let mut input = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
         shell.windows.active_window_id = Some(fixture["previousWindow"].as_str().unwrap().into());
-        let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "pane-owner-select").expect("the published pane exposes its exact accessible address");
+        let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "pane-owner-select").expect("the published pane exposes its exact accessible address");
         let focused = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap();
         let active = shell.windows.active_window_id.clone();
         let keyboard_surface = SessionCtx::of(&mut shell).retained_keyboard_focus().map(|(surface, _)| surface);
@@ -248,17 +248,17 @@ fn retained_pane_accessibility_and_keyboard_focus_keep_surface_and_window_distin
 
 #[test]
 fn retained_key_mapper_separates_select_typeahead_and_space_from_input_text() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let modifiers = PointerModifiers::default();
-    assert!(matches!(ui_event_from_key_action(&semio_framework_ui_wgpu_input::KeyAction::Char("d".into()), &modifiers, true), Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key, .. }) if key == "d"));
-    assert!(matches!(ui_event_from_key_action(&semio_framework_ui_wgpu_input::KeyAction::Space(true), &modifiers, true), Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key, .. }) if key == " "));
-    assert!(ui_event_from_key_action(&semio_framework_ui_wgpu_input::KeyAction::Space(false), &modifiers, true).is_none());
-    assert!(matches!(ui_event_from_key_action(&semio_framework_ui_wgpu_input::KeyAction::Char("d".into()), &modifiers, false), Some(semio_framework_ui_wgpu_events::UiEvent::TextInput { text }) if text == "d"));
+    assert!(matches!(ui_event_from_key_action(&semio_ui_wgpu_input::KeyAction::Char("d".into()), &modifiers, true), Some(semio_ui_wgpu_events::UiEvent::KeyDown { key, .. }) if key == "d"));
+    assert!(matches!(ui_event_from_key_action(&semio_ui_wgpu_input::KeyAction::Space(true), &modifiers, true), Some(semio_ui_wgpu_events::UiEvent::KeyDown { key, .. }) if key == " "));
+    assert!(ui_event_from_key_action(&semio_ui_wgpu_input::KeyAction::Space(false), &modifiers, true).is_none());
+    assert!(matches!(ui_event_from_key_action(&semio_ui_wgpu_input::KeyAction::Char("d".into()), &modifiers, false), Some(semio_ui_wgpu_events::UiEvent::TextInput { text }) if text == "d"));
 }
 
 #[test]
 fn the_context_menu_key_and_shift_f10_are_the_keyboard_secondary_click_and_nothing_else_is() {
-    use semio_framework_ui_wgpu_input::KeyAction;
+    use semio_ui_wgpu_input::KeyAction;
     let shift = PointerModifiers { shift: true, ..PointerModifiers::default() };
     let ctrl_shift = PointerModifiers { shift: true, ctrl: true, ..PointerModifiers::default() };
     assert!(is_context_menu_chord(&KeyAction::ContextMenu, &PointerModifiers::default()), "the dedicated key needs no modifier");
@@ -268,12 +268,12 @@ fn the_context_menu_key_and_shift_f10_are_the_keyboard_secondary_click_and_nothi
     assert!(!is_context_menu_chord(&KeyAction::Function(10), &ctrl_shift), "Ctrl+Shift+F10 is another chord");
     assert!(!is_context_menu_chord(&KeyAction::Function(11), &shift));
     assert!(!is_context_menu_chord(&KeyAction::Enter, &shift));
-    assert!(matches!(ui_event_from_key_action(&KeyAction::ContextMenu, &PointerModifiers::default(), false), Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key, .. }) if key == "ContextMenu"), "a retained scene sees the key too");
+    assert!(matches!(ui_event_from_key_action(&KeyAction::ContextMenu, &PointerModifiers::default(), false), Some(semio_ui_wgpu_events::UiEvent::KeyDown { key, .. }) if key == "ContextMenu"), "a retained scene sees the key too");
 }
 
 #[test]
 fn accessibility_focus_arms_shell_select_space_and_typeahead_routing() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "control-focus-select";
     let records: Vec<ui_contract::UiNodeRecord> = serde_json::from_value(serde_json::json!([
         {
@@ -290,21 +290,21 @@ fn accessibility_focus_arms_shell_select_space_and_typeahead_routing() {
     let mut document = shell.windows.publish_surface_records(surface, records).expect("Select surface publishes");
     let mut input = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
     shell.windows.active_window_id = Some(surface.to_string());
-    let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "framework.settings.appearance").expect("the published pane exposes its exact accessible address");
+    let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "framework.settings.appearance").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     assert!(shell.chrome.chrome_build.content_has_focus(surface));
     assert!(SessionCtx::of(&mut shell).retained_select_owns_keyboard());
 
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "opening with Space commits nothing");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
-    let space = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "opening with Space commits nothing");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    let space = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(space.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setAppearance"]);
 
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Char("d".into()), &PointerModifiers::default(), &mut input)).unwrap();
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "typeahead opens and highlights before commit");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).unwrap();
-    let typed = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Char("d".into()), &PointerModifiers::default(), &mut input)).unwrap();
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "typeahead opens and highlights before commit");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).unwrap();
+    let typed = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(typed.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setAppearance"]);
     assert_eq!(typed[0].args.as_ref().and_then(|args| args.get("value")).and_then(DslValue::as_str), Some("dark"));
     while !document.close_step() {}

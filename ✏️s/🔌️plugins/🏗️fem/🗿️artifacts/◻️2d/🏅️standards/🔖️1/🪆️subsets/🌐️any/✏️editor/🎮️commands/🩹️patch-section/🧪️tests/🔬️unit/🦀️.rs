@@ -6,7 +6,7 @@ use super::*;
 fn concurrent_section_fields_preserve_both_authors_intent() {
     let base = Fem2dSnapshot { sections: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection { id: "target".into(), name: "Original".into(), area: 0.01, iy: 1e-6 }], ..Default::default() };
     let lower = |field: &str, value: &str| {
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = semio_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&base, &history);
         let config = NoConfig::default();
         handle(&PatchSection { id: "target".into(), field: field.into(), value: value.into() }, &doc, &ConfigView { snapshot: &config, window: None }).expect("field intent").artifact_mutations.remove(0)
@@ -30,12 +30,12 @@ use crate::context::dispatch;
 use crate::context::fem2d_app;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use pack::snapshot::ArtifactDsl;
-#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
-#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_plugin::component::ArtifactView;
+#[cfg(test)] use semio_plugin::component::NoConfig;
 #[cfg(test)] use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 #[cfg(test)] use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_section::PatchSection;
-#[cfg(test)] use semio_framework_plugin::component::Emit;
-#[cfg(test)] use semio_framework_plugin::component::NoConfigMutation;
+#[cfg(test)] use semio_plugin::component::Emit;
+#[cfg(test)] use semio_plugin::component::NoConfigMutation;
 #[cfg(test)] use semio_framework::Fault;
 
 fn demo() -> Fem2dSnapshot {
@@ -43,7 +43,7 @@ fn demo() -> Fem2dSnapshot {
 }
 
 fn emit(snapshot: &Fem2dSnapshot, payload: PatchSection) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(snapshot, &history);
     let config = NoConfig::default();
     handle(&payload, &doc, &ConfigView { snapshot: &config, window: None })

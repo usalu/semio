@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::sche
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
 use serde_json::Value;
 #[allow(unused_imports)]
-use {semio_framework_plugin::app::io_dispatch, semio_framework_artifact_reference::Dialect, semio_framework_plugin::app::ErasedComposeSource, semio_framework_plugin::app::IoDirection, semio_framework_plugin::app::IoKey, semio_framework_plugin::app::IoPayload, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::app::io_dispatch, semio_framework_artifact_reference::Dialect, semio_plugin::app::ErasedComposeSource, semio_plugin::app::IoDirection, semio_plugin::app::IoKey, semio_plugin::app::IoPayload, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 #[allow(unused_imports)]

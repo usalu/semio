@@ -1,4 +1,4 @@
-use semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY;
+use semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY;
 use super::*;
 
 #[test]
@@ -10,7 +10,7 @@ fn closing_input_reports_each_admitted_action_receipt_once() {
     for row in rows {
         batch
             .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 128, |builder| {
-                builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
+                builder.set_receipt(semio_ui_action::ActionQueueReceipt { source: semio_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
                     token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
                     member: row["member"].as_u64().unwrap() as u8,
                     abort_correlation_on_error: row["abort"].as_bool().unwrap(),

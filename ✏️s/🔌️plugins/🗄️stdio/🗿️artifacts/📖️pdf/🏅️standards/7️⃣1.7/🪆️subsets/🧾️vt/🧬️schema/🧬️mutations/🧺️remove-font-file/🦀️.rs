@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "font-file", kind: "remove-font-file", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove font program from descriptor {}", self.descriptor_ordinal), &format!("Schriftprogramm aus Deskriptor {} entfernen", self.descriptor_ordinal))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove font program from descriptor {}", self.descriptor_ordinal), &format!("Schriftprogramm aus Deskriptor {} entfernen", self.descriptor_ordinal))
     }
 
     fn target(&self) -> Vec<String> {

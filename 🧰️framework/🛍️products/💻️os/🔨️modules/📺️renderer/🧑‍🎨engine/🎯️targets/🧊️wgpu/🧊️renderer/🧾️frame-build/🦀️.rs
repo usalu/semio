@@ -16,7 +16,7 @@ pub type AppMailbox = RuntimeMailbox<AppRuntime>;
 pub struct AppRuntime {
     pub atlas: FontAtlas,
     pub icons: IconAtlas,
-    pub icon_rebuild: Option<semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuild>,
+    pub icon_rebuild: Option<semio_renderer_wgpu_icon_host::IconAtlasRebuild>,
     pub icon_raster_scale: f32,
     pub interaction: Option<AppInteractionState>,
     pub checkout: runtime_mailbox_core::InteractionCheckoutLedger,
@@ -81,8 +81,8 @@ impl AppRuntime {
         if !scale_factor.is_finite() || scale_factor <= 0.0 {
             return;
         }
-        let pending = semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuild::new(scale_factor);
-        if pending.cell_size() == semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuild::new(self.icon_raster_scale).cell_size() {
+        let pending = semio_renderer_wgpu_icon_host::IconAtlasRebuild::new(scale_factor);
+        if pending.cell_size() == semio_renderer_wgpu_icon_host::IconAtlasRebuild::new(self.icon_raster_scale).cell_size() {
             return;
         }
         self.icon_rebuild = Some(pending);
@@ -92,9 +92,9 @@ impl AppRuntime {
     /// once, on the step that completes it, so the caller installs and re-uploads it.
     pub fn drive_icon_raster_step(&mut self) -> Option<IconAtlas> {
         let rebuild = self.icon_rebuild.as_mut()?;
-        match rebuild.step(semio_framework_os_renderer_wgpu_icon_host::ICON_RASTER_STEP_BUDGET) {
-            semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuildStep::Rasterized(_) => None,
-            semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuildStep::Complete(atlas) => {
+        match rebuild.step(semio_renderer_wgpu_icon_host::ICON_RASTER_STEP_BUDGET) {
+            semio_renderer_wgpu_icon_host::IconAtlasRebuildStep::Rasterized(_) => None,
+            semio_renderer_wgpu_icon_host::IconAtlasRebuildStep::Complete(atlas) => {
                 let scale = rebuild.scale_factor();
                 self.icon_rebuild = None;
                 self.icon_raster_scale = scale;
@@ -131,7 +131,7 @@ impl AppRuntime {
 pub const FRAME_ENGINE_PACKET_CAPACITY: usize = 256;
 pub const FRAME_ENGINE_PACKET_PAGE_SLOTS: usize = 16;
 pub const FRAME_ENGINE_PACKET_PAGES: usize = FRAME_ENGINE_PACKET_CAPACITY / FRAME_ENGINE_PACKET_PAGE_SLOTS;
-type FrameEnginePacketPage = [Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_PAGE_SLOTS];
+type FrameEnginePacketPage = [Option<semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_PAGE_SLOTS];
 
 pub struct FrameEnginePackets {
     pub slots: [Option<Box<FrameEnginePacketPage>>; FRAME_ENGINE_PACKET_PAGES],
@@ -156,7 +156,7 @@ impl FrameEnginePackets {
         Ok(index + 1 == FRAME_ENGINE_PACKET_PAGES)
     }
 
-    pub fn try_push(&mut self, packet: semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket) -> Result<(), semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
+    pub fn try_push(&mut self, packet: semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket) -> Result<(), semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
         if self.len == FRAME_ENGINE_PACKET_CAPACITY { return Err(packet); }
         let Some(page) = self.slots[self.len / FRAME_ENGINE_PACKET_PAGE_SLOTS].as_mut() else { return Err(packet) };
         page[self.len % FRAME_ENGINE_PACKET_PAGE_SLOTS] = Some(packet);
@@ -164,19 +164,19 @@ impl FrameEnginePackets {
         Ok(())
     }
 
-    pub fn pop(&mut self) -> Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
+    pub fn pop(&mut self) -> Option<semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
         let index = self.len.checked_sub(1)?;
         let packet = self.slots[index / FRAME_ENGINE_PACKET_PAGE_SLOTS].as_mut()?[index % FRAME_ENGINE_PACKET_PAGE_SLOTS].take();
         if packet.is_some() { self.len = index; }
         packet
     }
 
-    fn last_mut(&mut self) -> Option<&mut semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
+    fn last_mut(&mut self) -> Option<&mut semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
         let index = self.len.checked_sub(1)?;
         self.slots[index / FRAME_ENGINE_PACKET_PAGE_SLOTS].as_mut()?[index % FRAME_ENGINE_PACKET_PAGE_SLOTS].as_mut()
     }
 
-    pub fn get(&self, index: usize) -> Option<&semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
+    pub fn get(&self, index: usize) -> Option<&semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
         if index >= self.len { return None; }
         self.slots[index / FRAME_ENGINE_PACKET_PAGE_SLOTS].as_ref()?[index % FRAME_ENGINE_PACKET_PAGE_SLOTS].as_ref()
     }
@@ -208,8 +208,8 @@ impl FrameEnginePackets {
 
 pub struct AppFrameBuild {
     pub retained: semio_framework_job::RetainedCloneGrant,
-    pub input: semio_framework_ui_prepared::PreparedRenderInput,
-    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub input: semio_ui_prepared::PreparedRenderInput,
+    pub input_candidate: Option<semio_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
     pub engine_packets: FrameEnginePackets,
     pub generation: semio_framework_trace::Generation,
     pub cursor: SemioCursor,
@@ -222,10 +222,10 @@ pub struct AppFrameBuild {
 
 pub struct AppFrameAfterChrome {
     pub retained: semio_framework_job::RetainedCloneGrant,
-    pub resource_input: Option<semio_framework_ui_prepared::PreparedRenderInput>,
-    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
-    pub upload_rejected: Option<semio_framework_ui_prepared::PreparedRenderUpload>,
-    pub draw_rejected: Option<semio_framework_ui_prepared::PreparedRenderInputRejected>,
+    pub resource_input: Option<semio_ui_prepared::PreparedRenderInput>,
+    pub input_candidate: Option<semio_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub upload_rejected: Option<semio_ui_prepared::PreparedRenderUpload>,
+    pub draw_rejected: Option<semio_ui_prepared::PreparedRenderInputRejected>,
     pub engine_packets: Option<FrameEnginePackets>,
     pub fullscreen: Option<bool>,
     pub cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
@@ -240,22 +240,22 @@ pub struct FrameBuildCursor {
     pub retained_clock_index: usize,
     pub retained_clock_deadline: Option<f64>,
     pub presentation_witness: RuntimePresentationWitness,
-    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub input_candidate: Option<semio_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
     pub fullscreen: Option<bool>,
     pub previous_draw: Option<DrawList>,
     pub previous_overlay: Option<DrawList>,
     pub icon_checked: bool,
-    pub icon_pages: Option<semio_framework_ui_prepared::PreparedAtlasPages>,
-    pub icon_upload: Option<semio_framework_ui_prepared::PreparedRenderUpload>,
-    pub engine_resources: Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasBuildContext>,
+    pub icon_pages: Option<semio_ui_prepared::PreparedAtlasPages>,
+    pub icon_upload: Option<semio_ui_prepared::PreparedRenderUpload>,
+    pub engine_resources: Option<semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasBuildContext>,
     pub world_resources: Option<infinite_world::world::World3dBuildContext>,
-    pub resource_input: Option<semio_framework_ui_prepared::PreparedRenderInput>,
-    pub input_rejected: Option<semio_framework_ui_prepared::PreparedRenderInputRejected>,
+    pub resource_input: Option<semio_ui_prepared::PreparedRenderInput>,
+    pub input_rejected: Option<semio_ui_prepared::PreparedRenderInputRejected>,
     pub engine_packets: FrameEnginePackets,
-    pub engine_rejected: Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>,
+    pub engine_rejected: Option<semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>,
     pub world_rejected: Option<infinite_world::world::World3dBuildRejected>,
     pub retirement: Option<AppFramePreparation>,
-    pub chrome: semio_framework_os_renderer_wgpu_shell_view_panels::ShellChromeFrameCursor,
+    pub chrome: semio_renderer_wgpu_shell_view_panels::ShellChromeFrameCursor,
     pub cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
     pub job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
@@ -323,7 +323,7 @@ impl FrameBuildCursor {
             engine_rejected: None,
             world_rejected: None,
             retirement: None,
-            chrome: semio_framework_os_renderer_wgpu_shell_view_panels::ShellChromeFrameCursor::default(),
+            chrome: semio_renderer_wgpu_shell_view_panels::ShellChromeFrameCursor::default(),
             cursor_wake: None,
             #[cfg(not(target_arch = "wasm32"))]
             job_progress: None,
@@ -403,8 +403,8 @@ pub struct FrameFinishCursor {
     pub shell_maintenance: bool,
     pub settle: bool,
     pub glyph_started: bool,
-    pub glyph_pages: Option<semio_framework_ui_prepared::PreparedAtlasPages>,
-    pub icon_pages: Option<semio_framework_ui_prepared::PreparedAtlasPages>,
+    pub glyph_pages: Option<semio_ui_prepared::PreparedAtlasPages>,
+    pub icon_pages: Option<semio_ui_prepared::PreparedAtlasPages>,
 }
 
 #[derive(Clone, Copy)]
@@ -432,7 +432,7 @@ impl FrameFinishCursor {
         for pages in [&mut self.icon_pages, &mut self.glyph_pages] {
             if let Some(owner) = pages.as_mut() {
                 if !owner.terminal_is_empty() { return frame_child_step(owner.close_original_step(grant), grant, owner.terminal_is_empty()); }
-                let bytes = std::mem::size_of::<Option<semio_framework_ui_prepared::PreparedAtlasPages>>();
+                let bytes = std::mem::size_of::<Option<semio_ui_prepared::PreparedAtlasPages>>();
                 if let Some(step) = frame_inline_gate(grant, bytes)? { return Ok(step); }
                 *pages = None;
                 return frame_inline_progress(bytes);
@@ -560,8 +560,8 @@ pub fn frame_received_child(step:Result<InteractiveJobCloseStep,semio_framework_
 
 pub struct AppFramePresentation {
     pub retained: semio_framework_job::RetainedCloneGrant,
-    pub packet: Option<semio_framework_ui_prepared::PreparedRenderPacket>,
-    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub packet: Option<semio_ui_prepared::PreparedRenderPacket>,
+    pub input_candidate: Option<semio_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
     pub engine_packets: FrameEnginePackets,
     pub generation: semio_framework_trace::Generation,
     pub cursor: SemioCursor,
@@ -572,7 +572,7 @@ pub struct AppFramePresentation {
     pub job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
 }
 
-pub fn discard_frame_input_candidate(runtime: &AppMailbox, candidate: &mut Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>) -> bool {
+pub fn discard_frame_input_candidate(runtime: &AppMailbox, candidate: &mut Option<semio_renderer_wgpu_shell_input::PresentedInputCandidateWitness>) -> bool {
     let Some(witness) = *candidate else { return true };
     let Ok(mut runtime) = runtime.try_lock() else { return false };
     let Some(interaction) = runtime.interaction.as_mut() else { return false };
@@ -598,7 +598,7 @@ impl AppFrameBuild {
             #[cfg(not(target_arch = "wasm32"))]
             job_progress,
         } = self;
-        let (job, job_rejected) = match semio_framework_ui_prepared::PreparedRenderJob::try_new(input) {
+        let (job, job_rejected) = match semio_ui_prepared::PreparedRenderJob::try_new(input) {
             Ok(job) => (Some(job), None),
             Err(rejected) => (None, Some(rejected)),
         };

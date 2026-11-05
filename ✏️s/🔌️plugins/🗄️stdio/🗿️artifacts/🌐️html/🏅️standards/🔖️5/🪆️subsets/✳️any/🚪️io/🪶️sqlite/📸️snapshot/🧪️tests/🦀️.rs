@@ -1,22 +1,22 @@
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
-use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::SqliteValue};
+use semio_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::SqliteValue};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::ValueError;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteRow};
+use semio_os_kernel::{sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteRow};
 #[allow(unused_imports)]
 use std::{collections::BTreeMap, collections::BTreeSet};
 #[allow(unused_imports)]
 use semio_framework_value::ValueRefusalKind;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io_schema::IoError;
+use semio_os_kernel::io_schema::IoError;
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::sqlite::snapshot::{text, kind, component};
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::{parse_html_document, write_html_document};
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::sqlite::snapshot::*;
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
 fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }
 fn project(snapshot: &HtmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() }
@@ -92,11 +92,11 @@ fn sqlite_snapshot_html_independent_queries_edits_and_html_parser_oracle() {
 fn sqlite_snapshot_html_erased_native_preflight_admission_and_limits() {
     let snapshot = fixture();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.html".into(), standard: "5".into(), subset: "*".into() };
-    let codec = <HtmlSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
+    let codec = <HtmlSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let actual = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("html preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
-        let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)) };
+        let expected = match encoding { SnapshotEncoding::Text => semio_os_kernel::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_os_kernel::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)) };
         assert_eq!(actual, expected);
     }
     let large = HtmlSnapshot { schema: "stdio.html".into(), doctype: None, root: HtmlNode::Element { name: "html".into(), attributes: Vec::new(), children: vec![HtmlNode::Text { text: "x".repeat(100000) }] } };

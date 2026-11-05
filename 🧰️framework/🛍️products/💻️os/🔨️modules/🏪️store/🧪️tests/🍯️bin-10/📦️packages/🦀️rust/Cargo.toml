@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-store-tests-10"
+name = "semio-os-store-tests-10"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -34,24 +34,24 @@ semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/�
 semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
-semio-framework-os-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
-semio-framework-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
-semio-framework-os-semio = { path = "../../../../../🧬️semio/📦️packages/🦀️rust" }
-semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
-semio-framework-os-store-cursor = { path = "../../../../🧭️cursor/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-store-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
-semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust", features = ["hot-path-census"] }
-semio-framework-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
-semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust", features = ["hot-path-census"] }
-semio-framework-os-store-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
-semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
-semio-framework-os-store-testing-doubles = { path = "../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
-semio-framework-os-store-testing-fixtures = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }
-semio-framework-os-store-testing-prelude = { path = "../../../../🧪️testing/🧭️prelude/📦️packages/🦀️rust" }
-semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
+semio-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-os-semio = { path = "../../../../../🧬️semio/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
+semio-os-store-cursor = { path = "../../../../🧭️cursor/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
+semio-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust", features = ["hot-path-census"] }
+semio-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
+semio-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust", features = ["hot-path-census"] }
+semio-os-store-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
+semio-os-store-testing-doubles = { path = "../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
+semio-os-store-testing-fixtures = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-os-store-testing-prelude = { path = "../../../../🧪️testing/🧭️prelude/📦️packages/🦀️rust" }
+semio-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-json-retained-schema = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }

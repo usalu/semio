@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindFaceLoadedArea
         record: "ChangedWindFaceLoadedArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change loaded area a", "Belastete Fläche A ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change loaded area a", "Belastete Fläche A ändern")
     }
 }
 

@@ -1,8 +1,8 @@
-use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
-use semio_framework_ui_tui_frame::chrome::{window_chip_layout, ChromeMode, ChromeState, TabKind, WindowStackTabState, WindowState};
-use semio_framework_ui_tui_core::geometry::{Rect, Size};
-use semio_framework_ui_tui_core::docking::WindowStackCorner;
-use semio_framework_ui_tui_core::theme::{Role, Theme};
+use semio_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_ui_tui_frame::chrome::{window_chip_layout, ChromeMode, ChromeState, TabKind, WindowStackTabState, WindowState};
+use semio_ui_tui_core::geometry::{Rect, Size};
+use semio_ui_tui_core::docking::WindowStackCorner;
+use semio_ui_tui_core::theme::{Role, Theme};
 use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use tiny_skia::{Paint, Pixmap, Transform};

@@ -45,12 +45,12 @@ impl MutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dummy-count", kind: "set-dummy-count", record: "SetDummyCount" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set dummy count to {}", self.value), &format!("Platzhalteranzahl auf {} setzen", self.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set dummy count to {}", self.value), &format!("Platzhalteranzahl auf {} setzen", self.value))
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
+impl semio_os_command::ColdMutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
     fn diff(&self, _: &DummySnapshot) -> MutationOutcome<DummyDiff> {
         MutationOutcome::new(DummyDiff { count: Some(self.value) })
     }

@@ -2,13 +2,13 @@
 
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 use semio_s_artifact_cad_cad_model::CadArtifact;
 use semio_s_artifact_cad_cad_model_diff::CadDiff;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
-use semio_framework_os_kernel::{DiffBinary, DiffText};
+use semio_os_kernel::{DiffBinary, DiffText};
 
 #[test]
 fn cad_document_contract_round_trips_exact_child_identities() {

@@ -3,7 +3,7 @@
 use crate::editor::sequence::editor_vocabulary::reset_sequence_document_effect;
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetActiveExample

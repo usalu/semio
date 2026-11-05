@@ -34,10 +34,10 @@ mod tests {
     fn sample_config_spec() -> ConfigSpec {
         ConfigSpec {
             fields: vec![
-                semio_framework::ActionArgDef::number("zoom", semio_framework_ui_locale::LocalizedLabel::native("Zoom", "Zoom")).default_value(&1.0),
-                semio_framework::ActionArgDef::select("mode", semio_framework_ui_locale::LocalizedLabel::native("Mode", "Modus"), vec![semio_framework::ActionArgOption::new("A", semio_framework_ui_locale::LocalizedLabel::data("A")), semio_framework::ActionArgOption::new("B", semio_framework_ui_locale::LocalizedLabel::data("B"))]).default_value(&"A"),
-                semio_framework::ActionArgDef::toggle("flag", semio_framework_ui_locale::LocalizedLabel::native("Flag", "Markierung")),
-                semio_framework::ActionArgDef::text("label", semio_framework_ui_locale::LocalizedLabel::native("Label", "Beschriftung")),
+                semio_framework::ActionArgDef::number("zoom", semio_ui_locale::LocalizedLabel::native("Zoom", "Zoom")).default_value(&1.0),
+                semio_framework::ActionArgDef::select("mode", semio_ui_locale::LocalizedLabel::native("Mode", "Modus"), vec![semio_framework::ActionArgOption::new("A", semio_ui_locale::LocalizedLabel::data("A")), semio_framework::ActionArgOption::new("B", semio_ui_locale::LocalizedLabel::data("B"))]).default_value(&"A"),
+                semio_framework::ActionArgDef::toggle("flag", semio_ui_locale::LocalizedLabel::native("Flag", "Markierung")),
+                semio_framework::ActionArgDef::text("label", semio_ui_locale::LocalizedLabel::native("Label", "Beschriftung")),
             ],
         }
     }

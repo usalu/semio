@@ -64,11 +64,11 @@ struct TextEditorRenameInfo {
     pub(crate) occurrences: Vec<TextEditorSpan>,
 }
 
-fn text_editor_completions(editor: &semio_framework_ui_declaration::ui::TextEditorScene) -> Vec<TextEditorCompletionItem> {
+fn text_editor_completions(editor: &semio_ui_declaration::ui::TextEditorScene) -> Vec<TextEditorCompletionItem> {
     editor.completions_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default()
 }
 
-fn text_editor_rename_info(editor: &semio_framework_ui_declaration::ui::TextEditorScene) -> Option<TextEditorRenameInfo> {
+fn text_editor_rename_info(editor: &semio_ui_declaration::ui::TextEditorScene) -> Option<TextEditorRenameInfo> {
     editor.rename_json.as_deref().and_then(|json| serde_json::from_str(json).ok())
 }
 
@@ -113,7 +113,7 @@ fn multi_span_replace(text: &str, occurrences: &[(usize, usize)], next_name: &st
 /// 📍️ Anchor (page space) for the completions dropdown: near the caret, falling back to a fixed
 /// offset if the host isn't ready yet — mirrors React's `renamePosition ? … : { left: 12, top: 12 }`.
 fn text_editor_popup_anchor(scene: &UiComponentSceneNode, inner: Rect) -> (f32, f32) {
-    semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0))
+    semio_renderer_wgpu_engine_text::text_editor::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0))
 }
 
 fn text_editor_completion_row_rect(anchor: (f32, f32), theme: &Theme, index: usize) -> Rect {
@@ -175,10 +175,10 @@ fn text_editor_explicit_draft_button_rects(bounds: Rect, theme: &Theme) -> (Rect
 }
 
 fn render_text_editor_explicit_draft_controls(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let Some(settings) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene) else { return };
-    let dirty = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_is_dirty(scene);
-    let conflicted = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_has_conflict(scene);
-    let status = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene);
+    let Some(settings) = semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene) else { return };
+    let dirty = semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_is_dirty(scene);
+    let conflicted = semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_has_conflict(scene);
+    let status = semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene);
     let (discard, apply) = text_editor_explicit_draft_button_rects(bounds, ctx.theme);
     let footer = Rect::new(bounds.x, discard.y - 8.0, bounds.w, discard.h + 16.0);
     ctx.draw.push_rounded([footer.x, footer.y, footer.w, footer.h], ctx.theme.panel, 0.0);
@@ -294,7 +294,7 @@ pub fn text_editor_move_completion(scene: &UiComponentSceneNode, down: bool) -> 
 /** ✅️ Commits the highlighted completion — `applyCompletion`: replace
  * `[identifier_prefix_start(text, caret), caret)` with the item's insert text, publish the buffer as
  * `textEdit`, and close the dropdown. */
-pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<usize>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<usize>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(editor) = scene.text_editor.as_ref() else {
         return Ok(false);
     };
@@ -306,10 +306,10 @@ pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<
     let Some(item) = completions.get(active).or_else(|| completions.first()) else {
         return Ok(false);
     };
-    let (_, caret) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_caret(scene);
+    let (_, caret) = semio_renderer_wgpu_engine_text::text_editor::text_editor_caret(scene);
     let prefix_start = identifier_prefix_start(&editor.buffer, caret);
     let insert = item.insert_text.clone().unwrap_or_else(|| item.label.clone());
-    let applied = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_completion_into(scene, prefix_start, caret, &insert, input)?;
+    let applied = semio_renderer_wgpu_engine_text::text_editor::text_editor_apply_completion_into(scene, prefix_start, caret, &insert, input)?;
     text_editor_close_completions(&scene.host_id);
     Ok(applied)
 }
@@ -317,7 +317,7 @@ pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<
 /** ✏️ Arms the multi-span rename — React's `startRename`: the draft carries the scene's own
  * `rename_json` occurrences and current name, and the input takes keyboard focus so the next
  * keystrokes type the new name instead of editing the buffer. */
-pub fn text_editor_start_rename(scene: &UiComponentSceneNode, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+pub fn text_editor_start_rename(scene: &UiComponentSceneNode, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     let Some(info) = scene.text_editor.as_ref().and_then(text_editor_rename_info) else {
         return false;
     };
@@ -345,7 +345,7 @@ pub fn text_editor_update_rename(scene: &UiComponentSceneNode, next_text: &str) 
         return false;
     };
     let (preview, occurrences) = multi_span_replace(&editor.buffer, &draft.occurrences, next_text);
-    semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_preview_rename(scene, &preview, &occurrences);
+    semio_renderer_wgpu_engine_text::text_editor::text_editor_preview_rename(scene, &preview, &occurrences);
     mutate_text_editor_ui(&scene.host_id, |state| {
         if let Some(draft) = state.rename.as_mut() {
             draft.text = next_text.to_string();
@@ -356,13 +356,13 @@ pub fn text_editor_update_rename(scene: &UiComponentSceneNode, next_text: &str) 
 
 /// ✏️ Commits the rename — `commitRename { occurrences, text }`, React's own payload — and disarms
 /// the draft.
-pub fn text_editor_commit_rename(scene: &UiComponentSceneNode, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_commit_rename(scene: &UiComponentSceneNode, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(draft) = text_editor_ui(&scene.host_id).rename else {
         return Ok(false);
     };
-    let action = semio_framework_ui_declaration::ui::text_editor_actions::COMMIT_RENAME;
+    let action = semio_ui_declaration::ui::text_editor_actions::COMMIT_RENAME;
     let spans = serde_json::to_string(&draft.occurrences.iter().map(|(start, end)| json!({ "start": start, "end": end })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id, "text", &draft.text, "occurrences", &spans])?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id, "text", &draft.text, "occurrences", &spans])?;
     let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
     {
         let builder = reservation.builder();
@@ -390,7 +390,7 @@ pub fn text_editor_cancel_rename(scene: &UiComponentSceneNode) -> bool {
         return false;
     }
     if let Some(editor) = scene.text_editor.as_ref() {
-        semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_preview_rename(scene, &editor.buffer, &[]);
+        semio_renderer_wgpu_engine_text::text_editor::text_editor_preview_rename(scene, &editor.buffer, &[]);
     }
     mutate_text_editor_ui(&scene.host_id, |state| state.rename = None);
     true
@@ -404,7 +404,7 @@ pub fn text_editor_cancel_rename(scene: &UiComponentSceneNode) -> bool {
  * this target has no OS clipboard binding at all (`ui_wgpu::wgpu::events`' `UiCommand::Clipboard*`
  * still says the read/write is an unwired host concern), so pretending to handle them would swallow
  * the row instead of leaving it dispatchable. */
-pub fn text_editor_local_menu_action(scene: &UiComponentSceneNode, inner: Rect, action: &str, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_local_menu_action(scene: &UiComponentSceneNode, inner: Rect, action: &str, x: f32, y: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(editor) = scene.text_editor.as_ref() else {
         return Ok(false);
     };
@@ -413,15 +413,15 @@ pub fn text_editor_local_menu_action(scene: &UiComponentSceneNode, inner: Rect, 
             text_editor_open_completions(scene);
         }
         "selectToken" => {
-            semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_select_span_into(scene, inner, x, y, input)?;
+            semio_renderer_wgpu_engine_text::text_editor::text_editor_select_span_into(scene, inner, x, y, input)?;
         }
         "selectLine" => {
-            let (_, caret) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_caret(scene);
+            let (_, caret) = semio_renderer_wgpu_engine_text::text_editor::text_editor_caret(scene);
             let (start, end) = text_editor_line_range(&editor.buffer, caret);
-            semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_set_selection_into(scene, start, end, input)?;
+            semio_renderer_wgpu_engine_text::text_editor::text_editor_set_selection_into(scene, start, end, input)?;
         }
         "selectAll" => {
-            semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_set_selection_into(scene, 0, editor.buffer.len(), input)?;
+            semio_renderer_wgpu_engine_text::text_editor::text_editor_set_selection_into(scene, 0, editor.buffer.len(), input)?;
         }
         "commitRename" | "rename" => {
             if !text_editor_start_rename(scene, input) {
@@ -456,25 +456,25 @@ const TEXT_EDITOR_LOCAL_MENU_ACTIONS: [&str; 6] = ["requestCompletions", "sugges
 /** ⌨️ The popup half of one keystroke, offered BEFORE the buffer sees it — React's
  * `onKeyDown` prelude (`🧱️elements/✏️TextEditor/🟦️.tsx:556-608`): `Ctrl/Cmd+Space` opens completions,
  * `F2` starts a rename, and while either popup is open its own arrow/commit/dismiss keys win over
- * editing. `false` leaves the key to `semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_key_into`. */
-pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &semio_framework_ui_wgpu_input::PointerModifiers, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+ * editing. `false` leaves the key to `semio_renderer_wgpu_engine_text::text_editor::text_editor_apply_key_into`. */
+pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &semio_ui_wgpu_input::PointerModifiers, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let ui = text_editor_ui(&scene.host_id);
     let accelerator = modifiers.ctrl || modifiers.meta;
-    if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene).is_some() {
+    if semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene).is_some() {
         if accelerator && matches!(key, KeyAction::Char(ch) if ch.eq_ignore_ascii_case("z")) {
-            return Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_move_explicit_draft_history(scene, modifiers.shift));
+            return Ok(semio_renderer_wgpu_engine_text::text_editor::text_editor_move_explicit_draft_history(scene, modifiers.shift));
         }
         if modifiers.ctrl && matches!(key, KeyAction::Char(ch) if ch.eq_ignore_ascii_case("y")) {
-            return Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_move_explicit_draft_history(scene, true));
+            return Ok(semio_renderer_wgpu_engine_text::text_editor::text_editor_move_explicit_draft_history(scene, true));
         }
         if accelerator && matches!(key, KeyAction::Enter) {
-            return semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_explicit_draft_into(scene, input);
+            return semio_renderer_wgpu_engine_text::text_editor::text_editor_apply_explicit_draft_into(scene, input);
         }
         if matches!(key, KeyAction::Escape) {
-            if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_cancel_explicit_publication(scene) {
+            if semio_renderer_wgpu_engine_text::text_editor::text_editor_cancel_explicit_publication(scene) {
                 return Ok(true);
             }
-            return Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_discard_explicit_draft(scene));
+            return Ok(semio_renderer_wgpu_engine_text::text_editor::text_editor_discard_explicit_draft(scene));
         }
     }
     if let Some(draft) = ui.rename.as_ref() {
@@ -518,27 +518,27 @@ pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modi
  * (React's `event.altKey && completions.length > 0` branch in `onContextMenu`); a press on an open
  * dropdown row commits that row; a press anywhere else closes it, the way an outside press dismisses
  * any popup. `false` leaves the press to the caret/selection path. */
-pub fn text_editor_popup_pointer(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, alt: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_popup_pointer(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, alt: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(editor) = scene.text_editor.as_ref() else {
         return Ok(false);
     };
-    if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene).is_some() {
+    if semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene).is_some() {
         let (discard, apply) = text_editor_explicit_draft_button_rects(inner, &scene_input_theme());
         if discard.contains(x, y) {
-            if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene).pending {
+            if semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene).pending {
                 return Ok(true);
             }
-            return Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_discard_explicit_draft(scene));
+            return Ok(semio_renderer_wgpu_engine_text::text_editor::text_editor_discard_explicit_draft(scene));
         }
         if apply.contains(x, y) {
-            let status = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene);
+            let status = semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene);
             if status.pending && !status.cancellable {
                 return Ok(true);
             }
-            if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_cancel_explicit_publication(scene) {
+            if semio_renderer_wgpu_engine_text::text_editor::text_editor_cancel_explicit_publication(scene) {
                 return Ok(true);
             }
-            return semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_explicit_draft_into(scene, input);
+            return semio_renderer_wgpu_engine_text::text_editor::text_editor_apply_explicit_draft_into(scene, input);
         }
     }
     if text_editor_ui(&scene.host_id).completions_open {

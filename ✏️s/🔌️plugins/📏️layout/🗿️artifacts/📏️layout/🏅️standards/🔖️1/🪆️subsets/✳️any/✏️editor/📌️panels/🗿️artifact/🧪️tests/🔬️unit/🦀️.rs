@@ -48,9 +48,9 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 //#region 🪟️WindowLaws
 use crate::terminology::layout_labels;
 use semio_s_artifact_layout_layout_model::{ImageLink, Layer, ParagraphStyle, TextStory};
-use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, Component};
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
-use semio_framework_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
+use semio_plugin::plugin_app_close_prelude::{BuiltNode, Component};
+use semio_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
 
 /// 🪟️ Re-keys a cloned frame — `Frame` carries its id inside every variant, and an oversized
 /// fixture needs hundreds of distinct ones.
@@ -105,15 +105,15 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn viewing(rows: u32, requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 fn build(document: &LayoutSnapshot, view: &ViewModel) -> BuiltNode {
-    render(document, &LayoutWindowConfig::default(), layout_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, LAYOUT_PLAY_BODY_ARTIFACT)).expect("layout document tree assembly")
+    render(document, &LayoutWindowConfig::default(), layout_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, LAYOUT_PLAY_BODY_ARTIFACT)).expect("layout document tree assembly")
 }
 
 fn projection(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("layout document tree projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("layout document tree projection")
 }
 
 fn section_node<'a>(tree: &'a BuiltNode, id: &str) -> &'a BuiltNode {

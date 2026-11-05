@@ -244,7 +244,7 @@ impl SchemaLeafReader for FileSystemSchemaLeaves {
 }
 
 /// 📦️ Reads schema documents from the package assets a host delivered to a guest: `read` answers a repository-relative
-/// document path with the bytes the host delivered under that name (`semio_framework_plugin::reactor::package_asset` in a
+/// document path with the bytes the host delivered under that name (`semio_plugin::reactor::package_asset` in a
 /// guest), and each answer is checked as UTF-8 once and kept for the process lifetime. A name the host delivered nothing for
 /// answers `None`, exactly as a missing file does, so a guest resolves the leaf as soon as its instance has been opened.
 pub struct PackageAssetSchemaLeaves {
@@ -273,7 +273,7 @@ impl SchemaLeafReader for PackageAssetSchemaLeaves {
 
 /// 🔨️ Installs the reader the build target of this process needs, so every artifact that serves schema documents makes the
 /// same choice: a `wasm32` guest reads the documents its host delivered as package assets (`package_asset` is the guest's
-/// lookup, `semio_framework_plugin::reactor::package_asset`), any other process reads them from the checkout that holds
+/// lookup, `semio_plugin::reactor::package_asset`), any other process reads them from the checkout that holds
 /// `manifest_directory` (found by [`workspace_root_above`]). Returns false when a reader is already installed or, off `wasm32`,
 /// when no checkout is found.
 pub fn install_default_schema_leaf_reader(package_asset: fn(&str) -> Option<&'static [u8]>, manifest_directory: &str) -> bool {

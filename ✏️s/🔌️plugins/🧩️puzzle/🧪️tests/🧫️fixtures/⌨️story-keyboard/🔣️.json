@@ -1,0 +1,18 @@
+{
+  "input": "editable text",
+  "selectAll": "ControlOrMeta+a",
+  "delete": "Delete",
+  "selectedCount": 2,
+  "afterInputDelete": {
+    "input": "",
+    "nodes": 2
+  },
+  "afterBoardDelete": {
+    "nodes": 0,
+    "edges": 0
+  },
+  "groupLabels": {
+    "en": "Node graph",
+    "de": "Knotengraph"
+  }
+}

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointColumnMomentR
         record: "ChangedJointColumnMomentRes",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Column plastic moment M_c,pl,Rd of the joint", "Anschluss: Plastisches Stützenmoment M_c,pl,Rd ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Column plastic moment M_c,pl,Rd of the joint", "Anschluss: Plastisches Stützenmoment M_c,pl,Rd ändern")
     }
 }
 

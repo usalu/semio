@@ -15,8 +15,8 @@ pub struct Generation3dPlayApp;
 /// declared action must bridge from its own id under the shell's staged args alone — the same contract
 /// `parse_preview_camera_json` keeps for `setCamera`. A PRESENT but malformed one still faults: a camera the
 /// graph cannot express must never be silently replaced by one it can.
-pub(super) fn parse_flow_viewport(args: &semio_framework_value::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
-    let Some(value) = args.get("viewport").cloned() else { return Ok(semio_framework_os_kernel::Viewport2d::default()) };
+pub(super) fn parse_flow_viewport(args: &semio_framework_value::DslValue) -> Result<semio_os_kernel::Viewport2d, Fault> {
+    let Some(value) = args.get("viewport").cloned() else { return Ok(semio_os_kernel::Viewport2d::default()) };
     semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
 
@@ -35,12 +35,12 @@ pub(super) fn parse_preview_camera_json(args: &semio_framework_value::DslValue) 
 /// `dag_host_snapshot_to_workflow` projection the node-graph window paints — so an interaction target and a
 /// graph pick can never drift apart.
 pub fn generation3d_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
-    let dag = semio_framework_os_flow::FlowHost::project_dag_snapshot(host_snapshot, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let dag = semio_os_flow::FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
     let (graph_nodes, _) = semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&dag);
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 
-pub(super) fn generation3d_addressed_preview_eval(window: &semio_framework_plugin::WindowTransientSnapshot, eval_text: Option<String>) -> Result<semio_framework_plugin::WindowTransientMutation, Fault> {
+pub(super) fn generation3d_addressed_preview_eval(window: &semio_plugin::WindowTransientSnapshot, eval_text: Option<String>) -> Result<semio_plugin::WindowTransientMutation, Fault> {
     if window.window_kind_id() == generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW {
         generate_preview::transient::addressed(window, eval_text)
     } else {
@@ -56,11 +56,11 @@ pub fn generation3d_render_body(
     document: &Generation3dSnapshot,
     config: &Generation3dConfig,
     preview_eval_text: Option<&str>,
-    view_state: &semio_framework_plugin::ViewModel,
+    view_state: &semio_plugin::ViewModel,
     marks: &PreviewInteractionMarks,
     session: &FlowEvalSession,
-    run: Option<&semio_framework_plugin::ToolRunView>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    run: Option<&semio_plugin::ToolRunView>,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let labels = generation3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().unwrap_or("move");
     let selected_generation_id = config.selected_generation_id.as_deref();
@@ -75,12 +75,12 @@ pub fn generation3d_render_body(
             selected_generation_id,
             view_state.locale,
             view_state.terminology,
-            &semio_framework_plugin::TreeWindows::for_body(view_state, generations::GENERATION_3D_PLAY_BODY_GENERATIONS),
+            &semio_plugin::TreeWindows::for_body(view_state, generations::GENERATION_3D_PLAY_BODY_GENERATIONS),
         ),
         form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.host_snapshot, &document.generation, selected_generation_id, labels),
         generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.host_snapshot, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session, run),
-        artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT => artifact_panel::render(document, config, session, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT)),
-        catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE)),
+        artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT => artifact_panel::render(document, config, session, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT)),
+        catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE)),
         inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => {
             let evaluation = session.eval_json();
             let selected = marks.graph_selection_ids();
@@ -88,11 +88,11 @@ pub fn generation3d_render_body(
             let exported = match export_widget { Some(widget) => export_meshes_from_session(document, config, session, Some(widget.as_str())), None => Ok(Vec::new()) };
             let export_ready = exported.is_ok();
             let meshes = exported.unwrap_or_default();
-            inspection_panel::render(&document.host_snapshot, &marks.graph_selection_ids(), labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION), view_state.locale, view_state.terminology, &meshes, evaluation, session.status_json(), export_ready,marks.source_revision.as_deref())
+            inspection_panel::render(&document.host_snapshot, &marks.graph_selection_ids(), labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION), view_state.locale, view_state.terminology, &meshes, evaluation, session.status_json(), export_ready,marks.source_revision.as_deref())
         },
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+        _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
-    Ok(semio_framework_plugin::built_to_component_tree(node))
+    Ok(semio_plugin::built_to_component_tree(node))
 }
 
 //#region 🧵️RetainedCommands
@@ -224,7 +224,7 @@ pub(super) fn generation3d_preview_kind(kind: &str) -> Option<&'static str> {
     }
 }
 
-pub(super) fn generation3d_preview_windows(view: Option<&semio_framework_plugin::ViewModel>) -> Vec<(&str, &'static str)> {
+pub(super) fn generation3d_preview_windows(view: Option<&semio_plugin::ViewModel>) -> Vec<(&str, &'static str)> {
     view.map(|view| {
         view.window_instances
             .iter()
@@ -243,13 +243,13 @@ pub struct Generation3dPreviewCommandWork {
     /// 🔒️ The app instance's retained evaluation session, reached ONLY to arm the preview chain
     /// through its per-window latch — a gesture that changed what the evaluation would produce owes
     /// every attached preview a tick, and owes it at most once.
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) emit: Option<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>>,
     pub(super) host: Option<FlowHost>,
     /// 🧹️ The host's explicit retirement ladder, armed by `close_step` when the evaluation host is
     /// handed over. A bare `Option<FlowHost>::take()`-and-drop panics on the fixture's
     /// `OrderedMap<WidgetLayout>` root, so the host is drained under the caller's grant instead.
-    pub(super) host_retirement: Option<semio_framework_os_flow::FlowHostRetirement>,
+    pub(super) host_retirement: Option<semio_os_flow::FlowHostRetirement>,
     pub(super) session: Option<FlowEvalSession>,
     pub(super) emit_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>>>,
     pub(super) started: bool,
@@ -258,13 +258,13 @@ pub struct Generation3dPreviewCommandWork {
 }
 
 impl Generation3dPreviewCommandWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner, emit: None, host: None, host_retirement: None, session: None, emit_retirement: None, started: false, complete: false, closing: false }
     }
 
     /// 🔒️ Owes every attached preview window an evaluation on the RETAINED session's latch, so two
     /// gestures in a row still leave exactly one debt per window for the run to pay.
-    pub(super) fn owe_attached_previews(&self, view: Option<&semio_framework_plugin::ViewModel>, servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
+    pub(super) fn owe_attached_previews(&self, view: Option<&semio_plugin::ViewModel>, servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         let windows = generation3d_preview_windows(view);
         self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, emit, grant))
     }
@@ -295,7 +295,7 @@ impl Generation3dPreviewCommandWork {
 }
 
 /// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
-pub(super) fn command_work_step_demands<A: semio_framework_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
     Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
 }
 //#endregion 🧵️RetainedCommands

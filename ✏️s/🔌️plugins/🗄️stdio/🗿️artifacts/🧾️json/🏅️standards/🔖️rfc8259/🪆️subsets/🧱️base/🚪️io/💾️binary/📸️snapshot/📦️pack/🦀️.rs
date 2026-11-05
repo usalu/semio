@@ -91,8 +91,8 @@ impl pack::snapshot::ArtifactPack for JsonSnapshot{
   Snapshot::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.try_into().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
  }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JsonSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JsonSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
@@ -115,13 +115,13 @@ pub fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapshot::Sql
 
 pub fn retire(snapshot:JsonSnapshot){decoding::retire_value(snapshot.value)}
 
-pub fn encode(snapshot:&JsonSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{encoding::encode(snapshot,encoding,control,native_owner)}
+pub fn encode(snapshot:&JsonSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{encoding::encode(snapshot,encoding,control,native_owner)}
 
 pub fn reconstruct_record(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<JsonSnapshot,semio_framework_value::ValueError>{
  let snapshot=decoding::bind(record,control,maximum_rows)?;decoding::reconstruct(snapshot,control)
 }
 
-pub fn decode(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<JsonSnapshot,semio_framework_value::ValueError>{
+pub fn decode(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<JsonSnapshot,semio_framework_value::ValueError>{
  let maximum_rows=control.limits().max_rows;
  store::decode_sqlite_snapshot_record_native(payload,"stdio.json",Snapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {reconstruct_record(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
 }

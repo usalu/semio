@@ -13,11 +13,11 @@ use semio_framework::AssetDeclaration;
 use semio_framework::ExecutionMode;
 use semio_framework::ExtensionPointDeclaration;
 use semio_framework::Fault;
-use semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest;
-use semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult;
-use semio_framework_plugin_decl_registry::artifact_registration::contributed_mutation_plan;
-use semio_framework_plugin_decl_registry::artifact_registration::mutation_roster_entries;
-use semio_framework_plugin_reactor_app::plugin_internal_fault;
+use semio_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest;
+use semio_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult;
+use semio_plugin_decl_registry::artifact_registration::contributed_mutation_plan;
+use semio_plugin_decl_registry::artifact_registration::mutation_roster_entries;
+use semio_plugin_reactor_app::plugin_internal_fault;
 
 /// 🌉️ Wire encode over `T: ToValue` directly — no `serde_json` detour. Ticket
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: every caller's `T`
@@ -64,7 +64,7 @@ pub struct PluginDescriptorExtras {
 /// `PluginBuilder::try_build`/`ExtensionBundle::contributes`) — `crate::app::mutation_roster_entries`
 /// sorts by `mutation_id`, so repeated calls here never reorder or duplicate rows.
 pub async fn wire_list_artifact_mutations() -> Vec<u8> {
-    encode_wire_serialized(&semio_framework_plugin_decl_registry::artifact_registration::mutation_roster_entries().await)
+    encode_wire_serialized(&semio_plugin_decl_registry::artifact_registration::mutation_roster_entries().await)
 }
 /// 🎯️ `contributor.artifact-mutation-plan`: decodes the target snapshot pack + contributor
 /// payload, runs the registered contribution's `CompositeMutationKind::plan` through a fresh
@@ -75,12 +75,12 @@ pub async fn wire_list_artifact_mutations() -> Vec<u8> {
 /// app::contributed_mutation_plan` rejects a request whose `artifact_kind` does not match the
 /// mutation's own registered target before ever touching the snapshot/payload bytes).
 pub async fn wire_artifact_mutation_plan(request: &[u8]) -> Result<Vec<u8>, Fault> {
-    let request: semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest = decode_wire_serialized(request).await?;
+    let request: semio_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest = decode_wire_serialized(request).await?;
     if request.mutation_id.trim().is_empty() {
         return Err(plugin_internal_fault("artifact-mutation-plan requires a non-empty mutation_id"));
     }
-    let output = semio_framework_plugin_decl_registry::artifact_registration::contributed_mutation_plan(&request.mutation_id, &request.artifact_kind, &request.snapshot_pack, &request.payload).await.map_err(|error| plugin_internal_fault(error.to_string()))?;
-    let result = semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult {
+    let output = semio_plugin_decl_registry::artifact_registration::contributed_mutation_plan(&request.mutation_id, &request.artifact_kind, &request.snapshot_pack, &request.payload).await.map_err(|error| plugin_internal_fault(error.to_string()))?;
+    let result = semio_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult {
         artifact_kind: request.artifact_kind,
         mutation_id: request.mutation_id,
         revision: request.revision,

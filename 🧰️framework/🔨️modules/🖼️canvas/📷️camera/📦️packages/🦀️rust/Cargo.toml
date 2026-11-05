@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 geometry = { path = "../../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

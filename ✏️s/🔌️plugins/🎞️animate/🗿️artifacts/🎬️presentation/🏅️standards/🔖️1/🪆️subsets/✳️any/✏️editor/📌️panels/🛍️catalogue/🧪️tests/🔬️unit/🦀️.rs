@@ -1,4 +1,4 @@
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 #[allow(unused_imports)]
 use crate::editor::animate::terminology::AnimatePresentationLabels;
 #[allow(unused_imports)]
@@ -6,17 +6,17 @@ use crate::{editor::animate::support::animate_presentation_action, editor::anima
 #[allow(unused_imports)]
 use crate::PresentationSnapshot;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::{button, column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger, UiValue};
+use semio_ui_contract::{button, column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger, UiValue};
 use crate::editor::animate::panels::catalogue::*;
 use crate::editor::animate::unit_tests::context::{presentation_app, render as render_body};
 

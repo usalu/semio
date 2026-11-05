@@ -15,8 +15,8 @@ pub struct SetSoftwareInfo {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetSoftwareInfo {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "software-info", kind: "set-software-info", record: "SetSoftwareInfo" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set software info", "Softwareinfo setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set software info", "Softwareinfo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

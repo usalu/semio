@@ -1,6 +1,6 @@
 //! 📦️ Literal OPC package entities for individually authored container schemas.
 use super::{OpcPackage, OpcTargetMode};
-use semio_framework_os_kernel::sqlite_snapshot::{artifact::Projection, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase};
+use semio_os_kernel::sqlite_snapshot::{artifact::Projection, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase};
 
 #[path = "💰️backing/🦀️.rs"]
 mod backing;
@@ -96,4 +96,4 @@ pub fn reconstruct_opc_package(database: &SqliteDatabase, tables: OpcSqliteTable
     backing::reconstruct(database, tables, control)
 }
 
-use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};

@@ -4,12 +4,12 @@ use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueR
 use semio_s_artifact_norm_din18599_checks::{din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_lighting_hours, din_v_18599_12_tabelle5_qp_specific, din_v_18599_4_lighting_power_density, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors};
 use semio_s_plugin_norm_compliance::ClauseId;
 use semio_s_artifact_norm_din18599_model::MonthlyClimate;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.din18599.play.catalogue";
@@ -211,11 +211,11 @@ fn potsdam_monthly_climate() -> CatalogueTable {
 //#region 🔖️Render
 /// 📚️ Lists every `ExampleSource` plus normative reference tables with windowed catalogue rows.
 pub fn render(
-    examples: Vec<semio_framework_plugin::ExampleSource>,
-    locale: semio_framework_ui_locale::Locale,
+    examples: Vec<semio_plugin::ExampleSource>,
+    locale: semio_ui_locale::Locale,
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 //#endregion 🔖️Render

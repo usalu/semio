@@ -1,10 +1,10 @@
 //! 📸️ snapshot of `semio-s-artifact-forms-forms` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
-pub use crate::schema::snapshot::FormsSnapshot;
+pub use crate::schema::snapshot::{FormsSnapshot, forms_child_restore_projection};
 pub use crate::playbook::PlaybookExpr as FormExpr;
 pub use crate::playbook::PlaybookBlock as FormQuestion;
 pub use crate::playbook::PlaybookBlockOption as FormQuestionOption;

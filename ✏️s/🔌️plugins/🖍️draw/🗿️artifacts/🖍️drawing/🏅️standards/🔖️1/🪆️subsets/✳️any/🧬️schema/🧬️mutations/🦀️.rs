@@ -6,9 +6,9 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 
@@ -300,7 +300,7 @@ use semio_s_artifact_draw_drawing_transform::shape_coordinate::mutation::SetShap
 /// `SnapshotBuilder<S, M>`'s own documented "apply `outcome.diff()` once, fold a rejection into a
 /// Fatal message" idiom exactly, so this subset writes zero builder boilerplate (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE task 3).
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<DrawingSnapshot, DrawingMutation>;
+pub type Construction = semio_plugin::app::SnapshotBuilder<DrawingSnapshot, DrawingMutation>;
 
 //#region 🪢️TaxonomyMounts
 #[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]

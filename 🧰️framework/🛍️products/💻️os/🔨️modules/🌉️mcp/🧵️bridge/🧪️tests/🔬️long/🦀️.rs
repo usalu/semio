@@ -6,8 +6,8 @@ use std::sync::Arc;
 use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use crate::transport::HttpAdmission;
-use semio_framework_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
-use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, GatewayToShell, ShellKind, ShellToGateway};
+use semio_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
+use semio_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, GatewayToShell, ShellKind, ShellToGateway};
 #[cfg(test)]
 use crate::bridge_server::bridge_router;
 

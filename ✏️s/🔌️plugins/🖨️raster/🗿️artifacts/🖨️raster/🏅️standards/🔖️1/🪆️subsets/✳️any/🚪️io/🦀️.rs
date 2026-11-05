@@ -3,9 +3,9 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 use semio_s_artifact_raster_raster_model::RasterAssetChild;
 use semio_s_artifact_raster_raster_model::image_asset_child_handle;
@@ -38,11 +38,11 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// is dual-natured — its vector-shaped exports (svg) go through `s.stdio.semio/v1/drawing`, its
 /// pixel asset surface (png) goes through `s.stdio.semio/v1/image` — both real stdio bridges, never
 /// hand-rolled SVG/DWG bytes. Only the SVG→pixels render step has no stdio equivalent (a genuine
-/// vector-rasterizer gap, reported in `stdio_gaps`); it stays on `semio_framework_os`'s real
+/// vector-rasterizer gap, reported in `stdio_gaps`); it stays on `semio_os`'s real
 /// usvg/resvg renderer, whose OUTPUT is then canonicalized through the real png↔semio/image codec.
 use semio_s_artifact_raster_raster_model::{RasterImageAsset, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use {semio_framework_os_kernel::io::io_compose_via,semio_framework_os_kernel::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_os_kernel::io::io_compose_via,semio_os_kernel::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_os_kernel::io::ErasedComposeSource,semio_os_kernel::io::IoDirection,semio_os_kernel::io::IoKey,semio_os_kernel::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::PngSnapshot;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;

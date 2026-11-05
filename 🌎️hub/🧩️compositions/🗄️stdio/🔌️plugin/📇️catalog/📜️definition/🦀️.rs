@@ -3,7 +3,7 @@
 //! standard and no semio conversion. Its catalog commitment is byte-identical to the full catalog's (see the roster law in the full catalog).
 
 
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 use semio_s_artifact_stdio_contract::registry::ContributionRegistry;
 use semio_s_artifact_stdio_contract::{definition_only_assembly, ArtifactAssembly, ArtifactContribution, NativeCodecFactory};
 pub use semio_hub_stdio_catalog_projection::{native_artifact_catalog_dependency, validate_native_artifact_catalog_dependency};

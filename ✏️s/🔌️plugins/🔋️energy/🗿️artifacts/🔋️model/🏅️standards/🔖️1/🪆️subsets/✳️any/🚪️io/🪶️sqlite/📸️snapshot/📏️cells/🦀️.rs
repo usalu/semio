@@ -2,7 +2,7 @@
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R,DslField};
 use semio_framework_value::{DslValue as D, FromValue, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
+use semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 type Roles<'a>=&'a[(&'a str,Role)];

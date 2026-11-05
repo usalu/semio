@@ -1,12 +1,12 @@
 //! 📚️ EN 1995 play app panel — examples plus EN 338 / EN 14080 strength classes, k_mod, fastener types and member roles.
 
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Locale;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_ui_locale::Terminology;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable, NormFieldChoice};
 use semio_s_artifact_norm_en1995_schema::spec_trace::TABLE as SPEC_TRACE;
@@ -218,8 +218,8 @@ pub fn reference_tables(locale: Locale) -> Vec<CatalogueTable> {
 //#endregion 📚️Tables
 
 //#region 🔖️Render
-pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(locale), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+pub fn render(examples: Vec<semio_plugin::ExampleSource>, locale: Locale, controller_id: &'static str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(locale), locale, controller_id, &semio_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

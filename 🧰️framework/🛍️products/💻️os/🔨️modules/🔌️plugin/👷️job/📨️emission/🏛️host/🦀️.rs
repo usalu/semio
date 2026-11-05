@@ -1,5 +1,5 @@
 //! 🏛️ Original host configuration values retain their accepted input, native JSON owners and exact output through handoff.
-use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration as Declaration,OriginalHostConfigurationProjection as Projection,OriginalContributionProjection as Contributions};
+use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration as Declaration,OriginalHostConfigurationProjection as Projection,OriginalContributionProjection as Contributions};
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,NativeEncodeControl,NativeEncodeContinuation,retirement::RetireOwned,retained_clone::RetainedCloneClose};
 use semio_framework_pack_json::{JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonError,JsonBorrowedWriteCursor,JsonWriteSource,JsonWriteNode};

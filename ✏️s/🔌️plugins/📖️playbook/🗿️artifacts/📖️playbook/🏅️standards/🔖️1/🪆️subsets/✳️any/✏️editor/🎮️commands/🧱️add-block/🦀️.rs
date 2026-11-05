@@ -6,7 +6,7 @@ use crate::editor::playbook::{playbook_child_leaves_emit, playbook_minted_id};
 use crate::op::PlaybookMutation;
 use crate::schema::default_block;
 use crate::{playbook_add_block_leaves, playbook_flow_content, playbook_step_order, PlaybookSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

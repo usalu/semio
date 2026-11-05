@@ -11,7 +11,7 @@ use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::{terminology::puzzle2d_localized, snapshot::Puzzle2dScene, config::PUZZLE2D_LOD_MODE_AUTOMATIC};
 #[allow(unused_imports)]
-use semio_framework_plugin::{SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_plugin::{SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use crate::editor::puzzle2d::modes::edit::windows::overview::*;
 use crate::editor::puzzle2d::testkit::*;
 

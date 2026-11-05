@@ -1,22 +1,22 @@
 //! 📥️ Opening relays, command ingress, the exchange output and the custody manifest receiving.
 
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_decl_app::{ArtifactApp, MediaArtifactError};
-use semio_framework_plugin_decl_media::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
+use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_app::{ArtifactApp, MediaArtifactError};
+use semio_plugin_decl_media::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework::kernel::{Effect, InvocationResult};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
 use semio_framework::manifest::{CommandAddress as ManifestCommandAddress, CommandOwnerAddress as ManifestCommandOwnerAddress};
-use semio_framework_plugin_plugin_program::{Plugin, PluginProgram, decode_wire_serialized, encode_wire_serialized};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_plugin_plugin_program::{Plugin, PluginProgram, decode_wire_serialized, encode_wire_serialized};
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_plugin_job::{TransactionProposalDraft, TypedOperationResultPage};
+use semio_plugin_job::{TransactionProposalDraft, TypedOperationResultPage};
 use serde_json::Value;
 use crate::ops_typed_operations::drive_self_waking_ready;
 use crate::ops_wire_limits::find_instance;
-use semio_framework_plugin_runtime_instances::inst_wire_frames::{instance_actor, with_instances_turn_mut};
-use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_plugin_runtime_instances::inst_wire_frames::{instance_actor, with_instances_turn_mut};
+use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 #[cfg(test)]
 use std::mem::size_of;
 fn funded<T,E>(result:Result<T,E>)->semio_framework_value::RetainedWorkOutcome<T,E>{let work=u64::from(result.is_ok());semio_framework_value::RetainedWorkOutcome{result,work}}
@@ -269,7 +269,7 @@ include!("../../../../🧪️tests/🔬️plugin-runtime-paged-command-ingress/�
 #[derive(Default)]
 pub struct PluginExchangeOutput {
     pub original_receiving:Option<OriginalPublicationReceiving>,
-    pub constructor_receipt: Option<(semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind, semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>,
+    pub constructor_receipt: Option<(semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind, semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>,
     pub preparation_receipt: Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)>,
     pub retirement_receipt: Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)>,
     pub history_command_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,

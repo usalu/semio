@@ -5,10 +5,10 @@
 
 use crate::editor::puzzle5d::entities::Puzzle5dDocument;
 use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
-use semio_framework_plugin::app::ArtifactDownloadOutput;
-use semio_framework_plugin::app::ArtifactOutputChunks;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::Fault;
+use semio_plugin::app::ArtifactDownloadOutput;
+use semio_plugin::app::ArtifactOutputChunks;
+use semio_plugin::kernel::Effect;
+use semio_plugin::Fault;
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
 
 /// 📤 The download filename for one export: the document's own `label` as a slug

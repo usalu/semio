@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeBarPointZ where Op
         record: "ChangedBarPointZ",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change coordinate z of the bar point", "Bewehrungsstab: Koordinate z ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change coordinate z of the bar point", "Bewehrungsstab: Koordinate z ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.bar_id.clone()]

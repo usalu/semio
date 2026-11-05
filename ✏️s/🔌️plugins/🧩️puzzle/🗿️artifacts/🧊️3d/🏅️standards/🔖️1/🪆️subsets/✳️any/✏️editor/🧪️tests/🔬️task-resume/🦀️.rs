@@ -1,11 +1,11 @@
 //! 🔁️ A resolved task follow-up is queued on the mounted puzzle3d editor and delivered by the instance across funded publication units through its own typed source: it applies exactly once, is recorded as an undoable edit, answers its task once, a refused delivery answers with the fault, and a cancelled queue returns every owner.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
-use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, fixture_identity, meta, new_app_with_registry, settle_history_verb, settle_registered_typed_operation, OriginalFixtureCaller, OriginalFixtureScope};
-use semio_framework_plugin::{App, ArtifactApp, EditorApp, MountedOwnerPolicyV1, PluginApp, VcsArtifactApp};
+use semio_plugin::artifact_app_laws::{close_registered_fixture_app, fixture_identity, meta, new_app_with_registry, settle_history_verb, settle_registered_typed_operation, OriginalFixtureCaller, OriginalFixtureScope};
+use semio_plugin::{App, ArtifactApp, EditorApp, MountedOwnerPolicyV1, PluginApp, VcsArtifactApp};
 use semio_s_artifact_puzzle_3d_editor::{create_puzzle3d_app, Puzzle3dPlayApp};
 
 type Puzzle3d = EditorApp<Puzzle3dPlayApp>;
@@ -18,8 +18,8 @@ const POLICY: MountedOwnerPolicyV1 = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT
 static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 /// 🪟️ The puzzle3d window commands require the host's per-window view state, exactly as the browser host supplies it.
-fn window_view() -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel { window_id: Some("puzzle3d-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "puzzle3d-main".into(), window_kind_id: "puzzle3d-main".into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+fn window_view() -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel { window_id: Some("puzzle3d-main".into()), window_instances: vec![semio_plugin::ViewWindowInstance { id: "puzzle3d-main".into(), window_kind_id: "puzzle3d-main".into() }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 macro_rules! window_meta {
@@ -34,7 +34,7 @@ macro_rules! window_meta {
 static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 async fn mounted() -> Box<Puzzle3dMounted> {
-    let mut app = Box::new(new_app_with_registry::<Puzzle3d>(|| App { definition: create_puzzle3d_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), POLICY, &mut fixture_identity()).await);
+    let mut app = Box::new(new_app_with_registry::<Puzzle3d>(|| App { definition: create_puzzle3d_app(), examples: Vec::new() }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), POLICY, &mut fixture_identity()).await);
     app.bind_instance_id(1).await;
     app
 }
@@ -43,7 +43,7 @@ fn target_volumes(app: &Puzzle3dMounted) -> usize {
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(app.snapshot().expect("snapshot").typed())).get("targetVolumes").and_then(|volumes| volumes.as_array()).map_or(0, Vec::len)
 }
 
-async fn settle(app: &mut Puzzle3dMounted, scope: &mut OriginalFixtureScope) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+async fn settle(app: &mut Puzzle3dMounted, scope: &mut OriginalFixtureScope) -> semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
     match settle_registered_typed_operation(&mut *app, 1, POLICY, &mut fixture_identity(), scope.cx()).await {
         Ok(receipt) => receipt,
         Err(error) => {

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeFactorOverrideValu
         record: "ChangedFactorOverrideValue",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change override value of the factor override", "Faktorüberschreibung: Überschreibungswert ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change override value of the factor override", "Faktorüberschreibung: Überschreibungswert ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

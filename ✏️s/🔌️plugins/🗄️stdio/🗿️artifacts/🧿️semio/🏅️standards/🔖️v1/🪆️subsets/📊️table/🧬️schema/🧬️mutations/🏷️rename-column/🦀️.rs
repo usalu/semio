@@ -17,8 +17,8 @@ pub struct RenameColumn {
 impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for RenameColumn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "column", kind: "rename-column", record: "RenamedColumn" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename column {} to {}", self.name, self.new_name), &format!("Spalte {} in {} umbenennen", self.name, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename column {} to {}", self.name, self.new_name), &format!("Spalte {} in {} umbenennen", self.name, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.name.clone()]

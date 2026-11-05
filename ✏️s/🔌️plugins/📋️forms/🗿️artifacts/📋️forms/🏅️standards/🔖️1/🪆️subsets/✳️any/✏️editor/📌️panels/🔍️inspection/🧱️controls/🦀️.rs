@@ -2,8 +2,8 @@
 use crate::editor::forms::support::{forms_action, ui_admit, ui_label, ui_text_value, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::forms::terminology::FormsLabels;
 use crate::FormQuestion;
-use semio_framework_plugin::{tree_item_with_action, BuiltNode, UiAssemblyResult, UiValue};
-use semio_framework_ui_contract as ui;
+use semio_plugin::{tree_item_with_action, BuiltNode, UiAssemblyResult, UiValue};
+use semio_ui_contract as ui;
 use ui::{Buildable, HasBase, HasChildren};
 
 pub fn arguments(mut entries: Vec<(&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
@@ -76,7 +76,7 @@ fn property_value(question: &FormQuestion, field: &str) -> String {
     }
 }
 
-pub fn scalar_row(question: &FormQuestion, ids: &[String], field: &str, view: &semio_framework_plugin::ViewModel, config: &crate::editor::forms::config::FormsConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn scalar_row(question: &FormQuestion, ids: &[String], field: &str, view: &semio_plugin::ViewModel, config: &crate::forms_config::FormsConfig) -> UiAssemblyResult<BuiltNode> {
     let labels = crate::editor::forms::terminology::forms_play_labels(view);
     let id = format!("forms-play-inspector.question.{field}");
     let label = property_label(field, labels);

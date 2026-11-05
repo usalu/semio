@@ -21,8 +21,8 @@
 //! future revision drop this file's hand-rolled `ApplicationHandler` entirely.
 
 use crate::os_host::OsHost;
-use semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState;
-use semio_framework_os_renderer_wgpu_host_plumbing::input_wire::{event_modifiers_to_pointer, key_action_from_dispatch, pointer_button_to_i16};
+use semio_renderer_wgpu_frame_actions::AppInteractionState;
+use semio_renderer_wgpu_host_plumbing::input_wire::{event_modifiers_to_pointer, key_action_from_dispatch, pointer_button_to_i16};
 use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PointerButton, PointerInfo, TextEditTarget};
 

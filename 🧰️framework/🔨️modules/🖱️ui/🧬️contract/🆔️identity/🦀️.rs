@@ -1,7 +1,7 @@
 //! 🆔️ Semantic surface, node and revision identity with monotonic allocation.
 use serde::{Deserialize,Serialize};
 use semio_framework_value_derive::{FromValue,ToValue};
-use semio_framework_ui_contract_text::UiText;
+use semio_ui_contract_text::UiText;
 //#region 🆔️Ids
 /// 🪧️ A render surface address — today's dotted strings, e.g. `"note.play.navigator"`.
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]

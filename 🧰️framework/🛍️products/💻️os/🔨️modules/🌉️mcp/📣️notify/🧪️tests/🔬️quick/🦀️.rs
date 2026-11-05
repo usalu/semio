@@ -4,25 +4,25 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use crate::root::{GatewayRuntime, build_server_from_catalog};
-use semio_framework_os_mcp_catalog::catalog::{Catalog, compile};
-use semio_framework_os_mcp_foundation::audit::{AuditSinks, InMemoryAuditSink};
-use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceSubmitRequestV1, INFERENCE_REQUEST_ID_HEX_LENGTH, is_hub_inference_route};
-use semio_framework_os_mcp_port::policy::AgentPrincipal;
-use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
-use semio_framework_os_mcp_schema::schema::{compile_validator, validate};
-use semio_framework_os_mcp_server::mcp_server::McpServer;
-use semio_framework_os_mcp_wire::job_registry::{JobStatus, job_registry};
-use semio_framework_os_mcp_wire::notify::{NOTIFICATION_PROGRESS, NotificationSink, ProgressBinding, RecordingSink, ResourceChange, active_progress_binding, artifact_changed, cancel_request, changes_from_tool_result, decode_cursor, encode_cursor, enter_progress_scope, enter_request_scope, job_progress_changed, jobs_for_request, notification_slot, paginate, resource_update_broker};
-use semio_framework_os_mcp_wire::protocol::{JsonRpcId, JsonRpcNotification, JsonRpcRequest, NOTIFICATION_RESOURCES_UPDATED, intercept_cancellation};
+use semio_os_mcp_catalog::catalog::{Catalog, compile};
+use semio_os_mcp_foundation::audit::{AuditSinks, InMemoryAuditSink};
+use semio_os_mcp_inference_hub::hub_wire::{HubInferenceSubmitRequestV1, INFERENCE_REQUEST_ID_HEX_LENGTH, is_hub_inference_route};
+use semio_os_mcp_port::policy::AgentPrincipal;
+use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_os_mcp_schema::schema::{compile_validator, validate};
+use semio_os_mcp_server::mcp_server::McpServer;
+use semio_os_mcp_wire::job_registry::{JobStatus, job_registry};
+use semio_os_mcp_wire::notify::{NOTIFICATION_PROGRESS, NotificationSink, ProgressBinding, RecordingSink, ResourceChange, active_progress_binding, artifact_changed, cancel_request, changes_from_tool_result, decode_cursor, encode_cursor, enter_progress_scope, enter_request_scope, job_progress_changed, jobs_for_request, notification_slot, paginate, resource_update_broker};
+use semio_os_mcp_wire::protocol::{JsonRpcId, JsonRpcNotification, JsonRpcRequest, NOTIFICATION_RESOURCES_UPDATED, intercept_cancellation};
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_mcp_capabilities::source_builders::note_and_cad_source;
+use semio_os_mcp_capabilities::source_builders::note_and_cad_source;
 #[cfg(test)]
-use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
+use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
 //#region 🧫️Fixtures
 
 fn fixture_catalog() -> Arc<Catalog> {
-    Arc::new(compile(&note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
+    Arc::new(compile(&note_and_cad_source(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
 }
 
 /// 🧫️ A real server over the deterministic note+cad catalog, with a recording notification sink

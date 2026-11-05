@@ -9,8 +9,8 @@ use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 
 /// 🧸️ Read-only access to a composing document's live child stores, keyed `(slot,
 /// child_id)` exactly as the parent's `ArtifactChild` handles name them.
@@ -114,14 +114,14 @@ pub struct PreparedChildContentEntry {
     #[doc(hidden)]
     pub metadata_cursor: usize,
     #[doc(hidden)]
-    pub visibility: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>>>,
+    pub visibility: ManuallyDrop<Option<std::sync::Arc<semio_os_kernel::os_vcs::ArtifactGroupVisibility>>>,
     pub generation: u64,
 }
 
 pub struct PreparedChildContentSlot {
     pub index: usize,
     identity: usize,
-    visibility: std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>,
+    visibility: std::sync::Arc<semio_os_kernel::os_vcs::ArtifactGroupVisibility>,
     pub generation: u64,
     taken: bool,
 }
@@ -131,7 +131,7 @@ impl PreparedChildContentEntry {
     fn preparation_demands() -> RetirementDemand { let mut demand = store::os_store::snapshot_read::ErasedSnapshotRead::prepared_read_demands(); demand.depth += 1; demand }
 
     /// 🧳️ Moves admitted identity owners into an exact private candidate read.
-    pub fn prepare<M: SpaceMember>(identity: &mut Option<PreparedChildContentIdentity>, member: &M, publication: &mut dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(Self, RetainedCloneProgress)>, ValueError> {
+    pub fn prepare<M: SpaceMember>(identity: &mut Option<PreparedChildContentIdentity>, member: &M, publication: &mut dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &std::sync::Arc<semio_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(Self, RetainedCloneProgress)>, ValueError> {
         if !Self::admits(grant, Self::preparation_demands()) { return Ok(None); }
         let retained = identity.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "prepared child identity has already transferred"))?;
         ChildContentView::identity_hash(retained.key.borrowed())?;
@@ -164,7 +164,7 @@ impl PreparedChildContentEntry {
     fn admits(grant: store::os_store::one_item::ArtifactStoreOneItemGrant, demand: RetirementDemand) -> bool { grant.permits_one() && !(grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth) }
 
     /// 🪃️ Returns the lease to its private member before separately freeing each identity allocation.
-    pub fn close_step<M: SpaceMember>(&mut self, member: &M, publication: &mut dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility_retainer: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
+    pub fn close_step<M: SpaceMember>(&mut self, member: &M, publication: &mut dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility_retainer: &std::sync::Arc<semio_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.visibility.as_ref().is_none_or(|visibility| !std::sync::Arc::ptr_eq(visibility, visibility_retainer)) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.retirement_demands();
@@ -190,7 +190,7 @@ impl PreparedChildContentEntry {
         self.close_metadata_step(visibility_retainer, grant)
     }
 
-    pub fn close_metadata_step(&mut self, visibility_retainer: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
+    pub fn close_metadata_step(&mut self, visibility_retainer: &std::sync::Arc<semio_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.visibility.as_ref().is_none_or(|visibility| !std::sync::Arc::ptr_eq(visibility, visibility_retainer)) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.retirement_demands();
@@ -563,12 +563,12 @@ impl ChildContentView {
     }
 
     /// 🧵️ Selects an immutable child snapshot capability without exposing concrete ownership.
-    pub fn typed_read<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState>(&self, slot: &str, child_id: &str) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
+    pub fn typed_read<S: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState>(&self, slot: &str, child_id: &str) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
         self.typed_read_at(MemberKeyRef::root(slot, child_id))
     }
 
     /// 🪡️ [`Self::typed_read`] of the member at one exact owner edge, whatever its depth.
-    pub fn typed_read_at<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState>(&self, key: MemberKeyRef<'_>) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
+    pub fn typed_read_at<S: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState>(&self, key: MemberKeyRef<'_>) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
         let (slot, child_id) = (key.slot, key.child_id);
         let snapshot = &self.find(key)?.ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))?.snapshot;
         snapshot.typed::<S>().ok_or_else(|| plugin_sdk_fault(format!("child snapshot type mismatch for slot {slot} child {child_id}")))
@@ -683,3 +683,5 @@ pub use lifted_read::*;
 pub mod child_editor;
 
 #[path="📖️vector/🦀️.rs"]pub mod vector_read;
+
+#[path="📖️read/🦀️.rs"]pub mod child_read;

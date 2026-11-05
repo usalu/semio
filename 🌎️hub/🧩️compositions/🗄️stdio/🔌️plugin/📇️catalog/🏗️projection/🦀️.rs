@@ -4,7 +4,7 @@
 
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 use semio_s_artifact_stdio_contract::registry::ContributionRegistry;
 use semio_s_artifact_stdio_contract::{native_codec_hash, ArtifactAssembly, NativeCodecFactory, NativeCodecFactoryReceipt};
 use std::collections::BTreeSet;

@@ -181,8 +181,8 @@ async fn artifact_child_dsl_field_round_trips_via_pack_and_value() {
 
     let spec = artifact_child_spec();
     let record = artifact_child_to_record(&child);
-    let bytes = semio_framework_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
-    let (decoded_record, _report) = semio_framework_os_pack::record::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
+    let bytes = semio_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
+    let (decoded_record, _report) = semio_os_pack::record::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
     let decoded: ArtifactChild<DemoSnapshot> = artifact_child_from_record(&decoded_record).expect("from_record");
     assert_eq!(decoded, child);
 
@@ -213,8 +213,8 @@ async fn owner_ref_dsl_field_round_trips_via_pack() {
     };
     let spec = owner_ref_spec();
     let record = owner_ref_to_record(&owner);
-    let bytes = semio_framework_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
-    let (decoded_record, _report) = semio_framework_os_pack::record::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
+    let bytes = semio_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
+    let (decoded_record, _report) = semio_os_pack::record::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
     let decoded = owner_ref_from_record(&decoded_record).expect("from_record");
     assert_eq!(decoded, owner);
 }
@@ -228,8 +228,8 @@ async fn artifact_link_dsl_field_round_trips_every_link_pin_variant() {
         let semio_framework_dsl_record::Shape::Record(producer)=<ArtifactLink as semio_framework_dsl_record::DslField>::shape()else{unreachable!()};
         let spec=(producer.ordinary)();
         let semio_framework_dsl_record::FieldValue::Record(record)=<ArtifactLink as semio_framework_dsl_record::DslField>::to_value(&link)else{unreachable!()};
-        let bytes = semio_framework_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
-        let (decoded_record, _report) = semio_framework_os_pack::record::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
+        let bytes = semio_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
+        let (decoded_record, _report) = semio_os_pack::record::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
         let decoded=<ArtifactLink as semio_framework_dsl_record::DslField>::from_value(&semio_framework_dsl_record::FieldValue::Record(decoded_record)).expect("from_record");
         assert_eq!(decoded, link, "round trip diverged for pin variant {pin:?}");
     }
@@ -248,10 +248,10 @@ async fn artifact_refs_defaults_to_empty_for_a_leaf_snapshot() {
 async fn typed_child_store_factory_round_trips_a_child_through_create_persist_open() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let dialect = demo_child_dialect();
 
-    let mut child = create_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: Some(7) }.encode_pack(), ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into()), &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("create");
+    let mut child = create_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: Some(7) }.encode_pack(), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into()), &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("create");
     assert!(child.owners.snapshot_retirement_factory.is_some(), "generated member creation must install the exact snapshot retirement factory before returning ownership");
     assert!(child.owned_disposer_installed(), "generated member creation must install the exact whole-store bounded disposer before returning ownership");
     child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut identity).await.expect("apply");
@@ -261,7 +261,7 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
     let files = print_document_pack(child.envelope()).await.expect("print");
     let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-round-trip".into(), dialect };
-    let mut reopened = open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, None, &persisted, child.local_actor_id().clone(), &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("open");
+    let mut reopened = open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, None, &persisted, child.local_actor_id().clone(), &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("open");
 
     assert!(reopened.owners.snapshot_retirement_factory.is_some(), "generated member reopen must install the exact snapshot retirement factory before returning ownership");
     assert!(reopened.owned_disposer_installed(), "generated member reopen must install the exact whole-store bounded disposer before returning ownership");
@@ -284,7 +284,7 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
     let owner = OwnerRef { parent: parent.clone(), slot: "slot".into(), child_id: "genesis-child".into() };
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "genesis-child".into(), dialect: dialect.clone() };
     let envelope_pack = genesis_member_envelope_pack("demo/v1", &expected, &owner, &DemoSnapshot { n: Some(5) }.encode_pack()).await.expect("genesis envelope");
-    let mut opened = open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, Some(&owner), &envelope_pack, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into()), &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("open genesis member");
+    let mut opened = open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, Some(&owner), &envelope_pack, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into()), &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("open genesis member");
     assert_eq!(opened.envelope().id, "genesis-child");
     assert_eq!(opened.envelope().owner.as_ref(), Some(&owner));
     assert_eq!(opened.envelope().dialect.as_ref(), Some(&dialect));
@@ -292,7 +292,7 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
     assert!(opened.envelope().vcs.edits.is_empty(), "a genesis member carries no history");
     close_member_dialect_fixture(&mut opened);
     let other = OwnerRef { parent, slot: "other".into(), child_id: "genesis-child".into() };
-    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, Some(&other), &envelope_pack, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into()), &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "the stamped owner must match the requested one");
+    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, Some(&other), &envelope_pack, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into()), &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "the stamped owner must match the requested one");
     assert!(matches!(genesis_member_envelope_pack("demo/v1", &expected, &owner, &[]).await, Err(VcsError::Deserialize(_))), "an empty initial pack is rejected, never substituted");
 }
 
@@ -300,7 +300,7 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
 async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog() {
     type Wrapped = ArtifactStore<DemoSnapshot, DemoMutation>;
     let dialect = demo_child_dialect();
-    let mut created = <Wrapped as MemberFactory>::create("wrapped-member", &dialect, &DemoSnapshot { n: Some(3) }.encode_pack(), ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("wrapper create");
+    let mut created = <Wrapped as MemberFactory>::create("wrapped-member", &dialect, &DemoSnapshot { n: Some(3) }.encode_pack(), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("wrapper create");
     assert!(created.owners.snapshot_retirement_factory.is_some());
     assert!(created.owners.initial_snapshot_retirement_factory.is_some());
     assert!(created.owners.mutation_retirement_factory.is_some());
@@ -319,17 +319,17 @@ async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog
 
 #[semio_framework_async_macros::async_test]
 async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal() {
-    let mut missing = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut missing = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let refused = SpaceMember::close_owned_step(&mut missing, physical_test_close_grant());
     assert!(matches!(&refused, Err(reason) if reason.kind == semio_framework_value::ValueRefusalKind::InvariantViolated && reason.message.contains("no installed owner disposer")), "{refused:?}");
 
-    missing.install_document_store_owners_exact(complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    missing.install_document_store_owners_exact(complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     missing.closes_on_drop();
     let first = SpaceMember::close_owned_step(&mut missing, physical_test_close_grant());
     assert!(matches!(&first, Ok(RetainedCloneStep::Progress(progress)) if progress.fits(physical_test_close_grant())), "{first:?}");
     assert!(missing.owned_disposer_installed(), "the admitted owner remains retained until terminal close");
     assert!(!SpaceMember::close_owned_terminal_is_empty(&missing));
-    let replacement=complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()));
+    let replacement=complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()));
     let(error,mut returned)=missing.install_document_store_owners_exact(replacement).expect_err("the original catalog cannot be replaced");
     assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
     for _ in 0..10_000 { if returned.uninstalled_owners_terminal_is_empty(){break;}let step=returned.close_uninstalled_owners_step(physical_test_close_grant()).expect("returned original catalog closes under the supplied grant");assert!(step.progress().fits(physical_test_close_grant())); }
@@ -341,14 +341,14 @@ async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer
 /// typed by its parent, so `open` must fail closed rather than hand back an untypable member.
 #[semio_framework_async_macros::async_test]
 async fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child() {
-    assert!(matches!(create_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", "child-empty", &demo_child_dialect(), &[], ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into()), &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
+    assert!(matches!(create_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", "child-empty", &demo_child_dialect(), &[], ActorId(semio_os_spr::LOCAL_ACTOR_ID.into()), &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
 
-    let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "child-no-dialect", DemoSnapshot { n: Some(1) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "child-no-dialect", DemoSnapshot { n: Some(1) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.owner = Some(OwnerRef { parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
     let files = print_document_pack(&envelope).await.expect("print");
     let orphan = encode_document_pack_bytes(&files.pack, &files.spr).await;
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-no-dialect".into(), dialect: demo_child_dialect() };
-    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, envelope.owner.as_ref(), &orphan, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into()), &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
+    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, envelope.owner.as_ref(), &orphan, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into()), &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
     retire_demo_envelope(envelope);
 }
 
@@ -356,8 +356,8 @@ async fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_
 async fn pack_at_checkpoint_reads_history_without_moving_the_live_cursor() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "pinned-target", DemoSnapshot { n: Some(1) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "pinned-target", DemoSnapshot { n: Some(1) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply");
     let checkpoint = ReferenceSpaceMember::commit_checkpoint(&mut store, "v1".into(), Vec::new(), &mut identity).await.expect("checkpoint");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply after checkpoint");
@@ -375,7 +375,7 @@ async fn pack_at_checkpoint_reads_history_without_moving_the_live_cursor() {
 async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pins() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     struct FixtureDirectory {
         member: ArtifactStore<DemoSnapshot, DemoMutation>,
     }
@@ -388,7 +388,7 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
         }
     }
 
-    let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "linked-doc", DemoSnapshot { n: Some(1) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "linked-doc", DemoSnapshot { n: Some(1) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 42 })], transaction: None }, &mut identity).await.expect("apply");
     let pinned = ReferenceSpaceMember::commit_checkpoint(&mut member, "pinned".into(), Vec::new(), &mut identity).await.expect("checkpoint");
     member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], transaction: None }, &mut identity).await.expect("apply after pin");

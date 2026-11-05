@@ -2,7 +2,7 @@
 use crate::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_layout_layout_diff::{LayoutDiff,PageOverrideRemoval,PageOverrideInsertion,PageOverrideRelocation};
-use semio_framework_os_kernel::RetainedFieldPreparation;
+use semio_os_kernel::RetainedFieldPreparation;
 use semio_s_artifact_layout_layout_model::PageOverride;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use super::plan::OverrideRowsPlan;

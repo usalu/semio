@@ -1,12 +1,12 @@
 //! 🪜️ Sequence play app commands — step CRUD: add/remove/move/patch/collapse a step, delete the
 //! current selection.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::sequence::edit_rules;
 use crate::editor::sequence::editor_vocabulary::{sequence_edit_emit, sequence_scene_edit};
 use crate::mutations::SequenceMutation;
 use crate::{SequenceSnapshot, SlotRef, StepParams};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️AddStep
@@ -100,7 +100,7 @@ pub mod remove_step {
 
 pub mod delete_selection {
     use super::*;
-    use semio_framework_plugin::app::InteractionView;
+    use semio_plugin::app::InteractionView;
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "delete-selection")]

@@ -1,7 +1,7 @@
 //! 🛫️ Literal XML snapshot fields are counted and emitted under cumulative ownership admission.
 use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
 use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlSnapshot, XmlNode, XmlDeclaration, XmlDoctype, XmlExternalId, XmlDtdDeclaration};
-use semio_framework_os_kernel::{sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteDatabaseLimits}, io_schema::IoPayload};
+use semio_os_kernel::{sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteDatabaseLimits}, io_schema::IoPayload};
 
 struct Writer<'a, 'b, 'c> { control: &'a mut NativeEncodeControl<'b>, output: Option<&'c mut Vec<u8>>, count: usize, rows: usize, limits: SqliteDatabaseLimits, encoding: SnapshotEncoding }
 impl Writer<'_, '_, '_> {
@@ -67,7 +67,7 @@ impl Writer<'_, '_, '_> {
 }
 enum Action<'a> { Node(&'a XmlNode), Literal(&'static [u8]) }
 
-pub(crate) fn encode(snapshot: &XmlSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,_native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IoPayload, ValueError> {
+pub(crate) fn encode(snapshot: &XmlSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,_native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IoPayload, ValueError> {
     let limits = control.limits(); control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
     let mut callback = |event: pack::value::native_encoding::NativeEncodeProgress| control.checkpoint(SqliteSnapshotPhase::EncodeNative, event.completed, event.total).is_ok();
     let mut native = NativeEncodeControl::new(limits.max_value_bytes, &mut callback); native.begin_stage(0)?;

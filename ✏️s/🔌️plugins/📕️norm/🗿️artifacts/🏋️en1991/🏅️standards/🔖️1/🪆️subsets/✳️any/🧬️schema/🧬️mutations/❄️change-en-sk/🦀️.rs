@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeEnSk where Op: pro
         record: "ChangedEnSk",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic ground snow load (EN)", "Charakteristische Schneelast auf dem Boden (EN) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change characteristic ground snow load (EN)", "Charakteristische Schneelast auf dem Boden (EN) ändern")
     }
 }
 

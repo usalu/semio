@@ -9,23 +9,23 @@ use crate::viewer::remodeling::modes::view::windows::model;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DIALECT;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DOCUMENT_SCHEMA;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -69,8 +69,8 @@ impl ArtifactViewer for RemodelingViewer {
     /// 🚀️ Boots on the subset's committed `demo` example — the same document the editor boots on — so
     /// the two surfaces of one dialect open the same scene. A viewer has no `setActiveExample` action (its
     /// sole command is `Noop`), so example text that no longer parses refuses the birth with a typed fault.
-    fn reference_birth()->Option<fn()->Result<RemodelingSnapshot,semio_framework_plugin::Fault>>{Some(||{
-        semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::demo::PRIMARY_TEXT).map_err(|error|semio_framework_plugin::reference_birth_fault("remodeling demo document",error))
+    fn reference_birth()->Option<fn()->Result<RemodelingSnapshot,semio_plugin::Fault>>{Some(||{
+        semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::demo::PRIMARY_TEXT).map_err(|error|semio_plugin::reference_birth_fault("remodeling demo document",error))
     })}
 
     /// 👁️ Structurally read-only: the sole `RemodelingViewCommand::Noop` variant never carries a config
@@ -82,23 +82,23 @@ impl ArtifactViewer for RemodelingViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            model::BODY_KEY => model::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            model::BODY_KEY => model::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_remodeling_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_remodeling_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(REMODELING_DIALECT)
         .document(["semio", "remodeling"])
         .icon_id("remodeling-app")

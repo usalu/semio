@@ -4,7 +4,7 @@ use super::*;
 
 //#region 💾️StorageBackend
 /// 💾️ Blocking storage transport `StorageScheduler::submit` drives — same seam discipline as
-/// `HttpTransport` in `semio-framework-os-services` (this packet adds no concrete implementation;
+/// `HttpTransport` in `semio-os-services` (this packet adds no concrete implementation;
 /// see `UnwiredStorageBackend`).
 // 🚫️async: R1/E0038 — `Arc<dyn StorageBackend>` (below, `AsyncEffectExecutor::storage_backend`)
 // makes this an open dyn-dispatched extension point; `async fn` in a trait used via `dyn` is not

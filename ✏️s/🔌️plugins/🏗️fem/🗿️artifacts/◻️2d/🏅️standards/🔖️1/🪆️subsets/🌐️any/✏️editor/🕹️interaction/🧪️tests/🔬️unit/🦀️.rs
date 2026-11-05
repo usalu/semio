@@ -165,12 +165,12 @@ fn identity_fixture() -> (serde_json::Value, Fem2dSnapshot) {
 fn scoped_entity_identity_prevents_cross_kind_and_case_collisions() {
     use semio_s_artifact_fem_2d_editor::editor::fem2d::{panels::{artifact, inspection}, terminology::fem2d_labels};
     use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::{patch_load, remove_selection};
-    use semio_framework_plugin::ArtifactView;
-    use semio_framework_plugin::ConfigView;
-    use semio_framework_plugin::HistoryView;
-    use semio_framework_plugin::NoConfig;
-    use semio_framework_plugin::TreeWindows;
-    use semio_framework_plugin::ViewModel;
+    use semio_plugin::ArtifactView;
+    use semio_plugin::ConfigView;
+    use semio_plugin::HistoryView;
+    use semio_plugin::NoConfig;
+    use semio_plugin::TreeWindows;
+    use semio_plugin::ViewModel;
     let (fixture, mut document) = identity_fixture();
     let collision = &fixture["collision"];
     document.materials[0].id = collision["materialId"].as_str().expect("shared identity").into();
@@ -188,21 +188,21 @@ fn scoped_entity_identity_prevents_cross_kind_and_case_collisions() {
     assert_eq!(fem2d_load_owner(&document, target("liveLoad")).map(|(case, _)| case), Some("live"));
     assert!(gumball::fem2d_transform_targets(&document, &[target("material").into()]).is_empty());
     assert_eq!(gumball::fem2d_transform_targets(&document, &[target("node").into()]).node_ids, ["n1"]);
-    let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let labels = fem2d_labels(&view);
     let material = inspection::render(&document, &Fem2dInteractionSnapshot { selected_ids: vec![target("material").into()], ..Default::default() }, labels, &TreeWindows::unhosted()).expect("typed material inspector");
-    let material = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: material }).expect("inspector projection");
+    let material = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree { root: material }).expect("inspector projection");
     assert!(material.contains("fem2d-play-inspection.material.name.input") && !material.contains("fem2d-play-inspection.node.x.input"));
-    for (locale, key) in [(semio_framework_ui_locale::Locale::En, "en"), (semio_framework_ui_locale::Locale::De, "de")] {
-        let view = ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
+    for (locale, key) in [(semio_ui_locale::Locale::En, "en"), (semio_ui_locale::Locale::De, "de")] {
+        let view = ViewModel::new(locale, semio_ui_locale::Terminology::Native);
         let selected_ids = ["node", "material", "deadLoad", "liveLoad"].iter().map(|key| target(key).to_string()).collect();
         let panel = inspection::render(&document, &Fem2dInteractionSnapshot { selected_ids, ..Default::default() }, fem2d_labels(&view), &TreeWindows::unhosted()).expect("typed selection labels");
-        let panel = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: panel }).expect("selection projection");
+        let panel = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree { root: panel }).expect("selection projection");
         for label in collision["selectionLabels"][key].as_array().expect("portable localized selection labels") { assert!(panel.contains(label.as_str().unwrap()), "{locale:?}: {panel}"); }
     }
 
     let tree = artifact::render(&document, &Fem2dInteractionSnapshot::default(), labels, &TreeWindows::unhosted()).expect("case-owned load tree");
-    let tree = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: tree }).expect("tree projection");
+    let tree = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree { root: tree }).expect("tree projection");
     assert!(tree.contains(target("deadLoad")) && tree.contains(target("liveLoad")));
     let history = HistoryView::empty();
     let document_view = ArtifactView::new(&document, &history);

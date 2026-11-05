@@ -1,0 +1,1840 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "mode": "prototype",
+      "manifest": "/source/component/Cargo.toml",
+      "name": "renderer",
+      "raw": "/owned/raw/renderer.wasm",
+      "binding": "/owned/bindgen",
+      "optimized": "/owned/optimized/renderer_bg.wasm",
+      "expectedCargo": [
+        "--target=wasm32-unknown-unknown",
+        "--profile",
+        "prototype",
+        "--offline",
+        "--frozen"
+      ],
+      "expectedBindgen": [
+        "/owned/raw/renderer.wasm",
+        "--target",
+        "web",
+        "--no-typescript",
+        "--out-name",
+        "renderer",
+        "--out-dir",
+        "/owned/bindgen"
+      ],
+      "expectedOptimizer": null
+    },
+    {
+      "mode": "release",
+      "manifest": "/source/component/Cargo.toml",
+      "name": "renderer",
+      "raw": "/owned/raw/renderer.wasm",
+      "binding": "/owned/bindgen",
+      "optimized": "/owned/optimized/renderer_bg.wasm",
+      "expectedCargo": [
+        "--target=wasm32-unknown-unknown",
+        "--profile",
+        "release",
+        "--offline",
+        "--frozen"
+      ],
+      "expectedBindgen": [
+        "/owned/raw/renderer.wasm",
+        "--target",
+        "web",
+        "--no-typescript",
+        "--out-name",
+        "renderer",
+        "--out-dir",
+        "/owned/bindgen"
+      ],
+      "expectedOptimizer": [
+        "/owned/bindgen/renderer_bg.wasm",
+        "-Oz",
+        "-o",
+        "/owned/optimized/renderer_bg.wasm"
+      ]
+    }
+  ],
+  "refusals": [
+    "dev",
+    "debug",
+    "PROTOTYPE",
+    ""
+  ],
+  "lifecycle": [
+    {
+      "mode": "prototype",
+      "cancel": false,
+      "events": [
+        "products",
+        "lane",
+        "compile",
+        "lane-close",
+        "products-close"
+      ]
+    },
+    {
+      "mode": "release",
+      "cancel": true,
+      "events": [
+        "products",
+        "lane",
+        "compile",
+        "lane-close",
+        "products-close"
+      ]
+    }
+  ],
+  "observation": {
+    "build": "/owned/build",
+    "identity": "0123456789abcdef01234567",
+    "expected": "/owned/build/semio-cargo-observations/0123456789abcdef01234567",
+    "invalid": [
+      "",
+      "../escape",
+      "ABCDEF0123456789abcdef01"
+    ]
+  },
+  "fontPackages": [
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-share-tech-mono-latin-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-regions-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-nature-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-food-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-activities-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-joined-forms-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-symbols-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-faces-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-flags-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-people-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-objects-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-travel-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-noto-emoji-supplement-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-anta-latin-ext-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-anta-latin-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-anta-symbols-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-anta-math-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-kelly-slab-latin-ext-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-kelly-slab-latin-regular"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-font-kelly-slab-cyrillic-regular"
+    }
+  ],
+  "fontBuildDirectories": {
+    "posix": "/Users/ueli/Documents/semio/.r/i/m/u/l/p000000",
+    "win32": "C:\\Users\\ueli\\Documents\\semio\\.r\\i\\m\\u\\l\\p000000"
+  },
+  "rendererPackages": [
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-camera"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🙋️agent-elements/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-agent-elements"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏃️app-runtime/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-app-runtime"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗂️asset-authority/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-asset-authority"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🦴️asset-decode/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-asset-decode"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌍️browser-worker/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-browser-worker"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔄️canvas2d-host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-canvas2d-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖌️canvas2d-paint/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-canvas2d-paint"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-component"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🤝️contracts/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-contracts"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🛰️dock/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-dock"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️laws/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-dock-laws"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🛂️doors/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-doors"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔗️engine-attach/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-engine-attach"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧷️engine-attach-tests/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-engine-attach-tests"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪜️engine-attach-tests-2/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-engine-attach-tests-2"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎲️engine-board/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-engine-board"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🕸️engine-graph/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-engine-graph"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗺️engine-registry/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-engine-registry"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/✍️engine-text/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-engine-text"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧰️fixtures/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-fixtures"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🛎️frame-actions/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-frame-actions"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/👷️frame-job/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-frame-job"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📺️frame-presentation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-frame-presentation"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍇️frame-tests-1/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-frame-tests-1"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧾️frame-transaction/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-frame-transaction"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏛️host-base/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-host-base"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔧️host-plumbing/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-host-plumbing"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎪️host-winit/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-host-winit"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔐️hub-contracts/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-hub-contracts"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏘️hub-workspace/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-hub-workspace"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/💠️icon-host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-icon-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏊️kernel-pool/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-kernel-pool"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-kernel-protocol"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗃️kernel-retained/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-kernel-retained"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧠️kernel-runtime/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-kernel-runtime"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📬️mailbox-core/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-mailbox-core"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎥️media-slots/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-media-slots"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖥️native-platform/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-native-platform"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔬️native-probe/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-native-probe"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-native-runtime-modules"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪢️program-bridge/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-program-bridge"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📨️runtime-mailbox/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-runtime-mailbox"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪤️runtime-mailbox-tests/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-runtime-mailbox-tests"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎨️scene-canvas2d/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-scene-canvas2d"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📰️scene-feeds/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-scene-feeds"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/✒️scene-ink/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-scene-ink"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧶️scene-ink-tests/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-scene-ink-tests"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪞️scene-render/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-scene-render"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎭️scene-state/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-scene-state"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧮️scene-tables/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-scene-tables"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📁️scene-text-vfs/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-scene-text-vfs"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔀️shell-actions/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-actions"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏳️shell-async/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-async"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎚️shell-chrome-state/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-chrome-state"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎹️shell-commands/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-commands"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📒️shell-directory/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-directory"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📂️shell-doc-open/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-doc-open"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚓️shell-dock/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-dock"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📄️shell-docs/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-docs"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏪️shell-history/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-history"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🕹️shell-input/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-input"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧲️shell-plugins/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-plugins"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖐️shell-pointer/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-pointer"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎛️shell-prefs/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-prefs"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚶️shell-session/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-session"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐙️shell-state/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-state"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫧️shell-surfaces/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-surfaces"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔃️shell-sync/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-sync"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌈️shell-tests-chrome-1/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-chrome-1"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌌️shell-tests-chrome-2/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-chrome-2"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌅️shell-tests-chrome-3/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-chrome-3"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌴️shell-tests-chrome-4/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-chrome-4"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌲️shell-tests-chrome-5/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-chrome-5"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍃️shell-tests-chrome-6/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-chrome-6"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🥧️shell-tests-docs-1/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-docs-1"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🥪️shell-tests-docs-2/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-docs-2"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🥣️shell-tests-docs-3/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-docs-3"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍎️shell-tests-input-1/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-input-1"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍯️shell-tests-input-2/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-input-2"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍰️shell-tests-input-3/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-input-3"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏙️shell-tests-windows-1/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-windows-1"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌆️shell-tests-windows-2/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-tests-windows-2"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍱️shell-view-chrome/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-view-chrome"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗨️shell-view-overlays/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-view-overlays"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖍️shell-view-paint/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-view-paint"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪀️shell-view-panels/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-view-panels"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📖️shell-vocab/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-vocab"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪝️shell-window-actions/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-window-actions"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔲️shell-windows/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-shell-windows"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧯️test-support/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-test-support"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔒️thread-isolation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-thread-isolation"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖱️ui-engine/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-ui-engine"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔎️ui-engine-dump/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-ui-engine-dump"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/👆️ui-engine-focus/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-ui-engine-focus"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧿️ui-engine-tests/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-renderer-wgpu-ui-engine-tests"
+    }
+  ],
+  "domainPackages": [
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-locale"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/🍃️nodes/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-retained-tree-tree"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-retained-tree"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🏟️arena/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-arena"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-theme"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-styling"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-action"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌉️surface/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-surface"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🌍️world3d/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-world3d"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-views"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📜️doc/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-doc"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🕸️node-graph/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-node-graph"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-plane"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📏️world3d-modelling/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-modelling"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-pass"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-camera"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🎯️picking/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-picking"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-mesh"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-algebra"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️pack/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene-pack"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-scene"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-engine"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-engine-surface"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-events"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-prepared-staging"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-prepared"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-mounted-layout"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-input"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🔘️controls/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-controls"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-paint"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-paint-reference"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-render-prepared-shaders"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🔌️device/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-device"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-draw-contract"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-render"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-draw-execution"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-pipelines"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-mesh"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-raster"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-hosting"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-layout"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-widgets"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-widget-kit"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪶️light/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-wgpu-light"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-layout"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-declaration"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-text"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/✨️shader-contract/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-render-shader-contract"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-backend-vulkan"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-backend-metal"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-backend-webgpu"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-backend-d3d12"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-render"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/📮️packet/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-render-packet"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🔌️device/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-render-device"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🕹️interaction/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-render-interaction"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🖋️text/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-render-text"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-host"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-raster-owner"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/⏭️cursor/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-runtime-reconcile-cursor"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-runtime-reconcile"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📡️exchange/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-runtime-exchange"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-runtime"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🖼️presentation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-runtime-presentation"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🧱️primitives/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-runtime-reconcile-primitives"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚙️operations/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-operations"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-identity"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-values"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-actions"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-builder"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📏️budget/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-budget"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔤️text/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-text"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-presentation"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-validation"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-components"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-typegen"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-contract-text-edit"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-select-behavior"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🪟️surface/🪪️identity/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-surface-identity"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-ui-viewport"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-blob-identity"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-link-schema"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-config"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-config-merge-policy"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-kernel"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🌉️bridge/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-world-bridge"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-world-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-world-model"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧩️components/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-world-components"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-world-scene"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-world-cursors"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-world-interaction"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-engine"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-normal-focus"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-normal-gestures"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🖼️scene/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-normal-scene"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-normal-model"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-normal-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-normal-fill"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🕸️graph/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-dag-graph"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🗃️model/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-dag-model"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-dag-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-directed-presentation"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite-board-schema"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-infinite"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-geometry"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-vcs"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎒️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-mesh"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎞️actions-b/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-wasm-actions-b"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎬️actions-a/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-wasm-actions-a"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-wasm"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧩️domain-adapter/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-wasm-domain"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖍️drawing/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-drawing"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🎞️session/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-host-session"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-host-source"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-host-read"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧱️flow-host-model/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-host-core"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗃️operators/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-operators"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-flow-extensions"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-vcs"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-pack-tools"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-pack"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-retirement"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🌳️checkpoint-graph/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-checkpoint-graph"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🌿️branch/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-branch"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-live"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-stage"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧯️close/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-close"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-core"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-bundle"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/✉️envelope/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-envelope"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-config"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎞️projection/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-projection"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-one-item"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-one-item-publication"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-initialization-runtime"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-owners"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-initialization-replay"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-presence"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-presence-native-snapshot"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-ledger"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-message-ledger"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🏠️space/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-space"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-space-history"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🏭️factory/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-codec-factory"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-codec-registry"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-owned-schema-decode"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-owned-schema-fields"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-command"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-one-item-batch"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-replay-operation"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-replay"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🌐️wasm/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-sync-wasm"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-sync"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🖥️native/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-sync-native"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-backbone"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-read"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-command"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-replay"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-text-io"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-space-member"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-composition"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-engine-member-group"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-durable-group-wire"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-durable-group"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-member-open-store"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-member-open"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-testing-doubles"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-testing-fixtures"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧭️prelude/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-testing-prelude"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-space-schema"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-snapshot-clone"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-cursor"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-test-support"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-canonical-json"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-operation-wire"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-document"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-child"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-store-ephemeral"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-inference"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-directory"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-directory-client"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-directory-binary"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-directory-access-policy"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-directory-browser-actor"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-directory-check-in"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-directory-schema"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/⌨️cli/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-spr-cli"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-command"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/⚙️codec/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-history-codec"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-history"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-history-identity"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📋️record-set/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-history-record-decode"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-history-schema"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-spr"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-channel"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-node-graph"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-time-travel"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🧵️instance/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-time-travel-turns"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🪟️panel/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-time-travel-panel"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/🎮️operations/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-tool-run-operations"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-tool-run"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-tool-run-turns"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-operation"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/⏲️tasks/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-tasks"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-context"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-runtime-instances"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-runtime-exchange"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-runtime-ops"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-jobs"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-surfaces"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-core"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-lifecycle"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-turn"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧯️retirement-drivers-and-turn-limits/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-turn-limits"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-app"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧬️wit-bridge/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-wit-bridge"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-reactor-patches"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-actor-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-command"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-mounted-owner"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📜️registration/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-registration"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-builder"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🔌️program/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-plugin-program"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧩️app/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-app-builder"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-ownership"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️peer/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-peer"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-job"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🏛️host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-configuration"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️receiving/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-job-receiving"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-plugin-registry-schema"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-decl-media"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-decl-views"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-decl-tool-contract"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🧱️ownership/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-original-job-ownership"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-decl-registry"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-decl-emission"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-decl-app"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-decl-surface"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-interaction"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎭️guest-runtime/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-guest-runtime"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-post-turn-relay"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-wake"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔗️wit-bindings/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-wit"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-engine"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🚪️io/🎛️operation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-operation"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧭️routers/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-routers"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-shard"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🚚️process-transport/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-process-transport"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-host-shard-executor"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-component-receipt"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-document-media"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-abi"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-typing-edit"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🫧️host/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-scrub-host"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-interpreter-runtime"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-interpreter"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-composition-emission"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-composition-publication"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-publication-mounted"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-extension"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/⚖️declared-verb-verdicts/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-declared-verdict"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-testing-caller"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-testing-laws"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-testing-acceptance"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-guest-contract"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-initialization"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🏪️stores/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-stores"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-jobs"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-docs"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📜️history/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-history"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-app"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-dispatch"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-render"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-surface"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧩️extensions/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-extension"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-construction"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧷️command-routes/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-commands"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-typed-ops"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🪆️children/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-children"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-retained-command"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-child"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-instance-ladders"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-window-kits"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-window-kits-rich"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-window-config"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-window-config-mutation"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗂️registry/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-window-config-registry"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preparation/🔁️replace/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-window-config-replace"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧿️original/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-window-config-original"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-window-transient"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪪️identity/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-identity"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-shell"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-kernel-dsl-derive"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧩️expand/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-kernel-dsl-derive-expand"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-dsl"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-io"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-services"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-services-native-paths"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-services-native-io"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-kernel-neural-engine-budgeted"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-kernel-neural-engine-registry"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-kernel-neural-engine"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-kernel-neural-engine-model"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-extension"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-semio"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🪶️sqlite/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-space-sqlite-cells"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-list-delta"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🪪️identity/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-os-identity"
+    }
+  ]
+}

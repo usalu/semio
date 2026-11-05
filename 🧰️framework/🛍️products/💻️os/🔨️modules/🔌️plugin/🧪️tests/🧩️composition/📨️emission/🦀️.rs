@@ -1,39 +1,39 @@
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use semio_framework::*;
 use semio_framework::kernel::*;
-use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
-use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use semio_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use pack::snapshot::ArtifactPack;
 use store::ArtifactStoreInitializationAuthority;
-use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, ChildEmit, Emit, ToolCommandCatalog};
-use semio_framework_os_kernel::os_store::backbone::Backbone;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+use semio_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, ChildEmit, Emit, ToolCommandCatalog};
+use semio_os_kernel::os_store::backbone::Backbone;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
 use semio_framework_value::{DslValue, ValueError};
 use semio_framework_diagnostic::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_os_kernel::{MemberFactory, Mutation, SpaceMember};
-use semio_framework_plugin_decl_views::{NoConfigMutation, NoDraftMutation};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_builder::Ready;
+use semio_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_ui_locale::LocalizedLabel;
+use semio_os_kernel::{MemberFactory, Mutation, SpaceMember};
+use semio_plugin_decl_views::{NoConfigMutation, NoDraftMutation};
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_builder::Ready;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
-use semio_framework_os_kernel::io::SubsetValidator;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_os_kernel::io::SubsetValidator;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 use serde_json::Value;
-use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigReplaceMutation};
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_window_config::{WindowConfigOwner, WindowConfigReplaceMutation};
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 use semio_framework_job::InteractiveJob as _;
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
 
 /// 🎟️ One ordinary 4096-byte page turn on every independent axis.
 fn child_page_grant() -> store::RetainedCloneGrant {
@@ -82,8 +82,8 @@ fn child_emission_private_input_request_retains_whole_page_backing_undergrant() 
 
 #[test]
 fn child_emission_owned_preview_preserves_exact_wire_prefix() {
-    use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
-    use semio_framework_plugin_decl_emission::Emit;
+    use semio_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+    use semio_plugin_decl_emission::Emit;
     let fixture:Value=serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let operations=fixture["values"].as_array().unwrap().iter().map(|value|TestMutation::SetCount(SetCount{value:value.as_i64().unwrap()as i32})).collect::<Vec<_>>();
     let expected=operations.iter().map(::protocol::OpBinary::encode_op).collect::<Result<Vec<_>,_>>().unwrap();
@@ -103,8 +103,8 @@ fn child_emission_owned_preview_preserves_exact_wire_prefix() {
 
 #[test]
 fn child_emission_emit_retains_applying_source_without_wire_handoff() {
-    use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
-    use semio_framework_plugin_decl_emission::Emit;
+    use semio_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+    use semio_plugin_decl_emission::Emit;
     let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let operations = fixture["values"].as_array().unwrap().iter().map(|value| RefusingChildOperation { inner: TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 }), refuse: true }).collect::<Vec<_>>();
     let pointer=operations.as_ptr();
@@ -126,13 +126,13 @@ fn child_emission_emit_retains_applying_source_without_wire_handoff() {
     let metadata=retained.metadata().unwrap();
     assert_eq!(Value::from(semio_framework_value::ToValue::to_value(metadata)),serde_json::to_value(metadata).unwrap());
     assert!(metadata.ops.is_empty()&&metadata.labels.is_empty());
-    assert_eq!(emit.close_child_one(store::RetainedCloneGrant{maximum_items:0,..child_page_grant()}).unwrap(),Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())));
+    assert_eq!(emit.close_child_one(store::RetainedCloneGrant{maximum_items:0,..child_page_grant()}).unwrap(),Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())));
     assert_eq!(emit.owned_child_emits[0].mutations::<RefusingChildOperation>().unwrap().as_ptr(),pointer);
     let mut last=None;
     for _ in 0..4096 {
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||emit.close_child_one(child_page_grant()).unwrap());
         assert!(!heap.overflowed);assert!(heap.requested_bytes+heap.released_bytes<=4096);
-        if let Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress))=step{assert_eq!(heap.released_bytes,progress.released_bytes);}
+        if let Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress))=step{assert_eq!(heap.released_bytes,progress.released_bytes);}
         last=step;
         if step.is_none(){break;}
     }
@@ -144,7 +144,7 @@ fn child_emission_emit_retains_applying_source_without_wire_handoff() {
 
 #[test]
 fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decoding() {
-    use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+    use semio_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let operations = fixture["values"].as_array().unwrap().iter().map(|value| TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 })).collect::<Vec<_>>();
@@ -185,7 +185,7 @@ fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decod
 
 #[test]
 fn child_emission_preview_retains_exact_encoded_operations_and_semantic_labels() {
-    use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+    use semio_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
     let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let operations = fixture["values"].as_array().unwrap().iter().map(|value| TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 })).collect::<Vec<_>>();
     let expected_ops = operations.iter().map(|operation| ::protocol::OpBinary::encode_op(operation).unwrap()).collect::<Vec<_>>();
@@ -216,7 +216,7 @@ struct RefusingChildOperation {
 
 #[test]
 fn child_emission_owned_apply_admits_typed_source_without_requesting_wire_codec() {
-    use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+    use semio_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let operations = fixture["values"].as_array().unwrap().iter().map(|value| RefusingChildOperation { inner: TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 }), refuse: true }).collect::<Vec<_>>();
@@ -383,8 +383,8 @@ impl store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation> for Refus
 
 #[test]
 fn child_emission_owned_refusal_keeps_prefix_rejected_and_remaining_until_actual_typed_retirement(){
-    use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
-    use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    use semio_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+    use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
     let fixture:Value=serde_json::from_str(include_str!("../../../🧩️composition/📨️emission/🧪️tests/🧫️fixtures/🔣️.json")).expect("closed owned emission law");
     let demand=&fixture["ownedPreparation"];
     let returned=std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -427,7 +427,7 @@ fn child_emission_owned_refusal_keeps_prefix_rejected_and_remaining_until_actual
     let mut returned_provider=None;
     for _ in 0..demand["maximumCloseSteps"].as_u64().unwrap(){
         if preparation.terminal_is_empty(){break;}
-        let grant=original_close_grant;assert!(semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted retained close"),grant));
+        let grant=original_close_grant;assert!(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted retained close"),grant));
         let step=preparation.close_step(grant).expect("actual retained owned close");
         if let PluginLifecycleStep::Progress(progress)=step{assert!(progress.fits(grant));}
         else if let PluginLifecycleStep::AwaitingInput{reason}=step{
@@ -444,8 +444,8 @@ fn child_emission_owned_refusal_keeps_prefix_rejected_and_remaining_until_actual
 
 #[test]
 fn child_emission_accepted_owner_retirement_refusal_retains_exact_prefix_and_provider(){
-    use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
-    use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    use semio_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+    use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
     let fixture:Value=serde_json::from_str(include_str!("../../../🧩️composition/📨️emission/🧪️tests/🧫️fixtures/🔣️.json")).expect("closed accepted retirement refusal");
     let demand=&fixture["ownedPreparation"];
     let returned=std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -477,7 +477,7 @@ fn child_emission_accepted_owner_retirement_refusal_retains_exact_prefix_and_pro
     let mut provider_returned=false;
     for _ in 0..demand["maximumCloseSteps"].as_u64().unwrap(){
         if preparation.terminal_is_empty(){break;}
-        let grant=original_close_grant;assert!(semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted accepted owner close"),grant));
+        let grant=original_close_grant;assert!(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted accepted owner close"),grant));
         match preparation.close_step(grant).expect("retained accepted owner close"){
             PluginLifecycleStep::AwaitingInput{..}=>{let provider=preparation.take_retirement_provider::<TrackedChildOperation>().expect("original retained provider handback");assert!(std::sync::Arc::ptr_eq(&provider,&factory));provider_returned=true;},
             PluginLifecycleStep::Progress(progress)=>{assert!(progress.fits(grant));},
@@ -492,8 +492,8 @@ fn child_emission_accepted_owner_retirement_refusal_retains_exact_prefix_and_pro
 #[test]
 fn ready_child_parent_return_keeps_nested_owner_backing_until_paid_parent_release(){
     use semio_framework_value::retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep};
-    use semio_framework_plugin_decl_emission::ChildEmit;
-    use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    use semio_plugin_decl_emission::ChildEmit;
+    use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/📨️emission/🧪️tests/🧫️fixtures/📦️nested-parent-return.json")).unwrap();
     let mut child=ChildEmit::open(fixture["slot"].as_str().unwrap(),fixture["childId"].as_str().unwrap(),0);child.owner=fixture["owner"].as_str().unwrap().to_owned();
     let owner_pointer=child.owner.as_ptr();let expected=child.owner.capacity()+child.slot.capacity()+child.child_id.capacity()+child.op_schema.0.capacity();
@@ -514,7 +514,7 @@ fn child_emit_original_full_grant_preserves_denied_pointers_and_system_release_r
     let policy=&fixture["closeGrant"];let axis=|name:&str|policy[name].as_u64().unwrap() as usize;
     let grant=RetainedCloneGrant{maximum_items:axis("maximumItems"),maximum_copy_bytes:axis("maximumCopyBytes"),maximum_capacity_bytes:axis("maximumCapacityBytes"),maximum_release_bytes:axis("maximumReleaseBytes"),maximum_depth:axis("maximumDepth")};
     for row in fixture["children"].as_array().unwrap(){
-        let(mut child,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_plugin_decl_emission::ChildEmit{genesis:None,owner:row["id"].as_str().unwrap().into(),slot:row["slot"].as_str().unwrap().into(),child_id:row["childId"].as_str().unwrap().into(),ops:vec![row["value"].as_str().unwrap().as_bytes().to_vec()],op_schema:semio_framework::kernel::SchemaId("child.current".into()),labels:vec![semio_framework_ui_locale::LocalizedLabel::data(row["value"].as_str().unwrap().to_owned())]});
+        let(mut child,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_plugin_decl_emission::ChildEmit{genesis:None,owner:row["id"].as_str().unwrap().into(),slot:row["slot"].as_str().unwrap().into(),child_id:row["childId"].as_str().unwrap().into(),ops:vec![row["value"].as_str().unwrap().as_bytes().to_vec()],op_schema:semio_framework::kernel::SchemaId("child.current".into()),labels:vec![semio_ui_locale::LocalizedLabel::data(row["value"].as_str().unwrap().to_owned())]});
         let owner=child.owner.as_ptr();let operations=child.ops.as_ptr();let first=child.ops[0].as_ptr();
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||child.close_one(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());
         assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((child.owner.as_ptr(),child.ops.as_ptr(),child.ops[0].as_ptr()),(owner,operations,first));

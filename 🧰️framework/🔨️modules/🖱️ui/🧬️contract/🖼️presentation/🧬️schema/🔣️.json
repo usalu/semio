@@ -79,7 +79,7 @@
   },
   "$defs": {
     "PresenceUpdate": {
-      "$comment": "The wire shape of semio_framework_ui_contract::PresenceUpdate, this scope's own coalesced TTL-scoped presence message, keyed (surface, nodeKey). Exactly as wide as the Rust struct: 'surface' is a SurfaceId (UiText, UI_TEXT_MAX_BYTES = 512), 'peers' is omitted when empty, and every struct on this branch is deny_unknown_fields. Consumers narrow with const/minimum per 📋️execution-contract.md §D; they never restate the shape.",
+      "$comment": "The wire shape of semio_ui_contract::PresenceUpdate, this scope's own coalesced TTL-scoped presence message, keyed (surface, nodeKey). Exactly as wide as the Rust struct: 'surface' is a SurfaceId (UiText, UI_TEXT_MAX_BYTES = 512), 'peers' is omitted when empty, and every struct on this branch is deny_unknown_fields. Consumers narrow with const/minimum per 📋️execution-contract.md §D; they never restate the shape.",
       "x-semio-formats": [
         "🔣️jsonschema",
         "🦀️rust"

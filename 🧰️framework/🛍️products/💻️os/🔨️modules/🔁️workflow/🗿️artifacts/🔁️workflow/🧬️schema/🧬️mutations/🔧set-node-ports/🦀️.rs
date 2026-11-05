@@ -38,8 +38,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for SetNodePorts
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "workflow", kind: "set-node-ports", record: "SetWorkflowNodePorts" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the ports of {} workflow node(s)", self.nodes.len()), &format!("Anschlüsse von {} Arbeitsablaufknoten setzen", self.nodes.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set the ports of {} workflow node(s)", self.nodes.len()), &format!("Anschlüsse von {} Arbeitsablaufknoten setzen", self.nodes.len()))
     }
     fn target(&self) -> Vec<String> {
         std::iter::once("nodes".to_string()).chain(self.node_ids()).collect()

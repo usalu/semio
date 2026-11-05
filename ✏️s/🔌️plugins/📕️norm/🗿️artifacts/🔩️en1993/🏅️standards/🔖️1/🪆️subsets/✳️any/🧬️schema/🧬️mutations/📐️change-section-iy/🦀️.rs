@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSectionIy where Op
         record: "ChangedSectionIy",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Second moment of area I_y of the section", "Querschnitt: Flächenträgheitsmoment I_y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Second moment of area I_y of the section", "Querschnitt: Flächenträgheitsmoment I_y ändern")
     }
 }
 

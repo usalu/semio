@@ -23,7 +23,7 @@ pub struct SetPageGuides {
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetPageGuides where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_page_guides::SetPageGuides> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-guides", kind: "set-page-guides", record: "SetPageGuides" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set guides on page \"{}\"", self.id), &format!("Hilfslinien von Seite \"{}\" setzen", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Set guides on page \"{}\"", self.id), &format!("Hilfslinien von Seite \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

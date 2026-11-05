@@ -1,5 +1,5 @@
-use semio_framework_ui_tui_core::docking::{DockPlacement, WindowStackCorner, WINDOW_GAP};
-use semio_framework_ui_tui_core::geometry::Rect;
+use semio_ui_tui_core::docking::{DockPlacement, WindowStackCorner, WINDOW_GAP};
+use semio_ui_tui_core::geometry::Rect;
 use crate::scene::{NodeContent, NodeId, Scene};
 
 /// 📐️ How one axis of a node's size is determined.
@@ -32,7 +32,7 @@ pub struct Constraint {
 
 fn measure(scene: &Scene, id: NodeId) -> (u16, u16) {
     match &scene.node(id).content {
-        NodeContent::Text(s) => (semio_framework_ui_tui_core::text::display_width(s), 1),
+        NodeContent::Text(s) => (semio_ui_tui_core::text::display_width(s), 1),
         NodeContent::Widget(w) => {
             let size = w.preferred_size();
             (size.width, size.height)

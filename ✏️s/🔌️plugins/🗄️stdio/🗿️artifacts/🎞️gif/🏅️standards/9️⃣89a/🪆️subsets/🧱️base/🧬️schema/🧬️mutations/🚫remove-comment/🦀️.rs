@@ -15,8 +15,8 @@ pub struct RemoveComment {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "comment", kind: "remove-comment", record: "RemoveComment" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove comment", "Kommentar entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove comment", "Kommentar entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

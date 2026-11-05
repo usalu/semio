@@ -12,7 +12,7 @@ pub struct OsWorkflowStore {
 impl OsWorkflowStore {
     pub fn new(document: OsWorkflowArtifactDocument, actor: protocol::ActorId) -> Result<Self, VcsError> {
         let (name, envelope) = take_backbone_envelope(document)?;
-        let mut inner = resolve_kernel_future(ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor))?;
+        let mut inner = resolve_kernel_future(ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor))?;
         inner.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners().map_err(|error| VcsError::ValidationFailed(error.to_string()))?).map_err(|(error, owners)| { std::mem::forget(owners); VcsError::ValidationFailed(error.to_string()) })?;
         Ok(Self { inner, name })
     }
@@ -47,15 +47,15 @@ impl OsWorkflowStore {
         }
     }
 
-    pub fn dispatch_text(&mut self, command_text: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub fn dispatch_text(&mut self, command_text: &str, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         resolve_kernel_future(self.inner.dispatch_text(command_text, identity)).map(|_| ())
     }
 
-    pub fn dispatch_binary(&mut self, command_bytes: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub fn dispatch_binary(&mut self, command_bytes: &[u8], identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         resolve_kernel_future(self.inner.dispatch_binary(command_bytes, identity)).map(|_| ())
     }
 
-    pub fn dispatch_apply(&mut self, mutations: Vec<workflow::WorkflowMutation>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub fn dispatch_apply(&mut self, mutations: Vec<workflow::WorkflowMutation>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         resolve_kernel_future(self.inner.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, identity)).map(|_| ())
     }
 
@@ -70,7 +70,7 @@ impl OsWorkflowStore {
     /// `programs` list moved off the dissolved `OsSnapshot` onto `space::SpaceSnapshot` (see
     /// `## The inversion` in the plan), so spawning a node into the workflow graph and installing its
     /// plugin into the space are now two operations against two separate documents.
-    pub fn add_workflow_node(&mut self, plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64, space_store: &mut OsSpaceStore, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    pub fn add_workflow_node(&mut self, plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64, space_store: &mut OsSpaceStore, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         let app = resolve_os_app_definition(plugin_id, app_id).ok_or_else(|| VcsError::Deserialize(format!("unknown app {plugin_id}/{app_id}")))?;
         let node_id = create_os_id("node");
         let position = workflow::WorkflowPosition { x, y, width: 0.0, height: 0.0 };
@@ -83,14 +83,14 @@ impl OsWorkflowStore {
         Ok(node_id)
     }
 
-    pub fn add_parameter(&mut self, parameter_type: &workflow::WorkflowParameterType, name: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    pub fn add_parameter(&mut self, parameter_type: &workflow::WorkflowParameterType, name: &str, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         let parameter = resolve_kernel_future(workflow::create_default_workflow_parameter(parameter_type, name, None));
         let parameter_id_value = workflow::workflow_parameter_id(&parameter).to_string();
         self.dispatch_apply(vec![workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(parameter) })], identity)?;
         Ok(parameter_id_value)
     }
 
-    pub fn patch_parameter(&mut self, target_parameter_id: &str, patch: &workflow::WorkflowParameterPatch, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub fn patch_parameter(&mut self, target_parameter_id: &str, patch: &workflow::WorkflowParameterPatch, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         let document = self.snapshot()?;
         let current = document.parameters.iter().find(|parameter| workflow::workflow_parameter_id(parameter) == target_parameter_id).cloned().ok_or_else(|| VcsError::Deserialize(format!("unknown parameter {target_parameter_id}")))?;
         let next = resolve_kernel_future(workflow::patch_workflow_parameter(&current, patch));

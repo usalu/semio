@@ -1,13 +1,13 @@
-//! ♻️ The reconcile authority — the thin [`SurfaceReconciler`] owner that composes a retained shadow with its handback reservation, the credit reservation, the process-wide handback registry, the resumable job, the generation-qualified patch and document owners, the terminal close authority and the surface output pool. The shadow and cursor it drives live in `semio_framework_ui_runtime_reconcile_cursor`; the bounded primitives in `semio_framework_ui_runtime_reconcile_primitives`.
+//! ♻️ The reconcile authority — the thin [`SurfaceReconciler`] owner that composes a retained shadow with its handback reservation, the credit reservation, the process-wide handback registry, the resumable job, the generation-qualified patch and document owners, the terminal close authority and the surface output pool. The shadow and cursor it drives live in `semio_ui_runtime_reconcile_cursor`; the bounded primitives in `semio_ui_runtime_reconcile_primitives`.
 
 use std::mem::{size_of, take};
 use std::sync::{LazyLock, Mutex, MutexGuard, OnceLock};
 
-use semio_framework_ui_runtime_presentation::{ComponentTree, UiNativeResourceLoans, UiNativeResources};
-use semio_framework_ui_runtime_reconcile_primitives::{SURFACE_COMPONENT_COPY_WORK_BYTES, SURFACE_RECONCILE_PAGE_BYTES, SurfaceReconcileFault, SurfaceReconcileLimits, SurfaceReconcileUsage, SurfaceTreeRetireCursor, release_surface_reconcile, release_surface_reconcile_one, reserve_surface_reconcile_floor, surface_reconcile_limits_admissible};
-use semio_framework_ui_runtime_reconcile_cursor::{SurfaceShadow, SurfaceReconcileCursor, SurfaceReconcileStep};
+use semio_ui_runtime_presentation::{ComponentTree, UiNativeResourceLoans, UiNativeResources};
+use semio_ui_runtime_reconcile_primitives::{SURFACE_COMPONENT_COPY_WORK_BYTES, SURFACE_RECONCILE_PAGE_BYTES, SurfaceReconcileFault, SurfaceReconcileLimits, SurfaceReconcileUsage, SurfaceTreeRetireCursor, release_surface_reconcile, release_surface_reconcile_one, reserve_surface_reconcile_floor, surface_reconcile_limits_admissible};
+use semio_ui_runtime_reconcile_cursor::{SurfaceShadow, SurfaceReconcileCursor, SurfaceReconcileStep};
 #[cfg(test)]
-use semio_framework_ui_runtime_presentation::TreeNode;
+use semio_ui_runtime_presentation::TreeNode;
 
 #[path = "../📤️output/🦀️.rs"]
 mod output;

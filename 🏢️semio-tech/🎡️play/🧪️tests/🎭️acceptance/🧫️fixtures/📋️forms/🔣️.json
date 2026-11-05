@@ -1,0 +1,50 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "pane": "forms",
+  "title": "Browser Form",
+  "questionLabel": "Browser Component Name",
+  "answer": "Browser Column",
+  "addedKind": "text",
+  "controls": {
+    "title": "forms-play-inspector.title.control",
+    "questionLabel": "forms-play-inspector.question.label.control",
+    "name": "forms-try.name.input",
+    "next": "forms-try.next",
+    "submit": "forms-try.submit",
+    "submitted": "forms-try.submitted",
+    "respondAgain": "forms-try.respond-again"
+  },
+  "locales": [
+    {
+      "browser": "en-US",
+      "title": "Title",
+      "next": "Next",
+      "submit": "Submit",
+      "submitted": "Your response was saved.",
+      "responses": "Responses",
+      "blueprint": "Design",
+      "run": "Run Flow",
+      "flowDocument": "Flow Document"
+    },
+    {
+      "browser": "de-DE",
+      "title": "Titel",
+      "next": "Weiter",
+      "submit": "Absenden",
+      "submitted": "Ihre Antwort wurde gespeichert.",
+      "responses": "Antworten",
+      "blueprint": "Entwurf",
+      "run": "Flow ausführen",
+      "flowDocument": "Flow-Dokument"
+    }
+  ],
+  "extension": {
+    "label": "Column Height",
+    "initial": 6,
+    "changed": 6.5,
+    "key": "ArrowRight"
+  },
+  "flowFixture": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🧫️fixtures/🌊️embedded-flow.json",
+  "flowKind": "flow"
+}

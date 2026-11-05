@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertTestProfile where 
         verb: "insert", entity: "test-profile", kind: "insert-test-profile", record: "InsertedTestProfile",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert pile test profile", "Pfahl-Probebelastungsprofil einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert pile test profile", "Pfahl-Probebelastungsprofil einfügen")
     }
 }
 

@@ -169,7 +169,7 @@ fn stats(draw: &DrawList) -> (usize, usize, usize) {
 }
 
 fn retained_stats(node: &UiNode) -> (usize, usize, usize) {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("golden", node);
     drive_layout(&mut ui, "golden", 400.0, 400.0, &mut atlas);
@@ -321,7 +321,7 @@ fn checkbox_checked_state_does_not_paint_a_selection_outline() {
     let height = paint["availableHeight"].as_f64().unwrap() as f32;
     let side = paint["controlSide"].as_f64().unwrap() as f32;
     for checked in paint["checkedStates"].as_array().unwrap().iter().map(|value| value.as_bool().unwrap()) {
-        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+        let mut ui = Ui::new(semio_ui_locale::Locale::En);
         let mut atlas = FontAtlas::builtin();
         let toggle = UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Checkbox, id: "checkbox".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(checked), menu: None });
         ui.apply_tree("checkbox-paint", &leaf(toggle));

@@ -3,7 +3,7 @@
 //! this artifact's only subset.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 /// 🎯️ `extensions` is the real carried-over value — the old `definition()` codec row claims
@@ -13,9 +13,9 @@ use {semio_framework_artifact_reference::StandardId};
 /// identical deviation.
 pub fn standard<PA>() -> StandardDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling::RemodelingViewer>>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingPlayApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling::RemodelingViewer>>>,
 {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.remodeling+json"], extensions: &["remodeling"] }, subsets: vec![subsets::any::subset()] }
 }

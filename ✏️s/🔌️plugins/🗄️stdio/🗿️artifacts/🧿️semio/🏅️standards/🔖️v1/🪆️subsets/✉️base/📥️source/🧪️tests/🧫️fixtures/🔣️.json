@@ -5,7 +5,7 @@
       "id": "extension-quoted-birth-lost",
       "change": {
         "role": "producer",
-        "from": "::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<$snapshot, $mutation>()",
+        "from": "::semio_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<$snapshot, $mutation>()",
         "to": "Ok(Default::default())"
       },
       "accepted": false
@@ -14,7 +14,7 @@
       "id": "extension-owner-grant-lost",
       "change": {
         "role": "producer",
-        "from": "::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners::<$snapshot, $mutation>(grant)",
+        "from": "::semio_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners::<$snapshot, $mutation>(grant)",
         "to": "unreachable!()"
       },
       "accepted": false

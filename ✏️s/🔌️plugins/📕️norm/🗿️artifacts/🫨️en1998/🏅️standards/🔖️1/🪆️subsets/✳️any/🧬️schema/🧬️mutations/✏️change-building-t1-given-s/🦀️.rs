@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingT1GivenS w
         record: "ChangeBuildingT1GivenS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Given fundamental period T₁", "Vorgegebene Eigenperiode T₁ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Given fundamental period T₁", "Vorgegebene Eigenperiode T₁ ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-t1-given-s".into()]

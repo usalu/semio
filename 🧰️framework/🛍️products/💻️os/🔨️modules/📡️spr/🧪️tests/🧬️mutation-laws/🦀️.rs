@@ -1,7 +1,7 @@
 //! 🧪️ Counter domain and direct operations used by the law helper's own tests.
 
-use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
-use semio_framework_os_spr::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
+use semio_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_os_spr::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 
 //#region 🔺️StructuralDiff
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -51,7 +51,7 @@ impl ColdMutationDiff<i64> for CounterDiff {
         self.deltas.extend(other.deltas);
     }
 
-    fn apply(&self, base: &mut i64, _capability: semio_framework_os_spr::ApplyCapability) -> MutationApplyResult<()> {
+    fn apply(&self, base: &mut i64, _capability: semio_os_spr::ApplyCapability) -> MutationApplyResult<()> {
         let value = self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))?;
         *base = value;
         Ok(())
@@ -90,7 +90,7 @@ pub use mutations::*;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_os_spr::{ColdMutation, Mutation, MutationLeaf, OpText};
+    use semio_os_spr::{ColdMutation, Mutation, MutationLeaf, OpText};
 
     fn fixture() -> serde_json::Value {
         serde_json::from_str(include_str!("../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("law fixture")

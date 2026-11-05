@@ -26,8 +26,8 @@ pub mod mutation {
     crate::delete_layer::inverse::inverse(self, base)
 }
 
-        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete layer {}", self.layer_id), &format!("Ebene {} löschen", self.layer_id))
+        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+            semio_ui_locale::LocalizedLabel::native(&format!("Delete layer {}", self.layer_id), &format!("Ebene {} löschen", self.layer_id))
         }
 
         fn target(&self) -> Vec<String> {

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeThermalSectionAlph
         record: "ChangedThermalSectionAlphaMicro",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change thermal expansion coefficient alpha_T [1e-6/K] of the thermal section", "Temperaturquerschnitt: Wärmeausdehnungskoeffizient alpha_T [1e-6/K] ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change thermal expansion coefficient alpha_T [1e-6/K] of the thermal section", "Temperaturquerschnitt: Wärmeausdehnungskoeffizient alpha_T [1e-6/K] ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

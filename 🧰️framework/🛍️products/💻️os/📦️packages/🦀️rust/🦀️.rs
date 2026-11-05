@@ -38,7 +38,7 @@ extern crate self as dsl;
 extern crate self as dsl_grammar;
 
 pub extern crate self as semio_format;
-extern crate self as semio_framework_os_kernel;
+extern crate self as semio_os_kernel;
 extern crate self as spr;
 extern crate self as store;
 extern crate self as vcs;
@@ -54,26 +54,26 @@ extern crate semio_framework_async as wasm_bindgen_futures;
 include!("📥️mounts/🌱️wp1-leaves/🦀️.rs");
 
 
-pub use semio_framework_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
+pub use semio_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
 
-pub use semio_framework_os_vcs as os_vcs;
+pub use semio_os_vcs as os_vcs;
 
-pub use semio_framework_os_identity as os_identity;
+pub use semio_os_identity as os_identity;
 
 
-pub use semio_framework_plugin_component_receipt as os_component_receipt;
+pub use semio_plugin_component_receipt as os_component_receipt;
 
 pub mod os_directory {
- pub use semio_framework_os_directory::*;
- pub use semio_framework_os_directory_client as client;
- pub use semio_framework_os_directory_client::identity;
+ pub use semio_os_directory::*;
+ pub use semio_os_directory_client as client;
+ pub use semio_os_directory_client::identity;
 }
 
 // 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: `🔁️workflow/🦀️.rs`
 // is NOT mounted here (tried, reverted — see this file's own header comment "pending dep-DAG
 // cleanup"): its `use semio_framework::{AppDefinition, MediaClass, MediaType, ConfigSpec,
 // Terminology, Locale, …}` lines need the FULL framework crate's surface, which this wasm-safe
-// kernel crate cannot depend on without an actual `semio-framework` → `semio-framework-os-kernel`
+// kernel crate cannot depend on without an actual `semio-framework` → `semio-os-kernel`
 // →(back to)→ `semio-framework` cargo dependency CYCLE (`semio-framework` already depends on this
 // crate — see its Cargo.toml). It is mounted in `🧰️framework/📦️packages/🦀️rust/🦀️.rs`
 // (the `semio-framework` crate) instead, where all of those symbols already live — see that
@@ -81,10 +81,10 @@ pub mod os_directory {
 // `extern crate semio_framework as workflow;` alias change.
 
 pub mod io {
-    pub use semio_framework_os_io::*;
-    pub use semio_framework_os_store_codec_registry::lifted_io::*;
+    pub use semio_os_io::*;
+    pub use semio_os_store_codec_registry::lifted_io::*;
 }
-pub use semio_framework_os_io::{compose_thunk, io_run_thunk, io_sniff_thunk};
+pub use semio_os_io::{compose_thunk, io_run_thunk, io_sniff_thunk};
 
 pub use semio_framework_io_schema as io_schema;
 
@@ -106,11 +106,11 @@ pub mod os_store {
     // own docstring already states: WASI-P2 guest plugins never link the sync actor's transport.
     #[cfg(all(feature = "sync", not(all(target_arch = "wasm32", target_env = "p2"))))]
     pub mod sync {
-        pub use semio_framework_os_store_sync::*;
+        pub use semio_os_store_sync::*;
         #[cfg(not(target_arch = "wasm32"))]
-        pub use semio_framework_os_store_sync_native::*;
+        pub use semio_os_store_sync_native::*;
         #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-        pub use semio_framework_os_store_sync_wasm::*;
+        pub use semio_os_store_sync_wasm::*;
     }
 
     // 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; `👷️worker/🦀️.rs` is an
@@ -122,12 +122,12 @@ pub mod os_store {
     pub mod worker;
 }
 
-pub use semio_framework_os_inference as os_inference;
+pub use semio_os_inference as os_inference;
 
 pub use crate::os_dsl::*;
 pub use crate::os_inference::*;
 pub use crate::os_pack::*;
-/// 🎯️ The replication protocol's central applier, exported by this kernel's protocol facade for every crate that reaches the protocol through it (`extern crate semio_framework_os_kernel as protocol`): the function itself, not an `os_spr` alias.
+/// 🎯️ The replication protocol's central applier, exported by this kernel's protocol facade for every crate that reaches the protocol through it (`extern crate semio_os_kernel as protocol`): the function itself, not an `os_spr` alias.
 pub use protocol::{apply_diff_cold, apply_diff_cold_into, ColdMutation, ColdMutationDiff, ColdDiffAlgebra, retained_row_patch, retained_patch_diff, retained_set_field, retained_set_record, retained_root_record, protocol_error_retirement_demand, close_protocol_error_one};
 pub use crate::os_spr::*;
 pub use crate::os_store::test_support;
@@ -150,7 +150,7 @@ use semio_framework_value::edit_through_value;
 pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 
-pub use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
+pub use semio_ui_viewport::{Viewport2d, Viewport3dOrbit};
 
 /// 🧬️ The crates `sparse_record_diff!`/`field_set_mutations!`/`config_record!` expand against, re-exported so the expansion
 /// resolves the same in every invoking crate.

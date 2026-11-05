@@ -1,6 +1,6 @@
 //! 📋️ Actual bounded component source/candidate copy execution.
 use crate::*;
-use semio_framework_ui_contract_values::copy_protocol::*;
+use semio_ui_contract_values::copy_protocol::*;
 use std::mem::{size_of,ManuallyDrop};
 //#region 🎟️ExactRootOwner
 struct OwnedComponent {

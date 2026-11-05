@@ -14,8 +14,8 @@ pub struct InsertBlock {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "block", kind: "insert-block", record: "InsertBlock" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert block", "Block einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert block", "Block einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

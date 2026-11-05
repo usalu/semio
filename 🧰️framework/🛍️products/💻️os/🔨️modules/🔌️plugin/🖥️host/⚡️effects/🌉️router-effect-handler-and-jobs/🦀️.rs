@@ -255,7 +255,7 @@ struct RouterEffectWallet {
     pub(super) progress: semio_framework_job::RetainedCloneProgress,
 }
 
-impl semio_framework_os_services::ComputeRetainedRecipient for RouterEffectWallet {
+impl semio_os_services::ComputeRetainedRecipient for RouterEffectWallet {
     fn remaining_grant(&self) -> Result<semio_framework_job::RetainedCloneGrant, semio_framework_value::ValueError> {
         if !self.progress.fits(self.original) {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect wallet is exhausted"));
@@ -288,7 +288,7 @@ pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, r
     let (operation, generation) = (OperationId(ctx.trace.0), Generation(u64::from(ctx.generation)));
     let now_ms = runtime.now_ms().await;
     let deadline_us = ctx.deadline_ms.map_or(u64::MAX, |deadline| deadline.saturating_sub(now_ms).saturating_mul(1000).saturating_add(semio_framework_job::default_now_us().unwrap_or(0)));
-    let mut caller = match semio_framework_os_services::ComputeOriginalCaller::admit(operation, generation, retained, deadline_us) {
+    let mut caller = match semio_os_services::ComputeOriginalCaller::admit(operation, generation, retained, deadline_us) {
         Ok(Some(caller)) => caller,
         Ok(None) => return RouterEffectJobOutcome::Fault("router effect compute caller was refused its grant".to_string()),
         Err(error) => return RouterEffectJobOutcome::Fault(error.to_string()),
@@ -307,7 +307,7 @@ pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, r
     outcome
 }
 
-async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, _scope: &ScopeHandle, ctx: &OperationContext, retained: semio_framework_job::RetainedCloneGrant, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect, caller: &mut semio_framework_os_services::ComputeOriginalCaller, wallet: &mut RouterEffectWallet) -> RouterEffectJobOutcome {
+async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, _scope: &ScopeHandle, ctx: &OperationContext, retained: semio_framework_job::RetainedCloneGrant, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect, caller: &mut semio_os_services::ComputeOriginalCaller, wallet: &mut RouterEffectWallet) -> RouterEffectJobOutcome {
     use semio_framework_job::{Generation,InteractiveStage,OperationId,RetainedCloneProgress};
     use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobCloseStep};
     let (operation, generation) = (OperationId(ctx.trace.0), Generation(u64::from(ctx.generation)));
@@ -390,7 +390,7 @@ async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, run
 }
 
 /// 🧹️ Retires the original job and parameters an effect's compute admission never took over.
-async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, job: &mut Option<DynRouterEffectJob>, params: &mut Option<semio_framework_job_worker_authority::BatchJobParams>, caller: &mut semio_framework_os_services::ComputeOriginalCaller, wallet: &mut RouterEffectWallet) {
+async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, job: &mut Option<DynRouterEffectJob>, params: &mut Option<semio_framework_job_worker_authority::BatchJobParams>, caller: &mut semio_os_services::ComputeOriginalCaller, wallet: &mut RouterEffectWallet) {
     use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};
     use semio_framework_value::RetainedWorkOutcome;
     for _ in 0..ROUTER_EFFECT_CLOSE_TURNS {
@@ -433,7 +433,7 @@ async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, job: &
 }
 
 /// 🚧️ Default until a real handler is wired (mirrors `UnwiredHttpTransport`'s own honest-gap
-/// pattern in `semio-framework-os-services`) — every call fails loudly.
+/// pattern in `semio-os-services`) — every call fails loudly.
 pub struct UnwiredRouterEffectHandler;
 
 impl RouterEffectHandler for UnwiredRouterEffectHandler {

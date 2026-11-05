@@ -20,8 +20,8 @@ pub fn note_chrome_group_item(item: &ChromeGroupItem<'_>) {
 }
 
 /// 🗣️ Localizes Dock actions while their title and pointer target belong to the same painted frame.
-pub fn note_dock_control_name(control_id: &str, name: semio_framework_os_renderer_wgpu_dock::DockControlName<'_>, german: bool) {
-        use semio_framework_os_renderer_wgpu_dock::DockControlName;
+pub fn note_dock_control_name(control_id: &str, name: semio_renderer_wgpu_dock::DockControlName<'_>, german: bool) {
+        use semio_renderer_wgpu_dock::DockControlName;
     let label = match name {
         DockControlName::Body(title) | DockControlName::Tab { title, .. } => title.to_string(),
         DockControlName::Focus => shell_chrome_string("common.focus", german).to_string(),

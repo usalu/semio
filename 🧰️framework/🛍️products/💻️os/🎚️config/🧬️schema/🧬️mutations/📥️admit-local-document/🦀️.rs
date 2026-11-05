@@ -1,8 +1,8 @@
 //! 📥️ `AdmitLocalDocument` is the authoritative direct Rust leaf for listing one document in this device's local catalog.
 
-use semio_framework_os_kernel::ColdMutation;
-use semio_framework_os_kernel::ColdMutationDiff;
-use semio_framework_os_kernel::ColdDiffAlgebra;
+use semio_os_kernel::ColdMutation;
+use semio_os_kernel::ColdMutationDiff;
+use semio_os_kernel::ColdDiffAlgebra;
 use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::retire_local_document::RetireLocalDocument;
 use super::LocalCatalogConfigMutation;
@@ -196,8 +196,8 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Keep \"{}\" on this device", self.name), &format!("\"{}\" auf diesem Gerät behalten", self.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Keep \"{}\" on this device", self.name), &format!("\"{}\" auf diesem Gerät behalten", self.name))
     }
 
     fn target(&self) -> Vec<String> {
@@ -205,7 +205,7 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocument {
+impl semio_os_command::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocument {
     fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
         let admitted = LocalDocument::from(self);
         if base.documents.iter().any(|entry| *entry == admitted) {

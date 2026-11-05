@@ -2781,16 +2781,25 @@
     },
     "prepare-storybook": {
       "executor": "repo:noop",
-      "dependsOn": ["@semio-tech/ui-styling-tokens:generate", "@semio-tech/assets:build"],
+      "dependsOn": [
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/assets:build"
+      ],
       "cache": true,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
         }
       }
     },
     "dev-storybook": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2812,7 +2821,9 @@
       }
     },
     "dev-storybook-ui": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2834,7 +2845,9 @@
       }
     },
     "dev-storybook-puzzle": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2856,7 +2869,9 @@
       }
     },
     "dev-storybook-puzzle-2d": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2878,7 +2893,9 @@
       }
     },
     "dev-storybook-styling": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2900,7 +2917,9 @@
       }
     },
     "dev-storybook-puzzle-3d": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2922,7 +2941,9 @@
       }
     },
     "dev-storybook-puzzle-5d": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2944,7 +2965,9 @@
       }
     },
     "dev-storybook-framework": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2966,7 +2989,9 @@
       }
     },
     "dev-storybook-framework-hosts": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2988,7 +3013,9 @@
       }
     },
     "dev-storybook-framework-os": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -3010,7 +3037,9 @@
       }
     },
     "dev-storybook-infinite": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -3032,7 +3061,9 @@
       }
     },
     "dev-storybook-cad": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -3054,7 +3085,9 @@
       }
     },
     "dev-storybook-animate": {
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -3656,7 +3689,12 @@
     "test-storybook-subjects": {
       "executor": "repo:script",
       "cache": true,
-      "inputs": ["production", "^production", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📖️stories/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/**/*"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📖️stories/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/**/*"
+      ],
       "outputs": [],
       "options": {
         "command": "repo tools exec bun -- test ./🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️story-subject-coverage/🟦️.test.ts"
@@ -3664,9 +3702,16 @@
     },
     "test-storybook-catalog": {
       "executor": "repo:script",
-      "dependsOn": ["prepare-storybook", "test-storybook-subjects"],
+      "dependsOn": [
+        "prepare-storybook",
+        "test-storybook-subjects"
+      ],
       "cache": true,
-      "inputs": ["production", "^production", "{workspaceRoot}/.storybook/**/*"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/.storybook/**/*"
+      ],
       "outputs": [],
       "options": {
         "command": "repo tools exec bun -- x vitest run --config .storybook/🧪️tests/🧪️unit-runner/🟦️.ts"
@@ -3674,8 +3719,25 @@
     },
     "test-storybook": {
       "executor": "repo:script",
-      "dependsOn": ["prepare-storybook", "test-storybook-catalog"],
-      "cache": true,
+      "metadata": {
+        "semio": {
+          "orchestrator": true,
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      },
+      "dependsOn": [
+        "prepare-storybook",
+        "test-storybook-catalog"
+      ],
+      "cache": false,
       "options": {
         "command": "repo ./📜️script.ts test storybook",
         "forwardAllArgs": true,
@@ -4521,14 +4583,16 @@
     },
     "build-storybook": {
       "executor": "repo:script",
-      "dependsOn": ["prepare-storybook"],
+      "dependsOn": [
+        "prepare-storybook"
+      ],
       "options": {
         "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
         "env": {
           "STORYBOOK_PORT": "6010"
         }
       },
-      "cache": true,
+      "cache": false,
       "outputs": [
         "{projectRoot}/.🧾️store/build-storybook.json"
       ],
@@ -4555,10 +4619,15 @@
       },
       "metadata": {
         "semio": {
+          "orchestrator": true,
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
           "cache": {
             "version": 1,
-            "class": "deterministic",
-            "reason": "pure-function-of-inputs"
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
           }
         }
       }
@@ -6149,6 +6218,28 @@
             "version": 1,
             "class": "live",
             "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "deps-browser-wasm": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "parallelism": false,
+      "options": {
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync browser-wasm"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
           }
         }
       }

@@ -2,7 +2,7 @@
 
 //#region 🧰️Harness
 fn corpus() -> Value {
-    serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️time-travel-band/🔣️.json")).expect("the shared time-travel band corpus parses")
+    serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️time-travel-band/🔣️.json")).expect("the shared time-travel band corpus parses")
 }
 
 /// 🧾️ The kernel session of the corpus case whose name starts with `name`.
@@ -32,19 +32,19 @@ fn refusal_key(label: TimeTravelLabel) -> String {
 
 const ALL_VERBS: [TimeTravelVerb; 8] = [TimeTravelVerb::NextProblem, TimeTravelVerb::Accept, TimeTravelVerb::Discard, TimeTravelVerb::CancelReplay, TimeTravelVerb::Rerun, TimeTravelVerb::Finalize, TimeTravelVerb::Back, TimeTravelVerb::Exit];
 
-fn chord(chord: &str) -> (semio_framework_ui_wgpu_input::KeyAction, PointerModifiers) {
+fn chord(chord: &str) -> (semio_ui_wgpu_input::KeyAction, PointerModifiers) {
     let mut modifiers = PointerModifiers::default();
-    let mut key = semio_framework_ui_wgpu_input::KeyAction::Escape;
+    let mut key = semio_ui_wgpu_input::KeyAction::Escape;
     for token in chord.split('+') {
         match token {
             "alt" => modifiers.alt = true,
             "shift" => modifiers.shift = true,
             "ctrl" => modifiers.ctrl = true,
             "meta" | "mod" => modifiers.meta = true,
-            "enter" => key = semio_framework_ui_wgpu_input::KeyAction::Enter,
-            "backspace" => key = semio_framework_ui_wgpu_input::KeyAction::Backspace,
-            "escape" => key = semio_framework_ui_wgpu_input::KeyAction::Escape,
-            other => key = semio_framework_ui_wgpu_input::KeyAction::Char(other.to_string()),
+            "enter" => key = semio_ui_wgpu_input::KeyAction::Enter,
+            "backspace" => key = semio_ui_wgpu_input::KeyAction::Backspace,
+            "escape" => key = semio_ui_wgpu_input::KeyAction::Escape,
+            other => key = semio_ui_wgpu_input::KeyAction::Char(other.to_string()),
         }
     }
     (key, modifiers)
@@ -60,11 +60,11 @@ fn session_shell() -> ShellState {
         body_key: Some("framework.body.history".into()),
         children: vec![],
     });
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.dock.dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    shell.dock.dock.root = semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
     shell.dock.dock.active_window_id = Some("main".into());
     shell.windows.active_window_id = Some("main".into());
-    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell.chrome.screen_w = 1280.0;
     shell.chrome.screen_h = 720.0;
     shell
@@ -112,18 +112,18 @@ fn dispatched() -> Vec<String> {
 /// 🎨️ Paints `document` in `surface` to completion with the stepped paint every retained body uses, then registers and
 /// publishes its hits, so the surface's accessibility projection is the one the mirror reads; answers the staged input.
 fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
     let mut input = InputState::<ActionDescriptor>::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
     let mut world3d_states = std::mem::take(&mut shell.surfaces.world3d_states);
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let mut cursor = UiDocumentFrameCursor::default();
     let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-        let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx))
+        let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
+        caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx))
     });
     assert!(painted, "{surface} painted within its opportunity ceiling");
     if surface == FRAMEWORK_PANEL_TAB_HISTORY_ID {
@@ -139,10 +139,10 @@ fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocum
 
 /// 🧹️ Closes a law's retained surface and retires every document it published there.
 fn close_retained_body(surface: &str, documents: Vec<UiDocumentLease>) {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    if semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface) {
-        while semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface) {
-            assert!(caller.turn(|cx|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted close opportunity advances");
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    if semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface) {
+        while semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface) {
+            assert!(caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted close opportunity advances");
         }
     }
     for mut document in documents {

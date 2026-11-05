@@ -14,7 +14,7 @@ fn zone(id: u32, name: &str) -> crate::model::Zone {
 
 /// 📊️ The table's row records, read the way both hosts read them: the scene spine with its paged `rows` lane merged back in.
 fn rows(table: &BuiltNode) -> Vec<serde_json::Value> {
-    let scene = semio_framework_plugin::artifact_app_laws::built_surface_scene::<semio_framework_plugin::TableScene>(table).expect("the table scene decodes");
+    let scene = semio_plugin::artifact_app_laws::built_surface_scene::<semio_plugin::TableScene>(table).expect("the table scene decodes");
     serde_json::from_str(&scene.rows_json).expect("the rows lane is JSON")
 }
 

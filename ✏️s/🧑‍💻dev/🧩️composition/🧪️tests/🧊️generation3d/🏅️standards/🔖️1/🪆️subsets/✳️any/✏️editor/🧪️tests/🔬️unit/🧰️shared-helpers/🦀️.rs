@@ -7,12 +7,12 @@
 /// build, never for a downstream consumer like this one), so `serde_json::from_value` cannot reach
 /// it here; round-trip through the wire text and `semio_framework_pack_json::from_json_str` instead, exactly like
 /// production's `mesh_data_for_preview_handle` (above) does.
-fn mesh_data_from_json(value: &Value) -> semio_framework_plugin::MeshData {
+fn mesh_data_from_json(value: &Value) -> semio_plugin::MeshData {
     semio_framework_pack_json::from_json_str(&serde_json::to_string(value).expect("mesh data json text"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mesh data")
 }
 
 /// 🌉️ `Mesh3d` (a plain positions/normals/indices struct) no longer exists —
-/// `semio_framework_ui::wgpu::kernel_3d_scene`'s mesh API is now a generation/revision-keyed write-token/lease
+/// `semio_ui::wgpu::kernel_3d_scene`'s mesh API is now a generation/revision-keyed write-token/lease
 /// pair (`mesh3d_begin`/`mesh3d_write_vec3`/`mesh3d_seal`) meant for the shared render-owned mesh
 /// arena, not for a one-off AABB check. This test only ever needed the bounding box of the raw
 /// position buffer, so compute it directly instead of standing up a lease.
@@ -41,7 +41,7 @@ pub(crate) fn node_move_operations_json(node_id: &str, dx: f64, dy: f64) -> Stri
 /// 📇️ Every action this app declares: each window kind's own roster plus the app-level roster
 /// (`AppDefinition::actions`), which `semio_framework::window_kind_actions` offers to every window
 /// that does not claim the id itself. The builder no longer clones app actions into window kinds.
-fn declared_actions(definition: &semio_framework_plugin::AppDefinition) -> impl Iterator<Item = &semio_framework_plugin::ActionDefinition> {
+fn declared_actions(definition: &semio_plugin::AppDefinition) -> impl Iterator<Item = &semio_plugin::ActionDefinition> {
     definition.window_kinds.iter().flat_map(|window| window.actions.iter()).chain(definition.actions.iter())
 }
 

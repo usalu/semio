@@ -13,8 +13,8 @@ pub struct SetViewDefinition {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetViewDefinition {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "view-definition", kind: "set-view-definition", record: "SetViewDefinition" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set view definition", "Modellansichtsdefinition setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set view definition", "Modellansichtsdefinition setzen")
     }
 
     fn target(&self) -> Vec<String> {

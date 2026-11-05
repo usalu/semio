@@ -218,7 +218,7 @@ pub fn update_field_cold<P, F: InferredField<P>>(snapshot: &P, cache: &mut Infer
 pub fn infer_field_delta<P, F, D>(snapshot: &P, diff: &D, session: &mut InferenceSession, cache: &mut InferenceCache) -> Result<FieldDelta<F::Key, F::Value>, InferenceError>
 where
     F: InferredField<P>,
-    D: semio_framework_os_command::DiffRegions,
+    D: semio_os_command::DiffRegions,
 {
     let mut update = session.begin_update::<P, F, D>(diff, cache.enabled());
     let outcome = loop {
@@ -238,7 +238,7 @@ where
 pub async fn infer_field_after_diff<P, F, D>(snapshot: &P, diff: &D, session: &mut InferenceSession, cache: &mut InferenceCache) -> BTreeMap<F::Key, F::Value>
 where
     F: InferredField<P>,
-    D: semio_framework_os_command::DiffRegions,
+    D: semio_os_command::DiffRegions,
 {
     infer_field_delta::<P, F, D>(snapshot, diff, session, cache).unwrap_or_else(|error| panic!("{error}"));
     session.field_values::<P, F>().cloned().unwrap_or_default()

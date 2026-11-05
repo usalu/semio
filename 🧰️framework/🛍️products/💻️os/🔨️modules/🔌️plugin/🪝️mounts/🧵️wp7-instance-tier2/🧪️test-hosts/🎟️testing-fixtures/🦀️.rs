@@ -2,19 +2,19 @@
 
 #[cfg(test)]
 pub(crate) mod testing_fixtures_unit_1 {
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient;
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresence;
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresenceDiff;
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::PublicationPresenceMutation;
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransientDiff;
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresence;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresenceDiff;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::PublicationPresenceMutation;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransientDiff;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
     #[doc(hidden)]
 #[cfg(test)]
     pub mod tests {
         use super::*;
-        use semio_framework_plugin_decl_views::{NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+        use semio_plugin_decl_views::{NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
         use protocol::{ColdMutation, Mutation, ColdMutationDiff,MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
     
         /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.

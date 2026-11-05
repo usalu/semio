@@ -16,8 +16,8 @@ pub struct RemoveShapeRepresentation {
 impl protocol::MutationKind<StepSnapshot, StepCc1Mutation> for RemoveShapeRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "shape-representation", kind: "remove-shape-representation", record: "RemovedShapeRepresentation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove shape representation #{}", self.id), &format!("Formrepräsentation #{} entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove shape representation #{}", self.id), &format!("Formrepräsentation #{} entfernen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

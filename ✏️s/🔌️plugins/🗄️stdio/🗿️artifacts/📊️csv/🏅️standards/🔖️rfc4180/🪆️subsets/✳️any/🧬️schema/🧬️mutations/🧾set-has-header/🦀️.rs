@@ -14,8 +14,8 @@ pub struct SetHasHeader {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetHasHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "has-header", kind: "set-has-header", record: "SetHasHeader" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set has header", "Kopfzeile vorhanden setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set has header", "Kopfzeile vorhanden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -24,8 +24,8 @@ pub struct ChangeFrameColumns {
 impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameColumns where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_columns::ChangeFrameColumns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-columns", kind: "change-frame-columns", record: "ChangedFrameColumns" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" columns", self.frame_id), &format!("Spalten von Rahmen \"{}\" ändern", self.frame_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" columns", self.frame_id), &format!("Spalten von Rahmen \"{}\" ändern", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

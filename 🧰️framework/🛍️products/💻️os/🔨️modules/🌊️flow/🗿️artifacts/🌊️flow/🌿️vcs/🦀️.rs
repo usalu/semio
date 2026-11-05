@@ -244,14 +244,14 @@ pub mod io;
 pub const FLOW_HISTORY_STORE_FACTORY:crate::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>=crate::os_store::OriginalStoreGenesisFactory{construct:original_flow_history_store,envelope:original_flow_history_envelope};
 
 /// 🧾️ The selected child codec admits the exact original baseline into its reset envelope.
-pub fn original_flow_history_envelope(baseline:FlowHostSnapshot)->Result<FlowEnvelope,::semio_framework_os_kernel::os_vcs::VcsError>{
+pub fn original_flow_history_envelope(baseline:FlowHostSnapshot)->Result<FlowEnvelope,::semio_os_kernel::os_vcs::VcsError>{
  let producer=crate::io::binary::snapshot::FlowSnapshotPackProducer;
- let genesis=::semio_framework_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis::born(baseline,&producer).map_err(|error|::semio_framework_os_kernel::os_vcs::VcsError::ValidationFailed(error.to_string()))?;
+ let genesis=::semio_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis::born(baseline,&producer).map_err(|error|::semio_os_kernel::os_vcs::VcsError::ValidationFailed(error.to_string()))?;
  Ok(crate::os_store::document_materialize::create_document_envelope_from_genesis(FLOW_DOCUMENT_SCHEMA,"flow-host",genesis,None))
 }
 
 /// 🏪️ The actual child constructor publishes its native codec and installs its original Store catalog.
-pub fn original_flow_history_store(baseline:FlowHostSnapshot)->Result<FlowStore,::semio_framework_os_kernel::os_vcs::VcsError>{
+pub fn original_flow_history_store(baseline:FlowHostSnapshot)->Result<FlowStore,::semio_os_kernel::os_vcs::VcsError>{
  let envelope=original_flow_history_envelope(baseline)?;
  let mut store=::semio_framework_async::poll::resolve_ready(FlowStore::new::<crate::io::binary::snapshot::FlowSnapshotPackProducer>(envelope,crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())))?;
  crate::os_store::install_funded_member_store_owners(&mut store,&crate::io::binary::snapshot::FlowSnapshotPackProducer)?;Ok(store)

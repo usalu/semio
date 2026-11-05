@@ -13,8 +13,8 @@ pub struct ChangeZoneFloorArea {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZoneFloorArea where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_floor_area::ChangeZoneFloorArea> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-floor-area", kind: "change-zone-floor-area", record: "ChangeZoneFloorArea" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change floor area of the zone", "Grundfläche der Zone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change floor area of the zone", "Grundfläche der Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
 }

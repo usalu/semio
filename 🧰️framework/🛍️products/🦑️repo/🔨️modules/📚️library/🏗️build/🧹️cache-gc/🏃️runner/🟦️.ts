@@ -4,7 +4,7 @@ import {isAbsolute,join,relative,resolve,sep} from "node:path";
 import {CACHE_GC_LIMITS_V1} from "../🧬️schema/🟦️.ts";
 import ticket from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧬️schema/📜️ticket/🔣️json/🟦️.ts";
 import budgetPolicy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
-import {CACHE_RUNTIME_V1,CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,cacheRecencyMsV1,formatCacheReasonV1,planCacheCollectionV1,readCacheSizeLedgerV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheSizeLedgerV1,type CacheSizeRecordV1,type CacheSourceV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {CACHE_ROOT_IDS_V1,CACHE_RUNTIME_V1,CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,cacheRecencyMsV1,formatCacheReasonV1,planCacheCollectionV1,readCacheSizeLedgerV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheSizeLedgerV1,type CacheSizeRecordV1,type CacheSourceV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {formatMachinePlanV1,planMachineBudgetV1,splitMachineBudgetV1,type MachinePlanV1,type MachinePolicyV1,type MachineSourceV1,type MachineUseV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import { SqliteDatabaseV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -179,7 +179,7 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
   }
   areaRows.push(row);
  }
- const totals=new Map<CacheRootIdV1,number>([["repository",0],["native",0]]),retired:CacheEntryRowV1[]=[],undeclared:CacheEntryRowV1[]=[],count=(root:CacheRootIdV1,size:Sized)=>{totals.set(root,totals.get(root)!+(size.usedBytes??0));partial.set(root,(partial.get(root)??false)||size.partial||size.usedBytes===null);};
+ const totals=new Map<CacheRootIdV1,number>(CACHE_ROOT_IDS_V1.map(root=>[root,0])),retired:CacheEntryRowV1[]=[],undeclared:CacheEntryRowV1[]=[],count=(root:CacheRootIdV1,size:Sized)=>{totals.set(root,totals.get(root)!+(size.usedBytes??0));partial.set(root,(partial.get(root)??false)||size.partial||size.usedBytes===null);};
  for(const area of ledger.areas.filter(area=>(area.kind==="tree"||area.kind==="control"&&area.collect)&&selected(area.id))){
   await ports.progress("status:"+area.id);ports.signal.throwIfAborted();
   const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions),budget=cacheAreaBudgetBytesV1(ledger,area,partitions),size=await sized(area.id,directory!==null?[directory]:await matching(cacheRootDirectoryV1(workspace,ledger,area.root),area.pattern!),area.id);
@@ -193,7 +193,7 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
   if(!size.present)continue;
   retired.push({root:retirement.root,path:retirement.root+":"+retirement.directory,kind:"retired",usedBytes:size.usedBytes,entries:size.entries,partial:size.partial,source:size.source,recordedAtMs:size.recordedAtMs});count(retirement.root,size);
  }
- if(!only||only.has("undeclared"))for(const root of["repository","native"] as const){
+ if(!only||only.has("undeclared"))for(const root of CACHE_ROOT_IDS_V1){
   for(const entry of await undeclaredEntriesV1(workspace,ledger,root)){
    await ports.progress("status:"+entry);ports.signal.throwIfAborted();
    const size=await sized("undeclared:"+root+":"+entry,[join(cacheRootDirectoryV1(workspace,ledger,root),...entry.split("/"))],entry);
@@ -201,7 +201,7 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
   }
  }
  if(deep)await recordCacheSizesV1(workspace,ledger,fresh);
- const roots=(["repository","native"] as const).map(id=>({id,directory:ledger.roots[id].directory,usedBytes:totals.get(id)!,budgetBytes:ledger.roots[id].maximumBytes,partial:partial.get(id)??false}));
+ const roots=(CACHE_ROOT_IDS_V1).map(id=>({id,directory:ledger.roots[id].directory,usedBytes:totals.get(id)!,budgetBytes:ledger.roots[id].maximumBytes,partial:partial.get(id)??false}));
  return{version:1,workspace,generatedAtMs:now,partitions:rows,areas:areaRows,roots,retired,undeclared};
 }
 
@@ -311,7 +311,7 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    try{names=await readdir(base);}catch{continue;}
    resolved.push({target:{id:retirement.root+":"+retirement.directory,kind:"retired",budgetBytes:null,unusedAgeMs:0,quietMs:retirement.quietMs,units:await observe(base,names,retirement.directory,"quiet",ports)},base,prefix:[],unusedAgeMs:0});
   }
-  if(request.only===undefined||request.only.has("undeclared"))for(const root of["repository","native"] as const){
+  if(request.only===undefined||request.only.has("undeclared"))for(const root of CACHE_ROOT_IDS_V1){
    const base=cacheRootDirectoryV1(workspace,ledger,root),names=await undeclaredEntriesV1(workspace,ledger,root);
    if(names.length)resolved.push({target:{id:root+":undeclared",kind:"undeclared",budgetBytes:null,unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,quietMs:ledger.roots[root].undeclaredQuietMs,units:await observe(base,names,root+":undeclared","quiet",ports)},base,prefix:[],unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,loose:true});
   }

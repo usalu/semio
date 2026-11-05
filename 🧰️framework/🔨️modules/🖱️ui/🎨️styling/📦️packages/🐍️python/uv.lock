@@ -45,7 +45,7 @@ wheels = [
 ]
 
 [[package]]
-name = "semio-framework-ui-styling"
+name = "semio-ui-styling"
 version = "0.1.0"
 source = { editable = "." }
 

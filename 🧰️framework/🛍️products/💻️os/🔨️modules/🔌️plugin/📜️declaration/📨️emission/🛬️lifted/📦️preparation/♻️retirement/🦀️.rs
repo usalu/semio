@@ -9,7 +9,7 @@ impl RetirementCursor for OwnedChildEmitRetirement{
   let Some(source)=self.original.as_mut()else{return RetirementStep::Complete(0)};
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
   if source.terminal_is_empty(){drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1)}
-  match source.close_granted(grant){Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,0)}
+  let result=source.close_granted(grant);let work=source.last_turn_work();match result{Ok(step)=>RetirementStep::Progress(step.progress(),work),Err(error)=>RetirementStep::Failure(error,work)}
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.original.as_ref().map_or(Ok(0),|source|source.retirement_demands(0).map(|d|d.copy_bytes))}
@@ -38,14 +38,14 @@ impl RetirementCursor for ChildEmitPreparationRetirement{
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
-  if let Some(fault)=self.fault.as_mut(){return match fault.step(grant){Ok(step)=>{if fault.terminal_is_empty(){drop(self.fault.take());}RetirementStep::Progress(step.progress(),1)},Err(error)=>RetirementStep::Failure(error,0)}}
+  if let Some(fault)=self.fault.as_mut(){let result=fault.step(grant);let work=fault.last_turn_work();return match result{Ok(step)=>{if fault.terminal_is_empty(){drop(self.fault.take());}RetirementStep::Progress(step.progress(),work)},Err(error)=>RetirementStep::Failure(error,work)}}
   let Some(source)=self.original.as_mut()else{return RetirementStep::Complete(0)};
   if source.terminal_is_empty(){let bytes=source.owner_cell_bytes();if grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted}drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},1)}
   source.begin_close();
-  match source.close_step(grant){
-   Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>RetirementStep::Progress(progress,1),
-   Ok(PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..})=>RetirementStep::BudgetExhausted,
-   Err(original)=>{match ControlledRetirement::new(original){Ok(fault)=>self.fault=Some(fault),Err((error,_))=>return RetirementStep::Failure(error,0)}RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"),0)}
+  let result=source.close_step(grant);let work=source.last_turn_work();match result{
+   Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>RetirementStep::Progress(progress,work),
+   Ok(PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..})=>if work==0{RetirementStep::BudgetExhausted}else{RetirementStep::Progress(Default::default(),work)},
+   Err(original)=>{match ControlledRetirement::new(original){Ok(fault)=>self.fault=Some(fault),Err((error,_))=>return RetirementStep::Failure(error,work)}RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"),work)}
   }
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.fault.is_none()}

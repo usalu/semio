@@ -19,7 +19,7 @@ path = "../../🦀️.rs"
 serde = { workspace = true, optional = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
@@ -34,5 +34,5 @@ semio-s-artifact-norm-iso16757-mutations = { workspace = true }
 test-support = ["dep:serde", "semio-s-artifact-norm-iso16757-diff/test-support", "semio-s-artifact-norm-iso16757-model/test-support", "semio-s-artifact-norm-iso16757-mutations/test-support"]
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde = { workspace = true }

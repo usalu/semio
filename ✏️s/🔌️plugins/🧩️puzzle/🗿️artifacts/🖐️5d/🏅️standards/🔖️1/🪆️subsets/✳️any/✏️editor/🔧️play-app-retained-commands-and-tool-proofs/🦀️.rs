@@ -15,13 +15,13 @@ impl Puzzle5dPlayApp {
     /// `context_menu_with_request_context` funnel here, differing only in whether `interaction` carries a live
     /// `vortex`-domain read or the empty default.
     pub(super) fn context_menu_body(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         interaction: &Puzzle5dInteractionSnapshot,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         let projection = puzzle5d_editor_projection(&doc.snapshot);
         let Some(labels) = puzzle5d_labels(view_state) else { return Vec::new() };
         let window_id = view_state.window_id.as_deref().unwrap_or(crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID);
@@ -50,8 +50,8 @@ impl Puzzle5dRetainedCommandJobFactory {
 }
 
 impl ToolJobFactory for Puzzle5dRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Puzzle5dPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle5dPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Puzzle5dPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle5dPlayApp>>;
 
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
@@ -69,7 +69,7 @@ impl ToolJobFactory for Puzzle5dRetainedCommandJobFactory {
         self.contract
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
 
     
 }
@@ -186,11 +186,11 @@ impl ArtifactOwnedToolJobFactory for Puzzle5dRetainedCommandJobFactory {
 pub struct Puzzle5dRetainedCommandProofs;
 
 impl Puzzle5dRetainedCommandProofs {
-    pub fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    pub fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         Self::bounded_first_step_tool_proofs()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle5dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle5d@1/*#editor",
@@ -290,11 +290,11 @@ impl Puzzle5dRetainedCommandProofs {
 pub struct Puzzle5dHostConfigurationProofs;
 
 impl Puzzle5dHostConfigurationProofs {
-    pub fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    pub fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         Self::bounded_first_step_tool_proofs()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle5dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle5d@1/*#editor",

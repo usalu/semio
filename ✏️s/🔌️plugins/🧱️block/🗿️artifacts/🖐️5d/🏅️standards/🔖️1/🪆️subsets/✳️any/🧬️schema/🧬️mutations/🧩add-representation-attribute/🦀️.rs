@@ -33,8 +33,8 @@ pub fn add_representation_attribute_at<Op: From<crate::add_representation_attrib
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for AddRepresentationAttribute where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::remove_representation_attribute::RemoveRepresentationAttribute> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "representation-attribute", kind: "add-representation-attribute", record: "AddedRepresentationAttribute" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add attribute \"{}\" to representation \"{}\"", self.attribute.key, self.id), &format!("Attribut \"{}\" zu Repräsentation \"{}\" hinzufügen", self.attribute.key, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add attribute \"{}\" to representation \"{}\"", self.attribute.key, self.id), &format!("Attribut \"{}\" zu Repräsentation \"{}\" hinzufügen", self.attribute.key, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

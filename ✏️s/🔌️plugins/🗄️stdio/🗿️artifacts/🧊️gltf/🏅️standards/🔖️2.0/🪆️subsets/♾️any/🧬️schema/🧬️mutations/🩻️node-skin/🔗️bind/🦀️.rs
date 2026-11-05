@@ -63,8 +63,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "node-skin", kind: "bind-node-skin", record: "BoundNodeSkin" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Bind Node Skin", "Knoten-Skin binden")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Bind Node Skin", "Knoten-Skin binden")
     }
 
     fn target(&self) -> Vec<String> {

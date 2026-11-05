@@ -42,7 +42,7 @@ function publicationRows(source: string): { route: string; lanes: Lane[] }[] {
 }
 function proofRows(source: string): string[] {
   const rows: string[] = [];
-  for (let start = source.indexOf("semio_framework_plugin::bounded_first_step_tool_proofs!"); start >= 0; start = source.indexOf("semio_framework_plugin::bounded_first_step_tool_proofs!", start + 1)) {
+  for (let start = source.indexOf("semio_plugin::bounded_first_step_tool_proofs!"); start >= 0; start = source.indexOf("semio_plugin::bounded_first_step_tool_proofs!", start + 1)) {
     const end = source.indexOf("\n    }", start);
     if (end < start) continue;
     rows.push(...[...source.slice(start, end).matchAll(/^\s*"([^"]+)" =>/gm)].map((match) => match[1]!));

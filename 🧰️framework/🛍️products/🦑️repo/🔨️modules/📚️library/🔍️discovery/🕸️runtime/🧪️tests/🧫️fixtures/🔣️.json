@@ -1490,7 +1490,7 @@
       "current": false
     }
   ],
-  "trunkOutputs": {
+  "wasmOutputs": {
     "raw": "compiled raw wasm",
     "outputs": {
       "native/owner.js": "export default async()=>{}",

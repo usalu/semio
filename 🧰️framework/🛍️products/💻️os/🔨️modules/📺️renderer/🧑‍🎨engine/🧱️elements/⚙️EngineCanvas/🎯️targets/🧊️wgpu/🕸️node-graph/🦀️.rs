@@ -3,25 +3,25 @@
 //! Node graph camera, catalogue drag and drop, wheel, pointer, connection cursor, published interaction,
 //! labels and overlays of an engine surface.
 
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{ENGINE_SURFACES, EngineSurface, EngineSurfaceRegistry, NodeGraphEngine, PublishedGraphInteraction, engine_canvas_debug_log, engine_surface_wire_id, published_graph_interaction};
-use semio_framework_os_renderer_wgpu_engine_board::paint2d::{paint2d_marquee_overlay, paint2d_navigator_overlay_rect};
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::{ENGINE_SURFACES, EngineSurface, EngineSurfaceRegistry, NodeGraphEngine, PublishedGraphInteraction, engine_canvas_debug_log, engine_surface_wire_id, published_graph_interaction};
+use semio_renderer_wgpu_engine_board::paint2d::{paint2d_marquee_overlay, paint2d_navigator_overlay_rect};
 use crate::element_contracts::FrameworkWidgetContext;
 use flow::dag::dag_screen_to_world;
 use flow::FlowHost;
 use semio_framework_canvas as canvas;
-use semio_framework_os_node_graph::GraphHost;
+use semio_os_node_graph::GraphHost;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use semio_framework_ui_wgpu_widget_kit::draw_text_overlay;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::{KeyAction, PointerModifiers};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::{Rgba, Theme};
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
-use semio_framework_os_infinite_board_dag_graph::{dag_set_wheel_zoom_active, fit_camera_to_content, hovered_node_id, hovered_node_id_ref, selection_union_bounds_screen_json};
-use semio_framework_os_infinite_board_dag_host::{connection_cursor_active_at_screen, screen_geometry_census_json, screen_hit, screen_hit_json};
+use semio_ui_wgpu_widget_kit::draw_text_overlay;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::{KeyAction, PointerModifiers};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::{Rgba, Theme};
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
+use semio_os_infinite_board_dag_graph::{dag_set_wheel_zoom_active, fit_camera_to_content, hovered_node_id, hovered_node_id_ref, selection_union_bounds_screen_json};
+use semio_os_infinite_board_dag_host::{connection_cursor_active_at_screen, screen_geometry_census_json, screen_hit, screen_hit_json};
 
 #[path = "🎥️scene-camera-and-drag-drop/🦀️.rs"]
 mod scene_camera_and_drag_drop;

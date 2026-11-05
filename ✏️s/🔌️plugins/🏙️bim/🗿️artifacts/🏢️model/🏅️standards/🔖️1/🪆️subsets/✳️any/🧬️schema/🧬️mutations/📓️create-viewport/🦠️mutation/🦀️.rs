@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "viewport", kind: "create-viewport", record: "CreateViewport" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Place view \"{}\" on sheet \"{}\"", self.viewport.view, self.viewport.sheet), &format!("Ansicht \"{}\" auf Blatt \"{}\" platzieren", self.viewport.view, self.viewport.sheet))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Place view \"{}\" on sheet \"{}\"", self.viewport.view, self.viewport.sheet), &format!("Ansicht \"{}\" auf Blatt \"{}\" platzieren", self.viewport.view, self.viewport.sheet))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

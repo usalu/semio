@@ -324,7 +324,7 @@ fn the_touch_profile_follows_the_device_class_and_the_shell_asks_it_per_signal()
 fn the_framework_touch_lane_realises_the_gesture_table_of_every_device_class() {
     use crate::device_profiles::gestures::{map_gesture, Gesture, Intent};
     use semio_framework::interaction::gesture::{TouchSession, TouchStep, LONG_PRESS_MS};
-    use semio_framework_plugin::{MergeMode, SelectionMethod};
+    use semio_plugin::{MergeMode, SelectionMethod};
     let lane = |class: DeviceClass| {
         let profile = touch_profile_of(class);
         let mut session = TouchSession::default();

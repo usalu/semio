@@ -6,7 +6,7 @@ use super::*;
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_layout_app() -> semio_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_layout_layout_model::LAYOUT_DIALECT)
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),
@@ -94,14 +94,14 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("exportPackage", LocalizedLabel::native("Bundles the layout and every asset it references into one downloadable package.", "Bündelt das Layout und alle referenzierten Assets in ein herunterladbares Paket."))
             .action_describe("setActivePage", LocalizedLabel::native("Brings one page of the layout into view.", "Holt eine Seite des Layouts in die Ansicht."))
             .action_describe("focusPreflightIssue", LocalizedLabel::native("Scrolls to and highlights one reported preflight issue.", "Springt zu einem gemeldeten Preflight-Problem und hebt es hervor."))
-            .action_audience("canvasDrop", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("canvasDragOver", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("canvasDragLeave", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("canvasPointerMove", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("canvasPointerUp", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("canvasDrop", semio_plugin::CapabilityAudience::Input)
+            .action_audience("canvasDragOver", semio_plugin::CapabilityAudience::Input)
+            .action_audience("canvasDragLeave", semio_plugin::CapabilityAudience::Input)
+            .action_audience("canvasPointerDown", semio_plugin::CapabilityAudience::Input)
+            .action_audience("canvasPointerMove", semio_plugin::CapabilityAudience::Input)
+            .action_audience("canvasPointerUp", semio_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_plugin::CapabilityAudience::Input)
+            .action_audience("engagementSubmit", semio_plugin::CapabilityAudience::Input)
             .action_interactive_job("setActivePage", InteractiveJobClassification::Migrated)
             .action_interactive_job("focusPreflightIssue", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)

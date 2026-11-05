@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use crate::editor_unit_tests::context::{dispatch, live_host_snapshot, main_window_meta, new_app, new_app_with_registry_wired};
 use crate::editor::sequence::retained::SequenceCommand;
 use crate::SequenceCamera;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 use crate::editor::sequence::commands::node_graph::set_viewport::SetViewport;
 
@@ -18,9 +18,9 @@ async fn set_viewport_writes_config_not_operations() {
     let result = dispatch(&mut app, SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } })).await;
     assert!(result.mutations.is_empty(), "setViewport must not emit a VCS operation");
     let view = main_window_meta().view_state.expect("main window view");
-    let scene: semio_framework_plugin::NodeGraphScene = semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, &view, app.1.cx(), |root| {
-        let semio_framework_plugin::Component::Surface(props) = &root.component else { panic!("semantic graph") };
-        semio_framework_ui_scene::decode(props).expect("packed graph")
+    let scene: semio_plugin::NodeGraphScene = semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, &view, app.1.cx(), |root| {
+        let semio_plugin::Component::Surface(props) = &root.component else { panic!("semantic graph") };
+        semio_ui_scene::decode(props).expect("packed graph")
     }).await.expect("render");
     assert_eq!(scene.viewport.expect("camera viewport").zoom, 2.0);
 }
@@ -60,7 +60,7 @@ fn fold(base: &semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSna
     for leaf in leaves {
         let outcome = semio_s_artifact_stdio_semio_flow::schema::mutations::diff_semio_flow_mutation(leaf, &state);
         assert!(outcome.worst_level().is_none_or(|level| level < semio_framework_diagnostic::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
-        state = semio_framework_os_kernel::apply_diff_cold(outcome.diff(), &state).expect("a leaf diff applies to the state it was computed from");
+        state = semio_os_kernel::apply_diff_cold(outcome.diff(), &state).expect("a leaf diff applies to the state it was computed from");
     }
     state
 }

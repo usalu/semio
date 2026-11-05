@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "documentId",
+    "instanceId",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "documentId": {
+      "type": "string"
+    },
+    "instanceId": {
+      "type": "integer"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "identities",
+          "expectedArchive",
+          "expectedReads"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "identities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "app_instance_id",
+                "parent_document_id"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "app_instance_id": {
+                  "type": "integer"
+                },
+                "parent_document_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "expectedArchive": {
+            "type": "boolean"
+          },
+          "expectedReads": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "missingIdentity": {
+            "type": "boolean"
+          },
+          "replaceDuringRead": {
+            "type": "boolean"
+          },
+          "duplicate": {
+            "type": "object",
+            "required": [
+              "samePlugin",
+              "documentId"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "samePlugin": {
+                "type": "boolean"
+              },
+              "documentId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

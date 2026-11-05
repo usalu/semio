@@ -1,14 +1,14 @@
 //! 🏭️ Genuine Process3d parent capability and complete persisted-state baselines.
 #![recursion_limit = "256"]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use semio_framework_test_original_snapshot_owners as original_owners;
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::sqlite::snapshot::Process3dSnapshot;
 use semio_s_artifact_process_process3d_model::snapshot::*;
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
@@ -149,7 +149,7 @@ fn assert_full(actual: &Process3dSnapshot, expected: &Process3dSnapshot, w: u64)
 }
 #[test]
 fn sqlite_snapshot_process3d_actual_parent_bare_capability_is_present() {
-    assert!(<Process3dSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
+    assert!(<Process3dSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_process3d_complete_parent_native_formats_preserve_all_fields_and_words() {
@@ -219,15 +219,15 @@ fn sqlite_snapshot_process3d_independent_sqlite_knows_every_handwritten_table_an
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
 }
 
-use semio_framework_plugin::{plugin_app_close_prelude::*, EditorApp, PluginApp, VcsArtifactApp};
-use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_plugin::{plugin_app_close_prelude::*, EditorApp, PluginApp, VcsArtifactApp};
+use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
 semio_framework_dispatch_macros::dyn_enum_close! {
  /// 📝️ The actual Process3d declared editor app.
  enum SqliteProcessApps:PluginApp{Editor(VcsArtifactApp<EditorApp<semio_s_artifact_process_process3d_editor::Process3dPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>)}
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability() {
-    semio_framework_plugin::PluginBuilder::<semio_framework_plugin::app::NeedsLabel, SqliteProcessApps>::new("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(semio_s_artifact_process_process3d::declaration().unwrap()).try_build().unwrap();
+    semio_plugin::PluginBuilder::<semio_plugin::app::NeedsLabel, SqliteProcessApps>::new("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(semio_s_artifact_process_process3d::declaration().unwrap()).try_build().unwrap();
     let codec = store::os_store::codec_registry::document_codec(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA).await.unwrap().unwrap();
     assert!(codec.snapshot_sqlite.is_some(), "Actual Process3d declared document has no parent SQLite capability");
 }
@@ -272,7 +272,7 @@ mod native_semantic_census;
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_process3d_actual_public_file_preserves_complete_parent_owner() {
-    semio_framework_plugin::PluginBuilder::<semio_framework_plugin::app::NeedsLabel, SqliteProcessApps>::new("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(semio_s_artifact_process_process3d::declaration().unwrap()).try_build().unwrap();
+    semio_plugin::PluginBuilder::<semio_plugin::app::NeedsLabel, SqliteProcessApps>::new("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(semio_s_artifact_process_process3d::declaration().unwrap()).try_build().unwrap();
     let corpus = laws();
     let declared = &corpus["dialect"];
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: declared["artifactKind"].as_str().unwrap().into(), standard: declared["standard"].as_str().unwrap().into(), subset: declared["subset"].as_str().unwrap().into() };

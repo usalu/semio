@@ -40,18 +40,18 @@ impl<'ctx> PointerCtx<'ctx> {
     ///
     /// 📌️ ticket §C5 item 3 — same shell-owned keyboard-routed draft-field idiom as
     /// `sync_card_kind` above, for the check-in message-prompt card.
-    pub fn handle_keyboard(&mut self, action: semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) {
+    pub fn handle_keyboard(&mut self, action: semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) {
         if self.chrome.chrome_build.dialog_open() && self.input.handle_chrome_dialog_key(&action, modifiers, &mut self.chrome, &mut self.settle) {
             return;
         }
-        if action == semio_framework_ui_wgpu_input::KeyAction::Escape {
-            if semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_interactions(input) {
-                if let Some((window_id, pointer_id)) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_any_pointer_capture() {
-                    semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_framework_ui_wgpu_events::UiEvent::PointerCancel, input);
+        if action == semio_ui_wgpu_input::KeyAction::Escape {
+            if semio_renderer_wgpu_scene_render::cancel_canvas_interactions(input) {
+                if let Some((window_id, pointer_id)) = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_any_pointer_capture() {
+                    semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_ui_wgpu_events::UiEvent::PointerCancel, input);
                 }
                 return;
             }
-            if semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer() {
+            if semio_renderer_wgpu_scene_render::cancel_scene_list_transfer() {
                 self.input.chrome_pointer_owner = None;
                 return;
             }
@@ -64,7 +64,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 return;
             }
             if self.input.context_menu.is_some() {
-                match self.input.context_menu_handle_key(semio_framework_ui_wgpu_input::KeyAction::Escape) {
+                match self.input.context_menu_handle_key(semio_ui_wgpu_input::KeyAction::Escape) {
                     ContextMenuKeyOutcome::Activate(_) => return,
                     ContextMenuKeyOutcome::Ignored => {}
                     ContextMenuKeyOutcome::Consumed | ContextMenuKeyOutcome::CloseMenu => return,
@@ -74,7 +74,7 @@ impl<'ctx> PointerCtx<'ctx> {
         if self.sync.sync_card_kind.is_none() {
             if let Some(step) = self.docs.chrome_tour_active_step(&self.chrome) {
                 match action {
-                    semio_framework_ui_wgpu_input::KeyAction::Escape => {
+                    semio_ui_wgpu_input::KeyAction::Escape => {
                         if let Some(seen_key) = self.docs.introduction_seen_key() {
                             self.chrome.chrome_build.dismiss_introduction(&seen_key);
                         } else {
@@ -82,13 +82,13 @@ impl<'ctx> PointerCtx<'ctx> {
                         }
                         return;
                     }
-                    semio_framework_ui_wgpu_input::KeyAction::Enter | semio_framework_ui_wgpu_input::KeyAction::ArrowRight => {
+                    semio_ui_wgpu_input::KeyAction::Enter | semio_ui_wgpu_input::KeyAction::ArrowRight => {
                         if step.interactions.is_empty() {
                             self.docs.chrome_tour_advance_current_step(&step, &mut self.chrome);
                             return;
                         }
                     }
-                    semio_framework_ui_wgpu_input::KeyAction::ArrowLeft => {
+                    semio_ui_wgpu_input::KeyAction::ArrowLeft => {
                         self.chrome.chrome_build.back_introduction();
                         return;
                     }
@@ -110,32 +110,32 @@ impl<'ctx> PointerCtx<'ctx> {
                 }
             }
         }
-        if !editing && !palette_open && self.dock.dock_drag.is_none() && action == semio_framework_ui_wgpu_input::KeyAction::Tab {
+        if !editing && !palette_open && self.dock.dock_drag.is_none() && action == semio_ui_wgpu_input::KeyAction::Tab {
             self.advance_keyboard_ring(!modifiers.shift, input);
             return;
         }
         if self.sync.sync_card_kind.is_some() {
             match action {
-                semio_framework_ui_wgpu_input::KeyAction::Escape => {
+                semio_ui_wgpu_input::KeyAction::Escape => {
                     self.sync.sync_card_kind = None;
                     return;
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Enter => {
+                semio_ui_wgpu_input::KeyAction::Enter => {
                     self.settle.deferred_actions.push(ActionDescriptor {
                         controller_id: "framework.sync".into(),
                         action: "attach".into(),
-                        args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({
+                        args: semio_renderer_wgpu_host_base::action_args_json!({
                             "path": self.sync.sync_card_draft,
                             "kind": self.sync.sync_card_kind,
                         }),
                     });
                     return;
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Char(key) => {
+                semio_ui_wgpu_input::KeyAction::Char(key) => {
                     self.sync.sync_card_draft.push_str(&key);
                     return;
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Backspace => {
+                semio_ui_wgpu_input::KeyAction::Backspace => {
                     self.sync.sync_card_draft.pop();
                     return;
                 }
@@ -145,23 +145,23 @@ impl<'ctx> PointerCtx<'ctx> {
         #[cfg(not(target_arch = "wasm32"))]
         if self.sync.checkin_dialog_draft.is_some() {
             match action {
-                semio_framework_ui_wgpu_input::KeyAction::Escape => {
+                semio_ui_wgpu_input::KeyAction::Escape => {
                     self.sync.checkin_dialog_draft = None;
                     return;
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Enter => {
+                semio_ui_wgpu_input::KeyAction::Enter => {
                     let message = self.sync.checkin_dialog_draft.clone().unwrap_or_default();
                     self.sync.checkin_dialog_draft = None;
-                    self.settle.deferred_actions.push(ActionDescriptor { controller_id: "framework.checkin".into(), action: "submit".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "message": message }) });
+                    self.settle.deferred_actions.push(ActionDescriptor { controller_id: "framework.checkin".into(), action: "submit".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "message": message }) });
                     return;
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Char(key) => {
+                semio_ui_wgpu_input::KeyAction::Char(key) => {
                     if let Some(draft) = self.sync.checkin_dialog_draft.as_mut() {
                         draft.push_str(&key);
                     }
                     return;
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Backspace => {
+                semio_ui_wgpu_input::KeyAction::Backspace => {
                     if let Some(draft) = self.sync.checkin_dialog_draft.as_mut() {
                         draft.pop();
                     }
@@ -172,10 +172,10 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if palette_open {
             match action {
-                semio_framework_ui_wgpu_input::KeyAction::Escape => {
+                semio_ui_wgpu_input::KeyAction::Escape => {
                     self.commands.close_command_palette(input, &mut self.input);
                 }
-                semio_framework_ui_wgpu_input::KeyAction::ArrowDown => {
+                semio_ui_wgpu_input::KeyAction::ArrowDown => {
                     if self.input.overlay_state == OverlayState::Search {
                         let len = self.as_session().filtered_search_items().len();
                         if len > 0 {
@@ -188,24 +188,24 @@ impl<'ctx> PointerCtx<'ctx> {
                         }
                     }
                 }
-                semio_framework_ui_wgpu_input::KeyAction::ArrowUp => {
+                semio_ui_wgpu_input::KeyAction::ArrowUp => {
                     if self.input.overlay_state == OverlayState::Search {
                         self.commands.search_selected = self.commands.search_selected.saturating_sub(1);
                     } else {
                         self.commands.find_selected = self.commands.find_selected.saturating_sub(1);
                     }
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Enter => {
+                semio_ui_wgpu_input::KeyAction::Enter => {
                     let runtime = ();
                     let _ = runtime;
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Char(key) => {
+                semio_ui_wgpu_input::KeyAction::Char(key) => {
                     let kind = if self.input.overlay_state == OverlayState::Search { ShellPaletteKind::Search } else { ShellPaletteKind::Find };
                     let mut query = self.commands.palette_query(kind).to_string();
                     query.push_str(&key);
                     self.commands.set_palette_query(kind, query, input, &mut self.input);
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Backspace => {
+                semio_ui_wgpu_input::KeyAction::Backspace => {
                     let kind = if self.input.overlay_state == OverlayState::Search { ShellPaletteKind::Search } else { ShellPaletteKind::Find };
                     let mut query = self.commands.palette_query(kind).to_string();
                     query.pop();
@@ -217,13 +217,13 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if input.focused_id.is_some() {
             match action {
-                semio_framework_ui_wgpu_input::KeyAction::Char(key) => {
+                semio_ui_wgpu_input::KeyAction::Char(key) => {
                     if let Some(ch) = key.chars().next() {
                         input.insert_char(ch);
                     }
                 }
-                semio_framework_ui_wgpu_input::KeyAction::Backspace => input.backspace(),
-                semio_framework_ui_wgpu_input::KeyAction::Delete => input.delete_forward(),
+                semio_ui_wgpu_input::KeyAction::Backspace => input.backspace(),
+                semio_ui_wgpu_input::KeyAction::Delete => input.delete_forward(),
                 _ => {}
             }
         }
@@ -300,7 +300,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// History panel's Undo/Redo rows and the palette's `studio.undo`/`studio.redo` entries use, so
     /// the three doors to the verb cannot diverge. Before this wave the wgpu shell had NO undo chord
     /// at all: undo was reachable only by opening the palette and typing "undo".
-    pub async fn handle_keyboard_async(&mut self, action: semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+    pub async fn handle_keyboard_async(&mut self, action: semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
         if self.chrome.chrome_build.dialog_open() {
             self.handle_keyboard(action, modifiers, input);
             self.settle.owe_settle();
@@ -316,19 +316,19 @@ impl<'ctx> PointerCtx<'ctx> {
                 }
             }
         }
-        if matches!(action, semio_framework_ui_wgpu_input::KeyAction::Enter | semio_framework_ui_wgpu_input::KeyAction::Space(true)) {
+        if matches!(action, semio_ui_wgpu_input::KeyAction::Enter | semio_ui_wgpu_input::KeyAction::Space(true)) {
             if let Some(target) = self.input.keyboard_focused_chrome_target(input, &self.chrome) {
                 self.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, input).await?;
                 return Ok(());
             }
         }
-        if matches!(self.input.overlay_state, OverlayState::Search) && action == semio_framework_ui_wgpu_input::KeyAction::Enter {
+        if matches!(self.input.overlay_state, OverlayState::Search) && action == semio_ui_wgpu_input::KeyAction::Enter {
             self.activate_search_item(self.commands.search_selected).await?;
             input.blur_input();
             self.input.accessibility_focused_control_id = None;
             return Ok(());
         }
-        if matches!(self.input.overlay_state, OverlayState::Find) && action == semio_framework_ui_wgpu_input::KeyAction::Enter {
+        if matches!(self.input.overlay_state, OverlayState::Find) && action == semio_ui_wgpu_input::KeyAction::Enter {
             self.activate_find_item(self.commands.find_selected).await?;
             input.blur_input();
             self.input.accessibility_focused_control_id = None;
@@ -336,14 +336,14 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if content_is_editing(input.focused_id.as_deref(), false) {
             match action {
-                semio_framework_ui_wgpu_input::KeyAction::Enter | semio_framework_ui_wgpu_input::KeyAction::Escape => {
+                semio_ui_wgpu_input::KeyAction::Enter | semio_ui_wgpu_input::KeyAction::Escape => {
                     self.commit_focused_input(input).await?;
                     return Ok(());
                 }
                 _ => {}
             }
         }
-        if action == semio_framework_ui_wgpu_input::KeyAction::Escape {
+        if action == semio_ui_wgpu_input::KeyAction::Escape {
             self.input.dismiss_dismissable_layers();
             if self.input.overlay_state==OverlayState::None&&self.sync.sync_card_kind.is_none()&&self.dock.dock_drag.is_none(){
                 if let Some((surface,node))=self.as_session().retained_keyboard_focus(){
@@ -384,7 +384,7 @@ impl<'ctx> PointerCtx<'ctx> {
         if idle {
             if let Some(row_id) = self.row_control_focus_request(&action, modifiers) {
                 let controller_id = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
-                let args = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "rowId": row_id });
+                let args = semio_renderer_wgpu_host_base::action_args_json!({ "rowId": row_id });
                 let dispatched = self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: semio_framework::FOCUS_ROW_CONTROL_ACTION_ID.into(), args }).await;
                 self.apply_pending_row_control_focus(input).await?;
                 self.settle.owe_settle();
@@ -409,7 +409,7 @@ impl<'ctx> PointerCtx<'ctx> {
                     }
                     semio_framework::ShellKeyOutcome::Select { domain_id, targets, merge } => {
                         let targets = serde_json::to_string(&targets).unwrap_or_else(|_| "[]".to_owned());
-                        let args = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "domainId": domain_id, "targets": targets, "merge": merge, "method": "pick" });
+                        let args = semio_renderer_wgpu_host_base::action_args_json!({ "domainId": domain_id, "targets": targets, "merge": merge, "method": "pick" });
                         self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "interactionSelect".into(), args }).await?;
                         self.settle.owe_settle();
                         return Ok(());
@@ -458,15 +458,15 @@ impl<'ctx> PointerCtx<'ctx> {
         if idle {
             if let Some((surface, node)) = self.as_session().retained_keyboard_focus() {
                 debug_log(&format!("[TRACE] wgpu-shell key routing surface={surface} node={node:?} action={action:?}"));
-                let focused_select = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_is_select(&surface, node);
+                let focused_select = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_is_select(&surface, node);
                 if let Some(event) = ui_event_from_key_action(&action, modifiers, focused_select) {
-                    let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, event, input);
+                    let commands = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, event, input);
                     self.chrome.chrome_build.note_content_focus_commands(&commands);
                     return Ok(());
                 }
             }
         }
-        if idle && action == semio_framework_ui_wgpu_input::KeyAction::Escape {
+        if idle && action == semio_ui_wgpu_input::KeyAction::Escape {
             if let Some(window_id) = self.windows.active_window_id.clone() {
                 if self.windows.active_utility_by_window.remove(&window_id).is_some() {
                     self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
@@ -476,7 +476,7 @@ impl<'ctx> PointerCtx<'ctx> {
             let armed_tool = self.docs.session.as_ref().and_then(|session| session.view_state.active_tool_id.clone()).is_some_and(|tool_id| !tool_id.is_empty());
             if armed_tool {
                 let controller_id = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
-                self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "toolId": "" }) }).await?;
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "toolId": "" }) }).await?;
                 return Ok(());
             }
         }
@@ -523,7 +523,7 @@ impl<'ctx> PointerCtx<'ctx> {
             }
             semio_framework::ShellKeyOutcome::Select { domain_id, targets, merge } => {
                 let targets = serde_json::to_string(&targets).unwrap_or_else(|_| "[]".to_owned());
-                let args = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "domainId": domain_id, "targets": targets, "merge": merge, "method": "pick" });
+                let args = semio_renderer_wgpu_host_base::action_args_json!({ "domainId": domain_id, "targets": targets, "merge": merge, "method": "pick" });
                 self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "interactionSelect".into(), args }).await?;
                 self.settle.owe_settle();
             }
@@ -593,29 +593,29 @@ impl<'ctx> PointerCtx<'ctx> {
     }
 
     /// ⌨️ `F2` on a focused tree row asks for the `focusRowControl` verb of that row; `None` while the key is not a bare `F2` or the keyboard is not on a row (a cell inside a row owns its own `F2`).
-    pub fn row_control_focus_request(&self, action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<String> {
-        if !matches!(action, semio_framework_ui_wgpu_input::KeyAction::Function(2)) || modifiers.ctrl || modifiers.alt || modifiers.shift || modifiers.meta {
+    pub fn row_control_focus_request(&self, action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<String> {
+        if !matches!(action, semio_ui_wgpu_input::KeyAction::Function(2)) || modifiers.ctrl || modifiers.alt || modifiers.shift || modifiers.meta {
             return None;
         }
         let (surface, node) = self.as_session().retained_keyboard_focus()?;
-        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_focused_row_key(&surface, node)
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_focused_row_key(&surface, node)
     }
 }
 
 //#endregion ShellInput
 
 /// ☰ Whether a key press asks for the context menu of the focused element: the dedicated context-menu key or `Shift+F10`, the keyboard counterpart of a secondary click (WAI-ARIA authoring practices, menu button and context menu keys). Domain-neutral: the menu content is whatever the app's `context_menu` answers for the focused surface.
-pub fn is_context_menu_chord(action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> bool {
+pub fn is_context_menu_chord(action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> bool {
     match action {
-        semio_framework_ui_wgpu_input::KeyAction::ContextMenu => true,
-        semio_framework_ui_wgpu_input::KeyAction::Function(10) => modifiers.shift && !modifiers.ctrl && !modifiers.alt && !modifiers.meta,
+        semio_ui_wgpu_input::KeyAction::ContextMenu => true,
+        semio_ui_wgpu_input::KeyAction::Function(10) => modifiers.shift && !modifiers.ctrl && !modifiers.alt && !modifiers.meta,
         _ => false,
     }
 }
 
 /// ⌨️ A key press as the plugin shell hook sees it: the active window id as scope, the key name the DOM spells and the modifiers.
-pub fn shell_key_event(scope: &str, action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> semio_framework::ShellKeyEvent {
-    use semio_framework_ui_wgpu_input::KeyAction;
+pub fn shell_key_event(scope: &str, action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> semio_framework::ShellKeyEvent {
+    use semio_ui_wgpu_input::KeyAction;
     let key = match action {
         KeyAction::Char(text) => text.clone(),
         KeyAction::Function(number) => format!("F{number}"),

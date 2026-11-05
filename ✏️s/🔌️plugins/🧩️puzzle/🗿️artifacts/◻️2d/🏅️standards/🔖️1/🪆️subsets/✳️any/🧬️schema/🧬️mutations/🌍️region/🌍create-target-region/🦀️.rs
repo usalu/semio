@@ -36,8 +36,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create target region \"{}\"", self.target_region.id), &format!("Zielregion \"{}\" erstellen", self.target_region.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create target region \"{}\"", self.target_region.id), &format!("Zielregion \"{}\" erstellen", self.target_region.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.target_region.id.to_string_owner()]

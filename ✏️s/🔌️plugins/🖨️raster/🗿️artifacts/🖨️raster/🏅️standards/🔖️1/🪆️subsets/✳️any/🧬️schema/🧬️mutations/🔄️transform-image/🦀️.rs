@@ -154,7 +154,7 @@ pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for TransformImage where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::transform_image::TransformImage> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "image", kind: "transform-image", record: "TransformedImage" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let layer = &self.layer_id;
         let (width, height, x, y) = (self.width, self.height, self.x, self.y);
         let (en, de) = match self.operation.as_str() {
@@ -163,7 +163,7 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for TransformImage where Op:
             "resize" => (format!("Resize layer {layer} to {width} × {height}"), format!("Ebene {layer} auf {width} × {height} skalieren")),
             _ => (format!("Crop layer {layer} to {width} × {height} at ({x}, {y})"), format!("Ebene {layer} auf {width} × {height} bei ({x}, {y}) zuschneiden")),
         };
-        semio_framework_ui_locale::LocalizedLabel::native(&en, &de)
+        semio_ui_locale::LocalizedLabel::native(&en, &de)
     }
 
     fn target(&self) -> Vec<String> {

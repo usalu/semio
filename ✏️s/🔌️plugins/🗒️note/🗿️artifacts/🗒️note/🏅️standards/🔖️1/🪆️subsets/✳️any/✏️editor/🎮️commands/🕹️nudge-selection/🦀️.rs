@@ -5,7 +5,7 @@ use crate::editor::note::commands::ink_apply_events::{note_ink_dispatch, NoteInk
 use crate::op::NoteMutation;
 use crate::schema::{block_id, block_locked, flatten_blocks};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfigMutation};
 use semio_framework_tool_machine::ToolYield;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -38,6 +38,6 @@ pub struct NudgeSelection {
     pub dy: f64,
 }
 
-pub fn handle(payload: &NudgeSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &NudgeSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
     nudge(doc, ctx, "nudgeSelection", payload.dx, payload.dy)
 }

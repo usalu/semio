@@ -9,7 +9,7 @@ use crate::editor::remodeling::commands::import_video_bytes_payload;
 use crate::editor::remodeling::commands::import_video_frame_payload::{import_transaction, import_window_required, refuse_while_streaming};
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingImport;
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 #[cfg(test)]
 use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image;
@@ -24,7 +24,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 

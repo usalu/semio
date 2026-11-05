@@ -184,3 +184,6 @@ impl From<dag::DagError> for FlowCoreError {
     }
 }
 // #endregion ⚠️ Errors
+
+#[path="📤️domain/🦀️.rs"]
+mod original_domain;

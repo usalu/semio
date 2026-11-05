@@ -1,7 +1,7 @@
 //! ↩️ Changed frame inverses preserve original absolute scalar values and original identity owners.
 use crate::LayoutMutation;
 use semio_s_artifact_layout_layout_model::{Frame,snapshot::LayoutSnapshot};
-use semio_framework_os_kernel::{RetainedFieldPreparation,RetainedMutationCloseContext};
+use semio_os_kernel::{RetainedFieldPreparation,RetainedMutationCloseContext};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use semio_framework_value_factory::vector::FactoryVectorRetirement;
 use super::batch_plan::FrameSelectionPlan;

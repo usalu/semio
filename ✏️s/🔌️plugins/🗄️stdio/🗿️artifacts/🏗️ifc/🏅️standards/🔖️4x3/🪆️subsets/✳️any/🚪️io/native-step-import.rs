@@ -1,6 +1,6 @@
 //! 📥️ Normal TXT import receives actual source storage and publishes an owned graph through the existing original IFC route.
 use super::{IfcSnapshot, TXT_DIALECT, TxtSnapshot, reading};
-use semio_framework_os_kernel::{
+use semio_os_kernel::{
     ArtifactPackReceiving,
     io::{
         io_mechanism::{Deserializer, IoRunControl},

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberMemberAlphaC
         record: "ChangedMemberMemberAlphaCr",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change elastic critical load factor α_cr (0 = not declared, E90.12) of the member", "Bauteil: Verzweigungslastfaktor α_cr (0 = nicht angegeben, E90.12) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change elastic critical load factor α_cr (0 = not declared, E90.12) of the member", "Bauteil: Verzweigungslastfaktor α_cr (0 = nicht angegeben, E90.12) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -15,7 +15,7 @@
       "const": 1
     },
     "owner": {
-      "const": "semio-framework-os-store-link-schema"
+      "const": "semio-os-store-link-schema"
     },
     "sourceBoundary": {
       "const": {

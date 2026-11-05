@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact,semio_framework_value_derive::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValue, FromValue, semio_os_dsl::DslArtifact,semio_framework_value_derive::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.durable-owned-three-member-decision")]
 pub struct DurableOwnedThreeMemberDecisionV1 {
@@ -98,14 +98,14 @@ impl DurableOwnedThreeMemberDecisionV1 {
         if bytes.len() > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES {
             return Err(DurableOwnedGroupDecisionError::EventTooLarge);
         }
-        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+        let (envelope, inner) = semio_os_semio::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let options = PackDecodeOptions {
             verification: PackVerificationLevel::Full,
             preserve_unknown: true,
-            limits: semio_framework_os_pack::PackLimits {
+            limits: semio_os_pack::PackLimits {
                 max_file_len: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES as u64,
                 max_segment_len: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES as u64,
                 max_symbols: 128,
@@ -201,37 +201,37 @@ impl ArtifactDsl for DurableOwnedThreeMemberDecisionV1 {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = semio_framework_os_semio::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
+        let body = semio_os_semio::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
         let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Dsl, 1).expect("valid durable group envelope");
-        semio_framework_os_semio::wrap_text(&envelope, &body)
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Dsl, 1).expect("valid durable group envelope");
+        semio_os_semio::wrap_text(&envelope, &body)
     }
 }
 
 impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(semio_framework_os_semio::wrap_binary(&envelope, &inner))
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
+        Ok(semio_os_semio::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+        let (envelope, inner) = semio_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1) {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "durable group pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(semio_framework_os_store_text_io::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(semio_os_store_text_io::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 
-impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DurableOwnedThreeMemberDecisionV1 {
+impl semio_os_store_text_io::ArtifactStoreSnapshot for DurableOwnedThreeMemberDecisionV1 {
 
 }
 

@@ -14,8 +14,8 @@ pub struct SetSampleRate {
 impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for SetSampleRate {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-rate", kind: "set-sample-rate", record: "SetSampleRate" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set sample rate", "Abtastrate setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set sample rate", "Abtastrate setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

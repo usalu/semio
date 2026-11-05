@@ -63,7 +63,10 @@ impl FlowEvalSession {
     pub fn next_retirement_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.retirement.demands(copy)?.capacity_bytes)}
     pub fn next_retirement_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.release_bytes)}
     pub fn next_retirement_depth_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.depth)}
-    pub fn retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retirement.step(grant)}
+    pub fn retirement_is_empty(&self)->bool{self.retirement.terminal_is_empty()}
+    pub fn retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retirement_original_step(grant).result}
+    /// ♻️ Forwards the existing live retirement engine's real work independently of its result.
+    pub fn retirement_original_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let result=self.retirement.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:self.retirement.work}}
 
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,ValueError>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
@@ -90,7 +93,7 @@ impl FlowEvalSession {
         if !self.retirement.terminal_is_empty(){
             return match self.retirement.step(grant){Ok(step)=>if self.terminal_is_empty(){Ok(Step::Complete{progress:step.progress()})}else{Ok(Step::Pending{progress:step.progress()})},Err(error)=>Err(error)}
         }
-        if let Some(port)=self.geometry_port.take(){self.retiring_geometry_port=Some(semio_framework_os_flow_geometry::GeometryPortRetirement::new(port));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
+        if let Some(port)=self.geometry_port.take(){self.retiring_geometry_port=Some(semio_os_flow_geometry::GeometryPortRetirement::new(port));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if let Some(source)=self.take_session_source(){
             self.retirement.root=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!("declared original session source root supports controlled retirement")));
             return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})
@@ -111,4 +114,16 @@ impl FlowEvalSession {
     }
 
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.state.pending_snapshot_copy.is_none()&&self.state.pending_host.is_none()&&self.state.retiring_host.is_none()&&self.geometry_port.is_none()&&self.retiring_geometry_port.is_none()&&!self.owns_session_source()&&self.retirement.terminal_is_empty()}
+}
+
+impl FlowEvalSession{
+ /// 🧹️ Closes the genuine session source after its separate intake, host and geometry frontiers end.
+ pub fn retire_source_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,ValueError>{
+  use semio_framework_value::RetainedWorkOutcome as Turn;
+  if !self.closing||self.state.pending_snapshot_copy.is_some()||self.state.pending_tick_snapshot.is_some()||self.state.pending_tick_snapshot_retirement.is_some()||self.state.pending_tick_snapshot_origin.is_some()||self.state.pending_host.is_some()||self.state.retiring_host.is_some()||self.state.geometry_port.is_some()||self.state.retiring_geometry_port.is_some(){return Turn{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original session source awaits its separately owned frontiers")),work:0}}
+  let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return Turn{result:Err(error),work:0}};if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return Turn{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  if !self.retirement.terminal_is_empty(){let result=self.retirement.step(grant);return Turn{result,work:self.retirement.work}}
+  if let Some(source)=self.take_session_source(){self.retirement.root=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!("original session source declares controlled retirement")));return Turn{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+  Turn{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
+ }
 }

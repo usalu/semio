@@ -180,15 +180,16 @@ impl MeshImportCursor {
     pub fn next_close_release_byte_demand(&self,body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(self.removal_demand(body).1),|owner|owner.owner().next_release_byte_demand())}
     pub fn next_close_depth_demand(&self,_body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(usize::from(!self.retired)),|owner|owner.owner().next_depth_demand())}
     /// 🧹️ Retains the actual scratch, removed entity and recorder until their full grants arrive.
-    pub fn close_step(&mut self,body:&mut Body,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    pub fn close_original_step(&mut self,body:&mut Body,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+        let mut work=0;let result=(||->Result<RetainedCloneStep,ValueError>{
         if self.retired {return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0 || grant.maximum_depth==0 || (!self.cancelled && self.phase<4) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(owner)=self.retirement.as_mut() {
-            if owner.owner().terminal_is_empty() {self.retirement=None;return Ok(import_progress());}
-            return owner.owner_mut().close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));
+            if owner.owner().terminal_is_empty() {self.retirement=None;work=1;return Ok(import_progress());}
+            let turn=owner.owner_mut().close_step(grant);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));
         }
         match self.retirement_stage {
-            0=>{let scratch=ImportScratch {positions:std::mem::take(&mut self.positions),positions64:std::mem::take(&mut self.positions64),normals64:std::mem::take(&mut self.normals64),normals:std::mem::take(&mut self.normals),indices:std::mem::take(&mut self.indices),faces:std::mem::take(&mut self.faces),vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)};self.retirement=Some(ImportCloseOwner::Scratch(import_controller(scratch)));self.retirement_stage=2;Ok(import_progress())}
+            0=>{work=1;let scratch=ImportScratch {positions:std::mem::take(&mut self.positions),positions64:std::mem::take(&mut self.positions64),normals64:std::mem::take(&mut self.normals64),normals:std::mem::take(&mut self.normals),indices:std::mem::take(&mut self.indices),faces:std::mem::take(&mut self.faces),vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)};self.retirement=Some(ImportCloseOwner::Scratch(import_controller(scratch)));self.retirement_stage=2;Ok(import_progress())}
             2=>{
                 if let Some(entity)=self.recorder.last_owned().filter(|_|self.cancelled) {
                     let (removed,progress)=match entity {
@@ -204,14 +205,16 @@ impl MeshImportCursor {
                         EntityRef::Surface(id)=>{let (value,progress)=body.surfaces.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Surface{value}),progress)},
                     };
                     if progress==Default::default() {return Ok(RetainedCloneStep::Progress(progress));}
-                    self.recorder.pop_retired_owned(entity);
+                    work=1;self.recorder.pop_retired_owned(entity);
                     if let Some(value)=removed {self.retirement=Some(ImportCloseOwner::Entity(import_controller(value)));}
                     Ok(RetainedCloneStep::Progress(progress))
-                } else {self.retirement=Some(ImportCloseOwner::Recorder(import_controller(std::mem::take(&mut self.recorder))));self.retirement_stage=3;Ok(import_progress())}
+                } else {work=1;self.retirement=Some(ImportCloseOwner::Recorder(import_controller(std::mem::take(&mut self.recorder))));self.retirement_stage=3;Ok(import_progress())}
             }
-            _=>{self.retired=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..Default::default()}))}
+            _=>{work=1;self.retired=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..Default::default()}))}
         }
+    })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
+    pub fn close_step(&mut self,body:&mut Body,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_original_step(body,grant).result}
     fn advance(&mut self,body:&mut Body)->Result<Option<EntityRef>,KernelError> {
         use semio_framework_3d_brep_representation::topology::EntityRef;
         match self.phase {

@@ -15,9 +15,9 @@
 // DslValue-free by construction (see `UiValue`'s own docstring in `🎬️action.rs`).
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize,Serialize};
-pub use semio_framework_ui_contract_values::*;
-pub use semio_framework_ui_contract_actions::*;
-pub use semio_framework_ui_contract_presentation::*;
+pub use semio_ui_contract_values::*;
+pub use semio_ui_contract_actions::*;
+pub use semio_ui_contract_presentation::*;
 
 #[path = "🎛️container-roles-and-row-actions/🦀️.rs"]
 mod container_roles_and_row_actions;
@@ -69,7 +69,7 @@ pub use table_image_extension_and_component::{
 
 //#region 🎨️Props
 
-use semio_framework_ui_contract_budget::{TREE_WINDOW_FIXED_NODE_HEADROOM,TREE_WINDOW_BODY_NODE_BUDGET};
+use semio_ui_contract_budget::{TREE_WINDOW_FIXED_NODE_HEADROOM,TREE_WINDOW_BODY_NODE_BUDGET};
 
 //#endregion 🎨️Props
 

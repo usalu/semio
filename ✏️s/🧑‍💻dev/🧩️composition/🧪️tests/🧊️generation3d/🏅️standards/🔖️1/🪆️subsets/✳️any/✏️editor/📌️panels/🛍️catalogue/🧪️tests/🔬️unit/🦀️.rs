@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, render as render_body, render_with_view};
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_plugin::{TreeWindowRequest, ViewModel};
 use semio_framework_test_fixtures::repo_text;
 
 #[semio_framework_async_macros::async_test]
@@ -58,23 +58,23 @@ fn group_windows(json: &str) -> Vec<RenderedWindow> {
 }
 
 fn catalogue_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// 🧭️ A group's window path: the enclosing section key, `TREE_WINDOW_PATH_SEPARATOR`, then the group
 /// key (`TreeWindows::path_of`). A bare nested key never seats a host request.
 fn group_window_path(key: &str) -> String {
-    format!("{GENERATION_3D_PLAY_CATALOGUE_SECTION}{}{key}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+    format!("{GENERATION_3D_PLAY_CATALOGUE_SECTION}{}{key}", semio_plugin::TREE_WINDOW_PATH_SEPARATOR)
 }
 
 fn first_group_key() -> String {
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let sections = semio_os_flow::flow_palette_catalogue_sections();
     let section = sections.first().expect("the flow palette registers at least one catalogue section");
     format!("procedural-play-catalogue.{}", section.id)
 }
 
 fn first_group_items() -> Vec<String> {
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let sections = semio_os_flow::flow_palette_catalogue_sections();
     let section = sections.first().expect("the flow palette registers at least one catalogue section");
     section
         .items
@@ -94,7 +94,7 @@ fn first_group_items() -> Vec<String> {
 #[semio_framework_async_macros::async_test]
 async fn every_catalogue_group_stamps_the_total_its_window_slices() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let sections = semio_os_flow::flow_palette_catalogue_sections();
     let roster: usize = sections.iter().map(|section| section.items.len()).sum();
     assert!(roster > 0, "the flow palette registers at least one operator");
     let mut app = app().await;
@@ -191,8 +191,8 @@ async fn every_windowed_container_carries_a_distinct_node_key() {
 #[test]
 fn the_spotlight_catalogue_offers_every_registered_operator() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
-    let spotlight = semio_framework_os_flow::flow_app_catalogue();
+    let sections = semio_os_flow::flow_palette_catalogue_sections();
+    let spotlight = semio_os_flow::flow_app_catalogue();
     let spotlight_rows: usize = spotlight.sections.iter().map(|section| section.items.len()).sum();
     let roster: usize = sections.iter().map(|section| section.items.len()).sum();
     assert_eq!(spotlight_rows, roster, "the spotlight catalogue is the whole roster");

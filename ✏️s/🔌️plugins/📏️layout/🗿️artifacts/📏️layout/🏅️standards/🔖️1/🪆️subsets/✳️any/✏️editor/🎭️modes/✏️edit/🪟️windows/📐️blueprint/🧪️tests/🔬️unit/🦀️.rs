@@ -1,4 +1,4 @@
-#[allow(unused_imports)] use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)] use semio_plugin::SurfaceKind;
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::*;
 use semio_s_artifact_layout_layout_editor::unit_tests::context::{layout_app, render as render_body, scene as body_scene};
 

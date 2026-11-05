@@ -2,21 +2,21 @@
 #[path="../../../../../../../🔨️modules/🌱️value/📽️projection/👁️post/🧪️testing/🦀️.rs"]
 mod post_fixture;
 use post_fixture::PostFixture;
-use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
-use semio_framework_os_store_one_item_batch::paged_one_item as paged;
-use semio_framework_os_spr as protocol;
+use semio_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_os_store_one_item_batch::paged_one_item as paged;
+use semio_os_spr as protocol;
 use paged::mutation_apply_preparation_factory;
 use paged::PagedOneItemEdit;
 
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
-use semio_framework_os_spr::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcome, MutationOutcomeClass, OpBinary};
-use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
-use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
-use semio_framework_os_store_command::HistoryLane;
+use semio_os_spr::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcome, MutationOutcomeClass, OpBinary};
+use semio_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
+use semio_os_store_command::HistoryLane;
 use semio_framework_value_snapshot_read::{SnapshotRead, SnapshotReadRegistryHandle};
-use semio_framework_os_spr::{Mutation};
+use semio_os_spr::{Mutation};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use semio_framework_value::{FromValue, ToValue, ValueError, ValueRefusalKind};
@@ -153,8 +153,8 @@ impl ColdMutation<PlainDocument> for DocumentMutation {
 }
 
 impl OpBinary for DocumentMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> { serde_json::to_vec(self).map_err(|error| semio_framework_os_spr::ProtocolError::Io(error.to_string())) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> { serde_json::from_slice(bytes).map_err(|error| semio_framework_os_spr::ProtocolError::Io(error.to_string())) }
+    fn encode_op(&self) -> Result<Vec<u8>, semio_os_spr::ProtocolError> { serde_json::to_vec(self).map_err(|error| semio_os_spr::ProtocolError::Io(error.to_string())) }
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_os_spr::ProtocolError> { serde_json::from_slice(bytes).map_err(|error| semio_os_spr::ProtocolError::Io(error.to_string())) }
 }
 
 fn fixture() -> Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
@@ -265,7 +265,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(document);
     let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("registry admission"));
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0; 32], 0, 1, semio_framework_os_spr::HybridLogicalTimestamp::new(1, 0), "actor".into(), None, None, None));
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0; 32], 0, 1, semio_os_spr::HybridLogicalTimestamp::new(1, 0), "actor".into(), None, None, None));
     let mutation_retirement: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>> = Arc::new(OriginalMutationIssuer);
     let snapshot_retirement: Arc<dyn semio_framework_value::SnapshotRetirementFactory<Document>> = Arc::new(SharedValueRetirementFactory::<Document>::default());
     let request = ArtifactStoreOneItemPreparationRequest { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(1), base_revision: [0; 32], lane: HistoryLane::Document, authority, base: SnapshotRead::new(Arc::clone(&root), lease), mutation, mutation_retirement: Arc::clone(&mutation_retirement), snapshot_retirement: Arc::clone(&snapshot_retirement) };
@@ -379,7 +379,7 @@ fn mutation_apply_wire_values_round_trip_through_the_value_contract() {
 #[derive(semio_framework_value_derive::ToValue,semio_framework_value_derive::FromValue,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone,semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 struct ScalarConfig{value:i64}
-impl semio_framework_os_store_snapshot_clone::config_apply::ConfigApplyMutation<i64> for ScalarConfig{
+impl semio_os_store_snapshot_clone::config_apply::ConfigApplyMutation<i64> for ScalarConfig{
     fn exchange(self,post:&mut i64)->Result<Self,(ValueError,Self)>{Ok(Self{value:std::mem::replace(post,self.value)})}
 }
 
@@ -390,11 +390,11 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
     let law:Value=serde_json::from_str(include_str!("./🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let base=law["base"].as_i64().unwrap();let expected=base+law["diff"].as_i64().unwrap();
     let root=Arc::new(base);let registry=SnapshotReadRegistryHandle::new();let lease=registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_|panic!("scalar config source lease"));
-    let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_framework_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
+    let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
     let mutations:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<ScalarConfig>>=Arc::new(OwnedValueRetirementFactory::<ScalarConfig>::default());
     let snapshots:Arc<dyn semio_framework_value::SnapshotRetirementFactory<i64>>=Arc::new(SharedValueRetirementFactory::<i64>::default());
     let request=ArtifactStoreOneItemPreparationRequest{operation:semio_framework_job::OperationId(1),generation:semio_framework_job::Generation(1),base_revision:[0;32],lane:HistoryLane::Document,authority,base:SnapshotRead::new(Arc::clone(&root),lease),mutation:ScalarConfig{value:expected},mutation_retirement:Arc::clone(&mutations),snapshot_retirement:Arc::clone(&snapshots)};
-    let factory=semio_framework_os_store_snapshot_clone::config_apply::config_apply_preparation_factory::<i64,ScalarConfig>();let policy=grant(1<<16,WIDE);
+    let factory=semio_os_store_snapshot_clone::config_apply::config_apply_preparation_factory::<i64,ScalarConfig>();let policy=grant(1<<16,WIDE);
     let(mut owner,receipt)=factory.begin(request,policy).unwrap_or_else(|_|panic!("scalar config birth"));assert!(receipt.fits(policy.retained_grant()));
     let mut prepared=None;let mut turns=0;let mut receiver=Receiver::new(policy.retained_grant());
     for _ in 0..100000{
@@ -422,14 +422,14 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
 /// 🎬️ Prefix, ordinary history and policy merge preserve the same semantic refusal and original row.
 #[test]
 fn replay_diagnostics_decide_before_inverse_and_application() {
-    use semio_framework_os_store_replay::{apply_outcome, fold_operation};
+    use semio_os_store_replay::{apply_outcome, fold_operation};
     let law: Value = serde_json::from_str(include_str!("./🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let original = plain_document_json(&fixture()["base"]);
     for case in law["cases"].as_array().unwrap() {
         let mutation = DocumentMutation::Diagnostic { level: case["level"].as_str().unwrap().into(), code: case["code"].as_str().unwrap().into(), message: case["message"].as_str().unwrap().into() };
         let expected = mutation.diff(&original).stamp_op_index(0).messages().to_vec();
         APPLY_CALLS.set(0);
-        let (initial, initial_messages) = semio_framework_os_vcs::apply_mutation(&original, &mutation).unwrap();
+        let (initial, initial_messages) = semio_os_vcs::apply_mutation(&original, &mutation).unwrap();
         assert_eq!(initial_messages, mutation.diff(&original).messages());
         assert_eq!(APPLY_CALLS.get(), 1, "apply_mutation stays policy-agnostic: callers gate on the returned diagnostics");
         assert_eq!(initial.nodes[0].text, "diagnostic applied");
@@ -755,7 +755,7 @@ fn mutation_apply_admits_large_immutable_documents_with_bounded_changed_paths() 
     let large = PlainDocument { title: "large".into(), nodes: (0..1400).map(|index| PlainNode { id: format!("n{index}"), text: text.clone() }).collect() };
     let build = || (document_from_plain(large.clone()), DocumentMutation::SetText { index: 700, text: "edited".into() });
     let bytes: usize = large.nodes.iter().map(|node| node.id.len() + node.text.len()).sum();
-    assert!(bytes > semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
+    assert!(bytes > semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
     let factory = mutation_apply_preparation_factory::<Document, DocumentMutation>();
     let probe=DocumentMutation::SetText{index:700,text:"edited".into()};
     let footprint = factory.preflight(&probe, HistoryLane::Document).unwrap();

@@ -5,20 +5,20 @@ use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::schema::{parse_jack_ast, JackAstNode};
 use crate::{writer_text, WriterSnapshot};
 use crate::editor::writer::editor_vocabulary::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, WRITER_PLAY_APP_ID};
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::tree_item;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_BODY_ARTIFACT: &str = "writer.play.artifact";
@@ -63,7 +63,7 @@ pub fn definition() -> PanelTabDefinition {
 ///
 /// 🪟️ Every AST level nests through [`tree_window_item`], so a wide `match`/`pattern` node streams
 /// its children in host-chosen windows instead of failing the render past the fixed child capacity.
-pub fn jack_ast_to_tree_item(node: &JackAstNode, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn jack_ast_to_tree_item(node: &JackAstNode, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let item = ui::tree_item(crate::editor::writer::editor_vocabulary::ui_label(node.label.clone())?)
         .try_id(&node.id)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "writer AST id admission failed"))?
@@ -73,7 +73,7 @@ pub fn jack_ast_to_tree_item(node: &JackAstNode, windows: &TreeWindows<'_>) -> s
     tree_window_item(windows, item, &node.id, default_open, &node.children, |child| jack_ast_to_tree_item(child, windows))
 }
 
-pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     if document.language_id != "jack" {
         let items = crate::editor::writer::editor_vocabulary::ui_node_list([tree_item("writer-document.id", crate::editor::writer::editor_vocabulary::ui_label(document.id.clone())?), tree_item("writer-document.language", crate::editor::writer::editor_vocabulary::ui_label(document.language_id.clone())?)])?;
         return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(crate::editor::writer::editor_vocabulary::ui_label(labels.artifact.as_str())?), true, items)?.build();

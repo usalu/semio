@@ -7,23 +7,23 @@
 use crate::viewer::playbook::modes::view;
 use crate::viewer::playbook::modes::view::windows::steps;
 use crate::{PlaybookSnapshot, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 // 🚧️ SDK GAP: `ArtifactViewer` is reachable bare (w0-f gap 1 closed it), but this trait's own
 // `InteractionView` parameter type is NOT in the crate-root curated re-export list yet — only
 // reachable through `app`. Flagged for the coordinator (see this packet's notes file).
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -50,7 +50,7 @@ impl protocol::OpBinary for PlaybookViewCommand {
 #[derive(Default, Clone, Copy)]
 pub struct PlaybookViewer;
 
-impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
+impl semio_plugin::ArtifactViewer for PlaybookViewer {
     /// 🧩️ The same member roster the editor declares — see `PlaybookPlayApp`'s `Members`.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = PlaybookSnapshot;
@@ -66,12 +66,12 @@ impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
     const DIALECT: Dialect = PLAYBOOK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<PlaybookSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<PlaybookSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::empty_playbook_snapshot())
     })}
 
     /// 📣️ The localized notices of the composed reads this viewer refuses with (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
         crate::playbook_fault_notices()
     }
 
@@ -94,26 +94,26 @@ impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             steps::PLAYBOOK_VIEW_BODY_STEPS => {
-                let spec = crate::playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new(fault.code.0, fault.message))?;
-                Ok(semio_framework_plugin::built_to_component_tree(steps::render(&spec, &semio_framework_plugin::TreeWindows::for_body(view_state, steps::PLAYBOOK_VIEW_BODY_STEPS))?))
+                let spec = crate::playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new(fault.code.0, fault.message))?;
+                Ok(semio_plugin::built_to_component_tree(steps::render(&spec, &semio_plugin::TreeWindows::for_body(view_state, steps::PLAYBOOK_VIEW_BODY_STEPS))?))
             }
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_playbook_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_playbook_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(PLAYBOOK_DIALECT).document(["semio", "playbook"]).icon_id("eye").mode_def(view::definition()).default_mode_id(view::PLAYBOOK_VIEW_MODE_VIEW).window_kind_def(steps::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

@@ -3,63 +3,63 @@
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
 extern crate infinite_canvas as infinite_world;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store_sync;
-use semio_framework_os_renderer_wgpu_shell_async::{chrome_now_ms, debug_log, instant_now_ms};
-use semio_framework_os_renderer_wgpu_shell_chrome_state::{ChromeState, ThemeDocument, WINDOW_SEARCH_BODY_KEY, window_actions_surface_id, window_measures_surface_id, window_search_surface_id};
-use semio_framework_os_renderer_wgpu_shell_commands::{CommandState, resolved_execute_args};
-use semio_framework_os_renderer_wgpu_shell_directory::DirectoryState;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store_sync;
+use semio_renderer_wgpu_shell_async::{chrome_now_ms, debug_log, instant_now_ms};
+use semio_renderer_wgpu_shell_chrome_state::{ChromeState, ThemeDocument, WINDOW_SEARCH_BODY_KEY, window_actions_surface_id, window_measures_surface_id, window_search_surface_id};
+use semio_renderer_wgpu_shell_commands::{CommandState, resolved_execute_args};
+use semio_renderer_wgpu_shell_directory::DirectoryState;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_shell_directory::ShellInferenceRunner;
-use semio_framework_os_renderer_wgpu_shell_doc_open::{OpenArtifactRelayTarget, OpeningState, request_file_open, wgpu_document_socket_surface};
+use semio_renderer_wgpu_shell_directory::ShellInferenceRunner;
+use semio_renderer_wgpu_shell_doc_open::{OpenArtifactRelayTarget, OpeningState, request_file_open, wgpu_document_socket_surface};
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_renderer_wgpu_shell_doc_open::PendingFileOpen;
-use semio_framework_os_renderer_wgpu_shell_dock::{ShellDockState, tutorial_resolve_gesture_point};
-use semio_framework_os_renderer_wgpu_shell_docs::{DocumentState, LocalFolderIdentity, note_shell_command_action};
+use semio_renderer_wgpu_shell_doc_open::PendingFileOpen;
+use semio_renderer_wgpu_shell_dock::{ShellDockState, tutorial_resolve_gesture_point};
+use semio_renderer_wgpu_shell_docs::{DocumentState, LocalFolderIdentity, note_shell_command_action};
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-use semio_framework_os_renderer_wgpu_shell_docs::{BackboneFolderVerb, archive_digest, backbone_folder_call, backbone_folder_request};
-use semio_framework_os_renderer_wgpu_shell_history::HistoryState;
+use semio_renderer_wgpu_shell_docs::{BackboneFolderVerb, archive_digest, backbone_folder_call, backbone_folder_request};
+use semio_renderer_wgpu_shell_history::HistoryState;
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-use semio_framework_os_renderer_wgpu_shell_history::HostRouteFolder;
-use semio_framework_os_renderer_wgpu_shell_input::ShellInputState;
-use semio_framework_os_renderer_wgpu_shell_plugins::{PluginState, find_dialect_app, flatten_panel_tab_leaves};
+use semio_renderer_wgpu_shell_history::HostRouteFolder;
+use semio_renderer_wgpu_shell_input::ShellInputState;
+use semio_renderer_wgpu_shell_plugins::{PluginState, find_dialect_app, flatten_panel_tab_leaves};
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_renderer_wgpu_shell_plugins::PendingExtensionInvocation;
-use semio_framework_os_renderer_wgpu_shell_prefs::{ActiveSession, PrefsState, ReplayRefusalReasonV1, dsl_value_as_json, labels, with_chrome_prefs};
-use semio_framework_os_renderer_wgpu_shell_session::{SessionCtx, app_owns_command, declare_boot_subphase, download_media_export, panel_state_from_view, program_space_index, resident_census, staged_arg_row, staged_number};
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
-use semio_framework_os_renderer_wgpu_shell_surfaces::{PickedImport, SettleState, ShellRenderedRefresh, SurfaceState, TutorialCameraConverge, TutorialMode, TutorialPendingDocOp, TutorialRuntime, TutorialState, World3dComputeStatus, orbit_to_tutorial_camera, tutorial_apply_camera_pose, tutorial_capture_camera_pose};
+use semio_renderer_wgpu_shell_plugins::PendingExtensionInvocation;
+use semio_renderer_wgpu_shell_prefs::{ActiveSession, PrefsState, ReplayRefusalReasonV1, dsl_value_as_json, labels, with_chrome_prefs};
+use semio_renderer_wgpu_shell_session::{SessionCtx, app_owns_command, declare_boot_subphase, download_media_export, panel_state_from_view, program_space_index, resident_census, staged_arg_row, staged_number};
+use semio_renderer_wgpu_shell_state::ShellState;
+use semio_renderer_wgpu_shell_surfaces::{PickedImport, SettleState, ShellRenderedRefresh, SurfaceState, TutorialCameraConverge, TutorialMode, TutorialPendingDocOp, TutorialRuntime, TutorialState, World3dComputeStatus, orbit_to_tutorial_camera, tutorial_apply_camera_pose, tutorial_capture_camera_pose};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_shell_surfaces::ShellIoCompletion;
-use semio_framework_os_renderer_wgpu_shell_sync::{ShellHubDocumentSeed, ShellSyncOwner, SyncState};
-use semio_framework_os_renderer_wgpu_shell_windows::{PanelAnchor, WINDOW_PANE_CHIP_PARENT, WindowState, panel_ui_scroll_records, window_host_event_action};
+use semio_renderer_wgpu_shell_surfaces::ShellIoCompletion;
+use semio_renderer_wgpu_shell_sync::{ShellHubDocumentSeed, ShellSyncOwner, SyncState};
+use semio_renderer_wgpu_shell_windows::{PanelAnchor, WINDOW_PANE_CHIP_PARENT, WindowState, panel_ui_scroll_records, window_host_event_action};
 use infinite_world::world::{WorldInteractionIntent, enqueue_world3d_events};
 #[cfg(not(target_arch = "wasm32"))]
 use protocol::os_directory::client::InstalledServiceStatusV1;
 use semio_framework::{AppDefinition, IconName, ViewModel};
 use semio_framework::kernel::{UiDirtyScope, UiDirtySection};
-use semio_framework_os_kernel::os_directory::{DirectoryCommand, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility};
+use semio_os_kernel::os_directory::{DirectoryCommand, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::schema::DocumentScope;
-use semio_framework_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1;
-use semio_framework_os_renderer_wgpu_contracts::ShellHubRemoteV1;
-use semio_framework_os_renderer_wgpu_dock::parse_path;
+use semio_os_kernel::os_directory::schema::DocumentScope;
+use semio_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1;
+use semio_renderer_wgpu_contracts::ShellHubRemoteV1;
+use semio_renderer_wgpu_dock::parse_path;
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_renderer_wgpu_host_base::host_io_call;
-use semio_framework_os_renderer_wgpu_program_bridge::ProgramBridgeEntry;
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
+use semio_renderer_wgpu_host_base::host_io_call;
+use semio_renderer_wgpu_program_bridge::ProgramBridgeEntry;
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
 use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use store_sync::sync::{ArtifactActorMsg, ArtifactHost, ArtifactMailboxSender, DocumentLinkStatus, PersistenceBinding, RemoteState};
 use ui_contract::UiDocumentLease;
-use semio_framework_ui_declaration::layout::{ActionDescriptor, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID};
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_wgpu_input::HitKind;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiFieldNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_ui_declaration::layout::{ActionDescriptor, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID};
+use semio_ui_draw_contract::DrawList;
+use semio_ui_wgpu_input::HitKind;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::ui::{UiButtonNode, UiFieldNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/⚓️dock-model-and-measures/🦀️.rs"]
 mod staged_window_actions__dock_model_and_measures;

@@ -53,7 +53,7 @@ test("every public compiler front uses the owned system token boundary", () => {
   expect(existsSync(resolve(owner, "🦀️.rs")), "actual generic emitter definitions").toBe(true);
   const source = readTree("🦀️.rs");
   for (const name of ["derive_record", "derive_scalar", "derive_enum", "record_binding", "record_projection", "variant_binding"]) expect(source).toContain(`pub fn ${name}(input: TokenStream) -> TokenStream`);
-  for (const spelling of ["::semio_framework_os_kernel", "::store::", "DslArtifact", "DslDiff", "DslOps", "pub use syn", "pub use quote"]) expect(source).not.toContain(spelling);
+  for (const spelling of ["::semio_os_kernel", "::store::", "DslArtifact", "DslDiff", "DslOps", "pub use syn", "pub use quote"]) expect(source).not.toContain(spelling);
 });
 
 

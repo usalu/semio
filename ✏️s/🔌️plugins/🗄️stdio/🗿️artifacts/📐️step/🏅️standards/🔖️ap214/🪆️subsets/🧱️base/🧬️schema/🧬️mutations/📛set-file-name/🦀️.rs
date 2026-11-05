@@ -15,8 +15,8 @@ pub struct SetFileName {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-name", kind: "set-file-name", record: "SetFileName" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set file name", "Dateiname setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set file name", "Dateiname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

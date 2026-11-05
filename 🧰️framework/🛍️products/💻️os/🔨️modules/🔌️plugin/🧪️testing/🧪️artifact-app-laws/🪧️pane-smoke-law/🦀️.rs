@@ -3,7 +3,7 @@
 use super::*;
 
 /// ⚖️ LAW: `example_dsl` loads through the document archive door (the genesis op log of the booted app rides along), `command` changes `probe`, `undo` restores the loaded probe, `redo` returns the changed probe, and `close_registered_fixture_app` retires every owner. Returns the probe values `(loaded, applied)` so a pane test can pin its own expectations.
-pub async fn assert_pane_smoke<A, M, P>(app: &mut VcsArtifactApp<A, M>, example_dsl: &str, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> (P, P)
+pub async fn assert_pane_smoke<A, M, P>(app: &mut VcsArtifactApp<A, M>, example_dsl: &str, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> (P, P)
 where
     A: ArtifactApp,
     A::Command: semio_framework_value::ToValue,
@@ -30,7 +30,7 @@ where
 }
 
 /// ‼️ LAW: like [`assert_pane_smoke`], but the example arrives the way the shell asks for it — `example` is the app's own load-example command, whose published `LoadDocument` effect crosses the document archive door — so the pane's example catalogue, not a text constant, is what the law exercises.
-pub async fn assert_pane_smoke_by_example<A, M, P>(app: &mut VcsArtifactApp<A, M>, example: A::Command, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> (P, P)
+pub async fn assert_pane_smoke_by_example<A, M, P>(app: &mut VcsArtifactApp<A, M>, example: A::Command, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> (P, P)
 where
     A: ArtifactApp,
     A::Command: semio_framework_value::ToValue,

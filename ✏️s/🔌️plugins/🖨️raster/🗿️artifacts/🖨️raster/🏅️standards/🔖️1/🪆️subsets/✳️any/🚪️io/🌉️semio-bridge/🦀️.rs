@@ -109,7 +109,7 @@ pub fn page_drawing_from_world(world: &SemioDrawingSnapshot) -> SemioDrawingSnap
 /// 🚪️ Dispatches `s.stdio.semio/v1/drawing` → `s.stdio.svg` through stdio's real SVG serializer
 /// (`io_dispatch`), then prints the composed `SvgSnapshot` as bare XML (`write_svg_xml`, NOT
 /// `ArtifactDsl::print_dsl` — w5b-close fix: `print_dsl` wraps the text in stdio's `.semio`
-/// envelope preamble, which `raster_document_from_dwg_drawing`'s `semio_framework_os::
+/// envelope preamble, which `raster_document_from_dwg_drawing`'s `semio_os::
 /// rasterize_svg_to_png_base64` call below then fails to parse as XML at all ("unknown token at
 /// 1:1"); every downstream consumer of this function's return value wants a bare `<svg>…</svg>`
 /// document, matching 🗒️note's/🖍️draw's own `write_svg_xml` usage for the identical bridge).

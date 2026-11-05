@@ -5,8 +5,8 @@ use semio_framework::Fault;
 use semio_framework_actor::typed_operation_page::{ResultPageDelivery,ResultPageWireReceiver,TypedOperationResultPage};
 #[cfg(test)]
 use semio_framework_actor::typed_operation_page::TypedOperationResultToken;
-use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::{size_of,ManuallyDrop};

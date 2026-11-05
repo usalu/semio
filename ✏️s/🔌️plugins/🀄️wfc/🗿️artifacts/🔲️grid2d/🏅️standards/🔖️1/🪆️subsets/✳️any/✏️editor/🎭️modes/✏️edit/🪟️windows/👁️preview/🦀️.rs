@@ -10,16 +10,16 @@ use crate::editor::grid2d::window::Grid2dWindowConfig;
 use crate::schema::inferences::Grid2dInferenceCommit;
 use crate::schema::snapshot::{Grid2dSnapshot, WfcColor, WfcPathSegment, WfcTile2d, WfcTileMedia2d};
 use crate::standards::v1::subsets::any::io::binary::snapshot::{decode_palette_indices};
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::ToolRunView;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -282,7 +282,7 @@ pub fn scene(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: O
 }
 
 pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: Option<&ToolRunView>) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, tool_run))
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, tool_run))
 }
 //#endregion 🔖️Render
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeActionMz where Op:
         record: "ChangedActionMz",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bending moment M_z,Ed of the member action", "Bauteileinwirkung: Biegemoment M_z,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bending moment M_z,Ed of the member action", "Bauteileinwirkung: Biegemoment M_z,Ed ändern")
     }
 }
 

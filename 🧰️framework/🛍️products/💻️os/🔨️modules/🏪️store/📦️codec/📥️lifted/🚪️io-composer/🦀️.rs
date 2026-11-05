@@ -1,6 +1,6 @@
 //! 📥️ Items of `io` that belong to `os-store-codec-registry` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🚪️io/🦀️.rs`.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
+use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_diagnostic::Diagnostic;

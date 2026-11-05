@@ -1,10 +1,10 @@
 //! 🎞️ Scene draw descriptors: materials, lighting, shadow pass, procedural grid, line and textured draws, and frustum culling.
 //!
-//! Carved out of the former `semio-framework-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
+//! Carved out of the former `semio-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 
 use semio_framework_geometry::{Mat4, Vec3};
-use semio_framework_ui_scene_algebra::{mat4_look_at_m, mat4_orthographic_m, vec3_from_array_m, vec3_new_m, Mat4Math, Vec3Math};
-use semio_framework_ui_scene_mesh::Instance3d;
+use semio_ui_scene_algebra::{mat4_look_at_m, mat4_orthographic_m, vec3_from_array_m, vec3_new_m, Mat4Math, Vec3Math};
+use semio_ui_scene_mesh::Instance3d;
 use serde::{Deserialize, Serialize};
 
 //#region ScenePass

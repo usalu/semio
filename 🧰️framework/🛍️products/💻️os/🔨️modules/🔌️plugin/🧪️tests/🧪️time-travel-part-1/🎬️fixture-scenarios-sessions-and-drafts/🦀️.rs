@@ -4,11 +4,11 @@
 /// document only changes through a commit, and pending/superseded/withdrawn rows are exactly the fixture's.
 #[semio_framework_async_macros::async_test]
 async fn every_fixture_scenario_reaches_its_status_body_and_rows() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     for scenario in fixture["scenarios"].as_array().expect("scenarios") {
         let id = text(&scenario["id"]);
@@ -71,16 +71,16 @@ async fn every_fixture_scenario_reaches_its_status_body_and_rows() {
 /// that leave the draft untouched.
 #[semio_framework_async_macros::async_test]
 async fn an_open_session_freezes_document_verbs_and_refuses_stale_or_invalid_drafts() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let refusals = &fixture["refusals"];
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
-    let emitted = app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 3 }.into()], ..Default::default() }, &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let emitted = app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 3 }.into()], ..Default::default() }, &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     assert_eq!(emitted.err().map(|fault| fault.code), Some(FaultCode::new(text(&refusals["frozen"]))), "an artifact emit is frozen");
     for action in refusals["frozenVerbs"].as_array().expect("frozen verbs") {
         let refused = app.handle_action(text(action), None, &meta(&fixture), &mut identity).await;
@@ -112,11 +112,11 @@ async fn an_open_session_freezes_document_verbs_and_refuses_stale_or_invalid_dra
 /// reviewing moves the base and replays again, and the reviewed head includes the remote edit.
 #[semio_framework_async_macros::async_test]
 async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let (backbone, mut probe) = MemoryBackbone::pair("time-travel-remote", "time-travel-remote").await;
@@ -150,7 +150,7 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
         probe.send(message).await.expect("forward remote edit");
     }
     let generation = app.stores.store.generation();
-    app.tick_backbone(&mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("ingest remote edit");
+    app.tick_backbone(&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("ingest remote edit");
     assert!(app.stores.store.generation() > generation, "the remote edit is ingested while the session reviews");
     pump_until(&mut app, "the moved base replays again", |app| app.time_travel.session().stage == TimeTravelStage::Reviewing && app.time_travel.session().report.is_some() && app.time_travel.session().base.content_revision == app.stores.store.content_revision(), mounted_policy, &mut identity,cx)
         .await;

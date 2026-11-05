@@ -85,7 +85,7 @@ pub const CAD_PLAY_DOCUMENT_SCHEMA: &str = "cad.document";
 /// row), standard `"1"` and subset `"*"` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any`
 /// location. Lives at the artifact level (not under `editor`/`viewer`) so `policyViewerPurityBreaches`
 /// never sees a viewer file importing through an `::editor::` path just to read this constant.
-pub const CAD_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.cad.cad", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const CAD_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.cad.cad", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "kebab-case")]
 pub enum CadPaneId {
@@ -216,8 +216,8 @@ pub fn cad_pane_model_slot(pane: CadPaneId) -> &'static str {
 pub const CAD_DRAWINGS_SLOT: &str = "drawings";
 /// 🧬️ The bounded projection of this snapshot's composed child handles, as both surfaces hand it to
 /// the framework (`ArtifactEditor::child_restore_projection` / `ArtifactViewer::child_restore_projection`).
-pub fn cad_child_restore_projection(snapshot: &CadSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("cad child projection failed: {error}")))
+pub fn cad_child_restore_projection(snapshot: &CadSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::from(format!("cad child projection failed: {error}")))
 }
 /// 🧱️ One pane's objects in a working scene.
 pub fn cad_scene_pane_objects(scene: &CadWorkingScene, pane: CadPaneId) -> &[crate::geometry::CadObject] {
@@ -274,7 +274,7 @@ fn default_width_world() -> f64 {
 }
 /// 📎 Map-value scalar for `referencesByModelDefinitionId` (schema parity).
 pub type CadReferenceList = Vec<CadReference>;
-/// 📐️ Local twin of `semio_framework_plugin::WorldProjectionConfig`'s flat 15-field classical
+/// 📐️ Local twin of `semio_plugin::WorldProjectionConfig`'s flat 15-field classical
 /// taxonomy (Parallel: Orthographic/Axonometric/Oblique, Perspective: 1/2/3-Point/Curvilinear) —
 /// mirrored here rather than imported because `cad/rs` has no dependency on the plugin layer;
 /// `cad/engine/rs`'s `cad_camera_projection_config`/`cad_camera_set_projection_config` convert
@@ -408,15 +408,15 @@ pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<Ca
 /// 🗿️ The `3d.cad` artifact kind this plugin contributes — lifted out of the app manifest builder's
 /// `.artifact_kind(…)` so the artifact node owns its own identity (schema, media capability, and the
 /// import/export format set the kernel exposes for it).
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "3d.cad".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D CAD", "3D-CAD"),
+        label: semio_ui_locale::LocalizedLabel::native("3D CAD", "3D-CAD"),
         source_format: "cad.scene".into(),
         component_kind: "cad".into(),
         dimension: "3d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::Brep,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Brep },
+        media_capability: semio_plugin::OsMediaCapability::Brep,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::ThreeD, form: semio_plugin::MediaForm::Brep },
         schema: "cad.scene".into(),
         export_formats: vec![],
         import_formats: vec![],

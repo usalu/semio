@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "id": "exact",
+      "maximum": 4,
+      "declared": 4,
+      "actual": "data",
+      "accepted": true
+    },
+    {
+      "id": "growth",
+      "maximum": 4,
+      "declared": 4,
+      "actual": "data-overflow",
+      "accepted": false
+    },
+    {
+      "id": "short",
+      "maximum": 4,
+      "declared": 4,
+      "actual": "dat",
+      "accepted": false
+    },
+    {
+      "id": "zero",
+      "maximum": 0,
+      "declared": 0,
+      "actual": "",
+      "accepted": false
+    },
+    {
+      "id": "fractional",
+      "maximum": 1.5,
+      "declared": 1,
+      "actual": "a",
+      "accepted": false
+    },
+    {
+      "id": "unsafe",
+      "maximum": 9007199254740991,
+      "declared": 1,
+      "actual": "a",
+      "accepted": false
+    },
+    {
+      "id": "tiny-large-ceiling",
+      "maximum": 9007199254740990,
+      "declared": 1,
+      "actual": "a",
+      "accepted": true
+    }
+  ]
+}

@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "outlines", kind: "set-outlines", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set {} outline items", self.outlines.len()), &format!("{} Lesezeichen setzen", self.outlines.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set {} outline items", self.outlines.len()), &format!("{} Lesezeichen setzen", self.outlines.len()))
     }
 
     fn target(&self) -> Vec<String> {

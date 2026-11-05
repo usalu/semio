@@ -1,12 +1,12 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `combine-boolean`.
 
 use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::{create_drawing_boolean_layer, find_drawing_layer, find_drawing_layer_location, layer_base, layer_base_mut};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "combine-boolean")]
@@ -15,7 +15,7 @@ pub struct CombineBoolean {
     pub ids: Vec<String>,
 }
 
-pub fn plan(document:&DrawingSnapshot,ids:&[String],operation:&str,admission:&semio_framework_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(Vec<DrawingMutation>,String),Fault> {
+pub fn plan(document:&DrawingSnapshot,ids:&[String],operation:&str,admission:&semio_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(Vec<DrawingMutation>,String),Fault> {
     if !semio_s_artifact_draw_drawing_model::DRAWING_BOOLEAN_OPERATIONS.contains(&operation) {return Err(Fault::from("Choose Union, Difference, Intersection or Exclusive Or / Vereinigung, Differenz, Schnittmenge oder Exklusives Oder wählen"));}
     let unique=ids.iter().collect::<std::collections::BTreeSet<_>>();
     if ids.len()<2 || unique.len()!=ids.len() {return Err(Fault::from("Select at least two distinct geometric layers / Mindestens zwei verschiedene geometrische Ebenen auswählen"));}

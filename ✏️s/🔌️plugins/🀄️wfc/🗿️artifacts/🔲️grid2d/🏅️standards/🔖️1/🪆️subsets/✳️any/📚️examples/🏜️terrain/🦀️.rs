@@ -7,8 +7,8 @@
 
 use crate::schema::snapshot::{Grid2dSnapshot, WfcAdjacencyRule2d, WfcColor, WfcDirection2d, WfcPinnedCell2d, WfcTile2d, WfcTileMedia2d, WFC_GRID2D_DOCUMENT_SCHEMA};
 use crate::standards::v1::subsets::any::io::binary::snapshot::{encode_palette_indices};
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "terrain";
 pub const ICON: &str = "map";

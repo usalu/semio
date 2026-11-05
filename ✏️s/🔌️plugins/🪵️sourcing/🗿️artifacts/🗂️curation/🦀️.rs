@@ -6,16 +6,16 @@
 // `-> impl Future + Send` fix is never taken, and the method is never made sync to silence it.
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[path = "🌉️apply/🦀️.rs"]
 pub mod central_apply;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 
-use {semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm};
+use {semio_plugin::MediaClass, semio_plugin::MediaForm};
 
 pub use crate::schema::mutations::SourcingMutation;
 

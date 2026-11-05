@@ -2,18 +2,18 @@
 
 use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::{ui_fixed_label, ui_value_map, ui_value_text, vcs_action, VCS_INTERACTION_HISTORY, VCS_PLAY_APP_ID};
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::HistoryView;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::HistoryView;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_BODY_ARTIFACT: &str = "vcs.play.artifact";
@@ -45,7 +45,7 @@ pub fn definition() -> PanelTabDefinition {
 ///
 /// 🪟️ Commit history is unbounded by construction, so both sections are windowed: the host's
 /// `TreeWindows` decide the materialised slice while `window.total` always reports the full history.
-pub fn render(history: &HistoryView, labels: &VcsPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(history: &HistoryView, labels: &VcsPlayLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let builder = PanelTreeBuilder::new("vcs-play-document")?;
     let checkpoints: Vec<_> = history.columns.iter().rev().collect();
     let mut alternative_ids: Vec<&str> = Vec::new();
@@ -71,7 +71,7 @@ pub fn render(history: &HistoryView, labels: &VcsPlayLabels, windows: &TreeWindo
                     Some(column.timestamp.clone()),
                     vcs_action("checkoutCheckpoint", Some(action_args))?,
                 )?;
-                if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+                if let semio_plugin::Component::TreeItem(props) = &mut node.component {
                     props.icon = Some(UiText::try_from_str("git-commit").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "vcs checkpoint icon admission failed"))?);
                 }
                 Ok(node)
@@ -82,7 +82,7 @@ pub fn render(history: &HistoryView, labels: &VcsPlayLabels, windows: &TreeWindo
             let count = history.columns.iter().filter(|column| column.alternative_ids.iter().any(|candidate| candidate.as_str() == *alternative_id)).count();
             let action_args = ui_value_map([("alternativeId", ui_value_text(alternative_id)?)])?;
             let mut node = tree_item_with_action(format!("vcs-play-document.alternative.{alternative_id}"), *alternative_id, Some(format!("{count} {}", labels.checkpoints.as_str())), vcs_action("switchAlternative", Some(action_args))?)?;
-            if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+            if let semio_plugin::Component::TreeItem(props) = &mut node.component {
                 props.icon = Some(UiText::try_from_str("git-branch").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "vcs alternative icon admission failed"))?);
             }
             Ok(node)

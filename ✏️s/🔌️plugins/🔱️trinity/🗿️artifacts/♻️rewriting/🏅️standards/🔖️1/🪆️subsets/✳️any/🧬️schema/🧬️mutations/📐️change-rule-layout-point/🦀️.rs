@@ -31,8 +31,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "rule-layout-point", kind: "change-rule-layout-point", record: "ChangedRuleLayoutPoint" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change rule layout point \"{}\"", self.key), &format!("Layoutpunkt der Regel \"{}\" ändern", self.key))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change rule layout point \"{}\"", self.key), &format!("Layoutpunkt der Regel \"{}\" ändern", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

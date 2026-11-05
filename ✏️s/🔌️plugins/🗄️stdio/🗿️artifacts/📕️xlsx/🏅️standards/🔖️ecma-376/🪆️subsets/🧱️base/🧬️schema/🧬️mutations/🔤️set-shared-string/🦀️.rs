@@ -16,8 +16,8 @@ pub struct SetSharedString {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetSharedString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shared-string", kind: "set-shared-string", record: "SetSharedString" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set shared string", "Gemeinsame Zeichenfolge setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set shared string", "Gemeinsame Zeichenfolge setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

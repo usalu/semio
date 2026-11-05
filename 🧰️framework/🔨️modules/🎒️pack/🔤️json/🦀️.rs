@@ -170,3 +170,6 @@ pub mod testkit {
     pub type JsonLexeme = super::JsonLexeme;
 }
 
+/// 🛬️ Native JSON schema recipients use the actual first-party decoding owner.
+pub use semio_framework_value_native_owned::native_decoding;
+pub use semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary;

@@ -16,8 +16,8 @@ pub struct SetAnalysisModel {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "analysis-model", kind: "set-analysis-model", record: "SetAnalysisModel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set analysis model", "Analysemodell setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set analysis model", "Analysemodell setzen")
     }
 
     fn target(&self) -> Vec<String> {

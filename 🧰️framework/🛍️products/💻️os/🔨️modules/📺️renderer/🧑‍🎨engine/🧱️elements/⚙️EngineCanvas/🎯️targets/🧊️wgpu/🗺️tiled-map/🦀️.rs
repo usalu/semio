@@ -2,15 +2,15 @@
 //!
 //! Tiled map tile fetch reservation, the map host accessors, camera and pointer interaction.
 
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::{
     engine_surface_wire_id, MapSyncCache, ENGINE_SURFACES, MAP_TILE_ASSET_FAULT,
 };
 use crate::element_contracts::ScenePointerTarget;
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use semio_framework_surface::tiled_map::{tiles as map_tiles, MapHost, MapInteractionIntent};
 use serde_json::Value;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
 
 //#region TiledMap
 
@@ -60,7 +60,7 @@ fn reserve_map_tile_fetch(surface: WorldAssetMetadataId, cache: &mut MapSyncCach
 /// render mode (`image`/`vector`/`combined`) exactly as React's `needsRasterTiles`/
 /// `needsVectorTiles` gates do, and clearing a lane's miss set when that lane's visible-range
 /// revision changes (React's `refreshRasterTiles`/`refreshVectorTiles` do the same).
-pub fn reserve_map_tile_fetches(surface_id: &str, host: &MapHost, cache: &mut MapSyncCache, map: &semio_framework_ui_declaration::ui::TiledMapScene) {
+pub fn reserve_map_tile_fetches(surface_id: &str, host: &MapHost, cache: &mut MapSyncCache, map: &semio_ui_declaration::ui::TiledMapScene) {
     let Ok(surface) = WorldAssetMetadataId::try_from_str(surface_id) else { return };
     let mode = host.render_mode_str();
     if matches!(mode, "image" | "combined") {
@@ -145,10 +145,10 @@ pub fn tiled_map_set_camera_silent(surface_id: &str, camera: [f64; 3]) -> bool {
 }
 
 /// 🏁️ Publishes the settled map camera once when the last pinch contact lifts.
-pub fn tiled_map_publish_camera_into(surface_id: &str, controller_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn tiled_map_publish_camera_into(surface_id: &str, controller_id: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(camera) = tiled_map_camera(surface_id) else { return Ok(false) };
     let Some(wire_surface_id) = engine_surface_wire_id(surface_id) else { return Ok(false) };
-    let mut reservation = input.reserve_actions(1, semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let mut reservation = input.reserve_actions(1, semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     write_map_camera_action(&mut reservation, wire_surface_id.as_str(), controller_id, camera)?;
     reservation.publish()?;
     Ok(true)
@@ -233,9 +233,9 @@ pub fn parse_map_hover(hit_json: &str) -> Value {
 /// `write_tiled_map_selection`/`write_tiled_map_hover`). The deleted `setFeatureSelection`/`setHover`
 /// pair this used to also emit on every wheel tick has no handler left in any map app — a map app's
 /// `"features"` interaction definition auto-injects the generic verbs instead.
-fn write_map_camera_action(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, camera: [f64; 3]) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
-    let camera_action = semio_framework_ui_declaration::ui::tiled_map_actions::SET_CAMERA;
-    let camera_bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, camera_action, "surfaceId", surface_id, "camera", "x", "y", "zoom"])?;
+fn write_map_camera_action(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, camera: [f64; 3]) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let camera_action = semio_ui_declaration::ui::tiled_map_actions::SET_CAMERA;
+    let camera_bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, camera_action, "surfaceId", surface_id, "camera", "x", "y", "zoom"])?;
     batch.action(controller_id, camera_action, camera_bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("surfaceId"), surface_id)?;
@@ -248,8 +248,8 @@ fn write_map_camera_action(batch: &mut semio_framework_ui_action::BoundedActionB
     })
 }
 
-pub fn with_map_interaction_into(surface_id: &str, controller_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, intent: MapInteractionIntent) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
-    let mut reservation = input.reserve_actions(1, semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
+pub fn with_map_interaction_into(surface_id: &str, controller_id: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, intent: MapInteractionIntent) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    let mut reservation = input.reserve_actions(1, semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     let planned = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let host = map.get(surface_id).and_then(|entry| entry.map_host.as_ref())?;
@@ -266,7 +266,7 @@ pub fn with_map_interaction_into(surface_id: &str, controller_id: &str, input: &
     Ok(true)
 }
 
-pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     let delta_y = if ctrl { delta as f64 * 2.5 } else { delta as f64 };
     with_map_interaction_into(surface_id, controller_id, input, MapInteractionIntent::Wheel { sx, sy, delta_y })

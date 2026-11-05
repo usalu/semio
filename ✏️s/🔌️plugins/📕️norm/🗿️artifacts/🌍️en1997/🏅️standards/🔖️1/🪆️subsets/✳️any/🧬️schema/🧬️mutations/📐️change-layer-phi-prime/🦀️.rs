@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerPhiPrime wher
         verb: "change", entity: "layer-phi-prime", kind: "change-layer-phi-prime", record: "ChangedLayerPhiPrime",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change effective friction angle φ′ of the soil layer", "Effektiven Reibungswinkel φ′ der Bodenschicht ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change effective friction angle φ′ of the soil layer", "Effektiven Reibungswinkel φ′ der Bodenschicht ändern")
     }
 }
 

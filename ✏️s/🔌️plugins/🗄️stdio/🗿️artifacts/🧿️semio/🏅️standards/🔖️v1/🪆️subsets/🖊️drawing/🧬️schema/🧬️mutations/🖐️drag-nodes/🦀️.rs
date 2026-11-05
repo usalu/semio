@@ -22,10 +22,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "nodes", kind: "drag-nodes", record: "DraggedNodes" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.ats.len() {
-            1 => semio_framework_ui_locale::LocalizedLabel::native("Drag 1 node", "1 Knoten ziehen"),
-            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {count} nodes"), &format!("{count} Knoten ziehen")),
+            1 => semio_ui_locale::LocalizedLabel::native("Drag 1 node", "1 Knoten ziehen"),
+            count => semio_ui_locale::LocalizedLabel::native(&format!("Drag {count} nodes"), &format!("{count} Knoten ziehen")),
         }
     }
     fn target(&self) -> Vec<String> {

@@ -1,0 +1,232 @@
+{
+  "cases": [
+    {
+      "name": "number",
+      "input": {
+        "type": "number",
+        "value": 7.25
+      },
+      "expected": {
+        "$schema": "number",
+        "value": 7.25
+      }
+    },
+    {
+      "name": "text-unicode",
+      "input": {
+        "type": "text",
+        "value": "Grüße 💠 中文"
+      },
+      "expected": {
+        "$schema": "text",
+        "value": "Grüße 💠 中文"
+      }
+    },
+    {
+      "name": "boolean",
+      "input": {
+        "type": "boolean",
+        "value": false
+      },
+      "expected": {
+        "$schema": "boolean",
+        "value": false
+      }
+    },
+    {
+      "name": "point",
+      "input": {
+        "type": "point",
+        "value": [
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "$schema": "point",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      }
+    },
+    {
+      "name": "vector",
+      "input": {
+        "type": "vector",
+        "value": [
+          -3,
+          0,
+          0.5
+        ]
+      },
+      "expected": {
+        "$schema": "vector",
+        "x": -3,
+        "y": 0,
+        "z": 0.5
+      }
+    },
+    {
+      "name": "plane",
+      "input": {
+        "type": "plane",
+        "value": {
+          "origin": [
+            1,
+            2,
+            3
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "expected": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      }
+    },
+    {
+      "name": "number-list",
+      "input": {
+        "type": "numberList",
+        "value": [
+          1,
+          2.5
+        ]
+      },
+      "expected": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2.5
+        },
+        "$schema": "list"
+      }
+    },
+    {
+      "name": "text-list",
+      "input": {
+        "type": "textList",
+        "value": [
+          "a",
+          "💠ä"
+        ]
+      },
+      "expected": {
+        "0": {
+          "$schema": "text",
+          "value": "a"
+        },
+        "1": {
+          "$schema": "text",
+          "value": "💠ä"
+        },
+        "$schema": "list"
+      }
+    },
+    {
+      "name": "boolean-list",
+      "input": {
+        "type": "booleanList",
+        "value": [
+          true,
+          false
+        ]
+      },
+      "expected": {
+        "0": {
+          "$schema": "boolean",
+          "value": true
+        },
+        "1": {
+          "$schema": "boolean",
+          "value": false
+        },
+        "$schema": "list"
+      }
+    },
+    {
+      "name": "point-list",
+      "input": {
+        "type": "pointList",
+        "value": [
+          [
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "expected": {
+        "0": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "$schema": "list"
+      }
+    },
+    {
+      "name": "vector-list",
+      "input": {
+        "type": "vectorList",
+        "value": [
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "expected": {
+        "0": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        },
+        "$schema": "list"
+      }
+    },
+    {
+      "name": "empty-number-list",
+      "input": {
+        "type": "numberList",
+        "value": []
+      },
+      "expected": {
+        "$schema": "list"
+      }
+    },
+    {
+      "name": "empty-text",
+      "input": {
+        "type": "text",
+        "value": ""
+      },
+      "expected": {
+        "$schema": "text",
+        "value": ""
+      }
+    }
+  ]
+}

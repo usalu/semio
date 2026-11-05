@@ -1,10 +1,10 @@
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
-use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;
+use semio_os_kernel::sqlite_snapshot::SnapshotEncoding;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::ValueError};
+use semio_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::ValueError};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_2::subsets::any::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{
+use semio_os_kernel::{
     sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue},
     os_store::serialization::ArtifactSqliteSnapshotHost,
 };
@@ -21,17 +21,17 @@ fn sqlite_snapshot_owns_precise_samples_and_semantic_metadata() {
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_png_public_file_round_trip_preserves_owned_sample_metadata() {
-    use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
+    use {semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     use store::sqlite_snapshot::SnapshotEncoding;
-    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
         .label("PNG canonical SQLite").version("0.0.1").package_id("semio:stdio")
         .artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.png".into(), standard: "1.2".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let snapshot = fixture();
-        let file = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=Default::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
+        let file = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=Default::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
         assert_eq!(&file[..16], b"SQLite format 3\0");
-        let restored = async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=Default::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PngSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;
+        let restored = async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=Default::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PngSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;
         assert_eq!(restored, snapshot);
     }
 }

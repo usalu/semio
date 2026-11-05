@@ -7,7 +7,7 @@
 
 use super::edit_fault;
 use super::SnapshotEditEvent;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::DslValue;
 
 pub const TRANSFORM_PATH: &str = "/transform";

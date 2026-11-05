@@ -83,7 +83,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     /// 🔀️ Contract §5.6: this member's prepared ops land as exactly ONE `Edit` — the
     /// one-edit-per-member invariant `CompositionCoordinator::undo_group`'s tail-based group
     /// undo depends on — stamped with `group_id = txn_id` and every `MutationMeta.origin`.
-    pub(super) async fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, Fault> {
+    pub(super) async fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, Fault> {
         let pending = match self.txn.pending_transaction.take() {
             Some(pending) if pending.txn_id == txn_id => pending,
             Some(other) => {

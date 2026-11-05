@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnBoltsEdgeDista
         record: "ChangedConnBoltsEdgeDistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Edge distance e₁ of the connection", "Anschluss: Randabstand e₁ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Edge distance e₁ of the connection", "Anschluss: Randabstand e₁ ändern")
     }
 }
 

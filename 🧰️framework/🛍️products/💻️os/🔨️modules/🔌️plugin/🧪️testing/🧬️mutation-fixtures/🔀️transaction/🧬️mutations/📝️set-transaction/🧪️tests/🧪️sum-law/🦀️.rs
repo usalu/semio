@@ -4,6 +4,6 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     for value in [0, 9] {
-        semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&TxnMutation::from(SetTransactionCount { value }), &TxnSnapshot { count: 3 }).await;
+        semio_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&TxnMutation::from(SetTransactionCount { value }), &TxnSnapshot { count: 3 }).await;
     }
 }

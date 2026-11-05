@@ -3,7 +3,7 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_step_any_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, STEP_ANY_DIALECT.into());
 }
 
@@ -14,10 +14,10 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<StepAnyEditor, crate::viewer::step_any::StepAnyViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<StepAnyEditor, crate::viewer::step_any::StepAnyViewer>().await;
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::StepAnyEditor, || semio_framework_plugin::App { definition: super::create_step_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ap214/🪆️subsets/🧱️base");
+semio_plugin::history_edit_acceptance_law!("stdio", super::StepAnyEditor, || semio_plugin::App { definition: super::create_step_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ap214/🪆️subsets/🧱️base");
 
 #[test]
 fn natural_file_codec_declares_the_exact_kind_extension_and_media_type() {

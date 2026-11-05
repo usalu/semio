@@ -1,6 +1,6 @@
 //! 🧩 Semantic chrome frame composition; never merges across positive gaps or overlay layers.
 
-use semio_framework_os_renderer_wgpu_dock::shared_borders::{resolve_border_segments, BorderPoint, BorderSegment, BorderState};
+use semio_renderer_wgpu_dock::shared_borders::{resolve_border_segments, BorderPoint, BorderSegment, BorderState};
 
 pub struct ChromeBorderFrame {
     pub owner: String,

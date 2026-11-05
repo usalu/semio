@@ -1,7 +1,7 @@
 //! 🧪️ Actual original Reserved bodies share neutral bytes, one-unit work and paid source closure.
 use super::*;
 use std::mem::size_of;
-use semio_framework_plugin_testing_laws::OriginalWorkFixture;
+use semio_plugin_testing_laws::OriginalWorkFixture;
 use crate::{BoundedJob,JobStep};
 use semio_framework_job::{OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::RetainedCloneStep;

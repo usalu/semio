@@ -4,8 +4,8 @@
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
 extern crate semio_s_plugin_energy_engine_calendar as calendar;

@@ -72,16 +72,16 @@ fn solid_slab_doc() -> Fem3dSnapshot {
 #[test]
 fn fem3d_dsl_round_trips_bundled_default_example() {
     let document = parse_dsl(FEM3D_EXAMPLE_TEXT).expect("parse default example");
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&document);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&document);
 }
 
 #[test]
 fn fem3d_dsl_round_trips_fixture_documents() {
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&Fem3dSnapshot::default());
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&cantilever_fixture());
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&truss_fixture());
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&solid_slab_doc());
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&Fem3dSnapshot::default());
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&cantilever_fixture());
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&truss_fixture());
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&solid_slab_doc());
     let mut with_combination = cantilever_fixture();
     with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35)]) });
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&with_combination);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&with_combination);
 }

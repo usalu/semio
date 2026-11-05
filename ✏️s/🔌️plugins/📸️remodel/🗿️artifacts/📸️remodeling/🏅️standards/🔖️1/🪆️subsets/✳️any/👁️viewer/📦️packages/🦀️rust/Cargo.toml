@@ -20,11 +20,11 @@ base64_codec = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-remodel-remodeling-examples = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }

@@ -263,7 +263,7 @@ fn abi_code_failure(code: AbiErrorCode) -> FlowFailure {
     abi_failure(code)
 }
 
-pub fn flow_vcs_close_failure(failure:semio_framework_os_flow_vcs::FlowVcsCloseFailure)->FlowFailure{let code=flow_vcs_fault_code(failure.fault);match failure.cause{Some(error)=>FlowFailure::from_value(code,error),None=>flow_close_failure(code).with_retained_progress(failure.retained_progress)}}
+pub fn flow_vcs_close_failure(failure:semio_os_flow_vcs::FlowVcsCloseFailure)->FlowFailure{let code=flow_vcs_fault_code(failure.fault);match failure.cause{Some(error)=>FlowFailure::from_value(code,error),None=>flow_close_failure(code).with_retained_progress(failure.retained_progress)}}
 
 fn flow_vcs_fault_code(fault:FlowVcsFault)->AbiErrorCode{match fault {
         FlowVcsFault::Closed => AbiErrorCode::Closed,

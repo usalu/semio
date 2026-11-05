@@ -9,9 +9,9 @@
 //! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING) — see `🔖️ContentBridge` and `🔖️ChildLane` below.
 
 extern crate semio_framework as semio_framework;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 pub use crate::standards::v1::subsets::any::schema::mutations::central_apply;
 
 #[cfg(test)]

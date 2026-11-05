@@ -2,44 +2,44 @@
 //!
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[cfg(any(test, not(target_arch = "wasm32")))]
-extern crate semio_framework_os_kernel as store;
-use semio_framework_os_renderer_wgpu_shell_async::debug_log;
-use semio_framework_os_renderer_wgpu_shell_chrome_state::{ChromeDialogRequest, ChromePrefsState, ChromeState, ThemeDocument, appearance_id, default_compute_worker_count, format_keybinding_shortcut};
-use semio_framework_os_renderer_wgpu_shell_directory::DirectoryState;
+extern crate semio_os_kernel as store;
+use semio_renderer_wgpu_shell_async::debug_log;
+use semio_renderer_wgpu_shell_chrome_state::{ChromeDialogRequest, ChromePrefsState, ChromeState, ThemeDocument, appearance_id, default_compute_worker_count, format_keybinding_shortcut};
+use semio_renderer_wgpu_shell_directory::DirectoryState;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_shell_directory::ShellDirectoryHomePublicationOutcome;
-use semio_framework_os_renderer_wgpu_shell_history::{HistoryState, SHELL_CHROME_IO_FIELD_BYTES};
-use semio_framework_os_renderer_wgpu_shell_plugins::PluginState;
-use semio_framework_os_renderer_wgpu_shell_prefs::{ActiveSession, DockTabNode, PrefsState, ResolvedCommand, ShellConflictRow, TimeTravelVerb, UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, capture_ui_prefs_snapshot, command_address_stable_key, custom_themes_from, display_panel_body, env_lock, read_ui_preferences, resolve_appearance_id, resolve_locale_id, resolve_ui_driver_chrome, settings_tree_select_item_with, stored_field_get, theme_from_document, time_travel_band_controls, with_chrome_prefs};
-use semio_framework_os_renderer_wgpu_shell_surfaces::{SettleState, TutorialState};
+use semio_renderer_wgpu_shell_directory::ShellDirectoryHomePublicationOutcome;
+use semio_renderer_wgpu_shell_history::{HistoryState, SHELL_CHROME_IO_FIELD_BYTES};
+use semio_renderer_wgpu_shell_plugins::PluginState;
+use semio_renderer_wgpu_shell_prefs::{ActiveSession, DockTabNode, PrefsState, ResolvedCommand, ShellConflictRow, TimeTravelVerb, UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, capture_ui_prefs_snapshot, command_address_stable_key, custom_themes_from, display_panel_body, env_lock, read_ui_preferences, resolve_appearance_id, resolve_locale_id, resolve_ui_driver_chrome, settings_tree_select_item_with, stored_field_get, theme_from_document, time_travel_band_controls, with_chrome_prefs};
+use semio_renderer_wgpu_shell_surfaces::{SettleState, TutorialState};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_shell_surfaces::ShellPoolFuture;
-use semio_framework_os_renderer_wgpu_shell_sync::SyncState;
+use semio_renderer_wgpu_shell_surfaces::ShellPoolFuture;
+use semio_renderer_wgpu_shell_sync::SyncState;
 use semio_framework::{AppDefinition, IconName, ViewSessionIdentity};
 use semio_framework::kernel::UiDirtyScope;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::Lane;
-use semio_framework_os_config::opening_config::UiChromeLayout as OsUiChromeLayout;
+use semio_os_config::opening_config::UiChromeLayout as OsUiChromeLayout;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::client::{CanonicalDirectoryEventPageV1, DirectoryEventPageAckV1};
+use semio_os_kernel::os_directory::client::{CanonicalDirectoryEventPageV1, DirectoryEventPageAckV1};
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_renderer_wgpu_host_base::host_io_call;
-use semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID;
-use semio_framework_os_renderer_wgpu_program_bridge::ProgramBridgeEntry;
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
-use semio_framework_ui_viewport::{Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant, Viewport3dAxonometricVariant, Viewport3dCurvilinearMapping, Viewport3dObliqueVariant, Viewport3dOrthographicView, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+use semio_renderer_wgpu_host_base::host_io_call;
+use semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID;
+use semio_renderer_wgpu_program_bridge::ProgramBridgeEntry;
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
+use semio_ui_viewport::{Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant, Viewport3dAxonometricVariant, Viewport3dCurvilinearMapping, Viewport3dObliqueVariant, Viewport3dOrthographicView, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 use semio_framework_value::DslValue;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::PointerModifiers;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::PointerModifiers;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::ui::{UiButtonNode, UiControlNode, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🧬️component/🦀️.rs"]
 mod staged_docs__component;

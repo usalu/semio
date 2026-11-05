@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeWeldBetaW where Op
         record: "ChangedWeldBetaW",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Correlation factor β_w of the weld group", "Schweißnahtgruppe: Korrelationsbeiwert β_w ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Correlation factor β_w of the weld group", "Schweißnahtgruppe: Korrelationsbeiwert β_w ändern")
     }
 }
 

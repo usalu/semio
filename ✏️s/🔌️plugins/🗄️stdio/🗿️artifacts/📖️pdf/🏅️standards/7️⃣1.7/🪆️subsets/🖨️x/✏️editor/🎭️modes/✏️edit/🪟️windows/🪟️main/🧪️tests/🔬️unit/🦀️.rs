@@ -1,14 +1,14 @@
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 #[allow(unused_imports)]
 use crate::editor::page;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 #[allow(unused_imports)]
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 use crate::editor::pdf17x::modes::edit::windows::main::*;
 use crate::standards::v1_7::subsets::base::io::export::demo_pdf17_snapshot;
 
@@ -22,8 +22,8 @@ fn definition_declares_the_page_canvas() {
     assert!(def.actions.iter().any(|action| action.id == "insert-image"));
 }
 
-fn first_surface(node: &semio_framework_ui_contract::BuiltNode) -> Option<&semio_framework_ui_contract::BuiltNode> {
-    matches!(node.component, semio_framework_ui_contract::Component::Surface(_)).then_some(node).or_else(|| node.children.iter().find_map(first_surface))
+fn first_surface(node: &semio_ui_contract::BuiltNode) -> Option<&semio_ui_contract::BuiltNode> {
+    matches!(node.component, semio_ui_contract::Component::Surface(_)).then_some(node).or_else(|| node.children.iter().find_map(first_surface))
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn render_paints_the_page_text_on_the_canvas() {
     let document = demo_pdf17_snapshot();
     let node = render(&document).expect("page canvas");
     let surface = first_surface(&node).expect("canvas surface");
-    let semio_framework_ui_contract::Component::Surface(props) = &surface.component else { unreachable!() };
-    let scene: semio_framework_plugin::Canvas2dScene = semio_framework_ui_scene::decode(props).expect("canvas scene");
+    let semio_ui_contract::Component::Surface(props) = &surface.component else { unreachable!() };
+    let scene: semio_plugin::Canvas2dScene = semio_ui_scene::decode(props).expect("canvas scene");
     assert!(scene.layers_json.contains("Semio"), "{}", scene.layers_json);
 }

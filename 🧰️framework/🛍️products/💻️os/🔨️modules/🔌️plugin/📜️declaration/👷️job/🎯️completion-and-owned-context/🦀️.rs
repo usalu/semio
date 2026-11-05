@@ -4,7 +4,7 @@ use super::*;
 
 impl<A: ArtifactApp> ArtifactToolCompletion<A> {
     /// 🪪️ Runs app-owned physical IO with the mounted operation's original lease and receipt.
-    pub fn with_authoring_identity<T>(&self, operation: impl FnOnce(&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<T, Fault>) -> Result<T, Fault> {
+    pub fn with_authoring_identity<T>(&self, operation: impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<T, Fault>) -> Result<T, Fault> {
         let mut owner = self.inner.try_lock_authoring().map_err(|_| plugin_sdk_fault("original app-owned effect authority is busy or poisoned"))?;
         owner.as_mut().ok_or_else(|| plugin_sdk_fault("app-owned creation requires its original mounted effect authority"))?.run(operation)
     }
@@ -299,3 +299,4 @@ impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
         &self.gesture
     }
 }
+

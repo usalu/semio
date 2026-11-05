@@ -16,7 +16,7 @@ fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
     let pack = context::demonstrator_contributions_pack();
     let wire = semio_framework_pack_json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
     println!("[STATS] process3d demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
-    assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
+    assert!(wire.len() <= semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
     assert!(pack.len() > PROCESS3D_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope — that is the whole point of its own lane");
 
     let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
@@ -106,12 +106,12 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
     };
     let mut arguments = Some(DslValue::object(invocation.arguments.iter().map(|(name, value)| (name.clone(), value.clone()))));
     let mut fault = None;
-    for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
-        let handled = ::semio_framework_async::poll::resolve_ready(PluginApp::handle_command(&mut app.0, &invocation.address, &mut arguments, &mut fault, None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("the host's setContributions command passes the host-configuration output gate");
+    for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        let handled = ::semio_framework_async::poll::resolve_ready(PluginApp::handle_command(&mut app.0, &invocation.address, &mut arguments, &mut fault, None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("the host's setContributions command passes the host-configuration output gate");
         if handled.is_some() {
             return;
         }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("setContributions maintenance step");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("setContributions maintenance step");
     }
     panic!("the host's setContributions command stayed pending under its original caller");
 }
@@ -122,12 +122,12 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
 fn settle_member_less_archive(app: &mut context::Process3dApp, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
     PluginApp::begin_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     for _ in 0..200_000 {
-        let polled = ::semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(&mut app.0, operation, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("archive status");
+        let polled = ::semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(&mut app.0, operation, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(&mut app.0, operation).expect("archive acknowledgement");
             return polled;
         }
-        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
     }
     panic!("archive load never reached a terminal state");
 }
@@ -135,7 +135,7 @@ fn settle_member_less_archive(app: &mut context::Process3dApp, operation: u64, p
 /// 🔁️ Dispatches `setActiveExample` and drives its typed operation to the published
 /// `Effect::LoadDocument`, the way the host's publication ladder does.
 fn published_example_load(app: &mut context::Process3dApp, example: &str) -> (Vec<u8>, Vec<u8>) {
-    let instance = semio_framework_plugin::artifact_app_laws::meta("local").instance_id;
+    let instance = semio_plugin::artifact_app_laws::meta("local").instance_id;
     let result = action(app, "setActiveExample", Some(&DslValue::from(&serde_json::json!({ "exampleId": example }))));
     let mut loaded = result.requested_effects.into_iter().find_map(|effect| match effect {
         Effect::LoadDocument { pack, spr } => Some((pack, spr)),
@@ -145,8 +145,8 @@ fn published_example_load(app: &mut context::Process3dApp, example: &str) -> (Ve
         if loaded.is_some() && !app.has_pending_typed_operations() {
             break;
         }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("example maintenance step");
-        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("example publication");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("example maintenance step");
+        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("example publication");
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).expect("example result ack"));
         }

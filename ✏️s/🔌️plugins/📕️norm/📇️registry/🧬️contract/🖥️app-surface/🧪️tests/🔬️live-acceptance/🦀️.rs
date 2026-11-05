@@ -8,7 +8,7 @@ macro_rules! norm_live_acceptance {
         mod live_acceptance {
             use super::*;
             use semio_framework_value::ToValue;
-            type Doc = <$app as semio_framework_plugin::ArtifactEditor>::Snapshot;
+            type Doc = <$app as semio_plugin::ArtifactEditor>::Snapshot;
             type Family = <$app as $crate::NormRetainedEditor>::Family;
 
             fn probe() -> (Doc, semio_s_plugin_norm_structural_scene::EntityRef, semio_s_plugin_norm_structural_scene::Handle, f64, f64) {
@@ -205,9 +205,9 @@ macro_rules! norm_live_acceptance {
                 use semio_framework_value::{DslValue, FromValue};
                 let seed = Doc::default();
                 let placements = semio_s_plugin_norm_structural_scene::projection_kit::PLACEMENTS_FIELD;
-                let request = |id: &str| semio_framework_plugin::ContextMenuRequest {
-                    menu: semio_framework_plugin::UiMenuRef { id: "window".into(), args: None },
-                    surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "shell".into(), kind: "window".into(), hits: vec![semio_framework_plugin::ContextMenuHit { domain: "tree".into(), id: format!("norm-outliner.{id}.select"), label: None }], selection: Vec::new(), text: None }),
+                let request = |id: &str| semio_plugin::ContextMenuRequest {
+                    menu: semio_plugin::UiMenuRef { id: "window".into(), args: None },
+                    surface: Some(semio_plugin::ContextMenuSurfaceTarget { surface_id: "shell".into(), kind: "window".into(), hits: vec![semio_plugin::ContextMenuHit { domain: "tree".into(), id: format!("norm-outliner.{id}.select"), label: None }], selection: Vec::new(), text: None }),
                     window_instance_id: Some("norm-test-outliner".into()),
                     point: None,
                 };
@@ -224,7 +224,7 @@ macro_rules! norm_live_acceptance {
                     let english = $crate::live_context_menu::<$app>(&request(&path), &doc, false);
                     let german = $crate::live_context_menu::<$app>(&request(&path), &doc, true);
                     assert_eq!(english.iter().map(|item| &item.id).collect::<Vec<_>>(), german.iter().map(|item| &item.id).collect::<Vec<_>>(), "kind '{}': both languages offer the same rows", spec.id);
-                    let find = |items: &[semio_framework_plugin::ContextMenuItemSpec], name: &str| items.iter().find(|item| item.id == format!("norm.context.{name}")).cloned().unwrap_or_else(|| panic!("kind '{}': row {name}", spec.id));
+                    let find = |items: &[semio_plugin::ContextMenuItemSpec], name: &str| items.iter().find(|item| item.id == format!("norm.context.{name}")).cloned().unwrap_or_else(|| panic!("kind '{}': row {name}", spec.id));
                     let duplicate = find(&english, "duplicate");
                     let command = $crate::LiveCommand::parse(duplicate.action.as_deref().expect("duplicate runs"), duplicate.args.as_ref()).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
                     let emitted = $crate::live_entity_edit::<$app>(&doc, &command).unwrap_or_else(|fault| panic!("kind '{}': {fault:?}", spec.id));
@@ -294,7 +294,7 @@ macro_rules! norm_live_acceptance {
             #[test]
             fn every_registered_entity_kind_deletes_a_multi_selection_as_one_atomic_batch_that_undoes_and_redoes() {
                 use semio_framework_value::{DslValue, FromValue};
-                type Mut = <$app as semio_framework_plugin::ArtifactEditor>::Mutation;
+                type Mut = <$app as semio_plugin::ArtifactEditor>::Mutation;
                 fn step(document: &Doc, mutation: &Mut) -> Doc {
                     let raised = <Mut as protocol::ColdMutation<Doc>>::diff(mutation, document);
                     protocol::apply_diff_cold(raised.diff(), document).unwrap_or_else(|error| panic!("a mutation of the batch does not apply: {error:?}"))
@@ -413,7 +413,7 @@ macro_rules! norm_live_acceptance {
                 use $crate::accessibility::A11yPrefs;
                 use $crate::viewport3d::lane_overlays::{grips, GripView, LaneOverlays};
                 use semio_framework::PluginShellHooks as _;
-                use semio_framework_plugin::World3dAnnotation;
+                use semio_plugin::World3dAnnotation;
                 let doc = Doc::default();
                 let handles = <$app as $crate::NormLiveEditor>::live_handles(&doc, &$entities(&doc));
                 let refs: Vec<GripRef> = handles.iter().map(|handle| GripRef { id: handle.id.clone(), entity: handle.entity.id.clone() }).collect();
@@ -548,9 +548,9 @@ macro_rules! norm_live_acceptance {
                 let scene = <$app as $crate::NormLiveEditor>::live_scene(&doc, ViewOptions::none());
                 let index = report.checks.iter().position(|check| !check.subject.entity_id.is_empty() && scene.entities.iter().any(|drawn| base_id(&drawn.entity.id) == base_id(&check.subject.entity_id))).expect("the default document has a check on a drawn entity");
                 let mut args = Some(semio_framework_value::DslValue::object(vec![("index".to_string(), semio_framework_value::DslValue::float(index as f64))]));
-                let command = <$app as semio_framework_plugin::ArtifactEditor>::command_from_action("setSelectedCheckIndex", &mut args, &mut None).expect("the action of the row decodes");
+                let command = <$app as semio_plugin::ArtifactEditor>::command_from_action("setSelectedCheckIndex", &mut args, &mut None).expect("the action of the row decodes");
                 let effects = <$app as $crate::NormRetainedEditor>::check_focus_effects(&command, &doc);
-                let [semio_framework_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) }] = effects.as_slice() else { panic!("one interactionSelect replay, got {effects:?}") };
+                let [semio_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) }] = effects.as_slice() else { panic!("one interactionSelect replay, got {effects:?}") };
                 assert_eq!(action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
                 let text = |key: &str| args.get(key).and_then(semio_framework_value::DslValue::as_str).map(str::to_owned).unwrap_or_default();
                 assert_eq!((text("domainId"), text("merge")), ($crate::interaction_domain_id(VARIANT), "replace".to_owned()));
@@ -575,8 +575,8 @@ macro_rules! norm_live_acceptance {
                 use $crate::device_profiles::{device_profile, PRIORITY};
                 use $crate::direct_manipulation::{nudge, writes_for, Modifiers};
                 use $crate::viewport3d::config::DeviceClass;
-                use semio_framework_plugin::{WindowLayoutChild, WindowLayoutRoot};
-                use semio_framework_ui_locale::Locale;
+                use semio_plugin::{WindowLayoutChild, WindowLayoutRoot};
+                use semio_ui_locale::Locale;
                 use semio_framework_value::{DslValue, FromValue};
                 use semio_s_plugin_norm_structural_scene::EntityRef;
                 fn kinds(child: &WindowLayoutChild, out: &mut Vec<String>) {
@@ -609,12 +609,12 @@ macro_rules! norm_live_acceptance {
                 let select_all = $crate::accessibility::focus_order::shortcut_action_id(&$crate::accessibility::focus_order::ShortcutAction::SelectAll);
                 for entry in menu.iter().filter(|entry| entry.action_id != select_all) {
                     let (tool, args) = $crate::host_entity_call(&entry.action_id, &context).unwrap_or_else(|| panic!("{} is an entity route", entry.action_id)).unwrap_or_else(|message| panic!("{}: {message}", entry.action_id));
-                    <$app as semio_framework_plugin::ArtifactEditor>::command_from_action(tool, &mut Some(args), &mut None).unwrap_or_else(|fault| panic!("the editor refuses {tool} from the Edit menu: {fault:?}"));
+                    <$app as semio_plugin::ArtifactEditor>::command_from_action(tool, &mut Some(args), &mut None).unwrap_or_else(|fault| panic!("the editor refuses {tool} from the Edit menu: {fault:?}"));
                     assert!(!entry.label.en.is_empty() && !entry.label.de.is_empty() && entry.label.en != entry.label.de, "{}: labelled in both languages", entry.action_id);
                 }
                 for locale in [Locale::En, Locale::De] {
                     let node = $crate::render_touch_menu(&menu, "norm.law", locale).expect("the Edit menu renders");
-                    let projected = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("the Edit menu projects");
+                    let projected = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("the Edit menu projects");
                     assert!(projected.contains("selectAll") && projected.contains("norm.shortcut.delete") && projected.contains("norm.shortcut.copy"), "{locale:?}: select all raises the framework verb and copy and delete are action items of the menu: {projected}");
                 }
                 let mut cases: Vec<(Doc, EntityRef, String)> = entities.into_iter().map(|entity| (doc.clone(), entity, "default document".to_owned())).collect();
@@ -638,7 +638,7 @@ macro_rules! norm_live_acceptance {
                     let view = $crate::viewport3d::toolbar::ViewportView { lanes: $crate::viewport3d::lane_overlays::LaneOverlays { handles: handles.clone(), ..Default::default() }, ..Default::default() };
                     for locale in [Locale::En, Locale::De] {
                         let controls = $crate::viewport3d::toolbar::render_touch_controls(&view, Some(DeviceClass::Mobile), "norm.law", locale, "norm.law").expect("the touch controls render").unwrap_or_else(|| panic!("{what}: a phone offers nudge buttons for the selected grips"));
-                        let projected = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(controls)).expect("the touch controls project");
+                        let projected = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(controls)).expect("the touch controls project");
                         for handle in &handles {
                             assert!(projected.contains(&format!("norm-viewport.nudge.{}.minus", handle.id)) && projected.contains(&format!("norm-viewport.nudge.{}.plus", handle.id)), "{what}: grip '{}' has a minus and a plus button in {locale:?}", handle.id);
                         }

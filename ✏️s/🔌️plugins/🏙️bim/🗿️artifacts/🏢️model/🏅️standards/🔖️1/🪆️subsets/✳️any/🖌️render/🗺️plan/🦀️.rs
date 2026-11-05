@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{Plan
 use semio_framework_2d::PathSegment;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
-use semio_framework_plugin::{Canvas2dFraming, Canvas2dScene};
+use semio_plugin::{Canvas2dFraming, Canvas2dScene};
 use semio_framework_value::{DslValue, ToValue};
 
 //#region 🔖️Constants

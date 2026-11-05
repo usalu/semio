@@ -64,8 +64,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "buffer-view", kind: "delete-buffer-view", record: "DeletedBufferView" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete Buffer View", "Pufferansicht löschen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Delete Buffer View", "Pufferansicht löschen")
     }
 
     fn target(&self) -> Vec<String> {

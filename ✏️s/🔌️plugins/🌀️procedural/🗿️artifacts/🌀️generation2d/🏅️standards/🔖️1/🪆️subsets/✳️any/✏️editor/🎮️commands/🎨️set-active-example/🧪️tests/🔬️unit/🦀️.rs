@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::HistoryView;
+use semio_plugin::HistoryView;
 
 #[test]
 fn set_active_example_loads_the_demo_document() {
@@ -10,5 +10,5 @@ fn set_active_example_loads_the_demo_document() {
     let cfg = ConfigView { snapshot: &config, window: None };
     let emitted = emit(&SetActiveExample { example_id: semio_s_artifact_procedural_2d_examples::demo::ID.into() }, &doc, &cfg).expect("demo loads");
     assert!(emitted.artifact_mutations.is_empty(), "an example switch authors no mutation rows");
-    assert!(matches!(emitted.effects.as_slice(), [semio_framework_plugin::Effect::LoadDocument { .. }]), "the example rides exactly one load-document effect");
+    assert!(matches!(emitted.effects.as_slice(), [semio_plugin::Effect::LoadDocument { .. }]), "the example rides exactly one load-document effect");
 }

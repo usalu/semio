@@ -1,8 +1,8 @@
 use super::*;
 use crate::accessibility::A11yPrefs;
-use semio_framework_plugin::World3dMarkerShape;
+use semio_plugin::World3dMarkerShape;
 use crate::{DragPreview, FieldWrite, NormTransient, PeerDrag};
-use semio_framework_plugin::World3dAnnotation;
+use semio_plugin::World3dAnnotation;
 use semio_s_plugin_norm_structural_scene::{Affine, EntityRef, FieldBinding, GripStyle, Interval, LocalizedCopy, SnapRule};
 
 fn handle() -> Handle {

@@ -1,6 +1,6 @@
 //! 🧪️ Native loaded-FEM laws target actual owned Pack routes and shared nodal vectors.
 use super::*;
-use semio_framework_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner};
+use semio_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner};
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, RetainedCloneGrant, RetireOwned, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;

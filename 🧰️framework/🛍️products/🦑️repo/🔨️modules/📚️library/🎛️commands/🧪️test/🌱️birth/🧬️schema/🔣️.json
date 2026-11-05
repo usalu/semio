@@ -21,7 +21,52 @@
         "helpFlags": [
           "-h",
           "--help"
-        ]
+        ],
+        "nativeRequests": [
+          {
+            "prefix": [
+              "test",
+              "storybook"
+            ],
+            "exact": false
+          },
+          {
+            "prefix": [
+              "build",
+              "storybook"
+            ],
+            "exact": true
+          },
+          {
+            "prefix": [
+              "dev",
+              "storybook-static"
+            ],
+            "exact": true
+          },
+          {
+            "prefix": [
+              "dev",
+              "storybook"
+            ],
+            "exact": false
+          }
+        ],
+        "activationRequest": {
+          "prefix": [
+            "dev",
+            "time-travel"
+          ],
+          "profiles": [
+            "prototype",
+            "release"
+          ],
+          "variantSource": "caller-playground-catalog",
+          "renderers": [
+            "react",
+            "wgpu"
+          ]
+        }
       }
     },
     "Case": {
@@ -52,6 +97,18 @@
             "workspace",
             "received"
           ]
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "buildArguments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

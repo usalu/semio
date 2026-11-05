@@ -4,11 +4,11 @@ use crate::editor::procedure::modes::edit::windows::script;
 use crate::editor::procedure::panels::document as document_panel;
 use crate::ProcedureSnapshot;
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Editor;
+use semio_plugin::HierarchyProvider;
 use semio_framework_test_fixtures::fixture_text;
 use store::snapshot::ArtifactPack;
 use crate::editor::procedure::commands::run;
@@ -18,9 +18,9 @@ use crate::{editor::procedure::commands::add_step, editor::procedure::commands::
 use crate::editor::procedure::{imperative_steps_topology, IMPERATIVE_RETAINED_TOOL_IDS, IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS};
 pub(crate) mod context {
     use crate::editor::procedure::*;
-    use semio_framework_plugin::app::App;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_plugin::app::App;
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry};
+    use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type ImperativeApp = VcsArtifactApp<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
@@ -43,8 +43,8 @@ pub(crate) mod context {
         App { definition: create_imperative_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::composed_reload_law!("imperative", ImperativePlayApp, imperative_app_manifest_for_tests, "../..");
-    semio_framework_plugin::composed_child_history_law!("imperative", ImperativePlayApp, imperative_app_manifest_for_tests, [("addStep", r#"{"kind":"log.print"}"#)]);
+    semio_plugin::composed_reload_law!("imperative", ImperativePlayApp, imperative_app_manifest_for_tests, "../..");
+    semio_plugin::composed_child_history_law!("imperative", ImperativePlayApp, imperative_app_manifest_for_tests, [("addStep", r#"{"kind":"log.print"}"#)]);
 
     /// 🧸️ The live program and seed composed from the app's `flow` and `text` member stores (design §20.15: the parent holds
     /// only the two child handles).
@@ -64,8 +64,8 @@ pub(crate) mod context {
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
     pub async fn imperative_app_with_registry() -> OwnedImperativeApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(imperative_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(imperative_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         OwnedImperativeApp(app, scope)
     }
@@ -78,12 +78,12 @@ pub(crate) mod context {
     /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the paid app close.
-    pub struct OwnedImperativeApp(pub ImperativeApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct OwnedImperativeApp(pub ImperativeApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl OwnedImperativeApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -110,29 +110,29 @@ pub(crate) mod context {
 
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does.
     pub async fn settle(app: &mut OwnedImperativeApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
     }
 
     /// 🧹️ Closes every store the wrapper opened — a live `ArtifactStore` asserts in `Drop` otherwise.
     pub fn close(app: &mut OwnedImperativeApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
     
     pub async fn dispatch(app: &mut OwnedImperativeApp, command: ImperativeCommand) -> InvocationResult {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
     
     pub async fn render(app: &mut OwnedImperativeApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
     }
 }
 
 use crate::editor::procedure::*;
 use crate::editor::procedure::unit_tests::context::{dispatch, imperative_app, imperative_app_with_registry, live_scene, render};
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::{EditorApp, PluginApp};
+use semio_plugin::artifact_app_laws::meta;
+use semio_plugin::{EditorApp, PluginApp};
 use std::collections::BTreeMap;
 use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
@@ -166,7 +166,7 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
 fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs() {
     assert!(IMPERATIVE_RETAINED_TOOL_IDS.contains(&"setActiveExample"), "the example verb must be a retained tool or the dispatch gate refuses it");
     let contract = IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == "setActiveExample").expect("setActiveExample has a publication contract");
-    assert_eq!(contract.lanes, &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly], "a whole-document load publishes through neither the artifact nor the config store");
+    assert_eq!(contract.lanes, &[semio_plugin::ArtifactToolPublicationLane::HostOnly], "a whole-document load publishes through neither the artifact nor the config store");
     let definition = create_imperative_app();
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
@@ -325,7 +325,7 @@ async fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
 async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
     let document = ProcedureSnapshot::default();
     let config = ImperativeConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = ImperativePlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
@@ -337,10 +337,10 @@ async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
 #[semio_framework_async_macros::async_test]
 async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations() {
     let mut app = imperative_app_with_registry().await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add step");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add step");
     context::settle(&mut app).await;
     assert_eq!(live_scene(&app).await.path.steps.last().expect("the added step").kind, "log.print");
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ImperativeCommand::Run(run::Run {}), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("run");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ImperativeCommand::Run(run::Run {}), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("run");
     assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
     context::close(&mut app);
 }
@@ -415,18 +415,18 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
     context::settle(&mut instance_a).await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
     context::settle(&mut instance_b).await;
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "both instances must converge on the same program");
     assert_eq!(probe(&instance_a).await, (genesis.0 + 1, true), "each instance holds both disjoint edits");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
+    semio_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
     context::settle(&mut instance_a).await;
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
@@ -449,10 +449,10 @@ async fn ingest_operations_is_idempotent_for_imperative() {
     assert!(!envelopes.is_empty(), "the add reached the backbone");
     let operations = protocol::encode_envelopes(&envelopes);
     let mut receiver = imperative_app().await;
-    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
+    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
     let once = live_scene(&receiver).await;
     assert_eq!(once.path.steps.len(), genesis + 1, "the replayed add applies");
-    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
+    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
     assert_eq!(live_scene(&receiver).await, once, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
 }

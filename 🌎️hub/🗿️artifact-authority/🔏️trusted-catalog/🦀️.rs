@@ -8,7 +8,7 @@ use directory::os_store::{self, serialization::ArtifactCodec};
 use directory::io::{ArtifactAssemblyRegistryPlan,ArtifactCodecBinding,ArtifactCatalogBinding,ArtifactCatalogCapability,ArtifactCatalogTarget};
 use semio_framework::{DslValue, PackageDescriptor, Version};
 use semio_framework_hash::{Hasher, Sha256};
-use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef};
+use semio_plugin_host::{PackageHash, PackageId, PackageRef};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::Arc;

@@ -10,6 +10,12 @@ class TestScript extends BundleScript {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any");
     runCmd(process.execPath, [
       "test",
+      join(this.repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎥️shooting-route/🔬️unit/🟦️.ts"),
+      join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️export/🟦️.ts"),
+      join(this.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️icon-transform/🟦️.ts"),
+      join(subset, "🧬️schema/🧪️tests/🛂️parsing/🟦️.ts"),
+      join(subset, "🧬️schema/🧪️tests/☀️sun/🟦️.ts"),
+      join(subset, "✏️editor/🧪️tests/📷️shot-camera/🟦️.ts"),
       join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"),
       join(subset, "📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts"),
       join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts"),

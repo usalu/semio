@@ -16,8 +16,8 @@ pub struct SetHeaderVar {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetHeaderVar {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "header-var", kind: "set-header-var", record: "SetHeaderVar" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set header var", "Header-Variable setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set header var", "Header-Variable setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

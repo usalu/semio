@@ -48,5 +48,17 @@
     "deadline",
     "fuel",
     "stock"
+  ],
+  "closeWorkCases": [
+    {
+      "cancelled": false,
+      "financialItems": 512,
+      "primitiveItems": 1
+    },
+    {
+      "cancelled": true,
+      "financialItems": 512,
+      "primitiveItems": 1
+    }
   ]
 }

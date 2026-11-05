@@ -1,24 +1,24 @@
 //! 🧴️ Staged slice of the `dispatch` band of the mounted artifact instance: its `instance-children` members (WP6 step S0 of the instance family).
 //!
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework_artifact_reference::ArtifactRef;
 use crate::children_components::ChildComposition;
-use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
-use semio_framework_plugin_instance_history::history_components::CommandHistory;
-use semio_framework_plugin_decl_views::history_view::CommandLogEntry;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
+use semio_plugin_instance_history::history_components::CommandHistory;
+use semio_plugin_decl_views::history_view::CommandLogEntry;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use std::collections::HashSet;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 
 impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🧩️ Every live child's TAIL applied edit id, plus whether any child has an edit on

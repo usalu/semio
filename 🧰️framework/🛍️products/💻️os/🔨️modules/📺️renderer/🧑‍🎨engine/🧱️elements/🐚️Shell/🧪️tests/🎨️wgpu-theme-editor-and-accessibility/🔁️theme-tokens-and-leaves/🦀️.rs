@@ -36,7 +36,7 @@ fn editing_the_document_re_tokenises_the_painted_theme() {
 fn every_open_theme_section_publishes_within_the_retained_document_ceiling() {
     while !ui_contract::close_ui_value_page_one() {}
     let baseline = ui_contract::ui_value_headroom();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     for (suffix, _) in SHELL_THEME_EDITOR_SECTIONS {
         shell.input.set_canonical_tree_open(&format!("framework.settings.theme.{suffix}"), true);
     }
@@ -62,7 +62,7 @@ fn every_open_theme_section_publishes_within_the_retained_document_ceiling() {
 /// ⚖️ React disables Reset only for the clean Semio baseline.
 #[test]
 fn reset_disabled_state_matches_reacts_baseline_predicate() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.chrome.chrome_build.preferences.theme_id = "semio".into();
     let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.input.build_settings_theme_ui(&shell.chrome, &shell.prefs)).expect("clean theme document");
     let reset = records.iter().find(|record| record.key.as_str().ends_with("/framework.settings.theme.reset")).expect("reset control");
@@ -77,7 +77,7 @@ fn reset_disabled_state_matches_reacts_baseline_predicate() {
 /// React's own three option values.
 #[test]
 fn the_general_leaf_offers_reacts_merge_policy_selector() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut selects = Vec::new();
     fn walk(node: &UiNode, out: &mut Vec<(String, Vec<String>)>) {
         fn walk_item(item: &UiTreeItemNode, out: &mut Vec<(String, Vec<String>)>) {
@@ -107,7 +107,7 @@ fn the_general_leaf_offers_reacts_merge_policy_selector() {
 /// document re-parses — the `.theme.dsl` text React's `serializeUiTheme`/`parseUiTheme` round-trip.
 #[test]
 fn the_theme_leaf_offers_reacts_export_import_and_save_controls() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let ids = theme_editor_control_ids(&shell);
     for id in ["framework.settings.theme.select", "framework.settings.theme.saveLabel", "framework.settings.theme.save", "framework.settings.theme.reset", "framework.settings.theme.export", "framework.settings.theme.import"] {
         assert!(ids.contains(&id.to_string()), "🎨️ {id} is one of React's theme-leaf controls");
@@ -129,7 +129,7 @@ fn an_editor_commit_keeps_the_rows_authored_coordinates() {
     assert_eq!(json["key"], "primary", "🔀️ the node's authored coordinate survives");
     assert_eq!(json["value"], "#00ff00", "🔀️ …beside the committed value");
 
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.prefs.apply_theme_editor_commit("setThemeColor", &serde_json::json!({ "key": "primary", "value": "#00ff00" }), &shell.chrome);
     assert_eq!(shell.prefs.theme_document(&shell.chrome).colors["primary"], "#00ff00", "🎨️ React's `setThemeColor`");
     shell.prefs.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({ "key": "compact", "value": "5px" }), &shell.chrome);

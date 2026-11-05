@@ -1,3 +1,4 @@
+import {storybookEnginePackagesV1} from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🧰️preparation/🕸️engines/🟦️.ts";
 import { canonicalWasmBuildVitePlugin, viteCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { buildModePolicy, readBuildMode } from "../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { semioViteBuild } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
@@ -23,6 +24,8 @@ import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildExac
 import { repositoryCachePartitionRootDataV1 } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { createAssetBuildPluginsV1 } from "../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
+import { frameworkOsEngineDeliveriesV1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import { managedWasmPackagesVitePluginV1 } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
 import { flowBrowserDeliveryV1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
 import { builtPluginModulesRootIn } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 import { RUNTIME_ASSET_CHANNELS } from "../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
@@ -143,6 +146,9 @@ const config: StorybookConfig = {
     };
 
     config.plugins = config.plugins || [];
+    const requiredEnginePackages=storybookEnginePackagesV1(activeScopes);
+    const engineDeliveries = frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRootPath, "products"), { version: 1, mode: buildMode, facet: "distribution" }).filter(row=>requiredEnginePackages.includes(row.packageName));
+    config.plugins.unshift(...hostBuildPlugins([managedWasmPackagesVitePluginV1(engineDeliveries.map(({ packageName, root, entry, files, entrypoint }) => ({ packageName, root, entry, files, entrypoint })))]));
     const hasTailwindPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite");
     if (!hasTailwindPlugin) {
       config.plugins.push(...hostBuildPlugins(uiTailwindBuildPlugins({ sourceBase: __dirname })));

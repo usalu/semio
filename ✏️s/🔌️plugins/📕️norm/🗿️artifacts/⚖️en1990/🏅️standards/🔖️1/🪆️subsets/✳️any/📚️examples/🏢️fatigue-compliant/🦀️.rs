@@ -1,7 +1,7 @@
 //! 📚️ Example `fatigue-compliant` — fatigue (FAT) verification active (R_d,FAT > 0).
 
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 use semio_s_artifact_norm_en1990_model::{ReliabilityClass, Member, MemberEffect, PermanentAction, VariableAction, FatigueSpectrum};
 
 pub const ID: &str = "fatigue-compliant";

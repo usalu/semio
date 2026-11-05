@@ -42,7 +42,7 @@ impl ShellDockState {
     /// rather than collapsing it to a hairline.
     pub fn anchor_content_height(&self, anchor: PanelAnchor, theme: &Theme) -> Option<f32> {
         let leaf = self.anchor_state(anchor).active_tab()?;
-        let document = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(leaf)?;
+        let document = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(leaf)?;
         Some(self.anchor_tab_bar_height(anchor, theme) + document + theme.gap_standard * 2.0)
     }
 
@@ -63,8 +63,8 @@ impl ShellDockState {
         };
         let terminology = prefs.active_terminology();
         let locale = prefs.active_locale();
-        let mut instance_titles = session.app.default_layout.as_ref().map(semio_framework_os_renderer_wgpu_dock::window_layout_instance_titles).unwrap_or_default();
-        instance_titles.extend(self.layout_override.as_ref().map(semio_framework_os_renderer_wgpu_dock::window_layout_instance_titles).unwrap_or_default());
+        let mut instance_titles = session.app.default_layout.as_ref().map(semio_renderer_wgpu_dock::window_layout_instance_titles).unwrap_or_default();
+        instance_titles.extend(self.layout_override.as_ref().map(semio_renderer_wgpu_dock::window_layout_instance_titles).unwrap_or_default());
         for (window_id, window_kind_id) in self.dock.window_instances() {
             let Some(kind) = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id) else {
                 continue;

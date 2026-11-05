@@ -21,8 +21,8 @@ pub struct ChangeElement {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeElement where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeElement> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "element", kind: "change-element", record: "ChangedElement" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change element \"{}\"", self.id), &format!("Stab \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change element \"{}\"", self.id), &format!("Stab \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

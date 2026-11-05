@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "left": "",
+      "right": "",
+      "expected": "equal"
+    },
+    {
+      "left": "a",
+      "right": "aa",
+      "expected": "less"
+    },
+    {
+      "left": "z",
+      "right": "aa",
+      "expected": "greater"
+    },
+    {
+      "left": "Ä",
+      "right": "Z",
+      "expected": "greater"
+    },
+    {
+      "left": "🪆️",
+      "right": "🌊️",
+      "expected": "greater"
+    },
+    {
+      "left": "a\u0000b",
+      "right": "a\u0000c",
+      "expected": "less"
+    },
+    {
+      "prefix": "a",
+      "repeat": 4096,
+      "leftSuffix": "b",
+      "rightSuffix": "a",
+      "expected": "greater"
+    }
+  ],
+  "profiles": [
+    {
+      "items": 1,
+      "copyBytes": 4096,
+      "calls": 10000
+    },
+    {
+      "items": 512,
+      "copyBytes": 32768,
+      "calls": 200
+    }
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    7,
+    17,
+    50
+  ],
+  "oracle": "SQLite TEXT COLLATE BINARY UTF-8 order"
+}

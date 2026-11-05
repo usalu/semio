@@ -1,32 +1,32 @@
 //! 📊️ The table window kit and its editable row windows.
 use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition};
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use serde_json::Value;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin_window_kits::text_kit::TextDraftView;
-use semio_framework_plugin_window_kits::text_kit::TextView;
-use semio_framework_plugin_window_kits::text_kit::TextWindowKit;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin_window_kits::text_kit::TextDraftView;
+use semio_plugin_window_kits::text_kit::TextView;
+use semio_plugin_window_kits::text_kit::TextWindowKit;
 use crate::tree_kit::TreeWindows;
 use crate::tree_kit::tree_window_indexed_rows;
 use crate::tree_kit::tree_window_rows;
-use semio_framework_plugin_window_kits::WindowKit;
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_plugin_window_transient::scene_surface;
-use semio_framework_plugin_interaction::ui_assembly_error;
-use semio_framework_plugin_window_transient::window_kind_definition;
+use semio_plugin_window_kits::WindowKit;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_plugin_window_transient::scene_surface;
+use semio_plugin_interaction::ui_assembly_error;
+use semio_plugin_window_transient::window_kind_definition;
 
 
 
@@ -142,7 +142,7 @@ impl WindowKit for TableWindowKit {
     /// 📊️ Emits the renderer table contract both hosts read: `columnsJson` as `{id, label}` records
     /// and `rowsJson` as `{id, <column id>: cell}` records, keyed by column and row position.
     ///
-    /// 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-framework-ui-scene` and its
+    /// 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-ui-scene` and its
     /// `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
     /// OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
     fn render(view: &TableView) -> UiAssemblyResult<BuiltNode> {
@@ -162,7 +162,7 @@ impl WindowKit for TableWindowKit {
             .collect();
         let columns_json = serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into());
         let rows_json = serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into());
-        let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
+        let scene = semio_ui_scene::TableScene::base(columns_json, rows_json);
         scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene)
     }
 }
@@ -201,7 +201,7 @@ impl TableWindowKit {
             .collect();
         let columns_json = serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into());
         let rows_json = serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into());
-        let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
+        let scene = semio_ui_scene::TableScene::base(columns_json, rows_json);
         scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene)
     }
 
@@ -235,7 +235,7 @@ impl TableWindowKit {
             .collect::<UiAssemblyResult<Vec<_>>>()?;
         let columns_json = serde_json::to_string(&columns).map_err(|_| ui_assembly_error("table-window.editable-cell-columns"))?;
         let rows_json = serde_json::to_string(&rows).map_err(|_| ui_assembly_error("table-window.editable-cell-rows"))?;
-        let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
+        let scene = semio_ui_scene::TableScene::base(columns_json, rows_json);
         scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene)
     }
 }

@@ -10,13 +10,13 @@ use crate::{Puzzle5dSnapshot};
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
 
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale;
-use semio_framework_plugin::app::MeshView;
-use semio_framework_plugin::app::MeshWindowKit;
-use semio_framework_plugin::app::WindowKit;
-use semio_framework_plugin::world3d_mesh_id_from_url;
-use semio_framework_plugin::world3d_meshes_json_from_urls;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::MeshView;
+use semio_plugin::app::MeshWindowKit;
+use semio_plugin::app::WindowKit;
+use semio_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_meshes_json_from_urls;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::puzzle5d::create_puzzle5d_viewer`. Uses
@@ -60,7 +60,7 @@ fn meshes_json(document: &Puzzle5dSnapshot) -> String {
     if urls.is_empty() {
         let fallback = semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([
             ("id".to_string(), semio_framework_value::DslValue::String(FALLBACK_MESH_ID.to_string())),
-            ("data".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_plugin::mesh_from_kind(FALLBACK_MESH_ID))),
+            ("data".to_string(), semio_framework_value::ToValue::to_value(&semio_plugin::mesh_from_kind(FALLBACK_MESH_ID))),
         ])]);
         return semio_framework_pack_json::to_json_string(&fallback);
     }
@@ -88,7 +88,7 @@ pub fn instances_json(document: &Puzzle5dSnapshot) -> String {
 /// 👁️ Pure `Puzzle5dSnapshot -> UiNode` read: default camera, no selection, no gumball, no
 /// engagement/brush-preview overlay. Grip/fastener overlays are a follow-up, not required for a
 /// first real read-only look at the document's placed parts.
-pub fn render(document: &Puzzle5dSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::BuiltNode> {
+pub fn render(document: &Puzzle5dSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::plugin_app_close_prelude::BuiltNode> {
     let view = MeshView { camera_json: default_camera_json(), meshes_json: meshes_json(document), instances_json: instances_json(document), selection_json: world3d_selection_json("pick", &[], None) };
     MeshWindowKit::render(&view)
 }

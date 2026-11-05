@@ -1,10 +1,10 @@
 //! 📐️ Generation3d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 
 
 
@@ -14,8 +14,8 @@ pub use semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
 
 //#region 🔖️Declaration
 /// 🧾️ Defines s.generation3d's immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.procedural.generation3d")?)
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.schema.artifact")?, ArtifactCapabilityKind::schema())
@@ -56,13 +56,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.generation3d's typed runtime declaration.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(semio_s_artifact_procedural_3d_model::generation3d_artifact_schema_descriptor())
         .inferences([semio_s_artifact_procedural_3d_inferences::generation3d_artifact_inference_descriptor()])
         .inference_services([semio_s_artifact_procedural_3d_geometry_service::geometry_inference_service()])
         .composers(semio_s_artifact_procedural_3d_io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -76,7 +76,7 @@ pub mod manifest {
     use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
     use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
     use semio_s_artifact_procedural_3d_editor_selection as selection;
-    use semio_framework_plugin::ArtifactEditor as _;
+    use semio_plugin::ArtifactEditor as _;
     use semio_s_artifact_procedural_3d_export_document as export_document;
     use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
     use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
@@ -118,24 +118,24 @@ pub mod manifest {
     use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
     use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
     use semio_s_artifact_procedural_3d_model::artifact_kind;
-    use semio_framework_plugin::ActionArgDef;
-    use semio_framework_plugin::ActionArgOption;
-    use semio_framework_plugin::ActionDefinition;
-    use semio_framework_plugin::ActionKind;
-    use semio_framework_plugin::CommandDefinition;
-    use semio_framework_plugin::Editor;
-    use semio_framework_plugin::GranularityDefinition;
-    use semio_framework_plugin::HierarchyProvider;
-    use semio_framework_plugin::HoverSpec;
-    use semio_framework_plugin::InteractionDefinition;
-    use semio_framework_plugin::InteractionRef;
-    use semio_framework_plugin::InteractiveJobClassification;
-    use semio_framework_ui_locale::LocalizedLabel;
-    use semio_framework_plugin::MergeMode;
-    use semio_framework_plugin::SelectionMethod;
-    use semio_framework_plugin::SelectionMode;
-    use semio_framework_plugin::SelectionSpec;
-    use semio_framework_plugin::UtilityDefinition;
+    use semio_plugin::ActionArgDef;
+    use semio_plugin::ActionArgOption;
+    use semio_plugin::ActionDefinition;
+    use semio_plugin::ActionKind;
+    use semio_plugin::CommandDefinition;
+    use semio_plugin::Editor;
+    use semio_plugin::GranularityDefinition;
+    use semio_plugin::HierarchyProvider;
+    use semio_plugin::HoverSpec;
+    use semio_plugin::InteractionDefinition;
+    use semio_plugin::InteractionRef;
+    use semio_plugin::InteractiveJobClassification;
+    use semio_ui_locale::LocalizedLabel;
+    use semio_plugin::MergeMode;
+    use semio_plugin::SelectionMethod;
+    use semio_plugin::SelectionMode;
+    use semio_plugin::SelectionSpec;
+    use semio_plugin::UtilityDefinition;
     use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
     use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json;
     use semio_s_artifact_procedural_3d_editor::*;
@@ -148,7 +148,7 @@ pub mod manifest {
         definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
         definition
     }
-    pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
+    pub fn create_generation3d_app() -> semio_plugin::AppDefinition {
         let builder = Editor::builder(semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT);
     let builder = create_generation3d_app_part_1(builder);
     let builder = create_generation3d_app_part_2(builder);
@@ -159,7 +159,7 @@ pub mod manifest {
     }
 
 /// 🧱️ The manifest slice 1 of 5 of `create_generation3d_app`: its builder calls.
-fn create_generation3d_app_part_1(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+fn create_generation3d_app_part_1(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.document(["semio", "procedural", "3d"])
                 .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
                 .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
@@ -222,7 +222,7 @@ fn create_generation3d_app_part_1(builder: semio_framework_plugin::app::EditorBu
 }
 
 /// 🪵️ The manifest slice 2 of 5 of `create_generation3d_app`: its builder calls.
-fn create_generation3d_app_part_2(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+fn create_generation3d_app_part_2(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.view_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"))
                 .action_with(ActionDefinition::new("cycleShowMode", LocalizedLabel::native("Cycle Show Mode", "Anzeigemodus wechseln"), ActionKind::View, "eye"))
                 .action_with(ActionDefinition::new("cycleLodMode", LocalizedLabel::native("Cycle Lod Mode", "LOD-Modus wechseln"), ActionKind::View, "layers"))
@@ -282,7 +282,7 @@ fn create_generation3d_app_part_2(builder: semio_framework_plugin::app::EditorBu
 }
 
 /// 🔩️ The manifest slice 3 of 5 of `create_generation3d_app`: its builder calls.
-fn create_generation3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+fn create_generation3d_app_part_3(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
                 .action_destructive("exportDocument")
                 .action_args("editMeshSelection", vec![
@@ -378,7 +378,7 @@ fn create_generation3d_app_part_3(builder: semio_framework_plugin::app::EditorBu
 }
 
 /// ⚙️ The manifest slice 4 of 5 of `create_generation3d_app`: its builder calls.
-fn create_generation3d_app_part_4(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+fn create_generation3d_app_part_4(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.window_kind_action_refs(
                     flow_window::GENERATION_3D_PLAY_WINDOW_MAIN,
                     vec![
@@ -469,7 +469,7 @@ fn create_generation3d_app_part_4(builder: semio_framework_plugin::app::EditorBu
 }
 
 /// 🧲️ The manifest slice 5 of 5 of `create_generation3d_app`: its builder calls.
-fn create_generation3d_app_part_5(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+fn create_generation3d_app_part_5(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.keybinding("arrowleft", "selectUpstreamNode")
                 .keybinding("arrowright", "selectDownstreamNode")
                 .config(Generation3dPlayApp::config_spec())
@@ -506,9 +506,9 @@ fn create_generation3d_app_part_5(builder: semio_framework_plugin::app::EditorBu
                 .action_describe("importDocument", LocalizedLabel::native("Replaces the generator document with one read from an imported 3D artifact file.", "Ersetzt das Generatordokument durch eines aus einer importierten 3D-Artefaktdatei."))
                 .action_describe("cycleShowMode", LocalizedLabel::native("Switches the editor to the next show mode in turn (such as graph, result or wireframe); only the view changes.", "Wechselt den Editor reihum in den nächsten Anzeigemodus (etwa Graph, Ergebnis oder Drahtgitter); nur die Ansicht ändert sich."))
                 .action_describe("cycleLodMode", LocalizedLabel::native("Switches the 3D preview to the next level of detail in turn; only the view changes.", "Wechselt die 3D-Vorschau reihum zur nächsten Detailstufe; nur die Ansicht ändert sich."))
-                .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
-                .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
-                .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+                .action_audience("nodeGraphEdit", semio_plugin::CapabilityAudience::Input)
+                .action_audience("nodeGraphViewport", semio_plugin::CapabilityAudience::Chrome)
+                .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
                 .action_destructive("reorganize")
                 .action_destructive("importDocument")
                 

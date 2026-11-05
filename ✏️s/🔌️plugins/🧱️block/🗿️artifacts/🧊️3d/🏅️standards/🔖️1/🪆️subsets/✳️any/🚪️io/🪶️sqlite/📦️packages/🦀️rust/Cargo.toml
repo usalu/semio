@@ -22,7 +22,7 @@ testkit = []
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
@@ -32,4 +32,4 @@ semio-s-artifact-stdio-semio-kit-snapshot = { path = "../../../../../../../../..
 semio-s-plugin-block = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

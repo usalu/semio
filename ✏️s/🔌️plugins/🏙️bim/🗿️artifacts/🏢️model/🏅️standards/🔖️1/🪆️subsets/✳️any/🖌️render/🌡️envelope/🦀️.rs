@@ -13,7 +13,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::triangulation::triangulate;
 use semio_framework_geometry::Point;
-use semio_framework_plugin::{MeshData, World3dColorRamp};
+use semio_plugin::{MeshData, World3dColorRamp};
 use std::collections::BTreeMap;
 
 //#region 🔖️Constants

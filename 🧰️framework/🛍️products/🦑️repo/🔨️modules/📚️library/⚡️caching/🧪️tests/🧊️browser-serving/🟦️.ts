@@ -33,7 +33,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
       const reloadFile = join(rootFor("modules"), "reload.json");
       for (const route of fixture.routes) { put(join(rootFor(route.root), route.file), route.content); put(join(publicRoot, decodeURI(route.url)), route.content); }
       const wasm = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
-      writeFileSync(join(rootFor("compiler"), "semio-framework-os-renderer-wgpu-component_bg.wasm"), wasm);
+      writeFileSync(join(rootFor("compiler"), "semio-renderer-wgpu-component_bg.wasm"), wasm);
       put(reloadFile, "0");
       copyFileSync(template, join(app, "🌐️.html"));
       put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, libraryRoot: roots.library, workerRoot: roots.worker, fontRoot: roots.fonts, reloadFile, assets: [], assetServeMode: "fetch" }) + ');\n');
@@ -54,7 +54,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
           assert.equal(actual.status, 200, route.url);
           assert.equal(await actual.text(), await expected.text(), route.url);
         }
-        const wasmResponse = await fetch(new URL("/renderer-modules/wgpu/semio-framework-os-renderer-wgpu-component_bg.wasm", url));
+        const wasmResponse = await fetch(new URL("/renderer-modules/wgpu/semio-renderer-wgpu-component_bg.wasm", url));
         assert.equal(wasmResponse.headers.get("content-type"), "application/wasm");
         assert.ok((await WebAssembly.instantiate(await wasmResponse.arrayBuffer())).instance);
         assert.equal((await fetch(new URL(fixture.missing, url))).status, 404);

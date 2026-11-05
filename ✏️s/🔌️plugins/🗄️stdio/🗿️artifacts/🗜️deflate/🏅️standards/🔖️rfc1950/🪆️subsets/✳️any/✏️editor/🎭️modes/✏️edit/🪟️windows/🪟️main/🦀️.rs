@@ -8,11 +8,11 @@
 
 use crate::schema::snapshot::DeflateLevelHint;
 use crate::DeflateSnapshot;
-use semio_framework_plugin::app::{TextEditView, TextWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{TextEditView, TextWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -68,7 +68,7 @@ pub fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 /// the payload byte count (informational only — `#`-prefixed lines are never parsed back on `textEdit`), as the kit's
 /// explicit draft (structured text: edited locally, ONE `textEdit` on Apply).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DeflateSnapshot, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &DeflateSnapshot, locale: Locale, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown or editable here)",
         document.compression_method,

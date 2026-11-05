@@ -1,3 +1,4 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 👥️ Two humans, one hub, every kind the hub can create — driven in two isolated browser profiles of the React `s` shell.
  *
  * Per kind the hub's creation catalog offers: A creates it from the Space app (the creation saga opens it for A), B opens it
@@ -16,8 +17,7 @@
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { readMatrixPins, withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { activate, boot, clickRowAction, dialog, faultsSince, type Human, openSessions, pause, readStatus, selectOption, type Session, signIn, started, submitDialog, until, waitNamedRow, waitRow } from "./🔑️sessions/🟦️.ts";
@@ -28,13 +28,13 @@ import { JOURNEYS, seedSharedSpaceThroughHub } from "./🧭️journeys/🟦️.t
 //#region 🔖️TwoHuman
 /** 👥️ Runs the two-human journey over every selected creatable kind; the report is flushed after every kind and the
  * signal ends the run after the current kind. */
-export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanReport> {
+export async function runTwoHuman(repoRoot: string, options: TwoHumanOptions): Promise<TwoHumanReport> {
   const pins = readMatrixPins();
   const outDir = join(options.outDir, options.tag);
   mkdirSync(outDir, { recursive: true });
   const browserLocale = options.locale === "de" ? "de-DE" : "en-US";
   const report: TwoHumanReport = { tag: options.tag, journey: options.journey, hub: options.hub, serves: options.serves, locale: browserLocale, startedAt: new Date().toISOString(), spaceId: options.spaceId, kinds: [], rows: [], misses: [] };
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
   const sessions = await openSessions(browser, options.serves, options.humans, browserLocale);
@@ -195,7 +195,7 @@ export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, se
   const served = (url: string, run: (baseUrl: string) => Promise<void>): Promise<void> => withDevServe(repoRoot, check, { serveUrl: url, hubUrl, locale, signal: controller.signal, startedAt }, run);
   const body = async (serveUrl: string, serveBUrl: string): Promise<void> => {
     const outDir = resolve(flagValue(segments, "--out") ?? defaultOutDir);
-    const report = await runTwoHuman({
+    const report = await runTwoHuman(repoRoot, {
       journey: journey as TwoHumanJourney,
       hub: hubUrl,
       serves: [serveUrl, serveBUrl],

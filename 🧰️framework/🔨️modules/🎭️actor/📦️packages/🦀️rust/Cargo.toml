@@ -36,7 +36,7 @@ semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦
 # wgpu-web hosts). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the
 # WASI component target too — declaring these under the bare arch gate linked `wasm-bindgen` (and,
 # via the `wasm_bindgen_futures` alias, this crate's own first-party async runtime) into the shipped
-# plugin component. The wasip2 guest path is `semio-framework-plugin` on `wasm32-wasip2`,
+# plugin component. The wasip2 guest path is `semio-plugin` on `wasm32-wasip2`,
 # not this bridge.
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

@@ -1964,7 +1964,7 @@
       "workspaceOwner": "🧰️framework/Cargo.toml",
       "workspaceKind": "repository",
       "packageManifest": "/repo/🧰️framework/describe/Cargo.toml",
-      "packageName": "semio-framework-plugin-describe",
+      "packageName": "semio-plugin-describe",
       "buildDirectory": "/paid/build"
     }
   ],

@@ -139,7 +139,7 @@ impl<'ctx> PointerCtx<'ctx> {
         let parked = false;
         let armed_work = !self.settle.deferred_actions.is_empty() || !self.settle.touch_gestures.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.opening.import_transfers.is_empty();
         let computing = self.surfaces.live_compute_surfaces().any(|(surface_id, _)| !self.settle.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
-        self.opening.icon_export.as_ref().is_some_and(IconExportBatch::running) || semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
+        self.opening.icon_export.as_ref().is_some_and(IconExportBatch::running) || semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
     }
 
     /// 🫀️ ONE settle step, and the whole of what the frame loop asks of this shell per frame.
@@ -263,7 +263,7 @@ impl<'ctx> PointerCtx<'ctx> {
         let tree_item_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(tree_hit_item_id).map(str::to_string));
         let ContextMenuSurfaceResolution { surface_id, kind, mut hits, selection: selection_groups, text: text_context } = self.input.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref(), &self.surfaces);
         if let Some(id) = tree_item_id.filter(|_| !hits.iter().any(|hit| hit.domain == CONTEXT_MENU_TREE_HIT_DOMAIN)) {
-            hits.insert(0, semio_framework_ui_declaration::ui::ContextMenuHit { domain: CONTEXT_MENU_TREE_HIT_DOMAIN.into(), id, label: None });
+            hits.insert(0, semio_ui_declaration::ui::ContextMenuHit { domain: CONTEXT_MENU_TREE_HIT_DOMAIN.into(), id, label: None });
         }
         let window_instance_id = self.input.context_window_instance_id(x, y).map(str::to_string);
         let is_de = self.prefs.locale_id == "de";
@@ -313,11 +313,11 @@ impl<'ctx> PointerCtx<'ctx> {
         if items.is_empty() {
             if let Some(session) = &self.docs.session {
                 let window_kind = window_instance_id.as_deref().and_then(|window_id| self.dock.live_window_kind_id(session, window_id)).and_then(|window_kind_id| session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id));
-                let actions: Vec<semio_framework_ui_declaration::layout::ShellMenuAction> = window_kind
+                let actions: Vec<semio_ui_declaration::layout::ShellMenuAction> = window_kind
                     .map(|kind| semio_framework::resolve_window_actions(&session.app, kind))
                     .unwrap_or_default()
                     .into_iter()
-                    .map(|action| semio_framework_ui_declaration::layout::ShellMenuAction {
+                    .map(|action| semio_ui_declaration::layout::ShellMenuAction {
                         id: action.id.clone(),
                         label: action.label.resolve(self.prefs.active_terminology(), self.prefs.active_locale()).to_string(),
                         icon: Some(action.icon_id.as_str().to_string()),
@@ -329,7 +329,7 @@ impl<'ctx> PointerCtx<'ctx> {
                     })
                     .collect();
                 let controller_id = session.app.controller_id.clone();
-                items = semio_framework_ui_declaration::layout::build_shell_context_menu_specs(&actions, true).into_iter().map(|spec| shell_context_menu_item_from_spec(spec, &controller_id, is_de)).collect();
+                items = semio_ui_declaration::layout::build_shell_context_menu_specs(&actions, true).into_iter().map(|spec| shell_context_menu_item_from_spec(spec, &controller_id, is_de)).collect();
             }
         }
         if let Some(window_id) = window_instance_id.as_deref() {

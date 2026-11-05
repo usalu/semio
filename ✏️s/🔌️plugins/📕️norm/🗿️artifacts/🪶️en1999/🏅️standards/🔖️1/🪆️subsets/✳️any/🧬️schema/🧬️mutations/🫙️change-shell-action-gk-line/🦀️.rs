@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeShellActionGKLine 
         record: "ChangedShellActionGKLine",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permanent line load g_k of the shell action", "Schaleneinwirkung: Ständige Streckenlast g_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permanent line load g_k of the shell action", "Schaleneinwirkung: Ständige Streckenlast g_k ändern")
     }
 }
 

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "base",
+          "key",
+          "value",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "base": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/native"
+            }
+          },
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/$defs/native"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/native"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "native": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/native"
+          }
+        }
+      ]
+    }
+  }
+}

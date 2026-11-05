@@ -67,10 +67,10 @@ pub(crate) const PROCESS3D_RESUMABLE_OUTPUT_BYTES: usize = PROCESS3D_CONFIG_CONT
 /// 📏️ The raw-wire ceiling one retained tool id is admitted against. `setContributions` is the ONE
 /// retained command whose wire is a host pack, not a gesture — it carries the whole capability
 /// closure the receiver's registry `consumes` row names — so it is priced on
-/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`], never on the gesture envelope.
+/// [`semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`], never on the gesture envelope.
 pub(super) fn process3d_retained_raw_bytes(tool_id: &str) -> usize {
     if tool_id == "setContributions" {
-        semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
+        semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
     } else {
         PROCESS3D_RETAINED_RAW_BYTES
     }
@@ -78,7 +78,7 @@ pub(super) fn process3d_retained_raw_bytes(tool_id: &str) -> usize {
 
 /// 🧮️ Work units one retained tool id may declare. The resumable pump scans `PROCESS3D_SCAN_BYTES`
 /// per unit, so a tool's unit cap and its wire cap are one bound: a `setContributions` pack of
-/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] is that many scans, and pricing
+/// [`semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] is that many scans, and pricing
 /// it on the gesture cap refused the real pack before it ever reached the config lane.
 pub(super) fn process3d_retained_work_items(tool_id: &str) -> usize {
     process3d_retained_raw_bytes(tool_id).div_ceil(PROCESS3D_SCAN_BYTES).max(PROCESS3D_RETAINED_WORK_ITEMS)
@@ -104,14 +104,14 @@ fn process3d_bounded_contract() -> ToolExecutionContract {
 }
 
 /// 🧾️ The ONE execution contract every RESUMABLE process3d tool is admitted under. Its wire ceiling
-/// is [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] because one of those tools —
+/// is [`semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] because one of those tools —
 /// `setContributions` — carries a host pack, not a gesture, and a factory declares one contract for
 /// every tool it serves, which the proof catalogue must join exactly. Widening the ADMISSION does
 /// not widen what a sun or engagement gesture may send: [`process3d_retained_raw_bytes`] is what
 /// `process3d_resumable_extent` and the payload both bound, per tool id. Its output cap is
 /// [`PROCESS3D_RESUMABLE_OUTPUT_BYTES`] for the same reason: the one config mutation that route emits.
 pub(super) fn process3d_resumable_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, PROCESS3D_RESUMABLE_OUTPUT_BYTES, 7_500, 1, 1)
+    ToolExecutionContract::resumable(semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, PROCESS3D_RESUMABLE_OUTPUT_BYTES, 7_500, 1, 1)
 }
 
 fn process3d_string_units(value: &str) -> usize {
@@ -134,10 +134,10 @@ pub(super) fn process3d_retained_reduce(
     command: &Process3dCommand,
     snapshot: &Process3dSnapshot,
     config: &Process3dConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Process3dPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Process3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Process3dMutation, Process3dConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
@@ -207,14 +207,14 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         self.tool_id
     }
 
-    fn extent(&self, command: &Process3dCommand, snapshot: &Process3dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Process3dPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &Process3dCommand, snapshot: &Process3dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Process3dPlayApp>>>) -> Option<usize> {
         let _ = (command, snapshot, interaction);
         Some(self.extent)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation, snapshot_read: _ } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation, snapshot_read: _ } = *input;
         if self.complete {
             return Err(Fault::from("process3d-retained-work-repeated"));
         }
@@ -309,7 +309,7 @@ impl ToolJobFactory for Process3dBoundedCommandJobFactory {
         process3d_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
 
 }
 
@@ -326,32 +326,32 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     /// `Process3dArtifactPreparationFactory`; `Config` is the viewer's replay cursor and the engagement line — view
     /// state, never history — so the cursor verbs and `engagementSubmit` publish there only, and every verb that
     /// inserts or removes a step publishes BOTH lanes (the step, and the cursor moved past it).
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadModelRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "updateWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeSelectedStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "updateStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepEnabled", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStock", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchInspector", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "worldFaceDragEnd", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importModelFile", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportModel", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCursor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorBack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorForward", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "loadModelRequest", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "addWorkshopMachine", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "removeWorkshopMachine", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "updateWorkshopMachine", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "removeSelectedStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "updateStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setStepEnabled", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setStock", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "patchInspector", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "worldFaceDragEnd", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importModelFile", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "exportModel", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setCursor", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursor", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorBack", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorForward", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
     ];
 }
 
@@ -385,7 +385,7 @@ impl ToolJobFactory for Process3dResumableCommandJobFactory {
         process3d_resumable_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
 
 }
 
@@ -393,13 +393,13 @@ impl ArtifactOwnedToolJobFactory for Process3dResumableCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_RESUMABLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
     ];
 }
 //#endregion 🧵️RetainedCommands

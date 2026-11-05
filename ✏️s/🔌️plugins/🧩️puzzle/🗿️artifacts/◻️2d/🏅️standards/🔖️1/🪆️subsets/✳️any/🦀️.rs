@@ -1,42 +1,18 @@
-//! 🏃️ RUNTIME`, `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
-//! 🪆️ Subset root for `s.puzzle.puzzle2d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
-//! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
-//! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — `crate::editor::puzzle2d`/
-//! `crate::viewer::puzzle2d` stay mounted at the plugin's top-level `editor`/`viewer` modules
-//! (`🗒️note`/`🖍️draw` recipe §5 gotcha 1), not here. `examples` is TWO real fixtures
-//! (`crate::examples::puzzle2d::{nakagin_capsule_tower, concrete_forest}::SOURCE`, each a
-//! `LazyLock<ExampleSource>` cloned here). Puzzle 2D's artifact root mounts these examples at the crate root
-//! (`crate::examples::puzzle2d::…`), not under `artifacts::puzzle2d` at all.
-//!
-//! ⚠️ DEVIATION from the `🗒️note`/`🖍️draw` template (documented, not an oversight — same shape
-//! trinity's own subset-root files carry): those two call `io: io::io()`, delegating to a same-named
-//! `io() -> IoDeclaration` function their migration added to `🚪️io/🦀️.rs`. puzzle2d's own
-//! `🚪️io/🦀️.rs` is still on the OLD `ComposerEntry`/`io_registry` channel (six composer
-//! rows: native, svg, pdf, png, dwg, dxf — see the artifact root's `definition()`), and
-//! hand-authoring typed `Deserializer<Puzzle2dSnapshot>`/`Serializer<Puzzle2dSnapshot>` impls for all
-//! six foreign formats is real, non-trivial migration work outside this packet's descriptor-emission
-//! scope. `io_declaration()` below is the same `IoDeclaration` shape, built here instead: `native` is
-//! real (reuses `crate::pilot_languages()`'s already-real grammar/protocol
-//! pairs, and a real `store::bare_artifact_codec::<Puzzle2dSnapshot, Puzzle2dMutation>(...)`), but
-//! `entries: &[]` — the foreign-format hops stay UNREGISTERED on the new `io_mechanism` channel (an
-//! honest gap, not an oversight; `try_build()` still succeeds since an empty batch trivially passes
-//! `preflight_io_entries`). Lease-request (mirrors trinity's own): once this artifact's
-//! `🚪️io/🦀️.rs` is migrated to the typed `serializer_entry`/`deserializer_entry` shape,
-//! relocate `io_declaration()` there as `io()` (verbatim rename), add the six typed leaves, and swap
-//! this file's `io: io_declaration()` back to `io: io::io()` to match the template exactly.
+//! 🪆️ Canonical native codecs and typed foreign-format routes for this Puzzle subset.
 
+use crate::standards::v1::subsets::any::io;
 use crate::editor::puzzle2d as editor;
 use crate::standards::v1::subsets::any::schema;
 use crate::viewer::puzzle2d as viewer;
 use {crate::Puzzle2dMutation, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::PUZZLE2D_DIALECT, crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA};
-use semio_framework_plugin::app::declarations::editor_surface;
-use semio_framework_plugin::app::declarations::viewer_surface;
-use semio_framework_plugin::app::declarations::IoDeclaration;
-use semio_framework_plugin::app::declarations::LanguagePair;
-use semio_framework_plugin::app::declarations::NativeCodecs;
-use semio_framework_plugin::app::declarations::SchemaDeclaration;
-use semio_framework_plugin::app::declarations::SubsetDeclaration;
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::editor_surface;
+use semio_plugin::app::declarations::viewer_surface;
+use semio_plugin::app::declarations::IoDeclaration;
+use semio_plugin::app::declarations::LanguagePair;
+use semio_plugin::app::declarations::NativeCodecs;
+use semio_plugin::app::declarations::SchemaDeclaration;
+use semio_plugin::app::declarations::SubsetDeclaration;
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 pub fn examples() -> &'static [ExampleSource] {
@@ -62,7 +38,7 @@ fn io_declaration() -> IoDeclaration {
             inferences: None,
             codec: store::bare_artifact_codec::<Puzzle2dSnapshot, Puzzle2dMutation>(PUZZLE_2D_SCHEMA.to_string()),
         },
-        entries: &[],
+        entries: io::routes::entries(),
     }
 }
 

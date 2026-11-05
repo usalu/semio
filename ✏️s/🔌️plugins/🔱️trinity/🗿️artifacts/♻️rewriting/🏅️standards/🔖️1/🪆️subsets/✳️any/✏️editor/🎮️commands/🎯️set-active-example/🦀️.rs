@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::{Emit, NoConfigMutation};
+use semio_plugin::{Emit, NoConfigMutation};
 use pack::snapshot::ArtifactDsl;
 
 /// 🎬️ The ids this verb answers. The navbar example picker dispatches a REGISTERED example id, and

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeParamShape where O
         record: "ChangedParamShape",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shape of the parametric section", "Parametrischer Querschnitt: Form ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shape of the parametric section", "Parametrischer Querschnitt: Form ändern")
     }
 }
 

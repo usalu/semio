@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "constant-schedule", kind: "delete-constant-schedule", record: "DeletedConstantSchedule" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete Constant Schedule {}", self.id.0), &format!("Konstanten Zeitplan {} löschen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete Constant Schedule {}", self.id.0), &format!("Konstanten Zeitplan {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

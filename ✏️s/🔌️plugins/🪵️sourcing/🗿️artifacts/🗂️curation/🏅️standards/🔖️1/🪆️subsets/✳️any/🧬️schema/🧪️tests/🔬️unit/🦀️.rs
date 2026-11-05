@@ -4,7 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use framework_schema::ArtifactSchema;
 #[allow(unused_imports)]
-use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_mesh_id_from_url;
 #[allow(unused_imports)]
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 #[allow(unused_imports)]

@@ -7,7 +7,7 @@
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/📋️orchestration/🟦️.ts — the caller.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use protocol::{Mutation, MutationLeafDescriptor};
 
@@ -18,10 +18,10 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
-    ("IdentityConfigMutation", descriptors::<semio_framework_os_config::opening_config::mutations::sign_in::IdentitySetting, semio_framework_os_config::opening_config::mutations::IdentityConfigMutation>),
-    ("MergePolicyConfigMutation", descriptors::<semio_framework_os_config::opening_config::mutations::change_merge_policy::MergePolicySetting, semio_framework_os_config::opening_config::mutations::MergePolicyConfigMutation>),
-    ("OpeningConfigMutation", descriptors::<semio_framework_os_config::opening_config::OpeningPreferences, semio_framework_os_config::opening_config::mutations::OpeningConfigMutation>),
-    ("UiPreferencesConfigMutation", descriptors::<semio_framework_os_config::opening_config::UiPreferences, semio_framework_os_config::opening_config::mutations::UiPreferencesConfigMutation>),
+    ("IdentityConfigMutation", descriptors::<semio_os_config::opening_config::mutations::sign_in::IdentitySetting, semio_os_config::opening_config::mutations::IdentityConfigMutation>),
+    ("MergePolicyConfigMutation", descriptors::<semio_os_config::opening_config::mutations::change_merge_policy::MergePolicySetting, semio_os_config::opening_config::mutations::MergePolicyConfigMutation>),
+    ("OpeningConfigMutation", descriptors::<semio_os_config::opening_config::OpeningPreferences, semio_os_config::opening_config::mutations::OpeningConfigMutation>),
+    ("UiPreferencesConfigMutation", descriptors::<semio_os_config::opening_config::UiPreferences, semio_os_config::opening_config::mutations::UiPreferencesConfigMutation>),
 ];
 
 /// 🗺️ Manifest coordinate (artifact, standard, subset, state-lane surface or `""` for the document) → the owner

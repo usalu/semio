@@ -9,8 +9,8 @@ pub struct OriginalEditWireHeaders<'a>{pub document:&'a str,pub schema:&'a str,p
 pub(super) struct EditWireView<'a,M:Sync>{pub edit:&'a Edit<M>,pub wire:ArtifactOperationWire<M>,pub headers:OriginalEditWireHeaders<'a>,pub current:usize,pub forward:Option<&'a ArtifactOriginalOperationBytes<M>>,pub inverse:Option<&'a ArtifactOriginalOperationBytes<M>>}
 
 impl<M:Sync> EditWireView<'_,M>{
-    fn meta(&self,row:usize)->Result<&semio_framework_os_spr::MutationMeta,ValueError>{self.edit.mutation_meta.get(row).ok_or_else(invalid)}
-    fn targets(&self,row:usize)->Result<Option<&dyn semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactOperationTargets>,ValueError>{self.wire.targets(self.edit.forwards.get(row).ok_or_else(invalid)?)}
+    fn meta(&self,row:usize)->Result<&semio_os_spr::MutationMeta,ValueError>{self.edit.mutation_meta.get(row).ok_or_else(invalid)}
+    fn targets(&self,row:usize)->Result<Option<&dyn semio_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactOperationTargets>,ValueError>{self.wire.targets(self.edit.forwards.get(row).ok_or_else(invalid)?)}
     fn original_text(&self,row:usize,field:CausalEnvelopeField)->Result<&str,ValueError>{
         let meta=self.meta(row)?;use CausalEnvelopeField as F;Ok(match field{
             F::MutationId=>&meta.mutation_id.as_ref().ok_or_else(invalid)?.0,F::DocumentId=>self.headers.document,

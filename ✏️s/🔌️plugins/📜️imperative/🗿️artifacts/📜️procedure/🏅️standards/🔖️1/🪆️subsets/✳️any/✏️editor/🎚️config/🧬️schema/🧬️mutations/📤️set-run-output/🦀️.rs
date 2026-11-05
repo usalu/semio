@@ -14,8 +14,8 @@ pub struct SetRunOutput {
 impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetRunOutput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run_output_json", kind: "set-run-output", record: "SetRunOutput" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Run Output", "Laufausgabe setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Run Output", "Laufausgabe setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["run_output_json".into()]

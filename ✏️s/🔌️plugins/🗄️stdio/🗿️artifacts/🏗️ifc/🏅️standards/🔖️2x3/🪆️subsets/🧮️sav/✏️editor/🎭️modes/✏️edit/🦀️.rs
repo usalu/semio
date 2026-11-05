@@ -1,9 +1,9 @@
 //! ✏️ IFC 2x3 Sav editor — the `edit` mode: a single full-pane Main window.
 
 use crate::editor::ifc2x3_sav::modes::edit::windows::main;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const IFC2X3_SAV_EDIT_MODE_ID: &str = "edit";
 

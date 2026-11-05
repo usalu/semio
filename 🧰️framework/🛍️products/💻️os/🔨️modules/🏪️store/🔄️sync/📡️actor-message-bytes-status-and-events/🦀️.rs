@@ -62,7 +62,7 @@ pub fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize>
             add(&mut bytes, field(message.len())?)?;
         }
         ArtifactActorMsg::LocalDocumentArchive { archive } => {
-            if archive.is_empty() || archive.len() > semio_framework_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES || archive[0] != 1 {
+            if archive.is_empty() || archive.len() > semio_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES || archive[0] != 1 {
                 return None;
             }
             add(&mut bytes, field(archive.len())?)?;
@@ -102,9 +102,9 @@ pub fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize>
                 add(
                     &mut bytes,
                     match &view.kind {
-                        semio_framework_os_spr::PresenceViewKind::Canvas { .. } => 24,
-                        semio_framework_os_spr::PresenceViewKind::Orbit { .. } => 80,
-                        semio_framework_os_spr::PresenceViewKind::Geo { .. } => 40,
+                        semio_os_spr::PresenceViewKind::Canvas { .. } => 24,
+                        semio_os_spr::PresenceViewKind::Orbit { .. } => 80,
+                        semio_os_spr::PresenceViewKind::Geo { .. } => 40,
                     },
                 )?;
                 add(&mut bytes, 17)?;
@@ -177,7 +177,7 @@ pub struct ArtifactSyncStatus {
     pub remote: RemoteState,
     /// 📌️ The edited head the hub acknowledged, present only while nothing local is unacknowledged —
     /// the head a hub Check In names. `None` before the first edit and while mutations are in flight.
-    pub acknowledged_head: Option<semio_framework_os_directory::EditedArtifactFrontierV1>,
+    pub acknowledged_head: Option<semio_os_directory::EditedArtifactFrontierV1>,
     /// 🧯️ The reason the document is unsaved, `None` while nothing failed.
     pub write_failure: Option<SyncWriteFailure>,
 }
@@ -215,7 +215,7 @@ pub enum ArtifactEvent {
     /// 🛟️ The hub made this document rebuild from its canonical checkpoint (fan-out lag, an approval checkpoint): the actor
     /// dropped its projection and socket, keeps its unacked work and waits for the host's [`ArtifactActorMsg::Reseed`] with the
     /// pair `control` names — the pair only the host's directory client fetches and only the host can load into the guest.
-    RebootstrapRequired { control: semio_framework_os_directory::RebootstrapRequired },
+    RebootstrapRequired { control: semio_os_directory::RebootstrapRequired },
     /// 🎨️ The hub assigned (or re-confirmed, on reconnect) this connection's session color —
     /// `crate::os_spr::wire::ServerFrame::Session`, sent once per connection after `Welcome`. The
     /// actor stores it and stamps it onto every outbound `PresenceHeartbeat` via {@link stamp_session}.

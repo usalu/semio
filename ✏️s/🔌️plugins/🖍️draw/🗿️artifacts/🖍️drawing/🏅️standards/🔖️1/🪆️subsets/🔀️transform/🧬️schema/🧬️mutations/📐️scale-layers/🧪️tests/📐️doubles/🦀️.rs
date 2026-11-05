@@ -79,8 +79,8 @@ fn outcome_laws() {
 #[test]
 fn label_reads_the_factors() {
     let label = serde_json::from_str::<DrawingMutation>(*MUTATION).unwrap().label();
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Scale 1 layer by (2, 0.5)");
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Ebene um (2; 0,5) skalieren");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Scale 1 layer by (2, 0.5)");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "1 Ebene um (2; 0,5) skalieren");
 }
 
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.

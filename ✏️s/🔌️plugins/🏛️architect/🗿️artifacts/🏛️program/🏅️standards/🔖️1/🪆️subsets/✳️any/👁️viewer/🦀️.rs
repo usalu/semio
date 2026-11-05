@@ -8,22 +8,22 @@ use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::viewer::architect::modes::view;
 use crate::viewer::architect::modes::view::windows::register;
 use crate::standards::v1::subsets::any::schema::{snapshot::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA}, ARCHITECT_DIALECT};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling editor surface's root `🦀️.rs`).
-use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_plugin::app::{Dialect, InteractionView};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -58,7 +58,7 @@ impl ArtifactViewer for ArchitectViewer {
     /// Without it every live envelope load faults with `viewer did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("architect.child-projection"), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("architect.child-projection"), error.to_string()))
     }
 
     type Snapshot = ProgramSnapshot;
@@ -74,7 +74,7 @@ impl ArtifactViewer for ArchitectViewer {
     const DIALECT: Dialect = ARCHITECT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<ProgramSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<ProgramSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(sample_plugin())
     })}
 
@@ -94,24 +94,24 @@ impl ArtifactViewer for ArchitectViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            register::ARCHITECT_VIEW_BODY_REGISTER => register::render(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, register::ARCHITECT_VIEW_BODY_REGISTER)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("architect.viewer.ui.capacity", "viewer label admission failed")),
+            register::ARCHITECT_VIEW_BODY_REGISTER => register::render(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, register::ARCHITECT_VIEW_BODY_REGISTER)),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("architect.viewer.ui.capacity", "viewer label admission failed")),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_architect_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_architect_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(ARCHITECT_DIALECT)
         .document(["semio", "architect"])
         .icon_id("architect")

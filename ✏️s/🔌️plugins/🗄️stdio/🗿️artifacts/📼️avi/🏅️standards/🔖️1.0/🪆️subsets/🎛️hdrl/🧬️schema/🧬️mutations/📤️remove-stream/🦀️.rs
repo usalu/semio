@@ -13,8 +13,8 @@ pub struct RemoveStream {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for RemoveStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "stream", kind: "remove-stream", record: "RemoveStream" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove stream", "Datenstrom entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove stream", "Datenstrom entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,4 +1,4 @@
-use semio_framework_os_kernel::os_semio::*;
+use semio_os_kernel::os_semio::*;
 use semio_framework_value_native_owned::native_decoding::*;
 
 #[test]

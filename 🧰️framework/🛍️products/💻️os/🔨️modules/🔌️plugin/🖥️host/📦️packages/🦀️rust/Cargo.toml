@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-plugin-host"
+name = "semio-plugin-host"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,14 +23,14 @@ name = "semio-shard"
 path = "../../🧵️shard/👶️child/🦀️.rs"
 
 [features]
-testkit = ["semio-framework-plugin-host-engine/testkit", "semio-framework-plugin-host-guest-runtime/testkit", "semio-framework-plugin-host-post-turn-relay/testkit", "semio-framework-plugin-host-process-transport/testkit", "semio-framework-plugin-host-routers/testkit", "semio-framework-plugin-host-shard/testkit"]
+testkit = ["semio-plugin-host-engine/testkit", "semio-plugin-host-guest-runtime/testkit", "semio-plugin-host-post-turn-relay/testkit", "semio-plugin-host-process-transport/testkit", "semio-plugin-host-routers/testkit", "semio-plugin-host-shard/testkit"]
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
-semio-framework-plugin-guest-contract = { workspace = true }
-semio-framework-plugin-interpreter-runtime = { workspace = true }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-plugin-guest-contract = { workspace = true }
+semio-plugin-interpreter-runtime = { workspace = true }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1-host-native): `GuestRuntime`'s `RuntimeActorId`/
 # `PackageId`/`PackageHash` vocabulary (design-runtime.md §2) — packet A1's pure, domain-neutral
@@ -40,7 +40,7 @@ semio-framework-actor = { workspace = true }
 # `AsyncEffectExecutor` derives `OperationContext`/`ScopeHandle`/`ChannelPolicy` (this crate's own
 # vocabulary is domain-neutral, zero tokio) and dispatches onto `HttpPool`/`StorageScheduler`/
 # `TimerWheel`/`ComputePool`/`EventRouter` (packet R2's tokio-backed services) — same dependency
-# shape `semio-framework-os-services` itself already establishes.
+# shape `semio-os-services` itself already establishes.
 # 🧵️ P1c (one-pool-worker-runtime): `"entrypoint"` is required (not merely `cfg(test)`) because
 # `🧵️shard/🧵️executor/🦀️.rs`'s `ShardExecutor::run` calls `semio_framework_async::block_on` from a
 # PRODUCTION `WorkerPool` job closure (a plain OS thread, no async executor already polling it) —
@@ -54,34 +54,34 @@ serde_json = "1.0.140"
 # hashes a `ForeignStep`'s payload into `protocol::PayloadHash` for `MutationOrigin::Contributed`, the
 # exact algorithm `📡️spr/🎮️command/🦀️.rs`'s own `Planner` cycle-guard already uses.
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
-semio-framework-plugin-host-engine = { path = "../../🔧️engine/📦️packages/🦀️rust" }
-semio-framework-plugin-host-guest-runtime = { path = "../../🎭️guest-runtime/📦️packages/🦀️rust" }
-semio-framework-plugin-host-post-turn-relay = { path = "../../🔀️post-turn-relay/📦️packages/🦀️rust" }
-semio-framework-plugin-host-process-transport = { path = "../../🧵️shard/🚚️process-transport/📦️packages/🦀️rust" }
-semio-framework-plugin-host-routers = { path = "../../🧭️routers/📦️packages/🦀️rust" }
-semio-framework-plugin-host-shard = { path = "../../🧵️shard/📦️packages/🦀️rust" }
-semio-framework-plugin-host-shard-executor = { path = "../../🧵️shard/🧵️executor/📦️packages/🦀️rust" }
-semio-framework-plugin-host-wake = { path = "../../🔔️wake/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-plugin-host-engine = { path = "../../🔧️engine/📦️packages/🦀️rust" }
+semio-plugin-host-guest-runtime = { path = "../../🎭️guest-runtime/📦️packages/🦀️rust" }
+semio-plugin-host-post-turn-relay = { path = "../../🔀️post-turn-relay/📦️packages/🦀️rust" }
+semio-plugin-host-process-transport = { path = "../../🧵️shard/🚚️process-transport/📦️packages/🦀️rust" }
+semio-plugin-host-routers = { path = "../../🧭️routers/📦️packages/🦀️rust" }
+semio-plugin-host-shard = { path = "../../🧵️shard/📦️packages/🦀️rust" }
+semio-plugin-host-shard-executor = { path = "../../🧵️shard/🧵️executor/📦️packages/🦀️rust" }
+semio-plugin-host-wake = { path = "../../🔔️wake/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true }
 
 [dev-dependencies]
-semio-framework-plugin-host-operation = { path = "../../🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-plugin-host-wit = { path = "../../🔗️wit-bindings/📦️packages/🦀️rust" }
-semio-framework-plugin-host-engine = { path = "../../🔧️engine/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-plugin-host-guest-runtime = { path = "../../🎭️guest-runtime/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-plugin-host-post-turn-relay = { path = "../../🔀️post-turn-relay/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-plugin-host-process-transport = { path = "../../🧵️shard/🚚️process-transport/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-plugin-host-routers = { path = "../../🧭️routers/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-plugin-host-shard = { path = "../../🧵️shard/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-plugin-interpreter = { workspace = true }
-semio-framework-plugin-interpreter-runtime = { workspace = true, features = ["testkit"] }
+semio-plugin-host-operation = { path = "../../🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-host-wit = { path = "../../🔗️wit-bindings/📦️packages/🦀️rust" }
+semio-plugin-host-engine = { path = "../../🔧️engine/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-host-guest-runtime = { path = "../../🎭️guest-runtime/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-host-post-turn-relay = { path = "../../🔀️post-turn-relay/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-host-process-transport = { path = "../../🧵️shard/🚚️process-transport/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-host-routers = { path = "../../🧭️routers/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-host-shard = { path = "../../🧵️shard/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-interpreter = { workspace = true }
+semio-plugin-interpreter-runtime = { workspace = true, features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
 # plain dependency above for test builds only) brings in `semio-framework-async::testkit::
 # ManualRuntime`, this crate's own `#[cfg(test)]` double for `⚡️effects/🦀️.rs`'s tests —
-# same pattern `semio-framework-os-services`'s own Cargo.toml already establishes.
+# same pattern `semio-os-services`'s own Cargo.toml already establishes.
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

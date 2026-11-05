@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::{fixture_bytes, fixture_path, fixture_text};
 
 pub(crate) fn register_sqlite_test_declaration() {
     static REGISTERED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
-    REGISTERED.get_or_init(|| { semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("PDF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap(); });
+    REGISTERED.get_or_init(|| { semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("PDF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap(); });
 }
 
 #[test]
@@ -33,7 +33,7 @@ fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
     for (text, record, grammar, protocol) in cases {
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
         let source = format!("{}\n{body}", envelope.envelope_id());
-        assert!(semio_framework_dsl::Recognizer::compile(&semio_framework_dsl::parse_grammar(grammar).unwrap(), &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&source).unwrap(), "{source}");
+        assert!(semio_framework_dsl::Recognizer::compile(&semio_framework_dsl::parse_grammar(grammar).unwrap(), &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&source).unwrap(), "{source}");
         let protocol = semio_framework_dsl::parse_protocol(protocol).unwrap();
         let fields = protocol.blocks.iter().find_map(|block| match block { semio_framework_dsl::Block::Record { name, fields, .. } if name == "snapshot" => Some(fields), _ => None }).unwrap();
         assert_eq!(fields.iter().map(|field| field.name.as_str()).collect::<Vec<_>>(), record.fields.iter().map(|field| field.key.as_str()).collect::<Vec<_>>());

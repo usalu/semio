@@ -1,9 +1,9 @@
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::BuiltNode;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_scene::EventFeedScene;
+use semio_ui_scene::EventFeedScene;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::inferences::audit_trail;
 #[allow(unused_imports)]
@@ -11,13 +11,13 @@ use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 #[allow(unused_imports)]
 use semio_framework_value::ToValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::scene_surface;
+use semio_plugin::scene_surface;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 use crate::editor::architect::modes::edit::windows::trace::{rfc3339_utc_epoch_ms};
 use crate::editor::architect::modes::edit::windows::trace::*;
 use crate::standards::v1::subsets::any::schema::kernel::{EntityHeader, TextField};
@@ -75,7 +75,7 @@ async fn authored_audit_record_projects_to_a_real_event_feed_scene() {
     let json = project_render(render(&program, &TreeWindows::unhosted()));
     assert!(json.contains("event-feed"), "missing event-feed surface: {json}");
     assert!(!json.contains("text-editor"), "trace must not fall back to a generic text surface: {json}");
-    let scene: EventFeedScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("packed event-feed scene");
+    let scene: EventFeedScene = semio_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("packed event-feed scene");
     let entries: Vec<serde_json::Value> = serde_json::from_str(&scene.entries_json).expect("event entries");
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0], fixture["expected"]);
@@ -86,11 +86,11 @@ async fn authored_audit_record_projects_to_a_real_event_feed_scene() {
 #[semio_framework_async_macros::async_test]
 async fn empty_audit_trail_is_an_empty_authored_feed() {
     let scene_json = project_render(render(&empty_plugin(), &TreeWindows::unhosted()));
-    let scene: EventFeedScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&scene_json).expect("packed event-feed scene");
+    let scene: EventFeedScene = semio_plugin::artifact_app_laws::decode_fixture_scene(&scene_json).expect("packed event-feed scene");
     let entries: Vec<serde_json::Value> = serde_json::from_str(&scene.entries_json).expect("event entries");
     assert!(entries.is_empty());
 }
 
-fn project_render(node: semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
+fn project_render(node: semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>) -> String {
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
 }

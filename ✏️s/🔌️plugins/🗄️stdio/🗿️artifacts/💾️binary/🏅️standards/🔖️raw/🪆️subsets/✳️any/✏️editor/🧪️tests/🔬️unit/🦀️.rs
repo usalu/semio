@@ -1,9 +1,9 @@
 use crate::editor::binary::modes::edit::windows::main;
 use crate::schema::mutations::replace_byte_range;
 use crate::{BinaryMutation, BinarySnapshot};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
 use crate::editor::binary::{parse_hex_dump, binary_text_emit};
 use crate::editor::binary::*;
 use semio_framework_test_fixtures::fixture_text;
@@ -11,7 +11,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[semio_framework_async_macros::async_test]
 async fn create_binary_editor_builds_a_definition_for_the_editor_role() {
     let def = create_binary_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, BINARY_EDITOR_DIALECT.into());
 }
 
@@ -29,8 +29,8 @@ async fn editor_declares_the_main_window() {
 #[semio_framework_async_macros::async_test]
 async fn parse_hex_dump_round_trips_a_rendered_snapshot() {
     let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
-    let node = main::render(&document, semio_framework_ui_locale::Locale::En, semio_framework_plugin::UiPublicationRevision(23)).expect("render");
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
+    let node = main::render(&document, semio_ui_locale::Locale::En, semio_plugin::UiPublicationRevision(23)).expect("render");
+    let scene: semio_ui_scene::TextEditorScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
     let parsed = parse_hex_dump(&scene.buffer).expect("well-formed hex dump must parse");
     assert_eq!(parsed, vec![0xde, 0xad, 0xbe, 0xef]);
 }
@@ -121,7 +121,7 @@ fn a_document_details_edit_is_one_byte_splice() {
     assert_eq!((range(&moved, 0), range(&moved, 1)), ((0, 1, vec![]), (2, 0, vec![0xde])));
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::binary::BinaryEditor, || semio_framework_plugin::App { definition: crate::editor::binary::create_binary_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️raw/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::binary::BinaryEditor, || semio_plugin::App { definition: crate::editor::binary::create_binary_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️raw/🪆️subsets/✳️any");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_binary_files_are_the_exact_bytes_and_survive_a_byte_edit() {

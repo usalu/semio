@@ -1,6 +1,6 @@
 //! 🛠️ Lowpoly editor options: sun, edges, brush and eraser parameters, selection, gumball and snap.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 //#region 🧩️Modules
 #[path = "🖌️paint-params-brush/🦀️.rs"]

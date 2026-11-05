@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLoadDispersalSlabT
         record: "ChangedLoadDispersalSlabThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slab thickness t_s of the load dispersal", "Lastausbreitung: Plattendicke t_s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slab thickness t_s of the load dispersal", "Lastausbreitung: Plattendicke t_s ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,15 +1,15 @@
 //! ♻️ Tool operation keys, document authority and tool cancellation scopes, handles and leases.
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as pack;
 #[cfg(test)]
 #[global_allocator]
 static CANCELLATION_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_async::{PublicationClaimHandle, PublicationClaim, PublicationPermit};
-use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_typed_owner_demand, plugin_typed_owner_step};
+use semio_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_typed_owner_demand, plugin_typed_owner_step};
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, RetirementDemand, ValueError};
 use std::mem::ManuallyDrop;
 #[path="🎟️issuer/🦀️.rs"]

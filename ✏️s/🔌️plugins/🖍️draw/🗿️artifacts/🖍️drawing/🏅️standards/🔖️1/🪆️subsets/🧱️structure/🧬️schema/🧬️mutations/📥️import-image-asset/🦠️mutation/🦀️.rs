@@ -15,7 +15,7 @@ pub fn import_image_asset<Op: From<ImportImageAsset>>(asset_id:String,asset:Draw
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for ImportImageAsset where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::remove_image_asset::mutation::RemoveImageAsset> {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"add",entity:"image-asset",kind:"import-image-asset",record:"AddedImageAsset"};
 
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Import image asset","Bildressource importieren")}
+    fn label(&self)->semio_ui_locale::LocalizedLabel {semio_ui_locale::LocalizedLabel::native("Import image asset","Bildressource importieren")}
     fn target(&self)->Vec<String>{vec![self.asset_id.to_string_owner()]}
 }
 

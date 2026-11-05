@@ -20,8 +20,8 @@ pub struct ConfigStoreHydrationProgress {
 
 pub enum ConfigStoreHydrationStep<P, M>
 where
-    P: semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     Pending(ConfigStoreHydrationProgress),
     Ready(Box<ArtifactStore<P, M>>),
@@ -52,41 +52,41 @@ pub(super) enum Phase {
 
 pub struct RetainedConfigStoreHydration<P, M>
 where
-    P: semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
-    pub initial: ManuallyDrop<Option<semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>>>,
+    pub initial: ManuallyDrop<Option<semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>>>,
     pub(super) validation: ManuallyDrop<Option<P>>,
     pub current: ManuallyDrop<Option<P>>,
-    pub history: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_spr::HistoryLog>>>,
-    pub fold_job: ManuallyDrop<Option<semio_framework_os_spr::HistoryFoldJob<'static, semio_framework_os_spr::history::RetainedHistoryFold>>>,
-    pub fold: ManuallyDrop<Option<semio_framework_os_spr::HistoryFold>>,
-    pub normalized_transitions: ManuallyDrop<Option<std::collections::VecDeque<semio_framework_os_spr::MutationEnvelope>>>,
-    pub transition_ledger:ManuallyDrop<Option<semio_framework_os_vcs::ArtifactHistoryLedger<semio_framework_os_spr::MutationEnvelope>>>,
-    pub(super) fold_auxiliary: ManuallyDrop<Option<(Vec<String>, Vec<semio_framework_os_spr::Conflict>)>>,
+    pub history: ManuallyDrop<Option<std::sync::Arc<semio_os_spr::HistoryLog>>>,
+    pub fold_job: ManuallyDrop<Option<semio_os_spr::HistoryFoldJob<'static, semio_os_spr::history::RetainedHistoryFold>>>,
+    pub fold: ManuallyDrop<Option<semio_os_spr::HistoryFold>>,
+    pub normalized_transitions: ManuallyDrop<Option<std::collections::VecDeque<semio_os_spr::MutationEnvelope>>>,
+    pub transition_ledger:ManuallyDrop<Option<semio_os_vcs::ArtifactHistoryLedger<semio_os_spr::MutationEnvelope>>>,
+    pub(super) fold_auxiliary: ManuallyDrop<Option<(Vec<String>, Vec<semio_os_spr::Conflict>)>>,
     pub fold_completed: u64,
     pub progress_high_water: std::cell::Cell<u64>,
-    pub(super) source_edits: ManuallyDrop<Option<semio_framework_os_store_retirement::resident_backing::PagedSourceIterator<semio_framework_os_spr::HistoryEdit>>>,
-    pub(super) source_forwards: ManuallyDrop<Option<semio_framework_os_store_retirement::resident_backing::SourceIterator<semio_framework_os_spr::OpPayload>>>,
-    pub(super) source_inverse: ManuallyDrop<Option<semio_framework_os_store_retirement::resident_backing::SourceIterator<semio_framework_os_spr::OpPayload>>>,
-    pub(super) source_metadata: ManuallyDrop<Option<semio_framework_os_store_retirement::resident_backing::SourceIterator<semio_framework_os_spr::HistoryOpMeta>>>,
+    pub(super) source_edits: ManuallyDrop<Option<semio_os_store_retirement::resident_backing::PagedSourceIterator<semio_os_spr::HistoryEdit>>>,
+    pub(super) source_forwards: ManuallyDrop<Option<semio_os_store_retirement::resident_backing::SourceIterator<semio_os_spr::OpPayload>>>,
+    pub(super) source_inverse: ManuallyDrop<Option<semio_os_store_retirement::resident_backing::SourceIterator<semio_os_spr::OpPayload>>>,
+    pub(super) source_metadata: ManuallyDrop<Option<semio_os_store_retirement::resident_backing::SourceIterator<semio_os_spr::HistoryOpMeta>>>,
     pub(super) pending_source_lane: ManuallyDrop<Option<String>>,
     pub(super) pending_snapshot: ManuallyDrop<Option<P>>,
-    pub(super) pending_source_edit: ManuallyDrop<Option<semio_framework_os_spr::HistoryEdit>>,
-    pub(super) pending_retired_payload: ManuallyDrop<Option<semio_framework_os_spr::OpPayload>>,
-    pub(super) pending_payload: ManuallyDrop<Option<semio_framework_os_spr::OpPayload>>,
-    pub(super) pending_metadata: ManuallyDrop<Option<semio_framework_os_spr::HistoryOpMeta>>,
+    pub(super) pending_source_edit: ManuallyDrop<Option<semio_os_spr::HistoryEdit>>,
+    pub(super) pending_retired_payload: ManuallyDrop<Option<semio_os_spr::OpPayload>>,
+    pub(super) pending_payload: ManuallyDrop<Option<semio_os_spr::OpPayload>>,
+    pub(super) pending_metadata: ManuallyDrop<Option<semio_os_spr::HistoryOpMeta>>,
     pub(super) expected_id: ManuallyDrop<Option<String>>,
     pub schema: ManuallyDrop<Option<String>>,
     pub envelope: ManuallyDrop<Option<ArtifactEnvelope<P, M>>>,
     pub runtime: ManuallyDrop<Option<ArtifactStoreInitializationRuntime<P>>>,
     pub owners: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
     pub pending_edit: ManuallyDrop<Option<Edit<M>>>,
-    pub pending_messages: ManuallyDrop<Option<semio_framework_os_spr::EditMessages>>,
-    pub(super) retired_messages: ManuallyDrop<Option<semio_framework_os_spr::EditMessages>>,
+    pub pending_messages: ManuallyDrop<Option<semio_os_spr::EditMessages>>,
+    pub(super) retired_messages: ManuallyDrop<Option<semio_os_spr::EditMessages>>,
     pub edit_lookup: ManuallyDrop<Option<protocol::HistoryFoldIndex<String, usize>>>,
     pub active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    pub actor: ManuallyDrop<semio_framework_os_spr::ActorId>,
+    pub actor: ManuallyDrop<semio_os_spr::ActorId>,
     pub initial_digest: [u8; 32],
     pub generation: u64,
     pub(super) maximum_value_bytes: usize,
@@ -101,20 +101,20 @@ where
 
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where
-    P: semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     pub fn from_snapshots(
-        initial: semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>,
+        initial: semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>,
         validation: P,
         current: P,
-        history: semio_framework_os_spr::HistoryLog,
+        history: semio_os_spr::HistoryLog,
         expected_id: String,
         schema: String,
         owners: DocumentStoreOwners<P, M>,
         generation: u64,
         maximum_value_bytes: usize,
-        actor: semio_framework_os_spr::ActorId,
+        actor: semio_os_spr::ActorId,
     ) -> Self {
         let initial_digest = initial.facts().digest();
         Self {
@@ -126,7 +126,7 @@ where
             fold_job: ManuallyDrop::new(None),
             fold: ManuallyDrop::new(None),
             normalized_transitions: ManuallyDrop::new(None),
-            transition_ledger:ManuallyDrop::new(Some(semio_framework_os_vcs::ArtifactHistoryLedger::empty())),
+            transition_ledger:ManuallyDrop::new(Some(semio_os_vcs::ArtifactHistoryLedger::empty())),
             fold_auxiliary: ManuallyDrop::new(None),
             fold_completed: 0,
             progress_high_water: std::cell::Cell::new(0),
@@ -163,7 +163,7 @@ where
         }
     }
 
-    pub(super) fn metadata_retained_bytes(source: &semio_framework_os_spr::HistoryOpMeta) -> usize {
+    pub(super) fn metadata_retained_bytes(source: &semio_os_spr::HistoryOpMeta) -> usize {
         source.op_id.as_ref().map_or(0, String::len)
             + source.dependencies.iter().map(String::len).sum::<usize>()
             + source.author_id.as_ref().map_or(0, semio_framework_value::SharedUtf8::len)
@@ -171,11 +171,11 @@ where
             + source.messages.iter().map(|message| message.code.len() + message.message.len() + message.target.iter().map(String::len).sum::<usize>()).sum::<usize>()
     }
 
-    pub fn payload_bytes(payload: &semio_framework_os_spr::OpPayload) -> usize {
+    pub fn payload_bytes(payload: &semio_os_spr::OpPayload) -> usize {
         payload.binary.as_ref().map_or_else(|| payload.text.as_ref().map_or(0, String::len), Vec::len)
     }
 
-    pub fn decode_operation(payload: &semio_framework_os_spr::OpPayload) -> Result<M, ConfigStoreHydrationDiagnostic> {
+    pub fn decode_operation(payload: &semio_os_spr::OpPayload) -> Result<M, ConfigStoreHydrationDiagnostic> {
         match (&payload.binary, &payload.text) {
             (Some(bytes), _) => M::decode_op(bytes).map_err(|_| ConfigStoreHydrationDiagnostic::Replay),
             (None, Some(text)) => M::parse_op(text).map_err(|_| ConfigStoreHydrationDiagnostic::Replay),
@@ -183,7 +183,7 @@ where
         }
     }
 
-    pub(super) fn vacant_history_edit()->semio_framework_os_spr::HistoryEdit{semio_framework_os_spr::HistoryEdit{id:String::new(),actor:None,started_at:String::new(),finished_at:None,verb:None,line:None,ops:Vec::new(),inverse:Vec::new(),meta:None,lane:None}}
+    pub(super) fn vacant_history_edit()->semio_os_spr::HistoryEdit{semio_os_spr::HistoryEdit{id:String::new(),actor:None,started_at:String::new(),finished_at:None,verb:None,line:None,ops:Vec::new(),inverse:Vec::new(),meta:None,lane:None}}
 
     pub fn reject(&mut self, diagnostic: ConfigStoreHydrationDiagnostic) -> ConfigStoreHydrationStep<P, M> {
         self.diagnostic.get_or_insert(diagnostic);
@@ -205,7 +205,7 @@ where
 
     pub fn drive_active(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ConfigStoreHydrationDiagnostic> {
         if self.active.is_none() { return Ok(None); }
-        semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| Some(step.progress())).map_err(|_| ConfigStoreHydrationDiagnostic::Initialization)
+        semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| Some(step.progress())).map_err(|_| ConfigStoreHydrationDiagnostic::Initialization)
     }
 
     pub(super) fn admit_input<T: semio_framework_value::retirement::RetireOwned>(source: &mut Option<T>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress)>, ValueError> {
@@ -246,9 +246,9 @@ where
     pub fn demand_bytes(&self) -> Result<usize, ValueError> {
         if self.phase == Phase::Fold { return self.fold_job.as_ref().map_or(Ok(0), |job| job.next_copy_byte_demand()); }
         Ok(match self.phase {
-            Phase::BeginEdit => self.source_edits.as_ref().and_then(|edits| edits.peek()).map_or(0,|edit|edit.id.len().saturating_mul(2).max(size_of::<Option<semio_framework_os_spr::HistoryEdit>>()+size_of::<usize>())),
+            Phase::BeginEdit => self.source_edits.as_ref().and_then(|edits| edits.peek()).map_or(0,|edit|edit.id.len().saturating_mul(2).max(size_of::<Option<semio_os_spr::HistoryEdit>>()+size_of::<usize>())),
             Phase::DecodeForward | Phase::DecodeInverse => self.pending_payload.as_ref().map_or(0, Self::payload_bytes).max(size_of::<M>()),
-            Phase::DecodeMetadata => size_of::<semio_framework_os_spr::MutationMeta>().max(self.pending_metadata.as_ref().map_or(0, Self::metadata_retained_bytes)),
+            Phase::DecodeMetadata => size_of::<semio_os_spr::MutationMeta>().max(self.pending_metadata.as_ref().map_or(0, Self::metadata_retained_bytes)),
             Phase::FinishEdit => self.pending_edit.as_ref().map_or(0, |edit| edit.id.len()),
             _ => 0,
         })

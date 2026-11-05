@@ -40,7 +40,7 @@ pub struct GraphInteractionDispatch {
     pub(in super::super) domain_id: Option<String>,
     select_targets: String,
     hover_targets: String,
-    pub(in super::super) viewport: semio_framework_os_kernel::Viewport2d,
+    pub(in super::super) viewport: semio_os_kernel::Viewport2d,
     pub(super) digest: PublishedGraphInteraction,
     pub publish_select: bool,
     pub publish_hover: bool,
@@ -53,11 +53,11 @@ impl GraphInteractionDispatch {
     }
 }
 
-pub(super) fn node_graph_interaction_domain(surface_id: &str) -> Option<Arc<semio_framework_ui_declaration::ui::NodeGraphInteractionDomain>> {
+pub(super) fn node_graph_interaction_domain(surface_id: &str) -> Option<Arc<semio_ui_declaration::ui::NodeGraphInteractionDomain>> {
     ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).and_then(|entry| entry.sync_cache.interaction_domain.clone()))
 }
 
-fn node_graph_target_prefix<'a>(domain: &'a semio_framework_ui_declaration::ui::NodeGraphInteractionDomain, granularity: &str) -> Option<&'a str> {
+fn node_graph_target_prefix<'a>(domain: &'a semio_ui_declaration::ui::NodeGraphInteractionDomain, granularity: &str) -> Option<&'a str> {
     match granularity {
         "node" => Some(&domain.node_target_prefix),
         "edge" => Some(&domain.edge_target_prefix),
@@ -66,12 +66,12 @@ fn node_graph_target_prefix<'a>(domain: &'a semio_framework_ui_declaration::ui::
     }
 }
 
-pub fn node_graph_domain_targets_json(domain: &semio_framework_ui_declaration::ui::NodeGraphInteractionDomain, granularity: &str, ids: &[String]) -> Result<String, semio_framework_ui_action::BoundedActionFault> {
-    let prefix = node_graph_target_prefix(domain, granularity).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
-    serde_json::to_string(&ids.iter().map(|id| json!({ "granularity": granularity, "id": format!("{prefix}{id}") })).collect::<Vec<_>>()).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)
+pub fn node_graph_domain_targets_json(domain: &semio_ui_declaration::ui::NodeGraphInteractionDomain, granularity: &str, ids: &[String]) -> Result<String, semio_ui_action::BoundedActionFault> {
+    let prefix = node_graph_target_prefix(domain, granularity).ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+    serde_json::to_string(&ids.iter().map(|id| json!({ "granularity": granularity, "id": format!("{prefix}{id}") })).collect::<Vec<_>>()).map_err(|_| semio_ui_action::BoundedActionFault::Structure)
 }
 
-pub fn graph_interaction_dispatch(published: PublishedGraphInteraction, snapshot: GraphInteractionSnapshot, domain: Option<&semio_framework_ui_declaration::ui::NodeGraphInteractionDomain>) -> Result<GraphInteractionDispatch, semio_framework_ui_action::BoundedActionFault> {
+pub fn graph_interaction_dispatch(published: PublishedGraphInteraction, snapshot: GraphInteractionSnapshot, domain: Option<&semio_ui_declaration::ui::NodeGraphInteractionDomain>) -> Result<GraphInteractionDispatch, semio_ui_action::BoundedActionFault> {
     let select_targets = match domain {
         Some(domain) => node_graph_domain_targets_json(domain, "node", &snapshot.node_ids)?,
         None => "[]".into(),
@@ -130,12 +130,12 @@ pub(super) fn record_graph_interaction(surface_id: &str, digest: PublishedGraphI
 }
 //#endregion 📌️GraphInteractionChange
 
-pub(super) fn write_graph_interaction_actions(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, dispatch: &GraphInteractionDispatch) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+pub(super) fn write_graph_interaction_actions(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, dispatch: &GraphInteractionDispatch) -> Result<(), semio_ui_action::BoundedActionFault> {
     if dispatch.publish_select {
-        let domain_id = dispatch.domain_id.as_deref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let domain_id = dispatch.domain_id.as_deref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let select_action = "interactionSelect";
         let select_targets = dispatch.select_targets.as_str();
-        let select_bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, select_action, "domainId", domain_id, "targets", select_targets, "merge", "replace", "method", "pick"])?;
+        let select_bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, select_action, "domainId", domain_id, "targets", select_targets, "merge", "replace", "method", "pick"])?;
         batch.action(controller_id, select_action, select_bytes, |builder| {
             builder.begin_object(None)?;
             builder.string(Some("domainId"), domain_id)?;
@@ -146,10 +146,10 @@ pub(super) fn write_graph_interaction_actions(batch: &mut semio_framework_ui_act
         })?;
     }
     if dispatch.publish_hover {
-        let domain_id = dispatch.domain_id.as_deref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let domain_id = dispatch.domain_id.as_deref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let hover_action = "interactionHover";
         let hover_targets = dispatch.hover_targets.as_str();
-        let hover_bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, hover_action, "domainId", domain_id, "channel", "pointer", "targets", hover_targets])?;
+        let hover_bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, hover_action, "domainId", domain_id, "channel", "pointer", "targets", hover_targets])?;
         batch.action(controller_id, hover_action, hover_bytes, |builder| {
             builder.begin_object(None)?;
             builder.string(Some("domainId"), domain_id)?;
@@ -161,7 +161,7 @@ pub(super) fn write_graph_interaction_actions(batch: &mut semio_framework_ui_act
     if dispatch.publish_viewport {
         let viewport_action = "nodeGraphViewport";
         let viewport = dispatch.viewport;
-        let viewport_bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, viewport_action, "surfaceId", surface_id, "viewport", "x", "y", "zoom"])?;
+        let viewport_bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, viewport_action, "surfaceId", surface_id, "viewport", "x", "y", "zoom"])?;
         batch.action(controller_id, viewport_action, viewport_bytes, |builder| {
             builder.begin_object(None)?;
             builder.string(Some("surfaceId"), surface_id)?;

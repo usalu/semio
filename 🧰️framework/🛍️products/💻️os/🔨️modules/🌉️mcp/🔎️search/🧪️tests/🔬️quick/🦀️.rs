@@ -1,11 +1,11 @@
 //! 🧱️ Search_quick of the capabilities crate: Gateway capability declarations and the core catalog.
 
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 #[cfg(any(test, feature = "testkit"))]
 use crate::source_builders;
-use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityKind, CapabilityOwner, CatalogAuditFinding, audit_source, compile};
-use semio_framework_os_mcp_catalog::search::{RankedHit, SearchFilters, search, tokenize};
+use semio_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityKind, CapabilityOwner, CatalogAuditFinding, audit_source, compile};
+use semio_os_mcp_catalog::search::{RankedHit, SearchFilters, search, tokenize};
 
 #[test]
 fn tokenizer_splits_camel_case_and_kebab_case_and_drops_stopwords() {

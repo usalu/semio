@@ -7,15 +7,15 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_wit
 use crate::editor::bim::panels::properties::input_row;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_ui_locale::Label;
+use semio_plugin::tree_item_desc;
+use semio_plugin::BuiltNode;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_ui_locale::Label;
 use std::collections::BTreeSet;
 
 //#region 🔖️Constants
@@ -95,7 +95,7 @@ pub fn render(snapshot: &ModelSnapshot, labels: &BimLabels, elements: &[String],
         })?;
     }
     if snapshot.classification_systems.is_empty() {
-        builder = builder.section(format!("{ROOT}.empty"), Some(ui_label(labels.classification_none.as_str())?), true, semio_framework_plugin::ui_node_list(Vec::<UiAssemblyResult<BuiltNode>>::new())?)?;
+        builder = builder.section(format!("{ROOT}.empty"), Some(ui_label(labels.classification_none.as_str())?), true, semio_plugin::ui_node_list(Vec::<UiAssemblyResult<BuiltNode>>::new())?)?;
     }
     builder.interaction_domain(BIM_EDITOR_CONTROLLER_ID, BIM_LIBRARY_DOMAIN)?.build()
 }

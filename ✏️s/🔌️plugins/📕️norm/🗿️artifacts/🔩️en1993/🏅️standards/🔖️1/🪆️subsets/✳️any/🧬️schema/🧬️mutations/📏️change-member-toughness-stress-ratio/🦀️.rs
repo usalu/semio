@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberToughnessStr
         record: "ChangedMemberToughnessStressRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stress level σ_Ed/f_y(t) (1-10) of the member", "Bauteil: Spannungsniveau σ_Ed/f_y(t) (1-10) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stress level σ_Ed/f_y(t) (1-10) of the member", "Bauteil: Spannungsniveau σ_Ed/f_y(t) (1-10) ändern")
     }
 }
 

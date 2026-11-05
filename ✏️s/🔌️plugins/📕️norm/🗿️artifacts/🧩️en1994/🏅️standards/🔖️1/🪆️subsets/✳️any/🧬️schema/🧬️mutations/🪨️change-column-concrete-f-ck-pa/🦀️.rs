@@ -17,8 +17,8 @@ pub struct ChangeColumnConcreteFCkPa {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnConcreteFCkPa where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_concrete_f_ck_pa::ChangeColumnConcreteFCkPa> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-concrete-f-ck-pa", kind: "change-column-concrete-f-ck-pa", record: "ChangedColumnConcreteFCkPa" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change column concrete strength f_ck", "Betondruckfestigkeit f_ck der Stütze ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change column concrete strength f_ck", "Betondruckfestigkeit f_ck der Stütze ändern")
     }
 }
 

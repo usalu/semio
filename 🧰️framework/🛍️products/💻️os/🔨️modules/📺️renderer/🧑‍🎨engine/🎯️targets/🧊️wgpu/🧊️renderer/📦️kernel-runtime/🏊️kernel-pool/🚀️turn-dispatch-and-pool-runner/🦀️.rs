@@ -167,7 +167,7 @@ impl KernelPoolState {
                 match outcome {
                     ShardOutcome::OriginalCall{actor:reported,returned,continuation,call}=>{
                         self.runtime.kernel_mut().receive_original_call(ActorId(reported),returned,continuation).map_err(ProgramFault::from)?;
-                        if let Some(call)=call{if matches!(call.kind,semio_framework_plugin_host::original_actor_context::OriginalActorFixedKind::Failure{..}){return Err(call.into())}}
+                        if let Some(call)=call{if matches!(call.kind,semio_plugin_host::original_actor_context::OriginalActorFixedKind::Failure{..}){return Err(call.into())}}
                     }
                     ShardOutcome::Turn { actor: reported, result, jobs } => {
                         self.runtime.complete_actor(ActorId(reported), &result, self.now_ms).await.map_err(ProgramFault::from)?;
@@ -407,7 +407,7 @@ impl KernelPoolState {
             if self.semantic_close_document_lane {
                 let _ = ui_contract::close_ui_document_page_one();
             } else {
-                let _ = semio_framework_ui_contract_validation::close_ui_patch_owner_one();
+                let _ = semio_ui_contract_validation::close_ui_patch_owner_one();
             }
             self.semantic_close_document_lane = !self.semantic_close_document_lane;
             return Ok(());

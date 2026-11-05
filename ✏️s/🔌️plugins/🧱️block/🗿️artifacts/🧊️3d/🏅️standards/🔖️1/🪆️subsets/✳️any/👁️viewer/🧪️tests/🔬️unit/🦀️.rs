@@ -28,19 +28,19 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 /// manifest is what the runtime mounts, so it is what these laws run against.
 mod context {
     use crate::tests::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{PluginApp, VcsArtifactApp, ViewerApp};
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_plugin::{PluginApp, VcsArtifactApp, ViewerApp};
 
     pub type Block3dViewerHarness = VcsArtifactApp<ViewerApp<Block3dViewer>>;
 
-    pub fn block3d_viewer_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_block3d_viewer(), examples: Vec::new() }
+    pub fn block3d_viewer_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_block3d_viewer(), examples: Vec::new() }
     }
 
     /// 🧹️ A live viewer fixture that CLOSES itself: the document store's `Drop` asserts its exact
     /// terminal-empty witness, so a plainly dropped harness aborts the whole test binary.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct Block3dViewerFixture(pub Block3dViewerHarness, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct Block3dViewerFixture(pub Block3dViewerHarness, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for Block3dViewerFixture {
         type Target = Block3dViewerHarness;
@@ -60,14 +60,14 @@ mod context {
             if std::thread::panicking() {
                 return;
             }
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             assert!(self.0.close_terminal_is_empty(), "Block3d viewer fixture did not reach its terminal-empty close witness");
         }
     }
 
     pub async fn app() -> Block3dViewerFixture {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<ViewerApp<Block3dViewer>>(block3d_viewer_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<ViewerApp<Block3dViewer>>(block3d_viewer_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Block3dViewerFixture(app, scope)
     }
@@ -96,7 +96,7 @@ async fn noop_command_round_trips_and_never_mutates() {
     let mut app = crate::tests::context::app().await;
     let before = app.snapshot().expect("snapshot");
     assert_eq!(protocol::OpBinary::decode_op(&protocol::OpBinary::encode_op(&Block3dViewCommand::Noop).expect("encode")).map(|command: Block3dViewCommand| command), Ok(Block3dViewCommand::Noop), "the sole command round-trips through its own wire form");
-    let refused = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Block3dViewCommand::Noop, &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    let refused = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Block3dViewCommand::Noop, &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert!(refused.is_err(), "a viewer declares no command, so the typed channel must refuse it instead of routing it: {refused:?}");
     assert_eq!(app.snapshot().expect("snapshot"), before, "the viewer's document must come through the refusal untouched");
 }

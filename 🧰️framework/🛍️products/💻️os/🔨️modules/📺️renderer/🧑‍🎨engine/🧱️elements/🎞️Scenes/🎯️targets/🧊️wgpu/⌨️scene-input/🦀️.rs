@@ -49,21 +49,21 @@ impl CanvasPointerWire {
 
 const CANVAS_POINTER_WIRE_KEYS: &[&str] = &["surfaceId", "x", "y", "width", "height", "shift", "ctrl", "meta", "alt", "extend", "worldX", "worldY", "button", "cancelled", "samples", "worldSamples"];
 
-fn canvas_pointer_action_bytes(scene: &UiComponentSceneNode, action: &str) -> Result<usize, semio_framework_ui_action::BoundedActionFault> {
+fn canvas_pointer_action_bytes(scene: &UiComponentSceneNode, action: &str) -> Result<usize, semio_ui_action::BoundedActionFault> {
     canvas_pointer_action_address_bytes(&scene.controller_id, &scene.surface_id, action)
 }
 
-fn canvas_pointer_action_address_bytes(controller_id: &str, surface_id: &str, action: &str) -> Result<usize, semio_framework_ui_action::BoundedActionFault> {
+fn canvas_pointer_action_address_bytes(controller_id: &str, surface_id: &str, action: &str) -> Result<usize, semio_ui_action::BoundedActionFault> {
     let mut parts: Vec<&str> = vec![controller_id, action, surface_id];
     parts.extend_from_slice(CANVAS_POINTER_WIRE_KEYS);
-    semio_framework_ui_action::checked_action_string_bytes(&parts)
+    semio_ui_action::checked_action_string_bytes(&parts)
 }
 
-fn write_canvas_pointer_action(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, action: &str, wire: &CanvasPointerWire) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+fn write_canvas_pointer_action(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, action: &str, wire: &CanvasPointerWire) -> Result<(), semio_ui_action::BoundedActionFault> {
     write_canvas_pointer_action_address(batch, &scene.controller_id, &scene.surface_id, action, wire)
 }
 
-fn write_canvas_pointer_action_address(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, surface_id: &str, action: &str, wire: &CanvasPointerWire) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+fn write_canvas_pointer_action_address(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, surface_id: &str, action: &str, wire: &CanvasPointerWire) -> Result<(), semio_ui_action::BoundedActionFault> {
     let bytes = canvas_pointer_action_address_bytes(controller_id, surface_id, action)?;
     batch.action(controller_id, action, bytes, |builder| {
         builder.begin_object(None)?;
@@ -105,13 +105,13 @@ fn write_canvas_pointer_action_address(batch: &mut semio_framework_ui_action::Bo
 
 const CANVAS_DOUBLE_CLICK_KEYS: &[&str] = &["surfaceId", "x", "y", "width", "height"];
 
-fn canvas_double_click_action_bytes(controller_id: &str, surface_id: &str) -> Result<usize, semio_framework_ui_action::BoundedActionFault> {
+fn canvas_double_click_action_bytes(controller_id: &str, surface_id: &str) -> Result<usize, semio_ui_action::BoundedActionFault> {
     let mut parts = vec![controller_id, "canvasDoubleClick", surface_id];
     parts.extend_from_slice(CANVAS_DOUBLE_CLICK_KEYS);
-    semio_framework_ui_action::checked_action_string_bytes(&parts)
+    semio_ui_action::checked_action_string_bytes(&parts)
 }
 
-fn write_canvas_double_click_action(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, surface_id: &str, inner: Rect, x: f32, y: f32) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+fn write_canvas_double_click_action(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, surface_id: &str, inner: Rect, x: f32, y: f32) -> Result<(), semio_ui_action::BoundedActionFault> {
     let bytes = canvas_double_click_action_bytes(controller_id, surface_id)?;
     batch.action(controller_id, "canvasDoubleClick", bytes, |builder| {
         builder.begin_object(None)?;
@@ -139,8 +139,8 @@ fn canvas_gesture_matches(active: &CanvasGesture, pointer_id: ui_render::Pointer
     active.pointer_id == pointer_id && active.window_id == window_id && active.host_id == host_id && active.document_generation == document_generation
 }
 
-fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
-    if semio_framework_os_renderer_wgpu_canvas2d_host::cancel_into(pointer_id, "captureLost", input)? {
+fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    if semio_renderer_wgpu_canvas2d_host::cancel_into(pointer_id, "captureLost", input)? {
         return Ok(true);
     }
     let Some(active) = CANVAS_GESTURE.with(|cell| {
@@ -204,7 +204,7 @@ fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, 
     Ok(true)
 }
 
-pub fn cancel_canvas_pointer_gesture(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+pub fn cancel_canvas_pointer_gesture(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     match cancel_canvas_pointer_gesture_into(None, input) {
         Ok(cancelled) => cancelled,
         Err(fault) => {
@@ -214,7 +214,7 @@ pub fn cancel_canvas_pointer_gesture(input: &mut semio_framework_ui_wgpu_input::
     }
 }
 
-pub fn cancel_canvas_pointer_gesture_for(pointer_id: ui_render::PointerId, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+pub fn cancel_canvas_pointer_gesture_for(pointer_id: ui_render::PointerId, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     match cancel_canvas_pointer_gesture_into(Some(pointer_id), input) {
         Ok(cancelled) => cancelled,
         Err(fault) => {
@@ -226,7 +226,7 @@ pub fn cancel_canvas_pointer_gesture_for(pointer_id: ui_render::PointerId, input
 
 /// 🧹️ Releases one Canvas input owner after the exact window token has entered close.
 pub fn retire_canvas_window_step(window_id: &str) -> bool {
-    if semio_framework_os_renderer_wgpu_canvas2d_host::retire_window(window_id) {
+    if semio_renderer_wgpu_canvas2d_host::retire_window(window_id) {
         return true;
     }
     if CANVAS_GESTURE.with(|cell| {
@@ -248,7 +248,7 @@ pub fn retire_canvas_window_step(window_id: &str) -> bool {
 }
 
 pub fn request_canvas_pointer_gesture_cancel_for_window(window_id: &str) {
-    semio_framework_os_renderer_wgpu_scene_state::request_cancel(|window, _, _| window == window_id);
+    semio_renderer_wgpu_scene_state::request_cancel(|window, _, _| window == window_id);
     CANVAS_GESTURE.with(|cell| {
         for active in cell.borrow_mut().slots.iter_mut().flatten().filter(|active| active.window_id == window_id) {
             active.cancellation_requested = true;
@@ -262,7 +262,7 @@ pub fn request_canvas_pointer_gesture_cancel_for_window(window_id: &str) {
 }
 
 pub fn request_stale_canvas_authority_cancel(mut generation_is_live: impl FnMut(&str, u64) -> bool) {
-    semio_framework_os_renderer_wgpu_scene_state::request_cancel(|window, _, generation| !generation_is_live(window, generation));
+    semio_renderer_wgpu_scene_state::request_cancel(|window, _, generation| !generation_is_live(window, generation));
     CANVAS_GESTURE.with(|cell| {
         for active in cell.borrow_mut().slots.iter_mut().flatten() {
             if !generation_is_live(&active.window_id, active.document_generation) {
@@ -277,8 +277,8 @@ pub fn request_stale_canvas_authority_cancel(mut generation_is_live: impl FnMut(
     });
 }
 
-pub fn canvas_pointer_terminal_step(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
-    if let Some(pointer_id) = semio_framework_os_renderer_wgpu_canvas2d_host::cancel_due() {
+pub fn canvas_pointer_terminal_step(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    if let Some(pointer_id) = semio_renderer_wgpu_canvas2d_host::cancel_due() {
         return cancel_canvas_pointer_gesture_for(pointer_id, input);
     }
     let gesture_due = CANVAS_GESTURE.with(|cell| cell.borrow().slots.iter().flatten().find(|active| active.cancellation_requested).map(|active| active.pointer_id));
@@ -292,8 +292,8 @@ pub fn canvas_pointer_terminal_step(input: &mut semio_framework_ui_wgpu_input::I
     false
 }
 
-pub(crate) fn cancel_stale_canvas_authority(window_id: &str, host_id: &str, document_generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
-    semio_framework_os_renderer_wgpu_canvas2d_host::cancel_stale_into(window_id, host_id, document_generation, input)?;
+pub(crate) fn cancel_stale_canvas_authority(window_id: &str, host_id: &str, document_generation: u64, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
+    semio_renderer_wgpu_canvas2d_host::cancel_stale_into(window_id, host_id, document_generation, input)?;
     let stale_gesture = CANVAS_GESTURE.with(|cell| cell.borrow().slots.iter().flatten().find(|active| active.window_id == window_id && active.host_id == host_id && active.document_generation != document_generation).map(|active| active.pointer_id));
     if let Some(pointer_id) = stale_gesture {
         cancel_canvas_pointer_gesture_into(Some(pointer_id), input)?;
@@ -314,10 +314,10 @@ pub fn canvas_pointer_move_into(
     x: f32,
     y: f32,
     modifiers: SceneModifiers,
-    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
-) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_ui_action::BoundedActionFault> {
     cancel_stale_canvas_authority(window_id, &scene.host_id, document_generation, input)?;
-    if let Some(handled) = semio_framework_os_renderer_wgpu_canvas2d_host::pointer_move_into(scene, inner, pointer_id, window_id, document_generation, x, y, canvas_camera(&scene.host_id), input)? {
+    if let Some(handled) = semio_renderer_wgpu_canvas2d_host::pointer_move_into(scene, inner, pointer_id, window_id, document_generation, x, y, canvas_camera(&scene.host_id), input)? {
         return Ok(handled);
     }
     let active = CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer_id).filter(|active| canvas_gesture_matches(active, pointer_id, window_id, &scene.host_id, document_generation)).cloned());
@@ -385,8 +385,8 @@ pub fn canvas_pointer_button_into(
     down: bool,
     button: i16,
     modifiers: SceneModifiers,
-    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
-) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_ui_action::BoundedActionFault> {
     cancel_stale_canvas_authority(window_id, &scene.host_id, document_generation, input)?;
     if down && !inner.contains(x, y) {
         return Ok(false);
@@ -394,11 +394,11 @@ pub fn canvas_pointer_button_into(
     if down && CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer_id).is_some()) {
         cancel_canvas_pointer_gesture_into(Some(pointer_id), input)?;
     }
-    if let Some(handled) = semio_framework_os_renderer_wgpu_canvas2d_host::pointer_button_into(scene, inner, pointer_id, window_id, document_generation, x, y, down, button, canvas_camera(&scene.host_id), input)? {
+    if let Some(handled) = semio_renderer_wgpu_canvas2d_host::pointer_button_into(scene, inner, pointer_id, window_id, document_generation, x, y, down, button, canvas_camera(&scene.host_id), input)? {
         return Ok(handled);
     }
     if down && !CANVAS_GESTURE.with(|cell| cell.borrow().has_capacity_for(pointer_id)) {
-        return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+        return Err(semio_ui_action::BoundedActionFault::ItemCredits);
     }
     let active = CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer_id).filter(|active| canvas_gesture_matches(active, pointer_id, window_id, &scene.host_id, document_generation)).cloned());
     if !down && active.is_none() {
@@ -453,7 +453,7 @@ pub fn canvas_pointer_button_into(
         && active.as_ref().is_some_and(|active| active.button == button)
         && prior_click.is_some_and(|prior| prior.button == button && now_ms - prior.at_ms <= 400.0 && (prior.x - x).abs() <= 4.0 && (prior.y - y).abs() <= 4.0);
     let double_bytes = double_click.then(|| canvas_double_click_action_bytes(&scene.controller_id, &scene.surface_id)).transpose()?.unwrap_or(0);
-    let mut batch = input.reserve_actions(1 + usize::from(double_click), pointer_bytes.checked_add(double_bytes).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?)?;
+    let mut batch = input.reserve_actions(1 + usize::from(double_click), pointer_bytes.checked_add(double_bytes).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?)?;
     write_canvas_pointer_action(&mut batch, scene, pointer_action, &wire)?;
     if double_click {
         write_canvas_double_click_action(&mut batch, &scene.controller_id, &scene.surface_id, inner, x, y)?;
@@ -519,16 +519,16 @@ pub fn canvas_catalogue_drag_over_into(
     x: f32,
     y: f32,
     types: &[String],
-    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
-) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_ui_action::BoundedActionFault> {
     if !inner.contains(x, y) || !types.iter().any(|mime| mime == CANVAS_CATALOGUE_DRAG_MIME) {
         cancel_canvas_catalogue_drag_into(input)?;
         return Ok(false);
     }
     if types.len() > CANVAS_CATALOGUE_TYPE_CAPACITY {
-        return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+        return Err(semio_ui_action::BoundedActionFault::ItemCredits);
     }
-    semio_framework_ui_action::checked_action_string_bytes(&types.iter().map(String::as_str).collect::<Vec<_>>())?;
+    semio_ui_action::checked_action_string_bytes(&types.iter().map(String::as_str).collect::<Vec<_>>())?;
     let now_ms = semio_framework_job::default_now_ms().expect("Canvas input requires the installed monotonic host clock") as f64;
     let prior = CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().clone());
     let same_target = prior.as_ref().is_some_and(|active| active.window_id == window_id && active.document_generation == document_generation && active.host_id == scene.host_id);
@@ -571,7 +571,7 @@ pub fn canvas_catalogue_drag_over_into(
     Ok(true)
 }
 
-fn cancel_canvas_catalogue_drag_into(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+fn cancel_canvas_catalogue_drag_into(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(active) = CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().clone()) else { return Ok(false) };
     if crate::element_contracts::ui_document_close_pending_for(&active.window_id) || scene_host_retiring(&active.host_id) {
         CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow_mut().take());
@@ -588,7 +588,7 @@ fn cancel_canvas_catalogue_drag_into(input: &mut semio_framework_ui_wgpu_input::
     Ok(true)
 }
 
-pub fn cancel_canvas_catalogue_drag(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+pub fn cancel_canvas_catalogue_drag(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     match cancel_canvas_catalogue_drag_into(input) {
         Ok(cancelled) => cancelled,
         Err(fault) => {
@@ -606,8 +606,8 @@ pub fn canvas_catalogue_drop_into(
     x: f32,
     y: f32,
     raw_payload: &str,
-    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
-) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_ui_action::BoundedActionFault> {
     if raw_payload.is_empty() || raw_payload.len() > CANVAS_CATALOGUE_PAYLOAD_BYTE_CAPACITY || !inner.contains(x, y) {
         cancel_canvas_catalogue_drag_into(input)?;
         return Ok(false);
@@ -632,7 +632,7 @@ pub fn canvas_catalogue_drop_into(
     Ok(true)
 }
 
-pub fn cancel_canvas_interactions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+pub fn cancel_canvas_interactions(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     let gesture = cancel_canvas_pointer_gesture(input);
     let catalogue = cancel_canvas_catalogue_drag(input);
     gesture || catalogue
@@ -840,8 +840,8 @@ pub fn passive_scene_pointer_button(
     window_id: &str,
     document_generation: u64,
     driver_drag: UiDriverDrag,
-    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
-) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_ui_action::BoundedActionFault> {
     cancel_scene_list_transfer_if_stale(window_id, &scene.host_id, document_generation, driver_drag);
     if SCENE_LIST_TRANSFER.with(|cell| cell.borrow().active.as_ref().is_some_and(|active| active.pointer_id != pointer_id)) {
         return Ok(false);

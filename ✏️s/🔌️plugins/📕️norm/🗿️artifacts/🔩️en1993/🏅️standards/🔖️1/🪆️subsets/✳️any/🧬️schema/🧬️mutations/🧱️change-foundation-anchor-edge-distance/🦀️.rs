@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationAnchorEd
         record: "ChangedFoundationAnchorEdgeDistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Anchor edge distance to the block edge of the foundation block", "Fundamentblock: Randabstand der Anker zum Blockrand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Anchor edge distance to the block edge of the foundation block", "Fundamentblock: Randabstand der Anker zum Blockrand ändern")
     }
 }
 

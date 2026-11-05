@@ -14,15 +14,15 @@
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️tree-row-rects/🟦️.ts`, which pins the same rows against the
 //! React `Tree`'s own row metric (`treeRowHeightPx`).
 
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_declaration::ui::{ActionDescriptor, UiNode, UiPresence, UiState, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use semio_framework_ui_wgpu_engine::UiSurfaceToken;
-use semio_framework_ui_wgpu_events::hit_test;
-use semio_framework_ui_wgpu_layout::flex::{LayoutJobStage, LayoutJobStep};
-use semio_framework_ui_wgpu_mounted_layout::{MountedLayoutIdentity, MountedLayoutJob};
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_retained_tree::tree::{NodeKey, UiTree};
-use semio_framework_ui_locale::Label;
+use semio_ui_arena::NodeId;
+use semio_ui_declaration::ui::{ActionDescriptor, UiNode, UiPresence, UiState, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_ui_wgpu_engine::UiSurfaceToken;
+use semio_ui_wgpu_events::hit_test;
+use semio_ui_wgpu_layout::flex::{LayoutJobStage, LayoutJobStep};
+use semio_ui_wgpu_mounted_layout::{MountedLayoutIdentity, MountedLayoutJob};
+use semio_ui_theme::Theme;
+use semio_ui_retained_tree::tree::{NodeKey, UiTree};
+use semio_ui_locale::Label;
 use serde_json::Value;
 
 fn law() -> Value {
@@ -136,8 +136,8 @@ fn the_row_metric_is_the_one_the_fixture_was_pinned_against() {
     let theme = Theme::default();
     assert!(close(theme.tree_row_height, metrics["rowHeightPx"].as_f64().expect("rowHeightPx")));
     assert!(close(theme.tree_row_height, metrics["uiSpacingCompactPx"].as_f64().expect("uiSpacingCompactPx") * metrics["treeRowUiSpacing"].as_f64().expect("treeRowUiSpacing")));
-    assert!(close(semio_framework_ui_theme::metrics::TREE_ROW_HEIGHT, metrics["rowHeightPx"].as_f64().expect("rowHeightPx")));
-    let row_metrics = semio_framework_ui_wgpu_layout::layout::TreeRowMetrics::from_theme(&theme);
+    assert!(close(semio_ui_theme::metrics::TREE_ROW_HEIGHT, metrics["rowHeightPx"].as_f64().expect("rowHeightPx")));
+    let row_metrics = semio_ui_wgpu_layout::layout::TreeRowMetrics::from_theme(&theme);
     assert_eq!(row_metrics.row_height, theme.tree_row_height);
     assert_eq!(row_metrics.header_height, theme.tree_row_height);
 }
@@ -217,7 +217,7 @@ fn a_touch_tree_lays_every_row_out_at_least_44_pixels_tall_and_the_standard_tree
         let standard_height = standard.mounted_layout(standard_id).expect("standard row layout").3;
         let touch_height = touch.mounted_layout(touch_id).expect("touch row layout").3;
         assert!(close(standard_height, 24.0), "the standard row stays {standard_height} px");
-        assert!(touch_height >= semio_framework_ui_wgpu_layout::layout::TREE_ROW_TOUCH_MIN_PX, "the touch row {:?} is {touch_height} px tall", rect["path"]);
+        assert!(touch_height >= semio_ui_wgpu_layout::layout::TREE_ROW_TOUCH_MIN_PX, "the touch row {:?} is {touch_height} px tall", rect["path"]);
     }
     assert!(touch.mounted_layout(touch_root).expect("touch tree layout").3 >= 3.0 * 44.0, "three touch rows stack to at least 132 px");
 }
@@ -225,9 +225,9 @@ fn a_touch_tree_lays_every_row_out_at_least_44_pixels_tall_and_the_standard_tree
 #[test]
 fn the_touch_row_metric_is_the_theme_row_raised_to_44_pixels() {
     let theme = Theme::default();
-    let touch = semio_framework_ui_wgpu_layout::layout::TreeRowMetrics::for_presentation(&theme, ui_contract::TreePresentation::Touch);
+    let touch = semio_ui_wgpu_layout::layout::TreeRowMetrics::for_presentation(&theme, ui_contract::TreePresentation::Touch);
     assert_eq!(touch.row_height, theme.tree_row_height.max(44.0));
     assert_eq!(touch.header_height, touch.row_height, "a section header is as tall as a row");
     let taller = Theme { tree_row_height: 60.0, ..Theme::default() };
-    assert_eq!(semio_framework_ui_wgpu_layout::layout::TreeRowMetrics::for_presentation(&taller, ui_contract::TreePresentation::Touch).row_height, 60.0, "a theme with taller rows keeps them");
+    assert_eq!(semio_ui_wgpu_layout::layout::TreeRowMetrics::for_presentation(&taller, ui_contract::TreePresentation::Touch).row_height, 60.0, "a theme with taller rows keeps them");
 }

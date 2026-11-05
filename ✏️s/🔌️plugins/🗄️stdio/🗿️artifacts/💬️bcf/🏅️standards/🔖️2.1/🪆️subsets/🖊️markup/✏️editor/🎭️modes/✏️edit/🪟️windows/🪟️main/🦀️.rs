@@ -3,11 +3,11 @@
 //! Render is identical to the viewer's read; mutation is the surface root's `handle()` responsibility.
 
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
-use semio_framework_plugin::app::{editable_table_window_row, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::{editable_table_window_row, TableWindowKit, WindowKit, WindowedEditableTableCell};
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_locale::Locale;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -30,13 +30,13 @@ fn columns(locale: Locale) -> [&'static str; 5] {
     }
 }
 
-pub fn render(document: &BcfSnapshot, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BcfSnapshot, locale: Locale, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(document);
     render_revisioned(document, &revision, publication_revision, locale, &TreeWindows::unhosted())
 }
 
 /// 🔐️ Renders only the host-requested topic rows against the captured store revision.
-pub fn render_revisioned(document: &BcfSnapshot, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_revisioned(document: &BcfSnapshot, revision: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let columns = columns(locale);
     TableWindowKit::render_indexed_rows(
         windows,

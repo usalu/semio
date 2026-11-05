@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberWarpingSuppo
         record: "ChangedMemberWarpingSupport",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Torsion and warping end conditions of the member for the bimoment row (EN 1993-1-1 6.2.7): fork, both ends restrained, restrained at the start with fork end, or cantilever of the member", "Bauteil: Torsions- und Wölblagerung der Bauteilenden für die Bimomentzeile (EN 1993-1-1 6.2.7): Gabel, beidseitig eingespannt, Anfang eingespannt mit Gabelende oder Kragarm ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Torsion and warping end conditions of the member for the bimoment row (EN 1993-1-1 6.2.7): fork, both ends restrained, restrained at the start with fork end, or cantilever of the member", "Bauteil: Torsions- und Wölblagerung der Bauteilenden für die Bimomentzeile (EN 1993-1-1 6.2.7): Gabel, beidseitig eingespannt, Anfang eingespannt mit Gabelende oder Kragarm ändern")
     }
 }
 

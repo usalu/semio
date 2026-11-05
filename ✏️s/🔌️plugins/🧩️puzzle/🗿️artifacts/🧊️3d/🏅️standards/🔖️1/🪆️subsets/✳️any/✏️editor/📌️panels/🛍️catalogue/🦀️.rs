@@ -10,24 +10,24 @@
 
 pub use semio_s_artifact_puzzle_3d_editor_snapshot::catalog_entry_label;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
-use semio_framework_plugin::{Buildable, HasBase};
+use semio_plugin::{Buildable, HasBase};
 use {semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 
 use semio_framework_pack_json::json;
 
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_plugin::tree_window_item;
+use semio_plugin::ActionFactory;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.kinds";
@@ -49,16 +49,16 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-fn ui_text_value(value: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.text", "fixed action text admission failed"))
+fn ui_text_value(value: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.action.text", "fixed action text admission failed"))
 }
 
-fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.map", "fixed action map admission failed"))?;
+fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.action.map", "fixed action map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.map.entry", "fixed action map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.action.map.entry", "fixed action map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🌀️ One object kind's rim-vortex templates, paired with their ordinal so sibling templates that
@@ -68,20 +68,20 @@ fn vortex_templates(entry: &semio_framework_value::DslValue) -> Vec<(usize, &sem
     entry.get("vortices").and_then(semio_framework_value::DslValue::as_array).unwrap_or(&[]).iter().enumerate().collect()
 }
 
-fn vortex_template_row(index: usize, template: &semio_framework_value::DslValue) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn vortex_template_row(index: usize, template: &semio_framework_value::DslValue) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let vortex_kind = template.get("vortexKind").and_then(semio_framework_value::DslValue::as_str).unwrap_or("vortex");
     let position_value = template.get("point").or_else(|| template.get("position")).cloned().unwrap_or_else(|| semio_framework_value::ToValue::to_value(&[0.0, 0.0, 0.0]));
     let position = semio_framework_pack_json::from_dsl_value(&position_value).to_string();
     ui::tree_item(ui_label(vortex_kind)?)
         .try_id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"))
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex id admission failed"))?
-        .description(semio_framework_plugin::UiText::try_from_string(position).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex description admission failed"))?)
-        .icon(semio_framework_plugin::UiText::try_from_str("circle-dot").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex icon admission failed"))?)
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex id admission failed"))?
+        .description(semio_plugin::UiText::try_from_string(position).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex description admission failed"))?)
+        .icon(semio_plugin::UiText::try_from_str("circle-dot").ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex icon admission failed"))?)
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex row admission failed"))
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex row admission failed"))
 }
 
-fn object_kind_item(entry: &semio_framework_value::DslValue, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn object_kind_item(entry: &semio_framework_value::DslValue, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     let mesh_url = entry
         .get("meshUrl")
@@ -94,10 +94,10 @@ fn object_kind_item(entry: &semio_framework_value::DslValue, windows: &TreeWindo
     let add = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(action_args))?;
     let mut builder = ui::tree_item(ui_label(catalog_entry_label(entry))?)
         .try_id(&kind_id)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object id admission failed"))?
-        .description(semio_framework_plugin::UiText::try_from_string(kind_id.clone()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object description admission failed"))?)
-        .icon(semio_framework_plugin::UiText::try_from_str("box").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object icon admission failed"))?);
-    builder = builder.target(semio_framework_plugin::activation_target(add)?);
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.object", "object id admission failed"))?
+        .description(semio_plugin::UiText::try_from_string(kind_id.clone()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.object", "object description admission failed"))?)
+        .icon(semio_plugin::UiText::try_from_str("box").ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.object", "object icon admission failed"))?);
+    builder = builder.target(semio_plugin::activation_target(add)?);
     if draggable {
         let mut payload = json!({ "objectKind": kind_id });
         if let Some(url) = mesh_url {
@@ -105,28 +105,28 @@ fn object_kind_item(entry: &semio_framework_value::DslValue, windows: &TreeWindo
                 object.insert("meshUrl", Value::from(url));
             }
         }
-        let mut drag_data = semio_framework_ui_contract::UiFixedMap::default();
+        let mut drag_data = semio_ui_contract::UiFixedMap::default();
         drag_data
             .try_push(
-                semio_framework_plugin::UiText::try_from_str(PUZZLE3D_CATALOGUE_DRAG_MIME).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag mime admission failed"))?,
-                semio_framework_plugin::UiText::try_from_string(payload.to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag payload admission failed"))?,
+                semio_plugin::UiText::try_from_str(PUZZLE3D_CATALOGUE_DRAG_MIME).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag mime admission failed"))?,
+                semio_plugin::UiText::try_from_string(payload.to_string()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag payload admission failed"))?,
             )
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag data admission failed"))?;
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag data admission failed"))?;
         builder = builder.draggable(true).drag_data(drag_data);
     }
     let templates = vortex_templates(entry);
     tree_window_item(windows, builder, &kind_id, false, &templates, |template| vortex_template_row(template.0, template.1))
 }
 
-fn catalog_kind_item(entry: &semio_framework_value::DslValue, icon_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn catalog_kind_item(entry: &semio_framework_value::DslValue, icon_id: &str) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     ui::tree_item(ui_label(catalog_entry_label(entry))?)
         .try_id(format!("puzzle3d-kind-entry:{kind_id}"))
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind id admission failed"))?
-        .description(semio_framework_plugin::UiText::try_from_string(kind_id).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind description admission failed"))?)
-        .icon(semio_framework_plugin::UiText::try_from_str(icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind icon admission failed"))?)
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind id admission failed"))?
+        .description(semio_plugin::UiText::try_from_string(kind_id).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind description admission failed"))?)
+        .icon(semio_plugin::UiText::try_from_str(icon_id).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind icon admission failed"))?)
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind row admission failed"))
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind row admission failed"))
 }
 //#endregion 🔖️Rows
 
@@ -141,7 +141,7 @@ fn catalog_kind_item(entry: &semio_framework_value::DslValue, icon_id: &str) -> 
 /// `querySelectorAll`, so a press aimed at it measured `{0,0,0,0}` and landed at the viewport origin —
 /// which is inside the navbar, and is why ticket 26/09/02 read this as "the navbar covers the catalogue"
 /// for three waves (wave B26 §5, corrected in wave B27 §1).
-pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let entries = |section: &str| semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_catalog_entries(&envelope.scene_snapshot, section);
     PanelTreeBuilder::new(ROOT)?
         .window_section(windows, &format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, entries("objects"), |entry| object_kind_item(entry, windows))?

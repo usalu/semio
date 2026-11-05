@@ -6,11 +6,11 @@ use semio_framework::kernel::{
 };
 use semio_framework::manifest::{ActionAddress, ActionInvocation, ViewModel, ViewWindowInstance};
 use semio_framework_actor::ActorId;
-use semio_framework_os_kernel::os_spr::channel::{encode_app_command, AppCommand};
-use semio_framework_plugin::AppInstanceId;
-use semio_framework_plugin_host::{shard, GuestInstance, GuestRuntime, PackageHash, PackageId, PackageRef, SharedEngineConfig, WasmtimeRuntime};
-use semio_framework_ui_contract::{Component, SurfaceKind, UiNodeId, UiPatch, UiPatchOp};
-use semio_framework_ui_scene::{SceneDoc, TiledMapScene};
+use semio_os_kernel::os_spr::channel::{encode_app_command, AppCommand};
+use semio_plugin::AppInstanceId;
+use semio_plugin_host::{shard, GuestInstance, GuestRuntime, PackageHash, PackageId, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+use semio_ui_contract::{Component, SurfaceKind, UiNodeId, UiPatch, UiPatchOp};
+use semio_ui_scene::{SceneDoc, TiledMapScene};
 use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use semio_s_artifact_gis_gismap::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
 use std::collections::BTreeMap;
@@ -79,9 +79,9 @@ async fn open_live(bytes: &[u8]) -> (WasmtimeRuntime, GuestInstance, ActorInstan
 async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
     use pack::snapshot::ArtifactPack;
 
-    let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![MapFeature { id: value["id"].as_str().expect("position id").into(), data: semio_framework_os_kernel::DslValue::from(value) }], ..Default::default() });
-    let envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, "shared-map", snapshot, None);
-    let files = semio_framework_os_kernel::os_store::text_format::print_document_pack(&envelope).await.expect("canonical GIS pack pair");
+    let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![MapFeature { id: value["id"].as_str().expect("position id").into(), data: semio_os_kernel::DslValue::from(value) }], ..Default::default() });
+    let envelope = semio_os_kernel::os_store::document_materialize::create_document_envelope::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, "shared-map", snapshot, None);
+    let files = semio_os_kernel::os_store::text_format::print_document_pack(&envelope).await.expect("canonical GIS pack pair");
     assert_eq!(files.pack.as_slice(), envelope.vcs.genesis.pack());
     let mut retirement = semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::binary::mutations::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     let mut retired = false;
@@ -90,8 +90,8 @@ async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
             retired = true;
             break;
         }
-        let demand = retirement.next_demand(semio_framework_os_kernel::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS envelope retirement quotes its next turn");
-        let grant = semio_framework_os_kernel::os_store::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let demand = retirement.next_demand(semio_os_kernel::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS envelope retirement quotes its next turn");
+        let grant = semio_os_kernel::os_store::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         retirement.close_step(grant).expect("GIS envelope retirement");
     }
     assert!(retired, "GIS fixture envelope retires within the bounded grant");
@@ -163,7 +163,7 @@ async fn load_pair(runtime: &WasmtimeRuntime, instance: &mut GuestInstance, life
 #[derive(Default)]
 struct RetainedSurface {
     revision: u64,
-    nodes: Vec<semio_framework_ui_contract::UiNodeRecord>,
+    nodes: Vec<semio_ui_contract::UiNodeRecord>,
 }
 
 impl RetainedSurface {
@@ -191,7 +191,7 @@ impl RetainedSurface {
         self.revision = patch.revision.0;
     }
 
-    fn node_mut(&mut self, id: UiNodeId) -> &mut semio_framework_ui_contract::UiNodeRecord {
+    fn node_mut(&mut self, id: UiNodeId) -> &mut semio_ui_contract::UiNodeRecord {
         self.nodes.iter_mut().find(|record| record.id == id).expect("retained GIS node the patch mutates")
     }
 
@@ -207,7 +207,7 @@ impl RetainedSurface {
     /// 🚚️ The ASSEMBLED tiled-map scene: the spine decoded out of the fixed-capacity
     /// `SurfaceProps.doc`, plus every out-of-doc payload lane (`SceneDoc::split_lanes`) that rides
     /// beside it as a `paged_text_carrier` child of the same node. `map_descriptor_json` IS such a lane
-    /// (`framework.scene.tiledmap.mapDescriptor`), so a bare `semio_framework_ui_scene::decode` reads it
+    /// (`framework.scene.tiledmap.mapDescriptor`), so a bare `semio_ui_scene::decode` reads it
     /// as the empty spine field — this is the Rust twin of the React Interpreter's `sceneFromLanes`
     /// and of the framework's own `built_surface_scene`.
     fn scene(&self) -> Option<TiledMapScene> {
@@ -216,7 +216,7 @@ impl RetainedSurface {
             _ => false,
         })?;
         let Component::Surface(props) = &surface.component else { return None };
-        let mut scene: TiledMapScene = semio_framework_ui_scene::decode(props).ok()?;
+        let mut scene: TiledMapScene = semio_ui_scene::decode(props).ok()?;
         for child in surface.children.iter() {
             let Some(carrier) = self.nodes.iter().find(|record| record.id == *child) else { continue };
             scene.merge_lane(carrier.key.as_str(), self.carrier_text(carrier));
@@ -226,7 +226,7 @@ impl RetainedSurface {
 
     /// 🚚️ Depth-first concatenation of every `Component::Text` leaf under one lane carrier — the exact
     /// inverse of `paged_text_carrier`, read through the retained id table.
-    fn carrier_text(&self, root: &semio_framework_ui_contract::UiNodeRecord) -> String {
+    fn carrier_text(&self, root: &semio_ui_contract::UiNodeRecord) -> String {
         let mut payload = String::new();
         let mut frontier = vec![root];
         let mut order = Vec::new();
@@ -267,8 +267,8 @@ async fn retain_patch(result: TurnResult, expected_lifetime: ActorInstanceLifeti
 }
 
 async fn render_until_scene(runtime: &WasmtimeRuntime, instance: &mut GuestInstance, lifetime: ActorInstanceLifetime, marker: &str, session: &mut u64, retained: &mut RetainedSurface) -> (TiledMapScene, u64) {
-    use semio_framework_os_kernel::ToValue;
-    let mut event = Event::SurfaceVisible { surface: SURFACE.into(), body_key: "gis2d.play.composite".into(), view_state: semio_framework_os_kernel::pack_rt::encode_wire_value(&gis_view().to_value()) };
+    use semio_os_kernel::ToValue;
+    let mut event = Event::SurfaceVisible { surface: SURFACE.into(), body_key: "gis2d.play.composite".into(), view_state: semio_os_kernel::pack_rt::encode_wire_value(&gis_view().to_value()) };
     let mut matched = None;
     for _ in 0..256 {
         let result = runtime.execute_turn(instance, &[event], budget()).await.expect("genuine GIS render turn");
@@ -301,16 +301,16 @@ fn gis_view() -> ViewModel {
 }
 
 async fn dispatch_patch_positions(runtime: &WasmtimeRuntime, instance: &mut GuestInstance, position: &serde_json::Value) {
-    use semio_framework_os_kernel::ToValue;
+    use semio_os_kernel::ToValue;
 
     let mut arguments = BTreeMap::new();
-    arguments.insert("positionsJson".into(), semio_framework_os_kernel::DslValue::String(serde_json::to_string(&[position]).expect("position JSON")));
+    arguments.insert("positionsJson".into(), semio_os_kernel::DslValue::String(serde_json::to_string(&[position]).expect("position JSON")));
     let invocation = ActionInvocation {
         address: ActionAddress { plugin_id: "gis".into(), app_id: "s.gis.gismap@1/*#editor".into(), mode_id: "edit".into(), window_kind_id: "gis2d-main".into(), window_instance_id: "gis2d-main".into(), action_id: "patchPositions".into() },
         arguments,
     };
     let view = gis_view();
-    let command = AppCommand::Command { seq: COMMAND_SEQUENCE, command: semio_framework_os_kernel::pack_rt::encode_wire_value(&invocation.to_value()), view_state: semio_framework_os_kernel::pack_rt::encode_wire_value(&view.to_value()) };
+    let command = AppCommand::Command { seq: COMMAND_SEQUENCE, command: semio_os_kernel::pack_rt::encode_wire_value(&invocation.to_value()), view_state: semio_os_kernel::pack_rt::encode_wire_value(&view.to_value()) };
     let command = encode_app_command(&command).await.expect("encode addressed GIS mutation");
     let mut envelopes = CommandEnvelopeSet::try_new().expect("fixed command owners");
     envelopes.try_push(CommandEnvelope { instance: INSTANCE, seq: COMMAND_SEQUENCE, command }).unwrap_or_else(|(fault, _)| panic!("admit GIS command: {fault:?}"));

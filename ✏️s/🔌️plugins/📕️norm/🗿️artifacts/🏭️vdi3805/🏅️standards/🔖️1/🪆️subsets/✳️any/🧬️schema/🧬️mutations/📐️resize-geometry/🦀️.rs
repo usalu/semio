@@ -17,8 +17,8 @@ pub struct ResizeGeometry {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ResizeGeometry where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::resize_geometry::ResizeGeometry> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "geometry", kind: "resize-geometry", record: "ResizedGeometry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize geometry \"{}\"", self.id), &format!("Größe von Geometrie \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Resize geometry \"{}\"", self.id), &format!("Größe von Geometrie \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

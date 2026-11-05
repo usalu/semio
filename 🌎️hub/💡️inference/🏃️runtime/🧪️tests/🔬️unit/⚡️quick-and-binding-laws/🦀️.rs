@@ -492,7 +492,7 @@ use semio_hub_inference_runtime_contract::last_close_store_step;
 struct FixedMembersBindingV1;
 
 impl MapInferenceProposalBindingV1 for FixedMembersBindingV1 {
-    fn inference_service(&self) -> semio_framework_plugin::ArtifactInferenceService {
+    fn inference_service(&self) -> semio_plugin::ArtifactInferenceService {
         GisMapInferenceBindingV1.inference_service()
     }
 
@@ -504,11 +504,11 @@ impl MapInferenceProposalBindingV1 for FixedMembersBindingV1 {
         Ok(vec!["fixed-drawing".to_owned(), "fixed-value".to_owned()])
     }
 
-    fn infer(&self, _pack: &[u8], _job_id: &str, _budget: &semio_framework_plugin::WireArtifactInferenceBudget, _checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError>) -> Result<MapInferenceRunV1, MapBindingRefusalV1> {
+    fn infer(&self, _pack: &[u8], _job_id: &str, _budget: &semio_plugin::WireArtifactInferenceBudget, _checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_plugin::ArtifactInferenceExecutionError>) -> Result<MapInferenceRunV1, MapBindingRefusalV1> {
         Err(MapBindingRefusalV1::Execution)
     }
 
-    fn approval_effect(&self, _pack: &[u8], _job_id: &str, _budget: &semio_framework_plugin::WireArtifactInferenceBudget) -> Result<MapProposalEffectV1, MapBindingRefusalV1> {
+    fn approval_effect(&self, _pack: &[u8], _job_id: &str, _budget: &semio_plugin::WireArtifactInferenceBudget) -> Result<MapProposalEffectV1, MapBindingRefusalV1> {
         Err(MapBindingRefusalV1::Composition)
     }
 

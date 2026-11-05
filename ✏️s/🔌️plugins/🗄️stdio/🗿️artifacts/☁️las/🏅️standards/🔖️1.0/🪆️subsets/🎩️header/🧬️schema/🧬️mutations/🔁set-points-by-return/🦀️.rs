@@ -15,8 +15,8 @@ pub struct SetPointsByReturn {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetPointsByReturn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "points-by-return", kind: "set-points-by-return", record: "SetPointsByReturn" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set points by return", "Punktanzahl pro Echo setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set points by return", "Punktanzahl pro Echo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

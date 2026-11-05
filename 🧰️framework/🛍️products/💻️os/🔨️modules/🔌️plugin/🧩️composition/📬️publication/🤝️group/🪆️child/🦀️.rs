@@ -1,20 +1,20 @@
 use semio_framework_value::ErasedSnapshotRetirement as _;
-use semio_framework_plugin_decl_emission::ChildEmit;
+use semio_plugin_decl_emission::ChildEmit;
 use semio_framework::kernel::ActorId;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
-use semio_framework_plugin_decl_views::child_view::{ChildContentRetainers, MemberKeyRef};
+use semio_plugin_decl_views::child_view::{ChildContentRetainers, MemberKeyRef};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, SpaceMember};
-use semio_framework_plugin_decl_emission::child_emit_preparation::OwnedChildEmit;
-use semio_framework_plugin_composition_emission::metadata::private_child_metadata::{PrivateChildMemberMetadata, PrivateChildMemberMetadataIssuer, PrivateChildMemberMetadataSource};
+use semio_plugin_decl_emission::child_emit_preparation::OwnedChildEmit;
+use semio_plugin_composition_emission::metadata::private_child_metadata::{PrivateChildMemberMetadata, PrivateChildMemberMetadataIssuer, PrivateChildMemberMetadataSource};
 use semio_framework_value::{RetirementDemand, ValueError};
 use crate::group::private_publication_group::{child, owner};
-use semio_framework_plugin_composition_emission::private_child_input::PrivateChildGenesisInput;
+use semio_plugin_composition_emission::private_child_input::PrivateChildGenesisInput;
 use semio_framework_job::{Generation, OperationId};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 

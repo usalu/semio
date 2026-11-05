@@ -16,7 +16,7 @@
 //! for real even though nothing samples the result yet.
 
 #[cfg(not(target_os = "linux"))]
-compile_error!("semio-framework-ui-backend-vulkan builds only on Linux.");
+compile_error!("semio-ui-backend-vulkan builds only on Linux.");
 
 use crate::resources::GpuResources;
 use crate::surface;

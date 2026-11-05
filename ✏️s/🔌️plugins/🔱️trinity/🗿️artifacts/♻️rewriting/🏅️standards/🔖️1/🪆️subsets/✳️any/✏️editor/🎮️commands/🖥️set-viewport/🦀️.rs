@@ -2,8 +2,8 @@
 
 use crate::editor::rewriting::window_config::{addressed, RewritingWindowConfigMutation, SetCamera};
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation, ViewModel};
-use semio_framework_os_kernel::Viewport2d;
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation, ViewModel};
+use semio_os_kernel::Viewport2d;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Camera;
 
 pub fn set_viewport(_surface_id: &Option<String>, viewport: &Viewport2d, view: Option<&ViewModel>) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {

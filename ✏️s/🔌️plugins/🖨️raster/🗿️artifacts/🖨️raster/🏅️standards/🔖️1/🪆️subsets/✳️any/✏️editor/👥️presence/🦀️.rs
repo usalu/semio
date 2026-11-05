@@ -8,7 +8,7 @@ use pack::snapshot::ArtifactPack;
 /// 👥️ Shareable live raster brush and camera state. Layer selection/hover
 /// deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `"layers"` interaction
 /// domain broadcasts automatically via the framework's typed `PresenceInteraction` field now.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "raster.presence")]
@@ -121,8 +121,8 @@ impl ArtifactPack for RasterPresence {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RasterPresence {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RasterPresence {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -237,8 +237,8 @@ pub fn raster_presence_is_terminal_empty(_presence: &RasterPresence) -> bool {
     true
 }
 
-pub fn raster_presence_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<RasterPresence, RasterPresenceMutation>>> {
-    Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(RasterPresence::default()), raster_presence_is_terminal_empty).expect("the default raster presence root owns no heap"))
+pub fn raster_presence_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<RasterPresence, RasterPresenceMutation>>> {
+    Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(RasterPresence::default()), raster_presence_is_terminal_empty).expect("the default raster presence root owns no heap"))
 }
 //#endregion 🧹️Retirement
 

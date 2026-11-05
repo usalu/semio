@@ -8,20 +8,20 @@ use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruct
 use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruction_session::RECONSTRUCTION_TRACE_POINT_MESH;
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UtilityRef;
-use semio_framework_plugin::WindowEngagementSlot;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_selection_json;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UtilityRef;
+use semio_plugin::WindowEngagementSlot;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
+use semio_plugin::WorldSunConfig;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -178,11 +178,11 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
     }
 }
 
-pub fn render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let camera_json = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&config.camera));
     let mut world_scene = world3d_scene(camera_json, world_meshes_json(scene), world_instances_json(config), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     world_scene.points_json = world_points_json(scene, config);
-    semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_MAIN, ContractSurfaceKind::World3d, &world_scene)
+    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_MAIN, ContractSurfaceKind::World3d, &world_scene)
 }
 //#endregion 🔖️Scene
 

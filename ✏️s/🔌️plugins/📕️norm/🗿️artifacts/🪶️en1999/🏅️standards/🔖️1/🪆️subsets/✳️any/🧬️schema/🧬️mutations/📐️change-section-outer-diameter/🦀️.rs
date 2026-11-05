@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSectionOuterDiamet
         record: "ChangedSectionOuterDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Outer diameter D of the section", "Querschnitt: Außendurchmesser D ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Outer diameter D of the section", "Querschnitt: Außendurchmesser D ändern")
     }
 }
 

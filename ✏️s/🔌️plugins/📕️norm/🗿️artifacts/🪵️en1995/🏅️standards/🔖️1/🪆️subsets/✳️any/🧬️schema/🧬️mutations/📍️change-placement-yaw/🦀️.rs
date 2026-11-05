@@ -10,7 +10,7 @@ pub struct ChangePlacementYaw { pub id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangePlacementYaw where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_placement_yaw::ChangePlacementYaw> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "placement-yaw", kind: "change-placement-yaw", record: "ChangedPlacementYaw" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change yaw about +z of placement {}", self.id), &format!("Gierwinkel um +Z von Platzierung {} ändern", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change yaw about +z of placement {}", self.id), &format!("Gierwinkel um +Z von Platzierung {} ändern", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

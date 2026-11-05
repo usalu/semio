@@ -9,7 +9,7 @@ use crate::config::{RasterConfig, RasterConfigMutation};
 use semio_s_artifact_raster_raster_mutations_pixels::transform_image::{invariant, TransformImage as TransformImageLeaf};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🔄️ One grid change as both hosts dispatch it: the layer, the operation, the crop origin, the resize or crop extent

@@ -3,17 +3,17 @@
 //! 🧭️ The tests are mounted unchanged from the production tree and reach the production crate through its public API only.
 #![cfg(test)]
 
-pub use semio_framework_os_config::*;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+pub use semio_os_config::*;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 #[path = "."]
 pub mod opening_config {
-    pub use semio_framework_os_config::opening_config::*;
+    pub use semio_os_config::opening_config::*;
 
     #[path = "."]
     pub mod component {
-        pub use semio_framework_os_config::opening_config::testkit::component::*;
+        pub use semio_os_config::opening_config::testkit::component::*;
         use semio_framework::{AppRef, AppRole};
         use semio_framework_artifact_reference::ArtifactDialect;
         use semio_framework_value_derive::{FromValue, ToValue};
@@ -30,13 +30,13 @@ pub mod opening_config {
 
     #[path = "."]
     pub mod mutations {
-        pub use semio_framework_os_config::opening_config::mutations::*;
+        pub use semio_os_config::opening_config::mutations::*;
 
         #[path = "."]
         pub mod admit_local_document {
-            pub use semio_framework_os_config::opening_config::mutations::admit_local_document::*;
-            use semio_framework_os_config::opening_config::mutations::retire_local_document::RetireLocalDocument;
-            use semio_framework_os_config::opening_config::mutations::LocalCatalogConfigMutation;
+            pub use semio_os_config::opening_config::mutations::admit_local_document::*;
+            use semio_os_config::opening_config::mutations::retire_local_document::RetireLocalDocument;
+            use semio_os_config::opening_config::mutations::LocalCatalogConfigMutation;
             use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework_value::ToValue;
             use serde::{Deserialize, Serialize};
@@ -50,9 +50,9 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod attach_local_folder {
-            pub use semio_framework_os_config::opening_config::mutations::attach_local_folder::*;
-            use semio_framework_os_config::opening_config::mutations::detach_local_folder::DetachLocalFolder;
-            use semio_framework_os_config::opening_config::mutations::LocalFoldersConfigMutation;
+            pub use semio_os_config::opening_config::mutations::attach_local_folder::*;
+            use semio_os_config::opening_config::mutations::detach_local_folder::DetachLocalFolder;
+            use semio_os_config::opening_config::mutations::LocalFoldersConfigMutation;
             use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework_value::ToValue;
             use serde::{Deserialize, Serialize};
@@ -66,8 +66,8 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod change_merge_policy {
-            pub use semio_framework_os_config::opening_config::mutations::change_merge_policy::*;
-            use semio_framework_os_config::opening_config::mutations::MergePolicyConfigMutation;
+            pub use semio_os_config::opening_config::mutations::change_merge_policy::*;
+            use semio_os_config::opening_config::mutations::MergePolicyConfigMutation;
             use protocol::{Mutation, MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -80,10 +80,10 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod clear_default_app {
-            pub use semio_framework_os_config::opening_config::mutations::clear_default_app::*;
-            use semio_framework_os_config::opening_config::{OpeningDiff, OpeningPreferences};
-            use semio_framework_os_config::opening_config::mutations::set_default_app::SetDefaultApp;
-            use semio_framework_os_config::opening_config::mutations::OpeningConfigMutation;
+            pub use semio_os_config::opening_config::mutations::clear_default_app::*;
+            use semio_os_config::opening_config::{OpeningDiff, OpeningPreferences};
+            use semio_os_config::opening_config::mutations::set_default_app::SetDefaultApp;
+            use semio_os_config::opening_config::mutations::OpeningConfigMutation;
             use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework::AppRole;
             use semio_framework_artifact_reference::ArtifactDialect;
@@ -99,9 +99,9 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod detach_local_folder {
-            pub use semio_framework_os_config::opening_config::mutations::detach_local_folder::*;
-            use semio_framework_os_config::opening_config::mutations::attach_local_folder::{attach_local_folder, LocalFolderBindings, LocalFoldersDiff};
-            use semio_framework_os_config::opening_config::mutations::LocalFoldersConfigMutation;
+            pub use semio_os_config::opening_config::mutations::detach_local_folder::*;
+            use semio_os_config::opening_config::mutations::attach_local_folder::{attach_local_folder, LocalFolderBindings, LocalFoldersDiff};
+            use semio_os_config::opening_config::mutations::LocalFoldersConfigMutation;
             use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework_value_derive::{FromValue, ToValue};
             use serde::{Deserialize, Serialize};
@@ -115,9 +115,9 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod retire_local_document {
-            pub use semio_framework_os_config::opening_config::mutations::retire_local_document::*;
-            use semio_framework_os_config::opening_config::mutations::admit_local_document::{admit_local_document, LocalCatalog, LocalCatalogDiff};
-            use semio_framework_os_config::opening_config::mutations::LocalCatalogConfigMutation;
+            pub use semio_os_config::opening_config::mutations::retire_local_document::*;
+            use semio_os_config::opening_config::mutations::admit_local_document::{admit_local_document, LocalCatalog, LocalCatalogDiff};
+            use semio_os_config::opening_config::mutations::LocalCatalogConfigMutation;
             use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework_value_derive::{FromValue, ToValue};
             use serde::{Deserialize, Serialize};
@@ -131,10 +131,10 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod set_default_app {
-            pub use semio_framework_os_config::opening_config::mutations::set_default_app::*;
-            use semio_framework_os_config::opening_config::{OpeningDiff, OpeningPreferences};
-            use semio_framework_os_config::opening_config::mutations::clear_default_app::ClearDefaultApp;
-            use semio_framework_os_config::opening_config::mutations::OpeningConfigMutation;
+            pub use semio_os_config::opening_config::mutations::set_default_app::*;
+            use semio_os_config::opening_config::{OpeningDiff, OpeningPreferences};
+            use semio_os_config::opening_config::mutations::clear_default_app::ClearDefaultApp;
+            use semio_os_config::opening_config::mutations::OpeningConfigMutation;
             use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework::{AppRef, AppRole};
             use semio_framework_artifact_reference::ArtifactDialect;
@@ -149,8 +149,8 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod sign_in {
-            pub use semio_framework_os_config::opening_config::mutations::sign_in::*;
-            use semio_framework_os_config::opening_config::mutations::IdentityConfigMutation;
+            pub use semio_os_config::opening_config::mutations::sign_in::*;
+            use semio_os_config::opening_config::mutations::IdentityConfigMutation;
             use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework_value::{FromValue, ToValue};
             use serde::{Deserialize, Serialize};
@@ -164,9 +164,9 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod sign_out {
-            pub use semio_framework_os_config::opening_config::mutations::sign_out::*;
-            use semio_framework_os_config::opening_config::mutations::sign_in::{sign_in, IdentityDiff, IdentitySetting};
-            use semio_framework_os_config::opening_config::mutations::IdentityConfigMutation;
+            pub use semio_os_config::opening_config::mutations::sign_out::*;
+            use semio_os_config::opening_config::mutations::sign_in::{sign_in, IdentityDiff, IdentitySetting};
+            use semio_os_config::opening_config::mutations::IdentityConfigMutation;
             use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
             use semio_framework_value_derive::{FromValue, ToValue};
             use serde::{Deserialize, Serialize};
@@ -180,13 +180,13 @@ pub mod opening_config {
 
         #[path = "."]
         pub mod ui_preferences {
-            pub use semio_framework_os_config::opening_config::mutations::ui_preferences::*;
+            pub use semio_os_config::opening_config::mutations::ui_preferences::*;
 
             #[path = "."]
             pub mod set_appearance {
-                pub use semio_framework_os_config::opening_config::mutations::ui_preferences::set_appearance::*;
-                use semio_framework_os_config::opening_config::{UiPreferences, UiPreferencesDiff};
-                use semio_framework_os_config::opening_config::mutations::UiPreferencesConfigMutation;
+                pub use semio_os_config::opening_config::mutations::ui_preferences::set_appearance::*;
+                use semio_os_config::opening_config::{UiPreferences, UiPreferencesDiff};
+                use semio_os_config::opening_config::mutations::UiPreferencesConfigMutation;
                 use semio_framework_value_derive::{FromValue, ToValue};
 
                 #[path = "../../🧬️schema/🧬️mutations/🌗️set-appearance/🧪️tests/✏️sets-appearance/🦀️.rs"]

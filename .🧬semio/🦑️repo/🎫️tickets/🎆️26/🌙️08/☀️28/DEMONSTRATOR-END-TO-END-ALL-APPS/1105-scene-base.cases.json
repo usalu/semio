@@ -1,0 +1,26 @@
+[
+  {
+    "base": 3,
+    "first": 2,
+    "second": 7,
+    "expectedFirst": 5,
+    "expectedSecond": 10,
+    "expectedBase": 3
+  },
+  {
+    "base": -8,
+    "first": 4,
+    "second": -2,
+    "expectedFirst": -4,
+    "expectedSecond": -10,
+    "expectedBase": -8
+  },
+  {
+    "base": 0,
+    "first": 0,
+    "second": 9,
+    "expectedFirst": 0,
+    "expectedSecond": 9,
+    "expectedBase": 0
+  }
+]

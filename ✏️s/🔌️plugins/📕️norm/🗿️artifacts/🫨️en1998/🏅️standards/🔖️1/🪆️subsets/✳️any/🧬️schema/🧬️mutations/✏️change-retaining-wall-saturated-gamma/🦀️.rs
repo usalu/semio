@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeRetainingWallSatur
         record: "ChangeRetainingWallSaturatedGamma",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Saturated unit weight γ_sat of the backfill below the water (0 = the soil unit weight γ)", "Wichte unter Wasser γ_sat der Hinterfüllung (0 = Wichte des Bodens γ) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Saturated unit weight γ_sat of the backfill below the water (0 = the soil unit weight γ)", "Wichte unter Wasser γ_sat der Hinterfüllung (0 = Wichte des Bodens γ) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-retaining-wall-saturated-gamma".into()]

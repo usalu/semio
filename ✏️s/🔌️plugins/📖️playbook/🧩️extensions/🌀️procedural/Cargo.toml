@@ -37,7 +37,7 @@ path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-plugin-flow-brep]
@@ -81,3 +81,31 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+
+[workspace.dependencies.semio-s-plugin-flow-primitive]
+path = "../../../🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust"
+default-features = false
+
+[workspace.dependencies.semio-s-plugin-flow-text]
+path = "../../../🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust"
+default-features = false
+
+[workspace.dependencies.semio-s-plugin-flow-list]
+path = "../../../🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust"
+default-features = false
+
+[workspace.dependencies.semio-s-plugin-flow-dictionary]
+path = "../../../🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust"
+default-features = false
+
+[workspace.dependencies.semio-s-plugin-flow-logic]
+path = "../../../🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust"
+default-features = false
+
+[workspace.dependencies.semio-s-plugin-flow-draw]
+path = "../../../🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust"
+default-features = false
+
+[workspace.dependencies.semio-s-plugin-flow-bim]
+path = "../../../🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust"
+default-features = false

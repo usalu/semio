@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmChordStrM
         record: "ChangeDiaphragmChordStrMpa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design strength of the chord", "Bemessungsfestigkeit des Gurts ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design strength of the chord", "Bemessungsfestigkeit des Gurts ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-chord-str-mpa".into()]

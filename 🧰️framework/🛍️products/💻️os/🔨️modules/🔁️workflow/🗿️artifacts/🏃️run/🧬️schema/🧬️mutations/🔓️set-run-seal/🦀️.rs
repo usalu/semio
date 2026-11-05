@@ -20,10 +20,10 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for SetRunSeal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run-seal", kind: "set-run-seal", record: "SetRunSeal" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.sealed {
-            true => semio_framework_ui_locale::LocalizedLabel::native("Seal run", "Lauf versiegeln"),
-            false => semio_framework_ui_locale::LocalizedLabel::native("Reopen run", "Lauf wieder öffnen"),
+            true => semio_ui_locale::LocalizedLabel::native("Seal run", "Lauf versiegeln"),
+            false => semio_ui_locale::LocalizedLabel::native("Reopen run", "Lauf wieder öffnen"),
         }
     }
     fn target(&self) -> Vec<String> {

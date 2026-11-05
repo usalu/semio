@@ -2,7 +2,7 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+use semio_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
 #[allow(unused_imports)]
@@ -20,13 +20,13 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_coordination::editor::bim::commands::create_view::{handle, CreateView, extents};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view as window_view;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, german, run};
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 fn create(kind: &str, parent: &str, name: &str, selected: &[&str], german_view: bool) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = demo();

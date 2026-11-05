@@ -21,8 +21,8 @@ pub struct InsertIfdMutation {
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for InsertIfdMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "ifd", kind: "insert-ifd", record: "InsertIfd" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert IFD", "IFD einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert IFD", "IFD einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-ifd".into()]

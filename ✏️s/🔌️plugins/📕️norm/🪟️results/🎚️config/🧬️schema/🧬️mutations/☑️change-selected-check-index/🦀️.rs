@@ -21,8 +21,8 @@ pub struct ChangeSelectedCheckIndex {
 impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMutation> for ChangeSelectedCheckIndex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "selected-check-index", kind: "change-selected-check-index", record: "ChangedSelectedCheckIndex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&{
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&{
         match self.index {
             Some(index) => format!("Select compliance check {index}"),
             None => "Clear selected compliance check".into(),

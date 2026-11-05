@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-mcp-bridge-codec"
+name = "semio-os-mcp-bridge-codec"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,4 +25,4 @@ doctest = false
 [dependencies]
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
-semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }

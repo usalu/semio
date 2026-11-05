@@ -227,10 +227,10 @@ impl UiTree {
      * everything under a floating surface is positioned against that surface's placement rather than
      * against the document it was authored in. The single geometry answer shared by
      * `events::absolute_rect`, `engine::Ui::scene_at` and the retained paint/hit walk. */
-    pub fn absolute_rect(&self, id: NodeId) -> Option<semio_framework_ui_theme::geometry::Rect> {
+    pub fn absolute_rect(&self, id: NodeId) -> Option<semio_ui_theme::geometry::Rect> {
         let layout = self.accepted_layout(id)?;
         if let Some((origin_x, origin_y)) = self.overlay_walk_origin(id) {
-            return Some(semio_framework_ui_theme::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height));
+            return Some(semio_ui_theme::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height));
         }
         let mut x = layout.x;
         let mut y = layout.y;
@@ -241,11 +241,11 @@ impl UiTree {
             x += parent_x;
             y += parent_y;
             if overlay_origin.is_some() {
-                return Some(semio_framework_ui_theme::geometry::Rect::new(x, y, layout.width, layout.height));
+                return Some(semio_ui_theme::geometry::Rect::new(x, y, layout.width, layout.height));
             }
             cursor = self.node(parent_id)?.parent;
         }
-        Some(semio_framework_ui_theme::geometry::Rect::new(x, y, layout.width, layout.height))
+        Some(semio_ui_theme::geometry::Rect::new(x, y, layout.width, layout.height))
     }
 
     pub fn commit_inactive_layout(&mut self, generation: u64) {

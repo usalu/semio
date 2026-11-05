@@ -1,5 +1,5 @@
 //! 📚️ Generation3d bundled examples: one module per authored example document.
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "🥽️mesh-workbench/🦀️.rs"]
 pub mod art_generation3d_mesh_workbench;

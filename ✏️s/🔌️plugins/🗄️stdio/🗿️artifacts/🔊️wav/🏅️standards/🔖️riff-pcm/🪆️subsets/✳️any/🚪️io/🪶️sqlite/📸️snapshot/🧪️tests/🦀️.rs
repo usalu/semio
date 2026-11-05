@@ -1,10 +1,10 @@
-use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
-use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotPhase};
+use semio_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+use semio_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotPhase};
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::*;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::transfer::heap_sort, sqlite_snapshot::transfer::reserve, sqlite_snapshot::validate_sqlite_database_schema_controlled, sqlite_snapshot::SqliteRow};
+use semio_os_kernel::{sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::transfer::heap_sort, sqlite_snapshot::transfer::reserve, sqlite_snapshot::validate_sqlite_database_schema_controlled, sqlite_snapshot::SqliteRow};
 use crate::standards::riff_pcm::subsets::any::io::sqlite::snapshot::{invalid, short};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::riff_pcm::subsets::any::io::sqlite::snapshot::*;
@@ -58,7 +58,7 @@ fn sqlite_snapshot_wav_manual_metadata_preserves_neutral_fields_and_enforces_cum
 }
 #[test]
 fn sqlite_snapshot_wav_controlled_native_owner_preserves_full_fixture_and_enforces_caller_limits(){
- use semio_framework_os_kernel::{io::IoPayload,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl},os_store::serialization::ArtifactSqliteSnapshotHost};
+ use semio_os_kernel::{io::IoPayload,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl},os_store::serialization::ArtifactSqliteSnapshotHost};
  let snapshot=fixture();let limits=SqliteDatabaseLimits::default();
  for payload in[IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)),IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot))]{
   assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| WavSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
@@ -90,7 +90,7 @@ fn sqlite_snapshot_wav_canonical_json_preserves_raw_sample_words_and_full_chunk_
 #[test]
 fn sqlite_snapshot_wav_authored_grammar_and_protocol_admit_complete_logical_records() {
     let grammar = semio_framework_dsl::parse_grammar(include_str!("../../../📝️text/📸️snapshot/📖️.grammar.semio")).unwrap();
-    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     for snapshot in [fixture(), WavSnapshot::default(), crate::standards::riff_pcm::subsets::any::io::decode_wav(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎧️example/🔊️.wav")).unwrap()] {
         let text = <WavSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
         let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
@@ -108,7 +108,7 @@ fn sqlite_snapshot_wav_shipped_demo_assets_match_owned_native_source() {
     assert_eq!(<WavSnapshot as pack::snapshot::ArtifactPack>::decode_pack(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio")).unwrap(), snapshot);
 }
 
-use semio_framework_os_kernel::{
+use semio_os_kernel::{
     sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue},
     os_store::serialization::ArtifactSqliteSnapshotHost,
 };
@@ -126,10 +126,10 @@ fn sqlite_snapshot_wav_complete_unsigned64_chunk_indices_survive_owned_relations
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_wav_actual_erased_capability_retains_all_owned_sample_states() {
-    use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding};
+    use {semio_framework_artifact_reference::ArtifactDialect,semio_os_kernel::io::IoPayload,semio_os_kernel::sqlite_snapshot::SnapshotEncoding};
     let patterns: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json")).unwrap();
     let floats = patterns["ieee754Binary32Bits"].as_array().unwrap().iter().map(|value| f32::from_bits(value.as_u64().unwrap() as u32)).collect();
-    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
         .label("Wav erased SQLite")
         .version("0.0.1")
         .package_id("semio:stdio")
@@ -169,7 +169,7 @@ async fn sqlite_snapshot_wav_actual_erased_capability_retains_all_owned_sample_s
 
 #[test]
 fn sqlite_snapshot_wav_owned_encoding_matches_exact_declared_file_bounds() {
-    use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase};
+    use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase};
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let snapshot = fixture();
         let expected=owned_control_payload(&snapshot,encoding);let length=match &expected{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};
@@ -259,9 +259,9 @@ fn sqlite_snapshot_wav_independent_sqlite_interprets_and_edits_semantic_entities
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_wav_actual_declaration_preserves_owned_state_over_io() {
-    use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
-    use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase};
-    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
+    use {semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
+    use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase};
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio")
         .label("WAV SQLite declaration")
         .version("0.0.1")
         .package_id("semio:stdio")
@@ -274,13 +274,13 @@ async fn sqlite_snapshot_wav_actual_declaration_preserves_owned_state_over_io() 
     snapshot.fmt.ext = Some(Vec::new());
     snapshot.fmt_pad_byte = 255;
     let mut phases = Vec::new();
-    let bytes = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event| {
+    let bytes = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event| {
         phases.push(event.phase);
         true
-    };semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await
+    };semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await
     .unwrap()
     .value;
-    assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<WavSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value, snapshot);
+    assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<WavSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value, snapshot);
     assert!(!phases.iter().any(|phase| matches!(phase, SqliteSnapshotPhase::EncodeNative | SqliteSnapshotPhase::DecodeNative)));
 }
 

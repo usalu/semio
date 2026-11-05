@@ -10,7 +10,7 @@ use semio_framework_geometry::triangulation::triangulate;
 #[allow(unused_imports)]
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
-use semio_framework_plugin::{MeshData, World3dColorRamp};
+use semio_plugin::{MeshData, World3dColorRamp};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 use semio_s_artifact_bim_model_modify::render::envelope::{u_value_rgb, NEUTRAL, u_value_ticks, boundary_steps, Mode, rgb, boundary_rgb, normal_of, mesh_of, Part, LIFT, triangles_of, polygon_area, to_world, centre, parts, by_placement, u_values};

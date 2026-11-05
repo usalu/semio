@@ -6,8 +6,8 @@
 use crate::editor::note as editor;
 use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::note as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: std::sync::OnceLock<Vec<ExampleSource>> = std::sync::OnceLock::new();
@@ -21,9 +21,9 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 
 pub fn subset<PA>() -> SubsetDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::note::NoteViewer>>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::note::NotePlayApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::note::NoteViewer>>>,
 {
     SubsetDeclaration {
         dialect: crate::NOTE_DIALECT,

@@ -15,29 +15,29 @@ use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA;
-use semio_framework_plugin::retained_command::ArtifactCommandInputs;
-use semio_framework_plugin::retained_command::ArtifactCommandWork;
-use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::ArtifactCommandInputs;
+use semio_plugin::retained_command::ArtifactCommandWork;
+use semio_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 
 #[path = "📬️preparation/🦀️.rs"]
 pub mod preparation;
@@ -67,21 +67,21 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(DocxEditorComm
 /// 🧮️ Maps one strictly addressed, revision-checked paragraph draft to a reversible mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build_set_page_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, Fault> {
-    preparation::prepare_set_run_text(snapshot, address, text).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))
+    preparation::prepare_set_run_text(snapshot, address, text).map_err(|message| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))
 }
 
 pub fn build_set_run_formatting_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, bold: bool, italic: bool, underline: bool) -> Result<Option<DocxMutation>, Fault> {
-    let current = docx_run_formatting(snapshot, address).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-run-formatting.address"), error.into_message()))?;
+    let current = docx_run_formatting(snapshot, address).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.docx.set-run-formatting.address"), error.into_message()))?;
     if current == (DocxRunFormatting { bold: Some(bold), italic: Some(italic), underline: Some(underline) }) {
         return Ok(None);
     }
     let mutation = DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { address: address.clone(), bold, italic, underline });
-    let prepared = prepare_addressed_xml_mutation(snapshot, &mutation).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-run-formatting.address"), error.into_message()))?;
+    let prepared = prepare_addressed_xml_mutation(snapshot, &mutation).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.docx.set-run-formatting.address"), error.into_message()))?;
     Ok(prepared.changed.then_some(mutation))
 }
 
 fn docx_action_fault(code: &'static str, message: impl Into<String>) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message)
 }
 
 pub(crate) fn required_docx_xml_address(args: Option<&semio_framework_value::DslValue>) -> Result<DocxXmlAddress, Fault> {
@@ -159,7 +159,7 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
         command: &<DocxEditor as ArtifactEditor>::Command,
         _snapshot: &DocxSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DocxEditor>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DocxEditor>>>,
     ) -> Option<usize> {
         match command {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address, text }) => {
@@ -196,7 +196,7 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
             };
             self.validated = true;
         }
-        self.copied_text.advance(text, DOCX_TEXT_WORK_PAGE_BYTES).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.copy-refused"), message))?;
+        self.copied_text.advance(text, DOCX_TEXT_WORK_PAGE_BYTES).map_err(|message| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.docx.set-page.copy-refused"), message))?;
         if !self.copied_text.is_complete() {
             return Ok(ArtifactCommandWorkStep::Replay { stage: "docx-copy-run-text", preview: br#"{"en":"Preparing paragraph text","de":"Absatztext wird vorbereitet"}"# });
         }
@@ -286,17 +286,17 @@ macro_rules! canonical_docx_set_page_work {
             }
         }
 
-        impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<$editor>> for $work {
+        impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<$editor>> for $work {
             fn tool_id(&self) -> &'static str {
                 self.tool_id
             }
 
             fn extent(
                 &self,
-                command: &<$editor as semio_framework_plugin::ArtifactEditor>::Command,
+                command: &<$editor as semio_plugin::ArtifactEditor>::Command,
                 _snapshot: &DocxSnapshot,
                 _interaction: &protocol::InteractionState,
-                _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<$editor>>>,
+                _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<$editor>>>,
             ) -> Option<usize> {
                 match command {
                     semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($page_command { address, text }) => {
@@ -312,7 +312,7 @@ macro_rules! canonical_docx_set_page_work {
                 }
             }
 
-            fn work_demands(&self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<$editor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+            fn work_demands(&self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<$editor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
                 match input.command {
                     semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($page_command { address, text }) => Ok($crate::editor::docx::standards::v_ecma_376::subsets::base::docx_set_page_demand(address, text)),
                     semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($formatting_command { address, .. }) => Ok($crate::editor::docx::standards::v_ecma_376::subsets::base::docx_address_demand(address)),
@@ -322,37 +322,37 @@ macro_rules! canonical_docx_set_page_work {
 
             fn step(
                 &mut self,
-                input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<$editor>>,
+                input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<$editor>>,
                 _cx: &mut semio_framework_job::StepContext<'_>,
-            ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<$editor>>, semio_framework_job::OriginalTurnFailure> {
-                let original: Result<_, semio_framework_plugin::Fault> = (|| {
+            ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<semio_plugin::EditorApp<$editor>>, semio_framework_job::OriginalTurnFailure> {
+                let original: Result<_, semio_plugin::Fault> = (|| {
                 if self.closing || self.complete {
-                    return Err(semio_framework_plugin::Fault::from("stdio.docx.set-page.work-closed"));
+                    return Err(semio_plugin::Fault::from("stdio.docx.set-page.work-closed"));
                 }
                 if let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($formatting_command { address, bold, italic, underline }) = input.command {
                     let mutation = $crate::editor::docx::standards::v_ecma_376::subsets::base::build_set_run_formatting_mutation(input.snapshot, address, *bold, *italic, *underline)?;
                     self.complete = true;
-                    return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_framework_plugin::Emit { artifact_mutations: mutation.into_iter().collect(), ..Default::default() }));
+                    return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_plugin::Emit { artifact_mutations: mutation.into_iter().collect(), ..Default::default() }));
                 }
                 let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($page_command { address, text }) = input.command else {
-                    return Err(semio_framework_plugin::Fault::from("stdio.docx.command-mismatch"));
+                    return Err(semio_plugin::Fault::from("stdio.docx.command-mismatch"));
                 };
                 if !self.validated {
                     let Some(_) = build_set_page_mutation(input.snapshot, address, text)? else {
                         self.complete = true;
-                        return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_framework_plugin::Emit::default()));
+                        return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_plugin::Emit::default()));
                     };
                     self.validated = true;
                 }
                 self.copied_text
                     .advance(text, $crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES)
-                    .map_err(|message| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.copy-refused"), message))?;
+                    .map_err(|message| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.docx.set-page.copy-refused"), message))?;
                 if !self.copied_text.is_complete() {
-                    return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Replay { stage: "docx-copy-run-text", preview: br#"{"en":"Preparing paragraph text","de":"Absatztext wird vorbereitet"}"# });
+                    return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Replay { stage: "docx-copy-run-text", preview: br#"{"en":"Preparing paragraph text","de":"Absatztext wird vorbereitet"}"# });
                 }
-                let copied = self.copied_text.take().ok_or_else(|| semio_framework_plugin::Fault::from("stdio.docx.set-page.copy-incomplete"))?;
+                let copied = self.copied_text.take().ok_or_else(|| semio_plugin::Fault::from("stdio.docx.set-page.copy-incomplete"))?;
                 self.complete = true;
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_framework_plugin::Emit {
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_plugin::Emit {
                     artifact_mutations: vec![DocxMutation::SetRunText(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: copied })],
                     ..Default::default()
                 }))
@@ -394,7 +394,7 @@ macro_rules! canonical_docx_set_page_work {
             }
         }
 
-        fn $factory(tool_id: &'static str) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<$editor>>> {
+        fn $factory(tool_id: &'static str) -> Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<$editor>>> {
             Box::new($work { tool_id, ..Default::default() })
         }
     };
@@ -423,12 +423,12 @@ impl ArtifactEditor for DocxEditor {
     const DOCUMENT_SCHEMA: &'static str = STDIO_DOCX_DOCUMENT_SCHEMA;
 
     /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec {
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec {
             format_kind: "s.stdio.docx@ecma-376",
             extension: ".docx",
             media_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -436,12 +436,12 @@ impl ArtifactEditor for DocxEditor {
         })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
@@ -474,11 +474,11 @@ impl ArtifactEditor for DocxEditor {
                 italic: required_docx_bool_argument(args, "italic")?,
                 underline: required_docx_bool_argument(args, "underline")?,
             }),
-            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.unhandled-action"), format!("unknown docx editor action '{other}'"))),
+            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.docx.unhandled-action"), format!("unknown docx editor action '{other}'"))),
         })
     }
 
-    fn reference_birth()->Option<fn()->Result<DocxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<DocxSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
             body: vec![semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default())],
             styles: Vec::new(),
@@ -491,8 +491,8 @@ impl ArtifactEditor for DocxEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -509,20 +509,20 @@ impl ArtifactEditor for DocxEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render_windowed(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.docx@ecma-376/*#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -564,7 +564,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_docx_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_docx_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(DOCX_EDITOR_DIALECT)
         .document(["semio", "stdio", "docx"])
         .icon_id("file-text")

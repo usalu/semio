@@ -60,7 +60,6 @@
     "./engine/publication": "./⚙️engine/📤️publication/🟦️.ts",
     "./engine/selection": "./⚙️engine/🧭️selection/🟦️.ts",
     "./local-hub/execution": "./🚀️local-hub/🏃️execution/🟦️.ts",
-    "./parity/execution": "./⚖️parity/🏃️execution/🟦️.ts",
     "./playground-session/execution": "./🎮️playground-session/🏃️execution/🟦️.ts",
     "./playground-session/schema": "./🎮️playground-session/🧬️schema/🟦️.ts",
     "./testing/program-matrix": "./🧪️testing/🧮️program-matrix/🟦️.ts",

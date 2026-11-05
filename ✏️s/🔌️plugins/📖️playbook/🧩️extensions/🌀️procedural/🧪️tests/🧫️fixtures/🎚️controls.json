@@ -10,7 +10,7 @@
       "value": "ä",
       "surface": "try",
       "interactive": true,
-      "component": "input",
+      "component": "surface",
       "expectedValue": "ä"
     },
     {
@@ -22,7 +22,7 @@
       "value": "Line\nö",
       "surface": "blueprint",
       "interactive": true,
-      "component": "input",
+      "component": "surface",
       "expectedValue": "Line\nö"
     },
     {
@@ -73,6 +73,18 @@
       "surface": "try",
       "interactive": false,
       "component": "toggle"
+    },
+    {
+      "question": {
+        "id": "empty",
+        "label": "Initial Text",
+        "kind": "text"
+      },
+      "value": "",
+      "surface": "try",
+      "interactive": true,
+      "component": "surface",
+      "expectedValue": ""
     }
   ]
 }

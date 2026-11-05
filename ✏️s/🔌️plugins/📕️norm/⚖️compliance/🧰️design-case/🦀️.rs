@@ -55,10 +55,10 @@ impl InputSpec {
     pub const fn scope(mut self, entries: &'static str) -> Self { self.scope = entries; self }
     /// 🎯 True when the row applies to the catalogue entry `entry_id` (an empty scope applies to every entry).
     pub fn applies_to(&self, entry_id: &str) -> bool { self.scope.is_empty() || self.scope.split(',').any(|id| id == entry_id) }
-    pub fn label(&self, locale: &semio_framework_ui_locale::Locale) -> &'static str {
+    pub fn label(&self, locale: &semio_ui_locale::Locale) -> &'static str {
         match locale {
-            semio_framework_ui_locale::Locale::En => self.en,
-            semio_framework_ui_locale::Locale::De => self.de,
+            semio_ui_locale::Locale::En => self.en,
+            semio_ui_locale::Locale::De => self.de,
         }
     }
     pub fn is_number(&self) -> bool { matches!(self.kind, InputKind::Number | InputKind::Vector | InputKind::Series) }
@@ -168,10 +168,10 @@ pub struct CaseEntry {
     pub geometry: Option<CaseGeometry>,
 }
 impl CaseEntry {
-    pub fn title(&self, locale: &semio_framework_ui_locale::Locale) -> &'static str {
+    pub fn title(&self, locale: &semio_ui_locale::Locale) -> &'static str {
         match locale {
-            semio_framework_ui_locale::Locale::En => self.en,
-            semio_framework_ui_locale::Locale::De => self.de,
+            semio_ui_locale::Locale::En => self.en,
+            semio_ui_locale::Locale::De => self.de,
         }
     }
 }

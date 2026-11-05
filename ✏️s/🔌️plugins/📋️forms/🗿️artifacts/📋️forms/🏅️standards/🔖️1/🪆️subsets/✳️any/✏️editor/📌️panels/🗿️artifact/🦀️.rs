@@ -2,7 +2,7 @@
 //!
 //! 🪟️ BOTH levels are virtualised the framework way: the steps section is a windowed container and
 //! every step row is a windowed container over its own questions
-//! (`semio_framework_plugin::tree_window_item`). Each publishes its FULL extent through
+//! (`semio_plugin::tree_window_item`). Each publishes its FULL extent through
 //! `TreeWindow { total, offset }` and materialises only the slice the host asked for
 //! (`ViewModel::tree_windows`, read once per render as [`TreeWindows`]), so a real form — many steps
 //! × many questions per step — scrolls as one document, with no page cursor and no `+N` row.
@@ -14,21 +14,21 @@ use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::support::{forms_action, ui_label, FORMS_INTERACTION_FIELDS, FORMS_INTERACTION_GRANULARITY_FIELD, FORMS_INTERACTION_GRANULARITY_SECTION, FORMS_PLAY_APP_ID};
 use crate::schema::forms_play_step_tree_id;
 use crate::{forms_steps, FormQuestion, FormStep, FormsSnapshot};
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::tree_window_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_ARTIFACT: &str = "forms.play.artifact";

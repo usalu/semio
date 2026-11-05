@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-identity"
+name = "semio-os-identity"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

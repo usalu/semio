@@ -21,12 +21,12 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactCursorOwners {
-    #[value(default, skip_serializing_if = "semio_framework_os_vcs::history_id_stack_is_empty")]
-    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "semio_framework_os_vcs::history_id_stack_is_empty"))]
-    pub applied_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
-    #[value(default, skip_serializing_if = "semio_framework_os_vcs::history_id_stack_is_empty")]
-    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "semio_framework_os_vcs::history_id_stack_is_empty"))]
-    pub redo_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
+    #[value(default, skip_serializing_if = "semio_os_vcs::history_id_stack_is_empty")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "semio_os_vcs::history_id_stack_is_empty"))]
+    pub applied_edit_ids: semio_os_vcs::HistoryPageStack<String>,
+    #[value(default, skip_serializing_if = "semio_os_vcs::history_id_stack_is_empty")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "semio_os_vcs::history_id_stack_is_empty"))]
+    pub redo_edit_ids: semio_os_vcs::HistoryPageStack<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     pub checkpoint_id: Option<String>,
@@ -39,12 +39,12 @@ pub struct ArtifactCursor {
 }
 
 struct ArtifactCursorGroupRoot {
-    visibility: Arc<semio_framework_os_vcs::ArtifactGroupVisibility>,
+    visibility: Arc<semio_os_vcs::ArtifactGroupVisibility>,
     owners: ArtifactCursorOwners,
 }
 
 impl ArtifactCursor {
-    pub fn new(applied_edit_ids: impl Into<semio_framework_os_vcs::HistoryPageStack<String>>, redo_edit_ids: impl Into<semio_framework_os_vcs::HistoryPageStack<String>>, checkpoint_id: Option<String>) -> Self {
+    pub fn new(applied_edit_ids: impl Into<semio_os_vcs::HistoryPageStack<String>>, redo_edit_ids: impl Into<semio_os_vcs::HistoryPageStack<String>>, checkpoint_id: Option<String>) -> Self {
         Self::from_owners(ArtifactCursorOwners { applied_edit_ids: applied_edit_ids.into(), redo_edit_ids: redo_edit_ids.into(), checkpoint_id })
     }
 
@@ -52,7 +52,7 @@ impl ArtifactCursor {
         Self { owners: std::mem::ManuallyDrop::new(owners), group: std::mem::ManuallyDrop::new(None) }
     }
 
-    pub fn stage_group_owned(&mut self, owners: ArtifactCursorOwners, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>) -> Result<(), ArtifactCursorOwners> {
+    pub fn stage_group_owned(&mut self, owners: ArtifactCursorOwners, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>) -> Result<(), ArtifactCursorOwners> {
         if self.group.is_some() || !visibility.pending() {
             return Err(owners);
         }
@@ -60,7 +60,7 @@ impl ArtifactCursor {
         Ok(())
     }
 
-    pub fn adopt_group_owned(&mut self, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>) -> Result<ArtifactCursorOwners, ()> {
+    pub fn adopt_group_owned(&mut self, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>) -> Result<ArtifactCursorOwners, ()> {
         if !visibility.committed() || !self.group.as_ref().is_some_and(|group| Arc::ptr_eq(&group.visibility, visibility)) {
             return Err(());
         }
@@ -68,18 +68,18 @@ impl ArtifactCursor {
         Ok(std::mem::replace(&mut *self.owners, group.owners))
     }
 
-    pub fn abort_group_owned(&mut self, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>) -> Result<ArtifactCursorOwners, ()> {
+    pub fn abort_group_owned(&mut self, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>) -> Result<ArtifactCursorOwners, ()> {
         if visibility.pending() || visibility.committed() || !self.group.as_ref().is_some_and(|group| Arc::ptr_eq(&group.visibility, visibility)) {
             return Err(());
         }
         Ok(self.group.take().expect("validated aborted cursor root remains owned").owners)
     }
 
-    pub fn group_visibility(&self) -> Option<&semio_framework_os_vcs::ArtifactGroupVisibility> {
+    pub fn group_visibility(&self) -> Option<&semio_os_vcs::ArtifactGroupVisibility> {
         self.group.as_ref().map(|group| group.visibility.as_ref())
     }
 
-    pub fn read_group(&self, decision: Option<&semio_framework_os_vcs::ArtifactGroupReadDecision<'_>>) -> Result<&ArtifactCursorOwners, ()> {
+    pub fn read_group(&self, decision: Option<&semio_os_vcs::ArtifactGroupReadDecision<'_>>) -> Result<&ArtifactCursorOwners, ()> {
         match self.group.as_ref() {
             Some(group) if decision.ok_or(())?.committed_for(&group.visibility)? => Ok(&group.owners),
             _ => Ok(&*self.owners),

@@ -9,7 +9,7 @@
 //! 🪟️ Every section and every nesting row is a WINDOW over its own list: the host says which slice it
 //! is looking at (`ViewModel::tree_windows`), the guest materialises exactly that slice and stamps the
 //! full `total` beside it. A document past one viewport streams; it never truncates and it never
-//! closes a section with a `+N` row (see `semio_framework_plugin::TreeWindows`).
+//! closes a section with a `+N` row (see `semio_plugin::TreeWindows`).
 
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_COMBINATION;
@@ -38,25 +38,25 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_ui_contract::Label as UiLabel;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_ui_contract::Label as UiLabel;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "fem2d.play.artifact";
@@ -67,7 +67,7 @@ pub const TREE_NAMESPACE: &str = "fem2d-play-artifact";
 pub const SECTIONS: usize = 9;
 /// 🎯️ Ids the builder records as selected/hovered — one `UiFixedList`, so a wider selection marks
 /// its first page rather than refusing the whole render.
-const MARKED_IDS_LIMIT: usize = semio_framework_ui_contract::UI_FIXED_LIST_ITEMS;
+const MARKED_IDS_LIMIT: usize = semio_ui_contract::UI_FIXED_LIST_ITEMS;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "setpoint-manager", kind: "replace-setpoint-manager-kind", record: "ReplacedSetpointManagerKind" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace setpoint manager {} control law with {:?}", self.id.0, self.new_kind), &format!("Regelgesetz von Sollwertführung {} durch {:?} ersetzen", self.id.0, self.new_kind))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace setpoint manager {} control law with {:?}", self.id.0, self.new_kind), &format!("Regelgesetz von Sollwertführung {} durch {:?} ersetzen", self.id.0, self.new_kind))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,8 +1,8 @@
 //! 🧾️ Typed operations of the mounted artifact instance: typed-operation publication, typed-command dispatch, configuration and the history panel.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
+extern crate semio_os_kernel as pack;
 
 #[path = "📥️staging/🔌️plugin-app-impl/🦀️.rs"]
 pub mod typed_ops_plugin_app_impl;

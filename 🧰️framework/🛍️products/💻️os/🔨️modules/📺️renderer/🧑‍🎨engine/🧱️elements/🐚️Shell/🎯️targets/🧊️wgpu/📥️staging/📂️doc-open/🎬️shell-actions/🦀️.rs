@@ -12,7 +12,7 @@ impl OpeningState {
     /// terminal status. Answers whether the footer's status changed.
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn pump_hub_check_in(&mut self, directory: &DirectoryState, sync: &mut SyncState) -> bool {
-        use semio_framework_os_kernel::os_directory::{DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_SCHEMA_V1};
+        use semio_os_kernel::os_directory::{DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_SCHEMA_V1};
         let Some(operation) = sync.hub_check_in.clone() else { return false };
         if operation.status.as_ref().is_some_and(|status| status.phase.is_terminal()) {
             return false;
@@ -84,7 +84,7 @@ impl OpeningState {
         program: &ProgramBridgeEntry,
         app: &AppDefinition,
         window_kind_id: &str,
-        checkpoint: Option<semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1>, directory: &mut DirectoryState, sync: &SyncState
+        checkpoint: Option<semio_os_kernel::os_directory::DocumentOpenCheckpointV1>, directory: &mut DirectoryState, sync: &SyncState
     ) -> Result<Option<ShellHubDocumentSeed>, String> {
         let Some(space_id) = bindings.iter().find_map(|binding| match binding {
             PersistenceBinding::Hub { space_id, .. } => Some(space_id.clone()),
@@ -93,13 +93,13 @@ impl OpeningState {
             return Ok(None);
         };
         let client = directory.directory_client.clone().ok_or("document open requires a signed-in hub session")?;
-        let scope = semio_framework_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id);
+        let scope = semio_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id);
         let codec_resolves = store_sync::os_store::codec_registry::document_kind_codec(schema).await.map_err(|error| format!("document codec registry: {error}"))?.is_some();
         let surface_id = wgpu_document_socket_surface(program, app, window_kind_id)?;
-        let intent = semio_framework_os_kernel::os_directory::DocumentOpenIntentV1 {
+        let intent = semio_os_kernel::os_directory::DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
             version: 1,
-            scope: semio_framework_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id),
+            scope: semio_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id),
             requested_surface_id: Some(surface_id.clone()),
             client_instance_id: format!("wgpu-shell-{}", directory.shell_session_id),
         };

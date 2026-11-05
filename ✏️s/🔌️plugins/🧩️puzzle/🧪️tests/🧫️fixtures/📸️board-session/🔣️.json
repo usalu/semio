@@ -1,0 +1,36 @@
+{
+  "case": "initial board snapshot survives parsing and subsequent session reads",
+  "expected": {
+    "selection": [],
+    "activeUtility": "select",
+    "nodeCount": 2,
+    "edgeCount": 1
+  },
+  "input": {
+    "node": {
+      "x": 0,
+      "y": 0
+    },
+    "lasso": [
+      {
+        "x": -80,
+        "y": -80
+      },
+      {
+        "x": 360,
+        "y": -80
+      },
+      {
+        "x": -80,
+        "y": 200
+      },
+      {
+        "x": -80,
+        "y": -80
+      }
+    ]
+  },
+  "afterLasso": [
+    "alpha"
+  ]
+}

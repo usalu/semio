@@ -17,12 +17,12 @@
         /// worker's emit has walked the publication ladder above. Rebuilt here through the SAME
         /// `result_from_last_edit` the unmigrated route calls, with the SAME `amended_same_edit` tail
         /// rule, so a coalesced gesture still reports only the operation THIS dispatch added.
-        pub async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        pub async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
             let verb = test_command_id(&command);
             let before_edit_id = self.0.stores.test_last_edit_id();
             let before_tail = self.0.stores.test_edit_tail_lengths();
             let mut admitted = artifact_app_laws::dispatch_original_fixture_command(&mut self.0, &command, meta, artifact_app_laws::fixture_mounted_policy(), identity, cx).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -46,11 +46,11 @@
         /// hands its reducer to a worker. This drives both, exactly as
         /// {@link artifact_app_laws::settle_history_verb} does for the raw wrapper, and rebuilds the
         /// settled mutations/inverse through the same `result_from_last_edit`.
-        pub async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        pub async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
             let before_edit_id = self.0.stores.test_last_edit_id();
             let before_tail = self.0.stores.test_edit_tail_lengths();
             let mut admitted = artifact_app_laws::dispatch_fixture_action(&mut self.0, action, args.cloned(), meta, identity, cx, artifact_app_laws::fixture_mounted_policy().maintenance).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -72,21 +72,21 @@
     /// hands its reducer to a worker too, so a law that reads the store right after one observed the
     /// pre-dispatch revision.
     #[doc(hidden)]
-pub async fn settle_contract_app(app: &mut ContractApp,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
-        artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await.expect("registered fixture settles its addressed dispatch");
+pub async fn settle_contract_app(app: &mut ContractApp,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
+        artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await.expect("registered fixture settles its addressed dispatch");
     }
 
     #[doc(hidden)]
-pub async fn contract_app_under_test(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+pub async fn contract_app_under_test(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
         contract_app_with(migrated_contract_registry().await, mounted_policy, identity).await
     }
 
     /// 🧪️ [`contract_app_under_test`] over an explicit registry — the flat-menu and interaction
     /// fixtures declare their own manifests but need the same mounted shape with explicit original paid closure.
     #[doc(hidden)]
-pub async fn contract_app_with(registry: AppActionRegistry, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+pub async fn contract_app_with(registry: AppActionRegistry, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
         let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         ContractApp(app, mounted_policy)
     }
@@ -95,7 +95,7 @@ pub async fn contract_app_with(registry: AppActionRegistry, mounted_policy: semi
     /// uses now. A registry-less wrapper can no longer dispatch anything at all (it has no manifest
     /// declaration for the verb), so "no registry" was never what those laws were testing.
     #[doc(hidden)]
-pub async fn contract_app(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+pub async fn contract_app(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
         contract_app_with(migrated_contract_registry().await, mounted_policy, identity).await
     }
 
@@ -104,25 +104,25 @@ pub async fn contract_app(mounted_policy: semio_framework_plugin_mounted_owner::
     /// generic surface (a generic bound never applies a `Deref` coercion). Those laws own the close
     /// themselves, exactly as they did before.
     #[doc(hidden)]
-pub async fn contract_app_raw(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
+pub async fn contract_app_raw(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
         let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
 
     /// 🧩️ [`contract_app_raw`] over the composed member roster.
     #[doc(hidden)]
-pub async fn contract_composed_app_raw(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp, TestMembers> {
+pub async fn contract_composed_app_raw(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp, TestMembers> {
         let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
 
     /// 🧩️ [`ContractApp`] over the composed member roster — same three laws by construction.
     #[doc(hidden)]
-pub struct ContractComposedApp(VcsArtifactApp<TestApp, TestMembers>, semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1);
+pub struct ContractComposedApp(VcsArtifactApp<TestApp, TestMembers>, semio_plugin_mounted_owner::MountedOwnerPolicyV1);
 
     impl std::ops::Deref for ContractComposedApp {
         type Target = VcsArtifactApp<TestApp, TestMembers>;
@@ -161,12 +161,12 @@ pub struct ContractComposedApp(VcsArtifactApp<TestApp, TestMembers>, semio_frame
         /// leaves `member_edits` empty by construction, so it must never overwrite a composed
         /// result the pipeline itself already filled — a composite gesture's child lane would
         /// vanish into the rebuild.
-        pub async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        pub async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
             let verb = test_command_id(&command);
             let before_edit_id = self.0.stores.test_last_edit_id();
             let before_tail = self.0.stores.test_edit_tail_lengths();
             let mut admitted = artifact_app_laws::dispatch_original_fixture_command(&mut self.0, &command, meta, artifact_app_laws::fixture_mounted_policy(), identity, cx).await?;
-            let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
+            let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -193,11 +193,11 @@ pub struct ContractComposedApp(VcsArtifactApp<TestApp, TestMembers>, semio_frame
         }
         /// ⏪️ See {@link ContractApp::dispatch_action}: a framework-reserved history verb admits an
         /// `Effect::SpawnJob` the caller must run, and an app verb hands its reducer to a worker.
-        pub async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        pub async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
             let before_edit_id = self.0.stores.test_last_edit_id();
             let before_tail = self.0.stores.test_edit_tail_lengths();
             let mut admitted = artifact_app_laws::dispatch_fixture_action(&mut self.0, action, args.cloned(), meta, identity, cx, artifact_app_laws::fixture_mounted_policy().maintenance).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -215,9 +215,9 @@ pub struct ContractComposedApp(VcsArtifactApp<TestApp, TestMembers>, semio_frame
     }
 
     #[doc(hidden)]
-pub async fn contract_composed_app(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractComposedApp {
+pub async fn contract_composed_app(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractComposedApp {
         let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         ContractComposedApp(app, mounted_policy)
     }

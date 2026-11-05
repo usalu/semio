@@ -1,8 +1,8 @@
 //! 🪜️ Entry, lifecycle focus and retirement phases of the reactor turn: the borrowed retained input admission, the one lifecycle command per turn and the bounded close ladders that run before the turn's event. See [`super`].
 
 use super::*;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 
 /// 🚪️ Admits the borrowed retained input of one poll: it must equal the context's own operation, generation and grant, and no refused publication may still own its output.
 pub(super) fn admit_turn_entry(budget: semio_framework::kernel::Budget, cx: &semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
@@ -94,7 +94,7 @@ pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
         if cx.retirement_should_yield(){break}
         cx.consume_fuel(1);
-        if semio_framework_ui_runtime::close_surface_reconcile_handback_one().map_err(reactor_close_fault)? {
+        if semio_ui_runtime::close_surface_reconcile_handback_one().map_err(reactor_close_fault)? {
             break;
         }
         if cx.retirement_should_yield() {
@@ -102,7 +102,7 @@ pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
         }
     }
     retire_until_complete(cx, || ui_contract::close_ui_document_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("queued document retirement remains valid").complete);
-    retire_until_complete(cx, semio_framework_ui_contract_validation::close_ui_patch_owner_one);
+    retire_until_complete(cx, semio_ui_contract_validation::close_ui_patch_owner_one);
     retire_until_complete(cx, || ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("exact UI value retirement queue remains valid").complete);
     retire_until_complete(cx, ui_contract::close_built_node_page_one);
     retire_while_progress(cx, || semio_framework::kernel::close_ui_turn_patch_owner_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
@@ -111,12 +111,12 @@ pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     });
     with_pending_patches(|pending| pending.borrow_mut().advance_rejection(|surface, generation| PATCHES.with(|patches| patches.mark_rejected(surface, generation))));
     step_pending_patch_close(cx)?;
-    let close_cleanup_work=semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(runtime,cx)?;
-    for _ in 0..semio_framework_plugin_runtime_instances::inst_cleanup_turns::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
+    let close_cleanup_work=semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(runtime,cx)?;
+    for _ in 0..semio_plugin_runtime_instances::inst_cleanup_turns::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
         if cx.retirement_should_yield(){break}
         cx.consume_fuel(1);
-        let _ = semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(runtime,cx)?;
-        if !semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_live_cleanup_under_pressure(runtime) || cx.retirement_should_yield() {
+        let _ = semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(runtime,cx)?;
+        if !semio_plugin_runtime_instances::inst_cleanup_turns::plugin_live_cleanup_under_pressure(runtime) || cx.retirement_should_yield() {
             break;
         }
     }

@@ -1,8 +1,8 @@
 //! ♻️ Actual Rewriting parent fields and semantic SQL, before Native provider opt-in.
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SnapshotEncoding};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SnapshotEncoding};
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::{encoding};
 use semio_framework_test_original_snapshot_owners as original_owners;
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_graph_manifest::PropertyValue;
 use crate::standards::v1::subsets::any::schema::rule::{Assignment, Lhs, ParameterKind, ParameterSpec, Pattern, Rhs};
@@ -255,7 +255,7 @@ fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_s
 #[test]
 fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
     use semio_framework_value::{DslValue, FromValue, Number, ToValue};
-    use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::*};
+    use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::*};
     use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
     fn read(value: &serde_json::Value) -> DslValue {
         match value {
@@ -298,8 +298,8 @@ fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
 
 mod populated_public_owner {
     use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
-    use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
-    use semio_framework_plugin::plugin_app_close_prelude::*;
+    use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
+    use semio_plugin::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
         /// ♻️ Actual two Rewriting declared app wrappers close public persistence.
         pub(crate) enum RewritingArtifactApps: PluginApp {
@@ -311,7 +311,7 @@ mod populated_public_owner {
     async fn sqlite_snapshot_rewriting_populated_actual_app_public_both_forms_independent_child_edit(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};
         use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};use store::sqlite_snapshot::*;use std::{io::Write,process::{Command,Stdio}};
-        let _plugin=semio_framework_plugin::PluginBuilder::<_, RewritingArtifactApps>::new("trinity").label("Rewriting SQLite owner").version("0.1.0").package_id("semio:trinity").declare_artifact(crate::standards::v1::subsets::any::registration::artifact::<RewritingArtifactApps>()).try_build().unwrap();
+        let _plugin=semio_plugin::PluginBuilder::<_, RewritingArtifactApps>::new("trinity").label("Rewriting SQLite owner").version("0.1.0").package_id("semio:trinity").declare_artifact(crate::standards::v1::subsets::any::registration::artifact::<RewritingArtifactApps>()).try_build().unwrap();
         let dialect=ArtifactDialect{artifact_kind:"s.trinity.rewriting".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
         for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
         for word in words(){let expected=Owned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{

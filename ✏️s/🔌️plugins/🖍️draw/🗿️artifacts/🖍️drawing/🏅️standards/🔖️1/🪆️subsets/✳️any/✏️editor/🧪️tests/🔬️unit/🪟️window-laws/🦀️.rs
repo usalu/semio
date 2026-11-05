@@ -2,7 +2,7 @@
 
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 use semio_framework::MediaPayload;
 
 #[semio_framework_async_macros::async_test]
@@ -18,7 +18,7 @@ async fn canvas_pointer_up_direct_pick_selects_inline() {
     assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert_eq!(selected_strokes(&app).await, vec![rect_id], "the picked rect is selected inside the carrying operation");
-    artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -26,8 +26,8 @@ async fn set_selected_opacity_reads_the_framework_interaction_selection() {
     let (mut app, meta) = inline_selection_app().await;
     let id = first_layer_id(&app);
     let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": id })]).unwrap();
-    let admission = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("select");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.expect("selection publication settles");
+    let admission = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("select");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.expect("selection publication settles");
     assert_eq!(selected_strokes(&app).await, vec![id.clone()], "the retained opacity command reads the framework-owned selection published for its canvas window");
     let (result, receipt) = settled(&mut app, DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &meta).await;
     assert!(result.mutations.is_empty(), "the migrated route retains its operation until publication");
@@ -38,7 +38,7 @@ async fn set_selected_opacity_reads_the_framework_interaction_selection() {
 #[semio_framework_async_macros::async_test]
 async fn drawing_labels_resolve_native_by_default() {
     let mut app = drawing_app().await;
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_LAYERS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire semantic tree");
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_LAYERS, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire semantic tree");
     assert!(json.contains("Add Path"));
     assert!(json.contains("Add Rectangle"));
     assert!(!json.contains("Pfad hinzufügen"));
@@ -47,12 +47,12 @@ async fn drawing_labels_resolve_native_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn drawing_labels_translate_panels_in_german() {
     let mut app = drawing_app().await;
-    let view_state = ViewModel { locale: semio_framework_ui_locale::Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
-    let layers_json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_LAYERS, &view_state, app.1.cx()).await.expect("retire layers tree");
+    let view_state = ViewModel { locale: semio_ui_locale::Locale::De, ..ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native) };
+    let layers_json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_LAYERS, &view_state, app.1.cx()).await.expect("retire layers tree");
     assert!(layers_json.contains("Pfad hinzufügen"));
     assert!(layers_json.contains("Rechteck hinzufügen"));
     assert!(!layers_json.contains("Add Path"));
-    let catalogue_json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_CATALOGUE, &view_state, app.1.cx()).await.expect("retire catalogue tree");
+    let catalogue_json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_CATALOGUE, &view_state, app.1.cx()).await.expect("retire catalogue tree");
     assert!(catalogue_json.contains("\"Ellipse\""));
     assert!(catalogue_json.contains("Nachzeichnung"));
 }
@@ -61,10 +61,10 @@ async fn drawing_labels_translate_panels_in_german() {
 async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() {
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧮️status/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut witnesses=0;
-    for locale in [semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Locale::De] {
-        let language=if locale==semio_framework_ui_locale::Locale::En {"en"} else {"de"};
+    for locale in [semio_ui_locale::Locale::En,semio_ui_locale::Locale::De] {
+        let language=if locale==semio_ui_locale::Locale::En {"en"} else {"de"};
         let labels=law["labels"].as_array().unwrap().iter().find(|row|row["locale"]==language).unwrap();
-        for terminology in [semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Terminology::Reuse] {
+        for terminology in [semio_ui_locale::Terminology::Native,semio_ui_locale::Terminology::Reuse] {
             for row in law["cases"].as_array().unwrap() {
                 let (mut app,mut meta)=inline_selection_app().await;
                 let view=meta.view_state.as_mut().unwrap();view.locale=locale;view.terminology=terminology;
@@ -73,8 +73,8 @@ async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() 
                 for (step,selection) in row["selections"].as_array().unwrap().iter().enumerate() {
                     let targets=selection.as_array().unwrap().iter().map(|index|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":format!("layer-{}",index.as_u64().unwrap())})).collect::<Vec<_>>();
                     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":serde_json::to_string(&targets).unwrap(),"merge":"replace","method":"pick"}));
-                    let admission=semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
-                    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
+                    let admission=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+                    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
                     assert_eq!(selected_strokes(&app).await.len(),selection.as_array().unwrap().len());
                     let engagements=app.window_engagements(meta.view_state.as_ref().unwrap()).await;
                     let engagement=engagements.get("drawing-canvas").expect("addressed canvas chrome");
@@ -85,7 +85,7 @@ async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() 
                 }
                 let unaddressed=ViewModel::new(locale,terminology);
                 assert!(app.window_engagements(&unaddressed).await.is_empty());
-                artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");assert!(app.close_terminal_is_empty());
+                artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");assert!(app.close_terminal_is_empty());
             }
         }
     }
@@ -98,7 +98,7 @@ async fn drawing_io_declares_vector_out_and_export_media_covers_both_ports() {
     let (_, receipt) = settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &meta).await;
     assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::with_operation(&projection, &history,semio_s_artifact_draw_drawing_editor::identity_test::operation());
     let vector = DrawingPlayApp::export_media("vector:out", &doc).expect("vector:out");
     let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };

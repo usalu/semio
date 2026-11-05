@@ -4,7 +4,7 @@ use super::*;
 
 /// 🗂️ Process-lifetime snapshot produced only after complete bundle verification and codec activation.
 pub struct VerifiedTrustedCatalog {
-    pub residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>>,
+    pub residency: Arc<GuestResidencyLedgerV1<semio_plugin_interpreter_runtime::OwnedCompiledGuest>>,
     pub(super) guests: Box<[Arc<GuestArtifactComponent>]>,
     pub progress: Arc<TrustedCatalogLoadProgressCellV1>,
     pub packages: Box<[VerifiedTrustedPackage]>,

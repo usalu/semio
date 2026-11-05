@@ -4,8 +4,8 @@
 //! (`semio_s_artifact_energy_model_session::EnergySimulationRunJob`).
 
 use crate::session::energy_simulation_run_definition;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ToolDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ToolDefinition;
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = "energySimulation";
@@ -21,7 +21,7 @@ pub fn definition() -> ToolDefinition {
 //#region 🔓️RunMap
 /// 🔓️ The live energy simulation run's per-surface map, if there is one. Filters on
 /// `tool_id == energySimulation` so another plugin's run in the same document never colours this one.
-pub fn surface_energy_from_run(run: Option<&semio_framework_plugin::ToolRunView>) -> Option<crate::editor_results::SurfaceEnergyMap> {
+pub fn surface_energy_from_run(run: Option<&semio_plugin::ToolRunView>) -> Option<crate::editor_results::SurfaceEnergyMap> {
     let run = run.filter(|run| run.tool_id == TOOL_ID)?;
     crate::editor_results::decode_run_payload(run.payload.as_deref()?)
 }

@@ -1,6 +1,6 @@
 //! 🧪️ Fixture laws of the semio text lifecycle mutations (add-mark, insert-run, remove-mark, remove-run), over the mutation crate's public API.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../➕add-mark/🧪️tests/🔗️adds/🦀️.rs"]
 mod tests_add_mark_adds_a_link_mark_ahead_of_the_bold_mark;

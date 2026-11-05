@@ -1,7 +1,7 @@
 use crate::backend::ColorDepth;
-use semio_framework_ui_tui_core::cell::{Cell, CellBuffer, DiffRun};
-use semio_framework_ui_tui_core::theme::Rgb;
-use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec};
+use semio_ui_tui_core::cell::{Cell, CellBuffer, DiffRun};
+use semio_ui_tui_core::theme::Rgb;
+use semio_ui_tui_core::signal::{CursorShape, CursorSpec};
 use std::borrow::Cow;
 use std::time::Duration;
 
@@ -34,8 +34,8 @@ mod click_counter;
 pub use click_counter::{ClickCounter, CLICK_WINDOW_MS};
 
 //#region 🔤️Parse
-use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::Pos;
+use semio_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::Pos;
 
 //#endregion 🔤️Parse
 

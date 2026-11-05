@@ -12,7 +12,7 @@ use crate::editor::flow::commands::{connect_media_ports, context_menu_at, delete
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::{compiled, main};
 #[allow(unused_imports)]
@@ -44,81 +44,81 @@ use semio_framework_artifact_flow_flow::{CameraJson, Widget};
 #[allow(unused_imports)]
 use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
+use semio_os_infinite_directed_presentation::DagDrawLod;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
+use semio_plugin::app::{ChildEmitPreparation, InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppActionRegistry;
+use semio_plugin::AppActionRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppDefinition;
+use semio_plugin::AppDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::CommandDefinition;
+use semio_plugin::CommandDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuRequest;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use serde_json::json;
 #[allow(unused_imports)]
@@ -136,7 +136,7 @@ use std::sync::Arc;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::*;
-use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_their_declarations, declared_verb_agent_divergences, DeclaredVerbOutcome};
+use semio_plugin::artifact_app_laws::{assert_declared_verbs_honour_their_declarations, declared_verb_agent_divergences, DeclaredVerbOutcome};
 
 /// ⚖️ LAW: all 28 declared verbs honour their declarations, probed with the first-party extensions installed (their
 /// operators give `add` the ports `connectMediaPorts` wires). The agent lane carries every verb that edits the composed
@@ -147,7 +147,7 @@ use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_the
 #[semio_framework_async_macros::async_test]
 async fn every_declared_flow_verb_honours_its_declaration() {
     crate::editor::flow::unit_tests::context::install_first_party_light_flow_extensions_for_tests();
-    let probes = assert_declared_verbs_honour_their_declarations::<semio_framework_plugin::EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_flow_app, Some(fixture_text!("../../../🧫️fixtures/⚖️declared-verb-examples.json")), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let probes = assert_declared_verbs_honour_their_declarations::<semio_plugin::EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_flow_app, Some(fixture_text!("../../../🧫️fixtures/⚖️declared-verb-examples.json")), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(probes.len(), 28, "declared verbs");
     assert_eq!(declared_verb_agent_divergences(&probes), ["evaluate", "focusSelection"], "agent-lane divergences");
     let evaluate = probes.iter().find(|probe| probe.verb == "evaluate").expect("evaluate is a declared verb");
@@ -170,12 +170,12 @@ async fn the_content_child_is_the_one_scene_every_verb_and_window_reads() {
     let note = added.widgets.iter().map(|widget| crate::schema::widget_id(widget).to_string()).find(|id| id.starts_with("note")).expect("addWidget lands one note in the content child");
     added.retire_cold();
     let rendered = render(&mut app, FLOW_PLAY_BODY_MAIN).await;
-    let spine = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&rendered).expect("main window scene spine");
-    let main_window = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&rendered).expect("assembled main window node-graph scene");
+    let spine = semio_plugin::artifact_app_laws::decode_fixture_scene::<semio_plugin::NodeGraphScene>(&rendered).expect("main window scene spine");
+    let main_window = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&rendered).expect("assembled main window node-graph scene");
     let projection: serde_json::Value = serde_json::from_str(&rendered).unwrap();
-    let surface = semio_framework_plugin::artifact_app_laws::fixture_scene_node::<semio_framework_plugin::NodeGraphScene>(&projection).unwrap();
+    let surface = semio_plugin::artifact_app_laws::fixture_scene_node::<semio_plugin::NodeGraphScene>(&projection).unwrap();
     let carrier = surface["children"].as_array().unwrap().iter().find(|child| child["key"] == "framework.scene.nodeGraph.nodes").expect("production node carrier");
-    let oracle: serde_json::Value = serde_json::from_str(&semio_framework_plugin::artifact_app_laws::fixture_carrier_text(carrier)).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(&semio_plugin::artifact_app_laws::fixture_carrier_text(carrier)).unwrap();
     assert_eq!(main_window.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), oracle.as_array().unwrap().iter().map(|node| node["id"].as_str().unwrap()).collect::<Vec<_>>(), "assembled scene reads the actual serialized node carrier");
     assert!(main_window.nodes.iter().any(|node| node.id == note), "the main window renders the widget the child edit added");
     dispatch(&mut app, FlowCommand::RemoveWidget(RemoveWidget { widget_id: note.clone() })).await;

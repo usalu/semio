@@ -1,9 +1,9 @@
 use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation;
 use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
 use crate::JPG_BASELINE_DIALECT;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_contract::editing;
 use crate::editor::jpg_baseline::*;
@@ -58,13 +58,13 @@ fn paint_command(args: Vec<(&str, u64)>) -> JpgBaselineEditCommand {
     super::jpg_baseline_editor_command_from_action(paint_region::ACTION_ID, Some(&semio_framework_value::DslValue::object(args.into_iter().map(|(key, value)| (key.into(), number(value))).collect::<Vec<_>>()))).expect("typed paint-region action")
 }
 
-fn drive_paint(command: &JpgBaselineEditCommand, snapshot: &crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot) -> Result<Vec<crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation>, semio_framework_plugin::Fault> {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-    let config = semio_framework_plugin::NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+fn drive_paint(command: &JpgBaselineEditCommand, snapshot: &crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot) -> Result<Vec<crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation>, semio_plugin::Fault> {
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    let config = semio_plugin::NoConfig::default();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "paint-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "paint-region-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
+    let hover = semio_plugin::app::InteractionHoverState::default();
+    let operation = semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "paint-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "paint-region-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new();
     assert!(work.extent(command, snapshot, &interaction, None).is_some());
     for _ in 0..4096 {
@@ -73,7 +73,7 @@ fn drive_paint(command: &JpgBaselineEditCommand, snapshot: &crate::standards::v_
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
         let step = work.step(&ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx);
         match step {
-            Err(failure) => return Err(semio_framework_plugin::Fault::from(format!("{failure:?}"))),
+            Err(failure) => return Err(semio_plugin::Fault::from(format!("{failure:?}"))),
             Ok(ArtifactCommandWorkStep::Progress { preview, .. }) => assert!(std::str::from_utf8(preview).unwrap().contains("\"de\"")),
             Ok(ArtifactCommandWorkStep::Complete(emit)) => return Ok(emit.artifact_mutations),
             Ok(_) => panic!("unexpected paint region work step"),
@@ -115,12 +115,12 @@ fn paint_region_refuses_an_out_of_bounds_rectangle_without_mutating() {
     }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::jpg_baseline::JpgBaselineEditor, || semio_framework_plugin::App { definition: crate::editor::jpg_baseline::create_jpg_baseline_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::jpg_baseline::JpgBaselineEditor, || semio_plugin::App { definition: crate::editor::jpg_baseline::create_jpg_baseline_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {
-    use semio_framework_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
+    use semio_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
+    use semio_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
     let source = include_bytes!("../../../../🧾️document/📚️examples/🎬️demo/🖼️assets/🖼️.jpg");
     let codec = <JpgBaselineEditor as ArtifactEditor>::natural_file_codec().expect("paired natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.jpg@jfif-1.01", ".jpg", "image/jpeg", true));
@@ -136,20 +136,20 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source.to_vec(),
     };
     let initial = <JpgBaselineEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
     app.consume_media(NATURAL_FILE_PORT, artifact, scope.cx()).await.expect("registered natural import");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("natural import publishes");
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("natural import publishes");
     let opened = app.snapshot().expect("opened snapshot").clone();
     let refused = match app.consume_media(NATURAL_FILE_PORT, outside, scope.cx()).await {
         Err(_) => true,
-        Ok(_) => semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err(),
+        Ok(_) => semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err(),
     };
     assert!(refused);
     assert_eq!(app.snapshot().expect("refused baseline JPEG preserves the owner"), opened);
-    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| semio_framework_plugin::artifact_app_laws::produce_fixture_media(&mut app, NATURAL_FILE_PORT, native_owner, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).await.expect("registered natural save");
+    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| semio_plugin::artifact_app_laws::produce_fixture_media(&mut app, NATURAL_FILE_PORT, native_owner, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).await.expect("registered natural save");
     assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
     assert_eq!(saved.descriptor.kind_id.as_deref(), Some(codec.format_kind));
     let oracle = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_identity_round_trip(&saved.data).expect("image independently reopens and writes the baseline JPEG export");
@@ -157,22 +157,22 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     let expected = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation(&oracle).expect("project independent baseline JPEG output");
     assert_eq!(observed.get("width"), expected.get("width"));
     assert_eq!(observed.get("height"), expected.get("height"));
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut reopened = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut reopened = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved, scope.cx()).await.expect("fresh owner imports exported bytes");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("fresh owner import publishes");
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("fresh owner import publishes");
     let reopened_snapshot = reopened.snapshot().expect("reopened snapshot").clone();
     assert_eq!(reopened_snapshot, opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("source undo snapshot"), initial);
     assert_eq!(reopened.snapshot().expect("reopened snapshot remains isolated"), reopened_snapshot);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("source redo snapshot"), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(reopened.snapshot().expect("reopened undo snapshot"), initial);
     assert_eq!(app.snapshot().expect("source remains isolated"), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(reopened.snapshot().expect("reopened redo snapshot"), reopened_snapshot);
     artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");

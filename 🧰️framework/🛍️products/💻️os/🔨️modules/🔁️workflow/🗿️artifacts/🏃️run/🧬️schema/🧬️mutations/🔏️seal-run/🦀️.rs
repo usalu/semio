@@ -17,8 +17,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for SealRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "seal", entity: "run", kind: "seal-run", record: "SealedRun" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Seal run", "Lauf versiegeln")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Seal run", "Lauf versiegeln")
     }
     fn target(&self) -> Vec<String> {
         vec!["sealed".into()]

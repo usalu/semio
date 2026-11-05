@@ -23,7 +23,7 @@ pub struct SetPageOverrides {
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetPageOverrides where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_page_overrides::SetPageOverrides> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-overrides", kind: "set-page-overrides", record: "SetPageOverrides" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set overrides on page \"{}\"", self.id), &format!("Abweichungen von Seite \"{}\" setzen", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Set overrides on page \"{}\"", self.id), &format!("Abweichungen von Seite \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

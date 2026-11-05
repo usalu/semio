@@ -1,5 +1,5 @@
 //! 🌱️ Native Energy row birth and deletion pipelines compose the actual original typed sources of the native mutation base.
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_diff as diff;
 use semio_s_artifact_energy_model_native_mutations::{leaf,reference,row,scalar,owned,text};

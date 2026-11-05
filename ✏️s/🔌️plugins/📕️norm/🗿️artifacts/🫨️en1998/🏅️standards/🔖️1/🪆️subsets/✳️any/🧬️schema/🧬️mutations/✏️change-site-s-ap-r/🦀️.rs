@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteSApR where Op:
         record: "ChangeSiteSApR",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change S_aP,R", "S_aP,R ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change S_aP,R", "S_aP,R ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-s-ap-r".into()]

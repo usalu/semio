@@ -11,7 +11,7 @@ use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export
 use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::IFC_DIALECT;
 use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::Dialect;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
@@ -200,7 +200,7 @@ impl Deserializer<ModelSnapshot> for Ifc2x3IntoModel {
         }
     }
 
-    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<ModelSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<ModelSnapshot> {
         let _ = control;
         let (model, notes) = import_ifc2x3(bytes_of(payload)).map_err(|message| refused("Ifc2x3IntoModel", message))?;
         Ok(IoOutcome { value: model, diagnostics: diagnostics_of(notes) })
@@ -223,7 +223,7 @@ impl Deserializer<ModelSnapshot> for Ifc4IntoModel {
         }
     }
 
-    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<ModelSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<ModelSnapshot> {
         let _ = control;
         let (model, notes) = import_ifc4(bytes_of(payload)).map_err(|message| refused("Ifc4IntoModel", message))?;
         Ok(IoOutcome { value: model, diagnostics: diagnostics_of(notes) })

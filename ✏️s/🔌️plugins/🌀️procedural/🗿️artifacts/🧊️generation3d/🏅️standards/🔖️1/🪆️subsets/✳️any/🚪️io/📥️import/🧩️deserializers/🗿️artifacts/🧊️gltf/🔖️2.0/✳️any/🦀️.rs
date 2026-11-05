@@ -2,7 +2,7 @@
 use semio_s_artifact_procedural_3d_mesh_bridge::import_semio_mesh;
 use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_plugin::ArtifactDeserializer;
+use semio_plugin::ArtifactDeserializer;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfNode;

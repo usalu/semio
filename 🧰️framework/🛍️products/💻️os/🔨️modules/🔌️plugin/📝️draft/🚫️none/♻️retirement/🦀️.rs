@@ -1,7 +1,7 @@
 //! 📝️ Exact store owners for the zero-payload draft lane, and the zero-payload retirement every
 //! statically empty lane (`NoDraft`, `NoConfig`) shares.
 
-use semio_framework_plugin_ownership::store_lifecycle::{bounded_document_store_disposer, ArtifactOwnedDisposer};
+use semio_plugin_ownership::store_lifecycle::{bounded_document_store_disposer, ArtifactOwnedDisposer};
 use crate::NoDraft;
 use crate::NoDraftMutation;
 use crate::store;
@@ -84,7 +84,7 @@ impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPaylo
 /// 🫙️ Exact owner catalogue for a store whose snapshot and mutation types are statically empty.
 pub(super) fn zero_payload_store_owners<P, M>() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, M>, ValueError>
 where
-    P: pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+    P: pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
     M: store::ArtifactCanonicalJsonTree + store::StoreMutationFor<P>,
 {
     let capacity_bytes = store::os_store::document_store_owners::DocumentStoreOwners::<P, M>::source_birth_bytes::<ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<M>, store::ArtifactStoreCursorDisposer<P, M>>()?;

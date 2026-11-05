@@ -1,4 +1,4 @@
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
+use semio_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
 
 #[test]
 fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
@@ -15,10 +15,10 @@ fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
     let record = <semio_s_artifact_vcs_vcs::VcsSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("VCS schema-owned record");
     assert_eq!(codec.pack_schema_hash, pack::record::schema_hash(&record));
     assert_ne!(codec.pack_schema_hash, [0; 32]);
-    let runtime = PluginRuntime::<semio_hub_vcs::VcsApps>::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
+    let runtime = PluginRuntime::<semio_hub_vcs::VcsApps>::new(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     install_plugin_bundle_result(&runtime, Ok(bundle));
-    let bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
-    let wire = semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("guest descriptor bytes");
+    let bytes = ::semio_framework_async::poll::resolve_ready(semio_plugin::describe::describe_plugin(&runtime));
+    let wire = semio_os_kernel::pack_rt::decode_wire_value(&bytes).expect("guest descriptor bytes");
     let descriptor: semio_framework::PackageDescriptor = semio_framework_value::FromValue::from_value(wire).expect("strict guest descriptor");
     assert_eq!(descriptor.package_id, authority["packageId"].as_str().unwrap());
     assert_eq!(descriptor.manifest.plugin_id, authority["pluginId"].as_str().unwrap());
@@ -33,6 +33,6 @@ fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
             assert_eq!(apps[0].window_kinds.iter().filter(|window| window.id == authority["viewerWindowKindId"].as_str().unwrap()).count(), 1);
         }
     }
-    assert!(descriptor.activation_events.iter().any(|event| matches!(event, semio_framework_plugin::kernel::ActivationEvent::OnArtifactKind { kind } if kind == authority["artifactKind"].as_str().unwrap())));
+    assert!(descriptor.activation_events.iter().any(|event| matches!(event, semio_plugin::kernel::ActivationEvent::OnArtifactKind { kind } if kind == authority["artifactKind"].as_str().unwrap())));
     assert!(!format!("{descriptor:?}").contains("vcs.document"));
 }

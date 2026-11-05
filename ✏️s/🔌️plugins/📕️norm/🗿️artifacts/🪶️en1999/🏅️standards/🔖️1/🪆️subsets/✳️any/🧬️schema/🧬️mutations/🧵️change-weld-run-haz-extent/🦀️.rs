@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeWeldRunHazExtent w
         record: "ChangedWeldRunHazExtent",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change HAZ extent b_haz override (0 = table) of the weld run", "Schweißnaht: WEZ-Breite b_haz abweichend (0 = Tabelle) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change HAZ extent b_haz override (0 = table) of the weld run", "Schweißnaht: WEZ-Breite b_haz abweichend (0 = Tabelle) ändern")
     }
 }
 

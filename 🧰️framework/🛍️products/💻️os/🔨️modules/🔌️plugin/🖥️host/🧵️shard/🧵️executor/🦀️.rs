@@ -22,8 +22,8 @@
 //! forwarder thread necessary in the first place (`💻️os/🖥️host/🎠️activation/🦀️.rs`'s deleted
 //! `semio-os-host-kernel-shard-forward-*` threads) no longer exists.
 
-use semio_framework_plugin_host_shard::{AdmissionLimit, SharedThreadTransport, DeferredAuthority, FixedOwnerRing, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES, ShardDrive, ShardLoop, ShardOutcome, ShardTransports};
-use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
+use semio_plugin_host_shard::{AdmissionLimit, SharedThreadTransport, DeferredAuthority, FixedOwnerRing, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES, ShardDrive, ShardLoop, ShardOutcome, ShardTransports};
+use semio_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
 use semio_framework_actor::{ActorId, Lane as ActorLane, ShardTransport, ThreadTransport};
 use semio_framework_async::{Job as PoolJob, Lane as PoolLane, WorkerPool, WorkerSubmitErrorKind};
 use std::collections::VecDeque;
@@ -157,8 +157,8 @@ pub struct ShardExecutor {
     ingress_gate: Mutex<()>,
     ingress_state: AtomicU8,
     terminal_overflow_occupied: AtomicBool,
-    failure: Mutex<FixedOwnerRing<semio_framework_plugin_guest_contract::PluginHostError, SHARD_DEFERRED_ITEMS>>,
-    terminal_failure: Mutex<Option<semio_framework_plugin_guest_contract::PluginHostError>>,
+    failure: Mutex<FixedOwnerRing<semio_plugin_guest_contract::PluginHostError, SHARD_DEFERRED_ITEMS>>,
+    terminal_failure: Mutex<Option<semio_plugin_guest_contract::PluginHostError>>,
 }
 
 struct PendingIngressFrame {
@@ -177,8 +177,8 @@ struct ShardExecutorState {
 
 #[must_use]
 pub enum RegistrationAdmission {
-    Admitted(semio_framework_plugin_host_shard::ShardActorAllocation),
-    Refused(semio_framework_plugin_host_shard::ShardRegistrationRejected),
+    Admitted(semio_plugin_host_shard::ShardActorAllocation),
+    Refused(semio_plugin_host_shard::ShardRegistrationRejected),
     Stopped,
     Rejected { actor: ActorId, instance: GuestInstance, limit: AdmissionLimit },
 }
@@ -276,7 +276,7 @@ impl ShardExecutor {
     /// `RegisterRequest`/ack rendezvous, there is no interleaving to close here at all), and returns
     /// an `Arc` (needed so [`ShardExecutor::schedule`] can hand `WorkerPool::submit` a strong
     /// self-reference for its job closure).
-    pub async fn new(pool: Arc<WorkerPool>, runtime: Arc<GuestRuntimes>, initial: Vec<(ActorId, GuestInstance)>, outcomes: Arc<OutcomeSink>,identity:semio_framework_plugin_host_shard::identity::OriginalShardIdentityIssuer) -> Arc<ShardExecutor> {
+    pub async fn new(pool: Arc<WorkerPool>, runtime: Arc<GuestRuntimes>, initial: Vec<(ActorId, GuestInstance)>, outcomes: Arc<OutcomeSink>,identity:semio_plugin_host_shard::identity::OriginalShardIdentityIssuer) -> Arc<ShardExecutor> {
         let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
         let mut shard = ShardLoop::new(runtime, ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side))),identity).await;
         for (actor, instance) in initial {
@@ -318,7 +318,7 @@ impl ShardExecutor {
         let receive = {
             let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
             if self.closed.load(Ordering::Acquire) || self.ingress_state.load(Ordering::Acquire) != 0 || self.pool.is_shutdown() {
-                return RegistrationAdmission::Refused(semio_framework_plugin_host_shard::ShardRegistrationRejected { actor, instance, reason: semio_framework_plugin_host_shard::ShardRegistrationReason::Stopped,identity_refusal:None });
+                return RegistrationAdmission::Refused(semio_plugin_host_shard::ShardRegistrationRejected { actor, instance, reason: semio_plugin_host_shard::ShardRegistrationReason::Stopped,identity_refusal:None });
             }
             if let Some(shard) = state.shard.as_mut() {
                 return match shard.register(actor, instance) {
@@ -337,7 +337,7 @@ impl ShardExecutor {
     }
 
     /// 🧯️ Transfers the exact last malformed-frame or shard-drive failure to the host.
-    pub fn take_failure(&self) -> Option<semio_framework_plugin_guest_contract::PluginHostError> {
+    pub fn take_failure(&self) -> Option<semio_plugin_guest_contract::PluginHostError> {
         let failure = self.failure.lock().unwrap_or_else(PoisonError::into_inner).pop_front().map(|(_, failure)| failure);
         failure.or_else(|| self.terminal_failure.lock().unwrap_or_else(PoisonError::into_inner).take())
     }
@@ -544,7 +544,7 @@ impl ShardExecutor {
             let Some((_, (actor, instance, reply))) = owner else { break };
             let unclaimed = match reply {
                 Some(reply) => {
-                    let refusal = RegistrationAdmission::Refused(semio_framework_plugin_host_shard::ShardRegistrationRejected { actor, instance, reason: semio_framework_plugin_host_shard::ShardRegistrationReason::Stopped,identity_refusal:None });
+                    let refusal = RegistrationAdmission::Refused(semio_plugin_host_shard::ShardRegistrationRejected { actor, instance, reason: semio_plugin_host_shard::ShardRegistrationReason::Stopped,identity_refusal:None });
                     match reply.send(refusal) {
                         Ok(()) => None,
                         Err(RegistrationAdmission::Refused(owner)) => Some(owner.instance),
@@ -587,8 +587,8 @@ impl ShardExecutor {
         }
     }
 
-    fn retain_failure(&self, failure: semio_framework_plugin_guest_contract::PluginHostError) {
-        let result = self.failure.lock().unwrap_or_else(PoisonError::into_inner).try_push(failure, size_of::<semio_framework_plugin_guest_contract::PluginHostError>());
+    fn retain_failure(&self, failure: semio_plugin_guest_contract::PluginHostError) {
+        let result = self.failure.lock().unwrap_or_else(PoisonError::into_inner).try_push(failure, size_of::<semio_plugin_guest_contract::PluginHostError>());
         if let Err(rejected) = result {
             self.close_ingress(IngressCloseReason::Closing);
             self.closed.store(true, Ordering::Release);
@@ -601,7 +601,7 @@ impl ShardExecutor {
     fn acknowledge_consumed_epoch(&self, epoch: u64) {
         let previous = epoch.checked_sub(1).expect("ShardExecutor: shard epochs start at one");
         if self.consumed_epoch.compare_exchange(previous, epoch, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            self.retain_failure(semio_framework_plugin_guest_contract::PluginHostError::Plugin(format!("ShardExecutor: ingress epoch {epoch} was consumed out of FIFO order")));
+            self.retain_failure(semio_plugin_guest_contract::PluginHostError::Plugin(format!("ShardExecutor: ingress epoch {epoch} was consumed out of FIFO order")));
         }
     }
 
@@ -697,8 +697,8 @@ impl ShardExecutor {
             let mut pos = 0usize;
             match poll_drive_once(ShardOutcome::pack_decode(&bytes, &mut pos)) {
                 Some(Ok(outcome)) => self.outcomes.push(outcome),
-                Some(Err(error)) => self.retain_failure(semio_framework_plugin_guest_contract::PluginHostError::Plugin(format!("ShardExecutor: malformed outcome: {error:?}"))),
-                None => self.retain_failure(semio_framework_plugin_guest_contract::PluginHostError::Plugin("ShardExecutor: outcome decoder suspended without a retained cursor".to_string())),
+                Some(Err(error)) => self.retain_failure(semio_plugin_guest_contract::PluginHostError::Plugin(format!("ShardExecutor: malformed outcome: {error:?}"))),
+                None => self.retain_failure(semio_plugin_guest_contract::PluginHostError::Plugin("ShardExecutor: outcome decoder suspended without a retained cursor".to_string())),
             }
         }
         if let ShardDrive::Fault { error, .. } = drive {

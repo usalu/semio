@@ -41,7 +41,7 @@ pub trait GuestResidentFootprintV1 {
     fn footprint_bytes(&self) -> u64;
 }
 
-impl GuestResidentFootprintV1 for semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest {
+impl GuestResidentFootprintV1 for semio_plugin_interpreter_runtime::OwnedCompiledGuest {
     /// 🧊️ Beyond its parsed component (which its registration charges) a compiled guest holds the owned interpreter's codec
     /// origin once a codec call assembled it: the guest's linear memory right after its plugin bundle assembled.
     fn footprint_bytes(&self) -> u64 {

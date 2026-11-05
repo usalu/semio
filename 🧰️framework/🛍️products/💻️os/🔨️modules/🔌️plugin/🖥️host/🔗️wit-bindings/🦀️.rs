@@ -1,7 +1,7 @@
 //! 🔗️ WIT bindings of the actor world and the kernel to WIT conversions every plugin-host layer shares: the crate's one `bindgen!` invocation, its aliases, the cold pair, UI patch and retained turn wire modules.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as store;
 
 pub mod actor_bindings {
     // 🐛️ `additional_derives` carries NEITHER `Debug` NOR `Clone`, each for its own reason.
@@ -20,10 +20,10 @@ pub mod actor_bindings {
     // 🧬️ This is the crate's ONE `bindgen!` invocation for `semio:framework` — `📥️imports/🦀️.rs`'s 24
     // `host-async` implementations re-export this module rather than generating a second, nominally
     // distinct copy of every type (which is what the two-world split forced before the collapse).
-    semio_framework_plugin_host_engine::wasm::component::bindgen!({
+    semio_plugin_host_engine::wasm::component::bindgen!({
         world: "actor",
         path: "../../../../🧬️schema",
-        wasmtime_crate: ::semio_framework_plugin_host_engine::wasm::generated_code_support,
+        wasmtime_crate: ::semio_plugin_host_engine::wasm::generated_code_support,
     });
 }
 

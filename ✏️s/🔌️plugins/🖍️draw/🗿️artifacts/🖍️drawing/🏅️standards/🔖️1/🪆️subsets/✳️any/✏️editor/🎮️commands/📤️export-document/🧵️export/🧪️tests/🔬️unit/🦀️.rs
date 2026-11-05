@@ -1,8 +1,8 @@
 //! 🧪️ Original export sources survive interruption and every denied retirement currency.
 use semio_framework_test_fixtures::fixture_text;
 
-#[allow(unused_imports)] use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
-#[allow(unused_imports)] use semio_framework_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerJob,OwnedSerializerOutput,io_begin_owned_serialization};
+#[allow(unused_imports)] use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
+#[allow(unused_imports)] use semio_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerJob,OwnedSerializerOutput,io_begin_owned_serialization};
 #[allow(unused_imports)] use semio_framework_value::{DslValue,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::export_job::*;
 use semio_framework_job::InteractiveJobCloseStep;
@@ -16,8 +16,8 @@ async fn original_export_read_returns_under_exact_physical_grants(){
  assert_eq!(corpus["readReturn"]["exportConsumer"]["identity"],"original-read");
  for format in ["png","svg","pdf","unsupported"]{
   let document=DrawingSnapshot{id:"original-export-source".into(),..Default::default()};
-  let mut issuer=store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>("drawing.drawing","original-export-source",document,None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer),protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
-  issuer.install_document_store_owners_exact(::semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
+  let mut issuer=store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>("drawing.drawing","original-export-source",document,None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer),protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+  issuer.install_document_store_owners_exact(::semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
   let read=issuer.snapshot_read().unwrap();let pointer=read.get()as*const DrawingSnapshot;
   let mut work=Work::new(Default::default(),Default::default());work.read=Some(read);
   work.begin_close();let mut returned=None;let mut saw_read=false;let(mut requested,mut released)=(0,0);

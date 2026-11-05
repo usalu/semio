@@ -37,8 +37,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add grip \"{}\" to part \"{}\"", self.grip.id, self.part_id), &format!("Griff \"{}\" zu Bauteil \"{}\" hinzufügen", self.grip.id, self.part_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add grip \"{}\" to part \"{}\"", self.grip.id, self.part_id), &format!("Griff \"{}\" zu Bauteil \"{}\" hinzufügen", self.grip.id, self.part_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.part_id.clone(), self.grip.id.clone()]

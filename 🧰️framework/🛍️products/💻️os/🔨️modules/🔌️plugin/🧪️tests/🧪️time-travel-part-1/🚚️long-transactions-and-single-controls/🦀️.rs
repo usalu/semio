@@ -3,7 +3,7 @@
 /// 🪟️ The history body as a host shows it with history row `seq`'s mutation window open on `rows` rows from `offset`.
 async fn render_history_window(app: &mut ToyApp, seq: u64, offset: u32, rows: u32) -> Value {
     let request = semio_framework::TreeWindowRequest { body_key: FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: time_travel::history_row_window_path(seq), open: Some(true), offset, rows };
-    let view = ViewModel { tree_windows: vec![request], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: vec![request], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let tree = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &view).await.unwrap_or_else(|fault| panic!("history render: {fault:?}"));
     serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(tree).expect("history projection")).expect("history projection parses")
 }
@@ -21,17 +21,17 @@ fn mutation_row_ids(row: &Value) -> Vec<String> {
 /// still open, a running replay; it is enabled again in the review.
 #[semio_framework_async_macros::async_test]
 async fn every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_begin_law() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let mut ops: Vec<TestMutation> = (1..40).map(|value| SetCount { value }.into()).collect();
     ops.push(SetLabel { value: head(&app).1 }.into());
     let transaction = protocol::TransactionRef { id: "tx-0000000000000040".into(), tool: format!("{}#select", ToyHistoryApp::APP_ID) };
-    app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), ops), &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the long transaction publishes");
+    app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), ops), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the long transaction publishes");
     let row = app.render_ctx().history_patch(true).await.expect("history patch").upserts.into_iter().find(|entry| entry.transaction.as_ref().is_some_and(|reference| reference.id == transaction.id)).expect("the transaction row");
     let ids: Vec<String> = app.stores.store.mutation_ops().expect("applied operations").iter().filter(|op| row.edit_id.as_deref() == Some(op.edit_id)).map(|op| op.mutation_id.0.clone()).collect();
     assert_eq!((row.op_count, ids.len()), (40, 40), "one edit of forty operations");
@@ -93,26 +93,26 @@ async fn every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_
 /// naming no transaction and aborts carrying mutations break the shape rule.
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     type ToyEmit = Emit<TestMutation, TestConfigMutation, NoDraftMutation>;
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let edits = app.stores.store.envelope().vcs.edits.len();
     let streamed = protocol::TransactionRef { id: "tx-00000000000000aa".into(), tool: format!("{}#import", ToyHistoryApp::APP_ID) };
     for value in [2, 3, 4] {
-        app.dispatch_emit("select", ToyEmit::stream_transaction(streamed.clone(), vec![SetCount { value }.into()]), &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("a tick streams");
+        app.dispatch_emit("select", ToyEmit::stream_transaction(streamed.clone(), vec![SetCount { value }.into()]), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("a tick streams");
     }
     assert_eq!((app.stores.store.envelope().vcs.edits.len(), app.stores.store.open_transaction().map(|open| open.transaction.clone())), (edits + 1, Some(streamed.clone())), "the ticks grow one open edit");
-    let plain = app.dispatch_emit("select", ToyEmit::mutations(vec![SetCount { value: 9 }.into()]), &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let plain = app.dispatch_emit("select", ToyEmit::mutations(vec![SetCount { value: 9 }.into()]), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     assert_eq!(plain.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.open")), "a plain edit waits for the open transaction");
     let first = seeded_mutation(&app, 0);
     let busy = verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(first))], mounted_policy, &mut identity).await;
     assert_eq!(rejected(&busy), Some("timeTravel.busy"), "time travel waits for the open transaction");
-    app.dispatch_emit("select", ToyEmit::commit_transaction(streamed.clone(), Vec::new()), &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("an empty commit closes the edit");
+    app.dispatch_emit("select", ToyEmit::commit_transaction(streamed.clone(), Vec::new()), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("an empty commit closes the edit");
     assert!(app.stores.store.open_transaction().is_none());
     let tail = app.stores.store.envelope().vcs.edits.last().expect("the committed edit");
     assert!(tail.forwards.len() == 3 && tail.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&streamed)), "one edit, every op stamped");
@@ -122,17 +122,17 @@ async fn a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none() {
     let (edits, revision) = (app.stores.store.envelope().vcs.edits.len(), app.stores.store.content_revision_now());
     let aborted = protocol::TransactionRef { id: "tx-00000000000000bb".into(), tool: streamed.tool.clone() };
     for value in [5, 6] {
-        app.dispatch_emit("select", ToyEmit::stream_transaction(aborted.clone(), vec![SetCount { value }.into()]), &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("a tick streams");
+        app.dispatch_emit("select", ToyEmit::stream_transaction(aborted.clone(), vec![SetCount { value }.into()]), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("a tick streams");
     }
-    app.dispatch_emit("select", ToyEmit::abort_transaction(aborted.clone()), &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the abort reverts the open edit");
+    app.dispatch_emit("select", ToyEmit::abort_transaction(aborted.clone()), &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the abort reverts the open edit");
     assert_eq!((app.stores.store.envelope().vcs.edits.len(), app.stores.store.content_revision_now(), app.stores.store.open_transaction().is_none()), (edits, revision, true), "zero trace");
     let patch = app.render_ctx().history_patch(true).await.expect("history patch");
     let held: HashSet<&str> = app.stores.store.envelope().vcs.edits.iter().map(|edit| edit.id.as_str()).collect();
     assert!(patch.upserts.iter().all(|entry| entry.transaction.as_ref().is_none_or(|reference| reference.id != aborted.id) && entry.edit_id.as_deref().is_none_or(|edit_id| held.contains(edit_id))), "no row of the aborted transaction remains");
     let unnamed = ToyEmit { transaction: None, transaction_phase: TransactionPhase::Stream, ..ToyEmit::mutations(vec![SetCount { value: 7 }.into()]) };
-    assert_eq!(app.dispatch_emit("select", unnamed, &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
+    assert_eq!(app.dispatch_emit("select", unnamed, &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
     let carrying = ToyEmit { artifact_mutations: vec![SetCount { value: 8 }.into()], ..ToyEmit::abort_transaction(aborted) };
-    assert_eq!(app.dispatch_emit("select", carrying, &meta(&fixture), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
+    assert_eq!(app.dispatch_emit("select", carrying, &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
     close(&mut app,cx);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
@@ -143,11 +143,11 @@ async fn a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none() {
 /// control; React mounts any): no text, progress bar or group is a row's child, and a second control is a nested row.
 #[semio_framework_async_macros::async_test]
 async fn the_band_and_the_editor_rows_hold_at_most_one_single_control() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     const SINGLE_CONTROLS: [&str; 9] = ["input", "select", "toggle", "button", "keyValueList", "slider", "numberStepper", "ring", "iconSelect"];
     fn violations(node: &Value, found: &mut Vec<String>) {
         let children = node["children"].as_array().map(Vec::as_slice).unwrap_or_default();

@@ -4,13 +4,13 @@
 mod native_exchange_tests;
 #[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 
 /// 📇️ The full-catalog contribution of the ifc artifact.
@@ -21,17 +21,17 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     let assembly = semio_s_artifact_stdio_contract::runtime_assembly("ifc", semio_s_artifact_stdio_ifc::definition()?, declaration)?;
-    semio_framework_os_kernel::io::io_mechanism::io_register(semio_s_artifact_stdio_ifc_4x3::native_exchange::io_entries()).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("ifc.exchange-registration", error.to_string()))?;
+    semio_os_kernel::io::io_mechanism::io_register(semio_s_artifact_stdio_ifc_4x3::native_exchange::io_entries()).map_err(|error| semio_plugin::PluginAssemblyError::new("ifc.exchange-registration", error.to_string()))?;
     Ok(assembly)
 }
 
 /// 🧾️ The runtime `ifc` declares for both standards (`4`, `2x3`, independently versioned ids): schemas, format, inference
 /// descriptors, composers, document codecs, and the `2x3` model-view-definition validators (`cv20`, `sav`, `cobie`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition)
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    let builder = semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(semio_s_artifact_stdio_ifc_4_descriptor::standards::v4::subsets::any::schema::descriptor::ifc_artifact_schema_descriptor())
         .schemas([semio_s_artifact_stdio_ifc_2x3_base_descriptor::standards::v2x3::subsets::base::schema::descriptor::ifc2x3_artifact_schema_descriptor()])
         .formats(semio_s_artifact_stdio_ifc::formats()?)
@@ -57,7 +57,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.ifc".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Ifc", "Ifc"),
+        label: semio_ui_locale::LocalizedLabel::native("Ifc", "Ifc"),
         source_format: semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::STDIO_IFC_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -80,8 +80,8 @@ pub mod io_registry {
     use semio_s_artifact_stdio_ifc_2x3_cobie::standards::v2x3::subsets::cobie::io::Ifc2x3CobieComposer;
     use semio_s_artifact_stdio_ifc_2x3_cv20::standards::v2x3::subsets::cv20::io::Ifc2x3Cv20Composer;
     use semio_s_artifact_stdio_ifc_2x3_sav::standards::v2x3::subsets::sav::io::Ifc2x3SavComposer;
-    use semio_framework_plugin::composer_entry_of;
-    use {semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
+    use semio_plugin::composer_entry_of;
+    use {semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

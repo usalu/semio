@@ -15,9 +15,9 @@ fn selected_frame_page_and_document_expose_edit_inputs() {
     let snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let config = LayoutWindowConfig { active_page_id: "page-1".into(), ..LayoutWindowConfig::default() };
     let interaction = LayoutInteractionSnapshot { ids: vec!["frame-1".into()], ..Default::default() };
-    let labels = crate::terminology::layout_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let node = render(&snapshot, &config, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), LAYOUT_PLAY_BODY_INSPECTION)).expect("inspector");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project inspector");
+    let labels = crate::terminology::layout_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let node = render(&snapshot, &config, &interaction, labels, &semio_plugin::TreeWindows::for_body(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), LAYOUT_PLAY_BODY_INSPECTION)).expect("inspector");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project inspector");
     assert!(json.contains("patchFrame"), "{json}");
     assert!(json.contains("patchPage"), "{json}");
     assert!(json.contains("patchDocument"), "{json}");

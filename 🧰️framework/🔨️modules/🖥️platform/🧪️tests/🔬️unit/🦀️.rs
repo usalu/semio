@@ -1,7 +1,7 @@
 
 use super::*;
 use semio_framework_manifest_app_surface::{ModeDefinition, WindowKindDefinition};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 #[semio_framework_async_macros::async_test]
 async fn adds_first_app_as_active() {
@@ -22,9 +22,9 @@ async fn adds_first_app_as_active() {
                 id: "composite".into(),
                 label: LocalizedLabel::data("Canvas"),
                 body_key: "composite".into(),
-                surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+                surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
-                options: semio_framework_ui_declaration::layout::WindowOptions::default(),
+                options: semio_ui_declaration::layout::WindowOptions::default(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 interactions: Vec::new(),
@@ -76,9 +76,9 @@ async fn minimal_app(id: &str) -> AppDefinition {
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
             body_key: "main".into(),
-            surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+            surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
             icon_id: "pen-tool".into(),
-            options: semio_framework_ui_declaration::layout::WindowOptions::default(),
+            options: semio_ui_declaration::layout::WindowOptions::default(),
             actions: Vec::new(),
             utilities: Vec::new(),
             interactions: Vec::new(),

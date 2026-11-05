@@ -1,6 +1,6 @@
 //! 🕸️ Paged mesh ownership: the exclusive authority, write tokens, leases, native resource custody and the instance and component source records drawn from them.
 //!
-//! Carved out of the former `semio-framework-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
+//! Carved out of the former `semio-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 
 #[path = "../♻️retirement/🦀️.rs"]
 mod mesh3d_retirement;
@@ -12,7 +12,7 @@ use semio_framework_value::{
 };
 use semio_framework_geometry::{Mat4, Vec3};
 pub use semio_framework_mesh_component_references::ComponentReferenceTable;
-use semio_framework_ui_scene_algebra::{mat4_from_quat_m, mat4_scale_vec_m, mat4_translation_m, vec3_from_array_m, Mat4Math};
+use semio_ui_scene_algebra::{mat4_from_quat_m, mat4_scale_vec_m, mat4_translation_m, vec3_from_array_m, Mat4Math};
 
 //#region Mesh
 

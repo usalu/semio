@@ -3,7 +3,7 @@
 /// `25.09.2026, 21:05 UTC` (de) — the Home and space tables' "Updated" cell. The guest has no time zone, so it
 /// says UTC instead of pretending to be local. Cases: `🧫️fixtures/🕰️utc-minute/🔣️.json` beside this module,
 /// cross-checked against `Intl.DateTimeFormat` by its TS unit test.
-pub fn utc_minute_text(epoch_ms: u64, locale: semio_framework_ui_locale::Locale) -> String {
+pub fn utc_minute_text(epoch_ms: u64, locale: semio_ui_locale::Locale) -> String {
     let minutes = epoch_ms / 60_000;
     let (hour, minute) = ((minutes / 60) % 24, minutes % 60);
     let days = (minutes / 1_440) as i64 + 719_468;
@@ -16,8 +16,8 @@ pub fn utc_minute_text(epoch_ms: u64, locale: semio_framework_ui_locale::Locale)
     let month = if month_index < 10 { month_index + 3 } else { month_index - 9 };
     let year = year_of_era + era * 400 + i64::from(month <= 2);
     match locale {
-        semio_framework_ui_locale::Locale::En => format!("{year:04}-{month:02}-{day:02} {hour:02}:{minute:02} UTC"),
-        semio_framework_ui_locale::Locale::De => format!("{day:02}.{month:02}.{year:04}, {hour:02}:{minute:02} UTC"),
+        semio_ui_locale::Locale::En => format!("{year:04}-{month:02}-{day:02} {hour:02}:{minute:02} UTC"),
+        semio_ui_locale::Locale::De => format!("{day:02}.{month:02}.{year:04}, {hour:02}:{minute:02} UTC"),
     }
 }
 

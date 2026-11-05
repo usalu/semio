@@ -45,7 +45,7 @@ pub fn paint_node_step_with_driver(
     let Some(node) = tree.node(id) else { return RetainedNodePaintStep::Fault };
     let unscoped_body_font_size = theme.font_size_body;
     let mut scoped_theme = *theme;
-    if semio_framework_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some_and(|owner| owner.presentation == ui_contract::TreePresentation::Compact) {
+    if semio_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some_and(|owner| owner.presentation == ui_contract::TreePresentation::Compact) {
         scoped_theme.font_size_body = SIZE_TINY;
         scoped_theme.font_size_small = SIZE_TINY;
     }
@@ -88,7 +88,7 @@ pub fn paint_node_step_with_driver(
             UiNode::IconSelect(select) => paint_icon_select_node_step(select, atlas, draw, cursor, node, theme, bounds, presence),
             UiNode::Field(field) => paint_field_node_step(field, tree, id, atlas, draw, cursor, theme, bounds, presence),
             UiNode::Section(section) => paint_section_node_step(section, tree, id, atlas, draw, cursor, theme, bounds, presence),
-            UiNode::Group(_) if semio_framework_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some() => retained_presence_step(draw, bounds, theme, presence),
+            UiNode::Group(_) if semio_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some() => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(group) => paint_group_node_step(group, atlas, icons, draw, cursor, theme, bounds, presence),
             UiNode::Tree(tree_node) => retained_tree_node_step(tree, id, tree_node, bounds, theme, driver_drag, block_reversed, inline, atlas, icons, draw, cursor),
             UiNode::Image(image) => paint_image_node_step(image, atlas, has_scene_host, draw, cursor, theme, bounds, presence),

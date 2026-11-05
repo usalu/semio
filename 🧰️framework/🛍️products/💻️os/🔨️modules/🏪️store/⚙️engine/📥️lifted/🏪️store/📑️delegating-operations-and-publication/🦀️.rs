@@ -1,12 +1,12 @@
 //! 📑️ Delegating operations and publication: the store operations that delegate to the live, replay, cursor and log components. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🪞️ Delegates to [`StoreLive::mutation_ops`].
     #[inline] pub fn mutation_ops(&self) -> Result<Vec<AppliedMutation<'_, Mutation>>, VcsError> { self.live.mutation_ops(&self.log, &self.wire, &self.cursor) }
@@ -74,19 +74,19 @@ where
         if stage.seed_pending.is_some(){let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<protocol::MutationId>>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<String>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}let id=stage.seed_pending.take().unwrap();stage.seed_retiring=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(id.0).map_err(|(error,_)|error)?);return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
         if let Some(owner)=stage.seed_owner.as_ref(){let d=self.log.dag.original_seed_abort_demands(owner)?;if !admits(grant,d){return Ok(Some(Default::default()))}let Some((id,p))=self.log.dag.abort_original_seed_step(&mut stage.seed_owner,grant)?else{return Ok(Some(Default::default()))};stage.seed_pending=id.map(protocol::MutationId);return Ok(Some(p))}
         if let Some(metadata)=stage.commit_metadata.as_mut(){
-            use semio_framework_os_store_read::{ArtifactStoreStringVectorRetirement,ArtifactStoreRevisionAccumulatorRetirement,ArtifactStoreStringRetirement};
+            use semio_os_store_read::{ArtifactStoreStringVectorRetirement,ArtifactStoreRevisionAccumulatorRetirement,ArtifactStoreStringRetirement};
             use semio_framework_value::retirement::frame::admit_retirement_frame;
             let error=|message|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message);
-            if metadata.history.is_some(){let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_os_store_ledger::ArtifactStoreHistoryCommitReservation>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}let original=metadata.history.take().unwrap();if let Err(history)=self.log.envelope.vcs.edits.cancel_reservation(original.history){metadata.history=Some(semio_framework_os_store_ledger::ArtifactStoreHistoryCommitReservation{history,rejected_owner:original.rejected_owner});return Err(error("original metadata abort lost its exact history reservation"))}self.owners.displaced_retirements.release_owner_slots(original.rejected_owner).map_err(|_|error("original metadata abort lost its rejected owner reservation"))?;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+            if metadata.history.is_some(){let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_os_store_ledger::ArtifactStoreHistoryCommitReservation>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}let original=metadata.history.take().unwrap();if let Err(history)=self.log.envelope.vcs.edits.cancel_reservation(original.history){metadata.history=Some(semio_os_store_ledger::ArtifactStoreHistoryCommitReservation{history,rejected_owner:original.rejected_owner});return Err(error("original metadata abort lost its exact history reservation"))}self.owners.displaced_retirements.release_owner_slots(original.rejected_owner).map_err(|_|error("original metadata abort lost its rejected owner reservation"))?;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
             if let Some(reservation)=metadata.displaced.as_mut(){
-                macro_rules! retire_stack{($field:ident)=>{if metadata.$field.capacity()!=0{let d=semio_framework_value::RetirementDemand{capacity_bytes:size_of::<ArtifactStoreStringVectorRetirement>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}let original=std::mem::replace(&mut metadata.$field,semio_framework_os_vcs::HistoryPageStack::empty());match admit_retirement_frame(original,grant,ArtifactStoreStringVectorRetirement::new){Ok((owner,p))=>{self.owners.displaced_retirements.push_owner_reserved(reservation,owner).unwrap_or_else(|_|panic!("original metadata retains its exact reserved disposer slot"));return Ok(Some(p))},Err((reason,original))=>{metadata.$field=original;return Err(reason)}}}}}
+                macro_rules! retire_stack{($field:ident)=>{if metadata.$field.capacity()!=0{let d=semio_framework_value::RetirementDemand{capacity_bytes:size_of::<ArtifactStoreStringVectorRetirement>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}let original=std::mem::replace(&mut metadata.$field,semio_os_vcs::HistoryPageStack::empty());match admit_retirement_frame(original,grant,ArtifactStoreStringVectorRetirement::new){Ok((owner,p))=>{self.owners.displaced_retirements.push_owner_reserved(reservation,owner).unwrap_or_else(|_|panic!("original metadata retains its exact reserved disposer slot"));return Ok(Some(p))},Err((reason,original))=>{metadata.$field=original;return Err(reason)}}}}}
                 retire_stack!(applied);retire_stack!(cursor);
                 macro_rules! retire_optional{($field:ident,$kind:ty,$construct:path)=>{if metadata.$field.is_some(){let d=semio_framework_value::RetirementDemand{capacity_bytes:size_of::<$kind>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}let original=metadata.$field.take().unwrap();match admit_retirement_frame(original,grant,$construct){Ok((owner,p))=>{self.owners.displaced_retirements.push_owner_reserved(reservation,owner).unwrap_or_else(|_|panic!("original metadata retains its exact reserved disposer slot"));return Ok(Some(p))},Err((reason,original))=>{metadata.$field=Some(original);return Err(reason)}}}}}
                 retire_optional!(cursor_redo,ArtifactStoreStringVectorRetirement,ArtifactStoreStringVectorRetirement::new);retire_optional!(log_redo,ArtifactStoreStringVectorRetirement,ArtifactStoreStringVectorRetirement::new);
                 retire_optional!(revision,ArtifactStoreRevisionAccumulatorRetirement,ArtifactStoreRevisionAccumulatorRetirement::new);retire_optional!(checkpoint,ArtifactStoreStringRetirement,ArtifactStoreStringRetirement::new);
-                let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_os_store_read::ArtifactStoreDisplacedOwnerReservation>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}self.owners.displaced_retirements.release_owner_slots(metadata.displaced.take().unwrap()).map_err(|_|error("original metadata abort lost its reserved disposer slots"))?;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+                let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_os_store_read::ArtifactStoreDisplacedOwnerReservation>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}self.owners.displaced_retirements.release_owner_slots(metadata.displaced.take().unwrap()).map_err(|_|error("original metadata abort lost its reserved disposer slots"))?;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
             }
-            let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}stage.commit_metadata=None;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+            let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}stage.commit_metadata=None;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
         }
         Ok(None)
     }
@@ -140,31 +140,31 @@ where
     #[inline] pub(super) fn seed_known_events(&mut self) -> Result<(), VcsError> { self.log.seed_known_events() }
 
     /// 🪞️ Delegates to [`StoreReplay::admit_remote_transitions`].
-    #[inline] async fn admit_remote_transitions(&mut self, transitions: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> { self.replay.admit_remote_transitions(&mut self.log, &mut self.owners, &mut self.wire, &mut self.cursor, &mut self.live, transitions).await }
+    #[inline] async fn admit_remote_transitions(&mut self, transitions: Vec<semio_os_spr::MutationEnvelope>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> { self.replay.admit_remote_transitions(&mut self.log, &mut self.owners, &mut self.wire, &mut self.cursor, &mut self.live, transitions).await }
 
     /// 🪞️ Delegates to [`StoreLog::admit_history_shape`].
-    #[inline] pub fn admit_history_shape(&self, envelopes: &[semio_framework_os_spr::MutationEnvelope]) -> Result<(), VcsError> { self.log.admit_history_shape(envelopes) }
+    #[inline] pub fn admit_history_shape(&self, envelopes: &[semio_os_spr::MutationEnvelope]) -> Result<(), VcsError> { self.log.admit_history_shape(envelopes) }
 
     /// 🪞️ Delegates to [`StoreReplay::retract_transitions`].
-    #[inline] pub(super) async fn retract_transitions(&mut self, refused: &[String]) -> Result<Vec<String>, VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.replay.retract_transitions(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, refused).await }
+    #[inline] pub(super) async fn retract_transitions(&mut self, refused: &[String]) -> Result<Vec<String>, VcsError> where P: Clone, Mutation: semio_os_spr::ColdMutation<P> { self.replay.retract_transitions(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, refused).await }
 
     /// 🪞️ Delegates to [`StoreLive::insert_transition`].
-    #[inline] pub fn insert_transition(&mut self, envelope: semio_framework_os_spr::MutationEnvelope) { self.live.insert_transition(&mut self.log, envelope) }
+    #[inline] pub fn insert_transition(&mut self, envelope: semio_os_spr::MutationEnvelope) { self.live.insert_transition(&mut self.log, envelope) }
 
     /// 🪞️ Delegates to [`StoreLog::transition_envelope`].
-    #[inline] pub fn transition_envelope(&self, transition: &semio_framework_os_spr::HistoryTransition, dependencies: Vec<MutationId>, target: Vec<String>, timestamp: HybridLogicalTimestamp) -> semio_framework_os_spr::MutationEnvelope { self.log.transition_envelope(transition, dependencies, target, timestamp) }
+    #[inline] pub fn transition_envelope(&self, transition: &semio_os_spr::HistoryTransition, dependencies: Vec<MutationId>, target: Vec<String>, timestamp: HybridLogicalTimestamp) -> semio_os_spr::MutationEnvelope { self.log.transition_envelope(transition, dependencies, target, timestamp) }
 
     /// 🪞️ Delegates to [`StoreLive::reproject`].
-    #[inline] pub(super) async fn reproject(&mut self) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError>  where P: Clone, Mutation: ColdMutation<P> { self.live.reproject(&mut self.log, &mut self.owners, &mut self.cursor).await }
+    #[inline] pub(super) async fn reproject(&mut self) -> Result<Vec<semio_os_spr::EditMessages>, VcsError>  where P: Clone, Mutation: ColdMutation<P> { self.live.reproject(&mut self.log, &mut self.owners, &mut self.cursor).await }
 
     /// 🪞️ Delegates to [`StoreReplay::tail_step`].
-    #[inline] pub(super) fn tail_step(&self, envelope: &semio_framework_os_spr::MutationEnvelope) -> Option<TailStep> { self.replay.tail_step(&self.log, &self.cursor, &self.live, envelope) }
+    #[inline] pub(super) fn tail_step(&self, envelope: &semio_os_spr::MutationEnvelope) -> Option<TailStep> { self.replay.tail_step(&self.log, &self.cursor, &self.live, envelope) }
 
     /// 🪞️ Delegates to [`StoreLive::live_prefix_state`].
-    #[inline] pub fn live_prefix_state(&self, length: usize) -> Result<(Arc<P>, Vec<(usize, Option<[u8; 32]>, Arc<P>)>), VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.live.live_prefix_state(&self.log, &self.cursor, length) }
+    #[inline] pub fn live_prefix_state(&self, length: usize) -> Result<(Arc<P>, Vec<(usize, Option<[u8; 32]>, Arc<P>)>), VcsError> where P: Clone, Mutation: semio_os_spr::ColdMutation<P> { self.live.live_prefix_state(&self.log, &self.cursor, length) }
 
     /// 🪞️ Delegates to [`StoreLive::reproject_replayed`].
-    #[inline] pub fn reproject_replayed(&mut self, result: EditReplayResult<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> { self.live.reproject_replayed(&mut self.log, &mut self.owners, &mut self.cursor, result) }
+    #[inline] pub fn reproject_replayed(&mut self, result: EditReplayResult<P, Mutation>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> { self.live.reproject_replayed(&mut self.log, &mut self.owners, &mut self.cursor, result) }
 
     /// 🪞️ Delegates to [`StoreOwners::retire_replay_result`].
     #[inline] pub fn retire_replay_result(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<(), VcsError> { self.owners.retire_replay_result(result) }
@@ -182,7 +182,7 @@ where
     #[inline] pub(super) fn clear_prefix_ring(&mut self) -> Result<(), VcsError> { self.live.clear_prefix_ring(&mut self.owners) }
 
     /// 🪞️ Delegates to [`StoreReplay::append_transaction`].
-    #[inline] pub(super) async fn append_transaction(&mut self, mutations: Vec<Mutation>, transaction: protocol::TransactionRef, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.replay.append_transaction(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, mutations, transaction, identity).await }
+    #[inline] pub(super) async fn append_transaction(&mut self, mutations: Vec<Mutation>, transaction: protocol::TransactionRef, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where P: Clone, Mutation: semio_os_spr::ColdMutation<P> { self.replay.append_transaction(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, mutations, transaction, identity).await }
 
     /// 🪞️ Delegates to [`StoreReplay::continue_pending_replay_across_append`].
     #[inline] pub fn continue_pending_replay_across_append(&mut self, before: [u8; 32], edit_id: &str, appended: usize) { self.replay.continue_pending_replay_across_append(&mut self.cursor, before, edit_id, appended) }
@@ -191,16 +191,16 @@ where
     #[inline] pub fn commit_open_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> { self.replay.commit_open_transaction(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, transaction_id) }
 
     /// 🪞️ Delegates to [`StoreReplay::abort_open_transaction`].
-    #[inline] pub fn abort_open_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.replay.abort_open_transaction(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, transaction_id) }
+    #[inline] pub fn abort_open_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> where P: Clone, Mutation: semio_os_spr::ColdMutation<P> { self.replay.abort_open_transaction(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, transaction_id) }
 
     /// 🪞️ Delegates to [`StoreReplay::flush_announcements`].
     #[inline] pub async fn flush_announcements(&mut self) -> Result<(), VcsError> { self.replay.flush_announcements(&mut self.owners, &mut self.wire).await }
 
     /// 🪞️ Delegates to [`StoreLive::lift_open_transaction`].
-    #[inline] pub(super) async fn lift_open_transaction(&mut self) -> Result<Option<(OpenToolTransaction, Edit<Mutation>)>, VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.live.lift_open_transaction(&mut self.log, &mut self.owners, &mut self.cursor).await }
+    #[inline] pub(super) async fn lift_open_transaction(&mut self) -> Result<Option<(OpenToolTransaction, Edit<Mutation>)>, VcsError> where P: Clone, Mutation: semio_os_spr::ColdMutation<P> { self.live.lift_open_transaction(&mut self.log, &mut self.owners, &mut self.cursor).await }
 
     /// 🪞️ Delegates to [`StoreReplay::restore_open_transaction`].
-    #[inline] pub(super) async fn restore_open_transaction(&mut self, open: OpenToolTransaction, mut edit: Edit<Mutation>) -> Result<(), VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.replay.restore_open_transaction(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, open, edit).await }
+    #[inline] pub(super) async fn restore_open_transaction(&mut self, open: OpenToolTransaction, mut edit: Edit<Mutation>) -> Result<(), VcsError> where P: Clone, Mutation: semio_os_spr::ColdMutation<P> { self.replay.restore_open_transaction(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, open, edit).await }
 
     /// 🪞️ Delegates to [`StoreReplay::defer_remote_replays`].
     #[inline] pub fn defer_remote_replays(&mut self, budget: Option<ReplayTurnBudget>) { self.replay.defer_remote_replays(budget) }
@@ -229,13 +229,13 @@ where
     #[inline] pub async fn defer_local_step(&mut self, step: PendingLocalStep, clock: HybridLogicalTimestamp) -> Result<Option<PendingLocalStep>, VcsError> where P: Clone, Mutation: ColdMutation<P> { self.replay.defer_local_step(&mut self.log, &mut self.owners, &mut self.wire, &mut self.cursor, &mut self.live, step, clock).await }
 
     /// 🪞️ Delegates to [`StoreLog::author_head_alternative`].
-    #[inline] pub(super) async fn author_head_alternative(&self, name: String, clock: &mut HybridLogicalTimestamp, envelopes: &mut Vec<semio_framework_os_spr::MutationEnvelope>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> { self.log.author_head_alternative(name, clock, envelopes, identity).await }
+    #[inline] pub(super) async fn author_head_alternative(&self, name: String, clock: &mut HybridLogicalTimestamp, envelopes: &mut Vec<semio_os_spr::MutationEnvelope>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> { self.log.author_head_alternative(name, clock, envelopes, identity).await }
 
     /// 🪞️ Delegates to [`StoreLog::prospective_fold`].
-    #[inline] pub(super) fn prospective_fold(&self, candidates: &[semio_framework_os_spr::MutationEnvelope]) -> Result<semio_framework_os_spr::HistoryFold, VcsError> { self.log.prospective_fold(candidates) }
+    #[inline] pub(super) fn prospective_fold(&self, candidates: &[semio_os_spr::MutationEnvelope]) -> Result<semio_os_spr::HistoryFold, VcsError> { self.log.prospective_fold(candidates) }
 
     /// 🪞️ Delegates to [`StoreLive::dry_run`].
-    #[inline] pub(super) fn dry_run(&self, fold: &semio_framework_os_spr::HistoryFold) -> Result<EditReplayResult<P, Mutation>, VcsError> { self.live.dry_run(&self.log, &self.cursor, fold) }
+    #[inline] pub(super) fn dry_run(&self, fold: &semio_os_spr::HistoryFold) -> Result<EditReplayResult<P, Mutation>, VcsError> { self.live.dry_run(&self.log, &self.cursor, fold) }
 
     /// 🪞️ Delegates to [`StoreLive::supersede_inputs`].
     #[inline] pub fn supersede_inputs(&self, inputs: Vec<SupersedeInput<Mutation>>) -> Result<(Vec<protocol::SupersededInput>, Vec<String>), VcsError> { self.live.supersede_inputs(&self.log, &self.wire, &self.cursor, inputs) }
@@ -247,7 +247,7 @@ where
     #[inline] pub fn record_replay_report(&mut self, report: &protocol::ReplayReport) { self.replay.record_replay_report(report) }
 
     /// 🪞️ Delegates to [`StoreReplay::absorb_merge_report`].
-    #[inline] pub(super) fn absorb_merge_report(&mut self, report: &semio_framework_os_spr::MergeReport) { self.replay.absorb_merge_report(report) }
+    #[inline] pub(super) fn absorb_merge_report(&mut self, report: &semio_os_spr::MergeReport) { self.replay.absorb_merge_report(report) }
 
     /// 🪞️ Delegates to [`StoreLog::edit_lane`].
     #[inline] pub fn edit_lane(&self, edit_id: &str) -> HistoryLane { self.log.edit_lane(edit_id) }
@@ -265,13 +265,13 @@ where
     #[inline] pub fn viewer_head_now(&self) -> (Option<String>, Option<String>) { self.log.viewer_head_now() }
 
     /// 🪞️ Delegates to [`StoreLog::pending_checkpoint_transition`].
-    #[inline] pub async fn pending_checkpoint_transition(&self, message: Option<String>, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(semio_framework_os_spr::HistoryTransition, Vec<MutationId>, String), VcsError> { self.log.pending_checkpoint_transition(message, authors, identity).await }
+    #[inline] pub async fn pending_checkpoint_transition(&self, message: Option<String>, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(semio_os_spr::HistoryTransition, Vec<MutationId>, String), VcsError> { self.log.pending_checkpoint_transition(message, authors, identity).await }
 
     /// 🪞️ Delegates to [`StoreReplay::apply_command`].
-    #[inline] pub(super) async fn apply_command(&mut self, mutations: Vec<Mutation>, lane: HistoryLane, transaction: Option<protocol::TransactionRef>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.replay.apply_command(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, mutations, lane, transaction, identity).await }
+    #[inline] pub(super) async fn apply_command(&mut self, mutations: Vec<Mutation>, lane: HistoryLane, transaction: Option<protocol::TransactionRef>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where P: Clone, Mutation: semio_os_spr::ColdMutation<P> { self.replay.apply_command(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live, mutations, lane, transaction, identity).await }
 
     /// 🪞️ Delegates to [`StoreOwners::replace_edit_messages`].
-    #[inline] pub fn replace_edit_messages(&mut self, edit_id: &str, messages: Vec<semio_framework_os_spr::MutationMessage>) -> Result<(), VcsError> { self.owners.replace_edit_messages(&mut self.log, edit_id, messages) }
+    #[inline] pub fn replace_edit_messages(&mut self, edit_id: &str, messages: Vec<semio_os_spr::MutationMessage>) -> Result<(), VcsError> { self.owners.replace_edit_messages(&mut self.log, edit_id, messages) }
 
     /// 🪞️ Delegates to [`StoreOwners::authored_operation_bytes`].
     #[inline] pub fn authored_operation_bytes(&mut self,mutations:&[Mutation],identity:&mut EntityIdentityAuthority<'_>)->Result<Vec<Vec<u8>>,VcsError> { self.owners.authored_operation_bytes(&mut self.log, mutations, identity) }
@@ -280,7 +280,7 @@ where
     #[inline] pub fn authored_edit_operation_bytes(&mut self,identity:&mut EntityIdentityAuthority<'_>)->Result<Option<(Vec<Vec<u8>>,Vec<Vec<u8>>)>,VcsError> { self.owners.authored_edit_operation_bytes(&mut self.log, identity) }
 
     /// 🪞️ Delegates to [`StoreLog::snapshot_pack`].
-    #[inline] pub async fn snapshot_pack(&self) -> Result<ArtifactPackFiles, VcsError> where P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot, { self.log.snapshot_pack().await }
+    #[inline] pub async fn snapshot_pack(&self) -> Result<ArtifactPackFiles, VcsError> where P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot, { self.log.snapshot_pack().await }
 
     /// 🪞️ Delegates to [`StoreLive::snapshot_json`].
     #[inline] pub fn snapshot_json(&self) -> Result<String, VcsError> where P: Clone { self.live.snapshot_json(&self.wire) }
@@ -289,7 +289,7 @@ where
     #[inline] pub fn envelope_json(&self) -> Result<String, VcsError> where P: ToValue, Mutation: ToValue, { self.log.envelope_json() }
 
     /// 🪞️ Delegates to [`StoreLog::event_log`].
-    #[inline] pub fn event_log(&self) -> Result<Vec<semio_framework_os_spr::MutationEnvelope>, VcsError> { self.log.event_log() }
+    #[inline] pub fn event_log(&self) -> Result<Vec<semio_os_spr::MutationEnvelope>, VcsError> { self.log.event_log() }
 
     /// 🪞️ Delegates to [`StoreLog::event_log_payload`].
     #[inline] pub fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> { self.log.event_log_payload() }
@@ -313,16 +313,16 @@ where
     #[inline] pub fn backbone_ref(&self) -> Option<&ArtifactBackboneRef> { self.log.backbone_ref() }
 
     /// 🪞️ Delegates to [`StoreOwners::refuse_with_candidate_dag`].
-    #[inline] fn refuse_with_candidate_dag<T>(&mut self, candidate_dag: semio_framework_os_spr::MutationDag, error: VcsError) -> Result<T, VcsError> { self.owners.refuse_with_candidate_dag::<T>(candidate_dag, error) }
+    #[inline] fn refuse_with_candidate_dag<T>(&mut self, candidate_dag: semio_os_spr::MutationDag, error: VcsError) -> Result<T, VcsError> { self.owners.refuse_with_candidate_dag::<T>(candidate_dag, error) }
 
     /// 🪞️ Delegates to [`StoreLog::assert_equivalent_remote_envelope`].
-    #[inline] fn assert_equivalent_remote_envelope(&self, existing: &Edit<Mutation>, incoming: &semio_framework_os_spr::MutationEnvelope) -> Result<(), VcsError> { self.log.assert_equivalent_remote_envelope(existing, incoming) }
+    #[inline] fn assert_equivalent_remote_envelope(&self, existing: &Edit<Mutation>, incoming: &semio_os_spr::MutationEnvelope) -> Result<(), VcsError> { self.log.assert_equivalent_remote_envelope(existing, incoming) }
 
     /// 🪞️ Delegates to [`StoreLog::assert_equivalent_remote_mutation`].
-    #[inline] fn assert_equivalent_remote_mutation(&self, incoming: &semio_framework_os_spr::MutationEnvelope) -> Result<(), VcsError> { self.log.assert_equivalent_remote_mutation(incoming) }
+    #[inline] fn assert_equivalent_remote_mutation(&self, incoming: &semio_os_spr::MutationEnvelope) -> Result<(), VcsError> { self.log.assert_equivalent_remote_mutation(incoming) }
 
     /// 🪞️ Delegates to [`StoreReplay::resolve_conflict`].
-    #[inline] pub async fn resolve_conflict(&mut self, conflict_id: &str, resolution: semio_framework_os_spr::ConflictResolution) -> Result<semio_framework_os_spr::MergeReport, VcsError> where P: Clone + Sync, Mutation: ColdMutation<P>, { self.replay.resolve_conflict(&mut self.log, &mut self.owners, &mut self.wire, &mut self.cursor, &mut self.live, conflict_id, resolution).await }
+    #[inline] pub async fn resolve_conflict(&mut self, conflict_id: &str, resolution: semio_os_spr::ConflictResolution) -> Result<semio_os_spr::MergeReport, VcsError> where P: Clone + Sync, Mutation: ColdMutation<P>, { self.replay.resolve_conflict(&mut self.log, &mut self.owners, &mut self.wire, &mut self.cursor, &mut self.live, conflict_id, resolution).await }
 
     /// 🪞️ Delegates to [`StoreLog::verify_genesis`].
     #[inline] pub(super) fn verify_genesis(&self, pack: &[u8]) -> Result<(), VcsError> { self.log.verify_genesis(pack) }
@@ -357,8 +357,8 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🪞️ Delegates to [`StoreReplay::local_step_pending`].
     #[inline] pub fn local_step_pending(&self) -> bool { self.replay.local_step_pending() }

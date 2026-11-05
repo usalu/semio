@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloMeridionalStre
         record: "ChangedSiloMeridionalStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Meridional stress σ_x,Ed of the silo shell", "Silo-Schale: Meridianspannung σ_x,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Meridional stress σ_x,Ed of the silo shell", "Silo-Schale: Meridianspannung σ_x,Ed ändern")
     }
 }
 

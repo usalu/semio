@@ -46,7 +46,7 @@ async fn engagement_steps_are_window_state_until_the_one_committing_edit() {
     let shape_child = semio_s_artifact_cad_cad_model::snapshot::cad_pane_model(&scene, CadPaneId::Shape).expect("the demo document composes a shape child").child_id.clone();
     let config = CadConfig::default();
     let history = empty_history();
-    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: TEST_INSTANCE, parent_document_id: "cad-test-document".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "seed-engagement".into() };
+    let operation = semio_plugin::AppOperationContext { app_instance_id: TEST_INSTANCE, parent_document_id: "cad-test-document".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "seed-engagement".into() };
     let mut transient = CadWorldWindowTransient::default();
     let mut step = |action: &str, args: Value, what: &str| {
         let doc = ArtifactView::with_children(&scene, &history, children.clone()).bound_to_operation(operation.clone());
@@ -79,12 +79,12 @@ async fn engagement_steps_are_window_state_until_the_one_committing_edit() {
     let mut ready = false;
     for _ in 0..4096 {
         match emit.prepare_child_one(1, 65_536).expect("bounded child preparation") {
-            semio_framework_plugin::app::ChildEmitPreparationStep::Ready => {
+            semio_plugin::app::ChildEmitPreparationStep::Ready => {
                 ready = true;
                 break;
             }
-            semio_framework_plugin::app::ChildEmitPreparationStep::Pending => {}
-            semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault) => panic!("child preparation refused: {}", fault.message),
+            semio_plugin::app::ChildEmitPreparationStep::Pending => {}
+            semio_plugin::app::ChildEmitPreparationStep::Refused(fault) => panic!("child preparation refused: {}", fault.message),
         }
     }
     assert!(ready, "the commit's child edit prepares within its bound");
@@ -107,7 +107,7 @@ async fn engagement_steps_are_window_state_until_the_one_committing_edit() {
 #[semio_framework_async_macros::async_test]
 async fn cad_interaction_scope_keeps_hover_to_the_world_bodies() {
     use semio_framework::kernel::UiDirtyScope;
-    use semio_framework_plugin::InteractionVerb;
+    use semio_plugin::InteractionVerb;
     let Some(UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels }) = cad_interaction_scope(InteractionVerb::Hover, &[CAD_INTERACTION_DOMAIN]) else {
         panic!("hover answers a partial scope");
     };
@@ -132,11 +132,11 @@ async fn world_scene_render_cost_probe() {
     let view = forest_view();
     let options = CadDislocateOptions::default();
     let cold = std::time::Instant::now();
-    let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options, semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("scene");
+    let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options, semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).expect("scene");
     let cold = cold.elapsed();
     let warm = std::time::Instant::now();
     for _ in 0..10 {
-        let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options, semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("scene");
+        let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options, semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).expect("scene");
     }
     let warm = warm.elapsed() / 10;
     let composed = view.panes.pane(CadPaneId::Building);
@@ -144,7 +144,7 @@ async fn world_scene_render_cost_probe() {
     let meshes = edit::world_meshes_json_cached(CadPaneId::Building, composed.genesis.as_ref(), &composed.objects, composed.geometry(CadPaneId::Building));
     let lane = lane.elapsed();
     let carrier = std::time::Instant::now();
-    let _ = semio_framework_plugin::paged_text_carrier("meshes", &meshes);
+    let _ = semio_plugin::paged_text_carrier("meshes", &meshes);
     let carrier = carrier.elapsed();
     assert!(warm < cold);
 }

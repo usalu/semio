@@ -4,7 +4,7 @@ use super::*;
 
 //#region 📮️RuntimeMailbox
 impl AppPresentedRetirement {
-    pub(super) fn new(previous: Option<semio_framework_ui_prepared::PreparedRenderPacket>) -> Self {
+    pub(super) fn new(previous: Option<semio_ui_prepared::PreparedRenderPacket>) -> Self {
         Self {
             previous,
             completed_frame: None,
@@ -18,7 +18,7 @@ impl AppPresentedRetirement {
         }
     }
 
-    fn abort(previous: semio_framework_ui_prepared::PreparedRenderPacket, witness: ui_gpu::RasterTextureWitness) -> Self {
+    fn abort(previous: semio_ui_prepared::PreparedRenderPacket, witness: ui_gpu::RasterTextureWitness) -> Self {
         let raster = RasterCandidateRetirement::Abort(witness);
         Self {
             previous: Some(previous),
@@ -33,7 +33,7 @@ impl AppPresentedRetirement {
         }
     }
 
-    pub(super) fn commit(previous: Option<semio_framework_ui_prepared::PreparedRenderPacket>, witness: ui_gpu::RasterTextureWitness) -> Self {
+    pub(super) fn commit(previous: Option<semio_ui_prepared::PreparedRenderPacket>, witness: ui_gpu::RasterTextureWitness) -> Self {
         Self {
             previous,
             completed_frame: None,
@@ -47,7 +47,7 @@ impl AppPresentedRetirement {
         }
     }
 
-    pub(super) fn step(&mut self, gpu: &mut GpuContext, gate: &semio_framework_ui_prepared::PreparedRenderGate) -> Result<bool, String> {
+    pub(super) fn step(&mut self, gpu: &mut GpuContext, gate: &semio_ui_prepared::PreparedRenderGate) -> Result<bool, String> {
         if self.raster == RasterCandidateRetirement::Infer {
             self.raster = RasterCandidateRetirement::Complete;
             return Ok(false);
@@ -76,10 +76,10 @@ impl AppPresentedRetirement {
             if self.acknowledged_eviction < packet.evictions().len() {
                 let Some(eviction) = packet.evictions().get(self.acknowledged_eviction) else { return Err("prepared eviction cursor exceeded its fixed list".to_string()) };
                 let key = match eviction {
-                    semio_framework_ui_prepared::PreparedRenderEviction::Mesh { key } => key,
+                    semio_ui_prepared::PreparedRenderEviction::Mesh { key } => key,
                 };
                 if let Some(upload) = packet.uploads().get(self.acknowledged_upload_scan) {
-                    if let semio_framework_ui_prepared::PreparedRenderUpload::Mesh { key: upload_key, version, .. } = upload {
+                    if let semio_ui_prepared::PreparedRenderUpload::Mesh { key: upload_key, version, .. } = upload {
                         if upload_key == key {
                             let Some(slot) = self.acknowledged_versions.get_mut(self.acknowledged_version_count) else {
                                 return Err("prepared mesh eviction keep-version credits exhausted".to_string());
@@ -250,7 +250,7 @@ impl AppPresenter {
 
     pub fn close_original_media_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Some(cursor)=self.pending.as_mut()else{return Ok(true)};
-        if !cursor.media_collect.terminal_is_empty(){if !semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::close_presented_media_slots(&mut cursor.media_collect,cx)?{return Ok(false)}}
+        if !cursor.media_collect.terminal_is_empty(){if !semio_renderer_wgpu_ui_engine_dump::chrome_ledger::close_presented_media_slots(&mut cursor.media_collect,cx)?{return Ok(false)}}
         if let Some(owner)=cursor.media_close.as_mut(){if owner.terminal_is_empty(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cursor.media_close=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}
         if !cursor.media_slots.is_empty(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let original=std::mem::take(&mut cursor.media_slots);match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>cursor.media_close=Some(owner),Err((original,source))=>{cursor.media_slots=source;return Err(original.into())}}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}Ok(true)
     }
@@ -385,7 +385,7 @@ impl AppPresenter {
             upload: 0,
             witness: None,
             raster_witness: None,
-            raster_keep: semio_framework_ui_prepared::PreparedRasterKeepCursorV1::default(),
+            raster_keep: semio_ui_prepared::PreparedRasterKeepCursorV1::default(),
             raster_keep_steps: 0,
             input_wait: AppPresentInputWait::None,
             input_progress: 0,

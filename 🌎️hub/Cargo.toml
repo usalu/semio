@@ -261,11 +261,11 @@ semio-s-plugin-norm-compliance = { path = "../✏️s/🔌️plugins/📕️norm
 semio-s-plugin-norm-app-surface = { path = "../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-mutations = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-model = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-mcp = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
-semio-framework-plugin-host = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter-runtime = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust" }
-semio-framework-plugin-guest-contract = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
+semio-os-mcp = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
+semio-plugin-host = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-plugin-interpreter = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
+semio-plugin-interpreter-runtime = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust" }
+semio-plugin-guest-contract = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
 semio-s-plugin-stdio = { path = "../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }
 semio-hub-stdio = { path = "../🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust" }
 semio-hub-stdio-catalog = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📦️packages/🦀️rust" }
@@ -546,11 +546,11 @@ tokio = { version = "1" }
 # consumer. `# N refs` is the survey count. Grouped: os-kernel/core, math, ui, plugin-internal.
 # ---- core (24) ----
 semio-framework = { path = "../🧰️framework/📦️packages/🦀️rust" }  # 58 refs
-semio-framework-os = { path = "../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
-semio-framework-plugin = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { path = "../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
-semio-framework-ui-scene = { path = "../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+semio-os = { path = "../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-plugin = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-ui-contract = { path = "../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+semio-ui-scene = { path = "../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-s-artifact-norm-contract = { path = "../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust" }
 semio-s-artifact-norm-din4108 = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust" }
 semio-s-artifact-norm-din16798 = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust" }

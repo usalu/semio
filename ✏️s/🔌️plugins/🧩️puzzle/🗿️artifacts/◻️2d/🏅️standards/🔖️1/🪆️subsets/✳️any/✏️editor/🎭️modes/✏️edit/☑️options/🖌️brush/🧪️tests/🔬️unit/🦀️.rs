@@ -1,11 +1,11 @@
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 use semio_framework_pack_json::json;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::snapshot::{puzzle2d_action, puzzle2d_kind_ids, Puzzle2dScene};
 #[allow(unused_imports)]
-use semio_framework_plugin::MeasureSelectItem;
+use semio_plugin::MeasureSelectItem;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 use crate::editor::puzzle2d::modes::edit::options::brush::*;
@@ -19,7 +19,7 @@ use crate::editor::puzzle2d::testkit::*;
 
 #[test]
 fn brush_params_are_tagged_utility_options_not_engagement_controls() {
-    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = puzzle2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let host = puzzle_board_host();
     let group_tag = |measures: &[WindowMeasure], id: &str| {
         measures.iter().find_map(|measure| match measure {

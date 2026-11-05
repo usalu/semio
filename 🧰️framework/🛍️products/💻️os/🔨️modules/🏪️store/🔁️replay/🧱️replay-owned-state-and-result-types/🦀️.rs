@@ -7,7 +7,7 @@ where
     Mutation: super::Mutation<P>,
 {
     pub mode: ReplayMode,
-    pub order: semio_framework_os_vcs::HistoryPageStack<String>,
+    pub order: semio_os_vcs::HistoryPageStack<String>,
     pub from: usize,
     pub prefix_until: usize,
     pub prefix_work_progress: bool,
@@ -18,14 +18,14 @@ where
     pub supersessions: EffectiveSupersessions,
     pub state: Option<Arc<P>>,
     pub candidate: Option<Arc<P>>,
-    pub edit_messages: semio_framework_os_spr::command::ReplayMessageAccumulator,
+    pub edit_messages: semio_os_spr::command::ReplayMessageAccumulator,
     pub edit_inverse: semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>,
-    pub message_settlement: Option<semio_framework_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement>,
+    pub message_settlement: Option<semio_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement>,
     pub(super) closed_outcomes: usize,
     pub committed: Vec<String>,
     pub(crate) quarantined: Vec<String>,
     pub rebased_inverse: Vec<(String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>)>,
-    pub replayed: Vec<semio_framework_os_spr::EditMessages>,
+    pub replayed: Vec<semio_os_spr::EditMessages>,
     pub outcomes: Vec<protocol::MutationReplayOutcome>,
     pub(crate) report_worst: Option<semio_framework_diagnostic::Severity>,
     pub conflict_target:Vec<String>,
@@ -57,7 +57,7 @@ pub replay_retirement_factory: Option<Arc<dyn replay_preparation::ArtifactReplay
 impl<P, M: Mutation<P>> ReplayOwnedState<P, M> {
     pub fn terminal() -> Self {
         Self {
-            mode: ReplayMode::Report, order: semio_framework_os_vcs::HistoryPageStack::empty(), from: 0, prefix_until: 0,
+            mode: ReplayMode::Report, order: semio_os_vcs::HistoryPageStack::empty(), from: 0, prefix_until: 0,
             prefix_work_progress: false, operation_progress: false, cursor: 0, operation: 0, schema: String::new(),
             supersessions: Default::default(), state: None, candidate: None, edit_messages: Default::default(),
             edit_inverse: Default::default(), message_settlement: None, closed_outcomes: 0, committed: Vec::new(),
@@ -81,11 +81,11 @@ where
 {
     pub original_history:Option<(usize,u64)>,
     pub original_decode:Option<(u64,u64)>,
-    pub original_selection:Option<semio_framework_os_vcs::OriginalHistoryEditSelection>,
+    pub original_selection:Option<semio_os_vcs::OriginalHistoryEditSelection>,
     pub original_order:Option<(usize,usize)>,
     pub conflict_target:Vec<String>,
     pub unit_flags: protocol::HistoryFoldIndex<([u8; 32], usize), bool>,
-    pub order: semio_framework_os_vcs::HistoryPageStack<String>,
+    pub order: semio_os_vcs::HistoryPageStack<String>,
     pub from: usize,
     pub supersessions: EffectiveSupersessions,
     pub drafts: protocol::HistoryInputDrafts,
@@ -96,7 +96,7 @@ where
     pub committed: Vec<String>,
     pub(crate) quarantined: Vec<String>,
     pub rebased_inverse: Vec<(String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>)>,
-    pub replayed: Vec<semio_framework_os_spr::EditMessages>,
+    pub replayed: Vec<semio_os_spr::EditMessages>,
     pub recorded: Vec<(usize, Arc<P>)>,
     pub report: protocol::ReplayReport,
 }
@@ -141,7 +141,7 @@ where
     }
 
     /// 📨️ Every replayed edit's messages, in order.
-    pub fn replayed(&self) -> &[semio_framework_os_spr::EditMessages] {
+    pub fn replayed(&self) -> &[semio_os_spr::EditMessages] {
         &self.replayed
     }
 
@@ -166,7 +166,7 @@ where
     }
 
     /// 📬️ Takes the replayed edits' messages.
-    pub fn take_replayed(&mut self) -> Vec<semio_framework_os_spr::EditMessages> {
+    pub fn take_replayed(&mut self) -> Vec<semio_os_spr::EditMessages> {
         std::mem::take(&mut self.replayed)
     }
 

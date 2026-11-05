@@ -21,6 +21,29 @@
         "{workspaceRoot}/🧰️framework/**/*"
       ],
       "outputs": []
+    },
+    "test-layout-catalogue": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./📜️script.ts test-layout-catalogue",
+        "cwd": "✏️s/🧪️tests/🏘️plugin-composition"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧪️tests/🏘️plugin-composition/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/**/*",
+        "{workspaceRoot}/🧰️framework/**/*"
+      ],
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "runtimeSourceEntries": [
+            "{projectRoot}/🛍️layout-canvas-catalogue/🟦️.ts"
+          ]
+        }
+      }
     }
   }
 }

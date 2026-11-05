@@ -1,6 +1,6 @@
 //! 🎮️ Original encoded run operations retain native decoding and Store semantic preparation across caller turns.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use store::ArtifactStore;
 use semio_framework_tool_run::TOOL_RUN_PROVISIONAL_OPS_MAX;
@@ -14,7 +14,7 @@ fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,d
 fn built_with<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|control|semio_framework_value::RetainedWorkOutcome{result:construct(control),work:1})}
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 type Source=RetainedCloneSource<Vec<u8>>;
-type Receiver<M>=Box<dyn semio_framework_os_store_operation_wire::ArtifactOriginalOperationReceiving<M>>;
+type Receiver<M>=Box<dyn semio_os_store_operation_wire::ArtifactOriginalOperationReceiving<M>>;
 type Derived<P>=crate::store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>;
 type Semantic<P,M>=crate::store::os_store::ArtifactDerivedOperation<P,M>;
 type Input<M>=crate::store::os_store::ArtifactMutationSource<M>;
@@ -53,7 +53,7 @@ pub struct OriginalToolRunOperations<P,M:Send+Sync+'static>{
  finalizing:bool,
 }
 impl<P,M:Send+Sync+'static> Default for OriginalToolRunOperations<P,M>{fn default()->Self{Self{rows:Vec::new(),row_admission:None,retiring_wire:None,projection:None,receiver:None,mutation:None,source:None,input:None,factory:None,factory_close:None,index:0,incoming:0,phase:0,ingest:0,taking:false,overlay:OriginalToolOverlayFold::default(),resetting:false,closing:false,finalizing:false}}}
-impl<P,M> OriginalToolRunOperations<P,M> where P: semio_framework_os_kernel::StoreState,M: semio_framework_os_kernel::StoreMutationFor<P>{
+impl<P,M> OriginalToolRunOperations<P,M> where P: semio_os_kernel::StoreState,M: semio_os_kernel::StoreMutationFor<P>{
  /// 🧭️ Exposes only borrowed scalar stages for actual bounded-progress regression witnesses.
  #[cfg(feature="artifact-app-testing")]
  pub fn diagnostic_cursor(&self,store:&ArtifactStore<P,M>)->Result<(usize,u8,u8,u32,RetirementDemand),ValueError>{let flags=u32::from(self.mutation.is_some())|u32::from(self.source.is_some())<<1|u32::from(self.input.is_some())<<2|u32::from(self.receiver.is_some())<<3|u32::from(self.factory.is_some())<<4|u32::from(self.overlay.messages.is_some())<<5|u32::from(self.projection.is_some())<<6|u32::from(self.overlay.retirement.is_some())<<7|u32::from(self.overlay.alias.is_some())<<8|u32::from(self.overlay.base.is_some())<<9|u32::from(self.overlay.running.is_some())<<10|u32::from(self.resetting)<<11;let d=if let Some(owner)=self.overlay.semantic.as_ref(){if owner.is_closing(){owner.next_demand(4096)?}else{store.derived_operation_demands(owner,4096)?}}else if let Some(owner)=self.receiver.as_ref(){if self.mutation.is_some(){owner.close_demands(4096)?}else if self.taking{owner.take_owned_demands(4096)?}else{owner.demands(4096)?}}else{Default::default()};Ok((self.index,self.phase,self.ingest,flags,d))}

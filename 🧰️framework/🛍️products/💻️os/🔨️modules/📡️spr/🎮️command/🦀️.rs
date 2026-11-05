@@ -284,7 +284,7 @@ pub trait SemanticMutation<P>: Mutation<P> {
 
 //#region 🔖️Collection
 /// 🩹️ Collection identity/patch/diff — single source of truth in VCS (`crate::os_vcs`).
-pub use semio_framework_os_vcs::{CollectionDiff, Identified, ItemPatch, Patchable};
+pub use semio_os_vcs::{CollectionDiff, Identified, ItemPatch, Patchable};
 
 //#endregion 🔖️Collection
 
@@ -298,7 +298,7 @@ pub use semio_framework_os_vcs::{CollectionDiff, Identified, ItemPatch, Patchabl
 // 🎞️ Was declined in an earlier pass (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
 // RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️directory-spr-serde-
 // removal.md`, decline #3): `modified: Vec<ItemPatch<K, Patch>>` needed `ItemPatch<K, Patch>:
-// ToValue + FromValue`, which `semio_framework_os_vcs::ItemPatch` did not yet have. It does now — converted.
+// ToValue + FromValue`, which `semio_os_vcs::ItemPatch` did not yet have. It does now — converted.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct NamedTripleDiff<K, V, Patch> {
@@ -912,9 +912,9 @@ pub fn mutation_label_failures<P, M: SemanticMutation<P>>(ops: &[M]) -> Vec<Stri
         .enumerate()
         .filter_map(|(index, op)| {
             let label = op.label();
-            let cells: Vec<String> = semio_framework_ui_locale::Terminology::ALL
+            let cells: Vec<String> = semio_ui_locale::Terminology::ALL
                 .into_iter()
-                .flat_map(|terminology| semio_framework_ui_locale::Locale::ALL.into_iter().map(move |locale| (terminology, locale)))
+                .flat_map(|terminology| semio_ui_locale::Locale::ALL.into_iter().map(move |locale| (terminology, locale)))
                 .filter(|(terminology, locale)| label.resolve(*terminology, *locale).trim().is_empty())
                 .map(|(terminology, locale)| format!("{}/{}", terminology.as_str(), locale.as_str()))
                 .collect();
@@ -963,4 +963,4 @@ pub fn mutation_fixture_ops<M: semio_framework_value::FromValue>(root: &std::pat
 
 #[path = "../🧮️fold/🦀️.rs"]
 pub mod fold;
-pub use semio_framework_ui_locale::LocalizedLabel;
+pub use semio_ui_locale::LocalizedLabel;

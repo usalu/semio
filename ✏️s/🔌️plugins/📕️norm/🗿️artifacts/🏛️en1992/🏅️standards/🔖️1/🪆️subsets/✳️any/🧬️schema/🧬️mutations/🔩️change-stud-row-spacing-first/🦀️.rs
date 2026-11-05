@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeStudRowSpacingFirs
         record: "ChangedStudRowSpacingFirst",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change first stud distance s₀ from the column face of the stud row", "Dübelreihe: Abstand des ersten Dübels s₀ vom Stützenrand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change first stud distance s₀ from the column face of the stud row", "Dübelreihe: Abstand des ersten Dübels s₀ vom Stützenrand ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.stud_row_id.clone()]

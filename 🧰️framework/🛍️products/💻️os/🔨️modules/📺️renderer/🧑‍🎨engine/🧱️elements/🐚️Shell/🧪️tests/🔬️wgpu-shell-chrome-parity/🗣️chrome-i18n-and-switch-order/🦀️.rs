@@ -150,10 +150,10 @@ fn the_session_switch_creates_before_it_retires_and_leaks_no_instance() {
 
 #[test]
 fn asking_for_the_role_already_mounted_creates_and_retires_nothing() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let dialect = ArtifactDialect { artifact_kind: "s.procedural.generation3d".into(), standard: "1".into(), subset: "*".into() };
     let app = parity_app("s.procedural.generation3d@1/*#editor", AppRole::Editor, dialect, "Editor", "Editor", &["edit", "generate"]);
-    shell.docs.session = Some(ActiveSession { plugin_id: "procedural".into(), instance_id: 7, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "procedural".into(), instance_id: 7, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).switch_to_session_role(AppRole::Editor)).expect("a no-op switch never fails");
     let session = shell.docs.session.as_ref().expect("the session survives a no-op switch");
     assert_eq!(session.instance_id, 7, "the mounted instance is untouched");

@@ -3,7 +3,8 @@
 use super::*;
 
 //#region 🧵️HostOnlyRetainedRoutes
-pub const FLOW_HOST_ONLY_TOOL_IDS: &[&str] = &["evaluate", "contextMenuAt", "openSpotlight", "replaceImage", "flowEvalTick", "flowEvalResolve"];
+pub const FLOW_EVALUATION_TOOL_IDS:&[&str]=&["evaluate","flowEvalTick","flowEvalResolve"];
+pub const FLOW_HOST_ONLY_TOOL_IDS: &[&str] = &["contextMenuAt", "openSpotlight", "replaceImage"];
 
 const FLOW_HOST_ONLY_RAW_BYTES: usize = 16_384;
 
@@ -11,10 +12,10 @@ pub struct FlowHostEffectPayload {
     pub(super) command: FlowCommand,
     pub(super) snapshot: Arc<FlowSnapshot>,
     pub(super) config: Arc<FlowMainWindowConfig>,
-    pub(super) history: Arc<semio_framework_plugin::HistoryView>,
-    pub(super) children: Arc<semio_framework_plugin::ChildContentView>,
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
-    pub(super) completion: semio_framework_plugin::ArtifactToolCompletion<semio_framework_plugin::EditorApp<FlowPlayApp>>,
+    pub(super) history: Arc<semio_plugin::HistoryView>,
+    pub(super) children: Arc<semio_plugin::ChildContentView>,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) completion: semio_plugin::ArtifactToolCompletion<semio_plugin::EditorApp<FlowPlayApp>>,
 }
 
 pub fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::record::scalar_witness::ScalarRecordView<'_>, &'static str> {
@@ -25,7 +26,7 @@ pub fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack:
         FlowCommand::ContextMenuAt(command) => [Some(Field::Text(&command.id)), None, None],
         FlowCommand::ReplaceImage(command) => [Some(Field::Text(&command.id)), None, None],
         FlowCommand::FlowEvalTick(command) => [Some(Field::Text(&command.window_id)), Some(Field::Text(&command.window_kind_id)), None],
-        FlowCommand::FlowEvalResolve(command) => [Some(Field::Text(&command.window_id)), Some(Field::U64(command.node_hash)), command.output_json.as_deref().map(Field::Text)],
+        FlowCommand::FlowEvalResolve(command) if command.output.is_none()=>[Some(Field::Text(&command.window_id)),Some(Field::U64(command.node_hash)),None],
         _ => return Err("Flow command does not have an admitted scalar record witness"),
     };
     Ok(ScalarRecordView { ordinal, fields })
@@ -39,7 +40,7 @@ pub struct FlowHostEffectJob {
     pub(super) payload: Option<Arc<FlowHostEffectPayload>>,
     payload_close: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<FlowHostEffectPayload>>,
     decoder_close: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<FlowHostEffectPayload>>,
-    completion_refusal: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<FlowPlayApp>>>>,
+    completion_refusal: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin::ArtifactToolCompletionRejection<semio_plugin::EditorApp<FlowPlayApp>>>>,
     pub(super) input: Option<semio_framework_action_bus::RetainedToolWireInput>,
     decoder: Option<store::os_pack::record::scalar_witness::ScalarRecordWireWitness<FlowHostEffectPayload>>,
     pub(super) page: usize,
@@ -100,14 +101,12 @@ impl FlowHostEffectJob {
             let view = ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone());
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
-                    FlowCommand::Evaluate(_) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).and_then(|composed| evaluate::evaluate_result(&composed, &payload.config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN)),
-                    FlowCommand::FlowEvalTick(command) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).and_then(|composed| flow_eval_tick::tick_result(&composed, &payload.config, session, &command.window_id, &command.window_kind_id)),
-                    FlowCommand::FlowEvalResolve(command) => flow_eval_resolve::handle(command, &view, &ConfigView { snapshot: &NoConfig {}, window: None }, session),
+                    
                     FlowCommand::ContextMenuAt(_) | FlowCommand::OpenSpotlight(_) | FlowCommand::ReplaceImage(_) => Ok(Emit::default()),
                     _ => Err(Fault::from("flow-host-effect-route-mismatch")),
                 })?
             });
-            if let Err(original)=payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()) {
+            if let Err(original)=payload.completion.complete(emit, semio_plugin::EphemeralEmit::default()) {
                 self.completion_refusal=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original completion refusal defines full source retirement")));
                 return Err(Self::fault());
             }
@@ -186,27 +185,34 @@ impl semio_framework::ToolJobFactory for FlowHostEffectJobFactory {
         semio_framework::ToolExecutionContract::resumable(FLOW_HOST_ONLY_RAW_BYTES, 256, 1, 16_384, 7_500, 1, 1)
     }
 
-    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Ok::<_, String>(FlowHostEffectJob::new(operation, payload)));
+    semio_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Ok::<_, String>(FlowHostEffectJob::new(operation, payload)));
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFactory {
+    type Owner = semio_plugin::EditorApp<FlowPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FLOW_HOST_ONLY_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "evaluate", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "contextMenuAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openSpotlight", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "replaceImage", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "contextMenuAt", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "openSpotlight", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "replaceImage", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
     ];
 }
 
 /// 🧳️ Builds the host-only job from the original request, taking its wire owner into the decoder when the command arrived over the wire.
-pub(super) fn flow_build_host_only_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<FlowPlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    use semio_framework_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
+pub(super) fn flow_build_host_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<FlowPlayApp>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    use semio_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
     let original = request.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Flow host-only request is absent"))?;
+    if original.tool_id.as_str()!=original.command.command_id(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow job changed its declared command route").into())}
+    if original.command.command_id()=="flowEvalResolve"{
+        let bytes=2*std::mem::size_of::<semio_plugin::ArtifactInstanceOperationOwnerHandle>();
+        return semio_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,FlowCommand::command_id,FLOW_HOST_ONLY_RAW_BYTES,1,false,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|request,_|Ok((super::retained::FlowResolveJobWork::new(request.instance_operation_owner.clone()),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})));
+    }
+    if FLOW_EVALUATION_TOOL_IDS.contains(&original.command.command_id()){
+        let tool=original.command.command_id();let bytes=2*std::mem::size_of::<semio_plugin::ArtifactInstanceOperationOwnerHandle>();
+        return semio_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,FlowCommand::command_id,FLOW_HOST_ONLY_RAW_BYTES,1,false,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|request,_|Ok((super::retained::FlowEvaluationJobWork::new(tool,request.instance_operation_owner.clone()),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})));
+    }
+    if !FLOW_HOST_ONLY_TOOL_IDS.contains(&original.command.command_id()){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original Flow host job has no declared route").into())}
     if original.checkpoint.is_some() || original.input.as_ref().is_some_and(|input| input.declared_bytes() > FLOW_HOST_ONLY_RAW_BYTES) {
         return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Flow host-only job rejects checkpoint or oversized wire owner").into());
     }
@@ -221,7 +227,40 @@ pub(super) fn flow_build_host_only_job(request: &mut Option<semio_framework_plug
             job.input = Some(input);
             job.validated = false;
         }
-        Ok((semio_framework_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<FlowHostEffectJob>(), ..Default::default() }))
+        Ok((semio_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<FlowHostEffectJob>(), ..Default::default() }))
     })
 }
 //#endregion 🧵️HostOnlyRetainedRoutes
+
+/// 🧮️ Evaluation has its concrete retained command factory, source intake and same original execution contract.
+pub struct FlowEvaluationJobFactory{keys:Vec<semio_framework::ToolFactoryKey>}
+impl FlowEvaluationJobFactory{pub(super) fn new(controller:&str)->Self{Self{keys:FLOW_EVALUATION_TOOL_IDS.iter().map(|tool|semio_framework::ToolFactoryKey::new(controller,*tool)).collect()}}}
+pub fn flow_evaluation_contract()->semio_framework::ToolExecutionContract{semio_framework::ToolExecutionContract::resumable(FLOW_HOST_ONLY_RAW_BYTES,256,1,16_384,7_500,1,1)}
+impl semio_framework::ToolJobFactory for FlowEvaluationJobFactory{
+ type Payload=ArtifactRetainedCommandPayload<semio_plugin::EditorApp<FlowPlayApp>>;
+ type Job=ArtifactRetainedCommandJob<semio_plugin::EditorApp<FlowPlayApp>>;
+ fn keys(&self)->&[semio_framework::ToolFactoryKey]{&self.keys}
+ fn payload_schema_id(&self)->&str{FLOW_DOCUMENT_SCHEMA}
+ fn classification(&self)->semio_framework::InteractiveJobClassification{semio_framework::InteractiveJobClassification::Migrated}
+ fn execution_contract(&self)->semio_framework::ToolExecutionContract{flow_evaluation_contract()}
+ semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:FLOW_HOST_ONLY_RAW_BYTES,checkpoint_resume:false);
+}
+impl semio_plugin::ArtifactOwnedToolJobFactory for FlowEvaluationJobFactory{
+ type Owner=semio_plugin::EditorApp<FlowPlayApp>;
+ const TOOL_IDS:&'static[&'static str]=FLOW_EVALUATION_TOOL_IDS;
+ const DOCUMENT_SCHEMA:&'static str=FLOW_DOCUMENT_SCHEMA;
+ const PUBLICATION_CONTRACTS:&'static[semio_plugin::ArtifactToolPublicationContract]=&[
+  semio_plugin::ArtifactToolPublicationContract{tool_id:"evaluate",lanes:&[semio_plugin::ArtifactToolPublicationLane::HostOnly]},
+  semio_plugin::ArtifactToolPublicationContract{tool_id:"flowEvalTick",lanes:&[semio_plugin::ArtifactToolPublicationLane::HostOnly]},
+  semio_plugin::ArtifactToolPublicationContract{tool_id:"flowEvalResolve",lanes:&[semio_plugin::ArtifactToolPublicationLane::HostOnly]},
+ ];
+}
+pub(super) struct FlowEvaluationJobFactoryProofs;
+impl FlowEvaluationJobFactoryProofs{
+ semio_plugin::bounded_first_step_tool_proofs!{
+  owner:semio_plugin::EditorApp<FlowPlayApp>,
+  owner_file:"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  controller:"s.flow.flow@1/*#editor",artifact_schema:"s.flow.flow",factory:"FlowEvaluationJobFactory",factory_type:FlowEvaluationJobFactory,contract:flow_evaluation_contract(),tools:["evaluate","flowEvalTick","flowEvalResolve"]
+ }
+ pub(super) fn proofs()->Vec<semio_plugin::ArtifactBoundedFirstStepProof>{Self::bounded_first_step_tool_proofs()}
+}

@@ -58,7 +58,7 @@ fn the_window_config_round_trips_through_its_text_and_binary_codecs() {
 
 #[test]
 fn the_owner_binds_the_3d_window_kind() {
-    use semio_framework_plugin::WindowConfigOwner;
+    use semio_plugin::WindowConfigOwner;
     assert_eq!(<EnergyModelWindowConfigOwner as WindowConfigOwner>::WINDOW_KIND_ID, super::super::WINDOW_KIND_ID);
     assert_eq!(<EnergyModelWindowConfigOwner as WindowConfigOwner>::SCHEMA, "energy.model3dwindowconfig");
 }

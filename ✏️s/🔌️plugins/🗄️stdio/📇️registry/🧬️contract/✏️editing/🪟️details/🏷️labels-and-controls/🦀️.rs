@@ -115,7 +115,7 @@ pub(super) fn error(code: &'static str) -> PluginAssemblyError {
 
 /// 🎟️ A refusal of the process-wide `UiValue` arena is the framework's capacity refusal, so the tree window
 /// building this row ends there with a shorter run instead of faulting the whole render — see
-/// `semio_framework_plugin::tree_window_indexed_section` and law `🧪️tests/🎟️details-arena-headroom`.
+/// `semio_plugin::tree_window_indexed_section` and law `🧪️tests/🎟️details-arena-headroom`.
 fn arena(stage: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new("ui.fixed-capacity", format!("snapshot details {stage} admission failed: the UiValue arena has no free credit"))
 }

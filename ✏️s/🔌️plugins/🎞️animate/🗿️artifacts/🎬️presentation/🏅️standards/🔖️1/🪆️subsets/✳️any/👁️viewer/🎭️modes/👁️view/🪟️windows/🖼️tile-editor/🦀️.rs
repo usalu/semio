@@ -13,12 +13,12 @@
 //! `Canvas2dScene` approach, is the honest fit.
 
 use crate::{FigureTileFrame, PresentationSnapshot};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::BuiltNode;
-use semio_framework_ui_scene::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::BuiltNode;
+use semio_ui_scene::Canvas2dScene;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "animate-view-tile-editor";
@@ -97,10 +97,10 @@ pub fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Render
-pub fn render(deck: &PresentationSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(deck: &PresentationSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (camera_x, camera_y, zoom) = crate::presentation_canvas_camera(deck);
     let scene = Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: deck_to_canvas_layers(deck), snapshot: None, tool_run_trace: None, lanes: Vec::new() };
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene)
 }
 //#endregion 🔖️Render
 

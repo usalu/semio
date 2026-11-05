@@ -89,7 +89,7 @@ use codec::{document_archive_into_fields, malformed};
 pub use codec::{decode_app_command, decode_app_frame, decode_document_archive_bytes, encode_app_command, encode_app_frame, encode_document_archive_bytes, encode_local_interaction_query_frame_into, presence_command_sequence};
 
 
-/// 🪝️ Test hook of the companion crate `semio-framework-os-channel-tests`: the private codec modules, public only behind the `testkit` feature.
+/// 🪝️ Test hook of the companion crate `semio-os-channel-tests`: the private codec modules, public only behind the `testkit` feature.
 #[cfg(feature = "testkit")]
 #[doc(hidden)]
 pub mod testkit {

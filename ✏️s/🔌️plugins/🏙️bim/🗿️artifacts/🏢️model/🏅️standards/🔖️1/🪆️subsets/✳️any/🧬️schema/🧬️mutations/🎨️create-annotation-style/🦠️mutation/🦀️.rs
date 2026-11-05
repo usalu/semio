@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "annotation-style", kind: "create-annotation-style", record: "CreateAnnotationStyle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create annotation style \"{}\"", self.annotation_style.name), &format!("Beschriftungsstil \"{}\" anlegen", self.annotation_style.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create annotation style \"{}\"", self.annotation_style.name), &format!("Beschriftungsstil \"{}\" anlegen", self.annotation_style.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

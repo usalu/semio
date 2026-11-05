@@ -1,8 +1,8 @@
 //! 🚪️ IO s.cad (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[path = "."]
@@ -65,7 +65,7 @@ pub fn cad_from_wire(bytes: &[u8]) -> Result<semio_s_artifact_cad_cad_model::sna
 pub mod derived_composition {
     use crate::CadAnalyzer;
     use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.cad.cad", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -99,7 +99,7 @@ pub mod derived_composition {
                     };
                     if let Some(text) = text {
                         if let Ok(snapshot) = crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
-                            return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                            return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                         }
                     }
                 }
@@ -120,7 +120,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::CadBuilder as CadAnyBuilder;
     use crate::CadComposer as CadAnyComposer;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::composer_entry_of,semio_plugin::ArtifactBuilder,semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource,semio_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -157,11 +157,11 @@ pub mod io_registry {
         Err(ComposeError { message: "CadComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
+    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
+            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::Medium })
         })
     }
     //#endregion 🔖️ExportEntries
@@ -186,7 +186,7 @@ pub mod io_registry {
 // compute.
 use semio_framework_value::DslValue;
 use semio_framework::mesh_io::MeshImporter;
-use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
+use semio_plugin::{ArtifactDeserializer, ArtifactSerializer};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_brep_export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
@@ -435,13 +435,13 @@ pub struct CadImportedObject {
 /// 🌉️ Same OBJ-text bridge `cad_object_from_mesh` used before this wave's rewrite (reused, not
 /// reimplemented) — factored out so `import_glb_object` can mint a kernel handle without going
 /// through the geometry-import module's now-`pub(crate)`-only `CadObject`.
-fn mesh_to_obj_text_for_import(mesh: &semio_framework_plugin::MeshData) -> Option<String> {
+fn mesh_to_obj_text_for_import(mesh: &semio_plugin::MeshData) -> Option<String> {
     let snapshot = semio_mesh_snapshot_from_solids_placeholder(mesh)?;
     let obj_snapshot = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&snapshot)).ok()?;
     Some(encode_obj(&obj_snapshot))
 }
 
-fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::MeshData) -> Option<SemioMeshSnapshot> {
+fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_plugin::MeshData) -> Option<SemioMeshSnapshot> {
     if mesh.indices.is_empty() || !mesh.indices.len().is_multiple_of(3) || mesh.positions.is_empty() {
         return None;
     }
@@ -553,7 +553,7 @@ pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<semio_s_artifact
     Some(document)
 }
 
-pub fn cad_mesh_from_document(doc: &DslValue) -> Result<semio_framework_plugin::MeshData, String> {
+pub fn cad_mesh_from_document(doc: &DslValue) -> Result<semio_plugin::MeshData, String> {
     let scene: semio_s_artifact_cad_cad_model::snapshot::CadSnapshot = semio_framework_value::FromValue::from_value(doc.clone()).map_err(|err: semio_framework_value::ValueError| err.to_string())?;
     Ok(semio_s_artifact_cad_cad_inferences::export_mesh_from_scene(&scene))
 }
@@ -618,7 +618,7 @@ pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg_geometry::stan
 // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), a genuine framework-owned boundary
 // type out of this plugin's write scope. Bridged once, at this exact boundary, from a `DslValue`
 // built the normal way via `protocol::json::from_dsl_value`.
-pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<semio_framework_pack_json::Value, String> {
+pub fn cad_document_from_mesh(_mesh: &semio_plugin::MeshData) -> Result<semio_framework_pack_json::Value, String> {
     use semio_s_artifact_cad_cad_inferences::default_document;
     Ok(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&default_document())))
 }
@@ -645,7 +645,7 @@ pub mod derived_construction {
     use semio_s_artifact_cad_cad_model_diff::CadDiff;
     use semio_s_artifact_cad_cad_mutations::CadMutation;
     use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CAD_PLAY_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
     use semio_s_artifact_cad_cad_model::CadReferenceIndex;
 
     //#region Builder
@@ -721,7 +721,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct CadParts {
@@ -734,27 +734,27 @@ pub mod derived_analysis {
         type Parts = CadParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.cad.cad", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
+            semio_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = CadParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <CadSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <CadSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -766,7 +766,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec CadBuilderFacets {
         construction: CadBuilderConstruction,
         analysis: CadAnalyzerAnalysis,

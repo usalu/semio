@@ -20,7 +20,7 @@ use super::*;
 /// the same file — painted `⌘️`. Two functions, one question, two answers
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-transport-residual.md` §3).
 pub fn command_host_platform() -> semio_framework::manifest::Platform {
-    semio_framework_os_renderer_wgpu_host_base::host_platform()
+    semio_renderer_wgpu_host_base::host_platform()
 }
 
 //#region ⌨️WindowScope
@@ -53,7 +53,7 @@ pub fn reserved_shell_chords_v1(shell_table: &[(String, String)], overrides: &[(
 /// ⌨️ Whether a key event matches a keybinding chord such as `"mod+shift+z"`, `"ctrl+k"`, or `"escape"`.
 /// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
 /// undeclared accelerator/shift/alt may be held, so `mod+z` never fires for `mod+shift+z`.
-pub fn key_event_matches_chord(action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chord: &str) -> bool {
+pub fn key_event_matches_chord(action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chord: &str) -> bool {
     let mut want_mod = false;
     let mut want_shift = false;
     let mut want_alt = false;
@@ -85,23 +85,23 @@ pub fn key_event_matches_chord(action: &semio_framework_ui_wgpu_input::KeyAction
         return false;
     }
     match action {
-        semio_framework_ui_wgpu_input::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
-        semio_framework_ui_wgpu_input::KeyAction::Enter => key_token == "enter" || key_token == "return",
-        semio_framework_ui_wgpu_input::KeyAction::Escape => key_token == "escape" || key_token == "esc",
-        semio_framework_ui_wgpu_input::KeyAction::Backspace => key_token == "backspace",
-        semio_framework_ui_wgpu_input::KeyAction::Delete => key_token == "delete" || key_token == "del",
-        semio_framework_ui_wgpu_input::KeyAction::Tab => key_token == "tab",
-        semio_framework_ui_wgpu_input::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
-        semio_framework_ui_wgpu_input::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
-        semio_framework_ui_wgpu_input::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
-        semio_framework_ui_wgpu_input::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
-        semio_framework_ui_wgpu_input::KeyAction::Home => key_token == "home",
-        semio_framework_ui_wgpu_input::KeyAction::End => key_token == "end",
-        semio_framework_ui_wgpu_input::KeyAction::PageUp => key_token == "pageup",
-        semio_framework_ui_wgpu_input::KeyAction::PageDown => key_token == "pagedown",
-        semio_framework_ui_wgpu_input::KeyAction::Function(number) => key_token == format!("f{number}"),
-        semio_framework_ui_wgpu_input::KeyAction::Space(_) => key_token == "space",
-        semio_framework_ui_wgpu_input::KeyAction::ContextMenu => key_token == "contextmenu",
+        semio_ui_wgpu_input::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
+        semio_ui_wgpu_input::KeyAction::Enter => key_token == "enter" || key_token == "return",
+        semio_ui_wgpu_input::KeyAction::Escape => key_token == "escape" || key_token == "esc",
+        semio_ui_wgpu_input::KeyAction::Backspace => key_token == "backspace",
+        semio_ui_wgpu_input::KeyAction::Delete => key_token == "delete" || key_token == "del",
+        semio_ui_wgpu_input::KeyAction::Tab => key_token == "tab",
+        semio_ui_wgpu_input::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
+        semio_ui_wgpu_input::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
+        semio_ui_wgpu_input::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
+        semio_ui_wgpu_input::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
+        semio_ui_wgpu_input::KeyAction::Home => key_token == "home",
+        semio_ui_wgpu_input::KeyAction::End => key_token == "end",
+        semio_ui_wgpu_input::KeyAction::PageUp => key_token == "pageup",
+        semio_ui_wgpu_input::KeyAction::PageDown => key_token == "pagedown",
+        semio_ui_wgpu_input::KeyAction::Function(number) => key_token == format!("f{number}"),
+        semio_ui_wgpu_input::KeyAction::Space(_) => key_token == "space",
+        semio_ui_wgpu_input::KeyAction::ContextMenu => key_token == "contextmenu",
     }
 }
 
@@ -311,7 +311,7 @@ impl DocumentState {
         leaves.push(FRAMEWORK_SYNC_PANEL_TAB_ID.to_string());
         leaves.push(FRAMEWORK_TASK_MANAGER_PANEL_ID.to_string());
         leaves.push(FRAMEWORK_CHAT_PANEL_ID.to_string());
-        leaves.push(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID.to_string());
+        leaves.push(semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID.to_string());
         leaves.extend(self.tool_panel_tabs(prefs).into_iter().map(|tab| tab.id));
         leaves
     }

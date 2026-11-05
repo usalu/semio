@@ -9,8 +9,8 @@ use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::SPACE_INDEX_DIALECT;
 use crate::viewer::space_index::modes::view;
 use crate::viewer::space_index::modes::view::windows::main;
-use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::{built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
+use semio_plugin::app::{Dialect, InteractionView};
+use semio_plugin::{built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -50,27 +50,27 @@ impl ArtifactViewer for SpaceIndexViewer {
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<SSpaceSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<SSpaceSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(SSpaceSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `SpaceIndexViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => Ok(built_to_component_tree(main::render(doc.snapshot, view_state)?)),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_space_index_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_space_index_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(SPACE_INDEX_DIALECT)
         .document(["semio", "s", "space", "index"])
         .icon_id("layout-grid")

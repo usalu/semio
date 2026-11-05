@@ -34,9 +34,14 @@ export async function testFormsSubmission(): Promise<void> {
   const { default: input } = await import("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json");
   const { default: responseSchema } = await import("../../🔣️.json");
   const validate = semioSchemaAjvV1().compile(responseSchema);
-  for (const test of input.cases) {
-    const result = prepareResponse(parseFormsJsonDefinition(input.definition), Object.fromEntries(Object.entries(test.values).map(([key,value])=>[key,parseFormsJsonValue(value)])), input.metadata);
+  const { default: vectors } = await import("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️vector-submission.json");
+  for (const corpus of [input, vectors]) for (const test of corpus.cases) {
+    const result = prepareResponse(parseFormsJsonDefinition(corpus.definition), Object.fromEntries(Object.entries(test.values).map(([key,value])=>[key,parseFormsJsonValue(value)])), corpus.metadata);
     assert.deepEqual({...result,response:result.response?formsResponseJson(result.response):null}, test.expected, test.name);
-    if (result.response) assert.equal(validate(formsResponseJson(result.response)), true, test.name);
+    if (result.response) {
+      const json = formsResponseJson(result.response);
+      assert.equal(validate(json), true, test.name);
+      assert.deepEqual(formsResponseJson(parseFormsJsonResponse(JSON.parse(JSON.stringify(json)))), json, test.name);
+    }
   }
 }

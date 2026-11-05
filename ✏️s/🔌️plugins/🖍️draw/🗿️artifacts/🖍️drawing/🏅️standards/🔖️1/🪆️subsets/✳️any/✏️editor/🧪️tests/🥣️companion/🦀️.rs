@@ -2,8 +2,8 @@
 
 #![cfg(test)]
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[path = "../🔬️archive-load/🦀️.rs"]
 pub mod archive_load_tests;

@@ -550,26 +550,26 @@ pub fn energy_model_camera_json(model: &impl EnergySceneModel) -> String {
         Some((min, max)) => ([(min[0] + max[0]) / 2.0, (min[1] + max[1]) / 2.0, (min[2] + max[2]) / 2.0], energy_model_extent(model) * 1.8),
         None => ([0.0, 0.0, 0.0], 8.0),
     };
-    semio_framework_ui_declaration::ui::world3d_camera_json([centre[0] + distance, centre[1] - distance, centre[2] + distance * 0.7], centre, 45.0)
+    semio_ui_declaration::ui::world3d_camera_json([centre[0] + distance, centre[1] - distance, centre[2] + distance * 0.7], centre, 45.0)
 }
 
 /// 🎬️ The whole `World3dScene` for one model. `domain_id` is `Some` only for a surface that actually
 /// declares the interaction domain (the editor); the read-only viewer passes `None` and the react
 /// host leaves the window on the OS's own world board with no plugin-owned picking.
-pub fn energy_model_scene(model: &impl EnergySceneModel, style: &EnergySceneStyle<'_>, domain: Option<(&str, &str)>) -> semio_framework_plugin_window_kits_rich::world3d_host::World3dScene {
+pub fn energy_model_scene(model: &impl EnergySceneModel, style: &EnergySceneStyle<'_>, domain: Option<(&str, &str)>) -> semio_plugin_window_kits_rich::world3d_host::World3dScene {
     let (meshes_json, instances_json) = energy_model_scene_parts(model, style);
-    let mut scene = semio_framework_plugin_window_kits::world3d_sun::world3d_scene(
+    let mut scene = semio_plugin_window_kits::world3d_sun::world3d_scene(
         energy_model_camera_json(model),
         meshes_json,
         instances_json,
-        semio_framework_plugin_window_kits_rich::world3d_host::world3d_selection_json("rectangle", style.selected_ids, style.hovered_ids.first().map(String::as_str)),
-        &semio_framework_plugin_window_kits::world3d_sun::WorldSunConfig::default(),
+        semio_plugin_window_kits_rich::world3d_host::world3d_selection_json("rectangle", style.selected_ids, style.hovered_ids.first().map(String::as_str)),
+        &semio_plugin_window_kits::world3d_sun::WorldSunConfig::default(),
     );
     if let Some((domain_id, granularity_id)) = domain {
         scene.domain_id = Some(domain_id.to_string());
         scene.domain_granularity_id = Some(granularity_id.to_string());
     }
-    scene.fit_json = Some(semio_framework_ui_declaration::ui::world3d_fit_json(energy_model_fit_revision(model), ENERGY_SCENE_FIT_PADDING, None));
+    scene.fit_json = Some(semio_ui_declaration::ui::world3d_fit_json(energy_model_fit_revision(model), ENERGY_SCENE_FIT_PADDING, None));
     scene
 }
 //#endregion 🔖️Scene

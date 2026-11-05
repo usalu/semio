@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "property-template", kind: "create-property-template", record: "CreatePropertyTemplate" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create property template \"{}\"", self.template.name), &format!("Eigenschaftsvorlage \"{}\" anlegen", self.template.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create property template \"{}\"", self.template.name), &format!("Eigenschaftsvorlage \"{}\" anlegen", self.template.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

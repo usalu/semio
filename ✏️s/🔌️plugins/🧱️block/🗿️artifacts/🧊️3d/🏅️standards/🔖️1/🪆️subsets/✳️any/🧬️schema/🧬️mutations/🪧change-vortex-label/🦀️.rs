@@ -25,8 +25,8 @@ pub fn change_vortex_label<Op: From<crate::change_vortex_label::ChangeVortexLabe
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeVortexLabel where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_vortex_label::ChangeVortexLabel> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vortex", kind: "change-vortex-label", record: "ChangedVortexLabel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change vortex \"{}\" label", self.id), &format!("Beschriftung von Wirbel \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change vortex \"{}\" label", self.id), &format!("Beschriftung von Wirbel \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

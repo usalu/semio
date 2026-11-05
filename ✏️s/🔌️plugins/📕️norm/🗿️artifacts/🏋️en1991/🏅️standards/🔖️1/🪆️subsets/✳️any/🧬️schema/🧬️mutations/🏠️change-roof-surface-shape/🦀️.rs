@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRoofSurfaceShape w
         record: "ChangedRoofSurfaceShape",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change shape of the roof surface", "Dachfläche: Form ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change shape of the roof surface", "Dachfläche: Form ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

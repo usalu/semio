@@ -11,14 +11,33 @@
         "lockSuffix": ".lock",
         "workingSuffix": "-working",
         "directory": "incremental",
-        "bases": ["b/*", "t/*", "u/l/*/b", "u/l/*/t", "components/*/b", "components/*/t"],
+        "bases": [
+          "b/*",
+          "t/*",
+          "u/l/*",
+          "u/l/*/t",
+          "components/*/b",
+          "components/*/t"
+        ],
         "maximumProfileDepth": 2,
         "maximumEntriesPerSession": 262144,
         "reportedRemovals": 8,
-        "yieldEvery": 4
+        "yieldEvery": 4,
+        "laneBase": "u/l/*",
+        "excludedLaneChildren": [
+          "t",
+          "v",
+          "m"
+        ]
       }
     },
-    "Reason": { "enum": ["idle", "budget", "pressure"] },
+    "Reason": {
+      "enum": [
+        "idle",
+        "budget",
+        "pressure"
+      ]
+    },
     "Messages": {
       "const": {
         "scan": {
@@ -66,44 +85,134 @@
     "Session": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "bytes", "lastUsedMs", "held", "newest"],
+      "required": [
+        "path",
+        "bytes",
+        "lastUsedMs",
+        "held",
+        "newest"
+      ],
       "properties": {
-        "path": { "type": "string", "minLength": 1 },
-        "bytes": { "type": "integer", "minimum": 0 },
-        "lastUsedMs": { "type": "integer", "minimum": 0 },
-        "held": { "type": "boolean" },
-        "newest": { "type": "boolean" }
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastUsedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "held": {
+          "type": "boolean"
+        },
+        "newest": {
+          "type": "boolean"
+        }
       }
     },
     "Input": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["volumeBytes", "needBytes", "nowMs", "sessions"],
+      "required": [
+        "volumeBytes",
+        "needBytes",
+        "nowMs",
+        "sessions"
+      ],
       "properties": {
-        "volumeBytes": { "type": "integer", "minimum": 1 },
-        "needBytes": { "type": "integer", "minimum": 0 },
-        "nowMs": { "type": "integer", "minimum": 0 },
-        "sessions": { "type": "array", "items": { "$ref": "#/definitions/Session" } }
+        "volumeBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "needBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Session"
+          }
+        }
       }
     },
     "Removal": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "bytes", "reason"],
+      "required": [
+        "path",
+        "bytes",
+        "reason"
+      ],
       "properties": {
-        "path": { "type": "string", "minLength": 1 },
-        "bytes": { "type": "integer", "minimum": 0 },
-        "reason": { "$ref": "#/definitions/Reason" }
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "$ref": "#/definitions/Reason"
+        }
       }
     },
     "Vector": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "input", "remove"],
+      "required": [
+        "name",
+        "input",
+        "remove"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1 },
-        "input": { "$ref": "#/definitions/Input" },
-        "remove": { "type": "array", "items": { "$ref": "#/definitions/Removal" } }
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "$ref": "#/definitions/Input"
+        },
+        "remove": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Removal"
+          }
+        }
+      }
+    },
+    "Discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directories",
+        "expected"
+      ],
+      "properties": {
+        "directories": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expected": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     }
   }

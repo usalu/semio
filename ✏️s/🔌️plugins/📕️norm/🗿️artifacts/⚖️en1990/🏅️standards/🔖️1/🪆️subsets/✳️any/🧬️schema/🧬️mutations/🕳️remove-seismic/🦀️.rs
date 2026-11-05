@@ -10,8 +10,8 @@ pub struct RemoveSeismic { pub index: usize, }
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for RemoveSeismic where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::insert_seismic::InsertSeismic> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "seismic", kind: "remove-seismic", record: "RemovedSeismic" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove seismic action", "Erdbebeneinwirkung entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove seismic action", "Erdbebeneinwirkung entfernen")
     }
 }
 

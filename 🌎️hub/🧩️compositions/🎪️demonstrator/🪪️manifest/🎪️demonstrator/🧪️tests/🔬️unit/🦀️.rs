@@ -108,15 +108,15 @@ fn contribution_consumers_declare_the_hidden_app_command() {
 
 fn assert_tree_reconciles(tree: ComponentTree, generation: u64, label: &str) {
     assert!(!tree.root.key.is_empty(), "{label} must contain an authored root");
-    let mut producer = semio_framework_ui_runtime::ComponentTreeProducer::try_new(tree.root, generation).expect("nonzero aggregate tree generation");
+    let mut producer = semio_ui_runtime::ComponentTreeProducer::try_new(tree.root, generation).expect("nonzero aggregate tree generation");
     for _ in 0..65_536 {
         match producer.step(generation, false, false) {
-            semio_framework_ui_runtime::ComponentTreeProducerStep::MoreWork => {}
-            semio_framework_ui_runtime::ComponentTreeProducerStep::Complete => {
+            semio_ui_runtime::ComponentTreeProducerStep::MoreWork => {}
+            semio_ui_runtime::ComponentTreeProducerStep::Complete => {
                 assert!(producer.take_complete().is_some(), "completed {label} tree transfers its exact owner");
                 return;
             }
-            semio_framework_ui_runtime::ComponentTreeProducerStep::Fault(fault) => panic!("{label} tree must enter retained reconciliation: {fault:?}"),
+            semio_ui_runtime::ComponentTreeProducerStep::Fault(fault) => panic!("{label} tree must enter retained reconciliation: {fault:?}"),
         }
     }
     panic!("{label} tree producer did not settle within its fixed bound");
@@ -124,8 +124,8 @@ fn assert_tree_reconciles(tree: ComponentTree, generation: u64, label: &str) {
 
 #[semio_framework_async_macros::async_test]
 async fn aggregate_runtime_renders_every_demonstrator_window() {
-    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::<DemonstratorApps>::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
-    semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, test_bundle());
+    let runtime = semio_plugin::plugin_runtime::PluginRuntime::<DemonstratorApps>::new(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
+    semio_plugin::plugin_runtime::install_plugin_bundle(&runtime, test_bundle());
     let apps: &[(&str, &[&str])] = &[
         ("s.procedural.generation3d@1/*#editor", &["procedural.play.main", "procedural.play.preview", "procedural.play.generations", "procedural.play.generate-form", "procedural.play.generate-preview"]),
         ("s.cad.cad@1/*#editor", &["cad.play.shape", "cad.play.building", "cad.play.energy", "cad.play.structure-classic"]),
@@ -134,13 +134,13 @@ async fn aggregate_runtime_renders_every_demonstrator_window() {
         ("s.process.process3d@1/*#editor", &["process.play.main"]),
         ("s.gis.gismap@1/*#editor", &["gis2d.play.composite"]),
     ];
-    let view_state = serde_json::to_string(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("aggregate view state serializes");
+    let view_state = serde_json::to_string(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("aggregate view state serializes");
     let mut generation = 1_u64;
     for (app_index, (app_id, body_keys)) in apps.iter().enumerate() {
         let instance_id = u32::try_from(app_index + 1).expect("six aggregate app instances");
-        semio_framework_plugin::plugin_runtime::plugin_create_app_with_id(&runtime, instance_id, app_id, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|fault| panic!("aggregate app {app_id} opens: {fault:?}"));
+        semio_plugin::plugin_runtime::plugin_create_app_with_id(&runtime, instance_id, app_id, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|fault| panic!("aggregate app {app_id} opens: {fault:?}"));
         for body_key in *body_keys {
-            let tree = semio_framework_plugin::plugin_runtime::plugin_render(&runtime, instance_id, body_key, &view_state).await.unwrap_or_else(|fault| panic!("aggregate body {body_key} renders: {fault:?}"));
+            let tree = semio_plugin::plugin_runtime::plugin_render(&runtime, instance_id, body_key, &view_state).await.unwrap_or_else(|fault| panic!("aggregate body {body_key} renders: {fault:?}"));
             assert_tree_reconciles(tree, generation, body_key);
             generation += 1;
         }

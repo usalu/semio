@@ -1,5 +1,5 @@
-use semio_framework_plugin_interpreter::*;
-use semio_framework_plugin_interpreter::testkit::*;
+use semio_plugin_interpreter::*;
+use semio_plugin_interpreter::testkit::*;
 use std::sync::Arc;
 use semio_framework_test_fixtures::fixture_text;
 

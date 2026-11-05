@@ -1,6 +1,6 @@
 //! 🔍️ Admitted XML identity and parent/ordinal row indexes preserve declared relations.
 use super::super::*;
-use semio_framework_os_kernel::sqlite_snapshot::transfer::reserve;
+use semio_os_kernel::sqlite_snapshot::transfer::reserve;
 pub(super) type Result<T> = std::result::Result<T, ValueError>;
 pub(super) fn invalid(message: &str) -> ValueError {
     ValueError::new(ValueRefusalKind::InvalidValue, message)
@@ -41,7 +41,7 @@ pub(super) struct Identities<'a> {
     pub(super) rows: Vec<&'a SqliteRow>,
 }
 impl<'a> Identities<'a> {
-    pub(super) fn new(table: &'a semio_framework_os_kernel::sqlite_snapshot::SqliteTable, width: usize, control: &mut SqliteSnapshotControl<'_>) -> Result<Self> {
+    pub(super) fn new(table: &'a semio_os_kernel::sqlite_snapshot::SqliteTable, width: usize, control: &mut SqliteSnapshotControl<'_>) -> Result<Self> {
         let mut rows = reserve(table.rows.len(), control)?;
         let mut work = 0;
         for row in &table.rows {

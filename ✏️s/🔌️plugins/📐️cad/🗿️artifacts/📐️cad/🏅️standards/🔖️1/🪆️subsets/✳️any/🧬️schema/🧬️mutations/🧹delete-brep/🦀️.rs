@@ -18,7 +18,7 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "brep", kind: "delete-brep", record: "DeletedBrep" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Delete topology child", "Topologie-Kind löschen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Delete topology child", "Topologie-Kind löschen") }
     fn target(&self) -> Vec<String> { vec![self.child_id.clone()] }
 }
 

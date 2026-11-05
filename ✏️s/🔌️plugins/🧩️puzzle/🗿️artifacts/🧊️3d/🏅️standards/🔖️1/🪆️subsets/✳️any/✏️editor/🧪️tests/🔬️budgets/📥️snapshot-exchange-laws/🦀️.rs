@@ -189,7 +189,7 @@ async fn import_snapshot_of_a_distinct_two_object_json_against_a_one_object_live
 /// law asserts the absence of a refusal as well as the presence of the edit.
 #[semio_framework_async_macros::async_test]
 async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_identity() {
-    let exported = |result: &semio_framework_plugin::InvocationResult| -> String {
+    let exported = |result: &semio_plugin::InvocationResult| -> String {
         result
             .requested_effects
             .iter()
@@ -199,7 +199,7 @@ async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_i
             })
             .expect("exportSnapshot emits one DownloadMediaExport")
     };
-    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+    let notices = |result: &semio_plugin::InvocationResult| -> Vec<String> {
         result
             .requested_effects
             .iter()
@@ -432,7 +432,7 @@ fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() 
     use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_segmented;
     use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_segmented_budget_bytes;
     use semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_OUTPUT_BYTES;
-    use semio_framework_plugin::app::ArtifactOutputChunks;
+    use semio_plugin::app::ArtifactOutputChunks;
     let budget = puzzle3d_export_segmented_budget_bytes().expect("the declared output budget is within the framework cap");
     assert_eq!(budget, PUZZLE_COMMAND_OUTPUT_BYTES, "the segmented budget IS this command's declared contract output budget");
     assert!(budget <= ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES, "no app may declare a download larger than the wire admits");

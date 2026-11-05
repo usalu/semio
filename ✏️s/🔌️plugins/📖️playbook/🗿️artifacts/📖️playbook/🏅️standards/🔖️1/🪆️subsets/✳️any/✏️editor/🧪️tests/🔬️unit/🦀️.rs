@@ -5,22 +5,22 @@ use crate::editor::playbook::modes::builder;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
 use crate::{steps_from_flow_content, PlaybookSnapshot, PlaybookSpec};
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::Media;
+use semio_plugin::MediaError;
+use semio_plugin::MediaPayload;
+use semio_plugin::SelectionMethod;
 use crate::editor::playbook::{PLAYBOOK_RETAINED_TOOL_IDS, PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS, PlaybookRetainedCommandJobFactory};
 pub(crate) mod context {
     use crate::editor::playbook::*;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, project_and_retire_fixture_tree, settle_history_verb, settle_registered_typed_operation};
-    use semio_framework_plugin::{App, EditorApp, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, project_and_retire_fixture_tree, settle_history_verb, settle_registered_typed_operation};
+    use semio_plugin::{App, EditorApp, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type MountedPlaybookApp = VcsArtifactApp<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
@@ -29,7 +29,7 @@ pub(crate) mod context {
     /// bounded close protocol on drop (`artifact store reached Drop without its exact terminal-empty
     /// shallow-shell witness`). A panicking test leaves the witness alone so its first failure stays reported.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct PlaybookApp(pub MountedPlaybookApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct PlaybookApp(pub MountedPlaybookApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for PlaybookApp {
         type Target = MountedPlaybookApp;
@@ -47,15 +47,15 @@ pub(crate) mod context {
     impl Drop for PlaybookApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
 
     /// 🧪️ A bound app instance with its concrete command registry, retained job proofs and composed member roster.
     pub async fn playbook_app() -> PlaybookApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_and_members::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(playbook_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry_and_members::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(playbook_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         PlaybookApp(app, scope)
     }
@@ -66,9 +66,9 @@ pub(crate) mod context {
         App { definition: create_playbook_play_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, "../..");
-    semio_framework_plugin::composed_reload_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, "../..");
-    semio_framework_plugin::composed_child_history_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, [("addStep", "{}"), ("addBlock", r#"{"kind":"number"}"#)]);
+    semio_plugin::history_edit_acceptance_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, "../..");
+    semio_plugin::composed_reload_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, "../..");
+    semio_plugin::composed_child_history_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, [("addStep", "{}"), ("addBlock", r#"{"kind":"number"}"#)]);
 
     /// 🧩️ The LIVE playbook, composed from the parent projection and the `flow` CHILD store — the surface every step/block verb
     /// publishes on (the parent only carries the child's coordinate, design §20.15).
@@ -84,13 +84,13 @@ pub(crate) mod context {
     /// 🚚️ Dispatches one typed command, settles its retained operation and applies any `LoadDocument`
     /// effect exactly as the host would; a mounted app's `result.mutations` is always empty.
     pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained playbook operation settles");
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained playbook operation settles");
         result.requested_effects.extend(receipt.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
+                semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -98,18 +98,18 @@ pub(crate) mod context {
 
     /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) through admission, commit and publication.
     pub async fn history_verb(app: &mut PlaybookApp, action: &str) {
-        settle_history_verb(&mut app.0, action, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        settle_history_verb(&mut app.0, action, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
     pub async fn render(app: &mut PlaybookApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
     }
 }
 
 use crate::editor::playbook::*;
 use crate::editor::playbook::unit_tests::context::{dispatch, live_spec, playbook_app};
-use semio_framework_plugin::artifact_app_laws;
-use semio_framework_plugin::{MediaClass, MediaForm, PluginApp};
+use semio_plugin::artifact_app_laws;
+use semio_plugin::{MediaClass, MediaForm, PluginApp};
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -233,7 +233,7 @@ async fn interaction_topology_covers_every_step_and_block() {
     dispatch(&mut app, PlaybookCommand::AddBlock(add_block::AddBlock { kind: "text".into(), step_id: Some(step_id.clone()) })).await;
     let block_id = live_spec(&app).await.steps[1].blocks[0].id.clone();
     let spec = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let cfg = PlaybookConfig::default();
     let doc = ArtifactView::with_children(&spec, &history, app.test_child_content_view());
     let topology = PlaybookPlayApp::interaction_topology(&doc, &ConfigView { snapshot: &cfg, window: None }).expect("composed interaction topology");
@@ -246,7 +246,7 @@ async fn interaction_topology_covers_every_step_and_block() {
 #[test]
 fn interaction_topology_refuses_an_uncomposed_flow_child() {
     let spec = crate::empty_playbook_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let cfg = PlaybookConfig::default();
     let error = PlaybookPlayApp::interaction_topology(&ArtifactView::new(&spec, &history), &ConfigView { snapshot: &cfg, window: None }).expect_err("no composed child");
     assert!(error.to_string().contains("playbook.flow.unavailable"), "{error}");
@@ -263,7 +263,7 @@ fn interaction_topology_refuses_an_uncomposed_flow_child() {
 /// ever dropped again — a declaration-only assertion would not catch a regression in `local_read`.
 #[semio_framework_async_macros::async_test]
 async fn set_contributions_boots_because_presence_declares_its_retirement_owners() {
-    use semio_framework_plugin::ArtifactApp;
+    use semio_plugin::ArtifactApp;
 
     assert!(
         <EditorApp<PlaybookPlayApp> as ArtifactApp>::build_presence_local_root_retirement_factory().is_some(),
@@ -275,9 +275,9 @@ async fn set_contributions_boots_because_presence_declares_its_retirement_owners
     );
 
     let mut app = playbook_app().await;
-    let outcome = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }), &artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    let outcome = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }), &artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert!(outcome.is_ok(), "setContributions must not be refused at boot: {:?}", outcome.err());
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("setContributions publishes");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, artifact_app_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("setContributions publishes");
 }
 
 /// ↩️ Spelled out over the `flow` child (the law helper's probe is a synchronous closure over the parent projection, which
@@ -307,19 +307,19 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 /// measured on the `flow` child, since neither edit touches the parent projection.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+    use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     let mut instance_a = playbook_app().await;
     let mut instance_b = playbook_app().await;
     let (backbone_a, backbone_b) = store::os_store::backbone::MemoryBackbone::pair("mem://playbook-convergence", "mem://playbook-convergence").await;
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let receiver = meta("actor-a").instance_id;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &PlaybookCommand::AddStep(add_step::AddStep {}), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &PlaybookCommand::AddStep(add_step::AddStep {}), &meta("actor-a"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }), &meta("actor-b"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut instance_b.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     let shape = |spec: crate::PlaybookSpec| spec.steps.iter().map(|step| (step.id.clone(), step.blocks.len())).collect::<Vec<_>>();
     let converged = shape(live_spec(&instance_a).await);
     assert_eq!(converged, shape(live_spec(&instance_b).await), "both instances must converge on the same composed playbook");
@@ -342,7 +342,7 @@ async fn playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind() {
 
 fn chapter_media(text: &str, title: &str) -> Media {
     let payload = PlaybookChapterPayload { id: "jack".into(), title: title.into(), text: text.into(), language_id: "jack".into() };
-    Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: semio_framework_pack_json::to_json_string(&payload) } }
+    Media { media_type: semio_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: semio_framework_pack_json::to_json_string(&payload) } }
 }
 
 /// 🎞️ The first import creates the `imported` step WITH its note block as ONE `flow` child edit (node + chain edge); the
@@ -351,14 +351,14 @@ fn chapter_media(text: &str, title: &str) -> Media {
 async fn import_media_creates_the_imported_step_on_the_flow_child() {
     let app = playbook_app().await;
     let spec = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let mut emit = PlaybookPlayApp::import_media("chapters:in", &chapter_media("MATCH (a) RETURN a", "Jack Query"), &ArtifactView::with_children(&spec, &history, app.test_child_content_view())).expect("import chapters:in");
     let mut prepared=false;
     for _ in 0..4096{
         match emit.prepare_child_one(1,65536).expect("bounded real child preparation"){
-            semio_framework_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
-            semio_framework_plugin::app::ChildEmitPreparationStep::Pending=>{},
-            semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
+            semio_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
+            semio_plugin::app::ChildEmitPreparationStep::Pending=>{},
+            semio_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
         }
     }
     assert!(prepared,"closed fixture child prefix must complete within its authored bound");
@@ -372,10 +372,10 @@ async fn import_media_creates_the_imported_step_on_the_flow_child() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_rejects_unknown_ports_and_malformed_payloads() {
     let spec = crate::empty_playbook_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc_view = ArtifactView::new(&spec, &history);
     assert!(matches!(PlaybookPlayApp::import_media("nonsense:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::NotImplemented)));
-    let bad_media = Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: "not json".into() } };
+    let bad_media = Media { media_type: semio_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: "not json".into() } };
     assert!(matches!(PlaybookPlayApp::import_media("chapters:in", &bad_media, &doc_view), Err(MediaError::Payload(..))));
     assert!(matches!(PlaybookPlayApp::import_media("chapters:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::Payload(..))), "an uncomposed flow child refuses the import");
 }
@@ -391,7 +391,7 @@ async fn import_media_rejects_unknown_ports_and_malformed_payloads() {
 /// been driven to terminal-empty through a real store, which an existence check has none of.
 #[test]
 fn every_retained_tool_id_is_migrated_contracted_and_backed_by_store_owners() {
-    use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory};
+    use semio_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory};
     assert_eq!(PLAYBOOK_RETAINED_TOOL_IDS.len(), PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS.len());
     for tool_id in PLAYBOOK_RETAINED_TOOL_IDS {
         assert!(PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id), "{tool_id} has no publication contract");
@@ -414,7 +414,7 @@ fn every_retained_tool_id_is_migrated_contracted_and_backed_by_store_owners() {
 /// every id with `app.command.unsupported` and no Builder palette row could reach `dispatch`.
 #[test]
 fn command_from_action_resolves_every_declared_verb() {
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     for tool_id in PLAYBOOK_RETAINED_TOOL_IDS {
         let command = PlaybookPlayApp::command_from_action(tool_id, None, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
         assert_eq!(command.command_id(), *tool_id);
@@ -427,7 +427,7 @@ fn command_from_action_resolves_every_declared_verb() {
 /// foreign id is never answered. Six structural verbs publish on the `Child` lane only.
 #[test]
 fn set_active_example_is_host_only_and_the_flow_child_mints_its_genesis_pack() {
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     assert!(PLAYBOOK_RETAINED_TOOL_IDS.contains(&"setActiveExample"), "the example verb must be a retained tool or the dispatch gate refuses it");
     let contract = PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == "setActiveExample").expect("setActiveExample has a publication contract");
     assert_eq!(contract.lanes, &[ArtifactToolPublicationLane::HostOnly], "a whole-document load publishes through neither the artifact nor the config store");
@@ -453,13 +453,13 @@ fn set_active_example_is_host_only_and_the_flow_child_mints_its_genesis_pack() {
 /// 📣️ Every refusal code this artifact raises has an en and de notice (design §20.12).
 #[test]
 fn every_playbook_refusal_code_has_a_localized_notice() {
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     let notices = PlaybookPlayApp::fault_notices();
     assert_eq!(notices.len(), 7);
     for (code, label) in notices {
         assert!(code.starts_with("playbook.") && code.split('.').count() == 3, "{code} is a three-segment playbook code");
-        for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
-            assert!(!label.resolve(semio_framework_ui_locale::Terminology::Native, locale).is_empty(), "{code} has a {locale:?} notice");
+        for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+            assert!(!label.resolve(semio_ui_locale::Terminology::Native, locale).is_empty(), "{code} has a {locale:?} notice");
         }
     }
 }

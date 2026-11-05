@@ -1,14 +1,14 @@
-use semio_framework_os_kernel::Viewport2d;
+use semio_os_kernel::Viewport2d;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
 use crate::{FlowMutation, FlowSnapshot};
 #[allow(unused_imports)]
 use flow::FlowEvalSession;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::node_graph_viewport::*;
@@ -16,8 +16,8 @@ use crate::editor::flow::unit_tests::context::{dispatch, flow_app, render, settl
 use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 use serde_json::{json, Value};
 
-async fn node_graph_scene(app: &mut FlowAppFixture) -> semio_framework_ui_declaration::ui::NodeGraphScene {
-    semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&render(app, FLOW_PLAY_BODY_MAIN).await).expect("rendered nodeGraph scene")
+async fn node_graph_scene(app: &mut FlowAppFixture) -> semio_ui_declaration::ui::NodeGraphScene {
+    semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&render(app, FLOW_PLAY_BODY_MAIN).await).expect("rendered nodeGraph scene")
 }
 
 async fn preview_off_ids(app: &mut FlowAppFixture) -> Value {
@@ -40,7 +40,7 @@ async fn set_preview_off_toggles_ids_on_and_off_the_scene() {
 async fn node_graph_viewport_moves_the_camera() {
     let mut app = flow_app().await;
     let before = node_graph_scene(&mut app).await.viewport;
-    dispatch(&mut app, FlowCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 30.0, y: -12.0, zoom: 2.0 } })).await;
+    dispatch(&mut app, FlowCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: 30.0, y: -12.0, zoom: 2.0 } })).await;
     settle(&mut app).await;
     let after = node_graph_scene(&mut app).await.viewport.expect("Flow main scene publishes its authored viewport");
     assert_ne!(before, Some(after), "the retained viewport publication changes the authored camera");

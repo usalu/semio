@@ -17,8 +17,8 @@ pub struct ChangeColumnLengthM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnLengthM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_length_m::ChangeColumnLengthM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-length-m", kind: "change-column-length-m", record: "ChangedColumnLengthM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change column length", "Stützenlänge ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change column length", "Stützenlänge ändern")
     }
 }
 

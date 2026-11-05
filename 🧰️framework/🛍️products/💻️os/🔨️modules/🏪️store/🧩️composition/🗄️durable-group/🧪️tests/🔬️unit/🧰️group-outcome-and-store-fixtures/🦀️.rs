@@ -4,8 +4,8 @@ fn fixture() -> serde_json::Value {
     serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🔣️.json")).expect("durable group fixture")
 }
 
-fn copy_grant(bytes: usize) -> semio_framework_os_store_one_item::ArtifactStoreOneItemGrant {
-    semio_framework_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
+fn copy_grant(bytes: usize) -> semio_os_store_one_item::ArtifactStoreOneItemGrant {
+    semio_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
 }
 
 fn hex(value: &str) -> Vec<u8> {
@@ -68,15 +68,15 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
         actor: Some(actor.clone()),
         forwards: vec![format!("{role}:forward")],
         inverse: vec![format!("{role}:inverse")].into(),
-        mutation_meta: vec![semio_framework_os_spr::MutationMeta {
-            mutation_id: Some(semio_framework_os_spr::MutationId(format!("{edit_id}#0"))),
+        mutation_meta: vec![semio_os_spr::MutationMeta {
+            mutation_id: Some(semio_os_spr::MutationId(format!("{edit_id}#0"))),
             dependencies: Vec::new(),
             base_version: generation,
-            author_id: Some(semio_framework_os_spr::ActorId(actor)),
+            author_id: Some(semio_os_spr::ActorId(actor)),
             timestamp: next_clock,
-            undo_policy: semio_framework_os_spr::UndoPolicy::ExactBaseOnly,
+            undo_policy: semio_os_spr::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
-            semantic_kind: Some(semio_framework_os_spr::SchemaId(recovery_schema.into())),
+            semantic_kind: Some(semio_os_spr::SchemaId(recovery_schema.into())),
             label: Some(format!("prepare {role}")),
             group_id: None,
             origin: Default::default(),
@@ -119,10 +119,10 @@ fn decision() -> DurableOwnedThreeMemberDecisionV1 {
 }
 
 async fn owned_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<OwnerRef>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    let mut envelope = semio_framework_os_store_document::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut envelope = semio_os_store_document::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let mut store = ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, semio_framework_os_spr::ActorId(fixture()["openedActor"].as_str().expect("declared opened group actor").into())).await.expect("owned group fixture Store");
+    let mut store = ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, semio_os_spr::ActorId(fixture()["openedActor"].as_str().expect("declared opened group actor").into())).await.expect("owned group fixture Store");
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store
 }
@@ -153,15 +153,15 @@ let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal
         actor: Some(actor.clone()),
         forwards: vec![DemoMutation::SetN(SetN { n: next })],
         inverse: vec![DemoMutation::SetN(SetN { n: store.snapshot_ref().n.unwrap_or_default() })].into(),
-        mutation_meta: vec![semio_framework_os_spr::MutationMeta {
-            mutation_id: Some(semio_framework_os_spr::MutationId(format!("{edit_id}#0"))),
-            dependencies: (0..valid_dependencies).map(|index|semio_framework_os_spr::MutationId(format!("dependency-{index}"))).chain(invalid_dependency.map(|value|semio_framework_os_spr::MutationId(value.into()))).collect(),
+        mutation_meta: vec![semio_os_spr::MutationMeta {
+            mutation_id: Some(semio_os_spr::MutationId(format!("{edit_id}#0"))),
+            dependencies: (0..valid_dependencies).map(|index|semio_os_spr::MutationId(format!("dependency-{index}"))).chain(invalid_dependency.map(|value|semio_os_spr::MutationId(value.into()))).collect(),
             base_version: store.cursor.generation,
-            author_id: Some(semio_framework_os_spr::ActorId(actor)),
+            author_id: Some(semio_os_spr::ActorId(actor)),
             timestamp: next_clock,
-            undo_policy: semio_framework_os_spr::UndoPolicy::ExactBaseOnly,
+            undo_policy: semio_os_spr::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
-            semantic_kind: Some(semio_framework_os_spr::SchemaId(format!("map-role-{ordinal}"))),
+            semantic_kind: Some(semio_os_spr::SchemaId(format!("map-role-{ordinal}"))),
             label: Some(format!("durable map member {ordinal}")),
             group_id: None,
             origin: Default::default(),
@@ -191,11 +191,11 @@ fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutatio
     for turn in 0..law["storeClosure"]["maximumTurns"].as_u64().unwrap() {
         let demand = store.close_owned_demands(body).expect("durable fixture quotes original close frontier");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let step = semio_framework_os_store_space_member::lifted_store::SpaceMember::close_owned_step(store, grant).expect("durable group fixture Store closes under its bounded owner grant");
+        let step = semio_os_store_space_member::lifted_store::SpaceMember::close_owned_step(store, grant).expect("durable group fixture Store closes under its bounded owner grant");
                 assert!(step.progress().fits(grant));
         assert!(step.progress() != Default::default() || matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)), "quoted fixture Store close blocked: {demand:?}, phase={}, displaced={}", store.close_owned_phase_witness(), store.close_displaced_witness());
 if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
-            assert!(semio_framework_os_store_space_member::lifted_store::SpaceMember::close_owned_terminal_is_empty(store));
+            assert!(semio_os_store_space_member::lifted_store::SpaceMember::close_owned_terminal_is_empty(store));
 return;
         }
     }
@@ -205,12 +205,12 @@ return;
 async fn assert_erased_snapshot_authority(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, expected: i32) {
     let generation = store.generation();
     let revision = store.content_revision();
-    let read = semio_framework_os_store_space_member::lifted_store::SpaceMember::snapshot_read_erased(store).await.expect("erased group read publishes its selected authority");
+    let read = semio_os_store_space_member::lifted_store::SpaceMember::snapshot_read_erased(store).await.expect("erased group read publishes its selected authority");
     assert_eq!(read.typed::<DemoSnapshot>().expect("erased group read retains the exact snapshot type").n, Some(expected));
     assert!(store.owners.snapshot_read_leases.authority_matches(generation, revision));
     let mut read = Some(read);
     let birth = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: 4096, maximum_depth: 64 };
-    let (retirement, _) = semio_framework_os_store_space_member::lifted_store::SpaceMember::retire_snapshot_read_erased(store, &mut read, birth).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
+    let (retirement, _) = semio_os_store_space_member::lifted_store::SpaceMember::retire_snapshot_read_erased(store, &mut read, birth).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
     let mut retirement = retirement.expect("erased group read retirement is born under its funded grant");
     for _ in 0..4096 {
         if matches!(retirement.close_step(semio_framework_value::testing::physical_test_close_grant()).result.expect("erased group read retirement remains infallible"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
@@ -228,7 +228,7 @@ fn bound_three(
 ) -> DurableOwnedThreeStoreBoundV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation> {
     let mut prepared = DurableOwnedThreeStorePreparedV1::from_store_prepared(store_prepared(parent, 1, 7), store_prepared(drawing, 2, 11), store_prepared(value, 3, 13))
         .expect("Store owns exactly three unbound candidates");
-    let store_grant = semio_framework_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: usize::MAX / 2, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: usize::MAX / 2, maximum_depth: 64 };
+    let store_grant = semio_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: usize::MAX / 2, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: usize::MAX / 2, maximum_depth: 64 };
     let mut admitted = |_| true;
     let mut native = semio_framework_value::NativeEncodeControl::new(usize::MAX / 2, &mut admitted);
     for _ in 0..4096 {

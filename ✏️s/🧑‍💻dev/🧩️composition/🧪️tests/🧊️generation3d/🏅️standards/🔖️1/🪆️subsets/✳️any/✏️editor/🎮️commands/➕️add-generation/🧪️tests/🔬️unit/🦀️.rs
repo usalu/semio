@@ -2,14 +2,14 @@ use super::*;
 use semio_s_artifact_procedural_3d_editor_commands::select_generation;
 use crate::editor_domain::editor_laws::context::{app, dispatch};
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
-use semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip;
+use semio_plugin::artifact_app_laws::assert_undo_redo_round_trip;
 use crate::editor_domain::editor_laws::context;
 
 #[semio_framework_async_macros::async_test]
 async fn add_generation_records_an_undoable_generation_operation() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
-    assert_undo_redo_round_trip(&mut app.0, Generation3dCommand::AddGeneration(AddGeneration {}), |app| context::snapshot(&app).generation.generations.len(), 0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    assert_undo_redo_round_trip(&mut app.0, Generation3dCommand::AddGeneration(AddGeneration {}), |app| context::snapshot(&app).generation.generations.len(), 0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]

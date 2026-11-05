@@ -106,7 +106,7 @@ pub fn active_request_bytes() -> usize {
     STATE.with(|slot| slot.get().observation.bytes)
 }
 
-use semio_framework_os_kernel::{
+use semio_os_kernel::{
     os_store::serialization::ArtifactSqliteSnapshotHost,
     sqlite_snapshot::{SqliteDatabase, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
 };
@@ -218,7 +218,7 @@ pub fn verify_snapshot_failure_backing<T: ArtifactSqliteSnapshotHost>(snapshot: 
         }
         for interior in [false, true] {
             let mut reached = false;
-            let mut callback = |event: semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress| {
+            let mut callback = |event: semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress| {
                 if !interior || (event.phase == phase && event.completed >= cancel_at && event.completed < event.total && active_request_bytes() > 0) {
                     reached = true;
                     false

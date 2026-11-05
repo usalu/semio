@@ -4,7 +4,7 @@
     "version": 1,
     "kind": "cargo-executable",
     "manifest": "Cargo.toml",
-    "package": "semio-framework-os-mcp",
+    "package": "semio-os-mcp",
     "binary": "semio-os-mcp",
     "sourcesRecord": "semio-os-mcp.sources.json"
   },
@@ -140,7 +140,7 @@
         "version": 1,
         "kind": "cargo-executable",
         "manifest": "Cargo.toml",
-        "package": "semio-framework-os-mcp",
+        "package": "semio-os-mcp",
         "binary": "semio-os-mcp",
         "sourcesRecord": "semio-os-mcp.sources.json"
       },
@@ -152,7 +152,7 @@
         "version": 1,
         "kind": "cargo-executable",
         "manifest": "/outside/Cargo.toml",
-        "package": "semio-framework-os-mcp",
+        "package": "semio-os-mcp",
         "binary": "semio-os-mcp"
       },
       "valid": false
@@ -163,7 +163,7 @@
         "version": 1,
         "kind": "cargo-executable",
         "manifest": "C:/Cargo.toml",
-        "package": "semio-framework-os-mcp",
+        "package": "semio-os-mcp",
         "binary": "semio-os-mcp"
       },
       "valid": false
@@ -174,7 +174,7 @@
         "version": 1,
         "kind": "cargo-executable",
         "manifest": "x:y/Cargo.toml",
-        "package": "semio-framework-os-mcp",
+        "package": "semio-os-mcp",
         "binary": "semio-os-mcp"
       },
       "valid": false
@@ -185,7 +185,7 @@
         "version": 1,
         "kind": "cargo-executable",
         "manifest": "../Cargo.toml",
-        "package": "semio-framework-os-mcp",
+        "package": "semio-os-mcp",
         "binary": "semio-os-mcp"
       },
       "valid": false
@@ -196,7 +196,7 @@
         "version": 1,
         "kind": "cargo-executable",
         "manifest": "\\\\server\\share\\Cargo.toml",
-        "package": "semio-framework-os-mcp",
+        "package": "semio-os-mcp",
         "binary": "semio-os-mcp"
       },
       "valid": false
@@ -207,7 +207,7 @@
         "version": 1,
         "kind": "cargo-executable",
         "manifest": "Cargo.toml",
-        "package": "semio-framework-os-mcp",
+        "package": "semio-os-mcp",
         "binary": "semio-os-mcp",
         "sourcesRecord": "../sources.json"
       },

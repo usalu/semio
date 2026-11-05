@@ -12,8 +12,8 @@ pub struct ChangeCellarArea {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeCellarArea where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_cellar_area::ChangeCellarArea> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cellar-area", kind: "change-cellar-area", record: "ChangeCellarArea" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change cellar floor area", "Kellergrundfläche ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change cellar floor area", "Kellergrundfläche ändern")
     }
 }
 

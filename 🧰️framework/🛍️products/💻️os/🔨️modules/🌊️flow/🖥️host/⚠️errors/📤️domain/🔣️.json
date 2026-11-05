@@ -1,0 +1,404 @@
+{
+  "cases": [
+    {
+      "id": "json",
+      "variant": "Json",
+      "value": "malformed {\"λ\":",
+      "expected": {
+        "variant": "json",
+        "value": "malformed {\"λ\":"
+      },
+      "code": "flow.json"
+    },
+    {
+      "id": "widgetIdExists",
+      "variant": "WidgetIdExists",
+      "value": "original Grüße 東京 1",
+      "expected": {
+        "variant": "widgetIdExists",
+        "value": "original Grüße 東京 1"
+      },
+      "code": "flow.widget-id-exists"
+    },
+    {
+      "id": "unknownWidget",
+      "variant": "UnknownWidget",
+      "value": "original Grüße 東京 2",
+      "expected": {
+        "variant": "unknownWidget",
+        "value": "original Grüße 東京 2"
+      },
+      "code": "flow.unknown-widget"
+    },
+    {
+      "id": "unknownNeuronWidget",
+      "variant": "UnknownNeuronWidget",
+      "value": "original Grüße 東京 3",
+      "expected": {
+        "variant": "unknownNeuronWidget",
+        "value": "original Grüße 東京 3"
+      },
+      "code": "flow.unknown-neuron-widget"
+    },
+    {
+      "id": "notVariadicInput",
+      "variant": "NotVariadicInput",
+      "value": "original Grüße 東京 4",
+      "expected": {
+        "variant": "notVariadicInput",
+        "value": "original Grüße 東京 4"
+      },
+      "code": "flow.not-variadic-input"
+    },
+    {
+      "id": "notVariadicOutput",
+      "variant": "NotVariadicOutput",
+      "value": "original Grüße 東京 5",
+      "expected": {
+        "variant": "notVariadicOutput",
+        "value": "original Grüße 東京 5"
+      },
+      "code": "flow.not-variadic-output"
+    },
+    {
+      "id": "notNeuron",
+      "variant": "NotNeuron",
+      "value": "original Grüße 東京 6",
+      "expected": {
+        "variant": "notNeuron",
+        "value": "original Grüße 東京 6"
+      },
+      "code": "flow.not-neuron"
+    },
+    {
+      "id": "widgetNotNeuron",
+      "variant": "WidgetNotNeuron",
+      "value": "original Grüße 東京 7",
+      "expected": {
+        "variant": "widgetNotNeuron",
+        "value": "original Grüße 東京 7"
+      },
+      "code": "flow.widget-not-neuron"
+    },
+    {
+      "id": "maxInputPortsReached",
+      "variant": "MaxInputPortsReached",
+      "value": "original Grüße 東京 8",
+      "expected": {
+        "variant": "maxInputPortsReached",
+        "value": "original Grüße 東京 8"
+      },
+      "code": "flow.max-input-ports-reached"
+    },
+    {
+      "id": "maxOutputPortsReached",
+      "variant": "MaxOutputPortsReached",
+      "value": "original Grüße 東京 9",
+      "expected": {
+        "variant": "maxOutputPortsReached",
+        "value": "original Grüße 東京 9"
+      },
+      "code": "flow.max-output-ports-reached"
+    },
+    {
+      "id": "unknownInputPort",
+      "variant": "UnknownInputPort",
+      "value": "original Grüße 東京 10",
+      "expected": {
+        "variant": "unknownInputPort",
+        "value": "original Grüße 東京 10"
+      },
+      "code": "flow.unknown-input-port"
+    },
+    {
+      "id": "unknownOutputPort",
+      "variant": "UnknownOutputPort",
+      "value": "original Grüße 東京 11",
+      "expected": {
+        "variant": "unknownOutputPort",
+        "value": "original Grüße 東京 11"
+      },
+      "code": "flow.unknown-output-port"
+    },
+    {
+      "id": "noOutputPort",
+      "variant": "NoOutputPort",
+      "value": "original Grüße 東京 12",
+      "expected": {
+        "variant": "noOutputPort",
+        "value": "original Grüße 東京 12"
+      },
+      "code": "flow.no-output-port"
+    },
+    {
+      "id": "noInputPort",
+      "variant": "NoInputPort",
+      "value": "original Grüße 東京 13",
+      "expected": {
+        "variant": "noInputPort",
+        "value": "original Grüße 東京 13"
+      },
+      "code": "flow.no-input-port"
+    },
+    {
+      "id": "unknownSynapse",
+      "variant": "UnknownSynapse",
+      "value": "original Grüße 東京 14",
+      "expected": {
+        "variant": "unknownSynapse",
+        "value": "original Grüße 東京 14"
+      },
+      "code": "flow.unknown-synapse"
+    },
+    {
+      "id": "unknownWidgetLayout",
+      "variant": "UnknownWidgetLayout",
+      "value": "original Grüße 東京 15",
+      "expected": {
+        "variant": "unknownWidgetLayout",
+        "value": "original Grüße 東京 15"
+      },
+      "code": "flow.unknown-widget-layout"
+    },
+    {
+      "id": "unknownCluster",
+      "variant": "UnknownCluster",
+      "value": "original Grüße 東京 16",
+      "expected": {
+        "variant": "unknownCluster",
+        "value": "original Grüße 東京 16"
+      },
+      "code": "flow.unknown-cluster"
+    },
+    {
+      "id": "widgetNotCluster",
+      "variant": "WidgetNotCluster",
+      "value": "original Grüße 東京 17",
+      "expected": {
+        "variant": "widgetNotCluster",
+        "value": "original Grüße 東京 17"
+      },
+      "code": "flow.widget-not-cluster"
+    },
+    {
+      "id": "unknownSharedPayload",
+      "variant": "UnknownSharedPayload",
+      "value": "original Grüße 東京 18",
+      "expected": {
+        "variant": "unknownSharedPayload",
+        "value": "original Grüße 東京 18"
+      },
+      "code": "flow.unknown-shared-payload"
+    },
+    {
+      "id": "historyRefused",
+      "variant": "HistoryRefused",
+      "value": "original Grüße 東京 19",
+      "expected": {
+        "variant": "historyRefused",
+        "value": "original Grüße 東京 19"
+      },
+      "code": "flow.history-refused"
+    },
+    {
+      "id": "selfConnection",
+      "variant": "SelfConnection",
+      "expected": {
+        "variant": "selfConnection"
+      },
+      "code": "flow.self-connection"
+    },
+    {
+      "id": "selfInsertion",
+      "variant": "SelfInsertion",
+      "expected": {
+        "variant": "selfInsertion"
+      },
+      "code": "flow.self-insertion"
+    },
+    {
+      "id": "cycleWouldBeCreated",
+      "variant": "CycleWouldBeCreated",
+      "expected": {
+        "variant": "cycleWouldBeCreated"
+      },
+      "code": "flow.cycle-would-be-created"
+    },
+    {
+      "id": "connectionAlreadyExists",
+      "variant": "ConnectionAlreadyExists",
+      "expected": {
+        "variant": "connectionAlreadyExists"
+      },
+      "code": "flow.connection-already-exists"
+    },
+    {
+      "id": "collapseNeedsTwoWidgets",
+      "variant": "CollapseNeedsTwoWidgets",
+      "expected": {
+        "variant": "collapseNeedsTwoWidgets"
+      },
+      "code": "flow.collapse-needs-two-widgets"
+    },
+    {
+      "id": "collapseUnknownWidgets",
+      "variant": "CollapseUnknownWidgets",
+      "expected": {
+        "variant": "collapseUnknownWidgets"
+      },
+      "code": "flow.collapse-unknown-widgets"
+    },
+    {
+      "id": "collapseContainsClusters",
+      "variant": "CollapseContainsClusters",
+      "expected": {
+        "variant": "collapseContainsClusters"
+      },
+      "code": "flow.collapse-contains-clusters"
+    },
+    {
+      "id": "minInputPorts",
+      "variant": "MinInputPorts",
+      "widget": "ports 🌊",
+      "min": 0,
+      "expected": {
+        "variant": "minInputPorts",
+        "widget": "ports 🌊",
+        "min": 0
+      },
+      "code": "flow.min-input-ports"
+    },
+    {
+      "id": "minOutputPorts",
+      "variant": "MinOutputPorts",
+      "widget": "ports 🌊",
+      "min": 4294967295,
+      "expected": {
+        "variant": "minOutputPorts",
+        "widget": "ports 🌊",
+        "min": 4294967295
+      },
+      "code": "flow.min-output-ports"
+    },
+    {
+      "id": "incompatiblePortTypes",
+      "variant": "IncompatiblePortTypes",
+      "source": "source@out",
+      "sourceType": "list<λ>",
+      "target": "target@input",
+      "targetType": "integer",
+      "expected": {
+        "variant": "incompatiblePortTypes",
+        "source": "source@out",
+        "sourceType": "list<λ>",
+        "target": "target@input",
+        "targetType": "integer"
+      },
+      "code": "flow.incompatible-port-types"
+    },
+    {
+      "id": "dag-snapshotRootNotObject",
+      "variant": "Dag",
+      "dagVariant": "SnapshotRootNotObject",
+      "expected": {
+        "variant": "dag",
+        "dag": {
+          "variant": "snapshotRootNotObject"
+        }
+      },
+      "code": "flow.dag"
+    },
+    {
+      "id": "dag-schemaMismatch",
+      "variant": "Dag",
+      "dagVariant": "SchemaMismatch",
+      "expected": {
+        "variant": "dag",
+        "dag": {
+          "variant": "schemaMismatch"
+        }
+      },
+      "code": "flow.dag"
+    },
+    {
+      "id": "dag-nodesMissing",
+      "variant": "Dag",
+      "dagVariant": "NodesMissing",
+      "expected": {
+        "variant": "dag",
+        "dag": {
+          "variant": "nodesMissing"
+        }
+      },
+      "code": "flow.dag"
+    },
+    {
+      "id": "dag-unknownAlignMode",
+      "variant": "Dag",
+      "dagVariant": "UnknownAlignMode",
+      "value": "nested 原本 UnknownAlignMode",
+      "expected": {
+        "variant": "dag",
+        "dag": {
+          "variant": "unknownAlignMode",
+          "value": "nested 原本 UnknownAlignMode"
+        }
+      },
+      "code": "flow.dag"
+    },
+    {
+      "id": "dag-unknownWidget",
+      "variant": "Dag",
+      "dagVariant": "UnknownWidget",
+      "value": "nested 原本 UnknownWidget",
+      "expected": {
+        "variant": "dag",
+        "dag": {
+          "variant": "unknownWidget",
+          "value": "nested 原本 UnknownWidget"
+        }
+      },
+      "code": "flow.dag"
+    },
+    {
+      "id": "dag-canvasTheme",
+      "variant": "Dag",
+      "dagVariant": "CanvasTheme",
+      "value": "nested 原本 CanvasTheme",
+      "expected": {
+        "variant": "dag",
+        "dag": {
+          "variant": "canvasTheme",
+          "value": "nested 原本 CanvasTheme"
+        }
+      },
+      "code": "flow.dag"
+    },
+    {
+      "id": "dag-gridFactorOutOfRange",
+      "variant": "Dag",
+      "dagVariant": "GridFactorOutOfRange",
+      "expected": {
+        "variant": "dag",
+        "dag": {
+          "variant": "gridFactorOutOfRange"
+        }
+      },
+      "code": "flow.dag"
+    },
+    {
+      "id": "dag-json",
+      "variant": "Dag",
+      "dagVariant": "Json",
+      "value": "nested 原本 Json",
+      "expected": {
+        "variant": "dag",
+        "dag": {
+          "variant": "json",
+          "value": "nested 原本 Json"
+        }
+      },
+      "code": "flow.dag"
+    }
+  ]
+}

@@ -63,7 +63,7 @@ const HOST_ENGINE_HANDLE_TYPES: Readonly<Record<string, string>> = {
 // per-call/per-document from a fixture/snapshot, own no cache/arena/budget/connection to shared
 // process-lifetime state) are excluded on the same "plain data, not a handle" ground. Also deliberately
 // excludes the OS-crate host types (`ArtifactHost`, `SpaceHost`, `PluginHost`, `BackboneWorkerHost`,
-// `WasmtimeNodeHost`) — those live inside `semio-framework-os`, already a blanket-forbidden dependency
+// `WasmtimeNodeHost`) — those live inside `semio-os`, already a blanket-forbidden dependency
 // under `PluginCapabilityLintScript`'s `depRules`, so a plugin reaching them is already caught (coarser,
 // but caught) there; adding them here would be redundant noise, not a new gap. And excludes bare
 // `NativeHost`/`WasmHost`/`TestHost` — confirmed by inspection to be generic actor-model types a plugin

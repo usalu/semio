@@ -7,7 +7,7 @@ use semio_s_artifact_bim_model_plan_linework::render::plan::scene;
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -46,13 +46,13 @@ pub fn definition() -> WindowKindDefinition {
 /// 🗺️ Pure `ModelSnapshot × ModelInference × window configuration × selected element ids -> Canvas2d surface` of the plan of the configured storey.
 pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerPlanWindowConfig, selected: &[String]) -> UiAssemblyResult<BuiltNode> {
     let plan = semio_s_artifact_bim_model_tests_5::render::plan_storey(snapshot, &config.storey).and_then(|storey| inference.plan_linework.get(&storey));
-    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene(plan, &config.viewport, config.framed, selected))
+    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(plan, &config.viewport, config.framed, selected))
 }
 //#endregion 🔖️Render
 
 //#region 🔖️Measures
 /// 🎚️ The window chrome: the storey picker.
-pub fn measures(snapshot: &ModelSnapshot, config: &config::BimViewerPlanWindowConfig, labels: &BimViewerLabels, action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor) -> Vec<WindowMeasure> {
+pub fn measures(snapshot: &ModelSnapshot, config: &config::BimViewerPlanWindowConfig, labels: &BimViewerLabels, action: impl Fn(&str, Option<semio_plugin::DslValue>) -> ActionDescriptor) -> Vec<WindowMeasure> {
     let items = semio_s_artifact_bim_model_tests_5::render::storeys(snapshot).into_iter().map(|row| MeasureSelectItem { id: format!("{MEASURE_STOREY}-{}", row.id), value: row.id, label: row.name }).collect();
     vec![WindowMeasure::Select {
         id: MEASURE_STOREY.into(),

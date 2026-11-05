@@ -6,7 +6,7 @@ use super::*;
 #[doc(hidden)]
 pub struct FlowHostRetirementState {
     pub(super) source:Option<FlowHost>,
-    pub geometry:Option<semio_framework_os_flow_geometry::GeometryPortRetirement>,
+    pub geometry:Option<semio_os_flow_geometry::GeometryPortRetirement>,
     payload:Option<ControlledRetirement<FlowHostPayload>>,
 }
 
@@ -59,7 +59,7 @@ impl FlowHostRetirement {
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }
         let source=self.state.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"host admitted close lost original source"))?;
-        if let Some(port)=source.geometry_port.take(){self.state.geometry=Some(semio_framework_os_flow_geometry::GeometryPortRetirement::new(port));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+        if let Some(port)=source.geometry_port.take(){self.state.geometry=Some(semio_os_flow_geometry::GeometryPortRetirement::new(port));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
         if let Some(store)=source.history_store.as_mut(){
             if store.close_owned_store_terminal_is_empty(){source.history_store=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=store.close_owned_store_step(child)?;
@@ -131,4 +131,10 @@ impl FlowHostCloseSlot{
   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let owner=self.owner.as_mut().unwrap();let step=owner.close_step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original command host close")?;Ok(RetainedCloneStep::Progress(step.progress()))
  }
  pub fn terminal_is_empty(&self)->bool{self.owner.is_none()}
+}
+
+#[cfg(any(test,feature="testkit"))]
+impl FlowHostRetirement{
+ /// 🔬️ Identifies the original retained text allocations before its first physical close event.
+ pub fn test_source_text_identity(&self)->Option<(*const u8,*const u8)>{let source=self.state.source.as_ref()?;Some((source.host_catalogue_json.as_ptr(),source.edited_note.as_ref()?.as_ptr()))}
 }

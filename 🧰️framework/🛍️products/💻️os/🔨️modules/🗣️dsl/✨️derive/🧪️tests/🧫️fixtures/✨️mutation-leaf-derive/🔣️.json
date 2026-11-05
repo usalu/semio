@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "attributes": [
     { "name": "absolute-lower-contract", "attribute": "#[mutation_leaf(contract = ::protocol)]", "accepted": true },
-    { "name": "absolute-facade-contract", "attribute": "#[mutation_leaf(contract = ::semio_framework_os_kernel)]", "accepted": true },
+    { "name": "absolute-facade-contract", "attribute": "#[mutation_leaf(contract = ::semio_os_kernel)]", "accepted": true },
     { "name": "missing-contract", "attribute": "#[mutation_leaf]", "accepted": false, "diagnostic": "requires mutation_leaf contract" },
     { "name": "duplicate-contract", "attribute": "#[mutation_leaf(contract = ::protocol, contract = ::protocol)]", "accepted": false, "diagnostic": "duplicate mutation_leaf contract" },
     { "name": "duplicate-attribute", "attribute": "#[mutation_leaf(contract = ::protocol)] #[mutation_leaf(contract = ::protocol)]", "accepted": false, "diagnostic": "duplicate mutation_leaf attribute" },

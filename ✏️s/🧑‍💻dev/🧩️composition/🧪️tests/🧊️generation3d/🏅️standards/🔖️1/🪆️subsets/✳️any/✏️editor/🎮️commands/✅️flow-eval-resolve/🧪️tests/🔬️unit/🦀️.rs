@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_artifact_flow_flow::neural::{Atom, ColdRetire, Dictionary, Value as NeuralValue};
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 
 /// ⚖️ LAW: an `evaluate` extension result carried back as `flowEvalResolve` seeds the session's shared
 /// neural cache under the requested `nodeHash` and leaves its window owing the `previewEval` run exactly

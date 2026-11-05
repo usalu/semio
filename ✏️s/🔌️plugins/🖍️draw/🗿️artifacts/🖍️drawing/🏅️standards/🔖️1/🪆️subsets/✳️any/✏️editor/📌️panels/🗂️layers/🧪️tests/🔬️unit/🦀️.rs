@@ -3,15 +3,15 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::terminology::DrawingPlayLabels;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-#[allow(unused_imports)] use semio_framework_plugin::Buildable;
-#[allow(unused_imports)] use semio_framework_plugin::HasBase;
-#[allow(unused_imports)] use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)] use semio_plugin::Buildable;
+#[allow(unused_imports)] use semio_plugin::HasBase;
+#[allow(unused_imports)] use semio_plugin::TreeWindows;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::*;
 
 //#region 🪟️WindowLaws
 
 use semio_s_artifact_draw_drawing_model::{DrawingGroupBody, DrawingLayerBase, DrawingShapeBody};
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn shape_layer(id: &str, name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Shape(DrawingShapeBody { base: DrawingLayerBase { id: id.into(), name: name.into(), ..default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name) }, shape_kind: "rect".into(), rect: None, ellipse: None, circle: None, line: None, polygon: None })
@@ -29,9 +29,9 @@ fn oversized_document(top: usize, nested: usize) -> DrawingSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(document: &DrawingSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let node = render(document, &DrawingPlayLabels::NATIVE_EN, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_LAYERS)).expect("render the drawing layer tree");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the drawing layer tree")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the drawing layer tree")
 }
 
 fn open(node_key: &str, offset: u32, rows: u32) -> TreeWindowRequest {
@@ -41,7 +41,7 @@ fn open(node_key: &str, offset: u32, rows: u32) -> TreeWindowRequest {
 /// 🪟️ A container's window identity is its PATH — the enclosing windowed containers' keys, outermost
 /// first, then its own key — so a nested group is addressed under the section that builds it.
 fn nested_path(keys: &[&str]) -> String {
-    keys.join(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+    keys.join(semio_plugin::TREE_WINDOW_PATH_SEPARATOR)
 }
 
 /// 🪟️ Law (a): the section AND the nested group stamp their FULL extent, materialise at most one
@@ -112,9 +112,9 @@ fn creation_choices_match_language_neutral_contract() {
         let kinds=layers_rows(&document,labels).into_iter().filter_map(|row|match row {LayersRow::Add(_,_,_,kind)=>Some(kind),_=>None}).collect::<Vec<_>>();
         let expected=fixture["kinds"].as_array().unwrap().iter().map(|kind|kind.as_str().unwrap()).collect::<Vec<_>>();
         assert_eq!(kinds,expected);
-        let view=ViewModel {tree_windows:vec![open("drawing-play-layers",0,11)],..ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native)};
+        let view=ViewModel {tree_windows:vec![open("drawing-play-layers",0,11)],..ViewModel::new(semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native)};
         let tree=render(&document,labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_LAYERS)).unwrap();
-        let json=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+        let json=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
         for label in [labels.add_ellipse,labels.add_line,labels.add_polygon,labels.add_image,labels.add_trace] {assert!(json.contains(label.as_str()));}
         assert_eq!(json.matches("addLayer").count(),10);
     }

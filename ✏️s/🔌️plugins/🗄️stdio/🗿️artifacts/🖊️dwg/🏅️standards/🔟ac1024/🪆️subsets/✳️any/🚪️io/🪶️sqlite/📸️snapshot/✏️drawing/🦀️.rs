@@ -20,7 +20,7 @@ use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::word;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::xrecord;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
 use Cell::{Integer as I,Real as R,Text as T};
 

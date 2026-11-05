@@ -13,8 +13,8 @@ pub struct ChangeZonePollutionClass {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZonePollutionClass where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_pollution_class::ChangeZonePollutionClass> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-pollution-class", kind: "change-zone-pollution-class", record: "ChangeZonePollutionClass" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change building pollution class of the zone", "Emissionsklasse des Gebäudes für die Zone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change building pollution class of the zone", "Emissionsklasse des Gebäudes für die Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
 }

@@ -9,11 +9,11 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::Mutex;
 use crate::transport::{BRIDGE_OPENING_DEADLINE_MS, EventLog, HEADER_MISMATCH, HTTP_CONNECTION_CAPACITY, HTTP_RESPONSE_BYTES, HttpAdmission, HttpEventPublisher, HttpState, HttpTerminalReason, HttpTransport, HttpTransportOptions, OwnedHeader, OwnedHttpResponse, ParsedHttpHead, decode_client_websocket_frame, dispatch_owned_bridge_handshake, dispatch_owned_http};
-use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, GatewayToShell, ShellKind, ShellToGateway};
-use semio_framework_os_mcp_foundation::rendezvous::mint_admission_proof;
-use semio_framework_os_mcp_server::mcp_server::McpServer;
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcNotification, NullBackend, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION};
-use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+use semio_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, GatewayToShell, ShellKind, ShellToGateway};
+use semio_os_mcp_foundation::rendezvous::mint_admission_proof;
+use semio_os_mcp_server::mcp_server::McpServer;
+use semio_os_mcp_wire::protocol::{CallToolResult, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcNotification, NullBackend, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION};
+use semio_os_mcp_workspace::gateway_backend::GatewayBackends;
 #[cfg(test)]
 use crate::transport::{handle_get, handle_post};
 #[cfg(test)]
@@ -338,7 +338,7 @@ async fn get_with_last_event_id_resumes_after_that_id_only() {
 /// Bad Origin is rejected before the upgrade completes.
 #[tokio::test]
 async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
-    use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, ShellKind, ShellToGateway};
+    use semio_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, ShellKind, ShellToGateway};
     use futures::{SinkExt, StreamExt};
     use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
     use tokio_tungstenite::tungstenite::client::IntoClientRequest;
@@ -432,7 +432,7 @@ async fn reqwest_free_post(addr: SocketAddr, path: &str, bearer: &str, body: &se
 /// completion releases once it is cancelled, which is what withdraws its rendezvous offer.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bridge_only_listener_answers_every_connection_it_accepts() {
-    use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, BridgeRefusal, GatewayToShell, ShellKind, ShellToGateway};
+    use semio_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, BridgeRefusal, GatewayToShell, ShellKind, ShellToGateway};
     use futures::{SinkExt, StreamExt};
     use tokio_tungstenite::tungstenite::client::IntoClientRequest;
     use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;

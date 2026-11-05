@@ -19,7 +19,7 @@ where
     P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    pub fn durable_group_read_root(&self) -> Option<&semio_framework_os_store_durable_group_wire::lifted_durable_group::ArtifactStoreDurableGroupRootV1<P, Mutation>> {
+    pub fn durable_group_read_root(&self) -> Option<&semio_os_store_durable_group_wire::lifted_durable_group::ArtifactStoreDurableGroupRootV1<P, Mutation>> {
         self.durable_group_root.as_ref().filter(|root| root.visibility.committed() && !root.adopted)
     }
 
@@ -42,12 +42,12 @@ where
         }
     }
 
-    pub fn applied_edit_ids<'a>(&'a self, store_log: &'a StoreLog<P, Mutation>) -> &'a semio_framework_os_vcs::HistoryPageStack<String> {
+    pub fn applied_edit_ids<'a>(&'a self, store_log: &'a StoreLog<P, Mutation>) -> &'a semio_os_vcs::HistoryPageStack<String> {
         self.durable_group_read_root().map_or(&store_log.applied_edit_ids, |root| &root.applied_edit_ids)
     }
 
     /// ↪️ Pending redo stack (edit ids undone since the last fresh `Apply`).
-    pub fn redo_edit_ids<'a>(&'a self, store_log: &'a StoreLog<P, Mutation>) -> &'a semio_framework_os_vcs::HistoryPageStack<String> {
+    pub fn redo_edit_ids<'a>(&'a self, store_log: &'a StoreLog<P, Mutation>) -> &'a semio_os_vcs::HistoryPageStack<String> {
         self.durable_group_read_root().map_or(&store_log.redo_edit_ids, |root| &root.redo_edit_ids)
     }
 
@@ -104,12 +104,12 @@ where
         }
         let genesis = BackboneMessage::Genesis { pack: store_log.envelope.vcs.genesis.pack().to_vec() };
         let mut messages = vec![genesis];
-        let mut batch: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
+        let mut batch: Vec<semio_os_spr::MutationEnvelope> = Vec::new();
         let mut batch_bytes = 0usize;
         for event in store_log.event_log()? {
             let mut encoded = Vec::new();
-            semio_framework_os_spr::encode_envelope(&event, &mut encoded);
-            if !batch.is_empty() && batch_bytes + encoded.len() > semio_framework_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES / 2 {
+            semio_os_spr::encode_envelope(&event, &mut encoded);
+            if !batch.is_empty() && batch_bytes + encoded.len() > semio_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES / 2 {
                 messages.push(BackboneMessage::from_envelopes(&std::mem::take(&mut batch)));
                 batch_bytes = 0;
             }

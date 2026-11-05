@@ -1,7 +1,7 @@
 //! ⚖️ The law set a committed vector is held to: applied, no-op and rejected outcomes, the inverse and the canonical form.
 
 use super::committed_vector::{json_of, refusal_level, Vector};
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use semio_framework_pack_json::{from_json_str, parse, JsonMemberPolicy, Value};
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;

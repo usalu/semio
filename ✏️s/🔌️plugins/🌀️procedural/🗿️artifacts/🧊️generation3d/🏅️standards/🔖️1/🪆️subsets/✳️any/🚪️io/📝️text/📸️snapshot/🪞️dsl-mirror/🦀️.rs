@@ -4,7 +4,7 @@ use crate::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use std::collections::BTreeMap;
 
 pub use semio_s_procedural_core_generation_sqlite_native::{

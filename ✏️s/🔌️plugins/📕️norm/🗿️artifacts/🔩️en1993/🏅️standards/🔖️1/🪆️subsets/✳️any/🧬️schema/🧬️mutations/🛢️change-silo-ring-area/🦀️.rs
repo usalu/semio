@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloRingArea where
         record: "ChangedSiloRingArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ring stiffener area A_r of the silo shell", "Silo-Schale: Ringsteifenfläche A_r ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ring stiffener area A_r of the silo shell", "Silo-Schale: Ringsteifenfläche A_r ändern")
     }
 }
 

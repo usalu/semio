@@ -1,0 +1,1 @@
+{"cases":[{"name":"empty","entries":{},"hash":7,"expected":null},{"name":"hit","entries":{"7":{"value":42},"3":{"value":3},"9":{"value":9}},"hash":7,"expected":{"value":42}},{"name":"miss","entries":{"3":{"value":3},"9":{"value":9}},"hash":7,"expected":null}]}

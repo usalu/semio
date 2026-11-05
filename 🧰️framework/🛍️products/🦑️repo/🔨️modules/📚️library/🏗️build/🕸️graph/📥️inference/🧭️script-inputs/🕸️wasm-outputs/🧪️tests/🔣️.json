@@ -1,0 +1,114 @@
+{
+  "owner": {
+    "name": "@fixture/engine",
+    "root": "engine",
+    "manifest": "engine/📋️project.json",
+    "packages": []
+  },
+  "project": {
+    "name": "@fixture/engine",
+    "targets": {
+      "wasm": {
+        "executor": "repo:script",
+        "outputs": [
+          "{projectRoot}/.🧾️store/wasm.json"
+        ],
+        "metadata": {
+          "semio": {
+            "wasmPackageSourceV1": {
+              "version": 1,
+              "sourceOwner": "engine",
+              "compileOutputs": [
+                {
+                  "specifier": "@fixture/engine",
+                  "path": "engine/pkg/engine.js"
+                },
+                {
+                  "specifier": "@fixture/engine/engine.js",
+                  "path": "engine/pkg/engine.js"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "package": {
+    "name": "@fixture/engine",
+    "type": "module",
+    "exports": {
+      ".": {
+        "types": "./runtime.d.mts",
+        "default": "./pkg/engine.js"
+      },
+      "./engine.js": {
+        "types": "./runtime.d.mts",
+        "default": "./pkg/engine.js"
+      }
+    }
+  },
+  "requests": [
+    {
+      "specifier": "@fixture/engine",
+      "output": "engine/pkg/engine.js",
+      "source": true
+    },
+    {
+      "specifier": "@fixture/engine/engine.js?worker&url",
+      "output": "engine/pkg/engine.js",
+      "source": true
+    },
+    {
+      "specifier": "@fixture/engine/engine.js?raw",
+      "output": "engine/pkg/engine.js",
+      "source": false
+    }
+  ],
+  "unlisted": [
+    "@fixture/engine/missing.js",
+    "engine/pkg/missing.js"
+  ],
+  "invalid": [
+    {
+      "name": "escaping-source",
+      "sourceOwner": "../foreign"
+    },
+    {
+      "name": "escaping-output",
+      "path": "../foreign.js"
+    },
+    {
+      "name": "foreign-output",
+      "path": "foreign/pkg/foreign.js"
+    }
+  ],
+  "inventory": [
+    {
+      "name": "@semio-tech/framework-actor-rs",
+      "root": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json"
+    },
+    {
+      "name": "@semio-tech/framework-surface-rs",
+      "root": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📋️project.json"
+    },
+    {
+      "name": "@semio-tech/framework-editor-rs",
+      "root": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📋️project.json"
+    },
+    {
+      "name": "@semio-tech/framework-os-node-graph-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/📋️project.json"
+    },
+    {
+      "name": "semio-framework-os-flow-browser-package",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json"
+    }
+  ],
+  "moduleCount": 10
+}

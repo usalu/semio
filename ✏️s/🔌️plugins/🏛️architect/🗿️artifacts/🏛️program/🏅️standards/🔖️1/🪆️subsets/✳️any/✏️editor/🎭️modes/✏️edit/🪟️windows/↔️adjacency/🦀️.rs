@@ -6,19 +6,19 @@ use crate::editor::architect::editor_vocabulary::ui_label;
 use crate::editor::architect::editor_vocabulary::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::HasBase;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::tree_window_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::HasBase;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -78,7 +78,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectAdjacencyWindowC
     let matrix = adjacency_matrix(program);
     let n = matrix.element_ids.len();
     if n == 0 {
-        return crate::editor::architect::editor_vocabulary::ui_node(semio_framework_ui_contract::text(ui_label("Add program elements to edit adjacencies.")?), "architect-adjacency.empty");
+        return crate::editor::architect::editor_vocabulary::ui_node(semio_ui_contract::text(ui_label("Add program elements to edit adjacencies.")?), "architect-adjacency.empty");
     }
     let headers: Vec<_> = matrix.element_ids.iter().enumerate().collect();
     let rows: Vec<(usize, Vec<MatrixCell>)> = (1..n)
@@ -112,7 +112,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectAdjacencyWindowC
         })?
         .window_section(windows, "architect-adjacency.rows", Some(ui_label("Pairs")?), true, &rows, |(row, cells)| {
             let id = format!("architect-adjacency.row.{row}");
-            let group = semio_framework_ui_contract::tree_item(ui_label(element_label(program, &matrix.element_ids[*row]))?)
+            let group = semio_ui_contract::tree_item(ui_label(element_label(program, &matrix.element_ids[*row]))?)
                 .try_id(&id)
                 .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect adjacency row admission failed"))?;
             tree_window_item(windows, group, &id, true, cells.as_slice(), |cell| matrix_cell_row(*row, cell))

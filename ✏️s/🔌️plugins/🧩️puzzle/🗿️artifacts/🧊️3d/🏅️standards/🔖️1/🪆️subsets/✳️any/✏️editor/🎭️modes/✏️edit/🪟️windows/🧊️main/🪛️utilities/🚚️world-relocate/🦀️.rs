@@ -3,8 +3,8 @@
 //! `world_relocate`). It carries no Utility Options of its own — the proximity radius it honours is a
 //! whole-app setting on the ⚙️settings panel.
 
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityDefinition;
 
 pub const UTILITY_ID: &str = "worldRelocate";
 

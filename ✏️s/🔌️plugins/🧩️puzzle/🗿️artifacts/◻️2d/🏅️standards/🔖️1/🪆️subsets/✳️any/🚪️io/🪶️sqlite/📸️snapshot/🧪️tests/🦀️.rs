@@ -22,9 +22,60 @@ fn fill_words(snapshot:&mut Puzzle2dSnapshot,value:f64){
 fn sqlite_snapshot_puzzle2d_typed_native_codec_exposes_owned_semantic_capability(){
  assert!(store::bare_artifact_codec::<Puzzle2dSnapshot,crate::Puzzle2dMutation>(crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA).snapshot_sqlite.is_some(),"Puzzle 2D's actual typed native codec requires owned relational SQLite");
 }
+/// 🔬️ Compares every authored neutral field through independent JSON, preserving exact numeric words.
+fn assert_neutral_fields(actual:&serde_json::Value,expected:&serde_json::Value,path:&str){
+ match(actual,expected){
+  (serde_json::Value::Number(a),serde_json::Value::Number(b))=>assert_eq!(a.as_f64().unwrap().to_bits(),b.as_f64().unwrap().to_bits(),"{path}"),
+  (serde_json::Value::Array(a),serde_json::Value::Array(b))=>{assert_eq!(a.len(),b.len(),"{path}");for(index,(a,b))in a.iter().zip(b).enumerate(){assert_neutral_fields(a,b,&format!("{path}/{index}"));}},
+  (serde_json::Value::Object(a),serde_json::Value::Object(b))=>{assert_eq!(a.len(),b.len(),"{path}");for(key,value)in b{assert_neutral_fields(a.get(key).unwrap_or_else(||panic!("missing {path}/{key}")),value,&format!("{path}/{key}"));}},
+  _=>assert_eq!(actual,expected,"{path}"),
+ }
+}
+/// 📜️ Builds the independent declared wire specimen from authored typed float pointers.
+fn declared_json_specimen(word:Option<u64>)->serde_json::Value{
+ let laws=laws();let mut expected=laws["snapshot"].clone();
+ let paths=laws["declaredJson"]["floatPointers"].as_array().unwrap();assert_eq!(paths.len(),43);
+ for path in paths{
+  let value=expected.pointer_mut(path.as_str().unwrap()).expect("authored float slot");
+  let bits=word.unwrap_or_else(||value.as_f64().expect("neutral native number").to_bits());
+  *value=serde_json::json!({"bits":format!("{bits:016x}")});
+ }
+ expected
+}
+/// 🧳️ Retires the genuine test snapshot on success and on a failed JSON assertion.
+struct JsonSnapshotOwner(Option<Puzzle2dSnapshot>);
+impl JsonSnapshotOwner {
+ fn get(&self)->&Puzzle2dSnapshot{self.0.as_ref().unwrap()}
+}
+impl Drop for JsonSnapshotOwner {
+ fn drop(&mut self){if let Some(snapshot)=self.0.take(){snapshot.retire_sqlite_snapshot();}}
+}
+#[test]
+fn sqlite_snapshot_puzzle2d_declared_json_preserves_complete_fields_and_every_word(){
+ use crate::standards::v1::subsets::any::io::{export::serializers::artifacts::json::v_rfc8259::any as output,import::deserializers::artifacts::json::v_rfc8259::any as input};
+ let source=JsonSnapshotOwner(Some(snapshot()));
+ let bytes=output::serialize_bytes(source.get()).expect("declared JSON export");
+ let independent:serde_json::Value=serde_json::from_slice(&bytes).expect("independent JSON parse");
+ assert_eq!(independent,declared_json_specimen(None),"complete declared wire fields");
+ assert_registered_json_route(source.get(),&independent);
+ let restored=JsonSnapshotOwner(Some(input::deserialize_bytes(&serde_json::to_vec(&independent).unwrap()).expect("independently encoded declared JSON import")));
+ assert_eq!(restored.get(),source.get());
+ for hex in laws()["binary64Words"].as_array().unwrap(){
+  let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();
+  let mut snapshot=snapshot();fill_words(&mut snapshot,f64::from_bits(bits));
+  let source=JsonSnapshotOwner(Some(snapshot));
+  let bytes=output::serialize_bytes(source.get()).expect("declared JSON word export");
+  let independent:serde_json::Value=serde_json::from_slice(&bytes).expect("independent JSON word parse");
+  assert_eq!(independent,declared_json_specimen(Some(bits)),"complete declared JSON {hex}");
+  assert_registered_json_route(source.get(),&independent);
+  let restored=JsonSnapshotOwner(Some(input::deserialize_bytes(&serde_json::to_vec(&independent).unwrap()).expect("independently encoded declared JSON word import")));
+  assert_eq!(words(restored.get()),vec![bits;43],"declared JSON {hex}");
+ }
+}
+
 #[test]
 fn sqlite_snapshot_puzzle2d_complete_neutral_fields_match_independent_serde_and_both_native_directions(){
- let expected=snapshot();let value:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let independent:Puzzle2dSnapshot=serde_json::from_value(value["snapshot"].clone()).unwrap();assert_eq!(expected,independent);assert_eq!(words(&expected).len(),43);
+ let expected=snapshot();let value:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let independent=&value["snapshot"];let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&expected)))).unwrap();assert_neutral_fields(&actual,independent,"snapshot");assert_eq!(words(&expected).len(),43);
  let binary=<Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap();assert_eq!(<Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(&binary,&store::PackDecodeOptions::default()).unwrap(),expected);
  let text=<Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&expected);assert_eq!(<Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).unwrap(),expected);
 }
@@ -81,20 +132,20 @@ fn sqlite_snapshot_puzzle2d_play_literal_text_preserves_every_typed_native_word(
 fn sqlite_snapshot_puzzle2d_play_both_erased_directions_keep_every_native_word(){
  let codec=store::bare_artifact_codec::<crate::Puzzle2dPlaySnapshot,crate::Puzzle2dMutation>(crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA);let owner=codec.snapshot_sqlite.unwrap();
  for hex in laws()["binary64Words"].as_array().unwrap(){let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let mut expected=snapshot();fill_words(&mut expected,f64::from_bits(bits));
-  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let d=original_owners::with_decoding(|native_owner|(owner.export)(&codec.schema,&dialect(),&payload(&expected,encoding),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(words(&restore(&d)),vec![bits;43]);let output=original_owners::with_encoding(|native_owner|(owner.import)(&codec.schema,&dialect(), &mut Some(d),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;let actual=<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::original_owners::with_decoding(|native_owner|decode_sqlite_snapshot_native(&output,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(words(actual.typed()),vec![bits;43]);assert_eq!(actual.typed().meta.manifest_id,expected.meta.manifest_id);}
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let d=original_owners::with_decoding(|native_owner|(owner.export)(&codec.schema,&dialect(),&payload(&expected,encoding),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(words(&restore(&d)),vec![bits;43]);let output=original_owners::with_encoding(|native_owner|(owner.import)(&codec.schema,&dialect(), &mut Some(d),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;let actual=original_owners::with_decoding(|native_owner|<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&output,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(words(actual.typed()),vec![bits;43]);assert_eq!(actual.typed().meta.manifest_id,expected.meta.manifest_id);}
  }
 }
 #[test]
 fn sqlite_snapshot_puzzle2d_play_admits_exact_semantic_rows_and_physical_output_bytes(){
  let expected=snapshot();let play=<crate::Puzzle2dPlaySnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(&expected)).unwrap();let limits=SqliteDatabaseLimits::default();
- for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let output=original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();let bytes=match &output{store::io_schema::IoPayload::Binary(value)=>value.len(),store::io_schema::IoPayload::Text(value)=>value.len()};assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:42,max_file_bytes:bytes,..limits}), native_owner)).is_ok());for restricted in[SqliteDatabaseLimits{max_rows:41,..limits},SqliteDatabaseLimits{max_file_bytes:bytes-1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}]{assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());assert!(<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::original_owners::with_decoding(|native_owner|decode_sqlite_snapshot_native(&output,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());}assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,limits), native_owner)).is_err());}
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let output=original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();let bytes=match &output{store::io_schema::IoPayload::Binary(value)=>value.len(),store::io_schema::IoPayload::Text(value)=>value.len()};assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:42,max_file_bytes:bytes,..limits}), native_owner)).is_ok());for restricted in[SqliteDatabaseLimits{max_rows:41,..limits},SqliteDatabaseLimits{max_file_bytes:bytes-1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}]{assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());assert!(original_owners::with_decoding(|native_owner|<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&output,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());}assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,limits), native_owner)).is_err());}
 }
-use semio_framework_plugin::PluginApp;
-use semio_framework_plugin::VcsArtifactApp;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::ViewerApp;
-use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
-use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_plugin::PluginApp;
+use semio_plugin::VcsArtifactApp;
+use semio_plugin::EditorApp;
+use semio_plugin::ViewerApp;
+use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_plugin::plugin_app_close_prelude::*;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🎲️ The actual Puzzle editor and viewer app roster.
  enum SqliteApps:PluginApp{
@@ -104,7 +155,7 @@ semio_framework_dispatch_macros::dyn_enum_close!{
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_puzzle2d_actual_editor_viewer_declaration_routes_queryable_files(){
- semio_framework_plugin::PluginBuilder::<_, SqliteApps>::new("puzzle").label("Puzzle owned SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA).await.unwrap().unwrap();assert_eq!(codec.snapshot_sqlite.as_ref().unwrap().snapshot_type,Some(std::any::TypeId::of::<crate::Puzzle2dSnapshot>()));let expected=snapshot();
+ semio_plugin::PluginBuilder::<_, SqliteApps>::new("puzzle").label("Puzzle owned SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA).await.unwrap().unwrap();assert_eq!(codec.snapshot_sqlite.as_ref().unwrap().snapshot_type,Some(std::any::TypeId::of::<crate::Puzzle2dSnapshot>()));let expected=snapshot();
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect();let original_file_input=&expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));let query=oracle(r#"import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,JSON.stringify(db.query('SELECT count(*) AS count FROM puzzle2d_node').get()));db.close();"#,&bytes);assert_eq!(serde_json::from_slice::<serde_json::Value>(&query).unwrap()["count"],2);let actual=async{let original_file_dialect=&dialect();let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_import_sqlite_snapshot::<crate::Puzzle2dSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(actual,expected);}
 }
 
@@ -127,13 +178,35 @@ fn sqlite_snapshot_puzzle2d_complete_cells_have_independent_exact_typed_and_play
    assert_eq!(original_owners::with_encoding(|native_owner|source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner)).unwrap(),expected);
    assert_eq!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner)).unwrap(),expected);
    let actual=original_owners::with_decoding(|native_owner|Puzzle2dSnapshot::decode_sqlite_snapshot_native(&expected,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner)).unwrap();assert_eq!(words(&actual),words(&source));assert_eq!(payload(&actual,encoding),expected);actual.retire_sqlite_snapshot();
-   let actual=<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::original_owners::with_decoding(|native_owner|decode_sqlite_snapshot_native(&expected,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner)).unwrap();assert_eq!(words(actual.typed()),words(&source));assert_eq!(payload(actual.typed(),encoding),expected);actual.retire_sqlite_snapshot();
+   let actual=original_owners::with_decoding(|native_owner|<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&expected,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner)).unwrap();assert_eq!(words(actual.typed()),words(&source));assert_eq!(payload(actual.typed(),encoding),expected);actual.retire_sqlite_snapshot();
    for short in[SqliteDatabaseLimits{max_rows:rows-1,..exact},SqliteDatabaseLimits{max_value_bytes:cells-1,..exact}]{
     assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err());assert!(play.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err());
     assert!(original_owners::with_encoding(|native_owner|source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err());assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err());
-    assert!(original_owners::with_decoding(|native_owner|Puzzle2dSnapshot::decode_sqlite_snapshot_native(&expected,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err());assert!(<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::original_owners::with_decoding(|native_owner|decode_sqlite_snapshot_native(&expected,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err());
+    assert!(original_owners::with_decoding(|native_owner|Puzzle2dSnapshot::decode_sqlite_snapshot_native(&expected,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err());assert!(original_owners::with_decoding(|native_owner|<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&expected,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err());
    }
   }
   for short in[SqliteDatabaseLimits{max_rows:rows-1,..exact},SqliteDatabaseLimits{max_value_bytes:cells-1,..exact}]{assert!(original_owners::with_sqlite_recipient(short,&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).is_err());assert!(original_owners::with_sqlite_recipient(short,&mut |_|true,|sqlite_control|Puzzle2dSnapshot::from_sqlite_database(&database, sqlite_control)).is_err());}
  }
 }
+
+/// 🚏️ Executes the canonical native entry and independently encoded foreign carrier over every field.
+fn assert_registered_json_route(source:&Puzzle2dSnapshot,expected:&serde_json::Value){
+ use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding};
+ use store::io::io_mechanism::{IoRunControl,IoEntryDirection};
+ use store::io_schema::IoPayload;
+ let entries=crate::standards::v1::subsets::any::io::routes::entries();
+ let export=entries.iter().find(|entry|entry.direction==IoEntryDirection::Export&&entry.into.artifact_kind=="s.stdio.json").expect("canonical JSON export");
+ let import=entries.iter().find(|entry|entry.direction==IoEntryDirection::Import&&entry.from.artifact_kind=="s.stdio.json").expect("canonical JSON import");
+ let native=original_owners::with_encoding(|owner|source.encode_native_snapshot(NativeSnapshotEncoding::Binary,owner.native())).expect("original native carrier");
+ let exported=original_owners::with_decoding(|owner|(export.run)(&native,&mut IoRunControl::decoding(owner.native(),original_owners::original_grant()))).expect("actual registered JSON export").value;
+ let IoPayload::Text(exported)=exported else{panic!("canonical JSON entry preserves its text carrier")};let exported=exported.into_bytes();
+ assert_eq!(&serde_json::from_slice::<serde_json::Value>(&exported).expect("independent registered JSON parse"),expected,"complete registered wire");
+ let foreign=IoPayload::Binary(serde_json::to_vec(expected).expect("independent registered JSON encode"));
+ let restored=original_owners::with_encoding(|owner|(import.run)(&foreign,&mut IoRunControl::encoding(owner.native(),original_owners::original_grant()))).expect("actual registered JSON import").value;
+ let IoPayload::Binary(restored)=restored else{panic!("native binary entry output")};
+ let restored=RouteSnapshotOwner(Some(original_owners::with_decoding(|owner|Puzzle2dSnapshot::decode_native_snapshot(NativeSnapshotInput::Binary(&restored),owner.native())).expect("original restored native carrier")));
+ let project=|snapshot:&Puzzle2dSnapshot|original_owners::with_sqlite_recipient(store::sqlite_snapshot::SqliteDatabaseLimits::default(),&mut |_|true,|control|snapshot.to_sqlite_database(control)).unwrap();
+ assert_eq!(project(restored.0.as_ref().unwrap()),project(source),"all registered native entities and exact words");
+}
+struct RouteSnapshotOwner(Option<Puzzle2dSnapshot>);
+impl Drop for RouteSnapshotOwner{fn drop(&mut self){if let Some(snapshot)=self.0.take(){snapshot.retire_sqlite_snapshot();}}}

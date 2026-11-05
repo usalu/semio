@@ -163,7 +163,7 @@ async fn no_window_kind_declares_an_app_level_verb_itself() {
 /// (`PluginApp::take_typed_operation_ui_scope`). Draining matters: the ledger only pushes a new scope
 /// when the outbox is EMPTY (`flush_tool_run_ui_dirty`), so a test that never drains sees exactly one.
 fn drain_ui_scopes(app: &mut EnergyEditorApp, into: &mut Vec<semio_framework::kernel::UiDirtyScope>) {
-    use semio_framework_plugin::PluginApp as _;
+    use semio_plugin::PluginApp as _;
     while let Some(scope) = app.take_typed_operation_ui_scope() {
         into.push(scope);
     }
@@ -203,7 +203,7 @@ fn painted_bands(body: &str) -> std::collections::BTreeSet<usize> {
 /// that path now calls `release_provisional(true)`.
 #[semio_framework_async_macros::async_test]
 async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
-    use semio_framework_plugin::PluginApp as _;
+    use semio_plugin::PluginApp as _;
     use crate::editor_config::ResultField;
 
     let def = definition();
@@ -231,7 +231,7 @@ async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
     let mut live_caption = false;
     while std::time::Instant::now() < deadline && state_of(&app) != Some("finalized") {
         let running = matches!(state_of(&app), Some("starting" | "running"));
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("driver turn");
         drain_ui_scopes(&mut app, &mut scopes);
         if running && scopes.iter().any(|scope| scope_covers(scope, model_window::BODY_KEY)) && painted_while_running.len() < 2 {
             let live = render_text(&mut app, model_window::BODY_KEY).await;

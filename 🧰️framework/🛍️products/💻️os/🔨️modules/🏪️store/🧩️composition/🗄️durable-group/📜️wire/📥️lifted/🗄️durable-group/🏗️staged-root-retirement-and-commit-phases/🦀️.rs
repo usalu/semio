@@ -5,16 +5,16 @@ use crate::lifted_durable_group::outcome_and_journal_receipt_types::DurablePlann
 
 pub struct StagedRootRetirement<P, Mutation> {
         pub planning_output: Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
-    pub diagnostics: Option<semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage>,
-pub edit: Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<Mutation>>,
+    pub diagnostics: Option<semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage>,
+pub edit: Option<semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<Mutation>>,
     pub external_strings: [Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>; 3],
-    pub cursor: Option<semio_framework_os_store_read::ArtifactStoreCursorRetirement>,
-    pub applied: Option<semio_framework_os_store_read::ArtifactStoreStringVectorRetirement>,
-    pub redo: Option<semio_framework_os_store_read::ArtifactStoreStringVectorRetirement>,
-    pub revision: Option<semio_framework_os_store_read::ArtifactStoreRevisionAccumulatorRetirement>,
-    pub report: Option<semio_framework_os_store_ledger::ArtifactStorePendingReportRetirement>,
-    pub tail_id: Option<semio_framework_os_store_read::ArtifactStoreStringRetirement>,
-    pub authority: Option<semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemAuthorityRetirement>,
+    pub cursor: Option<semio_os_store_read::ArtifactStoreCursorRetirement>,
+    pub applied: Option<semio_os_store_read::ArtifactStoreStringVectorRetirement>,
+    pub redo: Option<semio_os_store_read::ArtifactStoreStringVectorRetirement>,
+    pub revision: Option<semio_os_store_read::ArtifactStoreRevisionAccumulatorRetirement>,
+    pub report: Option<semio_os_store_ledger::ArtifactStorePendingReportRetirement>,
+    pub tail_id: Option<semio_os_store_read::ArtifactStoreStringRetirement>,
+    pub authority: Option<semio_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemAuthorityRetirement>,
     pub snapshots: [Option<Arc<P>>; 2],
     pub active: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     pub factory: Option<Arc<dyn semio_framework_value::SnapshotRetirementFactory<P>>>,
@@ -72,9 +72,9 @@ impl<P: Send + Sync, Mutation: Send + 'static> StagedRootRetirement<P, Mutation>
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
         let nested = |mut demand: RetirementDemand| { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "staged root child depth overflow"))?; Ok(demand) };
                 if let Some(owner)=self.planning_output.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>(),depth:1,..Default::default()});}return nested(owner.next_demand(maximum_body_bytes)?);}
-        if let Some(owner)=self.diagnostics.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage>(),depth:1,..Default::default()});}return nested(owner.close_demands(maximum_body_bytes)?);}
-if let Some(active) = self.active.as_ref() { return nested(semio_framework_os_store_read::artifact_retirement_box_demands(active, maximum_body_bytes)?); }
-        if self.edit.is_some() { return semio_framework_os_store_read::retirement_owner_demands(&self.edit, maximum_body_bytes); }
+        if let Some(owner)=self.diagnostics.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage>(),depth:1,..Default::default()});}return nested(owner.close_demands(maximum_body_bytes)?);}
+if let Some(active) = self.active.as_ref() { return nested(semio_os_store_read::artifact_retirement_box_demands(active, maximum_body_bytes)?); }
+        if self.edit.is_some() { return semio_os_store_read::retirement_owner_demands(&self.edit, maximum_body_bytes); }
         if self.external_strings.iter().any(Option::is_some) { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>(), depth: 2, ..Default::default() }); }
         if let Some(owner) = self.inline_owner() { return nested(owner.next_demand(maximum_body_bytes)?); }
         if (7..9).contains(&self.phase) {
@@ -103,8 +103,8 @@ fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueErr
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
                 if let Some(owner)=self.planning_output.as_mut(){if owner.terminal_is_empty(){self.planning_output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return owner.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
         if let Some(owner)=self.diagnostics.as_mut(){if owner.terminal_is_empty(){self.diagnostics=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}owner.begin_close();return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if self.edit.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.edit, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+if self.active.is_some() { return semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.edit.is_some() { return semio_os_store_read::retirement_owner_close(&mut self.edit, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(slot)=self.external_strings.iter_mut().find(|slot|slot.is_some()){let original=match slot.take(){Some(v)=>v,None=>return Err(ValueError::invariant("slot absent"))};return match semio_framework_value::retirement::admit_owned_retirement(original,child).result {Ok((owner,receipt))=>{self.active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original))=>{*slot=Some(original);Err(error)}};}
         if let Some(owner) = self.inline_owner_mut() {
             if !owner.terminal_is_empty() {
@@ -146,8 +146,8 @@ impl<P, Mutation> Drop for StagedRootRetirement<P, Mutation> {
     }
 }
 
-pub fn retained_string_stack(source: impl IntoIterator<Item = String>, appended: Option<&str>) -> Result<semio_framework_os_vcs::HistoryPageStack<String>, DurableOwnedGroupDecisionError> {
-    let mut values = semio_framework_os_vcs::HistoryPageStack::try_new().map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into()))?;
+pub fn retained_string_stack(source: impl IntoIterator<Item = String>, appended: Option<&str>) -> Result<semio_os_vcs::HistoryPageStack<String>, DurableOwnedGroupDecisionError> {
+    let mut values = semio_os_vcs::HistoryPageStack::try_new().map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into()))?;
     for value in source {
         values.try_push(value).map_err(|_| DurableOwnedGroupDecisionError::Codec("history catalog address space exhausted".into()))?;
     }
@@ -157,15 +157,15 @@ pub fn retained_string_stack(source: impl IntoIterator<Item = String>, appended:
     Ok(values)
 }
 
-pub fn retained_revision_stack(source: impl IntoIterator<Item = semio_framework_os_store_ledger::CursorRevisionRecord>) -> Result<semio_framework_os_vcs::HistoryPageStack<semio_framework_os_store_ledger::CursorRevisionRecord>, DurableOwnedGroupDecisionError> {
-    let mut values = semio_framework_os_vcs::HistoryPageStack::try_new().map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into()))?;
+pub fn retained_revision_stack(source: impl IntoIterator<Item = semio_os_store_ledger::CursorRevisionRecord>) -> Result<semio_os_vcs::HistoryPageStack<semio_os_store_ledger::CursorRevisionRecord>, DurableOwnedGroupDecisionError> {
+    let mut values = semio_os_vcs::HistoryPageStack::try_new().map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into()))?;
     for value in source {
         values.try_push(value).map_err(|_| DurableOwnedGroupDecisionError::Codec("history catalog address space exhausted".into()))?;
     }
     Ok(values)
 }
 
-pub fn retain_displaced_owner(store: &mut semio_framework_os_store_read::ArtifactStoreDisplacedRetirements, reservation: &mut semio_framework_os_store_read::ArtifactStoreDisplacedOwnerReservation, owner: Box<dyn semio_framework_value::ErasedSnapshotRetirement>) {
+pub fn retain_displaced_owner(store: &mut semio_os_store_read::ArtifactStoreDisplacedRetirements, reservation: &mut semio_os_store_read::ArtifactStoreDisplacedOwnerReservation, owner: Box<dyn semio_framework_value::ErasedSnapshotRetirement>) {
     if let Err(owner) = store.push_owner_reserved(reservation, owner) {
         store.push_reserved(owner);
     }
@@ -279,7 +279,7 @@ Blocked,
     Terminal,
 }
 
-pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'static>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
+pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'static>(publication: &mut Option<semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
     use semio_framework_value::retained_clone::{RetainedCloneStep, admit_retained_clone_close};
     let Some(owner) = publication.as_mut() else { return Ok(true) };
     let grant = grant.retained_grant();
@@ -294,8 +294,8 @@ pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'st
     }
 }
 
-pub fn take_assembly_prepared<P, Mutation>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(Option<ArtifactStoreOneItemPrepared<P, Mutation>>,semio_framework_value::retained_clone::RetainedCloneProgress), DurableOwnedGroupDecisionError> {
+pub fn take_assembly_prepared<P, Mutation>(publication: &mut Option<semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(Option<ArtifactStoreOneItemPrepared<P, Mutation>>,semio_framework_value::retained_clone::RetainedCloneProgress), DurableOwnedGroupDecisionError> {
     let publication = publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if publication.phase() != semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
+    if publication.phase() != semio_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
     publication.take_staged_prepared(grant.retained_grant(),receiving).map_err(DurableOwnedGroupDecisionError::Retirement)
 }

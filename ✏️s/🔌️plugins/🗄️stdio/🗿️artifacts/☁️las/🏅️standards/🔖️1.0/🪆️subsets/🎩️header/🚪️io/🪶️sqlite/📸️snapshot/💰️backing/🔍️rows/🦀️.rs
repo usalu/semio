@@ -1,5 +1,5 @@
 //! 🔍️ LAS admitted ordinal, identity, VLR byte and optional component indexes.
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteRow,SqliteTable,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::ordered_row_refs,transfer::reserve};
+use semio_os_kernel::sqlite_snapshot::{SqliteRow,SqliteTable,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::ordered_row_refs,transfer::reserve};
 type Result<T>=std::result::Result<T,ValueError>;
 const PHASE:SqliteSnapshotPhase=SqliteSnapshotPhase::ReconstructSnapshot;
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

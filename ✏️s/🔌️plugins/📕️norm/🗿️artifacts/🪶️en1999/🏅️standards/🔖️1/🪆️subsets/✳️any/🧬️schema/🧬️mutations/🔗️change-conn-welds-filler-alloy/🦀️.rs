@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnWeldsFillerAll
         record: "ChangedConnWeldsFillerAlloy",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Filler alloy of the connection", "Anschluss: Schweißzusatz ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Filler alloy of the connection", "Anschluss: Schweißzusatz ändern")
     }
 }
 

@@ -297,7 +297,7 @@ pub fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Result<boo
     Ok(begun)
 }
 
-pub fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+pub fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().is_some_and(|mut registry| registry.close_step(token, context, input)))
 }
 

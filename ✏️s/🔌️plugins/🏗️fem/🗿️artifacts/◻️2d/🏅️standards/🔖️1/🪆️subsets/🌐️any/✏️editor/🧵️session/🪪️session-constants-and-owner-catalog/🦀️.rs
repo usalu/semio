@@ -9,7 +9,7 @@ pub const SESSION_ACTIVE_CAPACITY: usize = 32;
 pub const SESSION_CONSUMER_CAPACITY: usize = 128;
 pub type RequestKey = semio_framework_value_registry::fixed_request_owners::ContentRequestKey;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ConsumerKey { Model, Window(semio_framework_plugin::WindowConfigAuthorityIdentity) }
+pub enum ConsumerKey { Model, Window(semio_plugin::WindowConfigAuthorityIdentity) }
 
 pub const SESSION_SHELL_CAPACITY: usize = 64;
 
@@ -151,7 +151,7 @@ impl MountedProcessOwnerCatalog {
                         + SESSION_MAXIMUM_MESH_POINTS,
                 },
                 MountedOwnerClaim { class: MountedOwnerClass::VisualStrings, roots: 64 + SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS + SESSION_MAXIMUM_ELEMENTS + SESSION_MAXIMUM_MESH_TRIANGLES + 1, items: 0 },
-                MountedOwnerClaim { class: MountedOwnerClass::OutputPages, roots: 3 * semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY + 3 * (SESSION_MAXIMUM_OUTPUT_BYTES / SESSION_OWNER_PAGE_BYTES), items: 6 },
+                MountedOwnerClaim { class: MountedOwnerClass::OutputPages, roots: 3 * semio_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY + 3 * (SESSION_MAXIMUM_OUTPUT_BYTES / SESSION_OWNER_PAGE_BYTES), items: 6 },
                 MountedOwnerClaim { class: MountedOwnerClass::FaultPages, roots: 2, items: 0 },
             ],
         }

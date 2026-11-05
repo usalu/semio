@@ -1,12 +1,12 @@
 //! ✉ Envelope records, captured group reads and terminal ownership independent of Store execution.
-use semio_framework_os_vcs::{ArtifactVcs, io::binary::genesis::AdmittedArtifactGenesis};
+use semio_os_vcs::{ArtifactVcs, io::binary::genesis::AdmittedArtifactGenesis};
 use protocol::Mutation;
 use semio_framework_value::{DslValue, RetainedCloneGrant, RetainedCloneProgress, ToValue, ValueError};
 use std::sync::Arc;
-use semio_framework_os_store_cursor::{ArtifactCursor, ArtifactCursorOwners};
-use semio_framework_os_store_command::{HistoryLane, OpenToolTransaction, retire_scratch_edits};
-use semio_framework_os_store_projection::retire_shared_projection;
-use semio_framework_os_store_message_ledger::ArtifactEditMessageLedger;
+use semio_os_store_cursor::{ArtifactCursor, ArtifactCursorOwners};
+use semio_os_store_command::{HistoryLane, OpenToolTransaction, retire_scratch_edits};
+use semio_os_store_projection::retire_shared_projection;
+use semio_os_store_message_ledger::ArtifactEditMessageLedger;
 #[path="../🪆️child/🏠️owner/🧬️schema/🦀️.rs"]
 pub mod owner;
 use owner::OwnerRef;
@@ -77,7 +77,7 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     /// Together with `vcs.edits` this is the document's complete semantic event log. The
     /// change/checkpoint/alternative ledgers are its projection. `active_alternative_id` and
     /// `viewer_checkpoint_id` are this replica's head, persisted local-only, not that projection.
-    pub transitions: semio_framework_os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>,
+    pub transitions: semio_os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>,
     /// 🗂️ The transitions this history holds ([`protocol::HistoryShape`]): a config store's history holds undo and
     /// redo only, so its store refuses every other transition at dispatch and at remote admission — the same law its
     /// retained loader applies.
@@ -93,7 +93,7 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
 pub struct ArtifactEnvelopeRead<'a, P, Mutation> {
     schema: &'a str,
     id: &'a str,
-    vcs: semio_framework_os_vcs::ArtifactVcsRead<'a, AdmittedArtifactGenesis<P>, Mutation>,
+    vcs: semio_os_vcs::ArtifactVcsRead<'a, AdmittedArtifactGenesis<P>, Mutation>,
     backbone: Option<&'a ArtifactBackboneRef>,
     active_alternative_id: Option<&'a String>,
     cursor: Option<&'a ArtifactCursorOwners>,
@@ -112,7 +112,7 @@ pub struct ArtifactEnvelopeRead<'a, P, Mutation> {
 /// simply omitting the key when the option is `None`/the map is empty.
 impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactEnvelopeRead<'_, P, Mutation> {
     fn to_value(&self) -> DslValue {
-        let mut entries = vec![("schema".to_string(), self.schema.to_value()), ("id".to_string(), self.id.to_value()), ("vcs".to_string(), semio_framework_os_vcs::io::text::vcs::native_vcs_read_value(&self.vcs))];
+        let mut entries = vec![("schema".to_string(), self.schema.to_value()), ("id".to_string(), self.id.to_value()), ("vcs".to_string(), semio_os_vcs::io::text::vcs::native_vcs_read_value(&self.vcs))];
         if let Some(backbone) = self.backbone {
             entries.push(("backbone".to_string(), backbone.to_value()));
         }
@@ -157,7 +157,7 @@ impl<P, Mutation> ArtifactEnvelopeOwners<P, Mutation> {
         if history_visibility.zip(cursor_visibility).is_some_and(|(history, cursor)| !std::ptr::eq(history, cursor)) {
             return Err("envelope cursor and history have different group authorities");
         }
-        let decision = history_visibility.or(cursor_visibility).map(semio_framework_os_vcs::ArtifactGroupVisibility::capture);
+        let decision = history_visibility.or(cursor_visibility).map(semio_os_vcs::ArtifactGroupVisibility::capture);
         let vcs = self.vcs.read_group(decision.as_ref()).map_err(|()| "envelope history lost its captured group authority")?;
         let cursor = self.cursor.as_ref().map(|cursor| cursor.read_group(decision.as_ref())).transpose().map_err(|()| "envelope cursor lost its captured group authority")?;
         Ok(ArtifactEnvelopeRead {

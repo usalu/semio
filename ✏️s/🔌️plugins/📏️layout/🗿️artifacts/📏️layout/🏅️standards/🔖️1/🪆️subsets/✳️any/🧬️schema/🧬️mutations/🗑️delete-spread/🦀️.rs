@@ -19,7 +19,7 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for DeleteSpread
 where Op: protocol::Mutation<LayoutSnapshot, Diff = LayoutDiff> + From<crate::create_spread::CreateSpread> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "spread", kind: "delete-spread", record: "DeletedSpread" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Delete spread", "Druckbogen löschen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Delete spread", "Druckbogen löschen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

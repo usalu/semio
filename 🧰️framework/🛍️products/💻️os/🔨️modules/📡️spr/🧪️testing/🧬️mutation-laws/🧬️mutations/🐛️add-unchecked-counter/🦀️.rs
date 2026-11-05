@@ -1,7 +1,7 @@
 //! 🐛️ Deliberately incorrect missing-target command used to prove a law assertion fails.
 
 use super::super::{CounterDiff, CounterMutation};
-use semio_framework_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
+use semio_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -14,14 +14,14 @@ pub struct AddUncheckedCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddUncheckedCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "unchecked-counter", kind: "add-unchecked-counter", record: "AddedUncheckedCounter" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add to unchecked counter", "Zum ungeprüften Zähler addieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add to unchecked counter", "Zum ungeprüften Zähler addieren")
     }
 
 
 }
 
-impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddUncheckedCounter {
+impl semio_os_spr::ColdMutationKind<i64, CounterMutation> for AddUncheckedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff::delta(1))
     }

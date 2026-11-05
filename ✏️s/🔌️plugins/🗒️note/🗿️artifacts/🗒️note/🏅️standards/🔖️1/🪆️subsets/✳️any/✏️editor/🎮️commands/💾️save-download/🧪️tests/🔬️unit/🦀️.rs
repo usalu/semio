@@ -1,10 +1,10 @@
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
 use crate::op::NoteMutation;
 #[allow(unused_imports)]
 use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::note::commands::save_download::*;

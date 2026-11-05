@@ -1,12 +1,12 @@
 //! 🧵️ Dedicated browser Worker owner for the complete frame transaction and OffscreenCanvas surface.
 
-use semio_framework_os_renderer_wgpu_program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
-use semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState;
-use semio_framework_os_renderer_wgpu_frame_presentation::AppPresenter;
-use semio_framework_os_renderer_wgpu_app_runtime::AppRuntime;
-use semio_framework_os_renderer_wgpu_asset_authority::RendererAssetFetchOwner;
-use semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimeMailbox;
+use semio_renderer_wgpu_program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
+use semio_renderer_wgpu_shell_state::ShellState;
+use semio_renderer_wgpu_frame_actions::AppInteractionState;
+use semio_renderer_wgpu_frame_presentation::AppPresenter;
+use semio_renderer_wgpu_app_runtime::AppRuntime;
+use semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner;
+use semio_renderer_wgpu_runtime_mailbox::RuntimeMailbox;
 use infinite_world::world::{WorldAssetRequestKind, WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -33,7 +33,7 @@ const HUB_STATUS_EVENT_CAPACITY: usize = 64;
 /// plus their stateless projection onto `DispatchEvent`, mounted natively so one language-neutral
 /// fixture can be answered by an ordinary `cargo test`. What stays HERE is everything that needs the
 /// Worker: its byte/item credits, its segmented text streams, and the `#[wasm_bindgen]` host.
-use semio_framework_os_renderer_wgpu_host_plumbing::input_wire::{accessibility_address_within_credits, pointer, stateless_dispatch, BrowserBatch, BrowserPointerKind, BrowserWireEvent, TextTarget};
+use semio_renderer_wgpu_host_plumbing::input_wire::{accessibility_address_within_credits, pointer, stateless_dispatch, BrowserBatch, BrowserPointerKind, BrowserWireEvent, TextTarget};
 
 struct PendingText {
     stream_id: u64,
@@ -43,7 +43,7 @@ struct PendingText {
 }
 
 enum PendingHubDocumentEvent {
-    Status(String, semio_framework_os_renderer_wgpu_contracts::ShellHubRemoteV1),
+    Status(String, semio_renderer_wgpu_contracts::ShellHubRemoteV1),
     Close(String),
 }
 
@@ -55,7 +55,7 @@ impl PendingHubDocumentEvent {
     }
 }
 
-use semio_framework_os_renderer_wgpu_host_plumbing::browser_original_output::{BrowserTickOutput, BrowserMediaOutput, OriginalBrowserOutput};
+use semio_renderer_wgpu_host_plumbing::browser_original_output::{BrowserTickOutput, BrowserMediaOutput, OriginalBrowserOutput};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -96,12 +96,12 @@ fn worker_now_ms() -> f64 {
 //#region 🧵️Runtime
 #[wasm_bindgen]
 pub struct BrowserRendererWorker {
-    host: Option<semio_framework_os_renderer_wgpu_host_winit::os_host::OsHost>,
+    host: Option<semio_renderer_wgpu_host_winit::os_host::OsHost>,
     original_frame:Option<semio_framework_plugin::reactor::original_actor_context::OriginalActorGuestEntry>,
     original_receipt:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedReceipt,
     original_output:Option<OriginalBrowserOutput>,
     original_failure_output:Option<semio_framework_job::JobOutcomeDescriptor>,
-    retired_host: Option<semio_framework_os_renderer_wgpu_host_winit::os_host::OsHostRetirement>,
+    retired_host: Option<semio_renderer_wgpu_host_winit::os_host::OsHostRetirement>,
     text_streams: [Option<PendingText>; TEXT_STREAM_CAPACITY],
     text_bytes: usize,
     latest_generation: u64,
@@ -115,10 +115,10 @@ pub struct BrowserRendererWorker {
 
 
 struct BrowserFrameClose<'a>{
-    host:&'a mut Option<semio_framework_os_renderer_wgpu_host_winit::os_host::OsHost>,
+    host:&'a mut Option<semio_renderer_wgpu_host_winit::os_host::OsHost>,
     original_output:&'a mut Option<OriginalBrowserOutput>,
     original_failure_output:&'a mut Option<semio_framework_job::JobOutcomeDescriptor>,
-    retired_host:&'a mut Option<semio_framework_os_renderer_wgpu_host_winit::os_host::OsHostRetirement>,
+    retired_host:&'a mut Option<semio_renderer_wgpu_host_winit::os_host::OsHostRetirement>,
     text_streams:&'a mut [Option<PendingText>;TEXT_STREAM_CAPACITY],
     text_bytes:&'a mut usize,
     close_phase:&'a mut u8,
@@ -193,7 +193,7 @@ impl BrowserFrameClose<'_>{
         }
         if *self.close_phase == 5 {
             if self.host.is_some() {
-                let Some(retirement) = semio_framework_os_renderer_wgpu_host_winit::os_host::OsHost::try_into_retirement(self.host, cx)? else {
+                let Some(retirement) = semio_renderer_wgpu_host_winit::os_host::OsHost::try_into_retirement(self.host, cx)? else {
                     return Ok(false);
                 };
                 *self.retired_host = Some(retirement);
@@ -306,9 +306,9 @@ impl BrowserRendererWorker {
         let owner = self.asset_fetch.as_mut().ok_or_else(|| js_error("asset-request-state", "asset response arrived without an active request"))?;
         let host = self.host.as_ref().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
         match host.runtime.reserve_renderer_asset_response(owner, byte_credits) {
-            semio_framework_os_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted => Ok(true),
-            semio_framework_os_renderer_wgpu_asset_authority::RendererAssetSealStep::Busy => Ok(false),
-            semio_framework_os_renderer_wgpu_asset_authority::RendererAssetSealStep::Refused(detail) => Err(js_error("asset-response-credits", detail)),
+            semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted => Ok(true),
+            semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Busy => Ok(false),
+            semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Refused(detail) => Err(js_error("asset-response-credits", detail)),
         }
     }
 
@@ -349,12 +349,12 @@ impl BrowserRendererWorker {
         };
         if !owner.owner().is_sealed() {
             match host.runtime.seal_renderer_asset_response(&mut owner) {
-                semio_framework_os_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted => {}
-                semio_framework_os_renderer_wgpu_asset_authority::RendererAssetSealStep::Busy => {
+                semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted => {}
+                semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Busy => {
                     self.asset_fetch = Some(owner);
                     return Ok(false);
                 }
-                semio_framework_os_renderer_wgpu_asset_authority::RendererAssetSealStep::Refused(detail) => {
+                semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Refused(detail) => {
                     owner.begin_close();
                     self.asset_blocked = Some(owner);
                     return Err(js_error("asset-seal", detail));
@@ -437,7 +437,7 @@ impl BrowserRendererWorker {
             return Ok(());
         }
         self.latest_generation = generation;
-        let mut latency = semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::WireApply, 1);
+        let mut latency = semio_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_renderer_wgpu_host_base::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), semio_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::WireApply, 1);
         let batch: BrowserBatch = serde_json::from_str(events_json).map_err(|error| js_error("message-decode", &error.to_string()))?;
         latency.set_work_items(batch.replaceable.len().saturating_add(batch.lossless.len()));
         if batch.replaceable.len() > 18 || batch.lossless.len() > 16 {
@@ -482,7 +482,7 @@ impl BrowserRendererWorker {
         let host = self.host.as_ref().ok_or_else(|| js_error("closed", "asset decoder has no live host"))?;
         let original = self.original_frame.as_mut().expect("original frame entry available").dispatch_value_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us,|cx| {
             let turn = host.runtime.asset_decode_step(cx)?;
-            let kind = match turn.kind { semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Pending => 0, semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Idle => 1, semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Published => 2, semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Cancelled => 3, semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Fault => 4 };
+            let kind = match turn.kind { semio_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Pending => 0, semio_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Idle => 1, semio_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Published => 2, semio_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Cancelled => 3, semio_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Fault => 4 };
             Ok(kind | if turn.pending { 8 } else { 0 })
         });
         let authority = match &original.result { Err(semio_framework_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Authority(error)) => Some(error.kind), _ => None };
@@ -495,7 +495,7 @@ impl BrowserRendererWorker {
     /// a second step never got one and a queued `DispatchEvents` was never pumped
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
     pub fn tick(&mut self,_timestamp_ms:f64,_sequence:u64,generation:u64,operation:u64,business_generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize,fuel:u64,deadline_us:u64,cancelled:bool)->Result<u8,JsValue>{
-        let _latency = semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::WorkerTick, 1);
+        let _latency = semio_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_renderer_wgpu_host_base::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), semio_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::WorkerTick, 1);
         self.ensure_live()?;
         self.flush_hub_document_event();
         if generation != self.latest_generation {
@@ -760,10 +760,10 @@ impl BrowserRendererBootstrap {
                 BootPhase { stage: "font-atlas", progress: 0.1, shell_boot: false, complete: false }
             }
             1 => {
-                if semio_framework_os_renderer_wgpu_icon_host::icon_atlas_source_count() > ICON_SOURCE_CAPACITY {
+                if semio_renderer_wgpu_icon_host::icon_atlas_source_count() > ICON_SOURCE_CAPACITY {
                     return Err(js_error("icon-credits", "icon atlas source count exceeds the Worker boot cap"));
                 }
-                self.icons = Some(semio_framework_os_renderer_wgpu_icon_host::build_icon_atlas_scaled(self.dpr));
+                self.icons = Some(semio_renderer_wgpu_icon_host::build_icon_atlas_scaled(self.dpr));
                 BootPhase { stage: "icon-atlas", progress: 0.25, shell_boot: false, complete: false }
             }
             2 => {
@@ -779,7 +779,7 @@ impl BrowserRendererBootstrap {
                 BootPhase { stage: "plugin-parse", progress: 0.55, shell_boot: false, complete: false }
             }
             5 => {
-                let (locale, terminology) = semio_framework_os_renderer_wgpu_shell_prefs::shell_language_axes().map_err(|error| js_error("language-authority", &error))?;
+                let (locale, terminology) = semio_renderer_wgpu_shell_prefs::shell_language_axes().map_err(|error| js_error("language-authority", &error))?;
                 let mut shell = ShellState::new(self.entries.take().expect("bootstrap plugin entries exist"), self.plugin_filter.clone(), locale, terminology);
                 shell.chrome.screen_w = self.width.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
                 shell.chrome.screen_h = self.height.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
@@ -805,7 +805,7 @@ impl BrowserRendererBootstrap {
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str("[TRACE] wgpu-worker boot_shell enter"));
         declare_boot_subphase("shell-boot:select-program", "enter", 0.0);
         let started = worker_now_ms();
-        let result = semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx::of(self.shell.as_mut().expect("bootstrap shell exists")).boot().await;
+        let result = semio_renderer_wgpu_shell_actions::ActionsCtx::of(self.shell.as_mut().expect("bootstrap shell exists")).boot().await;
         let elapsed = (worker_now_ms() - started).max(0.0);
         declare_boot_subphase("shell-boot:select-program", "leave", elapsed);
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!("[TRACE] wgpu-worker boot_shell leave {elapsed:.0} ms")));
@@ -830,12 +830,12 @@ impl BrowserRendererBootstrap {
                 shell,
                 input: InputState::<ActionDescriptor>::default(),
                 theme: Theme::default(),
-                theme_dark: semio_framework_os_renderer_wgpu_host_base::appearance_is_dark("system"),
+                theme_dark: semio_renderer_wgpu_host_base::appearance_is_dark("system"),
                 last_pointer_x: 0.0,
                 last_pointer_y: 0.0,
                 pointer_down: false,
                 pointer_button: 0,
-                pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
+                pointer_capture: semio_renderer_wgpu_shell_input::PointerCapture::default(),
                 modifiers: PointerModifiers::default(),
                 space_pressed: false,
                 wheel_zoom_deadline_ms: 0.0,
@@ -845,16 +845,16 @@ impl BrowserRendererBootstrap {
                 text_cancel_pending: false,
                 last_sync_pump_ms: 0.0,
             }),
-            checkout: semio_framework_os_renderer_wgpu_mailbox_core::InteractionCheckoutLedger::default(),
+            checkout: semio_renderer_wgpu_mailbox_core::InteractionCheckoutLedger::default(),
             draw: DrawList::default(),
             overlay: DrawList::default(),
             pending_frame_deferred: None,
-            frame_actions: semio_framework_os_renderer_wgpu_frame_actions::FrameActionOwners::default(),
+            frame_actions: semio_renderer_wgpu_frame_actions::FrameActionOwners::default(),
         });
         let token = OffscreenPresentToken::mint_for_dedicated_worker().map_err(|error| js_error("worker-capability", error))?;
         let presenter = AppPresenter {
             gpu: self.gpu.take().expect("bootstrap GPU exists"),
-            engine: semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter::default(),
+            engine: semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter::default(),
             gate: semio_framework_ui_prepared::PreparedRenderGate::default(),
             runtime: runtime.clone(),
             presentation_authority: runtime.presentation_authority(),
@@ -868,7 +868,7 @@ impl BrowserRendererBootstrap {
             surface_resize: None,
             stall: Default::default(),
         };
-        let mut host = semio_framework_os_renderer_wgpu_host_winit::os_host::OsHost::new(runtime, presenter, semio_framework_os_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
+        let mut host = semio_renderer_wgpu_host_winit::os_host::OsHost::new(runtime, presenter, semio_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
         let runtime_wake = self.wake.clone();
         host.runtime.set_waker(Rc::new(move || {
             let _ = runtime_wake.call0(&JsValue::NULL);
@@ -947,4 +947,4 @@ fn js_error(code: &str, detail: &str) -> JsValue {
     JsValue::from_str(&format!("{code}: {detail}"))
 }
 
-pub use semio_framework_os_renderer_wgpu_host_base::declare_boot_subphase;
+pub use semio_renderer_wgpu_host_base::declare_boot_subphase;

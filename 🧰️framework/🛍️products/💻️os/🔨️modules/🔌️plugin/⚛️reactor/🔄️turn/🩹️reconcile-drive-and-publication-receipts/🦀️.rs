@@ -81,7 +81,7 @@ pub fn drive_reconcile_within(patches: &patches::PatchTracker, opportunities: us
         if can_publish {
             if let Some((key, generation)) = patches.ready_patch_key().map_err(reactor_close_fault)? {
                 let mut target = None;
-                if patches.take_ready_patch_into(key, generation, &mut target, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES).map_err(reactor_close_fault)? {
+                if patches.take_ready_patch_into(key, generation, &mut target, semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES).map_err(reactor_close_fault)? {
                     extracted = true;
                     if let Some(patch) = target {
                         match with_pending_patches(|pending| pending.borrow_mut().push_reconcile(patch)) {
@@ -124,7 +124,7 @@ pub fn reconcile_arms_turn(patches: &patches::PatchTracker) -> bool {
     })
 }
 
-pub(super) fn live_patch_receipt<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, receipt: ActorUiPatchReceipt) -> bool {
+pub(super) fn live_patch_receipt<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, receipt: ActorUiPatchReceipt) -> bool {
     runtime.guest_lifetimes.borrow().get(receipt.lifetime.instance_id).is_some_and(|slot| slot.cell.is_live() && slot.cell.lifetime() == receipt.lifetime)
 }
 
@@ -132,8 +132,8 @@ pub(super) fn original_turn_progress(before:semio_framework_value::RetainedClone
 
 /// 🧾️ Keeps exact producer grants and original deltas together when their receiver refuses authority.
 struct OriginalPublicationReceipts{
- pub receiving:Option<semio_framework_plugin_runtime_ops::ops_ingress::OriginalPublicationReceiving>,
- pub constructor:Option<(semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind,semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
+ pub receiving:Option<semio_plugin_runtime_ops::ops_ingress::OriginalPublicationReceiving>,
+ pub constructor:Option<(semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind,semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  pub preparation:Option<(semio_framework_job::OperationId,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  pub history:Option<(semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  pub tool:Option<(semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
@@ -142,14 +142,14 @@ struct OriginalPublicationReceipts{
 
 pub(super) struct OriginalPublicationReceiptRefusal{pub receipts:OriginalPublicationReceipts,pub error:semio_framework_job::OriginalTurnFailure}
 
-pub(super) struct RefusedPublicationOwner{pub instance:u32,pub operation:semio_framework_job::OperationId,pub generation:semio_framework_job::Generation,pub output:std::mem::ManuallyDrop<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>,pub receipts:std::mem::ManuallyDrop<OriginalPublicationReceipts>}
+pub(super) struct RefusedPublicationOwner{pub instance:u32,pub operation:semio_framework_job::OperationId,pub generation:semio_framework_job::Generation,pub output:std::mem::ManuallyDrop<semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>,pub receipts:std::mem::ManuallyDrop<OriginalPublicationReceipts>}
 
 impl Drop for RefusedPublicationOwner{fn drop(&mut self){assert!(std::thread::panicking(),"original refused publication reached Drop before explicit funded retirement");}}
 
 /// 📥️ Collects each actual producer delta once into the same original recipient before semantic publication.
 #[doc(hidden)]
-pub fn collect_original_publication_receipts(output:&mut semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),OriginalPublicationReceiptRefusal>{
- use semio_framework_plugin_runtime_ops::ops_ingress::OriginalPublicationFamily as Family;
+pub fn collect_original_publication_receipts(output:&mut semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),OriginalPublicationReceiptRefusal>{
+ use semio_plugin_runtime_ops::ops_ingress::OriginalPublicationFamily as Family;
  let receipts=OriginalPublicationReceipts{receiving:output.original_receiving.take(),constructor:output.constructor_receipt.take(),preparation:output.preparation_receipt.take(),history:output.history_command_receipt.take(),tool:output.tool_run_receipt.take(),retirement:output.retirement_receipt.take()};let mut refusal=None;let mut receipt_refusal=None;
  let actual=[receipts.constructor.map(|(_,_,grant,progress)|(Family::Constructor,grant,progress)),receipts.preparation.map(|(_,grant,progress)|(Family::Preparation,grant,progress)),receipts.history.map(|(grant,progress)|(Family::History,grant,progress)),receipts.tool.map(|(grant,progress)|(Family::Tool,grant,progress)),receipts.retirement.map(|(_,grant,progress)|(Family::Retirement,grant,progress))];
  if let Some(receiving)=receipts.receiving{let unique=actual.iter().flatten().count()==1&&actual.iter().flatten().any(|(family,_,_)|Some(*family)==receiving.family);let posted=receiving.before.checked_add(receiving.posted);if !unique||receiving.recipient!=cx.original_recipient_identity()||posted.as_ref().ok()!=Some(&cx.retained_progress()){return Err(OriginalPublicationReceiptRefusal{receipts,error:semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original posted publication receipt lacks its unique family or actual recipient binding").into()})}}
@@ -162,12 +162,12 @@ pub fn collect_original_publication_receipts(output:&mut semio_framework_plugin_
  match refusal{Some(error)=>Err(OriginalPublicationReceiptRefusal{receipts,error:{let original=semio_framework_job::OriginalTurnFailure::from(error);semio_framework_job::OriginalTurnFailure{receipt_refusal,context_refusal:None,..original}}}),None=>Ok(())}
 }
 
-pub(super) fn retain_refused_publication(instance:u32,output:semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,refusal:OriginalPublicationReceiptRefusal,cx:&semio_framework_job::StepContext<'_>)->semio_framework_job::OriginalTurnFailure{
+pub(super) fn retain_refused_publication(instance:u32,output:semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,refusal:OriginalPublicationReceiptRefusal,cx:&semio_framework_job::StepContext<'_>)->semio_framework_job::OriginalTurnFailure{
  let OriginalPublicationReceiptRefusal{receipts,error}=refusal;
  REFUSED_PUBLICATION.with(|owner|{let mut owner=owner.borrow_mut();assert!(owner.is_none(),"original Reactor refusal slot cannot replace an earlier original output");*owner=Some(RefusedPublicationOwner{instance,operation:cx.operation(),generation:cx.generation(),output:std::mem::ManuallyDrop::new(output),receipts:std::mem::ManuallyDrop::new(receipts)});});error
 }
 
-pub(super) fn route_exchange_output(instance:u32,mut output:semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,effects:&mut Vec<Effect>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+pub(super) fn route_exchange_output(instance:u32,mut output:semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,effects:&mut Vec<Effect>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
  if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){
   return Err(retain_refused_publication(instance,output,refusal,cx));
  }

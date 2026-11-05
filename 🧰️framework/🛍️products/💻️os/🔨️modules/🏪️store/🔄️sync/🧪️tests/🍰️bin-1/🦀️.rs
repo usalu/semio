@@ -7,20 +7,20 @@
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
-use semio_framework_os_store_testing_prelude::*;
-use semio_framework_os_store_testing_fixtures::*;
-use semio_framework_os_store_testing_doubles::*;
-use semio_framework_os_store_testing_doubles::store::ArtifactStore;
-use semio_framework_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
-use semio_framework_os_store_testing_fixtures::lossy::{LossyMutation, SetN as LossySetN};
-use semio_framework_os_store_testing_fixtures::severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation};
-use semio_framework_os_store_testing_fixtures::timestamped::{SetN as TimestampedSetN, TimestampedMutation};
-use semio_framework_os_store_testing_fixtures::validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation};
+use semio_os_store_testing_prelude::*;
+use semio_os_store_testing_fixtures::*;
+use semio_os_store_testing_doubles::*;
+use semio_os_store_testing_doubles::store::ArtifactStore;
+use semio_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
+use semio_os_store_testing_fixtures::lossy::{LossyMutation, SetN as LossySetN};
+use semio_os_store_testing_fixtures::severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation};
+use semio_os_store_testing_fixtures::timestamped::{SetN as TimestampedSetN, TimestampedMutation};
+use semio_os_store_testing_fixtures::validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEdit;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEditCursor;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEditStep;
-use semio_framework_os_store_snapshot_clone::RetainedClonePreparationFactory;
+use semio_os_store_snapshot_clone::RetainedCloneEdit;
+use semio_os_store_snapshot_clone::RetainedCloneEditCursor;
+use semio_os_store_snapshot_clone::RetainedCloneEditStep;
+use semio_os_store_snapshot_clone::RetainedClonePreparationFactory;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
 use semio_framework_pack_json_retained_schema::testing::{OWNED_SCHEMA_TEST_FIELDS, owned_schema_test_cursor, drive_owned_schema, schema_test_close_grant};
 use semio_framework_value::testing::physical_test_close_grant;

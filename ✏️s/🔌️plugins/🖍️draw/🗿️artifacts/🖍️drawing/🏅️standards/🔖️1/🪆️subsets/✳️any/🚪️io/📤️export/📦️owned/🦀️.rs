@@ -1,8 +1,8 @@
 //! 📤️ One genuine captured document producer supplies original PNG, SVG and PDF bytes.
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentRasterJob, DocumentRasterRetirement, DocumentSceneViewport, DocumentVectorJob, DocumentVectorRetirement, DocumentScenePlan, DocumentSceneLimits, DocumentAlgorithmLimits};
-use semio_framework_plugin::Fault;
-use semio_framework_os_kernel::io::io_mechanism::OwnedSerializerOutput;
+use semio_plugin::Fault;
+use semio_os_kernel::io::io_mechanism::OwnedSerializerOutput;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
 use crate::serializers::artifacts::svg::v1_1::any::write::{SvgWriteJob, SvgWriteRetirement, SvgWriteLimits};
 use crate::serializers::artifacts::pdf::v1_4::any::write::{PdfWriteJob, PdfWriteRetirement, PdfWriteLimits};
@@ -74,7 +74,7 @@ impl ExportProducer{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.vector.is_none()&&self.vector_close.is_none()&&self.raster.is_none()&&self.raster_close.is_none()&&self.read.is_none()&&self.read_close.is_none()&&self.output.terminal_is_empty()}
 }
 
-use semio_framework_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerRefusal,OwnedSerializerAdmission,OwnedSerializerFactory,OwnedSerializerJob,OwnedSerializerOutputHandoff,OwnedSerializerFaultHandoff};
+use semio_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerRefusal,OwnedSerializerAdmission,OwnedSerializerFactory,OwnedSerializerJob,OwnedSerializerOutputHandoff,OwnedSerializerFaultHandoff};
 use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{DslValue,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};

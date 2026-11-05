@@ -7,7 +7,7 @@ use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::PUZZLE5D_D
 
 
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID;
 use semio_framework_tool_run::TOOL_RUN_ARG_GENERATION;
 use semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID;
@@ -25,7 +25,7 @@ pub fn engagement_abort(ctx: &mut Puzzle5dActionCtx<'_>, _args: Option<&Value>) 
     if puzzle5d_fill_tool_active(ctx.view_state) || ctx.scene.active_utility == fill_tool::TOOL_ID {
         if let Some(run) = fill_tool::live_fill_run(ctx.tool_run) {
             ctx.effects.push(Effect::DispatchAction {
-                req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
+                req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
                 action: TOOL_RUN_ABORT_ACTION_ID.into(),
                 args: Some(semio_framework::dsl_value!({ TOOL_RUN_ARG_RUN_ID: run.identity.id.run.to_string(), TOOL_RUN_ARG_GENERATION: run.identity.generation })),
                 delay_ms: 0,

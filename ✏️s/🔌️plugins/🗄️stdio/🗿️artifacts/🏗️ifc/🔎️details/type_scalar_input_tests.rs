@@ -22,7 +22,7 @@ fn scalar_source(law: &serde_json::Value, name: &str) -> Arc<IfcSnapshot> {
         ..Default::default()
     })
 }
-fn scalar_request(row: &serde_json::Value, complete: bool) -> semio_framework_plugin::action_staging::StagedFormRequest {
+fn scalar_request(row: &serde_json::Value, complete: bool) -> semio_plugin::action_staging::StagedFormRequest {
     let mut request = guidance_request();
     let rows = if complete {
         serde_json::Value::Array(row["required"].as_array().unwrap().iter().map(|item| serde_json::json!({"index":item["index"].as_u64().unwrap().to_string(),"value":row["args"][item["index"].as_u64().unwrap()as usize]})).collect())
@@ -35,7 +35,7 @@ fn scalar_request(row: &serde_json::Value, complete: bool) -> semio_framework_pl
 }
 #[test]
 fn original_scalar_type_guidance_admits_complete_exact_strings_and_signed_integers_without_defaults() {
-    use semio_framework_plugin_decl_staged_form::StagedBodySource;
+    use semio_plugin_decl_staged_form::StagedBodySource;
     let law = scalar_contract();
     for row in law["cases"].as_array().unwrap() {
         for complete in [false, true] {

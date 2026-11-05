@@ -1,7 +1,7 @@
 //! 🔣️ bitmap ← `s.stdio.json@rfc8259` — the exact inverse of the JSON export leaf.
 
 use crate::BitmapSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -17,7 +17,7 @@ pub struct JsonIntoBitmap;
 impl Deserializer<BitmapSnapshot> for JsonIntoBitmap {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<BitmapSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<BitmapSnapshot> {
         let text = match payload {
             IoPayload::Text(text) => text.clone(),
             IoPayload::Binary(bytes) => String::from_utf8(bytes.clone()).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("bitmap←json: not valid utf-8: {error}"))))?,

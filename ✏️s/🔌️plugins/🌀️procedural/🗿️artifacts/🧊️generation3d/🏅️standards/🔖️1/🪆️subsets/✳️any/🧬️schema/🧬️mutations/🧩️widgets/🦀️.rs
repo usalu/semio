@@ -1,6 +1,6 @@
 //! 🧩️ Generation3d widget mutation leaves: create, update, delete and move widgets, drop their position, set slider values and inputs and shift nodes. Every leaf is generic over the dispatch enum.
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 //#region 🔖️GestureLeaves
 /// 🖊️ One number as the history labels print it: English with a decimal point, German with a decimal comma.

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationLiqN160 
         record: "ChangeFoundationLiqN160",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Corrected SPT blow count (N1)60 of the layer (0 = no liquefaction check)", "Korrigierte SPT-Schlagzahl (N1)60 der Schicht (0 = kein Verflüssigungsnachweis) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Corrected SPT blow count (N1)60 of the layer (0 = no liquefaction check)", "Korrigierte SPT-Schlagzahl (N1)60 der Schicht (0 = kein Verflüssigungsnachweis) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-liq-n160".into()]

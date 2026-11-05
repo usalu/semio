@@ -1,19 +1,19 @@
-//! 📖️ terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
+//! 📖️ terminology×locale combination is compile-checked by `semio_plugin::app_labels!`
 //! 🗣️ Puzzle 5d play app — the complete UI label set: one field per label, so every
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use semio_framework_ui_locale::AppLabels;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::AppLabels;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
 use semio_framework_tool_run::ToolRunCounterDefinition;
 use semio_framework_tool_run::ToolRunReasonDefinition;
 use semio_framework_tool_run::ToolRunStageDefinition;
 use {semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunCounter, semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunReason, semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunStage, semio_s_artifact_puzzle_3d_model::FillRunCounter, semio_s_artifact_puzzle_3d_model::FillRunReason, semio_s_artifact_puzzle_3d_model::FillRunStage};
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 5d app; one field per label, all four locale×terminology cells required.
     pub struct Puzzle5dLabels {
         parts: native_en "Parts", native_de "Teile", reuse_en "Building components", reuse_de "Baukomponenten";
@@ -191,13 +191,13 @@ pub fn puzzle5d_label_axes(locale_tag: &str, terminology_tag: &str) -> Option<(L
 }
 
 /// 🗣️ Resolves the German branch from the admitted host axes; an unauthored axis has no branch at all.
-pub fn puzzle5d_is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> Option<bool> {
+pub fn puzzle5d_is_de_locale(view_state: &semio_plugin::ViewModel) -> Option<bool> {
     Some(puzzle5d_label_axes(view_state.locale.as_str(), view_state.terminology.as_str())?.0 == Locale::De)
 }
 
 /// 🗣️ Resolves the active label set from the canonical host view axes, failing closed through
 /// [`puzzle5d_label_axes`] whenever the host names an axis this app never authored.
-pub fn puzzle5d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle5dLabels> {
+pub fn puzzle5d_labels(view_state: &semio_plugin::ViewModel) -> Option<&'static Puzzle5dLabels> {
     let (locale, terminology) = puzzle5d_label_axes(view_state.locale.as_str(), view_state.terminology.as_str())?;
     Some(Puzzle5dLabels::labels(locale, terminology))
 }

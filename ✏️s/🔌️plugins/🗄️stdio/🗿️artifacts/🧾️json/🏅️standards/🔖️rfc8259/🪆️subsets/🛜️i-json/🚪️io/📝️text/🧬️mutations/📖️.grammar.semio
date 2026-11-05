@@ -1,0 +1,6 @@
+dialect grammar
+grammar json.i-json.mutations
+extension json
+start document
+
+document = "json-i-json-mutation" " " json

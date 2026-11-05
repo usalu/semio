@@ -1,15 +1,15 @@
 use crate::measured;
-use semio_framework_ui_prepared::*;
-use semio_framework_ui_draw_contract::{DrawLayer, DrawList};
+use semio_ui_prepared::*;
+use semio_ui_draw_contract::{DrawLayer, DrawList};
 use semio_framework_job::InteractiveJob;
 use std::mem::size_of;
-use semio_framework_ui_prepared_staging::retirement::*;
+use semio_ui_prepared_staging::retirement::*;
 use std::sync::atomic::Ordering;
 use semio_framework_job::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_ui_prepared_staging::*;
+use semio_ui_prepared_staging::*;
 use semio_framework_test_fixtures::fixture_text;
 
-use semio_framework_ui_prepared::testing::*;
+use semio_ui_prepared::testing::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "../♻️physical-job-close/🎟️prepared/🦀️.rs"]
@@ -19,7 +19,7 @@ use semio_framework_job::{root_cancel_token, Generation, InteractiveStage, JobOu
 #[test]
 fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🖌️render/⏱️schedule/🧪️tests/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
     for overlay_route in [false, true] {
         for row in fixture["primitives"].as_array().unwrap() {
@@ -27,7 +27,7 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
             let mut overlay = DrawList::default();
             for (list, field) in [(&mut draw, "draw"), (&mut overlay, "overlay")] {
                 for kind in row[field].as_array().unwrap() {
-                    let mut instance = semio_framework_ui_draw_contract::UiInstance::solid([0.0, 0.0, 24.0, 24.0], semio_framework_ui_theme::Rgba::new(1.0, 1.0, 1.0, 1.0));
+                    let mut instance = semio_ui_draw_contract::UiInstance::solid([0.0, 0.0, 24.0, 24.0], semio_ui_theme::Rgba::new(1.0, 1.0, 1.0, 1.0));
                     instance.params[2] = kind.as_f64().unwrap() as f32;
                     if overlay_route {
                         list.layers[0].overlay_ui_instances.push(instance);
@@ -45,7 +45,7 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
         }
     }
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 
@@ -68,12 +68,12 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
 #[test]
 fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
     let _guard = prepared_process_guard();
-    use semio_framework_ui_scene::math::{Instance3d, LineDraw3d, LineVertex3d, SceneCurvilinear3d, SceneDraw3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d};
+    use semio_ui_scene::math::{Instance3d, LineDraw3d, LineVertex3d, SceneCurvilinear3d, SceneDraw3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d};
     let mut draw = DrawList::default();
     let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     draw.push_scene_pass(ScenePass3d {
         viewport: [0.0, 0.0, 100.0, 40.0],
-        shadow: semio_framework_ui_scene::math::SceneShadow3d { enabled: true, ..Default::default() },
+        shadow: semio_ui_scene::math::SceneShadow3d { enabled: true, ..Default::default() },
         shadow_draws: vec![SceneDraw3d { mesh_key: "caster".into(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: SceneShadowRole3d { casts: true, receives: true } }],
         draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: Default::default() }],
         translucent_draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: Default::default() }],
@@ -138,7 +138,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
 #[test]
 fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry() {
     let _guard = prepared_process_guard();
-    use semio_framework_ui_scene::math::{Instance3d, LineDraw3d, LineVertex3d, ProceduralGrid3d, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d};
+    use semio_ui_scene::math::{Instance3d, LineDraw3d, LineVertex3d, ProceduralGrid3d, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d};
     let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
     let grid = ProceduralGrid3d { plane_z: 0.001, camera_plane_projection: [2.0, -3.0, 0.001], cell_size: 1.0, fade_distance: 8.0, cell_color: [0.2, 0.3, 0.4] };
     let mut draw = DrawList::default();
@@ -172,7 +172,7 @@ fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry
 
 #[test]
 fn ellipse_scene_pass_snapshots_backdrop_clears_inside_then_composites_last() {
-    use semio_framework_ui_scene::math::{ScenePass3d, SceneViewportMask3d};
+    use semio_ui_scene::math::{ScenePass3d, SceneViewportMask3d};
     let mut draw = DrawList::default();
     draw.push_scene_pass(ScenePass3d { viewport_mask: SceneViewportMask3d::Ellipse, clear_color: Some([0.1, 0.2, 0.3, 0.7]), ..Default::default() });
     let mut cursor = DrawMeasureCursor::PassHeader(0);
@@ -204,7 +204,7 @@ fn ellipse_scene_pass_snapshots_backdrop_clears_inside_then_composites_last() {
 #[test]
 fn a_disabled_shadow_never_publishes_a_gpu_shadow_scalar() {
     let _guard = prepared_process_guard();
-    use semio_framework_ui_scene::math::{Instance3d, SceneDraw3d, ScenePass3d};
+    use semio_ui_scene::math::{Instance3d, SceneDraw3d, ScenePass3d};
     let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
     let mut draw = DrawList::default();
     draw.push_scene_pass(ScenePass3d { draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance], shadow_role: Default::default() }], ..Default::default() });
@@ -224,7 +224,7 @@ fn a_disabled_shadow_never_publishes_a_gpu_shadow_scalar() {
 #[test]
 fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let (unbound, _) = PreparedRasterProducer::try_admit("unbound".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_raster_producer(unbound).is_ok());
@@ -247,7 +247,7 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     assert_eq!(job.fault(), None);
     while !close_job_step(&mut job,&mut close_caller) {}
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 
@@ -255,7 +255,7 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
 #[test]
 fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let (mut producer, _) = PreparedRasterProducer::try_admit("governed".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     assert!(producer.bind_frame_generation(3));
     let source_pointer = producer.original_source().as_ptr();
@@ -283,13 +283,13 @@ fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn cancellation_retires_large_upload_incrementally_before_terminal_empty() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4_096], width: 64, height: 64 }).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
@@ -303,7 +303,7 @@ fn cancellation_retires_large_upload_incrementally_before_terminal_empty() {
     assert!(turns > 4_096);
     assert!(job.terminal_is_empty());
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 fn assert_send<T: Send>() {}
@@ -364,7 +364,7 @@ fn preparation_yields_at_the_configured_item_budget() {
 #[test]
 fn preparation_completes_across_bounded_steps() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let mut draw = DrawList::default();
     draw.layers.extend((0..2).map(|_| DrawLayer::default()));
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
@@ -376,7 +376,7 @@ fn preparation_completes_across_bounded_steps() {
     while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
@@ -519,7 +519,7 @@ fn gate_close_requires_pending_and_last_valid_packet_handback_before_terminal_sc
 #[test]
 fn upload_byte_cap_faults_before_packet_publication() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     input.limits.max_upload_bytes = 3;
     assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4], width: 2, height: 2 }).is_ok());
@@ -530,13 +530,13 @@ fn upload_byte_cap_faults_before_packet_publication() {
     while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn eviction_byte_cap_faults_before_packet_publication() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     input.limits.max_upload_bytes = 3;
     assert!(input.try_push_eviction(PreparedRenderEviction::Mesh { key: "mesh".into() }).is_ok());
@@ -547,15 +547,15 @@ fn eviction_byte_cap_faults_before_packet_publication() {
     while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn draw_item_cap_faults_before_packet_publication() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let mut draw = DrawList::default();
-    draw.layers[0].ui_instances.push(semio_framework_ui_draw_contract::UiInstance::solid([0.0; 4], semio_framework_ui_theme::Rgba::new(0.0, 0.0, 0.0, 0.0)));
+    draw.layers[0].ui_instances.push(semio_ui_draw_contract::UiInstance::solid([0.0; 4], semio_ui_theme::Rgba::new(0.0, 0.0, 0.0, 0.0)));
     let mut input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
     input.limits.max_draw_items = 0;
     let mut job = PreparedRenderJob::new(input, 64);
@@ -565,7 +565,7 @@ fn draw_item_cap_faults_before_packet_publication() {
     while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
@@ -610,7 +610,7 @@ fn packet_drop_retires_nested_backings_and_permit_scalars_separately() {
     let _guard = prepared_process_guard();
     drain_abandoned_preparations();
     let mut owner = packet(7, 3);
-    owner.draw.push_solid([0.0, 0.0, 8.0, 8.0], semio_framework_ui_theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
+    owner.draw.push_solid([0.0, 0.0, 8.0, 8.0], semio_ui_theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
     drop(owner);
     let mut turns = 0;
     while !close_abandoned_packet_step() {
@@ -646,10 +646,10 @@ fn fixed_command_pages_reject_max_plus_one_without_consuming_the_owner() {
 #[test]
 fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     drain_abandoned_preparations();
     let mut draw = DrawList::default();
-    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_framework_ui_theme::Rgba::new(0.0, 1.0, 0.0, 1.0));
+    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_ui_theme::Rgba::new(0.0, 1.0, 0.0, 1.0));
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
     let mut preview = 0;
     let mut steps = 0;
@@ -673,7 +673,7 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
     while !close_packet_step(&mut packet) {}
     while !close_job_step(&mut job,&mut close_caller) {}
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
@@ -746,7 +746,7 @@ fn prepared_packet_publishes_main_overlay_and_top_overlay_raster_owners() {
 #[test]
 fn prepared_render_common_close_funds_declared_frontiers_without_losing_original_owners() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/📦️prepared-close/🔣️.json")).unwrap();
     for row in fixture["grants"].as_array().unwrap() {
         let grant = semio_framework_job::RetainedCloneGrant {
@@ -782,13 +782,13 @@ fn prepared_render_common_close_funds_declared_frontiers_without_losing_original
         assert_eq!(close_caller.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete { progress: semio_framework_job::RetainedCloneProgress::default() });
     }
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
     let _guard = prepared_process_guard();
-    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
+    let mut close_caller=semio_ui_prepared::testing::close_source::caller(1,3);
     let decoded = vec![7; PREPARED_RASTER_PAGE_BYTES];
     let retained_source = vec![9; PREPARED_RASTER_PAGE_BYTES * 2];
     let retained_pointer = retained_source.as_ptr();
@@ -812,5 +812,5 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
     while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
 
-    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
+    close_caller.retire(semio_ui_prepared::testing::close_source::STOCK);
 }

@@ -62,7 +62,7 @@ pub(super) const REMODELING_RETAINED_WORK_ITEMS: usize = 4_096;
 /// exact concrete `WindowConfig` owner; the three shell verbs build `Emit::effect(..)` only — `RequestFileOpen`,
 /// `RequestMediaFrames`, `DownloadMediaExport` — and never touch a store (`HostOnly`). No remodeling
 /// handler emits a draft, a presence or an app transient mutation.
-const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+const REMODELING_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
     import_route("importFramePayload"),
     import_route("importVideoFramePayload"),
     import_route("importVideoDone"),
@@ -102,23 +102,23 @@ const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPu
 ];
 
 /// 📥️ One import-lane publication row: the streamed document edit plus the importing window's tool state.
-const fn import_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] }
+const fn import_route(tool_id: &'static str) -> semio_plugin::ArtifactToolPublicationContract {
+    semio_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::WindowTransient] }
 }
 
 /// 📄️ One document-lane publication row.
-const fn artifact_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] }
+const fn artifact_route(tool_id: &'static str) -> semio_plugin::ArtifactToolPublicationContract {
+    semio_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] }
 }
 
 /// 👁️ One exact window-config publication row.
-const fn window_config_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] }
+const fn window_config_route(tool_id: &'static str) -> semio_plugin::ArtifactToolPublicationContract {
+    semio_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] }
 }
 
 /// 🐚️ One shell-effect-only publication row.
-const fn host_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] }
+const fn host_route(tool_id: &'static str) -> semio_plugin::ArtifactToolPublicationContract {
+    semio_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] }
 }
 
 fn remodeling_retained_contract() -> ToolExecutionContract {
@@ -141,9 +141,9 @@ pub(super) fn remodeling_retained_extent(command: &RemodelingCommand, snapshot: 
 
 pub(super) fn remodeling_window_config_mutation(
     command: &RemodelingCommand,
-    snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>,
-    view: &semio_framework_plugin::ViewModel,
-) -> Result<Option<semio_framework_plugin::WindowConfigMutation>, Fault> {
+    snapshot: Option<&semio_plugin::WindowConfigSnapshot>,
+    view: &semio_plugin::ViewModel,
+) -> Result<Option<semio_plugin::WindowConfigMutation>, Fault> {
     match command {
         RemodelingCommand::SetCamera(payload) => {
             model::windows::model::config::addressed_camera(view, payload.camera.clone()).map(Some)
@@ -187,15 +187,15 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
         command: &RemodelingCommand,
         snapshot: &RemodelingSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RemodelingPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RemodelingPlayApp>>>,
     ) -> Option<usize> {
         (!self.completed && command.command_id() == self.tool_id).then(|| remodeling_retained_extent(command, snapshot, interaction)).flatten()
     }
     fn step(
         &mut self,
-        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<RemodelingPlayApp>>,
+        input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<RemodelingPlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<RemodelingPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<RemodelingPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.route"), "the bounded Remodeling work rejects an undeclared or completed route"));
@@ -211,7 +211,7 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
                 false => vec![transient::addressed(input.context.and_then(|context| context.view_state.as_deref()).ok_or_else(import_video_frame_payload::import_window_required)?, next)?],
             };
             self.completed = true;
-            return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } });
+            return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } });
         }
         let mut emit = input.command.dispatch(&document, &config_view)?;
         if matches!(input.command, RemodelingCommand::SetCamera(_) | RemodelingCommand::SetLayerVisibility(_) | RemodelingCommand::SetFrameCursor(_) | RemodelingCommand::SetReportTable(_)) {
@@ -219,7 +219,7 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
             if let Some(mutation) = remodeling_window_config_mutation(input.command, window, view)? { emit.window_config_mutations.push(mutation); }
         }
         self.completed = true;
-        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+        Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -259,15 +259,15 @@ impl semio_framework::ToolJobFactory for RemodelingRetainedCommandJobFactory {
         remodeling_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: REMODELING_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: REMODELING_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedCommandJobFactory {
     type Owner = EditorApp<RemodelingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = REMODELING_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = REMODELING_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = REMODELING_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️RemodelingPlayApp

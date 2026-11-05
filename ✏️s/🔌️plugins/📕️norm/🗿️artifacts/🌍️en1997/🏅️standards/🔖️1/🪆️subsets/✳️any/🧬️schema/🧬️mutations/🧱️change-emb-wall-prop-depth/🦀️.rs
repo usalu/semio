@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeEmbWallPropDepth w
         record: "ChangedEmbWallPropDepth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Prop depth below top of the embedded wall", "Eingespannte Wand: Tiefe der Stützung unter Oberkante ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Prop depth below top of the embedded wall", "Eingespannte Wand: Tiefe der Stützung unter Oberkante ändern")
     }
 }
 

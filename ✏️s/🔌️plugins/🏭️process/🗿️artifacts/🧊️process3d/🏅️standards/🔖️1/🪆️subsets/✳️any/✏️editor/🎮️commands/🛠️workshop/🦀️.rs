@@ -9,7 +9,7 @@ use semio_s_artifact_process_process3d_mut_machines::rename_machine::RenameMachi
 use semio_s_artifact_process_process3d_mut_machines::replace_machine_capabilities::ReplaceMachineCapabilities;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers

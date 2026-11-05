@@ -3,7 +3,7 @@ use semio_s_artifact_stdio_json::JsonSnapshot;
 #[allow(unused_imports)]
 use crate::WriterSnapshot;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]

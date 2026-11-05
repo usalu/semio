@@ -213,8 +213,8 @@ fn an_edited_stroke_rederives_itself_and_its_downstream() {
 fn the_stroke_labels_itself_in_english_and_german() {
     let RasterMutation::PaintStroke(stroke) = paint_stroke("paint", "mask", "eraser", brush(2.0, 1.0, 1.0, [0.0, 0.0, 0.0, 1.0]), points(&[(1.0, 1.0), (2.0, 2.0), (3.0, 3.0)])) else { unreachable!() };
     let label = protocol::MutationKind::<RasterSnapshot, RasterMutation>::label(&stroke);
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Mask eraser stroke of 3 points on layer paint");
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Masken-Radierstrich mit 3 Punkten auf Ebene paint");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Mask eraser stroke of 3 points on layer paint");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Masken-Radierstrich mit 3 Punkten auf Ebene paint");
 }
 
 /// 🧯️ A payload the schema refuses is a Fatal invariant breach naming the field, and moves nothing.
@@ -245,9 +245,9 @@ fn a_payload_outside_its_bounds_is_an_invariant_breach() {
 #[semio_framework_async_macros::async_test]
 async fn the_store_folds_a_stroke_like_the_leaf() {
     let stroke = paint_stroke("paint", "pixels", "brush", brush(2.0, 0.5, 0.8, [0.1, 0.9, 0.3, 1.0]), points(&[(1.0, 1.0), (4.5, 2.5)]));
-    let mut store = semio_s_artifact_raster_raster_mutations::RasterStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "paint-stroke", base(false), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = semio_s_artifact_raster_raster_mutations::RasterStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "paint-stroke", base(false), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
-    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![stroke.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the stroke applies");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![stroke.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the stroke applies");
     let before = base(false);
     let expected = apply_raster_mutation(&before, &stroke).expect("the leaf applies");
     let projected = store.snapshot().expect("the store projects");

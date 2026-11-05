@@ -8,7 +8,7 @@ use crate::mutations::create_tile::CreateTile;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::tile_grid::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

@@ -1,6 +1,6 @@
 //! 🧬️ viewer of `semio-s-artifact-playbook-playbook` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 pub use crate::playbook::PlaybookSpec;

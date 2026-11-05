@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "surface", kind: "replace-surface", record: "ReplacedSurface" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace surface on face \"{}\"", self.face_id), &format!("Oberfläche auf Fläche \"{}\" ersetzen", self.face_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace surface on face \"{}\"", self.face_id), &format!("Oberfläche auf Fläche \"{}\" ersetzen", self.face_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.face_id.clone()]

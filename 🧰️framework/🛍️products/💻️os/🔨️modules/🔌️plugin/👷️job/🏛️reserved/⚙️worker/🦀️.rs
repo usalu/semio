@@ -3,7 +3,7 @@ use super::{ArtifactApp,FrameworkConfigurationBinaryJob};
 use semio_framework_job::{Operation,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::RetainedCloneGrant};
 use semio_framework_job_worker::{MountedWorkerJobSession,WorkerJobPoll};
-use semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource;
+use semio_plugin_ownership::reserved_job_session::RefusedWorkerSource;
 use std::mem::ManuallyDrop;
 
 pub struct ConfigurationWorker<A:ArtifactApp>{source:Option<RefusedWorkerSource<FrameworkConfigurationBinaryJob<A>>>,session:Option<MountedWorkerJobSession<FrameworkConfigurationBinaryJob<A>>>,binding:semio_framework::action_bus::OriginalToolSourceBinding,operation:Operation,maximum_output:usize,fuel:u64,preparation:RetainedCloneGrant,close:RetainedCloneGrant,checkpoint:u64,outcome_seen:bool,terminal:Option<u8>,closing:bool,failure:ManuallyDrop<Option<OriginalTurnFailure>>,overruns:semio_framework_trace::StepOverrunLedger}

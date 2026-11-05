@@ -4,9 +4,9 @@
 //! engine logo; the export tree renders SVG, scene and GPU PNG exports; the icon render scene lays out and paints the icon render surface.
 
 extern crate infinite_canvas as infinite_world;
-extern crate semio_framework_os_renderer_wgpu_asset_authority as asset_authority;
-extern crate semio_framework_os_renderer_wgpu_contracts as element_contracts;
-pub use semio_framework_os_renderer_wgpu_host_base::mesh_assets;
+extern crate semio_renderer_wgpu_asset_authority as asset_authority;
+extern crate semio_renderer_wgpu_contracts as element_contracts;
+pub use semio_renderer_wgpu_host_base::mesh_assets;
 use crate::element_contracts::FrameworkWidgetContext;
 use serde::Deserialize;
 use serde_json::json;
@@ -16,17 +16,17 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::OnceLock;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Rgba;
-use semio_framework_ui_declaration::ui::UiPresence;
-use semio_framework_ui_wgpu_widget_kit::draw_text;
-use semio_framework_ui_wgpu_widget_kit::draw_text_face;
-use semio_framework_ui_text::TextFace;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_ui_declaration::ui::UiComponentSceneNode;
-use semio_framework_os_renderer_wgpu_scene_state::{IconRenderChromeLabels, SceneEngineHosts, total};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Rgba;
+use semio_ui_declaration::ui::UiPresence;
+use semio_ui_wgpu_widget_kit::draw_text;
+use semio_ui_wgpu_widget_kit::draw_text_face;
+use semio_ui_text::TextFace;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_declaration::ui::UiComponentSceneNode;
+use semio_renderer_wgpu_scene_state::{IconRenderChromeLabels, SceneEngineHosts, total};
 
 #[path = "../../../🧱️elements/🖼️IconRenderHost/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod icon_atlas;

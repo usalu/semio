@@ -1,6 +1,6 @@
 //! ❓️ commands of `semio-s-artifact-forms-forms` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as dsl;
 
 pub use crate::schema::snapshot::FormsSnapshot;
 pub use crate::playbook::PlaybookStep as FormStep;
@@ -18,3 +18,5 @@ pub use semio_s_artifact_forms_forms_snapshot::{forms_steps};
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;
 pub use mirror::*;
+
+pub use semio_s_artifact_forms_forms_config::forms_config;

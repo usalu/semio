@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "room-air-model-assignment", kind: "create-room-air-model-assignment", record: "CreatedRoomAirModelAssignment" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create room air model assignment {}", self.zone_id.0), &format!("Raumluftmodellzuordnung {} erstellen", self.zone_id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create room air model assignment {}", self.zone_id.0), &format!("Raumluftmodellzuordnung {} erstellen", self.zone_id.0))
     }
 
     fn target(&self) -> Vec<String> {

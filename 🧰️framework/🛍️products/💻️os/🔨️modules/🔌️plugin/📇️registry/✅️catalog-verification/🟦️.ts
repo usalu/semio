@@ -1,4 +1,4 @@
-import { COMPONENT_PACKAGE_ID, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1 } from "../🔎️discovery/🟦️.ts";
+import { COMPONENT_PACKAGE_ID, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1 } from "../🔎️discovery/🧬️schema/🟦️.ts";
 import { SHIPPED_COMPONENT_MAX_BYTES } from "../../📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 import type { ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 

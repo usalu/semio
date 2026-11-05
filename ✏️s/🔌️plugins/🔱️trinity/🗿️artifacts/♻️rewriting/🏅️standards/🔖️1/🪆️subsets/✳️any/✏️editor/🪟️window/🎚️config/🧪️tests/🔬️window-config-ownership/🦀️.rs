@@ -3,7 +3,7 @@
 use crate::editor::rewriting::window_config::{schema};
 use crate::editor::rewriting::window_config::*;
 use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
-use semio_framework_plugin::WindowConfigOwner;
+use semio_plugin::WindowConfigOwner;
 
 /// 🧾️ The committed wire witnesses a fixture case names by its leaf folder (`"witness"`).
 static WITNESSES: std::sync::LazyLock<[(&str, &str); 2]> = std::sync::LazyLock::new(|| [
@@ -31,25 +31,25 @@ fn scene_field(value: &serde_json::Value, field: &str) -> Option<serde_json::Val
 async fn rewriting_window_config_retained_publication_renders_and_reloads_two_concrete_windows() {
     use crate::editor::rewriting::{create_rewriting_app, TrinityRewritingCommand, TrinityRewritingPlayApp};
 use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
-    use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     fn manifest() -> App {
         App { definition: create_rewriting_app(), examples: Vec::new() }
     }
-    async fn render(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<serde_json::Value, String> {
-        let text = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, TRINITY_REWRITING_PLAY_BODY_BEFORE, view, cx).await.map_err(|error| format!("{error:?}"))?;
-        let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&text).map_err(str::to_string)?;
+    async fn render(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>, view: &ViewModel, cx: &mut semio_plugin::StepContext<'_>) -> Result<serde_json::Value, String> {
+        let text = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, TRINITY_REWRITING_PLAY_BODY_BEFORE, view, cx).await.map_err(|error| format!("{error:?}"))?;
+        let scene = artifact_app_laws::decode_fixture_scene::<semio_plugin::NodeGraphScene>(&text).map_err(str::to_string)?;
         serde_json::to_value(scene).map_err(|error| error.to_string())
     }
     let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let view = ViewModel {
         window_instances: ["leftWindowId", "rightWindowId"].into_iter().map(|key| ViewWindowInstance { id: fixture[key].as_str().unwrap().into(), window_kind_id: BeforeWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let left = view.for_window_instance(fixture["leftWindowId"].as_str().unwrap()).unwrap();
     let right = view.for_window_instance(fixture["rightWindowId"].as_str().unwrap()).unwrap();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-    let mut reopened = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut reopened = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     reopened.bind_instance_id(2).await;
     let outcome: Result<(), String> = async {
@@ -67,7 +67,7 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
                 "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: mutation["value"].as_str().unwrap().into() },
                 other => return Err(format!("unexpected neutral command {other}")),
             };
-            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         }
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut receipts = 0;
@@ -75,16 +75,16 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
             if std::time::Instant::now() >= deadline {
                 return Err("window config operations did not finish".into());
             }
-            app.maintenance_step(scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            app.maintenance_step(scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
+            app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             if let Some(page) = app.take_typed_operation_result_page(1) {
                 let lane = page.lane;
                 let bytes = page.bytes().to_vec();
                 app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-                if lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
+                if lane == semio_plugin::app::TypedOperationResultLane::Fault {
                     return Err(format!("window config publication failed: {bytes:?}"));
                 }
-                if lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig {
+                if lane == semio_plugin::app::TypedOperationResultLane::WindowConfig {
                     receipts += 1;
                 }
             }
@@ -123,7 +123,7 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
             let Some(rows) = measures.get(id) else {
                 return Err(format!("missing exact window measures for {id}"));
             };
-            if !rows.iter().any(|row| matches!(row, semio_framework_plugin::WindowMeasure::Select { value, .. } if value == expected)) {
+            if !rows.iter().any(|row| matches!(row, semio_plugin::WindowMeasure::Select { value, .. } if value == expected)) {
                 return Err(format!("window {id} did not retain its own LOD"));
             }
         }
@@ -180,15 +180,15 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
             assert_eq!(state, &expected);
         }
     }
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&semio_framework_plugin::NoConfig::default())).unwrap(), fixture["expectedAppConfig"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&semio_plugin::NoConfig::default())).unwrap(), fixture["expectedAppConfig"]);
 }
 
 #[test]
 fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::Terminology;
-    use semio_framework_plugin::ViewModel;
-    use semio_framework_plugin::ViewWindowInstance;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
+    use semio_plugin::ViewModel;
+    use semio_plugin::ViewWindowInstance;
     let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let left = fixture["leftWindowId"].as_str().unwrap();
     let right = fixture["rightWindowId"].as_str().unwrap();

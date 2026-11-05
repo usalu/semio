@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
+use semio_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
 fn strings<'a>(b:&mut NativeEncodingBound<'_,'_>,values:impl IntoIterator<Item=&'a str>)->Result<(),ValueError>{for v in values{b.repeated(v.len(),16)?;}Ok(())}
 fn dictionary(b:&mut NativeEncodingBound<'_,'_>,root:&Dictionary)->Result<(),ValueError>{let mut pending=vec![root];while let Some(d)=pending.pop(){b.check_rows(d.len())?;b.checkpoint()?;for(key,v)in d.iter(){strings(b,[key.as_str()])?;b.add(256)?;match v{NeuralValue::Dictionary(d)=>pending.push(d),NeuralValue::Atom(Atom::String(v))=>strings(b,[v.as_str()])?,NeuralValue::Atom(Atom::Decimal(_))=>b.add(2048)?,_=>b.add(128)?}}}Ok(())}
 fn value(b:&mut NativeEncodingBound<'_,'_>,root:&DslValue)->Result<(),ValueError>{let mut pending=vec![root];while let Some(v)=pending.pop(){b.check_rows(pending.len()+1)?;b.add(128)?;match v{DslValue::Null|DslValue::Bool(_)=>{},DslValue::Number(_)=>b.add(2048)?,DslValue::String(v)=>strings(b,[v.as_str()])?,DslValue::Bytes(v)=>b.repeated(v.len(),8)?,DslValue::Array(values)=>{b.check_rows(values.len())?;for v in values{b.checkpoint()?;pending.push(v);}},DslValue::Object(values)=>{b.check_rows(values.len())?;for(k,v)in values{strings(b,[k.as_str()])?;pending.push(v);}}}}Ok(())}

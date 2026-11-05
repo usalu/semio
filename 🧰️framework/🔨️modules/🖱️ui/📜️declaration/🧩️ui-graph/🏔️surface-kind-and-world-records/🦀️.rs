@@ -191,7 +191,7 @@ pub fn world3d_fit_json(revision: u32, padding: f64, bounds: Option<([f64; 3], [
 }
 
 // 🎬️ `world3d_default_selection_json`/`world3d_default_meshes_json` moved with `World3dScene`
-// itself into `semio-framework-ui-scene` (they back its `#[serde(default = ...)]` fields) — no
+// itself into `semio-ui-scene` (they back its `#[serde(default = ...)]` fields) — no
 // longer defined here; nothing else in this file called them directly.
 
 pub fn world3d_camera_json(position: [f64; 3], target: [f64; 3], fov: f64) -> String {

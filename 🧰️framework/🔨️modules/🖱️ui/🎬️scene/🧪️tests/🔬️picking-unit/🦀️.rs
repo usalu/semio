@@ -1,11 +1,11 @@
 //! 🧲️ Unit proofs of ray, marquee and component screen picking.
 
 use super::*;
-use semio_framework_ui_scene_algebra::{mat4_identity_m, mat4_translation_m};
-use semio_framework_ui_scene_camera::testkit::{puzzle3d_perspective_camera, puzzle3d_top_camera};
-use semio_framework_ui_scene_camera::{default_projection_spec, Camera3d, WORLD_ORBIT_CAMERA_MIN_FAR};
-use semio_framework_ui_scene_mesh::testkit::{close_mesh, mesh_test_attempt, paged_mesh_fixture, test_box_mesh, LegacyMeshOracleData};
-use semio_framework_ui_scene_mesh::{mesh3d_begin_close, mesh3d_terminal_is_empty};
+use semio_ui_scene_algebra::{mat4_identity_m, mat4_translation_m};
+use semio_ui_scene_camera::testkit::{puzzle3d_perspective_camera, puzzle3d_top_camera};
+use semio_ui_scene_camera::{default_projection_spec, Camera3d, WORLD_ORBIT_CAMERA_MIN_FAR};
+use semio_ui_scene_mesh::testkit::{close_mesh, mesh_test_attempt, paged_mesh_fixture, test_box_mesh, LegacyMeshOracleData};
+use semio_ui_scene_mesh::{mesh3d_begin_close, mesh3d_terminal_is_empty};
 
 #[test]
 fn point_in_square() {

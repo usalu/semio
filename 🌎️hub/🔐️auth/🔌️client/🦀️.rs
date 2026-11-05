@@ -1,6 +1,6 @@
 //! 🛂️ Hub-owned delegation grammar, session request, response, and refusal mapping.
-use semio_framework_os_mcp::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp::agent_credential::{CredentialExchangeProtocolV1, CredentialExchangeRequestV1, DelegatedCredentialV1, DelegatedSessionGrantV1};
+use semio_os_mcp::{GatewayError, GatewayErrorCode};
+use semio_os_mcp::agent_credential::{CredentialExchangeProtocolV1, CredentialExchangeRequestV1, DelegatedCredentialV1, DelegatedSessionGrantV1};
 
 struct SecretDocument(serde_json::Value);
 impl std::ops::Deref for SecretDocument { type Target = serde_json::Value; fn deref(&self) -> &Self::Target { &self.0 } }

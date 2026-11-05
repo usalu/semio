@@ -1,8 +1,8 @@
-use semio_framework_ui_contract_values::*;
-use semio_framework_ui_contract_values::testkit::*;
+use semio_ui_contract_values::*;
+use semio_ui_contract_values::testkit::*;
 use std::mem::size_of;
-use semio_framework_ui_contract_budget::*;
-use semio_framework_ui_contract_text::{UiText, UI_TEXT_CLIP_MARK};
+use semio_ui_contract_budget::*;
+use semio_ui_contract_text::{UiText, UI_TEXT_CLIP_MARK};
 use semio_framework_test_fixtures::fixture_text;
 
 fn ui_text(value: &str) -> UiText {

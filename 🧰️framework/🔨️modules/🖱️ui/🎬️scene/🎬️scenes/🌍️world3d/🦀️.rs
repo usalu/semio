@@ -1,12 +1,12 @@
 //! 🌍️ The world-3d scene payload with its presentation and typed lanes, the modelling builders and the world snapshot lease.
 //!
-//! Carved out of the former `semio-framework-ui-scene` scenes module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
+//! Carved out of the former `semio-ui-scene` scenes module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 
 use protocol::value::{DslValue, FromValue, ToValue, ValueError};
-use semio_framework_ui_scene_doc::{scene_lane_hash, scene_pack_wire, value_decode, value_decode_default, value_decode_option, value_push, value_push_if_nonempty, value_push_option, SceneDoc, SceneLanePayload, SceneLaneRef};
-use semio_framework_ui_scene_modelling::{world3d_modelling_from_lane_text, world3d_modelling_lane_text, World3dAnnotationLayer, World3dHighlight, World3dModellingOptions, World3dPickGranularity, World3dScalarField, World3dSection};
-use semio_framework_ui_scene_pack::{from_bytes, to_bytes, PackError};
-use semio_framework_ui_scene_pass::SceneViewportMask3d;
+use semio_ui_scene_doc::{scene_lane_hash, scene_pack_wire, value_decode, value_decode_default, value_decode_option, value_push, value_push_if_nonempty, value_push_option, SceneDoc, SceneLanePayload, SceneLaneRef};
+use semio_ui_scene_modelling::{world3d_modelling_from_lane_text, world3d_modelling_lane_text, World3dAnnotationLayer, World3dHighlight, World3dModellingOptions, World3dPickGranularity, World3dScalarField, World3dSection};
+use semio_ui_scene_pack::{from_bytes, to_bytes, PackError};
+use semio_ui_scene_pass::SceneViewportMask3d;
 use serde::{Deserialize, Serialize};
 #[path = "../../🌍️world3d-snapshot/🦀️.rs"]
 mod world3d_snapshot;

@@ -35,7 +35,7 @@ fn the_primary_metrics_invalidation_scan_terminates_within_the_fixed_slot_table(
 fn realize_step_drains_the_whole_metrics_invalidation_scan_in_one_answer() {
     #[allow(non_snake_case)]
     fn SOURCE() -> &'static str {
-        semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs")
+        semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs")
     }
     let start = SOURCE().find("if self.metrics_invalidation_scan.is_some() {").expect("the realize ladder still guards on the scan");
     let arm = &SOURCE()[start..start + SOURCE()[start..].find("return Ok(false);").expect("the arm answers not-yet")];

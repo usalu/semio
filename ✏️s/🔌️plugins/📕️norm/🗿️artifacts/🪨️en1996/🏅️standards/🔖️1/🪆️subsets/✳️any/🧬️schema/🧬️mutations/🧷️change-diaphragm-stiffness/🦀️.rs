@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeDiaphragmStiffness
         record: "ChangedDiaphragmStiffness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change diaphragm in-plane stiffness of the wall", "Wand: Scheibensteifigkeit der Decke ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change diaphragm in-plane stiffness of the wall", "Wand: Scheibensteifigkeit der Decke ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

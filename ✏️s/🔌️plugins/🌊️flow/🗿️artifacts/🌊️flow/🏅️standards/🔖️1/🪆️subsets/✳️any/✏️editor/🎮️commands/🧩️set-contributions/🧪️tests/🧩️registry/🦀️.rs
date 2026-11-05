@@ -4,7 +4,7 @@
 //! overlay proof 3, 2026-09-28, 9 unrelated flow reds).
 
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
 use semio_s_artifact_flow_flow::editor::flow::commands::set_contributions::{handle, install, SetContributions};
 use semio_s_artifact_flow_flow::FlowSnapshot;
 

@@ -14,7 +14,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::di
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, IssuePriority, IssueStatus, IssueViewpoint, Point2, Point3, SectionBox, ViewCamera};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Issue, ModelSnapshot};
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
 /// 🔭️ How far around the clash box the section box of a raised issue reaches, in metres.
@@ -88,7 +88,7 @@ fn orbit_of(camera: &ViewCamera) -> store::Viewport3dOrbit {
     store::Viewport3dOrbit { position, target, zoom: 1.0, up: None }
 }
 
-fn world_window(ctx: &BimDispatchCtx) -> Result<semio_framework_plugin::ViewModel, Fault> {
+fn world_window(ctx: &BimDispatchCtx) -> Result<semio_plugin::ViewModel, Fault> {
     let view = ctx.view.clone().ok_or_else(|| fault("bim.clash.window-required", "this belongs to one open 3D window"))?;
     if ctx.window_kind != semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID {
         return Err(fault("bim.clash.world-required", "this belongs to a 3D window"));

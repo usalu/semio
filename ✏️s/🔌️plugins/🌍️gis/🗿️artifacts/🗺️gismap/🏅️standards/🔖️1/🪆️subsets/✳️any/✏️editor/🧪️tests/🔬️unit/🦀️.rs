@@ -4,20 +4,20 @@ use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::panels::{artifact as docum
 use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use semio_s_artifact_gis_gismap_gis2d::{GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
 use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::artifact_declaration::{artifact_kind};
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::WindowMeasure;
 use pack::snapshot::ArtifactPack;
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::example::set_active_example;
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::features::{patch_positions, patch_route, patch_routes};
@@ -29,16 +29,16 @@ use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::sn
 
 pub mod context {
     use super::*;
-    use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members};
-    use semio_framework_plugin::{EditorApp, Effect, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_plugin::app::TypedOperationResultLane;
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members};
+    use semio_plugin::{EditorApp, Effect, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     use semio_s_artifact_stdio_semio::SemioMembers;
 
     pub type Gis2dApp = VcsArtifactApp<EditorApp<Gis2dPlayApp>, SemioMembers>;
 
     /// 🧹️ Owning guard that drains the exact close ladder before `ArtifactStore` drop asserts.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct Gis2dTestApp(pub Gis2dApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct Gis2dTestApp(pub Gis2dApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for Gis2dTestApp {
         type Target = Gis2dApp;
@@ -59,15 +59,15 @@ pub mod context {
             if std::thread::panicking() || self.0.close_terminal_is_empty() {
                 return;
             }
-            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             assert!(self.0.close_terminal_is_empty(), "GIS map test app must reach terminal-empty close");
         }
     }
 
     /// 🧬️ Builds the real registered fixture and binds the instance addressed by [`meta`].
     pub async fn app() -> Gis2dTestApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(gis2d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(gis2d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Gis2dTestApp(app, scope)
     }
@@ -75,22 +75,22 @@ pub mod context {
     /// ✏️ Adapts `create_gis2d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `context::assert_declared_actions_bridge_to_commands` still expects —
     /// framework test context gap, not modifiable here.
-    pub fn gis2d_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_gis2d_app(), examples: Vec::new() }
+    pub fn gis2d_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_gis2d_app(), examples: Vec::new() }
     }
 
     /// 🪟️ Targets the real GIS Map window instance for render, config, and measure authority.
     pub fn main_window_view() -> ViewModel {
-        ViewModel { window_id: Some("gis-map-main-test".into()), window_instances: vec![ViewWindowInstance { id: "gis-map-main-test".into(), window_kind_id: map::GIS2D_PLAY_WINDOW_MAIN.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+        ViewModel { window_id: Some("gis-map-main-test".into()), window_instances: vec![ViewWindowInstance { id: "gis-map-main-test".into(), window_kind_id: map::GIS2D_PLAY_WINDOW_MAIN.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
     }
 
     /// 🧹️ Drives a GIS Map fixture to its exact terminal-empty ownership witness.
     pub fn close(app: &mut Gis2dTestApp) {
-        close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 
     /// 📬️ Host-visible publication collected after one GIS Map command reaches quiescence.
-    pub struct Gis2dDispatchReceipt(semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt);
+    pub struct Gis2dDispatchReceipt(semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt);
 
     impl Gis2dDispatchReceipt {
         pub fn artifact_publication_count(&self) -> usize {
@@ -106,18 +106,18 @@ pub mod context {
     pub async fn dispatch(app: &mut Gis2dTestApp, command: Gis2dCommand) -> Gis2dDispatchReceipt {
         let mut action_meta = meta("local");
         action_meta.view_state = Some(main_window_view());
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch admission");
-        Gis2dDispatchReceipt(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch publication"))
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch admission");
+        Gis2dDispatchReceipt(semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch publication"))
     }
 
     /// 🖼️ Renders and retires one GIS Map fixture component tree.
     pub async fn render(app: &mut Gis2dTestApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &main_window_view(), app.1.cx()).await.expect("render projection")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &main_window_view(), app.1.cx()).await.expect("render projection")
     }
 
     /// 🗺️ Decodes the tiled-map surface payload from one rendered fixture tree.
-    pub async fn render_tiled_map_scene(app: &mut Gis2dTestApp, body_key: &str) -> semio_framework_ui_scene::TiledMapScene {
-        semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&render(app, body_key).await).expect("decode tiled-map scene")
+    pub async fn render_tiled_map_scene(app: &mut Gis2dTestApp, body_key: &str) -> semio_ui_scene::TiledMapScene {
+        semio_plugin::artifact_app_laws::decode_fixture_scene(&render(app, body_key).await).expect("decode tiled-map scene")
     }
 
     /// 📐️ Projects the main GIS Map window measures through the registered fixture.
@@ -145,10 +145,10 @@ pub mod context {
         dispatch(&mut instance_a, command_a).await;
         dispatch(&mut instance_b, command_b).await;
         for _ in 0..8 {
-            semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("pump a");
-            semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_b.0, "commitCheckpoint", None, &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("pump b");
-            instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("tick backbone a");
-            instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("tick backbone b");
+            semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("pump a");
+            semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_b.0, "commitCheckpoint", None, &meta("actor-b"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("pump b");
+            instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("tick backbone a");
+            instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("tick backbone b");
         }
         assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
         instance_a.detach_backbone().await.expect("detach backbone a");
@@ -159,7 +159,7 @@ pub mod context {
 }
 
 use crate::unit_tests::context::{app, close, gis2d_app_manifest_for_tests, render, Gis2dApp, Gis2dTestApp};
-use semio_framework_plugin::{ContextMenuRequest, PluginApp, VcsArtifactApp};
+use semio_plugin::{ContextMenuRequest, PluginApp, VcsArtifactApp};
 
 #[test]
 fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
@@ -187,8 +187,8 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
 #[semio_framework_async_macros::async_test]
 async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_once() {
     let snapshot = empty_gis_map_snapshot();
-    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_gis_gismap_gis2d::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_gis_gismap_gis2d::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
         .await
         .expect("GIS Map preparation-law Store opens");
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
@@ -212,7 +212,7 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
             None,
         )
         .expect("GIS Map one-item publication admits its exact factory");
-    let mut receiving_fixture = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant());
+    let mut receiving_fixture = semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant());
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 16_384, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 262_144, maximum_depth: 4096 };
     let mut published = false;
     for _ in 0..64 {
@@ -238,7 +238,7 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
     }
     assert!(publication.terminal_is_empty());
     drop(publication);
-    semio_framework_os_store_testing_doubles::close_test_store(&mut store);
+    semio_os_store_testing_doubles::close_test_store(&mut store);
 }
 
 /// 🧾️ LAW: every parent snapshot this crate can hand a live document replacement projects into the
@@ -288,7 +288,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
         "conflicts": []
     }))
     .expect("schema-first GIS fixture envelope");
-    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut retirement = semio_s_artifact_gis_gismap_gis2d::host::owned::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(semio_framework_value::testing::physical_test_close_grant()).result.expect("GIS fixture envelope retirement") {
@@ -303,7 +303,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
     panic!("GIS fixture envelope retirement did not reach terminal")
 }
 
-fn admit_gis_map_envelope(app: &mut Gis2dTestApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_gis_map_envelope(app: &mut Gis2dTestApp, wire: &[u8]) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("GIS live envelope ingress credits");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -323,18 +323,18 @@ fn admit_gis_map_envelope(app: &mut Gis2dTestApp, wire: &[u8]) -> semio_framewor
 /// asserts termination, not speed.
 const GIS_MAP_LIVE_LOAD_TURN_BUDGET: usize = 1_000_000;
 
-async fn drive_gis_map_live_load(app: &mut Gis2dTestApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
-    let mut last = semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending;
+async fn drive_gis_map_live_load(app: &mut Gis2dTestApp, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
+    let mut last = semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending;
     for _ in 0..GIS_MAP_LIVE_LOAD_TURN_BUDGET {
-        PluginApp::advance_typed_operation_publication(&mut app.0, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("GIS envelope load reactor turn");
+        PluginApp::advance_typed_operation_publication(&mut app.0, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("GIS envelope load reactor turn");
         last = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("GIS live load advancement");
-        if !matches!(last, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
+        if !matches!(last, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
             return last;
         }
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one GIS live maintenance turn");
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one GIS live maintenance turn");
         let _ = semio_framework_job_worker::pump_worker_job_retirements(8, app.1.cx());
         last = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("GIS live load advancement after maintenance");
-        if !matches!(last, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
+        if !matches!(last, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
             return last;
         }
         std::thread::yield_now();
@@ -354,7 +354,7 @@ async fn gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_su
     let base_generation = app.artifact_generation_now();
     let handle = admit_gis_map_envelope(&mut app, &gis_map_envelope_wire());
     assert_eq!(handle.generation, base_generation);
-    assert_eq!(drive_gis_map_live_load(&mut app, handle).await, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(drive_gis_map_live_load(&mut app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("first exact GIS load acknowledgement"));
     assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate GIS load acknowledgement is a no-op"));
@@ -374,7 +374,7 @@ async fn gis_map_live_envelope_cancel_closes_retained_pages_without_publication(
     let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled GIS first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled GIS page admission failed: {fault:?}"));
     app.cancel_artifact_envelope_load(handle).expect("cancel exact GIS ingress");
-    assert_eq!(drive_gis_map_live_load(&mut app, handle).await, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    assert_eq!(drive_gis_map_live_load(&mut app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.artifact_generation_now(), base_generation);
     close(&mut app);
 }
@@ -451,7 +451,7 @@ async fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
 /// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_tests).await;
+    semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_tests).await;
     assert!(Gis2dPlayApp::command_from_action("noSuchAction", &mut None, &mut None).is_err());
 }
 //#endregion 🔖️CommandSurface
@@ -481,7 +481,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
 async fn export_media_map_out_produces_a_2d_map_structured_payload() {
     let mut app = app().await;
     let document = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = Gis2dPlayApp::export_media("map:out", &doc).expect("map:out export");
     let MediaPayload::Intrinsic { schema, value } = media.payload else { panic!("expected intrinsic map payload") };
@@ -496,7 +496,7 @@ async fn export_media_map_out_produces_a_2d_map_structured_payload() {
 async fn import_media_features_in_adds_new_positions_as_operations() {
     let mut app = app().await;
     let document = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let incoming = serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming } };
@@ -524,9 +524,9 @@ async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
     assert_eq!(io.artifact_schema, GIS_MAP_SCHEMA);
     assert_eq!(io.artifact.id, semio_s_artifact_gis_gismap_gis2d::GISMAP_DIALECT.artifact_kind);
     let ports = io.all_ports().await;
-    assert!(ports.iter().any(|port| port.id == "features:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
+    assert!(ports.iter().any(|port| port.id == "features:in" && port.direction == semio_plugin::MediaPortDirection::In));
     let map_out = ports.iter().find(|port| port.id == "map:out").expect("map:out declared");
-    assert_eq!(map_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(map_out.direction, semio_plugin::MediaPortDirection::Out);
     assert_eq!(map_out.kind_id.as_deref(), Some(semio_s_artifact_gis_gismap_gis2d::GISMAP_DIALECT.artifact_kind));
 }
 
@@ -549,8 +549,8 @@ async fn gis2d_map_media_exports_the_document_descriptor() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
     let mut app = app().await;
-    let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let request = ContextMenuRequest { menu: semio_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };
+    let menu = app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("empty-canvas context menu should not be empty");
     assert_eq!(last.id, "clearSelection", "known destructive clearSelection must be last: {menu:?}");
@@ -562,7 +562,7 @@ async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_
 
 //#region 🎬️StageableActionVocabulary
 /// 🔎️ One declared action of the gis2d manifest, wherever its window kind declares it.
-fn declared_action(definition: &semio_framework_plugin::AppDefinition, id: &str) -> ActionDefinition {
+fn declared_action(definition: &semio_plugin::AppDefinition, id: &str) -> ActionDefinition {
     definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == id).unwrap_or_else(|| panic!("{id} is declared")).clone()
 }
 
@@ -594,7 +594,7 @@ async fn layer_verbs_stage_every_declared_map_layer() {
     for id in ["toggleLayerVisibility", "setLayerStrokeScale"] {
         let action = declared_action(&definition, id);
         let layer = action.args.iter().find(|arg| arg.id == "layerId").unwrap_or_else(|| panic!("{id} stages a layer"));
-        let semio_framework_plugin::ArgSchema::String { options, .. } = &layer.schema else {
+        let semio_plugin::ArgSchema::String { options, .. } = &layer.schema else {
             panic!("{id} stages its layer as a discrete choice");
         };
         let staged: Vec<&str> = options.iter().map(|option| option.value.as_str()).collect();
@@ -626,4 +626,4 @@ async fn the_retained_tool_surface_proofs_and_publication_contracts_cover_every_
 }
 //#endregion 🎬️StageableActionVocabulary
 
-semio_framework_plugin::history_edit_acceptance_law!("gis", semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dPlayApp, || semio_framework_plugin::App { definition: semio_s_artifact_gis_gismap_gis2d::editor::gis2d::create_gis2d_app(), examples: Vec::new() }, "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("gis", semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dPlayApp, || semio_plugin::App { definition: semio_s_artifact_gis_gismap_gis2d::editor::gis2d::create_gis2d_app(), examples: Vec::new() }, "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any");

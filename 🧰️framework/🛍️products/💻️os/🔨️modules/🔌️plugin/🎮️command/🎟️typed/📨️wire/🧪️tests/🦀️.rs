@@ -1,7 +1,7 @@
 //! 🧪️ Original command bytes retain the exact typed Box across both passes, denied turns and cancellation.
 use super::*;
-use semio_framework_plugin_command::command_admission::original_typed_command::ArtifactOriginalCommandWire as Wire;
-use semio_framework_os_store_operation_wire::{ArtifactOperationText,ArtifactOperationTextNode,ArtifactPreparedOperationError,ArtifactPreparedOperationSource};
+use semio_plugin_command::command_admission::original_typed_command::ArtifactOriginalCommandWire as Wire;
+use semio_os_store_operation_wire::{ArtifactOperationText,ArtifactOperationTextNode,ArtifactPreparedOperationError,ArtifactPreparedOperationSource};
 use semio_framework_value::{ValueError,retained_clone::RetainedCloneClose};
 use std::mem::size_of;
 #[derive(semio_framework_value::RetireOwned)]

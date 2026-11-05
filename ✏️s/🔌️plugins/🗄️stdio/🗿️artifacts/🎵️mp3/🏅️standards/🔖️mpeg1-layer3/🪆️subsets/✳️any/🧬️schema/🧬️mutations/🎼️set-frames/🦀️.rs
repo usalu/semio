@@ -13,8 +13,8 @@ pub struct SetFrames {
 impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetFrames {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frames", kind: "set-frames", record: "SetFrames" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set frames", "Frames setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set frames", "Frames setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

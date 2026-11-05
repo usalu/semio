@@ -1,7 +1,7 @@
 use crate::ansi::AnsiPatch;
-use semio_framework_ui_tui_core::event::Event;
-use semio_framework_ui_tui_core::geometry::Size;
-use semio_framework_ui_tui_core::signal::CursorSpec;
+use semio_ui_tui_core::event::Event;
+use semio_ui_tui_core::geometry::Size;
+use semio_ui_tui_core::signal::CursorSpec;
 use std::io;
 
 #[path = "📋️clipboard-and-osc52/🦀️.rs"]

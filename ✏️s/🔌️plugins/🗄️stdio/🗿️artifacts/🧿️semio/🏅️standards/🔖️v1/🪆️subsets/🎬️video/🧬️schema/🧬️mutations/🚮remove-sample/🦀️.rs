@@ -15,8 +15,8 @@ pub struct RemoveSample {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for RemoveSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "sample", kind: "remove-sample", record: "RemoveSample" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove sample", "Sample entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove sample", "Sample entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

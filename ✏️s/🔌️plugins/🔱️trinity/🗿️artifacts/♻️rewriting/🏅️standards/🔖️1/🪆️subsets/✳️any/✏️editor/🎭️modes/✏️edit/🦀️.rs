@@ -3,14 +3,14 @@
 //! itself has no other mode; this is the only `ModeDefinition` `create_rewriting_app` registers.
 
 use crate::editor::rewriting::ids::{TRINITY_REWRITING_PLAY_WINDOW_AFTER, TRINITY_REWRITING_PLAY_WINDOW_BEFORE, TRINITY_REWRITING_PLAY_WINDOW_JACK, TRINITY_REWRITING_PLAY_WINDOW_LHS, TRINITY_REWRITING_PLAY_WINDOW_PARAMETERS, TRINITY_REWRITING_PLAY_WINDOW_RHS};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
-use semio_framework_plugin::WindowLayoutAxisNode;
-use semio_framework_plugin::WindowLayoutChild;
-use semio_framework_plugin::WindowLayoutRoot;
-use semio_framework_plugin::WindowLayoutStackNode;
-use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
+use semio_plugin::WindowLayoutAxisNode;
+use semio_plugin::WindowLayoutChild;
+use semio_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutStackNode;
+use semio_plugin::WindowLayoutWindowNode;
 
 pub const TRINITY_REWRITING_MODE_EDIT: &str = "edit";
 

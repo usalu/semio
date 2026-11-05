@@ -7,10 +7,10 @@ use crate::editor::wires::modes::edit;
 use crate::WiresMutation;
 use crate::WiresSnapshot;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
 use crate::editor::wires::{WIRES_RETAINED_TOOL_IDS, WIRES_RETAINED_RAW_BYTES, WIRES_RETAINED_WORK_ITEMS, WIRES_RETAINED_PUBLICATION_CONTRACTS, WiresRetainedCommandJobFactory};
 pub mod context {
     use crate::editor::wires::*;
@@ -23,12 +23,12 @@ use crate::editor::wires::modes::edit;
 use crate::WiresMutation;
 use crate::WiresSnapshot;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
-    use semio_framework_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
+    use semio_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
@@ -53,12 +53,12 @@ use semio_framework_plugin::HierarchyProvider;
     /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
     /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct OwnedWiresApp(pub WiresApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct OwnedWiresApp(pub WiresApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl OwnedWiresApp {
         /// 🚪️ Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -92,25 +92,25 @@ use semio_framework_plugin::HierarchyProvider;
         App { definition: create_wires_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::composed_reload_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, "../..");
-    semio_framework_plugin::composed_child_history_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, [("addNode", r#"{"kind":"identity"}"#)]);
+    semio_plugin::composed_reload_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, "../..");
+    semio_plugin::composed_child_history_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, [("addNode", r#"{"kind":"identity"}"#)]);
 
     /// 📱️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
     pub async fn app_with_registry() -> OwnedWiresApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        OwnedWiresApp(new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(wires_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await, scope)
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        OwnedWiresApp(new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(wires_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await, scope)
     }
     
     /// 📤️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
     pub async fn metabolism_app() -> OwnedWiresApp {
         let mut app = new_app().await;
         let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print document pack");
         retire_envelope(envelope);
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load metabolism");
+        semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load metabolism");
         app
     }
     
@@ -126,8 +126,8 @@ use semio_framework_plugin::HierarchyProvider;
     /// mounted app `dispatch_typed` only QUEUES the operation, so a law reading `app.snapshot()`
     /// straight afterwards would observe the pre-dispatch document, and the returned
     /// `InvocationResult` carries neither the mutations nor the effects the operation produces.
-    pub async fn settle(app: &mut OwnedWiresApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation")
+    pub async fn settle(app: &mut OwnedWiresApp) -> semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation")
     }
 
     /// 🧑️ Reads the actual declared board member through its current Store lease.
@@ -142,11 +142,11 @@ use semio_framework_plugin::HierarchyProvider;
     }
 
     /// 📦️ Loads a parent and its explicit full graph child through the real recursive archive protocol.
-    pub async fn load_graph_snapshot(app: &mut OwnedWiresApp, nodes: Vec<semio_framework_value::DslValue>, edges: Vec<semio_framework_value::DslValue>) -> Result<(), semio_framework_plugin::Fault> {
+    pub async fn load_graph_snapshot(app: &mut OwnedWiresApp, nodes: Vec<semio_framework_value::DslValue>, edges: Vec<semio_framework_value::DslValue>) -> Result<(), semio_plugin::Fault> {
         let content = crate::wires_content_snapshot(&nodes, &edges);
         let snapshot = WiresSnapshot { content: crate::wires_content_handle(&content), ..crate::empty_wires_snapshot() };
         let handle = snapshot.content.clone();
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("graph fixture parent pack");
         retire_envelope(envelope);
@@ -161,10 +161,10 @@ use semio_framework_plugin::HierarchyProvider;
             owner: protocol::DocumentArchiveOwnerRef { parent: protocol::DocumentArchiveArtifactRef { artifact_id: parent.artifact_id, artifact_kind: parent.dialect.artifact_kind, standard: parent.dialect.standard, subset: parent.dialect.subset }, slot: crate::WIRES_CONTENT_SLOT.into(), child_id: handle.child_id },
             envelope_pack,
         });
-        let operation = semio_framework_plugin::artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION;
+        let operation = semio_plugin::artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION;
         app.begin_document_archive_load(operation, archive)?;
         for _ in 0..100_000 {
-            let status = app.0.poll_document_archive_load(operation, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await?;
+            let status = app.0.poll_document_archive_load(operation, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await?;
             if matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 continue;
             }
@@ -177,7 +177,7 @@ use semio_framework_plugin::HierarchyProvider;
 
     /// 🎛️ Dispatches one typed command and settles its publication.
     pub async fn dispatch(app: &mut OwnedWiresApp, command: WiresCommand) -> InvocationResult {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -187,14 +187,14 @@ use semio_framework_plugin::HierarchyProvider;
     /// `dispatch(..)` followed by `settle(..)`: `dispatch` already drains the operation, so a second
     /// settle finds `has_pending_typed_operations() == false` and answers an EMPTY receipt — no lanes,
     /// no effects — which reads exactly like a command that emitted nothing.
-    pub async fn dispatch_receipt(app: &mut OwnedWiresApp, command: WiresCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    pub async fn dispatch_receipt(app: &mut OwnedWiresApp, command: WiresCommand) -> (InvocationResult, semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let receipt = settle(app).await;
         (result, receipt)
     }
     
     pub async fn render(app: &mut OwnedWiresApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render")
     }
 }
 
@@ -206,7 +206,7 @@ static RETAINED_ROUTES: std::sync::LazyLock<&'static str> = std::sync::LazyLock:
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let fixture: Value = serde_json::from_str((*RETAINED_ROUTES)).expect("Wires retained route fixture decodes through serde_json");
     assert_eq!(fixture.get("maximumRawBytes").and_then(Value::as_u64), Some(WIRES_RETAINED_RAW_BYTES as u64));
     assert_eq!(fixture.get("maximumWorkItems").and_then(Value::as_u64), Some(WIRES_RETAINED_WORK_ITEMS as u64));
@@ -304,7 +304,7 @@ pub(crate) fn every_command() -> Vec<WiresCommand> {
         WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5, samples: vec![[0.5, -1.5], [1.5, -2.5]] }),
         WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
         WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
-        WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -377,7 +377,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = new_app().await;
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::schema::board_snapshot_nodes(&context::board(app)).len(), 0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    semio_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| crate::schema::board_snapshot_nodes(&context::board(app)).len(), 0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 
@@ -385,15 +385,15 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 /// parent `Mutations` batch); a peer folding that lane gets the edit, and the same lane redelivered folds nothing twice.
 #[semio_framework_async_macros::async_test]
 async fn a_redelivered_member_lane_is_idempotent() {
-    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+    use semio_plugin::PluginApp;
     use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
     let nodes = |app: &crate::editor::wires::unit_tests::context::WiresApp| crate::schema::board_snapshot_nodes(&context::board(app)).len();
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://wires-idempotent", "mem://wires-idempotent").await;
     sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut sender.0, &WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("apply command");
-    settle_registered_typed_operation(&mut sender.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("the edit publishes");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut sender.0, &WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("apply command");
+    settle_registered_typed_operation(&mut sender.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("the edit publishes");
     let received = far.receive().await.expect("receive");
     assert!(!received.iter().any(|message| matches!(message, BackboneMessage::Mutations { .. })), "a board edit never travels as a parent batch");
     let lanes: Vec<BackboneMessage> = received.into_iter().filter(|message| matches!(message, BackboneMessage::Member { .. })).collect();
@@ -405,13 +405,13 @@ async fn a_redelivered_member_lane_is_idempotent() {
     for message in &lanes {
         peer.send(message.clone()).await.expect("deliver the member lane");
     }
-    receiver.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("fold the member lane once");
+    receiver.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("fold the member lane once");
     let once = nodes(&receiver);
     assert_eq!(once, genesis + 1, "folding the member lane materializes the edit");
     for message in &lanes {
         peer.send(message.clone()).await.expect("redeliver the member lane");
     }
-    receiver.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("fold the member lane twice");
+    receiver.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("fold the member lane twice");
     assert_eq!(nodes(&receiver), once, "the same member lane redelivered must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
     receiver.detach_backbone().await.expect("receiver releases its backbone");
@@ -424,8 +424,8 @@ async fn a_redelivered_member_lane_is_idempotent() {
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     use crate::schema::board_node;
-    use semio_framework_plugin::artifact_app_laws::meta;
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::artifact_app_laws::meta;
+    use semio_plugin::PluginApp;
     use store::os_store::backbone::MemoryBackbone;
 
     let mut instance_a = new_app().await;
@@ -441,13 +441,13 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
     let receiver = meta("local").instance_id;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a adds node");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-2".into() }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b relates node-1 to node-2");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a adds node");
+    semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_a.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-2".into() }), &meta("actor-b"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b relates node-1 to node-2");
+    semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_b.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
 
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
 
     let projection_a = context::board(&instance_a);
     let projection_b = context::board(&instance_b);
@@ -482,21 +482,21 @@ async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history
 
 #[test]
 fn debug_child_seed_settles() {
-    semio_framework_plugin::app::history_edit_acceptance::block_on_acceptance(async {
-        use semio_framework_plugin::PluginApp;
-        let manifest = || semio_framework_plugin::App { definition: create_wires_app(), examples: Vec::new() };
-        let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<semio_framework_plugin::EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-        let receiver = semio_framework_plugin::artifact_app_laws::meta("acceptance").instance_id;
+    semio_plugin::app::history_edit_acceptance::block_on_acceptance(async {
+        use semio_plugin::PluginApp;
+        let manifest = || semio_plugin::App { definition: create_wires_app(), examples: Vec::new() };
+        let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = semio_plugin::artifact_app_laws::new_app_with_registry_and_members::<semio_plugin::EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
+        let receiver = semio_plugin::artifact_app_laws::meta("acceptance").instance_id;
         app.bind_instance_id(receiver).await;
         let args = semio_framework_value::DslValue::Object(vec![("kind".into(), semio_framework_value::DslValue::String("identity".into()))]);
-        let meta = semio_framework_plugin::ActionMeta { view_state: Some(semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..semio_framework_plugin::artifact_app_laws::meta("acceptance") };
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "addNode", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await;
+        let meta = semio_plugin::ActionMeta { view_state: Some(semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), ..semio_plugin::artifact_app_laws::meta("acceptance") };
+        let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "addNode", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await;
         for turn in 0..4000 {
             if !app.has_pending_typed_operations() {
                 break;
             }
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("advance");
+            app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("advance");
             while app.take_typed_operation_ui_progress().is_some() {}
             if turn == 1000 || turn == 3999 {
                 let page = app.take_typed_operation_result_page(receiver);
@@ -504,8 +504,8 @@ fn debug_child_seed_settles() {
                 }
             }
         }
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map(|receipt| {}).unwrap_or_else(|fault| {});
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map(|receipt| {}).unwrap_or_else(|fault| {});
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     });
 }
 

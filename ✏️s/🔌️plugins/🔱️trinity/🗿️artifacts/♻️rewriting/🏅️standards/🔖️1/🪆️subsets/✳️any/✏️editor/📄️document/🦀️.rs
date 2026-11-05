@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::rule::{ParameterKind, Rhs};
 use crate::standards::v1::subsets::any::schema::model::{LayoutPoint, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::{PropertyBag};
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use crate::editor::rewriting::ids::*;
@@ -33,10 +33,10 @@ pub fn default_rule_state() -> RewritingSnapshot {
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `resetRule` builds a `Effect::LoadDocument`
 /// (outside undo history) instead of an `artifact_mutations` entry.
-pub fn reset_document_effect(state: &RewritingSnapshot) -> semio_framework_plugin::Effect {
+pub fn reset_document_effect(state: &RewritingSnapshot) -> semio_plugin::Effect {
     let pack = <RewritingSnapshot as ArtifactPack>::encode_pack(state);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+    semio_plugin::Effect::LoadDocument { pack, spr }
 }
 
 

@@ -16,8 +16,8 @@ pub struct SetStructuralEntity {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetStructuralEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "structural-entity", kind: "set-structural-entity", record: "SetStructuralEntity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set structural entity", "Tragwerkselement setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set structural entity", "Tragwerkselement setzen")
     }
 
     fn target(&self) -> Vec<String> {

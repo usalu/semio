@@ -1,0 +1,172 @@
+{
+  "rows": [
+    {
+      "id": "zero-items",
+      "input": {
+        "length": 0,
+        "capacity": 0,
+        "cellBytes": 16,
+        "original": true,
+        "items": 0,
+        "copyBytes": 0,
+        "capacityBytes": 16,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "expected": {
+        "length": 0,
+        "capacity": 0,
+        "original": true,
+        "work": 0,
+        "copiedBytes": 0,
+        "bornBytes": 0,
+        "releasedBytes": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "short-capacity",
+      "input": {
+        "length": 0,
+        "capacity": 0,
+        "cellBytes": 16,
+        "original": true,
+        "items": 1,
+        "copyBytes": 0,
+        "capacityBytes": 15,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "expected": {
+        "length": 0,
+        "capacity": 0,
+        "original": true,
+        "work": 0,
+        "copiedBytes": 0,
+        "bornBytes": 0,
+        "releasedBytes": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "zero-depth",
+      "input": {
+        "length": 0,
+        "capacity": 0,
+        "cellBytes": 16,
+        "original": true,
+        "items": 1,
+        "copyBytes": 0,
+        "capacityBytes": 16,
+        "releaseBytes": 0,
+        "depth": 0
+      },
+      "expected": {
+        "length": 0,
+        "capacity": 0,
+        "original": true,
+        "work": 0,
+        "copiedBytes": 0,
+        "bornBytes": 0,
+        "releasedBytes": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "reserve",
+      "input": {
+        "length": 0,
+        "capacity": 0,
+        "cellBytes": 16,
+        "original": true,
+        "items": 1,
+        "copyBytes": 0,
+        "capacityBytes": 16,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "expected": {
+        "length": 0,
+        "capacity": 1,
+        "original": true,
+        "work": 1,
+        "copiedBytes": 0,
+        "bornBytes": 16,
+        "releasedBytes": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "short-handoff",
+      "input": {
+        "length": 0,
+        "capacity": 1,
+        "cellBytes": 16,
+        "original": true,
+        "items": 1,
+        "copyBytes": 31,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "expected": {
+        "length": 0,
+        "capacity": 1,
+        "original": true,
+        "work": 0,
+        "copiedBytes": 0,
+        "bornBytes": 0,
+        "releasedBytes": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "handoff",
+      "input": {
+        "length": 0,
+        "capacity": 1,
+        "cellBytes": 16,
+        "original": true,
+        "items": 1,
+        "copyBytes": 32,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "expected": {
+        "length": 1,
+        "capacity": 1,
+        "original": false,
+        "work": 1,
+        "copiedBytes": 32,
+        "bornBytes": 0,
+        "releasedBytes": 0,
+        "complete": true
+      }
+    },
+    {
+      "id": "no-source",
+      "input": {
+        "length": 0,
+        "capacity": 0,
+        "cellBytes": 16,
+        "original": false,
+        "items": 1,
+        "copyBytes": 0,
+        "capacityBytes": 16,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "expected": {
+        "length": 0,
+        "capacity": 0,
+        "original": false,
+        "work": 0,
+        "copiedBytes": 0,
+        "bornBytes": 0,
+        "releasedBytes": 0,
+        "complete": true
+      }
+    }
+  ]
+}

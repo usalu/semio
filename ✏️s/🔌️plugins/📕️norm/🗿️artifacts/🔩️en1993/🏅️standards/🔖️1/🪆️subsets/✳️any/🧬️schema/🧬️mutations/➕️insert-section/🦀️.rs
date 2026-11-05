@@ -10,7 +10,7 @@ pub struct InsertSection { pub index: Option<usize>, pub section: SteelSection }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertSection where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_section::RemoveSection> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "section", kind: "insert-section", record: "InsertedSection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert cross-section at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Querschnitt an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert cross-section at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Querschnitt an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

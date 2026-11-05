@@ -12,7 +12,7 @@
 use crate::editor::home::config::{local_studio_id_is_admissible, HomeConfig, HomeConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "bind-space-file")]
@@ -41,15 +41,15 @@ pub fn validate(payload: &BindSpaceFile) -> Result<(), Fault> {
 /// 💾️ Stage two — the one filesystem + catalog write, then the catalog generation bump.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn commit(payload: &BindSpaceFile, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    use semio_framework_os::{document_backbone_ref, encode_backbone_payload, OsBackbonePort as _};
-    let refused = |error: semio_framework_os::VcsError| Fault::new(FaultOrigin::App, "s.home.bind-space-file.io-failed", format!("binding {} to {} failed: {error:?}", payload.space_id, payload.file_path));
+    use semio_os::{document_backbone_ref, encode_backbone_payload, OsBackbonePort as _};
+    let refused = |error: semio_os::VcsError| Fault::new(FaultOrigin::App, "s.home.bind-space-file.io-failed", format!("binding {} to {} failed: {error:?}", payload.space_id, payload.file_path));
     let uri = format!("file://{}", payload.file_path);
-    let port = semio_framework_os::open_file_space_backbone(&payload.file_path).map_err(refused)?;
+    let port = semio_os::open_file_space_backbone(&payload.file_path).map_err(refused)?;
     let mut document = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::resolve_studio_document(&payload.space_id)).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.bind-space-file.unknown-studio", format!("no local studio {} exists", payload.space_id)))?;
     document.backbone = Some(::semio_framework_async::poll::resolve_ready(document_backbone_ref(&uri)));
     port.write(&uri, &encode_backbone_payload(&document).map_err(refused)?).map_err(refused)?;
     ::semio_framework_async::poll::resolve_ready(semio_s_space_core::register_studio_port(&payload.space_id, port));
-    semio_framework_os::host::admit_os_space_document(document, &::semio_framework_async::poll::resolve_ready(semio_s_space_core::catalog_port())).map_err(refused)?;
+    semio_os::host::admit_os_space_document(document, &::semio_framework_async::poll::resolve_ready(semio_s_space_core::catalog_port())).map_err(refused)?;
     let draft_port = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::draft_backbone_port());
     ::semio_framework_async::poll::resolve_ready(semio_s_space_core::ephemeral_draft_catalog()).discard_draft(&draft_port, &payload.space_id);
     Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(doc.snapshot.catalog_generation + 1)]))

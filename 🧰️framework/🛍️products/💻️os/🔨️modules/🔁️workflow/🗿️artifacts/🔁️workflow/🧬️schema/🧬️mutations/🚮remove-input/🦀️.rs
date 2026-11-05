@@ -18,8 +18,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveInput 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "workflow", kind: "remove-input", record: "RemovedWorkflowInput" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove workflow input {}", self.input_id), &format!("Arbeitsablaufeingabe {} entfernen", self.input_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove workflow input {}", self.input_id), &format!("Arbeitsablaufeingabe {} entfernen", self.input_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["inputs".into(), self.input_id.clone()]

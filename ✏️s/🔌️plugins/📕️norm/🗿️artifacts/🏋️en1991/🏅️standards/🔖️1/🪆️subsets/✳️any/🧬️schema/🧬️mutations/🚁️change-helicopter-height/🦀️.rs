@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeHelicopterHeight w
         record: "ChangedHelicopterHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change height of the pad above ground of the helicopter landing", "Hubschrauberlandung: Höhe des Landeplatzes über Gelände ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change height of the pad above ground of the helicopter landing", "Hubschrauberlandung: Höhe des Landeplatzes über Gelände ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,6 +1,6 @@
 //! 📚️ remodeling examples: the demo document and the synthetic-orbit capture.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "."]
 pub mod examples {

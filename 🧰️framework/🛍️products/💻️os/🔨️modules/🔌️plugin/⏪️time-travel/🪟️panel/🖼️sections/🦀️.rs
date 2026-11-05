@@ -1,31 +1,31 @@
 //! 🖼️ The history panel sections: row refusals of the mutation controls, the band, reprojection and editor sections, control rows, the input row builder and the panel limits.
 
-use semio_framework_plugin_interaction::{UiAssemblyResult,ui_assembly_error};
-use semio_framework_plugin_window_transient::{ui_label,ui_text};
-use semio_framework_plugin_window_kits_rich::tree_kit::{TreeWindows,tree_window_indexed_item,tree_window_indexed_section};
+use semio_plugin_interaction::{UiAssemblyResult,ui_assembly_error};
+use semio_plugin_window_transient::{ui_label,ui_text};
+use semio_plugin_window_kits_rich::tree_kit::{TreeWindows,tree_window_indexed_item,tree_window_indexed_section};
 use semio_framework::{ActionArgControl, ArgPresentation, ArgSchema, FaultFrom, IconName, reference_id_text};
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::DslValue;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ARG_EDIT, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_PATH, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_ARG_VALUE, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, HISTORY_EDIT_DISCARD_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_INPUT_INSERT, HISTORY_EDIT_INPUT_REMOVE, HISTORY_EDIT_RERUN_ACTION_ID, HISTORY_EDIT_USE_SELECTION_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
-use semio_framework_plugin_command::lifted_command::{HistoryPanelText, MutationRowRefusals, TimeTravelEditorPanel, TimeTravelInputRow, TimeTravelListItem, TimeTravelPanel, history_code_text, history_severity_text, history_severity_tone};
+use semio_plugin_command::lifted_command::{HistoryPanelText, MutationRowRefusals, TimeTravelEditorPanel, TimeTravelInputRow, TimeTravelListItem, TimeTravelPanel, history_code_text, history_severity_text, history_severity_tone};
 use semio_framework::kernel::{HistoryReprojection, HistoryReprojectionKind, HistoryTimeTravelStage};
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 use semio_framework_time_travel::{TimeTravelLabel, TimeTravelRefusal, TimeTravelReview, TimeTravelStage};
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 use crate::panel_pointer::{time_travel_color_rgba, time_travel_json};
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 
 //#region 🔖️Limits
 /// 🔎️ Document values one reference-name lookup visits at most ([`time_travel_entity_names`]).

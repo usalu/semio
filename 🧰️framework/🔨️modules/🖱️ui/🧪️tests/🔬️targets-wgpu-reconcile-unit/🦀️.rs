@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_declaration::ui::{ui_tree_stamp_presence, UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::{ui_tree_stamp_presence, UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
 
 fn action() -> ActionDescriptor {
     ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
@@ -301,7 +301,7 @@ fn open_select(tree: &mut UiTree, ui: &UiNode) -> NodeId {
 /// neutral tone and the brand roles carry none, and a toneless row costs nothing on the wire.
 #[test]
 fn a_tree_row_carries_only_a_semantic_tone() {
-    let theme = semio_framework_ui_theme::Theme::light();
+    let theme = semio_ui_theme::Theme::light();
     for (tone, carried) in [
         (ui_contract::Tone::Info, true),
         (ui_contract::Tone::Success, true),
@@ -448,7 +448,7 @@ fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
 #[test]
 fn changing_only_a_field_error_dirties_layout_for_the_new_error_band() {
     let field = |error: Option<&str>| {
-        UiNode::Field(semio_framework_ui_declaration::ui::UiFieldNode {
+        UiNode::Field(semio_ui_declaration::ui::UiFieldNode {
             id: "field".into(),
             label: Label::data("Field"),
             description: Some("Description".into()),
@@ -478,7 +478,7 @@ fn node_graph_surface_reconciles_paged_records_and_host_snapshot() {
     let node: ui_scene::NodeGraphNodeRecord = serde_json::from_value(fixture["node"].clone()).unwrap();
     let count = fixture["nodeCount"].as_u64().unwrap() as usize;
     let nodes = (0..count).map(|index| ui_scene::NodeGraphNodeRecord { id: index.to_string(), ..node.clone() }).collect();
-    let mut scene = ui_scene::NodeGraphScene::base(nodes, Vec::new(), semio_framework_ui_viewport::Viewport2d::default());
+    let mut scene = ui_scene::NodeGraphScene::base(nodes, Vec::new(), semio_ui_viewport::Viewport2d::default());
     scene.host_snapshot_json = Some(serde_json::json!({ "label": fixture["hostSnapshotLabel"].as_str().unwrap().repeat(count) }).to_string());
     let (spine, lanes) = scene.split_lanes();
     let props = ui_scene::encode(ui_contract::SurfaceKind::NodeGraph, &spine).unwrap();

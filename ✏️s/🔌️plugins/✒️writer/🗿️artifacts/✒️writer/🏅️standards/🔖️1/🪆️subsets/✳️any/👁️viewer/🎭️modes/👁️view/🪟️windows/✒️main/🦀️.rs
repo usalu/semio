@@ -5,8 +5,8 @@
 //! on the sibling `editor` module's own window, never read from here).
 
 use crate::{writer_text, WriterSnapshot};
-use semio_framework_plugin::app::{TextView, TextWindowKit};
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowKit};
+use semio_plugin::app::{TextView, TextWindowKit};
+use semio_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WRITER_VIEW_WINDOW_KIND: &str = TextWindowKit::KIND_ID;

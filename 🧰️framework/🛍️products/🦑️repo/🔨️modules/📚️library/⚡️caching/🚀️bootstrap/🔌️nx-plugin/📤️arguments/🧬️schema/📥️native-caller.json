@@ -5,6 +5,7 @@
   "additionalProperties": false,
   "required": [
     "workspaceRoot",
+    "codeRoot",
     "arguments",
     "buildMode",
     "native",
@@ -16,6 +17,12 @@
       "pattern": "^(prototype|release)$"
     },
     "workspaceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000]+$"
+    },
+    "codeRoot": {
       "type": "string",
       "minLength": 1,
       "maxLength": 256,

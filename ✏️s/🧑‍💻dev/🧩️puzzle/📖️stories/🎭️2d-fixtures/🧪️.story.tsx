@@ -9,6 +9,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
 import { Board2dHost } from "@semio-tech/framework-renderer-react";
+import { BoardSessionFactoryContext, resolveAppSurfaceSessionFactory } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
+import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-renderer-react";
 
 import { puzzle2dConcreteForestDsl as concreteForestFixtureDsl } from "@semio-tech/puzzle-2d/examples/concrete-forest/assets/forest";
@@ -210,6 +212,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
 
 //#region StoryHost
 function Board2dFixtureStoryHost({ fixtureDsl, interactive }: { readonly fixtureDsl: string; readonly interactive: boolean }): ReactElement {
+  const factory = useMemo(() => resolveAppSurfaceSessionFactory(PUZZLE_BOARD_SESSION_FACTORIES, { pluginId: "puzzle", appId: "s.puzzle.puzzle2d@1/*#editor", instanceId: 1 }), []);
   const [state, setState] = useState<StoryPuzzle2dState | null>(null);
 
   useEffect(() => {
@@ -248,7 +251,9 @@ function Board2dFixtureStoryHost({ fixtureDsl, interactive }: { readonly fixture
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <Board2dHost node={node} onAction={onAction} />
+        <BoardSessionFactoryContext.Provider value={factory}>
+          <Board2dHost node={node} onAction={onAction} />
+        </BoardSessionFactoryContext.Provider>
       </div>
       <pre data-testid="puzzle2d-fixture-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {debug}

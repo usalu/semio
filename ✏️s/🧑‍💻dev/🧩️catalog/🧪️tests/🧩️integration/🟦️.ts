@@ -118,4 +118,28 @@ describe("Specific original catalog completion", () => {
     );
     expect(backEdges, backEdges.join("\n")).toEqual([]);
   });
+
+  it("forms boots its contributed flow and procedural question surfaces from installed descriptors", () => {
+    const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "🧫️fixtures/📋️forms/🔣️.json"), "utf8")) as { variant: string; provider: string; questionKinds: string[]; topic: string };
+    const boot = resolvePlaygroundBoot(catalog, fixture.variant);
+    expect(boot.dependencyErrors).toEqual([]);
+    const identities = boot.plugins.map(row => row.pluginId);
+    expect(identities).toContain(fixture.provider);
+    const target = composition.rows.targets.find(row => row.pluginId === fixture.provider);
+    expect(target?.contributes).toContain(fixture.topic);
+    for (const dependency of target?.dependsOn ?? []) {
+      expect(identities).toContain(dependency);
+      expect(identities.indexOf(dependency)).toBeLessThan(identities.indexOf(fixture.provider));
+    }
+    const descriptor = JSON.parse(readFileSync(join(findWorkspaceRoot(), "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧩️component/🔣️.json"), "utf8")) as { manifest: { apps: { id: string; windowKinds: { bodyKey: string }[] }[]; topicContributions: { topic: string; payload: { questionKind: string; appId: string; paramsBodyKey: string; previewBodyKey: string } }[] } };
+    const contributions = descriptor.manifest.topicContributions.filter(row => row.topic === fixture.topic);
+    expect(contributions.map(row => row.payload.questionKind).sort()).toEqual([...fixture.questionKinds].sort());
+    for (const { payload } of contributions) {
+      const app = descriptor.manifest.apps.find(row => row.id === payload.appId);
+      expect(app, payload.questionKind).toBeTruthy();
+      const bodies = app!.windowKinds.map(row => row.bodyKey);
+      expect(bodies).toContain(payload.paramsBodyKey);
+      expect(bodies).toContain(payload.previewBodyKey);
+    }
+  });
 });

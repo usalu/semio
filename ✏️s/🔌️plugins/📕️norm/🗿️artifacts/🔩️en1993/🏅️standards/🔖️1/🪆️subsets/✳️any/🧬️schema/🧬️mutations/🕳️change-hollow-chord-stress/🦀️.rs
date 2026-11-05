@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeHollowChordStress 
         record: "ChangedHollowChordStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Chord stress σ_0,Ed (compression negative) of the hollow joint", "Hohlprofilknoten: Gurtspannung σ_0,Ed (Druck negativ) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Chord stress σ_0,Ed (compression negative) of the hollow joint", "Hohlprofilknoten: Gurtspannung σ_0,Ed (Druck negativ) ändern")
     }
 }
 

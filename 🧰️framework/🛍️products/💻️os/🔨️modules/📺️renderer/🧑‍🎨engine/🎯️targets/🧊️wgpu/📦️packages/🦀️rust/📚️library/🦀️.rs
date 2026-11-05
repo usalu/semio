@@ -4,7 +4,7 @@
 include!("../../../🧊️renderer/🦀️.rs");
 
 #[cfg(target_os = "wasi")]
-pub extern crate semio_framework_os_renderer_wgpu_mailbox_core as runtime_mailbox_core;
+pub extern crate semio_renderer_wgpu_mailbox_core as runtime_mailbox_core;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "../../../⌨️native-entrypoint/🦀️.rs"]

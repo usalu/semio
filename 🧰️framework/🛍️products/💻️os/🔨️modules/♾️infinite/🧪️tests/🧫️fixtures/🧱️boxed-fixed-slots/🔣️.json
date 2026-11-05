@@ -7,7 +7,7 @@
   "tables": [
     {
       "guard": "infinite::world",
-      "crate": "semio-framework-os-infinite",
+      "crate": "semio-os-infinite",
       "owner": "world::WorldInteractionObjectRegistry",
       "capacityConstant": "WORLD_INTERACTION_OBJECT_CAPACITY",
       "capacity": 1024,

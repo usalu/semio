@@ -18,11 +18,11 @@ pub fn encode_sqlite_snapshot_record_native(
     let limits = control.limits();
     control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
     let component = match encoding {
-        SnapshotEncoding::Binary => semio_framework_os_semio::Component::Pack,
-        SnapshotEncoding::Text => semio_framework_os_semio::Component::Dsl,
+        SnapshotEncoding::Binary => semio_os_semio::Component::Pack,
+        SnapshotEncoding::Text => semio_os_semio::Component::Dsl,
     };
     let body_limit =
-        limits.max_file_bytes.checked_sub(semio_framework_os_semio::declared_envelope_prefix_len(envelope_id, component, 1)?).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native file ceiling cannot contain its declared envelope"))?;
+        limits.max_file_bytes.checked_sub(semio_os_semio::declared_envelope_prefix_len(envelope_id, component, 1)?).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native file ceiling cannot contain its declared envelope"))?;
     let before=native_owner.native().owned_bytes();
     let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot cumulative allowance overflow"))?;
     let mut refused=None;
@@ -37,12 +37,12 @@ pub fn encode_sqlite_snapshot_record_native(
                 SnapshotEncoding::Binary => {
                     let mut options = pack::record::EncodeOptions::default();
                     options.limits.max_file_len = body_limit as u64;
-                    *body=Some(semio_framework_io_schema::IoPayload::Binary(pack::record::encode_document_controlled(spec, record, &options, native).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?));
-                    let Some(semio_framework_io_schema::IoPayload::Binary(bytes))=body.as_ref()else{unreachable!()};semio_framework_io_schema::IoPayload::Binary(semio_framework_os_semio::wrap_binary_controlled(envelope_id, component, 1, bytes, native)?)
+                    *body=Some(semio_framework_io_schema::IoPayload::Binary(pack::record::encode_document_controlled(spec, record, &options, native).map_err(semio_os_pack::PackRefusal::into_value_error)?));
+                    let Some(semio_framework_io_schema::IoPayload::Binary(bytes))=body.as_ref()else{unreachable!()};semio_framework_io_schema::IoPayload::Binary(semio_os_semio::wrap_binary_controlled(envelope_id, component, 1, bytes, native)?)
                 }
                 SnapshotEncoding::Text => {
                     *body=Some(semio_framework_io_schema::IoPayload::Text(semio_framework_dsl_record::print_controlled(record, spec, semio_framework_dsl_record::JoinMode::Document, body_limit, native).map_err(|error| ValueError::new(error.kind, error.message))?));
-                    let Some(semio_framework_io_schema::IoPayload::Text(text))=body.as_ref()else{unreachable!()};semio_framework_io_schema::IoPayload::Text(semio_framework_os_semio::wrap_text_controlled(envelope_id, component, 1, text, native)?)
+                    let Some(semio_framework_io_schema::IoPayload::Text(text))=body.as_ref()else{unreachable!()};semio_framework_io_schema::IoPayload::Text(semio_os_semio::wrap_text_controlled(envelope_id, component, 1, text, native)?)
                 }
             };
             *candidate=Some(output);

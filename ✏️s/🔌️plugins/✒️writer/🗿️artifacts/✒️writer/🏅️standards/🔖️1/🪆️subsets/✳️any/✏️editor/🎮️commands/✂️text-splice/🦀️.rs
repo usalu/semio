@@ -2,7 +2,7 @@
 
 use crate::op::WriterMutation;
 use crate::WriterSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🔤️ One typed run as its host saw it (`semio.ui.scene.text-splice.v1`), the host's run sequence `seq`, and the selection the
@@ -22,8 +22,8 @@ pub struct TextSplice {
 
 impl TextSplice {
     /// 🗣️ The language-neutral splice of this run.
-    pub fn splice(&self) -> semio_framework_plugin::TextSplice {
-        semio_framework_plugin::TextSplice { start: self.start, deleted: self.deleted.clone(), insert: self.insert.clone(), before: self.before.clone(), after: self.after.clone() }
+    pub fn splice(&self) -> semio_plugin::TextSplice {
+        semio_plugin::TextSplice { start: self.start, deleted: self.deleted.clone(), insert: self.insert.clone(), before: self.before.clone(), after: self.after.clone() }
     }
 }
 

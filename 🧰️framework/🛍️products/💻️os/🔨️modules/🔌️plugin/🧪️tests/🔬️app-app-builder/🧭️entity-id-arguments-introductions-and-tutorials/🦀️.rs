@@ -29,7 +29,7 @@
         };
         let definition = built("entity-ids-app", "graph", "node").await.expect("a declared granularity builds");
         let rename = declared_actions(&definition).find(|action| action.id == "rename").expect("declared");
-        let schema = rename.args[0].json_schema(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
+        let schema = rename.args[0].json_schema(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En);
         let items = schema.get("items").expect("an entity-id argument is a list");
         assert_eq!(
             (schema.get("type").and_then(DslValue::as_str), items.get("type").and_then(DslValue::as_str), items.get("x-semio-format").and_then(DslValue::as_str), items.get("x-semio-entity-kind").and_then(DslValue::as_str)),
@@ -46,7 +46,7 @@
     async fn declaring_introduction_injects_start_introduction_action() {
         use semio_framework::ActionKind;
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("intro-app")
             .await
@@ -77,7 +77,7 @@
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_duplicate_introduction_step_ids() {
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("dupe-step-app").await;
         let __chain = __base
@@ -94,7 +94,7 @@
     async fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
         use semio_framework::window_element_id;
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-window-app").await;
         let __chain = __base
@@ -108,7 +108,7 @@
     async fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
         use semio_framework::{panel_tab_element_id, panel_tab_first_draggable_element_id};
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-panel-tab-app").await;
         let __chain = __base
@@ -130,7 +130,7 @@
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-element-app").await;
         let __chain =
@@ -147,7 +147,7 @@
     #[semio_framework_async_macros::async_test]
     async fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("good-escape-hatch-app")
             .await
@@ -161,7 +161,7 @@
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-interaction-utility-app").await;
         let __chain = __base
@@ -177,7 +177,7 @@
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-interaction-window-app").await;
         let __chain = __base
@@ -194,7 +194,7 @@
     async fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
         use semio_framework::window_element_id;
         use semio_framework::onboarding::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("good-intro-app")
             .await

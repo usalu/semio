@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::{self};
 use crate::standards::v1::subsets::any::schema::rule::ParameterKind;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 
 /// ➕️ The leaves that add one clause of `clause_kind` to the rule: `edit-lhs` for a WHERE clause, `edit-rhs` for every other
 /// clause (plus the new parameter's `change-parameter-binding`), so the edit carries no re-printed copy of the untouched side. A

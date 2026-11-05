@@ -1,6 +1,6 @@
 //! 🧱️ Sourcing editor core: the typed media I/O surface, the controller and interaction ids, the action and table factories, the UI value factories and the whole-document reset effect every other layer of the editor builds on.
 
-use semio_framework_plugin::{ActionDescriptor, MediaClass, MediaForm, MediaType};
+use semio_plugin::{ActionDescriptor, MediaClass, MediaForm, MediaType};
 use pack::snapshot::ArtifactPack;
 use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA};
 
@@ -11,14 +11,14 @@ use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA};
 /// mapped into the SAME `kit.catalog` JSON shape `block_3d::puzzle3d_catalog_fragment` produces, so
 /// `s/plugin/puzzle`'s `kit:in` importer can consume either producer identically without knowing which
 /// one it came from (see `crate::schema::inferences::sourcing_catalog_fragment`).
-pub fn sourcing_curation_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn sourcing_curation_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: SOURCING_CURATION_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
-        ports: vec![semio_framework_plugin::MediaPortSpec {
+        ports: vec![semio_plugin::MediaPortSpec {
             id: "catalog:out".into(),
             label: "Catalog".into(),
-            direction: semio_framework_plugin::MediaPortDirection::Out,
+            direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
             kind_id: Some("kit.catalog".into()),
             required: false,
@@ -26,7 +26,7 @@ pub fn sourcing_curation_io() -> semio_framework_plugin::AppIo {
         }],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "catalogue.sourcing".into(), name: "Sourcing Curation".into(), dimension: "data".into(), component_kind: "catalogue".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "catalogue.sourcing".into(), name: "Sourcing Curation".into(), dimension: "data".into(), component_kind: "catalogue".into() },
     }
 }
 //#endregion 🔖️Io
@@ -47,8 +47,8 @@ pub const EMPTY_EXAMPLE_ID: &str = "";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// builds its `on_change`/drop actions with.
-pub fn sourcing_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(SOURCING_CONTROLLER_ID).action(action, args)
+pub fn sourcing_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(SOURCING_CONTROLLER_ID).action(action, args)
 }
 
 /// 🪟️ Bridges semantic app actions into the retained window-measure transport.
@@ -64,7 +64,7 @@ pub fn sourcing_table_action(action: &str, object_id: Option<&str>) -> ActionDes
 
 /// 🧾️ One table row record for a stock kind: its id, the `{objectId}` payload a drag carries under
 /// [`SOURCING_DRAG_MIME`], and `cells` keyed by column id.
-pub fn sourcing_table_row(object_id: &str, cells: Vec<(&str, semio_framework_plugin::TableCell)>) -> semio_framework_value::DslValue {
+pub fn sourcing_table_row(object_id: &str, cells: Vec<(&str, semio_plugin::TableCell)>) -> semio_framework_value::DslValue {
     let mut entries = vec![
         ("id".to_string(), semio_framework_value::DslValue::String(object_id.to_string())),
         ("_drag".to_string(), semio_framework_value::DslValue::object([("objectId".to_string(), semio_framework_value::DslValue::String(object_id.to_string()))])),
@@ -75,59 +75,59 @@ pub fn sourcing_table_row(object_id: &str, cells: Vec<(&str, semio_framework_plu
 
 /// 📊️ One sourcing table surface: `(id, label, sortable)` columns, [`sourcing_table_row`] records
 /// draggable under [`SOURCING_DRAG_MIME`], and `drop_action` answering a row dropped onto it.
-pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<semio_framework_value::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<semio_framework_value::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let columns = columns
         .iter()
         .map(|(id, label, sortable)| semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id.to_string())), ("label".to_string(), semio_framework_value::DslValue::String(label.to_string())), ("sortable".to_string(), semio_framework_value::DslValue::Bool(*sortable))]))
         .collect();
-    let mut scene = semio_framework_plugin::TableScene::base(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(columns)), semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(rows)));
+    let mut scene = semio_plugin::TableScene::base(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(columns)), semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(rows)));
     scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
     scene.drop_action_json = Some(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&sourcing_table_action(drop_action, None))));
     scene.sort_json = sort.map(|sort| semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(sort)));
     scene.domain_id = Some(SOURCING_ROWS_DOMAIN.into());
     scene.domain_granularity_id = Some(SOURCING_OBJECT_GRANULARITY.into());
-    semio_framework_plugin::scene_surface(surface_id, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene)
+    semio_plugin::scene_surface(surface_id, semio_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene)
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref())
+        .map(semio_plugin::UiValue::Text)
+        .ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new()
+        .ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
         builder
             .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new()
+        .ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
         builder
             .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 //#endregion 🔖️Constants
@@ -168,8 +168,8 @@ pub const SOURCING_CURATION_CONFIG_TEXT_BYTES: usize = 96;
 
 //#region 📚️Examples
 /// 📚️ The subset's registered examples — the one source the manifest picker, the `setActiveExample` argument form and its handler all resolve ids against.
-pub fn examples() -> &'static [semio_framework_plugin::ExampleSource] {
-    static EXAMPLES: std::sync::OnceLock<Vec<semio_framework_plugin::ExampleSource>> = std::sync::OnceLock::new();
+pub fn examples() -> &'static [semio_plugin::ExampleSource] {
+    static EXAMPLES: std::sync::OnceLock<Vec<semio_plugin::ExampleSource>> = std::sync::OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 //#endregion 📚️Examples

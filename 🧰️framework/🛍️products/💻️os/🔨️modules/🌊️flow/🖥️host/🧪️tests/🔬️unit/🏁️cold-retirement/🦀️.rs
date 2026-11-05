@@ -1,6 +1,6 @@
 /// 🧯️ A real installed history disposer may refuse without relinquishing its original Store custody.
 struct FlowCloseRefusalDisposer {
-    original: Option<Box<dyn semio_framework_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSnapshot, FlowMutation>>>,
+    original: Option<Box<dyn semio_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSnapshot, FlowMutation>>>,
     refuse_once: bool,
 }
 
@@ -22,8 +22,8 @@ impl FlowCloseRefusalDisposer {
     }
 }
 
-impl semio_framework_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSnapshot, FlowMutation> for FlowCloseRefusalDisposer {
-    fn close_step(&mut self, view: &mut semio_framework_os_kernel::os_store::ArtifactStoreCloseView<'_, FlowHostSnapshot, FlowMutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+impl semio_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSnapshot, FlowMutation> for FlowCloseRefusalDisposer {
+    fn close_step(&mut self, view: &mut semio_os_kernel::os_store::ArtifactStoreCloseView<'_, FlowHostSnapshot, FlowMutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let demand = self.demands(&*view.store, grant.maximum_copy_bytes)?;
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
             return Ok(RetainedCloneStep::Progress(Default::default()));
@@ -40,11 +40,11 @@ impl semio_framework_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSna
         original.close_step(view, Self::child(grant)).map(|step| RetainedCloneStep::Progress(step.progress()))
     }
 
-    fn terminal_is_empty(&self, _store: &dyn semio_framework_os_kernel::os_store::ArtifactStoreCloseHost<FlowHostSnapshot, FlowMutation>) -> bool {
+    fn terminal_is_empty(&self, _store: &dyn semio_os_kernel::os_store::ArtifactStoreCloseHost<FlowHostSnapshot, FlowMutation>) -> bool {
         self.original.is_none()
     }
 
-    fn demands(&self, store: &dyn semio_framework_os_kernel::os_store::ArtifactStoreCloseHost<FlowHostSnapshot, FlowMutation>, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    fn demands(&self, store: &dyn semio_os_kernel::os_store::ArtifactStoreCloseHost<FlowHostSnapshot, FlowMutation>, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         let Some(original) = self.original.as_ref() else { return Ok(Default::default()) };
         if original.terminal_is_empty(store) {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(original.as_ref()), depth: 1, ..Default::default() });
@@ -77,7 +77,7 @@ impl semio_framework_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSna
 }
 
 /// 🏭️ Decorates the exact canonical history authority; no Store source or installed factory is fabricated.
-fn flow_history_with_close_refusal(baseline: FlowHostSnapshot) -> Result<FlowStore, semio_framework_os_kernel::os_vcs::VcsError> {
+fn flow_history_with_close_refusal(baseline: FlowHostSnapshot) -> Result<FlowStore, semio_os_kernel::os_vcs::VcsError> {
     let mut store = (semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY.construct)(baseline)?;
     let original = store.owners.owned_disposer.take().unwrap();
     *store.owners.owned_disposer = Some(Box::new(FlowCloseRefusalDisposer { original: Some(original), refuse_once: true }));
@@ -86,7 +86,7 @@ fn flow_history_with_close_refusal(baseline: FlowHostSnapshot) -> Result<FlowSto
 
 /// 🏠️ A valid detached host with a canonical initialized history Store and one recoverable authority refusal.
 fn flow_host_with_close_refusal() -> FlowHost {
-    let mut host = FlowHost::from_host_snapshot(FlowHostSnapshot::default()).with_history_store_factory(semio_framework_os_kernel::os_store::OriginalStoreGenesisFactory {
+    let mut host = FlowHost::from_host_snapshot(FlowHostSnapshot::default()).with_history_store_factory(semio_os_kernel::os_store::OriginalStoreGenesisFactory {
         construct: flow_history_with_close_refusal,
         envelope: semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY.envelope,
     });
@@ -101,7 +101,7 @@ fn flow_retirement_contract() -> serde_json::Value {
 }
 
 /// 🎟️ Uses the same exact per-turn quote as the cold driver, without lowering any supplied currency.
-fn flow_retirement_contract_grant(owner: &semio_framework_os_flow_host_core::FlowHostRetirement) -> RetainedCloneGrant {
+fn flow_retirement_contract_grant(owner: &semio_os_flow_host_core::FlowHostRetirement) -> RetainedCloneGrant {
     let copy = owner.next_close_copy_byte_demand().unwrap().max(4096);
     let demand = owner.close_demands(copy).unwrap();
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
@@ -111,7 +111,7 @@ fn flow_retirement_contract_grant(owner: &semio_framework_os_flow_host_core::Flo
 #[test]
 fn retained_host_close_preserves_custody_after_a_real_history_authority_refusal() {
     let law = flow_retirement_contract();
-    let mut owner = semio_framework_os_flow_host_core::FlowHostRetirement::new(flow_host_with_close_refusal());
+    let mut owner = semio_os_flow_host_core::FlowHostRetirement::new(flow_host_with_close_refusal());
     let mut refusals = 0;
     for _ in 0..law["maximumTurns"].as_u64().unwrap() {
         let grant = flow_retirement_contract_grant(&owner);

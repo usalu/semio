@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_geometry::infer_geometry;

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-plugin-instance-extension"
+name = "semio-plugin-instance-extension"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,23 +22,23 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
-semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-jobs = { path = "../../../👷️jobs/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }
+semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
+semio-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
+semio-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
+semio-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
+semio-plugin-instance-jobs = { path = "../../../👷️jobs/📦️packages/🦀️rust" }
+semio-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
-semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
-semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
-semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
-semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
-semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

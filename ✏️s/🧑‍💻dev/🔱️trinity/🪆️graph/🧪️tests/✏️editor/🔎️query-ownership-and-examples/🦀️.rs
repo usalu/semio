@@ -16,7 +16,7 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
         let view = query_windows();
         let editor = view.for_window_instance("editor-main").ok_or("missing editor window")?;
         let results = view.for_window_instance("results-main").ok_or("missing results window")?;
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a.name".into()), results_window_id: "results-main".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("query-owner") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a.name".into()), results_window_id: "results-main".into() }, &semio_plugin::ActionMeta { view_state: Some(editor), ..meta("query-owner") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
         .await
         .map_err(|error| format!("{error:?}"))?;
         if drive_query_ownership_operations(&mut app,cx).await? != (0, 0, 1) {
@@ -57,12 +57,12 @@ pub(super) async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<Ed
             return Err("query operations did not finish".into());
         }
         app.maintenance_step(cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().maintenance).map_err(|error| format!("{error:?}"))?;
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
         if let Some(page) = app.take_typed_operation_result_page(1) {
-            let fault = (page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| format!("query publication fault: {:?}", page.bytes()));
-            transient_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::Transient);
-            window_config_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig);
-            window_transient_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient);
+            let fault = (page.lane == semio_plugin::app::TypedOperationResultLane::Fault).then(|| format!("query publication fault: {:?}", page.bytes()));
+            transient_receipts += u64::from(page.lane == semio_plugin::app::TypedOperationResultLane::Transient);
+            window_config_receipts += u64::from(page.lane == semio_plugin::app::TypedOperationResultLane::WindowConfig);
+            window_transient_receipts += u64::from(page.lane == semio_plugin::app::TypedOperationResultLane::WindowTransient);
             app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
             if let Some(fault) = fault {
                 return Err(fault);
@@ -98,12 +98,12 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
     let mut app = new_app().await;
     let view = ViewModel {
         window_instances: vec![
-            semio_framework_plugin::ViewWindowInstance { id: "editor-left".into(), window_kind_id: "trinity-jack-editor".into() },
-            semio_framework_plugin::ViewWindowInstance { id: "editor-right".into(), window_kind_id: "trinity-jack-editor".into() },
-            semio_framework_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: "trinity-jack-results".into() },
-            semio_framework_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: "trinity-jack-results".into() },
+            semio_plugin::ViewWindowInstance { id: "editor-left".into(), window_kind_id: "trinity-jack-editor".into() },
+            semio_plugin::ViewWindowInstance { id: "editor-right".into(), window_kind_id: "trinity-jack-editor".into() },
+            semio_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: "trinity-jack-results".into() },
+            semio_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: "trinity-jack-results".into() },
         ],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let editor_left = view.for_window_instance("editor-left").unwrap();
     let editor_right = view.for_window_instance("editor-right").unwrap();
@@ -112,11 +112,11 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
     let left_query = "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name";
     let right_query = "MATCH (a:Piece) WHERE a.name != 'b' RETURN a.name";
     let app_config_before = app.config_pack().await.expect("app config pack");
-    let denied = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: Some(left_query.into()), results_window_id: "editor-right".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)
+    let denied = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: Some(left_query.into()), results_window_id: "editor-right".into() }, &semio_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
         .await;
     assert!(denied.is_err(), "an attached editor cannot be promoted to results mutation authority by command payload");
 
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::TextEdit { text: left_query.into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::TextEdit { text: left_query.into() }, &semio_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
         .await
         .expect("query edit");
     assert_eq!(drive_query_ownership_operations(&mut app,cx).await.expect("query edit"), (0, 0, 0));
@@ -124,12 +124,12 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
     assert_eq!(document.query, left_query, "the typed query is the document's");
     for context in [&editor_left, &editor_right] {
         let rendered = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.editor", context, cx).await.expect("editor render");
-        let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&rendered).expect("editor scene");
+        let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::TextEditorScene>(&rendered).expect("editor scene");
         assert_eq!(scene.buffer, left_query, "every editor window shows the document's one query");
     }
 
     for (context, target, query) in [(&editor_left, "results-left", None), (&editor_right, "results-right", Some(right_query.to_string()))] {
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query, results_window_id: target.into() }, &semio_framework_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query, results_window_id: target.into() }, &semio_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
             .await
             .expect("paired query");
     }
@@ -157,8 +157,8 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
 
     let reloaded = <jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(&document)).expect("the document pack decodes");
     assert_eq!(reloaded.query, left_query, "the query persists with the document");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,"undo",None,&semio_framework_plugin::ActionMeta { view_state: Some(editor_right.clone()), ..meta("query-owner") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.unwrap_or_else(|fault| panic!("undo admission: {fault:?}"));
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("undo settles: {fault:?}"));
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,"undo",None,&semio_plugin::ActionMeta { view_state: Some(editor_right.clone()), ..meta("query-owner") },&mut semio_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.unwrap_or_else(|fault| panic!("undo admission: {fault:?}"));
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("undo settles: {fault:?}"));
     drive_query_ownership_operations(&mut app,cx).await.expect("undo publishes");
     assert_eq!(app.snapshot().expect("document after undo").query, jack::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_QUERY, "one undo from either editor reverts the query edit");
     app.close(cx);
@@ -196,7 +196,7 @@ async fn window_kind_actions_scope_text_verbs_to_the_query_editor() {
     let definition = create_trinity_jack_app();
     let resolve = |window_id: &str| -> Vec<String> {
         let window = definition.window_kinds.iter().find(|window| window.id == window_id).expect("window kind");
-        semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
+        semio_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
     };
     let graph = resolve("trinity-jack-graph");
     let editor = resolve("trinity-jack-editor");
@@ -230,7 +230,7 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::SetActiveExample { example_id: jack::examples::demo::ID.into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("set active example");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::SetActiveExample { example_id: jack::examples::demo::ID.into() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("set active example");
     let receipt = settle(&mut app,cx).await;
     assert!(!result.requested_effects.is_empty() || !receipt.effects.is_empty(), "the registered example id must request the LoadDocument effect");
     app.close(cx);
@@ -245,7 +245,7 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
         .args
         .iter()
         .flat_map(|arg| match &arg.schema {
-            semio_framework_plugin::ArgSchema::String { options, .. } => options.iter().map(|option| option.value.clone()).collect::<Vec<_>>(),
+            semio_plugin::ArgSchema::String { options, .. } => options.iter().map(|option| option.value.clone()).collect::<Vec<_>>(),
             _ => Vec::new(),
         })
         .collect();

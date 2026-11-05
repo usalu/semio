@@ -2,7 +2,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::*;
 use std::collections::BTreeMap;
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell,RowWriter,NativeEncodingBound,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind},os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{artifact::{Cell,RowWriter,NativeEncodingBound,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind},os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_pack_json::ArtifactCanonicalJsonText as Text;
 
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
@@ -56,13 +56,13 @@ fn read_content(row:&SqliteRow,values:Option<&Vec<&SqliteRow>>,bytes:Option<&Vec
   "opaque"=>Id3Content::Opaque{bytes:read_octets(bytes,control)?},_=>return Err(invalid("MP3 semantic content kind")),
  };
  if !matches!(kind,"text"|"userText")&&values.is_some()||!matches!(kind,"opaque"|"picture")&&bytes.is_some(){return Err(invalid("MP3 content child role mismatch"));}
- for index in 5..=10{if !used.contains(&index)&&!matches!(row.values[index],semio_framework_os_kernel::sqlite_snapshot::SqliteValue::Null){return Err(invalid("MP3 unused semantic content field"));}}Ok(content)
+ for index in 5..=10{if !used.contains(&index)&&!matches!(row.values[index],semio_os_kernel::sqlite_snapshot::SqliteValue::Null){return Err(invalid("MP3 unused semantic content field"));}}Ok(content)
 }
 
 impl ArtifactSqliteSnapshotHost for Mp3Snapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
  
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   semantic::typed(self,SqliteSnapshotPhase::EncodeNative,control)?;
   store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
@@ -78,7 +78,7 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
   validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;let documents=entities(database,"mp3_document",2,control)?;if documents.len()!=1||!documents.contains_key(&1){return Err(invalid("MP3 requires document identity one"));}let tags=optional_tag(database,"mp3_id3v2_tag",1,control)?;let trailers=optional_tag(database,"mp3_id3v1_tag",8,control)?;
   let id3_frames=entities(database,"mp3_id3v2_frame",11,control)?;let ordered_tags=groups(&id3_frames,&tags,control)?;let tag_values=groups(&entities(database,"mp3_id3_text_value",4,control)?,&id3_frames,control)?;let tag_octets=groups(&entities(database,"mp3_id3_content_octet",4,control)?,&id3_frames,control)?;
   let id3v2=if tags.contains_key(&1){let mut frames=Vec::new();for row in ordered_tags.get(&1).into_iter().flatten(){checkpoint(control,frames.len(),0)?;let frame=Id3Frame{id:reconstruct_text(control,row.text(3)?)?,content:read_content(row,tag_values.get(&row.rowid),tag_octets.get(&row.rowid),control)?};validate_id3_frame(&frame).map_err(invalid)?;frames.push(frame);}Some(Id3v2Tag{frames})}else{None};
-  let id3v1=if let Some(row)=trailers.get(&1){let tag=Id3v1Tag{title:reconstruct_text(control,row.text(1)?)?,artist:reconstruct_text(control,row.text(2)?)?,album:reconstruct_text(control,row.text(3)?)?,year:reconstruct_text(control,row.text(4)?)?,comment:reconstruct_text(control,row.text(5)?)?,track:if matches!(row.values[6],semio_framework_os_kernel::sqlite_snapshot::SqliteValue::Null){None}else{Some(octet(row,6)?)},genre:if matches!(row.values[7],semio_framework_os_kernel::sqlite_snapshot::SqliteValue::Null){None}else{Some(octet(row,7)?)}};validate_id3v1_tag(&tag).map_err(invalid)?;Some(tag)}else{None};
+  let id3v1=if let Some(row)=trailers.get(&1){let tag=Id3v1Tag{title:reconstruct_text(control,row.text(1)?)?,artist:reconstruct_text(control,row.text(2)?)?,album:reconstruct_text(control,row.text(3)?)?,year:reconstruct_text(control,row.text(4)?)?,comment:reconstruct_text(control,row.text(5)?)?,track:if matches!(row.values[6],semio_os_kernel::sqlite_snapshot::SqliteValue::Null){None}else{Some(octet(row,6)?)},genre:if matches!(row.values[7],semio_os_kernel::sqlite_snapshot::SqliteValue::Null){None}else{Some(octet(row,7)?)}};validate_id3v1_tag(&tag).map_err(invalid)?;Some(tag)}else{None};
   let audio=entities(database,"mp3_audio_frame",15,control)?;let ordered_audio=groups(&audio,&documents,control)?;let audio_octets=groups(&entities(database,"mp3_audio_payload_octet",4,control)?,&audio,control)?;let mut frames=Vec::new();for row in ordered_audio.get(&1).into_iter().flatten(){checkpoint(control,frames.len(),0)?;frames.push(Mp3Frame{header:header(row)?,payload:read_octets(audio_octets.get(&row.rowid),control)?});}let result=Self{schema:reconstruct_text(control,documents[&1].text(1)?)?,id3v2,frames,id3v1};control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(result)
  }
 }

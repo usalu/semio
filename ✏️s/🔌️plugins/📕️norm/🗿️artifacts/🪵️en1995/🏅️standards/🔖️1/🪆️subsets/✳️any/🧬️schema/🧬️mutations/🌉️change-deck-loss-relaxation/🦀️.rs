@@ -10,7 +10,7 @@ pub struct ChangeDeckLossRelaxation { pub deck_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeDeckLossRelaxation where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_deck_loss_relaxation::ChangeDeckLossRelaxation> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "deck-loss-relaxation", kind: "change-deck-loss-relaxation", record: "ChangedDeckLossRelaxation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change prestress loss by bar relaxation of deck {}", self.deck_id), &format!("Vorspannverlust durch Relaxation von Deck {} ändern", self.deck_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change prestress loss by bar relaxation of deck {}", self.deck_id), &format!("Vorspannverlust durch Relaxation von Deck {} ändern", self.deck_id)) }
     fn target(&self) -> Vec<String> { vec![self.deck_id.clone()] }
 }
 

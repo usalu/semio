@@ -1,7 +1,7 @@
 //! 🏡️ Example `house`: a detached house with basement, ground, upper and attic storeys, a bay wall, a gable roof and a U-stair.
 
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "house";
 pub const ASSET_DIR: &str = "🏡️house";

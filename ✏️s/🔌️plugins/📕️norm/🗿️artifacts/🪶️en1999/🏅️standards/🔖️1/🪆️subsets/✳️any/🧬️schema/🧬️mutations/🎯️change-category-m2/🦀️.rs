@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeCategoryM2 where O
         record: "ChangedCategoryM2",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change S-N slope m2 (0 = m1 + 2) of the fatigue detail site", "Ermüdungsdetail-Stelle: Wöhler-Neigung m2 (0 = m1 + 2) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change S-N slope m2 (0 = m1 + 2) of the fatigue detail site", "Ermüdungsdetail-Stelle: Wöhler-Neigung m2 (0 = m1 + 2) ändern")
     }
 }
 

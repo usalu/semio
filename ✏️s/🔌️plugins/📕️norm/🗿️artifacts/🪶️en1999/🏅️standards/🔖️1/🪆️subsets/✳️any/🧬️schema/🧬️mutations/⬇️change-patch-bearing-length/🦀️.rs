@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangePatchBearingLength
         record: "ChangedPatchBearingLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bearing length s_s of the web patch load", "Stegeinzellast: Lasteinleitungslänge s_s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bearing length s_s of the web patch load", "Stegeinzellast: Lasteinleitungslänge s_s ändern")
     }
 }
 

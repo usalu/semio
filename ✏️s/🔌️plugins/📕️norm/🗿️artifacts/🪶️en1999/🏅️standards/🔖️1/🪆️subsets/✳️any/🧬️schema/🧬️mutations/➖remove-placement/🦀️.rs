@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for RemovePlacement where Op
         record: "RemovedPlacement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove placement", "Platzierung entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove placement", "Platzierung entfernen")
     }
 }
 

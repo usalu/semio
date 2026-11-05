@@ -22,7 +22,7 @@ pub(super) fn rows(document: &LayoutSnapshot) -> Vec<DataRow<'_>> {
     rows
 }
 
-pub(super) fn render(windows: &semio_framework_plugin::TreeWindows<'_>, row: &DataRow<'_>, labels: &LayoutLabels, stamp: &str) -> UiAssemblyResult<BuiltNode> {
+pub(super) fn render(windows: &semio_plugin::TreeWindows<'_>, row: &DataRow<'_>, labels: &LayoutLabels, stamp: &str) -> UiAssemblyResult<BuiltNode> {
     let prefix = &row.path;
     let mut children = Vec::new();
     if let Some(key) = row.key { children.push(document_input(&format!("layout-play-inspector.patchDocument.{prefix}.key"), &format!("{prefix}.key.at.{stamp}"), labels.data_key, key.into(), InputKind::Text)?); }

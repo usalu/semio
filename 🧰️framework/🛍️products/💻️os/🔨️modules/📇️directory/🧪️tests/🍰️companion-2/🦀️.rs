@@ -3,24 +3,24 @@
 //! 🧭️ The tests are mounted unchanged from the production tree and reach the production crate through its public API only.
 #![cfg(test)]
 
-pub use semio_framework_os_directory::*;
+pub use semio_os_directory::*;
 
 #[path = "../🔬️unit/🦀️.rs"]
 mod tests;
 
 #[path = "."]
 pub mod io {
-    pub use semio_framework_os_directory::io::*;
+    pub use semio_os_directory::io::*;
 
     #[path = "."]
     pub mod binary {
-        pub use semio_framework_os_directory::io::binary::*;
+        pub use semio_os_directory::io::binary::*;
 
         #[path = "../../🚪️io/🧱️binary/🪢️checkpoint-pair/🧪️tests/🔬️unit"]
         pub mod checkpoint_pair {
-            pub use semio_framework_os_directory::io::binary::checkpoint_pair::*;
-            use semio_framework_os_directory::schema::{ArtifactFrontier, ArtifactHash, DocumentScope};
-            use semio_framework_os_directory::CanonicalCheckpointPairRefusalV1;
+            pub use semio_os_directory::io::binary::checkpoint_pair::*;
+            use semio_os_directory::schema::{ArtifactFrontier, ArtifactHash, DocumentScope};
+            use semio_os_directory::CanonicalCheckpointPairRefusalV1;
 
             #[path = "🦀️.rs"]
             mod tests;
@@ -28,8 +28,8 @@ pub mod io {
 
         #[path = "../../🚪️io/🧱️binary/🪪️artifact-hash/🧪️tests"]
         pub mod artifact_hash {
-            pub use semio_framework_os_directory::io::binary::artifact_hash::*;
-            use semio_framework_os_directory::schema::{ArtifactHash, EditedArtifactFrontierV1};
+            pub use semio_os_directory::io::binary::artifact_hash::*;
+            use semio_os_directory::schema::{ArtifactHash, EditedArtifactFrontierV1};
 
             #[path = "🦀️.rs"]
             mod tests;
@@ -37,8 +37,8 @@ pub mod io {
 
         #[path = "../../🚪️io/🧱️binary/🔐️descriptor-digest/🧪️tests"]
         pub mod descriptor_digest {
-            pub use semio_framework_os_directory::io::binary::descriptor_digest::*;
-            use semio_framework_os_directory::schema::{ArtifactHash, DocumentDescriptor, validate_document_descriptor_v1};
+            pub use semio_os_directory::io::binary::descriptor_digest::*;
+            use semio_os_directory::schema::{ArtifactHash, DocumentDescriptor, validate_document_descriptor_v1};
 
             #[path = "🦀️.rs"]
             mod tests;
@@ -48,11 +48,11 @@ pub mod io {
 
 #[path = "."]
 pub mod schema {
-    pub use semio_framework_os_directory::schema::*;
+    pub use semio_os_directory::schema::*;
 
     #[path = "../../🧬️schema/🌐️browser-actor/🧪️tests/🔬️unit"]
     pub mod browser_actor {
-        pub use semio_framework_os_directory_browser_actor::*;
+        pub use semio_os_directory_browser_actor::*;
 
         #[path = "🦀️.rs"]
         mod tests;
@@ -60,8 +60,8 @@ pub mod schema {
 
     #[path = "../../🧬️schema/📌️document-check-in-v1/🧪️tests/🔬️unit"]
     pub mod document_check_in {
-        pub use semio_framework_os_directory_check_in::*;
-        use semio_framework_os_directory::schema::EditedArtifactFrontierV1;
+        pub use semio_os_directory_check_in::*;
+        use semio_os_directory::schema::EditedArtifactFrontierV1;
 
         #[path = "🦀️.rs"]
         mod tests;

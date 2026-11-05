@@ -2390,6 +2390,66 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "semio-framework-font-anta-latin-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-kelly-slab-latin-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-activities-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-faces-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-flags-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-food-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-joined-forms-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-nature-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-objects-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-people-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-regions-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-supplement-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-symbols-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-travel-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-share-tech-mono-latin-regular"
+version = "0.1.0"
+
+[[package]]
 name = "semio-framework"
 version = "0.1.0"
 dependencies = [
@@ -3263,66 +3323,6 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
 ]
-
-[[package]]
-name = "semio-framework-font-anta-latin-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-kelly-slab-latin-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-activities-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-faces-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-flags-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-food-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-joined-forms-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-nature-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-objects-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-people-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-regions-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-supplement-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-symbols-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-travel-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-share-tech-mono-latin-regular"
-version = "0.1.0"
 
 [[package]]
 name = "semio-framework-geometry"
@@ -4211,6 +4211,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-native-storage",
  "semio-framework-value-ordered",
  "semio-framework-value-persistent",
 ]
@@ -10015,7 +10016,6 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "parley",
- "semio-framework-async",
  "semio-framework-font-anta-latin-regular",
  "semio-framework-font-kelly-slab-latin-regular",
  "semio-framework-font-noto-emoji-activities-regular",
@@ -10031,6 +10031,7 @@ dependencies = [
  "semio-framework-font-noto-emoji-symbols-regular",
  "semio-framework-font-noto-emoji-travel-regular",
  "semio-framework-font-share-tech-mono-latin-regular",
+ "semio-framework-async",
  "semio-framework-ui-theme",
  "semio-framework-value",
  "serde",
@@ -10253,6 +10254,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
+ "semio-framework-value-equality",
  "semio-framework-value-factory",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-encoding",
@@ -10332,8 +10334,9 @@ dependencies = [
 name = "semio-framework-value-equality"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value-clone-source",
  "semio-framework-value-control-contract",
- "semio-framework-value-retained-clone",
+ "semio-framework-value-intrinsic",
  "semio-framework-value-retirement",
 ]
 
@@ -14339,6 +14342,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -18914,6 +18918,7 @@ dependencies = [
  "semio-framework-value",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dwg-geometry",
+ "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-brep",
@@ -18936,6 +18941,7 @@ dependencies = [
  "semio-framework-value",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dwg-geometry",
+ "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-read",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-brep",
@@ -19901,6 +19907,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-geometry",
+ "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-dxf",
@@ -19909,7 +19916,6 @@ dependencies = [
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
  "semio-s-artifact-stdio-semio-drawing-import",
- "semio-s-artifact-stdio-semio-drawing-png-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-xml",
 ]
@@ -21507,6 +21513,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-geometry",
+ "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-gltf-model",
@@ -21535,6 +21542,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-geometry",
+ "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-read",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",

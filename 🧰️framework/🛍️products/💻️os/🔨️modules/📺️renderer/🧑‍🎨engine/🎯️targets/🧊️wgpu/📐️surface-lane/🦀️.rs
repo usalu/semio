@@ -1,6 +1,6 @@
 //! 📐️ Generation-qualified, fixed-capacity resize preparation for primary presentation surfaces.
 
-use semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource;
+use semio_plugin_ownership::reserved_job_session::RefusedWorkerSource;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OriginalTurnFailure, StepContext};
 use semio_framework_value::{RetainedCloneStep, RetainedCloneProgress, RetirementDemand, ValueError};
 use semio_framework_job_worker::MountedWorkerJobSession;

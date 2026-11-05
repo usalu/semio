@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-scene-camera"
+name = "semio-ui-scene-camera"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -26,8 +26,8 @@ testkit = []
 
 [dependencies]
 semio-framework-geometry = { path = "../../../../../../📐️geometry/📦️packages/🦀️rust" }
-semio-framework-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
-semio-framework-ui-viewport = { path = "../../../../../🪟️viewport/📦️packages/🦀️rust" }
+semio-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
+semio-ui-viewport = { path = "../../../../../🪟️viewport/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }

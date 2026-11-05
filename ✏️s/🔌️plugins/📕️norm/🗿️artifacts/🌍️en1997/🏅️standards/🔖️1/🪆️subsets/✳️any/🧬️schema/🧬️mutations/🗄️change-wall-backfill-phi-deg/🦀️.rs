@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallBackfillPhiDeg
         record: "ChangedWallBackfillPhiDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change backfill phi deg of the retaining wall", "Stützwand: Reibungswinkel φ der Hinterfüllung in Grad ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change backfill phi deg of the retaining wall", "Stützwand: Reibungswinkel φ der Hinterfüllung in Grad ändern")
     }
 }
 

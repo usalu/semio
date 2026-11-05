@@ -37,7 +37,7 @@ pub fn wire_envelopes_with_original_actor(envelopes:&[MutationEnvelope],actor:&s
 //#region 🔖️EnvelopeSerde
 /// 🧵️ JSON worker seam: `MutationEnvelope` vectors as `encode_envelopes` bytes (not struct JSON).
 pub(super) mod envelope_serde {
-    use semio_framework_os_spr::{decode_envelopes, encode_envelopes, MutationEnvelope};
+    use semio_os_spr::{decode_envelopes, encode_envelopes, MutationEnvelope};
 
     /// 🧵️ Byte framing for the `ArtifactActorMsg::LocalMutations`/`ArtifactEvent::
     /// RemoteMutations` `#[value(serialize_with = ..., deserialize_with = ...)]` field bridge —

@@ -88,8 +88,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "accessor", kind: "delete-accessor", record: "DeletedAccessor" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete Accessor", "Accessor löschen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Delete Accessor", "Accessor löschen")
     }
 
     fn target(&self) -> Vec<String> {

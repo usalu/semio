@@ -95,11 +95,11 @@ impl LocalizedCopy {
         Self { en: en.into(), de: de.into() }
     }
 
-    /// 🗣️ Exact locale match against the framework [`semio_framework_ui_locale::Locale`] axis.
-    pub fn resolve(&self, locale: &semio_framework_ui_locale::Locale) -> &str {
+    /// 🗣️ Exact locale match against the framework [`semio_ui_locale::Locale`] axis.
+    pub fn resolve(&self, locale: &semio_ui_locale::Locale) -> &str {
         match locale {
-            semio_framework_ui_locale::Locale::En => &self.en,
-            semio_framework_ui_locale::Locale::De => &self.de,
+            semio_ui_locale::Locale::En => &self.en,
+            semio_ui_locale::Locale::De => &self.de,
         }
     }
 }

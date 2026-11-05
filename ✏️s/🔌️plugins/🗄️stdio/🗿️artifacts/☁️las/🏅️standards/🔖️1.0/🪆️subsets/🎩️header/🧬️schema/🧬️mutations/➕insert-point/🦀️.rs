@@ -16,8 +16,8 @@ pub struct InsertPoint {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for InsertPoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "point", kind: "insert-point", record: "InsertPoint" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert point", "Punkt einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert point", "Punkt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

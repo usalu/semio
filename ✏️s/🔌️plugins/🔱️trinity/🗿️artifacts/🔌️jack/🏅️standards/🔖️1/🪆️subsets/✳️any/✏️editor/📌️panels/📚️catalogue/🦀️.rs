@@ -1,7 +1,7 @@
 //! 📚️ Trinity Jack app — Catalogue panel (fixture presets, example queries, manifest kinds).
 
 use crate::editor::jack::terminology::TrinityJackLabels;
-use semio_framework_plugin::{tree_item, tree_item_with_action, ui_node_list, PanelTreeBuilder, TreeWindows};
+use semio_plugin::{tree_item, tree_item_with_action, ui_node_list, PanelTreeBuilder, TreeWindows};
 
 //#region 🔖️Render
 /// 📚️ One bundled graph fixture the catalogue can load.
@@ -30,7 +30,7 @@ const EXAMPLES: [ExampleQuery; 8] = [
     ExampleQuery { id: "merge-edge", label: "Merge Edge", query: "MERGE (x:Piece)-[:Connection]->(y:Piece)" },
 ];
 
-fn graph_example_row(preset: &GraphExample) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn graph_example_row(preset: &GraphExample) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let args = crate::editor::jack::ui_value_map([("exampleId", crate::editor::jack::ui_value_text(preset.id)?)])?;
     tree_item_with_action(
         format!("trinity-jack-catalogue.graph-example.{}", preset.id),
@@ -40,12 +40,12 @@ fn graph_example_row(preset: &GraphExample) -> semio_framework_plugin::UiAssembl
     )
 }
 
-fn example_row(example: &ExampleQuery) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn example_row(example: &ExampleQuery) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let args = crate::editor::jack::ui_value_map([("query", crate::editor::jack::ui_value_text(example.query)?)])?;
     tree_item_with_action(format!("trinity-jack-catalogue.example.{}", example.id), crate::editor::jack::ui_label(example.label)?, Some(example.query.into()), crate::editor::jack::jack_action("runQuery", Some(args))?)
 }
 
-pub fn render(labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let kind_items = ui_node_list([
         tree_item("trinity-jack-catalogue.piece", crate::editor::jack::ui_label(labels.piece.as_str())?),
         tree_item("trinity-jack-catalogue.connection", crate::editor::jack::ui_label(labels.connection.as_str())?),

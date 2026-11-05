@@ -21,8 +21,8 @@ impl FlowDirectStoreJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for FlowDirectStoreJobFactory {
-    type Payload = ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<FlowPlayApp>>;
-    type Job = ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+    type Payload = ArtifactRetainedCommandPayload<semio_plugin::EditorApp<FlowPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<semio_plugin::EditorApp<FlowPlayApp>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -40,35 +40,35 @@ impl semio_framework::ToolJobFactory for FlowDirectStoreJobFactory {
         flow_direct_store_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: FLOW_DIRECT_STORE_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: FLOW_DIRECT_STORE_RAW_BYTES, checkpoint_resume: true);
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobFactory {
+    type Owner = semio_plugin::EditorApp<FlowPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FLOW_DIRECT_STORE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "disconnect", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchFlowWidgets", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "duplicateWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setProximityDistance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setGridFactor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setPreviewOff", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCatalogueSections", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleExtension", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addGeneration", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeGeneration", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameGeneration", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "updateGenerationValues", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "disconnect", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "patchFlowWidgets", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "duplicateWidget", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child, semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setProximityDistance", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setGridFactor", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setPreviewOff", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setCatalogueSections", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "toggleExtension", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowConfig] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "addGeneration", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "removeGeneration", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "renameGeneration", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "updateGenerationValues", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
     ];
 }
 //#endregion 🧵️DirectStoreLaneRoutes
@@ -80,7 +80,7 @@ pub(super) const FLOW_CHILD_GROUP_RAW_BYTES: usize = 16_384;
 
 pub struct FlowChildGroupWork {
     pub(super) tool_id: &'static str,
-    pub(super) instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    pub(super) instance_owner: Option<semio_plugin::ArtifactInstanceOperationOwnerHandle>,
     pub output: Option<Emit<FlowMutation, NoConfigMutation, NoDraftMutation>>,
     output_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Emit<FlowMutation, NoConfigMutation, NoDraftMutation>>>,
     pub completed: bool,
@@ -93,11 +93,11 @@ impl FlowChildGroupWork {
         Self { tool_id, instance_owner: None, output: None, output_retirement: None, completed: false, closing: false }
     }
 
-    pub fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner: Some(instance_owner), output: None, output_retirement: None, completed: false, closing: false }
     }
 
-    pub fn accept_output(&mut self,emit:Emit<FlowMutation,NoConfigMutation,NoDraftMutation>,child_id:&str)->Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>,Fault>{
+    pub fn accept_output(&mut self,emit:Emit<FlowMutation,NoConfigMutation,NoDraftMutation>,child_id:&str)->Result<ArtifactCommandWorkStep<semio_plugin::EditorApp<FlowPlayApp>>,Fault>{
         assert!(self.output.is_none(),"one Flow work unit retains at most one original output");
         self.output=Some(emit);
         let emit=self.output.as_ref().expect("original output retained before validation");
@@ -118,7 +118,7 @@ impl FlowChildGroupWork {
     fn admitted_child<'a>(
         command: &FlowCommand,
         snapshot: &'a FlowSnapshot,
-        context: Option<&'a semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        context: Option<&'a semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<FlowPlayApp>>>,
     ) -> Option<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioFlowSnapshot>> {
         if !matches!(command, FlowCommand::AddWidget(_) | FlowCommand::MoveMediaNode(_) | FlowCommand::NodeGraphEdit(_) | FlowCommand::SpotlightCommit(_)) {
             return None;
@@ -140,7 +140,7 @@ impl FlowChildGroupWork {
     }
 }
 
-impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowChildGroupWork {
+impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowChildGroupWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -150,7 +150,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         command: &FlowCommand,
         snapshot: &FlowSnapshot,
         _interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<FlowPlayApp>>>,
     ) -> Option<usize> {
         if self.closing || self.completed || command.command_id() != self.tool_id || !FLOW_CHILD_GROUP_TOOL_IDS.contains(&self.tool_id) || !Self::payload_admitted(command) {
             return None;
@@ -159,9 +159,9 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         (child.nodes.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && child.edges.len() <= FLOW_STORE_MAX_MUTATION_ITEMS).then_some(1)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_plugin::EditorApp<FlowPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation, snapshot_read: _ } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation, snapshot_read: _ } = *input;
         if self.closing || self.completed || self.output.is_some() {
             return Err(Fault::from("flow-retained-child-group-terminal"));
         }
@@ -289,8 +289,8 @@ impl FlowChildGroupJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for FlowChildGroupJobFactory {
-    type Payload = ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<FlowPlayApp>>;
-    type Job = ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+    type Payload = ArtifactRetainedCommandPayload<semio_plugin::EditorApp<FlowPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<semio_plugin::EditorApp<FlowPlayApp>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -308,19 +308,34 @@ impl semio_framework::ToolJobFactory for FlowChildGroupJobFactory {
         semio_framework::ToolExecutionContract::resumable(FLOW_CHILD_GROUP_RAW_BYTES, 256, 1, 16_384, 7_500, 1, 1)
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: FLOW_CHILD_GROUP_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: FLOW_CHILD_GROUP_RAW_BYTES, checkpoint_resume: true);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowChildGroupJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for FlowChildGroupJobFactory {
+    type Owner = semio_plugin::EditorApp<FlowPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FLOW_CHILD_GROUP_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "spotlightCommit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "addWidget", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "spotlightCommit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
     ];
 }
 //#endregion 🧵️ChildGroupRetainedRoute
+
+/// 🏭️ Every admitted concrete work frame is quoted before its own Box is born.
+pub(super) fn flow_build_retained_job(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<FlowPlayApp>>>,output:&mut Option<semio_plugin::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+ use semio_framework_value::{RetirementDemand,RetainedCloneProgress,ValueError,ValueRefusalKind};
+ fn admit<W:ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>>+'static>(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<FlowPlayApp>>>,output:&mut Option<semio_plugin::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>,raw:usize,items:usize,copy:usize,construct:impl FnOnce(&semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<FlowPlayApp>>)->W)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,FlowCommand::command_id,raw,items,false,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()},|request,_|Ok((construct(request),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})))}
+ let original=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow retained request is absent"))?;let tool=original.command.command_id();let alias=2*std::mem::size_of::<semio_plugin::ArtifactInstanceOperationOwnerHandle>();
+ if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool){return admit(request,output,cx,FLOW_CONTRIBUTIONS_RAW_BYTES,1,alias,|request|FlowContributionsWork::new(request.instance_operation_owner.clone()))}
+ let insert=matches!(&original.command,FlowCommand::NodeGraphEdit(payload)if matches!(payload.operations.as_slice(),[super::node_graph_edit::FlowNodeGraphEditOp::InsertPort{..}]));
+ if tool=="addWidget"||insert{return admit(request,output,cx,FLOW_CHILD_GROUP_RAW_BYTES,1,alias,|request|FlowGraphOperationWork::new(tool,request.instance_operation_owner.clone()))}
+ if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool){return admit(request,output,cx,FLOW_CHILD_GROUP_RAW_BYTES,1,alias,|request|FlowChildGroupWork::new(tool,request.instance_operation_owner.clone()))}
+ if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool){return admit(request,output,cx,FLOW_GRAPH_OPERATION_RAW_BYTES,FLOW_GRAPH_OPERATION_CAPACITY.work_items(),alias,|request|FlowGraphOperationWork::new(tool,request.instance_operation_owner.clone()))}
+ if matches!(tool,"removeWidget"|"disconnect"){return admit(request,output,cx,FLOW_DIRECT_STORE_RAW_BYTES,FLOW_STORE_MAX_MUTATION_ITEMS,alias,|request|FlowGraphOperationWork::new(tool,request.instance_operation_owner.clone()))}
+ if FLOW_DIRECT_STORE_TOOL_IDS.contains(&tool){return admit(request,output,cx,FLOW_DIRECT_STORE_RAW_BYTES,FLOW_STORE_MAX_MUTATION_ITEMS,0,|_|FlowDirectStoreWork::new(tool))}
+ Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original Flow retained request has no declared factory").into())
+}

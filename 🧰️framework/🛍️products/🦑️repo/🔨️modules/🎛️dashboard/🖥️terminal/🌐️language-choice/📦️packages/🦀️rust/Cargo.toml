@@ -24,11 +24,11 @@ path = "../../🦀️.rs"
 [dependencies]
 dashboard_feedback = { path = "../../../📣️feedback/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-feedback" }
 dashboard_preferences = { path = "../../../../⚙️preferences/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-preferences" }
-ui_locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
-semio-framework-ui-tui-core = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
-semio-framework-ui-tui-engine = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-ui-tui-frame = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
-semio-framework-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust" }
+ui_locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale" }
+semio-ui-tui-core = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-engine = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
+semio-ui-tui-frame = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
+semio-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

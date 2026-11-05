@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloRingSpacing wh
         record: "ChangedSiloRingSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ring stiffener spacing l_r (0 = unstiffened, L governs) of the silo shell", "Silo-Schale: Ringsteifenabstand l_r (0 = unausgesteift, L maßgebend) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ring stiffener spacing l_r (0 = unstiffened, L governs) of the silo shell", "Silo-Schale: Ringsteifenabstand l_r (0 = unausgesteift, L maßgebend) ändern")
     }
 }
 

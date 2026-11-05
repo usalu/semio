@@ -1,13 +1,13 @@
 //! 🧯️ Close host, drop and pair merge: the close host, the history finalization and supersede scope, the store drop, the merge by id and the pair merge. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
-use semio_framework_os_store_engine_close::{StoreCloseAdmission as _, StoreCloseWitness as _};
+use semio_os_spr::ColdMutation;
+use semio_os_store_engine_close::{StoreCloseAdmission as _, StoreCloseWitness as _};
 
 impl<P, Mutation> ArtifactStoreCloseHost<P, Mutation> for ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     fn close_host_member_inbox_capacity(&self) -> usize { self.wire.member_inbox.capacity() }
     fn close_host_backbone_attached(&self) -> bool { self.wire.backbone.is_some()||!self.wire.original_outbox.terminal_is_empty() }
@@ -25,8 +25,8 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: PartialEq + semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: PartialEq + semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🪞️ Delegates to [`StoreLive::enable_convergence_early_exit`].
     #[inline] pub fn enable_convergence_early_exit(&mut self) { self.live.enable_convergence_early_exit() }
@@ -52,8 +52,8 @@ pub enum SupersedeScope {
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     pub(super) fn resident_backings_terminal_is_empty(&self) -> bool {
         let (report_messages, report_outbound, report_edit_ids) = self.replay.pending_report.resident_backings();
@@ -63,8 +63,8 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🪞️ Delegates to [`StoreOwners::factory_aliases_present`].
     #[inline] pub fn factory_aliases_present(&self) -> bool { self.owners.factory_aliases_present() }
@@ -72,8 +72,8 @@ where
 
 impl<P, Mutation> Drop for ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🪦️ Exact terminal-empty shallow-shell witness, strict on the ordinary path — the store must
     /// have been retired down to an empty shell before it may be dropped.
@@ -144,12 +144,12 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🫸️ [`Self::merge_persisted_history`] over the pair's undecoded `.spr` bytes.
     pub async fn merge_persisted_pair(&mut self, pack: &[u8], spr: &[u8]) -> Result<PairMerge, VcsError> where P: Clone, Mutation: Clone + ColdMutation<P> {
-        let history = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let history = semio_os_spr::decode_history(spr, &semio_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.merge_persisted_history(pack, history).await
     }
 
@@ -160,17 +160,17 @@ where
     /// of another document (id, schema or genesis) is refused before anything is parsed: replacing a document is a load, not
     /// a merge. An ingest refusal stops the merge; what was taken before it stays, as with any remote batch (every ingest is
     /// atomic).
-    pub async fn merge_persisted_history(&mut self, pack: &[u8], history: semio_framework_os_spr::HistoryLog) -> Result<PairMerge, VcsError> where P: Clone, Mutation: Clone + ColdMutation<P> {
+    pub async fn merge_persisted_history(&mut self, pack: &[u8], history: semio_os_spr::HistoryLog) -> Result<PairMerge, VcsError> where P: Clone, Mutation: Clone + ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         if history.doc_id != self.log.envelope.id || history.schema != self.log.envelope.schema || artifact_initial_digest_of_pack(pack) != self.log.initial_digest {
             return Err(VcsError::ValidationFailed(format!("the persisted pair holds document {}, not {}: a merge takes this document's own log only", history.doc_id, self.log.envelope.id)));
         }
-        let ParsedDocumentText { envelope: foreign, snapshot } = parse_decoded_document_spr::<P, Mutation>(pack, history, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let ParsedDocumentText { envelope: foreign, snapshot } = parse_decoded_document_spr::<P, Mutation>(pack, history, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
         retire_replayed_projection::<P, Mutation>(snapshot);
         let mut failure = None;
         let mut events = Vec::new();
         for edit in foreign.vcs.edits.iter() {
-            match semio_framework_os_spr::mutation_envelopes_from_edit_since::<P, Mutation>(edit, 0, &ArtifactId(foreign.id.clone()), &SchemaId(foreign.schema.clone())) {
+            match semio_os_spr::mutation_envelopes_from_edit_since::<P, Mutation>(edit, 0, &ArtifactId(foreign.id.clone()), &SchemaId(foreign.schema.clone())) {
                 Ok(envelopes) => events.extend(envelopes),
                 Err(error) => {
                     failure = Some(VcsError::Serialize(error.to_string()));

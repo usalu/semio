@@ -9,7 +9,7 @@ fn observe(g:RetainedCloneGrant,f:impl FnOnce()->RetainedCloneStep)->RetainedClo
 fn close(p:&mut SpreadOutput){p.begin_close();for _ in 0..100000{if p.terminal_is_empty(){return}let d=p.close_demand(256).unwrap();assert_eq!(observe(Default::default(),||p.close_step(Default::default()).unwrap()).progress(),Default::default());observe(grant(d),||p.close_step(grant(d)).unwrap());}panic!("spread original close stalled")}
 #[test]
 fn original_affected_spread_strings_keep_physical_custody_and_exact_receipts(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🎚️simple/🧪️tests/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(&crate::test_fixture_text("../../🧳️retained/🎚️simple/🧪️tests/🔣️.json")).unwrap();
  let mut checked=0;
  for row in corpus["commands"].as_array().unwrap().iter().filter(|row|row["accepted"]==true&&row["mutation"].get("SetPageSpread").is_some()){
   let event:LayoutMutation=decode(&row["mutation"]);let original:LayoutSnapshot=decode(row.get("before").unwrap_or(&corpus["base"]));

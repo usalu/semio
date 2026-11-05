@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeStudRowDiameter wh
         record: "ChangedStudRowDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change bar diameter Ø of the stud row", "Dübelreihe: Stabdurchmesser Ø ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change bar diameter Ø of the stud row", "Dübelreihe: Stabdurchmesser Ø ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.stud_row_id.clone()]

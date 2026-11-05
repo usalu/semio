@@ -84,7 +84,7 @@ impl UiCandidateBaseline {
     }
 }
 
-pub fn retire_surface_scene(document_id: UiNodeId, window_id: &str, window_generation: u64, retirements: &mut VecDeque<UiRetiredComponentScene>, node_id: NodeId, node: &semio_framework_ui_retained_tree::tree::Node) -> bool {
+pub fn retire_surface_scene(document_id: UiNodeId, window_id: &str, window_generation: u64, retirements: &mut VecDeque<UiRetiredComponentScene>, node_id: NodeId, node: &semio_ui_retained_tree::tree::Node) -> bool {
     let UiNode::ComponentScene(scene) = &node.spec.0 else { return true };
     if retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
         return false;

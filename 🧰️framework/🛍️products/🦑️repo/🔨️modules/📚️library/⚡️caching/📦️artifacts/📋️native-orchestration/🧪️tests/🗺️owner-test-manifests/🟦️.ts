@@ -15,7 +15,7 @@ test("General task ownership follows its neutral imports and exact route roster"
  const program=ts.createSourceFile(general,source,ts.ScriptTarget.Latest,true),imports:string[]=[],routes:string[]=[];
  const visit=(node:ts.Node)=>{if(ts.isImportDeclaration(node)&&ts.isStringLiteral(node.moduleSpecifier))imports.push(node.moduleSpecifier.text);if(ts.isCallExpression(node)&&ts.isPropertyAccessExpression(node.expression)&&node.expression.name.text==="register"&&ts.isStringLiteral(node.arguments[0]!))routes.push(node.arguments[0].text);ts.forEachChild(node,visit);};visit(program);
  expect(imports.some(value=>value.includes("🛍️products"))).toBe(false);
- expect(source.includes("semio-framework-os-")).toBe(false);expect(source.includes('segments[0] === "io"')).toBe(false);
+ expect(source.includes("semio-os-")).toBe(false);expect(source.includes('segments[0] === "io"')).toBe(false);
  expect(routes).toContain("test-fixture-ownership-source");expect(routes).toContain("test-artifact-kind-source");expect(routes).not.toContain("test-fixture-ownership");expect(routes).not.toContain("test-artifact-kind");
 });
 /** 📥️ Authors one original sixty-second law deadline before route work. */

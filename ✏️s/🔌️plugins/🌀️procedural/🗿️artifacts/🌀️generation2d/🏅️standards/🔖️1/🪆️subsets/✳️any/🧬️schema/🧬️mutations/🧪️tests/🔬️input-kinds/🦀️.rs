@@ -1,6 +1,6 @@
 //! 🧪️ Kind fixture laws of `change-slider-value`, `change`, `update-camera`, `move-nodes`: each committed scenario applied, inverted and diffed through the mutation union.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🎛️update-camera/🧪️tests/📷️pans/🦀️.rs"]
 mod update_camera_pans_and_zooms_the_graph_camera;

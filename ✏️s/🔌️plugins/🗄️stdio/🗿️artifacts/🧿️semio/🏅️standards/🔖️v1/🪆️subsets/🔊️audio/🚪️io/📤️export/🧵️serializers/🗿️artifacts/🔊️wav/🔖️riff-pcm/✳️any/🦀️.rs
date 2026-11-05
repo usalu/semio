@@ -12,7 +12,7 @@
 //! `audio→wav→audio` round trip; every numeric/sample field does.
 
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
-use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavFmt};
 use semio_s_artifact_stdio_wav::WavSnapshot;
 

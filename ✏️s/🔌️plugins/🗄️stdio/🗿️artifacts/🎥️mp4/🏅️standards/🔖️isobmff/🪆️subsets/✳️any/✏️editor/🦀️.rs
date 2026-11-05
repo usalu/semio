@@ -11,41 +11,41 @@ use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Sn
 #[cfg(test)] use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Track};
 use crate::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
 use semio_framework_2d_compute::EngineHandles;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactStoreInitializationJob;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_ui_locale::Label;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
+use semio_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Command
@@ -126,7 +126,7 @@ fn mp4_editor_retained_extent(command: &Mp4EditCommand, _snapshot: &Mp4Snapshot,
 }
 /// ✂️ Parses a half-open range written `start-end`, both counted in whole units.
 pub(crate) fn parse_cut_range(value: &str) -> Result<(usize, usize), Fault> {
-    let invalid = || Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.mp4.cut-range"), "Range must be written start-end with whole numbers. / Der Bereich muss als Start-Ende mit ganzen Zahlen geschrieben werden.");
+    let invalid = || Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.mp4.cut-range"), "Range must be written start-end with whole numbers. / Der Bereich muss als Start-Ende mit ganzen Zahlen geschrieben werden.");
     let whole = |text: &str| Some(text.trim()).filter(|text| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit())).and_then(|text| text.parse::<usize>().ok());
     let (start, end) = value.trim().split_once('-').ok_or_else(invalid)?;
     Ok((whole(start).ok_or_else(invalid)?, whole(end).ok_or_else(invalid)?))
@@ -136,15 +136,15 @@ pub(crate) fn cut_range_mutations(snapshot: &Mp4Snapshot, value: &str) -> Result
     let (start, end) = parse_cut_range(value)?;
     let samples = snapshot.tracks.first().map_or(0, |track| track.samples.len());
     if start >= end || end > samples {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.mp4.cut-range"), format!("Sample range {start}-{end} must satisfy 0 <= start < end <= {samples}. / Der Samplebereich {start}-{end} muss 0 <= Start < Ende <= {samples} erfüllen.")));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.mp4.cut-range"), format!("Sample range {start}-{end} must satisfy 0 <= start < end <= {samples}. / Der Samplebereich {start}-{end} muss 0 <= Start < Ende <= {samples} erfüllen.")));
     }
     Ok((start..end).map(|_| Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index: 0, index: start })).collect())
 }
 /// ✂️ The localized `cut-frames` action: a revision-guarded range cut dispatched by the transport trim.
 pub(crate) fn cut_frames_action() -> ActionDefinition {
-    let mut action = ActionDefinition::bounded_catalog(CUT_FRAMES_ACTION_ID, semio_framework_ui_locale::LocalizedLabel::native("Cut range", "Bereich ausschneiden"), ActionKind::Mutation).with_args([
-        ActionArgDef::document_revision("revision", semio_framework_ui_locale::LocalizedLabel::native("Document revision", "Dokumentrevision")),
-        ActionArgDef::text("value", semio_framework_ui_locale::LocalizedLabel::native("Range (start-end)", "Bereich (Start-Ende)")).required(),
+    let mut action = ActionDefinition::bounded_catalog(CUT_FRAMES_ACTION_ID, semio_ui_locale::LocalizedLabel::native("Cut range", "Bereich ausschneiden"), ActionKind::Mutation).with_args([
+        ActionArgDef::document_revision("revision", semio_ui_locale::LocalizedLabel::native("Document revision", "Dokumentrevision")),
+        ActionArgDef::text("value", semio_ui_locale::LocalizedLabel::native("Range (start-end)", "Bereich (Start-Ende)")).required(),
     ]);
     action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
     action
@@ -153,16 +153,16 @@ fn mp4_editor_retained_reduce(
     command: &Mp4EditCommand,
     _snapshot: &Mp4Snapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Mp4Editor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Mp4Editor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Mp4Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         Mp4EditCommand::CutFrames { revision, value } => {
             if *revision != semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision) {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.mp4.cut-conflict"), "The document changed before this cut was applied. / Das Dokument wurde vor dem Schnitt geändert."));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.mp4.cut-conflict"), "The document changed before this cut was applied. / Das Dokument wurde vor dem Schnitt geändert."));
             }
             Ok(Emit { artifact_mutations: cut_range_mutations(_snapshot, value)?, ..Default::default() })
         }
@@ -193,7 +193,7 @@ impl ToolJobFactory for Mp4EditorExampleFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         ToolExecutionContract::bounded_first_step(STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
 }
 impl ArtifactOwnedToolJobFactory for Mp4EditorExampleFactory {
     type Owner = EditorApp<Mp4Editor>;
@@ -208,7 +208,7 @@ pub struct Mp4Editor;
 
 impl ArtifactEditor for Mp4Editor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = Mp4Snapshot;
@@ -226,30 +226,30 @@ impl ArtifactEditor for Mp4Editor {
     const DIALECT: Dialect = MP4_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_MP4_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.mp4@isobmff", extension: ".mp4", media_type: "video/mp4", binary: true })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.mp4@isobmff", extension: ".mp4", media_type: "video/mp4", binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
         let bytes = crate::standards::isobmff::subsets::any::io::encode_mp4(snapshot);
-        let reopened = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))?;
+        let reopened = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error))?;
         if reopened == *snapshot {
             Ok(bytes)
         } else {
-            Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "MP4 snapshot is not exactly representable".into()))
+            Err(semio_plugin::MediaError::Payload("artifact:natural".into(), "MP4 snapshot is not exactly representable".into()))
         }
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))?;
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error))?;
         if crate::standards::isobmff::subsets::any::io::encode_mp4(&snapshot).as_slice() == bytes {
             Ok(snapshot)
         } else {
-            Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "MP4 input is outside the exact ISO-BMFF subset".into()))
+            Err(semio_plugin::MediaError::Payload("artifact:natural".into(), "MP4 input is outside the exact ISO-BMFF subset".into()))
         }
     }
 
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
@@ -268,8 +268,8 @@ impl ArtifactEditor for Mp4Editor {
         editing::register_snapshot_edit_tool_factory::<Self>(registry)?;
         registry.register(crate::standards::isobmff::subsets::any::io::playback::Mp4MediaExportJobFactory::<EditorApp<Self>>::new(registry.controller_id()))
     }
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) {
             return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx);
         }
@@ -277,10 +277,10 @@ impl ArtifactEditor for Mp4Editor {
             return Ok(false);
         }
         if mp4_editor_command_id(&original.command) != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
         }
-        let tool: &'static str = STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().copied().find(|id| *id == original.tool_id).ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-unknown"))?;
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, mp4_editor_command_id, STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool, mp4_editor_retained_reduce, mp4_editor_retained_extent))
+        let tool: &'static str = STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().copied().find(|id| *id == original.tool_id).ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-unknown"))?;
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, mp4_editor_command_id, STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool, mp4_editor_retained_reduce, mp4_editor_retained_extent))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
@@ -291,7 +291,7 @@ impl ArtifactEditor for Mp4Editor {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_MP4_DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(semio_plugin::bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_MP4_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
         mp4_editor_command_id(command)
@@ -302,15 +302,15 @@ impl ArtifactEditor for Mp4Editor {
         mp4_editor_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{
         Ok(Mp4Snapshot::default())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(semio_s_artifact_stdio_contract::media_export::playback_app_io::<crate::standards::isobmff::subsets::any::io::playback::Mp4PlaybackExport>())
     }
 
-    fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if request.as_ref().is_some_and(|source|source.port!=semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID||source.tool_id!=semio_s_artifact_stdio_contract::media_export::PLAYBACK_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Stdio media source requires its exact published output port").into())}
         crate::standards::isobmff::subsets::any::io::playback::Mp4PlaybackExportJob::admit_original(request,body,cx)
     }
@@ -321,24 +321,24 @@ impl ArtifactEditor for Mp4Editor {
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Mp4EditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
-            Mp4EditCommand::CutFrames { .. } => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.mp4.cut-conflict"), "A cut is revision-guarded and only runs through its retained command route. / Ein Schnitt ist revisionsgebunden und läuft nur über seine Befehlsroute.")),
+            Mp4EditCommand::CutFrames { .. } => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.mp4.cut-conflict"), "A cut is revision-guarded and only runs through its retained command route. / Ein Schnitt ist revisionsgebunden und läuft nur über seine Befehlsroute.")),
             Mp4EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp4_editor_example_snapshot(example_id), STDIO_MP4_DOCUMENT_SCHEMA)], ..Default::default() }),
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, view_state.locale, semio_s_artifact_stdio_contract::media_transport_resource(doc, "s.stdio.mp4@isobmff/*#editor"), doc.render_operation().map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.mp4@isobmff/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
-                .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale, semio_s_artifact_stdio_contract::media_transport_resource(doc, "s.stdio.mp4@isobmff/*#editor"), doc.render_operation().map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))).map(semio_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.mp4@isobmff/*#editor", &semio_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
+                .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -375,7 +375,7 @@ impl editing::SnapshotEditingEditor for Mp4Editor {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_mp4_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_mp4_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(MP4_DIALECT)
         .document(["semio", "mp4"])
         .icon_id("play")
@@ -408,7 +408,7 @@ pub const STDIO_MP4_DOCUMENT_SCHEMA: &str = "stdio.mp4";
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{STDIO_MP4_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
@@ -416,7 +416,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.mp4".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Mp4", "Mp4"),
+        label: semio_ui_locale::LocalizedLabel::native("Mp4", "Mp4"),
         source_format: STDIO_MP4_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -463,7 +463,7 @@ pub mod artifact_items_7 {
 use crate::{native_codecs};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
@@ -494,14 +494,14 @@ pub use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
 /// to.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("mp4", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()])

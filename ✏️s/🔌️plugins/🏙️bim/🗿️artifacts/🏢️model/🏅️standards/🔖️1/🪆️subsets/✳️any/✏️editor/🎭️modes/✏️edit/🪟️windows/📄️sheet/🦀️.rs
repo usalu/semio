@@ -13,11 +13,11 @@ use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schem
 use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::DslValue;
+use semio_plugin::InteractionRef;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "bim-edit-sheet";
@@ -72,7 +72,7 @@ pub fn active_sheet(snapshot: &ModelSnapshot, config: &config::BimSheetWindowCon
 
 /// 🗣️ The headings a sheet prints, in the language of `labels`.
 pub fn title_labels(labels: &BimLabels) -> TitleLabels {
-    let text = |value: semio_framework_ui_locale::LabelText| value.as_str().to_string();
+    let text = |value: semio_ui_locale::LabelText| value.as_str().to_string();
     TitleLabels {
         project: text(labels.sheet_project),
         number: text(labels.sheet_number),
@@ -208,15 +208,15 @@ pub fn records(layout: Option<&SheetLayout>, inference: &ModelInference, selecti
 //#region 🔖️Render
 /// 🎨️ Renders the sheet window.
 #[allow(clippy::too_many_arguments)]
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     render_over(snapshot, inference, config, selection, utility, revision, labels, &[])
 }
 
 /// 🎨️ [`render`] with the records of the authoring overlay (the handles of the selected viewports, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let layout = active_sheet(snapshot, config).and_then(|id| inference.sheet_layouts.get(&id));
-    let framing = layout.filter(|_| !config.framed).map(|layout| semio_framework_plugin::Canvas2dFraming { revision, bounds: [0.0, 0.0, layout.width, layout.height], padding: FRAMING_PADDING });
+    let framing = layout.filter(|_| !config.framed).map(|layout| semio_plugin::Canvas2dFraming { revision, bounds: [0.0, 0.0, layout.width, layout.height], padding: FRAMING_PADDING });
     let mut records = records(layout, inference, selection, utility, labels);
     records.extend(overlay.iter().cloned());
     canvas_surface(SURFACE_ID, config.viewport, framing, &records)

@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `VcsPlayApp::Command` — the SOLE dispatch surface for the vcs demo app's own behavior. The six
     /// history actions (undo/redo/commitCheckpoint/createAlternative/switchAlternative/checkoutCheckpoint)
     /// never reach here — `VcsArtifactApp` intercepts those itself as host mechanics, not app behavior
@@ -98,10 +98,10 @@ pub fn vcs_bounded_reduce(
     command: &VcsCommand,
     snapshot: &VcsSnapshot,
     config: &VcsDemoConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<VcsPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<VcsPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
@@ -150,11 +150,11 @@ impl ToolJobFactory for VcsBoundedCommandJobFactory {
         vcs_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: VCS_BOUNDED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: VCS_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsBoundedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for VcsBoundedCommandJobFactory {
     type Owner = EditorApp<VcsPlayApp>;
     const TOOL_IDS: &'static [&'static str] = VCS_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
@@ -191,11 +191,11 @@ impl ToolJobFactory for VcsResumableCommandJobFactory {
         vcs_resumable_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: VCS_BOUNDED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: VCS_BOUNDED_RAW_BYTES, checkpoint_resume: true);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsResumableCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for VcsResumableCommandJobFactory {
     type Owner = EditorApp<VcsPlayApp>;
     const TOOL_IDS: &'static [&'static str] = VCS_RESUMABLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;

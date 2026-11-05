@@ -7,7 +7,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::{ArtifactApp, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, EditorApp};
+use semio_plugin::{ArtifactApp, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, EditorApp};
 use std::collections::{BTreeMap, BTreeSet};
 
 const STUDIO_FIXTURE: &str = include_str!("../../⚙️engine/🪐️space/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
@@ -232,9 +232,9 @@ async fn plugin_assembly_succeeds_and_registers_all_five_surfaces() {
 /// `deleteVirtualFileSystemNode`; the host's local catalog added `applyLocalCatalogDocument`) and the space index's 14.
 #[semio_framework_async_macros::async_test]
 async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
-    let mut studio = VcsArtifactApp::<semio_hub_space_app::SpaceApp>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_hub_space_app::create_space_app().await.definition), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
-    let mut home = VcsArtifactApp::<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_home::editor::home::create_home_app().await), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
-    let mut index = VcsArtifactApp::<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_space::editor::space_index::create_space_index_editor()), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
+    let mut studio = VcsArtifactApp::<semio_hub_space_app::SpaceApp>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_hub_space_app::create_space_app().await.definition), semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
+    let mut home = VcsArtifactApp::<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_home::editor::home::create_home_app().await), semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
+    let mut index = VcsArtifactApp::<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_space::editor::space_index::create_space_index_editor()), semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the reference snapshot births");
     assert_eq!(<semio_hub_space_app::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 40);
     assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
     assert_eq!(<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
@@ -246,7 +246,7 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
 /// 🪶️ Pins the two actual persisted Runtime owners independently of the five app surfaces.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_composed_owner_census() {
-    use semio_framework_os_kernel::{os_store::serialization::ArtifactCodec, os_store::serialization::ArtifactSqliteSnapshotHost};
+    use semio_os_kernel::{os_store::serialization::ArtifactCodec, os_store::serialization::ArtifactSqliteSnapshotHost};
     use directory::io::io_mechanism::{io_route, native_snapshot_sqlite_schema};
     use semio_framework::ArtifactDialect;
     use semio_framework::io_schema::{IoFidelity, SQLITE_SNAPSHOT};
@@ -283,7 +283,7 @@ async fn sqlite_snapshot_composed_owner_census() {
         assert!(!sql.trim().is_empty());
         assert_eq!(declared.schema.as_ref(),sql);
         assert!(declared.identical_to(typed.snapshot_sqlite.as_ref().unwrap()),"typed owner and declared complete SQL/hooks differ");
-        let installed=semio_framework_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap().expect("the ordinary composition installs each actual document codec");
+        let installed=semio_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap().expect("the ordinary composition installs each actual document codec");
         assert_eq!(installed.schema,codec.schema);
         assert!(declared.identical_to(installed.snapshot_sqlite.as_ref().expect("installed semantic provider")));
         assert_eq!(native_snapshot_sqlite_schema(&native).unwrap(),sql);

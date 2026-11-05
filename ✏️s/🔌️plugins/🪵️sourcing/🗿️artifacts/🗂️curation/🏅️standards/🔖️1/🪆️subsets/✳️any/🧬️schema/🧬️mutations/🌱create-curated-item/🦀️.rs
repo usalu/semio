@@ -40,8 +40,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "curated-item", kind: "create-curated-item", record: "CreatedCuratedItem" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Curation \"{}\"", self.item.object_id), &format!("Kuratierung \"{}\"", self.item.object_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Curation \"{}\"", self.item.object_id), &format!("Kuratierung \"{}\"", self.item.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.item.object_id.clone()]

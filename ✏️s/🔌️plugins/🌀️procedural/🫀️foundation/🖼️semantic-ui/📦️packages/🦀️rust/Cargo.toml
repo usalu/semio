@@ -16,8 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-playbook-contract = { workspace = true }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
-semio-framework-ui-declaration = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-os-playbook-contract = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-locale = { workspace = true }
+semio-ui-declaration = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 

@@ -1105,20 +1105,16 @@
         }
       }
     },
-    "RuntimeTrunkCompilationV1": {
+    "RuntimeWasmCompilationV1": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "rawSha256",
-        "querySha256",
+        "compiledSha256",
         "outputs"
       ],
       "properties": {
         "rawSha256": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "querySha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         },
@@ -1143,10 +1139,14 @@
               }
             }
           }
+        },
+        "compiledSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       }
     },
-    "RuntimeTrunkObservationV1": {
+    "RuntimeWasmObservationV1": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1160,16 +1160,15 @@
         "owner",
         "compiler",
         "raw",
-        "configuration",
-        "toolVersions",
-        "outputs"
+        "outputs",
+        "transformations"
       ],
       "properties": {
         "version": {
           "const": 1
         },
         "kind": {
-          "const": "wgpu-trunk"
+          "const": "wgpu-wasm"
         },
         "profile": {
           "enum": [
@@ -1179,11 +1178,13 @@
         },
         "manifest": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 256
         },
         "outputDirectory": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 256
         },
         "builtAtMs": {
           "type": "number",
@@ -1194,120 +1195,28 @@
           "minimum": 0
         },
         "owner": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "path",
-            "sha256"
-          ],
-          "properties": {
-            "path": {
-              "type": "string",
-              "minLength": 1
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
-            }
-          }
+          "$ref": "#/definitions/RuntimeWasmFileV1"
         },
         "compiler": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "path",
-            "sha256"
-          ],
-          "properties": {
-            "path": {
-              "type": "string",
-              "minLength": 1
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
-            }
-          }
+          "$ref": "#/definitions/RuntimeWasmFileV1"
         },
         "raw": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "path",
-            "sha256"
-          ],
-          "properties": {
-            "path": {
-              "type": "string",
-              "minLength": 1
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
-            }
-          }
-        },
-        "configuration": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "html",
-            "toml"
-          ],
-          "properties": {
-            "html": {
-              "type": "string",
-              "minLength": 1
-            },
-            "toml": {
-              "type": "string",
-              "minLength": 1
-            }
-          }
-        },
-        "toolVersions": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "bindgen",
-            "binaryen",
-            "trunk"
-          ],
-          "properties": {
-            "bindgen": {
-              "type": "string",
-              "minLength": 1
-            },
-            "binaryen": {
-              "type": "string",
-              "minLength": 1
-            },
-            "trunk": {
-              "type": "string",
-              "minLength": 1
-            }
-          }
+          "$ref": "#/definitions/RuntimeWasmFileV1"
         },
         "outputs": {
           "type": "array",
           "minItems": 2,
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "path",
-              "sha256"
-            ],
-            "properties": {
-              "path": {
-                "type": "string",
-                "minLength": 1
-              },
-              "sha256": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{64}$"
-              }
-            }
+            "$ref": "#/definitions/RuntimeWasmFileV1"
+          },
+          "maxItems": 2048
+        },
+        "transformations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/RuntimeWasmTransformationV1"
           }
         }
       }
@@ -2244,6 +2153,161 @@
           "maxItems": 65536,
           "items": {
             "$ref": "#/definitions/RuntimeCargoBuildResourcesV1"
+          }
+        }
+      }
+    },
+    "RuntimeWasmTransformationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "tool",
+        "arguments",
+        "input",
+        "outputs"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "wasm-bindgen",
+            "binaryen"
+          ]
+        },
+        "tool": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "version"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            }
+          }
+        },
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "input": {
+          "$ref": "#/definitions/RuntimeWasmFileV1"
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2048,
+          "items": {
+            "$ref": "#/definitions/RuntimeWasmFileV1"
+          }
+        }
+      }
+    },
+    "RuntimeWasmFileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "RuntimeWasmProtocolV1": {
+      "const": {
+        "maximumFiles": 2048,
+        "maximumDirectories": 2048,
+        "maximumEntries": 4096,
+        "publicationMarker": ".semio-artifact.json",
+        "publicationOwnerPrefix": "wgpu-renderer:"
+      }
+    },
+    "RuntimeWasmRostersV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binding",
+        "published"
+      ],
+      "properties": {
+        "binding": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2048,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "published": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2048,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "RuntimeWasmPublicationMarkerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "enum": [
+            "wgpu-renderer:prototype",
+            "wgpu-renderer:release"
+          ]
+        },
+        "files": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2048,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
           }
         }
       }

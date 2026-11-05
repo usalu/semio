@@ -3,7 +3,7 @@
 //! The app's typed `VcsCommand` enum — which used to share the old `📡️protocol` crate with this codec —
 //! is a SURFACE concern, not an artifact one: it now lives in the editor surface's
 //! `✏️editor/🦀️.rs`, assembled from the `🎮️commands/*` payload modules by
-//! `semio_framework_plugin::app_commands!`.
+//! `semio_plugin::app_commands!`.
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).

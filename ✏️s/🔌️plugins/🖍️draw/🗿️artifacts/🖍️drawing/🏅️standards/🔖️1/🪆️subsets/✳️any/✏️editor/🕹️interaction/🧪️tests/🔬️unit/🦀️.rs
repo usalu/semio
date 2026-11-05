@@ -2,8 +2,8 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[allow(unused_imports)] use semio_framework_job_registry::{FixedOperationOwner};
-#[allow(unused_imports)] use semio_framework_plugin::ArtifactEditor;
-#[allow(unused_imports)] use semio_framework_plugin::Emit;
+#[allow(unused_imports)] use semio_plugin::ArtifactEditor;
+#[allow(unused_imports)] use semio_plugin::Emit;
 #[allow(unused_imports)] use pack::snapshot::ArtifactPack;
 #[allow(unused_imports)] use std::collections::HashMap;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;

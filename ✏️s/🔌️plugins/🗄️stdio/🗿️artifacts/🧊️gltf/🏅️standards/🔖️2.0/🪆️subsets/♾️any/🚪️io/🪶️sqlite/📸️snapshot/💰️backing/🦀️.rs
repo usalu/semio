@@ -1,6 +1,6 @@
 //! 🗂️ Adjacent concrete GLTF relational indexes await the owning capability baseline.
 use super::*;
-use semio_framework_os_kernel::sqlite_snapshot::transfer::{reserve,validate_table_controlled};
+use semio_os_kernel::sqlite_snapshot::transfer::{reserve,validate_table_controlled};
 
 struct Entity<'a>{row:&'a SqliteRow,used:bool}
 struct Relation<'a>{owner:i64,ordinal:usize,row:&'a SqliteRow}

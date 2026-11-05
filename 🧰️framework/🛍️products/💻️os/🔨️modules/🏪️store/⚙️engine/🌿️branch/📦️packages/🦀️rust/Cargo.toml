@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-store-engine-branch"
+name = "semio-os-store-engine-branch"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,12 +24,12 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
-semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-engine = { path = "../../../📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../../🧱️store-components/📦️packages/🦀️rust" }
-semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
-semio-framework-os-store-operation-wire = { path = "../../../../🧵️operation-wire/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-engine = { path = "../../../📦️packages/🦀️rust" }
+semio-os-store-engine-core = { path = "../../../🧱️store-components/📦️packages/🦀️rust" }
+semio-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-os-store-operation-wire = { path = "../../../../🧵️operation-wire/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

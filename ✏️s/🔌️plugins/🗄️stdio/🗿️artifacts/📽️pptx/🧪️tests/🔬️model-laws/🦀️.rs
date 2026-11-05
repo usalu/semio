@@ -1,7 +1,7 @@
 //! 🧪️ The pptx model laws, as an integration target over the artifact's public API.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 
 #[path = "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs"]

@@ -2,10 +2,10 @@
 
 
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_contract::BuiltNode;
+use semio_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_contract::BuiltNode;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -28,13 +28,13 @@ pub fn page_summary(index: usize, page: &PageDoc) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render_windowed(document: &PdfSnapshot, windows: &semio_framework_plugin::TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_windowed(document: &PdfSnapshot, windows: &semio_plugin::TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
     DocumentWindowKit::render_windowed(&DocumentView { pages }, windows)
 }
 /// 🧪️ Renders an explicitly unhosted read-only fixture.
-pub fn render(document: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    render_windowed(document, &semio_framework_plugin::TreeWindows::unhosted())
+pub fn render(document: &PdfSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    render_windowed(document, &semio_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

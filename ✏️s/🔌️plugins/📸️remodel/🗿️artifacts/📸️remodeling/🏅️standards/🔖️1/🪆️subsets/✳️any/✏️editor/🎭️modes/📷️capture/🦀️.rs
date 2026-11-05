@@ -4,11 +4,11 @@
 use crate::editor::remodeling::modes::capture::windows::frames;
 use crate::editor::remodeling::modes::model::windows::model;
 use crate::editor::remodeling::modes::model::tools::reconstruction;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_plugin::create_named_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::NamedLayout;
+use semio_plugin::create_default_layout;
+use semio_plugin::create_named_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::NamedLayout;
 
 pub const REMODELING_PLAY_MODE_CAPTURE: &str = "capture";
 pub const REMODELING_PLAY_LAYOUT_CAPTURE: &str = "remodeling-capture";

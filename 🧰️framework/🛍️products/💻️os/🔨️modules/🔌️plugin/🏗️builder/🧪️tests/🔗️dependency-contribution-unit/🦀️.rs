@@ -109,7 +109,7 @@ fn contribution_plan_matches_direct_leaf() {
     let folded = protocol::apply_diff_cold(protocol::os_spr::fold::fold_plan_diff(&leaf, &base).diff(), &base).expect("contribution result");
     assert_eq!(direct, folded);
     assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::SEMANTICS.kind, "add-value");
-    assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(&leaf), semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
+    assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(&leaf), semio_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
     let minimum = AddValue { delta: i32::MIN };
     let zero = DependencyTestSnapshot { value: 0 };
     assert_eq!(protocol::os_spr::fold::fold_plan_inverse(&minimum, &zero).expect("valid retained mutation inverse fixture"), vec![operation(1), operation(i32::MAX)]);

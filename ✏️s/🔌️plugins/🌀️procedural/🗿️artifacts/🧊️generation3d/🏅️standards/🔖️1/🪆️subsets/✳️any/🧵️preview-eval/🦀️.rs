@@ -7,7 +7,7 @@
 //! chain hop it hands the host through its [`ToolRunJobPort`] (`flowEvalTick` addressed at a preview
 //! window), after which it waits until a hop settles. The hop advances the retained
 //! [`FlowEvalSession`], publishes the evaluation into the addressed window's retained transient and
-//! parks an [`semio_framework_plugin::ExtensionInvocation`] (`evaluate` while operators are still
+//! parks an [`semio_plugin::ExtensionInvocation`] (`evaluate` while operators are still
 //! pending, then `tessellate`); `flowEvalResolve` / `flowTessellateResolve` fold the answers and wake
 //! the job. Every observed node transition becomes a trace record keyed by the node's entity id. Abort
 //! is host-driven by construction: the job's close quiesces the session and hands the host one
@@ -27,17 +27,17 @@
 
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
 use semio_s_artifact_procedural_3d_model::host_with_session;
-use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
-use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::ExtensionInvocation;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MeshData;
-use semio_framework_plugin::ToolDefinition;
-use semio_framework_plugin::ToolRunJobPort;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::ViewModel;
+use semio_os_flow::{FlowEvalPublication, FlowEvalSession};
+use semio_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin::Effect;
+use semio_plugin::ExtensionInvocation;
+use semio_plugin::Fault;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MeshData;
+use semio_plugin::ToolDefinition;
+use semio_plugin::ToolRunJobPort;
+use semio_plugin::ToolRunView;
+use semio_plugin::ViewModel;
 use semio_framework_tool_run::{
     ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID,
     TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID,
@@ -66,7 +66,7 @@ pub use status_json::*;
 
 //#region ⏱️Tick
 
-pub use semio_framework_os_flow::flow_inference_dependency_json as geometry_dependency_json;
+pub use semio_os_flow::flow_inference_dependency_json as geometry_dependency_json;
 
 //#endregion ⏱️Tick
 
@@ -84,36 +84,36 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<semio_framework_ui_declaration::ui::NodeGraphNodeRecord>, Vec<semio_framework_ui_declaration::ui::NodeGraphEdgeRecord>) {
-    let nodes: Vec<semio_framework_ui_declaration::ui::NodeGraphNodeRecord> = host_snapshot
+pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<semio_ui_declaration::ui::NodeGraphNodeRecord>, Vec<semio_ui_declaration::ui::NodeGraphEdgeRecord>) {
+    let nodes: Vec<semio_ui_declaration::ui::NodeGraphNodeRecord> = host_snapshot
         .nodes
         .iter()
-        .map(|node| semio_framework_ui_declaration::ui::NodeGraphNodeRecord {
+        .map(|node| semio_ui_declaration::ui::NodeGraphNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui_declaration::ui::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui_declaration::ui::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_ui_declaration::ui::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_ui_declaration::ui::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
             ..Default::default()
         })
         .collect();
-    let edges: Vec<semio_framework_ui_declaration::ui::NodeGraphEdgeRecord> = host_snapshot
+    let edges: Vec<semio_ui_declaration::ui::NodeGraphEdgeRecord> = host_snapshot
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            semio_framework_ui_declaration::ui::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+            semio_ui_declaration::ui::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
     (nodes, edges)
 }
 
 /// 🪪️ Reads exact retained channel packs without display filtering or another kernel evaluation.
-pub fn export_meshes_from_evaluation(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_framework_plugin::MeshData>, semio_framework_diagnostic::TextError> {
+pub fn export_meshes_from_evaluation(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_plugin::MeshData>, semio_framework_diagnostic::TextError> {
     use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
     if session.preview_chain_status().working || session.preview_eval_status().in_flight > 0 || session.preview_tessellate_status().in_flight > 0 { return Err(io_error("generation3d export is waiting for the current geometry evaluation")); }
     let sources = semio_s_artifact_procedural_3d_mesh_bridge::export_source_channels(snapshot, widget_id)?;

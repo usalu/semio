@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-plugin-extension"
+name = "semio-plugin-extension"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,14 +25,14 @@ path = "../../🦀️.rs"
 original-actor-context-testing = []
 
 [dependencies]
-semio-framework-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
-semio-framework-plugin-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-surface = { path = "../../../📜️declaration/🪟️surface/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-app = { path = "../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-registry = { path = "../../../📜️declaration/📦️packages/🦀️rust" }
-semio-framework-plugin-plugin-program = { path = "../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-lifecycle = { path = "../../../⚛️reactor/📨️pending/📦️packages/🦀️rust" }
-semio-framework-plugin-runtime-instances = { path = "../../../⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust" }
+semio-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
+semio-plugin-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
+semio-plugin-decl-surface = { path = "../../../📜️declaration/🪟️surface/📦️packages/🦀️rust" }
+semio-plugin-reactor-app = { path = "../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-plugin-decl-registry = { path = "../../../📜️declaration/📦️packages/🦀️rust" }
+semio-plugin-plugin-program = { path = "../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
+semio-plugin-reactor-lifecycle = { path = "../../../⚛️reactor/📨️pending/📦️packages/🦀️rust" }
+semio-plugin-runtime-instances = { path = "../../../⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust" }
 base64_codec = { path = "../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
@@ -40,9 +40,9 @@ semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠�
 semio-framework-dsl = { path = "../../../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
@@ -50,12 +50,12 @@ semio-framework-value-derive = { path = "../../../../../../../🔨️modules/�
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-app = { path = "../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-plugin-decl-app = { path = "../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
-semio-framework-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-os-kernel" }
+semio-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-job-payload = { workspace = true }

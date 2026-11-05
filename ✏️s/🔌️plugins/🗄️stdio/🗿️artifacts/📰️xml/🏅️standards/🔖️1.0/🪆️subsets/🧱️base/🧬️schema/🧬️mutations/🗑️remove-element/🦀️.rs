@@ -18,8 +18,8 @@ pub type RemoveElementPayload = RemoveElementMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemovedElement" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove Element", "Element entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove Element", "Element entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-element".to_string()]

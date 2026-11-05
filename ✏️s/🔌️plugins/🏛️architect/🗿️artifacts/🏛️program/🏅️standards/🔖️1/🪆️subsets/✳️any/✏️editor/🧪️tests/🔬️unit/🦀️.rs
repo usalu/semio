@@ -13,12 +13,12 @@ use crate::{editor::architect::modes::edit::windows::adjacency as adjacency_wind
 use crate::{editor::architect::panels::catalogue as catalogue_panel, editor::architect::panels::document as document_panel, editor::architect::panels::inspection as inspection_panel};
 use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::{standards::v1::subsets::any::schema::snapshot::sample_plugin, standards::v1::subsets::any::schema::snapshot::ProgramSnapshot};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HistoryView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::HistoryView;
 #[allow(unused_imports)]
 use crate::{editor::architect::catalog::adjacency_kind_from_id, editor::architect::catalog::parse_entity_id, editor::architect::catalog::parse_entity_id_from_args, editor::architect::catalog::parse_register_id, editor::architect::catalog::report_kind_picker_options, editor::architect::catalog::REGISTER_IDS};
 #[allow(unused_imports)]
@@ -32,67 +32,67 @@ use crate::standards::v1::subsets::any::schema::snapshot::ARCHITECT_PROGRAM_SCHE
 #[allow(unused_imports)]
 use semio_framework_value::DslValue as Value;
 #[allow(unused_imports)]
-use semio_framework_plugin::{app::ArtifactOwnedToolJobContext, app::ArtifactOwnedToolJobRequest, app::Dialect, app::InteractionView};
+use semio_plugin::{app::ArtifactOwnedToolJobContext, app::ArtifactOwnedToolJobRequest, app::Dialect, app::InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::{retained_command::ArtifactCommandWork, retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+use semio_plugin::{retained_command::ArtifactCommandWork, retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppOperationContext;
+use semio_plugin::AppOperationContext;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolExecutionContract;
+use semio_plugin::ToolExecutionContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 pub(crate) mod context {
@@ -112,14 +112,14 @@ use crate::{editor::architect::modes::edit::windows::adjacency as adjacency_wind
 use crate::{editor::architect::panels::catalogue as catalogue_panel, editor::architect::panels::document as document_panel, editor::architect::panels::inspection as inspection_panel};
 use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::{standards::v1::subsets::any::schema::snapshot::sample_plugin, standards::v1::subsets::any::schema::snapshot::ProgramSnapshot};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HistoryView;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
-    use semio_framework_plugin::{App, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::HistoryView;
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
+    use semio_plugin::{App, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `ArchitectPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<ArchitectPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -133,7 +133,7 @@ use semio_framework_plugin::HistoryView;
     /// early — a panicking test leaves the witness alone so the FIRST failure stays the reported one.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the paid app close.
-    pub struct ArchitectApp(pub MountedArchitectApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct ArchitectApp(pub MountedArchitectApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for ArchitectApp {
         type Target = MountedArchitectApp;
@@ -151,7 +151,7 @@ use semio_framework_plugin::HistoryView;
     impl Drop for ArchitectApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -174,12 +174,12 @@ use semio_framework_plugin::HistoryView;
         App { definition: create_architect_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("architect", ArchitectPlayApp, architect_app_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("architect", ArchitectPlayApp, architect_app_manifest_for_tests, "../..");
     
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> ArchitectApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(architect_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(architect_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         ArchitectApp(app, scope)
     }
@@ -190,13 +190,13 @@ use semio_framework_plugin::HistoryView;
     /// `LoadDocument` effects the host would apply. Without the `bind_instance_id`/settle pair every
     /// typed command is refused with `interactive-job.live-instance`.
     pub async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle");
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
+                semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -205,18 +205,18 @@ use semio_framework_plugin::HistoryView;
     /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
     /// committed through its reserved job, then published — all three steps or the projection never moves.
     pub async fn history_verb(app: &mut ArchitectApp, action: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
     /// 🕹️ The framework's own injected `interactionSelect` verb takes that same reserved-job lane.
     pub async fn framework_verb(app: &mut ArchitectApp, action: &str, payload: &semio_framework_value::DslValue) {
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(payload.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} admission: {fault:?}"));
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved-job commit: {fault:?}"));
-        settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(payload.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} admission: {fault:?}"));
+        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved-job commit: {fault:?}"));
+        settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
     }
     
     pub async fn render(app: &mut ArchitectApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire app render")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire app render")
     }
     
     /// 🔀️ Drives a typed `ArchitectCommand` straight through `ArchitectCommand::dispatch` — mirrors
@@ -224,7 +224,7 @@ use semio_framework_plugin::HistoryView;
     ///
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches through
     /// `ArchitectCommand::dispatch` directly instead of `ArtifactEditor::handle` — `handle`'s
-    /// `interaction: &semio_framework_plugin::app::InteractionView<'_>` parameter has `pub(crate)`
+    /// `interaction: &semio_plugin::app::InteractionView<'_>` parameter has `pub(crate)`
     /// fields in that crate, so this crate's own tests cannot construct one; no `ArchitectCommand`
     /// row reads the "program" domain's live selection (see `handle`'s own doc comment), so
     /// `dispatch`'s plain 2-arg shape (no `ctx`) already carries everything every handler needs.
@@ -251,14 +251,14 @@ use semio_framework_plugin::HistoryView;
         next
     }
     
-    pub fn project_render(node: semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
+    pub fn project_render(node: semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>) -> String {
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
     }
     
     pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> String {
         let history = HistoryView::empty();
-        let tree = ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config, window: None }, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("editor render");
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire editor tree")
+        let tree = ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config, window: None }, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("editor render");
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire editor tree")
     }
 }
 
@@ -267,7 +267,7 @@ use crate::editor::architect::catalog::analysis_kind_from_str;
 use crate::standards::v1::subsets::any::schema::mutations::create_register_row;
 use crate::standards::v1::subsets::any::schema::registers::{catalog::{RegisterKey, RegisterRow}, AdjacencyKind, AnalysisKind};
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 use serde_json::json;
 
 //#region 🔖️CommandSurface
@@ -291,7 +291,7 @@ fn every_command() -> Vec<ArchitectCommand> {
         ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {}),
         ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: "text".into() }),
         ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
-        ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d::default() }),
+        ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_os_kernel::Viewport2d::default() }),
         ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind { element_a_id: "a".into(), element_b_id: "b".into(), kind: None, cycle: true }),
         ArchitectCommand::Search(query::Search { query: "hall".into() }),
         ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: None }),
@@ -313,7 +313,7 @@ async fn command_ids_are_unique_and_cover_every_row() {
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     for command in every_command() {
-        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
         let keyword = printed.split_whitespace().next().unwrap_or_default().to_string();
         assert!(keyword.contains('-') || keyword == "search", "row {} printed a non-kebab keyword {printed:?}", command.command_id());
@@ -345,7 +345,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 /// `command_id`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<ArchitectPlayApp>>(context::architect_app_manifest_for_tests).await;
+    semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<semio_plugin::EditorApp<ArchitectPlayApp>>(context::architect_app_manifest_for_tests).await;
     assert!(ArchitectPlayApp::command_from_action("notARealAction", None, None).is_err());
 }
 
@@ -378,7 +378,7 @@ async fn set_active_example_is_declared_bridged_and_loads_the_document() {
     assert_eq!(ArchitectPlayApp::command_id(&command), "setActiveExample");
     let emit = context::drive(&command, &sample_plugin());
     assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
-    assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::LoadDocument { .. })), "setActiveExample must emit a LoadDocument effect");
+    assert!(matches!(emit.effects.first(), Some(semio_plugin::Effect::LoadDocument { .. })), "setActiveExample must emit a LoadDocument effect");
 }
 
 /// 🙈️ An example id this app does not publish is a no-op, not a fault — the navbar dispatches
@@ -424,13 +424,13 @@ async fn adjacency_matrix_renders_triangle_strip() {
 #[semio_framework_async_macros::async_test]
 async fn graph_body_emits_node_graph_scene() {
     let program = sample_plugin();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let cfg = ArchitectPlayApp::initial_config();
-    let tree = ArchitectPlayApp::render(graph_window::ARCHITECT_BODY_GRAPH, &ArtifactView::new(&program, &history), &ConfigView { snapshot: &cfg, window: None }, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("graph render");
-    let semio_framework_plugin::Component::Surface(props) = &tree.root.component else { panic!("graph surface") };
-    let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
+    let tree = ArchitectPlayApp::render(graph_window::ARCHITECT_BODY_GRAPH, &ArtifactView::new(&program, &history), &ConfigView { snapshot: &cfg, window: None }, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("graph render");
+    let semio_plugin::Component::Surface(props) = &tree.root.component else { panic!("graph surface") };
+    let scene: semio_plugin::NodeGraphScene = semio_ui_scene::decode(props).expect("packed graph");
     assert_eq!(scene.nodes.len(), program.elements.len());
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire graph tree");
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire graph tree");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -496,7 +496,7 @@ async fn formatted_report_renders_section_headings() {
     let selected_report_id = record.header.id.clone();
     program.reports.push(record.clone());
     let config = report_window::config::ArchitectReportWindowConfig { selected_report_id: Some(selected_report_id) };
-    let json = context::project_render(report_window::render(&program, &config, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), &semio_framework_plugin::TreeWindows::unhosted()));
+    let json = context::project_render(report_window::render(&program, &config, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), &semio_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Overview"));
     assert!(json.contains("architect-report.section"));
 }
@@ -518,7 +518,7 @@ async fn import_registers_csv_action_sets_plugin() {
     let csv = export_registers_csv(&program).expect("export csv");
     let emit = context::drive(&ArchitectCommand::ImportRegistersCsv(import_registers_csv::ImportRegistersCsv { payload: csv, strategy: "upsert".into() }), &program);
     assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
-    assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::LoadDocument { .. })), "importRegistersCsv must emit a LoadDocument effect");
+    assert!(matches!(emit.effects.first(), Some(semio_plugin::Effect::LoadDocument { .. })), "importRegistersCsv must emit a LoadDocument effect");
 }
 
 /// 📂️ LAW: the CSV import is reachable from a file: its request verb asks the shell for one CSV file and names
@@ -528,7 +528,7 @@ async fn import_registers_csv_request_opens_a_csv_file_picker() {
     let program = sample_plugin();
     let emit = context::drive(&ArchitectCommand::ImportRegistersCsvRequest(import_registers_csv_request::ImportRegistersCsvRequest {}), &program);
     assert!(emit.artifact_mutations.is_empty(), "a file request edits nothing");
-    let Some(semio_framework_plugin::Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. }) = emit.effects.first() else { panic!("importRegistersCsvRequest must request a file: {:?}", emit.effects) };
+    let Some(semio_plugin::Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. }) = emit.effects.first() else { panic!("importRegistersCsvRequest must request a file: {:?}", emit.effects) };
     assert_eq!((accept.as_str(), read_as.as_deref(), import_action.as_str(), *multiple), (".csv,text/csv", Some("text"), "importRegistersCsv", false));
 }
 
@@ -555,16 +555,16 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
     let mut app = context::app_with_registry().await;
-    let view = semio_framework_plugin::ViewModel {
+    let view = semio_plugin::ViewModel {
         window_id: Some("architect-register-test".into()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "architect-register-test".into(), window_kind_id: register_window::ARCHITECT_WINDOW_REGISTER.into() }],
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: "architect-register-test".into(), window_kind_id: register_window::ARCHITECT_WINDOW_REGISTER.into() }],
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
-    let meta = semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("select exact Register window");
-    let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("view publication settles");
+    let meta = semio_plugin::ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") };
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("select exact Register window");
+    let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_plugin::artifact_app_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("view publication settles");
     assert!(result.mutations.is_empty(), "selectRegister is a view action and must never reach document operations under kind discipline");
-    assert!(!settled.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a view row never publishes the document lane: {:?}", settled.lanes);
+    assert!(!settled.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact), "a view row never publishes the document lane: {:?}", settled.lanes);
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: end-to-end proof the "program"
@@ -602,20 +602,20 @@ async fn interaction_select_stamps_the_picked_element_as_selected_in_the_documen
 /// (`document-archive-replacement.closure-rejected`).
 #[semio_framework_async_macros::async_test]
 async fn demo_example_load_settles_through_the_host_document_archive_door() {
-    use semio_framework_plugin::{artifact_app_laws, PluginApp};
+    use semio_plugin::{artifact_app_laws, PluginApp};
     let mut app = context::app_with_registry().await;
     let instance = 7;
     app.bind_instance_id(instance).await;
-    let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ArchitectCommand::SetActiveExample(crate::editor::architect::commands::example::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
+    let meta = semio_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ArchitectCommand::SetActiveExample(crate::editor::architect::commands::example::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
-        if let Some(semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
+        if let Some(semio_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
             loaded = Some((pack, spr));
         }
         app.take_typed_operation_event();
@@ -629,12 +629,12 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     PluginApp::begin_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
         std::thread::yield_now();
     }
     let status = status.expect("archive load reaches a terminal state");
@@ -654,6 +654,6 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         let table = <semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&derived).unwrap_or_else(|error| panic!("the derived {slot} member decodes: {error}"));
         assert_eq!(table.rows.len(), rows, "the genesis-derived {slot} member must carry one row per loaded record");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🔖️ExampleArchiveLoad

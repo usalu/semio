@@ -2,8 +2,8 @@
 
 #![cfg(test)]
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[path = "../../↔️move-layer/🧪️tests/📍️slides/🦀️.rs"]
 mod move_layer_tests_slides_the_stamp_layer_off_the_origin;

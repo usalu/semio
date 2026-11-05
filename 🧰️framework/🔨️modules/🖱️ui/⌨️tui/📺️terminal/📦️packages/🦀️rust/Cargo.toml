@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-tui-terminal"
+name = "semio-ui-tui-terminal"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -26,7 +26,7 @@ native = ["dep:libc"]
 
 [dependencies]
 semio-framework-async = { path = "../../../../../⏳️async/📦️packages/🦀️rust" }
-semio-framework-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
 
 [target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
 libc = { version = "0.2.186", optional = true }

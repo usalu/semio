@@ -26,7 +26,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, model_to_part21};
 use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{house, psets};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance};
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 
 /// 🔁️ The part of the house that the import understands: no roof, stair, railing, curtain wall, sloped slab or inferred space.
 fn importable() -> ModelSnapshot {

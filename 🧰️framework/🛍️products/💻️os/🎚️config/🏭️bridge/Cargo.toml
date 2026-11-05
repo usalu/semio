@@ -19,6 +19,6 @@ semio-framework-diagnostic = { path = "../../../../🔨️modules/⚠️diagnost
 semio-framework-dsl-record = { path = "../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../📦️packages/🦀️rust" }
 pack = { path = "../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-framework-os-config = { path = "../📦️packages/🦀️rust" }
+semio-os-config = { path = "../📦️packages/🦀️rust" }

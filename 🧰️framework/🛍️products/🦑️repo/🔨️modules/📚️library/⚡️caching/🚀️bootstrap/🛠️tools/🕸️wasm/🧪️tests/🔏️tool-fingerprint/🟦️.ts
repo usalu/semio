@@ -12,7 +12,7 @@ export async function testWasmToolFingerprint(workspace: string, output: string)
   assert.ok(Object.keys(built.metafile.inputs).every(path => !/🧪️tests|📦️packages\/🟦️typescript\/🟦️.ts/.test(path)));
   const { binaryenIdentity, preparedBinaryen, binaryenDirectory } = await import("../../🟦️.ts");
   const directory = mkdtempSync(join(output, "tool-fingerprint-"));
-  const environment = { ...process.env, PATH: "", SEMIO_WASM_BINDGEN_BIN: "", SEMIO_WASM_OPT_BIN: "", REPO_ROOT: workspace, NX_WORKSPACE_ROOT: workspace };
+  const environment = { ...process.env, PATH: "", SEMIO_TOOL_WASM_BINDGEN: "", SEMIO_WASM_OPT_BIN: "", REPO_ROOT: workspace, NX_WORKSPACE_ROOT: workspace };
   try {
     const cold = spawnSync(process.execPath, [script, fixture.command], { cwd: directory, env: environment, encoding: "utf8", timeout: 30000 });
     assert.equal(cold.status, 0, cold.stderr);

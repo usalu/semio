@@ -21,7 +21,7 @@ testkit = []
 [dependencies]
 machine = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-s-artifact-process-process3d-model = { workspace = true }
 semio-s-artifact-process-process3d-mutations = { workspace = true }

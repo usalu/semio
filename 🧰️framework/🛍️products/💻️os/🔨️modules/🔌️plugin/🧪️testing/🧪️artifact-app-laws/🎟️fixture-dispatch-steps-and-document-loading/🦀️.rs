@@ -11,7 +11,7 @@ pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_
 }
 
 /// 🎟️ Drives the actual borrowed action endpoint and pays remaining original fixture sources under its authored close loan.
-pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
     ensure_fixture_cancellation_issuer(app,cx)?;
     let mut original_args=args;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
@@ -26,7 +26,7 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
 }
 
 /// 🧭️ Drives the actual addressed command endpoint and pays remaining original fixture sources under its authored close loan.
-pub async fn dispatch_fixture_command<P:PluginApp>(app:&mut P,address:&semio_framework::manifest::CommandAddress,args:Option<semio_framework_value::DslValue>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+pub async fn dispatch_fixture_command<P:PluginApp>(app:&mut P,address:&semio_framework::manifest::CommandAddress,args:Option<semio_framework_value::DslValue>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
     let mut original_args=args;let mut original_fault=None;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
@@ -49,7 +49,7 @@ pub async fn export_fixture_media<P:PluginApp>(app:&mut P,port:&str,cx:&mut semi
 }
 
 /// 💾️ Produces one natural media artifact through the real original caller: each pending turn funds one maintenance step under the authored close loan until the port answers.
-pub async fn produce_fixture_media<P:PluginApp>(app:&mut P,port:&str,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework_plugin_document_media::MediaArtifact,semio_framework_plugin_decl_app::MediaArtifactOperationFailure>{
+pub async fn produce_fixture_media<P:PluginApp>(app:&mut P,port:&str,owner:&mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_document_media::MediaArtifact,semio_plugin_decl_app::MediaArtifactOperationFailure>{
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if let Some(artifact)=app.produce_media(port,owner,cx).await?{return Ok(artifact)}
         if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(semio_framework_job::OriginalTurnFailure::from(failure).into())}
@@ -58,7 +58,7 @@ pub async fn produce_fixture_media<P:PluginApp>(app:&mut P,port:&str,owner:&mut 
 }
 
 /// 🎬️ Submits one interactive media export through the real original receiving port: each pending turn funds one maintenance step under the authored close loan until the handle is received.
-pub async fn submit_fixture_media_export<P:PluginApp>(app:&mut P,port:&str,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework_plugin_decl_media::ArtifactMediaExportHandle,semio_framework_job::OriginalTurnFailure>{
+pub async fn submit_fixture_media_export<P:PluginApp>(app:&mut P,port:&str,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportHandle,semio_framework_job::OriginalTurnFailure>{
     let mut receiver=None;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if app.submit_media_export(port,&mut receiver,cx).await?{break}
@@ -68,7 +68,7 @@ pub async fn submit_fixture_media_export<P:PluginApp>(app:&mut P,port:&str,cx:&m
 }
 
 /// 📡️ Advances one submitted media export to its next poll answer through the real original receiving port.
-pub async fn poll_fixture_media_export<P:PluginApp>(app:&mut P,handle:&semio_framework_plugin_decl_media::ArtifactMediaExportHandle,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework_plugin_decl_media::ArtifactMediaExportPoll,semio_framework_job::OriginalTurnFailure>{
+pub async fn poll_fixture_media_export<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportPoll,semio_framework_job::OriginalTurnFailure>{
     let mut receiver=None;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if app.poll_media_export(handle.original_loan(),&mut receiver,cx).await?{break}
@@ -78,8 +78,8 @@ pub async fn poll_fixture_media_export<P:PluginApp>(app:&mut P,handle:&semio_fra
 }
 
 /// 📦️ Publishes one completed media export result as the segmented download the host would hand out.
-pub async fn retain_fixture_media_export_result<P:PluginApp>(app:&mut P,handle:&semio_framework_plugin_decl_media::ArtifactMediaExportHandle,result:semio_framework_plugin_decl_media::ArtifactMediaExportResult,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework_plugin_decl_media::ArtifactMediaExportPublishedStatus,semio_framework_job::OriginalTurnFailure>{
-    let mut source=Some(semio_framework_plugin_decl_media::ArtifactMediaExportPoll::Complete(result));let mut status=None;
+pub async fn retain_fixture_media_export_result<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,result:semio_plugin_decl_media::ArtifactMediaExportResult,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportPublishedStatus,semio_framework_job::OriginalTurnFailure>{
+    let mut source=Some(semio_plugin_decl_media::ArtifactMediaExportPoll::Complete(result));let mut status=None;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if app.retain_media_export_result(handle.original_loan(),&mut source,&mut status,cx).await?{break}
         if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
@@ -88,7 +88,7 @@ pub async fn retain_fixture_media_export_result<P:PluginApp>(app:&mut P,handle:&
 }
 
 /// ⬇️ Takes the next segmented download chunk of one retained media export; `None` is the end of the download.
-pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&semio_framework_plugin_decl_media::ArtifactMediaExportHandle,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
+pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
     let mut receiver=None;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if app.take_media_export_chunk(handle.original_loan(),&mut receiver,terminal,cx).await?{return Ok(receiver)}
@@ -98,7 +98,7 @@ pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&sem
 }
 
 /// 📨️ Exercises the real continuation receiver with one original argument and fault pair.
-pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,meta:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,meta:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
     let(mut original_args,mut original_fault)=(args,fault);let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){result=app.handle_response_action(action,&mut original_args,&mut original_fault,meta,identity,cx).await;if !matches!(result,Ok(None)){break}if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}}
     close_fixture_action_inputs(original_args,original_fault,cx,close_loan);
@@ -107,9 +107,9 @@ pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&st
 
 fn close_fixture_action_inputs(args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant){
     if args.is_some()||fault.is_some(){
-        let mut receiving=Some(semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:None,args,prepared:None,assembled:None,fault});
+        let mut receiving=Some(semio_plugin_instance_stores::action_ingress::ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:None,args,prepared:None,assembled:None,fault});
         let mut original_caller=None;
-        let mut owner=semio_framework_plugin_instance_stores::action_ingress::ActionIngressRecord::receive(&mut receiving,&mut original_caller,cx).expect("original fixture action receiving receipt").expect("authored caller must fund original unused argument receiving");
+        let mut owner=semio_plugin_instance_stores::action_ingress::ActionIngressRecord::receive(&mut receiving,&mut original_caller,cx).expect("original fixture action receiving receipt").expect("authored caller must fund original unused argument receiving");
         owner.finish_parser();
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             if owner.terminal_is_empty(){break}
@@ -120,7 +120,7 @@ fn close_fixture_action_inputs(args:Option<semio_framework_value::DslValue>,faul
 }
 
 /// 🔬️ Borrows one real app registry publication for a synchronous integration-law closure.
-pub async fn with_document_view<A, M, R>(app: &mut VcsArtifactApp<A, M>, inspect: impl for<'a> FnOnce(&semio_framework_plugin_decl_views::ArtifactView<'a, A::Snapshot>) -> R) -> Result<R, semio_framework::Fault>
+pub async fn with_document_view<A, M, R>(app: &mut VcsArtifactApp<A, M>, inspect: impl for<'a> FnOnce(&semio_plugin_decl_views::ArtifactView<'a, A::Snapshot>) -> R) -> Result<R, semio_framework::Fault>
 where
     A: ArtifactApp,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -131,18 +131,18 @@ where
     if !read.commit_authority_matches(generation, revision) {
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("framework.artifact-law.publication-invariant"), "law parent snapshot publication changed before document view capture").with_param("refusalKind", semio_framework_value::ValueRefusalKind::InvariantViolated.as_str()));
     }
-    let (_, snapshot, _, history) = app.history.cache.as_ref().ok_or_else(|| semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault("law document view cache was not prepared"))?;
+    let (_, snapshot, _, history) = app.history.cache.as_ref().ok_or_else(|| semio_plugin_ownership::sdk_fault::plugin_sdk_fault("law document view cache was not prepared"))?;
     if !std::ptr::eq(snapshot.as_ref(), read.get()) {
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("framework.artifact-law.publication-invariant"), "law history cache belongs to a different parent snapshot publication").with_param("refusalKind", semio_framework_value::ValueRefusalKind::InvariantViolated.as_str()));
     }
-    let view = semio_framework_plugin_decl_views::ArtifactView::with_children(read.get(), history.as_ref(), semio_framework_plugin_decl_views::child_view::ChildContentView::clone(&app.child_composition.child_content_root));
+    let view = semio_plugin_decl_views::ArtifactView::with_children(read.get(), history.as_ref(), semio_plugin_decl_views::child_view::ChildContentView::clone(&app.child_composition.child_content_root));
     Ok(inspect(&view))
 }
 
 /// 🎟️ The explicit mounted owner policy every testkit fixture instance runs under.
-pub fn fixture_mounted_policy() -> semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 {
+pub fn fixture_mounted_policy() -> semio_plugin_mounted_owner::MountedOwnerPolicyV1 {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-    semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+    semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
 }
 
 /// 🎟️ One valid original retained turn input for a fixture `Budget`.
@@ -220,9 +220,9 @@ pub fn fixture_step<J: semio_framework_job::InteractiveJob + ?Sized>(job: &mut J
 
 /// 🪪️ One local native authoring identity for a fixture call: `&mut fixture_identity()` lives for the whole statement, awaits included.
 /// Its no-op observer is a zero-sized closure, so leaking it allocates nothing.
-pub fn fixture_identity() -> semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'static> {
-    let observer: &'static mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'static> = Box::leak(Box::new(|_: semio_framework_value::native_encoding::NativeEncodeProgress| true));
-    semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("fixture authoring identity admission")
+pub fn fixture_identity() -> semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'static> {
+    let observer: &'static mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'static> = Box::leak(Box::new(|_: semio_framework_value::native_encoding::NativeEncodeProgress| true));
+    semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("fixture authoring identity admission")
 }
 
 /// 🛬️ The archive operation a law's whole-document load runs under: bit 61 alone, below the restore (62) and cold-pair
@@ -233,7 +233,7 @@ pub const LAW_DOCUMENT_LOAD_OPERATION: u64 = 1 << 61;
 /// stamped with the live store's identity — exactly what the runtime does to an `Effect::LoadDocument` — admitted as a
 /// whole-document archive load (`members: []`), polled to its terminal state over real polls and acknowledged. A load
 /// that does not land answers its own fault.
-pub async fn load_document<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
+pub async fn load_document<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
 where
     A: ArtifactApp,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -257,12 +257,12 @@ where
 
 /// 🏗️ Drives one live instance's metered store constructor through the runtime exchange the reactor uses, so a fixture that
 /// loads a document straight after opening the instance finds every store owner catalog installed.
-pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
+pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    while semio_framework_plugin_runtime_ops::ops_document::plugin_store_constructor_pending(runtime, instance_id).await? {
+    while semio_plugin_runtime_ops::ops_document::plugin_store_constructor_pending(runtime, instance_id).await? {
         if std::time::Instant::now() >= deadline { return Err(semio_framework::Fault::from("the instance store constructor did not settle").into()); }
         if cx.should_yield(){return Err(semio_framework::Fault::from("store constructor requires its next original source turn").into())}cx.consume_fuel(1);
-        semio_framework_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime, instance_id, None, identity, cx).await?;
+        semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime, instance_id, None, identity, cx).await?;
     }
     Ok(())
 }
@@ -270,34 +270,34 @@ pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &semio_fram
 /// 🛬️ [`load_document`] for one instance of a live runtime: the archive comes from the instance's own store stamp and goes
 /// through the runtime's archive-load entry points — admit, poll to terminal, acknowledge — the path a checkpoint restore
 /// takes.
-pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
+pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     plugin_settle_store_constructor(runtime, instance_id, identity,cx).await?;
-    let archive = semio_framework_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
-    semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, archive).await?;
+    let archive = semio_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
+    semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, archive).await?;
     let mut polls = 0usize;
     let fresh = cx.fuel_remaining();
     let fresh_grant = cx.retained_grant();
     let status = loop {
         semio_framework_job::testkit::renew_turn(cx, fresh, fresh_grant)?;
-        cx.consume_fuel(1);semio_framework_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,None,identity,cx).await?;
-        let status = semio_framework_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
+        cx.consume_fuel(1);semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,None,identity,cx).await?;
+        let status = semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
         if !law_load_running(&status, &mut polls)? {
             break status;
         }
     };
-    semio_framework_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION).await?;
+    semio_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION).await?;
     law_load_outcome(status).map_err(Into::into)
 }
 
 /// 📜️ [`plugin_load_document`] for a text pair typed by `S`/`Mutation`: parsed and printed to the pack and SPR the archive
 /// load takes, like [`load_document_text`].
-pub async fn plugin_load_document_text<PA, S, Mutation>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
+pub async fn plugin_load_document_text<PA, S, Mutation>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
 where
     PA: PluginApp,
-    S: Clone + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
+    S: Clone + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
     Mutation: store::OpText + store::OpBinary + store::Mutation<S> + store::ColdMutation<S> + 'static,
 {
-    let parsed: store::os_store::text_format::ParsedDocumentText<S, Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
+    let parsed: store::os_store::text_format::ParsedDocumentText<S, Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
     let envelope = parsed.into_envelope();
     let pack = store::os_store::text_format::print_document_pack(&envelope).await;
     envelope.retire_unadopted();
@@ -331,13 +331,13 @@ fn law_load_outcome(status: protocol::DocumentArchiveLoadStatus) -> Result<(), s
 /// 📜️ [`load_document`] for a text pair: the DSL and op log parse into the envelope whose pack and SPR the archive load
 /// takes, through the same printers `document_pack` uses; the parsed envelope is retired through its exact owners, never
 /// dropped.
-pub async fn load_document_text<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
+pub async fn load_document_text<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
 where
     A: ArtifactApp,
     A::Snapshot: pack::snapshot::ArtifactDsl,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
-    let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
+    let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
     let envelope = parsed.into_envelope();
     let pack = store::os_store::text_format::print_document_pack(&envelope).await;
     envelope.retire_unadopted();
@@ -419,11 +419,11 @@ pub fn drain_maintenance_pressure<P: PluginApp>(app: &mut P,cx:&mut semio_framew
         let grant = fixture_lifecycle_grant(PluginApp::maintenance_retirement_demands(app, fixture_mounted_policy().maintenance.maximum_copy_bytes).expect("quoted maintenance demand"));
         if cx.should_yield(){return}
         let demand=PluginApp::maintenance_retirement_demands(app,grant.maximum_copy_bytes).expect("original maintenance quote");
-        match semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|Ok((PluginApp::maintenance_step(app,same,loan)?,PluginApp::maintenance_terminal_is_empty(app)))).expect("original bounded maintenance") {
-            semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress != semio_framework_value::retained_clone::RetainedCloneProgress::default() => idle_stages = 0,
+        match semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|Ok((PluginApp::maintenance_step(app,same,loan)?,PluginApp::maintenance_terminal_is_empty(app)))).expect("original bounded maintenance") {
+            semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress != semio_framework_value::retained_clone::RetainedCloneProgress::default() => idle_stages = 0,
             _ => idle_stages += 1,
         }
-        assert!(idle_stages <= usize::from(semio_framework_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES), "a pressured displaced-owner queue made no maintenance progress over a whole stage rotation");
+        assert!(idle_stages <= usize::from(semio_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES), "a pressured displaced-owner queue made no maintenance progress over a whole stage rotation");
     }
 }
 
@@ -438,15 +438,15 @@ where
     M: store::MemberFactory,
 {
     let snapshot = std::mem::ManuallyDrop::new(snapshot);
-    let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&*snapshot).map_err(|error| semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault(format!("initial snapshot child projection failed: {error}")))?;
+    let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&*snapshot).map_err(|error| semio_plugin_ownership::sdk_fault::plugin_sdk_fault(format!("initial snapshot child projection failed: {error}")))?;
     let mut derived = 0;
     for index in 0..projection.len() {
         let Some((slot, fields)) = projection.get(index) else { break };
-        if !derives(&snapshot as &S, slot, fields.child_id).map_err(|error| semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault(error.into_message()))? {
+        if !derives(&snapshot as &S, slot, fields.child_id).map_err(|error| semio_plugin_ownership::sdk_fault::plugin_sdk_fault(error.into_message()))? {
             continue;
         }
         let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
-        semio_framework_plugin_instance_children::children_instance_root::genesis_member_schema::<M>(&dialect)?;
+        semio_plugin_instance_children::children_instance_root::genesis_member_schema::<M>(&dialect)?;
         derived += 1;
     }
     Ok(derived)
@@ -456,12 +456,12 @@ where
 /// derives a genesis child for, and answers how many it checked — a caller pins that count so a
 /// surface that stops deriving its children cannot turn the assertion vacuous. Any bundle
 /// registering `E` instantiates that same roster, so one assertion covers every bundle.
-pub fn assert_editor_genesis_children_declared<E: semio_framework_plugin_decl_surface::ArtifactEditor>() -> Result<usize, semio_framework::Fault> {
+pub fn assert_editor_genesis_children_declared<E: semio_plugin_decl_surface::ArtifactEditor>() -> Result<usize, semio_framework::Fault> {
     genesis_children_declared::<E::Snapshot, E::Members>(E::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"), |snapshot, slot, child_id| E::genesis_child_pack(snapshot, slot, child_id).map(|value| value.is_some()))
 }
 
 /// 👁️🌱️ Viewer twin of `assert_editor_genesis_children_declared`.
-pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_surface::ArtifactViewer>() -> Result<usize, semio_framework::Fault> {
+pub fn assert_viewer_genesis_children_declared<V: semio_plugin_decl_surface::ArtifactViewer>() -> Result<usize, semio_framework::Fault> {
     genesis_children_declared::<V::Snapshot, V::Members>(V::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"), |snapshot, slot, child_id| V::genesis_child_pack(snapshot, slot, child_id).map(|value| value.is_some()))
 }
 
@@ -495,7 +495,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
     /// 🎟️ Projects a cold typed fixture input into the actual retained action ingress under its persistent original caller.
 
-    pub async fn dispatch_original_fixture_command<A,M>(app:&mut VcsArtifactApp<A,M>,command:&A::Command,meta:&ActionMeta,mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>
+    pub async fn dispatch_original_fixture_command<A,M>(app:&mut VcsArtifactApp<A,M>,command:&A::Command,meta:&ActionMeta,mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>
 
     where A:ArtifactApp,A::Command:semio_framework_value::ToValue,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
 

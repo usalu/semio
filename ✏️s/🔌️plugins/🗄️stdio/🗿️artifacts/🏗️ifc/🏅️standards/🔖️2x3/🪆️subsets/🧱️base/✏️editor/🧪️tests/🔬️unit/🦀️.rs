@@ -3,7 +3,7 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_ifc2x3_any_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, IFC2X3_ANY_DIALECT.into());
 }
 
@@ -14,10 +14,10 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Ifc2x3AnyEditor, crate::viewer::ifc2x3_any::Ifc2x3AnyViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Ifc2x3AnyEditor, crate::viewer::ifc2x3_any::Ifc2x3AnyViewer>().await;
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::Ifc2x3AnyEditor, || semio_framework_plugin::App { definition: super::create_ifc2x3_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base");
+semio_plugin::history_edit_acceptance_law!("stdio", super::Ifc2x3AnyEditor, || semio_plugin::App { definition: super::create_ifc2x3_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base");
 
 const NATURAL_REVIT_IFC: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
 

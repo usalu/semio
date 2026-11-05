@@ -14,7 +14,7 @@ impl Tui {
                 NodeContent::Chrome(c) => c.paint_emphasized(theme, rect, buf, hovered_chrome.contains(&id)),
                 NodeContent::Widget(w) => w.paint(theme, rect, buf, Some(id) == focus),
                 NodeContent::Text(s) => {
-                    let bg = buf.get(rect.x, rect.y).map_or(theme.surface(semio_framework_ui_tui_core::theme::Surface::Base), |c| c.bg);
+                    let bg = buf.get(rect.x, rect.y).map_or(theme.surface(semio_ui_tui_core::theme::Surface::Base), |c| c.bg);
                     buf.put_str(Pos { x: rect.x, y: rect.y }, s, theme.role(Role::Foreground), bg, 0, rect);
                 }
                 NodeContent::Axis(axis) => paint_gutters(scene, theme, axis, node, buf),
@@ -30,7 +30,7 @@ impl Tui {
         walk(&self.scene, &self.theme, focus, &self.hovered_chrome, self.scene.root(), &mut self.back);
         walk(&self.scene, &self.theme, focus, &self.hovered_chrome, self.scene.overlay_root(), &mut self.back);
         if let Some(preview) = &self.dock_preview {
-            semio_framework_ui_tui_frame::window::paint_window_tab_preview(&preview.window, &self.theme, preview.window_rect, &mut self.back);
+            semio_ui_tui_frame::window::paint_window_tab_preview(&preview.window, &self.theme, preview.window_rect, &mut self.back);
         }
     }
 

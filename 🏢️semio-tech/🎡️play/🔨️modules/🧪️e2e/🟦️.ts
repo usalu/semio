@@ -1,10 +1,11 @@
 import { scriptInvocationEnvironment, withScriptInvocationSignalV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, resolve } from "node:path";
+import { createRequire } from "node:module";
 import { BundleScript } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import readinessBudget from "../🧩️runtime/🧪️e2e/🔣️.json" with { type: "json" };
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { PLAY_E2E_OWNER, playE2eInvocationPid, playE2eSessionRoot } from "../🧩️runtime/🧪️e2e/🟦️.ts";
+import { playE2eInvocationPid, playE2eServiceV1 } from "../🧩️runtime/🧪️e2e/🟦️.ts";
 import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {withPublishedPlayPagesV1} from "../📦️site/📄pages/📦️publication/🟦️.ts";
 import {captureOwnedCommandResultV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
@@ -16,20 +17,23 @@ import { runtimeCommandNameV1 } from "../../../../🧰️framework/🔨️module
 /** 🎭️ Runs acceptance tests only against the server generation prepared and owned by the build tool. */
 export class TestScript extends BundleScript {
   protected selection:readonly string[]=[];
+  protected serviceScope: string | undefined;
   protected reportDirectory="play-e2e";
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play E2E accepts no compiler or server arguments");
-    const root = resolve(this.root, "../.."), sessionRoot = playE2eSessionRoot(this.repoRoot), controller = new AbortController(), signal = AbortSignal.any([this.invocation.control.signal, controller.signal]);
-    const session = readServiceSession(sessionRoot, PLAY_E2E_OWNER, playE2eInvocationPid(process.env));
+    const service = playE2eServiceV1(this.repoRoot, this.serviceScope);
+    const root = resolve(this.root, "../.."), sessionRoot = service.root, controller = new AbortController(), signal = AbortSignal.any([this.invocation.control.signal, controller.signal]);
+    const session = readServiceSession(sessionRoot, service.owner, playE2eInvocationPid(process.env));
     const interrupt = (): void => { process.exitCode = 130; controller.abort(); }, terminate = (): void => { process.exitCode = 143; controller.abort(); };
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
       console.log(`Waiting for play E2E service ${session.id}`);
       const budget = parseServiceReadinessBudgetV1(readinessBudget), language = serviceReadyProgressLanguage(process.env);
-      const baseURL = await waitForServiceReady(sessionRoot, session, signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(PLAY_E2E_OWNER, progress, language)) });
+      const baseURL = await waitForServiceReady(sessionRoot, session, signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(service.owner, progress, language)) });
       const output = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated",this.reportDirectory, session.id) : join(root, "dist/reports/e2e", session.id);
       console.log(`Testing play at ${baseURL}`);
-      const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { signal, cwd: this.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
+      const cli = resolve(createRequire(join(root, "package.json")).resolve("playwright/package.json"), "../cli.js");
+      const child = startToolV1(runtimeCommandNameV1(), [cli, "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { signal, cwd: root, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
       const status = await toolExitV1(child);
       if (status !== 0 && !signal.aborted) throw new Error(`Play acceptance tests failed (${status})`);
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
@@ -40,6 +44,13 @@ export class TestScript extends BundleScript {
 export class TestEnduserScript extends TestScript{
  protected override selection=["--grep","3d (en-US|de-DE)|language.*choose"];
  protected override reportDirectory="enduser-2026-10-13/browser";
+}
+
+/** 📋️ Exercises Forms through the same isolated live service as the complete acceptance suite. */
+export class TestFormsScript extends TestScript {
+ protected override serviceScope="forms";
+ protected override selection=["--grep","forms (en-US|de-DE)"];
+ protected override reportDirectory="forms";
 }
 
 /** 🚀 Verifies the actual release pages with fresh browser contexts and no development server. */

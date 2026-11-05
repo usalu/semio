@@ -18,7 +18,7 @@ fn observed<T>(caller: &mut OriginalJobFixtureCaller, decoder: &mut OriginalJobD
         let result = caller.turn_with_decoder(g, decoder, |cx| {
             let before = cx.retained_progress();
             let result = action(cx);
-            p = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?;
+            p = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?;
             result
         });
         (result, p)
@@ -27,14 +27,14 @@ fn observed<T>(caller: &mut OriginalJobFixtureCaller, decoder: &mut OriginalJobD
     assert_eq!((heap.requested_bytes, heap.released_bytes), (p.retained_capacity_bytes, p.released_bytes));
     result
 }
-fn fixture() -> (semio_framework_plugin_window_kits::RegisteredAppDefinition, OriginalDeclaredTools) {
+fn fixture() -> (semio_plugin_window_kits::RegisteredAppDefinition, OriginalDeclaredTools) {
     let mut definition = semio_framework_async::poll::resolve_ready(semio_framework_manifest_app_surface::testkit::app_with(Vec::new(), Vec::new()));
     definition.id = <crate::fixture::NativeWindowApp as ArtifactApp>::APP_ID.into();
     definition.controller_id = definition.id.clone();
     definition.dialect = <crate::fixture::NativeWindowApp as ArtifactApp>::DIALECT.into();
     definition.io.artifact_schema = <crate::fixture::NativeWindowApp as ArtifactApp>::DOCUMENT_SCHEMA.into();
-    definition.actions.push(semio_framework::ActionDefinition::resumable_framework("adjust", semio_framework_ui_locale::LocalizedLabel::native("Adjust", "Anpassen"), semio_framework::ActionKind::Mutation, "pencil"));
-    let mut definition = semio_framework_plugin_window_kits::RegisteredAppDefinition::declared(definition, true);
+    definition.actions.push(semio_framework::ActionDefinition::resumable_framework("adjust", semio_ui_locale::LocalizedLabel::native("Adjust", "Anpassen"), semio_framework::ActionKind::Mutation, "pencil"));
+    let mut definition = semio_plugin_window_kits::RegisteredAppDefinition::declared(definition, true);
     let mut catalog = OriginalDeclaredTools::new(produce_declared_tool_catalog::<crate::fixture::NativeWindowApp>(definition.original_source().unwrap()).unwrap());
     definition.commit_producer();
     catalog.commit_producer();

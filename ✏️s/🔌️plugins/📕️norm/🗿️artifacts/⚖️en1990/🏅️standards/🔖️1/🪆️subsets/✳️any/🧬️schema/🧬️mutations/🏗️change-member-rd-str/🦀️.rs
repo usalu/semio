@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberRdStr where 
         record: "ChangedMemberRdStr",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change design resistance R_d (STR) of the member", "Bauteil: Bemessungswert des Widerstands R_d (STR) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change design resistance R_d (STR) of the member", "Bauteil: Bemessungswert des Widerstands R_d (STR) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

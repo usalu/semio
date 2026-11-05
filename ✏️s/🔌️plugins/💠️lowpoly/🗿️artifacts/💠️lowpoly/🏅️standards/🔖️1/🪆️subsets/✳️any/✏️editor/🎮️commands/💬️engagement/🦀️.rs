@@ -6,12 +6,12 @@ use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutati
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Local sync
-/// mirror of `semio_framework_plugin::engagement::engagement_token_matches`: that helper is `async fn`
+/// mirror of `semio_plugin::engagement::engagement_token_matches`: that helper is `async fn`
 /// per the U-program's R2 (every first-party framework fn), but `app_commands!` dispatch requires
 /// every `handle` in this crate to stay a plain sync `fn` — and neither making `handle` async nor
 /// bridging with `block_on` is available here (U1 explicitly forbids `block_on` on any wasm host

@@ -119,7 +119,7 @@ pub fn text_font_asset_declarations() -> Vec<semio_framework::AssetDeclaration> 
         .iter()
         .map(|(role, size_bytes, sha256)| semio_framework::AssetDeclaration {
             name: text_font_asset_name(*role),
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Text, form: semio_framework_plugin::MediaForm::Document },
+            media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Text, form: semio_plugin::MediaForm::Document },
             size_bytes: *size_bytes,
             sha256: (*sha256).to_string(),
         })
@@ -127,7 +127,7 @@ pub fn text_font_asset_declarations() -> Vec<semio_framework::AssetDeclaration> 
 }
 
 /// 📥️ The built-in text font set a host delivered as package assets: `read` answers a declared asset name with its bytes
-/// (`semio_framework_plugin::reactor::package_asset` in the guest). Fails with [`TextFontsInstallError::PackageAssetMissing`]
+/// (`semio_plugin::reactor::package_asset` in the guest). Fails with [`TextFontsInstallError::PackageAssetMissing`]
 /// when the host delivered no such asset, which a caller treats as "this host delivers none".
 pub fn package_text_font_set(read: impl Fn(&str) -> Option<&'static [u8]>) -> Result<TextFontSet<'static>, TextFontsInstallError> {
     let mut missing = None;
@@ -180,7 +180,7 @@ pub fn export_font_source(index: usize) -> Option<&'static [u8]> {
         #[cfg(not(target_arch = "wasm32"))]
         { native_export_fonts() }
         #[cfg(target_arch = "wasm32")]
-        { package_text_font_set(semio_framework_plugin::reactor::package_asset).ok() }
+        { package_text_font_set(semio_plugin::reactor::package_asset).ok() }
     })?;
     export_font_source_from_set(index, fonts)
 }

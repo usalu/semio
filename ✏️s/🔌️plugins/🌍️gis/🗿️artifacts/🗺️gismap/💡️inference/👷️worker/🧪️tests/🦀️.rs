@@ -1,19 +1,19 @@
-use semio_framework_os_kernel::{os_directory::client::InstalledServiceDriverV1, os_directory::client::InstalledServiceTurnV1, os_directory::client::DocumentHttpPortCodeV1};
+use semio_os_kernel::{os_directory::client::InstalledServiceDriverV1, os_directory::client::InstalledServiceTurnV1, os_directory::client::DocumentHttpPortCodeV1};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use crate::inference_schema::*;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::os_directory::schema::mint_directory_command_request_id;
+use semio_os_kernel::os_directory::schema::mint_directory_command_request_id;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1;
+use semio_os_kernel::os_directory::client::InstalledServiceContributionV1;
 #[allow(unused_imports)]
 use semio_framework_value::{ToValue, FromValue};
 use crate::inference_worker::{NativeGisMapServiceV1};
 //#region 💡️InferencePortLaws
 #[cfg(not(target_arch = "wasm32"))]
 use crate::inference_schema::*;
-use semio_framework_os_kernel::os_directory::schema::DocumentScope;
+use semio_os_kernel::os_directory::schema::DocumentScope;
 use crate::inference_worker::*;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -144,7 +144,7 @@ fn inference_driver_approves_only_an_offered_proposal_and_is_terminal_once() {
         applied: true,
         undo: GisMapApprovalUndoHandleV1 {
             target_id: "22".repeat(16),
-            expected_current: semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1 {
+            expected_current: semio_os_kernel::os_directory::EditedArtifactFrontierV1 {
                 document_id: "document-map".into(),
                 head_edit_ordinal: 2,
                 head_edit_id: "approval-edit".into(),

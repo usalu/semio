@@ -1,0 +1,21 @@
+# Native Artifact Failure Causal Audit
+
+Read-only audit of declared native-artifacts17125. Evidence: fleet-wgpu-compiler-execution-2026-11-04.md; 🗑️generated/fleet-cargo-native-artifacts-code-root-current-2026-11-04.log (controller); 🗑️generated/fleet-cargo-native-artifacts-17125-action.log (complete action, line references below). The action actually executed all 12 files and failed nine (line3816). Generic Wasm passed6/41 and path corpus passed40 assertions. No rerun or source edit performed.
+
+Paths below are relative to 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build. Current Source, rather than old log snippets, determines remaining defects.
+
+| Failed File | Direct Cause and Evidence | Ownership |
+|---|---|---|
+| 🎟️admission/🧪️tests/🟦️.ts | Real Cargo helper refused Undeclared original Repo build selection (action163, helper 🧪️tests/🦀️cargo/🟦️.ts:63); memory AST expectation expected7516192768/received6710886400 (action194–207, source95). | Repo invocation fixture and memory-policy expectation; no codeRoot/compact-lane/path regression demonstrated. |
+| 🎰️jobserver/🧪️tests/🟦️.ts | Same undeclared Repo selection at538; helper63; failure566. | Same unrelated fixture admission. |
+| 📈️telemetry/🧪️tests/🟦️.ts | Same undeclared Repo selection at1068; failure1096. | Same unrelated fixture admission. |
+| 📋️plan/🧪️tests/🧵️control/🟦️.ts | capabilities-differ before body. Current source11 asks artifacts:true although source15 explicitly documents neutral ports and no Native authority. | Existing stale pure-law declaration; independent of current selected-path feature. No production graph result. |
+| 📏️path-envelope/🧪️tests/🟦️.ts | capabilities-differ before body in17125. Current source17 now capabilities:{}; source19–22 retains genuine issued controls and cancellation assertion. | Goal-owned test declaration defect already repaired in Source; actual successor remains required to establish behavioral result. Do not restore suite artifacts grant. |
+| 📥️inputs/🧪️tests/🟦️.ts | Nested consumer model ReferenceError renewableCompilerAdmissionControlV1 (action1460–1470). Current nested 📥️consumers/🟦️.ts:24–27 extracts function into new Function; ports42–57 omit renewableCompilerAdmissionControlV1 and progressDeadlinePolicyV1. Actual sibling artifacts/🕸️wasm-build/🟦️.ts:89 uses both for nonzero policy.budgetMs. | Stale AST consumer harness after Wasm budget evolution; real generic Wasm owner passes. No evidence that codeRoot/compact-lane/selected-path introduced this omission. |
+| 🧩️component-pass/🧪️tests/🟦️.ts | Expected negative comp-b(release-hub) at current source160–168 enrolls failure into shared Original; later tests report same first failure (action1664 onward). Cancellation child imports test helper outside bun test and fails afterAll (action1880; source334–335). | Existing law isolation violations and cascading Original closure, not selected-path or codeRoot refusal. |
+| 🧪️tests/🟦️.ts | Cancellation negative isolation mismatch(action2436); synthetic retained builds hit Completed Cargo Source differs from admitted artifact plan(action2788–2812 and3582–3618); generated Rust main.rs lacks compiler ownership(action2925/2969; current 📥️source/🟦️.ts:29–32); provenance negative instead exhausts existing2min Original(action3714). | Distinct existing custody/fixture/churn/negative-law problems. No mandatory-codeRoot or compact path refusal appears in these leaves. Current source173–184 still fabricates compiler-artifact output; log line positions are historical. |
+| 🧾️receipt/🧪️tests/🟦️.ts | Expected fixed250ms vs observed1992.75ms(action3769–3779). Current source466 compares sleep to static profile backoff. | Churn timing expectation; no path/root causal connection. |
+
+## Actionable Goal-Owned Follow-Up
+
+Only demonstrated goal-owned failure in this run is the selected-path law capability declaration, already corrected at 📏️path-envelope/🧪️tests/🟦️.ts:17. Preserve the current empty declaration and verify its existing normal successor. None of the other eight failing files proves a current mandatory-codeRoot or compact-lane defect. This classification is causal scope, not an exemption or a green whole-suite claim. The AST consumer omission is a concrete separate maintenance defect; the run alone does not establish its attribution to this goal.

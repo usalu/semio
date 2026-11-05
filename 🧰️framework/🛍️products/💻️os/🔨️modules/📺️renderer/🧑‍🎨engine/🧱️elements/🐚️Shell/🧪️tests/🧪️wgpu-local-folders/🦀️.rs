@@ -4,8 +4,8 @@
 //! "Reconnect folder" band a failed reattach leaves — React's browser band, which a browser always shows — and the
 //! browser build's folder door over the dev host's backbone route (shared corpus `🧫️wgpu-backbone-folder-door`).
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::host_test_shell;
-use semio_framework_os_config::io::text::mutations::{decode_local_folders_config_mutation_json};
+use semio_renderer_wgpu_fixtures::shell::host_test_shell;
+use semio_os_config::io::text::mutations::{decode_local_folders_config_mutation_json};
 use super::*;
 use semio_framework::kernel::{HistoryEntry, HistoryPatch};
 
@@ -66,8 +66,8 @@ fn program_archive() -> protocol::DocumentArchivePack {
 
 /// 🎬️ A program whose document doors answer from the archive the law restored: it records each loaded archive, hands
 /// out its own archive `[7, 7, 7] / [8]`, and answers the history the archive holds — two rows, head `cp-2`.
-fn restored_program() -> semio_framework_os_renderer_wgpu_program_bridge::ProgramFixtureDocument {
-    semio_framework_os_renderer_wgpu_program_bridge::ProgramFixtureDocument {
+fn restored_program() -> semio_renderer_wgpu_program_bridge::ProgramFixtureDocument {
+    semio_renderer_wgpu_program_bridge::ProgramFixtureDocument {
         load: |_, archive| {
             LOADED.with(|loaded| loaded.borrow_mut().push(archive.clone()));
             Ok(())
@@ -130,7 +130,7 @@ fn the_config_payload_fixtures_read_as_their_mutations() {
         include_str!("../../../../../../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/✂️detach-local-folder/✂️forgets-the-folder-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
     ] {
         let value: Value = serde_json::from_str(fixture).expect("JSON");
-        let decoded = semio_framework_os_config::io::text::mutations::decode_local_folders_config_mutation_json(fixture).expect("the config crate decodes it");
+        let decoded = semio_os_config::io::text::mutations::decode_local_folders_config_mutation_json(fixture).expect("the config crate decodes it");
         assert_eq!(local_folders_mutation_of_value(&value), Some(decoded));
     }
 }
@@ -227,7 +227,7 @@ fn a_failed_reattach_offers_an_accessible_reconnect_band_and_forget_retires_it()
             assert_eq!((button.role.as_str(), button.label.as_deref()), ("button", corpus["texts"][tongue][key].as_str()), "{tongue}: {control_id}");
         }
     }
-    let forget = ActionDescriptor { controller_id: "framework.sync".into(), action: FOLDER_FORGET_ACTION.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "documentId": "doc-7" }) };
+    let forget = ActionDescriptor { controller_id: "framework.sync".into(), action: FOLDER_FORGET_ACTION.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "documentId": "doc-7" }) };
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_sync_action(forget)).expect("forget routes");
     assert!(shell.history.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty());
     assert!(paint_folder_band(&mut shell).is_empty(), "the band is gone");

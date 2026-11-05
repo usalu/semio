@@ -33,10 +33,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "elements", kind: "drag-elements", record: "DraggedElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (items_en, items_de) = element_count_label(self.targets.len());
         let (offset_en, offset_de) = vector_label(self.offset);
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by {offset_en}"), &format!("{items_de} um {offset_de} ziehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by {offset_en}"), &format!("{items_de} um {offset_de} ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabTestLayerId whe
         record: "ChangedLabTestLayerId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Layer id of the laboratory test", "Laborversuch: Schicht-ID ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Layer id of the laboratory test", "Laborversuch: Schicht-ID ändern")
     }
 }
 

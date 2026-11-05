@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveAnchor where Op: p
         verb: "remove", entity: "anchor", kind: "remove-anchor", record: "RemovedAnchor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove ground anchor", "Verpressanker entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove ground anchor", "Verpressanker entfernen")
     }
 }
 

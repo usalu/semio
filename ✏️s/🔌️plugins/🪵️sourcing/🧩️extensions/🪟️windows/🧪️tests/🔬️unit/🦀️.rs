@@ -5,7 +5,7 @@ use semio_s_plugin_sourcing_catalog_oracle as json_oracle;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_module_for_sourcing_curation() {
-    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let mut original_caller=semio_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
     let manifest = bundle().into_manifest_cold(&mut cx).unwrap();
     assert_eq!(manifest.extension_id, EXTENSION_ID);
     assert_eq!(manifest.extends, "sourcing");

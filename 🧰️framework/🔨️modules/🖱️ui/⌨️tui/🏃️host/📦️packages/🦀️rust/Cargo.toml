@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-tui-host"
+name = "semio-ui-tui-host"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -25,10 +25,10 @@ path = "../../🦀️.rs"
 bindgen = ["dep:wasm-bindgen"]
 
 [dependencies]
-semio-framework-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
-semio-framework-ui-tui-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-ui-tui-terminal = { path = "../../../📺️terminal/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
+semio-ui-tui-terminal = { path = "../../../📺️terminal/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 wasm-bindgen = { version = "0.2.106", optional = true }

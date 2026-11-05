@@ -33,8 +33,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "route-property", kind: "set-route-property", record: "RoutePropertySet" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of route \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Route \"{}\" setzen", self.key, self.feature))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set property \"{}\" of route \"{}\"", self.key, self.feature), &format!("Eigenschaft \"{}\" von Route \"{}\" setzen", self.key, self.feature))
     }
 }
 

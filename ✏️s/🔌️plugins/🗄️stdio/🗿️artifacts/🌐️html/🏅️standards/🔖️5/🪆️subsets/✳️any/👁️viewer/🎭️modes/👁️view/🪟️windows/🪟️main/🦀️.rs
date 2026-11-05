@@ -2,8 +2,8 @@
 //! render of the current document (read-only).
 
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
-use semio_framework_plugin::app::{TextView, TextWindowKit};
-use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
+use semio_plugin::app::{TextView, TextWindowKit};
+use semio_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 use pack::snapshot::ArtifactDsl;
 
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -18,7 +18,7 @@ pub fn definition() -> WindowKindDefinition {
 /// markup — the same textual form `parse_dsl` accepts back on `replace-text` (see the sibling root
 /// `handle`). Round-trips exactly for any document this format's own grammar can already print.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &HtmlSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &HtmlSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     TextWindowKit::render(&TextView { text: snapshot.print_dsl(), language: Some("html".into()) })
 }
 

@@ -26,8 +26,8 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use crate::notify::cancel_request;
 use crate::tool_shapes::{admit_tool_errors, convert_draft07_to_2020_12, normalize_boolean_subschemas};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::reports::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::reports::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
 
 /// 🌉️ `serde_json::Value` ↔ `DslValue` bridge, built on `🌱️value/🦀️.rs`'s own infallible
 /// `From<&DslValue>`/`From<&serde_json::Value>` impls — shared by every field in this file typed
@@ -854,7 +854,7 @@ impl PromptRegistry for InMemoryPromptRegistry {
 
 /// 🔌️ Everything a real OS/plugin integration provides — later packets (P1b/P2/P6) implement this
 /// against the live plugin host; THIS crate never references `semio-framework`,
-/// `semio-framework-os-kernel`, the plugin host, the channel, or the actor crate (they are mid-rewrite
+/// `semio-os-kernel`, the plugin host, the channel, or the actor crate (they are mid-rewrite
 /// by the peer `MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME` ticket — §2.6 of this packet's brief).
 // 🔀️ dedyn-fw-os-misc, O1/R11: closed 3-implementor set (`NullBackend`, `HeadlessWorkspace`, its
 // `Arc<HeadlessWorkspace>` delegation impl) — `#[dyn_enum]` here + `dyn_enum_close!` at

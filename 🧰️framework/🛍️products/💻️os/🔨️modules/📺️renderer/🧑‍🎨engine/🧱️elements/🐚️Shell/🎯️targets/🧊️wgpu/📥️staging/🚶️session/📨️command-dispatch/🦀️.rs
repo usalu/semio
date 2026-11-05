@@ -66,7 +66,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// (browser parity), so its membership stays projected. Home is never folded: its projection's
     /// only writer is the sealed page lane, which the same events wake through `home.wake` below.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn dispatch_fold_directory_events(&mut self, events: &[semio_framework_os_kernel::os_directory::DirectoryEvent]) {
+    pub fn dispatch_fold_directory_events(&mut self, events: &[semio_os_kernel::os_directory::DirectoryEvent]) {
         let Some(session) = self.docs.session.clone().filter(|session| session_is_space_index(session, &self.plugins.plugins)) else { return };
         let Some(program) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
         let events_json = semio_framework_pack_json::to_json_string(&events.to_vec());

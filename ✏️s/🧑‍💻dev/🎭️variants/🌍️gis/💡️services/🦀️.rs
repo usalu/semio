@@ -1,5 +1,5 @@
 //! 🧩 Outward application assembly of installed native document services.
-use semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1;
+use semio_os_kernel::os_directory::client::InstalledServiceContributionV1;
 
 /// 📦 Supplies the concrete owner inventory installed by this application.
 pub fn service_contributions_v1() -> Vec<InstalledServiceContributionV1> {

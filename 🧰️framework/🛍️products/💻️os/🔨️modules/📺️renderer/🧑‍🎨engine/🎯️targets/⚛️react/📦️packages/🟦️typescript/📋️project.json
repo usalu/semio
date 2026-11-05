@@ -39,9 +39,15 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/**/*"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
@@ -420,6 +426,27 @@
           "workspaceCommand": [
             "verify",
             "operation-diagnostic-host-check"
+          ]
+        }
+      }
+    },
+    "document-archive-ownership-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts document-archive-ownership-check"
+      },
+      "metadata": {
+        "semio": {
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🔸️open-document/🔏️archive-owner/🧪️tests/🟦️.ts"
           ]
         }
       }

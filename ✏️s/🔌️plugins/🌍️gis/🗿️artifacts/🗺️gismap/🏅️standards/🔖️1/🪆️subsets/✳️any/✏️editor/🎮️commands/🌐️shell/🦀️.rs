@@ -6,8 +6,8 @@ use crate::editor::gis2d::maphost::map_host_from;
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::tile_coordinates::gis_policy::GIS_MAP_OVERLAY_POSITIONS;
 use crate::GisMapSnapshot;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::kernel::Effect;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️OpenSource

@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::{DRAWING_BOUNDED_PAYLOAD_SCHEMA, DRAWING_PATH_PUBLICATION_CONTRACTS, DRAWING_PATH_TOOL_IDS, DrawingCommand, DrawingPlayApp, DrawingWindowCommandWork};
 #[allow(unused_imports)] #[cfg(test)] use semio_s_artifact_draw_drawing_editor_commands::edit_path;
-#[allow(unused_imports)] use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
+#[allow(unused_imports)] use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 #[allow(unused_imports)] use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, ValueError};
 #[allow(unused_imports)] use semio_framework_value_persistent::list::PagedList;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
@@ -31,8 +31,8 @@ fn retained_path_simplification_shared_cases() {
         let layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Simplify")).to_string().into()).expect("nonempty authored identity"), "Simplify",source.into());let id=semio_s_artifact_draw_drawing_model::layer_base(&layer).id.clone();
         let snapshot=DrawingSnapshot {layers:vec![layer].into(),..Default::default()};let saved=snapshot.clone();
         let command=DrawingCommand::EditPath(edit_path::EditPath {layer_id:id,edit:Box::new(serde_json::from_value(case["operation"].clone()).unwrap())});
-        let config=NoConfig {};let history=semio_framework_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_framework_plugin::app::InteractionHoverState::new();
-        let operation=semio_framework_plugin::AppOperationContext {app_instance_id:1,parent_document_id:"simplify".into(),operation_id:1,generation:1,canonical_base_revision:[0;32],authoring_seed:"simplify".into()};
+        let config=NoConfig {};let history=semio_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_plugin::app::InteractionHoverState::new();
+        let operation=semio_plugin::AppOperationContext {app_instance_id:1,parent_document_id:"simplify".into(),operation_id:1,generation:1,canonical_base_revision:[0;32],authoring_seed:"simplify".into()};
         let input=ArtifactCommandInputs::<App> {command:&command,snapshot:&snapshot,snapshot_owner:None,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
         let mut work=Work::new();let cancel=semio_framework_job::root_cancel_token();let mut sequence=0;let mut progressed=false;let mut completed=false;
         for _ in 0..20000 {

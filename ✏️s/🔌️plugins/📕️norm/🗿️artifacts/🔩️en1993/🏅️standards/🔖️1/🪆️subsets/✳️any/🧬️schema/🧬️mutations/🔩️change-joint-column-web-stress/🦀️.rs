@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointColumnWebStre
         record: "ChangedJointColumnWebStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Column web longitudinal stress σ_com,Ed of the joint", "Anschluss: Stützensteglängsspannung σ_com,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Column web longitudinal stress σ_com,Ed of the joint", "Anschluss: Stützensteglängsspannung σ_com,Ed ändern")
     }
 }
 

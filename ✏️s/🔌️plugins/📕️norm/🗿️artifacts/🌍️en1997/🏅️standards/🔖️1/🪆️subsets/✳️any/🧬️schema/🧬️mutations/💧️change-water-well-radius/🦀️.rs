@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWaterWellRadius wh
         record: "ChangedWaterWellRadius",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Well radius r_w (0 = no well) of the layer water", "Schichtwasser: Brunnenradius r_w (0 = kein Brunnen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Well radius r_w (0 = no well) of the layer water", "Schichtwasser: Brunnenradius r_w (0 = kein Brunnen) ändern")
     }
 }
 

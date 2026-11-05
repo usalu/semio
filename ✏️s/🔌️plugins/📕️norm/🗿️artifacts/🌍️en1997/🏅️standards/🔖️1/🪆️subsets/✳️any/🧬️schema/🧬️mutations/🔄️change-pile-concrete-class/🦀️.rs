@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileConcreteClass 
         record: "ChangedPileConcreteClass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Concrete class of the shaft of the pile", "Pfahl: Betonfestigkeitsklasse des Schafts ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Concrete class of the shaft of the pile", "Pfahl: Betonfestigkeitsklasse des Schafts ändern")
     }
 }
 

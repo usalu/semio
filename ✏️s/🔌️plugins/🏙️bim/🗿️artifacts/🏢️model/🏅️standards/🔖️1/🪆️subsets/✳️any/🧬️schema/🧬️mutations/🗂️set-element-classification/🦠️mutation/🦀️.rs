@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "element-classification", kind: "set-element-classification", record: "SetElementClassification" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Classify \"{}\" as {} in {}", self.id, self.code, self.system), &format!("\"{}\" als {} in {} klassifizieren", self.id, self.code, self.system))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Classify \"{}\" as {} in {}", self.id, self.code, self.system), &format!("\"{}\" als {} in {} klassifizieren", self.id, self.code, self.system))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

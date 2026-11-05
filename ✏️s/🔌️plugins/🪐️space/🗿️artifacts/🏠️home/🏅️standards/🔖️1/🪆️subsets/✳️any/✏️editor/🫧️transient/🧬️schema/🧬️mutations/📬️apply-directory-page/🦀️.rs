@@ -20,8 +20,8 @@ pub struct ApplyDirectoryPage {
 impl protocol::MutationKind<HomeTransient, HomeTransientMutation> for ApplyDirectoryPage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "directory-page", kind: "apply-directory-page", record: "ApplyDirectoryPage" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Apply Directory Page", "Verzeichnisseite anwenden")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Apply Directory Page", "Verzeichnisseite anwenden")
     }
     fn target(&self) -> Vec<String> {
         vec!["directory".into()]

@@ -1,25 +1,25 @@
 //! 🧽️ Staged slice of the `render` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🖼️ Render side of the mounted artifact instance: composition graph, interaction state, render, media jobs and media export.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_ui_runtime::ComponentTree;
+use semio_ui_runtime::ComponentTree;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::{LocalInteraction, PeerRoster};
+use semio_plugin_instance_stores::stores_components::{LocalInteraction, PeerRoster};
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
 use crate::jobs_components::{PendingReserved, ToolOperations};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError};
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_ui_contract::*;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_ui_contract::*;
 use crate::jobs_instance_root::{OriginalRenderInteractionStamp, original_render_posted_since};
 
 #[path = "work.rs"]
@@ -41,12 +41,12 @@ impl<A: ArtifactApp> PendingReserved<A> {
         Ok(Default::default())
     }
 
-    pub fn close_render_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn close_render_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let before=cx.retained_progress();
         if !self.prepare_render_closure_failure(cx)?{return Ok(PluginLifecycleStep::Progress(original_render_posted_since(before,cx.retained_progress())?))}
         match self.close_pending_render_tree_on_original(cx){Ok(Some(true))=>{},Ok(_)=>return Ok(PluginLifecycleStep::Progress(original_render_posted_since(before,cx.retained_progress())?)),Err(failure)=>{self.retain_render_closure_failure(failure, cx);return Ok(PluginLifecycleStep::Progress(original_render_posted_since(before,cx.retained_progress())?))}}
         let demand=self.render_failure_demands(grant.maximum_copy_bytes)?;
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             if let Some(owner)=self.pending_render_retirement.as_mut(){
                 if owner.terminal_is_empty(){drop(self.pending_render_retirement.take());self.pending_render_identity=None;self.pending_render_tree_identity=None;return Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))}
                 let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:1}})?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
@@ -77,7 +77,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
             let grant=cx.retained_grant();
             if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
             let tree=self.pending_render_tree.take().expect("original tree source remains stationary until funded close donation");
-            *self.pending_render_tree_close=Some(semio_framework_ui_contract::OriginalBuiltTreeRetirement::new(tree.root));
+            *self.pending_render_tree_close=Some(semio_ui_contract::OriginalBuiltTreeRetirement::new(tree.root));
             self.pending_render_tree_ready=false;
             cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
             cx.consume_fuel(1);
@@ -124,28 +124,28 @@ impl<A: ArtifactApp> PendingReserved<A> {
         self.pending_render_tree_ready=false;
     }
 
-    pub fn retain_render_failure<T>(&mut self,source:semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<T>,semio_framework_job::OriginalTurnFailure>{
+    pub fn retain_render_failure<T>(&mut self,source:semio_plugin_ownership::sdk_fault::OriginalRenderFailure,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<T>,semio_framework_job::OriginalTurnFailure>{
         if self.pending_render_failure.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original pending render source cannot be overwritten").into())}
         *self.pending_render_failure=Some(source);self.pending_render_identity=Some((cx.operation(),cx.generation()));let _=self.receive_render_failure(cx)?;Ok(None)
     }
 
     pub(crate) fn retain_render_closure_failure(&mut self,failure:semio_framework_job::OriginalTurnFailure,cx:&semio_framework_job::StepContext<'_>){
         assert!(self.pending_render_compound.is_none()&&self.pending_render_close_failure.is_none(),"original render closure failure cannot overwrite a retained cause");
-        if self.pending_render_failure.is_some(){*self.pending_render_close_failure=Some(failure);}else{*self.pending_render_failure=Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure));self.pending_render_identity=Some((cx.operation(),cx.generation()));}
+        if self.pending_render_failure.is_some(){*self.pending_render_close_failure=Some(failure);}else{*self.pending_render_failure=Some(semio_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure));self.pending_render_identity=Some((cx.operation(),cx.generation()));}
     }
 
     pub(crate) fn prepare_render_closure_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if self.pending_render_compound.is_some()||self.pending_render_compound_place.is_some(){
-            if let Some(original)=crate::jobs_components::admit_pending_domain_failure(&mut *self.pending_render_compound,&mut *self.pending_render_compound_place,cx)?{assert!(self.pending_render_failure.is_none());*self.pending_render_failure=Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
+            if let Some(original)=crate::jobs_components::admit_pending_domain_failure(&mut *self.pending_render_compound,&mut *self.pending_render_compound_place,cx)?{assert!(self.pending_render_failure.is_none());*self.pending_render_failure=Some(semio_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
             return Ok(self.pending_render_compound.is_none()&&self.pending_render_compound_place.is_none());
         }
         if self.pending_render_close_failure.is_none(){return Ok(true)}
-        if !matches!(self.pending_render_failure.as_ref(),Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(_))){
-            if let Some(original)=crate::jobs_components::admit_pending_domain_failure(&mut *self.pending_render_failure,&mut *self.pending_render_failure_place,cx)?{*self.pending_render_failure=Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
+        if !matches!(self.pending_render_failure.as_ref(),Some(semio_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(_))){
+            if let Some(original)=crate::jobs_components::admit_pending_domain_failure(&mut *self.pending_render_failure,&mut *self.pending_render_failure_place,cx)?{*self.pending_render_failure=Some(semio_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
             return Ok(false);
         }
         let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-        let Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(initial))=self.pending_render_failure.take()else{unreachable!()};
+        let Some(semio_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(initial))=self.pending_render_failure.take()else{unreachable!()};
         let closure=self.pending_render_close_failure.take().expect("original render closure cause remains stationary");
         *self.pending_render_compound=Some(semio_framework_job::OriginalClosureFailure{initial,closure});
         cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(false)
@@ -155,9 +155,9 @@ impl<A: ArtifactApp> PendingReserved<A> {
         if self.pending_render_failure.is_none()&&self.pending_render_failure_place.is_none()&&self.pending_render_compound.is_none()&&self.pending_render_compound_place.is_none()&&self.pending_render_close_failure.is_none(){return Ok(false)}
         if !self.prepare_render_closure_failure(cx)?{return Ok(true)}
         match self.close_pending_render_tree_on_original(cx){Ok(Some(true))=>{},Ok(_)=>return Ok(true),Err(failure)=>{self.retain_render_closure_failure(failure, cx);return Ok(true)}}
-        if matches!(self.pending_render_failure.as_ref(),Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(_))){
+        if matches!(self.pending_render_failure.as_ref(),Some(semio_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(_))){
             let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(true)}
-            let Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure))=self.pending_render_failure.take() else{unreachable!()};
+            let Some(semio_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure))=self.pending_render_failure.take() else{unreachable!()};
             self.pending_render_identity=None;self.pending_render_tree_identity=None;
             cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Err(failure);
         }

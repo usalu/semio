@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeTiePosition where 
         record: "ChangedTiePosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tie or anchor tie position x", "Ankerlage x (Anker) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tie or anchor tie position x", "Ankerlage x (Anker) ändern")
     }
 }
 

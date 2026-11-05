@@ -1,6 +1,6 @@
 //! 🧪️ Full retained population scheduling preserves independent rule identities and valid authoring populations.
 use super::{machine::*, overlay::*, receive::*};
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 include!("official-cases.rs");
 fn run(source: &IfcSnapshot) -> (bool, bool, Vec<String>) {

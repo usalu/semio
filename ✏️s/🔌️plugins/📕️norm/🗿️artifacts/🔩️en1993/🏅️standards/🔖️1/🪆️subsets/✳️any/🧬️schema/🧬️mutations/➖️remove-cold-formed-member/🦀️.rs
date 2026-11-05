@@ -10,7 +10,7 @@ pub struct RemoveColdFormedMember { pub index: usize }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveColdFormedMember where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_cold_formed_member::InsertColdFormedMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "cold-formed-member", kind: "remove-cold-formed-member", record: "RemovedColdFormedMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove cold-formed member #{}", self.index), &format!("Kaltprofil-Bauteil #{} entfernen", self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove cold-formed member #{}", self.index), &format!("Kaltprofil-Bauteil #{} entfernen", self.index)) }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }
 

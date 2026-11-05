@@ -51,10 +51,10 @@ pub struct DurableOwnedGroupTestMember<P: 'static, Mutation: 'static> {
 #[cfg(feature = "durable-group-testing")]
 pub fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, member: DurableOwnedGroupTestMember<P, Mutation>) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Mutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    let mut owners = semio_framework_os_store_one_item_batch::OneItemOwners::from_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement);
+    let mut owners = semio_os_store_one_item_batch::OneItemOwners::from_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement);
     let outcome = (|| {
         let (edit, _) = owners.refused.as_ref().expect("original fixture candidates");
         let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;

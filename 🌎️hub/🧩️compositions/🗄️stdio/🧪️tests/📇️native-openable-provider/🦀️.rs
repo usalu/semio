@@ -13,8 +13,8 @@ fn native_catalog_dependency_is_exactly_its_compiled_owner() {
         let parsed = serde_json::from_value::<Vec<semio_framework::PluginDependency>>(row["dependencies"].clone());
         let accepted = parsed.as_ref().is_ok_and(|dependencies| semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(dependencies).is_ok());
         assert_eq!(accepted, expected, "{}", row["id"]);
-        let bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&row["dependencies"].clone().into());
-        let decoded = <Vec<semio_framework::PluginDependency> as semio_framework_value::FromValue>::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap());
+        let bytes = semio_os_kernel::pack_rt::encode_wire_value(&row["dependencies"].clone().into());
+        let decoded = <Vec<semio_framework::PluginDependency> as semio_framework_value::FromValue>::from_value(semio_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap());
         assert_eq!(decoded.is_ok(), parsed.is_ok(), "{}: the wire decoder and the JSON reader refuse the same dependency pins", row["id"]);
         assert_eq!(decoded.is_ok_and(|dependencies| semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&dependencies).is_ok()), expected, "{}", row["id"]);
     }
@@ -26,20 +26,20 @@ fn generic_plugin_builder_preserves_domain_owned_topic_contributions() {
     for row in fixture["cases"].as_array().unwrap() {
         let plugin_id = format!("builder-topic-{}", row["id"].as_str().unwrap());
         let contributions: Vec<semio_framework::TopicContribution> = serde_json::from_value(row["contributions"].clone()).unwrap();
-        let mut builder = semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new(&plugin_id).label("Topic Fixture").version("0.1.0").package_id(format!("semio:{plugin_id}"));
+        let mut builder = semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new(&plugin_id).label("Topic Fixture").version("0.1.0").package_id(format!("semio:{plugin_id}"));
         for contribution in contributions {
             builder = builder.contributes_topic(contribution);
         }
         let plugin = builder.try_library().unwrap();
         assert_eq!(serde_json::to_value(&plugin.manifest.topic_contributions).unwrap(), row["contributions"]);
         let value = semio_framework_value::ToValue::to_value(&plugin.manifest.topic_contributions);
-        let bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&value);
-        let roundtrip: Vec<semio_framework::TopicContribution> = semio_framework_value::FromValue::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap()).unwrap();
+        let bytes = semio_os_kernel::pack_rt::encode_wire_value(&value);
+        let roundtrip: Vec<semio_framework::TopicContribution> = semio_framework_value::FromValue::from_value(semio_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap()).unwrap();
         assert_eq!(serde_json::to_value(&roundtrip).unwrap(), row["contributions"]);
     }
 }
 
-use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
+use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
 use semio_hub_stdio_catalog::native_codec_factory_receipts;
 
 #[test]
@@ -89,7 +89,7 @@ fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assemb
     let definition_ids = artifact_definitions().unwrap().iter().map(|definition| definition.identity().as_str().to_owned()).collect::<BTreeSet<_>>();
     assert_eq!(expected.iter().map(|kind| kind.id.as_str()).collect::<BTreeSet<_>>(), receipts.iter().map(|receipt| receipt.artifact_kind.as_str()).collect());
     assert!(expected.iter().all(|kind| definition_ids.contains(&kind.id)));
-    let canonical = |values: &[semio_framework_plugin::ArtifactKindSpec]| {
+    let canonical = |values: &[semio_plugin::ArtifactKindSpec]| {
         let mut encoded: Vec<String> = values.iter().map(|kind| serde_json::to_string(kind).unwrap()).collect();
         encoded.sort();
         encoded
@@ -106,7 +106,7 @@ fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assemb
             "duplicate" => actual[1] = actual[0].clone(),
             "identity" => actual[0].id = "foreign.artifact".into(),
             "schema" => actual[0].schema = "foreign.schema".into(),
-            "label" => actual[0].label = semio_framework_ui_locale::LocalizedLabel::native("Foreign", "Fremd"),
+            "label" => actual[0].label = semio_ui_locale::LocalizedLabel::native("Foreign", "Fremd"),
             "source-format" => actual[0].source_format = "foreign.format".into(),
             value => panic!("unknown neutral mutation {value}"),
         }
@@ -193,9 +193,9 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
             reverse_object_fields(&mut actual[0].payload);
             assert_ne!(before, actual[0].payload);
             assert_eq!(serde_json::to_value(&actual[0]).unwrap(), changed);
-            let permuted = semio_framework_os_kernel::pack_rt::encode_wire_value(&actual[0].payload);
-            assert_ne!(semio_framework_os_kernel::pack_rt::encode_wire_value(&before), permuted);
-            assert_eq!(semio_framework_os_kernel::pack_rt::decode_wire_value(&permuted).unwrap(), actual[0].payload);
+            let permuted = semio_os_kernel::pack_rt::encode_wire_value(&actual[0].payload);
+            assert_ne!(semio_os_kernel::pack_rt::encode_wire_value(&before), permuted);
+            assert_eq!(semio_os_kernel::pack_rt::decode_wire_value(&permuted).unwrap(), actual[0].payload);
         }
         if operation == "missing-topic" {
             actual.clear();
@@ -211,11 +211,11 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
         assert_eq!(validate_native_artifact_catalog_contributions(&actual).is_ok(), accepted, "{}", case["id"]);
         progress("validated");
         let value = semio_framework_value::ToValue::to_value(&actual);
-        let packed = semio_framework_os_kernel::pack_rt::encode_wire_value(&value);
+        let packed = semio_os_kernel::pack_rt::encode_wire_value(&value);
         progress("encoded");
-        let decoded = semio_framework_os_kernel::pack_rt::decode_wire_value(&packed).unwrap();
+        let decoded = semio_os_kernel::pack_rt::decode_wire_value(&packed).unwrap();
         progress("decoded");
-        assert_eq!(semio_framework_os_kernel::pack_rt::encode_wire_value(&decoded), packed);
+        assert_eq!(semio_os_kernel::pack_rt::encode_wire_value(&decoded), packed);
         let roundtrip: Vec<semio_framework::TopicContribution> = semio_framework_value::FromValue::from_value(decoded).unwrap();
         assert_eq!(serde_json::to_value(&roundtrip).unwrap(), serde_json::to_value(&actual).unwrap());
         assert_eq!(validate_native_artifact_catalog_contributions(&roundtrip).is_ok(), accepted, "Pack {}", case["id"]);

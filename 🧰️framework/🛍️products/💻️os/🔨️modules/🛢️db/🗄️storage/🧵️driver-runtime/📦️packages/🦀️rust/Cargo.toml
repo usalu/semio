@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-kernel-db-storage-driver-runtime"
+name = "semio-os-kernel-db-storage-driver-runtime"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,7 +23,7 @@ name = "db_storage_driver_runtime"
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-async-sync = { workspace = true }
 

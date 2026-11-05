@@ -1,7 +1,7 @@
 use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::{Effect, Emit, Fault, NoConfigMutation};
+use semio_plugin::{Effect, Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{matching, placeable};
 #[allow(unused_imports)]
@@ -13,14 +13,14 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windo
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_move_storey::editor::bim::commands::browse_families::{handle, PlaceComponent, COMPONENT_UTILITY, OpenFamily, SearchFamilies};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::placed;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, run};
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 fn selected(emit: &Emit<ModelMutation, NoConfigMutation>) -> String {
     emit.effects.iter().map(|effect| format!("{effect:?}")).collect::<Vec<_>>().join(" ")

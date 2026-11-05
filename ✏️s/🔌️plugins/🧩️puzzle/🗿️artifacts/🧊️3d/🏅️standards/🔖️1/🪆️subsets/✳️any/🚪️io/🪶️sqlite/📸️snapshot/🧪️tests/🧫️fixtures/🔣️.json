@@ -114,5 +114,16 @@
     "Puzzle3dTargetVolumesDelta",
     "Puzzle3dReferencesDelta",
     "Puzzle3dKindCompatibilityDelta"
-  ]
+  ],
+  "textCarrier": {
+    "encoding": "utf-8",
+    "invalidHex": [
+      "80",
+      "c080",
+      "eda080",
+      "f4908080",
+      "e282"
+    ],
+    "domain": "literal\u0000😀"
+  }
 }

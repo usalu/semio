@@ -1,6 +1,6 @@
 //! 🧪️ Retained continuation execution consumes the same static semantic cases under original work ownership.
 use super::{ast::*, machine::*};
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 include!("expression-cases.rs");
 include!("statement-cases.rs");

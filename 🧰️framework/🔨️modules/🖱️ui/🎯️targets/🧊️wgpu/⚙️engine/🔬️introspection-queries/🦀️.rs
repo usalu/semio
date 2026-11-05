@@ -33,10 +33,10 @@ impl Ui {
     /// 🌴️ Every windowed Tree container `window_id` presents, measured against the scroll viewport it paints in — the host half
     /// of the tree window observer (`mounted_layout::tree_window_measures`, the twin of React's `treeWindowContainersUnder`):
     /// `(viewport height, containers)`, or `None` when the surface presents no windowed container.
-    pub fn tree_window_measures(&self, window_id: &str) -> Option<(f64, Vec<semio_framework_ui_wgpu_light::tree_window::TreeWindowContainerMeasure>)> {
+    pub fn tree_window_measures(&self, window_id: &str) -> Option<(f64, Vec<semio_ui_wgpu_light::tree_window::TreeWindowContainerMeasure>)> {
         let window = self.windows.get(window_id).filter(|window| window.closing.is_none())?;
         let tree = if window.presented_ready { &window.presented_tree } else { &window.tree };
-        semio_framework_ui_wgpu_mounted_layout::tree_window_measures(tree, &self.theme, window.viewport, window.router.flow().block == ui_contract::FlowBlock::Up)
+        semio_ui_wgpu_mounted_layout::tree_window_measures(tree, &self.theme, window.viewport, window.router.flow().block == ui_contract::FlowBlock::Up)
     }
 
     /// 🌲️ Read-only access to `window_id`'s retained tree (root + `Node` arena) for a caller to walk.
@@ -45,7 +45,7 @@ impl Ui {
     }
 
     /// 🧾️ Captures only an addressed input commit's current focused edit buffer.
-    pub fn retained_input_draft(&self, window_id: &str, intent: &semio_framework_ui_action::UiIntentCommand) -> Option<RetainedInputDraft> {
+    pub fn retained_input_draft(&self, window_id: &str, intent: &semio_ui_action::UiIntentCommand) -> Option<RetainedInputDraft> {
         if intent.trigger != ui_contract::Trigger::Commit { return None; }
         let surface = self.windows.token(window_id)?;
         let tree = self.tree(window_id)?;
@@ -62,7 +62,7 @@ impl Ui {
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return false };
         let tree = if window.presented_ready { &mut window.presented_tree } else { &mut window.tree };
         let Some(node) = tree.node_mut(submitted.node).filter(|node| node.key == submitted.key && matches!(&node.spec.0, UiNode::Input(input) if input.on_change == submitted.action)) else { return false };
-        let Some(published) = semio_framework_ui_wgpu_events::editable_value(&node.spec.0) else { return false };
+        let Some(published) = semio_ui_wgpu_events::editable_value(&node.spec.0) else { return false };
         let Some(edit) = node.state.edit.as_mut().filter(|edit| edit.text == submitted.text && edit.composition.is_none()) else { return false };
         edit.text = published;
         edit.caret = edit.text.len(); edit.anchor = edit.caret; edit.composition = None; edit.scroll_x = 0.0;
@@ -81,12 +81,12 @@ impl Ui {
         let window = self.windows.get(window_id)?;
         let (tree, router) = if window.presented_ready { (&window.presented_tree, &window.presented_router) } else { (&window.tree, &window.router) };
         let (row, index) = router.revealed_row_reason()?;
-        Some((tree.document_id(row)?, index, semio_framework_ui_wgpu_events::disabled_row_action_reason(tree, row, index)?.to_string()))
+        Some((tree.document_id(row)?, index, semio_ui_wgpu_events::disabled_row_action_reason(tree, row, index)?.to_string()))
     }
 
     /// 🗂️ The absolute rect of `row`'s `index`-th action icon in `window_id` — where a pointer fires or hovers it and its reason
     /// hint anchors.
-    pub fn row_action_icon_rect(&self, window_id: &str, row: UiNodeId, index: usize) -> Option<semio_framework_ui_theme::geometry::Rect> {
+    pub fn row_action_icon_rect(&self, window_id: &str, row: UiNodeId, index: usize) -> Option<semio_ui_theme::geometry::Rect> {
         let window = self.windows.get(window_id)?;
         let (tree, router) = if window.presented_ready { (&window.presented_tree, &window.presented_router) } else { (&window.tree, &window.router) };
         router.row_action_icon_rect(tree, tree.document_node(row)?, index)
@@ -205,7 +205,7 @@ impl Ui {
         let window = self.windows.get(window_id).filter(|window| window.closing.is_none())?;
         let tree = if window.presented_ready { &window.presented_tree } else { &window.tree };
         let root = tree.root?;
-        let mut cursor = Some(semio_framework_ui_wgpu_events::hit_test(tree, root, x, y)?);
+        let mut cursor = Some(semio_ui_wgpu_events::hit_test(tree, root, x, y)?);
         while let Some(id) = cursor {
             if let Some(slot) = scene_slot_for_node_absolute(tree, id) {
                 return Some(slot);

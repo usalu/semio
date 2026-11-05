@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "sizing-object", kind: "delete-sizing-object", record: "DeletedSizingObject" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete sizing object {}", self.id.0), &format!("Auslegungsobjekt {} löschen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete sizing object {}", self.id.0), &format!("Auslegungsobjekt {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

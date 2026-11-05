@@ -1,26 +1,26 @@
 //! 🔢️ The draft editor input rows of the history panel: RFC 6901 pointer reads and edits of the draft value, variant switching, snaps, options, coercion, selection values and entity names.
 
 use semio_framework::{ActionArgDef, ActionArgOption, ArgPresentation, ArgSchema, FaultFrom, OptionSource, SnapSource, input_label_glossary, reference_id_text, registered_input_schema_document};
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_value::DslValue;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 use crate::panel_sections::{TIME_TRAVEL_ENTITY_NAME_VISITS, TIME_TRAVEL_SHORT_ID_CHARS};
-use semio_framework_plugin_command::lifted_command::{TimeTravelInputRow, TimeTravelList, TimeTravelListItem};
+use semio_plugin_command::lifted_command::{TimeTravelInputRow, TimeTravelList, TimeTravelListItem};
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 
 //#region 🔖️Pointer
 /// 🔢️ The array index an RFC 6901 reference token names: `0` or a digit run without a leading zero (no sign, no padding),

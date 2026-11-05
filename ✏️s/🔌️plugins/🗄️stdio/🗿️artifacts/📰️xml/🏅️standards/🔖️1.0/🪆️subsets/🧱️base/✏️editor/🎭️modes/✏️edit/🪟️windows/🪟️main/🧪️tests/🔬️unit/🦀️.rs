@@ -1,7 +1,7 @@
 use crate::schema::snapshot::XmlNode;
 use crate::XmlSnapshot;
-use semio_framework_plugin::app::TreeWindowKit;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::TreeWindowKit;
+use semio_ui_locale::Locale;
 use crate::editor::xml_any::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
@@ -23,7 +23,7 @@ async fn render_walks_element_children() {
             epilog: Vec::new(),
         },
     };
-    let node = render(&document, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    let node = render(&document, &semio_plugin::TreeWindows::unhosted()).expect("render");
     let section = node.children.get(0).expect("tree section");
     let root = section.children.get(0).expect("tree root");
     assert_eq!(root.key.as_str(), XML_ROOT_NODE_ID, "the root must carry a real key, never the positional `#0` fallback an empty id produces");
@@ -45,16 +45,16 @@ fn editor_render_exposes_natural_xml_as_an_explicit_whole_document_draft() {
     };
     let node = render_editor(
         &document,
-        semio_framework_ui_locale::Locale::En,
-        &semio_framework_plugin::TreeWindows::unhosted(),
+        semio_ui_locale::Locale::En,
+        &semio_plugin::TreeWindows::unhosted(),
         "s.stdio.xml@1.0/*#editor",
         "revision",
-        semio_framework_plugin::UiPublicationRevision(23),
+        semio_plugin::UiPublicationRevision(23),
     )
     .expect("editor render");
     let source = node.children.get(0).expect("source surface");
-    let semio_framework_plugin::Component::Surface(props) = &source.component else { panic!("expected text editor surface") };
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
+    let semio_plugin::Component::Surface(props) = &source.component else { panic!("expected text editor surface") };
+    let scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(&props).expect("decode text scene");
     let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings JSON");
     assert_eq!(settings["editAction"], "set-node");
     assert_eq!(settings["editArguments"]["nodeId"], "$");
@@ -62,7 +62,7 @@ fn editor_render_exposes_natural_xml_as_an_explicit_whole_document_draft() {
     assert_eq!(settings["commit"], "explicit");
     assert_eq!(settings["applyLabel"], "Apply");
     assert_eq!(settings["discardLabel"], "Discard");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project");
     assert!(json.contains("Grüße\\n%20"), "natural XML text remains in the draft: {json}");
 }
 
@@ -72,11 +72,11 @@ fn editor_render_refuses_invalid_declaration_without_panicking() {
     document.doc.declaration = Some(crate::schema::snapshot::XmlDeclaration::new("1.0", Some("ISO-8859-1".into()), None));
     assert!(render_editor(
         &document,
-        semio_framework_ui_locale::Locale::En,
-        &semio_framework_plugin::TreeWindows::unhosted(),
+        semio_ui_locale::Locale::En,
+        &semio_plugin::TreeWindows::unhosted(),
         "s.stdio.xml@1.0/*#editor",
         "revision",
-        semio_framework_plugin::UiPublicationRevision(23),
+        semio_plugin::UiPublicationRevision(23),
     )
     .is_err());
 }
@@ -89,12 +89,12 @@ fn editor_render_refuses_invalid_declaration_without_panicking() {
 fn window_path(keys: &[&str]) -> String {
     let mut path = format!("{}-root", TreeWindowKit::KIND_ID);
     for key in keys {
-        path.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        path.push_str(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
         path.push_str(key);
     }
     path
 }
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 /// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
 /// real `UiValue` argument-arena credit, shared process-wide, and a law that materialised a full
@@ -118,9 +118,9 @@ fn oversized_document(children: usize) -> XmlSnapshot {
 
 /// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(document: &XmlSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let node = render(document, &TreeWindows::for_body(&view, BODY_KEY)).expect("render the xml tree");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the xml tree")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the xml tree")
 }
 
 /// 🪟️ Law (a): a 300-child element renders — the root stamps its full extent and no `+N` appears.

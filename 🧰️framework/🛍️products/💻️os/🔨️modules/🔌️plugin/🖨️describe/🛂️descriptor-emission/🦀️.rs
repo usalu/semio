@@ -1,4 +1,4 @@
-//! 🛂️ `semio-framework-plugin-describe` — the build-time-only descriptor emitter
+//! 🛂️ `semio-plugin-describe` — the build-time-only descriptor emitter
 //! (`📓️design-abi.md` §3, packet E1-describe). `describe <component.wasm> --out <dir>`
 //! instantiates the built `world actor` component exactly once, with ONLY its `pure` import
 //! satisfied and a fuel cap, calls the `describe()` export, decodes the packed
@@ -8,18 +8,18 @@
 //! `ComponentReceiptV1` (ticket 26/09/23 wave A2), so a descriptor is equal under every profile.
 //! Never instantiated or invoked by the OS at runtime — see `🧬️schema/📜️.wit`'s
 //! `describe` interface doc.
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use semio_framework::{CanonicalDescriptorValue, PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
-use semio_framework_plugin_guest_contract::TurnFault;
-use semio_framework_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedRuntime};
+use semio_plugin_guest_contract::TurnFault;
+use semio_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedRuntime};
 /// 🧠️ The owned core-export set of the interpreter the emitter drives; the owned core-export law reads it.
 #[cfg(test)]
-use semio_framework_plugin_interpreter::OwnedSemioExport;
+use semio_plugin_interpreter::OwnedSemioExport;
 
 //#region 🔖️ActorBindings
 #[cfg(test)]
@@ -630,11 +630,11 @@ pub async fn run(args: Vec<String>) -> i32 {
         Some("describe") => run_describe(rest.collect()).await,
         Some("codecs") => run_codecs(rest.collect()).await,
         Some(other) => {
-            eprintln!("semio-framework-plugin-describe: unknown command {other:?} (expected \"describe\" or \"codecs\")");
+            eprintln!("semio-plugin-describe: unknown command {other:?} (expected \"describe\" or \"codecs\")");
             2
         }
         None => {
-            eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --out <dir>");
+            eprintln!("usage: semio-plugin-describe describe <component.wasm> --out <dir>");
             2
         }
     }
@@ -662,17 +662,17 @@ async fn run_codecs(args: Vec<String>) -> i32 {
             "--out" => out_path = iter.next().map(PathBuf::from),
             _ if wasm_path.is_none() => wasm_path = Some(PathBuf::from(arg)),
             other => {
-                eprintln!("semio-framework-plugin-describe codecs: unexpected argument {other:?}");
+                eprintln!("semio-plugin-describe codecs: unexpected argument {other:?}");
                 return 2;
             }
         }
     }
     let (Some(wasm_path), Some(out_path)) = (wasm_path, out_path) else {
-        eprintln!("usage: semio-framework-plugin-describe codecs <component.wasm> --kinds <kind=schema,…> --out <file.json>");
+        eprintln!("usage: semio-plugin-describe codecs <component.wasm> --kinds <kind=schema,…> --out <file.json>");
         return 2;
     };
     if kinds.is_empty() {
-        eprintln!("semio-framework-plugin-describe codecs: --kinds must name at least one <kind>=<schema> pair");
+        eprintln!("semio-plugin-describe codecs: --kinds must name at least one <kind>=<schema> pair");
         return 2;
     }
     match component_codec_rows(&wasm_path, &kinds).await {
@@ -687,7 +687,7 @@ async fn run_codecs(args: Vec<String>) -> i32 {
             let document = format!("{{\"schema\":\"semio.plugin.component-codec-rows/v1\",\"rows\":[{body}],\"unowned\":[{unowned}]}}\n");
             if let Some(parent) = out_path.parent() {
                 if let Err(error) = fs::create_dir_all(parent) {
-                    eprintln!("semio-framework-plugin-describe codecs: creating {}: {error}", parent.display());
+                    eprintln!("semio-plugin-describe codecs: creating {}: {error}", parent.display());
                     return 1;
                 }
             }
@@ -697,13 +697,13 @@ async fn run_codecs(args: Vec<String>) -> i32 {
                     0
                 }
                 Err(error) => {
-                    eprintln!("semio-framework-plugin-describe codecs: writing {}: {error}", out_path.display());
+                    eprintln!("semio-plugin-describe codecs: writing {}: {error}", out_path.display());
                     1
                 }
             }
         }
         Err(error) => {
-            eprintln!("semio-framework-plugin-describe codecs: {error}");
+            eprintln!("semio-plugin-describe codecs: {error}");
             1
         }
     }
@@ -718,13 +718,13 @@ async fn run_describe(args: Vec<String>) -> i32 {
             "--out" => out_dir = iter.next().map(PathBuf::from),
             _ if wasm_path.is_none() => wasm_path = Some(PathBuf::from(arg)),
             other => {
-                eprintln!("semio-framework-plugin-describe describe: unexpected argument {other:?}");
+                eprintln!("semio-plugin-describe describe: unexpected argument {other:?}");
                 return 2;
             }
         }
     }
     let (Some(wasm_path), Some(out_dir)) = (wasm_path, out_dir) else {
-        eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --out <dir>");
+        eprintln!("usage: semio-plugin-describe describe <component.wasm> --out <dir>");
         return 2;
     };
     match describe_component(&wasm_path, &out_dir).await {
@@ -733,7 +733,7 @@ async fn run_describe(args: Vec<String>) -> i32 {
             0
         }
         Err(error) => {
-            eprintln!("semio-framework-plugin-describe describe: {error}");
+            eprintln!("semio-plugin-describe describe: {error}");
             1
         }
     }

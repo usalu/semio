@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "parameterPolicy": "last duplicate key wins",
+  "missingAndInvalidDefaults": {
+    "neuron": {
+      "params": {},
+      "inputPorts": [],
+      "outputPorts": [],
+      "preview": true
+    },
+    "inputSlider": {
+      "value": 0,
+      "min": 0,
+      "max": 10,
+      "step": 0.1
+    },
+    "outputPreview": {
+      "preview": {},
+      "expanded": []
+    },
+    "cluster": {
+      "tree": {
+        "neurons": [],
+        "synapses": []
+      }
+    }
+  },
+  "cases": [
+    {
+      "kind": "neuron",
+      "id": "n",
+      "label": "",
+      "params": [
+        {
+          "key": "neuronKind",
+          "value": "fixture.echo"
+        },
+        {
+          "key": "params",
+          "value": "{"
+        },
+        {
+          "key": "inputPorts",
+          "value": "false"
+        },
+        {
+          "key": "outputPorts",
+          "value": "null"
+        },
+        {
+          "key": "preview",
+          "value": "bad"
+        }
+      ],
+      "expected": {
+        "kind": "neuron",
+        "id": "n",
+        "neuronKind": "fixture.echo",
+        "params": {},
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      }
+    },
+    {
+      "kind": "inputNote",
+      "id": "n",
+      "label": "",
+      "params": [
+        {
+          "key": "text",
+          "value": "old"
+        },
+        {
+          "key": "text",
+          "value": "Ärger\n🪆️"
+        }
+      ],
+      "expected": {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "Ärger\n🪆️"
+      }
+    },
+    {
+      "kind": "unknown",
+      "id": "n",
+      "label": "",
+      "params": [],
+      "expected": {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "[unknown widget kind \"unknown\"]"
+      }
+    },
+    {
+      "kind": "inputSlider",
+      "id": "n",
+      "label": "λ",
+      "params": [
+        {
+          "key": "value",
+          "value": "+01.25"
+        },
+        {
+          "key": "min",
+          "value": "bad"
+        },
+        {
+          "key": "max",
+          "value": "-0"
+        },
+        {
+          "key": "step",
+          "value": ".5"
+        }
+      ]
+    },
+    {
+      "kind": "inputImage",
+      "id": "n",
+      "label": "λ",
+      "params": [
+        {
+          "key": "src",
+          "value": "data:🪆️"
+        }
+      ]
+    },
+    {
+      "kind": "variable",
+      "id": "n",
+      "label": "λ",
+      "params": [
+        {
+          "key": "name",
+          "value": "  λ  "
+        },
+        {
+          "key": "schema",
+          "value": " schema "
+        }
+      ]
+    },
+    {
+      "kind": "outputAction",
+      "id": "n",
+      "label": "λ",
+      "params": [
+        {
+          "key": "action",
+          "value": "go"
+        }
+      ]
+    },
+    {
+      "kind": "outputExport",
+      "id": "n",
+      "label": "λ",
+      "params": [
+        {
+          "key": "format",
+          "value": "json"
+        }
+      ]
+    },
+    {
+      "kind": "outputPreview",
+      "id": "n",
+      "label": "λ",
+      "params": [
+        {
+          "key": "preview",
+          "value": "{"
+        },
+        {
+          "key": "expanded",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "kind": "cluster",
+      "id": "n",
+      "label": "λ",
+      "params": [
+        {
+          "key": "name",
+          "value": "cluster"
+        },
+        {
+          "key": "tree",
+          "value": "{"
+        },
+        {
+          "key": "flow",
+          "value": "null"
+        }
+      ]
+    },
+    {
+      "kind": "unknown'́️",
+      "id": "n",
+      "label": "λ",
+      "params": []
+    },
+    {
+      "kind": "neuron",
+      "id": "n",
+      "label": "λ",
+      "params": [
+        {
+          "key": "neuronKind",
+          "value": "echo"
+        },
+        {
+          "key": "params",
+          "value": "{}"
+        },
+        {
+          "key": "inputPorts",
+          "value": "[\"a\",\"β\"]"
+        },
+        {
+          "key": "outputPorts",
+          "value": "[\"out\"]"
+        },
+        {
+          "key": "preview",
+          "value": "false"
+        }
+      ]
+    }
+  ],
+  "profiles": [
+    {
+      "items": 1,
+      "copyBytes": 4096
+    },
+    {
+      "items": 512,
+      "copyBytes": 32768
+    }
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    7,
+    17,
+    50
+  ],
+  "opportunity": {
+    "maximumCalls": 200,
+    "fuel": 32768
+  },
+  "sourceObservation": "original node and parameter pointers remain unchanged; each original param row indexed once",
+  "expectedRefusal": "invalidValue alone is a declared field default after full original recipient and refusal closure; control refusals propagate"
+}

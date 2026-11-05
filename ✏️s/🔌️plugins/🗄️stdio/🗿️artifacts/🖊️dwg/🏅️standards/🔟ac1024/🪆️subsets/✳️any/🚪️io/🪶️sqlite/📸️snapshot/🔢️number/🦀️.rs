@@ -1,6 +1,6 @@
 //! 🔢️ Primitive DWG numeric cells retain finite values, signed zero, NaN and infinities in authored columns.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::{Cell,Projection as PhysicalProjection}};
+use semio_os_kernel::sqlite_snapshot::{SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::{Cell,Projection as PhysicalProjection}};
 use Cell::{Null as N,Text as T,Real as R,Integer as I};
 
 pub fn numeric_positions(table:&str)->&'static [usize]{match table{
@@ -41,17 +41,17 @@ fn cells(value:f64)->[Cell<'static>;3]{
     let bits=I(value.to_bits() as i64);
     if value.is_nan(){[T("nan"),bits,N]}else if value==f64::INFINITY{[T("positive_infinity"),bits,N]}else if value==f64::NEG_INFINITY{[T("negative_infinity"),bits,N]}else if value==0.0&&value.is_sign_negative(){[T("negative_zero"),bits,N]}else{[T("finite"),bits,R(value)]}
 }
-enum Target<'c,'p>{Database(PhysicalProjection<'c,'p>),Admission{control:&'c mut SqliteSnapshotControl<'p>,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,identifiers:std::collections::BTreeMap<&'static str,i64>}}
+enum Target<'c,'p>{Database(PhysicalProjection<'c,'p>),Admission{control:&'c mut SqliteSnapshotControl<'p>,phase:semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,identifiers:std::collections::BTreeMap<&'static str,i64>}}
 pub struct Projection<'c,'p>{target:Target<'c,'p>,rows:usize,bytes:usize}
 impl<'c,'p> Projection<'c,'p>{
     pub fn new(sql:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{Ok(Self{target:Target::Database(PhysicalProjection::new(sql,control)?),rows:0,bytes:0})}
-    pub fn admission(sql:&str,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{
+    pub fn admission(sql:&str,phase:semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{
         control.checkpoint(phase,0,0)?;
         if sql.len()>control.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"DWG authored SQL exceeds schema byte limit"))}
         if control.limits().max_tables<277{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"DWG authored schema exceeds table limit"))}
         Ok(Self{target:Target::Admission{control,phase,identifiers:std::collections::BTreeMap::new()},rows:0,bytes:0})
     }
-    fn limits(&self)->semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{match &self.target{Target::Database(physical)=>physical.limits(),Target::Admission{control,..}=>control.limits()}}
+    fn limits(&self)->semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{match &self.target{Target::Database(physical)=>physical.limits(),Target::Admission{control,..}=>control.limits()}}
     fn measure(&self,table:&str,values:&[Cell<'_>])->Result<(usize,usize),ValueError>{
         let positions=numeric_positions(table);
         let columns=values.len().checked_add(positions.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"DWG numeric column count overflow"))?).and_then(|value|value.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"DWG numeric column count overflow"))?;
@@ -85,7 +85,7 @@ impl<'c,'p> Projection<'c,'p>{
     }
     pub fn checkpoint(&mut self)->Result<(),ValueError>{match &mut self.target{Target::Database(physical)=>physical.checkpoint(),Target::Admission{control,phase,..}=>control.checkpoint(*phase,self.rows,0)}}
     pub fn finish_admission(self)->Result<usize,ValueError>{match self.target{Target::Admission{control,phase,..}=>{control.checkpoint(phase,self.rows,self.rows)?;Ok(self.rows)},Target::Database(_)=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG admission requires its owned counting target"))}}
-    pub fn finish(self)->Result<semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,ValueError>{match self.target{Target::Database(physical)=>physical.finish(),Target::Admission{..}=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG counting target cannot materialize database rows"))}}
+    pub fn finish(self)->Result<semio_os_kernel::sqlite_snapshot::SqliteDatabase,ValueError>{match self.target{Target::Database(physical)=>physical.finish(),Target::Admission{..}=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG counting target cannot materialize database rows"))}}
 }
 #[derive(Clone,Copy)]
 pub struct Row<'a>{raw:&'a SqliteRow,numeric:&'static[usize],pub rowid:i64}

@@ -23,7 +23,7 @@ pub struct OsArtifactRef {
 /// 🆔️ Mints a fresh app document id — uuid-v7 (time-ordered), matching the id shape semio_hub already
 /// uses for its own entities (`framework/product/os/semio_hub/rs/bin.rs`'s `Uuid::now_v7()`).
 pub fn create_os_artifact_id() -> String {
-    semio_framework_os_kernel::os_identity::time_ordered_id()
+    semio_os_kernel::os_identity::time_ordered_id()
 }
 
 // 🧷️ `OsAppInstance` is deleted — `workflow::WorkflowNode` (kernel crate) absorbs it entirely;

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "gate",
+          "type",
+          "body",
+          "expected",
+          "calls"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "gate": {
+            "enum": [
+              "ready",
+              "busy",
+              "poison"
+            ]
+          },
+          "type": {
+            "enum": [
+              "correct",
+              "wrong"
+            ]
+          },
+          "body": {
+            "enum": [
+              "value",
+              "refuse"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "value",
+              "pending",
+              "invariantViolated",
+              "invalidValue"
+            ]
+          },
+          "calls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    }
+  }
+}

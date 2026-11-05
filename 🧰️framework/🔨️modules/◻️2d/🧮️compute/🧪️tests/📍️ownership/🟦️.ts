@@ -26,7 +26,7 @@ test("physical neutral owner retains original native assertions with independent
 });
 test("independent TOML oracle proves generic compute is its own crate root without product dependency or facade",()=>{
  const manifest=TOML.parse(read("🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust/Cargo.toml"));
- expect(Object.keys(manifest.dependencies??{})).not.toContain("semio-framework-os-kernel");
+ expect(Object.keys(manifest.dependencies??{})).not.toContain("semio-os-kernel");
  expect(Object.keys(manifest.dependencies??{})).not.toContain("semio-framework-2d");
  expect(manifest.lib).toHaveProperty("name","semio_framework_2d_compute");
  const binding=read(corpus.source);

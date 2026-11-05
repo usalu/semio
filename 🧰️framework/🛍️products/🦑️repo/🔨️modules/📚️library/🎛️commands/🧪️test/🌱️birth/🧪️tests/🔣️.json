@@ -169,5 +169,341 @@
     ],
     "received": true,
     "expected": "received"
+  },
+  {
+    "name": "fresh Storybook test",
+    "argv": [
+      "test",
+      "storybook"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh filtered Storybook test",
+    "argv": [
+      "test",
+      "storybook",
+      "--grep",
+      "puzzle"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh Storybook build",
+    "argv": [
+      "build",
+      "storybook"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh static Storybook server",
+    "argv": [
+      "dev",
+      "storybook-static"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "Storybook help grants nothing",
+    "argv": [
+      "test",
+      "storybook",
+      "--help"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "unrelated test grants nothing",
+    "argv": [
+      "test",
+      "puzzle"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "extra Storybook build operand grants nothing",
+    "argv": [
+      "build",
+      "storybook",
+      "extra"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "extra static server operand grants nothing",
+    "argv": [
+      "dev",
+      "storybook-static",
+      "extra"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "received Storybook test stays Original",
+    "argv": [
+      "test",
+      "storybook"
+    ],
+    "received": true,
+    "expected": "received"
+  },
+  {
+    "name": "received Storybook server stays Original",
+    "argv": [
+      "dev",
+      "storybook-static"
+    ],
+    "received": true,
+    "expected": "received"
+  },
+  {
+    "name": "fresh explicit time-travel prototype",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle2d",
+      "--renderer",
+      "react",
+      "--scenario",
+      "puzzle",
+      "--locales",
+      "en,de"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "prototype"
+    },
+    "buildArguments": [
+      "run",
+      "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh explicit time-travel puzzle3d wgpu release",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle3d",
+      "--renderer",
+      "wgpu",
+      "--scenario",
+      "puzzle",
+      "--locales",
+      "en,de"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "release"
+    },
+    "buildArguments": [
+      "run",
+      "@semio-tech/framework-os-dev:activate-puzzle3d-wgpu-release"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "time-travel missing selection",
+    "argv": [
+      "dev",
+      "time-travel"
+    ],
+    "environment": {},
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "time-travel missing profile",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle2d",
+      "--renderer",
+      "react"
+    ],
+    "environment": {},
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "time-travel invalid profile",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle2d",
+      "--renderer",
+      "react"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "debug"
+    },
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "time-travel help",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle2d",
+      "--renderer",
+      "react",
+      "--help"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "prototype"
+    },
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "time-travel unknown variant",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "other",
+      "--renderer",
+      "react"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "prototype"
+    },
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "time-travel unknown renderer",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle2d",
+      "--renderer",
+      "other"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "prototype"
+    },
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "time-travel duplicate variant",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle2d",
+      "--renderer",
+      "react",
+      "--variant",
+      "puzzle2d"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "prototype"
+    },
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "time-travel duplicate renderer",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle2d",
+      "--renderer",
+      "react",
+      "--renderer",
+      "wgpu"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "prototype"
+    },
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "received explicit time-travel",
+    "argv": [
+      "dev",
+      "time-travel",
+      "--variant",
+      "puzzle2d",
+      "--renderer",
+      "react"
+    ],
+    "environment": {
+      "SEMIO_BUILD_MODE": "prototype"
+    },
+    "received": true,
+    "expected": "received"
+  },
+  {
+    "name": "received missing time-travel selection",
+    "argv": [
+      "dev",
+      "time-travel"
+    ],
+    "environment": {},
+    "received": true,
+    "expected": "received"
+  },
+  {
+    "name": "unrelated dev",
+    "argv": [
+      "dev",
+      "time-travel-extra"
+    ],
+    "environment": {},
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "fresh Storybook developer scope",
+    "argv": [
+      "dev",
+      "storybook",
+      "ui"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh Storybook developer help",
+    "argv": [
+      "dev",
+      "storybook",
+      "ui",
+      "--help"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "received Storybook developer scope",
+    "argv": [
+      "dev",
+      "storybook",
+      "puzzle",
+      "2d"
+    ],
+    "received": true,
+    "expected": "received"
   }
 ]

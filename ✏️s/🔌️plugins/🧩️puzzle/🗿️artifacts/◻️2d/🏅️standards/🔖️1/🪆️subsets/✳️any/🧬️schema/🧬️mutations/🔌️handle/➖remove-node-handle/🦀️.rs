@@ -38,8 +38,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove handle \"{}\" from node \"{}\"", self.handle_id, self.node_id), &format!("Griff \"{}\" aus Knoten \"{}\" entfernen", self.handle_id, self.node_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove handle \"{}\" from node \"{}\"", self.handle_id, self.node_id), &format!("Griff \"{}\" aus Knoten \"{}\" entfernen", self.handle_id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.to_string_owner(), self.handle_id.to_string_owner()]

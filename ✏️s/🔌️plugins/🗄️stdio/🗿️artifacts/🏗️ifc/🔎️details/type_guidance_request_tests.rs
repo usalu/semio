@@ -3,14 +3,14 @@ use super::*;
 #[test]
 fn guided_request_copy_preserves_original_donor_and_exact_utf8_payload_at_every_cancel_prefix(){
     use super::super::type_guidance_request::RequestCopy;
-    use semio_framework_plugin::action_staging::{StagedFormRequest,StagedFormToken};
+    use semio_plugin::action_staging::{StagedFormRequest,StagedFormToken};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/guided-request-copy.json")).unwrap();
     let mut successful_turns=None;
     for cancel_at in std::iter::once(None).chain((0..100000).map(Some)){
         if cancel_at.is_some_and(|prefix|successful_turns.is_some_and(|turns|prefix>=turns)){break;}
         let mut caller=OriginalWorkFixture::new();let mut copy=Some(RequestCopy::default());
         let args=super::type_input_tests::raw(&law["args"]);
-        let mut donor=Some(StagedFormRequest{token:StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:"source-query".into(),generation:"1".into(),revision:"0".repeat(64)},args,locale:semio_framework_ui_locale::Locale::En,page:None});
+        let mut donor=Some(StagedFormRequest{token:StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:"source-query".into(),generation:"1".into(),revision:"0".repeat(64)},args,locale:semio_ui_locale::Locale::En,page:None});
         let original=donor.as_ref().unwrap().token.action.as_ptr();let mut done=false;
         for turn in 0..100000{
             if cancel_at==Some(turn){caller.cancel().cancel_now();}

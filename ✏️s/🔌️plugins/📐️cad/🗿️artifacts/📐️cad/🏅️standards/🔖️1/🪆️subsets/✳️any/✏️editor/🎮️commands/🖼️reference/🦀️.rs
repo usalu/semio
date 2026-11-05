@@ -12,7 +12,7 @@ use semio_s_artifact_cad_cad_mut_references::move_reference::MoveReference;
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_s_artifact_cad_cad_model::{snapshot::cad_pane_from_model_definition_id, snapshot::CadPaneId};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, InteractionWrite};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, InteractionWrite};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️PatchCadPlayReference

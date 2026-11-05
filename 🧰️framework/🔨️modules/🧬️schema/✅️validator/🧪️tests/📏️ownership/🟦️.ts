@@ -15,5 +15,5 @@ export function proveSchemaValidatorOwnershipV1(repoRoot: string): void {
   for (const dependency of law.neutralDependencies) assert(manifest.includes(dependency));
   assert(!manifest.includes("products"), "validator package must declare no product dependency");
   const source = read(law.validatorPackage.replace("📦️packages/🦀️rust/Cargo.toml", "🦀️.rs"));
-  assert(!source.includes("semio_framework_os"), "validator source must consume neutral values directly");
+  assert(!source.includes("semio_os"), "validator source must consume neutral values directly");
 }

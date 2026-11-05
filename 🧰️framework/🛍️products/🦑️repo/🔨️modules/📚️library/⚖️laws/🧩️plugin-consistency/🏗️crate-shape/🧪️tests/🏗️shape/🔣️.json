@@ -145,7 +145,7 @@
    "rule": "policySelectionIdsBreaches",
    "source": [
     "fn selection_ids(a: u8) -> u8 { 1 }",
-    "fn selection_ids(b: u8) -> u8 { semio_framework_plugin::selection_ids(b) }"
+    "fn selection_ids(b: u8) -> u8 { semio_plugin::selection_ids(b) }"
    ],
    "expect": [
     [
@@ -161,7 +161,7 @@
    "id": "selection-ids-delegating-through-an-import-alias",
    "rule": "policySelectionIdsBreaches",
    "source": [
-    "use semio_framework_plugin::selection_ids as sel;",
+    "use semio_plugin::selection_ids as sel;",
     "fn selection_ids(x: u8) -> u8 { sel(x) }"
    ],
    "expect": [],

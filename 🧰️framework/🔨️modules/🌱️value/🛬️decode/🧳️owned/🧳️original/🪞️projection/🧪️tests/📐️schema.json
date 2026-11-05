@@ -1,0 +1,44 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "source",
+      "expected",
+      "parentPreserved",
+      "wrap"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "source": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "expected": {
+        "type": "string"
+      },
+      "parentPreserved": {
+        "const": true
+      },
+      "wrap": {
+        "enum": [
+          "root",
+          "array"
+        ]
+      }
+    }
+  }
+}

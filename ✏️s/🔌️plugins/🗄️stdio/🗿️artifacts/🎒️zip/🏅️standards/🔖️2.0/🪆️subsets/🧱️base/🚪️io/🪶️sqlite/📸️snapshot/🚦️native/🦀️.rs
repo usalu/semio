@@ -1,7 +1,7 @@
 //! 🚦️ ZIP native ownership and literal semantic row admission under one caller control.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v2_0::subsets::base::schema::snapshot::{ZipSnapshot,ZipExtraField};
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost as _;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_dsl_record::{FieldValue,RecordValue};
@@ -46,11 +46,11 @@ fn admit_snapshot(value:&ZipSnapshot,control:&mut SqliteSnapshotControl<'_>,phas
  }
  census.control.checkpoint(phase,census.rows,census.rows)
 }
-pub(super) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<ZipSnapshot,ValueError>{
+pub(super) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<ZipSnapshot,ValueError>{
  extent(control.limits())?;let limits=control.limits();
  let snapshot=store::decode_sqlite_snapshot_record_native(payload,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admit_record(record,limits,native)?;ZipSnapshot::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_snapshot(&snapshot,control,SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
 }
-pub(super) fn encode(snapshot:&ZipSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+pub(super) fn encode(snapshot:&ZipSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
  admit_snapshot(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
  store::encode_sqlite_snapshot_record_native(encoding,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control,native_owner)
 }

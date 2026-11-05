@@ -16,8 +16,8 @@ pub struct RemoveBeam {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for RemoveBeam where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::insert_beam::InsertBeam> + From<semio_s_artifact_norm_en1994_mut_stud_rows::insert_stud::InsertStud> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "beam", kind: "remove-beam", record: "RemovedBeam" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove composite beam", "Verbundträger entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove composite beam", "Verbundträger entfernen")
     }
 }
 

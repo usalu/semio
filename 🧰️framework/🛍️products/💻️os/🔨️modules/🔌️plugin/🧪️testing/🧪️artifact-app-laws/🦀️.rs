@@ -8,14 +8,14 @@
 //! `terminology_tests`/`panel_kit_tests` above for the sibling pattern of testing SDK primitives
 //! themselves inline.
 
-use semio_framework_plugin_job::reserved_jobs::register_framework_reserved_factories;
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_app_builder::App;
-use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolFactoryRegistry, TypedOperationResultLane};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_job::reserved_jobs::register_framework_reserved_factories;
+use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_app_builder::App;
+use semio_plugin_window_kits::AppActionRegistry;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::tool_contract::{ArtifactToolFactoryRegistry, TypedOperationResultLane};
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_app::VcsArtifactApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
 pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture};
@@ -23,7 +23,7 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
 
     /// 📃️ Observes each production page presentation with the exact original fixture grant.
 
-    pub fn take_fixture_result_page<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_plugin_job::TypedOperationResultPage>,semio_framework::Fault>{
+    pub fn take_fixture_result_page<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_plugin_job::TypedOperationResultPage>,semio_framework::Fault>{
 
         loop{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.take_typed_operation_result_page(receiver,grant));let(page,p)=result?;assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));if page.is_some()||p==Default::default(){return Ok(page);}}
 
@@ -31,7 +31,7 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
 
     /// ♻️ Returns a projected page's token only after its exact physical alias closure.
 
-    pub fn close_fixture_result_page(page:&mut semio_framework_plugin_job::TypedOperationResultPage,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_plugin_job::TypedOperationResultToken{
+    pub fn close_fixture_result_page(page:&mut semio_plugin_job::TypedOperationResultPage,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_plugin_job::TypedOperationResultToken{
 
         let token=page.token;for _ in 0..100000{if page.terminal_is_empty(){return token;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||page.close_step(grant).expect("original fixture receiver page closure"));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default(),"original fixture close grant must fund its unchanged page authority");}panic!("original fixture receiver page did not close");
 
@@ -170,10 +170,10 @@ pub use declaration_registration_laws::{
     assert_subset_declaration_ids_are_derived,
 };
 
-pub use semio_framework_plugin_declared_verdict::{
+pub use semio_plugin_declared_verdict::{
     DeclaredArgumentProbe, DeclaredVerbEffect, DeclaredVerbFinding, DeclaredVerbOutcome, DeclaredVerbProbe, DeclaredVerbWindowProbe, declared_argument_alternatives, declared_bridge_arguments, declared_verb_agent_divergences, declared_verb_ever_wrote_document, declared_verb_findings, declared_verb_probe, declared_verb_staged_wrote_document, declared_verb_wrote_document
 };
 
 // 🎫️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 — lane 0-F. New
 // subregion, appended after the peer `🧫️fixtures` subregion above without touching it.
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer, ViewerApp};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer, ViewerApp};

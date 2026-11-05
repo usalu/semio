@@ -1,6 +1,6 @@
 //! 📜️ Original sorted drafts stream into canonical transition pages and their content-addressed identity.
 use super::ArtifactPreparedOperationOutput;
-use semio_framework_os_spr::{HistoryInputDrafts,HistoryTransition,HistoryTransitionWireCursor,HistoryTransitionBorrowedIdentity,HistoryTransitionCommitView,HistoryTransitionBranchView,HistoryTransitionEditMode,HistoryTransitionEditsView,HistoryTransitionRepinView,HybridLogicalTimestamp,CausalPayload,MutationId};
+use semio_os_spr::{HistoryInputDrafts,HistoryTransition,HistoryTransitionWireCursor,HistoryTransitionBorrowedIdentity,HistoryTransitionCommitView,HistoryTransitionBranchView,HistoryTransitionEditMode,HistoryTransitionEditsView,HistoryTransitionRepinView,HybridLogicalTimestamp,CausalPayload,MutationId};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_hash::Hasher;

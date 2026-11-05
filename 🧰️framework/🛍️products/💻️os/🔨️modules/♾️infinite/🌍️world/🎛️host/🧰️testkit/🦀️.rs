@@ -1,6 +1,6 @@
 //! 🧰️ Test-only host surface: the step context fixture and the close-driving `Drop` for `World3dState` (feature `testkit`).
 
-use semio_framework_os_infinite_world_bridge::step_world3d_scene_bridge_close;
+use semio_os_infinite_world_bridge::step_world3d_scene_bridge_close;
 use crate::World3dState;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};

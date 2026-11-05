@@ -35,21 +35,21 @@ use semio_s_artifact_procedural_2d_terminology::generation2d_labels;
 use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalTarget;
 use semio_s_artifact_procedural_2d_model::GENERATION_2D_SCHEMA;
 use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Effect;
+use semio_plugin::Fault;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
 
 use semio_s_artifact_procedural_2d_editor::*;
 use crate::app_fixture::{app, app_with_registry, close, snapshot_read};
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::artifact_app_laws::assert_undo_redo_round_trip;
+use semio_plugin::PluginApp;
 
 include!("🧰️production-fixtures-and-maintenance-law/🦀️.rs");
 

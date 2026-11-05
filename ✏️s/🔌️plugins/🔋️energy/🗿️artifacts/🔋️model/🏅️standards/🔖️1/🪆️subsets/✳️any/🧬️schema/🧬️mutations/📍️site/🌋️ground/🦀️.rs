@@ -1,8 +1,8 @@
 //! 🌋️ Energy model mutation domain `site-ground`: `change-ground-deep`, `change-ground-building`, `change-ground-shallow`
 
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_diff as diff;
 extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;

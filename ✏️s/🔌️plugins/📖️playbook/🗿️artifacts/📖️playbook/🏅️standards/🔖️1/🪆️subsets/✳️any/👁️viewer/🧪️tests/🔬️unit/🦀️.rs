@@ -1,7 +1,7 @@
 use crate::PLAYBOOK_DIALECT;
-use semio_framework_plugin::Viewer;
+use semio_plugin::Viewer;
 use crate::viewer::playbook::*;
-use semio_framework_plugin::ArtifactViewer;
+use semio_plugin::ArtifactViewer;
 
 #[semio_framework_async_macros::async_test]
 async fn create_playbook_viewer_builds_a_definition_for_the_viewer_role() {

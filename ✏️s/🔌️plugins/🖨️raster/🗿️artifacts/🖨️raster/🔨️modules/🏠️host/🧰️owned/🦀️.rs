@@ -3,9 +3,9 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_raster_raster_model::RASTER_OWNED_FIELD_BYTES;

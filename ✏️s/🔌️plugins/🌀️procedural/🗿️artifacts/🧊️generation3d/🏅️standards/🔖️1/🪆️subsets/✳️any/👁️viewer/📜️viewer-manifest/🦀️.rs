@@ -5,10 +5,10 @@ use super::*;
 //#region 🔖️Manifest
 /// ⏱️ One hidden runtime command of the evaluation chain. Never in the palette, never a `View`
 /// action a window declares: a user does not dispatch a tick, the app does.
-fn generation3d_view_runtime_command(id: &str, label: LocalizedLabel, args: &[&str]) -> semio_framework_plugin::CommandDefinition {
-    let mut definition = semio_framework_plugin::CommandDefinition {
+fn generation3d_view_runtime_command(id: &str, label: LocalizedLabel, args: &[&str]) -> semio_plugin::CommandDefinition {
+    let mut definition = semio_plugin::CommandDefinition {
         in_palette: false,
-        ..semio_framework_plugin::CommandDefinition::bounded_catalog(id, label, "runtime", ActionKind::View).with_args(args.iter().map(|arg| semio_framework_plugin::ActionArgDef::text(*arg, LocalizedLabel::native(*arg, *arg))).collect::<Vec<_>>())
+        ..semio_plugin::CommandDefinition::bounded_catalog(id, label, "runtime", ActionKind::View).with_args(args.iter().map(|arg| semio_plugin::ActionArgDef::text(*arg, LocalizedLabel::native(*arg, *arg))).collect::<Vec<_>>())
     };
     definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
     definition
@@ -18,9 +18,9 @@ fn generation3d_view_runtime_command(id: &str, label: LocalizedLabel, args: &[&s
 /// SAME eight ids `editor::generation3d::examples()` registers onto the manifest, named through the
 /// surface-neutral `🧬️schema` constants so this read-only surface never reaches into `::editor::`
 /// (`policyViewerPurityBreaches`).
-fn generation3d_view_example_options() -> Vec<semio_framework_plugin::ActionArgOption> {
+fn generation3d_view_example_options() -> Vec<semio_plugin::ActionArgOption> {
     use semio_s_artifact_procedural_3d_model as generation3d_schema;
-    use semio_framework_plugin::ActionArgOption;
+    use semio_plugin::ActionArgOption;
     vec![
         ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
         ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH, LocalizedLabel::native("Mesh Workbench", "Netzwerkstatt")),
@@ -34,7 +34,7 @@ fn generation3d_view_example_options() -> Vec<semio_framework_plugin::ActionArgO
     ]
 }
 
-pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_generation3d_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(GENERATION3D_DIALECT)
         .document(["semio", "procedural", "3d"])
         .icon_id("workflow")
@@ -58,20 +58,20 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
         .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-        .action_args("setActiveExample", vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), generation3d_view_example_options()).required()])
+        .action_args("setActiveExample", vec![semio_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), generation3d_view_example_options()).required()])
         .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"), ActionKind::View, "download"))
         .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
         .action_destructive("exportDocument")
-        .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), semio_s_artifact_procedural_3d_io::document_io::export_format_options()).required().default_value(&"stl")])
+        .action_args("exportDocument", vec![semio_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), semio_s_artifact_procedural_3d_io::document_io::export_format_options()).required().default_value(&"stl")])
         .keybinding("mod+shift+e", "exportDocument")
         .tool(preview_eval::preview_eval_tool_definition())
         .command({
-            let mut definition = semio_framework_plugin::CommandDefinition {
+            let mut definition = semio_plugin::CommandDefinition {
                 in_palette: false,
-                ..semio_framework_plugin::CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([
-                    semio_framework_plugin::ActionArgDef::text("json", LocalizedLabel::native("Contributions Page", "Beiträge-Seite")),
-                    semio_framework_plugin::ActionArgDef::text("page", LocalizedLabel::native("Page", "Seite")),
-                    semio_framework_plugin::ActionArgDef::text("pageCount", LocalizedLabel::native("Page Count", "Seitenanzahl")),
+                ..semio_plugin::CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([
+                    semio_plugin::ActionArgDef::text("json", LocalizedLabel::native("Contributions Page", "Beiträge-Seite")),
+                    semio_plugin::ActionArgDef::text("page", LocalizedLabel::native("Page", "Seite")),
+                    semio_plugin::ActionArgDef::text("pageCount", LocalizedLabel::native("Page Count", "Seitenanzahl")),
                 ])
             };
             definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
@@ -118,7 +118,7 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_describe("setSunIntensity", LocalizedLabel::native("Sets the brightness of the 3D viewer's sun; only the view changes.", "Legt die Helligkeit der Sonne des 3D-Betrachters fest; nur die Ansicht ändert sich."))
         .action_describe("setActiveExample", LocalizedLabel::native("Shows one of the bundled generator examples in this viewer instead of the document; the document itself is not changed.", "Zeigt in diesem Betrachter eines der mitgelieferten Generatorbeispiele statt des Dokuments; das Dokument selbst ändert sich nicht."))
         .action_describe("exportDocument", LocalizedLabel::native("Writes the 3D result shown in the viewer in the chosen format to a downloaded file on the user's machine.", "Schreibt das im Betrachter gezeigte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."))
-        .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest

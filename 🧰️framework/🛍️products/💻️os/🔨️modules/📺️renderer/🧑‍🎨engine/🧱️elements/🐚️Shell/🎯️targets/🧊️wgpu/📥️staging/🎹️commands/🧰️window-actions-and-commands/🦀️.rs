@@ -18,7 +18,7 @@ const WINDOW_SEARCH_SUGGESTIONS_CONTROL_ID: &str = "ui.windowSearch.suggestions"
 /// line's OWN ranker, higher-is-better, `-1` for no match. Deliberately NOT `rank_fuzzy_items`: that
 /// is the ⌘️K palette's ranker (`//#region 🔎️FuzzyRankingParity`), and React's window search never
 /// calls it, so borrowing it here would order the two shells' suggestion lists differently.
-fn search_possible_rank_score(query: &str, possible: &semio_framework_ui_declaration::layout::WindowEngagementPossible) -> i32 {
+fn search_possible_rank_score(query: &str, possible: &semio_ui_declaration::layout::WindowEngagementPossible) -> i32 {
     let needle = normalize_engagement_action_text(query).to_lowercase();
     if needle.is_empty() {
         return -1;
@@ -75,11 +75,11 @@ pub fn normalize_engagement_action_text(text: &str) -> String {
 
 /// 🔎️ React's `filterSearchPossibles`: an empty query keeps the host's own order, otherwise the rows
 /// that score at all, best first.
-pub fn filter_search_possibles<'a>(query: &str, possibles: &'a [semio_framework_ui_declaration::layout::WindowEngagementPossible]) -> Vec<&'a semio_framework_ui_declaration::layout::WindowEngagementPossible> {
+pub fn filter_search_possibles<'a>(query: &str, possibles: &'a [semio_ui_declaration::layout::WindowEngagementPossible]) -> Vec<&'a semio_ui_declaration::layout::WindowEngagementPossible> {
     if normalize_engagement_action_text(query).is_empty() {
         return possibles.iter().collect();
     }
-    let mut scored: Vec<(i32, usize, &semio_framework_ui_declaration::layout::WindowEngagementPossible)> = possibles.iter().enumerate().map(|(index, possible)| (search_possible_rank_score(query, possible), index, possible)).filter(|(score, _, _)| *score >= 0).collect();
+    let mut scored: Vec<(i32, usize, &semio_ui_declaration::layout::WindowEngagementPossible)> = possibles.iter().enumerate().map(|(index, possible)| (search_possible_rank_score(query, possible), index, possible)).filter(|(score, _, _)| *score >= 0).collect();
     scored.sort_by(|left, right| right.0.cmp(&left.0).then(left.1.cmp(&right.1)));
     scored.into_iter().map(|(_, _, possible)| possible).collect()
 }
@@ -124,15 +124,15 @@ impl CommandState {
             accept: None,
             precision: None,
             snaps: Vec::new(),
-            on_change: input.on_change.clone().unwrap_or_else(|| ActionDescriptor { controller_id: "framework".into(), action: "setEngagementInput".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string() }) }),
+            on_change: input.on_change.clone().unwrap_or_else(|| ActionDescriptor { controller_id: "framework".into(), action: "setEngagementInput".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string() }) }),
             on_submit: input.on_submit.clone(),
             on_abort: input.on_abort.clone(),
             on_repeat_last: (!session_active).then(|| input.on_repeat_last.clone()).flatten(),
-            presence: UiPresence { state: if input.disabled.unwrap_or(false) { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
+            presence: UiPresence { state: if input.disabled.unwrap_or(false) { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
             menu: None,
             ..Default::default()
         })];
-        let possibles: &[semio_framework_ui_declaration::layout::WindowEngagementPossible] = engagement.possible_engagements.as_deref().unwrap_or(&[]);
+        let possibles: &[semio_ui_declaration::layout::WindowEngagementPossible] = engagement.possible_engagements.as_deref().unwrap_or(&[]);
         if !possibles.is_empty() {
             let open = self.search_possibles_open.get(window_id).copied().unwrap_or(false);
             children.push(UiNode::Toggle(UiToggleNode {
@@ -140,7 +140,7 @@ impl CommandState {
                 id: WINDOW_SEARCH_SUGGESTIONS_CONTROL_ID.into(),
                 icon_id: if open { IconName::ChevronDown } else { IconName::ChevronRight },
                 text: Some(Label::data(shell_chrome_string("windowSearch.suggestions", is_de))),
-                on_change: ActionDescriptor { controller_id: "framework".into(), action: "toggleSearchPossibles".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string() }) },
+                on_change: ActionDescriptor { controller_id: "framework".into(), action: "toggleSearchPossibles".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string() }) },
                 presence: UiPresence { selected: open, ..UiPresence::default() },
                 menu: None,
             }));
@@ -211,7 +211,7 @@ pub const FUZZY_SEARCH_LIMIT: usize = 20;
 
 /// 🔎️ `normalizeFuzzyText` — lowercase, marks stripped, trimmed, bounded.
 pub fn normalize_fuzzy_text(value: &str) -> String {
-    semio_framework_ui_select_behavior::normalize_nfkd_text(value, false, FUZZY_TEXT_LIMIT)
+    semio_ui_select_behavior::normalize_nfkd_text(value, false, FUZZY_TEXT_LIMIT)
 }
 
 /// 🔎️ `boundedDamerauLevenshtein` — edit distance with transpositions, abandoned past `maximum`.

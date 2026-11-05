@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberPrestressLos
         record: "ChangedMemberPrestressLossRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change prestress losses of the member", "Bauteil: Spannkraftverluste ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change prestress losses of the member", "Bauteil: Spannkraftverluste ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

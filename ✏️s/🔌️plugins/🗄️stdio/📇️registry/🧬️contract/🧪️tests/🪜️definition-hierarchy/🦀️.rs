@@ -1,10 +1,10 @@
-use semio_framework_plugin::ArtifactDefinition;
-use semio_framework_plugin::ArtifactCapability;
-use semio_framework_plugin::ArtifactIdentity;
-use semio_framework_plugin::ArtifactCapabilityKind;
+use semio_plugin::ArtifactDefinition;
+use semio_plugin::ArtifactCapability;
+use semio_plugin::ArtifactIdentity;
+use semio_plugin::ArtifactCapabilityKind;
 mod artifact_definition_contract_tests {
     use super::super::*;
-    use semio_framework_plugin::ArtifactDefinitionRegistry;
+    use semio_plugin::ArtifactDefinitionRegistry;
 
     fn identity(value: &str) -> ArtifactIdentity {
         ArtifactIdentity::parse(value).unwrap()

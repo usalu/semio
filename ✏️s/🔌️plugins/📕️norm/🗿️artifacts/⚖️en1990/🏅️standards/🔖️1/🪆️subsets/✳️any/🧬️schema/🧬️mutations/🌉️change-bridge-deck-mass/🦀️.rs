@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeBridgeDeckMass whe
         record: "ChangedBridgeDeckMass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change deck mass per length of the bridge serviceability", "Brückengebrauchstauglichkeit: Deckmasse je Meter ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change deck mass per length of the bridge serviceability", "Brückengebrauchstauglichkeit: Deckmasse je Meter ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

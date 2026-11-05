@@ -1,11 +1,11 @@
 use crate::modes::edit::windows::inputs::*;
 use crate::unit_tests::context;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::TreeWindowRequest;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
+use semio_ui_locale::Locale;
+use semio_plugin::TreeWindowRequest;
+use semio_plugin::TreeWindows;
+use semio_plugin::ViewModel;
+use semio_plugin::TREE_WINDOW_PATH_SEPARATOR;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_this_windows_body_key() {
@@ -48,10 +48,10 @@ fn full_default_snapshot_inputs_expose_catalogue_sections_within_slots() {
             rows: 16,
         }],
         tree_viewport_rows: Some(16),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let collapsed = render(&document, Locale::En, "norm.iso16757", &TreeWindows::for_body(&collapsed_view, BODY_INPUTS)).expect("collapsed assemble");
-    let collapsed_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(collapsed)).expect("collapsed retire");
+    let collapsed_json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(collapsed)).expect("collapsed retire");
     assert!(collapsed_json.contains("norm-inputs-catalogue") || collapsed_json.contains("catalogue"), "{collapsed_json}");
     assert!(collapsed_json.contains("dictionary") || collapsed_json.contains("Dictionary"), "{collapsed_json}");
     assert!(collapsed_json.contains("geometry") || collapsed_json.contains("Geometry"), "{collapsed_json}");
@@ -69,10 +69,10 @@ fn full_default_snapshot_inputs_expose_catalogue_sections_within_slots() {
             TreeWindowRequest { body_key: BODY_INPUTS.into(), node_key: objects_path, open: Some(true), offset: 0, rows: 8 },
         ],
         tree_viewport_rows: Some(16),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let expanded = render(&document, Locale::En, "norm.iso16757", &TreeWindows::for_body(&expanded_view, BODY_INPUTS)).expect("expanded assemble");
-    let expanded_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(expanded)).expect("expanded retire");
+    let expanded_json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(expanded)).expect("expanded retire");
     assert!(expanded_json.contains("norm-inputs-catalogue.products") || expanded_json.contains("products"), "{expanded_json}");
     assert!(expanded_json.contains("subjects") || expanded_json.contains("Subjects"), "{expanded_json}");
     assert!(expanded_json.contains("objects") || expanded_json.contains("Objects") || expanded_json.contains("geom-valve"), "{expanded_json}");

@@ -12,10 +12,10 @@ use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::i
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::IssueOwner;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ParameterKind;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_ui_locale::Label;
+use semio_plugin::tree_item_desc;
+use semio_plugin::BuiltNode;
+use semio_plugin::UiAssemblyResult;
+use semio_ui_locale::Label;
 use std::collections::BTreeMap;
 
 //#region 🔖️Rows
@@ -59,7 +59,7 @@ pub fn rows(snapshot: &ModelSnapshot, component: &str, labels: &BimLabels) -> Ve
 //#endregion 🔖️Rows
 
 //#region 🔖️Panel
-fn args(component: &str, name: &str, value: Option<&str>) -> UiAssemblyResult<semio_framework_plugin::UiValue> {
+fn args(component: &str, name: &str, value: Option<&str>) -> UiAssemblyResult<semio_plugin::UiValue> {
     let mut entries = vec![("component", ui_value_text(component)?), ("name", ui_value_text(name)?)];
     if let Some(value) = value {
         entries.push(("value", ui_value_text(value)?));

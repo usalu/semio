@@ -211,7 +211,7 @@ let grant = ephemeral_test_close_grant();
 #[semio_framework_async_macros::async_test]
 #[should_panic(expected = "terminal-empty witness")]
 async fn artifact_store_one_item_drop_rejects_an_unclosed_publication_owner() {
-    let store = Box::leak(Box::new(ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await));
+    let store = Box::leak(Box::new(ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await));
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let publication = store
         .begin_apply_batch(
@@ -236,7 +236,7 @@ async fn artifact_store_one_item_drop_rejects_an_unclosed_publication_owner() {
 /// proves the witness stays strict when nothing is unwinding.
 #[semio_framework_async_macros::async_test]
 async fn a_panicking_body_holding_a_live_store_unwinds_instead_of_aborting_the_process() {
-    let store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "unwind-witness", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "unwind-witness", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let previous = std::panic::take_hook();
     std::panic::set_hook(Box::new(|_| {}));
     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
@@ -264,7 +264,7 @@ let mut store = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { 
     let mut published = false;
     for _ in 0..2048 {
         if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|store.advance_publish_one(&mut publication, ephemeral_test_close_grant(),receiving)).expect("original presence publication advances") {
-            assert_eq!(receipt, semio_framework_os_store_one_item::LaneItemReceipt { generation_before: 0, generation_after: 1 });
+            assert_eq!(receipt, semio_os_store_one_item::LaneItemReceipt { generation_before: 0, generation_after: 1 });
             published = true;
             break;
         }

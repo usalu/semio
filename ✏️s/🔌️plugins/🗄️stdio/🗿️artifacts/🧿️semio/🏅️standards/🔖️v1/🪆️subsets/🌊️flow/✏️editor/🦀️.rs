@@ -289,3 +289,5 @@ fn typed_example_selection_refuses_unknown_and_malformed_sources(){
     for id in ["","unknown-example","demo"]{assert!(semio_flow_editor_example_snapshot(id).is_err());}
     for source in ["","not a semio document"]{assert!(semio_s_artifact_stdio_contract::parse_example_snapshot::<SemioFlowSnapshot>(semio_s_artifact_stdio_semio_base_examples::examples::pipeline::ID,semio_s_artifact_stdio_semio_base_examples::examples::pipeline::ID,source,SEMIO_FLOW_DOCUMENT_SCHEMA,|snapshot|snapshot.schema.as_str()).is_err());}
 }
+#[path="🪆️child/🦀️.rs"]
+pub mod child_editor;

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberTorsionLoad 
         record: "ChangedMemberTorsionLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Application of the torsion action on a fork-supported member (point torque at the position below or uniform torque) of the member", "Bauteil: Anordnung des Torsionsmoments am gabelgelagerten Bauteil (Einzeltorsionsmoment an der Stelle unten oder gleichmäßig verteilt) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Application of the torsion action on a fork-supported member (point torque at the position below or uniform torque) of the member", "Bauteil: Anordnung des Torsionsmoments am gabelgelagerten Bauteil (Einzeltorsionsmoment an der Stelle unten oder gleichmäßig verteilt) ändern")
     }
 }
 

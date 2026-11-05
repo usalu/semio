@@ -1,0 +1,16 @@
+{
+  "answer": {
+    "unit": "ä🧱",
+    "repeat": 800,
+    "bytes": 4800,
+    "sha256": "5db77edee49cbfe74793c6a45711dc59ab9658b1d4a9053bddc6ec6f90c6a3b4"
+  },
+  "kinds": [
+    "text",
+    "longText"
+  ],
+  "windowIds": [
+    "fill-long-a",
+    "fill-long-b"
+  ]
+}

@@ -7,7 +7,7 @@
 
 use crate::FlowMutation;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::{Emit, NoConfigMutation};
+use semio_plugin::{Emit, NoConfigMutation};
 use semio_framework_tool_machine::{node_drag_emit, NodeDragEmit, NodeDragRecord};
 use {semio_s_artifact_stdio_semio_flow::schema::mutations::drag_nodes::DragNodes, semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;

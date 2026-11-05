@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "operations": [
+    "connect",
+    "selfConnect",
+    "disconnect",
+    "unknownDisconnect",
+    "remove",
+    "add",
+    "insertInput",
+    "insertOutput",
+    "reorganize",
+    "addOccupied",
+    "addTrimmed",
+    "addBlank",
+    "addSlider",
+    "addSliderRange",
+    "addSliderDefaults"
+  ],
+  "profiles": [
+    {
+      "items": 1,
+      "copyBytes": 4096,
+      "calls": 10000
+    },
+    {
+      "items": 512,
+      "copyBytes": 32768,
+      "calls": 200
+    }
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    7,
+    17,
+    50
+  ],
+  "operation": 97146,
+  "generation": 17,
+  "fuel": 32768,
+  "stock": {
+    "items": 65536,
+    "copyBytes": 134217728,
+    "capacityBytes": 268435456,
+    "releaseBytes": 536870912,
+    "depth": 4096
+  },
+  "clock": 1000,
+  "deadline": 1500,
+  "oracle": "genuine FlowHost original independent authoring plus serde_json canonical leaf comparison",
+  "descriptors": {
+    "addSlider": {
+      "kind": "inputSlider",
+      "label": "Fraction",
+      "value": 1.25
+    },
+    "addSliderRange": {
+      "kind": "inputSlider",
+      "label": "Range",
+      "value": 25.0,
+      "min": 10.0,
+      "max": -10.0,
+      "step": -1.0
+    },
+    "addSliderDefaults": {
+      "kind": "inputSlider",
+      "label": "Default"
+    }
+  },
+  "sliderFields": {
+    "addSlider": [
+      1.25,
+      0.0,
+      10.0,
+      0.01
+    ],
+    "addSliderRange": [
+      10.0,
+      -10.0,
+      10.0,
+      1e-09
+    ],
+    "addSliderDefaults": [
+      3.0,
+      0.0,
+      10.0,
+      0.1
+    ]
+  }
+}

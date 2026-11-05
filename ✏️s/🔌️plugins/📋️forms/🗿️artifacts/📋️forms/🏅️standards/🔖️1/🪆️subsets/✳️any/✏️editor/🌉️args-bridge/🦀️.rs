@@ -3,7 +3,7 @@
 
 //#region 🔖️ActionBridge
 use super::*;
-use semio_framework_plugin::{FaultCode, FaultOrigin};
+use semio_plugin::{FaultCode, FaultOrigin};
 
 fn snake(key: &str) -> String {
     let mut out = String::with_capacity(key.len() + 4);
@@ -107,7 +107,7 @@ pub fn command_from_action(action: &str, args: Option<&semio_framework_value::Ds
         "updateForm" => FormsCommand::UpdateForm(decode(action, fold(args, &[("value", "title")], &[]))?),
         "addBlock" => FormsCommand::AddQuestion(decode(action, plain())?),
         "removeBlock" => FormsCommand::RemoveQuestion(decode(action, fold(args, &[("block_id", "question_id")], &[]))?),
-        "patchQuestions" => FormsCommand::PatchQuestions(decode(action, fold(args, &[], VALUE_JSON))?),
+        "patchQuestions" => FormsCommand::PatchQuestions(patch_questions::from_action(args)?),
         "patchQuestionOptions" => FormsCommand::PatchQuestionOptions(decode(action, fold(args, &[], VALUE_JSON))?),
         "addQuestionOption" => FormsCommand::AddQuestionOption(decode(action, plain())?),
         "removeQuestionOption" => FormsCommand::RemoveQuestionOption(decode(action, plain())?),

@@ -169,9 +169,9 @@ struct EditorSceneHoverField {
 }
 
 /// 🔎️ One `*Json` member of the contract's scene in its typed form: the encoded field expanded
-/// (`semio_framework_os_kernel::os_pack::pack_rt::scene_field_json_text`, React's `parseSceneJsonField`) and read; a JSON `null` is no value.
+/// (`semio_os_kernel::os_pack::pack_rt::scene_field_json_text`, React's `parseSceneJsonField`) and read; a JSON `null` is no value.
 fn text_editor_scene_member<T: serde::de::DeserializeOwned>(member: &str, raw: &str) -> Result<Option<T>, String> {
-    let json = semio_framework_os_kernel::os_pack::pack_rt::scene_field_json_text(raw).map_err(|error| format!("{member}: {error}"))?;
+    let json = semio_os_kernel::os_pack::pack_rt::scene_field_json_text(raw).map_err(|error| format!("{member}: {error}"))?;
     serde_json::from_str::<Option<T>>(&json).map_err(|error| format!("{member}: {error}"))
 }
 
@@ -194,7 +194,7 @@ fn text_editor_scene_field<T: serde::de::DeserializeOwned>(member: &str, raw: Op
 /// own edit leaves both out, so the local draft and its caret stay (React's `sceneWithoutEchoedTextV1`). A member this
 /// host cannot read is left out — unchanged in the engine, by the document's own rule — and named in the second answer;
 /// it is never guessed.
-pub fn text_editor_scene_document(editor: &semio_framework_ui_declaration::ui::TextEditorScene, carries_text: bool) -> (String, Vec<String>) {
+pub fn text_editor_scene_document(editor: &semio_ui_declaration::ui::TextEditorScene, carries_text: bool) -> (String, Vec<String>) {
     let mut faults = Vec::new();
     let selection = if carries_text { text_editor_scene_field::<EditorSceneSelectionField>("selectionJson", editor.selection_json.as_deref(), &mut faults) } else { None };
     let occurrences = text_editor_scene_field::<EditorSceneOccurrenceFields>("occurrencesJson", editor.occurrences_json.as_deref(), &mut faults);
@@ -229,7 +229,7 @@ pub fn text_editor_scene_document(editor: &semio_framework_ui_declaration::ui::T
 /// 🎬️ Commits one contract scene into its editor host: the canonical document ([`text_editor_scene_document`]) decoded
 /// under a bounded authority ([`TEXT_EDITOR_SCENE_OWNED_BYTES`]) and handed to `EditorHost::synchronize_scene`. A member
 /// the builder left out is told on the console; a document the engine refuses is the caller's `Err` — never silence.
-pub fn synchronize_text_editor_host(host: &mut EditorHost, editor: &semio_framework_ui_declaration::ui::TextEditorScene, carries_text: bool) -> Result<(), String> {
+pub fn synchronize_text_editor_host(host: &mut EditorHost, editor: &semio_ui_declaration::ui::TextEditorScene, carries_text: bool) -> Result<(), String> {
     let (document, faults) = text_editor_scene_document(editor, carries_text);
     for fault in &faults {
         engine_canvas_fault_log(&format!("[text-editor] scene member left unchanged — {fault}"));

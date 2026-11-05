@@ -203,7 +203,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn retain_native_asset_transport(&self, fetch: &RendererAssetFetchOwner, cancel: semio_framework_async::CancelToken, cancellation: semio_framework_os_services::HttpBodyCancellationHandle) -> NativeAssetTransportGuard<R> {
+    pub fn retain_native_asset_transport(&self, fetch: &RendererAssetFetchOwner, cancel: semio_framework_async::CancelToken, cancellation: semio_os_services::HttpBodyCancellationHandle) -> NativeAssetTransportGuard<R> {
         let surface_token = match fetch {
             RendererAssetFetchOwner::World { surface: _, surface_token, owner: _ } => Some(*surface_token),
             RendererAssetFetchOwner::Shared(_) => None,
@@ -227,7 +227,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             if let Some(step) = lease.cancellation_step.as_ref() {
                 return NativeAssetTransportCloseStep::Pending(step.clone());
             }
-            lease.cancellation_step = Some(semio_framework_os_services::HttpBodyCancellationStep::Idle);
+            lease.cancellation_step = Some(semio_os_services::HttpBodyCancellationStep::Idle);
             lease.cancellation.clone()
         };
         let step = cancellation.cancel_in_flight();

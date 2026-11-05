@@ -1,6 +1,6 @@
 //! 🏠️ Native geometry service admission and instance engine ownership.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 use semio_s_artifact_procedural_3d_geometry::engine::CacheMode;
 use semio_s_artifact_procedural_3d_geometry::engine::EngineError;
 use semio_s_artifact_procedural_3d_geometry::engine::EngineStep;
@@ -17,7 +17,7 @@ use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use protocol::DepHash;
-use semio_framework_plugin::{ArtifactDocumentPayload, ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferencePayloadContract, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceCacheMode, WireArtifactInferenceDiagnostic};
+use semio_plugin::{ArtifactDocumentPayload, ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferencePayloadContract, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceCacheMode, WireArtifactInferenceDiagnostic};
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::{RetirementDemand, ToValue as _, ValueError};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -109,7 +109,7 @@ pub const GEOMETRY_INFERENCE_CONTRACT: ArtifactInferencePayloadContract = Artifa
     input_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛰️service/📥️request.json"),
     output_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛰️service/📤️result.json"),
     progress_unit: GEOMETRY_PROGRESS_UNIT,
-    artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: false }),
+    artifact_binding: Some(semio_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: false }),
     commit: None,
 };
 
@@ -193,7 +193,7 @@ fn cache_mode(requested: &WireArtifactInferenceCacheMode) -> CacheMode {
 
 fn receipt_since(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items.checked_sub(before.copied_items).expect("original geometry receipt items"),copied_bytes:after.copied_bytes.checked_sub(before.copied_bytes).expect("original geometry receipt body"),retained_capacity_bytes:after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes).expect("original geometry receipt capacity"),released_bytes:after.released_bytes.checked_sub(before.released_bytes).expect("original geometry receipt release")}}
 
-fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any, cx:&mut semio_plugin::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let host = context.downcast_ref::<GeometryHost>().ok_or_else(|| ArtifactInferenceExecutionError::new("generation3d.geometry.context", "geometry inference requires its instance's geometry host"))?;
     let admitted=host.with(|engine|engine.admit_failure(cx)).map_err(engine_failure)?.map_err(|original|ArtifactInferenceExecutionError::original(original,false))?;
     if let Some(original)=admitted{return Err(ArtifactInferenceExecutionError::original(original,false))}

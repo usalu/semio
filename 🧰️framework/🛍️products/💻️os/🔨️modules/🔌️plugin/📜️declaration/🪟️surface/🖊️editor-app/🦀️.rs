@@ -46,10 +46,10 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<MountedOwnerPhaseV1> { E::mounted_job_maintenance_phase(instance_id) }
     fn mounted_job_maintenance_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { E::mounted_job_maintenance_demands(instance_id, body) }
     fn mounted_job_close_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { E::mounted_job_close_demands(instance_id, body) }
-    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         E::mounted_job_maintenance_step(instance_id,cx,grant)
     }
-    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         E::mounted_job_close_step(instance_id,cx,grant)
     }
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
@@ -95,7 +95,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_reserved_tool_job(request,body,cx)
     }
-    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_media_export_job(request,body,cx)
     }
 
@@ -200,12 +200,12 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
             None => Err(Fault::new(FaultOrigin::App, FaultCode::new("app.example.unknown"), format!("no registered example '{example_id}'"))),
         })
     }
-    fn reference_birth()->Option<semio_framework_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>>{E::reference_birth()}
+    fn reference_birth()->Option<semio_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>>{E::reference_birth()}
     async fn initial_config() -> Self::Config {
         E::initial_config()
     }
-    fn original_host_configuration(action:&str)->Option<&'static semio_framework_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{E::original_host_configuration(action)}
-    fn original_typing_fold() -> semio_framework_plugin_decl_app::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
+    fn original_host_configuration(action:&str)->Option<&'static semio_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{E::original_host_configuration(action)}
+    fn original_typing_fold() -> semio_plugin_decl_app::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
         E::original_typing_fold()
     }
     fn entity_label(snapshot: &Self::Snapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
@@ -237,7 +237,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     async fn command_id(command: &Self::Command) -> &'static str {
         E::command_id(command)
     }
-    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{E::original_action_command_producer().or_else(semio_framework_plugin_decl_app::tool_contract::declared_action_command_bridge::<Self>)}
+    fn original_action_command_producer()->Option<&'static dyn semio_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{E::original_action_command_producer().or_else(semio_plugin_decl_app::tool_contract::declared_action_command_bridge::<Self>)}
     async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         E::command_from_action(action, args, original_fault)
     }
@@ -297,7 +297,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> { E::render_with_work_context(work, owner, body_key, source, doc, cfg, view_state, transient, interaction, cx) }
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> { E::render_with_work_context(work, owner, body_key, source, doc, cfg, view_state, transient, interaction, cx) }
     async fn render_with_request_context(
         owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
@@ -307,7 +307,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
         E::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
     async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {

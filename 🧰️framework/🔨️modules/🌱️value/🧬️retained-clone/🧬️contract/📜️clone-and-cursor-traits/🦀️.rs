@@ -13,8 +13,7 @@ pub trait RetainedClone: RetireOwned + Send + Sync + Sized + 'static {
     fn bitwise_extend(_target: &mut Vec<Self>, _source: &[Self]) -> bool { false }
 }
 
-/// 📃️ The largest payload one bulk vector copy turn moves, equal to the ABI page so a bitwise run is never longer than one page of work.
-pub const RETAINED_CLONE_BULK_PAGE_BYTES: usize = 64 * 1024;
+pub use semio_framework_value_control_contract::RETAINED_CLONE_BULK_PAGE_BYTES;
 
 /// 📏️ The number of `width`-byte elements one bulk turn may process under `grant`: one item and at most one page of payload, zero when the grant admits neither one item nor one element.
 pub fn bulk_run_elements(grant: RetainedCloneGrant, width: usize) -> usize {

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorTendonYieldF
         record: "ChangedAnchorTendonYieldForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic tendon force P_t,k of the anchor", "Anker: Charakteristische Zuggliedkraft P_t,k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic tendon force P_t,k of the anchor", "Anker: Charakteristische Zuggliedkraft P_t,k ändern")
     }
 }
 

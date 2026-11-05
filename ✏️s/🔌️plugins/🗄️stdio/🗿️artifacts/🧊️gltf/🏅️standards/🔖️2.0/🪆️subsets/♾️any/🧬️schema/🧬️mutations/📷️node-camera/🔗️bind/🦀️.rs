@@ -63,8 +63,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "node-camera", kind: "bind-node-camera", record: "BoundNodeCamera" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Bind Node Camera", "Knotenkamera binden")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Bind Node Camera", "Knotenkamera binden")
     }
 
     fn target(&self) -> Vec<String> {

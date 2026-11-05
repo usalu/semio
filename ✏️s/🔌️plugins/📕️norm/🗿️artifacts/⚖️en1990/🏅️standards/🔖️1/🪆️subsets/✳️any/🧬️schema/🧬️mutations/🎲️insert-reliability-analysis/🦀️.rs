@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for InsertReliabilityAnalysi
         record: "InsertedReliabilityAnalysis",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert reliability analysis {}", self.item.id), &format!("Zuverlässigkeitsanalyse {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert reliability analysis {}", self.item.id), &format!("Zuverlässigkeitsanalyse {} einfügen", self.item.id))
     }
 }
 

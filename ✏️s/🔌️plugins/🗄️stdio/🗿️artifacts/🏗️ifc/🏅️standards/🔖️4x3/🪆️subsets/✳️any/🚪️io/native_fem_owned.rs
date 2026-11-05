@@ -1,6 +1,6 @@
 //! 🫴️ Analytical projection keeps lookup scratch and every authored destination in the original native receiving frame.
 use super::*;
-use semio_framework_os_kernel::NativeSnapshotDecodeOwner as Owner;
+use semio_os_kernel::NativeSnapshotDecodeOwner as Owner;
 use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind, retained_clone::RetainedCloneProgress};
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::{
     FemMaterialValue, FemNodeValue,

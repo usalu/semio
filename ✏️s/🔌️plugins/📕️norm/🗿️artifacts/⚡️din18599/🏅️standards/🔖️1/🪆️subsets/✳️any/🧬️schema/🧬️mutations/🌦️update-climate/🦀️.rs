@@ -22,8 +22,8 @@ pub struct UpdateClimate {
 impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for UpdateClimate where Op: protocol::Mutation<Din18599Snapshot, Diff = semio_s_artifact_norm_din18599_diff::Din18599Diff> + From<crate::update_climate::UpdateClimate> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "climate", kind: "update-climate", record: "UpdatedClimate" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update monthly climate profile", "Monatsklimaprofil aktualisieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Update monthly climate profile", "Monatsklimaprofil aktualisieren")
     }
 }
 

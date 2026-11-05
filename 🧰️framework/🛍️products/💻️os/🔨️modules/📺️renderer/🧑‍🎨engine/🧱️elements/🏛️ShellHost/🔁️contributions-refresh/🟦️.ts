@@ -286,6 +286,13 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
           contributorInstances: contributorInstancesRef.current,
           contributorPasses: contributorPassesRef.current,
           viewState,
+          onEffects: (pluginId: string, instanceId: number, effects: readonly Effect[]) => queueMicrotask(() => {
+            const contributor = [...contributorInstancesRef.current.values()].find(entry => entry.pluginId === pluginId && entry.instanceId === instanceId);
+            const app = loadedPluginsRef.current.find(entry => entry.handle.pluginId === pluginId)?.manifest.apps.find(app => app.id === contributor?.appId);
+            if (!contributor?.viewState || !app) return;
+            const target = { pluginId, instanceId, app, viewState: contributor.viewState };
+            void core.applyHostEffects(effects, target, { kind: "full" }, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1("[os-shell] extension effects failed"));
+          }),
           onError: (extension: string, error: unknown) => console.error("[os-shell] extension render failed", extension, error),
           hostExtensions: new Set([MEDIA_TRANSPORT_EXTENSION_ID]),
         };

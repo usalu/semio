@@ -29,8 +29,8 @@ semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-s-artifact-fem-2d = { workspace = true }
 semio-s-artifact-fem-2d-editor = { workspace = true }
 semio-s-artifact-fem-2d-editor-session = { workspace = true }
@@ -43,5 +43,5 @@ semio-s-artifact-fem-3d-io = { workspace = true }
 semio-s-artifact-fem-3d-viewer = { workspace = true }
 
 [dev-dependencies]
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }

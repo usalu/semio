@@ -1,33 +1,33 @@
 //! 🪁️ The instance components of `instance-jobs`: PendingReserved, ToolOperations (WP6, plan section 7.3).
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedQueue, ArtifactFixedRegistry};
-use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedQueue, ArtifactFixedRegistry};
+use semio_plugin_window_kits::AppActionRegistry;
 use semio_framework::kernel::{AppEvent, Effect, InvocationResult, UiDirtyScope};
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolPublicContract, ArtifactToolRegistration};
+use semio_plugin_decl_app::tool_contract::{ArtifactToolPublicContract, ArtifactToolRegistration};
 use std::collections::BTreeMap;
-use semio_framework_ui_runtime::ComponentTree;
-use semio_framework_plugin_composition_publication::ComposedGestureResult;
+use semio_ui_runtime::ComponentTree;
+use semio_plugin_composition_publication::ComposedGestureResult;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use crate::jobs_document_replacement::DocumentWindowResetAdmission;
 use semio_framework_value::DslValue;
-use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_plugin_job::{EmitWire, TYPED_OPERATION_HOST_OUTBOX_SLOTS, TypedOperationCompletionWitness, TypedOperationLeftover};
+use semio_plugin_decl_emission::Emit;
+use semio_plugin_job::{EmitWire, TYPED_OPERATION_HOST_OUTBOX_SLOTS, TypedOperationCompletionWitness, TypedOperationLeftover};
 use semio_framework::{Fault, FaultFrom};
-use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReservedCommitPermit, PendingFrameworkReserved, QualifiedBoundedFirstStepProof};
+use semio_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReservedCommitPermit, PendingFrameworkReserved, QualifiedBoundedFirstStepProof};
 use std::future::Future;
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, SpaceMember};
-use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use protocol::OpText;
 use crate::jobs_instance_root::OriginalRenderTreeIdentity;
 use crate::jobs_lease::OriginalToolLeaseAdmission;
-use semio_framework_plugin_command::command_admission::{PendingLatestWinsCommand, ToolLatestWinsRegistry};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
+use semio_plugin_command::command_admission::{PendingLatestWinsCommand, ToolLatestWinsRegistry};
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
 
 /// 🪂️ Pending reserved work: the reserved commits, render trees, configuration commands and their failure custody.
 pub struct PendingReserved<A: ArtifactApp> {
@@ -41,25 +41,25 @@ pub struct PendingReserved<A: ArtifactApp> {
     pub pending_render_work: ManuallyDrop<Option<crate::jobs_render::work::OriginalRenderWork<A::RenderWork>>>,
     pub pending_render_source: ManuallyDrop<Option<crate::jobs_render::work::OriginalRenderWork<std::sync::Arc<A::Snapshot>>>>,
     pub pending_render_tree_ready: bool,
-    pub pending_render_tree_close:std::mem::ManuallyDrop<Option<semio_framework_ui_contract::OriginalBuiltTreeRetirement>>,
+    pub pending_render_tree_close:std::mem::ManuallyDrop<Option<semio_ui_contract::OriginalBuiltTreeRetirement>>,
     pub pending_configuration_source:Option<semio_framework::action_bus::OriginalToolSourceBinding>,
     pub pending_configuration_rejected:bool,
-    pub pending_configuration_worker:Option<semio_framework_plugin_job::reserved_jobs::configuration_worker::ConfigurationWorker<A>>,
-    pub pending_configuration_completion:Option<semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement<A::ConfigMutation>>,
+    pub pending_configuration_worker:Option<semio_plugin_job::reserved_jobs::configuration_worker::ConfigurationWorker<A>>,
+    pub pending_configuration_completion:Option<semio_plugin_job::reserved_jobs::ConfigurationDecodeRetirement<A::ConfigMutation>>,
     pub pending_configuration_command:std::mem::ManuallyDrop<Option<ArtifactCommand<A::ConfigMutation>>>,
     pub pending_configuration_command_close:Option<ControlledRetirement<ArtifactCommand<A::ConfigMutation>>>,
     pub pending_configuration_permit:Option<FrameworkReservedCommitPermit>,
-    pub pending_configuration_failure:std::mem::ManuallyDrop<Option<semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure>>,
+    pub pending_configuration_failure:std::mem::ManuallyDrop<Option<semio_plugin_job::reserved_jobs::OriginalConfigurationFailure>>,
     pub pending_configuration_identity:Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,
-    pub pending_configuration_retirement:Option<ControlledRetirement<semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure>>,
-    pub pending_render_failure: std::mem::ManuallyDrop<Option<semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure>>,
+    pub pending_configuration_retirement:Option<ControlledRetirement<semio_plugin_job::reserved_jobs::OriginalConfigurationFailure>>,
+    pub pending_render_failure: std::mem::ManuallyDrop<Option<semio_plugin_ownership::sdk_fault::OriginalRenderFailure>>,
     pub pending_render_identity: Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,
     pub pending_render_close_failure:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     pub pending_render_compound:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalClosureFailure>>,
-    pub pending_render_failure_place:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure>>>,
+    pub pending_render_failure_place:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_plugin_ownership::sdk_fault::OriginalRenderFailure>>>,
     pub pending_render_compound_place:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_framework_job::OriginalClosureFailure>>>,
-    pub pending_configuration_failure_place:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure>>>,
-    pub pending_render_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure>>>,
+    pub pending_configuration_failure_place:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_plugin_job::reserved_jobs::OriginalConfigurationFailure>>>,
+    pub pending_render_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_ownership::sdk_fault::OriginalRenderFailure>>>,
     pub pending_reserved: ArtifactFixedRegistry<PendingFrameworkReserved>,
     pub reserved_commits: std::collections::VecDeque<FrameworkReservedCommit<A::Snapshot,A::Mutation>>,
     pub reserved_commit_outcome: Option<Result<InvocationResult, Fault>>,
@@ -69,7 +69,7 @@ pub struct PendingReserved<A: ArtifactApp> {
 
 impl<A: ArtifactApp> PendingReserved<A> {
     /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
-    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.pending_reserved,64)?,semio_framework_plugin_ownership::bounded_ownership::original_deque_backing::<Self,_>(|owner|&owner.reserved_commits,64)?])}
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.pending_reserved,64)?,semio_plugin_ownership::bounded_ownership::original_deque_backing::<Self,_>(|owner|&owner.reserved_commits,64)?])}
 
     /// 🛟️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
             /// 📋️ Enabled fields form one retained initialization inventory.
@@ -149,7 +149,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
 
 pub fn new(dispatch_report:protocol::DispatchReport)->Self{let backing=true;Self{reserved_preparation:ManuallyDrop::new(None),last_emit_wire:None,dispatch_report:dispatch_report,pending_render_tree:std::mem::ManuallyDrop::new(None),pending_render_tree_identity:None,pending_render_work:ManuallyDrop::new(None),pending_render_source:ManuallyDrop::new(None),pending_render_tree_ready:false,pending_render_tree_close:std::mem::ManuallyDrop::new(None),pending_configuration_source:None,pending_configuration_rejected:false,pending_configuration_worker:None,pending_configuration_completion:None,pending_configuration_command:std::mem::ManuallyDrop::new(None),pending_configuration_command_close:None,pending_configuration_permit:None,pending_configuration_failure:std::mem::ManuallyDrop::new(None),pending_configuration_identity:None,pending_configuration_retirement:None,pending_render_failure:std::mem::ManuallyDrop::new(None),pending_render_identity:None,pending_render_close_failure:std::mem::ManuallyDrop::new(None),pending_render_compound:std::mem::ManuallyDrop::new(None),pending_render_failure_place:std::mem::ManuallyDrop::new(None),pending_render_compound_place:std::mem::ManuallyDrop::new(None),pending_configuration_failure_place:std::mem::ManuallyDrop::new(None),pending_render_retirement:std::mem::ManuallyDrop::new(None),pending_reserved:if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},reserved_commits:if backing{std::collections::VecDeque::with_capacity(ARTIFACT_LIVE_OUTPUT_SLOTS)}else{std::collections::VecDeque::new()},reserved_commit_outcome:None,pending_document_window_admission:std::mem::ManuallyDrop::new(None)}}
 
-    pub fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<semio_framework_ui_runtime::ComponentTree>,semio_framework_job::OriginalTurnFailure>{
+    pub fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<semio_ui_runtime::ComponentTree>,semio_framework_job::OriginalTurnFailure>{
         self.pending_render_tree_identity.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source has no initiating identity"))?.validate(cx)?;
         if !self.pending_render_tree_ready || self.pending_render_work.is_some() || self.pending_render_source.is_some() || self.pending_render_failure.is_some() || self.pending_render_failure_place.is_some() || self.pending_render_compound.is_some() || self.pending_render_compound_place.is_some() || self.pending_render_close_failure.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source is not ready for donation").into());}
         Ok(&mut self.pending_render_tree)
@@ -159,12 +159,12 @@ pub fn new(dispatch_report:protocol::DispatchReport)->Self{let backing=true;Self
 /// 🪐️ Tool operations: typed operation outboxes, tool jobs and registrations, cancellations and latest-wins commands.
 pub struct ToolOperations<A: ArtifactApp> {
     pub pending_tool_lease_admission:ManuallyDrop<Option<OriginalToolLeaseAdmission>>,
-    pub original_tool_follow:ManuallyDrop<Option<Box<semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalToolMachineFollow<A>>>>,
-    pub original_tool_tag_retirement:ManuallyDrop<Option<Box<semio_framework_plugin_scrub_host::OriginalToolTagRetirement>>>,
-    pub original_tool_tag_capture:ManuallyDrop<Option<Box<semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalToolTagCapture>>>,
-    pub original_scrub_dispatch:ManuallyDrop<Option<Box<semio_framework_plugin_scrub_host::OriginalScrubDispatch<semio_framework_plugin_tool_run::tool_jobs_tool_machine::PressLeaf<A::Mutation,A::ConfigMutation>>>>>,
-    pub original_press_settlement:ManuallyDrop<Option<Box<semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement<A>>>>,
-    pub original_typing_settlement:ManuallyDrop<Option<Box<semio_framework_plugin_typing_edit::OriginalTypingSettlement<A>>>>,
+    pub original_tool_follow:ManuallyDrop<Option<Box<semio_plugin_tool_run::tool_jobs_tool_machine::OriginalToolMachineFollow<A>>>>,
+    pub original_tool_tag_retirement:ManuallyDrop<Option<Box<semio_plugin_scrub_host::OriginalToolTagRetirement>>>,
+    pub original_tool_tag_capture:ManuallyDrop<Option<Box<semio_plugin_tool_run::tool_jobs_tool_machine::OriginalToolTagCapture>>>,
+    pub original_scrub_dispatch:ManuallyDrop<Option<Box<semio_plugin_scrub_host::OriginalScrubDispatch<semio_plugin_tool_run::tool_jobs_tool_machine::PressLeaf<A::Mutation,A::ConfigMutation>>>>>,
+    pub original_press_settlement:ManuallyDrop<Option<Box<semio_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement<A>>>>,
+    pub original_typing_settlement:ManuallyDrop<Option<Box<semio_plugin_typing_edit::OriginalTypingSettlement<A>>>>,
     pub typed_effect_outbox: ArtifactFixedQueue<Effect>,
     pub typed_event_outbox: ArtifactFixedQueue<AppEvent>,
     pub typed_ui_outbox: ArtifactFixedQueue<UiDirtyScope>,
@@ -191,21 +191,21 @@ pub struct ToolOperations<A: ArtifactApp> {
     /// 🧩️ See [`ComposedGestureResult`] — one entry per composed gesture this actor published.
     pub typed_composed_outbox: ArtifactFixedQueue<ComposedGestureResult>,
     pub declared_tools:ManuallyDrop<Option<DeclaredToolCatalogAlias>>,
-    pub declared_owner:ManuallyDrop<Option<semio_framework_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>,
+    pub declared_owner:ManuallyDrop<Option<semio_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>,
     pub registry: AppActionRegistry,
     pub tool_job_controller_id: String,
     pub tool_jobs: ToolActionBus,
-    pub agent_lane_preview:Option<semio_framework_plugin_job::AgentLanePreview<A>>,
+    pub agent_lane_preview:Option<semio_plugin_job::AgentLanePreview<A>>,
     pub bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>,
     pub bounded_tool_contracts: Vec<ArtifactToolPublicContract>,
     pub framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>,
     pub app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>,
     pub instance_operation_owner: ArtifactInstanceOperationOwnerHandle,
-    pub tool_cancellations: semio_framework_plugin_operation::ToolCancellationIssuer,
+    pub tool_cancellations: semio_plugin_operation::ToolCancellationIssuer,
     pub live_runtime_instance_id: Option<u32>,
     pub tool_operations: ArtifactFixedRegistry<Box<MountedTypedCommandFullOperation<A>>>,
-    pub original_emission_admission:std::mem::ManuallyDrop<Option<Box<semio_framework_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
-    pub original_emission_receipt:Option<semio_framework_plugin_job::original_emission::OriginalEmissionReceipt>,
+    pub original_emission_admission:std::mem::ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
+    pub original_emission_receipt:Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>,
     #[cfg(test)]
     pub test_tool_clock: Option<fn() -> Option<u64>>,
     pub typed_operation_reservations: [Option<u64>; ARTIFACT_LIVE_OUTPUT_SLOTS],
@@ -231,7 +231,7 @@ unsafe fn initialize_manual_absent_at<T:'static>(target:*mut ManuallyDrop<Option
 
 impl<A: ArtifactApp> ToolOperations<A> {
     /// 🎞️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
-    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.tool_operations,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.latest_wins_commands,64)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_effect_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_event_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_ui_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_completion_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_composed_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.latest_wins_order,64)?])}
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.tool_operations,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.latest_wins_commands,64)?,semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_effect_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_event_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_ui_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_completion_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_composed_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.latest_wins_order,64)?])}
 
     /// 🌱️ Moves original tool registrations into their actual fixed-queue runtime under the same mounted caller.
     pub fn admit_original(sources:&mut Option<OriginalToolOperationsSources>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Self>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if sources.is_none()||output.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool runtime birth requires retained registrations and an empty destination").into())}let mut d=Self::birth_demands()?;d.copy_bytes=d.copy_bytes.checked_add(2*std::mem::size_of::<OriginalToolOperationsSources>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool source extent overflow"))?;semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|_|{let source=sources.take().unwrap();semio_framework_value::RetainedWorkOutcome{result:Ok((Self::from_original(source),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})),work:1}})?;Ok(output.is_some())}
@@ -348,7 +348,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn new(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: semio_framework::ActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, mut bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
         bounded_tool_contracts.sort_by(|left,right|left.tool_id.cmp(&right.tool_id));
         let catalog=DeclaredToolCatalog{controller_id:tool_job_controller_id.clone(),bus:semio_framework::RegisteredActionBusSource::reference(tool_jobs.clone()),bounded_proofs:bounded_tool_proofs.into_iter().collect(),bounded_contracts:bounded_tool_contracts.into_iter().collect(),framework:framework_tool_registrations.into_iter().collect(),app:app_tool_registrations.into_iter().collect()};
-        let mut owner=semio_framework_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog::new(catalog);
+        let mut owner=semio_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog::new(catalog);
         owner.commit_producer();
         let grant=semio_framework_value::RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX};
         let(alias,_)=DeclaredToolCatalogAlias::admit(owner.source().expect("reference tool catalog owner is live at construction"),grant).expect("reference tool catalog source is committed").expect("reference tool catalog lease is funded");
@@ -380,7 +380,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             framework_tool_registrations,
             app_tool_registrations,
             instance_operation_owner,
-            tool_cancellations: semio_framework_plugin_operation::ToolCancellationIssuer::empty(),
+            tool_cancellations: semio_plugin_operation::ToolCancellationIssuer::empty(),
             live_runtime_instance_id: None,
             tool_operations: ArtifactFixedRegistry::new(),
             original_emission_admission:std::mem::ManuallyDrop::new(None),original_emission_receipt:None,

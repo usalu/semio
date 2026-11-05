@@ -1,7 +1,7 @@
 //! ⏳️ Deferred reprojection and supersede reports: the deferred remote and local replays, the reprojection drive, the pending adoption, the replay reports and the merge report absorption. See [`super`].
 
 use super::*;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️DeferredReprojection
     /// 🐢️ Steps the Report replay a remote history change needs — a supersession, undo or redo another replica authored —
@@ -197,7 +197,7 @@ where
     /// head, the projection follows and the step's transitions are announced. A finalizing step whose report blocks is
     /// refused (`Rejected { policy: Normal }`, every replay message) with nothing of it recorded while its remote transitions
     /// wait again. Atomic: a refused adoption keeps the log and the head.
-    async fn adopt_pending(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, pending: PendingReprojection<P, Mutation>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
+    async fn adopt_pending(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, pending: PendingReprojection<P, Mutation>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let PendingReprojection { transitions, local, replay } = pending;
         store_owners.retire_pending_replay(replay)?;
         let Some(local) = local else {
@@ -219,7 +219,7 @@ where
             }
             let messages = report.outcomes.iter().flat_map(|outcome| outcome.messages.iter().cloned()).collect();
             self.refuse_local_step(store_owners, PendingReprojection { transitions, local: Some(local), replay: None });
-            return Err(VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, messages });
+            return Err(VcsError::Rejected { policy: semio_os_spr::MergePolicy::Normal, messages });
         }
         let PendingLocalStep { envelopes, head, finalizing } = local;
         let saved = store_log.viewer_head_now();
@@ -236,7 +236,7 @@ where
         let replayed = match projected {
             Ok(replayed) => replayed,
             Err(error) => {
-                let waiting: Vec<semio_framework_os_spr::MutationEnvelope> = store_log.envelope.transitions.extract_if(|known| remote.contains(&known.mutation_id)).expect("exclusive deferred replay retains original transition owners");
+                let waiting: Vec<semio_os_spr::MutationEnvelope> = store_log.envelope.transitions.extract_if(|known| remote.contains(&known.mutation_id)).expect("exclusive deferred replay retains original transition owners");
                 drop(store_log.envelope.transitions.extract_if(|known|authored.contains(&known.mutation_id)).expect("exclusive author rollback retains original transition owners"));
                 (store_log.envelope.active_alternative_id, store_log.envelope.viewer_checkpoint_id) = saved;
                 self.refuse_local_step(store_owners, PendingReprojection { transitions: waiting, local: Some(PendingLocalStep { envelopes, head, finalizing }), replay: None });
@@ -258,11 +258,11 @@ where
     //#region 🔖️Supersede
     /// 📮️ Hands a supersession's replay messages to the dispatch receipt, grouped by edit.
     pub fn record_replay_report(&mut self, report: &protocol::ReplayReport) {
-        let mut grouped: Vec<semio_framework_os_spr::EditMessages> = Vec::new();
+        let mut grouped: Vec<semio_os_spr::EditMessages> = Vec::new();
         for outcome in report.outcomes.iter().filter(|outcome| !outcome.messages.is_empty()) {
             match grouped.last_mut() {
                 Some(entry) if entry.edit_id == outcome.edit_id => entry.messages.extend(outcome.messages.iter().cloned()),
-                _ => grouped.push(semio_framework_os_spr::EditMessages { edit_id: outcome.edit_id.clone(), messages: outcome.messages.clone() }),
+                _ => grouped.push(semio_os_spr::EditMessages { edit_id: outcome.edit_id.clone(), messages: outcome.messages.clone() }),
             }
         }
         self.pending_report.record_replay(grouped, report.worst);
@@ -272,7 +272,7 @@ where
     /// 📨️ Copies a `MergeReport`'s messages/worst level into `pending_report` for `dispatch` to
     /// hand back as the resulting `CommandReceipt` — shared by the `IngestRemote`/`ResolveConflict`
     /// arms above.
-    pub fn absorb_merge_report(&mut self, report: &semio_framework_os_spr::MergeReport) {
+    pub fn absorb_merge_report(&mut self, report: &semio_os_spr::MergeReport) {
         self.pending_report.declare_edit_ids_unless_declared(|| if report.accepted { report.replayed.iter().map(|edit_messages| edit_messages.edit_id.clone()).collect() } else { Vec::new() });
         self.pending_report.record_replay(report.replayed.clone(), report.worst);
     }
@@ -294,7 +294,7 @@ where
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
     P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: ToValue + FromValue + semio_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// ⏳️ Whether a local history step still replays ([`Self::defer_local_replays`]).
     pub fn local_step_pending(&self) -> bool {

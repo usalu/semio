@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "component": {
+    "pluginId": "puzzle",
+    "packageId": "semio:puzzle",
+    "profile": "prototype",
+    "target": "wasm32-wasip2",
+    "appId": "s.puzzle.puzzle2d@1/*#editor"
+  },
+  "route": {
+    "from": "s.puzzle.puzzle2d@1/*",
+    "into": "s.stdio.json@rfc8259/*"
+  },
+  "material": {
+    "nodes": 1024,
+    "columns": 32,
+    "spacing": 128,
+    "idPrefix": "export-node-",
+    "edges": 0
+  },
+  "progress": {
+    "excludeDecodedIdentity": true,
+    "phase": "execute",
+    "minimumCompleted": 1
+  },
+  "execution": {
+    "maximumTurns": 10000,
+    "maximumMilliseconds": 120000,
+    "userVisibleTurns": 2000,
+    "mountedPolicy": "INTERACTIVE_COMPONENT"
+  },
+  "afterCancel": {
+    "command": "createAlternative",
+    "args": {
+      "name": "AfterExportCancel"
+    },
+    "requireAccepted": true,
+    "requireAppEffect": true,
+    "requireActiveAlternativeChanged": true
+  },
+  "closure": {
+    "requireSourceClosed": true,
+    "requireNoCompletedOutput": true,
+    "requirePaidInstanceClose": true
+  },
+  "client": {
+    "locale": "en",
+    "terminology": "native"
+  },
+  "limits": {
+    "requestBytes": 2097152,
+    "resultBytes": 2097152,
+    "nativeValueAllowanceBytes": 4194304,
+    "vmBytes": 16777216,
+    "scaffoldingBytes": 2097152
+  },
+  "operationSource": {
+    "maximumItems": 64000,
+    "maximumCopyBytes": 50331648,
+    "maximumCapacityBytes": 73400320,
+    "maximumReleaseBytes": 73400320,
+    "maximumDepth": 4096
+  },
+  "cancellationTerminal": {
+    "state": "failed",
+    "encoding": "pack",
+    "code": "canceled",
+    "origin": "framework",
+    "severity": "error",
+    "retryable": false
+  }
+}

@@ -28,10 +28,10 @@ pub fn scale_layers<Op: From<ScaleLayers>>(targets: semio_framework_value_persis
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for ScaleLayers where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::update_layer_transform::mutation::UpdateLayerTransform> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "layers", kind: "scale-layers", record: "ScaledLayers" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let ((x_en, x_de), (y_en, y_de)) = (drawing_label_number(self.scale_x), drawing_label_number(self.scale_y));
         let (en, de) = drawing_label_layers(self.targets.len());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({x_en}, {y_en})"), &format!("{de} um ({x_de}; {y_de}) skalieren"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({x_en}, {y_en})"), &format!("{de} um ({x_de}; {y_de}) skalieren"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.iter().map(|target| target.to_string_owner()).collect()

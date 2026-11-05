@@ -154,39 +154,39 @@ pub(super) fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, us
         bytes = bytes.checked_add(next_bytes)?;
         Some(())
     };
-    include(pass.shadow_draws.len(), pass.shadow_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::SceneDraw3d>())?)?;
-    include(pass.draws.len(), pass.draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::SceneDraw3d>())?)?;
-    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::SceneDraw3d>())?)?;
+    include(pass.shadow_draws.len(), pass.shadow_draws.capacity().checked_mul(size_of::<semio_ui_scene_pass::SceneDraw3d>())?)?;
+    include(pass.draws.len(), pass.draws.capacity().checked_mul(size_of::<semio_ui_scene_pass::SceneDraw3d>())?)?;
+    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(size_of::<semio_ui_scene_pass::SceneDraw3d>())?)?;
     for draw in pass.shadow_draws.iter().chain(pass.draws.iter()).chain(pass.translucent_draws.iter()) {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene_mesh::Instance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_ui_scene_mesh::Instance3d>())?)?;
         for instance in &draw.instances {
             include(instance.id.len(), instance.id.capacity())?;
         }
     }
-    include(pass.material_draws.len(), pass.material_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::SceneMaterialDraw3d>())?)?;
+    include(pass.material_draws.len(), pass.material_draws.capacity().checked_mul(size_of::<semio_ui_scene_pass::SceneMaterialDraw3d>())?)?;
     for draw in &pass.material_draws {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
         let texture_key = match &draw.material {
-            semio_framework_ui_scene_pass::SceneMaterialKind3d::Painted {texture_key} => Some(texture_key),
-            semio_framework_ui_scene_pass::SceneMaterialKind3d::Authored(material) => material.base_color_texture.as_ref(),
-            semio_framework_ui_scene_pass::SceneMaterialKind3d::Standard | semio_framework_ui_scene_pass::SceneMaterialKind3d::Celebration {..} => None,
+            semio_ui_scene_pass::SceneMaterialKind3d::Painted {texture_key} => Some(texture_key),
+            semio_ui_scene_pass::SceneMaterialKind3d::Authored(material) => material.base_color_texture.as_ref(),
+            semio_ui_scene_pass::SceneMaterialKind3d::Standard | semio_ui_scene_pass::SceneMaterialKind3d::Celebration {..} => None,
         };
         if let Some(texture_key) = texture_key {
             include(texture_key.len(), texture_key.capacity())?;
         }
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene_mesh::Instance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_ui_scene_mesh::Instance3d>())?)?;
         for instance in &draw.instances {
             include(instance.id.len(), instance.id.capacity())?;
         }
     }
-    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::LineDraw3d>())?)?;
+    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(size_of::<semio_ui_scene_pass::LineDraw3d>())?)?;
     for draw in &pass.line_draws {
-        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::LineVertex3d>())?)?;
+        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(size_of::<semio_ui_scene_pass::LineVertex3d>())?)?;
     }
-    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::TexturedDraw3d>())?)?;
+    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(size_of::<semio_ui_scene_pass::TexturedDraw3d>())?)?;
     for draw in &pass.textured_draws {
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::TexturedInstance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_ui_scene_pass::TexturedInstance3d>())?)?;
         for instance in &draw.instances {
             include(instance.texture_key.len(), instance.texture_key.capacity())?;
         }
@@ -371,7 +371,7 @@ impl DrawList {
             if let Some(draw)=pass.textured_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.texture_key))}return if draw.instances.capacity()!=0{bytes(&draw.instances)}else{Ok(0)}}
             if let Some(draw)=pass.material_draws.last(){
                 if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}
-                use semio_framework_ui_scene_pass::SceneMaterialKind3d;
+                use semio_ui_scene_pass::SceneMaterialKind3d;
                 let key=match &draw.material{SceneMaterialKind3d::Painted{texture_key}=>Some(texture_key),SceneMaterialKind3d::Authored(material)=>[&material.base_color_texture,&material.metallic_roughness_texture,&material.normal_texture,&material.occlusion_texture,&material.emissive_texture].into_iter().flatten().find(|key|!key.is_empty()||key.capacity()!=0),_=>None};
                 if let Some(key)=key{if !key.is_empty()||key.capacity()!=0{return Ok(text(key))}}
                 return Ok(text(&draw.mesh_key))

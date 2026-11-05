@@ -23,10 +23,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "assets", kind: "drag-assets", record: "DraggedAssets" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.asset_ids.len() {
-            1 => semio_framework_ui_locale::LocalizedLabel::native("Drag 1 asset", "1 Asset ziehen"),
-            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {count} assets"), &format!("{count} Assets ziehen")),
+            1 => semio_ui_locale::LocalizedLabel::native("Drag 1 asset", "1 Asset ziehen"),
+            count => semio_ui_locale::LocalizedLabel::native(&format!("Drag {count} assets"), &format!("{count} Assets ziehen")),
         }
     }
     fn target(&self) -> Vec<String> {

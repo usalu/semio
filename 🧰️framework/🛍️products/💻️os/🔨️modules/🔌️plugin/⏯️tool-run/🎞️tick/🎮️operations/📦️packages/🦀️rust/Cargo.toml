@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-plugin-tool-run-operations"
+name = "semio-plugin-tool-run-operations"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,7 +25,7 @@ path = "../../🦀️.rs"
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-tool-run = { workspace = true }
-semio-framework-os-store-operation-wire = { path = "../../../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
+semio-os-store-operation-wire = { path = "../../../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

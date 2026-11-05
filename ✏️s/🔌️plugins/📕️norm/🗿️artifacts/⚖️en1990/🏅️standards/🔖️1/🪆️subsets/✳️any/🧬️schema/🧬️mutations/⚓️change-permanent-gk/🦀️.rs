@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangePermanentGk where 
         record: "ChangedPermanentGk",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic permanent action G_k of the permanent action", "Ständige Einwirkung: Charakteristischer Wert der ständigen Einwirkung G_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change characteristic permanent action G_k of the permanent action", "Ständige Einwirkung: Charakteristischer Wert der ständigen Einwirkung G_k ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

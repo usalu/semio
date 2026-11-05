@@ -1,0 +1,1 @@
+{"version":1,"generated":[{"prefix":"note","existing":["note_02","note_+3"],"expected":"note_4","serial":4}],"explicit":[{"input":"\u2003  original \n\t","expected":"original"},{"input":"\u2003 \n","expected":null}],"maximumSurveyBytesPerEvent":67,"profiles":[{"items":1,"copyBytes":4096},{"items":512,"copyBytes":32768}]}

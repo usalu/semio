@@ -5,7 +5,7 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::editor_vocabulary::FLOW_PLAY_APP_ID;
 use flow::{dag::dag_lod_scale_json, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::{ActionDescriptor, MeasureSelectItem, WindowMeasure};
+use semio_plugin::{ActionDescriptor, MeasureSelectItem, WindowMeasure};
 use serde_json::Value;
 
 //#region 🔖️Measure

@@ -1,12 +1,12 @@
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime;
-use semio_framework_os_store_engine_owners::DocumentStoreOwners;
+use semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime;
+use semio_os_store_engine_owners::DocumentStoreOwners;
 use semio_framework_value::{ErasedSnapshotRetirement, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::mem::ManuallyDrop;
-use semio_framework_os_store_member_open::MemberOpenDiagnostic;
-use semio_framework_os_spr::Mutation;
-use semio_framework_os_store_document::persisted_document_hydration::{PersistedDocumentHydrationTarget, PersistedDocumentStoreHydrationStep, Phase, RetainedPersistedDocumentHydration, drive_hydration_retirement, drive_hydration_runtime, hydration_fold_byte_grant};
+use semio_os_store_member_open::MemberOpenDiagnostic;
+use semio_os_spr::Mutation;
+use semio_os_store_document::persisted_document_hydration::{PersistedDocumentHydrationTarget, PersistedDocumentStoreHydrationStep, Phase, RetainedPersistedDocumentHydration, drive_hydration_retirement, drive_hydration_runtime, hydration_fold_byte_grant};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::sync::{Arc, Mutex};
 
@@ -23,20 +23,20 @@ fn admission_grant(bytes: usize) -> RetainedCloneGrant {
 }
 
 fn wide_grant() -> RetainedCloneGrant {
-    admission_grant(semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES)
+    admission_grant(semio_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES)
 }
 
 #[test]
 fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consuming_original_owners() {
-    type Snapshot = semio_framework_os_store_testing_fixtures::DemoSnapshot;
-    type Mutation = semio_framework_os_store_testing_fixtures::demo::DemoMutation;
+    type Snapshot = semio_os_store_testing_fixtures::DemoSnapshot;
+    type Mutation = semio_os_store_testing_fixtures::demo::DemoMutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️store-entry/🔣️.json")).unwrap();
     let pack = fixture["pack"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let expected = semio_framework_pack_json::from_json_str::<ArtifactRef>(&fixture["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut hydration = RetainedPersistedDocumentHydration::<Snapshot, Mutation>::from_decoded_pack(
-        Snapshot::default(), pack, [7; 32], semio_framework_os_spr::HistoryLog::default(), expected, None, "demo/v1".into(),
-        semio_framework_os_store_testing_doubles::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
-        PersistedDocumentHydrationTarget::Envelope, semio_framework_os_spr::ActorId("store-entry".into()),
+        Snapshot::default(), pack, [7; 32], semio_os_spr::HistoryLog::default(), expected, None, "demo/v1".into(),
+        semio_os_store_testing_doubles::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
+        PersistedDocumentHydrationTarget::Envelope, semio_os_spr::ActorId("store-entry".into()),
     );
     let pack_identity = hydration.pack.as_ref().unwrap().as_ptr();
     let history_identity = Arc::as_ptr(hydration.history.as_ref().unwrap());
@@ -56,8 +56,8 @@ fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consum
     assert!(!hydration.terminal_is_empty());
     for _ in 0..fixture["maximumCloseTurns"].as_u64().unwrap() {
         if hydration.terminal_is_empty() { break; }
-        let demand = quoted(&hydration, semio_framework_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
-        assert!(demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes) <= semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES);
+        let demand = quoted(&hydration, semio_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+        assert!(demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes) <= semio_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES);
         hydration.close_step(semio_framework_value::testing::physical_test_close_grant()).result.unwrap();
     }
     assert!(hydration.terminal_is_empty());
@@ -103,7 +103,7 @@ fn persisted_hydration_release_funds_actual_whole_allocation_and_separate_termin
     for extent in fixture["allocationBytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
         assert!(extent <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
         let mut active: Option<Box<dyn ErasedSnapshotRetirement>> = Some(Box::new(WholeAllocation { owner: Some(vec![42; extent]) }));
-        assert_eq!(semio_framework_os_store_read::artifact_retirement_box_demands(active.as_ref().unwrap(), 0).unwrap().release_bytes, extent);
+        assert_eq!(semio_os_store_read::artifact_retirement_box_demands(active.as_ref().unwrap(), 0).unwrap().release_bytes, extent);
         let mut sequence = 0;
         let mut original_retained_progress_2 = semio_framework_value::RetainedCloneProgress::default();
         let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, semio_framework_value::testing::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);
@@ -144,7 +144,7 @@ fn unit_factory() -> Arc<dyn semio_framework_value::ArtifactOwnedValueRetirement
 fn persisted_hydration_release_runtime_funds_whole_physical_extent_with_one_work_unit() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
     for extent in fixture["runtimeAllocationBytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
-        let mut runtime = ArtifactStoreInitializationRuntime::new("physical-hydration", "unit/v1", Arc::new(()), [7; 32], semio_framework_os_spr::ActorId(semio_framework_value::SharedUtf8::default()));
+        let mut runtime = ArtifactStoreInitializationRuntime::new("physical-hydration", "unit/v1", Arc::new(()), [7; 32], semio_os_spr::ActorId(semio_framework_value::SharedUtf8::default()));
         *runtime.close_active = Some(Box::new(WholeAllocation { owner: Some(vec![42; extent]) }));
         assert_eq!(runtime.next_close_release_byte_demand().unwrap(), extent);
         let factory = unit_factory();
@@ -204,7 +204,7 @@ impl ErasedSnapshotRetirement for AllocationProbe {
 fn persisted_hydration_release_runtime_refuses_extent_outside_existing_admission() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
     let extent = fixture["refusedAllocationBytes"].as_u64().unwrap() as usize;
-    let mut runtime = ArtifactStoreInitializationRuntime::new("refused-hydration", "unit/v1", Arc::new(()), [7; 32], semio_framework_os_spr::ActorId(semio_framework_value::SharedUtf8::default()));
+    let mut runtime = ArtifactStoreInitializationRuntime::new("refused-hydration", "unit/v1", Arc::new(()), [7; 32], semio_os_spr::ActorId(semio_framework_value::SharedUtf8::default()));
     *runtime.close_active = Some(Box::new(WholeAllocation { owner: Some(vec![42; extent]) }));
     let factory = unit_factory();
     let mut sequence = 0;
@@ -261,8 +261,8 @@ fn persisted_hydration_release_pages_are_independent_of_step_fuel() {
 
 #[test]
 fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
-    type Snapshot = semio_framework_os_store_testing_fixtures::DemoSnapshot;
-    type Mutation = semio_framework_os_store_testing_fixtures::demo::DemoMutation;
+    type Snapshot = semio_os_store_testing_fixtures::DemoSnapshot;
+    type Mutation = semio_os_store_testing_fixtures::demo::DemoMutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
     let policy = &fixture["readyAuxiliaryPolicy"];
     let grant = RetainedCloneGrant { maximum_items: policy["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize };
@@ -273,9 +273,9 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
     assert!(source_receipt.fits(grant));assert_eq!((source_allocated,source_released),(source_receipt.retained_capacity_bytes,0));
     let original_owned_bytes=extent+source_allocated;
     let mut owner = RetainedPersistedDocumentHydration::<Snapshot, Mutation> {
-        actor: ManuallyDrop::new(semio_framework_os_spr::ActorId(actor)),
+        actor: ManuallyDrop::new(semio_os_spr::ActorId(actor)),
         pack: ManuallyDrop::new(None), initial: ManuallyDrop::new(None), history: ManuallyDrop::new(None),
-        fold_job: ManuallyDrop::new(None), normalized_transitions: ManuallyDrop::new(None),transition_ledger:ManuallyDrop::new(Some(semio_framework_os_vcs::ArtifactHistoryLedger::empty())), normalized_conflicts: ManuallyDrop::new(None),
+        fold_job: ManuallyDrop::new(None), normalized_transitions: ManuallyDrop::new(None),transition_ledger:ManuallyDrop::new(Some(semio_os_vcs::ArtifactHistoryLedger::empty())), normalized_conflicts: ManuallyDrop::new(None),
         replay_ids: ManuallyDrop::new(None), replay_order: ManuallyDrop::new(None), replay_total: 0,
         pin_refs: ManuallyDrop::new(None), loaded_result: ManuallyDrop::new(None), edit_lookup: ManuallyDrop::new(None), mutation_lookup: ManuallyDrop::new(None),
         target_source: ManuallyDrop::new(None), target_decoder: ManuallyDrop::new(None), pending_target: ManuallyDrop::new(None), target_address: ManuallyDrop::new(None),
@@ -327,7 +327,7 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
 
 #[test]
 fn funded_verified_genesis_preserves_original_refusal_and_every_shared_backing_receipt() {
-    use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
+    use semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
     use semio_framework_value::retirement::{arc_custody::SharedControlledRetirement, controlled::ControlledRetirement};
     fn close(mut snapshot: impl ErasedSnapshotRetirement, mut pack: impl ErasedSnapshotRetirement, policy: RetainedCloneGrant, expected: usize) {
         let mut freed = 0;
@@ -384,8 +384,8 @@ fn funded_verified_genesis_preserves_original_refusal_and_every_shared_backing_r
 
 #[test]
 fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
-    use semio_framework_os_store_ledger::ArtifactEditMessageLedger;
-    use semio_framework_os_store_ledger::ArtifactEditMessageLedgerRetirement;
+    use semio_os_store_ledger::ArtifactEditMessageLedger;
+    use semio_os_store_ledger::ArtifactEditMessageLedgerRetirement;
     let plain: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
     let row = &plain["messageLedgerBirth"]; let supplied = &row["policy"];
     let policy = RetainedCloneGrant { maximum_items: supplied["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: supplied["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: supplied["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: supplied["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: supplied["maximumDepth"].as_u64().unwrap() as usize };
@@ -414,7 +414,7 @@ fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
             for (index, name) in row["ids"].as_array().unwrap().iter().enumerate() {
                 let (id, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| { let mut id = String::with_capacity(37); id.push_str(name.as_str().unwrap()); id });
                 assert_eq!((born, freed), (id.capacity(), 0)); total += born; original[index] = id.as_ptr();
-                let (result, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| ledger.try_push(semio_framework_os_spr::EditMessages { edit_id: id, messages: Vec::new() }));
+                let (result, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| ledger.try_push(semio_os_spr::EditMessages { edit_id: id, messages: Vec::new() }));
                 assert_eq!((born, freed), (0, 0));
                 let ticket = result.unwrap_or_else(|_| panic!("original admitted fixed ticket remains available"));
                 assert_eq!(ticket.slot as usize, index);
@@ -454,10 +454,10 @@ fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
 #[test]
 fn member_envelope_phased_birth_cancel_cuts_conserve_original_catalog_allocations() {
     use semio_framework_value::factory::OwnedValueRetirementFactory;
-    use semio_framework_os_store_document::empty_document_envelope_from_genesis_owners;
+    use semio_os_store_document::empty_document_envelope_from_genesis_owners;
 use semio_framework_value::ArtifactOwnedValueRetirementFactory;
-    use semio_framework_os_store_read::ArtifactStoreEnvelopeRetirement;
-    use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
+    use semio_os_store_read::ArtifactStoreEnvelopeRetirement;
+    use semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
     let plain: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
     let row = &plain["envelopeBirth"]; let supplied = &row["policy"];
     let policy = RetainedCloneGrant { maximum_items: supplied["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: supplied["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: supplied["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: supplied["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: supplied["maximumDepth"].as_u64().unwrap() as usize };
@@ -506,14 +506,14 @@ use semio_framework_value::ArtifactOwnedValueRetirementFactory;
     }
 }
 
-fn authority_hydration() -> (RetainedPersistedDocumentHydration<semio_framework_os_store_testing_fixtures::DemoSnapshot, semio_framework_os_store_testing_fixtures::demo::DemoMutation>, u64) {
+fn authority_hydration() -> (RetainedPersistedDocumentHydration<semio_os_store_testing_fixtures::DemoSnapshot, semio_os_store_testing_fixtures::demo::DemoMutation>, u64) {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️store-entry/🔣️.json")).unwrap();
     let pack = fixture["pack"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let expected = semio_framework_pack_json::from_json_str::<ArtifactRef>(&fixture["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let hydration = RetainedPersistedDocumentHydration::from_decoded_pack(
-        Default::default(), pack, [7; 32], semio_framework_os_spr::HistoryLog::default(), expected, None, "demo/v1".into(),
-        semio_framework_os_store_testing_doubles::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
-        PersistedDocumentHydrationTarget::Envelope, semio_framework_os_spr::ActorId("authority".into()),
+        Default::default(), pack, [7; 32], semio_os_spr::HistoryLog::default(), expected, None, "demo/v1".into(),
+        semio_os_store_testing_doubles::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
+        PersistedDocumentHydrationTarget::Envelope, semio_os_spr::ActorId("authority".into()),
     );
     (hydration, fixture["maximumCloseTurns"].as_u64().unwrap())
 }
@@ -529,7 +529,7 @@ fn persisted_hydration_authority_is_the_stepping_job_identity_not_the_archive_lo
             hydration.operation = cx.operation();
             hydration.generation = cx.generation();
         }
-        let stale = matches!(hydration.step(&mut cx, wide_grant()), semio_framework_os_store_document::persisted_document_hydration::PersistedDocumentHydrationStep::Rejected(MemberOpenDiagnostic::Stale));
+        let stale = matches!(hydration.step(&mut cx, wide_grant()), semio_os_store_document::persisted_document_hydration::PersistedDocumentHydrationStep::Rejected(MemberOpenDiagnostic::Stale));
         for _ in 0..turns {
             if hydration.terminal_is_empty() { break; }
             hydration.close_step(semio_framework_value::testing::physical_test_close_grant()).result.unwrap();

@@ -19,7 +19,7 @@
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
-use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
 use semio_s_artifact_stdio_csv::CsvSnapshot;
 use semio_s_artifact_stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA;

@@ -16,7 +16,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// Without it every live envelope load faults with `editor did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("animate.child-projection"), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("animate.child-projection"), error.to_string()))
     }
 
     type Snapshot = PresentationSnapshot;
@@ -27,8 +27,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::editor::animate::presence::PresentationPresence;
     type PresenceMutation = crate::editor::animate::presence::PresentationPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = PresentationCommand;
 
@@ -47,8 +47,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// returned snapshot read requires its exact owned-snapshot retirement factory` — measured
     /// against the live React playground.
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 📬️ Exact one-item PUBLICATION authority for the DOCUMENT store. Without it every tool
@@ -66,39 +66,39 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// 🧹️ Every store an instance owns closes through its bounded disposer before drop; without these the
     /// instance close faults `interactive-job.close-owned-disposer-missing` at the config-store lane.
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(Box::new(
-            semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
+            semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
                 .expect("default presentation presence is the exact empty terminal"),
         ))
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<AnimatePresentationPlayApp>,
         owner_file: "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.animate.presentation@1/*#editor",
@@ -132,19 +132,19 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         registry.register(AnimatePresentationRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !ANIMATE_PRESENTATION_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "animate-presentation-command-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "animate-presentation-command-tool-mismatch").into());
         }
         if animate_presentation_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
             return Err(Fault::from("animate-presentation-command-payload-too-large"));
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, PresentationCommand::command_id, ANIMATE_PRESENTATION_RETAINED_RAW_BYTES, ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS, false, |request| semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, animate_presentation_retained_reduce, animate_presentation_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, PresentationCommand::command_id, ANIMATE_PRESENTATION_RETAINED_RAW_BYTES, ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS, false, |request| semio_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, animate_presentation_retained_reduce, animate_presentation_retained_extent))
     }
 
     /// 🎞️ `import-media` is the only reserved route presentation owns: every inbound `frames:in`
@@ -172,7 +172,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         Some(crate::editor::animate::config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<PresentationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<PresentationSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_presentation_snapshot())
     })}
 
@@ -257,7 +257,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         doc: &ArtifactView<'_, PresentationSnapshot>,
         cfg: &ConfigView<'_, PresentationConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, Self::DraftMutation>, Fault> {
@@ -271,17 +271,17 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// `config.selected_ids` are gone from `inspection::render`; the client renders the tile-selected
     /// canvas highlight itself from the framework's own interaction state now (matches `🖍️draw`'s
     /// canvas render, same reason).
-    fn render(body_key: &str, doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<ComponentTree> {
         let deck = doc.snapshot;
         let labels = animate_presentation_labels(view_state);
         (match body_key {
             PRESENTATION_PLAY_BODY_MAIN => tile_editor::render(deck),
-            PRESENTATION_PLAY_BODY_ARTIFACT => artifact::render(deck, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, PRESENTATION_PLAY_BODY_ARTIFACT)),
+            PRESENTATION_PLAY_BODY_ARTIFACT => artifact::render(deck, labels, &semio_plugin::TreeWindows::for_body(view_state, PRESENTATION_PLAY_BODY_ARTIFACT)),
             PRESENTATION_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
             PRESENTATION_PLAY_BODY_DETAILS => inspection::render(deck, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
         })
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️AnimatePresentationPlayApp

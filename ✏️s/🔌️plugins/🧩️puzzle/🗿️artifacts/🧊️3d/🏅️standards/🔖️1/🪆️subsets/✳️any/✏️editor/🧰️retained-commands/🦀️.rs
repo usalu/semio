@@ -88,8 +88,8 @@ impl Puzzle3dRetainedCommandJobFactory {
 }
 
 impl ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Puzzle3dPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle3dPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Puzzle3dPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle3dPlayApp>>;
 
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
@@ -107,7 +107,7 @@ impl ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         self.contract
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
 
     
 }
@@ -191,11 +191,11 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
 pub(super) struct Puzzle3dRetainedCommandProofs;
 
 impl Puzzle3dRetainedCommandProofs {
-    pub(crate) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    pub(crate) fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         Self::bounded_first_step_tool_proofs()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle3d@1/*#editor",
@@ -220,11 +220,11 @@ impl Puzzle3dRetainedCommandProofs {
 pub(super) struct Puzzle3dHostConfigurationProofs;
 
 impl Puzzle3dHostConfigurationProofs {
-    pub(crate) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    pub(crate) fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         Self::bounded_first_step_tool_proofs()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle3d@1/*#editor",

@@ -41,7 +41,7 @@ impl MaintenanceStageGrants {
         report
     }
 
-    fn record(&mut self, stage: u8, grant: semio_framework_value::retained_clone::RetainedCloneGrant, step: &Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure>) {
+    fn record(&mut self, stage: u8, grant: semio_framework_value::retained_clone::RetainedCloneGrant, step: &Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure>) {
         let index = stage as usize;
         self.units[index] += 1;
         let Ok(PluginLifecycleStep::Progress(progress)) = step else { return };
@@ -66,7 +66,7 @@ impl MaintenanceStageGrants {
 pub struct Puzzle3dApp {
     raw: Option<Box<Puzzle3dRawApp>>,
     /// 🎟️ The fixture's ONE original caller scope: every call that needs a `cx` threads it through [`Puzzle3dApp::parts`], and the scope pays the caller's terminal retirement after the paid app close.
-    scope: semio_framework_plugin::artifact_app_laws::OriginalFixtureScope,
+    scope: semio_plugin::artifact_app_laws::OriginalFixtureScope,
     /// 🪪️ The instance identity this scene_snapshot bound ([`next_fixture_instance_id`]) and therefore the receiver
     /// `take_typed_operation_result_page` answers for and the key of its session registry slot.
     pub instance_id: u32,
@@ -103,7 +103,7 @@ impl std::ops::DerefMut for Puzzle3dApp {
 
 impl Puzzle3dApp {
     /// 🎟️ The raw app together with the fixture's original caller context — disjoint borrows, so a call reads `let (raw, cx) = app.parts();`.
-    pub fn parts(&mut self) -> (&mut Puzzle3dRawApp, &mut semio_framework_plugin::StepContext<'static>) {
+    pub fn parts(&mut self) -> (&mut Puzzle3dRawApp, &mut semio_plugin::StepContext<'static>) {
         (self.raw.as_deref_mut().expect("scene_snapshot app was already consumed by close_witness"), self.scope.cx())
     }
 
@@ -122,7 +122,7 @@ impl Puzzle3dApp {
     /// app resolves its label set from `ViewModel.locale`/`.terminology` and fails closed on an axis it
     /// never authored (`puzzle3d_labels`), so a test that asserts German or reuse text has to say so —
     /// there is no default language to fall back to.
-    pub fn set_label_axes(&mut self, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) {
+    pub fn set_label_axes(&mut self, locale: semio_ui_locale::Locale, terminology: semio_ui_locale::Terminology) {
         self.view.locale = locale;
         self.view.terminology = terminology;
     }
@@ -171,7 +171,7 @@ impl Puzzle3dApp {
     /// against its grant and attributed to the fixed stage that ran it. The stage is read BEFORE the call:
     /// `maintenance_step`'s idle early return leaves the round-robin cursor untouched, so reading it afterwards names a
     /// stale stage.
-    pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         let stage = self.next_maintenance_stage();
         let (raw, cx) = self.parts();
         let demand = PluginApp::maintenance_retirement_demands(raw, maximum_bytes)?;
@@ -179,7 +179,7 @@ impl Puzzle3dApp {
         let step = cx.with_retained_loan(grant, |cx| {
             let loan = cx.retained_grant();
             PluginApp::maintenance_step(raw, cx, loan).map_err(semio_framework_job::OriginalTurnFailure::from)
-        }).map_err(semio_framework_plugin::PluginLifecycleFailure::from);
+        }).map_err(semio_plugin::PluginLifecycleFailure::from);
         self.maintenance.record(stage, grant, &step);
         step
     }
@@ -200,7 +200,7 @@ pub fn fault_of(failure: semio_framework_job::OriginalTurnFailure) -> Fault {
 /// 🧹️ Drives `app` through the real `PluginApp` close state machine with the fixture's original caller, one grant
 /// quoted from the owner per turn exactly as a host actor tick does, and returns the terminal-empty witness or the
 /// fault that stopped it. Bounded by the caller's own opportunity (`maximum_turns`), never by a local spin cap.
-fn drain_close(app: &mut Puzzle3dRawApp, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<bool, semio_framework_plugin::PluginLifecycleFailure> {
+fn drain_close(app: &mut Puzzle3dRawApp, cx: &mut semio_plugin::StepContext<'_>) -> Result<bool, semio_plugin::PluginLifecycleFailure> {
     artifact_app_laws::close_registered_fixture_app(app, artifact_app_laws::fixture_mounted_policy(), cx)?;
     Ok(app.close_terminal_is_empty())
 }
@@ -208,7 +208,7 @@ fn drain_close(app: &mut Puzzle3dRawApp, cx: &mut semio_framework_plugin::StepCo
 /// 🧹️ Consumes one scene_snapshot app through its real close state machine and reports the outcome, so the
 /// close contract is asserted by a test rather than by a destructor. `Err` carries the framework's own
 /// fault; `Ok(false)` means the machine reported `Complete` without reaching terminal-empty ownership.
-pub fn close_witness(app: &mut Puzzle3dApp) -> Result<bool, semio_framework_plugin::PluginLifecycleFailure> {
+pub fn close_witness(app: &mut Puzzle3dApp) -> Result<bool, semio_plugin::PluginLifecycleFailure> {
     let Some(raw) = app.raw.as_deref_mut() else { return Ok(true) };
     let complete = drain_close(raw, app.scope.cx())?;
     if complete {
@@ -233,7 +233,7 @@ pub fn puzzle3d_manifest_for_tests() -> App {
     App { definition: create_puzzle3d_app(), examples: Vec::new() }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle3dPlayApp, puzzle3d_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle3dPlayApp, puzzle3d_manifest_for_tests, "../..");
 
 /// 🧰️ The registry-backed, instance-bound scene_snapshot app — the ONLY constructor this plugin can use.
 /// puzzle3d declares `bounded_first_step_tool_proofs!`, so `VcsArtifactApp::with_registry_on_bus`'s
@@ -244,21 +244,21 @@ semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle3dPlayApp, 
 /// interaction query authority key their live-runtime bookkeeping on, exactly as the host binds it.
 /// 🧱 Builds the action registry on its own frame and drops the definition before `with_registry`.
 #[inline(never)]
-fn puzzle3d_action_registry() -> semio_framework_plugin::AppActionRegistry {
+fn puzzle3d_action_registry() -> semio_plugin::AppActionRegistry {
     let definition = create_puzzle3d_app();
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&definition);
+    let registry = semio_plugin::AppActionRegistry::from_definition(&definition);
     drop(definition);
     registry
 }
 
 pub async fn app() -> Puzzle3dApp {
-    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let registry = puzzle3d_action_registry();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), artifact_app_laws::fixture_mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
+    let mut app = semio_plugin::with_authoring_identity!(|identity| VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), artifact_app_laws::fixture_mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
     let instance_id = next_fixture_instance_id();
     app.bind_instance_id(instance_id).await;
     artifact_app_laws::settle_store_constructor(&mut app, artifact_app_laws::fixture_mounted_policy());
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: WINDOW_KIND_ID.into(), window_kind_id: WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: WINDOW_KIND_ID.into(), window_kind_id: WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     Puzzle3dApp { raw: Some(Box::new(app)), scope, instance_id, view, maintenance: Box::new(MaintenanceStageGrants::default()) }
 }
 
@@ -266,7 +266,7 @@ pub async fn app() -> Puzzle3dApp {
 #[inline(never)]
 pub fn activate_window_utility(app: &mut Puzzle3dApp, utility_id: &str) {
     app.ensure_window(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
-    app.activate(semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utility_id })), semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
+    app.activate(semio_plugin::SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utility_id })), semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
 }
 
 /// 🪪️ A process-unique instance identity per scene_snapshot app. The puzzle 3d session registry is process-global
@@ -307,10 +307,10 @@ pub const SETTLE_HOST_TURN_ITEMS: usize = 256;
 
 pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> Puzzle3dSettled {
     let mut settled = Puzzle3dSettled::default();
-    let census_before = semio_framework_plugin::app::typed_operation_unit_census();
+    let census_before = semio_plugin::app::typed_operation_unit_census();
     for _ in 0..1_048_576 {
         if !app.has_pending_typed_operations() {
-            settled.census = semio_framework_plugin::app::typed_operation_unit_census() - census_before;
+            settled.census = semio_plugin::app::typed_operation_unit_census() - census_before;
             return settled;
         }
         host_turn(app, maximum_items, &mut settled).await;
@@ -324,11 +324,11 @@ pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mu
     settled.turns += 1;
     app.measure_maintenance_step(maximum_items, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
     let (raw, cx) = app.parts();
-    raw.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
+    raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     let instance_id = app.instance_id;
-    if let Some(page) = app.take_typed_operation_result_page(instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
-        assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
-        if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Download {
+    if let Some(page) = app.take_typed_operation_result_page(instance_id, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
+        assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+        if page.lane == semio_plugin::app::TypedOperationResultLane::Download {
             settled.downloads.push(Puzzle3dDownload::from_page(page.token.operation, page.bytes()));
         }
         assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");

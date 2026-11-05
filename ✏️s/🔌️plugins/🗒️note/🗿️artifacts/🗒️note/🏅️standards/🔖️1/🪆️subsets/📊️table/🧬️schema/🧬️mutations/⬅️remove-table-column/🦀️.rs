@@ -31,8 +31,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "table-column", kind: "remove-table-column", record: "RemovedTableColumn" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove column from table \"{}\"", self.id), &format!("Spalte aus Tabelle \"{}\" entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove column from table \"{}\"", self.id), &format!("Spalte aus Tabelle \"{}\" entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

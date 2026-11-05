@@ -3,18 +3,18 @@
 
 use semio_hub_space_foundation::terminology::SStudioLabels;
 use semio_hub_space_foundation::S_PLAY_CATALOGUE_BODY_KEY;
-use semio_framework_os::{os_app_primary_output_kind, os_app_registration, workflow_palette};
-use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, HasBase};
-use semio_framework_ui_locale::{Locale, Terminology};
-use semio_framework_plugin::{tree_window_item, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiFixedMap, UiText};
-use semio_framework_ui_contract as ui;
+use semio_os::{os_app_primary_output_kind, os_app_registration, workflow_palette};
+use semio_plugin::plugin_app_close_prelude::{BuiltNode, HasBase};
+use semio_ui_locale::{Locale, Terminology};
+use semio_plugin::{tree_window_item, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiFixedMap, UiText};
+use semio_ui_contract as ui;
 use std::collections::BTreeMap;
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(semio_hub_space_foundation::S_PLAY_CATALOGUE_TAB_ID.into()),
-        label: semio_framework_ui_locale::LocalizedLabel::native(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
+        label: semio_ui_locale::LocalizedLabel::native(semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
         group: PanelGroup::Workbench,
         body_key: Some(S_PLAY_CATALOGUE_BODY_KEY.into()),
         children: Vec::new(),
@@ -57,7 +57,7 @@ struct CatalogueRoot {
 /// .is_empty())`) materialised the entire registry at every depth on every render. Closed now means a
 /// branch stamps its full `total` and materialises its children only once the HOST opens it — lazy
 /// expansion, host-owned, surviving refreshes.
-fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, node: &AppCatalogueNode) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, node: &AppCatalogueNode) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let node_key = format!("s-play-catalogue.document.{id_path}");
     let children: Vec<(&String, &AppCatalogueNode)> = node.children.iter().collect();
     let mut item = ui::tree_item(ui::Label::try_from(label).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row label admission failed"))?)
@@ -81,7 +81,7 @@ fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, nod
 /// 🎨️ Builds the app catalogue tree straight from the production registry — `workflow_palette()`
 /// (every registered `(plugin_id, app_id)`) joined with `os_app_registration` for the document
 /// breadcrumb/primary output kind. Always live, never stale.
-pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut document = AppCatalogueNode::default();
     for entry in workflow_palette() {
         if entry.app_id == semio_hub_space_foundation::S_PLAY_APP_ID {

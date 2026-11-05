@@ -1,3 +1,4 @@
+import {mergeStoryWorldSelectionV1,pickStoryWorldSelectionV1} from "../🎯️selection/🟦️.ts";
 // #region 🧲️Header
 // 💻️ ✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx
 // Specs: Compose `World3dHost` + `🌳️GraphTimelineHost` against the real puzzle-5d example fixtures — "5D" (3 spatial + assembly-order + fastener graph) rendered as a 3D world you can scrub through an assembly history.
@@ -129,22 +130,6 @@ function historyColumnsFromParts(parts: readonly StoryPuzzle5dPart[]): readonly 
 //#endregion HistorySynthesis
 
 //#region PluginEmulator
-/** 🖱️ Story-local mirror of the ONE `MergeMode` set algebra (`🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json`) — see `../3d/World.stories.tsx`'s copy. */
-function applyStoryMerge(current: readonly string[], id: string, merge: string): string[] {
-  const set = new Set(current);
-  if (merge === "replace" || merge === "range") return [id];
-  if (merge === "additive") {
-    set.add(id);
-    return [...set];
-  }
-  if (merge === "subtractive") {
-    set.delete(id);
-    return [...set];
-  }
-  if (set.has(id)) set.delete(id);
-  else set.add(id);
-  return [...set];
-}
 
 /** 🧩️ Story-local reducer: `checkoutCheckpoint` (from `🌳️GraphTimelineHost`) scrubs `revealCount`; `worldPick`/`setHover`/`setCamera` (from `World3dHost`) mirror the same subset `../3d/World.stories.tsx` implements, resolved against the *currently revealed* parts slice. */
 function storyActionArguments(value: unknown): Record<string, unknown> | undefined {
@@ -163,11 +148,8 @@ function reduceStoryPuzzle5dAction(state: StoryPuzzle5dState, action: string, ar
       return { fixture, runtime: { ...runtime, revealCount: index + 1, selectedIds: [], hoveredId: null } };
     }
     case "worldPick": {
-      const index = Number(args?.id);
       const merge = typeof args?.merge === "string" ? args.merge : "replace";
-      const target = revealed[index];
-      if (!target) return state;
-      return { fixture, runtime: { ...runtime, selectedIds: applyStoryMerge(runtime.selectedIds, target.id, merge) } };
+      return { fixture, runtime: { ...runtime, selectedIds: pickStoryWorldSelectionV1(runtime.selectedIds, revealed, args?.id, merge) } };
     }
     case "setHover": {
       const objectId = args?.objectId;

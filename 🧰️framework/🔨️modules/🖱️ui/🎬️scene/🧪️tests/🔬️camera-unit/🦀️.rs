@@ -2,7 +2,7 @@
 
 use super::testkit::{puzzle3d_perspective_camera, puzzle3d_top_camera};
 use super::*;
-use semio_framework_ui_scene_algebra::mat4_from_quat_m;
+use semio_ui_scene_algebra::mat4_from_quat_m;
 
 #[test]
 fn orbit_round_trip() {

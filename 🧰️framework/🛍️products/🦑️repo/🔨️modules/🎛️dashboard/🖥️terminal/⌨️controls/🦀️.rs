@@ -8,13 +8,13 @@ use super::launcher::{Input, LauncherState, Outcome};
 use super::windows::{Body, ContextMenu, Dashboard, Effect, Kind, LinkState, Place};
 use dashboard_preferences::Change;
 use dashboard_preferences::keymap::{KeyName, KeySpec, Scope};
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_frame::layout::{dock_window, reorder_stack_tab, resize_split, resize_window, zoom_window};
-use semio_framework_ui_tui_core::docking::{DockPlacement};
-use semio_framework_ui_tui_frame::scene::NodeId;
-use semio_framework_ui_tui_core::signal::WidgetSignal;
-use semio_framework_ui_tui_widgets::widget::WidgetState;
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_frame::layout::{dock_window, reorder_stack_tab, resize_split, resize_window, zoom_window};
+use semio_ui_tui_core::docking::{DockPlacement};
+use semio_ui_tui_frame::scene::NodeId;
+use semio_ui_tui_core::signal::WidgetSignal;
+use semio_ui_tui_widgets::widget::WidgetState;
 
 const GROW_STEP: f64 = 0.1;
 const PREFIX_PATIENCE: std::time::Duration = std::time::Duration::from_secs(3);
@@ -93,10 +93,10 @@ fn class_of(body: &Body) -> Class {
 pub enum Flow { Continue, Quit }
 
 /// 📏️ The leading hints that fit whole beside a status that keeps a third of the row, and up to two thirds while a notice needs them (the footer draws ` key ` and `label ` per hint).
-pub fn fit_hints(hints: Vec<semio_framework_ui_tui_frame::chrome::KeyHint>, width: u16, notice_cells: u16) -> Vec<semio_framework_ui_tui_frame::chrome::KeyHint> {
+pub fn fit_hints(hints: Vec<semio_ui_tui_frame::chrome::KeyHint>, width: u16, notice_cells: u16) -> Vec<semio_ui_tui_frame::chrome::KeyHint> {
     let mut room = i32::from(width) - i32::from(notice_cells.saturating_add(1).clamp(width / 3, width / 3 * 2)) - 1;
     hints.into_iter().take_while(|hint| {
-        room -= i32::from(semio_framework_ui_tui_core::text::display_width(&hint.key)) + i32::from(semio_framework_ui_tui_core::text::display_width(&hint.label)) + 3;
+        room -= i32::from(semio_ui_tui_core::text::display_width(&hint.key)) + i32::from(semio_ui_tui_core::text::display_width(&hint.label)) + 3;
         room >= 0
     }).collect()
 }
@@ -302,7 +302,7 @@ impl Dashboard {
         if self.management_paste(tui,index,text){return;}
         if self.management_blocks_edit(index){self.notice=Some(self.text().source_busy.as_str().into());return;}
         if let Body::Files(files) = &mut self.windows[index].body {
-            for cluster in semio_framework_ui_tui_core::text::clusters(text) { if files.query.len() + cluster.len() <= 256 && !cluster.chars().any(char::is_control) { files.query.push_str(cluster); } }
+            for cluster in semio_ui_tui_core::text::clusters(text) { if files.query.len() + cluster.len() <= 256 && !cluster.chars().any(char::is_control) { files.query.push_str(cluster); } }
             self.paint_files(tui, index); return;
         }
         if matches!(self.windows[index].body, Body::Document(_)) || self.terminal_has_keyboard(tui) || matches!(&self.windows[index].body, Body::Launcher(launcher) if launcher.editing()) { let signals = tui.dispatch(event); self.on_signals(tui, signals); return; }
@@ -402,8 +402,8 @@ impl Dashboard {
     }
 
     /// 📋️ Opens the context menu of a window, a tab chip or a terminal; every row names its keys from the keymap.
-    fn open_context_menu(&mut self, tui: &mut Tui, pos: semio_framework_ui_tui_core::geometry::Pos, item: Option<usize>, window: Option<usize>) {
-        use semio_framework_ui_tui_widgets::menu::MenuItem;
+    fn open_context_menu(&mut self, tui: &mut Tui, pos: semio_ui_tui_core::geometry::Pos, item: Option<usize>, window: Option<usize>) {
+        use semio_ui_tui_widgets::menu::MenuItem;
         let Some(window) = window else { return };
         let target = item.and_then(|tab| self.tab_window(window, tab)).unwrap_or(window);
         let output = self.windows[target].is_output();
@@ -521,7 +521,7 @@ impl Dashboard {
                 }
             }
             Action::TabTopLeft | Action::TabTopRight | Action::TabBottomLeft | Action::TabBottomRight => {
-                use semio_framework_ui_tui_core::docking::WindowStackCorner::*;
+                use semio_ui_tui_core::docking::WindowStackCorner::*;
                 let source = self.windows[index].id.clone();
                 let corner = match action { Action::TabTopLeft => TopLeft, Action::TabTopRight => TopRight, Action::TabBottomLeft => BottomLeft, _ => BottomRight };
                 if dock_window(&mut self.layout, &source, &source, DockPlacement::Corner(corner), None) { self.focus_window(tui, index); }
@@ -579,7 +579,7 @@ impl Dashboard {
             if let Some(node) = node { if tui.scene.node(node).visible != shown { tui.scene.node_mut(node).set_visible(shown); } }
         }
         let caption_text = if browse {
-            match &tui.scene.node(tree).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(WidgetState::Tree(state)) => launcher.caption(state), _ => String::new() }
+            match &tui.scene.node(tree).content { semio_ui_tui_frame::scene::NodeContent::Widget(WidgetState::Tree(state)) => launcher.caption(state), _ => String::new() }
         } else {
             launcher.set_page(usize::from(tui.scene.rect(list).height).max(1));
             let screen = launcher.screen();
@@ -589,7 +589,7 @@ impl Dashboard {
         };
         window.editor_slot = editor_slot;
         if let Some(node) = caption {
-            let changed = matches!(&tui.scene.node(node).content, semio_framework_ui_tui_frame::scene::NodeContent::Widget(WidgetState::Label(label)) if label.text != caption_text);
+            let changed = matches!(&tui.scene.node(node).content, semio_ui_tui_frame::scene::NodeContent::Widget(WidgetState::Label(label)) if label.text != caption_text);
             if changed { if let Some(WidgetState::Label(label)) = tui.scene.node_mut(node).widget() { label.text = caption_text; } }
         }
     }
@@ -606,15 +606,15 @@ impl Dashboard {
         let hints = self.footer_hints(tui);
         let status = self.footer_status(tui);
         let node = self.shell.footer;
-        let same = matches!(&tui.scene.node(node).content, semio_framework_ui_tui_frame::scene::NodeContent::Chrome(semio_framework_ui_tui_frame::chrome::ChromeState::Footer(footer)) if footer.status == status && footer.hints.len() == hints.len() && footer.hints.iter().zip(&hints).all(|(a, b)| a.key == b.key && a.label == b.label));
+        let same = matches!(&tui.scene.node(node).content, semio_ui_tui_frame::scene::NodeContent::Chrome(semio_ui_tui_frame::chrome::ChromeState::Footer(footer)) if footer.status == status && footer.hints.len() == hints.len() && footer.hints.iter().zip(&hints).all(|(a, b)| a.key == b.key && a.label == b.label));
         if same { return; }
-        if let Some(semio_framework_ui_tui_frame::chrome::ChromeState::Footer(footer)) = tui.scene.node_mut(node).chrome() { footer.hints = hints; footer.status = status; }
+        if let Some(semio_ui_tui_frame::chrome::ChromeState::Footer(footer)) = tui.scene.node_mut(node).chrome() { footer.hints = hints; footer.status = status; }
     }
 
     /// 💡️ The footer hints, generated from the keymap and the text catalogue; nothing is spelled twice. Only
     /// hints that fit whole next to the status are returned, most important first, so none is ever cut.
-    pub fn footer_hints(&self, tui: &Tui) -> Vec<semio_framework_ui_tui_frame::chrome::KeyHint> {
-        use semio_framework_ui_tui_frame::chrome::KeyHint;
+    pub fn footer_hints(&self, tui: &Tui) -> Vec<semio_ui_tui_frame::chrome::KeyHint> {
+        use semio_ui_tui_frame::chrome::KeyHint;
         let text = self.text();
         let hint = |scope: Scope, action: &str| self.keymap.keys_label(scope, action).map(|keys| KeyHint { key: keys, label: text.action(action).to_string() });
         let wanted: Vec<KeyHint> = if self.armed {
@@ -626,13 +626,13 @@ impl Dashboard {
                 std::iter::once(controls).chain([(Scope::View, "activate"), (Scope::View, "back"), (Scope::View, "up"), (Scope::View, "down"), (Scope::Window, "next-window")].into_iter().filter_map(|(scope, action)| hint(scope, action).map(|found| if action == "activate" { KeyHint { label: text.hint_activate.as_str().to_string(), ..found } } else { found }))).collect()
             }
         };
-        fit_hints(wanted, tui.size().width, self.notice.as_deref().map_or(0, semio_framework_ui_tui_core::text::display_width))
+        fit_hints(wanted, tui.size().width, self.notice.as_deref().map_or(0, semio_ui_tui_core::text::display_width))
     }
 
     fn footer_status(&self, tui: &Tui) -> String {
         let text = self.text();
         if let Some((placement, _)) = tui.docking_preview() {
-            let action = match placement { DockPlacement::Tabs => text.dock_tabs, DockPlacement::Corner(corner) => match corner { semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft => text.dock_top_left, semio_framework_ui_tui_core::docking::WindowStackCorner::TopRight => text.dock_top_right, semio_framework_ui_tui_core::docking::WindowStackCorner::BottomLeft => text.dock_bottom_left, semio_framework_ui_tui_core::docking::WindowStackCorner::BottomRight => text.dock_bottom_right }, DockPlacement::Left => text.dock_left, DockPlacement::Right => text.dock_right, DockPlacement::Top => text.dock_top, DockPlacement::Bottom => text.dock_bottom };
+            let action = match placement { DockPlacement::Tabs => text.dock_tabs, DockPlacement::Corner(corner) => match corner { semio_ui_tui_core::docking::WindowStackCorner::TopLeft => text.dock_top_left, semio_ui_tui_core::docking::WindowStackCorner::TopRight => text.dock_top_right, semio_ui_tui_core::docking::WindowStackCorner::BottomLeft => text.dock_bottom_left, semio_ui_tui_core::docking::WindowStackCorner::BottomRight => text.dock_bottom_right }, DockPlacement::Left => text.dock_left, DockPlacement::Right => text.dock_right, DockPlacement::Top => text.dock_top, DockPlacement::Bottom => text.dock_bottom };
             return text.dock_preview.fill(&[("action", action.as_str())]).into_string();
         }
         let link = match &self.state {

@@ -74,12 +74,12 @@
       "packages": [
         "semio-framework",
         "semio-framework-replication",
-        "semio-framework-os-kernel",
-        "semio-framework-os",
-        "semio-framework-plugin"
+        "semio-os-kernel",
+        "semio-os",
+        "semio-plugin"
       ],
       "features": [
-        "semio-framework-os-kernel/deflate",
+        "semio-os-kernel/deflate",
         "semio-framework-replication/deflate"
       ]
     },
@@ -87,17 +87,17 @@
       "target": "wasm32-unknown-unknown",
       "workspace": "Cargo.toml",
       "packages": [
-        "semio-framework-os-kernel"
+        "semio-os-kernel"
       ],
       "features": [
-        "semio-framework-os-kernel/sync"
+        "semio-os-kernel/sync"
       ]
     },
     {
       "target": "wasm32-unknown-unknown",
       "workspace": "Cargo.toml",
       "packages": [
-        "semio-framework-os-renderer-wgpu"
+        "semio-renderer-wgpu"
       ],
       "features": []
     }

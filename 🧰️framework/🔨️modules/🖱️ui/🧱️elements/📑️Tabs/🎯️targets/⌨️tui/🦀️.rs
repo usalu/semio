@@ -2,13 +2,13 @@
 //! inline body (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling
 //! module of `crate::tui::widget` (see that mod's `use crate::tui::tabs::{...};`).
 
-use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
-use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use semio_framework_ui_tui_core::text::display_width;
-use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::text::display_width;
+use semio_ui_tui_core::theme::{Role, Surface, Theme};
 use crate::widget::TabsState;
-use semio_framework_ui_tui_core::signal::WidgetSignal;
+use semio_ui_tui_core::signal::WidgetSignal;
 
 pub fn tabs_on_key(t: &mut TabsState, ev: &KeyEvent) -> Option<WidgetSignal> {
     if t.tabs.is_empty() {

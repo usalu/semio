@@ -14,10 +14,10 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 async fn home_document_text_round_trips_through_the_store() {
     use crate::SHomeSnapshot;
     let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
-    let envelope = store::os_store::document_materialize::create_document_envelope::<SHomeSnapshot, SHomeMutation>("s.home", "home", projection, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store: store::ArtifactStore<SHomeSnapshot, SHomeMutation> = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let envelope = store::os_store::document_materialize::create_document_envelope::<SHomeSnapshot, SHomeMutation>("s.home", "home", projection, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store: store::ArtifactStore<SHomeSnapshot, SHomeMutation> = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<SHomeSnapshot, SHomeMutation>().expect("funded bounded Home owners")).unwrap_or_else(|(error, _)| panic!("Home bounded owners install: {error:?}"));
-    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![change_catalog_generation(3)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![change_catalog_generation(3)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     while !store.close_owned_terminal_is_empty() {

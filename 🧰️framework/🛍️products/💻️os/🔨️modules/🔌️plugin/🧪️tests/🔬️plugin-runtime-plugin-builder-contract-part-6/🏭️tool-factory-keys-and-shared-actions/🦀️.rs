@@ -3,8 +3,8 @@
     struct OtherTestRetainedCommandFactory(TestRetainedCommandFactory);
 
     impl ToolJobFactory for OtherTestRetainedCommandFactory {
-        type Payload = semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>;
-        type Job = semio_framework_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>;
+        type Payload = semio_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>;
+        type Job = semio_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>;
         fn keys(&self) -> &[ToolFactoryKey] {
             &self.0.keys
         }
@@ -49,7 +49,7 @@ fn admit_job(&mut self,cx:&mut semio_framework_job::StepContext<'_>,operation:&s
         type TransientMutation = NoTransientMutation;
         type Command = TestCommand;
 
-        fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_plugin::Fault>>{Some(||{
             Ok(TestSnapshot::default())
         })}
 
@@ -76,7 +76,7 @@ fn admit_job(&mut self,cx:&mut semio_framework_job::StepContext<'_>,operation:&s
     /// 🧵️ Source text of the mounted artifact instance: its module tree, the parent file followed by every staged impl slice in declaration order, read at run time from the manifest folder of the hosting crate.
     #[doc(hidden)]
 pub fn instance_source() -> String {
-        semio_framework_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../🧵️instance/🦀️.rs")).expect("the instance module tree reads")
+        semio_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../🧵️instance/🦀️.rs")).expect("the instance module tree reads")
     }
 
     /// 🧭️ The bijection has exactly two named residues, and both are asserted as exact sets so a
@@ -100,20 +100,20 @@ pub fn instance_source() -> String {
     /// not the cause — the clause above still proves there is no factory to find.
     #[semio_framework_async_macros::async_test]
     async fn activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
-        let mounted_policy=semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;
         let declared = registry.test_migrated_tool_ids();
         let controller_id = registry.test_controller_id().to_string();
         let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         let registered: std::collections::BTreeSet<String> = app.tools.test_registered_tool_keys()
             .into_iter()
             .map(|key| {
@@ -157,7 +157,7 @@ pub fn instance_source() -> String {
         let verb = <TestApp<false, TEST_APP_TOOLS_NONE> as ArtifactApp>::command_id(&TestCommand::IncrementViaCommand).await;
         assert!(!registered.contains(verb), "the unproved verb has no activated factory of its own");
         assert!(!declared.contains(verb), "and this registry does not declare it migrated either");
-        let error = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::IncrementViaCommand, &meta(), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect_err("an unproved typed command must remain fail closed");
+        let error = semio_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::IncrementViaCommand, &meta(), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect_err("an unproved typed command must remain fail closed");
         assert_eq!(error.primary_fault().expect("a diagnostic fault").code.0, "interactive-job.not-ui-safe");
         assert_eq!(platform.action_bus.dispatch_count(), before);
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
@@ -176,13 +176,13 @@ pub fn instance_source() -> String {
     /// 1 MiB wire admission that the bus has never granted them.
     #[semio_framework_async_macros::async_test]
     async fn shared_framework_actions_have_exact_registered_factory_and_joined_bus_identity() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
-        let mounted_policy=semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeTieRunSpan where O
         record: "ChangedTieRunSpan",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tie span L of the tie run", "Zuggliedstrang: Zuggliedlänge L ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tie span L of the tie run", "Zuggliedstrang: Zuggliedlänge L ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

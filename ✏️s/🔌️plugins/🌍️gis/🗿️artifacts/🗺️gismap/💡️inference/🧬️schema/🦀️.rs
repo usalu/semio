@@ -1,7 +1,7 @@
 //! 🗺️ Owner-authored map proposal wire contracts, lifecycle and presentation vocabulary.
 
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_os_kernel::os_directory::schema::{EditedArtifactFrontierV1, DocumentExecutionTargetLocaleV1, DOCUMENT_OPEN_MAX_SAFE_INTEGER};
+use semio_os_kernel::os_directory::schema::{EditedArtifactFrontierV1, DocumentExecutionTargetLocaleV1, DOCUMENT_OPEN_MAX_SAFE_INTEGER};
 
 //#region 💡️InferencePort
 /// 🧯 Exact maximum accepted bytes for one inference request or approval body.

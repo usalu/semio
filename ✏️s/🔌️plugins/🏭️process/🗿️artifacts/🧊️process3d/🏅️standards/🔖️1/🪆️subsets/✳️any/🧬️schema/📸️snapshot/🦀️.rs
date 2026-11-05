@@ -4,7 +4,7 @@
 //! CHILD HANDLES. The snapshot is a `dsl::DslRecord`: text, pack and the pack-schema identity all
 //! come from the one derived `__dsl_spec()`, and mounted envelope ingress decodes that same canonical
 //! pack through the framework retained cursors into typed owners (`🔖️MountedTypedSnapshotOwner`).
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 
 use framework_schema::ArtifactSchema;
@@ -93,7 +93,7 @@ pub use flow_and_scene_converters::{
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.process".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D Process", "3D-Prozess"),
+        label: semio_ui_locale::LocalizedLabel::native("3D Process", "3D-Prozess"),
         source_format: PROCESS_3D_SCHEMA.into(),
         component_kind: "process3d".into(),
         dimension: "3d".into(),

@@ -2,8 +2,8 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::Emit;
+use semio_plugin::NoConfigMutation;
 
 /// 🧬️ `resetRule` is a genuine whole-document reset (back to the blank default rule) — not
 /// expressible as a granular mutation, so it routes through `Effect::LoadDocument` (outside

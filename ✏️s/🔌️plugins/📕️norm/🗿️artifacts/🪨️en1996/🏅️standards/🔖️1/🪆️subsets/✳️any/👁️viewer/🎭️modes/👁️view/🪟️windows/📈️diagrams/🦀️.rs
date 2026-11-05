@@ -1,7 +1,7 @@
 //! 📈️ EN 1996 viewer — the read-only diagrams window; imports nothing from the editor (`policyViewerPurityBreaches`).
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 use semio_s_artifact_norm_en1996_scene::diagrams;
 use semio_s_plugin_norm_structural_scene::projection::memo_diagrams;

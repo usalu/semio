@@ -31,8 +31,8 @@ pub fn add_tag_at(tag: String, index: u32) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for AddTag {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "tag", kind: "add-tag", record: "AddedTagToVcs" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add tag \"{}\"", self.tag), &format!("Tag \"{}\" hinzufügen", self.tag))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add tag \"{}\"", self.tag), &format!("Tag \"{}\" hinzufügen", self.tag))
     }
     fn target(&self) -> Vec<String> {
         vec![self.tag.clone()]

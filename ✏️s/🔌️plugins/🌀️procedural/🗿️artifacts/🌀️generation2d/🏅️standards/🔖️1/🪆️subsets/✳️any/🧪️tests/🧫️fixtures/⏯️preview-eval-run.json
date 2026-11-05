@@ -1038,5 +1038,90 @@
       "hopsAtLeast": 1,
       "ceilingMicros": 8000
     }
-  }
+  },
+  "evaluationWire": {
+    "neuronId": "shape.源",
+    "operatorId": "brep.prim2d.rectangle",
+    "inputJson": "{\"width\":2}",
+    "dependencyJson": "{\"source\":\"original\"}",
+    "nodeHash": 17,
+    "windowId": "preview.源",
+    "windowKindId": "procedural2d.preview",
+    "extensionId": "brep",
+    "authorityFieldsAbsent": [
+      "retained",
+      "budget",
+      "wallMicros"
+    ],
+    "requiredKeys": [
+      "neuronId",
+      "operatorId",
+      "inputJson",
+      "dependencyJson",
+      "operatorVersion",
+      "nodeHash",
+      "resume",
+      "windowId",
+      "windowKindId",
+      "extensionId"
+    ],
+    "compactResumeFields": [
+      "inputJson",
+      "dependencyJson"
+    ],
+    "requiredCalleeFields": [
+      "neuronId",
+      "operatorId",
+      "inputJson"
+    ]
+  },
+  "evaluatedTargets": [
+    {
+      "steps": [
+        [
+          "document",
+          1
+        ]
+      ],
+      "expected": {
+        "document": 1
+      }
+    },
+    {
+      "steps": [
+        [
+          "document",
+          1
+        ],
+        [
+          "generation",
+          2
+        ]
+      ],
+      "expected": {
+        "document": 1,
+        "generation": 2
+      }
+    },
+    {
+      "steps": [
+        [
+          "generation",
+          2
+        ],
+        [
+          "document",
+          1
+        ],
+        [
+          "document",
+          9
+        ]
+      ],
+      "expected": {
+        "document": 9,
+        "generation": 2
+      }
+    }
+  ]
 }

@@ -1,8 +1,8 @@
 //! 🧪️ Actual global native I/O uses the installed original launch owner, fixed slots and the real process worker pool.
 use super::*;
-use semio_framework_os_infinite_world_scene::WorldAssetIoAuthority;
-use semio_framework_os_infinite_world_scene::WorldAssetRequestKind;
-use semio_framework_os_infinite_world_scene::WorldAssetResponsePage;
+use semio_os_infinite_world_scene::WorldAssetIoAuthority;
+use semio_os_infinite_world_scene::WorldAssetRequestKind;
+use semio_os_infinite_world_scene::WorldAssetResponsePage;
 
 static SOURCE_LAWS:Mutex<()>=Mutex::new(());
 pub(super) fn fixture_guard()->std::sync::MutexGuard<'static,()>{let guard=SOURCE_LAWS.lock().unwrap();install_launch();guard}

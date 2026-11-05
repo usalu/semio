@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../../.."
-name = "semio-framework-os-infinite-board-dag-graph"
+name = "semio-os-infinite-board-dag-graph"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,28 +22,28 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-os-infinite-board-schema/testkit", "semio-framework-os-infinite-board-engine/testkit", "semio-framework-os-infinite-board-normal-model/testkit", "semio-framework-os-infinite-board-dag-model/testkit"]
+testkit = ["semio-os-infinite-board-schema/testkit", "semio-os-infinite-board-engine/testkit", "semio-os-infinite-board-normal-model/testkit", "semio-os-infinite-board-dag-model/testkit"]
 
 [dependencies]
-semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-os-infinite-directed-presentation = { path = "../../../../../../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 geometry = { path = "../../../../../../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 graph = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
 semio-framework-graph-drawing = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-light = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪶️light/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-semio-framework-os-infinite-board-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-model = { path = "../../../../➕️normal/🗃️model/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-dag-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
+semio-ui-wgpu-light = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪶️light/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
+semio-os-infinite-board-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-infinite-board-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-model = { path = "../../../../➕️normal/🗃️model/📦️packages/🦀️rust" }
+semio-os-infinite-board-dag-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 
 [dev-dependencies]
-semio-framework-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }

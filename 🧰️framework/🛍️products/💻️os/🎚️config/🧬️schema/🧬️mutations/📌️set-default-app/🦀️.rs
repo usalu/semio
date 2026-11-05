@@ -30,8 +30,8 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)))
     }
 
     fn target(&self) -> Vec<String> {
@@ -39,7 +39,7 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
+impl semio_os_command::ColdMutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningDiff> {
         if base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role && entry.app == self.app) {
             let role = role_name(self.role);

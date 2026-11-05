@@ -18,8 +18,8 @@ pub struct ChangeSlabActionDeltaTauPa {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSlabActionDeltaTauPa where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_slab_action_delta_tau_pa::ChangeSlabActionDeltaTauPa> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "slab-action-delta-tau-pa", kind: "change-slab-action-delta-tau-pa", record: "ChangedSlabActionDeltaTauPa" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fatigue shear stress range of the slab action", "Schubspannungsschwingbreite der Deckeneinwirkung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fatigue shear stress range of the slab action", "Schubspannungsschwingbreite der Deckeneinwirkung ändern")
     }
 }
 

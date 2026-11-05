@@ -32,8 +32,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-font-size", kind: "change-block-font-size", record: "ChangedBlockFontSize" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change block \"{}\" font size to {}", self.id, self.new_font_size), &format!("Schriftgröße von Block \"{}\" auf {} ändern", self.id, self.new_font_size))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change block \"{}\" font size to {}", self.id, self.new_font_size), &format!("Schriftgröße von Block \"{}\" auf {} ändern", self.id, self.new_font_size))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

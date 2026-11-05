@@ -288,7 +288,7 @@ export class DocumentMountSingleFlightCheckScript extends BundleScript {
     if (segments[0] !== "--native") return;
     const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
-          package: "semio-framework-os-kernel-db",
+          package: "semio-os-kernel-db",
           target: { kind: "lib", name: "db" },
           cargoArgs: ["--all-features"],
           laws: [
@@ -335,7 +335,7 @@ export class DurableOwnedGroupDecisionCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-framework-os-store-durable-group-tests",
+            package: "semio-os-store-durable-group-tests",
             target: { kind: "lib" },
             laws: [
               "durable_byte_carriers_preserve_octets_under_the_declared_ownership_ceiling",
@@ -477,7 +477,7 @@ export class DurableGroupJournalCheckScript extends BundleScript {
       `durable-group-journal-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`,
     );
     if (segments[0] !== "--native") return;
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws }],progress(event) {
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws }],progress(event) {
         console.log(`durable-group-journal-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
       }});
     console.log(`durable-group-journal-native-receipts: ${JSON.stringify(receipts)}`);
@@ -490,7 +490,7 @@ export class DocumentOpeningAttemptNativeCheckScript extends BundleScript {
     if (segments.length) throw new Error("document-opening-attempt-native-check accepts no arguments");
     const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
-          package: "semio-framework-os-store-sync-tests-1",
+          package: "semio-os-store-sync-tests-1",
           target: { kind: "lib" },
           laws: ["sync_tests::document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages"],
         },
@@ -541,7 +541,7 @@ export class ReopenStormCheckScript extends BundleScript {
       console.log(`[reopen-storm] ${index + 1}/${wanted.length} ${name}: ${law}`);
       const { status, lines } = await runLawProcess(
         "cargo",
-        ["test", "-p", "semio-framework-os-kernel-db", "--features", features, "--lib", "--no-fail-fast", "--", "--exact", law, "--nocapture", "--test-threads=1", ...(claimed ? ["--include-ignored"] : [])],
+        ["test", "-p", "semio-os-kernel-db", "--features", features, "--lib", "--no-fail-fast", "--", "--exact", law, "--nocapture", "--test-threads=1", ...(claimed ? ["--include-ignored"] : [])],
         { cwd: this.repoRoot, env: { ...process.env, CARGO_INCREMENTAL: "0", RUST_MIN_STACK: "268435456", SEMIO_DB_ISOLATED_LAW: law } },
         () => {
           cancelled = true;
@@ -586,9 +586,9 @@ export class DocumentHttpCheckScript extends BundleScript {
     const validate = ajv.compile(JSON.parse(fixture.neutral.operations[0].inputSchema));
     for (const vector of fixture.vectors) assert.equal(validate(vector.value), vector.valid, vector.name);
     for (const law of ["os_directory::client::document_http::tests::owner_removal_preserves_neutral_document_transport", "os_directory::client::document_http::tests::schema_vectors_match_owned_validator", "os_directory::client::document_http::tests::decoded_replies_obey_the_same_node_bounds_as_owner_inputs"]) {
-      await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.root, this.invocation, ["--lib", "--", law, "--exact", "--nocapture"]);
+      await runAdmittedCargoPackageTestsV1(["semio-os-kernel"], this.root, this.invocation, ["--lib", "--", law, "--exact", "--nocapture"]);
     }
-    await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.root, this.invocation, ["--lib", "--", "os_directory::client::tests::document_http_transport_preserves_scope_bounds_and_owner_decode", "--exact"]);
+    await runAdmittedCargoPackageTestsV1(["semio-os-kernel"], this.root, this.invocation, ["--lib", "--", "os_directory::client::tests::document_http_transport_preserves_scope_bounds_and_owner_decode", "--exact"]);
     console.log("document-http: Ajv vectors, removal/reinstall, scope, bounds and owner decoding passed");
   }
 }

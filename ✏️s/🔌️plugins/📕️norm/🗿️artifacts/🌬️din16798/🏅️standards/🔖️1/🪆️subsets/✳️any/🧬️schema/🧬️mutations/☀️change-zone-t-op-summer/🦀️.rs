@@ -13,8 +13,8 @@ pub struct ChangeZoneTOpSummer {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZoneTOpSummer where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_t_op_summer::ChangeZoneTOpSummer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-t-op-summer", kind: "change-zone-t-op-summer", record: "ChangeZoneTOpSummer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change summer operative temperature of the zone", "Operative Temperatur im Sommer für die Zone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change summer operative temperature of the zone", "Operative Temperatur im Sommer für die Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
 }

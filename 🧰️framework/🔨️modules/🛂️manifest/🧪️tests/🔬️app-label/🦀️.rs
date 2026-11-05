@@ -48,7 +48,7 @@ use semio_framework_manifest_address::{ActionAddress, ActionInvocation, ActionRe
 use semio_framework_manifest_arg_schema::{ActionArgControl, ActionArgDef, ActionArgOption, AppRole};
 use semio_framework_manifest_actions::{ActionDefinition, ActionKind, ActionSemantics, ApprovalMode, CLEAR_SELECTION_ACTION_ID, CommandDefinition, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, OsDefinition, PreviewMode, SELECT_ALL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, UndoMode, UtilityDefinition};
 use crate::{AppDefinition, AppRef, DialogDefinition, Modes, NonEmptyVec, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition, WindowKinds, app_window_label, effective_action_args, interaction_action_definitions, missing_required_args, parse_surface_app_id, resolve_app_breadcrumb, resolve_layout_for_mode, resolve_mode_tools, resolve_window_actions, surface_app_id, window_kind_actions};
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
 // definition family lives at the crate root, not under `crate::ui` — see the equivalent `use`
 // at this file's top.
@@ -496,12 +496,12 @@ async fn resolve_mode_tools_skips_unresolvable_refs() {
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
-    async fn stack_layout(active: &str) -> semio_framework_ui_declaration::layout::WindowLayout {
-        semio_framework_ui_declaration::layout::WindowLayout { root: semio_framework_ui_declaration::layout::WindowLayoutRoot::Stack(semio_framework_ui_declaration::layout::WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.into()), children: vec![] }) }
+    async fn stack_layout(active: &str) -> semio_ui_declaration::layout::WindowLayout {
+        semio_ui_declaration::layout::WindowLayout { root: semio_ui_declaration::layout::WindowLayoutRoot::Stack(semio_ui_declaration::layout::WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.into()), children: vec![] }) }
     }
     let mut app = app_with(vec![], vec![]).await;
     app.modes.first_mut().layout_id = Some("named".into());
-    app.named_layouts.push(semio_framework_ui_declaration::layout::NamedLayout { id: "named".into(), label: "Named".into(), icon_id: None, layout: stack_layout("main").await, origin: "app".into(), group_path: None });
+    app.named_layouts.push(semio_ui_declaration::layout::NamedLayout { id: "named".into(), label: "Named".into(), icon_id: None, layout: stack_layout("main").await, origin: "app".into(), group_path: None });
     app.default_layout = Some(stack_layout("fallback").await);
 
     assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("main").await), "named layout referenced by the mode wins");

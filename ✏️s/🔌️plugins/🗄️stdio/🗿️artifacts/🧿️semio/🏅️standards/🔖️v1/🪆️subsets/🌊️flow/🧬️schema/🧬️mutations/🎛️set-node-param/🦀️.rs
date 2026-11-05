@@ -27,8 +27,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "node-param", kind: "set-node-param", record: "SetNodeParam" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set node param", "Knotenparameter setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set node param", "Knotenparameter setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

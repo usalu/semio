@@ -11,7 +11,7 @@ pub use gpu::{IconGpuPngExport, IconGpuPngRejected};
 pub use scene::{IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected};
 pub use scene::close_prepared;
 pub use svg::{IconSvgExport, IconSvgRejected};
-pub use semio_framework_os_renderer_wgpu_asset_authority::icon_export_asset as asset;
+pub use semio_renderer_wgpu_asset_authority::icon_export_asset as asset;
 
 #[derive(Debug)]
 pub enum IconExportFault {

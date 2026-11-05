@@ -3,13 +3,13 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
+use semio_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 use crate::viewer::pdf17::modes::view::windows::main::*;
 use crate::standards::v1_7::subsets::base::io::export::demo_pdf17_snapshot;
 
@@ -26,7 +26,7 @@ fn render_lists_one_line_per_page_with_media_box_and_text() {
     assert_eq!(document.pages.len(), 1);
     let node = render(&document).expect("bounded PDF document fixture must render");
     assert_eq!(node.children.len(), 1);
-    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the rendered page window");
-    let page: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("the page renders as a read-only text scene with its lanes");
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the rendered page window");
+    let page: semio_ui_scene::TextEditorScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("the page renders as a read-only text scene with its lanes");
     assert!(page.buffer.contains("MediaBox"));
 }

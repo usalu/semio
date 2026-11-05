@@ -3,7 +3,7 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn create_xlsx_editor_builds_a_definition_for_the_editor_role() {
     let def = create_xlsx_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, XLSX_DIALECT.into());
 }
 
@@ -380,4 +380,4 @@ async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens() {
     }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::XlsxEditor, || semio_framework_plugin::App { definition: super::create_xlsx_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base");
+semio_plugin::history_edit_acceptance_law!("stdio", super::XlsxEditor, || semio_plugin::App { definition: super::create_xlsx_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base");

@@ -1,6 +1,6 @@
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework::kernel::Effect;
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 
 /// 👁️ What a viewer may emit — structurally cannot carry an artifact or draft mutation (contract
 /// §2.2): the read-only guarantee is a type property, not a runtime check.

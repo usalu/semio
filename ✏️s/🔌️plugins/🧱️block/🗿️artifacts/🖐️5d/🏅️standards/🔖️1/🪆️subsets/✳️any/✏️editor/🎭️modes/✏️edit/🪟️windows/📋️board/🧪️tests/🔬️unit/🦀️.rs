@@ -1,6 +1,6 @@
 
-#[allow(unused_imports)] use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-#[allow(unused_imports)] use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)] use semio_plugin::{Buildable, HasBase, HasChildren};
+#[allow(unused_imports)] use semio_plugin::SurfaceKind;
 #[allow(unused_imports)] use semio_s_artifact_block_5d_editor::modes::edit::windows::board::*;
 
 #[semio_framework_async_macros::async_test]

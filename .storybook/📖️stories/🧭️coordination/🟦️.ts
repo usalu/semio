@@ -16,12 +16,15 @@
 
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { discoverPackages, readSemioMarkerSubTable, loadTaxonomy } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { discoverPackages, readSemioMarkerSubTable, loadTaxonomy } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🔍️discovery/🟦️.ts";
 import type { AssetDeliveryDeclarationV1 } from "../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { runtimeAssetDeliveries } from "../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
 import type { OwnedBuildPlugin } from "../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 
 export type { AssetDeliveryDeclarationV1 };
+import {frameworkOsEnginePackageNameV1,frameworkOsEngineSourceOwnersV1} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+const RENDERER_WASM_PACKAGES=frameworkOsEngineSourceOwnersV1("renderer").map(frameworkOsEnginePackageNameV1);
+
 
 /** ⚡️ Prebundle external ports hidden behind excluded workspace package boundaries before the first preview request. */
 export const STORYBOOK_PREVIEW_DEPENDENCIES: readonly string[] = [
@@ -37,6 +40,7 @@ export const STORYBOOK_PREVIEW_DEPENDENCIES: readonly string[] = [
 /** 🗂️ One composable Storybook slice. */
 export type StoryScope = {
   readonly id: string;
+  readonly wasmPackages?: readonly string[];
   /** 📛️ Emoji-namespaced `meta.title` prefix every owned story must start with. */
   readonly titlePrefix: string;
   /** 🌳️ Repo-root-relative source dirs this scope's stories import from. Watch-ignores are DERIVED: union(all scopes' roots) − union(active scopes' roots). */
@@ -88,24 +92,28 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
   },
   {
     id: "puzzle",
+    wasmPackages: [...RENDERER_WASM_PACKAGES,"@semio-tech/puzzle-wasm"],
     titlePrefix: "🧩️puzzle",
     sourceRoots: [],
     storyGlobs: ["../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/**/🧪️.story.tsx"],
   },
   {
     id: "puzzle/2d",
+    wasmPackages: [...RENDERER_WASM_PACKAGES,"@semio-tech/puzzle-wasm"],
     titlePrefix: "🧩️puzzle🩻️2d",
     sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d")],
     storyGlobs: ["../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-*/🧪️.story.tsx"],
   },
   {
     id: "puzzle/3d",
+    wasmPackages: [...RENDERER_WASM_PACKAGES,"@semio-tech/puzzle-wasm"],
     titlePrefix: "🧩️puzzle🧊️3d",
     sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle"), repoRelative("🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript")],
     storyGlobs: ["../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-*/🧪️.story.tsx"],
   },
   {
     id: "puzzle/5d",
+    wasmPackages: [...RENDERER_WASM_PACKAGES,"@semio-tech/puzzle-wasm"],
     titlePrefix: "🧩️puzzle🕐️5d",
     sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle")],
     storyGlobs: ["../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-*/🧪️.story.tsx"],
@@ -123,6 +131,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
   },
   {
     id: "framework",
+    wasmPackages: [...RENDERER_WASM_PACKAGES,"@semio-tech/flow-core"],
     titlePrefix: "🛠️framework",
     sourceRoots: [repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"), repoRelative("🧰️framework/📦️packages/🟦️typescript")],
     storyGlobs: [
@@ -132,6 +141,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
   },
   {
     id: "framework/hosts",
+    wasmPackages: [...RENDERER_WASM_PACKAGES,"@semio-tech/flow-core"],
     titlePrefix: "🛠️framework🔌️hosts",
     sourceRoots: [
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"),
@@ -147,6 +157,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
   },
   {
     id: "framework/os",
+    wasmPackages: [...RENDERER_WASM_PACKAGES,"@semio-tech/flow-core"],
     titlePrefix: "🛠️framework🖥️os",
     sourceRoots: [
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"),
@@ -202,6 +213,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
  * `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`.
  */
 type StorybookOptIn = {
+  readonly wasmPackages?: readonly string[];
   readonly id?: string;
   readonly titlePrefix?: string;
   readonly sourceRoots?: readonly string[];
@@ -211,8 +223,10 @@ type StorybookOptIn = {
 /** 🧹️ Narrows the untyped `Record<string, unknown>` `readSemioMarkerSubTable` returns down to the fields `StorybookOptIn` actually understands, dropping anything else silently (a package's opt-in table is its own manifest's business — this generator only reads what it needs). */
 function coerceStorybookOptIn(raw: Record<string, unknown> | undefined): StorybookOptIn | undefined {
   if (!raw) return undefined;
+  if(raw.wasmPackages!==undefined&&(!Array.isArray(raw.wasmPackages)||raw.wasmPackages.some(value=>typeof value!=="string")))throw Error("Explicit Storybook WASM package requirements required");
   const strings = (value: unknown): readonly string[] | undefined => (Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : undefined);
   return {
+    wasmPackages: strings(raw.wasmPackages),
     id: typeof raw.id === "string" ? raw.id : undefined,
     titlePrefix: typeof raw.titlePrefix === "string" ? raw.titlePrefix : undefined,
     sourceRoots: strings(raw.sourceRoots),
@@ -234,6 +248,7 @@ export function buildGeneratedScopes(repoRoot: string): readonly StoryScope[] {
     scopes.push({
       id,
       titlePrefix: optIn.titlePrefix ?? id,
+      wasmPackages: optIn.wasmPackages,
       sourceRoots: optIn.sourceRoots.map((root) => join(pkg.ownerRel, root).replaceAll("\\", "/")),
       ...(optIn.storyGlobs ? { storyGlobs: optIn.storyGlobs.map((glob) => `../${join(pkg.ownerRel, glob).replaceAll("\\", "/")}`) } : {}),
     });

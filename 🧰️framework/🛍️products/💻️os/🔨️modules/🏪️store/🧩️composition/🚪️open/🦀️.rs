@@ -18,8 +18,8 @@ pub mod source_admission;
 pub use source_admission::{MemberOpenSourceAdmission,diagnostic_error as member_admission_diagnostic};
 
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_framework_os_store_owned_schema_decode::{OwnedSchemaDecodePage, OwnedSchemaDecodePages};
-use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_os_store_owned_schema_decode::{OwnedSchemaDecodePage, OwnedSchemaDecodePages};
+use semio_os_store_envelope::owner::OwnerRef;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use {semio_framework_artifact_reference::ArtifactRef};
 use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFailure};
@@ -135,7 +135,7 @@ pub trait MemberOpenOperation {
 }
 
 pub struct MemberOpenRequest {
-    pub actor: ManuallyDrop<semio_framework_os_spr::ActorId>,
+    pub actor: ManuallyDrop<semio_os_spr::ActorId>,
     pub operation: OperationId,
     pub generation: Generation,
     pub expires_at_us: u64,
@@ -175,7 +175,7 @@ impl MemberOpenRequest {
         if !pages.is_sealed()||start.checked_add(extent).is_none_or(|end|end>pages.byte_count()){return Err(MemberOpenDiagnostic::Malformed)}
         Ok(OriginalMemberHistorySource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{range_start:start,address:pages.slot_address(),extent,authority:Some((self.operation.0,self.generation.0))}})
     }
-    pub fn new(operation: OperationId, generation: Generation, expires_at_us: u64, expected: ArtifactRef, owner: Option<OwnerRef>, pages: OwnedSchemaDecodePages, actor: semio_framework_os_spr::ActorId) -> Self {
+    pub fn new(operation: OperationId, generation: Generation, expires_at_us: u64, expected: ArtifactRef, owner: Option<OwnerRef>, pages: OwnedSchemaDecodePages, actor: semio_os_spr::ActorId) -> Self {
         Self {
             actor: ManuallyDrop::new(actor),
             operation,
@@ -209,7 +209,7 @@ impl MemberOpenRequest {
         }
         self.expected.as_ref().ok_or(MemberOpenDiagnostic::Stale)
     }
-    pub fn actor(&self) -> &semio_framework_os_spr::ActorId { &self.actor }
+    pub fn actor(&self) -> &semio_os_spr::ActorId { &self.actor }
 
     pub fn owner(&self) -> Option<&OwnerRef> {
         self.owner.as_ref()
@@ -332,7 +332,7 @@ impl MemberOpenRequest {
         if offset > length {
             return Err(MemberOpenDiagnostic::Malformed);
         }
-        let maximum = output.len().min(length - offset).min(semio_framework_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+        let maximum = output.len().min(length - offset).min(semio_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
         let mut copied = 0;
         while copied < maximum && !cx.should_yield() {
             self.check_step_authority(cx)?;

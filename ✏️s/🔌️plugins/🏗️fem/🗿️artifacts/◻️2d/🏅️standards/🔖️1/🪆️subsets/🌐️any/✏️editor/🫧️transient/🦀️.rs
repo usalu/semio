@@ -119,9 +119,9 @@ pub fn fem_gumball_drive<T: GestureTool<Gesture = FemGumballGesture>>(
     tick: Option<T::Tick>,
     authoring_seed: &str,
     base_revision: &str,
-) -> Result<FemGumballDrive<T::Mutation>, semio_framework_plugin::Fault> {
+) -> Result<FemGumballDrive<T::Mutation>, semio_plugin::Fault> {
     let drive = semio_framework_tool_machine::drive_gesture::<T>(transient.gestures.get(window), verb, phase, tick, authoring_seed, base_revision)
-        .map_err(|refusal| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, refusal.code(), "the gumball tool refused the dispatch"))?;
+        .map_err(|refusal| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, refusal.code(), "the gumball tool refused the dispatch"))?;
     Ok(FemGumballDrive { committed: drive.committed, transient: drive.next.map(|gesture| transient.with_gesture(window, gesture)) })
 }
 //#endregion 🛠️Drive
@@ -134,7 +134,7 @@ impl semio_framework_value_snapshot_projection::SnapshotProjection for FemGumbal
 }
 
 //#region 🔖️Mutation
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: FemGumballTransient,
     mutation: FemGumballTransientMutation,
     diff: FemGumballTransientDiff,

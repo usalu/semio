@@ -69,8 +69,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "node-children", kind: "reorder-node-children", record: "ReorderedNodeChildren" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Reorder Node Children", "Kindknoten umordnen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Reorder Node Children", "Kindknoten umordnen")
     }
 
     fn target(&self) -> Vec<String> {

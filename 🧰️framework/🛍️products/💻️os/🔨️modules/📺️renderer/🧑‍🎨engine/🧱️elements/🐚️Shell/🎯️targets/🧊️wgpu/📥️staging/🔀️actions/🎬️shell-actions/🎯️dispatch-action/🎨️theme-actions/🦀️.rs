@@ -78,7 +78,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         self.settle.submit_shell_io_future(async move {
             let opened = request_file_open(SHELL_THEME_IMPORT_ACCEPT, Some("text"), false).await;
             ShellIoCompletion::Actions(
-                opened.into_iter().take(1).map(|file| ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": file.contents }) }).collect(),
+                opened.into_iter().take(1).map(|file| ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": file.contents }) }).collect(),
             )
         });
         Ok(())

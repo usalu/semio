@@ -1,8 +1,8 @@
 //! 🧱 Compliant clay load-bearing wall example (DIN EN 1996 DE-NA).
 
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "loadbearing-wall";
 pub fn label() -> LocalizedLabel {

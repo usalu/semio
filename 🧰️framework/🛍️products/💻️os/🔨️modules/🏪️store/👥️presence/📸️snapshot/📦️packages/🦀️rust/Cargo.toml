@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-presence-native-snapshot"
+name = "semio-os-presence-native-snapshot"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

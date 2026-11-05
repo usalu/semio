@@ -5,7 +5,7 @@
 //! `ImperativeConfig` carries no terminology axis.
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale
     /// combination compile-checked.
     pub struct ImperativeLabels {
@@ -29,8 +29,8 @@ semio_framework_ui_locale::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-pub fn imperative_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static ImperativeLabels {
-    semio_framework_plugin::resolve_labels::<ImperativeLabels>(view_state)
+pub fn imperative_labels(view_state: &semio_plugin::ViewModel) -> &'static ImperativeLabels {
+    semio_plugin::resolve_labels::<ImperativeLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

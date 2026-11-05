@@ -11,8 +11,8 @@ fn sqlite_snapshot_semantic_row_tail_processing_cancels_inside_owned_frontier(){
  assert_eq!(tails.len(),height);for(y,row)in tails.iter().enumerate(){assert_eq!(row.integer(2).unwrap(),y as i64);assert_eq!(row.integer(3).unwrap(),(y%128)as i64);}
  assert_eq!(restore(&database),snapshot);
  let mut completed_frontiers=0usize;let mut canceled_at=None;
- let mut progress=|event:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{
-  if event.phase==semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot&&event.total==height{
+ let mut progress=|event:semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{
+  if event.phase==semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot&&event.total==height{
    if event.completed==height{completed_frontiers+=1;}
    if completed_frontiers>=2&&event.completed==cadence{canceled_at=Some(event);return false;}
   }true

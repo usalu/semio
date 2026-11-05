@@ -6,17 +6,17 @@ use std::sync::OnceLock;
 use std::time::Duration;
 use std::time::Instant;
 use crate::ui::{conversation_reply_handler, read_ui_resource, register_ui_tools, ui_resource_templates, ui_resources};
-use semio_framework_os_mcp_bridge::session::{AgentConversation, BridgeHandle};
-use semio_framework_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, dispatch_shell_command_with_timeout};
-use semio_framework_os_mcp_bridge_codec::bridge::{AGENT_CONVERSATION_MAX_TEXT, GatewayToShell, SELF_PUBLISHING_CONVERSATION_TOOLS, ShellToGateway, truncate_conversation_text};
-use semio_framework_os_mcp_capabilities::capability_declarations::ui_capabilities;
-use semio_framework_os_mcp_catalog::catalog::{CapabilityKind, ToolExposure};
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
-use semio_framework_os_mcp_foundation::handles::HandleTable;
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy, PolicyEngine};
-use semio_framework_os_mcp_wire::job_registry::{JobRegistry, JobStatus, job_registry};
-use semio_framework_os_mcp_wire::notify::{NotificationSink, NotificationSlot, RecordingSink, ResourceSubscriptions, notification_slot};
-use semio_framework_os_mcp_wire::protocol::{InMemoryToolRegistry, ToolRegistry, is_valid_tool_name};
+use semio_os_mcp_bridge::session::{AgentConversation, BridgeHandle};
+use semio_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, dispatch_shell_command_with_timeout};
+use semio_os_mcp_bridge_codec::bridge::{AGENT_CONVERSATION_MAX_TEXT, GatewayToShell, SELF_PUBLISHING_CONVERSATION_TOOLS, ShellToGateway, truncate_conversation_text};
+use semio_os_mcp_capabilities::capability_declarations::ui_capabilities;
+use semio_os_mcp_catalog::catalog::{CapabilityKind, ToolExposure};
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_foundation::handles::HandleTable;
+use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy, PolicyEngine};
+use semio_os_mcp_wire::job_registry::{JobRegistry, JobStatus, job_registry};
+use semio_os_mcp_wire::notify::{NotificationSink, NotificationSlot, RecordingSink, ResourceSubscriptions, notification_slot};
+use semio_os_mcp_wire::protocol::{InMemoryToolRegistry, ToolRegistry, is_valid_tool_name};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

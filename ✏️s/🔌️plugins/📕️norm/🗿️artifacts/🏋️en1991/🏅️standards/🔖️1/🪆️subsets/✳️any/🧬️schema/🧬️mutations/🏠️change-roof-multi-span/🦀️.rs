@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRoofMultiSpan wher
         record: "ChangedRoofMultiSpan",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change multi-span roof of the roof", "Dach: Mehrfeld-Dach ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change multi-span roof of the roof", "Dach: Mehrfeld-Dach ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

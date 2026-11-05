@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangePrestressStrength 
         record: "ChangedPrestressStrength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tendon characteristic tendon strength f_pk", "Charakteristische Spannstahlfestigkeit f_pk (Spannglied) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tendon characteristic tendon strength f_pk", "Charakteristische Spannstahlfestigkeit f_pk (Spannglied) ändern")
     }
 }
 

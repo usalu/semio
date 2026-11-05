@@ -4,8 +4,9 @@ import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import{fileURLToPath}from"node:url";
 import Ajv from"ajv";
-import{applyPatch}from"fast-json-patch";
+import{applyPatch,getValueByPointer}from"fast-json-patch";
 import fixture from"./🧫️fixtures/🔣️.json";
+import wireSchema from "../../../🔣️json/🔣️.json";
 
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
@@ -170,7 +171,7 @@ test("Puzzle2d create inverse retains unconditional literal intent under native 
  for(const row of corpus.cases){expect(row.inverse).toEqual({mutation:"delete-node",payload:{id:row.mutation.node.id}});const id=text(row.inverse.payload.id),db=new Database(":memory:");try{db.run("CREATE TABLE inverse_intent(id TEXT NOT NULL)");db.run("INSERT INTO inverse_intent VALUES(?)",[id]);expect(db.query("SELECT id,length(CAST(id AS BLOB)) AS bytes FROM inverse_intent").get()).toEqual({id,bytes:new TextEncoder().encode(id).length});}finally{db.close()}
   if(row.status==="changed")expect(applyPatch(row.after.map(text),[{op:"remove",path:`/${row.position}`}]).newDocument).toEqual(row.nodes.map(text));
  }
- const source=await Bun.file(new URL("↩️inverse/🦀️.rs",root)).text();expect(source).toContain("pub type Puzzle2dCreateNodeInverseCursor");expect(source).toContain("fn inverse_id(&self)");expect(source).toContain("&self.node.id");const owner=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🏷️literal-id-inverse/🦀️.rs",import.meta.url)).text();expect(owner).toContain("mutation.project(1, M::inverse_id)");expect(owner).toContain("PagedList<Puzzle2dMutation");expect(owner).toContain("ControlledRetirement");expect(owner).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("↩️inverse/🦀️.rs",root)).text();expect(source).toContain("pub type Puzzle2dCreateNodeInverseCursor");const owner=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🏷️literal-id-inverse/🦀️.rs",import.meta.url)).text();expect(owner).toContain("impl Puzzle2dLiteralIdInverse for crate::standards::v1::subsets::any::schema::mutations::CreateNode");expect(owner).toContain("fn inverse_id(&self)");expect(owner).toContain("&self.node.id");expect(owner).toContain("mutation.project(1, M::inverse_id)");expect(owner).toContain("PagedList<Puzzle2dMutation");expect(owner).toContain("ControlledRetirement");expect(owner).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 
@@ -271,7 +272,7 @@ test("Puzzle2d connect inverse owns only unconditional literal ID intent",async(
  for(const row of corpus.cases){expect(row.inverse).toEqual([{kind:"disconnect-handles",id:row.id}]);const id=text(row.id),db=new Database(":memory:");try{db.run("CREATE TABLE inverse_intent(kind TEXT NOT NULL,id TEXT NOT NULL)");db.run("INSERT INTO inverse_intent VALUES(?,?)",["disconnect-handles",id]);expect(db.query("SELECT kind,id,length(CAST(id AS BLOB)) AS bytes FROM inverse_intent").get()).toEqual({kind:"disconnect-handles",id,bytes:new TextEncoder().encode(id).length});}finally{db.close()}
  if(row.changed){const forward=applyPatch(row.base.map(text),[{op:"add",path:`/${row.position}`,value:id}]).newDocument;expect(applyPatch(forward,[{op:"remove",path:`/${row.position}`}]).newDocument).toEqual(row.base.map(text));}
  }
- const source=await Bun.file(new URL("🦀️.rs",root)).text();expect(source).toContain("pub type Puzzle2dConnectHandlesInverseCursor");expect(source).toContain("impl Puzzle2dLiteralIdInverse for ConnectHandles");expect(source).toContain("&self.id");const owner=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🏷️literal-id-inverse/🦀️.rs",import.meta.url)).text();expect(owner).toContain("mutation.project(1, M::inverse_id)");expect(owner).toContain("PagedList<Puzzle2dMutation");expect(owner).toContain("ControlledRetirement");expect(owner).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("🦀️.rs",root)).text();expect(source).toContain("pub type Puzzle2dConnectHandlesInverseCursor");const owner=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🏷️literal-id-inverse/🦀️.rs",import.meta.url)).text();expect(owner).toContain("impl Puzzle2dLiteralIdInverse for crate::standards::v1::subsets::any::schema::mutations::ConnectHandles");expect(owner).toContain("&self.id");expect(owner).toContain("mutation.project(1, M::inverse_id)");expect(owner).toContain("PagedList<Puzzle2dMutation");expect(owner).toContain("ControlledRetirement");expect(owner).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 
@@ -367,4 +368,32 @@ test("Puzzle2d child preparation owns exact granted native birth and terminal re
   const native=readFileSync(resolve(base,"🦀️.rs"),"utf8");
   expect(native).toContain("maximum_capacity_bytes < bytes");expect(native).toContain("maximum_release_bytes < bytes");expect(native).toContain("owner.terminal_is_empty()");
  }finally{db.close();}
+});
+
+test("Puzzle 2D declared JSON has forty-three authored exact binary64 word fields",()=>{
+ const paths=fixture.declaredJson.floatPointers,ajv=new Ajv(),validateWire=ajv.compile(wireSchema),validate=ajv.compile({$ref:wireSchema.$id+"#/$defs/FloatWord"});
+ expect(fixture.declaredJson.wireSchema).toBe(wireSchema.$id);
+ expect(paths.length).toBe(43);expect(new Set(paths).size).toBe(43);
+ for(const word of[undefined,...fixture.binary64Words]){
+  const patches=paths.map(path=>{
+   const value=getValueByPointer(fixture.snapshot,path);
+   expect(typeof value).toBe("number");
+   const buffer=new DataView(new ArrayBuffer(8));buffer.setFloat64(0,value,false);
+   const bits=word??buffer.getBigUint64(0,false).toString(16).padStart(16,"0");
+   return{op:"replace"as const,path,value:{bits}};
+  });
+  const expected=applyPatch(structuredClone(fixture.snapshot),patches,true,false).newDocument;
+  const independent=JSON.parse(JSON.stringify(expected));
+  expect(independent).toEqual(expected);
+  expect(validateWire(independent),JSON.stringify(validateWire.errors)).toBe(true);
+  for(const path of paths){const value=getValueByPointer(independent,path);expect(validate(value)).toBe(true);expect(value).toEqual(patches.find(patch=>patch.path===path)!.value);}
+ }
+ for(const invalid of[{},null,{bits:"0"},{bits:"FFFFFFFFFFFFFFFF"},{bits:"000000000000000g"},{bits:"0000000000000000",extra:true}])expect(validate(invalid)).toBe(false);
+ for(const row of fixture.declaredJson.presenceCases){
+  const patches=paths.map(path=>{const buffer=new DataView(new ArrayBuffer(8));buffer.setFloat64(0,getValueByPointer(fixture.snapshot,path),false);return{op:"replace"as const,path,value:{bits:buffer.getBigUint64(0,false).toString(16).padStart(16,"0")}};});
+  const wire=applyPatch(structuredClone(fixture.snapshot),patches,true,false).newDocument;
+  const mutation=row.operation==="remove"?{op:"remove"as const,path:row.path}:{op:"replace"as const,path:row.path,value:"value"in row?row.value:null};
+  const input=applyPatch(wire,[mutation],true,false).newDocument;
+  expect(validateWire(input),row.name+" "+JSON.stringify(validateWire.errors)).toBe(row.accepted);
+ }
 });

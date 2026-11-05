@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_os_flow::geometry::{GeometryWorkIdentity,GeometryWorkProgress,GeometryWorkFailure};
+use semio_os_flow::geometry::{GeometryWorkIdentity,GeometryWorkProgress,GeometryWorkFailure};
 use semio_framework_value::RetirementDemand;
 
 /// 🧭️ One original source and caller identity remain attached to its paid key and query admission.
@@ -195,7 +195,7 @@ impl Session {
         let row=registry.jobs.iter().find(|(key,row)|key.0==handle&&key.1==tolerance.to_bits()&&row.identity==identity&&row.source==handle.as_ptr()as usize&&row.length==handle.len()).map(|(_,row)|row);Ok(row.map(|row|(row.source_units,row.source_units+1,"admitted-source")))
     }
     fn source_tessellation_cancelled(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64)->Result<bool,ValueError>{let owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original().ok_or_else(ownership_busy)?;Ok(registry.source_cancellation.as_ref().is_some_and(|target|target.matches(identity,handle,tolerance)))}
-    pub fn tessellation_demands(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let authority=self;if self.source_tessellation_cancelled(identity,handle,tolerance)?{return Ok(Default::default());}if let Some(demand)=authority.admission_demands(identity,handle,tolerance,copy)?{return Ok(demand);}let kernel=self.kernel().try_lock().map_err(|_|ownership_busy())?;let owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original().ok_or_else(ownership_busy)?;
+    pub fn tessellation_demands(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let authority=self;if self.source_tessellation_cancelled(identity,handle,tolerance)?{return Ok(Default::default());}if let Some(demand)=authority.admission_demands(identity,handle,tolerance,copy)?{return Ok(demand);}let kernel=self.kernel().try_lock().map_err(|_|ownership_busy())?;let owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original().ok_or_else(ownership_busy)?;
         if let Some(validation)=registry.jobs.iter().find(|(key,row)|key.0==handle&&key.1==tolerance.to_bits()&&row.identity==identity&&row.source==handle.as_ptr()as usize&&row.length==handle.len()).and_then(|(_,row)|row.validation.as_ref()){return validation.funded_demands(kernel.tessellation_body());}
         let bytes=authority.cached_mesh_payload_bytes(handle,tolerance);Ok(semio_framework_value::RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()})}
     fn tessellate_admitted_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant,spent:&mut usize)->Result<(TessellationStepOutcome,GeometryWorkProgress),ValueError>{
@@ -224,15 +224,15 @@ impl Session {
             if let Some(primary)=receipt_refusal{return Err(GeometryWorkFailure{primary,work,receipt_refusal:None})}Ok(original)
         }}
     }
-    pub fn tessellate_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_os_flow::geometry::GeometryStep,GeometryWorkProgress),GeometryWorkFailure>{
+    pub fn tessellate_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(semio_os_flow::geometry::GeometryStep,GeometryWorkProgress),GeometryWorkFailure>{
         Self::check_geometry_caller(identity,cx)?;
-        if cx.is_cancelled(){return Ok((semio_framework_os_flow::geometry::GeometryStep::Cancelled,Default::default()))}
-        if cx.should_yield(){return Ok((semio_framework_os_flow::geometry::GeometryStep::Working{units_done:0,units_total:0,phase:"awaiting-caller"},Default::default()))}
+        if cx.is_cancelled(){return Ok((semio_os_flow::geometry::GeometryStep::Cancelled,Default::default()))}
+        if cx.should_yield(){return Ok((semio_os_flow::geometry::GeometryStep::Working{units_done:0,units_total:0,phase:"awaiting-caller"},Default::default()))}
         let mut spent=0;let result=self.tessellate_original_step(identity,handle,tolerance,1,cx.retained_grant(),&mut spent);
         Self::receive_geometry_work(result.map_err(|primary|GeometryWorkFailure::new(primary,spent)),cx)
     }
-    fn tessellate_original_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant,spent:&mut usize)->Result<(semio_framework_os_flow::geometry::GeometryStep,GeometryWorkProgress),ValueError> {
-        use semio_framework_os_flow::geometry::{GeometryStep,GeometryWorkProgress};
+    fn tessellate_original_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant,spent:&mut usize)->Result<(semio_os_flow::geometry::GeometryStep,GeometryWorkProgress),ValueError> {
+        use semio_os_flow::geometry::{GeometryStep,GeometryWorkProgress};
         let awaiting=||(GeometryStep::Working {units_done:0,units_total:0,phase:"awaiting-grant"},GeometryWorkProgress::default());
         if self.is_closed(){return Err(ownership_busy());}let authority=self;
         if self.source_tessellation_cancelled(identity,handle,tolerance)?{return Ok((GeometryStep::Cancelled,Default::default()));}

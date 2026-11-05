@@ -47,7 +47,7 @@ async fn gumball_active_only_for_transform_utilities_with_object_selection() {
     assert_eq!(transform_selection.pointer("/gumballConfig/moveAxes").and_then(Value::as_bool), Some(true));
     assert_eq!(transform_selection.pointer("/gumballConfig/rotate").and_then(Value::as_bool), Some(true));
 
-    dispatch(&mut app, semio_framework_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear");
+    dispatch(&mut app, semio_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear");
     assert_eq!(selection_of(&render_window(&mut app, WINDOW_KIND_ID).await).get("gumballActive").and_then(Value::as_bool), Some(false), "an unattached gumball must never render");
 
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("reselect");
@@ -88,7 +88,7 @@ async fn transform_utility_is_local_to_the_window_instance_not_shared_across_spl
 
 #[semio_framework_async_macros::async_test]
 async fn transform_utility_options_expose_move_and_rotate_flags() {
-    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("admitted host axis");
     let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into() };
     let measures = main::window_measures(&scene, labels);
     assert_eq!(measure_group_tag(&measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-transform")), Some(Some(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into())));
@@ -127,11 +127,11 @@ fn object_scale(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
 /// 🧾️ The applied history rows one settle upserted that carry document ops.
 
 fn english(entry: &semio_framework::kernel::HistoryEntry) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
+    entry.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string()
 }
 
 fn german(entry: &semio_framework::kernel::HistoryEntry) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
+    entry.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_string()
 }
 
 /// 🌱️ An empty scene with one fresh object, the object selected and the Transform utility active.

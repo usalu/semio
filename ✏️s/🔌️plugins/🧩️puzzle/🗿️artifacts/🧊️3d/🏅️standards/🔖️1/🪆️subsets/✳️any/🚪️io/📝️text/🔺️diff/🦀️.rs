@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type Puzzle3dDiffText = String;
 
-semio_framework_os_kernel::diff_text!(crate::Puzzle3dDiff);
+semio_os_kernel::diff_text!(crate::Puzzle3dDiff);
 
 #[cfg(test)]
 #[test]

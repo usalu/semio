@@ -2,7 +2,7 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 pub use semio_s_artifact_stdio_epw_io_registry::{declaration, definition};
 

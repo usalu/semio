@@ -1,0 +1,58 @@
+[
+  {
+    "name": "original-order-with-malformed-leaf",
+    "generation": 17,
+    "values": [
+      {
+        "type": "MoveWidget",
+        "id": "node",
+        "x": 1,
+        "y": 2
+      },
+      null,
+      {
+        "type": "ChangeGenerationValue",
+        "id": "g",
+        "key": "text",
+        "value": "β\n🧬"
+      }
+    ],
+    "expected": [
+      {
+        "type": "MoveWidget",
+        "id": "node",
+        "x": 1,
+        "y": 2
+      },
+      null,
+      {
+        "type": "ChangeGenerationValue",
+        "id": "g",
+        "key": "text",
+        "value": "β\n🧬"
+      }
+    ],
+    "remaining": [
+      {
+        "type": "MoveWidget",
+        "id": "node",
+        "x": 1,
+        "y": 2
+      },
+      null,
+      {
+        "type": "ChangeGenerationValue",
+        "id": "g",
+        "key": "text",
+        "value": "β\n🧬"
+      }
+    ]
+  },
+  {
+    "name": "empty-capture-retains-epoch",
+    "generation": 91,
+    "values": [],
+    "expected": [],
+    "remaining": []
+  }
+]

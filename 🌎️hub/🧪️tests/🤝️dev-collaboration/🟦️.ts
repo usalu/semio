@@ -27,7 +27,7 @@ import { collabRunCollaborationBehaviours } from "./🧪️collaboration-behavio
 
 import {buildComponentClosureV1} from "@semio-tech/framework-plugin/build/driver-stages";
 
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 
 import { withBuiltLocalHubHostV1, withLocalHubHostTaskV1, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 

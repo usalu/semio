@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeCategoryElementId 
         record: "ChangedCategoryElementId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plate element at the detail of the fatigue detail site", "Ermüdungsdetail-Stelle: Blechelement am Detail ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plate element at the detail of the fatigue detail site", "Ermüdungsdetail-Stelle: Blechelement am Detail ändern")
     }
 }
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloGamma where Op
         record: "ChangedSiloGamma",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Unit weight of the stored solid γ of the silo shell", "Silo-Schale: Wichte des Schüttguts γ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Unit weight of the stored solid γ of the silo shell", "Silo-Schale: Wichte des Schüttguts γ ändern")
     }
 }
 

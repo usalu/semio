@@ -654,8 +654,8 @@ export class ScopedDirectorySocketCheckScript extends BundleScript {
     if (phase === "all" || phase === "native") {
       const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,groups: [
           {
-            package: "semio-framework-os-kernel",
-            target: { kind: "lib", name: "semio_framework_os_kernel" },
+            package: "semio-os-kernel",
+            target: { kind: "lib", name: "semio_os_kernel" },
             laws: ["scoped_stream_close_4401_is_terminal_and_never_redials", "scoped_stream_issues_and_dials_the_same_encoded_scope"],
           },
         ],progress(event) {

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeWallWebSpacingM wh
         record: "ChangedWallWebSpacingM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Wall: Web spacing of the shear wall (0 = not given)", "Wand: Stegabstand der Schubwand (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Wall: Web spacing of the shear wall (0 = not given)", "Wand: Stegabstand der Schubwand (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

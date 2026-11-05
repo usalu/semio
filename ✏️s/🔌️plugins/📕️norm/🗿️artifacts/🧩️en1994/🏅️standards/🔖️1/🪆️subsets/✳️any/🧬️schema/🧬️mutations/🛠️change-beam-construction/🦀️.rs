@@ -18,8 +18,8 @@ pub struct ChangeBeamConstruction {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamConstruction where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_construction::ChangeBeamConstruction> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-construction", kind: "change-beam-construction", record: "ChangedBeamConstruction" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change beam construction method", "Montagezustand des Trägers ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change beam construction method", "Montagezustand des Trägers ändern")
     }
 }
 

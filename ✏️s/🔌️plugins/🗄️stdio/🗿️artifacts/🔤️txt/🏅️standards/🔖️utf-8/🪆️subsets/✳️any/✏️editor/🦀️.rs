@@ -8,39 +8,39 @@ use crate::editor::txt::modes::edit;
 use crate::editor::txt::modes::edit::windows::main;
 use crate::schema::mutations::{SpliceTextMutation, TextSplice};
 use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_ui_locale::Label;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
+use semio_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Dialect
@@ -211,7 +211,7 @@ pub fn txt_command_from_action(action: &str, args: Option<&semio_framework_value
         TXT_KIT_ACTION_ID => {
             Ok(TxtEditorCommand::SpliceText { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?, splices: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "splices")? })
         }
-        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, textEdit)"))),
+        other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.txt.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, textEdit)"))),
     }
 }
 
@@ -241,19 +241,19 @@ pub fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_re
     };
     let current_revision = canonical_revision.map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), semio_s_artifact_stdio_contract::window_kit_canonical_revision);
     if revision != &current_revision {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.stale-text-edit"), "the text document changed while this draft was open"));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.txt.stale-text-edit"), "the text document changed while this draft was open"));
     }
     let ranges = semio_s_artifact_stdio_contract::draft_splices_from_json(splices)?;
     if ranges.is_empty() {
         return Ok(Emit::default());
     }
-    let range_fault = |_| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.splice-out-of-range"), "a range of the change set exceeds the supported text size");
+    let range_fault = |_| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.txt.splice-out-of-range"), "a range of the change set exceeds the supported text size");
     let mutation = TxtMutation::SpliceText(SpliceTextMutation {
         splices: ranges.iter().map(|range| Ok(TextSplice { offset: u32::try_from(range.offset)?, delete: u32::try_from(range.delete)?, insert: range.insert.clone() })).collect::<Result<Vec<_>, std::num::TryFromIntError>>().map_err(range_fault)?,
     });
     let outcome = <TxtMutation as protocol::ColdMutation<TxtSnapshot>>::diff(&mutation, snapshot);
     if let Some(message) = outcome.messages().first() {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.splice-unrepresentable"), message.message.to_string()));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.txt.splice-unrepresentable"), message.message.to_string()));
     }
     Ok(if outcome.diff() == &crate::schema::diff::TxtDiff::default() { Emit::default() } else { Emit::mutations(vec![mutation]) })
 }
@@ -264,10 +264,10 @@ fn txt_retained_reduce(
     command: &TxtEditorCommand,
     snapshot: &TxtSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TxtEditor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TxtEditor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<TxtMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     txt_emit(command, snapshot, Some(operation.canonical_base_revision))
@@ -299,7 +299,7 @@ impl ToolJobFactory for TxtRetainedCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         txt_retained_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: TXT_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: TXT_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -317,7 +317,7 @@ pub struct TxtEditor;
 
 impl ArtifactEditor for TxtEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = TxtSnapshot;
@@ -335,20 +335,20 @@ impl ArtifactEditor for TxtEditor {
     const DIALECT: Dialect = TXT_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TXT_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.txt@utf-8", extension: ".txt", media_type: "text/plain", binary: false })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.txt@utf-8", extension: ".txt", media_type: "text/plain", binary: false })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
         Ok(snapshot.to_body().into_bytes())
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
         Ok(TxtSnapshot::from_body(text))
     }
 
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
@@ -369,8 +369,8 @@ impl ArtifactEditor for TxtEditor {
         semio_s_artifact_stdio_contract::editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if semio_s_artifact_stdio_contract::editing::is_snapshot_edit_action(&original.tool_id) {
             return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Self>(request, output, cx);
         }
@@ -378,10 +378,10 @@ impl ArtifactEditor for TxtEditor {
             return Ok(false);
         }
         if txt_command_id(&original.command) != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-txt-retained-command-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-txt-retained-command-tool-mismatch").into());
         }
         let tool_id = txt_command_id(&original.command);
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, txt_command_id, TXT_RETAINED_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, txt_retained_reduce, txt_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, txt_command_id, TXT_RETAINED_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, txt_retained_reduce, txt_retained_extent))
     }
 
     /// 📤️ The artifact lane's one-item publication authority. The kit verb's route declares the
@@ -406,7 +406,7 @@ impl ArtifactEditor for TxtEditor {
         txt_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Result<TxtSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<TxtSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(TxtSnapshot::default())
     })}
 
@@ -414,8 +414,8 @@ impl ArtifactEditor for TxtEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -425,22 +425,22 @@ impl ArtifactEditor for TxtEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
                 let revision =
                     doc.render_operation().map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot), |operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render(doc.snapshot, view_state.locale, &revision, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render(doc.snapshot, view_state.locale, &revision, publication_revision).map(semio_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.txt@utf-8/*#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -461,7 +461,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TxtEdit
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_txt_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_txt_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(TXT_EDITOR_DIALECT)
         .document(["semio", "stdio", "txt"])
         .artifact_kind(crate::artifact_kind())

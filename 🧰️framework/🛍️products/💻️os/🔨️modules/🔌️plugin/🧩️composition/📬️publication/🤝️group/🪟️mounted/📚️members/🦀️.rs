@@ -1,22 +1,22 @@
 use crate::mounted_child_group_receipt::mounted_nested_retirement_demand;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework::kernel::{ArtifactHandle, InverseMutation, KernelMutation, MutationId};
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_plugin_child::ChildMemberRegistry;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_plugin_child::ChildMemberRegistry;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::{MemberFactory, SpaceMember};
 use crate::mounted_child_group_receipt::MountedArtifactHandleIssuer;
 use crate::mounted_child_group_receipt_group::{MountedGroupChildEditSource, MountedGroupPreparedChildEdits, MountedGroupReceipt, MountedGroupReceiptOutput, MountedGroupReceiptSource};
 use crate::mounted_child_group_receipt_group::member::{MountedMemberReceipt, MountedMemberReceiptSource};
-use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
+use semio_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 #[cfg(test)]
 use crate::mounted_child_group_receipt_group::member::{member_receipt_fixture, member_receipt_source};
-use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_plugin_ownership::bounded_ownership::plugin_grant_funds;
 
 struct MountedMemberReceiptRows {
     pub rows: [Option<Box<MountedMemberReceipt>>; 65],

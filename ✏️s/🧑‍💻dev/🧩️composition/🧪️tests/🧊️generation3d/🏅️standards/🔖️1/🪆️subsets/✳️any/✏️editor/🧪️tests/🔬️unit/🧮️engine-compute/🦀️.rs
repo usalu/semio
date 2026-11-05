@@ -23,10 +23,10 @@ fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifa
 #[test]
 fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_authority() {
     let _serial = test_serial();
-    use semio_framework_plugin::{ArtifactEditor, MediaClass, MediaForm, MediaPayload, TransientView};
+    use semio_plugin::{ArtifactEditor, MediaClass, MediaForm, MediaPayload, TransientView};
     let fixtures: Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json")).expect("the language-neutral mesh corpus");
     let fixture = fixtures["meshes"].as_array().unwrap().iter().find(|case| case["name"] == "unit-tetrahedron").expect("the independent tetrahedron fixture");
-    let source = semio_framework_plugin::MeshData {
+    let source = semio_plugin::MeshData {
         positions: fixture["mesh"]["vertices"].as_array().unwrap().iter().flat_map(|vertex| vertex.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap() as f32)).collect(),
         indices: fixture["mesh"]["faces"].as_array().unwrap().iter().flat_map(|face| face.as_array().unwrap().iter().map(|index| index.as_u64().unwrap() as u32)).collect(),
         ..Default::default()
@@ -43,7 +43,7 @@ fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_aut
             crate::flow_operators::resolve_preview_geometry(&eval_json, &projection.host_snapshot, &Generation3dConfig::default().lod_mode, session);
         })
     }).expect("the supplied owner retains the prepared evaluation");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
     let transient = Generation3dTransient::default();
     let transient = TransientView { snapshot: &transient, window: None };
@@ -52,7 +52,7 @@ fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_aut
     assert_eq!(media.media_type.form, MediaForm::Mesh);
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("geometry export must carry a structured mesh"); };
     assert_eq!(schema, "3d.mesh");
-    let mesh: semio_framework_plugin::MeshData = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the exported actual geometry");
+    let mesh: semio_plugin::MeshData = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the exported actual geometry");
     assert!(mesh.positions.len() >= 12);
     assert_eq!(mesh.indices.len() / 3, fixture["expected"]["faces"].as_u64().unwrap() as usize);
     assert_eq!(mesh.indices.len(), source.indices.len());
@@ -66,7 +66,7 @@ fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_aut
 }
 
 /// 📦️ Supplies the actual document geometry from the concrete Session to its IO bridge.
-fn prepared_document_mesh(projection: &Generation3dSnapshot) -> semio_framework_plugin::MeshData {
+fn prepared_document_mesh(projection: &Generation3dSnapshot) -> semio_plugin::MeshData {
     let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &Generation3dConfig::default());
     let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("prepared document meshes");
     let meshes = meshes.iter().map(|mesh| mesh_data_from_json(&mesh["data"])).collect::<Vec<_>>();
@@ -149,10 +149,10 @@ fn preview_payload_has_meshes_and_instances() {
 #[test]
 fn document_from_mesh_rejects_empty_or_invalid_geometry() {
     let _serial = test_serial();
-    let mesh = semio_framework_plugin::MeshData::default();
+    let mesh = semio_plugin::MeshData::default();
     assert!(generation3d_document_from_mesh(&mesh).is_err());
     for (positions, indices) in [(vec![0.0; 8], vec![0, 1, 2]), (vec![0.0; 9], vec![0, 1, 9]), (vec![f32::NAN; 9], vec![0, 1, 2]), (vec![0.0; 9], vec![0, 1, 1])] {
-        assert!(generation3d_document_from_mesh(&semio_framework_plugin::MeshData { positions, indices, ..Default::default() }).is_err());
+        assert!(generation3d_document_from_mesh(&semio_plugin::MeshData { positions, indices, ..Default::default() }).is_err());
     }
 }
 
@@ -165,7 +165,7 @@ fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
         if source["faces"].as_array().unwrap().iter().any(|face| face.as_array().unwrap().len() != 3) { continue; }
         let positions = source["vertices"].as_array().unwrap().iter().flat_map(|point| point.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap() as f32)).collect::<Vec<_>>();
         let indices = source["faces"].as_array().unwrap().iter().flat_map(|face| face.as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32)).collect::<Vec<_>>();
-        let mesh = semio_framework_plugin::MeshData { positions: positions.clone(), indices: indices.clone(), ..Default::default() };
+        let mesh = semio_plugin::MeshData { positions: positions.clone(), indices: indices.clone(), ..Default::default() };
         let document = generation3d_document_from_mesh(&mesh).unwrap();
         let projection = <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&document)).unwrap();
         let source_fields = semio_s_artifact_procedural_3d_mesh_bridge::imported_source(&projection).map(|(kind, data)| (kind.to_owned(), data.to_owned()));
@@ -282,10 +282,10 @@ fn generation3d_io_declares_the_params_and_geometry_ports() {
     assert_eq!(io.artifact_schema, "generation.3d");
     assert_eq!(io.artifact.id, "3d.generation");
     let params = io.ports.iter().find(|port| port.id == "params:in").expect("params:in declared");
-    assert_eq!(params.direction, semio_framework_plugin::MediaPortDirection::In);
+    assert_eq!(params.direction, semio_plugin::MediaPortDirection::In);
     assert!(!params.required);
     let geometry = io.ports.iter().find(|port| port.id == "geometry:out").expect("geometry:out declared");
-    assert_eq!(geometry.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(geometry.direction, semio_plugin::MediaPortDirection::Out);
     assert_eq!(geometry.kind_id.as_deref(), Some("3d.mesh"));
     assert_eq!(geometry.multiplicity, semio_framework::PortMultiplicity::Many);
 }
@@ -303,7 +303,7 @@ fn mesh_preview_renders_without_a_brep_conversion_in_editor_and_viewer() {
     let _serial = test_serial();
     let fixture = preview_widget_fixture("mesh", vec!["meshOut".into()]);
     let expected = semio_framework::mesh_box(1.0, 1.0, 1.0);
-    let preview = semio_framework_os_flow::mesh::encode_base64(&semio_framework_os_flow::mesh::encode_mesh_pack(&expected).unwrap());
+    let preview = semio_os_flow::mesh::encode_base64(&semio_os_flow::mesh::encode_mesh_pack(&expected).unwrap());
     let data = json!({"vertices": expected.positions.chunks_exact(3).collect::<Vec<_>>(), "faces": expected.indices.chunks_exact(3).collect::<Vec<_>>()}).to_string();
     let eval_json = json!({"mesh": {"out": {"meshOut": {"$schema": "mesh", "data": data, "preview": preview}}}}).to_string();
     let (meshes, instances) = preview_payload_from_eval(&eval_json, &fixture, &Generation3dConfig::default());

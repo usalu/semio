@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberMomentDiagra
         record: "ChangedMemberMomentDiagram",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bending moment diagram of the member", "Bauteil: Momentenverlauf ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bending moment diagram of the member", "Bauteil: Momentenverlauf ändern")
     }
 }
 

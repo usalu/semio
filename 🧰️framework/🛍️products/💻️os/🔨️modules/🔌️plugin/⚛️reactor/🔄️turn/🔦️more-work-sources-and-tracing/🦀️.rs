@@ -129,7 +129,7 @@ pub(super) fn trace_turn_phase_retention(phase: &str) {
 /// the same stream, so this stays one call site.
 pub(super) fn trace_guest_line(line: &str) {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin_abi::wasip2::log("debug", line));
+    ::semio_framework_async::poll::resolve_ready(semio_plugin_abi::wasip2::log("debug", line));
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     eprintln!("{line}");
 }
@@ -168,7 +168,7 @@ pub(super) fn trace_guest_memory_pressure() {
     }
 }
 
-pub(super) fn native_close_key<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
+pub(super) fn native_close_key<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
     runtime.live_instance_key(instance).map_err(|error|reactor_close_fault(if error.message=="lifecycle authority busy"{"lifecycle authority busy"}else{"instance has no acknowledged live lifetime"}))
 }
 
@@ -229,7 +229,7 @@ pub(super) fn drive_turn_executors(effects: &mut Vec<Effect>) -> TurnExecutorWor
 /// hold that lock is itself either a reactor executor task (`executor_pending`), a task resume
 /// (`resumes`), an ingress command (`command_ingress`) or a lifecycle step (`lifecycle`), each of
 /// which already arms this turn on its own account. See `📓️idle-turns-2026-09-10.md`.
-pub(super) fn settle_turn_work<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, inputs: TurnWorkInputs, effects: &[Effect]) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+pub(super) fn settle_turn_work<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, inputs: TurnWorkInputs, effects: &[Effect]) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let TurnWorkInputs { events_pending, executors, close_cleanup_work, typed_operation_runnable, typed_operation_contended, reconcile_work, resumes_remain, document_load_work } = inputs;
     let (executor_deadline_work, task_executor_work, process_pool_work) = (executors.deadline, executors.task, executors.pool);
     let more_work = executor_deadline_work || task_executor_work || process_pool_work;

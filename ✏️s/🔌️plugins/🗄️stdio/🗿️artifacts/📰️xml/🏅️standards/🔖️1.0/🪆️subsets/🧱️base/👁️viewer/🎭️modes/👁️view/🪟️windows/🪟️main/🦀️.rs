@@ -4,11 +4,11 @@
 
 use crate::schema::snapshot::XmlNode;
 use crate::XmlSnapshot;
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -27,7 +27,7 @@ pub const XML_ROOT_NODE_ID: &str = "$";
 pub fn encode_node_path(path: &[usize]) -> String {
     let mut encoded = XML_ROOT_NODE_ID.to_string();
     for index in path {
-        encoded.push_str(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR);
+        encoded.push_str(semio_plugin::TREE_WINDOW_PATH_SEPARATOR);
         encoded.push_str(&index.to_string());
     }
     encoded
@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `XmlSnapshot -> BuiltNode` read: same shape as the editor's own render, no mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &XmlSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &XmlSnapshot, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let root = match &document.doc.root {
         Some(node) => node_view(XML_ROOT_NODE_ID.to_string(), node),
         None => TreeNodeView { id: XML_ROOT_NODE_ID.to_string(), label: "(empty document)".to_string(), children: Vec::new() },

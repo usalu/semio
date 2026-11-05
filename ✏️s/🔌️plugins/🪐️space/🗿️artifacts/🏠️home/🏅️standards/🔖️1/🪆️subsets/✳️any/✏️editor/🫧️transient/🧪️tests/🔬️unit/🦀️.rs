@@ -73,7 +73,7 @@ fn item(page_json: &str) -> HomeTransientMutation {
 /// 📬️ Publishes one page item through the PRODUCTION transient preparation (the bounded one-item factory the Home surfaces
 /// install), exactly as the transient store does: preflight, begin over the captured root, advance with the pump's page grant.
 fn publish(root: &Arc<HomeTransient>, mutation: HomeTransientMutation) -> (Arc<HomeTransient>, store::os_store::one_item::ArtifactStoreOneItemFootprint) {
-    let factory = semio_framework_plugin::bounded_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
+    let factory = semio_plugin::bounded_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
     let footprint = factory.preflight(&mutation).expect("one page is one admissible item");
     assert!(footprint.is_admissible());
     let request = store::ArtifactEphemeralOneItemPreparationRequest {
@@ -83,7 +83,7 @@ fn publish(root: &Arc<HomeTransient>, mutation: HomeTransientMutation) -> (Arc<H
         mutation,
     };
     let Ok(mut preparation) = factory.begin(request) else { panic!("the bounded factory begins every admitted page") };
-    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: semio_framework_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: semio_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES };
     assert!(matches!(preparation.advance(grant).expect("the page folds"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(_)));
     let prepared = preparation.take_prepared().expect("prepared root");
     (prepared.next_root, footprint)
@@ -123,7 +123,7 @@ fn a_ten_thousand_space_directory_bootstraps_page_by_page_under_the_one_item_bou
 /// size is its page's, independent of any projection.
 #[test]
 fn a_page_item_never_exceeds_the_one_item_bound() {
-    let factory = semio_framework_plugin::bounded_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
+    let factory = semio_plugin::bounded_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
     let largest = item(&"x".repeat(crate::editor::home::config::HOME_DIRECTORY_PAGE_BYTES));
     let footprint = factory.preflight(&largest).expect("the largest admitted page is one item");
     assert!(footprint.is_admissible());
@@ -237,7 +237,7 @@ fn a_displaced_root_retires_in_page_grants() {
     let estimate = root.directory().retained_bytes();
     let birth = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: 0, maximum_depth: 2 };
     let Ok((mut retirement, _)) = store::SnapshotRetirementFactory::retire(&HomeTransientRetirementFactory, root, birth) else { panic!("a transient root retirement is born under its own grant") };
-    let grant = semio_framework_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
+    let grant = semio_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
     let turn = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: grant, maximum_depth: 1 };
     let mut released = 0;
     loop {

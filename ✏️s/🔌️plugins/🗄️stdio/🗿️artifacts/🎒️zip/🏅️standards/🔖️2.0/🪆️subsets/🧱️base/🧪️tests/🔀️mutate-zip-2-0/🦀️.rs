@@ -9,7 +9,7 @@
 //! generated host's `sut` feature so the oracle-only run never links `semio-s-plugin-stdio` at all.
 //! (That gate is a build-cost boundary, nothing more: the subject phase RUNS. This adapter used to
 //! say it was peer-blocked by a concurrent os-kernel refactor — that blocker was cleared on
-//! 2026-08-24, `cargo check -p semio-framework-os-kernel --lib` is exit 0, and this case's own
+//! 2026-08-24, `cargo check -p semio-os-kernel --lib` is exit 0, and this case's own
 //! `parity exhaustive --owner 🗄️stdio --case mutate-zip-2-0` is the measurement of record. No ratio
 //! is restated here: a parity figure in source is a claim about one moment that silently becomes
 //! false when anything moves, so measurements live in the dated ticket record instead.)

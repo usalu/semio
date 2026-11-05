@@ -10,7 +10,7 @@ pub struct InsertPlacement { pub index: usize, pub placement: Placement }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertPlacement where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_placement::RemovePlacement> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "placement", kind: "insert-placement", record: "InsertedPlacement" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert placement {} at #{}", self.placement.id, self.index), &format!("Platzierung {} an #{} einfügen", self.placement.id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert placement {} at #{}", self.placement.id, self.index), &format!("Platzierung {} an #{} einfügen", self.placement.id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.placement.id.clone()] }
 }
 

@@ -2,9 +2,9 @@
 use super::windows::{Body,Dashboard,DashboardWindow,Kind,Place};
 use dashboard_source_view::{Context,SourceWindowPort,WindowRef,WindowMut,Body as ViewBody,OwnedBody,Effect as SourceEffect,Request,EntryAction};
 use semio_framework_filesystem_workspace::commands::HistoryAction;
-use semio_framework_ui_tui_core::event::KeyEvent;
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_frame::scene::{Node,NodeContent};
+use semio_ui_tui_core::event::KeyEvent;
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_frame::scene::{Node,NodeContent};
 
 pub struct Windows<'a>{windows:&'a mut [DashboardWindow],input_mode:&'a mut bool}
 fn read(window:&DashboardWindow)->WindowRef<'_>{WindowRef{id:&window.id,list:window.list,caption:window.caption,body:match &window.body{Body::Files(value)=>ViewBody::Files(value),Body::Document(value)=>ViewBody::Document(value.as_deref()),_=>ViewBody::Other}}}

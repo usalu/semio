@@ -204,7 +204,7 @@ pub fn color_input_swatch(bounds: Rect, text: &str) -> Option<(Rect, Rgba, Rect)
 }
 
 /// ☑️ The compact binary-control outline and check use a fixed number of draw scalars.
-pub fn paint_checkbox(node: &semio_framework_ui_declaration::ui::UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, inline: ui_contract::FlowInline, draw: &mut DrawList) {
+pub fn paint_checkbox(node: &semio_ui_declaration::ui::UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, inline: ui_contract::FlowInline, draw: &mut DrawList) {
     let side = SIZE_TINY.min(bounds.h).min(bounds.w);
     let rect = Rect::new(if inline.is_rtl() { bounds.x + bounds.w - side } else { bounds.x }, bounds.y + (bounds.h - side) * 0.5, side, side);
     let border = if focus_ring_visible(flags) { theme.accent } else { theme.border_normal };
@@ -219,20 +219,20 @@ pub fn paint_checkbox(node: &semio_framework_ui_declaration::ui::UiToggleNode, b
 /// 🎚️ A slider's travel at `value`: a track's rail, filled range, one tick per detent at its axis position and the thumb —
 /// or a dial's face, one radial tick per detent, the needle at the value's angle and its thumb on the rim. Shared by the
 /// retained painter and the test painter, so both draw every detent the same way.
-pub fn paint_slider_travel(node: &semio_framework_ui_declaration::ui::UiSliderNode, value: f64, presentation: semio_framework_ui_wgpu_layout::layout::SliderPresentation, theme: &Theme, draw: &mut DrawList) {
+pub fn paint_slider_travel(node: &semio_ui_declaration::ui::UiSliderNode, value: f64, presentation: semio_ui_wgpu_layout::layout::SliderPresentation, theme: &Theme, draw: &mut DrawList) {
     let tick_color = theme.text_element.with_alpha(theme.text_element.a * 0.6);
     match node.appearance {
         ui_contract::SliderAppearance::Dial => {
-            let face = semio_framework_ui_wgpu_controls::slider::dial_face(presentation.track_cell);
+            let face = semio_ui_wgpu_controls::slider::dial_face(presentation.track_cell);
             let diameter = face.radius * 2.0;
             draw.push_rounded([face.cx - face.radius, face.cy - face.radius, diameter, diameter], theme.text_element, face.radius);
             let inset = theme.stroke_hairline.max(1.0);
             draw.push_rounded([face.cx - face.radius + inset, face.cy - face.radius + inset, diameter - inset * 2.0, diameter - inset * 2.0], theme.muted, face.radius - inset);
-            for [x0, y0, x1, y1] in semio_framework_ui_wgpu_controls::slider::dial_tick_lines(face, node) {
+            for [x0, y0, x1, y1] in semio_ui_wgpu_controls::slider::dial_tick_lines(face, node) {
                 draw.push_line(x0, y0, x1, y1, tick_color, theme.stroke_hairline.max(1.0));
             }
             let angle = ui_contract::dial_angle(node.axis_position(value));
-            let (x, y) = semio_framework_ui_wgpu_controls::slider::dial_point(face, angle, 0.82);
+            let (x, y) = semio_ui_wgpu_controls::slider::dial_point(face, angle, 0.82);
             draw.push_line(face.cx, face.cy, x, y, theme.accent, (face.radius * 0.14).max(1.5));
             let knob = (face.radius * 0.3).max(2.0);
             draw.push_rounded([x - knob * 0.5, y - knob * 0.5, knob, knob], theme.text_element, knob * 0.5);
@@ -240,7 +240,7 @@ pub fn paint_slider_travel(node: &semio_framework_ui_declaration::ui::UiSliderNo
         ui_contract::SliderAppearance::Track => {
             draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], theme.muted, presentation.rail.h * 0.5);
             draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], theme.text_element, presentation.range.h * 0.5);
-            for tick in semio_framework_ui_wgpu_controls::slider::slider_tick_rects(presentation.rail, node.min, node.max, node.scale, &node.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
+            for tick in semio_ui_wgpu_controls::slider::slider_tick_rects(presentation.rail, node.min, node.max, node.scale, &node.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
                 draw.push_solid([tick.x, tick.y, tick.w, tick.h], tick_color);
             }
             draw.push_rounded([presentation.thumb.x, presentation.thumb.y, presentation.thumb.w, presentation.thumb.h], theme.text_element, presentation.thumb.h * 0.5);

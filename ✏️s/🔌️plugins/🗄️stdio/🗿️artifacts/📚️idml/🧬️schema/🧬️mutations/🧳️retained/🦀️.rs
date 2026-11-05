@@ -1,7 +1,7 @@
 //! 🧬️ Genuine IDML mutation sources yield typed sparse diffs and exact-issuer inverse rows.
 use crate::{IdmlSnapshot,IdmlDiff,IdmlMutation,schema::diff::IdmlPatch};
 use crate::io::admission::{IdmlAdmissionSource,IdmlNameLookup,retained::{RetainedIdmlAdmission,RetainedIdmlAdmissionAdvance},retained_version::RetainedIdmlVersion,change::{IdmlChangeCursor,IdmlChangeEvent,retained_part::RetainedIdmlPartPatch}};
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use protocol::{RetainedMutationPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext,RetainedFieldPreparation,RetainedDiagnosticPreparation,RetainedDiagnosticSpec,MutationMessage,MutationMessageLedgerRetirement};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{ManuallyDrop,size_of};

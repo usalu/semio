@@ -78,18 +78,18 @@ use plugin_instance_handle::wait_for_scripted_guest_relay_release;
 #[path="../♻️publication/🧪️tests/🦀️.rs"]
 mod original_publication_source_tests;
 
-use semio_framework_plugin_host_wake::{GuestRelayWakeDriver, GuestRelayWakeReceiptLedger, GuestRelayWakeTurnGrant};
+use semio_plugin_host_wake::{GuestRelayWakeDriver, GuestRelayWakeReceiptLedger, GuestRelayWakeTurnGrant};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
-use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntimes, JobFunds};
-use semio_framework_plugin_host_wake::GuestRelayWakeReceipt;
-use semio_framework_plugin_guest_contract::{identity_turn_fault, JobBudget, JobStep, PluginHostError, TurnFault};
+use semio_plugin_host_guest_runtime::{GuestInstance, GuestRuntimes, JobFunds};
+use semio_plugin_host_wake::GuestRelayWakeReceipt;
+use semio_plugin_guest_contract::{identity_turn_fault, JobBudget, JobStep, PluginHostError, TurnFault};
 use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
 use semio_framework_actor::ActorId as RuntimeActorId;
 use semio_framework_value_derive::ToValue;
-use semio_framework_plugin_host_engine::plugin_host_worker_pool;
-use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
-use semio_framework_plugin_host_wake::GuestRelayWakeReceiptReceiver as _;
+use semio_plugin_host_engine::plugin_host_worker_pool;
+use semio_plugin_host_guest_runtime::GuestRuntime as _;
+use semio_plugin_host_wake::GuestRelayWakeReceiptReceiver as _;
 #[cfg(test)]
 #[global_allocator]
 static HOST_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

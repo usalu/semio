@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeLambda1 wher
         record: "ChangedBridgeLambda1",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Damage factor λ_1 (from the curve) of the bridge fatigue", "Brückenermüdung: Schädigungsbeiwert λ_1 (aus Kurve) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Damage factor λ_1 (from the curve) of the bridge fatigue", "Brückenermüdung: Schädigungsbeiwert λ_1 (aus Kurve) ändern")
     }
 }
 

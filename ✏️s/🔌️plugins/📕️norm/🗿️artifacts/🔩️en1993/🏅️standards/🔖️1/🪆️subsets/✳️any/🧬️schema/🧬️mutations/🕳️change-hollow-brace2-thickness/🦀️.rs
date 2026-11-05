@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeHollowBrace2Thickn
         record: "ChangedHollowBrace2Thickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Brace 2 wall thickness t_2 of the hollow joint", "Hohlprofilknoten: Streben-2-Wanddicke t_2 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Brace 2 wall thickness t_2 of the hollow joint", "Hohlprofilknoten: Streben-2-Wanddicke t_2 ändern")
     }
 }
 

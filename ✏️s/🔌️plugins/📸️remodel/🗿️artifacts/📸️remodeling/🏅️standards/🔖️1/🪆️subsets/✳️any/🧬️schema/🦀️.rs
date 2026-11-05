@@ -16,11 +16,11 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 //#region 🔖️ArtifactKind
 /// 🗿️ The `3d.remodeling` artifact kind — lifted verbatim out of the manifest builder's
 /// `.artifact_kind(…)` literal so the artifact node, not the app, owns its own identity.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
     ArtifactKindSpec {
         id: "3d.remodeling".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D Remodeling", "3D-Umbau"),
+        label: semio_ui_locale::LocalizedLabel::native("3D Remodeling", "3D-Umbau"),
         source_format: "remodeling.scene".into(),
         component_kind: "remodeling".into(),
         dimension: "3d".into(),
@@ -37,11 +37,11 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 
 //#region 🔖️Ids
 /// 🆔️ The id one admitted command mints for its new `prefix` entity (a stream, a GCP): content-addressed over the
-/// command's [`semio_framework_plugin::AppOperationContext::authoring_seed`] — unique per writer and admission — so two
+/// command's [`semio_plugin::AppOperationContext::authoring_seed`] — unique per writer and admission — so two
 /// writers, two sessions or a reload never mint one id twice (a process counter restarted at `stream-1` after every
 /// reload), and the import transaction minted from a stream id is unique with it. A view without an admission mints from
 /// the empty seed. See [`store::content_id`].
-pub fn mint_remodeling_id(operation: Option<&semio_framework_plugin::AppOperationContext>, prefix: &str) -> String {
+pub fn mint_remodeling_id(operation: Option<&semio_plugin::AppOperationContext>, prefix: &str) -> String {
     store::content_id(prefix, format!("{}\u{1f}{prefix}", operation.map_or("", |operation| operation.authoring_seed.as_str())).as_bytes())
 }
 //#endregion 🔖️Ids

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "states": [
+    "capture-preborn-registry",
+    "start-derivation",
+    "derive-once",
+    "close-builder",
+    "close-displaced",
+    "publish-preborn",
+    "ready"
+  ],
+  "boundaries": [
+    "normal-command-only-retains-published-infos",
+    "replacement-follows-actual-registry-generation",
+    "source-and-output-survive-debit-refusal",
+    "all-displaced-roots-close-under-original-context"
+  ],
+  "replacement": [
+    {
+      "from": 0,
+      "to": 1
+    },
+    {
+      "from": 1,
+      "to": 2
+    },
+    {
+      "from": 2,
+      "to": 3
+    },
+    {
+      "from": 3,
+      "to": 4
+    },
+    {
+      "from": 4,
+      "to": 5
+    },
+    {
+      "from": 5,
+      "to": 6
+    },
+    {
+      "from": 6,
+      "to": 0
+    }
+  ]
+}

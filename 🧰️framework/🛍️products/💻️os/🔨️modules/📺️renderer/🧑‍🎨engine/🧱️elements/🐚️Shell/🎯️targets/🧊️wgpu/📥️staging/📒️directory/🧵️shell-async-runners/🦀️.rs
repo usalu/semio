@@ -316,7 +316,7 @@ pub type ShellDirectoryPageResult = (u64, Result<CanonicalDirectoryEventPageV1, 
 #[cfg(not(target_arch = "wasm32"))]
 pub enum ShellDirectoryHomePublicationOutcome {
     Published(DirectoryEventPageAckV1),
-    Rejected(semio_framework_os_renderer_wgpu_program_bridge::ProgramFault),
+    Rejected(semio_renderer_wgpu_program_bridge::ProgramFault),
     Terminal(String),
 }
 

@@ -2,8 +2,8 @@ mod tests {
     use super::*;
     use crate::standards::v1_1::subsets::tiny::io::SvgTinyBuilder;
     use crate::standards::v1_1::subsets::tiny::schema::conformance::{CODE_ATTRIBUTE, CODE_ELEMENT};
-    use semio_framework_plugin::io::AnalyzeSource;
-    use semio_framework_plugin::ArtifactBuilder as _;
+    use semio_plugin::io::AnalyzeSource;
+    use semio_plugin::ArtifactBuilder as _;
 
     #[semio_framework_async_macros::async_test]
     async fn conforming_document_composes_and_stamps_tiny() {

@@ -40,7 +40,7 @@ fn world_component_marquee_cursor_ids(state: &World3dState, points: &[[f32; 2]])
 /// 📨️ Drives one gumball publication job to completion and answers what it published (nothing for a `Skip`).
 fn world_gumball_publish(state: &World3dState, gesture: WorldGumballGesture, phase: WorldGumballPhase) -> Option<ActionDescriptor> {
     let mut job = WorldGumballCommitJob::new(8, gesture, phase);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     for _ in 0..4096 {
         if with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)).expect("bounded gumball publication") == WorldInteractionStep::Complete {
             break;
@@ -394,14 +394,14 @@ fn world_environment_reaches_the_actual_scene_pass() {
     let bounds = Rect::new(0.0, 0.0, 128.0, 96.0);
     drive_scene_bridge(&mut state, &scene, bounds);
     let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
-    let theme = semio_framework_ui_theme::Theme::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let theme = semio_ui_theme::Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = semio_framework_ui_wgpu_widget_kit::WidgetContext {
+    let mut ctx = semio_ui_wgpu_widget_kit::WidgetContext {
         draw: &mut draw,
         overlay: None,
         atlas: &mut atlas,
@@ -481,14 +481,14 @@ fn offscreen_light_visible_glb_is_retained_only_in_the_actual_shadow_channel() {
         .expect("source draw admitted");
 
     let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
-    let theme = semio_framework_ui_theme::Theme::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let theme = semio_ui_theme::Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = semio_framework_ui_wgpu_widget_kit::WidgetContext {
+    let mut ctx = semio_ui_wgpu_widget_kit::WidgetContext {
         draw: &mut draw,
         overlay: None,
         atlas: &mut atlas,

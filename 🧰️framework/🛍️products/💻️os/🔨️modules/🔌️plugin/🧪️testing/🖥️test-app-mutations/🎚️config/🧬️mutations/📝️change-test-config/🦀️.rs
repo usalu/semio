@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 fn required_nullable<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
     <Option<String> as serde::Deserialize>::deserialize(deserializer)
 }
-impl semio_framework_os_command::ColdMutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection {
+impl semio_os_command::ColdMutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection {
     fn diff(&self, _: &TestConfig) -> MutationOutcome<TestConfigDiff> {
         MutationOutcome::new(match &self.selected {
             None => TestConfigDiff::Clear,
@@ -48,8 +48,8 @@ impl MutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "test-config-selection", kind: "change-test-config-selection", record: "ChangedTestConfigSelection" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(
             &{
                 match &self.selected {
                     None => "Clear test config selection".into(),

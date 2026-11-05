@@ -20,9 +20,9 @@ semio-framework-dsl-record = { path = "../../../../../../../../../../../../../..
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-s-artifact-block-2d-mut-handles-2 = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-block-2d-diff = { workspace = true }
@@ -30,6 +30,6 @@ semio-s-artifact-block-2d-model = { workspace = true }
 semio-s-plugin-block = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
 serde = { workspace = true }

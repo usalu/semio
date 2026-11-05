@@ -6771,7 +6771,7 @@
                     },
                     {
                       "name": "Viewport2d",
-                      "providerPackage": "semio-framework-ui-viewport"
+                      "providerPackage": "semio-ui-viewport"
                     }
                   ]
                 },

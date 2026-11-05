@@ -17,40 +17,40 @@ use crate::mutations::ProcedureMutation;
 use crate::schema::default_snapshot;
 use crate::{ProcedureSnapshot, Step, PROCEDURE_DOCUMENT_SCHEMA};
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
 // 🚧️ Dialect/StandardId/SubsetId are not yet in the crate-root re-export list (w0-f gap 1 closed
 // ArtifactEditor/Editor/etc but left these three under `app::`, already reachable via
 // `semio_framework::*` elsewhere) — see `crate::PROCEDURE_DIALECT`'s own
@@ -59,8 +59,8 @@ use semio_framework_2d_compute::EngineHandles;
 use store::{snapshot::ArtifactPack, };
 
 /// 🏷️ Admits semantic labels for the imperative editor.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin::PluginAssemblyError::new("imperative.ui.capacity", "label admission failed"))
 }
 
 //#region 🔖️Constants
@@ -105,7 +105,7 @@ pub fn imperative_steps_topology(path: &crate::Path) -> DomainTopology {
 //#endregion 🔖️Interaction
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `ImperativePlayApp::Command` — the SOLE dispatch surface for imperative's own behavior,
     /// assembled from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
@@ -149,18 +149,18 @@ const IMPERATIVE_RETAINED_WORK_ITEMS: usize = 64;
 
 /// 🚦️ Per-tool publication lanes, read straight off the command bodies: the eight structural step
 /// verbs emit `artifact_mutations` only, while `run` and `setContributions` write the config store.
-pub const IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStepAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStepAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveStepAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepParams", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepParamsAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "run", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+pub const IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "addStepAt", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "removeStepAt", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "moveStepAt", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setStepParams", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setStepParamsAt", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "run", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
 ];
 
 fn imperative_retained_contract() -> semio_framework::ToolExecutionContract {
@@ -259,8 +259,8 @@ fn imperative_command_from_action(action: &str, args: Option<&semio_framework_va
         "setContributions" => Ok(ImperativeCommand::SetContributions(set_contributions::SetContributions { json: text(&["json", "value"], "{}") })),
         "setActiveExample" => Ok(ImperativeCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
         other => Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("imperative.unhandled-action"),
+            semio_plugin::FaultOrigin::App,
+            semio_plugin::FaultCode::new("imperative.unhandled-action"),
             format!("action '{other}' is not one of this app's declared verbs"),
         )),
     }
@@ -271,11 +271,11 @@ fn imperative_retained_reduce(
     command: &ImperativeCommand,
     snapshot: &ProcedureSnapshot,
     config: &ImperativeConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<ImperativePlayApp>>>,
-    operation: &semio_framework_plugin::AppOperationContext,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<ImperativePlayApp>>>,
+    operation: &semio_plugin::AppOperationContext,
 ) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation, NoDraftMutation>, Fault> {
     let context = context.ok_or_else(|| Fault::from("imperative-retained-children-required"))?;
     let doc = ArtifactView::with_children(snapshot, history, (*context.children).clone()).bound_to_operation(operation.clone());
@@ -296,8 +296,8 @@ impl ImperativeRetainedCommandJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for ImperativeRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<ImperativePlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<ImperativePlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<semio_plugin::EditorApp<ImperativePlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<semio_plugin::EditorApp<ImperativePlayApp>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -315,15 +315,15 @@ impl semio_framework::ToolJobFactory for ImperativeRetainedCommandJobFactory {
         imperative_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: IMPERATIVE_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: IMPERATIVE_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ImperativeRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<ImperativePlayApp>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for ImperativeRetainedCommandJobFactory {
+    type Owner = semio_plugin::EditorApp<ImperativePlayApp>;
     const TOOL_IDS: &'static [&'static str] = IMPERATIVE_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
 
@@ -338,15 +338,15 @@ pub struct ImperativePlayApp;
 /// before its app-owned bounded retirement authority detached` trap on this path; the framework
 /// re-stamps the log with the live mount's identity before hydration sees it
 /// (`store::os_store::text_format::stamp_document_spr_identity`), so no app ever states its own mount.
-pub fn reset_procedure_document_effect(document: &ProcedureSnapshot) -> semio_framework_plugin::Effect {
+pub fn reset_procedure_document_effect(document: &ProcedureSnapshot) -> semio_plugin::Effect {
     let pack = <ProcedureSnapshot as ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("procedure", PROCEDURE_DOCUMENT_SCHEMA));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+    semio_plugin::Effect::LoadDocument { pack, spr }
 }
 
 impl ArtifactEditor for ImperativePlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     /// 🧩️ The roster both composed `s.stdio.semio` children (`flow`, `text`) open through. A
@@ -359,14 +359,14 @@ impl ArtifactEditor for ImperativePlayApp {
     type ConfigMutation = ImperativeConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = ImperativeCommand;
 
-    const DIALECT: semio_framework_plugin::app::Dialect = crate::PROCEDURE_DIALECT;
+    const DIALECT: semio_plugin::app::Dialect = crate::PROCEDURE_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::procedure_child_restore_projection`).
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::procedure_child_restore_projection(snapshot)
@@ -384,20 +384,20 @@ impl ArtifactEditor for ImperativePlayApp {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
     /// 👤️ `EditorApp<E>` forwards these two straight to the editor (only the VIEWER adapter falls
@@ -408,19 +408,19 @@ impl ArtifactEditor for ImperativePlayApp {
     /// presence, so this editor needs the owners even though its presence is `NoPresence`
     /// (`🕸️dag` and `🪐️space`'s Home declare the same pair).
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<ImperativePlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<ImperativePlayApp>,
         owner_file: "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.imperative.procedure@1/*#editor",
         artifact_schema: "procedure.document/v1",
@@ -430,7 +430,7 @@ impl ArtifactEditor for ImperativePlayApp {
         tools: ["addStep", "addStepAt", "removeStep", "removeStepAt", "moveStep", "moveStepAt", "setStepParams", "setStepParamsAt", "run", "setContributions", "setActiveExample"]
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(ImperativeRetainedCommandJobFactory::new(&controller))
     }
@@ -442,19 +442,19 @@ impl ArtifactEditor for ImperativePlayApp {
         imperative_command_from_action(action, args)
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !IMPERATIVE_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "procedure command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "procedure command does not match its exact registered tool").into());
         }
         if imperative_retained_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "procedure command payload exceeds its bounded retained extent").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "procedure command payload exceeds its bounded retained extent").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, ImperativeCommand::command_id, IMPERATIVE_RETAINED_RAW_BYTES, IMPERATIVE_RETAINED_WORK_ITEMS, false, |request| semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, imperative_retained_reduce, imperative_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, ImperativeCommand::command_id, IMPERATIVE_RETAINED_RAW_BYTES, IMPERATIVE_RETAINED_WORK_ITEMS, false, |request| semio_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, imperative_retained_reduce, imperative_retained_extent))
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -468,11 +468,11 @@ impl ArtifactEditor for ImperativePlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<ProcedureSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<ProcedureSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_snapshot())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(imperative_io())
     }
 
@@ -487,7 +487,7 @@ impl ArtifactEditor for ImperativePlayApp {
         doc: &ArtifactView<'_, ProcedureSnapshot>,
         cfg: &ConfigView<'_, ImperativeConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
@@ -528,20 +528,20 @@ impl ArtifactEditor for ImperativePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ProcedureSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ProcedureSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<ComponentTree> {
         imperative_engine::sync_imperative_module_contributions(&cfg.snapshot.contributions_json);
-        let scene = crate::procedure_scene(doc).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("imperative.child-content", format!("{error:?}")))?;
+        let scene = crate::procedure_scene(doc).map_err(|error| semio_plugin::PluginAssemblyError::new("imperative.child-content", format!("{error:?}")))?;
         let config = cfg.snapshot;
         let labels = imperative_labels(view_state);
         (match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => main::render(&scene, &config.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => script::render(&scene),
-            IMPERATIVE_PLAY_BODY_ARTIFACT => document_panel::render(&scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_ARTIFACT)),
-            IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_CATALOGUE)),
+            IMPERATIVE_PLAY_BODY_ARTIFACT => document_panel::render(&scene, labels, &semio_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_ARTIFACT)),
+            IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_CATALOGUE)),
             IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(&scene, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
         })
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️ImperativePlayApp
@@ -550,7 +550,7 @@ impl ArtifactEditor for ImperativePlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_imperative_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::PROCEDURE_DIALECT)
             .command(CommandDefinition {
                 args: vec![ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))],
@@ -578,9 +578,9 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             .mutation("moveStepAt", LocalizedLabel::native("Move Step At", "Schritt bei Position verschieben"))
             .mutation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
             .mutation("setStepParamsAt", LocalizedLabel::native("Set Step Params At", "Schrittparameter bei Position festlegen"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View, "play"))
+            .action_with(semio_plugin::ActionDefinition::new("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View, "play"))
             .action_with(
-                semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file")
+                semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file")
                     .with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]),
             )
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
@@ -673,9 +673,9 @@ pub mod artifact_items_4 {
 /// artifact must not depend on its app, so both stayed artifact-side rather than moving to the app),
 /// reached below by their full qualified path. `bootstrap_imperative_runtime` stays `pub` (widened from
 /// its former `pub(crate)`) since the app engine module now reaches it by the same long qualified path.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.imperative.procedure.standard.v1", "standard", "1", &[], None),
         ("s.imperative.procedure.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.imperative.procedure.schema.artifact", "schema", "s.imperative.procedure", &[("schema", "s.imperative.procedure")], None),
@@ -703,14 +703,14 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     crate::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::schema::procedure_artifact_schema_descriptor())
         .inferences([crate::standards::v1::subsets::any::schema::inferences::procedure_artifact_inference_descriptor()])
         .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::procedure::ImperativePlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<crate::editor::procedure::ImperativePlayApp>>()
         .try_build()
 }
 

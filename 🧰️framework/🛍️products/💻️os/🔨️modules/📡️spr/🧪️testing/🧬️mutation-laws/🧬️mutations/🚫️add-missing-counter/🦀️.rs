@@ -1,7 +1,7 @@
 //! 🚫️ Missing-target command preserving the law helper's positive error fixture.
 
 use super::super::{CounterDiff, CounterMutation};
-use semio_framework_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
+use semio_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -14,14 +14,14 @@ pub struct AddMissingCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddMissingCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "missing-counter", kind: "add-missing-counter", record: "AddedMissingCounter" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add to missing counter", "Zum fehlenden Zähler addieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add to missing counter", "Zum fehlenden Zähler addieren")
     }
 
 
 }
 
-impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddMissingCounter {
+impl semio_os_spr::ColdMutationKind<i64, CounterMutation> for AddMissingCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
     }

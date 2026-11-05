@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeBridgeDeckTwistLim
         record: "ChangedBridgeDeckTwistLimit",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change admissible deck twist t_max of the bridge serviceability", "Brückengebrauchstauglichkeit: Zulässige Verwindung t_max ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change admissible deck twist t_max of the bridge serviceability", "Brückengebrauchstauglichkeit: Zulässige Verwindung t_max ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

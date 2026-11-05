@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfPsi where Op: pr
         record: "ChangedCfPsi",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stress ratio ψ of the cold-formed member", "Kaltprofil: Randspannungsverhältnis ψ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stress ratio ψ of the cold-formed member", "Kaltprofil: Randspannungsverhältnis ψ ändern")
     }
 }
 

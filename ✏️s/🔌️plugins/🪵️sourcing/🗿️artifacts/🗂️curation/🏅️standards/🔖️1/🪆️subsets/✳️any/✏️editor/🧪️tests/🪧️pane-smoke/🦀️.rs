@@ -1,7 +1,7 @@
 //! 🪧️ Aussuchen pane smoke: the bundled curation demo loads, one `CurationAdd` applies, undo restores the loaded snapshot and the app closes through its exact retained close.
 
-use semio_framework_plugin::artifact_app_laws::{self as laws, OriginalFixtureScope};
-use semio_framework_plugin::{App, EditorApp, MountedOwnerPolicyV1, PluginApp as _, VcsArtifactApp};
+use semio_plugin::artifact_app_laws::{self as laws, OriginalFixtureScope};
+use semio_plugin::{App, EditorApp, MountedOwnerPolicyV1, PluginApp as _, VcsArtifactApp};
 use semio_s_artifact_sourcing_curation::editor::sourcing::commands::curation_add;
 use semio_s_artifact_sourcing_curation::editor::sourcing::{create_sourcing_curation_app, SourcingCurationApp, SourcingCurationCommand};
 use semio_s_artifact_stdio_semio::SemioMembers;
@@ -16,7 +16,7 @@ fn manifest() -> App {
 #[semio_framework_async_macros::async_test]
 async fn aussuchen_pane_loads_applies_undoes_and_closes() {
     let mut scope = OriginalFixtureScope::admit();
-    let mut app: Mounted = laws::new_app_with_registry_and_members::<EditorApp<SourcingCurationApp>, SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut laws::fixture_identity()).await;
+    let mut app: Mounted = laws::new_app_with_registry_and_members::<EditorApp<SourcingCurationApp>, SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut laws::fixture_identity()).await;
     app.bind_instance_id(laws::meta("local").instance_id).await;
     let object_id = semio_s_artifact_sourcing_curation::stock_of(&app.snapshot().expect("boot snapshot"))[0].id.clone();
     let command = SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: object_id.clone() });

@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "curated-item", kind: "change-curated-item-count", record: "ChangedCuratedItemCount" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set curated count of \"{}\" to {}", self.object_id, self.new_count), &format!("Kuratierte Anzahl von \"{}\" auf {} setzen", self.object_id, self.new_count))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set curated count of \"{}\" to {}", self.object_id, self.new_count), &format!("Kuratierte Anzahl von \"{}\" auf {} setzen", self.object_id, self.new_count))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

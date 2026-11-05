@@ -17,8 +17,8 @@ pub struct ChangeBeamAdjacentSpanM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamAdjacentSpanM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_adjacent_span_m::ChangeBeamAdjacentSpanM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-adjacent-span-m", kind: "change-beam-adjacent-span-m", record: "ChangedBeamAdjacentSpanM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change adjacent span length for the equivalent span and statics (0 = equal to the span)", "Länge des Nachbarfelds für Ersatzstützweite und Statik (0 = gleich der Stützweite) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change adjacent span length for the equivalent span and statics (0 = equal to the span)", "Länge des Nachbarfelds für Ersatzstützweite und Statik (0 = gleich der Stützweite) ändern")
     }
 }
 

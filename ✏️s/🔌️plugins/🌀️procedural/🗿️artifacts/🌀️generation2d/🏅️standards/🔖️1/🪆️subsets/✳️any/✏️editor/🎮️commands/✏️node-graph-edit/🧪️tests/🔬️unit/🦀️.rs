@@ -8,8 +8,8 @@ use crate::app_fixture::{app, close, dispatch, snapshot_read, Generation2dApp};
 use semio_s_artifact_procedural_2d_editor::Generation2dCommand;
 use semio_framework::kernel::{HistoryEntry, UiDirtyScope};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
-use semio_framework_plugin::PluginApp;
+use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+use semio_plugin::PluginApp;
 
 async fn edit(app: &mut Generation2dApp, operations: serde_json::Value) {
     dispatch(app, Generation2dCommand::NodeGraphEdit(NodeGraphEdit { operations_json: operations.to_string() })).await;
@@ -20,8 +20,8 @@ async fn edit(app: &mut Generation2dApp, operations: serde_json::Value) {
 async fn send(app: &mut Generation2dApp, args: serde_json::Value) {
     let action_meta = meta("local");
     let args: semio_framework_value::DslValue = args.into();
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "nodeGraphEdit", Some(args.clone()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("nodeGraphEdit admitted");
-    settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("nodeGraphEdit settles");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "nodeGraphEdit", Some(args.clone()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("nodeGraphEdit admitted");
+    settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("nodeGraphEdit settles");
 }
 
 /// 🧾️ Every applied history row that carries document operations, oldest first.
@@ -66,11 +66,11 @@ fn position(app: &Generation2dApp, id: &str) -> Option<(f64, f64)> {
 }
 
 fn english(entry: &HistoryEntry) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
+    entry.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string()
 }
 
 fn german(entry: &HistoryEntry) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
+    entry.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_string()
 }
 
 /// ⚖️ LAW: `disconnect` cuts a wire and `connect` draws it again between the same two ports — the demo's neurons declare
@@ -200,7 +200,7 @@ fn node_graph_edit_takes_exactly_the_shared_row_vocabulary() {
         let batch = serde_json::json!([{ "operation": "disconnect", "synapseId": "s1" }, case["row"]]);
         assert!(rows(&NodeGraphEdit { operations_json: batch.to_string() }).is_err(), "{} refuses the whole batch", case["id"]);
         let args: semio_framework_value::DslValue = serde_json::json!({ "operations": batch }).into();
-        assert!(<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some((args).clone()), None).is_err(), "{} is refused at admission", case["id"]);
+        assert!(<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp as semio_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some((args).clone()), None).is_err(), "{} is refused at admission", case["id"]);
     }
 }
 //#endregion 🔗️EditRows

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationPileDiam
         record: "ChangeFoundationPileDiameterM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pile diameter d (0 = no pile check)", "Pfahldurchmesser d (0 = kein Pfahlnachweis) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pile diameter d (0 = no pile check)", "Pfahldurchmesser d (0 = kein Pfahlnachweis) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-pile-diameter-m".into()]

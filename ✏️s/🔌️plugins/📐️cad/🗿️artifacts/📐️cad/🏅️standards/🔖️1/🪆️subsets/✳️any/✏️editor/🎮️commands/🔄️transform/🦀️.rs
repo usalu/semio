@@ -11,7 +11,7 @@ use semio_s_artifact_cad_cad_transform::{cad_pane_models, cad_transform_tool_emi
 use semio_s_artifact_cad_cad_kit::{apply_transformation_entries, ids_or_selection};
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️TranslateSelection

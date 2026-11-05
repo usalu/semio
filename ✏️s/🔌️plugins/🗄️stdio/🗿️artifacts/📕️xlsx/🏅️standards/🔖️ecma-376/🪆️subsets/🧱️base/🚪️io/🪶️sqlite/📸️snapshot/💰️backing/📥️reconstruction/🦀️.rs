@@ -1,7 +1,7 @@
 //! 📥️ XLSX owns admitted parts and retains every XML document through final control.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::{Documents, Parts, XlsxSnapshot, XlsxXmlPart, OPC, XML};
-use semio_framework_os_kernel::{
+use semio_os_kernel::{
     sqlite_snapshot::{
         artifact::{ordered_row_refs, reconstruct_text},
         transfer::{heap_sort, reserve},

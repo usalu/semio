@@ -2,7 +2,7 @@
 //! operating system's descheduling of a suspended turn.
 use std::cell::Cell;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
+use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
 use std::future::Future as _;
 
 #[doc(hidden)]

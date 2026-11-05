@@ -32,7 +32,7 @@ impl LayoutWindowWork {
     pub(super) fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false,page_drawing:page_drawing::PageDrawingWork::new() } }
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<LayoutPlayApp>> for LayoutWindowWork {
+impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<LayoutPlayApp>> for LayoutWindowWork {
     fn receive_original_command(&mut self,command:&mut LayoutCommand,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.page_drawing.receive(command,cx)}
     fn begin_close(&mut self){self.page_drawing.begin_close()}
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{self.page_drawing.close_step(cx)}
@@ -42,7 +42,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
     fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.page_drawing.close_demand(0)?.depth)}
     fn terminal_is_empty(&self)->bool{self.page_drawing.owners.terminal_is_empty()}
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if self.page_drawing.active(){return self.page_drawing.demand(maximum_copy_bytes)}
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
@@ -56,7 +56,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         command: &LayoutCommand,
         _snapshot: &LayoutSnapshot,
         _interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<LayoutPlayApp>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<LayoutPlayApp>>>,
     ) -> Option<usize> {
         let _ = context;
         (!self.completed && command.command_id() == self.tool_id).then_some(1)
@@ -64,15 +64,15 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
 
     fn step(
         &mut self,
-        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>,
+        input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>,
     cx: &mut StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<LayoutPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<LayoutPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         if self.page_drawing.active(){
-            if let Some(emit)=self.page_drawing.step(input,cx)?{self.completed=true;return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))}
-            return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Pending{stage:"layout.page.drawing.artboard",preview:b""});
+            if let Some(emit)=self.page_drawing.step(input,cx)?{self.completed=true;return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))}
+            return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Pending{stage:"layout.page.drawing.artboard",preview:b""});
         }
         let original: Result<_, Fault> = (|| {
-        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        use semio_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::from("layout-window-work-terminal"));
         }
@@ -164,7 +164,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         match window_transient {
             Some(mutation) => Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
                 emit,
-                ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] },
+                ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] },
             }),
             None => Ok(ArtifactCommandWorkStep::Complete(emit)),
         }
@@ -185,8 +185,8 @@ impl LayoutRetainedCommandJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for LayoutRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<LayoutPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<LayoutPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<LayoutPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<LayoutPlayApp>>;
 
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
@@ -204,11 +204,11 @@ impl semio_framework::ToolJobFactory for LayoutRetainedCommandJobFactory {
         layout_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: LAYOUT_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: LAYOUT_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedCommandJobFactory {
     type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LAYOUT_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA;
@@ -240,7 +240,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedComma
 pub(super) struct LayoutRetainedProofs;
 
 impl LayoutRetainedProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<LayoutPlayApp>,
         owner_file: "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.layout.layout@1/*#editor",
@@ -255,7 +255,7 @@ impl LayoutRetainedProofs {
 pub(super) struct LayoutExportProofs;
 
 impl LayoutExportProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<LayoutPlayApp>,
         owner_file: "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.layout.layout@1/*#editor",

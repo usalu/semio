@@ -22,8 +22,8 @@ pub struct RenamePage {
 impl<Op> MutationKind<LayoutSnapshot, Op> for RenamePage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rename_page::RenamePage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "page", kind: "rename-page", record: "RenamedPage" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename page to \"{}\"", self.new_name), &format!("Seite in \"{}\" umbenennen", self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename page to \"{}\"", self.new_name), &format!("Seite in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

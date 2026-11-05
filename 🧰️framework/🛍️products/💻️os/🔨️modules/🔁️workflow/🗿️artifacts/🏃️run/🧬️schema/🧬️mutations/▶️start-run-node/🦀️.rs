@@ -17,8 +17,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRunNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "start", entity: "run-node", kind: "start-run-node", record: "StartedRunNode" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Start run node {}", self.node_id), &format!("Laufknoten {} starten", self.node_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Start run node {}", self.node_id), &format!("Laufknoten {} starten", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_id.clone()]

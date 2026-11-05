@@ -64,7 +64,17 @@ pub fn answer_error(question: &FormQuestion, value: &DslValue) -> Option<&'stati
             _ => Some("type"),
         },
         "vector" => match value {
-            DslValue::Array(items) => (items.len() != question.fields.as_ref().map_or(0, Vec::len) || items.iter().any(|item| item.as_f64().is_none_or(|number| !number.is_finite()))).then_some("vector"),
+            DslValue::Array(items) => {
+                if items.len() != question.fields.as_ref().map_or(0, Vec::len) || items.iter().any(|item| item.as_f64().is_none_or(|number| !number.is_finite())) { return Some("vector"); }
+                if items.iter().filter_map(DslValue::as_f64).any(|number| question.min.is_some_and(|min| number < min) || question.max.is_some_and(|max| number > max)) { return Some("range"); }
+                if let Some(step) = question.step {
+                    if items.iter().filter_map(DslValue::as_f64).any(|number| {
+                        let ticks = (number - question.min.unwrap_or(0.0)) / step;
+                        !ticks.is_finite() || (ticks - ticks.round()).abs() > 1e-9
+                    }) { return Some("step"); }
+                }
+                None
+            },
             _ => Some("vector"),
         },
         _ => (!matches!(value, DslValue::Object(_))).then_some("type"),

@@ -3,7 +3,7 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
     #[path = "."]
     pub mod deserializers {
@@ -62,7 +62,7 @@ extern crate semio_framework_os_kernel as store;
 
 use semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat;
 use semio_s_artifact_stdio_semio_base::SemioConversion;
-use semio_framework_plugin::{deserializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
+use semio_plugin::{deserializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
 
 /// 🧾️ This direction's composer rows, built once.
 pub fn entries() -> &'static [ComposerEntry] {
@@ -87,7 +87,7 @@ fn register() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_drawing(bytes: &[u8], format: SemioDrawingFormat) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     use {crate::deserializers::artifacts::dwg::v_ac1024::any::SemioDrawingFromDwg, crate::deserializers::artifacts::dxf::v_r12::any::SemioDrawingFromDxf, crate::deserializers::artifacts::pdf::v1_7::any::SemioDrawingFromPdf, crate::deserializers::artifacts::svg::v1_1::any::SemioDrawingFromSvg};
-    use semio_framework_plugin::{ ArtifactDeserializer};
+    use semio_plugin::{ ArtifactDeserializer};
     let text = || std::str::from_utf8(bytes).map_err(|e| e.to_string());
     match format {
         SemioDrawingFormat::Svg => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromSvg::deserialize(&semio_s_artifact_stdio_svg::SvgSnapshot::import_utf8(bytes)?)).map_err(|e| e.to_string()),

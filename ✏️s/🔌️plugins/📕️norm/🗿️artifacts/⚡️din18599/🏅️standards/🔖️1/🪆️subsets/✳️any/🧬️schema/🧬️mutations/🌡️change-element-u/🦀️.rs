@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ChangeElementU where O
         record: "ChangedElementU",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change U-value of the element", "U-Wert des Bauteils ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change U-value of the element", "U-Wert des Bauteils ändern")
     }
 }
 

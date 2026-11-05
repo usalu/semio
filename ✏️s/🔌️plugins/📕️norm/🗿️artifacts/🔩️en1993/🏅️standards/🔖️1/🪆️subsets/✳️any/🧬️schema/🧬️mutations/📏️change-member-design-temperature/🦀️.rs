@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberDesignTemper
         record: "ChangedMemberDesignTemperature",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Minimum member temperature T_md (1-10) of the member", "Bauteil: Mindest-Bauteiltemperatur T_md (1-10) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Minimum member temperature T_md (1-10) of the member", "Bauteil: Mindest-Bauteiltemperatur T_md (1-10) ändern")
     }
 }
 

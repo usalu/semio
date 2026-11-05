@@ -1,11 +1,11 @@
 //! 🩹️ Retained fixed-admission reconciliation for mounted plugin surfaces.
 
-use semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
+use semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
 use semio_framework_job::StepContext;
-use semio_framework_ui_contract as ui_contract;
-use semio_framework_ui_runtime::ComponentTree;
-use semio_framework_ui_runtime::{ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation, SurfaceReconcileTerminal, SurfaceReconciler, SURFACE_RECONCILE_ADMISSION_SLOTS};
-use semio_framework_ui_runtime::{SurfaceReconcileOutputReservation, SurfaceReconcileOutputTransfer, SurfaceReconcileOutputs};
+use semio_ui_contract as ui_contract;
+use semio_ui_runtime::ComponentTree;
+use semio_ui_runtime::{ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation, SurfaceReconcileTerminal, SurfaceReconciler, SURFACE_RECONCILE_ADMISSION_SLOTS};
+use semio_ui_runtime::{SurfaceReconcileOutputReservation, SurfaceReconcileOutputTransfer, SurfaceReconcileOutputs};
 use std::cell::RefCell;
 
 #[path = "🎰️surface-slots-and-reconcile-grant/🦀️.rs"]
@@ -45,9 +45,9 @@ pub mod original_retry_laws;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub mod tests;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as dsl;
 
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     /// 🩹️ One `PatchTracker` shared by every instance this actor hosts (surfaces are already
     /// namespaced by their own `surface` string, which today embeds the instance — see
     /// `render_surface`'s key).

@@ -1,7 +1,7 @@
 //! 🗂️ Guest document codec routes: print, apply, replay, compile and sqlite snapshot bridges.
 
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_plugin_host::GuestRuntimes;
+use semio_plugin_host::GuestRuntimes;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
@@ -11,7 +11,7 @@ use crate::compiled_components::shared_plugin_runtime;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::plugin_artifact_channel::shared_compiled_component;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 
 //#region 🗂️GuestDocumentCodec
 
@@ -29,12 +29,12 @@ pub(crate) const DOCUMENT_BACKBONE_BINDING_GENERATION: u64 = 1;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn headless_codec_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { fuel: u64::MAX, deadline_us: 60_000_000, ..semio_framework_plugin_host::GUEST_CODEC_BUDGET }
+    semio_framework::kernel::Budget { fuel: u64::MAX, deadline_us: 60_000_000, ..semio_plugin_host::GUEST_CODEC_BUDGET }
 }
 
 /// 🌐️ The process's document-socket I/O reactor, for the hub DOCUMENT SOCKET and nothing else: the one [`store::sync::DocumentSocketReactor`] the native artifact actors poll their own socket against, so this gateway owns no runtime of its own.
 ///
-/// 🐛️ A hub document opened here dials its socket on a `WorkerPool` thread that no Tokio runtime owns (`semio_framework_os_services::TokioHostRuntime` carries no reactor despite the name), so the first dial panicked with "there is no reactor running" until the caller entered a reactor around `ArtifactHost::open` and the guest codec calls (measured live on hub 7681, 2026-09-22). The same reactor drives the event pump of [`store::sync::ArtifactHost::pump_events_key`].
+/// 🐛️ A hub document opened here dials its socket on a `WorkerPool` thread that no Tokio runtime owns (`semio_os_services::TokioHostRuntime` carries no reactor despite the name), so the first dial panicked with "there is no reactor running" until the caller entered a reactor around `ArtifactHost::open` and the guest codec calls (measured live on hub 7681, 2026-09-22). The same reactor drives the event pump of [`store::sync::ArtifactHost::pump_events_key`].
 #[cfg(not(target_arch = "wasm32"))]
 pub fn hub_socket_reactor() -> Result<&'static store::sync::DocumentSocketReactor, GatewayError> {
     store::sync::DocumentSocketReactor::shared().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("starting the hub document-socket reactor: {error}")))
@@ -85,7 +85,7 @@ struct GuestCodecRoute {
     pub artifact_schema: String,
     pub plugin_id: String,
     pub runtime: Arc<GuestRuntimes>,
-    pub compiled: semio_framework_plugin_host::CompiledHandle,
+    pub compiled: semio_plugin_host::CompiledHandle,
 }
 
 /// 🗂️ Every guest-backed codec this process has registered, in registration order.
@@ -133,7 +133,7 @@ pub fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Bo
 /// 🧩️ `(pack, spr, encode_ops_vec) -> (pack, spr, ops text)` through the same route resolution.
 /// The ops text is the component's own print of the RESULT pair, never a host re-derivation.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn guest_apply_ops_binary<'a, 'b>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8], identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> store::os_store::serialization::ArtifactCodecApplyFuture<'a> {
+pub fn guest_apply_ops_binary<'a, 'b>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8], identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> store::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move {
         let routes = guest_codec_route_snapshot();
         let mut refusals: Vec<String> = Vec::new();
@@ -166,7 +166,7 @@ fn guest_replay_envelopes<'a>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]
         let mut refusals: Vec<String> = Vec::new();
         for route in &routes {
             let budget = headless_codec_budget();
-            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}, &semio_framework_plugin_guest_contract::GuestCallCancellation::default()).await {
+            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}, &semio_plugin_guest_contract::GuestCallCancellation::default()).await {
                 Ok(replayed) => replayed,
                 Err(error) => {
                     refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema));
@@ -202,8 +202,8 @@ pub fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationE
 /// 🪶️ Resolves semantic snapshot conversion by its declared schema and exact dialect.
 /// 🖥️ Classifies the VM's intrinsic outcome separately from a provider rejection.
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_turn_error(error: semio_framework_plugin_guest_contract::TurnFault) -> semio_framework::io_schema::IoError {
-    use semio_framework_plugin_guest_contract::TurnFault;
+fn guest_sqlite_turn_error(error: semio_plugin_guest_contract::TurnFault) -> semio_framework::io_schema::IoError {
+    use semio_plugin_guest_contract::TurnFault;
     use semio_framework_value::{ValueError, ValueRefusalKind};
     let kind = match &error {
         TurnFault::Cancelled => ValueRefusalKind::Canceled,
@@ -225,8 +225,8 @@ fn guest_sqlite_export(schema: &str, dialect: &semio_framework_artifact_referenc
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
-    use semio_framework_os_kernel::io::{self};
-    use semio_framework_plugin_guest_contract::{sqlite_wire, GuestCallCancellation};
+    use semio_os_kernel::io::{self};
+    use semio_plugin_guest_contract::{sqlite_wire, GuestCallCancellation};
     control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
     let route = guest_sqlite_route(schema, dialect)?;
     let (encoding, bytes) = match payload { IoPayload::Binary(bytes) => (SnapshotEncoding::Binary, bytes.as_slice()), IoPayload::Text(text) => (SnapshotEncoding::Text, text.as_bytes()) };
@@ -236,7 +236,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let mut progress_refusal = None;
     let grant=native.grant();
     let result=native.native().with_encoding_receiver(|remaining,observer,allocate|{
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
+        let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
         semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled,&dialect.to_coordinate(),encoding.as_str(),bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
     })?;
     let file = match result { sqlite_wire::SnapshotFileResult::Done(file) => file, sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?), sqlite_wire::SnapshotFileResult::Pending(_) => return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "guest SQLite export remains in guest custody pending its funded retirement"))) };
@@ -252,7 +252,7 @@ struct GuestSqliteImportFrame {
     pub(crate) database: Option<semio_framework::sqlite_snapshot::SqliteDatabase>,
     pub bytes: Vec<u8>,
     pub(crate) coordinate: String,
-    pub(super) wire: Option<semio_framework_plugin_guest_contract::sqlite_wire::SnapshotPayloadResult>,
+    pub(super) wire: Option<semio_plugin_guest_contract::sqlite_wire::SnapshotPayloadResult>,
     diagnostics: Vec<semio_framework::Diagnostic>,
 }
 
@@ -283,7 +283,7 @@ pub(crate) fn guest_sqlite_import_coordinate(dialect:&semio_framework_artifact_r
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
     use semio_framework::{io_schema::{IoError,IoOutcome,IoPayload},sqlite_snapshot::{self,SqliteSnapshotPhase}};
-    use semio_framework_plugin_guest_contract::{sqlite_wire,GuestCallCancellation};
+    use semio_plugin_guest_contract::{sqlite_wire,GuestCallCancellation};
     use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant};
     if database.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"guest SQLite import original database is absent")))}
     native.receive_nested::<GuestSqliteImportFrame,semio_framework::io_schema::IoResult<IoPayload>>(|slot,native|{
@@ -293,7 +293,7 @@ pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifa
             control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0).map_err(IoError::from_value_error)?;
             let route=guest_sqlite_route(schema,dialect)?;
             let limits=control.limits();
-            semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(frame.database.as_mut().unwrap(),dialect,encoding,control).map_err(IoError::from_value_error)?;
+            semio_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(frame.database.as_mut().unwrap(),dialect,encoding,control).map_err(IoError::from_value_error)?;
             frame.bytes=sqlite_snapshot::export_sqlite_database_controlled(frame.database.as_ref().unwrap(),control).map_err(IoError::from_value_error)?;
             guest_sqlite_import_coordinate(dialect,&mut frame.coordinate,native).map_err(IoError::from_value_error)?;
             let cancel=GuestCallCancellation::default();
@@ -301,7 +301,7 @@ pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifa
             let mut progress_refusal=None;
             let grant:RetainedCloneGrant=native.remaining_grant();
             frame.wire=Some(native.native().with_encoding_receiver(|remaining,observer,allocate|{
-                let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
+                let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
                 semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled,&frame.coordinate,&frame.bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
             })?);
             match frame.wire.as_mut().unwrap(){
@@ -374,8 +374,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }),
     };
     let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-    let binding=semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::Guest,plugin_id,Some(dialect.artifact_kind.clone()),Vec::new(),Some(dialect.clone()),None,&codec);
-    semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_bindings:vec![binding],document_codecs: vec![codec.clone()], native_snapshots: vec![semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration { dialect: dialect.clone(), codec }], ..Default::default() }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed semantic codec for `{artifact_schema}`: {error}")))?;
+    let binding=semio_os_kernel::io::ArtifactCodecBinding::from_codec(semio_os_kernel::io::ArtifactCodecBindingChannel::Guest,plugin_id,Some(dialect.artifact_kind.clone()),Vec::new(),Some(dialect.clone()),None,&codec);
+    semio_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, semio_os_kernel::io::ArtifactAssemblyRegistryPlan { document_bindings:vec![binding],document_codecs: vec![codec.clone()], native_snapshots: vec![semio_os_kernel::io::io_mechanism::NativeSnapshotRegistration { dialect: dialect.clone(), codec }], ..Default::default() }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed semantic codec for `{artifact_schema}`: {error}")))?;
     routes.push(Arc::new(GuestCodecRoute { dialect, artifact_schema: artifact_schema.to_string(), plugin_id: plugin_id.to_string(), runtime: Arc::clone(&runtime), compiled }));
     Ok(pack_schema_hash)
 }

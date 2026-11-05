@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "infiltration", kind: "change-infiltration-velocity-squared-term-coefficient", record: "ChangedInfiltrationVelocitySquaredTermCoefficient" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Infiltration Velocity Squared Term Coefficient of infiltration {}", self.id.0), &format!("Quadratischen Windkoeffizienten von Infiltration {} ändern", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Infiltration Velocity Squared Term Coefficient of infiltration {}", self.id.0), &format!("Quadratischen Windkoeffizienten von Infiltration {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

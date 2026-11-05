@@ -21,8 +21,8 @@ pub struct SetUnknownStatements {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetUnknownStatements {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "unknown-statements", kind: "set-unknown-statements", record: "SetUnknownStatements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set unknown statements", "Unbekannte Anweisungen setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set unknown statements", "Unbekannte Anweisungen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

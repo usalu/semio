@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindFaceCD where O
         record: "ChangedWindFaceCD",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change dynamic factor cd of the wind face", "Windfläche: Dynamikbeiwert cd ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change dynamic factor cd of the wind face", "Windfläche: Dynamikbeiwert cd ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

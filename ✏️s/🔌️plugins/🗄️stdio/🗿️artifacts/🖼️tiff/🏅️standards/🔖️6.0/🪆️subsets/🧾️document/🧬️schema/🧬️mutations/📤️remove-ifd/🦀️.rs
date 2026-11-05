@@ -20,8 +20,8 @@ pub struct RemoveIfdMutation {
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveIfdMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "ifd", kind: "remove-ifd", record: "RemoveIfd" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove IFD", "IFD entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove IFD", "IFD entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-ifd".into()]

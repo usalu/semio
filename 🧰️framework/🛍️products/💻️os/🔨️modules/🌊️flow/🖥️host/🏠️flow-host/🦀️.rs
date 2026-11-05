@@ -71,7 +71,7 @@ impl RetireOwned for FlowBaselineLeases {
 
 /// 🏠️ Retained flow host: host_snapshot, dag scene, evaluation cache.
 pub struct FlowHost {
-    pub geometry_port: Option<Box<dyn semio_framework_os_flow_geometry::GeometryPort>>,
+    pub geometry_port: Option<Box<dyn semio_os_flow_geometry::GeometryPort>>,
     pub operator_registry: Option<neural::SharedRegistry>,
     pub host_snapshot: FlowHostSnapshot,
     pub dag: DagHost,
@@ -109,10 +109,10 @@ pub struct FlowHost {
     pub viewport_dpr: f64,
     pub(super) pan_anchor: Option<(f64, f64, f64, f64)>,
     pub ghost_node: Option<DagNodeSpec>,
-    /// ↩️ Undo/redo, backed by the standard `semio_framework_os_kernel::os_store::ArtifactStore<FlowHostSnapshot, FlowMutation>`
+    /// ↩️ Undo/redo, backed by the standard `semio_os_kernel::os_store::ArtifactStore<FlowHostSnapshot, FlowMutation>`
     /// mechanism (see the `impl FlowHost`'s `🔖️History` region) instead of a hand-rolled snapshot stack.
     pub history_store: Option<FlowStore>,
-    pub(super) history_store_factory:Option<semio_framework_os_kernel::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>>,
+    pub(super) history_store_factory:Option<semio_os_kernel::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>>,
     pub(super) pending_history_baseline: Option<FlowHostSnapshot>,
     /// 🚩️ Armed by `begin_change`/`begin_gesture` for a discrete mutation not yet flushed into
     /// `history_store` — lets `can_undo` reflect it immediately, mirroring how the old snapshot stack's

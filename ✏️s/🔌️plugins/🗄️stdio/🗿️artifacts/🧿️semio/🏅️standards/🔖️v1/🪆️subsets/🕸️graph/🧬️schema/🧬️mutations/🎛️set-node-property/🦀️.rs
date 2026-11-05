@@ -23,11 +23,11 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "node-property", kind: "set-node-property", record: "SetNodeProperty" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (key, owner) = (&self.key, &self.node_id.value);
         match semio_s_artifact_stdio_semio_value_model::schema::snapshot::semio_value_scalar_label(&self.value) {
-            Some((en, de)) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Set \"{key}\" of node \"{owner}\" to {en}"), &format!("\"{key}\" von Knoten \"{owner}\" auf {de} setzen")),
-            None => semio_framework_ui_locale::LocalizedLabel::native(&format!("Set \"{key}\" of node \"{owner}\""), &format!("\"{key}\" von Knoten \"{owner}\" setzen")),
+            Some((en, de)) => semio_ui_locale::LocalizedLabel::native(&format!("Set \"{key}\" of node \"{owner}\" to {en}"), &format!("\"{key}\" von Knoten \"{owner}\" auf {de} setzen")),
+            None => semio_ui_locale::LocalizedLabel::native(&format!("Set \"{key}\" of node \"{owner}\""), &format!("\"{key}\" von Knoten \"{owner}\" setzen")),
         }
     }
     fn target(&self) -> Vec<String> {

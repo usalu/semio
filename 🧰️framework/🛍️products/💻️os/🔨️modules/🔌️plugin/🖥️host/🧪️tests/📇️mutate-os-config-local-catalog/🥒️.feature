@@ -10,7 +10,7 @@ Feature: Apply every typed local-catalog mutation to its committed specification
   decision in `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ Like its opening, merge-policy and identity siblings, this case lives under `🔌️plugin/🖥️host`; its Rust subject
-  links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  links the owning crate `semio-os-config` directly, declared as a subject host package in
   `../../🔮️oracles/🔣️.json`.
 
   Two kinds close the vocabulary: an admission is an UPSERT keyed on `documentId` (a re-admission replaces the entry, a new

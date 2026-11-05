@@ -41,7 +41,7 @@ fn tree_with_owned_child(text: &str) -> ComponentTree {
     tree
 }
 
-fn publish_test(mut ready: SurfaceReconcileReadyPatch) -> (ui_contract::UiPatch, semio_framework_ui_runtime::SurfaceReconcilePublishedPatch) {
+fn publish_test(mut ready: SurfaceReconcileReadyPatch) -> (ui_contract::UiPatch, semio_ui_runtime::SurfaceReconcilePublishedPatch) {
     let mut payload = ui_contract::UiPendingPatch::default();
     let mut published = None;
     assert!(ready.publish_into(&mut payload, &mut published, SurfaceReconcileReadyPatch::required_publish_bytes()).unwrap() > 0);
@@ -49,7 +49,7 @@ fn publish_test(mut ready: SurfaceReconcileReadyPatch) -> (ui_contract::UiPatch,
     (payload.source_mut().unwrap().take().unwrap(), published.unwrap())
 }
 
-fn close_published(mut published: semio_framework_ui_runtime::SurfaceReconcilePublishedPatch) {
+fn close_published(mut published: semio_ui_runtime::SurfaceReconcilePublishedPatch) {
     for turn in 0..65_536 {
         let step = published.close_step_with_grant(1, 4096).unwrap();
         assert!(step.released_items <= 1 && step.released_bytes <= 4096);
@@ -126,12 +126,12 @@ fn acknowledge_one_publication(tracker: &PatchTracker, surface: &str,cx:&mut sem
             let (patch, authority) = publish_test(owner);
             let mut authority = Some(authority);
             let mut acknowledgement = None;
-            assert!(semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(
+            assert!(semio_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(
                 &mut authority,
                 &mut acknowledgement,
                 surface,
                 patch.revision.0,
-                semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()
+                semio_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()
             )
             .unwrap());
             assert!(tracker.mark_published_ack(acknowledgement.as_ref().unwrap()).unwrap());
@@ -146,7 +146,7 @@ fn acknowledge_one_publication(tracker: &PatchTracker, surface: &str,cx:&mut sem
 }
 
 #[doc(hidden)]
-pub fn published(tracker: &PatchTracker, surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_ui_runtime::SurfaceReconcilePublishedPatch {
+pub fn published(tracker: &PatchTracker, surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> semio_ui_runtime::SurfaceReconcilePublishedPatch {
     tracker.begin(surface.to_owned(), leaf("root", "published")).expect("admitted publication");
     for _ in 0..4_096 {
         tracker.drive_one(cx).expect("original patch fixture semantic step");

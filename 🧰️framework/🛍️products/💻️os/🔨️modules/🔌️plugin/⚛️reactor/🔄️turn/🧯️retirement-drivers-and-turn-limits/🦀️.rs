@@ -99,7 +99,7 @@ const PATCH_CLOSE_DEADLINE_STRIDE: usize = 8;
 pub const PATCH_RETIREMENT_ITEMS_PER_UNIT: usize = 1_024;
 
 /// 🧹️ Bytes one retirement unit may retire — the publication's own page budget.
-pub const PATCH_RETIREMENT_BYTES_PER_UNIT: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES;
+pub const PATCH_RETIREMENT_BYTES_PER_UNIT: usize = semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES;
 
 /// ⏱️ The reactor's OWN slice of one turn: the wall the executor may spend running ready tasks before
 /// it hands control back to whoever polled it. It is the reactor's slice, not the turn's — the turn's

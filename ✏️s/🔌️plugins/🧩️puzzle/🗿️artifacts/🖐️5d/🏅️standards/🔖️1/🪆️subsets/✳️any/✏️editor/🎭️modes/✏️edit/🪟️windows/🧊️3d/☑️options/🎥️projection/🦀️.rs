@@ -4,8 +4,8 @@
 use crate::editor::puzzle5d::entities::puzzle5d_action;
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
-use semio_framework_plugin::world3d_projection_measures;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::world3d_projection_measures;
+use semio_plugin::WindowMeasure;
 
 /// 🧭️ The projection select plus its parameter sliders for this window instance's camera.
 /// 🔗️ `world3d_projection_measures` is a framework helper still bound to `semio_framework_pack_json::Value`

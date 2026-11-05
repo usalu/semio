@@ -3,19 +3,19 @@
 use semio_framework_async::CancelToken;
 use semio_framework_async::OperationContext;
 use semio_framework_async::TraceId;
-use semio_framework_os_kernel::os_directory::ArtifactFrontier;
-use semio_framework_os_kernel::os_directory::ArtifactHash;
-use semio_framework_os_kernel::os_directory::DirectorySpaceKind;
-use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
-use semio_framework_os_kernel::os_directory::DirectorySpaceVisibility;
-use semio_framework_os_kernel::os_directory::DocumentDescriptor;
-use semio_framework_os_kernel::os_directory::DocumentFrontier;
-use semio_framework_os_kernel::os_directory::DocumentOwner;
-use semio_framework_os_kernel::os_directory::DocumentScope;
-use semio_framework_os_kernel::os_directory::DocumentView;
-use semio_framework_os_kernel::os_directory::MemberSpaceViewV1;
-use semio_framework_os_kernel::os_directory::MemberView;
-use semio_framework_os_kernel::os_directory::RebootstrapRequired;
+use semio_os_kernel::os_directory::ArtifactFrontier;
+use semio_os_kernel::os_directory::ArtifactHash;
+use semio_os_kernel::os_directory::DirectorySpaceKind;
+use semio_os_kernel::os_directory::DirectorySpaceRole;
+use semio_os_kernel::os_directory::DirectorySpaceVisibility;
+use semio_os_kernel::os_directory::DocumentDescriptor;
+use semio_os_kernel::os_directory::DocumentFrontier;
+use semio_os_kernel::os_directory::DocumentOwner;
+use semio_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::DocumentView;
+use semio_os_kernel::os_directory::MemberSpaceViewV1;
+use semio_os_kernel::os_directory::MemberView;
+use semio_os_kernel::os_directory::RebootstrapRequired;
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -25,11 +25,11 @@ use std::sync::atomic::AtomicU64;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 use crate::remote::{AuthorizedDescriptorSnapshot, AuthorizedDocumentView, HubRemoteBinding, HubStreamObservation, base64_encode_exact, canonical_checkpoint_resource_text, checked_base64_length, checkpoint_resource_uri, parse_checkpoint_resource_uri};
-use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
-use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairActorState, CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairHttpResponse, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairTransport, HUB_PAIR_CACHE_MAX_ENTRIES, HUB_PAIR_MAX_VERIFIED_BYTES, HUB_PAIR_MEDIA_TYPE, PairBegin, PairCompletion, canonical_etag, checkpoint, maximum_wire_bytes, wait_for_published_receipt};
-use semio_framework_os_mcp_schema::schema::UNTRUSTED_CONTENT_NOTICE;
+use semio_os_mcp_hub_pair::binding_errors::HubBindingError;
+use semio_os_mcp_hub_pair::pair::{CanonicalPairActorState, CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairHttpResponse, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairTransport, HUB_PAIR_CACHE_MAX_ENTRIES, HUB_PAIR_MAX_VERIFIED_BYTES, HUB_PAIR_MEDIA_TYPE, PairBegin, PairCompletion, canonical_etag, checkpoint, maximum_wire_bytes, wait_for_published_receipt};
+use semio_os_mcp_schema::schema::UNTRUSTED_CONTENT_NOTICE;
 #[cfg(test)]
-use semio_framework_os_mcp_hub_pair::pair::{decode_fixture_for_test, test_wiped_bytes};
+use semio_os_mcp_hub_pair::pair::{decode_fixture_for_test, test_wiped_bytes};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 
@@ -514,7 +514,7 @@ async fn canonical_pair_receipt_preflights_streams_cancels_expires_and_never_res
         descriptor_digest_v1: ArtifactHash::new([1; 32]),
         baseline_frontier: ArtifactFrontier { document_id: scope.document_id.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: ArtifactHash::new([3; 32]) },
     };
-    assert_eq!(binding.observe_stream_message(&semio_framework_os_kernel::os_directory::DirectoryStreamMessage::RebootstrapRequired { control }), HubStreamObservation::RefreshRequired);
+    assert_eq!(binding.observe_stream_message(&semio_os_kernel::os_directory::DirectoryStreamMessage::RebootstrapRequired { control }), HubStreamObservation::RefreshRequired);
     assert_eq!(binding.canonical_pair_test_stats().0, CanonicalPairActorState::Refreshing);
 }
 

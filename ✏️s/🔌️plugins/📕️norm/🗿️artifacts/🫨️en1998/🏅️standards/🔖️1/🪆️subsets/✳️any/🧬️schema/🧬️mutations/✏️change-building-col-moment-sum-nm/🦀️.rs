@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingColMomentS
         record: "ChangeBuildingColMomentSumNm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Sum of column design resistances at the governing joint", "Summe der Stützenwiderstände am maßgebenden Knoten ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Sum of column design resistances at the governing joint", "Summe der Stützenwiderstände am maßgebenden Knoten ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-col-moment-sum-nm".into()]

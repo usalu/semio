@@ -3,7 +3,7 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_semio_video_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, SEMIO_VIDEO_DIALECT.into());
 }
 
@@ -14,7 +14,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioVideoEditor, crate::viewer::SemioVideoViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioVideoEditor, crate::viewer::SemioVideoViewer>().await;
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio/SemioVideoEditor", SemioVideoEditor, || semio_framework_plugin::App { definition: create_semio_video_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio/SemioVideoEditor", SemioVideoEditor, || semio_plugin::App { definition: create_semio_video_editor(), examples: Vec::new() }, "../..");

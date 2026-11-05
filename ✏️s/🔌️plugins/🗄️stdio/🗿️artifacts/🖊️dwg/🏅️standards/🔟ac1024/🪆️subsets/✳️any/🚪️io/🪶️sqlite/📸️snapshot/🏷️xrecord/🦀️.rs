@@ -2,7 +2,7 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
 use super::reader::{boolean,byte,full_unsigned,high,low,ordinal,real,signed_integer,signed_word,Reader};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 use super::number::{Projection,Row};
 use Cell::{Integer as I,Real as R,Text as T,Null as N};
 

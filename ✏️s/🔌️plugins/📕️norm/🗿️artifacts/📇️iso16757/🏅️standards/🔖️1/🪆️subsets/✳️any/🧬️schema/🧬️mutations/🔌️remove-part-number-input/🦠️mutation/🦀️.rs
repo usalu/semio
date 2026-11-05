@@ -16,8 +16,8 @@ pub struct RemovePartNumberInput {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RemovePartNumberInput where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_part_number_input::mutation::ChangePartNumberInput> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "part-number-input", kind: "remove-part-number-input", record: "RemovedPartNumberInput" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove part-number input \"{}\"", self.key), &format!("Artikelnummer-Eingabe \"{}\" entfernen", self.key))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove part-number input \"{}\"", self.key), &format!("Artikelnummer-Eingabe \"{}\" entfernen", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

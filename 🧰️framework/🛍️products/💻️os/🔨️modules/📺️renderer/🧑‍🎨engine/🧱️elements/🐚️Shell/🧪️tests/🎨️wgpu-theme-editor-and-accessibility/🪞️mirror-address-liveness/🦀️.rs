@@ -1,7 +1,7 @@
 /// 🪞️ Mirror address liveness: the settings toggle shell and the accessibility address staying live, stale or delayed across frames.
 
 fn settings_toggle_shell() -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.dock.dock_tabs.tabs_mut(PanelAnchor::BottomRight).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)]));
     shell
 }
@@ -15,7 +15,7 @@ fn generation_rule_hit(rect_key: &str) -> HitTarget<ActionDescriptor> {
 fn settings_toggle_address(shell: &ShellState, input: &InputState<ActionDescriptor>) -> ui_render::AccessibilityTarget {
     let control = accessibility_fixture()["presentedChrome"]["generationRule"]["controlId"].as_str().expect("generation rule control").to_string();
     let node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == control).expect("Settings mirror node");
-    ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key }
+    ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key }
 }
 
 #[test]

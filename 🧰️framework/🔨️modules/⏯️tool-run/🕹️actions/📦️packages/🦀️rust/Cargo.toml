@@ -25,7 +25,7 @@ semio-framework-manifest-actions = { path = "../../../../🛂️manifest/🕹️
 semio-framework-manifest-app-surface = { path = "../../../../🛂️manifest/🧱️app-surface/📦️packages/🦀️rust" }
 semio-framework-manifest-arg-schema = { path = "../../../../🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
-semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 replication = { package = "semio-framework-replication", path = "../../../../📡️replication/📦️packages/🦀️rust" }

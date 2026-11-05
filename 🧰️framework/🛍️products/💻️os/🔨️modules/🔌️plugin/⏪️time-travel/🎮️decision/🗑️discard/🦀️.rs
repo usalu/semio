@@ -1,14 +1,14 @@
 //! 🗑️ Original typed Store effects prepare their custody before the Session publishes Discard.
-use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, Mutation, MutationDiff};
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
 use protocol::{OpBinary, OpText};
@@ -17,16 +17,16 @@ use semio_framework_value::{RetirementDemand, ValueError};
 use crate::{TimeTravelEditor, TimeTravelOwners, TimeTravelReviewChildren, TimeTravelStoreState};
 use semio_framework_time_travel::{TimeTravelSession, TimeTravelStage};
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 use std::mem::{ManuallyDrop, size_of_val};
 use semio_framework_value::{ErasedSnapshotRetirement, FactoryAuthority, ArtifactOwnedValueRetirementFactory};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_child::ChildContentRetirement;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_child::ChildContentRetirement;
+use semio_plugin_decl_views::child_view::ChildContentView;
 
 pub(super) struct TimeTravelDiscardStoreEffects<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> {
  residue:ManuallyDrop<Option<TimeTravelStoreState<P,Mu>>>,
@@ -47,7 +47,7 @@ pub fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Defa
 pub fn admits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 #[doc(hidden)]
 pub fn demand(owner:&dyn ErasedSnapshotRetirement,body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||refusal("Discard original child depth overflow"))?})}
-impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,Mu: ::protocol::StoreMutationFor<P> {
+impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,Mu: ::protocol::StoreMutationFor<P> {
  pub(super) fn prepare_discard_effects(&mut self,store:&ArtifactStore<P,Mu>,stage:TimeTravelStage,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ValueError>{
   if !TimeTravelEditor::controlled_retirement_supported()||!protocol::InputReplacement::controlled_retirement_supported(){return Err(refusal("Discard original editor schema ownership is unsupported"))}
   let bound=(self as *const _ as usize,store.generation_now(),store.content_revision_now(),stage);
@@ -68,7 +68,7 @@ impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semi
  pub(super) fn discard_effects_retirement_demands(&self,body:usize)->Result<Option<RetirementDemand>,ValueError>{self.discard_effects.as_ref().filter(|owner|owner.closing).map(|owner|if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{demand(owner.as_ref(),body)}).transpose()}
  pub(super) fn discard_effects_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{let Some(quote)=self.discard_effects_retirement_demands(grant.maximum_copy_bytes)?else{return Ok(None)};if !admits(grant,quote){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}let owner=self.discard_effects.as_mut().unwrap();if owner.terminal_is_empty(){drop(self.discard_effects.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:quote.release_bytes,..item()})))}owner.closing=true;let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child).result?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"Actor original prepared Discard effects")?;Ok(Some(RetainedCloneStep::Progress(step.progress())))}
 }
-impl<P,Mu> ErasedSnapshotRetirement for TimeTravelDiscardStoreEffects<P,Mu> where P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,Mu: ::protocol::StoreMutationFor<P> {
+impl<P,Mu> ErasedSnapshotRetirement for TimeTravelDiscardStoreEffects<P,Mu> where P: ::protocol::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,Mu: ::protocol::StoreMutationFor<P> {
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{semio_framework_value::RetainedWorkOutcome{result:(||->Result<RetainedCloneStep,ValueError>{
   if !admits(grant,self.next_demand(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()))}self.closing=true;let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
   if let Some(original)=self.residue.as_mut(){
@@ -94,7 +94,7 @@ impl<P,Mu> ErasedSnapshotRetirement for TimeTravelDiscardStoreEffects<P,Mu> wher
  fn next_depth_demand(&self)->Result<usize,ValueError>{self.next_demand(0).map(|d|d.depth)}
  fn terminal_is_empty(&self)->bool{self.residue.is_none()&&self.input.is_none()&&self.editor.is_none()&&self.frames.iter().all(Option::is_none)&&self.factory.is_none()&&self.factory_close.is_none()}
 }
-impl<P,Mu> TimeTravelDiscardStoreEffects<P,Mu> where P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,Mu: ::protocol::StoreMutationFor<P> {
+impl<P,Mu> TimeTravelDiscardStoreEffects<P,Mu> where P: ::protocol::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,Mu: ::protocol::StoreMutationFor<P> {
  pub fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(original)=self.residue.as_ref(){if original.preview_job.is_some()||original.replay.is_some()||original.finished.is_some()||original.preview.is_some()||original.head.is_some(){return Ok(RetirementDemand{depth:2,..Default::default()})}if original.preview_input.is_some()||original.discarded_factory.is_none()&&(original.kind.is_some()||original.staged.is_some()||!original.discarded.is_empty()||original.discarded_pending.is_some())||original.discarded_pending.is_none()&&(original.kind.is_some()||original.staged.is_some()){return Ok(RetirementDemand{depth:1,..Default::default()})}let mut demand=original.original_retirement_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||refusal("Discard original typed residue depth overflow"))?;return Ok(demand)}
   if let Some(owner)=self.editor.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{demand(owner,body)}}
@@ -109,7 +109,7 @@ impl<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> Drop for TimeTra
 pub struct DiscardMemberPublication<'a>{pub owners:&'a mut dyn TimeTravelOwners,pub cursor:&'a mut semio_framework_time_travel::TimeTravelDiscardCursor,pub session:&'a mut TimeTravelSession,pub editor:&'a mut Option<TimeTravelEditor>,pub review_children:&'a mut Option<TimeTravelReviewChildren>,pub children:&'a mut Option<ChildContentView>,pub retirements:&'a mut ArtifactFixedRegistry<ChildContentRetirement>,pub child_generation:&'a mut u64,pub view_copy_bytes:usize,pub grant:RetainedCloneGrant}
 impl store::MemberStoreVisitor for DiscardMemberPublication<'_>{
  type Output=Result<RetainedCloneProgress,ValueError>;
- fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output where P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::protocol::StoreState,Mu: protocol::SemanticMutation<P> + ::protocol::StoreMutationFor<P> {
+ fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output where P: ::protocol::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::protocol::StoreState,Mu: protocol::SemanticMutation<P> + ::protocol::StoreMutationFor<P> {
   let state=self.owners.as_any_mut().downcast_mut::<TimeTravelStoreState<P,Mu>>().ok_or_else(||refusal("Discard original member Store kind changed"))?;
   if self.cursor.prepared_stage()==Some(TimeTravelStage::Reviewing){
    let review=self.review_children.as_ref().ok_or_else(||refusal("Discard original reviewing child custody is absent"))?;if review.base!=self.session.base{return Err(refusal("Discard original reviewed child base changed"))}

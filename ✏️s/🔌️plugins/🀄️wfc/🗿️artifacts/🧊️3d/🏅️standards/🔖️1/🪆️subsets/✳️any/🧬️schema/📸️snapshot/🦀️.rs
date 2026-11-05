@@ -224,7 +224,7 @@ impl<R:semio_framework_schema_composition::ChildReadSource> semio_framework_sche
 }
 
 /// 🔑️ The identity of a `Slot3d` inside its list delta.
-impl semio_framework_os_kernel::list_delta::Keyed for Slot3d {
+impl semio_os_kernel::list_delta::Keyed for Slot3d {
     type Key = String;
     fn key(&self) -> String {
         self.id.clone()
@@ -232,7 +232,7 @@ impl semio_framework_os_kernel::list_delta::Keyed for Slot3d {
 }
 
 /// 🔑️ The identity of a `SlotEdge` inside its list delta.
-impl semio_framework_os_kernel::list_delta::Keyed for SlotEdge {
+impl semio_os_kernel::list_delta::Keyed for SlotEdge {
     type Key = String;
     fn key(&self) -> String {
         self.id.clone()
@@ -240,7 +240,7 @@ impl semio_framework_os_kernel::list_delta::Keyed for SlotEdge {
 }
 
 /// 🔑️ The identity of a `Tile` inside its list delta.
-impl semio_framework_os_kernel::list_delta::Keyed for Tile {
+impl semio_os_kernel::list_delta::Keyed for Tile {
     type Key = String;
     fn key(&self) -> String {
         self.id.clone()
@@ -248,7 +248,7 @@ impl semio_framework_os_kernel::list_delta::Keyed for Tile {
 }
 
 /// 🔑️ The identity of a `GraphRule` inside its list delta.
-impl semio_framework_os_kernel::list_delta::Keyed for GraphRule {
+impl semio_os_kernel::list_delta::Keyed for GraphRule {
     type Key = String;
     fn key(&self) -> String {
         self.id.clone()

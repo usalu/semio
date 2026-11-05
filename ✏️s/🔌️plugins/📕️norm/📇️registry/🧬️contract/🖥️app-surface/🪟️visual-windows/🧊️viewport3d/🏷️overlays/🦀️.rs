@@ -5,7 +5,7 @@ use super::measure::MeasureState;
 use super::parts::entity_anchor;
 use super::pose::*;
 use super::scene::{Annotation, DeformationKind, DeformationOverlay, FailureMode, Quantity, QuantityKind, StructuralScene, Tone};
-use semio_framework_plugin::{World3dAnnotation, World3dAnnotationLayer, World3dMarker, World3dMarkerShape, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX};
+use semio_plugin::{World3dAnnotation, World3dAnnotationLayer, World3dMarker, World3dMarkerShape, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX};
 
 fn trimmed(value: f64, decimals: usize) -> String {
     let text = format!("{value:.decimals$}");

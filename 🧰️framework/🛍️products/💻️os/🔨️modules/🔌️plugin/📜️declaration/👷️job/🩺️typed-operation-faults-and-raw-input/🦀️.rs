@@ -85,12 +85,12 @@ pub(crate) struct OriginalAuthoringEffect {
 }
 
 impl OriginalAuthoringEffect {
-    pub(super) fn run<T>(&mut self, operation: impl FnOnce(&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<T, Fault>) -> Result<T, Fault> {
+    pub(super) fn run<T>(&mut self, operation: impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<T, Fault>) -> Result<T, Fault> {
         let Self { receipt, token, publication, progress } = self;
         let original = receipt.take().ok_or_else(|| plugin_sdk_fault("app-owned effect lacks its original authoring receipt"))?;
         let mut observed = *progress;
         let mut observer = |next: semio_framework_value::native_encoding::NativeEncodeProgress| { observed = next; !token.is_cancelled_now() && !publication.is_cancelled() };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(original, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(original, &mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
         let result = operation(&mut identity);
         *receipt = Some(identity.pause().map_err(|error| plugin_sdk_fault(error.to_string()))?);
         drop(observer);
@@ -149,7 +149,7 @@ impl ArtifactToolRawInput {
         }
         let mut input = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.raw-page-busy"), "typed-operation raw page owner is busy or poisoned"))?;
         let Some(owner) = input.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
-        let step = owner.close_step(grant).map_err(semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
+        let step = owner.close_step(grant).map_err(semio_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
         if owner.terminal_is_empty() {
             *input = None;
         }

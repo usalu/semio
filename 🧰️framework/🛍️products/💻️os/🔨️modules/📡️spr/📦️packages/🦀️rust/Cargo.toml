@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-spr"
+name = "semio-os-spr"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,28 +22,28 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-protocol-laws = ["semio-framework-os-pack/record-codec-laws", "dep:semio-framework-async"]
-mutation-testing = ["semio-framework-os-command/mutation-testing"]
+protocol-laws = ["semio-os-pack/record-codec-laws", "dep:semio-framework-async"]
+mutation-testing = ["semio-os-command/mutation-testing"]
 
 [dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"], optional = true }
-dsl_derive = { path = "../../../🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
+dsl_derive = { path = "../../../🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-os-kernel-dsl-derive" }
 semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-os-channel = { path = "../../🧵️channel/📦️packages/🦀️rust" }
-semio-framework-os-command = { path = "../../🎮️command/📦️packages/🦀️rust" }
-semio-framework-os-history = { path = "../../📜️history/📦️packages/🦀️rust", default-features = false }
-semio-framework-os-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust" }
+semio-os-channel = { path = "../../🧵️channel/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../🎮️command/📦️packages/🦀️rust" }
+semio-os-history = { path = "../../📜️history/📦️packages/🦀️rust", default-features = false }
+semio-os-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-source = { path = "../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-os-pack-tools = { path = "../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
+semio-os-pack-tools = { path = "../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-command = { path = "../../🎮️command/📦️packages/🦀️rust", features = ["mutation-testing"] }
-semio-framework-os-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", features = ["record-codec-laws"] }
+semio-os-command = { path = "../../🎮️command/📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-os-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", features = ["record-codec-laws"] }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

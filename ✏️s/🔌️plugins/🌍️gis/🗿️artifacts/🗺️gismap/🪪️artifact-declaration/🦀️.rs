@@ -1,7 +1,7 @@
 //! 🪪️ Declaration of the GIS map artifact: the artifact kind, the immutable runtime definition and the typed declaration. See [`super`].
 
 use crate::schema::snapshot::GisMapSnapshot;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use crate::{GISMAP_DIALECT, GIS_MAP_SCHEMA};
 use crate::standards::v1::subsets::any::inference_service::{gis_map_inference_service};
 use semio_s_artifact_gis_gismap_mutations::standards::v1::subsets::any::schema::mutations::GisMapMutation;
@@ -11,7 +11,7 @@ use semio_s_artifact_gis_gismap_mutations::standards::v1::subsets::any::schema::
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: GISMAP_DIALECT.artifact_kind.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D Map", "2D-Karte"),
+        label: semio_ui_locale::LocalizedLabel::native("2D Map", "2D-Karte"),
         source_format: GIS_MAP_SCHEMA.into(),
         component_kind: "gismap".into(),
         dimension: "2d".into(),
@@ -33,8 +33,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
 /// 🧾️ Defines s.gis.gismap's immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.gis.gismap")?)
         .capability(
@@ -98,8 +98,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.gis.gismap's typed runtime declaration.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::schema::gismap_artifact_schema_descriptor())
         .inferences([crate::standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor()])
         .inference_services([gis_map_inference_service()])

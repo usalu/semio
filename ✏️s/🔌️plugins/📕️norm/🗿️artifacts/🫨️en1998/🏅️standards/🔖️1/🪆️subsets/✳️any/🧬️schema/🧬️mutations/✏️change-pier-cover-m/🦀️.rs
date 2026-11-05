@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangePierCoverM where O
         record: "ChangePierCoverM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change pier: Cover to bar centre d1 (0 = not given)", "Pfeiler: Randabstand der Bewehrungsachse d1 (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change pier: Cover to bar centre d1 (0 = not given)", "Pfeiler: Randabstand der Bewehrungsachse d1 (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-pier-cover-m".into()]

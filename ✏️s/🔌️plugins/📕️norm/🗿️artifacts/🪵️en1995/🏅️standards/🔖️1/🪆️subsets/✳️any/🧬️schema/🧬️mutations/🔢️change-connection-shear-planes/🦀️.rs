@@ -10,7 +10,7 @@ pub struct ChangeConnectionShearPlanes { pub connection_id: String, pub new_valu
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeConnectionShearPlanes where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_shear_planes::ChangeConnectionShearPlanes> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-shearPlanes", kind: "change-connection-shear-planes", record: "ChangedConnectionShearPlanes" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Shear planes of connection {}", self.connection_id), &format!("Scherflächen von Verbindung {} ändern", self.connection_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Shear planes of connection {}", self.connection_id), &format!("Scherflächen von Verbindung {} ändern", self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
 }
 

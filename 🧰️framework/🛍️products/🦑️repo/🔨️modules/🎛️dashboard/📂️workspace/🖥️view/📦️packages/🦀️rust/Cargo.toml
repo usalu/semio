@@ -28,12 +28,12 @@ semio-framework-filesystem-workspace = { path = "../../../../../../../../🔨️
 dashboard_labels = { path = "../../../../🖥️terminal/🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }
 dashboard_preferences = { path = "../../../../⚙️preferences/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-preferences" }
 dashboard_feedback = { path = "../../../../🖥️terminal/📣️feedback/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-feedback" }
-ui_locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
-semio-framework-ui-tui-core = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
-semio-framework-ui-tui-frame = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
-semio-framework-ui-tui-engine = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-ui-tui-widgets = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
-semio-framework-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust" }
+ui_locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale" }
+semio-ui-tui-core = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-frame = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
+semio-ui-tui-engine = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
+semio-ui-tui-widgets = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
+semio-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

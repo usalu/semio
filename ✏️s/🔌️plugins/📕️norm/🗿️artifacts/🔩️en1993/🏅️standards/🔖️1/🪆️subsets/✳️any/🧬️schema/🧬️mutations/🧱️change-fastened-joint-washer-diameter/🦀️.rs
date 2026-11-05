@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFastenedJointWashe
         record: "ChangedFastenedJointWasherDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fastened joint: Washer or head diameter d_w", "Befestigungsverbindung: Scheiben- oder Kopfdurchmesser d_w ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fastened joint: Washer or head diameter d_w", "Befestigungsverbindung: Scheiben- oder Kopfdurchmesser d_w ändern")
     }
 }
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgeImportanceCl
         record: "ChangeBridgeImportanceClass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Importance class of the bridge for γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1)", "Bedeutungsklasse der Brücke für γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Importance class of the bridge for γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1)", "Bedeutungsklasse der Brücke für γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-importance-class".into()]

@@ -1,5 +1,5 @@
 use crate::schema::snapshot::SemioBrepSnapshot;
-use semio_framework_plugin::MeshWindowKit;
+use semio_plugin::MeshWindowKit;
 use crate::editor::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
@@ -8,7 +8,7 @@ async fn definition_declares_the_editable_mesh_window_kit() {
     assert_eq!(def.id, MeshWindowKit::KIND_ID);
     let [action] = def.actions.as_slice() else { panic!("the edit window carries exactly the set-vertex action") };
     assert_eq!(action.id, "set-vertex");
-    assert_eq!(action.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated);
+    assert_eq!(action.semantics.execution.interactive_job, semio_plugin::InteractiveJobClassification::Migrated);
 }
 
 #[semio_framework_async_macros::async_test]

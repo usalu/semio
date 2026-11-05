@@ -4,7 +4,7 @@ use semio_framework::IoEntryDescriptor;
 use semio_framework::IoEntryDirection;
 use semio_framework::PackageDescriptor;
 use semio_framework::PluginManifest;
-use semio_framework_os_kernel::io;
+use semio_os_kernel::io;
 
 #[doc(hidden)]
 #[cfg(test)]

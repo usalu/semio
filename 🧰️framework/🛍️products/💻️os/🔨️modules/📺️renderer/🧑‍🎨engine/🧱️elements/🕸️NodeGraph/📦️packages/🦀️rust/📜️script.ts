@@ -25,7 +25,7 @@ class SourceScript extends BundleScript{
 }
 class TestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
-    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-node-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);}
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-os-node-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);}
 }
 const router=new ScriptRouter(import.meta.dirname).register("wasm",WasmScript).register("test",TestScript).register("test-source",SourceScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"wasm"}) }));

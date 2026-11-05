@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn original_multiple_reference_row_retains_constructed_text_when_receipt_quote_refuses() {
-    use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+    use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
     let mut caller = OriginalWorkFixture::new();
     let stock = OriginalWorkFixture::stock();
     let mut parts = Some(RowParts { strings: Default::default(), outer: None, inner: None, bits:None, structured:None });

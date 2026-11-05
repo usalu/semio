@@ -1,13 +1,13 @@
 // #region chrome
 //! 🎛️ Bordered chrome primitives shared by widgets and shell renderers.
 
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_draw_contract::IconAtlas;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::{Rgba, Theme};
+use semio_ui_draw_contract::DrawList;
+use semio_ui_draw_contract::IconAtlas;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::{Rgba, Theme};
 
-pub use semio_framework_ui_theme::metrics::{ICON_TINY, SIZE_TINY, ICON_TREE_ROW};
+pub use semio_ui_theme::metrics::{ICON_TINY, SIZE_TINY, ICON_TREE_ROW};
 
 /// 🫥️ Re-export of the "paint nothing" identity — see [`Rgba::TRANSPARENT`].
 pub const TRANSPARENT: Rgba = Rgba::TRANSPARENT;

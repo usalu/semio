@@ -13,8 +13,8 @@ pub struct SetVersion {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetVersion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "version", kind: "set-version", record: "SetVersion" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set version", "Version setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set version", "Version setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

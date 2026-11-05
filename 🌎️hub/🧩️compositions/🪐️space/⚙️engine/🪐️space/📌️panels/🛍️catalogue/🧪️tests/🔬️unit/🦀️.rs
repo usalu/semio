@@ -1,8 +1,8 @@
 
 use super::*;
-use semio_framework_os::{ArtifactPresentation, MediaClass, MediaForm, MediaType};
-use semio_framework_ui_locale::{LocalizedLabel};
-use semio_framework_plugin::{App, AppIo, TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_os::{ArtifactPresentation, MediaClass, MediaForm, MediaType};
+use semio_ui_locale::{LocalizedLabel};
+use semio_plugin::{App, AppIo, TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], artifact_schema: &str) {
     let definition = App::builder(app_id, LocalizedLabel::data(label))
@@ -10,12 +10,12 @@ async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str],
         .document(document.iter().map(|segment| segment.to_string()))
         .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
         .await
-        .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_framework_ui_contract::SurfaceKind::Canvas2d, "square-pen")
+        .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_ui_contract::SurfaceKind::Canvas2d, "square-pen")
         .await
         .io(AppIo::from_artifact(artifact_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() }).await)
         .await
         .build_definition();
-    semio_framework_os::register_app_io(plugin_id, &definition);
+    semio_os::register_app_io(plugin_id, &definition);
 }
 
 /// 🔑️ The **window path** the host addresses a nested branch by: the enclosing windowed containers'
@@ -28,7 +28,7 @@ fn branch_path(segments: &[&str]) -> String {
         id = format!("{id}.{segment}");
         parts.push(id.clone());
     }
-    parts.join(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+    parts.join(semio_plugin::TREE_WINDOW_PATH_SEPARATOR)
 }
 
 fn open_branch(segments: &[&str], offset: u32, rows: u32) -> TreeWindowRequest {
@@ -37,9 +37,9 @@ fn open_branch(segments: &[&str], offset: u32, rows: u32) -> TreeWindowRequest {
 
 /// 🛍️ The catalogue body exactly as the host reads it, for the host-known windows in `requests`.
 async fn window_body(requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let tree = build_catalogue_tree(semio_framework_plugin::resolve_labels::<SStudioLabels>(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), Locale::En, &TreeWindows::for_body(&view, S_PLAY_CATALOGUE_BODY_KEY)).await.expect("catalogue tree");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("catalogue projection")
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let tree = build_catalogue_tree(semio_plugin::resolve_labels::<SStudioLabels>(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), Locale::En, &TreeWindows::for_body(&view, S_PLAY_CATALOGUE_BODY_KEY)).await.expect("catalogue tree");
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).expect("catalogue projection")
 }
 
 #[semio_framework_async_macros::async_test]

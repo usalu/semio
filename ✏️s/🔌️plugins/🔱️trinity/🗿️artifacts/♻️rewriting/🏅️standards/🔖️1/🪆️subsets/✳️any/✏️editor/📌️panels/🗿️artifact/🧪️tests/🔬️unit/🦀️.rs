@@ -1,16 +1,16 @@
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::NoConfig;
+use semio_plugin::TreeWindows;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Buildable, HasBase};
+use semio_plugin::{Buildable, HasBase};
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_ui_contract as ui;
+use semio_ui_contract as ui;
 use crate::editor::rewriting::panels::document::*;
 use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_ARTIFACT;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::JackWorkingScene;
@@ -30,9 +30,9 @@ fn oversized_state(nodes: usize) -> RewritingSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(state: &RewritingSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let node = render(state, &NoConfig::default(), &TrinityRewritingLabels::NATIVE_EN, &TreeWindows::for_body(&view, TRINITY_REWRITING_PLAY_BODY_ARTIFACT)).expect("render the rewriting document tree");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the rewriting document tree")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the rewriting document tree")
 }
 
 /// 🪟️ Law (a): the nodes container stamps its FULL extent and materialises at most its slice — no `+N`.

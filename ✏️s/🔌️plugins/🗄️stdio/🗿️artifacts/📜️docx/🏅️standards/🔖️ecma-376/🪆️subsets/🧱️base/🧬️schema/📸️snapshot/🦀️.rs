@@ -164,7 +164,7 @@ pub struct DocxXmlPart {
     pub document: RetainedXmlDocument,
 }
 
-impl semio_framework_os_kernel::list_delta::Keyed for DocxXmlPart {
+impl semio_os_kernel::list_delta::Keyed for DocxXmlPart {
     type Key = String;
     fn key(&self) -> String {
         self.path.clone()

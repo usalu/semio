@@ -1,9 +1,9 @@
 use crate::standards::v1_0::subsets::any::schema::mutations::AviMutation;
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 use crate::{AVI_DIALECT, STDIO_AVI_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
 use semio_s_artifact_stdio_contract::editing;
 use crate::apply_mutation;
 use crate::editor::avi::*;
@@ -22,12 +22,12 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn playback_export_route_is_registered_cancellable_and_fully_retired() {
-    use semio_framework_plugin::PluginApp;
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_framework_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let handle = semio_framework_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered AVI playback producer");
+    use semio_plugin::PluginApp;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered AVI playback producer");
     app.cancel_media_export(&handle).await.expect("cancel live AVI producer");
-    assert!(semio_framework_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.is_err(), "cancelled handle transfers to bounded close");
+    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.is_err(), "cancelled handle transfers to bounded close");
     for _ in 0..10_000 {
         if app.close_terminal_is_empty() {
             break;
@@ -40,19 +40,19 @@ async fn playback_export_route_is_registered_cancellable_and_fully_retired() {
 
 #[semio_framework_async_macros::async_test]
 async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes() {
-    use semio_framework_plugin::{app::ArtifactMediaExportPoll, PluginApp};
+    use semio_plugin::{app::ArtifactMediaExportPoll, PluginApp};
     let source = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎬️.avi");
     let snapshot = crate::standards::v1_0::subsets::any::io::decode_avi(source).expect("real AVI fixture decodes");
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_framework_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_AVI_DOCUMENT_SCHEMA) else {
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_AVI_DOCUMENT_SCHEMA) else {
         panic!("AVI snapshot builds one document load");
     };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("host loads the real AVI document");
-    let handle = semio_framework_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered AVI playback producer");
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("host loads the real AVI document");
+    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered AVI playback producer");
     let mut completed = None;
     for _ in 0..10_000 {
-        match semio_framework_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("AVI playback poll") {
+        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("AVI playback poll") {
             ArtifactMediaExportPoll::Running { .. } => semio_framework_async::yield_once().await,
             ArtifactMediaExportPoll::Complete(result) => {
                 completed = Some(result);
@@ -66,11 +66,11 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     assert_eq!(result.mime_type, crate::standards::v1_0::subsets::any::io::playback::MIME_TYPE);
     assert_eq!(result.schema, crate::standards::v1_0::subsets::any::io::playback::MEDIA_SCHEMA);
     assert_eq!(result.media_type, crate::standards::v1_0::subsets::any::io::playback::MEDIA_TYPE);
-    semio_framework_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("retain exact AVI output authority");
+    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("retain exact AVI output authority");
     let mut exported = Vec::new();
     let mut download_terminal = false;
-    while let Some(chunk) = semio_framework_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("take AVI playback page") {
-        assert!(chunk.len() <= semio_framework_plugin::app::ArtifactOutputChunks::CHUNK_BYTES);
+    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("take AVI playback page") {
+        assert!(chunk.len() <= semio_plugin::app::ArtifactOutputChunks::CHUNK_BYTES);
         exported.extend_from_slice(&chunk);
     }
     assert_eq!(exported, source);
@@ -84,12 +84,12 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     assert!(app.close_terminal_is_empty());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::avi::AviEditor, || semio_framework_plugin::App { definition: crate::editor::avi::create_avi_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::avi::AviEditor, || semio_plugin::App { definition: crate::editor::avi::create_avi_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {
-    use semio_framework_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
+    use semio_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
+    use semio_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
     let source = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎬️.avi");
     let codec = <AviEditor as ArtifactEditor>::natural_file_codec().expect("paired natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.avi@1.0", ".avi", "video/x-msvideo", true));
@@ -105,42 +105,42 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source.to_vec(),
     };
     let initial = <AviEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_framework_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
     app.consume_media(NATURAL_FILE_PORT, artifact, scope.cx()).await.expect("registered natural import");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("natural import publishes");
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("natural import publishes");
     let opened = app.snapshot().expect("opened snapshot").clone();
     let refused = match app.consume_media(NATURAL_FILE_PORT, outside, scope.cx()).await {
         Err(_) => true,
-        Ok(_) => semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err(),
+        Ok(_) => semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err(),
     };
     assert!(refused);
     assert_eq!(app.snapshot().expect("refused AVI preserves the owner"), opened);
-    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| semio_framework_plugin::artifact_app_laws::produce_fixture_media(&mut app, NATURAL_FILE_PORT, native_owner, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).await.expect("registered natural save");
+    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| semio_plugin::artifact_app_laws::produce_fixture_media(&mut app, NATURAL_FILE_PORT, native_owner, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).await.expect("registered natural save");
     assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
     assert_eq!(saved.descriptor.kind_id.as_deref(), Some(codec.format_kind));
     let oracle = semio_s_artifact_stdio_avi_test_oracle::standards::v1_0::subsets::hdrl::oracle_identity_round_trip(&saved.data).expect("riff and the independent AVI codec reopen and write the AVI export");
     let observed = semio_s_artifact_stdio_avi_test_oracle::standards::v1_0::subsets::hdrl::project_avi_1_0(&saved.data).expect("project AVI export");
     let expected = semio_s_artifact_stdio_avi_test_oracle::standards::v1_0::subsets::hdrl::project_avi_1_0(&oracle).expect("project independent AVI output");
     assert_eq!(observed, expected);
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut reopened = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_framework_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut reopened = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved, scope.cx()).await.expect("fresh owner imports exported bytes");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("fresh owner import publishes");
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("fresh owner import publishes");
     let reopened_snapshot = reopened.snapshot().expect("reopened snapshot").clone();
     assert_eq!(reopened_snapshot, opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("source undo snapshot"), initial);
     assert_eq!(reopened.snapshot().expect("reopened snapshot remains isolated"), reopened_snapshot);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("source redo snapshot"), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(reopened.snapshot().expect("reopened undo snapshot"), initial);
     assert_eq!(app.snapshot().expect("source remains isolated"), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(reopened.snapshot().expect("reopened redo snapshot"), reopened_snapshot);
     artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");

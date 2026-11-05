@@ -1,11 +1,11 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
-use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, NeedsLabel, Plugin, PluginApp, PluginBuilder};
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, NeedsLabel, Plugin, PluginApp, PluginBuilder};
 
 //#region 🧮️GuestHeapWitness
 //#endregion 🧮️GuestHeapWitness

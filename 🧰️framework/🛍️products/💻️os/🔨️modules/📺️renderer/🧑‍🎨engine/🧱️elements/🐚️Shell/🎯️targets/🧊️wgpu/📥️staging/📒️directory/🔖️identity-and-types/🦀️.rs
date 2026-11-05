@@ -53,7 +53,7 @@ pub fn shell_directory_request_base_url() -> String {
 /// about the human — never a fingerprint — and a session id carrying a character the route would
 /// refuse is filtered rather than rejected, so a sign-in can never fail on a local id format.
 pub fn shell_hub_device_instance_id(session_id: &str) -> String {
-    let filtered: String = session_id.chars().filter(|character| character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | ':' | '-')).take(semio_framework_os_renderer_wgpu_hub_contracts::hub_sign_in::HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES).collect();
+    let filtered: String = session_id.chars().filter(|character| character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | ':' | '-')).take(semio_renderer_wgpu_hub_contracts::hub_sign_in::HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES).collect();
     if filtered.is_empty() {
         "wgpu-shell".to_string()
     } else {

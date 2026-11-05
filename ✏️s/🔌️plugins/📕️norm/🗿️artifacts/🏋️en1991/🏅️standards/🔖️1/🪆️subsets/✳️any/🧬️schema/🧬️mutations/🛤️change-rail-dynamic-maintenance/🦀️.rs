@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRailDynamicMainten
         record: "ChangedRailDynamicMaintenance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change track maintenance (careful or standard) of the rail span", "Eisenbahnfeld: Gleisunterhaltung (sorgfältig oder normal) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change track maintenance (careful or standard) of the rail span", "Eisenbahnfeld: Gleisunterhaltung (sorgfältig oder normal) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

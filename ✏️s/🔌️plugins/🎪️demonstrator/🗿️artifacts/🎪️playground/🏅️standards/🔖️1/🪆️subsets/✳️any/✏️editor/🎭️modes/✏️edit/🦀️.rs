@@ -1,10 +1,10 @@
 //! ✏️ Playground editor — the `edit` mode: a single window over the document's one `schema` field.
 
 use crate::editor::playground::modes::edit::windows::main;
-use semio_framework_plugin::create_stack_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_stack_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const PLAYGROUND_EDIT_MODE_EDIT: &str = "edit";
 

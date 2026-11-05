@@ -112,7 +112,7 @@ impl ArtifactOwnedToolJobFactory for SurfaceFixtureFactory {
     fn latest_wins_target(_command: &SurfaceEditorCommand) -> Option<&str> {
         None
     }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<SurfaceEditorCommand>>> {
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<SurfaceEditorCommand>>> {
         None
     }
 }
@@ -124,7 +124,7 @@ async fn surface_manifest() -> crate::app_builder::App {
             .document(["state"])
             .mode("edit", LocalizedLabel::data("Edit"), "pencil")
             .await
-            .window_kind("main", LocalizedLabel::data("Main"), "surface.main", semio_framework_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow)
+            .window_kind("main", LocalizedLabel::data("Main"), "surface.main", semio_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow)
             .await
             .app_command(SURFACE_TOOL_ID, LocalizedLabel::data("Increment"), "fixture", ActionKind::Mutation)
             .await
@@ -188,18 +188,18 @@ impl crate::app_contract::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNa
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, Fault> {
         if self.retirement.is_some() {
             let step=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant).result.map_err(|error|Fault::from(error.into_message()))?;
-            return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()));
+            return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()));
         }
         if let Some(original)=self.bytes.take(){
             return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{
-                Ok((owner,progress))=>{self.retirement=Some(owner);Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress))},
+                Ok((owner,progress))=>{self.retirement=Some(owner);Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress))},
                 Err((error,original))=>{self.bytes=Some(original);Err(Fault::from(error.into_message()))},
             };
         }
-        Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
+        Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
     }
 
     fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{

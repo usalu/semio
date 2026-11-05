@@ -1,7 +1,7 @@
 //! 📈️ EN 1995 play app — the diagrams window: k_mod, k_c, k_crit, deflection components, char depth, floor frequency and velocity, embedment strength, Johansen failure modes and spacings of the selected check's entity.
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 use semio_s_artifact_norm_en1995_scene::diagrams;
 use semio_s_plugin_norm_app_surface::{render_diagrams, DiagramsWindowSpec};

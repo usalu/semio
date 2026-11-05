@@ -52,7 +52,7 @@ use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Identity
 
-use semio_framework_ui_render_interaction::{Bounds, ElementId, Hitbox};
+use semio_ui_render_interaction::{Bounds, ElementId, Hitbox};
 
 //#endregion 🔖️Identity
 

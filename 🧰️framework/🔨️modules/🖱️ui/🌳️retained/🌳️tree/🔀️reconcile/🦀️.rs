@@ -14,8 +14,8 @@
 //! the always-ready rows once `WidgetState` grows an `open`-like field to gate *showing*/hit-testing
 //! them — no further reconcile-side change should be needed at that point.
 
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
+use semio_ui_locale::Label;
+use semio_ui_declaration::ui::UiTreeActionPlacement;
 use semio_framework_value::DslValue;
 #[cfg(any(test, feature = "testkit"))]
 use std::borrow::Cow;
@@ -23,18 +23,18 @@ use std::collections::HashMap;
 #[cfg(any(test, feature = "testkit"))]
 use std::collections::HashSet;
 
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_ui_arena::NodeId;
+use semio_ui_declaration::layout::ActionDescriptor;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_ui_declaration::ui::ui_control_to_node;
-use semio_framework_ui_declaration::ui::{
+use semio_ui_declaration::ui::ui_control_to_node;
+use semio_ui_declaration::ui::{
     SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiDropOverlaySpec, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode, UiNumberStepperNode, UiPresence,
     UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow,
     UiTreeWindowRowExtent,
 };
 use crate::{Node, NodeFlags, NodeKey, NodeKeyRef, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
-use semio_framework_ui_action::{UiIntentAddress, UiIntentBindings};
-use semio_framework_ui_declaration::IconName;
+use semio_ui_action::{UiIntentAddress, UiIntentBindings};
+use semio_ui_declaration::IconName;
 use ui_contract::{UiDocumentNodePage, UiNodeId, UiNodeRecord, UI_DOCUMENT_NODES};
 
 #[path = "📄️page-reconcile-and-cursor/🦀️.rs"]

@@ -1,13 +1,13 @@
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin_window_config::WindowConfigSnapshot;
+use semio_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin_window_config::WindowConfigSnapshot;
 use crate::ArtifactApp;
 use semio_framework_tool_run::ToolRunDefinition;
 use semio_framework_tool_run::ToolRunIdentity;
 use std::sync::Arc;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPort;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunTraceKeys;
+use semio_plugin_decl_views::tool_run_contract::ToolRunJobPort;
+use semio_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
+use semio_plugin_decl_views::tool_run_contract::ToolRunTraceKeys;
 
 /// 🧳️ Everything an app needs to build one run or revalidate job (§3.7).
 ///
@@ -40,7 +40,7 @@ pub struct ToolRunJobRequest<'a, A: ArtifactApp> {
     pub provisional: &'a [A::Mutation],
     pub instance_owner: ArtifactInstanceOperationOwnerHandle,
     pub port: ToolRunJobPort,
-    pub host: Option<semio_framework_plugin_actor_host::Host>,
+    pub host: Option<semio_plugin_actor_host::Host>,
     pub trace_keys: ToolRunTraceKeys,
     pub entity_marks: &'a [(u32, u64)],
     pub children: ChildContentView,

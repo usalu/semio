@@ -1,5 +1,5 @@
 //! 🧾️ IDML publishes its own schema, native event codecs, format and contribution.
-use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, PluginAssemblyError};
+use semio_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability, PluginAssemblyError};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../📜️artifact-definition.json");
@@ -14,12 +14,12 @@ pub fn definition() -> Result<ArtifactDefinition, PluginAssemblyError> {
 }
 
 /// 🎞️ Declares the IDML extension and MIME independently of ZIP's own artifact identity.
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> semio_framework_os_kernel::os_store::serialization::ArtifactCodec {
-    let mut codec = semio_framework_os_kernel::bare_artifact_codec_with_owners::<crate::IdmlSnapshot, crate::IdmlMutation,crate::issuer::IdmlCodecOwners>(crate::DOCUMENT_SCHEMA);
+fn native_codec() -> semio_os_kernel::os_store::serialization::ArtifactCodec {
+    let mut codec = semio_os_kernel::bare_artifact_codec_with_owners::<crate::IdmlSnapshot, crate::IdmlMutation,crate::issuer::IdmlCodecOwners>(crate::DOCUMENT_SCHEMA);
     codec.extension = "idml";
     codec
 }
@@ -33,7 +33,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: crate::ARTIFACT_KIND.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("InDesign Package", "InDesign-Paket"),
+        label: semio_ui_locale::LocalizedLabel::native("InDesign Package", "InDesign-Paket"),
         source_format: crate::DOCUMENT_SCHEMA.into(), component_kind: "stdio".into(), dimension: "data".into(),
         media_capability: OsMediaCapability::MeshOnly, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         schema: crate::DOCUMENT_SCHEMA.into(), export_formats: vec![], import_formats: vec![], export_stdio_kinds: vec![], import_stdio_kinds: vec![],
@@ -59,10 +59,10 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
     semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "idml", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
-fn execute_replace_package(base: &crate::IdmlSnapshot, document: crate::IdmlSnapshot) -> semio_framework_os_kernel::MutationOutcome<crate::IdmlDiff> {
-    semio_framework_os_kernel::ColdMutation::diff(&crate::IdmlMutation::ReplacePackage { document }, base)
+fn execute_replace_package(base: &crate::IdmlSnapshot, document: crate::IdmlSnapshot) -> semio_os_kernel::MutationOutcome<crate::IdmlDiff> {
+    semio_os_kernel::ColdMutation::diff(&crate::IdmlMutation::ReplacePackage { document }, base)
 }
 
-fn execute_replace_part(base: &crate::IdmlSnapshot, path: String, bytes: Vec<u8>) -> semio_framework_os_kernel::MutationOutcome<crate::IdmlDiff> {
-    semio_framework_os_kernel::ColdMutation::diff(&crate::IdmlMutation::ReplacePart { path, bytes }, base)
+fn execute_replace_part(base: &crate::IdmlSnapshot, path: String, bytes: Vec<u8>) -> semio_os_kernel::MutationOutcome<crate::IdmlDiff> {
+    semio_os_kernel::ColdMutation::diff(&crate::IdmlMutation::ReplacePart { path, bytes }, base)
 }

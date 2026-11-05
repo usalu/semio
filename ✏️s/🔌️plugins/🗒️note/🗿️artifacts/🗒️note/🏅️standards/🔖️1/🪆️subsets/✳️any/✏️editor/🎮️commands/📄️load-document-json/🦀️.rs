@@ -3,7 +3,7 @@
 use crate::op::NoteMutation;
 use crate::{NOTE_DOCUMENT_SCHEMA};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::Value;
 
@@ -13,7 +13,7 @@ pub struct LoadDocumentJson {
     pub json: String,
 }
 
-pub fn handle(payload: &LoadDocumentJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &LoadDocumentJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_plugin::NoConfig>, _ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_plugin::NoConfigMutation>, Fault> {
     let next_document = if let Ok(document) = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(&payload.json) {
         document
     } else {

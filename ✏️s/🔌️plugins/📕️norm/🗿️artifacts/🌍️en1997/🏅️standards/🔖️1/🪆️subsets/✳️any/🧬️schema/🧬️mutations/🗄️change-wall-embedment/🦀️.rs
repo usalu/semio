@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallEmbedment wher
         record: "ChangedWallEmbedment",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change embedment of the retaining wall", "Stützwand: Einbindetiefe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change embedment of the retaining wall", "Stützwand: Einbindetiefe ändern")
     }
 }
 

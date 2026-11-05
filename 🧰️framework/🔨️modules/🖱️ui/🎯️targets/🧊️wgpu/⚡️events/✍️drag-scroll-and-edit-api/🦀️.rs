@@ -110,7 +110,7 @@ impl EventRouter {
         let Some(node) = tree.node_mut(id) else { return };
         let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
         let value = constrain_stepper_value(number_stepper_live_value(node, stepper) + delta, stepper);
-        let text = semio_framework_ui_wgpu_controls::stepper::stepper_value_text(value, stepper.precision, stepper.display_factor);
+        let text = semio_ui_wgpu_controls::stepper::stepper_value_text(value, stepper.precision, stepper.display_factor);
         let caret = text.len();
         node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
         node.state.number_refusal = None;
@@ -121,7 +121,7 @@ impl EventRouter {
     pub(super) fn apply_stepper_local_value(&mut self, tree: &mut UiTree, id: NodeId, value: f64) {
         let Some(node) = tree.node_mut(id) else { return };
         let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
-        let text = semio_framework_ui_wgpu_controls::stepper::stepper_value_text(value, stepper.precision, stepper.display_factor);
+        let text = semio_ui_wgpu_controls::stepper::stepper_value_text(value, stepper.precision, stepper.display_factor);
         let caret = text.len();
         node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
         node.state.number_refusal = None;

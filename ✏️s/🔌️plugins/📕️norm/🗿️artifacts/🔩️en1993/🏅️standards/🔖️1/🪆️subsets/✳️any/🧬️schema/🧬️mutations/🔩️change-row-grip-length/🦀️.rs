@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowGripLength wher
         record: "ChangedRowGripLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Grip length L_b of the joint row", "Schraubenreihe: Klemmlänge L_b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Grip length L_b of the joint row", "Schraubenreihe: Klemmlänge L_b ändern")
     }
 }
 

@@ -19,15 +19,15 @@ extern crate semio_framework_async as wasm_bindgen_futures;
 // - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
 
 extern crate infinite_canvas as infinite_world;
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as dsl;
 #[cfg(not(target_arch = "wasm32"))]
-extern crate semio_framework_os_kernel as dsl_core;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl_core;
+extern crate semio_os_kernel as protocol;
 #[cfg(any(test, not(target_arch = "wasm32")))]
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as store_sync;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as store_sync;
 
-use semio_framework_os_renderer_camera as camera_storage;
+use semio_renderer_camera as camera_storage;
 
 /// 🔎️ The whole renderer source tree as one text, for the source-text law tests that pin where the renderer calls what.
 
@@ -57,19 +57,19 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode, SceneRasterWriter};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode, SceneRasterWriter};
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
 #[cfg(target_arch = "wasm32")]
 use semio_framework_async::browser::spawn_local;
-use semio_framework_ui_wgpu_hosting::cursor::{apply_window_cursor, resolve_semio_cursor, CursorDragState, SemioCursor};
-use semio_framework_ui_text::{fetch_font_bytes, FontAtlas};
+use semio_ui_wgpu_hosting::cursor::{apply_window_cursor, resolve_semio_cursor, CursorDragState, SemioCursor};
+use semio_ui_text::{fetch_font_bytes, FontAtlas};
 use ui_scene::math::{mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32, mesh3d_write_edge, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
-use semio_framework_ui_theme::Theme;
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
+use semio_ui_theme::Theme;
 use ui_gpu::{GpuContext};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -83,14 +83,14 @@ use winit::event_loop::EventLoop;
 use winit::window::Fullscreen;
 use winit::window::Window;
 
-pub use semio_framework_os_renderer_wgpu_host_base::{action_args_json, mesh_assets, plugin_catalog, runtime_assets};
-pub(crate) use semio_framework_os_renderer_wgpu_host_base::frame_latency;
-pub use semio_framework_os_renderer_wgpu_host_base::{HostAppearance, HostAppearancePreference, WGPU_BOOT_FIELD_CAPACITY, WgpuBootBrand, WgpuBootDefaults, WgpuBootDescriptor, WgpuBootHub, WgpuBootLocks, apply_boot_descriptor, boot_app_example, boot_app_id, boot_app_mode, boot_app_role, boot_brand, boot_brand_id, boot_broker_proof, boot_descriptor, boot_locks, boot_window_title, host_appearance, host_appearance_preference, host_introduction_suppressed, host_locale, host_locale_from_tag, host_platform, host_platform_uses_meta, keybinding_platform_kind, keybinding_platform_uses_meta, set_host_appearance, set_host_introduction_suppressed, set_host_locale, set_host_platform, set_host_platform_kind, set_host_platform_uses_meta};
+pub use semio_renderer_wgpu_host_base::{action_args_json, mesh_assets, plugin_catalog, runtime_assets};
+pub(crate) use semio_renderer_wgpu_host_base::frame_latency;
+pub use semio_renderer_wgpu_host_base::{HostAppearance, HostAppearancePreference, WGPU_BOOT_FIELD_CAPACITY, WgpuBootBrand, WgpuBootDefaults, WgpuBootDescriptor, WgpuBootHub, WgpuBootLocks, apply_boot_descriptor, boot_app_example, boot_app_id, boot_app_mode, boot_app_role, boot_brand, boot_brand_id, boot_broker_proof, boot_descriptor, boot_locks, boot_window_title, host_appearance, host_appearance_preference, host_introduction_suppressed, host_locale, host_locale_from_tag, host_platform, host_platform_uses_meta, keybinding_platform_kind, keybinding_platform_uses_meta, set_host_appearance, set_host_introduction_suppressed, set_host_locale, set_host_platform, set_host_platform_kind, set_host_platform_uses_meta};
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) use semio_framework_os_renderer_wgpu_host_base::KernelPoolFuture;
-pub(crate) use semio_framework_os_renderer_wgpu_host_base::{app_now_ms, appearance_is_dark, boot_axis, log_debug, log_debug_diagnostic, log_debug_diagnostic_once_per_transition, log_debug_once_per_transition, prefers_dark_scheme, renderer_worker_pool, resolve_environment_boot_descriptor, resolve_theme, spawn_app_task};
+pub(crate) use semio_renderer_wgpu_host_base::KernelPoolFuture;
+pub(crate) use semio_renderer_wgpu_host_base::{app_now_ms, appearance_is_dark, boot_axis, log_debug, log_debug_diagnostic, log_debug_diagnostic_once_per_transition, log_debug_once_per_transition, prefers_dark_scheme, renderer_worker_pool, resolve_environment_boot_descriptor, resolve_theme, spawn_app_task};
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) use semio_framework_os_renderer_wgpu_host_base::{RENDERER_IO_CHECKED_OUT, RENDERER_IO_EXHAUSTED, RENDERER_IO_LIVE, RENDERER_IO_PUMP_CURSOR, RENDERER_IO_SESSION_SLOTS, RENDERER_IO_SLOTS, RENDERER_IO_VACANT, RENDERER_IO_WAKE, RendererIoHandle, RendererIoNode, RendererIoSlot, actor_budget_from_turn_budget, drive_renderer_worker_task, renderer_io_generation_live, renderer_io_sessions_pending, renderer_io_with_node, run_renderer_io, submit_renderer_io};
+pub(crate) use semio_renderer_wgpu_host_base::{RENDERER_IO_CHECKED_OUT, RENDERER_IO_EXHAUSTED, RENDERER_IO_LIVE, RENDERER_IO_PUMP_CURSOR, RENDERER_IO_SESSION_SLOTS, RENDERER_IO_SLOTS, RENDERER_IO_VACANT, RENDERER_IO_WAKE, RendererIoHandle, RendererIoNode, RendererIoSlot, actor_budget_from_turn_budget, drive_renderer_worker_task, renderer_io_generation_live, renderer_io_sessions_pending, renderer_io_with_node, run_renderer_io, submit_renderer_io};
 
 //#region 🌓️HostAppearance
 /// 🌓️ wasm appearance hook — the browser twin of winit's `Window::theme()`. The frame Worker has no
@@ -107,7 +107,7 @@ pub fn semio_wgpu_set_host_appearance(preference: String, system_dark: bool) {
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = semioWgpuSetHostPlatformPrefs)]
 pub fn semio_wgpu_set_host_platform_prefs(forced_colors: bool, prefers_contrast_more: bool, prefers_dark: bool, prefers_reduced_motion: bool) {
-    semio_framework_os_renderer_wgpu_host_base::set_host_platform_prefs(semio_framework::ShellPlatformPrefs { forced_colors, prefers_contrast_more, prefers_dark, prefers_reduced_motion });
+    semio_renderer_wgpu_host_base::set_host_platform_prefs(semio_framework::ShellPlatformPrefs { forced_colors, prefers_contrast_more, prefers_dark, prefers_reduced_motion });
 }
 //#endregion 🎛️HostPlatformPrefs
 
@@ -233,7 +233,7 @@ pub fn semio_wgpu_dispatch_media_action(action_json: String) -> Result<(), JsVal
 //#endregion 🏠️ShellHostHooks
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) use semio_framework_os_renderer_wgpu_host_plumbing::native_launch;
+pub(crate) use semio_renderer_wgpu_host_plumbing::native_launch;
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) use semio_framework_os_renderer_wgpu_host_plumbing::native_io::{RendererIoPath, RendererSourceIoHandle, RendererSourceIoError, RendererSourceIoFailureKind, open_renderer_source_io, read_renderer_source_bytes, read_renderer_resident_bytes, find_renderer_wasm_path, start_renderer_modified, renderer_source_io_pending, pump_renderer_io_sessions};
+pub(crate) use semio_renderer_wgpu_host_plumbing::native_io::{RendererIoPath, RendererSourceIoHandle, RendererSourceIoError, RendererSourceIoFailureKind, open_renderer_source_io, read_renderer_source_bytes, read_renderer_resident_bytes, find_renderer_wasm_path, start_renderer_modified, renderer_source_io_pending, pump_renderer_io_sessions};
 

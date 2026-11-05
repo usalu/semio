@@ -1,7 +1,7 @@
 use semio_s_artifact_bim_model_tests_5::render::world::{ELEMENT_DOMAIN, ELEMENT_GRANULARITY};
 use semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::{plan, world};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT;
-use semio_framework_plugin::{ActionKind, ArtifactView, ArtifactViewer, CapabilityAudience, ConfigView, InteractiveJobClassification, NoConfig, ViewModel, ViewerApp};
+use semio_plugin::{ActionKind, ArtifactView, ArtifactViewer, CapabilityAudience, ConfigView, InteractiveJobClassification, NoConfig, ViewModel, ViewerApp};
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view;
@@ -18,11 +18,11 @@ use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionDescriptor, AppOperationContext, ArtifactInstanceOperationOwnerHandle, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ComponentTree, DomainTopology, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, NoConfigMutation, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode, UiAssemblyResult, ViewEmit, Viewer, WindowConfigMutation, WindowConfigSnapshot, WindowMeasure};
+use semio_plugin::{ActionArgDef, ActionDefinition, ActionDescriptor, AppOperationContext, ArtifactInstanceOperationOwnerHandle, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ComponentTree, DomainTopology, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, NoConfigMutation, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode, UiAssemblyResult, ViewEmit, Viewer, WindowConfigMutation, WindowConfigSnapshot, WindowMeasure};
 #[allow(unused_imports)]
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_ui_locale::{Label, LocalizedLabel};
 #[allow(unused_imports)]
 use semio_framework_value::FromValue;
 #[allow(unused_imports)]
@@ -33,8 +33,8 @@ use crate::viewer::bim::{BIM_VIEW_TOOL_IDS, view_emit, command_from_action};
 use crate::viewer::bim::*;
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
-use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, HistoryView, PluginApp, VcsArtifactApp, ViewWindowInstance, WindowLayoutChild, WindowLayoutRoot};
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::{artifact_app_laws, ActionMeta, App, HistoryView, PluginApp, VcsArtifactApp, ViewWindowInstance, WindowLayoutChild, WindowLayoutRoot};
+use semio_ui_locale::{Locale, Terminology};
 use semio_framework_value::ToValue;
 
 fn view_model() -> ViewModel {
@@ -94,10 +94,10 @@ enum SurfaceKindTag {
 }
 
 impl SurfaceKindTag {
-    fn of(kind: &semio_framework_plugin::SurfaceKind) -> Self {
+    fn of(kind: &semio_plugin::SurfaceKind) -> Self {
         match kind {
-            semio_framework_plugin::SurfaceKind::World3d => Self::World3d,
-            semio_framework_plugin::SurfaceKind::Canvas2d => Self::Canvas2d,
+            semio_plugin::SurfaceKind::World3d => Self::World3d,
+            semio_plugin::SurfaceKind::Canvas2d => Self::Canvas2d,
             _ => Self::Other,
         }
     }
@@ -140,7 +140,7 @@ async fn the_world_window_is_bound_to_the_element_domain() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_viewer_never_emits_a_document_mutation() {
-    artifact_app_laws::assert_viewer_never_mutates::<BimModelViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    artifact_app_laws::assert_viewer_never_mutates::<BimModelViewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[test]
@@ -241,11 +241,11 @@ fn manifest() -> App {
 
 #[semio_framework_async_macros::async_test]
 async fn window_commands_persist_per_window_and_never_touch_the_document() {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
     app.bind_instance_id(91).await;
     let view = windows(&[("left", semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::WINDOW_KIND_ID), ("right", semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::WINDOW_KIND_ID), ("plan", semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::WINDOW_KIND_ID)]);
-    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
     reopened.bind_instance_id(92).await;
     let outcome: Result<(), String> = async {
         let before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -256,14 +256,14 @@ async fn window_commands_persist_per_window_and_never_touch_the_document() {
             ("plan", BimViewCommand::SetPlanStorey { storey: "st-first".into() }),
         ];
         for (window, command) in steps {
-            let meta = ActionMeta { instance_id: 91, view_state: Some(addressed(&view, window)), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) };
+            let meta = ActionMeta { instance_id: 91, view_state: Some(addressed(&view, window)), ..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) };
             let label = format!("{window} {command:?}");
-            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("dispatch {label}: {error:?}"))?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("settle {label}: {error:?}"))?;
-            if !receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) {
+            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("dispatch {label}: {error:?}"))?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("settle {label}: {error:?}"))?;
+            if !receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::WindowConfig) {
                 return Err(format!("the viewer command published no window configuration: {:?}", receipt.lanes));
             }
-            if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) {
+            if receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact) {
                 return Err(format!("the viewer command touched the artifact lane: {:?}", receipt.lanes));
             }
         }
@@ -293,17 +293,17 @@ async fn window_commands_persist_per_window_and_never_touch_the_document() {
         Ok(())
     }
     .await;
-    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
-    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     outcome.expect("BIM viewer window configuration ownership and restoration");
 }
 
-async fn render_world(app: &mut VcsArtifactApp<ViewerApp<BimModelViewer>>, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::World3dScene, String> {
+async fn render_world(app: &mut VcsArtifactApp<ViewerApp<BimModelViewer>>, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::World3dScene, String> {
     let json = artifact_app_laws::render_registered_fixture_app(app, semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::BODY_KEY, view, cx).await.map_err(|error| format!("{error:?}"))?;
     artifact_app_laws::decode_fixture_scene_with_lanes(&json).map_err(str::to_string)
 }
 
-async fn render_plan(app: &mut VcsArtifactApp<ViewerApp<BimModelViewer>>, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::Canvas2dScene, String> {
+async fn render_plan(app: &mut VcsArtifactApp<ViewerApp<BimModelViewer>>, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::Canvas2dScene, String> {
     let json = artifact_app_laws::render_registered_fixture_app(app, semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::BODY_KEY, view, cx).await.map_err(|error| format!("{error:?}"))?;
     artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
 }
@@ -311,19 +311,19 @@ async fn render_plan(app: &mut VcsArtifactApp<ViewerApp<BimModelViewer>>, view: 
 /// 🧹️ A viewer whose window instance has been rendered closes through the exact retained ladder to its terminal-empty witness: the window-config partition publishes the physical release its store owes.
 #[semio_framework_async_macros::async_test]
 async fn a_window_addressed_viewer_closes_to_its_terminal_empty_witness() {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
     app.bind_instance_id(81).await;
     let view = windows(&[("plan", semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::WINDOW_KIND_ID)]);
     render_plan(&mut app, &addressed(&view, "plan"), scope.cx()).await.expect("render");
-    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_viewer_speaks_both_languages_from_its_one_label_block() {
     use semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels as Labels;
     let json = serde_json::to_string(&create_bim_viewer()).expect("viewer definition json");
-    let picks: [fn(&Labels) -> semio_framework_ui_locale::LabelText; 10] = [
+    let picks: [fn(&Labels) -> semio_ui_locale::LabelText; 10] = [
         |labels| labels.mode_view,
         |labels| labels.window_world,
         |labels| labels.window_plan,
@@ -345,7 +345,7 @@ async fn the_viewer_speaks_both_languages_from_its_one_label_block() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_layout_tabs_are_the_localized_window_labels_not_english_text() {
-    assert_eq!(view::layout(), semio_framework_plugin::create_default_layout(&[world::WINDOW_KIND_ID.into(), plan::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), None), "no tab titles of its own: the windows' labels name the tabs");
+    assert_eq!(view::layout(), semio_plugin::create_default_layout(&[world::WINDOW_KIND_ID.into(), plan::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), None), "no tab titles of its own: the windows' labels name the tabs");
 }
 
 #[semio_framework_async_macros::async_test]

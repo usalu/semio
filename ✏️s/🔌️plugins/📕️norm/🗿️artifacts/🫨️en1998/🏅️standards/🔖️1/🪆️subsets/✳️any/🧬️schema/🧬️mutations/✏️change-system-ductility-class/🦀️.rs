@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSystemDuctilityCla
         record: "ChangeSystemDuctilityClass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ductility class", "Duktilitätsklasse ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ductility class", "Duktilitätsklasse ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-system-ductility-class".into()]

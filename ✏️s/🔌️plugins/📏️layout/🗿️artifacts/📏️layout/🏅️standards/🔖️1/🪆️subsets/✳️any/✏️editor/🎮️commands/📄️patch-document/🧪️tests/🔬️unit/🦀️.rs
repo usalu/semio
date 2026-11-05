@@ -1,4 +1,4 @@
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::patch_document::*;
 use semio_s_artifact_layout_layout_editor_commands::{patch_frame, patch_page};
@@ -212,7 +212,7 @@ fn inherited_frames_dispatch_shared_content_and_explicit_parent_edits() {
     snapshot.links[0].artifact_kind = "s.stdio.pdf".into();
     snapshot.links[0].artifact_ref = "source-pdf".into();
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let emit = |frame_id: &str, field: &str, value: &str| patch_frame::handle(&patch_frame::PatchFrame { frame_id: frame_id.into(), page_id: Some(snapshot.pages[0].id.clone()), field: field.into(), value: value.into() }, &doc, &cfg).unwrap();
@@ -234,7 +234,7 @@ fn bounded_story_commits_preserve_text_outside_the_addressed_unicode_span() {
         let ranges = semio_s_artifact_layout_layout_editor_commands::patch_document::text_chunks::ranges(&content);
         let span=ranges.get(1).unwrap();
         let config = NoConfig::default();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = semio_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg = ConfigView { snapshot: &config, window: None };
         let stamp = semio_s_artifact_layout_layout_editor_commands::patch_document::text_chunks::fingerprint(content.as_bytes());
@@ -273,7 +273,7 @@ fn typed_byte_spans_edit_nonfirst_windows_and_refuse_reordered_members() {
     let stamp = semio_s_artifact_layout_layout_editor_commands::patch_document::text_chunks::dictionary_stamp(&snapshot);
     let payload = PatchDocument { field: format!("data.0.value.bytes.128.256.{stamp}"), value: fixture["byteEdit"]["hex"].as_str().unwrap().into() };
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let emit = semio_s_artifact_layout_layout_editor_commands::patch_document::handle(&payload, &ArtifactView::new(&snapshot, &history), &ConfigView { snapshot: &config, window: None }).unwrap();
     let LayoutMutation::ChangeDataFields(change) = &emit.artifact_mutations[0] else { panic!("native typed dictionary mutation") };
     let semio_framework_value::DslValue::Bytes(bytes) = &change.new_fields.as_ref().unwrap().entries[0].value else { panic!("bytes remain typed") };
@@ -290,7 +290,7 @@ fn dictionary_text_spans_reject_remote_insertions_and_member_reordering() {
     let stamp = semio_s_artifact_layout_layout_editor_commands::patch_document::text_chunks::dictionary_stamp(&snapshot);
     let payload = PatchDocument { field: format!("data.0.value.chunk.85.170.{stamp}"), value: "Local draft".into() };
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let mut changed = snapshot.clone();
     if let semio_framework_value::DslValue::String(value) = &mut changed.data_fields.as_mut().unwrap().entries[0].value { value.insert(0, 'X'); }
     let cfg = ConfigView { snapshot: &config, window: None };
@@ -308,6 +308,6 @@ fn scalar_dictionary_controls_and_nested_member_order_share_the_span_guard() {
     if let semio_framework_value::DslValue::Object(entries) = &mut snapshot.data_fields.as_mut().unwrap().entries[0].value { entries.swap(0, 1); }
     assert_ne!(semio_s_artifact_layout_layout_editor_commands::patch_document::text_chunks::dictionary_stamp(&snapshot), stamp);
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     assert!(semio_s_artifact_layout_layout_editor_commands::patch_document::handle(&payload, &ArtifactView::new(&snapshot, &history), &ConfigView { snapshot: &config, window: None }).is_err());
 }

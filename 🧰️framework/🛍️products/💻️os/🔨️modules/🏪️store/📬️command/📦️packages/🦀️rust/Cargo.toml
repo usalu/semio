@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-command"
+name = "semio-os-store-command"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,9 +23,9 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-value-native-storage = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
-semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
-semio-framework-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

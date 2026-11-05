@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeTMin where Op: pro
         record: "ChangedTMin",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change minimum shade air temperature", "Minimale Außenlufttemperatur ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change minimum shade air temperature", "Minimale Außenlufttemperatur ändern")
     }
 }
 

@@ -22,10 +22,10 @@ semio-s-artifact-norm-en1998-mut-foundations-more = { workspace = true }
 serde = { workspace = true, optional = true }
 semio-s-artifact-norm-en1998-mut-foundations-retaining-wall = { workspace = true }
 semio-s-artifact-norm-en1998-mut-foundations-foundation = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1998-diff = { workspace = true }
@@ -40,5 +40,5 @@ semio-s-artifact-norm-en1998-mut-foundations-soil = { workspace = true }
 test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-foundations-bearing/test-support", "semio-s-artifact-norm-en1998-mut-foundations-foundation/test-support", "semio-s-artifact-norm-en1998-mut-foundations-liq/test-support", "semio-s-artifact-norm-en1998-mut-foundations-more/test-support", "semio-s-artifact-norm-en1998-mut-foundations-pile/test-support", "semio-s-artifact-norm-en1998-mut-foundations-pile-head/test-support", "semio-s-artifact-norm-en1998-mut-foundations-retaining-wall/test-support", "semio-s-artifact-norm-en1998-mut-foundations-sliding/test-support", "semio-s-artifact-norm-en1998-mut-foundations-soil/test-support", "semio-s-artifact-norm-en1998-mut-foundations-water/test-support"]
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde = { workspace = true }

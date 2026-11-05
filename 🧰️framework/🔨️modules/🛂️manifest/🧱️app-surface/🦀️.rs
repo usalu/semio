@@ -1,9 +1,9 @@
 //! 🧱️ App surface: dialogs, modes, window kinds, panels, fault notice wiring and the app definition.
 
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -19,11 +19,11 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
 use std::fmt::Display;
-use semio_framework_ui_declaration::IconName;
-use semio_framework_ui_declaration::layout::NamedLayout;
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_ui_declaration::layout::WindowLayout;
-use semio_framework_ui_declaration::layout::WindowOptions;
+use semio_ui_declaration::IconName;
+use semio_ui_declaration::layout::NamedLayout;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_declaration::layout::WindowLayout;
+use semio_ui_declaration::layout::WindowOptions;
 use semio_framework_interaction::{InteractionDefinition, InteractionRef};
 use semio_framework_kernel_history::FaultNoticeDefinition;
 use semio_framework_kernel_identity::{ArtifactKind, CapabilityRequirement};

@@ -10,7 +10,7 @@
 //! `Host` is constructed per app instance (never a process-global singleton — see
 //! `important.md`'s "Replace, never wrap" list: `set_host_backbone_channel` is explicitly one of
 //! the things a pooled multi-instance actor cannot keep). Cloning is cheap (`Poll` wraps an `Rc`).
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use requests::RequestRegistry;
 use semio_framework_value::DslValue;
@@ -520,7 +520,7 @@ impl Host {
 pub async fn log(level: &str, message: &str) {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
-        semio_framework_plugin_abi::wasip2::semio::framework::pure::log(level, message);
+        semio_plugin_abi::wasip2::semio::framework::pure::log(level, message);
     }
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     eprintln!("[{level}] {message}");
@@ -530,7 +530,7 @@ pub async fn log(level: &str, message: &str) {
 pub async fn now_ms() -> i64 {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
-        semio_framework_plugin_abi::wasip2::semio::framework::pure::now_ms()
+        semio_plugin_abi::wasip2::semio::framework::pure::now_ms()
     }
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis() as i64)
@@ -540,7 +540,7 @@ pub async fn now_ms() -> i64 {
 pub async fn trace_span(name: &str) {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
-        semio_framework_plugin_abi::wasip2::semio::framework::pure::trace_span(name);
+        semio_plugin_abi::wasip2::semio::framework::pure::trace_span(name);
     }
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     let _ = name;

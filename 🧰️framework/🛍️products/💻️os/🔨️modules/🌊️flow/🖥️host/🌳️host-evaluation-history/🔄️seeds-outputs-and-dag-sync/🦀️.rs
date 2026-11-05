@@ -12,8 +12,8 @@ impl FlowHost {
 
     /// 🌱️ Borrows input widgets to construct exactly the evaluator seed rows.
     pub fn project_seeds(host_snapshot:&dyn FlowSnapshotSource)->HashMap<String,Dictionary>{
-        let mut seeds = HashMap::new();
-        for widget in host_snapshot.widgets() {
+        let mut seeds = HashMap::new();let mut seen=BTreeSet::new();
+        for widget in host_snapshot.widgets().iter().filter(|widget|seen.insert(widget_id_for(widget))) {
             match widget {
                 Widget::InputSlider { id, value, .. } => {
                     seeds.insert(id.clone(), channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(*value)))));

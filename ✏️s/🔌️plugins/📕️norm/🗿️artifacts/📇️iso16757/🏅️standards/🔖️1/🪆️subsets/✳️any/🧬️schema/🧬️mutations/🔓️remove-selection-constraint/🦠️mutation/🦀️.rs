@@ -15,8 +15,8 @@ pub struct RemoveSelectionConstraint {
 
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RemoveSelectionConstraint where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::add_selection_constraint::mutation::AddSelectionConstraint> { const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "selection-constraint", kind: "remove-selection-constraint", record: "RemovedSelectionConstraint" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove selection constraint #{}", self.index), &format!("Auswahlbedingung #{} entfernen", self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove selection constraint #{}", self.index), &format!("Auswahlbedingung #{} entfernen", self.index))
     }
 }
 

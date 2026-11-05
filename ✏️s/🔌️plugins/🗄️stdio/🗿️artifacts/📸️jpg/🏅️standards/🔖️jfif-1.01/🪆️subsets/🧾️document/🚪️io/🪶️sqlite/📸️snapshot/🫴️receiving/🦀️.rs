@@ -1,6 +1,6 @@
 //! 📸️ Complete JPEG semantic fields remain in original paid receiving destinations.
 use super::{JpgSnapshot,JpgImage,JpgSegment,JfifThumbnail,JfifDensityUnits};
-use semio_framework_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotReceivingControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,parent_range,validate_schema_sql,check_database,settle}}};
+use semio_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotReceivingControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,parent_range,validate_schema_sql,check_database,settle}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::{cell::{Cell,RefCell},mem::size_of};
 pub type Result<T>=std::result::Result<T,ValueError>;

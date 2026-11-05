@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeMemberTWeldOffset 
         record: "ChangedMemberTWeldOffset",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Weld distance x_s from the end of the member", "Bauteil: Schweißnahtabstand x_s vom Ende ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Weld distance x_s from the end of the member", "Bauteil: Schweißnahtabstand x_s vom Ende ändern")
     }
 }
 

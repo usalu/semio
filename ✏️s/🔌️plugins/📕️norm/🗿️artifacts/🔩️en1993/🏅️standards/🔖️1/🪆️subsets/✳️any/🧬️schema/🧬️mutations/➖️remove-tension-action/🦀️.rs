@@ -16,8 +16,8 @@ pub struct RemoveTensionAction {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveTensionAction where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_tension_action::InsertTensionAction> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "tension-action", kind: "remove-tension-action", record: "RemovedTensionAction" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove tension component action #{} of {}", self.index, self.id), &format!("Zugglied-Einwirkung #{} von {} entfernen", self.index, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove tension component action #{} of {}", self.index, self.id), &format!("Zugglied-Einwirkung #{} von {} entfernen", self.index, self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone(), self.index.to_string()] }
 }

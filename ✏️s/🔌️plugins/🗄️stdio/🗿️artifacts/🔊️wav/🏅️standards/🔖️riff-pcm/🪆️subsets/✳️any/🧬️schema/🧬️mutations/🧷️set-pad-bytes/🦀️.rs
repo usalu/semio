@@ -24,8 +24,8 @@ impl SetPadBytes {
 impl protocol::MutationKind<WavSnapshot, WavMutation> for SetPadBytes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "pad-bytes", kind: "set-pad-bytes", record: "SetPadBytes" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set pad bytes", "Füllbytes setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set pad bytes", "Füllbytes setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

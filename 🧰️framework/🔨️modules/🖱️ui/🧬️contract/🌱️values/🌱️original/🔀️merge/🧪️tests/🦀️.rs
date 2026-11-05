@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_job::*;
 use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use semio_framework_ui_contract::OriginalUiArgumentsMerge;
+use semio_ui_contract::OriginalUiArgumentsMerge;
 #[track_caller]
 fn event(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,run:&mut dyn FnMut(&mut StepContext<'_>)->Result<(),OriginalTurnFailure>){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,|cx|run(cx)));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes),"native UI merge receipt {p:?}, failure={:?}",result.as_ref().err());result.unwrap()}
 fn object_witnesses(args:&Option<DslValue>,input:&Option<DslValue>)->Vec<(String,usize,Option<usize>)>{let(Some(DslValue::Object(args)),Some(DslValue::Object(input)))=(args,input)else{return Vec::new()};let mut result=Vec::new();for(key,value)in args{let value=input.iter().find(|(candidate,_)|candidate==key).map(|(_,value)|value).unwrap_or(value);result.push((key.clone(),key.as_ptr()as usize,if let DslValue::String(text)=value{Some(text.as_ptr()as usize)}else{None}));}for(key,value)in input{if !args.iter().any(|(candidate,_)|candidate==key){result.push((key.clone(),key.as_ptr()as usize,if let DslValue::String(text)=value{Some(text.as_ptr()as usize)}else{None}));}}result}

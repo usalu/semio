@@ -18,7 +18,7 @@ export function testSelectedRuntimeDependencies(targets: Record<string, any>, gr
     if (renderer === "react") assert.ok(!ids.some(id => id.startsWith(rendererProject + ":")), name + ": React must not compile the WGPU renderer");
     const fontTask = fixture.fontTool.project + ":build";
     assert.ok(ids.includes(fontTask), name + ": standalone font prerequisite");
-    assert.ok(!ids.some(id => /^semio-framework-os-infinite:(?:build|font-tool)$/.test(id)), name + ": fonts must not compile Infinite");
+    assert.ok(!ids.some(id => /^semio-os-infinite:(?:build|font-tool)$/.test(id)), name + ": fonts must not compile Infinite");
     for (const forbidden of row.forbiddenProjects) assert.ok(!ids.some(id => id === forbidden + ":wasm" || id === forbidden + ":wasm-release"), name + ": unwanted engine " + forbidden);
   }
 }

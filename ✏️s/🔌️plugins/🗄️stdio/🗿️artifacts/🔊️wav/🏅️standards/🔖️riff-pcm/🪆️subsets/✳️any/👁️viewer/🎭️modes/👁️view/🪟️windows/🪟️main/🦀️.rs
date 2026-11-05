@@ -2,11 +2,11 @@
 
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 use crate::standards::riff_pcm::subsets::any::schema::inferences::duration::compute_wav_duration;
-use semio_framework_plugin::app::{MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowKit;
+use semio_plugin::app::{MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Locale;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowKit;
 
 pub const WINDOW_KIND_ID: &str = MediaWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MediaWindowKit::KIND_ID;
@@ -18,7 +18,7 @@ pub fn definition() -> WindowKindDefinition {
 
 /// 🎬️ Projects inferred timing and exact live identity without claiming an unregistered viewer export.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &WavSnapshot, locale: Locale, resource: Option<MediaResource>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &WavSnapshot, locale: Locale, resource: Option<MediaResource>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let duration_ms = semio_s_artifact_stdio_contract::media_duration_ms(compute_wav_duration(snapshot).duration_seconds);
     let revision = resource.as_ref().map_or_else(|| "0".to_string(), |resource| resource.revision.clone());
     let reason = match locale { Locale::En => "Encoded playback export is not registered for this app.", Locale::De => "Der kodierte Wiedergabeexport ist für diese App nicht registriert." };

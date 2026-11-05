@@ -1,0 +1,32 @@
+[
+  {
+    "name": "unicode-and-empty",
+    "field": [
+      "α",
+      "",
+      "a\nb"
+    ],
+    "revisionByte": 17,
+    "generation": 9,
+    "cancelAfter": null
+  },
+  {
+    "name": "cancel-admission",
+    "field": [
+      "kept"
+    ],
+    "revisionByte": 18,
+    "generation": 10,
+    "cancelAfter": 2
+  },
+  {
+    "name": "cancel-clone",
+    "field": [
+      "one",
+      "two"
+    ],
+    "revisionByte": 19,
+    "generation": 11,
+    "cancelAfter": 12
+  }
+]

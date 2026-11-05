@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWaterFlowLength wh
         record: "ChangedWaterFlowLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flow length l of the layer water", "Schichtwasser: Fließlänge l ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flow length l of the layer water", "Schichtwasser: Fließlänge l ändern")
     }
 }
 

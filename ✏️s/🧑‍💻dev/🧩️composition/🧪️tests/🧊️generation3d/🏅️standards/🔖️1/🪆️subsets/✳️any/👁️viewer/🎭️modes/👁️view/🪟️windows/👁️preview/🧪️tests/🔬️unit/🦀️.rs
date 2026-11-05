@@ -115,8 +115,8 @@ fn render_uses_the_configured_preview_camera() {
     let _serial = crate::viewer_domain::viewer_laws::context::lock();
     let document = default_document();
     let config = Generation3dViewConfig { preview_camera: Generation3dViewCamera { position: [9.0, 8.0, 7.0], target: [1.0, 1.0, 1.0], fov: 33.0 }, ..Generation3dViewConfig::default() };
-    let node = render(&document, &config, None, None, None, &Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("render");
-    let scene: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("viewer preview body must decode as an assembled world-3d scene");
+    let node = render(&document, &config, None, None, None, &Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))).expect("render");
+    let scene: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("viewer preview body must decode as an assembled world-3d scene");
     assert!(scene.camera_json.contains("\"fov\":33"), "the configured fov must reach the rendered scene: {}", scene.camera_json);
     document.retire_cold();
 }
@@ -188,8 +188,8 @@ fn render_without_a_published_evaluation_paints_the_empty_world() {
     let config = Generation3dViewConfig::default();
     reset_preview_mesh_table();
     let before = preview_tessellation_count();
-    let node = render(&document, &config, None, None, None, &Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("render");
-    let scene: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("viewer preview body must decode as an assembled world-3d scene");
+    let node = render(&document, &config, None, None, None, &Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))).expect("render");
+    let scene: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("viewer preview body must decode as an assembled world-3d scene");
     assert_eq!(scene.meshes_json, "[]", "an unevaluated document must paint no meshes, not evaluate itself");
     assert_eq!(preview_tessellation_count(), before, "a pure render must never reach the geometry kernel");
     document.retire_cold();

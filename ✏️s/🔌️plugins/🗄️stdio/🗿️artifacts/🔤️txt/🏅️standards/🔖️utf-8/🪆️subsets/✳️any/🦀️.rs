@@ -5,8 +5,8 @@
 use crate::editor::txt as editor;
 use crate::standards::v_utf_8::subsets::any::{io, schema};
 use crate::viewer::txt as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use std::sync::OnceLock;
 

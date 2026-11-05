@@ -229,7 +229,7 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
         command: &Wfc2dEditorCommand,
         snapshot: &Wfc2dSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Wfc2dEditor>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Wfc2dEditor>>>,
     ) -> Option<usize> {
         (!self.completed && wfc2d_command_id(command) == self.tool_id).then(|| wfc2d_retained_extent(command, snapshot)).flatten()
     }
@@ -237,7 +237,7 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Wfc2dEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Wfc2dEditor>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.completed || wfc2d_command_id(input.command) != self.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.retained.route"), "the bounded WFC 2D work rejects an undeclared or completed route"));
+            return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc2d.retained.route"), "the bounded WFC 2D work rejects an undeclared or completed route"));
         }
         let emit = dispatch(input.command, input.snapshot, input.config, &input.operation.authoring_seed)?;
         let transient = match input.command {
@@ -288,11 +288,11 @@ impl semio_framework::ToolJobFactory for Wfc2dRetainedCommandJobFactory {
         wfc2d_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: WFC_2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: WFC_2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Wfc2dRetainedCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Wfc2dRetainedCommandJobFactory {
     type Owner = EditorApp<Wfc2dEditor>;
     const TOOL_IDS: &'static [&'static str] = WFC_2D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = WFC_2D_DOCUMENT_SCHEMA;

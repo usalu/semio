@@ -21,7 +21,7 @@ use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
 use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ITEM;
 use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};
 

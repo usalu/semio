@@ -1,7 +1,7 @@
 //! 📥️ Real Chart producers bind the shared closed owners to authored native assets.
 use super::{corpus,owned,exact,file,independent};
 use crate::ChartSnapshot;
-use semio_framework_os_space_testing_sqlite_native_caller::{native_caller_policy,with_original_decode,with_original_encode};
+use semio_os_space_testing_sqlite_native_caller::{native_caller_policy,with_original_decode,with_original_encode};
 use protocol::os_store::serialization::ArtifactSqliteSnapshotHost;use pack::snapshot::{ArtifactDsl,ArtifactPack};
 #[test]
 fn chart_logical_owner_fixture_producer(){

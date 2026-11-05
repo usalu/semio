@@ -17,14 +17,14 @@
 //! `note_document_bounds`/`note_document_to_svg`/`note_document_json_from_dwg` and friends below
 //! (unchanged, relocated nowhere) are real domain-mapping helpers the foreign leaves in
 //! `📥️import`/`📤️export` call — `note_document_to_svg` still bridges through the OLD
-//! `semio_framework_plugin::app::io_dispatch`/`ComposerEntry` mechanism to reach stdio's registered
+//! `semio_plugin::app::io_dispatch`/`ComposerEntry` mechanism to reach stdio's registered
 //! semio/drawing→svg composer, because stdio's own `drawing` subset has not yet migrated onto the
 //! new `io_mechanism` registry (ticket status.md wave W2, not this plugin's boundary) — a real,
 //! documented cross-plugin limitation, not an oversight (see `## openQuestions`).
 
 use crate::{NoteBlockNode, NoteTextParagraph, NoteTextRun};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use {semio_framework_plugin::app::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_plugin::app::ErasedComposeSource,semio_framework_plugin::app::IoDirection,semio_framework_plugin::app::IoKey,semio_framework_plugin::app::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::app::io_dispatch,semio_framework_artifact_reference::Dialect,semio_plugin::app::ErasedComposeSource,semio_plugin::app::IoDirection,semio_plugin::app::IoKey,semio_plugin::app::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
@@ -330,13 +330,13 @@ mod media_tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️IoDeclaration
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     #[cfg(test)] use crate::standards::v1::subsets::any::io::binary::{diff, mutations, snapshot};
     use crate::{NoteMutation, NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
     /// 🗣️ The five hand-authored `dsl::LanguageSpec`s this subset already carried before this

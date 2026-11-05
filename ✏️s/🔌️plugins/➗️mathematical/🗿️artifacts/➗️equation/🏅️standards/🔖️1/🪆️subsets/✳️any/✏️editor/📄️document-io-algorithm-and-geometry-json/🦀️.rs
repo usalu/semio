@@ -11,10 +11,10 @@ pub const MATH_APP_ID: &str = "equation-play";
 /// detached every nested owner first, and nothing on this path ever mounts or retires it — the
 /// envelope route panics inside the guest (`🗒️note`/`✒️writer`/`🕸️dag` all take this route). The log
 /// is edit-free by construction, which is exactly what a whole-document replace carries.
-pub fn reset_equation_document_effect(document: &EquationSnapshot) -> semio_framework_plugin::Effect {
+pub fn reset_equation_document_effect(document: &EquationSnapshot) -> semio_plugin::Effect {
     let pack = EquationSnapshot::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(MATH_APP_ID, MATH_DOCUMENT_SCHEMA));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+    semio_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Constants
 
@@ -23,14 +23,14 @@ pub fn reset_equation_document_effect(document: &EquationSnapshot) -> semio_fram
 /// `create_equation_app` declares via `.artifact_kind(...)` (`computation.equation`), plus one
 /// extra output port: `result:out`, the current graph+geometry projection as a generic data value
 /// (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
-pub fn equation_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn equation_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: MATH_DOCUMENT_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
-        ports: vec![semio_framework_plugin::MediaPortSpec {
+        ports: vec![semio_plugin::MediaPortSpec {
             id: "result:out".into(),
             label: "Result".into(),
-            direction: semio_framework_plugin::MediaPortDirection::Out,
+            direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: Some("computation.equation".into()),
             required: false,
@@ -38,7 +38,7 @@ pub fn equation_io() -> semio_framework_plugin::AppIo {
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "computation.equation".into(), name: "Equation".into(), dimension: "graph".into(), component_kind: "equation".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "computation.equation".into(), name: "Equation".into(), dimension: "graph".into(), component_kind: "equation".into() },
     }
 }
 //#endregion 🔖️Io

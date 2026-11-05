@@ -1,21 +1,21 @@
 //! 📷️ Shared window camera fixtures: one schema-first camera state, its whole-record mutation, the retained edit and the owners that bind them, mounted by the in-crate preview laws and the companion window-config laws alike.
 
 use std::sync::Arc;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_window_config::{WindowConfigOwner, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners};
-use semio_framework_os_kernel as pack;
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_window_config::{WindowConfigOwner, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners};
+use semio_os_kernel as pack;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
 
 /// 📷️ A real schema-first window camera: enveloped Pack, record spec, and a whole-record snapshot mutation.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Copy, Debug, Default, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Copy, Debug, Default, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "test.retainedloadcameraconfig")]
 pub struct RetainedLoadCameraConfig {
     #[dsl(block)]
-    pub viewport: semio_framework_os_kernel::Viewport2d,
+    pub viewport: semio_os_kernel::Viewport2d,
     #[dsl(coord)]
     pub eye: [f64; 3],
 }
@@ -63,7 +63,7 @@ impl pack::snapshot::ArtifactPack for RetainedLoadCameraConfig {
         Some(Self::__artifact_borrowed_record_spec_producer())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RetainedLoadCameraConfig {
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RetainedLoadCameraConfig {
 
 }
 
@@ -74,7 +74,7 @@ impl store::ConfigRecord for RetainedLoadCameraConfig {}
 #[value(rename_all = "camelCase", default)]
 pub struct RetainedLoadCameraConfigDiff {
     #[value(skip_serializing_if = "Option::is_none")]
-    pub viewport: Option<semio_framework_os_kernel::Viewport2d>,
+    pub viewport: Option<semio_os_kernel::Viewport2d>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub eye: Option<[f64; 3]>,
 }
@@ -207,7 +207,7 @@ macro_rules! retained_load_owner {
             const MAXIMUM_PREPARATION_DEPTH:usize=64;
             fn build_retained_edit()->Arc<Self::Edit>{Arc::new(CameraRetainedEdit)}
 
-            fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin_window_config::bounded_window_config_preparation_source_birth::<Self>()}
+            fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin_window_config::bounded_window_config_preparation_source_birth::<Self>()}
     fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>> {
                 bounded_window_config_store_owners::<Self>(grant)
             }
@@ -241,7 +241,7 @@ impl WindowConfigOwner for IdentityWindowOwner {
     const MAXIMUM_PREPARATION_DEPTH:usize=64;
     fn build_retained_edit()->Arc<Self::Edit>{Arc::new(CameraRetainedEdit)}
 
-    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin_window_config::bounded_window_config_preparation_source_birth::<Self>()}
+    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin_window_config::bounded_window_config_preparation_source_birth::<Self>()}
     fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>> {
         bounded_window_config_store_owners::<Self>(grant)
     }

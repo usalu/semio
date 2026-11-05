@@ -1,7 +1,7 @@
 //! 🏷️ Unit proofs of the modelling lanes carried by the world-3d scene: split, merge, refusal and builder validation.
 
 use super::*;
-use semio_framework_ui_scene_modelling::{World3dAnnotation, World3dColorRamp, World3dScalarDomain, World3dScalarRange, World3dSubElementStyle, World3dText, World3dTone};
+use semio_ui_scene_modelling::{World3dAnnotation, World3dColorRamp, World3dScalarDomain, World3dScalarRange, World3dSubElementStyle, World3dText, World3dTone};
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/📏️world3d-modelling/🔣️.json");
@@ -88,7 +88,7 @@ fn the_scene_value_codec_and_serde_shape_carry_the_typed_fields() {
 #[test]
 fn the_typed_lanes_never_ride_the_pack_and_the_split_spine_does() {
     let assembled = modelling_scene();
-    assert!(matches!(assembled.encode_pack(), Err(semio_framework_ui_scene_pack::PackError::Unsupported(_))), "an unsplit scene must not silently drop its typed lanes");
+    assert!(matches!(assembled.encode_pack(), Err(semio_ui_scene_pack::PackError::Unsupported(_))), "an unsplit scene must not silently drop its typed lanes");
     let (spine, lanes) = assembled.split_lanes();
     let mut decoded = World3dScene::decode_pack(&spine.encode_pack().expect("spine encodes")).expect("spine decodes");
     assert_eq!(decoded, spine);

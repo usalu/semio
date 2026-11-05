@@ -1,7 +1,7 @@
 //! 📚️ Trinity Rewriting app — Catalogue panel (manifest kinds + add-to-LHS/RHS clause shortcuts).
 
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
-use semio_framework_plugin::{tree_item, tree_item_with_action, ui_node_list, PanelTreeBuilder, TreeWindows};
+use semio_plugin::{tree_item, tree_item_with_action, ui_node_list, PanelTreeBuilder, TreeWindows};
 
 //#region 🔖️Render
 /// 📚️ One "add a clause" shortcut: the row id and the rule-clause kind its click appends.
@@ -21,12 +21,12 @@ const RHS_CLAUSES: [ClausePreset; 5] = [
     ClausePreset { id: "trinity-catalogue.add-parameter", label: "Parameter", kind: "parameter" },
 ];
 
-fn clause_row(preset: &ClausePreset) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn clause_row(preset: &ClausePreset) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let args = crate::editor::rewriting::ui::ui_value_map([("kind", crate::editor::rewriting::ui::ui_value_text(preset.kind)?)])?;
     tree_item_with_action(preset.id, crate::editor::rewriting::ui::ui_label(preset.label)?, None, crate::editor::rewriting::ui::rewriting_action("addRuleClause", Some(args))?)
 }
 
-pub fn render(labels: &TrinityRewritingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(labels: &TrinityRewritingLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let kind_items = ui_node_list([
         tree_item("trinity-catalogue.piece", crate::editor::rewriting::ui::ui_label(labels.piece.as_str())?),
         tree_item("trinity-catalogue.connection", crate::editor::rewriting::ui::ui_label(labels.connection.as_str())?),

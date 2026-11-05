@@ -71,8 +71,8 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_POINTER_UP => self.pointer_up(payload),
             SEQUENCE_OPERATION_WHEEL => self.wheel(payload),
             SEQUENCE_OPERATION_REORGANIZE => {
-                let mut progress=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(std::str::from_utf8(payload).map_err(domain_error)?,&mut decode).map_err(domain_error)?;
-                let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.host.dag.graph.reorganize(&options,&mut control).map_err(domain_error)?;
+                let mut progress=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_os_infinite::board::io::text::layout::decode_dag_options_json(std::str::from_utf8(payload).map_err(domain_error)?,&mut decode).map_err(domain_error)?;
+                let mut progress=|_|true;let mut control=semio_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.host.dag.graph.reorganize(&options,&mut control).map_err(domain_error)?;
                 self.host.sync_from_dag();
                 self.host.layout_expanded_slots();
                 Ok(Vec::new())
@@ -86,19 +86,19 @@ impl SequenceDomain for SequenceDomainAdapter {
                 self.host.dag.viewport.set_forced_draw_lod_label(&one_text(payload)?);
                 Ok(Vec::new())
             }
-            SEQUENCE_OPERATION_DRAW_LOD => Ok(semio_framework_os_infinite::dag_draw_lod_label(&self.host.dag.viewport,&self.host.dag.graph).to_string().into_bytes()),
+            SEQUENCE_OPERATION_DRAW_LOD => Ok(semio_os_infinite::dag_draw_lod_label(&self.host.dag.viewport,&self.host.dag.graph).to_string().into_bytes()),
             SEQUENCE_OPERATION_SET_THEME => {
                 let json = std::str::from_utf8(payload).map_err(|_| abi_failure(AbiErrorCode::InvalidUtf8))?;
                 let mut accepted = |_| true;
                 let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024, &mut accepted);
-                let overlay = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(domain_error)?;
-                semio_framework_os_infinite::dag_set_canvas_palette(&mut self.host.dag.viewport,&mut self.host.dag.paint,&overlay);
+                let overlay = semio_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(domain_error)?;
+                semio_os_infinite::dag_set_canvas_palette(&mut self.host.dag.viewport,&mut self.host.dag.paint,&overlay);
                 Ok(Vec::new())
             }
             SEQUENCE_OPERATION_SELECTED_NODES => Ok(semio_framework_pack_json::to_json_string(&self.host.dag.graph.selected_node_ids()).into_bytes()),
             SEQUENCE_OPERATION_SET_SELECTION => self.set_selection(payload),
             SEQUENCE_OPERATION_LABEL_OVERLAY => self.host.dag.label_overlay_paint_state_json().map(String::into_bytes).map_err(domain_error),
-            SEQUENCE_OPERATION_HOVERED_NODE => Ok(semio_framework_os_infinite::directed_dag::hovered_node_id(&self.host.dag.viewport,&self.host.dag.graph).unwrap_or_default().into_bytes()),
+            SEQUENCE_OPERATION_HOVERED_NODE => Ok(semio_os_infinite::directed_dag::hovered_node_id(&self.host.dag.viewport,&self.host.dag.graph).unwrap_or_default().into_bytes()),
             SEQUENCE_OPERATION_PRESELECT_NODES => Ok(semio_framework_pack_json::json!({
                 "ids": self.host.dag.graph.preselect_widget_ids(),
                 "removedIds": self.host.dag.graph.preselect_removed_widget_ids(),
@@ -108,7 +108,7 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_SELECTION_PREVIEW_POINTS => Ok(self.host.dag.graph.selection_preview_points_json().into_bytes()),
             SEQUENCE_OPERATION_SELECTION_PREVIEW_CROSSING => Ok(vec![u8::from(self.host.dag.graph.selection_preview_crossing())]),
             SEQUENCE_OPERATION_SELECTION_PREVIEW_METHOD => Ok(self.host.dag.graph.selection_preview_method().to_string().into_bytes()),
-            SEQUENCE_OPERATION_SELECTION_BOUNDS => Ok(semio_framework_os_infinite::directed_dag::selection_union_bounds_screen_json(&self.host.dag.viewport,&self.host.dag.graph).into_bytes()),
+            SEQUENCE_OPERATION_SELECTION_BOUNDS => Ok(semio_os_infinite::directed_dag::selection_union_bounds_screen_json(&self.host.dag.viewport,&self.host.dag.graph).into_bytes()),
             SEQUENCE_OPERATION_SET_SELECTION_OPTIONS => {
                 let (method, mode) = two_texts(payload)?;
                 self.host.dag.graph.set_selection_options(&method, &mode, true, false, false);

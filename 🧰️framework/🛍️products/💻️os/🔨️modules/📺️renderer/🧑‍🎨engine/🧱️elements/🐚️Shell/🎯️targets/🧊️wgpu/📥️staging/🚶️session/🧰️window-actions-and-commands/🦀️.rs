@@ -19,14 +19,14 @@ pub struct WindowScopeStackV1 {
 }
 
 /// 🪟️ Flattens a dock tree into its tab stacks, in layout order — twin of `modeLayoutStacksV1`.
-pub fn mode_layout_stacks_v1(node: &semio_framework_os_renderer_wgpu_dock::DockNode) -> Vec<WindowScopeStackV1> {
+pub fn mode_layout_stacks_v1(node: &semio_renderer_wgpu_dock::DockNode) -> Vec<WindowScopeStackV1> {
     match node {
-        semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, active } => {
+        semio_renderer_wgpu_dock::DockNode::Stack { windows, active } => {
             let window_ids: Vec<String> = windows.iter().map(|tab| tab.window_id.clone()).collect();
             let active_window_id = if active.is_empty() { window_ids.first().cloned() } else { Some(active.clone()) };
             vec![WindowScopeStackV1 { window_ids, active_window_id }]
         }
-        semio_framework_os_renderer_wgpu_dock::DockNode::Row(children) | semio_framework_os_renderer_wgpu_dock::DockNode::Column(children) => children.iter().flat_map(|(child, _)| mode_layout_stacks_v1(child)).collect(),
+        semio_renderer_wgpu_dock::DockNode::Row(children) | semio_renderer_wgpu_dock::DockNode::Column(children) => children.iter().flat_map(|(child, _)| mode_layout_stacks_v1(child)).collect(),
     }
 }
 
@@ -115,7 +115,7 @@ impl<'ctx> SessionCtx<'ctx> {
             FRAMEWORK_SYNC_PANEL_TAB_ID => self.sync.build_sync_attach_ui(&self.prefs),
             FRAMEWORK_TASK_MANAGER_PANEL_ID => self.opening.build_task_manager_ui(&self.prefs),
             FRAMEWORK_CHAT_PANEL_ID => self.directory.build_agent_chat_ui(&self.chrome, &self.prefs),
-            semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID => semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&self.directory.hub_workspace, self.prefs.active_locale()),
+            semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID => semio_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&self.directory.hub_workspace, self.prefs.active_locale()),
             other => match other.strip_prefix(FRAMEWORK_TOOL_PANEL_TAB_PREFIX) {
                 Some(tool_id) => self.windows.build_tool_panel_ui(tool_id, &self.prefs, &self.docs),
                 None => return Ok(None),
@@ -191,16 +191,16 @@ impl<'ctx> SessionCtx<'ctx> {
                         id: Some(format!("command-{element_key}-execute")),
                         icon_id: IconName::Check,
                         label: Label::data(shell_chrome_string("common.execute", is_de)),
-                        action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": key.clone() }) },
+                        action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedCommand".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": key.clone() }) },
                         style: None,
-                        presence: UiPresence { state: if missing { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
+                        presence: UiPresence { state: if missing { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                         menu: None,
                     }),
                     UiNode::Button(UiButtonNode {
                         id: Some(format!("command-{element_key}-reset")),
                         icon_id: IconName::Undo,
                         label: Label::data(shell_chrome_string("common.reset", is_de)),
-                        action: ActionDescriptor { controller_id: "framework".into(), action: "resetStagedCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": key.clone() }) },
+                        action: ActionDescriptor { controller_id: "framework".into(), action: "resetStagedCommand".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": key.clone() }) },
                         style: None,
                         presence: UiPresence::default(),
                         menu: None,

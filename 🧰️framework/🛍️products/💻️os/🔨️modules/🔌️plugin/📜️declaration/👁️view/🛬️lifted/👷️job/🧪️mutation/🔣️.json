@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "name": "ready",
+      "gate": "ready",
+      "type": "correct",
+      "body": "value",
+      "expected": "value",
+      "calls": 1
+    },
+    {
+      "name": "busy",
+      "gate": "busy",
+      "type": "correct",
+      "body": "value",
+      "expected": "pending",
+      "calls": 0
+    },
+    {
+      "name": "busy-before-type-check",
+      "gate": "busy",
+      "type": "wrong",
+      "body": "value",
+      "expected": "pending",
+      "calls": 0
+    },
+    {
+      "name": "wrong-type",
+      "gate": "ready",
+      "type": "wrong",
+      "body": "value",
+      "expected": "invariantViolated",
+      "calls": 0
+    },
+    {
+      "name": "original-refusal",
+      "gate": "ready",
+      "type": "correct",
+      "body": "refuse",
+      "expected": "invalidValue",
+      "calls": 1
+    },
+    {
+      "name": "poison",
+      "gate": "poison",
+      "type": "correct",
+      "body": "value",
+      "expected": "invariantViolated",
+      "calls": 0
+    }
+  ]
+}

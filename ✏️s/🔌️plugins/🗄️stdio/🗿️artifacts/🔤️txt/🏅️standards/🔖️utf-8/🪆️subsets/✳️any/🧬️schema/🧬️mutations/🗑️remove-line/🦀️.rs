@@ -43,8 +43,8 @@ impl RemoveLineMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for RemoveLineMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "line", kind: "remove-line", record: "RemovedLine" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove Line", "Zeile entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove Line", "Zeile entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-line".to_string()]

@@ -1,7 +1,7 @@
 //! 🪡️ One supplied typed setter exchanges original field custody under central authority.
 use crate::*;
 use semio_s_artifact_layout_layout_model::{ParagraphStyle,CharacterStyle,ParentPage,Spread,ImageLink,TextStory,Page,Layer,Frame,GridSettings,LayoutBounds};
-use semio_framework_os_kernel::ApplyCapability;
+use semio_os_kernel::ApplyCapability;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;
 /// 🎚️ Nested collections and derived caches have their own separately admitted frontiers.
@@ -50,7 +50,7 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 impl OwnedPatch<LayoutSnapshot> for LayoutDiff{
  const FIELD_COUNT:usize=5;
  fn supplied(&self,index:usize)->bool{match index{0=>self.schema.is_some(),1=>self.name.is_some(),2=>self.print_target.is_some(),3=>self.background_drawing.is_some(),4=>self.referenced_model.is_some(),_=>false}}
- fn field_demand(&self,index:usize)->Result<RetirementDemand,ValueError>{Ok(match index{0|1=>fixed::<String>(),2=>fixed::<Option<String>>(),3=>fixed::<Option<semio_s_artifact_layout_layout_model::LayoutDrawingMember>>(),4=>fixed::<Option<semio_framework_os_kernel::ArtifactLink>>(),_=>return Err(invalid())})}
+ fn field_demand(&self,index:usize)->Result<RetirementDemand,ValueError>{Ok(match index{0|1=>fixed::<String>(),2=>fixed::<Option<String>>(),3=>fixed::<Option<semio_s_artifact_layout_layout_model::LayoutDrawingMember>>(),4=>fixed::<Option<semio_os_kernel::ArtifactLink>>(),_=>return Err(invalid())})}
  fn exchange_field(&mut self,row:&mut LayoutSnapshot,index:usize,g:RetainedCloneGrant,_capability:ApplyCapability)->Result<RetainedCloneStep,ValueError>{let d=self.field_demand(index)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}match index{0=>exchange(&mut self.schema,&mut row.schema),1=>exchange(&mut self.name,&mut row.name),2=>if let Some(change)=self.print_target.as_mut(){std::mem::swap(&mut change.target,&mut row.print_target)},3=>exchange(&mut self.background_drawing,&mut row.background_drawing),4=>exchange(&mut self.referenced_model,&mut row.referenced_model),_=>return Err(invalid())}Ok(progress(d))}
 }
 

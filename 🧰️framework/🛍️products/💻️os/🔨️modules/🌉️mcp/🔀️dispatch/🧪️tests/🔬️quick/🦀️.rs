@@ -6,26 +6,26 @@ use semio_framework::manifest::CapabilityExecution;
 use semio_framework::manifest::CapabilityPolicy;
 use semio_framework::manifest::ResourceSelector;
 use semio_framework::manifest::kernel;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use std::sync::Arc;
 use std::sync::Mutex;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_mcp_capabilities::source_builders;
+use semio_os_mcp_capabilities::source_builders;
 use crate::actions::{ActionAdapter, INSTANCE_BUSY_MAX_ATTEMPTS};
-use semio_framework_os_mcp_catalog::catalog::{CapabilityArgSummary, CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure, compile};
-use semio_framework_os_mcp_consent::approval_coordinator::ApprovalCoordinator;
-use semio_framework_os_mcp_consent::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines};
-use semio_framework_os_mcp_foundation::audit::{AgentAuditEvent, AuditDecision, AuditSinks, ClientInfo, InMemoryAuditSink};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
-use semio_framework_os_mcp_foundation::reports::{InvocationStatus, RevisionStamp};
-use semio_framework_os_mcp_port::channel_port::{AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, AGENT_LANE_UNCARRIED_REMEDY, AppCommand, ArtifactChannel, COMMAND_NO_EFFECT_FAULT_CODE, COMMAND_NO_EFFECT_REMEDY, COMMAND_TARGETS_REQUIRED_FAULT_CODE, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, HubRelayOutcome, InferCommand, InferenceCancel, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedOps, REVISION_GUARD_REQUIRED_FAULT_CODE, UnboundArtifactChannel, VIEWER_READ_ONLY_FAULT_CODE, WORKSPACE_UNBOUND_FAULT_CODE, map_fault};
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
-use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
-use semio_framework_os_mcp_wire::protocol::ClientFeatures;
+use semio_os_mcp_catalog::catalog::{CapabilityArgSummary, CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure, compile};
+use semio_os_mcp_consent::approval_coordinator::ApprovalCoordinator;
+use semio_os_mcp_consent::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines};
+use semio_os_mcp_foundation::audit::{AgentAuditEvent, AuditDecision, AuditSinks, ClientInfo, InMemoryAuditSink};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
+use semio_os_mcp_foundation::reports::{InvocationStatus, RevisionStamp};
+use semio_os_mcp_port::channel_port::{AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, AGENT_LANE_UNCARRIED_REMEDY, AppCommand, ArtifactChannel, COMMAND_NO_EFFECT_FAULT_CODE, COMMAND_NO_EFFECT_REMEDY, COMMAND_TARGETS_REQUIRED_FAULT_CODE, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, HubRelayOutcome, InferCommand, InferenceCancel, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedOps, REVISION_GUARD_REQUIRED_FAULT_CODE, UnboundArtifactChannel, VIEWER_READ_ONLY_FAULT_CODE, WORKSPACE_UNBOUND_FAULT_CODE, map_fault};
+use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_os_mcp_wire::protocol::ClientFeatures;
 #[cfg(test)]
-use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
+use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
 fn synthetic_capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bool) -> CapabilityDefinition {
     CapabilityDefinition {
@@ -325,7 +325,7 @@ fn remote_approval_history_retains_opaque_authority_in_its_private_session_port(
     let port = Arc::new(RecordingHistoryUndoPort::default());
     adapter.bind_history_undo_port(port.clone());
     let session = SessionHandle::new("sess_owner");
-    let scope = semio_framework_os_kernel::os_directory::DocumentScope::new("space-a", "document-a");
+    let scope = semio_os_kernel::os_directory::DocumentScope::new("space-a", "document-a");
     let authority=semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"ownerReceipt":"opaque-authority"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let token = adapter
         .retain_hub_inference_approval_undo(&session, "https://hub.invalid", &scope, "inference/document", &authority, 7)
@@ -684,8 +684,8 @@ fn an_unrecognised_field_against_the_capabilitys_schema_is_input_invalid() {
 fn an_omitted_optional_argument_runs_with_its_declared_default() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
     let definitions = [
-        semio_framework::manifest::ActionArgDef::text("kind", semio_framework_ui_locale::LocalizedLabel::native("Kind", "Art")).default_value(&"text".to_string()),
-        semio_framework::manifest::ActionArgDef::text("title", semio_framework_ui_locale::LocalizedLabel::native("Title", "Titel")),
+        semio_framework::manifest::ActionArgDef::text("kind", semio_ui_locale::LocalizedLabel::native("Kind", "Art")).default_value(&"text".to_string()),
+        semio_framework::manifest::ActionArgDef::text("title", semio_ui_locale::LocalizedLabel::native("Title", "Titel")),
     ];
     let mut capability = synthetic_capability("forms.addBlock", &[], ApprovalMode::Never, false);
     capability.input_schema = serde_json::json!({ "type": "object", "properties": { "kind": { "type": "string", "default": "text" }, "title": { "type": "string" } }, "additionalProperties": false });

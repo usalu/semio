@@ -27,8 +27,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "slot", kind: "unpin-slot", record: "Cleared" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unpin slot \"{}\"", self.id), &format!("Fixierung von Slot \"{}\" aufheben", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Unpin slot \"{}\"", self.id), &format!("Fixierung von Slot \"{}\" aufheben", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

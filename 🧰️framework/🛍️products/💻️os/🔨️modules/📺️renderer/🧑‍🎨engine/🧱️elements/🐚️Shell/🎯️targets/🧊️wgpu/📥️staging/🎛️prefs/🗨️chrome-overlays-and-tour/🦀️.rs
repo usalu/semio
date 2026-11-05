@@ -48,7 +48,7 @@ pub fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuest
 /// 📣️ The text a refused program call reads in the shell's language: the localized notice of the structured fault behind it
 /// (`kernel::fault_notice` over the framework's tables — the host's guest admission `plugin.channel-mismatch` names both
 /// channels), else the call's own text.
-pub fn program_fault_text(refusal: &semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, terminology: Terminology, locale: Locale) -> String {
+pub fn program_fault_text(refusal: &semio_renderer_wgpu_program_bridge::ProgramFault, terminology: Terminology, locale: Locale) -> String {
     #[cfg(not(target_arch = "wasm32"))]
     if refusal.create_app_source.is_some(){return LocalizedLabel::native("The application could not be opened.","Die Anwendung konnte nicht geöffnet werden.").resolve(terminology,locale).to_string();}
     #[cfg(not(target_arch = "wasm32"))]
@@ -77,7 +77,7 @@ impl PrefsState {
 
     /// 📣️ Records one refused program call's structured guest fault beside the refusing app's notices for the funnel, and
     /// answers the `code: message` text every `String` dispatch channel carries.
-    pub fn refused_guest_call(&mut self, mut refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, app: &AppDefinition, chrome: &mut ChromeState) -> String {
+    pub fn refused_guest_call(&mut self, mut refusal: semio_renderer_wgpu_program_bridge::ProgramFault, app: &AppDefinition, chrome: &mut ChromeState) -> String {
         #[cfg(not(target_arch = "wasm32"))]
         let detail=if refusal.frame.is_some()||refusal.create_app_source.is_some(){program_fault_text(&refusal,self.active_terminology(),self.active_locale())}else{std::mem::take(&mut refusal.text)};
         #[cfg(target_arch = "wasm32")]
@@ -92,7 +92,7 @@ impl PrefsState {
     /// 🤝️ Tells one refused instance open — the host's guest admission (`plugin.channel-mismatch`, both channels named) or any
     /// other structured refusal — through the dispatch-fault funnel, so it reaches the person as its localized notice and never
     /// as a raw code; answers the text the open's own status keeps ([`program_fault_text`]).
-    pub fn note_refused_open(&mut self, refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, chrome: &mut ChromeState) -> String {
+    pub fn note_refused_open(&mut self, refusal: semio_renderer_wgpu_program_bridge::ProgramFault, chrome: &mut ChromeState) -> String {
         let detail=program_fault_text(&refusal,self.active_terminology(),self.active_locale());
         #[cfg(not(target_arch = "wasm32"))]
         let source_refusal=refusal.create_app_source.is_some();

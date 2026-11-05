@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeRetainingWallHRdNP
         record: "ChangeRetainingWallHRdNPerM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Thrust resistance", "Schubwiderstand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Thrust resistance", "Schubwiderstand ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-retaining-wall-h-rd-n-per-m".into()]

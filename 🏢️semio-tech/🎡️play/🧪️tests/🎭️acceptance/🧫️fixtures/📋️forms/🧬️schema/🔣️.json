@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "pane",
+    "title",
+    "questionLabel",
+    "answer",
+    "addedKind",
+    "controls",
+    "locales",
+    "extension",
+    "flowFixture",
+    "flowKind"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "pane": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "questionLabel": {
+      "type": "string"
+    },
+    "answer": {
+      "type": "string"
+    },
+    "addedKind": {
+      "type": "string"
+    },
+    "controls": {
+      "type": "object",
+      "required": [
+        "title",
+        "questionLabel",
+        "name",
+        "next",
+        "submit",
+        "submitted",
+        "respondAgain"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "questionLabel": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "next": {
+          "type": "string"
+        },
+        "submit": {
+          "type": "string"
+        },
+        "submitted": {
+          "type": "string"
+        },
+        "respondAgain": {
+          "type": "string"
+        }
+      }
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "browser",
+          "title",
+          "next",
+          "submit",
+          "submitted",
+          "responses",
+          "blueprint",
+          "run",
+          "flowDocument"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "browser": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string"
+          },
+          "submit": {
+            "type": "string"
+          },
+          "submitted": {
+            "type": "string"
+          },
+          "responses": {
+            "type": "string"
+          },
+          "blueprint": {
+            "type": "string"
+          },
+          "run": {
+            "type": "string"
+          },
+          "flowDocument": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "extension": {
+      "type": "object",
+      "required": [
+        "label",
+        "initial",
+        "changed",
+        "key"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "initial": {
+          "type": "number"
+        },
+        "changed": {
+          "type": "number"
+        },
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "flowFixture": {
+      "type": "string"
+    },
+    "flowKind": {
+      "type": "string"
+    }
+  }
+}

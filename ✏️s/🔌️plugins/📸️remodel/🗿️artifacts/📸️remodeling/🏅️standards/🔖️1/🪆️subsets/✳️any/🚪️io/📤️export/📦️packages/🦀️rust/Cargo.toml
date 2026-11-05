@@ -20,9 +20,9 @@ base64_codec = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-remodel-remodeling-io = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }

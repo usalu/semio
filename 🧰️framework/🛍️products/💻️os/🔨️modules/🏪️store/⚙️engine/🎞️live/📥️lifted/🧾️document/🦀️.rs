@@ -1,6 +1,6 @@
 //! 📥️ Items of `document_materialize` that belong to `os-store-engine-live` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧾️document/🦀️.rs`.
-use semio_framework_os_spr::MutationId;
-use semio_framework_os_spr::{Edit, Mutation};
+use semio_os_spr::MutationId;
+use semio_os_spr::{Edit, Mutation};
 /// 🪪️ For a SINGLE-op edit only, overrides its sole `mutation_meta[0].mutation_id` with the edit's
 /// own real `id` — preserving a SINGLE global edit-id domain across the wire for the dominant case
 /// (one atomic user action, one forward op). `replay_mutations` always pre-fills

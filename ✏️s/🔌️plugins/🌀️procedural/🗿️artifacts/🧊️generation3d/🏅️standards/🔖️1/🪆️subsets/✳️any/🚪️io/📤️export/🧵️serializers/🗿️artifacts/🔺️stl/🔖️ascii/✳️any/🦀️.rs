@@ -15,7 +15,7 @@
 //! preview that carries no face connectivity (a wire or point preview) is a typed error rather than
 //! invented geometry, and per-vertex normals collapse to one facet normal.
 use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
-use semio_framework_plugin::ArtifactSerializer;
+use semio_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_s_artifact_stdio_stl::StlSnapshot;

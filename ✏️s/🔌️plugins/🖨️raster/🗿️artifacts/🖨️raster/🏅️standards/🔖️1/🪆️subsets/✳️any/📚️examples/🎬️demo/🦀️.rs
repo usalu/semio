@@ -1,8 +1,8 @@
 //! 📚️ Example `demo`.
 
 use semio_s_artifact_raster_raster_model::RasterImageAsset;
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 pub fn label() -> LocalizedLabel {

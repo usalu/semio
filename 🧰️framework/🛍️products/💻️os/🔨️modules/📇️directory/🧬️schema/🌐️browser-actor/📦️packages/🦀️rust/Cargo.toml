@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-directory-browser-actor"
+name = "semio-os-directory-browser-actor"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

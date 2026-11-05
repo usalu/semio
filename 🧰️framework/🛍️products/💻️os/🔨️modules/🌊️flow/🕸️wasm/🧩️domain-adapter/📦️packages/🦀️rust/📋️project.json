@@ -1,5 +1,5 @@
 {
-  "name": "semio-framework-os-flow-wasm-domain",
+  "name": "semio-os-flow-wasm-domain",
   "projectType": "library",
   "tags": [
     "scope:framework",

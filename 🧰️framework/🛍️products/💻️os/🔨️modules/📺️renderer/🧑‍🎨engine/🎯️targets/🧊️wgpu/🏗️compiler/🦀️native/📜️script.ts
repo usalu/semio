@@ -18,7 +18,7 @@ export function nativeRendererDirectory(rustPackageRoot: string, profile: string
 export async function buildNativeRenderer(rustPackageRoot: string, profile: string, workspace: string, control: CompilerAdmissionControl,network:CargoDependencyNetworkV1,invocation:ScriptInvocation): Promise<void> {
   const mode = readBuildMode(profile), output = nativeRendererDirectory(rustPackageRoot, mode);
   if (process.env.SEMIO_BUILD_MODE !== undefined && readBuildMode(process.env.SEMIO_BUILD_MODE) !== mode) throw new Error("Native renderer mode contradicts its original environment");
-  await buildRepositoryCargoArtifacts(join(rustPackageRoot, "Cargo.toml"), ["-p", "semio-framework-os-renderer-wgpu", "--bin", "semio-wgpu-native", "--features", "native-bin", "--profile", buildModePolicy(mode).cargoProfile], workspace, {producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1, network,control, output, environment: buildModeEnvironment(mode) });
+  await buildRepositoryCargoArtifacts(join(rustPackageRoot, "Cargo.toml"), ["-p", "semio-renderer-wgpu", "--bin", "semio-wgpu-native", "--features", "native-bin", "--profile", buildModePolicy(mode).cargoProfile], workspace, {producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1, network,control, output, environment: buildModeEnvironment(mode) });
 }
 
 /** 🚀️ Selects the executable materialized by the native producer or a build cache restoration. */

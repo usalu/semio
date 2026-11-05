@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "answer",
+    "kinds",
+    "windowIds"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "repeat",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 4097,
+          "maximum": 65536
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "text",
+          "longText"
+        ]
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true
+    },
+    "windowIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true
+    }
+  }
+}

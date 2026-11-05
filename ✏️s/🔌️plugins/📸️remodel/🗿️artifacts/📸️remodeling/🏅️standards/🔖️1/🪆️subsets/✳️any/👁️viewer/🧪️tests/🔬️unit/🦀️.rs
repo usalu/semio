@@ -15,10 +15,10 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 #[semio_framework_async_macros::async_test]
 async fn render_renders_the_model_window_body_and_falls_back_by_name_otherwise() {
     let scene = default_remodeling_scene();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&scene, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let _rendered = <RemodelingViewer as ArtifactViewer>::render(model::BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let fallback = <RemodelingViewer as ArtifactViewer>::render("nonsense", &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let _rendered = <RemodelingViewer as ArtifactViewer>::render(model::BODY_KEY, &doc, &cfg, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let fallback = <RemodelingViewer as ArtifactViewer>::render("nonsense", &doc, &cfg, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     assert!(format!("{fallback:?}").contains("nonsense"));
 }

@@ -125,7 +125,7 @@ fn retire_one(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedClo
 }
 
 pub fn maintenance_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
-    semio_framework_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
+    semio_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
         let step = maintenance_step_turn(app_instance_id, cx, grant)?;
         Ok((step, terminal_is_empty(app_instance_id)))
     })
@@ -140,7 +140,7 @@ pub(super) fn merge_close_demand(total: &mut RetirementDemand, child: Retirement
 }
 
 pub fn close_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
-    semio_framework_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
+    semio_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
         let step = close_step_turn(app_instance_id, cx, grant)?;
         Ok((step, terminal_is_empty(app_instance_id)))
     })

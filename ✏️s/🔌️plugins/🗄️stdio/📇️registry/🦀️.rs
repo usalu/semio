@@ -1,8 +1,8 @@
 //! 📇 Validated assembly of caller-authored artifact contributions.
 
 use crate::{capability_ledger, native_codec_factory_receipts, schema_summary, ArtifactAssembly, ArtifactContribution, CapabilityLedger, NativeCodecFactory, NativeCodecFactoryReceipt};
-use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+use semio_plugin::io::FormatDescriptor;
+use semio_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
 use std::collections::{BTreeMap, BTreeSet};
 
 fn failure(message: impl Into<String>) -> PluginAssemblyError {

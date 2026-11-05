@@ -5,7 +5,7 @@
 //! flat grid, so this hop is `IoFidelity::Lossy`.
 
 use crate::{equation_snapshot_with_state, EquationGeometry, EquationGraph, EquationNode, EquationSnapshot};
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
@@ -17,7 +17,7 @@ pub struct CsvIntoEquation;
 impl Deserializer<EquationSnapshot> for CsvIntoEquation {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<EquationSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<EquationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(crate::standards::v1::subsets::any::io::invalid_payload("CsvIntoEquation", "expected a binary csv payload"));
         };

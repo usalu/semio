@@ -42,13 +42,13 @@ pub mod document_index;
 pub use document_index::DirectoryIndexedDocumentViewV1;
 pub use document_index::DocumentIndexEntryV1;
 
-pub use semio_framework_os_directory_browser_actor::DOCUMENT_BROWSER_ACTOR_INTERFACES;
-pub use semio_framework_os_directory_browser_actor::DOCUMENT_BROWSER_ACTOR_MAX_BYTES;
-pub use semio_framework_os_directory_browser_actor::DocumentBrowserActorByteLengthV1;
-pub use semio_framework_os_directory_browser_actor::DocumentBrowserActorErrorV1;
-pub use semio_framework_os_directory_browser_actor::DocumentBrowserActorSourceV1;
-pub use semio_framework_os_directory_browser_actor::DocumentExecutionTargetBrowserActorV1;
-pub use semio_framework_os_directory_browser_actor::DocumentOpenBrowserActorV1;
+pub use semio_os_directory_browser_actor::DOCUMENT_BROWSER_ACTOR_INTERFACES;
+pub use semio_os_directory_browser_actor::DOCUMENT_BROWSER_ACTOR_MAX_BYTES;
+pub use semio_os_directory_browser_actor::DocumentBrowserActorByteLengthV1;
+pub use semio_os_directory_browser_actor::DocumentBrowserActorErrorV1;
+pub use semio_os_directory_browser_actor::DocumentBrowserActorSourceV1;
+pub use semio_os_directory_browser_actor::DocumentExecutionTargetBrowserActorV1;
+pub use semio_os_directory_browser_actor::DocumentOpenBrowserActorV1;
 
 #[path = "📖️events-commands-and-admin/🦀️.rs"]
 mod events_commands_and_admin;

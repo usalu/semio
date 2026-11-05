@@ -1,12 +1,12 @@
-use semio_framework_os_kernel::*;
+use semio_os_kernel::*;
 use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef};
-extern crate semio_framework_os_kernel as dsl;
-pub use semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+pub use semio_os_kernel as store;
 #[path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧪️tests/🪆️binding/🦀️.rs"]
 mod native_binding;
-pub use semio_framework_os_kernel::{io_schema, os_dsl, sqlite_snapshot};
-pub use semio_framework_os_kernel::{io, os_pack};
-pub use semio_framework_os_kernel::os_pack::codec;
+pub use semio_os_kernel::{io_schema, os_dsl, sqlite_snapshot};
+pub use semio_os_kernel::{io, os_pack};
+pub use semio_os_kernel::os_pack::codec;
 
 /// 📥️ Reads a committed language-agnostic fixture at run time, by its path relative to the calling test file (`file!()`), so the test closure stays inside the source gate instead of embedding the fixtures with `include_str!`. The workspace root is the manifest ancestor that contains the `file!()` path.
 /// @see <https://doc.rust-lang.org/std/macro.include_str.html>

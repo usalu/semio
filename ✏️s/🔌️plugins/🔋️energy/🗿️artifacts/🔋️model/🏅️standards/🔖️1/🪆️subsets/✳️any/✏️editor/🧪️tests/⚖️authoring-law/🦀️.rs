@@ -1,5 +1,5 @@
 //! ⚖️ Real-store authoring: an energy config edit authors, applies, undoes and redoes through the energy editor's own config catalog and the runtime's canonical operation wire.
-use semio_framework_plugin::{authoring_law::{author_through_config_store, StoreAuthoringPhase}, EditorApp};
+use semio_plugin::{authoring_law::{author_through_config_store, StoreAuthoringPhase}, EditorApp};
 use semio_framework_value::ToValue;
 use semio_s_artifact_energy_model_editor_config::{ChangeResultField, EnergyModelConfig, EnergyModelConfigMutation};
 use semio_s_artifact_energy_model_editor::EnergyModelEditor;

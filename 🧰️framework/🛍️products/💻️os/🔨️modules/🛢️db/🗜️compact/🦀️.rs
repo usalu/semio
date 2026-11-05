@@ -26,7 +26,7 @@
 //! since a snapshot builder and a compactor may legitimately run concurrently for two different
 //! documents, but never for the SAME document at the same time).
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_ids::{ArtifactId, DbError, check_len};
 use db_durability::{DurabilityClass, EpochFence, Frontier};

@@ -16,8 +16,8 @@ pub struct SetBounds {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetBounds {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "bounds", kind: "set-bounds", record: "SetBounds" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set bounds", "Grenzen setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set bounds", "Grenzen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -16,8 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }

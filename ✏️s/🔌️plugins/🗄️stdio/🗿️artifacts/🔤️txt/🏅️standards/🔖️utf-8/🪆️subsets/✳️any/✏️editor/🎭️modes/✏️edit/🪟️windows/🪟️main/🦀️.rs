@@ -3,11 +3,11 @@
 //! document's own `line_ending` on render, and receive the ranges of the draft's change set on `textEdit`.
 
 use crate::TxtSnapshot;
-use semio_framework_plugin::app::{TextEditView, TextWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{TextEditView, TextWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
 /// trailing terminator when `trailing_newline` is set — the exact same join the artifact's own
 /// codec uses to re-serialize, so what's shown here IS what re-encoding would emit — as the kit's explicit draft from `revision`, published as the change set the editor made (`splices`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &TxtSnapshot, locale: Locale, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &TxtSnapshot, locale: Locale, revision: &str, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     TextWindowKit::render_editable_by_splices(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: document.to_body(), language: Some("text".into()), revision: Some(revision.into()), publication_revision }, locale)
 }
 //#endregion 🔖️Render

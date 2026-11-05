@@ -1,5 +1,5 @@
 /// 🧲️ Window docking: tabs into every corner and zone with preview and committed geometry, pointer and keyboard drags, cancellation, identity-owned controls and splitter capture.
-use semio_framework_ui_tui_core::{docking as dock, geometry as geo}; use semio_framework_ui_tui_frame::layout as tuilayout;
+use semio_ui_tui_core::{docking as dock, geometry as geo}; use semio_ui_tui_frame::layout as tuilayout;
 
 fn docking_vectors() -> serde_json::Value { serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧫️fixtures/🪟️windows/🔣️.json")).unwrap() }
 
@@ -18,14 +18,14 @@ fn tab_position(dashboard: &Dashboard, tui: &Tui, id: &str) -> Pos {
     let rect = tui.scene.rect(window.chrome);
     for y in rect.y..rect.y + rect.height {
       for x in rect.x..rect.x + rect.width {
-        if chrome.window_target(rect, Pos { x, y }) == Some(semio_framework_ui_tui_frame::chrome::WindowHit::Tab(index)) { return Pos { x, y }; }
+        if chrome.window_target(rect, Pos { x, y }) == Some(semio_ui_tui_frame::chrome::WindowHit::Tab(index)) { return Pos { x, y }; }
       }
     }
   }
   panic!("no visible tab for {id}")
 }
 
-fn docking_ghost(tui: &mut Tui, placement: dock::DockPlacement) -> (geo::Rect, semio_framework_ui_tui_core::cell::CellBuffer) {
+fn docking_ghost(tui: &mut Tui, placement: dock::DockPlacement) -> (geo::Rect, semio_ui_tui_core::cell::CellBuffer) {
   let (actual, rect) = tui.docking_preview().expect("destination tab preview");
   assert_eq!(actual, placement);
   assert!(rect.width > 0 && rect.height > 0);
@@ -33,8 +33,8 @@ fn docking_ghost(tui: &mut Tui, placement: dock::DockPlacement) -> (geo::Rect, s
   (rect, tui.frame().clone())
 }
 
-fn assert_committed_ghost(dashboard: &Dashboard, tui: &mut Tui, source: &str, ghost: &(geo::Rect, semio_framework_ui_tui_core::cell::CellBuffer)) {
-  use semio_framework_ui_tui_frame::chrome::WindowHit;
+fn assert_committed_ghost(dashboard: &Dashboard, tui: &mut Tui, source: &str, ghost: &(geo::Rect, semio_ui_tui_core::cell::CellBuffer)) {
+  use semio_ui_tui_frame::chrome::WindowHit;
   use geo::Rect;
   tui.render();
   let chrome = dashboard.windows.iter().find(|window| window.id == source).unwrap().chrome;
@@ -73,7 +73,7 @@ fn docking_window_handle_tooltips_follow_dashboard_language() {
 fn docking_tabs_reach_all_four_corners_with_preview_and_identity_owned_controls() {
   use tuilayout::{stack_hosting};
   use dock::{DockPlacement, WindowStackCorner};
-  use semio_framework_ui_tui_frame::chrome::WindowHit;
+  use semio_ui_tui_frame::chrome::WindowHit;
   let corners = [WindowStackCorner::TopLeft, WindowStackCorner::TopRight, WindowStackCorner::BottomLeft, WindowStackCorner::BottomRight];
   for corner in corners {
     let (mut dashboard, mut tui) = view();
@@ -206,7 +206,7 @@ fn keyboard_docking_places_tabs_in_all_corners_and_localizes_every_action() {
 
 #[test]
 fn docking_fullscreen_and_close_on_an_inactive_tab_target_its_identity() {
-  use semio_framework_ui_tui_frame::chrome::WindowHit;
+  use semio_ui_tui_frame::chrome::WindowHit;
   let (mut dashboard, mut tui) = view();
   dashboard.perform(&mut tui, Action::NewTask);
   dashboard.focus_window(&mut tui, 0);

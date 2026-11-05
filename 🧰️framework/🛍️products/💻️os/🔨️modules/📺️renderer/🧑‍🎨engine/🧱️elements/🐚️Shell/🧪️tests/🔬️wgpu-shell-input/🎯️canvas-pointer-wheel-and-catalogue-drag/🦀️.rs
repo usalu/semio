@@ -4,15 +4,15 @@
 /// captured gesture exactly one cancelled terminal action on Escape or a hitless release.
 #[test]
 fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
-    semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut InputState::default());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut InputState::default());
     let fixture = canvas_input_fixture();
     let surface = fixture["surface"]["id"].as_str().expect("surface id");
     let controller = fixture["surface"]["controllerId"].as_str().expect("controller id");
     let width = fixture["surface"]["width"].as_f64().expect("surface width") as f32;
     let height = fixture["surface"]["height"].as_f64().expect("surface height") as f32;
     let body = Rect::new(17.0, 31.0, width, height);
-    let scene = semio_framework_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
+    let scene = semio_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
     let mut shell = host_test_shell();
     let mut document = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas", &scene)]).expect("Canvas2d document publishes");
     let mut input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
@@ -23,8 +23,8 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
     let theme = Theme::default();
 
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &theme)).expect("Shell routes Canvas2d down");
-    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input);
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerUp"]);
     let down_args = canvas_action_args(&actions[0]);
     assert_json_number_eq(&down_args["x"], &down["x"], "pointer down x");
@@ -47,42 +47,42 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &theme)).expect("a fresh Canvas2d gesture arms");
     let outside = (body.x + body.w + 20.0, body.y + body.h + 20.0);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(outside.0, outside.1, false, 0, &mut input, &theme)).expect("captured outside release routes");
-    let outside_actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let outside_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(outside_actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerUp"]);
     assert_eq!(canvas_action_args(&outside_actions[1])["cancelled"], true);
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(outside.0, outside.1, false, 0, &mut input, &theme)).expect("duplicate release stays inert");
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "a retired gesture cannot emit a second terminal action");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "a retired gesture cannot emit a second terminal action");
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &theme)).expect("explicit cancellation gesture arms");
     PointerCtx::of(&mut shell).handle_pointer_cancel(&mut input);
     PointerCtx::of(&mut shell).handle_pointer_cancel(&mut input);
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerUp"]);
     assert_eq!(canvas_action_args(&actions[1])["cancelled"], true);
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     assert!(!input.pointer_down && !input.drag.active);
     while !document.close_step() {}
 }
 
 #[test]
 fn renderer_canvas_surface_routes_the_retained_pointer_sequence() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     renderer_canvas_pointer_sequence(false);
 }
 
 #[test]
 fn renderer_foreign_pointer_cancel_preserves_the_retained_canvas_sequence() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     renderer_canvas_pointer_sequence(true);
 }
 
 fn renderer_canvas_pointer_sequence(foreign_cancel: bool) {
-    semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut InputState::default());
+    semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut InputState::default());
     let fixture = canvas_input_fixture();
     let surface = fixture["surface"]["id"].as_str().unwrap();
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, fixture["surface"]["width"].as_f64().unwrap() as f32, fixture["surface"]["height"].as_f64().unwrap() as f32);
-    let scene = semio_framework_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
+    let scene = semio_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
     let mut shell = host_test_shell();
     let mut document = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas", &scene)]).unwrap();
     let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
@@ -90,15 +90,15 @@ fn renderer_canvas_pointer_sequence(foreign_cancel: bool) {
     let x = body.x + fixture["pointer"]["down"]["x"].as_f64().unwrap() as f32;
     let y = body.y + fixture["pointer"]["down"]["y"].as_f64().unwrap() as f32;
     semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), x, y, true, 0, PointerModifiers::default()));
-    let down = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
+    let down = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
     if foreign_cancel {
         interaction.handle_pointer_cancel(mouse_pointer(78));
     }
-    let after_foreign_cancel = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
+    let after_foreign_cancel = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
     semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), body.x + body.w + 20.0, body.y + body.h + 20.0, false, 0, PointerModifiers::default()));
-    let up = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
-    semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut interaction.input);
-    semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(ui_render::PointerId(77));
+    let up = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
+    semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut interaction.input);
+    semio_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(ui_render::PointerId(77));
     while !document.close_step() {}
     assert_eq!(down.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown"], "actual renderer dispatch reaches the retained Canvas2d owner");
     assert!(after_foreign_cancel.is_empty(), "another pointer must not finish the captured Canvas gesture");
@@ -108,8 +108,8 @@ fn renderer_canvas_pointer_sequence(foreign_cancel: bool) {
 
 #[test]
 fn renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_its_context_menu() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
-    semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut InputState::default());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut InputState::default());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let row = fixture["panCases"].as_array().unwrap().iter().find(|row| row["id"] == "right-button-gesture").unwrap();
     let surface = fixture["surface"]["id"].as_str().unwrap();
@@ -117,7 +117,7 @@ fn renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_it
     let body = Rect::new(17.0, 31.0, fixture["surface"]["width"].as_f64().unwrap() as f32, fixture["surface"]["height"].as_f64().unwrap() as f32);
     let initial = &fixture["wheel"]["initialCamera"];
     let layers = serde_json::json!([{ "role": "meta", "utility": row["activeUtility"] }]).to_string();
-    let scene = semio_framework_ui_scene_plane::Canvas2dScene::base(initial["x"].as_f64().unwrap(), initial["y"].as_f64().unwrap(), initial["zoom"].as_f64().unwrap(), layers);
+    let scene = semio_ui_scene_plane::Canvas2dScene::base(initial["x"].as_f64().unwrap(), initial["y"].as_f64().unwrap(), initial["zoom"].as_f64().unwrap(), layers);
     let mut shell = host_test_shell();
     let mut document = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas", &scene)]).unwrap();
     let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
@@ -128,11 +128,11 @@ fn renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_it
     semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), start.0, start.1, true, button, PointerModifiers::default()));
     semio_framework_async::block_on(interaction.handle_pointer_move(mouse_pointer(77), end.0, end.1, true, button, PointerModifiers::default()));
     semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), end.0, end.1, false, button, PointerModifiers::default()));
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
     let action_ids = actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>();
     let context_menu_open = interaction.shell.input.context_menu.is_some();
-    semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut interaction.input);
-    semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(ui_render::PointerId(77));
+    semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut interaction.input);
+    semio_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(ui_render::PointerId(77));
     while !document.close_step() {}
     assert_eq!(action_ids, row["expectedActions"].as_array().unwrap().iter().map(|action| action.as_str().unwrap()).collect::<Vec<_>>(), "the actual App/Shell route preserves the neutral Canvas2d secondary document gesture");
     assert!(context_menu_open, "the document gesture preserves Canvas2d's secondary-click context menu");
@@ -140,13 +140,13 @@ fn renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_it
 
 #[test]
 fn a_published_canvas_hit_cannot_retarget_a_same_key_successor() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "canvas-secondary-successor";
     let controller = "controller.canvas-secondary-successor";
     let body = Rect::new(17.0, 31.0, 100.0, 100.0);
     let point = (body.x + body.w * 0.5, body.y + body.h * 0.5);
     let mut shell = host_test_shell();
-    let initial_scene = semio_framework_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
+    let initial_scene = semio_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
     let mut initial = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &initial_scene)]).unwrap();
     let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &initial, body)]);
     let hit = input.hit_at(point.0, point.1).expect("the initial Canvas2d publication owns its body point").clone();
@@ -163,12 +163,12 @@ fn a_published_canvas_hit_cannot_retarget_a_same_key_successor() {
     );
     let mut removed = shell.windows.publish_surface_records(surface, vec![removed_record]).unwrap();
     let _removed_input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &removed, body)]);
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, point.0 - body.x, point.1 - body.y).is_none(), "the intermediate publication retires the mounted Canvas owner");
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, point.0 - body.x, point.1 - body.y).is_none(), "the intermediate publication retires the mounted Canvas owner");
 
-    let successor_scene = semio_framework_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 2.0, "[]".into());
+    let successor_scene = semio_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 2.0, "[]".into());
     let mut successor = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &successor_scene)]).unwrap();
     let _successor_input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &successor, body)]);
-    let successor_target = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, point.0 - body.x, point.1 - body.y).expect("the successor Canvas2d scene is live");
+    let successor_target = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, point.0 - body.x, point.1 - body.y).expect("the successor Canvas2d scene is live");
     assert_eq!(old_target.surface_id, successor_target.surface_id);
     assert_eq!(old_target.key, successor_target.key, "the regression keeps the exact same retained key");
     assert_ne!(old_target, successor_target, "the successor still has a distinct generation-qualified identity");
@@ -183,19 +183,19 @@ fn a_published_canvas_hit_cannot_retarget_a_same_key_successor() {
 
 #[test]
 fn renderer_canvas_wheel_burst_preserves_each_zoom_in_event() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     renderer_canvas_wheel_burst("two-zoom-in-events");
 }
 
 #[test]
 fn renderer_canvas_first_wheel_uses_the_authored_camera() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     renderer_canvas_wheel_burst("authored-camera");
 }
 
 #[test]
 fn renderer_canvas_opposite_wheel_events_preserve_the_react_camera() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     renderer_canvas_wheel_burst("zoom-in-then-out-events");
 }
 
@@ -210,7 +210,7 @@ fn renderer_canvas_wheel_burst(case_id: &str) {
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, fixture["surface"]["width"].as_f64().unwrap() as f32, fixture["surface"]["height"].as_f64().unwrap() as f32);
     let initial = &fixture["wheel"]["initialCamera"];
-    let scene = semio_framework_ui_scene_plane::Canvas2dScene::base(initial["x"].as_f64().unwrap(), initial["y"].as_f64().unwrap(), initial["zoom"].as_f64().unwrap(), "[]".into());
+    let scene = semio_ui_scene_plane::Canvas2dScene::base(initial["x"].as_f64().unwrap(), initial["y"].as_f64().unwrap(), initial["zoom"].as_f64().unwrap(), "[]".into());
     let mut shell = host_test_shell();
     let mut document = shell.windows.publish_surface_records(&surface, vec![canvas_pointer_record(1, "canvas", &scene)]).unwrap();
     let mut input = paint_component_pointer_documents(&mut shell, &[(&surface, controller, &document, body)]);
@@ -218,9 +218,9 @@ fn renderer_canvas_wheel_burst(case_id: &str) {
     let y = body.y + fixture["wheel"]["anchor"]["y"].as_f64().unwrap() as f32;
     let mut interaction = pointer_interaction(shell, input);
     for delta in case["deltas"].as_array().unwrap() {
-        semio_framework_async::block_on(semio_framework_os_renderer_wgpu_frame_actions::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::Scroll { x, y, delta_x: 0.0, delta_y: delta.as_f64().unwrap() as f32, modifiers: ui_render::EventModifiers::default() }));
+        semio_framework_async::block_on(semio_renderer_wgpu_frame_actions::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::Scroll { x, y, delta_x: 0.0, delta_y: delta.as_f64().unwrap() as f32, modifiers: ui_render::EventModifiers::default() }));
     }
-    let actions = semio_framework_os_renderer_wgpu_scene_state::sweep_expired_scene_camera_dispatches(semio_framework_os_renderer_wgpu_host_base::app_now_ms() + 400.0);
+    let actions = semio_renderer_wgpu_scene_state::sweep_expired_scene_camera_dispatches(semio_renderer_wgpu_host_base::app_now_ms() + 400.0);
     let actions: Vec<_> = actions.iter().filter(|action| action.controller_id == controller && canvas_action_args(action)["surfaceId"] == surface).collect();
     let expected_zoom = case["expectedFactors"].as_array().unwrap().iter().fold(initial["zoom"].as_f64().unwrap() as f32, |zoom, factor| (zoom * factor.as_f64().unwrap() as f32).clamp(0.05, 32.0));
     while !document.close_step() {}
@@ -238,7 +238,7 @@ fn renderer_canvas_wheel_burst(case_id: &str) {
 /// ingress, preserves the raw catalogue MIME payload, and retires both drag authorities once.
 #[test]
 fn retained_catalogue_item_drags_and_drops_into_a_published_canvas() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture = canvas_input_fixture();
     let catalogue = &fixture["catalogue"];
     let raw_payload = catalogue["rawPayload"].as_str().expect("raw catalogue payload");
@@ -247,7 +247,7 @@ fn retained_catalogue_item_drags_and_drops_into_a_published_canvas() {
     let controller = fixture["surface"]["controllerId"].as_str().expect("destination controller");
     let mut shell = host_test_shell();
     let mut source_document = published_canvas_catalogue_document(&mut shell, source_id, raw_payload);
-    let scene = semio_framework_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
+    let scene = semio_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
     let mut destination_document = shell.windows.publish_surface_records(destination_id, vec![canvas_pointer_record(1, "canvas", &scene)]).expect("Canvas2d destination publishes");
     let source_body = Rect::new(11.0, 17.0, 320.0, 200.0);
     let destination_body = Rect::new(411.0, 17.0, 100.0, 100.0);
@@ -260,7 +260,7 @@ fn retained_catalogue_item_drags_and_drops_into_a_published_canvas() {
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(source_point.0, source_point.1, true, 0, &mut input, &theme)).expect("catalogue source down routes");
     PointerCtx::of(&mut shell).handle_pointer_move(destination_point.0, destination_point.1, true, &mut input, &theme);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(destination_point.0, destination_point.1, false, 0, &mut input, &theme)).expect("Canvas2d drop routes");
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasDragOver", "canvasDragLeave", "canvasDrop"]);
     let over = canvas_action_args(&actions[0]);
     assert_json_number_eq(&over["x"], &point["x"], "drag over x");
@@ -276,19 +276,19 @@ fn retained_catalogue_item_drags_and_drops_into_a_published_canvas() {
     assert_json_number_eq(&drop["width"], &fixture["surface"]["width"], "drop width");
     assert_json_number_eq(&drop["height"], &fixture["surface"]["height"], "drop height");
     assert_eq!(drop["dragData"], raw_payload);
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions().is_empty());
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions().is_empty());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(destination_point.0, destination_point.1, false, 0, &mut input, &theme)).expect("duplicate drop release stays inert");
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "a retired retained drag cannot drop twice");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "a retired retained drag cannot drop twice");
 
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(source_point.0, source_point.1, true, 0, &mut input, &theme)).expect("a second catalogue source down routes");
     PointerCtx::of(&mut shell).handle_pointer_move(destination_point.0, destination_point.1, true, &mut input, &theme);
     PointerCtx::of(&mut shell).handle_pointer_move(destination_body.x + destination_body.w + 40.0, destination_body.y + destination_body.h + 40.0, true, &mut input, &theme);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(destination_body.x + destination_body.w + 40.0, destination_body.y + destination_body.h + 40.0, false, 0, &mut input, &theme)).expect("outside catalogue release cancels cleanly");
-    let cancelled = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let cancelled = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(cancelled.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasDragOver", "canvasDragLeave"]);
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions().is_empty());
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions().is_empty());
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     while !source_document.close_step() {}
     while !destination_document.close_step() {}
 }
@@ -297,7 +297,7 @@ fn retained_catalogue_item_drags_and_drops_into_a_published_canvas() {
 /// `canvasDoubleClick` at the shared fixture point, after both release phases.
 #[test]
 fn published_canvas_double_click_emits_once_at_surface_coordinates() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture = canvas_input_fixture();
     let surface = "canvas-double-click-surface";
     let controller = fixture["surface"]["controllerId"].as_str().expect("controller id");
@@ -305,7 +305,7 @@ fn published_canvas_double_click_emits_once_at_surface_coordinates() {
     let point = &fixture["doubleClick"];
     let x = body.x + point["x"].as_f64().expect("double click x") as f32;
     let y = body.y + point["y"].as_f64().expect("double click y") as f32;
-    let scene = semio_framework_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
+    let scene = semio_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
     let mut shell = host_test_shell();
     let mut document = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas", &scene)]).expect("Canvas2d document publishes");
     let mut input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
@@ -316,7 +316,7 @@ fn published_canvas_double_click_emits_once_at_surface_coordinates() {
         semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &theme)).expect("Canvas2d click down routes");
         semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, false, 0, &mut input, &theme)).expect("Canvas2d click up routes");
     }
-    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerUp", "canvasPointerDown", "canvasPointerUp", "canvasDoubleClick"]);
     let double_click = canvas_action_args(actions.last().expect("double click action"));
     assert_json_number_eq(&double_click["x"], &point["x"], "double click x");

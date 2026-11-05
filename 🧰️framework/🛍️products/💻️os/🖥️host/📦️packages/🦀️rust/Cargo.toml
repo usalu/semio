@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-os"
+name = "semio-os"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,21 +25,21 @@ semio-framework-pack-json = { path = "../../../../../🔨️modules/🎒️pack/
 semio-framework-async = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-space-space = { workspace = true }
 semio-framework-artifact-space-collection = { workspace = true }
-semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 semio-framework = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-os-host-codec-abi = { path = "../../📡️codec-abi/📦️packages/🦀️rust" }
-semio-framework-os-host-instance = { path = "../../🧱️instance/📦️packages/🦀️rust" }
-semio-framework-os-host-media-raster = { path = "../../🖼️media-export-raster/📦️packages/🦀️rust" }
-semio-framework-os-host-registry = { path = "../../🗂️registry/📦️packages/🦀️rust" }
-semio-framework-os-host-space = { path = "../../../🔨️modules/🪐️space/📦️packages/🦀️rust" }
-semio-framework-os-host-workflow = { path = "../../🔀️workflow/📦️packages/🦀️rust" }
-semio-framework-ui-declaration = { path = "../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-os-host-codec-abi = { path = "../../📡️codec-abi/📦️packages/🦀️rust" }
+semio-os-host-instance = { path = "../../🧱️instance/📦️packages/🦀️rust" }
+semio-os-host-media-raster = { path = "../../🖼️media-export-raster/📦️packages/🦀️rust" }
+semio-os-host-registry = { path = "../../🗂️registry/📦️packages/🦀️rust" }
+semio-os-host-space = { path = "../../../🔨️modules/🪐️space/📦️packages/🦀️rust" }
+semio-os-host-workflow = { path = "../../🔀️workflow/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 # 🚪️ `semio-framework-3d` dependency REMOVED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
 # wave IO1): the only references to it in this crate were `register_solid_exporter`/`register_solid_importer`
 # and their supporting registry (`//#region SolidMediaExport`, `🖥️host/🦀️.rs`), deleted this same
@@ -61,18 +61,18 @@ base64_codec = { path = "../../../../../🔨️modules/🚪️io/🔤️base64/�
 semio-framework-deflate = { path = "../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 # 🔄️ The space backbone's folder storage (`store_sync`) needs the kernel's sync transport off the WASI guest. A target table
 # instead of a feature keeps `sync` out of every `wasm32-wasip2` component, so all hub components share one kernel unit.
-semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync"] }
+semio-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1", features = ["sync"], default-features = false }
 # 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): this crate did not depend
 # on the plugin-host runtime AT ALL before this packet, which is exactly why "native smoke" (33/33
-# via `semio-framework-os-run`) exercised a code path the product does not use — `🎠️activation/🦀️.rs`'s
+# via `semio-os-run`) exercised a code path the product does not use — `🎠️activation/🦀️.rs`'s
 # own module doc explains the fix. Native-only: `NativeKernelRuntime` spawns real OS threads and is
 # never compiled for wasm32, where the JS host already owns plugin execution off this crate.
 semio-framework-actor = { workspace = true }
-semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+semio-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
 
 [dev-dependencies]
-semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing", "protocol-laws"] }
+semio-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing", "protocol-laws"] }
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

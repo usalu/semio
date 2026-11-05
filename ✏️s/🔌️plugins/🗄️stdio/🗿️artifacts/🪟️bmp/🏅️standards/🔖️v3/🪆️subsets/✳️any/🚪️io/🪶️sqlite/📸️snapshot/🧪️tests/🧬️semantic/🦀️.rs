@@ -2,7 +2,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_v3::subsets::any::io::sqlite::snapshot::*;
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteValue};
+use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteValue};
 fn fixture() -> BmpSnapshot {
     semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
@@ -19,10 +19,10 @@ fn sources() -> [(&'static str, &'static [u8]); 9] {
   ("direct-rgb24-top-down",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-top-down.bmp"))
  ]
 }
-fn project(snapshot: &BmpSnapshot) -> semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase {
+fn project(snapshot: &BmpSnapshot) -> semio_os_kernel::sqlite_snapshot::SqliteDatabase {
  snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,Default::default())).unwrap()
 }
-fn restore(database: &semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase) -> BmpSnapshot {
+fn restore(database: &semio_os_kernel::sqlite_snapshot::SqliteDatabase) -> BmpSnapshot {
  BmpSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_| true,Default::default())).unwrap()
 }
 #[test]

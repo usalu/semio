@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "trim-box", kind: "remove-trim-box", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} entfernen", self.page_index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} entfernen", self.page_index))
     }
 
     fn target(&self) -> Vec<String> {

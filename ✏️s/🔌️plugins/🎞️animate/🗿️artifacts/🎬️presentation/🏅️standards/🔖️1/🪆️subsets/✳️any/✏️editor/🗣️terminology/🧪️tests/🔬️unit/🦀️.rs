@@ -18,7 +18,7 @@ async fn animate_presentation_labels_resolve_native_by_default() {
 async fn animate_presentation_labels_translate_panels_in_german() {
     use crate::editor::animate::unit_tests::context::{presentation_app, render_with_view};
     use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_ARTIFACT};
-    let german = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
+    let german = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), semio_ui_locale::Terminology::Native) };
     let mut app = presentation_app().await;
     let catalogue_json = render_with_view(&mut app, PRESENTATION_PLAY_BODY_CATALOGUE, &german).await;
     assert!(catalogue_json.contains("Kachelvorlagen"));

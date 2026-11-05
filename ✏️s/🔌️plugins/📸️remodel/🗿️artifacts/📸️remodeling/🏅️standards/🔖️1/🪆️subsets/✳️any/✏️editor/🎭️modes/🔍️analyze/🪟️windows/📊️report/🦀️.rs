@@ -3,19 +3,19 @@
 
 use crate::editor::remodeling::modes::analyze::windows::report::config::RemodelingReportWindowConfig;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TableScene;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowEngagementSlot;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TableScene;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowEngagementSlot;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
 use semio_framework_pack_json::Value;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
 pub const REMODELING_PLAY_WINDOW_REPORT: &str = "remodeling-report";
@@ -134,7 +134,7 @@ fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String
 
 pub fn render(scene: &RemodelingSnapshot, config: &RemodelingReportWindowConfig) -> UiAssemblyResult<BuiltNode> {
     let (columns_json, rows_json) = report_table_json(scene, &config.report_table);
-    semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_REPORT, ContractSurfaceKind::Table, &TableScene::base(columns_json, rows_json))
+    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_REPORT, ContractSurfaceKind::Table, &TableScene::base(columns_json, rows_json))
 }
 //#endregion 🔖️Scene
 

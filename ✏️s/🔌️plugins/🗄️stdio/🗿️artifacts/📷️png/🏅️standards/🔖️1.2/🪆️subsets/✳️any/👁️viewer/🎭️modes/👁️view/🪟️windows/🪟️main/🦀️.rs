@@ -2,9 +2,9 @@
 
 use crate::standards::v1_2::subsets::any::io::png_preview;
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
-use semio_framework_plugin::app::{ImageView, ImageWindowKit};
-use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::{ImageView, ImageWindowKit};
+use semio_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
+use semio_ui_locale::Locale;
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
@@ -13,15 +13,15 @@ pub fn definition() -> WindowKindDefinition {
     ImageWindowKit::window_kind()
 }
 
-pub fn render(snapshot: &PngSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &PngSnapshot, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     match image_view(snapshot) {
         Ok(view) => ImageWindowKit::render(&view),
         Err(_) => ImageWindowKit::render_unavailable(locale),
     }
 }
 
-fn image_view(snapshot: &PngSnapshot) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
-    let preview = png_preview(snapshot).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.png.preview", message))?;
+fn image_view(snapshot: &PngSnapshot) -> semio_plugin::UiAssemblyResult<ImageView> {
+    let preview = png_preview(snapshot).map_err(|message| semio_plugin::PluginAssemblyError::new("stdio.png.preview", message))?;
     Ok(ImageView { width: preview.width, height: preview.height, mime: "image/png".into(), base64: crate::base64_standard(&preview.bytes) })
 }
 

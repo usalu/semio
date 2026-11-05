@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeImpactActionMass w
         record: "ChangedImpactActionMass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change mass m of the impact action", "Anpralleinwirkung: Masse m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change mass m of the impact action", "Anpralleinwirkung: Masse m ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

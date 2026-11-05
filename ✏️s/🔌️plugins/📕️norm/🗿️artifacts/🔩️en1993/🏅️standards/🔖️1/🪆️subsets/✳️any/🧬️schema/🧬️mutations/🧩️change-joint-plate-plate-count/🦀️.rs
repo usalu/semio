@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlatePlateCou
         record: "ChangedJointPlatePlateCount",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plates acting in parallel (1 or 2) of the joint plate", "Anschlussblech: Parallel wirkende Bleche (1 oder 2) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plates acting in parallel (1 or 2) of the joint plate", "Anschlussblech: Parallel wirkende Bleche (1 oder 2) ändern")
     }
 }
 

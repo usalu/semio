@@ -22,8 +22,8 @@ pub struct SetObject {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "object", kind: "set-object", record: "SetObject" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set object", "Objekt setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set object", "Objekt setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

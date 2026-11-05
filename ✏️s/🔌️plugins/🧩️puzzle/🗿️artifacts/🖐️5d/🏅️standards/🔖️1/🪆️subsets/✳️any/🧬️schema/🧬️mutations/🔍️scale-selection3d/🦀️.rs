@@ -30,10 +30,10 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (factors_en, factors_de) = puzzle5d_selection_triple(self.factors);
         let (en, de) = puzzle5d_selection_items(self.targets.len());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by {factors_en}"), &format!("{de} um {factors_de} skalieren"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Scale {en} by {factors_en}"), &format!("{de} um {factors_de} skalieren"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

@@ -17,8 +17,8 @@ pub struct ChangeBeamSteelWPlYM3 {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamSteelWPlYM3 where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_steel_w_pl_y_m3::ChangeBeamSteelWPlYM3> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-steel-w-pl-y-m3", kind: "change-beam-steel-w-pl-ym3", record: "ChangedBeamSteelWPlYM3" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change plastic section modulus W_pl,y", "Plastisches Widerstandsmoment W_pl,y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change plastic section modulus W_pl,y", "Plastisches Widerstandsmoment W_pl,y ändern")
     }
 }
 

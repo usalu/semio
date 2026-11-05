@@ -4,9 +4,9 @@
 use std::sync::atomic::Ordering;
 use semio_framework_async::CancelToken;
 use semio_framework_async::OperationContext;
-use semio_framework_os_kernel::os_directory::ArtifactFrontier;
-use semio_framework_os_kernel::os_directory::ArtifactHash;
-use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::ArtifactFrontier;
+use semio_os_kernel::os_directory::ArtifactHash;
+use semio_os_kernel::os_directory::DocumentScope;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use crate::binding_errors::HubBindingError;
@@ -63,20 +63,20 @@ pub trait CanonicalPairTransport: Send + Sync {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct NativeCanonicalPairTransport<R: semio_framework_async::HostAsyncRuntime> {
-    pub transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>,
-    pub credential: std::sync::Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>,
+    pub transport: semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>,
+    pub credential: std::sync::Arc<semio_os_kernel::os_directory::client::LocalHubCredential>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R: semio_framework_async::HostAsyncRuntime> NativeCanonicalPairTransport<R> {
-    pub fn new(transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>, credential: std::sync::Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>) -> Self {
+    pub fn new(transport: semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>, credential: std::sync::Arc<semio_os_kernel::os_directory::client::LocalHubCredential>) -> Self {
         Self { transport, credential }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct NativeCanonicalPairBody {
-    pub body: semio_framework_os_services::HttpPoolBody,
+    pub body: semio_os_services::HttpPoolBody,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -88,9 +88,9 @@ impl CanonicalPairBody for NativeCanonicalPairBody {
         let Some(mut chunk) = self.body.next_chunk().await.map_err(|error| {
             if context.cancel.is_cancelled_now() {
                 CanonicalPairMountError::Cancelled
-            } else if matches!(error, semio_framework_os_services::HttpPoolError::Compute(semio_framework_os_services::ComputeError::DeadlineExceeded)) {
+            } else if matches!(error, semio_os_services::HttpPoolError::Compute(semio_os_services::ComputeError::DeadlineExceeded)) {
                 CanonicalPairMountError::DeadlineExceeded
-            } else if matches!(error, semio_framework_os_services::HttpPoolError::ByteBudgetExhausted { .. }) {
+            } else if matches!(error, semio_os_services::HttpPoolError::ByteBudgetExhausted { .. }) {
                 CanonicalPairMountError::BudgetExhausted
             } else {
                 CanonicalPairMountError::Unavailable
@@ -120,10 +120,10 @@ impl<R: semio_framework_async::HostAsyncRuntime + 'static> CanonicalPairTranspor
         }
         let url = format!("{}{}", request.hub_origin, request.path);
         let (head, body) = self.transport.fetch_protected_stream(context, self.credential.as_ref(), &url, request.accept).await.map_err(|error| match error {
-            semio_framework_os_kernel::os_directory::client::TransportError::Cancelled => CanonicalPairMountError::Cancelled,
-            semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded => CanonicalPairMountError::DeadlineExceeded,
-            semio_framework_os_kernel::os_directory::client::TransportError::BudgetExhausted => CanonicalPairMountError::BudgetExhausted,
-            semio_framework_os_kernel::os_directory::client::TransportError::Io(_) => CanonicalPairMountError::Unavailable,
+            semio_os_kernel::os_directory::client::TransportError::Cancelled => CanonicalPairMountError::Cancelled,
+            semio_os_kernel::os_directory::client::TransportError::DeadlineExceeded => CanonicalPairMountError::DeadlineExceeded,
+            semio_os_kernel::os_directory::client::TransportError::BudgetExhausted => CanonicalPairMountError::BudgetExhausted,
+            semio_os_kernel::os_directory::client::TransportError::Io(_) => CanonicalPairMountError::Unavailable,
         })?;
         let (content_type, etag, content_length) = if head.status == 200 {
             let content_type = exact_header(&head.headers, "content-type")?;

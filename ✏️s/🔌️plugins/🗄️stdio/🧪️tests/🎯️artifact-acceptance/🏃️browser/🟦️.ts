@@ -351,7 +351,7 @@ export async function runJourney(options: Readonly<{ baseUrl: string; tag: strin
   mkdirSync(outDir, { recursive: true });
   const report: JourneyReport = { entry:options.entry, baseUrl: options.baseUrl, tag: options.tag, locale: options.locale, started: new Date().toISOString(), rows: [] };
   const flush = (): void => writeFileSync(join(outDir, "journey.json"), JSON.stringify(report, null, 1));
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const scratch = resolve(outDir, "browser-tmp");
   mkdirSync(scratch, { recursive: true });

@@ -9,41 +9,39 @@ use crate::schema::empty_forms_snapshot;
 use crate::viewer::forms::modes::view;
 use crate::viewer::forms::modes::view::windows::try_wizard;
 use crate::{FormsSnapshot, FORMS_DIALECT, FORMS_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling editor surface's root `🦀️.rs`).
-use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_plugin::app::{Dialect, InteractionView};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
-/// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
-/// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*`
-/// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
-pub enum FormsViewCommand {
-    #[default]
-    Noop,
+pub const FORMS_VIEW_APP_ID: &str = "s.forms.forms@1/*#viewer";
+#[path = "🎮️commands/🧩️set-contributions/🦀️.rs"]
+mod set_contributions;
+#[path = "🧵️retained-commands/🦀️.rs"]
+mod retained_commands;
+
+semio_plugin::view_commands! {
+    /// 👁️ The host projection changes configuration while the document remains read-only.
+    pub enum FormsViewCommand for FormsSnapshot, FormsConfig, FormsConfigMutation {
+        "setContributions" as "set-contributions" => set_contributions::SetContributions,
+    }
 }
 
-impl protocol::OpBinary for FormsViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(Vec::new())
-    }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(FormsViewCommand::Noop)
-    }
+impl Default for FormsViewCommand {
+    fn default() -> Self { Self::SetContributions(set_contributions::SetContributions { json: "[]".into() }) }
 }
 //#endregion 🔖️Command
 
@@ -55,8 +53,8 @@ impl ArtifactViewer for FormsViewer {
     type Snapshot = FormsSnapshot;
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Mutation = FormMutation;
-    type Config = NoConfig;
-    type ConfigMutation = NoConfigMutation;
+    type Config = FormsConfig;
+    type ConfigMutation = FormsConfigMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
     type Transient = NoTransient;
@@ -77,56 +75,71 @@ impl ArtifactViewer for FormsViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<FormsSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<FormsSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(empty_forms_snapshot())
     })}
 
-    /// 👁️ Structurally read-only: the sole `FormsViewCommand::Noop` variant never carries a config
-    /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
-    /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action is a
-    /// pure addition here, never a signature change.
-    fn handle(
-        _command: &Self::Command,
-        _doc: &ArtifactView<'_, Self::Snapshot>,
-        _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
-        _engines: &EngineHandles,
-    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
-        Ok(ViewEmit::default())
+    fn config_schema() -> &'static str { "forms.config" }
+
+    fn command_id(command: &Self::Command) -> &'static str { command.command_id() }
+
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        if action != "setContributions" { return Err(Fault::from("Forms viewer action is not declared")); }
+        let payload = <set_contributions::SetContributions as semio_framework_value::FromValue>::from_value(args.take().ok_or_else(|| Fault::from("Forms viewer contribution arguments are absent"))?).map_err(|error| Fault::from(error.to_string()))?;
+        Ok(FormsViewCommand::SetContributions(payload))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::ViewerApp<Self>>) -> Result<(), Fault> {
+        registry.register(retained_commands::FormsViewContributionFactory::new(registry.controller_id()))
+    }
+
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        retained_commands::build(request, output, cx)
+    }
+
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+        retained_commands::proofs()
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn handle(
+        command: &Self::Command,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+        command.dispatch(doc, cfg)
+    }
+
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            try_wizard::BODY_KEY => Ok(semio_framework_plugin::built_to_component_tree(try_wizard::render(doc.snapshot)?)),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            try_wizard::BODY_KEY => Ok(semio_plugin::built_to_component_tree(try_wizard::render(doc.snapshot, &semio_framework::parse_contributions(&cfg.snapshot.contributions_json), view_state)?)),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_forms_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(FORMS_DIALECT).document(["semio", "forms"]).icon_id("forms").mode_def(view::definition()).default_mode_id(view::FORMS_VIEW_MODE_VIEW).window_kind_def(try_wizard::definition()).default_layout(view::layout()).build_definition()
+pub fn create_forms_viewer() -> semio_plugin::AppDefinition {
+    Viewer::builder(FORMS_DIALECT)
+        .command(semio_plugin::CommandDefinition { in_palette: false, ..semio_plugin::CommandDefinition::bounded_catalog("setContributions", semio_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", semio_plugin::ActionKind::View).with_args([semio_plugin::ActionArgDef::text("json", semio_ui_locale::LocalizedLabel::native("Contributions", "Beiträge"))]) })
+        .action_interactive_job("setContributions", semio_plugin::InteractiveJobClassification::Migrated)
+        .config(FormsViewer::config_spec()).document(["semio", "forms"]).icon_id("forms").mode_def(view::definition()).default_mode_id(view::FORMS_VIEW_MODE_VIEW).window_kind_def(try_wizard::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod unit_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️integration/🦀️.rs"]
+mod integration_tests;
 //#endregion 🧪️Tests
-
-//#region 🧩️ArtifactItems5
-pub mod artifact_items_5 {
-pub use crate::schema::snapshot::FormsSnapshot;
-
-//#region 🧬️ChildRestoreProjection
-/// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields — the ONE
-/// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
-/// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
-/// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn forms_child_restore_projection(snapshot: &FormsSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("forms.child-projection"), error.to_string()))
-}
-//#endregion 🧬️ChildRestoreProjection
-}
-//#endregion 🧩️ArtifactItems5

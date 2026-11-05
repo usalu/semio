@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindBridgeAssumedF
         record: "ChangedWindBridgeAssumedForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed horizontal wind force F_W per metre of the bridge wind case", "Brückenwindfall: Angenommene horizontale Windkraft F_W je Meter ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed horizontal wind force F_W per metre of the bridge wind case", "Brückenwindfall: Angenommene horizontale Windkraft F_W je Meter ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

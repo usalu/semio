@@ -5,7 +5,7 @@
 async fn terminal_capacity_plus_one_parks_then_rearms_once_at_the_fifo_tail() {
     let (transport, probe) = LoopbackTransport::paired().await;
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     for epoch in 1..=SHARD_DEFERRED_ITEMS as u64 {
         let raw = vec![0xff, (epoch >> 8) as u8, epoch as u8];
         probe.push_inbound(raw).await;
@@ -37,7 +37,7 @@ async fn permanently_over_capacity_frame_uses_the_same_bounded_overflow_handoff(
     let actor = ActorId(54);
     let (transport, probe) = LoopbackTransport::paired().await;
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     for index in 0..SHARD_DEFERRED_ITEMS {
         let raw = vec![0xfd, index as u8];
         shard.terminal_frames.try_push(raw.clone(), raw.len()).expect("fill terminal ring exactly");
@@ -74,7 +74,7 @@ async fn transient_frame_rejection_keeps_its_original_epoch_until_admission() {
     let mut bytes = Vec::new();
     ShardFrame::Register { actor }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default()),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default()),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.rejected_frame = Some((9, bytes));
 
     match shard.drive_one().await {

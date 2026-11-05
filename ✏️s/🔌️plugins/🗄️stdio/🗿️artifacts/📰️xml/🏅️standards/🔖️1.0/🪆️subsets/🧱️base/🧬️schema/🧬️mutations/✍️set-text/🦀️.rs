@@ -18,8 +18,8 @@ pub type SetTextPayload = SetTextMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Text", "Text setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Text", "Text setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-text".to_string()]

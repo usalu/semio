@@ -129,7 +129,7 @@ fn window_chrome_hides_both_tabs_when_too_narrow_for_even_the_title() {
     let rect = Rect::new(0, 0, 4, 5);
     let mut buf = CellBuffer::new(Size { width: 4, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     let w = WindowState::new("X");
-    assert_eq!(window_chip_layout(&w, rect).mode, semio_framework_ui_tui_frame::chrome::ChromeMode::Flat);
+    assert_eq!(window_chip_layout(&w, rect).mode, semio_ui_tui_frame::chrome::ChromeMode::Flat);
     let window = ChromeState::Window(Box::new(w));
     window.paint(&theme, rect, &mut buf);
     assert_eq!(row_text(&buf, 0), "┌──┐");
@@ -161,7 +161,7 @@ fn window_hit_resolves_tab_activation_and_new_tab_signals() {
     w.new_tab = true;
     let layout = window_chip_layout(&w, rect);
     let window = ChromeState::Window(Box::new(w));
-    let group = layout.groups.iter().find(|g| g.corner == semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft).expect("top-left group");
+    let group = layout.groups.iter().find(|g| g.corner == semio_ui_tui_core::docking::WindowStackCorner::TopLeft).expect("top-left group");
     let tab0 = group.tabs.first().expect("first tab geometry");
     let tab1 = group.tabs.get(1).expect("second tab geometry");
     assert_eq!(window.window_hit(rect, Pos { x: tab0.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(0)));
@@ -170,14 +170,14 @@ fn window_hit_resolves_tab_activation_and_new_tab_signals() {
     let close1 = tab1.close_x.expect("second tab close geometry");
     assert_eq!(window.window_hit(rect, Pos { x: close0, y: rect.y + 1 }), Some(WidgetSignal::WindowClose(0)), "an inactive chip closes itself");
     assert_eq!(window.window_hit(rect, Pos { x: close1, y: rect.y + 1 }), Some(WidgetSignal::WindowClose(1)));
-    let controls = layout.groups.iter().flat_map(|g| g.tabs.iter()).find(|tab| tab.kind == semio_framework_ui_tui_frame::chrome::TabKind::Controls).expect("controls chip");
+    let controls = layout.groups.iter().flat_map(|g| g.tabs.iter()).find(|tab| tab.kind == semio_ui_tui_frame::chrome::TabKind::Controls).expect("controls chip");
     let new_x = controls.new_x.expect("new-tab glyph geometry");
     assert_eq!(window.window_hit(rect, Pos { x: new_x, y: rect.y + 1 }), Some(WidgetSignal::WindowNewTab(1)));
 }
 
 #[test]
 fn shell_window_wizard_body_paints_options_after_remount() {
-    let mut tui = semio_framework_ui_tui_engine::Tui::new(Size { width: 60, height: 16 }, Theme::new(AppearanceName::Dark));
+    let mut tui = semio_ui_tui_engine::Tui::new(Size { width: 60, height: 16 }, Theme::new(AppearanceName::Dark));
     let navbar = NavbarState { left: vec![], center: vec![], right: vec![] };
     let footer = FooterState { hints: vec![], status: String::new() };
     let layout = create_default_layout(&["w1".into()], "row", None, Some(&["wizard".into()]));
@@ -236,13 +236,13 @@ fn wizard_keys_filter_navigate_back_and_activate() {
     let mut empty = WidgetState::Wizard(WizardState::new(vec!["only".into()]));
     let backspace = KeyEvent { key: Key::Backspace, mods: 0 };
     assert_eq!(empty.on_key(&backspace), None, "Backspace on an empty filter never leaves the wizard, so a held key cannot walk out");
-    let alt_backspace = KeyEvent { key: Key::Backspace, mods: semio_framework_ui_tui_core::event::mods::ALT };
+    let alt_backspace = KeyEvent { key: Key::Backspace, mods: semio_ui_tui_core::event::mods::ALT };
     assert_eq!(empty.on_key(&alt_backspace), Some(WidgetSignal::NavigateBack));
 }
 
 #[test]
 fn tui_dispatch_emits_window_close_signal_on_click() {
-    let mut tui = semio_framework_ui_tui_engine::Tui::new(Size { width: 40, height: 40 }, Theme::new(AppearanceName::Dark));
+    let mut tui = semio_ui_tui_engine::Tui::new(Size { width: 40, height: 40 }, Theme::new(AppearanceName::Dark));
     let navbar = NavbarState { left: vec![], center: vec![], right: vec![] };
     let footer = FooterState { hints: vec![], status: String::new() };
     let layout = even_window_layout(&["plugins".to_string()]);

@@ -3,7 +3,7 @@
 //! playground (no identity, no space, no data dir) hands the relay, and the one execution-target
 //! lease a hub document of a codec-less kind may bind.
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::host_test_shell;
+use semio_renderer_wgpu_fixtures::shell::host_test_shell;
 use super::*;
 
 fn hub() -> PersistenceBinding {
@@ -66,8 +66,8 @@ fn this_build_declares_the_transports_its_document_actor_serves() {
     assert_eq!(SHELL_DOCUMENT_TRANSPORTS, BROWSER);
 }
 
-fn note_lease() -> semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 {
-    use semio_framework_os_kernel::os_directory as directory;
+fn note_lease() -> semio_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 {
+    use semio_os_kernel::os_directory as directory;
     directory::DocumentExecutionTargetLeaseFieldsV1 {
         schema: "semio.os.document-execution-target-lease/v1".into(),
         version: 1,
@@ -81,13 +81,13 @@ fn note_lease() -> semio_framework_os_kernel::os_directory::DocumentExecutionTar
             component_sha256: "33".repeat(32),
             component_blake3: "44".repeat(32),
             descriptor_byte_sha256: "55".repeat(32),
-            execution_protocol: directory::DocumentExecutionProtocolV1 { app_channel_version: semio_framework_os_kernel::os_spr::CHANNEL_VERSION },
-            component_receipt: semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1 {
-                schema: semio_framework_os_kernel::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+            execution_protocol: directory::DocumentExecutionProtocolV1 { app_channel_version: semio_os_kernel::os_spr::CHANNEL_VERSION },
+            component_receipt: semio_os_kernel::os_component_receipt::ComponentReceiptV1 {
+                schema: semio_os_kernel::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                 plugin_id: "note".into(),
                 package_id: "semio:note".into(),
-                profile: semio_framework_os_kernel::os_component_receipt::ComponentProfileV1::Release,
-                target: semio_framework_os_kernel::os_component_receipt::COMPONENT_TARGET.into(),
+                profile: semio_os_kernel::os_component_receipt::ComponentProfileV1::Release,
+                target: semio_os_kernel::os_component_receipt::COMPONENT_TARGET.into(),
                 wasm_sha256: "33".repeat(32),
                 wasm_bytes: 1024,
                 semantic_descriptor_sha256: "55".repeat(32),
@@ -155,7 +155,7 @@ fn a_remote_backbone_uri_names_host_space_and_document() {
 #[test]
 fn the_hub_workspace_overlay_is_never_the_active_plugin_window() {
     let shell = host_test_shell();
-    assert!(SessionCtx::of(&mut shell).retained_surface_is_panel(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID));
+    assert!(SessionCtx::of(&mut shell).retained_surface_is_panel(semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID));
     let plugin_window = shell.docs.session.as_ref().expect("host test shell has a session").app.window_kinds.first().id.clone();
     assert!(!SessionCtx::of(&mut shell).retained_surface_is_panel(&plugin_window), "a plugin window stays a window");
 }
@@ -165,7 +165,7 @@ fn the_hub_workspace_overlay_is_never_the_active_plugin_window() {
 /// could pick Remote and never see where to type the hub document).
 #[test]
 fn every_sync_card_verb_republishes_the_sync_panel() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(FRAMEWORK_SYNC_PANEL_TAB_ID).expect("sync panel publication").expect("the sync panel owns a retained document");
     shell.docs.panel_documents.insert(FRAMEWORK_SYNC_PANEL_TAB_ID.into(), initial);
     for (action, args) in [("selectRemote", None), ("setSyncDraft", Some(serde_json::json!({ "value": "127.0.0.1:7800/space-1/doc-a" })))] {
@@ -205,7 +205,7 @@ fn a_short_link_is_spoken_and_a_terminal_link_ends_until_the_next_open() {
     assert_eq!(shell_sync_link_terminal("link-expired"), Some(DocumentLinkStatus::LinkExpired));
     assert_eq!(shell_sync_link_terminal("access-revoked"), Some(DocumentLinkStatus::AccessRevoked));
     assert_eq!(shell_sync_link_terminal("artifactBootstrap"), None);
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let quiet = serde_json::to_string(&shell.sync.build_sync_attach_ui(&shell.prefs)).expect("sync ui json");
     assert!(!quiet.contains("framework.sync.link."), "a linked document speaks no link line");
     for (status, locale) in [(DocumentLinkStatus::Reconnecting, "en"), (DocumentLinkStatus::LinkExpired, "de"), (DocumentLinkStatus::AccessRevoked, "en")] {
@@ -234,7 +234,7 @@ fn a_presence_heartbeat_names_the_signed_in_person() {
 /// door and agent bridge ride the same pump. Pinned on the source because the gate lives in wasm32-only control flow.
 #[test]
 fn the_sync_pump_cadence_is_not_gated_off_the_browser_build() {
-    let renderer = semio_framework_os_renderer_wgpu_test_support::renderer_source();
+    let renderer = semio_renderer_wgpu_test_support::renderer_source();
     let deferred = renderer.split("FrameFinishPhase::Deferred => {").nth(1).expect("the deferred finish phase exists");
     let deferred = &deferred[..deferred.find("FrameFinishPhase::IconRaster => {").expect("the phase ends before the icon raster")];
     assert!(deferred.contains("cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= SHELL_SYNC_PUMP_INTERVAL_MS;"), "the pump is owed on a fixed cadence");
@@ -247,7 +247,7 @@ fn the_sync_pump_cadence_is_not_gated_off_the_browser_build() {
 /// (React's `#s-presence-peers` is a labelled status).
 #[test]
 fn the_footer_speaks_its_live_sync_pill_and_names_its_status_chips() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let pill = shell_sync_pill_text(shell.sync.sync_pill(), false);
     shell.dock.dock_tabs.tabs_mut(PanelAnchor::BottomLeft).push(DockTabNode::leaf(FRAMEWORK_SYNC_PANEL_TAB_ID, pill, "refresh-cw", 0));
     let detached = shell.dock.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
@@ -260,7 +260,7 @@ fn the_footer_speaks_its_live_sync_pill_and_names_its_status_chips() {
     let roster = nodes.iter().find(|node| node.key == "s-presence-peers").expect("the roster chip is a named node");
     assert_eq!(roster.role, "status");
     assert!(!roster.focusable && !roster.actionable, "a status is read, never a tab stop");
-    assert_eq!(roster.label.as_deref(), Some(semio_framework_ui_wgpu_light::presence_bar::presence_empty_label(Locale::En).as_str()));
+    assert_eq!(roster.label.as_deref(), Some(semio_ui_wgpu_light::presence_bar::presence_empty_label(Locale::En).as_str()));
 }
 
 #[test]

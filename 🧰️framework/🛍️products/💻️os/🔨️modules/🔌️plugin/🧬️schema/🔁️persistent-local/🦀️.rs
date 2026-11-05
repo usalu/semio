@@ -87,7 +87,7 @@ pub mod owned_abi {
     }
 
     /// 🌉️ Hand-written, not derived — `events`/`command_page`/`budget` are foreign kernel types
-    /// (`semio_framework::kernel::*`, owned by the `semio-framework`/`semio-framework-os-kernel`
+    /// (`semio_framework::kernel::*`, owned by the `semio-framework`/`semio-os-kernel`
     /// crates), so neither `#[derive(ToValue, FromValue)]` nor a direct `impl … for
     /// semio_framework::kernel::Event` is legal here (orphan rule: neither the trait nor the type
     /// is local to this crate). Bridges through the already-derived `Serialize`/`Deserialize` via

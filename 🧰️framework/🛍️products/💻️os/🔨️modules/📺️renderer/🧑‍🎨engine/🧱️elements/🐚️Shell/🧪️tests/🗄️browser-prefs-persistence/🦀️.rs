@@ -16,7 +16,7 @@ use super::*;
 
 /// 🌳️ `…/🧑‍🎨engine`, the root every source-reading law resolves against.
 fn engine_root() -> std::path::PathBuf {
-    semio_framework_os_renderer_wgpu_test_support::engine_root()
+    semio_renderer_wgpu_test_support::engine_root()
 }
 
 /// 🌳️ The workspace root — React's own key constants live outside this product.
@@ -344,7 +344,7 @@ fn native_config_uses_the_document_lane_and_flat_fields_keep_the_fixed_page_lane
     let write = &write[..write.find("fn raw_prefs_get").expect("raw preference route follows")];
     assert!(write.contains("key == OS_SHELL_CONFIG_STORAGE_KEY") && write.contains("NATIVE_PREF_DOCUMENTS"));
     assert!(write.contains("storage_worker_write_fixed_file_page") && write.contains("SHELL_CHROME_IO_FIELD_BYTES"));
-    assert!(shell.contains("Mutex<semio_framework_os_services::RetainedFixedFileDocuments>"));
+    assert!(shell.contains("Mutex<semio_os_services::RetainedFixedFileDocuments>"));
     assert!(shell.contains("const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;"));
     assert!(shell.contains("const SHELL_CHROME_IO_FIELD_BYTES: usize = 4 * 1024;"));
 }

@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "signature-field", kind: "remove-signature-field", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" entfernen", self.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" entfernen", self.name))
     }
 
     fn target(&self) -> Vec<String> {

@@ -61,25 +61,25 @@ path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packag
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os]
+[workspace.dependencies.semio-os]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-infinite]
+[workspace.dependencies.semio-os-infinite]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-schema]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-scene]
+[workspace.dependencies.semio-ui-scene]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-derive]

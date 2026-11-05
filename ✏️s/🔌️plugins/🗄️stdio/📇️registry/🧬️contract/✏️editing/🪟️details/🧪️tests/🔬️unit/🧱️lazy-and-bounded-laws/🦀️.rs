@@ -50,8 +50,8 @@ fn details_definition_owns_all_snapshot_actions_in_both_languages() {
     assert_eq!(definition.id, SNAPSHOT_DETAILS_WINDOW_KIND_ID);
     assert_eq!(definition.body_key, SNAPSHOT_DETAILS_BODY_KEY);
     assert_eq!(definition.actions.len(), SNAPSHOT_EDIT_ACTION_IDS.len());
-    assert_ne!(definition.label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::En), "");
-    assert_ne!(definition.label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::De), "");
+    assert_ne!(definition.label.resolve(semio_ui_locale::Terminology::Native, Locale::En), "");
+    assert_ne!(definition.label.resolve(semio_ui_locale::Terminology::Native, Locale::De), "");
 }
 
 struct NativeLazySnapshot;
@@ -109,7 +109,7 @@ fn native_details_use_shape_key_and_scalar_projections_without_materializing_the
 #[test]
 fn lazy_collection_renders_a_bounded_page_without_materializing_every_pixel() {
     let provider = LazyPixels { count: 16_000_000 };
-    let result = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "s.stdio.png@test/*#editor", &TreeWindows::unhosted());
+    let result = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "s.stdio.png@test/*#editor", &TreeWindows::unhosted());
     assert!(result.is_ok());
 }
 
@@ -147,7 +147,7 @@ fn lazy_large_object_controls_do_not_scan_unpaged_keys() {
         }
     }
     let provider = LazyObject { key_reads: Cell::new(0) };
-    render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.lazy-object#editor", &TreeWindows::unhosted()).expect("bounded large object");
+    render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.lazy-object#editor", &TreeWindows::unhosted()).expect("bounded large object");
     assert!(provider.key_reads.get() < 1_024, "visible paging must bound key reads, got {}", provider.key_reads.get());
 }
 
@@ -188,7 +188,7 @@ fn an_exact_chunk_budget_parent_omits_unbindable_derived_insert_controls_without
     assert!(path_is_bindable(&path));
     assert!(!path_is_bindable(&format!("{path}/new")));
     let provider = BoundaryPath { key };
-    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.boundary-path#editor", &TreeWindows::unhosted()).expect("derived path is safely omitted");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.boundary-path#editor", &TreeWindows::unhosted()).expect("derived path is safely omitted");
     let id = path_id(&[SnapshotDetailPathSegment::Key(provider.key.clone())]);
     assert!(!contains_key(&rendered, &format!("{id}-add-0")));
     assert!(contains_key(&rendered, SOURCE_ID));

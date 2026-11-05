@@ -9,7 +9,7 @@
 //! `MergePolicyConfigMutation` vocabulary.
 //!
 //! **Why the case sits here.** The generated test host resolves its subject crate by walking UP from the
-//! case owner to `🖥️host/📦️packages/🦀️rust`; the subject links the owning crate `semio-framework-os-config`
+//! case owner to `🖥️host/📦️packages/🦀️rust`; the subject links the owning crate `semio-os-config`
 //! directly, declared as a subject host package in `../../🔮️oracles/🔣️.json`.
 //!
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role, so every law this
@@ -82,10 +82,10 @@ fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_framework_os_config::io::text::mutations::{decode_merge_policy_config_mutation_json};
-    use semio_framework_os_config::io::text::snapshot::{decode_merge_policy_setting_json, encode_merge_policy_setting_json};
+    use semio_os_config::io::text::mutations::{decode_merge_policy_config_mutation_json};
+    use semio_os_config::io::text::snapshot::{decode_merge_policy_setting_json, encode_merge_policy_setting_json};
 
-    use semio_framework_os_config::opening_config::mutations::{
+    use semio_os_config::opening_config::mutations::{
         apply_merge_policy_config_mutation_reporting, inverse_merge_policy_config_mutation_steps, ChangeMergePolicy,
         MergePolicyConfigMutation, MergePolicySetting,
     };

@@ -12,7 +12,7 @@ use semio_s_artifact_lowpoly_lowpoly_io::{import::deserializers::artifacts::obj:
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -94,7 +94,7 @@ pub mod load_mesh_request {
     pub struct LoadMeshRequest {}
 
     pub fn handle(_payload: &LoadMeshRequest, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(LOWPOLY_MESH_FILE_OPEN_REQUEST), accept: LOWPOLY_MESH_FILE_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importMeshFile".into(), multiple: false, args: None }))
+        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_plugin::RequestId(LOWPOLY_MESH_FILE_OPEN_REQUEST), accept: LOWPOLY_MESH_FILE_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importMeshFile".into(), multiple: false, args: None }))
     }
 }
 //#endregion 🔖️LoadMeshRequest

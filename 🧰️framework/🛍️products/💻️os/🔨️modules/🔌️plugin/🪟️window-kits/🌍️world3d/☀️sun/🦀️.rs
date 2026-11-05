@@ -1,5 +1,5 @@
 //! 🌞️ World-3d sun state and scene constructor shared down to the base window kits (the mesh kit renders through them).
-use semio_framework_ui_scene::World3dScene;
+use semio_ui_scene::World3dScene;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

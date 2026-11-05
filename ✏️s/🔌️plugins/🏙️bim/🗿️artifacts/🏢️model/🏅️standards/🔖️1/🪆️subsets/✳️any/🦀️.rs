@@ -4,8 +4,8 @@
 use crate::editor::bim as editor;
 use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io;
 use semio_s_artifact_bim_model_viewer::viewer::bim as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 //#region 🔖️Examples

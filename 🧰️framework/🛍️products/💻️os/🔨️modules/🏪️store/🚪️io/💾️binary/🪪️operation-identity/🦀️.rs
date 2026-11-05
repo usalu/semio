@@ -1,9 +1,9 @@
 //! ⚙️ Controlled operation-source commitments with deferred original cursor retirement.
-use semio_framework_os_store_operation_wire::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationSource};
+use semio_os_store_operation_wire::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationSource};
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_framework_os_store_canonical_json::ARTIFACT_CANONICAL_JSON_DEPTH;
+use semio_os_store_canonical_json::ARTIFACT_CANONICAL_JSON_DEPTH;
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
-use semio_framework_os_vcs::io::binary::entity_identity::NativeIdentityPreimage;
+use semio_os_vcs::io::binary::entity_identity::NativeIdentityPreimage;
 
 #[path="📑️rows/🦀️.rs"]
 mod rows;

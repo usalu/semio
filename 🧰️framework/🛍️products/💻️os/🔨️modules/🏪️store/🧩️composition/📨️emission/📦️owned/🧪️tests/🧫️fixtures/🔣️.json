@@ -114,5 +114,10 @@
         "value": 63
       }
     ]
+  },
+  "work": {
+    "denied": 0,
+    "shellRelease": 1,
+    "delegate": "preserve-original-on-success-and-refusal"
   }
 }

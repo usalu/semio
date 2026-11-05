@@ -38,7 +38,7 @@ semio-s-artifact-stdio-gltf-inferences-symmetry = { path = "../../🪞️symmetr
 semio-s-artifact-stdio-gltf-inferences-inferences = { path = "../../../../🚪️io/💾️binary/📸️snapshot/🧮️decoded-accessors/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-gltf-inferences-projection-tests = { path = "../../../../🚪️io/💾️binary/📸️snapshot/🧮️decoded-accessors/🧪️tests/🧮️decoded-accessor/📦️packages/🦀️rust" }
 pack = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
@@ -51,4 +51,4 @@ serde_json = { workspace = true }
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

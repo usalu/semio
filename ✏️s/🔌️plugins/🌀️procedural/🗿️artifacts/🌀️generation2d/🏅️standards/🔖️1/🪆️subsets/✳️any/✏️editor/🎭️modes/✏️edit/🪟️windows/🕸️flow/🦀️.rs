@@ -7,15 +7,15 @@ use semio_s_artifact_procedural_2d_model::GENERATION2D_GRAPH_NODE_TARGET_PREFIX;
 use semio_s_artifact_procedural_2d_model::GENERATION2D_INTERACTION_DOMAIN;
 use semio_s_artifact_procedural_2d_preview_eval::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession, FlowHost};
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_declaration::ui::{NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord};
+use semio_os_flow::{flow_backed_node_graph_extras, FlowEvalSession, FlowHost};
+use semio_os_kernel::Viewport2d;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_declaration::ui::{NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -77,8 +77,8 @@ fn kind_extension_name(kind: &str) -> (String, String) {
 }
 
 /// 🛍️ Document-derived operator records — one per neuron KIND the open graph actually holds.
-fn document_operator_records(dag: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
-    let catalogue = semio_framework_os_flow::flow_operator_catalogue_records();
+fn document_operator_records(dag: &semio_os_infinite_directed_presentation::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
+    let catalogue = semio_os_flow::flow_operator_catalogue_records();
     let node_by_id: std::collections::BTreeMap<&str, &NodeGraphNodeRecord> = nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut kinds: Vec<String> = Vec::new();
     for spec in &dag.nodes {
@@ -137,17 +137,17 @@ fn document_operator_records(dag: &semio_framework_os_infinite_directed_presenta
 //#region 🔖️Render
 /// 🕹️ `selection` is the live `graph`-domain widget ids `render_with_request_context` resolved —
 /// the marks-free `render` path passes an empty slice.
-pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
-    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
     let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
     let operators = document_operator_records(&dag, &nodes);
     let viewport = Viewport2d { x: config.viewport.x, y: config.viewport.y, zoom: config.viewport.zoom };
-    let flow_extras = flow_backed_node_graph_extras(host_snapshot, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    let flow_extras = flow_backed_node_graph_extras(host_snapshot, "", 0.0, true, false, semio_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let _ = GENERATION2D_PLAY_APP_ID;
     semio_s_procedural_core_semantic_ui::scene_surface(
         GENERATION2D_PLAY_SURFACE_MAIN,
-        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph,
+        semio_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph,
         &NodeGraphScene {
             editable: Some(true),
             interaction_domain: Some(NodeGraphInteractionDomain {

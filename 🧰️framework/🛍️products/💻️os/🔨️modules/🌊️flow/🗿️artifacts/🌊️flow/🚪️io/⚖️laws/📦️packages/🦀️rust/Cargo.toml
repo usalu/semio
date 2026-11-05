@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-artifact-flow-flow-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
@@ -33,4 +33,4 @@ semio-framework-replication = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde_json = "1"
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["mutation-testing"] }

@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-box", kind: "set-page-box", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} {:?} box", self.index, self.kind), &format!("Seite {}: {:?}-Box setzen", self.index, self.kind))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set page {} {:?} box", self.index, self.kind), &format!("Seite {}: {:?}-Box setzen", self.index, self.kind))
     }
 
     fn target(&self) -> Vec<String> {

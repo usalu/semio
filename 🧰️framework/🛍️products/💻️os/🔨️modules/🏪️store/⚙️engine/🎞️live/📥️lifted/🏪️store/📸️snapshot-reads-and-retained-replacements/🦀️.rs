@@ -2,7 +2,7 @@
 
 use super::*;
 use semio_framework_value::RetainedCloneProgress;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -18,8 +18,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     /// 📬️ Captures one immutable projection or inference input from the current reconciled snapshot.
     
@@ -137,7 +137,7 @@ where
         &mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>,
         next_envelope: ArtifactEnvelope<P, Mutation>,
         next_current: Arc<P>,
-        next_dag: semio_framework_os_spr::MutationDag,
+        next_dag: semio_os_spr::MutationDag,
         next_tail: Option<(String, Arc<P>)>,
         authority: ArtifactStoreDocumentRootCommitAuthority<P, Mutation>,
     ) {
@@ -165,7 +165,7 @@ where
         *self.tail_undo_cache = next_tail;
     }
 
-    pub fn string_vector_owner_slots(values: &semio_framework_os_vcs::HistoryPageStack<String>) -> usize {
+    pub fn string_vector_owner_slots(values: &semio_os_vcs::HistoryPageStack<String>) -> usize {
         usize::from(!values.is_empty() || values.capacity() != 0)
     }
 
@@ -173,7 +173,7 @@ where
         usize::from(value.is_some())
     }
 
-    pub fn take_string_vector_replacement(target: &mut std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>, next: semio_framework_os_vcs::HistoryPageStack<String>) -> Option<Box<dyn ErasedSnapshotRetirement>> {
+    pub fn take_string_vector_replacement(target: &mut std::mem::ManuallyDrop<semio_os_vcs::HistoryPageStack<String>>, next: semio_os_vcs::HistoryPageStack<String>) -> Option<Box<dyn ErasedSnapshotRetirement>> {
         let previous = std::mem::replace(&mut **target, next);
         (!previous.is_empty() || previous.capacity() != 0).then(|| Box::new(ArtifactStoreStringVectorRetirement::new(previous)) as Box<dyn ErasedSnapshotRetirement>)
     }
@@ -329,9 +329,9 @@ where
 impl<P, Mutation> StoreLive<P, Mutation>
 where
     P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: ToValue + FromValue + semio_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    pub fn step_history_read_plan(&self,store_log:&StoreLog<P,Mutation>,store_wire:&StoreWire<P,Mutation>,store_cursor:&StoreCursor<P,Mutation>,plan:&mut HistoryReadPlan,order:Option<&semio_framework_os_vcs::HistoryPageStack<semio_framework_os_vcs::ArtifactHistoryKey>>,grant:RetainedCloneGrant,control:&mut semio_framework_value::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<(bool,RetainedCloneProgress),VcsError>{
+    pub fn step_history_read_plan(&self,store_log:&StoreLog<P,Mutation>,store_wire:&StoreWire<P,Mutation>,store_cursor:&StoreCursor<P,Mutation>,plan:&mut HistoryReadPlan,order:Option<&semio_os_vcs::HistoryPageStack<semio_os_vcs::ArtifactHistoryKey>>,grant:RetainedCloneGrant,control:&mut semio_framework_value::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<(bool,RetainedCloneProgress),VcsError>{
         use semio_framework_value::{RetirementDemand,ValueRefusalKind};
         if plan.original_order!=order.map(|o|(o as*const _ as usize,o.len())){return Err(VcsError::HistoryReplaying)}let idle=RetainedCloneProgress::default();if plan.finished{return Ok((true,idle))}if deadline()||grant.maximum_items==0{return Ok((false,idle))}
         let metadata=2*size_of::<usize>()+size_of::<u8>()+size_of::<ReplayProgress>();
@@ -356,7 +356,7 @@ where
 impl<P, Mutation> StoreLive<P, Mutation>
 where
     P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: ToValue + FromValue + semio_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn selected_history_edit<'a>(&self,store_log:&'a StoreLog<P,Mutation>,store_wire:&StoreWire<P,Mutation>,store_cursor:&StoreCursor<P,Mutation>,selection:Option<semio_framework_os_vcs::OriginalHistoryEditSelection>,position:usize)->Result<&'a Edit<Mutation>,VcsError>{match selection{Some(selection)=>match selection.original_position(position){None=>store_log.envelope.vcs.edits.get_key(selection.key).ok_or(VcsError::HistoryReplaying),Some(position)=>store_cursor.applied_edit(store_log,store_wire,position)},None=>store_cursor.applied_edit(store_log,store_wire,position)}}
+    fn selected_history_edit<'a>(&self,store_log:&'a StoreLog<P,Mutation>,store_wire:&StoreWire<P,Mutation>,store_cursor:&StoreCursor<P,Mutation>,selection:Option<semio_os_vcs::OriginalHistoryEditSelection>,position:usize)->Result<&'a Edit<Mutation>,VcsError>{match selection{Some(selection)=>match selection.original_position(position){None=>store_log.envelope.vcs.edits.get_key(selection.key).ok_or(VcsError::HistoryReplaying),Some(position)=>store_cursor.applied_edit(store_log,store_wire,position)},None=>store_cursor.applied_edit(store_log,store_wire,position)}}
 }

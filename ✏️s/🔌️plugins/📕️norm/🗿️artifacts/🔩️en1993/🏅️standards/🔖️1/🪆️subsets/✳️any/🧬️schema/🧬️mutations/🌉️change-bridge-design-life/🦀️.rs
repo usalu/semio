@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeDesignLife w
         record: "ChangedBridgeDesignLife",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design life t_Ld of the bridge fatigue", "Brückenermüdung: Nutzungsdauer t_Ld ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design life t_Ld of the bridge fatigue", "Brückenermüdung: Nutzungsdauer t_Ld ändern")
     }
 }
 

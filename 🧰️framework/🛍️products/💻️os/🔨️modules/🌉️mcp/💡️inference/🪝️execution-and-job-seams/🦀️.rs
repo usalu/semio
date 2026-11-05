@@ -26,7 +26,7 @@ pub fn lookup_inference(declared: &[DeclaredInference], inference_schema: &str) 
 /// `semio://artifact/{id}/inference/{field}` resource carry no canonical request body, and an
 /// inference is a computation over one — the guest has nothing to run against. Execution itself is
 /// no longer missing: `inference_run` (`AppCommand::Infer` →
-/// `semio_framework_plugin_host::ArtifactInferenceRouter`) runs any declared service for real. This
+/// `semio_plugin_host::ArtifactInferenceRouter`) runs any declared service for real. This
 /// stays retryable because a later packet that caches a document-derived canonical payload per
 /// artifact turns this exact read into a hit with no change to the discovery path above.
 ///

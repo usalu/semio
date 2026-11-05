@@ -12,7 +12,7 @@ pub fn test_raw_allocation_close<A: ArtifactApp>() {
         let mut job = ArtifactRetainedCommandJob::<A> {
             original_command_admitted:false,
             command: None,
-            command_received:false,
+            command_received:false,context_received:false,
             snapshot: None,
             snapshot_read: std::cell::RefCell::new(None),
             config: None,

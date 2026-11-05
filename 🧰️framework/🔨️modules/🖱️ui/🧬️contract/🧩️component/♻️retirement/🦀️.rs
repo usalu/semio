@@ -1,8 +1,8 @@
 //! ♻️ Exact component descendant retirement.
 use crate::*;
-use semio_framework_ui_contract_values::{ui_typed_fields,ui_typed_scalar};
-use semio_framework_ui_contract_values::retirement_protocol::maximum_depth;
-use semio_framework_ui_contract_values::retirement_protocol::done;
+use semio_ui_contract_values::{ui_typed_fields,ui_typed_scalar};
+use semio_ui_contract_values::retirement_protocol::maximum_depth;
+use semio_ui_contract_values::retirement_protocol::done;
 ui_typed_scalar!(ContainerRole,InputKind,SelectAppearance,ToggleAppearance,SliderAppearance,UiNumberScale,TreePresentation,TreeWindowRowExtent,RowActionPlacement);
 crate::ui_component_field_catalog!(ui_typed_fields);
 impl UiTypedRetire for Component {

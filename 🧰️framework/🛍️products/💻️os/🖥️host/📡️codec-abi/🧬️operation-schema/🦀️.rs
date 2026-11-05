@@ -92,7 +92,7 @@ pub(super) struct RegisteredOsHostFormatResolver;
 
 impl OsHostFormatResolver for RegisteredOsHostFormatResolver {
     fn resolve_format(&mut self, kind: &str) -> Result<Option<OsHostCodecFormat>, OsHostCodecFailure> {
-        semio_framework_os_kernel::io::format_descriptor(kind)
+        semio_os_kernel::io::format_descriptor(kind)
             .map(|row| row.map(|row| OsHostCodecFormat { short_id: row.short_id, extensions: row.extensions }))
             .map_err(|_| OsHostCodecFailure::fixed(OsHostCodecErrorCode::InvalidState, "stdio format registry unavailable"))
     }

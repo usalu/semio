@@ -1,7 +1,7 @@
 //! 🗂️ History stream verification, whole-file encoding and incremental hydration.
-pub use semio_framework_os_history_schema::*;
-pub use semio_framework_os_history_codec::*;
-pub use semio_framework_os_history_record_decode::*;
+pub use semio_os_history_schema::*;
+pub use semio_os_history_codec::*;
+pub use semio_os_history_record_decode::*;
 #[path="🛬️decode/🗂️file/📚️frames/🦀️.rs"]
 mod retained_history_source_frames;
 pub use retained_history_source_frames::{RetainedHistorySourceFrames,RetainedHistorySourceFrame,RetainedHistorySourceFramesStep};
@@ -12,7 +12,7 @@ pub use retained_history_source::{RetainedHistorySourceDecode,RetainedHistorySou
 mod retained_history_deflate;
 pub use retained_history_deflate::{RetainedHistoryDeflateDecode,RetainedHistoryDeflatePayload,RetainedHistoryDeflateStep};
 
-use semio_framework_os_pack::{ByteReader, ByteWriter, CodecId};
+use semio_os_pack::{ByteReader, ByteWriter, CodecId};
 use semio_framework_pack_source::{PackSink};
 use protocol::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
 use protocol::ProtocolError;
@@ -922,4 +922,4 @@ mod tests;
 static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
 #[cfg(test)]
-use semio_framework_os_history_testing_retirement as test_retirement;
+use semio_os_history_testing_retirement as test_retirement;

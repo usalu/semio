@@ -7,22 +7,22 @@
 use crate::viewer::dag::modes::view;
 use crate::viewer::dag::modes::view::windows::main;
 use crate::{default_snapshot, DagSnapshot, DAG_DIALECT, DAG_DOCUMENT_SCHEMA};
-use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::app::{Dialect, InteractionView};
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -76,7 +76,7 @@ impl ArtifactViewer for DagViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<DagSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<DagSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_snapshot())
     })}
 
@@ -89,23 +89,23 @@ impl ArtifactViewer for DagViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(&crate::dag_scene(doc).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("dag.child-content", format!("{error:?}")))?).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(&crate::dag_scene(doc).map_err(|error| semio_plugin::PluginAssemblyError::new("dag.child-content", format!("{error:?}")))?).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_dag_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_dag_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(DAG_DIALECT)
         .document(["semio", "mathematical", "graph", "port", "directed", "dag"])
         .icon_id("dag")
@@ -132,8 +132,8 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn dag_child_restore_projection(snapshot: &DagSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.child-projection"), error.to_string()))
+pub fn dag_child_restore_projection(snapshot: &DagSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("dag.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
 }

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgeVRdN where O
         record: "ChangeBridgeVRdN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change design shear resistance of the bridge", "Bemessungswert der Querkrafttragfähigkeit der Brücke ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change design shear resistance of the bridge", "Bemessungswert der Querkrafttragfähigkeit der Brücke ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-v-rd-n".into()]

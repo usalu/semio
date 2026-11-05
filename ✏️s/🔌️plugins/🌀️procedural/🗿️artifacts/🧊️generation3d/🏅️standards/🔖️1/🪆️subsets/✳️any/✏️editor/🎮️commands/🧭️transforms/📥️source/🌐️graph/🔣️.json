@@ -1,0 +1,241 @@
+{
+  "base": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "widgets": [
+      {
+        "kind": "neuron",
+        "id": "a",
+        "neuronKind": "brep.xform.translate",
+        "params": {
+          "offset": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      },
+      {
+        "kind": "neuron",
+        "id": "b",
+        "neuronKind": "brep.xform.translate",
+        "params": {
+          "offset": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      }
+    ],
+    "synapses": [
+      {
+        "id": "syn0",
+        "from": "a",
+        "fromPort": "geometry",
+        "to": "b",
+        "toPort": "geometry"
+      }
+    ],
+    "layout": {}
+  },
+  "rows": [
+    {
+      "mutation": "createWidget",
+      "index": 2,
+      "widget": {
+        "kind": "neuron",
+        "id": "a__gumball_translate",
+        "neuronKind": "brep.xform.translate",
+        "params": {
+          "offset": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      }
+    },
+    {
+      "mutation": "moveWidget",
+      "id": "a__gumball_translate",
+      "layout": {
+        "x": 220,
+        "y": 0
+      }
+    },
+    {
+      "mutation": "updateSynapse",
+      "synapse": {
+        "id": "syn0",
+        "from": "a__gumball_translate",
+        "fromPort": "geometry",
+        "to": "b",
+        "toPort": "geometry"
+      }
+    },
+    {
+      "mutation": "connectSynapse",
+      "index": 1,
+      "synapse": {
+        "id": "syn101",
+        "from": "a",
+        "fromPort": "geometry",
+        "to": "a__gumball_translate",
+        "toPort": "geometry"
+      }
+    },
+    {
+      "mutation": "updateWidget",
+      "widget": {
+        "kind": "neuron",
+        "id": "a",
+        "neuronKind": "brep.xform.translate",
+        "params": {
+          "offset": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": false
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "Unmodified Base",
+      "created": [],
+      "updated": [
+        null,
+        null
+      ],
+      "rewired": [
+        null
+      ],
+      "links": [],
+      "widgets": [
+        "a",
+        "b"
+      ],
+      "previews": [
+        true,
+        true
+      ],
+      "wires": [
+        [
+          "syn0",
+          "a",
+          "geometry",
+          "b",
+          "geometry"
+        ]
+      ]
+    },
+    {
+      "name": "Created Node and Link",
+      "created": [
+        0
+      ],
+      "updated": [
+        null,
+        null,
+        null
+      ],
+      "rewired": [
+        null
+      ],
+      "links": [
+        3
+      ],
+      "widgets": [
+        "a",
+        "b",
+        "a__gumball_translate"
+      ],
+      "previews": [
+        true,
+        true,
+        true
+      ],
+      "wires": [
+        [
+          "syn0",
+          "a",
+          "geometry",
+          "b",
+          "geometry"
+        ],
+        [
+          "syn101",
+          "a",
+          "geometry",
+          "a__gumball_translate",
+          "geometry"
+        ]
+      ]
+    },
+    {
+      "name": "Rewired Base and Preview",
+      "created": [
+        0
+      ],
+      "updated": [
+        4,
+        null,
+        null
+      ],
+      "rewired": [
+        2
+      ],
+      "links": [
+        3
+      ],
+      "widgets": [
+        "a",
+        "b",
+        "a__gumball_translate"
+      ],
+      "previews": [
+        false,
+        true,
+        true
+      ],
+      "wires": [
+        [
+          "syn0",
+          "a__gumball_translate",
+          "geometry",
+          "b",
+          "geometry"
+        ],
+        [
+          "syn101",
+          "a",
+          "geometry",
+          "a__gumball_translate",
+          "geometry"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 //! ✅️ EN 1999 viewer — the read-only checks window (no actions, no remedies applied); imports nothing from the editor (`policyViewerPurityBreaches`).
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 use semio_s_plugin_norm_app_surface::{render_checks_with, ChecksViewState, ChecksWindowSpec};
 

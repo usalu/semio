@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "name": "Empty Text",
+      "unit": "",
+      "repeat": 0,
+      "maximumBytes": 0,
+      "bytes": [
+        0
+      ]
+    },
+    {
+      "name": "ASCII Boundary",
+      "unit": "a",
+      "repeat": 513,
+      "maximumBytes": 1024,
+      "bytes": [
+        512,
+        1
+      ]
+    },
+    {
+      "name": "Three Byte Boundary",
+      "unit": "€",
+      "repeat": 171,
+      "maximumBytes": 1024,
+      "bytes": [
+        510,
+        3
+      ]
+    },
+    {
+      "name": "Four Byte Boundary",
+      "unit": "🌊",
+      "repeat": 129,
+      "maximumBytes": 1024,
+      "bytes": [
+        512,
+        4
+      ]
+    },
+    {
+      "name": "Multilingual Graph",
+      "unit": "{\"label\":\"Höhe 高さ 🌊\"}",
+      "repeat": 40,
+      "maximumBytes": 4096
+    }
+  ],
+  "refusals": [
+    {
+      "name": "UTF8 Byte Limit",
+      "unit": "é",
+      "repeat": 513,
+      "maximumBytes": 1024
+    },
+    {
+      "name": "Chunk Count Limit",
+      "unit": "a",
+      "repeat": 131073,
+      "maximumBytes": 131073
+    }
+  ]
+}

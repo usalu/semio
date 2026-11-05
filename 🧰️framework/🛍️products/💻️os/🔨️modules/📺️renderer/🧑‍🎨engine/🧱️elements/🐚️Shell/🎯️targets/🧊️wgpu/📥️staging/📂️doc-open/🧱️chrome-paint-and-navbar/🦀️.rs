@@ -11,14 +11,14 @@ pub const HUB_CHECK_IN_POLL_MS: u64 = 250;
 #[cfg(not(target_arch = "wasm32"))]
 pub fn hub_check_in_local_status(
     request_id: &str,
-    phase: semio_framework_os_kernel::os_directory::DocumentCheckInPhaseV1,
-    refusal: Option<semio_framework_os_kernel::os_directory::DocumentCheckInRefusalV1>,
-) -> semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1 {
-    semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1 {
-        schema: semio_framework_os_kernel::os_directory::DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1.to_string(),
+    phase: semio_os_kernel::os_directory::DocumentCheckInPhaseV1,
+    refusal: Option<semio_os_kernel::os_directory::DocumentCheckInRefusalV1>,
+) -> semio_os_kernel::os_directory::DocumentCheckInStatusV1 {
+    semio_os_kernel::os_directory::DocumentCheckInStatusV1 {
+        schema: semio_os_kernel::os_directory::DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1.to_string(),
         request_id: request_id.to_string(),
         phase,
-        progress: semio_framework_os_kernel::os_directory::DocumentCheckInProgressV1 { completed_units: 0, total_units: 8 },
+        progress: semio_os_kernel::os_directory::DocumentCheckInProgressV1 { completed_units: 0, total_units: 8 },
         ready: None,
         refusal,
     }

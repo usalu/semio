@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePileInterlockShear
         record: "ChangedPileInterlockShear",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Interlock shear V_L,Ed of the pile", "Pfahl: Schlossschub V_L,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Interlock shear V_L,Ed of the pile", "Pfahl: Schlossschub V_L,Ed ändern")
     }
 }
 

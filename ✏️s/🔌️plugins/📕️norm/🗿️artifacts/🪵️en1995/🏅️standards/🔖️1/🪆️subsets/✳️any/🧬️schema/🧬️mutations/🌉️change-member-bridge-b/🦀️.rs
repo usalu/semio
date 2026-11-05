@@ -10,7 +10,7 @@ pub struct ChangeMemberBridgeB { pub member_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberBridgeB where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_bridge_b::ChangeMemberBridgeB> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-bridgeB", kind: "change-member-bridge-b", record: "ChangedMemberBridgeB" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Fatigue slope b of member {}", self.member_id), &format!("Ermüdungsparameter b von Bauteil {} ändern", self.member_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Fatigue slope b of member {}", self.member_id), &format!("Ermüdungsparameter b von Bauteil {} ändern", self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
 

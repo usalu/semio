@@ -16,8 +16,8 @@ pub struct SetViewpointCamera {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "viewpoint-camera", kind: "set-viewpoint-camera", record: "SetViewpointCamera" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set viewpoint camera", "Blickpunktkamera setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set viewpoint camera", "Blickpunktkamera setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -29,7 +29,7 @@ fn gumball_gestures_declare_no_bracket_verbs() {
 /// with `interactive-job.catalog-authority` before any dispatch is even attempted.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_document() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = app().await;
     let before_first_id = first_object_id(&app);
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("dispatch setActiveExample through the migrated tool-job path");
@@ -43,26 +43,26 @@ async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_d
 }
 
 /// 📏️ Sizes this artifact's three reserved refresh sections against the retained section carrier that
-/// now publishes them (`semio_framework_plugin::section_component_tree`): the engagements, window
+/// now publishes them (`semio_plugin::section_component_tree`): the engagements, window
 /// measure and tool measure maps must all admit into the bounded chunk tree and round-trip
 /// byte-exactly, with the fill tool's count slider present in the tool payload.
 #[semio_framework_async_macros::async_test]
 async fn reserved_refresh_section_payloads_admit_into_the_retained_section_carrier() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = app().await;
-    let view = semio_framework_plugin::ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: WINDOW_KIND_ID.to_string(), window_kind_id: WINDOW_KIND_ID.to_string() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = semio_plugin::ViewModel { window_instances: vec![semio_plugin::ViewWindowInstance { id: WINDOW_KIND_ID.to_string(), window_kind_id: WINDOW_KIND_ID.to_string() }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let payloads = [
-        (semio_framework_plugin::UiRefreshSection::Engagements, serde_json::to_string(&app.window_engagements(&view).await).expect("engagements serialize")),
-        (semio_framework_plugin::UiRefreshSection::Measures, serde_json::to_string(&app.window_measures(&view).await).expect("measures serialize")),
-        (semio_framework_plugin::UiRefreshSection::Tools, serde_json::to_string(&app.tool_measures(&view).await).expect("tool measures serialize")),
+        (semio_plugin::UiRefreshSection::Engagements, serde_json::to_string(&app.window_engagements(&view).await).expect("engagements serialize")),
+        (semio_plugin::UiRefreshSection::Measures, serde_json::to_string(&app.window_measures(&view).await).expect("measures serialize")),
+        (semio_plugin::UiRefreshSection::Tools, serde_json::to_string(&app.tool_measures(&view).await).expect("tool measures serialize")),
     ];
     assert!(payloads[2].1.contains("puzzle3d-fill-count"), "the fill tool must contribute its count slider to the tools section");
     assert!(payloads[1].1.contains(WINDOW_KIND_ID), "the main window instance must key its own entry in the measures section");
     for (section, payload) in payloads {
-        let tree = semio_framework_plugin::section_component_tree(section, &payload).expect("reserved section payload admits into the bounded carrier");
-        let projected: serde_json::Value = serde_json::from_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("carrier projects")).expect("carrier projection is json");
+        let tree = semio_plugin::section_component_tree(section, &payload).expect("reserved section payload admits into the bounded carrier");
+        let projected: serde_json::Value = serde_json::from_str(&semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("carrier projects")).expect("carrier projection is json");
         assert_eq!(projected["key"], section.body_key());
-        assert_eq!(semio_framework_plugin::artifact_app_laws::fixture_carrier_text(&projected), payload, "{} carrier must round-trip byte-exactly", section.key());
+        assert_eq!(semio_plugin::artifact_app_laws::fixture_carrier_text(&projected), payload, "{} carrier must round-trip byte-exactly", section.key());
     }
 }
 
@@ -210,7 +210,7 @@ async fn initial_snapshot_is_the_concrete_forest_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn puzzle3d_play_projection_pack_round_trips() {
     let app = app().await;
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
 }
 
 /// 🧬️ Wave B9 lane 2: the TYPED half of the snapshot is the authority
@@ -269,7 +269,7 @@ fn interaction_topology_names_every_id_the_world_lane_paints() {
     assert!(refusal.is_err(),"invalid catalogs must refuse rather than discard objects");
     divergent.meta.kind_compatibility=None;
     let snapshot=Puzzle3dPlaySnapshot::new(puzzle3d_snapshot_from_host_snapshot(&divergent).expect("valid host admits"));
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Puzzle3dConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
@@ -313,7 +313,7 @@ async fn set_active_example_swaps_the_document_and_undo_restores_it() {
 
 /// 🛰️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B7: `undo` is a TWO-half framework-reserved gesture
 /// and neither half may be silent. The ADMISSION half must change nothing and say so out loud — one
-/// Isolated [`semio_framework_plugin::app::FRAMEWORK_RESERVED_JOB_KIND`] spawn job and
+/// Isolated [`semio_plugin::app::FRAMEWORK_RESERVED_JOB_KIND`] spawn job and
 /// `UiDirtyScope::None`, never a success that quietly committed nothing; the HOST half
 /// (`complete_reserved_spawned_job` → `commit_framework_history_route`) is the only thing that may
 /// move the document. Pins the regression wave B5 reported: a caller that stops at the admission
@@ -327,7 +327,7 @@ async fn undo_admits_one_reserved_job_that_alone_restores_the_document() {
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     assert_eq!(object_count(&app), 0, "empty example clears the objects");
     let admitted = dispatch_reserved_unsettled(&mut app, "undo", None, None).await.expect("undo admits");
-    let spawned = admitted.requested_effects.iter().filter(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework_plugin::app::FRAMEWORK_RESERVED_JOB_KIND)).count();
+    let spawned = admitted.requested_effects.iter().filter(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_plugin::app::FRAMEWORK_RESERVED_JOB_KIND)).count();
     assert_eq!(spawned, 1, "the admission half must ask the host for exactly one Isolated reserved job: {:?}", admitted.requested_effects);
     assert!(matches!(admitted.ui_scope, UiDirtyScope::None), "an undo that has not run yet must not claim a dirty scope: {:?}", admitted.ui_scope);
     assert_eq!(object_count(&app), 0, "the admission half must never move the document on its own");
@@ -401,12 +401,12 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::os_store::document_materialize::create_document_envelope;
     use store::os_store::store_schema::ArtifactCommand;
 
-    let mut store = puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
+    let mut store = puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object(object, None)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object(object, None)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
+    semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
     close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests

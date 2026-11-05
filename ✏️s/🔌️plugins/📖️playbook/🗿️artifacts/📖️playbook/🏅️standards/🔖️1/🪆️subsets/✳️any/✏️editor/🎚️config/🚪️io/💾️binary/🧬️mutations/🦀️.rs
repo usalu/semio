@@ -16,5 +16,5 @@ impl protocol::OpBinary for PlaybookConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(PlaybookConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(PlaybookConfigMutation);
 }

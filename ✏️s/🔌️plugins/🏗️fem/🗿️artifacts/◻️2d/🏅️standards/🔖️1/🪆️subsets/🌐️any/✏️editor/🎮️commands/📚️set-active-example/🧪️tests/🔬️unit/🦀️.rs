@@ -1,11 +1,11 @@
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::*;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use pack::snapshot::ArtifactDsl;
@@ -17,7 +17,7 @@ use semio_framework::kernel::Effect;
 #[test]
 fn set_active_example_loads_the_demo_fixture_2d() {
     let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
@@ -33,7 +33,7 @@ fn set_active_example_loads_the_demo_fixture_2d() {
 #[test]
 fn set_active_example_unknown_id_resets_to_empty_document_2d() {
     let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
@@ -52,7 +52,7 @@ fn set_active_example_unknown_id_resets_to_empty_document_2d() {
 fn set_active_example_is_declared_as_operation_2d() {
     let definition = semio_s_artifact_fem_2d_editor::editor::fem2d::create_fem2d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
-    assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
+    assert!(matches!(action.kind, semio_plugin::ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
     assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
 }
 

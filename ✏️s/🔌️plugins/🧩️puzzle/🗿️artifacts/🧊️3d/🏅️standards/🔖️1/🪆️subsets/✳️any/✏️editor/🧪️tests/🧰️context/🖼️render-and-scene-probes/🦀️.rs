@@ -5,7 +5,7 @@
 /// 🪟️ The ViewModel is addressed at the very window the body key names (`<body>:<windowInstanceId>`,
 /// else the main instance), exactly like `dispatch`: a host never asks "render this pane" without
 /// saying which pane, and the window-owned config/transient partitions are captured through
-/// `ViewModel::window_id` — a bare `ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)` renders every window-owned field at its
+/// `ViewModel::window_id` — a bare `ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)` renders every window-owned field at its
 /// type default (no camera, no suggestion popup, no engagement scratch), which is a state no real
 /// render can be in.
 pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
@@ -51,9 +51,9 @@ async fn rendered_body_value(app: &mut Puzzle3dApp, body_key: &str, view: &ViewM
         let mut stack = vec![root];
         let mut rendered_scene = None;
         while let Some(node) = stack.pop() {
-            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-                if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
-                    let scene: semio_framework_ui_scene::World3dScene = artifact_app_laws::built_surface_scene(node).expect("assemble world scene");
+            if let semio_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema.as_str() == <semio_ui_scene::World3dScene as semio_ui_scene::SceneDoc>::SCHEMA {
+                    let scene: semio_ui_scene::World3dScene = artifact_app_laws::built_surface_scene(node).expect("assemble world scene");
                     let world3d = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&scene));
                     rendered_scene = Some(object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]));
                     if scene.interaction_json.is_some() {
@@ -88,8 +88,8 @@ pub async fn world_surface_payload_bytes(app: &mut Puzzle3dApp, body_key: &str) 
         let mut stack = vec![root];
         let mut widest = 0;
         while let Some(node) = stack.pop() {
-            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-                if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+            if let semio_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema.as_str() == <semio_ui_scene::World3dScene as semio_ui_scene::SceneDoc>::SCHEMA {
                     widest = widest.max(surface.doc.bytes.as_slice().len());
                 }
             }
@@ -100,10 +100,10 @@ pub async fn world_surface_payload_bytes(app: &mut Puzzle3dApp, body_key: &str) 
     .await
     .expect("render");
     assert!(widest > 0, "{body_key} rendered no world-3d surface");
-    (widest, semio_framework_ui_contract::UI_FIXED_BYTES)
+    (widest, semio_ui_contract::UI_FIXED_BYTES)
 }
 
-fn count_built_nodes(node: &semio_framework_ui_contract::BuiltNode) -> usize {
+fn count_built_nodes(node: &semio_ui_contract::BuiltNode) -> usize {
     1 + node.children.iter().map(count_built_nodes).sum::<usize>()
 }
 
@@ -129,7 +129,7 @@ pub struct WorldSceneCarrierCensus {
     pub capacity: usize,
     pub nodes: usize,
     pub lanes: Vec<WorldSceneLaneCensus>,
-    pub assembled: semio_framework_ui_scene::World3dScene,
+    pub assembled: semio_ui_scene::World3dScene,
 }
 
 impl WorldSceneCarrierCensus {
@@ -142,7 +142,7 @@ impl WorldSceneCarrierCensus {
     }
 
     pub fn report(&self) -> String {
-        self.lanes.iter().map(|lane| format!("{}={}B/{}leaves", lane.key.trim_start_matches(semio_framework_ui_scene::WORLD3D_SCENE_LANE_KEY_PREFIX), lane.bytes, lane.leaves)).collect::<Vec<_>>().join(" ")
+        self.lanes.iter().map(|lane| format!("{}={}B/{}leaves", lane.key.trim_start_matches(semio_ui_scene::WORLD3D_SCENE_LANE_KEY_PREFIX), lane.bytes, lane.leaves)).collect::<Vec<_>>().join(" ")
     }
 }
 
@@ -157,9 +157,9 @@ pub async fn world_surface_carrier_census(app: &mut Puzzle3dApp, body_key: &str)
     let mut stack = vec![root];
     let mut census = None;
     while let Some(node) = stack.pop() {
-        if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-            if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
-                let spine: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(surface).expect("decode world spine");
+        if let semio_ui_contract::Component::Surface(surface) = &node.component {
+            if surface.doc_schema.as_str() == <semio_ui_scene::World3dScene as semio_ui_scene::SceneDoc>::SCHEMA {
+                let spine: semio_ui_scene::World3dScene = semio_ui_scene::decode(surface).expect("decode world spine");
                 let mut lanes = Vec::new();
                 for child in node.children.iter() {
                     let payload = artifact_app_laws::built_carrier_text(child);
@@ -167,14 +167,14 @@ pub async fn world_surface_carrier_census(app: &mut Puzzle3dApp, body_key: &str)
                     let mut frontier = vec![(child, 0usize)];
                     while let Some((current, level)) = frontier.pop() {
                         widest_children = widest_children.max(current.children.len());
-                        if let semio_framework_ui_contract::Component::Text(text) = &current.component {
+                        if let semio_ui_contract::Component::Text(text) = &current.component {
                             leaves += 1;
                             leaf_depth = leaf_depth.max(level);
                             widest_leaf = widest_leaf.max(text.value.0.as_str().len());
                         }
                         frontier.extend(current.children.iter().map(|grandchild| (grandchild, level + 1)));
                     }
-                    let reference = spine.lanes.iter().find(|reference| semio_framework_ui_scene::World3dSceneLane::from_name(&reference.lane).is_some_and(|lane| lane.body_key() == child.key.as_str()));
+                    let reference = spine.lanes.iter().find(|reference| semio_ui_scene::World3dSceneLane::from_name(&reference.lane).is_some_and(|lane| lane.body_key() == child.key.as_str()));
                     lanes.push(WorldSceneLaneCensus {
                         key: child.key.as_str().to_string(),
                         bytes: payload.len(),
@@ -186,7 +186,7 @@ pub async fn world_surface_carrier_census(app: &mut Puzzle3dApp, body_key: &str)
                         declared_hash: reference.map_or_else(String::new, |reference| reference.hash.clone()),
                     });
                 }
-                census = Some(WorldSceneCarrierCensus { doc_bytes: surface.doc.bytes.as_slice().len(), capacity: semio_framework_ui_contract::UI_FIXED_BYTES, nodes: count_built_nodes(node), lanes, assembled: artifact_app_laws::built_surface_scene(node).expect("assemble world scene") });
+                census = Some(WorldSceneCarrierCensus { doc_bytes: surface.doc.bytes.as_slice().len(), capacity: semio_ui_contract::UI_FIXED_BYTES, nodes: count_built_nodes(node), lanes, assembled: artifact_app_laws::built_surface_scene(node).expect("assemble world scene") });
                 break;
             }
         }

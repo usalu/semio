@@ -11,26 +11,26 @@ use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::ui_la
 use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::terminology::Puzzle5dLabels;
 use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::view::Puzzle5dScene;
 use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
-use semio_framework_plugin::plugin_app_close_prelude::ActionBinding;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
-use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
-use semio_framework_plugin::plugin_app_close_prelude::NumberStepperProps;
-use semio_framework_plugin::plugin_app_close_prelude::Trigger;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::ActionBinding;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_plugin::plugin_app_close_prelude::Component;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::plugin_app_close_prelude::HasChildren;
+use semio_plugin::plugin_app_close_prelude::NumberStepperProps;
+use semio_plugin::plugin_app_close_prelude::Trigger;
+use semio_plugin::ui_node_list;
+use semio_plugin::ActionFactory;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const PANEL_TAB_ID: &str = "puzzle5d.panel.settings";
@@ -55,7 +55,7 @@ fn window_args(window_id: Option<&str>) -> UiAssemblyResult<Option<UiValue>> {
 
 /// 🪟️ The pane an app-level panel addresses: the render's own window, else the focused pane, else the
 /// first live instance — `None` when the host mounts no pane at all.
-pub fn panel_window_id(view_state: &semio_framework_plugin::ViewModel) -> Option<&str> {
+pub fn panel_window_id(view_state: &semio_plugin::ViewModel) -> Option<&str> {
     view_state
         .window_id
         .as_deref()

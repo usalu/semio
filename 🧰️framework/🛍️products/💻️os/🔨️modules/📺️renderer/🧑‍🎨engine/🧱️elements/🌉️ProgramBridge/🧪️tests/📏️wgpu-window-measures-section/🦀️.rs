@@ -1,6 +1,6 @@
 //! 📏️ The window-measures wire home on both bridge backends: the guest's reserved
 //! `framework.section.measures` surface, built here by the REAL producer
-//! (`semio_framework_plugin::app::paged_text_carrier`), published as a retained document and read back
+//! (`semio_plugin::app::paged_text_carrier`), published as a retained document and read back
 //! by [`window_measures_from_section`]. `serde_json` is the independent oracle for the round trip.
 //!
 //! Fixture: `🧑‍🎨engine/🧫️fixtures/📏️window-measures/🔣️.json`.
@@ -38,7 +38,7 @@ fn flatten(node: &ui_contract::BuiltNode, next: &mut u64, records: &mut Vec<ui_c
 
 pub(crate) fn section_document(section: &serde_json::Value, generation: u64, refresh_section: semio_framework::UiRefreshSection) -> UiDocumentLease {
     let body_key = refresh_section.body_key();
-    let carrier = semio_framework_plugin::app::paged_text_carrier(body_key, &serde_json::to_string(section).expect("section serializes")).expect("real producer builds the carrier");
+    let carrier = semio_plugin::app::paged_text_carrier(body_key, &serde_json::to_string(section).expect("section serializes")).expect("real producer builds the carrier");
     let mut records = Vec::new();
     let root = flatten(&carrier, &mut 1, &mut records);
     let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(1), root: Some(root), layout_epoch: 0 };

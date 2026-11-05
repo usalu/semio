@@ -39,7 +39,7 @@ impl JackContentMoveCodec for FixtureMoveCodec{
  fn decode_move(&self,_:&[u8])->Result<Option<JackContentMove>,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"fixture has no member operation codec"))}
 }
 impl JackContentLayout for FixtureContent{fn move_codec(&self)->std::sync::Arc<dyn JackContentMoveCodec>{std::sync::Arc::new(FixtureMoveCodec)}}
-impl JackContentRead for FixtureContent{fn prepare_effects(&self,_:&[GraphEffect])->Result<Vec<semio_framework_plugin::app::ChildEmitPreparation>,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"fixture has no registered member emitter"))}}
+impl JackContentRead for FixtureContent{fn prepare_effects(&self,_:&[GraphEffect])->Result<Vec<semio_plugin::app::ChildEmitPreparation>,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"fixture has no registered member emitter"))}}
 impl JackOwnedContent for FixtureContent{
  fn genesis_pack(&self)->Result<Vec<u8>,ValueError>{Ok(semio_framework_pack_json::to_json_string(&self.graph).into_bytes())}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::boxed_owner_birth_bytes::<Self>())}
@@ -58,9 +58,9 @@ impl JackComposition for FixtureComposition{
  fn initial_snapshot()->JackSnapshot{empty_trinity_graph_snapshot::<Self>()}
  fn initial_viewer_snapshot()->JackSnapshot{Self::initial_snapshot()}
  fn example_snapshot(_:&str)->Option<JackSnapshot>{None}
- fn bind<'a>(_:&JackSnapshot,_:&'a semio_framework_plugin::app::ChildContentView)->Result<Self::Read<'a>,semio_framework_plugin::Fault>{Err(semio_framework_plugin::Fault::from("intrinsic fixture declares no published member receiver"))}
+ fn bind<'a>(_:&JackSnapshot,_:&'a semio_plugin::app::ChildContentView)->Result<Self::Read<'a>,semio_plugin::Fault>{Err(semio_plugin::Fault::from("intrinsic fixture declares no published member receiver"))}
  fn genesis_child_pack(snapshot:&JackSnapshot,slot:&str,id:&str)->Result<Option<Vec<u8>>,ValueError>{genesis_jack_child_pack(snapshot,slot,id)}
- fn examples()->&'static[semio_framework_plugin::ExampleSource]{&[]}
+ fn examples()->&'static[semio_plugin::ExampleSource]{&[]}
  fn io_entries()->&'static[store::io::io_mechanism::IoEntry]{&[]}
 }
 

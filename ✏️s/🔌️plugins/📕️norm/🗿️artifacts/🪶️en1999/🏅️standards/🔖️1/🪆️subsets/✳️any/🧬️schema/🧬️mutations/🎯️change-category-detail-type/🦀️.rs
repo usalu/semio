@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeCategoryDetailType
         record: "ChangedCategoryDetailType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Detail type of the fatigue detail site", "Ermüdungsdetail-Stelle: Detailtyp ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Detail type of the fatigue detail site", "Ermüdungsdetail-Stelle: Detailtyp ändern")
     }
 }
 

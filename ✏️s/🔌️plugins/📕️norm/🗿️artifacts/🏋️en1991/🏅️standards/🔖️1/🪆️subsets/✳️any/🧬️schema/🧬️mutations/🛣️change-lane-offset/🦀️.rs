@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLaneOffset where O
         record: "ChangedLaneOffset",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change lateral offset of the lane axis of the bridge lane", "Brückenfahrstreifen: Seitlicher Versatz der Fahrstreifenachse ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change lateral offset of the lane axis of the bridge lane", "Brückenfahrstreifen: Seitlicher Versatz der Fahrstreifenachse ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,6 +1,7 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {repositoryStrictStorageV1} from "../../🔒️enforcement/🟦️.ts";
 import budgetPolicy from "../../🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../🔣️policy.json" with {type:"json"};
@@ -100,7 +101,7 @@ test("planning is pure and never removes a held or quiet unit",()=>{
 
 test("every path is classified as an area, a container, a retired root, an ignored file or nobody's",()=>{
  for(const row of fixtures.classification){
-  const actual=classifyCachePathV1(ledger,row.root as "repository"|"native",row.path);
+  const actual=classifyCachePathV1(ledger,row.root as Parameters<typeof classifyCachePathV1>[1],row.path);
   expect(actual.kind,row.root+":"+row.path).toBe(row.kind as typeof actual.kind);
   if("id" in row)expect(actual.id,row.root+":"+row.path).toBe(row.id);
  }
@@ -155,4 +156,15 @@ test("Law: the runtime state store of the command runner is a declared area of t
  expect(area!.budget!.bytes).toBeGreaterThan(0);expect(area!.collect!.custody).toBe("quiet");expect(area!.collect!.unusedAgeMs).toBeGreaterThan(0);
  expect(area!.purpose.en.length>0&&area!.purpose.de.length>0).toBe(true);
  expect(classifyCachePathV1(ledger,"native",name+"/capture/x.log").kind,"classified as its area, not as undeclared").not.toBe("undeclared");
+});
+
+
+test("the compact Rust image has an explicit disjoint ledger root",()=>{
+ const fixture=fixtures.compactRust,area=ledger.areas.find(row=>row.id==="rust")!;
+ expect(fixture.root).toBe(area.root);expect(area.directory).toBe(fixture.partitionDirectory);
+ expect(ledger.roots[area.root].directory).toBe(fixture.directory);
+ expect(cacheAreaDirectoryV1("/work/semio",ledger,area)).toBe(fixture.absoluteDirectory);
+ const strict=repositoryStrictStorageV1("/work/semio");expect(strict.directory).toBe(fixture.absoluteDirectory);expect(Object.hasOwn(strict,"partition")).toBe(false);
+ const held=ledger.areas.find(row=>row.id==="held-rust-image")!;expect(held.kind).toBe("control");expect(held.managed?.owner).toBe("image");expect(held.collect).toBeUndefined();
+ for(const row of fixture.cases)expect({kind:row.kind,...row.id?{id:row.id}:{}}).toEqual(classifyCachePathV1(ledger,area.root,row.path));
 });

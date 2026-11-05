@@ -17,8 +17,8 @@ pub struct ChangeColumnOuterSizeM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnOuterSizeM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_outer_size_m::ChangeColumnOuterSizeM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-outer-size-m", kind: "change-column-outer-size-m", record: "ChangedColumnOuterSizeM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change column outer size", "Außenabmessung der Stütze ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change column outer size", "Außenabmessung der Stütze ändern")
     }
 }
 

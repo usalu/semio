@@ -1,7 +1,7 @@
 //! 📚️ Example `road-bridge-failing` — CC2 road bridge failing Annex A2.4 SLS and ULS.
 
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 use semio_s_artifact_norm_en1990_model::{ReliabilityClass, BridgeSls, Member, MemberEffect, PermanentAction, VariableAction};
 
 pub const ID: &str = "road-bridge-failing";

@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "annual-schedule", kind: "insert-annual-schedule-rule", record: "InsertedAnnualScheduleRule" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert rule at {} of annual schedule {}", self.index, self.id.0), &format!("Regel an Position {} in Jahreszeitplan {} einfügen", self.index, self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert rule at {} of annual schedule {}", self.index, self.id.0), &format!("Regel an Position {} in Jahreszeitplan {} einfügen", self.index, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

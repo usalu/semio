@@ -1,6 +1,6 @@
 //! 🧳️ Original encoded member operations become one typed batch under their installed decoder and retirement issuers.
 use super::MemberStoreOwnedBatch;
-use semio_framework_os_store_one_item_publication::{lifted_prepared_operation_wire::{ArtifactOperationWire, ArtifactOriginalOperationReceiving},lifted_member_owned_batch::{BatchRetirementIssuer,BatchRetirement}};
+use semio_os_store_one_item_publication::{lifted_prepared_operation_wire::{ArtifactOperationWire, ArtifactOriginalOperationReceiving},lifted_member_owned_batch::{BatchRetirementIssuer,BatchRetirement}};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,FactoryAuthority,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneSource,RetainedOwnedProjection,RetirementDemand,ValueError,ValueRefusalKind,OriginalRetirementControl};
 use semio_framework_value::retained_clone::{RetainedCloneSourceAdmission,RetainedCloneSourceTake,retained_clone_grant_admits};
 use semio_framework_value::retirement::controlled::ControlledRetirement;

@@ -14,8 +14,8 @@ pub struct ChangeSchema {
 impl protocol::MutationKind<PlaygroundSnapshot, PlaygroundMutation> for ChangeSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "schema", kind: "change-schema", record: "ChangedSchema" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change playground schema to \"{}\"", self.new_schema), &format!("Playground-Schema auf \"{}\" ändern", self.new_schema))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change playground schema to \"{}\"", self.new_schema), &format!("Playground-Schema auf \"{}\" ändern", self.new_schema))
     }
 
     fn target(&self) -> Vec<String> {

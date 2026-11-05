@@ -3,11 +3,11 @@
 
 #[path = "🤖️generated/📇️registry/🦀️.rs"]
 pub mod graph_manifest;
-use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
-use semio_framework_plugin::PluginBuilder;
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {

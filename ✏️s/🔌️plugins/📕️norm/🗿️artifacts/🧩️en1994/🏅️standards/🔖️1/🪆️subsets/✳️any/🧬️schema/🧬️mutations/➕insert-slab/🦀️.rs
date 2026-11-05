@@ -17,8 +17,8 @@ pub struct InsertSlab {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for InsertSlab where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::remove_slab::RemoveSlab> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "slab", kind: "insert-slab", record: "InsertedSlab" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert composite slab", "Verbunddecke einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert composite slab", "Verbunddecke einfügen")
     }
 }
 

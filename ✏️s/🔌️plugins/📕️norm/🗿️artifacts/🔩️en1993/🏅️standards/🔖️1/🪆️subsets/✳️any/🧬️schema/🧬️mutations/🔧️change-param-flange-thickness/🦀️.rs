@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeParamFlangeThickne
         record: "ChangedParamFlangeThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flange thickness t_f of the parametric section", "Parametrischer Querschnitt: Flanschdicke t_f ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flange thickness t_f of the parametric section", "Parametrischer Querschnitt: Flanschdicke t_f ändern")
     }
 }
 

@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "infiltration", kind: "change-infiltration-flow-per-exterior-area", record: "ChangedInfiltrationFlowPerExteriorArea" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Infiltration Flow Per Exterior Area of infiltration {}", self.id.0), &format!("Volumenstrom pro Außenfläche von Infiltration {} ändern", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Infiltration Flow Per Exterior Area of infiltration {}", self.id.0), &format!("Volumenstrom pro Außenfläche von Infiltration {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

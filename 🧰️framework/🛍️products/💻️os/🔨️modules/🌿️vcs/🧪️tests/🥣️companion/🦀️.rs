@@ -1,4 +1,4 @@
-//! 🥣️ Companion tests of the version-graph algebra: history ledger, group visibility, read custody, checkpoint and entity identities, run against the public surface of `semio-framework-os-vcs`.
+//! 🥣️ Companion tests of the version-graph algebra: history ledger, group visibility, read custody, checkpoint and entity identities, run against the public surface of `semio-os-vcs`.
 //!
 //! 🧭️ The test sources stay beside their owners and are mounted here with `#[path]` below wrappers that restate the imports of the owning module; every fixture is read at run time from the vcs folder.
 #![cfg(test)]

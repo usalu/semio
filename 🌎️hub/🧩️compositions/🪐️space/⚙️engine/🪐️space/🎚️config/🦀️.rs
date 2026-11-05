@@ -4,13 +4,13 @@
 
 use protocol::ColdMutation;
 use crate::S_PLAY_CATALOGUE_TAB_ID;
-use semio_framework_os::OsWorkflowCamera;
+use semio_os::OsWorkflowCamera;
 use std::collections::BTreeMap;
 
 //#region 🔖️Types
 /// 🎥️ One window-instance's workflow-canvas camera — keyed by window id inside `SpaceConfig.camera`
 /// (a `BTreeMap<String, SpaceWindowCamera>`, per the Configured Node Apps recipe's "camera/selection/
-/// per-window options keyed by window-instance id" rule). Distinct from `semio_framework_os::OsWorkflowCamera`
+/// per-window options keyed by window-instance id" rule). Distinct from `semio_os::OsWorkflowCamera`
 /// (a plain, non-`dsl`-field data type this crate can't blanket-impl `dsl::DslField` for under the
 /// orphan rule) — converts to/from it 1:1 at the render boundary.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -119,8 +119,8 @@ impl pack::snapshot::ArtifactPack for SpaceConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SpaceConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SpaceConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

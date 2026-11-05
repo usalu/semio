@@ -13,7 +13,7 @@ pub struct BimWindowTransient {
 
 semio_framework_value::artifact_retire_struct!(BimWindowTransient { engagement_input, pointer_generation, preview });
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: BimWindowTransient,
     mutation: BimWindowTransientMutation,
     diff: BimWindowTransientDiff,
@@ -26,7 +26,7 @@ semio_framework_plugin::transient_root! {
     fields: { engagement_input: String, pointer_generation: u64, preview: String },
 }
 
-semio_framework_plugin::window_transient_owners! {
+semio_plugin::window_transient_owners! {
     state: BimWindowTransient,
     mutation: BimWindowTransientMutation,
     windows: {

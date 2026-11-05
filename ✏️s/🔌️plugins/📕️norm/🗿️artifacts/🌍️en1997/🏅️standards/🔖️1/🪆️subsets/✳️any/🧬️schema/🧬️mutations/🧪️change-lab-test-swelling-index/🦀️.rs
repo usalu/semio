@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabTestSwellingInd
         record: "ChangedLabTestSwellingIndex",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Swelling index C_s (0 = 0.1 C_c) of the laboratory test", "Laborversuch: Schwellbeiwert C_s (0 = 0,1 C_c) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Swelling index C_s (0 = 0.1 C_c) of the laboratory test", "Laborversuch: Schwellbeiwert C_s (0 = 0,1 C_c) ändern")
     }
 }
 

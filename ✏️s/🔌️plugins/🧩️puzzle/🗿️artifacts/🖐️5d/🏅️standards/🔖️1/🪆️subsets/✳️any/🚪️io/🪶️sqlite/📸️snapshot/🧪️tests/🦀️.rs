@@ -26,8 +26,13 @@ pub(super) fn with_original_decode<O>(sql: &mut store::sqlite_snapshot::SqliteSn
         if !native.has_retirement_owner() {
             break;
         }
-        let step = native.close_retirement_recipient(policy).unwrap();
-        assert!(step.progress().fits(policy));
+        let outcome = native.close_retirement_recipient(policy);
+        let progress = match &outcome.result {
+            Ok(step) => step.progress(),
+            Err(error) => error.retained_progress(),
+        };
+        assert!(progress.fits(policy), "retirement work {}", outcome.work);
+        outcome.result.unwrap_or_else(|error| panic!("retirement failed after {} work: {error:?}", outcome.work));
     }
     assert!(!native.has_retirement_owner());
     result
@@ -48,8 +53,13 @@ pub(super) fn with_original_encode<O>(sql: &mut store::sqlite_snapshot::SqliteSn
         if !native.has_retirement_owner() {
             break;
         }
-        let step = native.close_retirement_recipient(policy).unwrap();
-        assert!(step.progress().fits(policy));
+        let outcome = native.close_retirement_recipient(policy);
+        let progress = match &outcome.result {
+            Ok(step) => step.progress(),
+            Err(error) => error.retained_progress(),
+        };
+        assert!(progress.fits(policy), "retirement work {}", outcome.work);
+        outcome.result.unwrap_or_else(|error| panic!("retirement failed after {} work: {error:?}", outcome.work));
     }
     assert!(!native.has_retirement_owner());
     result
@@ -58,7 +68,7 @@ pub(super) fn with_original_encode<O>(sql: &mut store::sqlite_snapshot::SqliteSn
 /// 📸️ Decodes through the genuine supplied-owner typed definition.
 macro_rules! decode_native {
     ($ty:ty; $payload:expr, $ctl:expr) => {
-        with_original_decode($ctl, |sql, owner| <$ty as store::os_store::serialization::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native($payload, sql, owner))
+        with_original_decode($ctl, |sql, owner| <$ty as store::os_store::serialization::ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native($payload, sql, owner))
     };
 }
 pub(super) use decode_native;
@@ -92,6 +102,7 @@ pub(super) use import_native;
 //#endregion 🔖️NativeOwners
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
+use store::snapshot::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::*;
 
 use semio_framework_test_original_snapshot_owners as original_owners;
@@ -114,6 +125,38 @@ use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dCatalogF
 }
 fn project(s:&Puzzle5dSnapshot)->SqliteDatabase{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|c|s.to_sqlite_database(c)).unwrap()}
 fn restore(d:&SqliteDatabase)->Result<Puzzle5dSnapshot,semio_framework_value::ValueError>{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|c|Puzzle5dSnapshot::from_sqlite_database(d,c))}
+
+/// 🧳️ Retires the genuine test snapshot even when JSON validation refuses.
+struct JsonSnapshotOwner(Option<Puzzle5dSnapshot>);
+impl JsonSnapshotOwner {
+ fn get(&self)->&Puzzle5dSnapshot{self.0.as_ref().unwrap()}
+}
+impl Drop for JsonSnapshotOwner {
+ fn drop(&mut self){if let Some(snapshot)=self.0.take(){snapshot.retire_sqlite_snapshot();}}
+}
+#[test]
+fn sqlite_snapshot_puzzle5d_declared_json_preserves_complete_entities_and_every_word(){
+ use crate::standards::v1::subsets::any::io::{export::serializers::artifacts::json::v_rfc8259::any as output,import::deserializers::artifacts::json::v_rfc8259::any as input};
+ let fixture=laws();let pointers=fixture["declaredJsonOptionalWordPointers"].as_array().expect("optional float roles");
+ assert_eq!(pointers.len(),7);assert_eq!(pointers.iter().map(|pointer|pointer.as_str().unwrap()).collect::<std::collections::BTreeSet<_>>().len(),7);
+ for hex in fixture["binary64Bits"].as_array().unwrap(){
+  let word=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let value=f64::from_bits(word);
+  for present in [false,true]{
+   let mut source=JsonSnapshotOwner(Some(complete(word)));
+   if present{
+    let snapshot=source.0.as_mut().unwrap();snapshot.parts[0].part_2d.width=Some(value);snapshot.parts[0].grips[0].grip_3d.radius=Some(value);snapshot.target_volumes[0].orientation=Some([value;4]);snapshot.kind_catalogs_extra.as_mut().unwrap().parts[0].grips[0].radius=Some(value);
+   }
+   let bytes=output::serialize_bytes(source.get()).expect("declared JSON export");
+   let independent:serde_json::Value=serde_json::from_slice(&bytes).expect("independent JSON parse");
+   let expected=serde_json::json!({"bits":format!("{word:016x}")});
+   assert_eq!(independent["parts"][0]["2d"]["x"],expected);
+   if present{for pointer in pointers{assert_eq!(independent.pointer(pointer.as_str().unwrap()),Some(&expected),"owned optional float {pointer}");}}
+   assert_registered_json_route(source.get(),&independent);
+   let restored=JsonSnapshotOwner(Some(input::deserialize_bytes(&serde_json::to_vec(&independent).unwrap()).expect("independently encoded declared JSON import")));
+   assert_eq!(project(restored.get()),project(source.get()),"all declared JSON entities and words {hex}, optional words present={present}");
+  }
+ }
+}
 
 #[test]
 fn sqlite_snapshot_puzzle5d_all_entities_and_words_cross_real_physical_files(){
@@ -233,3 +276,25 @@ fn sqlite_snapshot_puzzle5d_borrowed_scale_matches_neutral_list_shape() {
         assert_eq!(value, <Vec<f64> as semio_framework_dsl_record::DslField>::to_value(&sample));
     }
 }
+
+/// 🚏️ Executes the canonical native entry and independently encoded foreign carrier over every field.
+fn assert_registered_json_route(source:&Puzzle5dSnapshot,expected:&serde_json::Value){
+ use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding};
+ use store::io::io_mechanism::{IoRunControl,IoEntryDirection};
+ use store::io_schema::IoPayload;
+ let entries=crate::standards::v1::subsets::any::io::routes::entries();
+ let export=entries.iter().find(|entry|entry.direction==IoEntryDirection::Export&&entry.into.artifact_kind=="s.stdio.json").expect("canonical JSON export");
+ let import=entries.iter().find(|entry|entry.direction==IoEntryDirection::Import&&entry.from.artifact_kind=="s.stdio.json").expect("canonical JSON import");
+ let native=original_owners::with_encoding(|owner|source.encode_native_snapshot(NativeSnapshotEncoding::Binary,owner.native())).expect("original native carrier");
+ let exported=original_owners::with_decoding(|owner|(export.run)(&native,&mut IoRunControl::decoding(owner.native(),original_owners::original_grant()))).expect("actual registered JSON export").value;
+ let IoPayload::Text(exported)=exported else{panic!("canonical JSON entry preserves its text carrier")};let exported=exported.into_bytes();
+ assert_eq!(&serde_json::from_slice::<serde_json::Value>(&exported).expect("independent registered JSON parse"),expected,"complete registered wire");
+ let foreign=IoPayload::Binary(serde_json::to_vec(expected).expect("independent registered JSON encode"));
+ let restored=original_owners::with_encoding(|owner|(import.run)(&foreign,&mut IoRunControl::encoding(owner.native(),original_owners::original_grant()))).expect("actual registered JSON import").value;
+ let IoPayload::Binary(restored)=restored else{panic!("native binary entry output")};
+ let restored=RouteSnapshotOwner(Some(original_owners::with_decoding(|owner|Puzzle5dSnapshot::decode_native_snapshot(NativeSnapshotInput::Binary(&restored),owner.native())).expect("original restored native carrier")));
+ let project=|snapshot:&Puzzle5dSnapshot|original_owners::with_sqlite_recipient(store::sqlite_snapshot::SqliteDatabaseLimits::default(),&mut |_|true,|control|snapshot.to_sqlite_database(control)).unwrap();
+ assert_eq!(project(restored.0.as_ref().unwrap()),project(source),"all registered native entities and exact words");
+}
+struct RouteSnapshotOwner(Option<Puzzle5dSnapshot>);
+impl Drop for RouteSnapshotOwner{fn drop(&mut self){if let Some(snapshot)=self.0.take(){snapshot.retire_sqlite_snapshot();}}}

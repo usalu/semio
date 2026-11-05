@@ -1,12 +1,12 @@
 // 🧰️ History acceptance, source laws and camera helper: the history edit acceptance law, the editor source reader, the cursorized cohort route laws and the rendered camera helper.
 
-semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle2dPlayApp, puzzle2d_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle2dPlayApp, puzzle2d_manifest_for_tests, "../..");
 use crate::editor::puzzle2d::testkit::*;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::editor::puzzle2d::*;
 use crate::Puzzle2dSnapshot;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 use store::os_store::backbone::Backbone;
 use store::os_store::backbone::BackboneMessage;
 use store::os_store::backbone::MemoryBackbone;

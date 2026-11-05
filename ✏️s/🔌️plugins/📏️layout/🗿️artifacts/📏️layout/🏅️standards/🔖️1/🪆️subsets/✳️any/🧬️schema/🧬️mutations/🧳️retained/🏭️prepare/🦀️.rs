@@ -2,7 +2,7 @@
 use crate::LayoutMutation;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use protocol::{RetainedMutationPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext,RetainedFieldPreparation,RetainedDiagnosticPreparation,RetainedDiagnosticSpec,MutationMessage,MutationMessageLedgerRetirement};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_factory::vector::FactoryVectorRetirement;

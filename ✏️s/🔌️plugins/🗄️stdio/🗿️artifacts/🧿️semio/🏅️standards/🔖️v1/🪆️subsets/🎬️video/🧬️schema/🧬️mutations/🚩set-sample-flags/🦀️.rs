@@ -17,8 +17,8 @@ pub struct SetSampleFlags {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetSampleFlags {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-flags", kind: "set-sample-flags", record: "SetSampleFlags" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set sample flags", "Sample-Kennungen setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set sample flags", "Sample-Kennungen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

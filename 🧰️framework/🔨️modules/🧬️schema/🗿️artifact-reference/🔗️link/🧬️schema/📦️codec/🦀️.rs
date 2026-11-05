@@ -1,6 +1,6 @@
 //! 🔗️ Canonical durable link records, borrowed schema and controlled native codecs.
 use super::{ArtifactLink,LinkPin};
-use semio_framework_os_store_blob_identity::BlobRef;
+use semio_os_store_blob_identity::BlobRef;
 use semio_framework_value::ValueError;
 use semio_framework_dsl_record::RecordSpecProducer;
 

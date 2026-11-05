@@ -17,8 +17,8 @@ pub struct ChangeBeamSteelSecondMomentM4 {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamSteelSecondMomentM4 where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_steel_second_moment_m4::ChangeBeamSteelSecondMomentM4> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-steel-second-moment-m4", kind: "change-beam-steel-second-moment-m4", record: "ChangedBeamSteelSecondMomentM4" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change second moment of area I_y", "Flächenträgheitsmoment I_y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change second moment of area I_y", "Flächenträgheitsmoment I_y ändern")
     }
 }
 

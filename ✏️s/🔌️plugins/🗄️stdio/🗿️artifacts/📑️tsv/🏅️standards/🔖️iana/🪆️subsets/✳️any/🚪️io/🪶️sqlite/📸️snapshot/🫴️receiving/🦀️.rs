@@ -1,7 +1,7 @@
 //! 📑️ Genuine TSV receiving frames preserve raw row extents and independent newline metadata.
 use super::{TsvSnapshot,LineEnding};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::{Direction,Projection,Scalar,AuthoredTable,cell,text_cell,row,push_row,sort,identity_position,parent_range,ordinal,integer,validate_schema,settle};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase};
+use semio_os_kernel::sqlite_snapshot::artifact::receiving::{Direction,Projection,Scalar,AuthoredTable,cell,text_cell,row,push_row,sort,identity_position,parent_range,ordinal,integer,validate_schema,settle};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::NativeSnapshotBodyWallet;
 use std::mem::size_of;
@@ -12,7 +12,7 @@ pub(super) fn validate_subset(dialect:&semio_framework_artifact_reference::Artif
  if dialect.subset=="*"{return Ok(store::io_schema::IoOutcome::clean(()))}
  Err(store::io_schema::IoError::from_value_error(error(ValueRefusalKind::UnsupportedOwner,"TSV subset has no authored semantic validator")))
 }
-type Port<'a,'b,'c>=semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::Port<'a,'b,'c,NativeSnapshotBodyWallet>;
+type Port<'a,'b,'c>=semio_os_kernel::sqlite_snapshot::artifact::receiving::Port<'a,'b,'c,NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 const NAMES:[&str;3]=["tsv_document","tsv_record","tsv_field"];
 fn error(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}

@@ -14,7 +14,7 @@ mod tests {
         assert_eq!(projected.schema, spec.schema);
         assert_eq!(projected.media_type, spec.media_type);
         assert_eq!(projected.label, spec.label, "the host descriptor presents the kind's own label");
-        assert_eq!(projected.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Format-Rundlauf");
+        assert_eq!(projected.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Format-Rundlauf");
     }
 
     #[test]
@@ -36,7 +36,7 @@ mod tests {
                 body_key: "draw".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
-                options: semio_framework_ui_declaration::layout::WindowOptions::default(),
+                options: semio_ui_declaration::layout::WindowOptions::default(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 interactions: Vec::new(),

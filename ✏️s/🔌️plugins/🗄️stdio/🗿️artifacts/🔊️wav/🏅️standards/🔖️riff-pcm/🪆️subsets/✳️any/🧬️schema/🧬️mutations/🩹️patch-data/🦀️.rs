@@ -49,8 +49,8 @@ impl PatchData {
 impl protocol::MutationKind<WavSnapshot, WavMutation> for PatchData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "data", kind: "patch-data", record: "PatchData" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Patch samples", "Samples bearbeiten")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Patch samples", "Samples bearbeiten")
     }
     fn target(&self) -> Vec<String> {
         vec!["data".into(), "value".into(), self.index.to_string()]

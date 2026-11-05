@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeBridgeTrackGauge w
         record: "ChangedBridgeTrackGauge",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change track gauge (0 = not declared) of the bridge serviceability", "Brückengebrauchstauglichkeit: Spurweite (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change track gauge (0 = not declared) of the bridge serviceability", "Brückengebrauchstauglichkeit: Spurweite (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

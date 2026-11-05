@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "object", kind: "move-object", record: "MovedObject" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move object to ({}, {}, {})", self.translation.x, self.translation.y, self.translation.z), &format!("Objekt nach ({}, {}, {}) verschieben", self.translation.x, self.translation.y, self.translation.z))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move object to ({}, {}, {})", self.translation.x, self.translation.y, self.translation.z), &format!("Objekt nach ({}, {}, {}) verschieben", self.translation.x, self.translation.y, self.translation.z))
     }
     fn target(&self) -> Vec<String> {
         vec!["transform".to_string()]

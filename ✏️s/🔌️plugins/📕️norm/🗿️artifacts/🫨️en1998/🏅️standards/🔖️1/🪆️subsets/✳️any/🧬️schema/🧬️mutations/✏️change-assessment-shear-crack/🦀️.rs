@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentShearCra
         record: "ChangeAssessmentShearCrack",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear cracking before flexural yielding a_V (1 = yes, 0 = no)", "Schubrisse vor dem Biegefließen a_V (1 = ja, 0 = nein) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear cracking before flexural yielding a_V (1 = yes, 0 = no)", "Schubrisse vor dem Biegefließen a_V (1 = ja, 0 = nein) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-shear-crack".into()]

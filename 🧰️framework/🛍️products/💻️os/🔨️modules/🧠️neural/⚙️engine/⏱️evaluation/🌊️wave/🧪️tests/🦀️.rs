@@ -1,5 +1,5 @@
 use super::*;
-fn observe<T>(work:impl FnOnce()->T)->(T,usize,usize){semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership(work)}
+fn observe<T>(work:impl FnOnce()->T)->(T,usize,usize){semio_os_kernel_neural_engine_model::testkit::observe_ownership(work)}
 #[derive(semio_framework_value::RetireOwned)]
 struct AdmissionSources{metadata:SharedOwner<super::super::PendingOperatorMetadata>,input:Option<Dictionary>,accepted:Option<OperatorPendingPlan>}
 #[test]

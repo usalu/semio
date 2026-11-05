@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-prepared-laws"
+name = "semio-ui-prepared-laws"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Companion white-box laws of semio-framework-ui-prepared"
+description = "Companion white-box laws of semio-ui-prepared"
 
 [package.metadata.semio]
 role = "framework"
@@ -18,15 +18,15 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
-semio-framework-ui-prepared = { path = "../../../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-prepared = { path = "../../../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
-semio-framework-ui-draw-contract = { path = "../../../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
-semio-framework-ui-prepared-staging = { path = "../../../../🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-scene = { path = "../../../../🎬️scene/📦️packages/🦀️rust" }
-semio-framework-ui-theme = { path = "../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-ui-prepared-staging = { path = "../../../../🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-scene = { path = "../../../../🎬️scene/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
-ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

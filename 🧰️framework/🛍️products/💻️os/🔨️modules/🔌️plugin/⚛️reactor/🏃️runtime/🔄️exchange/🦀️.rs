@@ -1,7 +1,7 @@
 //! 🔁️ The plugin exchange function of the plugin runtime.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 
 #[path = "🔀️plugin-exchange/🦀️.rs"]
 pub mod exch_plugin_exchange;

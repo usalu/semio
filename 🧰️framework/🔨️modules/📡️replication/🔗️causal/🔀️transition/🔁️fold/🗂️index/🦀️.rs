@@ -57,7 +57,10 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     /// 📐️ Covers the actual AVL path and prospective original page ownership path.
     pub fn next_insert_depth_demand<Q:Ord+?Sized>(&self,key:&Q)->Result<usize,ValueError> where K:Borrow<Q>{let page=if self.contains_key(key){self.displaced_keys.next_reserve_depth_demand()}else if self.free_head.is_some(){Ok(0)}else{self.nodes.next_reserve_depth_demand()}.map_err(|error|index_page_refusal(error.kind,error.reason))?;self.height(self.root).checked_add(2).and_then(|tree|page.checked_add(1).map(|page|tree.max(page))).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"index insertion depth overflow"))}
     /// 🎫️ Admits one backing page while every original key and value remains in place.
-    pub fn reserve_insert_step<Q:Ord+?Sized>(&mut self,key:&Q,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,RetainedCloneProgress)> where K:Borrow<Q>{
+    pub fn reserve_insert_step<Q:Ord+?Sized>(&mut self,key:&Q,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,RetainedCloneProgress)> where K:Borrow<Q>{self.reserve_insert_original(key,grant).result}
+    /// ⏱️ Retains the defining page producer's exact work on success and refusal.
+    pub fn reserve_insert_original<Q:Ord+?Sized>(&mut self,key:&Q,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,(ValueError,RetainedCloneProgress)> where K:Borrow<Q>{
+        let mut work=0;let result=(||{
         let empty=RetainedCloneProgress::default();
         let bytes=self.next_insert_capacity_byte_demand(key,grant.maximum_copy_bytes).map_err(|error|(error,empty))?;
         if bytes==0{return Ok(empty)}
@@ -65,7 +68,8 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         if grant.maximum_depth<self.next_insert_depth_demand(key).map_err(|error|(error,empty))?{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"index reservation exceeds admitted depth"),empty))}
         if grant.maximum_capacity_bytes<bytes{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"index backing exceeds admitted capacity"),empty))}
         let result=if self.contains_key(key){self.displaced_keys.reserve_one(grant.maximum_capacity_bytes)}else{self.nodes.reserve_one(grant.maximum_capacity_bytes)};
-        match result{Ok(progress)=>Ok(RetainedCloneProgress{copied_items:usize::from(progress.progressed),retained_capacity_bytes:progress.allocated_bytes,..empty}),Err(error)=>Err((index_page_refusal(error.kind,error.reason),RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..empty}))}
+        match result{Ok(progress)=>{work=progress.work;Ok(RetainedCloneProgress{copied_items:usize::from(progress.progressed),retained_capacity_bytes:progress.allocated_bytes,..empty})},Err(error)=>{work=error.work;Err((index_page_refusal(error.kind,error.reason),RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..empty}))}}
+        })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
     /// 🪴️ Transfers one incoming original row only into independently admitted backing.
     pub fn insert_reserved(&mut self,key:K,value:V,grant:RetainedCloneGrant)->Result<(Option<V>,RetainedCloneProgress),(ValueError,K,V)>{

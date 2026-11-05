@@ -15,7 +15,7 @@
 //! way). `db_storage::IndexStorage` stores opaque per-`(document, run_id)` byte blobs; this crate
 //! owns everything about what's inside a run and how `run_id`s are namespaced per `IndexKind`.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_durability::Frontier;
 use db_ids::{ActorId, ArtifactId, DbError, check_len};

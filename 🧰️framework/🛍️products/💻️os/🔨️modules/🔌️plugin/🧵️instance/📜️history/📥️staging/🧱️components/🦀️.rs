@@ -1,22 +1,22 @@
 //! 🪗️ The instance components of `instance-history`: CommandHistory, HostEvents, Transactions (WP6, plan section 7.3).
 use semio_framework::{ActionKind, FaultFrom};
-use semio_framework_plugin_document_media::AppProjectionCache;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_document_media::AppProjectionCache;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use std::future::Future;
 use std::collections::{HashMap, HashSet};
-use semio_framework_plugin_command::{HistoryBackfillMark, HistoryViewCache};
-use semio_framework_plugin_decl_views::history_view::{HistoryCommandFilter, ShellHistoryReplay};
+use semio_plugin_command::{HistoryBackfillMark, HistoryViewCache};
+use semio_plugin_decl_views::history_view::{HistoryCommandFilter, ShellHistoryReplay};
 use store::{MemberFactory, Mutation, SpaceMember};
-use semio_framework_plugin_publication_mounted::command_mounted::MountedCommandPrune;
+use semio_plugin_publication_mounted::command_mounted::MountedCommandPrune;
 use protocol::OpText;
-use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group::command::PagedCommandLog;
-use semio_framework_plugin_job::{PendingTransaction, TransactionProposalDraft};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_time_travel::SupersedeLedger;
-use semio_framework_ui_contract::*;
+use semio_plugin_publication_mounted::mounted_child_group_receipt_group::command::PagedCommandLog;
+use semio_plugin_job::{PendingTransaction, TransactionProposalDraft};
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_time_travel::SupersedeLedger;
+use semio_ui_contract::*;
 
 /// 🎸️ Command history: the session command log, the cached history view, backfill marks and the supersede ledger.
 pub struct CommandHistory<A: ArtifactApp> {
@@ -93,13 +93,13 @@ pub struct HostEvents {
     /// 📨️ The typed operations a [`HostEvent`] admitted: never history rows of their own.
     pub host_event_operations: HostEventOperations,
     /// 📬️ The window facts waiting for their original typed delivery, front first; the front is the one in flight while `delivering`.
-    pub queue: std::collections::VecDeque<semio_framework_plugin_decl_emission::HostEvent>,
+    pub queue: std::collections::VecDeque<semio_plugin_decl_emission::HostEvent>,
     /// 🏃️ Set from the first queued delivery until the queue has drained through the shared typed source.
     pub delivering: bool,
     /// 💬️ Set while the `hostEvent` action itself waits for its queued fact: the reply follows the last delivery.
     pub reply: bool,
     /// 🔁️ The resolved task follow-ups waiting for their original typed delivery.
-    pub resumes: semio_framework_plugin_command::command_admission::original_typed_command::TaskResumes,
+    pub resumes: semio_plugin_command::command_admission::original_typed_command::TaskResumes,
 }
 
 impl HostEvents {
@@ -117,7 +117,7 @@ impl HostEvents {
             queue: std::collections::VecDeque::new(),
             delivering: false,
             reply: false,
-            resumes: semio_framework_plugin_command::command_admission::original_typed_command::TaskResumes::new(),
+            resumes: semio_plugin_command::command_admission::original_typed_command::TaskResumes::new(),
         }
     }
 }

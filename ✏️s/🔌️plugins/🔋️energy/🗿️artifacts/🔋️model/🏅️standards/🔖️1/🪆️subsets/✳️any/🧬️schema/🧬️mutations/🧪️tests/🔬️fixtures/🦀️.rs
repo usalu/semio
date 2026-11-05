@@ -3,8 +3,8 @@
 
 #![allow(async_fn_in_trait, clippy::too_many_arguments)]
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
 extern crate semio_s_artifact_energy_model_mut_air_loop as air_loop_mutations;
 extern crate semio_s_artifact_energy_model_mut_air_loop_nodes as air_loop_nodes_mutations;

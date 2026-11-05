@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-snapshot-clone"
+name = "semio-os-store-snapshot-clone"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,13 +22,13 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-canonical-json = { path = "../../../🧵️canonical-edit/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-canonical-json = { path = "../../../🧵️canonical-edit/📦️packages/🦀️rust" }
+semio-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
-semio-framework-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
+semio-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

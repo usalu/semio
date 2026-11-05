@@ -1,10 +1,10 @@
 //! 🖥️ Semio framework OS host — Shape V2 glue.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_value_derive as value_derive;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 
 /// 🛂️ Binds a finite test caller identity authority, the one every authored host edit is admitted through.
 #[cfg(test)]
@@ -14,8 +14,8 @@ macro_rules! test_identity {
     };
     ($identity:ident, $maximum:expr) => {
         let mut observer_function = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-        let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer_function;
-        let mut $identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new($maximum, observer).expect("finite test identity admission");
+        let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer_function;
+        let mut $identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new($maximum, observer).expect("finite test identity admission");
     };
 }
 
@@ -23,7 +23,7 @@ macro_rules! test_identity {
 pub mod persistence;
 
 //#region 🔖️Space
-pub use semio_framework_os_host_space as space;
+pub use semio_os_host_space as space;
 
 // 🌉️ Mirrors the target guard on the module this re-exports: `store::sync` is itself mounted
 // `#[cfg(all(feature = "sync", not(all(target_arch = "wasm32", target_env = "p2"))))]` because the

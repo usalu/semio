@@ -5,21 +5,21 @@ use crate::{raster_action, ui_label, ui_value_list, ui_value_map, ui_value_text}
 use semio_s_artifact_raster_raster_model::{find_layer, layer_name, layer_node_id, layer_opacity, layer_blend_mode, layer_transform, layer_visible, layer_locked, layer_protection};
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
-use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::activation_target;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::activation_target;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_ui_contract as ui;
 
 pub const RASTER_PLAY_BODY_PROPERTIES: &str = "raster.play.properties";
 const ROOT: &str = "raster-inspector";
@@ -164,7 +164,7 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
     let input = ui::input(InputKind::Color).value(text(&runtime.brush_color)?).try_id(format!("{ROOT}.foreground.input")).map_err(|_| capacity())?.try_label(labels.foreground.as_str()).map_err(|_| capacity())?
         .try_on_with(Trigger::Change, action, args.ok_or_else(capacity)?).map_err(|_| capacity())?.try_build().map_err(|_| capacity())?;
     rows.push(ui::tree_item(ui_label(labels.foreground.as_str())?).try_id(format!("{ROOT}.foreground")).map_err(|_| capacity())?.try_child(input).map_err(|_| capacity())?.try_build().map_err(|_| capacity())?);
-    PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.properties"), Some(ui_label(labels.inspection.as_str())?), true, semio_framework_plugin::ui_node_list(rows.into_iter().map(Ok))?)?.build()
+    PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.properties"), Some(ui_label(labels.inspection.as_str())?), true, semio_plugin::ui_node_list(rows.into_iter().map(Ok))?)?.build()
 }
 
 #[cfg(test)]

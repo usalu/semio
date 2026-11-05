@@ -2,13 +2,13 @@
 
 use crate::editor::sequence::host::host_from_host_snapshot;
 use crate::SequenceHostSnapshot;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TextEditorScene;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TextEditorScene;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
@@ -41,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 pub fn render(host_snapshot: &SequenceHostSnapshot) -> UiAssemblyResult<BuiltNode> {
     let host = neural_engine::ColdOwner::new(host_from_host_snapshot(host_snapshot));
-    semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_COMPILED, semio_framework_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
+    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_COMPILED, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
 //#endregion 🔖️Render
 

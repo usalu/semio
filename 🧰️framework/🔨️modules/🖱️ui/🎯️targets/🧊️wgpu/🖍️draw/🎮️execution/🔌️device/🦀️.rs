@@ -1,6 +1,6 @@
 //! 🔒️ Actual backend resources retain their issuing device and reject foreign sessions before execution.
 use std::sync::{Arc,atomic::{AtomicBool,Ordering}};
-pub use semio_framework_ui_render_device::*;
+pub use semio_ui_render_device::*;
 
 #[path="🗺️conversion/🦀️.rs"]
 mod conversion;

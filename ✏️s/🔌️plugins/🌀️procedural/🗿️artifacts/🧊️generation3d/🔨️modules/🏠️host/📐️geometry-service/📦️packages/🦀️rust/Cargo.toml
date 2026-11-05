@@ -17,9 +17,9 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-procedural-3d-geometry = { workspace = true }
@@ -31,8 +31,8 @@ semio-s-artifact-procedural-3d-mutations = { workspace = true }
 [dev-dependencies]
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true, features = ["testkit"] }
 

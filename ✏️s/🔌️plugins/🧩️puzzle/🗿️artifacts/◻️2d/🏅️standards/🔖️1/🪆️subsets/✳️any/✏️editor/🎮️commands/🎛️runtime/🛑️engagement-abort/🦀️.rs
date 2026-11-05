@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select;
 use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 
 pub fn engagement_abort(ctx: &mut Puzzle2dActionCtx<'_>, _args: Option<&Value>) {

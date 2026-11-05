@@ -1,11 +1,11 @@
 /// 🔚️ Close turn, wire input and no-state disposers: the app close turn, the retained wire input, the declared child projection default and the keyed no-state disposers and retirement factories.
 
     /// 🎟️ Spends exactly the quoted close turn of a hosted app.
-    fn app_close_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn app_close_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-        let grant = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
+        let grant = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
         assert!(grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"app demand exceeds its original fixture close policy");
-        let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty())))?;
+        let step = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty())))?;
         let _ = app.take_constructor_receipt();
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "close receipt {step:?} exceeds its exact grant {grant:?}");
         Ok(step)
@@ -47,12 +47,12 @@
 
     #[test]
     fn keyed_fixture_no_state_disposers_and_retirement_factories_close_live_owners() {
-        use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+        use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
         let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
         fn close_root<T: Send + Sync + 'static>(factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<T>>, root: T) {
             let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
-            let admission = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation;
+            let admission = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation;
             let (mut retirement, born) = match store::SnapshotRetirementFactory::retire(factory.as_ref(), std::sync::Arc::new(root), admission) {
                 Ok(admitted) => admitted,
                 Err((error, _)) => panic!("no-state root retirement constructor refused its page grant: {error:?}"),
@@ -144,6 +144,6 @@
         transient = store::TransientStore::new(NoTransient::default());
         let drifted_transient_root = transient.current_root();
         assert!(!transient_disposer.terminal_is_empty(&transient));
-        assert!(transient_disposer.close_step(&mut transient, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).is_err(), "transient terminal witness rejects owner drift");
+        assert!(transient_disposer.close_step(&mut transient, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).is_err(), "transient terminal witness rejects owner drift");
         assert!(std::sync::Arc::ptr_eq(&drifted_transient_root, &transient.current_root()));
     }

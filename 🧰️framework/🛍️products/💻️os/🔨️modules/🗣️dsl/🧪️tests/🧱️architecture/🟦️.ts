@@ -46,7 +46,7 @@ test("all seven current family assets stay at their actual specific owners", () 
 test.each([...corpus.consumers])("the actual $owner language binding directly selects the general provider", (consumer) => {
     const text = read(consumer.manifest), native = Bun.TOML.parse(text) as { dependencies?: Record<string, string | { package?: string; path?: string }> }, thirdParty = TOML.parse(text) as typeof native;
     expect(native).toEqual(thirdParty);
-    const dependencies = Object.entries(native.dependencies ?? {}), kernel = dependencies.filter(([name, row]) => name === "semio-framework-os-kernel" || typeof row === "object" && row.package === "semio-framework-os-kernel");
+    const dependencies = Object.entries(native.dependencies ?? {}), kernel = dependencies.filter(([name, row]) => name === "semio-os-kernel" || typeof row === "object" && row.package === "semio-os-kernel");
     if (consumer.boundary === "complete-package") expect(kernel, `${consumer.manifest}: current concrete product edge`).toEqual([]);
     expect(dependencies.some(([name, row]) => name === corpus.package.name || typeof row === "object" && row.package === corpus.package.name), consumer.manifest).toBe(true);
     expect(tokens(read(consumer.source)).includes("os_dsl"), consumer.source).toBe(false);

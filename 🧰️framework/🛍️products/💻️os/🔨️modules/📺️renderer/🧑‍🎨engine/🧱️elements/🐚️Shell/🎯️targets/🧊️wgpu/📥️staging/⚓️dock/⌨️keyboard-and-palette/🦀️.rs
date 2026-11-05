@@ -46,9 +46,9 @@ impl FocusDevice {
 }
 
 /// 🪟️ The window kinds the layout `device` presents holds: the app's named layout whose id is the device id or ends in `-<device id>` (`norm-visual-mobile`); `None` when the app declares no layout for the device, which leaves every declared kind available.
-pub fn device_layout_window_kinds(layouts: &[semio_framework_ui_declaration::layout::NamedLayout], device: FocusDevice) -> Option<Vec<String>> {
+pub fn device_layout_window_kinds(layouts: &[semio_ui_declaration::layout::NamedLayout], device: FocusDevice) -> Option<Vec<String>> {
     let suffix = format!("-{}", device.id());
-    layouts.iter().find(|layout| layout.id == device.id() || layout.id.ends_with(&suffix)).map(|layout| semio_framework_ui_declaration::layout::collect_window_kind_ids_from_layout(&layout.layout))
+    layouts.iter().find(|layout| layout.id == device.id() || layout.id.ends_with(&suffix)).map(|layout| semio_ui_declaration::layout::collect_window_kind_ids_from_layout(&layout.layout))
 }
 
 /// 🎯️ The window kind a focus lands on for a device: `requested` when the device layout holds it (or declares no layout), else the `fallback` stand-in when the layout holds that, else `None` (the focus is refused as unavailable).
@@ -109,7 +109,7 @@ impl ShellDockState {
 
     //#region ⌨️ShellShortcutDispatch
     /// 🪟️ The dock stack path holding `window_id`, read off the same order walk Tab cycling uses.
-    pub fn dock_stack_path_for(&self, window_id: &str) -> Option<semio_framework_os_renderer_wgpu_dock::DockPath> {
+    pub fn dock_stack_path_for(&self, window_id: &str) -> Option<semio_renderer_wgpu_dock::DockPath> {
         let mut order = Vec::new();
         dock_window_order(&self.dock.root, &mut Vec::new(), &mut order);
         order.into_iter().find(|(_, id)| id == window_id).map(|(path, _)| path)
@@ -195,7 +195,7 @@ impl ShellDockState {
         let Some(path) = self.dock_stack_path_for(&window_id) else {
             return false;
         };
-        if !self.dock.split_stack_with_instance(&path, &instance_id, &window_kind_id, semio_framework_os_renderer_wgpu_dock::DockSide::Right) {
+        if !self.dock.split_stack_with_instance(&path, &instance_id, &window_kind_id, semio_renderer_wgpu_dock::DockSide::Right) {
             return false;
         }
         windows.active_window_id = Some(instance_id.clone());
@@ -222,7 +222,7 @@ impl ShellDockState {
                 if !windows.window_topology_publication_has_credit() {
                     return Err("the window topology queue is full".to_string());
                 }
-                if !self.dock.split_root_with_window(window_kind_id, semio_framework_os_renderer_wgpu_dock::DockSide::Right) {
+                if !self.dock.split_root_with_window(window_kind_id, semio_renderer_wgpu_dock::DockSide::Right) {
                     return Err(format!("window kind {window_kind_id} could not be opened"));
                 }
                 (window_kind_id.to_string(), true)
@@ -253,14 +253,14 @@ impl ShellDockState {
 /// private to the `dock` module and this region (`shell::ShellInput`) must not edit `dock` to expose
 /// a public equivalent (region-claims.json `must_not_touch`). `DockNode`'s variants/fields are
 /// public, so this is a plain read of already-public state, not a layering violation.
-pub fn dock_window_order(node: &semio_framework_os_renderer_wgpu_dock::DockNode, path: &mut Vec<usize>, out: &mut Vec<(Vec<usize>, String)>) {
+pub fn dock_window_order(node: &semio_renderer_wgpu_dock::DockNode, path: &mut Vec<usize>, out: &mut Vec<(Vec<usize>, String)>) {
     match node {
-        semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, .. } => {
+        semio_renderer_wgpu_dock::DockNode::Stack { windows, .. } => {
             for tab in windows {
                 out.push((path.clone(), tab.window_id.clone()));
             }
         }
-        semio_framework_os_renderer_wgpu_dock::DockNode::Row(children) | semio_framework_os_renderer_wgpu_dock::DockNode::Column(children) => {
+        semio_renderer_wgpu_dock::DockNode::Row(children) | semio_renderer_wgpu_dock::DockNode::Column(children) => {
             for (index, (child, _)) in children.iter().enumerate() {
                 path.push(index);
                 dock_window_order(child, path, out);

@@ -128,10 +128,10 @@ fn fem2d_retained_reduce(
     command: &Fem2dCommand,
     snapshot: &Fem2dSnapshot,
     config: &NoConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem2dMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
@@ -164,17 +164,17 @@ pub(super) struct Fem2dRetainedWork {
     pub(super) consumed: bool,
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem2dPlayApp>> for Fem2dRetainedWork {
+impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem2dPlayApp>> for Fem2dRetainedWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
 
-    fn extent(&self, command: &Fem2dCommand, snapshot: &Fem2dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &Fem2dCommand, snapshot: &Fem2dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>) -> Option<usize> {
         fem2d_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
         use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballMotion;
@@ -182,7 +182,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
             return Err(Fault::from("fem2d-retained-work-repeated"));
         }
         self.consumed = true;
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
         let selected = fem2d_interaction_selection_ids(interaction);
         match command {
             Fem2dCommand::TranslateSelection(payload) => crate::editor::fem2d::commands::gumball::gumball_step("translateSelection", Fem2dGumballMotion::Translate { dx: payload.dx, dy: payload.dy }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
@@ -193,16 +193,16 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
                 let view = context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("fem2d.result-animation-tick.window-context-required"))?;
                 let clock = results_window::transient::required_clock::<results_window::transient::Fem2dResultsWindowTransientOwner>(context.and_then(|context| context.window_transient.as_ref()), &payload.window_id)?;
                 let step = result_animation_tick::result_animation_tick_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, view, clock)?;
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })
             }
             Fem2dCommand::SetResultAnimation(payload) => {
                 let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
                 let view = context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("fem2d.result-animation.window-context-required"))?;
                 let clock = payload.window_id.as_deref().filter(|id| !id.is_empty()).and_then(|id| context.and_then(|context| results_window::transient::captured_clock::<results_window::transient::Fem2dResultsWindowTransientOwner>(context.window_transient.as_ref(), id)));
                 let step = set_result_animation::set_result_animation_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, view, clock)?;
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })
             }
-            _ => fem2d_retained_reduce(command, snapshot, config, history, interaction, hover, context, operation).map(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete),
+            _ => fem2d_retained_reduce(command, snapshot, config, history, interaction, hover, context, operation).map(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete),
         }
     
         })();

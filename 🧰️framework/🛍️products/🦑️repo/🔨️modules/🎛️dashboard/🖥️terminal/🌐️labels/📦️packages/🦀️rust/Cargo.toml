@@ -25,13 +25,13 @@ path = "../../🦀️.rs"
 semio-framework-filesystem-workspace = { path = "../../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust" }
 dashboard_launch = { path = "../../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
 dashboard_wire = { path = "../../../../🌀️daemon/🧵️wire/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-wire" }
-ui_locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
-semio-framework-ui-tui-core = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
-semio-framework-ui-tui-engine = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-ui-tui-frame = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
-semio-framework-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust", features = ["native"] }
-semio-framework-ui-tui-vt = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📟️vt/📦️packages/🦀️rust" }
-semio-framework-ui-tui-widgets = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
+ui_locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale" }
+semio-ui-tui-core = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-engine = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
+semio-ui-tui-frame = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
+semio-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust", features = ["native"] }
+semio-ui-tui-vt = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📟️vt/📦️packages/🦀️rust" }
+semio-ui-tui-widgets = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 dashboard_core = { path = "../../../../🧱️invocation-catalog/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }

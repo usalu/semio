@@ -7,7 +7,7 @@ use semio_framework::kernel::Effect;
 
 /// 📨️ Routes text-entry requests through the retained public command.
 pub fn request(count: u32) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: "setFillCount".into(), args: Some(semio_framework::dsl_value!({ "value": count })), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: "setFillCount".into(), args: Some(semio_framework::dsl_value!({ "value": count })), delay_ms: 0 }
 }
 
 /// 🔢️ The requested count is any `u32` — the planner plans toward exactly what was asked and reports

@@ -1,10 +1,10 @@
 use crate::viewer::dag::modes::view::windows::main;
 use crate::{default_snapshot, DAG_DIALECT};
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
+use semio_plugin::NoConfig;
+use semio_plugin::Viewer;
 use crate::viewer::dag::*;
 
 #[semio_framework_async_macros::async_test]
@@ -23,9 +23,9 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 #[semio_framework_async_macros::async_test]
 async fn the_main_body_refuses_a_view_without_its_content_child() {
     let snapshot = default_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    assert!(<DagViewer as ArtifactViewer>::render(main::BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).is_err());
+    assert!(<DagViewer as ArtifactViewer>::render(main::BODY_KEY, &doc, &cfg, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).is_err());
 }

@@ -25,8 +25,8 @@ pub struct CreateLink {
 impl<Op> MutationKind<LayoutSnapshot, Op> for CreateLink where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_link::DeleteLink> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "link", kind: "create-link", record: "CreatedLink" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create link \"{}\"", self.link.path), &format!("Verknüpfung \"{}\" erstellen", self.link.path))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create link \"{}\"", self.link.path), &format!("Verknüpfung \"{}\" erstellen", self.link.path))
     }
     fn target(&self) -> Vec<String> {
         vec![self.link.id.clone()]

@@ -10,7 +10,7 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_job::reserved_jobs::FRAMEWORK_RESERVED_JOB_MAGIC;
+use semio_plugin_job::reserved_jobs::FRAMEWORK_RESERVED_JOB_MAGIC;
 
 /// 🧪️ Drives one framework-reserved spawn-job through the real reactor registry: a genuine original admission under a
 /// caller context funded with at least the registry's own quoted grant, then bounded steps until its terminal output.
@@ -142,7 +142,7 @@ impl FrameworkReservedBoundedJob{
 }
 
 impl crate::BoundedJob for FrameworkReservedBoundedJob {
- fn step(&mut self,_original:&mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_,'_>,_snapshot:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::OriginalJobStep,OriginalTurnFailure>{self.step_original(cx)}
+ fn step(&mut self,_original:&mut semio_os_kernel::io::io_mechanism::IoRunControl<'_,'_>,_snapshot:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::OriginalJobStep,OriginalTurnFailure>{self.step_original(cx)}
  fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate_original(cx)?;if self.terminal_drop_is_shallow(){return Ok(true)}
   if !self.cancelled{let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.cancelled=true;return Ok(false)}

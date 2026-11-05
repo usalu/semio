@@ -6,15 +6,15 @@ use semio_s_artifact_vcs_vcs_editor::editor::vcs::modes::edit;
 use semio_s_artifact_vcs_vcs_editor::{editor::vcs::modes::edit::windows::editor, editor::vcs::modes::edit::windows::history};
 use semio_s_artifact_vcs_vcs_editor::{op::VcsDemoMutation, VcsSnapshot};
 use semio_framework::ToolExecutionContract;
-use semio_framework_plugin::retained_command::ArtifactCommandWork;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::retained_command::ArtifactCommandWork;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::EditorApp;
+use semio_plugin::HierarchyProvider;
 pub(crate) mod context {
     use super::*;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, render_registered_fixture_app, OriginalFixtureScope};
-    use semio_framework_plugin::ActionMeta;
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, render_registered_fixture_app, OriginalFixtureScope};
+    use semio_plugin::ActionMeta;
+    use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use store::os_store::store_schema::ArtifactEnvelope;
     
     /// ✏️ `VcsPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
@@ -30,7 +30,7 @@ pub(crate) mod context {
     impl VcsApp {
         /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
         pub fn close_fixture(&mut self) {
-            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -58,11 +58,11 @@ pub(crate) mod context {
     /// ✏️ Adapts `create_vcs_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `context::new_app_with_registry` still expects — framework test context gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    fn vcs_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_vcs_app(), examples: Vec::new() }
+    fn vcs_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_vcs_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("vcs", VcsPlayApp, vcs_app_manifest_for_tests, "../../../..");
+    semio_plugin::history_edit_acceptance_law!("vcs", VcsPlayApp, vcs_app_manifest_for_tests, "../../../..");
     
     /// 🧪️ A pre-seeded app instance. It carries the real `AppActionRegistry`, exactly like
     /// `app_with_registry()`: since the framework joins `EditorApp<VcsPlayApp>`'s
@@ -82,7 +82,7 @@ pub(crate) mod context {
     /// `1` — so the id is bound here, before the demo history is seeded through that same surface.
     pub async fn app_with_registry() -> VcsApp {
         let scope = OriginalFixtureScope::admit();
-        let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         instance.bind_instance_id(meta("local").instance_id).await;
         let mut instance = VcsApp(instance, scope);
         seed_vcs_demo_history(&mut instance).await;
@@ -92,8 +92,8 @@ pub(crate) mod context {
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does: on a
     /// mounted app `dispatch_typed` only QUEUES the operation, so a reader that skips this step
     /// observes the pre-dispatch document.
-    pub async fn settle(instance: &mut VcsApp) -> Vec<semio_framework_plugin::app::TypedOperationResultLane> {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx()).await.expect("settle the typed operation").lanes
+    pub async fn settle(instance: &mut VcsApp) -> Vec<semio_plugin::app::TypedOperationResultLane> {
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx()).await.expect("settle the typed operation").lanes
     }
 
     /// 🎬️ Admits one framework-reserved action (`commitCheckpoint`, `checkoutCheckpoint`, …) and runs
@@ -105,7 +105,7 @@ pub(crate) mod context {
     /// 🎬️ [`settle_action`] that hands the SETTLED answer back — a framework-reserved verb's events
     /// (`history-changed`, …) are produced by the spawned job, never by the admission.
     pub async fn settle_reserved(instance: &mut VcsApp, admitted: InvocationResult) -> InvocationResult {
-        let settled = semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance.0, admitted).await.expect("framework reserved admission");
+        let settled = semio_plugin::app::settle_framework_reserved_admission(&mut instance.0, admitted).await.expect("framework reserved admission");
         settle(instance).await;
         settled
     }
@@ -126,12 +126,12 @@ pub(crate) mod context {
     /// empty — the document edit is witnessed by the settled receipt's `Artifact` lane instead.
     pub struct Dispatched {
         pub result: InvocationResult,
-        pub lanes: Vec<semio_framework_plugin::app::TypedOperationResultLane>,
+        pub lanes: Vec<semio_plugin::app::TypedOperationResultLane>,
     }
 
     impl Dispatched {
         pub fn edited_document(&self) -> bool {
-            self.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact)
+            self.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact)
         }
     }
 
@@ -143,13 +143,13 @@ pub(crate) mod context {
     }
 
     pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> Dispatched {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx()).await.expect("dispatch");
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx()).await.expect("dispatch");
         let lanes = settle(instance).await;
         Dispatched { result, lanes }
     }
     
     pub async fn render(instance: &mut VcsApp, body_key: &str) -> String {
-        render_registered_fixture_app(&mut instance.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), instance.1.cx()).await.expect("render json")
+        render_registered_fixture_app(&mut instance.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), instance.1.cx()).await.expect("render json")
     }
     
     /// 📦️ A parsed document envelope that hands its owners back on the way out. `ArtifactEnvelope`'s
@@ -187,7 +187,7 @@ pub(crate) mod context {
     /// edit in the log is still applied.
     pub async fn seeded_envelope(instance: &VcsApp) -> SeededEnvelope {
         let files = instance.document_pack().await.expect("document pack");
-        SeededEnvelope(Some(store::os_store::text_format::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse document pack").envelope))
+        SeededEnvelope(Some(store::os_store::text_format::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse document pack").envelope))
     }
     
     /// 🌱️ Seeds a rich, forked checkpoint/alternative history through `VcsApp`'s own public dispatch
@@ -206,14 +206,14 @@ pub(crate) mod context {
         let mut next = app.snapshot().expect("materialize snapshot");
         mutate(&mut next);
         let text = serde_json::to_string(&next).expect("serialize snapshot");
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &VcsCommand::TextEdit(text_edit::TextEdit { text }), local, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("seeded edit is admitted");
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &VcsCommand::TextEdit(text_edit::TextEdit { text }), local, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("seeded edit is admitted");
         settle(app).await;
     }
 
     /// 🎬️ One seeding action, admitted AND settled — every one of these verbs publishes through the
     /// retained operation lane on a mounted app, so dropping the receipt left the demo history empty.
     async fn seed_action(app: &mut VcsApp, local: &ActionMeta, action_id: &str, args: semio_framework_value::DslValue) {
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action_id, Some(args.clone()), local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("seeded action {action_id} is admitted: {fault:?}"));
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action_id, Some(args.clone()), local, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("seeded action {action_id} is admitted: {fault:?}"));
         settle_action(app, admitted).await;
     }
 
@@ -361,8 +361,8 @@ pub(crate) mod context {
 
 use semio_s_artifact_vcs_vcs_editor::editor::vcs::*;
 use crate::unit_tests::context::{action_args, app, dispatch, no_args, seeded_envelope, settle_action, settle_reserved};
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::artifact_app_laws::meta;
+use semio_plugin::PluginApp;
 use serde_json::{from_str as parse, Value};
 use store::HistoryColumn;
 
@@ -454,7 +454,7 @@ fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
 
 #[test]
 fn retained_factories_publish_only_their_exact_declared_lanes() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let fixture: Value = parse((*RETAINED_ROUTES)).expect("VCS retained route fixture decodes");
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
     assert_eq!(routes.len(), VCS_BOUNDED_PUBLICATION_CONTRACTS.len() + VCS_RESUMABLE_PUBLICATION_CONTRACTS.len());
@@ -531,7 +531,7 @@ fn canvas_pointer_wire_requires_samples_and_cancelled() {
     let interaction = protocol::InteractionState::default();
     assert_eq!(vcs_bounded_extent(&VcsCommand::CanvasPointerMove(moved), &snapshot, &interaction), Some(VCS_BOUNDED_WORK_ITEMS), "two samples are priced within the bounded raw budget");
     let refused = |action: &str, args: Option<&semio_framework_value::DslValue>| VcsPlayApp::command_from_action(action, args, None).err().map(|fault| fault.code);
-    let invalid = Some(semio_framework_plugin::FaultCode::new("app.command.invalid-args"));
+    let invalid = Some(semio_plugin::FaultCode::new("app.command.invalid-args"));
     let unbatched = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0))]);
     assert_eq!(refused("canvasPointerMove", Some(&unbatched)), invalid, "a move without `samples` is refused");
     assert_eq!(refused("canvasPointerMove", None), invalid, "a bare move is refused");
@@ -543,7 +543,7 @@ fn canvas_pointer_wire_requires_samples_and_cancelled() {
     assert!(!released.cancelled);
     let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some((flag(true)).clone()), None).expect("cancel") else { panic!("up") };
     assert!(released.cancelled);
-    assert_eq!(refused("unknown", None), Some(semio_framework_plugin::FaultCode::new("app.command.unsupported")));
+    assert_eq!(refused("unknown", None), Some(semio_plugin::FaultCode::new("app.command.unsupported")));
 }
 
 #[test]
@@ -580,7 +580,7 @@ fn resumable_text_edit_matches_the_serde_json_batch_oracle() {
 
 #[test]
 fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let fixture: Value = parse((*RETAINED_EDIT_LIMITS)).expect("VCS retained edit limits decode");
     let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
     let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
@@ -637,16 +637,16 @@ fn every_resumable_edit_turn_stays_below_the_interaction_ceiling() {
 /// retained edit work emitted one uncoalesced edit per keystroke).
 #[semio_framework_async_macros::async_test]
 async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step() {
-    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-    let run = semio_framework_plugin::artifact_app_laws::typing_run();
+    let mut original_caller=semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let run = semio_plugin::artifact_app_laws::typing_run();
     assert!(run.texts.len() > 64 * 10, "the run must outlast the edit ledger many times over");
     let mut instance = app().await;
     dispatch(&mut instance, VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: run.initial.clone() })).await;
     let start = instance.snapshot().expect("snapshot");
     assert_eq!(start.notes, run.initial);
-    let window = semio_framework_plugin::ViewModel { window_id: Some("vcs-editor-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "vcs-editor-main".into(), window_kind_id: editor::VCS_PLAY_WINDOW_EDITOR.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let typing_meta = semio_framework_plugin::ActionMeta { view_state: Some(window), ..meta("local") };
-    let buffer = (semio_framework_plugin::TYPING_BUFFER_ARG.to_string(), semio_framework_value::DslValue::String("vcs.editor".into()));
+    let window = semio_plugin::ViewModel { window_id: Some("vcs-editor-main".into()), window_instances: vec![semio_plugin::ViewWindowInstance { id: "vcs-editor-main".into(), window_kind_id: editor::VCS_PLAY_WINDOW_EDITOR.into() }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let typing_meta = semio_plugin::ActionMeta { view_state: Some(window), ..meta("local") };
+    let buffer = (semio_plugin::TYPING_BUFFER_ARG.to_string(), semio_framework_value::DslValue::String("vcs.editor".into()));
     let edits = instance.edit_transactions().len();
     let mut now = 50_000;
     for (index, notes) in run.texts.iter().enumerate() {
@@ -655,22 +655,22 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
         now += 40;
         instance.set_tool_clock_ms(Some(now));
         let args = semio_framework_value::DslValue::Object(vec![("text".into(), semio_framework_value::DslValue::String(serde_json::to_string(&next).expect("snapshot json"))), buffer.clone()]);
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "textEdit", Some(args.clone()), &typing_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("keystroke {index} was refused: {fault:?}"));
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "textEdit", Some(args.clone()), &typing_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("keystroke {index} was refused: {fault:?}"));
         settle_action(&mut instance, admitted).await;
-        semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *instance,cx);
+        semio_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *instance,cx);
     }
     assert_eq!(instance.rendered_snapshot().notes, run.expected, "every render reads the open run");
     assert_eq!((instance.snapshot().expect("snapshot").notes, instance.edit_transactions().len()), (run.initial.clone(), edits), "no key lands while the run is open");
     instance.set_tool_clock_ms(Some(now + 750));
-    let commit = semio_framework_value::DslValue::Object(vec![buffer.clone(), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), semio_framework_value::DslValue::String("idle".into()))]);
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "textEdit", Some(commit.clone()), &typing_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the idle commit");
+    let commit = semio_framework_value::DslValue::Object(vec![buffer.clone(), (semio_plugin::TYPING_COMMIT_ARG.into(), semio_framework_value::DslValue::String("idle".into()))]);
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "textEdit", Some(commit.clone()), &typing_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the idle commit");
     settle_action(&mut instance, admitted).await;
     assert_eq!(instance.snapshot().expect("snapshot").notes, run.expected);
     let transactions = instance.edit_transactions();
     assert_eq!(transactions.len(), edits + 1, "the run lands as ONE edit");
     assert!(transactions.last().cloned().flatten().is_some_and(|transaction| transaction.tool.ends_with("#textEdit")), "the edit carries the run's TransactionRef: {transactions:?}");
     for (verb, expected) in [("undo", &run.initial), ("redo", &run.expected)] {
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, verb, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, verb, None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
         settle_reserved(&mut instance, admitted).await;
         assert_eq!(&instance.snapshot().expect("snapshot").notes, expected, "one {verb} moves the whole run");
     }
@@ -750,12 +750,12 @@ async fn checkout_then_commit_forks_across_actions() {
     let root_checkpoint_id = envelope_before.vcs.checkpoints[0].id.clone();
     let children_of_root_before = envelope_before.vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str())).count();
 
-    let checkout = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "checkoutCheckpoint", Some(action_args([("checkpointId", root_checkpoint_id.clone())])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("checkout");
+    let checkout = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "checkoutCheckpoint", Some(action_args([("checkpointId", root_checkpoint_id.clone())])), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("checkout");
     assert!(checkout.mutations.is_empty(), "history actions never emit KernelMutations");
     settle_action(&mut instance, checkout).await;
 
     dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
-    let commit = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "commitCheckpoint", Some(action_args([("message", "forked from root".to_string())])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("commit");
+    let commit = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "commitCheckpoint", Some(action_args([("message", "forked from root".to_string())])), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("commit");
     settle_action(&mut instance, commit).await;
 
     let envelope_after = seeded_envelope(&instance).await;
@@ -769,12 +769,12 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let before = instance.snapshot().expect("materialize snapshot").counter;
     dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
-    let undo = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "undo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
+    let undo = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "undo", None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
     assert!(undo.mutations.is_empty());
     let undone = settle_reserved(&mut instance, undo).await;
     assert!(undone.events.iter().any(|event| event.kind == "history-changed"));
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before);
-    let redo = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "redo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("redo");
+    let redo = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "redo", None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("redo");
     settle_action(&mut instance, redo).await;
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
 }
@@ -782,7 +782,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
     let mut instance = app().await;
-    let create = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "createAlternative", Some(action_args([("name", "trying-something".to_string())])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("create alternative");
+    let create = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "createAlternative", Some(action_args([("name", "trying-something".to_string())])), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("create alternative");
     assert!(create.mutations.is_empty());
     settle_action(&mut instance, create).await;
     let envelope = seeded_envelope(&instance).await;

@@ -1,6 +1,6 @@
 //! 🔌️ Finite render descriptors carry work data; only a backend issues actual resource owners.
 use std::num::NonZeroU64;
-pub use semio_framework_ui_render_shader_contract::{VertexFormat,VertexStepMode,CompareFunction,PrimitiveTopology};
+pub use semio_ui_render_shader_contract::{VertexFormat,VertexStepMode,CompareFunction,PrimitiveTopology};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum ResourceFault { ForeignSession, InvalidDescriptor(&'static str), Backend(&'static str) }

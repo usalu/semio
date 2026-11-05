@@ -7,7 +7,7 @@ pub const TREE_INDENT_PER_LEVEL: f32 = (ui_styling::metrics::chrome::UI_SPACING_
 
 pub const TREE_TOGGLE_WIDTH: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_TOGGLE_UI_SPACING) as f32;
 
-pub const TREE_ICON_SIZE: f32 = semio_framework_ui_wgpu_layout::chrome::ICON_TREE_ROW;
+pub const TREE_ICON_SIZE: f32 = semio_ui_wgpu_layout::chrome::ICON_TREE_ROW;
 
 pub const RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024;
 
@@ -86,7 +86,7 @@ impl RetainedGlyphCursor {
 /// this painter then re-accumulates, and f32 addition does not have to land on the same last bit:
 /// without the slack a perfectly measured chip label loses its final glyph (`Chat` → `Cha`) or, in
 /// [`RetainedTextFlow::Wrap`], drops that glyph onto a second line.
-const RETAINED_TEXT_FIT_EPSILON: f32 = semio_framework_ui_text::LINE_BREAK_FIT_EPSILON;
+const RETAINED_TEXT_FIT_EPSILON: f32 = semio_ui_text::LINE_BREAK_FIT_EPSILON;
 
 /// 🪜️ Advances one UTF-8 scalar and at most one exactly admitted glyph, wrapping at `bounds.w`.
 pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
@@ -106,7 +106,7 @@ pub fn paint_retained_glyph_step_weighted(
     size: f32,
     color: Rgba,
     flow: RetainedTextFlow,
-    weight: semio_framework_ui_text::TextWeight,
+    weight: semio_ui_text::TextWeight,
     atlas: &mut FontAtlas,
     draw: &mut DrawList,
     cursor: &mut RetainedGlyphCursor,
@@ -127,11 +127,11 @@ pub fn paint_retained_glyph_step_weighted(
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W9a).
 #[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
 pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
-    paint_retained_glyph_step_inner(value, bounds, size, color, flow, semio_framework_ui_text::TextWeight::Regular, atlas, draw, cursor)
+    paint_retained_glyph_step_inner(value, bounds, size, color, flow, semio_ui_text::TextWeight::Regular, atlas, draw, cursor)
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
-fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, weight: semio_framework_ui_text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
+fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, weight: semio_ui_text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
     if value.len() > RETAINED_NODE_TEXT_MAX_BYTES || !value.is_char_boundary(cursor.byte) {
         return RetainedGlyphStep::Fault;
     }
@@ -152,8 +152,8 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
         return RetainedGlyphStep::Pending;
     }
     let mut kerning = if cursor.pen_x > 0.0 { atlas.kerning_at(value, cursor.byte, size) } else { 0.0 };
-    if matches!(flow, RetainedTextFlow::Wrap) && cursor.pen_x > 0.0 && semio_framework_ui_text::is_break_opportunity(value, cursor.byte) {
-        let run = atlas.measure_range(value, cursor.byte, semio_framework_ui_text::unbreakable_run_end(value, cursor.byte), size);
+    if matches!(flow, RetainedTextFlow::Wrap) && cursor.pen_x > 0.0 && semio_ui_text::is_break_opportunity(value, cursor.byte) {
+        let run = atlas.measure_range(value, cursor.byte, semio_ui_text::unbreakable_run_end(value, cursor.byte), size);
         if cursor.pen_x + kerning + run > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON {
             let Some(next_line) = cursor.line.checked_add(1) else { return RetainedGlyphStep::Fault };
             cursor.line = next_line;
@@ -162,7 +162,7 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
         }
     }
     let strikes = weight.strikes();
-    if draw.begin_retained_output(strikes, strikes * size_of::<semio_framework_ui_draw_contract::UiInstance>()).is_err() {
+    if draw.begin_retained_output(strikes, strikes * size_of::<semio_ui_draw_contract::UiInstance>()).is_err() {
         return RetainedGlyphStep::Fault;
     }
     let atlas_w = atlas.width as f32;
@@ -170,7 +170,7 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
     let glyph = atlas.ensure_glyph(ch, size);
     let (atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y) = (glyph.atlas_x, glyph.atlas_y, glyph.width, glyph.height, glyph.advance, glyph.bearing_x, glyph.bearing_y);
     let (logical_w, logical_h) = (glyph.logical_width(), glyph.logical_height());
-    let hangs = matches!(flow, RetainedTextFlow::Wrap) && semio_framework_ui_text::is_wrap_space(ch);
+    let hangs = matches!(flow, RetainedTextFlow::Wrap) && semio_ui_text::is_wrap_space(ch);
     let overflows = !hangs && cursor.pen_x > 0.0 && cursor.pen_x + kerning + advance > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON;
     if overflows && matches!(flow, RetainedTextFlow::Clip) {
         if draw.finish_retained_output().is_err() {
@@ -190,7 +190,7 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
         kerning = 0.0;
     }
     cursor.pen_x += kerning;
-    let line_height = semio_framework_ui_text::line_height(size);
+    let line_height = semio_ui_text::line_height(size);
     let baseline = match flow {
         RetainedTextFlow::Wrap => bounds.y + line_height * (cursor.line as f32 + 1.0),
         RetainedTextFlow::Clip => bounds.y + size + line_height * cursor.line as f32,

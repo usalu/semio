@@ -2,7 +2,7 @@
 use serde::{Serialize,Deserialize};
 use semio_framework_value_derive::{ToValue,FromValue};
 use std::fmt;
-pub use semio_framework_ui_contract_values::*;
+pub use semio_ui_contract_values::*;
 //#region 🔖️Action
 
 /// 🆔️ A versioned action address. `scope` names the controller/domain (the old `ActionDescriptor`'s

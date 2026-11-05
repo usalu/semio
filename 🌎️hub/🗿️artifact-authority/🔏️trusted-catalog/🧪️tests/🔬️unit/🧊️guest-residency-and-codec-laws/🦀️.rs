@@ -368,14 +368,14 @@ fn guest_codec_calls_run_off_the_async_worker_and_relay_their_fuel() {
         let relayed: Vec<u64> = control.progress.lock().unwrap().iter().filter(|progress| progress.stage == AuthorityProgressStage::GuestCodecExecuting).map(|progress| progress.completed_units).collect();
         assert_eq!(relayed, vec![10, 20, 30]);
         let observed = |observes: Arc<AtomicBool>| {
-            move |_handle: &tokio::runtime::Handle, progress: &mut dyn FnMut(u64), cancellation: &semio_framework_plugin_guest_contract::GuestCallCancellation| -> Result<u32, semio_framework_plugin_guest_contract::TurnFault> {
+            move |_handle: &tokio::runtime::Handle, progress: &mut dyn FnMut(u64), cancellation: &semio_plugin_guest_contract::GuestCallCancellation| -> Result<u32, semio_plugin_guest_contract::TurnFault> {
                 progress(1);
                 let started = std::time::Instant::now();
                 while !cancellation.is_cancelled() && started.elapsed() < std::time::Duration::from_secs(10) {
                     std::thread::sleep(std::time::Duration::from_millis(1));
                 }
                 observes.store(cancellation.is_cancelled(), Ordering::SeqCst);
-                Err(semio_framework_plugin_guest_contract::TurnFault::Cancelled)
+                Err(semio_plugin_guest_contract::TurnFault::Cancelled)
             }
         };
         let settled = |observes: Arc<AtomicBool>| async move {

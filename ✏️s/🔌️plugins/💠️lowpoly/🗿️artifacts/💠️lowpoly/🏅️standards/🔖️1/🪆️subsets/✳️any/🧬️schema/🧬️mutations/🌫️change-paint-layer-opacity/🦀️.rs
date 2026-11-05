@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "paint-layer", kind: "change-paint-layer-opacity", record: "ChangedPaintLayerOpacity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set paint layer opacity to {}", self.new_opacity), &format!("Deckkraft der Malebene auf {} setzen", self.new_opacity))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set paint layer opacity to {}", self.new_opacity), &format!("Deckkraft der Malebene auf {} setzen", self.new_opacity))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

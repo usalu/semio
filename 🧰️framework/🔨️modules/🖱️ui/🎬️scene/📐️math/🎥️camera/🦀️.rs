@@ -1,10 +1,10 @@
 //! 🪐️ Orbit and parallel cameras, projection-spec matrices, framing, gumball and ray math, and the level-of-detail grid — the renderer-neutral camera half of the scene math.
 //!
-//! Carved out of the former `semio-framework-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
+//! Carved out of the former `semio-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 
 use semio_framework_geometry::{Mat4, Vec3};
-use semio_framework_ui_scene_algebra::{mat4_look_at_m, mat4_orthographic_m, mat4_perspective_m, vec3_new_m, Mat4Math, Vec3Math};
-use semio_framework_ui_viewport::{
+use semio_ui_scene_algebra::{mat4_look_at_m, mat4_orthographic_m, mat4_perspective_m, vec3_new_m, Mat4Math, Vec3Math};
+use semio_ui_viewport::{
     Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant, Viewport3dAxonometricVariant, Viewport3dObliqueVariant, Viewport3dOrthographicView, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec,
 };
 

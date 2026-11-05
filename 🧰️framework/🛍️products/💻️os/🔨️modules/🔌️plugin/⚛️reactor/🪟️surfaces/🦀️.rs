@@ -66,7 +66,7 @@ struct SurfaceBinding {
 #[doc(hidden)]
 
 pub struct SurfaceContexts {
-    slots: [Option<SurfaceBinding>; semio_framework_ui_contract::UI_RESIDENT_SLOTS],
+    slots: [Option<SurfaceBinding>; semio_ui_contract::UI_RESIDENT_SLOTS],
     /// 🪟️ The last host view this INSTANCE was mounted or refreshed with — diagnostics and
     /// window-scoped background work only (`ArtifactApp::pending_effects`). Never the source a body
     /// is rendered from: that is each binding's own [`SurfaceBinding::view_state`].
@@ -249,7 +249,7 @@ const SYNTHETIC_WINDOW_SURFACE: &str = "window";
 
 #[path="native.rs"]
 mod native;
-pub use native::{OriginalSurfaceRefresh,OriginalSurfaceViewCapture};
+pub use native::{OriginalSurfaceRefresh,OriginalSurfaceViewCapture,OriginalSurfaceViewRead};
 
 #[cfg(test)]
 #[path = "🧪️tests/🪟️surface-context-lifecycle/🦀️.rs"]

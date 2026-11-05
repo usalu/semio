@@ -117,7 +117,7 @@ const readSource = (path: string, options: ModuleTreeOptions): string => options
 /** 🌲️ A child file with the directory its own mounts stay below: a module owns its own directory, an `include!`d file stays inside the directory of the file that includes it, because its items belong to that module. */
 interface TreeChild { readonly target: string; readonly scope: string; }
 
-const CRATE_PREFIX = "semio_framework_os_renderer_wgpu_";
+const CRATE_PREFIX = "semio_renderer_wgpu_";
 
 /** 🧩️ The crates of one renderer partition (`<engine>/🎯️targets/🧊️wgpu/<crate>/📦️packages/🦀️rust/Cargo.toml`): library name to crate root, and every file a crate root owns through its own mounts. */
 interface CratePartition { readonly crates: ReadonlyMap<string, string>; readonly owned: ReadonlySet<string>; readonly scope: string; }
@@ -135,7 +135,7 @@ function cratePartition(file: string): CratePartition | null {
     for (const entry of readdirSync(target, { withFileTypes: true })) {
       const manifest = resolve(target, entry.name, "📦️packages", "🦀️rust", "Cargo.toml");
       if (!entry.isDirectory() || !existsSync(manifest)) continue;
-      const name = /^name\s*=\s*"semio-framework-os-renderer-wgpu-([a-z0-9-]+)"/mu.exec(readFileSync(manifest, "utf8"))?.[1];
+      const name = /^name\s*=\s*"semio-renderer-wgpu-([a-z0-9-]+)"/mu.exec(readFileSync(manifest, "utf8"))?.[1];
       if (name !== undefined) crates.set(CRATE_PREFIX + name.replaceAll("-", "_"), resolve(target, entry.name, "🦀️.rs"));
     }
     const owned = new Set<string>();

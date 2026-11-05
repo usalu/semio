@@ -1,13 +1,13 @@
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
+use semio_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 use crate::viewer::pdf14a::modes::view::windows::main::{page_summary};
 use crate::viewer::pdf14a::modes::view::windows::main::*;
 static CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../✏️editor/🧪️tests/🧫️fixtures/📄️resolved-page-domain/🔣️.json"));
@@ -31,8 +31,8 @@ fn render_lists_each_own_page_with_exact_dimensions_and_text() {
     assert_eq!(page_summary(0, &document.pages[0]), "1 | 200 × 300\nSemio page one");
     assert_eq!(page_summary(1, &document.pages[1]), "2 | 400 × 500\nSeite zwei");
     let node = render(&document).unwrap();
-    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).unwrap();
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
+    let scene: semio_ui_scene::TextEditorScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).unwrap();
     assert_eq!(scene.buffer, page_summary(0, &document.pages[0]));
     assert_eq!(scene.settings_json.as_deref(), Some("{\"readOnly\":true}"));
 }

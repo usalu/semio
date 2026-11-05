@@ -1,0 +1,1 @@
+{"eventsPerCall":512,"maximumCalls":200,"fuel":32768,"copy":32768,"capacity":16777216,"release":16777216,"depth":4096,"originalWorkLoan":{"fuel":1,"maximumEventWork":1,"maximumCalls":200}}

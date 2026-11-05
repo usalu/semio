@@ -14,14 +14,14 @@ use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::i
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::SolidShape;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TableCell;
-use semio_framework_plugin::UiTreeActionPlacement;
-use semio_framework_plugin::UiTreeItemAction;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_plugin::DslValue;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TableCell;
+use semio_plugin::UiTreeActionPlacement;
+use semio_plugin::UiTreeItemAction;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_locale::{Label, LocalizedLabel};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "bim-edit-family";
@@ -103,9 +103,9 @@ fn column_value(id: &str, label: &str) -> DslValue {
     DslValue::object([("id".to_string(), DslValue::String(id.into())), ("label".to_string(), DslValue::String(label.into())), ("sortable".to_string(), DslValue::Bool(false))])
 }
 
-fn table(columns: Vec<DslValue>, rows: Vec<DslValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let scene = semio_framework_plugin::TableScene::base(semio_framework_pack_json::to_json_string(&DslValue::Array(columns)), semio_framework_pack_json::to_json_string(&DslValue::Array(rows)));
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Table, &scene)
+fn table(columns: Vec<DslValue>, rows: Vec<DslValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let scene = semio_plugin::TableScene::base(semio_framework_pack_json::to_json_string(&DslValue::Array(columns)), semio_framework_pack_json::to_json_string(&DslValue::Array(rows)));
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Table, &scene)
 }
 //#endregion 🔖️Cells
 
@@ -210,7 +210,7 @@ pub fn columns(labels: &BimLabels) -> Vec<DslValue> {
 }
 
 /// 🧬️ Renders the family editor: the table of the selected family, or the hint to select one when the model has none.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[String], library: &[String], labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[String], library: &[String], labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let Some(family) = selected(snapshot, elements, library) else {
         let hint = row("none", vec![("part", text(labels.fam_none.as_str())), ("item", text("")), ("formula", text("")), ("value", text("")), ("issue", text("")), ("actions", TableCell::Buttons { buttons: Vec::new() })]);
         return table(columns(labels), vec![hint]);
@@ -245,7 +245,7 @@ pub fn drawn(value: &FamilyValue) -> Vec<(String, ElementSolid)> {
 }
 
 /// 🎬️ The world scene of the family preview: the visible solids of family `id` as meshes and identity instances, framed once per family.
-pub fn view_scene(snapshot: &ModelSnapshot, inference: &ModelInference, id: &str) -> semio_framework_plugin::World3dScene {
+pub fn view_scene(snapshot: &ModelSnapshot, inference: &ModelInference, id: &str) -> semio_plugin::World3dScene {
     let solids = inference.families.get(id).map(drawn).unwrap_or_default();
     let meshes: Vec<DslValue> = solids.iter().map(|(solid_id, solid)| DslValue::object([("id".to_string(), DslValue::String(solid_id.clone())), ("data".to_string(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::from(mesh_data(snapshot, solid))))])).collect();
     let instances: Vec<DslValue> = solids
@@ -264,16 +264,16 @@ pub fn view_scene(snapshot: &ModelSnapshot, inference: &ModelInference, id: &str
         })
         .collect();
     let camera = overview_orbit(world_bounds(solids.iter().map(|(_, solid)| solid)));
-    let camera_json = semio_framework_plugin::world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &semio_framework_plugin::WorldProjectionConfig::default());
-    let mut scene = semio_framework_plugin::world3d_scene(camera_json, semio_framework_pack_json::to_json_string(&meshes), semio_framework_pack_json::to_json_string(&instances), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
+    let camera_json = semio_plugin::world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &semio_plugin::WorldProjectionConfig::default());
+    let mut scene = semio_plugin::world3d_scene(camera_json, semio_framework_pack_json::to_json_string(&meshes), semio_framework_pack_json::to_json_string(&instances), semio_plugin::world3d_selection_json("rectangle", &[], None), &semio_plugin::WorldSunConfig::default());
     scene.fit_json = Some(semio_framework_pack_json::to_json_string(&DslValue::object([("enabled".to_string(), DslValue::Bool(true)), ("revision".to_string(), DslValue::float(f64::from(semio_s_artifact_bim_model_plan_linework::render::plan::framing_revision(id)))), ("padding".to_string(), DslValue::float(1.25))])));
     scene
 }
 
 /// 🧊️ Renders the family preview: the selected family in 3D, an empty scene when the model has none.
-pub fn view_render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[String], library: &[String]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn view_render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[String], library: &[String]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let id = selected(snapshot, elements, library).unwrap_or_default();
-    semio_framework_plugin::scene_surface(VIEW_SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &view_scene(snapshot, inference, &id))
+    semio_plugin::scene_surface(VIEW_SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &view_scene(snapshot, inference, &id))
 }
 //#endregion 🔖️Preview
 

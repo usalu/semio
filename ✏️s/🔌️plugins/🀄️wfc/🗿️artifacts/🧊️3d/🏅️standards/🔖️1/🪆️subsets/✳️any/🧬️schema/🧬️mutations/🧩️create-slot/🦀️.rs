@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "slot", kind: "create-slot", record: "CreatedSlot" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create slot \"{}\"", self.slot.id), &format!("Slot \"{}\" erstellen", self.slot.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create slot \"{}\"", self.slot.id), &format!("Slot \"{}\" erstellen", self.slot.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.slot.id.clone()]

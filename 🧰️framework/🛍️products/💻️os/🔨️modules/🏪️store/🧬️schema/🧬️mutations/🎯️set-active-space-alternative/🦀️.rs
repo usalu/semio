@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// wire word. `required` is what gives the `#[value]` codec the same "key must be present, value
 /// may be `null`" shape as the test-only `#[serde(deserialize_with = "required_option")]` bridge
 /// below, which is exactly what this leaf's own wire law measures.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_os_dsl::MutationLeaf)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -37,19 +37,19 @@ where
 //#endregion ⚙️Serde
 
 //#region ⚙️Semantics
-impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
-    const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "active-space-alternative", kind: "set-active-space-alternative", record: "SetActiveSpaceAlternative" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set active space alternative", "Aktive Space-Alternative setzen")
+impl semio_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
+    const SEMANTICS: semio_os_spr::SemanticDescriptor = semio_os_spr::SemanticDescriptor { verb: "set", entity: "active-space-alternative", kind: "set-active-space-alternative", record: "SetActiveSpaceAlternative" };
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set active space alternative", "Aktive Space-Alternative setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["activeAlternativeId".into()]
     }
 }
 
-impl semio_framework_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
-    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_framework_os_spr::MutationOutcome<SpaceHistoryDiff> {
-        semio_framework_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::SetActive { alternative_id: self.alternative_id.clone() }))
+impl semio_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
+    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_os_spr::MutationOutcome<SpaceHistoryDiff> {
+        semio_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::SetActive { alternative_id: self.alternative_id.clone() }))
     }
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
         Ok(vec![SpaceHistoryMutation::SetActiveSpaceAlternative(Self { alternative_id: base.active_alternative_id.clone() })])

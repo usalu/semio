@@ -18,8 +18,8 @@ pub struct ChangeMemberBucklingLength {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberBucklingLength where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_member_buckling_length::ChangeMemberBucklingLength> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-buckling-length", kind: "change-member-buckling-length", record: "ChangedChangeMemberBucklingLength" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Effective (buckling) length l₀ of member {}", self.member_id), &format!("Ersatzlänge l₀ von Bauteil {} ändern", self.member_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Effective (buckling) length l₀ of member {}", self.member_id), &format!("Ersatzlänge l₀ von Bauteil {} ändern", self.member_id))
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }

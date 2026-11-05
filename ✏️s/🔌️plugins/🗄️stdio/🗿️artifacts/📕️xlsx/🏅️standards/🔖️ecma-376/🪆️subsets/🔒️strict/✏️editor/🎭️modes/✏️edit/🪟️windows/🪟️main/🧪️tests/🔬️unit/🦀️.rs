@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::{Component, Trigger};
+use semio_plugin::{Component, Trigger};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_table_window() {
@@ -21,7 +21,7 @@ async fn strict_grid_binds_blank_cell_creation_to_the_strict_controller() {
         }
     }
     let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Blank".into(), cells: Vec::new() }], ..Default::default() });
-    let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_framework_plugin::UiPublicationRevision(23)).unwrap();
+    let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_plugin::UiPublicationRevision(23)).unwrap();
     let mut found = false;
     visit(&node, &mut found);
     assert!(found);

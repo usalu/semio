@@ -31,10 +31,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "snap-enabled", kind: "change-snap-enabled", record: "ChangedSnapEnabled" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.new_enabled {
-            Some(true) => semio_framework_ui_locale::LocalizedLabel::native("Enable snapping", "Fangfunktion einschalten"),
-            Some(false) => semio_framework_ui_locale::LocalizedLabel::native("Disable snapping", "Fangfunktion ausschalten"),
+            Some(true) => semio_ui_locale::LocalizedLabel::native("Enable snapping", "Fangfunktion einschalten"),
+            Some(false) => semio_ui_locale::LocalizedLabel::native("Disable snapping", "Fangfunktion ausschalten"),
             None => crate::schema::note_setting_label(("snapping", "Fangfunktion"), None),
         }
     }

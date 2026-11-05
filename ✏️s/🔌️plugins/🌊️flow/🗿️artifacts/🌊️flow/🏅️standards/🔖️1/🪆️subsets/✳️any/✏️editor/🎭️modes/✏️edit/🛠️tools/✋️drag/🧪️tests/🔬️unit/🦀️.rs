@@ -6,7 +6,7 @@ use crate::FlowMutation;
 #[allow(unused_imports)]
 use semio_framework::kernel::UiDirtyScope;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Emit, NoConfigMutation};
+use semio_plugin::{Emit, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_framework_tool_machine::{node_drag_emit, NodeDragEmit};
 use crate::editor::flow::modes::edit::tools::drag::*;
@@ -56,9 +56,9 @@ fn a_seeded_release_is_a_child_transaction_and_a_seedless_one_is_plain() {
     let mut prepared=false;
     for _ in 0..4096{
         match emit.prepare_child_one(1,65536).expect("bounded real child preparation"){
-            semio_framework_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
-            semio_framework_plugin::app::ChildEmitPreparationStep::Pending=>{},
-            semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
+            semio_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
+            semio_plugin::app::ChildEmitPreparationStep::Pending=>{},
+            semio_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
         }
     }
     assert!(prepared,"closed fixture child prefix must complete within its authored bound");
@@ -68,14 +68,14 @@ fn a_seeded_release_is_a_child_transaction_and_a_seedless_one_is_plain() {
     assert_eq!(emit.child_emits.len(), 1);
     let child = &emit.child_emits[0];
     assert_eq!((child.slot.as_str(), child.child_id.as_str(), child.ops.len()), ("content", "child-1", 1));
-    assert_eq!(child.labels[0].resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 node by (-20, 20)");
+    assert_eq!(child.labels[0].resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 1 node by (-20, 20)");
     let mut plain = flow_drag_tool_emit("child-1", "moveMediaNode", "", &base, Vec::new(), &[record(&["c"], -20.0, 20.0)]);
     let mut prepared=false;
     for _ in 0..4096{
         match plain.prepare_child_one(1,65536).expect("bounded real child preparation"){
-            semio_framework_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
-            semio_framework_plugin::app::ChildEmitPreparationStep::Pending=>{},
-            semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
+            semio_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
+            semio_plugin::app::ChildEmitPreparationStep::Pending=>{},
+            semio_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
         }
     }
     assert!(prepared,"closed fixture child prefix must complete within its authored bound");
@@ -84,9 +84,9 @@ fn a_seeded_release_is_a_child_transaction_and_a_seedless_one_is_plain() {
     let mut prepared=false;
     for _ in 0..4096{
         match nothing.prepare_child_one(1,65536).expect("bounded real child preparation"){
-            semio_framework_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
-            semio_framework_plugin::app::ChildEmitPreparationStep::Pending=>{},
-            semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
+            semio_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
+            semio_plugin::app::ChildEmitPreparationStep::Pending=>{},
+            semio_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
         }
     }
     assert!(prepared,"closed fixture child prefix must complete within its authored bound");

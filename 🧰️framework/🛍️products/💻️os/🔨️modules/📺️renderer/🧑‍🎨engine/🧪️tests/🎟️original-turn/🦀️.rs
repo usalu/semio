@@ -34,9 +34,9 @@ impl FixtureTurnV1 {
     }
     fn close(&mut self){
         if self.caller.is_none(){return}
-        for surface in &self.surfaces{semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface);}
-        for _ in 0..65_536{if !self.surfaces.iter().any(|surface|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)){break}self.turn(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture surface retirement");}
-        assert!(!self.surfaces.iter().any(|surface|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)));
+        for surface in &self.surfaces{semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface);}
+        for _ in 0..65_536{if !self.surfaces.iter().any(|surface|semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)){break}self.turn(semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture surface retirement");}
+        assert!(!self.surfaces.iter().any(|surface|semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)));
         let caller=self.caller.as_mut().unwrap();let stock=caller.stock();
         for _ in 0..65_536{if self.decoder.terminal_is_empty(){break}caller.turn(stock,|cx|{let demand=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|self.decoder.close_step(grant))?;Ok(())}).expect("same original renderer decoder close");}
         assert!(self.decoder.terminal_is_empty());self.caller.take().unwrap().retire(stock);

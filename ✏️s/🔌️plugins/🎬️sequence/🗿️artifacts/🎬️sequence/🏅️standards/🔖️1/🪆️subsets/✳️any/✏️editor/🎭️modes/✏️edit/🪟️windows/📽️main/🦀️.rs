@@ -3,17 +3,17 @@
 use super::config::SequenceMainWindowConfig;
 use crate::editor::sequence::host::host_from_host_snapshot;
 use crate::SequenceHostSnapshot;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphEdgeRecord;
-use semio_framework_plugin::NodeGraphNodeRecord;
-use semio_framework_plugin::NodeGraphPortRecord;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_os_kernel::Viewport2d;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphEdgeRecord;
+use semio_plugin::NodeGraphNodeRecord;
+use semio_plugin::NodeGraphPortRecord;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_os_kernel::Viewport2d;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_MAIN: &str = "sequence-main";
@@ -49,7 +49,7 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "next".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+fn dag_host_snapshot_to_workflow(host_snapshot: &semio_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = host_snapshot
         .nodes
         .iter()
@@ -84,7 +84,7 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, config: &SequenceMainWindowC
     host.layout_expanded_slots();
     let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
+    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_MAIN, semio_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 

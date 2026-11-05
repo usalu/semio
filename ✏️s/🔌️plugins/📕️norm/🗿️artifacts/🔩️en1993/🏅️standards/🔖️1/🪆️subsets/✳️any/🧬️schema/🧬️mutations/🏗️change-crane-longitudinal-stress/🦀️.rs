@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneLongitudinalS
         record: "ChangedCraneLongitudinalStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Longitudinal stress σ_ox of the crane runway", "Kranbahn: Längsspannung σ_ox ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Longitudinal stress σ_ox of the crane runway", "Kranbahn: Längsspannung σ_ox ändern")
     }
 }
 

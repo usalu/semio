@@ -4,13 +4,13 @@
 use crate::store;
 use crate::protocol;
 use crate::ChildEmit;
-use semio_framework_plugin_decl_views::child_view::vector_read::command::OriginalChildEditorCommandAuthority;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_decl_views::child_view::child_read::command::OriginalChildEditorCommandAuthority;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_diagnostic::{Fault,FaultFrom};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 /// 📏️ Capacity one encoded operation and its semantic label may cost per preparation turn; the actual cost is read back off the allocations and refused above the caller's grant.
 const CHILD_OPERATION_ENCODE_QUOTE_BYTES:usize=2_048;
@@ -39,9 +39,10 @@ pub struct OwnedChildEmit {
     authority:Option<OriginalChildEditorCommandAuthority>,
     metadata:Option<ChildEmit>,
     mutations:Option<store::MemberStoreOwnedBatch>,
+    last_work:u64,
 }
 impl OwnedChildEmit {
-    pub fn new(metadata:ChildEmit,mutations:store::MemberStoreOwnedBatch)->Self{Self{metadata:Some(metadata),mutations:Some(mutations),authority:None}}
+    pub fn new(metadata:ChildEmit,mutations:store::MemberStoreOwnedBatch)->Self{Self{metadata:Some(metadata),mutations:Some(mutations),authority:None,last_work:0}}
     pub fn authority(&self)->Option<&OriginalChildEditorCommandAuthority>{self.authority.as_ref()}
     pub fn metadata(&self)->Option<&ChildEmit>{self.metadata.as_ref()}
     pub fn mutations<M:Send+'static>(&self)->Option<&[M]>{self.mutations.as_ref()?.mutations::<M>()}
@@ -63,6 +64,7 @@ impl OwnedChildEmit {
     }
     /// 🎟️ Keeps logical work independent from original typed source and metadata physical release.
     pub fn close_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        self.last_work=0;
         use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -71,34 +73,39 @@ impl OwnedChildEmit {
         if demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.copy_bytes>grant.maximum_copy_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(batch)=self.mutations.as_mut(){
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-            let step=batch.close_granted(child)?;
+            let result=batch.close_granted(child);self.last_work=batch.last_turn_work();let step=result?;
             let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,batch.terminal_is_empty(),"owned child source")?;
             if batch.terminal_is_empty(){self.mutations.take();}
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(metadata)=self.metadata.as_mut(){
-            if metadata.terminal_is_empty(){self.metadata.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+            if metadata.terminal_is_empty(){self.last_work=1;self.metadata.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-            let step=metadata.close_one(child)?;
+            self.last_work=1;let step=metadata.close_one(child)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,metadata.terminal_is_empty(),"original owned child metadata")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(authority)=self.authority.as_mut(){authority.begin_close();let step=authority.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})?;if authority.terminal_is_empty(){self.authority=None}return Ok(RetainedCloneStep::Progress(step.progress()))}
+        if let Some(authority)=self.authority.as_mut(){authority.begin_close();let result=authority.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});self.last_work=authority.last_turn_work();let step=result?;if authority.terminal_is_empty(){self.authority=None}return Ok(RetainedCloneStep::Progress(step.progress()))}
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
+    /// 🎟️ Actual work of the last owned-source close, including refused delegates.
+    pub fn last_turn_work(&self)->u64{self.last_work}
     pub fn terminal_is_empty(&self)->bool{self.metadata.is_none()&&self.mutations.is_none()&&self.authority.is_none()}
 }
 impl Drop for OwnedChildEmit{
-    fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"applying child emission dropped before original typed source and metadata returned");}
+    fn drop(&mut self){assert!(self.terminal_is_empty(),"applying child emission dropped before original typed source and metadata returned");}
 }
 trait ChildEmitPreparationOwner: Send {
+    fn as_any(&self)->&dyn std::any::Any;
     fn as_any_mut(&mut self)->&mut dyn std::any::Any;
+    fn last_turn_work(&self)->u64;
     fn matches_source(&self,mutation_type:std::any::TypeId,slot:&str,child_id:&str,maximum_operations:usize)->bool;
     fn step(&mut self, grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>;
     fn step_demands(&self)->Result<RetirementDemand,ValueError>;
     fn preparation_is_ready(&self)->bool;
     fn take_ready(&mut self)->Option<ChildEmit>;
-    fn begin_preview(&mut self);
+    fn preview_demands(&self)->Option<RetirementDemand>;
+    fn begin_preview_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,RetainedCloneProgress)>;
     fn next_owned_capacity_byte_demand(&self)->usize;
     fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>;
     fn begin_close(&mut self);
@@ -113,6 +120,7 @@ trait ChildEmitPreparationOwner: Send {
 pub struct ChildEmitPreparation {
     authority:Option<OriginalChildEditorCommandAuthority>,
     owner:Box<dyn ChildEmitPreparationOwner>,
+    last_work:u64,
 }
 impl ChildEmitPreparation {
     /// 📐️ Quotes actual one-operation backing, typed owner, copied address and schema allocations.
@@ -164,13 +172,13 @@ impl ChildEmitPreparation {
     where M:protocol::SemanticMutation<S>+::protocol::OpBinary+Send+'static {
         let operation_count=operations.len();
         let backing_bytes=operations.capacity().checked_mul(size_of::<M>()).expect("owned mutation vector allocation has a representable layout");
-        Self{authority:None,owner:Box::new(TypedChildEmitPreparation::<M>{
+        Self{authority:None,last_work:0,owner:Box::new(TypedChildEmitPreparation::<M>{
             remaining:ManuallyDrop::new(Some(operations.into_iter())),owned_source:ManuallyDrop::new(None),take_batch:None,batch_capacity_bytes:0,backing_bytes,operation_count,
             current:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),retired_schema:ManuallyDrop::new(None),
             prefix:Some(ChildEmit::open(slot,child_id,0)),cause:ManuallyDrop::new(None),cause_close:ManuallyDrop::new(None),close_refusal:ManuallyDrop::new(None),factory:ManuallyDrop::new(factory),closing_factory:ManuallyDrop::new(None),retire_builtin,
             schema_parts:|operation|{let semantics=protocol::SemanticMutation::<S>::semantics(operation);(semantics.entity,semantics.kind)},schema_offset:0,schema_started:false,schema_done:false,
             encode:|operation|{let encoded=::protocol::OpBinary::encode_op(operation)?;Ok((encoded,protocol::SemanticMutation::<S>::label(operation)))},
-            closing:false,ready:false,
+            closing:false,ready:false,last_work:0,
         })}
     }
     /// 🪪️ Checks the original typed operation source and literal child address without encoding or transferring owners.
@@ -181,18 +189,31 @@ impl ChildEmitPreparation {
         owner.factory.take()
     }
     /// 🎟️ Advances one preparation unit under the complete caller grant: copy paces encoding, capacity funds births, release retires displaced owners.
-    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{self.owner.step(grant)}
+    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{let result=self.owner.step(grant);self.last_work=self.owner.last_turn_work();result}
+    /// 🎟️ Actual producer or authority work, retained on both result branches.
+    pub fn last_turn_work(&self)->u64{self.last_work}
     /// 📏️ The minimal grant on every independent axis that the next `step` needs.
     pub fn step_demands(&self)->Result<RetirementDemand,ValueError>{self.owner.step_demands()}
     pub fn preparation_is_ready(&self)->bool{self.owner.preparation_is_ready()}
     pub fn take_ready(&mut self)->Option<ChildEmit>{if self.authority.is_some(){None}else{self.owner.take_ready()}}
     /// 🎭️ Turns an applying typed source into a wire preview: the same operation vector, owner and order, now consumed by the incremental encoder instead of handed to a member store.
-    pub fn begin_preview(&mut self){if self.authority.is_none(){self.owner.begin_preview()}}
+    pub fn preview_demands(&self)->Option<RetirementDemand>{if self.authority.is_some(){None}else{self.owner.preview_demands()}}
+    /// 🎭️ Converts only this genuine original vector under its complete header-transfer grant.
+    pub fn begin_preview_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,RetainedCloneProgress)>{
+        self.last_work=0;if self.authority.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok((false,Default::default())),work:0}}
+        let outcome=self.owner.begin_preview_original(grant);self.last_work=outcome.work;outcome
+    }
     pub fn next_owned_capacity_byte_demand(&self)->usize{self.owner.next_owned_capacity_byte_demand()}
-    pub fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{if self.authority.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"qualified child preparation requires its authenticated output owner"))}self.owner.take_ready_owned(grant)}
-    pub fn take_ready_owned_qualified(&mut self,grant:RetainedCloneGrant)->Result<Option<(OwnedChildEmit,RetainedCloneProgress)>,ValueError>{let Some((metadata,mutations,progress))=self.owner.take_ready_owned(grant)?else{return Ok(None)};Ok(Some((OwnedChildEmit{metadata:Some(metadata),mutations:Some(mutations),authority:self.authority.take()},progress)))}
+    pub fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{self.last_work=0;if self.authority.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"qualified child preparation requires its authenticated output owner"))}let result=self.owner.take_ready_owned(grant);self.last_work=self.owner.last_turn_work();result}
+    pub fn take_ready_owned_qualified(&mut self,grant:RetainedCloneGrant)->Result<Option<(OwnedChildEmit,RetainedCloneProgress)>,ValueError>{let result=self.owner.take_ready_owned(grant);self.last_work=self.owner.last_turn_work();let Some((metadata,mutations,progress))=result?else{return Ok(None)};Ok(Some((OwnedChildEmit{metadata:Some(metadata),mutations:Some(mutations),authority:self.authority.take(),last_work:0},progress)))}
     pub fn begin_close(&mut self){self.owner.begin_close();if let Some(authority)=self.authority.as_mut(){authority.begin_close()}}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{if !self.owner.terminal_is_empty(){return self.owner.close_step(grant).map(|step|match step{PluginLifecycleStep::Complete(progress)if self.authority.is_some()=>PluginLifecycleStep::Progress(progress),other=>other})}let Some(authority)=self.authority.as_mut()else{return Ok(PluginLifecycleStep::Complete(Default::default()))};authority.begin_close();let step=authority.close_step(grant).map_err(value_fault)?;if authority.terminal_is_empty(){self.authority=None}Ok(PluginLifecycleStep::retained(step,self.terminal_is_empty()))}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
+        self.last_work=0;
+        if !self.owner.terminal_is_empty(){let result=self.owner.close_step(grant);self.last_work=self.owner.last_turn_work();return result.map(|step|match step{PluginLifecycleStep::Complete(progress)if self.authority.is_some()=>PluginLifecycleStep::Progress(progress),other=>other})}
+        let Some(authority)=self.authority.as_mut()else{return Ok(PluginLifecycleStep::Complete(Default::default()))};
+        authority.begin_close();let result=authority.close_step(grant);self.last_work=authority.last_turn_work();let step=result.map_err(value_fault)?;
+        if authority.terminal_is_empty(){self.authority=None}Ok(PluginLifecycleStep::retained(step,self.terminal_is_empty()))
+    }
     pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.authority.is_none()}
     pub fn owner_cell_bytes(&self)->usize{size_of_val(self.owner.as_ref())}
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.owner.terminal_is_empty(){self.authority.as_ref().map_or(Ok(Default::default()),|authority|authority.close_demand(body))}else{self.owner.retirement_demands(body)}}
@@ -200,9 +221,15 @@ impl ChildEmitPreparation {
     pub fn retirement_refusal(&self)->Option<&ValueError>{self.owner.retirement_refusal()}
     pub fn accepted_prefix(&self)->Option<&ChildEmit>{self.owner.accepted_prefix()}
     pub fn retained_operation_count(&self)->usize{self.owner.retained_operation_count()}
+    /// 🧬️ Borrows the remaining native window pointer, length and retained backing extent.
+    pub fn source_window_identity<M:Send+'static>(&self)->Option<(usize,usize,usize)>{
+        let owner=self.owner.as_any().downcast_ref::<TypedChildEmitPreparation<M>>()?;
+        let source=owner.owned_source.as_ref().map(Vec::as_slice).or_else(||owner.remaining.as_ref().map(|remaining|remaining.as_slice()))?;
+        Some((source.as_ptr() as usize,source.len(),owner.backing_bytes))
+    }
 }
 impl Drop for ChildEmitPreparation {
-    fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired");}
+    fn drop(&mut self){assert!(self.terminal_is_empty(),"child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired");}
 }
 struct TypedChildEmitPreparation<M> {
     remaining:ManuallyDrop<Option<std::vec::IntoIter<M>>>,
@@ -228,6 +255,7 @@ struct TypedChildEmitPreparation<M> {
     encode:ChildEncode<M>,
     pub closing:bool,
     ready:bool,
+    last_work:u64,
 }
 impl<M> TypedChildEmitPreparation<M>
 where M:Send+'static {
@@ -249,6 +277,7 @@ where M:Send+'static {
         Ok(RetirementDemand{depth:usize::from(!self.retire_stage_is_empty()),..Default::default()})
     }
     fn retire_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
+        self.last_work=0;
         let idle=RetainedCloneProgress::default();
         if self.retire_stage_is_empty(){return Ok(RetainedCloneStep::Complete(idle));}
         let demand=self.retire_demands(grant.maximum_copy_bytes).map_err(value_fault)?;
@@ -256,15 +285,16 @@ where M:Send+'static {
         if yields(grant,demand){return Ok(RetainedCloneStep::Progress(idle));}
         if let Some(error)=self.close_refusal.as_ref(){
             if !self.closing{return Err(retirement_refusal_fault(error));}
-            self.close_refusal.take();
+            self.last_work=1;self.close_refusal.take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));
         }
         if self.retired_schema.is_some(){
-            self.retired_schema.take();
+            self.last_work=1;self.retired_schema.take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));
         }
         if self.retirement.is_some(){
-            return match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant).result {
+            let outcome=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant);self.last_work=outcome.work;
+            return match outcome.result {
                 Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),
                 Err(error)=>{let fault=retirement_refusal_fault(&error);*self.close_refusal=Some(error);Err(fault)}
             };
@@ -272,11 +302,11 @@ where M:Send+'static {
         if self.current.is_some(){
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
             let outcome=match self.retire_builtin{
-                Some((admit,_))=>admit(&mut self.current,&mut self.retirement,grant).result,
+                Some((admit,_))=>{let outcome=admit(&mut self.current,&mut self.retirement,grant);self.last_work=outcome.work;outcome.result},
                 None=>'retire:{
                     let Some(factory)=self.factory.as_ref()else{break 'retire Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"nonterminal owned mutation lost its retirement factory"))};
                     let Some(operation)=self.current.take()else{break 'retire Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"observed current operation is absent"))};
-                    match factory.retire_owned(operation,child).result {
+                    let outcome=factory.retire_owned(operation,child);self.last_work=outcome.work;match outcome.result {
                         Ok((box_,progress))=>{
                             *self.retirement=Some(box_);
                             if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned mutation constructor changed its receipt"))}else{Ok(RetainedCloneStep::Progress(progress))}
@@ -288,22 +318,23 @@ where M:Send+'static {
             return outcome.map_err(|error|{let fault=retirement_refusal_fault(&error);*self.close_refusal=Some(error);fault});
         }
         if self.owned_source.as_ref().is_some_and(|owner|!owner.is_empty()){
-            *self.current=self.owned_source.as_mut().unwrap().pop();
+            self.last_work=1;*self.current=self.owned_source.as_mut().unwrap().pop();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}));
         }
         if self.remaining.as_ref().is_some_and(|owner|owner.len()!=0){
-            *self.current=self.remaining.as_mut().expect("remaining owner exists").next();
+            self.last_work=1;*self.current=self.remaining.as_mut().expect("remaining owner exists").next();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}));
         }
         if self.backing_bytes!=0{
-            let released_bytes=self.backing_bytes;self.backing_bytes=0;self.remaining.take();self.owned_source.take();
+            self.last_work=1;let released_bytes=self.backing_bytes;self.backing_bytes=0;self.remaining.take();self.owned_source.take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..idle}));
         }
-        self.remaining.take();self.owned_source.take();
-        Ok(RetainedCloneStep::Complete(idle))
+        self.last_work=1;self.remaining.take();self.owned_source.take();
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..idle}))
     }
     /// 🧵️ Grows the wire prefix vectors by one doubling step, else moves the next source operation through the codec: its encoded bytes and semantic label join the prefix, the typed operation stays in custody until its retirement. A codec refusal retains the operation and the refusal.
     fn encode_next(&mut self)->Result<ChildEmitPreparationStep,Fault>{
+        self.last_work=1;
         let idle=RetainedCloneProgress::default();
         let element=Self::wire_element_bytes();
         let target=self.wire_growth_target();
@@ -355,7 +386,9 @@ where M:Send+'static {
 }
 impl<M> ChildEmitPreparationOwner for TypedChildEmitPreparation<M>
 where M:Send+'static {
+    fn as_any(&self)->&dyn std::any::Any{self}
     fn as_any_mut(&mut self)->&mut dyn std::any::Any{self}
+    fn last_turn_work(&self)->u64{self.last_work}
     fn matches_source(&self,mutation_type:std::any::TypeId,slot:&str,child_id:&str,maximum_operations:usize)->bool{
         mutation_type==std::any::TypeId::of::<M>()&&!self.closing&&!self.ready&&self.operation_count!=0&&self.operation_count<=maximum_operations&&self.prefix.as_ref().is_some_and(|prefix|prefix.slot==slot&&prefix.child_id==child_id)
     }
@@ -385,6 +418,7 @@ where M:Send+'static {
         self.retire_demands(0)
     }
     fn step(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{
+        self.last_work=0;
         let idle=RetainedCloneProgress::default();
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(ChildEmitPreparationStep::Pending(idle));}
         if self.closing{return Err(Fault::from("owned-child-emission-step-after-close"));}
@@ -393,6 +427,7 @@ where M:Send+'static {
         let demand=self.step_demands().map_err(value_fault)?;
         if grant.maximum_depth<demand.depth||yields(grant,demand){return Ok(ChildEmitPreparationStep::Pending(idle));}
         if self.retired_schema.is_some()||self.retirement.is_some()||self.current.is_some(){return Ok(ChildEmitPreparationStep::Pending(self.retire_one(grant)?.progress()));}
+        self.last_work=1;
         if !self.schema_done{
             if let Some(length)=self.schema_length().map_err(value_fault)?{
                 let(entity,kind)=(self.schema_parts)(self.first_operation().expect("quoted first operation"));
@@ -424,10 +459,14 @@ where M:Send+'static {
         if self.remaining.as_ref().is_some_and(|source|source.len()!=0){return self.encode_next();}
         let step=self.retire_one(grant)?;let progress=step.progress();
         if !matches!(step,RetainedCloneStep::Complete(_))||progress!=idle||self.factory.is_some(){return Ok(ChildEmitPreparationStep::Pending(progress));}
-        self.ready=true;Ok(ChildEmitPreparationStep::Ready(RetainedCloneProgress{copied_items:1,..idle}))
+        self.last_work=1;self.ready=true;Ok(ChildEmitPreparationStep::Ready(RetainedCloneProgress{copied_items:1,..idle}))
     }
-    fn begin_preview(&mut self){
-        if let Some(source)=self.owned_source.take(){*self.remaining=Some(source.into_iter());}
+    fn preview_demands(&self)->Option<RetirementDemand>{self.owned_source.as_ref().map(|_|RetirementDemand{copy_bytes:size_of::<Option<Vec<M>>>()+size_of::<Option<std::vec::IntoIter<M>>>(),depth:1,..Default::default()})}
+    fn begin_preview_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,RetainedCloneProgress)>{
+        self.last_work=0;let Some(demand)=self.preview_demands()else{return semio_framework_value::RetainedWorkOutcome{result:Ok((false,Default::default())),work:0}};
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return semio_framework_value::RetainedWorkOutcome{result:Ok((false,Default::default())),work:0}}
+        let source=self.owned_source.take().unwrap();*self.remaining=Some(source.into_iter());self.ready=false;self.last_work=1;
+        semio_framework_value::RetainedWorkOutcome{result:Ok((true,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
     }
     fn take_ready(&mut self)->Option<ChildEmit>{
         if !self.ready||self.closing||self.retired_schema.is_some()||self.current.is_some()||self.retirement.is_some()||self.remaining.is_some()||self.owned_source.is_some(){return None;}
@@ -436,17 +475,19 @@ where M:Send+'static {
     }
     fn next_owned_capacity_byte_demand(&self)->usize{if self.owned_source.is_some(){self.batch_capacity_bytes}else{0}}
     fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{
+        self.last_work=0;
         if !self.ready||self.closing||self.retired_schema.is_some()||self.current.is_some()||self.retirement.is_some(){return Ok(None);}
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<self.batch_capacity_bytes{return Ok(None);}
         let Some(take)=self.take_batch else{return Ok(None)};
         let Some(source)=self.owned_source.take()else{return Ok(None)};
-        match take(source,grant){
+        self.last_work=1;match take(source,grant){
             Ok((batch,progress))=>{self.backing_bytes=0;Ok(Some((self.prefix.take().expect("ready typed owner retains its wire prefix"),batch,progress)))},
             Err((error,source))=>{*self.owned_source=Some(source);if error.kind==ValueRefusalKind::AllocationFailed{Ok(None)}else{Err(error)}}
         }
     }
     fn begin_close(&mut self){self.closing=true;}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
+        self.last_work=0;
         let idle=RetainedCloneProgress::default();
         if !self.closing{return Err(Fault::from("owned-child-emission-close-before-admission"));}
         if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(idle));}
@@ -458,29 +499,30 @@ where M:Send+'static {
         if yields(grant,demand){return Ok(PluginLifecycleStep::Progress(idle));}
         if !self.retire_stage_is_empty(){
             let step=self.retire_one(grant)?;
-            if step.progress()!=idle{return Ok(PluginLifecycleStep::Progress(step.progress()));}
+            if self.last_work!=0||step.progress()!=idle{return Ok(PluginLifecycleStep::Progress(step.progress()));}
         }
         if let Some(prefix)=self.prefix.as_mut(){
-            if prefix.terminal_is_empty(){self.prefix.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
+            if prefix.terminal_is_empty(){self.last_work=1;self.prefix.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-            let step=prefix.close_one(child).map_err(value_fault)?;
+            self.last_work=1;let step=prefix.close_one(child).map_err(value_fault)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,prefix.terminal_is_empty(),"original child preparation prefix").map_err(value_fault)?;
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if self.cause.is_some()||self.cause_close.is_some(){
-            let step=match semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.cause,&mut self.cause_close,grant).map(|step|PluginLifecycleStep::retained(step,self.cause.is_none()&&self.cause_close.is_none())){
+            let outcome=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.cause,&mut self.cause_close,grant);self.last_work=outcome.work;let step=match outcome.result.map(|step|PluginLifecycleStep::retained(step,self.cause.is_none()&&self.cause_close.is_none())){
                 Ok(step)=>step,
                 Err(error)=>{let fault=retirement_refusal_fault(&error);*self.close_refusal=Some(error);return Err(fault);}
             };
-            if !matches!(step,PluginLifecycleStep::Complete(_)){return Ok(step);}
+            if self.last_work!=0||!matches!(step,PluginLifecycleStep::Complete(_)){return Ok(step);}
         }
         if let Some(factory)=self.factory.take(){
+            self.last_work=1;
             let factory:Arc<dyn semio_framework_value::FactoryRetirement>=factory;
             *self.closing_factory=Some(semio_framework_value::FactoryAuthority::new(factory));
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));
         }
         if let Some(factory)=self.closing_factory.as_mut(){
-            let step=factory.step(grant).result.map_err(value_fault)?;
+            let outcome=factory.step(grant);self.last_work=outcome.work;let step=outcome.result.map_err(value_fault)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,factory.terminal_is_empty(),"original child preparation factory").map_err(value_fault)?;
             if factory.terminal_is_empty(){drop(self.closing_factory.take());}
             return Ok(PluginLifecycleStep::Progress(step.progress()));
@@ -498,7 +540,7 @@ where M:Send+'static {
             demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original prefix depth overflow"))?;
             return Ok(demand);
         }
-        if self.cause.is_some()||self.cause_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.cause,&self.cause_close,body);}
+        if self.cause.is_some()||self.cause_close.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.cause,&self.cause_close,body);}
         if self.factory.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(factory)=self.closing_factory.as_ref(){return factory.demands(body);}
         Ok(Default::default())
@@ -510,7 +552,7 @@ where M:Send+'static {
 }
 impl<M> Drop for TypedChildEmitPreparation<M>{
     fn drop(&mut self){
-        assert!(std::thread::panicking()||(self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.cause_close.is_none()&&self.close_refusal.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()),"typed child emission lost actual operation, prefix or encoder refusal owners");
+        assert!((self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.cause_close.is_none()&&self.close_refusal.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()),"typed child emission lost actual operation, prefix or encoder refusal owners");
         unsafe{ManuallyDrop::drop(&mut self.remaining);ManuallyDrop::drop(&mut self.owned_source);ManuallyDrop::drop(&mut self.current);ManuallyDrop::drop(&mut self.retirement);ManuallyDrop::drop(&mut self.cause);ManuallyDrop::drop(&mut self.cause_close);ManuallyDrop::drop(&mut self.retired_schema);ManuallyDrop::drop(&mut self.close_refusal);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.closing_factory);}
     }
 }
@@ -520,3 +562,6 @@ pub fn retirement_refusal_fault(error:&ValueError)->Fault{
     Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,"interactive-job.child-emission-retirement-refused",error.message.as_ref()).with_param("refusalKind",error.kind.as_str()).with_retained_progress(error.retained_progress())
 }
 
+
+#[path="🪢️batch/🦀️.rs"]
+mod qualified_batch;

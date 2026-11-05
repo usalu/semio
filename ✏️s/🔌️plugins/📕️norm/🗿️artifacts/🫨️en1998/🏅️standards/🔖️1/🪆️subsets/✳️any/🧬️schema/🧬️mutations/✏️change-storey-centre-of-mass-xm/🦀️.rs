@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeStoreyCentreOfMass
         record: "ChangeStoreyCentreOfMassXM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Centre of mass X", "Massenschwerpunkt X ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Centre of mass X", "Massenschwerpunkt X ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-storey-centre-of-mass-xm".into()]

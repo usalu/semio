@@ -285,7 +285,7 @@ pub const STDIO_CONFORMANCE_GRADUATED: &[(&str, &str, ConformanceFacet)] = &[
     // at `🏅️standards/🔖️89a/📚️examples/🎬️demo/🖼️assets/` (confirmed present on disk); with the
     // resolver fix landed, `m5_handcrafted_grammar_conformance`/`m5_handcrafted_protocol_conformance`
     // now resolve gif89a's OWN grammar against gif89a's OWN fixture and pass for real (confirmed:
-    // `cargo test -p semio-framework-os-kernel` green, gif89a no longer among the exempt-soft or
+    // `cargo test -p semio-os-kernel` green, gif89a no longer among the exempt-soft or
     // hard-failure sets). gif89a's own `⚙️engine::tests::conformance_laws::*` (6/6, using its OWN
     // correct per-standard fixture) were already real, trustworthy, independent verification —
     // graduating here is purely a harness-resolution fix catching up to content that was already
@@ -330,7 +330,7 @@ pub const STDIO_CONFORMANCE_GRADUATED: &[(&str, &str, ConformanceFacet)] = &[
     // its per-standard `🏅️standards/🔖️1.7/📚️examples/🎬️demo/🖼️assets/` location (confirmed present
     // on disk); with the resolver fix landed, both handcrafted-conformance tests now resolve
     // pdf/1.7's OWN grammar/protocol against pdf/1.7's OWN fixture and pass for real (confirmed:
-    // `cargo test -p semio-framework-os-kernel` green, pdf/1.7 no longer among the exempt-soft or
+    // `cargo test -p semio-os-kernel` green, pdf/1.7 no longer among the exempt-soft or
     // hard-failure sets) — not new artifact work, pdf/1.7's own
     // `⚙️engine::tests::conformance_laws::*` were already real and green per `p2-fg3-verify-report.md`.
     // Graduated.

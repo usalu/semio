@@ -76,10 +76,10 @@ fn space_bounded_reduce(
     command: &SpaceCommand,
     snapshot: &WorkflowSnapshot,
     config: &SpaceConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<SpaceApp>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<SpaceApp>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, NoDraftMutation>, Fault> {
     if !SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
@@ -142,55 +142,55 @@ impl semio_framework::ToolJobFactory for SpaceCommandJobFactory {
         space_bounded_contract()
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: SPACE_BOUNDED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: SPACE_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFactory {
     type Owner = SpaceApp;
     const TOOL_IDS: &'static [&'static str] = SPACE_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = S_WORKFLOW_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActivePanelTab", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "workflowEngagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "compiledDagEngagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "closeFocusedInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "spawnApp", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePackPayload", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setAppRegistrations", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "disconnectMediaEdge", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "copyAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "duplicateAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "pasteAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameAppInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchMediaNodes", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchAppInstances", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "bindParameterField", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "unbindParameterField", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganizeWorkflow", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "workflowEngagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "compiledDagEngagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportMedia", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importMedia", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importMediaPayload", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportStudioPack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportStudioDsl", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setActivePanelTab", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "workflowEngagementInput", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "compiledDagEngagementInput", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "closeFocusedInstance", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePack", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "spawnApp", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "openInstance", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePackPayload", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "setAppRegistrations", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "patchParameter", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "addParameter", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "removeParameter", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "disconnectMediaEdge", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "removeAppInstance", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "copyAppInstance", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "duplicateAppInstance", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "pasteAppInstance", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "renameAppInstance", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "patchMediaNodes", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "patchAppInstances", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "bindParameterField", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "unbindParameterField", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "reorganizeWorkflow", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "workflowEngagementSubmit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "compiledDagEngagementSubmit", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "exportMedia", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importMedia", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "importMediaPayload", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "exportStudioPack", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "exportStudioDsl", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -203,7 +203,7 @@ pub(crate) const SPACE_CONFIG_RETAINED_BYTES: usize = 65_536;
 //#endregion 📬️ConfigStorePreparation
 
 impl ArtifactApp for SpaceApp {
-    const DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.space.studio", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+    const DIALECT: semio_plugin::Dialect = semio_plugin::Dialect { artifact_kind: "s.space.studio", standard: semio_plugin::StandardId("1"), subset: semio_plugin::SubsetId::ANY };
     type Snapshot = WorkflowSnapshot;
     type Mutation = WorkflowMutation;
     type Config = SpaceConfig;
@@ -212,14 +212,14 @@ impl ArtifactApp for SpaceApp {
     type DraftMutation = NoDraftMutation;
     type Presence = SpacePresence;
     type PresenceMutation = SpacePresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
     type Command = SpaceCommand;
 
     const APP_ID: &'static str = S_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = S_WORKFLOW_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: SpaceApp,
         owner_file: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs",
         controller: "s.space.studio@1/*#editor",
@@ -284,11 +284,11 @@ impl ArtifactApp for SpaceApp {
         crate::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-studio-config-retained", SPACE_CONFIG_RETAINED_BYTES)
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<Self>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<Self>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
 
         if !SPACE_BOUNDED_TOOL_IDS.contains(&original.tool_id.as_str()) {
@@ -301,7 +301,7 @@ impl ArtifactApp for SpaceApp {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.extent"), "Space bounded route exceeded its declared work extent").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SpaceCommand::command_id, SPACE_BOUNDED_RAW_BYTES, SPACE_BOUNDED_WORK_ITEMS, false, |_original| BoundedArtifactCommandWork::new(tool_id, space_bounded_reduce, space_bounded_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SpaceCommand::command_id, SPACE_BOUNDED_RAW_BYTES, SPACE_BOUNDED_WORK_ITEMS, false, |_original| BoundedArtifactCommandWork::new(tool_id, space_bounded_reduce, space_bounded_extent))
     }
 
     async fn initial_snapshot() -> WorkflowSnapshot {
@@ -388,7 +388,7 @@ impl ArtifactApp for SpaceApp {
             "setActivePanelTab" => Ok(SpaceCommand::SetActivePanelTab(semio_hub_space_commands_media::set_active_panel_tab::SetActivePanelTab { tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default() })),
             "nodeGraphViewport" => {
                 let value = args.and_then(|value| value.get("viewport")).cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
-                let viewport = <semio_framework_os_kernel::Viewport2d as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
+                let viewport = <semio_os_kernel::Viewport2d as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
                 Ok(SpaceCommand::NodeGraphViewport(semio_hub_space_commands_authoring::node_graph_viewport::NodeGraphViewport { viewport }))
             }
             "presenceHeartbeat" => Ok(SpaceCommand::PresenceHeartbeat(semio_hub_space_commands_media::presence_heartbeat::PresenceHeartbeat {})),
@@ -424,7 +424,7 @@ impl ArtifactApp for SpaceApp {
         doc: &ArtifactView<'_, WorkflowSnapshot>,
         cfg: &ConfigView<'_, SpaceConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, Self::DraftMutation>, Fault> {
@@ -463,26 +463,26 @@ impl ArtifactApp for SpaceApp {
         Ok(InteractionTopology { domains })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let projection = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(view_state);
+        let labels = semio_plugin::resolve_labels::<SStudioLabels>(view_state);
         match body_key {
             semio_hub_space_foundation::S_PLAY_BODY_WORKFLOW => {
-                crate::modes::main::windows::workflow::render(&SpaceApp, projection, config).await.map(semio_framework_plugin::built_to_component_tree)
+                crate::modes::main::windows::workflow::render(&SpaceApp, projection, config).await.map(semio_plugin::built_to_component_tree)
             }
-            crate::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::modes::main::windows::media_vfs::render(projection, view_state).await.map(semio_framework_plugin::built_to_component_tree),
-            crate::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::modes::main::windows::compiled_dag::render(projection).await.map(semio_framework_plugin::built_to_component_tree),
-            S_PLAY_CATALOGUE_BODY_KEY => crate::panels::catalogue::build_catalogue_tree(labels, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_CATALOGUE_BODY_KEY))
+            crate::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::modes::main::windows::media_vfs::render(projection, view_state).await.map(semio_plugin::built_to_component_tree),
+            crate::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::modes::main::windows::compiled_dag::render(projection).await.map(semio_plugin::built_to_component_tree),
+            S_PLAY_CATALOGUE_BODY_KEY => crate::panels::catalogue::build_catalogue_tree(labels, view_state.locale, &semio_plugin::TreeWindows::for_body(view_state, S_PLAY_CATALOGUE_BODY_KEY))
                 .await
-                .map(semio_framework_plugin::built_to_component_tree),
-            S_PLAY_PARAMETERS_BODY_KEY => crate::panels::parameters::render(projection, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_PARAMETERS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
-            S_PLAY_INSPECTOR_BODY_KEY => crate::panels::inspection::render(projection, &[], labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_INSPECTOR_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+                .map(semio_plugin::built_to_component_tree),
+            S_PLAY_PARAMETERS_BODY_KEY => crate::panels::parameters::render(projection, labels, &semio_plugin::TreeWindows::for_body(view_state, S_PLAY_PARAMETERS_BODY_KEY)).map(semio_plugin::built_to_component_tree),
+            S_PLAY_INSPECTOR_BODY_KEY => crate::panels::inspection::render(projection, &[], labels, &semio_plugin::TreeWindows::for_body(view_state, S_PLAY_INSPECTOR_BODY_KEY)).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    async fn window_measures(doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+    async fn window_measures(doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<semio_plugin::WindowMeasure>> {
         HashMap::from([(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW.into(), crate::modes::main::windows::workflow::window_measures(cfg.snapshot, &doc.snapshot.graph.nodes, view_state).await)])
     }
 
@@ -490,13 +490,13 @@ impl ArtifactApp for SpaceApp {
     /// w3b-summary.md), so the selection-dependent rows below always take the "nothing selected"
     /// branch rather than reading a stale/wrong selection.
     async fn context_menu(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, WorkflowSnapshot>,
         _cfg: &ConfigView<'_, SpaceConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(view_state);
+        view_state: &semio_plugin::ViewModel,
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
+        let labels = semio_plugin::resolve_labels::<SStudioLabels>(view_state);
         space_workflow_context_menu_items(registry, labels, view_state, request.surface.as_ref(), &[]).await
     }
 }

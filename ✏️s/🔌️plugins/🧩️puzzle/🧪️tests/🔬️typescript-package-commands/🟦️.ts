@@ -26,7 +26,7 @@ function retainedIds(source: string, owner: PublicationOwner["owner"]): string[]
   return quotedValues(match[1]!);
 }
 function manifestPairs(source: string): Map<string, string> {
-  return new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
+  return new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
 }
 function exactArray(left: string[], right: string[]): boolean {
   return JSON.stringify([...left].sort()) === JSON.stringify([...right].sort()) && new Set(left).size === left.length && new Set(right).size === right.length;
@@ -181,7 +181,7 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
   const factory = `${owner.owner.slice(0, 8)}RetainedCommandJobFactory`;
   const factoryBlock = production.split(new RegExp(`impl (?:[A-Za-z_][A-Za-z0-9_]*::)*ArtifactOwnedToolJobFactory for ${factory}\\b`))[1]?.split("//#endregion 🧵️RetainedCommands")[0] ?? "";
   const contracts = publicationContracts(factoryBlock);
-  const proofBlock = production.split("semio_framework_plugin::bounded_first_step_tool_proofs!")[1]?.split("fn register_tool_job_factories")[0] ?? "";
+  const proofBlock = production.split("semio_plugin::bounded_first_step_tool_proofs!")[1]?.split("fn register_tool_job_factories")[0] ?? "";
   const proofIds = quotedValues(proofBlock.match(/tools:\s*\[([^\]]*)\]/)?.[1] ?? "");
   const exactFactory = implementsFor(production, "ToolJobFactory", factory)
     && implementsFor(production, "ArtifactOwnedToolJobFactory", factory)
@@ -247,7 +247,7 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("fn terminal_is_empty(&self)")
       && production.includes("fn puzzle2d_dispatch_emit(")
       && production.includes("puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?")
-      && production.includes("puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, &semio_framework_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())")
+      && production.includes("puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, &semio_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())")
       && production.includes("PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024")
       && production.includes("if addressed > PUZZLE2D_SELECTION_BATCH_LIMIT {\n        return None;\n    }")
       && production.includes("Some(addressed.saturating_add(connects).max(1))");
@@ -288,7 +288,7 @@ export async function runPublicationAuthorityAuditScript(context: Readonly<{ roo
     const blocked = owner.groups.find((group) => group.status === "batch-only-pending-rewrite")?.routes[0];
     if (blocked) {
       const hostile = source.replace(
-        new RegExp(`(\\.action_interactive_job\\("${blocked}",\\s*(?:semio_framework_plugin::)?InteractiveJobClassification::)BatchOnlyPendingRewrite`),
+        new RegExp(`(\\.action_interactive_job\\("${blocked}",\\s*(?:semio_plugin::)?InteractiveJobClassification::)BatchOnlyPendingRewrite`),
         "$1Migrated",
       );
       if (hostile === source) throw new Error(`${owner.owner} hostile activation mutation did not apply for ${blocked}`);

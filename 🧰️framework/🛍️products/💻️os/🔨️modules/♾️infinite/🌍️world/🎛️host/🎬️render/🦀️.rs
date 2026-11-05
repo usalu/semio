@@ -15,12 +15,12 @@ use super::*;
 pub fn render_world_3d(
     scene: &UiComponentSceneNode,
     bounds: Rect,
-    ctx: &mut semio_framework_ui_wgpu_widget_kit::WidgetContext<'_, ActionDescriptor>,
+    ctx: &mut semio_ui_wgpu_widget_kit::WidgetContext<'_, ActionDescriptor>,
     state: &mut World3dState,
     gpu: &mut World3dBuildContext,
     shadow_profile: World3dShadowProfile,
 ) {
-    use semio_framework_ui_wgpu_widget_kit::{draw_text, gizmo as gpu_gizmo};
+    use semio_ui_wgpu_widget_kit::{draw_text, gizmo as gpu_gizmo};
     let theme = ctx.theme;
     let modelling = scene.world_3d.as_ref();
     let section = modelling.and_then(|world| world.modelling_options.as_ref()).and_then(|options| options.section);

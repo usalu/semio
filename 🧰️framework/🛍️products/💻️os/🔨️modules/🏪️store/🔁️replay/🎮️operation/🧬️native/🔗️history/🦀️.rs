@@ -1,5 +1,5 @@
 //! 🔗️ Original history source retains its exact ledger slot, captured issuer and projected forward owners.
-use semio_framework_os_vcs::{ArtifactHistoryLedger,ArtifactHistoryReadKey};
+use semio_os_vcs::{ArtifactHistoryLedger,ArtifactHistoryReadKey};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,FactoryAuthority,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedOwnedProjection,retained_clone_grant_admits}};
 use std::{mem::{ManuallyDrop,size_of},sync::Arc};
 /// 🧷️ One granted source binds the original ledger and issuer until every retained projection returns.

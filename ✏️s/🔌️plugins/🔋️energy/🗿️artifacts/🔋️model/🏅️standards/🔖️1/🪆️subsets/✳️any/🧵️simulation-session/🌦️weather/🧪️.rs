@@ -1,7 +1,7 @@
 //! 🧪️ Actual registry replies, canonical EPW packs and independent CSV values drive original weather capture.
 use super::*;
-use semio_framework_os_kernel::pack::snapshot::ArtifactPack;
-use semio_framework_plugin_actor_host::requests::RequestRegistry;
+use semio_os_kernel::pack::snapshot::ArtifactPack;
+use semio_plugin_actor_host::requests::RequestRegistry;
 use semio_framework::kernel::{Effect,RequestId};
 use semio_s_plugin_energy_engine_sim::testing::OriginalEnergyCaller;
 use semio_framework_job::{OperationId,Generation};

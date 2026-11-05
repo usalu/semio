@@ -1,3 +1,4 @@
+use crate::RetirementDemand;
 use super::*;
 fn post(bank:&mut RetainedCloneGrant,fuel:&mut u64,p:RetainedCloneProgress,work:u64){assert!(p.fits(*bank));assert!(work<=1);bank.maximum_items-=p.copied_items;bank.maximum_copy_bytes-=p.copied_bytes;bank.maximum_capacity_bytes-=p.retained_capacity_bytes;bank.maximum_release_bytes-=p.released_bytes;*fuel=fuel.checked_sub(work).unwrap();}
 fn close<T:crate::retirement::RetireOwned>(value:T,bank:&mut RetainedCloneGrant,fuel:&mut u64){let mut owner=crate::retirement::controlled::ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();for _ in 0..100000{if owner.terminal_is_empty(){return}let(step,heap)=crate::allocation_testing::observe_retirement_allocations(||owner.step(RetainedCloneGrant{maximum_items:1,..*bank}).unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(bank,fuel,p,owner.last_turn_work());}panic!("actual ordered update cleanup exhausted finite turns")}

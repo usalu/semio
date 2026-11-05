@@ -1,10 +1,10 @@
 //! 🏭️ Closed factory declarations stay paired with the retained input through semantic admission.
 //! Selection is not space or pin authorization; no typed document is hydrated here.
 
-use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
+use semio_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress};
-use semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput;
+use semio_os_store_member_open::{MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress};
+use semio_os_store_member_open::history::VerifiedMemberHistoryInput;
 use crate::lifted_store::MemberFactory;
 use semio_framework_job::StepContext;
 use semio_framework_value::{ValueError, RetirementDemand};
@@ -61,7 +61,7 @@ fn check_input(input: &Option<VerifiedMemberHistoryInput>, cx: &StepContext<'_>)
 }
 
 fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    semio_framework_os_store_read::retirement_owner_close(input, grant).result
+    semio_os_store_read::retirement_owner_close(input, grant).result
 }
 
 impl<M: MemberFactory> MemberFactorySelection<M> {
@@ -185,7 +185,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> MemberFactorySelection<M> {
-    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.input, body) }
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_os_store_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for MemberFactorySelection<M> {
     fn drop(&mut self) {
@@ -249,7 +249,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M
 }
 impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
     pub fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
-    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.input, body) }
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_os_store_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryInput<M> {
     fn drop(&mut self) {
@@ -289,7 +289,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDiction
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
-    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.owner, body) }
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_os_store_read::retirement_owner_demands(&self.owner, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryDictionary<M> {
     fn drop(&mut self) {
@@ -304,10 +304,10 @@ pub struct SelectedVerifiedMemberHistory<M: MemberFactory> {
 }
 
 impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
-    pub fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<semio_framework_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<semio_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.input.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)
     }
-    pub fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<semio_framework_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<semio_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)
     }
     pub fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
@@ -328,7 +328,7 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
         self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, output, cx)
     }
 
-    pub fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<semio_framework_os_store_envelope::owner::OwnerRef>, &'static str, semio_framework_os_spr::ActorId), MemberOpenDiagnostic> {
+    pub fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<semio_os_store_envelope::owner::OwnerRef>, &'static str, semio_os_spr::ActorId), MemberOpenDiagnostic> {
         let (expected, owner, schema, actor) = self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.clone_initial_identity(cx)?;
         if schema != self.declaration.schema {
             return Err(MemberOpenDiagnostic::Identity);
@@ -349,7 +349,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistor
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
-    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.input, body) }
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_os_store_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedVerifiedMemberHistory<M> {
     fn drop(&mut self) {

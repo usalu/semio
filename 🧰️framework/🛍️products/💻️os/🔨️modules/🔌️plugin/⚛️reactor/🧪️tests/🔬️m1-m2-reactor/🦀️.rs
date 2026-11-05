@@ -1,7 +1,7 @@
-use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
+use semio_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
 use crate::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::{patches_diff, patches_revision, presence_expire_and_flush, presence_record_own, presence_record_peer};
-use semio_framework_ui_contract as ui_contract;
-use semio_framework_ui_runtime::{ComponentTree, TreeNode};
+use semio_ui_contract as ui_contract;
+use semio_ui_runtime::{ComponentTree, TreeNode};
 
 #[doc(hidden)]
 pub fn leaf(key: &str) -> ComponentTree {
@@ -15,7 +15,7 @@ pub fn leaf(key: &str) -> ComponentTree {
 async fn revision_guard_never_rejects_an_intent_at_the_never_rendered_default() {
     let current = patches_revision("never-rendered").await;
     assert_eq!(current, ui_contract::UiRevision(0));
-    assert!(!semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(0), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE));
+    assert!(!semio_ui_runtime::is_stale_intent(ui_contract::UiRevision(0), current, semio_ui_runtime::DEFAULT_REVISION_TOLERANCE));
 }
 
 /// 🎯️ M1: after one real render bumps `PATCHES`'s revision to 1, an intent stamped at revision
@@ -25,15 +25,15 @@ async fn revision_guard_never_rejects_an_intent_at_the_never_rendered_default() 
 /// no command" reduced to the guard `poll` evaluates before ever reaching dispatch.
 #[semio_framework_async_macros::async_test]
 async fn revision_guard_rejects_an_intent_trailing_by_more_than_the_tolerance() {
-    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
+    let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
 
     patches_diff("s",leaf("root"),&mut cx).await;
     patches_diff("s",leaf("root2"),&mut cx).await;
     patches_diff("s",leaf("root3"),&mut cx).await;
     let current = patches_revision("s").await;
     assert_eq!(current, ui_contract::UiRevision(3));
-    assert!(!semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(2), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by exactly the tolerance must still dispatch");
-    assert!(semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(1), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by 2 must be rejected — no patch, no command");
+    assert!(!semio_ui_runtime::is_stale_intent(ui_contract::UiRevision(2), current, semio_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by exactly the tolerance must still dispatch");
+    assert!(semio_ui_runtime::is_stale_intent(ui_contract::UiRevision(1), current, semio_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by 2 must be rejected — no patch, no command");
     let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("same original repeated-render fixture caller close");
 }
 

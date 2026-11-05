@@ -30,7 +30,7 @@
     "schema_hash"
   ],
   "forbiddenProviders": [
-    "semio-framework-os-kernel",
-    "semio-framework-plugin"
+    "semio-os-kernel",
+    "semio-plugin"
   ]
 }

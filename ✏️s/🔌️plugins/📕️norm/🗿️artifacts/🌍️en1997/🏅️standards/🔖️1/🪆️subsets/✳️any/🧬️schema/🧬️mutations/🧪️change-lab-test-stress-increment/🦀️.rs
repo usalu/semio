@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabTestStressIncre
         record: "ChangedLabTestStressIncrement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stress increment Δσ of the laboratory test", "Laborversuch: Spannungszuwachs Δσ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stress increment Δσ of the laboratory test", "Laborversuch: Spannungszuwachs Δσ ändern")
     }
 }
 

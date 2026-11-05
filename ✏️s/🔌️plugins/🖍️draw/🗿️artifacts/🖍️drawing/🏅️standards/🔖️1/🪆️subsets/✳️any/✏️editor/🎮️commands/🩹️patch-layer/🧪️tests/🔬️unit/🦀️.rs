@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::{drawing_op_for_layer_field, DrawingMutation};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::patch_layer::*;
 
 #[test]

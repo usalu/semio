@@ -3,12 +3,12 @@
 //! 🧭️ They name `handle_scene_wheel` and `handle_scene_pointer_move`, the test-only emulator of the Scenes standalone law, so they are mounted next to it by the Scenes companion.
 
 use super::{handle_scene_pointer_move, handle_scene_wheel};
-use semio_framework_os_renderer_wgpu_host_base::app_now_ms;
-use semio_framework_os_renderer_wgpu_scene_state::{SceneDrag, SceneDragMode, camera_fixture_grant, camera_fixture_lease, clear_camera_fixture, mutate_scene_state, sweep_expired_scene_camera_dispatches};
+use semio_renderer_wgpu_host_base::app_now_ms;
+use semio_renderer_wgpu_scene_state::{SceneDrag, SceneDragMode, camera_fixture_grant, camera_fixture_lease, clear_camera_fixture, mutate_scene_state, sweep_expired_scene_camera_dispatches};
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
 
 fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
     UiComponentSceneNode {
@@ -19,7 +19,7 @@ fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
         pane_id: None,
         binding_id: None,
         presence: UiPresence::default(),
-        canvas_2d: Some(semio_framework_ui_scene_plane::Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
+        canvas_2d: Some(semio_ui_scene_plane::Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
         world_3d: None,
         node_graph: None,
         text_editor: None,

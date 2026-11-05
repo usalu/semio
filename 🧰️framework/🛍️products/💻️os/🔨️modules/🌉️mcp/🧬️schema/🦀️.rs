@@ -22,10 +22,10 @@ use semio_framework_schema_registry::ScopeSchemaExports;
 use semio_framework_schema_registry::register_scope_schema_exports as register_exports;
 use serde::Deserialize;
 use serde::Serialize;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::reports::{ContextSummary, InvocationReport, InvocationStatus, JobState, JobStatus, PreparedActionReport, RevisionStamp, SearchHit};
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, ContentBlock, Prompt, PromptArgument, PromptGetResult, PromptMessage, Resource, ResourceContent, ResourceTemplate, Tool};
-use semio_framework_os_mcp_wire::tool_shapes::normalize_boolean_subschemas;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::reports::{ContextSummary, InvocationReport, InvocationStatus, JobState, JobStatus, PreparedActionReport, RevisionStamp, SearchHit};
+use semio_os_mcp_wire::protocol::{CallToolResult, ContentBlock, Prompt, PromptArgument, PromptGetResult, PromptMessage, Resource, ResourceContent, ResourceTemplate, Tool};
+use semio_os_mcp_wire::tool_shapes::normalize_boolean_subschemas;
 
 #[path = "🧭️core-and-mutation-tool-schemas/🦀️.rs"]
 mod core_and_mutation_tool_schemas;

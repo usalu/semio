@@ -98,7 +98,7 @@ pub fn close_job<J: InteractiveJob + ?Sized>(job: &mut J, label: &str) -> usize 
 }
 
 /// 🧹️ Begins the close of one command work and drives it to its terminal-empty witness under exactly its quoted grants.
-pub fn close_work<A: semio_framework_plugin::ArtifactApp, W: semio_framework_plugin::retained_command::ArtifactCommandWork<A> + ?Sized>(work: &mut W, label: &str) {
+pub fn close_work<A: semio_plugin::ArtifactApp, W: semio_plugin::retained_command::ArtifactCommandWork<A> + ?Sized>(work: &mut W, label: &str) {
     work.begin_close();
     let mut caller = fixture_caller(semio_framework_job::allocate_operation_id(), Generation(1), u64::MAX, 1 << 40);
     for _ in 0..10_000_000 {
@@ -124,22 +124,22 @@ pub fn close_work<A: semio_framework_plugin::ArtifactApp, W: semio_framework_plu
 }
 
 /// 🧹️ Spends one exact-grant close turn of the instance owner `O` behind `handle`; answers whether it reached its terminal-empty witness.
-pub fn close_instance_owner_turn<O: semio_framework_plugin::ArtifactInstanceOperationOwner + 'static>(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> bool {
+pub fn close_instance_owner_turn<O: semio_plugin::ArtifactInstanceOperationOwner + 'static>(handle: &semio_plugin::ArtifactInstanceOperationOwnerHandle) -> bool {
     handle
         .with_mut::<O, _>(|owner| {
-            let demand = owner.retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| semio_framework_plugin::Fault::from(error.to_string()))?;
+            let demand = owner.retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| semio_plugin::Fault::from(error.to_string()))?;
             let grant = exact_grant(demand);
             let mut sequence = 0;
             let mut receipt = RetainedCloneProgress::default();
             let mut cx = StepContext::new(semio_framework_job::allocate_operation_id(), Generation(1), StepBudget::new(1, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-            let step = owner.close_step(&mut cx, grant).map_err(|error| semio_framework_plugin::Fault::from(format!("{error:?}")))?;
-            Ok(matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)))
+            let step = owner.close_step(&mut cx, grant).map_err(|error| semio_plugin::Fault::from(format!("{error:?}")))?;
+            Ok(matches!(step, semio_plugin::PluginLifecycleStep::Complete(_)))
         })
         .expect("the owner lends itself to its close ladder")
 }
 
 /// 🧹️ Closes the instance owner `O` behind `handle` to its terminal-empty witness.
-pub fn close_instance_owner<O: semio_framework_plugin::ArtifactInstanceOperationOwner + 'static>(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, label: &str) {
+pub fn close_instance_owner<O: semio_plugin::ArtifactInstanceOperationOwner + 'static>(handle: &semio_plugin::ArtifactInstanceOperationOwnerHandle, label: &str) {
     for _ in 0..1_000_000 {
         if close_instance_owner_turn::<O>(handle) {
             return;

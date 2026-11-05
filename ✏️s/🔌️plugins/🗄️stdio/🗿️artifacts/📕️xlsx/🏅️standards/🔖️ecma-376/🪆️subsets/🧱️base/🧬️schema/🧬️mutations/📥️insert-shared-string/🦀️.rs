@@ -17,8 +17,8 @@ pub struct InsertSharedString {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSharedString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "shared-string", kind: "insert-shared-string", record: "InsertSharedString" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert shared string", "Gemeinsame Zeichenfolge einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert shared string", "Gemeinsame Zeichenfolge einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

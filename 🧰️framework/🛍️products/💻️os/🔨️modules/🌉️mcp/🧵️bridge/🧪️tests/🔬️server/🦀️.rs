@@ -17,8 +17,8 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use std::sync::Arc;
 use crate::transport::{HttpAdmission, origin_allowed};
-use semio_framework_os_mcp_bridge::session::BridgeHandle;
-use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, GatewayToShell, ShellToGateway};
+use semio_os_mcp_bridge::session::BridgeHandle;
+use semio_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, GatewayToShell, ShellToGateway};
 
 #[derive(Clone)]
 struct BridgeServerState {

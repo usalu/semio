@@ -1,9 +1,9 @@
 //! 🖱️ Blueprint utility — Select: the default pointer. Click and shift-click picking stay on the
 //! canvas pointer commands; this utility does not arm the transform gumball.
 
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
 
 pub const UTILITY_ID: &str = "select";
 

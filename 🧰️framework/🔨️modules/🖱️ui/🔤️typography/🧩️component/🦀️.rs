@@ -69,11 +69,11 @@ mod glyph_packing_measure_and_kerning;
 mod text_wrapping_and_font_fetch;
 pub use text_wrapping_and_font_fetch::fetch_font_bytes;
 
-pub use semio_framework_font_anta_latin_regular::OUTLINE as ANTA_LATIN;
-pub use semio_framework_font_kelly_slab_latin_regular::OUTLINE as KELLY_SLAB_LATIN;
-pub use semio_framework_font_share_tech_mono_latin_regular::OUTLINE as SHARE_TECH_MONO_LATIN;
+pub use semio_font_anta_latin_regular::OUTLINE as ANTA_LATIN;
+pub use semio_font_kelly_slab_latin_regular::OUTLINE as KELLY_SLAB_LATIN;
+pub use semio_font_share_tech_mono_latin_regular::OUTLINE as SHARE_TECH_MONO_LATIN;
 
-pub use semio_framework_ui_theme::metrics::line_height;
+pub use semio_ui_theme::metrics::line_height;
 
 #[cfg(any(test, feature = "testkit"))]
 #[path = "../../🧪️testing/🔤️text-reference/🦀️.rs"]

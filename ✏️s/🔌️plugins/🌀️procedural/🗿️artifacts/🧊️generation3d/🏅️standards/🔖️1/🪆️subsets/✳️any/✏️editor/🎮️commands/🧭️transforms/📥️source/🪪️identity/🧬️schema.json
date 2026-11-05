@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "source",
+          "operation",
+          "component",
+          "ordinal",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "operation": {
+            "enum": [
+              "translate",
+              "rotate",
+              "scale"
+            ]
+          },
+          "component": {
+            "type": "boolean"
+          },
+          "ordinal": {
+            "type": "string",
+            "pattern": "^(0|[2-9][0-9]*|1[0-9]+)$"
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

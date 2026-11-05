@@ -3,12 +3,12 @@
 use crate::modes::view::windows::model as model_window;
 use crate::mutations::EnergyModelMutation;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraftMutation;
 use super::EnergyModelViewCommand;
 
 //#region 🎥️Camera
@@ -19,7 +19,7 @@ use super::EnergyModelViewCommand;
 /// no config mutation, no effect — which is the runtime half of the read-only guarantee whose
 /// compile-time half is `ViewEmit`. `reduce`'s own signature could carry a document mutation; this
 /// function is the one place that decides, and it never builds one.
-pub(super) fn camera_emit(command: &EnergyModelViewCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<EnergyModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub(super) fn camera_emit(command: &EnergyModelViewCommand, view_state: Option<&semio_plugin::ViewModel>) -> Result<Emit<EnergyModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let EnergyModelViewCommand::SetCamera { camera } = command;
     let view = view_state.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.viewer.window-required"), "a camera change requires a concrete 3d model window"))?;
     if camera.is_empty() {

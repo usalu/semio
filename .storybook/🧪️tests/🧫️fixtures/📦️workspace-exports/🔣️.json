@@ -1,0 +1,35 @@
+{
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/package.json",
+  "cases": [
+    {
+      "specifier": "@semio-tech/ui/elements/Diagram/layout",
+      "exported": true,
+      "syntax": true
+    },
+    {
+      "specifier": "@semio-tech/ui/elements/Diagram/layout/wire",
+      "exported": true,
+      "syntax": true
+    },
+    {
+      "specifier": "@semio-tech/ui/elements/Ports/interactive-jobs",
+      "exported": true,
+      "syntax": true
+    },
+    {
+      "specifier": "@semio-tech/UI/elements/Diagram/layout",
+      "exported": false,
+      "syntax": false
+    },
+    {
+      "specifier": "@semio-tech/ui/elements/../Diagram/layout",
+      "exported": false,
+      "syntax": false
+    },
+    {
+      "specifier": "@semio-tech/ui/elements/diagram/layout",
+      "exported": false,
+      "syntax": true
+    }
+  ]
+}

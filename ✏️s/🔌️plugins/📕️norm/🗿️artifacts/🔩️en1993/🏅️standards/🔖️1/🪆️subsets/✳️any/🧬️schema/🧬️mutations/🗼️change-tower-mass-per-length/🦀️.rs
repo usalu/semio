@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerMassPerLength
         record: "ChangedTowerMassPerLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Mass per length m of the tower leg", "Turmstiel: Masse je Länge m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Mass per length m of the tower leg", "Turmstiel: Masse je Länge m ändern")
     }
 }
 

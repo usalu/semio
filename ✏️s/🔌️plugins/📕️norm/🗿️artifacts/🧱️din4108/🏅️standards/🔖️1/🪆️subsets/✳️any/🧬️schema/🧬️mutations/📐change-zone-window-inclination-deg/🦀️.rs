@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeZoneWindowInclina
         record: "ChangedZoneWindowInclinationDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change window inclination", "Fensterneigung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change window inclination", "Fensterneigung ändern")
     }
 }
 

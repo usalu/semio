@@ -21,7 +21,7 @@
 //! See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/
 //! 📓️terra-async-imports-report.md`.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use std::collections::{HashMap, VecDeque};
 use std::pin::Pin;
@@ -32,8 +32,8 @@ use std::task::{Context, Poll, Waker};
 use semio_framework::{MediaClass, MediaForm, MediaType};
 use semio_framework_actor::{ActorId as RuntimeActorId, PackageId};
 use semio_framework_async::{CancelToken, CapabilityTokenId, HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle, TraceId};
-use semio_framework_os_services::{HttpRequest as ServiceHttpRequest, StorageError, TokioHostRuntime};
-use semio_framework_plugin_host_engine::wasm;
+use semio_os_services::{HttpRequest as ServiceHttpRequest, StorageError, TokioHostRuntime};
+use semio_plugin_host_engine::wasm;
 use wasm::component::{Accessor, Destination, HasSelf, StreamProducer, StreamReader, StreamResult, VecBuffer};
 use wasm::{ResourceLimiter, StoreContextMut};
 use wasm::wasi::{WasiCtx, WasiCtxView, WasiView};
@@ -47,7 +47,7 @@ use wasm::wasi::{WasiCtx, WasiCtxView, WasiView};
 ///
 /// 🐛️ The `additional_derives` caveats that used to live here moved with the invocation; see
 /// `mod actor_bindings`'s own comment for why it requests neither `Debug` nor `Clone`.
-use semio_framework_plugin_host_wit::actor_bindings as host_async_bindings;
+use semio_plugin_host_wit::actor_bindings as host_async_bindings;
 
 use host_async_bindings::semio::framework::{effects as wit_effects, host_async as wit_host_async, ui as wit_ui};
 //#endregion 🔌️Bindings
@@ -77,10 +77,10 @@ use host_async_bindings::semio::framework::{effects as wit_effects, host_async a
 // rather than making this whole file generic, which would thread `R` through ~25 trait methods
 // with no caller yet to prove the shape against. Revisit once this world is actually wired.
 pub(crate) struct AsyncActorHostState {
-    operation_slot:semio_framework_plugin_host_operation::OperationSlot,
+    operation_slot:semio_plugin_host_operation::OperationSlot,
     router_turn_grant: semio_framework_job::RetainedCloneGrant,
-    services: Arc<semio_framework_plugin_host_effects::AsyncServices<TokioHostRuntime>>,
-    router_handler: Arc<dyn semio_framework_plugin_host_effects::RouterEffectHandler>,
+    services: Arc<semio_plugin_host_effects::AsyncServices<TokioHostRuntime>>,
+    router_handler: Arc<dyn semio_plugin_host_effects::RouterEffectHandler>,
     scope: ScopeHandle,
     actor: u64,
     generation: u16,
@@ -93,7 +93,7 @@ pub(crate) struct AsyncActorHostState {
     trace_ids: TraceIdAllocator,
     effect_sink: Vec<semio_framework::kernel::Effect>,
     patch_sink: Vec<wit_ui::UiPatch>,
-    limiter: semio_framework_plugin_host_engine::BudgetLimiter,
+    limiter: semio_plugin_host_engine::BudgetLimiter,
     wasi_ctx: WasiCtx,
     resource_table: wasm::component::ResourceTable,
 }
@@ -101,8 +101,8 @@ pub(crate) struct AsyncActorHostState {
 impl AsyncActorHostState {
     #[allow(clippy::too_many_arguments)]
     pub async fn new(
-        services: Arc<semio_framework_plugin_host_effects::AsyncServices<TokioHostRuntime>>,
-        router_handler: Arc<dyn semio_framework_plugin_host_effects::RouterEffectHandler>,
+        services: Arc<semio_plugin_host_effects::AsyncServices<TokioHostRuntime>>,
+        router_handler: Arc<dyn semio_plugin_host_effects::RouterEffectHandler>,
         router_turn_grant: semio_framework_job::RetainedCloneGrant,
         scope: ScopeHandle,
         actor: u64,
@@ -114,7 +114,7 @@ impl AsyncActorHostState {
         wasi_ctx: WasiCtx,
     ) -> AsyncActorHostState {
         AsyncActorHostState {
-            operation_slot:semio_framework_plugin_host_operation::OperationSlot::new(),
+            operation_slot:semio_plugin_host_operation::OperationSlot::new(),
             services,
             router_handler,
             router_turn_grant,
@@ -129,7 +129,7 @@ impl AsyncActorHostState {
             trace_ids: TraceIdAllocator::new(),
             effect_sink: Vec::new(),
             patch_sink: Vec::new(),
-            limiter: semio_framework_plugin_host_engine::BudgetLimiter::default(),
+            limiter: semio_plugin_host_engine::BudgetLimiter::default(),
             wasi_ctx,
             resource_table: wasm::component::ResourceTable::new(),
         }
@@ -290,8 +290,8 @@ async fn addressed_actor_id(actor_stable: u64, generation: u16) -> RuntimeActorI
 struct CallContext {
     router_turn_grant: semio_framework_job::RetainedCloneGrant,
     ctx: OperationContext,
-    services: Arc<semio_framework_plugin_host_effects::AsyncServices<TokioHostRuntime>>,
-    router_handler: Arc<dyn semio_framework_plugin_host_effects::RouterEffectHandler>,
+    services: Arc<semio_plugin_host_effects::AsyncServices<TokioHostRuntime>>,
+    router_handler: Arc<dyn semio_plugin_host_effects::RouterEffectHandler>,
     scope: ScopeHandle,
     package: PackageId,
     actor_id: RuntimeActorId,
@@ -312,8 +312,8 @@ struct CallSnapshot {
     generation: u16,
     lane: u8,
     capability: Option<CapabilityTokenId>,
-    services: Arc<semio_framework_plugin_host_effects::AsyncServices<TokioHostRuntime>>,
-    router_handler: Arc<dyn semio_framework_plugin_host_effects::RouterEffectHandler>,
+    services: Arc<semio_plugin_host_effects::AsyncServices<TokioHostRuntime>>,
+    router_handler: Arc<dyn semio_plugin_host_effects::RouterEffectHandler>,
     scope: ScopeHandle,
     package: PackageId,
     capability_registry: Arc<DirectAwaitCapabilityRegistry>,
@@ -389,7 +389,7 @@ async fn wake_chunk_shared(shared: &Mutex<ChunkShared>) {
 /// 🐌️ `blob-read`'s fallback per the mission's own instruction: the `BlobLoad` router
 /// job returns one buffered result — there is no chunked blob
 /// backend anywhere in this codebase today, and adding one would mean editing
-/// `⚡️effects/🦀️.rs`/`semio-framework-os-services`, both out of this packet's owned paths.
+/// `⚡️effects/🦀️.rs`/`semio-os-services`, both out of this packet's owned paths.
 /// One already-`done` chunk is therefore the honest, real behaviour, not a placeholder.
 async fn single_chunk_shared(bytes: Vec<u8>) -> Arc<Mutex<ChunkShared>> {
     let mut queue = VecDeque::new();
@@ -619,14 +619,14 @@ impl wit_host_async::Host for AsyncActorHostState {
 /// answers (`blob-load`/`blob-write`/`artifact-read`/`artifact-write`/`io-compose`/`cache-derive`/
 /// `cache-read`/`invoke-extension`/`dispatch-action`) — one explicit resumable router job, driven
 /// one bounded step per worker closure and awaited inline to resolve the guest's future.
-async fn run_router_effect(call: &CallContext, effect: semio_framework_plugin_host_effects::RouterEffect, name: &str) -> Result<Vec<u8>, Vec<u8>> {
-    let result = semio_framework_plugin_host_effects::run_router_effect_job(call.services.compute.as_ref(), call.services.runtime.as_ref(), &call.scope, call.ctx.clone(), call.router_turn_grant, &call.router_handler, effect).await;
+async fn run_router_effect(call: &CallContext, effect: semio_plugin_host_effects::RouterEffect, name: &str) -> Result<Vec<u8>, Vec<u8>> {
+    let result = semio_plugin_host_effects::run_router_effect_job(call.services.compute.as_ref(), call.services.runtime.as_ref(), &call.scope, call.ctx.clone(), call.router_turn_grant, &call.router_handler, effect).await;
     match result {
-        semio_framework_plugin_host_effects::RouterEffectJobOutcome::Complete(bytes) => Ok(bytes),
-        semio_framework_plugin_host_effects::RouterEffectJobOutcome::Cancelled => Err(fault_bytes("capability-revoked", format!("{name} cancelled")).await),
-        semio_framework_plugin_host_effects::RouterEffectJobOutcome::Fault(error) => Err(fault_bytes("router-error", error).await),
-        semio_framework_plugin_host_effects::RouterEffectJobOutcome::DeadlineExceeded => Err(fault_bytes("deadline-exceeded", format!("{name} exceeded its deadline")).await),
-        semio_framework_plugin_host_effects::RouterEffectJobOutcome::WorkerLost => Err(fault_bytes("worker-lost", format!("{name} worker lost")).await),
+        semio_plugin_host_effects::RouterEffectJobOutcome::Complete(bytes) => Ok(bytes),
+        semio_plugin_host_effects::RouterEffectJobOutcome::Cancelled => Err(fault_bytes("capability-revoked", format!("{name} cancelled")).await),
+        semio_plugin_host_effects::RouterEffectJobOutcome::Fault(error) => Err(fault_bytes("router-error", error).await),
+        semio_plugin_host_effects::RouterEffectJobOutcome::DeadlineExceeded => Err(fault_bytes("deadline-exceeded", format!("{name} exceeded its deadline")).await),
+        semio_plugin_host_effects::RouterEffectJobOutcome::WorkerLost => Err(fault_bytes("worker-lost", format!("{name} worker lost")).await),
     }
 }
 
@@ -636,7 +636,7 @@ async fn run_router_effect(call: &CallContext, effect: semio_framework_plugin_ho
 /// them still gets full `OperationContext` derivation, cancellation-before-dispatch and capability
 /// tracking, so the WIRING is complete; only the final "call a real backend" step is a typed fault,
 /// same "fails loudly" idiom `UnwiredRouterEffectHandler`/`UnwiredStorageBackend`/
-/// `UnwiredHttpTransport` already establish elsewhere in this crate/`semio-framework-os-services`.
+/// `UnwiredHttpTransport` already establish elsewhere in this crate/`semio-os-services`.
 /// See the packet report's `## honest gaps` for exactly which real service each one is blocked on.
 async fn not_wired(accessor: &Accessor<AsyncActorHostState, HasSelf<AsyncActorHostState>>, name: &str) -> Result<Vec<u8>, Vec<u8>> {
     let call = begin_call(accessor.with(|mut access| snapshot_call(access.get()))).await;
@@ -727,7 +727,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             call.guard.disarm();
             return Err(fault_bytes("capability-revoked", "blob-load cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::BlobLoad { hash: params.hash }, "blob-load").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::BlobLoad { hash: params.hash }, "blob-load").await;
         call.guard.disarm();
         result
     }
@@ -739,7 +739,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             return Err(fault_bytes("capability-revoked", "blob-write cancelled before dispatch").await);
         }
         let media_type = decode_json(&params.media_type).await.unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::BlobWrite { media_type, bytes: params.bytes }, "blob-write").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::BlobWrite { media_type, bytes: params.bytes }, "blob-write").await;
         call.guard.disarm();
         result
     }
@@ -755,7 +755,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             call.guard.disarm();
             return Err(fault_bytes("capability-revoked", "blob-read cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::BlobLoad { hash }, "blob-read").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::BlobLoad { hash }, "blob-read").await;
         call.guard.disarm();
         let bytes = result?;
         let shared = single_chunk_shared(bytes).await;
@@ -823,7 +823,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             call.guard.disarm();
             return Err(fault_bytes("capability-revoked", "artifact-read cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::DocumentRead { doc: params.doc as u128, lane: params.lane }, "artifact-read").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::DocumentRead { doc: params.doc as u128, lane: params.lane }, "artifact-read").await;
         call.guard.disarm();
         result
     }
@@ -834,7 +834,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             call.guard.disarm();
             return Err(fault_bytes("capability-revoked", "document-write cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::DocumentWrite { doc: params.doc as u128, lane: params.lane, ops: params.ops }, "artifact-write").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::DocumentWrite { doc: params.doc as u128, lane: params.lane, ops: params.ops }, "artifact-write").await;
         call.guard.disarm();
         result
     }
@@ -849,7 +849,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
         }
         let key = String::from_utf8_lossy(&params.key).into_owned();
         let sources = decode_json(&params.sources).await.unwrap_or_default();
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::IoCompose { key, sources }, "io-compose").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::IoCompose { key, sources }, "io-compose").await;
         call.guard.disarm();
         result
     }
@@ -860,7 +860,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             call.guard.disarm();
             return Err(fault_bytes("capability-revoked", "cache-derive cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::CacheDerive { engine_id: params.engine_id, input: params.input }, "cache-derive").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::CacheDerive { engine_id: params.engine_id, input: params.input }, "cache-derive").await;
         call.guard.disarm();
         result
     }
@@ -872,7 +872,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             return Err(fault_bytes("capability-revoked", "cache-read cancelled before dispatch").await);
         }
         let key = String::from_utf8_lossy(&params.key).into_owned();
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::CacheRead { engine_id: params.engine_id, key }, "cache-read").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::CacheRead { engine_id: params.engine_id, key }, "cache-read").await;
         call.guard.disarm();
         result
     }
@@ -884,7 +884,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             return Err(fault_bytes("capability-revoked", "invoke-extension cancelled before dispatch").await);
         }
         let request_json = String::from_utf8_lossy(&params.payload).into_owned();
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::InvokeExtension { extension_id: params.extension_id, capability: params.capability, request_json }, "invoke-extension").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::InvokeExtension { extension_id: params.extension_id, capability: params.capability, request_json }, "invoke-extension").await;
         call.guard.disarm();
         result
     }
@@ -899,7 +899,7 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
             Some(bytes) => decode_dsl(&bytes).await,
             None => None,
         };
-        let result = run_router_effect(&call, semio_framework_plugin_host_effects::RouterEffect::DispatchAction { action: params.action, args, delay_ms: params.delay_ms }, "dispatch-action").await;
+        let result = run_router_effect(&call, semio_plugin_host_effects::RouterEffect::DispatchAction { action: params.action, args, delay_ms: params.delay_ms }, "dispatch-action").await;
         call.guard.disarm();
         result
     }
@@ -951,17 +951,17 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
 
 /// 🛂️ Generated concurrent imports forward the real inline admission slot to the original caller pump.
 impl host_async_bindings::semio::framework::pure::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHostState> {
- async fn operation_begin(accessor:&Accessor<AsyncActorHostState,Self>)->Result<u64,u32>{match semio_framework_plugin_host_operation::request(accessor,semio_framework_plugin_host_operation::OperationRequest::Begin).await{semio_framework_plugin_host_operation::OperationReply::Begin(value)=>value,_=>Err(4)}}
- async fn operation_progress(accessor:&Accessor<AsyncActorHostState,Self>,completed:u64,total:u64,owned:u64)->u32{match semio_framework_plugin_host_operation::request(accessor,semio_framework_plugin_host_operation::OperationRequest::Progress{completed,total,owned}).await{semio_framework_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
- async fn operation_allocation(accessor:&Accessor<AsyncActorHostState,Self>,bytes:u64,owned:u64,next:u64,maximum:u64)->u32{match semio_framework_plugin_host_operation::request(accessor,semio_framework_plugin_host_operation::OperationRequest::Allocation{bytes,owned,next,maximum}).await{semio_framework_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
- async fn operation_reserve_return(accessor:&Accessor<AsyncActorHostState,Self>,kind:host_async_bindings::semio::framework::pure::OperationReturnAllocation,count:u64)->u32{match semio_framework_plugin_host_operation::request(accessor,semio_framework_plugin_host_operation::OperationRequest::ReserveReturn{kind:semio_framework_plugin_host_operation::allocation_kind(kind),count}).await{semio_framework_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
- async fn operation_finish(accessor:&Accessor<AsyncActorHostState,Self>,owned:u64)->u32{match semio_framework_plugin_host_operation::request(accessor,semio_framework_plugin_host_operation::OperationRequest::Finish{owned}).await{semio_framework_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_begin(accessor:&Accessor<AsyncActorHostState,Self>)->Result<u64,u32>{match semio_plugin_host_operation::request(accessor,semio_plugin_host_operation::OperationRequest::Begin).await{semio_plugin_host_operation::OperationReply::Begin(value)=>value,_=>Err(4)}}
+ async fn operation_progress(accessor:&Accessor<AsyncActorHostState,Self>,completed:u64,total:u64,owned:u64)->u32{match semio_plugin_host_operation::request(accessor,semio_plugin_host_operation::OperationRequest::Progress{completed,total,owned}).await{semio_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_allocation(accessor:&Accessor<AsyncActorHostState,Self>,bytes:u64,owned:u64,next:u64,maximum:u64)->u32{match semio_plugin_host_operation::request(accessor,semio_plugin_host_operation::OperationRequest::Allocation{bytes,owned,next,maximum}).await{semio_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_reserve_return(accessor:&Accessor<AsyncActorHostState,Self>,kind:host_async_bindings::semio::framework::pure::OperationReturnAllocation,count:u64)->u32{match semio_plugin_host_operation::request(accessor,semio_plugin_host_operation::OperationRequest::ReserveReturn{kind:semio_plugin_host_operation::allocation_kind(kind),count}).await{semio_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_finish(accessor:&Accessor<AsyncActorHostState,Self>,owned:u64)->u32{match semio_plugin_host_operation::request(accessor,semio_plugin_host_operation::OperationRequest::Finish{owned}).await{semio_plugin_host_operation::OperationReply::Code(value)=>value,_=>4}}
 }
 
 /// 🪟️ The actual asynchronous actor state retains its own inline receiving slot.
-impl semio_framework_plugin_host_operation::OperationHostStore for AsyncActorHostState {
+impl semio_plugin_host_operation::OperationHostStore for AsyncActorHostState {
     fn operation_clock_us(&mut self,clock_binding:u64)->Option<u64>{host_async_bindings::semio::framework::pure::Host::operation_clock_us(self,clock_binding)}
- fn operation_slot(&mut self)->&mut semio_framework_plugin_host_operation::OperationSlot{&mut self.operation_slot}
+ fn operation_slot(&mut self)->&mut semio_plugin_host_operation::OperationSlot{&mut self.operation_slot}
  fn operation_log(&mut self,level:String,message:String){host_async_bindings::semio::framework::pure::Host::log(self,level,message)}
  fn operation_now_ms(&mut self)->i64{host_async_bindings::semio::framework::pure::Host::now_ms(self)}
  fn operation_trace_span(&mut self,name:String){host_async_bindings::semio::framework::pure::Host::trace_span(self,name)}

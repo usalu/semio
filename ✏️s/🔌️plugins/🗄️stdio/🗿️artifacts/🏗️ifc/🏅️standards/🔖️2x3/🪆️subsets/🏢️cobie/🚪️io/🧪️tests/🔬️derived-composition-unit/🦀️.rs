@@ -2,8 +2,8 @@ mod tests {
     use super::*;
     use crate::standards::v2x3::subsets::cobie::io::CODE_VIEW_DEFINITION;
     use crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction as Ifc2x3CobieBuilder;
-    use semio_framework_plugin::io::AnalyzeSource;
-    use semio_framework_plugin::ArtifactBuilder as _;
+    use semio_plugin::io::AnalyzeSource;
+    use semio_plugin::ArtifactBuilder as _;
 
     #[semio_framework_async_macros::async_test]
     async fn conforming_builder_snapshot_composes_and_stamps_cobie() {

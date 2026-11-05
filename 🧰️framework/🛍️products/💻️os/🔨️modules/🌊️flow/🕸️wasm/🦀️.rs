@@ -8,17 +8,17 @@ use semio_framework_abi::{
     AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget, decode_abi_message, encode_abi_message,
 };
 use semio_framework_value::{retained_clone::{RetainedCloneStep, RetainedCloneProgress, RetainedCloneGrant, admit_retained_clone_close}, retirement::controlled::ControlledRetirement};
-use semio_framework_os_flow_vcs::{FlowRetainedVcs, FlowVcsCloseDemands};
-use semio_framework_os_flow_host_core::*;
-use semio_framework_os_flow_wasm_domain::*;
-use semio_framework_os_flow_wasm_actions_a::*;
-use semio_framework_os_flow_wasm_actions_a::retained_dag_input;
-use semio_framework_os_flow_wasm_actions_b::*;
-use semio_framework_os_flow_wasm_domain::protocol::*;
+use semio_os_flow_vcs::{FlowRetainedVcs, FlowVcsCloseDemands};
+use semio_os_flow_host_core::*;
+use semio_os_flow_wasm_domain::*;
+use semio_os_flow_wasm_actions_a::*;
+use semio_os_flow_wasm_actions_a::retained_dag_input;
+use semio_os_flow_wasm_actions_b::*;
+use semio_os_flow_wasm_domain::protocol::*;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
-pub use semio_framework_os_flow_wasm_domain::protocol;
+pub use semio_os_flow_wasm_domain::protocol;
 
 //#region 🔖️ReactiveFeatures
 #[path = "🌉️domain-impl/🦀️.rs"]
@@ -43,9 +43,9 @@ pub use linear_memory::*;
 
 //#region 🧪️Laws
 #[cfg(test)] use semio_framework_artifact_flow_flow::artifact::Widget;
-#[cfg(test)] use semio_framework_os_flow_drawing::*;
-#[cfg(test)] use semio_framework_os_flow_host::*;
-#[cfg(test)] use semio_framework_os_infinite::board::ports::directed_dag as dag;
+#[cfg(test)] use semio_os_flow_drawing::*;
+#[cfg(test)] use semio_os_flow_host::*;
+#[cfg(test)] use semio_os_infinite::board::ports::directed_dag as dag;
 #[cfg(test)] use semio_framework_canvas as canvas;
 #[cfg(test)] use protocol::{FlowFailure, FlowFeature, FlowFeatureAdmission, FlowFeatureStep, FlowPayloadReader, FlowPayloadWriter};
 #[cfg(test)] use serde_json::json;

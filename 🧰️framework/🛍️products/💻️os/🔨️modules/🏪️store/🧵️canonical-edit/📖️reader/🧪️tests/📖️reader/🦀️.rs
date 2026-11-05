@@ -1,19 +1,19 @@
 //! 🧪️ Typed reader byte parity, exact Arc ownership, cancellation, and worker laws.
 
 use super::canonical_edit_borrowed_tests::{MapLifetime, MapMutation, fixture, quoted_close_grant};
-use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
 use std::sync::Arc;
-use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError};
-use semio_framework_os_store_canonical_json::borrowed::{ArtifactCanonicalJsonArray, ArtifactCanonicalJsonValue};
+use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError};
+use semio_os_store_canonical_json::borrowed::{ArtifactCanonicalJsonArray, ArtifactCanonicalJsonValue};
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonTree};
-use semio_framework_os_store_canonical_json::reader::ArtifactCanonicalJsonReader;
+use semio_os_store_canonical_json::reader::ArtifactCanonicalJsonReader;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, FromValue, SnapshotRetirementFactory, ValueError};
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
-use semio_framework_os_spr::Edit;
+use semio_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_spr::Edit;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_snapshot_read::artifact_retirement_box_close_step;
-use super::canonical_edit_borrowed_tests as borrowed_tests; use semio_framework_os_store_test_support as test_support; use super::reader_tests as tests;
-use semio_framework_os_store_ledger as ledger;
+use super::canonical_edit_borrowed_tests as borrowed_tests; use semio_os_store_test_support as test_support; use super::reader_tests as tests;
+use semio_os_store_ledger as ledger;
 use std::sync::atomic::Ordering;
 
 //#region 📦️ReaderFixtures
@@ -84,7 +84,7 @@ fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() 
     for bytes in [FRAME_COPY_FLOOR, 100, 4096] {
         let (mut reader, fixture, lifetime) = make_reader();
         let address = Arc::as_ptr(reader.owned.root.as_ref().unwrap());
-        let expected = serde_json::to_vec(&test_support::SerdeValue(&semio_framework_os_store_ledger::CursorRevisionAccumulator::revision_value(reader.owned.root.as_ref().unwrap().as_ref()))).unwrap();
+        let expected = serde_json::to_vec(&test_support::SerdeValue(&semio_os_store_ledger::CursorRevisionAccumulator::revision_value(reader.owned.root.as_ref().unwrap().as_ref()))).unwrap();
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         assert_eq!(expected.len() as u64, reader_fixture["expectedByteLength"].as_u64().unwrap());
         assert!(reader.take_root().is_none());
@@ -384,4 +384,4 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
 }
 //#endregion ⚠️ErrorProgress
 
-fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }
+fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }

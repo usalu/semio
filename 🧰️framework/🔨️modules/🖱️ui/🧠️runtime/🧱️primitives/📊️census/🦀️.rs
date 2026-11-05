@@ -1,7 +1,7 @@
 //! 📊️ Semantic ownership census — charges the complete semantic ownership of one presented node in bounded pages, so a producer can price a subtree before it reconciles it.
 
 use std::mem::{size_of, take};
-use semio_framework_ui_runtime_presentation::TreeNode;
+use semio_ui_runtime_presentation::TreeNode;
 use crate::{SURFACE_RECONCILE_PAGE_BYTES, SURFACE_RECONCILE_SEMANTIC_COPIES, SURFACE_RECONCILE_VALUE_DEPTH, SurfaceReconcileFault};
 
 //#region ⏭️ResumableReconcile

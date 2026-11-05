@@ -1,7 +1,7 @@
-use semio_framework_os_spr::ColdMutationKind;
-use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_os_spr::ColdMutationKind;
+use semio_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
-use semio_framework_os_spr::{MutationKind, MutationLeaf};
+use semio_os_spr::{MutationKind, MutationLeaf};
 #[test]
 fn metadata_and_activation_diff_are_leaf_owned() {
     assert_eq!(<CreateSpaceAlternative as MutationLeaf>::DESCRIPTOR.payload_schema, "🧬️schema/🔣️.json");
@@ -20,8 +20,8 @@ async fn inverse_diffs_sum_to_the_negative_diff() {
     for active in [None, Some("a".to_string()), Some("c".to_string())] {
         let base = SpaceHistorySnapshot { alternatives: vec![alternative("a"), alternative("c")], active_alternative_id: active, ..Default::default() };
         for id in ["0", "b", "z"] {
-            semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative(id) }), &base).await;
+            semio_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative(id) }), &base).await;
         }
     }
-    semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative("a") }), &SpaceHistorySnapshot::default()).await;
+    semio_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative("a") }), &SpaceHistorySnapshot::default()).await;
 }

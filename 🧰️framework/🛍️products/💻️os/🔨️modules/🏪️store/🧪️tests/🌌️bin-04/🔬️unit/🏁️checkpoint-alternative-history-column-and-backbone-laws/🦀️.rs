@@ -2,8 +2,8 @@
 
 #[semio_framework_async_macros::async_test]
 async fn apply_computes_backwards_from_pre_state() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let edit = &store.envelope().vcs.edits[0];
     assert_eq!(edit.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })]);
@@ -11,8 +11,8 @@ async fn apply_computes_backwards_from_pre_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn commit_checkpoint_wraps_edits_into_change() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
     assert_eq!(store.envelope().vcs.changes.len(), 1);
@@ -22,8 +22,8 @@ async fn commit_checkpoint_wraps_edits_into_change() {
 
 #[semio_framework_async_macros::async_test]
 async fn checkout_checkpoint_restores_applied_edits() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
     let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
@@ -35,8 +35,8 @@ async fn checkout_checkpoint_restores_applied_edits() {
 
 #[semio_framework_async_macros::async_test]
 async fn alternatives_switch_restores_checkpoint_chain() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CreateAlternative { name: "branch-a".into() }).await.expect("create alternative");
     let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative follows the trunk").id.clone();
@@ -55,8 +55,8 @@ async fn alternatives_switch_restores_checkpoint_chain() {
 
 #[semio_framework_async_macros::async_test]
 async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
     let c1 = store.envelope().vcs.checkpoints[0].id.clone();
@@ -80,8 +80,8 @@ async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create alternative");
@@ -94,8 +94,8 @@ async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
 
 #[semio_framework_async_macros::async_test]
 async fn history_columns_orders_newest_first_and_labels_trunk_root() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
@@ -112,8 +112,8 @@ async fn history_columns_orders_newest_first_and_labels_trunk_root() {
 
 #[semio_framework_async_macros::async_test]
 async fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
     let root = store.envelope().vcs.checkpoints[0].id.clone();
@@ -178,16 +178,16 @@ async fn backbone_message_binary_round_trips_every_variant() {
     }
 }
 
-async fn sample_envelope_for_backbone_test() -> semio_framework_os_spr::MutationEnvelope {
-    semio_framework_os_spr::MutationEnvelope {
+async fn sample_envelope_for_backbone_test() -> semio_os_spr::MutationEnvelope {
+    semio_os_spr::MutationEnvelope {
         mutation_id: MutationId("op-1".to_string()),
         document_id: ArtifactId("doc-1".to_string()),
         actor: ActorId("actor-1".to_string().into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![1, 2, 3]).unwrap() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&Vec::new()).unwrap() },
+        diff: semio_os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![1, 2, 3]).unwrap() },
+        inverse: semio_os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&Vec::new()).unwrap() },
         timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
         transaction: None,
         verb: None,
@@ -197,19 +197,19 @@ async fn sample_envelope_for_backbone_test() -> semio_framework_os_spr::Mutation
 
 #[semio_framework_async_macros::async_test]
 async fn no_backbone_by_default() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     assert!(envelope.backbone.is_none(), "a fresh document has no attached backbone");
-    let store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert!(store.backbone_ref().is_none());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn memory_backbone_pair_propagates_edits_bidirectionally() {
     let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b").await;
-    let envelope_a: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let envelope_b: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store_a = ArtifactStore::new(envelope_a, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let mut store_b = ArtifactStore::new(envelope_b, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope_a: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope_b: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store_a = ArtifactStore::new(envelope_a, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store_b = ArtifactStore::new(envelope_b, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
     store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
 
@@ -260,8 +260,8 @@ async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_
 #[semio_framework_async_macros::async_test]
 async fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
     let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b").await;
-    let mut store_a = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let mut store_b: ArtifactStore<DemoSnapshot, DemoMutation> = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store_a = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store_b: ArtifactStore<DemoSnapshot, DemoMutation> = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
     store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
     store_a.detach_backbone().expect("detach source backbone");
@@ -275,8 +275,8 @@ async fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
 
 #[semio_framework_async_macros::async_test]
 async fn loaded_envelope_with_stale_backbone_ref_never_auto_attaches() {
-    let stale = || create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, Some(ArtifactBackboneRef { uri: "folder:///nonexistent/path".into() }), &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(stale(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let stale = || create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, Some(ArtifactBackboneRef { uri: "folder:///nonexistent/path".into() }), &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(stale(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert!(!store.tick().await.expect("tick with no live backbone is a no-operation"), "no backbone was ever attached, so there is nothing to pump");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply works purely against the in-memory graph");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));

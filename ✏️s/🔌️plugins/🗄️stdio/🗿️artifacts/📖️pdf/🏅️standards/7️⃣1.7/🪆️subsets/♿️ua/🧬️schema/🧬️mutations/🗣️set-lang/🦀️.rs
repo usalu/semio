@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "lang", kind: "set-lang", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA language to {}", self.lang), &format!("PDF/UA-Sprache auf {} setzen", self.lang))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA language to {}", self.lang), &format!("PDF/UA-Sprache auf {} setzen", self.lang))
     }
 
     fn target(&self) -> Vec<String> {

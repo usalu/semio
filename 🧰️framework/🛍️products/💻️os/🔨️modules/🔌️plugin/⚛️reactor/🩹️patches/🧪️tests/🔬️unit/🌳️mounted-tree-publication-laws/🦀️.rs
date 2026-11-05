@@ -2,10 +2,10 @@
 
 #[test]
 fn tracker_initialization_fits_the_component_stack_budget() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let bytes = size_of::<PatchTrackerState>();
     assert!(bytes <= 256, "PatchTrackerState requires {bytes} bytes");
     let state = PatchTrackerState::default();
@@ -19,10 +19,10 @@ fn tracker_initialization_fits_the_component_stack_budget() {
 
 #[test]
 fn mounted_path_advances_one_reconcile_opportunity_per_grant() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
     assert!(tracker.take_ready_patch().is_none());
@@ -37,10 +37,10 @@ fn mounted_path_advances_one_reconcile_opportunity_per_grant() {
 
 #[test]
 fn mounted_document_tree_publishes_nested_interactive_rows() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     fn row(value: &serde_json::Value) -> ui_contract::BuiltNode {
         let id = value["id"].as_str().unwrap();
@@ -64,11 +64,11 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📃️document-surface.json")).unwrap();
     assert_eq!(ui_contract::UI_NODE_BINDINGS as u64, fixture["limits"]["nodeBindings"].as_u64().unwrap());
-    assert_eq!(semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_bytes as u64, fixture["limits"]["surfaceBytes"].as_u64().unwrap());
-    assert_eq!(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES as u64, fixture["limits"]["pageBytes"].as_u64().unwrap());
-    assert_eq!(semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES as u64, fixture["limits"]["aggregateBytes"].as_u64().unwrap());
+    assert_eq!(semio_ui_runtime::SurfaceReconcileLimits::default().max_bytes as u64, fixture["limits"]["surfaceBytes"].as_u64().unwrap());
+    assert_eq!(semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES as u64, fixture["limits"]["pageBytes"].as_u64().unwrap());
+    assert_eq!(semio_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES as u64, fixture["limits"]["aggregateBytes"].as_u64().unwrap());
     assert_eq!(
-        semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES,
+        semio_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES,
         ui_contract::UI_RESIDENT_SLOTS * ui_contract::UI_DOCUMENT_NODES * size_of::<ui_contract::UiNodeRecord>(),
         "the aggregate budget is exactly sixty-four full-document record baselines — a drift in either factor moves the recorded literal above"
     );
@@ -98,10 +98,10 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
 
 #[test]
 fn mounted_settings_controls_publish_with_authored_fields() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️settings-surface.json")).expect("language-neutral settings");
     let fields = fixture["fields"].as_array().unwrap();
@@ -140,10 +140,10 @@ fn mounted_settings_controls_publish_with_authored_fields() {
 
 #[test]
 fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
     let rows = fixture["rowsPerSection"].as_u64().unwrap();
@@ -168,12 +168,12 @@ fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
             let (patch, authority) = publish_test(owner);
             let mut authority = Some(authority);
             let mut acknowledgement = None;
-            assert!(semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(
+            assert!(semio_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(
                 &mut authority,
                 &mut acknowledgement,
                 fixture["surface"].as_str().unwrap(),
                 patch.revision.0,
-                semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()
+                semio_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()
             )
             .unwrap());
             assert!(tracker.mark_published_ack(acknowledgement.as_ref().unwrap()).unwrap());
@@ -198,10 +198,10 @@ fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
 
 #[test]
 fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
     let failure = &fixture["failure"];
     let key = failure["key"].as_str().unwrap();
@@ -234,10 +234,10 @@ fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
 
 #[test]
 fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
     let failure = &fixture["capacityFailure"];
     assert_eq!(ui_contract::UI_DOCUMENT_NODES as u64, failure["nodeLimit"].as_u64().unwrap());
@@ -273,10 +273,10 @@ fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
 
 #[test]
 fn mounted_sources_publish_every_window_and_panel_tree() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️mounted-surfaces.json")).expect("language-neutral surface fixtures");
     let fixtures = fixtures.as_array().expect("surface list");
@@ -318,10 +318,10 @@ fn mounted_sources_publish_every_window_and_panel_tree() {
 
 #[test]
 fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let steps = [0, SURFACE_RECONCILE_ADMISSION_SLOTS - 1].map(|index| {
         let tracker = PatchTracker::new();
         tracker.begin("main".into(), leaf("root", "a")).expect("admitted");

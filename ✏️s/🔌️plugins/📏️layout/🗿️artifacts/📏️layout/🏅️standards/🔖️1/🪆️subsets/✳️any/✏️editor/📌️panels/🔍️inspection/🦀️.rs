@@ -7,23 +7,23 @@ use semio_s_artifact_layout_layout_model::rgba_to_hex;
 use semio_s_artifact_layout_layout_editor_commands::patch_document::text_chunks;
 use semio_s_artifact_layout_layout_model::{Frame, Page, LAYOUT_DOCUMENT_SCHEMA};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::tree_item_desc;
+use semio_plugin::ui_node_list;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_ui_contract as ui;
 
 #[path = "🧾️data-fields/🦀️.rs"]
 mod data_fields;
@@ -70,7 +70,7 @@ fn locate_frame<'a>(document: &'a LayoutSnapshot, id: &str, active_page_id: &str
 }
 
 
-fn layer_select(windows: &semio_framework_plugin::TreeWindows<'_>, frame_id: &str, page_id: &str, layer_id: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+fn layer_select(windows: &semio_plugin::TreeWindows<'_>, frame_id: &str, page_id: &str, layer_id: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
     let choices = document.pages.iter().find(|page| page.id == page_id).into_iter().flat_map(|page| &page.layers).map(|layer| (layer.id.as_str(), layer.name.as_str()));
     choice_row(windows, "patchFrame", "layerId", labels.group_layer, layer_id, choices, Some(frame_id), Some(page_id))
 }
@@ -275,11 +275,11 @@ fn character_row(style: &semio_s_artifact_layout_layout_model::CharacterStyle, l
     ])
 }
 
-fn story_select(windows: &semio_framework_plugin::TreeWindows<'_>, frame_id: &str, page_id: &str, story_id: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+fn story_select(windows: &semio_plugin::TreeWindows<'_>, frame_id: &str, page_id: &str, story_id: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
     choice_row(windows, "patchFrame", "storyId", labels.story, story_id, document.stories.iter().map(|story| (story.id.as_str(), story.id.as_str())), Some(frame_id), Some(page_id))
 }
 
-fn style_run(windows: &semio_framework_plugin::TreeWindows<'_>, frame_id: &str, page_id: &str, index: usize, run: &semio_s_artifact_layout_layout_model::TextStyleRun, content: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+fn style_run(windows: &semio_plugin::TreeWindows<'_>, frame_id: &str, page_id: &str, index: usize, run: &semio_s_artifact_layout_layout_model::TextStyleRun, content: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
     let prefix = format!("run.{index}");
     let mut row = ui::tree_item(ui::Label(text(&format!("{} {}", labels.style_run.as_str(), index + 1))?)).try_id(format!("layout-play-inspector.patchFrame.{prefix}")).map_err(|_| admit())?;
     for (key, label, value) in [("start", labels.style_start, byte_chars(content, run.start)), ("end", labels.style_end, byte_chars(content, run.end))] {
@@ -306,41 +306,41 @@ fn select_row_at<'a>(location: &str, command: &str, field: &str, label: LabelTex
     ui::tree_item(ui::Label(text(label.as_str())?)).try_id(id).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
 }
 
-fn choice_row<'a>(windows: &semio_framework_plugin::TreeWindows<'_>, command: &str, field: &str, label: LabelText, current: &str, choices: impl Iterator<Item = (&'a str, &'a str)>+Clone, frame_id: Option<&str>, page_id: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+fn choice_row<'a>(windows: &semio_plugin::TreeWindows<'_>, command: &str, field: &str, label: LabelText, current: &str, choices: impl Iterator<Item = (&'a str, &'a str)>+Clone, frame_id: Option<&str>, page_id: Option<&str>) -> UiAssemblyResult<BuiltNode> {
     let id = format!("layout-play-inspector.{command}.{field}");
     let selected = choices.clone().find(|(value, _)| *value == current).map_or(current, |(_, label)| label);
     let item = ui::tree_item(ui::Label(text(label.as_str())?)).try_id(&id).map_err(|_| admit())?.description(text(selected)?);
-    semio_framework_plugin::tree_window_indexed_item(windows, item, &id, false, choices.clone().count(), |index| {
+    semio_plugin::tree_window_indexed_item(windows, item, &id, false, choices.clone().count(), |index| {
         let (value,title)=choices.clone().nth(index).ok_or_else(admit)?;
         let mut args = vec![("field", ui_value_text(field)?), ("value", ui_value_text(value)?)];
         if let Some(frame_id) = frame_id { args.push(("frameId", ui_value_text(frame_id)?)); }
         if let Some(page_id) = page_id { args.push(("pageId", ui_value_text(page_id)?)); }
-        let mut row = semio_framework_plugin::tree_item_with_action(format!("{id}.choice.{index}"), ui_label(title)?, None, layout_action(command, Some(ui_value_map(args)?))?)?;
-        if let semio_framework_plugin::Component::TreeItem(props) = &mut row.component { props.selected = Some(value == current); }
+        let mut row = semio_plugin::tree_item_with_action(format!("{id}.choice.{index}"), ui_label(title)?, None, layout_action(command, Some(ui_value_map(args)?))?)?;
+        if let semio_plugin::Component::TreeItem(props) = &mut row.component { props.selected = Some(value == current); }
         Ok(row)
     })
 }
 
-fn chunked_text(windows: &semio_framework_plugin::TreeWindows<'_>, location: &str, field: &str, content: &str, label: LabelText, stamp: &str) -> UiAssemblyResult<BuiltNode> {
+fn chunked_text(windows: &semio_plugin::TreeWindows<'_>, location: &str, field: &str, content: &str, label: LabelText, stamp: &str) -> UiAssemblyResult<BuiltNode> {
     let ranges = text_chunks::ranges(content);
     let item = ui::tree_item(ui::Label(text(label.as_str())?)).try_id(location).map_err(|_| admit())?;
-    semio_framework_plugin::tree_window_indexed_item(windows, item, location, true, ranges.len(), |index| {
+    semio_plugin::tree_window_indexed_item(windows, item, location, true, ranges.len(), |index| {
         let range=ranges.get(index).ok_or_else(admit)?;
         document_input(&format!("{location}.span.{}.{}", range.start, range.end), &format!("{field}.chunk.{}.{}.{stamp}", range.start, range.end), label, content[range.bytes.clone()].into(), InputKind::LongText)
     })
 }
 
-fn chunked_bytes(windows: &semio_framework_plugin::TreeWindows<'_>, location: &str, field: &str, bytes: &[u8], label: LabelText, stamp: &str) -> UiAssemblyResult<BuiltNode> {
+fn chunked_bytes(windows: &semio_plugin::TreeWindows<'_>, location: &str, field: &str, bytes: &[u8], label: LabelText, stamp: &str) -> UiAssemblyResult<BuiltNode> {
     let ranges = text_chunks::byte_ranges(bytes.len());
     let item = ui::tree_item(ui::Label(text(label.as_str())?)).try_id(location).map_err(|_| admit())?;
-    semio_framework_plugin::tree_window_indexed_item(windows, item, location, true, ranges.len(), |index| {
+    semio_plugin::tree_window_indexed_item(windows, item, location, true, ranges.len(), |index| {
         let range=ranges.get(index).ok_or_else(admit)?;
         let value = bytes[range.clone()].iter().map(|byte| format!("{byte:02x}")).collect();
         document_input(&format!("{location}.span.{}.{}", range.start, range.end), &format!("{field}.bytes.{}.{}.{stamp}", range.start, range.end), label, value, InputKind::Text)
     })
 }
 
-fn thread_select(windows: &semio_framework_plugin::TreeWindows<'_>, frame_id: &str, page_id: &str, thread_next: &Option<String>, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+fn thread_select(windows: &semio_plugin::TreeWindows<'_>, frame_id: &str, page_id: &str, thread_next: &Option<String>, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
     let choices = document.pages.iter().flat_map(|page| &page.frames).filter_map(|frame| match frame { Frame::Text { id, .. } if id != frame_id => Some((id.as_str(), id.as_str())), _ => None });
     choice_row(windows, "patchFrame", "threadNext", labels.thread_next, thread_next.as_deref().unwrap_or(""), std::iter::once(("", labels.thread_none.as_str())).chain(choices), Some(frame_id), Some(page_id))
 }
@@ -383,11 +383,11 @@ fn document_toggle_at(location: &str, field: &str, on: bool, label: LabelText) -
     ui::tree_item(ui::Label(text(label.as_str())?)).try_id(location).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
 }
 
-fn parent_select(windows: &semio_framework_plugin::TreeWindows<'_>, page_id: &str, parent_page_id: &Option<String>, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+fn parent_select(windows: &semio_plugin::TreeWindows<'_>, page_id: &str, parent_page_id: &Option<String>, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
     choice_row(windows, "patchPage", "parentPageId", labels.parent_page, parent_page_id.as_deref().unwrap_or(""), std::iter::once(("", labels.thread_none.as_str())).chain(document.parent_pages.iter().map(|parent| (parent.id.as_str(), parent.name.as_str()))), None, Some(page_id))
 }
 
-fn parent_frame_fields(windows: &semio_framework_plugin::TreeWindows<'_>, document: &LayoutSnapshot, page_id: &str, frame: &Frame, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+fn parent_frame_fields(windows: &semio_plugin::TreeWindows<'_>, document: &LayoutSnapshot, page_id: &str, frame: &Frame, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
     let page = document.pages.iter().find(|page| page.id == page_id).ok_or_else(admit)?;
     let parent = page.parent_page_id.as_ref().and_then(|id| document.parent_pages.iter().find(|parent| parent.id == *id)).ok_or_else(admit)?;
     let mut fields = frame_fields(frame, document, labels);
@@ -432,14 +432,14 @@ fn page_button_value(page_id: &str, field: &str, value: &str, label: LabelText) 
     ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchPage.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
 }
 
-fn rows(fields: &[Field], command: &str, frame_id: Option<&str>, page_id: Option<&str>) -> UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
+fn rows(fields: &[Field], command: &str, frame_id: Option<&str>, page_id: Option<&str>) -> UiAssemblyResult<semio_plugin::UiFixedList<BuiltNode>> {
     ui_node_list(fields.iter().map(|field| field_row(command, field, frame_id, page_id)))
 }
 
 /// 🕹️ Summary stays a read-only tree. Document, active page, and the selected frame are inputs bound to `patchDocument`, `patchPage`, and `patchFrame`.
-pub fn render(document: &LayoutSnapshot, config: &LayoutWindowConfig, interaction: &LayoutInteractionSnapshot, labels: &LayoutLabels, windows: &semio_framework_plugin::TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {render_qualified(document,config,interaction,labels,windows,None)}
+pub fn render(document: &LayoutSnapshot, config: &LayoutWindowConfig, interaction: &LayoutInteractionSnapshot, labels: &LayoutLabels, windows: &semio_plugin::TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {render_qualified(document,config,interaction,labels,windows,None)}
 
-fn render_qualified(document:&LayoutSnapshot,config:&LayoutWindowConfig,interaction:&LayoutInteractionSnapshot,labels:&LayoutLabels,windows:&semio_framework_plugin::TreeWindows<'_>,drawing:Option<&semio_s_artifact_layout_layout_editor_commands::patch_page::drawing::source::OriginalPageDrawingSource>)->UiAssemblyResult<BuiltNode>{
+fn render_qualified(document:&LayoutSnapshot,config:&LayoutWindowConfig,interaction:&LayoutInteractionSnapshot,labels:&LayoutLabels,windows:&semio_plugin::TreeWindows<'_>,drawing:Option<&semio_s_artifact_layout_layout_editor_commands::patch_page::drawing::source::OriginalPageDrawingSource>)->UiAssemblyResult<BuiltNode>{
     let dictionary_stamp = text_chunks::dictionary_stamp(document);
     let items = ui_node_list([
         tree_item_desc("layout-play-inspector.schema", ui_label(labels.schema.as_str())?, Some(LAYOUT_DOCUMENT_SCHEMA.into())),

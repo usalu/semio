@@ -4,20 +4,20 @@ use super::*;
 
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
 where
-    P: store::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-    Mutation: ::semio_framework_os_kernel::StoreMutationFor<P>,
+    P: store::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+    Mutation: ::semio_os_kernel::StoreMutationFor<P>,
     M: SpaceMember + MemberFactory,
 {
     pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,job:ArtifactStoreInitializationJob<P,Mutation>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self {
         let cancel = semio_framework_job::CancelToken::root_now();
         let cancel_signal = job.cancel_signal();
         let session=None;
-        let session_rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,source_identity));
+        let session_rejected=Some(semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,source_identity));
 
         Self {
             operation,
             generation,
-            publication_token: semio_framework_plugin_ownership::store_lifecycle::DocumentStorePublicationToken::mint(operation, generation, base_child_content_generation),
+            publication_token: semio_plugin_ownership::store_lifecycle::DocumentStorePublicationToken::mint(operation, generation, base_child_content_generation),
             base_child_content_generation,
             cancel: ManuallyDrop::new(Some(cancel)),
             cancel_signal: ManuallyDrop::new(Some(cancel_signal)),
@@ -206,11 +206,11 @@ where
 
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
 where
-    P: store::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
-    Mutation: ::semio_framework_os_kernel::StoreMutationFor<P>,
+    P: store::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
+    Mutation: ::semio_os_kernel::StoreMutationFor<P>,
     M: SpaceMember + MemberFactory,
 {
-    pub fn drive_member_open(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub fn drive_member_open(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let idle = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..idle };
         if grant.maximum_items == 0 { return Ok(PluginLifecycleStep::Progress(idle)); }
@@ -218,7 +218,7 @@ where
             if let Some(open)=self.active_member_open.as_mut(){
                 if store::MemberOpenOperation::terminal_is_empty(open){drop(self.active_member_open.take());return Ok(PluginLifecycleStep::Progress(item))}
                 let parent=cx.original_source_parent()?;let before=cx.retained_progress();cx.with_retained_loan(grant,|same|store::MemberOpenOperation::close_step(open,parent,same))?;
-                return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+                return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
             }
             let member=self.opened_member.take().expect("ready member remains retained until its exact source loan returns");
             return self.publish_opened_member(member);
@@ -275,10 +275,10 @@ where
         let admission=self.member_open_admission.as_mut().expect("original member source remains retained through constructor admission");
         let _=M::begin_open(admission,&mut self.active_member_open,cx,parent)?;
         if admission.terminal_is_empty(){drop(self.member_open_admission.take());}
-        Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+        Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
     }
 
-    fn publish_opened_member(&mut self,member:M)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    fn publish_opened_member(&mut self,member:M)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
                     let (ordinal, reference, owner) = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).expect("active member identity was verified before its exact open step");
                     if ordinal != self.next_member_ordinal || member.artifact_ref().as_ref() != Some(&reference) || member.owner_ref().as_ref() != Some(&owner) {
                         *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));

@@ -64,7 +64,19 @@
         "semio": {
           "wasmPackageSourceV1": {
             "version": 1,
-            "sourceOwner": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"
+            "sourceOwner": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+            "compileOutputs": [
+              {
+                "specifier": "@semio-tech/framework-surface-rs",
+                "path": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js",
+                "declarations": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts"
+              },
+              {
+                "specifier": "@semio-tech/framework-surface-rs/🕸️bindings/framework_surface.js",
+                "path": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js",
+                "declarations": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts"
+              }
+            ]
           }
         }
       }

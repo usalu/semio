@@ -22,7 +22,7 @@ pub struct DeleteCharacterStyle {
 impl<Op> MutationKind<LayoutSnapshot, Op> for DeleteCharacterStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_character_style::CreateCharacterStyle> + From<crate::update_character_style::UpdateCharacterStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "character-style", kind: "delete-character-style", record: "DeletedCharacterStyle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" löschen", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Delete character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" löschen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

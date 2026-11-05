@@ -16,8 +16,8 @@ pub struct ReorderRuns {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ReorderRuns {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "runs", kind: "reorder-runs", record: "ReorderedRuns" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move run #{} to #{}", self.from, self.to), &format!("Textlauf #{} nach #{} verschieben", self.from, self.to))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move run #{} to #{}", self.from, self.to), &format!("Textlauf #{} nach #{} verschieben", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.from.to_string()]

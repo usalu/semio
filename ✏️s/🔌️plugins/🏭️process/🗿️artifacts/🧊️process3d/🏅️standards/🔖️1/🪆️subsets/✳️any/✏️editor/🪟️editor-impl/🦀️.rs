@@ -8,26 +8,26 @@ use semio_s_artifact_process_process3d_kit::Process3dInteractionSnapshot;
 /// 🧱️ Every window/panel body of the process3d editor, rendered against one already-resolved
 /// `"geometry"` selection — shared by `render` (empty selection) and `render_with_request_context`
 /// (the live selection) so there is exactly one body-key match in the app.
-pub(super) fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Process3dConfig, view_state: &semio_framework_plugin::ViewModel, selected_ids: &[String]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+pub(super) fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Process3dConfig, view_state: &semio_plugin::ViewModel, selected_ids: &[String]) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let labels = process3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or(PROCESS3D_DEFAULT_UTILITY);
     let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
-    let windows = semio_framework_plugin::TreeWindows::for_body(view_state, base_body_key);
+    let windows = semio_plugin::TreeWindows::for_body(view_state, base_body_key);
     match base_body_key {
-        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, config.resolved_up_to, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc, selected_ids, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
-        _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility).map(semio_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, config.resolved_up_to, labels, &windows).map(semio_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels, &windows).map(semio_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels, &windows).map(semio_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc, selected_ids, labels, &windows).map(semio_plugin::built_to_component_tree),
+        _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
     }
 }
 
 /// 🏭️ Declares the owned machine contribution projection before payload production.
-static PROCESS3D_ORIGINAL_HOST_CONTRIBUTIONS: semio_framework_plugin::OriginalHostConfigurationDeclaration<Process3dConfigMutation> = semio_framework_plugin::OriginalHostConfigurationDeclaration {
+static PROCESS3D_ORIGINAL_HOST_CONTRIBUTIONS: semio_plugin::OriginalHostConfigurationDeclaration<Process3dConfigMutation> = semio_plugin::OriginalHostConfigurationDeclaration {
     maximum_input_bytes: semio_s_artifact_process_process3d_kit::PROCESS_CONTRIBUTION_MAX_BYTES,
     maximum_output_bytes: PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES,
-    projection: semio_framework_plugin::OriginalHostConfigurationProjection::Contributions(semio_framework_plugin::OriginalContributionProjection {
+    projection: semio_plugin::OriginalHostConfigurationProjection::Contributions(semio_plugin::OriginalContributionProjection {
         maximum_depth: semio_s_artifact_process_process3d_kit::PROCESS_CONTRIBUTION_MAX_DEPTH,
         maximum_items: semio_s_artifact_process_process3d_kit::PROCESS_CONTRIBUTION_MAX_ITEMS,
         maximum_string_bytes: semio_s_artifact_process_process3d_kit::PROCESS_CONTRIBUTION_MAX_STRING_BYTES,
@@ -44,7 +44,7 @@ static PROCESS3D_ORIGINAL_HOST_CONTRIBUTIONS: semio_framework_plugin::OriginalHo
 impl ArtifactEditor for Process3dPlayApp {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 2]> = std::sync::LazyLock::new(|| {
             [
             ("process3d.action.invalid", LocalizedLabel::native("This action's arguments are not valid.", "Die Argumente dieser Aktion sind ungültig.")),
@@ -55,7 +55,7 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_process_process3d_examples::source(), semio_s_artifact_process_process3d_examples::examples::concrete_forest::source()]
     }
     /// 🧩️ The roster the three composed `s.stdio.semio` members (`stockSolid`/`steps`/`toolSolids`)
@@ -70,8 +70,8 @@ impl ArtifactEditor for Process3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = Process3dPresence;
     type PresenceMutation = Process3dPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = Process3dCommand;
 
@@ -87,7 +87,7 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(std::sync::Arc::new(Process3dConfigStorePreparationFactory))
     }
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         Process3dBoundedProofs::bounded_first_step_tool_proofs().into_iter().chain(Process3dResumableProofs::bounded_first_step_tool_proofs()).collect()
     }
 
@@ -97,52 +97,52 @@ impl ArtifactEditor for Process3dPlayApp {
         registry.register(Process3dResumableCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let Some(disposition) = process3d_command_disposition(&original.tool_id) else {
             return Ok(false);
         };
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Process 3D command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Process 3D command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, Process3dCommand::command_id, process3d_retained_raw_bytes(tool_id), process3d_retained_work_items(tool_id), false, Default::default(), |request, _identity| {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, Process3dCommand::command_id, process3d_retained_raw_bytes(tool_id), process3d_retained_work_items(tool_id), false, Default::default(), |request, _identity| {
             let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
                 Process3dCommandDisposition::Bounded => Box::new(BoundedArtifactCommandWork::new(tool_id, process3d_retained_reduce, |_, _, _| Some(1))),
                 Process3dCommandDisposition::Config => {
-                    let extent = process3d_resumable_extent(&request.command, &request.snapshot, &request.config, &request.interaction_state).ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvalidValue, "process3d-retained-work-extent-overflow"))?;
+                    let extent = process3d_resumable_extent(&request.command, &request.snapshot, &request.config, &request.interaction_state).ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvalidValue, "process3d-retained-work-extent-overflow"))?;
                     Box::new(Process3dResumableCommandWork::new(tool_id, extent))
                 }
             };
             Ok((work, Default::default()))
         })
     }
-    fn document_store_owners_source_demands() -> Result<semio_framework_plugin::__value::RetirementDemand, semio_framework_plugin::__value::ValueError> {
-        semio_framework_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
     }
 
-    fn build_document_store_owners(grant: semio_framework_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+    fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(semio_s_artifact_process_process3d_host::process3d_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
     /// 🧹️ Every owned store lane the close ladder drives needs its bounded disposer, the absent ones
     /// (`NoDraft`, `NoTransient`) included — `drive_artifact_owned_disposer` faults
     /// `interactive-job.close-owned-disposer-missing` on the first `None` and the app never reaches
     /// its terminal-empty shell (mirrors `📐️cad`/`🧩️puzzle`).
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -153,12 +153,12 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(std::sync::Arc::new(semio_s_artifact_process_process3d_presence::Process3dPresenceRetirementFactory))
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(semio_s_artifact_process_process3d_presence::process3d_presence_store_disposer())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -176,18 +176,18 @@ impl ArtifactEditor for Process3dPlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<Process3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Process3dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(process3d_io())
     }
 
     /// 🎞️ `brep:out` (see the artifact engine's `export_process3d_model`, STEP text) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_plugin::Media, MediaError> {
         match port {
             "brep:out" => match semio_s_artifact_process_process3d_io::export_process3d_model(&semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(doc.snapshot), None, "step").map_err(|error| MediaError::Payload("brep:out".into(), error))? {
                 Some(export) => {
@@ -195,14 +195,14 @@ impl ArtifactEditor for Process3dPlayApp {
                         DslValue::String(text) => text,
                         other => semio_framework_pack_json::to_json_string(&other),
                     };
-                    Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.process".into(), json: text } })
+                    Ok(semio_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.process".into(), json: text } })
                 }
                 None => Err(MediaError::Payload("brep:out".into(), "kernel replay failed".into())),
             },
             "artifact:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
-                Ok(semio_framework_plugin::Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(semio_plugin::Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -211,7 +211,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// 📥️ `geometry:in` (best-effort STEP-text import) replaces the whole document via a `Effect::LoadDocument`
     /// (`reset_process3d_document_effect`, outside undo history); there is no import mutation. Overriding `import_media`
     /// shadows the trait's provided body for every port, so `document:in` is simply unimplemented here.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
@@ -331,7 +331,7 @@ impl ArtifactEditor for Process3dPlayApp {
         }
     }
 
-    fn original_host_configuration(action: &str) -> Option<&'static semio_framework_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
+    fn original_host_configuration(action: &str) -> Option<&'static semio_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
         (action == "setContributions").then_some(&PROCESS3D_ORIGINAL_HOST_CONTRIBUTIONS)
     }
 
@@ -344,8 +344,8 @@ impl ArtifactEditor for Process3dPlayApp {
         command: &Process3dCommand,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &semio_plugin::app::InteractionView<'_>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -356,11 +356,11 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🧮️ process3d exposes no genuinely settings-like sticky defaults — every `Process3dConfig` field
     /// is session-only view state, so this stays at the trait default.
-    fn config_spec() -> semio_framework_plugin::ConfigSpec {
-        semio_framework_plugin::ConfigSpec::default()
+    fn config_spec() -> semio_plugin::ConfigSpec {
+        semio_plugin::ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         process3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &[])
     }
 
@@ -368,16 +368,16 @@ impl ArtifactEditor for Process3dPlayApp {
     /// selection once per render and threads it into `process3d_render_body`, so the inspection
     /// panel finally sees a real selection instead of always rendering empty.
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
+        interaction: &semio_plugin::app::InteractionView<'_>,
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         let selected_ids = interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids.clone();
         process3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &selected_ids)
 
@@ -385,18 +385,18 @@ impl ArtifactEditor for Process3dPlayApp {
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, semio_plugin::WindowEngagement> {
         let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or(PROCESS3D_DEFAULT_UTILITY);
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.snapshot, cfg.snapshot, active_utility, process3d_labels(view_state)))])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot, process3d_labels(view_state).is_de()))])
     }
 
     /// 🖱️ Interaction-less twin of [`Self::context_menu_with_request_context`] — an empty
     /// `"geometry"` domain, so the destructive row is withheld.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         process3d_context_menu_items(registry, view_state, &[])
     }
 
@@ -407,8 +407,8 @@ impl ArtifactEditor for Process3dPlayApp {
         _request: &ContextMenuRequest,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        view_state: &semio_plugin::ViewModel,
+        interaction: &semio_plugin::app::InteractionView<'_>,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
         process3d_context_menu_items(registry, view_state, &interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids)

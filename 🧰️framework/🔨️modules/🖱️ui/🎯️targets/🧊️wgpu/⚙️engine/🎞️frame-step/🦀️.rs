@@ -34,7 +34,7 @@ impl Ui {
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
         let overlay_chrome = self.retained_overlay_chrome(window_id);
-        let viewport_rect = semio_framework_ui_theme::geometry::Rect::new(0.0, 0.0, viewport_width, viewport_height);
+        let viewport_rect = semio_ui_theme::geometry::Rect::new(0.0, 0.0, viewport_width, viewport_height);
         let theme = self.theme;
         let Some(surface) = self.windows.token(window_id) else { return UiFrameStep::Missing };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return UiFrameStep::Missing };
@@ -242,7 +242,7 @@ impl Ui {
             RetainedPaintPhase::Overlays => match frame.overlay_chrome.get(frame.overlay_index).copied().flatten() {
                 Some(placement) => {
                     frame.overlay_index = frame.overlay_index.saturating_add(1);
-                    let bounds = semio_framework_ui_theme::geometry::Rect::new(placement.x, placement.y, placement.width, placement.height);
+                    let bounds = semio_ui_theme::geometry::Rect::new(placement.x, placement.y, placement.width, placement.height);
                     if retained_overlay_chrome_step(&mut frame.candidate, viewport_rect, bounds, placement.backdrop, &theme) {
                         UiFrameStep::Pending
                     } else {

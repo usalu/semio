@@ -12,20 +12,20 @@
 
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
-use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::tree_item_with_action_draggable;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::HasBase;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::plugin_app_close_prelude::Component;
+use semio_plugin::tree_item_with_action_draggable;
+use semio_plugin::tree_window_item;
+use semio_plugin::ActionFactory;
+use semio_plugin::HasBase;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_BODY_CATALOGUE: &str = "procedural.play.catalogue";
@@ -54,16 +54,16 @@ fn catalogue_error(scope: &'static str) -> PluginAssemblyError {
 }
 
 /// 🖱️ Drag payload the flow canvas already accepts: MIME `application/x-flow-widget` whose value is the widget descriptor JSON.
-fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
+fn widget_drag_json(item: &semio_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
     let payload = semio_s_artifact_procedural_3d_add_widget::AddWidget::from_catalogue(item);
     let descriptor = semio_framework_pack_json::object(payload.descriptor_fields().into_iter().map(|(name, value)| (name.into(), semio_framework_pack_json::Value::String(value.into()))));
     semio_framework_pack_json::object([(GENERATION_3D_WIDGET_DRAG_MIME.to_string(), semio_framework_pack_json::Value::String(descriptor.to_string()))])
 }
 
-fn catalogue_row(labels: &Generation3dLabels, item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn catalogue_row(labels: &Generation3dLabels, item: &semio_os_flow::CatalogueItem) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let payload = semio_s_artifact_procedural_3d_add_widget::AddWidget::from_catalogue(item);
     let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
-    let fields = payload.descriptor_fields().into_iter().map(|(name, value)| Ok((name, semio_s_procedural_core_semantic_ui::ui_value_text(value)?))).collect::<semio_framework_plugin::UiAssemblyResult<Vec<_>>>()?;
+    let fields = payload.descriptor_fields().into_iter().map(|(name, value)| Ok((name, semio_s_procedural_core_semantic_ui::ui_value_text(value)?))).collect::<semio_plugin::UiAssemblyResult<Vec<_>>>()?;
     let args = semio_s_procedural_core_semantic_ui::ui_value_map(fields)?;
     let name = semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name(labels, item.neuron_kind.as_deref().unwrap_or(&item.kind), &item.name);
     let name = item.format.as_ref().map_or_else(|| name.to_string(), |format| format!("{name} {}", format.to_uppercase()));
@@ -80,21 +80,21 @@ fn catalogue_row(labels: &Generation3dLabels, item: &semio_framework_os_flow::Ca
     Ok(node)
 }
 
-fn group_id(section: &semio_framework_os_flow::CatalogueSection) -> String {
+fn group_id(section: &semio_os_flow::CatalogueSection) -> String {
     format!("procedural-play-catalogue.{}", section.id)
 }
 
 /// 🗂️ One catalogue group: a bindingless row whose children are the group's own window. The group
 /// row itself is never a pick target and carries no action — clicking it opens the window, which is
 /// what makes the listing lazy: a closed group stamps its `total` and materialises nothing.
-fn group_row(labels: &Generation3dLabels, windows: &TreeWindows<'_>, section: &semio_framework_os_flow::CatalogueSection, default_open: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn group_row(labels: &Generation3dLabels, windows: &TreeWindows<'_>, section: &semio_os_flow::CatalogueSection, default_open: bool) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let id = group_id(section);
-    let item = semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name(labels, &section.id, &section.title))?).try_id(&id).map_err(|_| catalogue_error("group.id"))?;
+    let item = semio_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name(labels, &section.id, &section.title))?).try_id(&id).map_err(|_| catalogue_error("group.id"))?;
     tree_window_item(windows, item, &id, default_open, &section.items, |item| catalogue_row(labels, item))
 }
 
-pub fn render(labels: &Generation3dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+pub fn render(labels: &Generation3dLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let mut sections = semio_os_flow::flow_palette_catalogue_sections();
     owning_exports(&mut sections);
     let first_group = sections.first().map(|section| section.id.clone()).unwrap_or_default();
     PanelTreeBuilder::new("procedural-play-catalogue")?
@@ -103,17 +103,17 @@ pub fn render(labels: &Generation3dLabels, windows: &TreeWindows<'_>) -> semio_f
 }
 
 /// 📤️ The palette and retained spotlight share the artifact's owning 3D export roster.
-pub fn catalogue() -> semio_framework_os_flow::FlowAppCatalogue {
-    let mut catalogue = semio_framework_os_flow::flow_app_catalogue();
+pub fn catalogue() -> semio_os_flow::FlowAppCatalogue {
+    let mut catalogue = semio_os_flow::flow_app_catalogue();
     owning_exports(&mut catalogue.sections);
     catalogue
 }
 
 /// 📤️ One export roster is shared by the palette and retained catalogue projection.
-fn owning_exports(sections: &mut [semio_framework_os_flow::CatalogueSection]) {
+fn owning_exports(sections: &mut [semio_os_flow::CatalogueSection]) {
     if let Some(outputs) = sections.iter_mut().find(|section| section.id == "outputs") {
         outputs.items.retain(|item| item.kind != "outputExport");
-        outputs.items.extend(semio_s_artifact_procedural_3d_io::document_io::EXPORT_FORMATS.iter().map(|format| semio_framework_os_flow::CatalogueItem { kind: "outputExport".into(), neuron_kind: None, action: None, format: Some(format.id.into()), name: format.label_en.into(), abbreviation: format.id.to_uppercase(), icon: "emoji:📤️".into(), summary: format.label_en.into() }));
+        outputs.items.extend(semio_s_artifact_procedural_3d_io::document_io::EXPORT_FORMATS.iter().map(|format| semio_os_flow::CatalogueItem { kind: "outputExport".into(), neuron_kind: None, action: None, format: Some(format.id.into()), name: format.label_en.into(), abbreviation: format.id.to_uppercase(), icon: "emoji:📤️".into(), summary: format.label_en.into() }));
     }
 }
 //#endregion 🔖️Render

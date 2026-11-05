@@ -9,7 +9,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
+    use {semio_plugin::io::register_subset_validator,semio_plugin::io::subset_validator_entry_of,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_plugin::io::SubsetValidator,semio_plugin::io::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_COBIE: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cobie") };
@@ -71,8 +71,8 @@ use semio_framework_diagnostic::TextSpan;
     impl store::io::SnapshotSubsetValidator for Ifc2x3CobieValidator {
         type Snapshot = Ifc2x3Snapshot;
 
-        fn validate_snapshot(snapshot: &Ifc2x3Snapshot, _database: &semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework_os_kernel::io_schema::IoResult<()> {
-            crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance_controlled(snapshot, control).map(|diagnostics| semio_framework_os_kernel::io_schema::IoOutcome { value: (), diagnostics }).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)
+        fn validate_snapshot(snapshot: &Ifc2x3Snapshot, _database: &semio_os_kernel::sqlite_snapshot::SqliteDatabase, control: &mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_os_kernel::io_schema::IoResult<()> {
+            crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance_controlled(snapshot, control).map(|diagnostics| semio_os_kernel::io_schema::IoOutcome { value: (), diagnostics }).map_err(semio_os_kernel::io_schema::IoError::from_value_error)
         }
     }
 
@@ -91,7 +91,7 @@ use semio_framework_diagnostic::TextSpan;
     /// 🧾️ The declarative twin of [`register`]: this subset's `SubsetValidator` as a row of the artifact's
     /// [`crate::declaration`].
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
+    pub fn declare(builder: semio_plugin::app::ArtifactDeclarationBuilder<semio_plugin::app::DeclarationReady>) -> semio_plugin::app::ArtifactDeclarationBuilder<semio_plugin::app::DeclarationReady> {
         builder.subset_validators(std::slice::from_ref(validator_entry()))
     }
     //#endregion 🔖️SubsetValidator
@@ -110,7 +110,7 @@ pub mod derived_construction {
     use crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
     use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -222,7 +222,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cobie") };
 
@@ -292,14 +292,14 @@ use semio_framework_diagnostic::TextSpan;
         out
     }
     /// 🛡️ Checks the actual COBie fields with controlled borrowed relationships.
-    pub fn check_cobie_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
-        use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
+    pub fn check_cobie_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_os_kernel::sqlite_snapshot::ValueError>{
+        use semio_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
         use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_header;
         use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_instances;
         use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_nonempty_name;
         use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_entity;
         use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::MvdDiagnostics;
-        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+        use semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
         let mut out=MvdDiagnostics::default();let(schema,view)=mvd_header(snapshot,"FMHandOverView",control)?;
         for(condition,code,message)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3"),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name FMHandOverView")]{if condition{out.emit(code,Severity::Error,format_args!("{message}"),control)?;}}
         for space in mvd_instances(snapshot,"IFCSPACE",control)?{let named=match mvd_entity(space,"IFCSPACE",control)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"missing IFC space arguments"))?.get(2).and_then(|v|v.as_str()){Some(text)=>mvd_nonempty_name(text,control)?,None=>false};if !named{out.emit(CODE_SPACE_NAME,Severity::Warning,format_args!("IFCSPACE #{} has no non-empty Name -- COBie's Space sheet is keyed by name",space.id),control)?;}}
@@ -317,7 +317,7 @@ use semio_framework_diagnostic::TextSpan;
         type Parts = Ifc2x3Parts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             Ifc2x3AnyAnalyzer::sniff(source)
         }
 
@@ -328,7 +328,7 @@ use semio_framework_diagnostic::TextSpan;
             if let Some(snapshot) = &inner.parts.snapshot {
                 let checks = check_cobie_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                    confidence = semio_framework_plugin::io::Confidence::Low;
+                    confidence = semio_plugin::io::Confidence::Low;
                 }
                 diagnostics.extend(checks);
             }
@@ -344,7 +344,7 @@ use semio_framework_diagnostic::TextSpan;
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec Ifc2x3CobieBuilderFacets {
         construction: Ifc2x3CobieBuilderConstruction,
         analysis: Ifc2x3CobieAnalyzerAnalysis,

@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "content", kind: "insert-content", record: "Insert" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert {} operators at {} on page {}", self.content.len(), self.at, self.index), &format!("{} Operatoren an {} auf Seite {} einfügen", self.content.len(), self.at, self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert {} operators at {} on page {}", self.content.len(), self.at, self.index), &format!("{} Operatoren an {} auf Seite {} einfügen", self.content.len(), self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

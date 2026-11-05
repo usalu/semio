@@ -23,7 +23,7 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::transient::BimWind
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{ArtifactInstanceOperationOwner, ArtifactView, Effect, Emit, Fault, NoConfigMutation, PluginLifecycleStep};
+use semio_plugin::{ArtifactInstanceOperationOwner, ArtifactView, Effect, Emit, Fault, NoConfigMutation, PluginLifecycleStep};
 use std::collections::BTreeMap;
 
 //#region 🔖️Registry
@@ -220,11 +220,11 @@ impl ArtifactInstanceOperationOwner for GestureOwner {
         Ok(semio_framework_value::RetirementDemand::default())
     }
 
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(Default::default()))
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         self.sessions.clear();
         Ok(PluginLifecycleStep::Complete(Default::default()))
     }

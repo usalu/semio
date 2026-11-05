@@ -12,7 +12,7 @@ async fn catalogue_lists_every_block_kind() {
 #[semio_framework_async_macros::async_test]
 async fn catalogue_resolves_german_locale() {
     let mut app = note_app().await;
-    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
+    let view_state = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::De, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native) };
     let json = crate::editor::note::unit_tests::context::render_with_view(&mut app, BODY_CATALOGUE, &view_state).await;
     assert!(json.contains("Blockarten"));
     assert!(json.contains("Text — reicher Textblock"));

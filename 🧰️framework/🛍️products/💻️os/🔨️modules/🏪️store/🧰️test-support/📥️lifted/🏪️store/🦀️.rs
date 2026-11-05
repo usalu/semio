@@ -1,8 +1,8 @@
 //! 📥️ Items of `store` that belong to `os-store-test-support` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🦀️.rs`.
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
+use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 //#region 🔖️EphemeralLanes
 
-use semio_framework_os_store_ephemeral::*;
+use semio_os_store_ephemeral::*;
 //#region 🔖️Authority
 //#region 🔖️EphemeralLanes
 //#region 🔖️Text

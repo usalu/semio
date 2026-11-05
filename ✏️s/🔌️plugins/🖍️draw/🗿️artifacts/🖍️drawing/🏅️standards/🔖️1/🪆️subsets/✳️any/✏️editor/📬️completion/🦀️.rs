@@ -1,6 +1,6 @@
 //! 📬️ Draw cleanup retains the actual emitted operations, host effects and typed download.
 use super::DrawingPlayApp;
-use semio_framework_plugin::{ArtifactToolCompletionValue,ArtifactCompletionFault,ArtifactDownloadOutput,EditorApp,Emit,EphemeralEmit,NoConfigMutation,NoDraftMutation,VacantVec,VacantDeque,CompletionEffect};
+use semio_plugin::{ArtifactToolCompletionValue,ArtifactCompletionFault,ArtifactDownloadOutput,EditorApp,Emit,EphemeralEmit,NoConfigMutation,NoDraftMutation,VacantVec,VacantDeque,CompletionEffect};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::{ControlledRetirement,admit_typed_controlled_retirement}},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::mem::ManuallyDrop;
 pub type App=EditorApp<DrawingPlayApp>;pub type Value=ArtifactToolCompletionValue<App>;type DrawingEmit=Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation,NoConfigMutation,NoDraftMutation>;
@@ -9,7 +9,7 @@ impl Source{fn ephemeral(&self)->&EphemeralEmit<App>{match self{Self::Emit(_,val
 pub struct DrawingCompletionPayload(pub Value);
 #[derive(semio_framework_value::RetireOwned)]
 pub struct RejectedCompletion{publication:DrawingCompletionPayload,fault:semio_framework::Fault}
-impl RejectedCompletion{pub fn new(original:semio_framework_plugin::ArtifactToolCompletionRejection<App>)->Self{Self{publication:DrawingCompletionPayload(Value::Emit(original.emit.map_err(ArtifactCompletionFault::new),original.ephemeral)),fault:original.fault}}}
+impl RejectedCompletion{pub fn new(original:semio_plugin::ArtifactToolCompletionRejection<App>)->Self{Self{publication:DrawingCompletionPayload(Value::Emit(original.emit.map_err(ArtifactCompletionFault::new),original.ephemeral)),fault:original.fault}}}
 struct Cursor{original:ManuallyDrop<Option<Source>>,phase:u8,faulted:bool}
 fn unsupported()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Draw completion retains an original opaque payload without an exact retirement facet")}
 pub fn birth(value:&Value)->Option<usize>{supported(value).then_some(size_of::<ControlledRetirement<DrawingCompletionPayload>>())}

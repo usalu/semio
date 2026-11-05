@@ -16,7 +16,7 @@
 //! hand-picked tokens to the full [`ui_contract::SpaceToken`] ramp that packet `contract-layout`
 //! defined after this file's wgpu-old ancestor was written.
 
-use semio_framework_ui_render_text::Measurement;
+use semio_ui_render_text::Measurement;
 use ui_contract::{AbsoluteLayout, Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, ScrollAxes, ScrollLayout, Sizing, SpaceToken, StackLayout};
 
 //#region 🔖️Layout

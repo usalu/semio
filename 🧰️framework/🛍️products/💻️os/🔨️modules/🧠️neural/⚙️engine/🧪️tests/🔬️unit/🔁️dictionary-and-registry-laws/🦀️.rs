@@ -1,7 +1,7 @@
 /// 🔁️ Dictionary and registry laws: the observed system, the dictionary cursor, the echo and double operators, schema round trips, registry dispatch and the custom dispatch pipelines.
 
 #[global_allocator]
-static OBSERVED_SYSTEM:semio_framework_os_kernel_neural_engine_model::testkit::ObservedSystem=semio_framework_os_kernel_neural_engine_model::testkit::ObservedSystem;
+static OBSERVED_SYSTEM:semio_os_kernel_neural_engine_model::testkit::ObservedSystem=semio_os_kernel_neural_engine_model::testkit::ObservedSystem;
 
 #[test]
 fn dictionary_owned_cursor_preserves_order_and_nested_ownership() {

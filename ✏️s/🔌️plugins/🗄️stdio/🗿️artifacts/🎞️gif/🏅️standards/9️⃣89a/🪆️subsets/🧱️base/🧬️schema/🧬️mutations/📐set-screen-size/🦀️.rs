@@ -16,8 +16,8 @@ pub struct SetScreenSize {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetScreenSize {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "screen-size", kind: "set-screen-size", record: "SetScreenSize" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set screen size", "Bildschirmgröße setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set screen size", "Bildschirmgröße setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

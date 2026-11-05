@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeCrossbeamSpa
         record: "ChangedBridgeCrossbeamSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cross beam spacing a of the bridge fatigue", "Brückenermüdung: Querträgerabstand a ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cross beam spacing a of the bridge fatigue", "Brückenermüdung: Querträgerabstand a ändern")
     }
 }
 

@@ -1,6 +1,6 @@
 //! ✏️ EN 1997 play app — the `edit` mode: properties and outliner left, 3D model centre, checks and diagrams right.
 
-use semio_framework_plugin::{ModeDefinition, WindowLayout};
+use semio_plugin::{ModeDefinition, WindowLayout};
 use semio_s_plugin_norm_app_surface::{device_profiles::LayoutPrefs, viewport3d::config::DeviceClass};
 
 //#region 🔖️Definition

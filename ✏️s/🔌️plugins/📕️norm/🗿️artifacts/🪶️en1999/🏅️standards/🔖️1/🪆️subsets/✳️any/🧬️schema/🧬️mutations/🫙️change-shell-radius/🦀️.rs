@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeShellRadius where 
         record: "ChangedShellRadius",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Mid-surface radius r of the shell", "Schale: Radius der Mittelfläche r ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Mid-surface radius r of the shell", "Schale: Radius der Mittelfläche r ändern")
     }
 }
 

@@ -7,7 +7,7 @@ use semio_s_artifact_cad_cad_kit::cad_pane_id_from_suffix;
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetDislocateOption

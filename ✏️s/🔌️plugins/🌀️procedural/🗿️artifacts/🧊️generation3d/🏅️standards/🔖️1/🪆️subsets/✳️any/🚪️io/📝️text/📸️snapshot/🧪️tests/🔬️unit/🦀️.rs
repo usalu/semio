@@ -1,7 +1,7 @@
 use crate::snapshot::*;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
-use semio_framework_os_kernel::os_store::test_support;
+use semio_os_kernel::os_store::test_support;
 use pack::snapshot::ArtifactDsl;
 use semio_framework_artifact_flow_flow::{FlowChannelRef,FlowNodeGui,FlowPreviewGui,FlowUi,NodeChrome,OrderedMap,OrderedSet,neural::{Neuron,Synapse,Tree}};
 
@@ -37,7 +37,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = semio_s_artifact_procedural_3d_testkit::store_fixture::document_store(Generation3dSnapshot::default()).await;
     use semio_s_artifact_procedural_3d_mut_widgets::create_widget::CreateWidget;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<Generation3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     test_support::assert_command_envelope_round_trip::<Generation3dSnapshot, Generation3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     semio_s_artifact_procedural_3d_testkit::store_fixture::close(store);

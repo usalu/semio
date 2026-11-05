@@ -1,9 +1,9 @@
 //! 🪟️ Own PDF 1.4 page drafts, dimensions and structural actions.
 use crate::editor::pdf14::page;
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::{TreeWindows, WindowKindDefinition, UiAssemblyResult};
-use semio_framework_ui_contract::{BuiltNode, UiPublicationRevision};
+use semio_ui_locale::Locale;
+use semio_plugin::{TreeWindows, WindowKindDefinition, UiAssemblyResult};
+use semio_ui_contract::{BuiltNode, UiPublicationRevision};
 
 pub const WINDOW_KIND_ID: &str = page::WINDOW_KIND_ID;
 pub const BODY_KEY: &str = page::BODY_KEY;

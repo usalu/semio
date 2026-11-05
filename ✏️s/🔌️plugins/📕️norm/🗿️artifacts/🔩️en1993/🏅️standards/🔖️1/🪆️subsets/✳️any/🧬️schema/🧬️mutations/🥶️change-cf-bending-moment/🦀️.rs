@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfBendingMoment wh
         record: "ChangedCfBendingMoment",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bending moment M_Ed of the cold-formed member", "Kaltprofil: Biegemoment M_Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bending moment M_Ed of the cold-formed member", "Kaltprofil: Biegemoment M_Ed ändern")
     }
 }
 

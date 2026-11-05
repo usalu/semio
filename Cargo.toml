@@ -857,28 +857,28 @@ rust-version = "1.95"
 [workspace.dependencies]
 semio-s-artifact-stdio-idf = { path = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/⚡️idf/📦️packages/🦀️rust" }
 semio-framework-value-original-slot = { path = "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust" }
-semio-framework-ui-contract-values = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust" }
-semio-framework-ui-contract-actions = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust" }
-semio-framework-ui-contract-presentation = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📦️packages/🦀️rust" }
-semio-framework-ui-contract-components = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/📦️packages/🦀️rust" }
-semio-framework-ui-contract-operations = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚙️operations/📦️packages/🦀️rust" }
-semio-framework-ui-contract-builder = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/📦️packages/🦀️rust" }
-semio-framework-ui-contract-validation = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
-semio-framework-ui-contract-text-edit = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust" }
-semio-framework-ui-contract-typegen = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust" }
+semio-ui-contract-values = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust" }
+semio-ui-contract-actions = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust" }
+semio-ui-contract-presentation = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📦️packages/🦀️rust" }
+semio-ui-contract-components = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/📦️packages/🦀️rust" }
+semio-ui-contract-operations = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚙️operations/📦️packages/🦀️rust" }
+semio-ui-contract-builder = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/📦️packages/🦀️rust" }
+semio-ui-contract-validation = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+semio-ui-contract-text-edit = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust" }
+semio-ui-contract-typegen = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust" }
 
 semio-framework-diagnostic = { path = "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { path = "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-validator = { path = "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust" }
-semio-framework-plugin-host-test-component = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust" }
-semio-framework-plugin-host = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter-runtime = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust" }
-semio-framework-plugin-guest-contract = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
+semio-plugin-host-test-component = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust" }
+semio-plugin-host = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-plugin-interpreter = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
+semio-plugin-interpreter-runtime = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust" }
+semio-plugin-guest-contract = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
 semio-repo-test-host = { path = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust" }
+semio-renderer-wgpu = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust" }
 semio-framework-artifact-playbook-playbook = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust" }
@@ -943,10 +943,10 @@ semio-framework-schema = { path = "🧰️framework/🔨️modules/🧬️schema
 semio-framework-schema-registry = { path = "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 schema = { path = "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-value-derive = { path = "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
-semio-framework-os-services = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust" }
-semio-framework-os-services-native-io = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️packages/🦀️rust" }
-semio-framework-os-services-native-paths = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust" }
-semio-framework-plugin-describe = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust" }
+semio-os-services = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust" }
+semio-os-services-native-io = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️packages/🦀️rust" }
+semio-os-services-native-paths = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust" }
+semio-plugin-describe = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust" }
 # 🌐️ Canonical versions for the highest-fanout external deps, chosen as the newest
 # explicit requirement string already used somewhere in the 630 manifests (matches what
 # Cargo.lock already resolves to, so adopting `.workspace = true` later is a no-op for
@@ -964,44 +964,41 @@ tokio = { version = "1" }
 # consumer. `# N refs` is the survey count. Grouped: os-kernel/core, math, ui, plugin-internal.
 # ---- core (24) ----
 semio-framework = { path = "🧰️framework/📦️packages/🦀️rust" }  # 58 refs
-semio-framework-os = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
-semio-framework-os-kernel-flow = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
-semio-framework-os-kernel-infinite-board-port-directed-dag = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-semio-framework-os-kernel-infinite-canvas = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-semio-framework-kernel-infinite-world = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-semio-framework-os-infinite = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust" }
-semio-framework-os-flow = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust" }
-semio-framework-os-kernel-neural-engine = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+semio-os = { path = "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-kernel-infinite-world = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
+semio-os-infinite = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust" }
+semio-os-flow = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust" }
+semio-os-kernel-neural-engine = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust" }
+semio-os-kernel-db = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-os-kernel-db" }
 # 🧭️ Keep alias on OLD impl until W8c plugin cut-over deletes the sandwich (packages path already exists on disk).
-semio-framework-plugin = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
-semio-framework-os-config = { path = "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust" }
-semio-framework-os-shell = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust" }
-semio-framework-os-mcp = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
+semio-plugin = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-os-config = { path = "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust" }
+semio-os-shell = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust" }
+semio-os-mcp = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
 
 # ---- math (13) ----
 
 # ---- ui (10) ----
-semio-framework-ui-styling = { path = "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }  # 15 refs
-semio-framework-ui-contract = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
-semio-framework-ui-render = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-render = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-draw-execution = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-pipelines = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-raster = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-mesh = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-device = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🔌️device/📦️packages/🦀️rust" }
-semio-framework-ui-render-device = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🔌️device/📦️packages/🦀️rust" }
-semio-framework-ui-render-prepared-shaders = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/📦️packages/🦀️rust" }
-semio-framework-ui-runtime = { path = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
-semio-framework-ui-scene = { path = "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
-semio-framework-ui-viewport = { path = "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
-semio-framework-ui-backend-webgpu = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust" }
-semio-framework-ui-backend-metal = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust" }
-semio-framework-ui-backend-d3d12 = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust" }
-semio-framework-ui-backend-vulkan = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust" }
-semio-framework-ui-host = { path = "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust" }
+semio-ui-styling = { path = "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }  # 15 refs
+semio-ui-contract = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+semio-ui-render = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust" }
+semio-ui-wgpu-render = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust" }
+semio-ui-wgpu-draw-execution = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/📦️packages/🦀️rust" }
+semio-ui-wgpu-pipelines = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/📦️packages/🦀️rust" }
+semio-ui-wgpu-raster = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/📦️packages/🦀️rust" }
+semio-ui-wgpu-mesh = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/📦️packages/🦀️rust" }
+semio-ui-wgpu-device = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🔌️device/📦️packages/🦀️rust" }
+semio-ui-render-device = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🔌️device/📦️packages/🦀️rust" }
+semio-ui-render-prepared-shaders = { path = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/📦️packages/🦀️rust" }
+semio-ui-runtime = { path = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
+semio-ui-scene = { path = "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+semio-ui-viewport = { path = "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+semio-ui-backend-webgpu = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust" }
+semio-ui-backend-metal = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust" }
+semio-ui-backend-d3d12 = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust" }
+semio-ui-backend-vulkan = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust" }
+semio-ui-host = { path = "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust" }
 semio-framework-surface = { path = "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 
 # ---- plugin (62) ----
@@ -1031,16 +1028,16 @@ unnecessary_wraps = "warn"
 redundant_clone = "warn"
 # phase B (enable after the T2/T3 waves land): unwrap_used = "warn"
 
-[workspace.dependencies.semio-framework-plugin-ownership]
+[workspace.dependencies.semio-plugin-ownership]
 path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-artifact-workflow-run-admission]
 path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/⚡️admission/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-config-merge-policy]
+[workspace.dependencies.semio-os-config-merge-policy]
 path = "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin-instance-surface]
+[workspace.dependencies.semio-plugin-instance-surface]
 path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-filesystem-workspace]

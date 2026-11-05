@@ -1,7 +1,7 @@
 //! 📦️ Runtime instance registry, descriptor, opening and cleanup pumps of the plugin runtime.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 
 #[path = "🏷️metadata-owner/🦀️.rs"]
 pub mod inst_metadata_owner;

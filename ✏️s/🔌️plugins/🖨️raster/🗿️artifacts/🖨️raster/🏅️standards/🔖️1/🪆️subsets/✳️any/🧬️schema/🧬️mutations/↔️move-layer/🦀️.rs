@@ -28,8 +28,8 @@ pub mod mutation {
     crate::move_layer::inverse::inverse(self, base)
 }
 
-        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Move layer {} to ({}, {})", self.layer_id, self.new_x, self.new_y), &format!("Ebene {} nach ({}, {}) verschieben", self.layer_id, self.new_x, self.new_y))
+        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+            semio_ui_locale::LocalizedLabel::native(&format!("Move layer {} to ({}, {})", self.layer_id, self.new_x, self.new_y), &format!("Ebene {} nach ({}, {}) verschieben", self.layer_id, self.new_x, self.new_y))
         }
 
         fn target(&self) -> Vec<String> {

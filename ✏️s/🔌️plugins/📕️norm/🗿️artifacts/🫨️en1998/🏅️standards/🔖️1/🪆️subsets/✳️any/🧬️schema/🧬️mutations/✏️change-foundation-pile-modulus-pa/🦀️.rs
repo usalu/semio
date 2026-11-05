@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationPileModu
         record: "ChangeFoundationPileModulusPa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pile material modulus E_p", "Elastizitätsmodul E_p des Pfahls ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pile material modulus E_p", "Elastizitätsmodul E_p des Pfahls ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-pile-modulus-pa".into()]

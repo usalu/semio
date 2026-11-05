@@ -1,0 +1,13 @@
+# JPG Current Repair Audit
+
+Read-only inspection after native owner repair; all commands through repo. Inspected the seven files listed in jpg-prerequisite.md and a scoped read-only Git diff of both typed paint command sources. No source edits, tests, builds, extra queue, process action or Git write. Native retry80322 remains solely owner-managed; this source review is not a compiler pass.
+
+No concrete defect was confirmed in the repair. schema-2 mirror declares public editor::paint_region_declaration using the standalone declaration source. The library publicly reexports its mirror, so the external baseline editor crate can reach that module. The mirror path retains the same document source root traversal already used by its directly mounted document editor. No higher baseline component was introduced into schema-2.
+
+The direct semio-framework-ui-contract normal dependency resolves to the existing framework/modules/ui/contract/packages/rust/Cargo.toml named semio-framework-ui-contract. No dependency on the higher JPG io-registry was added to schema-2. Baseline typed paint imports the declaration explicitly from semio_s_artifact_stdio_jpg_schema_2; document typed paint uses crate::editor::paint_region_declaration within its real schema-2 owner. Both window definitions now call the lower shared declaration. The higher io-registry continues to reexport schema-2 windows rather than mounting another copy requiring a new crate-local symbol.
+
+Both original integer_arg/action blocks were directly compared before extraction and were byte-identical. The scoped current diff shows removal of those metadata bodies and constants plus lower declaration reexports, while preserving typed payload schemas and workers. The new declaration preserves paint-region id, Mutation classification, English/German labels, required integer arguments, step1, x/y range0..u32::MAX with default0, width1..u32::MAX with default1, height1..65536 with default1, RGB0..255 with default0 and alpha0..255 with default255. Shared maximum rows remains65536.
+
+Baseline still exposes s.stdio.jpg.baseline.command.paint-region.v1 and ArtifactCommandWork for EditorApp<JpgBaselineEditor>; document retains its any schema and EditorApp<JpgAnyEditor>. Their typed parser, retained work/admission/cancellation and mutation route were not replaced with a sibling handler. Re-encode notices and editable window registration remain present. The new absolute declaration path is195UTF-16 units at this checkout, below256.
+
+Actual native compilation/test completion and named regression output remain pending the owner retry. No scope was pruned to obtain a passing result, and no native test outcome is asserted here.

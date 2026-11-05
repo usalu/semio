@@ -3,7 +3,7 @@
 //! AFTER a turn completes: it classifies each `Effect`, derives an `OperationContext` for it, and
 //! `spawn_scoped`s it into the emitting actor's own scope — cheap and synchronous itself (pure
 //! classification + a `HostAsyncRuntime::spawn_scoped` call per effect), never awaiting the real
-//! work inline. The real work runs later, off this call stack, on `semio-framework-os-services`'
+//! work inline. The real work runs later, off this call stack, on `semio-os-services`'
 //! pools (`HttpPool`/`StorageScheduler`/`TimerWheel`/`ComputePool`/`EventRouter`).
 //!
 //! 🔁️ **Completions re-enter as envelopes, never a side channel.** Every dispatched operation ends
@@ -12,7 +12,7 @@
 //! 🦀️.rs` already use for `Payload::Event { bytes }`), and handing it to
 //! [`EnvelopeCompletionSink`] — the ONE place in this module that constructs an `Envelope` and the
 //! ONE place that decides whether it is delivered now, buffered (suspended actor), or dropped
-//! (stale generation). `EnvelopeCompletionSink` implements `semio_framework_os_services::
+//! (stale generation). `EnvelopeCompletionSink` implements `semio_os_services::
 //! CompletionSink`, the only re-entry path those services are allowed to use.
 //!
 //! 🚰️ **Completions ride the same mailbox machinery as ordinary events.** Rather than a bespoke
@@ -32,7 +32,7 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[global_allocator]
@@ -52,7 +52,7 @@ use semio_framework_job::{JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind
 use semio_framework_job_payload::{RetainedPayloadBuilder, JobPayloadStream, RetainedJobPayload};
 #[cfg(test)] use semio_framework_job::{JobFault, StepOutcome};
 use semio_framework_job_payload::payload_writer_and_grant::RetainedJobPayloadWriter;
-use semio_framework_os_services::{
+use semio_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };
 use semio_framework_value_derive::ToValue;

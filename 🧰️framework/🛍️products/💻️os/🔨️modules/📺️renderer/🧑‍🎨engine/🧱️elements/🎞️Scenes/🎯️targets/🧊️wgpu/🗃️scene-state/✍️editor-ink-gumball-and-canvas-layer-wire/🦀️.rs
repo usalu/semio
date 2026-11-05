@@ -48,7 +48,7 @@ impl InkBoundsF {
 //#endregion ✒️InkBounds
 
 //#region 🖋️InkOutline
-pub fn draw_ink_rect_outline(draw: &mut semio_framework_ui_draw_contract::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
+pub fn draw_ink_rect_outline(draw: &mut semio_ui_draw_contract::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
     draw.push_line(x, y, x + w, y, color, width);
     draw.push_line(x + w, y, x + w, y + h, color, width);
     draw.push_line(x + w, y + h, x, y + h, color, width);

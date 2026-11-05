@@ -16,7 +16,7 @@
 //! `SurfaceProps` names WHAT is embedded (`kind` plus a `doc_schema`-tagged opaque payload) and WHICH
 //! surface-level intents it can fire (`bindings`) — never WHERE it sits or which product instance owns
 //! it. The scaffold's `surface_id`/`controller_id`/`pane_id`/`binding_id`/`domain_id`/
-//! `domain_granularity_id` fields are gone: placement is `semio-framework-ui-render`'s own
+//! `domain_granularity_id` fields are gone: placement is `semio-ui-render`'s own
 //! `SurfacePlacement`/`AnySurface` concern (that crate's `🦀️surface.rs` already imports only
 //! [`SurfaceId`]/[`SurfaceKind`] from this crate, never those dropped fields), and a per-instance
 //! identity (which pane, which binding, which domain granularity) is exactly the kind of
@@ -39,7 +39,7 @@
 //!
 //! `doc`'s bytes diff as an opaque blob: [`SurfaceProps`] derives plain structural [`PartialEq`], so a
 //! changed byte anywhere inside `doc.bytes` makes the whole `SurfaceProps` unequal to what it was —
-//! exactly one `component` change as far as `semio-framework-ui-runtime`'s `SurfaceReconciler` is
+//! exactly one `component` change as far as `semio-ui-runtime`'s `SurfaceReconciler` is
 //! concerned (`Component::Surface` is diffed as part of the same `component` field group every other
 //! `Component` variant is), which folds into a single `SetComponent`/`Upsert` op. No separate
 //! `SetSurface` op exists or is needed — a changed scene is exactly one op.

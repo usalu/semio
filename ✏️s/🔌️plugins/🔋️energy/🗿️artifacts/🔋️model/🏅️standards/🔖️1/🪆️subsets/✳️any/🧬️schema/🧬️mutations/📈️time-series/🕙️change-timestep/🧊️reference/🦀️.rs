@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "time-series-schedule", kind: "change-time-series-schedule-timestep", record: "ChangedTimeSeriesScheduleTimestep" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Time Series Schedule Timestep of time series schedule {}", self.id.0), &format!("Zeitschritt von Zeitreihenzeitplan {} ändern", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Time Series Schedule Timestep of time series schedule {}", self.id.0), &format!("Zeitschritt von Zeitreihenzeitplan {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

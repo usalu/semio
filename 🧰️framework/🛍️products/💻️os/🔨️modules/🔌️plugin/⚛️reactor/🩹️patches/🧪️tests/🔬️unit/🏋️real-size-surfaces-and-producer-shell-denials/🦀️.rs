@@ -31,11 +31,11 @@ fn sized_body(key: &str, bytes: usize) -> TreeNode {
 /// MAXIMUM, never a price, and this law fixes the aggregate to the session's real occupancy.
 #[test]
 fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
-    let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
+    let baseline = semio_ui_runtime::surface_reconcile_registry_census();
     let tracker = PatchTracker::new();
     let panes = ["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"];
     let panels = [
@@ -60,7 +60,7 @@ fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_
     }
     let state = tracker.debug_state();
     assert!(state.contains("reserve_refusal=none"), "no surface of a mounted session may be refused its reconcile reservation: {state}");
-    let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let census = semio_ui_runtime::surface_reconcile_registry_census();
     assert_eq!(census.resident_slots, baseline.resident_slots + mounted.len(), "every mounted surface must hold its own reservation at once: {census:?} against {baseline:?} — {state}");
     assert!(
         census.resident_bytes - baseline.resident_bytes < mounted.len() * ui_contract::UI_RESIDENT_SURFACE_BYTES,
@@ -70,7 +70,7 @@ fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_
     let mut published = 0usize;
     for _ in 0..1_048_576 {
         tracker.drive_one(cx).expect("original patch fixture semantic step");
-        peak = peak.max(semio_framework_ui_runtime::surface_reconcile_registry_census().resident_bytes);
+        peak = peak.max(semio_ui_runtime::surface_reconcile_registry_census().resident_bytes);
         if let Some(owner) = tracker.take_ready_patch() {
             let (patch, authority) = publish_test(owner);
             close_published(authority);
@@ -91,7 +91,7 @@ fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_
     eprintln!(
         "{} surfaces admitted at floor={}B each; reserved={}B for {} slots (mean {}B); peak while reconciling and publishing all of them={}B (mean {}B per surface) of {}B aggregate against a {}B per-surface ceiling; baseline={}B",
         mounted.len(),
-        semio_framework_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES,
+        semio_ui_runtime::SURFACE_RECONCILE_FLOOR_BYTES,
         census.resident_bytes - baseline.resident_bytes,
         census.resident_slots - baseline.resident_slots,
         (census.resident_bytes - baseline.resident_bytes) / mounted.len(),
@@ -114,7 +114,7 @@ fn mounted_original_producer_shell_denials_unchanged_child_census_and_paid_termi
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
     fn clock()->Option<u64>{Some(1000)}
     fn observe<T>(run:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,heap.requested_bytes,heap.released_bytes)}
-    let _guard=semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard=semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/🎬️media-slots/🎟️collect/🔣️.json")).unwrap();
     let stock=RetainedCloneGrant{maximum_items:1000000,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:256};
     let mut caller=OriginalJobFixtureCaller::admit(OperationId(941),Generation(17),stock,clock,1000000,1000000);

@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "outdoor-air-system", kind: "change-outdoor-air-system-economizer-enabled", record: "ChangedOutdoorAirSystemEconomizerEnabled" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change outdoor air system {} economizer setting to {:?}", self.id.0, self.new_economizer_enabled), &format!("Economizer-Einstellung von Außenluftsystem {} auf {:?} ändern", self.id.0, self.new_economizer_enabled))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change outdoor air system {} economizer setting to {:?}", self.id.0, self.new_economizer_enabled), &format!("Economizer-Einstellung von Außenluftsystem {} auf {:?} ändern", self.id.0, self.new_economizer_enabled))
     }
 
     fn target(&self) -> Vec<String> {

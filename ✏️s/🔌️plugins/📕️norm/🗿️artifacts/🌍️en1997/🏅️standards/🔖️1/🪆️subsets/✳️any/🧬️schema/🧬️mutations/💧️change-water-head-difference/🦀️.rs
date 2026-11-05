@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWaterHeadDifferenc
         record: "ChangedWaterHeadDifference",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Head difference Δh of the layer water", "Schichtwasser: Potenzialdifferenz Δh ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Head difference Δh of the layer water", "Schichtwasser: Potenzialdifferenz Δh ändern")
     }
 }
 

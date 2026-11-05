@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBearingStiffnessNP
         record: "ChangeBearingStiffnessNPerM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Horizontal stiffness of the bearing in the analysed direction (0 = rigid)", "Horizontalsteifigkeit des Lagers in der untersuchten Richtung (0 = starr) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Horizontal stiffness of the bearing in the analysed direction (0 = rigid)", "Horizontalsteifigkeit des Lagers in der untersuchten Richtung (0 = starr) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bearing-stiffness-n-per-m".into()]

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePileDesignLife whe
         record: "ChangedPileDesignLife",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design life of the pile", "Pfahl: Nutzungsdauer ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design life of the pile", "Pfahl: Nutzungsdauer ändern")
     }
 }
 

@@ -1,14 +1,14 @@
 /// 🧰️ Definition, roster, dispatch classification, document verb and granular vocabulary laws of the editor.
 
-fn definition() -> semio_framework_plugin::AppDefinition {
-    semio_framework_plugin::artifact_app_laws::publish_framework_schemas();
+fn definition() -> semio_plugin::AppDefinition {
+    semio_plugin::artifact_app_laws::publish_framework_schemas();
     create_energy_model_editor()
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_energy_model_editor_builds_a_definition_for_the_editor_role() {
     let def = definition();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, MODEL_DIALECT.into());
 }
 
@@ -34,7 +34,7 @@ async fn editor_declares_every_window() {
 /// here rather than discovered at dispatch.
 #[semio_framework_async_macros::async_test]
 async fn retained_roster_is_exact_and_exhaustive() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let roster = ENERGY_MODEL_RETAINED_TOOL_IDS.iter().copied().collect::<BTreeSet<_>>();
     assert_eq!(roster.len(), ENERGY_MODEL_RETAINED_TOOL_IDS.len(), "the retained roster repeats a tool id");
     assert_eq!(roster, <EnergyModelEditorCommand as protocol::OpBinary>::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>());
@@ -60,7 +60,7 @@ async fn every_declared_action_is_classified_and_resolves_to_a_command() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_verbs_publish_to_the_artifact_lane_settings_to_the_config_lane_and_examples_to_the_host() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     for contract in <EnergyModelCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
         let expected = match contract.tool_id {
             id if crate::editor_commands::ENERGY_MODEL_DOCUMENT_TOOL_IDS.contains(&id) => ArtifactToolPublicationLane::Artifact,
@@ -105,7 +105,7 @@ async fn loading_an_example_swaps_the_document_through_an_effect_and_never_a_mut
     for (id, _, model) in example_rows() {
         let emit = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: id.to_string() }, &doc).unwrap_or_else(|error| panic!("example {id} must load: {error:?}"));
         assert!(emit.artifact_mutations.is_empty(), "example {id} must not reach the mutation seam");
-        let [semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }] = emit.effects.as_slice() else { panic!("example {id} must emit exactly one LoadDocument effect") };
+        let [semio_plugin::kernel::Effect::LoadDocument { pack, spr }] = emit.effects.as_slice() else { panic!("example {id} must emit exactly one LoadDocument effect") };
         assert!(!pack.is_empty() && !spr.is_empty(), "example {id} emitted an empty document");
         let loaded = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("the emitted pack decodes");
         assert_eq!(model_value(&loaded), plain_value(&model), "example {id} loaded a different model than its own leaf declares");

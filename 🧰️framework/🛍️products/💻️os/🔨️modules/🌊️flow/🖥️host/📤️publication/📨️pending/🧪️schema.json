@@ -1,0 +1,94 @@
+{
+  "type": "array",
+  "minItems": 7,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "window",
+      "origins",
+      "pending",
+      "progress",
+      "expected"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "window": {
+        "type": "string"
+      },
+      "origins": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "window",
+            "hash",
+            "neuron"
+          ],
+          "properties": {
+            "hash": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "neuron": {
+              "type": "string"
+            },
+            "window": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "pending": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "hash",
+            "neuron"
+          ],
+          "properties": {
+            "hash": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "neuron": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "progress": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "expected": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "neuron",
+            "resume"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "neuron": {
+              "type": "string"
+            },
+            "resume": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
+}

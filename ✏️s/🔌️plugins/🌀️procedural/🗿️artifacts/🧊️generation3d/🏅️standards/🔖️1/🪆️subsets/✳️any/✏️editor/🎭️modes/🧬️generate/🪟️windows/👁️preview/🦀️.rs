@@ -19,15 +19,15 @@ use semio_s_artifact_procedural_3d_model::generation_by_id;
 use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_sun_measures;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_sun_measures;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
 
 #[path = "🫧️transient/🦀️.rs"]
 pub mod transient;
@@ -60,7 +60,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ Shares the same show-mode + sun measures as the edit-mode 3D preview window.
-pub fn window_measures(config: &Generation3dConfig, is_de: bool, procedural_action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> semio_framework_plugin::ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &Generation3dConfig, is_de: bool, procedural_action: impl Fn(&str, Option<semio_plugin::DslValue>) -> semio_plugin::ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
     vec![show_mode_measure(&config.show_mode, is_de, procedural_action), world3d_sun_measures("generation3d", &sun, is_de, procedural_action)]
 }
@@ -78,7 +78,7 @@ pub fn window_measures(config: &Generation3dConfig, is_de: bool, procedural_acti
 /// `hosts=[]` and no window a status could ever appear on — measured on 6018 as 189 s of
 /// `[data-status-json]`-less generate mode (`🗑️generated/journey-3/results.json`, ticket
 /// 26/09/09/PROCEDURAL-3D-END-TO-END). A hint is a state of this window, not a different window.
-fn generate_preview_status_json(session: &FlowEvalSession, run: Option<&semio_framework_plugin::ToolRunView>, _eval_json: &str, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
+fn generate_preview_status_json(session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, _eval_json: &str, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
     preview_window_status_json(Some(session), run, preview_status, &PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json }, hint)
 }
 
@@ -93,8 +93,8 @@ pub fn render(
     active_utility: &str,
     marks: &PreviewInteractionMarks,
     session: &FlowEvalSession,
-    run: Option<&semio_framework_plugin::ToolRunView>,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    run: Option<&semio_plugin::ToolRunView>,
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = preview_eval_text.unwrap_or_default();
     let marks = PreviewInteractionMarks { components: Default::default(), ..marks.clone() };
     let (payload, preview_status) = match generation_by_id(generation, selected_id) {
@@ -115,8 +115,8 @@ pub fn render(
     let _ = GENERATION_3D_PLAY_APP_ID;
     semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_GENERATE_PREVIEW,
-        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &semio_framework_ui_declaration::ui::World3dScene {
+        semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
+        &semio_ui_declaration::ui::World3dScene {
             status_json,
             fit_json: Some(fit_json),
             domain_id: Some(GENERATION_3D_INTERACTION_DOMAIN.into()),
@@ -125,7 +125,7 @@ pub fn render(
         },
         labels.preview_canvas.as_str(),
         labels.preview_canvas_hint.as_str(),
-        semio_framework_ui_contract::Liveness::Polite,
+        semio_ui_contract::Liveness::Polite,
     )
 }
 //#endregion 🔖️Render

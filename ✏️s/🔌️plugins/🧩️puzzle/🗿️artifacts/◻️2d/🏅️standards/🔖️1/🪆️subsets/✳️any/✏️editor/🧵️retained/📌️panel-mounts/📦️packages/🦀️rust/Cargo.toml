@@ -17,9 +17,9 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-mut-any-10 = { path = "../../../../../🧬️schema/🧬️mutations/✋️selection/📦️packages/🦀️rust" }

@@ -80,7 +80,7 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         command: &BitmapEditorCommand,
         _snapshot: &BitmapSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BitmapEditor>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BitmapEditor>>>,
     ) -> Option<usize> {
         BITMAP_TOOL_IDS.contains(&bitmap_command_id(command)).then_some(1)
     }
@@ -99,7 +99,7 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         let view_state = input.context.and_then(|context| context.view_state.as_deref());
         let pointer = input.command.brush_pointer();
         if pointer.is_some() || matches!(input.command, BitmapEditorCommand::PaintStroke { .. }) {
-            let detached = semio_framework_plugin::app::GestureSlot::detached();
+            let detached = semio_plugin::app::GestureSlot::detached();
             let slot = input.context.map_or(&detached, |context| context.gesture());
             let stroke = match &pointer {
                 Some(pointer) => BitmapEditor::pointer_stroke(pointer, doc.snapshot, slot.open().is_some()),
@@ -168,10 +168,10 @@ impl semio_framework::ToolJobFactory for BitmapCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         bitmap_retained_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BITMAP_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BITMAP_RETAINED_RAW_BYTES, checkpoint_resume: false);
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BitmapCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for BitmapCommandJobFactory {
     type Owner = EditorApp<BitmapEditor>;
     const TOOL_IDS: &'static [&'static str] = BITMAP_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = WFC_BITMAP_DOCUMENT_SCHEMA;

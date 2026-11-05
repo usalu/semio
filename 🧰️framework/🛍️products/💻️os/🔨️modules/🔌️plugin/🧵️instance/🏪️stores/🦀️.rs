@@ -1,9 +1,9 @@
 //! 🏪️ Instance components of the plugin SDK: constructor state, stores, peer roster, action ingress and local interaction.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
+extern crate semio_os_kernel as pack;
 
 #[path = "📥️staging/📮️action-ingress/🦀️.rs"]
 pub mod action_ingress;

@@ -4,7 +4,7 @@
 use crate::{Wfc3dBuilderConstruction, Wfc3dAnalyzerAnalysis};
 use crate::standards::v1::subsets::any::schema::*;
 use crate::Wfc3dSnapshot;
-use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactBuilder};
+use semio_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactBuilder};
 
 /// 🧬️ Four facets × five languages. A missing leaf is a crate-level compile error, so what this test
 /// adds is the guarantee that none of them is an EMPTY placeholder.

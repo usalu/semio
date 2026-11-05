@@ -1,10 +1,14 @@
+import{cargoPreparationRecordPathsV1}from"../../../🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🟦️.ts";
+import {withRepositoryCompilerLaneV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {testWasmBindgenToolSelection} from "../🕸️wasm/bindgen.ts";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import {testRecordV1} from "../📋️values/🟦️.ts";
 import {WASM_BINDGEN_LOCKS_V1} from "../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
 import toolchainPolicy from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️json/🟦️.ts";
-import { existsSync, realpathSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, realpathSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, statSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -17,6 +21,7 @@ import {nativeCallerPhaseV1} from "../../📦️artifacts/📋️native-orchestr
 /** 🏗️ Proves native preparation is an uncached, application-independent build leaf against Cargo and esbuild. */
 export async function testNativeDependencies(workspace: string, output: string,invocation:ScriptInvocation,parent:ResourceLeaseControl): Promise<void> {
   requireIssuedResourceControlInvocationV1(parent,invocation);
+  await testWasmBindgenToolSelection(workspace,parent);
   const require = createRequire(join(workspace, "package.json")), vectors = resolve(import.meta.dir, "../🧫️fixtures/📦️native-dependencies");
   const fixture = JSON.parse(readFileSync(join(vectors, "🔣️.json"), "utf8"));
   const custodyPath=join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts");for(const [row,key] of [[fixture.cargo,"preparationScript"],[fixture.dependencyPreparation,"script"],[fixture.generatedPreparation,"script"]] as const)row[key]=row[key].replace("{CUSTODY}",JSON.stringify(custodyPath.replaceAll("\\","/")));
@@ -34,7 +39,8 @@ export async function testNativeDependencies(workspace: string, output: string,i
   const storage={version:1 as const,directory:join(root,"preparation"),leaseDirectory:join(root,"leases"),program:repositoryCargoPreparationStorageV1(workspace).program};
   const{runNativeDependencyFixtureNegativeV1}=await import("./📥️purpose/🟦️.ts");
   const {withPreparedCargoDependencyPairV1}=await import("../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts"),{cargoWorkspacePreparationInvocationV1}=await import("../../../🗂️workspaces/🦀️cargo/🟦️.ts");
-  const phaseFor=(signal:AbortSignal)=>{let phase=phases.get(signal);if(!phase){phase=nativeCallerPhaseV1(invocation,workspace,createRequestedIssuedResourceControlV1(parent,fixture.originalNativeControl.maximumElapsedMilliseconds,signal));phases.set(signal,phase);}return phase;};
+  let phaseParent=parent;
+  const phaseFor=(signal:AbortSignal)=>{let phase=phases.get(signal);if(!phase){phase=nativeCallerPhaseV1(invocation,workspace,createRequestedIssuedResourceControlV1(phaseParent,fixture.originalNativeControl.maximumElapsedMilliseconds,signal));phases.set(signal,phase);}return phase;};
   const controlFor=(signal:AbortSignal)=>phaseFor(signal).leaseControl;
   const transportFor=(phase:ReturnType<typeof nativeCallerPhaseV1>)=>({maximumBytes:Math.min(fixture.originalNativeControl.native.transport.maximumBytes,phase.authority.transport.maximumBytes),maximumLines:Math.min(fixture.originalNativeControl.native.transport.maximumLines,phase.authority.transport.maximumLines)});
   const identity=async(cwd:string,signal:AbortSignal)=>{const phase=phaseFor(controller.signal);assert.equal(signal,phase.leaseControl.signal);return captureOwnedCommandV1("cargo",["--version"],cwd,{control:phase.leaseControl,env:phase.options(process.env).env,output:transportFor(phase)});};
@@ -55,18 +61,36 @@ export async function testNativeDependencies(workspace: string, output: string,i
     const interpolate = (value: string): string => value.replace("{workspace}", root).replaceAll("/", process.platform === "win32" && value.startsWith("{workspace}") ? "\\" : "/");
     const browserPort=()=>({platform:fixture.browserSystem.platform,root:fixture.browserSystem.root,resolve:(name:string)=>fixture.browserSystem.tools[name]??null,isFile:(path:string)=>path===join(root,"node_modules/playwright/cli.js")});
     for (const row of fixture.environments) {
-      const target = projects.targets[`deps-${row.kind}`], calls: string[][] = [],providers:string[]=[];
+      const target = projects.targets[`deps-${row.kind}`], calls: string[][] = [],providers:string[]=[];let bindingInstalled=false;
+      const cargoHome=join(root,"cargo-home"),binding=join(cargoHome,"bin","wasm-bindgen"+(process.platform==="win32"?".exe":""));mkdirSync(dirname(binding),{recursive:true});writeFileSync(binding,"fixture");
       assert.equal(target.cache, false); assert.deepEqual(target.outputs, []);
       assert.equal(target.options.command, `repo "${fixture.entry}" sync ${row.kind}`);
       await prepareDependencies(row.kind, root, invocation,storage,phaseFor(controller.signal), async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean, env: NodeJS.ProcessEnv) => {
         assert.equal(cwd, root); assert.equal(signal,phaseFor(controller.signal).leaseControl.signal);
-        if (capture) return command==="cargo"&&args[0]==="--version"?identity(cwd,signal):command==="dotnet"?toolchainPolicy.dotnet.sdk:"";
+        if (capture) return command===binding?(bindingInstalled?"wasm-bindgen "+fixture.bindgenLock.match(/version = "([^"]+)"/)[1]:""):command==="cargo"&&args[0]==="--version"?identity(cwd,signal):command==="dotnet"?toolchainPolicy.dotnet.sdk:"";
+        if(command==="cargo"&&args[0]==="install"&&args[1]==="wasm-bindgen-cli")bindingInstalled=true;
         calls.push([command, ...args]);
         for (const [key, value] of Object.entries(row.environment ?? {})) assert.equal(env[key], interpolate(value as string));
         return "";
-      }, process.env, async (base: NodeJS.ProcessEnv) => {providers.push("go");return{ ...base, ...toolchainPolicy.go.variables };},async base=>{providers.push("uv");return base;},async base=>{providers.push("cargo-tools");return base;},browserPort);
+      }, {...process.env,CARGO_HOME:cargoHome}, async (base: NodeJS.ProcessEnv) => {providers.push("go");return{ ...base, ...toolchainPolicy.go.variables };},async base=>{providers.push("uv");return base;},async base=>{providers.push("cargo-tools");return base;},browserPort);
       assert.deepEqual(providers,row.providers,row.kind);
       assert.deepEqual(calls.map(call => call[0] === process.execPath ? ["bun", ...call.slice(1)] : call), row.commands.map((command: string[]) => command.map(interpolate)), row.kind);
+    }
+    const bindgenCases=JSON.parse(readFileSync(join(vectors,"../🕸️wasm/bindgen.json"),"utf8")).readiness,locked=fixture.bindgenLock.match(/version = "([^"]+)"/)[1],semver=require("semver");
+    assert.equal(locked,bindgenCases.locked);
+    for(const row of bindgenCases.cases){
+      const cargoHome=join(root,"cargo-home"),binding=join(cargoHome,"bin","wasm-bindgen"+(process.platform==="win32"?".exe":"")),calls:string[][]=[];let installed=false;
+      const run=prepareDependencies("trunk",root,invocation,storage,phaseFor(controller.signal),async(command:string,args:string[],_cwd:string,_signal:AbortSignal,capture:boolean)=>{
+        calls.push([command,...args]);assert.notEqual(command,"wasm-bindgen","Ambient binding generators cannot prove owned readiness");
+        if(command==="cargo"){installed=true;return "";}
+        if(capture)return command==="trunk"?"trunk 0.21.14":command===binding?(installed?row.after:row.before):"wasm32-unknown-unknown";
+        return "";
+      },{...process.env,CARGO_HOME:cargoHome,...(row.explicit?{SEMIO_TOOL_WASM_BINDGEN:binding}:{})});
+      if(row.refused)await assert.rejects(run,/(?:Prepared|Explicit) wasm-bindgen must match Cargo.lock/);else await run;
+      assert.equal(calls.some(call=>call[0]==="cargo"&&call[1]==="install"),row.install,row.name);
+      if(row.install)assert.equal(calls.find(call=>call[0]==="cargo"&&call[1]==="install")?.includes("--force"),true,"Only observed mismatched owned bindgen requires replacement");
+      assert.equal(!semver.eq(row.after.split(/\s+/)[1],locked),row.refused,row.name+": independent version identity");
+      if(row.refused)assert.equal(calls.some(call=>call[0]==="rustup"),false,"Refused readiness cannot proceed to target setup");
     }
     const boundedGo = { ...process.env, SEMIO_BOUNDED_GO: root };
     let boundedMarker: string | undefined;
@@ -94,12 +118,17 @@ export async function testNativeDependencies(workspace: string, output: string,i
     writeFileSync(join(root, "Cargo.lock"), "version = 4\n");
     await assert.rejects(prepareDependencies("trunk", root, invocation,storage,phaseFor(controller.signal), async () => { assert.fail("Invalid lock must fail before acquisition"); }), /exactly one wasm-bindgen/);
     for(const args of fixture.rejected)await assert.rejects(new NativeDependenciesScript(root,workspace,invocation).run(args));
+    await withRepositoryCompilerLaneV1(workspace,readBuildMode(process.env.SEMIO_BUILD_MODE),createRequestedIssuedResourceControlV1(parent,0,controller.signal),process.env,{crates:[relative(workspace,root).split(sep).join("/")],unitCache:false},async(store,compilerControl)=>{
+    phaseParent=compilerControl;phases.clear();await store.storage.recheck();
+    const compilerTarget=store.environment.CARGO_TARGET_DIR!;
+    const deliverables=()=>existsSync(compilerTarget)?readdirSync(compilerTarget,{recursive:true,withFileTypes:true}).filter(file=>file.isFile()&&!fixture.cargo.nonDeliverableMetadata.includes(file.name)).map(file=>{const path=join(file.parentPath,file.name),state=statSync(path,{bigint:true});return[relative(compilerTarget,path),state.size.toString(),state.mtimeNs.toString()].join("\0");}).sort():[];
+    const originalDeliverables=deliverables();
     authorCargoFixture();
     writeFileSync(join(root, "package.json"), JSON.stringify({ name: "workspace", private: true }));
     writeFileSync(join(root, "nx.json"), JSON.stringify({ useDaemonProcess: false }));
     writeFileSync(join(root, "📜️script.ts"), "throw new Error('Application code must not run during native setup');\n");
     for(const source of fixture.requiredPhysicalSources)assert.equal(existsSync(join(workspace,source)),true,source);
-    const env: NodeJS.ProcessEnv = { ...process.env, SEMIO_WORKSPACE_ROOT_PATH: root, SEMIO_WORKSPACE_ROOT: root, REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NODE_PATH: join(workspace, "node_modules"), CARGO_TARGET_DIR: join(root, "target"), CARGO_BUILD_BUILD_DIR: join(root, "build"), FORCE_COLOR: "0", NO_COLOR: "1" };
+    const env: NodeJS.ProcessEnv = { ...store.environment, SEMIO_TEST_ARTIFACT_DIR:output, SEMIO_WORKSPACE_ROOT_PATH: root, SEMIO_WORKSPACE_ROOT: root, REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NODE_PATH: join(workspace, "node_modules"), FORCE_COLOR: "0", NO_COLOR: "1" };
     delete env.NX_SKIP_NX_CACHE;
     const phase=phaseFor(controller.signal);
     const rawCargo=(args:string[],cwd=root)=>captureOwnedCommandV1("cargo",args.includes("--offline")||args[0]==="--version"?args:[...args,"--offline"],cwd,{control:phase.leaseControl,env:phase.options(env).env,output:transportFor(phase)});
@@ -140,13 +169,15 @@ export async function testNativeDependencies(workspace: string, output: string,i
       assert.deepEqual(actual.packages.map((value:any)=>value.name).sort(),fixture.cargo.preparedPackages);
       await run("cargo",["fetch","--locked","--offline"]);
     }
-    assert.equal(existsSync(join(root, "target")), false, "Dependency synchronization must not compile deliverables");
+    assert.equal(existsSync(join(root, "target")), false, "Dependency synchronization must not write fixture compiler outputs");
+    assert.deepEqual(deliverables(),originalDeliverables,"Dependency synchronization must not create or change owned compiler deliverables");
     writeFileSync(join(root, "Cargo.lock"), fixture.cargo.invalidLock);
     await pair();
     assert.equal(readFileSync(join(root,"Cargo.lock"),"utf8"),preparedLock);
     await pair();
     await run("cargo",["fetch","--locked","--offline"]);
-    assert.equal(existsSync(join(root, "target")), false, "Lock refresh must not compile deliverables");
+    assert.equal(existsSync(join(root, "target")), false, "Lock refresh must not write fixture compiler outputs");
+    assert.deepEqual(deliverables(),originalDeliverables,"Lock refresh must not create or change owned compiler deliverables");
     const custodySchemaPath="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json";
     const schema=JSON.parse(readFileSync(join(workspace,custodySchemaPath),"utf8")),Ajv=require("ajv"),validate=new Ajv({strict:false}).compile(schema);
     const {inventorySchemaScopes}=await import("../../../🔍️discovery/🧾️schema-scope-catalog/🟦️.ts");
@@ -177,6 +208,16 @@ export async function testNativeDependencies(workspace: string, output: string,i
       rmSync(join(root,"additional"),{recursive:true,force:true});
       writeFileSync(recipe,initial);writeFileSync(join(root,"owned-input.txt"),fixture.cargo.ownedInput);writeFileSync(join(root,"Cargo.lock"),preparedLock!);
     }
+    const convergence=fixture.memberConvergence,memberRoot=join(root,"mc"),memberCommands:string[]=[];
+    const publishMembers=(files:Record<string,string>):void=>{for(const[path,content]of Object.entries(files)){const target=join(memberRoot,path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,content);}};
+    publishMembers(convergence.files);
+    await withPreparedCargoDependencyPairV1(storage,memberRoot,"Cargo.toml",phase.leaseControl,async(args,cwd,signal)=>{assert.equal(signal,phase.leaseControl.signal);memberCommands.push(args[0]!);await rawCargo(args,cwd);if(memberCommands.length===1)publishMembers(convergence.added);},identity,preparationFor(controller.signal));
+    assert.deepEqual(memberCommands,convergence.commands,"Unowned membership must converge under the same bounded Original");
+    const memberReceiptPath=cargoPreparationRecordPathsV1(storage,memberRoot,"Cargo.toml",[]).receipt,memberReceipt=JSON.parse(readFileSync(memberReceiptPath,"utf8"));assert.equal(memberReceipt.version,1);assert.match(memberReceipt.inputsSha256,/^[0-9a-f]{64}$/);assert.match(memberReceipt.lockSha256,/^[0-9a-f]{64}$/);await withPreparedCargoDependencyPairV1(storage,memberRoot,"Cargo.toml",phase.leaseControl,async()=>assert.fail("Unchanged converged receipt must not repeat Cargo"),identity,preparationFor(controller.signal));assert.deepEqual(JSON.parse(readFileSync(memberReceiptPath,"utf8")),memberReceipt);
+    const memberMetadata=JSON.parse(await rawCargo(["metadata","--locked","--offline","--no-deps","--format-version=1"],memberRoot));
+    assert.deepEqual(memberMetadata.packages.map((value:any)=>value.name).sort(),convergence.packages);
+    const memberManifest=readFileSync(join(memberRoot,"Cargo.toml"),"utf8");assert.deepEqual(Bun.TOML.parse(memberManifest),require("smol-toml").parse(memberManifest));assert.deepEqual(Bun.TOML.parse(memberManifest).workspace.members,["added","kernel"]);
+    assert.equal(existsSync(join(memberRoot,"target")),false);assert.deepEqual(deliverables(),originalDeliverables);
     const abort=new AbortController();const cancelledControl=controlFor(abort.signal),cancelledPreparation=preparationFor(abort.signal);abort.abort();await assert.rejects(withPreparedCargoDependencyPairV1(storage,root,"Cargo.toml",cancelledControl,async()=>assert.fail("Cancelled preparation must not run Cargo"),identity,cancelledPreparation));
     assert.equal(validate({}),false);
     const ordered=fixture.dependencyPreparation;
@@ -245,7 +286,9 @@ export async function testNativeDependencies(workspace: string, output: string,i
     assert.equal(new (require("ajv"))({strict:true}).compile(schema.$defs.CargoPreparationInvocationV1)(request),true);assert.equal(cargoWorkspacePreparationInvocationV1(storage,root,[launch.rejectedCommand],root,environment),undefined);assert.throws(()=>cargoWorkspacePreparationInvocationV1(storage,root,launch.args,root,{...environment,SEMIO_CARGO_PREPARATION_ACTIVE:"current-recipe"}),/Cargo recursion/);
     const consumed=JSON.parse(await run("cargo",["metadata","--locked","--offline","--no-deps","--format-version=1","--manifest-path","selected/main/Cargo.toml"]));assert.equal(resolve(consumed.workspace_root),join(root,"selected"));assert.deepEqual(consumed.packages.map((pkg:any)=>pkg.name).sort(),scoped.expectedPackages);assert.equal(readFileSync(join(root,"foreign/Cargo.lock"),"utf8"),scoped.foreignLock);
 
-    assert.ok(progress.length>0);assert.ok(progress.includes("yield"));passed = true;
+    assert.ok(progress.length>0);assert.ok(progress.includes("yield"));await store.storage.recheck();
+    });
+    passed = true;
   } finally {
     if (inheritedBrowserPath === undefined) delete process.env.PLAYWRIGHT_BROWSERS_PATH;
     else process.env.PLAYWRIGHT_BROWSERS_PATH = inheritedBrowserPath;

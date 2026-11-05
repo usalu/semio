@@ -1,8 +1,8 @@
 //! 📐️ STEP exchange headers, typed argument ownership and entity references.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepTypedValue, StepValue};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn,read_binary64,ieee754_is_null,validate_ieee754_row},*}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn,read_binary64,ieee754_is_null,validate_ieee754_row},*}};
 #[path = "📏️encoding/💰️backing/🦀️.rs"]
 mod native_backing;
 #[path = "🛬️reconstruction/🦀️.rs"]
@@ -66,13 +66,13 @@ fn visit_rows(snapshot:&StepSnapshot,projection:&mut RowWriter<'_,'_>)->Result<(
 impl StepSnapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut writer=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut writer)?;writer.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
 impl ArtifactSqliteSnapshotHost for StepSnapshot{
     fn retire_sqlite_snapshot(self){native::close(self)}
-    fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
+    fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native_backing::preflight(self,control)}
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{
         (|| -> Result<(), ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.step"||dialect.standard!="ap214"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "owned STEP dialect differs from its semantic standard"));}let row=database.table("step_document")?.single_row()?;if row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "owned STEP document identity differs from semantic projection"));}Ok(())
-        })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;
+        })().map_err(semio_os_kernel::io_schema::IoError::from_value_error)?;
         store::io::validate_registered_snapshot_subset(dialect,self,database,control)
     }
     

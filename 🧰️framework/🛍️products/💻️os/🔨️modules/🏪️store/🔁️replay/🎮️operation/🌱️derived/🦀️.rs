@@ -1,12 +1,12 @@
 //! 🌱️ Original Store semantic previews retain one installed operation producer across granted turns.
 use super::*;
-use semio_framework_os_spr as protocol;
+use semio_os_spr as protocol;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_snapshot_read::{ErasedSnapshotRead,SnapshotRead};
 use semio_framework_value_snapshot_read as snapshot_read_registry_handle;
 use semio_framework_value_snapshot_read as snapshot_read_registry_retirement;
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
-use semio_framework_os_store_one_item::ArtifactStoreOneItemGrant;
+use semio_os_store_one_item::ArtifactStoreOneItemGrant;
 use std::{sync::Arc,mem::size_of};
 use semio_framework_value::{RetirementDemand,ValueRefusalKind};
 use std::mem::ManuallyDrop;
@@ -99,7 +99,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
         }
         if prepared.apply_refusal.is_some(){return Ok(RetirementDemand{capacity_bytes:size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<protocol::MutationApplyError>>(),depth:1,..Default::default()});}
         if prepared.input_refusal.is_some(){return Ok(RetirementDemand{capacity_bytes:size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<String>>(),depth:1,..Default::default()});}
-        if prepared.messages.capacity()!=0&&(self.closing||self.mode!=ArtifactDerivedOperationMode::History){return Ok(RetirementDemand{capacity_bytes:size_of::<semio_framework_os_spr::command::MutationMessageLedgerRetirement>(),depth:1,..Default::default()});}
+        if prepared.messages.capacity()!=0&&(self.closing||self.mode!=ArtifactDerivedOperationMode::History){return Ok(RetirementDemand{capacity_bytes:size_of::<semio_os_spr::command::MutationMessageLedgerRetirement>(),depth:1,..Default::default()});}
         Ok(header::<ArtifactReplayPrepared<P,M>>())
     }
     /// ⏯️ Advances exactly one funded action, leaving cancellation and incomplete work owned across turns.
@@ -148,7 +148,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
                 let row=if let Some(cause)=prepared.apply_refusal.take(){protocol::MutationMessage{level:semio_framework_diagnostic::Severity::Fatal,code:semio_framework_diagnostic::FaultCode(cause.code),message:cause.message,target:cause.target,op_index:None}}else{protocol::MutationMessage{level:semio_framework_diagnostic::Severity::Fatal,code:semio_framework_diagnostic::FaultCode("mutation.invariant".into()),message:prepared.input_refusal.take().unwrap(),target:Vec::new(),op_index:None}};prepared.messages.push(row);RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes}
             }else if prepared.apply_refusal.is_some(){let original=prepared.apply_refusal.take().unwrap();let turn=semio_framework_value::retirement::admit_owned_retirement(original,grant);work+=turn.work;match turn.result{Ok((frame,p))=>{*self.retirement=Some(frame);p},Err((error,original))=>{prepared.apply_refusal=Some(original);return Err(error);}}
             }else if prepared.input_refusal.is_some(){let original=prepared.input_refusal.take().unwrap();let turn=semio_framework_value::retirement::admit_owned_retirement(original,grant);work+=turn.work;match turn.result{Ok((frame,p))=>{*self.retirement=Some(frame);p},Err((error,original))=>{prepared.input_refusal=Some(original);return Err(error);}}
-            }else if prepared.messages.capacity()!=0&&(self.closing||self.mode!=ArtifactDerivedOperationMode::History){match semio_framework_value::retirement::frame::admit_retirement_frame(std::mem::take(&mut prepared.messages),grant,|messages|semio_framework_os_spr::command::MutationMessageLedgerRetirement::new(String::new(),messages)){Ok((frame,p))=>{*self.retirement=Some(frame);p},Err((error,original))=>{prepared.messages=original;return Err(error);}}
+            }else if prepared.messages.capacity()!=0&&(self.closing||self.mode!=ArtifactDerivedOperationMode::History){match semio_framework_value::retirement::frame::admit_retirement_frame(std::mem::take(&mut prepared.messages),grant,|messages|semio_os_spr::command::MutationMessageLedgerRetirement::new(String::new(),messages)){Ok((frame,p))=>{*self.retirement=Some(frame);p},Err((error,original))=>{prepared.messages=original;return Err(error);}}
             }else{if self.closing{drop(self.prepared.take());}else{self.finished=true;}RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}}
         }else if self.producer.is_some(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=self.producer.take().unwrap();self.factory_close[4]=Some(semio_framework_value::FactoryAuthority::new(factory));RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}
         }else if self.snapshots.is_some(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=self.snapshots.take().unwrap();self.factory_close[0]=Some(semio_framework_value::FactoryAuthority::new(factory));RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}

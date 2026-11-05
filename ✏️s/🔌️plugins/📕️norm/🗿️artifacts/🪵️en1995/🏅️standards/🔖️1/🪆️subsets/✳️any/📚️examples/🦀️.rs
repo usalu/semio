@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -32,7 +32,7 @@ pub mod overloaded_footbridge;
 //#endregion 🪢️Mounts
 
 /// 📚️ Every bundled EN 1995 example in catalogue order — compliant first, then non-compliant.
-pub fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+pub fn examples() -> Vec<semio_plugin::ExampleSource> {
     vec![
         glulam_floor_beam::source(),
         glulam_footbridge::source(),

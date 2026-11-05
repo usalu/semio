@@ -186,7 +186,19 @@ export function publishPlayUnionReceipt(workspace: string, options: PlayActivati
 }
 
 /** 🧾️ Requires the exact completed union before starting the development host. */
-export function readPlayActivation(workspace: string): { readonly receiptDirectory: string; readonly extensionsDirectory: string; readonly extensionDirectories: ReadonlyMap<string, string>; readonly receipt: ActivationReceipt } {
+export function readPlayActivation(workspace: string, pane?: string): { readonly receiptDirectory: string; readonly extensionsDirectory: string; readonly extensionDirectories: ReadonlyMap<string, string>; readonly receipt: ActivationReceipt } {
+  if (pane !== undefined) {
+    const target = PLAY_RUNTIME_TARGETS.find(target => target.variant === pane);
+    if (!target) throw new Error(`Unknown Play activation pane: ${pane}`);
+    const receipt = mergePlayActivationReceipts([readPlayActivationLane(workspace, pane)], playRuntimeComponentIds([target]), pane);
+    const runtime = playLaneRuntimeRoot(workspace, pane), extensionsDirectory = join(runtime, "extensions");
+    const extensions = new Set(EXTENSION_TARGETS.map(target => target.pluginId));
+    const extensionDirectories = new Map(receipt.plugins.filter(plugin => extensions.has(plugin.pluginId)).map(plugin => {
+      const name = moduleDirectoryName(plugin.pluginId, COMPONENT_MODULE_DIRECTORIES);
+      return [name, join(extensionsDirectory, name)] as const;
+    }));
+    return { receiptDirectory: join(runtime, "activation"), extensionsDirectory, extensionDirectories, receipt };
+  }
   const { receiptDirectory, receipt } = publishPlayUnionReceipt(workspace);
   return { receiptDirectory, extensionsDirectory: join(playLaneRuntimeRoot(workspace, playActivationLanes()[0]!), "extensions"), extensionDirectories: playExtensionDirectories(workspace), receipt };
 }
@@ -201,9 +213,9 @@ export function playExtensionDirectory(name: string, pluginModulesDirectory: str
 }
 
 /** 🔎️ Describes every union component for the activation-receipt freshness watcher. */
-export function playActivationComponents(workspace: string, extensionDirectories: ReadonlyMap<string, string>): readonly ActivationComponentSpec[] {
+export function playActivationComponents(workspace: string, extensionDirectories: ReadonlyMap<string, string>, pluginIds: readonly string[] = playRuntimeComponentIds()): readonly ActivationComponentSpec[] {
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
-  return playRuntimeComponentIds().map(id => {
+  return pluginIds.map(id => {
     const row = byId.get(id)!, directoryName = moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES), installDirectory = extensionDirectories.get(directoryName);
     return { pluginId: id, directoryName, role: row.role === "extension" ? "extension" : "plugin", sourceRoot: resolve(workspace, componentOwnerRootV1(row.cratePath)), ...(installDirectory ? { installDirectory } : {}) };
   });

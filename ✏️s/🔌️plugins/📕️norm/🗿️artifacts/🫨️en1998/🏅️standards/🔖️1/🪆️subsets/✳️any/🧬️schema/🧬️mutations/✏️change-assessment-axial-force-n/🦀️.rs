@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentAxialFor
         record: "ChangeAssessmentAxialForceN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Axial force N (compression positive)", "Normalkraft N (Druck positiv) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Axial force N (compression positive)", "Normalkraft N (Druck positiv) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-axial-force-n".into()]

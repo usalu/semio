@@ -1,27 +1,27 @@
 //! 🎟️ Original inline publication ingress survives every funded partial cancellation.
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_ui_scene::SceneDoc;
+use semio_ui_scene::SceneDoc;
 use crate::{ToolRunMemberEmissionOwner, ToolRunMemberOwners};
 use crate::publication_ingress::ToolRunPublicationIngress;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 #[test]
 fn original_tool_run_publication_ingress_preserves_partial_custody_and_fixed_grants(){
  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};

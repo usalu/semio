@@ -13,8 +13,8 @@ pub struct SetDrawingNamespace {
 impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetDrawingNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "drawing-namespace", kind: "set-drawing-namespace", record: "SetDrawingNamespace" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set drawing namespace", "Zeichnungsnamensraum setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set drawing namespace", "Zeichnungsnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationBearAxia
         record: "ChangeFoundationBearAxialN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design axial force N_Ed of the footing", "Bemessungswert der Normalkraft N_Ed des Fundaments ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design axial force N_Ed of the footing", "Bemessungswert der Normalkraft N_Ed des Fundaments ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-bear-axial-n".into()]

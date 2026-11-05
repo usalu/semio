@@ -20,11 +20,11 @@ use semio_s_fem_app_surface::FemResultsAnimation;
 use semio_s_fem_app_surface::ANIMATION_SPEED_MAXIMUM;
 
 use semio_s_fem_app_surface::ANIMATION_SPEED_MINIMUM;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::WindowTransientMutation;
-use semio_framework_plugin::WindowTransientOwner;
-use semio_framework_plugin::WindowTransientOwnerBundle;
-use semio_framework_plugin::WindowTransientSnapshot;
+use semio_plugin::Fault;
+use semio_plugin::WindowTransientMutation;
+use semio_plugin::WindowTransientOwner;
+use semio_plugin::WindowTransientOwnerBundle;
+use semio_plugin::WindowTransientSnapshot;
 
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
@@ -107,8 +107,8 @@ impl pack::snapshot::ArtifactPack for FemResultsWindowTransient {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for FemResultsWindowTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for FemResultsWindowTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

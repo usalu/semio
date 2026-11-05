@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "provider": "semio_framework_os_services::TokioHostRuntime",
+  "provider": "semio_os_services::TokioHostRuntime",
   "constructor": "UreqStreamingHttpTransport::new",
   "cases": [
     {

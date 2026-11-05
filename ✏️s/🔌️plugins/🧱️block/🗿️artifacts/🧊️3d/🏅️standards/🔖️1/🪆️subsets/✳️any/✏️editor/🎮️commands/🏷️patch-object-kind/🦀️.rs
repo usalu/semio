@@ -3,7 +3,7 @@
 use semio_s_artifact_block_3d_mutations::Block3dMutation;
 use semio_s_artifact_block_3d_model::Block3dSnapshot;
 use semio_s_artifact_block_3d_editor_config::{Block3dConfig, Block3dConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_block_3d_mut_object_kind::rename_object_kind::rename_object_kind;
 use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_label::change_object_kind_label;

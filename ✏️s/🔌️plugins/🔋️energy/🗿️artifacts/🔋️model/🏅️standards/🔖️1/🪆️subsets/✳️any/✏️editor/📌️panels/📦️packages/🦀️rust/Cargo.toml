@@ -18,9 +18,9 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-s-plugin-energy-engine-air-exchange = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-energy-model-editor-commands = { workspace = true }
 semio-s-artifact-energy-model-editor-config = { workspace = true }
@@ -33,7 +33,7 @@ semio-s-plugin-energy-engine-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-energy-model-examples = { workspace = true }
 semio-s-plugin-energy-engine-bestest = { workspace = true }
 serde_json = { workspace = true }

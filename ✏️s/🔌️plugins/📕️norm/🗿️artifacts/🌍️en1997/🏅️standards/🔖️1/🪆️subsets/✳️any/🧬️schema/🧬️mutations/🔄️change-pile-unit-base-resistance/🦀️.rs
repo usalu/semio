@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileUnitBaseResist
         record: "ChangedPileUnitBaseResistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Unit base resistance q_b of the pile", "Pfahl: Pfahlspitzenwiderstand q_b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Unit base resistance q_b of the pile", "Pfahl: Pfahlspitzenwiderstand q_b ändern")
     }
 }
 

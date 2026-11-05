@@ -1,30 +1,30 @@
 use crate::FlowSnapshot;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 #[allow(unused_imports)]
 use flow::{flow_backed_node_graph_extras, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
+use semio_os_infinite_directed_presentation::DagHostSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::scene_surface;
+use semio_plugin::scene_surface;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::NodeGraphScene;
+use semio_plugin::NodeGraphScene;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::Viewport2d;
+use semio_os_kernel::Viewport2d;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-#[allow(unused_imports)] use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
+#[allow(unused_imports)] use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use crate::viewer::flow::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
@@ -38,7 +38,7 @@ async fn definition_declares_the_node_graph_surface_and_body_key() {
 async fn renders_node_graph_scene_for_the_default_document() {
     let document = FlowSnapshot::default();
     let node = render(&document).expect("render");
-    let tree = semio_framework_plugin::app::built_to_component_tree(node);
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection");
+    let tree = semio_plugin::app::built_to_component_tree(node);
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection");
     assert!(json.contains("node-graph"));
 }

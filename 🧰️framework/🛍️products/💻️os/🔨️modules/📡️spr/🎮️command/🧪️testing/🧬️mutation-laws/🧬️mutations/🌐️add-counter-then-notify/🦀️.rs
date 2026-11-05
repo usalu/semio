@@ -1,9 +1,9 @@
 //! 🌐️ Direct add-counter-then-notify-foreign fixture payload and behavior.
 use super::super::{foreign_step_fixture, AddCounter, Counter, CounterMutation};
-use semio_framework_os_command::CompositeMutationKind;
-use semio_framework_os_command::PlanError;
-use semio_framework_os_command::Planner;
-use semio_framework_os_command::SemanticDescriptor;
+use semio_os_command::CompositeMutationKind;
+use semio_os_command::PlanError;
+use semio_os_command::Planner;
+use semio_os_command::SemanticDescriptor;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord, dsl_derive::MutationLeaf, dsl_derive::CompositeMutation, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -22,7 +22,7 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterThenNotifyFor
 
     fn may_emit_foreign_steps(&self) -> bool { true }
     fn foreign_step_source<'a>(&'a self, _: &'a Counter, index: usize) -> Result<Option<protocol::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
-        if self.foreign_count > semio_framework_os_command::MAX_PLAN_DEPTH { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "foreign plan exceeds its original depth")); }
+        if self.foreign_count > semio_os_command::MAX_PLAN_DEPTH { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "foreign plan exceeds its original depth")); }
         if index >= usize::from(self.foreign_count) { return Ok(None); }
         const TARGETS: [&str;8] = ["artifact-0","artifact-1","artifact-2","artifact-3","artifact-4","artifact-5","artifact-6","artifact-7"];
         const LABELS: [&str;8] = ["Recolor widget 0","Recolor widget 1","Recolor widget 2","Recolor widget 3","Recolor widget 4","Recolor widget 5","Recolor widget 6","Recolor widget 7"];
@@ -34,7 +34,7 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterThenNotifyFor
     }
 }
 
-impl semio_framework_os_command::ColdCompositeMutationKind<Counter, CounterMutation> for AddCounterThenNotifyForeign {
+impl semio_os_command::ColdCompositeMutationKind<Counter, CounterMutation> for AddCounterThenNotifyForeign {
     fn plan(&self, _base: &Counter, planner: &mut Planner<Counter, CounterMutation>) -> Result<(), PlanError> {
         planner.call(CounterMutation::AddCounter(AddCounter { delta: self.delta }))?;
         for n in 0..self.foreign_count {
@@ -43,7 +43,7 @@ impl semio_framework_os_command::ColdCompositeMutationKind<Counter, CounterMutat
         Ok(())
     }
     fn foreign_step_source<'a>(&'a self, _: &'a Counter, index: usize) -> Result<Option<protocol::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
-        if self.foreign_count > semio_framework_os_command::MAX_PLAN_DEPTH { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "foreign plan exceeds its original depth")); }
+        if self.foreign_count > semio_os_command::MAX_PLAN_DEPTH { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "foreign plan exceeds its original depth")); }
         if index >= usize::from(self.foreign_count) { return Ok(None); }
         const TARGETS: [&str;8] = ["artifact-0","artifact-1","artifact-2","artifact-3","artifact-4","artifact-5","artifact-6","artifact-7"];
         const LABELS: [&str;8] = ["Recolor widget 0","Recolor widget 1","Recolor widget 2","Recolor widget 3","Recolor widget 4","Recolor widget 5","Recolor widget 6","Recolor widget 7"];

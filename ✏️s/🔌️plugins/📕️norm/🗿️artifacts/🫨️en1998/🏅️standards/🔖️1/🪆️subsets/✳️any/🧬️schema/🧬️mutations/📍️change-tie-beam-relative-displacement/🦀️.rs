@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTieBeamRelativeDis
         record: "ChangedTieBeamYaw",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tie beam: Relative ground displacement", "Fundamentbalken: Relative Bodenverschiebung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tie beam: Relative ground displacement", "Fundamentbalken: Relative Bodenverschiebung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

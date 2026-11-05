@@ -1,0 +1,594 @@
+{
+  "questionKind": "procedural3d",
+  "snapshot": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "widgets": [
+      {
+        "kind": "inputSlider",
+        "id": "c0-height",
+        "label": "Column Height",
+        "value": 6.0,
+        "min": 0,
+        "max": 10,
+        "step": 0.5,
+        "unit": "m"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c0-radius",
+        "label": "Profile Radius",
+        "value": 0.5,
+        "min": 0.1,
+        "max": 2,
+        "step": 0.05,
+        "unit": "m"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c0-sides",
+        "label": "Side Count",
+        "value": 120,
+        "min": 3,
+        "max": 120,
+        "step": 1
+      },
+      {
+        "kind": "neuron",
+        "id": "c0-profile",
+        "neuronKind": "brep.curve.polygon",
+        "params": {},
+        "input_ports": [
+          "radius",
+          "sides"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "neuron",
+        "id": "c0-extrusion-axis",
+        "neuronKind": "math.vector",
+        "params": {},
+        "input_ports": [
+          "x",
+          "y",
+          "z"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "neuron",
+        "id": "c0-extrude",
+        "neuronKind": "brep.solid.extrude",
+        "params": {},
+        "input_ports": [
+          "wire",
+          "vector"
+        ],
+        "preview": true
+      },
+      {
+        "kind": "outputPreview",
+        "id": "c0-column-preview",
+        "preview": {},
+        "expanded": []
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c1-height",
+        "label": "Column Height",
+        "value": 6.5,
+        "min": 0,
+        "max": 10,
+        "step": 0.5,
+        "unit": "m"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c1-radius",
+        "label": "Profile Radius",
+        "value": 0.55,
+        "min": 0.1,
+        "max": 2,
+        "step": 0.05,
+        "unit": "m"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c1-sides",
+        "label": "Side Count",
+        "value": 120,
+        "min": 3,
+        "max": 120,
+        "step": 1
+      },
+      {
+        "kind": "neuron",
+        "id": "c1-profile",
+        "neuronKind": "brep.curve.polygon",
+        "params": {},
+        "input_ports": [
+          "radius",
+          "sides"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "neuron",
+        "id": "c1-extrusion-axis",
+        "neuronKind": "math.vector",
+        "params": {},
+        "input_ports": [
+          "x",
+          "y",
+          "z"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "neuron",
+        "id": "c1-extrude",
+        "neuronKind": "brep.solid.extrude",
+        "params": {},
+        "input_ports": [
+          "wire",
+          "vector"
+        ],
+        "preview": true
+      },
+      {
+        "kind": "outputPreview",
+        "id": "c1-column-preview",
+        "preview": {},
+        "expanded": []
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c2-height",
+        "label": "Column Height",
+        "value": 7.0,
+        "min": 0,
+        "max": 10,
+        "step": 0.5,
+        "unit": "m"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c2-radius",
+        "label": "Profile Radius",
+        "value": 0.6,
+        "min": 0.1,
+        "max": 2,
+        "step": 0.05,
+        "unit": "m"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c2-sides",
+        "label": "Side Count",
+        "value": 120,
+        "min": 3,
+        "max": 120,
+        "step": 1
+      },
+      {
+        "kind": "neuron",
+        "id": "c2-profile",
+        "neuronKind": "brep.curve.polygon",
+        "params": {},
+        "input_ports": [
+          "radius",
+          "sides"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "neuron",
+        "id": "c2-extrusion-axis",
+        "neuronKind": "math.vector",
+        "params": {},
+        "input_ports": [
+          "x",
+          "y",
+          "z"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "neuron",
+        "id": "c2-extrude",
+        "neuronKind": "brep.solid.extrude",
+        "params": {},
+        "input_ports": [
+          "wire",
+          "vector"
+        ],
+        "preview": true
+      },
+      {
+        "kind": "outputPreview",
+        "id": "c2-column-preview",
+        "preview": {},
+        "expanded": []
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c3-height",
+        "label": "Column Height",
+        "value": 7.5,
+        "min": 0,
+        "max": 10,
+        "step": 0.5,
+        "unit": "m"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c3-radius",
+        "label": "Profile Radius",
+        "value": 0.65,
+        "min": 0.1,
+        "max": 2,
+        "step": 0.05,
+        "unit": "m"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "c3-sides",
+        "label": "Side Count",
+        "value": 120,
+        "min": 3,
+        "max": 120,
+        "step": 1
+      },
+      {
+        "kind": "neuron",
+        "id": "c3-profile",
+        "neuronKind": "brep.curve.polygon",
+        "params": {},
+        "input_ports": [
+          "radius",
+          "sides"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "neuron",
+        "id": "c3-extrusion-axis",
+        "neuronKind": "math.vector",
+        "params": {},
+        "input_ports": [
+          "x",
+          "y",
+          "z"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "neuron",
+        "id": "c3-extrude",
+        "neuronKind": "brep.solid.extrude",
+        "params": {},
+        "input_ports": [
+          "wire",
+          "vector"
+        ],
+        "preview": true
+      },
+      {
+        "kind": "outputPreview",
+        "id": "c3-column-preview",
+        "preview": {},
+        "expanded": []
+      }
+    ],
+    "synapses": [
+      {
+        "id": "c0-e0",
+        "from": "c0-height",
+        "to": "c0-extrusion-axis",
+        "fromPort": "number",
+        "toPort": "z"
+      },
+      {
+        "id": "c0-e1",
+        "from": "c0-radius",
+        "to": "c0-profile",
+        "fromPort": "number",
+        "toPort": "radius"
+      },
+      {
+        "id": "c0-e2",
+        "from": "c0-sides",
+        "to": "c0-profile",
+        "fromPort": "number",
+        "toPort": "sides"
+      },
+      {
+        "id": "c0-e3",
+        "from": "c0-profile",
+        "to": "c0-extrude",
+        "fromPort": "wire",
+        "toPort": "wire"
+      },
+      {
+        "id": "c0-e4",
+        "from": "c0-extrusion-axis",
+        "to": "c0-extrude",
+        "fromPort": "vectorOut",
+        "toPort": "vector"
+      },
+      {
+        "id": "c0-e5",
+        "from": "c0-extrude",
+        "to": "c0-column-preview",
+        "fromPort": "solid",
+        "toPort": ""
+      },
+      {
+        "id": "c1-e0",
+        "from": "c1-height",
+        "to": "c1-extrusion-axis",
+        "fromPort": "number",
+        "toPort": "z"
+      },
+      {
+        "id": "c1-e1",
+        "from": "c1-radius",
+        "to": "c1-profile",
+        "fromPort": "number",
+        "toPort": "radius"
+      },
+      {
+        "id": "c1-e2",
+        "from": "c1-sides",
+        "to": "c1-profile",
+        "fromPort": "number",
+        "toPort": "sides"
+      },
+      {
+        "id": "c1-e3",
+        "from": "c1-profile",
+        "to": "c1-extrude",
+        "fromPort": "wire",
+        "toPort": "wire"
+      },
+      {
+        "id": "c1-e4",
+        "from": "c1-extrusion-axis",
+        "to": "c1-extrude",
+        "fromPort": "vectorOut",
+        "toPort": "vector"
+      },
+      {
+        "id": "c1-e5",
+        "from": "c1-extrude",
+        "to": "c1-column-preview",
+        "fromPort": "solid",
+        "toPort": ""
+      },
+      {
+        "id": "c2-e0",
+        "from": "c2-height",
+        "to": "c2-extrusion-axis",
+        "fromPort": "number",
+        "toPort": "z"
+      },
+      {
+        "id": "c2-e1",
+        "from": "c2-radius",
+        "to": "c2-profile",
+        "fromPort": "number",
+        "toPort": "radius"
+      },
+      {
+        "id": "c2-e2",
+        "from": "c2-sides",
+        "to": "c2-profile",
+        "fromPort": "number",
+        "toPort": "sides"
+      },
+      {
+        "id": "c2-e3",
+        "from": "c2-profile",
+        "to": "c2-extrude",
+        "fromPort": "wire",
+        "toPort": "wire"
+      },
+      {
+        "id": "c2-e4",
+        "from": "c2-extrusion-axis",
+        "to": "c2-extrude",
+        "fromPort": "vectorOut",
+        "toPort": "vector"
+      },
+      {
+        "id": "c2-e5",
+        "from": "c2-extrude",
+        "to": "c2-column-preview",
+        "fromPort": "solid",
+        "toPort": ""
+      },
+      {
+        "id": "c3-e0",
+        "from": "c3-height",
+        "to": "c3-extrusion-axis",
+        "fromPort": "number",
+        "toPort": "z"
+      },
+      {
+        "id": "c3-e1",
+        "from": "c3-radius",
+        "to": "c3-profile",
+        "fromPort": "number",
+        "toPort": "radius"
+      },
+      {
+        "id": "c3-e2",
+        "from": "c3-sides",
+        "to": "c3-profile",
+        "fromPort": "number",
+        "toPort": "sides"
+      },
+      {
+        "id": "c3-e3",
+        "from": "c3-profile",
+        "to": "c3-extrude",
+        "fromPort": "wire",
+        "toPort": "wire"
+      },
+      {
+        "id": "c3-e4",
+        "from": "c3-extrusion-axis",
+        "to": "c3-extrude",
+        "fromPort": "vectorOut",
+        "toPort": "vector"
+      },
+      {
+        "id": "c3-e5",
+        "from": "c3-extrude",
+        "to": "c3-column-preview",
+        "fromPort": "solid",
+        "toPort": ""
+      }
+    ],
+    "layout": {
+      "c0-height": {
+        "x": 0,
+        "y": 0
+      },
+      "c0-radius": {
+        "x": 160,
+        "y": 0
+      },
+      "c0-sides": {
+        "x": 320,
+        "y": 0
+      },
+      "c0-profile": {
+        "x": 480,
+        "y": 0
+      },
+      "c0-extrusion-axis": {
+        "x": 640,
+        "y": 0
+      },
+      "c0-extrude": {
+        "x": 800,
+        "y": 0
+      },
+      "c0-column-preview": {
+        "x": 960,
+        "y": 0
+      },
+      "c1-height": {
+        "x": 0,
+        "y": 300
+      },
+      "c1-radius": {
+        "x": 160,
+        "y": 300
+      },
+      "c1-sides": {
+        "x": 320,
+        "y": 300
+      },
+      "c1-profile": {
+        "x": 480,
+        "y": 300
+      },
+      "c1-extrusion-axis": {
+        "x": 640,
+        "y": 300
+      },
+      "c1-extrude": {
+        "x": 800,
+        "y": 300
+      },
+      "c1-column-preview": {
+        "x": 960,
+        "y": 300
+      },
+      "c2-height": {
+        "x": 0,
+        "y": 600
+      },
+      "c2-radius": {
+        "x": 160,
+        "y": 600
+      },
+      "c2-sides": {
+        "x": 320,
+        "y": 600
+      },
+      "c2-profile": {
+        "x": 480,
+        "y": 600
+      },
+      "c2-extrusion-axis": {
+        "x": 640,
+        "y": 600
+      },
+      "c2-extrude": {
+        "x": 800,
+        "y": 600
+      },
+      "c2-column-preview": {
+        "x": 960,
+        "y": 600
+      },
+      "c3-height": {
+        "x": 0,
+        "y": 900
+      },
+      "c3-radius": {
+        "x": 160,
+        "y": 900
+      },
+      "c3-sides": {
+        "x": 320,
+        "y": 900
+      },
+      "c3-profile": {
+        "x": 480,
+        "y": 900
+      },
+      "c3-extrusion-axis": {
+        "x": 640,
+        "y": 900
+      },
+      "c3-extrude": {
+        "x": 800,
+        "y": 900
+      },
+      "c3-column-preview": {
+        "x": 960,
+        "y": 900
+      }
+    }
+  },
+  "expected": {
+    "widgets": 28,
+    "synapses": 24,
+    "polygonSides": 120,
+    "columns": 4
+  },
+  "locales": {
+    "en-US": {
+      "cancel": "Cancel Flow",
+      "stopped": "Flow Stopped"
+    },
+    "de-DE": {
+      "cancel": "Flow abbrechen",
+      "stopped": "Flow angehalten"
+    }
+  },
+  "windowUi": {
+    "tab": "framework.display.windows",
+    "group": "framework.display.windows.formsTry",
+    "template": "framework.display.windows.formsTry.kind"
+  }
+}

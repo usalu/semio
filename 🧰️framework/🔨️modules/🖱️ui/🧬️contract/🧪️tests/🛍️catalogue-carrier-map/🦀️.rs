@@ -1,5 +1,5 @@
 //! 🛍️ Laws for the packed-text carrier's `data_attributes` map — the ONE map shape the app-static
-//! catalogue document is made of. `semio_framework_plugin::app::section_text_chunks` packs
+//! catalogue document is made of. `semio_plugin::app::section_text_chunks` packs
 //! `1 + UI_FIXED_LIST_ITEMS` slices of `UI_TEXT_MAX_BYTES` into one `Component::Text`: the first as
 //! `TextProps.value`, the rest as `data_attributes` keyed `"01".."32"`.
 //!
@@ -11,7 +11,7 @@
 //! order, exactly like the React renderer's reader already does (`🧳️packed-text/🟦️.ts` sorts).
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
-use semio_framework_ui_contract::{Component, Label, TextProps, UiFixedMap, UiMap, UiText, UiValue, UI_FIXED_LIST_ITEMS, UI_VALUE_MAX_ITEMS};
+use semio_ui_contract::{Component, Label, TextProps, UiFixedMap, UiMap, UiText, UiValue, UI_FIXED_LIST_ITEMS, UI_VALUE_MAX_ITEMS};
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🛍️catalogue-carrier-map.json");
 

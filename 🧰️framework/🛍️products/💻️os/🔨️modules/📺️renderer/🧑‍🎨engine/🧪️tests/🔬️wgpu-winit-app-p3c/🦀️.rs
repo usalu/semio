@@ -1,14 +1,14 @@
 use super::*;
-use semio_framework_os_renderer_wgpu_frame_actions::dispatch_normalized_event;
-use semio_framework_os_renderer_wgpu_host_base::{apply_boot_descriptor, boot_descriptor, set_host_platform, set_host_platform_kind, set_host_platform_uses_meta};
-use semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord;
-use semio_framework_os_renderer_wgpu_shell_input::PointerCapture;
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_renderer_wgpu_frame_actions::dispatch_normalized_event;
+use semio_renderer_wgpu_host_base::{apply_boot_descriptor, boot_descriptor, set_host_platform, set_host_platform_kind, set_host_platform_uses_meta};
+use semio_renderer_wgpu_shell_docs::key_event_matches_chord;
+use semio_renderer_wgpu_shell_input::PointerCapture;
+use semio_renderer_wgpu_shell_state::ShellState;
+use semio_ui_locale::{Locale, Terminology};
 use serde::Deserialize;
 use serde_json::Value;
-use semio_framework_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
-use semio_framework_ui_theme::Theme;
+use semio_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
+use semio_ui_theme::Theme;
 
 #[test]
 fn secondary_pointer_button_uses_context_menu_code() {
@@ -51,7 +51,7 @@ fn native_system_theme_change_merges_theme_into_the_pending_redraw_reason() {
 
 #[test]
 fn normalized_host_maps_table_stepper_navigation_keys_without_text_fallback() {
-    for (key, expected) in [("Home", semio_framework_ui_wgpu_input::KeyAction::Home), ("End", semio_framework_ui_wgpu_input::KeyAction::End), ("PageUp", semio_framework_ui_wgpu_input::KeyAction::PageUp), ("PageDown", semio_framework_ui_wgpu_input::KeyAction::PageDown)] {
+    for (key, expected) in [("Home", semio_ui_wgpu_input::KeyAction::Home), ("End", semio_ui_wgpu_input::KeyAction::End), ("PageUp", semio_ui_wgpu_input::KeyAction::PageUp), ("PageDown", semio_ui_wgpu_input::KeyAction::PageDown)] {
         assert_eq!(key_action_from_dispatch(key, true), Some(expected));
         assert_eq!(key_action_from_dispatch(key, false), None);
     }
@@ -59,9 +59,9 @@ fn normalized_host_maps_table_stepper_navigation_keys_without_text_fallback() {
 
 #[test]
 fn normalized_host_maps_the_context_menu_key_and_f10_for_the_keyboard_secondary_click() {
-    assert_eq!(key_action_from_dispatch("ContextMenu", true), Some(semio_framework_ui_wgpu_input::KeyAction::ContextMenu));
+    assert_eq!(key_action_from_dispatch("ContextMenu", true), Some(semio_ui_wgpu_input::KeyAction::ContextMenu));
     assert_eq!(key_action_from_dispatch("ContextMenu", false), None);
-    assert_eq!(key_action_from_dispatch("F10", true), Some(semio_framework_ui_wgpu_input::KeyAction::Function(10)));
+    assert_eq!(key_action_from_dispatch("F10", true), Some(semio_ui_wgpu_input::KeyAction::Function(10)));
 }
 
 #[test]
@@ -93,18 +93,18 @@ struct OsShortcutCollision {
     refuses: String,
 }
 
-fn keyboard_interaction() -> semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
-    semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
-        shell: semio_framework_os_renderer_wgpu_shell_state::ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
-        input: semio_framework_ui_wgpu_input::InputState::default(),
-        theme: semio_framework_ui_theme::Theme::default(),
+fn keyboard_interaction() -> semio_renderer_wgpu_frame_actions::AppInteractionState {
+    semio_renderer_wgpu_frame_actions::AppInteractionState {
+        shell: semio_renderer_wgpu_shell_state::ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native),
+        input: semio_ui_wgpu_input::InputState::default(),
+        theme: semio_ui_theme::Theme::default(),
         theme_dark: false,
         last_pointer_x: 0.0,
         last_pointer_y: 0.0,
         pointer_down: false,
         pointer_button: 0,
-        pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
-        modifiers: semio_framework_ui_wgpu_input::PointerModifiers::default(),
+        pointer_capture: semio_renderer_wgpu_shell_input::PointerCapture::default(),
+        modifiers: semio_ui_wgpu_input::PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
         text_streams: std::array::from_fn(|_| None),
@@ -123,32 +123,32 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
     assert_eq!(fixture.retired_chord, "mod+shift+f");
     assert!(fixture.bindings.iter().any(|binding| binding.platform == "macOs" && binding.chord == "control+meta+f"));
 
-    let restore = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
-    semio_framework_os_renderer_wgpu_host_base::set_host_platform("MacIntel");
-    let action = semio_framework_ui_wgpu_input::KeyAction::Char("f".into());
-    let modifiers = semio_framework_ui_wgpu_input::PointerModifiers { ctrl: true, meta: true, shift: false, alt: false };
-    assert!(semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.matches));
-    assert!(!semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
+    let restore = semio_renderer_wgpu_host_base::boot_descriptor();
+    semio_renderer_wgpu_host_base::set_host_platform("MacIntel");
+    let action = semio_ui_wgpu_input::KeyAction::Char("f".into());
+    let modifiers = semio_ui_wgpu_input::PointerModifiers { ctrl: true, meta: true, shift: false, alt: false };
+    assert!(semio_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.matches));
+    assert!(!semio_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
     let mut interaction = keyboard_interaction();
     semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::KeyDown { key: "f".into(), modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true } }));
     assert!(interaction.shell.chrome.fullscreen_toggle_requested, "the real host ingress reaches apply_os_command");
     assert!(interaction.shell.settle.deferred_actions.is_empty(), "an OS command never enters the guest action lane");
 
-    semio_framework_os_renderer_wgpu_host_base::set_host_platform_uses_meta(cfg!(target_os = "macos"));
-    semio_framework_os_renderer_wgpu_host_base::set_host_platform_kind(if cfg!(target_os = "macos") {
+    semio_renderer_wgpu_host_base::set_host_platform_uses_meta(cfg!(target_os = "macos"));
+    semio_renderer_wgpu_host_base::set_host_platform_kind(if cfg!(target_os = "macos") {
         semio_framework::manifest::Platform::MacOs
     } else if cfg!(target_os = "windows") {
         semio_framework::manifest::Platform::Windows
     } else {
         semio_framework::manifest::Platform::Linux
     });
-    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(restore).expect("restore boot descriptor");
+    semio_renderer_wgpu_host_base::apply_boot_descriptor(restore).expect("restore boot descriptor");
 }
 
 #[test]
 fn normalized_pointer_and_wheel_snapshots_replace_stale_keyboard_modifiers() {
     let mut interaction = keyboard_interaction();
-    interaction.modifiers = semio_framework_ui_wgpu_input::PointerModifiers { shift: true, ctrl: true, alt: true, meta: true };
+    interaction.modifiers = semio_ui_wgpu_input::PointerModifiers { shift: true, ctrl: true, alt: true, meta: true };
     interaction.input.modifiers = interaction.modifiers.clone();
     let pointer = PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None };
     let ctrl = EventModifiers { shift: false, ctrl: true, alt: false, meta: false };

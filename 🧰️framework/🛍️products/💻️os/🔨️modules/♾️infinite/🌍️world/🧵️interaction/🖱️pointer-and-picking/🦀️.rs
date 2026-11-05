@@ -100,14 +100,14 @@ pub fn resolve_world_context_menu_target(selection_state: &WorldSelectionState) 
 /// the Rust twin of `world3dContextMenuSurfaceV1`
 /// (`🧱️elements/🌐️World3dHost/🟦️.tsx:1909`). The hit target rides THIS request; no separate
 /// target-recording dispatch precedes the menu.
-pub fn world3d_context_menu_surface(selection_state: &WorldSelectionState) -> (Vec<semio_framework_ui_declaration::ui::ContextMenuHit>, Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup>) {
-    let hits = resolve_world_context_menu_target(selection_state).map(|(domain, id)| semio_framework_ui_declaration::ui::ContextMenuHit { domain: domain.to_string(), id, label: None }).into_iter().collect();
+pub fn world3d_context_menu_surface(selection_state: &WorldSelectionState) -> (Vec<semio_ui_declaration::ui::ContextMenuHit>, Vec<semio_ui_declaration::ui::ContextMenuSelectionGroup>) {
+    let hits = resolve_world_context_menu_target(selection_state).map(|(domain, id)| semio_ui_declaration::ui::ContextMenuHit { domain: domain.to_string(), id, label: None }).into_iter().collect();
     let mut selection = Vec::new();
     if !selection_state.selected_ids.is_empty() {
-        selection.push(semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "object".into(), ids: selection_state.selected_ids.clone() });
+        selection.push(semio_ui_declaration::ui::ContextMenuSelectionGroup { domain: "object".into(), ids: selection_state.selected_ids.clone() });
     }
     if !selection_state.component_ids.is_empty() {
-        selection.push(semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "feature".into(), ids: selection_state.component_ids.clone() });
+        selection.push(semio_ui_declaration::ui::ContextMenuSelectionGroup { domain: "feature".into(), ids: selection_state.component_ids.clone() });
     }
     (hits, selection)
 }
@@ -258,7 +258,7 @@ pub fn world_merge_code(shift: bool, ctrl: bool, meta: bool) -> u8 {
 pub fn apply_world_action_preview(session_state: &mut WorldSessionState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, scene_state: &mut WorldSceneState, action: &ActionDescriptor) {
     let Some(args) = action.args.as_ref() else { return; };
     if args.get("domainId").and_then(|value| value.as_str()) != Some(resolved_domain_id(session_state)) || !matches!(action.action.as_str(), "interactionSelect" | "interactionHover") { return; }
-    let Some(text) = args.get("targets").and_then(|value| value.as_str()).filter(|text| text.len() <= semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY) else { return; };
+    let Some(text) = args.get("targets").and_then(|value| value.as_str()).filter(|text| text.len() <= semio_ui_action::ACTION_STRING_BYTE_CAPACITY) else { return; };
     let Ok(targets) = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return; };
     let Some(targets) = targets.as_array() else { return; };
     let mut ids = Vec::new();

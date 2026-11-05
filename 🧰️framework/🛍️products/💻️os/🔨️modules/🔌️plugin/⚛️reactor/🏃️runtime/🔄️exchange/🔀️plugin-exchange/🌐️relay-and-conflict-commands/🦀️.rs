@@ -7,7 +7,7 @@ pub(super) async fn arm_open_artifact(
     frames: &mut Vec<protocol::AppFrame>,
     effect_bytes: &mut Vec<Vec<u8>>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } = command else { unreachable!("arm_open_artifact is dispatched only for its own command") };
     match relay_open_artifact(artifact_ref, role, plugin_id, app_id).await {
         Ok(effect) => {
@@ -24,7 +24,7 @@ pub(super) async fn arm_set_default_app(
     frames: &mut Vec<protocol::AppFrame>,
     effect_bytes: &mut Vec<Vec<u8>>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } = command else { unreachable!("arm_set_default_app is dispatched only for its own command") };
     match relay_set_default_app(artifact_kind, standard, subset, role, plugin_id, app_id).await {
         Ok(effect) => {
@@ -41,7 +41,7 @@ pub(super) async fn arm_clear_default_app(
     frames: &mut Vec<protocol::AppFrame>,
     effect_bytes: &mut Vec<Vec<u8>>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } = command else { unreachable!("arm_clear_default_app is dispatched only for its own command") };
     match relay_clear_default_app(artifact_kind, standard, subset, role).await {
         Ok(effect) => {
@@ -59,7 +59,7 @@ pub(super) async fn arm_set_merge_policy<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::SetMergePolicy { seq, policy } = command else { unreachable!("arm_set_merge_policy is dispatched only for its own command") };
     let outcome = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
@@ -78,7 +78,7 @@ pub(super) async fn arm_resolve_conflict<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ResolveConflict { seq, conflict_id, resolution } = command else { unreachable!("arm_resolve_conflict is dispatched only for its own command") };
     let outcome = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
@@ -97,7 +97,7 @@ pub(super) async fn arm_read_conflicts<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ReadConflicts { seq } = command else { unreachable!("arm_read_conflicts is dispatched only for its own command") };
     let outcome = with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;

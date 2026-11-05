@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-infinite-world-bridge"
+name = "semio-os-infinite-world-bridge"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,42 +22,42 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-os-infinite-world-model/testkit", "semio-framework-os-infinite-world-components/testkit", "semio-framework-os-infinite-world-cursors/testkit", "semio-framework-os-infinite-world-scene/testkit"]
+testkit = ["semio-os-infinite-world-model/testkit", "semio-os-infinite-world-components/testkit", "semio-os-infinite-world-cursors/testkit", "semio-os-infinite-world-scene/testkit"]
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-job = { workspace = true }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-semio-framework-ui-viewport = { path = "../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
-semio-framework-ui-runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
+semio-ui-viewport = { path = "../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+semio-ui-runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
+semio-ui-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust" }
+semio-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
+semio-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust" }
+semio-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust" }
+semio-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-ui_gpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-framework-ui-wgpu-render" }
-semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
-semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
-semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
-ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+ui_gpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-ui-wgpu-render" }
+semio-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
-semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
-semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
-ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
 
 [dev-dependencies]
-semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

@@ -3,18 +3,18 @@
 
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::{BimLabels, bim_labels};
-use semio_framework_plugin::{ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowMeasure};
+use semio_plugin::{ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowMeasure};
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_coordination::editor::bim::commands::{create_entity, flip_walls, set_field};
 use semio_s_artifact_bim_model_move_storey::editor::bim::commands::{move_storey, place_elements, remove_classification, remove_property, set_classification, set_property, split_wall};
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::{diagnostics as diagnostics_panel, outliner as outliner_panel};
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, world};
-use semio_framework_plugin::PluginApp as _;
+use semio_plugin::PluginApp as _;
 use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
-use semio_framework_ui_locale::{LabelText, Locale};
+use semio_ui_locale::{LabelText, Locale};
 use semio_s_artifact_bim_model_bim::editor::bim::BimModelApp;
 
 fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<String> {
@@ -216,9 +216,9 @@ async fn the_wall_sweep_the_attach_and_the_reveal_are_reachable_from_the_ui_thro
 fn panel(snapshot: &ModelSnapshot, elements: &[&str], library: &[&str], locale: Locale) -> String {
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone);
-    let view = ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
+    let view = ViewModel::new(locale, semio_ui_locale::Terminology::Native);
     let node = semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::render(snapshot, &inference, &own(elements), &own(library), bim_labels(&view)).expect("the properties panel renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -262,8 +262,8 @@ async fn with_nothing_selected_the_panel_edits_the_project() {
 
 //#region 🔖️Accessibility
 async fn accessible(app: &mut BimApp, body: &str, view: &ViewModel) -> (Option<String>, Option<String>) {
-    use semio_framework_plugin::PluginApp;
-    semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, body, view, app.1.cx(), |root| {
+    use semio_plugin::PluginApp;
+    semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, body, view, app.1.cx(), |root| {
         let name = root.accessibility.label.as_ref().map(|label| label.0.as_str().to_string());
         let description = root.accessibility.description.as_ref().map(|label| label.0.as_str().to_string());
         (name, description)
@@ -356,7 +356,7 @@ async fn moving_a_wall_between_storeys_by_menu_key_or_drop_is_one_undoable_row_a
     assert_eq!(host(&app, "w-south"), hosted, "the openings follow their host");
     history_verb(&mut app, "undo").await;
     assert_eq!(app.snapshot().expect("snapshot").walls["w-south"].storey, "st-ground");
-    let dropped = BimModelApp::command_from_action("setField", Some((semio_framework_plugin::DslValue::object([("field", "storey"), ("value", "st-first"), (semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::DRAG_ELEMENT_MIME, "w-east")].map(|(key, value)| (key.to_string(), semio_framework_plugin::DslValue::String(value.into()))))).clone()), None).expect("the drop decodes");
+    let dropped = BimModelApp::command_from_action("setField", Some((semio_plugin::DslValue::object([("field", "storey"), ("value", "st-first"), (semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::DRAG_ELEMENT_MIME, "w-east")].map(|(key, value)| (key.to_string(), semio_plugin::DslValue::String(value.into()))))).clone()), None).expect("the drop decodes");
     assert!(dispatch(&mut app, dropped).await.edited_document());
     assert_eq!(app.snapshot().expect("snapshot").walls["w-east"].storey, "st-first", "the row dropped on a storey stands on it");
     history_verb(&mut app, "undo").await;

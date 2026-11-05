@@ -162,8 +162,10 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
     fn tool_id(&self) -> &'static str;
     /// 📨️ Receives original owned command fields under the initiating caller before immutable work views begin.
     fn receive_original_command(&mut self,_command:&mut A::Command,_cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
+    /// 🎒️ Receives the genuine immutable captured context issuer before command inputs begin.
+    fn receive_original_context(&mut self,_context:&ArtifactOwnedContextHandle<A>,_cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
     /// 📤️ Transfers the actual producer output root under this same original command turn before immutable work views begin.
-    fn receive_original_output_chunks(&mut self,_chunks:&mut Option<semio_framework_plugin_decl_media::ArtifactOutputChunks>,_cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
+    fn receive_original_output_chunks(&mut self,_chunks:&mut Option<semio_plugin_decl_media::ArtifactOutputChunks>,_cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
     /// 📐️ Opts into retained native decoding while the job keeps custody of the immutable original wire.
     fn original_wire_demands(&self,_wire:&[u8],_maximum_copy_bytes:usize)->Result<Option<RetirementDemand>,ValueError>{Ok(None)}
     /// 🛬️ Produces one actual command under the original caller without a cold codec fallback.
@@ -211,6 +213,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
 impl<A: ArtifactApp> ArtifactCommandWork<A> for Box<dyn ArtifactCommandWork<A>> {
     fn tool_id(&self) -> &'static str { (**self).tool_id() }
     fn receive_original_command(&mut self,command:&mut A::Command,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{(**self).receive_original_command(command,cx)}
+    fn receive_original_context(&mut self,context:&ArtifactOwnedContextHandle<A>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{(**self).receive_original_context(context,cx)}
     fn workspace_identity(&self) -> u64 { (**self).workspace_identity() }
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize> { (**self).extent(command, snapshot, interaction, context) }
     fn work_demands(&self, input: &ArtifactCommandInputs<'_, A>, maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> { (**self).work_demands(input, maximum_copy_bytes) }

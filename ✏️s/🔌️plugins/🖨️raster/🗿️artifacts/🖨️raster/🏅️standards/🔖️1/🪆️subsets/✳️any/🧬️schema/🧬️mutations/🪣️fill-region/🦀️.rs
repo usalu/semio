@@ -133,13 +133,13 @@ pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for FillRegion where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::fill_region::FillRegion> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "region", kind: "fill-region", record: "PaintedRegion" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (en, de) = match self.target.as_str() {
             "mask" => ("Mask fill", "Maskenfüllung"),
             _ => ("Bucket fill", "Farbfüllung"),
         };
         let (x, y) = (self.seed.x, self.seed.y);
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("{en} from ({x}, {y}) on layer {}", self.layer_id), &format!("{de} ab ({x}, {y}) auf Ebene {}", self.layer_id))
+        semio_ui_locale::LocalizedLabel::native(&format!("{en} from ({x}, {y}) on layer {}", self.layer_id), &format!("{de} ab ({x}, {y}) auf Ebene {}", self.layer_id))
     }
 
     fn target(&self) -> Vec<String> {

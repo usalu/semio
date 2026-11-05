@@ -1,7 +1,7 @@
 //! 🧵️ Lane runtime: transient reducer, preview overlay, frame coalescer, 30 Hz presence publisher and evaluation debounce. Never awaits the network. See [`super`].
 
 use super::{DragPreview, EvalProgress, FieldWrite, GhostPreview, LaneTransient, NormPresence, NormTransient, PeerDrag, ViewLane};
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 use crate::direct_manipulation::DragEffect;
 use semio_framework_value::DslValue;
 use semio_s_plugin_norm_structural_scene::projection::{ViewKey, ViewOptions, ViewValue};

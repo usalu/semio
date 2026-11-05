@@ -5,7 +5,7 @@ use super::*;
 fn borrowed_authoring_plans_match_genuine_host_operations(){
  let cases=semio_framework_pack_json::parse(include_str!("📁️cases.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  let cases=cases.as_array().unwrap();
- assert_eq!(cases.len(),8);
+ assert_eq!(cases.len(),9);
  for case in cases{
   let operation=case.get("operation").and_then(|value|value.as_str()).unwrap();
   let infos:Arc<HistoryFoldIndex<String,OperatorInfo>>=Arc::new(flow_operator_registry().operator_infos().map(|info|(info.id.clone(),info.clone())).collect());
@@ -25,6 +25,9 @@ fn borrowed_authoring_plans_match_genuine_host_operations(){
   host.begin_gesture();
   let mut serials=FlowAuthoringSerials::default();
   let descriptor=WidgetDescriptor::InputNote{id:None,text:Some("new".into())};
+  let options=DagLayoutOptions::default();
+  let mut progress=|_|true;
+  let mut control=semio_os_infinite::board::schema::layout::LayoutControl::new(u64::MAX,&mut progress);
   let plan=match operation{
    "connect"=>FlowAuthoringPlan::connect_ports(&source,&infos,&mut serials,"b",&first_output_port("b",&source.widgets,&source.synapses,&infos),"sink",&to_port),
    "selfConnect"=>FlowAuthoringPlan::connect_ports(&source,&infos,&mut serials,"a",&from_port,"a",&from_port),
@@ -34,8 +37,11 @@ fn borrowed_authoring_plans_match_genuine_host_operations(){
    "add"=>FlowAuthoringPlan::add_widget(&source,&infos,&mut serials,&descriptor,42.0,13.0),
    "insertInput"=>FlowAuthoringPlan::insert_port(&source,&infos,"variadic",true,0),
    "insertOutput"=>FlowAuthoringPlan::insert_port(&source,&infos,"variadic",false,0),
+   "reorganize"=>FlowAuthoringPlan::reorganize(&source,&infos,&options,&mut control),
    other=>panic!("unknown authoring case {other}"),
   };
+  let mut original_progress=|_|true;
+  let mut original_control=semio_os_infinite::board::schema::layout::LayoutControl::new(u64::MAX,&mut original_progress);
   let actual=match operation{
    "connect"=>host.connect_ports("b",&first_output_port("b",&source.widgets,&source.synapses,&infos),"sink",&to_port).map(|_|()),
    "selfConnect"=>host.connect_ports("a",&from_port,"a",&from_port).map(|_|()),
@@ -45,6 +51,7 @@ fn borrowed_authoring_plans_match_genuine_host_operations(){
    "add"=>host.add_widget_descriptor(&descriptor,42.0,13.0).map(|_|()),
    "insertInput"=>host.add_input_port("variadic",0),
    "insertOutput"=>host.add_output_port("variadic",0),
+   "reorganize"=>host.reorganize(&options,&mut original_control),
    _=>unreachable!(),
   };
   match(plan,actual){

@@ -2,19 +2,19 @@
 
 use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::terminology::primitive_catalog_label, editor::lowpoly::terminology::LowpolyLabels};
 use semio_s_artifact_lowpoly_lowpoly_kit::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_BODY_CATALOGUE: &str = "lowpoly.play.catalogue";
@@ -41,7 +41,7 @@ fn primitive_row(entry: &(&'static str, &'static str, &'static str), labels: &Lo
     let (kind, label, icon) = *entry;
     let args = ui_value_map([("kind", ui_value_text(kind)?)])?;
     let mut node = tree_item_with_action(format!("lowpoly-play-catalogue.{kind}"), primitive_catalog_label(kind, label, labels).into_string(), Some(kind.to_string()), lowpoly_action("addPrimitive", Some(args))?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
         props.icon = Some(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly primitive icon admission failed"))?);
     }
     Ok(node)

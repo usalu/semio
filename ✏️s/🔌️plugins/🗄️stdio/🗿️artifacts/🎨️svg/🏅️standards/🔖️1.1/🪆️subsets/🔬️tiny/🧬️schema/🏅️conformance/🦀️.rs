@@ -56,7 +56,7 @@ use semio_framework_value::ValueError;
     /// ✅️ Checks the owned profile without a physical codec.
     pub fn check_svg_tiny_conformance(snapshot:&SvgSnapshot)->Vec<Diagnostic>{check_svg_tiny_conformance_with(snapshot,&mut |_,_|Ok(())).expect("owned SVG validation count")}
     /// 🚦️ Binds physical SQLite progress to pure owned profile validation.
-    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{check_svg_tiny_conformance_with(snapshot,&mut |completed,total|control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,completed,total))}
+    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{check_svg_tiny_conformance_with(snapshot,&mut |completed,total|control.checkpoint(semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,completed,total))}
 
 
 
@@ -84,7 +84,7 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../../�
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{STDIO_SVG_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
@@ -92,7 +92,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.svg".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Svg", "Svg"),
+        label: semio_ui_locale::LocalizedLabel::native("Svg", "Svg"),
         source_format: STDIO_SVG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -113,7 +113,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod artifact_items_8 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }

@@ -24,5 +24,5 @@ async fn the_digest_sidecar_declares_the_fixture_it_stands_for() {
     assert_eq!(sha256.len(), 64);
     assert!(sha256.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)));
     let source = source();
-    assert!(matches!(source.body(), semio_framework_plugin::ExampleSourceBody::Deferred { source_suffix, source, .. } if *source_suffix == ".glb.digest" && *source == BASE_GLB_DIGEST));
+    assert!(matches!(source.body(), semio_plugin::ExampleSourceBody::Deferred { source_suffix, source, .. } if *source_suffix == ".glb.digest" && *source == BASE_GLB_DIGEST));
 }

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-infinite"
+name = "semio-os-infinite"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -14,30 +14,30 @@ id = "os-infinite"
 workspace = true
 
 [lib]
-name = "semio_framework_os_infinite"
+name = "semio_os_infinite"
 crate-type = ["rlib"]
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-os-infinite-directed-presentation = { path = "../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-os-infinite-directed-presentation = { path = "../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 # 🎲️ The board family lives in producer crates (schema, engine, normal model/scene/focus/gestures/fill/host, dag model/graph/host); `src/🦀️.rs` re-exports them under the former `board` paths.
-semio-framework-os-infinite-board-schema = { path = "../../🎲️board/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-engine = { path = "../../🎲️board/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-model = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-scene = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🖼️scene/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-focus = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-gestures = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-fill = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-host = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-dag-model = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🗃️model/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-dag-graph = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🕸️graph/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-dag-host = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/📦️packages/🦀️rust" }
+semio-os-infinite-board-schema = { path = "../../🎲️board/🧬️schema/📦️packages/🦀️rust" }
+semio-os-infinite-board-engine = { path = "../../🎲️board/⚙️engine/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-model = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-scene = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🖼️scene/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-focus = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-gestures = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-fill = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-host = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/📦️packages/🦀️rust" }
+semio-os-infinite-board-dag-model = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🗃️model/📦️packages/🦀️rust" }
+semio-os-infinite-board-dag-graph = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🕸️graph/📦️packages/🦀️rust" }
+semio-os-infinite-board-dag-host = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 # ⏯️ Decodes the `World3dScene.tool_run_trace` delta for the world's trace layer (`🌍️world/⏯️tool-run-trace`).
@@ -52,10 +52,10 @@ geometry = { path = "../../../../../../🔨️modules/📐️geometry/📦️pac
 semio-framework-graph-manifest = { path = "../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
 graph = { path = "../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
 semio-framework-graph-drawing = { path = "../../../../../../🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-semio-framework-ui-viewport = { path = "../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
-semio-framework-ui-runtime = { path = "../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
+semio-ui-viewport = { path = "../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+semio-ui-runtime = { path = "../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
+semio-ui-contract = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 # 🔤️ First-party RFC 4648 codec — replaces the third-party `base64` crate for `icon_codec`'s
@@ -75,19 +75,19 @@ semio-framework-surface-terrain = { path = "../../../../../../🔨️modules/�
 semio-framework-pixels = { path = "../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-ui_gpu = { path = "../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-framework-ui-wgpu-render" }
+ui_gpu = { path = "../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-ui-wgpu-render" }
 # 🌍️ The world family lives in producer crates (components, cursors, scene, bridge, interaction, host over the model); `src/🌍️world/🦀️.rs` is only their facade.
-semio-framework-os-infinite-world-model = { path = "../../🌍️world/🗃️model/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-components = { path = "../../🌍️world/🧩️components/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-cursors = { path = "../../🌍️world/🧲️cursors/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-scene = { path = "../../🌍️world/🧱️scene/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-bridge = { path = "../../🌍️world/🌉️bridge/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-interaction = { path = "../../🌍️world/🧵️interaction/📦️packages/🦀️rust" }
-semio-framework-os-infinite-world-host = { path = "../../🌍️world/🎛️host/📦️packages/🦀️rust" }
-ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-os-infinite-world-model = { path = "../../🌍️world/🗃️model/📦️packages/🦀️rust" }
+semio-os-infinite-world-components = { path = "../../🌍️world/🧩️components/📦️packages/🦀️rust" }
+semio-os-infinite-world-cursors = { path = "../../🌍️world/🧲️cursors/📦️packages/🦀️rust" }
+semio-os-infinite-world-scene = { path = "../../🌍️world/🧱️scene/📦️packages/🦀️rust" }
+semio-os-infinite-world-bridge = { path = "../../🌍️world/🌉️bridge/📦️packages/🦀️rust" }
+semio-os-infinite-world-interaction = { path = "../../🌍️world/🧵️interaction/📦️packages/🦀️rust" }
+semio-os-infinite-world-host = { path = "../../🌍️world/🎛️host/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
 
 # 🌉️ Browser-only Board session bridges and their async vocabulary. Excluded
 # from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI component target too —
@@ -105,7 +105,7 @@ semio-framework-job-worker-authority = { path = "../../../../../../🔨️module
 
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [[test]]

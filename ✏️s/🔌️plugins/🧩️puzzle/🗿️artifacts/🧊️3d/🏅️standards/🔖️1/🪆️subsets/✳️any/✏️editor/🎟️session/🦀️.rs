@@ -4,10 +4,10 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use {semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_ATTRACTION, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_REFERENCE, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_TARGET_VOLUME, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_VORTEX, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_LOCALIZATION_UNSUPPORTED, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dInteractionSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dVortex, semio_s_artifact_puzzle_3d_editor_snapshot::collect_mesh_urls, semio_s_artifact_puzzle_3d_editor_snapshot::mesh_selection_ids};
@@ -22,16 +22,16 @@ use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
 use semio_s_artifact_puzzle_3d_model::Puzzle3dEngineCommand;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use {semio_framework_job::InteractiveJobCloseStep, semio_framework_job::StepContext};
-use semio_framework_plugin::mesh_from_kind;
-use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_plugin::InteractionWrite;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::MergeMode;
+use semio_plugin::mesh_from_kind;
+use semio_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin::ArtifactView;
+use semio_plugin::Fault;
+use semio_plugin::InteractionTarget;
+use semio_plugin::InteractionWrite;
+use semio_ui_locale::Label;
+use semio_plugin::MergeMode;
 use semio_framework_value::FromValue;
 use {semio_framework_pack_json::json, semio_framework_pack_json::object, semio_framework_pack_json::to_string, semio_framework_pack_json::Value};
 use std::collections::HashMap;
@@ -62,7 +62,7 @@ pub use self::session_registry::*;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_mesh_id_from_url;
 use std::hash::Hasher;
 
 #[path = "🏘️instance-residency/🦀️.rs"]
@@ -73,7 +73,7 @@ pub use self::instance_residency::*;
 /// 🧩️ The puzzle3d editor contract: every editor whose lanes are puzzle3d's play snapshot, mutation union, config,
 /// presence and command vocabulary. The action dispatch, the retained works and the tool run builders are written
 /// against it, so they sit below the one concrete editor that implements it.
-pub trait Puzzle3dEditor: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle3dPlaySnapshot, Mutation = Puzzle3dMutation, Config = Puzzle3dConfig, ConfigMutation = semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = semio_s_artifact_puzzle_3d_editor_presence::Puzzle3dPresence, PresenceMutation = semio_s_artifact_puzzle_3d_editor_presence::Puzzle3dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand> {}
+pub trait Puzzle3dEditor: semio_plugin::ArtifactEditor<Snapshot = Puzzle3dPlaySnapshot, Mutation = Puzzle3dMutation, Config = Puzzle3dConfig, ConfigMutation = semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfigMutation, Draft = semio_plugin::NoDraft, DraftMutation = semio_plugin::NoDraftMutation, Presence = semio_s_artifact_puzzle_3d_editor_presence::Puzzle3dPresence, PresenceMutation = semio_s_artifact_puzzle_3d_editor_presence::Puzzle3dPresenceMutation, Transient = semio_plugin::NoTransient, TransientMutation = semio_plugin::NoTransientMutation, Command = semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand> {}
 
-impl<A> Puzzle3dEditor for A where A: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle3dPlaySnapshot, Mutation = Puzzle3dMutation, Config = Puzzle3dConfig, ConfigMutation = semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = semio_s_artifact_puzzle_3d_editor_presence::Puzzle3dPresence, PresenceMutation = semio_s_artifact_puzzle_3d_editor_presence::Puzzle3dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand> {}
+impl<A> Puzzle3dEditor for A where A: semio_plugin::ArtifactEditor<Snapshot = Puzzle3dPlaySnapshot, Mutation = Puzzle3dMutation, Config = Puzzle3dConfig, ConfigMutation = semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfigMutation, Draft = semio_plugin::NoDraft, DraftMutation = semio_plugin::NoDraftMutation, Presence = semio_s_artifact_puzzle_3d_editor_presence::Puzzle3dPresence, PresenceMutation = semio_s_artifact_puzzle_3d_editor_presence::Puzzle3dPresenceMutation, Transient = semio_plugin::NoTransient, TransientMutation = semio_plugin::NoTransientMutation, Command = semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand> {}
 //#endregion 🧩️EditorContract

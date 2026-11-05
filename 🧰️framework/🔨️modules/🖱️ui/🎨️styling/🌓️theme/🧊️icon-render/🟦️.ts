@@ -42,8 +42,16 @@ export interface IconRenderFit {
   readonly padding?: number;
 }
 
+/** 🧊️ An asset instance in world coordinates; rotation is an xyzw quaternion. */
+export interface IconRenderTransform {
+  readonly position:readonly [number,number,number];
+  readonly rotation:readonly [number,number,number,number];
+  readonly scale:readonly [number,number,number];
+}
+
 export interface IconRenderRequest {
   readonly assetUrl: string;
+  readonly transform?:IconRenderTransform;
   readonly camera: IconRenderCamera;
   readonly fit?: IconRenderFit;
   readonly lights: IconRenderLights;

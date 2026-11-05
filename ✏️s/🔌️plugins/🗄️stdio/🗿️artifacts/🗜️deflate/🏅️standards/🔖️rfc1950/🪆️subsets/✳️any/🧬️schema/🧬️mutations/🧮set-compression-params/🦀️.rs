@@ -21,8 +21,8 @@ pub struct SetCompressionParams {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetCompressionParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "compression-params", kind: "set-compression-params", record: "SetCompressionParams" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set compression params", "Kompressionsparameter setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set compression params", "Kompressionsparameter setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

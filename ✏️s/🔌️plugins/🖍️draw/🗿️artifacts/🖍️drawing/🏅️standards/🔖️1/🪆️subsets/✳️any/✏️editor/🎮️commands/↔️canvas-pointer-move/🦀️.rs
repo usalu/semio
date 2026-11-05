@@ -4,10 +4,10 @@
 //! hover, shape and draft cursor projections consume the newest position.
 
 use crate::{canvas_point_to_world, DrawingSession};
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "canvas-pointer-move")]
@@ -47,7 +47,7 @@ pub fn handle(payload: &CanvasPointerMove, _doc: &ArtifactView<'_, DrawingSnapsh
     let [x, y] = payload.last_sample();
     let (world_x, world_y) = canvas_point_to_world(&session.window_config.viewport, x, y, payload.width, payload.height);
     if session.tool.at_rest() {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("drawing.gesture.retained-route"), "idle hover requires the retained Drawing tree-query owner"));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("drawing.gesture.retained-route"), "idle hover requires the retained Drawing tree-query owner"));
     }
     session.sample([world_x, world_y], payload.shift, payload.alt)
 }

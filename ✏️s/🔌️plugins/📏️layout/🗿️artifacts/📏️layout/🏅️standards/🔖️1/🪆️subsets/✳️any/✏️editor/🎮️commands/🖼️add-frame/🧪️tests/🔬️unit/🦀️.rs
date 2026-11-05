@@ -1,5 +1,5 @@
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_model::Frame;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::add_frame::*;
 use semio_s_artifact_layout_layout_editor_commands::{patch_frame, patch_page};
@@ -18,7 +18,7 @@ async fn add_frame_action_appends_rect() {
 async fn undo_redo_round_trips_add_frame() {
     let mut app = layout_app().await;
     let before = app.snapshot().expect("projection").pages[0].frames.len();
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None }), |app| app.snapshot().expect("projection").pages[0].frames.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None }), |app| app.snapshot().expect("projection").pages[0].frames.len(), before, before + 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]

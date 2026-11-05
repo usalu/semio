@@ -5,8 +5,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::kernel::Effect;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "create-artifact")]
@@ -21,7 +21,7 @@ pub struct CreateArtifact {
 /// the already-declared `createArtifact` dialog instead of failing on an unknown empty `kind_id`.
 pub fn handle(payload: &CreateArtifact, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     if payload.name.trim().is_empty() || payload.kind_choice.trim().is_empty() {
-        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(130), dialog_id: "createArtifact".into(), args: None }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(130), dialog_id: "createArtifact".into(), args: None }));
     }
     Ok(Emit::effect(Effect::ReplayShellCommand {
         action_id: "os.create-space-artifact".into(),

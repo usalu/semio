@@ -76,7 +76,7 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
 fn ephemeral_transfer_preparation_returns_rejected_mutation_ownership_intact() {
     let retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<String>::default());
     let factory = ArtifactEphemeralTransferPreparationFactory::new(footprint, std::convert::identity, retirement.clone(), retirement);
-    let mut mutation = String::with_capacity(semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
+    let mut mutation = String::with_capacity(semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
     mutation.push_str("retained rejection");
     let pointer = mutation.as_ptr();
     let request = ArtifactEphemeralOneItemPreparationRequest {

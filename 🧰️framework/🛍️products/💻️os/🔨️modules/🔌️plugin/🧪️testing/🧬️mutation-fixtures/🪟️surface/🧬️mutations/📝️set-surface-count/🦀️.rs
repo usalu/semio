@@ -43,12 +43,12 @@ impl MutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "surface-count", kind: "set-surface-count", record: "SetSurfaceCount" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set surface count to {}", self.value), &format!("Oberflächenanzahl auf {} setzen", self.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set surface count to {}", self.value), &format!("Oberflächenanzahl auf {} setzen", self.value))
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
+impl semio_os_command::ColdMutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     fn diff(&self, _: &SurfaceSnapshot) -> MutationOutcome<SurfaceDiff> {
         MutationOutcome::new(SurfaceDiff { count: Some(self.value) })
     }

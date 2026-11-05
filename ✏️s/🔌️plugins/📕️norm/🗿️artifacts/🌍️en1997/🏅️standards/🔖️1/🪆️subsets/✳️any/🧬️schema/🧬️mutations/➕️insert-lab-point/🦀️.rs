@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertLabPoint where Op:
         verb: "insert", entity: "lab-point", kind: "insert-lab-point", record: "InsertedLabPoint",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert laboratory test point", "Laborversuchspunkt einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert laboratory test point", "Laborversuchspunkt einfügen")
     }
 }
 

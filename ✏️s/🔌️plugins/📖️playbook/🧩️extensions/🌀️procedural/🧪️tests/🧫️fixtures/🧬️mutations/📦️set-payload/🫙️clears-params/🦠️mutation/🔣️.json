@@ -6,6 +6,7 @@
     "questionId": "q",
     "controllerId": "forms-play",
     "surface": "try",
-    "interactive": true
+    "interactive": true,
+    "authoredParams": null
   }
 }

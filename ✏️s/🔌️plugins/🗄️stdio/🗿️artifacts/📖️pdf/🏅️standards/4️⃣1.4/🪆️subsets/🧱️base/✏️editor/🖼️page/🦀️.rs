@@ -2,11 +2,11 @@
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, InsertPage, RemovePage, MovePage, ResizePage, ReplacePageText};
 use protocol::{ColdMutation, Mutation, OpText};
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, TreeWindows, ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition, PluginAssemblyError, UiAssemblyResult, Buildable, HasBase, UiText};
-use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
-use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_ui_contract::{BuiltNode, UiPublicationRevision};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{Fault, FaultCode, FaultOrigin, TreeWindows, ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition, PluginAssemblyError, UiAssemblyResult, Buildable, HasBase, UiText};
+use semio_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
+use semio_plugin::plugin_app_close_prelude as ui;
+use semio_ui_contract::{BuiltNode, UiPublicationRevision};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_framework_value::DslValue;
 
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -38,7 +38,7 @@ pub fn window_definition() -> WindowKindDefinition {
     let height = || ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required();
     let action = |id, en, de, args| {
         let mut definition = ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), ActionKind::Mutation).with_args(args);
-        definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+        definition.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
         definition
     };
     definition.actions.extend([
@@ -120,19 +120,19 @@ pub fn edit_from_action(action: &str, args: Option<&DslValue>) -> Result<String,
 }
 
 /// ▶️ Admits the replayed own mutation against its original page domain.
-pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Result<semio_framework_plugin::Emit<PdfMutation>, Fault> {
+pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Result<semio_plugin::Emit<PdfMutation>, Fault> {
     let mutation = PdfMutation::parse_op(payload).map_err(|error| refusal(error.to_string()))?;
     if !matches!((action, &mutation),
         ("insert-page", PdfMutation::InsertPage(_)) | ("remove-page", PdfMutation::RemovePage(_)) |
         ("move-page", PdfMutation::MovePage(_)) | ("set-page-size", PdfMutation::ResizePage(_))) { return Err(refusal("Page action payload has a different mutation kind")); }
     let outcome = mutation.diff(snapshot);
     if !outcome.messages().is_empty() { return Err(refusal("Page action is outside this document's domain")); }
-    Ok(semio_framework_plugin::Emit { artifact_mutations: vec![mutation], ..Default::default() })
+    Ok(semio_plugin::Emit { artifact_mutations: vec![mutation], ..Default::default() })
 }
 
 /// 🪟️ Places own page drafts beside complete snapshot details.
-pub fn document_layout(main: &str) -> semio_framework_plugin::WindowLayout {
-    use semio_framework_plugin::{WindowLayout, WindowLayoutRoot, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutStackNode, WindowLayoutWindowNode};
+pub fn document_layout(main: &str) -> semio_plugin::WindowLayout {
+    use semio_plugin::{WindowLayout, WindowLayoutRoot, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutStackNode, WindowLayoutWindowNode};
     let stack = |size, id: &str| WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(size), active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: id.into(), title: None, instance_id: None, template_id: None, corner: None }] });
     WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![stack(0.7, main), stack(0.3, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID)] }) }
 }

@@ -18,8 +18,8 @@ pub struct ChangeLimits {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeLimits where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_limits::ChangeLimits> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "limits", kind: "change-limits", record: "ChangedLimits" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update security limits (maximum file size {} bytes)", self.new_limits.max_file_bytes), &format!("Sicherheitsgrenzwerte (maximale Dateigröße {} Byte) aktualisieren", self.new_limits.max_file_bytes))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update security limits (maximum file size {} bytes)", self.new_limits.max_file_bytes), &format!("Sicherheitsgrenzwerte (maximale Dateigröße {} Byte) aktualisieren", self.new_limits.max_file_bytes))
     }
 }
 

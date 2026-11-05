@@ -18,8 +18,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for DisconnectEd
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "workflow", kind: "disconnect-edge", record: "DisconnectedWorkflowEdge" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect workflow edge {}", self.edge_id), &format!("Arbeitsablaufkante {} trennen", self.edge_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Disconnect workflow edge {}", self.edge_id), &format!("Arbeitsablaufkante {} trennen", self.edge_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["edges".into(), self.edge_id.clone()]

@@ -1,7 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` combination mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🏗️hall/🦀️.rs"]
 mod create_combination_hall_hall_new_acc;

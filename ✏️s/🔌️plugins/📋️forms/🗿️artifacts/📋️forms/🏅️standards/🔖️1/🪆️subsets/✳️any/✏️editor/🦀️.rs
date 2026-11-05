@@ -1,16 +1,6 @@
-//! 📋️ Forms editor — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
-//! manifest stitch.
-//!
-//! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
-//! `🎭️modes/📝️blueprint/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view
-//! state in `🦀️config.rs`, shared document compute in the artifact's `🧬️schema`, this app's own IO
-//! surface in the `🔖️Io` region below. This file is a routing table:
-//! `handle` → `FormsCommand::dispatch`, `render` → body-key → node, plus the app-level `🔖️Contributions`
-//! region — host-declared plugin contributions (`config.contributions_json`) are consumed by THREE
-//! taxonomy nodes (the blueprint builder's palette, the try wizard, and the inspection panel), and every
-//! helper in that region takes `&FormsConfig` (an app-only view-state type) or an app-level
-//! `ProgramContributionEntry`, so per the DocumentHelpers placement rule they stay here rather than in the
-//! artifact's `🧬️schema`.
+//! 📋️ Forms editor command routing and manifest assembly.
+//! Shared configuration, document semantics and extension envelopes belong to the artifact.
+//! Editor-specific commands, windows, inspection and localized labels remain in this surface.
 
 pub use semio_s_artifact_forms_forms_questions::editor::forms::questions;
 
@@ -19,7 +9,7 @@ use crate::editor::forms::commands::{
     remove_question_option, remove_step, remove_vector_field, set_active_example, set_contributions, set_spec_json, update_form,
 };
 use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{next_step, previous_step, reset_try, set_try_value, set_try_value_step, set_try_values, submit};
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::{blueprint, fill, responses};
 use crate::editor::forms::commands::{export_responses, discard_response};
 use crate::editor::forms::modes::blueprint::windows::{builder, try_wizard as try_window};
@@ -30,50 +20,50 @@ use crate::op::FormMutation;
 use crate::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 #[cfg(test)] use semio_framework_pack_json::{object};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppDefinition;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::IconName;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::app::{Dialect, InteractionView};
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::AppDefinition;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::IconName;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -120,7 +110,7 @@ mod args_bridge;
 //#endregion 🔖️ActionBridge
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `FormsPlayApp::Command` — the SOLE dispatch surface for forms' own behavior, assembled from the
     /// `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`, the
     /// camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
@@ -172,14 +162,14 @@ semio_framework_plugin::app_commands! {
 /// object keyed by question id — the layout app's `fields:in` counterpart. Relocated from the deleted
 /// artifact `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is the app's
 /// own IO surface, not artifact behaviour.
-pub fn forms_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn forms_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: FORMS_DOCUMENT_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        ports: vec![semio_framework_plugin::MediaPortSpec {
+        ports: vec![semio_plugin::MediaPortSpec {
             id: "dictionary:out".into(),
             label: "Dictionary".into(),
-            direction: semio_framework_plugin::MediaPortDirection::Out,
+            direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: Some("form.dictionary".into()),
             required: false,
@@ -187,7 +177,7 @@ pub fn forms_io() -> semio_framework_plugin::AppIo {
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "form.dictionary".into(), name: "Form".into(), dimension: "data".into(), component_kind: "forms".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "form.dictionary".into(), name: "Form".into(), dimension: "data".into(), component_kind: "forms".into() },
     }
 }
 //#endregion 🔖️Io

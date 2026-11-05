@@ -302,7 +302,7 @@ pub fn painted_inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset>
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for PaintStroke where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "stroke", kind: "paint-stroke", record: "PaintedStroke" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let count = self.points.len();
         let (en_points, de_points) = if count == 1 { ("1 point".to_string(), "1 Punkt".to_string()) } else { (format!("{count} points"), format!("{count} Punkten")) };
         let (en, de) = match (self.target.as_str(), self.tool.as_str()) {
@@ -311,7 +311,7 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for PaintStroke where Op: pr
             (_, "eraser") => ("Eraser stroke", "Radierstrich"),
             _ => ("Brush stroke", "Pinselstrich"),
         };
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("{en} of {en_points} on layer {}", self.layer_id), &format!("{de} mit {de_points} auf Ebene {}", self.layer_id))
+        semio_ui_locale::LocalizedLabel::native(&format!("{en} of {en_points} on layer {}", self.layer_id), &format!("{de} mit {de_points} auf Ebene {}", self.layer_id))
     }
 
     fn target(&self) -> Vec<String> {

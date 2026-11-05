@@ -1,6 +1,6 @@
 //! 🛡️ SQLite admission delegates to the owned profile validator.
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
+use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 use semio_framework_diagnostic::Severity;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::subset::check;

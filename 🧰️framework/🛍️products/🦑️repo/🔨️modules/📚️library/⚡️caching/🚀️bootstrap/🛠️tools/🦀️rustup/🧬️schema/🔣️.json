@@ -663,6 +663,32 @@
           "type": "boolean"
         }
       }
+    },
+    "SourceRootCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "codeRoot",
+        "repositoryRoot",
+        "expected"
+      ],
+      "properties": {
+        "codeRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "repositoryRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "expected": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
     }
   }
 }

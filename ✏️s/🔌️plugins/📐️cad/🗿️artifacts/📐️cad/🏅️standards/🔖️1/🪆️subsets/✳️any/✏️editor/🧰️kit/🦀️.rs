@@ -1,7 +1,7 @@
 //! 🧰️ CAD editor kit: the play runtime and view, the dispatch context, the shared object/engagement helpers and the
 //! ui-value plumbing every command, mode and panel builds on.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[path = "."]
@@ -24,8 +24,8 @@ use semio_s_artifact_cad_cad_io::{CadSolidExport, export_solids_as};
 use semio_s_artifact_cad_cad_inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, next_cad_id};
 use semio_s_artifact_stdio_semio_model::{schema::mutations::SemioModelMutation, schema::mutations::remove_element::RemoveElement, schema::mutations::set_element::SetElement, schema::snapshot::SemioModelElement};
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionDescriptor, ActionKind, ChildContentView, ConfigView, Fault, MediaClass, MediaForm, MediaType, PluginAssemblyError, UiText, UiValue, ViewModel, WorldSunConfig, tree_item as framework_tree_item, tree_item_with_action, world3d_camera_projection_json};
-use semio_framework_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
+use semio_plugin::{ActionArgDef, ActionDefinition, ActionDescriptor, ActionKind, ChildContentView, ConfigView, Fault, MediaClass, MediaForm, MediaType, PluginAssemblyError, UiText, UiValue, ViewModel, WorldSunConfig, tree_item as framework_tree_item, tree_item_with_action, world3d_camera_projection_json};
+use semio_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
 use semio_framework_3d_brep_engine::{Brep, GeometryHandle};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashMap;
@@ -79,7 +79,7 @@ pub const CAD_INTERACTION_DOMAIN: &str = "cad";
 /// `CadDispatchCtx` to every command handler) and once per render by
 /// `ArtifactApp::render_with_request_context` (threaded through [`CadPlayView`] to the world scene,
 /// the engagement HUD, the inspection panel and the document tree). Decouples both from
-/// `semio_framework_plugin::app::InteractionView` itself — whose fields are `pub(crate)` to that
+/// `semio_plugin::app::InteractionView` itself — whose fields are `pub(crate)` to that
 /// crate, so this crate's own tests cannot construct one — tests build this plain, cad-owned struct
 /// directly instead (see `🎮️commands/🔄️transform`).
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -93,7 +93,7 @@ impl CadInteractionSnapshot {
     /// 🐁️ The hover channel `World3dHost` publishes instance hover on (`world3dHoverActionArgs`).
     pub const POINTER_CHANNEL: &'static str = "pointer";
 
-    pub fn from_interaction(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> Self {
+    pub fn from_interaction(interaction: &semio_plugin::app::InteractionView<'_>) -> Self {
         let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
         Self {
             granularity: selection.granularity.clone(),
@@ -277,15 +277,15 @@ impl CadPlayView {
         Self { axes: Some((terminology, locale)), ..self }
     }
 }
-pub fn cad_action(action: &str, args: Option<UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(CAD_PLAY_CONTROLLER_ID).action(action, args)
+pub fn cad_action(action: &str, args: Option<UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<UiValue>)> {
+    semio_plugin::ActionFactory::new(CAD_PLAY_CONTROLLER_ID).action(action, args)
 }
 /// 🪟️ Bridges window chrome, which still carries the retained WGPU action descriptor.
 pub fn cad_window_action(action: &str, args: Option<semio_framework_value::DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: CAD_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 /// 🧱️ Admits one fixed CAD UI text value.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<UiValue> {
     UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI text admission failed"))
 }
 /// 🔘️ Admits one CAD boolean action value.
@@ -293,8 +293,8 @@ pub fn ui_value_bool(value: bool) -> UiValue {
     UiValue::Bool(value)
 }
 /// 📚️ Admits one fixed CAD UI list value.
-pub fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> semio_plugin::UiAssemblyResult<UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI list admission failed"))?;
     for value in values {
         builder.push(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI list item admission failed"))?;
     }
@@ -303,16 +303,16 @@ pub fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> semio_framewo
 /// 🗺️ Admits one fixed CAD UI map value. 🔑️ `UiMapBuilder::push` admits keys in strictly ascending
 /// order only — a later key that does not exceed the previous one is refused — so callers list
 /// entries sorted by key.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> semio_plugin::UiAssemblyResult<UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI map admission failed"))?;
     for (key, value) in values {
         builder.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI map entry admission failed"))?;
     }
     Ok(UiValue::Map(builder.finish()))
 }
 /// 🏷️ Admits resolved CAD text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI label admission failed"))
 }
 pub fn camera_json(camera: &CadCamera) -> String {
     world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(camera))
@@ -351,9 +351,9 @@ pub fn cad_reference_flag_action(id: &str, flag: &str, label: LocalizedLabel, va
         ])
         .in_palette(false)
 }
-pub fn cad_tree_item(id: impl Into<String>, label: impl AsRef<str>, icon_id: Option<&str>, action: (semio_framework_plugin::ActionId, Option<UiValue>)) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn cad_tree_item(id: impl Into<String>, label: impl AsRef<str>, icon_id: Option<&str>, action: (semio_plugin::ActionId, Option<UiValue>)) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut item = tree_item_with_action(id.into(), ui_label(label)?, None, action)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = match icon_id {
             Some(value) => Some(UiText::try_from_str(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad tree icon admission failed"))?),
             None => None,
@@ -362,9 +362,9 @@ pub fn cad_tree_item(id: impl Into<String>, label: impl AsRef<str>, icon_id: Opt
     Ok(item)
 }
 /// 🌳️ Builds a presentational CAD tree item without inventing a plugin focus command.
-pub fn cad_tree_item_static(id: impl Into<String>, label: impl AsRef<str>, icon_id: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn cad_tree_item_static(id: impl Into<String>, label: impl AsRef<str>, icon_id: Option<&str>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut item = framework_tree_item(id.into(), ui_label(label)?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = match icon_id {
             Some(value) => Some(UiText::try_from_str(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad tree icon admission failed"))?),
             None => None,
@@ -746,24 +746,24 @@ pub fn command_value_json(field: &str, value: &str) -> semio_framework_value::Ds
 /// from any upstream 3D producer — `MediaForm::Any` only ever legal on the accepting side) and
 /// `brep:out` (this app's own `3d.cad` kind, `Many` multiplicity so several downstream consumers can
 /// each pull an independent export).
-pub fn cad_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn cad_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: "cad.scene".into(),
         artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
         ports: vec![
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "geometry:in".into(),
                 label: "Geometry".into(),
-                direction: semio_framework_plugin::MediaPortDirection::In,
+                direction: semio_plugin::MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
                 kind_id: None,
                 required: false,
                 multiplicity: semio_framework::PortMultiplicity::Many,
             },
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "brep:out".into(),
                 label: "Brep".into(),
-                direction: semio_framework_plugin::MediaPortDirection::Out,
+                direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
                 kind_id: Some("3d.cad".into()),
                 required: false,
@@ -772,13 +772,13 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
         ],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.cad".into(), name: "3D CAD".into(), dimension: "3d".into(), component_kind: "cad".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "3d.cad".into(), name: "3D CAD".into(), dimension: "3d".into(), component_kind: "cad".into() },
     }
 }
 //#endregion 🔖️Io
 //#region 🔖️Commands
 /// 🧵️ Per-dispatch app-struct state: a read-only [`CadInteractionSnapshot`] of the framework's `"cad"` domain — the
-/// `semio_framework_plugin::app_commands!`-generated `dispatch` has no way to thread `InteractionView` itself (see that
+/// `semio_plugin::app_commands!`-generated `dispatch` has no way to thread `InteractionView` itself (see that
 /// macro's own doc comment on `ctx`), so the dispatch builds the snapshot once and hands it down through this app-owned
 /// context — the addressed view, and the addressed window's engagement transient in (`window_transient`) and out
 /// (`next_window_transient`, design §17.4).

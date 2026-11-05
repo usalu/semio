@@ -185,7 +185,7 @@ test("the private Nx engine names only real npm packages as external dependencie
 test("an Nx target caches only when every output lies in a partition the cache hook can hold, equal to the actual output classifier",()=>{
  const root=process.cwd(),rust=join(root,budgetPolicy.partitions.rust.directory,"m"),products=join(root,budgetPolicy.partitions.products.directory,"m"),roots={rust,products},rows=[
   {outputs:undefined,cache:true},{outputs:[],cache:true},
-  {outputs:["{workspaceRoot}/"+budgetPolicy.partitions.rust.directory+"/m/u/l/d1/b/out"],cache:true},
+  {outputs:["{workspaceRoot}/"+budgetPolicy.partitions.rust.directory+"/m/u/l/d1/out"],cache:true},
   {outputs:["{workspaceRoot}/"+budgetPolicy.partitions.products.directory+"/m/artifact/out"],cache:true},
   {outputs:["{workspaceRoot}/🧰️framework/🤖️generated/🟦️.ts"],cache:false},
   {outputs:["{projectRoot}/dist"],cache:false},

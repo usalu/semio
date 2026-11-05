@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::spread_snake;
 use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Slot;
 use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_s_artifact_stdio_contract::editing::{EditRules, SnapshotEditEvent};
 
 /// 📚 Every pointer an object editor edit resolves, one rule per kind that sets through it.

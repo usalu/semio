@@ -2,11 +2,11 @@
 
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use crate::standards::mpeg1_layer3::subsets::any::schema::inferences::duration::compute_mp3_duration;
-use semio_framework_plugin::app::{MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowKit;
+use semio_plugin::app::{MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Locale;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowKit;
 
 pub const WINDOW_KIND_ID: &str = MediaWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MediaWindowKit::KIND_ID;
@@ -18,7 +18,7 @@ pub fn definition() -> WindowKindDefinition {
 
 /// 🎬️ Projects inferred timing and exact live identity for the registered resumable MP3 producer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &Mp3Snapshot, locale: Locale, resource: Option<MediaResource>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &Mp3Snapshot, locale: Locale, resource: Option<MediaResource>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let duration_ms = semio_s_artifact_stdio_contract::media_duration_ms(compute_mp3_duration(snapshot).duration_seconds);
     let revision = resource.as_ref().map_or_else(|| "0".to_string(), |resource| resource.revision.clone());
     let ready = resource.is_some();

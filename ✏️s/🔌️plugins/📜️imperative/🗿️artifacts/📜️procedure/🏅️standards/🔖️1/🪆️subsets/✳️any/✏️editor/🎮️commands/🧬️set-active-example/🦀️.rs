@@ -10,7 +10,7 @@
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
 use crate::mutations::ProcedureMutation;
 use crate::ProcedureSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload

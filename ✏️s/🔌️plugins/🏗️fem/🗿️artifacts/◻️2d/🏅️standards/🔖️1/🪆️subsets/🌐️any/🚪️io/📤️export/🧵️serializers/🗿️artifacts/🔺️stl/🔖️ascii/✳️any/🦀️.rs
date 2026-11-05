@@ -13,10 +13,10 @@
 //! registered refusal in this subset's `🚪️io/🦀️.rs` `geometry_import` module.
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::ArchiveChildren;
-use semio_framework_os_kernel::io::io_mechanism::Serializer;
+use semio_os_kernel::io::io_mechanism::ArchiveChildren;
+use semio_os_kernel::io::io_mechanism::Serializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
-use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactSerializer,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
 use semio_s_artifact_stdio_stl::standards::v_ascii::engine::encode_stl_ascii;
 
@@ -36,7 +36,7 @@ pub struct Fem2dIntoStl;
 impl Serializer<Fem2dSnapshot> for Fem2dIntoStl {
     const INTO: Dialect = STL_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &Fem2dSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &Fem2dSnapshot, _: &ArchiveChildren, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(stl_text(from)?)))
     }
 }

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointCategory wher
         record: "ChangedJointCategory",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bolted connection category of the joint", "Anschluss: Kategorie der Schraubenverbindung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bolted connection category of the joint", "Anschluss: Kategorie der Schraubenverbindung ändern")
     }
 }
 

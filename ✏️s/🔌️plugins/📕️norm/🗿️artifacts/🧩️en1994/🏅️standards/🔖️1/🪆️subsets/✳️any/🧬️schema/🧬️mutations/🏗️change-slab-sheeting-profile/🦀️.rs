@@ -18,8 +18,8 @@ pub struct ChangeSlabSheetingProfile {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSlabSheetingProfile where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_slab_sheeting_profile::ChangeSlabSheetingProfile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "slab-sheeting-profile", kind: "change-slab-sheeting-profile", record: "ChangedSlabSheetingProfile" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slab profiled sheeting type", "Profilblechtyp der Decke ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slab profiled sheeting type", "Profilblechtyp der Decke ändern")
     }
 }
 

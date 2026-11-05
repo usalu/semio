@@ -5,52 +5,52 @@
 
 //#region 🏛️OwnershipFacet
 
-pub use semio_framework_plugin_abi::sqlite_wire;
+pub use semio_plugin_abi::sqlite_wire;
 
 
 //#endregion 🏛️OwnershipFacet
 //#region 🪟️WindowFacet
-pub(crate) use semio_framework_plugin_window_kits_rich::document_kit;
-pub use semio_framework_plugin_window_transient::engagement;
-pub(crate) use semio_framework_plugin_window_kits::image_kit;
-pub(crate) use semio_framework_plugin_interaction::interaction_topology;
-pub(crate) extern crate semio_framework_plugin_interaction as local_interaction;
-pub(crate) use semio_framework_plugin_window_kits::media_kit;
-pub(crate) use semio_framework_plugin_window_kits::mesh_kit;
-pub(crate) use semio_framework_plugin_window_kits_rich::table_kit;
-pub(crate) use semio_framework_plugin_window_kits::text_kit;
-pub(crate) use semio_framework_plugin_window_kits_rich::tree_kit;
-pub(crate) extern crate semio_framework_plugin_window_config as window_config;
-pub(crate) extern crate semio_framework_plugin_window_kits as window_kits;
-pub(crate) use semio_framework_plugin_window_transient::window_mutation;
-pub(crate) extern crate semio_framework_plugin_window_transient as window_surface;
-pub use semio_framework_plugin_window_kits_rich::world3d_host;
+pub(crate) use semio_plugin_window_kits_rich::document_kit;
+pub use semio_plugin_window_transient::engagement;
+pub(crate) use semio_plugin_window_kits::image_kit;
+pub(crate) use semio_plugin_interaction::interaction_topology;
+pub(crate) extern crate semio_plugin_interaction as local_interaction;
+pub(crate) use semio_plugin_window_kits::media_kit;
+pub(crate) use semio_plugin_window_kits::mesh_kit;
+pub(crate) use semio_plugin_window_kits_rich::table_kit;
+pub(crate) use semio_plugin_window_kits::text_kit;
+pub(crate) use semio_plugin_window_kits_rich::tree_kit;
+pub(crate) extern crate semio_plugin_window_config as window_config;
+pub(crate) extern crate semio_plugin_window_kits as window_kits;
+pub(crate) use semio_plugin_window_transient::window_mutation;
+pub(crate) extern crate semio_plugin_window_transient as window_surface;
+pub use semio_plugin_window_kits_rich::world3d_host;
 //#endregion 🪟️WindowFacet
 //#region 📜️DeclarationFacet
-pub(crate) extern crate semio_framework_plugin_identity as artifact_identity;
-pub(crate) extern crate semio_framework_plugin_abi as artifact_io;
-pub(crate) use semio_framework_plugin_decl_app::completion_fault;
+pub(crate) extern crate semio_plugin_identity as artifact_identity;
+pub(crate) extern crate semio_plugin_abi as artifact_io;
+pub(crate) use semio_plugin_decl_app::completion_fault;
 
-pub(crate) use semio_framework_plugin_decl_app::completion_refusal_retirement;
+pub(crate) use semio_plugin_decl_app::completion_refusal_retirement;
 
-pub(crate) use semio_framework_plugin_decl_app::completion_retirement;
+pub(crate) use semio_plugin_decl_app::completion_retirement;
 
 // 🧬️ A2 (design-abi.md §4): `host_port` is deleted — see `important.md`'s "Replace, never wrap"
 // list (`host_port` · `component::host_*` · `set_host_backbone_channel` are all named explicitly).
 // Replaced by `🌐host/🦀️.rs`'s async `Host`/`log`/`now_ms`/`trace_span` — see that
 // module and the report's "peer-coexistence"/deferred-work sections for the backbone channel gap.
-pub extern crate semio_framework_plugin_actor_host as host;
-pub(crate) extern crate semio_framework_plugin_operation as tool_cancellation;
+pub extern crate semio_plugin_actor_host as host;
+pub(crate) extern crate semio_plugin_operation as tool_cancellation;
 //#endregion 📜️DeclarationFacet
 //#region 📬️PublicationFacet
-pub use semio_framework_plugin_actor_host::document_backbone_binding;
+pub use semio_plugin_actor_host::document_backbone_binding;
 //#endregion 📬️PublicationFacet
 //#region 👷️JobsFacet
-pub(crate) use semio_framework_plugin_operation::completion_effects;
+pub(crate) use semio_plugin_operation::completion_effects;
 pub use completion_effects::CompletionEffect;
-pub(crate) use semio_framework_plugin_operation::completion_vacant;
+pub(crate) use semio_plugin_operation::completion_vacant;
 pub use completion_vacant::{VacantVec,VacantDeque};
-pub use semio_framework_plugin_abi::operation_authority;
+pub use semio_plugin_abi::operation_authority;
 //#endregion 👷️JobsFacet
 //#region 🧪️Wp1TestHosts
 

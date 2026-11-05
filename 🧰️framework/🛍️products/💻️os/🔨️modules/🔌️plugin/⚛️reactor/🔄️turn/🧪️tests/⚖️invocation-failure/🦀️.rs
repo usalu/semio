@@ -2,17 +2,17 @@
 use semio_framework::kernel::MessageEndpoint;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::RequestOutcome;
-use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
-use semio_framework_plugin_reactor_lifecycle as pending;
-use semio_framework_plugin_reactor_turn as turn;
+use semio_plugin_reactor_lifecycle::instance_lifetime;
+use semio_plugin_reactor_lifecycle as pending;
+use semio_plugin_reactor_turn as turn;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
+use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
 use semio_framework_job::{OriginalTurnFailure, close_original_retained_step};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework::Effect;
-use semio_framework_plugin_reactor_turn::CommandIngressOwner;
-use semio_framework_plugin_reactor_turn::RetainedExtensionInvocation;
+use semio_plugin_reactor_turn::CommandIngressOwner;
+use semio_plugin_reactor_turn::RetainedExtensionInvocation;
 
 #[test]
 fn original_guest_failure_debit_failed_ingress_retiring_lane_returns_same_three_causes_after_paid_close(){
@@ -27,9 +27,9 @@ fn original_guest_failure_debit_failed_ingress_retiring_lane_returns_same_three_
             let((state,pointers),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
                 let failure={let original=OriginalTurnFailure::from(ValueError::new(ValueRefusalKind::InvalidValue,input["failure"]["primary"].as_str().unwrap()));OriginalTurnFailure{receipt_refusal:Some(ValueError::new(ValueRefusalKind::OwnershipLimit,input["failure"]["receipt"].as_str().unwrap())),context_refusal:Some(ValueError::new(ValueRefusalKind::DepthLimit,input["failure"]["context"].as_str().unwrap())),..original}};
                 let pointers=(failure.primary.message().as_ptr(),failure.receipt_refusal.as_ref().unwrap().message.as_ptr(),failure.context_refusal.as_ref().unwrap().message.as_ptr());
-                let command=semio_framework_os_kernel::DecodedAppCommandOwner::new(semio_framework_os_kernel::AppCommand::SubmitMediaExport{seq:input["command"]["seq"].as_str().unwrap().parse().unwrap(),port:input["command"]["port"].as_str().unwrap().into(),expected_parent_document_id:input["command"]["parent"].as_str().unwrap().into(),expected_base_revision:input["command"]["revision"].as_str().unwrap().parse().unwrap(),checkpoint_id:None});
+                let command=semio_os_kernel::DecodedAppCommandOwner::new(semio_os_kernel::AppCommand::SubmitMediaExport{seq:input["command"]["seq"].as_str().unwrap().parse().unwrap(),port:input["command"]["port"].as_str().unwrap().into(),expected_parent_document_id:input["command"]["parent"].as_str().unwrap().into(),expected_base_revision:input["command"]["revision"].as_str().unwrap().parse().unwrap(),checkpoint_id:None});
                 let cursor=semio_framework::kernel::CommandPageCursor{owner:7,generation:11,command_index:0,command_count:1,instance:13,seq:17,kind:19,page_index:0,page_count:1,item_count:0,metadata:0};
-                (CommandIngressOwner::Generic{cursor,command:semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{owner:command,failure:Some(failure),identity:(cx.operation(),cx.generation()),close_failure:None,compound:None,raw_media:None}},pointers)
+                (CommandIngressOwner::Generic{cursor,command:semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{owner:command,failure:Some(failure),identity:(cx.operation(),cx.generation()),close_failure:None,compound:None,raw_media:None}},pointers)
             });
             cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth.requested_bytes,..Default::default()})?;cx.consume_fuel(1);let(mut born,mut freed)=(birth.requested_bytes,birth.released_bytes);
             COMMAND_INGRESS.with(|owners|owners.borrow_mut()[slot]=Some(RetainedCommandIngress{key,state}));
@@ -54,8 +54,8 @@ fn original_guest_failure_debit_failed_ingress_retiring_lane_returns_same_three_
 #[test]
 fn original_extension_invocation_receiver_retains_failed_source_and_completes_paid_close(){
     let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🎟️context/🌉️call/⚖️failure-debit/🧪️tests/🧫️fixtures/📨️invocation.json")).unwrap();
-    let(mut caller,admission)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap());
-    let mut cx=caller.context();let loan=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,..cx.retained_grant()};let maximum=semio_framework_plugin_testing_laws::OriginalFixtureCaller::maximum_turns();
+    let(mut caller,admission)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap());
+    let mut cx=caller.context();let loan=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,..cx.retained_grant()};let maximum=semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns();
     let((mut owner,mut refusal,mut output),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||(RetainedExtensionInvocation::new(semio_framework::kernel::RequestId(721),MessageEndpoint::Shell{instance:semio_framework::kernel::PluginInstanceId("original source".into())},"original capability".into(),vec![7;211]),Some({let original=OriginalTurnFailure::from(ValueError::new(ValueRefusalKind::AllocationFailed,"original failed child source"));OriginalTurnFailure{receipt_refusal:Some(ValueError::new(ValueRefusalKind::OwnershipLimit,"original receipt source")),context_refusal:Some(ValueError::new(ValueRefusalKind::InvariantViolated,"original context source")),..original}}),Some(vec![9;79])));
     let pointers={let held=owner.source.as_ref().unwrap();(held.0.as_ptr(),held.1.as_ptr(),held.2.as_ptr())};let mut born=admission.requested_bytes+birth.requested_bytes;let mut freed=admission.released_bytes+birth.released_bytes;
     let delta=|a:RetainedCloneProgress,b:RetainedCloneProgress|RetainedCloneProgress{copied_items:b.copied_items.checked_sub(a.copied_items).unwrap(),copied_bytes:b.copied_bytes.checked_sub(a.copied_bytes).unwrap(),retained_capacity_bytes:b.retained_capacity_bytes.checked_sub(a.retained_capacity_bytes).unwrap(),released_bytes:b.released_bytes.checked_sub(a.released_bytes).unwrap()};

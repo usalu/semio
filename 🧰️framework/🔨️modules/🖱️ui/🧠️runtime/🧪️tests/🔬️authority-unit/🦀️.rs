@@ -1,6 +1,6 @@
 use super::*;
-use semio_framework_ui_runtime_reconcile_cursor::{testkit::*, *};
-use semio_framework_ui_runtime_reconcile_primitives::*;
+use semio_ui_runtime_reconcile_cursor::{testkit::*, *};
+use semio_ui_runtime_reconcile_primitives::*;
 
 #[cfg(test)]
 #[path = "../../📏️ownership/🧪️tests/🔒️authority/🦀️.rs"]
@@ -352,7 +352,7 @@ fn round_trip_property_every_emitted_patch_applies_cleanly_and_reproduces_the_sn
     let _guard = crate::surface_reconcile_registry_test_guard();
     let mut reconciler = SurfaceReconciler::from_text("s");
     let mut receiver_state = ui_contract::UiSnapshotState::new(ui_contract::SurfaceId::try_from("s").expect("bounded fixture surface"));
-    let limits = semio_framework_ui_contract_validation::UiDocumentLimits::default();
+    let limits = semio_ui_contract_validation::UiDocumentLimits::default();
 
     let frames = vec![
         tree(container("root", vec![leaf("a"), leaf("b")])),
@@ -370,12 +370,12 @@ fn round_trip_property_every_emitted_patch_applies_cleanly_and_reproduces_the_sn
     let mut generation = 1u64;
     for component_tree in &frames {
         if let Some(patch) = reconciler.reconcile(component_tree) {
-            let mut producer = semio_framework_ui_contract_validation::UiPatchApplyProducer::try_new(receiver_state, patch, limits, generation).expect("every emitted patch must enter the retained contract producer");
+            let mut producer = semio_ui_contract_validation::UiPatchApplyProducer::try_new(receiver_state, patch, limits, generation).expect("every emitted patch must enter the retained contract producer");
             loop {
                 match producer.drive_one(generation, false, false) {
-                    semio_framework_ui_contract_validation::UiPatchApplyStep::MoreWork => {}
-                    semio_framework_ui_contract_validation::UiPatchApplyStep::Ready => break,
-                    semio_framework_ui_contract_validation::UiPatchApplyStep::Rejected => panic!("every emitted patch must apply cleanly against the contract producer: {:?}", producer.rejection()),
+                    semio_ui_contract_validation::UiPatchApplyStep::MoreWork => {}
+                    semio_ui_contract_validation::UiPatchApplyStep::Ready => break,
+                    semio_ui_contract_validation::UiPatchApplyStep::Rejected => panic!("every emitted patch must apply cleanly against the contract producer: {:?}", producer.rejection()),
                 }
             }
             let mut outcome = producer.take_ready().unwrap_or_else(|_| panic!("ready producer must transfer its exact outcome"));

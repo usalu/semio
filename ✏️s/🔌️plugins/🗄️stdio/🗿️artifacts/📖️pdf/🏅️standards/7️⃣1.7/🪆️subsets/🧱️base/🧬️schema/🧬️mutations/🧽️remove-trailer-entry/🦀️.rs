@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "trailer-entry", kind: "remove-trailer-entry", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove trailer entry {}", self.key), &format!("Trailer-Eintrag {} entfernen", self.key))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove trailer entry {}", self.key), &format!("Trailer-Eintrag {} entfernen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

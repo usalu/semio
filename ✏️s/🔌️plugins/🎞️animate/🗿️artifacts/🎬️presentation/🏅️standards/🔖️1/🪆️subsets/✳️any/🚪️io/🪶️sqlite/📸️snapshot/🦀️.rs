@@ -15,10 +15,10 @@ fn restore_child<S>(row:&SqliteRow,native:&mut semio_framework_value_native_owne
 fn bound_child<S>(bound:&mut NativeEncodingBound<'_,'_>,child:&store::os_store::artifact_child::ArtifactChild<S>)->Result<(),ValueError>{let t=&child.target;for text in[&child.child_id,&t.artifact_id,&t.dialect.artifact_kind,&t.dialect.standard,&t.dialect.subset]{bound.repeated(text.len(),24)?}Ok(())}
 impl ArtifactSqliteSnapshotHost for PresentationSnapshot{
  
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   semantic_owned(self,control.limits().max_value_bytes,&mut SemanticCheck(control))?;control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   control.check_rows(4)?;let maximum=control.limits().max_rows;let maximum_bytes=control.limits().max_value_bytes;
   store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    let count=match record.get(2){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),None|Some(semio_framework_dsl_record::FieldValue::Absent)=>0,_=>return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Presentation tiles require a literal list").to_string()))};

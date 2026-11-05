@@ -1,23 +1,23 @@
 //! 🎻️ Staged slice of the `group` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🤝️ The instance's private child group publication and mounted command log turns.
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::Emit;
 use store::MemberFactory;
 use store::ReferenceSpaceMember;
 use semio_framework::FaultFrom;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
-use semio_framework_plugin_instance_children::children_components::ChildComposition;
+use semio_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
+use semio_plugin_instance_children::children_components::ChildComposition;
 use std::future::Future;
 use store::Mutation;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use crate::jobs_components::ToolOperations;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_ui_contract::*;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
 
 impl<A: ArtifactApp> ToolOperations<A> {
     /// 🧪️ Borrows original completed-output ownership and refusal observations without widening production visibility.

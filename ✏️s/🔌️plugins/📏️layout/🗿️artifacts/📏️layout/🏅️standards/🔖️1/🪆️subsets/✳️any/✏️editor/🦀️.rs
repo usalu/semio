@@ -17,8 +17,8 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_job::{Generation, InteractiveStage, RevisionId};
 use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
-use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
-use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
+use semio_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
+use semio_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
 use semio_s_artifact_layout_layout_engine_export::LayoutExportRequest;
@@ -45,9 +45,9 @@ use semio_s_artifact_layout_layout_editor_commands::LAYOUT_INTERACTION_ELEMENTS;
 use semio_s_artifact_layout_layout_editor_commands::LAYOUT_PLAY_APP_ID;
 use semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot;
 use semio_s_artifact_layout_layout_editor_commands::layout_select_action_args;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_layout_layout_editor_commands::modes::edit;
@@ -62,54 +62,54 @@ use semio_s_artifact_layout_layout_mutations_content::change_data_fields::Change
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_framework::kernel::Effect;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolInput, ArtifactReservedToolJobRequest, ArtifactToolFactoryRegistry};
+use semio_plugin::app::InteractionView;
+use semio_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolInput, ArtifactReservedToolJobRequest, ArtifactToolFactoryRegistry};
 #[cfg(test)]
-use semio_framework_plugin::App;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactKindSpec;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::ContextMenuSurfaceTarget;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::OsMediaCapability;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementPossible;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::CLEAR_SELECTION_ACTION_ID;
-use semio_framework_plugin::INTERACTION_HOVER_ACTION_ID;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_plugin::{AppOperationContext};
+use semio_plugin::App;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactKindSpec;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuSurfaceTarget;
+use semio_plugin::DraftView;
+use semio_plugin::DslValue;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaError;
+use semio_plugin::MediaPayload;
+use semio_plugin::MergeMode;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::OsMediaCapability;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementPossible;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::CLEAR_SELECTION_ACTION_ID;
+use semio_plugin::INTERACTION_HOVER_ACTION_ID;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::{AppOperationContext};
 #[cfg(test)] use serde_json::{json, Value};
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
@@ -167,7 +167,7 @@ pub use media_export_job_and_factories::{LayoutMediaExportJob, LayoutMediaExport
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `LayoutPlayApp::Command` — the SOLE dispatch surface for layout's own behavior, assembled from
     /// the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`,
     /// the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case

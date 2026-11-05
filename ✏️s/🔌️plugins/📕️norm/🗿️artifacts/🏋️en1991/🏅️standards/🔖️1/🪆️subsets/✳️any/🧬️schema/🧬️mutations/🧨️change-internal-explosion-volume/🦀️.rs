@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeInternalExplosionV
         record: "ChangedInternalExplosionVolume",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change enclosure volume V of the internal explosion", "Innenexplosion: Raumvolumen V ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change enclosure volume V of the internal explosion", "Innenexplosion: Raumvolumen V ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,6 +1,6 @@
 //! ✏️ Case edits: the editor actions of design cases as value-tree edits. The catalogue browser adds a seeded case (`insertItem cases`), the properties window sets or clears one unit-aware input (`setField cases[id=ID].numbers[id=KEY].value`, `null` clears), the case list duplicates and removes. Every edit is a [`NormEdit`] the artifact resolves to `insert-case`, `change-case-number|text` or `remove-case`; the live session re-evaluates the case on each. See [`super`] and `../../⚖️compliance/🧰️design-case`.
 use super::*;
-use semio_framework_plugin::UiListBuilder;
+use semio_plugin::UiListBuilder;
 use semio_framework_value::DslValue;
 use semio_s_plugin_norm_compliance::design_case::{CaseRow, DesignCase};
 
@@ -205,7 +205,7 @@ fn edit_args(edit: &NormEdit) -> UiAssemblyResult<UiValue> {
     }
 }
 
-fn edit_action(controller_id: &'static str, edit: &NormEdit) -> UiAssemblyResult<(semio_framework_plugin::ActionId, Option<UiValue>)> {
+fn edit_action(controller_id: &'static str, edit: &NormEdit) -> UiAssemblyResult<(semio_plugin::ActionId, Option<UiValue>)> {
     let action = match edit {
         NormEdit::InsertItem { .. } => "insertItem",
         NormEdit::RemoveItem { .. } => "removeItem",

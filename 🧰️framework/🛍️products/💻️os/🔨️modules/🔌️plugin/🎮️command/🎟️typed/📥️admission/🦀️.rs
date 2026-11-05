@@ -1,7 +1,7 @@
 //! 📥️ The admitted command receipt owns original wire pages and one authentic registered-row lease.
 use super::super::AdmittedToolCommand;
-use semio_framework_plugin_job::{original_declared_tools::{DeclaredToolRegistrationAlias,DeclaredToolRole},reserved_jobs::QualifiedToolProof};
-use semio_framework_plugin_decl_app::{ArtifactApp,tool_contract::ToolOwnerWitness};
+use semio_plugin_job::{original_declared_tools::{DeclaredToolRegistrationAlias,DeclaredToolRole},reserved_jobs::QualifiedToolProof};
+use semio_plugin_decl_app::{ArtifactApp,tool_contract::ToolOwnerWitness};
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
 use semio_framework::action_bus::RetainedToolWireInput;

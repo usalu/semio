@@ -5,8 +5,8 @@
 use crate::editor::grid2d as editor;
 use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::grid2d as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 
 fn examples() -> &'static [ExampleSource] {
     crate::examples::grid2d::example_source_slice()

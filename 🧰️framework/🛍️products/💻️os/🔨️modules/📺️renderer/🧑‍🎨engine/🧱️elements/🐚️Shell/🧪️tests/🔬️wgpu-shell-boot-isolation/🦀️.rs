@@ -1,4 +1,4 @@
-use semio_framework_os_renderer_wgpu_fixtures::shell::boot_manifest;
+use semio_renderer_wgpu_fixtures::shell::boot_manifest;
 use super::*;
 use {semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::PluginManifest,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 
@@ -40,7 +40,7 @@ fn boot_selection_opens_the_requested_variant_across_the_fixture_table() {
 /// settles (chrome + first refresh) and reports the plugin by name instead of rejecting `bootShell`.
 #[test]
 fn boot_without_the_requested_plugin_settles_with_a_per_plugin_status() {
-    let mut shell = ShellState::new(Vec::new(), "missing-plugin".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), "missing-plugin".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).boot()).expect("a missing plugin never fails the shell boot");
     assert!(shell.docs.session.is_none());
     assert_eq!(shell.plugins.plugin_faults.len(), 1);
@@ -53,7 +53,7 @@ fn boot_without_the_requested_plugin_settles_with_a_per_plugin_status() {
 /// carries the guest's own cause verbatim.
 #[test]
 fn plugin_fault_status_reads_in_both_languages() {
-    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(shell.prefs.plugin_fault_status(&shell.plugins).is_none());
     shell.plugins.plugin_faults.push(ShellPluginFault { plugin_id: "flow".into(), app_id: "s.flow.flow@1/*#editor".into(), detail: "interactive-job.catalog-authority: tool 'addGeneration'".into() });
     shell.prefs.locale_id = "en".into();
@@ -74,7 +74,7 @@ fn plugin_fault_status_reads_in_both_languages() {
 #[test]
 fn a_poisoned_surface_faults_alone() {
     let both: Vec<String> = vec!["flow-window".into(), "preview".into()];
-    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.prefs.settle_surface_faults(
         vec![("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()), ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into())],
         &both, &mut shell.chrome, &mut shell.plugins
@@ -99,7 +99,7 @@ fn a_poisoned_surface_faults_alone() {
 /// "repairs itself" while still showing nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn a_scoped_refresh_settles_only_the_surfaces_it_visited() {
-    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.prefs.settle_surface_faults(
         vec![("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()), ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into())],
         &["flow-window".to_string(), "preview".to_string()], &mut shell.chrome, &mut shell.plugins
@@ -120,7 +120,7 @@ fn a_scoped_refresh_settles_only_the_surfaces_it_visited() {
 /// cause verbatim, and never accumulates two cards for one surface.
 #[test]
 fn surface_fault_status_reads_in_both_languages_and_never_duplicates_a_surface() {
-    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(shell.prefs.surface_fault_status(&shell.plugins).is_none());
     shell.prefs.record_surface_fault("flow-window", "flow.body", "wgpu-ui.intake-budget-exhausted:intake:163840001".into(), &mut shell.chrome, &mut shell.plugins);
     shell.prefs.record_surface_fault("flow-window", "flow.body", "wgpu-ui.read-snapshot-missing".into(), &mut shell.chrome, &mut shell.plugins);

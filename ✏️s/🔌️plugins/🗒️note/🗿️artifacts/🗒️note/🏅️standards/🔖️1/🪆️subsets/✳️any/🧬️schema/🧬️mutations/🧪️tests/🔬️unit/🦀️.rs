@@ -359,9 +359,9 @@ async fn delete_asset_missing_target_is_error() {
 /// fresh fold of the edited log (Error/Fatal leaves fold as no-ops), and a clean report overwrites to exactly that state.
 async fn replay_history_edit(base: &NoteSnapshot, log: &[NoteMutation], index: usize, edited: &NoteMutation) -> protocol::ReplayReport {
     use protocol::OpBinary;
-    let mut store = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<NoteSnapshot, NoteMutation>(crate::NOTE_DOCUMENT_SCHEMA, "drag-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<NoteSnapshot, NoteMutation>(crate::NOTE_DOCUMENT_SCHEMA, "drag-time-travel", base.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     for mutation in log {
-        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a block edit applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("a block edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[index].clone(), protocol::InputReplacement::Input { schema: crate::NOTE_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
@@ -377,7 +377,7 @@ async fn replay_history_edit(base: &NoteSnapshot, log: &[NoteMutation], index: u
     });
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
     if !report.blocks_finalize() {
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
     }
     store.close();
@@ -409,7 +409,7 @@ async fn a_block_drag_retargeted_onto_a_missing_block_blocks_finalizing() {
 /// 🗣️ The drag's history row label reads the block count and the offset in English and German.
 #[test]
 fn a_block_drag_label_reads_the_count_and_offset() {
-    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_owned(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()) };
+    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_owned(), label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_owned()) };
     assert_eq!(label(drag_blocks(vec!["b1".into()], 2.5, -10.0)), ("Drag 1 block by (2.5, -10)".to_string(), "1 Block um (2,5; -10) ziehen".to_string()));
     assert_eq!(label(drag_blocks(vec!["b1".into(), "b2".into()], 0.0, 3.0)), ("Drag 2 blocks by (0, 3)".to_string(), "2 Blöcke um (0; 3) ziehen".to_string()));
 }
@@ -418,7 +418,7 @@ fn a_block_drag_label_reads_the_count_and_offset() {
 /// as verbs), an unset value reads as a reset, and no label leaks a Rust `Option` debug form.
 #[test]
 fn document_setting_labels_read_the_value_not_a_debug_option() {
-    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_owned(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()) };
+    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_owned(), label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_owned()) };
     let pair = |en: &str, de: &str| (en.to_string(), de.to_string());
     assert_eq!(label(change_grid_opacity(Some(0.76))), pair("Change grid opacity to 76%", "Rasterdeckkraft auf 76 % ändern"));
     assert_eq!(label(change_grid_opacity(None)), pair("Reset grid opacity", "Rasterdeckkraft zurücksetzen"));
@@ -439,8 +439,8 @@ fn document_setting_labels_read_the_value_not_a_debug_option() {
 #[test]
 fn block_references_read_their_name_and_take_the_block_selection() {
     let snapshot = sample_snapshot();
-    let names = semio_framework_plugin::app::time_travel::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&snapshot), &["b1"].into_iter().collect());
-    assert_eq!(names.get("b1").map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()).as_deref(), Some("Text"));
+    let names = semio_plugin::app::time_travel::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&snapshot), &["b1"].into_iter().collect());
+    assert_eq!(names.get("b1").map(|label| label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_owned()).as_deref(), Some("Text"));
     let schema: serde_json::Value = serde_json::from_str(<DragBlocks as protocol::MutationLeaf>::PAYLOAD_SCHEMA).expect("leaf schema");
     let reference = &schema["properties"]["ids"]["x-semio-ui"]["ref"];
     assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(crate::editor::note::support::NOTE_INTERACTION_BLOCKS), Some(crate::editor::note::support::NOTE_INTERACTION_GRANULARITY)), "{reference}");

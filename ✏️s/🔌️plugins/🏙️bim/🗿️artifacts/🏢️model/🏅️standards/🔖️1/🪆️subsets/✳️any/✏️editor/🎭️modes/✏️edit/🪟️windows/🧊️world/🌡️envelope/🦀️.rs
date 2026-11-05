@@ -9,7 +9,7 @@ use semio_s_artifact_bim_model_modify::render::envelope::{Mode, Part};
 use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{DslValue, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dScalarDomain, World3dScalarField, World3dScalarRange, World3dText, WORLD3D_ANNOTATIONS_MAX};
+use semio_plugin::{DslValue, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dScalarDomain, World3dScalarField, World3dScalarRange, World3dText, WORLD3D_ANNOTATIONS_MAX};
 
 /// 🏷️ The id of the mesh and the instance of the overlay group `index`.
 pub fn mesh_id(index: usize) -> String {

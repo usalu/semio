@@ -1,5 +1,5 @@
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use crate::viewer::avi::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

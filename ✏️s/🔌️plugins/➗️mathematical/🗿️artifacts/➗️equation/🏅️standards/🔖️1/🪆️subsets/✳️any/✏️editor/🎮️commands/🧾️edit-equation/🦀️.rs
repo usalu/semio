@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::graph::schema::mutations::{
     set_node_positions::{EquationNodePosition, SetNodePositions}, update_graph_algorithm::UpdateGraphAlgorithm,
 };
 use crate::{EquationGeometry, EquationGraph, EquationPoint, EquationSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::{BTreeMap, BTreeSet};
 

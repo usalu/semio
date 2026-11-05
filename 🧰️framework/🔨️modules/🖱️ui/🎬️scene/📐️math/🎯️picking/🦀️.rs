@@ -1,13 +1,13 @@
 //! 🎯️ Screen picking: ray and marquee selection of instances, components and vertices over leased meshes.
 //!
-//! Carved out of the former `semio-framework-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
+//! Carved out of the former `semio-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 
 use semio_framework_geometry::{Mat4, Vec3};
-use semio_framework_ui_scene_algebra::{vec3_from_array_m, vec3_new_m, Mat4Math, Vec3Math};
-use semio_framework_ui_scene_camera::projection_spec_project_point;
-use semio_framework_ui_scene_mesh::{Instance3d, Mesh3dFault, Mesh3dField, Mesh3dLease};
-use semio_framework_ui_scene_pass::{transform_aabb, SceneDraw3d};
-use semio_framework_ui_viewport::Viewport3dProjectionSpec;
+use semio_ui_scene_algebra::{vec3_from_array_m, vec3_new_m, Mat4Math, Vec3Math};
+use semio_ui_scene_camera::projection_spec_project_point;
+use semio_ui_scene_mesh::{Instance3d, Mesh3dFault, Mesh3dField, Mesh3dLease};
+use semio_ui_scene_pass::{transform_aabb, SceneDraw3d};
+use semio_ui_viewport::Viewport3dProjectionSpec;
 
 //#region Picking
 pub fn ray_aabb_slab(origin: Vec3, dir: Vec3, min: [f32; 3], max: [f32; 3]) -> Option<f32> {

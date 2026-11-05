@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFastenedJointGauge
         record: "ChangedFastenedJointGauge",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fastened joint: Gauge p_2", "Befestigungsverbindung: Rissabstand p_2 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fastened joint: Gauge p_2", "Befestigungsverbindung: Rissabstand p_2 ändern")
     }
 }
 

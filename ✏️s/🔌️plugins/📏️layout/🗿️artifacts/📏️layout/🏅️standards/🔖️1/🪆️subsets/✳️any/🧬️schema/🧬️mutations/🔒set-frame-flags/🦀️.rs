@@ -24,8 +24,8 @@ pub struct SetFrameFlags {
 impl<Op> MutationKind<LayoutSnapshot, Op> for SetFrameFlags where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_frame_flags::SetFrameFlags> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "frame-flags", kind: "set-frame-flags", record: "SetFrameFlags" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set flags on frame \"{}\"", self.frame_id), &format!("Markierungen von Rahmen \"{}\" setzen", self.frame_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set flags on frame \"{}\"", self.frame_id), &format!("Markierungen von Rahmen \"{}\" setzen", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

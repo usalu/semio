@@ -2,7 +2,7 @@ use crate::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID;
 use crate::editor::puzzle5d::precompute::editor_part;
 use crate::editor::puzzle5d::entities::Puzzle5dDocument;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use semio_framework_plugin::{EditorApp, Fault, ToolRunJobRequest};
+use semio_plugin::{EditorApp, Fault, ToolRunJobRequest};
 use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill3d;
 use std::sync::Arc;
 #[allow(unused_imports)]
@@ -10,7 +10,7 @@ use crate::editor::puzzle5d::precompute::{puzzle3d_config, puzzle3d_object, puzz
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolRunJob;
+use semio_plugin::ToolRunJob;
 #[allow(unused_imports)]
 use {semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::change_target_volume_hidden, semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::change_target_volume_locked, semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object, semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::create_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::delete_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::move_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::rotate_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::scale_target_volume, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
 use crate::editor::puzzle5d::Puzzle5dPlayApp;
@@ -48,13 +48,13 @@ use crate::editor::puzzle5d::entities::concrete_forest_example_document;
 use crate::editor::puzzle5d::entities::nakagin_example_document;
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_job::StepBudget;
-use semio_framework_plugin::ActionMeta;
-use semio_framework_plugin::ArtifactApp;
-use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin::PluginApp;
-use semio_framework_plugin::ToolRunJobPort;
-use semio_framework_plugin::ToolRunJobPurpose;
-use semio_framework_plugin::ToolRunTraceKeys;
+use semio_plugin::ActionMeta;
+use semio_plugin::ArtifactApp;
+use semio_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin::PluginApp;
+use semio_plugin::ToolRunJobPort;
+use semio_plugin::ToolRunJobPurpose;
+use semio_plugin::ToolRunTraceKeys;
 use semio_framework_tool_run::ToolRunId;
 use semio_framework_tool_run::ToolRunIdentity;
 use semio_framework_tool_run::ToolRunStep;
@@ -111,7 +111,7 @@ const PUZZLE5D_FILL_LAW_BOX_SCALE: f32 = 4.0;
 /// lock reads as "not resident" — hence the bounded retry rather than one call.
 fn seed_planner_meshes(document: &Puzzle5dDocument) {
     use semio_s_artifact_puzzle_3d_precompute::derive_brush_mesh;
-    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle5d::entities::PUZZLE5D_FALLBACK_MESH_KIND);
+    let fallback = semio_plugin::mesh_from_kind(crate::editor::puzzle5d::entities::PUZZLE5D_FALLBACK_MESH_KIND);
     let positions: Vec<f32> = fallback.positions.iter().map(|value| value * PUZZLE5D_FILL_LAW_BOX_SCALE).collect();
     let mut urls = crate::editor::puzzle5d::entities::collect_mesh_urls(document);
     urls.push(crate::editor::puzzle5d::entities::PUZZLE5D_FALLBACK_MESH_KIND.to_string());
@@ -147,7 +147,7 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
         host: None,
         trace_keys: ToolRunTraceKeys::default(),
         entity_marks: &[],
-        children: semio_framework_plugin::ChildContentView::default(),
+        children: semio_plugin::ChildContentView::default(),
         member_ops: &[],
     };
     fill_run_job(request).expect("the fill job builds").expect("the fill tool has a run job")
@@ -353,7 +353,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         host: None,
             trace_keys: ToolRunTraceKeys::default(),
             entity_marks: &[],
-            children: semio_framework_plugin::ChildContentView::default(),
+            children: semio_plugin::ChildContentView::default(),
             member_ops: &[],
         })
         .expect("the planner job builds")
@@ -503,11 +503,11 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
 
 //#region ⏯️App
 pub(crate) fn host_turn(app: &mut Puzzle5dTestApp) {
-    app.maintain(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes, app.1.cx()).expect("maintenance step");
-    semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut identity, app.1.cx()))).expect("advance one typed operation publication unit");
+    app.maintain(&mut app.0, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes, app.1.cx()).expect("maintenance step");
+    semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut identity, app.1.cx()))).expect("advance one typed operation publication unit");
     crate::puzzle_job::testing::drain_outboxes(&mut app.0);
     if let Some(page) = app.take_typed_operation_result_page(1) {
-        assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+        assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page");
     }
     let _ = app.take_typed_operation_event();
@@ -522,7 +522,7 @@ pub(crate) fn world_meta() -> ActionMeta {
 
 pub(crate) fn tool_run_action(app: &mut Puzzle5dTestApp, action: &str, args: serde_json::Value) -> serde_json::Value {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &world_meta(), &mut identity, app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close))).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+    let result = semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &world_meta(), &mut identity, app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close))).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     serde_json::Value::from(&result.output)
 }
 

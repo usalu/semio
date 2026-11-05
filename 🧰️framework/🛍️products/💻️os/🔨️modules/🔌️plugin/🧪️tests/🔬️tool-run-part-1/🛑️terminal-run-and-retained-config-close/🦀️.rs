@@ -12,11 +12,11 @@
 /// once per ANSWER, never once per REFRESH, and a terminal run answers nothing.
 #[semio_framework_async_macros::async_test]
 async fn a_terminal_run_arms_no_further_work_however_many_turns_the_host_takes() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let fixture = fixture();
@@ -73,11 +73,11 @@ fn expected_flag(value: &Value) -> bool {
 /// `sourcing.module` / `cad.computer` / `process.machines` host packs could never be retained.
 #[semio_framework_async_macros::async_test]
 async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
-    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let identity:semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
@@ -102,8 +102,8 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, maximum_release_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..caller.policy.close };
             assert!(demand.copy_bytes<=grant.maximum_copy_bytes && demand.capacity_bytes<=grant.maximum_capacity_bytes && demand.release_bytes<=grant.maximum_release_bytes && demand.depth<=grant.maximum_depth,"actual demand fits original independent page and caller ceilings");
             assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
-            match { let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(caller.context,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty()))).expect("original close step"); let _ = app.take_constructor_receipt(); step } {
-                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) => {
+            match { let step = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(caller.context,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty()))).expect("original close step"); let _ = app.take_constructor_receipt(); step } {
+                semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) => {
                     assert!(progress.fits(grant));
                     let released_items = progress.copied_items;
                     let released_bytes = progress.released_bytes;
@@ -113,7 +113,7 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
                     }
                     last = format!("Pending {{ {released_items}, {released_bytes} }}");
                 }
-                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
+                semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
                 step => last = format!("{step:?}"),
             }
         }

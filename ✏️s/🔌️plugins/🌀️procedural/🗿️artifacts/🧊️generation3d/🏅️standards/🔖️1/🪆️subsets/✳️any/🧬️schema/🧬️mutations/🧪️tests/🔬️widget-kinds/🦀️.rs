@@ -1,6 +1,6 @@
 //! 🧪️ Kind fixture laws of `create-widget`, `update-widget`, `delete-widget`, `move-widget`: each committed scenario applied, inverted and diffed through the mutation union.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🌱️create-widget/🧪️tests/📝️inserts/🦀️.rs"]
 mod create_widget_inserts;

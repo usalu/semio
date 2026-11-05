@@ -2,8 +2,8 @@
 //! deltas (`removed`/`inserted`/`moved`/`modified`, see `protocol::list_delta`): a mutation names exactly the rows it creates, deletes, moves or patches. The `steps` flow
 //! handle and the `tool_solids` handles are derived from the step rows by `apply`, never carried.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 //#region 🧩️Modules

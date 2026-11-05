@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "tiles", kind: "reorder-tiles", record: "ReorderedTiles" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder tile \"{}\" to position {}", self.id, self.to_index), &format!("Kachel \"{}\" an Position {} verschieben", self.id, self.to_index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Reorder tile \"{}\" to position {}", self.id, self.to_index), &format!("Kachel \"{}\" an Position {} verschieben", self.id, self.to_index))
     }
 
     fn target(&self) -> Vec<String> {

@@ -2,8 +2,8 @@
 
 use semio_hub_space_foundation::config::SpaceConfig;
 use semio_hub_space_foundation::terminology::SStudioLabels;
-use semio_framework_os::WorkflowNode;
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_os::WorkflowNode;
+use semio_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure
 pub async fn measure(config: &SpaceConfig, nodes: &[WorkflowNode], labels: &SStudioLabels) -> WindowMeasure {

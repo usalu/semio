@@ -12,8 +12,8 @@ pub struct ChangeOutdoorCo2 {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeOutdoorCo2 where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_outdoor_co2::ChangeOutdoorCo2> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "outdoor-co2", kind: "change-outdoor-co2", record: "ChangeOutdoorCo2" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change outdoor CO₂ concentration", "CO₂-Konzentration der Außenluft ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change outdoor CO₂ concentration", "CO₂-Konzentration der Außenluft ändern")
     }
 }
 

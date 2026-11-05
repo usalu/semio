@@ -26,7 +26,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_semio_table_model::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
-            let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+            let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
             let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot::demo_table_snapshot());
             let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
             let reconstructed = format!("{}\n{body}", envelope.envelope_id());
@@ -38,7 +38,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_semio_table_mutations::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
-            let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+            let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
             for mutation in semio_s_artifact_stdio_semio_table_mutations::io::text::mutations::demo_mutation_cases() {
                 let printed = mutation.print_op();
                 assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
@@ -51,7 +51,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_semio_table_model::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
-            let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+            let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
             for d in diff::demo_diff_cases() {
                 let printed = d.print_diff();
                 assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");

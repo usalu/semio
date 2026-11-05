@@ -1,0 +1,39 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "base",
+      "mutations",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "base": {
+        "type": "object",
+        "required": [
+          "hostSnapshot",
+          "generation"
+        ]
+      },
+      "mutations": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
+      "expected": {
+        "type": "object",
+        "required": [
+          "hostSnapshot",
+          "generation"
+        ]
+      }
+    }
+  }
+}

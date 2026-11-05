@@ -10,7 +10,7 @@ pub struct InsertCutout { pub index: usize, pub cutout: Cutout }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertCutout where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_cutout::RemoveCutout> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "cutout", kind: "insert-cutout", record: "InsertedCutout" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert cutout {} at #{}", self.cutout.id, self.index), &format!("Cutout {} an #{} einfügen", self.cutout.id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert cutout {} at #{}", self.cutout.id, self.index), &format!("Cutout {} an #{} einfügen", self.cutout.id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.cutout.id.clone()] }
 }
 

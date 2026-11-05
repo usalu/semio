@@ -15,8 +15,8 @@ pub struct SetArchiveComment {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetArchiveComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "archive-comment", kind: "set-archive-comment", record: "SetArchiveComment" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set archive comment", "Archivkommentar setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set archive comment", "Archivkommentar setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

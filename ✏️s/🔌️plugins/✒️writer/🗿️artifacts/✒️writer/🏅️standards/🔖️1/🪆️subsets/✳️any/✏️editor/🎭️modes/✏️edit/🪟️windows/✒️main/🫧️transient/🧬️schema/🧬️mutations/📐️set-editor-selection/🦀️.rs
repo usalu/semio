@@ -13,8 +13,8 @@ pub struct SetEditorSelection {
 impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransientMutation> for SetEditorSelection {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-editor-selection", kind: "set-editor-selection", record: "SetEditorSelection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Editor Selection", "Editorauswahl des Schreibfensters setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Writer Window Editor Selection", "Editorauswahl des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["editor_selection".into()]

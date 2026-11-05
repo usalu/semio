@@ -3,12 +3,12 @@
 //! to show beyond the run period the model carries. A viewer declares no actions and owns no locale
 //! switch, so every row carries both authored languages side by side (English then German).
 
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "energy.simulation.viewer";
@@ -52,7 +52,7 @@ pub fn render(run_period: &crate::snapshot::state::RunPeriod) -> BuiltNode {
         },
         leaf("energy-viewer-run-period", format!("Run period / Simulationszeitraum: {:02}-{:02} → {:02}-{:02}", run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day)),
     ];
-    TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Energy results unavailable")).expect("static label is valid"))
+    TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_plugin::built_text_node(semio_ui_locale::Label::data("Energy results unavailable")).expect("static label is valid"))
 }
 //#endregion 🔖️Render
 

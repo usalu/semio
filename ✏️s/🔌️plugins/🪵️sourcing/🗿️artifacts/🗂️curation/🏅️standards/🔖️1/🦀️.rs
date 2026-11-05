@@ -7,7 +7,7 @@
 //! `📓️w4-sourcing-report.md` `## openQuestions`); `extensions` IS the real, carried-over value.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<A: crate::SourcingApplication>() -> StandardDeclaration<A> {
@@ -17,7 +17,7 @@ pub fn standard<A: crate::SourcingApplication>() -> StandardDeclaration<A> {
 //#region 🧩️ArtifactItems7
 pub mod artifact_items_7 {
 use crate::{SOURCING_CURATION_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -25,7 +25,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "catalogue.sourcing".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Sourcing Curation", "Beschaffungskuratierung"),
+        label: semio_ui_locale::LocalizedLabel::native("Sourcing Curation", "Beschaffungskuratierung"),
         source_format: "sourcing.curation".into(),
         component_kind: "catalogue".into(),
         dimension: "data".into(),
@@ -55,9 +55,9 @@ pub mod artifact_items_8 {
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc). Relocated from
 /// `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes
 /// the artifact (kind, schema, io ports, ownership), which is not engine behaviour.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.sourcing.curation.standard.v1", "standard", "1", &[], None),
         ("s.sourcing.curation.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.sourcing.curation.schema.artifact", "schema", "s.sourcing.curation", &[("schema", "s.sourcing.curation")], None),
@@ -92,24 +92,24 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `declaration()`/`ArtifactDeclaration::builder(...)` channel outright (atomic cutover with the
 /// plugin root edit — no dual registration). `localization: &[]` is a documented shortfall: the
 /// real en/de localized names still live on `definition()`'s kept capability rows (debt D1).
-pub fn artifact<A: SourcingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: SourcingApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.sourcing.curation").expect("canonical sourcing.curation kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait SourcingApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> SourcingApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 

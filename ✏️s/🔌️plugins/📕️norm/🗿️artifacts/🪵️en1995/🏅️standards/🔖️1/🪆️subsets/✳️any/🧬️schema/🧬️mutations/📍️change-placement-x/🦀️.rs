@@ -10,7 +10,7 @@ pub struct ChangePlacementX { pub id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangePlacementX where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_placement_x::ChangePlacementX> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "placement-x", kind: "change-placement-x", record: "ChangedPlacementX" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change origin x of placement {}", self.id), &format!("Ursprung x von Platzierung {} ändern", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change origin x of placement {}", self.id), &format!("Ursprung x von Platzierung {} ändern", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

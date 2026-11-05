@@ -1,0 +1,137 @@
+{
+  "current": [
+    "beta"
+  ],
+  "targets": [
+    {
+      "id": "alpha"
+    },
+    {
+      "id": "beta"
+    }
+  ],
+  "cases": [
+    {
+      "name": "empty replace",
+      "id": null,
+      "merge": "replace",
+      "expected": []
+    },
+    {
+      "name": "empty range",
+      "id": null,
+      "merge": "range",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "empty additive",
+      "id": null,
+      "merge": "additive",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "empty subtractive",
+      "id": null,
+      "merge": "subtractive",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "empty toggle",
+      "id": null,
+      "merge": "toggle",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "numeric zero",
+      "id": 0,
+      "merge": "replace",
+      "expected": [
+        "alpha"
+      ]
+    },
+    {
+      "name": "numeric toggle",
+      "id": 1,
+      "merge": "toggle",
+      "expected": []
+    },
+    {
+      "name": "numeric additive",
+      "id": 0,
+      "merge": "additive",
+      "expected": [
+        "beta",
+        "alpha"
+      ]
+    },
+    {
+      "name": "numeric subtractive",
+      "id": 1,
+      "merge": "subtractive",
+      "expected": []
+    },
+    {
+      "name": "numeric string",
+      "id": "0",
+      "merge": "replace",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "boolean",
+      "id": false,
+      "merge": "replace",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "empty string",
+      "id": "",
+      "merge": "replace",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "negative",
+      "id": -1,
+      "merge": "replace",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "fractional",
+      "id": 0.5,
+      "merge": "replace",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "out of range",
+      "id": 2,
+      "merge": "replace",
+      "expected": [
+        "beta"
+      ]
+    },
+    {
+      "name": "missing id",
+      "merge": "replace",
+      "expected": [
+        "beta"
+      ]
+    }
+  ]
+}

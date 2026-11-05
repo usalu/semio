@@ -1,6 +1,6 @@
 //! 🧪️ Original source identity indexing pays actual growth, sorting, cancellation and close.
 use super::*;
-use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcEntity;
 struct RequestIds([u64; 3]);

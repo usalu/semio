@@ -5,22 +5,22 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use crate::editor::flow::host::catalogue_sections;
 use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
 use crate::editor::flow::editor_vocabulary::{flow_action, ui_value_bool, ui_value_map, ui_value_text};
-use semio_framework_ui_contract::Label;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::tree_item_with_action_draggable;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_contract::Label;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action_draggable;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use serde_json::Value;
 
 /// 🏷️ Converts catalogue/section titles into the panel builder's `Label`.
-fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<Label> {
+fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<Label> {
     Label::try_from(value.as_ref().to_string()).map_err(|error| PluginAssemblyError::new("ui.catalogue", error))
 }
 
@@ -60,7 +60,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(config: &FlowMainWindowConfig, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(config: &FlowMainWindowConfig, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let catalogue = catalogue_sections(&config.catalogue_sections_json);
     let sections = catalogue.as_array().ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue root must be an array"))?;
     if sections.is_empty() {
@@ -87,7 +87,7 @@ pub fn render(config: &FlowMainWindowConfig, labels: &FlowPlayLabels, windows: &
 }
 
 /// 🧩️ Installed/enabled extension palette plus actions surfaced by active extensions.
-fn append_extension_sections(mut builder: PanelTreeBuilder, config: &FlowMainWindowConfig, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<PanelTreeBuilder> {
+fn append_extension_sections(mut builder: PanelTreeBuilder, config: &FlowMainWindowConfig, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<PanelTreeBuilder> {
     let extension_enabled = config.automation_enabled();
     let enabled_actions: Vec<&(&str, &str, &str, &str, &str)> = FLOW_AUTOMATIONS.iter().filter(|(id, ..)| extension_enabled.get(*id).copied().unwrap_or(false)).collect();
     builder = builder.window_section(windows, "flow-play-extensions.installed", Some(ui_label(labels.extensions.as_str())?), false, FLOW_AUTOMATIONS, |(id, name, _, _, _)| {

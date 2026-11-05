@@ -1,7 +1,7 @@
 //! 🎠️ Kernel effects, events, turn results, invocation contexts, broker hooks and the return content wire.
 
 use semio_framework_actor::byte_page::ACTOR_BYTE_PAGE_BYTES;
-use semio_framework_ui_contract::PresenceUpdate;
+use semio_ui_contract::PresenceUpdate;
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
@@ -11,7 +11,7 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use semio_framework_ui_declaration::ui::UiNode;
+use semio_ui_declaration::ui::UiNode;
 use semio_framework_kernel_history::HistoryPatch;
 use semio_framework_kernel_identity::{ActionInvocation, ActivationEvent, AppEvent, AppInstanceId, ArtifactHandle, BrokerCapabilityGrant, CapabilityChange, CapabilityGrant, CapabilityId, CapabilityRequest, CommandInvocation, FailureAction, KernelMutation, PluginInstanceId, QuotaBreach, QuotaSchema, RequestId, RequestOutcome, TurnStatus, UndoGroup, Usage, WindowHandle, WindowKindId};
 use semio_framework_kernel_media_jobs::{IconRenderExportItem, SpawnedJobCompletion, VideoRenderProgram};
@@ -128,7 +128,7 @@ impl std::error::Error for ClipboardError {}
 /// links, registry lookups, io composition, engine caches, jobs, storage, capability admin, and
 /// pub/sub — see `📓️design-abi.md` §2's table.
 // 🚧️ Both `Serialize` AND `Deserialize` stay unconditional (kept additive, not stripped):
-// `semio-framework-plugin`'s `RefreshResponse` (`🔌️plugin/🦀️.rs`, `requested_effects: Vec<Effect>`)
+// `semio-plugin`'s `RefreshResponse` (`🔌️plugin/🦀️.rs`, `requested_effects: Vec<Effect>`)
 // derives `Serialize` in production and needs `Effect: Serialize`; this file's own `TurnResult`
 // (`effects: Vec<Effect>`, above `🔖️Invocation`) derives `Deserialize` in production too — a real
 // consumer a first pass at `#[cfg_attr(test, derive(Deserialize))]` missed (confirmed the hard way:
@@ -323,7 +323,7 @@ pub enum Effect {
         args: Option<DslValue>,
     },
     /// 🔌️ Asks the shell to invoke an extension capability. `req` is MINTED by the guest
-    /// request registry (`semio-framework-plugin`'s `RequestRegistry`) and is meaningless — a
+    /// request registry (`semio-plugin`'s `RequestRegistry`) and is meaningless — a
     /// silently discarded result — when it is written by hand: `Event::Completed { req, .. }` is
     /// routed exclusively through that registry, and an id with no registry slot resolves nothing.
     /// The variant is therefore `#[non_exhaustive]`: no crate outside this one can write the struct
@@ -703,7 +703,7 @@ pub enum Event {
     ColdDocumentPairPage(ColdDocumentPairPage),
 
     /// 🎬️ `wit-flip` (26/08/20) — a user action against a UI node, `pack`-encoded
-    /// `semio_framework_ui_contract::UiIntent`. Separate from paged command ingress so the host can
+    /// `semio_ui_contract::UiIntent`. Separate from paged command ingress so the host can
     /// tell a genuine UI interaction from a channel command without decoding the payload —
     /// `component.wit`'s `events::ui-intent-event`.
     UiIntent {

@@ -3,10 +3,10 @@ use crate::standards::v6_0::subsets::document::schema::mutations::TiffMutation;
 use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
 use crate::{standards::v6_0::subsets::document::schema::snapshot::TiffIfd, standards::v6_0::subsets::document::schema::snapshot::TiffTag};
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
+use semio_plugin::AppOperationContext;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_contract::editing;
 use config::{TiffEditorConfig, TiffEditorConfigMutation};
@@ -25,10 +25,10 @@ async fn create_editor_builds_a_definition_for_the_editor_role() {
     assert_eq!(def.role, semio_framework::AppRole::Editor);
     assert_eq!(def.dialect, TIFF_ANY_DIALECT.into());
     let select = def.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == main::SELECT_IFD_ACTION_ID).expect("TIFF page selection action");
-    assert_eq!(select.kind, semio_framework_plugin::ActionKind::View);
+    assert_eq!(select.kind, semio_plugin::ActionKind::View);
     assert!(!select.in_palette);
-    assert_eq!(select.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Select Image Page");
-    assert_eq!(select.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Bildseite auswählen");
+    assert_eq!(select.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Select Image Page");
+    assert_eq!(select.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Bildseite auswählen");
     assert_eq!(select.args.len(), 1);
     assert_eq!(select.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
 }
@@ -62,9 +62,9 @@ fn retained_page_selection_publishes_only_the_addressed_config_lane() {
     let mut snapshot = tiled_editor_snapshot();
     snapshot.ifds.push(snapshot.ifds[0].clone());
     let command = TiffAnyEditCommand::SelectIfd { ifd_index: 1 };
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-page-selection".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-page-selection".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let emit = tiff_any_editor_retained_reduce(&command, &snapshot, &TiffEditorConfig::default(), &history, &interaction, &hover, None, &operation).expect("retained page selection");
     assert!(emit.artifact_mutations.is_empty());
@@ -111,10 +111,10 @@ fn paint_command() -> TiffAnyEditCommand {
 }
 
 fn drive_paint(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, config: &TiffEditorConfig) -> Vec<TiffMutation> {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-    let history = semio_framework_plugin::HistoryView::empty();
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-paint-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-paint-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new();
     assert_eq!(work.extent(command, snapshot, &interaction, None), paint_region::CAPACITY.rows_for_items(1));
@@ -136,9 +136,9 @@ async fn image_window_exposes_bilingual_tiled_paint_controls() {
     let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == paint_region::ACTION_ID).expect("TIFF paint action");
     assert_eq!(action.args.len(), 8);
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
-    assert!(action.args.iter().all(|argument| argument.required && matches!(argument.schema, semio_framework_plugin::ArgSchema::Number { integer: true, .. })));
-    assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Paint Tiled Region");
-    assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Kachelbereich malen");
+    assert!(action.args.iter().all(|argument| argument.required && matches!(argument.schema, semio_plugin::ArgSchema::Number { integer: true, .. })));
+    assert_eq!(action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Paint Tiled Region");
+    assert_eq!(action.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Kachelbereich malen");
 }
 
 #[test]
@@ -179,7 +179,7 @@ fn retained_tiled_paint_targets_the_selected_ifd_and_survives_artifact_undo() {
 
 #[test]
 fn cancelled_retained_tiled_paint_closes_without_publication() {
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = tiled_editor_snapshot();
     let mut work = paint_region::PaintRegionWork::new();
     work.begin_close();
@@ -247,4 +247,4 @@ fn natural_file_decode_refuses_truncated_and_foreign_bytes_without_panicking() {
     assert!(<TiffAnyEditor as ArtifactEditor>::decode_natural_file(b"GIF89a not a tiff").is_err());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::tiff_any::TiffAnyEditor, || semio_framework_plugin::App { definition: crate::editor::tiff_any::create_tiff_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::tiff_any::TiffAnyEditor, || semio_plugin::App { definition: crate::editor::tiff_any::create_tiff_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document");

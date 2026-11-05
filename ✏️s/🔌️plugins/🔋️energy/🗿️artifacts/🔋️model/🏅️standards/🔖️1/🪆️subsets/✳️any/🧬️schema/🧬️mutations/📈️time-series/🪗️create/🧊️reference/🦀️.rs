@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "time-series-schedule", kind: "create-time-series-schedule", record: "CreatedTimeSeriesSchedule" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Time Series Schedule {} at index {}", self.id.0, self.index), &format!("Zeitreihenzeitplan {} an Index {} erstellen", self.id.0, self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create Time Series Schedule {} at index {}", self.id.0, self.index), &format!("Zeitreihenzeitplan {} an Index {} erstellen", self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

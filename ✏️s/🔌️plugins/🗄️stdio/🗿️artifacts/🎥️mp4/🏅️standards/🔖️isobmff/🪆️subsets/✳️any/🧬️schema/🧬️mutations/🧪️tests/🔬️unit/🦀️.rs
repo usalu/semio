@@ -112,7 +112,7 @@ async fn text_descriptor_recognizes_set_movie_printer_output() {
     let base = base_snapshot().await;
     let mutation = Mp4Mutation::SetMovie(set_movie::SetMovie { movie: base.movie.clone() });
     let grammar = semio_framework_dsl::parse_grammar(crate::standards::isobmff::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse MP4 mutation grammar");
-    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     let printed = mutation.print_op();
     assert!(recognizer.recognize(&printed).unwrap_or(false), "MP4 mutation grammar did not recognize {printed:?}");
 }

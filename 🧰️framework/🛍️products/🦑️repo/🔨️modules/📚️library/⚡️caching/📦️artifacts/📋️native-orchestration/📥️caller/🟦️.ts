@@ -30,6 +30,7 @@ export function nativeNxChildEnvironmentV1(root:string,envelope:ScriptProcessEnv
 /** 🏛️ Declares production resources and the original bootstrap's finite child command set before launch. */
 export interface NativeNxCallerCapabilitiesV1 {
  readonly workspaceRoot:string;
+ readonly codeRoot:string;
  readonly arguments:readonly string[];
  readonly selection:readonly string[];
  readonly buildMode:"prototype"|"release";
@@ -43,7 +44,7 @@ export function createNativeNxCallerCapabilitiesV1(root:string,arguments_:readon
  const canonical=canonicalArchitectureEnvironment(root,environment),offline=canonical.CARGO_NET_OFFLINE??"false";
  if(offline!=="true"&&offline!=="false")throw Error("Original Cargo network selection refused");
  const buildMode=environment.SEMIO_BUILD_MODE??"prototype";
- const capabilities={workspaceRoot:resolve(root),arguments:[...arguments_],selection:["nx",...selected],buildMode:buildMode as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"}},launches:launches.map(args=>["nx",...args])};
+ const capabilities={workspaceRoot:resolve(root),codeRoot:resolve(root),arguments:[...arguments_],selection:["nx",...selected],buildMode:buildMode as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"}},launches:launches.map(args=>["nx",...args])};
  if(arguments_[0]!=="nx"||validateJsonSchemaSubset(callerSchema,capabilities).length||!capabilities.launches.some(args=>JSON.stringify(args)===JSON.stringify(capabilities.selection)))throw Error("Original bootstrap launch declaration refused");
  return capabilities;
 }

@@ -11,8 +11,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change run period end day to {}", self.new_end_day), &format!("Endtag des Simulationszeitraums auf {} ändern", self.new_end_day))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change run period end day to {}", self.new_end_day), &format!("Endtag des Simulationszeitraums auf {} ändern", self.new_end_day))
     }
 }
 

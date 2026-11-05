@@ -42,10 +42,10 @@ fn a_hop_carries_the_window_id_and_kind_it_was_addressed_to() {
 /// and a surface that declares no preview kind has none.
 #[test]
 fn only_declared_preview_kinds_are_evaluation_windows() {
-    use semio_framework_plugin::ViewWindowInstance;
+    use semio_plugin::ViewWindowInstance;
     let view = ViewModel {
         window_instances: vec![ViewWindowInstance { id: "main".into(), window_kind_id: "procedural-main".into() }, ViewWindowInstance { id: "view-preview".into(), window_kind_id: "procedural-view-preview".into() }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let viewer_kinds: &[&'static str] = &["procedural-view-preview"];
     assert_eq!(attached_preview_windows(Some(&view), viewer_kinds), vec![("view-preview", "procedural-view-preview")]);
@@ -178,7 +178,7 @@ fn the_kernel_release_reaches_both_extension_registries_or_nothing() {
     let invocations = release_invocations_for(&payload, Ok("flow-extension-brep".into()));
     assert_eq!(invocations.iter().map(|invocation| invocation.capability.as_str()).collect::<Vec<_>>(), expected["capabilities"].as_array().unwrap().iter().map(text).collect::<Vec<_>>());
     assert!(invocations.iter().all(|invocation| invocation.response_action == text(&expected["responseAction"]) && invocation.extension_id == "flow-extension-brep"));
-    let miss = semio_framework_os_flow::FlowExtensionAddressMiss { extension_id: GENERATION_3D_GEOMETRY_EXTENSION_ID.into(), contributed: Vec::new() };
+    let miss = semio_os_flow::FlowExtensionAddressMiss { extension_id: GENERATION_3D_GEOMETRY_EXTENSION_ID.into(), contributed: Vec::new() };
     assert_eq!(release_invocations_for(&payload, Err(miss)).len() as u64, expected["unaddressableEmits"].as_u64().unwrap());
 }
 
@@ -205,7 +205,7 @@ fn every_status_row_offers_the_run_abort_exactly_while_it_can_stop_work() {
         assert_eq!(status["cancelAction"], expected["cancelAction"], "{id}: cancelAction");
         assert_eq!(status.get("cancelArgs").cloned().unwrap_or(serde_json::Value::Null), expected["cancelArgs"], "{id}: cancelArgs");
     }
-    let miss = semio_framework_os_flow::FlowExtensionAddressMiss { extension_id: GENERATION_3D_GEOMETRY_EXTENSION_ID.into(), contributed: Vec::new() };
+    let miss = semio_os_flow::FlowExtensionAddressMiss { extension_id: GENERATION_3D_GEOMETRY_EXTENSION_ID.into(), contributed: Vec::new() };
     let running = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "running" }));
     let faulted: serde_json::Value = serde_json::from_str(&preview_progress_status_json_for(None, running.as_ref(), Err(miss))).expect("status json");
     assert_eq!((faulted["phase"].as_str(), faulted["cancellable"].as_bool()), (Some("faulted"), Some(false)), "an unaddressable kernel has no work an abort could stop");
@@ -245,7 +245,7 @@ fn a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offe
     let shared: serde_json::Value = serde_json::from_str(surface_controls_fixture_json()).expect("the shared surface-controls fixture parses");
     let minimum = shared["progressTimeline"]["minimumNonIdleFrames"].as_u64().expect("the shared fixture declares a minimum") as usize;
     let run = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "running" }));
-    let mut host = semio_framework_os_flow::FlowHost::default();
+    let mut host = semio_os_flow::FlowHost::default();
     let mut session = FlowEvalSession::new();
 
     let idle = published(&session, None);
@@ -300,7 +300,7 @@ fn a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offe
 #[test]
 fn an_abort_while_the_chain_is_live_settles_on_cancelled() {
     let run = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "running" }));
-    let mut host = semio_framework_os_flow::FlowHost::default();
+    let mut host = semio_os_flow::FlowHost::default();
     let mut session = FlowEvalSession::new();
     assert!(session.sync(&host));
     session.arm_window_tick("preview-1");

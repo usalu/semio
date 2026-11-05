@@ -15,7 +15,7 @@ fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
     snapshot.objects[0].label = None;
     snapshot.meta.kind_catalogs.as_mut().expect("the example ships its kind catalogs").objects.iter_mut().find(|entry| entry.id == kind).expect("the seed's kind is catalogued").label = "Forest Left".into();
     snapshot.attractions.push(semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction { id: "attraction-chip".into(), attracting: vortex.clone(), attracted: vortex.clone(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
-    let chip = |kinds: &[&str], id: &str| puzzle3d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string());
+    let chip = |kinds: &[&str], id: &str| puzzle3d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string());
     assert_eq!(chip(&[PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_TARGET_VOLUME], &object).as_deref(), Some("Forest Left"), "an unlabelled object reads its kind's catalog label");
     assert_eq!(chip(&[PUZZLE3D_GRANULARITY_VORTEX], &vortex), Some(format!("Forest Left \u{b7} {vortex_label}")), "a vortex reads its object and its own label");
     assert_eq!(chip(&[PUZZLE3D_GRANULARITY_ATTRACTION], "attraction-chip").as_deref(), Some("Forest Left \u{2192} Forest Left"), "an attraction reads its two objects");
@@ -51,7 +51,7 @@ async fn a_history_edit_draft_highlights_exactly_the_objects_it_references() {
 #[semio_framework_async_macros::async_test]
 async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_catalogs() {
     let projection = Puzzle3dPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
 
     let fragment = json!({
@@ -68,7 +68,7 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
         "attractionKinds": [],
         "kindCompatibility": [{ "source": "door", "target": "door", "bidirectional": true }],
     });
-    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
+    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
     let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
     assert!(!emit.artifact_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
@@ -97,7 +97,7 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
 #[semio_framework_async_macros::async_test]
 async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
     let projection = Puzzle3dPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let mut current = projection.typed().clone();
 
     let fragment = json!({
@@ -107,7 +107,7 @@ async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         "attractionKinds": [],
         "kindCompatibility": [],
     });
-    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
+    let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
     for _ in 0..2 {
         let doc_projection = Puzzle3dPlaySnapshot::new(current.clone());

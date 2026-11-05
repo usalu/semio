@@ -3,12 +3,12 @@
 #![cfg(test)]
 #![allow(unused_imports, unused_qualifications)]
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_framework_io_ports::testkit::{bind, scene_content};
 use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, Operation, OriginalJobFixtureCaller, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RevisionId};
-use semio_framework_plugin::app::{ArtifactOutputChunks, ArtifactReservedToolJob};
+use semio_plugin::app::{ArtifactOutputChunks, ArtifactReservedToolJob};
 use semio_s_artifact_layout_layout_editor::{LayoutExportJobFactory, LayoutMediaExportJobFactory};
 use semio_s_artifact_layout_layout_engine_export::testkit::*;
 use semio_s_artifact_layout_layout_engine_export::*;
@@ -38,7 +38,7 @@ fn original_media_vector_projection_escapes_and_cancels_with_original_writer_and
             let mut credit=None;
             for _ in 0..32{
                 if credit.is_some(){break}
-                caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|semio_framework_plugin::ArtifactMediaExportCredit::original_birth_admit(MAX_LAYOUT_EXPORT_OUTPUT_BYTES,&mut credit,cx)).expect("actual original media credit");
+                caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|semio_plugin::ArtifactMediaExportCredit::original_birth_admit(MAX_LAYOUT_EXPORT_OUTPUT_BYTES,&mut credit,cx)).expect("actual original media credit");
             }
             let credit=credit.expect("media credit admitted by its actual caller");
             let mut input=request(LayoutExportKind::Svg);

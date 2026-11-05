@@ -8,7 +8,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -23,7 +23,7 @@ pub struct CreateSpace {
 //#region 🔖️Handle
 pub fn handle(payload: &CreateSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.name.trim().is_empty() {
-        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(123), dialog_id: "createSpace".into(), args: None }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(123), dialog_id: "createSpace".into(), args: None }));
     }
     let kind = if payload.kind.trim().is_empty() { "atelier".to_string() } else { payload.kind.clone() };
     let visibility = if payload.visibility.trim().is_empty() { "private".to_string() } else { payload.visibility.clone() };

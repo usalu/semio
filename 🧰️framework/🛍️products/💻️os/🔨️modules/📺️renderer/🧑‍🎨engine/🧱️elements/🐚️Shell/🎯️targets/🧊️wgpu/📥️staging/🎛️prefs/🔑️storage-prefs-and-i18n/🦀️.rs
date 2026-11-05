@@ -52,7 +52,7 @@ struct ShellPrefLocks {
 /// and was therefore unlockable, now locks from `<meta name="semio-locked-*">`/the library door's
 /// `locks` option through the same one vocabulary React reads as `FrameworkOsLocks`.
 pub fn env_lock(name: &str) -> Option<String> {
-    let locks = semio_framework_os_renderer_wgpu_host_base::boot_locks();
+    let locks = semio_renderer_wgpu_host_base::boot_locks();
     let value = match name {
         "SEMIO_LOCKED_APPEARANCE" => locks.appearance,
         "SEMIO_LOCKED_LOCALE" => locks.locale,
@@ -72,7 +72,7 @@ pub fn shell_pref_locks() -> ShellPrefLocks {
 //#endregion 🔒️PrefLocks
 //#region 🎨️ThemeRegistry
 #[cfg(not(target_arch = "wasm32"))]
-pub static CHROME_PREFS: semio_framework_os_renderer_wgpu_contracts::WorkerCell<Option<ChromePrefsState>> = semio_framework_os_renderer_wgpu_contracts::WorkerCell::new(Default::default);
+pub static CHROME_PREFS: semio_renderer_wgpu_contracts::WorkerCell<Option<ChromePrefsState>> = semio_renderer_wgpu_contracts::WorkerCell::new(Default::default);
 
 pub fn project_chrome_prefs(preferences: UiPreferences, worker_count: u32) -> ChromePrefsState {
     let custom_themes = custom_themes_from(&preferences);
@@ -214,7 +214,7 @@ pub fn read_ui_preferences() -> UiPreferences {
 /// answers on the browser too — the host term survives for the embeddable door and for a realm whose
 /// snapshot was refused.
 pub fn resolve_appearance_id(preferences: &UiPreferences) -> String {
-    env_lock("SEMIO_LOCKED_APPEARANCE").or_else(|| appearance_id(preferences.appearance)).or_else(|| semio_framework_os_renderer_wgpu_host_base::host_appearance_preference().map(ToOwned::to_owned)).unwrap_or_else(|| "system".to_string())
+    env_lock("SEMIO_LOCKED_APPEARANCE").or_else(|| appearance_id(preferences.appearance)).or_else(|| semio_renderer_wgpu_host_base::host_appearance_preference().map(ToOwned::to_owned)).unwrap_or_else(|| "system".to_string())
 }
 
 pub fn resolve_locale_id(lock: Option<String>, preferences: &UiPreferences, selected: Locale) -> String {
@@ -224,7 +224,7 @@ pub fn resolve_locale_id(lock: Option<String>, preferences: &UiPreferences, sele
             OsUiLocale::En => "en".to_string(),
         })
     })
-    .or_else(|| semio_framework_os_renderer_wgpu_host_base::host_locale().map(ToOwned::to_owned))
+    .or_else(|| semio_renderer_wgpu_host_base::host_locale().map(ToOwned::to_owned))
     .unwrap_or_else(|| selected.as_str().to_string())
 }
 
@@ -335,7 +335,7 @@ impl PrefsState {
         let preferences = read_ui_preferences();
         self.appearance_id = resolve_appearance_id(&preferences);
         self.locale_id = resolve_locale_id(locks.locale.clone(), &preferences, self.active_locale());
-        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(self.active_locale());
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(self.active_locale());
         self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| self.active_terminology().as_str().to_string());
         self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
         chrome.chrome_build.preferences = with_chrome_prefs(|preferences| preferences.clone());
@@ -399,7 +399,7 @@ thread_local! {
 /// 🌐️ Admits the host selected language and terminology before shell construction ([`resolve_language_axes`] over the
 /// process's locks, its stored preferences and the host's language read).
 pub fn shell_language_axes() -> Result<(Locale, Terminology), String> {
-    resolve_language_axes(env_lock("SEMIO_LOCKED_LOCALE"), env_lock("SEMIO_LOCKED_TERMINOLOGY"), &read_ui_preferences(), semio_framework_os_renderer_wgpu_host_base::host_locale())
+    resolve_language_axes(env_lock("SEMIO_LOCKED_LOCALE"), env_lock("SEMIO_LOCKED_TERMINOLOGY"), &read_ui_preferences(), semio_renderer_wgpu_host_base::host_locale())
 }
 //#endregion 💾️PrefsSync
 //#endregion ShellChrome

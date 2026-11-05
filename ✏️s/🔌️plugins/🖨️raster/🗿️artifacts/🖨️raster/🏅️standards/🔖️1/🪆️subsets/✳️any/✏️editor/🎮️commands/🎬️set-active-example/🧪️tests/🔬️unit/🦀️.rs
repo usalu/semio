@@ -20,6 +20,6 @@ fn demo_example_document_carries_its_media_in_the_pool() {
 fn switching_examples_builds_a_load_document_effect() {
     let document = example_document(semio_s_artifact_raster_raster_examples::art_raster_demo::ID).expect("the demo example document");
     let effect = semio_s_artifact_raster_raster_editor::raster_reset_document_effect(&document);
-    assert!(matches!(effect, semio_framework_plugin::Effect::LoadDocument { ref pack, .. } if !pack.is_empty()));
+    assert!(matches!(effect, semio_plugin::Effect::LoadDocument { ref pack, .. } if !pack.is_empty()));
     dismantle(document);
 }

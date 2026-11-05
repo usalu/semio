@@ -13,7 +13,7 @@ use super::*;
 /// read bounds from), not part of the design's literal 5-field list.
 pub(crate) struct ActorHostState {
     pub(super) original_job_clock:Option<(u64,fn()->Option<u64>)>,
-    pub(super) operation_slot:semio_framework_plugin_host_operation::OperationSlot,
+    pub(super) operation_slot:semio_plugin_host_operation::OperationSlot,
     pub(super) plugin_id: String,
     #[allow(dead_code)]
     pub(super) actor: RuntimeActorId,
@@ -127,7 +127,7 @@ pub fn classify_guest_trap(trap: &impl std::fmt::Debug) -> TurnFault {
 
 /// 🧬️ `pure` (`📜️wit/📜️pure.wit`) is `world actor`'s ONLY import — `log`/`now-ms`/`trace-span`,
 /// none fallible, none async.
-impl semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::Host for ActorHostState {
+impl semio_plugin_host_wit::actor_bindings::semio::framework::pure::Host for ActorHostState {
     /// 🚫️async: E1 — `wasmtime::component::bindgen!` generates this `Host` trait from the WIT
     /// interface, which declares `log`/`now-ms`/`trace-span` sync (see doc comment above); the
     /// trait's signature is external and fixed, not chosen by this repo. See R9/R2 E1.
@@ -146,12 +146,12 @@ impl semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::Ho
     }
 }
 
-impl semio_framework_plugin_host_operation::OperationHostStore for ActorHostState{
- fn operation_slot(&mut self)->&mut semio_framework_plugin_host_operation::OperationSlot{&mut self.operation_slot}
- fn operation_log(&mut self,level:String,message:String){semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::Host::log(self,level,message)}
- fn operation_clock_us(&mut self,clock_binding:u64)->Option<u64>{semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::Host::operation_clock_us(self,clock_binding)}
- fn operation_now_ms(&mut self)->i64{semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::Host::now_ms(self)}
- fn operation_trace_span(&mut self,name:String){semio_framework_plugin_host_wit::actor_bindings::semio::framework::pure::Host::trace_span(self,name)}
+impl semio_plugin_host_operation::OperationHostStore for ActorHostState{
+ fn operation_slot(&mut self)->&mut semio_plugin_host_operation::OperationSlot{&mut self.operation_slot}
+ fn operation_log(&mut self,level:String,message:String){semio_plugin_host_wit::actor_bindings::semio::framework::pure::Host::log(self,level,message)}
+ fn operation_clock_us(&mut self,clock_binding:u64)->Option<u64>{semio_plugin_host_wit::actor_bindings::semio::framework::pure::Host::operation_clock_us(self,clock_binding)}
+ fn operation_now_ms(&mut self)->i64{semio_plugin_host_wit::actor_bindings::semio::framework::pure::Host::now_ms(self)}
+ fn operation_trace_span(&mut self,name:String){semio_plugin_host_wit::actor_bindings::semio::framework::pure::Host::trace_span(self,name)}
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the seven type-only interfaces

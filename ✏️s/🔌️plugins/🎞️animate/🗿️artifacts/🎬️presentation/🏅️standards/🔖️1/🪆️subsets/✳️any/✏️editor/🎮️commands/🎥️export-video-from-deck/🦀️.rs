@@ -9,7 +9,7 @@ use crate::editor::animate::engine::{video_filename_for_deck, video_filename_for
 use crate::editor::animate::support::PresentationDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 📏️ The largest program one export may hand the host in a single effect: every path point is 8 bytes, every paint

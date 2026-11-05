@@ -3,37 +3,37 @@
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use semio_framework_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
+use semio_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
-use semio_framework_os_spr::command::ArtifactMessageSource;
+use semio_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, UndoPolicy};
-use semio_framework_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
+use semio_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, UndoPolicy};
+use semio_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
-use semio_framework_os_vcs::{Author, VcsError};
-use semio_framework_os_vcs::{Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable};
-use semio_framework_os_store_space_schema::{ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, HistoryLane};
-use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_os_vcs::{Author, VcsError};
+use semio_os_vcs::{Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable};
+use semio_os_store_space_schema::{ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, HistoryLane};
+use semio_os_store_envelope::owner::OwnerRef;
 use crate::{ArtifactPackFiles, encode_document_pack_bytes};
-use semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
+use semio_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
 
 use semio_framework_diagnostic::TextError;
 use semio_framework_diagnostic::TextSpan;
-use semio_framework_os_pack::pack_rt;
-use semio_framework_os_store_command::{OpsAuthor, OpsHeaderLine, OpsPin, OpsSupersededInput, ops_line_provenance};
-use semio_framework_os_store_ledger::{ArtifactEditMessageLedger, fold_envelope_history};
-use semio_framework_os_store_ledger::{retire_replayed_projection, retire_scratch_operations, stamp_edit_semantics, validate_composition_pins};
-use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
-use semio_framework_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, ReplayEdits, ReplayMode, admit_replacement};
-use semio_framework_os_store_replay::{ColdFoldProjection, retire_shared_projection};
+use semio_os_pack::pack_rt;
+use semio_os_store_command::{OpsAuthor, OpsHeaderLine, OpsPin, OpsSupersededInput, ops_line_provenance};
+use semio_os_store_ledger::{ArtifactEditMessageLedger, fold_envelope_history};
+use semio_os_store_ledger::{retire_replayed_projection, retire_scratch_operations, stamp_edit_semantics, validate_composition_pins};
+use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
+use semio_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, ReplayEdits, ReplayMode, admit_replacement};
+use semio_os_store_replay::{ColdFoldProjection, retire_shared_projection};
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_store_backbone::resolve_backbone;
+use semio_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use semio_framework_os_store_backbone::local_storage_backbone_key;
+use semio_os_store_backbone::local_storage_backbone_key;
 
 #[path = "🗒️text-files-parsed-document-and-ops-log/🦀️.rs"]
 mod text_files_parsed_document_and_ops_log;

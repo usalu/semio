@@ -16,7 +16,7 @@ use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::signed_integer;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::unsigned;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 pub fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgTableStyle)->Result<(),ValueError>{
  let template=optional_words(v.template_style_handle);p.insert_key("dwg_table_style",id,&[T(&v.description),I(i64::from(v.bit_flags)),template[0],template[1]])?;

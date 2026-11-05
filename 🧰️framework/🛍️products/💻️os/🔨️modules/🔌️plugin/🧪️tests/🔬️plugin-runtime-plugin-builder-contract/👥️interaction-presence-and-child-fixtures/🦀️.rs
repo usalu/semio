@@ -44,16 +44,16 @@ pub async fn interaction_app_definition() -> AppDefinition {
     }
 
     #[doc(hidden)]
-pub async fn interaction_app_under_test(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+pub async fn interaction_app_under_test(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
         contract_app_with(interaction_registry().await, mounted_policy, identity).await
     }
 
     /// 🕹️ [`interaction_app_under_test`] without the self-closing wrapper — for the local-interaction
     /// laws that move the app into a `PluginRuntime` cell.
     #[doc(hidden)]
-pub async fn interaction_app_raw(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
+pub async fn interaction_app_raw(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
         let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -78,7 +78,7 @@ pub const INGRESS_TURNS_PER_COMMAND: usize = 512;
     
     #[doc(hidden)]
 pub fn command_page_authority_budget() -> Budget {
-        Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16)
+        Budget::from_retained(semio_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16)
     }
 
     #[doc(hidden)]
@@ -173,8 +173,8 @@ pub async fn publish_presence_roster(app: &mut VcsArtifactApp<TestApp>, seq: u64
     }
 
     store::space_members! {
-    native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
-        history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    native_producer:&::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+        history_limits:semio_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum TestMembers, TestMembersOpen {
             Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation, TestMemberStoreProducer, TestMemberStoreProducer),
@@ -198,7 +198,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     #[doc(hidden)]
 pub async fn register_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
         declare_test_child(app, child_id).await;
-        app.register_child("slot", child_id, test_child_dialect().await, new_test_child(child_id).await.expect("construct child"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("register the declared child");
+        app.register_child("slot", child_id, test_child_dialect().await, new_test_child(child_id).await.expect("construct child"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("register the declared child");
     }
 
     /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, wrapped as `TestMembers` —
@@ -209,9 +209,9 @@ pub async fn register_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>,
     /// of the identical document shape.
     #[doc(hidden)]
 pub async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(test_child_dialect().await);
-        let mut child = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?;
+        let mut child = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?;
         store::install_funded_member_store_owners(&mut child,&TestMemberStoreProducer)?;
         Ok(TestMembers::Child(Box::new(child)))
     }
@@ -222,9 +222,9 @@ pub async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
     /// shape exists only to drive the refusal those laws assert.
     #[doc(hidden)]
 pub async fn new_bare_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(test_child_dialect().await);
-        Ok(TestMembers::Child(Box::new(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?)))
+        Ok(TestMembers::Child(Box::new(store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?)))
     }
 
     #[doc(hidden)]
@@ -235,7 +235,7 @@ pub async fn test_child_dialect() -> ArtifactDialect {
     #[doc(hidden)]
 pub fn close_member_admission_fixture(member: &mut TestMembers) {
         for _ in 0..65_536 {
-            let grant = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
+            let grant = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
             let demand=member.close_owned_demands(grant.maximum_copy_bytes).expect("actual member close demand");
             assert!(grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"member demand exceeds its original fixture close policy");
             let step = member.close_owned_step(grant).expect("actual member original close");
@@ -250,14 +250,14 @@ pub fn close_member_admission_fixture(member: &mut TestMembers) {
 
     #[doc(hidden)]
 pub fn close_member_admission_app<A: ArtifactApp>(app: &mut VcsArtifactApp<A, TestMembers>,cx:&mut semio_framework_job::StepContext<'_>) {
-        artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
+        artifact_app_laws::close_registered_fixture_app(app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
     }
 
     /// 🧪️ One reactor-turn continuation unit, polled exactly the way the guest bridges it: ONCE, with
     /// a no-op waker. A unit that suspends is the `resolve_ready: future was not ready on first poll`
     /// trap that killed the gis actor on its first auto check-in.
     #[doc(hidden)]
-pub fn original_publication_turn<P:PluginApp>(app:&mut P,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(),semio_framework_job::OriginalTurnFailure>{
+pub fn original_publication_turn<P:PluginApp>(app:&mut P,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(),semio_framework_job::OriginalTurnFailure>{
         caller.turn(grant,|original|{
             let mut task=std::task::Context::from_waker(std::task::Waker::noop());
             let mut unit=std::pin::pin!(PluginApp::advance_typed_operation_publication(app,identity,original));
@@ -283,7 +283,7 @@ pub fn inline_interaction_select(args: DslValue) -> Effect {
     #[doc(hidden)]
 pub struct TestTaskSource<F>(F);
 
-    impl<F, Fut> semio_framework_plugin_decl_emission::AsyncTaskSource<TestMutation, TestConfigMutation, NoDraftMutation> for TestTaskSource<F>
+    impl<F, Fut> semio_plugin_decl_emission::AsyncTaskSource<TestMutation, TestConfigMutation, NoDraftMutation> for TestTaskSource<F>
     where
         F: FnOnce(TaskCtx) -> Fut + Send + 'static,
         Fut: std::future::Future<Output = Result<TaskResolution<TestMutation, TestConfigMutation, NoDraftMutation>, Fault>> + 'static,
@@ -326,5 +326,5 @@ pub fn test_task<F, Fut>(label: &str, run: F) -> AsyncTask<TestMutation, TestCon
         F: FnOnce(TaskCtx) -> Fut + Send + 'static,
         Fut: std::future::Future<Output = Result<TaskResolution<TestMutation, TestConfigMutation, NoDraftMutation>, Fault>> + 'static,
     {
-        AsyncTask::new(label.to_string(), TestTaskSource(run), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).unwrap_or_else(|(error, _, _)| panic!("test task constructor refused: {error}")).0
+        AsyncTask::new(label.to_string(), TestTaskSource(run), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).unwrap_or_else(|(error, _, _)| panic!("test task constructor refused: {error}")).0
     }

@@ -10,8 +10,8 @@ pub struct RemoveAccidental { pub index: usize, }
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for RemoveAccidental where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::insert_accidental::InsertAccidental> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "accidental", kind: "remove-accidental", record: "RemovedAccidental" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove accidental action", "Außergewöhnliche Einwirkung entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove accidental action", "Außergewöhnliche Einwirkung entfernen")
     }
 }
 

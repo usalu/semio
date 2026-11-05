@@ -1,0 +1,5 @@
+# Browser Tool Preflight
+
+Read the actual demonstrator E2E config/runner. It requires a genuine repository-owned isolated service session and waits for readiness before setting PLAYWRIGHT_BASE_URL. No fake readiness/BaseURL or standalone server is introduced. Registered playwright launch uses repository tool control; target has one worker, both authored en/de projects, real ANGLE Metal on macOS by default. Software fallback is explicitly not used for full map acceptance.
+
+Registered Bun read-only tool lookup resolved the same repoCacheDirectory(workspace,tools,ms-playwright) used by the real runner. The installed @playwright/test Chromium executable resolves to cache/tools/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing and exists on this darwin host. No browser was launched or downloaded, no service authority was fabricated, no GPU/browser/app readiness pass is claimed. Actual50case browser execution still requires activation and serve-e2e.

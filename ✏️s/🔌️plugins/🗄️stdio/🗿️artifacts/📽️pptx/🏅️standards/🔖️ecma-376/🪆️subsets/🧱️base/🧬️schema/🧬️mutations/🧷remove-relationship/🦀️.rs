@@ -16,8 +16,8 @@ pub struct RemoveRelationship {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveRelationship {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "relationship", kind: "remove-relationship", record: "RemoveRelationship" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove relationship", "Beziehung entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove relationship", "Beziehung entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["opc".to_string(), "relationships".to_string(), self.owner.clone(), self.id.clone()]

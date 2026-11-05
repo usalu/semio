@@ -7,17 +7,17 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
-use semio_framework_plugin_identity::ArtifactIdentity;
-use semio_framework_plugin_decl_views::child_view::CHILD_CONTENT_ID_BYTES;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceExecution;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionError;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferencePayloadContract;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceServiceKey;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceServiceMetadata;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceServiceRegistry;
-use semio_framework_plugin_decl_registry::artifact_inference::WireArtifactInferenceBudget;
-use semio_framework_plugin_decl_registry::artifact_inference::WireArtifactInferenceCacheMode;
-use semio_framework_plugin_decl_registry::artifact_inference::WireArtifactInferenceDiagnostic;
+use semio_plugin_identity::ArtifactIdentity;
+use semio_plugin_decl_views::child_view::CHILD_CONTENT_ID_BYTES;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceExecution;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionError;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferencePayloadContract;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceServiceKey;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceServiceMetadata;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceServiceRegistry;
+use semio_plugin_decl_registry::artifact_inference::WireArtifactInferenceBudget;
+use semio_plugin_decl_registry::artifact_inference::WireArtifactInferenceCacheMode;
+use semio_plugin_decl_registry::artifact_inference::WireArtifactInferenceDiagnostic;
 /// 🪆️ The slot and child id an owned-child dependency key names (`child:<slot>/<childId>`, each part non-empty, at most
 /// [`CHILD_CONTENT_ID_BYTES`] bytes, without whitespace or control characters, the slot without `/`), else `None` — the grammar
 /// [`validate_wire_request_resources`] admits beside artifact identities.

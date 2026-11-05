@@ -4,12 +4,12 @@
 use crate::windows::form;
 use crate::windows::generations;
 use crate::windows::preview;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_plugin::create_named_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::NamedLayout;
-use semio_framework_plugin::ToolRef;
+use semio_plugin::create_default_layout;
+use semio_plugin::create_named_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::NamedLayout;
+use semio_plugin::ToolRef;
 
 pub const GENERATION_3D_PLAY_MODE_GENERATE: &str = "generate";
 pub const GENERATION_3D_PLAY_LAYOUT_GENERATE: &str = "generation3d-generate";

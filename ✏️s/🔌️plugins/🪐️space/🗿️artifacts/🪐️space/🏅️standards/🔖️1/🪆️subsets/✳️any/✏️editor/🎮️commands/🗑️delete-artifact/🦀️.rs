@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{delete_artifact,SSpa
 
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 /// 🗑️️ The real, immediate delete — never dispatched directly from a row's "Delete" affordance
 /// (that dispatches `❔request-delete-artifact` first, which opens the `deleteArtifact` confirm

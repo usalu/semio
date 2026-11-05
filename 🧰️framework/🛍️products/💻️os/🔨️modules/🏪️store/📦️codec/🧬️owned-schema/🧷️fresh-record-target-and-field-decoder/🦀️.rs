@@ -322,8 +322,8 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
                 lanes: protocol::HistoryFoldIndex::new(),
                 edit_messages: ArtifactEditMessageLedger::new(),
                 conflicts: Vec::new(),
-                transitions: semio_framework_os_vcs::ArtifactHistoryLedger::empty(),
-                history_shape: semio_framework_os_spr::HistoryShape::Document,
+                transitions: semio_os_vcs::ArtifactHistoryLedger::empty(),
+                history_shape: semio_os_spr::HistoryShape::Document,
                 open_transaction: None,
                 viewer_checkpoint_id: None,
             });

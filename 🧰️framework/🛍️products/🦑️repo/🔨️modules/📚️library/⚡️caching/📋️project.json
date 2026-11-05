@@ -313,6 +313,7 @@
         "test-tools-sdk-processes",
         "test-vite",
         "test-vite-processes",
+        "test-wasm-outputs",
         "test-web-build",
         "test-workspace-ownership"
       ],
@@ -6207,6 +6208,56 @@
             "version": 1,
             "kind": "source"
           },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-wasm-outputs": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-browser-wasm",
+        "workspace:deps-wasm-opt"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test wasm-outputs",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype",
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️wasm-outputs/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️wasm-outputs/📥️purpose/📜️script.ts"
+          ],
           "cache": {
             "version": 1,
             "class": "live",

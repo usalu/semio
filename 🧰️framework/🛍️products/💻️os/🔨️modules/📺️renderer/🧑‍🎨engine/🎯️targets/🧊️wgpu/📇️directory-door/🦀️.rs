@@ -18,7 +18,7 @@
 //! (`GET /auth/sessions/me`, `GET /directory/spaces/{id}[?cursor=]`, `POST /directory/commands`,
 //! `GET /directory/event-page/v1?after=`).
 
-use semio_framework_os_kernel::os_directory::client::{HttpMethod, HttpResponse, TransportError};
+use semio_os_kernel::os_directory::client::{HttpMethod, HttpResponse, TransportError};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Wire
@@ -121,7 +121,7 @@ pub fn decode_directory_door_response(answer: &str) -> Result<HttpResponse, Tran
 pub struct BrowserDoorDirectoryTransport;
 
 #[cfg(target_arch = "wasm32")]
-impl semio_framework_os_kernel::os_directory::client::DirectoryTransport for BrowserDoorDirectoryTransport {
+impl semio_os_kernel::os_directory::client::DirectoryTransport for BrowserDoorDirectoryTransport {
     type Ws = BrowserDoorWsConnection;
 
     async fn http(&self, ctx: &semio_framework_async::OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
@@ -179,7 +179,7 @@ impl BrowserDoorWsConnection {
 }
 
 #[cfg(target_arch = "wasm32")]
-impl semio_framework_os_kernel::os_directory::client::DirectoryWsConnection for BrowserDoorWsConnection {
+impl semio_os_kernel::os_directory::client::DirectoryWsConnection for BrowserDoorWsConnection {
     fn send_text(&mut self, text: String) -> Result<(), TransportError> {
         self.socket.send(crate::socket_door::SocketMessage::Text(text)).map_err(TransportError::Io)
     }
@@ -190,8 +190,8 @@ impl semio_framework_os_kernel::os_directory::client::DirectoryWsConnection for 
 
     /// 🛟️ A binary frame on the directory endpoint is off-contract; skip it rather than
     /// fabricating text, exactly as the native transport skips a `Message::Binary`.
-    fn try_recv_text(&mut self) -> Result<semio_framework_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
-        use semio_framework_os_kernel::os_directory::client::DirectoryWsPoll;
+    fn try_recv_text(&mut self) -> Result<semio_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
+        use semio_os_kernel::os_directory::client::DirectoryWsPoll;
         loop {
             match self.socket.try_recv() {
                 Some(crate::socket_door::SocketMessage::Text(text)) => return Ok(DirectoryWsPoll::Text(text)),
@@ -215,13 +215,13 @@ impl semio_framework_os_kernel::os_directory::client::DirectoryWsConnection for 
 //#region 🔖️Seam
 /// 🔌️ The ONE transport the shell's directory client is parameterized over on this target.
 #[cfg(not(target_arch = "wasm32"))]
-pub type ShellDirectoryTransport = semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>;
+pub type ShellDirectoryTransport = semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_os_services::TokioHostRuntime>;
 
 #[cfg(target_arch = "wasm32")]
 pub type ShellDirectoryTransport = BrowserDoorDirectoryTransport;
 
 /// 📇️ The hub directory client every shell lane holds, identical on both targets above the seam.
-pub type ShellDirectoryClient = semio_framework_os_kernel::os_directory::client::DirectoryClient<ShellDirectoryTransport>;
+pub type ShellDirectoryClient = semio_os_kernel::os_directory::client::DirectoryClient<ShellDirectoryTransport>;
 //#endregion 🔖️Seam
 
 //#region 🧪️Tests

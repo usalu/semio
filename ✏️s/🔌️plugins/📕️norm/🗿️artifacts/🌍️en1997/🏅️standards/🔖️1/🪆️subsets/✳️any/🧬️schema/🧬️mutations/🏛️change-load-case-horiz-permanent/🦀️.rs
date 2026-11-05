@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLoadCaseHorizPerma
         record: "ChangedLoadCaseHorizPermanent",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permanent horizontal load H_G,k of the footing load case", "Fundament-Lastfall: Ständige Horizontallast H_G,k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permanent horizontal load H_G,k of the footing load case", "Fundament-Lastfall: Ständige Horizontallast H_G,k ändern")
     }
 }
 

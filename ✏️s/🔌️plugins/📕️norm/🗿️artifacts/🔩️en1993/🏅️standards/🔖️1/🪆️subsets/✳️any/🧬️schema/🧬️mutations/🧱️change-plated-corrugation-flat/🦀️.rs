@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedCorrugationF
         record: "ChangedPlatedCorrugationFlat",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Corrugated web: flat fold width a_0 (0 = plane web) of the plated panel", "Plattenfeld: Trapezstegblech: ebene Faltenbreite a_0 (0 = ebener Steg) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Corrugated web: flat fold width a_0 (0 = plane web) of the plated panel", "Plattenfeld: Trapezstegblech: ebene Faltenbreite a_0 (0 = ebener Steg) ändern")
     }
 }
 

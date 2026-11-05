@@ -19,7 +19,7 @@ use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapsh
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStream;
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStreamKind;
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA;
-use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };

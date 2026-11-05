@@ -45,7 +45,7 @@ fn actual_registered_fem_host_pack_roundtrip_keeps_shared_definitions() {
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new(256 * 1024 * 1024, &mut observe);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let graph = fem_build::receive(&source, &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap();
+    let graph = fem_build::receive(&source, &mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap();
     let mut receive = |_| true;
     let mut publish = |_| true;
     let mut dr = NativeDecodeRetirementRecipient::new();
@@ -60,7 +60,7 @@ fn actual_registered_fem_host_pack_roundtrip_keeps_shared_definitions() {
     let result = (entry.run)(&native_input, &mut control).unwrap();
     let payload = result.value;
     assert!(!result.diagnostics.is_empty());
-    assert_eq!(control.direction(), semio_framework_os_kernel::io::io_mechanism::IoNativeDirection::Decode);
+    assert_eq!(control.direction(), semio_os_kernel::io::io_mechanism::IoNativeDirection::Decode);
     assert!(control.progress().retained_capacity_bytes > 0);
     drop(control);
     assert!(encode.owned_bytes() > 0);
@@ -74,7 +74,7 @@ fn actual_registered_fem_host_pack_roundtrip_keeps_shared_definitions() {
     drop(control);
     assert!(!decode.has_retirement_owner());
     assert!(!encode.has_retirement_owner());
-    let restored = fem_owned::receive(&restored_graph, &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap();
+    let restored = fem_owned::receive(&restored_graph, &mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap();
     assert_eq!(restored.nodes.len(), 3);
     assert_eq!(restored.elements.len(), 2);
     assert_eq!(restored.materials.len(), 1);
@@ -103,7 +103,7 @@ fn native_owned_mapping_preserves_original_terminal_cancellation() {
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new(256 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let error = fem_build::receive(&source, &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap_err();
+    let error = fem_build::receive(&source, &mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap_err();
     assert_eq!(error.kind, ValueRefusalKind::Canceled);
     retire(source);
 }
@@ -112,7 +112,7 @@ fn native_owned_mapping_preserves_original_terminal_cancellation() {
 fn original_registered_fem_context_refuses_one_sided_identity_directions(){
     for present in [1,2]{
         let source=domains::receive_fem_uncontrolled(&input()).unwrap();let mut observe=|_|true;let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(256*1024*1024,&mut observe);native.install_retirement_recipient(&mut recipient).unwrap();
-        let mut graph=fem_build::receive(&source,&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native,wallet())).unwrap();
+        let mut graph=fem_build::receive(&source,&mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native,wallet())).unwrap();
         let next=graph.entities.len()as u64+1;graph.entities.push(semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcEntity{id:next,name:"IFCDIRECTION".into(),args:vec![graph::a(if present==1{vec![graph::r(0.),graph::r(0.),graph::r(1.)]}else{vec![graph::r(1.),graph::r(0.),graph::r(0.)]})],complex:Vec::new()});
         let axis=graph.entities.iter_mut().find(|entity|entity.name=="IFCAXIS2PLACEMENT3D").unwrap();assert_eq!(&axis.args[1..],&[IfcValue::Unset,IfcValue::Unset]);axis.args[present]=IfcValue::Reference(next);
         let mut receive=|_|true;let mut publish=|_|true;let mut dr=NativeDecodeRetirementRecipient::new();let mut er=NativeEncodeRetirementRecipient::new();let mut decode=NativeDecodeControl::new(256*1024*1024,&mut receive);let mut encode=semio_framework_value::NativeEncodeControl::new(256*1024*1024,&mut publish);decode.install_retirement_recipient(&mut dr).unwrap();encode.install_retirement_recipient(&mut er).unwrap();
@@ -128,7 +128,7 @@ fn registered_fem_target_cancellation_keeps_the_original_terminal_kind() {
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new(256 * 1024 * 1024, &mut observe);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let graph = fem_build::receive(&source, &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap();
+    let graph = fem_build::receive(&source, &mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap();
     let mut receive = |_| true;
     let running = std::cell::Cell::new(false);
     let mut publish = |_| running.get();
@@ -161,7 +161,7 @@ fn native_owned_dimension_and_membership_refusals_publish_no_fem_snapshot() {
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new(256 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let graph = fem_build::receive(&source, &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap();
+    let graph = fem_build::receive(&source, &mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet())).unwrap();
     for mode in 0..2 {
         let mut graph = graph.clone();
         if mode == 0 {
@@ -169,7 +169,7 @@ fn native_owned_dimension_and_membership_refusals_publish_no_fem_snapshot() {
         } else {
             graph.entities.retain(|v| v.name != "IFCRELASSIGNSTOGROUP");
         }
-        let result = fem_owned::receive(&graph, &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet()));
+        let result = fem_owned::receive(&graph, &mut semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native, wallet()));
         assert!(result.is_err());
         assert!(!native.has_retirement_owner());
     }

@@ -69,7 +69,7 @@ export async function runRetainedAuditScript(context: Readonly<{ root: string; r
   const fixture = (await Bun.file(fixturePath).json()) as RetainedAuditFixture;
   const owner = readModuleTreeSource(ownerPath);
 
-  const commandBlock = owner.slice(owner.indexOf("semio_framework_plugin::app_commands!"), owner.indexOf("/// 🌉️ Converts"));
+  const commandBlock = owner.slice(owner.indexOf("semio_plugin::app_commands!"), owner.indexOf("/// 🌉️ Converts"));
   const commandIds = [...commandBlock.matchAll(/^\s*"([^"]+)"\s+as\s+/gm)].map((match) => match[1]!);
   const routeIds = fixture.routes.map((route) => route.id);
   const expectedAdmitted = [
@@ -82,7 +82,7 @@ export async function runRetainedAuditScript(context: Readonly<{ root: string; r
   const retainedToolIds = [...retainedToolBlock.matchAll(/"([^"]+)"/g)].map((match) => match[1]!);
   const semanticValid = (source: string): boolean => {
     const occurrences = (needle: string): number => source.split(needle).length - 1;
-    const annotationPairs = [...source.matchAll(/\.action_interactive_job\("([^"]+)", (?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => `${match[1]}:${match[2]}`);
+    const annotationPairs = [...source.matchAll(/\.action_interactive_job\("([^"]+)", (?:semio_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => `${match[1]}:${match[2]}`);
     const expectedPairs = fixture.routes.map((route) => `${route.id}:${variant(route.disposition)}`);
     return fixture.routeCount === 37
       && new Set(routeIds).size === 37
@@ -94,8 +94,8 @@ export async function runRetainedAuditScript(context: Readonly<{ root: string; r
       && fixture.limits.closePageBytes === 16_384
       && source.includes('factory: "CadRetainedCommandJobFactory"')
       && source.includes("impl semio_framework::ToolJobFactory for CadRetainedCommandJobFactory")
-      && source.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory")
-      && source.includes("type Owner = semio_framework_plugin::EditorApp<CadPlayApp>;")
+      && source.includes("impl semio_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory")
+      && source.includes("type Owner = semio_plugin::EditorApp<CadPlayApp>;")
       && source.includes("registry.register(CadRetainedCommandJobFactory::new(&controller))")
       && source.includes("fn build_config_store_one_item_preparation_factory()")
       && source.includes("fn build_artifact_store_one_item_preparation_factory()")
@@ -116,8 +116,8 @@ export async function runRetainedAuditScript(context: Readonly<{ root: string; r
     owner.replace('tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly]', 'tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::Config]'),
     owner.replace('bounded_first_step(8_192, 64, 1, 16_384, 7_500)', 'bounded_first_step(8_192, 64, 1, 32_768, 7_500)'),
     owner.replace("impl semio_framework::ToolJobFactory for CadRetainedCommandJobFactory", "impl ToolJobFactory for CadRetainedCommandJobFactory"),
-    owner.replace("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory", "impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory"),
-    owner.replace("type Owner = semio_framework_plugin::EditorApp<CadPlayApp>;", "type Owner = EditorApp<CadPlayApp>;"),
+    owner.replace("impl semio_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory", "impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory"),
+    owner.replace("type Owner = semio_plugin::EditorApp<CadPlayApp>;", "type Owner = EditorApp<CadPlayApp>;"),
     owner.replace("registry.register(CadRetainedCommandJobFactory::new(&controller))", "registry.register(BoundedFirstStepCommandJobFactory::new(&controller))"),
   ];
   const acceptedHostile = hostileSources.map((source, index) => semanticValid(source) ? index : -1).filter((index) => index >= 0);

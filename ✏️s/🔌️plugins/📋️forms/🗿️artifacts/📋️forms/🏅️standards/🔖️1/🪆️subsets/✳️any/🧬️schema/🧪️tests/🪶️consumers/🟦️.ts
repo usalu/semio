@@ -4,7 +4,7 @@ import{testFormsDocumentContractOracle,testFormsDesignImport,testFormsMutationSc
 import{testFormsInspectionAuthoring}from"../../../✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️authoring/🟦️.ts";
 import{testFormsQuestionPatches}from"../../../✏️editor/❓️questions/🧪️tests/🔬️patches/🟦️.ts";
 import{testFormsQuestionPlacement}from"../../../✏️editor/❓️questions/📍️placement/🧪️tests/🟦️.ts";
-import{testFormsExtensionInputs}from"../../../✏️editor/❓️questions/🧩️extensions/🧪️tests/🟦️.ts";
+import{testFormsExtensionInputs}from"../../../🧩️extensions/🧪️tests/🟦️.ts";
 import{testFormsVisibility}from"../../../✏️editor/❓️questions/🫥️visibility/🧪️tests/🔬️editing/🟦️.ts";
 import{testFormsPersistence}from"../💾️persistence/🟦️.ts";
 import{testFormsResponses,testFormsSubmission}from"../../📨️response/🧪️tests/🔬️events/🟦️.ts";
@@ -37,3 +37,23 @@ test("Forms package exports its document and transport APIs by package name",asy
  const require=createRequire(resolveFormsOwner(packageRoot,"package.json"));
  expect(()=>require.resolve("@semio-tech/forms-js/private")).toThrow();
 });
+
+import { testFormsTryParameterDefaults } from "../../../✏️editor/🎮️commands/🎯️set-try-value/🧪️tests/🟦️.ts";
+test("testFormsTryParameterDefaults", testFormsTryParameterDefaults);
+
+import "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🔤️text-chunks/🧪️tests/🟦️.ts";
+
+import {testFormsConfig} from "../../../🎚️config/🧪️tests/🟦️.ts";
+test("shared Forms config matches its independent schema oracle",testFormsConfig);
+
+import { testFormsViewerExtensionInputs } from "../../../👁️viewer/🧪️tests/🟦️.ts";
+test("testFormsViewerExtensionInputs", testFormsViewerExtensionInputs);
+
+import { testFormsTryPartialDefaults } from "../../../✏️editor/🎮️commands/🎯️set-try-value/🧪️tests/🟦️.ts";
+test("testFormsTryPartialDefaults",testFormsTryPartialDefaults);
+
+import{testFormsQuestionChunkIngress}from"../../../✏️editor/🎮️commands/🩹️patch-questions/🧪️tests/🟦️.ts";
+test("canonical question patch ingress preserves bounded authored source",testFormsQuestionChunkIngress);
+
+import { testFormsTryValueTarget } from "../../../✏️editor/🎮️commands/🎯️set-try-value/🧪️tests/🟦️.ts";
+test("testFormsTryValueTarget",testFormsTryValueTarget);

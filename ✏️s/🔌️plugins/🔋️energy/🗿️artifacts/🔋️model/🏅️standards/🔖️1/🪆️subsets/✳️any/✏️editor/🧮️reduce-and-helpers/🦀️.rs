@@ -60,12 +60,12 @@ fn orderings(items: &[usize]) -> Vec<Vec<usize>> {
 /// representative in this artifact's vocabulary at all (`📓️derivation-rules.md` rule 6), exactly as
 /// in `📐️cad`'s `reset_document_effect` and `🔱️trinity`'s. A freshly minted envelope has no edits,
 /// so its spr encode is infallible.
-fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::kernel::Effect {
+fn load_document_effect(model: &crate::model::Model) -> semio_plugin::kernel::Effect {
     let snapshot = EnergyModelSnapshot::from_model(model).expect("a registered engine model is an admissible native document");
     let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
-    let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
+    let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
-    semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
+    semio_plugin::kernel::Effect::LoadDocument { pack, spr }
 }
 
 /// 🆔️ Mints the next free `EntityId` for a collection addressed by its own ids — `max + 1`, so an
@@ -296,7 +296,7 @@ fn reduce_rows(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, Energy
 /// 🐢️ `UiDirtyScope::Partial` with nothing listed: the pane that sent the pose already holds it, and
 /// republishing the 3d body on every debounced orbit tick would be pure churn. A window that opens
 /// later reads the stored pose on its own first render.
-pub(super) fn camera_emit(command: &EnergyModelEditorCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Option<Result<Emit<EnergyModelMutation, EnergyModelConfigMutation, NoDraftMutation>, Fault>> {
+pub(super) fn camera_emit(command: &EnergyModelEditorCommand, view_state: Option<&semio_plugin::ViewModel>) -> Option<Result<Emit<EnergyModelMutation, EnergyModelConfigMutation, NoDraftMutation>, Fault>> {
     let EnergyModelEditorCommand::SetCamera { camera } = command else { return None };
     Some((|| {
         let view = view_state.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.window-required"), "a camera change requires a concrete 3d model window"))?;

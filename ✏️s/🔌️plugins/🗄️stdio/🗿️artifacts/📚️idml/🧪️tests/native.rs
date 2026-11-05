@@ -1,7 +1,7 @@
 //! 🧪️ Native IDML snapshot, semantic mutation, sparse diff and representation laws.
 use crate::{IdmlSnapshot, IdmlDiff, IdmlMutation};
 use semio_framework_value::FromValue;
-use semio_framework_os_kernel::{ColdMutation, ColdDiffAlgebra, OpText, OpBinary};
+use semio_os_kernel::{ColdMutation, ColdDiffAlgebra, OpText, OpBinary};
 use semio_framework_pack::snapshot::{ArtifactDsl, ArtifactPack};
 
 fn decode<T: semio_framework_value::FromValue>(value: &serde_json::Value) -> T {
@@ -18,12 +18,12 @@ fn native_idml_fixture_mutations_are_atomic_and_invertible() {
         let mutation: IdmlMutation = decode(&case["mutation"]);
         let saved = base.clone();
         let outcome = mutation.diff(&base);
-        let after = semio_framework_os_kernel::apply_diff_cold(outcome.diff(), &base).unwrap();
+        let after = semio_os_kernel::apply_diff_cold(outcome.diff(), &base).unwrap();
         assert_eq!(after, expected, "{name}: RFC 6902 witness");
         assert_eq!(base, saved, "{name}: immutable base");
-        assert_eq!(semio_framework_os_kernel::apply_diff_cold(&outcome.diff().inverse(&base), &after).unwrap(), base, "{name}: diff inverse");
+        assert_eq!(semio_os_kernel::apply_diff_cold(&outcome.diff().inverse(&base), &after).unwrap(), base, "{name}: diff inverse");
         let mut restored = after.clone();
-        for inverse in mutation.inverse(&base).unwrap().into_iter().rev() { restored = semio_framework_os_kernel::apply_diff_cold(inverse.diff(&restored).diff(), &restored).unwrap(); }
+        for inverse in mutation.inverse(&base).unwrap().into_iter().rev() { restored = semio_os_kernel::apply_diff_cold(inverse.diff(&restored).diff(), &restored).unwrap(); }
         assert_eq!(restored, base, "{name}: semantic inverse");
         if !case["accepted"].as_bool().unwrap() { assert!(outcome.messages().iter().any(|message| message.code == "mutation.invariant"), "{name}: rejection diagnostic"); }
         assert_eq!(IdmlMutation::parse_op(&mutation.print_op()).unwrap(), mutation, "{name}: op text");
@@ -42,7 +42,7 @@ fn hostile_diff_does_not_modify_an_unpublished_snapshot() {
     let mut base: IdmlSnapshot = decode(&fixture["valid"]);
     let saved = base.clone();
     let diff = IdmlDiff::from_value(semio_framework_value::DslValue::from(&serde_json::json!({"steps":[{"parts":[{"path":"designmap.xml","bytes":null}]}]}))).unwrap();
-    assert!(semio_framework_os_kernel::apply_diff_cold_into(&diff, &mut base).is_err());
+    assert!(semio_os_kernel::apply_diff_cold_into(&diff, &mut base).is_err());
     assert_eq!(base, saved);
 }
 
@@ -79,7 +79,7 @@ fn controlled_snapshot_admission_refuses_unchecked_xml_and_obeys_cancellation() 
 
 #[test]
 fn sequential_sparse_diff_composition_preserves_results_and_refusals() {
-    use semio_framework_os_kernel::ColdMutationDiff;
+    use semio_os_kernel::ColdMutationDiff;
     let corpus: serde_json::Value = serde_json::from_str(include_str!("mutations.json")).unwrap();
     let first = &corpus["cases"][0];
     let last = corpus["cases"].as_array().unwrap().last().unwrap();
@@ -88,11 +88,11 @@ fn sequential_sparse_diff_composition_preserves_results_and_refusals() {
     let target: IdmlSnapshot = decode(&last["after"]);
     let mut combined = IdmlDiff::changing(&base, &middle);
     combined.absorb(IdmlDiff::changing(&middle, &target));
-    assert_eq!(semio_framework_os_kernel::apply_diff_cold(&combined, &base).unwrap(), target);
-    assert_eq!(semio_framework_os_kernel::apply_diff_cold(&combined.inverse(&base), &target).unwrap(), base);
+    assert_eq!(semio_os_kernel::apply_diff_cold(&combined, &base).unwrap(), target);
+    assert_eq!(semio_os_kernel::apply_diff_cold(&combined.inverse(&base), &target).unwrap(), base);
     let mut invalid: IdmlDiff = decode(&serde_json::json!({"steps":[{"parts":[{"path":"designmap.xml","bytes":null}]}]}));
     invalid.absorb(IdmlDiff::changing(&base, &middle));
-    assert!(semio_framework_os_kernel::apply_diff_cold(&invalid, &base).is_err());
+    assert!(semio_os_kernel::apply_diff_cold(&invalid, &base).is_err());
 }
 
 #[test]
@@ -121,5 +121,5 @@ fn native_declaration_formats_factory_and_receipt_share_one_identity() {
     assert_eq!(receipts[0].artifact_kind, crate::ARTIFACT_KIND);
     assert_eq!(receipts[0].instantiate().unwrap().pack_schema_hash, crate::schema_hash());
     assert!(semio_s_artifact_stdio_contract::registry::ContributionRegistry::new(vec![contribution]).is_err());
-    for descriptor in <IdmlMutation as semio_framework_os_kernel::Mutation<IdmlSnapshot>>::DESCRIPTORS { descriptor.validate().unwrap(); }
+    for descriptor in <IdmlMutation as semio_os_kernel::Mutation<IdmlSnapshot>>::DESCRIPTORS { descriptor.validate().unwrap(); }
 }

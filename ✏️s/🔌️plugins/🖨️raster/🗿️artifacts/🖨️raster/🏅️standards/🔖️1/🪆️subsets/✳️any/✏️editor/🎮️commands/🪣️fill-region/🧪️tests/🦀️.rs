@@ -11,11 +11,11 @@ use semio_framework_value::ToValue;
 use semio_s_artifact_raster_raster_mutations_pixels::fill_region::{FillRegion as FillRegionLeaf, RasterSeed};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use semio_s_artifact_raster_raster_editor::commands::fill_region::*;
 use semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection;
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
-use semio_framework_plugin::{AppOperationContext, HistoryView};
+use semio_plugin::{AppOperationContext, HistoryView};
 
 fn document(locked: bool, visible: bool) -> RasterSnapshot {
     let identity = r#"{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":0.0,"d":1.0}"#;

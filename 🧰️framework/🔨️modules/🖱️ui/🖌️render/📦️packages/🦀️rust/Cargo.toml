@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../.."
-name = "semio-framework-ui-render"
+name = "semio-ui-render"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -20,17 +20,17 @@ path = "🦀️.rs"
 default = []
 # 🧪️ Offscreen readback + forced device loss, for the cross-backend pixel conformance suite. Never on
 # in a shipping build — it exists so four hand-written backends can be proven to agree.
-backend-testing = ["semio-framework-ui-render-packet/backend-testing"]
+backend-testing = ["semio-ui-render-packet/backend-testing"]
 
 [dependencies]
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-ui-render-interaction = { path = "../../🕹️interaction/📦️packages/🦀️rust" }
-semio-framework-ui-render-packet = { path = "../../📮️packet/📦️packages/🦀️rust" }
-semio-framework-ui-render-shader-contract = { path = "../../✨️shader-contract/📦️packages/🦀️rust" }
-semio-framework-ui-render-text = { path = "../../🖋️text/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-render-interaction = { path = "../../🕹️interaction/📦️packages/🦀️rust" }
+semio-ui-render-packet = { path = "../../📮️packet/📦️packages/🦀️rust" }
+semio-ui-render-shader-contract = { path = "../../✨️shader-contract/📦️packages/🦀️rust" }
+semio-ui-render-text = { path = "../../🖋️text/📦️packages/🦀️rust" }
 taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "grid", "taffy_tree"] }
 
 [dev-dependencies]
-semio-framework-ui-render-packet = { path = "../../📮️packet/📦️packages/🦀️rust", features = ["backend-testing"] }
+semio-ui-render-packet = { path = "../../📮️packet/📦️packages/🦀️rust", features = ["backend-testing"] }

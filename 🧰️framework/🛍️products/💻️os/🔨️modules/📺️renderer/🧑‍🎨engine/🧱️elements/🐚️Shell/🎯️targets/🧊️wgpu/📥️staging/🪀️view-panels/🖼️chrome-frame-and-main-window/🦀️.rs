@@ -211,16 +211,16 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         let mut failure=None;let completed=(||{
         if let Some(census) = cursor.note_opportunity() {
             debug_log(&format!("[TRACE] wgpu-shell chrome walk parked {census} windows={}", self.dock.dock_window_plan.len()));
-            semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_walk_parked(&census);
+            semio_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_walk_parked(&census);
         }
         let w = self.chrome.screen_w;
         let h = self.chrome.screen_h;
         let body = self.as_session().body_rect(theme);
         match cursor.phase {
             ShellChromeFramePhase::CloseDocument => {
-                let close_consumed=match semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx){Ok(advanced)=>advanced||self.docs.close_document_one(),Err(error)=>{failure=Some(error);return false}};
+                let close_consumed=match semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx){Ok(advanced)=>advanced||self.docs.close_document_one(),Err(error)=>{failure=Some(error);return false}};
                 begin_ui_document_opportunity(close_consumed);
-                if semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
+                if semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
                     return false;
                 }
                 cursor.phase = ShellChromeFramePhase::LoadPreferences;
@@ -250,12 +250,12 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                         self.input.retained_hit_windows_staging.clear();
                         self.input.retained_scene_hits_staging.clear();
                         with_chrome_control_names(|names| names.clear());
-                        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+                        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
                     }
                     1 => overlay.set_screen_height(h),
                     2 => {
                         draw.push_solid([0.0, 0.0, w, h], theme.background);
-                        self.chrome.chrome_floor_scope = Some(semio_framework_ui_theme::SurfaceScope { level: semio_framework_ui_theme::Level::Base, fill: semio_framework_ui_theme::SurfaceFill::Surface });
+                        self.chrome.chrome_floor_scope = Some(semio_ui_theme::SurfaceScope { level: semio_ui_theme::Level::Base, fill: semio_ui_theme::SurfaceFill::Surface });
                     }
                     3 => {
                         if self.chrome.chrome_build.find_items.pop_front().is_some() {
@@ -548,7 +548,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         let sign_in_item = ChromeGroupItem { control_id: "framework.hub.signIn", icon_id: Some("user"), label: Some(sign_in_label), active: false, disabled: false, kind: HitKind::Button };
         let sign_in_width = (hub == HubConnectionState::SignedOut).then(|| retained_chrome_group_item_width(atlas, theme, &sign_in_item).unwrap_or(theme.control_height));
         let presence_rows = self.footer_presence_rows();
-        let presence_label = semio_framework_ui_wgpu_light::presence_bar::presence_bar_chip_text(&presence_rows, None, self.prefs.active_locale());
+        let presence_label = semio_ui_wgpu_light::presence_bar::presence_bar_chip_text(&presence_rows, None, self.prefs.active_locale());
         let presence_item = ChromeGroupItem { control_id: "s-presence-peers", icon_id: None, label: Some(presence_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
         let presence_width = (!mobile).then(|| retained_chrome_group_item_width(atlas, theme, &presence_item).unwrap_or(0.0));
         let bottom_right_left = width - theme.padding_standard - bottom_right;
@@ -638,7 +638,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     ) -> bool {
         match cursor.phase {
             0 => {
-                if semio_framework_ui_theme::shell_floor_paints(self.chrome.chrome_floor_scope) {
+                if semio_ui_theme::shell_floor_paints(self.chrome.chrome_floor_scope) {
                     draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
                 }
                 cursor.rect = Some(bounds.inset(theme.panel_inset));
@@ -696,7 +696,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     let collapsed_sections = &mut self.input.collapsed_sections;
                     let open_selects = &mut self.input.open_selects;
                     let widget_maps = &mut self.input.widget_maps_staging;
-                    let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window_id.as_str() };
+                    let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window_id.as_str() };
                     let viewport_height_for_widgets = draw.screen_height();
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(window_rect);
@@ -848,7 +848,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     let (labels, icon_ids) = self.dock.dock_chrome_maps(&self.prefs, &self.docs, &self.windows);
                     let bounds = self.dock.dock_canvas_bounds;
                     let german = self.prefs.locale_id == "de";
-                    let mut names = |id: &str, name: semio_framework_os_renderer_wgpu_dock::DockControlName<'_>| note_dock_control_name(id, name, german);
+                    let mut names = |id: &str, name: semio_renderer_wgpu_dock::DockControlName<'_>| note_dock_control_name(id, name, german);
                     let mut ctx = DockRenderContext { draw, atlas, icons, input, theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: Some(&mut names) };
                     self.dock.dock_view.paint_chrome(&mut ctx, bounds, false);
                     self.dock.dock_view.register_resize_hits(&mut ctx, bounds);

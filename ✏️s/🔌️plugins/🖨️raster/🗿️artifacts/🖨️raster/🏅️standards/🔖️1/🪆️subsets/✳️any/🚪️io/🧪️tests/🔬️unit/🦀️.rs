@@ -114,7 +114,7 @@ async fn composite_svg_matches_adjusted_pixel_export() {
     let svg=raster_document_json_to_svg(&document);
     retire(document);
     let (svg,width,height)=svg.unwrap();
-    let encoded=semio_framework_os::rasterize_svg_to_png_base64(&svg,width,height).unwrap();
+    let encoded=semio_os::rasterize_svg_to_png_base64(&svg,width,height).unwrap();
     let png=base64_codec::base64_standard_decode(encoded.as_bytes()).unwrap();
     let image=semio_framework_pixels::decode_png(&png).unwrap();
     assert_eq!((image.width,image.height),(2,2));

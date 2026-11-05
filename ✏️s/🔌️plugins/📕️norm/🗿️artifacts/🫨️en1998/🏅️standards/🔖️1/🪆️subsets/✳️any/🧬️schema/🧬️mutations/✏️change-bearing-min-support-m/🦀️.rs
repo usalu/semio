@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBearingMinSupportM
         record: "ChangeBearingMinSupportM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Minimum support length l_m of the design", "Mindestauflagerlänge l_m der Bemessung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Minimum support length l_m of the design", "Mindestauflagerlänge l_m der Bemessung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bearing-min-support-m".into()]

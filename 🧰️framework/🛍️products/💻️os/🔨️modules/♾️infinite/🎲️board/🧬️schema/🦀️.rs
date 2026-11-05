@@ -1,6 +1,6 @@
 //! 🧬️ Board schema: layout contracts, palette, dag input records, layout inference algorithms and the text io codecs.
 //!
-//! Crate `semio-framework-os-infinite-board-schema`; a downward producer of the infinite board family.
+//! Crate `semio-os-infinite-board-schema`; a downward producer of the infinite board family.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use semio_framework_canvas::Circle;
@@ -70,7 +70,7 @@ pub use hierarchical_layout_entry::{apply_hierarchical_inner, buchheim_positions
 
 #[path = "🪜️layered-buchheim-layout/🦀️.rs"]
 mod layered_buchheim_layout;
-pub use layered_buchheim_layout::layered_positions;
+pub use layered_buchheim_layout::{layered_positions,LayeredLayoutCursor,LayeredLayoutNode,LayeredLayoutEdge,LayeredLayoutFault};
 use layered_buchheim_layout::{layered_buchheim_first_walk, layered_buchheim_second_walk, layered_buchheim_third_walk, LayeredBuchheimNode};
 
 #[path = "⚙️layout-options/🦀️.rs"]

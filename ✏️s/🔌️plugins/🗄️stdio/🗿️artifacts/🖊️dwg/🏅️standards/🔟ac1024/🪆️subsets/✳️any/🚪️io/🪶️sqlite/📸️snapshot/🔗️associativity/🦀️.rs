@@ -25,7 +25,7 @@ use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::signed_integer;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Null as N};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Null as N};
 
 pub fn project_dependency(projection:&mut Projection<'_,'_>,id:i64,value:&DwgAssociativeDependency)->Result<(),ValueError>{
  let read=optional_words(value.read_dependency_handle);let node=optional_words(value.dependency_node_handle);let body=optional_words(value.dependency_body_handle);

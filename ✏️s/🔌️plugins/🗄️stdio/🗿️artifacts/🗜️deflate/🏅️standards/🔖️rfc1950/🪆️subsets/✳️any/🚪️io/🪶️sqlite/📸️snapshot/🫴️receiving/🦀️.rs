@@ -1,6 +1,6 @@
 //! 🗜️ Complete Deflate semantic owners retain original paid projection, reconstruction and borrowed validation.
 use super::{DeflateSnapshot,DeflateLevelHint};
-use semio_framework_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteValue,SqliteSnapshotControl,SqliteSnapshotReceivingControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,validate_schema_sql,check_database,settle}}};
+use semio_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteValue,SqliteSnapshotControl,SqliteSnapshotReceivingControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,validate_schema_sql,check_database,settle}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::{cell::{Cell,RefCell},mem::size_of};
 pub type Result<T>=std::result::Result<T,ValueError>;
@@ -15,7 +15,7 @@ struct Frame{projection:Projection,snapshot:DeflateSnapshot,ids:Vec<usize>,order
 impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:Vec::new(),ordered:Vec::new(),status:None}}}
 pub fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
 fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
-fn bounded(row:&semio_framework_os_kernel::sqlite_snapshot::SqliteRow,column:usize,maximum:i64)->Result<i64>{let value=integer(row,column)?;if !(0..=maximum).contains(&value){return Err(invalid())}Ok(value)}
+fn bounded(row:&semio_os_kernel::sqlite_snapshot::SqliteRow,column:usize,maximum:i64)->Result<i64>{let value=integer(row,column)?;if !(0..=maximum).contains(&value){return Err(invalid())}Ok(value)}
 fn equal(left:&str,right:&str,port:&mut Paid<'_,'_,'_>)->Result<()>{port.work(2,0)?;if left.len()!=right.len(){return Err(invalid())}let total=left.len();port.control.checkpoint(port.phase(),0,total)?;for(index,(left,right))in left.as_bytes().chunks(256).zip(right.as_bytes().chunks(256)).enumerate(){port.work(2,0)?;if left!=right{return Err(invalid())}port.control.checkpoint(port.phase(),index*256+left.len(),total)?}Ok(())}
 fn project(source:&DeflateSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
  port.work(1,0)?;if source.compression_method>15||source.window_bits>15{return Err(invalid())}let total=add(source.payload.len(),1)?;port.control.check_rows(total)?;let limits=port.control.limits();let schema=TABLES.iter().enumerate().try_fold(0usize,|sum,(index,(name,_))|add(sum,add(name.len(),definition(index).len())?))?;if limits.max_tables<2||limits.max_columns<6||SQL.len()>limits.max_schema_bytes||schema>limits.max_schema_bytes{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Deflate authored schema exceeds original allowance"))}

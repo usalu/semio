@@ -1,7 +1,7 @@
 //! 🧱️ Root setters prepare only their authored fields and retain original displaced ownership.
 use crate::{LayoutDiff,GridPatch};
 use semio_s_artifact_layout_layout_model::{snapshot::LayoutSnapshot,LayoutDrawingMember,GridSettings};
-use semio_framework_os_kernel::{ApplyCapability,ArtifactLink,RetainedFieldPreparation};
+use semio_os_kernel::{ApplyCapability,ArtifactLink,RetainedFieldPreparation};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use super::super::setters::OwnedPatch;
 use std::mem::{size_of,ManuallyDrop};

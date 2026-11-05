@@ -17,8 +17,8 @@ pub struct SetProductIdentity {
 impl protocol::MutationKind<StepSnapshot, StepCc1Mutation> for SetProductIdentity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "product-identity", kind: "set-product-identity", record: "SetProductIdentity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set the PRODUCT identity chain", "Produktidentitätskette setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set the PRODUCT identity chain", "Produktidentitätskette setzen")
     }
 
     fn target(&self) -> Vec<String> {

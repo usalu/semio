@@ -80,7 +80,7 @@ export function suspectsWithinV1(index,suspects,names){
 }
 
 /** ❓️ Asks every suspect question again: an equal answer holds (with the rows the new computation read as the new support), a different answer or a failing computation changes the fact; without a computation every suspect changed.
- * With `memo` (a map that outlives one plan) and `hold` (whether rows still hold on the disk) a question is asked only once while everything its last computation read still holds: a plan that starts again after the sources moved asks only the questions whose inputs changed; `reused` counts the answers taken from the memo. */
+ * With `memo` (a map that outlives one plan) and `hold` (whether rows still hold on the disk) a question is asked only once while everything its last computation read still holds: a plan that starts again after the sources moved asks only the questions whose inputs changed; `reused` counts the answers taken from the memo. New questions are retained only below maximumSuspects; a full memo still computes and returns all semantic updates. */
 export async function settleSuspectsV1({index,suspects,derive,signal,progress,memo,hold}){
  const view=viewOf(index),names=[...suspects].filter(name=>view.pseudoRow.has(name)).sort(),held=new Map(),changed=new Map();let failed=0,done=0,next=0,reused=0;
  if(names.length>P.maximumSuspects)throw refuseBuildV1("refused","graph.cutoff-suspects-unbounded",{count:names.length,maximum:P.maximumSuspects});
@@ -89,11 +89,11 @@ export async function settleSuspectsV1({index,suspects,derive,signal,progress,me
   const row=index.rows[view.pseudoRow.get(name)];
   if(typeof derive!=="function"){changed.set(name,row);return;}
   let answer;
-  const known=memo&&hold?memo.get(name):undefined;
+  const question=canonicalJsonV1([row.kind,row.path]),known=memo&&hold?memo.get(question):undefined;
   if(known&&await hold(known.rows,signal)){answer=known;reused++;}
   else{
    try{answer=await derive(row,signal);}catch(error){aborted(signal);failed++;changed.set(name,row);return;}
-   if(memo&&hold&&answer.rows.length)memo.set(name,{fact:answer.fact,rows:[...answer.rows]});
+   if(memo&&hold&&answer.rows.length&&(memo.has(question)||memo.size<P.maximumSuspects))memo.set(question,{fact:answer.fact,rows:[...answer.rows]});
   }
   if(canonicalJsonV1(answer.fact)===canonicalJsonV1(row.fact))held.set(name,[row,...answer.rows]);else changed.set(name,row);
  };

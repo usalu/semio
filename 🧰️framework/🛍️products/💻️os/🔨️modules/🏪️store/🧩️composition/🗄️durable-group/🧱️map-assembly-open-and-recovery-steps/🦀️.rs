@@ -4,12 +4,12 @@ use super::*;
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<ParentP> + 'static,
-    DrawingP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    DrawingMutation: ArtifactCanonicalJsonTree + StoreMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<DrawingP> + 'static,
-    ValueP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    ValueMutation: ArtifactCanonicalJsonTree + StoreMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<ValueP> + 'static,
+    ParentP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<ParentP> + 'static,
+    DrawingP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    DrawingMutation: ArtifactCanonicalJsonTree + StoreMutation<DrawingP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<DrawingP> + 'static,
+    ValueP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    ValueMutation: ArtifactCanonicalJsonTree + StoreMutation<ValueP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<ValueP> + 'static,
 {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -19,9 +19,9 @@ where
         parent_admission: DurableOwnedMapMemberAdmissionV1<ParentMutation>,
         drawing_admission: DurableOwnedMapMemberAdmissionV1<DrawingMutation>,
         value_admission: DurableOwnedMapMemberAdmissionV1<ValueMutation>,
-        parent_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<ParentP, ParentMutation>>,
-        drawing_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DrawingP, DrawingMutation>>,
-        value_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<ValueP, ValueMutation>>,
+        parent_factory: Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<ParentP, ParentMutation>>,
+        drawing_factory: Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DrawingP, DrawingMutation>>,
+        value_factory: Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<ValueP, ValueMutation>>,
         sink: Box<dyn DurableOwnedGroupJournalSinkV1>,
     ) -> Self {
         Self {
@@ -88,7 +88,7 @@ where
         }
     }
 
-    pub fn advance(&mut self, body:usize, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedGroupDecisionError> {
+    pub fn advance(&mut self, body:usize, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedGroupDecisionError> {
         if !grant.permits_one() {
             return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);
         }
@@ -98,7 +98,7 @@ where
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let store = self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.parent_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_framework_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.parent_publication = Some(publication);
                         self.parent_admission = None;
@@ -117,7 +117,7 @@ where
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let store = self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.drawing_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_framework_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.drawing_publication = Some(publication);
                         self.drawing_admission = None;
@@ -136,7 +136,7 @@ where
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let store = self.value.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.value_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_framework_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.value_publication = Some(publication);
                         self.value_admission = None;
@@ -154,9 +154,9 @@ where
                 let store = self.parent.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.parent_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 match store.advance_apply_batch(publication, body, grant,receiving) {
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
-                    Ok(_) if publication.phase() == semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing,
+                    Ok(semio_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(semio_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
+                    Ok(_) if publication.phase() == semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing,
                     Ok(_) => {}
                     Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: PARENT_ROLE, reason: error.to_string() }),
                 }
@@ -165,9 +165,9 @@ where
                 let store = self.drawing.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.drawing_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 match store.advance_apply_batch(publication, body, grant,receiving) {
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
-                    Ok(_) if publication.phase() == semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue,
+                    Ok(semio_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(semio_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
+                    Ok(_) if publication.phase() == semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue,
                     Ok(_) => {}
                     Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: DRAWING_ROLE, reason: error.to_string() }),
                 }
@@ -176,9 +176,9 @@ where
                 let store = self.value.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.value_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 match store.advance_apply_batch(publication, body, grant,receiving) {
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::TakingPrepared;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
-                    Ok(_) if publication.phase() == semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::TakingPrepared,
+                    Ok(semio_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(semio_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::TakingPrepared;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
+                    Ok(_) if publication.phase() == semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::TakingPrepared,
                     Ok(_) => {}
                     Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: VALUE_ROLE, reason: error.to_string() }),
                 }
@@ -228,7 +228,7 @@ drop(self.prepared.take());
                     return match result {Ok(Some(receipt))=>Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt)),Ok(None)=>Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),Err(error)=>{self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Binding(error));Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase))}};
                 }
                 let hash=prepared.decision.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.decision_sha256.len();
-                let visibility=semio_framework_os_vcs::ArtifactGroupVisibilityOwner::allocation_bytes();
+                let visibility=semio_os_vcs::ArtifactGroupVisibilityOwner::allocation_bytes();
                 let copy=size_of::<DurableOwnedThreeStoreBoundV1<ParentP,ParentMutation,DrawingP,DrawingMutation,ValueP,ValueMutation>>()+size_of::<DurableOwnedThreeStoreCommitV1<ParentP,ParentMutation,DrawingP,DrawingMutation,ValueP,ValueMutation>>()+size_of::<DurableOwnedMapCommitHostV1<ParentP,ParentMutation,DrawingP,DrawingMutation,ValueP,ValueMutation>>()+hash;
                 let capacity=hash+visibility;
                 if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity{return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);}
@@ -263,7 +263,7 @@ drop(self.prepared.take());
     /// never reaches `Terminal` reports the same `Progress(<phase>)` every turn with no way to say
     /// WHICH owner refuses to retire. This names it.
     pub fn closing_witness(&self) -> String {
-        fn owner<P, Mutation>(publication: &Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>) -> String {
+        fn owner<P, Mutation>(publication: &Option<semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>) -> String {
             publication.as_ref().map_or_else(
                 || "retired".to_string(),
                 |publication| {
@@ -336,12 +336,12 @@ drop(self.prepared.take());
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
-    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
-    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<DrawingP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ValueP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static,
 {
     fn drop(&mut self) {
         assert!(
@@ -371,7 +371,7 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
         }
         let decision_pack = self.decision_pack.take().expect("decision admission retains its exact pack");
         let decision_sha256 = self.decision.decision_sha256.clone();
-        let visibility_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+        let visibility_owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
         let visibility = visibility_owner.view();
         Ok(DurableOwnedThreeStoreCommitV1 {
             parent: Some(self.parent),
@@ -399,7 +399,7 @@ decision_pack: Some(decision_pack),
             return Err(DurableOwnedGroupDecisionError::InvalidHash);
         }
         let decision_sha256 = self.decision.decision_sha256.clone();
-        let visibility_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
+        let visibility_owner = semio_os_vcs::ArtifactGroupVisibilityOwner::new();
         let visibility = visibility_owner.view();
         Ok(DurableOwnedThreeStoreCommitV1 {
             parent: Some(self.parent),

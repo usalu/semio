@@ -13,10 +13,10 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
 use crate::shell_command_dispatch::BridgeSlot;
-use semio_framework_os_mcp_bridge_codec::bridge::{ApprovalDecision, BridgeFlags, BridgeInstanceRef, GatewayToShell, ShellToGateway, truncate_conversation_text};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_wire::job_registry::job_registry;
-use semio_framework_os_mcp_wire::notify::agent_messages_changed;
+use semio_os_mcp_bridge_codec::bridge::{ApprovalDecision, BridgeFlags, BridgeInstanceRef, GatewayToShell, ShellToGateway, truncate_conversation_text};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_wire::job_registry::job_registry;
+use semio_os_mcp_wire::notify::agent_messages_changed;
 
 #[path = "🆔️connection-identity-and-limits/🦀️.rs"]
 mod connection_identity_and_limits;

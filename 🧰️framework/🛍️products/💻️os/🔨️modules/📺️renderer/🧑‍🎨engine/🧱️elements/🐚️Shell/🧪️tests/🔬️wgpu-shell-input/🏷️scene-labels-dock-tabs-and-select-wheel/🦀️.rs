@@ -2,7 +2,7 @@
 
 #[test]
 fn icon_render_scene_chrome_uses_the_selected_locale() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🖼️IconRenderHost/🧪️tests/🧫️fixtures/🏷️status/🔣️.json")).unwrap();
     for pack in fixture["locales"].as_array().unwrap() {
         let labels = scene_chrome_labels(pack["locale"] == "de").icon_render;
@@ -14,7 +14,7 @@ fn icon_render_scene_chrome_uses_the_selected_locale() {
 
 #[test]
 fn virtual_file_system_scene_chrome_uses_the_shared_english_and_german_labels() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json")).expect("shared VFS interaction fixture");
     for pack in fixture["chrome"].as_array().expect("chrome packs") {
         let labels = scene_chrome_labels(pack["locale"] == "de").virtual_file_system;
@@ -24,11 +24,11 @@ fn virtual_file_system_scene_chrome_uses_the_shared_english_and_german_labels() 
         assert_eq!(labels.collapse, pack["collapse"]);
     }
 }
-use semio_framework_os_renderer_wgpu_dock::{DockControlName, DockNode, DockStackTab};
+use semio_renderer_wgpu_dock::{DockControlName, DockNode, DockStackTab};
 
 #[test]
 fn accepted_dock_tabs_publish_one_tab_stop_per_stack_and_activate_only_an_exact_address() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/⌨️dock-tab-keyboard/🔣️.json")).expect("Dock tab keyboard fixture");
     let stacks = fixture["stacks"].as_array().expect("Dock stacks");
     let mut shell = host_test_shell();
@@ -79,7 +79,7 @@ fn accepted_dock_tabs_publish_one_tab_stop_per_stack_and_activate_only_an_exact_
 
     let node = shell.chrome.presented_chrome_accessibility.iter().find(|node| node.key == "dock.tab.0.b").expect("second left Dock tab");
     let target =
-        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() };
+        ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).expect("Dock focus"));
     assert_eq!(shell.windows.active_window_id.as_deref(), Some(initial), "roving focus does not select");
     let stale = ui_render::AccessibilityTarget { window_generation: target.window_generation.saturating_sub(1), ..target.clone() };
@@ -92,23 +92,23 @@ fn accepted_dock_tabs_publish_one_tab_stop_per_stack_and_activate_only_an_exact_
 
 #[test]
 fn a_published_immediate_select_owns_wheel_without_parsing_its_option_id() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).unwrap();
     let law = &fixture["select"]["wheel"];
     let id = "owner.item.embedded";
     let mut shell = host_test_shell();
     let mut input = InputState::default();
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let theme = Theme::default();
     shell.input.open_selects.insert(id.into(), true);
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 160.0, 100.0), event: None, control_id: Some("outer".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     let widget =
-        semio_framework_ui_wgpu_widget_kit::WidgetNode::Select { id: id.into(), value: "0".into(), items: (0..20).map(|index| semio_framework_ui_wgpu_widget_kit::SelectItem { value: format!("option.item.{index}"), label: index.to_string() }).collect(), placeholder: None, on_change: None };
-    semio_framework_ui_wgpu_widgets::render_widget(
+        semio_ui_wgpu_widget_kit::WidgetNode::Select { id: id.into(), value: "0".into(), items: (0..20).map(|index| semio_ui_wgpu_widget_kit::SelectItem { value: format!("option.item.{index}"), label: index.to_string() }).collect(), placeholder: None, on_change: None };
+    semio_ui_wgpu_widgets::render_widget(
         &widget,
         Rect::new(8.0, 62.0, 120.0, 22.4),
-        &mut semio_framework_ui_wgpu_widget_kit::WidgetContext {
+        &mut semio_ui_wgpu_widget_kit::WidgetContext {
             draw: &mut draw,
             overlay: None,
             atlas: &mut atlas,

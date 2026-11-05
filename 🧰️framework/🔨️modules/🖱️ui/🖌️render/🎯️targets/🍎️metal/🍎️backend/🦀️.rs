@@ -17,7 +17,7 @@
 //! (glass-content) 2D batches directly onto the swapchain view.
 
 #[cfg(not(target_os = "macos"))]
-compile_error!("semio-framework-ui-backend-metal builds only on macOS.");
+compile_error!("semio-ui-backend-metal builds only on macOS.");
 
 use crate::frame_buffers::FrameBuffers;
 use crate::objective_c::{

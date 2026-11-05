@@ -5,22 +5,22 @@ use crate::{CurationSnapshot, ObjectKind, SortDirection};
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use crate::editor::sourcing::editor_vocabulary::{sourcing_action, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
-use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
-use semio_framework_plugin::Buildable;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::HasBase;
-use semio_framework_plugin::HasChildren;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TableCell;
-use semio_framework_plugin::Trigger;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::plugin_app_close_prelude as ui;
+use semio_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::Buildable;
+use semio_plugin::BuiltNode;
+use semio_plugin::HasBase;
+use semio_plugin::HasChildren;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TableCell;
+use semio_plugin::Trigger;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiText;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_POOL: &str = "sourcing-pool";
@@ -93,8 +93,8 @@ fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
     UiText::try_from_str(value.as_ref()).ok_or_else(|| filter_error("text"))
 }
 
-fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_plugin::UiLabel> {
-    semio_framework_plugin::UiLabel::try_from(value.as_ref().to_string()).map_err(|_| filter_error("label"))
+fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_plugin::UiLabel> {
+    semio_plugin::UiLabel::try_from(value.as_ref().to_string()).map_err(|_| filter_error("label"))
 }
 
 /// 🔍️ The pool's filter chrome: free-text query, one toggle per module, the typology path, and the

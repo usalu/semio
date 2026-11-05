@@ -8,7 +8,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SelectGeneration
 /// 👆️ Selects the generation `generation_id` names, or clears the selection when it is `None`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_pack_json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -27,10 +28,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "selection", kind: "select-generation", record: "SelectedGeneration" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match &self.generation_id {
-            Some(id) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Select generation \"{id}\""), &format!("Generierung \"{id}\" auswählen")),
-            None => semio_framework_ui_locale::LocalizedLabel::native("Clear the generation selection", "Generierungsauswahl aufheben"),
+            Some(id) => semio_ui_locale::LocalizedLabel::native(&format!("Select generation \"{id}\""), &format!("Generierung \"{id}\" auswählen")),
+            None => semio_ui_locale::LocalizedLabel::native("Clear the generation selection", "Generierungsauswahl aufheben"),
         }
     }
 

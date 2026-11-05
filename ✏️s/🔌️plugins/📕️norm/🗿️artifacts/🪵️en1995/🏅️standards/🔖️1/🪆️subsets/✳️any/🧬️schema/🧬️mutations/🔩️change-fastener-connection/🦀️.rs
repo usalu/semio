@@ -10,7 +10,7 @@ pub struct ChangeFastenerConnection { pub fastener_id: String, pub new_value: St
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFastenerConnection where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_fastener_connection::ChangeFastenerConnection> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fastener-connection", kind: "change-fastener-connection", record: "ChangedFastenerConnection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change connection of fastener {}", self.fastener_id), &format!("Verbindung von Fastener {} ändern", self.fastener_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change connection of fastener {}", self.fastener_id), &format!("Verbindung von Fastener {} ändern", self.fastener_id)) }
     fn target(&self) -> Vec<String> { vec![self.fastener_id.clone()] }
 }
 

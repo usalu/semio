@@ -45,3 +45,13 @@ export function cargoArtifactAcquisitionStepV1(input:unknown):"produce"|"join"|"
  if(validateJsonSchemaSubset(schema.definitions.AcquisitionObservation,input,schema).length)throw Error("Closed artifact acquisition observation required");const row=input as Readonly<{consumerCancelled:boolean;publication:string;publicationRechecked:boolean;producerPlan:string|null;producerSettled:boolean;custodyReleased:boolean}>;
  if(row.consumerCancelled)return "cancel";if(row.publication==="foreign")return "refuse";if(row.publication==="matching")return row.publicationRechecked?"consume":"recheck";if(row.producerPlan==="same"&&(!row.producerSettled||!row.custodyReleased))return "join";return "produce";
 }
+
+/** 🧾️ Distinguishes changed completed Source bytes from an absent observation without printing Source. */
+export type CargoSourceDigestMismatchV1=Readonly<{path:string;expected:string;observed:string|null;missingRecord:boolean}>;
+/** 🔬️ Reports only a bounded path and SHA-256 DATA while retaining exact lookup identity. */
+export function cargoSourceDigestMismatchV1(path:string,expected:string,observed:string|null|undefined):CargoSourceDigestMismatchV1|null{
+ if(expected===observed)return null;
+ const row={path,expected,observed:observed??null,missingRecord:observed===undefined};
+ if(validateJsonSchemaSubset(schema.definitions.SourceDigestMismatch,row).length)throw Error("Closed bounded Cargo Source digest comparison required");
+ return Object.freeze(row);
+}

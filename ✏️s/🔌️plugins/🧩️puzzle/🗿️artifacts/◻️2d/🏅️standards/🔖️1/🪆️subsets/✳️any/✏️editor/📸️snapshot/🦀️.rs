@@ -84,25 +84,25 @@ use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use {crate::editor::puzzle2d::engine::handle_position_on_circle, crate::editor::puzzle2d::engine::handle_position_on_rectangle, crate::editor::puzzle2d::engine::BoardHost, crate::editor::puzzle2d::engine::Point, crate::editor::puzzle2d::engine::Puzzle2dExtension};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::kernel::Effect;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionTarget;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::app::InteractionView;
 use {semio_framework_pack_json::json, semio_framework_pack_json::Value};
 #[cfg(test)] use {std::collections::BTreeSet, std::collections::HashSet};
 use crate::editor::puzzle2d::snapshot;
@@ -112,9 +112,9 @@ use crate::editor::puzzle2d::engine::board_set_grid_visible;
 /// 🧩️ The puzzle2d editor contract: every editor whose lanes are puzzle2d's play snapshot, mutation union, config,
 /// presence and command vocabulary. The action dispatch and the retained works are written against it, so they sit
 /// below the one concrete editor that implements it.
-pub trait Puzzle2dEditor: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle2dPlaySnapshot, Mutation = Puzzle2dMutation, Config = crate::editor::puzzle2d::config::Puzzle2dConfig, ConfigMutation = crate::editor::puzzle2d::config::Puzzle2dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = crate::editor::puzzle2d::presence::Puzzle2dPresence, PresenceMutation = crate::editor::puzzle2d::presence::Puzzle2dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = Puzzle2dCommand> {}
+pub trait Puzzle2dEditor: semio_plugin::ArtifactEditor<Snapshot = Puzzle2dPlaySnapshot, Mutation = Puzzle2dMutation, Config = crate::editor::puzzle2d::config::Puzzle2dConfig, ConfigMutation = crate::editor::puzzle2d::config::Puzzle2dConfigMutation, Draft = semio_plugin::NoDraft, DraftMutation = semio_plugin::NoDraftMutation, Presence = crate::editor::puzzle2d::presence::Puzzle2dPresence, PresenceMutation = crate::editor::puzzle2d::presence::Puzzle2dPresenceMutation, Transient = semio_plugin::NoTransient, TransientMutation = semio_plugin::NoTransientMutation, Command = Puzzle2dCommand> {}
 
-impl<A> Puzzle2dEditor for A where A: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle2dPlaySnapshot, Mutation = Puzzle2dMutation, Config = crate::editor::puzzle2d::config::Puzzle2dConfig, ConfigMutation = crate::editor::puzzle2d::config::Puzzle2dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = crate::editor::puzzle2d::presence::Puzzle2dPresence, PresenceMutation = crate::editor::puzzle2d::presence::Puzzle2dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = Puzzle2dCommand> {}
+impl<A> Puzzle2dEditor for A where A: semio_plugin::ArtifactEditor<Snapshot = Puzzle2dPlaySnapshot, Mutation = Puzzle2dMutation, Config = crate::editor::puzzle2d::config::Puzzle2dConfig, ConfigMutation = crate::editor::puzzle2d::config::Puzzle2dConfigMutation, Draft = semio_plugin::NoDraft, DraftMutation = semio_plugin::NoDraftMutation, Presence = crate::editor::puzzle2d::presence::Puzzle2dPresence, PresenceMutation = crate::editor::puzzle2d::presence::Puzzle2dPresenceMutation, Transient = semio_plugin::NoTransient, TransientMutation = semio_plugin::NoTransientMutation, Command = Puzzle2dCommand> {}
 //#endregion 🧩️EditorContract
 
 impl ColdMutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {

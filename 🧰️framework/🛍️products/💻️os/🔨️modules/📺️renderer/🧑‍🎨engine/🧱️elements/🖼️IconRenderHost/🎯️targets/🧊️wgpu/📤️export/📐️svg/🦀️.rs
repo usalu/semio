@@ -2,7 +2,7 @@
 use std::{cmp::Ordering, collections::BTreeMap};
 
 use infinite_world::world::{World3dMeshAsset, World3dPrimitiveMaterial};
-use ui_scene::math::{Mat4, Mesh3dField, Mesh3dLease, SceneAuthoredMaterial3d, SceneMaterialAlpha3d, SceneViewportMask3d, Vec3, Vec3Math};
+use ui_scene::math::{Mat4Math, Mat4, Mesh3dField, Mesh3dLease, SceneAuthoredMaterial3d, SceneMaterialAlpha3d, SceneViewportMask3d, Vec3, Vec3Math};
 
 use super::scene::{validate_request, IconExportFormat};
 use super::super::{IconRenderCameraFields, IconRenderMaterialFields, IconRenderProjection, IconRenderRequestFields};
@@ -54,6 +54,7 @@ impl Ord for SvgSortKey {
 }
 
 struct SvgScene {
+    model: Mat4,
     view_proj: Mat4,
     viewport_mask: SceneViewportMask3d,
     clear_color: Option<[f32; 4]>,
@@ -261,7 +262,7 @@ impl IconSvgExport {
             .iter()
             .map(|index| self.mesh.vec3(Mesh3dField::Positions, *index).map(vec3).map_err(|fault| format!("icon SVG position read failed: {fault:?}")))
             .collect::<Result<Vec<_>, _>>()?;
-        let world = [world[0], world[1], world[2]];
+        let world = [world[0], world[1], world[2]].map(|point| scene.model.transform_point_m(point));
         let normal = world[2].sub_m(world[1]).cross_m(world[0].sub_m(world[1])).normalize_m();
         let material = authored_material(scene.material_override.as_ref().unwrap_or(&draw.material));
         let vertex_color = if material.vertex_color && schema.colors == schema.vertices {
@@ -316,7 +317,7 @@ impl IconSvgExport {
         let edge = self.mesh.edge(self.edge).map_err(|fault| format!("icon SVG edge read failed: {fault:?}"))?;
         self.edge += 1;
         self.work_completed = self.work_completed.saturating_add(1);
-        let clip = edge.map(|position| transform_clip(scene.view_proj, vec3(position)));
+        let clip = edge.map(|position| transform_clip(scene.view_proj, scene.model.transform_point_m(vec3(position))));
         let Some(clipped) = clip_line_near_far(clip) else { return Ok(()) };
         let points = clipped.map(|point| project(point, self.dimensions));
         if !visible_line(points, self.dimensions) {
@@ -460,6 +461,7 @@ fn svg_scene(request: &IconRenderRequestFields, dimensions: (u32, u32), bounds: 
         |stroke| if stroke.eq_ignore_ascii_case("none") || stroke.eq_ignore_ascii_case("transparent") { None } else { Some(parse_color(stroke)) },
     );
     SvgScene {
+        model: super::super::icon_render_model(request),
         view_proj: camera_view_projection(&camera, dimensions),
         viewport_mask: if request.shape.as_deref() == Some("ellipse") { SceneViewportMask3d::Ellipse } else { SceneViewportMask3d::Rectangle },
         clear_color: request.background.as_deref().filter(|background| !background.eq_ignore_ascii_case("transparent") && !background.is_empty()).map(parse_color),
@@ -502,6 +504,7 @@ struct ResolvedCamera {
 }
 
 fn resolved_camera(request: &IconRenderRequestFields, dimensions: (u32, u32), bounds: ([f32; 3], [f32; 3])) -> ResolvedCamera {
+    let bounds = super::super::icon_render_subject_bounds(request, bounds);
     let IconRenderCameraFields { position, target, zoom, fov, up, projection } = &request.camera;
     let mut position = position.map(|value| value as f32);
     let mut target = target.map(|value| value as f32);

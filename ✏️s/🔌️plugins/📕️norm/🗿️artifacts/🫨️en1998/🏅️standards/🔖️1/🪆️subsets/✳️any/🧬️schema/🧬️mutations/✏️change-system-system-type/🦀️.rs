@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSystemSystemType w
         record: "ChangeSystemSystemType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change System type", "Systemtyp ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change System type", "Systemtyp ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-system-system-type".into()]

@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "space-list", kind: "rename-space-list", record: "RenamedSpaceList" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename Space List of space list {}", self.id.0), &format!("Raumliste {} umbenennen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename Space List of space list {}", self.id.0), &format!("Raumliste {} umbenennen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

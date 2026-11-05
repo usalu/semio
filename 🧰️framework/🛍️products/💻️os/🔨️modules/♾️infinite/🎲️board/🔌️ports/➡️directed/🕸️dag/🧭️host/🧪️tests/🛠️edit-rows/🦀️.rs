@@ -1,10 +1,10 @@
 //! 🧪️ dag-host tests (🛠️edit-rows): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_schema::refusal;
-use semio_framework_os_infinite_board_dag_model::{computation_node_height, computation_node_width, DAG_GRAPH_EDIT_CAPACITY, dag_graph_edit_rows_json, DagGraphEdit, DagJournalRefusal, DagPortSide};
-use semio_framework_os_infinite_board_dag_host::DagHost;
+use semio_os_infinite_board_schema::refusal;
+use semio_os_infinite_board_dag_model::{computation_node_height, computation_node_width, DAG_GRAPH_EDIT_CAPACITY, dag_graph_edit_rows_json, DagGraphEdit, DagJournalRefusal, DagPortSide};
+use semio_os_infinite_board_dag_host::DagHost;
 use serde_json::Value;
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 
 /// 🔢️ `value` with every number as `f64`, so an integral JSON number and its float spelling compare equal.
 fn normalized(value: &Value) -> Value {

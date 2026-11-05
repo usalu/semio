@@ -45,7 +45,7 @@ async fn a_gesture_that_places_nothing_leaves_zero_trace() {
 /// history) moves past the inserted step on the config lane of the same emit.
 #[semio_framework_async_macros::async_test]
 async fn a_world_gesture_emits_one_stamped_edit_and_moves_the_viewers_cursor() {
-    use semio_framework_plugin::{AppOperationContext, HistoryView};
+    use semio_plugin::{AppOperationContext, HistoryView};
     let snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     let history = HistoryView::empty();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-world".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], retained: Default::default(), authoring_seed: "world-seed".into() };

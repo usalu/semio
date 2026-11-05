@@ -10,7 +10,7 @@ pub struct ChangeTaperRodResistance { pub taper_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTaperRodResistance where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_taper_rod_resistance::ChangeTaperRodResistance> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "taper-rod-resistance", kind: "change-taper-rod-resistance", record: "ChangedTaperRodResistance" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change axial rod resistance r_ax,k of taper {}", self.taper_id), &format!("Axialer Stabwiderstand R_ax,k von Taper {} ändern", self.taper_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change axial rod resistance r_ax,k of taper {}", self.taper_id), &format!("Axialer Stabwiderstand R_ax,k von Taper {} ändern", self.taper_id)) }
     fn target(&self) -> Vec<String> { vec![self.taper_id.clone()] }
 }
 

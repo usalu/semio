@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveAccidentalCase whe
         record: "RemovedAccidentalCases",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove accidental design situation", "Außergewöhnliche Bemessungssituation entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove accidental design situation", "Außergewöhnliche Bemessungssituation entfernen")
     }
 }
 

@@ -1,5 +1,5 @@
 //! 🗺️ The browser module of `semio-framework-surface`: links the facade, whose producer crates carry the `#[wasm_bindgen]` exports, and owns
-//! the terrain session export, which the terrain crate cannot carry because `semio-framework-os-infinite` links the same terrain crate and would duplicate the export.
+//! the terrain session export, which the terrain crate cannot carry because `semio-os-infinite` links the same terrain crate and would duplicate the export.
 
 extern crate semio_framework_surface as _;
 

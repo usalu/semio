@@ -6,7 +6,7 @@ use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::write_geo
 use crate::standards::v_rfc8259::subsets::geojson::schema::*;
 use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::read_geojson_text;
 use crate::standards::v_rfc8259::subsets::geojson::io::{JsonGeoJsonComposerComposition, JsonGeoJsonValidator};
-use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator};
+use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeSource,semio_framework_artifact_reference::Dialect,semio_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_plugin::io::SubsetValidator};
 use std::str::FromStr;
 
 static VECTORS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🌍️read-write/🔣️.json"));

@@ -11,7 +11,7 @@
 //! with it — the live lists are `artifact_kind()`'s own fields in the artifact root.
 //!
 //! `derived_composition` below STAYS and is now native-only: it is the `ArtifactComposition` facet
-//! `semio_framework_plugin::derive_artifact_facets!` requires in the sibling `🧬️schema/🦀️.rs`, and
+//! `semio_plugin::derive_artifact_facets!` requires in the sibling `🧬️schema/🦀️.rs`, and
 //! every foreign-format branch it used to carry now lives in a typed leaf instead.
 //!
 //! Format coverage — IDENTICAL in `◻️2d`, `🧊️3d` and `🖐️5d` (full decision table in the ticket's
@@ -28,9 +28,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -39,12 +39,12 @@ extern crate semio_framework_value_derive as value_derive;
 /// the twelve typed foreign entries. `pilot_languages()` indices are fixed by that function's own
 /// literal `vec![document, op, diff, pack, spr]` order, the same role→slot mapping `🗒️note`'s
 /// `io()` uses.
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
     use semio_s_artifact_block_3d_io_write::serializers::artifacts as export;
     use semio_s_artifact_block_3d_io_read::deserializers::artifacts as import;
     use crate::{Block3dMutation, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
     /// 🎹️ One vtable row per typed leaf, both directions per format — the single place this subset
@@ -79,7 +79,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 //#endregion 🔖️IoDeclaration
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec Block3dBuilderFacets {
         construction: Block3dBuilderConstruction,
         analysis: Block3dAnalyzerAnalysis,

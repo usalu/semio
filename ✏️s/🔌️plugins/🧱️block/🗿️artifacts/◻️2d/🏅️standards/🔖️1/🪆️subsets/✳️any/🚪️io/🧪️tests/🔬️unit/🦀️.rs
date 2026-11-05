@@ -5,7 +5,7 @@ use semio_s_artifact_block_2d_io_write::serializers::artifacts::zip::v2_0::any::
 use semio_s_artifact_block_2d_io_read::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
 use semio_s_artifact_block_2d_io_read::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
 use semio_s_artifact_block_2d_io_read::deserializers::artifacts::zip::v2_0::any::{ZIP_MAGIC, from_zip_bytes};
-use semio_framework_os_kernel::io::io_mechanism::Serializer;
+use semio_os_kernel::io::io_mechanism::Serializer;
 use semio_framework::io_schema::IoPayload;
 
 /// 📄️ Every handcrafted `.semio` DSL example asset of this subset — the language-agnostic
@@ -38,7 +38,7 @@ async fn json_round_trips_every_example() {
 async fn zip_round_trips_every_example_as_a_real_archive() {
     for (id, text) in EXAMPLES {
         let snapshot = from_dsl_text(text).unwrap_or_else(|error| panic!("{id}: {error:?}"));
-        let IoPayload::Binary(bytes) = Block2dIntoZip::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value else {
+        let IoPayload::Binary(bytes) = Block2dIntoZip::serialize(&snapshot, &semio_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value else {
             panic!("{id}: zip export must be a binary payload");
         };
         assert!(bytes.starts_with(ZIP_MAGIC), "{id}: zip export must be a real zip 2.0 container");

@@ -1,6 +1,7 @@
 /** 📡️ The operation completion, diagnostic and progress subscriptions of the host effects hook.
  *
  * 🧱️ Child hook module of {@link ../🟦️.ts | useApplyHostEffects}: runs the original `useEffect` statements in order. */
+import { subscribeContributorOperationLeasesV1 } from "./🎟️contributors/🟦️.ts";
 import { useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
 import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
@@ -37,7 +38,8 @@ import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/
  * session already routes to `refreshSpawnedUi`, so the completion pass needs no spawned-specific
  * branch of its own — only an owner.
  */
-export function useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, showTransientNoticeRef, applyHostEffects }: Pick<ShellCoreAfterSpawnedSession, "session" | "loadedPluginsRef" | "settleOperation" | "applyHistoryPatch" | "captureProgramEffectOwner" | "applyLeftoverInteractionView" | "dropForRetiredInstance" | "isCurrentEffectOwner" | "hostMode" | "spawnedAppsRef" | "spawnedRosterKey" | "showTransientNoticeRef"> & {
+export function useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, showTransientNoticeRef, contributorInstancesRef, contributorRosterKey, applyHostEffects }: Pick<ShellCoreAfterSpawnedSession, "session" | "loadedPluginsRef" | "settleOperation" | "applyHistoryPatch" | "captureProgramEffectOwner" | "applyLeftoverInteractionView" | "dropForRetiredInstance" | "isCurrentEffectOwner" | "hostMode" | "spawnedAppsRef" | "spawnedRosterKey" | "showTransientNoticeRef" | "contributorInstancesRef"> & {
+  readonly contributorRosterKey: string;
   readonly applyHostEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>) => Promise<void>;
 }) {
   useEffect(() => {
@@ -88,6 +90,35 @@ export function useOperationCompletionSubscriptions({ session, loadedPluginsRef,
 
   useEffect(() => {
     if (!session) return;
+    return subscribeContributorOperationLeasesV1(contributorInstancesRef, (lease, instanceId, current) => {
+      const entry = loadedPluginsRef.current.find(candidate => candidate.handle.pluginId === lease.pluginId);
+      const app = entry?.manifest.apps.find(candidate => candidate.id === lease.appId);
+      if (!entry || !app) return;
+      const target = (): ActiveSession | null => current() && lease.viewState ? { pluginId: lease.pluginId, instanceId, app, viewState: lease.viewState } : null;
+      const dispose = entry.handle.subscribeOperationCompletions(instanceId, completion => {
+        const receiver = target();
+        if (!receiver) return;
+        const owner = captureProgramEffectOwner(receiver);
+        if (!isCurrentEffectOwner(owner)) return;
+        settleOperation(completion);
+        applyHistoryPatch(completion.historyPatch, false, { pluginId: lease.pluginId, instanceId });
+        const refresh = typedOperationCompletionRefreshV1(completion);
+        if (refresh !== null) void applyHostEffects(completion.requestedEffects, receiver, refresh, owner).catch(logUnlessRetiredV1("contributor typed-operation completion effects failed"));
+      });
+      let diagnostics: (() => void) | undefined;
+      try {
+        diagnostics = entry.handle.subscribeOperationDiagnostics(instanceId, ({ token, diagnostic }) => {
+          const receiver = target();
+          if (!receiver || token.receiver !== instanceId || !isCurrentEffectOwner(captureProgramEffectOwner(receiver))) return;
+          showTransientNoticeRef.current(diagnostic.message, diagnostic.severity === "fatal" ? "error" : diagnostic.severity, diagnostic.code);
+        });
+      } catch (error) { dispose(); throw error; }
+      return () => { dispose(); diagnostics?.(); };
+    }, logUnlessRetiredV1("contributor operation-completion subscription failed"));
+  }, [session, contributorInstancesRef, contributorRosterKey, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, isCurrentEffectOwner, applyHostEffects, showTransientNoticeRef]);
+
+  useEffect(() => {
+    if (!session) return;
     const instances = [{ pluginId: session.pluginId, instanceId: session.instanceId }, ...(hostMode ? spawnedAppsRef.current : [])];
     const disposers: (() => void)[] = [];
     for (const instance of instances) {
@@ -118,7 +149,8 @@ export function useOperationCompletionSubscriptions({ session, loadedPluginsRef,
  * `subscribeSpawnedJobProgress`), which is the last of the six session-only decision sites S5
  * started on.
  */
-export function useOperationProgressSubscriptions({ session, loadedPluginsRef, applyHistoryPatch, captureProgramEffectOwner, dropForRetiredInstance, hostMode, spawnedAppsRef, spawnedRosterKey, applyHostEffects }: Pick<ShellCoreAfterSpawnedSession, "session" | "loadedPluginsRef" | "applyHistoryPatch" | "captureProgramEffectOwner" | "dropForRetiredInstance" | "hostMode" | "spawnedAppsRef" | "spawnedRosterKey"> & {
+export function useOperationProgressSubscriptions({ session, loadedPluginsRef, applyHistoryPatch, captureProgramEffectOwner, dropForRetiredInstance, hostMode, spawnedAppsRef, spawnedRosterKey, contributorInstancesRef, contributorRosterKey, isCurrentEffectOwner, applyHostEffects }: Pick<ShellCoreAfterSpawnedSession, "session" | "loadedPluginsRef" | "applyHistoryPatch" | "captureProgramEffectOwner" | "dropForRetiredInstance" | "hostMode" | "spawnedAppsRef" | "spawnedRosterKey" | "contributorInstancesRef" | "isCurrentEffectOwner"> & {
+  readonly contributorRosterKey: string;
   readonly applyHostEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>) => Promise<void>;
 }) {
   useEffect(() => {
@@ -176,4 +208,33 @@ export function useOperationProgressSubscriptions({ session, loadedPluginsRef, a
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hostMode, session, spawnedRosterKey, applyHistoryPatch, applyHostEffects, captureProgramEffectOwner]);
+  useEffect(() => {
+    if (!session) return;
+    return subscribeContributorOperationLeasesV1(contributorInstancesRef, (lease, instanceId, current) => {
+      const entry = loadedPluginsRef.current.find(candidate => candidate.handle.pluginId === lease.pluginId);
+      const app = entry?.manifest.apps.find(candidate => candidate.id === lease.appId);
+      if (!entry || !app) return;
+      const target = (): ActiveSession | null => current() && lease.viewState ? { pluginId: lease.pluginId, instanceId, app, viewState: lease.viewState } : null;
+      const operations = entry.handle.subscribeOperationProgress(instanceId, progress => {
+        const receiver = target();
+        if (!receiver) return;
+        const owner = captureProgramEffectOwner(receiver);
+        if (!isCurrentEffectOwner(owner)) return;
+        const { scope, historyPatch } = operationProgressPartsV1(progress);
+        applyHistoryPatch(historyPatch, false, { pluginId: lease.pluginId, instanceId });
+        if (scope.kind !== "none") void applyHostEffects([], receiver, scope, owner).catch(logUnlessRetiredV1("contributor typed-operation progress refresh failed"));
+      });
+      let jobs: (() => void) | undefined;
+      try {
+        jobs = entry.handle.subscribeSpawnedJobProgress?.(instanceId, () => {
+          const receiver = target();
+          if (!receiver) return;
+          const owner = captureProgramEffectOwner(receiver);
+          if (isCurrentEffectOwner(owner)) void applyHostEffects([], receiver, { kind: "full" }, owner).catch(logUnlessRetiredV1("contributor spawned-job progress refresh failed"));
+        });
+      } catch (error) { operations(); throw error; }
+      return () => { operations(); jobs?.(); };
+    }, logUnlessRetiredV1("contributor operation-progress subscription failed"));
+  }, [session, contributorInstancesRef, contributorRosterKey, loadedPluginsRef, applyHistoryPatch, captureProgramEffectOwner, isCurrentEffectOwner, applyHostEffects]);
+
 }

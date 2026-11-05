@@ -14,8 +14,8 @@ pub struct SetComments2 {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetComments2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comments2", kind: "set-comments2", record: "SetComments2" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set comments 2", "Kommentare 2 setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set comments 2", "Kommentare 2 setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

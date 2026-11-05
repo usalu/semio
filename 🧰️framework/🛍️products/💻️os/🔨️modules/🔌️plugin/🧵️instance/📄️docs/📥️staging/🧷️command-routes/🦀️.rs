@@ -2,20 +2,20 @@
 //!
 //! 🧷️ Command routes of the mounted artifact instance: framework-reserved routes, action dispatch and command dispatch.
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
-use semio_framework_plugin_document_media::ActiveDocumentArchiveLoad;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_document_media::ActiveDocumentArchiveLoad;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_command::DOCUMENT_LOADING_CODE;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_command::DOCUMENT_LOADING_CODE;
+use semio_plugin_decl_emission::Emit;
 use crate::docs_components::EnvelopeJobs;
 use std::future::Future;
-use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// ⏳️ The `document.loading` refusal of `verb` while a whole-document load still runs (`📓️api-stepped-document-load.md`

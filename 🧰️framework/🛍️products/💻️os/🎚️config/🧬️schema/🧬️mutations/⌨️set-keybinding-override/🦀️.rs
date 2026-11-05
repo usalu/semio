@@ -19,8 +19,8 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetK
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set keybinding override {:?}", self.control_id), &format!("Tastenkürzel {:?} setzen", self.control_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set keybinding override {:?}", self.control_id), &format!("Tastenkürzel {:?} setzen", self.control_id))
     }
 
     fn target(&self) -> Vec<String> {

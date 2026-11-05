@@ -1,8 +1,8 @@
 //! 🧬️ remodeling mutation vocabulary: the dispatch enum, its apply boundary, text and binary codecs and format leaves.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[path = "."]
 pub mod standards {

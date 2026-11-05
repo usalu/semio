@@ -1,16 +1,16 @@
 //#region 🚪️RuntimeInstanceCloseAuthority
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use std::cell::Cell;
 use semio_framework::{Fault, FaultFrom};
 use semio_framework_value::{FromValue, ToValue};
 use std::sync::atomic::Ordering;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_plugin_program::PluginProgram;
 use crate::life_instance_registry::{PluginRuntime, RuntimeCloseWorkerState};
 use crate::life_app_cell::RuntimeAppCell;
 use crate::life_cleanup_vocabulary::{RuntimeCloseStatus, runtime_cleanup_fault};
 use crate::life_cleanup_pumps::{checked_runtime_close_generation, plugin_begin_instance_close};
-use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 
 /// 🪪️ Captures the exact app allocation; a reused numeric ID cannot acquire this close authority.
 pub struct PluginInstanceCloseLease<PA: PluginApp> {

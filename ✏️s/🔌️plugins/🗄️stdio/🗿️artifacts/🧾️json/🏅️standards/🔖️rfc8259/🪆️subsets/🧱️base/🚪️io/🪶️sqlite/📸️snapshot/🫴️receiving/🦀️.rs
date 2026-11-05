@@ -1,11 +1,11 @@
 //! 🧾️ Original JSON source paths, relational backing and partially attached trees remain in paid typed custody.
 use super::{JsonSnapshot,JsonValue,JsonMember,kind};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Direction,Projection,Scalar,AuthoredTable,cell,text_cell,row,push_row,sort,sort_charged,ordinal,integer,identity_position,parent_range,validate_schema,check_database,settle}};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Direction,Projection,Scalar,AuthoredTable,cell,text_cell,row,push_row,sort,sort_charged,ordinal,integer,identity_position,parent_range,validate_schema,check_database,settle}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::NativeSnapshotBodyWallet;
 use std::{mem::size_of,cell::{Cell,RefCell},cmp::Ordering};
 type Result<T>=std::result::Result<T,ValueError>;
-type Port<'a,'b,'c>=semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::Port<'a,'b,'c,NativeSnapshotBodyWallet>;
+type Port<'a,'b,'c>=semio_os_kernel::sqlite_snapshot::artifact::receiving::Port<'a,'b,'c,NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 const NAMES:[&str;4]=["json_document","json_value","json_object_member","json_array_element"];
 fn error(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}

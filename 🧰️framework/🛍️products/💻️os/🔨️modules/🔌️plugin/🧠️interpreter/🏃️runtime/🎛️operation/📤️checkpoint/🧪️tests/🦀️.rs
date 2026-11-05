@@ -1,7 +1,7 @@
 use semio_framework_value::{NativeEncodeControl,native_encoding::NativeEncodeProgress,ValueRefusalKind};
 #[test]
 fn projected_checkpoint_serializes_actual_postcharge_receipt_and_keeps_every_canceled_buffer(){
-    use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,OriginalOperationReceiver};
+    use semio_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,OriginalOperationReceiver};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let actor=fixture["actor"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>();
     let g=&fixture["retirement"];let grant=semio_framework_value::RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
@@ -20,7 +20,7 @@ fn projected_checkpoint_serializes_actual_postcharge_receipt_and_keeps_every_can
         let mut receiver=OriginalOperationReceiver::new(&mut identity);receiver.begin().unwrap();receiver.finish(0).unwrap();
         enabled.set(true);
         let (result,allocated,released)=backing(||receiver.with_host_io(|scope|{
-            let mut metadata=|projection:&semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiptProjection<'_>,control:&mut NativeEncodeControl<'_>,output:Option<&mut Vec<u8>>|{let mut writer=super::super::input::JsonInputWriter{control,output,count:0};super::super::input::encode_borrowed(&mut writer,projection)?;Ok(writer.count)};
+            let mut metadata=|projection:&semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiptProjection<'_>,control:&mut NativeEncodeControl<'_>,output:Option<&mut Vec<u8>>|{let mut writer=super::super::input::JsonInputWriter{control,output,count:0};super::super::input::encode_borrowed(&mut writer,projection)?;Ok(writer.count)};
             let mut visit=|sink:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>|sink(&actor);
             super::encode_projected_checkpoint_frame(scope,&mut metadata,&mut visit)
         }));
@@ -57,8 +57,8 @@ fn borrowed_host_checkpoint_frame_preserves_exact_bytes_and_original_failure_own
 #[test]
 fn borrowed_actual_vm_checkpoint_visit_allocates_nothing(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let module=std::sync::Arc::new(semio_framework_plugin_interpreter::CoreModule::parse(&fixture["coreModule"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>()).unwrap());
-    let instance=semio_framework_plugin_interpreter::CoreInstance::instantiate(module).unwrap();let expected=instance.checkpoint();let mut count=0;
+    let module=std::sync::Arc::new(semio_plugin_interpreter::CoreModule::parse(&fixture["coreModule"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>()).unwrap());
+    let instance=semio_plugin_interpreter::CoreInstance::instantiate(module).unwrap();let expected=instance.checkpoint();let mut count=0;
     let (result,allocated,released)=backing(||instance.visit_checkpoint(&mut |bytes|{assert_eq!(&expected[count..count+bytes.len()],bytes);count+=bytes.len();Ok(())}));
     result.unwrap();assert_eq!(count,expected.len());assert_eq!((allocated,released),(0,0));
 }

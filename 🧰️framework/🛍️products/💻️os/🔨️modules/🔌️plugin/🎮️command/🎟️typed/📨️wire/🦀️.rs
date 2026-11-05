@@ -2,8 +2,8 @@
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::RetainedCloneClose};
 use semio_framework::action_bus::{RetainedToolWireInput,ToolWirePage,TOOL_WIRE_PAGE_BYTES};
-pub use semio_framework_os_store_operation_wire::ArtifactPreparedOperationSource;
-use semio_framework_os_store_operation_wire::{ArtifactPreparedOperationCursor,ArtifactPreparedOperationProgress};
+pub use semio_os_store_operation_wire::ArtifactPreparedOperationSource;
+use semio_os_store_operation_wire::{ArtifactPreparedOperationCursor,ArtifactPreparedOperationProgress};
 use std::mem::{ManuallyDrop,size_of};
 fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 fn built_with<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|control|semio_framework_value::RetainedWorkOutcome{result:construct(control),work:1})}

@@ -26,8 +26,8 @@ pub mod mutation {
     crate::change_layer_blend_mode::inverse::inverse(self, base)
 }
 
-        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer {} blend mode to {}", self.layer_id, self.new_blend_mode), &format!("Füllmethode von Ebene {} auf {} setzen", self.layer_id, self.new_blend_mode))
+        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+            semio_ui_locale::LocalizedLabel::native(&format!("Set layer {} blend mode to {}", self.layer_id, self.new_blend_mode), &format!("Füllmethode von Ebene {} auf {} setzen", self.layer_id, self.new_blend_mode))
         }
 
         fn target(&self) -> Vec<String> {

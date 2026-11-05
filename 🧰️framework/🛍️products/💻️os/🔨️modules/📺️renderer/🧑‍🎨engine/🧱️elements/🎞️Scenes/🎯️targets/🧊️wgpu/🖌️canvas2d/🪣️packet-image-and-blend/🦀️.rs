@@ -93,7 +93,7 @@ pub fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &st
     queue_canvas_image_upload_sized(surface_id, layer_id, data_url).0.ok()
 }
 
-pub fn draw_checkerboard(draw: &mut semio_framework_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme, extent: f32) {
+pub fn draw_checkerboard(draw: &mut semio_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme, extent: f32) {
     let cell = 16.0;
     let half = extent * 0.5;
     let light = theme.checker_light;
@@ -129,7 +129,7 @@ pub fn draw_checkerboard(draw: &mut semio_framework_ui_draw_contract::DrawList, 
     }
 }
 
-pub(super) fn draw_canvas_infinite_grid(draw: &mut semio_framework_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme) {
+pub(super) fn draw_canvas_infinite_grid(draw: &mut semio_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme) {
     if viewport.zoom <= 0.0 {
         return;
     }
@@ -166,7 +166,7 @@ pub(super) fn draw_canvas_infinite_grid(draw: &mut semio_framework_ui_draw_contr
     }
 }
 
-pub(super) fn draw_dashed_line(draw: &mut semio_framework_ui_draw_contract::DrawList, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
+pub(super) fn draw_dashed_line(draw: &mut semio_ui_draw_contract::DrawList, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
     let dx = x1 - x0;
     let dy = y1 - y0;
     let len = (dx * dx + dy * dy).sqrt().max(0.001);

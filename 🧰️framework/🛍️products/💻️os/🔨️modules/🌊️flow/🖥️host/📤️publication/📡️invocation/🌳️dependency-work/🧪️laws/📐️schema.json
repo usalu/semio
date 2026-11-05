@@ -1,0 +1,64 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "maxItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "target",
+      "widgets",
+      "synapses",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "target": {
+        "type": "string"
+      },
+      "widgets": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
+      "synapses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "from",
+            "to",
+            "fromPort",
+            "toPort"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "fromPort": {
+              "type": "string"
+            },
+            "toPort": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "type": "string"
+      }
+    }
+  }
+}

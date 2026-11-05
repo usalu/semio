@@ -1,7 +1,7 @@
 //! 🧪️ Native Store bytes use each immediate preimage and retain all original owners through close.
 use super::*;
 use protocol::command::ColdDiffAlgebra;
-use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 fn grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 2097152, maximum_release_bytes: 2097152, maximum_depth: 256 }
 }
@@ -133,7 +133,7 @@ fn original_progressive_preimages_match_central_bytes_and_exact_inverse_at_every
                 checked += 1;
             }
             turns += 1;
-            if caller.work_turn(grant(), 1, |cx| cursor.advance(&mutations, semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx)).unwrap() {
+            if caller.work_turn(grant(), 1, |cx| cursor.advance(&mutations, semio_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx)).unwrap() {
                 break;
             }
         }
@@ -154,7 +154,7 @@ fn original_progressive_preimages_match_central_bytes_and_exact_inverse_at_every
                 if turn == stop {
                     caller.cancel().cancel_now();
                 }
-                let result = caller.work_turn(grant(), 1, |cx| cursor.advance(&mutations, semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx));
+                let result = caller.work_turn(grant(), 1, |cx| cursor.advance(&mutations, semio_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx));
                 if turn == stop {
                     assert!(result.is_err());
                 } else {
@@ -177,8 +177,8 @@ fn original_publication_refuses_a_rebound_pending_owner() {
     let replacement = mutations.clone();
     let mut caller = OriginalWorkFixture::new();
     let mut cursor = capture(&snapshot, &mut caller);
-    caller.work_turn(grant(), 1, |cx| cursor.advance(&mutations, semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx)).unwrap();
-    assert!(caller.work_turn(grant(), 1, |cx| cursor.advance(&replacement, semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx)).unwrap_err().primary.message().contains("source changed"));
+    caller.work_turn(grant(), 1, |cx| cursor.advance(&mutations, semio_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx)).unwrap();
+    assert!(caller.work_turn(grant(), 1, |cx| cursor.advance(&replacement, semio_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx)).unwrap_err().primary.message().contains("source changed"));
     assert_eq!(cursor.bytes, 0);
     close(&mut cursor, &mut caller);
     caller.finish();

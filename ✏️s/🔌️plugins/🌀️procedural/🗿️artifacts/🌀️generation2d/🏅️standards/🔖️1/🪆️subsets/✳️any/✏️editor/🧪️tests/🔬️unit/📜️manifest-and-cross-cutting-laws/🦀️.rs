@@ -31,7 +31,7 @@ fn the_manifest_stitches_every_taxonomy_node() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn declared_actions_bridge_to_commands() {
-    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(context::generation2d_manifest_for_tests).await;
+    semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(context::generation2d_manifest_for_tests).await;
 }
 
 /// 🧵️ LAW (design L4 / §2 D): a `canvasPointerMove` wire carries its `samples` batch in order (a bare
@@ -52,7 +52,7 @@ fn canvas_pointer_wire_reads_only_a_samples_batch_and_defaults_cancelled() {
     assert_eq!(bridge("canvasPointerUp", bare_point), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "an absent `cancelled` is a real release");
     assert_eq!(bridge("canvasPointerUp", semio_framework_value::DslValue::object([("cancelled".into(), semio_framework_value::DslValue::Bool(true))])), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: true }));
     let document = Generation2dPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = Generation2dConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
@@ -69,9 +69,9 @@ fn canvas_pointer_wire_reads_only_a_samples_batch_and_defaults_cancelled() {
 #[test]
 fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malformed_one() {
     let decode = |args: semio_framework_value::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some((args).clone()), None);
-    let identity = semio_framework_os_kernel::Viewport2d::default();
+    let identity = semio_os_kernel::Viewport2d::default();
     assert_eq!(decode(semio_framework_value::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
-    let authored = semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 };
+    let authored = semio_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 };
     assert_eq!(
         decode(semio_framework_value::DslValue::object([("viewport".into(), semio_framework_value::ToValue::to_value(&authored))])).expect("an authored viewport bridges"),
         Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: authored })
@@ -88,7 +88,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
     let mut app = app_with_registry().await;
     let result: Result<(usize, usize), String> = async {
         let before = snapshot_read(&app).host_snapshot.widgets.len();
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
             .await
             .map_err(|error| format!("{error:?}"))?;
         let (artifact, _, _) = drive_preview_operation(&mut app).await?;
@@ -107,7 +107,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
 async fn add_widget_undo_redo_round_trip() {
     let mut app = app().await;
     let before = snapshot_read(&app).host_snapshot.widgets.len();
-    assert_undo_redo_round_trip(&mut app.0, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    assert_undo_redo_round_trip(&mut app.0, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     close(app);
 }
 
@@ -118,7 +118,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
     close(fixture);
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>), _, _>(
+    semio_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>), _, _>(
         "mem://generation2d-convergence",
         || async { crate::app_fixture::generation2d_manifest_for_tests() },
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
@@ -126,7 +126,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
         move |app| {
             let projection = snapshot_read(app);
             (projection.host_snapshot.layout.get(&w0).map(|entry| entry.x), projection.host_snapshot.layout.get(&w1).map(|entry| entry.x))
-        },semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        },semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }

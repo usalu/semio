@@ -1,8 +1,8 @@
 //! 🔖️ v1 of `semio-s-artifact-writer-writer` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use crate::standards::v1::subsets::any::schema::mutations::WriterMutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::WriterSnapshot;

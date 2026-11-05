@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfSupportLength wh
         record: "ChangedCfSupportLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Support length s_s of the cold-formed member", "Kaltprofil: Auflagerlänge s_s ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Support length s_s of the cold-formed member", "Kaltprofil: Auflagerlänge s_s ändern")
     }
 }
 

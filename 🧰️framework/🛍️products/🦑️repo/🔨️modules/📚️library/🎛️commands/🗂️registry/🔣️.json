@@ -164,10 +164,10 @@
         "en": "The module reaches the TypeScript compiler and the JSON schema library.",
         "de": "Das Modul erreicht den TypeScript-Compiler und die JSON-Schema-Bibliothek."
       },
-      "synopsis": "dev storybook|mcp …",
+      "synopsis": "dev storybook|time-travel|mcp …",
       "summary": {
-        "en": "Starts development servers: Storybook, MCP.",
-        "de": "Startet Entwicklungsserver: Storybook, MCP."
+        "en": "Starts development servers and the time-travel browser gate.",
+        "de": "Startet Entwicklungsserver und die Zeitreise-Browserprüfung."
       }
     },
     {

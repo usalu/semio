@@ -11,7 +11,7 @@ use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_fro
 use crate::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
 use protocol::command::DiffAlgebra;
 use protocol::{ColdMutation, Mutation, MutationDiff};
-use semio_framework_plugin::ArtifactBuilder;
+use semio_plugin::ArtifactBuilder;
 
 #[semio_framework_async_macros::async_test]
 async fn schema_facets_reject_raw_doctype_and_source_shadow_state() {
@@ -213,7 +213,7 @@ fn sample_mutations() -> Vec<XmlMutation> {
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = sample_snapshot();
-        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
+        let diff_direct = ::semio_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
@@ -238,7 +238,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
+        let diff = ::semio_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = protocol::apply_diff_cold(&inverse_diff, &next).unwrap();
@@ -287,9 +287,9 @@ fn root_children_diff(diff: &XmlDiff) -> &crate::schema::diff::XmlChildrenDiff {
 async fn absorb_law() {
     {
         let base = two_child_root("a", "b");
-        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let d1 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid);
+        let d2 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert_eq!(triple.removed, vec![0]);
@@ -301,9 +301,9 @@ async fn absorb_law() {
 
     {
         let base = two_child_root("a", "b");
-        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let d1 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid);
+        let d2 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -321,9 +321,9 @@ async fn absorb_law() {
 
     {
         let base = two_child_root("a", "b");
-        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let d1 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &mid);
+        let d2 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -334,9 +334,9 @@ async fn absorb_law() {
 
     {
         let base = two_child_root("a", "b");
-        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &base);
+        let d1 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 1 }), &mid);
+        let d2 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
@@ -345,11 +345,11 @@ async fn absorb_law() {
 
     {
         let base = two_child_root("a", "b");
-        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let d1 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
         let mid1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid1);
+        let d2 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid1);
         let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).unwrap();
-        let d3 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid2);
+        let d3 = ::semio_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid2);
         let sequential = protocol::apply_diff_cold(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();
@@ -416,7 +416,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
-        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_xml_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
@@ -428,7 +428,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
-        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
@@ -441,7 +441,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
-        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");

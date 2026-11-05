@@ -11,7 +11,7 @@ import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {GENERATION_MESSAGES_V1,extractGraphPolicyV1,implementationDigestV1,loadGenerationGraphV1,renderGenerationMessageV1,scopeImplementationRowsV1,sliceClosureV1,sliceViewV1,expandInChunksV1,shapeComputeResultV1,survivingStubsV1} from "../🟨️.mjs";
-import {GENERATION_POLICY_V1,canonicalJsonV1} from "../../🟨️.mjs";
+import {GENERATION_POLICY_V1,canonicalJsonV1,createGenerationStoreV1,type GenerationRowV1} from "../../🟨️.mjs";
 import {encodeGenerationPinV1,generationPinOpenV1,readGenerationPinV1} from "../../🧷️pin/🟨️.mjs";
 import {applyOps,createMockHost,ringFiles,seed} from "../../🧪️tests/🏃️world/🟦️.ts";
 
@@ -332,5 +332,68 @@ test("a prefetch that settles late delays the builder, and one that rejects fail
   await applyOps(dir,[{op:"write",path:"pkg/p3/src/index.ts",content:'import "@syn/p5";\nexport const v=6;\n'}]);
   const failing=createMockHost(dir,{prefetch:async()=>{throw new Error("cancelled");}});
   await expect(loadGenerationGraphV1(failing.host)).rejects.toThrow("cancelled");expect(failing.events).toEqual(["shared","prefetch"]);
+ }finally{clean(dir);}
+},60000);
+
+for(const row of fixture.attempts)test("shared to builder answers: "+row.id,async()=>{
+ const dir=scratch(),controller=new AbortController();let answer="equal",queries=0,active=false,inBuilder=false,failed=false;const proof:string[]=[];
+ const support=():GenerationRowV1=>({kind:"file",path:"test-support",fact:Number(readFileSync(join(dir,"test-support"),"utf8"))});
+ const head=():GenerationRowV1=>({kind:"derived",path:"test-question",fact:answer});
+ const attach=(mock:ReturnType<typeof createMockHost>)=>{
+  const storeOptions=mock.host.storeOptions,discover=mock.host.discoverPart;
+  mock.host.storeOptions=((store:any)=>{
+   const options=storeOptions(store);
+   return{...options,holds:async(rows:readonly GenerationRowV1[],signal?:AbortSignal)=>{
+    if(active&&rows.some(read=>read.path==="test-support"))proof.push((inBuilder?"builder":"shared")+":hold:"+rows.filter(read=>read.path==="test-support").map(read=>read.fact).join(","));
+    if(active&&inBuilder&&row.transition==="cancel"&&rows.some(read=>read.path==="test-support"&&read.fact===2))controller.abort(new Error("support cancelled"));
+    signal?.throwIfAborted();
+    const raw=rows.filter(read=>read.path!=="test-support");
+    return rows.every(read=>read.path!=="test-support"||read.fact===support().fact)&&await options.holds(raw,signal);
+   },derive:async(_read:GenerationRowV1,signal?:AbortSignal)=>{
+    signal?.throwIfAborted();queries++;proof.push((inBuilder?"builder":"shared")+":derive");
+    if(row.transition==="failure"&&!failed){failed=true;throw Error("derive failed");}
+    return{fact:answer,rows:[support()]};
+   }};
+  }) as typeof mock.host.storeOptions;
+  mock.host.discoverPart=(async(spec:any,signal?:AbortSignal)=>{
+   const part=await discover(spec,signal),owner=part.owners.find(owner=>owner.name==="p0");
+   if(!owner)return part;
+   owner.nodeRows.push(head());
+   return{...part,derived:[{row:head(),support:[support()]}]};
+  }) as typeof mock.host.discoverPart;
+  return mock;
+ };
+ try{
+  await seed(dir,{...ringFiles(2),"test-support":"1"});const initial=attach(createMockHost(dir));await loadGenerationGraphV1(initial.host);
+  const alternateRoot=join(dir,".other");
+  if(row.transition==="root"){const alternate=attach(createMockHost(dir)),options=alternate.host.storeOptions;alternate.host.storeOptions=store=>options({root:alternateRoot});await loadGenerationGraphV1(alternate.host);}
+  await applyOps(dir,[{op:"write",path:"test-support",content:"2"}]);
+  await applyOps(dir,[{op:"write",path:"pkg/p1/src/index.ts",content:"export const changed=2;\n"}]);
+  const before=readFileSync(join(dir,".gen","current.json"),"utf8");
+  if(row.priorLoad){const abandoned=attach(createMockHost(dir,{prefetch:async()=>{throw Error("abandoned load");}}));await expect(loadGenerationGraphV1(abandoned.host)).rejects.toThrow("abandoned load");expect(queries).toBe(1);queries=0;proof.length=0;}
+  const mock=attach(createMockHost(dir,{signal:controller.signal,gate:async()=>{
+   inBuilder=true;
+   if(row.transition==="support"||row.transition==="answer")await applyOps(dir,[{op:"write",path:"test-support",content:"3"}]);
+   if(row.transition==="answer")answer="changed";
+   if(row.transition==="generation"){
+    const peer=attach(createMockHost(dir));await loadGenerationGraphV1(peer.host);
+   }
+   if(row.transition==="membership")await applyOps(dir,[{op:"write",path:"pkg/new/project.json",content:JSON.stringify({name:"new",uses:[]})},{op:"write",path:"pkg/new/src/index.ts",content:"export const fresh=1;\n"}]);
+  }}));
+  if(row.transition==="root"){const options=mock.host.storeOptions;mock.host.storeOptions=store=>options(inBuilder?{root:alternateRoot}:store);}
+  active=true;
+  if(row.cancelled){
+   await expect(loadGenerationGraphV1(mock.host)).rejects.toThrow("support cancelled");
+   expect(readFileSync(join(dir,".gen","current.json"),"utf8")).toBe(before);
+  }else{
+   const graph=await loadGenerationGraphV1(mock.host);
+   expect(shape(graph)).toEqual(pythonGraph(dir));
+   const options=mock.host.storeOptions({root:join(dir,".gen")}),store=createGenerationStoreV1(options);
+   const settled=await store.plan({current:await store.read(),identity:await mock.host.identity(),changes:[]});
+   expect(settled.kind).toBe("clean");expect(settled.cutoff?.questions??0).toBe(0);
+   expect(mock.log.flatMap(row=>row.full).includes("p0")).toBe(row.transition==="answer");
+  }
+  expect(queries).toBe(row.queries);
+  if(row.transition==="none"){expect(proof.indexOf("shared:derive")).toBeGreaterThanOrEqual(0);expect(proof.indexOf("builder:hold:2")).toBeGreaterThan(proof.indexOf("shared:derive"));expect(proof).not.toContain("builder:derive");}
  }finally{clean(dir);}
 },60000);

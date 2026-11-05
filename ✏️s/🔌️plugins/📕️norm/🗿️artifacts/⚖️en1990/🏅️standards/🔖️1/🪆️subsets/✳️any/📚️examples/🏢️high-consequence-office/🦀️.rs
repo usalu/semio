@@ -1,7 +1,7 @@
 //! 📚️ Example `high-consequence-office` — non-compliant multi-failure CC3 subject.
 
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 use semio_s_artifact_norm_en1990_model::{ReliabilityClass, Member, MemberEffect, PermanentAction, VariableAction};
 
 pub const ID: &str = "high-consequence-office";

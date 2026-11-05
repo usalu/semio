@@ -202,7 +202,7 @@ fn encode_bridge_item(item: &InferenceBridgeItem) -> Vec<u8> {
 //#endregion 🌉️Channels
 
 type InferenceSession = semio_framework_job_worker::MountedWorkerJobSession<semio_framework::action_bus::ErasedToolJob>;
-type InferenceRejected = semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::action_bus::ErasedToolJob>;
+type InferenceRejected = semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::action_bus::ErasedToolJob>;
 
 // 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory` (see
 // `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); the admission body routes and constructs only.
@@ -216,12 +216,12 @@ pub(super) fn job_infer_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option
 
 /// 🎒️ The exact raw input and checkpoint remain owned until the original gateway and source close.
 struct OriginalInferenceJob {
-    pub input:Option<Vec<u8>>,pub restored:Option<Vec<u8>>,pub gateway:Option<semio_framework_plugin_extension::inference_gateway::ArtifactInferenceGateway>,pub output:Option<Vec<u8>>,
-    pub failure:Option<semio_framework_plugin_extension::artifact_inference::ArtifactInferenceGatewayRefusal>,closing_failure:Option<semio_framework_plugin_extension::artifact_inference::ArtifactInferenceGatewayRefusal>,pub reply:Option<semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply>,
+    pub input:Option<Vec<u8>>,pub restored:Option<Vec<u8>>,pub gateway:Option<semio_plugin_extension::inference_gateway::ArtifactInferenceGateway>,pub output:Option<Vec<u8>>,
+    pub failure:Option<semio_plugin_extension::artifact_inference::ArtifactInferenceGatewayRefusal>,closing_failure:Option<semio_plugin_extension::artifact_inference::ArtifactInferenceGatewayRefusal>,pub reply:Option<semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply>,
     pub secondary:Option<semio_framework_job::OriginalTurnFailure>,pub active:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,pub cancelled:bool,
 }
 impl OriginalInferenceJob {
-    pub fn new(input:Vec<u8>,restored:Option<Vec<u8>>,operation:u64,generation:u64)->Self{let gateway=semio_framework_plugin_extension::inference_gateway::ArtifactInferenceGateway::new(operation,generation,&input);Self{input:Some(input),restored,gateway:Some(gateway),output:None,failure:None,closing_failure:None,reply:None,secondary:None,active:None,cancelled:false}}
+    pub fn new(input:Vec<u8>,restored:Option<Vec<u8>>,operation:u64,generation:u64)->Self{let gateway=semio_plugin_extension::inference_gateway::ArtifactInferenceGateway::new(operation,generation,&input);Self{input:Some(input),restored,gateway:Some(gateway),output:None,failure:None,closing_failure:None,reply:None,secondary:None,active:None,cancelled:false}}
     pub fn close_field<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,active:&mut Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,semio_framework_value::ValueError>{
         use semio_framework_value::{retirement::admit_owned_retirement,close_factory_ticket,factory_ticket_demands};
         if active.is_some(){let demand=factory_ticket_demands(active.as_ref().unwrap(),grant.maximum_copy_bytes)?;if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default())}return close_factory_ticket(active,grant).result.map(|step|step.progress());}
@@ -241,23 +241,23 @@ impl OriginalInferenceJob {
             if self.cancelled||self.failure.is_some(){gateway.begin_close();}
             if self.closing_failure.is_some(){match Self::close_field(&mut self.closing_failure,&mut self.active,cx.retained_grant()){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}cx.consume_fuel(1);},Err(error)=>self.secondary=Some(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}return JobStep::Running(None)}
             if self.secondary.is_some()||self.active.is_some(){match Self::close_field(&mut self.secondary,&mut self.active,cx.retained_grant()){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}cx.consume_fuel(1);},Err(error)=>self.secondary=Some(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}return JobStep::Running(None)}
-            let answer=semio_framework_plugin_extension::inference_gateway::wire_artifact_infer(gateway,self.input.as_ref().unwrap(),cx);
+            let answer=semio_plugin_extension::inference_gateway::wire_artifact_infer(gateway,self.input.as_ref().unwrap(),cx);
             if let Some(cause)=answer.refusal{if self.failure.is_none(){self.failure=Some(cause);}else{assert!(self.closing_failure.is_none());self.closing_failure=Some(cause);}gateway.begin_close();}
             if let Some(payload)=answer.payload{assert!(self.output.is_none());self.output=Some(payload);}
             if gateway.terminal_is_empty(){self.gateway=None;}
             return JobStep::Running(None);
         }
         match self.close_sources(cx){Ok(false)=>return JobStep::Running(None),Err(error)=>{assert!(self.secondary.is_none());self.secondary=Some(error.into());return JobStep::Running(None)},Ok(true)=>{}}
-        if self.failure.is_some()&&self.reply.is_none(){self.reply=Some(semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Inference(self.failure.take().unwrap())));if let Err(error)=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}){self.secondary=Some(error.into());}return JobStep::Running(None)}
+        if self.failure.is_some()&&self.reply.is_none(){self.reply=Some(semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Inference(self.failure.take().unwrap())));if let Err(error)=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}){self.secondary=Some(error.into());}return JobStep::Running(None)}
         if self.cancelled&&self.output.is_some(){match Self::close_field(&mut self.output,&mut self.active,cx.retained_grant()){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}},Err(error)=>self.secondary=Some(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}return JobStep::Running(None)}
-        if self.cancelled&&self.reply.is_none(){self.reply=Some(semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original inference cancelled"))));return JobStep::Running(None)}
+        if self.cancelled&&self.reply.is_none(){self.reply=Some(semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original inference cancelled"))));return JobStep::Running(None)}
         if let Some(reply)=&mut self.reply{match reply.advance(cx){Ok(Some(bytes))=>{assert!(reply.terminal_is_empty());self.reply=None;return JobStep::Failed(bytes)},Ok(None)=>return JobStep::Running(None),Err(error)=>{self.secondary=Some(error.into());return JobStep::Running(None)}}}
         if self.output.is_some(){if let Err(error)=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}){self.secondary=Some(error.into());return JobStep::Running(None)}return JobStep::Done(self.output.take().unwrap())}
         JobStep::Running(None)
     }
  }
 impl BoundedJob for OriginalInferenceJob {
-    fn step(&mut self,_original:&mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_,'_>,_snapshot:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,semio_framework_job::OriginalTurnFailure>{let step=self.step_original(cx);match self.secondary.take(){Some(error)=>Err(error),None=>Ok(step)}}
+    fn step(&mut self,_original:&mut semio_os_kernel::io::io_mechanism::IoRunControl<'_,'_>,_snapshot:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,semio_framework_job::OriginalTurnFailure>{let step=self.step_original(cx);match self.secondary.take(){Some(error)=>Err(error),None=>Ok(step)}}
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if self.terminal_drop_is_shallow(){return Ok(true)}
         if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}
@@ -269,7 +269,7 @@ impl BoundedJob for OriginalInferenceJob {
         if let Some(gateway)=&mut self.gateway{
             gateway.begin_close();
             if gateway.terminal_is_empty(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.gateway=None;return Ok(false)}
-            let answer=semio_framework_plugin_extension::inference_gateway::wire_artifact_infer(gateway,self.input.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference close lost its raw input"))?,cx);
+            let answer=semio_plugin_extension::inference_gateway::wire_artifact_infer(gateway,self.input.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference close lost its raw input"))?,cx);
             if let Some(payload)=answer.payload{assert!(self.output.is_none());self.output=Some(payload);}
             if let Some(cause)=answer.refusal{if self.failure.is_none(){self.failure=Some(cause)}else{assert!(self.closing_failure.is_none());self.closing_failure=Some(cause)}}
             return Ok(false)
@@ -283,7 +283,7 @@ impl BoundedJob for OriginalInferenceJob {
         fn source<T:RetireOwned>(source:&T)->Result<RetirementDemand,semio_framework_value::ValueError>{Ok(RetirementDemand{capacity_bytes:source.retirement_birth_bytes().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original inference source has no declared close birth"))?,depth:1,..Default::default()})}
         if let Some(active)=&self.active{return semio_framework_value::factory_ticket_demands(active,copy)}
         if let Some(value)=&self.closing_failure{return source(value)}if let Some(value)=&self.secondary{return source(value)}
-        if let Some(gateway)=&self.gateway{return if gateway.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{semio_framework_plugin_extension::inference_gateway::original_inference_gateway_demands(gateway,copy)}}
+        if let Some(gateway)=&self.gateway{return if gateway.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{semio_plugin_extension::inference_gateway::original_inference_gateway_demands(gateway,copy)}}
         if let Some(reply)=&self.reply{return reply.demands(copy)}
         if let Some(value)=&self.closing_failure{return source(value)}if let Some(value)=&self.secondary{return source(value)}if let Some(value)=&self.failure{return source(value)}if let Some(value)=&self.output{return source(value)}if let Some(value)=&self.input{return source(value)}if let Some(value)=&self.restored{return source(value)}Ok(Default::default())
     }
@@ -294,7 +294,7 @@ impl BoundedJob for OriginalInferenceJob {
 impl Drop for OriginalInferenceJob{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_drop_is_shallow(),"original inference job dropped before full source closure");}}
 
 // 🚫️async: E1 pure parse consumed by the sync factory above and by `decode`'s own body.
-fn decode_request(input: &[u8]) -> Result<semio_framework_plugin_plugin_program::WireArtifactInferenceRequest, semio_framework::Fault> {
+fn decode_request(input: &[u8]) -> Result<semio_plugin_plugin_program::WireArtifactInferenceRequest, semio_framework::Fault> {
     let input_text = std::str::from_utf8(input).map_err(|error| crate::fault("job.infer.decode", format!("invalid {} input: {error}", crate::JOB_KIND_INFER)))?;
     semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| crate::fault("job.infer.decode", format!("invalid {} input: {error}", crate::JOB_KIND_INFER)))
 }
@@ -327,21 +327,21 @@ fn bridge_fault(error: &InferenceBridgeError) -> semio_framework::Fault {
 /// 🧾️ The result of a completed interactive inference, reporting only what the host observed: the job completed (`complete`), faulted nowhere (`valid`),
 /// its final persisted state or last checkpoint is the resume state (`previous_state`), and it published no diagnostics on the success path. A fidelity the
 /// job never declared is `unreported`, never `exact`.
-fn encode_result(request: semio_framework_plugin_plugin_program::WireArtifactInferenceRequest, canonical_payload: Vec<u8>, resume_state: Option<Vec<u8>>,retirement_progress:RetainedCloneProgress) -> Result<Vec<u8>, semio_framework::Fault> {
+fn encode_result(request: semio_plugin_plugin_program::WireArtifactInferenceRequest, canonical_payload: Vec<u8>, resume_state: Option<Vec<u8>>,retirement_progress:RetainedCloneProgress) -> Result<Vec<u8>, semio_framework::Fault> {
     let allocation = usize::try_from(request.budgets.allocation_bytes).map_err(|_| crate::fault("job.infer.result", "allocation budget exceeds this runtime's address space"))?;
     if canonical_payload.len() > allocation {
         return Err(crate::fault("job.infer.result", format!("interactive inference result has {} bytes, above allocation budget {allocation}", canonical_payload.len())));
     }
-    let provenance = semio_framework_plugin_plugin_program::WireArtifactInferenceProvenance {
+    let provenance = semio_plugin_plugin_program::WireArtifactInferenceProvenance {
         owner: request.owner.clone(),
         inference_schema: request.inference_schema.clone(),
         algorithm_version: request.algorithm_version,
         policy_version: request.policy_version,
         source_dialect: request.source_dialect.clone(),
     };
-    let result = semio_framework_plugin_plugin_program::WireArtifactInferenceResult {
+    let result = semio_plugin_plugin_program::WireArtifactInferenceResult {
         retirement_progress,
-        wire_version: semio_framework_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION,
+        wire_version: semio_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: request.owner,
         artifact_kind: request.artifact_kind,
         artifact_schema: request.artifact_schema,

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedCompressionS
         record: "ChangedPlatedCompressionStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plate compression stress σ_Ed of the plated panel", "Plattenfeld: Plattendruckspannung σ_Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plate compression stress σ_Ed of the plated panel", "Plattenfeld: Plattendruckspannung σ_Ed ändern")
     }
 }
 

@@ -1,6 +1,6 @@
 //! 📤️ Original durable semantic fields expose finite ordinals to shared JSON and Pack producers.
 use super::*;
-use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText};
+use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText};
 use semio_framework_dsl_record::native_encoding::FieldProjectionView as View;
 use semio_framework_value::{Number, ValueError, ValueRefusalKind};
 

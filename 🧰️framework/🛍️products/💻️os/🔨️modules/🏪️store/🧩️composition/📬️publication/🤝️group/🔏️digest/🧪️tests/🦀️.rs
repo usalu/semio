@@ -1,5 +1,5 @@
 //! 🧪️ Original group digest transport preserves native edit custody, exact grants and independent fixture digests.
-use semio_framework_os_kernel::{os_store::{admit_artifact_batch_digest,artifact_batch_digest_birth_demand},os_spr::Edit};
+use semio_os_kernel::{os_store::{admit_artifact_batch_digest,artifact_batch_digest_birth_demand},os_spr::Edit};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;

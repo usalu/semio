@@ -1,9 +1,9 @@
 use crate::editor::writer::modes::edit::windows::main::options;
 use serde_json::json;
-use semio_framework_plugin::{SurfaceKind, TextEditorScene, WindowMeasure};
+use semio_plugin::{SurfaceKind, TextEditorScene, WindowMeasure};
 use crate::editor::writer::modes::edit::windows::main::{WRITER_PLAY_BODY_MAIN, definition};
 use crate::editor_unit_tests::context::{main_window_measures, new_app, render as render_body};
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_text_editor_scene() {
@@ -16,8 +16,8 @@ async fn renders_text_editor_scene() {
 #[semio_framework_async_macros::async_test]
 async fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
     let mut app = new_app().await;
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app_over(&mut app.0, WRITER_PLAY_BODY_MAIN, Some(&crate::standards::v1::subsets::any::io::text::snapshot::jack_example_json()), &crate::editor_unit_tests::context::main_window_view(), app.1.cx()).await.expect("render JSON");
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<TextEditorScene>(&json).expect("text-editor scene");
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app_over(&mut app.0, WRITER_PLAY_BODY_MAIN, Some(&crate::standards::v1::subsets::any::io::text::snapshot::jack_example_json()), &crate::editor_unit_tests::context::main_window_view(), app.1.cx()).await.expect("render JSON");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<TextEditorScene>(&json).expect("text-editor scene");
     assert!(scene.placeholders_json.as_deref().is_some_and(|value| !value.is_empty()), "placeholders: {:?}", scene.placeholders_json);
     assert!(scene.selectable_spans_json.as_deref().is_some_and(|value| !value.is_empty()), "selectable spans: {:?}", scene.selectable_spans_json);
     assert!(scene.newline_gates_json.as_deref().is_some_and(|value| !value.is_empty()), "newline gates: {:?}", scene.newline_gates_json);

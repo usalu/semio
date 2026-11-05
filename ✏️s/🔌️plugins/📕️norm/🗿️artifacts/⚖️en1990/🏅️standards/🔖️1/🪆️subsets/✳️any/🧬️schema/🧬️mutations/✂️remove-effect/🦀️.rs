@@ -10,8 +10,8 @@ pub struct RemoveEffect { pub index: usize, }
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for RemoveEffect where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::insert_effect::InsertEffect> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "effect", kind: "remove-effect", record: "RemovedEffect" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove action effect", "Beanspruchung entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove action effect", "Beanspruchung entfernen")
     }
 }
 

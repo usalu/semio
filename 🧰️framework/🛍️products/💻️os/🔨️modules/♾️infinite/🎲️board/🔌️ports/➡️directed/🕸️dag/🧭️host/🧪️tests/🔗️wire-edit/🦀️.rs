@@ -1,15 +1,15 @@
 //! 🧪️ dag-host tests (🔗️wire-edit): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_engine::{Camera, InteractionMode};
-use semio_framework_os_infinite_board_dag_model::{computation_node_height, computation_node_width, dag_graph_edit_rows_json, DagGraphEdit, DagInteractionPlanFault, DagPointerIntent, DagPointerPhase, input_port_connector_bounds, minimap_widget_point_in_rect, output_port_connector_bounds};
-use semio_framework_os_infinite_board_dag_graph::entity_screen_json;
-use semio_framework_os_infinite_board_dag_host::{DagHost, derive_pointer_plan, minimap_widget_layout, screen_pointer_gesture_begins_at};
+use semio_os_infinite_board_engine::{Camera, InteractionMode};
+use semio_os_infinite_board_dag_model::{computation_node_height, computation_node_width, dag_graph_edit_rows_json, DagGraphEdit, DagInteractionPlanFault, DagPointerIntent, DagPointerPhase, input_port_connector_bounds, minimap_widget_point_in_rect, output_port_connector_bounds};
+use semio_os_infinite_board_dag_graph::entity_screen_json;
+use semio_os_infinite_board_dag_host::{DagHost, derive_pointer_plan, minimap_widget_layout, screen_pointer_gesture_begins_at};
 use graph::HandleRole;
 use semio_framework_canvas::Point;
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 use ::{graph, semio_framework_canvas as canvas};
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
 

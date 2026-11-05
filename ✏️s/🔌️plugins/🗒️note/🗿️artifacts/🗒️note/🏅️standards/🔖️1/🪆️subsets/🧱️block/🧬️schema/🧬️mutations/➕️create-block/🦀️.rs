@@ -32,8 +32,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create block \"{}\"", crate::schema::block_id(&self.block)), &format!("Block \"{}\" erstellen", crate::schema::block_id(&self.block)))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create block \"{}\"", crate::schema::block_id(&self.block)), &format!("Block \"{}\" erstellen", crate::schema::block_id(&self.block)))
     }
     fn target(&self) -> Vec<String> {
         vec![crate::schema::block_id(&self.block).to_string()]

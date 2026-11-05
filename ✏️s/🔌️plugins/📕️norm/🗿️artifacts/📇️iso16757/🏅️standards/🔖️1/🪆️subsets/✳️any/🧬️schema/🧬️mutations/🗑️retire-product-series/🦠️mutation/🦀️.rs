@@ -16,8 +16,8 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RetireProductSeries wh
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "remove", entity: "productSeries", kind: "retire-product-series", record: "RetiredProductSeries" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(
             &format!("Retire product series \"{}\"", self.id),
             &format!("Produktserie \"{}\" zurückziehen", self.id),
         )

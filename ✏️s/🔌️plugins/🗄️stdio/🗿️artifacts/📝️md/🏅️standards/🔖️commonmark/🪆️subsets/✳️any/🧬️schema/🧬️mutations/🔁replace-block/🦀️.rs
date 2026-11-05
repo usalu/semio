@@ -15,8 +15,8 @@ pub struct ReplaceBlock {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for ReplaceBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplaceBlock" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace block", "Block ersetzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Replace block", "Block ersetzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

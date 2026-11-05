@@ -14,7 +14,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
+    use {semio_plugin::io::register_subset_validator,semio_plugin::io::subset_validator_entry_of,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_plugin::io::SubsetValidator,semio_plugin::io::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_ISO21320: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("iso21320") };
@@ -124,7 +124,7 @@ pub mod derived_construction {
     use crate::standards::v2_0::subsets::iso21320::schema::mutations::{add_deflated_entry, add_stored_entry, ZipIso21320Mutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -213,7 +213,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("iso21320") };
@@ -251,7 +251,7 @@ use semio_framework_diagnostic::TextSpan;
         type Parts = ZipParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             ZipAnyAnalyzer::sniff(source)
         }
 
@@ -264,7 +264,7 @@ use semio_framework_diagnostic::TextSpan;
                 if let AnalyzeSource::Binary(bytes) = source {
                     let checks = check_iso21320_wire_conformance(bytes);
                     if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                        confidence = semio_framework_plugin::io::Confidence::Low;
+                        confidence = semio_plugin::io::Confidence::Low;
                     }
                     diagnostics.extend(checks);
                     wire_checked = true;
@@ -274,7 +274,7 @@ use semio_framework_diagnostic::TextSpan;
                 if let Some(snapshot) = &inner.parts.snapshot {
                     let checks = check_iso21320_conformance(snapshot);
                     if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                        confidence = semio_framework_plugin::io::Confidence::Low;
+                        confidence = semio_plugin::io::Confidence::Low;
                     }
                     diagnostics.extend(checks);
                 }
@@ -289,7 +289,7 @@ use semio_framework_diagnostic::TextSpan;
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec ZipIso21320BuilderFacets {
         construction: ZipIso21320BuilderConstruction,
         analysis: ZipIso21320AnalyzerAnalysis,
@@ -311,7 +311,7 @@ semio_framework_plugin::derive_artifact_facets!(
 pub mod io_registry {
     use crate::standards::v2_0::subsets::base::io::ZipComposer as ZipRawAnyComposer;
     use crate::standards::v2_0::subsets::iso21320::io::ZipIso21320Composer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();

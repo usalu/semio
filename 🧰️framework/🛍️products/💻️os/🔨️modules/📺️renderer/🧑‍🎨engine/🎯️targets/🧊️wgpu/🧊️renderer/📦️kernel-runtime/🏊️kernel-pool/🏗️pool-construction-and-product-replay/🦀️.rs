@@ -12,11 +12,11 @@ impl KernelPoolState {
     ///
     /// 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
     /// type mints for itself — see `ParallelRuntime::new`'s own doc.
-    pub async fn new(request_queue: Arc<KernelRequestQueue>, identity_policy:semio_framework_plugin_host::shard::ShardIdentityPolicy, original_clock:fn()->Option<u64>) -> Self {
+    pub async fn new(request_queue: Arc<KernelRequestQueue>, identity_policy:semio_plugin_host::shard::ShardIdentityPolicy, original_clock:fn()->Option<u64>) -> Self {
         let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(original_clock)));
         let pool = Arc::new(crate::renderer_worker_pool());
         let worker_count = u16::try_from(pool.worker_count()).unwrap_or(u16::MAX);
-        let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64,|_|{let original_queue=Arc::clone(&request_queue);semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let queue=Arc::clone(&original_queue);Box::new(move |_|!queue.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing)})}).await;
+        let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64,|_|{let original_queue=Arc::clone(&request_queue);semio_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let queue=Arc::clone(&original_queue);Box::new(move |_|!queue.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing)})}).await;
         Self {
             request_queue,
             guest_runtime,

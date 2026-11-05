@@ -1,4 +1,4 @@
-use semio_framework_plugin::{ArtifactEditor, DslValue, ViewModel};
+use semio_plugin::{ArtifactEditor, DslValue, ViewModel};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::{BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::{analyse_model, canvas_double_click, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, export_model};
 use semio_s_artifact_bim_model_move_storey::editor::bim::commands::{apply_template, conditions, edit_classification, edit_template, place_elements, place_grid_columns, remove_classification, remove_property, search_classification, select_findings, set_classification, set_property, split_wall};
@@ -6,9 +6,9 @@ use semio_s_artifact_bim_model_coordination::editor::bim::commands::{arm_utility
 use semio_s_artifact_bim_model_gestures::editor::bim::commands::{canvas_commit_draft, canvas_escape, cursor_keys, delete_selection, engagement_input, engagement_submit, world_pointer_down, world_pointer_move};
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, canvas_scene, dispatch, dispatch_in, history_verb, render_text, view, world_scene};
-use semio_framework_plugin::app::TypedOperationResultLane;
-use semio_framework_plugin::PluginApp;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::TypedOperationResultLane;
+use semio_plugin::PluginApp;
+use semio_ui_locale::Locale;
 use std::future::Future;
 
 fn plain(locale: Locale) -> ViewModel {
@@ -430,7 +430,7 @@ async fn every_refusal_code_the_commands_raise_has_an_english_and_a_german_notic
 }
 //#endregion 🔖️Faults
 
-semio_framework_plugin::history_edit_acceptance_law!(
+semio_plugin::history_edit_acceptance_law!(
     "bim",
     semio_s_artifact_bim_model_bim::editor::bim::BimModelApp,
     context::bim_app_manifest_for_tests,

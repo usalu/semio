@@ -12,7 +12,7 @@ pub(super) struct CanvasPaintOrder {
 }
 
 impl CanvasPaintOrder {
-    pub(super) fn open(draw: &mut semio_framework_ui_draw_contract::DrawList, inner: Rect) -> Self {
+    pub(super) fn open(draw: &mut semio_ui_draw_contract::DrawList, inner: Rect) -> Self {
         draw.push_scissor(inner);
         Self { inner, vectors: false }
     }
@@ -23,7 +23,7 @@ impl CanvasPaintOrder {
     }
 
     /// 🟦️ Readies the draw list for a quad: a fresh draw layer when the current one already holds vector paint.
-    pub(super) fn quad(&mut self, draw: &mut semio_framework_ui_draw_contract::DrawList) {
+    pub(super) fn quad(&mut self, draw: &mut semio_ui_draw_contract::DrawList) {
         if self.vectors {
             draw.pop_scissor();
             draw.push_scissor(self.inner);
@@ -31,7 +31,7 @@ impl CanvasPaintOrder {
         }
     }
 
-    pub(super) fn close(self, draw: &mut semio_framework_ui_draw_contract::DrawList) {
+    pub(super) fn close(self, draw: &mut semio_ui_draw_contract::DrawList) {
         draw.pop_scissor();
     }
 }
@@ -96,7 +96,7 @@ pub(super) fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &Can
                     continue;
                 }
                 let origin=((layer.x*text_scale) as f32,((layer.y+size+index as f64*size*semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT)*text_scale) as f32);
-                semio_framework_ui_wgpu_widget_kit::draw_text_face_affine_on(ctx.draw,ctx.atlas,face,line,origin,pixels,color,matrix);
+                semio_ui_wgpu_widget_kit::draw_text_face_affine_on(ctx.draw,ctx.atlas,face,line,origin,pixels,color,matrix);
             }
         }
     }
@@ -115,7 +115,7 @@ pub(super) fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &Can
 /// gradient (layer units) as pieces of at most a tenth of its screen extent, each coloured at its centre. A gradient whose
 /// ends coincide paints nothing, as on the platform canvas.
 #[allow(clippy::too_many_arguments, reason = "one argument per resolved paint/geometry input of the scene node")]
-fn push_scene_path_fill(draw: &mut semio_framework_ui_draw_contract::DrawList, contours: &[crate::canvas2d_paint::Contour], rule: crate::canvas2d_paint::FillRule, clip: (f64, f64), fill: &CanvasFillJson, map: &crate::canvas2d_paint::Affine, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
+fn push_scene_path_fill(draw: &mut semio_ui_draw_contract::DrawList, contours: &[crate::canvas2d_paint::Contour], rule: crate::canvas2d_paint::FillRule, clip: (f64, f64), fill: &CanvasFillJson, map: &crate::canvas2d_paint::Affine, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let linear = match fill.kind.as_deref() {
         Some("linearGradient") if !fill.stops.is_empty() => true,
         Some("radialGradient") if !fill.stops.is_empty() => false,

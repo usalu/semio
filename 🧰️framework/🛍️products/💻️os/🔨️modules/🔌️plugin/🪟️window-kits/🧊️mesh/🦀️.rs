@@ -1,23 +1,23 @@
 //! 🧊️ The mesh window kit.
 use semio_framework::{ActionDefinition, ActionKind, WindowKindDefinition};
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_contract::*;
+use semio_ui_locale::LocalizedLabel;
 use crate::WindowKit;
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_plugin_window_transient::scene_surface;
-use semio_framework_plugin_window_transient::window_kind_definition;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_plugin_window_transient::scene_surface;
+use semio_plugin_window_transient::window_kind_definition;
 
 
 

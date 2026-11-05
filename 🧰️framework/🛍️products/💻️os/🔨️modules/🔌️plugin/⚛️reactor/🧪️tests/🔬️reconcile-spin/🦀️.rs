@@ -1,13 +1,13 @@
-use semio_framework_plugin_reactor_lifecycle::with_state as with_pending;
-use semio_framework_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn};
-use semio_framework_plugin_reactor_turn_limits::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
+use semio_plugin_reactor_lifecycle::with_state as with_pending;
+use semio_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn};
+use semio_plugin_reactor_turn_limits::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
 use semio_framework::kernel::UiPatch;
-use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
-use semio_framework_plugin_reactor_patches as patches;
-use semio_framework_plugin_reactor_lifecycle as pending;
-use semio_framework_ui_contract as ui_contract;
+use semio_plugin_reactor_lifecycle::instance_lifetime;
+use semio_plugin_reactor_patches as patches;
+use semio_plugin_reactor_lifecycle as pending;
+use semio_ui_contract as ui_contract;
 use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
-use semio_framework_ui_runtime::{ComponentTree, TreeNode};
+use semio_ui_runtime::{ComponentTree, TreeNode};
 
 /// 🌲️ The cheapest admissible retained tree: this suite prices CROSSINGS, and a crossing costs the
 /// same whether the surface carries one text leaf or a Nakagin-scale world
@@ -52,7 +52,7 @@ struct CrossingLedger {
 /// `🧺️turn-patch-batch`), and stop when the guest stops answering
 /// `MoreWork` with nothing left to acknowledge. Every lap is one worker round trip.
 fn settle_surfaces(instance: u32, count: usize,cx:&mut semio_framework_job::StepContext<'_>) -> (CrossingLedger, usize) {
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = patches::PatchTracker::new();
     for index in 0..count {
         tracker.begin(format!("{instance}:surface-{index}"), tree("body")).expect("mounted admission");
@@ -84,7 +84,7 @@ fn settle_tracker(tracker: &patches::PatchTracker, instance: u32,cx:&mut semio_f
         });
         for (receipt, surface, revision) in acknowledgements.drain(..) {
             assert!(
-                with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"),
+                with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"),
                 "the host's acknowledgement of {surface}@{revision} must be admitted"
             );
         }
@@ -97,7 +97,7 @@ fn settle_tracker(tracker: &patches::PatchTracker, instance: u32,cx:&mut semio_f
             }
         });
         drive_reconcile_within(tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
-        let taken = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication");
+        let taken = with_pending(|pending| pending.borrow_mut().take_one(semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication");
         let carried_patch = taken.is_some();
         if let Some(patch) = taken {
             sequence += 1;
@@ -138,7 +138,7 @@ fn settle_tracker(tracker: &patches::PatchTracker, instance: u32,cx:&mut semio_f
 /// (`📓️reactor-reconcile-spin-2026-09-14.md` §2).
 #[test]
 fn n_pending_retained_surfaces_converge_in_bounded_crossings_that_each_carry_something() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let fixture = budget();
@@ -160,10 +160,10 @@ fn n_pending_retained_surfaces_converge_in_bounded_crossings_that_each_carry_som
 /// `None`.
 #[test]
 fn a_published_patch_leaves_the_guest_on_the_turn_that_published_it() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = patches::PatchTracker::new();
     tracker.begin("51:surface-0".to_string(), tree("body")).expect("mounted admission");
     for _ in 0..1_024 {
@@ -172,7 +172,7 @@ fn a_published_patch_leaves_the_guest_on_the_turn_that_published_it() {
             break;
         }
     }
-    let first = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication");
+    let first = with_pending(|pending| pending.borrow_mut().take_one(semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication");
     assert!(first.is_some(), "the first take of a queued publication must hand out its patch: {}", with_pending(|pending| pending.borrow().debug_state()));
     let mut owner = ui_contract::UiPendingPatch::default();
     *owner.source_mut().expect("writable payload") = first;
@@ -193,10 +193,10 @@ fn a_published_patch_leaves_the_guest_on_the_turn_that_published_it() {
 /// turn that carried nothing (`📓️reactor-reconcile-spin-2026-09-14.md` §1, family 2).
 #[test]
 fn a_host_blocked_ready_output_spends_no_opportunity_and_arms_nothing() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 52u32;
     let mut issued: Vec<(ActorUiPatchReceipt, String, u64)> = Vec::new();
     let mut sequence = 0u64;
@@ -204,7 +204,7 @@ fn a_host_blocked_ready_output_spends_no_opportunity_and_arms_nothing() {
         sequence += 1;
         let surface = ui_contract::SurfaceId::try_from(format!("{instance}:filler-{sequence}")).expect("fixture surface id");
         with_pending(|pending| pending.borrow_mut().push_external(ui_contract::UiPatch { surface, base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(sequence), ops: Default::default() })).expect("external publication");
-        let patch = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication").expect("queued filler");
+        let patch = with_pending(|pending| pending.borrow_mut().take_one(semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication").expect("queued filler");
         let receipt = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: instance, guest_lifetime: 1 }, patch_sequence: sequence };
         with_pending(|pending| pending.borrow_mut().stage_emission(receipt, std::iter::once(&patch))).expect("staged emission");
         with_pending(|pending| pending.borrow_mut().commit_emission());
@@ -226,7 +226,7 @@ fn a_host_blocked_ready_output_spends_no_opportunity_and_arms_nothing() {
     assert_eq!(spent, 0, "a saturated publication authority with nothing drivable must spend no opportunity: {}", tracker.debug_state());
     assert!(!arms, "a ready output the HOST is blocking must not arm another turn: {} | {}", tracker.debug_state(), with_pending(|pending| pending.borrow().debug_state()));
     for (receipt, surface, revision) in issued {
-        assert!(with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |_| Ok(true))).expect("issued ack"));
+        assert!(with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |_| Ok(true))).expect("issued ack"));
     }
     drain_pending_authority(cx);
     settle_tracker(&tracker, instance,cx);
@@ -253,10 +253,10 @@ fn retire_host_patch(patch: ui_contract::UiPatch,cx:&mut semio_framework_job::St
 /// ceiling.
 #[test]
 fn the_reconcile_drive_respects_the_turns_wall_hold() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture = budget();
     let stride = fixture["deadlineStride"].as_u64().expect("declared deadline stride") as usize;
     let tracker = patches::PatchTracker::new();
@@ -277,10 +277,10 @@ fn the_reconcile_drive_respects_the_turns_wall_hold() {
 /// turn armed only for the retirement it owes — never for a surface that will never publish again.
 #[test]
 fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 54u32;
     let tracker = patches::PatchTracker::new();
     for index in 0..3 {
@@ -320,7 +320,7 @@ fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
             break;
         }
         if with_pending(|pending| pending.borrow().has_undelivered()) {
-            let taken = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication");
+            let taken = with_pending(|pending| pending.borrow_mut().take_one(semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication");
             if let Some(patch) = taken {
                 let mut owner = ui_contract::UiPendingPatch::default();
                 *owner.source_mut().expect("writable payload") = Some(patch);
@@ -344,10 +344,10 @@ fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
 /// in neither.
 #[test]
 fn the_pending_publication_phases_partition_what_arms_a_turn() {
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
-    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let _guard = semio_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = patches::PatchTracker::new();
     tracker.begin("55:surface-0".to_string(), tree("body")).expect("mounted admission");
     for _ in 0..1_024 {
@@ -361,7 +361,7 @@ fn the_pending_publication_phases_partition_what_arms_a_turn() {
         assert_eq!(pending.phases(), vec![pending::PendingPatchPhase::Queued]);
         assert!(pending.has_undelivered() && !pending.has_retiring() && pending.has_unpublished());
     });
-    let patch = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication").expect("queued patch");
+    let patch = with_pending(|pending| pending.borrow_mut().take_one(semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication").expect("queued patch");
     let receipt = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: 55, guest_lifetime: 1 }, patch_sequence: 1 };
     with_pending(|pending| pending.borrow_mut().stage_emission(receipt, std::iter::once(&patch))).expect("staged emission");
     with_pending(|pending| pending.borrow_mut().commit_emission());
@@ -370,7 +370,7 @@ fn the_pending_publication_phases_partition_what_arms_a_turn() {
         assert_eq!(pending.phases(), vec![pending::PendingPatchPhase::Issued]);
         assert!(!pending.has_undelivered() && !pending.has_retiring() && !pending.has_unpublished(), "an issued publication is the HOST's turn, not the guest's");
     });
-    assert!(with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &patch.surface.0, patch.revision.0, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"));
+    assert!(with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &patch.surface.0, patch.revision.0, semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"));
     with_pending(|pending| {
         let pending = pending.borrow();
         assert_eq!(pending.phases(), vec![pending::PendingPatchPhase::Acknowledged]);

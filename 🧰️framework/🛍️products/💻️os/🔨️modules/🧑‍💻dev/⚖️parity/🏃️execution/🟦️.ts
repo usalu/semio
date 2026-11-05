@@ -1,10 +1,12 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
+import {browserLaunchOptionsV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { requirePlaygroundVariant } from "@semio-tech/plugin-registry/playground/default";
 /** 🧩️ Semantic parity execution owner. */
 
-import { repoCacheDirectory } from "@semio-tech/process/execution";
+
 
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -14,7 +16,8 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 
 const repoRoot = findWorkspaceRoot();
 
-import { PLAYWRIGHT_MODULE_SPECIFIER, playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
+import { playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { loadPlaywrightV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 import { ParityServerHandle, findFreeParityPortPair, parityDevUrl, parityPortsForShard, prebuildParityPlugin, startParityDevServer, stopParityDevServer } from "../🌐️server-pool/🟦️.ts";
@@ -115,15 +118,13 @@ async function triageParityBoot(page: import("playwright").Page, renderer: Parit
  * exact same stale-global-cache error, which is what made even a single `parity triage <variant>`
  * unrunnable (measured: `Executable doesn't exist at .../ms-playwright/chromium_headless_shell-1234/...`,
  * exit 1) before this fix — never mind a 58-variant sweep. */
-function ensureParityPlaywrightBrowsersPath(): void {
-  process.env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
-}
+
 
 async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
   const start = Date.now();
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+  const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: browserLaunchOptionsV1().args });
   let reactServer: ParityServerHandle | undefined;
   let wgpuServer: ParityServerHandle | undefined;
   try {
@@ -188,9 +189,9 @@ class ParityTriageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const variant = requirePlaygroundVariant(segments[0] || process.env.SEMIO_PLUGIN || runtimeCatalogBuildInventoryV1().defaultVariant);
     const ports = findFreeParityPortPair();
-    ensureParityPlaywrightBrowsersPath();
+    ensureRepositoryBrowserPathV1(repoRoot,process.env);
     const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: browserLaunchOptionsV1().args });
     let reactServer: ParityServerHandle | undefined;
     let wgpuServer: ParityServerHandle | undefined;
     try {
@@ -221,9 +222,9 @@ class ParityProbeScript extends BundleScript {
     const suite = PARITY_PROBE_CATALOG[suiteName];
     if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);
     const ports = findFreeParityPortPair();
-    ensureParityPlaywrightBrowsersPath();
+    ensureRepositoryBrowserPathV1(repoRoot,process.env);
     const { chromium }: typeof import("playwright") = await loadPlaywrightV1(repoRoot, PLAYWRIGHT_MODULE_SPECIFIER);
-    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: browserLaunchOptionsV1().args });
     let reactServer: ParityServerHandle | undefined;
     let wgpuServer: ParityServerHandle | undefined;
     try {
@@ -289,4 +290,4 @@ class ParitySweepScript extends BundleScript {
   }
 }
 
-export { PARITY_BOOT_TIMEOUT_MS, PARITY_STALE_BRIDGE_RE, ParityProbeScript, ParitySmokeScript, ParitySweepScript, ParityTriageScript, ParityVerifyScript, ensureParityPlaywrightBrowsersPath, triageParityBoot, verifyParityVariant };
+export { PARITY_BOOT_TIMEOUT_MS, PARITY_STALE_BRIDGE_RE, ParityProbeScript, ParitySmokeScript, ParitySweepScript, ParityTriageScript, ParityVerifyScript, triageParityBoot, verifyParityVariant };

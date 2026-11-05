@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileGroupColumns w
         record: "ChangedPileGroupColumns",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Columns n of the pile group", "Pfahlgruppe: Spalten n ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Columns n of the pile group", "Pfahlgruppe: Spalten n ändern")
     }
 }
 

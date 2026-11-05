@@ -68,11 +68,6 @@ pub mod editor {
             #[path = "../../../❓️questions/🧪️tests/🔬️patches/🦀️.rs"]
             pub mod patch_tests;
         }
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
-            pub use semio_s_artifact_forms_forms_tests::editor::forms::config::schema;
-        }
         pub use semio_s_artifact_forms_forms_tests::editor::forms::terminology;
         pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
         pub use semio_s_artifact_forms_forms_schema::editor::forms::contributions;
@@ -201,10 +196,5 @@ pub mod editor {
         }
     }
 }
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod forms {
-        pub use semio_s_artifact_forms_forms_tests_2::viewer::forms::*;
-    }
-}
+
+pub use semio_s_artifact_forms_forms_viewer::viewer;

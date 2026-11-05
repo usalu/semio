@@ -16,8 +16,8 @@ pub struct InsertSample {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for InsertSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "sample", kind: "insert-sample", record: "InsertSample" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert sample", "Sample einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert sample", "Sample einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

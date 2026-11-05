@@ -7,7 +7,7 @@ use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScra
 use semio_s_artifact_lowpoly_lowpoly_view::{build_doc, primitive_kind};
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

@@ -25,17 +25,17 @@ pub(super) struct InkOwnedRaw {
 }
 
 impl InkOwnedRaw {
-    pub(crate) fn new(raw: &str) -> Result<Self, semio_framework_ui_action::BoundedActionFault> {
+    pub(crate) fn new(raw: &str) -> Result<Self, semio_ui_action::BoundedActionFault> {
         if raw.len() > INK_INTERACTION_DOCUMENT_BYTE_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+            return Err(semio_ui_action::BoundedActionFault::ByteCredits);
         }
         let mut bytes = Box::new([0; INK_INTERACTION_DOCUMENT_BYTE_CAPACITY]);
         bytes[..raw.len()].copy_from_slice(raw.as_bytes());
         Ok(Self { bytes, len: raw.len() })
     }
 
-    pub(crate) fn as_str(&self) -> Result<&str, semio_framework_ui_action::BoundedActionFault> {
-        std::str::from_utf8(&self.bytes[..self.len]).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)
+    pub(crate) fn as_str(&self) -> Result<&str, semio_ui_action::BoundedActionFault> {
+        std::str::from_utf8(&self.bytes[..self.len]).map_err(|_| semio_ui_action::BoundedActionFault::Structure)
     }
 }
 
@@ -46,27 +46,27 @@ impl Default for InkRawPages {
 }
 
 impl InkRawPages {
-    pub fn push(&mut self, raw: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    pub fn push(&mut self, raw: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
         if self.len == self.spans.len() {
-            return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+            return Err(semio_ui_action::BoundedActionFault::ItemCredits);
         }
-        let end = self.byte_len.checked_add(raw.len()).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+        let end = self.byte_len.checked_add(raw.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
         if end > self.bytes.len() {
-            return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
+            return Err(semio_ui_action::BoundedActionFault::ByteCredits);
         }
         self.bytes[self.byte_len..end].copy_from_slice(raw.as_bytes());
         let index = (self.head + self.len) % self.spans.len();
-        self.spans[index] = Some((u16::try_from(self.byte_len).map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)?, u16::try_from(end).map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)?));
+        self.spans[index] = Some((u16::try_from(self.byte_len).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?, u16::try_from(end).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?));
         self.byte_len = end;
         self.len += 1;
         Ok(())
     }
 
-    pub fn front(&self) -> Result<Option<&str>, semio_framework_ui_action::BoundedActionFault> {
+    pub fn front(&self) -> Result<Option<&str>, semio_ui_action::BoundedActionFault> {
         let Some((start, end)) = self.spans[self.head] else {
             return Ok(None);
         };
-        std::str::from_utf8(&self.bytes[usize::from(start)..usize::from(end)]).map(Some).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)
+        std::str::from_utf8(&self.bytes[usize::from(start)..usize::from(end)]).map(Some).map_err(|_| semio_ui_action::BoundedActionFault::Structure)
     }
 
     pub fn pop_front(&mut self) -> bool {
@@ -109,16 +109,16 @@ impl std::io::Write for InkEventJsonPages {
 }
 
 impl InkEventJsonPages {
-    pub fn push(&mut self, value: &Value) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    pub fn push(&mut self, value: &Value) -> Result<(), semio_ui_action::BoundedActionFault> {
         if self.sealed || self.items == INK_INTERACTION_ITEM_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+            return Err(semio_ui_action::BoundedActionFault::ItemCredits);
         }
         let checkpoint = self.len;
         let result = (|| {
             if self.items != 0 {
-                self.write_all(b",").map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+                self.write_all(b",").map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?;
             }
-            serde_json::to_writer(&mut *self, value).map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)
+            serde_json::to_writer(&mut *self, value).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)
         })();
         if let Err(fault) = result {
             self.len = checkpoint;
@@ -128,18 +128,18 @@ impl InkEventJsonPages {
         Ok(())
     }
 
-    pub(super) fn push_add_block_raw(&mut self, block: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    pub(super) fn push_add_block_raw(&mut self, block: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
         if self.sealed || self.items == INK_INTERACTION_ITEM_CAPACITY {
-            return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+            return Err(semio_ui_action::BoundedActionFault::ItemCredits);
         }
         let checkpoint = self.len;
         let result = (|| {
             if self.items != 0 {
-                self.write_all(b",").map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+                self.write_all(b",").map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?;
             }
-            self.write_all(b"{\"operation\":\"addBlock\",\"block\":").map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
-            self.write_all(block.as_bytes()).map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
-            self.write_all(b"}").map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)
+            self.write_all(b"{\"operation\":\"addBlock\",\"block\":").map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?;
+            self.write_all(block.as_bytes()).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?;
+            self.write_all(b"}").map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)
         })();
         if let Err(fault) = result {
             self.len = checkpoint;
@@ -149,34 +149,34 @@ impl InkEventJsonPages {
         Ok(())
     }
 
-    pub fn seal(&mut self) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    pub fn seal(&mut self) -> Result<(), semio_ui_action::BoundedActionFault> {
         if self.sealed {
             return Ok(());
         }
-        self.write_all(b"]").map_err(|_| semio_framework_ui_action::BoundedActionFault::ByteCredits)?;
+        self.write_all(b"]").map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?;
         self.sealed = true;
         Ok(())
     }
 
-    pub fn as_str(&self) -> Result<&str, semio_framework_ui_action::BoundedActionFault> {
+    pub fn as_str(&self) -> Result<&str, semio_ui_action::BoundedActionFault> {
         if !self.sealed {
-            return Err(semio_framework_ui_action::BoundedActionFault::Structure);
+            return Err(semio_ui_action::BoundedActionFault::Structure);
         }
-        std::str::from_utf8(&self.bytes[..self.len]).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)
+        std::str::from_utf8(&self.bytes[..self.len]).map_err(|_| semio_ui_action::BoundedActionFault::Structure)
     }
 }
 
 /// 📨️ One `inkApplyEvents` action: a `stream` tick into the plugin's open ink transaction, the `commit` that publishes it
 /// as ONE edit, or (no phase) a one-shot — with the drag record of a block move instead of per-block events.
 pub(super) fn write_ink_events_action(
-    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+    input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
     scene: &UiComponentSceneNode,
     events: &InkEventJsonPages,
     phase: Option<&str>,
     gesture: Option<&str>,
     select_id: Option<&str>,
     mutate: impl FnOnce(),
-) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+) -> Result<(), semio_ui_action::BoundedActionFault> {
     let events = events.as_str()?;
     let mut parts: Vec<&str> = vec![&scene.controller_id, "inkApplyEvents", "surfaceId", &scene.surface_id, "eventsJson", events];
     if let Some(phase) = phase {
@@ -185,9 +185,9 @@ pub(super) fn write_ink_events_action(
     if let Some(gesture) = gesture {
         parts.extend(["gestureJson", gesture]);
     }
-    let base = semio_framework_ui_action::checked_action_string_bytes(&parts)?;
+    let base = semio_ui_action::checked_action_string_bytes(&parts)?;
     let bytes = match select_id {
-        Some(id) => base.checked_add(semio_framework_ui_action::checked_action_string_bytes(&["selectIds", id])?).filter(|bytes| *bytes <= semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?,
+        Some(id) => base.checked_add(semio_ui_action::checked_action_string_bytes(&["selectIds", id])?).filter(|bytes| *bytes <= semio_ui_action::ACTION_ITEM_BYTE_CAPACITY).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?,
         None => base,
     };
     let mut reservation = input.reserve_action(&scene.controller_id, "inkApplyEvents", bytes)?;
@@ -220,11 +220,11 @@ pub(super) fn write_ink_events_action(
 /// aborted with ONE `inkApplyEvents` (`phase: "abort"`, `reason: "captureLost"`), so the plugin drops it with zero trace;
 /// a press that never streamed publishes nothing. Answers whether an abort was published; runs before
 /// [`ink_pointer_cancel_into`] clears the local drag.
-pub fn ink_gesture_abort_into(controller_id: &str, surface_id: &str, host_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn ink_gesture_abort_into(controller_id: &str, surface_id: &str, host_id: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     if !SCENE_STATE.with(|cell| cell.borrow().get(host_id).is_some_and(|state| state.ink_gesture_open)) {
         return Ok(false);
     }
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "inkApplyEvents", "surfaceId", surface_id, "eventsJson", "[]", "phase", "abort", "reason", "captureLost"])?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, "inkApplyEvents", "surfaceId", surface_id, "eventsJson", "[]", "phase", "abort", "reason", "captureLost"])?;
     let mut reservation = input.reserve_action(controller_id, "inkApplyEvents", bytes)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -247,16 +247,16 @@ pub(super) fn ink_interaction_id(block: &Value) -> Option<&str> {
     block.get("interactionId").and_then(Value::as_str).filter(|id| !id.is_empty())
 }
 
-pub(super) fn write_ink_interaction_selection(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, ids: &[String], merge: &str, method: &str, mutate: impl FnOnce()) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+pub(super) fn write_ink_interaction_selection(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, ids: &[String], merge: &str, method: &str, mutate: impl FnOnce()) -> Result<(), semio_ui_action::BoundedActionFault> {
     let Some((domain_id, granularity)) = ink_interaction_domain(scene) else {
         mutate();
         return Ok(());
     };
     if ids.len() > INK_SELECTION_ITEM_CAPACITY {
-        return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
+        return Err(semio_ui_action::BoundedActionFault::ItemCredits);
     }
-    let targets = serde_json::to_string(&ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect::<Vec<_>>()).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "surfaceId", &scene.surface_id, "domainId", domain_id, "targets", &targets, "merge", merge, "method", method])?;
+    let targets = serde_json::to_string(&ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect::<Vec<_>>()).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "surfaceId", &scene.surface_id, "domainId", domain_id, "targets", &targets, "merge", merge, "method", method])?;
     let mut reservation = input.reserve_action(&scene.controller_id, "interactionSelect", bytes)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -269,10 +269,10 @@ pub(super) fn write_ink_interaction_selection(input: &mut semio_framework_ui_wgp
     reservation.publish_with(mutate)
 }
 
-pub(super) fn write_ink_interaction_hover(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, id: Option<&str>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+pub(super) fn write_ink_interaction_hover(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, id: Option<&str>) -> Result<(), semio_ui_action::BoundedActionFault> {
     let Some((domain_id, granularity)) = ink_interaction_domain(scene) else { return Ok(()) };
-    let targets = serde_json::to_string(&id.map(|id| vec![json!({ "granularity": granularity, "id": id })]).unwrap_or_default()).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionHover", "surfaceId", &scene.surface_id, "domainId", domain_id, "channel", "pointer", "targets", &targets])?;
+    let targets = serde_json::to_string(&id.map(|id| vec![json!({ "granularity": granularity, "id": id })]).unwrap_or_default()).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionHover", "surfaceId", &scene.surface_id, "domainId", domain_id, "channel", "pointer", "targets", &targets])?;
     let mut reservation = input.reserve_action(&scene.controller_id, "interactionHover", bytes)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -293,17 +293,17 @@ pub(crate) fn clear_ink_pointer_state(surface_id: &str) {
     });
 }
 
-fn ink_edit_updated_block(edit: &InkEditState) -> Result<Value, semio_framework_ui_action::BoundedActionFault> {
+fn ink_edit_updated_block(edit: &InkEditState) -> Result<Value, semio_ui_action::BoundedActionFault> {
     let mut block = edit.block.clone();
     match edit.kind {
         InkEditKind::Text => {
-            let Some(object) = block.as_object_mut() else { return Err(semio_framework_ui_action::BoundedActionFault::Structure) };
+            let Some(object) = block.as_object_mut() else { return Err(semio_ui_action::BoundedActionFault::Structure) };
             object.insert("paragraphs".into(), json!([{ "runs": [{ "text": edit.draft }] }]));
         }
         InkEditKind::Table { row, col } => {
-            let Some(rows) = block.get_mut("rows").and_then(Value::as_array_mut) else { return Err(semio_framework_ui_action::BoundedActionFault::Structure) };
-            let Some(cells) = rows.get_mut(row).and_then(Value::as_array_mut) else { return Err(semio_framework_ui_action::BoundedActionFault::Structure) };
-            let Some(cell) = cells.get_mut(col).and_then(Value::as_object_mut) else { return Err(semio_framework_ui_action::BoundedActionFault::Structure) };
+            let Some(rows) = block.get_mut("rows").and_then(Value::as_array_mut) else { return Err(semio_ui_action::BoundedActionFault::Structure) };
+            let Some(cells) = rows.get_mut(row).and_then(Value::as_array_mut) else { return Err(semio_ui_action::BoundedActionFault::Structure) };
+            let Some(cell) = cells.get_mut(col).and_then(Value::as_object_mut) else { return Err(semio_ui_action::BoundedActionFault::Structure) };
             cell.insert("content".into(), Value::String(edit.draft.clone()));
         }
     }
@@ -329,7 +329,7 @@ fn ink_edit_next_cell(edit: &InkEditState, updated: &Value) -> Option<InkEditSta
     Some(InkEditState { block: updated.clone(), kind: InkEditKind::Table { row: next_row, col: next_col }, draft, replace_on_input: true, screen_rect })
 }
 
-fn ink_publish_edit(scene: &UiComponentSceneNode, edit: InkEditState, advance: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+fn ink_publish_edit(scene: &UiComponentSceneNode, edit: InkEditState, advance: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
     let updated = ink_edit_updated_block(&edit)?;
     let block_id = ink_item_id(&updated).to_owned();
     let next = advance.then(|| ink_edit_next_cell(&edit, &updated)).flatten();
@@ -351,7 +351,7 @@ fn ink_publish_edit(scene: &UiComponentSceneNode, edit: InkEditState, advance: b
     Ok(())
 }
 
-pub fn ink_edit_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &semio_framework_ui_wgpu_input::PointerModifiers, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn ink_edit_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &semio_ui_wgpu_input::PointerModifiers, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(mut edit) = scene_state(&scene.host_id).ink_edit else { return Ok(false) };
     if modifiers.ctrl_or_meta() {
         return Ok(false);
@@ -402,7 +402,7 @@ pub fn ink_edit_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifier
     Ok(true)
 }
 
-pub fn ink_edit_blur_into(scene: &UiComponentSceneNode, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn ink_edit_blur_into(scene: &UiComponentSceneNode, x: f32, y: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(edit) = scene_state(&scene.host_id).ink_edit else { return Ok(false) };
     if edit.screen_rect.contains(x, y) {
         return Ok(false);
@@ -411,7 +411,7 @@ pub fn ink_edit_blur_into(scene: &UiComponentSceneNode, x: f32, y: f32, input: &
     Ok(true)
 }
 
-pub fn cancel_ink_edit(surface_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) {
+pub fn cancel_ink_edit(surface_id: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) {
     mutate_scene_state(surface_id, |state| state.ink_edit = None);
     if input.focused_id.as_deref().is_some_and(|id| id.starts_with(&format!("{surface_id}.ink."))) {
         input.blur_input();

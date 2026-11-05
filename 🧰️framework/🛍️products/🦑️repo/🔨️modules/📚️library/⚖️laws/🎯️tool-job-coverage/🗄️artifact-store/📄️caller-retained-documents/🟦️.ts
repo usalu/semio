@@ -57,7 +57,7 @@ export function toolJobStoreInitializerRetainedExact(plugin: string): boolean {
 export function toolJobWriterEnvelopeCallerRetainedExact(writer: string, editor: string, wasm: string, plugin: string): boolean {
   return (
     writer.includes("struct WriterStoreInitializationAuthority") &&
-    writer.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority") &&
+    writer.includes("impl semio_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority") &&
     writer.includes("WriterStoreInitializationPhase::ValidateEdit { index }") &&
     writer.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     writer.includes("WriterStoreInitializationPhase::SeedHistory") &&
@@ -119,7 +119,7 @@ export function toolJobJackEnvelopeCallerRetainedExact(store: string, jack: stri
     jack.includes("OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>") &&
     jack.includes("struct JackSnapshotCloneAuthority") &&
     jack.includes("struct JackStoreInitializationAuthority") &&
-    jack.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority") &&
+    jack.includes("impl semio_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority") &&
     jack.includes("JackStoreInitializationPhase::ValidateEdit { index }") &&
     jack.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     jack.includes("JackStoreInitializationPhase::SeedHistory") &&
@@ -173,7 +173,7 @@ export function toolJobTrinityRewriteEnvelopeCallerRetainedExact(store: string, 
     jack.includes("OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>") &&
     jack.includes("struct JackSnapshotCloneAuthority") &&
     jack.includes("struct JackStoreInitializationAuthority") &&
-    jack.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority") &&
+    jack.includes("impl semio_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority") &&
     jack.includes("JackStoreInitializationPhase::ValidateEdit { index }") &&
     jack.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     jack.includes("JackStoreInitializationPhase::SeedHistory") &&
@@ -272,7 +272,7 @@ export function toolJobGisMapEnvelopeCallerRetainedExact(store: string, gisMap: 
     gisMap.includes("OwnedSchemaHexAuthority<GIS_MAP_OWNED_FIELD_BYTES>") &&
     gisMap.includes("struct GisMapSnapshotCloneAuthority") &&
     gisMap.includes("struct GisMapStoreInitializationAuthority") &&
-    gisMap.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot, GisMapMutation> for GisMapStoreInitializationAuthority") &&
+    gisMap.includes("impl semio_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot, GisMapMutation> for GisMapStoreInitializationAuthority") &&
     gisMap.includes("GisMapStoreInitializationPhase::ValidateEdit { index }") &&
     gisMap.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     gisMap.includes("GisMapStoreInitializationPhase::SeedHistory") &&

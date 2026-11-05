@@ -8,7 +8,7 @@ use protocol::Mutation;
 use protocol::MutationDiff;
 use protocol::ColdMutationDiff;
 use semio_framework_value::DslValue;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value::{FromValue, ToValue};
 
 #[path = "🌉️play-codecs/🦀️.rs"]
@@ -202,7 +202,7 @@ impl protocol::SemanticMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::semantics(self)
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::label(self)
     }
     fn target(&self) -> Vec<String> {

@@ -1,7 +1,7 @@
 mod app_commands_tests {
-    use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, NoConfigMutation};
-use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_plugin_decl_views::history_view::HistoryView;
+    use semio_plugin_decl_views::{ArtifactView, ConfigView, NoConfigMutation};
+use semio_plugin_decl_emission::Emit;
+use semio_plugin_decl_views::history_view::HistoryView;
 
     mod add_widget {
         use semio_framework_value_derive::{FromValue, ToValue};
@@ -13,8 +13,8 @@ use semio_framework_plugin_decl_views::history_view::HistoryView;
 
         /// 🎯️ Mirrors the shape a real `🎮️commands/add_widget/🦀️.rs::handle` will have —
         /// `(payload, doc, cfg) -> ArtifactMutationOutcome<Mutation, ConfigMutation>`.
-        pub fn handle(payload: &AddWidget, _doc: &semio_framework_plugin_decl_views::ArtifactView<'_, u32>, _cfg: &semio_framework_plugin_decl_views::ConfigView<'_, ()>) -> Result<semio_framework_plugin_decl_emission::Emit<String, semio_framework_plugin_decl_views::NoConfigMutation>, semio_framework::Fault> {
-            Ok(semio_framework_plugin_decl_emission::Emit::mutations(vec![format!("add:{}:{}", payload.kind, payload.x)]))
+        pub fn handle(payload: &AddWidget, _doc: &semio_plugin_decl_views::ArtifactView<'_, u32>, _cfg: &semio_plugin_decl_views::ConfigView<'_, ()>) -> Result<semio_plugin_decl_emission::Emit<String, semio_plugin_decl_views::NoConfigMutation>, semio_framework::Fault> {
+            Ok(semio_plugin_decl_emission::Emit::mutations(vec![format!("add:{}:{}", payload.kind, payload.x)]))
         }
     }
 
@@ -26,8 +26,8 @@ pub mod delete_selection {
             pub id: String,
         }
 
-        pub fn handle(payload: &DeleteSelection, _doc: &semio_framework_plugin_decl_views::ArtifactView<'_, u32>, _cfg: &semio_framework_plugin_decl_views::ConfigView<'_, ()>) -> Result<semio_framework_plugin_decl_emission::Emit<String, semio_framework_plugin_decl_views::NoConfigMutation>, semio_framework::Fault> {
-            Ok(semio_framework_plugin_decl_emission::Emit::mutations(vec![format!("delete:{}", payload.id)]))
+        pub fn handle(payload: &DeleteSelection, _doc: &semio_plugin_decl_views::ArtifactView<'_, u32>, _cfg: &semio_plugin_decl_views::ConfigView<'_, ()>) -> Result<semio_plugin_decl_emission::Emit<String, semio_plugin_decl_views::NoConfigMutation>, semio_framework::Fault> {
+            Ok(semio_plugin_decl_emission::Emit::mutations(vec![format!("delete:{}", payload.id)]))
         }
     }
 
@@ -47,7 +47,7 @@ pub mod delete_selection {
     #[semio_framework_async_macros::async_test]
     async fn generated_tool_job_catalog_is_an_exact_bijection_with_rows() {
         assert_eq!(TestFakeCommand::TOOL_JOB_IDS, &["addWidget", "deleteSelection"]);
-        assert_eq!(<TestFakeCommand as semio_framework_plugin_decl_emission::ToolCommandCatalog>::TOOL_JOB_IDS, TestFakeCommand::TOOL_JOB_IDS);
+        assert_eq!(<TestFakeCommand as semio_plugin_decl_emission::ToolCommandCatalog>::TOOL_JOB_IDS, TestFakeCommand::TOOL_JOB_IDS);
         assert_eq!(<TestFakeCommand as ::protocol::OpBinary>::TOOL_JOB_IDS, TestFakeCommand::TOOL_JOB_IDS);
     }
 
@@ -80,9 +80,9 @@ pub mod keyed {
             pub kind: String,
         }
 
-        pub fn handle(payload: &AddWidget, _doc: &semio_framework_plugin_decl_views::ArtifactView<'_, u32>, _cfg: &semio_framework_plugin_decl_views::ConfigView<'_, ()>, ctx: &mut u32) -> Result<semio_framework_plugin_decl_emission::Emit<String, semio_framework_plugin_decl_views::NoConfigMutation>, semio_framework::Fault> {
+        pub fn handle(payload: &AddWidget, _doc: &semio_plugin_decl_views::ArtifactView<'_, u32>, _cfg: &semio_plugin_decl_views::ConfigView<'_, ()>, ctx: &mut u32) -> Result<semio_plugin_decl_emission::Emit<String, semio_plugin_decl_views::NoConfigMutation>, semio_framework::Fault> {
             *ctx += 1;
-            Ok(semio_framework_plugin_decl_emission::Emit::mutations(vec![format!("add:{}:{ctx}", payload.kind)]))
+            Ok(semio_plugin_decl_emission::Emit::mutations(vec![format!("add:{}:{ctx}", payload.kind)]))
         }
     }
 
@@ -91,8 +91,8 @@ pub mod keyed {
         #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
         pub struct DeleteSelection {}
 
-        pub fn handle(_payload: &DeleteSelection, _doc: &semio_framework_plugin_decl_views::ArtifactView<'_, u32>, _cfg: &semio_framework_plugin_decl_views::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<semio_framework_plugin_decl_emission::Emit<String, semio_framework_plugin_decl_views::NoConfigMutation>, semio_framework::Fault> {
-            Ok(semio_framework_plugin_decl_emission::Emit::mutations(vec!["delete".to_string()]))
+        pub fn handle(_payload: &DeleteSelection, _doc: &semio_plugin_decl_views::ArtifactView<'_, u32>, _cfg: &semio_plugin_decl_views::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<semio_plugin_decl_emission::Emit<String, semio_plugin_decl_views::NoConfigMutation>, semio_framework::Fault> {
+            Ok(semio_plugin_decl_emission::Emit::mutations(vec!["delete".to_string()]))
         }
     }
 

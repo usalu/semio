@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveWindFace where Op:
         record: "RemovedWindFaces",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove wind-loaded face", "Windbeanspruchte Fläche entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove wind-loaded face", "Windbeanspruchte Fläche entfernen")
     }
 }
 

@@ -6,7 +6,7 @@
 // 🗣️ Complete UI label set for the note app; one field per label makes every locale combination
 // compile-checked. (A plain `//` comment, not `///`: rustdoc does not generate documentation for macro
 // invocations, so a doc comment here is dead and clippy/rustc flag it as unused.)
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     pub struct NotePlayLabels {
         inspection: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";
         summary_schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
@@ -55,7 +55,7 @@ semio_framework_ui_locale::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from the host-provided view state.
-pub fn note_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static NotePlayLabels {
-    semio_framework_plugin::resolve_labels::<NotePlayLabels>(view_state)
+pub fn note_play_labels(view_state: &semio_plugin::ViewModel) -> &'static NotePlayLabels {
+    semio_plugin::resolve_labels::<NotePlayLabels>(view_state)
 }
 //#endregion 🔖️Resolvers

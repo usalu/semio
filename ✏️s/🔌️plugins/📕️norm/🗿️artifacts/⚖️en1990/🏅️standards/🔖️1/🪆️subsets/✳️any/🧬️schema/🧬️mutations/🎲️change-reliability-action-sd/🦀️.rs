@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeReliabilityActionS
         record: "ChangedReliabilityActionSd",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change action standard deviation σ_E of the reliability analysis", "Zuverlässigkeitsanalyse: Standardabweichung der Einwirkung σ_E ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change action standard deviation σ_E of the reliability analysis", "Zuverlässigkeitsanalyse: Standardabweichung der Einwirkung σ_E ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

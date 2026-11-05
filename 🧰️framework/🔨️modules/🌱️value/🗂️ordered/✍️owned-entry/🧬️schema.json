@@ -1,0 +1,125 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "maximumTurns",
+    "cancelAfter",
+    "stock",
+    "cases",
+    "comparison"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelAfter": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "base",
+          "key",
+          "value",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "base": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              ]
+            }
+          },
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "key",
+        "zeroWork",
+        "firstByte",
+        "zeroHex",
+        "oneHex"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "zeroWork": {
+          "const": 0
+        },
+        "firstByte": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "zeroHex": {
+          "const": ""
+        },
+        "oneHex": {
+          "type": "string",
+          "pattern": "^[0-9A-F]{2}$"
+        }
+      }
+    }
+  }
+}

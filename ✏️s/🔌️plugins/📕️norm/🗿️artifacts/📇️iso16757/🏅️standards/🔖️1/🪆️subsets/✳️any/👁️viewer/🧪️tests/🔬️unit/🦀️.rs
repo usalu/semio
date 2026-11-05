@@ -14,10 +14,10 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let snapshot = Iso16757Snapshot::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(
-        <Iso16757Viewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default(), window: None }, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("viewer assembly"),
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(
+        <Iso16757Viewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default(), window: None }, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("viewer assembly"),
     )
     .expect("json");
     assert!(json.contains("Unknown body"));

@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create asset \"{}\"", self.asset.name), &format!("Asset \"{}\" erstellen", self.asset.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create asset \"{}\"", self.asset.name), &format!("Asset \"{}\" erstellen", self.asset.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.asset.id.clone()]

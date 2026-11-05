@@ -12,9 +12,9 @@
 //! every request-issuing method now takes an `OperationContext` (`semio-framework-async` —
 //! cancellation/deadline/trace/capability), checked up front so an already-cancelled caller never
 //! reaches the transport. The native transport (`🔖️Native` below) is rebuilt on
-//! `semio-framework-os-services`'s `HttpPool`/`ComputePool` — the per-call blocking-`ureq`-on-a-
+//! `semio-os-services`'s `HttpPool`/`ComputePool` — the per-call blocking-`ureq`-on-a-
 //! dedicated-thread pattern and the ad hoc private tokio runtime this crate's own native `open_ws`
-//! used to need are RETIRED, not wrapped: tokio stays confined to `semio-framework-os-services`
+//! used to need are RETIRED, not wrapped: tokio stays confined to `semio-os-services`
 //! (this crate names it nowhere), and every native HTTP call is now admitted onto that crate's
 //! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
@@ -70,7 +70,7 @@ pub(crate) mod directory_stream;
 use directory_stream::{DirectoryStream, directory_scoped_ws_url, directory_ws_url};
 
 //#region 🔖️Native
-/// 🐎️ Native transport: HTTP routes through `semio-framework-os-services`'s `HttpPool`/
+/// 🐎️ Native transport: HTTP routes through `semio-os-services`'s `HttpPool`/
 /// `ComputePool` (this crate's EXISTING optional `ureq` dep supplies the ONE blocking call
 /// `HttpPool` admits onto its bounded pool — no per-call `std::thread::spawn` and no private
 /// tokio runtime built by this crate), `tokio-tungstenite` for WS (this crate's EXISTING `sync`

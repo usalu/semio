@@ -55,7 +55,7 @@ fn path_argument(expression: &Expr) -> bool {
 
 fn registration_macro(item: &syn::ItemMacro) -> RegistrationMacro {
     let name = path_string(&item.mac.path);
-    if name == "semio_framework_plugin::plugin_exports" || name == "semio_framework_plugin::extension_exports" {
+    if name == "semio_plugin::plugin_exports" || name == "semio_plugin::extension_exports" {
         let parser = Punctuated::<syn::Path, Token![,]>::parse_terminated;
         return if parser.parse2(item.mac.tokens.clone()).is_ok() { RegistrationMacro::Admitted } else { RegistrationMacro::Implementation };
     }

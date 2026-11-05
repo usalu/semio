@@ -5,7 +5,7 @@ use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutatio
 use crate::schema::operations::{insert_step, next_step_id, path_ref_in};
 use crate::mutations::ProcedureMutation;
 use crate::{Dictionary, ProcedureSnapshot, Step};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberMaterialStre
         record: "ChangedMemberMaterialStrengthK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic material strength X_k (E90.10) of the member", "Bauteil: Charakteristische Materialfestigkeit X_k (E90.10) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change characteristic material strength X_k (E90.10) of the member", "Bauteil: Charakteristische Materialfestigkeit X_k (E90.10) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

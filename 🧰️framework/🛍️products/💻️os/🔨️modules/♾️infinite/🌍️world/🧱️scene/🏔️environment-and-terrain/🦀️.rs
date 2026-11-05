@@ -35,7 +35,7 @@ pub fn environment_scene_material(environment: &WorldEnvironmentRecord) -> Scene
     SceneMaterial3d { metalness: material.metalness.unwrap_or(0.0) as f32, roughness: material.roughness.unwrap_or(1.0) as f32, emissive, emissive_intensity: if emissive == [0.0; 3] { 0.0 } else { material.emissive_intensity.unwrap_or(1.0) as f32 } }
 }
 
-pub fn environment_outline_color(environment: &WorldEnvironmentRecord, theme: &semio_framework_ui_theme::Theme) -> Option<[f32; 4]> {
+pub fn environment_outline_color(environment: &WorldEnvironmentRecord, theme: &semio_ui_theme::Theme) -> Option<[f32; 4]> {
     match environment.material.as_ref().and_then(|material| material.stroke.as_deref()).map(str::trim) {
         Some(stroke) if stroke.eq_ignore_ascii_case("none") || stroke.eq_ignore_ascii_case("transparent") => None,
         Some(stroke) if !stroke.is_empty() => Some(parse_color(stroke)),

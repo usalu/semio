@@ -24,8 +24,8 @@ pub fn change_object_kind_label<Op: From<crate::change_object_kind_label::Change
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeObjectKindLabel where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_object_kind_label::ChangeObjectKindLabel> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object-kind", kind: "change-object-kind-label", record: "ChangedObjectKindLabel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change object kind label to \"{}\"", self.new_label), &format!("Objektartbeschriftung auf \"{}\" ändern", self.new_label))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change object kind label to \"{}\"", self.new_label), &format!("Objektartbeschriftung auf \"{}\" ändern", self.new_label))
     }
 }
 

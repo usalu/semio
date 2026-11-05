@@ -156,7 +156,7 @@ async fn diff_grammar_conformance_law() {
     use protocol::{DiffBinary,DiffCodec,DiffText};
     let grammar_text = crate::standards::v_utf_8::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO;
     let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse diff grammar");
-    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
 
     let cases = vec![
         TxtDiff::default(),

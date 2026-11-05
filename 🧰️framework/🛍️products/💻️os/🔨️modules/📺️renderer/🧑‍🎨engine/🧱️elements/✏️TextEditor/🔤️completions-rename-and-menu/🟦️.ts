@@ -16,13 +16,15 @@ import type { EditorCore2 } from "../👥️session-presence-and-caret/🟦️.t
 export function useEditorCompletionsRenameAndMenu(core: EditorCore2) {
   const { caretCadenceRef, dispatch, emitSelection, renameActiveRef, scene, sessionRef, setSessionEpoch } = core;
   const [wasmSession, setWasmSession] = useState<FrameworkEditorSession | null>(null);
+  const [readyForSession, setReadyForSession] = useState<FrameworkEditorSession | null>(null);
   const [renameDraft, setRenameDraft] = useState<RenameDraft | null>(null);
   const [renamePosition, setRenamePosition] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const [completionsOpen, setCompletionsOpen] = useState(false);
   const [completionIndex, setCompletionIndex] = useState(0);
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly position: { readonly x: number; readonly y: number } }) | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.editor");
-  const editorLabel = useLabel(scene.language ? "ui.host.languageDocument" : "ui.host.documentPlaceholder", { language: scene.language });
+  const defaultEditorLabel = useLabel(scene.language ? "ui.host.languageDocument" : "ui.host.documentPlaceholder", { language: scene.language });
+  const editorLabel = core.editorLabelOverride ?? defaultEditorLabel;
 
   const completions = useMemo(() => parseJsonOr<readonly CompletionItem[]>(scene.completionsJson, []), [scene.completionsJson]);
   const renameInfo = useMemo(() => parseJsonOr<RenameInfo | null>(scene.renameJson, null), [scene.renameJson]);
@@ -168,8 +170,9 @@ export function useEditorCompletionsRenameAndMenu(core: EditorCore2) {
     sessionRef.current.setCaretVisible(caretCadenceRef.current?.visible() ?? false);
     syncSessionCanvasTheme(sessionRef.current);
     setSessionEpoch((epoch) => epoch + 1);
+    setReadyForSession(session as FrameworkEditorSession);
   }, []);
-  return { applyCompletion, cancelRename, caretScreenPosition, commitRename, completionIndex, completions, completionsOpen, contextMenu, contextMenuTitleLabel, dismissContextMenu, editorLabel, newlineGates, onSessionReady, openCompletions, renameDraft, renameInfo, renamePosition, sessionFactory, setCompletionIndex, setCompletionsOpen, setContextMenu, startRename, updateRenamePreview };
+  return { applyCompletion, cancelRename, caretScreenPosition, commitRename, completionIndex, completions, completionsOpen, contextMenu, contextMenuTitleLabel, dismissContextMenu, editorLabel, newlineGates, onSessionReady, openCompletions, renameDraft, renameInfo, renamePosition, sessionFactory, setCompletionIndex, setCompletionsOpen, setContextMenu, startRename, updateRenamePreview, editorReady: wasmSession !== null && readyForSession === wasmSession };
 }
 
 export type EditorCore3 = EditorCore2 & ReturnType<typeof useEditorCompletionsRenameAndMenu>;

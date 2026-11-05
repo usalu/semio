@@ -1,7 +1,7 @@
 //! 🚪️ The typed Store vocabulary admits one actual original message owner behind its defining interface.
 use super::*;
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_os_store_one_item_publication::batch_digest::ArtifactStoreBatchMessage;
+use semio_os_store_one_item_publication::batch_digest::ArtifactStoreBatchMessage;
 struct NativeMessage<M:RetireOwned+Send+Sync+'static>{original:ArtifactOriginalEditMessage<M>}
 fn birth<M:RetireOwned+Send+Sync+'static>()->RetirementDemand{let mut d=ArtifactOriginalEditMessage::<M>::birth_demands();d.capacity_bytes+=size_of::<NativeMessage<M>>();d.copy_bytes+=size_of::<Box<dyn ArtifactStoreBatchMessage<M>>>();d}
 fn admit<M:RetireOwned+Send+Sync+'static>(edit:&mut Option<Box<Edit<M>>>,wire:ArtifactOperationWire<M>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ArtifactStoreBatchMessage<M>>,RetainedCloneProgress)>,ValueError>{let d=birth::<M>();if !retained_clone_grant_admits(grant,d){return Ok(None)}let Some((original,mut p))=ArtifactOriginalEditMessage::admit(edit,wire,grant)?else{return Ok(None)};p.retained_capacity_bytes+=size_of::<NativeMessage<M>>();p.copied_bytes+=size_of::<Box<dyn ArtifactStoreBatchMessage<M>>>();Ok(Some((Box::new(NativeMessage{original}),p)))}

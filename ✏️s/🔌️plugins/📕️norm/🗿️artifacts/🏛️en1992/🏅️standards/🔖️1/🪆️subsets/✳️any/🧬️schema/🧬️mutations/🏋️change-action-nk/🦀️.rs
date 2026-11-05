@@ -19,8 +19,8 @@ pub struct ChangeActionNk {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeActionNk where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_action_nk::ChangeActionNk> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "action-nk", kind: "change-action-nk", record: "ChangedChangeActionNk" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change characteristic axial force N_k of action {}/{}", self.member_id, self.action_id), &format!("Charakteristische Normalkraft N_k der Einwirkung {}/{} ändern", self.member_id, self.action_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change characteristic axial force N_k of action {}/{}", self.member_id, self.action_id), &format!("Charakteristische Normalkraft N_k der Einwirkung {}/{} ändern", self.member_id, self.action_id))
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone(), self.action_id.clone()] }
 }

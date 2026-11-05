@@ -66,8 +66,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "morph-target", kind: "move-morph-target", record: "MovedMorphTarget" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Move Morph Target", "Morphziel verschieben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Move Morph Target", "Morphziel verschieben")
     }
 
     fn target(&self) -> Vec<String> {

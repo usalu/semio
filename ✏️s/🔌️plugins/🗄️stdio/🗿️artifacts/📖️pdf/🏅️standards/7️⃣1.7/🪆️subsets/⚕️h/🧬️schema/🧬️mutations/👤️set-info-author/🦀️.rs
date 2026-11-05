@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info-author", kind: "set-info-author", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/H author \"{}\"", self.author), &format!("PDF/H-Autor \"{}\" setzen", self.author))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set PDF/H author \"{}\"", self.author), &format!("PDF/H-Autor \"{}\" setzen", self.author))
     }
 
     fn target(&self) -> Vec<String> {

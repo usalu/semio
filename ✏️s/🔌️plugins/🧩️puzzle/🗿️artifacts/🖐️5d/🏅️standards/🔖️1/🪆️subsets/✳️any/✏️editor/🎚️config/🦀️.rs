@@ -4,9 +4,9 @@
 //! camera and display setting belongs to that exact window instance, while engagement and candidate
 //! scratch belongs to its transient owner.
 
-use semio_framework_plugin::WorldProjectionConfig;
+use semio_plugin::WorldProjectionConfig;
 
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::WorldSunConfig;
 use std::collections::BTreeMap;
 pub use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::config::Puzzle5dKindWeights;
 
@@ -315,8 +315,8 @@ impl pack::snapshot::ArtifactPack for Puzzle5dConfig {
         semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error))
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle5dConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle5dConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -610,7 +610,7 @@ impl protocol::OpBinary for Puzzle5dConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(Puzzle5dConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(Puzzle5dConfigMutation);
 
 impl protocol::OpText for Puzzle5dConfigMutation {
     fn print_op(&self) -> String {

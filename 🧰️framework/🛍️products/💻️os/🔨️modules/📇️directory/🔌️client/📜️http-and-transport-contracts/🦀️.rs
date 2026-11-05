@@ -168,7 +168,7 @@ impl<T> DirectoryConnectionPlatform for T {}
 /// futures are `Send`; wasm uses a platform-local marker because `JsValue` handles cannot move.
 /// `ctx` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) carries cancellation/deadline/
 /// trace/capability through to whichever concrete transport is wired — a native call routes it
-/// into `semio-framework-os-services`'s `HttpPool`/`ComputePool` (see `🔖️Native` below), so the
+/// into `semio-os-services`'s `HttpPool`/`ComputePool` (see `🔖️Native` below), so the
 /// SAME `OperationContext` that gates `SpaceRunner::compute_node`'s `exchange` calls
 /// (`🏃️run/🦀️.rs`) also gates a directory request, rather than each path inventing its
 /// own bolted-on cancellation.

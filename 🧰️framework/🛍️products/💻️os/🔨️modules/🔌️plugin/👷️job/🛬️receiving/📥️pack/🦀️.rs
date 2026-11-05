@@ -1,5 +1,5 @@
 //! 🛬️ An original intrinsic Pack and typed receiver settle before their unique completed value crosses a caller boundary.
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_job::{OriginalCallerSourceLoan,OriginalConstructionDemand,OriginalSourceBinding,OriginalTurnFailure,StepContext,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{DslValue,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneSource,RetainedCloneClose}};
 use semio_framework_value_native_owned::{NativeReceive,owned::NativeReceivingOriginal};

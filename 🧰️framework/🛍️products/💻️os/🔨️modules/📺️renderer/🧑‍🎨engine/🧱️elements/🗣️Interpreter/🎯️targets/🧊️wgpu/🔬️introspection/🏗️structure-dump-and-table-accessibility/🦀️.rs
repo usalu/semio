@@ -5,7 +5,7 @@ use super::*;
 //#region 🔬️Introspection
 //#region 🔬️IntrospectionBuilders
 #[cfg(target_arch = "wasm32")]
-pub(super) fn build_structure_dump(engine: &semio_framework_ui_wgpu_engine::Ui, dpr: f32, requested: Option<&str>) -> DumpStructure {
+pub(super) fn build_structure_dump(engine: &semio_ui_wgpu_engine::Ui, dpr: f32, requested: Option<&str>) -> DumpStructure {
     let window_ids = dump_window_ids(engine);
     let Some(window_id) = dump_window_id(engine, requested) else {
         return DumpStructure { viewport: DumpViewport { w: 0.0, h: 0.0, dpr }, window_id: None, window_ids, focus_path: None, nodes: Vec::new() };
@@ -29,20 +29,20 @@ pub(super) fn build_structure_dump(engine: &semio_framework_ui_wgpu_engine::Ui, 
 /// the `KIND_GLYPH` subset, for boot-triage (a booted-but-blank canvas has 0 of everything; text
 /// that silently failed to shape has quads but 0 glyphs).
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-pub(super) fn layer_is_nonempty(layer: &semio_framework_ui_draw_contract::DrawLayer) -> bool {
+pub(super) fn layer_is_nonempty(layer: &semio_ui_draw_contract::DrawLayer) -> bool {
     !layer.ui_instances.is_empty() || !layer.raster_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.overlay_ui_instances.is_empty() || !layer.overlay_vector_vertices.is_empty()
 }
 
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-pub(super) fn is_glyph_instance(instance: &semio_framework_ui_draw_contract::UiInstance) -> bool {
-    instance.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH
+pub(super) fn is_glyph_instance(instance: &semio_ui_draw_contract::UiInstance) -> bool {
+    instance.params[2] == semio_ui_draw_contract::KIND_GLYPH
 }
 
 struct TableStepperAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub depth: usize,
-    pub cell: semio_framework_os_renderer_wgpu_scene_state::TableStepperAccessibilityCell,
+    pub cell: semio_renderer_wgpu_scene_state::TableStepperAccessibilityCell,
 }
 
 pub fn scene_virtual_accessibility_node_id(key: &str) -> u64 {
@@ -50,14 +50,14 @@ pub fn scene_virtual_accessibility_node_id(key: &str) -> u64 {
     (1_u64 << 63) | (hash & !(1_u64 << 63))
 }
 
-fn collect_table_stepper_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableStepperAccessibilityEntry>) {
+fn collect_table_stepper_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableStepperAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::Table && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_table_stepper_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableStepperAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), cell }));
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::Table && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_renderer_wgpu_scene_feeds::accepted_table_stepper_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableStepperAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), cell }));
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -65,7 +65,7 @@ fn collect_table_stepper_accessibility_entries(tree: &semio_framework_ui_retaine
     }
 }
 
-pub fn table_stepper_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Vec<TableStepperAccessibilityEntry> {
+pub fn table_stepper_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree) -> Vec<TableStepperAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_table_stepper_accessibility_entries(tree, root, 0, &mut entries);
@@ -73,7 +73,7 @@ pub fn table_stepper_accessibility_entries(tree: &semio_framework_ui_retained_tr
     entries
 }
 
-pub(super) fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+pub(super) fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     let focus = FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.node, focus.host_id.clone(), focus.row_id.clone(), focus.column_id.clone())));
     for entry in table_stepper_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
@@ -123,14 +123,14 @@ struct TableEditableTextAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub depth: usize,
-    pub cell: semio_framework_os_renderer_wgpu_scene_state::TableEditableTextAccessibilityCell,
+    pub cell: semio_renderer_wgpu_scene_state::TableEditableTextAccessibilityCell,
 }
 
-fn collect_table_editable_text_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableEditableTextAccessibilityEntry>) {
+fn collect_table_editable_text_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableEditableTextAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::Table && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_table_editable_text_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableEditableTextAccessibilityEntry {
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::Table && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_renderer_wgpu_scene_feeds::accepted_table_editable_text_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableEditableTextAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -138,7 +138,7 @@ fn collect_table_editable_text_accessibility_entries(tree: &semio_framework_ui_r
             }));
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -146,7 +146,7 @@ fn collect_table_editable_text_accessibility_entries(tree: &semio_framework_ui_r
     }
 }
 
-pub fn table_editable_text_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Vec<TableEditableTextAccessibilityEntry> {
+pub fn table_editable_text_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree) -> Vec<TableEditableTextAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_table_editable_text_accessibility_entries(tree, root, 0, &mut entries);
@@ -154,7 +154,7 @@ pub fn table_editable_text_accessibility_entries(tree: &semio_framework_ui_retai
     entries
 }
 
-pub(super) fn append_table_editable_text_accessibility_nodes(window_id: &str, tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+pub(super) fn append_table_editable_text_accessibility_nodes(window_id: &str, tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     let focus = focused_table_editable_text_address();
     for entry in table_editable_text_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
@@ -204,14 +204,14 @@ struct TableButtonAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub depth: usize,
-    pub cell: semio_framework_os_renderer_wgpu_scene_state::TableButtonAccessibilityCell,
+    pub cell: semio_renderer_wgpu_scene_state::TableButtonAccessibilityCell,
 }
 
-fn collect_table_button_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableButtonAccessibilityEntry>) {
+fn collect_table_button_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableButtonAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::Table && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_table_button_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableButtonAccessibilityEntry {
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::Table && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_renderer_wgpu_scene_feeds::accepted_table_button_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableButtonAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -219,7 +219,7 @@ fn collect_table_button_accessibility_entries(tree: &semio_framework_ui_retained
             }));
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -227,7 +227,7 @@ fn collect_table_button_accessibility_entries(tree: &semio_framework_ui_retained
     }
 }
 
-pub fn table_button_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Vec<TableButtonAccessibilityEntry> {
+pub fn table_button_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree) -> Vec<TableButtonAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_table_button_accessibility_entries(tree, root, 0, &mut entries);
@@ -235,7 +235,7 @@ pub fn table_button_accessibility_entries(tree: &semio_framework_ui_retained_tre
     entries
 }
 
-pub(super) fn append_table_button_accessibility_nodes(tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+pub(super) fn append_table_button_accessibility_nodes(tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     for entry in table_button_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
             break;

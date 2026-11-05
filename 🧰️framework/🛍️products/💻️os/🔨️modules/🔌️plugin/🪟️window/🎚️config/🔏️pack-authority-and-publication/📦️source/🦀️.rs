@@ -2,7 +2,7 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 /// 📦️ Original source owners remain intact until their native readers finish or cancel.
 #[derive(semio_framework_value::RetireOwned)]
-pub enum WindowConfigPackSource{Pair(semio_framework_os_store_text_io::ArtifactPackFiles),Framed(Vec<u8>)}
+pub enum WindowConfigPackSource{Pair(semio_os_store_text_io::ArtifactPackFiles),Framed(Vec<u8>)}
 impl WindowConfigPackSource{
  pub fn pair(&self)->Result<(&[u8],&[u8]),ValueError>{
   match self{Self::Pair(files)=>Ok((&files.pack,&files.spr)),Self::Framed(bytes)=>{

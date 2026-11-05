@@ -8,8 +8,8 @@
 
 use super::*;
 use crate::viewer_domain::viewer_laws::context::{self, app};
-use semio_framework_plugin::app::TypedOperationResultLane;
-use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance};
+use semio_plugin::app::TypedOperationResultLane;
+use semio_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance};
 use semio_framework_test_fixtures::repo_text;
 
 /// ⚖️ The ONE language-agnostic addressing fixture both surfaces answer, with a third-party twin at
@@ -66,7 +66,7 @@ fn roster(fixture: &TickAddressingFixture, attached: &[AttachedWindow]) -> ViewM
         .iter()
         .map(|window| ViewWindowInstance { id: window.id.clone(), window_kind_id: fixture.window_kinds.get(&window.kind).unwrap_or_else(|| panic!("fixture window kind {}", window.kind)).clone() })
         .collect();
-    ViewModel { window_instances, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { window_instances, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW: which windows the READ-ONLY surface's `previewEval` run evaluates for a given attached roster.
@@ -86,8 +86,8 @@ async fn every_run_hop_names_a_viewer_preview_window_that_is_actually_attached()
         let hops: Vec<String> = run.hop_windows.iter().cloned().collect::<std::collections::BTreeSet<_>>().into_iter().collect();
         eprintln!("viewer run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), run.hop_windows);
         assert_eq!(hops, case.armed_window_ids, "arming case {}", case.id);
-        assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.is_empty(), "no roster at all starts nothing");
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        assert!(context::owed_run_actions(&mut app, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.is_empty(), "no roster at all starts nothing");
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 }
 
@@ -111,8 +111,8 @@ async fn destroying_a_converged_instance_retires_every_ordered_root() {
     let body = context::render_with_view(&mut app, preview::BODY_KEY, &view).await;
     let meshes = context::preview_mesh_count(&body);
     assert!(meshes >= 1, "the chain must actually converge onto painted geometry, got {meshes}");
-    let retired = crate::brep_extension::with_geometry_context(|owner| semio_framework_os_flow::cancel_all_evaluations(owner.registry()));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    let retired = crate::brep_extension::with_geometry_context(|owner| semio_os_flow::cancel_all_evaluations(owner.registry()));
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     drop(app);
 }
 
@@ -127,16 +127,16 @@ async fn only_a_viewer_preview_addressed_tick_passes_the_retained_preflight() {
         let view = roster(&fixture, &case.attached).for_window_instance(&case.current_window_id).expect("the current window is attached");
         let kind = fixture.window_kinds.get(&case.payload_window_kind).cloned().unwrap_or_default();
         let args = semio_s_artifact_procedural_3d_preview_eval::window_args(&case.payload_window_id, &kind);
-        let action_meta = ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+        let action_meta = ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") };
         let outcome = match context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await {
-            Ok(()) => match semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
+            Ok(()) => match semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
                 Ok(receipt) => receipt.lanes.contains(&TypedOperationResultLane::Fault).then(|| format!("retained publication faulted: {:?}", receipt.lanes)),
                 Err(fault) => Some(format!("{fault:?}")),
             },
             Err(fault) => Some(format!("{fault:?}")),
         };
         assert_eq!(outcome.is_none(), case.admitted, "dispatch case {}: {outcome:?}", case.id);
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 }
 
@@ -148,15 +148,15 @@ async fn a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silentl
     let _serial = context::lock();
     let mut app = app().await;
     let view = context::view_shell_view("view-preview");
-    let action_meta = ActionMeta { view_state: Some(view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+    let action_meta = ActionMeta { view_state: Some(view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
     let args = semio_s_artifact_procedural_3d_preview_eval::window_args("view-preview", preview::WINDOW_KIND_ID);
     context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await.expect("viewer preview tick");
-    let tick = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication");
+    let tick = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication");
     assert!(!tick.lanes.contains(&TypedOperationResultLane::Fault), "viewer preview tick faulted: {:?}", tick.lanes);
     let answered = crate::brep_extension::settle(&mut app.0, action_meta.instance_id, &action_meta, app.1.cx()).await.answered;
     let owed = context::owed_run_actions(&mut app, &view).await;
     assert!(answered > 0 || !owed.is_empty(), "the viewer evaluation must emit ExtensionInvocation or owe the run another hop, not a dead sync tick");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: the SERVED ORDER on the read-only surface. The shell opens the document and only THEN
@@ -175,9 +175,9 @@ async fn a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silentl
 async fn a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_registry_faulted() {
     let _serial = context::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::take();
-    semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("an empty closure is a legal registry state — it is the state every served boot starts in");
+    semio_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("an empty closure is a legal registry state — it is the state every served boot starts in");
     assert!(
-        semio_framework_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_err(),
+        semio_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_err(),
         "the geometry kernel must be unaddressable before the host pushes anything, or this law proves nothing"
     );
 
@@ -209,7 +209,7 @@ async fn a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_re
         }
     }
     assert!(
-        semio_framework_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_ok(),
+        semio_os_flow::flow_extension_invocation_address(crate::flow_operators::BREP_EXTENSION_FLOW_ID).is_ok(),
         "the pushed closure must make the geometry kernel addressable"
     );
 
@@ -219,5 +219,5 @@ async fn a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_re
     let meshes = context::preview_mesh_count(&preview_body);
     assert!(meshes >= 1, "the re-armed viewer chain must reach a painted preview, got {meshes}");
     println!("[STATS] viewer late install re-armed {ticks} ticks and painted meshes={meshes}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

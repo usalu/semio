@@ -1,16 +1,16 @@
 //! 💰️ Authored tabular projection and typed reconstruction under cumulative admission.
 use super::{TsvSnapshot,LineEnding};
 use semio_framework_dsl_record::__rt::DecodedFieldOwner;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
-use semio_framework_os_kernel::sqlite_snapshot::ValueError;
-use semio_framework_os_kernel::sqlite_snapshot::ValueRefusalKind;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::RowWriter;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Reconstruction;
-use semio_framework_os_kernel::sqlite_snapshot::transfer::reserve;
-use semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled;
+use semio_os_kernel::sqlite_snapshot::SqliteDatabase;
+use semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
+use semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+use semio_os_kernel::sqlite_snapshot::ValueError;
+use semio_os_kernel::sqlite_snapshot::ValueRefusalKind;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::RowWriter;
+use semio_os_kernel::sqlite_snapshot::artifact::Reconstruction;
+use semio_os_kernel::sqlite_snapshot::transfer::reserve;
+use semio_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled;
 use semio_framework_value::FromValue;
 #[path="🔍️rows/🦀️.rs"] mod rows;
 const SQL:&str=include_str!("../🗄️.sql");

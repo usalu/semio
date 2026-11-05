@@ -6,13 +6,13 @@ use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3
 use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_framework_os_kernel::Viewport3dOrbit;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_os_kernel::Viewport3dOrbit;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use crate::editor::fem3d::commands::set_camera;
@@ -32,7 +32,7 @@ pub fn handle(_payload: &FocusEntity, _doc: &ArtifactView<'_, Fem3dSnapshot>, _c
 
 /// 🎥️ The orbit the addressed World3d window is currently drawn with — both window kinds keep it
 /// in their own persisted window config.
-pub fn addressed_camera(cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Viewport3dOrbit, Fault> {
+pub fn addressed_camera(cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel) -> Result<Viewport3dOrbit, Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| Fault::from("fem3d.focus-entity.window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::from("fem3d.focus-entity.window-stale"))?;
     match kind {
@@ -46,7 +46,7 @@ pub fn addressed_camera(cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_p
 /// centroid for a solid, the carrying node for a support or a nodal load — carrying the current
 /// eye offset along, so the view slides over rather than jumps, written through the one `setCamera`
 /// window-config path.
-pub fn handle_window(payload: &FocusEntity, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+pub fn handle_window(payload: &FocusEntity, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let camera = addressed_camera(cfg, view)?;
     let target = fem3d_entity_point(doc.snapshot, &payload.id).ok_or_else(|| Fault::from("fem3d.focus-entity.unknown-entity"))?;
     set_camera::handle_window(&SetCamera { camera: focused_orbit(&camera, target) }, cfg, view)

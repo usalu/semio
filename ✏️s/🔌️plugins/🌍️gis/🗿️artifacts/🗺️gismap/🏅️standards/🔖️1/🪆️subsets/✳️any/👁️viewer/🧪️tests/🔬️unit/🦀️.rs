@@ -1,7 +1,7 @@
 use crate::viewer::gismap::modes::view;
 use crate::viewer::gismap::modes::view::windows::map;
 use crate::GISMAP_DIALECT;
-use semio_framework_plugin::{ArtifactToolPublicationLane, ArtifactViewer, PluginApp as _, Viewer, ViewerApp};
+use semio_plugin::{ArtifactToolPublicationLane, ArtifactViewer, PluginApp as _, Viewer, ViewerApp};
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 #[allow(unused_imports)]
@@ -9,19 +9,19 @@ use crate::{GisMapSnapshot, GIS_MAP_SCHEMA};
 #[allow(unused_imports)]
 use semio_framework::kernel::UiDirtyScope;
 #[allow(unused_imports)]
-use semio_framework_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+use semio_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
 #[allow(unused_imports)]
-use {semio_framework_plugin::AppOperationContext, semio_framework_plugin::ArtifactOwnedToolJobRequest, semio_framework_plugin::ArtifactToolFactoryRegistry, semio_framework_plugin::ArtifactToolPublicationContract, semio_framework_plugin::ArtifactView, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::Emit, semio_framework_plugin::Fault, semio_framework_plugin::FaultCode, semio_framework_plugin::FaultOrigin, semio_framework_plugin::HistoryView, semio_framework_plugin::InteractiveJobClassification, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraftMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_plugin::ToolExecutionContract, semio_framework_plugin::ToolFactoryKey, semio_framework_plugin::ToolJobFactoryError, semio_framework_plugin::ViewEmit};
+use {semio_plugin::AppOperationContext, semio_plugin::ArtifactOwnedToolJobRequest, semio_plugin::ArtifactToolFactoryRegistry, semio_plugin::ArtifactToolPublicationContract, semio_plugin::ArtifactView, semio_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_plugin::Emit, semio_plugin::Fault, semio_plugin::FaultCode, semio_plugin::FaultOrigin, semio_plugin::HistoryView, semio_plugin::InteractiveJobClassification, semio_plugin::NoConfig, semio_plugin::NoConfigMutation, semio_plugin::NoDraftMutation, semio_plugin::NoPresence, semio_plugin::NoPresenceMutation, semio_plugin::NoTransient, semio_plugin::NoTransientMutation, semio_plugin::ToolExecutionContract, semio_plugin::ToolFactoryKey, semio_plugin::ToolJobFactoryError, semio_plugin::ViewEmit};
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::gismap::{GIS_MAP_VIEW_TOOL_IDS, camera_emit, command_from_action, GisMapViewCommandJobFactory};
 use crate::viewer::gismap::*;
 
-type GisViewerApp = semio_framework_plugin::VcsArtifactApp<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers>;
+type GisViewerApp = semio_plugin::VcsArtifactApp<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers>;
 
 /// 🧹️ Owning guard that drains the exact close ladder before `ArtifactStore` drop asserts.
 /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-struct GisViewerTestApp(GisViewerApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+struct GisViewerTestApp(GisViewerApp, semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
 impl std::ops::Deref for GisViewerTestApp {
     type Target = GisViewerApp;
@@ -42,14 +42,14 @@ impl Drop for GisViewerTestApp {
         if std::thread::panicking() || self.0.close_terminal_is_empty() {
             return;
         }
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
     }
 }
 
 /// 🧬️ Builds the real registered viewer fixture and binds the instance addressed by `meta`.
 async fn viewer_app() -> GisViewerTestApp {
-    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let app = semio_framework_plugin::artifact_app_laws::new_registered_app_with_members::<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers, _>(async { semio_framework_plugin::App { definition: create_gismap_viewer(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let app = semio_plugin::artifact_app_laws::new_registered_app_with_members::<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers, _>(async { semio_plugin::App { definition: create_gismap_viewer(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     GisViewerTestApp(app, scope)
 }
 
@@ -66,8 +66,8 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 }
 
 //#region 🧭️ViewerCamera
-fn map_view(window_kind_id: &str) -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel { window_id: Some("map-1".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "map-1".into(), window_kind_id: window_kind_id.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+fn map_view(window_kind_id: &str) -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel { window_id: Some("map-1".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "map-1".into(), window_kind_id: window_kind_id.into() }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW: the read-only surface declares and owns the host's camera verb — undeclared, the shell
@@ -81,7 +81,7 @@ async fn the_viewer_declares_and_owns_the_camera_verb() {
     assert_eq!(<GisMapViewCommand as protocol::OpBinary>::TOOL_JOB_IDS, GIS_MAP_VIEW_TOOL_IDS);
     for window in &def.window_kinds {
         for action in semio_framework::window_kind_actions(&def, window) {
-            assert!(!matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "viewer window {} declares the mutating action {}", window.id, action.id);
+            assert!(!matches!(action.kind, semio_plugin::ActionKind::Mutation), "viewer window {} declares the mutating action {}", window.id, action.id);
         }
     }
 }
@@ -92,12 +92,12 @@ async fn the_viewer_declares_and_owns_the_camera_verb() {
 /// declared lane is a window-config lane.
 #[semio_framework_async_macros::async_test]
 async fn the_camera_route_joins_its_exact_retained_factory_on_the_window_config_lane() {
-    use semio_framework_plugin::{ArtifactOwnedToolJobFactory, PluginApp};
+    use semio_plugin::{ArtifactOwnedToolJobFactory, PluginApp};
     let contracts = <GisMapViewCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     assert_eq!(contracts.len(), 1);
     assert_eq!(contracts[0].lanes, &[ArtifactToolPublicationLane::WindowConfig], "a viewer may never name the artifact lane");
     let mut app = viewer_app().await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     assert!(app.close_terminal_is_empty());
 }
 
@@ -144,17 +144,17 @@ async fn the_view_command_round_trips_through_its_binary_codec() {
 /// window's next render publishes the retained camera.
 #[semio_framework_async_macros::async_test]
 async fn a_dispatched_pan_is_retained_by_its_window_and_rendered_back() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = viewer_app().await;
     let view = map_view(map::WINDOW_KIND_ID);
-    let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
+    let mut meta = semio_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(view.clone());
     let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>("{\"surfaceId\":\"gis2d.view.composite\",\"camera\":{\"x\":12.0,\"y\":-4.5,\"zoom\":2.0}}", semio_framework_pack_json::JsonMemberPolicy::Reject).expect("args");
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, map::SET_CAMERA_ACTION_ID, Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the pan is admitted");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the pan settles");
-    let projection = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, map::BODY_KEY, &view, app.1.cx()).await.expect("projection");
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::TiledMapScene>(&projection).expect("tiled map scene");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, map::SET_CAMERA_ACTION_ID, Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the pan is admitted");
+    semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the pan settles");
+    let projection = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, map::BODY_KEY, &view, app.1.cx()).await.expect("projection");
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene::<semio_plugin::TiledMapScene>(&projection).expect("tiled map scene");
     assert_eq!(scene.camera_json, map::config::GisMapViewerCamera { x: 12.0, y: -4.5, zoom: 2.0 }.scene_camera_json());
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🧭️ViewerCamera

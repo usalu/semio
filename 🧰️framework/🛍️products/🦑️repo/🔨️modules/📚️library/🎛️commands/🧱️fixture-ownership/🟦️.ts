@@ -23,14 +23,14 @@ export class FixtureOwnershipTestScript extends BundleScript {
           { package: "semio-framework-artifact-flow-flow-model", target: { kind: "lib" }, laws: [
             "authored_slider_labels_survive_json_dag_and_chrome",
           ] },
-          { package: "semio-framework-os-flow-host", target: { kind: "lib" }, laws: [
+          { package: "semio-os-flow-host", target: { kind: "lib" }, laws: [
             "slider_ghost_descriptor_requires_authored_label",
           ] },
-          { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
+          { package: "semio-os-kernel", target: { kind: "lib" }, laws: [
             "execution_target_status_vocabulary_matches_the_corpus",
             "execution_target_lease_compares_every_plan_and_verified_byte_field",
           ] },
-          { package: "semio-framework-os-mcp", target: { kind: "lib" }, laws: [
+          { package: "semio-os-mcp", target: { kind: "lib" }, laws: [
             "a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names_the_missing_binding",
             "a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothing_else",
             "every_inference_job_tool_is_denied_without_its_scope_and_admitted_by_inference_execute",

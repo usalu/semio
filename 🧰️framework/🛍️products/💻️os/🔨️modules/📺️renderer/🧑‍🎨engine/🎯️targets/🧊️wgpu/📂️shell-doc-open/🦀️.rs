@@ -2,35 +2,35 @@
 //!
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store_sync;
-use semio_framework_os_renderer_wgpu_shell_async::{chrome_now_ms, debug_log, directory_now_ms};
-use semio_framework_os_renderer_wgpu_shell_chrome_state::ChromeState;
-use semio_framework_os_renderer_wgpu_shell_directory::DirectoryState;
-use semio_framework_os_renderer_wgpu_shell_docs::DocumentState;
-use semio_framework_os_renderer_wgpu_shell_plugins::PluginState;
-use semio_framework_os_renderer_wgpu_shell_prefs::{PrefsState, dsl_value_as_json, settings_text_row};
-use semio_framework_os_renderer_wgpu_shell_surfaces::{OpenedFile, PickedImport, ShellDetached};
-use semio_framework_os_renderer_wgpu_shell_sync::{Phase, ShellHubDocumentSeed, ShellPreparedDocumentOpen, SyncState};
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store_sync;
+use semio_renderer_wgpu_shell_async::{chrome_now_ms, debug_log, directory_now_ms};
+use semio_renderer_wgpu_shell_chrome_state::ChromeState;
+use semio_renderer_wgpu_shell_directory::DirectoryState;
+use semio_renderer_wgpu_shell_docs::DocumentState;
+use semio_renderer_wgpu_shell_plugins::PluginState;
+use semio_renderer_wgpu_shell_prefs::{PrefsState, dsl_value_as_json, settings_text_row};
+use semio_renderer_wgpu_shell_surfaces::{OpenedFile, PickedImport, ShellDetached};
+use semio_renderer_wgpu_shell_sync::{Phase, ShellHubDocumentSeed, ShellPreparedDocumentOpen, SyncState};
 #[cfg(not(target_arch = "wasm32"))]
 use protocol::os_directory::client::InstalledServiceContributionV1;
 use semio_framework::{AppDefinition, IconName};
 use semio_framework_async::CancelToken;
-use semio_framework_os_kernel::os_directory::client::DirectoryClientError;
-use semio_framework_os_kernel::os_directory::identity::Identity;
+use semio_os_kernel::os_directory::client::DirectoryClientError;
+use semio_os_kernel::os_directory::identity::Identity;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::schema::{DocumentExecutionTargetLeaseFieldsV1, DocumentScope};
+use semio_os_kernel::os_directory::schema::{DocumentExecutionTargetLeaseFieldsV1, DocumentScope};
 #[cfg(target_arch = "wasm32")]
-use semio_framework_os_renderer_wgpu_host_base::host_io_call;
-use semio_framework_os_renderer_wgpu_program_bridge::ProgramBridgeEntry;
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_ui_locale::Label;
+use semio_renderer_wgpu_host_base::host_io_call;
+use semio_renderer_wgpu_program_bridge::ProgramBridgeEntry;
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_ui_locale::Label;
 use semio_framework_value::DslValue;
 use serde::Deserialize;
 use std::collections::VecDeque;
 use store_sync::sync::{ArtifactDocumentKey, PersistenceBinding};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🧬️component/🦀️.rs"]
 mod staged_doc_open__component;

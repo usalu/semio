@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-plugin-interpreter-core-laws"
+name = "semio-plugin-interpreter-core-laws"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Companion white-box laws of semio-framework-plugin-interpreter"
+description = "Companion white-box laws of semio-plugin-interpreter"
 
 [package.metadata.semio]
 role = "framework"
@@ -19,7 +19,7 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
-semio-framework-plugin-interpreter = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-interpreter = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }

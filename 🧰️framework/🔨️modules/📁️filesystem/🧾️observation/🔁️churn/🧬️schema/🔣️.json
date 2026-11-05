@@ -5,33 +5,116 @@
   "description": "One schema-first policy for every step that reads inputs other processes may edit at the same time. A step reads its inputs as a snapshot; when a concurrent edit is detected, the layer that owns the snapshot takes a new one and runs the step again, a bounded number of times with a growing pause, and says so in the declared languages. Only an edit that persists through every attempt of the widest layer fails, naming the path.",
   "definitions": {
     "Reason": {
-      "enum": ["bytes", "identity", "vanished", "appeared", "roster", "length", "ancestry", "output", "descriptor", "generation", "input", "busy"]
+      "enum": [
+        "bytes",
+        "identity",
+        "vanished",
+        "appeared",
+        "roster",
+        "length",
+        "ancestry",
+        "output",
+        "descriptor",
+        "generation",
+        "input",
+        "busy"
+      ]
     },
     "Profile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["rank", "maximumAttempts", "backoffMs"],
+      "required": [
+        "rank",
+        "maximumAttempts",
+        "backoffMs"
+      ],
       "properties": {
-        "rank": {"type": "integer", "minimum": 1, "maximum": 8},
-        "maximumAttempts": {"type": "integer", "minimum": 1, "maximum": 16},
-        "backoffMs": {"type": "array", "maxItems": 15, "items": {"type": "integer", "minimum": 0, "maximum": 120000}}
+        "rank": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "maximumAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "backoffMs": {
+          "type": "array",
+          "maxItems": 15,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120000
+          }
+        }
       }
     },
-    "Text": {"type": "string", "minLength": 1, "maxLength": 512},
+    "Text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
     "Protocol": {
       "const": {
         "version": 1,
         "staleImplementationCode": "SEMIO_STALE_IMPLEMENTATION",
         "concurrentEditCode": "SEMIO_CONCURRENT_EDIT",
-        "primaryFirstAggregates": ["Original physical body, drain and cleanup settlement failed"],
-        "staleImplementationCodes": ["SEMIO_STALE_IMPLEMENTATION", "BUILD_AUTHORITY_CHANGED"],
-        "languages": ["en", "de"],
+        "primaryFirstAggregates": [
+          "Original physical body, drain and cleanup settlement failed"
+        ],
+        "staleImplementationCodes": [
+          "SEMIO_STALE_IMPLEMENTATION",
+          "BUILD_AUTHORITY_CHANGED"
+        ],
+        "languages": [
+          "en",
+          "de"
+        ],
         "settleMilliseconds": 300,
-        "quiet": {"windowMilliseconds": 2000, "ceilingMilliseconds": 30000, "futureToleranceMilliseconds": 1000, "reasons": ["bytes", "identity", "length", "roster", "ancestry"]},
+        "quiet": {
+          "windowMilliseconds": 2000,
+          "ceilingMilliseconds": 30000,
+          "futureToleranceMilliseconds": 1000,
+          "reasons": [
+            "bytes",
+            "identity",
+            "length",
+            "roster",
+            "ancestry"
+          ]
+        },
         "profiles": {
-          "read": {"rank": 1, "maximumAttempts": 6, "backoffMs": [10, 40, 160, 640, 2560]},
-          "snapshot": {"rank": 2, "maximumAttempts": 5, "backoffMs": [250, 1000, 4000, 12000]},
-          "build": {"rank": 3, "maximumAttempts": 4, "backoffMs": [2000, 8000, 30000]}
+          "read": {
+            "rank": 1,
+            "maximumAttempts": 6,
+            "backoffMs": [
+              10,
+              40,
+              160,
+              640,
+              2560
+            ]
+          },
+          "snapshot": {
+            "rank": 2,
+            "maximumAttempts": 5,
+            "backoffMs": [
+              250,
+              1000,
+              4000,
+              12000
+            ]
+          },
+          "build": {
+            "rank": 3,
+            "maximumAttempts": 4,
+            "backoffMs": [
+              2000,
+              8000,
+              30000
+            ]
+          }
         },
         "reasons": {
           "en": {
@@ -71,6 +154,78 @@
           "de": {
             "retry": "Ein anderer Prozess änderte {path} während des Lesens ({reason}). Neuer Schnappschuss, Versuch {attempt} von {maximum}, in {delay} ms.",
             "exhausted": "{path} änderte sich in allen {maximum} Versuchen ({reason}): ein anderer Prozess bearbeitet es laufend. Den Befehl erneut ausführen, sobald die Änderungen aufgehört haben."
+          }
+        }
+      }
+    },
+    "PhysicalFileComparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "expected",
+        "observed"
+      ],
+      "properties": {
+        "kind": {
+          "const": "physical-file-comparison"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "byteLength",
+            "sha256"
+          ],
+          "properties": {
+            "byteLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sha256": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "observed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "byteLength",
+            "sha256"
+          ],
+          "properties": {
+            "byteLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sha256": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
           }
         }
       }

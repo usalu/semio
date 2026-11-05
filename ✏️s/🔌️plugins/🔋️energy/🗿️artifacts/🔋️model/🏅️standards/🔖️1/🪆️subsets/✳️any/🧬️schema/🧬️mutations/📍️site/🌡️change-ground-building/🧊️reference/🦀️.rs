@@ -11,8 +11,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change building-surface ground temperature of month {} to {} °C", self.month, self.new_temperature_c), &format!("Erdreichtemperatur unter dem Gebäude im Monat {} auf {} °C ändern", self.month, self.new_temperature_c))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change building-surface ground temperature of month {} to {} °C", self.month, self.new_temperature_c), &format!("Erdreichtemperatur unter dem Gebäude im Monat {} auf {} °C ändern", self.month, self.new_temperature_c))
     }
 }
 

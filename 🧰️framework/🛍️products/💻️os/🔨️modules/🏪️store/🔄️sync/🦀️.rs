@@ -97,20 +97,20 @@ use semio_framework_value::DslValue;
 use semio_framework_value::FromValue as FromValueTrait;
 use semio_framework_value::ToValue as ToValueTrait;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{PresencePeer, PresenceToolRun};
-use semio_framework_os_spr::{decode_document_backbone_envelopes_exact, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, OpBinary, RuntimeFrontierSummary, ServerFrame};
-use semio_framework_os_spr::{ActorId, MutationId};
-use semio_framework_os_store_backbone::{decode_hot_backbone_message_exact, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote, BACKBONE_CHANNEL_MAXIMUM_BYTES, BACKBONE_CHANNEL_MAXIMUM_MESSAGES, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES};
-use semio_framework_os_store_text_io::ArtifactPackFiles;
-use semio_framework_os_store_engine::lifted_store::ArtifactStore;
-use semio_framework_os_store_text_io::text_format::ArtifactTextFiles;
+use semio_os_spr::{PresencePeer, PresenceToolRun};
+use semio_os_spr::{decode_document_backbone_envelopes_exact, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, OpBinary, RuntimeFrontierSummary, ServerFrame};
+use semio_os_spr::{ActorId, MutationId};
+use semio_os_store_backbone::{decode_hot_backbone_message_exact, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote, BACKBONE_CHANNEL_MAXIMUM_BYTES, BACKBONE_CHANNEL_MAXIMUM_MESSAGES, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES};
+use semio_os_store_text_io::ArtifactPackFiles;
+use semio_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_store_text_io::text_format::ArtifactTextFiles;
 use semio_framework_value_derive::{FromValue, ToValue};
 use tokio::sync::broadcast;
 
 //#region 🔖️Endpoints
 // 🧱️ `ArtifactId` names the document of every envelope `envelopes_from_history_edit` rebuilds off an spr
 // log, which both actors (native and browser) read.
-use semio_framework_os_spr::ArtifactId;
+use semio_os_spr::ArtifactId;
 
 //#endregion 🔖️Endpoints
 

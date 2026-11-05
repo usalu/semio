@@ -424,7 +424,7 @@
           "additionalProperties": false,
           "required": [
             "version",
-            "directory",
+            "partition",
             "capacityBytes",
             "filesystemBytes",
             "maximumWorkspaceBytes",
@@ -460,6 +460,9 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
+            },
+            "partition": {
+              "const": "rust"
             }
           }
         },

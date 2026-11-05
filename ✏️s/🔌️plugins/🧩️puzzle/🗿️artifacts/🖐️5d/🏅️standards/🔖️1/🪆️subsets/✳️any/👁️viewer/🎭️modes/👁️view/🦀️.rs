@@ -5,10 +5,10 @@
 use crate::viewer::puzzle5d::modes::view::windows::board2d;
 
 use crate::viewer::puzzle5d::modes::view::windows::world3d;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const PUZZLE5D_VIEW_MODE_VIEW: &str = "view";
 

@@ -2,7 +2,7 @@
 //! viewer imports nothing from the editor, so it owns its labels; the macro compile-checks every locale cell.
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     pub struct BimViewerLabels {
         window_world: native_en "World", native_de "Welt", reuse_en "World", reuse_de "Welt";
         window_plan: native_en "Plan", native_de "Grundriss", reuse_en "Plan", reuse_de "Grundriss";
@@ -25,14 +25,14 @@ semio_framework_ui_locale::app_labels! {
 
 impl BimViewerLabels {
     /// 🌐️ The English and German text of one label field, read through borrowed constants (`NATIVE_EN.field` would copy the whole label set into the caller's frame at `opt-level = 0`).
-    pub fn localized(pick: fn(&Self) -> semio_framework_ui_locale::LabelText) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(pick(&Self::NATIVE_EN).as_str(), pick(&Self::NATIVE_DE).as_str())
+    pub fn localized(pick: fn(&Self) -> semio_ui_locale::LabelText) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(pick(&Self::NATIVE_EN).as_str(), pick(&Self::NATIVE_DE).as_str())
     }
 }
 
 /// 🗣️ The label set of the viewing user's locale and terminology.
-pub fn bim_viewer_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static BimViewerLabels {
-    semio_framework_plugin::resolve_labels::<BimViewerLabels>(view_state)
+pub fn bim_viewer_labels(view_state: &semio_plugin::ViewModel) -> &'static BimViewerLabels {
+    semio_plugin::resolve_labels::<BimViewerLabels>(view_state)
 }
 //#endregion 🔖️Labels
 

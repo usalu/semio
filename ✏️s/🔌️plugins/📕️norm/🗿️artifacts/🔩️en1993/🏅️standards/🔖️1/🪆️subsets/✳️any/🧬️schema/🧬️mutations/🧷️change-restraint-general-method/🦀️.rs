@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRestraintGeneralMe
         record: "ChangedRestraintGeneralMethod",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change General method 6.3.4 (0/1) of the restraint", "Halterung: Allgemeines Verfahren 6.3.4 (0/1) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change General method 6.3.4 (0/1) of the restraint", "Halterung: Allgemeines Verfahren 6.3.4 (0/1) ändern")
     }
 }
 

@@ -10,7 +10,7 @@ pub struct ChangeCutoutRodResistance { pub cutout_id: String, pub new_value: f64
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeCutoutRodResistance where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_cutout_rod_resistance::ChangeCutoutRodResistance> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cutout-rod-resistance", kind: "change-cutout-rod-resistance", record: "ChangedCutoutRodResistance" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change axial rod resistance r_ax,k of cutout {}", self.cutout_id), &format!("Axialer Stabwiderstand R_ax,k von Cutout {} ändern", self.cutout_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change axial rod resistance r_ax,k of cutout {}", self.cutout_id), &format!("Axialer Stabwiderstand R_ax,k von Cutout {} ändern", self.cutout_id)) }
     fn target(&self) -> Vec<String> { vec![self.cutout_id.clone()] }
 }
 

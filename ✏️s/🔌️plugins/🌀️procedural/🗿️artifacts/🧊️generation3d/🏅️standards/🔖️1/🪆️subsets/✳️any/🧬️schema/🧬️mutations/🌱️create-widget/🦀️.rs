@@ -8,7 +8,8 @@ use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️CreateWidget
 /// ➕ Full initial payload for a new widget, placed at `index` if no widget with the same id
 /// already exists (upsert-by-id, matching the widgets delta's own dedupe rule).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -23,16 +24,16 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         use semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name;
         use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
         let id = semio_s_artifact_procedural_3d_model::widget_id(&self.widget);
         match &self.widget {
             Widget::Neuron { neuron_kind, .. } => {
                 let name = |labels: &'static Generation3dLabels| generation3d_catalogue_name(labels, neuron_kind, neuron_kind).to_string();
-                semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert \"{}\" ({id})", name(&Generation3dLabels::NATIVE_EN)), &format!("\"{}\" ({id}) einfügen", name(&Generation3dLabels::NATIVE_DE)))
+                semio_ui_locale::LocalizedLabel::native(&format!("Insert \"{}\" ({id})", name(&Generation3dLabels::NATIVE_EN)), &format!("\"{}\" ({id}) einfügen", name(&Generation3dLabels::NATIVE_DE)))
             }
-            _ => semio_framework_ui_locale::LocalizedLabel::native(&format!("Create widget \"{id}\""), &format!("Widget \"{id}\" erstellen")),
+            _ => semio_ui_locale::LocalizedLabel::native(&format!("Create widget \"{id}\""), &format!("Widget \"{id}\" erstellen")),
         }
     }
 

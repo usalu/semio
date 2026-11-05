@@ -101,27 +101,27 @@ impl Puzzle3dKindWeightWork {
 
 }
 
-impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dKindWeightWork {
+impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dKindWeightWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
 
-    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let catalogs = snapshot.typed().meta.kind_catalogs.as_ref()?;
         let count = if self.tool_id == "setObjectKindWeight" { catalogs.objects.len() } else { catalogs.vortices.len() };
         let items = count.checked_mul(4)?.checked_add(3)?;
         (count <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS && items <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         semio_s_plugin_puzzle_retained::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         match self.stage {
             Puzzle3dKindWeightStage::Catalog => {
                 let catalogs = snapshot.typed().meta.kind_catalogs.as_ref().ok_or_else(|| Fault::from("puzzle3d-kind-weight-catalog-owner"))?;
@@ -202,7 +202,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dKindWeightStage::Publish => {
                 self.stage = Puzzle3dKindWeightStage::Complete;
                 if self.ignored {
-                    return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::default()));
+                    return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::default()));
                 }
                 let catalogs = snapshot.typed().meta.kind_catalogs.as_ref().ok_or_else(|| Fault::from("puzzle3d-kind-weight-catalog-owner"))?;
                 let object_ids: Vec<String> = catalogs.objects.iter().map(|entry| entry.id.clone()).collect();
@@ -212,7 +212,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 let mut object_weights = config.object_kind_weights.clone();
                 let mut joint_weights = config.vortex_kind_weights.clone();
                 puzzle3d_apply_distribution_weight(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids, self.tool_id, kind_id, object_kind_id, self.requested);
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     config_mutations: vec![
                         Puzzle3dConfigMutation::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights::from_map(&object_weights)),
                         Puzzle3dConfigMutation::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights::from_map(&joint_weights)),

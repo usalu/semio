@@ -23,11 +23,11 @@ pub const ASSEMBLY_TRIPLET_INDEX_SPACE: usize = semio_s_fem_sparse::SPARSE_INDEX
 pub type AssemblyOrder<T> = PagedList<T, ASSEMBLY_TRIPLET_INDEX_SPACE>;
 
 pub fn encode_value<T: semio_framework_value::ToValue>(value: &T) -> Vec<u8> {
-    semio_framework_os_pack::pack_rt::encode_wire_value(&value.to_value())
+    semio_os_pack::pack_rt::encode_wire_value(&value.to_value())
 }
 
 pub fn decode_value<T: semio_framework_value::FromValue>(bytes: &[u8]) -> Result<T, String> {
-    let value = semio_framework_os_pack::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
+    let value = semio_os_pack::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
     T::from_value(value).map_err(|error| error.to_string())
 }
 

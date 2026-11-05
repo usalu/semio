@@ -16,8 +16,8 @@ pub struct AddGeometry {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddGeometry where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::remove_geometry::RemoveGeometry> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "geometry", kind: "add-geometry", record: "AddedGeometry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create geometry \"{}\"", self.geometry.id), &format!("Geometrie \"{}\" erstellen", self.geometry.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create geometry \"{}\"", self.geometry.id), &format!("Geometrie \"{}\" erstellen", self.geometry.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.geometry.id.clone()]

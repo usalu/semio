@@ -3,7 +3,7 @@
 use crate::{with_clock, now_ms, view_write_events, DragPreview, FieldWrite, GhostPreview, GhostSource, LaneEvent, LanePresence, LaneTransient, NormTransient, PeerDrag};
 use crate::direct_manipulation::{complete_preview, derived_yaw, standing_pose, handle_placed_fields, is_placement_write, insert_edit, snap_point, InsertSpec, key_intent, DragEffect, DragEvent, DragPhase, DragState, HandleDragTool, Key, KeyIntent, Modifiers};
 use crate::{dispatch_live_command, resolve_view_steps, LiveCommand, LiveOutcome, NormEdit, NormRetainedEditor};
-use semio_framework_plugin::{ArtifactView, Emit, Fault, NoConfigMutation, PresenceView, TransientView};
+use semio_plugin::{ArtifactView, Emit, Fault, NoConfigMutation, PresenceView, TransientView};
 use semio_framework_value::{DslValue, FromValue};
 use semio_s_plugin_norm_structural_scene::projection::ViewOptions;
 use semio_s_plugin_norm_structural_scene::projection_kit::{placements_of, Placement as PlacedRow};
@@ -258,7 +258,7 @@ pub fn committed_scene<A: NormLiveEditor>(document: &A::Snapshot) -> std::sync::
 }
 
 fn fault(code: &'static str, message: String) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message)
 }
 
 /// 📈️ The writes of a value typed into the table-twin row of a diagram marker (`350 cm`) among `diagrams`: `None` when the gesture does not address a marker grip, `Some(None)` when it addresses one without a committing Enter, an unknown marker or a refused value; the unit-aware parse, limits and quantisation are those of [`marker_row_commit`](crate::entity_editing::marker_row_commit), so a typed row and a drag released at that value are one commit.
@@ -381,7 +381,7 @@ where
 }
 
 /// 🍽️ The context menu of a norm editor for a request: the pure rows of [`context_menu_items`] over the document tree, the published host context and the governing check of the report; `german` is the language of the viewer.
-pub fn live_context_menu<A: NormRetainedEditor>(request: &semio_framework_plugin::ContextMenuRequest, document: &A::Snapshot, german: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec>
+pub fn live_context_menu<A: NormRetainedEditor>(request: &semio_plugin::ContextMenuRequest, document: &A::Snapshot, german: bool) -> Vec<semio_plugin::ContextMenuItemSpec>
 where
     A::Snapshot: semio_framework_value::ToValue,
 {
@@ -493,7 +493,7 @@ where
 }
 
 /// 🗺️ The interaction topology of a live editor for `ArtifactEditor::interaction_topology`: the entities of its scene, the rows of its outliner collections and its check rows, in the interaction `domain`, so the framework's `selectAll` needs no payload.
-pub fn live_interaction_topology<A: NormLiveEditor>(document: &A::Snapshot, domain: &str) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError>
+pub fn live_interaction_topology<A: NormLiveEditor>(document: &A::Snapshot, domain: &str) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError>
 where
     A::Snapshot: semio_framework_value::ToValue,
 {
@@ -503,7 +503,7 @@ where
 }
 
 /// 🔗️ The view effects of the click on check row `check`: the framework selection of its owner entity in the interaction `domain` (the viewport then frames it, the lane carries the check); none for a document-level check or an unknown row.
-pub fn live_check_focus_effects<A: NormLiveEditor>(document: &A::Snapshot, check: Option<u32>, domain: &str) -> Vec<semio_framework_plugin::Effect> {
+pub fn live_check_focus_effects<A: NormLiveEditor>(document: &A::Snapshot, check: Option<u32>, domain: &str) -> Vec<semio_plugin::Effect> {
     let Some(index) = check else { return Vec::new() };
     let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
     crate::check_selection_effect(domain, &report, index as usize).into_iter().collect()
@@ -534,7 +534,7 @@ macro_rules! norm_live_commands {
                 pub gesture_json: Option<String>,
                 pub insert_json: Option<String>,
             }
-            pub fn handle(payload: &SetFields, doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
+            pub fn handle(payload: &SetFields, doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
                 $crate::live_set_fields::<$app>(doc.snapshot, &payload.writes_json, payload.gesture_json.as_deref(), payload.insert_json.as_deref())
             }
         }
@@ -547,25 +547,25 @@ macro_rules! norm_live_commands {
                 pub option_index: u32,
                 pub insert_json: Option<String>,
             }
-            pub fn handle(_payload: &PreviewRemedy, _doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
-                Ok(semio_framework_plugin::Emit::default())
+            pub fn handle(_payload: &PreviewRemedy, _doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
+                Ok(semio_plugin::Emit::default())
             }
         }
         pub mod clear_preview {
             #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
             #[dsl(keyword = "clear-preview")]
             pub struct ClearPreview {}
-            pub fn handle(_payload: &ClearPreview, _doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
-                Ok(semio_framework_plugin::Emit::default())
+            pub fn handle(_payload: &ClearPreview, _doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
+                Ok(semio_plugin::Emit::default())
             }
         }
         pub mod cancel_evaluation {
             #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
             #[dsl(keyword = "cancel-evaluation")]
             pub struct CancelEvaluation {}
-            pub fn handle(_payload: &CancelEvaluation, _doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
+            pub fn handle(_payload: &CancelEvaluation, _doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
                 <<$app as $crate::NormRetainedEditor>::Family as semio_s_plugin_norm_compliance::NormFamily>::cancel_live();
-                Ok(semio_framework_plugin::Emit::default())
+                Ok(semio_plugin::Emit::default())
             }
         }
         pub mod viewport_act {
@@ -576,8 +576,8 @@ macro_rules! norm_live_commands {
                 pub text: Option<String>,
                 pub number: Option<f64>,
             }
-            pub fn handle(_payload: &ViewportAct, _doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
-                Ok(semio_framework_plugin::Emit::default())
+            pub fn handle(_payload: &ViewportAct, _doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
+                Ok(semio_plugin::Emit::default())
             }
         }
         pub mod copy_entities {
@@ -587,7 +587,7 @@ macro_rules! norm_live_commands {
                 pub collection: String,
                 pub ids_json: String,
             }
-            pub fn handle(payload: &CopyEntities, doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
+            pub fn handle(payload: &CopyEntities, doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
                 $crate::live_copy_entities::<$app>(doc.snapshot, &payload.collection, &payload.ids_json)
             }
         }
@@ -598,8 +598,8 @@ macro_rules! norm_live_commands {
                 pub collection: String,
                 pub ids_json: String,
             }
-            pub fn handle(payload: &DuplicateEntities, doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
-                let command = $crate::LiveCommand::parse("duplicateEntities", Some(&$crate::entities_args(&payload.collection, &payload.ids_json)?)).map_err(|message| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.entity-args"), message))?;
+            pub fn handle(payload: &DuplicateEntities, doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
+                let command = $crate::LiveCommand::parse("duplicateEntities", Some(&$crate::entities_args(&payload.collection, &payload.ids_json)?)).map_err(|message| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("norm.entity-args"), message))?;
                 $crate::live_entity_edit::<$app>(doc.snapshot, &command)
             }
         }
@@ -610,7 +610,7 @@ macro_rules! norm_live_commands {
                 pub clip_json: String,
                 pub at: Option<u32>,
             }
-            pub fn handle(payload: &PasteEntities, doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
+            pub fn handle(payload: &PasteEntities, doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
                 $crate::live_entity_edit::<$app>(doc.snapshot, &$crate::LiveCommand::PasteEntities { clip_json: payload.clip_json.clone(), at: payload.at.map(|at| at as usize) })
             }
         }
@@ -621,8 +621,8 @@ macro_rules! norm_live_commands {
                 pub collection: String,
                 pub ids_json: String,
             }
-            pub fn handle(payload: &DeleteEntities, doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
-                let command = $crate::LiveCommand::parse("deleteEntities", Some(&$crate::entities_args(&payload.collection, &payload.ids_json)?)).map_err(|message| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.entity-args"), message))?;
+            pub fn handle(payload: &DeleteEntities, doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
+                let command = $crate::LiveCommand::parse("deleteEntities", Some(&$crate::entities_args(&payload.collection, &payload.ids_json)?)).map_err(|message| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("norm.entity-args"), message))?;
                 $crate::live_entity_edit::<$app>(doc.snapshot, &command)
             }
         }
@@ -636,8 +636,8 @@ macro_rules! norm_live_commands {
                 pub over: Option<String>,
                 pub step: Option<f64>,
             }
-            pub fn handle(payload: &MoveEntity, doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
-                let target = $crate::move_target(payload.to, payload.over.as_deref(), payload.step).map_err(|message| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.entity-args"), message))?;
+            pub fn handle(payload: &MoveEntity, doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
+                let target = $crate::move_target(payload.to, payload.over.as_deref(), payload.step).map_err(|message| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("norm.entity-args"), message))?;
                 $crate::live_entity_edit::<$app>(doc.snapshot, &$crate::LiveCommand::MoveEntity { path: payload.path.clone(), id: payload.id.clone(), target })
             }
         }
@@ -648,9 +648,9 @@ macro_rules! norm_live_commands {
                 pub units_json: Option<String>,
                 pub reason: String,
             }
-            pub fn handle(_payload: &EvaluateUnits, doc: &semio_framework_plugin::ArtifactView<'_, <$app as semio_framework_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::Emit<<$app as semio_framework_plugin::ArtifactEditor>::Mutation, semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
+            pub fn handle(_payload: &EvaluateUnits, doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
                 let _ = <<$app as $crate::NormRetainedEditor>::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(doc.snapshot);
-                Ok(semio_framework_plugin::Emit::default())
+                Ok(semio_plugin::Emit::default())
             }
         }
     };
@@ -680,11 +680,11 @@ macro_rules! norm_live_editor {
                 }
             }
 
-            fn live_handles(document: &<$app as semio_framework_plugin::ArtifactEditor>::Snapshot, selection: &[semio_s_plugin_norm_structural_scene::EntityRef]) -> Vec<semio_s_plugin_norm_structural_scene::Handle> {
+            fn live_handles(document: &<$app as semio_plugin::ArtifactEditor>::Snapshot, selection: &[semio_s_plugin_norm_structural_scene::EntityRef]) -> Vec<semio_s_plugin_norm_structural_scene::Handle> {
                 $handles(document, selection)
             }
 
-            fn live_entities(document: &<$app as semio_framework_plugin::ArtifactEditor>::Snapshot) -> Vec<semio_s_plugin_norm_structural_scene::EntityRef> {
+            fn live_entities(document: &<$app as semio_plugin::ArtifactEditor>::Snapshot) -> Vec<semio_s_plugin_norm_structural_scene::EntityRef> {
                 $entities(document)
             }
 
@@ -692,16 +692,16 @@ macro_rules! norm_live_editor {
                 $palette()
             }
 
-            fn live_resolve(document: &<$app as semio_framework_plugin::ArtifactEditor>::Snapshot, edit: &$crate::NormEdit) -> Result<Vec<<$app as semio_framework_plugin::ArtifactEditor>::Mutation>, String> {
+            fn live_resolve(document: &<$app as semio_plugin::ArtifactEditor>::Snapshot, edit: &$crate::NormEdit) -> Result<Vec<<$app as semio_plugin::ArtifactEditor>::Mutation>, String> {
                 $resolve(document, edit)
             }
 
-            fn live_scene(document: &<$app as semio_framework_plugin::ArtifactEditor>::Snapshot, view: &semio_s_plugin_norm_structural_scene::projection::ViewOptions) -> semio_s_plugin_norm_structural_scene::StructuralScene {
+            fn live_scene(document: &<$app as semio_plugin::ArtifactEditor>::Snapshot, view: &semio_s_plugin_norm_structural_scene::projection::ViewOptions) -> semio_s_plugin_norm_structural_scene::StructuralScene {
                 let report = <<$app as $crate::NormRetainedEditor>::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
                 ($scene)(document, &*report, view)
             }
             $(
-                fn live_diagrams(document: &<$app as semio_framework_plugin::ArtifactEditor>::Snapshot) -> Vec<semio_s_plugin_norm_structural_scene::Diagram2d> {
+                fn live_diagrams(document: &<$app as semio_plugin::ArtifactEditor>::Snapshot) -> Vec<semio_s_plugin_norm_structural_scene::Diagram2d> {
                     let report = <<$app as $crate::NormRetainedEditor>::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
                     ($diagrams)(document, &*report)
                 }

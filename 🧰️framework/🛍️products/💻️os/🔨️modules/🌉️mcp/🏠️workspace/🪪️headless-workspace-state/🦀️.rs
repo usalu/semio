@@ -5,26 +5,26 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::OnceLock;
-use semio_framework_os_mcp_catalog::catalog::Catalog;
-use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_hub_remote::remote::HubRemoteBinding;
-use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
-use semio_framework_os_mcp_probe_document::probe_document::{PROBE_SCHEMA, ProbeStore, close_probe_store_to_terminal};
-use semio_framework_os_mcp_routing::routing_and_shell_routed::{PluginArtifactBinding, WorkspaceCatalog};
-use semio_framework_os_mcp_schema::schema::{UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};
-use semio_framework_os_mcp_shell_channel::shell_channel::SessionChannelBinding;
-use semio_framework_os_mcp_wire::protocol::ResourceContent;
+use semio_os_mcp_catalog::catalog::Catalog;
+use semio_os_mcp_dispatch::actions::ActionAdapter;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_hub_remote::remote::HubRemoteBinding;
+use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_os_mcp_probe_document::probe_document::{PROBE_SCHEMA, ProbeStore, close_probe_store_to_terminal};
+use semio_os_mcp_routing::routing_and_shell_routed::{PluginArtifactBinding, WorkspaceCatalog};
+use semio_os_mcp_schema::schema::{UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};
+use semio_os_mcp_shell_channel::shell_channel::SessionChannelBinding;
+use semio_os_mcp_wire::protocol::ResourceContent;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_hub_remote::remote::NativeHubBindingDriver;
+use semio_os_mcp_hub_remote::remote::NativeHubBindingDriver;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_routing::routing_and_shell_routed::PluginComponentSource;
+use semio_os_mcp_routing::routing_and_shell_routed::PluginComponentSource;
 
 //#region 🔖️HeadlessWorkspace
 
 /// 🏠️ The real `GatewayBackend` — see this file's module doc for the shape and the honest gaps.
 pub struct HeadlessWorkspace {
-    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
     #[cfg(test)]
     pub test_discovery:Option<Vec<semio_framework::PackageDescriptor>>,
     pub(crate) artifact_host: store::sync::ArtifactHost,

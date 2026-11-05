@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-os-store-durable-group-tests"
+name = "semio-os-store-durable-group-tests"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -31,24 +31,24 @@ semio-framework-dsl-record = { path = "../../../../../../../../../../🔨️modu
 semio-framework-hash = { path = "../../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-payload = { workspace = true }
-semio-framework-os-pack = { path = "../../../../../../../🎒️pack/📦️packages/🦀️rust" }
-semio-framework-os-semio = { path = "../../../../../../../🧬️semio/📦️packages/🦀️rust" }
-semio-framework-os-spr = { path = "../../../../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-document = { path = "../../../../../../🧾️document/📦️packages/🦀️rust" }
-semio-framework-os-store-durable-group = { path = "../../../../📦️packages/🦀️rust" }
-semio-framework-os-store-durable-group-wire = { path = "../../../../📜️wire/📦️packages/🦀️rust" }
-semio-framework-os-store-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-owners = { path = "../../../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
-semio-framework-os-store-envelope = { path = "../../../../../../✉️envelope/📦️packages/🦀️rust" }
-semio-framework-os-store-initialization-runtime = { path = "../../../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item = { path = "../../../../../../🎮️one-item/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-publication = { path = "../../../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
-semio-framework-os-store-snapshot-clone = { path = "../../../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
-semio-framework-os-store-space-member = { path = "../../../../../👥️space-member/📦️packages/🦀️rust" }
-semio-framework-os-store-testing-doubles = { path = "../../../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
-semio-framework-os-store-testing-fixtures = { path = "../../../../../../🧪️testing/📦️packages/🦀️rust" }
-semio-framework-os-store-testing-prelude = { path = "../../../../../../🧪️testing/🧭️prelude/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-pack = { path = "../../../../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-os-semio = { path = "../../../../../../../🧬️semio/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-document = { path = "../../../../../../🧾️document/📦️packages/🦀️rust" }
+semio-os-store-durable-group = { path = "../../../../📦️packages/🦀️rust" }
+semio-os-store-durable-group-wire = { path = "../../../../📜️wire/📦️packages/🦀️rust" }
+semio-os-store-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-os-store-engine-owners = { path = "../../../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-os-store-envelope = { path = "../../../../../../✉️envelope/📦️packages/🦀️rust" }
+semio-os-store-initialization-runtime = { path = "../../../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-os-store-one-item = { path = "../../../../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-os-store-one-item-publication = { path = "../../../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-os-store-snapshot-clone = { path = "../../../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
+semio-os-store-space-member = { path = "../../../../../👥️space-member/📦️packages/🦀️rust" }
+semio-os-store-testing-doubles = { path = "../../../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
+semio-os-store-testing-fixtures = { path = "../../../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-os-store-testing-prelude = { path = "../../../../../../🧪️testing/🧭️prelude/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-json-retained-schema = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
@@ -60,8 +60,8 @@ serde_json = "1.0.140"
 [dev-dependencies]
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-os-store-durable-group = { path = "../../../../📦️packages/🦀️rust", features = ["durable-group-testing"] }
-semio-framework-os-store-engine-stage = { path = "../../../../../../⚙️engine/🗄️stage/📦️packages/🦀️rust" }
+semio-os-store-durable-group = { path = "../../../../📦️packages/🦀️rust", features = ["durable-group-testing"] }
+semio-os-store-engine-stage = { path = "../../../../../../⚙️engine/🗄️stage/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-replication-edit = { path = "../../../../../../../../../../🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust" }

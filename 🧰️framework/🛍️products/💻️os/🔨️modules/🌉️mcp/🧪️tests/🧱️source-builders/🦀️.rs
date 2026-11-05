@@ -5,7 +5,7 @@
 //! plugin crates as dev-dependencies to source one was considered and rejected: both crates live
 //! under `✏️s/🔌️plugins/**`, territory the peer `MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME` ticket holds
 //! exclusive through its A2/M0-M8 packets (`📌️important.md`'s collision matrix, "wait G3"), and
-//! `cad`/`note` transitively pull in `semio-framework-plugin(-host)`, which `📓️terra-P3-report.md`
+//! `cad`/`note` transitively pull in `semio-plugin(-host)`, which `📓️terra-P3-report.md`
 //! §7 already found does not compile workspace-wide right now (108 errors, the peer's in-flight WIT
 //! rewrite). Pulling either crate in — even as a dev-dependency — would make THIS crate's own build
 //! hostage to that unrelated, unfinished rewrite, exactly what `📓️terra-P1a-report.md` §5's
@@ -37,11 +37,11 @@ use semio_framework::manifest::WindowKinds;
 use semio_framework::manifest;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_locale::LocalizedLabel;
 use crate::core_capabilities::core_tool_capabilities;
-use semio_framework_os_mcp_catalog::catalog::CatalogSource;
-use semio_framework_os_mcp_catalog::conformance::EvalCase;
+use semio_os_mcp_catalog::catalog::CatalogSource;
+use semio_os_mcp_catalog::conformance::EvalCase;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 
@@ -54,7 +54,7 @@ pub fn catalog_contract_descriptor() -> (PackageDescriptor, Vec<u8>) {
     let json = fixture_text!("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📦️catalog-package/🔣️.json");
     let descriptor: PackageDescriptor = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog package contract");
     assert_eq!(descriptor, serde_json::from_str::<PackageDescriptor>(json).expect("independent catalog package parser"));
-    let bytes = semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value());
+    let bytes = semio_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value());
     (descriptor, bytes)
 }
 
@@ -91,7 +91,7 @@ fn wrap_descriptor(package_id: &str, manifest: manifest::PluginManifest) -> Pack
         capability_requests: Vec::new(),
         extension_points: Vec::new(),
         execution: ExecutionMode::Isolated,
-        execution_protocol: manifest::ExecutionProtocol { app_channel_version: semio_framework_os_kernel::os_spr::CHANNEL_VERSION },
+        execution_protocol: manifest::ExecutionProtocol { app_channel_version: semio_os_kernel::os_spr::CHANNEL_VERSION },
         quotas: Default::default(),
         contributions: ContributionSet::default(),
         assets: Vec::new(),

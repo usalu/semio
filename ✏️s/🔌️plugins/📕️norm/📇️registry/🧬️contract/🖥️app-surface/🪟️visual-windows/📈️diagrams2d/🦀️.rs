@@ -2,8 +2,8 @@
 //!
 //! 🔗️ See `NORM/🎬️structural-scene/🧬️schema/📈️diagram2d` for the schema and `NORM/🎬️structural-scene/📈️diagram-kit` for the geometry builders.
 
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::Locale;
 use semio_s_plugin_norm_structural_scene::{Axis, AxisRef, AxisScale, Diagram2d, Dash, EntityRef, Fill, Hatch, LocalizedCopy, Marker, MarkerShape, Series, SectionProfile, TickRule, Tone, Vec2};
 
 #[path = "🎯️hit-test/🦀️.rs"]

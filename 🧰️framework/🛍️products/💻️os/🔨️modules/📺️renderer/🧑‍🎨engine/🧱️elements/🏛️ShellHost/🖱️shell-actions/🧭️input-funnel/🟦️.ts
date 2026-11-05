@@ -146,7 +146,8 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
     return handleSetActivePanelTabAction({ hostApp, updateSpacePanel, mobile, dispatch, session, action, refuse, applied });
   }
 
-  let { targetSession, hostWindowId, targetSpawnedId } = resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWindowIdRef, spawnedIdsRef, session, action });
+  let { targetSession, hostWindowId, targetSpawnedId, targetContributor } = resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWindowIdRef, spawnedIdsRef, contributorInstancesRef: core.contributorInstancesRef, session, action });
+  if (action.controllerId.startsWith("contributor:") && !targetContributor) return refuse("owner-mismatch", "extension actor lease is no longer mounted");
   const undoOutcome = routeRemoteUndo({ inferenceHistoryByRuntimeKeyRef, openDocumentSessionsRef, historyCanUndo, localHistoryOrderRef, verifiedSessionAuthorityRef, ensureBackboneWorker, action, targetSession, refuse, applied });
   if (undoOutcome !== undefined) return undoOutcome;
   if (action.action === "undo" || action.action === "redo") {
@@ -170,7 +171,9 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
     return refuse("owner-mismatch", "effect owner is not current");
   }
 
-  const { baseDispatchViewState, dispatchWindowId, dispatchExtraInstances } = buildDispatchViewState({ spawnedIdsRef, extraWindowInstancesRef, applyLeftoverInteractionView, uiLocale, uiTerminology, identityRef, activeUtilityByWindowIdRef, activeWindowIdRef, treeWindowSchedulerRef, hostWindowId, targetSpawnedId, targetSession, action });
+  const { baseDispatchViewState, dispatchWindowId, dispatchExtraInstances } = targetContributor
+    ? { baseDispatchViewState: targetSession.viewState, dispatchWindowId: "extension", dispatchExtraInstances: [{ id: "extension", windowKindId: targetSession.viewState.activeWindowKindId! }] }
+    : buildDispatchViewState({ spawnedIdsRef, extraWindowInstancesRef, applyLeftoverInteractionView, uiLocale, uiTerminology, identityRef, activeUtilityByWindowIdRef, activeWindowIdRef, treeWindowSchedulerRef, hostWindowId, targetSpawnedId, targetSession, action });
   const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
   if (!dispatchViewState) {
     return refuse("view-state-unresolved", `window=${dispatchWindowId ?? ""}`);

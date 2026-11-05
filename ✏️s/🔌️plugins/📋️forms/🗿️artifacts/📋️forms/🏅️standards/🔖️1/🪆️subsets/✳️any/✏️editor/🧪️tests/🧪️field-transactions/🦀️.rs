@@ -9,8 +9,8 @@ use crate::editor::forms::unit_tests::context::{dispatch, forms_app, OwnedFormsA
 use crate::editor::forms::FormsCommand;
 use crate::FormQuestion;
 use semio_framework::kernel::{HistoryEntry, HistoryTimeTravelStage, Severity};
-use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
-use semio_framework_plugin::{DslValue, PluginApp};
+use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+use semio_plugin::{DslValue, PluginApp};
 
 //#region 🔖️Harness
 fn object(entries: Vec<(&str, DslValue)>) -> DslValue {
@@ -33,14 +33,14 @@ async fn patch(app: &mut OwnedFormsApp, id: &str, field: &str, value: f64, press
     if let Some((gesture, commit)) = press {
         args.extend([("gesture", DslValue::String(gesture.into())), ("commit", DslValue::Bool(commit))]);
     }
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the field dispatch is admitted");
-    settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the field dispatch settles");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(object(args)), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the field dispatch is admitted");
+    settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the field dispatch settles");
 }
 
 /// 🧯️ The host cancel of a press (`blur`): it carries no value and is settled by the runtime itself.
 async fn cancel(app: &mut OwnedFormsApp, gesture: &str) {
     let args = object(vec![("questionIds", DslValue::Array(Vec::new())), ("field", DslValue::String("max".into())), ("gesture", DslValue::String(gesture.into())), ("abort", DslValue::String("blur".into()))]);
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the cancel is admitted");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the cancel is admitted");
 }
 
 /// 🧾️ The history rows that carry a document edit, oldest first.
@@ -51,7 +51,7 @@ async fn edit_rows(app: &mut OwnedFormsApp) -> Vec<HistoryEntry> {
 }
 
 async fn history_edit(app: &mut OwnedFormsApp, verb: &str, args: Vec<(&str, DslValue)>) -> DslValue {
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(object(args)), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
 }
 
 async fn accepted(app: &mut OwnedFormsApp, verb: &str, args: Vec<(&str, DslValue)>) {
@@ -68,7 +68,7 @@ async fn pump_time_travel(app: &mut OwnedFormsApp, done: impl Fn(Option<HistoryT
         if done(time_travel_stage(app).await) {
             return;
         }
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel_stage(app).await);
@@ -78,8 +78,8 @@ async fn pump_time_travel(app: &mut OwnedFormsApp, done: impl Fn(Option<HistoryT
 fn assert_one_field_leaf(row: &HistoryEntry, id: &str, en: &str, de: &str) {
     assert_eq!(row.mutations.len(), 1, "one field edit is one leaf: {:?}", row.mutations);
     let label = &row.mutations[0].label;
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), format!("Change {en} of question \"{id}\""));
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), format!("{de} der Frage \"{id}\" ändern"));
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), format!("Change {en} of question \"{id}\""));
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), format!("{de} der Frage \"{id}\" ändern"));
 }
 //#endregion 🔖️Harness
 
@@ -120,7 +120,7 @@ async fn a_history_edit_freezes_an_open_press_with_zero_trace() {
     patch(&mut app, &id, "max", 90.0, Some(("q.max:6", false))).await;
     accepted(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(target))]).await;
     let args = object(vec![("questionIds", DslValue::Array(vec![DslValue::String(id.clone())])), ("field", DslValue::String("max".into())), ("value", DslValue::float(80.0)), ("gesture", DslValue::String("q.max:6".into())), ("commit", DslValue::Bool(false))]);
-    let Err(refused) = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await else { panic!("the frozen press keeps moving: its ticks are refused") };
+    let Err(refused) = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await else { panic!("the frozen press keeps moving: its ticks are refused") };
     assert_eq!(refused.code.0.as_str(), "timeTravel.frozen");
     accepted(&mut app, "historyEditExit", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
@@ -186,7 +186,7 @@ async fn a_history_edit_of_a_scrubbed_value_replays_downstream_and_overwrites() 
     let strip = |question: FormQuestion| FormQuestion { id: String::new(), ..question };
     assert_eq!(strip(question(&app, &id)), strip(question(&fresh, &fresh_id)), "the edited log equals a fresh run of the edited presses");
     let rows = edit_rows(&mut app).await;
-    let minimum = rows.iter().find(|row| row.mutations.iter().any(|mutation| mutation.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).starts_with("Change minimum"))).expect("the minimum's row survives the overwrite");
+    let minimum = rows.iter().find(|row| row.mutations.iter().any(|mutation| mutation.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).starts_with("Change minimum"))).expect("the minimum's row survives the overwrite");
     assert_one_field_leaf(minimum, &id, "minimum", "Minimum");
 }
 //#endregion ⏪️ReplayLaws

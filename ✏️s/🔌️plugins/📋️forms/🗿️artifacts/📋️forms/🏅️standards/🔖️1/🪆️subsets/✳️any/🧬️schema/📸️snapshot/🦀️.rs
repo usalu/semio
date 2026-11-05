@@ -92,3 +92,8 @@ impl Default for FormsSnapshot {
 // with them.
 
 
+
+/// 🧬️ Borrows derived child state for either Forms app surface.
+pub fn forms_child_restore_projection(snapshot: &FormsSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("forms.child-projection"), error.to_string()))
+}

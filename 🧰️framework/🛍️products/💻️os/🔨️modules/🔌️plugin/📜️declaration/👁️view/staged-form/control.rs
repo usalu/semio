@@ -1,5 +1,5 @@
 //! ⌨️ Native scalar controls consume exact prepared bindings under explicit original receiving demands.
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use std::mem::{ManuallyDrop,size_of};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};

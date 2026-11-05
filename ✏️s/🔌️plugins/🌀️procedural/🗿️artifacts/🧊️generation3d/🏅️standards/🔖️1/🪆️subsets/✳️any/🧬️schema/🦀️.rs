@@ -1,6 +1,6 @@
 //! 🧬️ Generation3d artifact schema — every field of the artifact with its state class.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate self as semio_s_artifact_procedural_3d_model;
 
 #[path = "🧭️transforms/🦀️.rs"]
@@ -9,12 +9,12 @@ pub mod transforms;
 
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::snapshot::Generation3dSnapshot;
-use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
+pub use semio_framework_artifact_playbook_playbook::{GenerationPlayRoot,GenerationPlayState,FormGeneration};
 
 use ::semio_framework_schema::ArtifactSchema;
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
-use semio_framework_plugin::ActionDescriptor;
+use {semio_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_plugin::MediaClass,semio_plugin::MediaForm,semio_plugin::MediaType,semio_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
+use semio_plugin::ActionDescriptor;
 
 //#region 🔖️Generation3dArtifact
 /// 🙂️ Generation3dArtifact facet type.
@@ -235,9 +235,9 @@ pub fn generation_host_snapshot_for(host_snapshot: &FlowHostSnapshot, generation
 /// `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), so a host is CLOSED through
 /// [`FlowHost::retire_cold`], never dropped. This scope is the ONLY way generation3d builds one —
 /// there is no `host_from_host_snapshot(…) -> FlowHost` to leak.
-pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> semio_framework_os_flow::FlowHostScopeOutcome<R> {
+pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> semio_os_flow::FlowHostScopeOutcome<R> {
     FlowHost::with_host_snapshot(host_snapshot, |host| {
-        host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
+        host.set_neuron_kind_info_map(semio_os_flow::flow_neuron_kind_info_map());
         body(host)
     })
 }
@@ -256,10 +256,10 @@ pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSes
 /// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
 /// host because every real caller needs it mutably (`sync`/`tick`), which a captured `&mut` could
 /// not provide while the scope itself holds the session borrow.
-pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<semio_framework_os_flow::FlowHostScopeOutcome<R>, (semio_framework_value::ValueError, FlowHost)> {
+pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<semio_os_flow::FlowHostScopeOutcome<R>, (semio_framework_value::ValueError, FlowHost)> {
     let mut host = host_with_session(host_snapshot, session, grant)?;
     let result = body(&mut host, session);
-    Ok(semio_framework_os_flow::FlowHostScopeOutcome { output: result, close: host.retire_cold() })
+    Ok(semio_os_flow::FlowHostScopeOutcome { output: result, close: host.retire_cold() })
 }
 
 
@@ -318,8 +318,8 @@ pub const GENERATION3D_IO_IMPORT_ACCEPT: &str = "generation3d.io.import-accept";
 pub const GENERATION3D_WIDGET_ADD: &str = "generation3d.widget.add";
 
 /// 📣️ The localized notices of the document-level refusals both surfaces raise (design §20.12).
-pub fn generation3d_document_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn generation3d_document_fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+    use semio_ui_locale::LocalizedLabel;
     static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 4]> = std::sync::LazyLock::new(|| {
         [
             (GENERATION3D_CHILD_PROJECTION, LocalizedLabel::native("The document's composed parts cannot be restored.", "Die zusammengesetzten Teile des Dokuments können nicht wiederhergestellt werden.")),
@@ -338,7 +338,7 @@ pub fn generation3d_document_fault_notices() -> &'static [(&'static str, semio_f
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.generation".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D Generation", "3D-Generierung"),
+        label: semio_ui_locale::LocalizedLabel::native("3D Generation", "3D-Generierung"),
         source_format: "generation.3d".into(),
         component_kind: "generation3d".into(),
         dimension: "3d".into(),
@@ -373,7 +373,6 @@ pub fn generation3d_action(action: &str, args: Option<semio_framework_value::Dsl
 pub use semio_framework_artifact_flow_flow::CameraJson;
 pub use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 pub use semio_framework_artifact_flow_flow::Widget;
-pub use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 //#endregion 🔁️Re-exports
 
 #[path = "."]

@@ -12,8 +12,8 @@ pub struct ChangeAnnex {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeAnnex where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_annex::ChangeAnnex> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annex", kind: "change-annex", record: "ChangeAnnex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change national annex", "Nationalen Anhang ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change national annex", "Nationalen Anhang ändern")
     }
 }
 

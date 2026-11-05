@@ -14,10 +14,10 @@ fn the_default_pane_config_snaps_to_a_visible_unit_grid() {
 #[test]
 fn the_two_panes_own_two_distinct_config_instances() {
     assert_ne!(
-        <Grid2dGridWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID,
-        <Grid2dPreviewWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID
+        <Grid2dGridWindowConfigOwner as semio_plugin::WindowConfigOwner>::WINDOW_KIND_ID,
+        <Grid2dPreviewWindowConfigOwner as semio_plugin::WindowConfigOwner>::WINDOW_KIND_ID
     );
-    assert_eq!(<Grid2dGridWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::SCHEMA, <Grid2dPreviewWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::SCHEMA);
+    assert_eq!(<Grid2dGridWindowConfigOwner as semio_plugin::WindowConfigOwner>::SCHEMA, <Grid2dPreviewWindowConfigOwner as semio_plugin::WindowConfigOwner>::SCHEMA);
 }
 
 #[test]
@@ -50,7 +50,7 @@ fn a_config_mutation_inverts_to_the_base_it_replaced() {
 
 #[test]
 fn a_config_write_without_a_window_is_refused() {
-    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(addressed_config(&view, Grid2dWindowConfigMutation::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor: 1.0 })).is_err(), "an unaddressed config write would land in the wrong pane's store");
     assert_eq!(kind_for_view(&view), None);
 }

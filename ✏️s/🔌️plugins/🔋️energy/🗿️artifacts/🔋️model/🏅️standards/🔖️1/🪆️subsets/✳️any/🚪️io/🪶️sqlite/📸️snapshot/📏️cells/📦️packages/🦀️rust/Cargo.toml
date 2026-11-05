@@ -17,6 +17,6 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-dsl-record = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }

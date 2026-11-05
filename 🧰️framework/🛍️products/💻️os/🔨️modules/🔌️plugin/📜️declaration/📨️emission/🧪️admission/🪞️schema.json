@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "values",
+    "deniedAxes",
+    "expected"
+  ],
+  "properties": {
+    "values": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "integer"
+      }
+    },
+    "deniedAxes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "depth"
+        ]
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values",
+        "sameAllocation",
+        "headerWork",
+        "bornBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "sameAllocation": {
+          "const": true
+        },
+        "headerWork": {
+          "const": 1
+        },
+        "bornBytes": {
+          "const": 0
+        },
+        "releasedBytes": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

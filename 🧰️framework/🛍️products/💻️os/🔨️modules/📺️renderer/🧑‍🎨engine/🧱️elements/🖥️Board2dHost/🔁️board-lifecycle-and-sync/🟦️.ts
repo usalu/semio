@@ -38,8 +38,13 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
     const fail = (error: unknown): void => {
       resizeObserver?.disconnect();
       unregisterBoard2dPeer(peerScope, node.controllerId, node.surfaceId, peer);
-      release();
-      if (!disposed) setSessionError(error instanceof Error ? error : new Error(String(error)));
+      let failure = error instanceof Error ? error : new Error(String(error));
+      if (!booting) {
+        try { release(); } catch (releaseError) {
+          failure = new AggregateError([failure, releaseError], `${failure.message}; release failed: ${releaseError instanceof Error ? releaseError.message : String(releaseError)}`);
+        }
+      }
+      if (!disposed) setSessionError(failure);
     };
 
     void factory.create().then((session) => {
@@ -51,7 +56,8 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
       const scheduler = createDemandFrameScheduler(() => {
         try {
           session.renderFrame();
-        } catch {
+        } catch (error) {
+          fail(error);
           return;
         }
         if (!vitalsPendingRef.current) return;
@@ -61,12 +67,6 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
       const handle = frameDemandingSessionV1(session, scheduler);
       ownerScheduler = scheduler;
       ownerHandle = handle;
-      schedulerRef.current = scheduler;
-      rawSessionRef.current = session;
-      sessionRef.current = handle;
-      peer = { session: handle, onPeerGestureEnded: (flushed) => onPeerGestureEndedRef.current(flushed) };
-      peerRef.current = peer;
-      registerBoard2dPeer(peerScope, node.controllerId, node.surfaceId, peer);
 
       const applySize = (): void => {
         const nextDpr = globalThis.devicePixelRatio || 1;
@@ -90,17 +90,23 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
         if (disposed) return;
         applySize();
         syncSessionCanvasTheme(session);
+        schedulerRef.current = scheduler;
+        rawSessionRef.current = session;
+        sessionRef.current = handle;
+        peer = { session: handle, onPeerGestureEnded: (flushed) => onPeerGestureEndedRef.current(flushed) };
+        peerRef.current = peer;
+        registerBoard2dPeer(peerScope, node.controllerId, node.surfaceId, peer);
+        resizeObserver =
+          typeof ResizeObserver === "undefined"
+            ? null
+            : new ResizeObserver(() => {
+                applySize();
+              });
+        resizeObserver?.observe(container);
         scheduler.paintNow();
         setSessionEpoch((epoch) => epoch + 1);
       };
 
-      resizeObserver =
-        typeof ResizeObserver === "undefined"
-          ? null
-          : new ResizeObserver(() => {
-              applySize();
-            });
-      resizeObserver?.observe(container);
       booting = true;
       void boot().finally(() => {
         booting = false;
@@ -192,16 +198,16 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
   }, [sessionEpoch, scene?.highlightedIdsJson]);
 
   useEffect(() => {
-    if (!scene || !board2dHostShellScope) return;
+    if (!scene) return;
     const updateOptions = () => {
-      const mode = board2dHostShellScope.selection.get();
+      const mode = board2dHostShellScope?.selection.get() ?? "replace";
       applyToSession(sessionRef.current, (session) =>
         session.setSelectionOptions?.(scene.selectionMethod, mode, scene.selectableNodes !== false, scene.selectableEdges !== false, scene.selectableHandles !== false),
       );
     };
     updateOptions();
-    return board2dHostShellScope.selection.subscribe(updateOptions);
-  }, [sessionEpoch, scene?.selectionMethod, scene?.selectableNodes, scene?.selectableEdges, scene?.selectableHandles, board2dHostShellScope]);
+    return board2dHostShellScope?.selection.subscribe(updateOptions);
+  }, [sessionEpoch, scene?.snapshotJson, scene?.selectionMethod, scene?.selectableNodes, scene?.selectableEdges, scene?.selectableHandles, board2dHostShellScope]);
 
   useEffect(() => {
     if (!scene) return;
@@ -266,9 +272,7 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
   useCanvasAppearanceSync(
     () => {
       syncSessionCanvasTheme(sessionRef.current);
-      try {
-        sessionRef.current?.renderFrame();
-      } catch {}
+      schedulerRef.current?.invalidate();
     },
     true,
     board2dHostShellScope?.rootRef.current ?? undefined,

@@ -72,16 +72,16 @@ fn solid_slab_doc() -> Fem3dSnapshot {
 #[test]
 fn fem3d_pack_agrees_with_dsl_for_bundled_default_example() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT).expect("parse default example");
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
 }
 
 #[test]
 fn fem3d_pack_agrees_with_dsl_for_fixture_documents() {
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&Fem3dSnapshot::default());
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&cantilever_fixture());
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&truss_fixture());
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&solid_slab_doc());
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&Fem3dSnapshot::default());
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&cantilever_fixture());
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&truss_fixture());
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&solid_slab_doc());
     let mut with_combination = cantilever_fixture();
     with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35)]) });
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&with_combination);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&with_combination);
 }

@@ -16,8 +16,8 @@ pub struct RemoveXmlNode {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveXmlNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "xml-node", kind: "remove-xml-node", record: "RemoveXmlNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove XML node", "XML-Knoten entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove XML node", "XML-Knoten entfernen")
     }
 
     fn target(&self) -> Vec<String> {

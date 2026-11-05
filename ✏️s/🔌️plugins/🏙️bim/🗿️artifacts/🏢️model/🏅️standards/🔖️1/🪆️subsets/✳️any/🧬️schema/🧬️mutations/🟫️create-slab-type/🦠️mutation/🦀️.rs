@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "slab-type", kind: "create-slab-type", record: "CreateSlabType" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create slab type \"{}\"", self.slab_type.name), &format!("Deckentyp \"{}\" anlegen", self.slab_type.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create slab type \"{}\"", self.slab_type.name), &format!("Deckentyp \"{}\" anlegen", self.slab_type.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

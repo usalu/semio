@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-plugin-describe"
+name = "semio-plugin-describe"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -17,7 +17,7 @@ workspace = true
 path = "../../🛂️descriptor-emission/🦀️.rs"
 
 [[bin]]
-name = "semio-framework-plugin-describe"
+name = "semio-plugin-describe"
 path = "💾️binary/🦀️.rs"
 
 [dependencies]
@@ -29,14 +29,14 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 # mounted inside `semio_framework`).
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 # 🔁️ direct dependency (not just transitive through `semio-framework`) so this crate can declare its
-# own `extern crate semio_framework_os_kernel as store;` alias — the same pattern every plugin crate's
+# own `extern crate semio_os_kernel as store;` alias — the same pattern every plugin crate's
 # own `🦀️.rs` already uses (see `🔌️plugin/📦️packages/🦀️rust/🦀️.rs`) — for
 # `store::pack_rt::{encode_wire_value,decode_wire_value}`.
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 # 🧠️ The owned interpreter's guest runtime and the guest contract it speaks: the emitter runs every component under it and links no
 # plugin host.
-semio-framework-plugin-guest-contract = { workspace = true }
-semio-framework-plugin-interpreter-runtime = { workspace = true }
+semio-plugin-guest-contract = { workspace = true }
+semio-plugin-interpreter-runtime = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 # ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `block_on` for `💾️binary/🦀️.rs`, the
@@ -45,7 +45,7 @@ semio-framework-async = { workspace = true }
 
 [dev-dependencies]
 # 🧠️ The core interpreter, whose owned core-export set the owned core-export law reads.
-semio-framework-plugin-interpreter = { workspace = true }
+semio-plugin-interpreter = { workspace = true }
 # 🐎️ The Wasmtime describe oracle of the owned differential (`🧪️tests/🔬️unit`) and nothing else: the emitter itself runs every
 # component under the owned interpreter, so the release tool links no Wasmtime. A real `wasm32-wasip2` component imports
 # `wasi:io/poll` and friends through the Rust target's runtime shim, so the oracle links `wasmtime-wasi` beside `world actor`'s
@@ -53,7 +53,7 @@ semio-framework-plugin-interpreter = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 wasmtime-wasi = "47.0.3"
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }

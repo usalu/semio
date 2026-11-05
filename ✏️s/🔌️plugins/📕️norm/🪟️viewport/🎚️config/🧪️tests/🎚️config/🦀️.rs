@@ -1,6 +1,6 @@
 //! 🧪️ Public viewport-config protocol laws: descriptor, apply and inverse, and the text and binary wire round trips.
 
-use semio_framework_os_kernel::{apply_diff_cold, ColdMutation, Mutation, OpBinary, OpText};
+use semio_os_kernel::{apply_diff_cold, ColdMutation, Mutation, OpBinary, OpText};
 use semio_s_plugin_norm_viewport_config::mutations::NormViewportWindowConfigMutation;
 use semio_s_plugin_norm_viewport_config::schema::NormViewportWindowConfig;
 use semio_s_plugin_norm_viewport_config::ChangeViewportView;

@@ -1,7 +1,7 @@
 //! 🧩️ Record diff primitives — the bounded copy, comparison and retirement cursors one node record is diffed and retired with, and the record builders that assemble it.
 
 use std::mem::take;
-use semio_framework_ui_runtime_presentation::TreeNode;
+use semio_ui_runtime_presentation::TreeNode;
 use crate::{SURFACE_COMPONENT_COPY_WORK_BYTES, SURFACE_RECONCILE_PAGE_BYTES, SurfaceReconcileFault};
 
 //#region ⏭️ResumableReconcile

@@ -13,7 +13,7 @@ fn recursive_fixture_wire_schema(_mutation: &RecursiveFixtureMutation) -> Option
 #[doc(hidden)]
 pub fn recursive_fixture_owners_birth_demand<P>() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     let base = store::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<P, RecursiveFixtureMutation>()?;
@@ -26,7 +26,7 @@ where
 #[doc(hidden)]
 pub fn recursive_fixture_owners<P>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, RecursiveFixtureMutation>>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, RecursiveFixtureMutation, store::MutationApplyEdit<P, RecursiveFixtureMutation>>(), depth: 1 })
@@ -39,7 +39,7 @@ where
 /// 🏗️ Funds the fixture catalog from its own quotes for stores no scheduler grants.
 fn funded_recursive_fixture_owners<P>(prefix: &'static str) -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     store::os_store::document_store_owners::fund_document_store_owners(recursive_fixture_owners_birth_demand::<P>()?, |grant| recursive_fixture_owners::<P>(prefix, grant))
@@ -230,8 +230,8 @@ impl<P> RecursiveMemberStoreProducer<P> {pub const fn new()->Self{Self(::std::ma
 recursive_fixture_snapshot!(RecursiveBranchSnapshot, "recursive-branch-test");
 
 store::space_members! {
-    native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
-    history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    native_producer:&::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+    history_limits:semio_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum RecursiveTestMembers, RecursiveTestMembersOpen {
         Branch("s.test.child", "native", "*", "semio.recursive-branch-test/v1") => (RecursiveBranchSnapshot, RecursiveFixtureMutation, RecursiveMemberStoreProducer<RecursiveBranchSnapshot>, RecursiveMemberStoreProducer::<RecursiveBranchSnapshot>::new()),
@@ -239,7 +239,7 @@ store::space_members! {
 }
 
 async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value, cx:&mut semio_framework_job::StepContext<'_>) {
-    let mut app = VcsArtifactApp::<ComposedParentApp<HAS_CHILD>, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    let mut app = VcsArtifactApp::<ComposedParentApp<HAS_CHILD>, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     let dialect = test_child_dialect().await;
     let child_id = row["childId"].as_str().unwrap();
     let slot = row["slot"].as_str().unwrap();
@@ -251,7 +251,7 @@ async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value, cx:&mut 
     let packed = member.envelope_pack_bytes().await.unwrap();
     close_member_admission_fixture(&mut member);
     PARENT_SNAPSHOT_CLONES.with(|count| count.set(0));
-    let admitted = app.open_child(slot, child_id, dialect, &packed, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.is_ok();
+    let admitted = app.open_child(slot, child_id, dialect, &packed, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.is_ok();
     let parent_clones = PARENT_SNAPSHOT_CLONES.with(std::cell::Cell::get);
     let published = app.child_composition.test_child_admission_state(1).generation;
     close_member_admission_app(&mut app, cx);

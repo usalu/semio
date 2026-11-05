@@ -1,7 +1,7 @@
 //! ↩️ Explicit whole-document inverses prepare the genuine original LayoutSnapshot under its original baseline binding.
 use crate::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_os_kernel::{RetainedFieldPreparation,RetainedMutationCloseContext};
+use semio_os_kernel::{RetainedFieldPreparation,RetainedMutationCloseContext};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use semio_framework_value_factory::vector::FactoryVectorRetirement;
 use std::mem::{ManuallyDrop,size_of};

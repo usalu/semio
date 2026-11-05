@@ -11,7 +11,7 @@ use crate::SemioJackComposition;
 use crate::jack::editor::jack::*;
 use crate::jack::editor::jack::transient::JackResultsWindowTransientOwner;
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin::{artifact_app_laws, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel};
+use semio_plugin::{artifact_app_laws, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel};
 
 /// 🎫️ `artifact_app_laws::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`'s own signature
 /// is still `fn(manifest: fn() -> App)`, unchanged for this ticket (SDK gap, see this packet's
@@ -38,7 +38,7 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
         TrinityJackCommand::LoadExampleQuery { query: "MATCH (a:Piece) RETURN a.name".into(), results_window_id: "results".into() },
         TrinityJackCommand::FormatDocument,
         TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() },
-        TrinityJackCommand::SetViewport { surface_id: Some("trinity.jack.play".into()), viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } },
+        TrinityJackCommand::SetViewport { surface_id: Some("trinity.jack.play".into()), viewport: semio_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.0 } },
         TrinityJackCommand::TextSelect { start: 3, end: 9 },
         TrinityJackCommand::SetLodMode { value: "compact".into() },
     ];
@@ -54,17 +54,17 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
     original_caller.retire(remaining_fuel).expect("paid original Jack law caller retirement");
 }
 
-fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
+fn meta(actor: &str) -> semio_plugin::ActionMeta {
     artifact_app_laws::meta(actor)
 }
 
 fn query_windows() -> ViewModel {
     ViewModel {
         window_instances: vec![
-            semio_framework_plugin::ViewWindowInstance { id: "editor-main".into(), window_kind_id: "trinity-jack-editor".into() },
-            semio_framework_plugin::ViewWindowInstance { id: "results-main".into(), window_kind_id: "trinity-jack-results".into() },
+            semio_plugin::ViewWindowInstance { id: "editor-main".into(), window_kind_id: "trinity-jack-editor".into() },
+            semio_plugin::ViewWindowInstance { id: "results-main".into(), window_kind_id: "trinity-jack-results".into() },
         ],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 
@@ -78,7 +78,7 @@ fn query_windows() -> ViewModel {
 /// dispatching test settles through `settle(&mut app)` before reading the projection.
 /// 🔚️ The law forwards its original caller through paid terminal app close; the guard checks completion.
 async fn new_app() -> JackTestApp {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_jack_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()),jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),&mut artifact_app_laws::fixture_identity()).await;
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_jack_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()),jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),&mut artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(JACK_TEST_INSTANCE).await;
     JackTestApp { app, closed: false }
 }
@@ -124,7 +124,7 @@ impl Drop for JackTestApp {
 /// 📬️ Drives the mounted app's retained typed operation to quiescence (pages ACKed, effects, events
 /// and completions drained) — the receipt carries what the host would have seen.
 async fn settle(app: &mut JackTestApp,cx:&mut semio_framework_job::StepContext<'_>) -> artifact_app_laws::TypedOperationFixtureReceipt {
-    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("settle the typed operation")
+    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("settle the typed operation")
 }
 
 #[path = "🔌️live-load-envelope/🦀️.rs"]

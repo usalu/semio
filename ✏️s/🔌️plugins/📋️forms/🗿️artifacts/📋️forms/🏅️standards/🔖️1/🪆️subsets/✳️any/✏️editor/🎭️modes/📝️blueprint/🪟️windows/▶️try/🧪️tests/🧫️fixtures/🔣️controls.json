@@ -117,5 +117,34 @@
       "component": "text",
       "interactive": false
     }
-  ]
+  ],
+  "unsupported": {
+    "question": {
+      "id": "q-unsupported",
+      "label": "Unknown",
+      "kind": "unknown"
+    },
+    "cases": [
+      {
+        "locale": "en",
+        "terminology": "native",
+        "expected": "Unsupported kind: unknown"
+      },
+      {
+        "locale": "de",
+        "terminology": "native",
+        "expected": "Nicht unterstützte Art: unknown"
+      },
+      {
+        "locale": "en",
+        "terminology": "reuse",
+        "expected": "Unsupported kind: unknown"
+      },
+      {
+        "locale": "de",
+        "terminology": "reuse",
+        "expected": "Nicht unterstützte Art: unknown"
+      }
+    ]
+  }
 }

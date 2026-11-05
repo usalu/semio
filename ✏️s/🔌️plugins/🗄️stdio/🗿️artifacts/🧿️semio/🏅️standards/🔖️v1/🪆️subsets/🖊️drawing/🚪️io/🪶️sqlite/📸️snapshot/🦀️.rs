@@ -2,14 +2,14 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
+use semio_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioDrawingSnapshot, DrawCanvas, DrawStyle, DrawLayer, DrawNode, PathSegment};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🔍️rows/🦀️.rs"]mod indexed;
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;
 #[path="🧮️semantic/🦀️.rs"]
@@ -44,16 +44,16 @@ DrawNode::Image{at,width,height,mime,bytes}=>p.insert_key_float("semio_drawing_i
 impl ArtifactSqliteSnapshotHost for SemioDrawingSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 
-fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
-fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
-fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
+fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
+fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
 
-fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
+fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_os_kernel::io_schema::IoOutcome<()>,ValueError>{
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
 if dialect.artifact_kind!="s.stdio.semio"||dialect.standard!="v1"||(dialect.subset!="*"&&dialect.subset!="drawing"){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned snapshot dialect differs from its dedicated semantic subset"));}
 let row=database.table("semio_drawing_document")?.single_row()?;
 if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio owned document identity differs from projected semantic fields"));}
-control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
+control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_os_kernel::io_schema::IoOutcome::clean(()))})();result.map_err(semio_os_kernel::io_schema::IoError::from_value_error)}
 
 
 
@@ -73,9 +73,9 @@ impl SemioDrawingSnapshot {
  let bg=colors(self.canvas.background);let document=p.insert_float("semio_drawing_document",&[Cell::Text(&self.schema),Cell::Real(self.canvas.width),Cell::Real(self.canvas.height),bg[0],bg[1],bg[2],bg[3]],float_columns("semio_drawing_document"))?;
  let mut styles=p.allocate_frontier(self.styles.len())?;
  for(ordinal,s)in self.styles.iter().enumerate(){let f=colors(s.fill);let k=colors(s.stroke);let id=p.insert_float("semio_drawing_style",&[Cell::Integer(document),Cell::Integer(number(ordinal)?),Cell::Text(&s.name),f[0],f[1],f[2],f[3],k[0],k[1],k[2],k[3],s.stroke_width.map(Cell::Real).unwrap_or(Cell::Null),s.opacity.map(|v|Cell::Float32(v)).unwrap_or(Cell::Null)],float_columns("semio_drawing_style"))?;styles.push((s.name.as_str(),id));}
- let phase=p.phase();p.sort_frontier(&mut styles,|left,right,control|{let order=semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(left.0,right.0,phase,control)?;if order.is_eq(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate drawing style identity"))}Ok(order)})?;
+ let phase=p.phase();p.sort_frontier(&mut styles,|left,right,control|{let order=semio_os_kernel::sqlite_snapshot::transfer::compare_text(left.0,right.0,phase,control)?;if order.is_eq(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate drawing style identity"))}Ok(order)})?;
  let mut names=p.allocate_frontier(self.layers.len())?;for layer in &self.layers{names.push(layer.id.as_str());}
- let phase=p.phase();p.sort_frontier(&mut names,|left,right,control|{let order=semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(left,right,phase,control)?;if order.is_eq(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate drawing layer identity"))}Ok(order)})?;
+ let phase=p.phase();p.sort_frontier(&mut names,|left,right,control|{let order=semio_os_kernel::sqlite_snapshot::transfer::compare_text(left,right,phase,control)?;if order.is_eq(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate drawing layer identity"))}Ok(order)})?;
  for(ordinal,layer)in self.layers.iter().enumerate(){let root=project_node(&layer.root,&styles,p)?;p.insert_float("semio_drawing_layer",&[Cell::Integer(document),Cell::Integer(number(ordinal)?),Cell::Text(&layer.id),Cell::Text(&layer.name),Cell::Integer(i64::from(layer.visible)),Cell::Integer(root)],float_columns("semio_drawing_layer"))?;}Ok(document)
     }
 

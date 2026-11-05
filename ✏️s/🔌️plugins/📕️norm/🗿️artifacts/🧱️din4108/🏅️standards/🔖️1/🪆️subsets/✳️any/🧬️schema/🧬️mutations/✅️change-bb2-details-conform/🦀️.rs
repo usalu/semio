@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeBb2DetailsConform
         record: "ChangedBb2DetailsConform",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Supplement 2 detail conformity", "Konformität der Anschlussdetails nach Beiblatt 2 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Supplement 2 detail conformity", "Konformität der Anschlussdetails nach Beiblatt 2 ändern")
     }
 }
 

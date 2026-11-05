@@ -375,7 +375,7 @@ function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default
 
 const WASM_LOADERS: Record<string, () => Promise<void>> = __STORYBOOK_HOST_WASM__ ? {
   "node-graph": singleFlightWasmInit("node-graph", () => import("@semio-tech/framework-surface-node-graph-rs/pkg/framework_surface_node_graph.js")),
-  editor: singleFlightWasmInit("editor", () => import("@semio-tech/framework-editor-rs/pkg/framework_editor.js")),
+  editor: singleFlightWasmInit("editor", () => import("@semio-tech/framework-editor-rs")),
   "paint-2d": singleFlightWasmInit("paint-2d", () => import("@semio-tech/framework-surface-paint-rs/pkg/framework_surface_paint.js")),
   "tiled-map": singleFlightWasmInit("tiled-map", () => import("@semio-tech/framework-surface-tiled-map-rs/pkg/framework_surface_tiled_map.js")),
   terrain: singleFlightWasmInit("terrain", () => import("@semio-tech/framework-surface-terrain-rs/pkg/framework_surface_terrain.js")),

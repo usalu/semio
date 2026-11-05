@@ -28,5 +28,5 @@ dashboard_launch = { path = "../../../🧾️launch/📦️packages/🦀️rust"
 dashboard_repo_domain = { path = "../../../🏛️repo-domain/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-repo-domain" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-ui_locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
-semio-framework-ui-tui-core = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
+ui_locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale" }
+semio-ui-tui-core = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }

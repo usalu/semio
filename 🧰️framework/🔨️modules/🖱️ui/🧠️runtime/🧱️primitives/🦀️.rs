@@ -27,7 +27,7 @@ pub use records::build_record;
 pub use tree_retirement::SurfaceTreeRetireCursor;
 
 #[cfg(test)]
-use semio_framework_ui_runtime_presentation::{ComponentTree, TreeNode};
+use semio_ui_runtime_presentation::{ComponentTree, TreeNode};
 
 //#region 🧪️Tests
 #[cfg(test)]

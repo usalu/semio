@@ -1,20 +1,20 @@
 //! 🔄️ Lift file: the generic bounded full-operation job, its phase and its tool job factory, of `🧵️retained-command/🔄️full-operation/🦀️.rs` that belong to crate `job` (WP3).
 //!
 //! WP3 owns both crates: `QualifiedBoundedFirstStepProof::admits` names the factory type, and the factory's `ToolJobFactory` impl names the job, so the three items move down together from `retained-command` to `job` (the plan moved the 16-line factory alone, which would have left its impl naming a `retained-command` type). Until `job` is carved, the source module re-exports them with `pub use`.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolCompletion, BOUNDED_FIRST_STEP_FACTORY, ToolOwnerWitness};
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::tool_contract::{ArtifactToolCompletion, BOUNDED_FIRST_STEP_FACTORY, ToolOwnerWitness};
+use semio_plugin_decl_views::child_view::ChildContentView;
 #[cfg(test)]
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::Fault;
-use semio_framework_plugin_decl_views::history_view::HistoryView;
-use semio_framework_plugin_decl_views::{InteractionHoverState, PeerPresenceRoot};
+use semio_plugin_decl_views::history_view::HistoryView;
+use semio_plugin_decl_views::{InteractionHoverState, PeerPresenceRoot};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use store::Mutation;
 use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
-use semio_framework_plugin_ownership::bounded_ownership::{plugin_text_close, plugin_text_retirement_demand};
+use semio_plugin_ownership::bounded_ownership::{plugin_text_close, plugin_text_retirement_demand};
 use crate::{retired};
 
 #[doc(hidden)]
@@ -49,8 +49,8 @@ pub struct TypedCommandFullOperationJob<A: ArtifactApp> {
     pub output: Option<ArtifactToolCompletion<A>>,
     pub state: [u8; 3],
     pub fault_message: &'static [u8],
-    pub pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
-    pub outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
+    pub pending: Option<semio_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
+    pub outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes,
     pub closing: bool,
 }
 
@@ -73,13 +73,13 @@ impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
 
     pub fn checkpoint(&mut self) {
         self.state = [self.phase as u8, self.prepare_cursor, self.reducer_cursor];
-        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress: u64::from(self.prepare_cursor).saturating_add(u64::from(self.reducer_cursor)) });
+        self.pending = Some(semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress: u64::from(self.prepare_cursor).saturating_add(u64::from(self.reducer_cursor)) });
     }
 
     pub fn fault(&mut self, message: &'static [u8]) {
         self.phase = TypedCommandFullOperationPhase::Fault;
         self.fault_message = message;
-        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault);
+        self.pending = Some(semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault);
     }
 }
 
@@ -134,7 +134,7 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOpe
 
 impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
     fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
+        use semio_plugin_decl_app::tool_contract::ReservedOutcomeKind;
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }

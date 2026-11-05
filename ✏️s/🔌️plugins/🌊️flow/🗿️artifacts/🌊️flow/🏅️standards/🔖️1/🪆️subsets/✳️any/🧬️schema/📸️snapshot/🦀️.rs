@@ -11,7 +11,7 @@ use framework_schema::ArtifactSchema;
 /// content model, it composes stdio's `flow` subset instead. Viewport state belongs to each
 /// concrete Flow main window and never enters this document snapshot.
 ///
-/// Distinct from `semio_framework_artifact_flow_flow::FlowHostSnapshot` in `semio-framework-os-flow`, which remains the framework
+/// Distinct from `semio_framework_artifact_flow_flow::FlowHostSnapshot` in `semio-os-flow`, which remains the framework
 /// host/kernel document type. This plugin snapshot converts at the host boundary via
 /// `to_host_snapshot`/`from_host_snapshot`, now bridging through the composed child + working-scene cache.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]

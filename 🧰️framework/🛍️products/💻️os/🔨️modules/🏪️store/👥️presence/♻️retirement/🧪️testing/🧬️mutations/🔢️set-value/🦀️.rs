@@ -11,21 +11,21 @@ pub struct SetValue {
     pub n: i32,
 }
 
-impl semio_framework_os_spr::MutationKind<Value, ValueMutation> for SetValue {
-    const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "value", kind: "set-value", record: "SetValue" };
+impl semio_os_spr::MutationKind<Value, ValueMutation> for SetValue {
+    const SEMANTICS: semio_os_spr::SemanticDescriptor = semio_os_spr::SemanticDescriptor { verb: "set", entity: "value", kind: "set-value", record: "SetValue" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Value", "Wert setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Value", "Wert setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]
     }
 }
 
-impl semio_framework_os_spr::ColdMutationKind<Value, ValueMutation> for SetValue {
-    fn diff(&self, _base: &Value) -> semio_framework_os_spr::MutationOutcome<Value> {
-        semio_framework_os_spr::MutationOutcome::new(Value(self.n))
+impl semio_os_spr::ColdMutationKind<Value, ValueMutation> for SetValue {
+    fn diff(&self, _base: &Value) -> semio_os_spr::MutationOutcome<Value> {
+        semio_os_spr::MutationOutcome::new(Value(self.n))
     }
     fn inverse(&self, base: &Value) -> Result<Vec<ValueMutation>, semio_framework_value::ValueError> {
     Ok((|| {

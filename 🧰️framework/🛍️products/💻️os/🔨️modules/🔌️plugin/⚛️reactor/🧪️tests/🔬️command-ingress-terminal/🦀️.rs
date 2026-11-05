@@ -2,7 +2,7 @@ use semio_framework_test_fixtures::fixture_path;
 
 /// 📖️ The reactor turn module tree, read at run time from the manifest folder of the hosting crate instead of embedded.
 fn turn_source() -> String {
-    semio_framework_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../⚛️reactor/🔄️turn/🦀️.rs")).expect("the reactor turn module tree reads")
+    semio_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../⚛️reactor/🔄️turn/🦀️.rs")).expect("the reactor turn module tree reads")
 }
 
 #[test]
@@ -36,9 +36,9 @@ fn async_actor_poll_awaits_exchange_and_render_work() {
     assert!(poll.contains("pub async fn poll_kernel<"));
     assert!(poll.contains("plugin_exchange_boxed(runtime, cursor.instance, None, identity,cx).await"));
     assert!(poll.contains("plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, command)), identity,cx).await"));
-    assert!(poll.contains("semio_framework_plugin::plugin_runtime::plugin_render_surface(runtime, instance, &surface_key).await"));
-    assert!(!poll.contains("resolve_ready(semio_framework_plugin::plugin_runtime::plugin_exchange"));
-    assert!(!poll.contains("resolve_ready(semio_framework_plugin::plugin_runtime::plugin_render"));
+    assert!(poll.contains("semio_plugin::plugin_runtime::plugin_render_surface(runtime, instance, &surface_key).await"));
+    assert!(!poll.contains("resolve_ready(semio_plugin::plugin_runtime::plugin_exchange"));
+    assert!(!poll.contains("resolve_ready(semio_plugin::plugin_runtime::plugin_render"));
 }
 
 /// 🧫️ The shared drain contract both twins read. The TS half lives in
@@ -57,10 +57,10 @@ fn a_turn_that_still_owns_an_ingress_never_answers_idle() {
     let contract = drain_contract();
     assert_eq!(contract["reactorStatuses"]["ownedTurnNeverIdle"], serde_json::Value::Bool(true));
 
-    let owned = semio_framework_plugin_reactor_turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, Some(cursor(2, 5)));
+    let owned = semio_plugin_reactor_turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, Some(cursor(2, 5)));
     assert!(matches!(&owned, semio_framework::kernel::CommandIngressStatus::CommandPending(pending) if pending.page_index == 2 && pending.seq == 17), "an owner that advanced nothing this turn is still an owner: {owned:?}");
 
-    let unowned = semio_framework_plugin_reactor_turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, None);
+    let unowned = semio_plugin_reactor_turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, None);
     assert!(matches!(unowned, semio_framework::kernel::CommandIngressStatus::Idle), "and with no owner, idle stays the honest answer");
 
     for already in [
@@ -69,7 +69,7 @@ fn a_turn_that_still_owns_an_ingress_never_answers_idle() {
         semio_framework::kernel::CommandIngressStatus::Backpressure(cursor(0, 1)),
         semio_framework::kernel::CommandIngressStatus::Fault { cursor: cursor(0, 1), fault: b"named".to_vec() },
     ] {
-        let kept = semio_framework_plugin_reactor_turn::command_ingress_while_owned(already.clone(), Some(cursor(0, 1)));
+        let kept = semio_plugin_reactor_turn::command_ingress_while_owned(already.clone(), Some(cursor(0, 1)));
         assert_eq!(format!("{kept:?}"), format!("{already:?}"), "a turn that already said something keeps saying it");
     }
 }

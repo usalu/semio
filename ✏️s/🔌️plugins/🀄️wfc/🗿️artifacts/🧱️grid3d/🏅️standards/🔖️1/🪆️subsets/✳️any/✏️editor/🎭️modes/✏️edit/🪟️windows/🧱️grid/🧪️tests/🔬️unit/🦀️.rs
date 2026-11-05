@@ -2,7 +2,7 @@
 //! document instead of standing inside it.
 
 use crate::editor::grid3d::window::Grid3dWindowConfig;
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind;
 use crate::editor::grid3d::modes::edit::windows::grid::*;
 use crate::standards::v1::subsets::any::io::text::inferences::scene_projection::grid_instances_json;
 
@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::io::text::inferences::scene_projection::
 fn the_window_kind_is_a_world3d_surface_bound_to_its_own_interaction_domain() {
     let definition = definition();
     assert_eq!(definition.id, WINDOW_KIND_ID);
-    assert!(matches!(definition.surface_kind, semio_framework_plugin::SurfaceKind::World3d));
+    assert!(matches!(definition.surface_kind, semio_plugin::SurfaceKind::World3d));
     assert!(format!("{:?}", definition.interactions).contains(INTERACTION_DOMAIN), "the grid window binds its own interaction domain");
 }
 

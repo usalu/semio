@@ -1,7 +1,7 @@
 //! 🧬️ Db artifact commands, diffs, conflict records and durable-group receipts.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as pack;
+extern crate semio_os_kernel as store;
 
 use db_artifact_history::{ArtifactHistoryView, HistoryReplayReservation};
 use db_durability::{DurabilityClass, Frontier};

@@ -18,7 +18,7 @@
 //! "one accessor every render/export/inference call site funnels through" pattern the migration
 //! recipe's §3 prescribes.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
 
 //#region 🧩️Modules
@@ -282,12 +282,12 @@ pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingS
     Some(handle)
 }
 
-pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_framework_plugin::MeshData> {
+pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_plugin::MeshData> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
     let mesh = session.kernel().tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
-    Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
+    Some(semio_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
 
 pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {

@@ -1,0 +1,190 @@
+[
+  {
+    "id": "empty",
+    "window": "main",
+    "origins": [],
+    "pending": [],
+    "progress": [],
+    "expected": []
+  },
+  {
+    "id": "original-order",
+    "window": "main",
+    "origins": [],
+    "pending": [
+      {
+        "hash": 3,
+        "neuron": "c"
+      },
+      {
+        "hash": 1,
+        "neuron": "a"
+      },
+      {
+        "hash": 2,
+        "neuron": "b"
+      }
+    ],
+    "progress": [],
+    "expected": [
+      {
+        "neuron": "c",
+        "resume": false
+      },
+      {
+        "neuron": "a",
+        "resume": false
+      },
+      {
+        "neuron": "b",
+        "resume": false
+      }
+    ]
+  },
+  {
+    "id": "cached-original",
+    "window": "main",
+    "origins": [
+      {
+        "window": "main",
+        "hash": 1,
+        "neuron": "original"
+      }
+    ],
+    "pending": [
+      {
+        "hash": 1,
+        "neuron": "incoming"
+      }
+    ],
+    "progress": [
+      1
+    ],
+    "expected": [
+      {
+        "neuron": "original",
+        "resume": true
+      }
+    ]
+  },
+  {
+    "id": "foreign-window",
+    "window": "preview",
+    "origins": [
+      {
+        "window": "main",
+        "hash": 1,
+        "neuron": "other"
+      }
+    ],
+    "pending": [
+      {
+        "hash": 1,
+        "neuron": "incoming"
+      }
+    ],
+    "progress": [
+      1
+    ],
+    "expected": [
+      {
+        "neuron": "incoming",
+        "resume": false
+      }
+    ]
+  },
+  {
+    "id": "first-match",
+    "window": "main",
+    "origins": [
+      {
+        "window": "main",
+        "hash": 1,
+        "neuron": "first"
+      },
+      {
+        "window": "main",
+        "hash": 1,
+        "neuron": "second"
+      }
+    ],
+    "pending": [
+      {
+        "hash": 1,
+        "neuron": "incoming"
+      }
+    ],
+    "progress": [],
+    "expected": [
+      {
+        "neuron": "first",
+        "resume": false
+      }
+    ]
+  },
+  {
+    "id": "same-batch-original",
+    "window": "main",
+    "origins": [],
+    "pending": [
+      {
+        "hash": 1,
+        "neuron": "first"
+      },
+      {
+        "hash": 1,
+        "neuron": "second"
+      }
+    ],
+    "progress": [],
+    "expected": [
+      {
+        "neuron": "first",
+        "resume": false
+      },
+      {
+        "neuron": "first",
+        "resume": false
+      }
+    ]
+  },
+  {
+    "id": "unicode",
+    "window": "窗口.源",
+    "origins": [
+      {
+        "window": "other",
+        "hash": 1,
+        "neuron": "wrong"
+      },
+      {
+        "window": "窗口.源",
+        "hash": 1,
+        "neuron": "元"
+      }
+    ],
+    "pending": [
+      {
+        "hash": 1,
+        "neuron": "new"
+      },
+      {
+        "hash": 2,
+        "neuron": "次"
+      }
+    ],
+    "progress": [
+      1
+    ],
+    "expected": [
+      {
+        "neuron": "元",
+        "resume": true
+      },
+      {
+        "neuron": "次",
+        "resume": false
+      }
+    ]
+  }
+]

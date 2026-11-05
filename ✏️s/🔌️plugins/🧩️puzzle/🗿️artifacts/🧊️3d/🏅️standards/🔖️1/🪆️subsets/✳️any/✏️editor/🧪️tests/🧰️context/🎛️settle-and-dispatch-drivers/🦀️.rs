@@ -20,9 +20,9 @@ pub struct Puzzle3dSettled {
     /// 26/09/02/PUZZLE-3D-END-TO-END wave B54: a turn now drives a bounded RUN of units, so `turns`
     /// alone can no longer say where a mutation's cost went and `turns` vs `census.units` is the
     /// wave's whole before/after ratio.
-    pub census: semio_framework_plugin::app::TypedOperationUnitCensus,
+    pub census: semio_plugin::app::TypedOperationUnitCensus,
     pub effects: Vec<Effect>,
-    pub events: Vec<semio_framework_plugin::AppEvent>,
+    pub events: Vec<semio_plugin::AppEvent>,
     pub scope: Option<UiDirtyScope>,
     pub completions: Vec<Puzzle3dCompletion>,
     pub downloads: Vec<Puzzle3dDownload>,
@@ -66,10 +66,10 @@ pub async fn drain_segmented_download(app: &mut Puzzle3dApp, download: &Puzzle3d
     let mut chunks = 0usize;
     while let Some(chunk) = app.take_segmented_download_chunk(download.operation).await.expect("take one segmented download chunk") {
         assert!(!chunk.is_empty(), "a segmented download chunk is never empty");
-        assert!(chunk.len() <= semio_framework_plugin::app::ArtifactOutputChunks::CHUNK_BYTES, "chunk {} exceeds the wire's own page cap", chunks);
+        assert!(chunk.len() <= semio_plugin::app::ArtifactOutputChunks::CHUNK_BYTES, "chunk {} exceeds the wire's own page cap", chunks);
         assembled.extend_from_slice(&chunk);
         chunks += 1;
-        assert!(chunks <= download.bytes / semio_framework_plugin::app::ArtifactOutputChunks::CHUNK_BYTES + 2, "segmented drain never terminated");
+        assert!(chunks <= download.bytes / semio_plugin::app::ArtifactOutputChunks::CHUNK_BYTES + 2, "segmented drain never terminated");
     }
     assembled
 }
@@ -177,7 +177,7 @@ pub async fn dispatch_action_reporting(app: &mut Puzzle3dApp, action: &str, args
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
     let (raw, cx) = app.parts();
-    let answered = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(args.clone()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
+    let answered = semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(args.clone()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
     settle_into_reporting_with_items(app, answered, 1).await
 }
 
@@ -192,7 +192,7 @@ pub async fn dispatch_reporting_with_items(
 ) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
     let window_id = window_id.unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.ensure_window(window_id);
-    if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID) {
+    if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | semio_plugin::SET_ACTIVE_UTILITY_ACTION_ID) {
         app.activate(action, args, window_id);
     }
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
@@ -224,7 +224,7 @@ pub async fn dispatch_reporting_with_items(
     ) {
         let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
         let (raw, cx) = app.parts();
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, dsl_args, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, dsl_args, &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
         let reserved = match admitted {
             Ok(admitted) => settle_reserved(app, admitted).await,
             Err(fault) => Err(fault),
@@ -232,7 +232,7 @@ pub async fn dispatch_reporting_with_items(
         return settle_into_reporting_with_items(app, reserved, maximum_items).await;
     }
     let (raw, cx) = app.parts();
-    let typed = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, action_args(args, window_id), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
+    let typed = semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, action_args(args, window_id), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
     settle_into_reporting_with_items(app, typed, maximum_items).await
 }
 
@@ -255,7 +255,7 @@ pub async fn dispatch_unsettled(app: &mut Puzzle3dApp, action: &str, args: Optio
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
     let (raw, cx) = app.parts();
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, action_args(args, window_id), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of)
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, action_args(args, window_id), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of)
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -284,7 +284,7 @@ pub async fn dispatch_reserved_unsettled(app: &mut Puzzle3dApp, action: &str, ar
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
     let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
     let (raw, cx) = app.parts();
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, dsl_args, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of)
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, dsl_args, &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of)
 }
 
 pub async fn hover_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
@@ -300,5 +300,5 @@ pub async fn select_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: &
 
 pub async fn settle_reserved(app: &mut Puzzle3dApp, admitted: InvocationResult) -> Result<InvocationResult, Fault> {
     let (raw, cx) = app.parts();
-    semio_framework_plugin::app::settle_framework_reserved_admission(raw, admitted, cx).await.map_err(fault_of)
+    semio_plugin::app::settle_framework_reserved_admission(raw, admitted, cx).await.map_err(fault_of)
 }

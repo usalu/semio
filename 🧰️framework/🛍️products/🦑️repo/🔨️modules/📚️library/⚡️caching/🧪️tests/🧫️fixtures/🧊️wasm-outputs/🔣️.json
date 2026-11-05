@@ -4,24 +4,45 @@
   "profiles": [
     {
       "profile": "prototype",
-      "target": "wasm",
-      "output": "dist/wasm-prototype"
+      "target": "wasm"
     },
     {
       "profile": "release",
-      "target": "wasm",
-      "output": "dist/wasm-release"
+      "target": "wasm"
     }
   ],
   "values": [
     42,
     43
   ],
-  "crate": "trunk-output-fixture",
-  "rust": "use wasm_bindgen::prelude::*;\n#[wasm_bindgen] pub fn answer() -> u32 { VALUE }\n",
+  "crate": "browser-output-fixture",
+  "rust": "#[unsafe(no_mangle)] pub extern \"C\" fn answer() -> u32 { VALUE }\n",
   "consumer": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
   "deliverables": [
     ".js",
     "_bg.wasm"
-  ]
+  ],
+  "targetOutputs": [
+    "{projectRoot}/.🧾️store/wasm.json"
+  ],
+  "negative": {
+    "id": "compile-refusal",
+    "source": "compile_error!(\"preserve the last successful renderer\");\n",
+    "diagnostic": "preserve the last successful renderer",
+    "reason": "Cargo artifact build failed",
+    "status": 1
+  },
+  "cargoFeatures": [
+    "trim-paths"
+  ],
+  "wasmExport": {
+    "name": "answer",
+    "kind": "function"
+  },
+  "workspaceFiles": {
+    "package.json": "{\n  \"name\": \"wgpu-output-workspace\",\n  \"private\": true,\n  \"workspaces\": [],\n  \"scripts\": {\n    \"repo\": \"repo\"\n  },\n  \"type\": \"module\"\n}\n",
+    "📋️project.json": "{\n  \"name\": \"wgpu-output-workspace\",\n  \"targets\": {}\n}\n",
+    "Cargo.toml": "cargo-features = [\"trim-paths\"]\n[workspace]\nmembers = []\nresolver = \"3\"\n",
+    ".cargo/config.toml": "[build]\n"
+  }
 }

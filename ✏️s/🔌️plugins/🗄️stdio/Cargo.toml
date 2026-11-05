@@ -163,13 +163,13 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 [workspace.dependencies.semio-framework-artifact-reference]
 path = "../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-schema]
 path = "../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-scene]
+[workspace.dependencies.semio-ui-scene]
 path = "../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-contract]

@@ -8,34 +8,34 @@ use semio_framework::{
     ActionArgDef, ActionDefinition, ActionKind, AppDefinition, AppRole, CommandDefinition, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, UtilityDefinition, ViewModel, WindowKindDefinition, WindowKinds,
 };
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceMap;
-use semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState;
-use semio_framework_os_renderer_wgpu_program_bridge::{PluginHostConfig, ProgramBridgeEntry};
-use semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context;
-use semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels;
-use semio_framework_os_renderer_wgpu_shell_dock::{PanelAnchorState, ShellDock};
-use semio_framework_os_renderer_wgpu_shell_docs::{SpacePanelState, SpawnedAppEntry};
-use semio_framework_os_renderer_wgpu_shell_input::{ContextMenuState, PointerCapture};
-use semio_framework_os_renderer_wgpu_shell_prefs::ActiveSession;
-use semio_framework_os_renderer_wgpu_shell_session::{panel_json, SessionCtx};
-use semio_framework_os_renderer_wgpu_shell_state::ShellState;
-use semio_framework_os_renderer_wgpu_shell_view_paint::SHELL_WINDOW_PAINT_OPPORTUNITIES;
-use semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx;
-use semio_framework_os_renderer_wgpu_shell_windows::PanelProjection;
-use semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::{render_ui_document_step, UiDocumentFrameCursor};
-use semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn;
-use semio_framework_ui_layout::layout::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_renderer_wgpu_contracts::AdmittedSurfaceMap;
+use semio_renderer_wgpu_frame_actions::AppInteractionState;
+use semio_renderer_wgpu_program_bridge::{PluginHostConfig, ProgramBridgeEntry};
+use semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context;
+use semio_renderer_wgpu_scene_state::SceneChromeLabels;
+use semio_renderer_wgpu_shell_dock::{PanelAnchorState, ShellDock};
+use semio_renderer_wgpu_shell_docs::{SpacePanelState, SpawnedAppEntry};
+use semio_renderer_wgpu_shell_input::{ContextMenuState, PointerCapture};
+use semio_renderer_wgpu_shell_prefs::ActiveSession;
+use semio_renderer_wgpu_shell_session::{panel_json, SessionCtx};
+use semio_renderer_wgpu_shell_state::ShellState;
+use semio_renderer_wgpu_shell_view_paint::SHELL_WINDOW_PAINT_OPPORTUNITIES;
+use semio_renderer_wgpu_shell_view_panels::PanelsViewCtx;
+use semio_renderer_wgpu_shell_windows::PanelProjection;
+use semio_renderer_wgpu_ui_engine::retained_document_consumer::{render_ui_document_step, UiDocumentFrameCursor};
+use semio_renderer_wgpu_ui_engine_tests::fixture_original_turn;
+use semio_ui_layout::layout::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use serde_json::Value;
 use std::collections::HashMap;
 use ui_contract::{UiDocumentLease, UiText};
-use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowEngagement};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, PointerModifiers};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::utilities::UtilityNode;
+use semio_ui_declaration::layout::{ActionDescriptor, WindowEngagement};
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::{HitKind, HitTarget, InputState, PointerModifiers};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::utilities::UtilityNode;
 
 pub fn host_test_apps() -> (AppDefinition, AppDefinition) {
     let mut home = test_app(Vec::new(), Vec::new());
@@ -76,7 +76,7 @@ pub fn host_test_shell() -> ShellState {
         contributions: vec![],
     };
     let bridge = ProgramBridgeEntry::from_wasm("space".into(), None, None, std::path::PathBuf::from("missing-host-panel-guest.wasm"), manifest).expect("nonrunnable host bridge");
-    let mut shell = ShellState::new(vec![bridge], "space".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(vec![bridge], "space".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     static HOST: PluginHostConfig = PluginHostConfig { plugin_id: "space", landing_app_id: "home", host_app_id: "studio" };
     shell.plugins.host_capability = Some(&HOST);
     shell.plugins.space_mode = true;
@@ -88,7 +88,7 @@ pub fn host_test_shell() -> ShellState {
         ],
         active_spawned_id: Some("spawned-model".into()),
     };
-    let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut view_state = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view_state.active_mode_id = Some(studio.default_mode_id.clone());
     view_state.active_window_kind_id = Some(studio.window_kinds.first().id.clone());
     view_state.panel_json = Some(panel_json(&base).expect("strict base panel"));
@@ -112,7 +112,7 @@ pub fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefi
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
             body_key: "main.body".into(),
-            surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+            surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
             icon_id: "app-window".into(),
             options: Default::default(),
             actions: vec![],
@@ -173,8 +173,8 @@ pub fn split_pane_app() -> AppDefinition {
 
 pub fn split_pane_shell() -> ShellState {
     let app = split_pane_app();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.docs.session = Some(ActiveSession { plugin_id: "pane".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    shell.docs.session = Some(ActiveSession { plugin_id: "pane".into(), instance_id: 1, app, view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     SessionCtx::of(&mut shell).sync_dock();
     shell.windows.active_window_id = Some("pane-top".into());
     shell
@@ -190,7 +190,7 @@ pub fn engaged_pane_shell() -> ShellState {
         WindowEngagement {
             session_active: None,
             options: None,
-            input: Some(semio_framework_ui_layout::layout::WindowEngagementInput {
+            input: Some(semio_ui_layout::layout::WindowEngagementInput {
                 id: Some("pane-engagement".into()),
                 value: Some(String::new()),
                 placeholder: None,
@@ -202,7 +202,7 @@ pub fn engaged_pane_shell() -> ShellState {
             }),
             control: None,
             controls: None,
-            status: Some(vec![semio_framework_ui_layout::layout::WindowEngagementStatus { id: "pane.status".into(), text: "Ready".into() }]),
+            status: Some(vec![semio_ui_layout::layout::WindowEngagementStatus { id: "pane.status".into(), text: "Ready".into() }]),
             possible_engagements: None,
         },
     );
@@ -234,8 +234,8 @@ pub fn mouse_pointer(id: u64) -> ui_render::PointerInfo {
     ui_render::PointerInfo { id: ui_render::PointerId(id), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }
 }
 
-pub fn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor>) -> semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
-    semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
+pub fn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor>) -> semio_renderer_wgpu_frame_actions::AppInteractionState {
+    semio_renderer_wgpu_frame_actions::AppInteractionState {
         shell,
         input,
         theme: Theme::default(),
@@ -259,13 +259,13 @@ pub fn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor
 
 pub fn retained_world_sequence_probe(scenario: &str) {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.dock.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock.dock_tabs = ShellDock::default();
     let mut active_documents = Vec::new();
     let mut retired_documents = Vec::new();
     let mut row_sources = Vec::new();
-    let scene = semio_framework_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
+    let scene = semio_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
     for row in fixture["surfaces"].as_array().unwrap() {
         let window = row["windowId"].as_str().unwrap();
         let surface = row["surfaceId"].as_str().unwrap();
@@ -328,7 +328,7 @@ pub fn retained_world_sequence_probe(scenario: &str) {
             "refresh" | "replace" => {
                 let window = rows.last().expect("the refreshed row remains mounted").0.clone();
                 let key = if step == "replace" { "replacement-world" } else { "world" };
-                let refreshed = semio_framework_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [5.0, 5.0, 5.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
+                let refreshed = semio_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [5.0, 5.0, 5.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
                 let document = interaction.shell.windows.publish_surface_records(&window, vec![world3d_pointer_record(1, key, &refreshed)]).unwrap();
                 retired_documents.push(std::mem::replace(active_documents.last_mut().expect("the refreshed row owns a document"), document));
                 let paint_rows: Vec<_> = rows.iter().zip(active_documents.iter()).map(|((window, _, _, bounds, _), document)| (window.as_str(), document, *bounds)).collect();
@@ -365,7 +365,7 @@ pub fn retained_world_sequence_probe(scenario: &str) {
     assert_eq!(menu_open, case["menuOpen"].as_bool().unwrap(), "{scenario} context menu state");
     let expected_window = if case["steps"].as_array().unwrap().iter().any(|step| step == "modal") { None } else { fixture["expectedOwner"].as_str() };
     assert_eq!(active_window.as_deref(), expected_window, "{scenario} activates the exact receiving window");
-    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(ui_render::PointerId(77)).is_none(), "{scenario} released its captured owner");
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(ui_render::PointerId(77)).is_none(), "{scenario} released its captured owner");
 }
 
 pub fn tree_pointer_record(id: u64, key: &str, component: ui_contract::Component, children: &[u64], action: Option<&str>) -> ui_contract::UiNodeRecord {
@@ -396,7 +396,7 @@ pub fn tree_pointer_record(id: u64, key: &str, component: ui_contract::Component
 }
 
 pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
-    let mut caller = semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -405,18 +405,18 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
     let mut world3d_states = std::mem::take(&mut shell.surfaces.world3d_states);
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     for (surface, document, body) in documents {
         let mut cursor = UiDocumentFrameCursor::default();
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-            let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts {
-                chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(),
+            let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts {
+                chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(),
                 world3d_states: &mut world3d_states,
                 world_resources: &mut world_resources,
                 window_id: surface,
             };
-            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the tree pointer document faulted in phase {}", cursor.phase_name());
             done
         });
@@ -430,13 +430,13 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
     input
 }
 
-pub fn world3d_pointer_record(id: u64, key: &str, scene: &semio_framework_ui_scene_world3d::World3dScene) -> ui_contract::UiNodeRecord {
-    let surface = semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::World3d, scene).expect("bounded World3d scene encodes");
+pub fn world3d_pointer_record(id: u64, key: &str, scene: &semio_ui_scene_world3d::World3dScene) -> ui_contract::UiNodeRecord {
+    let surface = semio_ui_scene_surface::encode(ui_contract::SurfaceKind::World3d, scene).expect("bounded World3d scene encodes");
     tree_pointer_record(id, key, ui_contract::Component::Surface(surface), &[], None)
 }
 
 pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&str, &str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
-    let mut caller = semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -445,18 +445,18 @@ pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
     let mut world3d_states = AdmittedSurfaceMap::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     for (window_id, controller_id, document, body) in documents {
         let mut cursor = UiDocumentFrameCursor::default();
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-            let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts {
-                chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(),
+            let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts {
+                chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(),
                 world3d_states: &mut world3d_states,
                 world_resources: &mut world_resources,
                 window_id,
             };
-            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the component pointer document faulted in phase {}", cursor.phase_name());
             done
         });
@@ -490,7 +490,7 @@ pub fn boot_app(app_id: &str) -> AppDefinition {
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
             body_key: "main.body".into(),
-            surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+            surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
             icon_id: "app-window".into(),
             options: Default::default(),
             actions: vec![],
@@ -560,7 +560,7 @@ pub fn tour_app(introduction: Option<semio_framework::onboarding::IntroductionDe
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
             body_key: "main.body".into(),
-            surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+            surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
             icon_id: "app-window".into(),
             options: Default::default(),
             actions: vec![],
@@ -608,8 +608,8 @@ pub fn tour_introduction() -> semio_framework::onboarding::IntroductionDefinitio
 }
 
 pub fn tour_shell(introduction: Option<semio_framework::onboarding::IntroductionDefinition>) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.docs.session = Some(ActiveSession { plugin_id: "tour".into(), instance_id: 1, app: tour_app(introduction), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    shell.docs.session = Some(ActiveSession { plugin_id: "tour".into(), instance_id: 1, app: tour_app(introduction), view_state: ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -618,10 +618,10 @@ pub fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<Utilit
     let mut buckets: [Vec<UtilityNode>; 4] = [vec![], vec![], vec![], vec![]];
     for utility in utilities {
         let idx = match utility.category() {
-            semio_framework_ui_layout::utilities::UtilityCategory::Selection => 0,
-            semio_framework_ui_layout::utilities::UtilityCategory::Utilities => 1,
-            semio_framework_ui_layout::utilities::UtilityCategory::History => 2,
-            semio_framework_ui_layout::utilities::UtilityCategory::Sync => 3,
+            semio_ui_layout::utilities::UtilityCategory::Selection => 0,
+            semio_ui_layout::utilities::UtilityCategory::Utilities => 1,
+            semio_ui_layout::utilities::UtilityCategory::History => 2,
+            semio_ui_layout::utilities::UtilityCategory::Sync => 3,
         };
         buckets[idx].push(utility.clone());
     }

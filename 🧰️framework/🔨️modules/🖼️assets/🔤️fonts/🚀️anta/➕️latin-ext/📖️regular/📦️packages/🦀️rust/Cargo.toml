@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-font-anta-latin-ext-regular"
+name = "semio-font-anta-latin-ext-regular"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

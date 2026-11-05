@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-history-codec"
+name = "semio-os-history-codec"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,8 +24,8 @@ path = "../../🦀️.rs"
 semio-framework-pack-source = { path = "../../../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-os-history-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-history-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }

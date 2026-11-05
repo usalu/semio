@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMaterialDuctilityU
         record: "ChangedMaterialDuctilityUltimateStrain",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change material ductility: Ultimate strain eps_u", "Werkstoffduktilität: Gleichmaßdehnung eps_u ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change material ductility: Ultimate strain eps_u", "Werkstoffduktilität: Gleichmaßdehnung eps_u ändern")
     }
 }
 

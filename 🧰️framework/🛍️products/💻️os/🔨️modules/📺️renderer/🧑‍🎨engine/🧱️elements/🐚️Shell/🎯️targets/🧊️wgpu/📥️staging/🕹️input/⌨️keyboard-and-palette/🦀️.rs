@@ -28,7 +28,7 @@ impl ShellInputState {
         let Some(action) = self.widget_maps.tree_selection_change.clone() else {
             return;
         };
-        settle.deferred_actions.push(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "ids": [item_id] }) });
+        settle.deferred_actions.push(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: semio_renderer_wgpu_host_base::action_args_json!({ "ids": [item_id] }) });
     }
 
     /// 🌳️ Arms one tree-selection dispatch on the settle lane — a selection is a pointer gesture, and
@@ -44,7 +44,7 @@ impl ShellInputState {
 
     /// 👻️ Catalogue ghosts while dragging from a retained document tree (panel catalogue) — not shell `tree_drag`.
     pub fn sync_world3d_catalogue_drop_preview_from_retained_ui(&mut self, surfaces: &mut SurfaceState) {
-        let sessions = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions();
+        let sessions = semio_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions();
         if sessions.is_empty() {
             if self.tree_drag.is_none() && self.pending_tree_drag.is_none() {
                 surfaces.clear_world3d_catalogue_drop_previews();
@@ -68,18 +68,18 @@ impl ShellInputState {
 
     pub fn sync_canvas2d_catalogue_drag(&self, x: f32, y: f32, drag_data: &HashMap<String, String>, input: &mut InputState<ActionDescriptor>) {
         let Some((window_id, local_x, local_y)) = self.retained_scene_point(x, y, input) else {
-            semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
+            semio_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
             return;
         };
-        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drag_over(&window_id, local_x, local_y, drag_data, input);
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drag_over(&window_id, local_x, local_y, drag_data, input);
     }
 
     pub fn finish_canvas2d_catalogue_drop(&self, x: f32, y: f32, drag_data: &HashMap<String, String>, input: &mut InputState<ActionDescriptor>) -> bool {
         let Some((window_id, local_x, local_y)) = self.retained_scene_point(x, y, input) else {
-            semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
+            semio_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
             return false;
         };
-        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drop(&window_id, local_x, local_y, drag_data, input)
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drop(&window_id, local_x, local_y, drag_data, input)
     }
 
     /// 🔽️ Closes every open `Select` popup and drops the two `scroll_offsets` slots each one owned —
@@ -89,7 +89,7 @@ impl ShellInputState {
     /// leave behind.
     pub fn close_open_selects(&mut self) {
         for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
-            semio_framework_ui_wgpu_controls::select::clear_select_scroll(&mut self.scroll_offsets, &key);
+            semio_ui_wgpu_controls::select::clear_select_scroll(&mut self.scroll_offsets, &key);
             self.open_selects.insert(key, false);
         }
     }
@@ -112,16 +112,16 @@ impl ShellInputState {
     pub fn resolve_context_menu_surface(&self, x: f32, y: f32, node_id: Option<&str>, edge_id: Option<&str>, surfaces: &SurfaceState) -> ContextMenuSurfaceResolution {
         let mut fallback_hits = Vec::new();
         if let Some(node_id) = node_id {
-            fallback_hits.push(semio_framework_ui_declaration::ui::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
+            fallback_hits.push(semio_ui_declaration::ui::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
         }
         if let Some(edge_id) = edge_id {
-            fallback_hits.push(semio_framework_ui_declaration::ui::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
+            fallback_hits.push(semio_ui_declaration::ui::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
         }
         if let Some((window_id, body)) = self.retained_context_menu_window(x, y) {
-            if let Some(resolved) = semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::surface_context_menu_target(&window_id, x - body.x, y - body.y) {
-                let kind = semio_framework_os_renderer_wgpu_scene_render::context_menu_surface_kind_id(resolved.kind).to_string();
-                let semio_framework_os_renderer_wgpu_scene_render::SceneContextMenuTarget { mut hits, mut selection, text } = resolved.target;
-                if resolved.kind == semio_framework_ui_declaration::ui::SurfaceKind::World3d {
+            if let Some(resolved) = semio_renderer_wgpu_ui_engine::scene_interaction::surface_context_menu_target(&window_id, x - body.x, y - body.y) {
+                let kind = semio_renderer_wgpu_scene_render::context_menu_surface_kind_id(resolved.kind).to_string();
+                let semio_renderer_wgpu_scene_render::SceneContextMenuTarget { mut hits, mut selection, text } = resolved.target;
+                if resolved.kind == semio_ui_declaration::ui::SurfaceKind::World3d {
                     if let Some(state) = surfaces.world3d_state_for_window(&window_id) {
                         let (world_hits, world_selection) = infinite_world::world::world3d_context_menu_surface(&state.selection);
                         hits = world_hits;
@@ -144,7 +144,7 @@ impl ShellInputState {
         let Some((window_id, body)) = self.retained_context_menu_window(x, y) else {
             return false;
         };
-        semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::text_editor_claim_menu_action(&window_id, x - body.x, y - body.y, &action.action)
+        semio_renderer_wgpu_ui_engine::scene_interaction::text_editor_claim_menu_action(&window_id, x - body.x, y - body.y, &action.action)
     }
 
     /// 📋️ Alt + secondary press on a text editor opens its completions dropdown instead of a menu.
@@ -152,7 +152,7 @@ impl ShellInputState {
         let Some((window_id, body)) = self.retained_context_menu_window(x, y) else {
             return false;
         };
-        semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::text_editor_claim_alt_completions(&window_id, x - body.x, y - body.y)
+        semio_renderer_wgpu_ui_engine::scene_interaction::text_editor_claim_alt_completions(&window_id, x - body.x, y - body.y)
     }
 
     /// 🪟️ The retained body a right-click landed in, as `(window_id, body_rect)` — the hit registry's
@@ -182,14 +182,14 @@ impl ShellInputState {
     }
 
     /** ⌨️ Routes keyboard input to the open shell context menu. */
-    pub fn context_menu_handle_key(&mut self, action: semio_framework_ui_wgpu_input::KeyAction) -> ContextMenuKeyOutcome {
+    pub fn context_menu_handle_key(&mut self, action: semio_ui_wgpu_input::KeyAction) -> ContextMenuKeyOutcome {
         let Some(menu) = self.context_menu.as_mut() else {
             return ContextMenuKeyOutcome::Ignored;
         };
         let root = menu.items.clone();
         let path = menu.active.clone();
         match action {
-            semio_framework_ui_wgpu_input::KeyAction::Escape => {
+            semio_ui_wgpu_input::KeyAction::Escape => {
                 if menu.active.len() > 1 {
                     menu.active.pop();
                     return ContextMenuKeyOutcome::Consumed;
@@ -197,7 +197,7 @@ impl ShellInputState {
                 self.context_menu = None;
                 return ContextMenuKeyOutcome::CloseMenu;
             }
-            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if key.len() == 1 && key.chars().next().is_some_and(|ch| ch.is_ascii_digit() && ch != '0') => {
+            semio_ui_wgpu_input::KeyAction::Char(ref key) if key.len() == 1 && key.chars().next().is_some_and(|ch| ch.is_ascii_digit() && ch != '0') => {
                 let ordinal = key.parse::<usize>().ok();
                 let Some(ordinal) = ordinal else {
                     return ContextMenuKeyOutcome::Ignored;
@@ -208,15 +208,15 @@ impl ShellInputState {
                 }
                 return ContextMenuKeyOutcome::Ignored;
             }
-            semio_framework_ui_wgpu_input::KeyAction::ArrowUp => {
+            semio_ui_wgpu_input::KeyAction::ArrowUp => {
                 menu.active = context_menu_move_active(&root, &path, false);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            semio_framework_ui_wgpu_input::KeyAction::ArrowDown => {
+            semio_ui_wgpu_input::KeyAction::ArrowDown => {
                 menu.active = context_menu_move_active(&root, &path, true);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            semio_framework_ui_wgpu_input::KeyAction::ArrowLeft => {
+            semio_ui_wgpu_input::KeyAction::ArrowLeft => {
                 if menu.active.len() > 1 {
                     let parent = menu.active[..menu.active.len() - 1].to_vec();
                     menu.active = parent.clone();
@@ -224,13 +224,13 @@ impl ShellInputState {
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            semio_framework_ui_wgpu_input::KeyAction::ArrowRight => {
+            semio_ui_wgpu_input::KeyAction::ArrowRight => {
                 if let Some(next) = context_menu_open_submenu_path(&root, &menu.active) {
                     menu.active = next;
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            semio_framework_ui_wgpu_input::KeyAction::Enter | semio_framework_ui_wgpu_input::KeyAction::Space(true) => {
+            semio_ui_wgpu_input::KeyAction::Enter | semio_ui_wgpu_input::KeyAction::Space(true) => {
                 let active = menu.active.clone();
                 let Some(item) = context_menu_item_at_path(&root, &active) else {
                     return ContextMenuKeyOutcome::Ignored;
@@ -250,21 +250,21 @@ impl ShellInputState {
                 }
                 return ContextMenuKeyOutcome::Ignored;
             }
-            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "w" | "W") => {
+            semio_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "w" | "W") => {
                 menu.active = context_menu_move_active(&root, &path, false);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "s" | "S") => {
+            semio_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "s" | "S") => {
                 menu.active = context_menu_move_active(&root, &path, true);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "a" | "A") => {
+            semio_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "a" | "A") => {
                 if menu.active.len() > 1 {
                     menu.active.pop();
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "d" | "D") => {
+            semio_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "d" | "D") => {
                 if let Some(next) = context_menu_open_submenu_path(&root, &menu.active) {
                     menu.active = next;
                 }
@@ -305,7 +305,7 @@ impl ShellInputState {
     pub fn keyboard_focused_chrome_target(&self, input: &InputState<ActionDescriptor>, chrome: &ChromeState) -> Option<ui_render::AccessibilityTarget> {
         let key = self.accessibility_focused_control_id.as_deref().filter(|_| input.focused_id.is_none())?;
         let node = chrome.presented_chrome_accessibility.iter().find(|node| node.key == key && node.focusable && !node.disabled)?;
-        Some(ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() })
+        Some(ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() })
     }
 
     /// ⌨️🖼️ Where the keyboard focus ring goes this frame: around the focused chrome control's own hit rect.
@@ -319,9 +319,9 @@ impl ShellInputState {
     /// `chordFromKeyboardEvent`: the fixed `ctrl, meta, alt, shift` modifier order then the key, with
     /// Escape cancelling the capture and a bare modifier press ignored. `true` when the event was
     /// consumed by the capture (which includes the Escape cancel).
-    pub fn capture_keybinding_chord(&mut self, action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState) -> bool {
+    pub fn capture_keybinding_chord(&mut self, action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState) -> bool {
         let Some(control_id) = self.keybinding_capture_control_id.clone() else { return false };
-        if matches!(action, semio_framework_ui_wgpu_input::KeyAction::Escape) {
+        if matches!(action, semio_ui_wgpu_input::KeyAction::Escape) {
             self.keybinding_capture_control_id = None;
             return true;
         }

@@ -1,11 +1,11 @@
 //! 🕸️ Sequence play app commands — bulk node-graph edits and viewport pan/zoom.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::sequence::edit_rules;
 use crate::editor::sequence::editor_vocabulary::{sequence_child_leaves_emit, sequence_scene_edit, SEQUENCE_PLAY_APP_ID};
 use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_pack_json::{self as json, Value};
 use semio_framework_tool_machine::{node_drag_emit, NodeDragRecord, NodeGraphEditRow};

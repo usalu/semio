@@ -208,7 +208,7 @@ impl PartialOrd for HybridLogicalTimestamp {
 }
 
 /// 💎️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` (`semio-framework-value-derive`)
-/// roots its generated code at `::semio_framework_os_kernel::…`, which this crate sits BELOW in
+/// roots its generated code at `::semio_os_kernel::…`, which this crate sits BELOW in
 /// the dependency DAG (os-kernel depends on replication, not the reverse) — the path could never
 /// resolve here. `crate::value` is the raw first-party value module mounted directly by `#[path]`
 /// (see the crate root), so it needs no such dependency edge. Field names match the pre-existing

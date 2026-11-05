@@ -26,7 +26,7 @@ fn ops() -> Vec<Puzzle3dMutation> {
         hidden: false,
         locked: true,
     };
-    vec![create_object(object, Some(0)), change_object_anchor("o1".into(), puzzle_3d::Puzzle3dObjectAnchor::Derived), delete_object("o1".into()), connect_vortices("a1".into(), "o1:v0".into(), "o2:v0".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, None)]
+    vec![create_object(object, Some(0)), change_object_anchor("o1".into(), semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor::Derived), delete_object("o1".into()), connect_vortices("a1".into(), "o1:v0".into(), "o2:v0".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, None)]
 }
 
 fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
@@ -63,7 +63,7 @@ fn operations_round_trip_text_and_binary() {
     let operations = ops();
     assert!(!operations.is_empty());
     for operation in &operations {
-        semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(operation);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(operation);
         let line = operation.print_op();
         assert_eq!(&Puzzle3dMutation::parse_op(&line).expect("parse_op"), operation);
         let bytes = encode_op(operation).expect("encode");
@@ -76,7 +76,7 @@ fn operations_round_trip_text_and_binary() {
             _ => None,
         })
         .expect("create-object covered");
-    assert_eq!(created.object.anchor, puzzle_3d::Puzzle3dObjectAnchor::Fixed);
+    assert_eq!(created.object.anchor, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor::Fixed);
     let connected = operations
         .iter()
         .find_map(|op| match op {

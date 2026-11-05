@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRestraintLoadDistr
         record: "ChangedRestraintLoadDistribution",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Load and moment distribution of the restraint", "Halterung: Last- und Momentenverlauf ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Load and moment distribution of the restraint", "Halterung: Last- und Momentenverlauf ändern")
     }
 }
 

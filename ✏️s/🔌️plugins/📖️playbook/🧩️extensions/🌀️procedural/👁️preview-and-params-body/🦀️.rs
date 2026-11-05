@@ -73,30 +73,16 @@ pub(super) fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_sn
     }
     owner.retain_current(&preview_handles);
     host.retire_cold();
-    if meshes.is_empty() {
-        let fallback = semio_framework_pack_json::json!([{ "id": PREVIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(PREVIEW_FALLBACK_MESH_KIND) }]);
-        let fallback_instances = semio_framework_pack_json::json!([{
-            "id": "preview",
-            "meshId": PREVIEW_FALLBACK_MESH_KIND,
-            "position": [0.0, 0.0, 0.0],
-            "rotation": [0.0, 0.0, 0.0, 1.0],
-            "scale": [1.0, 1.0, 1.0],
-            "label": "preview",
-            "selected": false,
-            "hovered": false,
-        }]);
-        return (json_to_string(&fallback), json_to_string(&fallback_instances));
-    }
     (json_to_string(&Value::Array(meshes)), json_to_string(&Value::Array(instances)))
 }
 
 pub(super) fn render_preview_body(owner: &mut ModuleGeometryOwner, payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
-    let slug = if payload.example_id.is_empty() { "hexagonal-mushroom-column" } else { payload.example_id.as_str() };
+    let slug = payload.example_id.as_str();
     let Some(snapshot_json) = learning_program_json(slug) else {
         return text_node(format!("Unknown learning example: {slug}"));
     };
     let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| FlowHostSnapshot::default());
-    let params = params_as_json(&payload.params);
+    let params = effective_params(payload);
     let (meshes_json, instances_json) = evaluated_preview_payload(owner, &host_snapshot, &params);
     host_snapshot.retire_cold();
     scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
@@ -146,24 +132,28 @@ fn media_button(payload: &ModuleRenderPayload, format: &str, import: bool) -> Ui
     )
 }
 
-pub(super) fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload, parent_window: Option<(&str, &str)>) -> UiAssemblyResult<BuiltNode> {
+pub(super) fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload, parent_window: Option<(&str, &str)>, initial: Option<&Value>) -> UiAssemblyResult<BuiltNode> {
     let key = question.id.as_str();
     let mut ids = UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural question ids admission failed"))?;
     ui_admit(ids.push(value_text(&payload.question_id)?))?;
     let blueprint = payload.surface == "blueprint";
     let mut args = vec![("questionIds", UiValue::List(ids.finish())), ("field", value_text(if blueprint { "param" } else { "tryParam" })?), ("paramKey", value_text(key)?), ("key", value_text(&payload.question_id)?)];
+    if !blueprint { if let Some(initial) = initial.filter(|initial| initial.as_object().is_some()) { args.push(("initialValueJsonChunks", ui_admit(UiValue::try_text_chunks(&json_to_string(initial), 16_384))?)); } }
     if let Some((id, kind)) = parent_window {
         args.extend([("windowId", value_text(id)?), ("windowKindId", value_text(kind)?)]);
     }
     let args = value_map(args)?;
+    if matches!(question.kind.as_str(), "text" | "longText") {
+        let scene = text_parameter_scene(question, value, payload, &args);
+        let mut control = scene_surface(&format!("playbook-module.{key}.editor"), SurfaceKind::TextEditor, &scene)?;
+        control.disabled = !payload.interactive;
+        control.accessibility.label = Some(ui_label(&question.label)?);
+        let wrapper = ui_admit(field(ui_label(&question.label)?).try_id(format!("playbook-module.{key}")))?;
+        return ui_admit(ui_admit(wrapper.try_child(control))?.try_build());
+    }
     let control: BuiltNode = match question.kind.as_str() {
-        "text" | "longText" | "number" => {
-            let kind = match question.kind.as_str() {
-                "longText" => InputKind::LongText,
-                "number" => InputKind::Number,
-                _ => InputKind::Text,
-            };
-            let mut input = input(kind).value(ui_text(json_string_value(value))?);
+        "number" => {
+            let mut input = input(InputKind::Number).value(ui_text(json_string_value(value))?);
             if let Some(placeholder) = &question.placeholder {
                 input = input.placeholder(ui_label(placeholder)?);
             }
@@ -179,14 +169,15 @@ pub(super) fn render_question_control(question: &PlaybookBlock, value: &Value, p
 }
 
 pub(super) fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels, parent_window: Option<(&str, &str)>, embedded: bool) -> UiAssemblyResult<BuiltNode> {
-    let slug = if payload.example_id.is_empty() { "hexagonal-mushroom-column" } else { payload.example_id.as_str() };
+    let slug = payload.example_id.as_str();
     let Some(snapshot_json) = learning_program_json(slug) else {
         return text_node(format!("Unknown learning example: {slug}"));
     };
     let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginAssemblyError::new("procedural.learning-program", error.to_string()))?;
     let spec = flow_host_snapshot_to_form_spec(&host_snapshot, &PlaybookFlowFormProducer);
+    let initial = embedded_flow::input_initial_values(&host_snapshot, &effective_params(payload));
     host_snapshot.retire_cold();
-    let values: Map = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
+    let values: Map = effective_params(payload).as_object().cloned().unwrap_or_default();
     let Some(step) = spec.steps.first() else {
         return text_node(labels.no_flow_inputs.as_str());
     };
@@ -199,7 +190,7 @@ pub(super) fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleL
     }
     for question in visible {
         let value = values.get(&question.id).cloned().unwrap_or_else(|| question.default.as_ref().map(json_from_dsl_value).unwrap_or(Value::Null));
-        column = ui_admit(column.try_child(render_question_control(question, &value, payload, parent_window)?))?;
+        column = ui_admit(column.try_child(render_question_control(question, &value, payload, parent_window, Some(&initial))?))?;
     }
     for format in SOLID_MEDIA_FORMATS.into_iter().filter(|_| !embedded) {
         column = ui_admit(column.try_child(media_button(payload, format, false)?))?;
@@ -212,15 +203,64 @@ pub(super) fn embedded_payload(input: &str, body_key: &str) -> UiAssemblyResult<
     let error = || PluginAssemblyError::new("procedural.extension-input", "invalid embedded surface input");
     let props = parse_json(input, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| error())?;
     if props.get("bodyKey").and_then(Value::as_str) != Some(body_key) { return Err(error()); }
-    let json = props.get("paramsJson").and_then(Value::as_str).ok_or_else(error)?;
-    let payload: ModuleRenderPayload = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| error())?;
-    let target = parse_json(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| error())?;
+    let chunks = props.get("paramsJsonChunks").and_then(Value::as_array).ok_or_else(error)?;
+    let json = join_text_chunks(chunks.iter().map(Value::as_str), 65_536).map_err(|_| error())?;
+    let payload: ModuleRenderPayload = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| error())?;
+    let target = parse_json(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| error())?;
     let window = match (target.get("windowId").and_then(Value::as_str), target.get("windowKindId").and_then(Value::as_str)) {
         (None, None) => None,
         (Some(id), Some(kind)) if !id.is_empty() && !kind.is_empty() && payload.surface == "try" => Some((id.to_string(), kind.to_string())),
         _ => return Err(error()),
     };
+    if target.get("authoredParams").is_some_and(|value| value.as_object().is_none()) { return Err(error()); }
     if payload.question_id.is_empty() || payload.controller_id.is_empty() || !matches!(payload.surface.as_str(), "blueprint" | "try") { return Err(error()); }
     Ok((payload, window))
 }
 //#endregion 🔖️Params
+
+pub(super) fn join_text_chunks<'a>(chunks: impl Iterator<Item = Option<&'a str>>, maximum: usize) -> Result<String, &'static str> {
+    let chunks = chunks.take(257).collect::<Option<Vec<_>>>().ok_or("text chunks must contain strings")?;
+    UiValue::join_text_chunks(chunks.into_iter(), maximum)
+}
+
+fn control_arguments_json(value: &UiValue) -> Value {
+    match value {
+        UiValue::Null => Value::Null,
+        UiValue::Bool(value) => Value::from(*value),
+        UiValue::Number(value) => Value::from(*value),
+        UiValue::Text(value) => Value::from(value.as_str()),
+        UiValue::List(values) => Value::Array(values.iter().map(|value| control_arguments_json(&value)).collect()),
+        UiValue::Map(values) => {
+            let mut result = Map::new();
+            for (key, value) in values.iter() { result.insert(key.to_string(), control_arguments_json(&value)); }
+            Value::Object(result)
+        }
+    }
+}
+
+pub(super) fn text_parameter_scene(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload, args: &UiValue) -> semio_plugin::TextEditorScene {
+    let blueprint = payload.surface == "blueprint";
+    let mut scene = semio_plugin::TextEditorScene::base(json_string_value(value), None, None);
+    let arguments = control_arguments_json(args);
+    let identity = if blueprint { None } else {
+        let mut address = Map::new();
+        for key in ["key", "paramKey", "windowId", "windowKindId"] {
+            if let Some(value) = arguments.get(key) { address.insert(key, value.clone()); }
+        }
+        Some(Value::Object(address))
+    };
+    let mut settings = semio_framework_pack_json::json!({
+        "readOnly": !payload.interactive,
+        "commit": "change",
+        "editControllerId": payload.controller_id,
+        "editAction": if blueprint { "patchQuestions" } else { "setTryValue" },
+        "editArgument": "valueJsonChunks",
+        "editEncoding": "json-chunks",
+        "editMaximumBytes": if blueprint { BLUEPRINT_VALUE_MAXIMUM_BYTES } else { ANSWER_VALUE_MAXIMUM_BYTES },
+        "editArguments": arguments,
+        "label": question.label
+    });
+    if let (Some(identity), Value::Object(settings)) = (identity, &mut settings) { settings.insert("editIdentityArguments", identity); }
+    scene.settings_json = Some(json_to_string(&settings));
+    scene
+}

@@ -1,6 +1,6 @@
 //! 🧪️ Original shared semantic source identity, denial and actual catalog cancellation frontiers.
 use super::*;
-use semio_framework_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationRequest};
+use semio_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationRequest};
 #[test]
 fn original_shared_semantic_source_constructs_one_paired_issuer_and_closes_all_actual_frontiers(){
  type Owners=DocumentStoreOwners<DemoSnapshot,DemoMutation>;

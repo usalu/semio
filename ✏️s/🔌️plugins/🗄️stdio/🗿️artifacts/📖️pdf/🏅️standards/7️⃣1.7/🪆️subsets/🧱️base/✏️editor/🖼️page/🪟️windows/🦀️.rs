@@ -17,7 +17,7 @@ pub fn window_definition() -> WindowKindDefinition {
     let blue = || ActionArgDef::number("blue", LocalizedLabel::native("Blue", "Blau")).required();
     let action = |id, en, de, args| {
         let mut definition = ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), ActionKind::Mutation).with_args(args);
-        definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+        definition.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
         definition
     };
     WindowKindDefinition {
@@ -119,17 +119,17 @@ pub fn window_definition() -> WindowKindDefinition {
 }
 
 /// 🖼️ Paints every page, stacked top to bottom, with one layer per object.
-pub fn render_window(snapshot: &PdfSnapshot) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+pub fn render_window(snapshot: &PdfSnapshot) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     render_window_with_selection(snapshot, None)
 }
 
 /// 🖼️ Paints every page and outlines `selected` when the host has one.
-pub fn render_window_with_selection(snapshot: &PdfSnapshot, selected: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
-    semio_framework_plugin::scene_surface(BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, canvas_layers(snapshot, selected)))
+pub fn render_window_with_selection(snapshot: &PdfSnapshot, selected: Option<&str>) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
+    semio_plugin::scene_surface(BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, canvas_layers(snapshot, selected)))
 }
 
 /// 🖼️ Paints the page window from the framework-owned object selection.
-pub fn render_selected(snapshot: &PdfSnapshot, interaction: &semio_framework_plugin::app::InteractionView<'_>) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+pub fn render_selected(snapshot: &PdfSnapshot, interaction: &semio_plugin::app::InteractionView<'_>) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     render_window_with_selection(snapshot, interaction.selection(OBJECT_DOMAIN).ids.first().map(String::as_str))
 }
 
@@ -178,9 +178,9 @@ pub fn render_inspector(
     snapshot: &PdfSnapshot,
     selected: Option<&str>,
     controller_id: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
+    publication_revision: semio_plugin::UiPublicationRevision,
     locale: Locale,
-) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     let object = selected.and_then(|id| objects(snapshot).into_iter().find(|object| object.id == id));
     let mut column = ui::column().try_id("pdf-object").map_err(|_| inspector_error("pdf.object.root-id"))?;
     let Some(object) = object else {

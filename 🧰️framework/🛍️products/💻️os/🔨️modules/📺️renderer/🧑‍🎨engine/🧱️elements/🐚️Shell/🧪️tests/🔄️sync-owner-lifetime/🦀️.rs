@@ -3,15 +3,15 @@ use super::{shell_sync_owner_matches, ShellSyncOwner};
 const BINDING_FIXTURE: &str = include_str!("../../../../../../🔌️plugin/📡️backbone/🔗️binding/🧪️tests/🧫️fixtures/🔣️.json");
 #[allow(non_snake_case)]
 fn SHELL_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::shell_source()
+    semio_renderer_wgpu_test_support::shell_source()
 }
 #[allow(non_snake_case)]
 fn BRIDGE_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs")
+    semio_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn KERNEL_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+    semio_renderer_wgpu_test_support::renderer_source()
 }
 
 fn owner(generation: u64, uri: &str) -> ShellSyncOwner {

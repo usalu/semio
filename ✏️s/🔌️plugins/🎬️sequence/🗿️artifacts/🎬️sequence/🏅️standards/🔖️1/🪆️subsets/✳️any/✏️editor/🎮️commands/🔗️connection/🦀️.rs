@@ -1,10 +1,10 @@
 //! 🔗️ Sequence play app commands — connect/disconnect steps.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::sequence::editor_vocabulary::{sequence_edit_emit, sequence_scene_edit};
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ConnectSteps

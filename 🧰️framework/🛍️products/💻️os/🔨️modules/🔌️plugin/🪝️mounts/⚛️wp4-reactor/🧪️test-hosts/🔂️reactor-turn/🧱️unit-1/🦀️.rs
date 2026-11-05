@@ -5,13 +5,13 @@ use semio_framework::kernel::Event;
 use semio_framework::kernel::MessageEndpoint;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::RequestOutcome;
-use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
-use semio_framework_plugin_reactor_patches as patches;
-use semio_framework_plugin_reactor_lifecycle as pending;
+use semio_plugin_reactor_lifecycle::instance_lifetime;
+use semio_plugin_reactor_patches as patches;
+use semio_plugin_reactor_lifecycle as pending;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
-use semio_framework_plugin_reactor_turn as turn;
-use semio_framework_ui_contract as ui_contract;
+use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
+use semio_plugin_reactor_turn as turn;
+use semio_ui_contract as ui_contract;
 
 #[doc(hidden)]
 #[cfg(test)]

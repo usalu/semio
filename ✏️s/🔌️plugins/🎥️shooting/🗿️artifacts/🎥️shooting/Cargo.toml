@@ -49,7 +49,7 @@ path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packag
 [workspace.dependencies.semio-framework-tool-machine]
 path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-contract]
+[workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-bmp]

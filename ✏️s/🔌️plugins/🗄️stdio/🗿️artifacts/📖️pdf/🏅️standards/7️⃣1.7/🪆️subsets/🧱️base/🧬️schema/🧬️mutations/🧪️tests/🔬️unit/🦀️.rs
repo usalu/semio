@@ -8,7 +8,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::ObjRef;
 #[allow(unused_imports)]
 use semio_framework_value::FromValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_plugin::{Fault, FaultCode, FaultOrigin};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector};
 use crate::standards::v1_7::subsets::base::schema::mutations::*;
@@ -80,7 +80,7 @@ fn samples_apply_and_invert_on_a_real_document() {
         for inverse in semio_s_artifact_stdio_contract::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_pdf_mutation(&mut restored, &inverse);
         }
-        assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label().resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En));
+        assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label().resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En));
     }
 }
 

@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "component", kind: "create-component", record: "CreateComponent" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Place component \"{}\"", self.component.name), &format!("Komponente \"{}\" platzieren", self.component.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Place component \"{}\"", self.component.name), &format!("Komponente \"{}\" platzieren", self.component.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

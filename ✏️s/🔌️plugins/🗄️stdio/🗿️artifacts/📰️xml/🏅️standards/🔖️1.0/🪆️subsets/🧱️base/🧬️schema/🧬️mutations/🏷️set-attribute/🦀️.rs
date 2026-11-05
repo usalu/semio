@@ -22,8 +22,8 @@ pub type SetAttributePayload = SetAttributeMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetAttributeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "attribute", kind: "set-attribute", record: "SetAttribute" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Attribute", "Attribut setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Attribute", "Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-attribute".to_string()]

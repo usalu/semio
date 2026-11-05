@@ -10,7 +10,7 @@ pub struct ChangeDeckShearStress { pub deck_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeDeckShearStress where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_deck_shear_stress::ChangeDeckShearStress> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "deck-shear-stress", kind: "change-deck-shear-stress", record: "ChangedDeckShearStress" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change shear stress to transfer τ_h of deck {}", self.deck_id), &format!("Zu übertragende Schubspannung τ_h von Deck {} ändern", self.deck_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change shear stress to transfer τ_h of deck {}", self.deck_id), &format!("Zu übertragende Schubspannung τ_h von Deck {} ändern", self.deck_id)) }
     fn target(&self) -> Vec<String> { vec![self.deck_id.clone()] }
 }
 

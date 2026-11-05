@@ -1,6 +1,6 @@
 use semio_framework_plugin::WindowKit;
 use crate::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;
-use semio_framework_plugin::MeshWindowKit;
+use semio_plugin::MeshWindowKit;
 use crate::editor::obj::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

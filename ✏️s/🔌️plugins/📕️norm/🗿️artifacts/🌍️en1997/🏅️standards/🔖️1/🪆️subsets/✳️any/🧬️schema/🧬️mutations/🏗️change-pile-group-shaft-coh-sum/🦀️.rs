@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileGroupShaftCohS
         record: "ChangedPileGroupShaftCohSum",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Block perimeter Σ c_u·h [Pa·m] of the pile group", "Pfahlgruppe: Blockumfang Σ c_u·h [Pa·m] ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Block perimeter Σ c_u·h [Pa·m] of the pile group", "Pfahlgruppe: Blockumfang Σ c_u·h [Pa·m] ändern")
     }
 }
 

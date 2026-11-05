@@ -17,7 +17,7 @@ async fn object_context_menu_owns_puzzle_rows_not_shell_fallback() {
 /// 📏️ Wave W-Y: gumball scale on a locked volume refuses with a notice and emits no edit.
 #[semio_framework_async_macros::async_test]
 async fn gumball_scale_on_locked_volume_refuses_without_edit() {
-    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+    let notices = |result: &semio_plugin::InvocationResult| -> Vec<String> {
         result.requested_effects.iter().filter_map(|effect| match effect {
             Effect::Notify { message } => Some(message.clone()),
             _ => None,
@@ -65,7 +65,7 @@ fn leftover_copy_paste_clones_selected_object() {
     assert_eq!(objects[0].id, "seed-left-001");
     assert_eq!(objects[0].origin, [1.0, 2.0, 3.0]);
     let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations(&fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
+    let mutations = puzzle3d_paste_operations(&fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -114,7 +114,7 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
     assert_eq!(objects.len(), 1, "leftover selected vortex uuid must resolve to the parent object: {objects:?}");
     assert_eq!(objects[0].id, "seed-left-001");
     let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations(&fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
+    let mutations = puzzle3d_paste_operations(&fragment, &semio_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -129,7 +129,7 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
 /// 🕹️ leftover overlay → translateSelection on a locked object must refuse with a visible notice.
 #[semio_framework_async_macros::async_test]
 async fn leftover_translate_selection_on_locked_object_refuses_with_notice() {
-    let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
+    let notices = |result: &semio_plugin::InvocationResult| -> Vec<String> {
         result.requested_effects.iter().filter_map(|effect| match effect {
             Effect::Notify { message } => Some(message.clone()),
             _ => None,

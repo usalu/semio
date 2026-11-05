@@ -178,7 +178,7 @@ pub fn project_flow_status_json(host_snapshot:&dyn FlowSnapshotSource,remaining:
 
 /// 👁️ Computes the same empty-session status projection without a mutable Host or session.
 pub fn initial_flow_status_json(snapshot:&dyn FlowSnapshotSource)->String{
- let infos=HistoryFoldIndex::new();let cache=NeuralCache::new();let registry=semio_framework_os_flow_operators::registry::flow_operator_registry();
+ let infos=HistoryFoldIndex::new();let cache=NeuralCache::new();let registry=semio_os_flow_operators::registry::flow_operator_registry();
  let remaining=FlowHost::project_pending_widget_ids(snapshot,&infos,None,None,None,registry.as_ref(),&cache);
  let text=project_flow_status_json(snapshot,&remaining,"",&BTreeSet::new(),|id|FlowHost::project_widget_blocked_ports(snapshot,&infos,None,id));neural::ColdRetire::retire_cold(cache);text
 }

@@ -1,5 +1,5 @@
 //! 🎒️ Concrete Semio tessellation cost and cache laws.
-use semio_framework_os_flow::mesh::*;
+use semio_os_flow::mesh::*;
 use semio_s_spatial_kernel_semio_session::{Session, TessellationStepOutcome};
 
 #[test]

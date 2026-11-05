@@ -57,7 +57,7 @@ export function unitProfilesV1(store:string):UnitProfileV1[]{
   for(const segment of pattern.split("/"))current=current.flatMap(dir=>segment==="*"?directoriesOf(dir):isDirectory(join(dir,segment))?[join(dir,segment)]:[]);
   for(const base of current){
    let level=[base];
-   for(let depth=0;depth<policy.maximumProfileDepth;depth++){level=level.flatMap(directoriesOf).filter(dir=>basename(dir)!==policy.directory);for(const dir of level)if(isDirectory(join(dir,policy.directory)))found.set(dir,{buildDirectory:base,profileDirectory:dir,profile:basename(dir)});}
+   for(let depth=0;depth<policy.maximumProfileDepth;depth++){level=level.flatMap(directoriesOf).filter(dir=>basename(dir)!==policy.directory&&!(pattern===policy.laneBase&&depth===0&&policy.excludedLaneChildren.includes(basename(dir))));for(const dir of level)if(isDirectory(join(dir,policy.directory)))found.set(dir,{buildDirectory:base,profileDirectory:dir,profile:basename(dir)});}
   }
  }
  return [...found.values()].sort((left,right)=>order(left.profileDirectory,right.profileDirectory));

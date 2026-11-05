@@ -94,7 +94,7 @@ fn marquee_face_preview_and_overlay_use_logical_face_ids() {
     update_marquee_preview(&mut state.camera, &mut state.selection, &mut state.scene, bounds);
     assert!(state.selection.marquee_preview_ids.iter().any(|id| id == "10" || id == "11"), "preview ids: {:?}", state.selection.marquee_preview_ids);
     let mut lines = Vec::new();
-    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_framework_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(!lines.is_empty(), "face marquee preview should draw triangle edge lines");
 }
 
@@ -177,13 +177,13 @@ fn preview_survives_sync_when_scene_json_unchanged() {
 #[test]
 fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsing() {
     let mut scene = scene_with_selection("{}");
-    let mut page = semio_framework_ui_declaration::ui::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
+    let mut page = semio_ui_declaration::ui::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
     page.push_item(World3dSnapshotItem { numbers: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 45.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 12, ..Default::default() }).unwrap();
     page.seal().unwrap();
-    let descriptor = semio_framework_ui_declaration::ui::World3dSnapshotDescriptor { revision: 5, generation: 7, page_count: 1, item_count: 1, byte_count: 0, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
-    let token = semio_framework_ui_declaration::ui::world3d_snapshot_begin(descriptor).unwrap();
-    semio_framework_ui_declaration::ui::world3d_snapshot_admit_page(token, page).unwrap();
-    let lease = semio_framework_ui_declaration::ui::world3d_snapshot_seal(token).unwrap();
+    let descriptor = semio_ui_declaration::ui::World3dSnapshotDescriptor { revision: 5, generation: 7, page_count: 1, item_count: 1, byte_count: 0, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
+    let token = semio_ui_declaration::ui::world3d_snapshot_begin(descriptor).unwrap();
+    semio_ui_declaration::ui::world3d_snapshot_admit_page(token, page).unwrap();
+    let lease = semio_ui_declaration::ui::world3d_snapshot_seal(token).unwrap();
     scene.world_3d.as_mut().unwrap().snapshot = Some(lease);
 
     let bounds = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
@@ -217,9 +217,9 @@ fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsi
     assert_eq!(actual.fov_y, expected.fov_y);
     assert_eq!(typed.bridge.snapshot_lease, Some(lease));
 
-    semio_framework_ui_declaration::ui::world3d_snapshot_begin_close(lease).unwrap();
-    assert!(!semio_framework_ui_declaration::ui::world3d_snapshot_close_step(lease).unwrap());
-    assert!(semio_framework_ui_declaration::ui::world3d_snapshot_close_step(lease).unwrap());
+    semio_ui_declaration::ui::world3d_snapshot_begin_close(lease).unwrap();
+    assert!(!semio_ui_declaration::ui::world3d_snapshot_close_step(lease).unwrap());
+    assert!(semio_ui_declaration::ui::world3d_snapshot_close_step(lease).unwrap());
 }
 
 /// 🗑️ A url the renderer's decoder refused is offered ONCE. Both request loops re-derive their
@@ -378,7 +378,7 @@ fn append_component_face_overlay_lines_include_hovered_face() {
     state.scene.meshes.insert("mesh-1".into(), mesh);
     state.scene.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     let mut lines = Vec::new();
-    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_framework_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 6, "hovered face should emit triangle edge lines, got {}", lines.len());
 }
 

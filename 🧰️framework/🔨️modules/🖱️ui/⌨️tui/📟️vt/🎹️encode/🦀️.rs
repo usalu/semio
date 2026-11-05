@@ -1,6 +1,6 @@
-pub use semio_framework_ui_tui_core::event::KeypadKey;
-use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::Pos;
+pub use semio_ui_tui_core::event::KeypadKey;
+use semio_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::Pos;
 
 /// 🐭️ Which pointer events the child asked to receive.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

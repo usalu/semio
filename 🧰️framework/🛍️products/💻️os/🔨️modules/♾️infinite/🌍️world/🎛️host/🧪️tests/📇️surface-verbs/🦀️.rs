@@ -1,14 +1,14 @@
 //! 🧪️ host tests (📇️surface-verbs): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::WorldInteractionIntent;
-use semio_framework_os_infinite_world_components::{GumballHandle, set_world3d_declared_actions, world3d_declares_action, world3d_offers_transform_gumball};
-use semio_framework_os_infinite_world_cursors::{gumball_handle_action_id, WorldInteractionAuthorityStep};
-use semio_framework_os_infinite_world_interaction::{enqueue_world3d_event, world3d_interaction_front_generation};
-use semio_framework_os_infinite_world_host::{step_world3d_interaction, World3dState};
+use semio_os_infinite_world_model::WorldInteractionIntent;
+use semio_os_infinite_world_components::{GumballHandle, set_world3d_declared_actions, world3d_declares_action, world3d_offers_transform_gumball};
+use semio_os_infinite_world_cursors::{gumball_handle_action_id, WorldInteractionAuthorityStep};
+use semio_os_infinite_world_interaction::{enqueue_world3d_event, world3d_interaction_front_generation};
+use semio_os_infinite_world_host::{step_world3d_interaction, World3dState};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_wgpu_input::PointerModifiers;
-use semio_framework_ui_theme::geometry::Rect;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_wgpu_input::PointerModifiers;
+use semio_ui_theme::geometry::Rect;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -129,7 +129,7 @@ fn a_primary_press_enters_gumball_pick_only_on_a_surface_that_declares_one() {
         let modifiers = PointerModifiers::default();
         assert!(enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(200.0, 200.0, true, 0, &modifiers)).is_ok(), "{name}: the intent is admitted");
         let generation = world3d_interaction_front_generation(&state.camera, &state.authority).expect("a queued intent carries a generation");
-        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+        let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         let mut turns = 0;
         while !state.interaction_census().contains("active=GumballPick") {
             let step = with_world_step_context(1, |context| step_world3d_interaction(&mut state, generation, &mut input, context));

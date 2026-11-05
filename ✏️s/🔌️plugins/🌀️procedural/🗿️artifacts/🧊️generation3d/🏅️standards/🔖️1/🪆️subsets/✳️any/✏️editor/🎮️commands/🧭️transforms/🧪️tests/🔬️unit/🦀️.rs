@@ -121,7 +121,7 @@ fn the_gumball_rides_the_shared_gesture_runner() {
 /// the `create-widget` of the operator it inserts (audit P4); other tools declare none.
 #[test]
 fn every_gumball_tool_declares_the_leaf_it_yields_as_its_intent() {
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     type Editor = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
     for (verb, motion) in [("translateSelection", GumballMotion::Translate([1.0, 0.0, 0.0])), ("rotateSelection", GumballMotion::Rotate(AxisAngle { axis: [0.0, 0.0, 1.0], angle: 0.5 })), ("scaleSelection", GumballMotion::Scale([2.0, 1.0, 1.0]))] {
         let tool = format!("{}#{verb}", semio_s_artifact_procedural_3d_model::GENERATION3D_EDITOR_APP_ID);
@@ -171,8 +171,8 @@ fn every_gumball_refusal_is_a_named_fault_code() {
 /// refusal that names a kind fills `{kind}` from the fault's param, never from its English developer detail.
 #[test]
 fn every_gumball_refusal_code_has_a_localized_notice() {
-    use semio_framework_plugin::ArtifactEditor;
-    use semio_framework_ui_locale::{Locale, Terminology};
+    use semio_plugin::ArtifactEditor;
+    use semio_ui_locale::{Locale, Terminology};
     type Editor = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
     let notices = semio_framework::fault_notice_definitions(<Editor as ArtifactEditor>::fault_notices());
     assert_eq!(semio_framework::validate_fault_notices(&notices), Vec::new(), "the gumball notice table is a valid table");

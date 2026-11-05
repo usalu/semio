@@ -28,8 +28,8 @@ pub enum ActiveArtifactEnvelopeDecodeState {
 }
 
 /// 🎟️ Keeps original worker receipts and child terminal evidence through one admitted lifecycle turn.
-pub(crate) fn original_worker_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job_worker_authority::WorkerJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-    semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+pub(crate) fn original_worker_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job_worker_authority::WorkerJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
         let(step,terminal)=cx.with_retained_loan(grant,owner)?;
         let step=match step{
             semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
@@ -42,8 +42,8 @@ pub(crate) fn original_worker_lifecycle(cx:&mut semio_framework_job::StepContext
 
 /// 🎟️ Retains the whole original rejected source through its actual context and paid terminal witness.
 #[doc(hidden)]
-pub fn original_rejection_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job::InteractiveJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-    semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+pub fn original_rejection_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job::InteractiveJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
         let(step,terminal)=cx.with_retained_loan(grant,owner)?;let step=match step.admit(grant,terminal)?{
             semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),
             semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason},
@@ -57,7 +57,7 @@ pub struct ActiveArtifactEnvelopeDecode<P: Send + 'static, Mutation: Send + 'sta
     pub generation: semio_framework_job::Generation,
     pub cancel: semio_framework_job::CancelToken,
     pub session: ManuallyDrop<Option<semio_framework_job_worker::MountedWorkerJobSession<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
-    pub session_rejected: ManuallyDrop<Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
+    pub session_rejected: ManuallyDrop<Option<semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
     pub outcome_pending: bool,
     terminal_state: Option<ActiveArtifactEnvelopeDecodeState>,
     pub resume_pending: bool,
@@ -75,7 +75,7 @@ where
     pub fn admitted(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, decode: store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>, completion: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion>, source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation)) -> Self {
         let cancel = semio_framework_job::CancelToken::root_now();
         let session=None;
-        let session_rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(decode,source_identity));
+        let session_rejected=Some(semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(decode,source_identity));
 
         Self {
             operation,
@@ -155,15 +155,15 @@ where
         live_generation: semio_framework_job::Generation,
         completed: &store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>,
         grant: RetainedCloneGrant,
-    ) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    ) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         if let Some(rejected)=self.session_rejected.as_mut(){
-            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
+            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
             if rejected.admission_pending()&&!cx.is_cancelled()&&!self.cancel.is_cancelled_now(){
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"artifact_envelope_decode",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
                 let before=cx.retained_progress();
                 rejected.admit_pending(config,&mut self.session,cx)?;
-                return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+                return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
             }
 
             if rejected.terminal_is_empty(){

@@ -6,6 +6,8 @@ pub trait OriginalFailureContext{
  fn original_failure_identity(&self)->Result<(usize,Option<u64>),ValueError>;
  fn is_cancelled(&self)->bool;
  fn should_yield(&self)->bool;
+ fn original_retirement_is_active(&self)->Result<bool,ValueError>;
+ fn retirement_should_yield(&self)->bool;
  fn retained_work_can_enter(&self,demand:RetirementDemand)->bool;
  fn retained_grant(&self)->RetainedCloneGrant;
  fn original_total_retained_grant(&self)->RetainedCloneGrant;

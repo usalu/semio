@@ -49,10 +49,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "rule-layout-points", kind: "set-rule-layout-points", record: "SetRuleLayoutPoints" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.points.len() + self.cleared.len() {
-            1 => semio_framework_ui_locale::LocalizedLabel::native("Place 1 rule node", "1 Regelknoten platzieren"),
-            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Place {count} rule nodes"), &format!("{count} Regelknoten platzieren")),
+            1 => semio_ui_locale::LocalizedLabel::native("Place 1 rule node", "1 Regelknoten platzieren"),
+            count => semio_ui_locale::LocalizedLabel::native(&format!("Place {count} rule nodes"), &format!("{count} Regelknoten platzieren")),
         }
     }
     fn target(&self) -> Vec<String> {

@@ -1,0 +1,1311 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Append Selects New Generation",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "add",
+        "generation": {
+          "id": "g3",
+          "name": "Third",
+          "values": {
+            "x": 3
+          }
+        },
+        "index": null
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          },
+          {
+            "id": "g3",
+            "name": "Third",
+            "values": {
+              "x": 3
+            }
+          }
+        ],
+        "selectedGenerationId": "g3",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Insert At First Index",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "add",
+        "generation": {
+          "id": "g3",
+          "name": "Third",
+          "values": {
+            "x": 3
+          }
+        },
+        "index": 0
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g3",
+            "name": "Third",
+            "values": {
+              "x": 3
+            }
+          },
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g3",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Insert At Length",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "add",
+        "generation": {
+          "id": "g3",
+          "name": "Third",
+          "values": {
+            "x": 3
+          }
+        },
+        "index": 2
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          },
+          {
+            "id": "g3",
+            "name": "Third",
+            "values": {
+              "x": 3
+            }
+          }
+        ],
+        "selectedGenerationId": "g3",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Reject Overshoot",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "add",
+        "generation": {
+          "id": "g3",
+          "name": "Third",
+          "values": {
+            "x": 3
+          }
+        },
+        "index": 3
+      },
+      "outcome": "index",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Reject Duplicate Identifier",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "add",
+        "generation": {
+          "id": "g1",
+          "name": "First",
+          "values": {
+            "a": 1
+          }
+        },
+        "index": null
+      },
+      "outcome": "duplicate",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Remove Selected Uses First Different Identifier",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "remove",
+        "id": "g1"
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g2",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Remove Unselected Preserves Selection",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "remove",
+        "id": "g2"
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Remove Last Clears Selection",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": "retained"
+      },
+      "mutation": {
+        "kind": "remove",
+        "id": "g1"
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [],
+        "selectedGenerationId": null,
+        "previewText": "retained"
+      }
+    },
+    {
+      "name": "Reject Missing Removal",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "remove",
+        "id": "absent"
+      },
+      "outcome": "missing",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Remove First Duplicate Uses Different Fallback",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g1",
+            "name": "Duplicate",
+            "values": {}
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "remove",
+        "id": "g1"
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "Duplicate",
+            "values": {}
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g2",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Rename First Match",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "rename",
+        "id": "g1",
+        "name": "Renamed"
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "Renamed",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Equal Rename Is Unchanged",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "rename",
+        "id": "g1",
+        "name": "First"
+      },
+      "outcome": "unchanged",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Reject Missing Rename",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "rename",
+        "id": "absent",
+        "name": "Name"
+      },
+      "outcome": "missing",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Insert Generation Value",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "setValue",
+        "id": "g1",
+        "key": "z",
+        "value": [
+          1,
+          2
+        ]
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1,
+              "z": [
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Replace Generation Value",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "setValue",
+        "id": "g1",
+        "key": "a",
+        "value": false
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": false
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Equal Generation Value Is Unchanged",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "setValue",
+        "id": "g1",
+        "key": "a",
+        "value": 1
+      },
+      "outcome": "unchanged",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Reject Missing Value Generation",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "setValue",
+        "id": "absent",
+        "key": "a",
+        "value": 1
+      },
+      "outcome": "missing",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Empty Question Identifier",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "setValue",
+        "id": "g1",
+        "key": "",
+        "value": null
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1,
+              "": null
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Select Existing Generation",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "select",
+        "id": "g2"
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g2",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Equal Selection Is Unchanged",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "select",
+        "id": "g1"
+      },
+      "outcome": "unchanged",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Clear Selection",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "select",
+        "id": null
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": null,
+        "previewText": null
+      }
+    },
+    {
+      "name": "Reject Missing Selection",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "select",
+        "id": "absent"
+      },
+      "outcome": "missing",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Set Preview",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "preview",
+        "text": "Grüße 東京 🌍"
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": "Grüße 東京 🌍"
+      }
+    },
+    {
+      "name": "Equal Preview Is Unchanged",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": "Grüße 東京 🌍"
+      },
+      "mutation": {
+        "kind": "preview",
+        "text": "Grüße 東京 🌍"
+      },
+      "outcome": "unchanged",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": "Grüße 東京 🌍"
+      }
+    },
+    {
+      "name": "Clear Preview",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": "Grüße 東京 🌍"
+      },
+      "mutation": {
+        "kind": "preview",
+        "text": null
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      }
+    },
+    {
+      "name": "Unicode Generation Identity",
+      "before": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          }
+        ],
+        "selectedGenerationId": "g1",
+        "previewText": null
+      },
+      "mutation": {
+        "kind": "add",
+        "generation": {
+          "id": "東京🌍",
+          "name": "Grüße",
+          "values": {
+            "frage": 7
+          }
+        },
+        "index": null
+      },
+      "outcome": "applied",
+      "after": {
+        "generations": [
+          {
+            "id": "g1",
+            "name": "First",
+            "values": {
+              "a": 1
+            }
+          },
+          {
+            "id": "g2",
+            "name": "Second",
+            "values": {
+              "b": 2
+            }
+          },
+          {
+            "id": "東京🌍",
+            "name": "Grüße",
+            "values": {
+              "frage": 7
+            }
+          }
+        ],
+        "selectedGenerationId": "東京🌍",
+        "previewText": null
+      }
+    }
+  ]
+}

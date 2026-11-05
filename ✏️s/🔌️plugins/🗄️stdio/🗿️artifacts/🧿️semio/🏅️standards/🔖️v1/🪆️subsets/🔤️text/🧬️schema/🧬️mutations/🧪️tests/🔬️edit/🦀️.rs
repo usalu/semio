@@ -1,6 +1,6 @@
 //! 🧪️ Fixture laws of the semio text edit mutations (change-run-language, edit-run, reorder-runs), over the mutation crate's public API.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../✏️edit-run/🧪️tests/✍️rewrites/🦀️.rs"]
 mod tests_edit_run_rewrites_the_marked_runs_content;

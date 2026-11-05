@@ -16,7 +16,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_framework::io_schema::{Confidence, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_deflate::zip_archive::{ZipArchive, ZipWriter};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Deserializer, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Deserializer, Serializer};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use std::collections::{BTreeMap, BTreeSet};
@@ -562,7 +562,7 @@ pub struct ModelIntoBcf;
 impl Serializer<ModelSnapshot> for ModelIntoBcf {
     const INTO: Dialect = BCF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let bytes = export_bcf(from).map_err(|message| refused("ModelIntoBcf", message))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }
@@ -582,7 +582,7 @@ impl Deserializer<ModelSnapshot> for BcfIntoModel {
         }
     }
 
-    async fn deserialize(payload: &IoPayload, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<ModelSnapshot> {
+    async fn deserialize(payload: &IoPayload, _: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<ModelSnapshot> {
         let IoPayload::Binary(bytes) = payload else { return Err(refused("BcfIntoModel", "a BCF container is binary")) };
         let imported = import_bcf(bytes, &|_| None).map_err(|message| refused("BcfIntoModel", message))?;
         let model = ModelSnapshot { issues: imported.issues, issue_comments: imported.comments, ..ModelSnapshot::default() };

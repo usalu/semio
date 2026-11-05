@@ -10,7 +10,7 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, GridLine, ModelSnapshot};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, Point2, TopConstraint};
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
 /// 📏️ How close an existing column may stand to a crossing before the crossing counts as taken, in metres.

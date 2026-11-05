@@ -5,22 +5,22 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use crate::windows::main;
-use semio_framework_plugin::create_window_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::ToolRef;
-use semio_framework_plugin::WindowLayout;
-use semio_framework_plugin::WindowLayoutAxisNode;
-use semio_framework_plugin::WindowLayoutChild;
-use semio_framework_plugin::WindowLayoutRoot;
-use semio_framework_plugin::WindowLayoutStackNode;
+use semio_plugin::create_window_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::ToolRef;
+use semio_plugin::WindowLayout;
+use semio_plugin::WindowLayoutAxisNode;
+use semio_plugin::WindowLayoutChild;
+use semio_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutStackNode;
 
 pub const PUZZLE3D_PLAY_MODE_EDIT: &str = "edit";
 

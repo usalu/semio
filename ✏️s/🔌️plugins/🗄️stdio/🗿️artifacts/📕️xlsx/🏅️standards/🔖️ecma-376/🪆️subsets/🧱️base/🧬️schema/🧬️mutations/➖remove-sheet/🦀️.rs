@@ -13,8 +13,8 @@ pub struct RemoveSheet {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveSheet {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "sheet", kind: "remove-sheet", record: "RemoveSheet" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove sheet", "Arbeitsblatt entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove sheet", "Arbeitsblatt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

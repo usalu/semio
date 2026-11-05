@@ -49,7 +49,7 @@
 //! convention — it compiles to an effectively-empty module on a `wasm32-unknown-unknown` target
 //! check. `MemoryStorage` has no such gate and is always available.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 #[cfg(test)]
 #[path = "../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]

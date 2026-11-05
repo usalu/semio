@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberDeflectionSe
         record: "ChangedMemberDeflectionSensitive",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change deflection-sensitive finishes of the member", "Bauteil: Verformungsempfindlicher Ausbau ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change deflection-sensitive finishes of the member", "Bauteil: Verformungsempfindlicher Ausbau ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

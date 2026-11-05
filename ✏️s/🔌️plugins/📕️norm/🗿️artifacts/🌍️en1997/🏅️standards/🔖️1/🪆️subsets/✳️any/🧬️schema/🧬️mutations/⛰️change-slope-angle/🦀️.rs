@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeSlopeAngle where O
         verb: "change", entity: "slope-angle", kind: "change-slope-angle", record: "ChangedSlopeAngle",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slope angle", "Böschungswinkel ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slope angle", "Böschungswinkel ändern")
     }
 }
 

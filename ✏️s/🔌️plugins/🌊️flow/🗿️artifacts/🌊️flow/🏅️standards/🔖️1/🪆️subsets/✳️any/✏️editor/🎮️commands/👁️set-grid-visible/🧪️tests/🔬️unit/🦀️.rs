@@ -1,19 +1,19 @@
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
 use crate::{FlowMutation, FlowSnapshot};
 #[allow(unused_imports)]
 use flow::FlowEvalSession;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::set_grid_visible::*;
 use crate::editor::flow::unit_tests::context::{dispatch, flow_app, main_window_measures, settle, FlowAppFixture};
 use crate::editor::flow::FlowCommand;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 async fn grid_children(app: &mut FlowAppFixture) -> Vec<WindowMeasure> {
     main_window_measures(app)

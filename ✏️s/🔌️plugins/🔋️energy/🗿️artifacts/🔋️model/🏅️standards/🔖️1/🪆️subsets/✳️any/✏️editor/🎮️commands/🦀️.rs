@@ -1,15 +1,15 @@
 //! 🎮️ Energy model editor commands: the action ids every window and panel dispatches, `EnergyModelEditorCommand`
 //! with its action bridge and op codecs, the inspector's action definitions and the UI id helpers.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_s_plugin_energy_engine_model as model;
 
 use semio_framework_diagnostic::{Fault, FaultCode, FaultOrigin};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use crate::model::SurfaceClass;
-use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::UiAssemblyResult;
 
 //#region 🏷️ActionIds
 /// 🏷️ Every dispatchable verb of this editor, exactly once. `set-node`/`set-cell` come from the two
@@ -453,13 +453,13 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
 pub const ENERGY_MODEL_EDITOR_CONTROLLER_ID: &str = "s.energy.model@1/*#editor";
 
 /// 🚪️ Admits resolved energy text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin_ownership::sdk_fault::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
 }
 
 /// 🔽️ Mints one energy-editor action for a panel row or an inspector control binding.
-pub fn energy_model_action(action: &str, args: Option<semio_framework_ui_contract::UiValue>) -> UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)> {
-    semio_framework_plugin_window_kits::ActionFactory::new(ENERGY_MODEL_EDITOR_CONTROLLER_ID).action(action, args)
+pub fn energy_model_action(action: &str, args: Option<semio_ui_contract::UiValue>) -> UiAssemblyResult<(semio_ui_contract::ActionId, Option<semio_ui_contract::UiValue>)> {
+    semio_plugin_window_kits::ActionFactory::new(ENERGY_MODEL_EDITOR_CONTROLLER_ID).action(action, args)
 }
 
 /// 🌀️ Wire spelling of a [`SurfaceClass`] — the inverse of [`surface_class_from_id`], so the
@@ -671,7 +671,7 @@ pub fn native_mutation_actions() -> Vec<semio_framework::ActionDefinition> {
             ("fault", "Fehler"), ("daily-schedule", "Tagesprofil"), ("setpoint-manager", "Sollwertmanager"), ("infiltration", "Infiltration"), ("fenestration", "Fenster"), ("annual-schedule", "Jahresprofil"), ("weekly-schedule", "Wochenprofil"), ("lighting-gain", "Beleuchtungslast"), ("sizing-object", "Auslegungsobjekt"), ("room-air-model", "Raumluftmodell"), ("constant-schedule", "Konstantes Profil"), ("plant-loop", "Anlagenkreislauf"), ("shw-system", "Warmwassersystem"), ("battery", "Batterie"), ("refrigeration-system", "Kältesystem"), ("ideal-loads-system", "Ideales Lastsystem"), ("outdoor-air-system", "Außenluftsystem"), ("mechanical-ventilation", "Mechanische Lüftung"), ("electrical-load-center", "Elektrische Lastzentrale"), ("water-system", "Wassersystem"), ("equipment-gain", "Gerätelast"), ("air-loop", "Luftkreislauf"), ("time-series-schedule", "Zeitreihenprofil"), ("daylight-zone", "Tageslichtzone"), ("humidistat", "Feuchteregler"), ("surface", "Fläche"), ("glazing-material", "Verglasungsmaterial"), ("gas-material", "Gaszwischenraum"), ("material", "Material"), ("thermostat", "Thermostat"), ("shading-surface", "Verschattungsfläche"), ("thermal-enclosure", "Thermische Hülle"), ("pv-system", "PV-System"), ("solar-thermal-system", "Solarthermieanlage"), ("people-gain", "Personenlast"), ("zone-equipment", "Zonenausstattung"), ("zone", "Zone"), ("construction", "Konstruktion"), ("space", "Raum"), ("space-list", "Raumliste"), ("ground", "Erdboden"), ("site", "Standort"), ("run", "Simulationszeitraum"), ("airflow-network", "Luftströmungsnetz"), ("output-variable", "Ausgabegröße"), ("model", "Energiemodell"),
         ].into_iter().filter(|(kind, _)| descriptor.semantic_kind.contains(kind)).max_by_key(|(kind, _)| kind.len()).map_or("Energiemodell", |(_, label)| label);
         action.label = LocalizedLabel::from_fn(|terminology, locale| {
-            if locale == semio_framework_ui_locale::Locale::De {
+            if locale == semio_ui_locale::Locale::De {
                 let field = action.args.iter().find(|field| field.id != "id" && field.id != "index").map(|field| field.label.resolve(terminology, locale));
                 field.map_or_else(|| format!("{verb} · {entity}"), |field| format!("{verb} · {entity} · {field}"))
             } else { descriptor.display_name.to_string() }
@@ -686,7 +686,7 @@ pub fn native_mutation_actions() -> Vec<semio_framework::ActionDefinition> {
 impl original_action::EnergyOriginalCommand<semio_s_artifact_energy_model_mutations::EnergyModelMutation> for EnergyModelEditorCommand{
  fn descriptor(index:usize)->Option<(&'static str,&'static str,semio_s_artifact_energy_model_native_mutations_singletons::action::NativeActionFactory<semio_s_artifact_energy_model_mutations::EnergyModelMutation>)>{let descriptor=ENERGY_MODEL_NATIVE_DESCRIPTORS.get(index)?;let(action,factory)=semio_s_artifact_energy_model_mutations::EnergyModelMutation::ORIGINAL_ACTION_RECEIVERS.get(index)?;if *action!=descriptor.aggregate_variant{return None}Some((action,descriptor.semantic_kind,*factory))}
  fn from_original_mutation(kind:String,mutation:semio_s_artifact_energy_model_mutations::EnergyModelMutation)->Self{Self::ApplyNativeMutation{kind,mutation:Some(mutation)}}
- fn original_wire(&self)->semio_framework_plugin_command::command_admission::original_typed_command::original_wire::ArtifactPreparedOperationSource<'_>{let(_,ordinal,spec)=semio_framework_dsl_record::BorrowedDslVariants::projected_borrowed_variant_identity(self);semio_framework_plugin_command::command_admission::original_typed_command::original_wire::ArtifactPreparedOperationSource::Pack{tag:ordinal as u64,body:self,spec}}
+ fn original_wire(&self)->semio_plugin_command::command_admission::original_typed_command::original_wire::ArtifactPreparedOperationSource<'_>{let(_,ordinal,spec)=semio_framework_dsl_record::BorrowedDslVariants::projected_borrowed_variant_identity(self);semio_plugin_command::command_admission::original_typed_command::original_wire::ArtifactPreparedOperationSource::Pack{tag:ordinal as u64,body:self,spec}}
  const MAXIMUM_WIRE_BYTES:usize=262144;
  fn from_action(action:&str,args:&mut Option<semio_framework_value::DslValue>,fault:&mut Option<Fault>)->Result<Self,Fault>{if let Some(fault)=fault.take(){return Err(fault)}args_bridge::command_from_action(action,args.as_ref())}
 }

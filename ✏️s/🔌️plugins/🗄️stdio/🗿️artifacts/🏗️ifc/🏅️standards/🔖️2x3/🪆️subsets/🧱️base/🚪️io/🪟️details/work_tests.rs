@@ -1,8 +1,8 @@
 //! 🧪️ Own Part21 retained work preserves one original caller across preparation, tiny-turn validation and close.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
-use semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead;
-use semio_framework_plugin::{AppOperationContext,HistoryView,NoConfig};
+use semio_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::retained_command::ArtifactCommandSnapshotRead;
+use semio_plugin::{AppOperationContext,HistoryView,NoConfig};
 use protocol::ColdMutation;
 use semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::{Ifc2x3AnyEditor,Ifc2x3AnyEditCommand};
 type Work=Ifc2x3DetailsWork<Ifc2x3AnyEditor>;

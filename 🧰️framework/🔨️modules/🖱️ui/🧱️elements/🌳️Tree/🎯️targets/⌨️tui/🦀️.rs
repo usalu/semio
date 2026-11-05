@@ -3,13 +3,13 @@
 //! matches the whole path of a node, so a leaf is found by the names of its folders. Signals carry item indices.
 //! The widget owner and its integration laws use the single lower core cell, signal and geometry model.
 
-use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
-use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseEvent};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use semio_framework_ui_tui_core::rows::{navigate_to, paint_scroll_bar, row_style, FilterIndex, Pointer, Rows};
-use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
-use semio_framework_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
-use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
+use semio_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_ui_tui_core::event::{mods, Key, KeyEvent, MouseEvent};
+use semio_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::rows::{navigate_to, paint_scroll_bar, row_style, FilterIndex, Pointer, Rows};
+use semio_ui_tui_core::text::{display_width, elide, Elision};
+use semio_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use semio_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 
 const NONE: u32 = u32::MAX;
 
@@ -389,7 +389,7 @@ pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
         let (fg, row_bg, mut attrs) = row_style(theme, bg, selected, focused, hovered == Some(item));
         let fg = if path && !selected { theme.role(Role::BorderEmphasized) } else { fg };
         if path && !selected {
-            attrs |= semio_framework_ui_tui_core::cell::attr::BOLD;
+            attrs |= semio_ui_tui_core::cell::attr::BOLD;
         }
         let line = Rect::new(area.x, y, area.width, 1);
         buf.fill_rect(line, Cell::blank(fg, row_bg));
@@ -397,7 +397,7 @@ pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
         for (depth, &ancestor) in ancestors.iter().enumerate().take(usize::from(area.width).div_ceil(2)) {
             let emphasized = on_path(ancestor) && hovered != Some(ancestor);
             let guide_fg = theme.role(if emphasized { Role::BorderEmphasized } else { Role::BorderNormal });
-            let guide_attrs = if emphasized { semio_framework_ui_tui_core::cell::attr::BOLD } else { 0 };
+            let guide_attrs = if emphasized { semio_ui_tui_core::cell::attr::BOLD } else { 0 };
             buf.put_str(Pos { x: area.x + depth as u16 * 2, y }, theme.glyphs.glyph(Glyph::ScrollTrack), guide_fg, row_bg, guide_attrs, line);
         }
         ancestors.push(item);

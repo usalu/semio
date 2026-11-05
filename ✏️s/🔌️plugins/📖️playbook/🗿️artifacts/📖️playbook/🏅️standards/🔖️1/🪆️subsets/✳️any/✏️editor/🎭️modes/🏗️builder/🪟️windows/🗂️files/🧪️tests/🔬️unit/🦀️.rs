@@ -18,7 +18,7 @@ fn files_window_projects_the_fixture_hierarchy_without_navigation_or_selection_a
             PlaybookStep { id: "publish".into(), title: "Publish".into(), description: None, blocks: Vec::new() },
         ],
     };
-    let labels = crate::editor::playbook::terminology::playbook_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = crate::editor::playbook::terminology::playbook_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let projected = scene(&snapshot, labels);
     let schema: serde_json::Value = serde_json::from_str(&projected.schema_json).expect("files schema");
     let rows: serde_json::Value = serde_json::from_str(&projected.rows_json).expect("files rows");

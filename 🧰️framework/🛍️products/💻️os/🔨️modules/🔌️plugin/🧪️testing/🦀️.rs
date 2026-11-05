@@ -1,10 +1,10 @@
 //! ⚖️ App laws and the test modules of the app vocabulary.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
 /// 🪪️ Runs one test body with a local native authoring identity: `with_authoring_identity!(|identity| body)` binds `identity` as a mutable
-/// [`EntityIdentityAuthority`](semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority) for `body`, an expression that may await.
+/// [`EntityIdentityAuthority`](semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority) for `body`, an expression that may await.
 #[cfg(any(test, feature = "artifact-app-testing"))]
 #[macro_export]
 macro_rules! with_authoring_identity {
@@ -16,13 +16,13 @@ macro_rules! with_authoring_identity {
     }};
 }
 #[doc(hidden)]
-pub use semio_framework_os_kernel as __kernel;
+pub use semio_os_kernel as __kernel;
 #[doc(hidden)]
 pub use semio_framework_value as __value;
 
-pub use semio_framework_plugin_testing_caller::{OriginalFixtureCaller, OriginalFixtureScope};
-use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
-use semio_framework_plugin_window_transient::window_transient::{WindowTransientOwner, WindowTransientOwnerRegistry};
+pub use semio_plugin_testing_caller::{OriginalFixtureCaller, OriginalFixtureScope};
+use semio_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
+use semio_plugin_window_transient::window_transient::{WindowTransientOwner, WindowTransientOwnerRegistry};
 #[path="🎟️caller/👷️work/🦀️.rs"]
 mod original_work_fixture;
 pub use original_work_fixture::OriginalWorkFixture;
@@ -37,20 +37,20 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework::manifest::ActionInvocation as ManifestActionInvocation;
 use semio_framework::kernel::{ActorId, Effect, InvocationResult};
 use semio_framework::{ActionKind, AppIo, ConfigSpec, Fault, FaultCode, FaultOrigin, MediaPortSpec, ViewModel, ViewWindowInstance, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID};
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
-use semio_framework_ui_runtime::ComponentTree;
+use semio_ui_contract::*;
+use semio_ui_runtime::ComponentTree;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
@@ -59,13 +59,13 @@ use pack::snapshot::ArtifactPack;
 use store::os_store::document_materialize::create_document_envelope;
 use store::os_store::store_schema::ArtifactCommand;
 use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, NoMembers, ReferenceSpaceMember, SpaceMember};
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_ui_layout::layout::ContextMenuItemSpec;
-use semio_framework_ui_layout::layout::ContextMenuRequest;
-use semio_framework_ui_layout::layout::WindowEngagement;
-use semio_framework_ui_layout::layout::WindowMeasure;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
+use semio_ui_layout::layout::ContextMenuItemSpec;
+use semio_ui_layout::layout::ContextMenuRequest;
+use semio_ui_layout::layout::WindowEngagement;
+use semio_ui_layout::layout::WindowMeasure;
 /// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
 /// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
 /// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
@@ -81,97 +81,97 @@ use protocol::LOCAL_ACTOR_ID;
 use store::ArtifactStoreInitializationAuthority;
 use semio_framework::AppRole;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_app_builder::App;
+use semio_plugin_app_builder::App;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_plugin_window_kits::AppActionRegistry;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_emission::ActionMeta;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::AppRenderOperationContext;
+use semio_plugin_decl_views::AppRenderOperationContext;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::ArtifactView;
+use semio_plugin_decl_views::ArtifactView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::ConfigView;
+use semio_plugin_decl_views::ConfigView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::DraftView;
+use semio_plugin_decl_views::DraftView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::InteractionHoverState;
+use semio_plugin_decl_views::InteractionHoverState;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::InteractionView;
+use semio_plugin_decl_views::InteractionView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::NoDraft;
+use semio_plugin_decl_views::NoDraft;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::NoPresence;
+use semio_plugin_decl_views::NoPresence;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::NoPresenceMutation;
+use semio_plugin_decl_views::NoPresenceMutation;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::NoTransient;
+use semio_plugin_decl_views::NoTransient;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::NoTransientMutation;
+use semio_plugin_decl_views::NoTransientMutation;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::PresenceView;
+use semio_plugin_decl_views::PresenceView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_transient::window_transient::TransientView;
+use semio_plugin_window_transient::window_transient::TransientView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES;
+use semio_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_instance_app::VcsArtifactApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_instance_children::children_instance_root::genesis_member_schema;
+use semio_plugin_instance_children::children_instance_root::genesis_member_schema;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_job::reserved_jobs::is_framework_reserved_action_id;
+use semio_plugin_job::reserved_jobs::is_framework_reserved_action_id;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission;
+use semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_registry::artifact_registration::surface_dependency_breaches;
+use semio_plugin_decl_registry::artifact_registration::surface_dependency_breaches;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_views::child_view::ChildContentView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::history_view::HistoryView;
+use semio_plugin_decl_views::history_view::HistoryView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_interaction::interaction_topology::empty_draft_references;
+use semio_plugin_interaction::interaction_topology::empty_draft_references;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::PeerPresenceRoot;
+use semio_plugin_decl_views::PeerPresenceRoot;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_plugin_program::Plugin;
+use semio_plugin_plugin_program::Plugin;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_job::reserved_jobs::register_framework_reserved_factories;
+use semio_plugin_job::reserved_jobs::register_framework_reserved_factories;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
+use semio_plugin_ownership::store_lifecycle::ArtifactDisposal;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_surface::ArtifactEditor;
+use semio_plugin_decl_surface::ArtifactEditor;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_surface::ArtifactViewer;
+use semio_plugin_decl_surface::ArtifactViewer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
+use semio_plugin_decl_emission::surface_contract::ViewEmit;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_surface::ViewerApp;
+use semio_plugin_decl_surface::ViewerApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
+use semio_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_job::TransactionProposalDraft;
+use semio_plugin_job::TransactionProposalDraft;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::UiAssemblyResult;
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "../⚖️authoring-law/🦀️.rs"]

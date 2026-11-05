@@ -1,6 +1,6 @@
 //! 🎟️ Window genesis declares its schema, identity and native source on the shared original Store birth.
 use super::*;
-use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesis,OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesis,OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 /// 🪟️ The Window owner supplies the same declared state and semantic catalog used by its native replay.
 pub struct WindowGenesisOwner<O>(std::marker::PhantomData<fn()->O>);
 impl<O:WindowConfigOwner> OriginalStoreGenesisOwner for WindowGenesisOwner<O>{

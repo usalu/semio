@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "name": "Multilingual Answer Above a Scalar Turn",
+      "unit": "Höhe 高さ 🌊 ",
+      "repeat": 300,
+      "maximumBytes": 16384
+    },
+    {
+      "name": "ASCII Answer Above a Scalar Turn",
+      "unit": "a",
+      "repeat": 5000,
+      "maximumBytes": 16384
+    }
+  ],
+  "refusals": [
+    {
+      "name": "Full Answer Byte Ceiling",
+      "unit": "a",
+      "repeat": 16384,
+      "maximumBytes": 16384
+    }
+  ],
+  "invalidJson": [
+    {
+      "name": "Unterminated String",
+      "source": "\"missing"
+    },
+    {
+      "name": "Incomplete Object",
+      "source": "{\"a\":"
+    },
+    {
+      "name": "Non JSON Number",
+      "source": "NaN"
+    }
+  ]
+}

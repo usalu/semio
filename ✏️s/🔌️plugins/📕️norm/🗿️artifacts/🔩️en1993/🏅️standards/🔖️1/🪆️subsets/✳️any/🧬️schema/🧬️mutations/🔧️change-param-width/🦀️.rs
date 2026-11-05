@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeParamWidth where O
         record: "ChangedParamWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Width b of the parametric section", "Parametrischer Querschnitt: Breite b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Width b of the parametric section", "Parametrischer Querschnitt: Breite b ändern")
     }
 }
 

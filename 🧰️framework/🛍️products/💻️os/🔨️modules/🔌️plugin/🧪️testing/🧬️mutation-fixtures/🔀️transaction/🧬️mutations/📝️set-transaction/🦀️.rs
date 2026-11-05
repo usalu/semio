@@ -44,12 +44,12 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "transaction-count", kind: "set-transaction-count", record: "SetTransactionCount" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count to {}", self.value), &format!("Transaktionsanzahl auf {} setzen", self.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set transaction count to {}", self.value), &format!("Transaktionsanzahl auf {} setzen", self.value))
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCount {
+impl semio_os_command::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCount {
     fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
         MutationOutcome::new(TxnDiff { count: Some(self.value) })
     }

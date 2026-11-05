@@ -36,8 +36,8 @@ pub mod mutation {
     crate::add_layer_asset::inverse::inverse(self, base)
 }
 
-        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Add asset {}", self.asset_id), &format!("Asset {} hinzufügen", self.asset_id))
+        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+            semio_ui_locale::LocalizedLabel::native(&format!("Add asset {}", self.asset_id), &format!("Asset {} hinzufügen", self.asset_id))
         }
 
         fn target(&self) -> Vec<String> {

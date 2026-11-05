@@ -40,7 +40,7 @@ pub fn close_deque<T>(owner: &mut VecDeque<T>, grant: RetainedCloneGrant) -> Res
     Ok(released(demand, true))
 }
 
-pub fn close_history<T>(owner: &mut semio_framework_os_vcs::HistoryPageStack<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn close_history<T>(owner: &mut semio_os_vcs::HistoryPageStack<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     let demand = owner.next_empty_page_release_byte_demand().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "resident history backing still holds typed owners"))?;
     if demand == 0 { return Ok(RetainedCloneStep::Complete(Default::default())); }
     if !admit_release(grant, demand)? { return Ok(denied()); }

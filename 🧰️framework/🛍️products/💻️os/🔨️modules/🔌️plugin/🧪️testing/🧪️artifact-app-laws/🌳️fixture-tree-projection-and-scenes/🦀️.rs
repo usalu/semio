@@ -4,9 +4,9 @@ use super::*;
 
 pub const FIXTURE_TREE_MAX_DEPTH: usize = 64;
 
-pub const FIXTURE_TREE_MAX_NODES: usize = semio_framework_ui_contract::UI_BUILT_CHILD_RETIRE_SLOTS;
+pub const FIXTURE_TREE_MAX_NODES: usize = semio_ui_contract::UI_BUILT_CHILD_RETIRE_SLOTS;
 
-pub const FIXTURE_TREE_RETIRE_STEPS: usize = FIXTURE_TREE_MAX_NODES * (semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX + 1);
+pub const FIXTURE_TREE_RETIRE_STEPS: usize = FIXTURE_TREE_MAX_NODES * (semio_ui_contract::UI_BUILT_CHILDREN_MAX + 1);
 
 /// 🔗️ The action bindings are part of the surface a host receives — a tree item's
 /// `activate` route lives in `BuiltNode.bindings`, never inside its `Component`, so a
@@ -20,7 +20,7 @@ pub const FIXTURE_TREE_RETIRE_STEPS: usize = FIXTURE_TREE_MAX_NODES * (semio_fra
 /// projection that omitted them made every "this canvas is named / announces / advertises its
 /// chord" assertion read against a tree that carried no accessibility at all
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(super) fn project_fixture_node(node: &semio_framework_ui_contract::BuiltNode, remaining: &mut usize, depth: usize) -> Result<serde_json::Value, &'static str> {
+pub(super) fn project_fixture_node(node: &semio_ui_contract::BuiltNode, remaining: &mut usize, depth: usize) -> Result<serde_json::Value, &'static str> {
     if depth >= FIXTURE_TREE_MAX_DEPTH || *remaining == 0 {
         return Err("tree-limit");
     }
@@ -45,7 +45,7 @@ pub(super) fn project_fixture_node(node: &semio_framework_ui_contract::BuiltNode
 }
 
 /// 🖼️ Observes fixture keys/components/children and retires that exact tree before any outcome; not a wire codec.
-pub fn project_and_retire_fixture_tree(tree: semio_framework_ui_runtime::ComponentTree) -> Result<String, &'static str> {
+pub fn project_and_retire_fixture_tree(tree: semio_ui_runtime::ComponentTree) -> Result<String, &'static str> {
     observe_and_retire_fixture_tree(tree, |root| {
         let mut remaining = FIXTURE_TREE_MAX_NODES;
         project_fixture_node(root, &mut remaining, 0).and_then(|value| serde_json::to_string(&value).map_err(|_| "projection-json"))
@@ -79,7 +79,7 @@ pub fn document_input_commit_findings(projection: &serde_json::Value, is_documen
 /// `Mutation` kind.
 pub async fn document_input_commit_lint<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, body_key: &str, view: &semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<String>, semio_framework_job::OriginalTurnFailure> {
     let projected = render_registered_fixture_app(app, body_key, view,cx).await?;
-    let projection: serde_json::Value = serde_json::from_str(&projected).map_err(|error| semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault(error.to_string()))?;
+    let projection: serde_json::Value = serde_json::from_str(&projected).map_err(|error| semio_plugin_ownership::sdk_fault::plugin_sdk_fault(error.to_string()))?;
     Ok(document_input_commit_findings(&projection, &|verb| app.tools.registry.get(verb).is_some_and(|definition| definition.kind == semio_framework::ActionKind::Mutation)))
 }
 
@@ -88,7 +88,7 @@ pub async fn document_input_commit_lint<A: ArtifactApp + Default, M: store::Refe
 /// to compose its scene alongside semantic siblings (generation3d's Flow window renders the
 /// graph's node/port/wire rows beside the GPU canvas), and a scene assertion may not care which
 /// of the two shapes the body under test happens to be.
-pub fn fixture_scene_node<T: semio_framework_ui_scene::SceneDoc>(tree: &serde_json::Value) -> Option<&serde_json::Value> {
+pub fn fixture_scene_node<T: semio_ui_scene::SceneDoc>(tree: &serde_json::Value) -> Option<&serde_json::Value> {
     let component = &tree["component"];
     if component["type"].as_str() == Some("surface") && component["docSchema"].as_str() == Some(T::SCHEMA) {
         return Some(tree);
@@ -97,7 +97,7 @@ pub fn fixture_scene_node<T: semio_framework_ui_scene::SceneDoc>(tree: &serde_js
 }
 
 /// 🎬️ Decodes the exact typed scene a projected fixture carries.
-pub fn decode_fixture_scene<T: semio_framework_ui_scene::SceneDoc>(projection: &str) -> Result<T, &'static str> {
+pub fn decode_fixture_scene<T: semio_ui_scene::SceneDoc>(projection: &str) -> Result<T, &'static str> {
     let tree: serde_json::Value = serde_json::from_str(projection).map_err(|_| "fixture-scene-json")?;
     let component = &fixture_scene_node::<T>(&tree).ok_or("fixture-scene-schema")?["component"];
     let bytes = component["doc"]["bytes"].as_array().ok_or("fixture-scene-bytes")?.iter().map(|value| value.as_u64().and_then(|value| u8::try_from(value).ok()).ok_or("fixture-scene-byte")).collect::<Result<Vec<_>, _>>()?;
@@ -106,13 +106,13 @@ pub fn decode_fixture_scene<T: semio_framework_ui_scene::SceneDoc>(projection: &
 
 /// 🚚️ The ASSEMBLED scene a render host reads, taken straight off ONE built surface node: the
 /// spine decoded out of the fixed-capacity `SurfaceProps.doc`, with every out-of-doc payload
-/// lane hanging off that same node merged back in. `semio_framework_ui_scene::decode` alone
+/// lane hanging off that same node merged back in. `semio_ui_scene::decode` alone
 /// returns the SPINE — since ticket 26/09/02 wave P a world-3d scene's `instancesJson`/
 /// `meshesJson`/… do not ride inside the doc at all, so a test that reads one off a bare
 /// decode reads an empty field.
-pub fn built_surface_scene<T: semio_framework_ui_scene::SceneDoc>(node: &semio_framework_ui_contract::BuiltNode) -> Result<T, &'static str> {
-    let semio_framework_ui_contract::Component::Surface(props) = &node.component else { return Err("built-surface-component") };
-    let mut scene: T = semio_framework_ui_scene::decode(props).map_err(|_| "built-surface-decode")?;
+pub fn built_surface_scene<T: semio_ui_scene::SceneDoc>(node: &semio_ui_contract::BuiltNode) -> Result<T, &'static str> {
+    let semio_ui_contract::Component::Surface(props) = &node.component else { return Err("built-surface-component") };
+    let mut scene: T = semio_ui_scene::decode(props).map_err(|_| "built-surface-decode")?;
     for child in node.children.iter() {
         scene.merge_lane(child.key.as_str(), built_carrier_text(child));
     }
@@ -120,7 +120,7 @@ pub fn built_surface_scene<T: semio_framework_ui_scene::SceneDoc>(node: &semio_f
 }
 
 /// 🚚️ Depth-first concatenation of every `Component::Text` leaf under one built lane carrier.
-pub fn built_carrier_text(node: &semio_framework_ui_contract::BuiltNode) -> String {
+pub fn built_carrier_text(node: &semio_ui_contract::BuiltNode) -> String {
     let mut payload = String::new();
     let mut order = Vec::new();
     let mut frontier = vec![node];
@@ -129,7 +129,7 @@ pub fn built_carrier_text(node: &semio_framework_ui_contract::BuiltNode) -> Stri
         frontier.extend(current.children.iter().rev());
     }
     for current in order {
-        if let semio_framework_ui_contract::Component::Text(text) = &current.component {
+        if let semio_ui_contract::Component::Text(text) = &current.component {
             payload.push_str(&text.packed_payload());
         }
     }
@@ -164,7 +164,7 @@ pub fn fixture_carrier_text(node: &serde_json::Value) -> String {
                     }
                 }
             }
-            payload.push_str(&semio_framework_ui_contract::packed_text_leaf(value, attributes));
+            payload.push_str(&semio_ui_contract::packed_text_leaf(value, attributes));
         }
     }
     payload
@@ -173,7 +173,7 @@ pub fn fixture_carrier_text(node: &serde_json::Value) -> String {
 /// 🚚️ Decodes a projected surface's typed scene AND re-attaches every out-of-doc payload lane
 /// hanging off it — the Rust twin of the React Interpreter's `world3dSurfaceLaneTexts` +
 /// `world3dSceneFromLanes`. A child whose key is not a lane carrier is ignored.
-pub fn decode_fixture_scene_with_lanes<T: semio_framework_ui_scene::SceneDoc>(projection: &str) -> Result<T, &'static str> {
+pub fn decode_fixture_scene_with_lanes<T: semio_ui_scene::SceneDoc>(projection: &str) -> Result<T, &'static str> {
     let tree: serde_json::Value = serde_json::from_str(projection).map_err(|_| "fixture-scene-json")?;
     let mut scene = decode_fixture_scene::<T>(projection)?;
     for child in fixture_scene_node::<T>(&tree).ok_or("fixture-scene-schema")?["children"].as_array().ok_or("fixture-scene-children")? {
@@ -184,9 +184,9 @@ pub fn decode_fixture_scene_with_lanes<T: semio_framework_ui_scene::SceneDoc>(pr
 }
 
 #[doc(hidden)]
-pub fn observe_and_retire_fixture_tree<R>(tree: semio_framework_ui_runtime::ComponentTree, project: impl FnOnce(&semio_framework_ui_contract::BuiltNode) -> R) -> R {
+pub fn observe_and_retire_fixture_tree<R>(tree: semio_ui_runtime::ComponentTree, project: impl FnOnce(&semio_ui_contract::BuiltNode) -> R) -> R {
     let projected = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| project(&tree.root)));
-    let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(tree.root);
+    let mut retirement = semio_ui_contract::BuiltTreeRetirement::new(tree.root);
     while !retirement.terminal_is_empty() {
         let step = retirement.close_step(1, 4096).expect("fixture's exact built-tree retirement remains valid");
         if !step.progressed {

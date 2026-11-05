@@ -24,7 +24,7 @@ fn base() -> Generation2dSnapshot {
 }
 
 fn outcome_codes(mutation: &Generation2dMutation, base: &Generation2dSnapshot) -> Vec<(semio_framework_diagnostic::Severity, String)> {
-    let (delta, messages) = ::semio_framework_os_kernel::ColdMutation::diff(mutation, base).into_parts();
+    let (delta, messages) = ::semio_os_kernel::ColdMutation::diff(mutation, base).into_parts();
     delta.retire_cold();
     messages.into_iter().map(|message| (message.level, message.code.0)).collect()
 }
@@ -105,8 +105,8 @@ fn gesture_leaves_label_their_rows_in_english_and_german() {
         (move_nodes(vec!["a".into(), "b".into()], 40.0, -12.5), "Move 2 node(s) by (40, -12.5)", "2 Knoten um (40; -12,5) verschieben"),
     ] {
         let label = <Generation2dMutation as protocol::SemanticMutation<Generation2dSnapshot>>::label(&mutation);
-        assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), english);
-        assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), german);
+        assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), english);
+        assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), german);
     }
 }
 
@@ -148,7 +148,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         let base = base();
         let mut store = semio_s_artifact_procedural_2d_testkit::store_fixture::document_store(base.clone()).await;
         for mutation in &log {
-            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
+            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids[edited_at].clone();
@@ -168,7 +168,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         let result = replay.finish().expect("a finished replay yields its result");
         assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "an edited gesture never blocks finalizing");
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
         for state in [preview, before, fresh, base] {
             state.retire_cold();

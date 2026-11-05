@@ -1,6 +1,6 @@
 //! 📏️ Resource primitives for Semio's explicitly authored native field scans.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::sqlite_snapshot::{artifact::NativeEncodingBound, SqliteSnapshotControl};
+use semio_os_kernel::sqlite_snapshot::{artifact::NativeEncodingBound, SqliteSnapshotControl};
 
 /// 🧮️ Accounts for scalar spelling, native buffers and explicit entity counts before encoding.
 pub struct Bound<'c, 'p> { bound: NativeEncodingBound<'c, 'p>, rows: usize }

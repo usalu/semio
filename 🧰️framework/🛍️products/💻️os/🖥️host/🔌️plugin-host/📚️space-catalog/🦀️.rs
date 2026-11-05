@@ -165,7 +165,7 @@ pub fn import_os_space_from_dsl(dsl: &str, port: &Arc<OsBackbonePorts>) -> Resul
 /// 📦️ Pack counterpart of `import_os_space_from_dsl`: admits the pair under its own document id and the head
 /// manifest's name (the catalog lists a studio by its document name).
 pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
-    let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(pack, spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(pack, spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let name = parsed.snapshot.name.trim().to_owned();
     let mut owners = parsed.into_envelope().into_owners();
     let mut edit_messages = Vec::with_capacity(owners.edit_messages.len());

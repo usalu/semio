@@ -4,8 +4,8 @@
 //! `🔺️diff/`, `🧬️mutations/`, `💡️inferences/` (design.md §1 CORRECTION).
 
 use crate::{WriterMutation, WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_SCHEMA};
-use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+use semio_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+use semio_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
 
 //#region 🔖️Io
 pub fn io() -> IoDeclaration {

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmChordArea
         record: "ChangeDiaphragmChordAreaM2",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Chord (edge member) cross-section area", "Gurt-Querschnittsfläche (Randglied) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Chord (edge member) cross-section area", "Gurt-Querschnittsfläche (Randglied) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-chord-area-m2".into()]

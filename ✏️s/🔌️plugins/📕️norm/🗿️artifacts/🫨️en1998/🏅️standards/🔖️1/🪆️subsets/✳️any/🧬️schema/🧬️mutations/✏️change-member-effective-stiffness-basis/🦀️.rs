@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberEffectiveSti
         record: "ChangeMemberEffectiveStiffnessBasis",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stiffness basis of the gross wall stiffness (EN 1998-1 4.3.1(6))", "Steifigkeitsbasis der Brutto-Wandsteifigkeit (EN 1998-1 4.3.1(6)) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stiffness basis of the gross wall stiffness (EN 1998-1 4.3.1(6))", "Steifigkeitsbasis der Brutto-Wandsteifigkeit (EN 1998-1 4.3.1(6)) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-effective-stiffness-basis".into()]

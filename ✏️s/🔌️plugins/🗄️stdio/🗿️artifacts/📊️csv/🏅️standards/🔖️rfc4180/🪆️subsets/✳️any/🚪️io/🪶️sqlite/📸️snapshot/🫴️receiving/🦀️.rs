@@ -1,6 +1,6 @@
 //! 🫴️ Original CSV receiving frames own authored rows, paid indexes and partial logical records.
 use super::{CsvSnapshot,CsvRecord,CsvField};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[cfg(test)]
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
@@ -22,9 +22,9 @@ fn invalid(message:&'static str)->ValueError{error(ValueRefusalKind::InvalidValu
 fn ordinal(value:usize)->Result<i64>{i64::try_from(value).map_err(|_|error(ValueRefusalKind::WorkLimit,"CSV ordinal exceeds signed SQL extent"))}
 fn definition(index:usize)->&'static str{SQL.split(';').filter(|word|!word.trim().is_empty()).nth(index).unwrap().trim()}
 fn empty_snapshot()->CsvSnapshot{CsvSnapshot{schema:String::new(),has_header:false,records:Vec::new()}}
-use semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::{Direction,Projection,Scalar,cell,text_cell,row,push_row,sort,identity_position as record_position,settle};
-type Port<'a,'b,'c>=semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::Port<'a,'b,'c,NativeSnapshotBodyWallet>;
-fn fields(rows:&[SqliteRow],indices:&[usize],identity:i64,port:&mut Port<'_,'_,'_>)->Result<std::ops::Range<usize>>{semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::parent_range(rows,indices,identity,1,port)}
+use semio_os_kernel::sqlite_snapshot::artifact::receiving::{Direction,Projection,Scalar,cell,text_cell,row,push_row,sort,identity_position as record_position,settle};
+type Port<'a,'b,'c>=semio_os_kernel::sqlite_snapshot::artifact::receiving::Port<'a,'b,'c,NativeSnapshotBodyWallet>;
+fn fields(rows:&[SqliteRow],indices:&[usize],identity:i64,port:&mut Port<'_,'_,'_>)->Result<std::ops::Range<usize>>{semio_os_kernel::sqlite_snapshot::artifact::receiving::parent_range(rows,indices,identity,1,port)}
 fn project(source:&CsvSnapshot,frame:&mut Projection,port:&mut Port<'_,'_,'_>)->Result<()>{
  let limits=port.control.limits();let schema_bytes=(0..3).map(|index|NAMES[index].len()+definition(index).len()).sum::<usize>();if schema_bytes>limits.max_schema_bytes||limits.max_tables<3||limits.max_columns<5{return Err(error(ValueRefusalKind::OwnershipLimit,"CSV authored schema exceeds original ceiling"))}
  let mut fields=0usize;for record in &source.records{port.work(2,0)?;fields=fields.checked_add(record.fields.len()).ok_or_else(||error(ValueRefusalKind::WorkLimit,"CSV field count overflow"))?;port.control.check_rows(1usize.checked_add(source.records.len()).and_then(|count|count.checked_add(fields)).ok_or_else(||error(ValueRefusalKind::WorkLimit,"CSV row count overflow"))?)?;}let total=1+source.records.len()+fields;port.control.check_rows(total)?;
@@ -40,7 +40,7 @@ fn table<'a>(database:&'a SqliteDatabase,name:&str)->Result<&'a SqliteTable>{dat
 fn integer(row:&SqliteRow,column:usize)->Result<i64>{match row.values.get(column){Some(SqliteValue::Integer(value))=>Ok(*value),_=>Err(invalid("CSV integer cell is invalid"))}}
 fn text(row:&SqliteRow,column:usize)->Result<&str>{match row.values.get(column){Some(SqliteValue::Text(value))=>Ok(value),_=>Err(invalid("CSV text cell is invalid"))}}
 fn flag(row:&SqliteRow,column:usize)->Result<bool>{match integer(row,column)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("CSV authored flag requires zero or one"))}}
-fn schema(database:&SqliteDatabase,port:&mut Port<'_,'_,'_>)->Result<()>{let authored=[0,1,2].map(|index|semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::AuthoredTable{name:NAMES[index],declaration:definition(index),columns:[3,3,5][index]});semio_framework_os_kernel::sqlite_snapshot::artifact::receiving::validate_schema(database,&authored,port)}
+fn schema(database:&SqliteDatabase,port:&mut Port<'_,'_,'_>)->Result<()>{let authored=[0,1,2].map(|index|semio_os_kernel::sqlite_snapshot::artifact::receiving::AuthoredTable{name:NAMES[index],declaration:definition(index),columns:[3,3,5][index]});semio_os_kernel::sqlite_snapshot::artifact::receiving::validate_schema(database,&authored,port)}
 fn reconstruct(database:&SqliteDatabase,frame:&mut Reconstruction,port:&mut Port<'_,'_,'_>)->Result<()>{
  schema(database,port)?;port.control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;let documents=&table(database,NAMES[0])?.rows;if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=3||integer(&documents[0],0)?!=1{return Err(invalid("CSV requires one authored document identity"))}let document=&documents[0];port.control.admit_reconstruction_bytes(8)?;port.work(1,size_of::<bool>())?;frame.snapshot.has_header=flag(document,2)?;
  let records=&table(database,NAMES[1])?.rows;let children=&table(database,NAMES[2])?.rows;port.vector(records.len(),&mut frame.records,1)?;port.vector(records.len(),&mut frame.record_ids,1)?;port.vector(children.len(),&mut frame.fields,1)?;port.vector(children.len(),&mut frame.field_ids,1)?;

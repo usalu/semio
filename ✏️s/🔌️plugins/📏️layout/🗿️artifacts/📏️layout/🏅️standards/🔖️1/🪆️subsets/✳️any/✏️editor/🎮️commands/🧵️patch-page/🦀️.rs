@@ -1,6 +1,6 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-page`.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use crate::modes::edit::windows::blueprint::config::current;
 use semio_s_artifact_layout_layout_mutations_content::change_page_height::ChangePageHeight;
 use semio_s_artifact_layout_layout_mutations_content::change_page_width::ChangePageWidth;
@@ -20,7 +20,7 @@ use semio_s_artifact_layout_layout_mutations_content::update_page_margins::Updat
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_layout_layout_model::Page;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared

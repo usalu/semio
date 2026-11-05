@@ -142,6 +142,31 @@
         "fuel",
         "stock"
       ]
+    },
+    "closeWorkCases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cancelled",
+          "financialItems",
+          "primitiveItems"
+        ],
+        "properties": {
+          "cancelled": {
+            "type": "boolean"
+          },
+          "financialItems": {
+            "const": 512
+          },
+          "primitiveItems": {
+            "const": 1
+          }
+        }
+      }
     }
   }
 }

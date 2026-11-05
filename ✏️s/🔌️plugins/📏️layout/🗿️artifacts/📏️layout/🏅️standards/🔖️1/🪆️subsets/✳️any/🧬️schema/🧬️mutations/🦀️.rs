@@ -2,9 +2,9 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
@@ -143,7 +143,6 @@ pub const KINDS: &[&str] = &[
     "set-page-overrides",
     "create-layer",
     "set-frame-layer",
-    "set-drawing-text",
     "reorder-frame",
     "drag-frames",
     "rotate-frames",
@@ -175,9 +174,6 @@ pub mod binary;
 pub mod text;
 //#endregion 🪢️TaxonomyMounts
 
-#[cfg(test)]
-#[path = "🧪️tests/🏗️structure/🦀️.rs"]
-mod structure_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/✅️validation/🦀️.rs"]
@@ -193,4 +189,11 @@ pub mod retained;
 impl semio_s_artifact_layout_layout_mutations_decisions::LayoutMutationSource for LayoutMutation {
  fn view(&self)->semio_s_artifact_layout_layout_mutations_decisions::LayoutMutationView<'_>{use semio_s_artifact_layout_layout_mutations_decisions::LayoutMutationView as V;match self{Self::RenameLayout(p)=>V::RenameLayout(p),Self::ChangePrintTarget(p)=>V::ChangePrintTarget(p),Self::ChangeDataFields(p)=>V::ChangeDataFields(p),Self::CreatePage(p)=>V::CreatePage(p),Self::DeletePage(p)=>V::DeletePage(p),Self::RenamePage(p)=>V::RenamePage(p),Self::ChangePageWidth(p)=>V::ChangePageWidth(p),Self::ChangePageHeight(p)=>V::ChangePageHeight(p),Self::UpdatePageMargins(p)=>V::UpdatePageMargins(p),Self::UpdatePageColumns(p)=>V::UpdatePageColumns(p),Self::ReorderPages(p)=>V::ReorderPages(p),Self::CreateStory(p)=>V::CreateStory(p),Self::DeleteStory(p)=>V::DeleteStory(p),Self::EditStory(p)=>V::EditStory(p),Self::CreateLink(p)=>V::CreateLink(p),Self::DeleteLink(p)=>V::DeleteLink(p),Self::ChangeLinkPath(p)=>V::ChangeLinkPath(p),Self::CreateFrame(p)=>V::CreateFrame(p),Self::DeleteFrame(p)=>V::DeleteFrame(p),Self::MoveFrame(p)=>V::MoveFrame(p),Self::ResizeFrame(p)=>V::ResizeFrame(p),Self::RotateFrame(p)=>V::RotateFrame(p),Self::ChangeFrameFill(p)=>V::ChangeFrameFill(p),Self::ChangeFrameStroke(p)=>V::ChangeFrameStroke(p),Self::ChangeFrameWrapMode(p)=>V::ChangeFrameWrapMode(p),Self::ChangeFrameColumns(p)=>V::ChangeFrameColumns(p),Self::UpdateGrid(p)=>V::UpdateGrid(p),Self::SetFrameFlags(p)=>V::SetFrameFlags(p),Self::UpdateParagraphStyle(p)=>V::UpdateParagraphStyle(p),Self::UpdateTextFrame(p)=>V::UpdateTextFrame(p),Self::UpdateLayer(p)=>V::UpdateLayer(p),Self::CreateCharacterStyle(p)=>V::CreateCharacterStyle(p),Self::DeleteCharacterStyle(p)=>V::DeleteCharacterStyle(p),Self::UpdateCharacterStyle(p)=>V::UpdateCharacterStyle(p),Self::UpdateParentPage(p)=>V::UpdateParentPage(p),Self::UpdateSpread(p)=>V::UpdateSpread(p),Self::SetPageParent(p)=>V::SetPageParent(p),Self::SetPageGuides(p)=>V::SetPageGuides(p),Self::SetStoryRuns(p)=>V::SetStoryRuns(p),Self::UpdateLink(p)=>V::UpdateLink(p),Self::SetPageOverrides(p)=>V::SetPageOverrides(p),Self::CreateLayer(p)=>V::CreateLayer(p),Self::SetFrameLayer(p)=>V::SetFrameLayer(p),Self::ReorderFrame(p)=>V::ReorderFrame(p),Self::DragFrames(p)=>V::DragFrames(p),Self::RotateFrames(p)=>V::RotateFrames(p),Self::ScaleFrames(p)=>V::ScaleFrames(p),Self::CreateParagraphStyle(p)=>V::CreateParagraphStyle(p),Self::DeleteParagraphStyle(p)=>V::DeleteParagraphStyle(p),Self::CreateParentPage(p)=>V::CreateParentPage(p),Self::DeleteParentPage(p)=>V::DeleteParentPage(p),Self::CreateSpread(p)=>V::CreateSpread(p),Self::DeleteSpread(p)=>V::DeleteSpread(p),Self::SetPageSpread(p)=>V::SetPageSpread(p),Self::ReorderLayer(p)=>V::ReorderLayer(p),Self::SetParentPageContent(p)=>V::SetParentPageContent(p),Self::ReplaceDocument(p)=>V::ReplaceDocument(p),Self::SetPageBackgroundDrawing(p)=>V::SetPageBackgroundDrawing(p)}}
  fn parent_creation_mut(&mut self)->Option<&mut create_parent_page::CreateParentPage>{if let Self::CreateParentPage(p)=self{Some(p)}else{None}}
+}
+
+/// 🧫️ Reads exact declared test data through the system filesystem without embedding corpus Source.
+#[cfg(test)]
+fn test_fixture_text(relative: &str) -> String {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display()))
 }

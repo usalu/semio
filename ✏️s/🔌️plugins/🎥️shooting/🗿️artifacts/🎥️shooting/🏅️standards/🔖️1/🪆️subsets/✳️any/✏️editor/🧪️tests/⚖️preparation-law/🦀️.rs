@@ -1,5 +1,5 @@
 //! ⚖️ Runtime proof that both shooting editing lanes publish through their store factories: the document lane's paged `cold_mutation_apply_preparation_factory` and the config lane's `config_apply_preparation_factory` each drive a real edit through the canonical sealer to `Prepared` and close under exactly quoted grants.
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_s_artifact_shooting_shooting::editor::shooting::config::{SetCamera, ShootingConfig, ShootingConfigMutation};
 use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::schema::mutations::create_shot::CreateShot;
 use semio_s_artifact_shooting_shooting::{ShootingMutation, ShootingShot, ShootingSnapshot};

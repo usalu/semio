@@ -228,7 +228,7 @@ pub struct PreparedRenderPacket {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PreparedRasterKeepCursorV1 {
     pub(super) owner: u8,
-    pub(super) draw: semio_framework_ui_draw_contract::RasterKeepCursorV1,
+    pub(super) draw: semio_ui_draw_contract::RasterKeepCursorV1,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -372,15 +372,15 @@ impl PreparedRenderPacket {
         };
         let Some(draw) = draw else {
             cursor.owner += 1;
-            cursor.draw = semio_framework_ui_draw_contract::RasterKeepCursorV1::default();
+            cursor.draw = semio_ui_draw_contract::RasterKeepCursorV1::default();
             return PreparedRasterKeepStepV1::Pending;
         };
         match draw.raster_keep_step(&mut cursor.draw) {
-            semio_framework_ui_draw_contract::RasterKeepStepV1::Pending => PreparedRasterKeepStepV1::Pending,
-            semio_framework_ui_draw_contract::RasterKeepStepV1::Key(key) => PreparedRasterKeepStepV1::Key(key),
-            semio_framework_ui_draw_contract::RasterKeepStepV1::Complete => {
+            semio_ui_draw_contract::RasterKeepStepV1::Pending => PreparedRasterKeepStepV1::Pending,
+            semio_ui_draw_contract::RasterKeepStepV1::Key(key) => PreparedRasterKeepStepV1::Key(key),
+            semio_ui_draw_contract::RasterKeepStepV1::Complete => {
                 cursor.owner += 1;
-                cursor.draw = semio_framework_ui_draw_contract::RasterKeepCursorV1::default();
+                cursor.draw = semio_ui_draw_contract::RasterKeepCursorV1::default();
                 PreparedRasterKeepStepV1::Pending
             }
         }

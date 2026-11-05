@@ -26,8 +26,8 @@ pub fn move_grip_3d<Op: From<crate::move_grip_3d::MoveGrip3d>>(id: String, new_p
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for MoveGrip3d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::move_grip_3d::MoveGrip3d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "grip", kind: "move-grip3d", record: "MovedGrip3d" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move grip \"{}\" (3D)", self.id), &format!("Griff \"{}\" (3D) verschieben", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move grip \"{}\" (3D)", self.id), &format!("Griff \"{}\" (3D) verschieben", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

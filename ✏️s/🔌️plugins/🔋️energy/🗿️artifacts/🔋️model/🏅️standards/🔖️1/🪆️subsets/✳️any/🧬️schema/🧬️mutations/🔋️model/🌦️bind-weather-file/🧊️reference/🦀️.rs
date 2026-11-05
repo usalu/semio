@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "weather-file", kind: "bind-weather-file", record: "BoundWeatherFile" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind weather file {}", self.link.target.artifact_id), &format!("Wetterdatei {} binden", self.link.target.artifact_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Bind weather file {}", self.link.target.artifact_id), &format!("Wetterdatei {} binden", self.link.target.artifact_id))
     }
 
     fn target(&self) -> Vec<String> {

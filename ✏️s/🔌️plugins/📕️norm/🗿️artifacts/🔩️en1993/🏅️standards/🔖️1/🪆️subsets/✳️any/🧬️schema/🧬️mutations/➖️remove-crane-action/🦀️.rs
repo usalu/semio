@@ -16,8 +16,8 @@ pub struct RemoveCraneAction {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveCraneAction where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_crane_action::InsertCraneAction> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "crane-action", kind: "remove-crane-action", record: "RemovedCraneAction" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove crane runway action #{} of {}", self.index, self.id), &format!("Kranbahn-Einwirkung #{} von {} entfernen", self.index, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove crane runway action #{} of {}", self.index, self.id), &format!("Kranbahn-Einwirkung #{} von {} entfernen", self.index, self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone(), self.index.to_string()] }
 }

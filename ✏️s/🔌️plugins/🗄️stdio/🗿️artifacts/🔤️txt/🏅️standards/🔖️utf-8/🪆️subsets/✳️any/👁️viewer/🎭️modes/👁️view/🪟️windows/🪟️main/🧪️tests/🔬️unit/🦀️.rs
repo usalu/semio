@@ -1,12 +1,12 @@
 use crate::TxtSnapshot;
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 use crate::viewer::txt::modes::view::windows::main::*;
-use semio_framework_plugin::Component;
+use semio_plugin::Component;
 
 /// 🚚️ Decodes the text surface and re-attaches every lane its carrier children hold (`SceneDoc::merge_lane`).
-fn merged_scene(node: &BuiltNode) -> semio_framework_ui_scene::TextEditorScene {
+fn merged_scene(node: &BuiltNode) -> semio_ui_scene::TextEditorScene {
     let Component::Surface(props) = &node.component else { panic!("expected a retained text surface") };
-    let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("decode text scene");
+    let mut scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(props).expect("decode text scene");
     for carrier in &node.children {
         let mut payload = String::new();
         let mut frontier = vec![carrier];
@@ -16,7 +16,7 @@ fn merged_scene(node: &BuiltNode) -> semio_framework_ui_scene::TextEditorScene {
             }
             frontier.extend(child.children.iter().rev());
         }
-        semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), payload);
+        semio_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), payload);
     }
     scene
 }

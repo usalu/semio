@@ -9,7 +9,7 @@ impl PluginArtifactChannel {
         self.pending_command_closes.terminal_is_empty()
     }
 
-    pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
+    pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
         let wasm_path = resolve_plugin_wasm_path(&repo_root, &entry)?;
         let runtime = shared_plugin_runtime()?;
         let compiled = scoped_compiled_component(runtime.as_ref(), &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
@@ -20,14 +20,14 @@ impl PluginArtifactChannel {
     /// a repo build read from disk, or the execution-target component a Hub authorized and served.
     /// Everything past the bytes is identical, which is exactly the point: a hub-bound agent's guest
     /// is the SAME guest a local one gets, not a second code path with its own behaviour.
-    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
+    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
         let runtime = shared_plugin_runtime()?;
         let compiled = shared_compiled_component(runtime.as_ref(), &plugin_id, bytes)?;
         Ok(Self::from_compiled(runtime, compiled, plugin_id, descriptor, app_ref, actor_label, host_driver_policy))
     }
 
     /// 🧩️ A channel over a component this process already compiled — see [`scoped_compiled_component`].
-    pub fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_framework_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
+    pub fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy) -> Self {
         Self {
             runtime,
             compiled,
@@ -36,7 +36,7 @@ impl PluginArtifactChannel {
             app_ref,
             actor_label,
             host_driver_policy,
-            host_driver:Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
+            host_driver:Arc::new(semio_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
             instances: HashMap::new(),
             pending_exchanges: PendingExchangeRegistry::new(),
             pending_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
@@ -84,8 +84,8 @@ impl PluginArtifactChannel {
             return Ok(());
         }
         self.ensure_instance(instance)?;
-        let command = semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
-            operation: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Bind,
+        let command = semio_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
+            operation: semio_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Bind,
             instance_id: instance,
             binding_generation: DOCUMENT_BACKBONE_BINDING_GENERATION,
             uri: self.actor_label.clone(),
@@ -106,7 +106,7 @@ impl PluginArtifactChannel {
         if receipts.len() != 1 {
             return Err(Self::not_wired("document-backbone bind", format!("the guest answered {} shell receipt(s) for one bind", receipts.len())));
         }
-        semio_framework_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(receipts[0], &command).map_err(|error| Self::not_wired("document-backbone bind", error))?;
+        semio_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(receipts[0], &command).map_err(|error| Self::not_wired("document-backbone bind", error))?;
         for effect in &turn.effects {
             if let Some(egress) = document_backbone_payload(&self.actor_label, effect) {
                 self.backbone_egress.push(egress.to_vec());

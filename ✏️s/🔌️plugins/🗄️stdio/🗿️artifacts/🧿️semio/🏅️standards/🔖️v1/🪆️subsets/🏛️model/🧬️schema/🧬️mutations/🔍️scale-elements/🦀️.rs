@@ -37,10 +37,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "elements", kind: "scale-elements", record: "ScaledElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (items_en, items_de) = element_count_label(self.targets.len());
         let (factors_en, factors_de) = vector_label(self.factors);
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {items_en} by {factors_en}"), &format!("{items_de} um {factors_de} skalieren"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Scale {items_en} by {factors_en}"), &format!("{items_de} um {factors_de} skalieren"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

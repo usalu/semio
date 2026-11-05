@@ -14,7 +14,7 @@ use protocol::command::DiffAlgebra;
 async fn mutation_diff_law() {
     for mutation in demo_mutation_cases() {
         let base = fixture();
-        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
+        let diff_direct = ::semio_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut via_apply = base.clone();
@@ -40,7 +40,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
+        let diff = ::semio_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = protocol::apply_diff_cold(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
@@ -96,7 +96,7 @@ async fn insert_then_remove_node_apply_and_inverse() {
     let mut after = base.clone();
     after = semio_s_artifact_stdio_semio_base::applied(&after, &insert).0;
     assert_eq!(after.nodes.len(), 3);
-    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_os_kernel::ColdMutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
@@ -109,7 +109,7 @@ async fn node_param_mutations_apply_and_inverse() {
     let mut after = base.clone();
     after = semio_s_artifact_stdio_semio_base::applied(&after, &set).0;
     assert_eq!(param_value_at(&after, "n1", "k"), Some("new"));
-    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&set, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_os_kernel::ColdMutation::inverse(&set, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
@@ -118,7 +118,7 @@ async fn node_param_mutations_apply_and_inverse() {
     let mut after2 = base.clone();
     after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &add).0;
     assert_eq!(param_value_at(&after2, "n1", "fresh"), Some("added"));
-    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&add, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_os_kernel::ColdMutation::inverse(&add, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &inv).0;
     }
     assert_eq!(after2, base);
@@ -131,7 +131,7 @@ async fn edge_mutations_apply_and_inverse() {
     let mut after = base.clone();
     after = semio_s_artifact_stdio_semio_base::applied(&after, &set).0;
     assert_eq!(edge_at(&after, "e1").unwrap().from.node, "n2");
-    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&set, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_os_kernel::ColdMutation::inverse(&set, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
@@ -156,14 +156,14 @@ async fn drag_nodes_moves_relative_to_its_base_and_undoes_exactly() {
         restored = semio_s_artifact_stdio_semio_base::applied(&restored, &step).0;
     }
     assert_eq!(restored, base, "drag-nodes' undo restores every base position exactly");
-    let partial = ::semio_framework_os_kernel::ColdMutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into(), "ghost".into()], dx: 1.0, dy: 0.0 }), &base);
+    let partial = ::semio_os_kernel::ColdMutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into(), "ghost".into()], dx: 1.0, dy: 0.0 }), &base);
     assert!(partial.messages().iter().any(|message| message.code.0 == "mutation.partial" && message.target == vec!["ghost".to_string()]), "{:?}", partial.messages());
-    let missing = ::semio_framework_os_kernel::ColdMutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["ghost".into()], dx: 1.0, dy: 0.0 }), &base);
+    let missing = ::semio_os_kernel::ColdMutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["ghost".into()], dx: 1.0, dy: 0.0 }), &base);
     assert!(missing.messages().iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == semio_framework_diagnostic::Severity::Error), "{:?}", missing.messages());
-    let still = ::semio_framework_os_kernel::ColdMutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into()], dx: 0.0, dy: 0.0 }), &base);
+    let still = ::semio_os_kernel::ColdMutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into()], dx: 0.0, dy: 0.0 }), &base);
     assert!(still.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "{:?}", still.messages());
     for malformed in [drag_nodes::DragNodes { targets: Vec::new(), dx: 1.0, dy: 0.0 }, drag_nodes::DragNodes { targets: vec!["n1".into(), "n1".into()], dx: 1.0, dy: 0.0 }, drag_nodes::DragNodes { targets: vec!["n1".into()], dx: f64::NAN, dy: 0.0 }] {
-        let outcome = ::semio_framework_os_kernel::ColdMutation::diff(&SemioFlowMutation::DragNodes(malformed), &base);
+        let outcome = ::semio_os_kernel::ColdMutation::diff(&SemioFlowMutation::DragNodes(malformed), &base);
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant" && message.level == semio_framework_diagnostic::Severity::Fatal), "{:?}", outcome.messages());
     }
 }
@@ -172,14 +172,14 @@ async fn drag_nodes_moves_relative_to_its_base_and_undoes_exactly() {
 #[test]
 fn drag_nodes_labels_its_row_from_its_inputs() {
     let label = <SemioFlowMutation as protocol::SemanticMutation<SemioFlowSnapshot>>::label(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into(), "n2".into()], dx: 80.0, dy: 40.5 }));
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 nodes by (80, 40.5)");
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Knoten um (80; 40,5) ziehen");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 2 nodes by (80, 40.5)");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "2 Knoten um (80; 40,5) ziehen");
 }
 //#endregion ✋️DragNodes
 
 #[test]
 fn paged_flow_original_source_keeps_all_fourteen_frames_and_exact_owner_policy(){
-    use semio_framework_os_kernel::os_spr::operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep};
+    use semio_os_kernel::os_spr::operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep};
     use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📦️operation-source.json")).unwrap();
     let mut operations=Vec::new();

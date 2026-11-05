@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeBracingSystem wher
         record: "ChangedBracingSystem",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change bracing system of the wall", "Wand: Aussteifungssystem ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change bracing system of the wall", "Wand: Aussteifungssystem ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

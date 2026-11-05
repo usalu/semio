@@ -105,8 +105,10 @@ export function buildImportResourceV1(containing,specifier){
 }
 
 /** 📦️ Resolves a package specifier to the workspace module it names, so imports through `@scope/package` subpaths join a command closure like relative ones; installed registry packages stay covered by their locked external dependency. */
-export function workspacePackageModuleV1(containing, specifier, workspaceRoot, compiler=parserTypescriptV1(), host=observedTypeScriptHost(compiler.sys), mode=compiler.ModuleKind.ESNext, declarations=false) {
+export function workspacePackageModuleV1(containing, specifier, workspaceRoot, compiler=parserTypescriptV1(), host=observedTypeScriptHost(compiler.sys), mode=compiler.ModuleKind.ESNext, declarations=false,producedOutput) {
   if (specifier.startsWith(".") || isAbsolute(specifier) || isBuiltin(specifier) || /^[a-z][a-z0-9+.-]*:/u.test(specifier)) return undefined;
+  specifier=buildImportResourceV1(containing,specifier).specifier;
+  const promised=producedOutput?.(specifier);if(promised&&!declarations)return resolve(workspaceRoot,promised.output);
   const options={moduleResolution:compiler.ModuleResolutionKind.NodeNext,module:compiler.ModuleKind.NodeNext,allowJs:true,resolveJsonModule:true,noDtsResolution:!declarations};
   let resolution=compiler.resolveModuleName(specifier,containing,options,host,undefined,undefined,mode);
   const packageName=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0],future=new Map(),packages=[];
@@ -117,7 +119,7 @@ export function workspacePackageModuleV1(containing, specifier, workspaceRoot, c
    for(const output of producer.outputs){future.set(output,output);future.set(resolve(dirname(manifest),relative(dirname(physical),output)),output);}
   }
   if(future.size){const view={...host,fileExists:path=>future.has(path)||host.fileExists(path),directoryExists:path=>[...future.keys()].some(file=>dirname(file)===path)||host.directoryExists?.(path)===true,realpath:path=>future.get(path)??(host.realpath?host.realpath(path):path)};resolution=compiler.resolveModuleName(specifier,containing,options,view,undefined,undefined,mode);}
-  const resolved=resolution.resolvedModule?.resolvedFileName;
+  const resolved=resolution.resolvedModule?.resolvedFileName??(declarations&&promised?.declarations?resolve(workspaceRoot,promised.declarations):undefined);
   if (!resolved) {
     const packageName=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0];
     for(const manifest of resolution.affectingLocations??[]){
@@ -394,7 +396,7 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
         if (kept && !kept.has(entry)) continue;
         const resource=buildImportResourceV1(path,entry);
         if(generated(resource.specifier))continue;
-        let resolved=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host);
+        let resolved=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,compiler.ModuleKind.ESNext,false,cache.generatedOutput);
         try { resolved ??= observedRequireResolve(path, resource.specifier); }
         catch (error) {
           if (error.code !== "MODULE_NOT_FOUND") throw error;
@@ -407,8 +409,8 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
       const references = observedSourceAnalysisV1(prepareSourceAnalysesV1().references,path);
       for (const [specifiers, mode] of [[references.runtime.imports, compiler.ModuleKind.ESNext], [references.runtime.requires, compiler.ModuleKind.CommonJS]]) for (const specifier of specifiers) {
         await checkpoint();
-        const member = workspacePackageModuleV1(path, specifier, workspaceRoot, compiler, host, mode);
-        if (member&&!generated(member)) imports.push({path:member,source:true});
+        const resource=buildImportResourceV1(path,specifier);if(generated(resource.specifier))continue;const member=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,mode,false,cache.generatedOutput);
+        if (member&&!generated(member)) imports.push({path:member,source:resource.source});
       }
       for (const literal of references.urls) {
         await checkpoint();

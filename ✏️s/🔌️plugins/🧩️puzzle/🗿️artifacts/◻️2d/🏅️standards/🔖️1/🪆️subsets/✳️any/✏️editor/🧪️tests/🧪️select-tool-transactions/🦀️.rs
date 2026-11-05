@@ -14,8 +14,8 @@ use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::brush as
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::window::{Puzzle2dWindowConfig, Puzzle2dWindowTransient};
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::InteractionTarget;
+use semio_plugin::kernel::Effect;
+use semio_plugin::InteractionTarget;
 use semio_framework_pack_json::{json, Value};
 use std::collections::BTreeSet;
 #[allow(unused_imports)]
@@ -47,93 +47,93 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 #[allow(unused_imports)]
 use semio_framework::kernel::UiDirtyScope;
 #[allow(unused_imports)]
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, PastePlacement};
+use semio_plugin::kernel::{ClipboardError, ClipboardFragment, PastePlacement};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionRef;
+use semio_plugin::ActionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactPresentation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DialogDefinition;
+use semio_plugin::DialogDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionVerb;
+use semio_plugin::InteractionVerb;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaClass;
+use semio_plugin::MediaClass;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaForm;
+use semio_plugin::MediaForm;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortDirection;
+use semio_plugin::MediaPortDirection;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortSpec;
+use semio_plugin::MediaPortSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::PortMultiplicity;
+use semio_plugin::PortMultiplicity;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use std::collections::{HashMap, HashSet};
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
+use semio_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::kit::*;
 #[allow(unused_imports)]
@@ -145,7 +145,7 @@ use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::editor::puzzle2d::engine::board_host::testkit::close_board_host;
 use crate::editor::puzzle2d::testkit::*;
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::InvocationResult;
+use semio_plugin::InvocationResult;
 
 /// 🧱️ The select-tool corpus board (`🧫️fixtures/🧫️select-tool-history`): three circle nodes on one line — `left`, `mid`
 /// and a locked `pin` — whose `v0` handles are compatible.
@@ -162,7 +162,7 @@ fn painted_host(app: &Puzzle2dApp) -> BoardHost {
 pub(crate) fn painted_host_of(snapshot: &Value) -> BoardHost {
     let mut host = puzzle_board_host();
     host.scene.set_size(800, 600, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)}, "the engine paints the document");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)}, "the engine paints the document");
     set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
     set_transform_flags(&mut host.scene, &mut host.gestures, true, false);
     let _ = drain_board_events_json(&mut host);
@@ -206,11 +206,11 @@ fn edit_rows(result: &InvocationResult) -> Vec<HistoryEntry> {
 }
 
 pub(crate) fn english(entry: &HistoryEntry) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
+    entry.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string()
 }
 
 pub(crate) fn german(entry: &HistoryEntry) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
+    entry.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_string()
 }
 
 //#region 🎬️BoardGestures
@@ -525,7 +525,7 @@ fn leaving_the_select_utility_retires_an_open_gesture() {
     let before = fixture_of(&app);
     stream(&mut app, 40.0);
     assert_eq!(painted_x(&mut app, "left"), -160.0, "the gesture is open");
-    let brush = semio_framework_plugin::ViewModel { active_utility_id: Some(brush_utility::UTILITY_ID.into()), ..window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID) };
+    let brush = semio_plugin::ViewModel { active_utility_id: Some(brush_utility::UTILITY_ID.into()), ..window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID) };
     dispatch_in_view(&mut app, "focusSelection", None, Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID), brush).expect("a verb under the brush");
     let late = phase(&mut app, json!({ "phase": "commit" }));
     assert_zero_trace(&mut app, &late, &before, "a retired gesture");
@@ -568,7 +568,7 @@ fn a_selection_with_repeated_ids_drags_each_target_once() {
     let command = Puzzle2dCommand::from_action("translateSelection", Some(json!({ "dx": 5.0, "dy": 0.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.to_string()));
     let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec!["left".to_string(), "left".to_string(), "left".to_string()], anchor_id: None };
     let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
-    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &selection, "seed-3", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit");
+    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &selection, "seed-3", "rev-1", &semio_plugin::app::GestureSlot::detached(), None).expect("emit");
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(["left".into()].into_iter().collect(), 5.0, 0.0)]);
     assert!(emit.transaction.is_some(), "one transaction");
 }
@@ -591,7 +591,7 @@ fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
     .to_string();
     let command = Puzzle2dCommand::from_action("applyBoardEvents", Some(json!({ "eventsJson": events })), None);
     let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
-    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit").0;
+    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_plugin::app::GestureSlot::detached(), None).expect("emit").0;
     let emit = emit_for("seed-7");
     let transaction = emit.transaction.clone().expect("the commit carries its transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle2d@1/*#editor#select", "{transaction:?}");

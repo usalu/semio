@@ -11,7 +11,7 @@ pub const OS_SHELL_CONFIG_STORAGE_KEY: &str = "semio.os.config";
 pub const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;
 
 #[cfg(not(target_arch = "wasm32"))]
-static NATIVE_PREF_DOCUMENTS: std::sync::LazyLock<std::sync::Mutex<semio_framework_os_services::RetainedFixedFileDocuments>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(semio_framework_os_services::RetainedFixedFileDocuments::default()));
+static NATIVE_PREF_DOCUMENTS: std::sync::LazyLock<std::sync::Mutex<semio_os_services::RetainedFixedFileDocuments>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(semio_os_services::RetainedFixedFileDocuments::default()));
 
 #[cfg(not(target_arch = "wasm32"))]
 static NATIVE_PREF_DOCUMENT_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
@@ -53,9 +53,9 @@ fn native_pref_field_path(key: &str) -> Option<std::path::PathBuf> {
 fn native_pref_read_page(key: &str) -> Option<String> {
     let path = native_pref_field_path(key)?;
     let page = if key == OS_SHELL_CONFIG_STORAGE_KEY {
-        semio_framework_os_services::storage_worker_read_fixed_file_document(&path, OS_SHELL_CONFIG_MAX_BYTES).ok()?
+        semio_os_services::storage_worker_read_fixed_file_document(&path, OS_SHELL_CONFIG_MAX_BYTES).ok()?
     } else {
-        semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES).ok()?
+        semio_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES).ok()?
     };
     String::from_utf8(page).ok()
 }
@@ -90,7 +90,7 @@ fn native_pref_write_page(key: &str, value: &str) -> bool {
             }
         };
     }
-    semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES).is_ok()
+    semio_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES).is_ok()
 }
 
 /// 🗝️ One TOP-LEVEL storage key — React's `StoragePort.get` (`🖥️platform/🟦️.ts`), the flat
@@ -318,7 +318,7 @@ pub fn host_storage_write_through(verb: StorageDoorVerb, key: &str, value: Optio
         }
     };
     let key = key.to_string();
-    semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
+    semio_renderer_wgpu_host_base::spawn_app_task(async move {
         match host_io_call(&request, None).await.map_err(|error| error).and_then(|answer| decode_storage_door_answer(&answer)) {
             Ok(_) => {}
             Err(error) => debug_log(&format!("[TRACE] wgpu-shell storage {key} not persisted: {error}")),
@@ -412,7 +412,7 @@ impl FilePrefsStore {
     pub fn with_path(path: std::path::PathBuf) -> Self {
         let (sender, receiver) = std::sync::mpsc::channel();
         let load_path = path.clone();
-        semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().submit(
+        semio_renderer_wgpu_host_base::renderer_worker_pool().submit(
             Lane::Io,
             Box::new(move || {
                 use std::fs as system_fs;
@@ -459,7 +459,7 @@ impl FilePrefsStore {
         drop(state);
         let path = self.path.clone();
         let flush_state = std::sync::Arc::clone(&self.flush_state);
-        semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().submit(
+        semio_renderer_wgpu_host_base::renderer_worker_pool().submit(
             Lane::Io,
             Box::new(move || loop {
                 let snapshot = {

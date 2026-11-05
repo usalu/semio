@@ -20,9 +20,9 @@ serde = { workspace = true, optional = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1991-mut-rail-load-models = { workspace = true }
 semio-s-artifact-norm-en1991-mut-traffic-load-models = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1991-diff = { workspace = true }
@@ -32,5 +32,5 @@ semio-s-artifact-norm-en1991-model = { workspace = true }
 test-support = ["dep:serde", "semio-s-artifact-norm-en1991-diff/test-support", "semio-s-artifact-norm-en1991-model/test-support", "semio-s-artifact-norm-en1991-mut-rail-load-models/test-support", "semio-s-artifact-norm-en1991-mut-traffic-load-models/test-support"]
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde = { workspace = true }

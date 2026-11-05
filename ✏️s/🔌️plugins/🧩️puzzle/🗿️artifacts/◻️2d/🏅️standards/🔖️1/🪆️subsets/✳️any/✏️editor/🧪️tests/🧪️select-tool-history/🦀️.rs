@@ -10,8 +10,8 @@
 
 use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, puzzle2d_entity_label, board_snapshot_nodes};
 use crate::editor::puzzle2d::modes::edit::windows::overview;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::InteractionTarget;
+use semio_plugin::kernel::Effect;
+use semio_plugin::InteractionTarget;
 use semio_framework_pack_json::{json, Value};
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::snapshot::{puzzle2d_scene_for, puzzle2d_scene_with, PUZZLE2D_GENERIC_TOOL_IDS, PUZZLE2D_RETAINED_TOOL_IDS, PUZZLE2D_ADD_NODE_DIALOG_ID, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, Puzzle2dInteractionSnapshot, Puzzle2dScene, puzzle2d_active_utility, puzzle2d_addresses_locked_entity, puzzle2d_entity_hidden, puzzle2d_interaction_definition, puzzle2d_node_kind_arg, puzzle2d_select_scope, puzzle2d_selected_node_ids, puzzle2d_selection_is_locked, puzzle2d_window_and_engagements_scope, puzzle2d_window_only_scope};
@@ -46,93 +46,93 @@ use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 #[allow(unused_imports)]
 use semio_framework::kernel::UiDirtyScope;
 #[allow(unused_imports)]
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, PastePlacement};
+use semio_plugin::kernel::{ClipboardError, ClipboardFragment, PastePlacement};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionRef;
+use semio_plugin::ActionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactPresentation;
+use semio_plugin::ArtifactPresentation;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DialogDefinition;
+use semio_plugin::DialogDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::EditorApp;
+use semio_plugin::EditorApp;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionVerb;
+use semio_plugin::InteractionVerb;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaClass;
+use semio_plugin::MediaClass;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaForm;
+use semio_plugin::MediaForm;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortDirection;
+use semio_plugin::MediaPortDirection;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaPortSpec;
+use semio_plugin::MediaPortSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaType;
+use semio_plugin::MediaType;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::PortMultiplicity;
+use semio_plugin::PortMultiplicity;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolFactoryKey;
+use semio_plugin::ToolFactoryKey;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolJobFactoryError;
+use semio_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use std::collections::{BTreeSet, HashMap, HashSet};
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
+use semio_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::kit::*;
 #[allow(unused_imports)]
@@ -174,10 +174,10 @@ use semio_framework::ActionArgControl;
 use semio_framework::ArgSchema;
 use semio_framework::NumberScale;
 use semio_framework::SnapSource;
-use semio_framework_plugin::ActionMeta;
-use semio_framework_plugin::PluginApp;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_plugin::ActionMeta;
+use semio_plugin::PluginApp;
+use semio_plugin::ViewModel;
+use semio_plugin::FRAMEWORK_HISTORY_BODY_KEY;
 
 static SELECT_TOOL_HISTORY_CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧫️select-tool-history/🔣️.json"));
 
@@ -213,7 +213,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved `historyEdit*` verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&args)), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&args)), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -228,7 +228,7 @@ fn pump(app: &mut Puzzle2dApp, what: &str, done: impl Fn(Option<HistoryTimeTrave
         if done(session(app).map(|status| status.stage)) {
             return;
         }
-        block_on(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+        block_on(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("{what} never settled: {:?}", session(app));
@@ -364,7 +364,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
             let result = dispatch(app, verb, Some(spec), None).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
             assert_eq!(committed_edits(&result), 1, "{what}: {verb} is one edit");
         }
-        "ingest" => block_on(app.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(spec)), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{what}: ingest: {fault:?}")),
+        "ingest" => block_on(app.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(spec)), &mut semio_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{what}: ingest: {fault:?}")),
         "gridFactor" => {
             dispatch(app, "setGridFactor", Some(&json!({ "value": spec })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("grid factor");
         }
@@ -541,7 +541,7 @@ fn every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_f
         }
         let mut fresh = seeded_app(&corpus["board"]);
         for leaf_value in edited_log(scenario) {
-            block_on(fresh.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(&leaf_value)), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the edited log folds");
+            block_on(fresh.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(&leaf_value)), &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("the edited log folds");
         }
         assert_eq!(board_snapshot_nodes(&head), board_snapshot_nodes(&fixture_of(&fresh)), "{id}: the overwrite equals a fresh fold of the edited log");
         close_app(&mut app);
@@ -564,7 +564,7 @@ fn reference_chips_name_board_entities_like_the_outliner() {
     });
     let label = |kinds: &[&str], id: &str| {
         let kinds: Vec<String> = kinds.iter().map(|kind| kind.to_string()).collect();
-        puzzle2d_entity_label(&snapshot, &kinds, id).map(|label| (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()))
+        puzzle2d_entity_label(&snapshot, &kinds, id).map(|label| (label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string(), label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_string()))
     };
     let both = |text: &str| Some((text.to_string(), text.to_string()));
     assert_eq!(label(&["node", "targetRegion"], "a"), both("Alpha"));
@@ -597,9 +597,9 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
     let board: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(&corpus["board"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus board decodes");
     for scenario in corpus["scenarios"].as_array().expect("scenarios") {
         let id = scenario["id"].as_str().expect("scenario id");
-        let mut store = puzzle2d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA, id, board.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = puzzle2d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA, id, board.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for logged in scenario["log"].as_array().expect("log") {
-            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a logged leaf applies");
+            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("a logged leaf applies");
         }
         let mutation_ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let drafts: protocol::HistoryInputDrafts = scenario["drafts"]
@@ -653,7 +653,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
             }
         }
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "{id}: the replay equals the fresh fold of the edited log");
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "{id}: the overwritten history folds to the edited state");
         close_puzzle2d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
     }

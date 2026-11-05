@@ -1,6 +1,6 @@
 //! 🧪️ Original membership laws of the load-center and plant-loop operations, kept in a dedicated test crate so their domain crates stay inside the source boundary.
 #![allow(clippy::too_many_arguments)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 #[global_allocator]

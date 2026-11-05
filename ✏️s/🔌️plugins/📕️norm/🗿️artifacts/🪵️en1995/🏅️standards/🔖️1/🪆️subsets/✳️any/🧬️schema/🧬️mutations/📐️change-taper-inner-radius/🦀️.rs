@@ -10,7 +10,7 @@ pub struct ChangeTaperInnerRadius { pub taper_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTaperInnerRadius where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_taper_inner_radius::ChangeTaperInnerRadius> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "taper-inner-radius", kind: "change-taper-inner-radius", record: "ChangedTaperInnerRadius" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change inner radius r_in of taper {}", self.taper_id), &format!("Innenradius r_in von Taper {} ändern", self.taper_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change inner radius r_in of taper {}", self.taper_id), &format!("Innenradius r_in von Taper {} ändern", self.taper_id)) }
     fn target(&self) -> Vec<String> { vec![self.taper_id.clone()] }
 }
 

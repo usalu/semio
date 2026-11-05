@@ -80,20 +80,20 @@ impl RetainedPaintWalk {
     }
 }
 
-fn intersect_rect(parent: Option<semio_framework_ui_theme::geometry::Rect>, rect: semio_framework_ui_theme::geometry::Rect) -> Option<semio_framework_ui_theme::geometry::Rect> {
+fn intersect_rect(parent: Option<semio_ui_theme::geometry::Rect>, rect: semio_ui_theme::geometry::Rect) -> Option<semio_ui_theme::geometry::Rect> {
     let Some(parent) = parent else { return Some(rect) };
     let x = parent.x.max(rect.x);
     let y = parent.y.max(rect.y);
     let right = (parent.x + parent.w).min(rect.x + rect.w);
     let bottom = (parent.y + parent.h).min(rect.y + rect.h);
-    Some(semio_framework_ui_theme::geometry::Rect::new(x, y, (right - x).max(0.0), (bottom - y).max(0.0)))
+    Some(semio_ui_theme::geometry::Rect::new(x, y, (right - x).max(0.0), (bottom - y).max(0.0)))
 }
 
-pub fn offset_rect(rect: semio_framework_ui_theme::geometry::Rect, x: f32, y: f32) -> semio_framework_ui_theme::geometry::Rect {
-    semio_framework_ui_theme::geometry::Rect::new(rect.x + x, rect.y + y, rect.w, rect.h)
+pub fn offset_rect(rect: semio_ui_theme::geometry::Rect, x: f32, y: f32) -> semio_ui_theme::geometry::Rect {
+    semio_ui_theme::geometry::Rect::new(rect.x + x, rect.y + y, rect.w, rect.h)
 }
 
-pub fn retained_node_clip(tree: &UiTree, node: NodeId) -> Option<semio_framework_ui_theme::geometry::Rect> {
+pub fn retained_node_clip(tree: &UiTree, node: NodeId) -> Option<semio_ui_theme::geometry::Rect> {
     if tree.node(node).is_some_and(|node| matches!(&node.spec.0, UiNode::Select(_)) && node.state.open) {
         return None;
     }
@@ -102,7 +102,7 @@ pub fn retained_node_clip(tree: &UiTree, node: NodeId) -> Option<semio_framework
     let mut cursor = Some(node);
     while let Some(id) = cursor {
         if len == RETAINED_PAINT_DEPTH_CREDITS {
-            return Some(semio_framework_ui_theme::geometry::Rect::default());
+            return Some(semio_ui_theme::geometry::Rect::default());
         }
         path[len] = Some(id);
         len += 1;
@@ -117,7 +117,7 @@ pub fn retained_node_clip(tree: &UiTree, node: NodeId) -> Option<semio_framework
             clip = None;
         }
         let layout = tree.accepted_layout(id)?;
-        let rect = semio_framework_ui_theme::geometry::Rect::new(origin.0 + layout.x, origin.1 + layout.y, layout.width, layout.height);
+        let rect = semio_ui_theme::geometry::Rect::new(origin.0 + layout.x, origin.1 + layout.y, layout.width, layout.height);
         if id == node {
             return clip;
         }
@@ -195,7 +195,7 @@ impl UiFramePaintCensus {
             }
             for instance in layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()) {
                 census.quads += 1;
-                if instance.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH || instance.params[2] == semio_framework_ui_draw_contract::KIND_AFFINE_GLYPH {
+                if instance.params[2] == semio_ui_draw_contract::KIND_GLYPH || instance.params[2] == semio_ui_draw_contract::KIND_AFFINE_GLYPH {
                     census.glyphs += 1;
                 }
             }
@@ -230,8 +230,8 @@ pub struct UiSceneHit {
     pub node: NodeId,
     pub surface_id: String,
     pub controller_id: String,
-    pub kind: semio_framework_ui_declaration::ui::SurfaceKind,
-    pub rect: semio_framework_ui_theme::geometry::Rect,
+    pub kind: semio_ui_declaration::ui::SurfaceKind,
+    pub rect: semio_ui_theme::geometry::Rect,
 }
 
 /// 🔑️ `node`'s own absolute rect plus its scene identity, when it IS a `ComponentScene` leaf — the
@@ -254,7 +254,7 @@ fn push_retained_hit(out: &mut Vec<RetainedHitRegistration>, overlay_hits: &mut 
     }
 }
 
-fn push_clipped_retained_hit(out: &mut Vec<RetainedHitRegistration>, overlay_hits: &mut usize, overlay: bool, clip: Option<semio_framework_ui_theme::geometry::Rect>, mut registration: RetainedHitRegistration) {
+fn push_clipped_retained_hit(out: &mut Vec<RetainedHitRegistration>, overlay_hits: &mut usize, overlay: bool, clip: Option<semio_ui_theme::geometry::Rect>, mut registration: RetainedHitRegistration) {
     let Some(rect) = intersect_rect(clip, registration.rect) else { return };
     if rect.w <= 0.0 || rect.h <= 0.0 {
         return;
@@ -272,7 +272,7 @@ pub fn register_retained_hit(
     node: NodeId,
     origin_x: f32,
     origin_y: f32,
-    clip: Option<semio_framework_ui_theme::geometry::Rect>,
+    clip: Option<semio_ui_theme::geometry::Rect>,
     overlay: bool,
     overlay_hits: &mut usize,
     out: &mut Vec<RetainedHitRegistration>,
@@ -281,12 +281,12 @@ pub fn register_retained_hit(
         return;
     }
     let Some(layout) = tree.accepted_layout(node) else { return };
-    let authored_rect = semio_framework_ui_theme::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
+    let authored_rect = semio_ui_theme::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
     let Some(visible_rect) = intersect_rect(clip, authored_rect) else { return };
     if visible_rect.w <= 0.0 || visible_rect.h <= 0.0 {
         return;
     }
-    let metrics = semio_framework_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, node, &TreeRowMetrics::from_theme(theme).with_inline(inline));
+    let metrics = semio_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, node, &TreeRowMetrics::from_theme(theme).with_inline(inline));
     let overlay = overlay || tree.is_open_select_popup_row(node);
     if let Some(registration) = retained_hit_registration(tree, node, authored_rect, &metrics, driver_drag, reversed) {
         push_clipped_retained_hit(out, overlay_hits, overlay, clip, registration);
@@ -318,7 +318,7 @@ pub fn register_retained_hit(
             out,
             overlay_hits,
             true,
-            RetainedHitRegistration { node, rect, overlay: true, scene: None, kind: HitKind::DropdownItem, control_id: semio_framework_ui_select_behavior::select_scroll_control_id(select_id, up), action: None, drag_axis: None, drag_data: None },
+            RetainedHitRegistration { node, rect, overlay: true, scene: None, kind: HitKind::DropdownItem, control_id: semio_ui_select_behavior::select_scroll_control_id(select_id, up), action: None, drag_axis: None, drag_data: None },
         );
     }
 }

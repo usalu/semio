@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-raster-owner"
+name = "semio-ui-raster-owner"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

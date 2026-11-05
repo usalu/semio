@@ -1,6 +1,6 @@
 //! 🔗️ One paid transfer lends the actual Store read retained by the original command owner.
 use std::cell::RefCell;
-use semio_framework_plugin_decl_views::AppOperationContext;
+use semio_plugin_decl_views::AppOperationContext;
 use semio_framework_job::StepContext;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::{ValueError, ValueRefusalKind};

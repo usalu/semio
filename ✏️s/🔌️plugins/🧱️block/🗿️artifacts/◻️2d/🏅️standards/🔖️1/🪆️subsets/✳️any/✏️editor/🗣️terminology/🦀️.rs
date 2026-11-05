@@ -2,7 +2,7 @@
 //! reaches for.
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the block-2d app; one field per label makes every locale×terminology combination compile-checked.
     pub struct Block2dLabels {
         window_board: native_en "Node Kind", native_de "Knotenart", reuse_en "Node Kind", reuse_de "Knotenart";
@@ -19,8 +19,8 @@ semio_framework_ui_locale::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from the shared view state.
-pub fn block2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Block2dLabels {
-    semio_framework_plugin::resolve_labels::<Block2dLabels>(view_state)
+pub fn block2d_labels(view_state: &semio_plugin::ViewModel) -> &'static Block2dLabels {
+    semio_plugin::resolve_labels::<Block2dLabels>(view_state)
 }
 //#endregion 🔖️Labels
 

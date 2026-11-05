@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeZoneHeaviness whe
         record: "ChangedZoneHeaviness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change construction weight class of the zone", "Bauart (leicht, mittel, schwer) der Zone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change construction weight class of the zone", "Bauart (leicht, mittel, schwer) der Zone ändern")
     }
 }
 

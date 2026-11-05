@@ -1,0 +1,772 @@
+{
+  "base": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "a",
+        "text": "A"
+      },
+      {
+        "kind": "inputNote",
+        "id": "b",
+        "text": "B"
+      },
+      {
+        "kind": "inputNote",
+        "id": "c",
+        "text": "C"
+      },
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "old"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "s",
+        "label": "S",
+        "value": 1,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      }
+    ],
+    "synapses": [
+      {
+        "id": "w",
+        "from": "a",
+        "fromPort": "out",
+        "to": "b",
+        "toPort": "in"
+      }
+    ],
+    "layout": {
+      "n": {
+        "x": 1,
+        "y": 2
+      },
+      "s": {
+        "x": 3,
+        "y": 4
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "Insert Original Widget",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "InsertWidget": {
+          "index": 2,
+          "widget": {
+            "kind": "inputNote",
+            "id": "new",
+            "text": "Grüße🧱"
+          }
+        }
+      },
+      "expected": {
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "a",
+            "text": "A"
+          },
+          {
+            "kind": "inputNote",
+            "id": "b",
+            "text": "B"
+          },
+          {
+            "kind": "inputNote",
+            "id": "new",
+            "text": "Grüße🧱"
+          },
+          {
+            "kind": "inputNote",
+            "id": "c",
+            "text": "C"
+          },
+          {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "old"
+          },
+          {
+            "kind": "inputSlider",
+            "id": "s",
+            "label": "S",
+            "value": 1,
+            "min": 0,
+            "max": 10,
+            "step": 1
+          }
+        ]
+      },
+      "applied": true
+    },
+    {
+      "name": "Replace Exact Widget",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "ReplaceWidget": {
+          "widget": {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "next"
+          }
+        }
+      },
+      "expected": {
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "a",
+            "text": "A"
+          },
+          {
+            "kind": "inputNote",
+            "id": "b",
+            "text": "B"
+          },
+          {
+            "kind": "inputNote",
+            "id": "c",
+            "text": "C"
+          },
+          {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "next"
+          },
+          {
+            "kind": "inputSlider",
+            "id": "s",
+            "label": "S",
+            "value": 1,
+            "min": 0,
+            "max": 10,
+            "step": 1
+          }
+        ]
+      },
+      "applied": true
+    },
+    {
+      "name": "Remove Widget Keeps Dangling Layout",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "RemoveWidget": {
+          "id": "n"
+        }
+      },
+      "expected": {
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "a",
+            "text": "A"
+          },
+          {
+            "kind": "inputNote",
+            "id": "b",
+            "text": "B"
+          },
+          {
+            "kind": "inputNote",
+            "id": "c",
+            "text": "C"
+          },
+          {
+            "kind": "inputSlider",
+            "id": "s",
+            "label": "S",
+            "value": 1,
+            "min": 0,
+            "max": 10,
+            "step": 1
+          }
+        ]
+      },
+      "applied": true
+    },
+    {
+      "name": "Insert Original Synapse",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "InsertSynapse": {
+          "index": 0,
+          "synapse": {
+            "id": "v",
+            "from": "a",
+            "fromPort": "out",
+            "to": "c",
+            "toPort": "in"
+          }
+        }
+      },
+      "expected": {
+        "synapses": [
+          {
+            "id": "v",
+            "from": "a",
+            "fromPort": "out",
+            "to": "c",
+            "toPort": "in"
+          },
+          {
+            "id": "w",
+            "from": "a",
+            "fromPort": "out",
+            "to": "b",
+            "toPort": "in"
+          }
+        ]
+      },
+      "applied": true
+    },
+    {
+      "name": "Replace Exact Synapse",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "ReplaceSynapse": {
+          "synapse": {
+            "id": "w",
+            "from": "c",
+            "fromPort": "out",
+            "to": "a",
+            "toPort": "in"
+          }
+        }
+      },
+      "expected": {
+        "synapses": [
+          {
+            "id": "w",
+            "from": "c",
+            "fromPort": "out",
+            "to": "a",
+            "toPort": "in"
+          }
+        ]
+      },
+      "applied": true
+    },
+    {
+      "name": "Remove Original Synapse",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "RemoveSynapse": {
+          "id": "w"
+        }
+      },
+      "expected": {
+        "synapses": []
+      },
+      "applied": true
+    },
+    {
+      "name": "Set Original Layout",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "SetLayout": {
+          "id": "n",
+          "layout": {
+            "x": 4,
+            "y": 5
+          }
+        }
+      },
+      "expected": {
+        "layout": {
+          "n": {
+            "x": 4,
+            "y": 5
+          },
+          "s": {
+            "x": 3,
+            "y": 4
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Remove Original Layout",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "RemoveLayout": {
+          "id": "n"
+        }
+      },
+      "expected": {
+        "layout": {
+          "s": {
+            "x": 3,
+            "y": 4
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Move Camera",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "SetCamera": {
+          "camera": {
+            "x": 5,
+            "y": 6,
+            "zoom": 2
+          }
+        }
+      },
+      "expected": {
+        "camera": {
+          "x": 5,
+          "y": 6,
+          "zoom": 2
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Replace Schema Text",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "SetSchema": {
+          "schema": "new-schema"
+        }
+      },
+      "expected": {
+        "schema": "new-schema"
+      },
+      "applied": true
+    },
+    {
+      "name": "Set Slider Scalar",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "SetSlider": {
+          "id": "s",
+          "value": 5
+        }
+      },
+      "expected": {
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "a",
+            "text": "A"
+          },
+          {
+            "kind": "inputNote",
+            "id": "b",
+            "text": "B"
+          },
+          {
+            "kind": "inputNote",
+            "id": "c",
+            "text": "C"
+          },
+          {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "old"
+          },
+          {
+            "kind": "inputSlider",
+            "id": "s",
+            "label": "S",
+            "value": 5,
+            "min": 0,
+            "max": 10,
+            "step": 1
+          }
+        ]
+      },
+      "applied": true
+    },
+    {
+      "name": "2D Equivalent Wire Is NoOp",
+      "domains": [
+        "2d"
+      ],
+      "edit": {
+        "InsertSynapse": {
+          "index": 1,
+          "synapse": {
+            "id": "parallel",
+            "from": "a",
+            "fromPort": "out",
+            "to": "b",
+            "toPort": "in"
+          }
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "3D Equivalent Wire Is Permitted",
+      "domains": [
+        "3d"
+      ],
+      "edit": {
+        "InsertSynapse": {
+          "index": 1,
+          "synapse": {
+            "id": "parallel",
+            "from": "a",
+            "fromPort": "out",
+            "to": "b",
+            "toPort": "in"
+          }
+        }
+      },
+      "expected": {
+        "synapses": [
+          {
+            "id": "w",
+            "from": "a",
+            "fromPort": "out",
+            "to": "b",
+            "toPort": "in"
+          },
+          {
+            "id": "parallel",
+            "from": "a",
+            "fromPort": "out",
+            "to": "b",
+            "toPort": "in"
+          }
+        ]
+      },
+      "applied": true
+    },
+    {
+      "name": "2D Blank Schema Is Permitted",
+      "domains": [
+        "2d"
+      ],
+      "edit": {
+        "SetSchema": {
+          "schema": ""
+        }
+      },
+      "expected": {
+        "schema": ""
+      },
+      "applied": true
+    },
+    {
+      "name": "3D Blank Schema Is Rejected",
+      "domains": [
+        "3d"
+      ],
+      "edit": {
+        "SetSchema": {
+          "schema": ""
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "Missing Widget Is Rejected",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "RemoveWidget": {
+          "id": "missing"
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "Camera Signed Zero Preserves Old Bits",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "SetCamera": {
+          "camera": {
+            "x": -0.0,
+            "y": 0,
+            "zoom": 1
+          }
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "Widget Index Clamps",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "InsertWidget": {
+          "index": 99,
+          "widget": {
+            "kind": "inputNote",
+            "id": "new",
+            "text": "Grüße🧱"
+          }
+        }
+      },
+      "expected": {
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "a",
+            "text": "A"
+          },
+          {
+            "kind": "inputNote",
+            "id": "b",
+            "text": "B"
+          },
+          {
+            "kind": "inputNote",
+            "id": "c",
+            "text": "C"
+          },
+          {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "old"
+          },
+          {
+            "kind": "inputSlider",
+            "id": "s",
+            "label": "S",
+            "value": 1,
+            "min": 0,
+            "max": 10,
+            "step": 1
+          },
+          {
+            "kind": "inputNote",
+            "id": "new",
+            "text": "Grüße🧱"
+          }
+        ]
+      },
+      "applied": true
+    },
+    {
+      "name": "Duplicate Widget Is Rejected",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "InsertWidget": {
+          "index": 0,
+          "widget": {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "duplicate"
+          }
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "Missing Endpoint Is Rejected",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "InsertSynapse": {
+          "index": 0,
+          "synapse": {
+            "id": "v",
+            "from": "missing",
+            "fromPort": "out",
+            "to": "b",
+            "toPort": "in"
+          }
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "Missing Layout Is NoOp",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "RemoveLayout": {
+          "id": "missing"
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "Move Stored Nodes From Base",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "MoveNodes": {
+          "ids": [
+            "n",
+            "s"
+          ],
+          "dx": 2,
+          "dy": -3
+        }
+      },
+      "expected": {
+        "layout": {
+          "n": {
+            "x": 3,
+            "y": -1
+          },
+          "s": {
+            "x": 5,
+            "y": 1
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Move Valid Subset Skips Missing And Unplaced",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "MoveNodes": {
+          "ids": [
+            "missing",
+            "a",
+            "n"
+          ],
+          "dx": 4,
+          "dy": 1
+        }
+      },
+      "expected": {
+        "layout": {
+          "n": {
+            "x": 5,
+            "y": 3
+          },
+          "s": {
+            "x": 3,
+            "y": 4
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Move Missing Target Rejects",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "MoveNodes": {
+          "ids": [
+            "missing"
+          ],
+          "dx": 1,
+          "dy": 2
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "Move Unplaced Target Rejects",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "MoveNodes": {
+          "ids": [
+            "a"
+          ],
+          "dx": 1,
+          "dy": 2
+        }
+      },
+      "expected": {},
+      "applied": false
+    },
+    {
+      "name": "Move Zero Offset Preserves Base",
+      "domains": [
+        "2d",
+        "3d"
+      ],
+      "edit": {
+        "MoveNodes": {
+          "ids": [
+            "n"
+          ],
+          "dx": 0,
+          "dy": 0
+        }
+      },
+      "expected": {},
+      "applied": false
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦
 import { resolve } from "node:path";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** ⚙️ Runs the test suites of `semio-framework-ui-scene` and the producer crates carved from it, and the guest-target compile gates.
+/** ⚙️ Runs the test suites of `semio-ui-scene` and the producer crates carved from it, and the guest-target compile gates.
  *
  * This crate carries the pack-encoded `SurfaceDoc` payload every wasm32-wasip2 plugin component and
  * wasm32-unknown-unknown browser renderer moves across the `Component::Surface` boundary, so a
@@ -22,7 +22,7 @@ import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts
 const packageRoot = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 
 /** 🎬️ The scene crates, bottom up: the math producers, the pack codec, the doc contract, the product scenes, the surface bridge, then the facade. */
-const SCENE_PACKAGES = ["semio-framework-ui-scene-algebra", "semio-framework-ui-scene-camera", "semio-framework-ui-scene-mesh", "semio-framework-ui-scene-pass", "semio-framework-ui-scene-picking", "semio-framework-ui-scene-pack", "semio-framework-ui-scene-doc", "semio-framework-ui-scene-modelling", "semio-framework-ui-scene-world3d", "semio-framework-ui-scene-node-graph", "semio-framework-ui-scene-plane", "semio-framework-ui-scene-views", "semio-framework-ui-scene-surface", "semio-framework-ui-scene"];
+const SCENE_PACKAGES = ["semio-ui-scene-algebra", "semio-ui-scene-camera", "semio-ui-scene-mesh", "semio-ui-scene-pass", "semio-ui-scene-picking", "semio-ui-scene-pack", "semio-ui-scene-doc", "semio-ui-scene-modelling", "semio-ui-scene-world3d", "semio-ui-scene-node-graph", "semio-ui-scene-plane", "semio-ui-scene-views", "semio-ui-scene-surface", "semio-ui-scene"];
 
 //#region 🔖️test
 class TestScript extends BundleScript {
@@ -37,7 +37,7 @@ class TestScript extends BundleScript {
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    const check = (args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-scene", ...args],packageRoot,process.env,buildBudgetMs());
+    const check = (args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-ui-scene", ...args],packageRoot,process.env,buildBudgetMs());
     await check(["--target", "wasm32-wasip2"]);
     await check(["--target", "wasm32-unknown-unknown"]);
   }

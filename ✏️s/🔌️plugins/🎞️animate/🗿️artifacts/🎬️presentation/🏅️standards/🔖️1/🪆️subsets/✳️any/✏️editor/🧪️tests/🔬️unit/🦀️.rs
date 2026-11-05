@@ -3,13 +3,13 @@ use crate::editor::animate::config::PresentationConfigMutation;
 use crate::editor::animate::modes::main;
 use crate::editor::animate::modes::main::windows::tile_editor;
 use crate::{default_presentation_snapshot, PRESENTATION_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaPayload;
+use semio_plugin::ActionKind;
+use semio_plugin::EditorApp;
+use semio_plugin::Effect;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::Media;
+use semio_plugin::MediaPayload;
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind};
@@ -32,71 +32,71 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 #[allow(unused_imports)]
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_plugin::{app::ArtifactReservedToolInput, app::ArtifactReservedToolJob, app::ArtifactReservedToolJobRequest, app::ArtifactToolCompletion};
+use semio_plugin::{app::ArtifactReservedToolInput, app::ArtifactReservedToolJob, app::ArtifactReservedToolJobRequest, app::ArtifactToolCompletion};
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedJob;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppIo;
+use semio_plugin::AppIo;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppOperationContext;
+use semio_plugin::AppOperationContext;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobFactory;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactOwnedToolJobRequest;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolFactoryRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationContract;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactToolPublicationLane;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ComponentTree;
+use semio_plugin::ComponentTree;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::Emit;
+use semio_plugin::Emit;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MediaError;
+use semio_plugin::MediaError;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::editor::animate::{ANIMATE_PRESENTATION_RETAINED_TOOL_IDS, ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES, ANIMATE_PRESENTATION_CONFIG_STEP_BYTES, ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS, AnimatePresentationConfigPreparationFactory, AnimatePresentationConfigPreparation, AnimatePresentationConfigByteCounter};
@@ -107,15 +107,15 @@ use crate::editor::animate::config::PresentationConfigMutation;
 use crate::editor::animate::modes::main;
 use crate::editor::animate::modes::main::windows::tile_editor;
 use crate::{default_presentation_snapshot, PRESENTATION_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaPayload;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+use semio_plugin::ActionKind;
+use semio_plugin::EditorApp;
+use semio_plugin::Effect;
+use semio_plugin::Fault;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::Media;
+use semio_plugin::MediaPayload;
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
+    use semio_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     type MountedPresentationApp = VcsArtifactApp<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
@@ -124,7 +124,7 @@ use semio_framework_plugin::MediaPayload;
     /// shallow-shell witness`), so `Drop` runs `close_registered_fixture_app` for every test that returns
     /// early — a panicking test leaves the witness alone so the FIRST failure stays the reported one.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct PresentationApp(pub MountedPresentationApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct PresentationApp(pub MountedPresentationApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for PresentationApp {
         type Target = MountedPresentationApp;
@@ -142,7 +142,7 @@ use semio_framework_plugin::MediaPayload;
     impl Drop for PresentationApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -165,16 +165,16 @@ use semio_framework_plugin::MediaPayload;
     /// `App { definition, examples }` shape `new_app_with_registry`/
     /// `context::assert_declared_actions_bridge_to_commands` still expect — framework test context gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    fn animate_presentation_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_animate_presentation_app(), examples: Vec::new() }
+    fn animate_presentation_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_animate_presentation_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("animate", AnimatePresentationPlayApp, animate_presentation_app_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("animate", AnimatePresentationPlayApp, animate_presentation_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn presentation_app_with_registry() -> PresentationApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_and_members::<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(animate_presentation_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry_and_members::<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(animate_presentation_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         PresentationApp(app, scope)
     }
@@ -185,13 +185,13 @@ use semio_framework_plugin::MediaPayload;
     /// `LoadDocument` effects the host would apply. Without the `bind_instance_id`/settle pair every
     /// typed command is refused with `interactive-job.live-instance`.
     pub async fn dispatch(app: &mut PresentationApp, command: PresentationCommand) -> InvocationResult {
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle");
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
+                semio_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -199,10 +199,10 @@ use semio_framework_plugin::MediaPayload;
 
     /// 🚦️ The fault a refused command answers, whichever door raises it: admission (`dispatch_typed`) or the retained
     /// job's own step (surfaced by the settle the host drives).
-    pub async fn dispatch_refusal(app: &mut PresentationApp, command: PresentationCommand) -> semio_framework_plugin::Fault {
-        match semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
+    pub async fn dispatch_refusal(app: &mut PresentationApp, command: PresentationCommand) -> semio_plugin::Fault {
+        match semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
             Err(fault) => fault,
-            Ok(_) => match settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
+            Ok(_) => match settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
                 Err(fault) => fault,
                 Ok(_) => panic!("the command is refused while it runs"),
             },
@@ -212,7 +212,7 @@ use semio_framework_plugin::MediaPayload;
     /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
     /// committed through its reserved job, then published — all three steps or the projection never moves.
     pub async fn history_verb(app: &mut PresentationApp, action: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
     
     /// 🖼️ Renders one body and PROJECTS it, the way `🏛️architect`, `✒️writer` and `🖨️raster` all do.
@@ -224,13 +224,13 @@ use semio_framework_plugin::MediaPayload;
     /// still did. `project_and_retire_fixture_tree` is the framework's own projection (and it RETIRES
     /// the rendered tree, which the `Debug` route leaked).
     pub async fn render(app: &mut PresentationApp, body_key: &str) -> String {
-        render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
+        render_with_view(app, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await
     }
 
     /// 🌍️ [`render`] under an explicit `ViewModel` — the locale lives there, so a label law that wants
     /// German has to pass one (the default view model resolves NATIVE English).
     pub async fn render_with_view(app: &mut PresentationApp, body_key: &str, view_state: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render JSON")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render JSON")
     }
 }
 
@@ -291,8 +291,8 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
 
 use crate::editor::animate::unit_tests::context::presentation_app;
 use protocol::OpText;
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::artifact_app_laws::meta;
+use semio_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
 async fn deck_schema_is_animate_presentation() {
@@ -312,9 +312,9 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_unknown_body_key_reports_it_by_name() {
-    use semio_framework_plugin::ViewModel;
+    use semio_plugin::ViewModel;
     let mut app = presentation_app().await;
-    let debug_str = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, "some.unknown.body", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render unknown");
+    let debug_str = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, "some.unknown.body", &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render unknown");
     assert!(debug_str.contains("Unknown body: some.unknown.body"));
 }
 
@@ -322,9 +322,9 @@ async fn render_unknown_body_key_reports_it_by_name() {
 /// not cloned into `WindowKindDefinition::actions`, which holds only a window's OWN declarations.
 #[semio_framework_async_macros::async_test]
 async fn app_manifest_declares_expected_operations_and_shell_actions() {
-    use semio_framework_plugin::ActionKind;
+    use semio_plugin::ActionKind;
     let definition = create_animate_presentation_app();
-    let actions: Vec<&semio_framework_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
+    let actions: Vec<&semio_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
     let operation_ids: Vec<&str> = actions.iter().filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
     for expected in ["seedGrid", "addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops", "setSource", "setFrame", "setActiveExample", "clearTiles", "engagementSubmit"] {
         assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
@@ -367,7 +367,7 @@ async fn the_manifest_declares_the_tiles_interaction_domain() {
 /// derived `s.stdio.semio@v1/presentation`/`animation` children (the dag precedent).
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
     fn probe(app: &context::PresentationApp) -> (String, usize) {
         let (source, tiles) = crate::presentation_working_scene(&app.snapshot().expect("projection"));
         (source.kind, tiles.len())
@@ -383,23 +383,23 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a);
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &PresentationCommand::SetSource(set_source::SetSource { source }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &PresentationCommand::SetSource(set_source::SetSource { source }), &meta("actor-b"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut instance_b.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
+    semio_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a), probe(&instance_b), "a replicated checkpoint keeps both instances converged");
     assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
-    close_registered_fixture_app(&mut instance_a.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, instance_a.1.cx()).expect("original caller paid app close");
-    close_registered_fixture_app(&mut instance_b.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, instance_b.1.cx()).expect("original caller paid app close");
+    close_registered_fixture_app(&mut instance_a.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, instance_a.1.cx()).expect("original caller paid app close");
+    close_registered_fixture_app(&mut instance_b.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, instance_b.1.cx()).expect("original caller paid app close");
 }
 
 //#region 🔖️PortTests
@@ -413,7 +413,7 @@ async fn presentation_io_declares_frames_in_and_document_ports() {
 
 #[semio_framework_async_macros::async_test]
 async fn import_media_frames_in_inserts_a_new_tile() {
-    use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
+    use semio_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
     let mut app = context::presentation_app_with_registry().await;
     let before = crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len();
     let frame_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("name".to_string(), semio_framework_pack_json::Value::from("hero-frame")), ("src".to_string(), semio_framework_pack_json::Value::from("/frames/hero.png"))]));
@@ -426,7 +426,7 @@ async fn import_media_frames_in_inserts_a_new_tile() {
 
 #[semio_framework_async_macros::async_test]
 async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
-    use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
+    use semio_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
     let mut app = context::presentation_app_with_registry().await;
     for _ in 0..2 {
         let frame_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("name".to_string(), semio_framework_pack_json::Value::from("frame"))]));
@@ -440,7 +440,7 @@ async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
 
 #[semio_framework_async_macros::async_test]
 async fn import_media_rejects_unknown_port() {
-    use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
+    use semio_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
     let mut app = context::presentation_app_with_registry().await;
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "{}".into() } };
     assert!(app.0.import_media("not-a-port", media, &meta("local"), app.1.cx()).await.is_err());
@@ -463,8 +463,8 @@ async fn presentation_io_declares_the_frames_in_port() {
     let port = &io.ports[0];
     assert_eq!(port.id, "frames:in");
     assert_eq!(port.kind_id.as_deref(), Some("2d.image"));
-    assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::In);
-    assert_eq!(port.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+    assert_eq!(port.direction, semio_plugin::MediaPortDirection::In);
+    assert_eq!(port.multiplicity, semio_plugin::PortMultiplicity::Many);
     assert!(!port.required);
 }
 
@@ -588,20 +588,20 @@ pub(crate) fn every_command() -> Vec<PresentationCommand> {
 /// (`document-archive-replacement.closure-rejected`).
 #[semio_framework_async_macros::async_test]
 async fn demo_example_load_settles_through_the_host_document_archive_door() {
-    use semio_framework_plugin::{artifact_app_laws, PluginApp};
+    use semio_plugin::{artifact_app_laws, PluginApp};
     let mut app = context::presentation_app_with_registry().await;
     let instance = 7;
     app.bind_instance_id(instance).await;
-    let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &PresentationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
+    let meta = semio_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &PresentationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
-        if let Some(semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
+        if let Some(semio_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
             loaded = Some((pack, spr));
         }
         app.take_typed_operation_event();
@@ -615,12 +615,12 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     PluginApp::begin_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
         std::thread::yield_now();
     }
     let status = status.expect("archive load reaches a terminal state");
@@ -637,6 +637,6 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     let deck = <semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&derived).expect("the derived presentation member decodes");
     assert_eq!(deck.slides.len(), tiles.len(), "the genesis-derived deck must carry one slide per loaded tile");
     assert!(!deck.masters.is_empty(), "the genesis-derived deck must carry the loaded source figure as its master");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🔖️ExampleArchiveLoad

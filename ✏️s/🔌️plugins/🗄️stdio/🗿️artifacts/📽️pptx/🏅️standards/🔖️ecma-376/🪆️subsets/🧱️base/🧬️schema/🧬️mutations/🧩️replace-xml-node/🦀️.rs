@@ -15,8 +15,8 @@ pub struct ReplaceXmlNode {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for ReplaceXmlNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "xml-node", kind: "replace-xml-node", record: "ReplaceXmlNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace XML node", "XML-Knoten ersetzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Replace XML node", "XML-Knoten ersetzen")
     }
 
     fn target(&self) -> Vec<String> {

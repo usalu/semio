@@ -1,20 +1,20 @@
 //! 📥️ Items of `store` that belong to `os-store-engine-owners` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🦀️.rs`.
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
+use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{Mutation, OpBinary, OpText};
+use semio_os_spr::{Mutation, OpBinary, OpText};
 use std::marker::PhantomData;
 use std::sync::Arc;
-use semio_framework_os_store_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use semio_framework_os_store_read::{ArtifactStoreCursorDisposerPhase, SnapshotReadLeaseRegistryOwner, advance_returned_snapshot_read};
+use semio_os_store_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
+use semio_os_store_read::{ArtifactStoreCursorDisposerPhase, SnapshotReadLeaseRegistryOwner, advance_returned_snapshot_read};
 //#region 🔖️EphemeralLanes
 
-use semio_framework_os_store_ephemeral::*;
-use semio_framework_os_store_backbone::Backbone;
-use semio_framework_os_store_backbone::backbone_retirement::ArtifactStoreBackboneRetirement;
+use semio_os_store_ephemeral::*;
+use semio_os_store_backbone::Backbone;
+use semio_os_store_backbone::backbone_retirement::ArtifactStoreBackboneRetirement;
 //#region 🧬️OpaqueSnapshotRead
 /// 🔌️ What the owned disposers may ask of the store being closed: the close contract is base, the engine type behind it is not named below. The composer implements it by delegating to its components.
 pub trait ArtifactStoreCloseHost<P, Mutation>

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationLiqLayer
         record: "ChangeFoundationLiqLayerM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Thickness of the liquefiable layer (0 = point value)", "Dicke der verflüssigungsfähigen Schicht (0 = Punktwert) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Thickness of the liquefiable layer (0 = point value)", "Dicke der verflüssigungsfähigen Schicht (0 = Punktwert) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-liq-layer-m".into()]

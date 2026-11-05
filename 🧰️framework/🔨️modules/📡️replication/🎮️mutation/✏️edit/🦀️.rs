@@ -103,7 +103,7 @@ pub struct MutationMeta {
     /// reverse every sibling member together; `None` for a solitary, single-document edit.
     /// Additive, mirrors `semantic_kind`/`label` above. 🎞️ Wire representation is the bare id
     /// string `semio_framework::kernel::InvocationId` wraps, not that newtype itself: this crate
-    /// (`semio-framework-os-kernel`) is a dependency `semio-framework` builds on (see
+    /// (`semio-os-kernel`) is a dependency `semio-framework` builds on (see
     /// `📦️packages/🦀️rust/Cargo.toml`), so importing `InvocationId` here would invert that edge —
     /// see `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b1-spr-vcs-report.md` for the
     /// decision record. Callers holding a real `InvocationId` pass `.0`; this field round-trips

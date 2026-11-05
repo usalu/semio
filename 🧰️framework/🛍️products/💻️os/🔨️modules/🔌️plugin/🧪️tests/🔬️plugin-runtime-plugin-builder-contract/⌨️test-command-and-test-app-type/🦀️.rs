@@ -112,7 +112,7 @@
     #[doc(hidden)]
 #[derive(Debug,semio_framework_value::RetireOwned)]
     pub struct SpawnCountTask;
-    impl semio_framework_plugin_decl_emission::AsyncTaskSource<TestMutation,TestConfigMutation,NoDraftMutation> for SpawnCountTask{
+    impl semio_plugin_decl_emission::AsyncTaskSource<TestMutation,TestConfigMutation,NoDraftMutation> for SpawnCountTask{
         type Future=std::pin::Pin<Box<dyn std::future::Future<Output=Result<TaskResolution<TestMutation,TestConfigMutation,NoDraftMutation>,Fault>>>>;
         fn run(self,ctx:TaskCtx)->Self::Future{Box::pin(async move{
             let bytes=ctx.host.storage_read("counter").await?;

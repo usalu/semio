@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "name": "mounted contributor publishes progress and completion",
+      "actions": [
+        "ready",
+        "emit",
+        "emit"
+      ],
+      "attached": 1,
+      "delivered": 2,
+      "disposed": 0
+    },
+    {
+      "name": "retired pending contributor never subscribes",
+      "actions": [
+        "retire",
+        "ready",
+        "emit"
+      ],
+      "attached": 0,
+      "delivered": 0,
+      "disposed": 0
+    },
+    {
+      "name": "late publication from retired contributor is suppressed",
+      "actions": [
+        "ready",
+        "retire",
+        "emit"
+      ],
+      "attached": 1,
+      "delivered": 0,
+      "disposed": 0
+    },
+    {
+      "name": "replacement lease rejects previous callback",
+      "actions": [
+        "ready",
+        "replace",
+        "emit"
+      ],
+      "attached": 1,
+      "delivered": 0,
+      "disposed": 0
+    },
+    {
+      "name": "cleanup detaches listeners and suppresses retained callbacks",
+      "actions": [
+        "ready",
+        "cleanup",
+        "emit",
+        "cleanup"
+      ],
+      "attached": 1,
+      "delivered": 0,
+      "disposed": 1
+    }
+  ]
+}

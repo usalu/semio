@@ -1,3 +1,4 @@
+import {applyIconRenderTransform} from "./🧊️transform/🟦️.ts";
 import { Canvas as ThreeCanvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Grid } from "@react-three/drei/core/Grid.js";
@@ -344,6 +345,7 @@ async function applyIconRenderShape(result: IconRenderResult, shape: IconRenderS
 export let iconRenderPort: IconRenderPort = {
   async render(request: IconRenderRequest): Promise<IconRenderResult> {
     const model = await loadGlbGroup(request.assetUrl);
+    applyIconRenderTransform(model,request.transform);
     const scene = buildIconScene(request, model);
     const camera = buildIconCamera(request, iconRenderCameraPose(request, model));
     const result = request.format === "svg" ? await renderIconSvg(scene, camera, request.width, request.height, request.background) : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);

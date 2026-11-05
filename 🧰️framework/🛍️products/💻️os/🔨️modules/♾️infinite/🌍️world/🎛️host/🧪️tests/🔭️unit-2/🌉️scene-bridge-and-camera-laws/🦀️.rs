@@ -219,7 +219,7 @@ fn initial_projection_seed_preserves_the_delivered_url_draw_asset_request_and_lo
         assert!(turn < 4_095, "url snapshot did not apply inside its fixture ceiling");
     }
     assert!(state.scene.draw_rebuild.is_some(), "the applied delivery retains its sealed rebuild for the next transaction");
-    let top_spec = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
+    let top_spec = semio_ui_viewport::Viewport3dProjectionSpec { mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top } };
     assert!(apply_world3d_initial_projection_seed(&mut state.session, &mut state.camera, &mut state.scene, &mut state.bridge, top_spec));
     sync_world3d_state(&mut state, &scene, bounds);
     assert!(!state.camera.projection_frame_owed, "the exact Top document sync consumes its content-frame request");
@@ -617,7 +617,7 @@ fn the_live_camera_row_reports_the_orbit_and_not_the_wire() {
     assert_eq!(before["projection"]["mode"]["kind"], "threePoint", "🎥️ an untouched pane opens the canonical three-point perspective mode");
     assert_eq!(before["userMoved"], serde_json::Value::Bool(false));
 
-    let top_spec = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
+    let top_spec = semio_ui_viewport::Viewport3dProjectionSpec { mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top } };
     assert!(apply_world3d_projection_spec(&mut state.session, &mut state.camera, &mut state.scene, top_spec));
     let after = world3d_live_camera_json(&state.session, &state.camera, &state.selection, &state.scene);
     assert_eq!(after["projection"]["mode"]["kind"], "orthographic", "🎥️ the switch is visible in the row the probe reads");
@@ -645,7 +645,7 @@ fn a_local_projection_selection_retains_viewport_ownership() {
     state.camera.projection_frame_key = Some(7);
     state.camera.projection_frame_zoom = Some(3.0);
 
-    let top = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
+    let top = semio_ui_viewport::Viewport3dProjectionSpec { mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top } };
     assert!(apply_world3d_projection_spec(&mut state.session, &mut state.camera, &mut state.scene, top), "📐️ the press moves the pane");
     assert!(!state.camera.projection_frame_owed, "📐️ local selection retains the viewport owner instead of invoking the content framer");
     assert!(state.camera.projection_selected, "📐️ and holds its own spec from here on, React's `externalPendingProjectionSpec`");
@@ -654,7 +654,7 @@ fn a_local_projection_selection_retains_viewport_ownership() {
     assert_eq!(state.camera.projection_spec, top);
 
     assert!(!apply_world3d_projection_spec(&mut state.session, &mut state.camera, &mut state.scene, top), "📐️ pressing the SAME row again changes nothing");
-    let cabinet = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Oblique { variant: semio_framework_ui_viewport::Viewport3dObliqueVariant::Cabinet, angle: 45.0, depth_scale: 0.5 }, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Free {} };
+    let cabinet = semio_ui_viewport::Viewport3dProjectionSpec { mode: semio_ui_viewport::Viewport3dProjectionMode::Oblique { variant: semio_ui_viewport::Viewport3dObliqueVariant::Cabinet, angle: 45.0, depth_scale: 0.5 }, orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Free {} };
     assert!(apply_world3d_projection_spec(&mut state.session, &mut state.camera, &mut state.scene, cabinet), "📐️ but a row with the same family and another plane does — Cabinet after Orthographic");
     assert_eq!(state.camera.projection_spec, cabinet, "📐️ a free oblique retains every framing and shear parameter");
 
@@ -677,14 +677,14 @@ fn curvilinear_selection_retains_the_accepted_top_pose_and_zoom() {
     state.camera.orbit.target = Vec3::new(5.4054055, 2.3406067, 1.5015);
     state.camera.orbit.distance = 19.855713;
     state.camera.orbit.zoom = 6.1791667;
-    state.camera.projection_spec = semio_framework_ui_viewport::Viewport3dProjectionSpec {
-        mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {},
-        orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top },
+    state.camera.projection_spec = semio_ui_viewport::Viewport3dProjectionSpec {
+        mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {},
+        orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top },
     };
     state.camera.projection_selected = true;
     let accepted = state.camera.orbit.clone();
-    let spec = semio_framework_ui_viewport::Viewport3dProjectionSpec {
-        mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Curvilinear { fov: 120.0, strength: 1.0, mapping: semio_framework_ui_viewport::Viewport3dCurvilinearMapping::Fisheye },
+    let spec = semio_ui_viewport::Viewport3dProjectionSpec {
+        mode: semio_ui_viewport::Viewport3dProjectionMode::Curvilinear { fov: 120.0, strength: 1.0, mapping: semio_ui_viewport::Viewport3dCurvilinearMapping::Fisheye },
         orientation: state.camera.projection_spec.orientation,
     };
 
@@ -708,9 +708,9 @@ fn curvilinear_selection_retains_the_accepted_top_pose_and_zoom() {
 fn delivered_projection_spec_frames_once_after_accepted_camera() {
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
-    let spec = semio_framework_ui_viewport::Viewport3dProjectionSpec {
-        mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {},
-        orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top },
+    let spec = semio_ui_viewport::Viewport3dProjectionSpec {
+        mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {},
+        orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top },
     };
     let mut scene = camera_framing_scene(&fixture, "perspective", true, None);
     scene.world_3d.as_mut().expect("world scene").camera_json = serde_json::json!({

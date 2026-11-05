@@ -1,8 +1,8 @@
 //! 🪟️ Auxiliary queries borrow one live real-window context under original funded metadata turns.
 use super::*;
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
-use semio_framework_plugin_plugin_program::surface_context::{SurfaceWindowLease,SurfaceWindowLeaseCursor};
-use semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
+use semio_plugin_plugin_program::surface_context::{SurfaceWindowLease,SurfaceWindowLeaseCursor};
+use semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
 
 #[derive(Clone,Copy,PartialEq,Eq)]

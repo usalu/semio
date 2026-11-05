@@ -1,6 +1,6 @@
 //! 💰️ IFC2x3 actual conformance consumers request only concrete backing.
 use semio_framework_value::ValueRefusalKind;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
+use semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
 #[test]
 fn sqlite_snapshot_ifc2x3_mvd_consumers_follow_concrete_backing_roles(){
     let vector:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/💰️backing/🔣️.json")).unwrap();

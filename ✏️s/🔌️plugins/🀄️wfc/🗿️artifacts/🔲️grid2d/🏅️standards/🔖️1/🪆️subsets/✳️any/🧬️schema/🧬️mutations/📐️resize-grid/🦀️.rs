@@ -29,8 +29,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "grid", kind: "resize-grid", record: "ResizedGrid" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize grid to {}×{}", self.width, self.height), &format!("Größe des Rasters auf {}×{} ändern", self.width, self.height))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Resize grid to {}×{}", self.width, self.height), &format!("Größe des Rasters auf {}×{} ändern", self.width, self.height))
     }
 }
 

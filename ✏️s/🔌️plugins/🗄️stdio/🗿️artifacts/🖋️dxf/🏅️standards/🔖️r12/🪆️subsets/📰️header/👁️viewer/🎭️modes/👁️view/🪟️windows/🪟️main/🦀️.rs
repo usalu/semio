@@ -3,8 +3,8 @@
 
 use crate::standards::v_r12::subsets::any::io::text::snapshot::preview::{preview_svg, DXF_PREVIEW_CANVAS};
 use crate::standards::v_r12::subsets::any::schema::snapshot::DxfSnapshot;
-use semio_framework_plugin::app::{ImageView, ImageWindowKit};
-use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
+use semio_plugin::app::{ImageView, ImageWindowKit};
+use semio_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
@@ -17,7 +17,7 @@ pub fn definition() -> WindowKindDefinition {
 
 /// 👁️ Pure `DxfSnapshot -> BuiltNode` read.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DxfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &DxfSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (width, height) = DXF_PREVIEW_CANVAS;
     ImageWindowKit::render(&ImageView { width, height, mime: "image/svg+xml".into(), base64: semio_s_artifact_stdio_contract::base64_standard(preview_svg(document).as_bytes()) })
 }

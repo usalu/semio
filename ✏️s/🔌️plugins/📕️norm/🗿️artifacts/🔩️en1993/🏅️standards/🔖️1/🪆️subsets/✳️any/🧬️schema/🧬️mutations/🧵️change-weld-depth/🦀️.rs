@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeWeldDepth where Op
         record: "ChangedWeldDepth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Group depth d of the weld group", "Schweißnahtgruppe: Gruppentiefe d ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Group depth d of the weld group", "Schweißnahtgruppe: Gruppentiefe d ändern")
     }
 }
 

@@ -1,6 +1,6 @@
 //! 🧪 Released SELECT closure preserves exact runtime seeds and original retained custody.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 const EMPTY: ExpressExpression = ExpressExpression { kind: ExpressExpressionKind::Unknown, offset: 0, text: None, operator: None, name: None, operands: &[], entries: &[] };
 const ZERO: ExpressExpression = ExpressExpression { kind: ExpressExpressionKind::Real, text: Some("0."), ..EMPTY };
 const ONE: ExpressExpression = ExpressExpression { kind: ExpressExpressionKind::Real, text: Some("1."), ..EMPTY };

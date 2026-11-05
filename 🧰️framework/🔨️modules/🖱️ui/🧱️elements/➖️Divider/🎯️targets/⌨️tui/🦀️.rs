@@ -2,10 +2,10 @@
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling module of
 //! `crate::tui::widget` (see that mod's `use crate::tui::divider::paint_divider;`).
 
-use semio_framework_ui_tui_core::cell::CellBuffer;
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use semio_framework_ui_tui_core::text::display_width;
-use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::cell::CellBuffer;
+use semio_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::text::display_width;
+use semio_ui_tui_core::theme::{Role, Surface, Theme};
 use crate::widget::DividerState;
 
 pub fn paint_divider(d: &DividerState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {

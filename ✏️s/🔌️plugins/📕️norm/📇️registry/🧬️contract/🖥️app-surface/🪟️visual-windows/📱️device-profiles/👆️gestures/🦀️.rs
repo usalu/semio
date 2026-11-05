@@ -3,7 +3,7 @@
 //! 🔗️ Every selection intent is a method and merge the generated [`viewport_interaction_definition`](crate::viewport_interaction_definition) declares; see `visual-editor-architecture.md` §8.4.
 
 use super::*;
-use semio_framework_plugin::{MergeMode, SelectionMethod};
+use semio_plugin::{MergeMode, SelectionMethod};
 
 pub const LONG_PRESS_MS: u32 = 450;
 pub const DOUBLE_TAP_MS: u32 = 300;

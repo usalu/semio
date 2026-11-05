@@ -1,7 +1,7 @@
 //! 🧪️ bridge tests (📜️journal-sequences): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_components::WorldNavigationSnapshot;
-use semio_framework_os_infinite_world_bridge::classify_world_navigation_gestures;
+use semio_os_infinite_world_components::WorldNavigationSnapshot;
+use semio_os_infinite_world_bridge::classify_world_navigation_gestures;
 
 /// 🧭️ The classifier is React's `classifyWorldNavigationGestures`, thresholds and push order
 /// included — a set, never one verdict, so a drag that pans while it orbits reports both.

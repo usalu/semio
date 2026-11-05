@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeChaseY where Op: p
         record: "ChangedChaseY",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change chase position y of the chase", "Schlitz: Schlitzlage y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change chase position y of the chase", "Schlitz: Schlitzlage y ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

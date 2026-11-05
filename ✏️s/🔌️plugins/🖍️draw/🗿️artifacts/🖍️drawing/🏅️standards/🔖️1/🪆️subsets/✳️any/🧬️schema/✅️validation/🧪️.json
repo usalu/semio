@@ -1205,6 +1205,107 @@
         }
       ],
       "valid": true
+    },
+    {
+      "name": "Null Fill Clears Authored Paint",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": null
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Null Stroke Clears Authored Paint",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/stroke",
+          "value": null
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Null Fill And Stroke Clear Authored Paint",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/stroke",
+          "value": null
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Null Fill Retains Nonnull Stroke Validation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/stroke/width",
+          "value": -1
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Null Stroke Retains Nonnull Fill Validation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/stroke",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              2
+            ]
+          }
+        }
+      ],
+      "valid": false
+    }
+  ],
+  "terminalSources": [
+    {
+      "name": "Terminal Original Source Remains Admitted",
+      "replacement": "none",
+      "accepted": true,
+      "done": true
+    },
+    {
+      "name": "Terminal Equivalent Value Cannot Replace Original",
+      "replacement": "value",
+      "accepted": false
+    },
+    {
+      "name": "Terminal Issuer Cannot Replace Original",
+      "replacement": "identity",
+      "accepted": false
+    },
+    {
+      "name": "Terminal Projection Cannot Replace Original",
+      "replacement": "projection",
+      "accepted": false
     }
   ]
 }

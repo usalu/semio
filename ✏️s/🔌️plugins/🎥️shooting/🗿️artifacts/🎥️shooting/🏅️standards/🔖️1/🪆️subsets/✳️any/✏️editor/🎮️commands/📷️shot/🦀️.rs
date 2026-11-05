@@ -7,13 +7,14 @@ use crate::mutations::change_shot_height::ChangeShotHeight;
 use crate::mutations::change_shot_shape::ChangeShotShape;
 use crate::mutations::change_shot_width::ChangeShotWidth;
 use crate::mutations::create_shot::CreateShot;
+use crate::mutations::create_saved_camera::CreateSavedCamera;
 use crate::mutations::rename_shot::RenameShot;
 use crate::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingShot;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🩹️ Builds the single-field `ShootingMutation` for a `patchShot`/`patchShots`/`setActiveShot*`
@@ -153,12 +154,14 @@ pub mod add_shot {
         pub shape: String,
     }
 
-    pub fn handle(payload: &AddShot, doc: &ArtifactView<'_, crate::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &AddShot, doc: &ArtifactView<'_, crate::ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("shot");
-        let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, camera_id: None };
+        let camera_id = next_shooting_id("camera");
+        let saved_camera = crate::ShootingSavedCamera { id: camera_id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), camera: cfg.snapshot.camera.clone() };
+        let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, camera_id: Some(camera_id) };
         Ok(Emit {
-            artifact_mutations: vec![ShootingMutation::CreateShot(CreateShot { shot, index: Some(snapshot.shots.len()) }), ShootingMutation::SetActiveShot(SetActiveShotMutation { shot_id: Some(id.clone()) })],
+            artifact_mutations: vec![ShootingMutation::CreateSavedCamera(CreateSavedCamera { saved_camera, index: Some(snapshot.saved_cameras.len()) }), ShootingMutation::CreateShot(CreateShot { shot, index: Some(snapshot.shots.len()) }), ShootingMutation::SetActiveShot(SetActiveShotMutation { shot_id: Some(id.clone()) })],
             config_mutations: vec![ShootingConfigMutation::SetShotSelection(crate::editor::shooting::config::SetShotSelection { shot_ids: vec![id] })],
             ..Default::default()
         })

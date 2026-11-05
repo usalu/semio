@@ -2,25 +2,25 @@
 
 use semio_framework::{ActionArgDef, ArgSchema};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
 use semio_framework_value::DslValue;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use std::future::Future;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use protocol::{OpBinary, OpText};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 use crate::acceptance_change_buckets;
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 
 fn item_schema(shape: &str) -> ArgSchema {
     let label = || LocalizedLabel::native("Value", "Wert");

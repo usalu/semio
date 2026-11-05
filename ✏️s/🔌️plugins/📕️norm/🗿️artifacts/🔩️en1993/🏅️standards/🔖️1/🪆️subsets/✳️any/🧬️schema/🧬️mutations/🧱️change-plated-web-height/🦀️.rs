@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedWebHeight wh
         record: "ChangedPlatedWebHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Corrugated web height h_w of the plated panel", "Plattenfeld: Trapezstegblech: Steghöhe h_w ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Corrugated web height h_w of the plated panel", "Plattenfeld: Trapezstegblech: Steghöhe h_w ändern")
     }
 }
 

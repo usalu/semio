@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProductIndex 
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "insert", entity: "productIndex", kind: "introduce-product-index", record: "IntroducedProductIndex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(
             &format!("Introduce product index \"{}\"", self.product_index.id),
             &format!("Produktindex \"{}\" einführen", self.product_index.id),
         )

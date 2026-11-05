@@ -2,11 +2,11 @@
 //!
 //! WP3 owns the source file and cuts the items here (wire_artifact_infer_cold, wire_artifact_infer_from_cold, wire_artifact_infer_from_context_cold, wire_artifact_infer_with_service_cold); WP2 wires this file with one `mod` line in the crate root. Until `plugin-program` exists, the source module re-exports the items with `pub use`.
 use crate::artifact_inference::ARTIFACT_INFERENCE_WIRE_VERSION;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutable;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionError;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionRequest;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceService;
-use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceServiceRegistry;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutable;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionError;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionRequest;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceService;
+use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceServiceRegistry;
 use crate::artifact_inference::WireArtifactInferenceMetadata;
 use crate::artifact_inference::WireArtifactInferenceProvenance;
 use crate::artifact_inference::WireArtifactInferenceRequest;

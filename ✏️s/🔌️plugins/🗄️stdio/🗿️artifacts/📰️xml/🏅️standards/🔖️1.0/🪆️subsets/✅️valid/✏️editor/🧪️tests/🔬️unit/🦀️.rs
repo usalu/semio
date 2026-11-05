@@ -3,11 +3,11 @@ use crate::schema::snapshot::XmlNode;
 use crate::standards::v1_0::subsets::valid::schema::valid_mutations::set_text::SetText;
 use crate::standards::v1_0::subsets::valid::schema::XmlValidMutation;
 use crate::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use crate::editor::xml_valid::{decode_node_id, resolve_node, XML_VALID_KIT_ACTION_ID, xml_valid_example_snapshot, xml_valid_command_from_action, xml_valid_emit};
 use crate::editor::xml_valid::*;
@@ -24,7 +24,7 @@ fn set_node_requires_a_complete_address_and_allows_an_explicit_empty_text_node()
 #[semio_framework_async_macros::async_test]
 async fn create_xml_valid_editor_builds_a_definition_for_the_editor_role() {
     let def = create_xml_valid_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, XML_VALID_EDITOR_DIALECT.into());
 }
 
@@ -50,7 +50,7 @@ async fn decode_node_id_roundtrips_root_and_nested() {
 fn set_node_rejects_every_noncanonical_address_before_emitting() {
     let snapshot = XmlSnapshot::default();
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
-    let separator = semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
+    let separator = semio_plugin::TREE_WINDOW_PATH_SEPARATOR;
     for node_id in [String::new(), "0".into(), format!("${separator}{separator}0"), format!("${separator}${separator}0")] {
         let command = XmlValidEditorCommand::SetNode { node_id, revision: revision.clone(), value: "text".into() };
         assert!(xml_valid_emit(&command, &snapshot, None).is_err());
@@ -86,11 +86,11 @@ async fn the_editor_declares_the_example_pickers_verb() {
 /// `Migrated` classification and `OpBinary::TOOL_JOB_IDS` disagree — so constructing one is the proof.
 #[semio_framework_async_macros::async_test]
 async fn the_example_switch_joins_its_exact_retained_factory() {
-    use semio_framework_plugin::PluginApp;
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_xml_valid_editor());
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<XmlValidEditor>>::with_registry(EditorApp::<XmlValidEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
+    use semio_plugin::PluginApp;
+    let registry = semio_plugin::AppActionRegistry::from_definition(&create_xml_valid_editor());
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::VcsArtifactApp::<EditorApp<XmlValidEditor>>::with_registry(EditorApp::<XmlValidEditor>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
 
@@ -117,27 +117,27 @@ async fn the_shell_action_pair_resolves_into_the_typed_command() {
 //#endregion 🎬️ExampleSwitchLaws
 
 //#region 🪟️KitVerbLaws
-type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<XmlValidEditor>>;
+type KitFixtureApp = semio_plugin::VcsArtifactApp<EditorApp<XmlValidEditor>>;
 
 /// 🧪️ One registered fixture app holding `document`, loaded exactly as a host applies the example
 /// switch's `Effect::LoadDocument`.
-async fn kit_fixture_holding(document: &XmlSnapshot) -> (KitFixtureApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope) {
-    use semio_framework_plugin::PluginApp;
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<XmlValidEditor>, _>(async { semio_framework_plugin::App { definition: create_xml_valid_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_XML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
+async fn kit_fixture_holding(document: &XmlSnapshot) -> (KitFixtureApp, semio_plugin::artifact_app_laws::OriginalFixtureScope) {
+    use semio_plugin::PluginApp;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<XmlValidEditor>, _>(async { semio_plugin::App { definition: create_xml_valid_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_XML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
     (app, scope)
 }
 
 /// 🕹️ Dispatches `action` with text-staged `args`, exactly as a rail sends it, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)], cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), Fault> {
-    use semio_framework_plugin::PluginApp;
-    let meta = semio_framework_plugin::artifact_app_laws::meta("local");
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)], cx: &mut semio_plugin::StepContext<'_>) -> Result<(), Fault> {
+    use semio_plugin::PluginApp;
+    let meta = semio_plugin::artifact_app_laws::meta("local");
     let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_plugin::Fault::from(format!("{failure:?}"))))?;
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// ⚖️ LAW: `set-node` — the verb the `TreeWindowKit` mints for `🪟️main` — reaches the document through this
@@ -151,11 +151,11 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let after = app.snapshot().expect("xml snapshot");
     let root = after.doc.root.as_ref().expect("the example keeps its root element");
     assert_eq!(resolve_node(root, &[0, 0, 0]), Some(&XmlNode::Text { text: "Stone Forest".into() }));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 //#endregion 🪟️KitVerbLaws
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", XmlValidEditor, || semio_framework_plugin::App { definition: create_xml_valid_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio", XmlValidEditor, || semio_plugin::App { definition: create_xml_valid_editor(), examples: Vec::new() }, "../..");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_subset_closed_kind() {

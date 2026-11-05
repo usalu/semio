@@ -53,7 +53,7 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 
 /// 🧮️ ONE evaluation tick of the shared chain, for ANY surface.
 ///
-/// ⏱️ The tick's own wall cost is recorded into `semio_framework_os_flow`'s evaluation-step ledger
+/// ⏱️ The tick's own wall cost is recorded into `semio_os_flow`'s evaluation-step ledger
 /// ONLY while `semio_framework_job::runtime_diagnostics_enabled()` is armed — this is the ONE app
 /// work step the 8 ms interactive ceiling governs, and a normal boot must not pay two clock reads
 /// per tick to measure it.
@@ -64,7 +64,7 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 /// 🔁️ `turn_started_us` is when the guest turn this walk belongs to began. A tick the host
 /// dispatched opens its own turn and passes `None`; a tick an answer's fold runs INLINE passes the
 /// fold's own turn start, so every walk of one turn shares one wall deadline
-/// ([`semio_framework_os_flow::flow_eval_tick_budget`]).
+/// ([`semio_os_flow::flow_eval_tick_budget`]).
 pub fn evaluate_tick(
     window_id: &str,
     window_kind_id: &str,
@@ -99,26 +99,23 @@ pub fn evaluate_tick(
     }
     let publication = preview_eval_publication_for(session, host_snapshot, retained_eval);
     if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
-        semio_framework_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
+        semio_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
     }
     Ok(FlowEvalTickOutcome { extension_invocations, publication, census_moved: node_census_digest(session.status_json()) != census_before })
 }
 
 /// 📨️ The original evaluation request carries business identity and address; its caller lends execution authority through the actual context.
 pub fn evaluate_invocation(pending: semio_framework_artifact_flow_flow::neural::PendingExtensionEval, resume: bool, dependency_json: String, window_id: &str, window_kind_id: &str) -> ExtensionInvocation {
-    let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
-        ("neuronId".to_string(), semio_framework_value::DslValue::String(pending.neuron_id)),
-        ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
-        ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume { String::new() } else { pending.input_json })),
-        ("dependencyJson".to_string(), semio_framework_value::DslValue::String(dependency_json)),
-        ("operatorVersion".to_string(), semio_framework_value::DslValue::String(format!("registry:{};geometry:1;policy:1", semio_framework_os_flow::flow_extension_registry_generation()))),
-        ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
-        ("resume".to_string(), semio_framework_value::DslValue::Bool(resume)),
-        ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
-        ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
-        ("extensionId".to_string(), semio_framework_value::DslValue::String(pending.extension_id.clone())),
-    ]));
-    ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve")
+    let origin=semio_os_flow::FlowInvocationOrigin{
+        window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,
+        extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:pending.node_hash,
+        input_json:pending.input_json,dependency_json,
+        operator_version:format!("registry:{};geometry:1;policy:1",semio_os_flow::flow_extension_registry_generation()),
+        outer_node_hash:None,preview_source:None,
+    };
+    let request_json=origin.request_json_cold(resume);
+    let semio_os_flow::FlowInvocationOrigin{extension_id,..}=origin;
+    ExtensionInvocation::new(extension_id,"evaluate",request_json,"flowEvalResolve")
 }
 
 /// 🕸️ One number over the part of the per-node census that is worth re-rendering the GRAPH body for:
@@ -192,8 +189,8 @@ pub fn census_chrome_marks(status_json: &str) -> String {
 /// ⏱️ A budgeted `evaluate` answers an ENVELOPE: a step that spent its wall allowance without
 /// finishing says `done: false` and parks its job under this same `nodeHash`, so the window stays
 /// unfinished and owes one more identical hop (`📓️extension-evaluate-budget-2026-09-12.md`).
-pub fn resolve_eval(payload:&FlowEvalResolve,receiver:&mut semio_framework_os_flow::FlowEvaluationReplyReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-    let address=semio_framework_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};receiver.step(session,&address,cx)
+pub fn resolve_eval(payload:&FlowEvalResolve,receiver:&mut semio_os_flow::FlowEvaluationReplyReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let address=semio_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};receiver.step(session,&address,cx)
 }
 
 /// 💥 Retains (or forgets) the evaluate fault one answer carried. Publication only — no arming.
@@ -208,7 +205,7 @@ pub fn release_invocations(payload: &FlowEvalRelease) -> Vec<ExtensionInvocation
 
 /// 🧯️ The release over an ALREADY RESOLVED geometry address — pure in both inputs, for the same
 /// reason [`preview_progress_status_json_for`] is. An unaddressable extension has no actor to tell.
-pub fn release_invocations_for(payload: &FlowEvalRelease, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> Vec<ExtensionInvocation> {
+pub fn release_invocations_for(payload: &FlowEvalRelease, address: Result<String, semio_os_flow::FlowExtensionAddressMiss>) -> Vec<ExtensionInvocation> {
     let Ok(address) = address else {
         return Vec::new();
     };
@@ -224,7 +221,7 @@ pub fn resolve_tessellate_cancel(payload: &FlowTessellateCancelResolve, session:
 }
 
 /// 🔓️ A resolved address keeps cancellation independent of any new evaluator or task registry.
-pub fn resolve_tessellate_cancel_for(payload: &FlowTessellateCancelResolve, session: &mut FlowEvalSession, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> Vec<ExtensionInvocation> {
+pub fn resolve_tessellate_cancel_for(payload: &FlowTessellateCancelResolve, session: &mut FlowEvalSession, address: Result<String, semio_os_flow::FlowExtensionAddressMiss>) -> Vec<ExtensionInvocation> {
     let _ = session;
     if !payload.ok { eprintln!("flowTessellateCancelResolve: geometry extension refused the cancel for window {}", payload.window_id); return Vec::new(); }
     let pending=payload.output.get("ok").and_then(semio_framework_value::DslValue::as_bool)==Some(true)&&payload.output.get("pending").and_then(semio_framework_value::DslValue::as_bool)==Some(true);
@@ -242,7 +239,7 @@ pub fn resolve_tessellate_cancel_for(payload: &FlowTessellateCancelResolve, sess
 /// [`resolve_eval`] now runs inline and for the same reason: this route is window-addressed too, and
 /// the surface continues the chain here whenever
 /// [`FlowEvalSession::inline_continuation_admitted`] says the turn still has room.
-pub fn resolve_tessellate(payload:&FlowTessellateResolve,receiver:&mut semio_framework_os_flow::FlowPreviewCompletedReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-    let address=semio_framework_os_flow::FlowPreviewCompletedAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id,handle:&payload.handle,tolerance:payload.tolerance};session.resolve_preview_tessellate(receiver,&address,cx)
+pub fn resolve_tessellate(payload:&FlowTessellateResolve,receiver:&mut semio_os_flow::FlowPreviewCompletedReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let address=semio_os_flow::FlowPreviewCompletedAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id,handle:&payload.handle,tolerance:payload.tolerance};session.resolve_preview_tessellate(receiver,&address,cx)
 }
 //#endregion ⏱️Tick

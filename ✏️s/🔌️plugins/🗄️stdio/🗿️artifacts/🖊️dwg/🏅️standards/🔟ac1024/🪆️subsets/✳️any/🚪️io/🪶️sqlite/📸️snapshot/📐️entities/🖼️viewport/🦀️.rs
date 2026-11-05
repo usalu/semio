@@ -8,7 +8,7 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportRenderMode;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportStatusFlag;
 use super::{color,reader::optional_words,number::Projection,entities::{coordinates,handles,read_coordinates,read_handles},reader::{boolean,optional_unsigned,ordinal,real,word,Reader}};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 use Cell::{Integer as I,Real as R,Text as T};
 
 pub fn project(projection:&mut Projection<'_,'_>,id:i64,v:&DwgViewportEntity)->Result<(),ValueError>{

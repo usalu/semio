@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "display-doc-title", kind: "remove-display-doc-title", record: "Remove" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA title display preference", "PDF/UA-Anzeigeeinstellung für den Titel entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove PDF/UA title display preference", "PDF/UA-Anzeigeeinstellung für den Titel entfernen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for InsertStorey where Op: p
         record: "InsertStorey",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert storey", "Geschoss einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert storey", "Geschoss einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec![self.building_id.clone(), self.storey.id.clone()]

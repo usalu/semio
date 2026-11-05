@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileHorizBedModulu
         record: "ChangedPileHorizBedModulus",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Horizontal subgrade modulus k_h (0 = not given) of the pile", "Pfahl: Horizontaler Bettungsmodul k_h (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Horizontal subgrade modulus k_h (0 = not given) of the pile", "Pfahl: Horizontaler Bettungsmodul k_h (0 = nicht angegeben) ändern")
     }
 }
 

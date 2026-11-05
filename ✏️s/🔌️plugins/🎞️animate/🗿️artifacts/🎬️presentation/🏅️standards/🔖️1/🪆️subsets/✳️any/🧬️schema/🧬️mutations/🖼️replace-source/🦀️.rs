@@ -26,8 +26,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "source", kind: "replace-source", record: "ReplacedSource" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace source with \"{}\"", self.new_source.src), &format!("Quelle durch \"{}\" ersetzen", self.new_source.src))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace source with \"{}\"", self.new_source.src), &format!("Quelle durch \"{}\" ersetzen", self.new_source.src))
     }
 
     fn target(&self) -> Vec<String> {

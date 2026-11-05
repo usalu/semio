@@ -23,8 +23,8 @@ impl RemoveId3Frame {
 impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for RemoveId3Frame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "id3-frame", kind: "remove-id3-frame", record: "RemoveId3Frame" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove ID3 frame", "ID3-Frame entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove ID3 frame", "ID3-Frame entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["id3v2".into(), self.id.clone()]

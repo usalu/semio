@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertWindBridge where O
         record: "InsertedWindBridge",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bridge wind case {}", self.item.id), &format!("Brückenwindfall {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert bridge wind case {}", self.item.id), &format!("Brückenwindfall {} einfügen", self.item.id))
     }
 }
 

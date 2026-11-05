@@ -746,7 +746,7 @@ fn weather_job_original48_midnight_and_chronology_refusals_match_neutral_sources
 /// 🪪️ Genuine complete input projections match Serde's independent fields and retain exact paid cursor ownership.
 #[test]
 fn input_identity_original_full_fields_match_serde_and_paid_cancellation_frontiers(){
- use semio_framework_os_store_canonical_json::{ArtifactCanonicalSourceIdentityCursor as Cursor,ArtifactCanonicalTreeSource,ArtifactCanonicalJson};
+ use semio_os_store_canonical_json::{ArtifactCanonicalSourceIdentityCursor as Cursor,ArtifactCanonicalTreeSource,ArtifactCanonicalJson};
  let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../📍️site/📅️chronology/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let records:Vec<WeatherRecord>=serde_json::from_value(fixture["cases"][0]["records"].clone()).unwrap();
  let mut model=test_model_single_zone();model.name="München 🪪️ authored model".into();

@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeStructureId where 
         verb: "change", entity: "structure-id", kind: "change-structure-id", record: "ChangedStructureId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change structure id", "Bauwerkskennung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change structure id", "Bauwerkskennung ändern")
     }
 }
 

@@ -14,7 +14,7 @@ use crate::{Filters, TableSort};
 use protocol::Mutation;
 
 //#region 🔖️Config
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "sourcingcurationcfg")]
 #[artifact(id = "curation.config")]
@@ -69,8 +69,8 @@ impl pack::snapshot::ArtifactPack for SourcingCurationConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SourcingCurationConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SourcingCurationConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -296,7 +296,7 @@ impl protocol::OpBinary for SourcingCurationConfigMutation {
 
 //#endregion 🔖️OpCodec
 
-semio_framework_os_kernel::original_ordinal_operation_receiving!(SourcingCurationConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(SourcingCurationConfigMutation);
 
 impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
     type Diff = SourcingCurationConfigDiff;

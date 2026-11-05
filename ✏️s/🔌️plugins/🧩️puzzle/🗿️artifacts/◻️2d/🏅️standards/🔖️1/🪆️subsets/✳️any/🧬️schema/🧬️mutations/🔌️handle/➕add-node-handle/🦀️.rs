@@ -11,10 +11,8 @@ use {crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate:
 /// `index` (`None` appends). A duplicate `handle.id` on the same node is a no-op.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "add-node-handle")]
 pub struct AddNodeHandle {
     pub node_id: PagedUtf8<{ usize::MAX }>,
@@ -37,8 +35,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add handle \"{}\" to node \"{}\"", self.handle.id, self.node_id), &format!("Griff \"{}\" zu Knoten \"{}\" hinzufügen", self.handle.id, self.node_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add handle \"{}\" to node \"{}\"", self.handle.id, self.node_id), &format!("Griff \"{}\" zu Knoten \"{}\" hinzufügen", self.handle.id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.to_string_owner(), self.handle.id.to_string_owner()]

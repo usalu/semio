@@ -19,8 +19,8 @@ pub type InsertArrayElementPayload = InsertArrayElementMutation;
 impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for InsertArrayElementMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "array-element", kind: "insert-array-element", record: "InsertedArrayElement" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert Array Element", "Array-Element einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert Array Element", "Array-Element einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-array-element".to_string()]

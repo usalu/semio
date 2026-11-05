@@ -1,5 +1,5 @@
 use crate::editor::forms::panels::inspection::*;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]
@@ -19,11 +19,11 @@ fn inspection_controls_bind_to_real_typed_commands() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️authoring.json")).unwrap();
     let steps: Vec<crate::FormStep> = semio_framework_pack_json::from_json_str(&fixture["steps"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let spec = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "authoring".into(), "1".into(), Some("Authoring".into()), &steps);
-    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     for case in fixture["cases"].as_array().unwrap() {
         let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
-        let node = render(&spec, &Default::default(), &selected, &view, &semio_framework_plugin::TreeWindows::for_body(&view, FORMS_PLAY_BODY_INSPECTION)).unwrap();
-        let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+        let node = render(&spec, &Default::default(), &selected, &view, &semio_plugin::TreeWindows::for_body(&view, FORMS_PLAY_BODY_INSPECTION)).unwrap();
+        let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
         let tree: serde_json::Value = serde_json::from_str(&text).unwrap();
         assert!(text.contains("forms-play-inspector.title"), "{}", case["name"]);
         assert!(assert_bound_commands(&tree) > 0, "{} must expose authoring commands", case["name"]);

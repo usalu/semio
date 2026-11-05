@@ -1,0 +1,160 @@
+[
+  {
+    "name": "linear",
+    "target": "c",
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "a",
+        "text": "source"
+      },
+      {
+        "kind": "inputNote",
+        "id": "c",
+        "text": "target"
+      },
+      {
+        "kind": "inputNote",
+        "id": "unused",
+        "text": "no"
+      }
+    ],
+    "synapses": [
+      {
+        "id": "wire",
+        "from": "a",
+        "to": "c",
+        "fromPort": "text",
+        "toPort": "text"
+      }
+    ],
+    "expected": "{\"widgets\":{\"a\":{\"text\":\"source\"},\"c\":{\"text\":\"target\"}},\"synapses\":{\"wire\":{\"id\":\"wire\",\"from\":\"a\",\"to\":\"c\",\"fromPort\":\"text\",\"toPort\":\"text\"}}}"
+  },
+  {
+    "name": "missing-intermediate-cycle",
+    "target": "c",
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "a",
+        "text": "α\n"
+      },
+      {
+        "kind": "inputNote",
+        "id": "c",
+        "text": "target"
+      }
+    ],
+    "synapses": [
+      {
+        "id": "z",
+        "from": "a",
+        "to": "ghost",
+        "fromPort": "text",
+        "toPort": "text"
+      },
+      {
+        "id": "x",
+        "from": "ghost",
+        "to": "c",
+        "fromPort": "text",
+        "toPort": "text"
+      },
+      {
+        "id": "y",
+        "from": "c",
+        "to": "ghost",
+        "fromPort": "text",
+        "toPort": "text"
+      }
+    ],
+    "expected": "{\"widgets\":{\"a\":{\"text\":\"α\\n\"},\"c\":{\"text\":\"target\"}},\"synapses\":{\"x\":{\"id\":\"x\",\"from\":\"ghost\",\"to\":\"c\",\"fromPort\":\"text\",\"toPort\":\"text\"},\"y\":{\"id\":\"y\",\"from\":\"c\",\"to\":\"ghost\",\"fromPort\":\"text\",\"toPort\":\"text\"},\"z\":{\"id\":\"z\",\"from\":\"a\",\"to\":\"ghost\",\"fromPort\":\"text\",\"toPort\":\"text\"}}}"
+  },
+  {
+    "name": "duplicate-last-wins",
+    "target": "b",
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "a",
+        "text": "first"
+      },
+      {
+        "kind": "inputNote",
+        "id": "b",
+        "text": "target"
+      },
+      {
+        "kind": "inputNote",
+        "id": "a",
+        "text": "last"
+      }
+    ],
+    "synapses": [
+      {
+        "id": "same",
+        "from": "a",
+        "to": "b",
+        "fromPort": "text",
+        "toPort": "text"
+      },
+      {
+        "id": "same",
+        "from": "b",
+        "to": "b",
+        "fromPort": "text",
+        "toPort": "text"
+      }
+    ],
+    "expected": "{\"widgets\":{\"a\":{\"text\":\"last\"},\"b\":{\"text\":\"target\"}},\"synapses\":{\"same\":{\"id\":\"same\",\"from\":\"b\",\"to\":\"b\",\"fromPort\":\"text\",\"toPort\":\"text\"}}}"
+  },
+  {
+    "name": "neural-params-and-cluster",
+    "target": "cluster",
+    "widgets": [
+      {
+        "kind": "neuron",
+        "id": "n",
+        "neuronKind": "math.add",
+        "params": {
+          "nested": {
+            "quoted": "\"🧬️",
+            "truth": true,
+            "n": 4
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      },
+      {
+        "kind": "cluster",
+        "id": "cluster",
+        "name": "nested",
+        "tree": {
+          "neurons": [
+            {
+              "id": "inner",
+              "kind": "core.number",
+              "params": {
+                "value": 2
+              },
+              "tree": null
+            }
+          ],
+          "synapses": []
+        }
+      }
+    ],
+    "synapses": [
+      {
+        "id": "nc",
+        "from": "n",
+        "to": "cluster",
+        "fromPort": "sum",
+        "toPort": ""
+      }
+    ],
+    "expected": "{\"widgets\":{\"cluster\":{\"neurons\":[{\"id\":\"inner\",\"kind\":\"core.number\",\"params\":{\"value\":2},\"tree\":null}],\"synapses\":[]},\"n\":{\"operatorId\":\"math.add\",\"params\":{\"nested\":{\"n\":4,\"quoted\":\"\\\"🧬️\",\"truth\":true}}}},\"synapses\":{\"nc\":{\"id\":\"nc\",\"from\":\"n\",\"to\":\"cluster\",\"fromPort\":\"sum\",\"toPort\":\"\"}}}"
+  }
+]

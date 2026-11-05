@@ -1,7 +1,7 @@
 //! 🌳️ `FlowHost` evaluation steps, tree building, dag synchronisation, node editing, clusters and the undo/redo history.
 
 use super::*;
-use semio_framework_os_infinite::{dag_draw_lod_label, dag_pick_targets_at_screen_json, dag_set_canvas_palette};
+use semio_os_infinite::{dag_draw_lod_label, dag_pick_targets_at_screen_json, dag_set_canvas_palette};
 
 #[path = "🧮️evaluation-steps-and-tree-building/🦀️.rs"]
 mod evaluation_steps_and_tree_building;

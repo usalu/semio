@@ -7,7 +7,7 @@ use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Preview, Shap
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_kit::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 use std::f64::consts::TAU;
 
 const ACCENT: Rgba = [0.1, 0.45, 0.95, 1.0];

@@ -647,7 +647,7 @@ pub enum FailureAction {
 /// pinned to the parent's shard, capabilities scoped to the parent". Deliberately independent of
 /// the `.sxt` wire-format-specific `ExtensionPackageManifest` (`💻️os/🔨️modules/🧩️extension`, a
 /// different crate's mount set than this file's) and of the guest-side `ExtensionManifest`
-/// (`semio-framework-plugin`) — this shape uses only vocabulary this very file already owns
+/// (`semio-plugin`) — this shape uses only vocabulary this very file already owns
 /// (`CapabilityId`/`CapabilityRequest`), so `extensions_extending` stays callable from every crate
 /// this file reaches: it is `#[path]`-mounted (as `pub mod kernel`) into `🛂️manifest/🦀️.rs`
 /// alone, which is itself `#[path]`-mounted into THREE crates — `semio-framework` (root),

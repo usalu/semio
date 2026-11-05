@@ -5,9 +5,9 @@ use semio_s_artifact_sequence_sequence::editor::sequence::commands::playback::ru
 use semio_s_artifact_sequence_sequence::editor::sequence::commands::playback::stop_command::Stop;
 
 /// 📦️ Reads the typed script scene with its materialized text payload lane.
-async fn script_buffer(app: &mut SequenceApp, view: &semio_framework_plugin::ViewModel) -> String {
+async fn script_buffer(app: &mut SequenceApp, view: &semio_plugin::ViewModel) -> String {
     let projection = render_in(app, semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT, view).await;
-    let scene: semio_framework_plugin::TextEditorScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("materialized script scene");
+    let scene: semio_plugin::TextEditorScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("materialized script scene");
     scene.buffer
 }
 

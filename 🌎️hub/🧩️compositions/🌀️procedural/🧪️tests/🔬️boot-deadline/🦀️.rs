@@ -2,8 +2,8 @@
 //! strict time authority (`semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US`). The browser boot
 //! of 2026-09-10 died on exactly this turn (`plugin.reactor-turn-deadline` on `[handler/first-step]`),
 //! so the whole bootstrap cost is measured here, phase by phase, instead of inferred from a console.
-use semio_framework_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
+use semio_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
+use semio_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
 
 type ProceduralRuntime = PluginRuntime<semio_hub_procedural::ProceduralApps>;
 
@@ -30,9 +30,9 @@ fn now_us() -> u64 {
     semio_framework_job::default_now_us().expect("native microsecond clock")
 }
 
-async fn turn(runtime: &ProceduralRuntime, events: Vec<Event>) -> (semio_framework_plugin::kernel::TurnResult, u64) {
+async fn turn(runtime: &ProceduralRuntime, events: Vec<Event>) -> (semio_plugin::kernel::TurnResult, u64) {
     let started_us = now_us();
-    let result = semio_framework_plugin::reactor::poll_kernel(runtime, events, None, None, boot_budget()).await.expect("generation3d lifecycle turn");
+    let result = semio_plugin::reactor::poll_kernel(runtime, events, None, None, boot_budget()).await.expect("generation3d lifecycle turn");
     (result, now_us() - started_us)
 }
 
@@ -66,7 +66,7 @@ async fn generation3d_boot_fits_the_strict_lifecycle_turn_authority() {
     let install_us = now_us() - install_started_us;
 
     let describe_started_us = now_us();
-    let descriptor_bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
+    let descriptor_bytes = ::semio_framework_async::poll::resolve_ready(semio_plugin::describe::describe_plugin(&runtime));
     let describe_us = now_us() - describe_started_us;
 
     let (opened, open_us) = turn(&runtime, vec![boot_open()]).await;

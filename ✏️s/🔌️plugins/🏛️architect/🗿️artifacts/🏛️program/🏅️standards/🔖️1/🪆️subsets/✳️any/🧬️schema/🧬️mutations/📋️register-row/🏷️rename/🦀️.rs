@@ -25,9 +25,9 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "register-row", kind: "rename-register-row", record: "RenamedRegisterRow" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let label = self.register.label();
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename {} to \"{}\"", label.en, self.new_name), &format!("{} in \"{}\" umbenennen", label.de, self.new_name))
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename {} to \"{}\"", label.en, self.new_name), &format!("{} in \"{}\" umbenennen", label.de, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

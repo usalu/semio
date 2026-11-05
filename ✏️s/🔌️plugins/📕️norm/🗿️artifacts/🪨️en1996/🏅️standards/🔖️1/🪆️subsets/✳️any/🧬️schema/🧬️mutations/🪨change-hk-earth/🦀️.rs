@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeHKEarth where Op: 
         verb: "change", entity: "h-k-earth", kind: "change-hk-earth", record: "ChangedHKEarth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic earth thrust Hk", "Charakteristischen Erddruck Hk ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change characteristic earth thrust Hk", "Charakteristischen Erddruck Hk ändern")
     }
 }
 

@@ -5,10 +5,10 @@
 //! gated by a declared `.depends_on("cad", …)` runtime dependency (contract freeze §3/§4).
 
 use semio_framework_pack_json::{self as json, Value as JsonValue};
-use semio_framework_os_kernel::pack_rt;
+use semio_os_kernel::pack_rt;
 use semio_framework_value::{DslValue, FromValue, ToValue};
-use semio_framework_plugin::app::ArtifactContribution;
-use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
+use semio_plugin::app::ArtifactContribution;
+use semio_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CAD_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
@@ -89,7 +89,7 @@ fn computers_manifest() -> JsonValue {
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's
 // path_scope; `.contributes` is genuinely stateful registry work per that file's own doc comment,
 // but is dressed as `async` with zero real suspension — same shape `.depends_on` already bridges in
-// that same file); bridged here via `semio_framework_os_kernel::io::resolve_ready`, matching that established
+// that same file); bridged here via `semio_os_kernel::io::resolve_ready`, matching that established
 // idiom. See this packet's lease-request asking the SDK owner to revert these to sync directly.
 pub fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
@@ -146,10 +146,10 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
         infer_building_structure_summary,building_structure_summary_demands)
 }
 
-// 🚫️async: E4 fn-pointer slot — `semio_framework_plugin::ArtifactInference` is a plain
+// 🚫️async: E4 fn-pointer slot — `semio_plugin::ArtifactInference` is a plain
 // `for<'a> fn(&ArtifactInferenceExecutionRequest<'a>) -> Result<..>` type alias (an `fn` item's
 // pointer type is unnameable); also E1 pure (pack decode + struct literal, zero suspension) — see R9.
-fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_plugin::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let snapshot = <CadSnapshot as pack::snapshot::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
     let summary = BuildingStructureSummary { building_model_present: snapshot.building_model.is_some(), storey_count: snapshot.nodes.iter().filter(|node| node.kind == "building-storey").count() as u32 };
     let canonical_payload = pack_rt::encode_wire_value(&ToValue::to_value(&summary));
@@ -179,4 +179,4 @@ mod tests;
 //#endregion 🧪️Tests
 
 /// ♻️ This synchronous executable retains no callback child between invocations.
-fn building_structure_summary_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}
+fn building_structure_summary_demands(_request:&semio_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}

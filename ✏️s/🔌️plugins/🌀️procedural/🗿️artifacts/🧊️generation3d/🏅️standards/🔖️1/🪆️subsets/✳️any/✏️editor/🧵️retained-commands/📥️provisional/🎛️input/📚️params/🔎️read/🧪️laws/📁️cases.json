@@ -1,0 +1,161 @@
+[
+  {
+    "name": "Missing Vector Uses Original Fallback",
+    "kind": "vector",
+    "key": "offset",
+    "fallback": [
+      0,
+      0,
+      0
+    ],
+    "params": {},
+    "expected": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "Strict Per Lane Numeric Admission",
+    "kind": "vector",
+    "key": "offset",
+    "fallback": [
+      0,
+      0,
+      0
+    ],
+    "params": {
+      "offset": {
+        "x": 2,
+        "y": true,
+        "z": -3
+      }
+    },
+    "expected": [
+      2,
+      0,
+      -3
+    ]
+  },
+  {
+    "name": "Vector Schema Is Deliberately Ignored",
+    "kind": "vector",
+    "key": "offset",
+    "fallback": [
+      0,
+      0,
+      0
+    ],
+    "params": {
+      "offset": {
+        "$schema": "other",
+        "x": 1.5,
+        "y": 2.5,
+        "z": 3.5
+      }
+    },
+    "expected": [
+      1.5,
+      2.5,
+      3.5
+    ]
+  },
+  {
+    "name": "Untyped Root Uses Fallback",
+    "kind": "vector",
+    "key": "axis",
+    "fallback": [
+      0,
+      0,
+      1
+    ],
+    "params": {
+      "axis": 5
+    },
+    "expected": [
+      0,
+      0,
+      1
+    ]
+  },
+  {
+    "name": "Scale Missing Lanes Retain Ones",
+    "kind": "vector",
+    "key": "factor",
+    "fallback": [
+      1,
+      1,
+      1
+    ],
+    "params": {
+      "factor": {
+        "x": 2,
+        "z": "wrong"
+      }
+    },
+    "expected": [
+      2,
+      1,
+      1
+    ]
+  },
+  {
+    "name": "Angle Rejects Boolean Coercion",
+    "kind": "number",
+    "key": "angle",
+    "fallback": [
+      0,
+      0,
+      0
+    ],
+    "params": {
+      "angle": {
+        "value": true
+      }
+    },
+    "expected": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "Angle Reads Native Numeric Dictionary",
+    "kind": "number",
+    "key": "angle",
+    "fallback": [
+      0,
+      0,
+      0
+    ],
+    "params": {
+      "angle": {
+        "$schema": "ignored",
+        "value": -2.5
+      }
+    },
+    "expected": [
+      -2.5,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "Direct Numeric Param Is Not Typed Dictionary",
+    "kind": "number",
+    "key": "angle",
+    "fallback": [
+      7,
+      0,
+      0
+    ],
+    "params": {
+      "angle": 2.5
+    },
+    "expected": [
+      7,
+      0,
+      0
+    ]
+  }
+]

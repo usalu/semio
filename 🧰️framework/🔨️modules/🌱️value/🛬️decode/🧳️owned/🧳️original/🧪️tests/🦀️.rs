@@ -25,3 +25,5 @@ fn drain<T:RetireOwned>(value:T,bank:&mut Bank){let mut close=ControlledRetireme
  for stage in 0..2{let d=owner.demands(4096).unwrap();let g=bank.quoted(d);for denied in denied(d,g){let(turn,heap)=observe(||receive(&mut control,denied,crate::source_fixture::WorkLoan::new(&bank.fuel,1),|control|owner.advance(control,4096,denied)));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.demands(4096).unwrap(),d);}let(turn,heap)=observe(||receive(&mut control,g,crate::source_fixture::WorkLoan::new(&bank.fuel,1),|control|owner.advance(control,4096,g)));let work=turn.work;let p=turn.result.unwrap().progress();account(&mut bank,p,work,g,heap);assert!(owner.receiver.reserved());assert_eq!(owner.receiver.initialized(),stage==1);assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);}
  drain(owner,&mut bank);
 }
+
+#[path="../🪞️projection/🧪️tests/🦀️.rs"]mod projection_laws;

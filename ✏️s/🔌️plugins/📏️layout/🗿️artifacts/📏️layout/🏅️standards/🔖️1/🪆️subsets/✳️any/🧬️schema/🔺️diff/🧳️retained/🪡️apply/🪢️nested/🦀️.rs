@@ -1,7 +1,7 @@
 //! 🪢️ Final root identities group repeated nested patches without copying page or story content.
 use crate::*;
 use semio_s_artifact_layout_layout_model::{Page,TextStory,snapshot::LayoutSnapshot};
-use semio_framework_os_kernel::ApplyCapability;
+use semio_os_kernel::ApplyCapability;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use super::{collections::RootCollections,page::PageWork,story::StoryWork,super::keyed_plan::{Origin,PlanAdvance}};
 use std::mem::size_of;

@@ -18,7 +18,7 @@ impl Viewport {
             .unwrap_or_default()
     }
 
-    fn from_typed(viewport: Option<&semio_framework_os_kernel::Viewport2d>) -> Self {
+    fn from_typed(viewport: Option<&semio_os_kernel::Viewport2d>) -> Self {
         viewport.map(|viewport| Self { x: viewport.x as f32, y: viewport.y as f32, zoom: viewport.zoom as f32 }).unwrap_or(Self { x: 0.0, y: 0.0, zoom: 1.0 })
     }
 

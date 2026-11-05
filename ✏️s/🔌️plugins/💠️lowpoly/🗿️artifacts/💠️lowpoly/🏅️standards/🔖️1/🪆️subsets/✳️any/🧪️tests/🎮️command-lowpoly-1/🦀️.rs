@@ -2,7 +2,7 @@
 //! `26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS`.
 //!
 //! The public lowpoly editor shim re-exports the framework view and emission types a generated Rust
-//! subject host needs to invoke a command handler without linking `semio_framework_plugin` itself.
+//! subject host needs to invoke a command handler without linking `semio_plugin` itself.
 //! Alongside the catalog-shape checks, this adapter dispatches `patchObject` and asserts its emitted
 //! document mutation directly.
 

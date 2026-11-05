@@ -3,10 +3,10 @@ use neural_engine as neural;
 use neural::{Atom, Dictionary, EvalChannels, Neuron, OperatorInfo, Tree, TreeSnapshot, Value as NeuralValue};
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_artifact_flow_flow::{artifact::*, widget_id_for};
-use semio_framework_os_flow_host_core::*;
-use semio_framework_os_flow_host_source::{seeds::FlowEvaluationSeeds, FlowEvaluationSource};
-use semio_framework_os_flow_operators::catalogue::flow_neuron_kind_info_map;
-use semio_framework_os_flow_operators::registry::flow_extension_registry_generation;
+use semio_os_flow_host_core::*;
+use semio_os_flow_host_source::{seeds::FlowEvaluationSeeds, FlowEvaluationSource};
+use semio_os_flow_operators::catalogue::flow_neuron_kind_info_map;
+use semio_os_flow_operators::registry::flow_extension_registry_generation;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
 use std::sync::Arc;
 use semio_framework_job::StepContext;
@@ -184,3 +184,32 @@ impl RetirementCursor for ReadRetirement{
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for FlowSourceRead{fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(ReadRetirement(self))}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ReadRetirement>())}fn controlled_retirement_supported()->bool{true}}
+
+#[cfg(any(test,feature="testkit"))]
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct FlowSourceReadDiagnostic{pub phase:u8,pub widget:usize,pub scan:usize,pub offset:usize,pub binding:Option<[usize;8]>,pub origin:Option<(u64,u64)>,pub failure:Option<FlowSourceReadFailure>}
+#[cfg(any(test,feature="testkit"))]
+impl FlowSourceRead{
+ /// 🔬️ Borrows the finite original admission frontier without exposing mutable custody.
+ pub fn test_diagnostic(&self)->FlowSourceReadDiagnostic{FlowSourceReadDiagnostic{phase:self.phase,widget:self.widget,scan:self.scan,offset:self.offset,binding:self.binding,origin:self.origin,failure:self.failure}}
+}
+
+/// ✏️ Original borrowed authoring derives retained domain leaves without constructing a host.
+#[path="✏️authoring/🦀️.rs"]
+pub mod authoring;
+pub use authoring::{FlowAuthoringWork,FlowAuthoringRequest,FlowAuthoringOutcome,FlowTextCopyWork,FlowSynapseFieldsWork};
+use semio_os_flow_host_core::authoring_layout::DagLayoutOptions;
+
+#[cfg(test)]
+#[global_allocator]
+static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+#[cfg(test)]
+#[path="✏️authoring/🧪️laws/🎮️controller/🦀️.rs"]
+mod authoring_controller_laws;
+
+/// 🗺️ Actual owned layout entries use the shared funded ordered producer.
+pub type FlowLayoutEntryWork=semio_framework_value_ordered::ordered::OriginalOwnedEntry<semio_framework_artifact_flow_flow::WidgetLayout>;
+
+pub use semio_os_flow_host_source::ordering::{OriginalTextOrdering,FlowTextOrderingWork};
+
+

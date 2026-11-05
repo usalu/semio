@@ -5,7 +5,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_pack_json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -26,8 +27,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "generation", kind: "create-generation", record: "CreatedGeneration" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create generation \"{}\"", self.generation.name), &format!("Erzeugung \"{}\" erstellen", self.generation.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create generation \"{}\"", self.generation.name), &format!("Erzeugung \"{}\" erstellen", self.generation.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.generation.id.clone()]

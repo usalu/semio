@@ -4,9 +4,14 @@ use super::*;
 use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _, Mutation as _, OpBinary, OpText};
 use semio_s_artifact_layout_layout_model::validation::validate_document;
 
+/// 🧫️ Loads declared portable test data without making corpus bytes compiler Source.
+fn fixture(relative: &str) -> serde_json::Value {
+    serde_json::from_str(&crate::test_fixture_text(relative)).unwrap()
+}
+
 #[test]
 fn semantic_graph_mutations_publish_valid_graphs_and_restore_exact_state() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = fixture("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json");
     for case in corpus["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let decode = |value: &serde_json::Value| semio_framework_pack_json::from_json_str::<LayoutSnapshot>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -42,7 +47,7 @@ fn semantic_graph_mutations_publish_valid_graphs_and_restore_exact_state() {
 
 #[test]
 fn native_nonfinite_candidates_and_overflowing_character_splices_are_refused() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = fixture("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json");
     let base: LayoutSnapshot = semio_framework_pack_json::from_json_str(&corpus["cases"][0]["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
         let mut frame = base.pages[0].frames[1].clone();
@@ -68,7 +73,7 @@ fn native_nonfinite_candidates_and_overflowing_character_splices_are_refused() {
 
 #[test]
 fn portable_ieee_gutter_witnesses_refuse_native_nonfinite_values() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = fixture("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json");
     for case in corpus["wordCases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let base: LayoutSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -109,7 +114,7 @@ fn read_word(value: &semio_framework_value::DslValue, width: u64) -> u64 {
 #[test]
 fn portable_semantic_words_publish_signed_zero_and_restore_exact_bits() {
     use semio_framework_value::{DslValue, Number, FromValue, ToValue};
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🟰️words/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = fixture("../../../../🧪️tests/🧫️fixtures/🟰️words/🔣️.json");
     for case in corpus["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let width = case["width"].as_u64().unwrap();
@@ -137,9 +142,9 @@ fn portable_semantic_words_publish_signed_zero_and_restore_exact_bits() {
 #[test]
 fn whole_replacement_observes_same_and_different_opaque_nan_words() {
     use semio_framework_value::{DslValue, Number};
-    let graph: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json")).unwrap();
+    let graph: serde_json::Value = fixture("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json");
     let original: LayoutSnapshot = semio_framework_pack_json::from_json_str(&graph["cases"][0]["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = fixture("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🧪️tests/🧫️fixtures/🔣️.json");
     for case in corpus["cases"].as_array().unwrap().iter().filter(|case| case["width"] == 64) {
         let mut base = original.clone();
         base.data_fields = Some(semio_framework_value_dictionary::QuestionDictionary { entries: vec![semio_framework_value_dictionary::QuestionDictionaryEntry { question_id: "word".into(), value: DslValue::Number(Number::Float(native_word(64, case["left"].as_str().unwrap()))) }] });
@@ -156,9 +161,9 @@ fn whole_replacement_observes_same_and_different_opaque_nan_words() {
 
 #[test]
 fn persisted_model_equality_observes_the_neutral_ieee_word_corpus() {
-    let graph: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json")).unwrap();
+    let graph: serde_json::Value = fixture("../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json");
     let base: LayoutSnapshot = semio_framework_pack_json::from_json_str(&graph["cases"][0]["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = fixture("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🧪️tests/🧫️fixtures/🔣️.json");
     for case in corpus["cases"].as_array().unwrap() {
         let mut left = base.clone(); let mut right = base.clone();
         if case["width"] == 64 {
@@ -175,7 +180,7 @@ fn persisted_model_equality_observes_the_neutral_ieee_word_corpus() {
 #[test]
 fn portable_ieee_candidates_refuse_nonfinite_scalar_and_color_words() {
     use semio_framework_value::{DslValue, Number, FromValue};
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🟰️words/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = fixture("../../../../🧪️tests/🧫️fixtures/🟰️words/🔣️.json");
     for case in corpus["refusals"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let base: LayoutSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -192,7 +197,7 @@ fn portable_ieee_candidates_refuse_nonfinite_scalar_and_color_words() {
 #[test]
 fn portable_page_drawing_events_and_inverses_preserve_owner_and_graph(){
  let _declaration=semio_s_artifact_layout_layout_host::declaration().unwrap();
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/⚙️semantic/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=fixture("../../../../🧪️tests/🧫️fixtures/⚙️semantic/🔣️.json");
  for case in corpus["cases"].as_array().unwrap().iter().filter(|case|case["mutation"].get("SetPageBackgroundDrawing").is_some()){
   let read=|v:&serde_json::Value|semio_framework_pack_json::from_json_str::<LayoutSnapshot>(&v.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let base=read(&case["before"]);let expected=read(&case["after"]);let command:LayoutMutation=semio_framework_pack_json::from_json_str(&case["mutation"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let outcome=command.diff(&base);let after=protocol::apply_diff_cold(outcome.diff(),&base).unwrap();assert_eq!(after,expected);assert!(validate_document(&after).is_ok());assert_eq!(protocol::apply_diff_cold(&outcome.diff().inverse(&base),&after).unwrap(),base);let mut undo=after;for inverse in command.inverse(&base).unwrap().into_iter().rev(){undo=protocol::apply_diff_cold(inverse.diff(&undo).diff(),&undo).unwrap();}assert_eq!(undo,base);let wire=semio_framework_pack_json::to_json_string(outcome.diff());let decoded:LayoutDiff=semio_framework_pack_json::from_json_str(&wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(decoded,*outcome.diff());
  }
@@ -200,6 +205,6 @@ fn portable_page_drawing_events_and_inverses_preserve_owner_and_graph(){
 
 #[test]
 fn page_drawing_invalid_and_unchanged_commands_have_no_semantic_inverse(){
- let _declaration=semio_s_artifact_layout_layout_host::declaration().unwrap();let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/⚙️semantic/🔣️.json")).unwrap();let fixture=corpus["cases"].as_array().unwrap().iter().find(|c|c["name"]=="same page Drawing is a no-op").unwrap();let base:LayoutSnapshot=semio_framework_pack_json::from_json_str(&fixture["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let command:LayoutMutation=semio_framework_pack_json::from_json_str(&fixture["mutation"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(command.diff(&base).diff(),&LayoutDiff::default());assert!(command.inverse(&base).unwrap().is_empty());
- for zero_viewport in [false,true]{let mut invalid=command.clone();let LayoutMutation::SetPageBackgroundDrawing(payload)=&mut invalid else{panic!("page Drawing command")};let child=payload.drawing.as_mut().unwrap();if zero_viewport{semio_s_artifact_layout_layout_model::set_drawing_canvas_size(&mut child.content,0.0,0.0).unwrap();}else{child.handle.target.dialect.subset="other".into();}assert_eq!(invalid.diff(&base).diff(),&LayoutDiff::default());assert!(invalid.inverse(&base).unwrap().is_empty());}
+ let _declaration=semio_s_artifact_layout_layout_host::declaration().unwrap();let corpus:serde_json::Value=fixture("../../../../🧪️tests/🧫️fixtures/⚙️semantic/🔣️.json");let fixture=corpus["cases"].as_array().unwrap().iter().find(|c|c["name"]=="same page Drawing is a no-op").unwrap();let base:LayoutSnapshot=semio_framework_pack_json::from_json_str(&fixture["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let command:LayoutMutation=semio_framework_pack_json::from_json_str(&fixture["mutation"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(command.diff(&base).diff(),&LayoutDiff::default());assert!(command.inverse(&base).unwrap().is_empty());
+ for wrong_artifact in [false,true]{let mut invalid=command.clone();let LayoutMutation::SetPageBackgroundDrawing(payload)=&mut invalid else{panic!("page Drawing command")};let child=payload.drawing.as_mut().unwrap();if wrong_artifact{child.handle.target.dialect.artifact_kind="s.layout.layout".into();}else{child.handle.target.dialect.subset="other".into();}assert_eq!(invalid.diff(&base).diff(),&LayoutDiff::default());assert!(invalid.inverse(&base).unwrap().is_empty());}
 }

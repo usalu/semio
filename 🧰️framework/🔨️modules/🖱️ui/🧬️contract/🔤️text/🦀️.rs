@@ -1,7 +1,7 @@
 //! 🔤️ Bounded semantic UI text, codecs, original copying and byte retirement.
 use serde::{Deserialize,Deserializer,Serialize,Serializer};
 use std::fmt;
-use semio_framework_ui_contract_budget::UI_TEXT_MAX_BYTES;
+use semio_ui_contract_budget::UI_TEXT_MAX_BYTES;
 /// ✂️ Marks a display-only value clipped at a UTF8 boundary.
 pub const UI_TEXT_CLIP_MARK:&str="…";
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]

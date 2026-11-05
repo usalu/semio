@@ -8,8 +8,8 @@ use pack::snapshot::ArtifactPack;
 
 #[test]
 fn editor_and_viewer_share_the_grid3d_dialect() {
-    assert_eq!(<crate::editor::grid3d::Grid3dEditor as semio_framework_plugin::ArtifactEditor>::DIALECT, WFC_GRID3D_DIALECT);
-    assert_eq!(<crate::viewer::grid3d::Grid3dViewer as semio_framework_plugin::ArtifactViewer>::DIALECT, WFC_GRID3D_DIALECT);
+    assert_eq!(<crate::editor::grid3d::Grid3dEditor as semio_plugin::ArtifactEditor>::DIALECT, WFC_GRID3D_DIALECT);
+    assert_eq!(<crate::viewer::grid3d::Grid3dViewer as semio_plugin::ArtifactViewer>::DIALECT, WFC_GRID3D_DIALECT);
 }
 
 #[test]
@@ -34,8 +34,8 @@ fn examples_round_trip_dsl_and_pack() {
 
 #[test]
 fn example_labels_are_localized_en_and_de() {
-    assert_eq!(blocks::label(), semio_framework_ui_locale::LocalizedLabel::native("Building Blocks", "Bauklötze"));
-    assert_eq!(pipes_3d::label(), semio_framework_ui_locale::LocalizedLabel::native("3D Pipes", "3D-Rohre"));
+    assert_eq!(blocks::label(), semio_ui_locale::LocalizedLabel::native("Building Blocks", "Bauklötze"));
+    assert_eq!(pipes_3d::label(), semio_ui_locale::LocalizedLabel::native("3D Pipes", "3D-Rohre"));
 }
 
 #[test]

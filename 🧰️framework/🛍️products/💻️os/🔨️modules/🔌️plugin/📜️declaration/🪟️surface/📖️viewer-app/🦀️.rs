@@ -108,10 +108,10 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<MountedOwnerPhaseV1> { V::mounted_job_maintenance_phase(instance_id) }
     fn mounted_job_maintenance_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { V::mounted_job_maintenance_demands(instance_id, body) }
     fn mounted_job_close_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { V::mounted_job_close_demands(instance_id, body) }
-    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         V::mounted_job_maintenance_step(instance_id,cx,grant)
     }
-    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         V::mounted_job_close_step(instance_id,cx,grant)
     }
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
@@ -160,7 +160,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         V::build_reserved_tool_job(request,body,cx)
     }
-    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         V::build_media_export_job(request,body,cx)
     }
 
@@ -201,7 +201,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         V::fault_notices()
     }
-    fn reference_birth()->Option<semio_framework_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>>{V::reference_birth()}
+    fn reference_birth()->Option<semio_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>>{V::reference_birth()}
     async fn initial_config() -> Self::Config {
         V::initial_config()
     }
@@ -220,7 +220,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     async fn command_id(command: &Self::Command) -> &'static str {
         V::command_id(command)
     }
-    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{V::original_action_command_producer().or_else(semio_framework_plugin_decl_app::tool_contract::declared_action_command_bridge::<Self>)}
+    fn original_action_command_producer()->Option<&'static dyn semio_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{V::original_action_command_producer().or_else(semio_plugin_decl_app::tool_contract::declared_action_command_bridge::<Self>)}
     async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         V::command_from_action(action, args, original_fault)
     }
@@ -242,7 +242,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
         V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
     async fn pending_effects(owner: &ArtifactInstanceOperationOwnerHandle, doc: &crate::ArtifactPendingView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {

@@ -15,12 +15,12 @@ impl MediaFaultProjection {
     pub fn terminal_is_empty(&self) -> bool {
         self.fault.terminal_is_empty()
     }
-    pub fn close_step(&mut self, owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaStep, MediaValueError> {
+    pub fn close_step(&mut self, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaStep, MediaValueError> {
         close_media_projection(&mut self.fault,owner)
     }
 }
 /// 🎟️ Retires an admitted media result through its same original native control and wallet.
-fn close_media_projection<T:MediaRetireOwned>(value:&mut MediaControlled<T>,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaStep,MediaValueError>{
+fn close_media_projection<T:MediaRetireOwned>(value:&mut MediaControlled<T>,owner:&mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaStep,MediaValueError>{
         let grant = owner.remaining_grant();
         if grant.maximum_items == 0
             || value.next_copy_byte_demand()? > grant.maximum_copy_bytes
@@ -50,11 +50,11 @@ impl MediaOutputProjection{
     pub fn artifact(&self)->Option<&MediaArtifact>{match self.value.original(){Some(MediaOutputValue::Artifact(value))=>Some(value),_=>None}}
     pub fn fault(&self)->Option<&Fault>{match self.value.original(){Some(MediaOutputValue::Fault(value))=>Some(value),_=>None}}
     pub fn terminal_is_empty(&self)->bool{self.value.terminal_is_empty()}
-    pub fn close_step(&mut self,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaStep,MediaValueError>{close_media_projection(&mut self.value,owner)}
+    pub fn close_step(&mut self,owner:&mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaStep,MediaValueError>{close_media_projection(&mut self.value,owner)}
 }
 /// 🛬️ Admits original parent custody before invoking the exporter and projecting its full result.
 #[doc(hidden)]
-pub fn receive_media_output(owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>,exporter:impl FnOnce(&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaArtifact,MediaArtifactError>)->Result<MediaOutputProjection,MediaValueError>{
+pub fn receive_media_output(owner:&mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>,exporter:impl FnOnce(&mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaArtifact,MediaArtifactError>)->Result<MediaOutputProjection,MediaValueError>{
     let grant=owner.remaining_grant();
     if grant.maximum_items==0||grant.maximum_copy_bytes==0||grant.maximum_capacity_bytes==0||grant.maximum_release_bytes==0||grant.maximum_depth<4{return Err(media_frontier_error())}
     let value=owner.receive_nested::<MediaArtifactError,MediaOutputValue>(|slot,original|{
@@ -73,7 +73,7 @@ pub fn receive_media_output(owner:&mut semio_framework_os_kernel::io::control::N
 struct MediaFaultTextExtent<'a, 'control> {
     pub bytes: usize,
     pub native: &'a mut semio_framework_value::NativeEncodeControl<'control>,
-    pub wallet: &'a mut semio_framework_os_kernel::io::control::NativeSnapshotBodyWallet,
+    pub wallet: &'a mut semio_os_kernel::io::control::NativeSnapshotBodyWallet,
     pub error: Option<MediaValueError>,
 }
 impl std::fmt::Write for MediaFaultTextExtent<'_, '_> {
@@ -128,7 +128,7 @@ impl std::fmt::Write for MediaFaultTextWriter<'_, '_> {
     }
 }
 #[doc(hidden)]
-pub fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaFaultProjection, MediaValueError> {
+pub fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaFaultProjection, MediaValueError> {
     use semio_framework_diagnostic::{FaultParams, FaultScope, Severity};
     let grant = owner.remaining_grant();
     if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 || grant.maximum_capacity_bytes == 0 || grant.maximum_release_bytes == 0 || grant.maximum_depth < 4 {
@@ -137,7 +137,7 @@ pub fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, own
     let original = source.as_ref().ok_or_else(media_projection_error)?;
     let mismatch = matches!(original, MediaArtifactError::SchemaMismatch { .. });
     let code = if mismatch { MEDIA_SCHEMA_MISMATCH_CODE } else { "plugin.internal" };
-    let mut counting = semio_framework_os_kernel::io::control::NativeSnapshotBodyWallet::new(grant);
+    let mut counting = semio_os_kernel::io::control::NativeSnapshotBodyWallet::new(grant);
     let extent = owner.native().scoped_stage(|native| {
         native.begin_stage(0)?;
         let mut extent = MediaFaultTextExtent { bytes: 0, native, wallet: &mut counting, error: None };

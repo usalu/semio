@@ -4,7 +4,7 @@ use semio_framework_test_fixtures::{fixture_path, fixture_text};
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_plugin::{Fault, FaultCode, FaultOrigin};
 #[allow(unused_imports)]
 use semio_framework_value::FromValue;
 #[allow(unused_imports)]

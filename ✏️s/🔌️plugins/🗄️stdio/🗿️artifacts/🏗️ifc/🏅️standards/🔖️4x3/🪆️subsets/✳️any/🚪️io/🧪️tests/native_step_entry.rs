@@ -13,7 +13,7 @@ fn drain(native: &mut NativeEncodeControl<'_>, closing: RetainedCloneGrant) { fo
 
 #[test]
 fn actual_registered_step_entry_retains_the_original_native_pair() {
-    use semio_framework_os_kernel::io::{io_mechanism::{IoNativeDirection, IoRunControl}, io_schema::IoPayload};
+    use semio_os_kernel::io::{io_mechanism::{IoNativeDirection, IoRunControl}, io_schema::IoPayload};
     use semio_framework_value::NativeDecodeControl;
     use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
     let value = fixture(); let source = source(&value); let input = IoPayload::Binary(source.encode_pack()); let mut observe_decode = |_| true; let mut observe_encode = |_| true;

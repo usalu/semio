@@ -1,7 +1,7 @@
 //! 🧫️ Original payload identity and independent serde output survive completion, foreign callers and cancellation.
 use super::*;
-use semio_framework_os_spr as protocol;
-use semio_framework_os_store_operation_wire::{OriginalReplacementReceiving,ArtifactOperationWire};
+use semio_os_spr as protocol;
+use semio_os_store_operation_wire::{OriginalReplacementReceiving,ArtifactOperationWire};
 use semio_framework_value::{RetainedCloneGrant,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_job::{OriginalTurnFailure,close_original_retained_step};
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner};

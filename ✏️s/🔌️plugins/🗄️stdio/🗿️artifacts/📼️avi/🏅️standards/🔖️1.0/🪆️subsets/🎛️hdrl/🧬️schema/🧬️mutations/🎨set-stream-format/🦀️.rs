@@ -15,8 +15,8 @@ pub struct SetStreamFormat {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamFormat {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "stream-format", kind: "set-stream-format", record: "SetStreamFormat" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set stream format", "Datenstromformat setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set stream format", "Datenstromformat setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

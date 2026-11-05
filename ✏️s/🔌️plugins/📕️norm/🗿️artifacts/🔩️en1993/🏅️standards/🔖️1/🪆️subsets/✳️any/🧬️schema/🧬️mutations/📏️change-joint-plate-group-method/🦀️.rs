@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlateGroupMet
         record: "ChangedJointPlateGroupMethod",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Joint plate: Bolt group method", "Anschlussblech: Verfahren der Schraubengruppe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Joint plate: Bolt group method", "Anschlussblech: Verfahren der Schraubengruppe ändern")
     }
 }
 

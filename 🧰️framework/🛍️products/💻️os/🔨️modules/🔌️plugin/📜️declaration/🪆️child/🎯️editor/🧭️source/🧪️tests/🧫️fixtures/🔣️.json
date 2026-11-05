@@ -551,6 +551,72 @@
         "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
       },
       "accepted": false
+    },
+    {
+      "name": "Bounded Hashed Identifier",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "flow:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "flow:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": true,
+      "maximumTurns": 200
+    },
+    {
+      "name": "Bounded Utf8 Identifier",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx🌍yyyyyyyyyyy",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx🌍yyyyyyyyyyy",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": true,
+      "maximumTurns": 200
     }
   ],
   "capability": {

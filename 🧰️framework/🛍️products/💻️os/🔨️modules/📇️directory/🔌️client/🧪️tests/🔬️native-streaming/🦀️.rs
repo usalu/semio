@@ -70,8 +70,8 @@ mod streaming_tests {
             scope,
             OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel, capability: None },
         );
-        assert_eq!(body.cancellation_handle().cancel_in_flight(), semio_framework_os_services::HttpBodyCancellationStep::AwaitingReadDeadline { maximum_ms: UREQ_HTTP_READ_TIMEOUT_MS });
-        let (_terminal_handle, terminal) = semio_framework_os_services::HttpTransportTerminalHandle::pair();
+        assert_eq!(body.cancellation_handle().cancel_in_flight(), semio_os_services::HttpBodyCancellationStep::AwaitingReadDeadline { maximum_ms: UREQ_HTTP_READ_TIMEOUT_MS });
+        let (_terminal_handle, terminal) = semio_os_services::HttpTransportTerminalHandle::pair();
         let result = runtime.block_on(body.next_chunk(terminal));
         assert!(matches!(result, Err(HttpPoolError::Transport(message)) if message == "ureq HTTP body cancelled"));
         assert_eq!(reads.load(Ordering::SeqCst), 0);

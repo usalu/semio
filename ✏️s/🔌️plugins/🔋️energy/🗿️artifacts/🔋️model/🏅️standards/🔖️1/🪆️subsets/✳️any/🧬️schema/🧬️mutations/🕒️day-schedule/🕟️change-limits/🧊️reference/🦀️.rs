@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "daily-schedule", kind: "change-daily-schedule-limits", record: "ChangedDailyScheduleLimits" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change daily schedule {} limits", self.id.0), &format!("Grenzwerte von Tageszeitplan {} ändern", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change daily schedule {} limits", self.id.0), &format!("Grenzwerte von Tageszeitplan {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

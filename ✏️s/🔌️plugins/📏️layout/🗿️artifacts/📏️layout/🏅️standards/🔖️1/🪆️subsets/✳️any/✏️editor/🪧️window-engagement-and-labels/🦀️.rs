@@ -49,7 +49,7 @@ pub fn layout_entity_label(document: &LayoutSnapshot, kinds: &[String], id: &str
     let ordinal = (siblings.len() > 1).then(|| siblings.iter().position(|other| other.id() == id).map_or(1, |index| index + 1));
     let (kind, page) = (frame.kind_str().to_string(), page.to_string());
     Some(LocalizedLabel::from_fn(move |terminology, locale| {
-        let labels = <LayoutLabels as semio_framework_ui_locale::AppLabels>::labels(locale, terminology);
+        let labels = <LayoutLabels as semio_ui_locale::AppLabels>::labels(locale, terminology);
         let word = match kind.as_str() {
             "text" => labels.kind_text,
             "image" => labels.kind_image,
@@ -57,8 +57,8 @@ pub fn layout_entity_label(document: &LayoutSnapshot, kinds: &[String], id: &str
         }
         .as_str();
         let (open, close) = match locale {
-            semio_framework_ui_locale::Locale::De => ("\u{201e}", "\u{201c}"),
-            semio_framework_ui_locale::Locale::En => ("\u{201c}", "\u{201d}"),
+            semio_ui_locale::Locale::De => ("\u{201e}", "\u{201c}"),
+            semio_ui_locale::Locale::En => ("\u{201c}", "\u{201d}"),
         };
         match (&quoted, ordinal) {
             (Some(quoted), _) => format!("{word} {open}{quoted}{close} \u{b7} {page}"),

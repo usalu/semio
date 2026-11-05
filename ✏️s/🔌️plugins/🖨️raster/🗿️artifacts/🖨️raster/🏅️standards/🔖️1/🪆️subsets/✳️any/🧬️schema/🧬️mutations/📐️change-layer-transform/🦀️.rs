@@ -21,7 +21,7 @@ pub fn validate_target(payload:&ChangeLayerTransform,layer:&RasterLayerNode)->Re
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerTransform where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_transform::ChangeLayerTransform> {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"change",entity:"layer-transform",kind:"change-layer-transform",record:"ChangedLayerTransform"};
 
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Transform layer","Ebene transformieren")}
+    fn label(&self)->semio_ui_locale::LocalizedLabel {semio_ui_locale::LocalizedLabel::native("Transform layer","Ebene transformieren")}
     fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
 }
 

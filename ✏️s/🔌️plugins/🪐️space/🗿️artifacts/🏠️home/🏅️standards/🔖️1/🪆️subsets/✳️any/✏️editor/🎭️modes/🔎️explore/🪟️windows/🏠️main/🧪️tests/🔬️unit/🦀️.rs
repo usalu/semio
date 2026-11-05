@@ -3,26 +3,26 @@ use crate::editor::home::transient::HomeDirectoryProjection;
 use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use semio_s_space_core::HomeTableLabels;
-use semio_framework_plugin::app::TreeWindows;
+use semio_plugin::app::TreeWindows;
 use crate::editor::home::modes::explore::windows::main::{render_rows, render_rows_wrapped};
 
 use crate::editor::home::modes::explore::windows::main::*;
 
-fn project(node: semio_framework_plugin::BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("Home row tree projection")
+fn project(node: semio_plugin::BuiltNode) -> String {
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("Home row tree projection")
 }
 
-fn host_view(locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel {
+fn host_view(locale: semio_ui_locale::Locale) -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel {
         locale,
-        session_identity: Some(semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() }),
-        ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
+        session_identity: Some(semio_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() }),
+        ..semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native)
     }
 }
 
-fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&semio_framework_plugin::BuiltNode) -> R) -> R {
+fn observe<R>(node: semio_plugin::BuiltNode, inspect: impl FnOnce(&semio_plugin::BuiltNode) -> R) -> R {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| inspect(&node)));
-    let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(node);
+    let mut retirement = semio_ui_contract::BuiltTreeRetirement::new(node);
     while !retirement.terminal_is_empty() {
         let step = retirement.close_step(1, 4096).expect("Home fixture tree remains valid");
         if !step.progressed {
@@ -38,7 +38,7 @@ fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&sem
 /// 🔑️ The first node in the tree that carries two children under one key, reported as
 /// `(parent key, sibling keys)` — the same pair the reactor's `ComponentTreeProducer` refuses with
 /// `DuplicateSiblingKey`, but named at the authoring boundary where it can be read.
-fn first_duplicate_sibling(node: &semio_framework_plugin::BuiltNode) -> Option<(String, Vec<String>)> {
+fn first_duplicate_sibling(node: &semio_plugin::BuiltNode) -> Option<(String, Vec<String>)> {
     let keys: Vec<String> = node.children.iter().map(|child| child.key.as_str().to_owned()).collect();
     let mut unique = keys.clone();
     unique.sort();
@@ -49,25 +49,25 @@ fn first_duplicate_sibling(node: &semio_framework_plugin::BuiltNode) -> Option<(
     node.children.iter().find_map(first_duplicate_sibling)
 }
 
-fn row<'a>(root: &'a semio_framework_plugin::BuiltNode, key: &str) -> &'a semio_framework_plugin::BuiltNode {
+fn row<'a>(root: &'a semio_plugin::BuiltNode, key: &str) -> &'a semio_plugin::BuiltNode {
     root.children.iter().find(|node| node.key.as_str() == key).expect("Home row key present")
 }
 
 /// 🎬️ The bindings a Home row's actions dispatch — each its verb on the row's ONE target.
-fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<semio_framework_ui_contract::ActionBinding> {
-    let semio_framework_ui_contract::Component::TableRow(props) = &node.component else { panic!("a Home row is one TableRow record") };
+fn buttons(node: &semio_plugin::BuiltNode) -> Vec<semio_ui_contract::ActionBinding> {
+    let semio_ui_contract::Component::TableRow(props) = &node.component else { panic!("a Home row is one TableRow record") };
     let target = props.target.as_ref().expect("a Home row carries its one target");
     assert_eq!(target.activation.as_ref().map(|verb| verb.as_str()), Some("openSpace"), "a Home row's activation opens the space");
     props.row_actions.iter().map(|action| target.binding(&action.verb).expect("credited row binding")).collect()
 }
 
-fn rows(windows: &TreeWindows<'_>, rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn rows(windows: &TreeWindows<'_>, rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     render_rows(rows, table, actions, windows)
 }
 
-fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> String {
-    let Some(semio_framework_ui_contract::UiValue::Map(args)) = binding.args.as_ref() else { panic!("Home action carries map args") };
-    let (_, semio_framework_ui_contract::UiValue::Text(value)) = args.iter().find(|(name, _)| name.as_str() == key).expect("Home action arg present") else { panic!("Home action arg is text") };
+fn text_arg(binding: &semio_ui_contract::ActionBinding, key: &str) -> String {
+    let Some(semio_ui_contract::UiValue::Map(args)) = binding.args.as_ref() else { panic!("Home action carries map args") };
+    let (_, semio_ui_contract::UiValue::Text(value)) = args.iter().find(|(name, _)| name.as_str() == key).expect("Home action arg present") else { panic!("Home action arg is text") };
     value.as_str().to_owned()
 }
 
@@ -158,7 +158,7 @@ async fn a_local_row_carries_open_and_remove_from_home() {
 async fn seeded_local_studio_renders_a_table_row() {
     let cfg = HomeConfig::default();
     let _ = semio_s_space_core::list_all_space_catalog_entries().await;
-    let node = render(&cfg, &HomeDirectoryProjection::default(), &host_view(semio_framework_ui_locale::Locale::En)).expect("seeded Home rows");
+    let node = render(&cfg, &HomeDirectoryProjection::default(), &host_view(semio_ui_locale::Locale::En)).expect("seeded Home rows");
     let json = project(node);
     assert!(json.contains("local"), "the seeded demo studio has no directory entry, so it renders origin=local: {json}");
 }
@@ -174,14 +174,14 @@ async fn german_locale_labels_resolve_in_the_rendered_table() {
 #[semio_framework_async_macros::async_test]
 async fn render_resolves_labels_from_host_view() {
     let cfg = HomeConfig { ..HomeConfig::default() };
-    let view_state = host_view(semio_framework_ui_locale::Locale::De);
+    let view_state = host_view(semio_ui_locale::Locale::De);
     let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
     assert!(json.contains("Aktualisiert"));
     let _ = render(&cfg, &HomeDirectoryProjection::default(), &view_state).expect("localized Home rows");
 }
 
 /// 🔎️ The first node anywhere in the tree carrying `key`.
-fn keyed<'a>(node: &'a semio_framework_plugin::BuiltNode, key: &str) -> Option<&'a semio_framework_plugin::BuiltNode> {
+fn keyed<'a>(node: &'a semio_plugin::BuiltNode, key: &str) -> Option<&'a semio_plugin::BuiltNode> {
     if node.key.as_str() == key {
         return Some(node);
     }
@@ -194,10 +194,10 @@ fn keyed<'a>(node: &'a semio_framework_plugin::BuiltNode, key: &str) -> Option<&
 /// this test stays valid if the spacer count or the toolbar nesting ever changes.
 #[semio_framework_async_macros::async_test]
 async fn render_wraps_the_table_with_real_create_space_and_import_studio_buttons() {
-    observe(render(&HomeConfig::default(), &HomeDirectoryProjection::default(), &host_view(semio_framework_ui_locale::Locale::En)).expect("Home rows with toolbar actions"), |root| {
+    observe(render(&HomeConfig::default(), &HomeDirectoryProjection::default(), &host_view(semio_ui_locale::Locale::En)).expect("Home rows with toolbar actions"), |root| {
         for (key, action) in [("s-home-create-space", "createSpace"), ("s-home-import-studio", "importSpace")] {
             let button = keyed(root, key).unwrap_or_else(|| panic!("a {key} button somewhere in the tree"));
-            assert!(matches!(&button.component, semio_framework_ui_contract::Component::Button(_)));
+            assert!(matches!(&button.component, semio_ui_contract::Component::Button(_)));
             let binding = button.bindings.get(0).expect("toolbar button carries action");
             assert_eq!(binding.action.scope.as_str(), S_HOME_CONTROLLER_ID);
             assert_eq!(binding.action.name.as_str(), action);
@@ -215,7 +215,7 @@ async fn german_toolbar_and_removal_labels_resolve() {
 #[semio_framework_async_macros::async_test]
 async fn empty_catalog_still_renders_the_create_space_button() {
     observe(render_rows_wrapped_for_test(&[]).await.expect("empty Home rows with create action"), |root| {
-        assert!(keyed(root, "s-home-create-space").is_some_and(|node| matches!(&node.component, semio_framework_ui_contract::Component::Button(_))), "the create button must survive the empty-table branch too");
+        assert!(keyed(root, "s-home-create-space").is_some_and(|node| matches!(&node.component, semio_ui_contract::Component::Button(_))), "the create button must survive the empty-table branch too");
         assert!(keyed(root, "s-home-import-studio").is_some(), "the import button must survive the empty-table branch too");
     });
 }
@@ -244,7 +244,7 @@ async fn the_signed_in_window_body_survives_the_component_tree_producer() {
 
 /// 🧪️ `render`'s own composition, isolated from `semio_s_space_core::list_all_space_catalog_entries()`'s
 /// process-global singleton — mirrors `render_rows`'s own isolation rationale above.
-async fn render_rows_wrapped_for_test(rows: &[semio_s_space_core::HomeSpaceRow]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+async fn render_rows_wrapped_for_test(rows: &[semio_s_space_core::HomeSpaceRow]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN, &TreeWindows::unhosted())
 }
 

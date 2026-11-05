@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBuiltUpBackToBack 
         record: "ChangedBuiltUpBackToBack",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Back-to-back angles (0/1) of the built-up member", "Zusammengesetzter Stab: Rücken an Rücken gestellte Winkel (0/1) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Back-to-back angles (0/1) of the built-up member", "Zusammengesetzter Stab: Rücken an Rücken gestellte Winkel (0/1) ändern")
     }
 }
 

@@ -3,11 +3,11 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_geometry::editing::SegmentType;
-use semio_framework_plugin::UtilityCategory;
+use semio_plugin::UtilityCategory;
 
-fn with_utility(meta: &semio_framework_plugin::ActionMeta, utility: &str) -> semio_framework_plugin::ActionMeta {
+fn with_utility(meta: &semio_plugin::ActionMeta, utility: &str) -> semio_plugin::ActionMeta {
     let mut meta = meta.clone();
-    meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..meta.view_state.clone().unwrap_or_else(||ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native)) });
+    meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..meta.view_state.clone().unwrap_or_else(||ViewModel::new(semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native)) });
     meta
 }
 
@@ -59,7 +59,7 @@ async fn marquee_select_covers_contained_layer_only() {
     assert!(result.mutations.is_empty(), "a pure marquee-select gesture is not a document operation");
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert_eq!(selected_strokes(&app).await, vec![rect_a_id.clone()], "only the contained rect is selected, not the outside ellipse");
-    artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -87,7 +87,7 @@ async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
 async fn add_layer_undo_round_trip_through_wrapper() {
     let mut app = drawing_app().await;
     let before = app.snapshot().unwrap().layers.len();
-    artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -106,7 +106,7 @@ async fn path_join_conversion_position_and_translation_each_undo_as_one_edit() {
             let snapshot=app.snapshot().unwrap();
             let DrawingLayerNode::Path(path)=&snapshot.layers[0] else { panic!("Expected path") };
             path.segments.iter().cloned().collect::<Vec<_>>()
-        }, before, after, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        }, before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 }
 
@@ -119,7 +119,7 @@ async fn shape_conversion_restores_the_primitive_with_one_undo() {
     load_drawing_fixture(&mut app,&before);
     let mut after=before.clone();
     for mutation in edit_selection::plan(&before,&[id.clone()],"toPath").unwrap() { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after,&mutation).unwrap(); }
-    artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::EditSelection(edit_selection::EditSelection { operation:"toPath".into(),ids:vec![id] }), |app|app.snapshot().unwrap(), before, after, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::EditSelection(edit_selection::EditSelection { operation:"toPath".into(),ids:vec![id] }), |app|app.snapshot().unwrap(), before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -226,8 +226,8 @@ async fn armed_canvas_utilities_retire_gestures_after_document_actions() {
         load_drawing_fixture(&mut app, &before);
         settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
         let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": "source" })]).unwrap();
-        let admission = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
+        let admission = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
         let press = &row["press"];
         let movement = &row["move"];
         settled(&mut app, DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: press[0].as_f64().unwrap(), y: press[1].as_f64().unwrap(), width: 800.0, height: 600.0, ..Default::default() }), &meta).await;
@@ -258,11 +258,11 @@ async fn armed_canvas_utilities_retire_gestures_after_document_actions() {
         assert_eq!(edits[0].op_count, 1);
         assert_eq!(edits[0].op_lines.len(), 1);
         assert!(edits[0].op_lines[0].starts_with("create-layer"));
-        artifact_laws::settle_history_verb(&mut app.0, "undo", meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        artifact_laws::settle_history_verb(&mut app.0, "undo", meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         assert_eq!(app.snapshot().unwrap(), before);
-        artifact_laws::settle_history_verb(&mut app.0, "redo", meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        artifact_laws::settle_history_verb(&mut app.0, "redo", meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         assert_eq!(app.snapshot().unwrap(), after);
-        artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
         assert!(app.close_terminal_is_empty(), "{utility}: interrupted gesture and document owners retire completely");
     }
 }

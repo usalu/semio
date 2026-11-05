@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "owner": "semio-framework-os-kernel-db",
+  "owner": "semio-os-kernel-db",
   "definingErrorOwner": "semio-framework-pack-error",
   "rule": {
     "typedCause": "Pack",

@@ -1,15 +1,15 @@
 //! 🪣️ Normal board fill: snapshot capture and ingress, the fill job state machine and the commit encoder.
 //!
-//! Crate `semio-framework-os-infinite-board-normal-fill`; a downward producer of the infinite board family.
+//! Crate `semio-os-infinite-board-normal-fill`; a downward producer of the infinite board family.
 
 #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
 #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure the call sites.")]
 
-use semio_framework_os_infinite_board_schema::{absent, array, field};
-use semio_framework_os_infinite_board_engine::CompatSpecificity;
-use semio_framework_os_infinite_board_normal_model::{BoardFillStage, BoardNaming, handle_port_shapes_compatible, single_letter_port_families_compatible};
-use semio_framework_os_infinite_board_normal_scene::{BOARD_FILL_TEXT_BYTES, BoardFillCaptureFault, BoardSceneState, BoardStyleState, brush_handle_anchor_world};
-use semio_framework_os_infinite_board_normal_gestures::BoardBrushState;
+use semio_os_infinite_board_schema::{absent, array, field};
+use semio_os_infinite_board_engine::CompatSpecificity;
+use semio_os_infinite_board_normal_model::{BoardFillStage, BoardNaming, handle_port_shapes_compatible, single_letter_port_families_compatible};
+use semio_os_infinite_board_normal_scene::{BOARD_FILL_TEXT_BYTES, BoardFillCaptureFault, BoardSceneState, BoardStyleState, brush_handle_anchor_world};
+use semio_os_infinite_board_normal_gestures::BoardBrushState;
 use std::collections::BTreeMap;
 use std::cell::Cell;
 use semio_framework_canvas::{Circle, Point};

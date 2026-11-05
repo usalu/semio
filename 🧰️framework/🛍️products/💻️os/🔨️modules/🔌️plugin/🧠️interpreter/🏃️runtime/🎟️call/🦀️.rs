@@ -1,6 +1,6 @@
 //! 🎟️ Guest calls borrow the existing paid Core and authentic physical context throughout their retained machine phases.
 use super::{OwnedRuntime,OwnedGuestInstance};
-use semio_framework_plugin_interpreter::{OwnedSemioExport,ExportKind,Value,CoreOriginalInvocationStatus};
+use semio_plugin_interpreter::{OwnedSemioExport,ExportKind,Value,CoreOriginalInvocationStatus};
 use semio_framework_actor::{RetainedTurnInput,OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};

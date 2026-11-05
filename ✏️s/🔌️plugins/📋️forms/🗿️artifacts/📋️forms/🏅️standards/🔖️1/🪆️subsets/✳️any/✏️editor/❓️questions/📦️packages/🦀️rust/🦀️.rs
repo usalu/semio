@@ -57,13 +57,3 @@ pub mod editor {
         }
     }
 }
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod forms {
-        pub use semio_s_artifact_forms_forms_tests_2::viewer::forms::*;
-        #[cfg(test)]
-        #[path = "../../../../👁️viewer/🧪️tests/🔬️unit/🦀️.rs"]
-        pub mod tests;
-    }
-}

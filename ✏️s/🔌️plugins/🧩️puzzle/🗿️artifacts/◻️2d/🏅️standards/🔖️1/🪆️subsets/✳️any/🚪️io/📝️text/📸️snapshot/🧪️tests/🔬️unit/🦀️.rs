@@ -9,16 +9,16 @@ use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCamera, crate:
 fn puzzle2d_example_fixtures_parse_and_round_trip_as_dsl() {
     for dsl_text in [PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE2D_NAKAGIN_EXAMPLE_TEXT] {
         let projection = parse_dsl(dsl_text).expect("example snapshot parses as dsl");
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
+        semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+        semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
     }
 }
 
 #[test]
 fn puzzle2d_projection_dsl_round_trips() {
     let empty = Puzzle2dSnapshot::default();
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
     let mut with_content = Puzzle2dSnapshot { camera: Puzzle2dCamera { x: 12.0, y: -4.0, zoom: 2.5 }, ..Puzzle2dSnapshot::default() };
     with_content.nodes.push(Puzzle2dNode {
         id: "n1".into(),
@@ -62,8 +62,8 @@ fn puzzle2d_projection_dsl_round_trips() {
         kind_compatibility: vec![Puzzle2dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Puzzle2dCompatSpecificity::Vortex }].into(),
         kind_catalogs: None,
     };
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&with_content);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&with_content);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&with_content);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&with_content);
 }
 
 //#region 🔖️CommandEnvelopeTests
@@ -84,12 +84,12 @@ fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::os_store::document_materialize::create_document_envelope;
     use store::os_store::store_schema::ArtifactCommand;
 
-    let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("store");
+    let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-    ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("apply");
+    ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
+    ::semio_framework_async::poll::resolve_ready(semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
     close_puzzle2d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests

@@ -1,22 +1,22 @@
-use semio_framework_ui_tui_terminal::ansi::{emit_runs, AnsiPatch};
-use semio_framework_ui_tui_core::cell::{diff, Cell, CellBuffer, DiffRun};
-use semio_framework_ui_tui_frame::chrome::{window_tab_rect, ChromeState, WindowHit, WindowStackTabState, WindowState};
-use semio_framework_ui_tui_widgets::dialog::DialogState;
-use semio_framework_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
-use semio_framework_ui_tui_core::docking::DockPlacement;
+use semio_ui_tui_terminal::ansi::{emit_runs, AnsiPatch};
+use semio_ui_tui_core::cell::{diff, Cell, CellBuffer, DiffRun};
+use semio_ui_tui_frame::chrome::{window_tab_rect, ChromeState, WindowHit, WindowStackTabState, WindowState};
+use semio_ui_tui_widgets::dialog::DialogState;
+use semio_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_ui_tui_core::docking::DockPlacement;
 
 #[cfg(test)]
 #[path = "../🧪️tests/🪟️drag-preview/🦀️.rs"]
 mod drag_preview_tests;
-use semio_framework_ui_tui_widgets::menu::{MenuItem, MenuState};
-use semio_framework_ui_tui_widgets::palette::PaletteState;
-use semio_framework_ui_tui_frame::scene::{AxisState, Node, NodeContent, NodeId, Scene, LAYOUT_DIRTY, PAINT_DIRTY};
-use semio_framework_ui_tui_core::text::WidthMode;
-use semio_framework_ui_tui_core::theme::{Role, Status, Theme};
-use semio_framework_ui_tui_widgets::tooltip::{TooltipState, TOOLTIP_DELAY_MS};
-use semio_framework_ui_tui_core::signal::{CursorSpec, WidgetSignal};
-use semio_framework_ui_tui_widgets::widget::WidgetState;
+use semio_ui_tui_widgets::menu::{MenuItem, MenuState};
+use semio_ui_tui_widgets::palette::PaletteState;
+use semio_ui_tui_frame::scene::{AxisState, Node, NodeContent, NodeId, Scene, LAYOUT_DIRTY, PAINT_DIRTY};
+use semio_ui_tui_core::text::WidthMode;
+use semio_ui_tui_core::theme::{Role, Status, Theme};
+use semio_ui_tui_widgets::tooltip::{TooltipState, TOOLTIP_DELAY_MS};
+use semio_ui_tui_core::signal::{CursorSpec, WidgetSignal};
+use semio_ui_tui_widgets::widget::WidgetState;
 use ui_styling::appearance::AppearanceName;
 
 /// ⏱️ Presses on the same cell within this window count as one multi-click.

@@ -1,8 +1,8 @@
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::DslValue;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_kit::editor::bim::kit::bim_window_action;
 #[allow(unused_imports)]
@@ -18,17 +18,17 @@ use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::i
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::SolidShape;
 #[allow(unused_imports)]
-use semio_framework_plugin::TableCell;
+use semio_plugin::TableCell;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiTreeActionPlacement;
+use semio_plugin::UiTreeActionPlacement;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiTreeItemAction;
+use semio_plugin::UiTreeItemAction;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_ui_locale::{Label, LocalizedLabel};
 use crate::editor::bim::modes::edit::windows::family::{text, row};
 use crate::editor::bim::modes::edit::windows::family::*;
 use semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit;

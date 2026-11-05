@@ -57,7 +57,7 @@ fn theme_editor_control_ids(shell: &ShellState) -> Vec<String> {
 
 /// 🎨️ A shell with one theme-editor section open.
 fn shell_with_open_theme_section(section: &str) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let parts: Vec<_> = section.split('.').collect();
     let root = parts.iter().take(4).copied().collect::<Vec<_>>().join(".");
     shell.input.set_canonical_tree_open(&root, true);

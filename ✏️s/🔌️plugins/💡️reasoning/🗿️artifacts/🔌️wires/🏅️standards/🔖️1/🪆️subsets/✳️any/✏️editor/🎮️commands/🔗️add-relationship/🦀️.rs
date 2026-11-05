@@ -5,9 +5,9 @@ use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_EDGE, WIRES_IN
 use crate::schema::{board_edge, board_node, entity_id, wires_identities};
 use crate::{GraphEdgeId, GraphNodeId, SemioGraphMutation, SemioValue, SemioValueEntry, WiresComposed, WiresMutation, WiresSnapshot, WIRES_RELATIONSHIP_PROPERTY};
 use semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::app::InteractionView;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

@@ -64,8 +64,8 @@ fn is_unicode_noncharacter(c: char) -> bool {
 /// `SubsetValidator` re-runs it post-hoc against the wire payload for the D5 validate-on-build hook.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 /// 🛡️ Applies the same I-JSON rules with bounded typed traversal and transfer cancellation.
-pub fn check_i_json_conformance_controlled(snapshot:&JsonSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
-    use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotPhase, ValueError, ValueRefusalKind};
+pub fn check_i_json_conformance_controlled(snapshot:&JsonSnapshot,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_os_kernel::sqlite_snapshot::ValueError>{
+    use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotPhase, ValueError, ValueRefusalKind};
     enum Work<'a>{Value(&'a JsonValue),Object(std::slice::Iter<'a,crate::schema::snapshot::JsonMember>,std::collections::HashSet<&'a str>),Array(std::slice::Iter<'a,JsonValue>)}
     let mut out=Vec::new();let mut count=0usize;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
     if !matches!(snapshot.value,JsonValue::Object{..}|JsonValue::Array{..}){out.push(soft(CODE_TOP_LEVEL_SCALAR,"top-level value is neither an object nor an array -- RFC 7493 §2.1 recommends against a bare top-level scalar for interop".into()));}
@@ -84,7 +84,7 @@ pub fn check_i_json_conformance_controlled(snapshot:&JsonSnapshot,control:&mut s
 
 pub fn check_i_json_conformance(snapshot: &JsonSnapshot) -> Vec<Diagnostic> {
     let mut proceed=|_|true;
-    let mut control=semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut proceed,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{max_rows:usize::MAX,..semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()});
+    let mut control=semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut proceed,semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{max_rows:usize::MAX,..semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()});
     check_i_json_conformance_controlled(snapshot,&mut control).expect("borrowed I-JSON conformance without cancellation")
 }
 

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-scene-pass"
+name = "semio-ui-scene-pass"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,9 +23,9 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-geometry = { path = "../../../../../../📐️geometry/📦️packages/🦀️rust" }
-semio-framework-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
-semio-framework-ui-scene-mesh = { path = "../../../🕸️mesh/📦️packages/🦀️rust" }
+semio-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
+semio-ui-scene-mesh = { path = "../../../🕸️mesh/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
-semio-framework-ui-scene-camera = { path = "../../../🎥️camera/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-scene-camera = { path = "../../../🎥️camera/📦️packages/🦀️rust", features = ["testkit"] }

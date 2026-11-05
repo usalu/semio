@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFootbridgeNaturalF
         record: "ChangedFootbridgeNaturalFrequency",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change first vertical natural frequency f_v of the footbridge", "Fußgängerbrücke: Erste vertikale Eigenfrequenz f_v ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change first vertical natural frequency f_v of the footbridge", "Fußgängerbrücke: Erste vertikale Eigenfrequenz f_v ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

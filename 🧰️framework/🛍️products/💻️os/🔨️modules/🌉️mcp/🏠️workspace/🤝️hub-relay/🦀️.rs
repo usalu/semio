@@ -3,11 +3,11 @@
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::Arc;
 use std::sync::Mutex;
-use semio_framework_os_mcp_port::channel_port::{AppCommand, Fault, HubRelayOutcome};
+use semio_os_mcp_port::channel_port::{AppCommand, Fault, HubRelayOutcome};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::routing_and_shell_routed::PluginArtifactBinding;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_port::channel_port::{AppFrame, HUB_EDIT_UNBOUND_FAULT_CODE, VIEWER_READ_ONLY_FAULT_CODE};
+use semio_os_mcp_port::channel_port::{AppFrame, HUB_EDIT_UNBOUND_FAULT_CODE, VIEWER_READ_ONLY_FAULT_CODE};
 
 /// 🗂️ One artifact kind an installed plugin really declares — the row `artifact_create{kind}`
 /// validates against and `artifact_export` routes through.
@@ -137,8 +137,8 @@ pub(super) struct HubRelayState {
 /// (nothing the guest authored could reach the hub — a hub session never edits a plugin's own genesis document); the
 /// bound document has no live document actor. Every edit that passes is relayed and waits for the hub's acknowledgement.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn hub_edit_refusal(role: Result<semio_framework_os_kernel::os_directory::DirectorySpaceRole, String>, plugin_id: &str, bound: Option<(&str, &PluginArtifactBinding)>) -> Option<Fault> {
-    use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
+pub fn hub_edit_refusal(role: Result<semio_os_kernel::os_directory::DirectorySpaceRole, String>, plugin_id: &str, bound: Option<(&str, &PluginArtifactBinding)>) -> Option<Fault> {
+    use semio_os_kernel::os_directory::DirectorySpaceRole;
     if let Some(code) = bound.and_then(|(_, binding)| binding.relay.terminal()) {
         let artifact_id = bound.map_or("", |(artifact_id, _)| artifact_id);
         return Some(Fault { code: code.clone(), message: format!("`{artifact_id}`'s hub link is {code}: the hub takes no further edit from this session") });

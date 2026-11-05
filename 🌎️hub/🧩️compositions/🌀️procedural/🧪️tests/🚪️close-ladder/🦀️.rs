@@ -7,9 +7,9 @@
 //! arrived, because `⚛️reactor`'s `step_reactor_close` discarded `cancel_instance_tasks_step`'s own
 //! completion witness and looped on a cursor the production executor stops advancing — see
 //! `📓️close-ladder-2026-09-10.md`.
-use semio_framework_os_kernel as store;
-use semio_framework_plugin::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, AppInstanceId, Budget, Event};
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_text, plugin_render, PluginRuntime};
+use semio_os_kernel as store;
+use semio_plugin::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, AppInstanceId, Budget, Event};
+use semio_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_text, plugin_render, PluginRuntime};
 
 type ProceduralRuntime = PluginRuntime<semio_hub_procedural::ProceduralApps>;
 
@@ -36,8 +36,8 @@ fn open_event(app_id: &str) -> Event {
     }
 }
 
-async fn turn(runtime: &ProceduralRuntime, events: Vec<Event>) -> semio_framework_plugin::kernel::TurnResult {
-    semio_framework_plugin::reactor::poll_kernel(runtime, events, None, None, close_budget()).await.expect("procedural close-ladder turn")
+async fn turn(runtime: &ProceduralRuntime, events: Vec<Event>) -> semio_plugin::kernel::TurnResult {
+    semio_plugin::reactor::poll_kernel(runtime, events, None, None, close_budget()).await.expect("procedural close-ladder turn")
 }
 
 async fn acknowledge(runtime: &ProceduralRuntime, receipt: ActorInstanceLifecycleReceipt) {
@@ -56,9 +56,9 @@ async fn boot(app_id: &str) -> (ProceduralRuntime, ActorInstanceLifetime) {
 }
 
 fn preview_view_state() -> String {
-    let view = semio_framework_plugin::ViewModel {
+    let view = semio_plugin::ViewModel {
         window_id: Some("procedural-close-preview".into()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "procedural-close-preview".into(), window_kind_id: GENERATION3D_PREVIEW_WINDOW.into() }],
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: "procedural-close-preview".into(), window_kind_id: GENERATION3D_PREVIEW_WINDOW.into() }],
         ..Default::default()
     };
     serde_json::to_string(&view).expect("view model json")
@@ -67,10 +67,10 @@ fn preview_view_state() -> String {
 /// 🍄️ Loads the bundled example and renders its preview so the retained evaluation session, the
 /// window-transient partitions and the tessellation request table are all live at close time.
 async fn arm_generation3d_preview(runtime: &ProceduralRuntime) {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let dsl = semio_s_artifact_procedural_3d_examples::art_generation3d_hexagonal_mushroom_column::PRIMARY_TEXT;
     let booted = plugin_document_text(runtime, CLOSE_INSTANCE).await.expect("booted generation3d document text");
-    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("hexagonal-mushroom-column loads into the booted instance");
+    semio_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("hexagonal-mushroom-column loads into the booted instance");
     let view_state = preview_view_state();
     for _ in 0..4 {
         let _ = plugin_render(runtime, CLOSE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;
@@ -169,11 +169,11 @@ fn example_documents() -> Vec<&'static str> {
 /// `renders_per_document` preview renders, so the retained window transients, the tessellation table,
 /// the neural/eval session and the document history all grow with the session length.
 async fn replay_session(runtime: &ProceduralRuntime, documents: usize, renders_per_document: usize) {
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let view_state = preview_view_state();
     for dsl in example_documents().into_iter().take(documents) {
         let booted = settled_document_text(runtime).await;
-        semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("session example loads");
+        semio_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("session example loads");
         for _ in 0..renders_per_document {
             let _ = plugin_render(runtime, CLOSE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;
             turn(runtime, Vec::new()).await;

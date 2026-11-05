@@ -17,8 +17,8 @@ pub struct ChangeBeamPatchBearingLengthM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamPatchBearingLengthM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_patch_bearing_length_m::ChangeBeamPatchBearingLengthM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-patch-bearing-length-m", kind: "change-beam-patch-bearing-length-m", record: "ChangedBeamPatchBearingLengthM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change patch load bearing length s_s", "Lasteinleitungslänge s_s der Einzellast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change patch load bearing length s_s", "Lasteinleitungslänge s_s der Einzellast ändern")
     }
 }
 

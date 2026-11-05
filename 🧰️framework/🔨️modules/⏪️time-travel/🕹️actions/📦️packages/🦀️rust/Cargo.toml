@@ -25,8 +25,8 @@ semio-framework-manifest-actions = { path = "../../../../🛂️manifest/🕹️
 semio-framework-manifest-address = { path = "../../../../🛂️manifest/🧭️address/📦️packages/🦀️rust" }
 semio-framework-manifest-app-surface = { path = "../../../../🛂️manifest/🧱️app-surface/📦️packages/🦀️rust" }
 semio-framework-manifest-arg-schema = { path = "../../../../🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { path = "../../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-contract = { path = "../../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }

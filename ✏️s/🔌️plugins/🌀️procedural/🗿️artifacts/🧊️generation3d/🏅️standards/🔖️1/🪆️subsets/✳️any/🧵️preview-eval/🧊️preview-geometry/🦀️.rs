@@ -14,7 +14,7 @@ pub const PREVIEW_TESSELLATE_STEP_BUDGET: u32 = 24;
 /// microsecond-long steps each pay a WHOLE `flowEvalTick` round trip — seconds apiece in a served
 /// build — which is most of why `box-fillet-preview` needed eight round trips to paint and never
 /// finished inside a patience window (`📓️preview-mesh-delivery-2026-09-12.md`).
-pub const PREVIEW_TESSELLATE_STEP_WALL_MICROS: u64 = semio_framework_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS;
+pub const PREVIEW_TESSELLATE_STEP_WALL_MICROS: u64 = semio_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS;
 
 /// 🔬️ The deflection one LOD step asks the kernel for — the ONE mapping both surfaces read, so an
 /// editor mesh and a viewer mesh of the same handle at the same LOD are byte-identical.
@@ -28,7 +28,7 @@ pub fn preview_tolerance(lod_mode: &str) -> f64 {
 
 /// 🌊️ The flow-domain id of the geometry extension whose kernel tessellates every preview handle.
 /// It is NOT an invocation address: the host resolves an extension actor by the CONTRIBUTING
-/// PLUGIN's id, which [`semio_framework_os_flow::flow_extension_invocation_address`] — the ONE
+/// PLUGIN's id, which [`semio_os_flow::flow_extension_invocation_address`] — the ONE
 /// translation surface — looks up from the live contribution table.
 pub const GENERATION_3D_GEOMETRY_EXTENSION_ID: &str = "brep";
 
@@ -36,8 +36,8 @@ pub const GENERATION_3D_GEOMETRY_EXTENSION_ID: &str = "brep";
 /// producer and every status projection shares. Both callers own the same typed miss, so an
 /// unaddressable kernel reaches a preview window as `phase: "faulted"` with its own English/German
 /// label instead of a per-tick `eprintln!` nobody reads.
-pub fn geometry_extension_address() -> Result<String, semio_framework_os_flow::FlowExtensionAddressMiss> {
-    semio_framework_os_flow::flow_extension_invocation_address(GENERATION_3D_GEOMETRY_EXTENSION_ID)
+pub fn geometry_extension_address() -> Result<String, semio_os_flow::FlowExtensionAddressMiss> {
+    semio_os_flow::flow_extension_invocation_address(GENERATION_3D_GEOMETRY_EXTENSION_ID)
 }
 
 pub fn is_brep_geometry_handle(handle: &str) -> bool {
@@ -276,7 +276,7 @@ fn widget_kind_tag(widget: &semio_framework_artifact_flow_flow::Widget) -> &str 
 /// 🌍️ The `World3dScene.fit_json` every generation3d preview window publishes: frame the delivered
 /// bounds once per document, never again while that document is on screen.
 pub fn preview_fit_json(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, meshes_json: &str) -> String {
-    semio_framework_ui_declaration::ui::world3d_fit_json(preview_fit_revision(host_snapshot), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
+    semio_ui_declaration::ui::world3d_fit_json(preview_fit_revision(host_snapshot), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
 }
 
 /// ✏️ Half-extent (world units) of the axis cross drawn for a [`PreviewInlineGeometry::Point`].
@@ -326,8 +326,8 @@ pub fn apply_show_mode_mesh(mut data: MeshData, show_mode: &str) -> MeshData {
 /// 🎒️ Decodes a base64 `pack` mesh body the extension shipped back — the single decode seam every
 /// preview reader goes through.
 pub fn decode_preview_mesh_pack(base64_body: &str) -> Option<MeshData> {
-    let bytes = semio_framework_os_flow::mesh::decode_base64(base64_body).ok()?;
-    semio_framework_os_flow::mesh::decode_mesh_pack(&bytes).ok()
+    let bytes = semio_os_flow::mesh::decode_base64(base64_body).ok()?;
+    semio_os_flow::mesh::decode_mesh_pack(&bytes).ok()
 }
 
 /// 🧵️ The mesh the CHAIN produced for this handle: the retained session's resolved `pack` body,
@@ -544,7 +544,7 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
     retain_preview_meshes(session, live, grant)?;
     let mut invocations = Vec::new();
     for handle in pending {
-        let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
+        let node_hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
         if session.note_pending_tessellate(node_hash, handle.clone()) {
             let mut request_object = semio_framework_pack_json::Object::new();
             request_object.insert("handle", semio_framework_pack_json::Value::String(handle));

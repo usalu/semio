@@ -1,15 +1,15 @@
 //! 🔬️ tests of `semio-s-artifact-dag-dag` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[cfg(test)]
 pub use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
 #[cfg(test)]
 pub use crate::snapshot::schema::empty_snapshot;
 #[cfg(test)]
-pub use semio_framework_os_infinite_directed_presentation::DagHostSnapshotEdge;
+pub use semio_os_infinite_directed_presentation::DagHostSnapshotEdge;
 #[cfg(test)]
-pub use semio_framework_os_infinite_directed_presentation::DagNodeSpec;
+pub use semio_os_infinite_directed_presentation::DagNodeSpec;
 #[cfg(test)]
 pub use crate::snapshot::schema::default_snapshot;
 pub use semio_s_artifact_dag_dag_inferences::{DagScene, dag_content_child_handle};

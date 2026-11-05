@@ -5,7 +5,7 @@ use super::*;
 /// 🪪️ What a remembered verification was computed by: the owned engine's semantic identity and the
 /// fuel ceiling every guest codec call runs under.
 pub fn guest_codec_engine_identity() -> String {
-    format!("{}:fuel-{}", semio_framework_plugin_interpreter_runtime::owned_engine_identity(), GUEST_CODEC_BUDGET.fuel)
+    format!("{}:fuel-{}", semio_plugin_interpreter_runtime::owned_engine_identity(), GUEST_CODEC_BUDGET.fuel)
 }
 
 /// 🗃️ The hub's content-addressed memory of guest codec verifications (`GuestCodecVerificationV1`),

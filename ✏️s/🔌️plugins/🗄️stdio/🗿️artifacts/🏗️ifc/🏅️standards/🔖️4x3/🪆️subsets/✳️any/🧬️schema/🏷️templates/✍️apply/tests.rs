@@ -63,7 +63,7 @@ fn native_template_capacity_covers_every_released_selection_without_invented_pro
 #[test]
 fn native_template_command_matches_its_closed_wire_variant_and_domain_action() {
     use protocol::OpBinary;
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     use semio_framework_value::ToValue;
     let fixtures: serde_json::Value = serde_json::from_str(include_str!("native-cases.json")).unwrap();
     let application = original(&fixtures["cases"][0]["application"]);
@@ -73,7 +73,7 @@ fn native_template_command_matches_its_closed_wire_variant_and_domain_action() {
     let restored = crate::editor::Ifc4x3EditCommand::decode_op(&bytes).unwrap();
     assert_eq!(restored, command);
     assert_eq!(command.to_value().get("ApplyTemplate").unwrap().get("application"), Some(&application));
-    let contracts = <work::factory::IfcTemplateToolJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
+    let contracts = <work::factory::IfcTemplateToolJobFactory as semio_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     assert_eq!(contracts.len(), 1);
     assert_eq!(contracts[0].tool_id, APPLY_TEMPLATE_ACTION);
 }
@@ -117,7 +117,7 @@ fn existing_template_definition_sets_are_checked_before_retained_identity_collis
 
 #[test]
 fn native_factory_transfers_original_payload_and_never_publishes_without_semantic_authority() {
-    use semio_framework_plugin::{
+    use semio_plugin::{
         app_testing::OriginalWorkFixture,
         retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWork, ArtifactCommandWorkStep},
         AppOperationContext, HistoryView, NoConfig,

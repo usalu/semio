@@ -16,7 +16,7 @@ impl ShellState {
     /// injects `crate::renderer_worker_pool()`, the ONE process-wide `WorkerPool` this whole
     /// renderer crate shares (also used by `🦀️.rs::kernel_runtime`'s `ParallelRuntime` for
     /// shard-turn scheduling — see that fn's own doc for why it cannot instead reuse
-    /// `semio-framework-os-services`'s own private `global_worker_pool()` singleton). `open_scope`/
+    /// `semio-os-services`'s own private `global_worker_pool()` singleton). `open_scope`/
     /// `ComputePool::new`/`with_new_http_pool` are async constructors bridged once here. Runtime,
     /// scope, and compute ownership then lives in the transport; no directory thread is retained.
     ///
@@ -24,13 +24,13 @@ impl ShellState {
     /// every hop is one `fetch` the page makes on this shell's behalf — so the transport is a unit
     /// value and only the cancellation root has to be minted.
     pub fn new(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String, locale: Locale, terminology: Terminology) -> Self {
-        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(locale);
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(locale);
         let host_capability = resolve_plugin_host_config(&plugin_filter);
         let space_mode = host_capability.is_some();
         #[cfg(not(target_arch = "wasm32"))]
         let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = {
             const DIRECTORY_COMPUTE_CAPACITY: u32 = 4;
-            let pool = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
+            let pool = semio_renderer_wgpu_host_base::renderer_worker_pool();
             let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(pool.clone()));
             let scope = runtime.open_scope_now(ScopeOwner::Service("directory_client"), None);
             let compute = std::sync::Arc::new(ComputePool::with_pool(DIRECTORY_COMPUTE_CAPACITY, pool));
@@ -41,7 +41,7 @@ impl ShellState {
         let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = (shell_directory_transport(), CancelToken::root_now());
         #[cfg(not(target_arch = "wasm32"))]
         let document_host = {
-            let host = ArtifactHost::new(std::sync::Arc::new(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool()));
+            let host = ArtifactHost::new(std::sync::Arc::new(semio_renderer_wgpu_host_base::renderer_worker_pool()));
             if let Some(credential) = claimed_local_hub_credential("native") {
                 host.set_local_hub_credential(credential);
             }
@@ -49,8 +49,8 @@ impl ShellState {
         };
         #[cfg(target_arch = "wasm32")]
         let document_host = {
-            let host = ArtifactHost::new(std::sync::Arc::new(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool()));
-            host.set_document_socket_dialer(std::sync::Arc::new(semio_framework_os_renderer_wgpu_doors::socket_door::browser::DoorDocumentSocketDialer));
+            let host = ArtifactHost::new(std::sync::Arc::new(semio_renderer_wgpu_host_base::renderer_worker_pool()));
+            host.set_document_socket_dialer(std::sync::Arc::new(semio_renderer_wgpu_doors::socket_door::browser::DoorDocumentSocketDialer));
             host
         };
         let mut state = Self {
@@ -156,7 +156,7 @@ impl ShellState {
                 #[cfg(not(target_arch = "wasm32"))]
                 identity_bootstrap_task: None,
                 directory_client: None,
-                agent_bridge: semio_framework_os_renderer_wgpu_agent_elements::agent_bridge_door::AgentBridgeTransport::new(),
+                agent_bridge: semio_renderer_wgpu_agent_elements::agent_bridge_door::AgentBridgeTransport::new(),
                 agent_bridge_offer_scope: AgentBridgeOfferScopeOwnerV1::default(),
                 #[cfg(not(target_arch = "wasm32"))]
                 inference_port: None,
@@ -167,7 +167,7 @@ impl ShellState {
                 directory_transport,
                 directory_cancel,
                 directory_commands: ShellDirectoryCommandQueueV1::default(),
-                hub_workspace: semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::HubWorkspaceState::new(semio_framework_os_renderer_wgpu_hub_contracts::hub_sign_in::parse_hub_connection_book(prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(), &shell_hub_bootstrap_origin(), semio_framework_ui_locale::Locale::En)),
+                hub_workspace: semio_renderer_wgpu_hub_workspace::hub_connection::HubWorkspaceState::new(semio_renderer_wgpu_hub_contracts::hub_sign_in::parse_hub_connection_book(prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(), &shell_hub_bootstrap_origin(), semio_ui_locale::Locale::En)),
                 hub_sign_in_task: None,
                 hub_spaces_task: None,
                 hub_workspace_open: false,
@@ -205,7 +205,7 @@ impl ShellState {
                 panel_documents: HashMap::new(),
                 spawned_ui: None,
                 spawned_session: None,
-                app_document_identities: semio_framework_os_renderer_wgpu_media_slots::DocumentIdentityRegistry::default(),
+                app_document_identities: semio_renderer_wgpu_media_slots::DocumentIdentityRegistry::default(),
                 closing_documents: ShellDocumentRetirementRegistry::default(),
                 window_actions_documents: HashMap::new(),
                 window_search_documents: HashMap::new(),
@@ -240,9 +240,9 @@ impl ShellState {
                 measures_resize_origin_width: 0.0,
                 engagement_inputs: HashMap::new(),
                 measures_resize_window_id: None,
-                window_topology_actions: semio_framework_ui_action::BoundedActionQueue::default(),
-                window_topology_publications: VecDeque::with_capacity(semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY),
-                window_topology_action_tokens: VecDeque::with_capacity(semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY),
+                window_topology_actions: semio_ui_action::BoundedActionQueue::default(),
+                window_topology_publications: VecDeque::with_capacity(semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY),
+                window_topology_action_tokens: VecDeque::with_capacity(semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY),
                 next_window_topology_action_token: 1,
                 window_topology_refresh_owed: false,
                 window_topology_journal_dispatch_owed: false,

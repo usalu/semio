@@ -31,7 +31,7 @@ semio-framework-tool-run-tick-wire = { path = "../../../../🎞️tick/📦️pa
 semio-framework-pack = { workspace = true }
 semio-framework-replication = { workspace = true }
 semio-framework-trace = { workspace = true }
-semio-framework-ui-locale = { path = "../../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 serde_json = { workspace = true }

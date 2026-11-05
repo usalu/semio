@@ -1,0 +1,71 @@
+[
+  {
+    "name": "Insert Between",
+    "kind": "insert",
+    "index": 1,
+    "rows": [
+      "a",
+      "c"
+    ],
+    "value": "b",
+    "expected": [
+      "a",
+      "b",
+      "c"
+    ]
+  },
+  {
+    "name": "Insert Clamps To End",
+    "kind": "insert",
+    "index": 9,
+    "rows": [
+      "a"
+    ],
+    "value": "b",
+    "expected": [
+      "a",
+      "b"
+    ]
+  },
+  {
+    "name": "Replace Exact Row",
+    "kind": "replace",
+    "index": 1,
+    "rows": [
+      "a",
+      "old",
+      "c"
+    ],
+    "value": "new",
+    "expected": [
+      "a",
+      "new",
+      "c"
+    ]
+  },
+  {
+    "name": "Remove Exact Row",
+    "kind": "remove",
+    "index": 1,
+    "rows": [
+      "a",
+      "b",
+      "c"
+    ],
+    "value": null,
+    "expected": [
+      "a",
+      "c"
+    ]
+  },
+  {
+    "name": "Insert Into Empty",
+    "kind": "insert",
+    "index": 0,
+    "rows": [],
+    "value": "a",
+    "expected": [
+      "a"
+    ]
+  }
+]

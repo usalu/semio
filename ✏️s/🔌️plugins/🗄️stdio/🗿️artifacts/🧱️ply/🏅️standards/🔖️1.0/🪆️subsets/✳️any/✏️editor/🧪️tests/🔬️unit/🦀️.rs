@@ -1,7 +1,7 @@
 use crate::standards::v1_0::subsets::any::schema::mutations::PlyMutation;
 use crate::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
 use semio_s_artifact_stdio_contract::editing;
 use crate::apply_mutation;
 use crate::editor::ply::*;
@@ -9,7 +9,7 @@ use crate::editor::ply::*;
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_ply_any_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, PLY_ANY_DIALECT.into());
 }
 
@@ -20,10 +20,10 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<PlyAnyEditor, crate::viewer::ply::PlyAnyViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<PlyAnyEditor, crate::viewer::ply::PlyAnyViewer>().await;
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::ply::PlyAnyEditor, || semio_framework_plugin::App { definition: crate::editor::ply::create_ply_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.0/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::ply::PlyAnyEditor, || semio_plugin::App { definition: crate::editor::ply::create_ply_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.0/🪆️subsets/✳️any");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {

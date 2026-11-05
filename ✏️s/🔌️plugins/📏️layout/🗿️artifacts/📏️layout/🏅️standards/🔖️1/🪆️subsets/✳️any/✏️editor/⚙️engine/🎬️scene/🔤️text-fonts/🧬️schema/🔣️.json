@@ -46,7 +46,22 @@
         "text",
         "preferred",
         "missingScalar"
-      ]
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "preferred": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "missingScalar": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1114111
+        }
+      }
     }
   }
 }

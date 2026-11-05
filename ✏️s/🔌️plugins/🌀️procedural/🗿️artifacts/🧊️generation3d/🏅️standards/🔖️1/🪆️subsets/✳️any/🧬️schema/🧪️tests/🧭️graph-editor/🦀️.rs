@@ -91,7 +91,7 @@ fn graph_editor_replay_reaches_the_host_snapshot_for_a_creation() {
 /// 🗺️ Reorganising authors a `move-widget` per widget that moves, and the replayed layout is the host's.
 #[semio_framework_async_macros::async_test]
 async fn graph_editor_replay_reaches_the_host_snapshot_for_a_reorganisation() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let mut app = crate::app_fixture::app().await;
     let mut replayed = crate::app_fixture::snapshot(&app);

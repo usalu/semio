@@ -3,7 +3,7 @@
 use semio_s_artifact_block_2d_mutations::Block2dMutation;
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use crate::config::{Block2dConfig, Block2dConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_block_2d_mut_node_kind::rename_node_kind::rename_node_kind;
 use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_label::change_node_kind_label;

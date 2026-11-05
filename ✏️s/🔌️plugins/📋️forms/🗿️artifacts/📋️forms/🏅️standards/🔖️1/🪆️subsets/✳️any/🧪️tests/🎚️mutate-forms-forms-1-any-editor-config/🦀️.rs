@@ -1,4 +1,4 @@
-//! 🎚️ `s.forms.forms` ✏️editor/🎚️config state-lane mutation case — Rust adapter.
+//! 🎚️ `s.forms.forms` 🎚️config state-lane mutation case — Rust adapter.
 //!
 //! Recorded no-oracle decision `forms-forms-1-any-editor-config-state-lane-semantics`: the runner dispatches no oracle role, so every law is asserted inside
 //! the subject handlers through `semio_repo_test_host::law::vector` over the report of this crate's
@@ -10,23 +10,23 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
 use semio_repo_test_host::law::vector::Vector;
 
 //#region 🔖️Vectors
-/// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🎚️config/🧫️fixtures`.
+/// 🧫️ The committed applied vector of one kind, read literally from `🎚️config/🧫️fixtures`.
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "replace-config" => Vector {
-            before: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/📸️replace/✅️replace/🎯️outcome/🔣️.json"),
             observable: true,
         },
         "set-contributions" => Vector {
-            before: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🎚️config/🧪️tests/🧫️fixtures/🧩️set/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),
@@ -53,7 +53,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_forms_forms::editor::forms::config::component::io::text::mutations::forms_config_mutation_report_json;
+    use semio_s_artifact_forms_forms::forms_config::io::text::mutations::forms_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         forms_config_mutation_report_json(committed.before, committed.mutation, committed.after)

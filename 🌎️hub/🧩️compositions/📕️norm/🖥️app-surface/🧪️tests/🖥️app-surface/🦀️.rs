@@ -1,7 +1,7 @@
 //! 🧪️ Every public norm editor/viewer wrapper renders its declared language-neutral surface inventory.
 
-use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, project_and_retire_fixture_tree};
-use semio_framework_plugin::{AppDefinition, Locale, PanelTabDefinition, PluginApp, Terminology, ViewModel};
+use semio_plugin::artifact_app_laws::{close_registered_fixture_app, project_and_retire_fixture_tree};
+use semio_plugin::{AppDefinition, Locale, PanelTabDefinition, PluginApp, Terminology, ViewModel};
 use std::collections::BTreeSet;
 
 #[derive(serde::Deserialize)]
@@ -42,7 +42,7 @@ async fn check_surface<A: PluginApp>(app: &mut A, definition: &AppDefinition, fi
     if keys != fixture.body_keys.iter().cloned().collect() {
         return Err(format!("{} manifest returned the wrong surface inventory", fixture.app_id));
     }
-    let view = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     for key in &fixture.body_keys {
         let tree = app.render(key, None, &view).await.map_err(|error| format!("{} {key}: {error:?}", fixture.app_id))?;
         let projection = project_and_retire_fixture_tree(tree).map_err(|error| format!("{} {key} observation and retirement: {error}", fixture.app_id))?;
@@ -77,14 +77,14 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
         assert_eq!(definition.id, row.app_id);
         assert_eq!(definition.role.as_str(), row.role);
         assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", row.variant));
-        let mut app = plugin.create_app(&row.app_id, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).expect("each manifest app must have a registered factory");
+        let mut app = plugin.create_app(&row.app_id, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).expect("each manifest app must have a registered factory");
         let result = check_surface(&mut app, definition, row).await;
         close_registered_fixture_app(&mut app);
         rendered += result.unwrap_or_else(|error| panic!("{error}"));
     }
     assert_eq!(visited.len(), 30);
     assert_eq!(rendered, 120);
-    assert!(plugin.create_app("s.norm.unknown@1/*#editor", semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).is_none());
+    assert!(plugin.create_app("s.norm.unknown@1/*#editor", semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).is_none());
 }
 
 //#region 🧵️RetainedCohort
@@ -142,8 +142,8 @@ struct RetainedFixture {
 macro_rules! assert_norm_pair {
     ($($artifact:path => ($editor:path, $viewer:path)),+ $(,)?) => {
         $(
-            semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<$editor, $viewer>().await;
-            semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<$viewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+            semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<$editor, $viewer>().await;
+            semio_plugin::artifact_app_laws::assert_viewer_never_mutates::<$viewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         )+
     };
 }
@@ -181,13 +181,13 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
         assert_eq!(definition.io.artifact_schema, app.artifact_schema);
         assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", app.variant));
         for window in definition.window_kinds.iter() {
-            let presented = semio_framework_plugin::window_kind_actions(definition, window);
+            let presented = semio_plugin::window_kind_actions(definition, window);
             for route in &fixture.routes {
                 let action = presented.iter().find(|action| action.id == route.id).unwrap_or_else(|| panic!("{} window {} does not present {}", app.controller, window.id, route.id));
-                assert_eq!(action.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{} {} must dispatch from the UI", app.controller, route.id);
+                assert_eq!(action.semantics.execution.interactive_job, semio_plugin::InteractiveJobClassification::Migrated, "{} {} must dispatch from the UI", app.controller, route.id);
             }
         }
-        let mut runtime = plugin.create_app(&app.controller, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).unwrap_or_else(|| panic!("{} must build with its owned bounded factory registered", app.controller));
+        let mut runtime = plugin.create_app(&app.controller, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).unwrap_or_else(|| panic!("{} must build with its owned bounded factory registered", app.controller));
         close_registered_fixture_app(&mut runtime);
         identities += fixture.routes.len();
     }

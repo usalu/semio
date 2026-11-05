@@ -5,7 +5,7 @@ use super::*;
 /// 🎚 Paints one step of a slider node: track, thumb, value and unit label.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_slider_node_step(
-    slider: &semio_framework_ui_declaration::ui::UiSliderNode,
+    slider: &semio_ui_declaration::ui::UiSliderNode,
     atlas: &mut FontAtlas,
     inline: ui_contract::FlowInline,
     draw: &mut DrawList,
@@ -19,7 +19,7 @@ pub(super) fn paint_slider_node_step(
 ) -> RetainedNodePaintStep {
     let value = node.state.slider_draft_value.unwrap_or(slider.value);
     let unit_label = slider.unit_label();
-    let control = semio_framework_ui_wgpu_layout::layout::slider_control_presentation(bounds, slider.axis_position(value), 0.0, 1.0, unit_label.as_ref().map(|_| inline_suffix_width), theme.gap_standard, inline);
+    let control = semio_ui_wgpu_layout::layout::slider_control_presentation(bounds, slider.axis_position(value), 0.0, 1.0, unit_label.as_ref().map(|_| inline_suffix_width), theme.gap_standard, inline);
     let presentation = control.slider;
     let refusal = node.state.number_refusal.as_deref().filter(|_| node.state.edit.is_some());
     match cursor.phase {
@@ -91,7 +91,7 @@ pub(super) fn paint_slider_node_step(
 /// 🔢 Paints one step of a number stepper node: segments, chrome, icons and value text.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_number_stepper_node_step(
-    stepper: &semio_framework_ui_declaration::ui::UiNumberStepperNode,
+    stepper: &semio_ui_declaration::ui::UiNumberStepperNode,
     atlas: &mut FontAtlas,
     icons: Option<&IconAtlas>,
     inline: ui_contract::FlowInline,
@@ -103,7 +103,7 @@ pub(super) fn paint_number_stepper_node_step(
     presence: &UiPresence,
     flags: NodeFlags,
 ) -> RetainedNodePaintStep {
-    let [decrement, value_segment, increment] = semio_framework_ui_wgpu_layout::layout::number_stepper_segments(bounds, inline, theme.stroke_hairline);
+    let [decrement, value_segment, increment] = semio_ui_wgpu_layout::layout::number_stepper_segments(bounds, inline, theme.stroke_hairline);
     match cursor.phase {
         0 => {
             let result = retained_fixed_output(draw, |draw| draw.push_scissor(bounds));
@@ -198,7 +198,7 @@ pub(super) fn paint_number_stepper_node_step(
 
 /// ⭕ Paints one step of a ring node: the progress ring and its label.
 pub(super) fn paint_ring_node_step(
-    ring: &semio_framework_ui_declaration::ui::UiRingNode,
+    ring: &semio_ui_declaration::ui::UiRingNode,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
     theme: &Theme,
@@ -240,7 +240,7 @@ pub(super) fn paint_ring_node_step(
 
 /// 📶 Paints one step of a progress node: the bar track and fill.
 pub(super) fn paint_progress_node_step(
-    progress: &semio_framework_ui_declaration::ui::UiProgressNode,
+    progress: &semio_ui_declaration::ui::UiProgressNode,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
     theme: &Theme,

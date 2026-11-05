@@ -2,7 +2,7 @@
   "version": 1,
   "specimens": [
     {
-      "name": "semio_framework_ui_arena",
+      "name": "semio_ui_arena",
       "test": true,
       "inputs": [
         "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🏟️arena/🦀️.rs",
@@ -10,7 +10,7 @@
       ]
     },
     {
-      "name": "semio_framework_font_anta_latin_regular",
+      "name": "semio_font_anta_latin_regular",
       "test": false,
       "inputs": [
         "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🦀️.rs",
@@ -18,7 +18,7 @@
       ]
     },
     {
-      "name": "semio_framework_os_history_identity",
+      "name": "semio_os_history_identity",
       "test": false,
       "inputs": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🦀️.rs",
@@ -26,7 +26,7 @@
       ]
     },
     {
-      "name": "semio_framework_ui_surface_identity",
+      "name": "semio_ui_surface_identity",
       "test": true,
       "inputs": [
         "🧰️framework/🔨️modules/🖱️ui/🪟️surface/🪪️identity/🦀️.rs",

@@ -11,10 +11,10 @@ use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedQueue;
-use semio_framework_plugin_decl_views::history_view::HistoryView;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseLease;
+use semio_plugin_ownership::bounded_ownership::ArtifactFixedQueue;
+use semio_plugin_decl_views::history_view::HistoryView;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseLease;
 
 /// 📤️ Per-chunk byte cap of the segmented-download lane. Mirror of the ONE schema-owned chunk
 /// contract — `🎭️actor/📮️shard-client/📤️segmented-download/🧬️schema/🔣️.json` +

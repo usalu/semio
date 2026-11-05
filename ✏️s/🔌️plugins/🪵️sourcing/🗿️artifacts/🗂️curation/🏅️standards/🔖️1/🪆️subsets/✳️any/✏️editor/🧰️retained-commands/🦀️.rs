@@ -32,10 +32,10 @@ pub const SOURCING_CURATION_RETAINED_RAW_BYTES: usize = 8_192;
 /// 📏️ The raw-wire ceiling one retained tool id is admitted against. `setContributions` is the ONE
 /// retained command whose wire is a host pack, not a gesture — it carries the whole capability
 /// closure the receiver's registry `consumes` row names — so it is priced on
-/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`], never on the gesture envelope.
+/// [`semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`], never on the gesture envelope.
 pub fn sourcing_curation_retained_raw_bytes(tool_id: &str) -> usize {
     if tool_id == "setContributions" {
-        semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
+        semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
     } else {
         SOURCING_CURATION_RETAINED_RAW_BYTES
     }
@@ -48,7 +48,7 @@ pub const SOURCING_CURATION_RETAINED_WORK_ITEMS: usize = 1;
 /// exactly. Widening the ADMISSION does not widen what a gesture may send: the payload reserves, and
 /// the wire factory refuses past, `sourcing_curation_retained_raw_bytes(tool_id)`.
 pub fn sourcing_curation_bounded_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, 16_384, 7_500)
+    ToolExecutionContract::bounded_first_step(semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, 16_384, 7_500)
 }
 
 pub fn sourcing_curation_bounded_extent(command: &SourcingCurationCommand, _snapshot: &CurationSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -60,10 +60,10 @@ pub fn sourcing_curation_retained_reduce(
     command: &SourcingCurationCommand,
     snapshot: &CurationSnapshot,
     config: &SourcingCurationConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SourcingCurationApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SourcingCurationApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, NoDraftMutation>, Fault> {
     if !SOURCING_CURATION_BOUNDED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("sourcing-curation-retained-route-mismatch")); }
@@ -105,7 +105,7 @@ impl semio_framework::ToolJobFactory for SourcingCurationBoundedCommandJobFactor
         sourcing_curation_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
 
 }
 
@@ -148,8 +148,8 @@ fn sourcing_grid_window_mutation(command: &SourcingCurationCommand, _config: &gr
 pub fn sourcing_curation_finish_emit(
     command: &SourcingCurationCommand,
     mut emit: Emit<SourcingMutation, SourcingCurationConfigMutation, NoDraftMutation>,
-    window: Option<&semio_framework_plugin::WindowConfigSnapshot>,
-    view_state: Option<&semio_framework_plugin::ViewModel>,
+    window: Option<&semio_plugin::WindowConfigSnapshot>,
+    view_state: Option<&semio_plugin::ViewModel>,
 ) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, NoDraftMutation>, Fault> {
     let grid_cfg = grid_config::from_snapshot(window);
     if let (Some(view), Some(mutation)) = (view_state, sourcing_grid_window_mutation(command, &grid_cfg)) {

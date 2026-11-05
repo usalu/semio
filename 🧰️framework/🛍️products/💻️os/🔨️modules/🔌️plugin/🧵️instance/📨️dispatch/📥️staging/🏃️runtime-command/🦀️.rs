@@ -1,10 +1,10 @@
 //! 🏃️ Staged `runtime-command` members of the `instance-dispatch` use cases: a command the runtime itself originates is produced, admitted and dispatched through the original typed source across funded turns.
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_app::ArtifactApp;
 use crate::dispatch_bundle::DispatchCtx;
-use semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource;
-use semio_framework_plugin_job::original_declared_tools::DeclaredToolCatalogAlias;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource;
+use semio_plugin_job::original_declared_tools::DeclaredToolCatalogAlias;
+use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::InvocationResult;
 use store::{MemberFactory, ReferenceSpaceMember};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -20,7 +20,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🏃️ One funded turn of a command the runtime originates (host events, resumed tasks, laws): `make` births the typed command into the producer once,
     /// the producer encodes its exact OpBinary wire, the declared tool catalog admits that wire, and the shared typed pipeline mounts the operation.
     /// `Some` answers the emission receipt of the mounted operation; `None` asks for another turn.
-    pub async fn drive_runtime_typed_command(&mut self, source: &mut OriginalTypedCommandSource<A>, make: impl FnOnce() -> Option<Box<A::Command>>, tool_tag: &mut Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag>, metadata: &mut Option<ActionMeta>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+    pub async fn drive_runtime_typed_command(&mut self, source: &mut OriginalTypedCommandSource<A>, make: impl FnOnce() -> Option<Box<A::Command>>, tool_tag: &mut Option<semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag>, metadata: &mut Option<ActionMeta>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         if source.input_ready() || source.receipt.is_some() || source.metadata.is_some() { return self.dispatch_typed_command_inner(source, tool_tag, metadata, identity, cx).await }
         if !self.prepare_runtime_typed_command(source,make,cx).await?{return Ok(None)}
         self.dispatch_typed_command_inner(source, tool_tag, metadata, identity, cx).await

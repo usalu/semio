@@ -79,7 +79,7 @@ STORAGE = re.compile(r"\b(?:localStorage|sessionStorage|indexedDB)\b", A)
 EPHEMERAL = re.compile(r"\bephemeral(?:Box|Map|Set|WeakMap)\b", A)
 FAMILY = ["register_mesh_exporter", "register_mesh_importer", "register_mesh_dwg_export_handler", "register_mesh_dwg_import_handler", "register_solid_exporter", "register_solid_importer", "register_2d_export_handlers", "register_dwg_import_handler", "register_app_io", "register_os_media_export_handler_kind", "register_os_media_import_handler_kind", "register_composer_entries", "set_io_fallback_dispatcher", "register_subset_validator", "register_format_descriptors", "register_artifact_schema_descriptor", "register_artifact_inference_descriptor", "register_app_schema_descriptor", "register_language", "register_document_codec", "register_document_codec_for_app", "register_dialect_migration", "register_os_fixture_json", "register_artifact_descriptors", "register_artifact_descriptor"]
 FAMILY_RE = re.compile(r"\b(" + "|".join(FAMILY) + r")\b", A)
-DEP_ALLOWED = {"semio-framework-plugin", "semio-framework-os-kernel", "semio-framework-3d", "semio-framework-schema"} | {"semio-framework-3d-brep-" + s for s in "polynomial vector tolerance curve surface representation intersect queries tessellation validation analysis operations engine".split()}
+DEP_ALLOWED = {"semio-plugin", "semio-os-kernel", "semio-framework-3d", "semio-framework-schema"} | {"semio-framework-3d-brep-" + s for s in "polynomial vector tolerance curve surface representation intersect queries tessellation validation analysis operations engine".split()}
 EFFECT_CAP = {"OpenWindow": "Window", "CloseWindow": "Window", "Notify": "Window", "ClipboardWrite": "Document", "RequestSync": "Backbone", "Navigate": "Window", "LoadDocument": "Document", "OpenExternalUrl": "Network", "SetPanel": "Window", "DownloadMediaExport": "Asset", "IconRenderExport": "Asset", "VideoRenderExport": "Asset", "RequestFileOpen": "Asset", "RequestMediaFrames": "Asset", "SpawnPluginInstance": "Window", "OpenPluginInstance": "Window", "SetActiveUtility": "Window", "SetActiveTool": "Window", "OpenDialog": "Window", "DispatchAction": "Window", "ReplayShellCommand": "Window", "InvokeExtension": "Engine"}
 CEILING = {"plugin-closed-shape": 41, "plugin-dependency-allowlist": 105, "plugin-dependency-os-host": 10, "effect-capability-parity": 47}
 EXCLUDED = ("compose/", "♻️mit-bestand/", "🌎️hub/", "🧰️framework/🛍️products/🦑️repo/")
@@ -240,7 +240,7 @@ def registration(files):
         engine = a != -1 and path.find("/⚙️engine/", a) != -1
         for i, raw in enumerate(split_lines(text)):
             co = code_only(raw)
-            for sub, hit in (("family-call", FAMILY_RE.search(co)), ("os-host-path", re.search(r"\bsemio_framework_os::", co, A))):
+            for sub, hit in (("family-call", FAMILY_RE.search(co)), ("os-host-path", re.search(r"\bsemio_os::", co, A))):
                 if hit:
                     kind = "taxonomy/plugin-registration-" + ("engine-backlog" if engine else "violation")
                     out.append(row("plugin-registration-%s-%s-%s-%d" % ("engine-backlog" if engine else "violation", sub, path, i + 1), kind, "medium", i + 1))
@@ -267,7 +267,7 @@ def dependencies(files):
                 if name in DEP_ALLOWED or re.fullmatch(r"serde(_json|-wasm-bindgen)?", name):
                     continue
                 line = content[: start + m.start()].count("\n") + 1
-                host = name == "semio-framework-os"
+                host = name == "semio-os"
                 out.append(row("plugin-dependency-allowlist-%s-%s" % (path, name), "taxonomy/plugin-dependency-" + ("os-host" if host else "allowlist"), "medium", line))
     return out
 

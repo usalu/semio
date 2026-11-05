@@ -23,8 +23,8 @@ impl pack::snapshot::ArtifactPack for TiffSnapshot {
   crate::standards::v6_0::subsets::document::io::text::snapshot::from_record(store::pack_rt::decode_document(&body,&crate::standards::v6_0::subsets::document::io::text::snapshot::spec(),options)?.0).map_err(|error|store::PackError::from(error))
  }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TiffSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TiffSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }

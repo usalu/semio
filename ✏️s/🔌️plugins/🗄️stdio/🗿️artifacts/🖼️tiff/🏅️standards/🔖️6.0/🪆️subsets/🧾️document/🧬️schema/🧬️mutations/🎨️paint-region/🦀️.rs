@@ -34,8 +34,8 @@ impl PaintRegionMutation {
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PaintRegionMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "tiled-region", kind: "paint-region", record: "PaintRegion" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Paint tiled region", "Kachelbereich malen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Paint tiled region", "Kachelbereich malen")
     }
 
     fn target(&self) -> Vec<String> {

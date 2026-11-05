@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRoofSurfaceExtent 
         record: "ChangedRoofSurfaceExtent",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change horizontal extent normal to the ridge of the roof surface", "Dachfläche: Horizontale Ausdehnung quer zum First ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change horizontal extent normal to the ridge of the roof surface", "Dachfläche: Horizontale Ausdehnung quer zum First ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

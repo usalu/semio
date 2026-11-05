@@ -10,7 +10,7 @@ pub struct ChangePanelLayerThickness { pub panel_id: String, pub layer_id: Strin
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangePanelLayerThickness where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_panel_layer_thickness::ChangePanelLayerThickness> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "panel-layer-thickness", kind: "change-panel-layer-thickness", record: "ChangedPanelLayerThickness" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change layer thickness t of layer {} of panel {}", self.layer_id, self.panel_id), &format!("Lagendicke t von Lage {} an Platte {} ändern", self.layer_id, self.panel_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change layer thickness t of layer {} of panel {}", self.layer_id, self.panel_id), &format!("Lagendicke t von Lage {} an Platte {} ändern", self.layer_id, self.panel_id)) }
     fn target(&self) -> Vec<String> { vec![self.panel_id.clone(), self.layer_id.clone()] }
 }
 

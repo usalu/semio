@@ -1,7 +1,7 @@
 //! 🧪️ Shared reference-only ownership witnesses drive actual native relational projection and reconstruction.
 #![cfg(test)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use semio_s_artifact_layout_layout_model::{LayoutDrawingMember,snapshot::LayoutSnapshot};
 use store::sqlite_snapshot::SqliteSnapshotControl;
 use pack::snapshot::ArtifactSqliteSnapshot;

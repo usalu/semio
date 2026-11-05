@@ -30,11 +30,11 @@ fn plugin_manifest_builds_synchronously() {
 /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
 #[semio_framework_async_macros::async_test]
 async fn generation2d_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Generation2dPlayApp, Generation2dViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Generation2dPlayApp, Generation2dViewer>().await;
 }
 #[semio_framework_async_macros::async_test]
 async fn generation3d_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>().await;
 }
 
 /// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `.editor::<Generation3dPlayApp>` stamps
@@ -55,7 +55,7 @@ fn generation3d_manifest_examples_are_registered_on_the_dialect_for_both_surface
     let expected_sources = semio_s_artifact_procedural_3d_editor::examples();
     let expected_ids: Vec<&str> = expected_sources.iter().map(|source| source.id()).collect();
     for app in [&editor, &viewer] {
-        let registered_ids: Vec<&str> = semio_framework_plugin::manifest::examples_for_app(&plugin.manifest.examples, app).into_iter().map(|example| example.id.as_str()).collect();
+        let registered_ids: Vec<&str> = semio_plugin::manifest::examples_for_app(&plugin.manifest.examples, app).into_iter().map(|example| example.id.as_str()).collect();
         assert_eq!(registered_ids.len(), expected_ids.len(), "{} must offer every authored bundled example", app.id);
         assert_eq!(registered_ids, expected_ids, "{} must offer the authored example order", app.id);
     }

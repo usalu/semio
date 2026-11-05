@@ -7,8 +7,8 @@
 pub(super) struct DrawingGestureProofs;
 
 impl DrawingGestureProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<DrawingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.draw.drawing@1/*#editor",
         artifact_schema: "drawing.document",
@@ -22,8 +22,8 @@ impl DrawingGestureProofs {
 pub(super) struct DrawingPathProofs;
 
 impl DrawingPathProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<DrawingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.draw.drawing@1/*#editor",
         artifact_schema: "drawing.document",
@@ -37,8 +37,8 @@ impl DrawingPathProofs {
 pub(super) struct DrawingImageProofs;
 
 impl DrawingImageProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<DrawingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.draw.drawing@1/*#editor",
         artifact_schema: "drawing.document",
@@ -52,8 +52,8 @@ impl DrawingImageProofs {
 pub(super) struct DrawingExportProofs;
 
 impl DrawingExportProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<DrawingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.draw.drawing@1/*#editor",
         artifact_schema: "drawing.document",
@@ -67,8 +67,8 @@ impl DrawingExportProofs {
 pub(super) struct DrawingBoundedProofs;
 
 impl DrawingBoundedProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<DrawingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.draw.drawing@1/*#editor",
         artifact_schema: "drawing.document",

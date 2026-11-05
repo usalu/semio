@@ -1,8 +1,8 @@
 //! 🧪️ The defining empty lanes use genuine canonical Pack receiving and native Store genesis.
 use super::*;
-use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesis,OriginalStoreGenesisOwner};
-use semio_framework_plugin_decl_views::{NoConfig,NoConfigGenesisOwner,NoDraftGenesisOwner};
-fn empty_genesis<O:OriginalStoreGenesisOwner<State=NoConfig,Mutation=semio_framework_plugin_decl_views::NoConfigMutation>>(){
+use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesis,OriginalStoreGenesisOwner};
+use semio_plugin_decl_views::{NoConfig,NoConfigGenesisOwner,NoDraftGenesisOwner};
+fn empty_genesis<O:OriginalStoreGenesisOwner<State=NoConfig,Mutation=semio_plugin_decl_views::NoConfigMutation>>(){
  let law:serde_json::Value=serde_json::from_str(include_str!("genesis.json")).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096};
  for cut in law["cancelAfter"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as usize).chain([1000000]){
   let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let actor=store::ActorId("empty-lane-reader".into());let mut owner=original_emission_capture_tests::actual_turn(&mut caller,&mut decoder,g,|cx|OriginalStoreGenesis::<O>::admit("energy-empty",&actor,cx));let mut candidate=None;for index in 0..cut{candidate=original_emission_capture_tests::actual_turn(&mut caller,&mut decoder,g,|cx|owner.as_mut().unwrap().step(cx));if candidate.is_some(){break}assert!(index<999999,"empty native genesis stalled {:?}",owner.as_ref().unwrap().progress())}

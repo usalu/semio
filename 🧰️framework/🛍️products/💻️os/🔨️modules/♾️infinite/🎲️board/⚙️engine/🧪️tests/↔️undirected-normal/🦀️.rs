@@ -1,7 +1,7 @@
 //! 🧪️ engine tests (↔️undirected-normal): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_schema::LayoutControl;
-use semio_framework_os_infinite_board_engine::{force_snapshot_json, UndirectedGraphEngine};
+use semio_os_infinite_board_schema::LayoutControl;
+use semio_os_infinite_board_engine::{force_snapshot_json, UndirectedGraphEngine};
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 

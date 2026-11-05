@@ -1,0 +1,123 @@
+{
+  "cases": [
+    {
+      "id": "delivered",
+      "events": [
+        {
+          "kind": "started",
+          "job": 1,
+          "owner": "shooting",
+          "label": "shots",
+          "total": 2,
+          "atMs": 10
+        },
+        {
+          "kind": "progressed",
+          "job": 1,
+          "completed": 1
+        },
+        {
+          "kind": "progressed",
+          "job": 1,
+          "completed": 2
+        },
+        {
+          "kind": "finished",
+          "job": 1,
+          "outcome": "done"
+        }
+      ],
+      "expected": [
+        {
+          "state": "active",
+          "completed": 0
+        },
+        {
+          "state": "active",
+          "completed": 1
+        },
+        {
+          "state": "active",
+          "completed": 2
+        },
+        {
+          "state": "finished",
+          "completed": 2
+        }
+      ]
+    },
+    {
+      "id": "cancelled",
+      "events": [
+        {
+          "kind": "started",
+          "job": 1,
+          "owner": "shooting",
+          "label": "shots",
+          "total": 2,
+          "atMs": 10
+        },
+        {
+          "kind": "progressed",
+          "job": 1,
+          "completed": 1
+        },
+        {
+          "kind": "cancelRequested",
+          "job": 1
+        },
+        {
+          "kind": "finished",
+          "job": 1,
+          "outcome": "cancelled"
+        }
+      ],
+      "expected": [
+        {
+          "state": "active",
+          "completed": 0
+        },
+        {
+          "state": "active",
+          "completed": 1
+        },
+        {
+          "state": "cancelling",
+          "completed": 1
+        },
+        {
+          "state": "finished",
+          "completed": 1
+        }
+      ]
+    },
+    {
+      "id": "failed",
+      "events": [
+        {
+          "kind": "started",
+          "job": 1,
+          "owner": "shooting",
+          "label": "shots",
+          "total": 2,
+          "atMs": 10
+        },
+        {
+          "kind": "finished",
+          "job": 1,
+          "outcome": "failed"
+        }
+      ],
+      "expected": [
+        {
+          "state": "active",
+          "completed": 0
+        },
+        {
+          "state": "finished",
+          "completed": 0
+        }
+      ]
+    }
+  ]
+}

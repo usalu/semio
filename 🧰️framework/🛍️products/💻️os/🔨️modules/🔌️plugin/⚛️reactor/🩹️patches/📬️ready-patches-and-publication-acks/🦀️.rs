@@ -45,7 +45,7 @@ impl PatchTracker {
     pub fn take_ready_patch(&self) -> Option<SurfaceReconcileReadyPatch> {
         let (key, generation) = self.ready_patch_key().unwrap()?;
         let mut target = None;
-        self.take_ready_patch_into(key, generation, &mut target, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES).unwrap();
+        self.take_ready_patch_into(key, generation, &mut target, semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES).unwrap();
         target
     }
 
@@ -96,7 +96,7 @@ impl PatchTracker {
         true
     }
 
-    pub fn with_published_native_resource_loans_on_original<R>(&self,surface:&str,generation:u64,revision:ui_contract::UiRevision,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut semio_framework_ui_runtime::UiNativeResourceLoans,&mut StepContext<'_>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
+    pub fn with_published_native_resource_loans_on_original<R>(&self,surface:&str,generation:u64,revision:ui_contract::UiRevision,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut semio_ui_runtime::UiNativeResourceLoans,&mut StepContext<'_>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
         let Ok(mut state)=self.state.try_borrow_mut()else{return Ok(None)};
         let Some(index)=state.slots.iter().position(|slot|slot.as_ref().is_some_and(|slot|slot.surface.as_ref()==surface && slot.generation==generation && slot.acknowledged_revision.0<revision.0))else{return Ok(None)};
         let key=state.slots[index].as_ref().expect("selected original native surface").key;

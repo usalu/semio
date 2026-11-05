@@ -16,8 +16,8 @@ pub struct AddCurve {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddCurve where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::remove_curve::RemoveCurve> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "curve", kind: "add-curve", record: "AddedCurve" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create curve \"{}\"", self.curve.id), &format!("Kurve \"{}\" erstellen", self.curve.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create curve \"{}\"", self.curve.id), &format!("Kurve \"{}\" erstellen", self.curve.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.curve.id.clone()]

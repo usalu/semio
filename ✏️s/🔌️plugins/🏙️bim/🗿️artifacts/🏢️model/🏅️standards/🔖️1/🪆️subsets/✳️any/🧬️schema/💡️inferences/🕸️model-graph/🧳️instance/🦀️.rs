@@ -16,7 +16,7 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{InferenceWorkFailure,InferenceError, ColdMutation, Mutation, MutationDiff};
 use protocol::ColdMutationDiff;
-use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
@@ -137,7 +137,7 @@ pub fn finish(instance:&ArtifactInstanceOperationOwnerHandle,run:&mut SessionRun
 /// fuel on it, the one that finishes it settles the session. [`cancel`](Analysis::cancel) closes the run as cancelled, so the nodes it finished stay cached for the next run. An analysis without an instance
 /// settles a session of its own, so its runs belong to one session all the way.
 pub struct Analysis {
-    access:semio_framework_plugin::ArtifactInferenceSessionAccess<ModelInferenceSession>,
+    access:semio_plugin::ArtifactInferenceSessionAccess<ModelInferenceSession>,
     instance: Option<ArtifactInstanceOperationOwnerHandle>,
     local: Option<ModelInferenceSession>,
     run: Option<SessionRun>,

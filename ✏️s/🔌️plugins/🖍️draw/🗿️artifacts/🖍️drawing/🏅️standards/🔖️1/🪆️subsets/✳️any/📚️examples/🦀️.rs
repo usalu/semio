@@ -2,12 +2,12 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 /// 📚️ The one example-document catalogue of this subset — the same slice the shell's example switcher
 /// reads through `SubsetDeclaration.examples` and the same one `setActiveExample` resolves its

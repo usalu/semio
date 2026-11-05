@@ -3,7 +3,7 @@ use crate::{FlowMutation, FlowSnapshot};
 #[allow(unused_imports)]
 use flow::FlowEvalSession;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::modes::generate::commands::add_generation::*;

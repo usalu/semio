@@ -189,7 +189,7 @@ pub fn drive_job(mut job:MeshOperatorJob)->Result<Dictionary,EvalError> {
             OperatorJobStep::Working(_)=>{},
         }
     };
-    for _ in 0..1_000_000 {if matches!(job.close_step(sync_grant())?,RetainedCloneStep::Complete(_)) {return Ok(output);}}
+    for _ in 0..1_000_000 {if matches!(job.close_step(sync_grant()).result?,RetainedCloneStep::Complete(_)) {return Ok(output);}}
     Err(invalid("mesh operation did not reach its terminal retirement"))
 }
 pub fn mesh_output(mesh: &HalfedgeMesh) -> Result<Dictionary, EvalError> {drive_job(MeshOperatorJob::output(mesh.clone())?)}

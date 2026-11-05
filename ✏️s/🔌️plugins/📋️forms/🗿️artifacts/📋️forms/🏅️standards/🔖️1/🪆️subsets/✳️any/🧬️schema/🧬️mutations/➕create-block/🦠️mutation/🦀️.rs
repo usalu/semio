@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create block \"{}\"", self.block.label), &format!("Block \"{}\" erstellen", self.block.label))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create block \"{}\"", self.block.label), &format!("Block \"{}\" erstellen", self.block.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block.id.clone()]

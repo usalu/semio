@@ -155,12 +155,12 @@ fn p2_7_reconnecting_backs_off_and_starts_over_after_a_success() {
 
 #[test]
 fn footer_hints_give_way_to_a_long_notice_up_to_two_thirds_of_the_row() {
-    use semio_framework_ui_tui_frame::chrome::KeyHint;
+    use semio_ui_tui_frame::chrome::KeyHint;
     let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧫️fixtures/⌨️footer-hints/🔣️.json")).unwrap();
     let all: Vec<KeyHint> = fixture["hints"].as_array().unwrap().iter().map(|hint| KeyHint { key: hint["key"].as_str().unwrap().into(), label: hint["label"].as_str().unwrap().into() }).collect();
     for row in fixture["cases"].as_array().unwrap() {
         let notice = row["notice"].as_str().unwrap();
-        let kept = dashboard_terminal::testing::fit_hints(all.clone(), row["width"].as_u64().unwrap() as u16, semio_framework_ui_tui_core::text::display_width(notice));
+        let kept = dashboard_terminal::testing::fit_hints(all.clone(), row["width"].as_u64().unwrap() as u16, semio_ui_tui_core::text::display_width(notice));
         assert_eq!(kept.len() as u64, row["kept"].as_u64().unwrap(), "{}", row["name"]);
         assert!(kept.iter().zip(&all).all(|(kept, wanted)| kept.key == wanted.key && kept.label == wanted.label), "{}: the leading hints stay, in order", row["name"]);
     }

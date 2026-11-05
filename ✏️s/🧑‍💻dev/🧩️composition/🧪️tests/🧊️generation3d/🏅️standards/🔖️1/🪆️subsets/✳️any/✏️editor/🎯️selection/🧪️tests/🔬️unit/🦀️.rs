@@ -135,11 +135,11 @@ fn mesh_component_edit_context_is_scoped_to_the_addressed_editor_preview() {
     let fixtures: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["contexts"].as_array().unwrap() {
         let kind = case["window"].as_str().unwrap();
-        let view = semio_framework_plugin::ViewModel {
+        let view = semio_plugin::ViewModel {
             active_window_kind_id: Some("procedural-preview".into()),
             window_id: Some("target".into()),
-            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "target".into(), window_kind_id: kind.into() }],
-            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            window_instances: vec![semio_plugin::ViewWindowInstance { id: "target".into(), window_kind_id: kind.into() }],
+            ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         assert_eq!(edits_components(Some(&view), case["granularity"].as_str()), case["components"].as_bool().unwrap(), "{case}");
     }

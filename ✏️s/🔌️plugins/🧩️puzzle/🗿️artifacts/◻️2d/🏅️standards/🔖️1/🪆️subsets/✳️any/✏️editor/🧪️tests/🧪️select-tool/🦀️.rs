@@ -16,11 +16,11 @@ use crate::standards::v1::subsets::any::schema::{mutations::connect_handles_in_p
 #[allow(unused_imports)]
 use machine::Command;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::UtilityCategory;
+use semio_plugin::UtilityCategory;
 #[allow(unused_imports)]
-use semio_framework_plugin::UtilityDefinition;
+use semio_plugin::UtilityDefinition;
 #[allow(unused_imports)]
 use semio_framework_tool_machine::{GestureChart, ToolMachineRunner, ToolStep, ToolYield};
 #[allow(unused_imports)]

@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_job::*;
 use semio_framework_tool_machine::{ScrubLedger,ScrubInput,ToolAbortReason,ScrubPhase,OriginalScrubLedgerClose};
 use semio_framework_value::{RetainedCloneStep,RetainedCloneGrant,RetainedCloneProgress};
-use semio_framework_ui_locale::{Locale,Terminology};
+use semio_ui_locale::{Locale,Terminology};
 #[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 const TURN:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:16384,maximum_capacity_bytes:16384,maximum_release_bytes:262144,maximum_depth:4096};
 fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(9061),Generation(17),RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:4096},default_now_us,u64::MAX,1<<24)}
@@ -36,7 +36,7 @@ fn original_scrub_host_cancelled_prefix_preserves_source_and_retires_accepted_ta
 
 #[test]
 fn original_operation_tag_registry_preserves_every_admitted_owner_when_full(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let row=&law["registry"];let limit=row["limit"].as_u64().unwrap();assert_eq!(limit as usize,semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS);let mut machines=ToolMachineRuntime::<(),String>::default();let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let d=moved(2*size_of::<u64>());
+ let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let row=&law["registry"];let limit=row["limit"].as_u64().unwrap();assert_eq!(limit as usize,semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS);let mut machines=ToolMachineRuntime::<(),String>::default();let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let d=moved(2*size_of::<u64>());
  for operation in 0..limit{
   let mut input=Some(ToolTag::Scrub(ScrubTag{window:"w".into(),tool:"fixture#tag".into(),phase:ScrubPhase::Tick{gesture:format!("g{operation}")}}));let mut pending=None;
   turn(&mut caller,&mut decoder,RetainedCloneGrant{maximum_items:0,..TURN},|cx|{assert!(!admit_original_tagged(&mut machines,operation,&mut input,&mut pending,d,cx,||operation)?);Ok(())});assert!(input.is_some()&&pending.is_none());assert_eq!(caller.receipt(),Default::default());

@@ -1,6 +1,6 @@
 //! 📏️ Borrowed GLTF domains admit bounded logical encoding before any owned lowering.
 use super::*;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
+use semio_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
 type Bound<'a,'p>=NativeEncodingBound<'a,'p>;
 pub fn text(bound:&mut Bound<'_,'_>,value:&str)->Result<(), ValueError>{bound.repeated(value.len(),6)}
 fn optional_text(bound:&mut Bound<'_,'_>,value:&Option<String>)->Result<(), ValueError>{if let Some(value)=value{text(bound,value)?;}Ok(())}

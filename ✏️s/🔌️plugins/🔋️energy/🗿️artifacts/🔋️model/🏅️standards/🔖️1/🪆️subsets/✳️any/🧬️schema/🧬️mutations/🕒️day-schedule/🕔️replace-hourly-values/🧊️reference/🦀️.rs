@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "daily-schedule", kind: "replace-daily-schedule-hourly-values", record: "ReplacedDailyScheduleHourlyValues" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace Daily Schedule Hourly Values of daily schedule {}", self.id.0), &format!("Stundenwerte von Tageszeitplan {} ersetzen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace Daily Schedule Hourly Values of daily schedule {}", self.id.0), &format!("Stundenwerte von Tageszeitplan {} ersetzen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -65,8 +65,8 @@ fn layout_document_contract_json_text_pack_projection_and_identity() {
 
     let artifact = semio_s_artifact_layout_layout_model::LayoutArtifact::from_snapshot(snapshot.clone());
     assert_eq!(artifact.to_snapshot(), snapshot, "artifact/snapshot projection must preserve every Layout document field");
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
-    semio_framework_os_kernel::os_store::test_support::assert_pack_round_trip(&snapshot);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    semio_os_kernel::os_store::test_support::assert_pack_round_trip(&snapshot);
 
     let diff_json = serde_json::to_string(&fixture["diff"]).expect("Layout diff JSON");
     let diff: LayoutDiff = semio_framework_pack_json::from_json_str(&diff_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native Layout diff decoder");

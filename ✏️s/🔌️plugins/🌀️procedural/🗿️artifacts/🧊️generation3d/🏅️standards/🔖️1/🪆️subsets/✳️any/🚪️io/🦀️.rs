@@ -1,8 +1,8 @@
 //! 🚪️ IO s.generation3d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.obj", "stdio.ply", "stdio.stl", "stdio.txt"]
 }
@@ -38,7 +38,7 @@ pub mod document_io {
     use semio_s_artifact_procedural_3d_io_export::serializers::artifacts as export_leaves;
     use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts as import_leaves;
     use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-    use semio_framework_plugin::io::FormatDescriptor;
+    use semio_plugin::io::FormatDescriptor;
     use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
     /// 🏷️ One row of the user-facing format roster: the id the user picks, the two labels the picker
@@ -52,7 +52,7 @@ pub mod document_io {
         pub label_en: &'static str,
         pub label_de: &'static str,
         pub kind_id: &'static str,
-        pub descriptors: fn() -> Result<Vec<FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError>,
+        pub descriptors: fn() -> Result<Vec<FormatDescriptor>, semio_plugin::ArtifactDefinitionError>,
     }
 
     /// 📤️ Every format `exportDocument` offers, in menu order. Exactly [`super::export_stdio_kinds`]
@@ -103,8 +103,8 @@ pub mod document_io {
     /// 🗣️ One `ActionArgOption` per [`EXPORT_FORMATS`] row, in table order — the editor's picker and
     /// the viewer's are THE SAME list, built once here rather than spelled twice, so a format this
     /// artifact stops claiming disappears from both surfaces at once.
-    pub fn export_format_options() -> Vec<semio_framework_plugin::ActionArgOption> {
-        EXPORT_FORMATS.iter().map(|row| semio_framework_plugin::ActionArgOption::new(row.id, semio_framework_ui_locale::LocalizedLabel::native(row.label_en, row.label_de))).collect()
+    pub fn export_format_options() -> Vec<semio_plugin::ActionArgOption> {
+        EXPORT_FORMATS.iter().map(|row| semio_plugin::ActionArgOption::new(row.id, semio_ui_locale::LocalizedLabel::native(row.label_en, row.label_de))).collect()
     }
 
     /// 🗂️ The file picker's `accept` filter — every importable extension, comma-joined, exactly the
@@ -130,12 +130,12 @@ pub mod document_io {
     /// 🗣️ Reports a real format limitation through the app's localized inspector.
     pub struct Generation3dIoDiagnostic {
         pub code: &'static str,
-        pub label: semio_framework_ui_locale::LocalizedLabel,
+        pub label: semio_ui_locale::LocalizedLabel,
     }
 
     /// 📤️ Describes authored surface data the selected interchange codec cannot retain.
-    pub fn format_diagnostics(meshes: &[semio_framework_plugin::MeshData], format: &str) -> Vec<Generation3dIoDiagnostic> {
-        use semio_framework_plugin::MeshAttributeSemantic;
+    pub fn format_diagnostics(meshes: &[semio_plugin::MeshData], format: &str) -> Vec<Generation3dIoDiagnostic> {
+        use semio_plugin::MeshAttributeSemantic;
         if format == "txt" { return Vec::new(); }
         let supported: &[&str] = match format {
             "gltf" => &["normal", "uv", "color", "material", "texture", "custom"],
@@ -154,12 +154,12 @@ pub mod document_io {
         ];
         let mut diagnostics: Vec<_> = present.into_iter().filter(|(code, _, _, present)| *present && !supported.contains(code)).map(|(code, en, de, _)| Generation3dIoDiagnostic {
             code,
-            label: semio_framework_ui_locale::LocalizedLabel::native(
+            label: semio_ui_locale::LocalizedLabel::native(
                 &format!("{en} will not be retained by {}. The Semio Text document retains the editable data.", format.to_uppercase()),
                 &format!("{de} bleiben in {} nicht erhalten. Das Semio-Text-Dokument erhält die bearbeitbaren Daten.", format.to_uppercase()),
             ),
         }).collect();
-        let mut add = |code: &'static str, en: String, de: String| diagnostics.push(Generation3dIoDiagnostic { code, label: semio_framework_ui_locale::LocalizedLabel::native(&en, &de) });
+        let mut add = |code: &'static str, en: String, de: String| diagnostics.push(Generation3dIoDiagnostic { code, label: semio_ui_locale::LocalizedLabel::native(&en, &de) });
         for (name, semantic, code) in [("normal",MeshAttributeSemantic::Normal,"multiple-normal"),("uv",MeshAttributeSemantic::Uv,"multiple-uv"),("color",MeshAttributeSemantic::Color,"multiple-color"),("material",MeshAttributeSemantic::Material,"multiple-material")] {
             if format != "gltf" && supported.contains(&name) && meshes.iter().any(|mesh| mesh.attributes.values().filter(|attribute| attribute.semantic == semantic).count() > 1) { add(code, format!("{} retains one {name} channel. Additional sets remain in the Semio Text document.",format.to_uppercase()), format!("{} erhält einen {name}-Kanal. Zusätzliche Sätze bleiben im Semio-Text-Dokument.",format.to_uppercase())); }
         }
@@ -294,7 +294,7 @@ pub mod document_io {
     }
 
     /// 🎨️ Keeps rich prepared surfaces until their declared serializer has emitted the interchange.
-    pub fn export_prepared_geometry(meshes: &[semio_framework_plugin::MeshData], format: &str) -> Result<Generation3dDocumentExport, semio_framework_diagnostic::TextError> {
+    pub fn export_prepared_geometry(meshes: &[semio_plugin::MeshData], format: &str) -> Result<Generation3dDocumentExport, semio_framework_diagnostic::TextError> {
         let row = row_of(&EXPORT_FORMATS, format)?;
         let bytes = if format == "gltf" { export_leaves::gltf::v2_0::any::serialize_prepared_meshes_bytes(meshes)? } else { export_mesh_bytes(&semio_s_artifact_procedural_3d_mesh_bridge::semio_mesh_from_meshes(meshes)?, format)? };
         document_export_envelope(row, bytes)
@@ -359,7 +359,7 @@ pub use document_io::{export_document, import_document as import_picked_document
 pub mod derived_composition {
     use crate::Generation3dAnalyzer;
     use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation3d", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
@@ -398,7 +398,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_GLTF {
@@ -407,7 +407,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_JSON {
@@ -416,7 +416,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_OBJ {
@@ -425,7 +425,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_PLY {
@@ -434,7 +434,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::ply::v1_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_STL {
@@ -443,7 +443,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_TXT {
@@ -452,7 +452,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
             }
@@ -469,7 +469,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::Generation3dBuilder as Generation3dAnyBuilder;
     use crate::Generation3dComposer as Generation3dAnyComposer;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::composer_entry_of,semio_plugin::ArtifactBuilder,semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource,semio_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -498,13 +498,13 @@ pub mod io_registry {
     }
 
     const EXPORT_TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-    fn compose_export_txt(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_txt(sources: &[ErasedComposeSource]) -> semio_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources).await?;
             let encoded = semio_s_artifact_procedural_3d_io_export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes(&snapshot);
             snapshot.retire_cold();
             let bytes = encoded.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_TXT_DIALECT, payload: IoPayload::Text(String::from_utf8(bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::High })
+            Ok(ComposedArtifact { dialect: EXPORT_TXT_DIALECT, payload: IoPayload::Text(String::from_utf8(bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?), diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::High })
         })
     }
     //#endregion 🔖️ExportEntries
@@ -529,7 +529,7 @@ pub mod derived_construction {
     use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
     use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
     use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Generation3dBuilderConstruction {
@@ -579,7 +579,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Generation3dParts {
@@ -592,27 +592,27 @@ pub mod derived_analysis {
         type Parts = Generation3dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation3d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
+            semio_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Generation3dParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Generation3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Generation3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -624,7 +624,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec Generation3dBuilderFacets {
         construction: Generation3dBuilderConstruction,
         analysis: Generation3dAnalyzerAnalysis,

@@ -30,7 +30,7 @@ pub fn text_editor_is_read_only(scene: &UiComponentSceneNode) -> bool {
 
 /// 📋️ Replaces the mounted editor's current selection and publishes the same ordered edit/select
 /// pair React's textarea host emits for paste, cut and a committed composition.
-pub fn text_editor_replace_selection_into(scene: &UiComponentSceneNode, text: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_replace_selection_into(scene: &UiComponentSceneNode, text: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     emit_text_editor_actions(
         scene,
         input,
@@ -46,7 +46,7 @@ pub fn text_editor_replace_selection_into(scene: &UiComponentSceneNode, text: &s
 }
 
 /// ♿️ Applies an accessibility textarea's complete value through the editor's ordered action pair.
-pub fn text_editor_replace_all_into(scene: &UiComponentSceneNode, text: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_replace_all_into(scene: &UiComponentSceneNode, text: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     emit_text_editor_actions(
         scene,
         input,
@@ -59,7 +59,7 @@ pub fn text_editor_replace_all_into(scene: &UiComponentSceneNode, text: &str, in
     )
 }
 
-pub fn text_editor_apply_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &PointerModifiers, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_apply_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &PointerModifiers, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let supported = match key {
         KeyAction::Char(_) | KeyAction::Space(true) if !(modifiers.meta || modifiers.ctrl || modifiers.alt) => true,
         KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => true,
@@ -117,13 +117,13 @@ pub fn text_editor_apply_key_into(scene: &UiComponentSceneNode, key: &KeyAction,
     )
 }
 
-pub fn text_editor_select_span_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_select_span_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     emit_text_editor_actions(scene, input, false, |host| host.text().len(), |host| host.select_span_at_screen(sx, sy))
 }
 
-pub fn text_editor_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, down: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, down: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     emit_text_editor_actions(
@@ -141,7 +141,7 @@ pub fn text_editor_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect
     )
 }
 
-pub fn text_editor_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     emit_text_editor_actions(scene, input, false, |host| host.text().len(), |host| host.pointer_move_screen(sx, sy, 0))
@@ -156,11 +156,11 @@ pub fn text_editor_pointer_cancel_into(surface_id: &str) -> bool {
     })
 }
 
-pub fn text_editor_set_selection_into(scene: &UiComponentSceneNode, anchor: usize, caret: usize, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_set_selection_into(scene: &UiComponentSceneNode, anchor: usize, caret: usize, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     emit_text_editor_actions(scene, input, false, |host| host.text().len(), |host| host.set_selection_range(anchor, caret))
 }
 
-pub fn text_editor_apply_completion_into(scene: &UiComponentSceneNode, prefix_start: usize, caret: usize, insert_text: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_apply_completion_into(scene: &UiComponentSceneNode, prefix_start: usize, caret: usize, insert_text: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     emit_text_editor_actions(
         scene,
         input,
@@ -173,7 +173,7 @@ pub fn text_editor_apply_completion_into(scene: &UiComponentSceneNode, prefix_st
     )
 }
 
-pub fn text_editor_pointer_click_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn text_editor_pointer_click_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     ENGINE_SURFACES.with(|cell| {
@@ -185,7 +185,7 @@ pub fn text_editor_pointer_click_into(scene: &UiComponentSceneNode, inner: Rect,
             return Ok(false);
         };
         let selection_bytes = text_editor_action_bytes(scene, None)?;
-        let mut batch = input.reserve_actions(2, selection_bytes.checked_mul(2).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)?)?;
+        let mut batch = input.reserve_actions(2, selection_bytes.checked_mul(2).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?)?;
         host.pointer_down_screen(sx, sy, button as i32);
         write_text_editor_selection(&mut batch, scene, host)?;
         host.pointer_up_screen(sx, sy, 0);

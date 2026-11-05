@@ -92,7 +92,7 @@ where
         let outcome = <Mutation as protocol::ColdMutation<P>>::diff(op, source.snapshot());
         let applicable = outcome.is_applicable(protocol::MergePolicy::default());
         let (diff, _) = outcome.into_parts();
-        let next = applicable.then(|| semio_framework_os_spr::apply_diff_cold(&diff, source.snapshot()).ok()).flatten();
+        let next = applicable.then(|| semio_os_spr::apply_diff_cold(&diff, source.snapshot()).ok()).flatten();
         <<Mutation as protocol::ColdMutation<P>>::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
         Ok(next.map(|owner| self.seal_derived_snapshot(store_owners, store_wire, Arc::new(owner))))
     }
@@ -101,7 +101,7 @@ where
     pub fn derive_history_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError> where P: Clone, Mutation:protocol::ColdMutation<P> {
         self.admit_derived_source(store_owners, store_wire, &source.registry, source.generation, source.revision)?;
         let (diff, mut messages) = <Mutation as protocol::ColdMutation<P>>::diff(op, source.snapshot()).into_parts();
-        let applied = semio_framework_os_spr::apply_diff_cold(&diff, source.snapshot());
+        let applied = semio_os_spr::apply_diff_cold(&diff, source.snapshot());
         <<Mutation as protocol::ColdMutation<P>>::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
         let next = match applied {
             Ok(owner) => Some(self.seal_derived_snapshot(store_owners, store_wire, Arc::new(owner))),
@@ -193,7 +193,7 @@ where
         if let Some((position, index, digest)) = root.and_then(|root| root.mutation_positions.get(mutation_id)).or_else(|| self.revision_accumulator.mutation_positions.get(mutation_id)) {
             if store_wire.applied_edit_ids(store_log).get(*position).filter(|id| CursorRevisionAccumulator::hash_record(b"edit-id", &[id.as_bytes()]) == *digest).is_some() {
                 let edit = self.applied_edit(store_log, store_wire, *position)?;
-                if *index<edit.forwards.len()&&semio_framework_os_store_ledger::native_digest::with_operation_identity::<P,Mutation,_>(edit,*index,|id|Ok(id==mutation_id.0)).map_err(VcsError::InverseRefused)?{return Ok((*position,*index));}
+                if *index<edit.forwards.len()&&semio_os_store_ledger::native_digest::with_operation_identity::<P,Mutation,_>(edit,*index,|id|Ok(id==mutation_id.0)).map_err(VcsError::InverseRefused)?{return Ok((*position,*index));}
             }
         }
         Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"requested original operation is not applied")))
@@ -208,7 +208,7 @@ where
         if group.is_none() || self.applied_edit_units(store_log, store_wire, position)?[index].is_none() {
             return Ok(vec![mutation_id.clone()]);
         }
-        Ok(semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().enumerate().filter(|(member, _)| edit.mutation_meta.get(*member).and_then(|meta| meta.group_id.as_ref()) == group).map(|(_, member)| member).collect())
+        Ok(semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().enumerate().filter(|(member, _)| edit.mutation_meta.get(*member).and_then(|meta| meta.group_id.as_ref()) == group).map(|(_, member)| member).collect())
     }
 
     /// 🫴️ Recorded unit facts captured against each original operation's actual historical prestate by publication,
@@ -218,8 +218,8 @@ where
         let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
         Ok((0..edit.forwards.len()).map(|index| {
             let meta = edit.mutation_meta.get(index);
-            let spans = self.applied_unit_flag(store_wire, digest, index) || matches!(meta.map(|meta| &meta.origin), Some(semio_framework_os_spr::MutationOrigin::Transaction { .. }));
-            spans.then(|| meta.and_then(|meta| meta.group_id.clone()).unwrap_or_else(|| semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded unit identity").0))
+            let spans = self.applied_unit_flag(store_wire, digest, index) || matches!(meta.map(|meta| &meta.origin), Some(semio_os_spr::MutationOrigin::Transaction { .. }));
+            spans.then(|| meta.and_then(|meta| meta.group_id.clone()).unwrap_or_else(|| semio_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded unit identity").0))
         }).collect())
     }
 
@@ -505,7 +505,7 @@ operation,
     //#region 🔖️EventSourcedHistory
     /// 🎴️ Takes what a finished Report replay publishes — its messages and reached projection — and installs its unit flags
     /// and rebased inverses; every untaken owner stays attached for [`Self::retire_replay_result`].
-    pub fn take_report_replay(&mut self, store_log: &mut StoreLog<P, Mutation>, result: &mut EditReplayResult<P, Mutation>) -> Result<(Vec<semio_framework_os_spr::EditMessages>, Arc<P>), VcsError> {
+    pub fn take_report_replay(&mut self, store_log: &mut StoreLog<P, Mutation>, result: &mut EditReplayResult<P, Mutation>) -> Result<(Vec<semio_os_spr::EditMessages>, Arc<P>), VcsError> {
         self.revision_accumulator.unit_flags.extend(std::mem::take(&mut result.unit_flags));
         let replayed = result.take_replayed();
         if let Some(entry) = replayed.iter().find(|entry| entry.edit_id.len() > ARTIFACT_EDIT_MESSAGE_ID_BYTES) {

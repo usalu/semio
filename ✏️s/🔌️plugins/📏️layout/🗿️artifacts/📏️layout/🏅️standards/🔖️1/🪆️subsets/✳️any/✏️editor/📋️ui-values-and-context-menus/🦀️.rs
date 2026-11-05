@@ -4,22 +4,22 @@ use super::*;
 
 //#region 🔖️Constants
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 //#region 🔖️ContextMenu
@@ -69,7 +69,7 @@ fn layout_context_menu_item(id: &str, label: &str, icon: &str, action: &str, arg
     }
 }
 
-fn layout_add_frame_items<'a>(menu: semio_framework_plugin::Menu<'a>, labels: &'a LayoutLabels, kind: &'a str) -> semio_framework_plugin::Menu<'a> {
+fn layout_add_frame_items<'a>(menu: semio_plugin::Menu<'a>, labels: &'a LayoutLabels, kind: &'a str) -> semio_plugin::Menu<'a> {
     let (id, label, icon) = match kind {
         "text" => ("add-text-frame", labels.kind_text.as_str(), "type"),
         "image" => ("add-image-frame", labels.kind_image.as_str(), "image"),
@@ -84,12 +84,12 @@ pub(super) fn layout_context_menu_items(
     registry: &AppActionRegistry,
     doc: &LayoutSnapshot,
     labels: &LayoutLabels,
-    view_state: &semio_framework_plugin::ViewModel,
+    view_state: &semio_plugin::ViewModel,
     surface: Option<&ContextMenuSurfaceTarget>,
     fallback_selected: &[String],
 ) -> Vec<ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, Menu, SelectionKind};
-    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
+    use semio_plugin::{selection_count_phrase, Menu, SelectionKind};
+    let is_de = view_state.locale == semio_ui_locale::Locale::De;
 
     let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
     let authoring = layout_authoring_surface(surface);
@@ -152,7 +152,7 @@ pub(super) fn layout_context_menu_items(
             ));
         }
         menu = menu.group("create", |group| layout_add_frame_items(layout_add_frame_items(layout_add_frame_items(group, labels, "rect"), labels, "text"), labels, "image"));
-        return menu.action("addPage").action("selectAll").action("paste").destructive("clearSelection").disabled_because(&semio_framework_plugin::nothing_selected()).build();
+        return menu.action("addPage").action("selectAll").action("paste").destructive("clearSelection").disabled_because(&semio_plugin::nothing_selected()).build();
     }
 
     let phrase = selection_count_phrase(view_state.locale, &[(selected.len(), SelectionKind::Frame)]).unwrap_or_default();

@@ -27,8 +27,8 @@ where
     Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_solid::DeleteSolid>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "solid", kind: "create-solid", record: "CreatedSolid" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create solid \"{}\"", self.solid.id), &format!("Körper \"{}\" erstellen", self.solid.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create solid \"{}\"", self.solid.id), &format!("Körper \"{}\" erstellen", self.solid.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.solid.id.clone()]

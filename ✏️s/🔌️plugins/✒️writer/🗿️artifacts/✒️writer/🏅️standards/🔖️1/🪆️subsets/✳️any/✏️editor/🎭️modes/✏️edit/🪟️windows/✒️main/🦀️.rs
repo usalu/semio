@@ -8,16 +8,16 @@ use crate::standards::v1::subsets::any::io::text::inferences::{language_diagnost
 use crate::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
 use crate::standards::v1::subsets::any::io::text::snapshot::{language_completions_json};
 use crate::{writer_text, WriterSnapshot};
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TextEditorScene;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::SurfaceKind as SemanticSurfaceKind;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TextEditorScene;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::SurfaceKind as SemanticSurfaceKind;
 use serde_json::{json, Value};
 
 #[path = "🎚️config/🦀️.rs"]

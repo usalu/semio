@@ -10,8 +10,8 @@ pub struct InsertVariable { pub index: Option<usize>, pub item: semio_s_artifact
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for InsertVariable where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_variable::RemoveVariable> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "variable", kind: "insert-variable", record: "InsertedVariable" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert variable action", "Veränderliche Einwirkung einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert variable action", "Veränderliche Einwirkung einfügen")
     }
 }
 

@@ -20,7 +20,7 @@ path = "../../🦀️.rs"
 [dev-dependencies]
 semio-s-artifact-procedural-3d-editor = { path = "../../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-host = { workspace = true }
 semio-s-artifact-procedural-3d-testkit = { workspace = true }

@@ -740,7 +740,6 @@
         "set-page-overrides",
         "create-layer",
         "set-frame-layer",
-        "set-drawing-text",
         "reorder-frame",
         "drag-frames",
         "rotate-frames",

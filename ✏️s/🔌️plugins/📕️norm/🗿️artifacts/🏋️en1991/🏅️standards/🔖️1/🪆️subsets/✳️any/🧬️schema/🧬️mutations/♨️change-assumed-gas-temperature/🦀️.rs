@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedGasTemperat
         record: "ChangedAssumedGasTemperature",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed gas temperature", "Angenommene Heißgastemperatur ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed gas temperature", "Angenommene Heißgastemperatur ändern")
     }
 }
 

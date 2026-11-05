@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "operation": 707,
+  "generation": 9,
+  "copyAllowances": [
+    64
+  ],
+  "cancelTurns": [
+    0,
+    5,
+    37,
+    101
+  ],
+  "source": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "note-原",
+        "text": "same source 雪🌳️"
+      }
+    ],
+    "synapses": [],
+    "layout": {}
+  },
+  "expected": {
+    "note-原": {
+      "in": {},
+      "out": {
+        "text": {
+          "schema": "text",
+          "value": "same source 雪🌳️"
+        }
+      }
+    }
+  },
+  "paintCases": [
+    {
+      "id": "unanswered",
+      "live": {
+        "node": {
+          "in": {},
+          "out": {}
+        }
+      },
+      "converged": {
+        "node": {
+          "in": {
+            "old": 1
+          },
+          "out": {
+            "value": "雪"
+          }
+        }
+      },
+      "widgets": [
+        "node"
+      ],
+      "expected": {
+        "node": {
+          "in": {
+            "old": 1
+          },
+          "out": {
+            "value": "雪"
+          }
+        }
+      }
+    },
+    {
+      "id": "fault",
+      "live": {
+        "node": {
+          "in": {},
+          "out": {
+            "error": "original"
+          },
+          "error": "original"
+        }
+      },
+      "converged": {
+        "node": {
+          "in": {},
+          "out": {
+            "value": "old"
+          }
+        }
+      },
+      "widgets": [
+        "node"
+      ],
+      "expected": {
+        "node": {
+          "in": {},
+          "out": {
+            "error": "original"
+          },
+          "error": "original"
+        }
+      }
+    }
+  ],
+  "sameOriginalSource": true,
+  "preserveInvocationLedger": true,
+  "preserveWindowLatches": true,
+  "terminalDropBytes": 0,
+  "maximumRootCalls": 200,
+  "maximumWorkEventsPerCall": 512,
+  "originalCallerPolicy": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json"
+}

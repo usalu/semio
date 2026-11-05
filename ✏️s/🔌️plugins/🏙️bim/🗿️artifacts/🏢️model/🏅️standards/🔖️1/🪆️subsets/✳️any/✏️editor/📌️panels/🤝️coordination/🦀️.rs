@@ -12,8 +12,8 @@ use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schem
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{comments_of, Issue, ModelSnapshot, Rule};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IssueStatus, RuleSeverity};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
-use semio_framework_plugin::{BuiltNode, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiValue};
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_plugin::{BuiltNode, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiValue};
+use semio_ui_locale::{Label, LocalizedLabel};
 
 //#region 🔖️Constants
 pub const CLASHES_KEY: &str = "bim.edit.clashes";
@@ -117,7 +117,7 @@ fn clash_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &BimLa
     };
     let builder = item(id, &text, if clash.kind == ClashKind::Hard { "alert-circle" } else { "triangle-alert" }, None, Some(&measure))?;
     let with_set = [("set", set), ("first", clash.first.as_str()), ("second", clash.second.as_str())];
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, id, false, 4, |position| match position {
+    semio_plugin::tree_window_indexed_item(windows, builder, id, false, 4, |position| match position {
         0 => action_row(format!("{id}.select"), labels.clash_select.as_str(), "mouse-pointer", "selectFindings", &[], Some(&pair)),
         1 => action_row(format!("{id}.zoom"), labels.clash_zoom.as_str(), "zoom-in", "viewClash", &[("first", clash.first.as_str()), ("second", clash.second.as_str()), ("mode", "zoom")], None),
         2 => action_row(format!("{id}.isolate"), labels.clash_isolate.as_str(), "eye", "viewClash", &[("first", clash.first.as_str()), ("second", clash.second.as_str()), ("mode", "isolate")], None),
@@ -128,7 +128,7 @@ fn clash_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &BimLa
 fn group_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &BimLabels, set: &str, group: &(&ClashGroup, Vec<&Clash>)) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{CLASHES_ROOT}.{set}.{}", group.0.anchor);
     let builder = item(&id, &clip(&name_of(snapshot, &group.0.anchor)), "layers", None, Some(&group.1.len().to_string()))?;
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, &id, group.1.len() <= OPEN_LIMIT, group.1.len(), |position| {
+    semio_plugin::tree_window_indexed_item(windows, builder, &id, group.1.len() <= OPEN_LIMIT, group.1.len(), |position| {
         let clash = group.1[position];
         clash_row(windows, snapshot, labels, set, &format!("{id}.{}-{}", clash.first, clash.second), clash)
     })
@@ -137,16 +137,16 @@ fn group_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &BimLa
 /// 💥️ Renders the clash panel: a run row, then a section per clash set with its groups; an empty-state row when the model has no clash set.
 pub fn render_clashes(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let mut builder = PanelTreeBuilder::new(CLASHES_ROOT)?;
-    builder = builder.section(format!("{CLASHES_ROOT}.job"), Some(ui_label(labels.panel_clashes.as_str())?), true, semio_framework_plugin::ui_node_list([run_row(CLASHES_ROOT, labels.clash_run.as_str())])?)?;
+    builder = builder.section(format!("{CLASHES_ROOT}.job"), Some(ui_label(labels.panel_clashes.as_str())?), true, semio_plugin::ui_node_list([run_row(CLASHES_ROOT, labels.clash_run.as_str())])?)?;
     if snapshot.clash_sets.is_empty() {
-        return builder.section(format!("{CLASHES_ROOT}.none"), None, true, semio_framework_plugin::ui_node_list([note_row(format!("{CLASHES_ROOT}.empty"), labels.clash_empty.as_str(), "info")])?)?.build();
+        return builder.section(format!("{CLASHES_ROOT}.none"), None, true, semio_plugin::ui_node_list([note_row(format!("{CLASHES_ROOT}.empty"), labels.clash_empty.as_str(), "info")])?)?.build();
     }
     for (set_id, set) in &snapshot.clash_sets {
         let Some(result) = inference.clash_sets.get(set_id) else { continue };
         let rows = grouped(result);
         let heading = format!("{} ({} {} · {} {} · {} {})", clip(&set.name), result.hard(), labels.clash_hard.as_str(), result.soft(), labels.clash_soft.as_str(), result.tested, labels.clash_tested.as_str());
         if rows.is_empty() {
-            builder = builder.section(format!("{CLASHES_ROOT}.set.{set_id}"), Some(ui_label(&heading)?), true, semio_framework_plugin::ui_node_list([note_row(format!("{CLASHES_ROOT}.{set_id}.clean"), labels.clash_none.as_str(), "check")])?)?;
+            builder = builder.section(format!("{CLASHES_ROOT}.set.{set_id}"), Some(ui_label(&heading)?), true, semio_plugin::ui_node_list([note_row(format!("{CLASHES_ROOT}.{set_id}.clean"), labels.clash_none.as_str(), "check")])?)?;
         } else {
             builder = builder.window_section(windows, &format!("{CLASHES_ROOT}.set.{set_id}"), Some(ui_label(&heading)?), true, &rows, |group| group_row(windows, snapshot, labels, set_id, group))?;
         }
@@ -176,8 +176,8 @@ fn violation_row(snapshot: &ModelSnapshot, labels: &BimLabels, rule_id: &str, ru
     let unit = if rule.kind == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RuleKind::MaxCompartmentArea { "m²" } else if rule.kind == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RuleKind::MaxRampSlope { "" } else { "m" };
     let description = clip(&format!("{} · {} {} {} {}", severity_word(labels, rule.severity), format_number(finding.measured), unit, if rule.kind.is_maximum() { labels.rule_above.as_str() } else { labels.rule_below.as_str() }, format_number(finding.limit)));
     let mut node = tree_item_with_icon(format!("{RULES_ROOT}.{rule_id}.{index}"), Label::data(clip(&name_of(snapshot, &finding.element))), severity_icon(rule.severity), bim_action("selectFindings", Some(ui_value_map([("ids", ids_value(std::slice::from_ref(&finding.element))?)])?)))?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-        props.description = Some(semio_framework_plugin::UiText::try_from_str(&description).ok_or_else(ui_capacity_error)?);
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
+        props.description = Some(semio_plugin::UiText::try_from_str(&description).ok_or_else(ui_capacity_error)?);
     }
     Ok(node)
 }
@@ -190,15 +190,15 @@ fn format_number(value: f64) -> String {
 /// ⚖️ Renders the rules panel: a run row, then a section per rule with its violations; an empty-state row when the model has no rule.
 pub fn render_rules(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let mut builder = PanelTreeBuilder::new(RULES_ROOT)?;
-    builder = builder.section(format!("{RULES_ROOT}.job"), Some(ui_label(labels.panel_rules.as_str())?), true, semio_framework_plugin::ui_node_list([run_row(RULES_ROOT, labels.rules_run.as_str())])?)?;
+    builder = builder.section(format!("{RULES_ROOT}.job"), Some(ui_label(labels.panel_rules.as_str())?), true, semio_plugin::ui_node_list([run_row(RULES_ROOT, labels.rules_run.as_str())])?)?;
     if snapshot.rules.is_empty() {
-        return builder.section(format!("{RULES_ROOT}.none"), None, true, semio_framework_plugin::ui_node_list([note_row(format!("{RULES_ROOT}.empty"), labels.rules_empty.as_str(), "info")])?)?.build();
+        return builder.section(format!("{RULES_ROOT}.none"), None, true, semio_plugin::ui_node_list([note_row(format!("{RULES_ROOT}.empty"), labels.rules_empty.as_str(), "info")])?)?.build();
     }
     for (rule_id, rule) in &snapshot.rules {
         let Some(result): Option<&RuleResult> = inference.rule_results.get(rule_id) else { continue };
         let heading = format!("{} ({} / {})", clip(&rule.name), result.violations.len(), result.checked);
         if result.violations.is_empty() {
-            builder = builder.section(format!("{RULES_ROOT}.rule.{rule_id}"), Some(ui_label(&heading)?), false, semio_framework_plugin::ui_node_list([note_row(format!("{RULES_ROOT}.{rule_id}.ok"), labels.rules_ok.as_str(), "check")])?)?;
+            builder = builder.section(format!("{RULES_ROOT}.rule.{rule_id}"), Some(ui_label(&heading)?), false, semio_plugin::ui_node_list([note_row(format!("{RULES_ROOT}.{rule_id}.ok"), labels.rules_ok.as_str(), "check")])?)?;
         } else {
             builder = builder.window_section(windows, &format!("{RULES_ROOT}.rule.{rule_id}"), Some(ui_label(&heading)?), result.violations.len() <= OPEN_LIMIT, &(0..result.violations.len()).collect::<Vec<_>>(), |index| violation_row(snapshot, labels, rule_id, rule, *index, &result.violations[*index]))?;
         }
@@ -240,7 +240,7 @@ fn issue_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &BimLa
     let builder = item(&row_id, &clip(&issue.title), "flag", None, Some(&description))?;
     let count = 2 + usize::from(!issue.elements.is_empty()) + usize::from(issue.viewpoint.is_some()) + comments.len();
     let elements = issue.elements.clone();
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, &row_id, count <= OPEN_LIMIT, count, |position| {
+    semio_plugin::tree_window_indexed_item(windows, builder, &row_id, count <= OPEN_LIMIT, count, |position| {
         let mut at = position;
         if !issue.elements.is_empty() {
             if at == 0 {
@@ -270,9 +270,9 @@ pub fn render_issues(snapshot: &ModelSnapshot, labels: &BimLabels, windows: &Tre
     let mut builder = PanelTreeBuilder::new(ISSUES_ROOT)?;
     let export = tree_item_with_icon(format!("{ISSUES_ROOT}.export"), Label::data(labels.issue_export.as_str()), "download", bim_action("exportModel", Some(ui_value_map([("format", ui_value_text("bcf")?)])?)))?;
     let create = tree_item_with_icon(format!("{ISSUES_ROOT}.new"), Label::data(labels.issue_new.as_str()), "flag", bim_action("createEntity", Some(ui_value_map([("kind", ui_value_text("issue")?), ("name", ui_value_text(labels.issue_new_title.as_str())?)])?)))?;
-    builder = builder.section(format!("{ISSUES_ROOT}.job"), Some(ui_label(labels.panel_issues.as_str())?), true, semio_framework_plugin::ui_node_list([Ok(create), Ok(export)])?)?;
+    builder = builder.section(format!("{ISSUES_ROOT}.job"), Some(ui_label(labels.panel_issues.as_str())?), true, semio_plugin::ui_node_list([Ok(create), Ok(export)])?)?;
     if snapshot.issues.is_empty() {
-        return builder.section(format!("{ISSUES_ROOT}.none"), None, true, semio_framework_plugin::ui_node_list([note_row(format!("{ISSUES_ROOT}.empty"), labels.issue_empty.as_str(), "info")])?)?.build();
+        return builder.section(format!("{ISSUES_ROOT}.none"), None, true, semio_plugin::ui_node_list([note_row(format!("{ISSUES_ROOT}.empty"), labels.issue_empty.as_str(), "info")])?)?.build();
     }
     for status in STATUSES {
         let ids = issues_with(snapshot, status);

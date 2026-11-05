@@ -17,8 +17,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindParamete
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "workflow", kind: "bind-parameter-field", record: "BoundWorkflowParameterField" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow parameter {}", self.binding.parameter_id), &format!("Arbeitsablaufparameter {} binden", self.binding.parameter_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Bind workflow parameter {}", self.binding.parameter_id), &format!("Arbeitsablaufparameter {} binden", self.binding.parameter_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["parameter-bindings".into(), self.binding.node_id.clone(), self.binding.field_path.clone()]

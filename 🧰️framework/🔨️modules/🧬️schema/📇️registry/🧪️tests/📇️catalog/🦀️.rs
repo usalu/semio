@@ -1,5 +1,5 @@
 //! 📇️ The process-wide catalog seen from outside the crate: a scope that links **only**
-//! `semio-framework-schema-registry` — the position `semio-framework-ui-contract` and every other
+//! `semio-framework-schema-registry` — the position `semio-ui-contract` and every other
 //! dependency-restricted scope is in — registers its exports, resolves them, and appears in the
 //! `schema-export-registry-entries-v1` dump. Own test binary so the catalog carries exactly what this
 //! file registers.

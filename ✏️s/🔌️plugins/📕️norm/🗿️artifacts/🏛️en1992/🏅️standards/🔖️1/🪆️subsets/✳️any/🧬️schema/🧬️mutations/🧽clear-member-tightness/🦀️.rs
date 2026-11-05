@@ -16,8 +16,8 @@ pub struct ClearMemberTightness {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ClearMemberTightness where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_member_tightness::ChangeMemberTightness> + From<crate::clear_member_tightness::ClearMemberTightness> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "clear", entity: "member-tightness", kind: "clear-member-tightness", record: "ClearedMemberTightness" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Clear tightness class of member {}", self.member_id), &format!("Dichtigkeitsklasse von Bauteil {} entfernen", self.member_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Clear tightness class of member {}", self.member_id), &format!("Dichtigkeitsklasse von Bauteil {} entfernen", self.member_id))
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }

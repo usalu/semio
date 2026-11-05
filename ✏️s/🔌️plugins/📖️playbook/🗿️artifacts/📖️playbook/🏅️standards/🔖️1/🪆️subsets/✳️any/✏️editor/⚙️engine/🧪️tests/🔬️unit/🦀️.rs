@@ -8,6 +8,6 @@ async fn playbook_io_declares_the_extra_chapters_in_port() {
     assert!(ports.iter().any(|port| port.id == "artifact:out"));
     let chapters_in = ports.iter().find(|port| port.id == "chapters:in").expect("chapters:in port declared");
     assert_eq!(chapters_in.kind_id.as_deref(), Some("text.document"));
-    assert_eq!(chapters_in.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
-    assert_eq!(chapters_in.direction, semio_framework_plugin::MediaPortDirection::In);
+    assert_eq!(chapters_in.multiplicity, semio_plugin::PortMultiplicity::Many);
+    assert_eq!(chapters_in.direction, semio_plugin::MediaPortDirection::In);
 }

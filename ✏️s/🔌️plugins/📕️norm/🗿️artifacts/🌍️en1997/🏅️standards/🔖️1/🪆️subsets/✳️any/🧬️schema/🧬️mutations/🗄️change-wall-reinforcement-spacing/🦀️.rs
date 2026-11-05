@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallReinforcementS
         record: "ChangedWallReinforcementSpacing",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Reinforcement spacing S_v (0 = none) of the retaining wall", "Stützwand: Bewehrungsabstand S_v (0 = unbewehrt) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Reinforcement spacing S_v (0 = none) of the retaining wall", "Stützwand: Bewehrungsabstand S_v (0 = unbewehrt) ändern")
     }
 }
 

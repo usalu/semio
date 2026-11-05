@@ -1,12 +1,12 @@
 //! 🧱️ Conformance_quick of the capabilities crate: Gateway capability declarations and the core catalog.
 
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 #[cfg(any(test, feature = "testkit"))]
 use crate::source_builders;
-use semio_framework_os_mcp_catalog::catalog::{CapabilityKind, CapabilityOwner, CapabilityRef, Catalog, compile};
-use semio_framework_os_mcp_catalog::conformance::{check, check_bilingual_labels, run_eval};
+use semio_os_mcp_catalog::catalog::{CapabilityKind, CapabilityOwner, CapabilityRef, Catalog, compile};
+use semio_os_mcp_catalog::conformance::{check, check_bilingual_labels, run_eval};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

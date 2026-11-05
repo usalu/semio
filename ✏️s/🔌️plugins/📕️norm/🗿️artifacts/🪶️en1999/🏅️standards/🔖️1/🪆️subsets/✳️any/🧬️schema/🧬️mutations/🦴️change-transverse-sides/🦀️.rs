@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeTransverseSides wh
         record: "ChangedTransverseSides",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Sides of the web of the transverse stiffener", "Quersteife: Stegseiten ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Sides of the web of the transverse stiffener", "Quersteife: Stegseiten ändern")
     }
 }
 

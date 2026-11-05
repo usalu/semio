@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../.."
-name = "semio-framework-os-kernel"
+name = "semio-os-kernel"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -20,7 +20,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-name = "semio_framework_os_kernel"
+name = "semio_os_kernel"
 path = "🦀️.rs"
 
 [[test]]
@@ -32,17 +32,17 @@ name = "artifact_command_retirement"
 path = "../../🔨️modules/🏪️store/📬️command/♻️retirement/🧪️tests/🚪️public/🦀️.rs"
 
 [features]
-protocol-laws = ["record-codec-laws", "semio-framework-os-spr/protocol-laws"]
-record-codec-laws = ["semio-framework-os-pack/record-codec-laws"]
-durable-group-testing = ["semio-framework-os-store-durable-group/durable-group-testing", "semio-framework-os-store-durable-group-wire/durable-group-testing"]
-mutation-testing = ["semio-framework-os-command/mutation-testing", "semio-framework-os-spr/mutation-testing"]
+protocol-laws = ["record-codec-laws", "semio-os-spr/protocol-laws"]
+record-codec-laws = ["semio-os-pack/record-codec-laws"]
+durable-group-testing = ["semio-os-store-durable-group/durable-group-testing", "semio-os-store-durable-group-wire/durable-group-testing"]
+mutation-testing = ["semio-os-command/mutation-testing", "semio-os-spr/mutation-testing"]
 default = ["deflate"]
-deflate = ["semio-framework-os-history/deflate", "semio-framework-replication/deflate", "semio-framework-pack/deflate"]
+deflate = ["semio-os-history/deflate", "semio-framework-replication/deflate", "semio-framework-pack/deflate"]
 # 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet terra-directory-and-run): the native
 # `📇️directory/🔌️client`'s `NativeDirectoryTransport` routes its HTTP calls through
-# `semio-framework-os-services`'s `HttpPool`/`ComputePool` (bounded, cancellable, deadline-aware).
+# `semio-os-services`'s `HttpPool`/`ComputePool` (bounded, cancellable, deadline-aware).
 # The services edge now belongs to `sync` as the shared host boundary for Store file watching too.
-ureq = ["semio-framework-os-directory-client/ureq"]
+ureq = ["semio-os-directory-client/ureq"]
 # 🧵️ No `tokio/net` reference here (unlike `rt`/`time`): `tokio` is now a
 # `not(all(target_arch = "wasm32", target_env = "p2"))`-gated dependency (presentation on native and
 # browser wasm32, absent from wasip2), so a feature-flag `tokio/net` would still unify onto browser
@@ -51,7 +51,7 @@ ureq = ["semio-framework-os-directory-client/ureq"]
 # the `[target.cfg(not(wasm32))]` `tokio` entry below — see its docstring. WASI-P2 guest plugins
 # never link the sync actor's native (tokio-tungstenite) transport — see `🔄️sync/🦀️.rs`'s
 # `native_actor` vs `wasm_actor` split — so `net` has no business reaching wasm32 at all.
-sync = ["semio-framework-os-directory-client/sync", "dep:semio-framework-os-store-sync", "dep:semio-framework-os-store-sync-native", "dep:semio-framework-os-store-sync-wasm", "dep:semio-framework-os-services", "dep:ureq", "tokio/rt", "tokio/time"]
+sync = ["semio-os-directory-client/sync", "dep:semio-os-store-sync", "dep:semio-os-store-sync-native", "dep:semio-os-store-sync-wasm", "dep:semio-os-services", "dep:ureq", "tokio/rt", "tokio/time"]
 worker = ["sync"]
 # 🧬️ Keeps the boundary/protocol type-generation capability explicit at this layer. The current
 # wire declarations are owned by `semio-framework`, so enabling this feature adds no dependency.
@@ -64,85 +64,85 @@ native-bin = []
 
 [dependencies]
 # 🪓️ OS-KERNEL partition (PLAN-OS-KERNEL-CRATES.md): the WP1 leaves already carved out of this crate; the facade re-exports their historical paths from `📥️mounts/🌱️wp1-leaves`.
-semio-framework-os-dsl = { path = "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-os-list-delta = { path = "../../🔨️modules/🪡️list-delta/📦️packages/🦀️rust" }
-semio-framework-os-plugin-registry-schema = { path = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-semio = { path = "../../🔨️modules/🧬️semio/📦️packages/🦀️rust" }
-semio-framework-os-space-sqlite-cells = { path = "../../🔨️modules/🪐️space/🪶️sqlite/📦️packages/🦀️rust" }
-semio-framework-os-spr = { path = "../../🔨️modules/📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-codec-factory = { path = "../../🔨️modules/🏪️store/📦️codec/🏭️factory/📦️packages/🦀️rust" }
-semio-framework-os-store-composition = { path = "../../🔨️modules/🏪️store/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-os-store-config = { path = "../../🔨️modules/🏪️store/🎚️config/📦️packages/🦀️rust" }
-semio-framework-os-store-document = { path = "../../🔨️modules/🏪️store/🧾️document/📦️packages/🦀️rust" }
-semio-framework-os-store-durable-group = { path = "../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📦️packages/🦀️rust" }
-semio-framework-os-store-durable-group-wire = { path = "../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
-semio-framework-os-store-engine = { path = "../../🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-branch = { path = "../../🔨️modules/🏪️store/⚙️engine/🌿️branch/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-checkpoint-graph = { path = "../../🔨️modules/🏪️store/⚙️engine/🌳️checkpoint-graph/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-command = { path = "../../🔨️modules/🏪️store/🕰️history/🎮️command/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-live = { path = "../../🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-member-group = { path = "../../🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-owners = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-replay = { path = "../../🔨️modules/🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-stage = { path = "../../🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust" }
-semio-framework-os-store-initialization-replay = { path = "../../🔨️modules/🏪️store/🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
-semio-framework-os-store-initialization-runtime = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
-semio-framework-os-store-member-open = { path = "../../🔨️modules/🏪️store/🧩️composition/🚪️open/📦️packages/🦀️rust" }
-semio-framework-os-store-member-open-store = { path = "../../🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️packages/🦀️rust" }
-semio-framework-os-store-space = { path = "../../🔨️modules/🏪️store/📜️space-history/🏠️space/📦️packages/🦀️rust" }
-semio-framework-os-store-space-member = { path = "../../🔨️modules/🏪️store/🧩️composition/👥️space-member/📦️packages/🦀️rust" }
-semio-framework-os-store-test-support = { path = "../../🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
-semio-framework-os-io = { path = "../../🔨️modules/🚪️io/📦️packages/🦀️rust" }
-semio-framework-os-store-codec-registry = { path = "../../🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust" }
-semio-framework-os-store-space-history = { path = "../../🔨️modules/🏪️store/📜️space-history/📦️packages/🦀️rust" }
-semio-framework-os-store-text-io = { path = "../../🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust" }
-semio-framework-os-store-owned-schema-decode = { path = "../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
-semio-framework-os-store-owned-schema-fields = { path = "../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust" }
-semio-framework-os-store-retirement = { path = "../../🔨️modules/🏪️store/♻️retirement/📦️packages/🦀️rust" }
-semio-framework-os-store-space-schema = { path = "../../🔨️modules/🏪️store/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-backbone = { path = "../../🔨️modules/🏪️store/🔗️backbone/📦️packages/🦀️rust" }
-semio-framework-os-store-canonical-json = { path = "../../🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust" }
-semio-framework-os-store-child = { path = "../../🔨️modules/🏪️store/🪆️child/📦️packages/🦀️rust" }
-semio-framework-os-store-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-batch = { path = "../../🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-publication = { path = "../../🔨️modules/🏪️store/🎮️one-item/📬️publication/📦️packages/🦀️rust" }
-semio-framework-os-store-operation-wire = { path = "../../🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
-semio-framework-os-store-read = { path = "../../🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust" }
-semio-framework-os-store-replay = { path = "../../🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust" }
-semio-framework-os-store-replay-operation = { path = "../../🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
-semio-framework-os-store-snapshot-clone = { path = "../../🔨️modules/🏪️store/🧬️snapshot-clone/📦️packages/🦀️rust" }
+semio-os-dsl = { path = "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-os-list-delta = { path = "../../🔨️modules/🪡️list-delta/📦️packages/🦀️rust" }
+semio-os-plugin-registry-schema = { path = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/📦️packages/🦀️rust" }
+semio-os-semio = { path = "../../🔨️modules/🧬️semio/📦️packages/🦀️rust" }
+semio-os-space-sqlite-cells = { path = "../../🔨️modules/🪐️space/🪶️sqlite/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../🔨️modules/📡️spr/📦️packages/🦀️rust" }
+semio-os-store-codec-factory = { path = "../../🔨️modules/🏪️store/📦️codec/🏭️factory/📦️packages/🦀️rust" }
+semio-os-store-composition = { path = "../../🔨️modules/🏪️store/🧩️composition/📦️packages/🦀️rust" }
+semio-os-store-config = { path = "../../🔨️modules/🏪️store/🎚️config/📦️packages/🦀️rust" }
+semio-os-store-document = { path = "../../🔨️modules/🏪️store/🧾️document/📦️packages/🦀️rust" }
+semio-os-store-durable-group = { path = "../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📦️packages/🦀️rust" }
+semio-os-store-durable-group-wire = { path = "../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
+semio-os-store-engine = { path = "../../🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust" }
+semio-os-store-engine-branch = { path = "../../🔨️modules/🏪️store/⚙️engine/🌿️branch/📦️packages/🦀️rust" }
+semio-os-store-engine-checkpoint-graph = { path = "../../🔨️modules/🏪️store/⚙️engine/🌳️checkpoint-graph/📦️packages/🦀️rust" }
+semio-os-store-engine-command = { path = "../../🔨️modules/🏪️store/🕰️history/🎮️command/📦️packages/🦀️rust" }
+semio-os-store-engine-core = { path = "../../🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
+semio-os-store-engine-live = { path = "../../🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust" }
+semio-os-store-engine-member-group = { path = "../../🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust" }
+semio-os-store-engine-owners = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-os-store-engine-replay = { path = "../../🔨️modules/🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust" }
+semio-os-store-engine-stage = { path = "../../🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust" }
+semio-os-store-initialization-replay = { path = "../../🔨️modules/🏪️store/🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
+semio-os-store-initialization-runtime = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-os-store-member-open = { path = "../../🔨️modules/🏪️store/🧩️composition/🚪️open/📦️packages/🦀️rust" }
+semio-os-store-member-open-store = { path = "../../🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️packages/🦀️rust" }
+semio-os-store-space = { path = "../../🔨️modules/🏪️store/📜️space-history/🏠️space/📦️packages/🦀️rust" }
+semio-os-store-space-member = { path = "../../🔨️modules/🏪️store/🧩️composition/👥️space-member/📦️packages/🦀️rust" }
+semio-os-store-test-support = { path = "../../🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust" }
+semio-os-io = { path = "../../🔨️modules/🚪️io/📦️packages/🦀️rust" }
+semio-os-store-codec-registry = { path = "../../🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust" }
+semio-os-store-space-history = { path = "../../🔨️modules/🏪️store/📜️space-history/📦️packages/🦀️rust" }
+semio-os-store-text-io = { path = "../../🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust" }
+semio-os-store-owned-schema-decode = { path = "../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
+semio-os-store-owned-schema-fields = { path = "../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust" }
+semio-os-store-retirement = { path = "../../🔨️modules/🏪️store/♻️retirement/📦️packages/🦀️rust" }
+semio-os-store-space-schema = { path = "../../🔨️modules/🏪️store/🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-backbone = { path = "../../🔨️modules/🏪️store/🔗️backbone/📦️packages/🦀️rust" }
+semio-os-store-canonical-json = { path = "../../🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust" }
+semio-os-store-child = { path = "../../🔨️modules/🏪️store/🪆️child/📦️packages/🦀️rust" }
+semio-os-store-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📦️packages/🦀️rust" }
+semio-os-store-one-item-batch = { path = "../../🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust" }
+semio-os-store-one-item-publication = { path = "../../🔨️modules/🏪️store/🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-os-store-operation-wire = { path = "../../🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
+semio-os-store-read = { path = "../../🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust" }
+semio-os-store-replay = { path = "../../🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust" }
+semio-os-store-replay-operation = { path = "../../🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
+semio-os-store-snapshot-clone = { path = "../../🔨️modules/🏪️store/🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-pack-source = { path = "../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 
-semio-framework-os-store-link-schema = { path = "../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-blob-identity = { path = "../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-link-schema = { path = "../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-blob-identity = { path = "../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-mutation-diff={path="../../../../🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust"}
 semio-framework-io-control = { path = "../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-pack-json-retained-schema = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust"}
-semio-framework-os-store-ephemeral = { path = "../../🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust"}
-semio-framework-os-store-presence = { path = "../../🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust"}
-semio-framework-os-store-one-item = { path = "../../🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-os-store-ephemeral = { path = "../../🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust"}
+semio-os-store-presence = { path = "../../🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust"}
+semio-os-store-one-item = { path = "../../🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
-semio-framework-os-store-envelope = { path = "../../🔨️modules/🏪️store/✉️envelope/📦️packages/🦀️rust" }
-semio-framework-os-store-command = { path = "../../🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust" }
-semio-framework-os-store-cursor = { path = "../../🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust" }
-semio-framework-os-store-projection = { path = "../../🔨️modules/🏪️store/🎞️projection/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-message-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust" }
+semio-os-store-envelope = { path = "../../🔨️modules/🏪️store/✉️envelope/📦️packages/🦀️rust" }
+semio-os-store-command = { path = "../../🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust" }
+semio-os-store-cursor = { path = "../../🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust" }
+semio-os-store-projection = { path = "../../🔨️modules/🏪️store/🎞️projection/🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-message-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust" }
 
-semio-framework-os-directory-client = { path = "../../🔨️modules/📇️directory/🔌️client/📦️packages/🦀️rust" }
-semio-framework-os-history = { path = "../../🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust", default-features = false }
-semio-framework-os-pack = { path = "../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../🔨️modules/🌿️vcs/📦️packages/🦀️rust" }
-semio-framework-os-command = { path = "../../🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
-semio-framework-os-inference = { path = "../../🔨️modules/💡️inference/📦️packages/🦀️rust" }
-semio-framework-os-identity = { path = "../../🔨️modules/🪪️identity/📦️packages/🦀️rust" }
-semio-framework-os-channel = { path = "../../🔨️modules/📡️spr/🧵️channel/📦️packages/🦀️rust" }
-semio-framework-plugin-component-receipt = { path = "../../🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-directory = { path = "../../🔨️modules/📇️directory/📦️packages/🦀️rust" }
+semio-os-directory-client = { path = "../../🔨️modules/📇️directory/🔌️client/📦️packages/🦀️rust" }
+semio-os-history = { path = "../../🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust", default-features = false }
+semio-os-pack = { path = "../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../🔨️modules/🌿️vcs/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-os-inference = { path = "../../🔨️modules/💡️inference/📦️packages/🦀️rust" }
+semio-os-identity = { path = "../../🔨️modules/🪪️identity/📦️packages/🦀️rust" }
+semio-os-channel = { path = "../../🔨️modules/📡️spr/🧵️channel/📦️packages/🦀️rust" }
+semio-plugin-component-receipt = { path = "../../🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }
+semio-os-directory = { path = "../../🔨️modules/📇️directory/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-io-sqlite-snapshot = { path = "../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
@@ -151,18 +151,18 @@ semio-framework-diagnostic = { path = "../../../../🔨️modules/⚠️diagnost
 semio-framework-dsl = { path = "../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-validator = { workspace = true }
 semio-framework-value = { path = "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
+dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-os-kernel-dsl-derive" }
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-pack = { path = "../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
-semio-framework-ui-viewport = { workspace = true }
+semio-ui-viewport = { workspace = true }
 # 🪪️ `OperationContext`/`CancelToken`/`ScopeHandle` vocabulary (ticket
 # 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) — pure, zero-tokio, wasm32-safe, so this is an
 # unconditional (not target-gated) dependency: `📇️directory/🔌️client`'s `DirectoryTransport` trait
@@ -191,7 +191,7 @@ semio-framework-trace = { workspace = true }
 # `target_arch = "wasm32"` is TRUE for the WASI component target too. `fill_entropy`/`now_ms`
 # needed genuine wasip2 arms instead — see their docstrings.
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-semio-framework-os-store-sync-wasm = { path = "../../🔨️modules/🏪️store/🔄️sync/🌐️wasm/📦️packages/🦀️rust", optional = true }
+semio-os-store-sync-wasm = { path = "../../🔨️modules/🏪️store/🔄️sync/🌐️wasm/📦️packages/🦀️rust", optional = true }
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "WebSocket", "MessageEvent", "CloseEvent", "BinaryType", "Request", "RequestInit", "Response", "Headers"] }
@@ -207,18 +207,18 @@ web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "Web
 # this crate ... This actor is a host-side concern only"; the browser bridge is
 # `cfg(all(target_arch = "wasm32", not(target_env = "p2")))`-gated already). `semio-framework-deflate` (its first-party
 # `zip_archive`) backs `🧩️extension`'s `.sxt` package pack/unpack/verify — installing a runtime extension is host tooling
-# (only caller repo-wide: `semio-framework-os`'s native host crate), never something a guest
+# (only caller repo-wide: `semio-os`'s native host crate), never something a guest
 # component does to itself; its module mount is gated the same way in `🦀️.rs`.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-semio-framework-os-store-sync = { path = "../../🔨️modules/🏪️store/🔄️sync/📦️packages/🦀️rust", optional = true }
-semio-framework-os-extension = { path = "../../🔨️modules/🧩️extension/📦️packages/🦀️rust" }
+semio-os-store-sync = { path = "../../🔨️modules/🏪️store/🔄️sync/📦️packages/🦀️rust", optional = true }
+semio-os-extension = { path = "../../🔨️modules/🧩️extension/📦️packages/🦀️rust" }
 tokio = { version = "1", features = ["sync", "macros"], default-features = false }
 semio-framework-deflate = { path = "../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-os-store-sync-native = { path = "../../🔨️modules/🏪️store/🔄️sync/🖥️native/📦️packages/🦀️rust", optional = true }
-semio-framework-os-pack-tools = { path = "../../🔨️modules/🎒️pack/⌨️cli/📦️packages/🦀️rust" }
-semio-framework-os-spr-cli = { path = "../../🔨️modules/📡️spr/⌨️cli/📦️packages/🦀️rust" }
+semio-os-store-sync-native = { path = "../../🔨️modules/🏪️store/🔄️sync/🖥️native/📦️packages/🦀️rust", optional = true }
+semio-os-pack-tools = { path = "../../🔨️modules/🎒️pack/⌨️cli/📦️packages/🦀️rust" }
+semio-os-spr-cli = { path = "../../🔨️modules/📡️spr/⌨️cli/📦️packages/🦀️rust" }
 futures = "0.3"
 # 🧵️ Same crate key as the `not(all(target_arch = "wasm32", target_env = "p2"))` table above — cargo
 # unifies same-name deps declared in multiple matching `[target.cfg(...)]` tables into one edge for
@@ -232,11 +232,11 @@ futures = "0.3"
 tokio = { version = "1", default-features = false, features = ["net"] }
 # 🌀️ `HttpPool`/`ComputePool` and the owned file-change watcher. This remains optional because all
 # consumers are native sync-runtime paths; this crate names only OS-services-owned types.
-semio-framework-os-services = { workspace = true, optional = true }
+semio-os-services = { workspace = true, optional = true }
 # 🪪️ `PackageId`/`ActorId` — `HttpPool::request`'s own per-package/per-actor quota identity
-# (`semio-framework-os-services`'s doc: "consumed from here rather than reinvented locally"). Pure,
+# (`semio-os-services`'s doc: "consumed from here rather than reinvented locally"). Pure,
 # no tokio, but only the native `HttpPool`-backed transport constructs one, so it rides the same
-# `ureq` feature as `semio-framework-os-services` above.
+# `ureq` feature as `semio-os-services` above.
 semio-framework-actor = { workspace = true, optional = true }
 # 🌐️ The native `NativeDirectoryTransport`'s blocking HTTP client (rustls + ring). Every use site is
 # `cfg(all(feature = "ureq", feature = "sync", not(target_arch = "wasm32")))`, and ring's `getrandom 0.2`
@@ -259,12 +259,12 @@ path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
 [dev-dependencies]
-semio-framework-os-store-presence = { path = "../../🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-store-ephemeral = { path = "../../🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-presence = { path = "../../🔨️modules/🏪️store/👥️presence/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-ephemeral = { path = "../../🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-pack-json-retained-schema = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 blake3 = "1.8.2"
-semio-framework-os-store-testing-fixtures = { path = "../../🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust" }
+semio-os-store-testing-fixtures = { path = "../../🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 

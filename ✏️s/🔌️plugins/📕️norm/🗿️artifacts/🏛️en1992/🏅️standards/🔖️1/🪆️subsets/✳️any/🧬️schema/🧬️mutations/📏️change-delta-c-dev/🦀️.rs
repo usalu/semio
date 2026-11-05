@@ -17,8 +17,8 @@ pub struct ChangeDeltaCDev {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeDeltaCDev where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_delta_c_dev::ChangeDeltaCDev> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "delta-c-dev", kind: "change-delta-c-dev", record: "ChangedDeltaCDev" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change cover allowance for deviation Δc,dev to {}", self.new_delta_c_dev), &format!("Vorhaltemaß Δc,dev auf {} ändern", self.new_delta_c_dev))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change cover allowance for deviation Δc,dev to {}", self.new_delta_c_dev), &format!("Vorhaltemaß Δc,dev auf {} ändern", self.new_delta_c_dev))
     }
 }
 

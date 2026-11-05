@@ -49,7 +49,7 @@ impl protocol::SemanticMutation<SequenceSnapshot> for SequenceMutation {
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         match *self {}
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match *self {}
     }
     fn target(&self) -> Vec<String> {

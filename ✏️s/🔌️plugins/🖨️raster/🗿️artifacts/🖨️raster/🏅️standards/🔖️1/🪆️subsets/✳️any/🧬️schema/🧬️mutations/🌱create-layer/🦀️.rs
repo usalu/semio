@@ -28,8 +28,8 @@ pub mod mutation {
     crate::create_layer::inverse::inverse(self, base)
 }
 
-        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Create layer \"{}\"", semio_s_artifact_raster_raster_model::layer_name(&self.layer)), &format!("Ebene \"{}\" erstellen", semio_s_artifact_raster_raster_model::layer_name(&self.layer)))
+        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+            semio_ui_locale::LocalizedLabel::native(&format!("Create layer \"{}\"", semio_s_artifact_raster_raster_model::layer_name(&self.layer)), &format!("Ebene \"{}\" erstellen", semio_s_artifact_raster_raster_model::layer_name(&self.layer)))
         }
 
         fn target(&self) -> Vec<String> {

@@ -23,8 +23,8 @@ pub fn rename_vcs(new_title: String) -> VcsDemoMutation {
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RenameVcs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "vcs", kind: "rename-vcs", record: "RenamedVcs" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename vcs to \"{}\"", self.new_title), &format!("VCS in \"{}\" umbenennen", self.new_title))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename vcs to \"{}\"", self.new_title), &format!("VCS in \"{}\" umbenennen", self.new_title))
     }
 }
 

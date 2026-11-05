@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "construction-layer", kind: "remove-construction-layer", record: "RemovedConstructionLayer" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove layer {} from construction {}", self.index, self.id.0), &format!("Schicht {} aus Konstruktion {} entfernen", self.index, self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove layer {} from construction {}", self.index, self.id.0), &format!("Schicht {} aus Konstruktion {} entfernen", self.index, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

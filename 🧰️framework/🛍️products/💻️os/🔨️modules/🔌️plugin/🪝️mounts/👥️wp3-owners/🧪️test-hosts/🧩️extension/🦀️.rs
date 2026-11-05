@@ -19,18 +19,18 @@ pub(crate) mod extension_unit_4 {
     use semio_framework::Fault;
     use semio_framework::FaultFrom;
     use semio_framework::kernel::MessageEndpoint;
-    use semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1;
-    use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+    use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
+    use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
     use semio_framework::kernel::QuotaSchema;
     use serde_json::Value;
     #[cfg(test)]
 use std::mem::size_of;
-    use semio_framework_plugin_decl_app::ArtifactApp;
+    use semio_plugin_decl_app::ArtifactApp;
     use semio_framework_value::FromValue;
-    use semio_framework_plugin_reactor_app::PluginApp;
-    use semio_framework_plugin_plugin_program::PluginProgram;
+    use semio_plugin_reactor_app::PluginApp;
+    use semio_plugin_plugin_program::PluginProgram;
     use semio_framework_value::ToValue;
-    use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement;
+    use semio_plugin_extension::extension_runtime_lift::extension_retirement;
     #[cfg(test)]
     include!("../../../../🧪️tests/🔬️plugin-runtime-extension-bundle-dependency/🦀️.rs");
     #[cfg(test)]

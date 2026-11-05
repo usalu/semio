@@ -22,10 +22,10 @@ testkit = ["dep:serde", "semio-s-artifact-draw-drawing-diff/testkit", "semio-s-a
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 semio-framework-value-derive = { workspace = true }
@@ -36,7 +36,7 @@ serde = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-s-artifact-draw-drawing-diff = { workspace = true, features = ["testkit"] }

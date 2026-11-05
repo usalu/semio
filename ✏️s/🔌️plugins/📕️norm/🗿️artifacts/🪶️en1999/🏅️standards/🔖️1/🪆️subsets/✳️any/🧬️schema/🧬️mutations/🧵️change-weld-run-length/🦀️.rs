@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeWeldRunLength wher
         record: "ChangedWeldRunLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Run length of the weld run", "Schweißnaht: Nahtlänge ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Run length of the weld run", "Schweißnaht: Nahtlänge ändern")
     }
 }
 

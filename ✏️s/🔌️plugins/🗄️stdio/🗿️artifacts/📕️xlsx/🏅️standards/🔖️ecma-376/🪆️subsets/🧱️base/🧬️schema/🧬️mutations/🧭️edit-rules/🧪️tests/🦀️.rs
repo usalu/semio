@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 #[cfg(test)] use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address;
 #[cfg(test)] use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
-#[cfg(test)] use semio_framework_os_kernel::DslValue;
+#[cfg(test)] use semio_os_kernel::DslValue;
 #[cfg(test)] use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::schema::snapshot::XmlNode;
 #[cfg(test)] use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::opc_layer;
 #[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;

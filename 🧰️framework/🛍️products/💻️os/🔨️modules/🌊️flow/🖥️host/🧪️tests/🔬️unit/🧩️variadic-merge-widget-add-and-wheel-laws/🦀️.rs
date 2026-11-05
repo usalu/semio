@@ -121,7 +121,7 @@ fn add_note_widget_with_text() {
     };
     assert_eq!(dag_text, "some text");
     assert!(node.width >= 40.0);
-    assert_eq!(node.height, semio_framework_os_infinite_directed_presentation::DAG_CHANNEL_ROW_HEIGHT);
+    assert_eq!(node.height, semio_os_infinite_directed_presentation::DAG_CHANNEL_ROW_HEIGHT);
     host.retire_cold();
 }
 

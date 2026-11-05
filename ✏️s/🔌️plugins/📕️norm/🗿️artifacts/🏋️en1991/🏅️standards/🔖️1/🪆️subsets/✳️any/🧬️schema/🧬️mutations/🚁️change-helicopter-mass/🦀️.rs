@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeHelicopterMass whe
         record: "ChangedHelicopterMass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change take-off mass m of the helicopter landing", "Hubschrauberlandung: Startmasse m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change take-off mass m of the helicopter landing", "Hubschrauberlandung: Startmasse m ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

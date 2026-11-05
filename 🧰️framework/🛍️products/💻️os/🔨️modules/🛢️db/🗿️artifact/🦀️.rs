@@ -38,12 +38,12 @@
 //! below `db_artifact` allowed to interpret operation semantics at all (per the contract's hard
 //! dependency rule).
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as pack;
+extern crate semio_os_kernel as store;
 
-use semio_framework_os_kernel::ColdMutation;
-use semio_framework_os_kernel::ColdMutationDiff;
-use semio_framework_os_kernel::ColdDiffAlgebra;
+use semio_os_kernel::ColdMutation;
+use semio_os_kernel::ColdMutationDiff;
+use semio_os_kernel::ColdDiffAlgebra;
 use db_artifact_contract::{ArtifactDurableGroupJournalAppendV1, ArtifactDurableGroupRecoveryOwnerV1, ArtifactMessage, CheckpointPublicationSnapshot, CommandBatch, CommandReceipt, SubmitOptions};
 use db_artifact_engine::{ArtifactEngine, ArtifactEngineOpenRejected};
 use db_artifact_history::{ArtifactHistoryView, HistoryReplayFuture, HistoryReplayReservation};

@@ -132,11 +132,11 @@ fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
 type Generation3dStoreInitializationAuthority = store::ArtifactStoreReplayInitializer<Generation3dSnapshot, Generation3dMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>;
 
 fn initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Generation3dStoreInitializationAuthority {
-    Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
 fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
-    use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    use semio_plugin::ArtifactStoreInitializationAuthority;
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
     for _ in 0..100_000 {
@@ -155,7 +155,7 @@ fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
 /// 🦶️ Drives one step of the initializer under `fuel` and `deadline_us` and answers what it lent.
 fn step_initializer(authority: &mut Generation3dStoreInitializationAuthority, fuel: u64, deadline_us: u64, cancel: &semio_framework_job::CancelToken, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, sequence: &mut u64) -> Stepped {
     use semio_framework_job::JobOutcomeBorrow;
-    use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    use semio_plugin::ArtifactStoreInitializationAuthority;
     let mut receipt = store::RetainedCloneProgress::default();
     let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(fuel, deadline_us, STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
     match authority.step(&mut cx).expect("P3 initializer step admission") {
@@ -170,7 +170,7 @@ fn step_initializer(authority: &mut Generation3dStoreInitializationAuthority, fu
 
 #[test]
 fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
-    use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    use semio_plugin::ArtifactStoreInitializationAuthority;
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let operation = semio_framework_job::OperationId(u64::MAX - 301);
     let generation = semio_framework_job::Generation(301);
@@ -186,7 +186,7 @@ fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
 
 #[test]
 fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
-    use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    use semio_plugin::ArtifactStoreInitializationAuthority;
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let cancelled_operation = semio_framework_job::OperationId(u64::MAX - 302);
     let cancelled_generation = semio_framework_job::Generation(302);

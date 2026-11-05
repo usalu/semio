@@ -2,7 +2,7 @@ use semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::render
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, PropertyKind, PropertyValue, TemplateTarget};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use std::collections::BTreeMap;
 
 fn definition(name: &str, kind: PropertyKind, required: bool, default_value: Option<PropertyValue>) -> PropertyDef {
@@ -25,9 +25,9 @@ fn model() -> (ModelSnapshot, ModelInference) {
 
 fn text(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[&str], library: &[&str], locale: Locale) -> String {
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
-    let view = semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
+    let view = semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native);
     let node = render(snapshot, inference, &own(elements), &own(library), semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view)).expect("the properties panel renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 #[semio_framework_async_macros::async_test]

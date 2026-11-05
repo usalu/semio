@@ -5,8 +5,8 @@
 use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::LabelOf;
 use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::UtilityRef;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::UtilityRef;
 
 //#region 🔖️Registry
 /// 🪛️ One utility of the registry.
@@ -113,7 +113,7 @@ pub fn initial() -> Option<UtilityRef> {
 }
 
 /// 🪛️ The utility a view has armed, else the default.
-pub fn active(view_state: &semio_framework_plugin::ViewModel) -> &str {
+pub fn active(view_state: &semio_plugin::ViewModel) -> &str {
     view_state.active_utility_id.as_deref().unwrap_or(DEFAULT_UTILITY)
 }
 

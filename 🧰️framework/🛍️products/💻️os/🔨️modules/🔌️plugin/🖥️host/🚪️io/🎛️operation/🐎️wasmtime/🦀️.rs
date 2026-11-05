@@ -2,7 +2,7 @@
 use super::{OriginalOperationReceiving,slot::{OperationSlot,OperationRequest,OperationReply,OperationReturnAllocation}};
 use semio_framework_value::{ValueError,ValueRefusalKind,native_encoding::{NativeEncodeProgress,NativeEncodeAllocation}};
 use std::{future::{Future,poll_fn},task::{Context,Poll}};
-use semio_framework_plugin_host_engine::wasm;
+use semio_plugin_host_engine::wasm;
 use wasm::component::{Accessor,Linker};
 /// 🪟️ Native host state owns only the inline request slot and its existing diagnostic surface.
 pub trait OperationHostStore:Send+'static{
@@ -17,11 +17,11 @@ pub trait OperationHostStore:Send+'static{
 pub enum ReceiveError { Refused(ValueError), Runtime(wasm::Error) }
 /// 🫴️ Keeps an actual lifted DTO even when finishing its original receiving phase refuses.
 pub struct Received<R>{pub output:R,pub refusal:Option<ValueError>}
-fn code(result:Result<(),ValueError>)->OperationReply{OperationReply::Code(result.err().map_or(0,|error|semio_framework_plugin_guest_contract::operation_authority::refusal_code(error.kind)))}
+fn code(result:Result<(),ValueError>)->OperationReply{OperationReply::Code(result.err().map_or(0,|error|semio_plugin_guest_contract::operation_authority::refusal_code(error.kind)))}
 fn count(value:u64)->Result<usize,ValueError>{usize::try_from(value).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign native request exceeds receiving address space"))}
 fn resolve(receiver:&mut dyn OriginalOperationReceiving,request:OperationRequest)->OperationReply{
  match request{
-  OperationRequest::Begin=>OperationReply::Begin(receiver.begin().map(|maximum|maximum as u64).map_err(|error|semio_framework_plugin_guest_contract::operation_authority::refusal_code(error.kind))),
+  OperationRequest::Begin=>OperationReply::Begin(receiver.begin().map(|maximum|maximum as u64).map_err(|error|semio_plugin_guest_contract::operation_authority::refusal_code(error.kind))),
   OperationRequest::Progress{completed,total,owned}=>code((||receiver.progress(NativeEncodeProgress{completed:count(completed)?,total:count(total)?,owned_bytes:count(owned)?}))()),
   OperationRequest::Allocation{bytes,owned,next,maximum}=>code((||receiver.allocation(NativeEncodeAllocation{bytes:count(bytes)?,owned_bytes:count(owned)?,next_owned_bytes:count(next)?,maximum_bytes:count(maximum)?}))()),
   OperationRequest::ReserveReturn{kind,count:amount}=>code((||allocation_bytes(kind,count(amount)?).and_then(|bytes|receiver.reserve_return(bytes)))()),

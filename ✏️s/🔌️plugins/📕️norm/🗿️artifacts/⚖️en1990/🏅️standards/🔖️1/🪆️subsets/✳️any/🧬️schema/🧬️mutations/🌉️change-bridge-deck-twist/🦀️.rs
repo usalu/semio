@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeBridgeDeckTwist wh
         record: "ChangedBridgeDeckTwist",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change deck twist t of the bridge serviceability", "Brückengebrauchstauglichkeit: Verwindung des Überbaus t ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change deck twist t of the bridge serviceability", "Brückengebrauchstauglichkeit: Verwindung des Überbaus t ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,6 +1,6 @@
 //! 📄️ Generation2d document mutation leaves: pan the graph camera and restamp the schema. Every leaf is generic over the dispatch enum.
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 #[path = "."]
 pub mod update_camera {

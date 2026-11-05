@@ -18,9 +18,9 @@ use {crate::standards::v1::subsets::any::schema::mutations::connect_handles_in_p
 use crate::standards::v1::subsets::any::io::text::mutations::puzzle2d_declared_precision;
 use crate::Puzzle2dSnapshot;
 use machine::Command;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
 use semio_framework_tool_machine::GestureChart;
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_tool_machine::ToolMachineRunner;

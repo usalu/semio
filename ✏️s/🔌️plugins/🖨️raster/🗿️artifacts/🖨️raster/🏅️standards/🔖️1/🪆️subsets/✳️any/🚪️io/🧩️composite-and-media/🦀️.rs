@@ -220,13 +220,13 @@ pub fn raster_document_json_to_svg(document: &RasterSnapshot) -> Result<(String,
 /// 📥️ A WORLD drawing (what `s.stdio.semio/v1/drawing`'s own dwg import leaf reads out of a DWG
 /// file) becomes a one-`Pixel`-layer raster document: fitted onto a page (`page_drawing_from_world`),
 /// composed to SVG through stdio's `s.stdio.semio/v1/drawing` → `s.stdio.svg` bridge (`io_dispatch`),
-/// rendered by `semio_framework_os`'s usvg/resvg renderer (no stdio bridge rasterizes vectors — a
+/// rendered by `semio_os`'s usvg/resvg renderer (no stdio bridge rasterizes vectors — a
 /// reported `stdio_gaps` entry), and canonicalized through the `s.stdio.semio/v1/image` ↔ png codec,
 /// which also yields the real decoded width/height.
 pub fn raster_document_from_dwg_drawing(world: &SemioDrawingSnapshot) -> Result<RasterSnapshot, String> {
     let page = page_drawing_from_world(world);
     let svg = dispatch_drawing_to_svg(&page)?;
-    let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, page.canvas.width.round().max(1.0) as u32, page.canvas.height.round().max(1.0) as u32)?;
+    let rendered = semio_os::rasterize_svg_to_png_base64(&svg, page.canvas.width.round().max(1.0) as u32, page.canvas.height.round().max(1.0) as u32)?;
     let raw_bytes = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
     let image = semio_image_from_png_bytes(&raw_bytes)?;
     let (data, width, height) = (png_bytes_from_semio_image(&image)?, image.width, image.height);

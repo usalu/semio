@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertSnowGuard where Op
         record: "InsertedSnowGuard",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert snow guard {}", self.item.id), &format!("Schneefanggitter {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert snow guard {}", self.item.id), &format!("Schneefanggitter {} einfügen", self.item.id))
     }
 }
 

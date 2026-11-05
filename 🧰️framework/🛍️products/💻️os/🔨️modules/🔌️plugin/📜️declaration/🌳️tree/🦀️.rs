@@ -12,10 +12,10 @@
 //! is named `.declare_artifact(...)` instead — a forced, documented deviation from design.md §2's
 //! literal `.artifact(a: ArtifactDeclaration)` sketch.
 //! 🧭️ Every NEW io-mechanism type (`IoEntry`/`IoPayload`/io_schema's wire types) is referenced by its FULL path
-//! (`semio_framework_os_kernel::io::io_mechanism::…` / `semio_framework::io_schema::…`), never `use`d bare, so it can never
+//! (`semio_os_kernel::io::io_mechanism::…` / `semio_framework::io_schema::…`), never `use`d bare, so it can never
 //! collide with the OLD same-named `IoPayload`/`Confidence` of the `🔖️Dialect` region.
-use semio_framework_plugin_decl_surface::remember_subset_examples;
-use semio_framework_ui_contract::schema_metadata;
+use semio_plugin_decl_surface::remember_subset_examples;
+use semio_ui_contract::schema_metadata;
 use crate::plugin_program::AppFactory;
 use semio_framework::AppDefinition;
 use semio_framework::kernel::ActorId;
@@ -30,24 +30,24 @@ use semio_framework_artifact_reference::Dialect;
 use semio_framework_artifact_reference::StandardId;
 use semio_framework::surface_app_id;
 use semio_framework::AppRole;
-use semio_framework_plugin_reactor_app::NoPluginApp;
-use semio_framework_plugin_app_builder::App;
-use semio_framework_plugin_app_builder::ExampleSource;
-use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_decl_app::mount_natural_file_actions;
-use semio_framework_plugin_identity::ArtifactLocale;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use semio_framework_plugin_identity::preflight_artifact_identity;
+use semio_plugin_reactor_app::NoPluginApp;
+use semio_plugin_app_builder::App;
+use semio_plugin_app_builder::ExampleSource;
+use semio_plugin_window_kits::AppActionRegistry;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_decl_app::mount_natural_file_actions;
+use semio_plugin_identity::ArtifactLocale;
+use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_plugin_identity::preflight_artifact_identity;
 use crate::artifact_inference::ArtifactInferenceService;
-use semio_framework_plugin_ownership::store_lifecycle::OwnerMutationRoster;
-use semio_framework_plugin_decl_surface::ArtifactCodecTableV1;
-use semio_framework_plugin_decl_surface::ArtifactEditor;
-use semio_framework_plugin_decl_surface::ArtifactViewer;
-use semio_framework_plugin_decl_surface::EditorApp;
-use semio_framework_plugin_decl_surface::ViewerApp;
-use semio_framework_plugin_decl_surface::artifact_codec_table;
+use semio_plugin_ownership::store_lifecycle::OwnerMutationRoster;
+use semio_plugin_decl_surface::ArtifactCodecTableV1;
+use semio_plugin_decl_surface::ArtifactEditor;
+use semio_plugin_decl_surface::ArtifactViewer;
+use semio_plugin_decl_surface::EditorApp;
+use semio_plugin_decl_surface::ViewerApp;
+use semio_plugin_decl_surface::artifact_codec_table;
 
 /// 🗣️ One text/binary [`dsl::LanguageSpec`] pair for one `NativeCodecs` channel.
 /// `dsl::LanguageRole` names FIVE roles total (`Document`/`Ops`/`Diff`/`Pack`/`Spr`) —
@@ -76,7 +76,7 @@ pub struct NativeCodecs {
 }
 
 /// 🚪️ A subset's complete io surface: its native codecs plus every foreign-dialect hop it
-/// contributes to the process-wide `semio_framework_os_kernel::io::io_mechanism` registry (`IoEntry`
+/// contributes to the process-wide `semio_os_kernel::io::io_mechanism` registry (`IoEntry`
 /// rows built by the subset's own `serializer_entry`/`deserializer_entry`/`_text` calls —
 /// `📓️w1-a-report.md`).
 ///
@@ -87,7 +87,7 @@ pub struct NativeCodecs {
 /// so it does not exist — see `📓️w1-c-report.md` "conformance decision".
 pub struct IoDeclaration {
     pub native: NativeCodecs,
-    pub entries: &'static [semio_framework_os_kernel::io::io_mechanism::IoEntry],
+    pub entries: &'static [semio_os_kernel::io::io_mechanism::IoEntry],
 }
 
 /// 🧬️ A subset's four-facet schema descriptor plus its inference schema(s) and any executable
@@ -115,8 +115,8 @@ pub struct SchemaDeclaration {
 pub struct SurfaceDeclaration<PA: PluginApp = NoPluginApp> {
     pub definition: AppDefinition,
     /// 🚫️async: E4 fn-pointer slot
-    pub original_factory:Option<semio_framework_plugin_reactor_app::OriginalPluginAppFactory<PA>>,
-    pub factory: Option<for<'a, 'b> fn(&AppDefinition, ActorId, semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> Result<PA, semio_framework::Fault>>,
+    pub original_factory:Option<semio_plugin_reactor_app::OriginalPluginAppFactory<PA>>,
+    pub factory: Option<for<'a, 'b> fn(&AppDefinition, ActorId, semio_plugin_mounted_owner::MountedOwnerPolicyV1, &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> Result<PA, semio_framework::Fault>>,
     /// 🚫️async: E4 fn-pointer slot
     pub app_schema: fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>,
     pub document_schema: &'static str,
@@ -149,7 +149,7 @@ pub struct SubsetDeclaration<PA: PluginApp = NoPluginApp> {
 }
 
 /// 🗂️ One standard's file-format identity — mimes/extensions only (design.md §2); the commit
-/// walk synthesizes the remaining `semio_framework_os_kernel::io::FormatDescriptor` fields (`kind_id`/
+/// walk synthesizes the remaining `semio_os_kernel::io::FormatDescriptor` fields (`kind_id`/
 /// `short_id`/`name`/`full_name`/`dir_name`) from the owning `ArtifactDeclaration.kind` +
 /// `StandardDeclaration.id`, since a standard never needs a SEPARATE identity from its own
 /// dialect coordinate.
@@ -184,9 +184,9 @@ pub struct DeclaredRegistration<PA: PluginApp = NoPluginApp> {
     pub capabilities: Vec<CapabilityRequirement>,
 }
 
-pub fn format_descriptor_of<PA: PluginApp>(artifact: &ArtifactDeclaration<PA>, standard: &StandardDeclaration<PA>) -> semio_framework_os_kernel::io::FormatDescriptor {
+pub fn format_descriptor_of<PA: PluginApp>(artifact: &ArtifactDeclaration<PA>, standard: &StandardDeclaration<PA>) -> semio_os_kernel::io::FormatDescriptor {
     let kind_id = format!("{}@{}", artifact.kind.as_str(), standard.id.0);
-    semio_framework_os_kernel::io::FormatDescriptor {
+    semio_os_kernel::io::FormatDescriptor {
         kind_id: kind_id.clone(),
         short_id: kind_id.clone(),
         aliases: Vec::new(),
@@ -235,12 +235,12 @@ pub fn check_surface_id<PA: PluginApp>(subset: &SubsetDeclaration<PA>, surface: 
     Ok(())
 }
 
-pub fn subset_binding<PA: PluginApp>(plugin_id: &str, artifact: &ArtifactDeclaration<PA>, subset: &SubsetDeclaration<PA>) -> semio_framework_os_kernel::io::ArtifactCodecBinding {
+pub fn subset_binding<PA: PluginApp>(plugin_id: &str, artifact: &ArtifactDeclaration<PA>, subset: &SubsetDeclaration<PA>) -> semio_os_kernel::io::ArtifactCodecBinding {
     let apps = [&subset.viewer.definition.id, &subset.editor.definition.id].into_iter().filter(|app| !app.is_empty()).cloned().collect();
-    semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::TreeSubset, plugin_id, Some(artifact.kind.as_str().to_string()), apps, Some(subset.dialect.into()), None, &subset.io.native.codec)
+    semio_os_kernel::io::ArtifactCodecBinding::from_codec(semio_os_kernel::io::ArtifactCodecBindingChannel::TreeSubset, plugin_id, Some(artifact.kind.as_str().to_string()), apps, Some(subset.dialect.into()), None, &subset.io.native.codec)
 }
 
-pub fn artifact_declaration_bindings<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Vec<semio_framework_os_kernel::io::ArtifactCodecBinding> {
+pub fn artifact_declaration_bindings<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Vec<semio_os_kernel::io::ArtifactCodecBinding> {
     declarations.iter().flat_map(|artifact| artifact.standards.iter().flat_map(move |standard| standard.subsets.iter().map(move |subset| subset_binding(plugin_id, artifact, subset)))).collect()
 }
 
@@ -264,7 +264,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
         }
     }
-    let existing = semio_framework_os_kernel::io::io_mechanism::io_entries();
+    let existing = semio_os_kernel::io::io_mechanism::io_entries();
     for ((from, into), fidelity) in &proposed {
         let mut current_fidelity = None;
         for descriptor in existing.iter() {
@@ -313,10 +313,10 @@ pub fn project_artifact_declarations<PA: PluginApp>(declarations: &[ArtifactDecl
                 remember_subset_examples(subset.dialect, subset.examples);
                 for surface in [&subset.editor, &subset.viewer] {
                     let mut definition = surface.definition.clone();
-                    semio_framework_plugin_job::reserved_jobs::join_framework_shared_action_dispositions(&mut definition);
+                    semio_plugin_job::reserved_jobs::join_framework_shared_action_dispositions(&mut definition);
                     let examples = if surface.definition.role == AppRole::Editor { subset.examples.to_vec() } else { Vec::new() };
                     let app=App{definition:definition.clone(),examples};
-                    let definition=semio_framework_plugin_window_kits::RegisteredAppDefinition::declared(definition,surface.original_factory.is_some());
+                    let definition=semio_plugin_window_kits::RegisteredAppDefinition::declared(definition,surface.original_factory.is_some());
                     let registration=surface.original_factory.map(|factory|(factory.registration)(definition.original_source().expect("native definition producer is original"))).transpose()?;
                     result.app_defs.push((app,AppFactory{definition,registration,create:surface.factory,original_factory:surface.original_factory,document_schema:surface.document_schema,codec:surface.codec}));
                     result.app_schema_descriptors.push(surface.app_schema);

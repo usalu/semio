@@ -22,8 +22,8 @@ semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules
 semio-s-spatial-kernel-semio-session.workspace = true
 semio-s-artifact-stdio-step.workspace = true
 semio-framework-3d.workspace = true
-semio-framework-os-flow.workspace = true
-semio-framework-os-kernel-neural-engine.workspace = true
+semio-os-flow.workspace = true
+semio-os-kernel-neural-engine.workspace = true
 semio-s-artifact-stdio-step-geometry = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]

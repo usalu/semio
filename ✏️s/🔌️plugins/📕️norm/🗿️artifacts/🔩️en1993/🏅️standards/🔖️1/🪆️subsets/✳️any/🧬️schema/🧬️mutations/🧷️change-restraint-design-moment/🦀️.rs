@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRestraintDesignMom
         record: "ChangedRestraintDesignMoment",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Maximum design moment M_y,Ed of the restraint", "Halterung: Maximales Bemessungsmoment M_y,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Maximum design moment M_y,Ed of the restraint", "Halterung: Maximales Bemessungsmoment M_y,Ed ändern")
     }
 }
 

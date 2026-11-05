@@ -16,13 +16,13 @@ use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFaste
 
 
 
-use semio_framework_plugin::Board2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowEngagementSlot;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::BuiltNode;
+use semio_plugin::Board2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowEngagementSlot;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::BuiltNode;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
 
@@ -175,8 +175,8 @@ pub fn board_scene(document: &Puzzle5dSnapshot) -> Board2dScene {
 
 //#region 🔖️Render
 /// 👁️ Pure `Puzzle5dSnapshot -> UiNode` read of the flat projection.
-pub fn render(document: &Puzzle5dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Board2d, &board_scene(document))
+pub fn render(document: &Puzzle5dSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Board2d, &board_scene(document))
 }
 //#endregion 🔖️Render
 

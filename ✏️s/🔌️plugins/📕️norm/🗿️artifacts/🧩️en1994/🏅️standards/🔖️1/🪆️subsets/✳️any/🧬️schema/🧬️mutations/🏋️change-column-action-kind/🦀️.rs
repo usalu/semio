@@ -19,8 +19,8 @@ pub struct ChangeColumnActionKind {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnActionKind where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_action_kind::ChangeColumnActionKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-action-kind", kind: "change-column-action-kind", record: "ChangedColumnActionKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change kind of the column action", "Art der Stützeneinwirkung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change kind of the column action", "Art der Stützeneinwirkung ändern")
     }
 }
 

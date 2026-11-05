@@ -15,8 +15,8 @@ pub struct InsertCell {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "cell", kind: "insert-cell", record: "InsertCell" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert cell", "Zelle einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert cell", "Zelle einfügen")
     }
     fn target(&self) -> Vec<String> {
         let mut target = vec!["xmlParts".into(), self.address.worksheet.part_path.clone(), "document".into(), "root".into()];

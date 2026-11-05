@@ -33,21 +33,21 @@ semio-s-artifact-stdio-semio-value-model = { path = "../../../../../🔌️plugi
 semio-framework-schema-composition = { path = "../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-plugin = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-plugin = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { path = "../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 pack = { package = "semio-framework-pack", path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-plugin = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-plugin = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-graph-layout-run = { path = "../../../../../../🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust", features = ["testing"] }
 semio-framework-job = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-native-decode = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "../../../../../../🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-tool-run-actions = { path = "../../../../../../🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
 serde_json = "1.0"

@@ -1,32 +1,32 @@
 
 #[semio_framework_async_macros::async_test]
 async fn block2d_viewer_never_mutates() {
-    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<semio_s_artifact_block_2d_viewer::Block2dViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_plugin::artifact_app_laws::assert_viewer_never_mutates::<semio_s_artifact_block_2d_viewer::Block2dViewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn block2d_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<semio_s_artifact_block_2d_editor::Block2dPlayApp, semio_s_artifact_block_2d_viewer::Block2dViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<semio_s_artifact_block_2d_editor::Block2dPlayApp, semio_s_artifact_block_2d_viewer::Block2dViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn block3d_viewer_never_mutates() {
-    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<semio_s_artifact_block_3d_viewer::Block3dViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_plugin::artifact_app_laws::assert_viewer_never_mutates::<semio_s_artifact_block_3d_viewer::Block3dViewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn block3d_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<semio_s_artifact_block_3d_editor::Block3dPlayApp, semio_s_artifact_block_3d_viewer::Block3dViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<semio_s_artifact_block_3d_editor::Block3dPlayApp, semio_s_artifact_block_3d_viewer::Block3dViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn block5d_viewer_never_mutates() {
-    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<semio_s_artifact_block_5d_viewer::Block5dViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_plugin::artifact_app_laws::assert_viewer_never_mutates::<semio_s_artifact_block_5d_viewer::Block5dViewer>(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn block5d_editor_and_viewer_share_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<semio_s_artifact_block_5d_editor::Block5dPlayApp, semio_s_artifact_block_5d_viewer::Block5dViewer>().await;
+    semio_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<semio_s_artifact_block_5d_editor::Block5dPlayApp, semio_s_artifact_block_5d_viewer::Block5dViewer>().await;
 }
 
 /// 🗂️ The whole plugin has to ASSEMBLE: all three apps contribute the `kit.catalog` artifact kind on

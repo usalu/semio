@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object", kind: "change-object-smooth-shading", record: "ChangedObjectSmoothShading" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set object \"{}\" smooth shading to {}", self.id, self.new_smooth_shading), &format!("Weiche Schattierung von Objekt \"{}\" auf {} setzen", self.id, self.new_smooth_shading))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set object \"{}\" smooth shading to {}", self.id, self.new_smooth_shading), &format!("Weiche Schattierung von Objekt \"{}\" auf {} setzen", self.id, self.new_smooth_shading))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -2,7 +2,7 @@ use super::*;
 use super::extension_guest::{bundle, scoped_bundle};
 use flow_extension_sdk::flow_extension_topic_contribution;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
-use semio_framework_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginLifecycleStep};
+use semio_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginLifecycleStep};
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]
@@ -243,16 +243,16 @@ async fn named_geometry_inference_owns_worker_invocation_and_dependency_identity
     let _serial = super::tests::test_serial().await;
     let fixture = semio_framework_pack_json::parse(fixture_text!("../../../../💡️inferences/📐️geometry/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut bundle = bundle();
-    let service = semio_framework_plugin::artifact_inference_service(super::geometry_inference::GEOMETRY_ARTIFACT_KIND, super::geometry_inference::GEOMETRY_INFERENCE_SCHEMA).unwrap().unwrap();
+    let service = semio_plugin::artifact_inference_service(super::geometry_inference::GEOMETRY_ARTIFACT_KIND, super::geometry_inference::GEOMETRY_INFERENCE_SCHEMA).unwrap().unwrap();
     assert!(service.metadata().payload.is_some());
-    let budgets = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 };
-    let context_required = semio_framework_plugin::ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, policy: &[], budgets: &budgets, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(fixture.get("request").unwrap().get("retained").unwrap()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "context-proof", previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Cold, canonical_payload: b"{}", dependencies: &[] };
+    let budgets = semio_plugin::WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 };
+    let context_required = semio_plugin::ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, policy: &[], budgets: &budgets, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(fixture.get("request").unwrap().get("retained").unwrap()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "context-proof", previous_state: None, requested_cache_mode: semio_plugin::WireArtifactInferenceCacheMode::Cold, canonical_payload: b"{}", dependencies: &[] };
     assert_eq!(service.infer(&context_required).err().expect("context refusal").code, "artifact-inference.context-required");
-    let mut registry = semio_framework_plugin::ArtifactInferenceServiceRegistry::default();
+    let mut registry = semio_plugin::ArtifactInferenceServiceRegistry::default();
     registry.register(service).unwrap();
     registry.register(service).unwrap();
-    fn pure_owner(_request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> { unreachable!() }
-    assert!(registry.register(semio_framework_plugin::ArtifactInferenceService::new(service.metadata(), pure_owner,pure_owner_demands)).is_err());
+    fn pure_owner(_request: &semio_plugin::ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_plugin::ArtifactInferenceExecutionStep, semio_plugin::ArtifactInferenceExecutionError> { unreachable!() }
+    assert!(registry.register(semio_plugin::ArtifactInferenceService::new(service.metadata(), pure_owner,pure_owner_demands)).is_err());
     assert_eq!(bundle.manifest.contributions.len(), 1);
     let manifest = semio_framework_pack_json::parse(bundle.manifest.topic_contributions[0].payload.get("manifestJson").and_then(|value| value.as_str()).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for operator in manifest.get("contributes").unwrap().get("operators").and_then(|value| value.as_array()).unwrap() {
@@ -302,13 +302,13 @@ async fn named_geometry_inference_owns_worker_invocation_and_dependency_identity
 
 #[test]
 fn named_geometry_bypass_preserves_original_node_identity_and_round_grants() {
-    use semio_framework_plugin::{WireArtifactInferenceRequest,WireArtifactInferenceResult,WireArtifactInferenceBudget,WireArtifactInferenceCacheMode};
+    use semio_plugin::{WireArtifactInferenceRequest,WireArtifactInferenceResult,WireArtifactInferenceBudget,WireArtifactInferenceCacheMode};
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();let law=&fixture["bypassIdentity"];let (mut owner,reader)=scoped_bundle();let identity=reader.owner_identity();let metadata=super::geometry_inference::geometry_inference_service().metadata();let mut receipts=Vec::new();
     for hash in law["nodeHashes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()) {
         let mut payload=serde_json::json!({"operatorId":fixture["evaluate"]["operatorId"],"inputJson":fixture["evaluate"]["inputJson"],"nodeHash":hash,"dependencyJson":"","operatorVersion":"bypass-v1","budget":law["roundUnits"],"roundUnits":law["roundUnits"],"wallMicros":1,"resume":false,"retained":fixture["evaluate"]["retained"]});
         for hop in 0..=law["compactHops"].as_u64().unwrap() {
             if hop>0 {payload["inputJson"]=serde_json::json!("");payload["resume"]=serde_json::json!(true);}
-            let request=WireArtifactInferenceRequest {wire_version:semio_framework_plugin::ARTIFACT_INFERENCE_WIRE_VERSION,owner:metadata.owner.into(),artifact_kind:metadata.artifact_kind.into(),artifact_schema:metadata.artifact_schema.into(),artifact_schema_version:1,inference_schema:metadata.inference_schema.into(),inference_schema_version:1,algorithm_version:1,policy_version:1,revision:1,generation:1,source_dialect:"s.flow.flow.standard.v1.dialect.canonical".into(),policy:vec![],budgets:WireArtifactInferenceBudget {allocation_bytes:1048576,work_units:law["roundUnits"].as_u64().unwrap(),recursion_depth:64},retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(&super::tests::geometry_test_retained()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),cancellation_id:law["cancellationGroup"].as_str().unwrap().into(),previous_state:None,requested_cache_mode:WireArtifactInferenceCacheMode::Bypass,canonical_payload:serde_json::to_vec(&payload).unwrap(),dependencies:vec![]};
+            let request=WireArtifactInferenceRequest {wire_version:semio_plugin::ARTIFACT_INFERENCE_WIRE_VERSION,owner:metadata.owner.into(),artifact_kind:metadata.artifact_kind.into(),artifact_schema:metadata.artifact_schema.into(),artifact_schema_version:1,inference_schema:metadata.inference_schema.into(),inference_schema_version:1,algorithm_version:1,policy_version:1,revision:1,generation:1,source_dialect:"s.flow.flow.standard.v1.dialect.canonical".into(),policy:vec![],budgets:WireArtifactInferenceBudget {allocation_bytes:1048576,work_units:law["roundUnits"].as_u64().unwrap(),recursion_depth:64},retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(&super::tests::geometry_test_retained()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),cancellation_id:law["cancellationGroup"].as_str().unwrap().into(),previous_state:None,requested_cache_mode:WireArtifactInferenceCacheMode::Bypass,canonical_payload:serde_json::to_vec(&payload).unwrap(),dependencies:vec![]};
             let result:WireArtifactInferenceResult=semio_framework_pack_json::from_json_str(std::str::from_utf8(&owner.artifact_infer(semio_framework_pack_json::to_json_string(&request).as_bytes()).unwrap()).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let envelope:serde_json::Value=serde_json::from_slice(&result.canonical_payload).unwrap();let progress=flow_extension_sdk::evaluation_progress(&reader,fixture["evaluate"]["operatorId"].as_str().unwrap(),hash);receipts.push((result.complete,result.actual_cache_mode,envelope,progress.map(|value|value.units_done),reader.owner_identity()));
         }
@@ -378,24 +378,24 @@ async fn named_geometry_inference_resumes_with_progress_matches_output_and_cance
     let mut cancellation_rounds=0;while flow_extension_sdk::evaluation_retirement_pending(&scope){cancellation_rounds+=1;assert!(cancellation_rounds<100000);let reply=semio_framework_pack_json::parse_bytes(&bundle.invoke("evaluateCancel",cancel.as_bytes()).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(reply.get("ok").and_then(semio_framework_pack_json::Value::as_bool),Some(true));}
     assert!(flow_extension_sdk::evaluation_progress(&scope,"brep.bool.cut", 0xfeedcafe).is_none());
     let metadata = super::geometry_inference::geometry_inference_service().metadata();
-    let named = semio_framework_plugin::WireArtifactInferenceRequest {
-        wire_version: semio_framework_plugin::ARTIFACT_INFERENCE_WIRE_VERSION,
+    let named = semio_plugin::WireArtifactInferenceRequest {
+        wire_version: semio_plugin::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: metadata.owner.into(), artifact_kind: metadata.artifact_kind.into(), artifact_schema: metadata.artifact_schema.into(), artifact_schema_version: 1,
         inference_schema: metadata.inference_schema.into(), inference_schema_version: 1, algorithm_version: 1, policy_version: 1,
         revision: 1, generation: 1, source_dialect: "s.flow.flow.standard.v1.dialect.canonical".into(), policy: vec![],
-        budgets: semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 }, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(&super::tests::geometry_test_retained()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "geometry-retained-cancel".into(),
-        previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Cold,
+        budgets: semio_plugin::WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 }, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(&super::tests::geometry_test_retained()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "geometry-retained-cancel".into(),
+        previous_state: None, requested_cache_mode: semio_plugin::WireArtifactInferenceCacheMode::Cold,
         canonical_payload: request.into_bytes(), dependencies: vec![],
     };
-    assert!(semio_framework_plugin::install_extension_bundle(&mut Some(bundle)).await.unwrap());
-    semio_framework_plugin::extension_activate().await.unwrap();
-    let named_result = semio_framework_plugin::wire_artifact_infer(semio_framework_pack_json::to_json_string(&named).as_bytes()).await;
-    let cancellation = semio_framework_plugin::cancel_artifact_inference(&named.cancellation_id);
+    assert!(semio_plugin::install_extension_bundle(&mut Some(bundle)).await.unwrap());
+    semio_plugin::extension_activate().await.unwrap();
+    let named_result = semio_plugin::wire_artifact_infer(semio_framework_pack_json::to_json_string(&named).as_bytes()).await;
+    let cancellation = semio_plugin::cancel_artifact_inference(&named.cancellation_id);
     while flow_extension_sdk::evaluation_retirement_pending(&scope){let copy=flow_extension_sdk::evaluation_retirement_demands(&scope,8).unwrap().copy_bytes.max(8);let demand=flow_extension_sdk::evaluation_retirement_demands(&scope,copy).unwrap();let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=flow_extension_sdk::retire_cancelled_evaluations_close_step(&scope,grant).unwrap();assert!(step.progress().fits(grant));}
     let retired = flow_extension_sdk::evaluation_progress(&scope,"brep.bool.cut", 0xfeedcafe).is_none();drop(scope);
-    semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
+    semio_plugin::plugin_runtime::extension_dispose_cold().unwrap();
     let answer = named_result.unwrap();
-    let answer: semio_framework_plugin::WireArtifactInferenceResult = semio_framework_pack_json::from_json_str(std::str::from_utf8(&answer).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let answer: semio_plugin::WireArtifactInferenceResult = semio_framework_pack_json::from_json_str(std::str::from_utf8(&answer).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(!answer.complete);
     assert_eq!(answer.quality, "ExactNumericalWithinTolerance");
     cancellation.unwrap();
@@ -405,13 +405,13 @@ async fn named_geometry_inference_resumes_with_progress_matches_output_and_cance
 
 #[semio_framework_async_macros::async_test]
 async fn named_geometry_inference_standard_gateway_uses_registered_extension_context() {
-    use semio_framework_plugin::{WireArtifactInferenceRequest, WireArtifactInferenceResult, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+    use semio_plugin::{WireArtifactInferenceRequest, WireArtifactInferenceResult, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
     let _serial = super::tests::test_serial().await;
     let fixture = semio_framework_pack_json::parse(fixture_text!("../../../../💡️inferences/📐️geometry/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let bundle = bundle();
     let metadata = super::geometry_inference::geometry_inference_service().metadata();
     let request = WireArtifactInferenceRequest {
-        wire_version: semio_framework_plugin::ARTIFACT_INFERENCE_WIRE_VERSION,
+        wire_version: semio_plugin::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: metadata.owner.into(), artifact_kind: metadata.artifact_kind.into(), artifact_schema: metadata.artifact_schema.into(), artifact_schema_version: 1,
         inference_schema: metadata.inference_schema.into(), inference_schema_version: 1, algorithm_version: 1, policy_version: 1,
         revision: 1, generation: 1, source_dialect: "s.flow.flow.standard.v1.dialect.canonical".into(), policy: vec![],
@@ -460,9 +460,9 @@ async fn named_geometry_inference_standard_gateway_uses_registered_extension_con
         mesh_request.previous_state = Some(output.canonical_payload);
     }
     assert!(mesh_trips > 1);
-    assert!(semio_framework_plugin::install_extension_bundle(&mut Some(bundle)).await.unwrap());
-    semio_framework_plugin::extension_activate().await.unwrap();
-    let answer = semio_framework_plugin::wire_artifact_infer(wire.as_bytes()).await;
+    assert!(semio_plugin::install_extension_bundle(&mut Some(bundle)).await.unwrap());
+    semio_plugin::extension_activate().await.unwrap();
+    let answer = semio_plugin::wire_artifact_infer(wire.as_bytes()).await;
     let automatic = answer.as_ref().map(|bytes| semio_framework_pack_json::from_json_str::<WireArtifactInferenceResult>(std::str::from_utf8(bytes).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let volume_answer = match automatic.as_ref() {
         Ok(automatic) => {
@@ -471,11 +471,11 @@ async fn named_geometry_inference_standard_gateway_uses_registered_extension_con
             let mut volume_request = request.clone();
             volume_request.cancellation_id = "named-geometry-volume".into();
             volume_request.canonical_payload = geometry_test_request("brep.measure.volume", input, 0, 1, 1).into_bytes();
-            Some(semio_framework_plugin::wire_artifact_infer(semio_framework_pack_json::to_json_string(&volume_request).as_bytes()).await)
+            Some(semio_plugin::wire_artifact_infer(semio_framework_pack_json::to_json_string(&volume_request).as_bytes()).await)
         }
         Err(_) => None,
     };
-    semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
+    semio_plugin::plugin_runtime::extension_dispose_cold().unwrap();
     let automatic = automatic.unwrap();
     assert!(automatic.complete);
     assert_eq!(automatic.quality, result.quality);
@@ -485,4 +485,4 @@ async fn named_geometry_inference_standard_gateway_uses_registered_extension_con
     assert_eq!(geometry_test_output(&volume_envelope).get("volume").unwrap().get("value").and_then(semio_framework_pack_json::Value::as_f64), fixture.get("expectedVolume").and_then(semio_framework_pack_json::Value::as_f64));
 }
 
-fn pure_owner_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
+fn pure_owner_demands(_request:&semio_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowExtensionEdge w
         record: "ChangedRowExtensionEdge",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Extension edge distance e_x of the joint row", "Schraubenreihe: Überstand Randabstand e_x ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Extension edge distance e_x of the joint row", "Schraubenreihe: Überstand Randabstand e_x ändern")
     }
 }
 

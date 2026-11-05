@@ -7,7 +7,7 @@ import { runCmdStatus } from "@semio-tech/process/execution";
 import { WGPU_SCRIPT_PATH } from "@semio-tech/framework-plugin/build/plan";
 import { runtimeExecutableV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
-const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
+const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_os_scale_fixture.wasm";
 
 function benchNativeRows(repoRoot: string, outDir: string, registryPath: string, shardCount: number): Record<string, unknown>[] {
   const wasmPath = join(repoRoot, SCALE_COMPONENT_ARTIFACT);

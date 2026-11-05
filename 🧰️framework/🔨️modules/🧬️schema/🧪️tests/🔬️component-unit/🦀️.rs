@@ -55,7 +55,7 @@ async fn expected_snapshot_title(id: &str) -> String {
 //#endregion 🔖️SyntheticArtifact
 
 //#region 🔖️ArtifactCompositionFixture
-/// 🧪️ Local stand-ins for `semio-framework-os-kernel`'s store `ArtifactChild<T>` / `ArtifactLink`
+/// 🧪️ Local stand-ins for `semio-os-kernel`'s store `ArtifactChild<T>` / `ArtifactLink`
 /// — legitimate here since `#[derive(ArtifactSchema)]`'s composition support matches field types
 /// SYNTACTICALLY (last path segment), never resolving the real types.
 struct ArtifactChild<T> {

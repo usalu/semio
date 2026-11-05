@@ -12,7 +12,7 @@ use semio_s_artifact_draw_drawing_geometry::multiply;
 use semio_s_artifact_draw_drawing_geometry::editing::{PathPointRef, translate_world_path_points};
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
+use semio_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 use std::collections::{BTreeMap,BTreeSet};
 use semio_framework_value::paged::PagedUtf8;
 use semio_framework_value_persistent::list::PagedList;

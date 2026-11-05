@@ -5,16 +5,16 @@
 use crate::editor::wfc3d::modes::edit::windows::preview as editor_preview;
 use crate::editor::wfc3d::transient::solved_transient;
 use crate::Wfc3dSnapshot;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::World3dScene;
-use semio_framework_plugin::world3d_selection_json;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_plugin::World3dScene;
+use semio_plugin::world3d_selection_json;
 
 //#region 🔖️Constants
 pub const WFC_3D_VIEW_WINDOW: &str = "wfc-3d-view";

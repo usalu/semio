@@ -11,7 +11,7 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateLoad> + From<crate::standards::v1::subsets::any::schema::mutations::delete_load::DeleteLoad>,
 {
 const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "load", kind: "create-load", record: "CreateLoad" };
-fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("create load", "Anlegen Last") }
+fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("create load", "Anlegen Last") }
 fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

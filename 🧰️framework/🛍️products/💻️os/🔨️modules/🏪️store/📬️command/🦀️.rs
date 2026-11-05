@@ -3,9 +3,9 @@
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
 use protocol::{MutationId, UndoPolicy, Mutation, MutationDiff, OpBinary, OpText};
-use semio_framework_os_vcs::{Author, VcsError};
+use semio_os_vcs::{Author, VcsError};
 use semio_framework_diagnostic::{TextError, TextSpan};
-use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackRefusal, pack_rt};
+use semio_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackRefusal, pack_rt};
 #[path="🧬️schema/🦀️.rs"]
 mod schema;
 pub use schema::{ArtifactCommand, HistoryLane, OpenToolTransaction, SupersedeInput};

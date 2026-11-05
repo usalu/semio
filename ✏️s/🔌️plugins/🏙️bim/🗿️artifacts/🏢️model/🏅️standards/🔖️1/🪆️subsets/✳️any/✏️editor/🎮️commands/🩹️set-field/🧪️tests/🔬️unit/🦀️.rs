@@ -1,6 +1,6 @@
 use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+use semio_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, kind_holding, PROJECT_FIELDS, PROJECT_ID};
 #[allow(unused_imports)]
@@ -10,7 +10,7 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_coordination::editor::bim::commands::set_field::{handle, SetField};

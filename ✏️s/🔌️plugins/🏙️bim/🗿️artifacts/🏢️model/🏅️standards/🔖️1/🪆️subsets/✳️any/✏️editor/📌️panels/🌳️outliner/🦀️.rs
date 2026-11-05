@@ -10,21 +10,21 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_wit
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::Buildable;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::HasBase;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::Trigger;
-use semio_framework_plugin::{row_action, row_target, RowActionPlacement};
-use semio_framework_plugin::UiFixedMap;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_ui_locale::Label;
+use semio_plugin::Buildable;
+use semio_plugin::BuiltNode;
+use semio_plugin::HasBase;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::Trigger;
+use semio_plugin::{row_action, row_target, RowActionPlacement};
+use semio_plugin::UiFixedMap;
+use semio_plugin::UiText;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_ui_locale::Label;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "bim.edit.outliner";
@@ -56,7 +56,7 @@ pub mod views;
 
 //#region 🔖️Rows
 /// 🔭️ The kinds of view the outliner offers to add besides the plan of an entity row: what `createView` makes for the building, with the label of the row.
-const VIEW_ADDS: [(&str, fn(&BimLabels) -> semio_framework_ui_locale::LabelText); 5] = [
+const VIEW_ADDS: [(&str, fn(&BimLabels) -> semio_ui_locale::LabelText); 5] = [
     ("ceiling-plan", |labels| labels.name_ceiling_plan),
     ("section", |labels| labels.name_section),
     ("elevation", |labels| labels.name_elevation),
@@ -87,8 +87,8 @@ fn roster<'a>(snapshot: &'a ModelSnapshot) -> Vec<Row<'a>> {
 }
 
 /// 🌳️ A tree row with a label, an icon and, when it has them, a granularity and a description.
-pub fn item(row_id: &str, name: &str, icon: &str, granularity: Option<&str>, description: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
-    let mut item = semio_framework_ui_contract::tree_item(ui_label(name)?).try_id(row_id).map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())?.icon(ui_text(icon)?);
+pub fn item(row_id: &str, name: &str, icon: &str, granularity: Option<&str>, description: Option<&str>) -> UiAssemblyResult<semio_ui_contract::TreeItemBuilder> {
+    let mut item = semio_ui_contract::tree_item(ui_label(name)?).try_id(row_id).map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())?.icon(ui_text(icon)?);
     if let Some(granularity) = granularity {
         item = item.granularity(ui_text(granularity)?);
     }
@@ -99,11 +99,11 @@ pub fn item(row_id: &str, name: &str, icon: &str, granularity: Option<&str>, des
 }
 
 /// 🍃️ The builder as a closed row without children.
-pub fn leaf(builder: semio_framework_ui_contract::TreeItemBuilder) -> UiAssemblyResult<BuiltNode> {
+pub fn leaf(builder: semio_ui_contract::TreeItemBuilder) -> UiAssemblyResult<BuiltNode> {
     builder.default_open(false).try_build().map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())
 }
 
-pub fn entity_item(snapshot: &ModelSnapshot, row: &EntityKind, id: &str, description: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+pub fn entity_item(snapshot: &ModelSnapshot, row: &EntityKind, id: &str, description: Option<&str>) -> UiAssemblyResult<semio_ui_contract::TreeItemBuilder> {
     item(id, &(row.name)(snapshot, id).unwrap_or_else(|| id.to_string()), row.icon, Some(row.kind), description)
 }
 
@@ -120,14 +120,14 @@ fn drag_data(id: &str) -> UiAssemblyResult<UiFixedMap<UiText>> {
 }
 
 /// 🎯️ The storey row as the drop target of a movable element: dropping sets the `storey` field of the dragged element to this storey through `setField`, which is `set-element-storey`.
-fn drop_onto(builder: semio_framework_ui_contract::TreeItemBuilder, storey: &str) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+fn drop_onto(builder: semio_ui_contract::TreeItemBuilder, storey: &str) -> UiAssemblyResult<semio_ui_contract::TreeItemBuilder> {
     let args = ui_value_map([("field", ui_value_text("storey")?), ("value", ui_value_text(storey)?)])?;
     let (action, args) = bim_action("setField", Some(args))?;
     builder.try_on_with(Trigger::Drop, action, args.ok_or_else(semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error)?).map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())
 }
 
 /// 🪜️ The row of an element that can change its storey: draggable onto a storey row, and its menu offers the move to the storey above and below, the keyboard and screen-reader way to the same `set-element-storey`.
-fn movable_item(builder: semio_framework_ui_contract::TreeItemBuilder, labels: &BimLabels, id: &str) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+fn movable_item(builder: semio_ui_contract::TreeItemBuilder, labels: &BimLabels, id: &str) -> UiAssemblyResult<semio_ui_contract::TreeItemBuilder> {
     let target = row_target(BIM_EDITOR_CONTROLLER_ID, Some(ui_value_map([("id", ui_value_text(id)?)])?), None)?;
     let full = |_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error();
     builder
@@ -161,23 +161,23 @@ fn element_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &
         if nested.is_empty() {
             return leaf(builder);
         }
-        return semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, nested.len(), |index| leaf(entity_item(snapshot, nested[index].0, &nested[index].1, None)?));
+        return semio_plugin::tree_window_indexed_item(windows, builder, id, true, nested.len(), |index| leaf(entity_item(snapshot, nested[index].0, &nested[index].1, None)?));
     }
     if let (true, Some(conditions)) = (row.kind == "space", snapshot.space_conditions.get(id)) {
         let summary = semio_s_artifact_bim_model_entities::editor::bim::entities::energy::summary(conditions);
-        return semio_framework_plugin::tree_window_indexed_item(windows, builder, id, false, 1, |_| leaf(item(&format!("{id}::conditions"), labels.env_conditions_row.as_str(), "thermometer", None, Some(&summary))?));
+        return semio_plugin::tree_window_indexed_item(windows, builder, id, false, 1, |_| leaf(item(&format!("{id}::conditions"), labels.env_conditions_row.as_str(), "thermometer", None, Some(&summary))?));
     }
     if hosted.is_empty() {
         return leaf(builder);
     }
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, id, false, hosted.len(), |index| leaf(entity_item(snapshot, hosted[index].0, hosted[index].1, None)?))
+    semio_plugin::tree_window_indexed_item(windows, builder, id, false, hosted.len(), |index| leaf(entity_item(snapshot, hosted[index].0, hosted[index].1, None)?))
 }
 
 fn group_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, storey: &str, row: &'static EntityKind, ids: &[String]) -> UiAssemblyResult<BuiltNode> {
     let group_id = format!("{storey}::{}", row.kind);
     let count = ids.len().to_string();
     let builder = item(&group_id, (row.group)(labels).as_str(), row.icon, None, Some(&count))?;
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, &group_id, ids.len() <= OPEN_GROUP_LIMIT, ids.len(), |index| element_row(windows, snapshot, inference, labels, row, &ids[index]))
+    semio_plugin::tree_window_indexed_item(windows, builder, &group_id, ids.len() <= OPEN_GROUP_LIMIT, ids.len(), |index| element_row(windows, snapshot, inference, labels, row, &ids[index]))
 }
 
 fn storey_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, id: &str) -> UiAssemblyResult<BuiltNode> {
@@ -193,7 +193,7 @@ fn storey_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &M
     if groups.is_empty() {
         return leaf(builder);
     }
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, groups.len(), |index| group_row(windows, snapshot, inference, labels, id, groups[index].0, &groups[index].1))
+    semio_plugin::tree_window_indexed_item(windows, builder, id, true, groups.len(), |index| group_row(windows, snapshot, inference, labels, id, groups[index].0, &groups[index].1))
 }
 
 fn building_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, id: &str) -> UiAssemblyResult<BuiltNode> {
@@ -206,7 +206,7 @@ fn building_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: 
     if total == 0 {
         return leaf(builder);
     }
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, total, |index| match storeys.get(index) {
+    semio_plugin::tree_window_indexed_item(windows, builder, id, true, total, |index| match storeys.get(index) {
         Some(storey) => storey_row(windows, snapshot, inference, labels, storey),
         None if index < storeys.len() + grids.len() => leaf(entity_item(snapshot, grid, grids[index - storeys.len()], None)?),
         None => views::views_row(windows, snapshot, labels, id).unwrap_or_else(|| Err(semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())),
@@ -220,7 +220,7 @@ fn site_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &Mod
     if buildings.is_empty() {
         return leaf(builder);
     }
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, buildings.len(), |index| building_row(windows, snapshot, inference, labels, buildings[index]))
+    semio_plugin::tree_window_indexed_item(windows, builder, id, true, buildings.len(), |index| building_row(windows, snapshot, inference, labels, buildings[index]))
 }
 
 fn project_group(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, kind: &str) -> UiAssemblyResult<BuiltNode> {

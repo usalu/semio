@@ -1,29 +1,29 @@
-use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
+use semio_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
 use semio_framework::{IconName, ViewModel, WindowKindDefinition};
-use semio_framework_ui_contract::BuiltNode;
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_ui_contract::BuiltNode;
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use serde_json::Value;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::{ActionKind, TreeWindowRequest};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET;
+use semio_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET;
 #[cfg(test)]
-use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_plugin_testing_laws::artifact_app_laws;
 #[cfg(test)]
-use semio_framework_plugin_window_kits_rich::document_kit::{DocumentPage, DocumentView, DocumentWindowKit, EditableDocumentPage, EditableDocumentView};
+use semio_plugin_window_kits_rich::document_kit::{DocumentPage, DocumentView, DocumentWindowKit, EditableDocumentPage, EditableDocumentView};
 #[cfg(test)]
-use semio_framework_plugin_window_kits::image_kit::{IMAGE_WINDOW_PAGED_NODE_KEY, IMAGE_WINDOW_PIXELS_LANE_KEY, ImageView, ImageWindowKit};
+use semio_plugin_window_kits::image_kit::{IMAGE_WINDOW_PAGED_NODE_KEY, IMAGE_WINDOW_PIXELS_LANE_KEY, ImageView, ImageWindowKit};
 #[cfg(test)]
-use semio_framework_plugin_window_kits::media_kit::{MEDIA_PLAYBACK_OUTPUT_PORT, MEDIA_TRANSPORT_EXTENSION_ID, MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
+use semio_plugin_window_kits::media_kit::{MEDIA_PLAYBACK_OUTPUT_PORT, MEDIA_TRANSPORT_EXTENSION_ID, MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
 #[cfg(test)]
-use semio_framework_plugin_window_kits::mesh_kit::{MeshView, MeshWindowKit};
+use semio_plugin_window_kits::mesh_kit::{MeshView, MeshWindowKit};
 #[cfg(test)]
-use semio_framework_plugin_window_kits_rich::table_kit::{EditableTableCell, TableView, TableWindowKit, WindowedEditableTableCell, editable_table_window_row, editable_table_window_row_at, row_action, row_target, table_column_window_key, table_window_row};
+use semio_plugin_window_kits_rich::table_kit::{EditableTableCell, TableView, TableWindowKit, WindowedEditableTableCell, editable_table_window_row, editable_table_window_row_at, row_action, row_target, table_column_window_key, table_window_row};
 #[cfg(test)]
-use semio_framework_plugin_window_kits::text_kit::{TextEditView, TextView, TextWindowKit};
+use semio_plugin_window_kits::text_kit::{TextEditView, TextView, TextWindowKit};
 #[cfg(test)]
-use semio_framework_plugin_window_kits_rich::tree_kit::{EditableTreeNode, TREE_WINDOW_BODY_ITEM_BUDGET, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_FIXED_NODE_ITEMS, TreeNodeView, TreeView, TreeWindowKit, TreeWindows};
-use semio_framework_plugin_window_kits::*;
+use semio_plugin_window_kits_rich::tree_kit::{EditableTreeNode, TREE_WINDOW_BODY_ITEM_BUDGET, TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_FIXED_NODE_ITEMS, TreeNodeView, TreeView, TreeWindowKit, TreeWindows};
+use semio_plugin_window_kits::*;
 mod window_kits_tests {
     use super::*;
 
@@ -126,13 +126,13 @@ mod window_kits_tests {
                 text: "hello world".into(),
                 language: Some("markdown".into()),
                 revision: Some("r1".into()),
-                publication_revision: semio_framework_ui_contract::UiPublicationRevision(u64::MAX),
+                publication_revision: semio_ui_contract::UiPublicationRevision(u64::MAX),
             };
             let node = TextWindowKit::render_editable(&view, locale).expect("bounded fixture");
             let Component::Surface(props) = node.component else { panic!("expected Surface") };
-            let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("text editor scene");
+            let mut scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(&props).expect("text editor scene");
             for carrier in &node.children {
-                assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+                assert!(semio_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
             }
             assert_eq!((scene.buffer.as_str(), scene.language.as_deref()), ("hello world", Some("markdown")));
             let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings json");
@@ -147,12 +147,12 @@ mod window_kits_tests {
                 assert!(settings[key].as_str().is_some_and(|label| !label.is_empty()), "{key} in {locale:?}");
             }
         }
-        let view = TextEditView { surface_id: "s".into(), text: String::new(), language: None, revision: None, publication_revision: semio_framework_ui_contract::UiPublicationRevision(7) };
+        let view = TextEditView { surface_id: "s".into(), text: String::new(), language: None, revision: None, publication_revision: semio_ui_contract::UiPublicationRevision(7) };
         let node = TextWindowKit::render_editable(&view, Locale::En).expect("bounded fixture");
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
-        let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("text editor scene");
+        let mut scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(&props).expect("text editor scene");
         for carrier in &node.children {
-            assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+            assert!(semio_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
         }
         let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings json");
         assert!(settings.get("editArguments").is_none(), "no revision, no arguments");
@@ -164,7 +164,7 @@ mod window_kits_tests {
         let view = TextView { text: "x".into(), language: None };
         let node = TextWindowKit::render(&view).expect("bounded fixture");
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
-        let expected = semio_framework_ui_scene::TextEditorScene {
+        let expected = semio_ui_scene::TextEditorScene {
             buffer: "x".into(),
             lanes: Vec::new(),
             language: None,
@@ -183,8 +183,8 @@ mod window_kits_tests {
             newline_gates_json: None,
             rename_json: None,
         };
-        let (spine, _) = semio_framework_ui_scene::SceneDoc::split_lanes(&expected);
-        assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &spine).expect("bounded fixture"));
+        let (spine, _) = semio_ui_scene::SceneDoc::split_lanes(&expected);
+        assert_eq!(props, semio_ui_scene::encode(SurfaceKind::TextEditor, &spine).expect("bounded fixture"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -192,9 +192,9 @@ mod window_kits_tests {
         let view = TableView { columns: vec!["a".into(), "b".into()], rows: vec![vec!["1".into(), "2".into()]] };
         let node = TableWindowKit::render(&view).expect("bounded fixture");
         let Component::Surface(props) = &node.component else { panic!("expected Surface") };
-        let mut scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+        let mut scene: semio_ui_scene::TableScene = semio_ui_scene::decode(props).expect("table scene");
         for carrier in &node.children {
-            assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+            assert!(semio_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
         }
         assert_eq!(scene.columns_json, r#"[{"id":"0","label":"a"},{"id":"1","label":"b"}]"#);
         assert_eq!(scene.rows_json, r#"[{"0":"1","1":"2","id":"0"}]"#);
@@ -210,9 +210,9 @@ mod window_kits_tests {
         let view = TableView { columns: vec!["Sheet".into(), "Value".into()], rows: vec![vec!["Sheet 1".into(), "before".into()]] };
         let node = TableWindowKit::render_editable_cells(&view, "s.stdio.xlsx@ecma-376/*#editor", &[EditableTableCell::new(0, 1, "set-cell", UiValue::Map(args.finish()))]).expect("editable table scene");
         let Component::Surface(props) = &node.component else { panic!("expected Surface") };
-        let mut scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+        let mut scene: semio_ui_scene::TableScene = semio_ui_scene::decode(props).expect("table scene");
         for carrier in &node.children {
-            assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+            assert!(semio_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
         }
         let rows: serde_json::Value = serde_json::from_str(&scene.rows_json).expect("rows json");
         assert_eq!(rows[0]["1"]["kind"], "editableText");
@@ -229,7 +229,7 @@ mod window_kits_tests {
         let value = fixture["row"]["0"].as_str().unwrap();
         let view = TableView { columns: vec!["Name".into()], rows: (0..count).map(|_| vec![value.into()]).collect() };
         let node = TableWindowKit::render(&view).expect("large table assembles");
-        let rows = node.children.iter().find(|child| child.key.as_str() == semio_framework_ui_scene::TABLE_ROWS_LANE_KEY).expect("paged row carrier");
+        let rows = node.children.iter().find(|child| child.key.as_str() == semio_ui_scene::TABLE_ROWS_LANE_KEY).expect("paged row carrier");
         let decoded: serde_json::Value = serde_json::from_str(&artifact_app_laws::built_carrier_text(rows)).unwrap();
         assert_eq!(decoded.as_array().unwrap().len(), count);
         assert_eq!(decoded[count - 1]["0"], value);
@@ -281,7 +281,7 @@ mod window_kits_tests {
     async fn table_kit_render_rows_serves_exactly_the_hosts_window_on_the_shared_ledger() {
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 20 }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         let node = table_fixture(&windows, 500);
@@ -297,7 +297,7 @@ mod window_kits_tests {
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 3 }],
             locale: Locale::En,
-            ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         let node = TableWindowKit::render_indexed_rows(&windows, "Values", &["Value"], None, 500, |row| {
@@ -314,7 +314,7 @@ mod window_kits_tests {
                 &format!("row-{row}"),
                 "s.stdio.csv@rfc4180/*#editor",
                 Locale::En,
-                [WindowedEditableTableCell::new(format!("value-{row}"), "Value", "set-cell", UiValue::Map(args.finish())).publication_revision(semio_framework_ui_contract::UiPublicationRevision(11))],
+                [WindowedEditableTableCell::new(format!("value-{row}"), "Value", "set-cell", UiValue::Map(args.finish())).publication_revision(semio_ui_contract::UiPublicationRevision(11))],
                 [remove],
                 Some(target),
             )
@@ -352,7 +352,7 @@ mod window_kits_tests {
                 controller_id,
                 Locale::En,
                 column,
-                [WindowedEditableTableCell::new("draft", "Value", action_id, UiValue::Map(args.finish())).publication_revision(semio_framework_ui_contract::UiPublicationRevision(11))],
+                [WindowedEditableTableCell::new("draft", "Value", action_id, UiValue::Map(args.finish())).publication_revision(semio_ui_contract::UiPublicationRevision(11))],
                 Vec::new(),
                 None,
             )
@@ -384,7 +384,7 @@ mod window_kits_tests {
                 TreeWindowRequest { body_key: "body".into(), node_key: table_column_window_key(TableWindowKit::KIND_ID), open: Some(true), offset: column_offset, rows: column_count },
             ],
             locale: Locale::En,
-            ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         let node = TableWindowKit::render_indexed_matrix_with_id(
@@ -404,7 +404,7 @@ mod window_kits_tests {
                         let mut args = UiMapBuilder::try_new().expect("arguments");
                         args.try_insert("row".into(), UiValue::Number(row as f64)).expect("row");
                         args.try_insert("column".into(), UiValue::Number(column as f64)).expect("column");
-                        Ok(WindowedEditableTableCell::new(format!("r{row}c{column}"), format!("Column {}", column + 1), "set-cell", UiValue::Map(args.finish())).publication_revision(semio_framework_ui_contract::UiPublicationRevision(11)))
+                        Ok(WindowedEditableTableCell::new(format!("r{row}c{column}"), format!("Column {}", column + 1), "set-cell", UiValue::Map(args.finish())).publication_revision(semio_ui_contract::UiPublicationRevision(11)))
                     })
                     .collect::<UiAssemblyResult<Vec<_>>>()?;
                 editable_table_window_row_at(&format!("row-{row}"), "s.stdio.csv@rfc4180/*#editor", Locale::En, offset, cells, Vec::new(), None)
@@ -457,7 +457,7 @@ mod window_kits_tests {
 pub fn requested(rows: u32) -> ViewModel {
         ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 0, rows }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         }
     }
 
@@ -471,10 +471,10 @@ pub fn requested(rows: u32) -> ViewModel {
         let rows = node.children.len();
         assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((500, 0)), "a shortened window still spans the whole logical table");
         assert!(rows > 0 && rows < 100, "heavy rows end the window early: {rows} of 100 requested");
-        let priced = semio_framework_ui_runtime::surface_subtree_items(&node).expect("bounded census");
+        let priced = semio_ui_runtime::surface_subtree_items(&node).expect("bounded census");
         assert!(priced <= TREE_WINDOW_BODY_ITEM_BUDGET + TREE_WINDOW_FIXED_NODE_ITEMS, "{rows} rows priced {priced} items against a body budget of {TREE_WINDOW_BODY_ITEM_BUDGET}");
         assert_eq!(windows.nodes_remaining(), TREE_WINDOW_BODY_NODE_BUDGET - 1 - rows, "the records of the rows that were not built go back to the ledger");
-        assert!(windows.items_remaining() < semio_framework_ui_runtime::surface_subtree_items(&heavy_table_row(&0).expect("heavy row")).expect("bounded census"), "the window ends only when the next row no longer fits");
+        assert!(windows.items_remaining() < semio_ui_runtime::surface_subtree_items(&heavy_table_row(&0).expect("heavy row")).expect("bounded census"), "the window ends only when the next row no longer fits");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -519,7 +519,7 @@ pub fn requested(rows: u32) -> ViewModel {
         let windows = TreeWindows::for_body(&view, "body");
         let entries: Vec<usize> = (0..fixture["window"]["total"].as_u64().expect("total") as usize).collect();
         let node = TableWindowKit::render_rows(&windows, &text(&fixture["tableLabel"]), &columns.iter().map(String::as_str).collect::<Vec<_>>(), Some(text(&fixture["actionsLabel"]).as_str()), &entries, &build).expect("windowed table");
-        let row_cost = semio_framework_ui_runtime::surface_subtree_items(node.children.iter().next().expect("a served Home row")).expect("row census");
+        let row_cost = semio_ui_runtime::surface_subtree_items(node.children.iter().next().expect("a served Home row")).expect("row census");
         assert!(row_cost as u64 <= fixture["expect"]["maxRowItems"].as_u64().expect("max row items"), "a Home-shaped row costs {row_cost} reconcile items");
         let admitted = (TREE_WINDOW_BODY_ITEM_BUDGET / row_cost).min(rows as usize);
         assert_eq!(node.children.len(), admitted, "the window serves every Home-shaped row the body's reconcile budget admits");
@@ -630,7 +630,7 @@ pub fn requested(rows: u32) -> ViewModel {
         let view = MeshView { camera_json: "{}".into(), meshes_json: "[]".into(), instances_json: "[]".into(), selection_json: "[]".into() };
         let node = MeshWindowKit::render(&view).expect("bounded fixture");
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
-        let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(&props).expect("world_3d scene");
+        let scene: semio_ui_scene::World3dScene = semio_ui_scene::decode(&props).expect("world_3d scene");
         assert_eq!(scene.camera_json.as_str(), "{}");
     }
 
@@ -674,13 +674,13 @@ pub fn requested(rows: u32) -> ViewModel {
                 Some(arguments) => EditableDocumentPage::with_arguments(page_index, item_index, text, serde_json::from_value(arguments.clone()).expect("typed static arguments")),
                 None => EditableDocumentPage::new(page_index, item_index, text),
             };
-            let node = DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: vec![page], publication_revision: semio_framework_ui_contract::UiPublicationRevision(18_364_758_544_493_064_720) }, &TreeWindows::unhosted(), locale)
+            let node = DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: vec![page], publication_revision: semio_ui_contract::UiPublicationRevision(18_364_758_544_493_064_720) }, &TreeWindows::unhosted(), locale)
                 .expect("editable document");
             let surface = first_surface(&node).expect("prefilled draft surface");
             let Component::Surface(props) = &surface.component else { unreachable!() };
-            let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("text scene");
+            let mut scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(props).expect("text scene");
             for carrier in &surface.children {
-                assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+                assert!(semio_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
             }
             assert_eq!(scene.buffer, text);
             let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings json");
@@ -713,7 +713,7 @@ pub fn requested(rows: u32) -> ViewModel {
         let view = DocumentView { pages: (0..500).map(|index| DocumentPage { text: index.to_string() }).collect() };
         let state = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".into(), node_key: DocumentWindowKit::KIND_ID.into(), open: Some(true), offset: 400, rows: 10 }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         let node = DocumentWindowKit::render_windowed(&view, &TreeWindows::for_body(&state, "body")).expect("large document page range");
         let Component::TreeSection(props) = &node.component else { panic!("windowed pages") };

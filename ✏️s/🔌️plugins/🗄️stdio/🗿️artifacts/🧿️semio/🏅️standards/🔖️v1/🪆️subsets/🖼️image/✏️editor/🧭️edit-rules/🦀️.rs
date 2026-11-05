@@ -16,7 +16,7 @@ use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::INDEX;
 use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ITEM;
 use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, SnapshotEditEvent};
 

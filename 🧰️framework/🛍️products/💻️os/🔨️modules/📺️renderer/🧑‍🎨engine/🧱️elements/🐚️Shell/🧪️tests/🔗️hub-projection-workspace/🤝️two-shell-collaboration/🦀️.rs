@@ -28,10 +28,10 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let variant = live_env("SEMIO_PLUGIN");
     let relay = SeverableRelay::start(&origin);
     let mut ledger = CollaborationLedger::default();
-    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    let plugins = drive(semio_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
     assert!(plugins.iter().any(|entry| entry.plugin_id == journey.plugin_id.as_str()), "the staged runtime carries {}", journey.plugin_id);
-    let mut a = ShellState::new(plugins.clone(), variant.clone(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let mut b = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut a = ShellState::new(plugins.clone(), variant.clone(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut b = ShellState::new(plugins, variant, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
 
     let a_retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
     let b_retry = sign_in_live(&mut b, &relay.origin, &b_email, &b_password);
@@ -54,27 +54,27 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     );
 
     let space_name = format!("g7w collaboration {}", chrome_now_ms() as u64);
-    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
-    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
+    hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
     let space_id = a.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
     shell_command(&mut a, "os.directory.upsert-member", &[("spaceId", space_id.as_str()), ("email", b_email.as_str()), ("role", "author")]);
-    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
+    hub_verb(&mut b, semio_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
     let b_row = b.directory.hub_workspace.rows.iter().find(|row| row.id == space_id).map(|row| (row.name.clone(), row.role));
     ledger.record("2-same-space", !space_id.is_empty() && b_row.as_ref().is_some_and(|(_, role)| *role == Some(DirectorySpaceRole::Author)), format!("space={space_id} B sees {b_row:?}"));
 
-    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
-    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    hub_verb(&mut b, semio_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
     let (a_roster, b_roster) = (online_members(&mut a, &space_id), online_members(&mut b, &space_id));
     ledger.record("3-roster", a_roster.len() == 2 && b_roster.len() == 2, format!("A roster={a_roster:?} B roster={b_roster:?}"));
 
     let kind_id = a.directory.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == journey.schema.as_str())).map(|kind| kind.kind_id.clone()).unwrap_or_default();
-    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
-    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Shared board")]);
-    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
+    hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+    hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Shared board")]);
+    hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
     let creation_started = std::time::Instant::now();
     let mut creation_trail = Vec::new();
     while creation_started.elapsed() < std::time::Duration::from_secs(150) {
-        let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+        let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
         if creation_trail.last() != Some(&observed) {
             creation_trail.push(observed);
         }
@@ -153,11 +153,11 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let offline_pump = std::time::Instant::now();
     let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(3), &mut trail, |_, _| false);
     let pump_elapsed = offline_pump.elapsed();
-    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
+    hub_verb(&mut b, semio_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
     let offline_phase = b.directory.hub_workspace.phase.as_str();
     let offline_remote = remote_of(&b);
     relay.heal();
-    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
+    hub_verb(&mut b, semio_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
     let healed_phase = b.directory.hub_workspace.phase.as_str();
     let a_before_heal = applied_edits(&mut a).len();
     let relive = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(40), &mut trail, |a, b| is_live(a) && is_live(b));
@@ -165,13 +165,13 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let a_after_heal = applied_edits(&mut a);
     ledger.record(
         "12-connection-loss",
-        offline_edit.is_ok() && offline_latency <= b_latency.saturating_mul(2) && pump_elapsed < std::time::Duration::from_secs(5) && offline_phase == semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale.as_str() && healed_phase == semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready.as_str() && relive.is_some() && a_after_heal.len() > a_before_heal,
+        offline_edit.is_ok() && offline_latency <= b_latency.saturating_mul(2) && pump_elapsed < std::time::Duration::from_secs(5) && offline_phase == semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale.as_str() && healed_phase == semio_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready.as_str() && relive.is_some() && a_after_heal.len() > a_before_heal,
         format!("severed={severed} B offline edit={offline_edit:?} latency={offline_latency:?} pump={pump_elapsed:?} B spaces offline={offline_phase} healed={healed_phase} B remote offline={offline_remote} relive={relive:?} A ledger {a_before_heal}->{a_after_heal:?}"),
     );
 
     println!("g7w-live trail={trail:?}");
     let failed: Vec<&str> = ledger.steps.iter().filter(|(_, passed, _)| !passed).map(|(step, _, _)| *step).collect();
-    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
-    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut a, semio_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut b, semio_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
     assert!(failed.is_empty(), "two-user collaboration steps failed: {failed:?}");
 }

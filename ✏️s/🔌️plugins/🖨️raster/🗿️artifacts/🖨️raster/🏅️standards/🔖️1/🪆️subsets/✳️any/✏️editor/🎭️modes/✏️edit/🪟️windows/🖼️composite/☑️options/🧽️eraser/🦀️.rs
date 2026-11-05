@@ -4,7 +4,7 @@
 
 use crate::config::RasterConfig;
 use crate::raster_measure_action;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 use crate::terminology::RasterPlayLabels;
 
 //#region 🔖️Measure

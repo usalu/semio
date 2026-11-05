@@ -3,7 +3,7 @@
 use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, LocalHubCredential, TransportError};
 use semio_framework_actor::{ActorId, PackageId};
 use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle};
-use semio_framework_os_services::{
+use semio_os_services::{
     AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpBodyCancellationHandle, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead, HttpTransportStart, HttpTransportTerminalGuard, TokioHostRuntime,
     HTTP_BUCKET_REFILL_INTERVAL_MS,
 };
@@ -105,7 +105,7 @@ impl AsyncHttpTransport for UreqStreamingHttpTransport {
         let connect_scope = scope.clone();
         let connect_ctx = ctx.clone();
         let body_ctx = ctx.clone();
-        let (terminal, terminal_guard) = semio_framework_os_services::HttpTransportTerminalHandle::pair();
+        let (terminal, terminal_guard) = semio_os_services::HttpTransportTerminalHandle::pair();
         let response = Box::pin(async move {
             if cancelled {
                 drop(terminal_guard);
@@ -262,7 +262,7 @@ impl DirectoryWsConnection for TungsteniteConnection {
 
 /// 🚀️ A `DirectoryTransport` for the wgpu native host and native tests. `runtime`/`scope`/
 /// `http_pool` are INJECTED, never constructed by this crate — `TokioHostRuntime` stays
-/// confined to `semio-framework-os-services` (this crate names no tokio type anywhere; see the
+/// confined to `semio-os-services` (this crate names no tokio type anywhere; see the
 /// packet report's `## tokio-containment evidence`), and one `HttpPool` belongs to the WHOLE
 /// host process (its byte budget/outstanding cap are per-package/per-actor accounting,
 /// meaningless re-created fresh per client). The ideal caller is whoever already owns the host
@@ -295,12 +295,12 @@ impl<R: HostAsyncRuntime> NativeDirectoryTransport<R> {
     }
 
     /// 💰️ This transport's package byte budget right now (see [`HttpPool::package_budget_now`]).
-    pub fn network_budget(&self) -> semio_framework_os_services::HttpPackageBudget {
+    pub fn network_budget(&self) -> semio_os_services::HttpPackageBudget {
         self.http_pool.package_budget_now(&self.package)
     }
 
     /// 🛡️ Starts one protected bounded binary GET without exposing bearer text to the caller.
-    pub async fn fetch_protected_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, url: &str, accept: &str) -> Result<(HttpResponseHead, semio_framework_os_services::HttpPoolBody), TransportError>
+    pub async fn fetch_protected_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, url: &str, accept: &str) -> Result<(HttpResponseHead, semio_os_services::HttpPoolBody), TransportError>
     where
         R: 'static,
     {
@@ -321,7 +321,7 @@ impl<R: HostAsyncRuntime> NativeDirectoryTransport<R> {
     /// and keeps it. A component is an immutable, catalog-verified, content-addressed asset, so it belongs on a transport of
     /// its own whose bytes the per-minute budget of the directory's API requests never meters (the semio MCP gateway's
     /// asset transport); the route is built from the intent and the credential's own origin, never from a caller's URL.
-    pub async fn execution_target_component_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, intent: &super::DocumentOpenIntentV1) -> Result<(HttpResponseHead, semio_framework_os_services::HttpPoolBody), TransportError>
+    pub async fn execution_target_component_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, intent: &super::DocumentOpenIntentV1) -> Result<(HttpResponseHead, semio_os_services::HttpPoolBody), TransportError>
     where
         R: 'static,
     {

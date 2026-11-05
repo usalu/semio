@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "source-frame", kind: "resize-source-frame", record: "ResizedSourceFrame" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize source frame to {:.2}x{:.2}", self.new_frame.width, self.new_frame.height), &format!("Größe des Quellrahmens auf {:.2}×{:.2} ändern", self.new_frame.width, self.new_frame.height))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Resize source frame to {:.2}x{:.2}", self.new_frame.width, self.new_frame.height), &format!("Größe des Quellrahmens auf {:.2}×{:.2} ändern", self.new_frame.width, self.new_frame.height))
     }
 
     fn target(&self) -> Vec<String> {

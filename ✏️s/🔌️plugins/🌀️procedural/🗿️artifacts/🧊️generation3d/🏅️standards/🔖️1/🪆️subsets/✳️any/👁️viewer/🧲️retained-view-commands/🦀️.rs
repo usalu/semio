@@ -88,10 +88,10 @@ fn generation3d_view_retained_reduce(
     command: &Generation3dViewCommand,
     snapshot: &Generation3dSnapshot,
     config: &Generation3dViewConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>, Fault> {
     if !GENERATION3D_VIEW_TOOL_IDS.contains(&command.command_id()) && !GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&command.command_id()) {
@@ -131,7 +131,7 @@ pub(super) struct Generation3dViewCommandWork {
     pub(super) tool_id: &'static str,
     /// 🔒️ The app instance's retained evaluation session, reached ONLY to owe the attached previews an
     /// evaluation on their per-window latches.
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) emit: Option<Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>>,
     pub(super) presence: Vec<Generation3dViewPresenceMutation>,
     emit_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>>>,
@@ -141,7 +141,7 @@ pub(super) struct Generation3dViewCommandWork {
 }
 
 impl Generation3dViewCommandWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner, emit: None, presence: Vec::new(), emit_retirement: None, presence_retirement: None, complete: false, closing: false }
     }
 
@@ -161,7 +161,7 @@ impl Generation3dViewCommandWork {
 }
 
 /// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
-pub(super) fn command_work_step_demands<A: semio_framework_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
     Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
 }
 
@@ -175,7 +175,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         command: &Generation3dViewCommand,
         snapshot: &Generation3dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
     ) -> Option<usize> {
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }

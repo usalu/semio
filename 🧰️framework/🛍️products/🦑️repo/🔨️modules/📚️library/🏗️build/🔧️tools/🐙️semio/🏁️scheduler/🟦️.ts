@@ -16,7 +16,7 @@ export type SemioPortsV1=Readonly<{workspace:string;store:SemioStoreV1;remote?:S
 /** 🎛️ Cancellation and progress of one run. */
 export type SemioHooksV1=Readonly<{signal:AbortSignal;onEvent?:(event:SemioEventV1)=>void|Promise<void>;onSettled?:()=>void|Promise<void>}>;
 
-const EXCLUDED=new Set([".git",".🧬semio",".cache",".nx","node_modules","target","dist","build","coverage",".venv","__pycache__"]);
+const EXCLUDED=new Set([".git",".🧬semio",".cache", ".r",".nx","node_modules","target","dist","build","coverage",".venv","__pycache__"]);
 const order=(left:string,right:string)=>left<right?-1:left>right?1:0;
 
 /** 🌳️ Whether the workspace lies inside a Git work tree, judged from the `.git` entry of it or of a parent. */

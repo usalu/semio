@@ -17,8 +17,8 @@ pub struct ChangeColumnRebarCoverM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnRebarCoverM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_rebar_cover_m::ChangeColumnRebarCoverM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-rebar-cover-m", kind: "change-column-rebar-cover-m", record: "ChangedColumnRebarCoverM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change axis distance of the longitudinal bars from the concrete surface (0 = 0.05 m)", "Achsabstand der Längsbewehrung von der Betonoberfläche (0 = 0,05 m) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change axis distance of the longitudinal bars from the concrete surface (0 = 0.05 m)", "Achsabstand der Längsbewehrung von der Betonoberfläche (0 = 0,05 m) ändern")
     }
 }
 

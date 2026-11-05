@@ -15,8 +15,8 @@ pub struct InsertTriangle {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for InsertTriangle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "triangle", kind: "insert-triangle", record: "InsertTriangle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert triangle", "Dreieck einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert triangle", "Dreieck einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

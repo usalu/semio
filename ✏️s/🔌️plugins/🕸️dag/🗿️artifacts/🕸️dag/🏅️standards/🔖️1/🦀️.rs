@@ -2,7 +2,7 @@
 //! standard's media (design.md §1/§2).
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 /// 🏅️ `mimes` is a documented synthesis, not a literal carry-over — no real MIME registration
@@ -25,10 +25,10 @@ pub mod artifact_items_10 {
 /// function set. Relocated from `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// reloc-g2): `declaration()` describes the artifact (kind, schema, io ports, ownership), which is not
 /// engine behaviour.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.dag.dag.standard.v1", "standard", "1", &[], None),
         ("s.dag.dag.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.dag.dag.schema.artifact", "schema", "s.dag.dag", &[("schema", "s.dag.dag")], None),
@@ -64,22 +64,22 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `.declare_artifact(artifact())` call is the ONLY registration channel for this artifact.
 /// `definition()` (old `ArtifactDefinition`/capability rows) is KEPT per debt D1 — not deleted
 /// repo-wide until W6 — but has zero callers left from this file.
-pub fn artifact<A: DagApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: DagApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.dag.dag").expect("canonical dag kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait DagApplication:
-    semio_framework_plugin::PluginApp + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::dag::DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>> + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::dag::DagViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    semio_plugin::PluginApp + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::dag::DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>> + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::dag::DagViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> DagApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::dag::DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::dag::DagViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::dag::DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::dag::DagViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 

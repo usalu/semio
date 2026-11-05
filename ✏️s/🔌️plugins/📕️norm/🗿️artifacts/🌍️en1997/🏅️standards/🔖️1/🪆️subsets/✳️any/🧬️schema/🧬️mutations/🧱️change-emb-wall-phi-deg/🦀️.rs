@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeEmbWallPhiDeg wher
         record: "ChangedEmbWallPhiDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Friction angle φ′ of the embedded wall", "Eingespannte Wand: Reibungswinkel φ′ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Friction angle φ′ of the embedded wall", "Eingespannte Wand: Reibungswinkel φ′ ändern")
     }
 }
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeTestPairs where Op
         record: "ChangedTestPairs",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Test series: Test pairs r_e:r_t (D.7.2)", "Versuchsreihe: Versuchspaare r_e:r_t (D.7.2) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Test series: Test pairs r_e:r_t (D.7.2)", "Versuchsreihe: Versuchspaare r_e:r_t (D.7.2) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

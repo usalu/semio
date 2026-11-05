@@ -15,8 +15,8 @@ fn scalar_controller_value(input: &serde_json::Value) -> IfcValue {
 }
 #[test]
 fn scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_signed_values_editable() {
-    use semio_framework_plugin::{AppRenderOperationContext, ChildContentView};
-    use semio_framework_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
+    use semio_plugin::{AppRenderOperationContext, ChildContentView};
+    use semio_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
     use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity};
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔎️details/🧪️tests/type-scalar-input.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
@@ -32,7 +32,7 @@ fn scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_sig
             })
             .collect();
         let snapshot = std::sync::Arc::new(IfcSnapshot { entities, ..Default::default() });
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = semio_plugin::HistoryView::empty();
         let view = staged_view();
         let rows = serde_json::Value::Array(row["required"].as_array().unwrap().iter().map(|item| serde_json::json!({"index":item["index"].as_u64().unwrap().to_string(),"value":row["args"][item["index"].as_u64().unwrap()as usize]})).collect());
         let mut request = staged_request(&serde_json::json!({"path":"/entities/0","value":{"$ifcType":row["target"],"$ifcInputs":rows}}));
@@ -42,11 +42,11 @@ fn scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_sig
             base_revision: semio_framework_job::RevisionId(0),
             generation: semio_framework_job::Generation(1),
             canonical_base_revision: [0; 32],
-            mounted_policy: semio_framework_plugin::app_testing::artifact_app_laws::fixture_mounted_policy(),
+            mounted_policy: semio_plugin::app_testing::artifact_app_laws::fixture_mounted_policy(),
         };
         let doc = semio_framework_async::poll::resolve_ready(ArtifactView::with_render_context(snapshot.as_ref(), &history, ChildContentView::EMPTY, operation, "multiple-source", None));
         let mut caller = OriginalWorkFixture::new();
-        let mut work = caller.work_turn(staged_grant(), 1000, |cx| Ifc4x3AnyEditor::begin_render_work(semio_framework_plugin::action_staging::STAGED_FORM_BODY_KEY, cx)).unwrap().unwrap();
+        let mut work = caller.work_turn(staged_grant(), 1000, |cx| Ifc4x3AnyEditor::begin_render_work(semio_plugin::action_staging::STAGED_FORM_BODY_KEY, cx)).unwrap().unwrap();
         let mut donor = Some(request);
         let mut received = false;
         for _ in 0..16 {
@@ -58,7 +58,7 @@ fn scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_sig
         assert!(received && donor.is_none());
         let mut output = None;
         for _ in 0..100000 {
-            match caller.work_turn(staged_grant(), 1000, |cx| Ok(work.render(semio_framework_plugin::action_staging::STAGED_FORM_BODY_KEY, &snapshot, &doc, &view, cx))).unwrap() {
+            match caller.work_turn(staged_grant(), 1000, |cx| Ok(work.render(semio_plugin::action_staging::STAGED_FORM_BODY_KEY, &snapshot, &doc, &view, cx))).unwrap() {
                 Ok(Some(tree)) => {
                     output = Some(tree);
                     break;

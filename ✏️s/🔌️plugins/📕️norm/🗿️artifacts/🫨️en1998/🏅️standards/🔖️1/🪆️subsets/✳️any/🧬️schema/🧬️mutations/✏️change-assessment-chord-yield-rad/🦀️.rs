@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentChordYie
         record: "ChangeAssessmentChordYieldRad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Yield chord rotation θ_y", "Fließ-Sehnendrehwinkel θ_y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Yield chord rotation θ_y", "Fließ-Sehnendrehwinkel θ_y ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-chord-yield-rad".into()]

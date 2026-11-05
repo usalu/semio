@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileDynamicResMean
         record: "ChangedPileDynamicResMean",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Dynamic test mean resistance of the pile", "Pfahl: Mittlerer Widerstand der dynamischen Tests ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Dynamic test mean resistance of the pile", "Pfahl: Mittlerer Widerstand der dynamischen Tests ändern")
     }
 }
 

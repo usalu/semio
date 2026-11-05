@@ -1,6 +1,6 @@
 //! 🧪️ The retained overlay observes real original coordinates without constructing a candidate graph.
 use super::overlay::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 #[test]

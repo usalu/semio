@@ -39,8 +39,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "table-column", kind: "insert-table-column", record: "InsertedTableColumn" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert column into table \"{}\"", self.id), &format!("Spalte in Tabelle \"{}\" einfügen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert column into table \"{}\"", self.id), &format!("Spalte in Tabelle \"{}\" einfügen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

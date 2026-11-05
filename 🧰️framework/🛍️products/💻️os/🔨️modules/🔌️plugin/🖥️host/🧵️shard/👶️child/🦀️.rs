@@ -1,8 +1,8 @@
 //! 👶️ `semio-shard` — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1-process-shards): the `[[bin]]`
 //! `📓️design-runtime.md` §2 names ("in wave P1, the `semio-shard` `[[bin]]` runs over stdio").
 //! Hosts exactly ONE `🧵️shard/🦀️.rs::ShardLoop`, driven by a real
-//! [`semio_framework_plugin_interpreter_runtime::OwnedRuntime`] over
-//! [`semio_framework_plugin_host::process_transport::StdioTransport`] — the child-process half of
+//! [`semio_plugin_interpreter_runtime::OwnedRuntime`] over
+//! [`semio_plugin_host::process_transport::StdioTransport`] — the child-process half of
 //! `ProcessTransport`'s duplex link (`../🚚️process-transport/🦀️.rs`). One process per
 //! shard, one `semio-shard` invocation per process; multiple actors on the SAME shard register on
 //! this one `ShardLoop` exactly like a thread shard would (this binary does not special-case actor
@@ -18,11 +18,11 @@
 
 use semio_framework::kernel::Budget;
 use semio_framework_actor::ActorId;
-use semio_framework_plugin_host_guest_runtime::{GuestRuntime, GuestRuntimes, PackageRef};
-use semio_framework_plugin_host_process_transport::StdioTransport;
-use semio_framework_plugin_host_shard::{ShardLoop, ShardTransports, native_identity_issuer};
+use semio_plugin_host_guest_runtime::{GuestRuntime, GuestRuntimes, PackageRef};
+use semio_plugin_host_process_transport::StdioTransport;
+use semio_plugin_host_shard::{ShardLoop, ShardTransports, native_identity_issuer};
 use semio_framework_actor::{PackageHash, PackageId};
-use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
+use semio_plugin_interpreter_runtime::OwnedRuntime;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -33,7 +33,7 @@ use std::time::Duration;
 fn instantiate_budget(original_clock:fn()->Option<u64>)->Budget{Budget::original(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 }, 200_000_000, original_clock().expect("shard process root clock is available"), 500, 32, 1 << 16, 8)}
 
 /// 🎚️ P1f: this process hosts exactly ONE `ShardLoop`, pumped directly on THIS thread (below) —
-/// never submitted to `semio_framework_plugin_host::plugin_host_worker_pool()`. That pool's only
+/// never submitted to `semio_plugin_host::plugin_host_worker_pool()`. That pool's only
 /// tenant here is `StdioTransport`'s heartbeat sender (a sub-millisecond periodic job), so it
 /// needs exactly one worker, not `available_parallelism()-1`.
 ///

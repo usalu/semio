@@ -1,8 +1,8 @@
 //! 📥️ Trait impls of `🏪️store` whose trait or type belongs to `os-store-replay` (orphan rule, PLAN-OS-KERNEL-CRATES.md 7.7): lifted out of `🏪️store/🦀️.rs`.
-use semio_framework_os_vcs::ArtifactHistoryLedger;
-use semio_framework_os_spr::Edit;
+use semio_os_vcs::ArtifactHistoryLedger;
+use semio_os_spr::Edit;
 use std::collections::HashMap;
-use semio_framework_os_spr::Mutation;
+use semio_os_spr::Mutation;
 use crate::ReplayEdits;
 
 

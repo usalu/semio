@@ -44,14 +44,14 @@ async fn nakagin_document_text_round_trips_store_with_applied_operation() {
 
 /// 🧫️ The empty Nakagin-manifest document the round-trip laws edit the query of.
 fn create_document_envelope_for_test() -> store::os_store::store_schema::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
-    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
+    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
 }
 use store::os_store::document_materialize::create_document_envelope;
 
 type JackStoreInitializationAuthority = store::ArtifactStoreReplayInitializer<JackSnapshot, TrinityGraphMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>;
 
 fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
-    let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     JackStoreInitializationAuthority::new(envelope, TRINITY_GRAPH_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
@@ -73,7 +73,7 @@ fn drive_jack_initializer(authority: &mut JackStoreInitializationAuthority, oper
     for _ in 0..100_000 {
         let mut retained = RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, step_grant()), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut retained);
-        let lent = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context).expect("Jack retained initializer turn");
+        let lent = semio_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context).expect("Jack retained initializer turn");
         let Some(borrow) = lent else { continue };
         let terminal = borrow.is_terminal();
         let outcome = match &borrow {
@@ -90,17 +90,17 @@ fn drive_jack_initializer(authority: &mut JackStoreInitializationAuthority, oper
 }
 
 fn close_jack_candidate(mut candidate: store::ArtifactStore<JackSnapshot, TrinityGraphMutation>) {
-    use semio_framework_plugin::ArtifactOwnedDisposer;
+    use semio_plugin::ArtifactOwnedDisposer;
 
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<JackSnapshot, TrinityGraphMutation>::new();
+    let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<JackSnapshot, TrinityGraphMutation>::new();
     for _ in 0..100_000 {
         let demand = disposer.retirement_demands(&candidate, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack candidate close quote");
         let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
         match disposer.close_step(&mut candidate, grant).expect("Jack candidate close step") {
-            semio_framework_plugin::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
-            semio_framework_plugin::PluginLifecycleStep::Blocked { reason } => panic!("fresh Jack candidate close unexpectedly blocked: {reason}"),
-            semio_framework_plugin::PluginLifecycleStep::AwaitingInput { reason } => panic!("fresh Jack candidate close unexpectedly needs input: {reason}"),
-            semio_framework_plugin::PluginLifecycleStep::Complete(progress) => {
+            semio_plugin::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
+            semio_plugin::PluginLifecycleStep::Blocked { reason } => panic!("fresh Jack candidate close unexpectedly blocked: {reason}"),
+            semio_plugin::PluginLifecycleStep::AwaitingInput { reason } => panic!("fresh Jack candidate close unexpectedly needs input: {reason}"),
+            semio_plugin::PluginLifecycleStep::Complete(progress) => {
                 assert!(progress.fits(grant));
                 assert!(disposer.terminal_is_empty(&candidate));
                 drop(disposer);
@@ -119,11 +119,11 @@ fn jack_history_edit_initializer_aliases_genesis_and_publishes_exact_next_genera
     let mut authority = empty_jack_initializer(operation, generation);
     let genesis = authority.envelope.as_ref().expect("retained Jack envelope").vcs.genesis.facts().share_snapshot();
     assert_eq!(drive_jack_initializer(&mut authority, operation, generation), DrivenOutcome::Complete);
-    let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Jack candidate");
+    let candidate = semio_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Jack candidate");
     assert_eq!(candidate.generation_now(), 14);
     assert!(std::sync::Arc::ptr_eq(&genesis, &candidate.snapshot_owner()));
     drop(genesis);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
+    assert!(semio_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
     drop(authority);
     close_jack_candidate(candidate);
 }
@@ -133,15 +133,15 @@ fn jack_store_initializer_cancel_and_stale_generation_return_every_owner_termina
     let operation = semio_framework_job::OperationId(502);
     let generation = semio_framework_job::Generation(15);
     let mut cancelled = empty_jack_initializer(operation, generation);
-    semio_framework_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut cancelled);
+    semio_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut cancelled);
     assert_eq!(drive_jack_initializer(&mut cancelled, operation, generation), DrivenOutcome::Cancelled);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&cancelled));
+    assert!(semio_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&cancelled));
     drop(cancelled);
 
     let mut stale = empty_jack_initializer(operation, generation);
     assert_eq!(drive_jack_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), DrivenOutcome::Fault);
     close_jack_initializer(&mut stale);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
+    assert!(semio_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
     drop(stale);
 }
 
@@ -251,13 +251,13 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
 fn close_jack_initializer(authority: &mut JackStoreInitializationAuthority) {
     for _ in 0..100_000 {
-        if semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(authority) {
+        if semio_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(authority) {
             return;
         }
-        semio_framework_plugin::ArtifactStoreInitializationAuthority::begin_close(authority);
-        let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
+        semio_plugin::ArtifactStoreInitializationAuthority::begin_close(authority);
+        let demand = semio_plugin::ArtifactStoreInitializationAuthority::retirement_demands(authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
         let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
-        let step = semio_framework_job::close_with_self_funded_context(grant, |cx| semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(authority, cx)).expect("Jack initializer close");
+        let step = semio_framework_job::close_with_self_funded_context(grant, |cx| semio_plugin::ArtifactStoreInitializationAuthority::close_step(authority, cx)).expect("Jack initializer close");
         assert!(step.progress().fits(grant));
     }
     panic!("Jack initializer did not reach terminal-empty close")

@@ -1,13 +1,13 @@
 //! 🧪️ dag-model tests (🔬️dag-unit): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_schema::{DagLayoutOptions, DagLayoutOrientation, LayoutControl};
-use semio_framework_os_infinite_board_engine::CanvasPalette;
-use semio_framework_os_infinite_board_dag_model::{apply_dag_layout, channel_row_bounds, channel_row_divider_y, cluster_explode_hit, cluster_explode_hit_rect, computation_channel_row_count, computation_channel_row_divider_x_span, computation_column_divider_x, computation_input_column_x_bounds, computation_io_side_row_counts, computation_io_side_row_divider_indices, computation_name_world_center, computation_node_height, computation_node_width, computation_output_column_x_bounds, ComputationChannelRowSide, DAG_COMPONENT_WIDTH, dag_draw_lod, dag_edge_body_stroke, dag_handle_body_stroke, DAG_HANDLE_WORLD_RADIUS, DAG_IO_COLUMN_WIDTH, dag_label_compact_paint_px, DAG_LABEL_COMPACT_SCREEN_PX, dag_label_layout_px, dag_label_paint_px, DAG_LABEL_SCREEN_PX, dag_lod_band_floor_zoom, dag_node_body_stroke, dag_node_internal_chrome_stroke, dag_node_label_fill, dag_node_paint_fill, fit_node_size, input_port_row_hit_bounds, io_node_handle_angles, io_node_rect_port_angle, io_port_column_width, io_widget_height, io_widget_width, note_widget_size, output_port_row_hit_bounds, slider_track_bounds, slider_widget_height, slider_widget_width, truncate_label_to_fit_width, would_create_cycle};
+use semio_os_infinite_board_schema::{DagLayoutOptions, DagLayoutOrientation, LayoutControl};
+use semio_os_infinite_board_engine::CanvasPalette;
+use semio_os_infinite_board_dag_model::{apply_dag_layout, channel_row_bounds, channel_row_divider_y, cluster_explode_hit, cluster_explode_hit_rect, computation_channel_row_count, computation_channel_row_divider_x_span, computation_column_divider_x, computation_input_column_x_bounds, computation_io_side_row_counts, computation_io_side_row_divider_indices, computation_name_world_center, computation_node_height, computation_node_width, computation_output_column_x_bounds, ComputationChannelRowSide, DAG_COMPONENT_WIDTH, dag_draw_lod, dag_edge_body_stroke, dag_handle_body_stroke, DAG_HANDLE_WORLD_RADIUS, DAG_IO_COLUMN_WIDTH, dag_label_compact_paint_px, DAG_LABEL_COMPACT_SCREEN_PX, dag_label_layout_px, dag_label_paint_px, DAG_LABEL_SCREEN_PX, dag_lod_band_floor_zoom, dag_node_body_stroke, dag_node_internal_chrome_stroke, dag_node_label_fill, dag_node_paint_fill, fit_node_size, input_port_row_hit_bounds, io_node_handle_angles, io_node_rect_port_angle, io_port_column_width, io_widget_height, io_widget_width, note_widget_size, output_port_row_hit_bounds, slider_track_bounds, slider_widget_height, slider_widget_width, truncate_label_to_fit_width, would_create_cycle};
 use semio_framework_canvas::{Color, Point};
 use graph::NodeShape;
 use ::{graph, semio_framework_canvas as canvas};
 use semio_framework_graph_drawing::routing::{handle_exterior_cap_fill_path, handle_outward_at_node_rim, handle_position_on_rectangle};
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 
 #[test]
 fn io_node_handle_angles_left_right() {

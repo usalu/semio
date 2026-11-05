@@ -1,0 +1,182 @@
+[
+  {
+    "name": "native-parent-scene",
+    "snapshot": {
+      "schema": "flow.host_snapshot",
+      "camera": {
+        "x": 1,
+        "y": 2,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputSlider",
+          "id": "slider",
+          "label": "β",
+          "value": 2.5,
+          "min": 0,
+          "max": 10,
+          "step": 0.5
+        },
+        {
+          "kind": "inputNote",
+          "id": "note",
+          "text": "\"hello\"\nγ"
+        },
+        {
+          "kind": "neuron",
+          "id": "op",
+          "neuronKind": "math.add",
+          "params": {
+            "nested": {
+              "text": "δ",
+              "value": 2.5
+            }
+          },
+          "inputPorts": [
+            "a",
+            "b"
+          ],
+          "outputPorts": [
+            "sum"
+          ],
+          "preview": true
+        },
+        {
+          "kind": "outputPreview",
+          "id": "out",
+          "preview": {
+            "value": 3.5
+          },
+          "expanded": [
+            "value"
+          ]
+        },
+        {
+          "kind": "cluster",
+          "id": "cluster",
+          "name": "nested",
+          "tree": {
+            "neurons": [
+              {
+                "id": "inner",
+                "kind": "core.text",
+                "params": {
+                  "value": "text"
+                },
+                "tree": null
+              }
+            ],
+            "synapses": []
+          },
+          "flow": {
+            "camera": {
+              "x": 0,
+              "y": 0,
+              "zoom": 1
+            },
+            "nodes": {
+              "inner": {
+                "layout": {
+                  "x": 1,
+                  "y": 2
+                },
+                "chrome": {
+                  "kind": "plain",
+                  "preview": true
+                }
+              }
+            },
+            "previews": [
+              {
+                "id": "inside",
+                "source": {
+                  "neuron": "inner",
+                  "channel": "value"
+                },
+                "mode": "text",
+                "preview": {
+                  "value": "text"
+                },
+                "expanded": [
+                  "value"
+                ],
+                "layout": {
+                  "x": 1,
+                  "y": 2
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "synapses": [
+        {
+          "id": "a",
+          "from": "slider",
+          "to": "op",
+          "fromPort": "number",
+          "toPort": "a"
+        },
+        {
+          "id": "b",
+          "from": "op",
+          "to": "out",
+          "fromPort": "sum",
+          "toPort": ""
+        }
+      ],
+      "layout": {
+        "slider": {
+          "x": 10,
+          "y": 20
+        },
+        "op": {
+          "x": 30,
+          "y": 40
+        }
+      }
+    },
+    "expectedIds": [
+      "slider",
+      "note",
+      "op",
+      "out",
+      "cluster"
+    ],
+    "expectedSynapses": [
+      "a",
+      "b"
+    ],
+    "floatWords": [
+      {
+        "bits": "0000000000000000",
+        "json": "0.0"
+      },
+      {
+        "bits": "8000000000000000",
+        "json": "-0.0"
+      },
+      {
+        "bits": "0000000000000001",
+        "json": "5e-324"
+      },
+      {
+        "bits": "0010000000000000",
+        "json": "2.2250738585072014e-308"
+      },
+      {
+        "bits": "7fefffffffffffff",
+        "json": "1.7976931348623157e+308"
+      },
+      {
+        "bits": "3e7ad7f29abcaf48",
+        "json": "1e-7"
+      },
+      {
+        "bits": "444b1ae4d6e2ef50",
+        "json": "1e+21"
+      }
+    ]
+  }
+]

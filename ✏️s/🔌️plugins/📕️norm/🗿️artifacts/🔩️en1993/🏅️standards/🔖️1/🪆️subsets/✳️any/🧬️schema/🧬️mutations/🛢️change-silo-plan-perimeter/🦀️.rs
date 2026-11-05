@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloPlanPerimeter 
         record: "ChangedSiloPlanPerimeter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Silo perimeter U of the silo shell", "Silo-Schale: Silo-Umfang U ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Silo perimeter U of the silo shell", "Silo-Schale: Silo-Umfang U ändern")
     }
 }
 

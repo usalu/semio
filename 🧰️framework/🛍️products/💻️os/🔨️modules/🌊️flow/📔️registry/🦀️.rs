@@ -59,6 +59,7 @@ pub(crate) struct FlowExtensionRegistryState {
 
 const RETIRED_REGISTRY_CAPACITY: usize = 16;
 static FLOW_EXTENSION_STATE: OnceLock<Mutex<FlowExtensionRegistryState>> = OnceLock::new();
+static FLOW_PUBLISHED_GENERATION:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
 
 /// 🔒️ Serializes every law that mutates the process-wide extension registry — the contribution
 /// table, the replacement generation and the retirement queue are ONE singleton shared by the
@@ -250,6 +251,7 @@ impl FlowRegistryReplacement<'_> {
         self.state.retired.push_back(std::mem::replace(&mut self.state.registry_retirement, retirement));
         self.state.registry = registry;
         self.state.generation = self.generation;
+        FLOW_PUBLISHED_GENERATION.store(self.generation,std::sync::atomic::Ordering::Release);
         self.state.installed = None;
     }
 }
@@ -500,11 +502,24 @@ pub fn flow_extension_registry() -> neural::SharedRegistry {
     flow_extension_state().lock().expect("flow extension registry").registry.clone()
 }
 
+/// 🪢️ Captures the exact preborn registry lease and its installed generation under one existing state lock.
+pub fn bootstrap_flow_operator_registry_source()->(neural::SharedRegistry,u64){let state=flow_extension_state().lock().expect("flow extension registry");(state.registry.clone(),state.generation)}
+/// 📏️ Quotes only the existing immutable registry lease and installed generation headers.
+pub fn flow_operator_registry_source_demands()->RetirementDemand{RetirementDemand{copy_bytes:2*std::mem::size_of::<neural::SharedRegistry>()+std::mem::size_of::<u64>(),depth:1,..Default::default()}}
+/// 🪢️ One admitted nonblocking capture never initializes the process registry or rebuilds its catalogue.
+pub struct FlowRegistrySourceAdvance{pub source:Option<(neural::SharedRegistry,u64)>,pub progress:RetainedCloneProgress}
+pub fn flow_operator_registry_source(grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<FlowRegistrySourceAdvance>{
+ let d=flow_operator_registry_source_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return semio_framework_value::RetainedWorkOutcome{result:Ok(FlowRegistrySourceAdvance{source:None,progress:Default::default()}),work:0}}
+ let Some(original)=FLOW_EXTENSION_STATE.get()else{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow registry must be born at bootstrap before job capture")),work:1}};
+ let state=match original.try_lock(){Ok(state)=>state,Err(TryLockError::WouldBlock)=>return semio_framework_value::RetainedWorkOutcome{result:Ok(FlowRegistrySourceAdvance{source:None,progress:Default::default()}),work:1},Err(TryLockError::Poisoned(_))=>return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow registry source is poisoned")),work:1}};
+ semio_framework_value::RetainedWorkOutcome{result:Ok(FlowRegistrySourceAdvance{source:Some((state.registry.clone(),state.generation)),progress:RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}),work:1}
+}
+
 /// 🔢 Which replacement of the flow extension registry is installed right now. Bumped exactly once
 /// per `FlowRegistryReplacement::commit`, so a derived projection of the registry (the operator
 /// catalogue a `FlowHost` indexes) can be cached against it instead of rebuilt per evaluation tick.
 pub fn flow_extension_registry_generation() -> u64 {
-    flow_extension_state().lock().expect("flow extension registry").generation
+    FLOW_PUBLISHED_GENERATION.load(std::sync::atomic::Ordering::Acquire)
 }
 
 /// 📔️ Reads the neutral contribution registry for hosts using the shared contribution composition.
@@ -568,3 +583,11 @@ pub use seed::seed_flow_eval_node_cache;
 #[cfg(test)]
 #[path = "🧪️tests/📔️registry/🦀️.rs"]
 mod tests;
+
+#[path="📇️catalogue-work/🦀️.rs"]
+pub mod catalogue_work;
+pub use catalogue_work::{FlowOperatorCatalogue,FlowOperatorCatalogueWork,FlowOperatorInfoMap};
+
+#[path="📇️catalogue-owner/🦀️.rs"]
+pub mod catalogue_owner;
+pub use catalogue_owner::FlowOperatorCatalogueOwner;

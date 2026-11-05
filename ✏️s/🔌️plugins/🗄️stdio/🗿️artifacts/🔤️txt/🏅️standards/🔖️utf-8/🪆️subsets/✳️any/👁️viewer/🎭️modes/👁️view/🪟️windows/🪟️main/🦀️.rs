@@ -3,10 +3,10 @@
 //! surface — same `lines`/`line_ending` join, `read_only: true` stamps the host renderer.
 
 use crate::TxtSnapshot;
-use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TextView, TextWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `TxtSnapshot -> BuiltNode` read: same join as the editor's own render, `read_only: true`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &TxtSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &TxtSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut text = document.lines.join(document.line_ending.as_str());
     if document.trailing_newline && !document.lines.is_empty() {
         text.push_str(document.line_ending.as_str());

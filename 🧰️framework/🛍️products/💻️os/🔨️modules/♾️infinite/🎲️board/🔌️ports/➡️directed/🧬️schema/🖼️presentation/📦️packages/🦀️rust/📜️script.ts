@@ -15,7 +15,7 @@ class SourceScript extends BundleScript {
 class NativeScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw new Error("test-native accepts no arguments");
-  await runAdmittedCargoPackageTestsV1(["semio-framework-os-infinite-directed-presentation"],this.root,this.invocation,["--lib"]);
+  await runAdmittedCargoPackageTestsV1(["semio-os-infinite-directed-presentation"],this.root,this.invocation,["--lib"]);
  }
 }
 const router=new ScriptRouter(import.meta.dirname).register("test-source",SourceScript).register("test-native",NativeScript);

@@ -52,8 +52,8 @@ fn every_word(s:&mut Fem3dSnapshot,word:u64){let v=f64::from_bits(word);s.analys
 
 mod public_populated_owner {
     use super::*;
-    use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
-    use semio_framework_plugin::plugin_app_close_prelude::*;
+    use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
+    use semio_plugin::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
         /// 🏗️ Actual two FEM3d editor and viewer wrappers close this owning declaration.
         pub(crate) enum FemArtifactApps: PluginApp {
@@ -76,7 +76,7 @@ mod public_populated_owner {
         }}
         same(&a.to_value(),&b.to_value());
     }
-    fn register(){let _plugin=semio_framework_plugin::PluginBuilder::<_, FemArtifactApps>::new("fem").label("FEM3d SQLite owner").version("0.1.0").package_id("semio:fem").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}
+    fn register(){let _plugin=semio_plugin::PluginBuilder::<_, FemArtifactApps>::new("fem").label("FEM3d SQLite owner").version("0.1.0").package_id("semio:fem").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_fem3d_populated_actual_app_public_binary_text_exact_owner(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};

@@ -6,10 +6,10 @@
 
 use semio_s_plugin_norm_results_config::mutations::change_selected_check_index::ChangeSelectedCheckIndex;
 use semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_norm_en1997_mutations::En1997Mutation;
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload

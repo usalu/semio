@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFrameActionStartRa
         record: "ChangedFrameActionStartRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change frame action: Start along bar", "Rahmeneinwirkung: Beginn am Stab ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change frame action: Start along bar", "Rahmeneinwirkung: Beginn am Stab ändern")
     }
 }
 

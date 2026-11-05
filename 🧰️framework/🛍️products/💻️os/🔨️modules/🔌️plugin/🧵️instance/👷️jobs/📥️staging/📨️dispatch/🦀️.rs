@@ -2,28 +2,28 @@
 //!
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_plugin_decl_emission::{ActionMeta, Emit};
 use semio_framework::kernel::{AppEvent, Effect, InvocationId, InvocationResult, UiDirtyScope, UndoGroup};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents};
-use semio_framework_plugin_command::{CommandLogAppend, HISTORY_ROW_OPERATION_PREVIEW, HistoryRowReads, history_intent_label, history_leaf_row_label, history_row_applied, history_row_is_recorded, runtime_verb_label};
-use semio_framework_plugin_decl_views::history_view::{CommandLogEntry, CommandView, InverseAction};
+use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents};
+use semio_plugin_command::{CommandLogAppend, HISTORY_ROW_OPERATION_PREVIEW, HistoryRowReads, history_intent_label, history_leaf_row_label, history_row_applied, history_row_is_recorded, runtime_verb_label};
+use semio_plugin_decl_views::history_view::{CommandLogEntry, CommandView, InverseAction};
 use semio_framework_value::DslValue;
 use std::future::Future;
 #[cfg(test)]
-use semio_framework_plugin_command::HISTORY_ROWS_BUILT;
+use semio_plugin_command::HISTORY_ROWS_BUILT;
 use std::collections::HashMap;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_ui_locale::LocalizedLabel;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
 use crate::jobs_components::{PendingReserved, ToolOperations};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_time_travel::SupersedeRole;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_time_travel as time_travel;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_time_travel::SupersedeRole;
+use semio_ui_contract::*;
+use semio_plugin_time_travel as time_travel;
 
 impl<A: ArtifactApp> PendingReserved<A> {
     pub async fn reset_dispatch_report(&mut self, stores: &mut InstanceStores<A>) {

@@ -39,13 +39,13 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "rule-nodes", kind: "drag-rule-nodes", record: "DraggedRuleNodes" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (super::super::offset_text(self.dx), super::super::offset_text(self.dy));
         let (items_en, items_de) = match self.targets.len() {
             1 => ("1 rule node".to_string(), "1 Regelknoten".to_string()),
             count => (format!("{count} rule nodes"), format!("{count} Regelknoten")),
         };
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by ({dx_en}, {dy_en})"), &format!("{items_de} um ({dx_de}; {dy_de}) ziehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by ({dx_en}, {dy_en})"), &format!("{items_de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

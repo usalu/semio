@@ -15,8 +15,8 @@ pub struct SetEngagementInput {
 impl protocol::MutationKind<PresentationConfig, PresentationConfigMutation> for SetEngagementInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "engagement-input", kind: "set-engagement-input", record: "SetEngagementInput" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Engagement Input", "Interaktionseingabe setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Engagement Input", "Interaktionseingabe setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["engagementInput".into()]

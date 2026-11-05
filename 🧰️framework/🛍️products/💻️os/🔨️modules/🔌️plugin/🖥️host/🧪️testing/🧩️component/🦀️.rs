@@ -1,9 +1,9 @@
 //! 🧩️ Schema-first neutral SDK component for actual host codec and isolation laws.
-use semio_framework_plugin::PluginBuilder;
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
-use semio_framework_plugin::app::declarations::{ArtifactDeclaration as DeclaredArtifact,StandardDeclaration,MediaDeclaration,SubsetDeclaration,SchemaDeclaration,IoDeclaration,NativeCodecs,LanguagePair,SurfaceDeclaration};
+use semio_plugin::PluginBuilder;
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_plugin::app::declarations::{ArtifactDeclaration as DeclaredArtifact,StandardDeclaration,MediaDeclaration,SubsetDeclaration,SchemaDeclaration,IoDeclaration,NativeCodecs,LanguagePair,SurfaceDeclaration};
 use semio_framework_schema_registry::ArtifactSchemaDescriptor;
 use semio_framework_schema_registry::FacetLeaves;
 const KIND:&str="fixture.neutral-host-fixture.counter";
@@ -21,9 +21,9 @@ impl<const VIEWER:bool> ArtifactApp for CounterApp<VIEWER> {
     type Presence=NoPresence;type PresenceMutation=NoPresenceMutation;
     type Transient=NoTransient;type TransientMutation=NoTransientMutation;
     type Command=crate::Mutation;
-    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{Ok(crate::Snapshot::default())})}
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{Ok(crate::Snapshot::default())})}
     async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_2d_compute::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation> {Ok(Emit::default())}
-    async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree> {semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.count.to_string()).map(|root|ComponentTree::new(root))}
+    async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree> {semio_plugin::app::paged_text_carrier(body_key,&doc.snapshot.count.to_string()).map(|root|ComponentTree::new(root))}
 }
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum FixtureApps:PluginApp {Editor(VcsArtifactApp<CounterApp<false>>),Viewer(VcsArtifactApp<CounterApp<true>>),
@@ -37,11 +37,11 @@ RefusalUnsupportedEditor(VcsArtifactApp<RefusalApp<UnsupportedRefusal,false>>),R
 RefusalInvariantEditor(VcsArtifactApp<RefusalApp<InvariantRefusal,false>>),RefusalInvariantViewer(VcsArtifactApp<RefusalApp<InvariantRefusal,true>>)}
 }
 fn surface<const VIEWER:bool>()->SurfaceDeclaration<FixtureApps> {
-    fn editor(definition:&AppDefinition,actor:semio_framework_os_kernel::ActorId,mounted_policy:semio_framework_plugin::MountedOwnerPolicyV1,identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<FixtureApps,semio_framework::Fault> {::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<CounterApp<false>>::with_registry_on_bus(CounterApp::<false>,AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).map(FixtureApps::from)}
-    fn viewer(definition:&AppDefinition,actor:semio_framework_os_kernel::ActorId,mounted_policy:semio_framework_plugin::MountedOwnerPolicyV1,identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<FixtureApps,semio_framework::Fault> {::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<CounterApp<true>>::with_registry_on_bus(CounterApp::<true>,AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).map(FixtureApps::from)}
+    fn editor(definition:&AppDefinition,actor:semio_os_kernel::ActorId,mounted_policy:semio_plugin::MountedOwnerPolicyV1,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<FixtureApps,semio_framework::Fault> {::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<CounterApp<false>>::with_registry_on_bus(CounterApp::<false>,AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).map(FixtureApps::from)}
+    fn viewer(definition:&AppDefinition,actor:semio_os_kernel::ActorId,mounted_policy:semio_plugin::MountedOwnerPolicyV1,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<FixtureApps,semio_framework::Fault> {::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<CounterApp<true>>::with_registry_on_bus(CounterApp::<true>,AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).map(FixtureApps::from)}
     let mut definition=if VIEWER {Viewer::builder(DIALECT).document(["fixture","neutral-host-fixture","counter"]).mode("view",LocalizedLabel::native("View","Ansicht"),"eye").window_kind("main",LocalizedLabel::native("Counter","Zähler"),"fixture.counter",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()} else {Editor::builder(DIALECT).document(["fixture","neutral-host-fixture","counter"]).mode("edit",LocalizedLabel::native("Edit","Bearbeiten"),"pencil").window_kind("main",LocalizedLabel::native("Counter","Zähler"),"fixture.counter",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()};
     definition.io.artifact_schema=KIND.into();
-    SurfaceDeclaration {definition,original_factory:None,factory:Some(if VIEWER {viewer} else {editor}),app_schema:||None,document_schema:KIND,codec:semio_framework_plugin::app::artifact_codec_table::<CounterApp<VIEWER>>(),mutation_roster:None,rights:if VIEWER {Rights::Read} else {Rights::Write}}
+    SurfaceDeclaration {definition,original_factory:None,factory:Some(if VIEWER {viewer} else {editor}),app_schema:||None,document_schema:KIND,codec:semio_plugin::app::artifact_codec_table::<CounterApp<VIEWER>>(),mutation_roster:None,rights:if VIEWER {Rights::Read} else {Rights::Write}}
 }
 fn facet(role:&str,json_schema:&'static str)->FacetLeaves {
     let (rust,typescript,graphql,proto)=match role {
@@ -58,7 +58,7 @@ pub fn plugin()->Result<Plugin<FixtureApps>,PluginAssemblyError> {
     PluginBuilder::<_, FixtureApps>::new("neutral-host-fixture").label("Neutral Host Fixture").version("1.0.0").package_id("semio:neutral-host-fixture").declare_artifact(artifact).declare_artifact(refusal_artifact()?).try_build()
 }
 
-use semio_framework_plugin_host_test_component_refusal as refusal;
+use semio_plugin_host_test_component_refusal as refusal;
 
 /// 🛑️ A declared fixture subset owns one explicit typed refusal authority.
 pub trait RefusalOwner:Default+Send+Sync+'static{const SUBSET:&'static str;const EDITOR_ID:&'static str;const VIEWER_ID:&'static str;}
@@ -91,18 +91,18 @@ impl<C:RefusalOwner,const VIEWER:bool> ArtifactApp for RefusalApp<C,VIEWER>{
  type Presence=NoPresence;type PresenceMutation=NoPresenceMutation;
  type Transient=NoTransient;type TransientMutation=NoTransientMutation;
  type Command=refusal::Mutation;
- fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{Ok(refusal::Snapshot::default())})}
+ fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{Ok(refusal::Snapshot::default())})}
  async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_2d_compute::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>{Ok(Emit::default())}
- async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree>{semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.value.to_string()).map(|root|ComponentTree::new(root))}
+ async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree>{semio_plugin::app::paged_text_carrier(body_key,&doc.snapshot.value.to_string()).map(|root|ComponentTree::new(root))}
 }
 fn refusal_surface<C:RefusalOwner,const VIEWER:bool>()->SurfaceDeclaration<FixtureApps>
 where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<RefusalApp<C,true>>>{
- fn editor<C:RefusalOwner>(definition:&AppDefinition,actor:semio_framework_os_kernel::ActorId,mounted_policy:semio_framework_plugin::MountedOwnerPolicyV1,identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<FixtureApps,semio_framework::Fault> where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>{::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<RefusalApp<C,false>>::with_registry_on_bus(RefusalApp::default(),AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).map(FixtureApps::from)}
- fn viewer<C:RefusalOwner>(definition:&AppDefinition,actor:semio_framework_os_kernel::ActorId,mounted_policy:semio_framework_plugin::MountedOwnerPolicyV1,identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<FixtureApps,semio_framework::Fault> where FixtureApps:From<VcsArtifactApp<RefusalApp<C,true>>>{::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<RefusalApp<C,true>>::with_registry_on_bus(RefusalApp::default(),AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).map(FixtureApps::from)}
+ fn editor<C:RefusalOwner>(definition:&AppDefinition,actor:semio_os_kernel::ActorId,mounted_policy:semio_plugin::MountedOwnerPolicyV1,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<FixtureApps,semio_framework::Fault> where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>{::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<RefusalApp<C,false>>::with_registry_on_bus(RefusalApp::default(),AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).map(FixtureApps::from)}
+ fn viewer<C:RefusalOwner>(definition:&AppDefinition,actor:semio_os_kernel::ActorId,mounted_policy:semio_plugin::MountedOwnerPolicyV1,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<FixtureApps,semio_framework::Fault> where FixtureApps:From<VcsArtifactApp<RefusalApp<C,true>>>{::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<RefusalApp<C,true>>::with_registry_on_bus(RefusalApp::default(),AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).map(FixtureApps::from)}
  let dialect=<RefusalApp<C,VIEWER> as ArtifactApp>::DIALECT;
  let mut definition=if VIEWER{Viewer::builder(dialect).document(["fixture","neutral-host-fixture","snapshot-refusal"]).mode("view",LocalizedLabel::native("View","Ansicht"),"eye").window_kind("main",LocalizedLabel::native("Refusal","Ablehnung"),"fixture.snapshot-refusal",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()}else{Editor::builder(dialect).document(["fixture","neutral-host-fixture","snapshot-refusal"]).mode("edit",LocalizedLabel::native("Edit","Bearbeiten"),"pencil").window_kind("main",LocalizedLabel::native("Refusal","Ablehnung"),"fixture.snapshot-refusal",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()};
  definition.io.artifact_schema=refusal::KIND.into();
- SurfaceDeclaration{definition,original_factory:None,factory:Some(if VIEWER{viewer::<C>}else{editor::<C>}),app_schema:||None,document_schema:refusal::KIND,codec:semio_framework_plugin::app::artifact_codec_table::<RefusalApp<C,VIEWER>>(),mutation_roster:None,rights:if VIEWER{Rights::Read}else{Rights::Write}}
+ SurfaceDeclaration{definition,original_factory:None,factory:Some(if VIEWER{viewer::<C>}else{editor::<C>}),app_schema:||None,document_schema:refusal::KIND,codec:semio_plugin::app::artifact_codec_table::<RefusalApp<C,VIEWER>>(),mutation_roster:None,rights:if VIEWER{Rights::Read}else{Rights::Write}}
 }
 fn refusal_subset<C:RefusalOwner>()->SubsetDeclaration<FixtureApps>
 where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<RefusalApp<C,true>>>{

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-scene-mesh"
+name = "semio-ui-scene-mesh"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -28,7 +28,7 @@ testkit = []
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-mesh-component-references = { path = "../../../../../../🏗️mesh-engine/🎯️component-references/📦️packages/🦀️rust" }
 semio-framework-geometry = { path = "../../../../../../📐️geometry/📦️packages/🦀️rust" }
-semio-framework-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
+semio-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

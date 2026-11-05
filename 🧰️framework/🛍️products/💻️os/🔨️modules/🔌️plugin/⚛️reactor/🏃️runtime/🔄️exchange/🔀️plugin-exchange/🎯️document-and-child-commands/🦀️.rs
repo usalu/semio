@@ -9,7 +9,7 @@ pub(super) async fn arm_local_interaction_query<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::LocalInteractionQuery { seq, command } = command else { unreachable!("arm_local_interaction_query is dispatched only for its own command") };
     frames.try_reserve_exact(2).map_err(|_| plugin_internal_fault("local interaction receipt and rejection slots could not be admitted"))?;
     let reply = with_instances_mut(runtime, |list| {
@@ -43,7 +43,7 @@ pub(super) async fn arm_context_menu<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ContextMenu { seq, request } = command else { unreachable!("arm_context_menu is dispatched only for its own command") };
     match decode_wire_serialized::<ContextMenuWireRequest>(&request).await.and_then(ContextMenuWireRequest::into_parts) {
         Ok((request, view_state)) => {
@@ -65,12 +65,12 @@ pub(super) async fn arm_context_menu<PA: PluginApp>(
 pub(super) async fn arm_apply_envelopes<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx: &mut semio_framework_job::StepContext<'_>,
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ApplyEnvelopes { seq, envelopes } = command else { unreachable!("arm_apply_envelopes is dispatched only for its own command") };
     let encoded = protocol::encode_envelopes(&envelopes);
     match plugin_ingest_operations(runtime, instance_id, &encoded, identity, cx).await {
@@ -98,11 +98,11 @@ pub(super) async fn arm_apply_envelopes<PA: PluginApp>(
 pub(super) async fn arm_load_children<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::LoadChildren { seq, entries } = command else { unreachable!("arm_load_children is dispatched only for its own command") };
     let loaded = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
@@ -131,7 +131,7 @@ pub(super) async fn arm_read_children<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ReadChildren { seq } = command else { unreachable!("arm_read_children is dispatched only for its own command") };
     let read = with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
@@ -150,7 +150,7 @@ pub(super) async fn arm_read_child_heads<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ReadChildHeads { seq } = command else { unreachable!("arm_read_child_heads is dispatched only for its own command") };
     let read = with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
@@ -169,7 +169,7 @@ pub(super) async fn arm_read_history<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ReadHistory { seq } = command else { unreachable!("arm_read_history is dispatched only for its own command") };
     let snapshot = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;

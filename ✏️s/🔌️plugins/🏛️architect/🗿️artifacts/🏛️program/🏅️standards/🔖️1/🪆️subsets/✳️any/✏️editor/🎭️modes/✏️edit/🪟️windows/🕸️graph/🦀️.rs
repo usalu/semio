@@ -3,14 +3,14 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::undirected_edges;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphEdgeRecord;
-use semio_framework_plugin::NodeGraphNodeRecord;
-use semio_framework_plugin::NodeGraphPortRecord;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphEdgeRecord;
+use semio_plugin::NodeGraphNodeRecord;
+use semio_plugin::NodeGraphPortRecord;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -112,10 +112,10 @@ pub fn graph_media_json(program: &ProgramSnapshot) -> (Vec<NodeGraphNodeRecord>,
 /// and `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `dag`'s main window's and `space`'s workflow window's identical gap.
-pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectGraphWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectGraphWindowConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let (nodes, edges) = graph_media_json(program);
     let scene = NodeGraphScene { editable: Some(true), capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()), ..NodeGraphScene::base(nodes, edges, cfg.viewport.clone()) };
-    semio_framework_plugin::scene_surface(ARCHITECT_BODY_GRAPH, semio_framework_ui_contract::SurfaceKind::NodeGraph, &scene)
+    semio_plugin::scene_surface(ARCHITECT_BODY_GRAPH, semio_ui_contract::SurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render
 

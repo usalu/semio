@@ -9,8 +9,8 @@
 //! `🎚️config/🦀️.rs`, scratch (mid-gesture) state in `🖌️session/🦀️.rs`, shared
 //! read-view/selection helpers in `🧭️view/🦀️.rs`.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_s_artifact_lowpoly_lowpoly_commands::{paint::LowpolyPaintTick, paint::lowpoly_paint_tick};
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::lowpoly_paint_drive;
@@ -18,7 +18,7 @@ use semio_s_artifact_lowpoly_lowpoly_mut_paint::{apply_paint_stroke::ApplyPaintS
 use semio_framework_tool_machine::GesturePhase;
 
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText;
-pub use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HistoryView};
+pub use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, HistoryView};
 
 use semio_s_artifact_lowpoly_lowpoly_commands::{add_primitive, camera, chrome, engagement, document, media, mesh_edit, object, paint, patch_object, selection, sun, transform, utility, uv};
 use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit, SetPaintUtilityEdit, SetUtilityParamsEdit, SetPaintColorEdit, SetEngagementInputEdit, SetSunEdit};
@@ -32,47 +32,47 @@ use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::artifact_kind, snapshot::
 use protocol::Mutation;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionRef;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementOption;
-use semio_framework_plugin::WindowEngagementPossible;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionRef;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementOption;
+use semio_plugin::WindowEngagementPossible;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
@@ -97,39 +97,39 @@ use semio_framework_2d_compute::EngineHandles;
 /// accepting without a specific kind pin) rather than repointing at a stdio kind id, since choosing
 /// the RIGHT replacement wiring for a cross-plugin media port is a design decision beyond this
 /// migration's boundary — flagged under `sharedFileRequests` in this wave's report.
-pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn lowpoly_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         ports: vec![
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "mesh:in".into(),
                 label: "Mesh".into(),
-                direction: semio_framework_plugin::MediaPortDirection::In,
+                direction: semio_plugin::MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
                 kind_id: None,
                 required: false,
-                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+                multiplicity: semio_plugin::PortMultiplicity::Many,
             },
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "mesh:out".into(),
                 label: "Mesh".into(),
-                direction: semio_framework_plugin::MediaPortDirection::Out,
+                direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
                 kind_id: None,
                 required: false,
-                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+                multiplicity: semio_plugin::PortMultiplicity::Many,
             },
         ],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.lowpoly".into(), name: "3D Lowpoly".into(), dimension: "3d".into(), component_kind: "lowpoly".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "3d.lowpoly".into(), name: "3D Lowpoly".into(), dimension: "3d".into(), component_kind: "lowpoly".into() },
     }
 }
 //#endregion 🔖️Io
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `LowpolyPlayApp::Command` — the SOLE dispatch surface for lowpoly's own behavior, covering
     /// every declared action. Row order is the binary variant ordinal: appending is safe, reordering is
     /// a wire-format break.
@@ -247,7 +247,7 @@ pub use manifest::*;
 //#endregion 🔖️Manifest
 
 #[cfg(test)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 
 //#region 🪢️TaxonomyMounts
 #[path = "📚️examples/🎬️demo-session/🦀️.rs"]

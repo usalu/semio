@@ -22,7 +22,7 @@ pub struct UpdateSpread {
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateSpread where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_spread::UpdateSpread> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "spread", kind: "update-spread", record: "UpdatedSpread" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update spread \"{}\"", self.name), &format!("Druckbogen \"{}\" aktualisieren", self.name)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Update spread \"{}\"", self.name), &format!("Druckbogen \"{}\" aktualisieren", self.name)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

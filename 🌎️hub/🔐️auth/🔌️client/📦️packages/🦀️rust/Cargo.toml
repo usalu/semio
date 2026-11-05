@@ -16,5 +16,5 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-mcp.workspace = true
+semio-os-mcp.workspace = true
 serde_json.workspace = true

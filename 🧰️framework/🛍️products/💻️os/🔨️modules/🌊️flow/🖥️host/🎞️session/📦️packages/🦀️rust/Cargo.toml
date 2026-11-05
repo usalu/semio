@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-flow-host-session"
+name = "semio-os-flow-host-session"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,11 +22,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-flow-host-core = { path = "../../../🧱️flow-host-model/📦️packages/🦀️rust" }
-semio-framework-os-flow-host-source = { path = "../../../📥️evaluation-source/📦️packages/🦀️rust" }
-semio-framework-os-flow-host-read = { path = "../../../📥️evaluation-source/🔎️read/📦️packages/🦀️rust" }
-semio-framework-os-flow-operators = { path = "../../../../🗃️operators/📦️packages/🦀️rust" }
-semio-framework-os-flow-geometry = { path = "../../../../🌐️geometry/📦️packages/🦀️rust" }
+semio-os-flow-host-core = { path = "../../../🧱️flow-host-model/📦️packages/🦀️rust" }
+semio-os-flow-host-source = { path = "../../../📥️evaluation-source/📦️packages/🦀️rust" }
+semio-os-flow-host-read = { path = "../../../📥️evaluation-source/🔎️read/📦️packages/🦀️rust" }
+semio-os-flow-operators = { path = "../../../../🗃️operators/📦️packages/🦀️rust" }
+semio-os-flow-geometry = { path = "../../../../🌐️geometry/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-retirement-queue = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
@@ -36,10 +36,13 @@ semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { workspace = true }
 semio-framework-replication = { workspace = true }
-neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
 semio-framework-replication = { workspace = true }
+
+[features]
+testkit = []

@@ -1,7 +1,7 @@
 //! 🧭️ Shared plumbing of the semio editors' edit rules: the const builders of the stdio rule tables, the reshape step for kinds whose payload is not a plain field of the edit, and the pointer arithmetic of the editors that compute a gesture's kind.
 
 use protocol::Mutation;
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_plugin::{Fault, FaultCode, FaultOrigin};
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, RowKey, Selector, SnapshotEditError, SnapshotEditEvent};
 

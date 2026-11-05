@@ -1,6 +1,6 @@
 //! 🧩️ Actual Hub-owned component codec integration across caller selected runtimes.
-use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash};
-use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
+use semio_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash};
+use semio_plugin_interpreter_runtime::OwnedRuntime;
 use semio_framework::kernel::Budget;
 use semio_framework_test_fixtures::repo_root;
 const MINTED_DOCUMENT_ID:&str="artifact-0123456789abcdef0123456789abcdef";

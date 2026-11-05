@@ -20,7 +20,7 @@ test("Note source and fixture have one exact hostile census", async () => {
   const retainedSource = await Bun.file(retainedPath).text();
   const commandSource = await Bun.file(commandEnumPath).text();
   const commands = [...commandSource.matchAll(/^\s*"([^"]+)" as "[^"]+" =>/gm)].map((match) => match[1]!);
-  const manifests = new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
+  const manifests = new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
   const classified = fixture.groups.flatMap((group) => group.routes);
   const retained = fixture.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes);
   expect(exact(commands, classified)).toBe(true);
@@ -40,7 +40,7 @@ test("Note source and fixture have one exact hostile census", async () => {
   const publication = [...retainedContractsSource.matchAll(/tool_id: "([^"]+)"/g)].map((match) => match[1]!);
   expect(exact(registered, fixture.retainedRoutes)).toBe(true);
   expect(exact(publication, fixture.retainedRoutes)).toBe(true);
-  const proofSource = source.slice(source.indexOf("semio_framework_plugin::bounded_first_step_tool_proofs!"), source.indexOf("fn register_tool_job_factories"));
+  const proofSource = source.slice(source.indexOf("semio_plugin::bounded_first_step_tool_proofs!"), source.indexOf("fn register_tool_job_factories"));
   const proofs = [...proofSource.matchAll(/^\s*"([^"]+)"\s*=>/gm)].map((match) => match[1]!);
   expect(exact(proofs, fixture.retainedRoutes)).toBe(true);
   expect(proofSource).toContain('factory: "NoteCommandJobFactory"');

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberWallThicknes
         record: "ChangeMemberWallThicknessM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Masonry wall thickness t_ef (0 = not a masonry wall)", "Mauerwerksdicke t_ef (0 = keine Mauerwerkswand) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Masonry wall thickness t_ef (0 = not a masonry wall)", "Mauerwerksdicke t_ef (0 = keine Mauerwerkswand) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-wall-thickness-m".into()]

@@ -55,7 +55,7 @@ async fn supersede_replay_corpus_matches_the_store() {
             }
             Err(VcsError::Rejected { policy, messages }) => {
                 assert!(report.blocks_finalize(), "{name}: only a blocking report is refused");
-                assert_eq!(policy, semio_framework_os_spr::MergePolicy::Normal);
+                assert_eq!(policy, semio_os_spr::MergePolicy::Normal);
                 assert!(messages.iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error));
                 assert_eq!(store.generation(), generation, "{name}: a refused finalize changes nothing");
                 assert!(store.supersessions().is_empty());
@@ -100,12 +100,12 @@ async fn interior_supersede_equals_a_fresh_replay_of_the_edited_log() {
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
     let files = print_document_pack(store.envelope()).await.expect("pack prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.snapshot().expect("reloaded"), store.snapshot().expect("live"));
     assert_eq!(reloaded.supersessions().keys().collect::<Vec<_>>(), store.supersessions().keys().collect::<Vec<_>>());
     assert_eq!(reloaded.envelope().transitions, store.envelope().transitions, "the reload re-derives every supersession target");
     assert_eq!(reloaded.mutation_outcomes().unwrap(), store.mutation_outcomes().unwrap());
-    let log = semio_framework_os_spr::decode_history(&files.spr, &semio_framework_os_spr::DecodeOptions::default()).await.expect("spr decodes");
+    let log = semio_os_spr::decode_history(&files.spr, &semio_os_spr::DecodeOptions::default()).await.expect("spr decodes");
     assert!(log.fold().expect("the persisted log folds").supersessions.contains_key(&ids[0]), "HistoryLog::fold resolves the supersession");
 }
 
@@ -119,8 +119,8 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
     let ids = operation_ids(&store);
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
     let supersede = |replacement: Option<DemoMutation>, logical: u64| {
-        let transition = semio_framework_os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs: vec![protocol::SupersededInput { target: ids[0].clone(), replacement: draft(replacement) }] });
-        semio_framework_os_spr::encode_envelopes(&[semio_framework_os_spr::history_transition_envelope(
+        let transition = semio_os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs: vec![protocol::SupersededInput { target: ids[0].clone(), replacement: draft(replacement) }] });
+        semio_os_spr::encode_envelopes(&[semio_os_spr::history_transition_envelope(
             &transition,
             &ArtifactId("check-in".into()),
             &ActorId("editor".into()),
@@ -129,12 +129,12 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
         )])
     };
     let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(None, 0), || Ok(fixture_demo_owners())).await;
-    assert!(matches!(&refused, Err(VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
+    assert!(matches!(&refused, Err(VcsError::Rejected { policy: semio_os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
     assert!(refused.unwrap_err().to_string().contains("rejected by merge policy Normal"));
     let accepted = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(Some(DemoMutation::AssignN(AssignN { n: Some(40) })), 1), || Ok(fixture_demo_owners()))
         .await
         .expect("a clean supersession checks in");
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&accepted.pack, &accepted.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&accepted.pack, &accepted.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(41));
     test_support::retire_parsed_document(parsed);
 }
@@ -143,7 +143,7 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
 /// atomically with `Rejected { Normal }`, a Warning commits and stays in the durable history.
 #[semio_framework_async_macros::async_test]
 async fn downstream_warning_error_and_fatal_outcomes_are_reported_per_mutation() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     for operation in [SeverityMutation::SetN(SeveritySetN { n: 1 }), SeverityMutation::SetN(SeveritySetN { n: 2 }), SeverityMutation::SetN(SeveritySetN { n: 3 })] {
         fixture_author(&mut store, ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("clean severity edit");
     }
@@ -167,7 +167,7 @@ async fn downstream_warning_error_and_fatal_outcomes_are_reported_per_mutation()
     let snapshot = store.snapshot().unwrap();
     for (target, operation) in [(&ids[1], SeverityMutation::SetErrorN(SetErrorN { n: 6 })), (&ids[2], SeverityMutation::SetFatalN(SetFatalN { n: 7 }))] {
         let refused = fixture_author(&mut store, ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: target.clone(), replacement: Some(operation) }] }).await;
-        assert!(matches!(refused, Err(VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, ref messages }) if !messages.is_empty()), "{refused:?}");
+        assert!(matches!(refused, Err(VcsError::Rejected { policy: semio_os_spr::MergePolicy::Normal, ref messages }) if !messages.is_empty()), "{refused:?}");
         assert_eq!(store.generation(), generation, "a refused supersession changes nothing");
         assert_eq!(store.snapshot().unwrap(), snapshot);
         assert!(store.supersessions().is_empty());

@@ -38,8 +38,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "basic-attribute", kind: "set-basic-attribute", record: "SetBasicAttribute" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set basic attribute", "Basic-Attribut setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set basic attribute", "Basic-Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

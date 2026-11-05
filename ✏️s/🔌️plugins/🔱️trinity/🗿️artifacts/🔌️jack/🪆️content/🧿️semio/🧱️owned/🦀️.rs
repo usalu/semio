@@ -203,7 +203,7 @@ impl JackContentProjection for SemioJackOwnedContent{
  fn query_edge(&self,index:usize,maximum_bytes:usize)->Result<Option<Edge>,ValueError>{project_edge(self.snapshot(),index,maximum_bytes)}
 }
 impl JackContentLayout for SemioJackOwnedContent{fn move_codec(&self)->Arc<dyn jack::standards::v1::subsets::any::schema::content_read::JackContentMoveCodec>{move_codec()}}
-impl JackContentRead for SemioJackOwnedContent{fn prepare_effects(&self,effects:&[jack::standards::v1::subsets::any::schema::graph::GraphEffect])->Result<Vec<semio_framework_plugin::app::ChildEmitPreparation>,ValueError>{let leaves=graph_leaves(self.snapshot(),effects);Ok(if leaves.is_empty(){Vec::new()}else{vec![semio_framework_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot,_>("content",&self.identity.child_id,leaves)]})}}
+impl JackContentRead for SemioJackOwnedContent{fn prepare_effects(&self,effects:&[jack::standards::v1::subsets::any::schema::graph::GraphEffect])->Result<Vec<semio_plugin::app::ChildEmitPreparation>,ValueError>{let leaves=graph_leaves(self.snapshot(),effects);Ok(if leaves.is_empty(){Vec::new()}else{vec![semio_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot,_>("content",&self.identity.child_id,leaves)]})}}
 impl JackOwnedContent for SemioJackOwnedContent{
  fn genesis_pack(&self)->Result<Vec<u8>,ValueError>{use pack::snapshot::ArtifactPack;Ok(SemioGraphSnapshot::encode_pack(self.snapshot()))}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::boxed_owner_birth_bytes::<Self>())}

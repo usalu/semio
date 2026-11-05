@@ -2,7 +2,7 @@
 
 use semio_framework_pack_json as json;
 use neural_engine::Dictionary;
-use semio_framework_plugin::{DslValue, Emit, Fault, Media, MediaPayload, NoConfigMutation};
+use semio_plugin::{DslValue, Emit, Fault, Media, MediaPayload, NoConfigMutation};
 use crate::mutations::SequenceMutation;
 use crate::{SequenceSnapshot, SequenceStep, SequenceWorkingScene, StepParams};
 use crate::editor::sequence::edit_rules;
@@ -36,7 +36,7 @@ pub struct SequenceImportJob {
     pub params: Option<Dictionary>,
     pub retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     snapshot: Option<std::sync::Arc<SequenceSnapshot>>,
-    children: Option<semio_framework_plugin::app::ChildContentView>,
+    children: Option<semio_plugin::app::ChildContentView>,
     emit: Option<Emit<SequenceMutation, NoConfigMutation>>,
     checkpoint_publication: semio_framework_job_publication::RetainedJobPublication,
     checkpoint_delivered: bool,
@@ -45,8 +45,8 @@ pub struct SequenceImportJob {
     decoded: bool,
     completed: bool,
     closing: bool,
-    completion: Option<semio_framework_plugin::ArtifactToolCompletion<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
-    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+    completion: Option<semio_plugin::ArtifactToolCompletion<semio_plugin::EditorApp<SequencePlayApp>>>,
+    pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<semio_plugin::EditorApp<SequencePlayApp>>>,
 }
 
 type SequenceJobTurn<'a> = Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure>;
@@ -82,7 +82,7 @@ fn sequence_input_grant(input: &neural_engine::retirement::RetainedDictionaryInp
 }
 
 impl SequenceImportJob {
-    pub fn new(request: semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<SequencePlayApp>>, port: String, media: Media) -> Self {
+    pub fn new(request: semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<SequencePlayApp>>, port: String, media: Media) -> Self {
         Self {
             port: Some(port),
             media: Some(media),
@@ -380,12 +380,12 @@ impl SequenceImportJob {
         if let Some(emit) = self.emit.as_mut() {
             let demand = emit.child_preparation_demands(0)?;
             match emit.prepare_child_one(sequence_demand_grant(demand)) {
-                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Ready(_)) => {}
-                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Pending(_)) => {
+                Ok(semio_plugin::app::ChildEmitPreparationStep::Ready(_)) => {}
+                Ok(semio_plugin::app::ChildEmitPreparationStep::Pending(_)) => {
                     cx.consume_fuel(1);
                     return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
                 }
-                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => return self.fault(cx, &fault.message),
+                Ok(semio_plugin::app::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => return self.fault(cx, &fault.message),
             }
         }
         if !self.completed {
@@ -400,7 +400,7 @@ impl SequenceImportJob {
                 self.emit = Some(emit);
                 return self.fault(cx, "sequence import completion consumer is absent");
             }
-            if let Err(rejected) = completion.complete(Ok(emit), semio_framework_plugin::EphemeralEmit::default()) {
+            if let Err(rejected) = completion.complete(Ok(emit), semio_plugin::EphemeralEmit::default()) {
                 let message = rejected.fault.message.clone();
                 self.pending_completion_rejection = Some(rejected);
                 return self.fault(cx, &message);
@@ -455,5 +455,5 @@ impl semio_framework_job::InteractiveJob for SequenceImportJob {
     }
 }
 
-impl semio_framework_plugin::ArtifactReservedJob for SequenceImportJob {}
+impl semio_plugin::ArtifactReservedJob for SequenceImportJob {}
 //#endregion 🎞️ReservedImport

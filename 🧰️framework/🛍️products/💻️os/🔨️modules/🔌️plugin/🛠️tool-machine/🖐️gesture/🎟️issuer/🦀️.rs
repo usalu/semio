@@ -1,6 +1,6 @@
 //! 🎟️ Original gesture issuance keeps the runtime and captured alias behind a strong-only authority.
-use semio_framework_plugin_decl_views::gesture_contract::GestureCapture;
-use semio_framework_plugin_decl_views::gesture_contract::{GestureSlot, GestureSlotDecision};
+use semio_plugin_decl_views::gesture_contract::GestureCapture;
+use semio_plugin_decl_views::gesture_contract::{GestureSlot, GestureSlotDecision};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retirement::RetireOwned;

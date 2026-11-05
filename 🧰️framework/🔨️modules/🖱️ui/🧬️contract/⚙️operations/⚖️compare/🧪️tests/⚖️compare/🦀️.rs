@@ -71,7 +71,7 @@ fn retained_component_compare_cancellation_and_arena_contention_keep_both_roots(
     let (entered_tx, entered_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
     let holder = std::thread::spawn(move || {
-        semio_framework_ui_contract_values::test_observer::with_value_arena_held(||{
+        semio_ui_contract_values::test_observer::with_value_arena_held(||{
         entered_tx.send(()).unwrap();
         release_rx.recv().unwrap();
         });

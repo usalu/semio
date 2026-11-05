@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "rule", kind: "create-rule", record: "CreateRule" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create rule \"{}\"", self.rule.name), &format!("Regel \"{}\" anlegen", self.rule.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create rule \"{}\"", self.rule.name), &format!("Regel \"{}\" anlegen", self.rule.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

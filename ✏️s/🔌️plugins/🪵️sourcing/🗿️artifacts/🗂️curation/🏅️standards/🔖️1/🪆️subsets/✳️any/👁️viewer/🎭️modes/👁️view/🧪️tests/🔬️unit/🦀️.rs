@@ -1,20 +1,20 @@
 use crate::viewer::sourcing::modes::view::windows::pool;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::ModeDefinition;
+use semio_plugin::ModeDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::WindowLayout;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutAxisNode;
+use semio_plugin::WindowLayoutAxisNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutChild;
+use semio_plugin::WindowLayoutChild;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutRoot;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutStackNode;
+use semio_plugin::WindowLayoutStackNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_plugin::WindowLayoutWindowNode;
 
 use crate::viewer::sourcing::modes::view::*;
 

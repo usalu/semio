@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSheetActionLocalLo
         record: "ChangedSheetActionLocalLoadK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic patch load F_k of the cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech: Charakteristische Einzellast F_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic patch load F_k of the cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech: Charakteristische Einzellast F_k ändern")
     }
 }
 

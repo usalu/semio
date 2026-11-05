@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionPinDiameter
         record: "ChangedTensionPinDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pin diameter d (0 = no pin) of the tension component", "Zugglied: Bolzendurchmesser d (0 = kein Bolzen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pin diameter d (0 = no pin) of the tension component", "Zugglied: Bolzendurchmesser d (0 = kein Bolzen) ändern")
     }
 }
 

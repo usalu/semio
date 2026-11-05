@@ -6,7 +6,7 @@ use semio_framework_value::ToValue;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::BTreeMap;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::layout::ActionDescriptor;
 
 // #region 🛂️Manifest
 //#region 🔖️Manifest

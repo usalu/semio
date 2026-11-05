@@ -9,50 +9,50 @@
 //! whose descriptor declares `"editable": false` is withdraw-only (design §22.20) and never a case. One macro call, [`history_edit_acceptance_law!`](crate::history_edit_acceptance_law), wires it into a
 //! plugin crate's test target; every failure names the plugin, the leaf and the fixture case.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_plugin_decl_emission::{ActionMeta, Emit};
 use semio_framework::kernel::{ActorId, MutationId};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_app_builder::App;
+use semio_plugin_app_builder::App;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 #[doc(hidden)]
-pub use semio_framework_plugin_decl_surface::{ArtifactEditor as __ArtifactEditor, EditorApp as __EditorApp};
+pub use semio_plugin_decl_surface::{ArtifactEditor as __ArtifactEditor, EditorApp as __EditorApp};
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
 use std::collections::BTreeSet;
-use semio_framework_plugin_command::CATALOGUE_EXAMPLE_ACTION_ID;
+use semio_plugin_command::CATALOGUE_EXAMPLE_ACTION_ID;
 use semio_framework_value::{DslValue, ValueError};
-use semio_framework_plugin_app_builder::ExampleSource;
+use semio_plugin_app_builder::ExampleSource;
 use semio_framework::{Fault, ViewModel};
 use std::future::Future;
 use protocol::{LOCAL_ACTOR_ID, OpBinary, OpText};
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use serde_json::Value;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_instance_app::VcsArtifactApp;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_layout::layout::WindowMeasure;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_layout::layout::WindowMeasure;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_testing_laws::{artifact_app_laws, with_authoring_identity};
+use semio_plugin_testing_laws::{artifact_app_laws, with_authoring_identity};
 use store::os_store::document_materialize::create_document_envelope;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate as history_edit_acceptance;
-use semio_framework_plugin_time_travel as time_travel;
-use semio_framework_ui_contract::*;
+use semio_plugin_time_travel as time_travel;
+use semio_ui_contract::*;
 
 #[path = "🚧️acceptance-error-limits-and-verdicts/🦀️.rs"]
 mod acceptance_error_limits_and_verdicts;

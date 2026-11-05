@@ -1,12 +1,12 @@
 //! 🗃️ Dag board model: geometry, LOD, preview records, errors, edits and the host snapshot loaders.
 //!
-//! Crate `semio-framework-os-infinite-board-dag-model`; a downward producer of the infinite board family.
+//! Crate `semio-os-infinite-board-dag-model`; a downward producer of the infinite board family.
 
 #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
 #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure the call sites.")]
 
-use semio_framework_os_infinite_board_schema::{DagLayoutOptions, field, layered_positions, LayoutControl, refusal, Selection};
-use semio_framework_os_infinite_board_engine::{CanvasPalette, DirectedPortGraphEngine, GraphExtension};
+use semio_os_infinite_board_schema::{DagLayoutOptions, field, layered_positions, LayoutControl, refusal, Selection};
+use semio_os_infinite_board_engine::{CanvasPalette, DirectedPortGraphEngine, GraphExtension};
 use semio_framework_canvas::{Affine, Color, FillRule, Rect, Scene, Stroke};
 use semio_framework_value::{DslValue, Number};
 use std::collections::{HashMap, HashSet};
@@ -19,7 +19,7 @@ use semio_framework_value::retirement::{deferred_birth_bytes_for, RetirementCurs
 use semio_framework_pack_json::Value;
 use ::{graph, semio_framework_canvas as canvas};
 use semio_framework_graph_drawing::routing::{handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, rectangle_handle_angle_toward};
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 use semio_framework_value::retirement::*;
 
 #[path = "🪪️input-displaced-and-identity-records/🦀️.rs"]

@@ -3,29 +3,29 @@
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::{dag_action, ui_node_list, ui_value_list, ui_value_map, ui_value_text};
 use crate::DagScene;
-use semio_framework_os_infinite_directed_presentation::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
-use semio_framework_plugin::plugin_app_close_prelude::input;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
-use semio_framework_ui_contract::Label;
-use semio_framework_plugin::plugin_app_close_prelude::Trigger;
-use semio_framework_plugin::plugin_app_close_prelude::UiText;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::ui_inspector_mixed_number;
-use semio_framework_plugin::ui_inspector_mixed_text;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
-use semio_framework_plugin::UI_INSPECTOR_MIXED_PLACEHOLDER;
-use semio_framework_ui_contract::{tree_item, BuiltNode};
+use semio_os_infinite_directed_presentation::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
+use semio_plugin::plugin_app_close_prelude::input;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::plugin_app_close_prelude::HasChildren;
+use semio_plugin::plugin_app_close_prelude::InputKind;
+use semio_ui_contract::Label;
+use semio_plugin::plugin_app_close_prelude::Trigger;
+use semio_plugin::plugin_app_close_prelude::UiText;
+use semio_plugin::tree_item_desc;
+use semio_plugin::ui_inspector_mixed_number;
+use semio_plugin::ui_inspector_mixed_text;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::UI_INSPECTOR_MIXED_PLACEHOLDER;
+use semio_ui_contract::{tree_item, BuiltNode};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
@@ -63,7 +63,7 @@ fn control_row(id: &str, title: &str, control: BuiltNode) -> UiAssemblyResult<Bu
         .map_err(|_| admission_error())
 }
 
-fn input_field(id: &str, title: &str, kind: InputKind, value: &str, placeholder: Option<&str>, action: &str, args: semio_framework_plugin::UiValue) -> UiAssemblyResult<BuiltNode> {
+fn input_field(id: &str, title: &str, kind: InputKind, value: &str, placeholder: Option<&str>, action: &str, args: semio_plugin::UiValue) -> UiAssemblyResult<BuiltNode> {
     let (action, args) = dag_action(action, Some(args))?;
     let mut control = input(kind).value(UiText::try_from_str(value).ok_or_else(admission_error)?).try_id(format!("{id}.input")).map_err(|_| admission_error())?;
     if let Some(placeholder) = placeholder {
@@ -82,7 +82,7 @@ fn input_field(id: &str, title: &str, kind: InputKind, value: &str, placeholder:
     control_row(id, title, control.try_build().map_err(|_| admission_error())?)
 }
 
-fn patch_args(node_ids: &[String], field: &str) -> UiAssemblyResult<semio_framework_plugin::UiValue> {
+fn patch_args(node_ids: &[String], field: &str) -> UiAssemblyResult<semio_plugin::UiValue> {
     let ids = node_ids.iter().map(ui_value_text).collect::<UiAssemblyResult<Vec<_>>>()?;
     ui_value_map([("nodeIds", ui_value_list(ids)?), ("field", ui_value_text(field)?)])
 }

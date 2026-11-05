@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointWeldForceTran
         record: "ChangedJointWeldForceTransverse",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Joint: Weld force perpendicular to the weld axis along a leg F_w,perp,Ed (0 = not given)", "Anschluss: Nahtkraft quer zur Naht entlang eines Schenkels F_w,perp,Ed (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Joint: Weld force perpendicular to the weld axis along a leg F_w,perp,Ed (0 = not given)", "Anschluss: Nahtkraft quer zur Naht entlang eines Schenkels F_w,perp,Ed (0 = nicht angegeben) ändern")
     }
 }
 

@@ -1,4 +1,4 @@
-use semio_framework_plugin_extension::describe::DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES;
+use semio_plugin_extension::describe::DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES;
 use semio_framework::PluginManifest;
 use semio_framework_test_fixtures::fixture_path;
 
@@ -6,7 +6,7 @@ use semio_framework_test_fixtures::fixture_path;
 /// than restated here — `trustedBootstrapReadRegular` and the directory's execution-target read
 /// both refuse a descriptor above it.
 fn directory_schema_source() -> String {
-    semio_framework_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../../📇️directory/🧬️schema/🦀️.rs")).expect("the directory schema module tree reads")
+    semio_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../../📇️directory/🧬️schema/🦀️.rs")).expect("the directory schema module tree reads")
 }
 
 const DESCRIPTOR_MAX_BYTES: usize = 4 * 1024 * 1024;
@@ -20,7 +20,7 @@ fn manifest_with_example(body: String) -> PluginManifest {
         apps: Vec::new(),
         examples: vec![semio_framework::ExampleDefinition {
             id: "capsule-dream".to_string(),
-            label: semio_framework_ui_locale::LocalizedLabel::data("Capsule Dream"),
+            label: semio_ui_locale::LocalizedLabel::data("Capsule Dream"),
             icon_id: semio_framework::IconName::from("file"),
             artifact_json: body,
             dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.puzzle.5d".to_string(), standard: "1".to_string(), subset: "*".to_string() },

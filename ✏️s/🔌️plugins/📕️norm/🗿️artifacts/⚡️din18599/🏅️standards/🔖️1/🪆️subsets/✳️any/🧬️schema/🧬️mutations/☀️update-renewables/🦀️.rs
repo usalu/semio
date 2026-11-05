@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for UpdateRenewables where
         record: "UpdatedRenewables",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Update renewable energy systems", "Anlagen für erneuerbare Energien aktualisieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Update renewable energy systems", "Anlagen für erneuerbare Energien aktualisieren")
     }
 }
 

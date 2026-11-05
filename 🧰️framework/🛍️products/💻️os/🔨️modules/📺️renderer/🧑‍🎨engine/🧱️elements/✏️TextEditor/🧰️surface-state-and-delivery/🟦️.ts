@@ -12,7 +12,7 @@ import { showTextEditorSpliceViewV1, textEditorSessionSelectionV1 } from "../�
 
 // #region WasmEditorSurface
 /** 🧰️ Holds the refs and state of the editor surface and delivers edits and scene syncs. */
-export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction, explicitDraft, explicitDraftDirty, descriptionId, invalid, onDraftChange, requestContextMenu }: WasmEditorSurfaceProps) {
+export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction, onSourceCommit, label, readOnly: readOnlyOverride, explicitDraft, explicitDraftDirty, descriptionId, invalid, onDraftChange, requestContextMenu }: WasmEditorSurfaceProps) {
   const presenceRuntimeKey = usePresenceRuntimeKeyV1();
   const sessionRef = useRef<FrameworkEditorSession | null>(null);
   const renameActiveRef = useRef(false);
@@ -38,13 +38,18 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
   const shellContextMenuFallback = useShellContextMenuFallback();
 
   const syncSessionRef = useRef<(resync?: boolean) => void>(() => {});
-  const readOnlyRef = useRef(false);
-  const [readOnly, setReadOnly] = useState(false);
+  const readOnlyRef = useRef(readOnlyOverride ?? false);
+  const [readOnly, setReadOnly] = useState(readOnlyOverride ?? false);
+  useEffect(() => {
+    if (readOnlyOverride === undefined) return;
+    readOnlyRef.current = readOnlyOverride;
+    setReadOnly(readOnlyOverride);
+  }, [readOnlyOverride]);
   const selectionUndeclaredRef = useRef(false);
   const spliceHostRef = useRef<TextEditorSpliceHostV1 | null>(null);
   const spliceTyping = useMemo(() => textEditorTypingV1(scene.settingsJson) !== null, [scene.settingsJson]);
   const spliceTypingRef = useRef(false);
-  spliceTypingRef.current = spliceTyping && !explicitDraft;
+  spliceTypingRef.current = spliceTyping && !explicitDraft && !onSourceCommit;
   /** 📮️ ONE round trip in flight per editor, latest state wins: a typed run is delivered as the editor's text and selection AT
    * DELIVERY (`createTextEditorOutboxV1`) whenever the previous delivery settled, never one `textEdit` + one `textSelect` per key —
    * sustained typing at 40 keys/s filled the per-actor command queue (`queue-full`, > 256 pending turns) and dropped keys
@@ -52,8 +57,8 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
    * as the surface and reads its owner through `deliveryOwnerRef`: a dispatcher rebuilt on every new `onAction` identity left
    * the previous one flushing its own stale pending text AFTER the newer one had gone out, so the guest took an older buffer
    * last and the author's final keys vanished (ticket 26/09/23 C11, probe `c11typing3`). */
-  const deliveryOwnerRef = useRef({ controllerId, explicitDraft, onAction, onDraftChange, surfaceId, presenceRuntimeKey });
-  deliveryOwnerRef.current = { controllerId, explicitDraft, onAction, onDraftChange, surfaceId, presenceRuntimeKey };
+  const deliveryOwnerRef = useRef({ controllerId, explicitDraft, onAction, onSourceCommit, onDraftChange, surfaceId, presenceRuntimeKey });
+  deliveryOwnerRef.current = { controllerId, explicitDraft, onAction, onSourceCommit, onDraftChange, surfaceId, presenceRuntimeKey };
   /** ⌨️ Publishes the editor's pending run as the ephemeral shared preview peers render at its caret (`null` once it ended). */
   const publishTypingPreview = (surfaceId: string, local: string) => {
     const preview = typingRef.current?.preview(local) ?? null;
@@ -74,7 +79,7 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
       return () => clearTimeout(timer);
     },
   );
-  const deliver = useMemo(
+  const flushDelivery = useMemo(
     () =>
       createTextEditorOutboxV1<TextEditorOutboxV1>(
         () => {
@@ -82,7 +87,12 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
           return session === null ? null : { text: session.text(), start: session.anchor(), end: session.caret() };
         },
         async (next) => {
-          const { controllerId, explicitDraft, onAction, onDraftChange, surfaceId } = deliveryOwnerRef.current;
+          const { controllerId, explicitDraft, onAction, onSourceCommit, onDraftChange, surfaceId } = deliveryOwnerRef.current;
+          if (onSourceCommit) {
+            echoStateRef.current = { pending: [], acknowledged: next.text };
+            await onSourceCommit(next.text);
+            return;
+          }
           if (explicitDraft) {
             const history = explicitHistoryRef.current;
             if (history.current !== next.text) explicitHistoryRef.current = { past: [...history.past, history.current].slice(-256), current: next.text, future: [] };
@@ -150,6 +160,11 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
       ),
     [],
   );
+  const deliver = useCallback(() => {
+    const owner = deliveryOwnerRef.current, session = sessionRef.current;
+    if (owner.onSourceCommit && session) owner.onDraftChange?.(session.text());
+    flushDelivery();
+  }, [flushDelivery]);
   const moveExplicitHistory = useCallback((direction: "undo" | "redo") => {
     if (!explicitDraft) return false;
     const history = explicitHistoryRef.current;
@@ -219,7 +234,7 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
     [scene],
   );
   syncSessionRef.current = syncSession;
-  return { deliver, descriptionId, dispatch, invalid, lastHoverRangeRef, moveExplicitHistory, readOnly, readOnlyRef, renameActiveRef, requestContextMenu, scene, sessionRef, shellContextMenuFallback, surfaceId, syncSession, textEditorMenuKeysByActionId, typingRef , presenceRuntimeKey };
+  return { deliver, descriptionId, dispatch, invalid, lastHoverRangeRef, moveExplicitHistory, readOnly, readOnlyRef, renameActiveRef, requestContextMenu, scene, sessionRef, shellContextMenuFallback, surfaceId, syncSession, textEditorMenuKeysByActionId, typingRef , presenceRuntimeKey, editorLabelOverride: label };
 }
 
 export type EditorCore1 = ReturnType<typeof useEditorSurfaceState>;

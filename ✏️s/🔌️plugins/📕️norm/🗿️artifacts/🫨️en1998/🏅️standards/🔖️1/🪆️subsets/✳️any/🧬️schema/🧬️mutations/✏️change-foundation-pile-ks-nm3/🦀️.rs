@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationPileKsNM
         record: "ChangeFoundationPileKsNM3",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Horizontal subgrade modulus k_h of the soil", "Horizontaler Bettungsmodul k_h des Bodens ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Horizontal subgrade modulus k_h of the soil", "Horizontaler Bettungsmodul k_h des Bodens ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-pile-ks-nm3".into()]

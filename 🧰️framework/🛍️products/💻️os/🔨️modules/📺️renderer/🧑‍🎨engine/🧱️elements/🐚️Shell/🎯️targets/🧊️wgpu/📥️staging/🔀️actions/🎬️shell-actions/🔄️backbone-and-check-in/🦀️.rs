@@ -154,7 +154,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         }
         self.sync.checkpoint_dispatched = true;
         let authors: Vec<semio_framework::DslValue> = self.directory.identity.as_ref().map(|identity| vec![semio_framework::dsl_value!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();
-        let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "message": message, "authors": authors }) };
+        let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "message": message, "authors": authors }) };
         if let Err(error) = self.dispatch_action(action).await {
             debug_log(&format!("[TRACE] wgpu shell check-in checkpoint dispatch failed: {error}"));
             self.sync.checkpoint_dispatched = false;

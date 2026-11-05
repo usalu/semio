@@ -1,12 +1,12 @@
 //! 🚩️ Native reserved checkpoint routing preserves the actual arguments, child metadata source and parent command through one original continuation.
 use super::child_vcs::{invalid,header,original,paid,*,checkpoint::{CheckpointMetadata,cascade::{ChildCheckpointCascade,ChildRosterIdentity}}};
-use semio_framework_os_kernel::os_store::{SpaceMember,ArtifactNativeVcsRequest,ArtifactNativeVcsResult};
+use semio_os_kernel::os_store::{SpaceMember,ArtifactNativeVcsRequest,ArtifactNativeVcsResult};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetirementDemand,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
 use std::mem::{ManuallyDrop,size_of};
-use semio_framework_plugin_job_receiving::original_pack_receiving::OriginalPackReceiving;
+use semio_plugin_job_receiving::original_pack_receiving::OriginalPackReceiving;
 use semio_framework_value::DslValue;
-use semio_framework_os_kernel::os_vcs::{Author,CompositionPin,io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds};
+use semio_os_kernel::os_vcs::{Author,CompositionPin,io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds};
 use crate::{built,built_with,retired};
 /// 🖋️ The authored action fields receive directly from their original intrinsic tree.
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]

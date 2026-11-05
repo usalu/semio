@@ -3,7 +3,7 @@ use super::indexes::{Rows,invalid};
 use semio_framework_graph_manifest::{PropertyBag,PropertyValue};
 use semio_framework_value::{ValueError,ValueRefusalKind,DecodedValue};
 use semio_framework_value::FromValue;
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SqliteRow,transfer,artifact::{read_binary64,FloatColumn}};
+use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SqliteRow,transfer,artifact::{read_binary64,FloatColumn}};
 fn invariant(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,message)}
 pub(super) fn retire<T:FromValue>(value:T){T::retire_decoded(value)}
 pub(super) struct Reader<'a,'c,'p>{pub(super) rows:Rows<'a>,pub(super) control:&'c mut SqliteSnapshotControl<'p>,bytes:usize}

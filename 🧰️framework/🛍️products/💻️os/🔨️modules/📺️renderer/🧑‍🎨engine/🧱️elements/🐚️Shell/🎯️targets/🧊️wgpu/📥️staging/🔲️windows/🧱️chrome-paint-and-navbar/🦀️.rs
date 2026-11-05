@@ -169,7 +169,7 @@ fn world_projection_pane_rows(prefix: &str, window_id: &str, selected_id: &str, 
             action: Some(ActionDescriptor {
                 controller_id: "framework".into(),
                 action: "setWorldProjectionTemplate".into(),
-                args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowId": window_id.to_string(), "templateId": template.id }),
+                args: semio_renderer_wgpu_host_base::action_args_json!({ "windowId": window_id.to_string(), "templateId": template.id }),
             }),
             items: (!children.is_empty()).then_some(children),
             ..UiTreeItemNode::base(String::new(), Label::data(String::new()))

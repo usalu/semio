@@ -10,7 +10,7 @@ pub struct InsertHollowJoint { pub index: Option<usize>, pub hollow_joint: Hollo
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertHollowJoint where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_hollow_joint::RemoveHollowJoint> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "hollow-joint", kind: "insert-hollow-joint", record: "InsertedHollowJoint" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert hollow joint at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Hohlprofilknoten an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert hollow joint at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Hohlprofilknoten an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

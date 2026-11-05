@@ -1,6 +1,6 @@
-#[allow(unused_imports)] use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)] use semio_plugin::NoConfig;
 #[allow(unused_imports)] #[cfg(test)] #[cfg(test)] use semio_s_artifact_layout_layout_model::LayoutCamera;
-#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::canvas_pointer_down::*;
 use semio_s_artifact_layout_layout_editor_commands::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
@@ -11,8 +11,8 @@ use semio_s_artifact_layout_layout_editor_commands::LAYOUT_INTERACTION_ELEMENTS;
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT;
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::LAYOUT_PLAY_SURFACE_PREVIEW;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::artifact_app_laws;
-use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, INTERACTION_HOVER_ACTION_ID};
+use semio_plugin::artifact_app_laws;
+use semio_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, INTERACTION_HOVER_ACTION_ID};
 
 /// 🕹️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C: the interaction verbs a canvas gesture emits
 /// (`Effect::DispatchAction { action ∈ INTERACTION_ACTION_IDS }`) are folded in-reactor by the
@@ -34,7 +34,7 @@ async fn registered_layout_app() -> LayoutApp {
 }
 
 fn blueprint_meta() -> ActionMeta {
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") }
 }
 
@@ -46,9 +46,9 @@ fn close_registered(mut app: LayoutApp) {
 /// way the plugin host does; the receipt's `effects` are exactly what the host would have been handed.
 async fn settled_dispatch(app: &mut LayoutApp, command: LayoutCommand) -> artifact_app_laws::TypedOperationFixtureReceipt {
     let meta = blueprint_meta();
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
     assert!(result.mutations.is_empty(), "canvas gestures never mutate the document directly");
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication settles")
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication settles")
 }
 
 async fn selected_elements(app: &LayoutApp) -> Vec<String> {
@@ -133,7 +133,7 @@ async fn pointer_move_hovers_the_hit_frame_inline() {
 /// `BatchOnlyPendingRewrite` classification, which are framework-owned).
 fn hover_targets(payload: &canvas_pointer_move::CanvasPointerMove) -> String {
     let document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
@@ -169,7 +169,7 @@ async fn a_batched_pointer_move_hovers_its_last_sample_only() {
 async fn a_cancelled_release_is_inert_and_the_wire_defaults_hold() {
     use semio_framework_value::FromValue;
     let document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };

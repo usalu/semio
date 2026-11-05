@@ -109,7 +109,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
         mutations::{Mp4Mutation},
     };
     use protocol::{DiffBinary,DiffCodec,DiffText, ColdMutation, Mutation, OpBinary, OpText};
-    use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
+    use semio_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
     let bytes = std::fs::read(fixture_path!("../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
     let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");

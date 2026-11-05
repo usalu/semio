@@ -4,12 +4,12 @@ use semio_s_artifact_bim_model_modify::render::envelope::Mode;
 use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{World3dAnnotation, World3dColorRamp, World3dScalarDomain, World3dText};
+use semio_plugin::{World3dAnnotation, World3dColorRamp, World3dScalarDomain, World3dText};
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_modify::render::envelope::Part;
 #[allow(unused_imports)]
-use semio_framework_plugin::{DslValue, World3dAnnotationLayer, World3dScalarField, World3dScalarRange, WORLD3D_ANNOTATIONS_MAX};
+use semio_plugin::{DslValue, World3dAnnotationLayer, World3dScalarField, World3dScalarRange, WORLD3D_ANNOTATIONS_MAX};
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::envelope::{instance, marker};
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::envelope::{mode, overlay, legend, surface_text};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};

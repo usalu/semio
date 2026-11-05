@@ -24,8 +24,8 @@ fn the_framework_notices_mirror_the_fixture_in_both_locales() {
 fn a_guest_fault_under_a_framework_code_resolves_to_its_notice_in_both_locales() {
     let fault = Fault::new(FaultOrigin::App, "mutation.too-large".to_string(), "batched preparation footprint exceeds its fixed item capacity");
     let (en, de) = framework_fault_notice("mutation.too-large").expect("the framework labels mutation.too-large");
-    for (locale, expected) in [(semio_framework_ui_locale::Locale::En, en), (semio_framework_ui_locale::Locale::De, de)] {
-        let notice = fault_notice(&fault, &[], semio_framework_ui_locale::Terminology::Native, locale).expect("a framework code always earns its notice");
+    for (locale, expected) in [(semio_ui_locale::Locale::En, en), (semio_ui_locale::Locale::De, de)] {
+        let notice = fault_notice(&fault, &[], semio_ui_locale::Terminology::Native, locale).expect("a framework code always earns its notice");
         assert_eq!(notice, FaultNotice { code: "mutation.too-large".to_string(), text: expected.to_string() });
     }
 }
@@ -36,22 +36,22 @@ fn a_guest_fault_under_a_framework_code_resolves_to_its_notice_in_both_locales()
 fn a_foreign_document_schema_on_a_media_edge_names_both_schemas_in_both_locales() {
     let fault = Fault::new(FaultOrigin::Framework, "plugin.media.schema-mismatch".to_string(), "document schema mismatch").with_param("found", "s.draw.drawing").with_param("expected", "s.note.note");
     let (en, de) = framework_fault_notice("plugin.media.schema-mismatch").expect("the framework labels plugin.media.schema-mismatch");
-    for (locale, template) in [(semio_framework_ui_locale::Locale::En, en), (semio_framework_ui_locale::Locale::De, de)] {
-        let notice = fault_notice(&fault, &[], semio_framework_ui_locale::Terminology::Native, locale).expect("a schema mismatch always earns its notice");
+    for (locale, template) in [(semio_ui_locale::Locale::En, en), (semio_ui_locale::Locale::De, de)] {
+        let notice = fault_notice(&fault, &[], semio_ui_locale::Terminology::Native, locale).expect("a schema mismatch always earns its notice");
         assert_eq!(notice, FaultNotice { code: "plugin.media.schema-mismatch".to_string(), text: template.replace("{found}", "s.draw.drawing").replace("{expected}", "s.note.note") });
     }
     let unnamed = Fault::new(FaultOrigin::Framework, "plugin.media.schema-mismatch".to_string(), "no schemas named");
-    assert_eq!(fault_notice(&unnamed, &[], semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), None);
+    assert_eq!(fault_notice(&unnamed, &[], semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), None);
 }
 
 #[test]
 fn a_channel_mismatch_names_both_versions_in_both_locales() {
     let fault = Fault::new(FaultOrigin::Framework, "plugin.channel-mismatch".to_string(), "the guest speaks app channel 20, the host app channel 21").with_param("guest", "20").with_param("host", "21");
     let (en, de) = framework_fault_notice("plugin.channel-mismatch").expect("the framework labels plugin.channel-mismatch");
-    for (locale, template) in [(semio_framework_ui_locale::Locale::En, en), (semio_framework_ui_locale::Locale::De, de)] {
-        let notice = fault_notice(&fault, &[], semio_framework_ui_locale::Terminology::Native, locale).expect("a channel mismatch always earns its notice");
+    for (locale, template) in [(semio_ui_locale::Locale::En, en), (semio_ui_locale::Locale::De, de)] {
+        let notice = fault_notice(&fault, &[], semio_ui_locale::Terminology::Native, locale).expect("a channel mismatch always earns its notice");
         assert_eq!(notice, FaultNotice { code: "plugin.channel-mismatch".to_string(), text: template.replace("{guest}", "20").replace("{host}", "21") });
     }
     let unnamed = Fault::new(FaultOrigin::Framework, "plugin.channel-mismatch".to_string(), "no versions named");
-    assert_eq!(fault_notice(&unnamed, &[], semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), None, "a notice never shows an unfilled placeholder");
+    assert_eq!(fault_notice(&unnamed, &[], semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), None, "a notice never shows an unfilled placeholder");
 }

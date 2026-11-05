@@ -15,7 +15,7 @@ impl ArtifactEditor for WriterPlayApp {
     /// Without it every live envelope load faults with `editor did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("writer.child-projection"), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("writer.child-projection"), error.to_string()))
     }
 
     type Snapshot = WriterSnapshot;
@@ -35,7 +35,7 @@ impl ArtifactEditor for WriterPlayApp {
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
     /// ⌨️ Writer composes relative prose edits through its retained original typing producer.
-    fn original_typing_fold() -> semio_framework_plugin::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
+    fn original_typing_fold() -> semio_plugin::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
         semio_s_artifact_writer_writer_typing_fold::original_typing_fold()
     }
 
@@ -51,42 +51,42 @@ impl ArtifactEditor for WriterPlayApp {
     }
 
     fn build_config_store_disposer() -> ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+        Some(semio_plugin::no_config_store_disposer())
     }
 
     fn build_draft_store_disposer() -> ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<WriterMainWindowConfigOwner>()
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         registry.register::<WriterMainWindowTransientOwner>()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<WriterPlayApp>,
         owner_file: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.writer.writer@1/*#editor",
@@ -118,11 +118,11 @@ impl ArtifactEditor for WriterPlayApp {
         Some(crate::host::owned::writer_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn reference_birth()->Option<fn()->Result<WriterSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<WriterSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::schema::empty_writer_snapshot())
     })}
 
@@ -193,15 +193,15 @@ impl ArtifactEditor for WriterPlayApp {
         registry.register(WriterCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !WRITER_COMMAND_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Writer command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Writer command does not match its exact registered tool").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, WriterCommand::command_id, MAX_WRITER_COMMAND_RAW_BYTES, MAX_WRITER_COMMAND_WORK_ITEMS, false, |request| WriterRetainedCommandWork::new(request.command.command_id()))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, WriterCommand::command_id, MAX_WRITER_COMMAND_RAW_BYTES, MAX_WRITER_COMMAND_WORK_ITEMS, false, |request| WriterRetainedCommandWork::new(request.command.command_id()))
     }
 
     fn handle(
@@ -209,7 +209,7 @@ impl ArtifactEditor for WriterPlayApp {
         doc: &ArtifactView<'_, WriterSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WriterMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -244,37 +244,37 @@ impl ArtifactEditor for WriterPlayApp {
         Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let document = doc.snapshot;
         let labels = writer_play_labels(view_state);
         let window_config = main::config::current(cfg).cloned().unwrap_or_default();
         let window_transient = WriterMainWindowTransient::default();
         let node = match body_key {
             WRITER_PLAY_BODY_MAIN => main::render(document, &window_config, &window_transient),
-            WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WRITER_PLAY_BODY_ARTIFACT)),
+            WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_plugin::TreeWindows::for_body(view_state, WRITER_PLAY_BODY_ARTIFACT)),
             WRITER_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WRITER_PLAY_BODY_INSPECTION)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer unknown-body text admission failed")),
+            WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, labels, &semio_plugin::TreeWindows::for_body(view_state, WRITER_PLAY_BODY_INSPECTION)),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer unknown-body text admission failed")),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, WriterSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, NoTransient>,
         _interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == WRITER_PLAY_BODY_MAIN {
             let config = main::config::current(cfg).cloned().unwrap_or_default();
             let transient = main::transient::current(transient).cloned().unwrap_or_default();
             let node = main::render(doc.snapshot, &config, &transient)?;
-            return Ok(semio_framework_plugin::built_to_component_tree(node));
+            return Ok(semio_plugin::built_to_component_tree(node));
         }
         Self::render(body_key, doc, cfg, view_state)
 
@@ -282,8 +282,8 @@ impl ArtifactEditor for WriterPlayApp {
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
-        use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};
+    fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, semio_plugin::WindowEngagement> {
+        use semio_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};
 
         let Some(config) = main::config::current(cfg) else { return HashMap::new() };
         let labels = writer_play_labels(view_state);
@@ -323,10 +323,10 @@ impl ArtifactEditor for WriterPlayApp {
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, WriterSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, NoTransient>,
         _interaction: &InteractionView<'_>,
-    ) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    ) -> HashMap<String, semio_plugin::WindowEngagement> {
         let mut engagements = Self::window_engagements(doc, cfg, view_state);
         let Some(window_id) = view_state.window_id.as_ref() else { return HashMap::new() };
         let Some(window_transient) = main::transient::current(transient) else { return HashMap::new() };
@@ -336,13 +336,13 @@ impl ArtifactEditor for WriterPlayApp {
         engagements
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(config) = main::config::current(cfg) else { return HashMap::new() };
         let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
         HashMap::from([(window_id, main::window_measures(config, writer_play_labels(view_state)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, view_state)
     }
@@ -353,7 +353,7 @@ impl ArtifactEditor for WriterPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_writer_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::WRITER_DIALECT)
             .document(["semio", "writer"])
             .artifact_kind(crate::artifact_kind())
@@ -375,7 +375,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_with(writer_hidden_view("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), "camera"))
             .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen"), "sparkles").with_category("transform"))
             .action_with(writer_hidden_operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), "sparkles"))
-            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementSubmit", semio_plugin::CapabilityAudience::Input)
             .action_with(writer_hidden_operation("openDocument", LocalizedLabel::native("Open Document", "Dokument öffnen"), "folder-open"))
             .action_with(writer_hidden_operation("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), "sparkles"))
             .action_destructive("loadDocumentJson")
@@ -427,8 +427,8 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("commitRename", LocalizedLabel::native("With the caret on a Jack variable, renames every occurrence of it to the given text; otherwise replaces the editor's selected range with that text.", "Steht die Einfügemarke auf einer Jack-Variablen, werden alle ihre Vorkommen in den angegebenen Text umbenannt; sonst ersetzt der Text den ausgewählten Bereich des Editors."))
             .action_describe("openDocument", LocalizedLabel::native("Opens the given text under a URI as the writer document, detecting its language from the content or extension; the current document is replaced.", "Öffnet den angegebenen Text unter einer URI als Writer-Dokument und erkennt die Sprache aus Inhalt oder Dateiendung; das aktuelle Dokument wird ersetzt."))
             .action_describe("loadDocumentJson", LocalizedLabel::native("Loads a test fixture given as JSON as the whole writer document, replacing the current one; invalid JSON changes nothing.", "Lädt eine als JSON übergebene Test-Fixture als gesamtes Writer-Dokument und ersetzt das aktuelle; ungültiges JSON ändert nichts."))
-            .action_audience("textEdit", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("textSplice", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("textEdit", semio_plugin::CapabilityAudience::Input)
+            .action_audience("textSplice", semio_plugin::CapabilityAudience::Input)
             .action_describe("textSplice", LocalizedLabel::native("Replaces one range of the text as its author saw it; the change lands between the text its author saw around it, even when others edited the text meanwhile.", "Ersetzt einen Textbereich so, wie ihn sein Autor sah; die Änderung landet zwischen dem Text, den der Autor darum herum sah, auch wenn andere den Text inzwischen bearbeitet haben."))
             .action_destructive("setText")
             .action_destructive("openDocument")

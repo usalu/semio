@@ -5,15 +5,15 @@
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{Edit, Mutation};
+use semio_os_spr::{Edit, Mutation};
 use std::sync::Arc;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_framework_value_retirement_owner::{retirement_owner_close, retirement_owner_demands};
 use crate::lifted_snapshot_read::{ArtifactStoreEditRetirement, ArtifactStoreHistoryMetadataRetirement, ArtifactStoreOperationRowOwners};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_os_vcs::Change;
+use semio_os_vcs::Change;
 
-use semio_framework_os_pack::pack_rt;
+use semio_os_pack::pack_rt;
 
 impl<Mu> From<semio_framework_value_persistent::list::PagedList<Mu, {usize::MAX}>> for ArtifactStoreOperationRowOwners<Mu> {
     fn from(rows: semio_framework_value_persistent::list::PagedList<Mu, {usize::MAX}>) -> Self { Self::Inverse(rows) }

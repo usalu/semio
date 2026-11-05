@@ -203,7 +203,7 @@ impl Inputs {
                     let accepted = if kind == super::type_input_kind::Kind::Number { matches!(actual, Some("integer" | "real")) } else { actual == Some(kind.tag()) || kind==super::type_input_kind::Kind::Select&&self.kind.reference_member().is_some()&&actual==Some("reference") };
                     let payload = value.iter().find(|(key, _)| key == "value").map(|(_, value)| value);
                     let shape = match (actual, payload) {
-                        (Some("aggregate"),Some(DslValue::Array(items)))=>items.len()<semio_framework_plugin::action_staging::STAGED_FORM_BODY_LIMITS.content,
+                        (Some("aggregate"),Some(DslValue::Array(items)))=>items.len()<semio_plugin::action_staging::STAGED_FORM_BODY_LIMITS.content,
                         (Some("typedValue"),Some(value))=>typed_constructor(value).is_some_and(|(_,items)|items.len()==1),
                         (Some("real"), Some(DslValue::Object(words))) => matches!(words.as_slice(), [(key,DslValue::String(_))] if key == "bits"),
                         (_, Some(DslValue::String(_))) => actual != Some("real"),

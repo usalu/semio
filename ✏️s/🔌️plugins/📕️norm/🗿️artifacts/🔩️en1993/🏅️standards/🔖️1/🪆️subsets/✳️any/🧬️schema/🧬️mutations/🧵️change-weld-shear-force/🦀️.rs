@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeWeldShearForce whe
         record: "ChangedWeldShearForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear force F_Ed along the depth of the weld group", "Schweißnahtgruppe: Querkraft F_Ed in Tiefenrichtung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear force F_Ed along the depth of the weld group", "Schweißnahtgruppe: Querkraft F_Ed in Tiefenrichtung ändern")
     }
 }
 

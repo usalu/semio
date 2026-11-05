@@ -15,7 +15,7 @@ use crate::NoteImageAsset;
 #[allow(unused_imports)]
 use machine::Command;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_framework_tool_machine::{ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState};
 #[allow(unused_imports)]
@@ -29,7 +29,7 @@ use crate::editor::note::command_enum::NoteCommand;
 use crate::schema::{block_id, create_block_by_kind};
 use crate::{NoteCamera};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 use serde_json::json;
 
 /// 🖋️ One block spelled the way the ink-canvas host sends it — taken from the note's own canvas
@@ -123,7 +123,7 @@ async fn a_streamed_gesture_is_one_transaction_and_one_undo_step() {
     let transaction = rows[0].transaction.as_ref().unwrap();
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.note.note@1/*#editor#inkApplyEvents", "{transaction:?}");
     assert_eq!(rows[0].op_count, 1, "one net create-block, not one op per tick");
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "a single undo erases the whole gesture");
 }
 
@@ -184,8 +184,8 @@ async fn a_block_drag_commits_one_relative_drag_blocks_leaf() {
     let drag = &rows[1];
     assert_eq!(drag.op_lines.len(), 1, "one relative leaf: {:?}", drag.op_lines);
     assert!(drag.op_lines[0].starts_with("drag-blocks"), "{:?}", drag.op_lines);
-    assert_eq!(drag.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 blocks by (30, 15)");
-    assert_eq!(drag.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Blöcke um (30; 15) ziehen");
+    assert_eq!(drag.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 2 blocks by (30, 15)");
+    assert_eq!(drag.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "2 Blöcke um (30; 15) ziehen");
 }
 
 /// ⌨️ LAW (design §5): a keyboard nudge is ONE transaction of ONE `drag-blocks` over every unlocked selected block —

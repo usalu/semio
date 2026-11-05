@@ -14,7 +14,7 @@
   ],
   "forbiddenPrefixes": [
     "semio_s_spatial_kernel",
-    "semio_framework_os_flow",
+    "semio_os_flow",
     "semio_framework_os_renderer"
   ],
   "cases": [

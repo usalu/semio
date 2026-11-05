@@ -326,7 +326,7 @@ describe("canonical complete Stdio oracle ownership", () => {
     const source = read(deletion.lowerPlugin.manifest), cargo = toml.parse(source) as { lib: { path: string }; test: { name: string; path: string }[]; dependencies: Record<string, unknown> };
     expect(cargo.test.map(({ name }) => name)).toContain("authored_assembly");
     expect(cargo.lib.path).toBe("../../🦀️.rs");
-    expect(Object.keys(cargo.dependencies).sort()).toEqual(["semio-framework-artifact-reference", "semio-framework-pack", "semio-framework-plugin", "semio-s-artifact-stdio-contract"]);
+    expect(Object.keys(cargo.dependencies).sort()).toEqual(["semio-framework-artifact-reference", "semio-framework-pack", "semio-plugin", "semio-s-artifact-stdio-contract"]);
     expect(removedOracleInputs([{ path: deletion.lowerPlugin.manifest.slice(0, -"/Cargo.toml".length) }], deletion.lowerPlugin.removedOwner)).toEqual([]);
   });
 });

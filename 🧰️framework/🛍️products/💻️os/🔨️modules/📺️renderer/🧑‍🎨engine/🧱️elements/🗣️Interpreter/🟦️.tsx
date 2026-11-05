@@ -1,7 +1,7 @@
 /// <reference types="vitest/importMeta" />
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🟦️Interpreter/component.tsx
-/** 🌳️ `🟦️Interpreter` — turns the semantic UI contract (`semio-framework-ui-contract`'s
+/** 🌳️ `🟦️Interpreter` — turns the semantic UI contract (`semio-ui-contract`'s
  * `UiNodeRecord`/`Component`/`LayoutSpec`/`StyleSpec`/`AccessibilitySpec`) retained by a
  * `📃️UiDocumentStore` into `@semio-tech/ui-react` components. `InterpretedUiNode` is the entry point;
  * `UiNodeView` is the atomic per-node unit — each one subscribes to exactly its own record via

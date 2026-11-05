@@ -4,7 +4,7 @@
 //! below is plain sync by owner ruling U1.
 //!
 //! ⚠️ Decision (flagged for the coordinator, detailed in `📓️terra-contract-builder-report.md`):
-//! [`BuiltNode`] duplicates the shape the sibling `semio-framework-ui-runtime` crate's own
+//! [`BuiltNode`] duplicates the shape the sibling `semio-ui-runtime` crate's own
 //! `ComponentTree` needs, because this crate must not depend on that crate (the dependency runs the
 //! other way — see `🦀️.rs`). The runtime converts a `BuiltNode` tree into its own reconciler
 //! input; if the two shapes drift, that conversion is the one place to fix, never a second builder.
@@ -14,8 +14,8 @@ use std::ops::{Index, IndexMut};
 use std::sync::{LazyLock, Mutex};
 
 use serde::{Deserialize,Serialize};
-pub use semio_framework_ui_contract_components::*;
-use semio_framework_ui_contract_values::retirement_protocol as typed;
+pub use semio_ui_contract_components::*;
+use semio_ui_contract_values::retirement_protocol as typed;
 #[path="♻️retirement/🦀️.rs"]
 mod tree_retirement;
 pub use tree_retirement::{BuiltTreeRetirement,OriginalBuiltTreeRetirement};
@@ -85,7 +85,7 @@ pub use vector_reference_and_colour_input_builders::{
     ReferenceListBuilder, ReferenceListLabels, VectorInputBuilder,
 };
 
-use semio_framework_ui_contract_budget::{UI_BUILT_CHILDREN_MAX,UI_BUILT_CHILD_RETIRE_SLOTS};
+use semio_ui_contract_budget::{UI_BUILT_CHILDREN_MAX,UI_BUILT_CHILD_RETIRE_SLOTS};
 
 //#endregion 🧱️BuiltNode
 

@@ -53,7 +53,7 @@ impl WasmActor {
         }
     }
 
-    pub async fn relay_one_backbone(&mut self) -> Result<bool, semio_framework_os_vcs::VcsError> {
+    pub async fn relay_one_backbone(&mut self) -> Result<bool, semio_os_vcs::VcsError> {
         let Some(message) = self.remote.try_pop_front()? else { return Ok(false) };
         match message {
             BackboneMessage::Mutations { envelopes } => {
@@ -61,8 +61,8 @@ impl WasmActor {
                 self.relay_operations(&envelopes).await;
             }
             BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } => {}
-            BackboneMessage::Member { .. } => return Err(semio_framework_os_vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
-            BackboneMessage::Retract { .. } => return Err(semio_framework_os_vcs::VcsError::Backbone("a retraction flows from the actor to its store, never back".into())),
+            BackboneMessage::Member { .. } => return Err(semio_os_vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
+            BackboneMessage::Retract { .. } => return Err(semio_os_vcs::VcsError::Backbone("a retraction flows from the actor to its store, never back".into())),
         }
         Ok(true)
     }
@@ -98,7 +98,7 @@ impl WasmActor {
                 }
             }
             ArtifactActorMsg::LocalDocumentArchive { archive } => {
-                let _ = semio_framework_os_spr::decode_document_archive_bytes(&archive).await;
+                let _ = semio_os_spr::decode_document_archive_bytes(&archive).await;
             }
             ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
                 stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
@@ -166,7 +166,7 @@ impl WasmActor {
 
     /// ♻️ Hub lag forces a canonical pair refresh: keep unacked work queued, clear the projection tokens, drop the socket
     /// and ask the host for the pair — the native `require_artifact_rebootstrap`; no dial until the host's reseed.
-    pub fn require_artifact_rebootstrap(&mut self, control: semio_framework_os_directory::RebootstrapRequired) {
+    pub fn require_artifact_rebootstrap(&mut self, control: semio_os_directory::RebootstrapRequired) {
         self.requeue_pending_batches();
         self.abort_artifact_bootstrap();
         self.server_frontier = None;
@@ -179,7 +179,7 @@ impl WasmActor {
 
     /// 🛟️ The browser twin of the native reseed: the pair's baseline is the next Hello's frontier, the unacked local
     /// operations go back to the guest, and the next turn dials at once.
-    pub fn reseed_hub_document(&mut self, baseline: semio_framework_os_directory::ArtifactFrontier) {
+    pub fn reseed_hub_document(&mut self, baseline: semio_os_directory::ArtifactFrontier) {
         if !self.artifact_rebootstrap_required {
             return;
         }
@@ -248,7 +248,7 @@ impl WasmActor {
     /// pack schema hash, and the mounted guest that owns the kind validates the archive when the shell
     /// loads it.
     pub async fn install_artifact_bootstrap(&mut self, pending: PendingWasmArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
-        if let Some(codec) = semio_framework_os_store_codec_registry::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())? {
+        if let Some(codec) = semio_os_store_codec_registry::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())? {
             if codec.pack_schema_hash().await.map_err(|error| error.to_string())? != pending.pack_schema_hash {
                 return Err("artifact bootstrap codec changed during transfer".into());
             }
@@ -259,8 +259,8 @@ impl WasmActor {
         if !events.is_empty() {
             self.remote.push(BackboneMessage::from_envelopes(&events)).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
         }
-        let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: pair.pack, parent_spr: pair.spr, members: Vec::new() };
-        let archive = semio_framework_os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
+        let archive = semio_os_spr::DocumentArchivePack { parent_pack: pair.pack, parent_spr: pair.spr, members: Vec::new() };
+        let archive = semio_os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
         let _ = self.events.send(ArtifactEvent::DocumentArchiveReplaced { archive });
         self.server_frontier = Some(pending.baseline_frontier);
         self.pending_resume_token = Some(pending.resume_token);

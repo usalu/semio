@@ -3,8 +3,8 @@
 //! 🧭️ The test files keep their `use super::*` shape: this root carries the imports the dsl component root used to carry, and re-exports the crate under test.
 #![cfg(test)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as store;
 
 
 #[global_allocator]
@@ -14,11 +14,11 @@ use semio_framework_diagnostic::TextSpan;
 use semio_framework_dsl::*;
 use semio_framework_dsl_record::*;
 use semio_framework_dsl_record_derive::{DslEnum, DslRecord, DslScalar};
-use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
+use semio_ui_viewport::{Viewport2d, Viewport3dOrbit};
 use semio_framework_value::{DslValue, FromValue, Number, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
-pub use semio_framework_os_dsl::*;
+pub use semio_os_dsl::*;
 
 //#region 🧪️Tests
 #[path = "../../🔢️ieee754/🧪️tests/🦀️.rs"]

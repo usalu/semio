@@ -15,7 +15,7 @@ async fn suspend_with_checkpoint_true_surfaces_checkpoint_bytes_in_the_outcome()
     let operation = test_job_operation(actor, 0, 0);
     probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { operation, applied_progress: 73 }).await).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
 
     let driven = pump(&mut shard).await.expect("pump");
@@ -53,7 +53,7 @@ async fn suspend_then_resume_round_trips_byte_identical_checkpoint_state() {
     let (transport, probe) = LoopbackTransport::paired().await;
     let operation = test_job_operation(actor, 0, 0);
     probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { operation, applied_progress: 19 }).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     pump(&mut shard).await.expect("pump suspend");
 
@@ -101,7 +101,7 @@ async fn cancel_unregisters_the_instance_and_no_further_step_job_happens() {
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
 
     let driven1 = pump(&mut shard).await.expect("pump 1");
@@ -153,7 +153,7 @@ async fn actor_cancel_failure_retires_the_instance_and_reports_fault_instead_of_
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     assert_eq!(pump(&mut shard).await.expect("spawn turn"), 1);
     let authority = retain_replay_seed(&mut shard, actor, job_id).await;
@@ -208,7 +208,7 @@ async fn exclusive_placement_is_stepped_before_inline_placement_admitted_the_sam
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
 
     let driven = pump(&mut shard).await.expect("pump");

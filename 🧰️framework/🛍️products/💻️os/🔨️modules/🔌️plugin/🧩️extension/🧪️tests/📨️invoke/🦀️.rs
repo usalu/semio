@@ -1,12 +1,12 @@
 //! 🧪️ The real registered invocation lends the original context and keeps pending caller bytes intact.
-use semio_framework_plugin_extension::extension_runtime_lift::ExtensionBundle;
-use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::{ExtensionResourceOwner, MetadataOwner};
+use semio_plugin_extension::extension_runtime_lift::ExtensionBundle;
+use semio_plugin_extension::extension_runtime_lift::extension_retirement::{ExtensionResourceOwner, MetadataOwner};
 use semio_framework::Fault;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionInvokeStep;
+use semio_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionInvokeStep;
 
 struct OriginalResourceCloseProbe{pub failure:Option<semio_framework_job::OriginalTurnFailure>,pub closed:bool}
 impl ExtensionResourceOwner for OriginalResourceCloseProbe{
@@ -64,7 +64,7 @@ impl ExtensionResourceOwner for OriginalInvocationProbe{
 /// 🤝️ Normal registered handlers receive the same caller identity, source and independently debited receipt.
 #[test]
 fn original_extension_invoke_lends_caller_context_and_retains_pending_source(){
- let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
+ let mut original_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📨️invoke/🔣️.json")).unwrap();
  let request=fixture["text"].as_str().unwrap().repeat(fixture["repeat"].as_u64().unwrap()as usize).into_bytes();let pointer=request.as_ptr();assert_eq!(request.len(),fixture["utf8Bytes"].as_u64().unwrap()as usize);
  let operation=cx.operation().0;let generation=cx.generation().0;

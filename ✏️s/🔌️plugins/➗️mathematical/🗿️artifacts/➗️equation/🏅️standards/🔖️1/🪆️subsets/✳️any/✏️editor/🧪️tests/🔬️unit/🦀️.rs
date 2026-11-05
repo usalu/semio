@@ -8,12 +8,12 @@ use crate::op::EquationMutation;
 use crate::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT};
 use semio_framework_pack_json::Value;
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::NoConfig;
+use semio_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::NoConfig;
 use crate::editor::equation::{EQUATION_TOOL_IDS, EQUATION_MAX_NODES, EQUATION_MAX_EDGES, EQUATION_MAX_POINTS, EQUATION_MAX_EDIT_JSON_BYTES, EQUATION_MAX_EDIT_OPERATIONS, EQUATION_DEFAULT_EDIT_OPERATIONS, equation_operation_identity, equation_edit_preflight, equation_command_extent, EquationRetainedCommandWork, EquationCommandJobFactory, EquationStorePreparationFactory};
 
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
@@ -30,14 +30,14 @@ use crate::op::EquationMutation;
 use crate::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT};
 use semio_framework_pack_json::Value;
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::NoConfig;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, render_registered_fixture_app, OriginalFixtureScope};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+use semio_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::NoConfig;
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, render_registered_fixture_app, OriginalFixtureScope};
+    use semio_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `EquationPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<EquationPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -59,12 +59,12 @@ use semio_framework_plugin::NoConfig;
     /// definition, examples }` shape `context::assert_declared_actions_bridge_to_commands` still
     /// expects — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub fn equation_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_equation_app(), examples: Vec::new() }
+    pub fn equation_app_manifest_for_tests() -> semio_plugin::App {
+        semio_plugin::App { definition: create_equation_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("mathematical", EquationPlayApp, equation_app_manifest_for_tests, "../..");
-    semio_framework_plugin::composed_reload_law!("mathematical", EquationPlayApp, equation_app_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("mathematical", EquationPlayApp, equation_app_manifest_for_tests, "../..");
+    semio_plugin::composed_reload_law!("mathematical", EquationPlayApp, equation_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     /// 🪪️ Bound to the live runtime instance `meta("local")` addresses. Binding is mandatory now that
@@ -72,7 +72,7 @@ use semio_framework_plugin::NoConfig;
     /// `interactive-job.live-instance: typed command … does not belong to the mounted live app instance`.
     pub async fn math_app_with_registry() -> OwnedMathApp {
         let scope = OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let mut app = new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         OwnedMathApp(app, scope)
     }
@@ -81,7 +81,7 @@ use semio_framework_plugin::NoConfig;
     /// mounted app `dispatch_typed` only QUEUES the operation, so a test reading `app.snapshot()`
     /// straight afterwards would observe the pre-dispatch document.
     pub async fn settle(app: &mut OwnedMathApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
     }
 
     /// 🔚 A mounted app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
@@ -97,7 +97,7 @@ use semio_framework_plugin::NoConfig;
     impl OwnedMathApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -123,13 +123,13 @@ use semio_framework_plugin::NoConfig;
     }
     
     pub async fn dispatch(app: &mut OwnedMathApp, command: EquationCommand) -> InvocationResult {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
     
     pub async fn render(app: &mut OwnedMathApp, body_key: &str) -> String {
-        render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render")
+        render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render")
     }
 }
 
@@ -149,11 +149,11 @@ fn graph_with_shape(node_count: usize, edge_count: usize) -> EquationGraph {
 
 fn drive_retained(work: &mut EquationRetainedCommandWork, command: &EquationCommand, snapshot: &EquationSnapshot, operation: &AppOperationContext) -> semio_framework_value::DslValue {
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     loop {
-        match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default())).expect("retained Equation turn") {
+        match work.step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default())).expect("retained Equation turn") {
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => {}
             ArtifactCommandWorkStep::Complete(emit) => return semio_framework_value::ToValue::to_value(&emit.artifact_mutations),
             ArtifactCommandWorkStep::CompleteWithEphemeral { .. } => panic!("Equation commands do not publish ephemeral state"),
@@ -237,19 +237,19 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     let identity = equation_operation_identity("nodeGraphEdit", &operation);
     let mut uninterrupted = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     for _ in 0..9 {
         assert!(matches!(
             uninterrupted
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+                .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
                 .expect("checkpoint prefix"),
             ArtifactCommandWorkStep::Progress { .. }
         ));
     }
     let mut checkpoint = [0_u8; 40];
-    assert_eq!(uninterrupted.checkpoint(&mut checkpoint, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("checkpoint"), 40);
+    assert_eq!(uninterrupted.checkpoint(&mut checkpoint, &mut semio_plugin::artifact_app_laws::fixture_identity()).expect("checkpoint"), 40);
     let aba_operation = retained_operation(14);
     let mut stale_aba = EquationRetainedCommandWork::new("nodeGraphEdit", equation_operation_identity("nodeGraphEdit", &aba_operation), extent);
     assert!(stale_aba.restore(&checkpoint).is_err());
@@ -270,7 +270,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     let mut cancelled_after = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
     assert!(matches!(
         cancelled_after
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
             .expect("cancel after admission"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
@@ -308,13 +308,13 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     let extent = equation_command_extent(&command, &snapshot).expect("maximum retained extent");
     let mut work = EquationRetainedCommandWork::new("nodeGraphEdit", equation_operation_identity("nodeGraphEdit", &operation), extent);
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     loop {
         let started = std::time::Instant::now();
         let step = work
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
             .expect("maximum retained turn");
         admit(started.elapsed(), "micro");
         if matches!(step, ArtifactCommandWorkStep::Complete(_)) {
@@ -390,7 +390,7 @@ pub(crate) fn every_command() -> Vec<EquationCommand> {
         EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
         EquationCommand::SetDirected(set_directed::SetDirected { directed: true }),
         EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"move","gestureId":"node-drag:1","nodeIds":["a"],"dx":12.0,"dy":34.0}]"#.into() }),
-        EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 5.0, y: 6.0, zoom: 2.0 } }),
+        EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: 5.0, y: 6.0, zoom: 2.0 } }),
         EquationCommand::EditPoints(edit_points::EditPoints { geometry: EquationGeometry::default() }),
         EquationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
         EquationCommand::AddNode(crate::editor::equation::commands::add_node::AddNode { x: 12.0, y: 34.0 }),
@@ -470,7 +470,7 @@ async fn equation_io_declares_result_out_with_the_computation_equation_kind() {
     let port = &io.ports[0];
     assert_eq!(port.id, "result:out");
     assert_eq!(port.kind_id.as_deref(), Some("computation.equation"));
-    assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(port.direction, semio_plugin::MediaPortDirection::Out);
     assert_eq!(port.multiplicity, semio_framework::PortMultiplicity::Many);
     assert!(!port.required);
 }

@@ -76,9 +76,9 @@ impl ElementId {
 //#region 🔖️Bounds
 
 /// 📐️ A resolved, absolute (window-space) rect in logical pixels — the same type
-/// [`semio_framework_ui_render_packet::LayoutRect`] already is, reused here rather than duplicated,
+/// [`semio_ui_render_packet::LayoutRect`] already is, reused here rather than duplicated,
 /// since `prepaint`/`paint` bounds and scene-primitive rects are exactly the same kind of value.
-pub type Bounds = semio_framework_ui_render_packet::LayoutRect;
+pub type Bounds = semio_ui_render_packet::LayoutRect;
 
 /// 🎯️ One hit-testable region's geometry, passed to `PrepaintCx::register` alongside the flags and
 /// listeners [`crate::DispatchTree`] actually needs to interpret it (parent link, overlay bit,

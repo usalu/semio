@@ -1,17 +1,17 @@
 /// 🧩️ Native composition accepts only this artifact's declared codecs; authored installations supply foreign formats.
 pub mod derived_composition{
  use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
- use semio_framework_plugin::{ArtifactComposition,io::{AnalyzeSource,ComposeError,ComposeSource,Composition}};
+ use semio_plugin::{ArtifactComposition,io::{AnalyzeSource,ComposeError,ComposeSource,Composition}};
  pub struct JackComposerComposition;
  impl ArtifactComposition for JackComposerComposition{
   type Snapshot=JackSnapshot;
   const WRITES:semio_framework_artifact_reference::Dialect=crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DIALECT;
   fn reads()->&'static[semio_framework_artifact_reference::Dialect]{&[crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DIALECT]}
-  fn compose(sources:&[ComposeSource<'_>])->Result<Composition<JackSnapshot>,ComposeError>{use semio_framework_plugin::ArtifactAnalysis;for source in sources{if source.dialect!=Self::WRITES{continue}let payload=match&source.payload{AnalyzeSource::Text(text)=>AnalyzeSource::Text(text),AnalyzeSource::Binary(bytes)=>AnalyzeSource::Binary(bytes)};let analysis=super::JackAnalyzer::analyze(&[payload]);if let Some(snapshot)=analysis.parts.snapshot{return Ok(Composition{snapshot,confidence:analysis.confidence,diagnostics:analysis.diagnostics})}}Err(ComposeError{message:"Jack native composition requires its declared source dialect".into(),diagnostics:Vec::new()})}
+  fn compose(sources:&[ComposeSource<'_>])->Result<Composition<JackSnapshot>,ComposeError>{use semio_plugin::ArtifactAnalysis;for source in sources{if source.dialect!=Self::WRITES{continue}let payload=match&source.payload{AnalyzeSource::Text(text)=>AnalyzeSource::Text(text),AnalyzeSource::Binary(bytes)=>AnalyzeSource::Binary(bytes)};let analysis=super::JackAnalyzer::analyze(&[payload]);if let Some(snapshot)=analysis.parts.snapshot{return Ok(Composition{snapshot,confidence:analysis.confidence,diagnostics:analysis.diagnostics})}}Err(ComposeError{message:"Jack native composition requires its declared source dialect".into(),diagnostics:Vec::new()})}
  }
 }
 pub use derived_composition::*;
-pub mod io_registry{pub fn entries()->&'static[semio_framework_plugin::io::ComposerEntry]{static ENTRIES:std::sync::LazyLock<Vec<semio_framework_plugin::io::ComposerEntry>>=std::sync::LazyLock::new(||vec![semio_framework_plugin::composer_entry_of::<super::JackComposer>()]);ENTRIES.as_slice()}}
+pub mod io_registry{pub fn entries()->&'static[semio_plugin::io::ComposerEntry]{static ENTRIES:std::sync::LazyLock<Vec<semio_plugin::io::ComposerEntry>>=std::sync::LazyLock::new(||vec![semio_plugin::composer_entry_of::<super::JackComposer>()]);ENTRIES.as_slice()}}
 
 
 
@@ -27,7 +27,7 @@ pub mod derived_construction {
     use crate::standards::v1::subsets::any::schema::diff::JackDiff;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct JackBuilderConstruction {
@@ -77,7 +77,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct JackParts {
@@ -90,27 +90,27 @@ pub mod derived_analysis {
         type Parts = JackParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.trinity.jack", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
+            semio_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = JackParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <JackSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <JackSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -122,7 +122,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec JackBuilderFacets {
         construction: JackBuilderConstruction,
         analysis: JackAnalyzerAnalysis,

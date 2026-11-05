@@ -26,7 +26,7 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "model", kind: "apply-model", record: "ApplyModel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         protocol::SemanticMutation::label(&self.mutation)
     }
     fn target(&self) -> Vec<String> {

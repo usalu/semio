@@ -1,7 +1,7 @@
 //! 🏭️ The canonical IDML owner supplies one genuine publication/replay semantic factory.
 use crate::{IdmlSnapshot,IdmlMutation};
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_store_engine_owners as owners;
+use semio_os_kernel as protocol;
+use semio_os_store_engine_owners as owners;
 use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress}};
 /// 🧬️ This concrete source invokes retained decision, admitted inverse and the central typed applier.
 pub type IdmlSemanticPreparation=protocol::PagedOneItemPreparationFactory<IdmlSnapshot,IdmlMutation,protocol::MutationApplyEdit<IdmlSnapshot,IdmlMutation>>;

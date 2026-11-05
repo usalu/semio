@@ -5,17 +5,17 @@ use semio_s_artifact_procedural_2d_mode_edit as edit;
 use semio_s_artifact_procedural_2d_mode_generate::windows::generations;
 use semio_s_artifact_procedural_2d_mode_generate as generate;
 use semio_s_artifact_procedural_2d_editor_panels::document;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Fault;
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::ArtifactView;
+use semio_plugin::Effect;
+use semio_plugin::Fault;
 use semio_s_artifact_procedural_2d_editor::*;
-use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
+use semio_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
 /// 🪄️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
-pub struct Generation2dApp(pub VcsArtifactApp<EditorApp<Generation2dPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+pub struct Generation2dApp(pub VcsArtifactApp<EditorApp<Generation2dPlayApp>>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
 impl std::ops::Deref for Generation2dApp {
     type Target = VcsArtifactApp<EditorApp<Generation2dPlayApp>>;
@@ -41,8 +41,8 @@ pub async fn app() -> Generation2dApp {
 }
 
 pub async fn app_with_registry() -> Generation2dApp {
-    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     Generation2dApp(app, scope)
 }
@@ -58,15 +58,15 @@ pub fn snapshot_read(app: &Generation2dApp) -> semio_s_artifact_procedural_2d_mo
 /// `dispatch_typed` only ENQUEUES a retained job — the document, config and transient lanes are
 /// published when the host drives the ladder. `settle_registered_typed_operation` is that host loop.
 pub async fn dispatch(app: &mut Generation2dApp, command: Generation2dCommand) -> InvocationResult {
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("Generation2d dispatched operation settles");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("Generation2d dispatched operation settles");
     result
 }
 
 /// 🧹️ Walks the fixture app to its terminal-empty ownership witness — a registered app owns an
 /// `ArtifactStore` and a fixed owner registry, both of which reject a bare drop.
 pub fn close(mut app: Generation2dApp) {
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 
@@ -74,21 +74,21 @@ pub fn close(mut app: Generation2dApp) {
 /// `interactionSelect` is a `FrameworkInteractionSelectJob`, so a bare `handle_action` only
 /// admits; settle the reserved tool job before any selection-fed read (context menu, delete).
 pub async fn select_graph(app: &mut Generation2dApp, granularity: &str, ids: &[&str]) -> InvocationResult {
-    let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
+    let targets: Vec<semio_plugin::InteractionTarget> = ids.iter().map(|id| semio_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
     let targets_json = serde_json::to_string(&targets).expect("selection targets");
     let args: semio_framework_value::DslValue = serde_json::json!({ "domainId": semio_s_artifact_procedural_2d_model::GENERATION2D_INTERACTION_DOMAIN, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interaction selection admitted");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interaction selection settles its reserved tool job")
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interaction selection admitted");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interaction selection settles its reserved tool job")
 }
 
 pub async fn render(app: &mut Generation2dApp, body_key: &str) -> String {
-    render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
+    render_with_view(app, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await
 }
 
 /// 🌍️ The localized twin of [`render`] — labels resolve off `ViewModel::locale`, so a translation
 /// law has to hand the renderer the locale it is asserting.
 pub async fn render_with_view(app: &mut Generation2dApp, body_key: &str, view_state: &ViewModel) -> String {
-    semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render json")
+    semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render json")
 }
 
 /// ✏️ Adapts `create_generation2d_app`'s `AppDefinition` (contract §2.4) into the `App {
@@ -99,7 +99,7 @@ pub fn generation2d_manifest_for_tests() -> App {
     App { definition: create_generation2d_app(), examples: Vec::new() }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("procedural", Generation2dPlayApp, generation2d_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("procedural", Generation2dPlayApp, generation2d_manifest_for_tests, "../..");
 
 /// 🧹️ `FlowEvalSession` rejects a live drop, so a test that owns one must walk it across the close
 /// boundary itself — the same `begin_close` + granted `close_step` loop
@@ -114,7 +114,7 @@ pub fn edit_shell_views() -> (ViewModel, ViewModel) {
         semio_framework::ViewWindowInstance { id: "flow-1".into(), window_kind_id: flow_window::GENERATION2D_PLAY_WINDOW_MAIN.into() },
         semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into() },
     ];
-    let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     (view.for_window_instance("flow-1").expect("flow window instance"), view.for_window_instance("preview-1").expect("preview window instance"))
 }
 
@@ -126,7 +126,7 @@ pub fn generate_shell_views() -> (ViewModel, Vec<ViewModel>) {
         semio_framework::ViewWindowInstance { id: "preview-a".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
         semio_framework::ViewWindowInstance { id: "preview-b".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
     ];
-    let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     (view.for_window_instance("generations-1").expect("generations window instance"), ["preview-a", "preview-b"].iter().map(|id| view.for_window_instance(id).expect("generate preview window instance")).collect())
 }
 
@@ -141,9 +141,9 @@ pub struct PreviewRunReceipt {
 }
 
 /// 🚦️ The framework run actions an effect list carries.
-pub fn run_actions(effects: &[semio_framework_plugin::Effect]) -> Vec<String> {
+pub fn run_actions(effects: &[semio_plugin::Effect]) -> Vec<String> {
     effects.iter().filter_map(|effect| match effect {
-        semio_framework_plugin::Effect::DispatchAction { action, .. } if semio_framework_plugin::is_tool_run_action_id(action) => Some(action.clone()),
+        semio_plugin::Effect::DispatchAction { action, .. } if semio_plugin::is_tool_run_action_id(action) => Some(action.clone()),
         _ => None,
     }).collect()
 }
@@ -153,19 +153,19 @@ pub fn run_actions(effects: &[semio_framework_plugin::Effect]) -> Vec<String> {
 /// host redispatched as the typed command the shell sends. The demo operators are uncontributed in a
 /// test binary, so no hop parks an extension invocation. Stops once nothing is owed or pending and
 /// the run rests. `action_meta` names the shell view the roster is read off and the bound instance.
-pub async fn drive_preview_run(app: &mut Generation2dApp, action_meta: &semio_framework_plugin::ActionMeta, initial: &[semio_framework_plugin::Effect]) -> PreviewRunReceipt {
+pub async fn drive_preview_run(app: &mut Generation2dApp, action_meta: &semio_plugin::ActionMeta, initial: &[semio_plugin::Effect]) -> PreviewRunReceipt {
     use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-    use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
+    use semio_plugin::artifact_app_laws::settle_registered_typed_operation;
     let shell_view = action_meta.view_state.as_ref();
     let mut receipt = PreviewRunReceipt::default();
-    let mut effects: Vec<semio_framework_plugin::Effect> = initial.to_vec();
+    let mut effects: Vec<semio_plugin::Effect> = initial.to_vec();
     for _ in 0..100_000 {
         effects.extend(Box::pin(app.pending_effects(shell_view)).await);
         if app.has_pending_typed_operations() {
-            effects.extend(Box::pin(settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.expect("the run's driver turns settle").effects);
+            effects.extend(Box::pin(settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.expect("the run's driver turns settle").effects);
         }
         let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut effects).into_iter().filter_map(|effect| match effect {
-            semio_framework_plugin::Effect::DispatchAction { action, args, .. } => Some((action, args)),
+            semio_plugin::Effect::DispatchAction { action, args, .. } => Some((action, args)),
             _ => None,
         }).collect();
         receipt.state = app.tool_run_presence().map(|presence| presence.state.wire_name().to_string());
@@ -173,9 +173,9 @@ pub async fn drive_preview_run(app: &mut Generation2dApp, action_meta: &semio_fr
             return receipt;
         }
         for (action, args) in dispatches {
-            if semio_framework_plugin::is_tool_run_action_id(&action) {
+            if semio_plugin::is_tool_run_action_id(&action) {
                 receipt.run_actions.push(action.clone());
-                Box::pin(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, &action, args.clone(), action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
+                Box::pin(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, &action, args.clone(), action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
                 continue;
             }
             if action == "flowEvalTick" {
@@ -188,9 +188,9 @@ pub async fn drive_preview_run(app: &mut Generation2dApp, action_meta: &semio_fr
             };
             let app_id = app.app_id().await.to_string();
             let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: action.clone() }, arguments };
-            Box::pin(semio_framework_plugin::artifact_app_laws::dispatch_fixture_command(&mut app.0, &invocation.address, Some(semio_framework_value::DslValue::object(invocation.arguments.iter().map(|(name, value)| (name.clone(), value.clone())))), None, action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
-            let hop = Box::pin(settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.expect("retained publication");
-            assert!(!hop.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted: args={args:?}");
+            Box::pin(semio_plugin::artifact_app_laws::dispatch_fixture_command(&mut app.0, &invocation.address, Some(semio_framework_value::DslValue::object(invocation.arguments.iter().map(|(name, value)| (name.clone(), value.clone())))), None, action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
+            let hop = Box::pin(settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.expect("retained publication");
+            assert!(!hop.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted: args={args:?}");
             effects.extend(hop.effects);
         }
     }
@@ -199,14 +199,14 @@ pub async fn drive_preview_run(app: &mut Generation2dApp, action_meta: &semio_fr
 
 /// 📜️ The empty `HistoryView` a command-handler unit test hands `ArtifactView::new` — built here once
 /// because `HistoryView` (`🧰️framework/…/🔌️plugin/🦀️.rs`) derives no `Default`.
-pub fn empty_history_view() -> semio_framework_plugin::HistoryView {
-    semio_framework_plugin::HistoryView {
+pub fn empty_history_view() -> semio_plugin::HistoryView {
+    semio_plugin::HistoryView {
         columns: Vec::new(),
         can_undo: false,
         can_redo: false,
         active_alternative_id: None, alternatives: Vec::new(),
         current_checkpoint_id: None,
         commands: Vec::new(),
-        command_filter: semio_framework_plugin::app::HistoryCommandFilter::default(),
+        command_filter: semio_plugin::app::HistoryCommandFilter::default(),
     }
 }

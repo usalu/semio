@@ -88,7 +88,7 @@ impl Part21Preamble for Ifc2x3EdmPreamble {
 pub mod derived_composition {
     use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::base::io::Ifc2x3Analyzer;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -134,7 +134,7 @@ mod exchange_boundary_tests;
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
     use crate::standards::v2x3::subsets::base::io::Ifc2x3Composer as Ifc2x3RawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -153,7 +153,7 @@ pub mod derived_construction {
     use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
     use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation;
     use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     #[derive(Clone, Debug, Default)]
@@ -201,7 +201,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.ifc.2x3` parts.
@@ -216,16 +216,16 @@ pub mod derived_analysis {
     /// declare `IFC2X3` in `FILE_SCHEMA`; `Medium` for a Part-21 envelope of an unknown schema (could
     /// still decode -- IFC2X3 is layered on the same generic tokenizer); `Low` otherwise.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn sniff_text(body: &str) -> semio_framework_plugin::io::Confidence {
+    fn sniff_text(body: &str) -> semio_plugin::io::Confidence {
         let trimmed = body.trim_start();
         if trimmed.starts_with("ISO-10303-21") {
             if trimmed.contains("IFC2X3") {
-                semio_framework_plugin::io::Confidence::High
+                semio_plugin::io::Confidence::High
             } else {
-                semio_framework_plugin::io::Confidence::Medium
+                semio_plugin::io::Confidence::Medium
             }
         } else {
-            semio_framework_plugin::io::Confidence::Low
+            semio_plugin::io::Confidence::Low
         }
     }
     //#endregion 🔖️Sniff
@@ -237,7 +237,7 @@ pub mod derived_analysis {
         type Parts = Ifc2x3Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -248,7 +248,7 @@ pub mod derived_analysis {
                 }
                 AnalyzeSource::Binary(bytes) => match std::str::from_utf8(bytes) {
                     Ok(text) => sniff_text(text),
-                    Err(_) => semio_framework_plugin::io::Confidence::Low,
+                    Err(_) => semio_plugin::io::Confidence::Low,
                 },
             }
         }
@@ -256,7 +256,7 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Ifc2x3Parts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
@@ -266,14 +266,14 @@ pub mod derived_analysis {
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::standards::v2x3::subsets::base::io::decode_ifc2x3(bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -291,7 +291,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec Ifc2x3BuilderFacets {
         construction: Ifc2x3BuilderConstruction,
         analysis: Ifc2x3AnalyzerAnalysis,
@@ -325,7 +325,7 @@ pub fn register() {
     ::semio_framework_schema_registry::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor()).expect("schema descriptor publication");
     register_artifact_inferences();
     register_pilot_languages();
-    semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::bare_artifact_codec::<Ifc2x3Snapshot, mutations::Ifc2x3Mutation>(STDIO_IFC2X3_DOCUMENT_SCHEMA))
+    semio_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::bare_artifact_codec::<Ifc2x3Snapshot, mutations::Ifc2x3Mutation>(STDIO_IFC2X3_DOCUMENT_SCHEMA))
         .expect("static Stdio registration must be available and conflict-free");
 }
 

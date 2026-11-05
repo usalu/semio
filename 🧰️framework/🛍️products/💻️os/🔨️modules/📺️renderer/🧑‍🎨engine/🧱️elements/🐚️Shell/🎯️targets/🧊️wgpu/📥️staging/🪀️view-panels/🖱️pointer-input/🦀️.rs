@@ -18,18 +18,18 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         if !self.input.presented_input_candidate_matches(witness) {
             return false;
         }
-        if !semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::acknowledge_presented_input(witness.0) {
+        if !semio_renderer_wgpu_ui_engine_dump::chrome_ledger::acknowledge_presented_input(witness.0) {
             return false;
         }
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_host_temporal_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_table_stepper_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_table_editable_text_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_table_button_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_vfs_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_block_list_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_event_feed_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_world3d_accessibility_candidates(witness.0);
-        semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_graph_timeline_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_host_temporal_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_table_stepper_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_table_editable_text_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_table_button_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_vfs_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_block_list_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_event_feed_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_world3d_accessibility_candidates(witness.0);
+        semio_renderer_wgpu_scene_feeds::acknowledge_graph_timeline_accessibility_candidates(witness.0);
         std::mem::swap(&mut self.input.retained_hit_windows, &mut self.input.retained_hit_windows_staging);
         std::mem::swap(&mut self.input.retained_scene_hits, &mut self.input.retained_scene_hits_staging);
         std::mem::swap(&mut self.input.widget_maps, &mut self.input.widget_maps_staging);
@@ -37,7 +37,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         input.publish_hits();
         self.input.presented_input_epoch = witness.0;
         self.input.presented_input_candidate = None;
-        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
         self.input.resolve_time_travel_focus(input, &mut self.chrome, &mut self.history);
         let chrome_accessibility = self.chrome_accessibility_nodes(input.hits());
         let focus_changed = self.chrome.presented_chrome_accessibility.iter_mut().zip(&chrome_accessibility).fold(false, |changed, (previous, current)| {
@@ -51,12 +51,12 @@ impl<'ctx> PanelsViewCtx<'ctx> {
             self.chrome.presented_chrome_accessibility_generation = witness.0;
         }
         if authority_changed || focus_changed {
-            semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_accessibility(self.chrome.presented_chrome_accessibility_generation, self.chrome.presented_chrome_accessibility.clone());
+            semio_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_accessibility(self.chrome.presented_chrome_accessibility_generation, self.chrome.presented_chrome_accessibility.clone());
         }
-        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_hit_registry(input.hits(), &self.input.retained_hit_windows);
-        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_surfaces(&self.input.chrome_surface_census(&self.chrome, &self.dock));
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_hit_registry(input.hits(), &self.input.retained_hit_windows);
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_surfaces(&self.input.chrome_surface_census(&self.chrome, &self.dock));
         #[cfg(not(target_arch = "wasm32"))]
-        semio_framework_os_renderer_wgpu_native_platform::native_accessibility::publish_native_accessibility(semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityPublication { title: semio_framework_os_renderer_wgpu_host_base::boot_window_title(), windows: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::native_accessibility_windows() });
+        semio_renderer_wgpu_native_platform::native_accessibility::publish_native_accessibility(semio_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityPublication { title: semio_renderer_wgpu_host_base::boot_window_title(), windows: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::native_accessibility_windows() });
         true
     }
 

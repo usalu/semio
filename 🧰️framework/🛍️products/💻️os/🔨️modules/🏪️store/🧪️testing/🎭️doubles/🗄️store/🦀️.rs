@@ -2,19 +2,19 @@
 //!
 //! 🧭️ Moved from the former store unit test module; the items are `pub` because the test crates of the Store use them through the public API only.
 
-use semio_framework_os_store_testing_prelude::*;
-use semio_framework_os_store_testing_fixtures::*;
+use semio_os_store_testing_prelude::*;
+use semio_os_store_testing_fixtures::*;
 use crate::*;
-use semio_framework_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
-use semio_framework_os_store_testing_fixtures::lossy::{LossyMutation, SetN as LossySetN};
-use semio_framework_os_store_testing_fixtures::severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation};
-use semio_framework_os_store_testing_fixtures::timestamped::{SetN as TimestampedSetN, TimestampedMutation};
-use semio_framework_os_store_testing_fixtures::validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation};
+use semio_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
+use semio_os_store_testing_fixtures::lossy::{LossyMutation, SetN as LossySetN};
+use semio_os_store_testing_fixtures::severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation};
+use semio_os_store_testing_fixtures::timestamped::{SetN as TimestampedSetN, TimestampedMutation};
+use semio_os_store_testing_fixtures::validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEdit;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEditCursor;
-use semio_framework_os_store_snapshot_clone::RetainedCloneEditStep;
-use semio_framework_os_store_snapshot_clone::RetainedClonePreparationFactory;
+use semio_os_store_snapshot_clone::RetainedCloneEdit;
+use semio_os_store_snapshot_clone::RetainedCloneEditCursor;
+use semio_os_store_snapshot_clone::RetainedCloneEditStep;
+use semio_os_store_snapshot_clone::RetainedClonePreparationFactory;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
 use semio_framework_pack_json_retained_schema::testing::{OWNED_SCHEMA_TEST_FIELDS, owned_schema_test_cursor, drive_owned_schema, schema_test_close_grant};
 use semio_framework_value::testing::physical_test_close_grant;
@@ -31,30 +31,30 @@ pub fn drain_channel_for_test(remote: &ChannelBackboneRemote) -> Result<Vec<Back
 /// 🧪️ A test store: `new` installs the document type's own retirement authorities (so it records
 /// history like a production store) and the store closes itself on drop; `bare` leaves authorities to
 /// the test, which then installs and closes them explicitly.
-pub struct ArtifactStore<P, Mutation>(pub semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>, pub Option<fn(&mut semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>)>)
+pub struct ArtifactStore<P, Mutation>(pub semio_os_store_engine::lifted_store::ArtifactStore<P, Mutation>, pub Option<fn(&mut semio_os_store_engine::lifted_store::ArtifactStore<P, Mutation>)>)
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>;
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>;
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + semio_os_spr::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub async fn new<C:MemberStoreProducer<P,Mutation>>(envelope: ArtifactEnvelope<P, Mutation>,producer:&C) -> Self
     {
-        Self::new_with_actor(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into()),producer).await
+        Self::new_with_actor(envelope, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into()),producer).await
     }
 
     pub async fn new_with_actor<C:MemberStoreProducer<P,Mutation>>(envelope: ArtifactEnvelope<P, Mutation>, actor: ActorId,producer:&C) -> Self
     {
-        let mut store = semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, actor).await.expect("test fixture history is valid");
+        let mut store = semio_os_store_engine::lifted_store::ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, actor).await.expect("test fixture history is valid");
         store.install_document_store_owners_exact(complete_test_catalog(producer.member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         Self(store, Some(close_test_store::<P, Mutation>))
     }
 
     pub async fn bare(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
-        Self(semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid"), None)
+        Self(semio_os_store_engine::lifted_store::ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid"), None)
     }
 
     /// 🧹️ Arms the drop-close on a `bare` store once the test has installed its OWN owner catalog:
@@ -63,7 +63,7 @@ where
         self.1 = Some(close_test_store::<P, Mutation>);
     }
 
-    pub fn into_inner(self) -> semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation> {
+    pub fn into_inner(self) -> semio_os_store_engine::lifted_store::ArtifactStore<P, Mutation> {
         let this = std::mem::ManuallyDrop::new(self);
         unsafe { std::ptr::read(&this.0) }
     }
@@ -75,10 +75,10 @@ where
 
 impl<P, Mutation> std::ops::Deref for ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
-    type Target = semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>;
+    type Target = semio_os_store_engine::lifted_store::ArtifactStore<P, Mutation>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -87,8 +87,8 @@ where
 
 impl<P, Mutation> std::ops::DerefMut for ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
@@ -96,7 +96,7 @@ where
 }
 
 pub fn complete_test_catalog<P, M>(admitted: Result<(DocumentStoreOwners<P, M>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, M>>) -> DocumentStoreOwners<P, M>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
+where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + semio_os_spr::Mutation<P> + semio_os_spr::ColdMutation<P>,
 {
     let grant=physical_test_close_grant();
     let (mut owners,progress)=admitted.unwrap_or_else(|error|panic!("test catalog ingress refused while retaining original custody: {}",error.error));
@@ -112,10 +112,10 @@ where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + semio_fra
 
 
 /// 🧹️ Drives a test store's owned close to its terminal-empty witness.
-pub fn close_test_store<P, Mutation>(store: &mut semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>)
+pub fn close_test_store<P, Mutation>(store: &mut semio_os_store_engine::lifted_store::ArtifactStore<P, Mutation>)
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + semio_os_spr::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     if store.close_owned_terminal_is_empty() { return; }
     if store.close_owned_phase_witness().contains("started=false") { drop(store.detach_backbone().expect("a closing test store releases its backbone handle")); }
@@ -138,8 +138,8 @@ where
 
 impl<P, Mutation> Drop for ArtifactStore<P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     fn drop(&mut self) {
         if let Some(close) = self.1.take() {
@@ -152,22 +152,22 @@ where
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + semio_os_spr::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn member_native_vcs_capture_demands(&self)->semio_framework_value::RetirementDemand{SpaceMember::member_native_vcs_capture_demands(&self.0)}
-    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_framework_os_store_engine_command::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::admit_member_native_vcs_command(&self.0,request,cx,output)}
-    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_engine_command::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{SpaceMember::advance_member_native_vcs_command(&mut self.0,owner,cx)}
-    fn take_member_native_vcs_result(&self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_framework_os_store_engine_command::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::take_member_native_vcs_result(&self.0,owner,cx,output)}
-    fn ack_member_native_vcs_command(&self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::ack_member_native_vcs_command(&self.0,owner,cx)}
-    fn member_native_vcs_close_demands(&self,owner:&dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{SpaceMember::member_native_vcs_close_demands(&self.0,owner,body)}
-    fn close_member_native_vcs_command(&mut self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::close_member_native_vcs_command(&mut self.0,owner,cx)}
-    fn native_head_pack_source(&self)->Option<semio_framework_os_store_text_io::OriginalSnapshotPackView<'_>>{SpaceMember::native_head_pack_source(&self.0)}
+    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_os_store_engine_command::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn semio_os_store_space_member::lifted_store::MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::admit_member_native_vcs_command(&self.0,request,cx,output)}
+    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn semio_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_os_store_engine_command::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{SpaceMember::advance_member_native_vcs_command(&mut self.0,owner,cx)}
+    fn take_member_native_vcs_result(&self,owner:&mut dyn semio_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_os_store_engine_command::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::take_member_native_vcs_result(&self.0,owner,cx,output)}
+    fn ack_member_native_vcs_command(&self,owner:&mut dyn semio_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::ack_member_native_vcs_command(&self.0,owner,cx)}
+    fn member_native_vcs_close_demands(&self,owner:&dyn semio_os_store_space_member::lifted_store::MemberNativeVcsCommand,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{SpaceMember::member_native_vcs_close_demands(&self.0,owner,body)}
+    fn close_member_native_vcs_command(&mut self,owner:&mut dyn semio_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::close_member_native_vcs_command(&mut self.0,owner,cx)}
+    fn native_head_pack_source(&self)->Option<semio_os_store_text_io::OriginalSnapshotPackView<'_>>{SpaceMember::native_head_pack_source(&self.0)}
     fn native_pack_generation(&self)->u64{SpaceMember::native_pack_generation(&self.0)}
     fn native_checkpoint_id(&self)->Option<&str>{SpaceMember::native_checkpoint_id(&self.0)}
-    fn native_checkpoint_probe_demands(&self,probe:&semio_framework_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds)->Result<semio_framework_value::RetirementDemand,ValueError>{SpaceMember::native_checkpoint_probe_demands(&self.0,probe)}
-    fn advance_native_checkpoint_probe(&self,probe:&mut semio_framework_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{SpaceMember::advance_native_checkpoint_probe(&self.0,probe,grant)}
-    fn member_identity(&self)->Option<semio_framework_os_store_space_member::lifted_store::MemberIdentityRef<'_>>{SpaceMember::member_identity(&self.0)}
+    fn native_checkpoint_probe_demands(&self,probe:&semio_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds)->Result<semio_framework_value::RetirementDemand,ValueError>{SpaceMember::native_checkpoint_probe_demands(&self.0,probe)}
+    fn advance_native_checkpoint_probe(&self,probe:&mut semio_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{SpaceMember::advance_native_checkpoint_probe(&self.0,probe,grant)}
+    fn member_identity(&self)->Option<semio_os_store_space_member::lifted_store::MemberIdentityRef<'_>>{SpaceMember::member_identity(&self.0)}
     fn local_actor_id(&self) -> &ActorId {
         SpaceMember::local_actor_id(&self.0)
     }
@@ -192,7 +192,7 @@ where
     }
 
     fn original_batch_receiving_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { SpaceMember::original_batch_receiving_demands(&self.0) }
-    fn admit_original_batch_receiving(&self,wires:&mut Option<Vec<Vec<u8>>>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_os_store_one_item_batch::member_owned_batch::MemberOriginalBatchReceiving>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{SpaceMember::admit_original_batch_receiving(&self.0,wires,control,grant)}
+    fn admit_original_batch_receiving(&self,wires:&mut Option<Vec<Vec<u8>>>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Box<dyn semio_os_store_one_item_batch::member_owned_batch::MemberOriginalBatchReceiving>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{SpaceMember::admit_original_batch_receiving(&self.0,wires,control,grant)}
     fn owned_publication_birth_bytes(&self, request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> { SpaceMember::owned_publication_birth_bytes(&self.0, request) }
     fn begin_one_item_owned_publication(&self, request: &mut MemberStoreOwnedBatchRequest, grant: ArtifactStoreOneItemGrant) -> Result<Option<(Box<dyn ErasedMemberStoreOneItemPublication>, semio_framework_value::RetainedCloneProgress)>, String> {
         SpaceMember::begin_one_item_owned_publication(&self.0, request, grant)
@@ -203,16 +203,16 @@ where
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         SpaceMember::prepare_one_item_publication(&mut self.0, publication, body, grant,receiving)
     }
-    fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         SpaceMember::stage_one_item_publication(&mut self.0, publication, visibility, grant)
     }
-    fn adopt_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    fn adopt_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         SpaceMember::adopt_one_item_publication(&mut self.0, publication, visibility, grant)
     }
-    fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError> {
+    fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError> {
         SpaceMember::snapshot_read_erased_for_publication(&self.0, publication, visibility, grant)
     }
-    fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)> {
+    fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)> {
         SpaceMember::return_prepared_snapshot_read_erased(&self.0, publication, visibility, snapshot, grant)
     }
     fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -263,7 +263,7 @@ where
     /// on THIS wrapper (whether directly, or generically inside `CompositionCoordinator::
     /// dispatch_group`'s `M: SpaceMember` body) silently reads the trait's `Normal`-only default
     /// instead of whatever `set_merge_policy` set on the real inner store.
-    async fn merge_policy(&self) -> semio_framework_os_spr::MergePolicy {
+    async fn merge_policy(&self) -> semio_os_spr::MergePolicy {
         SpaceMember::merge_policy(&self.0).await
     }
 
@@ -310,33 +310,33 @@ where
 }
 
 impl<P,Mutation> ReferenceSpaceMember for ArtifactStore<P,Mutation>
-where P:Clone+ToValue+FromValue+ArtifactPack+semio_framework_os_store_text_io::ArtifactStoreSnapshot+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,Mutation:Clone+ToValue+FromValue+semio_framework_os_spr::Mutation<P>+semio_framework_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static,
+where P:Clone+ToValue+FromValue+ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,Mutation:Clone+ToValue+FromValue+semio_os_spr::Mutation<P>+semio_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static,
 {
     fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>> {
         ReferenceSpaceMember::begin_one_item_wire_publication(&self.0, request)
     }
-    async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         ReferenceSpaceMember::commit_checkpoint(&mut self.0, message, authors, identity).await
     }
-    async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         ReferenceSpaceMember::checkout(&mut self.0, checkpoint_id, alternative_id, identity).await
     }
-    async fn create_alternative(&mut self, name: String, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    async fn create_alternative(&mut self, name: String, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         ReferenceSpaceMember::create_alternative(&mut self.0, name, identity).await
     }
-    async fn undo(&mut self, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn undo(&mut self, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         ReferenceSpaceMember::undo(&mut self.0, identity).await
     }
-    async fn redo(&mut self, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn redo(&mut self, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         ReferenceSpaceMember::redo(&mut self.0, identity).await
     }
-    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<semio_framework_os_spr::MutationMessage> {
+    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<semio_os_spr::MutationMessage> {
         ReferenceSpaceMember::preview_wire(&self.0, ops).await
     }
-    async fn dispatch_wire(&mut self, command: &[u8], identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
+    async fn dispatch_wire(&mut self, command: &[u8], identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
         ReferenceSpaceMember::dispatch_wire(&mut self.0, command, identity).await
     }
-    async fn dispatch_wire_with_policy(&mut self, command: &[u8], policy: semio_framework_os_spr::MergePolicy, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
+    async fn dispatch_wire_with_policy(&mut self, command: &[u8], policy: semio_os_spr::MergePolicy, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
         ReferenceSpaceMember::dispatch_wire_with_policy(&mut self.0, command, policy, identity).await
     }
     async fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> {
@@ -351,7 +351,7 @@ where P:Clone+ToValue+FromValue+ArtifactPack+semio_framework_os_store_text_io::A
     async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
         ReferenceSpaceMember::stamp_tail_group_id(&mut self.0, group_id).await
     }
-    async fn stamp_tail_origin(&mut self, origin: semio_framework_os_spr::MutationOrigin) -> Result<(), VcsError> {
+    async fn stamp_tail_origin(&mut self, origin: semio_os_spr::MutationOrigin) -> Result<(), VcsError> {
         ReferenceSpaceMember::stamp_tail_origin(&mut self.0, origin).await
     }
     async fn set_owner(&mut self, owner: Option<OwnerRef>) {
@@ -384,13 +384,13 @@ macro_rules! fixture_member_factory {
                 if dialect != &demo_child_dialect() {
                     return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
                 }
-                Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack, actor, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::DemoMemberStoreProducer::<$mutation>::new()).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
+                Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack, actor, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::DemoMemberStoreProducer::<$mutation>::new()).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
             async fn open(expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId) -> Result<Self, VcsError> {
                 if expected.dialect != demo_child_dialect() {
                     return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
                 }
-                Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack, actor, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::DemoMemberStoreProducer::<$mutation>::new()).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
+                Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack, actor, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::DemoMemberStoreProducer::<$mutation>::new()).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
         }
 
@@ -422,9 +422,9 @@ pub fn fixture_wire_source<M: ArtifactCanonicalJson>(mutation: &M) -> Option<Art
 pub struct FixtureAuthoringFactory<M: 'static>(pub std::marker::PhantomData<fn() -> M>);
 
 /// 🧬️ The catalog identity fixture prepares no semantic replay.
-impl semio_framework_os_store_replay_operation::ArtifactReplayPreparationFactory<DemoSnapshot, DemoMutation> for FixtureAuthoringFactory<DemoMutation> {
+impl semio_os_store_replay_operation::ArtifactReplayPreparationFactory<DemoSnapshot, DemoMutation> for FixtureAuthoringFactory<DemoMutation> {
  fn preparation_birth_demand(&self)->semio_framework_value::RetirementDemand{Default::default()}
- fn begin(&self,request:semio_framework_os_store_replay_operation::ArtifactReplayPreparationRequest<DemoSnapshot,DemoMutation>,_:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_os_store_replay_operation::ArtifactReplayPreparation<DemoSnapshot,DemoMutation>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,semio_framework_os_store_replay_operation::ArtifactReplayPreparationRequest<DemoSnapshot,DemoMutation>)>{Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"catalog identity fixture prepares no semantic replay"),request))}
+ fn begin(&self,request:semio_os_store_replay_operation::ArtifactReplayPreparationRequest<DemoSnapshot,DemoMutation>,_:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_os_store_replay_operation::ArtifactReplayPreparation<DemoSnapshot,DemoMutation>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,semio_os_store_replay_operation::ArtifactReplayPreparationRequest<DemoSnapshot,DemoMutation>)>{Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"catalog identity fixture prepares no semantic replay"),request))}
 }
 
 
@@ -482,7 +482,7 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Demo
 
 /// 🌱️ Quotes the original catalog source tree: the three issuer Arcs, the inline disposer and the authoring factory Arc.
 pub fn fixture_authoring_birth_demand<M>() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError>
-where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
+where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
     let base = DocumentStoreOwners::<DemoSnapshot, M>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<DemoSnapshot, M>>()?;
     let capacity_bytes = base.checked_add(semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<M>>()).and_then(|bytes| bytes.checked_add(cold_replay_birth_bytes::<M>())).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fixture authoring catalog extent overflow"))?;
     Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
@@ -490,14 +490,14 @@ where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapsh
 
 /// 🗃️ Admits the demo member catalog together with its authoring-only semantic authority.
 pub fn fixture_authoring_member_owners<M>(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, M>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<DemoSnapshot, M>>
-where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
+where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
     let preparation = semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<M>>() + cold_replay_birth_bytes::<M>(), depth: 1 };
     DocumentStoreOwners::admit_source_constructor_with_semantic_preparations(grant, preparation, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, M>::new(), Arc::new(FixtureAuthoringFactory::<M>(std::marker::PhantomData)) as Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, M>>, crate::cold_demo_replay_preparation_factory::<M>()))
 }
 
 /// 🧮️ The original allocations of one cold native replay authority: the preparation factory and its three owned issuers.
-fn cold_replay_birth_bytes<M: Clone + ToValue + FromValue + Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static>() -> usize {
-    semio_framework_value::factory_arc_birth_bytes::<semio_framework_os_store_snapshot_clone::RetainedClonePreparationFactory<DemoSnapshot, M, ColdRetainedCloneEdit<M>>>()
+fn cold_replay_birth_bytes<M: Clone + ToValue + FromValue + Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static>() -> usize {
+    semio_framework_value::factory_arc_birth_bytes::<semio_os_store_snapshot_clone::RetainedClonePreparationFactory<DemoSnapshot, M, ColdRetainedCloneEdit<M>>>()
         + semio_framework_value::factory_arc_birth_bytes::<ColdRetainedCloneEdit<M>>()
         + semio_framework_value::factory_arc_birth_bytes::<DemoMutationRetirementFactory>()
         + semio_framework_value::factory_arc_birth_bytes::<DemoSnapshotRetirementFactory>()
@@ -532,7 +532,7 @@ impl MemberStoreProducer<DemoSnapshot,DemoMutation> for crate::DemoMemberStorePr
         fixture_authoring_birth_demand::<DemoMutation>()
     }
 
-    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, DemoMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, DemoMutation>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, DemoMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, DemoMutation>> {
         fixture_authoring_member_owners::<DemoMutation>(grant)
     }
 }
@@ -814,7 +814,7 @@ pub fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMut
 
 /// 🔁️ Settles every physical replay owner before exposing a report to the fixture.
 pub fn drive_test_report_replay<P, M>(replay: &mut EditReplay<P, M>, edits: &impl ReplayEdits<M>)
-where P: Clone, M: semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
+where P: Clone, M: semio_os_spr::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary,
 {
     for _ in 0..10_000 {
         if matches!(replay.step(edits, &mut || false).expect("bounded report replay advances"), ReplayStep::Finished(_)) {
@@ -845,7 +845,7 @@ impl MemberStoreProducer<DemoSnapshot,SeverityMutation> for crate::DemoMemberSto
         fixture_authoring_birth_demand::<SeverityMutation>()
     }
 
-    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, SeverityMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, SeverityMutation>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, SeverityMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, SeverityMutation>> {
         fixture_authoring_member_owners::<SeverityMutation>(grant)
     }
 }
@@ -862,7 +862,7 @@ impl MemberStoreProducer<DemoSnapshot,ValidatedMutation> for crate::DemoMemberSt
         fixture_authoring_birth_demand::<ValidatedMutation>()
     }
 
-    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, ValidatedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, ValidatedMutation>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, ValidatedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, ValidatedMutation>> {
         fixture_authoring_member_owners::<ValidatedMutation>(grant)
     }
 }
@@ -875,7 +875,7 @@ impl MemberStoreProducer<DemoSnapshot,TimestampedMutation> for crate::DemoMember
         fixture_authoring_birth_demand::<TimestampedMutation>()
     }
 
-    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, TimestampedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, TimestampedMutation>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, TimestampedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, TimestampedMutation>> {
         fixture_authoring_member_owners::<TimestampedMutation>(grant)
     }
 }

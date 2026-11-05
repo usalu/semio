@@ -1,6 +1,6 @@
 //! 🧪️ The `setpoint` domain's committed vectors, each held to the fixture laws through the aggregate.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;

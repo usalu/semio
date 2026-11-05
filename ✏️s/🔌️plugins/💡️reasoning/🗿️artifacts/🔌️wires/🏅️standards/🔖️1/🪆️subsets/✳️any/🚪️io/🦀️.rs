@@ -2,12 +2,12 @@
 //! 📸️ Snapshot Text and Pack facets publish the literal flat domain records.
 
 //#region 🔖️IoDeclaration
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{WiresMutation, WiresSnapshot, MINDMAP_WIRES_SCHEMA, WIRES_DIALECT};
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
     fn entries() -> &'static [IoEntry] {
@@ -64,7 +64,7 @@ pub mod derived_construction {
     use crate::schema::diff::WiresDiff;
     use crate::schema::mutations::WiresMutation;
     use crate::schema::snapshot::WiresSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug)]
     pub struct WiresBuilderConstruction {

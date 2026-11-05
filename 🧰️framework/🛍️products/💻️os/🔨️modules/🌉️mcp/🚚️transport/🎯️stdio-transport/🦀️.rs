@@ -6,10 +6,10 @@ use std::io::BufRead;
 use std::io::Write;
 use std::sync::Arc;
 use crate::mcp_server::McpServer;
-use semio_framework_os_mcp_consent::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_wire::notify::{NotificationSink, NotificationSlot};
-use semio_framework_os_mcp_wire::protocol::{ClientFeatures, JsonRpcId, JsonRpcIncoming, JsonRpcNotification, JsonRpcResponse, PARSE_ERROR};
+use semio_os_mcp_consent::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_wire::notify::{NotificationSink, NotificationSlot};
+use semio_os_mcp_wire::protocol::{ClientFeatures, JsonRpcId, JsonRpcIncoming, JsonRpcNotification, JsonRpcResponse, PARSE_ERROR};
 
 //#region 🔖️McpTransport
 

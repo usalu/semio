@@ -5,7 +5,7 @@ use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schem
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Issue, ModelSnapshot, Rule};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IssueStatus, RuleSeverity};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
-use semio_framework_plugin::{BuiltNode, TreeWindows};
+use semio_plugin::{BuiltNode, TreeWindows};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
 #[allow(unused_imports)]
@@ -17,9 +17,9 @@ use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::i
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::comments_of;
 #[allow(unused_imports)]
-use semio_framework_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, UiValue};
+use semio_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, UiValue};
 #[allow(unused_imports)]
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_ui_locale::{Label, LocalizedLabel};
 use crate::editor::bim::panels::coordination::{CLIP, clip};
 use crate::editor::bim::panels::coordination::*;
 use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::RuleFinding;
@@ -27,9 +27,9 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::IssueComment;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ViewModel;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 
 static FRAME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json"));
 
@@ -40,7 +40,7 @@ fn frame() -> (ModelSnapshot, ModelInference) {
 }
 
 fn project(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("the tree projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("the tree projects")
 }
 
 fn clashes_text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {

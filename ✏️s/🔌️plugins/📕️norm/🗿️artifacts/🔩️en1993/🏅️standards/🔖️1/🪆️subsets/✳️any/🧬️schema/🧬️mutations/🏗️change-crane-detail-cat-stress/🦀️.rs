@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneDetailCatStre
         record: "ChangedCraneDetailCatStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Detail category Δσ_C of the crane runway", "Kranbahn: Kerbfall Δσ_C ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Detail category Δσ_C of the crane runway", "Kranbahn: Kerbfall Δσ_C ändern")
     }
 }
 

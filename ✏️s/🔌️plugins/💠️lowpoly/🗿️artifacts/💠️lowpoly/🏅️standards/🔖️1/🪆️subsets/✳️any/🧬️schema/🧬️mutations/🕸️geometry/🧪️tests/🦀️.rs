@@ -1,6 +1,6 @@
 //! 🧺️ The `🕸️geometry` mutation group's leaf fixture tests, run as one target of its group crate.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 use semio_s_artifact_lowpoly_lowpoly_mut_laws as laws;
 #[path = "../../🕸️create-mesh/🧪️tests/🕸️attaches/🦀️.rs"]
 mod tests_attaches_a_mesh_child_handle_to_obj_fin;

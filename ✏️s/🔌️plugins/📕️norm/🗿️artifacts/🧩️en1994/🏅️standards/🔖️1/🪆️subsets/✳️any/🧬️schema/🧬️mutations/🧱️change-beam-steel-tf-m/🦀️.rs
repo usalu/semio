@@ -17,8 +17,8 @@ pub struct ChangeBeamSteelTfM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamSteelTfM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_steel_tf_m::ChangeBeamSteelTfM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-steel-tf-m", kind: "change-beam-steel-tf-m", record: "ChangedBeamSteelTfM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change steel flange thickness t_f", "Flanschdicke t_f des Stahlträgers ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change steel flange thickness t_f", "Flanschdicke t_f des Stahlträgers ändern")
     }
 }
 

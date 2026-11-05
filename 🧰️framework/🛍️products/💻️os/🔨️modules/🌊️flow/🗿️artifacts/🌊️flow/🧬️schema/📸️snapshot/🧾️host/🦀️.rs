@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️HostSnapshot
 /// 🧩️ Flow-host retained fixture encoded through the first-party value contract.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::DslArtifact, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
@@ -209,6 +209,12 @@ impl FlowHostSnapshot {
 }
 //#endregion 🧊️HostSnapshotRetirement
 
+/// 🪪️ Names every original immutable Flow field without hashing or copying its contents.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct FlowSourceIdentity{
+ pub schema:usize,pub schema_length:usize,pub camera:usize,pub widgets:usize,pub widgets_length:usize,pub synapses:usize,pub synapses_length:usize,pub layout:usize,
+}
+semio_framework_value::artifact_retire_leaf!(FlowSourceIdentity);
 /// 🔎️ Borrows the genuine immutable Flow source without constructing or cloning an owned document.
 pub trait FlowSnapshotSource{
  fn schema(&self)->&str;
@@ -216,7 +222,7 @@ pub trait FlowSnapshotSource{
  fn widgets(&self)->&[Widget];
  fn synapses(&self)->&[SynapseSpec];
  fn layout(&self)->&OrderedMap<WidgetLayout>;
- fn source_identity(&self)->[usize;6]{[self.widgets().as_ptr()as usize,self.widgets().len(),self.synapses().as_ptr()as usize,self.synapses().len(),self.layout()as*const _ as usize,self.schema().as_ptr()as usize]}
+ fn source_identity(&self)->FlowSourceIdentity{FlowSourceIdentity{schema:self.schema().as_ptr()as usize,schema_length:self.schema().len(),camera:self.camera()as*const _ as usize,widgets:self.widgets().as_ptr()as usize,widgets_length:self.widgets().len(),synapses:self.synapses().as_ptr()as usize,synapses_length:self.synapses().len(),layout:self.layout()as*const _ as usize}}
 }
 impl FlowSnapshotSource for FlowHostSnapshot{
  fn schema(&self)->&str{&self.schema}
@@ -226,7 +232,6 @@ impl FlowSnapshotSource for FlowHostSnapshot{
  fn layout(&self)->&OrderedMap<WidgetLayout>{&self.layout}
 }
 /// 🪞️ A view borrows actual original fields; its identity never depends on this temporary header address.
-#[derive(ToValue)]
 pub struct FlowSnapshotView<'a>{pub schema:&'a str,pub camera:&'a CameraJson,pub widgets:&'a[Widget],pub synapses:&'a[SynapseSpec],pub layout:&'a OrderedMap<WidgetLayout>}
 impl FlowSnapshotSource for FlowSnapshotView<'_>{
  fn schema(&self)->&str{self.schema}
@@ -234,4 +239,16 @@ impl FlowSnapshotSource for FlowSnapshotView<'_>{
  fn widgets(&self)->&[Widget]{self.widgets}
  fn synapses(&self)->&[SynapseSpec]{self.synapses}
  fn layout(&self)->&OrderedMap<WidgetLayout>{self.layout}
+}
+
+impl semio_framework_value::ToValue for FlowSnapshotView<'_>{
+ fn to_value(&self)->semio_framework_value::DslValue{
+  use semio_framework_value::{DslValue,ToValue};
+  DslValue::Object(vec![("schema".into(),self.schema.to_value()),("camera".into(),self.camera.to_value()),("widgets".into(),DslValue::Array(self.widgets.iter().map(ToValue::to_value).collect())),("synapses".into(),DslValue::Array(self.synapses.iter().map(ToValue::to_value).collect())),("layout".into(),self.layout.to_value())])
+ }
+ fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_value::DslValue,semio_framework_value::ValueError>{
+  use semio_framework_value::{DslValue,ToValue};
+  fn array<T:ToValue>(rows:&[T],control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<DslValue,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(rows.len())?;let mut output=control.allocate_vec(rows.len())?;for row in rows{output.push(row.to_value_controlled(control)?);control.step()?;}Ok(DslValue::Array(output))})}
+  control.scoped_stage(|control|{control.begin_stage(5)?;let mut output=control.allocate_vec(5)?;output.push((control.copy_text("schema")?,self.schema.to_value_controlled(control)?));control.step()?;output.push((control.copy_text("camera")?,self.camera.to_value_controlled(control)?));control.step()?;output.push((control.copy_text("widgets")?,array(self.widgets,control)?));control.step()?;output.push((control.copy_text("synapses")?,array(self.synapses,control)?));control.step()?;output.push((control.copy_text("layout")?,self.layout.to_value_controlled(control)?));control.step()?;Ok(DslValue::Object(output))})
+ }
 }

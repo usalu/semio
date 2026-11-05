@@ -3,16 +3,16 @@
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::schema::document_to_workflow;
 use crate::DagScene;
-use semio_framework_os_infinite_directed_presentation::DagCamera;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_os_kernel::Viewport2d;
+use semio_os_infinite_directed_presentation::DagCamera;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_os_kernel::Viewport2d;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_WINDOW_MAIN: &str = "dag-main";
@@ -52,7 +52,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(scene: &DagScene, camera: &DagCamera, _labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = document_to_workflow(scene);
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
-    scene_surface(DAG_PLAY_SURFACE_MAIN, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
+    scene_surface(DAG_PLAY_SURFACE_MAIN, semio_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 

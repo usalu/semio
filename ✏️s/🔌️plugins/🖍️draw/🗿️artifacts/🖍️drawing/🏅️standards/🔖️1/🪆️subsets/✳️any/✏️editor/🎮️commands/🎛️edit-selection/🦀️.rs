@@ -9,7 +9,7 @@ use semio_s_artifact_draw_drawing_model::{drawing_layer_is_locked, find_drawing_
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "edit-selection")]
@@ -18,7 +18,7 @@ pub struct EditSelection {
     pub ids: Vec<String>,
 }
 
-pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str,admission:&semio_framework_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<DrawingMutation>, Fault> {
+pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str,admission:&semio_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<DrawingMutation>, Fault> {
     if operation=="ungroup" {return ungroup::plan(document,ids).map(|(mutations,_)|mutations);}
     let selected = selected_drawing_layers(document, ids);
     if selected.is_empty() { return Err(Fault::from("Select at least one layer")); }

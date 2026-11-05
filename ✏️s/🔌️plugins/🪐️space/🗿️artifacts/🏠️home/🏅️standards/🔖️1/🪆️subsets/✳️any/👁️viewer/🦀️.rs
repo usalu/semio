@@ -13,31 +13,31 @@ use crate::editor::home::{
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::viewer::home::modes::view;
 use crate::viewer::home::modes::view::windows::main;
-use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
-use semio_framework_plugin::ViewerApp;
+use semio_plugin::app::{Dialect, InteractionView};
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ComponentTree;
+use semio_plugin::ConfigView;
+use semio_plugin::DslValue;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
+use semio_plugin::ViewerApp;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -110,7 +110,7 @@ impl HomeViewCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ToolJobFactory for HomeViewCommandJobFactory {
+impl semio_plugin::ToolJobFactory for HomeViewCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<ViewerApp<HomeViewer>>;
     type Job = ArtifactRetainedCommandJob<ViewerApp<HomeViewer>>;
 
@@ -126,10 +126,10 @@ impl semio_framework_plugin::ToolJobFactory for HomeViewCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         home_retained_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: HOME_DIRECTORY_PAGE_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: HOME_DIRECTORY_PAGE_BYTES, checkpoint_resume: true);
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for HomeViewCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for HomeViewCommandJobFactory {
     type Owner = ViewerApp<HomeViewer>;
     const TOOL_IDS: &'static [&'static str] = HOME_VIEW_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = S_HOME_DOCUMENT_SCHEMA;
@@ -156,7 +156,7 @@ impl ArtifactViewer for HomeViewer {
     const DIALECT: Dialect = HOME_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = S_HOME_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<SHomeSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<SHomeSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(SHomeSnapshot::default())
     })}
 
@@ -172,12 +172,12 @@ impl ArtifactViewer for HomeViewer {
 
     /// 🫧️ The same transient lane as the editor: one bounded page item per publication, roots retired by the projection's
     /// own byte estimate.
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::transient_store_disposer::<Self::Transient, Self::TransientMutation>(std::sync::Arc::new(HomeTransientRetirementFactory)))
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::transient_store_disposer::<Self::Transient, Self::TransientMutation>(std::sync::Arc::new(HomeTransientRetirementFactory)))
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
@@ -189,7 +189,7 @@ impl ArtifactViewer for HomeViewer {
         registry.register(HomeViewCommandJobFactory::new(&controller))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<HomeViewer>,
         owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.space.home@1/*#viewer",
@@ -200,19 +200,19 @@ impl ArtifactViewer for HomeViewer {
         tools: ["applyDirectoryEventPage"]
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !HOME_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.action_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "space home view command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "space home view command does not match its exact registered tool").into());
         }
         if home_view_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "space home view command payload exceeds its bounded retained extent").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "space home view command payload exceeds its bounded retained extent").into());
         }
         let tool_id = original.command.action_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, HomeViewCommand::action_id, HOME_DIRECTORY_PAGE_BYTES, 1, true, |request| HomeDirectoryPageWork::<ViewerApp<Self>>::new(tool_id, home_view_page_json))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, HomeViewCommand::action_id, HOME_DIRECTORY_PAGE_BYTES, 1, true, |request| HomeDirectoryPageWork::<ViewerApp<Self>>::new(tool_id, home_view_page_json))
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -234,29 +234,29 @@ impl ArtifactViewer for HomeViewer {
     /// 👁️ Structurally read-only and inert: a sealed page is admitted ONLY on the retained route
     /// ([`HomeDirectoryPageWork`]), whose terminal output carries the receipt the host acknowledges it by. Applied
     /// here, the page would land without that receipt and the host's feed would re-offer it for ever.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
     /// 👁️ The bare render has no transient: it lists the local rows only. The host renders through
     /// [`Self::render_with_request_context`].
-    fn render(body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         render_view_body(body_key, cfg.snapshot, &HomeTransient::default(), view_state)
     }
 
     /// 👁️ Renders the SAME overview table the editor's main window does, read-only: no create/delete/rename/share
     /// affordances, fed by the folded directory in this surface's own transient — never the artifact document itself.
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         render_view_body(body_key, cfg.snapshot, transient.snapshot, view_state)
 
         })();
@@ -265,17 +265,17 @@ impl ArtifactViewer for HomeViewer {
 }
 
 /// 👁️ One viewer body from the tombstones and the folded directory projection.
-pub fn render_view_body(body_key: &str, config: &HomeConfig, transient: &HomeTransient, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+pub fn render_view_body(body_key: &str, config: &HomeConfig, transient: &HomeTransient, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
     let root = match body_key {
         main::S_HOME_VIEW_BODY => main::render(transient.directory().spaces(), &config.retired_local_studio_ids, view_state)?,
-        _ => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?,
+        _ => semio_plugin::built_text_node(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?,
     };
     Ok(ComponentTree::new(root))
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_home_viewer() -> semio_framework_plugin::AppDefinition {
+pub async fn create_home_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(HOME_DIALECT)
         .document(["semio", "s", "home"])
         .icon_id("home")
@@ -285,7 +285,7 @@ pub async fn create_home_viewer() -> semio_framework_plugin::AppDefinition {
         .default_layout(view::layout())
         .view_action("applyDirectoryEventPage", LocalizedLabel::native("Apply Directory Event Page", "Verzeichnis-Ereignisseite anwenden"))
         .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)
-        .action_audience("applyDirectoryEventPage", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("applyDirectoryEventPage", semio_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest

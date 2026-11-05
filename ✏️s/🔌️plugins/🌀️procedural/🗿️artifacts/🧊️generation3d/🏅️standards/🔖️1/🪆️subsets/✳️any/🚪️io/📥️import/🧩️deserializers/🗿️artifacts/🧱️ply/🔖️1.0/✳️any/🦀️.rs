@@ -4,7 +4,7 @@ use semio_s_artifact_procedural_3d_mesh_bridge::polygon_import_payload;
 use semio_s_artifact_procedural_3d_mesh_bridge::polygon_import_attribute;
 use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_plugin::ArtifactDeserializer;
+use semio_plugin::ArtifactDeserializer;
 use semio_s_artifact_stdio_ply::PlySnapshot;
 use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyProperty, PlyRow, PlyValue};
 use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;

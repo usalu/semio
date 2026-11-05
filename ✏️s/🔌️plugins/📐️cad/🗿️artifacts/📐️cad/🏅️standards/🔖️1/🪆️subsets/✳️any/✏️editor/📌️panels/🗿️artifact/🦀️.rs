@@ -7,25 +7,25 @@ use semio_s_artifact_cad_cad_kit::{cad_action, cad_tree_item, cad_tree_item_stat
 use semio_s_artifact_cad_cad_model::geometry::CadObject;
 use semio_s_artifact_cad_cad_inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadReference, snapshot::CadSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_ARTIFACT: &str = "cad.play.artifact";
@@ -58,7 +58,7 @@ fn ui_key(value: &str) -> UiAssemblyResult<UiText> {
 /// tree-level `interactionSelect` binding and `granularity` makes this row a pick target of it, so a
 /// pane of objects costs zero `UiValue` arena credit (the per-row pick map is what pushed a
 /// 24-object document past the one-page argument arena before 2026-09-17).
-pub(crate) fn object_tree_item(windows: &TreeWindows<'_>, id_suffix: &str, object: &CadObject, labels: &CadLabels, axes: Option<(semio_framework_ui_locale::Terminology, semio_framework_ui_locale::Locale)>) -> UiAssemblyResult<BuiltNode> {
+pub(crate) fn object_tree_item(windows: &TreeWindows<'_>, id_suffix: &str, object: &CadObject, labels: &CadLabels, axes: Option<(semio_ui_locale::Terminology, semio_ui_locale::Locale)>) -> UiAssemblyResult<BuiltNode> {
     let mut item = ui::tree_item(ui_label(&object_name(object, axes))?)
         .try_id(object.id.clone())
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad object row id admission failed"))?
@@ -133,7 +133,7 @@ pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRu
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded, windowed against the
 /// host's own open/scroll state so the section reports its full `total` and materialises only the
 /// rows on screen.
-pub(crate) fn document_pane_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, label: LabelText, id_suffix: &str, objects: &[CadObject], labels: &CadLabels, axes: Option<(semio_framework_ui_locale::Terminology, semio_framework_ui_locale::Locale)>) -> UiAssemblyResult<PanelTreeBuilder> {
+pub(crate) fn document_pane_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, label: LabelText, id_suffix: &str, objects: &[CadObject], labels: &CadLabels, axes: Option<(semio_ui_locale::Terminology, semio_ui_locale::Locale)>) -> UiAssemblyResult<PanelTreeBuilder> {
     builder.window_section(windows, &format!("cad-play-document.{id_suffix}"), Some(ui_label(label.as_str())?), true, objects, |object| object_tree_item(windows, id_suffix, object, labels, axes))
 }
 

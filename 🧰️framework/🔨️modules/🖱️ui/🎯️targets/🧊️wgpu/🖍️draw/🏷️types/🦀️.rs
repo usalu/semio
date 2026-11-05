@@ -1,8 +1,8 @@
 //! 🖍️ Original CPU draw records, accumulation and bounded retained ownership.
 // #region draw_types
 
-use semio_framework_ui_scene_pass::ScenePass3d;
-use semio_framework_ui_theme::{GlassStyle, Rgba, Theme};
+use semio_ui_scene_pass::ScenePass3d;
+use semio_ui_theme::{GlassStyle, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
 
 #[path = "🧱️instance-records-and-clip/🦀️.rs"]

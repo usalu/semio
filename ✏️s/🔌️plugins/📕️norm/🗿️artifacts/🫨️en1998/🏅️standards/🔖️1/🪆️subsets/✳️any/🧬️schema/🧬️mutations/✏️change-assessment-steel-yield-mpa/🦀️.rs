@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentSteelYie
         record: "ChangeAssessmentSteelYieldMpa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Steel yield strength f_y (mean value)", "Stahlfließgrenze f_y (Mittelwert) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Steel yield strength f_y (mean value)", "Stahlfließgrenze f_y (Mittelwert) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-steel-yield-mpa".into()]

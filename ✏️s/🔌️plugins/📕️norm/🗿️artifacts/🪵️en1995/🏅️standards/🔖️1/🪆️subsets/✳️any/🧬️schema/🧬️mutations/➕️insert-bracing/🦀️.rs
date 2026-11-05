@@ -10,7 +10,7 @@ pub struct InsertBracing { pub index: usize, pub bracing: Bracing }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertBracing where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_bracing::RemoveBracing> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "bracing", kind: "insert-bracing", record: "InsertedBracing" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bracing {} at #{}", self.bracing.id, self.index), &format!("Bracing {} an #{} einfügen", self.bracing.id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert bracing {} at #{}", self.bracing.id, self.index), &format!("Bracing {} an #{} einfügen", self.bracing.id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.bracing.id.clone()] }
 }
 

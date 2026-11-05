@@ -49,11 +49,11 @@ semio-hub-state = { workspace = true, features = ["testkit"] }
 semio-hub-testing = { workspace = true }
 semio-hub-trusted-catalog-fixtures = { workspace = true }
 semio-s-artifact-gis-gismap = { workspace = true }
-semio-framework-os-mcp = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
+semio-os-mcp = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
 tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
-directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
-db = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
+db = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-os-kernel-db", features = ["claimed-backend-laws"] }
 serde_json = { workspace = true }
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust" }
@@ -65,6 +65,6 @@ axum = { version = "0.8", features = ["ws"] }
 semio-framework-trace = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-plugin-host = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-plugin-host = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 futures = "0.3"
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }

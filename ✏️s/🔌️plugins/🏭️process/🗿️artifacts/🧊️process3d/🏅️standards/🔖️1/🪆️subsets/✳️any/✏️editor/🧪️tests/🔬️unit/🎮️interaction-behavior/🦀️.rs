@@ -5,9 +5,9 @@ use super::*;
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn labels_resolve_native_by_default_and_in_german() {
-    let english = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::En, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let english = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::En, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     assert_eq!(process3d_labels(&english).stock.as_str(), "Stock");
-    let german = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
+    let german = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::De, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native) };
     assert_eq!(process3d_labels(&german).stock.as_str(), "Rohteil");
 }
 
@@ -18,14 +18,14 @@ async fn labels_resolve_native_by_default_and_in_german() {
 async fn undo_after_add_step_restores_the_steps_handle() {
     let mut app = app();
     let before = app.snapshot().expect("snapshot").steps.clone();
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }), |app| app.snapshot().expect("snapshot").steps == before, true, false, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }), |app| app.snapshot().expect("snapshot").steps == before, true, false, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_after_add_workshop_machine_restores_previous_machine_count() {
     let mut app = app();
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }), |app| app.snapshot().expect("snapshot").workshop.machines.len(), 11, 12, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }), |app| app.snapshot().expect("snapshot").workshop.machines.len(), 11, 12, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 
@@ -118,7 +118,7 @@ async fn stepping_the_replay_cursor_never_edits_the_document() {
     ] {
         let (_, receipt) = settled_dispatch(&mut app, command);
         assert!(!published_a_document_mutation(&receipt), "a cursor move must never write the document: {:?}", receipt.lanes);
-        assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Config), "a cursor move writes the viewer's config: {:?}", receipt.lanes);
+        assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Config), "a cursor move writes the viewer's config: {:?}", receipt.lanes);
     }
     assert_eq!(app.snapshot().expect("snapshot"), before, "a replay session leaves the document untouched");
 }

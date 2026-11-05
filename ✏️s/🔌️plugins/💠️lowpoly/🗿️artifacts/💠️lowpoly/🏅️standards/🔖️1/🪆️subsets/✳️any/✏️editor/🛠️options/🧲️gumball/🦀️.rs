@@ -7,8 +7,8 @@ use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
 use semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_window_action;
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
 use semio_s_artifact_lowpoly_lowpoly_view::{utility_param_bool, utility_params_value, GUMBALL_MOVE_PARAM, GUMBALL_ROTATE_PARAM, GUMBALL_SCALE_PARAM};
-use semio_framework_ui_locale::LabelText;
-use semio_framework_plugin::WindowMeasure;
+use semio_ui_locale::LabelText;
+use semio_plugin::WindowMeasure;
 
 /// 🎛️ The three handle-group switches as the scene publishes them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

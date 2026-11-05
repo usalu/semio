@@ -27,8 +27,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "signature-field", kind: "insert-signature-field", record: "Insert" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" einfügen", self.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" einfügen", self.name))
     }
 
     fn target(&self) -> Vec<String> {

@@ -14,8 +14,8 @@ pub struct SetSun {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetSun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sun", kind: "set-sun", record: "SetSun" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Sun", "Sonne setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Sun", "Sonne setzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,5 +1,5 @@
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, TreeWindows};
+use semio_plugin::UiText;
+use semio_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, TreeWindows};
 use crate::editor::sequence::panels::document::{SEQUENCE_PLAY_BODY_ARTIFACT, definition, render};
 use crate::editor_unit_tests::context::{new_app, render as render_body};
 
@@ -25,7 +25,7 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 // tree root carries exactly one `interactionSelect`.
 use crate::editor::sequence::terminology::sequence_play_labels;
 use crate::{SequenceHostSnapshot, SequenceStep, SlotRef};
-use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID, TREE_WINDOW_PATH_SEPARATOR};
+use semio_plugin::{BuiltNode, Component, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID, TREE_WINDOW_PATH_SEPARATOR};
 
 const STEPS_SECTION: &str = "sequence-play-document.steps";
 const THEN_SLOT: &str = "sequence-play-document.slot.root-if.then";
@@ -104,7 +104,7 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -115,7 +115,7 @@ async fn an_oversized_document_stamps_the_full_total_at_every_slot_level() {
         window_law_request(&window_law_path(&[STEPS_SECTION, THEN_SLOT]), Some(true), 0, 4),
         window_law_request(&window_law_path(&[STEPS_SECTION, THEN_SLOT, BODY_SLOT]), Some(true), 0, 3),
     ]);
-    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, SEQUENCE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, SEQUENCE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 0));
     assert_eq!(steps.children.len(), 8);
@@ -133,7 +133,7 @@ async fn an_oversized_document_stamps_the_full_total_at_every_slot_level() {
 #[semio_framework_async_macros::async_test]
 async fn a_control_step_keeps_its_collapse_toggle_beside_its_slot_rows() {
     let live = oversized_sequence_document(4);
-    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     let control = window_law_node(&tree, "root-if");
     assert_eq!(window_law_keys(control), vec!["sequence-play-document.collapse.root-if".to_string(), THEN_SLOT.to_string(), "sequence-play-document.slot.root-if.else".to_string()]);
 }
@@ -142,7 +142,7 @@ async fn a_control_step_keeps_its_collapse_toggle_beside_its_slot_rows() {
 async fn a_closed_slot_stamps_its_total_and_builds_no_children() {
     let live = oversized_sequence_document(OVERSIZED);
     let view = window_law_view(vec![window_law_request(STEPS_SECTION, Some(true), 0, 8), window_law_request(&window_law_path(&[STEPS_SECTION, THEN_SLOT]), Some(false), 0, 32)]);
-    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, SEQUENCE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, SEQUENCE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let then_slot = window_law_node(&tree, THEN_SLOT);
     assert_eq!(window_law_extent(then_slot), (OVERSIZED as u32, 0));
     assert_eq!(then_slot.children.len(), 0);
@@ -152,7 +152,7 @@ async fn a_closed_slot_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_step_id() {
     let live = oversized_sequence_document(OVERSIZED);
     let view = window_law_view(vec![window_law_request(STEPS_SECTION, Some(true), 50, 5)]);
-    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, SEQUENCE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, SEQUENCE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 50));
     assert_eq!(window_law_keys(steps), (50..55).map(|index| format!("root-{index:03}")).collect::<Vec<_>>());
@@ -161,12 +161,12 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_step_i
 #[semio_framework_async_macros::async_test]
 async fn pick_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let live = oversized_sequence_document(4);
-    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&live, sequence_play_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     let leaf = window_law_node(&tree, "root-001");
     let Component::TreeItem(props) = &leaf.component else { panic!("root-001 is not a tree row") };
-    assert_eq!(props.granularity.as_ref().map(semio_framework_plugin::UiText::as_str), Some("step"));
+    assert_eq!(props.granularity.as_ref().map(semio_plugin::UiText::as_str), Some("step"));
     assert!(leaf.bindings.is_empty(), "a pick row must not pay for its own activate binding");
 }
 

@@ -3,11 +3,12 @@ import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { declaredComponentKind } from "@semio-tech/repo-lib/inventory";
-import { CATALOG_ID, DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, type ComponentSourceOwnerV1 } from "../../🔎️discovery/🟦️.ts";
+import { DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, type ComponentSourceOwnerV1 } from "../../🔎️discovery/🟦️.ts";
+import { CATALOG_ID } from "../../🔎️discovery/🧬️schema/🟦️.ts";
 import { CATALOG_DESCRIPTOR_PACK_FILENAME, CATALOG_NODE_MAX, type CatalogSourceAudit, type CatalogSourceIssue, type StrictCatalogDescriptor } from "../🟦️.ts";
 import { boundedCatalogDiagnostic } from "../🛡️guards/🟦️.ts";
 import { orderCatalogNodes } from "../🗺️verification-plan/🟦️.ts";
-import { validateCatalogDescriptorPair } from "../🧬️descriptor-pair/🟦️.ts";
+import { validateCatalogDescriptorPair } from "../🧬️descriptor-pair/📁️filesystem/🟦️.ts";
 
 //#region 🔖️CatalogCompleteness
 /** 🧮️ Independently enumerates discovered component manifests and audits source identities without reading generated catalog files. */

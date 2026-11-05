@@ -17,8 +17,8 @@ pub struct ChangeColumnSectionHeightM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnSectionHeightM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_section_height_m::ChangeColumnSectionHeightM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-section-height-m", kind: "change-column-section-height-m", record: "ChangedColumnSectionHeightM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change height of the encased I-section (0 = equivalent section from the area)", "Höhe des einbetonierten I-Profils (0 = Ersatzquerschnitt aus der Fläche) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change height of the encased I-section (0 = equivalent section from the area)", "Höhe des einbetonierten I-Profils (0 = Ersatzquerschnitt aus der Fläche) ändern")
     }
 }
 

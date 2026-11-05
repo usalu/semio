@@ -344,10 +344,10 @@ pub(in super::super) async fn spawn_actor(
     remote: ChannelBackboneRemote,
     cmd_rx: ArtifactMailboxReceiver,
     events: broadcast::Sender<ArtifactEvent>,
-    credential: Arc<std::sync::RwLock<Option<Arc<semio_framework_os_directory_client::LocalHubCredential>>>>,
-    socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>>>>,
-    document_execution_target_lease: Option<semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-    seed: Option<semio_framework_os_directory::CanonicalCheckpointPairV1>,
+    credential: Arc<std::sync::RwLock<Option<Arc<semio_os_directory_client::LocalHubCredential>>>>,
+    socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn semio_os_directory_client::HubSocketGrantSource>>>>,
+    document_execution_target_lease: Option<semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    seed: Option<semio_os_directory::CanonicalCheckpointPairV1>,
     operation_cancel: semio_framework_async::CancelToken,
 ) -> ArtifactActorRunnerHandle {
     let io_reactor = document_socket_io_reactor();

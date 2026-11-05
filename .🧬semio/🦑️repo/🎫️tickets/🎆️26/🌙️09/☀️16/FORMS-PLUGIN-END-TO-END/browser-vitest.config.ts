@@ -1,0 +1,4 @@
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+const ticket = dirname(fileURLToPath(import.meta.url));
+export default { root: process.cwd(), cacheDir: resolve(ticket, "🗑️generated/vitest"), test: { server: { deps: { external: [/\/🦑️repo\/🔨️modules\/📚️library\//] } }, environment: "node", include: ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/📄️value-source/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/📄️value-source/🟦️.ts", "🏢️semio-tech/🎡️play/🧪️tests/🧪️forms-scope/🟦️.ts", "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧩️extensions/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎟️contributor-operations/🟦️.ts"], maxWorkers: 1, fileParallelism: false } };

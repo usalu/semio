@@ -1,9 +1,9 @@
 //! 🧪️ Exact scalar window fixtures use the production Store preparation lifecycle.
 
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerBundle;
+use semio_plugin_window_transient::window_transient::WindowTransientOwnerBundle;
 use crate::publication_fixture::transient::PublicationTransient as State;
 use crate::publication_fixture::transient::mutations::PublicationTransientMutation as Mutation;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use std::sync::Arc;
 
 #[doc(hidden)]

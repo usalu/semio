@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingOtBaseYM w
         record: "ChangeBuildingOtBaseYM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Base width in y for the overturning check (0 = plan length)", "Fundamentbreite in y für den Kippnachweis (0 = Grundrisslänge) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Base width in y for the overturning check (0 = plan length)", "Fundamentbreite in y für den Kippnachweis (0 = Grundrisslänge) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-ot-base-ym".into()]

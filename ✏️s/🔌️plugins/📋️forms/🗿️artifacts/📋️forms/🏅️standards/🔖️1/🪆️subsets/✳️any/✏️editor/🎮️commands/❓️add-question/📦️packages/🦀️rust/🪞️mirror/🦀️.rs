@@ -93,10 +93,6 @@ pub mod editor {
             pub use semio_s_artifact_forms_forms_diff::editor::forms::questions::visibility;
             pub use semio_s_artifact_forms_forms_tests_3::editor::forms::questions::placement;
         }
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
-        }
         pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
         #[path = "."]
         pub mod commands {

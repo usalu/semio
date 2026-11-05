@@ -49,7 +49,7 @@ fn action_category_id(action: &semio_framework::ActionDefinition) -> String {
 /// taxonomy id, else the raw id. (React consults the app's `group` label overlay first; this renderer
 /// carries no overlay, the same scoping every other shell-owned label here takes.)
 fn action_category_label(category: &str, is_de: bool) -> String {
-    semio_framework_ui_declaration::layout::ribbon_parent_label(category, is_de).unwrap_or(category).to_string()
+    semio_ui_declaration::layout::ribbon_parent_label(category, is_de).unwrap_or(category).to_string()
 }
 
 /// 🧰️ React's `actionRequiresStagedForm`: an action carrying a user-facing argument stages a form
@@ -64,8 +64,8 @@ const ENGAGEMENT_OPTIONS_CONTROL_ID: &str = "ui.engagement.actions";
 
 /// 🏷️ React's `engagementControlLabel` — a numeric control with a unit reads `Label (unit)`; a
 /// ring, toggle group or select never appends one (`🖥️ui/🎯️targets/⚛️react/🟦️.tsx:10638`).
-fn engagement_control_label(control: &semio_framework_ui_declaration::layout::WindowEngagementControl) -> Option<String> {
-    use semio_framework_ui_declaration::layout::WindowEngagementControl as Control;
+fn engagement_control_label(control: &semio_ui_declaration::layout::WindowEngagementControl) -> Option<String> {
+    use semio_ui_declaration::layout::WindowEngagementControl as Control;
     let (label, unit) = match control {
         Control::Slider { label, unit, .. } | Control::Stepper { label, unit, .. } => (label.as_ref()?, unit.as_deref()),
         Control::Ring { label, .. } | Control::ToggleGroup { label, .. } | Control::Select { label, .. } => (label.as_ref()?, None),
@@ -90,8 +90,8 @@ fn engagement_control_label(control: &semio_framework_ui_declaration::layout::Wi
 /// takes the whole orb list on one element — so the ring projects as a container under React's ring
 /// id holding one orb node per option, each carrying the orb id React exposes as `data-orb-id` and
 /// each dispatching the same `onOrbSelect` verb with its own `id`.
-pub fn engagement_control_rows(control: &semio_framework_ui_declaration::layout::WindowEngagementControl, is_de: bool) -> Vec<UiNode> {
-    use semio_framework_ui_declaration::layout::WindowEngagementControl as Control;
+pub fn engagement_control_rows(control: &semio_ui_declaration::layout::WindowEngagementControl, is_de: bool) -> Vec<UiNode> {
+    use semio_ui_declaration::layout::WindowEngagementControl as Control;
     let inert = || ActionDescriptor { controller_id: "framework".into(), action: String::new(), args: None };
     let with_id = |action: &Option<ActionDescriptor>, option_id: &str| -> Option<ActionDescriptor> {
         action.clone().map(|mut action| {
@@ -105,7 +105,7 @@ pub fn engagement_control_rows(control: &semio_framework_ui_declaration::layout:
             action
         })
     };
-    let state = |disabled: bool| if disabled { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal };
+    let state = |disabled: bool| if disabled { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal };
     let mut body = match control {
         Control::Slider { id, value, min, max, step, unit, disabled, on_change, .. } => vec![UiNode::Slider(UiSliderNode {
             id: id.clone().unwrap_or_else(|| "engagement-control.slider".to_string()),
@@ -236,7 +236,7 @@ pub fn engagement_control_rows(control: &semio_framework_ui_declaration::layout:
 /// (`renderStagedArgControl`'s `fieldId = field?.id ?? def.id`, `🛠️ShellHelpers/🟦️.tsx:3869`), which
 /// is also why the two never collide on one published surface key.
 pub fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
-    let stage = ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action_id.to_string(), "arg": arg.id.clone() }) };
+    let stage = ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action_id.to_string(), "arg": arg.id.clone() }) };
     staged_arg_row(format!("action.{action_id}.arg.{}", arg.id), &arg.id, arg, value, &stage, selection, terminology, locale)
 }
 
@@ -302,7 +302,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                         on_change: action,
                         presence: UiPresence {
                             selected: option.pressed.unwrap_or(false),
-                            state: if option.disabled.unwrap_or(false) { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal },
+                            state: if option.disabled.unwrap_or(false) { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal },
                             ..UiPresence::default()
                         },
                         menu: None,
@@ -349,7 +349,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                     let disabled = gated && !FRAMEWORK_RESERVED_ACTION_IDS.contains(&action.id.as_str());
                     let open = expanded.as_deref() == Some(action.id.as_str());
                     let dispatch = if staged {
-                        ActionDescriptor { controller_id: "framework".into(), action: "setActionExpanded".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) }
+                        ActionDescriptor { controller_id: "framework".into(), action: "setActionExpanded".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) }
                     } else {
                         ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action.id.clone(), args: None }
                     };
@@ -357,7 +357,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                         id: format!("action.{}", action.id),
                         label: Label::data(if staged { format!("{label}…") } else { label }),
                         icon_id: Some(action.icon_id.clone()),
-                        presence: UiPresence { state: if disabled { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
+                        presence: UiPresence { state: if disabled { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                         default_open: Some(open),
                         action: (!disabled).then_some(dispatch),
                         ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
@@ -410,18 +410,18 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                 id: Some(semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "action", action.id.as_str(), "execute"])),
                 icon_id: IconName::Check,
                 label: Label::data(shell_chrome_string("common.execute", is_de)),
-                action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedAction".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) },
+                action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedAction".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) },
                 style: None,
-                presence: UiPresence { state: if gated || missing { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
+                presence: UiPresence { state: if gated || missing { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             }));
             rows.push(UiNode::Button(UiButtonNode {
                 id: Some(semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "action", action.id.as_str(), "reset"])),
                 icon_id: IconName::Undo,
                 label: Label::data(shell_chrome_string("common.reset", is_de)),
-                action: ActionDescriptor { controller_id: "framework".into(), action: "resetActionArgs".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) },
+                action: ActionDescriptor { controller_id: "framework".into(), action: "resetActionArgs".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) },
                 style: None,
-                presence: UiPresence { state: if gated { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
+                presence: UiPresence { state: if gated { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             }));
             children.extend(rows);
@@ -433,7 +433,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// Measures overlay's own pass and through the same revision-keyed ingress, so an unchanged body
     /// pays nothing. A window whose body fails to project keeps no document and reports a surface
     /// fault rather than blanking the refresh.
-    pub fn refresh_window_action_panes(&mut self, windows: &[String], faults: &mut Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)>) -> Result<(), String> {
+    pub fn refresh_window_action_panes(&mut self, windows: &[String], faults: &mut Vec<(String, String, semio_renderer_wgpu_program_bridge::ProgramFault)>) -> Result<(), String> {
         let stale: Vec<String> = self.docs.window_actions_documents.keys().chain(self.docs.window_search_documents.keys()).filter(|window_id| !windows.contains(window_id)).cloned().collect();
         for window_id in stale.into_iter().chain(windows.iter().cloned()) {
             let previous = self.docs.window_actions_documents.remove(&window_id);

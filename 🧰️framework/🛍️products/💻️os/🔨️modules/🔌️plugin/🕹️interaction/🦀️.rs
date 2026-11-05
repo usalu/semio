@@ -1,10 +1,10 @@
 //! 🕹️ Exact local interaction ownership, query, and publication components.
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
 #[cfg(test)]
-use semio_framework_os_kernel::io;
+use semio_os_kernel::io;
 
 #[path = "🔐️authority/🦀️.rs"]
 pub mod authority;

@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "name": "translate Basic",
+      "source": "source",
+      "operation": "translate",
+      "component": false,
+      "ordinal": "0",
+      "expected": "source__gumball_translate"
+    },
+    {
+      "name": "translate Components",
+      "source": "source",
+      "operation": "translate",
+      "component": true,
+      "ordinal": "0",
+      "expected": "source__translateComponents"
+    },
+    {
+      "name": "rotate Basic",
+      "source": "source",
+      "operation": "rotate",
+      "component": false,
+      "ordinal": "0",
+      "expected": "source__gumball_rotate"
+    },
+    {
+      "name": "rotate Components",
+      "source": "source",
+      "operation": "rotate",
+      "component": true,
+      "ordinal": "0",
+      "expected": "source__rotateComponents"
+    },
+    {
+      "name": "scale Basic",
+      "source": "source",
+      "operation": "scale",
+      "component": false,
+      "ordinal": "0",
+      "expected": "source__gumball_scale"
+    },
+    {
+      "name": "scale Components",
+      "source": "source",
+      "operation": "scale",
+      "component": true,
+      "ordinal": "0",
+      "expected": "source__scaleComponents"
+    },
+    {
+      "name": "Unicode Identifier",
+      "source": "🏠.網@view",
+      "operation": "translate",
+      "component": false,
+      "ordinal": "0",
+      "expected": "🏠.網@view__gumball_translate"
+    },
+    {
+      "name": "Second Component Node",
+      "source": "a",
+      "operation": "rotate",
+      "component": true,
+      "ordinal": "2",
+      "expected": "a__rotateComponents_2"
+    },
+    {
+      "name": "Maximum Ordinal",
+      "source": "a",
+      "operation": "scale",
+      "component": true,
+      "ordinal": "18446744073709551615",
+      "expected": "a__scaleComponents_18446744073709551615"
+    },
+    {
+      "name": "Long UTF8 Boundary",
+      "source": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🏠bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "operation": "scale",
+      "component": false,
+      "ordinal": "0",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🏠bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb__gumball_scale"
+    }
+  ]
+}

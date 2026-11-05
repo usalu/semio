@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
 pub use crate::mutations::change_selected_check_index::ChangeSelectedCheckIndex;
@@ -24,7 +24,7 @@ macro_rules! norm_results_window_config_owner {
     ($owner:ident, $window_kind_id:expr) => {
         pub struct $owner;
 
-        impl semio_framework_plugin::WindowConfigOwner for $owner {
+        impl semio_plugin::WindowConfigOwner for $owner {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -33,52 +33,52 @@ macro_rules! norm_results_window_config_owner {
             const MAXIMUM_PUBLICATION_BYTES: usize = 4_096;
             type State = $crate::schema::NormResultsWindowConfig;
             type Mutation = $crate::mutations::NormResultsWindowConfigMutation;
-            type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+            type Edit = semio_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
 
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
-                std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new())
+                std::sync::Arc::new(semio_plugin::app::WindowConfigApplyEdit::new())
             }
 
-            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
-            fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
+            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+            fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
 
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-                semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
+                semio_plugin::bounded_window_config_preparation_factory::<Self>()
             }
 
-            fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-                semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
+            fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+                semio_plugin::bounded_window_config_store_disposer::<Self>()
             }
         }
     };
 }
 
 /// 👁️ Reads selection only from the exact Results-window snapshot captured for this call.
-pub fn current<O>(view: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> NormResultsWindowConfig
+pub fn current<O>(view: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> NormResultsWindowConfig
 where
-    O: semio_framework_plugin::WindowConfigOwner<State = NormResultsWindowConfig, Mutation = NormResultsWindowConfigMutation>,
+    O: semio_plugin::WindowConfigOwner<State = NormResultsWindowConfig, Mutation = NormResultsWindowConfigMutation>,
 {
     view.window::<O>().cloned().unwrap_or_default()
 }
 
 /// 🎯️ Addresses selection to a concrete Results instance: the addressed or focused window when it is one, else the document's first Results window, so the outliner and properties windows select through the checks window.
 pub fn addressed<O>(
-    view: &semio_framework_plugin::ViewModel,
+    view: &semio_plugin::ViewModel,
     mutation: NormResultsWindowConfigMutation,
-) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault>
+) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault>
 where
-    O: semio_framework_plugin::WindowConfigOwner<State = NormResultsWindowConfig, Mutation = NormResultsWindowConfigMutation>,
+    O: semio_plugin::WindowConfigOwner<State = NormResultsWindowConfig, Mutation = NormResultsWindowConfigMutation>,
 {
-    let owner = |window: &&semio_framework_plugin::ViewWindowInstance| window.window_kind_id == O::WINDOW_KIND_ID;
+    let owner = |window: &&semio_plugin::ViewWindowInstance| window.window_kind_id == O::WINDOW_KIND_ID;
     let named = view.window_id.as_deref().into_iter().chain(view.focused_window_id.as_deref());
     let id = named
         .filter_map(|id| view.window_instances.iter().find(|window| window.id == id))
         .find(owner)
         .or_else(|| view.window_instances.iter().find(owner))
         .map(|window| window.id.as_str())
-        .ok_or_else(|| semio_framework_plugin::Fault::from(if view.window_instances.is_empty() { "norm-results-window-required" } else { "norm-results-window-stale" }))?;
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<O>(id, mutation))
+        .ok_or_else(|| semio_plugin::Fault::from(if view.window_instances.is_empty() { "norm-results-window-required" } else { "norm-results-window-stale" }))?;
+    Ok(semio_plugin::WindowConfigMutation::of::<O>(id, mutation))
 }
 
 //#region 🧪️Tests

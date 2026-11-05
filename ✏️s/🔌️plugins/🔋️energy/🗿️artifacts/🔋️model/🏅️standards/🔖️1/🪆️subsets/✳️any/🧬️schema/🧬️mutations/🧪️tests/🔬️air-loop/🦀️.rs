@@ -1,6 +1,6 @@
 //! 🧪️ The `air-loop` domain's committed vectors, each held to the fixture laws through the aggregate.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mut_air_loop as air_loop_mutations;
 extern crate semio_s_artifact_energy_model_mut_air_loop_nodes as air_loop_nodes_mutations;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;

@@ -82,7 +82,7 @@ impl DocumentState {
     pub fn retire_documents_outside(&mut self, retained: &[String], windows: bool, chrome: &mut ChromeState) -> Result<(), String> {
         let stale: Vec<String> = if windows { self.window_ui.keys().filter(|id| !retained.contains(id)).cloned().collect() } else { self.panel_documents.keys().filter(|id| !retained.contains(id)).cloned().collect() };
         for id in stale {
-            if !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(&id) {
+            if !semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(&id) {
                 return Err(format!("shell: retained UI close registry refused surface '{id}'"));
             }
             chrome.chrome_build.clear_content_focus(&id);
@@ -110,7 +110,7 @@ impl DocumentState {
     /// `MERGE_POLICY_OPTIONS` verbatim, which are `protocol::MergePolicy`'s own variant names.
     pub fn build_settings_general_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
-        let locks = semio_framework_os_renderer_wgpu_host_base::boot_locks();
+        let locks = semio_renderer_wgpu_host_base::boot_locks();
         let mut sections = Vec::new();
         if let Some(session) = self.session.as_ref() {
             let app_label = session.app.label.resolve(prefs.active_terminology(), prefs.active_locale()).to_string();
@@ -183,7 +183,7 @@ impl DocumentState {
                 id: Some("framework.settings.resetDock".into()),
                 icon_id: IconName::RotateCcw,
                 label: Label::data(shell_chrome_string("settings.resetDock", is_de)),
-                action: ActionDescriptor { controller_id: "framework".into(), action: "runOsCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": "os.resetDock" }) },
+                action: ActionDescriptor { controller_id: "framework".into(), action: "runOsCommand".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": "os.resetDock" }) },
                 style: None,
                 presence: UiPresence::default(),
                 menu: None,
@@ -227,7 +227,7 @@ impl DocumentState {
         let mut sections: Vec<UiTreeSectionNode> = Vec::new();
         for kind in session.app.window_kinds.iter() {
             let label = kind.label.resolve(terminology, locale).to_string();
-            let mut items = if kind.surface_kind == semio_framework_ui_declaration::ui::SurfaceKind::World3d {
+            let mut items = if kind.surface_kind == semio_ui_declaration::ui::SurfaceKind::World3d {
                 world_projection_template_rows(&semio_framework::child_element_id(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &[kind.id.as_str(), "projection"]), &kind.id, 0, &mut 0)
             } else {
                 Vec::new()

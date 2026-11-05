@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "setpoint-manager", kind: "rename-setpoint-manager", record: "RenamedSetpointManager" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change setpoint manager {} name to {:?}", self.id.0, self.new_name), &format!("Name von Sollwertführung {} auf {:?} ändern", self.id.0, self.new_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change setpoint manager {} name to {:?}", self.id.0, self.new_name), &format!("Name von Sollwertführung {} auf {:?} ändern", self.id.0, self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

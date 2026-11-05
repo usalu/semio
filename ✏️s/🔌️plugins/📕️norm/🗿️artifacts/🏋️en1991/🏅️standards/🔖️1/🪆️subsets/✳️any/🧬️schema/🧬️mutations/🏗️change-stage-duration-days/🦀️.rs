@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeStageDurationDays 
         record: "ChangedStageDurationDays",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change stage duration of the construction stage", "Bauphase: Dauer des Bauzustands ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change stage duration of the construction stage", "Bauphase: Dauer des Bauzustands ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

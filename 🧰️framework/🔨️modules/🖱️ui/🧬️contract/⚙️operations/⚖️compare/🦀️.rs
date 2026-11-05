@@ -1,6 +1,6 @@
 //! ⚖️ Actual bounded component comparison execution.
 use crate::*;
-use semio_framework_ui_contract_values::compare_protocol::*;
+use semio_ui_contract_values::compare_protocol::*;
 use std::mem::ManuallyDrop;
 #[derive(Default)]
 pub struct UiComponentComparisonCursor {

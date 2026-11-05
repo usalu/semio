@@ -5,7 +5,7 @@ use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot
 use semio_framework_graph_manifest::PropertyDef;
 use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_value::{ValueError,ValueType};
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
+use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
 type Bound<'a,'p>=NativeEncodingBound<'a,'p>;
 pub fn text(value:&str,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{bound.add(128)?;bound.repeated(value.len(),6)}
 fn optional(value:&Option<String>,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{match value{Some(value)=>text(value,bound),None=>bound.add(128)}}

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentCoreDept
         record: "ChangeAssessmentCoreDepthM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Confined core depth h_0 (to stirrup centre line)", "Höhe des Kerns h_0 (bis Bügelachse) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Confined core depth h_0 (to stirrup centre line)", "Höhe des Kerns h_0 (bis Bügelachse) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-core-depth-m".into()]

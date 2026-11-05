@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeTieRunDeadLoad whe
         record: "ChangedTieRunDeadLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change permanent floor load g_k of the tie run", "Zuggliedstrang: Ständige Geschosslast g_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change permanent floor load g_k of the tie run", "Zuggliedstrang: Ständige Geschosslast g_k ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

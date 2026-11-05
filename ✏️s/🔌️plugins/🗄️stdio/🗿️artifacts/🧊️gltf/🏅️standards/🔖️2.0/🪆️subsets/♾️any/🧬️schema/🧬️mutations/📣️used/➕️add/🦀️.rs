@@ -65,8 +65,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "used-extension", kind: "add-used-extension", record: "AddedUsedExtension" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add Used Extension", "Verwendete Erweiterung hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add Used Extension", "Verwendete Erweiterung hinzufügen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "ids",
+          "kind"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "enum": [
+              "basic",
+              "components",
+              "refused"
+            ]
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "refusal": {
+            "enum": [
+              "first-invalid",
+              "invalid-target",
+              "mixed-targets",
+              "conflicting-identity"
+            ]
+          },
+          "selectionText": {
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "components"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "components",
+                "selectionText"
+              ],
+              "properties": {
+                "components": {},
+                "selectionText": {}
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "components"
+                ],
+                "properties": {
+                  "components": {}
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "refused"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "refusal"
+              ],
+              "properties": {
+                "refusal": {}
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "refusal"
+                ],
+                "properties": {
+                  "refusal": {}
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -7,15 +7,15 @@
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, ValueError, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_snapshot_read::*;
 use semio_framework_io_control::NativeSnapshotDecodeOwner;
-use semio_framework_os_store_read::ArtifactStoreDisplacedSnapshotRetirement;
+use semio_os_store_read::ArtifactStoreDisplacedSnapshotRetirement;
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_os_store_one_item::*;
+use semio_os_store_one_item::*;
 use protocol::{Mutation, MutationDiff, apply_operation};
 use semio_framework_value::{FromValue, ToValue};
 use std::{collections::BTreeMap, marker::PhantomData, sync::Arc, mem::{size_of, size_of_val}};
-use semio_framework_os_store_ephemeral::{ArtifactEphemeralBaseOwner, ArtifactEphemeralBaseRead, ArtifactEphemeralOneItemAdmissionRejected, ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactEphemeralOneItemPrepared, ArtifactEphemeralOneItemPublication};
+use semio_os_store_ephemeral::{ArtifactEphemeralBaseOwner, ArtifactEphemeralBaseRead, ArtifactEphemeralOneItemAdmissionRejected, ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactEphemeralOneItemPrepared, ArtifactEphemeralOneItemPublication};
 #[cfg(test)]
 use semio_framework_value_snapshot_read::presence_test_retirement;
 
@@ -23,7 +23,7 @@ use semio_framework_value_snapshot_read::presence_test_retirement;
 /// 🌉️ Carries serde alongside `ToValue`/`FromValue`: `TypedOperationResultPage::try_serialize`
 /// (`🔌️plugin/🦀️.rs`) is bound on `serde::Serialize`, and both fields are `u64`, so the derives add
 /// no bound fan-out. `rename_all` is mirrored so the two encodings emit the same keys.
-pub use semio_framework_os_store_one_item::LaneItemReceipt;
+pub use semio_os_store_one_item::LaneItemReceipt;
 
 pub const PRESENCE_PEER_SLOTS: usize = 64;
 
@@ -323,7 +323,7 @@ pub use presence_peer_read::PresencePeersRead;
 mod presence_peer_rejection;
 pub use presence_peer_rejection::PresencePeerAdmissionRejected;
 
-pub use semio_framework_os_presence_native_snapshot::{decode_presence_json, ArtifactPresenceSnapshot};
+pub use semio_os_presence_native_snapshot::{decode_presence_json, ArtifactPresenceSnapshot};
 
 #[path = "♻️retirement/🦀️.rs"]
 mod presence_retirement;

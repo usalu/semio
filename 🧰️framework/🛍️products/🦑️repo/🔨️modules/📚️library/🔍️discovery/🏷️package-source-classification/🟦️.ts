@@ -207,7 +207,7 @@ function classifyRustPackageSource(content: string, grammar: PackageGlueGrammarS
   if (macros.length > 0) {
     const registration = macros.map((row) => {
       const path = row[1]!, body = /!\s*[({]\s*([\s\S]*?)\s*[)}]\s*;?$/u.exec(row[0])?.[1]?.trim() ?? "";
-      if (path === "semio_framework_plugin::plugin_exports" || path === "semio_framework_plugin::extension_exports") return /^(?:[A-Za-z_]\w*(?:::[A-Za-z_]\w*)?)(?:\s*,\s*[A-Za-z_]\w*(?:::[A-Za-z_]\w*)?)*$/u.test(body) ? "admitted" : "implementation";
+      if (path === "semio_plugin::plugin_exports" || path === "semio_plugin::extension_exports") return /^(?:[A-Za-z_]\w*(?:::[A-Za-z_]\w*)?)(?:\s*,\s*[A-Za-z_]\w*(?:::[A-Za-z_]\w*)?)*$/u.test(body) ? "admitted" : "implementation";
       if (path === "inventory::submit") return /^[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*::new\s*\(\s*&?[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*\s*\)$/u.test(body) ? "admitted" : "implementation";
       return "unresolved";
     });

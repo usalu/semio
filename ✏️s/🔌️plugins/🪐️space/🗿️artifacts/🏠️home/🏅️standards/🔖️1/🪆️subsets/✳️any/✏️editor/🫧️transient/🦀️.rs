@@ -17,7 +17,7 @@
 //! inverse copy and refused `Space Home config publication exceeds its complete retained envelope` past ~1 MiB).
 //! @see ../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🦀️.rs `fold`
 
-use semio_framework_plugin::{Fault, FaultOrigin};
+use semio_plugin::{Fault, FaultOrigin};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -353,7 +353,7 @@ impl semio_framework_value::FromValue for HomeTransient {
 //#region 🔖️ArtifactCodec
 /// 📜️ The transient's text/pack record: its JSON projection as one field. Tooling and fixtures only — the transient
 /// lane itself never encodes its root.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "home.transient")]
 #[artifact(extension = "hometransient")]
@@ -411,8 +411,8 @@ impl pack::snapshot::ArtifactPack for HomeTransient {
         Some(HomeTransientRecord::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for HomeTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for HomeTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }

@@ -31,7 +31,7 @@ fn example_fill_roots(document: &str, seed: u32) -> (FillPreparationRoots, Vec<S
     let envelope = semio_s_artifact_puzzle_3d_editor_snapshot::scene_from_snapshot(&snapshot, Default::default(), "fill");
     let mut scene: SceneConfig = semio_framework_value::FromValue::from_value(semio_s_artifact_puzzle_3d_editor_session::scene_config_value(&envelope)).expect("scene config decodes");
     scene.seed = seed;
-    let fallback = semio_framework_plugin::mesh_from_kind(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
+    let fallback = semio_plugin::mesh_from_kind(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
     let positions: Vec<f32> = fallback.positions.iter().map(|value| value * FILL_RUN_BOX_SCALE).collect();
     let body = collision_body_from_buffers(&positions, &fallback.indices).expect("fallback body");
     let mut lane = semio_s_artifact_puzzle_3d_editor_snapshot::collect_mesh_urls(&envelope.scene_snapshot);
@@ -288,7 +288,7 @@ fn own_mesh_fill_roots(document: &str, seed: u32, scale: f32) -> (FillPreparatio
         object.mesh_url = Some(FILL_RUN_OWN_MESH_URL.into());
     }
     let own: Vec<f32> = positions.iter().map(|value| value * scale).collect();
-    let fallback = semio_framework_plugin::mesh_from_kind(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
+    let fallback = semio_plugin::mesh_from_kind(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
     let mut meshes = (*roots.meshes).clone();
     meshes.cold_insert(FILL_RUN_OWN_MESH_URL.into(), collision_body_from_buffers(&own, &fallback.indices).expect("own mesh body"));
     lane.push(FILL_RUN_OWN_MESH_URL.into());

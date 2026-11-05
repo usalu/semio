@@ -5,9 +5,9 @@ use crate::editor::flow::modes::edit::tools::drag::flow_drag_tool_emit;
 use semio_framework_tool_machine::NodeDragRecord;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 

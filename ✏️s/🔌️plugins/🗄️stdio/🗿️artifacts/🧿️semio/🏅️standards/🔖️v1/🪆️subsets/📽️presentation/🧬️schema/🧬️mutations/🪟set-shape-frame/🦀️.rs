@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape-frame", kind: "set-shape-frame", record: "SetShapeFrame" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set shape frame", "Rahmen der Form setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set shape frame", "Rahmen der Form setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

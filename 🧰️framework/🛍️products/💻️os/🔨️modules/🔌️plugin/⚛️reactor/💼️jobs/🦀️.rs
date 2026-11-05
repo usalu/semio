@@ -2,10 +2,10 @@
 //! Admission and execution borrow the same original context; each producer declares its own five-axis demand.
 //! Checkpoint publication and builtin semantic decoding still require migration to funded continuations.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as pack;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_job::OriginalTurnFailure;
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -91,8 +91,8 @@ pub const WORK_UNITS_PUMP: u64 = 64;
 
 /// 🧩️ Production job protocol. A registered owner advances one explicit bounded state-machine
 /// opportunity per `step-job`; there is no other body shape, in any build.
-pub use semio_framework_os_kernel::io::io_mechanism::IoRunControl;
-pub use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
+pub use semio_os_kernel::io::io_mechanism::IoRunControl;
+pub use semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
 
 pub trait BoundedJob {
     fn step(&mut self, original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<JobStep,OriginalTurnFailure>;
@@ -148,8 +148,8 @@ enum BuiltinExecuteFn {
 
 #[derive(Clone,Copy)]
 struct RegisteredJobKind {pub kind:&'static str,pub factory:BoundedJobFactory}
-const REGISTERED_JOB_KINDS:usize=semio_framework_plugin_actor_host::requests::REQUEST_SLOTS;
-semio_framework_plugin_abi::component_persistent_local! {
+const REGISTERED_JOB_KINDS:usize=semio_plugin_actor_host::requests::REQUEST_SLOTS;
+semio_plugin_abi::component_persistent_local! {
     static KIND_REGISTRY: RefCell<[Option<RegisteredJobKind>;REGISTERED_JOB_KINDS]> = const { RefCell::new([const {None};REGISTERED_JOB_KINDS]) };
     static KIND_REGISTRY_EPOCH: Cell<u64> = const { Cell::new(1) };
     static REGISTERED_KIND_COUNT: Cell<usize> = const { Cell::new(0) };
@@ -210,7 +210,7 @@ enum JobBody {
     Resolving(OriginalJobKindLookup),
     Preparing(BoundedJobFactory),
     Bounded(Box<dyn BoundedJob>),
-    Refused(Option<semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause>,Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause>>),
+    Refused(Option<semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause>,Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause>>),
 }
 
 struct JobSlot {
@@ -233,8 +233,8 @@ struct JobSlot {
 impl JobSlot{
  fn validate_original(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),ValueError>{cx.original_source_parent()?;if !self.binding.matches(cx)||!cx.retained_recipient_is_admitted(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"registered job requires its exact original source, clock and admitted recipient"))}Ok(())}
 }
-const JOB_SLOTS:usize=semio_framework_plugin_actor_host::requests::REQUEST_SLOTS;
-semio_framework_plugin_abi::component_persistent_local! {
+const JOB_SLOTS:usize=semio_plugin_actor_host::requests::REQUEST_SLOTS;
+semio_plugin_abi::component_persistent_local! {
     static JOBS: RefCell<[Option<JobSlot>;JOB_SLOTS]> = const { RefCell::new([const {None};JOB_SLOTS]) };
 }
 
@@ -243,7 +243,7 @@ semio_framework_plugin_abi::component_persistent_local! {
 //#region 🔖️Lifecycle
 
 /// 🧯️ A refused admission is answered by this boxed owner so the slot table stays small; its birth is charged to the same caller context as any other boxed job frame.
-struct AdmissionFailedJob {pub reply:semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply}
+struct AdmissionFailedJob {pub reply:semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply}
 impl BoundedJob for AdmissionFailedJob {
     fn step(&mut self,_original:&mut IoRunControl<'_,'_>,_snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,OriginalTurnFailure>{Ok(match self.reply.advance(cx)?{Some(bytes)=>JobStep::Failed(bytes),None=>JobStep::Running(None)})}
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -366,7 +366,7 @@ pub async fn step_job(job:u64,original:&mut IoRunControl<'_,'_>,snapshot:&mut Sq
             if !slot.cancellation_signalled{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}if let Some(JobBody::Bounded(owner))=&mut slot.body{owner.cancel()}else if let Some(owner)=slot.failed_owner.as_mut(){owner.cancel()}slot.cancellation_signalled=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(JobStep::Running(None))}
             if !close_body(slot,cx)?||!close_original(&mut slot.outcome,&mut slot.outcome_close,cx)?||!close_original(&mut slot.source,&mut slot.source_close,cx)?{return Ok(JobStep::Running(None))}
             let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
-            slot.cancellation_fault_started=true;slot.body=Some(JobBody::Refused(Some(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::Canceled,"original job was canceled"))),None));return Ok(JobStep::Running(None))
+            slot.cancellation_fault_started=true;slot.body=Some(JobBody::Refused(Some(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::Canceled,"original job was canceled"))),None));return Ok(JobStep::Running(None))
         }
         if slot.outcome.is_some(){
             if !close_body(slot,cx)?||!close_original(&mut slot.source,&mut slot.source_close,cx)?{return Ok(JobStep::Running(None))}
@@ -376,17 +376,17 @@ pub async fn step_job(job:u64,original:&mut IoRunControl<'_,'_>,snapshot:&mut Sq
         if matches!(slot.body,Some(JobBody::Refused(..)))&&(!close_failed_owner(slot,cx)?||!close_original(&mut slot.source,&mut slot.source_close,cx)?){return Ok(JobStep::Running(None))}
         if cx.should_yield(){return Ok(JobStep::Running(None))}
         match slot.body.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lost its retained body"))?{
-            JobBody::Resolving(lookup)=>{if cx.should_yield(){return Ok(JobStep::Running(None))}let source=slot.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lookup lost its retained source"))?;match lookup.advance(&source.kind,cx)?{OriginalJobKindLookupStep::Pending=>{},OriginalJobKindLookupStep::Found(candidate)=>slot.body=Some(JobBody::Preparing(candidate.factory)),OriginalJobKindLookupStep::Missing=>slot.body=Some(JobBody::Refused(Some(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"job kind has no registered original owner"))),None))}Ok(JobStep::Running(None))},
-            JobBody::Preparing(factory)=>{let source=slot.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lost its admission source"))?;let demand=match (factory.demands)(job,&source.input,&source.checkpoint,cx){Ok(demand)=>demand,Err(error)=>{slot.body=Some(JobBody::Refused(Some(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None));return Ok(JobStep::Running(None))}};let grant=cx.retained_grant();if grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes||grant.maximum_release_bytes<demand.maximum_release_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(JobStep::Running(None))}let body=match (factory.admit)(job,&mut source.input,&mut source.checkpoint,cx){Ok(Some(owner))=>Some(JobBody::Bounded(owner)),Ok(None)=>None,Err(error)=>Some(JobBody::Refused(Some(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None))};if let Some(body)=body{slot.body=Some(body)}Ok(JobStep::Running(None))},
+            JobBody::Resolving(lookup)=>{if cx.should_yield(){return Ok(JobStep::Running(None))}let source=slot.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lookup lost its retained source"))?;match lookup.advance(&source.kind,cx)?{OriginalJobKindLookupStep::Pending=>{},OriginalJobKindLookupStep::Found(candidate)=>slot.body=Some(JobBody::Preparing(candidate.factory)),OriginalJobKindLookupStep::Missing=>slot.body=Some(JobBody::Refused(Some(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"job kind has no registered original owner"))),None))}Ok(JobStep::Running(None))},
+            JobBody::Preparing(factory)=>{let source=slot.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lost its admission source"))?;let demand=match (factory.demands)(job,&source.input,&source.checkpoint,cx){Ok(demand)=>demand,Err(error)=>{slot.body=Some(JobBody::Refused(Some(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None));return Ok(JobStep::Running(None))}};let grant=cx.retained_grant();if grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes||grant.maximum_release_bytes<demand.maximum_release_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(JobStep::Running(None))}let body=match (factory.admit)(job,&mut source.input,&mut source.checkpoint,cx){Ok(Some(owner))=>Some(JobBody::Bounded(owner)),Ok(None)=>None,Err(error)=>Some(JobBody::Refused(Some(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None))};if let Some(body)=body{slot.body=Some(body)}Ok(JobStep::Running(None))},
             JobBody::Refused(cause,closing)=>{
                 let size=size_of::<AdmissionFailedJob>();let grant=cx.retained_grant();
                 if closing.is_some()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<size{return Ok(JobStep::Running(None))}
                 let Some(cause)=cause.take()else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job refusal lost its typed cause").into())};
                 cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:size,..Default::default()})?;
                 cx.consume_fuel(1);
-                let reply=if slot.cancellation_fault_started{semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new_terminal_cancellation(cause)}else{semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(cause)};slot.body=Some(JobBody::Bounded(Box::new(AdmissionFailedJob{reply})));Ok(JobStep::Running(None))
+                let reply=if slot.cancellation_fault_started{semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new_terminal_cancellation(cause)}else{semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(cause)};slot.body=Some(JobBody::Bounded(Box::new(AdmissionFailedJob{reply})));Ok(JobStep::Running(None))
             },
-            JobBody::Bounded(owner)=>match owner.step(original, snapshot, cx){Ok(step@JobStep::Running(_))=>Ok(step),Ok(step)=>{slot.outcome=Some(step);Ok(JobStep::Running(None))},Err(error)=>{let Some(JobBody::Bounded(owner))=slot.body.take()else{unreachable!("original failed body remains boxed")};slot.failed_owner=Some(owner);slot.cancellation_signalled=false;slot.body=Some(JobBody::Refused(Some(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Turn(error)),None));Ok(JobStep::Running(None))}},
+            JobBody::Bounded(owner)=>match owner.step(original, snapshot, cx){Ok(step@JobStep::Running(_))=>Ok(step),Ok(step)=>{slot.outcome=Some(step);Ok(JobStep::Running(None))},Err(error)=>{let Some(JobBody::Bounded(owner))=slot.body.take()else{unreachable!("original failed body remains boxed")};slot.failed_owner=Some(owner);slot.cancellation_signalled=false;slot.body=Some(JobBody::Refused(Some(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Turn(error)),None));Ok(JobStep::Running(None))}},
         }
     })
 }
@@ -506,7 +506,7 @@ struct TwoPhaseBoundedJob {
     pub restored:Option<Vec<u8>>,
     checkpoint_scan:usize,
     checkpoint_complete:bool,
-    pub failure:Option<semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply>,
+    pub failure:Option<semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply>,
     aborted_output:Option<Vec<u8>>,
     close_payload:Option<(Vec<u8>,Option<Vec<u8>>,Option<Vec<u8>>)>,
     pub source_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(Vec<u8>,Option<Vec<u8>>,Option<Vec<u8>>)>>,
@@ -540,10 +540,10 @@ impl BoundedJob for TwoPhaseBoundedJob {
         if let Some(reply)=&mut self.failure{return Ok(match reply.advance(cx)?{Some(bytes)=>JobStep::Failed(bytes),None=>JobStep::Running(None)})}
         if !self.checkpoint_complete{
             let source=self.restored.as_ref().unwrap();
-            if source.len()!=PHASE_DECODED.len(){self.failure=Some(semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::InvalidValue,"original job checkpoint has an invalid phase"))));return Ok(JobStep::Running(None))}
+            if source.len()!=PHASE_DECODED.len(){self.failure=Some(semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::InvalidValue,"original job checkpoint has an invalid phase"))));return Ok(JobStep::Running(None))}
             let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_copy_bytes==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}
             let matched=source[self.checkpoint_scan]==PHASE_DECODED[self.checkpoint_scan];cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;self.checkpoint_scan+=1;
-            if !matched{self.failure=Some(semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::InvalidValue,"original job checkpoint has an unknown phase"))))}else if self.checkpoint_scan==PHASE_DECODED.len(){self.checkpoint_complete=true;self.state=TwoPhaseState::Execute}
+            if !matched{self.failure=Some(semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::InvalidValue,"original job checkpoint has an unknown phase"))))}else if self.checkpoint_scan==PHASE_DECODED.len(){self.checkpoint_complete=true;self.state=TwoPhaseState::Execute}
             return Ok(JobStep::Running(None))
         }
         if cx.should_yield()||cx.fuel_remaining()<self.price(){return Ok(JobStep::Running(None))}
@@ -555,7 +555,7 @@ impl BoundedJob for TwoPhaseBoundedJob {
         };
         Ok(match result{
             Ok(bytes)=>{if self.state==TwoPhaseState::Decode{self.state=TwoPhaseState::Execute;JobStep::Running(Some(bytes))}else{self.state=TwoPhaseState::Complete;JobStep::Done(bytes)}},
-            Err(error)=>{self.state=TwoPhaseState::Complete;self.failure=Some(semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Fault(error)));JobStep::Running(None)},
+            Err(error)=>{self.state=TwoPhaseState::Complete;self.failure=Some(semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Fault(error)));JobStep::Running(None)},
         })
     }
 
@@ -681,11 +681,11 @@ async fn run_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot:
             frame.target = Some(semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&request.target).map_err(|message| fault("job.io-run", message))?);
             let source = frame.source.as_ref().unwrap();
             let target = frame.target.as_ref().unwrap();
-            let descriptor = semio_framework_os_kernel::io::io_mechanism::io_entries().into_iter().find(|entry| &entry.from == source && &entry.into == target).ok_or_else(|| fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate())))?;
+            let descriptor = semio_os_kernel::io::io_mechanism::io_entries().into_iter().find(|entry| &entry.from == source && &entry.into == target).ok_or_else(|| fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate())))?;
             let fidelity = descriptor.fidelity;
             frame.route = Some(semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity });
             frame.payload = Some(std::mem::replace(&mut frame.input.as_mut().unwrap().payload, semio_framework::io_schema::IoPayload::Binary(Vec::new())));
-            frame.outcome = Some(semio_framework_os_kernel::io::io_mechanism::io_run_with_snapshot_control(frame.route.as_ref().unwrap(), &mut frame.payload, run, snapshot).await);
+            frame.outcome = Some(semio_os_kernel::io::io_mechanism::io_run_with_snapshot_control(frame.route.as_ref().unwrap(), &mut frame.payload, run, snapshot).await);
             match frame.outcome.as_ref().unwrap() {
                 Ok(outcome) => Ok(semio_framework_pack_json::to_json_string(&outcome.value).into_bytes()),
                 Err(error) => Err(fault("job.io-run", error.cause.message.as_ref())),
@@ -711,7 +711,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     if source != carrier {
         return Ok(vec![semio_framework::io_schema::Confidence::None.rank()]);
     }
-    let confidence = semio_framework_os_kernel::io::io_mechanism::io_identify(&payload).await.into_iter().find(|(dialect, _)| *dialect == target).map_or(semio_framework::io_schema::Confidence::None, |(_, confidence)| confidence);
+    let confidence = semio_os_kernel::io::io_mechanism::io_identify(&payload).await.into_iter().find(|(dialect, _)| *dialect == target).map_or(semio_framework::io_schema::Confidence::None, |(_, confidence)| confidence);
     Ok(vec![confidence.rank()])
 }
 

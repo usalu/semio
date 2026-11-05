@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMaterialGModulus w
         record: "ChangedMaterialGModulus",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear modulus G of the material", "Werkstoff: Schubmodul G ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear modulus G of the material", "Werkstoff: Schubmodul G ändern")
     }
 }
 

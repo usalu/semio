@@ -2,7 +2,7 @@
 
 use crate::{CurationSnapshot, SourcingMutation};
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_mesh_id_from_url;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
@@ -100,7 +100,7 @@ pub fn curation_artifact_schema_descriptor() -> semio_framework_schema_registry:
 /// outright: construction is a plain snapshot+mutation build (no custom analysis/composition logic
 /// this subset needs beyond the ordinary `Mutation`/`MutationDiff` algebra), so the trivial-subset
 /// shape applies verbatim.
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<CurationSnapshot, SourcingMutation>;
+pub type Construction = semio_plugin::app::SnapshotBuilder<CurationSnapshot, SourcingMutation>;
 //#endregion 🏗️Construction
 
 //#region 🔁️Domain

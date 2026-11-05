@@ -17,8 +17,8 @@ pub struct ChangeBeamStudEdgeDistanceM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamStudEdgeDistanceM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_stud_edge_distance_m::ChangeBeamStudEdgeDistanceM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-stud-edge-distance-m", kind: "change-beam-stud-edge-distance-m", record: "ChangedBeamStudEdgeDistanceM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change distance of the stud edge from the flange edge (0 = not declared)", "Randabstand der Bolzen vom Flanschrand (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change distance of the stud edge from the flange edge (0 = not declared)", "Randabstand der Bolzen vom Flanschrand (0 = nicht angegeben) ändern")
     }
 }
 

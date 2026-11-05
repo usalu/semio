@@ -7,14 +7,14 @@
 
 use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dSegmentCubic, Wfc2dSegmentQuad, Wfc2dSegmentTo, Wfc2dSlot, Wfc2dTile, Wfc2dTileMedia, Wfc2dVectorMedia};
 use crate::Wfc2dSnapshot;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WFC_2D_VIEW_WINDOW: &str = "wfc-2d-board";
@@ -172,7 +172,7 @@ pub fn board_layers_json(document: &Wfc2dSnapshot) -> String {
 
 //#region 🔖️Render
 pub fn render(document: &Wfc2dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    scene_surface(WFC_2D_VIEW_SURFACE, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, board_layers_json(document)))
+    scene_surface(WFC_2D_VIEW_SURFACE, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, board_layers_json(document)))
 }
 //#endregion 🔖️Render
 

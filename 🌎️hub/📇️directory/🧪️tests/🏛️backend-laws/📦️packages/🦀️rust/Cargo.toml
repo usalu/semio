@@ -32,8 +32,8 @@ semio-hub-directory-postgres = { workspace = true, features = ["testkit"] }
 semio-hub-directory-sqlite = { workspace = true }
 semio-hub-testing = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
-directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
-db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
+db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-os-kernel-db", features = ["claimed-backend-laws"] }
 sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
 semio-framework-async = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

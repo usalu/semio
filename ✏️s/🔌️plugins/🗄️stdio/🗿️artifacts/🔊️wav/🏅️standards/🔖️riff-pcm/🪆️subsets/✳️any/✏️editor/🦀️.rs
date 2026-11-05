@@ -9,39 +9,39 @@ use crate::standards::riff_pcm::subsets::any::schema::mutations::{patch_data,set
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
 use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
 use semio_framework_2d_compute::EngineHandles;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactBoundedFirstStepProof;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactBoundedFirstStepProof;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactStoreInitializationJob;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_ui_locale::Label;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
+use semio_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
 #[path = "🎮️commands/🔊️edit-audio/🦀️.rs"]
@@ -126,10 +126,10 @@ fn wav_editor_retained_reduce(
     command: &WavEditCommand,
     _snapshot: &WavSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WavEditor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WavEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<WavMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
@@ -138,7 +138,7 @@ fn wav_editor_retained_reduce(
     }
 }
 fn wav_editor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message)
 }
 fn wav_editor_sample_index(segment: &str, len: usize, insertion: bool) -> Result<usize, Fault> {
     if insertion && segment == "-" {
@@ -314,7 +314,7 @@ impl ToolJobFactory for WavEditorExampleFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         ToolExecutionContract::bounded_first_step(STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
 }
 impl ArtifactOwnedToolJobFactory for WavEditorExampleFactory {
     type Owner = EditorApp<WavEditor>;
@@ -360,7 +360,7 @@ impl ToolJobFactory for WavAudioFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         wav_editor_audio_execution_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: edit_audio::MAXIMUM_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: edit_audio::MAXIMUM_RAW_BYTES, checkpoint_resume: false);
 }
 impl ArtifactOwnedToolJobFactory for WavAudioFactory {
     type Owner = EditorApp<WavEditor>;
@@ -374,7 +374,7 @@ pub struct WavEditor;
 
 impl ArtifactEditor for WavEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = WavSnapshot;
@@ -392,25 +392,25 @@ impl ArtifactEditor for WavEditor {
     const DIALECT: Dialect = WAV_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_WAV_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.wav@riff-pcm", extension: ".wav", media_type: "audio/wav", binary: true })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.wav@riff-pcm", extension: ".wav", media_type: "audio/wav", binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::riff_pcm::subsets::any::io::try_encode_wav(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        crate::standards::riff_pcm::subsets::any::io::try_encode_wav(snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        let snapshot = crate::standards::riff_pcm::subsets::any::io::decode_wav(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))?;
-        let encoded = crate::standards::riff_pcm::subsets::any::io::try_encode_wav(&snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))?;
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        let snapshot = crate::standards::riff_pcm::subsets::any::io::decode_wav(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error))?;
+        let encoded = crate::standards::riff_pcm::subsets::any::io::try_encode_wav(&snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error))?;
         if encoded.as_slice() == bytes {
             Ok(snapshot)
         } else {
-            Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "WAV input is outside the exact RIFF PCM subset".into()))
+            Err(semio_plugin::MediaError::Payload("artifact:natural".into(), "WAV input is outside the exact RIFF PCM subset".into()))
         }
     }
 
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
@@ -437,27 +437,27 @@ impl ArtifactEditor for WavEditor {
         registry.register(WavAudioFactory::new(registry.controller_id()))?;
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) {
             return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx);
         }
         if edit_audio::TOOL_IDS.contains(&original.tool_id.as_str()) {
             if wav_editor_command_id(&original.command) != original.tool_id {
-                return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-wav-audio-tool-mismatch").into());
+                return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-wav-audio-tool-mismatch").into());
             }
             
             let tool_id = wav_editor_command_id(&original.command);
-            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wav_editor_command_id, edit_audio::MAXIMUM_RAW_BYTES, edit_audio::CAPACITY.work_items(), false, |request| edit_audio::EditAudioWork::new(tool_id));
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wav_editor_command_id, edit_audio::MAXIMUM_RAW_BYTES, edit_audio::CAPACITY.work_items(), false, |request| edit_audio::EditAudioWork::new(tool_id));
         }
         if !STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if wav_editor_command_id(&original.command) != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
         }
         
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wav_editor_command_id, STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, wav_editor_retained_reduce, wav_editor_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wav_editor_command_id, STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, wav_editor_retained_reduce, wav_editor_retained_extent))
     }
     fn build_document_store_initialization_job(
         envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
@@ -465,7 +465,7 @@ impl ArtifactEditor for WavEditor {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_WAV_DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(semio_plugin::bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_WAV_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
@@ -479,7 +479,7 @@ impl ArtifactEditor for WavEditor {
         wav_editor_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{
         Ok(WavSnapshot::default())
     })}
 
@@ -487,8 +487,8 @@ impl ArtifactEditor for WavEditor {
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -499,7 +499,7 @@ impl ArtifactEditor for WavEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
                 let revision = doc
@@ -507,17 +507,17 @@ impl ArtifactEditor for WavEditor {
                     .map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))
                     .unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot));
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render_revisioned(doc.snapshot, &revision, publication_revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
+                main::render_revisioned(doc.snapshot, &revision, publication_revision, view_state.locale, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_plugin::built_to_component_tree)
             }
             editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details_provider_revisioned(
                 &WavDetailsProvider::new(doc.snapshot),
                 semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?,
                 view_state.locale,
                 "s.stdio.wav@riff-pcm/*#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -546,7 +546,7 @@ impl editing::SnapshotEditingEditor for WavEditor {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_wav_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_wav_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(WAV_DIALECT)
         .document(["semio", "wav"])
         .icon_id("play")
@@ -590,7 +590,7 @@ use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
 use crate::{native_codecs};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
@@ -623,7 +623,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 pub mod artifact_items_5 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }
@@ -634,22 +634,22 @@ pub mod artifact_items_7 {
 use crate::{definition};
 use crate::{formats};
 use crate::{STDIO_WAV_DOCUMENT_SCHEMA};
-use {semio_framework_plugin::ArtifactKindSpec, semio_framework_artifact_reference::Dialect, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactKindSpec, semio_framework_artifact_reference::Dialect, semio_plugin::MediaClass, semio_plugin::MediaForm, semio_plugin::MediaType, semio_plugin::OsMediaCapability, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 pub use crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
 pub use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("wav", definition()?, declaration)
 }
 
 /// 🧾️ The runtime `wav` declares: its schema, format, inference descriptor, composers and document codec.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor()])
@@ -662,7 +662,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.wav".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Wav", "Wav"),
+        label: semio_ui_locale::LocalizedLabel::native("Wav", "Wav"),
         source_format: STDIO_WAV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

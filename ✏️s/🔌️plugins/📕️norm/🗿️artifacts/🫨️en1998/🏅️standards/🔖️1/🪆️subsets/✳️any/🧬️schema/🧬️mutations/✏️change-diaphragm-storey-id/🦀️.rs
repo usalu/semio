@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmStoreyId 
         record: "ChangeDiaphragmStoreyId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Storey of the diaphragm", "Geschoss der Scheibe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Storey of the diaphragm", "Geschoss der Scheibe ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-storey-id".into()]

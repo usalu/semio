@@ -1,5 +1,5 @@
 //! 🧪️ Original envelope issuers release their exact unique empty backing after every lease returns.
-use semio_framework_os_kernel::os_store::owned_schema_decode::{ArtifactEnvelopeFieldDecoderRegistry as Fields,ArtifactEnvelopeCompletedRecordRegistry as Records};
+use semio_os_kernel::os_store::owned_schema_decode::{ArtifactEnvelopeFieldDecoderRegistry as Fields,ArtifactEnvelopeCompletedRecordRegistry as Records};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use std::sync::Arc;
 const GRANT:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4};
@@ -22,7 +22,7 @@ fn observed(f:impl FnOnce()->RetainedCloneStep)->RetainedCloneStep{let(step,heap
 }
 
 #[test]fn original_envelope_registry_owner_closes_the_actual_native_source_without_replacement(){
- use semio_framework_os_kernel::os_store::owned_schema_decode::ArtifactEnvelopeRegistryOwner;
+ use semio_os_kernel::os_store::owned_schema_decode::ArtifactEnvelopeRegistryOwner;
  use semio_framework_job::*;
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(99231),Generation(8),RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4},default_now_us,u64::MAX,64);
  let mut owner=ArtifactEnvelopeRegistryOwner::from_original(Fields::<(),()>::new());let pointer=Arc::as_ptr(owner.get().unwrap());

@@ -5,7 +5,7 @@
 
 use crate::schema::mutations::{InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementPayload, RemoveMemberPayload, SetMemberPayload, SetScalarPayload};
 use crate::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, SnapshotEditEvent};
 

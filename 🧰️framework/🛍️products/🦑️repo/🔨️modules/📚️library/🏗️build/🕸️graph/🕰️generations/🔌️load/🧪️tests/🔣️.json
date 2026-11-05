@@ -3090,5 +3090,63 @@
     },
     "workspaceRoot": "/w"
   },
-  "version": 1
+  "version": 1,
+  "attempts": [
+    {
+      "id": "held support survives custody",
+      "transition": "none",
+      "queries": 1,
+      "cancelled": false,
+      "priorLoad": true
+    },
+    {
+      "id": "changed support is checked again",
+      "transition": "support",
+      "queries": 2,
+      "cancelled": false,
+      "priorLoad": false
+    },
+    {
+      "id": "changed answer rebuilds its holder",
+      "transition": "answer",
+      "queries": 2,
+      "cancelled": false,
+      "priorLoad": false
+    },
+    {
+      "id": "peer generation is freshly read",
+      "transition": "generation",
+      "queries": 2,
+      "cancelled": false,
+      "priorLoad": false
+    },
+    {
+      "id": "membership is freshly read",
+      "transition": "membership",
+      "queries": 1,
+      "cancelled": false,
+      "priorLoad": false
+    },
+    {
+      "id": "support validation cancellation preserves pointer",
+      "transition": "cancel",
+      "queries": 1,
+      "cancelled": true,
+      "priorLoad": false
+    },
+    {
+      "id": "failed derive is never memoized",
+      "transition": "failure",
+      "queries": 2,
+      "cancelled": false,
+      "priorLoad": false
+    },
+    {
+      "id": "distinct store roots isolate answers",
+      "transition": "root",
+      "queries": 2,
+      "cancelled": false,
+      "priorLoad": false
+    }
+  ]
 }

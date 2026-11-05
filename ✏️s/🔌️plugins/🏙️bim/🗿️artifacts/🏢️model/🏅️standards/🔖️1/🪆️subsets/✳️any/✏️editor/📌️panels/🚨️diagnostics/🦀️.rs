@@ -9,13 +9,13 @@ use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{categories, Diagnostic, Severity};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::BuiltNode;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
 use std::collections::BTreeMap;
 
 //#region 🔖️Constants
@@ -88,7 +88,7 @@ pub fn groups(snapshot: &ModelSnapshot, found: &[Diagnostic], severity: Severity
 
 /// ⚖️ The canonical JSON of the groups of every severity, `{ <severity>: [ { storey, kinds: { <category>: <count> } } ] }` in the order of the panel: the table the third-party oracle recomputes from the exported findings.
 pub fn groups_json(snapshot: &ModelSnapshot, found: &[Diagnostic]) -> String {
-    use semio_framework_plugin::DslValue;
+    use semio_plugin::DslValue;
     let rows = |severity: Severity| {
         DslValue::Array(
             groups(snapshot, found, severity)
@@ -193,9 +193,9 @@ fn finding_row(snapshot: &ModelSnapshot, labels: &BimLabels, found: &Diagnostic,
     let message = found.text(labels.locale().as_str()).unwrap_or_else(|| found.message_key.clone());
     let description = clip(&format!("{} · {}", severity_label(labels, found.severity), element_names(snapshot, found)));
     let args = ui_value_map([("ids", ui_value_list(found.elements.iter().map(|id| ui_value_text(id)).collect::<UiAssemblyResult<Vec<_>>>()?)?)])?;
-    let mut node = semio_framework_plugin::tree_item_with_action(format!("{ROOT}.finding.{index}"), clip(&message).as_str(), Some(description), bim_action("selectFindings", Some(args))?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-        props.icon = Some(semio_framework_plugin::UiText::try_from_str(severity_icon(found.severity)).ok_or_else(ui_capacity_error)?);
+    let mut node = semio_plugin::tree_item_with_action(format!("{ROOT}.finding.{index}"), clip(&message).as_str(), Some(description), bim_action("selectFindings", Some(args))?)?;
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
+        props.icon = Some(semio_plugin::UiText::try_from_str(severity_icon(found.severity)).ok_or_else(ui_capacity_error)?);
     }
     Ok(node)
 }
@@ -203,7 +203,7 @@ fn finding_row(snapshot: &ModelSnapshot, labels: &BimLabels, found: &Diagnostic,
 fn kind_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &BimLabels, found: &[Diagnostic], group_id: &str, kind: &KindGroup) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{group_id}::{}", kind.category);
     let builder = item(&id, category_label(labels, kind.category), "folder", None, Some(&kind.findings.len().to_string()))?;
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, &id, kind.findings.len() <= OPEN_GROUP_LIMIT, kind.findings.len(), |position| {
+    semio_plugin::tree_window_indexed_item(windows, builder, &id, kind.findings.len() <= OPEN_GROUP_LIMIT, kind.findings.len(), |position| {
         let index = kind.findings[position];
         finding_row(snapshot, labels, &found[index], index)
     })
@@ -213,7 +213,7 @@ fn storey_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &BimL
     let id = format!("{ROOT}.{}::{}", severity_key(severity), group.storey.as_deref().unwrap_or("model"));
     let icon = group.storey.as_ref().and_then(|_| kind_of("storey")).map_or("building", |row| row.icon);
     let builder = item(&id, storey_name(snapshot, labels, group.storey.as_ref()), icon, None, Some(&group.total().to_string()))?;
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, &id, true, group.kinds.len(), |position| kind_row(windows, snapshot, labels, found, &id, &group.kinds[position]))
+    semio_plugin::tree_window_indexed_item(windows, builder, &id, true, group.kinds.len(), |position| kind_row(windows, snapshot, labels, found, &id, &group.kinds[position]))
 }
 
 fn empty_row(labels: &BimLabels) -> UiAssemblyResult<BuiltNode> {
@@ -227,7 +227,7 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &Bim
     let found = &inference.diagnostics;
     let mut builder = PanelTreeBuilder::new(ROOT)?;
     if found.is_empty() {
-        return builder.section(format!("{ROOT}.none"), Some(ui_label(labels.panel_diagnostics.as_str())?), true, semio_framework_plugin::ui_node_list([empty_row(labels)])?)?.build();
+        return builder.section(format!("{ROOT}.none"), Some(ui_label(labels.panel_diagnostics.as_str())?), true, semio_plugin::ui_node_list([empty_row(labels)])?)?.build();
     }
     for severity in SEVERITIES {
         let rows = groups(snapshot, found, severity);

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFireMu0 where Op: 
         record: "ChangedFireMu0",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Degree of utilisation μ₀ of the fire exposure", "Brandbeanspruchung: Ausnutzungsgrad μ₀ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Degree of utilisation μ₀ of the fire exposure", "Brandbeanspruchung: Ausnutzungsgrad μ₀ ändern")
     }
 }
 

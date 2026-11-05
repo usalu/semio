@@ -4,7 +4,7 @@
 #![cfg(test)]
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 

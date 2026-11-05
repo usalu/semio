@@ -121,7 +121,7 @@ fn retained_binding_copy_cancel_and_arena_contention_keep_exact_aliases() {
         owner.advance(1, 4096, 4096).unwrap();
     }
     assert!(!owner.advance(1, 4096, fixture["smallGrantBytes"].as_u64().unwrap() as usize).unwrap().progressed);
-    semio_framework_ui_contract_values::test_observer::with_value_arena_held(||{
+    semio_ui_contract_values::test_observer::with_value_arena_held(||{
     let step = owner.advance(1, 4096, 4096).unwrap();
     assert_eq!(step.progressed, fixture["contendedCopyProgresses"].as_bool().unwrap());
     });

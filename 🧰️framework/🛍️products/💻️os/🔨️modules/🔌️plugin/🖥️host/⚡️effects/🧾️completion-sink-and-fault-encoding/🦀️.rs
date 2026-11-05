@@ -65,7 +65,7 @@ impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
 }
 
 impl<I: EnvelopeInjector> CompletionSink for EnvelopeCompletionSink<I> {
-    /// 🚫️async: E1 — `semio_framework_os_services::CompletionSink::complete` is declared sync
+    /// 🚫️async: E1 — `semio_os_services::CompletionSink::complete` is declared sync
     /// (`🛎️services/🦀️.rs:1539`), outside this packet's `🔌️plugin/🖥️host` path_scope to
     /// change. Everything this body needs (`generation_of`, `ensure_subscribed`, `send_message`,
     /// `flush`) is genuinely `async` (the last transitively through the generic `I: EnvelopeInjector`,

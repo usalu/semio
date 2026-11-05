@@ -15,7 +15,7 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "design-option", kind: "create-design-option", record: "CreateDesignOption" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Create design option", "Anlegen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Create design option", "Anlegen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

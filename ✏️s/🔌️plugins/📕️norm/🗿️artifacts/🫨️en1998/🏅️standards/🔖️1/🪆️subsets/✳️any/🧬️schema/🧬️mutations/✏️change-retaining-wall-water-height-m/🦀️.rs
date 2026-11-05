@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeRetainingWallWater
         record: "ChangeRetainingWallWaterHeightM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Height of the retained water above the wall base for the hydrostatic and hydrodynamic water pressure (0 = none)", "Höhe des angestauten Wassers über der Wandsohle für den hydrostatischen und hydrodynamischen Wasserdruck (0 = keines) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Height of the retained water above the wall base for the hydrostatic and hydrodynamic water pressure (0 = none)", "Höhe des angestauten Wassers über der Wandsohle für den hydrostatischen und hydrodynamischen Wasserdruck (0 = keines) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-retaining-wall-water-height-m".into()]

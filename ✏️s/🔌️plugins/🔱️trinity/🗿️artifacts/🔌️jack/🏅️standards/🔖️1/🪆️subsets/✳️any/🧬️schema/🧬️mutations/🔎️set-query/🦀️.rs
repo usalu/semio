@@ -20,8 +20,8 @@ pub fn set_query(value: String) -> TrinityGraphMutation {
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for SetQuery {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "query", kind: "set-query", record: "SetQuery" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Edit Jack query", "Jack-Abfrage bearbeiten")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Edit Jack query", "Jack-Abfrage bearbeiten")
     }
     fn target(&self) -> Vec<String> {
         vec!["query".to_string()]

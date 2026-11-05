@@ -20,8 +20,8 @@ pub struct RemoveVertex {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveVertex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "vertex", kind: "remove-vertex", record: "RemoveVertex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove vertex", "Vertex entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove vertex", "Vertex entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

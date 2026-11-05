@@ -2,7 +2,7 @@
 
 use crate::lifted_store::ArtifactStoreInitializationOwnerCatalog;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_vcs::HistoryPageStack;
+use semio_os_vcs::HistoryPageStack;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
 fn demand<T>(owner: &HistoryPageStack<T>) -> Result<usize, ValueError> {

@@ -2,26 +2,26 @@
 //!
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
-use semio_framework_os_renderer_wgpu_shell_async::{debug_log, resolve_language_axes};
-use semio_framework_os_renderer_wgpu_shell_chrome_state::{ChromePrefsState, ChromeState, RefusedGuestFault, ThemeDocument, ThemeNumber, ThemePaintRef, UiPrefsSnapshot, appearance_id, apply_theme_document_metrics, default_compute_worker_count, shell_theme_document_base, theme_document_geometry};
-use semio_framework_os_renderer_wgpu_shell_history::{HistoryState, SHELL_CHROME_IO_FIELD_BYTES, prefs_get, prefs_set, raw_prefs_get, raw_prefs_set};
-use semio_framework_os_renderer_wgpu_shell_plugins::{DEFAULT_APP_NONE_VALUE, PluginState, ShellPluginFault, ShellSurfaceFault, flatten_panel_tab_leaves};
+use semio_renderer_wgpu_shell_async::{debug_log, resolve_language_axes};
+use semio_renderer_wgpu_shell_chrome_state::{ChromePrefsState, ChromeState, RefusedGuestFault, ThemeDocument, ThemeNumber, ThemePaintRef, UiPrefsSnapshot, appearance_id, apply_theme_document_metrics, default_compute_worker_count, shell_theme_document_base, theme_document_geometry};
+use semio_renderer_wgpu_shell_history::{HistoryState, SHELL_CHROME_IO_FIELD_BYTES, prefs_get, prefs_set, raw_prefs_get, raw_prefs_set};
+use semio_renderer_wgpu_shell_plugins::{DEFAULT_APP_NONE_VALUE, PluginState, ShellPluginFault, ShellSurfaceFault, flatten_panel_tab_leaves};
 use semio_framework::{AppDefinition, IconName, ViewModel};
-use semio_framework_os_config::io::text::mutations::decode_ui_preferences_config_mutation_json;
-use semio_framework_os_config::opening_config::{UI_PREFERENCES_CONFIG_SCHEMA, UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme, apply_ui_preferences_config_mutation};
-use semio_framework_os_config::opening_config::mutations::{UiPreferencesConfigMutation, set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme};
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
+use semio_os_config::io::text::mutations::decode_ui_preferences_config_mutation_json;
+use semio_os_config::opening_config::{UI_PREFERENCES_CONFIG_SCHEMA, UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme, apply_ui_preferences_config_mutation};
+use semio_os_config::opening_config::mutations::{UiPreferencesConfigMutation, set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme};
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
 use semio_framework_value::{DslValue, ToValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::HitKind;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::{Rgba, Theme};
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::HitKind;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::{Rgba, Theme};
+use semio_ui_declaration::ui::{UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🧬️component/🦀️.rs"]
 mod staged_prefs__component;

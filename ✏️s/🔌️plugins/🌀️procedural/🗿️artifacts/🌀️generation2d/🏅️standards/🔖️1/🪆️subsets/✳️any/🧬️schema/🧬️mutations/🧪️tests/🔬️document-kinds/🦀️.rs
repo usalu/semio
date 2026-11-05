@@ -1,6 +1,6 @@
 //! 🧪️ Kind fixture laws of `rename`, `change-schema`, `clear-widget-layout`: each committed scenario applied, inverted and diffed through the mutation union.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../🧹clear-widget-layout/🧪️tests/🧹️drops/🦀️.rs"]
 mod clear_widget_layout_drops_the_note_a_layout_entry;

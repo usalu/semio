@@ -8,7 +8,7 @@ where
  const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor{verb:"change",entity:"glazing-material",kind:"change-glazing-material-infrared-transmittance",record:"ChangedGlazingMaterialInfraredTransmittance"};
 
 
- fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native(&format!("Infrared transmittance of glazing material {}",self.id.0),&format!("Infraroter Transmissionsgrad von Verglasungsmaterial {}",self.id.0))}
+ fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native(&format!("Infrared transmittance of glazing material {}",self.id.0),&format!("Infraroter Transmissionsgrad von Verglasungsmaterial {}",self.id.0))}
  fn target(&self)->Vec<String>{vec![self.id.0.to_string()]}
 }
 

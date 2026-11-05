@@ -13,8 +13,8 @@ pub struct ChangeZoneOutdoorAir {
 impl<Op> protocol::MutationKind<Din16798Snapshot, Op> for ChangeZoneOutdoorAir where Op: protocol::Mutation<Din16798Snapshot, Diff = semio_s_artifact_norm_din16798_diff::Din16798Diff> + From<crate::change_zone_outdoor_air::ChangeZoneOutdoorAir> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-outdoor-air", kind: "change-zone-outdoor-air", record: "ChangeZoneOutdoorAir" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change outdoor airflow of the zone", "Außenluftvolumenstrom der Zone ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change outdoor airflow of the zone", "Außenluftvolumenstrom der Zone ändern")
     }
     fn target(&self) -> Vec<String> { vec![self.zone_id.clone()] }
 }

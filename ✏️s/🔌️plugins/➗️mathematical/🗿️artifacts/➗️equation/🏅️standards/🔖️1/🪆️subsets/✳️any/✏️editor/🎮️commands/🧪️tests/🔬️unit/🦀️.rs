@@ -9,7 +9,7 @@ use crate::editor::equation::EquationCommand;
 use crate::EquationCamera;
 use semio_framework_pack_json::Value;
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 fn node_graph_edit(operation: Value) -> EquationCommand {
     EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::array([operation])) })
@@ -35,12 +35,12 @@ async fn set_directed_toggles_the_graph() {
 async fn node_graph_viewport_writes_config_not_mutations() {
     let mut app = math_app().await;
     let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-    let view = semio_framework_plugin::ViewModel {
+    let view = semio_plugin::ViewModel {
         window_id: Some("equation-graph-test".into()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "equation-graph-test".into(), window_kind_id: crate::editor::equation::modes::edit::windows::graph::MATH_PLAY_WINDOW_GRAPH.into() }],
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: "equation-graph-test".into(), window_kind_id: crate::editor::equation::modes::edit::windows::graph::MATH_PLAY_WINDOW_GRAPH.into() }],
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }), &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }), &semio_plugin::ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
         .await
         .expect("viewport");
     assert!(result.mutations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
@@ -76,8 +76,8 @@ async fn node_graph_edit_delete_removes_nodes_and_incident_edges() {
 #[semio_framework_async_macros::async_test]
 async fn node_graph_edit_refuses_an_unknown_operation_and_an_empty_array_emits_nothing() {
     let mut app = math_app().await;
-    assert!(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &node_graph_edit(semio_framework_pack_json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.is_err(), "a row outside the shared vocabulary refuses the batch");
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("empty array");
+    assert!(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &node_graph_edit(semio_framework_pack_json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.is_err(), "a row outside the shared vocabulary refuses the batch");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_plugin::artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("empty array");
     assert!(result.mutations.is_empty());
 }
 
@@ -85,12 +85,12 @@ async fn node_graph_edit_refuses_an_unknown_operation_and_an_empty_array_emits_n
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = math_app().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
+    semio_plugin::artifact_app_laws::assert_undo_redo_round_trip(
         &mut app.0,
         EquationCommand::AddNode(AddNode { x: 1.0, y: 2.0 }),
         |app| app.snapshot().expect("projection").graph.nodes.len(),
         before,
-        before + 1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()
+        before + 1,semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()
     )
     .await;
 }
@@ -99,7 +99,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 /// instance faults in the `interactive-job.catalog-authority` proof join before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge_with_members::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
+    semio_plugin::artifact_app_laws::assert_two_registered_instances_converge_with_members::<semio_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
         "mem://equation-convergence",
         || async { crate::editor::equation::unit_tests::context::equation_app_manifest_for_tests() },
         EquationCommand::AddNode(AddNode { x: 9.0, y: 9.0 }),
@@ -107,17 +107,17 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         |app| {
             let projection = (app.snapshot().expect("projection")).graph.clone();
             (projection.nodes.len(), projection.directed)
-        }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
+        }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity())
     .await;
 }
 
 /// 🔁️ The REGISTERED idempotency law — same reason as the registered convergence pair above.
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_equation() {
-    semio_framework_plugin::artifact_app_laws::assert_registered_ingest_idempotent_with_members::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
+    semio_plugin::artifact_app_laws::assert_registered_ingest_idempotent_with_members::<semio_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
         || async { crate::editor::equation::unit_tests::context::equation_app_manifest_for_tests() },
         EquationCommand::AddNode(AddNode { x: 3.0, y: 4.0 }),
-        |app| app.snapshot().expect("projection").graph.nodes.len(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
+        |app| app.snapshot().expect("projection").graph.nodes.len(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity())
     .await;
 }
 
@@ -166,8 +166,8 @@ async fn a_node_drag_is_one_transaction_of_one_relative_move() {
     let first = rows[0].transaction.as_ref().expect("a drag is a tool transaction");
     assert!(first.id.starts_with("tx-") && first.tool == "s.mathematical.equation@1/*#editor#nodeGraphEdit", "{first:?}");
     assert_ne!(first.id, rows[1].transaction.as_ref().expect("second drag").id, "two drags, two transactions");
-    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Move 2 node(s) by (40, -12.5)");
-    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Knoten um (40; -12,5) verschieben");
+    assert_eq!(rows[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Move 2 node(s) by (40, -12.5)");
+    assert_eq!(rows[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "2 Knoten um (40; -12,5) verschieben");
 }
 
 /// ⚖️ LAW: every node-graph and algorithm verb lands intent leaves only — never `replace-graph` — and a deleted selection

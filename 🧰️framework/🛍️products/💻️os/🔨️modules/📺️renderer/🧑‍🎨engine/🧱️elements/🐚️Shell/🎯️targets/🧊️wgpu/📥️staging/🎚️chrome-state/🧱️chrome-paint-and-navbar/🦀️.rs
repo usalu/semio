@@ -19,7 +19,7 @@ pub fn format_keybinding_shortcut(keys: &str) -> String {
     if chord.is_empty() {
         return String::new();
     }
-    let apple = semio_framework_os_renderer_wgpu_host_base::host_platform_uses_meta();
+    let apple = semio_renderer_wgpu_host_base::host_platform_uses_meta();
     let glyph = |part: &str| -> String {
         match part {
             "mod" if apple => "⌘️".into(),

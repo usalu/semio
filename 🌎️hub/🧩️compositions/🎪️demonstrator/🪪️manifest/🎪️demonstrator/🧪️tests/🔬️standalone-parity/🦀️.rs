@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::ArtifactApp;
+use semio_plugin::ArtifactApp;
 use std::collections::BTreeSet;
 
 fn test_bundle() -> Plugin<DemonstratorApps> {

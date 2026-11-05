@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "reference", kind: "change-reference-hidden", record: "ChangedReferenceHidden" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change visibility of reference \"{}\"", self.reference_id), &format!("Sichtbarkeit von Referenz \"{}\" ändern", self.reference_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change visibility of reference \"{}\"", self.reference_id), &format!("Sichtbarkeit von Referenz \"{}\" ändern", self.reference_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone(), self.reference_id.clone()]

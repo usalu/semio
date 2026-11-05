@@ -13,9 +13,9 @@ use dashboard_registry::{split_arguments, Entry, Parameter, ParameterKind, Regis
 use std::collections::HashMap;
 use std::sync::Arc;
 use ui_locale::Locale;
-use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent};
-use semio_framework_ui_tui_widgets::widget::{TreeItem, TreeState, WidgetState};
-use semio_framework_ui_tui_core::signal::WidgetSignal;
+use semio_ui_tui_core::event::{mods, Key, KeyEvent};
+use semio_ui_tui_widgets::widget::{TreeItem, TreeState, WidgetState};
+use semio_ui_tui_core::signal::WidgetSignal;
 
 static NEXT_SOURCE_SESSION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 

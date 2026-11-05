@@ -10,7 +10,7 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
     const SCHEMA: &'static str;
     const MAXIMUM_PUBLICATION_BYTES: usize;
-    type State: semio_framework_value::retained_clone::RetainedClone + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ConfigRecord + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_dsl_record::DslField + semio_framework_value::retirement::RetireOwned + 'static;
+    type State: semio_framework_value::retained_clone::RetainedClone + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ConfigRecord + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_dsl_record::DslField + semio_framework_value::retirement::RetireOwned + 'static;
     type Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<Self::State> + protocol::ColdMutation<Self::State> + store::ArtifactCanonicalJsonTree + PartialEq + Send + Sync + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
 
     type Edit: store::snapshot_clone_preparation::RetainedCloneEdit<Self::State,Self::Mutation> + semio_framework_value::FactoryPayloadRetirement;
@@ -21,9 +21,9 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),ValueError>;
 
     fn native_pair_demands()->Result<RetirementDemand,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Window owner must declare its original native Pack receiver"))}
-    fn admit_native_pair(_pack:&[u8],_spr:&[u8],_pack_limits:protocol::PackLimits,_history_limits:semio_framework_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits,_native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,_grant:RetainedCloneGrant,_output:&mut Option<Box<dyn WindowConfigNativePairReceiving<Self::State>>>)->Result<RetainedCloneProgress,semio_framework_os_store_codec_registry::native_snapshot::OriginalArtifactPairFailure>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Window owner did not install its original native Pack receiver").into())}
+    fn admit_native_pair(_pack:&[u8],_spr:&[u8],_pack_limits:protocol::PackLimits,_history_limits:semio_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits,_native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,_grant:RetainedCloneGrant,_output:&mut Option<Box<dyn WindowConfigNativePairReceiving<Self::State>>>)->Result<RetainedCloneProgress,semio_os_store_codec_registry::native_snapshot::OriginalArtifactPairFailure>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Window owner did not install its original native Pack receiver").into())}
 
-    fn native_operation_wire()->semio_framework_os_store_operation_wire::ArtifactOperationWire<Self::Mutation>{semio_framework_os_store_operation_wire::ArtifactOperationWire::canonical()}
+    fn native_operation_wire()->semio_os_store_operation_wire::ArtifactOperationWire<Self::Mutation>{semio_os_store_operation_wire::ArtifactOperationWire::canonical()}
 
     fn build_retained_edit() -> Arc<Self::Edit>;
 
@@ -50,7 +50,7 @@ pub fn bounded_window_config_preparation_factory<O: WindowConfigOwner>() -> Arc<
 }
 
 pub fn bounded_window_config_store_disposer<O: WindowConfigOwner>() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<O::State, O::Mutation>>> {
-    semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<O::State, O::Mutation>()
+    semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<O::State, O::Mutation>()
 }
 
 /// 📬️ One typed config mutation addressed to one exact concrete window instance; clonable, so a press holds it as one of its
@@ -184,4 +184,4 @@ impl WindowConfigSnapshot {
 }
 
 /// 📏️ Quotes the actual bounded Store disposer selected by this Window owner.
-pub fn bounded_window_config_store_disposer_birth<O:WindowConfigOwner>()->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{capacity_bytes:size_of::<semio_framework_plugin_ownership::store_lifecycle::ArtifactDocumentStoreDisposer<O::State,O::Mutation>>(),depth:1,..Default::default()})}
+pub fn bounded_window_config_store_disposer_birth<O:WindowConfigOwner>()->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{capacity_bytes:size_of::<semio_plugin_ownership::store_lifecycle::ArtifactDocumentStoreDisposer<O::State,O::Mutation>>(),depth:1,..Default::default()})}

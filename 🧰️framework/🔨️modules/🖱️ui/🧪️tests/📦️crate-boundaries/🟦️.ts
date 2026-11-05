@@ -1,3 +1,4 @@
+import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { expect, test } from "bun:test";
 import { readFileSync, existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -11,6 +12,10 @@ import { rustTokens } from "../../../📚️compiler/📖️syntax/🦀️rust/�
 const ui = resolve(import.meta.dir, "../.."), read = (path: string) => readFileSync(resolve(ui, path), "utf8");
 type Manifest = { package: { name: string }; lib: { path: string }; dependencies: Record<string, { package?: string; path?: string }>; target?: Record<string, { dependencies?: Record<string, { package?: string; path?: string }> }> };
 const corpus = JSON.parse(read("🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json")) as { crates: { package: string; manifest: string; entry: string; dependencies: string[]; forbiddenDependencies: string[] }[] };
+test("canonical crate names agree with independent schema validators",()=>{
+ const schema=JSON.parse(read("🧬️schema/📦️crate-boundaries/🔣️.json")),nameSchema=schema.properties.crates.items.properties.package,validate=new Ajv().compile(nameSchema),rows=JSON.parse(read("🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json")).identifiers as {name:string;accepted:boolean}[];
+ for(const row of rows){expect(Boolean(validate(row.name)),row.name).toBe(row.accepted);expect(validateJsonSchemaSubset(nameSchema,row.name).length===0,row.name).toBe(row.accepted);}
+});
 test("language-neutral ownership corpus validates with the independent schema oracle", () => {
   const validate = new Ajv().compile(JSON.parse(read("🧬️schema/📦️crate-boundaries/🔣️.json")));
   expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
@@ -39,9 +44,9 @@ for (const row of corpus.crates) test(row.package + " owns an acyclic production
   expect(closure.some(input => input.path.endsWith(".svg"))).toBe(false);
   for (const input of closure.filter(input => input.path.endsWith(".rs"))) {
     const tokens = rustTokens(await readFile(resolve(workspace, input.path), "utf8"));
-    for (const forbidden of ["semio_framework_ui", "semio_framework_os_kernel", "semio_framework_plugin", "wgpu"]) expect(tokens.some(token => token.text === forbidden), input.path).toBe(false);
+    for (const forbidden of ["semio_ui", "semio_os_kernel", "semio_plugin", "wgpu"]) expect(tokens.some(token => token.text === forbidden), input.path).toBe(false);
   }
-  if (row.package === "semio-framework-ui-text") {
+  if (row.package === "semio-ui-text") {
     const consumerDirectory = "🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust";
     const consumer = Bun.TOML.parse(read(consumerDirectory + "/Cargo.toml")) as unknown as Manifest;
     const edge = consumer.dependencies[row.package];
@@ -51,7 +56,7 @@ for (const row of corpus.crates) test(row.package + " owns an acyclic production
   expect(existsSync(resolve(ui, "🎯️targets/🧊️wgpu/🦀️.rs"))).toBe(false);
 });
 
-for (const row of corpus.crates.filter(row => ["semio-framework-ui-draw-contract", "semio-framework-ui-prepared-staging", "semio-framework-ui-prepared", "semio-framework-ui-surface-identity"].includes(row.package))) test(row.package + " owns production and native test inputs across target cfgs", async () => {
+for (const row of corpus.crates.filter(row => ["semio-ui-draw-contract", "semio-ui-prepared-staging", "semio-ui-prepared", "semio-ui-surface-identity"].includes(row.package))) test(row.package + " owns production and native test inputs across target cfgs", async () => {
   const workspace = resolve(ui, "../../..");
   for (const cfg of [
     ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix"],
@@ -68,7 +73,7 @@ for (const row of corpus.crates.filter(row => ["semio-framework-ui-draw-contract
     expect(closure.length).toBeLessThanOrEqual(32);
     for (const input of closure.filter(input => input.path.endsWith(".rs"))) {
       const tokens = rustTokens(await readFile(resolve(workspace, input.path), "utf8"));
-      for (const forbidden of ["semio_framework_ui", "semio_framework_os_kernel", "semio_framework_plugin", "wgpu"]) expect(tokens.some(token => token.text === forbidden), input.path).toBe(false);
+      for (const forbidden of ["semio_ui", "semio_os_kernel", "semio_plugin", "wgpu"]) expect(tokens.some(token => token.text === forbidden), input.path).toBe(false);
     }
   }
 });
@@ -134,13 +139,13 @@ test("the carved wgpu crates consume declared producers without duplicating orig
   const consumers = ["⚙️engine", "🖌️paint", "⚡️events", "🪀️widgets/🧰️kit", "🧭️hosting", "📌️mounted_layout", "📥️input"].map(directory => "🎯️targets/🧊️wgpu/" + directory);
   const closures = (await Promise.all(consumers.map(directory => readRustSourceClosureV1([resolve(ui, directory, "🦀️.rs")], workspace, cfg, async path => await readFile(path).catch(error => error.code === "ENOENT" ? null : Promise.reject(error)))))).flat();
   const manifests = consumers.map(directory => Bun.TOML.parse(read(directory + "/📦️packages/🦀️rust/Cargo.toml")) as unknown as Manifest & { dependencies: Record<string, { path?: string }> });
-  for (const row of corpus.crates.filter(row => ["semio-framework-ui-draw-contract", "semio-framework-ui-prepared", "semio-framework-ui-surface-identity"].includes(row.package))) {
+  for (const row of corpus.crates.filter(row => ["semio-ui-draw-contract", "semio-ui-prepared", "semio-ui-surface-identity"].includes(row.package))) {
     const consumed = manifests.some((manifest, index) => { const edge = manifest.dependencies[row.package]; return edge?.path !== undefined && resolve(ui, consumers[index]!, "📦️packages/🦀️rust", edge.path, "Cargo.toml") === resolve(ui, row.manifest); });
-    if (row.package !== "semio-framework-ui-prepared") expect(consumed).toBe(true);
+    if (row.package !== "semio-ui-prepared") expect(consumed).toBe(true);
     expect(closures.some(input => resolve(workspace, input.path) === resolve(ui, row.entry))).toBe(false);
   }
   const prepared = Bun.TOML.parse(read("🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust/Cargo.toml")) as unknown as Manifest;
-  expect(prepared.dependencies["semio-framework-ui-prepared-staging"]?.path).toBe("../../📤️staging/📦️packages/🦀️rust");
+  expect(prepared.dependencies["semio-ui-prepared-staging"]?.path).toBe("../../📤️staging/📦️packages/🦀️rust");
   expect(closures.some(input => input.path.includes("🎟️prepared/📤️staging/"))).toBe(false);
 });
 

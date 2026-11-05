@@ -7,9 +7,9 @@ use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
 
 /// 🗂️ The browser group of a kind: plans, ceiling plans, sections, elevations, cameras.
 pub fn group_of(kind: ViewKind) -> usize {
@@ -53,11 +53,11 @@ pub fn views_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &B
     let node_id = format!("{building}::views");
     let count = groups.iter().map(|(_, ids)| ids.len()).sum::<usize>().to_string();
     Some(item(&node_id, labels.group_views.as_str(), row.icon, None, Some(&count)).and_then(|builder| {
-        semio_framework_plugin::tree_window_indexed_item(windows, builder, &node_id, true, groups.len(), |index| {
+        semio_plugin::tree_window_indexed_item(windows, builder, &node_id, true, groups.len(), |index| {
             let (group, ids) = &groups[index];
             let group_id = format!("{building}::views::{group}");
             let builder = item(&group_id, group_label(labels, *group), row.icon, None, Some(&ids.len().to_string()))?;
-            semio_framework_plugin::tree_window_indexed_item(windows, builder, &group_id, true, ids.len(), |position| leaf(entity_item(snapshot, row, &ids[position], scale_text(snapshot, &ids[position]).as_deref())?))
+            semio_plugin::tree_window_indexed_item(windows, builder, &group_id, true, ids.len(), |position| leaf(entity_item(snapshot, row, &ids[position], scale_text(snapshot, &ids[position]).as_deref())?))
         })
     }))
 }

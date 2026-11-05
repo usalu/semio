@@ -1,6 +1,6 @@
 //! 🏛️ Actual domain classification and owned native host configuration projection.
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin_host_configuration::{with_original_host_configuration,testkit::HeapWitness};
+use semio_plugin::ArtifactEditor;
+use semio_plugin_host_configuration::{with_original_host_configuration,testkit::HeapWitness};
 use semio_framework_value::DslValue;
 
 #[global_allocator]

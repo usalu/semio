@@ -169,19 +169,19 @@ impl ArtifactStoreReplacementRefusal {
 #[doc(hidden)]
 pub struct ActiveArtifactStoreReplacement<P, Mutation, M>
 where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + store::StoreState,
+    P: ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + store::StoreState,
     Mutation: store::StoreMutationFor<P>,
     M: SpaceMember + MemberFactory,
 {
     pub operation: semio_framework_job::OperationId,
     pub generation: semio_framework_job::Generation,
-    pub publication_token: semio_framework_plugin_ownership::store_lifecycle::DocumentStorePublicationToken,
+    pub publication_token: semio_plugin_ownership::store_lifecycle::DocumentStorePublicationToken,
     pub base_child_content_generation: u64,
     pub cancel: ManuallyDrop<Option<semio_framework_job::CancelToken>>,
     pub cancel_signal: ManuallyDrop<Option<std::sync::Arc<std::sync::atomic::AtomicBool>>>,
     pub cancel_retirement: ManuallyDrop<Option<semio_framework_async::CancelTokenRetirement>>,
     pub session: ManuallyDrop<Option<semio_framework_job_worker::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
-    pub session_rejected: ManuallyDrop<Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactStoreInitializationJob<P, Mutation>>>>,
+    pub session_rejected: ManuallyDrop<Option<semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactStoreInitializationJob<P, Mutation>>>>,
     pub outcome_pending: bool,
     pub(super) outcome_terminal: Option<(u8, ArtifactStoreRefusalCode)>,
     pub terminal_target: Option<ActiveArtifactStoreReplacementState>,

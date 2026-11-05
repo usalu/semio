@@ -35,7 +35,7 @@ pub(super) const TESSELLATION_JOB_CAPACITY: usize = 32;
 pub(super) type TessellationJobKey=(String,u64,u64,u64);
 
 pub(super) struct RetainedTessellation {
-    pub(super) identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,
+    pub(super) identity:semio_os_flow::geometry::GeometryWorkIdentity,
     pub(super) source:usize,
     pub(super) length:usize,
     pub(super) source_units:usize,

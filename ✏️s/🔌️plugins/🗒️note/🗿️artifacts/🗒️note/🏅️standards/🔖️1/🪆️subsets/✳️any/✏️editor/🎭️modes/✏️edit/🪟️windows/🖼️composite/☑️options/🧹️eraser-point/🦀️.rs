@@ -3,7 +3,7 @@
 
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::NoteSnapshot;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 //#region 🔖️Measure
 pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasure {

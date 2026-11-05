@@ -1,6 +1,6 @@
 //! 🌱️ Shared Space authority; its package has no concrete child artifact dependency.
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[path = "../../🕰️time/🦀️.rs"]
 pub mod time;
 #[path = "../../📄️documents/🦀️.rs"]

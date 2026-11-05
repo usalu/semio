@@ -11,7 +11,7 @@ fn renderer_camera_command() -> set_camera::SetCamera {
 #[test]
 fn fem3d_window_config_camera_uses_the_shared_renderer_pose_contract() {
     let command = renderer_camera_command();
-    assert_eq!(command.camera, semio_framework_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None });
+    assert_eq!(command.camera, semio_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None });
     for invalid in [
         serde_json::json!({ "position": [8, -3, 5], "target": [0, 0, 0], "zoom": 1.25 }),
         serde_json::json!({ "camera": { "json": "{}" } }),
@@ -62,27 +62,27 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                 use crate::editor::fem3d::commands::set_result_display;
                 use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
                 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
-                use semio_framework_plugin::artifact_app_laws;
-                use semio_framework_plugin::ActionMeta;
-                use semio_framework_plugin::App;
-                use semio_framework_plugin::EditorApp;
-                use semio_framework_plugin::PluginApp;
-                use semio_framework_plugin::VcsArtifactApp;
-                use semio_framework_plugin::ViewModel;
-                use semio_framework_plugin::ViewWindowInstance;
+                use semio_plugin::artifact_app_laws;
+                use semio_plugin::ActionMeta;
+                use semio_plugin::App;
+                use semio_plugin::EditorApp;
+                use semio_plugin::PluginApp;
+                use semio_plugin::VcsArtifactApp;
+                use semio_plugin::ViewModel;
+                use semio_plugin::ViewWindowInstance;
 
                 fn manifest() -> App {
                     App { definition: create_fem3d_app(), examples: Vec::new() }
                 }
 
-                async fn dispatch(app: &mut VcsArtifactApp<EditorApp<Fem3dPlayApp>>, view: &ViewModel, command: Fem3dCommand, expected_windows: usize, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
+                async fn dispatch(app: &mut VcsArtifactApp<EditorApp<Fem3dPlayApp>>, view: &ViewModel, command: Fem3dCommand, expected_windows: usize, cx: &mut semio_plugin::StepContext<'_>) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
                     let command_id = command.command_id();
                     let meta = ActionMeta { instance_id: 71, view_state: Some(view.clone()), ..artifact_app_laws::meta("fem3d-window-ownership") };
-                    let mut identity = semio_framework_plugin::artifact_app_laws::fixture_identity();
-                    let dispatch = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, cx);
+                    let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
+                    let dispatch = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, cx);
                     Box::pin(dispatch).await.map_err(|error| format!("{error:?}"))?;
-                    let receipt = Box::pin(artifact_app_laws::settle_registered_typed_operation(app, 71, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)).await.map_err(|error| format!("{command_id}: {error:?}"))?;
-                    let actual = receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count();
+                    let receipt = Box::pin(artifact_app_laws::settle_registered_typed_operation(app, 71, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                    let actual = receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::WindowConfig).count();
                     if actual != expected_windows {
                         return Err(format!("expected {expected_windows} FEM window publications, got {actual}"));
                     }
@@ -97,12 +97,12 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                         ViewWindowInstance { id: "results-right".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() },
                         ViewWindowInstance { id: "foreign".into(), window_kind_id: "fem-panel".into() },
                     ],
-                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                    ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
                 };
                 let model_left = all.for_window_instance("model-left").expect("model-left");
                 let results_left = all.for_window_instance("results-left").expect("results-left");
-                let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 app.bind_instance_id(71).await;
                 let outcome: Result<(), String> = Box::pin(async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -122,12 +122,12 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                         return Err("FEM window state crossed into a same-kind sibling".into());
                     }
                     let model_state = artifact_app_laws::capture_fixture_window_config::<model::config::Fem3dModelWindowConfigOwner, _, _>(&mut *app, &model_left).await.map_err(|error| format!("{error:?}"))?.ok_or_else(|| "missing exact FEM model state".to_string())?;
-                    if model_state.camera != (semio_framework_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None }) {
+                    if model_state.camera != (semio_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None }) {
                         return Err("FEM model camera did not persist on its exact owner".into());
                     }
-                    let rendered = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, model::FEM3D_BODY_MODEL, &model_left, scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-                    let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&rendered).map_err(|error| format!("{error:?}"))?;
-                    let echoed = semio_framework_pack_json::from_json_str::<semio_framework_os_kernel::Viewport3dOrbit>(&scene.camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
+                    let rendered = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, model::FEM3D_BODY_MODEL, &model_left, scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+                    let scene = artifact_app_laws::decode_fixture_scene::<semio_plugin::World3dScene>(&rendered).map_err(|error| format!("{error:?}"))?;
+                    let echoed = semio_framework_pack_json::from_json_str::<semio_os_kernel::Viewport3dOrbit>(&scene.camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
                     if echoed != model_state.camera { return Err("FEM renderer echo lost the exact window pose".into()); }
                     let result_state = artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(&mut *app, &results_left).await.map_err(|error| format!("{error:?}"))?.ok_or_else(|| "missing exact FEM results state".to_string())?;
                     if result_state.result_source_id.as_deref() != Some("dead") || result_state.result_mode != semio_s_fem_app_surface::ResultMode::Modal || result_state.result_mode_index != 2 {
@@ -138,7 +138,7 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                     let [semio_framework::kernel::Effect::LoadDocument { pack, spr }] = reset.effects.as_slice() else {
                         return Err("FEM example command did not emit one host-owned document load".into());
                     };
-                    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+                    semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
                     let after_example = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                     let after_example: Vec<(String, Vec<u8>)> = after_example.iter().map(|pack| (pack.window_id.clone(), pack.files.pack.clone())).collect();
                     if before_example != after_example {
@@ -148,8 +148,8 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                         || artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(&mut *app, &results_left).await.map_err(|error| format!("{error:?}"))?.as_ref() != Some(&result_state) {
                         return Err("FEM window values changed during document reset".into());
                     }
-                    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                     reopened.bind_instance_id(72).await;
                     let expected: std::collections::BTreeMap<_, _> = packs.iter().map(|pack| ((pack.window_id.clone(), pack.window_kind_id.clone()), (pack.files.pack.clone(), pack.files.spr.clone()))).collect();
                     for pack in packs {
@@ -167,8 +167,8 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                         || artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(&mut *reopened, &results_left).await.map_err(|error| format!("{error:?}"))?.as_ref() != Some(&result_state) {
                         return Err("FEM window values changed during exact config reload".into());
                     }
-                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), scope.cx()).expect("original caller paid app close");
-                    let stale = ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::artifact_app_laws::fixture_mounted_policy(), scope.cx()).expect("original caller paid app close");
+                    let stale = ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
                     if model::config::addressed(&stale, Default::default()).is_ok() {
                         return Err("FEM accepted a stale model window id".into());
                     }
@@ -179,7 +179,7 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                     Ok(())
                 })
                 .await;
-                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), scope.cx()).expect("original caller paid app close");
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_plugin::artifact_app_laws::fixture_mounted_policy(), scope.cx()).expect("original caller paid app close");
                 outcome.expect("FEM exact-window ownership runtime law");
             }))
         })

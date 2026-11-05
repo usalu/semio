@@ -32,13 +32,13 @@ dashboard_launcher = { path = "../../../../🚀️launcher/📦️packages/🦀�
 dashboard_preferences = { path = "../../../../../⚙️preferences/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-preferences" }
 dashboard_registry = { path = "../../../../../🎮️registry/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-registry" }
 dashboard_wire = { path = "../../../../../🌀️daemon/🧵️wire/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-wire" }
-ui_locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
-ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+ui_locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale" }
+ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 semio-framework-filesystem-workspace = { path = "../../../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust" }
-semio-framework-ui-tui-core = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
-semio-framework-ui-tui-engine = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-ui-tui-frame = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
-semio-framework-ui-tui-terminal = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust" }
-semio-framework-ui-tui-widgets = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
+semio-ui-tui-core = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
+semio-ui-tui-engine = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
+semio-ui-tui-frame = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
+semio-ui-tui-terminal = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust" }
+semio-ui-tui-widgets = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

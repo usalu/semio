@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangePatchWebAngle wher
         record: "ChangedPatchWebAngle",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Web slope φ (0 = 90°) of the web patch load", "Stegeinzellast: Stegneigung φ (0 = 90°) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Web slope φ (0 = 90°) of the web patch load", "Stegeinzellast: Stegneigung φ (0 = 90°) ändern")
     }
 }
 

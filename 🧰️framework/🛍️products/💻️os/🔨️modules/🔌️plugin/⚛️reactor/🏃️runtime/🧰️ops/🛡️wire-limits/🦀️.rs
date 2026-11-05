@@ -1,14 +1,14 @@
 //! 🛡️ Public action wire limits, envelope validation and addressed action admission.
 
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework::{Fault, FaultFrom};
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_plugin_reactor_lifecycle::life_app_cell::{HostInstanceGuard, RuntimeAppCell};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_plugin_program::PluginProgram;
-use semio_framework_plugin_reactor_lifecycle::life_instance_registry::{PluginRuntime, RuntimeInstanceRegistry};
+use semio_plugin_reactor_lifecycle::life_app_cell::{HostInstanceGuard, RuntimeAppCell};
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_plugin_program::PluginProgram;
+use semio_plugin_reactor_lifecycle::life_instance_registry::{PluginRuntime, RuntimeInstanceRegistry};
 use serde_json::Value;
-use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 // 🚫️async: E1-adjacent pure lookup consumed by `with_instances_mut`'s sync callback
 // (`FnOnce(&mut Vec<AppInstance>) -> Result<R, Fault>`, itself required sync by the
 // single-threaded `RefCell::borrow_mut` reentrancy guard) — see R9.
@@ -33,7 +33,7 @@ pub const MAX_PUBLIC_ACTION_BODY_BYTES: usize = semio_framework::PUBLIC_INVOCATI
 pub const MAX_PUBLIC_ACTION_STRING_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
 const MAX_PUBLIC_ACTION_DEPTH: usize = semio_framework::PUBLIC_INVOCATION_DEPTH;
 const HOST_CONTRIBUTIONS_PACK_COMMAND_ID: &str = "setContributions";
-fn dff_interactive_wire_limit(owner: semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, addressed_controller_id: &str, command_id: &str, app_contracts: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
+fn dff_interactive_wire_limit(owner: semio_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, addressed_controller_id: &str, command_id: &str, app_contracts: &[semio_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
     let registration = app_contracts.iter().find(|registration| registration.controller_id == addressed_controller_id && registration.tool_id == command_id);
     match registration {
         Some(registration) if runtime_controller_id == addressed_controller_id && registration.owner == owner && !registration.schema_id.is_empty() => Ok(Some(registration.max_raw_wire_bytes)),
@@ -41,7 +41,7 @@ fn dff_interactive_wire_limit(owner: semio_framework_plugin_decl_app::tool_contr
         None => Ok(None),
     }
 }
-fn dff_invocation_wire_limit(body: &str, identifier_key: &str, label: &str, owner: semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
+fn dff_invocation_wire_limit(body: &str, identifier_key: &str, label: &str, owner: semio_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
     let bytes = body.as_bytes();
     let mut cursor = 0usize;
     let mut depth = 0usize;
@@ -216,7 +216,7 @@ fn validate_public_json_envelope_with(body: &str, label: &str, cap_strings: bool
     Ok(())
 }
 #[doc(hidden)]
-pub fn validate_public_action_envelope(body: &str, owner: semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<(), Fault> {
+pub fn validate_public_action_envelope(body: &str, owner: semio_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<(), Fault> {
     validate_public_json_envelope(body, "action")?;
     if let Some(limit) = dff_invocation_wire_limit(body, "actionId", "action", owner, runtime_controller_id, app_contracts)? {
         if body.len() > limit {
@@ -226,7 +226,7 @@ pub fn validate_public_action_envelope(body: &str, owner: semio_framework_plugin
     Ok(())
 }
 #[doc(hidden)]
-pub fn validate_public_command_envelope(body: &str, owner: semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<(), Fault> {
+pub fn validate_public_command_envelope(body: &str, owner: semio_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<(), Fault> {
     validate_public_command_json(body)?;
     if let Some(limit) = dff_invocation_wire_limit(body, "commandId", "command", owner, runtime_controller_id, app_contracts)? {
         if body.len() > limit {
@@ -236,11 +236,11 @@ pub fn validate_public_command_envelope(body: &str, owner: semio_framework_plugi
     Ok(())
 }
 fn debug_action_dispatch_branch(action_id: &str) -> &'static str {
-    if !semio_framework_plugin_job::reserved_jobs::is_framework_reserved_action_id(action_id) {
+    if !semio_plugin_job::reserved_jobs::is_framework_reserved_action_id(action_id) {
         "catalog"
     } else if matches!(action_id, "copy" | "cut" | "paste") {
         "clipboard-instack"
-    } else if semio_framework_plugin_job::lifted_job::is_tool_run_action_id(action_id) || semio_framework_plugin_decl_app::is_time_travel_action_id(action_id) || action_id == semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID || action_id == semio_framework::HOST_EVENT_ACTION_ID {
+    } else if semio_plugin_job::lifted_job::is_tool_run_action_id(action_id) || semio_plugin_decl_app::is_time_travel_action_id(action_id) || action_id == semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID || action_id == semio_framework::HOST_EVENT_ACTION_ID {
         "host-driven"
     } else {
         "spawn-admit"

@@ -4,7 +4,7 @@
     {"name": "DomainHover", "providerPackage": "semio-framework-replication"},
     {"name": "DomainSelection", "providerPackage": "semio-framework-replication"},
     {"name": "SelectionMethod", "providerPackage": "semio-framework-replication"},
-    {"name": "Viewport2d", "providerPackage": "semio-framework-ui-viewport"}
+    {"name": "Viewport2d", "providerPackage": "semio-ui-viewport"}
   ],
   "selection": {"granularity": "node", "ids": ["α", "🧬"], "anchorId": "α"},
   "hover": {"channel": "pointer", "ids": ["🧬"]},

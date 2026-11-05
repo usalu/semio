@@ -281,7 +281,7 @@ pub mod geometry_inference;
 pub mod extension_guest {
     use flow_extension_sdk::flow_extension_topic_contribution;
     use semio_framework::{Fault, FaultCode, FaultOrigin};
-    use semio_framework_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginLifecycleStep};
+    use semio_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginLifecycleStep};
 
     const FLOW_APP_ID: &str = "flow-play";
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
@@ -305,7 +305,7 @@ pub mod extension_guest {
         let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", env!("CARGO_PKG_VERSION")).extends("flow").depends_on("flow", semio_framework::tree_pin!());
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = ::semio_framework_async::poll::resolve_ready(async {
-            bundle.contributes(semio_framework_plugin::app::ArtifactContribution::builder(super::geometry_inference::GEOMETRY_ARTIFACT_KIND).await
+            bundle.contributes(semio_plugin::app::ArtifactContribution::builder(super::geometry_inference::GEOMETRY_ARTIFACT_KIND).await
                 .inference_service(super::geometry_inference::geometry_inference_service()).await).await
         });
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
@@ -343,11 +343,11 @@ pub mod extension_guest {
     }
 
     impl ExtensionResourceOwner for BrepExtensionResources {
-        fn invoke(&mut self, capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::ExtensionInvokeStep, Fault> {
+        fn invoke(&mut self, capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::ExtensionInvokeStep, Fault> {
             match capability {
                 "evaluate" => self.context.evaluate_raw(request, cx),
                 "tessellate" => self.context.tessellate_raw(request, cx),
-                _ => self.invoke_bytes(capability, request).map(|payload| semio_framework_plugin::ExtensionInvokeStep { payload: Some(payload), retained_progress: Default::default(), refusal: None }),
+                _ => self.invoke_bytes(capability, request).map(|payload| semio_plugin::ExtensionInvokeStep { payload: Some(payload), retained_progress: Default::default(), refusal: None }),
             }
         }
         fn inference_context(&self) -> Option<&dyn std::any::Any> { Some(&self.context) }

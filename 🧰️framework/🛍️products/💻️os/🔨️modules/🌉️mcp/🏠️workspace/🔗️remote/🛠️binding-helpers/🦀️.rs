@@ -1,19 +1,19 @@
 //! 🛠️ Binding helpers: delegated session exchange, origin and resource URIs, canonical checkpoint text and error mapping.
 
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
-use semio_framework_os_kernel::os_directory::DocumentScope;
-use semio_framework_os_kernel::os_directory::io::binary::artifact_hash::hex_lower;
-use semio_framework_os_kernel::os_directory::client::{DirectoryClientError, DirectoryTransport};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::percent_codec::{percent_decode, percent_encode};
-use semio_framework_os_mcp_hub_pair::pair;
-use semio_framework_os_mcp_hub_pair::binding_errors::{HubBindingError, HubUnavailableCause};
-use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairMountError, CanonicalPairMountIdentity};
-use semio_framework_os_mcp_schema::schema::{UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};
+use semio_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::io::binary::artifact_hash::hex_lower;
+use semio_os_kernel::os_directory::client::{DirectoryClientError, DirectoryTransport};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::percent_codec::{percent_decode, percent_encode};
+use semio_os_mcp_hub_pair::pair;
+use semio_os_mcp_hub_pair::binding_errors::{HubBindingError, HubUnavailableCause};
+use semio_os_mcp_hub_pair::pair::{CanonicalPairMountError, CanonicalPairMountIdentity};
+use semio_os_mcp_schema::schema::{UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_foundation::agent_credential::{
+use semio_os_mcp_foundation::agent_credential::{
     CredentialExchangeProtocolV1,
     CredentialExchangeRequestV1,
     DelegatedCredentialV1,
@@ -35,8 +35,8 @@ use super::remote_binding::{HubBindingPhase, HubBindingProgress, HubRemoteBindin
 pub fn exchange_delegated_session_v1(base_url: &str, credential: &DelegatedCredentialV1, protocol: CredentialExchangeProtocolV1) -> Result<DelegatedSessionGrantV1, GatewayError> {
     use semio_framework_actor::{ActorId, PackageId};
     use semio_framework_async::{ProcessKind, ScopeOwner, TraceId, WorkerPoolConfig};
-    use semio_framework_os_kernel::os_directory::client::{native::NativeDirectoryTransport, DirectoryTransport, HttpMethod};
-    use semio_framework_os_services::{ComputePool, TokioHostRuntime};
+    use semio_os_kernel::os_directory::client::{native::NativeDirectoryTransport, DirectoryTransport, HttpMethod};
+    use semio_os_services::{ComputePool, TokioHostRuntime};
 
     let origin = base_url.trim_end_matches('/');
     if origin != credential.origin().trim_end_matches('/') {
@@ -47,7 +47,7 @@ pub fn exchange_delegated_session_v1(base_url: &str, credential: &DelegatedCrede
     let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
     let scope = runtime.open_scope_now(ScopeOwner::Service("mcp-agent-session-exchange"), None);
     let compute = Arc::new(ComputePool::with_pool(1, pool));
-    let transport = NativeDirectoryTransport::with_new_http_pool_now(runtime.clone(), scope, compute, 1024 * 1024, 1, PackageId("semio-framework-os-mcp".to_string()), ActorId(0x4d43_5002));
+    let transport = NativeDirectoryTransport::with_new_http_pool_now(runtime.clone(), scope, compute, 1024 * 1024, 1, PackageId("semio-os-mcp".to_string()), ActorId(0x4d43_5002));
     let cancel = semio_framework_async::CancelToken::root_now();
     let operation_now = runtime.block_on(runtime.now_ms());
     let ctx = OperationContext {
@@ -137,7 +137,7 @@ pub(crate) fn base64_encode_exact(bytes: &[u8], output_length: usize) -> Result<
 
 pub(crate) fn canonical_checkpoint_resource_text(
     identity: &CanonicalPairMountIdentity,
-    frontier: &semio_framework_os_kernel::os_directory::ArtifactFrontier,
+    frontier: &semio_os_kernel::os_directory::ArtifactFrontier,
     pack: &[u8],
     spr: &[u8],
 ) -> Result<String, CanonicalPairMountError> {
@@ -213,8 +213,8 @@ pub(crate) fn validate_document_count(actual: usize, declared: u32) -> Result<()
 pub(crate) fn map_client_error(error: DirectoryClientError) -> HubBindingError {
     match error {
         DirectoryClientError::Unauthorized | DirectoryClientError::Http { status: 403 | 404, .. } => HubBindingError::Unauthorized,
-        DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
-        DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
+        DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
+        DirectoryClientError::Transport(semio_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
         DirectoryClientError::Decode(_) => HubBindingError::Unavailable(HubUnavailableCause::UndecodableResponse),
         DirectoryClientError::Http { status, body } => HubBindingError::Unavailable(HubUnavailableCause::http(status, &body)),
         DirectoryClientError::Transport(error) => HubBindingError::Unavailable(HubUnavailableCause::transport(&error)),
@@ -224,8 +224,8 @@ pub(crate) fn map_client_error(error: DirectoryClientError) -> HubBindingError {
 pub(crate) fn map_catalog_client_error(error: DirectoryClientError) -> HubBindingError {
     match error {
         DirectoryClientError::Unauthorized | DirectoryClientError::Http { status: 403, .. } => HubBindingError::Unauthorized,
-        DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
-        DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
+        DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
+        DirectoryClientError::Transport(semio_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
         DirectoryClientError::Decode(_) => HubBindingError::InvalidResponse("execution-target response failed validation"),
         DirectoryClientError::Http { status: 404 | 409, .. } => HubBindingError::StaleRefresh,
         DirectoryClientError::Http { status, body } => HubBindingError::Unavailable(HubUnavailableCause::http(status, &body)),

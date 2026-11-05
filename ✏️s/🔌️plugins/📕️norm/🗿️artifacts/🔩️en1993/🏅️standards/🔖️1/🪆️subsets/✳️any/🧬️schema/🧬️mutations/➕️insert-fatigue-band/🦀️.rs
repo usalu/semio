@@ -17,8 +17,8 @@ pub struct InsertFatigueBand {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertFatigueBand where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_fatigue_band::RemoveFatigueBand> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "fatigue-band", kind: "insert-fatigue-band", record: "InsertedFatigueBand" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert fatigue band into {}", self.id), &format!("Ermüdungsband in {} einfügen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert fatigue band into {}", self.id), &format!("Ermüdungsband in {} einfügen", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone(), self.element.id.clone()] }
 }

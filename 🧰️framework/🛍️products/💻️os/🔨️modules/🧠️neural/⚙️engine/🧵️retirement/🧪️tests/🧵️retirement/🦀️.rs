@@ -372,3 +372,16 @@ fn dictionary_projection_identity_follows_the_shared_original_root_across_header
     assert!(matches!(FieldProjectionSource::projection_view(&*moved,&[]).unwrap(),FieldProjectionView::IntrinsicObject(5)));
     (*moved).retire_cold();
 }
+
+#[test]
+fn original_value_retirement_preserves_actual_close_work_and_physical_receipts(){
+ use crate::testkit::observe_ownership;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️work.json")).unwrap();assert_eq!(fixture.as_array().unwrap().len(),6);
+ for items in [1,512]{let(mut owner,born,free)=observe_ownership(||ValueRetirement::from_dictionary(Dictionary::new().insert("source",Value::Atom(Atom::String("original雪".repeat(17))))));let(mut births,mut releases)=(0,0);
+  for _ in 0..100000{if owner.terminal_is_empty(){break}let g=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:64,maximum_capacity_bytes:owner.next_capacity_byte_demand(64).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+   let(step,a,r)=observe_ownership(||owner.close_step(RetainedCloneGrant{maximum_items:0,..g}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(owner.last_turn_work(),0);assert_eq!((a,r),(0,0));
+   let(result,a,r)=observe_ownership(||owner.close_step(g));let step=result.unwrap();let work=owner.last_turn_work();assert!(work<=items as u64);if let Some(child)=owner.root.as_ref(){assert_eq!(work,child.last_turn_work())}assert_eq!((a,r),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=a;releases+=r;
+  }
+  let closed=owner.terminal_is_empty();let terminal=owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0}).unwrap();assert!(matches!(terminal,RetainedCloneStep::Complete(_)));assert_eq!(owner.last_turn_work(),0);drop(owner);assert!(closed);assert_eq!(born-free+births,releases);
+ }
+}

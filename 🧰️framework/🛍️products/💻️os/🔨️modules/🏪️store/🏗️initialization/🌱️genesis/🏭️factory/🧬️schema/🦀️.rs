@@ -3,9 +3,9 @@
 /// 🏭️ The child owns original genesis encoding, native publication and installed catalog admission.
 pub struct OriginalStoreGenesisFactory<P,M>
 where
- P: semio_framework_os_spr::StoreState,
- M: semio_framework_os_spr::StoreMutationFor<P>,
+ P: semio_os_spr::StoreState,
+ M: semio_os_spr::StoreMutationFor<P>,
 {
- pub construct:fn(P)->Result<semio_framework_os_store_engine::lifted_store::ArtifactStore<P,M>,semio_framework_os_vcs::VcsError>,
- pub envelope:fn(P)->Result<semio_framework_os_store_space_schema::ArtifactEnvelope<P,M>,semio_framework_os_vcs::VcsError>,
+ pub construct:fn(P)->Result<semio_os_store_engine::lifted_store::ArtifactStore<P,M>,semio_os_vcs::VcsError>,
+ pub envelope:fn(P)->Result<semio_os_store_space_schema::ArtifactEnvelope<P,M>,semio_os_vcs::VcsError>,
 }

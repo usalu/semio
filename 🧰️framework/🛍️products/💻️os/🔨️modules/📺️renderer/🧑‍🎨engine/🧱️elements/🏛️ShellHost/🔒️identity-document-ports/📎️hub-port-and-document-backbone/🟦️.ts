@@ -286,9 +286,14 @@ export function useEffectOwnersAndDialogs({ captureDialogOrigin, core, spaceArti
   }), [captureDialogOrigin]);
   const isCurrentEffectOwner = useCallback((owner: ReturnType<typeof captureEffectOwner>): boolean => {
     const primary = core.shellStateRef.current.pluginRuntime.session;
+    const spawned = primary === null ? [] : parsePanelState(primary.viewState)?.spawnedApps ?? [];
+    const contributorParents = primary === null ? [] : [primary, ...spawned];
     return owner.plugin !== null
       && core.loadedPluginsRef.current.find((entry) => entry.handle.pluginId === owner.session.pluginId)?.handle === owner.plugin
-      && shellEffectOwnerIsCurrentV1(owner, { presentation: captureDialogOrigin(primary), mounted: captureDialogOrigin(owner.session), primary, spawned: primary === null ? [] : parsePanelState(primary.viewState)?.spawnedApps ?? [] });
+      && shellEffectOwnerIsCurrentV1(owner, { presentation: captureDialogOrigin(primary), mounted: captureDialogOrigin(owner.session), primary, spawned: primary === null ? [] : [
+        ...spawned,
+        ...[...core.contributorInstancesRef.current.values()].filter(entry => entry.instanceId !== undefined && contributorParents.some(parent => entry.ownerId.startsWith(`${parent.pluginId}:${parent.instanceId}:`))).map(entry => ({ pluginId: entry.pluginId, appId: entry.appId, instanceId: entry.instanceId! })),
+      ] });
   }, [captureDialogOrigin]);
   /** 🎭️ The owner of a pass a PROGRAM runs on its own — its operation progress and completions, its deferred effects:
    * the primary session presents it, the program is its source ({@link shellEffectOwnerIsCurrentV1}). */

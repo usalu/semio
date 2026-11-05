@@ -2,7 +2,7 @@
 
 use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload

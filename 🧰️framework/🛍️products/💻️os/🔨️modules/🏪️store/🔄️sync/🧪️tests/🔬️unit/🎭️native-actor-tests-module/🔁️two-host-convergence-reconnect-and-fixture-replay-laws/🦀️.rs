@@ -8,7 +8,7 @@
     async fn two_hosts_converge_through_hub() {
     const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         ensure_demo_codec_registered().await;
         let (addr, hub) = spawn_mock_hub_with_session_gate(true).await;
         let base_url = format!("ws://{addr}");
@@ -34,9 +34,9 @@
         hub.session_gate.as_ref().expect("gated mock").add_permits(1);
         wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
-        let mut store_a = semio_framework_os_store_test_support::plain_test_store(demo_envelope("shared").await).await;
+        let mut store_a = semio_os_store_test_support::plain_test_store(demo_envelope("shared").await).await;
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
-        let mut store_b = semio_framework_os_store_test_support::plain_test_store(demo_envelope("shared").await).await;
+        let mut store_b = semio_os_store_test_support::plain_test_store(demo_envelope("shared").await).await;
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
         let position = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| (store.snapshot().expect("snapshot"), store.applied_edit_ids().len(), store.redo_edit_ids().len(), store.current_checkpoint_id().map(str::to_string));
 
@@ -56,8 +56,8 @@
         }
         assert_eq!(store_b.snapshot().expect("snapshot b").n, 9, "the redo reinstated A's second edit on B too");
 
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store_a);
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store_b);
+        semio_os_store_test_support::close_plain_test_store(&mut store_a);
+        semio_os_store_test_support::close_plain_test_store(&mut store_b);
         host_a.close_key(&key_a);
         host_b.close_key(&key_b);
     }
@@ -157,7 +157,7 @@
     async fn reconnect_since_catch_up_replays_backlog() {
     const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
 
@@ -173,7 +173,7 @@
             })
             .await;
         let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
-        let mut store_a = semio_framework_os_store_test_support::plain_test_store(demo_envelope("catchup").await).await;
+        let mut store_a = semio_os_store_test_support::plain_test_store(demo_envelope("catchup").await).await;
         let key_a = channels_a.document_key.clone();
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
@@ -191,7 +191,7 @@
             .await;
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
-        let mut store_b = semio_framework_os_store_test_support::plain_test_store(demo_envelope("catchup").await).await;
+        let mut store_b = semio_os_store_test_support::plain_test_store(demo_envelope("catchup").await).await;
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
         wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
@@ -203,8 +203,8 @@
 
         host_a.close_key(&key_a);
         host_b.close_key(&key_b);
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store_a);
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store_b);
+        semio_os_store_test_support::close_plain_test_store(&mut store_a);
+        semio_os_store_test_support::close_plain_test_store(&mut store_b);
     }
 
     // 🔬️ Detach drains the outbox: an operation applied right before close still reaches the semio_hub (and B).
@@ -215,7 +215,7 @@
     async fn detach_drains_pending_outbound_operations() {
     const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
 
@@ -232,7 +232,7 @@
             .await;
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
-        let mut store_b = semio_framework_os_store_test_support::plain_test_store(demo_envelope("drain").await).await;
+        let mut store_b = semio_os_store_test_support::plain_test_store(demo_envelope("drain").await).await;
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
         wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
@@ -241,7 +241,7 @@
         let channels_a =
             host_a.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
         let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
-        let mut store_a = semio_framework_os_store_test_support::plain_test_store(demo_envelope("drain").await).await;
+        let mut store_a = semio_os_store_test_support::plain_test_store(demo_envelope("drain").await).await;
         let key_a = channels_a.document_key.clone();
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
@@ -254,8 +254,8 @@
         store_b.tick().await.expect("tick b");
         assert_eq!(store_b.snapshot().expect("snapshot b").n, 5);
         host_b.close_key(&key_b);
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store_b);
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store_a);
+        semio_os_store_test_support::close_plain_test_store(&mut store_b);
+        semio_os_store_test_support::close_plain_test_store(&mut store_a);
     }
 
     // 🔬️ The mock semio_hub always Acks `Accepted` — confirms the new `ServerFrame::Ack` ->
@@ -264,7 +264,7 @@
     async fn command_outcome_accepted_fires_after_hub_ack() {
     const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
         let host = ArtifactHost::new(test_pool());
@@ -273,7 +273,7 @@
             host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
         let key = channels.document_key.clone();
         let mut events = host.subscribe_key(&key).await;
-        let mut store = semio_framework_os_store_test_support::plain_test_store(demo_envelope("outcome").await).await;
+        let mut store = semio_os_store_test_support::plain_test_store(demo_envelope("outcome").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         wait_for_mock_hub_event("A Session", &hub, &mut events, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
@@ -286,7 +286,7 @@
             other => panic!("expected CommandOutcome, got {other:?}"),
         }
         host.close_key(&key);
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+        semio_os_store_test_support::close_plain_test_store(&mut store);
     }
 
     // 🔬️ `SyncSession::publish_preview` -> `ClientFrame::PreviewPublish` -> the mock semio_hub's
@@ -351,13 +351,13 @@
     /// (removes any write/poke race). Folder-replayable fixtures pair inbound 1:1 with events.
     async fn replay_fixture(fixture: &ActorFixture) {
         ensure_demo_codec_registered().await;
-        let codec = semio_framework_os_store_codec_registry::document_codec(&fixture.schema).await.expect("codec registry available").unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
-        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let codec = semio_os_store_codec_registry::document_codec(&fixture.schema).await.expect("codec registry available").unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
+        let dir = semio_os_store_test_support::tempdir().expect("tempdir");
         let host = ArtifactHost::new(test_pool());
         let channels =
             host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
         let mut events = host.subscribe(&fixture.document_id).await;
-        let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut store = semio_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read_archive(&fixture.document_id).await.expect("read archive").is_some() }).await;
@@ -368,27 +368,27 @@
             match inbound {
                 FixtureInbound::ExternalEdits { ops_text } => {
                     let archive_bytes = storage.read_archive(&fixture.document_id).await.expect("read archive").expect("some archive");
-                    let mut archive = semio_framework_os_spr::decode_document_archive_bytes(&archive_bytes).await.expect("decode current archive");
-                    let parsed = semio_framework_os_spr::parse_ops_text(ops_text).unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
-                    let mut new_edits: Vec<semio_framework_os_spr::HistoryEdit> = Vec::new();
+                    let mut archive = semio_os_spr::decode_document_archive_bytes(&archive_bytes).await.expect("decode current archive");
+                    let parsed = semio_os_spr::parse_ops_text(ops_text).unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
+                    let mut new_edits: Vec<semio_os_spr::HistoryEdit> = Vec::new();
                     for edit in parsed.edits {
-                        let mut ops: Vec<semio_framework_os_spr::OpPayload> = Vec::new();
+                        let mut ops: Vec<semio_os_spr::OpPayload> = Vec::new();
                         for op in &edit.ops {
                             let text = op.text.as_deref().unwrap_or_else(|| panic!("fixture {} op line has no text", fixture.name));
                             let concrete = DemoMutation::parse_op(text).unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
-                            ops.push(semio_framework_os_spr::OpPayload { text: None, binary: Some(concrete.encode_op().expect("encode demo op")) });
+                            ops.push(semio_os_spr::OpPayload { text: None, binary: Some(concrete.encode_op().expect("encode demo op")) });
                         }
-                        new_edits.push(semio_framework_os_spr::HistoryEdit { ops, meta: None, ..edit });
+                        new_edits.push(semio_os_spr::HistoryEdit { ops, meta: None, ..edit });
                     }
-                    archive.parent_spr = semio_framework_os_store_text_io::text_format::append_history_events_to_spr(&archive.parent_spr, &new_edits, &[]).await.expect("append fixture edits");
-                    let archive_bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode fixture archive");
+                    archive.parent_spr = semio_os_store_text_io::text_format::append_history_events_to_spr(&archive.parent_spr, &new_edits, &[]).await.expect("append fixture edits");
+                    let archive_bytes = semio_os_spr::encode_document_archive_bytes(&archive).expect("encode fixture archive");
                     storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("write archive");
                     channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                 }
                 FixtureInbound::ReplaceDocument { dsl_text, ops_text } => {
                     let (pack_files, _dsl_mirror) = (codec.reference().expect("codec reference").compile_dsl)(dsl_text, ops_text).await.unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
-                    let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: pack_files.pack, parent_spr: pack_files.spr, members: Vec::new() };
-                    let archive_bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode replacement archive");
+                    let archive = semio_os_spr::DocumentArchivePack { parent_pack: pack_files.pack, parent_spr: pack_files.spr, members: Vec::new() };
+                    let archive_bytes = semio_os_spr::encode_document_archive_bytes(&archive).expect("encode replacement archive");
                     storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("replace archive write");
                     channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                 }
@@ -406,7 +406,7 @@
             assert!(timeline_ids.contains(expected_id), "fixture {} expected edit id {expected_id} in timeline {timeline_ids:?}", fixture.name);
         }
         host.close(&fixture.document_id);
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+        semio_os_store_test_support::close_plain_test_store(&mut store);
     }
 
     // 🚫️async: E1-adjacent — pure match with no suspension point, consumed by

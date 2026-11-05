@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeThermalBridgeType 
         record: "ChangedThermalBridgeType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change bridge deck type for thermal actions", "Überbautyp für Temperatureinwirkungen ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change bridge deck type for thermal actions", "Überbautyp für Temperatureinwirkungen ändern")
     }
 }
 

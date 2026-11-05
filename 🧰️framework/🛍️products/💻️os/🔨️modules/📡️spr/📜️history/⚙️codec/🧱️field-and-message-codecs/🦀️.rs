@@ -50,8 +50,8 @@ pub(super) async fn write_id_field(out: &mut ByteWriter, id: &str, dict: &mut Di
 pub(super) fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync)) -> Result<String, ProtocolError> {
     protocol::scalar::read_id(
         input,
-        |idx: u32| dict.resolve(idx).map_err(|_| semio_framework_os_pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
-        |ord: u64| ordinal_to_id(ord).map_err(|_| semio_framework_os_pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "edit ordinal", offset: ord, detail: "unresolvable".to_string() }),
+        |idx: u32| dict.resolve(idx).map_err(|_| semio_os_pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
+        |ord: u64| ordinal_to_id(ord).map_err(|_| semio_os_pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "edit ordinal", offset: ord, detail: "unresolvable".to_string() }),
     )
     .map_err(ProtocolError::from)
 }

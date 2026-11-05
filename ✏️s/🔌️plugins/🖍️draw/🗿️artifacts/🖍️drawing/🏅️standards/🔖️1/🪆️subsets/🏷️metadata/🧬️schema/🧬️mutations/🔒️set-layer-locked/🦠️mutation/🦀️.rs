@@ -25,8 +25,8 @@ pub fn set_layer_locked<Op: From<SetLayerLocked>>(layer_id: semio_framework_valu
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetLayerLocked where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerLocked> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-locked", record: "SetLayerLocked" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" locked to {}", self.layer_id, self.locked), &format!("Sperre von Ebene \"{}\" auf {} setzen", self.layer_id, self.locked))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" locked to {}", self.layer_id, self.locked), &format!("Sperre von Ebene \"{}\" auf {} setzen", self.layer_id, self.locked))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.to_string_owner()]

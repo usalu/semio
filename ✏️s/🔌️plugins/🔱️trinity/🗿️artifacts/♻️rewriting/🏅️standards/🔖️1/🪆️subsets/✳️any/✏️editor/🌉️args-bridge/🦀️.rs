@@ -2,8 +2,8 @@
 
 //#region 🔖️ActionBridge
 use super::TrinityRewritingCommand;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{DslValue, Fault, FaultCode, FaultOrigin};
+use semio_os_kernel::Viewport2d;
+use semio_plugin::{DslValue, Fault, FaultCode, FaultOrigin};
 
 fn invalid(action: &str, detail: impl std::fmt::Display) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("rewriting action '{action}' arguments do not decode: {detail}"))

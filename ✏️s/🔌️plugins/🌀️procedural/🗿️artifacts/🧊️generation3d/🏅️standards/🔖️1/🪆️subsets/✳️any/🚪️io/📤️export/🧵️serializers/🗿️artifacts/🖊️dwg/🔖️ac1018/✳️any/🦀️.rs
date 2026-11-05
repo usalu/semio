@@ -12,7 +12,7 @@
 //! `SemioMeshToDwg` bridge lives under the dwg artifact's `ac1024` module tree only because that is
 //! where the shared logical drawing model was rehomed — one `DwgSnapshot` type serves both.
 use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
-use semio_framework_plugin::ArtifactSerializer;
+use semio_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::dwg::v_ac1024::any::SemioMeshToDwg;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;

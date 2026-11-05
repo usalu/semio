@@ -1,6 +1,6 @@
 import{refuseCachingV1}from"../../📖️texts/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, posix, win32 } from "node:path";
 import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import registry from "./🔣️.json" with { type: "json" };
 /** 🌿️ The binding generator must have the same identity as the locked Rust crate. */
@@ -50,3 +50,11 @@ export function requireWasmBindgenLocksV1(workspace: string): void {
 export function requireWasmBindgenSourceLockV1(workspace: string, sourceOwner: string): void {
   refuseMismatches(workspace, [wasmBindgenLockOfV1(workspace, sourceOwner)]);
 }
+
+/** 🧰️ Projects the Cargo installation destination without consulting an ambient executable. */
+export function wasmBindgenCargoCommandV1(home:string,platform:string=process.platform):string{
+ const paths=platform==="win32"?win32:posix;if(!home||!paths.isAbsolute(home)||home.includes("\0"))throw Error("Original Cargo home required for wasm-bindgen");
+ const command=paths.join(home,"bin","wasm-bindgen"+(platform==="win32"?".exe":""));if(command.length>256)throw Error("Finite wasm-bindgen executable path required");return command;
+}
+/** 🪪️ Requires the exact locked generator identity, including its authored CLI name. */
+export function wasmBindgenCommandMatchesV1(output:string,version:string):boolean{return output.trim()==="wasm-bindgen "+version;}

@@ -20,10 +20,10 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = TrinityRewritingCommand;
 
@@ -34,31 +34,31 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         let documents = REWRITING_DOCUMENT_TOOL_IDS.iter().map(|tool| {
-            semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(
+            semio_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(
                 "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
                 "s.trinity.rewriting@1/*#editor",
                 "RewritingDocumentJobFactory",
@@ -71,7 +71,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         window_config::job::TOOL_IDS
             .iter()
             .map(|tool| {
-                semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(
+                semio_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(
                     "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧵️job/🦀️.rs",
                     "s.trinity.rewriting@1/*#editor",
                     "RewritingWindowConfigJobFactory",
@@ -85,14 +85,14 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             .collect()
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(window_config::job::RewritingWindowConfigJobFactory::new(&controller))?;
         registry.register(RewritingDocumentJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<semio_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if REWRITING_DOCUMENT_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return rewriting_build_document_tool_job(request, output, cx);
         }
@@ -106,15 +106,15 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     }
 
     /// 🎯️ Host-action bridge into the closed `TrinityRewritingCommand` enum — see `args_bridge`.
-    fn command_from_action(action: &str, args: Option<&semio_framework_plugin::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_plugin::DslValue>) -> Result<Self::Command, Fault> {
         args_bridge::command_from_action(action, args)
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         window_config::register(registry)
     }
 
-    fn reference_birth()->Option<fn()->Result<RewritingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<RewritingSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_rule_state())
     })}
 
@@ -127,7 +127,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         crate::standards::v1::subsets::any::content::rewriting_fault_notices()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(rewriting_io())
     }
 
@@ -193,7 +193,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         doc: &ArtifactView<'_, RewritingSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -214,12 +214,12 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let state = doc.snapshot;
         let config = cfg.snapshot;
         let window_config = window_config::current(cfg).cloned().unwrap_or_default();
-        let labels = semio_framework_plugin::resolve_labels::<crate::editor::rewriting::terminology::TrinityRewritingLabels>(view_state);
-        let composed = || crate::standards::v1::subsets::any::content::composed(state, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("trinity.rewriting.working-graph", fault.message));
+        let labels = semio_plugin::resolve_labels::<crate::editor::rewriting::terminology::TrinityRewritingLabels>(view_state);
+        let composed = || crate::standards::v1::subsets::any::content::composed(state, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new("trinity.rewriting.working-graph", fault.message));
         let root = match body_key {
             TRINITY_REWRITING_PLAY_BODY_BEFORE => edit::windows::before::render(&composed()?, &window_config),
             TRINITY_REWRITING_PLAY_BODY_AFTER => edit::windows::after::render(&composed()?, &window_config),
@@ -227,22 +227,22 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TRINITY_REWRITING_PLAY_BODY_RHS => edit::windows::rhs::render(state, &window_config),
             TRINITY_REWRITING_PLAY_BODY_JACK => edit::windows::jack::render(state, config),
             TRINITY_REWRITING_PLAY_BODY_PARAMETERS => edit::windows::parameters::render(state, labels),
-            TRINITY_REWRITING_PLAY_BODY_ARTIFACT => crate::editor::rewriting::panels::document::render(&composed()?, config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_ARTIFACT)),
-            TRINITY_REWRITING_PLAY_BODY_CATALOGUE => crate::editor::rewriting::panels::catalogue::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_CATALOGUE)),
+            TRINITY_REWRITING_PLAY_BODY_ARTIFACT => crate::editor::rewriting::panels::document::render(&composed()?, config, labels, &semio_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_ARTIFACT)),
+            TRINITY_REWRITING_PLAY_BODY_CATALOGUE => crate::editor::rewriting::panels::catalogue::render(labels, &semio_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_CATALOGUE)),
             TRINITY_REWRITING_PLAY_BODY_INSPECTION => crate::editor::rewriting::panels::inspection::render(),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
         }?;
-        Ok(semio_framework_plugin::built_to_component_tree(root))
+        Ok(semio_plugin::built_to_component_tree(root))
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let Some(config) = window_config::current(cfg) else { return HashMap::new() };
         HashMap::from([(window_id.to_string(), vec![trinity_rewriting_lod_measure(window_id, &config.lod_mode)])])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        use semio_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
 
@@ -255,7 +255,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             .group("history", |m| m.action("resetRule"))
             .group("mode", |m| m.action("setLodMode").action("setActiveExample"))
             .group("tools", |m| m.action("setLhsJson").action("setRhsJson"));
-        menu.item(node_graph_delete_selection_spec(semio_framework_plugin::delete_selection().resolve(view_state.terminology, view_state.locale), view_state, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit)).build()
+        menu.item(node_graph_delete_selection_spec(semio_plugin::delete_selection().resolve(view_state.terminology, view_state.locale), view_state, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit)).build()
     }
 
     /// 🕹️ Domain "graph" topology: unions three node universes under one "node" granularity —

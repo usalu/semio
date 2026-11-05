@@ -44,7 +44,7 @@ impl MountedLayoutJob {
         let metrics = retained_tree_row_metrics(tree, id, &self.row_metrics);
         let (line, band) = (metrics.content_line_height(), metrics.content_line_height() + metrics.gap);
         let (above, below) = match &record.component {
-            ui_contract::Component::Container(props) => semio_framework_ui_retained_tree::reconcile::tree_content_label_lines(props),
+            ui_contract::Component::Container(props) => semio_ui_retained_tree::reconcile::tree_content_label_lines(props),
             _ => (0, 0),
         };
         let (above, below) = (above as f32 * band, below as f32 * band);
@@ -56,10 +56,10 @@ impl MountedLayoutJob {
             return None;
         }
         let row = document.record(tree.document_id(owner.id)?)?;
-        let total = semio_framework_ui_retained_tree::reconcile::tree_row_content_lines(document, row)?;
-        let lines_of = |child: &ui_contract::UiNodeRecord| u16::try_from(semio_framework_ui_retained_tree::reconcile::tree_content_lines(document, child, 0)).unwrap_or(u16::MAX);
+        let total = semio_ui_retained_tree::reconcile::tree_row_content_lines(document, row)?;
+        let lines_of = |child: &ui_contract::UiNodeRecord| u16::try_from(semio_ui_retained_tree::reconcile::tree_content_lines(document, child, 0)).unwrap_or(u16::MAX);
         let mut before = 0_u32;
-        for child in semio_framework_ui_retained_tree::reconcile::tree_row_content(document, row) {
+        for child in semio_ui_retained_tree::reconcile::tree_row_content(document, row) {
             if child.id == record.id {
                 let top = (metrics.row_height - tree_content_height(u16::try_from(total).unwrap_or(u16::MAX), line, metrics.gap)) * 0.5 + before as f32 * band;
                 return Some(TreeContentFlow::Slot { top, height: tree_content_height(lines_of(child), line, metrics.gap), above, below, container });

@@ -3,12 +3,12 @@ use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::mutations::{add_tag, add_tag_at, change_counter, change_notes, register_vcs_demo_mutation_descriptors, remove_tag, rename_vcs, AddTag, RemoveTag};
 use crate::standards::v1::subsets::any::schema::empty_vcs_snapshot;
 use protocol::{ColdMutation, Mutation, MutationKind, SemanticMutation};
-use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use semio_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_mutation_round_trips_store() {
-    let mut store = new_vcs_store(store::os_store::document_materialize::create_document_envelope("vcs.vcs", "vcs", empty_vcs_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![change_counter(3)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    let mut store = new_vcs_store(store::os_store::document_materialize::create_document_envelope("vcs.vcs", "vcs", empty_vcs_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![change_counter(3)], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").counter, 3);
 }
 
@@ -79,7 +79,7 @@ async fn add_tag_is_a_noop_when_base_already_has_the_tag() {
 async fn remove_tag_missing_target_is_error() {
     let base = empty_vcs_snapshot();
     let mutation = VcsDemoMutation::RemoveTag(RemoveTag { tag: "gone".into() });
-    semio_framework_os_kernel::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
+    semio_os_kernel::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed
@@ -113,10 +113,10 @@ async fn dispatch_registers_semantic_descriptors() {
 /// 🏗 DSL txt carrier: serialize then deserialize must restore the snapshot exactly.
 #[semio_framework_async_macros::async_test]
 async fn txt_dsl_carrier_round_trips_exactly() {
-    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
+    use semio_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::standards::v1::subsets::any::schema::empty_vcs_snapshot();
-    let exported = crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::VcsIntoTxt::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
+    let exported = crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::VcsIntoTxt::serialize(&snapshot, &semio_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::TxtIntoVcs::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);

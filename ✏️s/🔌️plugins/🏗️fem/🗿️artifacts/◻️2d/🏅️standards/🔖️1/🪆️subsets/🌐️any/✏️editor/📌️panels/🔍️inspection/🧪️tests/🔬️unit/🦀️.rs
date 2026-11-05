@@ -31,42 +31,42 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ActionId;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::Trigger;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::plugin_app_close_prelude::HasChildren;
+use semio_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::tree_item;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ActionId;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::Trigger;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_ui_contract as ui;
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels;
 use crate::context::dispatch;
 use crate::context::fem2d_app;
 use crate::context::render as render_body;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ComponentTree;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
+use semio_plugin::ViewModel;
 use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
@@ -79,11 +79,11 @@ fn selecting(ids: &[&str]) -> Fem2dInteractionSnapshot {
 
 fn panel(doc: &Fem2dSnapshot, ids: &[&str], view_state: &ViewModel) -> String {
     let built = render(doc, &selecting(ids), fem2d_labels(view_state), &TreeWindows::unhosted()).expect("fem2d inspector assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(built)).expect("fem2d inspector projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(built)).expect("fem2d inspector projection")
 }
 
 fn english(doc: &Fem2dSnapshot, ids: &[&str]) -> String {
-    panel(doc, ids, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    panel(doc, ids, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 /// 🔎️ The projected node carrying `key`, anywhere under the body — the projection keys every node by

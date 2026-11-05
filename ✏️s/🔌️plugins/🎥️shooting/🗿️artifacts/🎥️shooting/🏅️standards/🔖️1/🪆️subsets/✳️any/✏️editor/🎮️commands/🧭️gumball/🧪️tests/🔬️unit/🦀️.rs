@@ -11,7 +11,7 @@ use crate::{editor::shooting::ui_helpers_and_io::ShootingDispatchCtx, editor::sh
 #[allow(unused_imports)]
 use machine::Command;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
 #[allow(unused_imports)]
@@ -22,18 +22,18 @@ use crate::editor::shooting::{ShootingCommand};
 use crate::editor::shooting::ui_helpers_and_io::{SHOOTING_INTERACTION_DOMAIN};
 use protocol::{ColdMutation, Mutation, MutationDiff};
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::{artifact_app_laws, PluginApp};
+use semio_plugin::{artifact_app_laws, PluginApp};
 
 fn translate(asset_ids: Vec<String>, dx: f64) -> ShootingCommand {
     ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids, dx, dy: 0.0, dz: 0.0 })
 }
 
 fn english(row: &HistoryEntry) -> String {
-    row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
+    row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string()
 }
 
 fn german(row: &HistoryEntry) -> String {
-    row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
+    row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_string()
 }
 
 fn origin(app: &ShootingApp, asset_id: &str) -> [f64; 3] {
@@ -111,9 +111,9 @@ async fn an_id_less_gesture_moves_the_live_selection() {
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let before = origin(&app, &asset_id);
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).expect("targets");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("the selection admission settles");
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the selection settles");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("the selection admission settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the selection settles");
     let captured = app.interaction_state().await;
     let rows = dispatch_rows(&mut app, translate(Vec::new(), 3.0)).await;
     let after_dispatch = app.interaction_state().await;
@@ -152,10 +152,10 @@ async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
     let asset_ids = vec![base.assets[0].id.clone()];
     let drag = |dx: f64, dy: f64| ShootingMutation::DragAssets(DragAssets { asset_ids: asset_ids.clone(), dx, dy, dz: 0.0 });
     let log = [drag(1.0, 0.0), ShootingMutation::RotateAssets(RotateAssets { asset_ids: asset_ids.clone(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.5 }), ShootingMutation::ScaleAssets(ScaleAssets { asset_ids: asset_ids.clone(), sx: 2.0, sy: 1.0, sz: 1.0 })];
-    let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<ShootingSnapshot, ShootingMutation>(crate::SHOOTING_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<ShootingSnapshot, ShootingMutation>(crate::SHOOTING_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<ShootingSnapshot, ShootingMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     for mutation in &log {
-        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = drag(-2.0, 4.0);
@@ -169,9 +169,9 @@ async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
     let fresh = fold(&[edited, log[1].clone(), log[2].clone()]);
     assert_ne!(fresh, fold(&log), "the edit changes the outcome");
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
-    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
-    let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<ShootingSnapshot, ShootingMutation>();
+    let mut disposer = semio_plugin::bounded_document_store_disposer::<ShootingSnapshot, ShootingMutation>();
     for _ in 0..65_536 {
         if disposer.terminal_is_empty(&store) {
             break;

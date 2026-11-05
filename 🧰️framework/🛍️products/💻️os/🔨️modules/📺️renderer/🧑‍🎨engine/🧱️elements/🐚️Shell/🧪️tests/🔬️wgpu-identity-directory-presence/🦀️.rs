@@ -1,4 +1,4 @@
-use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
+use semio_os_kernel::os_directory::io::text::directory_command_sha256;
 use super::*;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 
@@ -11,8 +11,8 @@ impl DirectoryWsConnection for LateDialProbe {
     fn send_binary(&mut self, _bytes: Vec<u8>) -> Result<(), TransportError> {
         Ok(())
     }
-    fn try_recv_text(&mut self) -> Result<semio_framework_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
-        Ok(semio_framework_os_kernel::os_directory::client::DirectoryWsPoll::Pending)
+    fn try_recv_text(&mut self) -> Result<semio_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
+        Ok(semio_os_kernel::os_directory::client::DirectoryWsPoll::Pending)
     }
     fn close(&mut self) {
         self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
@@ -194,7 +194,7 @@ fn presence_rows_require_each_normalized_surface_and_preserve_hub_color() {
     let rows = presence_peer_rows_for_surface(&peers, Some(editor_surface), editor_surface);
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].actor, "a");
-    assert_eq!(rows[0].role, Some(semio_framework_ui_wgpu_light::presence_bar::PresenceRole::Author));
+    assert_eq!(rows[0].role, Some(semio_ui_wgpu_light::presence_bar::PresenceRole::Author));
     assert_eq!(rows[0].color, Some(7));
     assert!(presence_peer_rows_for_surface(&peers, Some(editor_surface), viewer_surface).is_empty(), "a different attached surface sees no roster");
     let viewer_rows = presence_peer_rows_for_surface(&peers, Some(viewer_surface), viewer_surface);
@@ -212,7 +212,7 @@ fn presence_rows_require_each_normalized_surface_and_preserve_hub_color() {
 #[test]
 fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
     let pill_for = |status: Option<ArtifactSyncStatus>, progress: Option<(u64, u64, u32, u32)>| {
-        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         shell.sync.sync_status = status;
         shell.sync.sync_bootstrap_progress = progress;
         shell_sync_pill_text(shell.sync.sync_pill(), false)

@@ -1,9 +1,9 @@
 //! 🧪️ engine tests (🔬️dag-unit): compiled against the `testkit` surface of the board crates.
 
-use semio_framework_os_infinite_board_engine::CanvasPalette;
+use semio_os_infinite_board_engine::CanvasPalette;
 use semio_framework_canvas::Color;
 use semio_framework_canvas as canvas;
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 
 #[test]
 fn dag_label_colors_use_theme_label_fields() {

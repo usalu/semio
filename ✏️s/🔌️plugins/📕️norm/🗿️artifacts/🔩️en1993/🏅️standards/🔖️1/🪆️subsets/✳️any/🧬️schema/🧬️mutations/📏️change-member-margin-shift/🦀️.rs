@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberMarginShift 
         record: "ChangedMemberMarginShift",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Safety margin shift ΔT_R of the member", "Bauteil: Sicherheitsanteil ΔT_R ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Safety margin shift ΔT_R of the member", "Bauteil: Sicherheitsanteil ΔT_R ändern")
     }
 }
 

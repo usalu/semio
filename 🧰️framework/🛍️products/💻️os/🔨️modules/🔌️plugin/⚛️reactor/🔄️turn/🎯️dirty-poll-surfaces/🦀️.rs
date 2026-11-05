@@ -47,8 +47,8 @@ pub struct DirtyPollOwners {
 /// resident surface competing for the process-wide reconcile credit, whose reservation refusal left every
 /// real surface deferred and the reactor answering `more-work` for ever (wave B54 §6.4) while the real
 /// panes never received the update this dirty exists to deliver.
-pub(super) async fn dirty_background_surfaces<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance: u32, dirty: &mut DirtyPollOwners) -> Result<(), semio_framework::Fault> {
-    for surface in semio_framework_plugin_runtime_ops::ops_surface_render::plugin_instance_background_surfaces(runtime, instance).await {
+pub(super) async fn dirty_background_surfaces<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance: u32, dirty: &mut DirtyPollOwners) -> Result<(), semio_framework::Fault> {
+    for surface in semio_plugin_runtime_ops::ops_surface_render::plugin_instance_background_surfaces(runtime, instance).await {
         let surface = ui_contract::SurfaceId::try_from(surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
         dirty.try_surface(instance, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
     }
@@ -56,8 +56,8 @@ pub(super) async fn dirty_background_surfaces<PA: semio_framework_plugin_reactor
 }
 
 /// 📡️ Dirties every surface of `instance` after remote edits were merged into its document.
-pub(super) async fn dirty_document_surfaces<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance: u32, dirty: &mut DirtyPollOwners) -> Result<(), semio_framework::Fault> {
-    for surface in semio_framework_plugin_runtime_ops::ops_surface_render::plugin_instance_document_surfaces(runtime, instance).await {
+pub(super) async fn dirty_document_surfaces<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance: u32, dirty: &mut DirtyPollOwners) -> Result<(), semio_framework::Fault> {
+    for surface in semio_plugin_runtime_ops::ops_surface_render::plugin_instance_document_surfaces(runtime, instance).await {
         let surface = ui_contract::SurfaceId::try_from(surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
         dirty.try_surface(instance, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
     }

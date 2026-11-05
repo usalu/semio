@@ -1,6 +1,6 @@
 mod native_common_tests {
     use super::*;
-    use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseEvent};
+    use semio_ui_tui_core::event::{Key, KeyEvent, MouseEvent};
     use std::time::Duration;
 
     #[test]

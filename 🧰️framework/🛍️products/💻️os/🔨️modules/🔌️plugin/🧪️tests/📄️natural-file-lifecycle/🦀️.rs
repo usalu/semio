@@ -177,13 +177,13 @@ fn natural_file_actions_publish_exact_paired_codec_metadata() {
     let named: std::collections::BTreeSet<&str> = [BATCH_A_NATURAL_FILE_APPS, BATCH_B_NATURAL_FILE_APPS, BATCH_C_NATURAL_FILE_APPS, BATCH_D_NATURAL_FILE_APPS, BATCH_E_NATURAL_FILE_APPS, BATCH_F_NATURAL_FILE_APPS, BATCH_G_NATURAL_FILE_APPS, BATCH_H_NATURAL_FILE_APPS, BATCH_I_NATURAL_FILE_APPS].into_iter().flatten().copied().collect();
     assert_eq!(declared, named, "every declared natural-file app belongs to exactly one named batch set and vice versa");
     for row in fixture.formats {
-        let codec = semio_framework_plugin_decl_app::NaturalFileCodec {
+        let codec = semio_plugin_decl_app::NaturalFileCodec {
             format_kind: Box::leak(row.format_kind.clone().into_boxed_str()),
             extension: Box::leak(row.extension.clone().into_boxed_str()),
             media_type: Box::leak(row.media_type.clone().into_boxed_str()),
             binary: row.binary,
         };
-        let actions = semio_framework_plugin_decl_app::natural_file_action_definitions(codec);
+        let actions = semio_plugin_decl_app::natural_file_action_definitions(codec);
         assert_eq!(actions[0].id, semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID, "{} save action", row.app_id);
         assert_eq!(actions[1].id, semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID, "{} open action", row.app_id);
         for action in actions {
@@ -195,21 +195,21 @@ fn natural_file_actions_publish_exact_paired_codec_metadata() {
             assert_eq!(defaults["binary"].as_bool(), Some(row.binary));
         }
     }
-    let descriptor = semio_framework_plugin_decl_app::MediaArtifactDescriptor {
+    let descriptor = semio_plugin_decl_app::MediaArtifactDescriptor {
         edge_id: None,
-        port_id: Some(semio_framework_plugin_decl_app::NATURAL_FILE_PORT.to_string()),
+        port_id: Some(semio_plugin_decl_app::NATURAL_FILE_PORT.to_string()),
         kind_id: Some("s.stdio.csv@rfc4180".into()),
         media_type: None,
         wire: semio_framework::MediaWireFormat::Binary { format_kind: "s.stdio.csv@rfc4180".into() },
         blob_hash: None,
     };
     let descriptor = serde_json::Value::from(semio_framework_value::ToValue::to_value(&descriptor));
-    assert_eq!(descriptor["portId"], semio_framework_plugin_decl_app::NATURAL_FILE_PORT);
+    assert_eq!(descriptor["portId"], semio_plugin_decl_app::NATURAL_FILE_PORT);
     assert_eq!(descriptor["kindId"], "s.stdio.csv@rfc4180");
     assert_eq!(descriptor["wire"]["kind"], "binary");
     assert_eq!(descriptor["wire"]["format_kind"], "s.stdio.csv@rfc4180");
-    let media = semio_framework_plugin_decl_app::natural_file_input_media(
-        semio_framework_plugin_decl_app::NaturalFileCodec { format_kind: Box::leak(fixture.transport.schema.clone().into_boxed_str()), extension: ".bin", media_type: "application/octet-stream", binary: true },
+    let media = semio_plugin_decl_app::natural_file_input_media(
+        semio_plugin_decl_app::NaturalFileCodec { format_kind: Box::leak(fixture.transport.schema.clone().into_boxed_str()), extension: ".bin", media_type: "application/octet-stream", binary: true },
         semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value },
         fixture.transport.octets.clone(),
     );

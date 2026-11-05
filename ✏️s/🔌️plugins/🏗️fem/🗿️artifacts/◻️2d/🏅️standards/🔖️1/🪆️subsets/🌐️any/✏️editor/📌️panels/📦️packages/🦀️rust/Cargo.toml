@@ -20,11 +20,11 @@ semio-s-artifact-fem-2d-results-state = { path = "../../../🎭️modes/✏️ed
 semio-s-fem-analyses-model = { path = "../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
 semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-fem-2d-editor-commands = { workspace = true }
 semio-s-artifact-fem-2d-editor-interaction = { workspace = true }

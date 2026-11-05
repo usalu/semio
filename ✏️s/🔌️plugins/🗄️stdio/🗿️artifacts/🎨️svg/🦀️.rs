@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -26,7 +26,7 @@ pub use semio_s_artifact_stdio_svg_snapshot::{SVG_ARTIFACT_SCHEMA_ID};
 
 pub use semio_s_artifact_stdio_svg_snapshot::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
@@ -68,14 +68,14 @@ pub use semio_s_artifact_stdio_svg_snapshot::{artifact_kind};
 /// already exposes.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("svg", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(standards::v1_1::subsets::base::schema::svg_artifact_schema_descriptor())
         .formats(formats)
         .schema_documents(semio_framework_schema_registry::ScopeSchemaExports { scope: "s.stdio.svg", exports: &[semio_framework_schema_registry::SchemaExport { id: "xml-document", leaves: semio_s_artifact_stdio_xml::schema::XML_DOCUMENT_SCHEMA_LEAVES }] })
@@ -93,10 +93,10 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// doc for why this calls `subset_validator_entry_of` directly instead of reusing either subset's
 /// own private cache.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn declared_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+fn declared_subset_validators() -> &'static [semio_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
-        .get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_1::subsets::tiny::io::SvgTinyValidator>(), semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_1::subsets::basic::io::SvgBasicValidator>()])
+        .get_or_init(|| vec![semio_plugin::io::subset_validator_entry_of::<standards::v1_1::subsets::tiny::io::SvgTinyValidator>(), semio_plugin::io::subset_validator_entry_of::<standards::v1_1::subsets::basic::io::SvgBasicValidator>()])
         .as_slice()
 }
 

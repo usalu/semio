@@ -43,7 +43,11 @@ export class WarmMcpGateway {
   private failure = "";
   private readonly queue: WarmMcpFrame[] = [];
 
-  constructor(private readonly ports: WarmMcpPorts) {}
+  private readonly ports: WarmMcpPorts;
+
+  constructor(ports: WarmMcpPorts) {
+    this.ports = ports;
+  }
 
   get phase(): WarmState {
     return this.state;

@@ -28,7 +28,7 @@
 //! `db_engine` wires the remaining mailbox variants.
 #![allow(async_fn_in_trait)]
 #![cfg(not(target_arch = "wasm32"))]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_durability::{DurabilityClass, EpochFence, Frontier};
 use db_engine::{ArtifactSpec, Database, DatabaseShutdownControl};

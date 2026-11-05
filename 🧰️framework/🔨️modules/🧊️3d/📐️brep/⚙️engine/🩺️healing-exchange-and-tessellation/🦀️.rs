@@ -72,11 +72,13 @@ impl Brep {
         match result? {MeshImportStep::Done(entity)=>self.register_import_entity(entity).map(Some),_=>Ok(None)}
     }
     /// 🎟️ Forwards every original cleanup currency and its physical receipt without publishing.
-    pub fn close_mesh_import_sync(&mut self,cursor:&mut MeshImportCursor,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError> {
-        let step=cursor.close_step(&mut self.body,grant)?;
-        if cursor.cleanup_complete() && cursor.is_active() {cursor.set_active(false);self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
-        Ok(step)
+    /// 🧾️ Forwards the exact import close work before either original result branch.
+    pub fn close_mesh_import_original(&mut self,cursor:&mut MeshImportCursor,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+        let turn=cursor.close_original_step(&mut self.body,grant);
+        if cursor.cleanup_complete()&&cursor.is_active(){cursor.set_active(false);self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
+        turn
     }
+    pub fn close_mesh_import_sync(&mut self,cursor:&mut MeshImportCursor,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{self.close_mesh_import_original(cursor,grant).result}
     pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::io::MeshExporter) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
         export_solid_mesh(&self.body, solid, deflection, exporter).map_err(|error| map_err(&error))

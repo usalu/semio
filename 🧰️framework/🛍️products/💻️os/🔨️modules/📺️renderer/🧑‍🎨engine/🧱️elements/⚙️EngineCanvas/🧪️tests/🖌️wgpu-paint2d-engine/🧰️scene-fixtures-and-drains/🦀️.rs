@@ -105,7 +105,7 @@ fn layer_hit_point(surface_id: &str, bounds: Rect) -> Option<(f32, f32)> {
 }
 
 fn drain(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
-    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input)
+    semio_renderer_wgpu_frame_actions::collect_fixture_actions(input)
 }
 
 fn drain_editor_actions_accepted(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {

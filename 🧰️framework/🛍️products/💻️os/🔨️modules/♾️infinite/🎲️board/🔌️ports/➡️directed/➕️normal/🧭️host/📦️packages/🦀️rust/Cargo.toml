@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../../.."
-name = "semio-framework-os-infinite-board-normal-host"
+name = "semio-os-infinite-board-normal-host"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,25 +22,25 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-os-infinite-board-schema/testkit", "semio-framework-os-infinite-board-engine/testkit", "semio-framework-os-infinite-board-normal-model/testkit", "semio-framework-os-infinite-board-normal-scene/testkit", "semio-framework-os-infinite-board-normal-focus/testkit", "semio-framework-os-infinite-board-normal-gestures/testkit", "semio-framework-os-infinite-board-normal-fill/testkit"]
+testkit = ["semio-os-infinite-board-schema/testkit", "semio-os-infinite-board-engine/testkit", "semio-os-infinite-board-normal-model/testkit", "semio-os-infinite-board-normal-scene/testkit", "semio-os-infinite-board-normal-focus/testkit", "semio-os-infinite-board-normal-gestures/testkit", "semio-os-infinite-board-normal-fill/testkit"]
 
 [dependencies]
 semio-framework-canvas = { path = "../../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 geometry = { path = "../../../../../../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph-manifest = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+ui_styling = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 serde_json = "1.0.140"
-semio-framework-os-infinite-board-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-scene = { path = "../../../🖼️scene/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-focus = { path = "../../../🎯️focus/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-gestures = { path = "../../../🕹️gestures/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-fill = { path = "../../../🪣️fill/📦️packages/🦀️rust" }
+semio-os-infinite-board-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-infinite-board-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-scene = { path = "../../../🖼️scene/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-focus = { path = "../../../🎯️focus/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-gestures = { path = "../../../🕹️gestures/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-fill = { path = "../../../🪣️fill/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-infinite-board-normal-scene = { path = "../../../🖼️scene/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-infinite-board-normal-scene = { path = "../../../🖼️scene/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-pack-json = { path = "../../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

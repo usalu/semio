@@ -1,9 +1,9 @@
 //! 🧱️ Protocol_quick of the server crate: The MCP server dispatcher and the stdio transport.
 
 use crate::mcp_server::McpServer;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcId, JsonRpcIncoming, JsonRpcOutcome, JsonRpcRequest, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_NOT_FOUND, METHOD_SERVER_DISCOVER, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, NullBackend, ProtocolEra, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION, compute_catalog_hash, is_valid_tool_name};
-use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_wire::protocol::{CallToolResult, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcId, JsonRpcIncoming, JsonRpcOutcome, JsonRpcRequest, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_NOT_FOUND, METHOD_SERVER_DISCOVER, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, NullBackend, ProtocolEra, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION, compute_catalog_hash, is_valid_tool_name};
+use semio_os_mcp_workspace::gateway_backend::GatewayBackends;
 
 fn request(id: Option<i64>, method: &str, params: Option<serde_json::Value>) -> JsonRpcRequest {
     JsonRpcRequest { jsonrpc: "2.0".to_string(), id: id.map(JsonRpcId::Number), method: method.to_string(), params }

@@ -6,7 +6,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]
@@ -17,7 +17,7 @@ use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg
 use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::io;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
-use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
+use semio_os_kernel::io::io_mechanism::IoEntryDirection;
 
 #[test]
 fn the_declaration_lists_the_svg_export_between_the_bim_and_the_svg_dialect() {

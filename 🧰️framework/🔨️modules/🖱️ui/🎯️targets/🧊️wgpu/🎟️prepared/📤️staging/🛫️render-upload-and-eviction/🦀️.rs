@@ -44,7 +44,7 @@ pub enum PreparedRenderUpload {
     },
     SceneRaster {
         key: String,
-        lease: semio_framework_ui_raster_owner::SceneRasterLease,
+        lease: semio_ui_raster_owner::SceneRasterLease,
     },
     Mesh {
         key: String,
@@ -141,7 +141,7 @@ impl PreparedRenderUpload {
             #[cfg(any(test, feature = "testkit"))]
             Self::Raster { key, pixels, .. } => key.len().checked_add(pixels.len()),
             Self::RasterPages { key, pixels } => key.len().checked_add(pixels.byte_len()),
-            Self::SceneRaster { key, .. } => key.len().checked_add(size_of::<semio_framework_ui_raster_owner::SceneRasterLease>()),
+            Self::SceneRaster { key, .. } => key.len().checked_add(size_of::<semio_ui_raster_owner::SceneRasterLease>()),
             Self::Mesh { key, lease, .. } => {
                 let Ok(schema) = lease.schema() else { return Some(key.len()) };
                 let bytes = usize::try_from(schema.vertices)

@@ -3,9 +3,9 @@ use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{MeshView, MeshWindowKit, WindowKit};
+use semio_plugin::app::{MeshView, MeshWindowKit, WindowKit};
 #[allow(unused_imports)]
-use semio_framework_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_selection_json, WindowKindDefinition};
+use semio_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_selection_json, WindowKindDefinition};
 use crate::viewer::puzzle5d::modes::view::windows::world3d::{instances_json};
 
 use crate::viewer::puzzle5d::modes::view::windows::world3d::*;

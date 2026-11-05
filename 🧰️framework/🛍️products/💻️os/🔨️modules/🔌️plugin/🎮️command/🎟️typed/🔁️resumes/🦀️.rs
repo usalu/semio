@@ -3,7 +3,7 @@
 //! 🧵️ The reactor drains one resolved task per round and queues it here ([`TaskResumes::push`]); the instance then advances the queue front one funded step per publication unit ([`TaskResumes::plan`]) until the answering receipt is owed to the host ([`TaskResumes::take_outcome`]).
 use semio_framework::kernel::InvocationResult;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
-use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_emission::ActionMeta;
 use std::collections::VecDeque;
 
 /// 📏️ The most resolved tasks one instance holds before it refuses the next resume by name.

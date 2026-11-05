@@ -111,12 +111,12 @@ fn encoding_rows(snapshot:&NoteSnapshot,maximum:usize,control:&mut semio_framewo
 }
 
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for NoteSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
         let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;
         let maximum=control.limits().max_rows;
         store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|{encoding_rows(self,maximum,native)?;self.__dsl_to_record_controlled(native)},control,native_owner)
     }
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     fn retire_sqlite_snapshot(mut self){let mut pending=std::mem::take(&mut self.blocks);while let Some(block)=pending.pop(){if let NoteBlockNode::Group{mut children,..}=block{pending.append(&mut children);}}}
     fn preflight_sqlite_snapshot_encoding(&self, _: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(),ValueError> {
         control.checkpoint(Phase::EncodeNative, 0, 0)?;
@@ -125,11 +125,11 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for NoteSnapshot
         bound.add(32768)?;bound.repeated(rows,16384)?;bound.repeated(bytes,32)?;
         bound.finish()
     }
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&Db,control:&mut Control<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
-        control.checkpoint(Phase::ProjectSnapshot,0,0).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;
-        if dialect.artifact_kind!="s.note.note"||dialect.standard!="1"||dialect.subset!="*"{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(invalid("snapshot has no owned semantic validator for this exact dialect")));}
-        let row=database.table("note_document").map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?.single_row().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?!=self.schema{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(invalid("snapshot document identity differs from semantic projection")));}
-        control.checkpoint(Phase::ProjectSnapshot,1,1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics:Vec::new()})
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&Db,control:&mut Control<'_>)->semio_os_kernel::io_schema::IoResult<()>{
+        control.checkpoint(Phase::ProjectSnapshot,0,0).map_err(semio_os_kernel::io_schema::IoError::from_value_error)?;
+        if dialect.artifact_kind!="s.note.note"||dialect.standard!="1"||dialect.subset!="*"{return Err(semio_os_kernel::io_schema::IoError::from_value_error(invalid("snapshot has no owned semantic validator for this exact dialect")));}
+        let row=database.table("note_document").map_err(semio_os_kernel::io_schema::IoError::from_value_error)?.single_row().map_err(semio_os_kernel::io_schema::IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(semio_os_kernel::io_schema::IoError::from_value_error)?!=self.schema{return Err(semio_os_kernel::io_schema::IoError::from_value_error(invalid("snapshot document identity differs from semantic projection")));}
+        control.checkpoint(Phase::ProjectSnapshot,1,1).map_err(semio_os_kernel::io_schema::IoError::from_value_error)?;Ok(semio_os_kernel::io_schema::IoOutcome{value:(),diagnostics:Vec::new()})
     }
     
 
@@ -348,7 +348,7 @@ mod tests {
 
     #[test]
     fn sqlite_snapshot_note_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-        use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_os_kernel::io::IoPayload;
         let plan:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🚦️control.json")).unwrap();let mut snapshot=fixture();snapshot.schema="owned Note 世界\0".into();snapshot.title=Some("x".repeat(plan["longTextBytes"].as_u64().unwrap()as usize));
         let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{

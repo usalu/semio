@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 #[test]
 fn pack_round_trips_representative_document() {
     let document = Puzzle5dSnapshot::default();
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
     let bytes = encode(&document);
     assert_eq!(decode(&bytes).expect("decode"), document);
 }
@@ -32,12 +32,12 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::os_store::store_schema::ArtifactCommand;
     use store::os_store::document_materialize::create_document_envelope;
 
-    let mut store = (puzzle5d_store(create_document_envelope(crate::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
+    let mut store = (puzzle5d_store(create_document_envelope(crate::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-    semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity).await).expect("apply");
+    semio_plugin::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity).await).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    (semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()))).await;
+    (semio_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()))).await;
     close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests

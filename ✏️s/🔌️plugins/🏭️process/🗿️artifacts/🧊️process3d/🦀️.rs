@@ -9,8 +9,8 @@
 mod tests;
 
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.process.process3d")?)
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.schema.artifact")?, ArtifactCapabilityKind::schema())
@@ -50,12 +50,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         )
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::process3d_artifact_schema_descriptor())
         .inferences([semio_s_artifact_process_process3d_inferences::process3d_artifact_inference_descriptor()])
         .composers(semio_s_artifact_process_process3d_io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_process_process3d_editor::Process3dPlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<semio_s_artifact_process_process3d_editor::Process3dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

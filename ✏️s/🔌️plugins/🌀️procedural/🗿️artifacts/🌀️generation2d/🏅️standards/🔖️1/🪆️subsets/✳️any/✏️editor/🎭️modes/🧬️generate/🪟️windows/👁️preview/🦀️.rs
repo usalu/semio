@@ -3,13 +3,13 @@
 use semio_s_artifact_procedural_2d_terminology::Generation2dLabels;
 use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
 use semio_s_artifact_procedural_2d_io_text::snapshot::generation_preview_layers;
-use semio_framework_plugin::built_text_node;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::built_text_node;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -43,16 +43,16 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_text: Option<&str>, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_text: Option<&str>, labels: &Generation2dLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = preview_text.filter(|value| !value.is_empty()).unwrap_or("");
     if eval_json.is_empty() {
-        return built_text_node(semio_framework_ui_locale::Label::data(labels.preview_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-preview.hint", "fixed UI hint admission failed"));
+        return built_text_node(semio_ui_locale::Label::data(labels.preview_hint.as_str())).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.generate-preview.hint", "fixed UI hint admission failed"));
     }
     let layers = generation_preview_layers(eval_json);
     let _ = GENERATION2D_PLAY_APP_ID;
     semio_s_procedural_core_semantic_ui::scene_surface(
         GENERATION2D_PLAY_SURFACE_GENERATE_PREVIEW,
-        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
+        semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: layers, snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

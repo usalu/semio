@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for Ch
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "simulation-settings", kind: "change-simulation-settings", record: "ChangedSimulationSettings" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days), &format!("Simulationseinstellungen auf {} / {} min, {} Einschwingtage ändern", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days), &format!("Simulationseinstellungen auf {} / {} min, {} Einschwingtage ändern", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days))
     }
     fn target(&self) -> Vec<String> {
         vec!["simulation-settings".into()]

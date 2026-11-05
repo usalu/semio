@@ -3,8 +3,8 @@
 
 use crate::standards::v89a::subsets::any::io::encode_gif;
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
-use semio_framework_plugin::app::{ImageView, ImageWindowKit};
-use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
+use semio_plugin::app::{ImageView, ImageWindowKit};
+use semio_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
@@ -15,7 +15,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &GifSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &GifSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     ImageWindowKit::render(&image_view(snapshot))
 }
 

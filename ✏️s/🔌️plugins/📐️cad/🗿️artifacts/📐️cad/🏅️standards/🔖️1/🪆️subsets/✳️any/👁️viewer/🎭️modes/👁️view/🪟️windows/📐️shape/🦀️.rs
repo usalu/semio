@@ -7,18 +7,18 @@
 
 use semio_s_artifact_cad_cad_inferences::cad_camera_projection_config;
 use semio_s_artifact_cad_cad_model::{snapshot::CadCamera, snapshot::CadPaneId, snapshot::CadSnapshot};
-use semio_framework_plugin::app::WindowKit;
-use semio_framework_plugin::mesh_from_kind;
-use semio_framework_plugin::world3d_camera_projection_json;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MeshView;
-use semio_framework_plugin::MeshWindowKit;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_plugin::app::WindowKit;
+use semio_plugin::mesh_from_kind;
+use semio_plugin::world3d_camera_projection_json;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MeshView;
+use semio_plugin::MeshWindowKit;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_declaration::ui::SurfaceKind;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "cad-view-shape";
@@ -59,10 +59,10 @@ pub fn definition() -> WindowKindDefinition {
 /// straight off the document. Objects render the same fallback-box placeholder the editor's own
 /// `world_meshes_json` falls back to while composed-child object resolution is unimplemented (ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 gap, pre-existing, not introduced here).
-/// 🌉️ `MeshData` (`semio_framework_plugin`) carries its own first-party `From<MeshData> for
+/// 🌉️ `MeshData` (`semio_plugin`) carries its own first-party `From<MeshData> for
 /// pack::json::Value` — reached here through the `dsl`/`protocol` alias's `os_pack` re-export of the
 /// same `pack` crate, never through `serde_json`.
-fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> semio_framework_value::DslValue {
+fn mesh_data_to_dsl(data: &semio_plugin::MeshData) -> semio_framework_value::DslValue {
     semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::from(data.clone()))
 }
 

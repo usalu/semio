@@ -3,7 +3,7 @@
 
 use crate::schema::inferences::Grid2dInferenceCommit;
 use crate::schema::snapshot::Grid2dSnapshot;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use serde_json::Value;
 use crate::editor::grid2d::modes::edit::windows::preview::*;
 use crate::editor::grid2d::window::Grid2dWindowConfig;
@@ -18,7 +18,7 @@ fn the_window_declares_a_canvas_surface_with_a_registered_icon() {
     let window = definition();
     assert_eq!(window.id, WINDOW_KIND_ID);
     assert_eq!(window.surface_kind, SurfaceKind::Canvas2d);
-    assert_eq!(window.icon_id, semio_framework_plugin::IconName::Preview);
+    assert_eq!(window.icon_id, semio_plugin::IconName::Preview);
     assert!(window.utilities.is_empty(), "the preview pane accepts no pointer utility");
 }
 

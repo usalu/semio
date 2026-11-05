@@ -1,6 +1,6 @@
 //! 🧱️ Shared bridge types: shell kind, flags, approval decisions and withdrawals, refusals and the instance reference.
 
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_value::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use super::wire;

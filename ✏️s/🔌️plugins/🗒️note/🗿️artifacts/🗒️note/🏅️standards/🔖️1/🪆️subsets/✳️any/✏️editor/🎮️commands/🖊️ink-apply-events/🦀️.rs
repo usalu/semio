@@ -16,7 +16,7 @@ use crate::schema::{block_bounds, block_id, block_locked, block_name, block_visi
 use crate::{NoteBlockNode, NoteCamera, NoteImageAsset};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
 use machine::Command;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -455,7 +455,7 @@ pub struct InkApplyEvents {
 // after a gesture — selection is framework-owned `InteractionState` now, only ever mutated by the framework's own
 // injected `interactionSelect` handling; the field stays on the wire (the ink-canvas host still sends it) but is not
 // acted on.
-pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
     let phase = NoteInkPhase::parse(payload.phase.as_deref(), payload.reason.as_deref())?;
     let events = if payload.events_json.is_empty() { Vec::new() } else { decode_canvas_events(&payload.events_json)? };
     let mut window_config_mutations = Vec::new();

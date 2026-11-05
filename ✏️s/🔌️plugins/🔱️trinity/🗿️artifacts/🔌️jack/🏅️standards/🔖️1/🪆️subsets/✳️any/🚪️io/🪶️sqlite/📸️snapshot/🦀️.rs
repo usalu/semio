@@ -412,7 +412,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot
     
     
     
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         c.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 0)?;
         let max_rows = c.limits().max_rows;
         let value = store::decode_sqlite_snapshot_record_native(
@@ -430,7 +430,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot
         forecast(value.get(), c, SqliteSnapshotPhase::DecodeNative)?;
         Ok(value.take())
     }
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         validate(self)?;
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
         store::encode_sqlite_snapshot_record_native(

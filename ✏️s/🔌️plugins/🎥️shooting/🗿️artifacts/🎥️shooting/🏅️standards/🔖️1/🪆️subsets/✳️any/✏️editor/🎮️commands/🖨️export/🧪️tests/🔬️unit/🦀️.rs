@@ -1,4 +1,4 @@
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
 use crate::{editor::shooting::config::ShootingConfig, editor::shooting::config::ShootingConfigMutation};
 #[allow(unused_imports)]
@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::shooting_icon_render
 #[allow(unused_imports)]
 use crate::{ShootingShot, ShootingSnapshot};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, DslValue, Emit, Fault, FaultCode, FaultOrigin, IconRenderExportItem};
+use semio_plugin::{ArtifactView, ConfigView, DslValue, Emit, Fault, FaultCode, FaultOrigin, IconRenderExportItem};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::shooting::commands::export::*;

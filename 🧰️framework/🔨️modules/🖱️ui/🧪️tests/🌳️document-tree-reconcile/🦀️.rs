@@ -11,13 +11,13 @@
 //! `🖱️ui/🧪️tests/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json` as the shared fixture (its TypeScript twin is
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts`).
 
-use semio_framework_ui_retained_tree::reconcile::*;
-use semio_framework_ui_wgpu_engine_surface::{ui_document_ingress_generation, UiDocumentIngressFault, UiDocumentIngressStatus, UiFrameStep, UiLayoutStep, UI_RETIRED_COMPONENT_SCENE_CAPACITY};
-use semio_framework_ui_wgpu_engine::Ui;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_retained_tree::tree::{NodeKey, UiDocumentTree, UiTree};
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiNode};
-use semio_framework_ui_arena::NodeId;
+use semio_ui_retained_tree::reconcile::*;
+use semio_ui_wgpu_engine_surface::{ui_document_ingress_generation, UiDocumentIngressFault, UiDocumentIngressStatus, UiFrameStep, UiLayoutStep, UI_RETIRED_COMPONENT_SCENE_CAPACITY};
+use semio_ui_wgpu_engine::Ui;
+use semio_ui_text::FontAtlas;
+use semio_ui_retained_tree::tree::{NodeKey, UiDocumentTree, UiTree};
+use semio_ui_declaration::ui::{SurfaceKind, UiNode};
+use semio_ui_arena::NodeId;
 use semio_framework_value::DslValue;
 use ui_contract::{UiNodeId, UiNodeRecord, SurfaceId, UiDocumentAssembly, UiDocumentAssemblyIdentity, UiDocumentLease, UiDocumentLeaseHeader, UiRevision};
 use semio_framework_test_fixtures::fixture_text;
@@ -116,15 +116,15 @@ fn test_clock() -> Option<u64> {
 /// borrowing a host's fill. Passed as the type parameter only; every call site hands `None`.
 struct NoSceneHost;
 
-impl semio_framework_ui_wgpu_hosting::scene_slots::SceneHost for NoSceneHost {
+impl semio_ui_wgpu_hosting::scene_slots::SceneHost for NoSceneHost {
     fn paint_slot_step(
         &mut self,
-        _slot: &semio_framework_ui_wgpu_hosting::scene_slots::SceneSlot<'_>,
-        cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor,
-        _draw: &mut semio_framework_ui_draw_contract::DrawList,
+        _slot: &semio_ui_wgpu_hosting::scene_slots::SceneSlot<'_>,
+        cursor: &mut semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor,
+        _draw: &mut semio_ui_draw_contract::DrawList,
         _atlas: &mut FontAtlas,
-        _icons: Option<&semio_framework_ui_draw_contract::IconAtlas>,
-    ) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
+        _icons: Option<&semio_ui_draw_contract::IconAtlas>,
+    ) -> semio_ui_wgpu_hosting::scene_slots::ScenePaintStep {
         cursor.finish()
     }
 }
@@ -178,7 +178,7 @@ fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
     assert_eq!(scene.controller_id, law["expected"]["surfaceNode"]["controllerId"].as_str().expect("controller"));
     assert!(scene.node_graph.is_none(), "an empty doc payload renders the host's own empty viewport rather than refusing the record");
 
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let document = document_from(&law, &ids, law["document"]["generation"].as_u64().expect("generation"), law["document"]["revision"].as_u64().expect("revision"), None);
     assert!(ui.publish_document("procedural-main", document));
     reconcile_ui_window(&mut ui, "procedural-main", "generation3d", law["document"]["generation"].as_u64().expect("generation"));
@@ -189,7 +189,7 @@ fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
     let draw = ui.frame::<NoSceneHost>("procedural-main", 1200.0, 800.0, &mut atlas, None, None).expect("a mounted document paints");
     let layers = draw.layers.iter().filter(|layer| !layer.ui_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.raster_instances.is_empty()).count();
     let instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    let glyphs: usize = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).count();
+    let glyphs: usize = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == semio_ui_draw_contract::KIND_GLYPH).count();
     assert!(layers >= law["expected"]["paint"]["drawCallsAtLeast"].as_u64().expect("draw calls") as usize, "expected at least one non-empty draw layer, got {layers}");
     assert!(instances >= law["expected"]["paint"]["uiInstancesAtLeast"].as_u64().expect("instances") as usize, "expected painted quads, got {instances}");
     assert!(glyphs >= law["expected"]["paint"]["glyphInstancesAtLeast"].as_u64().expect("glyphs") as usize, "expected shaped glyphs, got {glyphs}");
@@ -438,7 +438,7 @@ fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_
     let minted_second = ui_document_ingress_generation(Some((first_revision, minted_first)), second_revision);
     assert!(minted_second > minted_first, "a republished surface must mint a STRICTLY greater ingress generation");
 
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     assert!(ingest_once(&mut ui, "second-document", &law, &ids, minted_first, first_revision, None), "the first document is admitted");
     assert!(!arena_keys(&ui, "second-document").contains(&added_key), "the first document does not carry the addition");
 
@@ -448,7 +448,7 @@ fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_
 
     let constant = law["ingressGeneration"]["constantProducerIsRefused"]["generations"].as_array().expect("constant generations").iter().map(|value| value.as_u64().expect("generation")).collect::<Vec<_>>();
     assert!(constant.windows(2).all(|pair| pair[0] == pair[1]), "the shipped producer's generations were all equal — that is the defect");
-    let mut refused = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut refused = Ui::new(semio_ui_locale::Locale::En);
     assert!(ingest_once(&mut refused, "constant", &law, &ids, constant[0], first_revision, None), "its first document is admitted");
     assert!(!ingest_once(&mut refused, "constant", &law, &survivors, constant[1], second_revision, Some(&addition)), "a repeat generation is never ADMITTED — `document_status` answers Published and the ingress is skipped");
     assert!(!arena_keys(&refused, "constant").contains(&added_key), "…so the arena keeps the first tree, which is exactly what 6118 painted");
@@ -638,7 +638,7 @@ fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string
     }
 
     let node = tree.document_node(UiNodeId(1)).and_then(|node| tree.node(node)).expect("the extension mounted");
-    let semio_framework_ui_declaration::ui::UiNode::ExternalSlot(slot) = &node.spec.0 else { panic!("an extension projects to an external slot, got {:?}", node.spec.0) };
+    let semio_ui_declaration::ui::UiNode::ExternalSlot(slot) = &node.spec.0 else { panic!("an extension projects to an external slot, got {:?}", node.spec.0) };
     assert_eq!(slot.plugin_id, "note", "a surface id's first segment IS its owning plugin — an empty id would compose empty ids into everything built from it");
     assert_eq!(slot.app_id, "note");
     assert_eq!(slot.body_key, "body.inspector");
@@ -648,7 +648,7 @@ fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string
 #[test]
 fn the_reserved_media_transport_projects_only_truthful_localized_host_status() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎬️media-transport-reservation/🔣️.json")).expect("media transport reservation fixture");
-    assert_eq!(fixture["reservedExtensionId"].as_str(), Some(semio_framework_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID));
+    assert_eq!(fixture["reservedExtensionId"].as_str(), Some(semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID));
     for (index, vector) in fixture["cases"].as_array().expect("fixture cases").iter().enumerate() {
         let mut tree = UiTree::new();
         let mut cursor = UiDocumentReconcileCursor::default();
@@ -665,14 +665,14 @@ fn the_reserved_media_transport_projects_only_truthful_localized_host_status() {
             }
         }
         let node = tree.document_node(UiNodeId(1)).and_then(|node| tree.node(node)).expect("media extension mounted");
-        let semio_framework_ui_declaration::ui::UiNode::ExternalSlot(slot) = &node.spec.0 else { panic!("media transport must remain an external host slot") };
+        let semio_ui_declaration::ui::UiNode::ExternalSlot(slot) = &node.spec.0 else { panic!("media transport must remain an external host slot") };
         assert_eq!(slot.body_key, extension_id, "the reserved address remains the stable slot identity");
         assert_eq!(slot.host_status.as_deref(), vector["expectedHostStatus"].as_str(), "{}", vector["name"]);
         assert_eq!(slot.params_json, serde_json::to_string(&vector["props"]).expect("fixture props serialize"), "hostContentHeight and future decoder inputs survive untouched");
-        assert_eq!(semio_framework_ui_retained_tree::reconcile::media_transport_contract_valid(&vector["props"].to_string()), vector.get("contractValid").unwrap_or(&vector["schemaValid"]).as_bool().unwrap(), "{}", vector["name"]);
-        let projection = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(&tree);
+        assert_eq!(semio_ui_retained_tree::reconcile::media_transport_contract_valid(&vector["props"].to_string()), vector.get("contractValid").unwrap_or(&vector["schemaValid"]).as_bool().unwrap(), "{}", vector["name"]);
+        let projection = semio_ui_wgpu_hosting::accessibility::accessibility_projection(&tree);
         let projected = projection.iter().find(|node| node.key == "media-slot").expect("media accessibility node");
-        if extension_id == semio_framework_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID {
+        if extension_id == semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID {
             assert_eq!(projected.role, "status");
             assert_eq!(projected.label.as_deref(), vector["expectedHostStatus"].as_str());
             assert!(!projected.focusable && !projected.tabbable && !projected.actionable && !projected.editable);
@@ -832,12 +832,12 @@ fn a_full_scene_retirement_ledger_yields_before_closing_the_mounted_node() {
 /// root is clean, and a `Pending` that finds the root dirty again goes back to layout — the exact
 /// ladder `render_ui_document_step` walks (`🗣️Interpreter/🎯️targets/🧊️wgpu`'s `UiDocumentFramePhase`).
 /// Answers the number of opportunities the window spent, or `None` if it never terminated.
-fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: semio_framework_ui_theme::geometry::Rect, atlas: &mut FontAtlas, budget: usize) -> Option<usize> {
+fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, budget: usize) -> Option<usize> {
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
-    let mut target = semio_framework_ui_draw_contract::DrawList::default();
+    let mut target = semio_ui_draw_contract::DrawList::default();
     for spent in 0..budget {
         if ui.layout_is_dirty(window_id) {
             ui.request_layout(window_id);
@@ -865,14 +865,14 @@ fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: semio_framewo
 /// ledger stuck at `generation: 0` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14a-*`).
 #[test]
 fn a_document_whose_root_is_the_engine_surface_reaches_a_painted_frame() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let root = engine_surface_root_record(0, "gis2d.play.composite", "tiled-map");
     assert!(ui.publish_document("gis2d-main", tiny_document("gis2d-main", 1, &root, None)));
     reconcile_ui_window(&mut ui, "gis2d-main", "gis", 11);
     assert!(ui.tree("gis2d-main").and_then(|tree| tree.root).is_some(), "the single surface record mounts as the arena root");
 
     let mut atlas = FontAtlas::builtin();
-    let viewport = semio_framework_ui_theme::geometry::Rect { x: 0.0, y: 0.0, w: 1433.6, h: 813.6 };
+    let viewport = semio_ui_theme::geometry::Rect { x: 0.0, y: 0.0, w: 1433.6, h: 813.6 };
     let spent = drive_window_to_painted(&mut ui, "gis2d-main", viewport, &mut atlas, 1 << 16);
     assert!(spent.is_some(), "the window never finished one paint in 65 536 opportunities — the shell's chrome walk can never leave it: {}", ui.paint_stall_census("gis2d-main"));
 

@@ -1,5 +1,5 @@
 //! 🪟️ Window kit contract, form panels, label axes and the UI command value producer.
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as dsl;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework::AppDefinition;
 use semio_framework::CommandDefinition;
@@ -12,38 +12,38 @@ use semio_framework_value::RetirementDemand;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_value::DslValue;
 use semio_framework::ActionDefinition;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::{ActionKind, TreeWindowRequest};
 use semio_framework::{Fault, FaultCode, FaultOrigin, IconName, ViewModel, WindowKindDefinition};
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use serde_json::Value;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_ui_layout::layout::ContextMenuItemSpec;
-use semio_framework_ui_layout::layout::ContextMenuSurfaceTarget;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
+use semio_ui_layout::layout::ContextMenuItemSpec;
+use semio_ui_layout::layout::ContextMenuSurfaceTarget;
 /// 🧾️ The body-wide node budget and its fixed-node reserve live ONCE, in the UI contract, because
 /// the React host spends the same number from the other side of the wire
 /// (`🌳️Tree/🟦️.tsx`'s `capTreeWindowRequests`). See
-/// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
+/// [`semio_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
 /// implement; [`TreeWindows`] is this side of it.
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET;
+use semio_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET;
 // 🗣️ Shared two-axis (locale × terminology) label resolution — replaces the ~25x hand-rolled
 // `struct XLabels { .. }` + `const X_LABELS_EN/DE` + `fn x_labels(view_state) -> &'static XLabels`
 // pattern duplicated per app, AND the 4-crate hand-rolled `NATIVE_EN/NATIVE_DE/REUSE_EN/REUSE_DE` +
@@ -52,14 +52,14 @@ use semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET;
 // exhaustive match on the generated `Locale`/`Terminology` enums — no catch-all arm is possible, so
 // adding a locale or terminology to `🖱️ui/🎚️axes/🔣️.json` breaks every invocation until it supplies that
 // cell. See ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
-use semio_framework_ui_locale::AppLabels;
+use semio_ui_locale::AppLabels;
 #[cfg(test)]
-use semio_framework_ui_locale::app_labels;
+use semio_ui_locale::app_labels;
 
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_plugin_interaction::ui_assembly_error;
-use semio_framework_plugin_window_transient::ui_label;
-use semio_framework_plugin_window_transient::ui_text;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::ui_assembly_error;
+use semio_plugin_window_transient::ui_label;
+use semio_plugin_window_transient::ui_text;
 #[cfg(test)]
 use crate::image_kit::IMAGE_WINDOW_PAGED_NODE_KEY;
 #[cfg(test)]
@@ -455,7 +455,7 @@ pub use context_menu::{delete_selection, node_graph_delete_selection_spec, nothi
 
 /// 🪟️ A framework window kit: declares its read-only/editable `WindowKindDefinition` pair and
 /// renders its plain owned `ViewModel` into a semantic contract node. Product surfaces encode
-/// their typed scene payload through `semio_framework_ui_scene`; ordinary widgets use the
+/// their typed scene payload through `semio_ui_scene`; ordinary widgets use the
 /// contract builder DSL directly, so no renderer-owned `UiNode` crosses this SDK boundary.
 pub trait WindowKit {
     type ViewModel;

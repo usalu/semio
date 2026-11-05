@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberLabelEn wher
         record: "ChangedMemberLabelEn",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change label (English) of the member", "Bauteil: Bezeichnung (Englisch) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change label (English) of the member", "Bauteil: Bezeichnung (Englisch) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

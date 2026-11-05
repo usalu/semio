@@ -25,8 +25,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "start", entity: "run", kind: "start-run", record: "StartedRun" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Start run for {}", self.workflow_ref), &format!("Lauf für {} starten", self.workflow_ref))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Start run for {}", self.workflow_ref), &format!("Lauf für {} starten", self.workflow_ref))
     }
     fn target(&self) -> Vec<String> {
         vec!["run".into()]

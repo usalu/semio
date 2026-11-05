@@ -18,7 +18,7 @@ pub fn example_snapshot(example_id: &str) -> Result<Wfc3dSnapshot, Fault> {
         id if id == crate::examples::two_room_corridor::ID => Ok(crate::examples::two_room_corridor::snapshot()),
         id if id == crate::examples::wall_roof_facade_strip::ID => Ok(crate::examples::wall_roof_facade_strip::snapshot()),
         id if id == crate::examples::tower_stack::ID => Ok(crate::examples::tower_stack::snapshot()),
-        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc3d.example.unknown"), format!("wfc3d has no example '{other}'"))),
+        other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc3d.example.unknown"), format!("wfc3d has no example '{other}'"))),
     }
 }
 
@@ -62,7 +62,7 @@ pub struct Wfc3dGraphGesture {
 /// - A malformed row refuses the whole batch by name; so do `setSlider` and `insertPort`, because a wfc slot graph has
 ///   no inline sliders and no variadic ports.
 pub fn graph_edit_gesture(document: &Wfc3dSnapshot, operations_json: &str) -> Result<Wfc3dGraphGesture, Fault> {
-    let refuse = |reason: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc3d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
+    let refuse = |reason: String| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc3d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
     let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&format!("{{\"operations\":{operations_json}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
     let rows = node_graph_edit_rows(&args).map_err(refuse)?;
     let mut edge_ids: Vec<String> = document.edges.iter().map(|edge| edge.id.clone()).collect();

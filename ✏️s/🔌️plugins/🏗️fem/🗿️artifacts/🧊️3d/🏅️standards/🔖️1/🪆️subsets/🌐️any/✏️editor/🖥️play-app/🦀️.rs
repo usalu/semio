@@ -21,8 +21,8 @@ impl ArtifactEditor for Fem3dPlayApp {
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
     type Transient = semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient;
     type TransientMutation = semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation;
 
@@ -47,48 +47,48 @@ impl ArtifactEditor for Fem3dPlayApp {
 
 
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<window_model::config::Fem3dModelWindowConfigOwner>()?;
         registry.register::<window_results::config::Fem3dResultsWindowConfigOwner>()
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         registry.register::<window_results::transient::Fem3dResultsWindowTransientOwner>()
     }
 
@@ -107,7 +107,7 @@ impl ArtifactEditor for Fem3dPlayApp {
 
 
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Fem3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
         controller: "s.fem.fem3d@1/*#editor",
@@ -158,20 +158,20 @@ impl ArtifactEditor for Fem3dPlayApp {
         registry.register(Fem3dRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original FEM request is absent"))?;
         if !FEM3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "fem3d retained command does not match its exact registered tool").into());
+            return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("app.command.tool-mismatch"), "fem3d retained command does not match its exact registered tool").into());
         }
         if fem3d_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
             return Err(Fault::from("fem3d-command-payload-too-large").into());
         }
 
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Fem3dCommand::command_id, FEM3D_RETAINED_RAW_BYTES, FEM3D_RETAINED_WORK_ITEMS, true, |_original| Fem3dCommandWork::new(tool_id))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Fem3dCommand::command_id, FEM3D_RETAINED_RAW_BYTES, FEM3D_RETAINED_WORK_ITEMS, true, |_original| Fem3dCommandWork::new(tool_id))
     }
 
     /// 🚀️ Boots on the bundled `default` example instead of the empty document — the Model window is a
@@ -179,16 +179,16 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// first paint was a blank scene until a client dispatched `setActiveExample`. Mirrors the sibling
     /// `Fem3dViewer::initial_snapshot` (and block3d's `block3d_boot_snapshot`) so editor and viewer boot
     /// the same geometry. See `semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::fem3d_boot_snapshot`.
-    fn reference_birth()->Option<fn()->Result<Fem3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
-        semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().map_err(|error|semio_framework_plugin::reference_birth_fault("fem3d bundled boot document",error))
+    fn reference_birth()->Option<fn()->Result<Fem3dSnapshot,semio_plugin::Fault>>{Some(||{
+        semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().map_err(|error|semio_plugin::reference_birth_fault("fem3d bundled boot document",error))
     })}
 
     fn io() -> Option<AppIo> {
         Some(fem3d_io())
     }
 
-    fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_framework_plugin::MountedOwnerPhaseV1> {
-        (!semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)).then_some(semio_framework_plugin::MountedOwnerPhaseV1::Maintenance)
+    fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_plugin::MountedOwnerPhaseV1> {
+        (!semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
@@ -199,11 +199,11 @@ impl ArtifactEditor for Fem3dPlayApp {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id)
     }
 
-    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure> {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_step(instance_id, cx, grant)
     }
 
-    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure> {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(instance_id, cx, grant)
     }
 
@@ -211,7 +211,7 @@ impl ArtifactEditor for Fem3dPlayApp {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)
     }
 
-    fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_framework_plugin::WindowConfigOwnerRegistry, view: Option<&semio_framework_plugin::ViewModel>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
+    fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_plugin::WindowConfigOwnerRegistry, view: Option<&semio_plugin::ViewModel>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::prepare_snapshot_read(operation, snapshot, windows, view, grant)
     }
 
@@ -372,7 +372,7 @@ impl ArtifactEditor for Fem3dPlayApp {
             "setActiveExample" => Ok(Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text("exampleId").or_else(|| text("id")).unwrap_or_default() })),
             "setCamera" => {
                 let camera = args.and_then(|value| value.get("camera")).cloned().ok_or_else(|| Fault::from("fem3d.camera.orbit-required"))?;
-                let camera: semio_framework_os_kernel::Viewport3dOrbit = semio_framework_value::FromValue::from_value(camera).map_err(|error| Fault::from(format!("fem3d.camera.orbit-invalid: {error}")))?;
+                let camera: semio_os_kernel::Viewport3dOrbit = semio_framework_value::FromValue::from_value(camera).map_err(|error| Fault::from(format!("fem3d.camera.orbit-invalid: {error}")))?;
                 Ok(Fem3dCommand::SetCamera(set_camera::SetCamera { camera }))
             }
             "setResultDisplay" => Ok(Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay {
@@ -464,12 +464,12 @@ impl ArtifactEditor for Fem3dPlayApp {
         fem3d_route(command, doc, cfg, || interaction.selection(FEM3D_INTERACTION_DOMAIN).ids.clone(), view_state)
     }
 
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(_owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::reconcile(doc)
     }
     /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] — an empty `"fem3d"` domain,
     /// so nothing paints selected and the inspector shows the document summary.
-    fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         Self::render_body(body_key, doc, None, cfg, view_state, Fem3dInteractionSnapshot::default(), None)
     }
 
@@ -477,16 +477,16 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// every body — the windows paint it, the artifact tree marks it, the inspector edits it — plus the
     /// open gumball gestures' preview from the FEM gumball transient.
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Fem3dSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient>,
+        transient: &semio_plugin::TransientView<'_, semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         let clock = transient.window::<window_results::transient::Fem3dResultsWindowTransientOwner>().and_then(|window| window.clock);
         let preview = transient.snapshot.preview::<Fem3dSnapshot, semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue, Fem3dMutation>(doc.snapshot, Fem3dSnapshot::to_reference, |value| Fem3dSnapshot::from_reference(value).ok());
         Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction), clock)
@@ -518,7 +518,7 @@ impl Fem3dPlayApp {
         view_state: &ViewModel,
         interaction: Fem3dInteractionSnapshot,
         clock: Option<semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let labels = fem3d_labels(view_state);
         match body_key {
             window_model::FEM3D_BODY_MODEL => {
@@ -536,12 +536,12 @@ impl Fem3dPlayApp {
                     None => window_results::render(doc.snapshot, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, labels),
                 }
             }
-            artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),
-            inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY)),
+            artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),
+            inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY)),
             results_panel::BODY_KEY => results_panel::render(doc.snapshot, window_results::config::captured(cfg).as_ref(), clock.as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d unknown-body label admission failed")),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Fem3dPlayApp

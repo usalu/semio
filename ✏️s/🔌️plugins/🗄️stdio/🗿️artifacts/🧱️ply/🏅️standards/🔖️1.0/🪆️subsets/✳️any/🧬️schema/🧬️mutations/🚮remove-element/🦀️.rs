@@ -13,8 +13,8 @@ pub struct RemoveElement {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemoveElement" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

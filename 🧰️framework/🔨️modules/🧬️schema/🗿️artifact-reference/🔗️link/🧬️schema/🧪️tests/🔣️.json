@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "owner": "semio-framework-os-store-link-schema",
+  "owner": "semio-os-store-link-schema",
   "sourceBoundary": {
     "maxSourceBytes": 65536,
     "maxSourceFiles": 8,

@@ -142,7 +142,7 @@ export class FingerprintScript extends Script {
       const versions: Record<string, string> = {};
       for (const tool of ["wasm-pack", "wasm-bindgen", "wasm-opt", "trunk"]) {
         controller.signal.throwIfAborted();
-        const override = tool === "wasm-bindgen" ? process.env.SEMIO_WASM_BINDGEN_BIN : tool === "wasm-opt" ? process.env.SEMIO_WASM_OPT_BIN : undefined;
+        const override = tool === "wasm-bindgen" ? process.env.SEMIO_TOOL_WASM_BINDGEN : tool === "wasm-opt" ? process.env.SEMIO_WASM_OPT_BIN : undefined;
         if (tool === "wasm-opt" && !override) { versions[tool] = binaryenIdentity(); continue; }
         const path = override ? resolve(getWorkspaceRoot(), override) : runtimeWhichV1(tool, { PATH: process.env.PATH });
         if (!path) { versions[tool] = "unavailable"; continue; }

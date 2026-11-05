@@ -1,11 +1,11 @@
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactToolCompletion};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactToolCompletion};
 use store::os_store::backbone::Backbone;
 use serde::Deserialize;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework_value_derive::{FromValue, ToValue};
 use protocol::MutationDiff;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::set_transaction_count::SetTransactionCount;
 use semio_framework::ToolJobFactory;
 use crate::testing_laws_unit_1::mutation_fixture::transaction::{TxnApp, TxnCommand, TxnFixtureJob, mutations};
@@ -132,7 +132,7 @@ pub fn drain(job:&mut TxnFixtureJob,cx:&mut semio_framework_job::StepContext<'_>
 
 #[doc(hidden)]
 pub fn check(id:&str){
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();let recipient=cx.original_recipient_identity();
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();let recipient=cx.original_recipient_identity();
     let document: Cases = serde_json::from_str(include_str!("../🧫️fixtures/🧾️transaction-command-close/🔣️.json")).expect("command-close neutral vectors");
     assert_eq!(document.schema_version, 2);
     assert_eq!(document.layout_policy, "command-value-layout-excludes-allocator-overhead");
@@ -153,7 +153,7 @@ pub fn check(id:&str){
     let command_identity = std::ptr::from_ref(command.as_ref());
     let completion = ArtifactToolCompletion::<TxnApp>::new();
     if case.completion != Completion::Empty {
-        completion.complete(Ok(Emit::mutations(vec![SetTransactionCount { value: 7 }.into()])), semio_framework_plugin_decl_app::app_emission::EphemeralEmit::default()).expect("one real pending mutation output");
+        completion.complete(Ok(Emit::mutations(vec![SetTransactionCount { value: 7 }.into()])), semio_plugin_decl_app::app_emission::EphemeralEmit::default()).expect("one real pending mutation output");
     }
     let external = (case.completion == Completion::PendingExternal).then(|| completion.clone());
     let mut job = TxnFixtureJob { owners: crate::testing_laws_unit_1::mutation_fixture::job_close::FixtureJobOwners::new(command, completion), count: 0, page: 0 };
@@ -262,7 +262,7 @@ fn original_fixture_completion_same_source_denials_whole_rejection_and_paid_clos
     use semio_framework_value::retirement::controlled::ControlledRetirement;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️mutation-fixtures-job-close/🧫️fixtures/🔣️.json")).unwrap();let loan=fixture["loan"].as_array().unwrap();let policy=RetainedCloneGrant{maximum_items:loan[0].as_u64().unwrap()as usize,maximum_copy_bytes:loan[1].as_u64().unwrap()as usize,maximum_capacity_bytes:loan[2].as_u64().unwrap()as usize,maximum_release_bytes:loan[3].as_u64().unwrap()as usize,maximum_depth:loan[4].as_u64().unwrap()as usize};
     for row in fixture["cases"].as_array().unwrap(){
-        let mut caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();let recipient=cx.original_recipient_identity();let mut owners=FixtureJobOwners::<TxnApp>::new(Box::new(TxnCommand::Increment),ArtifactToolCompletion::new());
+        let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();let recipient=cx.original_recipient_identity();let mut owners=FixtureJobOwners::<TxnApp>::new(Box::new(TxnCommand::Increment),ArtifactToolCompletion::new());
         assert!(cx.with_retained_loan(policy,|same|owners.prepare_emission(same,std::mem::size_of::<i32>(),0,||Ok(Emit::mutations(vec![SetTransactionCount{value:7}.into()])))).unwrap());
         let pending_pointer=owners.pending_emission().unwrap().0.as_ref().unwrap().artifact_mutations.as_ptr();
         if row["occupied"].as_bool().unwrap(){owners.completion.as_ref().unwrap().complete(Ok(Emit::default()),Default::default()).unwrap()}
@@ -274,12 +274,12 @@ fn original_fixture_completion_same_source_denials_whole_rejection_and_paid_clos
         let after=cx.retained_progress();let actual=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};assert_eq!((heap.requested_bytes,heap.released_bytes),(actual.retained_capacity_bytes,actual.released_bytes));assert_eq!(cx.fuel_remaining(),fuel-1);
         let mut failure:Option<OriginalTurnFailure>=None;match result{Ok(true)=>{assert!(row["faultCode"].is_null());assert!(owners.pending_is_empty());assert!(owners.completion_is_delivered())},Err(original)=>{let fault=original.primary_fault().unwrap();assert_eq!(fault.code.0,row["faultCode"].as_str().unwrap());assert_eq!(fault.retained_progress(),actual);assert_eq!(owners.pending_emission().unwrap().0.as_ref().unwrap().artifact_mutations.as_ptr(),pending_pointer);failure=Some(original)},other=>panic!("original completion did not hand off: {other:?}")}
         let mut emitted=owners.completion.as_ref().unwrap().take_emit().unwrap();let mut emitted_active=None;let mut failure_active:Option<ControlledRetirement<OriginalTurnFailure>>=None;cx.original_cancel_token().cancel_now();owners.begin_close();
-        for _ in 0..semio_framework_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(){
+        for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(){
             if owners.terminal_is_empty()&&emitted.is_none()&&emitted_active.is_none()&&failure.is_none()&&failure_active.is_none()&&busy_witness.is_none()&&busy_active.is_none(){break}
             let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(policy,|same|{
-                if emitted.is_some()||emitted_active.is_some(){let demand=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&emitted,&emitted_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut emitted,&mut emitted_active,grant))}
-                if failure.is_some()||failure_active.is_some(){let demand=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&failure,&failure_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut failure,&mut failure_active,grant))}
-                if busy_witness.is_some()||busy_active.is_some(){let demand=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&busy_witness,&busy_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut busy_witness,&mut busy_active,grant))}
+                if emitted.is_some()||emitted_active.is_some(){let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&emitted,&emitted_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut emitted,&mut emitted_active,grant))}
+                if failure.is_some()||failure_active.is_some(){let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&failure,&failure_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut failure,&mut failure_active,grant))}
+                if busy_witness.is_some()||busy_active.is_some(){let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&busy_witness,&busy_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut busy_witness,&mut busy_active,grant))}
                 owners.close_step(same)
             }));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(policy));
         }

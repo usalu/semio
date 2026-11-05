@@ -2,19 +2,19 @@
 //!
 //! The chrome input ledger, the world camera ledger rows, the chrome accessibility projection and the chrome dump.
 
-use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{InkClipboardAddress, FOCUSED_INK_EDITOR, FOCUSED_INK_SURFACE, FOCUSED_VFS_CONTROL, INK_CLIPBOARD_STREAMS, TEXT_EDITOR_INPUT_STREAMS};
+use semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{InkClipboardAddress, FOCUSED_INK_EDITOR, FOCUSED_INK_SURFACE, FOCUSED_VFS_CONTROL, INK_CLIPBOARD_STREAMS, TEXT_EDITOR_INPUT_STREAMS};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{PENDING_NATIVE_INK_CLIPBOARD, PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD};
+use semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{PENDING_NATIVE_INK_CLIPBOARD, PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD};
 use crate::introspection::build_accessibility_dump;
-use semio_framework_os_renderer_wgpu_ui_engine_focus::scene_intents_and_clipboard::SCENE_INTENTS;
-use semio_framework_os_renderer_wgpu_contracts::{SCENE_POINTER_OWNERS, UI_ENGINE};
-use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::{FocusedNodeGraphCaret, FOCUSED_NODE_GRAPH_CARET, FOCUSED_TABLE_EDITABLE_TEXT, FOCUSED_TABLE_STEPPER, FOCUSED_TEXT_EDITOR};
+use semio_renderer_wgpu_ui_engine_focus::scene_intents_and_clipboard::SCENE_INTENTS;
+use semio_renderer_wgpu_contracts::{SCENE_POINTER_OWNERS, UI_ENGINE};
+use semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::{FocusedNodeGraphCaret, FOCUSED_NODE_GRAPH_CARET, FOCUSED_TABLE_EDITABLE_TEXT, FOCUSED_TABLE_STEPPER, FOCUSED_TEXT_EDITOR};
 use crate::element_contracts::{WorkerCell, SCENE_POINTER_OWNER_CAPACITY};
 use serde_json::Value;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::UiNode;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_arena::NodeId;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::UiNode;
 
 //#region 🎯️ChromeLedger
 /** 🎯️ The chrome's own introspection lane — the one thing this region's header calls structurally
@@ -142,7 +142,7 @@ pub fn chrome_action_args(action: &ActionDescriptor) -> Option<String> {
 
 /// 🎯️ Projects one published registry row, naming the retained body that minted its control id when
 /// `owners` knows it — chrome rows own no window and answer `None`, which is how a probe tells the two apart.
-pub fn chrome_hit_row(hit: &semio_framework_ui_wgpu_input::HitTarget<ActionDescriptor>, owners: &std::collections::HashMap<String, (String, Rect)>) -> DumpHitTarget {
+pub fn chrome_hit_row(hit: &semio_ui_wgpu_input::HitTarget<ActionDescriptor>, owners: &std::collections::HashMap<String, (String, Rect)>) -> DumpHitTarget {
     let control_id = hit.control_id.clone().unwrap_or_default();
     DumpHitTarget {
         window_id: owners.get(&control_id).map(|(window_id, _)| window_id.clone()),
@@ -179,12 +179,12 @@ pub const SHELL_CHROME_ACCESSIBILITY_WINDOW_ID: &str = "shell.chrome";
 /// order — for the native shell's platform bridge (`♿️native-accessibility`): the same dump the browser build's DOM
 /// mirror renders, so both shells announce one tree (ticket 26/09/23 slice WG10).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn native_accessibility_windows() -> Vec<semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityWindow> {
+pub fn native_accessibility_windows() -> Vec<semio_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityWindow> {
     UI_ENGINE
         .with(|cell| build_accessibility_dump(&cell.borrow(), None))
         .windows
         .into_iter()
-        .map(|window| semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityWindow { window_id: window.window_id, window_generation: window.window_generation, nodes: window.nodes })
+        .map(|window| semio_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityWindow { window_id: window.window_id, window_generation: window.window_generation, nodes: window.nodes })
         .collect()
 }
 
@@ -206,7 +206,7 @@ struct AccessibilityVisibleWindows {
 
 pub static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new(Default::default);
 
-pub fn staged_retained_clock_surfaces() -> Vec<(String, semio_framework_ui_wgpu_engine::UiSurfaceToken)> {
+pub fn staged_retained_clock_surfaces() -> Vec<(String, semio_ui_wgpu_engine::UiSurfaceToken)> {
     let visible = ACCESSIBILITY_VISIBLE_WINDOWS.borrow().staging.clone();
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
@@ -215,11 +215,11 @@ pub fn staged_retained_clock_surfaces() -> Vec<(String, semio_framework_ui_wgpu_
 }
 
 /// 🎬️ The accepted original engine supplies its retained tree loans to the actual paid media continuation.
-pub fn drive_presented_media_slots(source:&semio_framework_os_renderer_wgpu_media_slots::original_collect::PresentedRosterSource<'_>,cursor:&mut semio_framework_os_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,output:&mut Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{UI_ENGINE.with(|cell|cursor.advance(source,&mut cell.borrow_mut(),output,cx))}
+pub fn drive_presented_media_slots(source:&semio_renderer_wgpu_media_slots::original_collect::PresentedRosterSource<'_>,cursor:&mut semio_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,output:&mut Vec<semio_renderer_wgpu_media_slots::PresentedMediaSlot>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{UI_ENGINE.with(|cell|cursor.advance(source,&mut cell.borrow_mut(),output,cx))}
 /// ♻️ The same original engine receives every retained accepted tree loan before media source retirement completes.
-pub fn close_presented_media_slots(cursor:&mut semio_framework_os_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{UI_ENGINE.with(|cell|cursor.close_step(&mut cell.borrow_mut(),cx))}
+pub fn close_presented_media_slots(cursor:&mut semio_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{UI_ENGINE.with(|cell|cursor.close_step(&mut cell.borrow_mut(),cx))}
 
-pub fn presented_retained_clock_deadline(surfaces: &[(String, semio_framework_ui_wgpu_engine::UiSurfaceToken)]) -> Option<f64> {
+pub fn presented_retained_clock_deadline(surfaces: &[(String, semio_ui_wgpu_engine::UiSurfaceToken)]) -> Option<f64> {
     UI_ENGINE.with(|cell| cell.borrow().surfaces_next_clock_deadline(surfaces))
 }
 
@@ -278,7 +278,7 @@ struct PresentedEditorRebase {
     native_ink: [Option<(u64, PresentedInkClipboardRebase)>; 32],
 }
 
-fn candidate_editor_geometry(engine: &semio_framework_ui_wgpu_engine::Ui, witness: u64, window_id: &str, window_generation: u64, node: NodeId, host_id: &str, kind: semio_framework_ui_declaration::ui::SurfaceKind) -> Option<(NodeId, Rect)> {
+fn candidate_editor_geometry(engine: &semio_ui_wgpu_engine::Ui, witness: u64, window_id: &str, window_generation: u64, node: NodeId, host_id: &str, kind: semio_ui_declaration::ui::SurfaceKind) -> Option<(NodeId, Rect)> {
     if engine.candidate_surface_generation(window_id) != Some(window_generation) {
         return None;
     }
@@ -288,7 +288,7 @@ fn candidate_editor_geometry(engine: &semio_framework_ui_wgpu_engine::Ui, witnes
     (scene.host_id == host_id && scene.component_kind == kind).then_some((candidate, rect))
 }
 
-fn prepare_presented_editor_node_rebase(engine: &semio_framework_ui_wgpu_engine::Ui, witness: u64, window_id: &str, window_generation: u64, node: NodeId, host_id: &str, kind: semio_framework_ui_declaration::ui::SurfaceKind) -> Option<PresentedEditorNodeRebase> {
+fn prepare_presented_editor_node_rebase(engine: &semio_ui_wgpu_engine::Ui, witness: u64, window_id: &str, window_generation: u64, node: NodeId, host_id: &str, kind: semio_ui_declaration::ui::SurfaceKind) -> Option<PresentedEditorNodeRebase> {
     engine.candidate_is_sealed_for(window_id, witness).then(|| PresentedEditorNodeRebase {
         window_id: window_id.to_owned(),
         window_generation,
@@ -298,8 +298,8 @@ fn prepare_presented_editor_node_rebase(engine: &semio_framework_ui_wgpu_engine:
     })
 }
 
-fn prepare_presented_node_graph_caret_rebase(engine: &semio_framework_ui_wgpu_engine::Ui, witness: u64, focus: &FocusedNodeGraphCaret) -> Option<PresentedEditorNodeRebase> {
-    let mut rebase = prepare_presented_editor_node_rebase(engine, witness, &focus.target.window_id, focus.target.window_generation, focus.target.node, &focus.target.host_id, semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph)?;
+fn prepare_presented_node_graph_caret_rebase(engine: &semio_ui_wgpu_engine::Ui, witness: u64, focus: &FocusedNodeGraphCaret) -> Option<PresentedEditorNodeRebase> {
+    let mut rebase = prepare_presented_editor_node_rebase(engine, witness, &focus.target.window_id, focus.target.window_generation, focus.target.node, &focus.target.host_id, semio_ui_declaration::ui::SurfaceKind::NodeGraph)?;
     if let Some(node) = rebase.candidate_node {
         let survives = engine
             .candidate_tree(&focus.target.window_id)
@@ -312,21 +312,21 @@ fn prepare_presented_node_graph_caret_rebase(engine: &semio_framework_ui_wgpu_en
     Some(rebase)
 }
 
-fn prepare_presented_ink_clipboard_rebase(engine: &semio_framework_ui_wgpu_engine::Ui, witness: u64, address: &InkClipboardAddress) -> Option<PresentedInkClipboardRebase> {
+fn prepare_presented_ink_clipboard_rebase(engine: &semio_ui_wgpu_engine::Ui, witness: u64, address: &InkClipboardAddress) -> Option<PresentedInkClipboardRebase> {
     engine
         .candidate_is_sealed_for(&address.window_id, witness)
-        .then(|| PresentedInkClipboardRebase { old: address.clone(), candidate: candidate_editor_geometry(engine, witness, &address.window_id, address.window_generation, address.node, &address.host_id, semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas) })
+        .then(|| PresentedInkClipboardRebase { old: address.clone(), candidate: candidate_editor_geometry(engine, witness, &address.window_id, address.window_generation, address.node, &address.host_id, semio_ui_declaration::ui::SurfaceKind::InkCanvas) })
 }
 
-fn prepare_presented_editor_rebase(engine: &semio_framework_ui_wgpu_engine::Ui, witness: u64) -> PresentedEditorRebase {
+fn prepare_presented_editor_rebase(engine: &semio_ui_wgpu_engine::Ui, witness: u64) -> PresentedEditorRebase {
     let text =
-        FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor)));
+        FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_ui_declaration::ui::SurfaceKind::TextEditor)));
     let node_graph = FOCUSED_NODE_GRAPH_CARET.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_node_graph_caret_rebase(engine, witness, focus)));
     let text_streams = TEXT_EDITOR_INPUT_STREAMS.with(|cell| {
         let streams = cell.borrow();
         std::array::from_fn(|index| {
             let stream = streams[index].as_ref()?;
-            Some((stream.id, prepare_presented_editor_node_rebase(engine, witness, &stream.focus.window_id, stream.focus.window_generation, stream.focus.node, &stream.focus.host_id, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor)?))
+            Some((stream.id, prepare_presented_editor_node_rebase(engine, witness, &stream.focus.window_id, stream.focus.window_generation, stream.focus.node, &stream.focus.host_id, semio_ui_declaration::ui::SurfaceKind::TextEditor)?))
         })
     });
     #[cfg(not(target_arch = "wasm32"))]
@@ -335,24 +335,24 @@ fn prepare_presented_editor_rebase(engine: &semio_framework_ui_wgpu_engine::Ui, 
         std::array::from_fn(|index| {
             let slot = &slots[index];
             let pending = slot.mounted.as_ref()?;
-            Some((slot.generation, prepare_presented_editor_node_rebase(engine, witness, &pending.focus.window_id, pending.focus.window_generation, pending.focus.node, &pending.focus.host_id, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor)?))
+            Some((slot.generation, prepare_presented_editor_node_rebase(engine, witness, &pending.focus.window_id, pending.focus.window_generation, pending.focus.node, &pending.focus.host_id, semio_ui_declaration::ui::SurfaceKind::TextEditor)?))
         })
     });
     let table =
-        FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_framework_ui_declaration::ui::SurfaceKind::Table)));
+        FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_ui_declaration::ui::SurfaceKind::Table)));
     let table_editable =
-        FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_framework_ui_declaration::ui::SurfaceKind::Table)));
+        FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_ui_declaration::ui::SurfaceKind::Table)));
     let vfs = FOCUSED_VFS_CONTROL.with(|cell| {
         cell.borrow().as_ref().and_then(|focus| {
-            let mut rebase = prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem)?;
-            if rebase.candidate_node.is_some() && !semio_framework_os_renderer_wgpu_scene_feeds::vfs_accessibility_control_survives_candidate(&focus.host_id, &focus.target, witness) {
+            let mut rebase = prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_ui_declaration::ui::SurfaceKind::VirtualFileSystem)?;
+            if rebase.candidate_node.is_some() && !semio_renderer_wgpu_scene_feeds::vfs_accessibility_control_survives_candidate(&focus.host_id, &focus.target, witness) {
                 rebase.candidate_node = None;
             }
             Some(rebase)
         })
     });
     let ink =
-        FOCUSED_INK_EDITOR.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas)));
+        FOCUSED_INK_EDITOR.with(|cell| cell.borrow().as_ref().and_then(|focus| prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, semio_ui_declaration::ui::SurfaceKind::InkCanvas)));
     let ink_surface = FOCUSED_INK_SURFACE.with(|cell| cell.borrow().as_ref().and_then(|address| prepare_presented_ink_clipboard_rebase(engine, witness, address)));
     let ink_streams = INK_CLIPBOARD_STREAMS.with(|cell| {
         let streams = cell.borrow();
@@ -595,11 +595,11 @@ pub fn acknowledge_presented_input(witness: u64) -> bool {
             commit_presented_editor_rebase(editor_rebase);
         }
         let retired_canvas_hosts =
-            if acknowledged { visible.iter().filter_map(|window_id| engine.retired_component_scene(window_id)).filter(|retired| retired.kind == semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d).map(|retired| retired.host_id).collect() } else { Vec::new() };
+            if acknowledged { visible.iter().filter_map(|window_id| engine.retired_component_scene(window_id)).filter(|retired| retired.kind == semio_ui_declaration::ui::SurfaceKind::Canvas2d).map(|retired| retired.host_id).collect() } else { Vec::new() };
         (acknowledged, retired_canvas_hosts)
     });
     for host_id in retired_canvas_hosts {
-        semio_framework_os_renderer_wgpu_scene_state::request_canvas_pointer_gesture_cancel_for_host(&host_id);
+        semio_renderer_wgpu_scene_state::request_canvas_pointer_gesture_cancel_for_host(&host_id);
     }
     acknowledged
 }
@@ -620,7 +620,7 @@ pub fn visible_retained_accessibility_target(pick: impl Fn(&[ui_contract::Access
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         visible.iter().find_map(|window_id| {
-            let nodes = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(engine.tree(window_id)?);
+            let nodes = semio_ui_wgpu_hosting::accessibility::accessibility_projection(engine.tree(window_id)?);
             let node = nodes.get(pick(&nodes)?)?;
             Some(ui_render::AccessibilityTarget { window_id: window_id.clone(), window_generation: engine.surface_generation(window_id)?, node_id: node.node_id, node_key: node.key.clone() })
         })
@@ -638,7 +638,7 @@ pub fn candidate_tree_item_selected_for_test(window_id: &str, key: &str) -> Opti
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         let tree = engine.candidate_tree(window_id)?;
-        semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(tree).into_iter().find(|node| node.key == key).and_then(|node| node.selected)
+        semio_ui_wgpu_hosting::accessibility::accessibility_projection(tree).into_iter().find(|node| node.key == key).and_then(|node| node.selected)
     })
 }
 
@@ -655,7 +655,7 @@ pub fn accessibility_visible_window_ids() -> Vec<String> {
     ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.clone()
 }
 
-pub fn note_chrome_hit_registry(hits: &[semio_framework_ui_wgpu_input::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
+pub fn note_chrome_hit_registry(hits: &[semio_ui_wgpu_input::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
     if !semio_framework_trace::runtime_diagnostics_enabled() {
         return;
     }
@@ -663,7 +663,7 @@ pub fn note_chrome_hit_registry(hits: &[semio_framework_ui_wgpu_input::HitTarget
 }
 
 /// 🎯️ The pure half of `note_chrome_hit_registry`, over a ledger a law can own.
-pub fn ledger_publish_hits(ledger: &mut ChromeLedger, hits: &[semio_framework_ui_wgpu_input::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
+pub fn ledger_publish_hits(ledger: &mut ChromeLedger, hits: &[semio_ui_wgpu_input::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
     ledger.hits = hits.iter().take(CHROME_HIT_CAPACITY).map(|hit| chrome_hit_row(hit, owners)).collect();
     ledger.generation += 1;
 }
@@ -756,4 +756,4 @@ pub fn note_chrome_walk_parked(census: &str) {
 }
 //#endregion 🎯️ChromeLedger
 
-pub use semio_framework_os_renderer_wgpu_scene_state::{note_world3d_live_camera, take_world_camera_diagnostic, WORLD_CAMERA_LEDGER};
+pub use semio_renderer_wgpu_scene_state::{note_world3d_live_camera, take_world_camera_diagnostic, WORLD_CAMERA_LEDGER};

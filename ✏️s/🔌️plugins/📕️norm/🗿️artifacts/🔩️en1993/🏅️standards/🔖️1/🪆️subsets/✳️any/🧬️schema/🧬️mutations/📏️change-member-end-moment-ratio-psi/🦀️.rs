@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberEndMomentRat
         record: "ChangedMemberEndMomentRatioPsi",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change End moment ratio ψ of the member", "Bauteil: Randmomentenverhältnis ψ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change End moment ratio ψ of the member", "Bauteil: Randmomentenverhältnis ψ ändern")
     }
 }
 

@@ -1,15 +1,15 @@
 //! 🕹️ Normal board brush, gesture, commit and closing components with their gesture and commit functions.
 //!
-//! Crate `semio-framework-os-infinite-board-normal-gestures`; a downward producer of the infinite board family.
+//! Crate `semio-os-infinite-board-normal-gestures`; a downward producer of the infinite board family.
 
 #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
 #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure the call sites.")]
 
-use semio_framework_os_infinite_board_schema::{array, Selection};
-use semio_framework_os_infinite_board_engine::{ActiveUtility, Edge, EdgeData, HandleData, Interaction, merge_pick_into_selection, NodeData, NodeKindHandleTemplate, region_bounds, region_grip_at, region_grip_drag, REGION_GRIP_PX, REGION_LABEL_INSET_PX, REGION_MIN_EXTENT_WORLD, RegionData, RegionGrip, rotate_point_about, snap_region_scalar, snap_transform_angle, transform_ring_angle_delta, TransformGumballFlags, WireData};
-use semio_framework_os_infinite_board_normal_model::{BOARD_POINTER_BYTE_CAPACITY, BOARD_POINTER_ITEM_CAPACITY, BoardDrawLod, BoardEventFault, BoardEventKind, BoardGestureMotion, BoardOwnedEvent, BoardPayloadBuilder, BoardPickTargetJson, BoardRegionDrag, BoardRegionPaint, BoardTransformDrag, brush_template_world_pos, BrushCandidatePage, BrushCandidateRef, BrushPreviewSnapshot, DropPreviewSnapshot, EDGE_HIT_TOLERANCE_PX, gesture_release_events, HANDLE_HIT_TOLERANCE_PX, NormalPortError, push_pick_target, region_paint_bounds, WorldContentCache};
-use semio_framework_os_infinite_board_normal_scene::{admitted_board_pointer_id, board_edge_curve, BoardDeleteKind, BoardDeletePlan, BoardDeletePlanningOperation, BoardDeletePlanningPhase, BoardPointerPlan, BoardSceneState, BoardStyleState, brush_compatible_candidates, brush_handle_anchor_world, current_draw_lod, edge_selectable, effective_handle_radius, handle_cap_attachment, handle_world_pos, indirect_handle_marker_radius_world, paint_highlighted_node_preview, region_snap_step, snap_region_point, wire_curve};
-use semio_framework_os_infinite_board_normal_focus::{BoardFocusState, BoardOutboxState, resolve_hit_world, restore_gesture_selection, set_hovered_id, set_selection_ids_gestured, stage_selection_ids};
+use semio_os_infinite_board_schema::{array, Selection};
+use semio_os_infinite_board_engine::{ActiveUtility, Edge, EdgeData, HandleData, Interaction, merge_pick_into_selection, NodeData, NodeKindHandleTemplate, region_bounds, region_grip_at, region_grip_drag, REGION_GRIP_PX, REGION_LABEL_INSET_PX, REGION_MIN_EXTENT_WORLD, RegionData, RegionGrip, rotate_point_about, snap_region_scalar, snap_transform_angle, transform_ring_angle_delta, TransformGumballFlags, WireData};
+use semio_os_infinite_board_normal_model::{BOARD_POINTER_BYTE_CAPACITY, BOARD_POINTER_ITEM_CAPACITY, BoardDrawLod, BoardEventFault, BoardEventKind, BoardGestureMotion, BoardOwnedEvent, BoardPayloadBuilder, BoardPickTargetJson, BoardRegionDrag, BoardRegionPaint, BoardTransformDrag, brush_template_world_pos, BrushCandidatePage, BrushCandidateRef, BrushPreviewSnapshot, DropPreviewSnapshot, EDGE_HIT_TOLERANCE_PX, gesture_release_events, HANDLE_HIT_TOLERANCE_PX, NormalPortError, push_pick_target, region_paint_bounds, WorldContentCache};
+use semio_os_infinite_board_normal_scene::{admitted_board_pointer_id, board_edge_curve, BoardDeleteKind, BoardDeletePlan, BoardDeletePlanningOperation, BoardDeletePlanningPhase, BoardPointerPlan, BoardSceneState, BoardStyleState, brush_compatible_candidates, brush_handle_anchor_world, current_draw_lod, edge_selectable, effective_handle_radius, handle_cap_attachment, handle_world_pos, indirect_handle_marker_radius_world, paint_highlighted_node_preview, region_snap_step, snap_region_point, wire_curve};
+use semio_os_infinite_board_normal_focus::{BoardFocusState, BoardOutboxState, resolve_hit_world, restore_gesture_selection, set_hovered_id, set_selection_ids_gestured, stage_selection_ids};
 use semio_framework_canvas::{Affine, CubicBez, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Point, Rect, Scene, Stroke, Vec2};
 use std::collections::{BTreeSet, HashMap};
 use std::cell::Cell;

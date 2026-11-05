@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberWallLengthM 
         record: "ChangeMemberWallLengthM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plan length l of the masonry wall in its own direction (0 = not a wall row)", "Grundrisslänge l der Mauerwerkswand in ihrer Richtung (0 = keine Wandzeile) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plan length l of the masonry wall in its own direction (0 = not a wall row)", "Grundrisslänge l der Mauerwerkswand in ihrer Richtung (0 = keine Wandzeile) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-wall-length-m".into()]

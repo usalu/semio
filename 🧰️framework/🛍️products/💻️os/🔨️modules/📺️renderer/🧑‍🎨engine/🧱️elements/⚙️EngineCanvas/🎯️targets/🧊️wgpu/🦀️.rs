@@ -11,7 +11,7 @@
 //! `crate::engine_canvas::...` are unchanged because the children are re-exported below. The shared contracts
 //! (`WorkerCell`, `FrameworkWidgetContext`, `ScenePointerTarget`) live in `crate::element_contracts`.
 
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry;
+use semio_renderer_wgpu_engine_registry::engine_surface_registry;
 pub(crate) use engine_surface_registry::{
     begin_engine_surface_close_token, close_engine_surface_step,
     engine_surface_terminal_nonopaque_is_empty, engine_surface_token, engine_surface_token_at,
@@ -19,16 +19,16 @@ pub(crate) use engine_surface_registry::{
 };
 pub use engine_surface_registry::TextEditorTypingEnd;
 
-use semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas;
+use semio_renderer_wgpu_engine_registry::prepared_engine_canvas;
 pub(crate) use prepared_engine_canvas::{
     stage_engine_packet_step, EngineCanvasBuildContext, EngineCanvasPacket, EngineCanvasPresenter,
 };
 
-use semio_framework_os_renderer_wgpu_engine_registry::tutorial_surface_geometry;
+use semio_renderer_wgpu_engine_registry::tutorial_surface_geometry;
 pub use tutorial_surface_geometry::resolve_tutorial_surface_point;
 pub(crate) use tutorial_surface_geometry::tutorial_polyline_point;
 
-use semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach;
+use semio_renderer_wgpu_engine_attach::engine_surface_attach;
 pub(crate) use engine_surface_attach::{advance_raster_composite, register_engine_surface};
 pub use engine_surface_attach::{
     board2d_tool_run_trace_cursors, engine_raster_key, stage_engine_scene_paint,
@@ -37,7 +37,7 @@ pub use engine_surface_attach::{
     EngineSurfaceKindDetail, EngineSurfaceRegistration,
 };
 
-use semio_framework_os_renderer_wgpu_engine_graph::node_graph;
+use semio_renderer_wgpu_engine_graph::node_graph;
 pub use node_graph::{
     catalogue_ghost_descriptor_json, component_scene_apply_note_edit_key,
     component_scene_has_editable_caret, component_scene_set_caret_visible,
@@ -50,7 +50,7 @@ pub use node_graph::{
     puzzle3d_catalogue_drag_payload, puzzle3d_catalogue_drag_payload_json,
 };
 
-use semio_framework_os_renderer_wgpu_engine_board::tiled_map;
+use semio_renderer_wgpu_engine_board::tiled_map;
 pub use tiled_map::{
     apply_map_tile_bytes, board_local_pointer, map_local_pointer, map_marquee_crossing,
     map_marquee_mode, parse_map_feature_hit, parse_map_hover,
@@ -59,7 +59,7 @@ pub use tiled_map::{
     tiled_map_wheel_into, with_map_host, with_map_host_mut, with_map_interaction_into,
 };
 
-use semio_framework_os_renderer_wgpu_engine_board::board2d;
+use semio_renderer_wgpu_engine_board::board2d;
 pub use board2d::{
     board2d_presence_state, board_drag_active, board_pick_best_target_id,
     drive_board_authority_step, publish_board_event_step, publish_board_pointer_step,
@@ -72,7 +72,7 @@ pub use board2d::{
     CoalescedBoardEvents,
 };
 
-use semio_framework_os_renderer_wgpu_engine_board::paint2d;
+use semio_renderer_wgpu_engine_board::paint2d;
 pub use paint2d::{
     board2d_context_menu_target, node_graph_context_menu_target, paint2d_context_menu_target,
     paint2d_marquee_overlay, paint2d_navigator_overlay_rect, paint2d_pointer_button_into,
@@ -80,7 +80,7 @@ pub use paint2d::{
     text_editor_context_menu_target, with_raster_host_mut,
 };
 
-use semio_framework_os_renderer_wgpu_engine_text::text_editor;
+use semio_renderer_wgpu_engine_text::text_editor;
 #[cfg(target_arch = "wasm32")]
 pub use text_editor::semio_wgpu_host_page_hidden;
 pub(crate) use text_editor::{

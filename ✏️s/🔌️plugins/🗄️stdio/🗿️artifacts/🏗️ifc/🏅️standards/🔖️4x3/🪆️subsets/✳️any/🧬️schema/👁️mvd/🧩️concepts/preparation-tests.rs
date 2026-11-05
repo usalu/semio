@@ -1,6 +1,6 @@
 //! 🎟️ Neutral request admission laws use the canonical original preparation and private index views.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
 #[derive(semio_framework_value::RetireOwned)]

@@ -1,6 +1,6 @@
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{Effect, Emit, NoConfigMutation};
+use semio_plugin::{Effect, Emit, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 #[allow(unused_imports)]
@@ -12,9 +12,9 @@ use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::schedule_records;
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Fault, NoConfig};
+use semio_plugin::{ArtifactView, ConfigView, EditorApp, Fault, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::export_schedule_csv::{CsvJob, Advance, file_name, resolve, handle, ExportScheduleCsv};
@@ -81,7 +81,7 @@ async fn the_command_downloads_the_csv_the_serializer_writes_for_that_schedule()
 
 #[semio_framework_async_macros::async_test]
 async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_as_the_one_shot_path() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = scheduled();
     let expected = schedule_csv(&snapshot, &ModelInference::infer(&snapshot).expect("infers"), "sch-walls").expect("the schedule");
     let mut job = CsvJob::with_steps("sch-walls".into(), Some(&instance), 3, 2);
@@ -96,7 +96,7 @@ async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_as_t
 
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_job_leaves_the_session_correct_and_the_next_job_finishes() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = scheduled();
     let mut cancelled = CsvJob::with_steps("sch-doors".into(), Some(&instance), 2, 1);
     for _ in 0..3 {
@@ -113,7 +113,7 @@ async fn a_cancelled_job_leaves_the_session_correct_and_the_next_job_finishes() 
 
 #[semio_framework_async_macros::async_test]
 async fn a_job_over_a_schedule_that_left_the_model_stops_with_a_fault() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let mut snapshot = scheduled();
     let mut job = CsvJob::new("sch-doors".into(), Some(&instance));
     job.advance(&snapshot).expect("the first step");

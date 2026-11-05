@@ -2,9 +2,9 @@
 
 use semio_framework_diagnostic::Fault;
 use semio_framework_diagnostic::Severity;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use serde::Deserialize;
@@ -113,7 +113,7 @@ pub struct HistoryMutationEntry {
     pub mutation_id: String,
     pub position: u32,
     pub op_index: u32,
-    pub label: semio_framework_ui_locale::LocalizedLabel,
+    pub label: semio_ui_locale::LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none", with = "history_severity_serde::option")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub worst: Option<Severity>,
@@ -205,7 +205,7 @@ pub struct HistoryTimeTravel {
     pub target: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub target_label: Option<semio_framework_ui_locale::LocalizedLabel>,
+    pub target_label: Option<semio_ui_locale::LocalizedLabel>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub done: Option<u32>,
@@ -269,7 +269,7 @@ pub struct HistoryEntry {
     /// 🏷️ Every shell locale's text for this row, resolved by the renderer against the
     /// active locale — never a pre-resolved string, so switching the shell locale re-renders the
     /// whole ledger instead of leaving already-logged rows in the locale they were dispatched in.
-    pub label: semio_framework_ui_locale::LocalizedLabel,
+    pub label: semio_ui_locale::LocalizedLabel,
     pub kind: String,
     pub timestamp: String,
     /// ⏩️ The newest forward operations of this row's edit, newest last — a bounded preview; `op_count` says how many the
@@ -307,7 +307,7 @@ fn history_entry_count() -> u32 {
 
 impl HistoryEntry {
     /// 🆕️ A row with the identifying fields and an explicit, complete label; every other field starts empty.
-    pub fn new(seq: u64, action_id: impl Into<String>, label: semio_framework_ui_locale::LocalizedLabel, kind: impl Into<String>) -> Self {
+    pub fn new(seq: u64, action_id: impl Into<String>, label: semio_ui_locale::LocalizedLabel, kind: impl Into<String>) -> Self {
         Self { seq, edit_id: None, transaction: None, transition_id: None, author: None, action_id: action_id.into(), label, kind: kind.into(), timestamp: String::new(), op_lines: Vec::new(), op_count: 0, applied: false, revertible: false, count: 0, worst: None, mutations: Vec::new() }
     }
 
@@ -548,12 +548,12 @@ pub fn framework_fault_notice(code: &str) -> Option<(&'static str, &'static str)
 /// (`AppDefinition::fault_notices`) second; the first declared code decides, its `{name}` placeholders filled from
 /// `Fault.params` only. `None` when no code is declared or a placeholder has no value — the shell then shows its generic
 /// refusal, never a raw code. Corpus `🛂️manifest/🧫️fixtures/🧫️fault-notices`; TS twin `faultNotice`.
-pub fn fault_notice(fault: &Fault, notices: &[FaultNoticeDefinition], terminology: semio_framework_ui_locale::Terminology, locale: semio_framework_ui_locale::Locale) -> Option<FaultNotice> {
+pub fn fault_notice(fault: &Fault, notices: &[FaultNoticeDefinition], terminology: semio_ui_locale::Terminology, locale: semio_ui_locale::Locale) -> Option<FaultNotice> {
     let params = fault.params.as_deref();
     let framework = |code: &str| history_notice(code).or_else(|| framework_fault_notice(code));
     let code = std::iter::once(&fault.code).chain(fault.causes.iter().filter_map(|cause| cause.code.as_ref())).map(|code| code.0.as_str()).find(|code| framework(code).is_some() || notices.iter().any(|notice| notice.code == *code))?;
     let text = match framework(code) {
-        Some((en, de)) => fill_fault_notice(semio_framework_ui_locale::LocalizedLabel::native(en, de).resolve(terminology, locale), params),
+        Some((en, de)) => fill_fault_notice(semio_ui_locale::LocalizedLabel::native(en, de).resolve(terminology, locale), params),
         None => fault_notice_text(notices, code, params, terminology, locale),
     }?;
     Some(FaultNotice { code: code.to_string(), text })
@@ -600,8 +600,8 @@ pub struct HistoryReprojectionStatus {
 /// ([`HISTORY_NOTICE_LABELS`]) or `reason.unnamed` — never a raw code; a paused remote change reads `remote.paused` (a step or
 /// a load is never paused); anything else its kind's progress. Labels [`HISTORY_REPROJECTION_LABELS`]; TS twin
 /// `historyReprojectionStatus`.
-pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminology: semio_framework_ui_locale::Terminology, locale: semio_framework_ui_locale::Locale) -> HistoryReprojectionStatus {
-    let localized = |en: &str, de: &str| semio_framework_ui_locale::LocalizedLabel::native(en, de).resolve(terminology, locale).to_string();
+pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminology: semio_ui_locale::Terminology, locale: semio_ui_locale::Locale) -> HistoryReprojectionStatus {
+    let localized = |en: &str, de: &str| semio_ui_locale::LocalizedLabel::native(en, de).resolve(terminology, locale).to_string();
     let label = |key: String| HISTORY_REPROJECTION_LABELS.iter().find(|(known, _, _)| *known == key).map_or_else(String::new, |(_, en, de)| localized(en, de));
     let kind = match reprojection.kind {
         HistoryReprojectionKind::Remote => "remote",

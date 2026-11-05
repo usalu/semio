@@ -1,7 +1,7 @@
 //! 🪶️ Unmounted authored SQLite mapping adds paid literal-field copies after its owning baseline.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc4180::subsets::any::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
@@ -35,7 +35,7 @@ fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<
         }
         control.check_value_bytes(value_bytes)?;
         let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
-        database.table_mut("csv_document")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(semio_framework_os_kernel::sqlite_snapshot::artifact::project_text(control, &self.schema)?), SqliteValue::Integer(i64::from(self.has_header))] });
+        database.table_mut("csv_document")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(semio_os_kernel::sqlite_snapshot::artifact::project_text(control, &self.schema)?), SqliteValue::Integer(i64::from(self.has_header))] });
         let mut record_rows = Vec::new();
         let mut field_rows = Vec::new();
         for (ordinal, record) in self.records.iter().enumerate() {
@@ -47,7 +47,7 @@ fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<
                 if (record_rows.len() + field_rows.len()) % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, record_rows.len() + field_rows.len(), total)?; }
                 let field_ordinal = i64::try_from(field_ordinal).map_err(|error|invalid(error.to_string()))?;
                 let field_id = i64::try_from(field_rows.len()).map_err(|error|invalid(error.to_string()))?.checked_add(1).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"CSV field identifier overflow"))?;
-                field_rows.push(SqliteRow { rowid: field_id, values: vec![SqliteValue::Integer(field_id), SqliteValue::Integer(record_id), SqliteValue::Integer(field_ordinal), SqliteValue::Text(semio_framework_os_kernel::sqlite_snapshot::artifact::project_text(control, &field.value)?), SqliteValue::Integer(i64::from(field.quoted))] });
+                field_rows.push(SqliteRow { rowid: field_id, values: vec![SqliteValue::Integer(field_id), SqliteValue::Integer(record_id), SqliteValue::Integer(field_ordinal), SqliteValue::Text(semio_os_kernel::sqlite_snapshot::artifact::project_text(control, &field.value)?), SqliteValue::Integer(i64::from(field.quoted))] });
             }
         }
         database.table_mut("csv_record")?.rows = record_rows;
@@ -87,11 +87,11 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
                 if completed % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, completed, total)?; }
                 if i64::try_from(index).map_err(|error|invalid(error.to_string()))? != ordinal { return Err(invalid("CSV field ordinals must be contiguous")); }
                 let quoted = match field.integer(4)? { 0 => false, 1 => true, _ => return Err(invalid("CSV field quote flag must be boolean")) };
-                record_fields.push(CsvField { value: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, field.text(3)?)?, quoted });
+                record_fields.push(CsvField { value: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, field.text(3)?)?, quoted });
             }
             records.push(CsvRecord { fields: record_fields });
         }
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, total, total)?;
-        Ok(Self { schema: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, document.text(1)?)?, has_header, records })
+        Ok(Self { schema: semio_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, document.text(1)?)?, has_header, records })
     }
 }

@@ -28,7 +28,7 @@ impl DocumentState {
     /// one concretely demonstrated brand divergence (`📓️w5a-browser-prefs-persistence.md` §7.1).
     pub fn introduction_seen_key(&self) -> Option<String> {
         let app_id = self.session.as_ref().map(|session| session.app.id.clone())?;
-        Some(match semio_framework_os_renderer_wgpu_host_base::boot_brand_id() {
+        Some(match semio_renderer_wgpu_host_base::boot_brand_id() {
             Some(brand_id) => format!("{brand_id}:{app_id}"),
             None => app_id,
         })
@@ -49,8 +49,8 @@ impl DocumentState {
     /// which is exactly what a kiosk brand needs. Carried by the brand ROW since this packet.
     pub fn auto_start_introduction(&mut self, seen_key: &str, seen: bool, chrome: &mut ChromeState, tutorial: &TutorialState) {
         let has_introduction = self.session.as_ref().is_some_and(|session| session.app.introduction.is_some());
-        let replay_on_load = semio_framework_os_renderer_wgpu_host_base::boot_brand().replays_introduction();
-        if !should_auto_start_introduction(seen_key, has_introduction, tutorial.tutorial.is_some(), seen, replay_on_load, semio_framework_os_renderer_wgpu_host_base::host_introduction_suppressed()) {
+        let replay_on_load = semio_renderer_wgpu_host_base::boot_brand().replays_introduction();
+        if !should_auto_start_introduction(seen_key, has_introduction, tutorial.tutorial.is_some(), seen, replay_on_load, semio_renderer_wgpu_host_base::host_introduction_suppressed()) {
             return;
         }
         chrome.chrome_build.start_introduction();
@@ -58,7 +58,7 @@ impl DocumentState {
 
     /// 🎓️ Reconciles a live host-policy transition without marking an unseen introduction as answered.
     pub fn reconcile_host_introduction_policy(&mut self, chrome: &mut ChromeState, tutorial: &TutorialState) {
-        let suppressed = semio_framework_os_renderer_wgpu_host_base::host_introduction_suppressed();
+        let suppressed = semio_renderer_wgpu_host_base::host_introduction_suppressed();
         if chrome.chrome_build.introduction_host_suppressed == suppressed {
             return;
         }
@@ -79,7 +79,7 @@ impl DocumentState {
                 let custom_themes = custom_themes_from(&preferences);
                 prefs.appearance_id = resolve_appearance_id(&preferences);
                 prefs.locale_id = resolve_locale_id(env_lock("SEMIO_LOCKED_LOCALE"), &preferences, prefs.active_locale());
-                semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(prefs.active_locale());
+                semio_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(prefs.active_locale());
                 prefs.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| prefs.active_terminology().as_str().to_string());
                 prefs.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
                 chrome.chrome_build.preferences.custom_drivers = preferences.custom_drivers;

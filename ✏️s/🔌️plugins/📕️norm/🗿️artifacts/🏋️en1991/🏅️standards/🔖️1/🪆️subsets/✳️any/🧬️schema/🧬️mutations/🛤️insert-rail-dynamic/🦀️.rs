@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertRailDynamic where 
         record: "InsertedRailDynamic",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert rail span {}", self.item.id), &format!("Eisenbahnfeld {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert rail span {}", self.item.id), &format!("Eisenbahnfeld {} einfügen", self.item.id))
     }
 }
 

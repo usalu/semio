@@ -20,18 +20,18 @@ semio-framework = { workspace = true, optional = true }
 semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-framework-plugin = { workspace = true, optional = true }
+semio-plugin = { workspace = true, optional = true }
 
 [features]
-testing = ["semio-framework-job/testkit", "dep:semio-framework", "dep:semio-framework-plugin"]
+testing = ["semio-framework-job/testkit", "dep:semio-framework", "dep:semio-plugin"]
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

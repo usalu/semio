@@ -103,7 +103,7 @@ impl DrawList {
         self.retained_output = None;
     }
 
-    pub fn push_scissor(&mut self, rect: semio_framework_ui_theme::geometry::Rect) {
+    pub fn push_scissor(&mut self, rect: semio_ui_theme::geometry::Rect) {
         if !self.claim_retained_output(1, size_of::<DrawLayer>()) {
             return;
         }
@@ -125,7 +125,7 @@ impl DrawList {
     }
 
     /// ✂️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
-    pub fn begin_silhouette_clip(&mut self, rects: &[semio_framework_ui_theme::geometry::Rect]) {
+    pub fn begin_silhouette_clip(&mut self, rects: &[semio_ui_theme::geometry::Rect]) {
         if ClipRegion::source_pieces_overlap(rects) {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;

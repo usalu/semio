@@ -4,7 +4,7 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColorValue;
 use super::reader::{byte,optional_text,word,Reader};
 use super::xrecord::require_null;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 use super::number::Projection;
 use Cell::{Integer as I,Text as T,Null as N};
 

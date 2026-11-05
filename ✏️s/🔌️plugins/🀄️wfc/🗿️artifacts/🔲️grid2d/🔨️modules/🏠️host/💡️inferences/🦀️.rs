@@ -39,12 +39,12 @@ pub const GRID2D_INFERENCE_REQUEST_SCHEMA: &str = r#"{
 
 /// 📜️ The whole published contract for `s.wfc.grid2d.solve`: request schema, result schema, the
 /// unit its bounded job counts, and the artifact binding that makes it callable at all.
-pub const GRID2D_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePayloadContract = semio_framework_plugin::ArtifactInferencePayloadContract {
+pub const GRID2D_INFERENCE_CONTRACT: semio_plugin::ArtifactInferencePayloadContract = semio_plugin::ArtifactInferencePayloadContract {
     payload_schema_id: GRID2D_INFERENCE_PAYLOAD_SCHEMA,
     input_schema: GRID2D_INFERENCE_REQUEST_SCHEMA,
     output_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"),
     progress_unit: "cells",
-    artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
+    artifact_binding: Some(semio_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
     commit: None,
 };
 
@@ -59,7 +59,7 @@ pub struct Grid2dInferenceRequest {
     /// `inference_run` with `artifactId` never has to state a snapshot it could not type: the
     /// gateway binds the document here and the guest decodes it into its own snapshot below.
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub document: Option<semio_framework_plugin::ArtifactDocumentPayload>,
+    pub document: Option<semio_plugin::ArtifactDocumentPayload>,
     pub checkpoint: Option<Vec<u8>>,
 }
 
@@ -799,7 +799,7 @@ impl semio_framework::ToolJobFactory for Grid2dInferenceJobFactory {
         semio_framework::ToolExecutionContract::resumable(16 << 20, MAX_GRID2D_TILES + MAX_GRID2D_RULES + MAX_GRID2D_CELLS, 4_096, MAX_GRID2D_OUTPUT_BYTES, 7_500, 1, 1)
     }
 
-    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Grid2dInferenceJob::new(operation, payload));
+    semio_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Grid2dInferenceJob::new(operation, payload));
 }
 
 /// 💡️ Descriptor for the `s.wfc.grid2d.solve` inference — five handcrafted facet leaves.
@@ -811,9 +811,9 @@ pub fn grid2d_artifact_inference_descriptor() -> ::semio_framework_schema_regist
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.wfc.grid2d.solve", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.wfc.grid2d.solve",
         inference: ::semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"), proto: "" },
@@ -939,8 +939,8 @@ impl store::InferredField<Grid2dSnapshot> for Grid2dEntropy {
 
 
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.
-pub const fn grid2d_inference_metadata() -> semio_framework_plugin::ArtifactInferenceServiceMetadata {
-    semio_framework_plugin::ArtifactInferenceServiceMetadata {
+pub const fn grid2d_inference_metadata() -> semio_plugin::ArtifactInferenceServiceMetadata {
+    semio_plugin::ArtifactInferenceServiceMetadata {
         owner: "wfc",
         artifact_kind: "s.wfc.grid2d",
         artifact_schema: "s.wfc.grid2d",

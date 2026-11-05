@@ -5,13 +5,13 @@
 //! from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright).
 
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 // 🚧️ SDK GAP: `TextWindowKit`/`TextView`/`WindowKit` (contract §2.6) are not yet in
-// `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs`) — the
+// `semio_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs`) — the
 // whole `//#region 🔖️WindowKits` region lives inside `pub mod app`, same gap category as
 // `InteractionView`. Not fixable here (`🧰️framework/**` is outside this packet's lease); flagged in
 // this packet's notes file for W1-A.
-use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
+use semio_plugin::app::{TextView, TextWindowKit, WindowKit};
 
 //#region 🔖️Definition
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -34,7 +34,7 @@ pub fn rule_text(state: &RewritingSnapshot) -> String {
     semio_framework_pack_json::to_string_pretty(&document)
 }
 
-pub fn render(document: &RewritingSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &RewritingSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     TextWindowKit::render(&TextView { text: rule_text(document), language: Some("json".into()) })
 }
 //#endregion 🔖️Render

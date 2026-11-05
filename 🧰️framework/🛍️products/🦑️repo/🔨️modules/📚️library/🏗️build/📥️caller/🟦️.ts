@@ -20,13 +20,19 @@ import {buildOperationArgumentsV1} from "../⚙️operations/🔤️options/🟦
 /** 🪶️ Loads the Cargo execution contract only when a native owner command asks for it, so no other command pays for the Cargo test harness, its sandbox and the native build storage. */
 const issueCargoExecutionBackendV1=(...call:Parameters<typeof import("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts").issueRepositoryCargoExecutionBackendV1>)=>(createRequire(import.meta.url)("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts") as typeof import("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts")).issueRepositoryCargoExecutionBackendV1(...call);
 
+/** 🔎️ Reports bounded schema diagnostics without serializing caller capabilities. */
+function nativeCapabilityRefusalV1(label:string,errors:readonly string[]):Error {
+ const details=errors.slice(0,8).map(error=>error.slice(0,256)).join("; "),remaining=errors.length>8?"; additional schema errors omitted":"";
+ return Error(label+": "+details+remaining);
+}
+
 /** 🎟️ Creates the configured native grant before the build process envelope is issued. */
 export function createNativeBuildCallerCapabilitiesV1(root:string,args:readonly string[],tool:string,environment:NodeJS.ProcessEnv):NativeBuildCallerCapabilitiesV1 {
-  if(validateJsonSchemaSubset(nativeSchema.$defs.NativeOwnerExecutionPolicyV1,executionPolicy).length)throw Error("Build native execution policy refused");
+  const policyErrors=validateJsonSchemaSubset(nativeSchema.$defs.NativeOwnerExecutionPolicyV1,executionPolicy);if(policyErrors.length)throw nativeCapabilityRefusalV1("Build native execution policy refused",policyErrors);
   const canonical=canonicalArchitectureEnvironment(root,environment),offline=canonical.CARGO_NET_OFFLINE??"false";
   if(!["true","false"].includes(offline))throw Error("Build native network selection refused");
-  const capabilities={tool,workspaceRoot:resolve(root),arguments:["repo",...args],selection:["repo",...args],buildMode:(environment.SEMIO_BUILD_MODE??"prototype") as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"}},launches:[["repo",...args]]};
-  if(validateJsonSchemaSubset(schema,capabilities).length)throw Error("Build native caller capabilities refused");
+  const capabilities={tool,workspaceRoot:resolve(root),codeRoot:resolve(root),arguments:["repo",...args],selection:["repo",...args],buildMode:(environment.SEMIO_BUILD_MODE??"prototype") as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"}},launches:[["repo",...args]]};
+  const issues=validateJsonSchemaSubset(schema,capabilities);if(issues.length)throw nativeCapabilityRefusalV1("Build native caller capabilities refused",issues);
   return capabilities;
 }
 
@@ -34,8 +40,8 @@ export function createNativeBuildCallerCapabilitiesV1(root:string,args:readonly 
 export function readBuildAuthoringCapabilitiesV1(root:string,args:readonly string[],tool:string,value:unknown):NativeBuildCallerCapabilitiesV1 {
   if(validateJsonSchemaSubset(authoringSchema,value).length)throw Error("Build authoring capabilities refused");
   const declared=value as NativeBuildCallerCapabilitiesV1,request=["repo",...args],workspaceRoot=resolve(root);
-  if(resolve(workspaceRoot,declared.workspaceRoot)!==workspaceRoot||declared.tool!==undefined&&declared.tool!==tool||JSON.stringify(declared.arguments)!==JSON.stringify(request)||JSON.stringify(declared.selection)!==JSON.stringify(request)||!declared.launches.some(launch=>JSON.stringify(launch)===JSON.stringify(request)))throw Error("Original authored build request changed");
-  const capabilities={...declared,tool,workspaceRoot,native:{...declared.native,artifactDirectory:resolve(workspaceRoot,declared.native.artifactDirectory)}};
+  if(resolve(workspaceRoot,declared.workspaceRoot)!==workspaceRoot||resolve(workspaceRoot,declared.codeRoot)!==workspaceRoot||declared.tool!==undefined&&declared.tool!==tool||JSON.stringify(declared.arguments)!==JSON.stringify(request)||JSON.stringify(declared.selection)!==JSON.stringify(request)||!declared.launches.some(launch=>JSON.stringify(launch)===JSON.stringify(request)))throw Error("Original authored build request changed");
+  const capabilities={...declared,tool,workspaceRoot,codeRoot:workspaceRoot,native:{...declared.native,artifactDirectory:resolve(workspaceRoot,declared.native.artifactDirectory)}};
   if(validateJsonSchemaSubset(schema,capabilities).length)throw Error("Initial build caller capabilities refused");
   return capabilities;
 }
@@ -65,7 +71,7 @@ function buildTaskEnvironmentV1(root:string,invocation:ScriptInvocation,executio
   if(request!==undefined){
     if(validateJsonSchemaSubset(nativeSchema.properties.command,request).length)throw Error("Discovered native build command required");
     const declared=request as NativeOwnerCapabilities["command"],command={...declared,arguments:[...declared.arguments,...effective]},cargoExecutionBackend=issueCargoExecutionBackendV1(root,command,capabilities.native.transport);
-    selected=readNativeOwnerCapabilities({version:1,buildMode:capabilities.buildMode,repositoryRoot:root,artifactDirectory:capabilities.native.artifactDirectory,command,transport:capabilities.native.transport,child:capabilities.native.child,network:capabilities.native.network,...(cargoExecutionBackend?{cargoExecutionBackend}:{})});
+    selected=readNativeOwnerCapabilities({version:1,buildMode:capabilities.buildMode,repositoryRoot:root,codeRoot:capabilities.codeRoot,artifactDirectory:capabilities.native.artifactDirectory,command,transport:capabilities.native.transport,child:capabilities.native.child,network:capabilities.native.network,...(cargoExecutionBackend?{cargoExecutionBackend}:{})});
   }
   const result=scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:selected},{...canonical,SEMIO_BUILD_TOOL:capabilities.tool,SEMIO_WORKSPACE_ROOT:root});
   delete result.SEMIO_SCRIPT_CAPABILITIES;

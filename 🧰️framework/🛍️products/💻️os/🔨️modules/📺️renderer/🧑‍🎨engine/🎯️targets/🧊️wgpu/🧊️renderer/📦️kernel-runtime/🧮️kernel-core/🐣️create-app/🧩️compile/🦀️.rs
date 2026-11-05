@@ -2,8 +2,8 @@
 use super::{SLOTS,Slot};
 use super::super::super::{OriginalKernelTaskProducer,OriginalKernelTaskInput};
 use semio_framework_actor::PackageHash;
-use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,PackageRef,CompiledHandle};
-use semio_framework_plugin_guest_contract::PluginHostError;
+use semio_plugin_host::{GuestRuntime,GuestRuntimes,PackageRef,CompiledHandle};
+use semio_plugin_guest_contract::PluginHostError;
 use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,OriginalSourceBinding,OriginalConstructionDemand,OriginalTurnFailure,StepContext,OriginalSuppliedJobBytes,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 use std::{future::Future,mem::{ManuallyDrop,size_of},pin::Pin,sync::{Arc,atomic::Ordering},task::{Context,Poll,RawWaker,RawWakerVTable,Waker}};

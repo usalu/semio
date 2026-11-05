@@ -7,7 +7,7 @@
 //! packet's own report for the tradeoff).
 
 use crate::schema::snapshot::SemioKitSnapshot;
-use semio_framework_plugin::{world3d_camera_json, world3d_meshes_json_from_kinds, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_plugin::{world3d_camera_json, world3d_meshes_json_from_kinds, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -59,7 +59,7 @@ fn world_instances_json(document: &SemioKitSnapshot) -> String {
 /// 👁️ Pure `SemioKitSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioKitSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &SemioKitSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = world3d_meshes_json_from_kinds(&[SEMIO_KIT_VIEW_FALLBACK_MESH_KIND.to_string()]);
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_KIT_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_KIT_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_KIT_VIEW_DEFAULT_CAMERA_FOV),

@@ -1,8 +1,8 @@
 //! 🧵️ Operation-owned DAG native codecs retain lifetime authority independently of poll fuel.
 use super::*;
-use semio_framework_os_infinite::board::io::text::dag_input::{retained::{DagInputCursor,DagInputKind},output::{DagJsonSource,DagOutputKind,DagOutputPreparation}};
+use semio_os_infinite::board::io::text::dag_input::{retained::{DagInputCursor,DagInputKind},output::{DagJsonSource,DagOutputKind,DagOutputPreparation}};
 use semio_framework_pack_json::JsonBorrowedWriteCursor;
-use semio_framework_os_infinite::board::ports::directed_dag::input_application::{DagInputApplication,DagInputDisplaced};
+use semio_os_infinite::board::ports::directed_dag::input_application::{DagInputApplication,DagInputDisplaced};
 use semio_framework_value::retirement::controlled::{ControlledRetirement,admit_typed_controlled_retirement};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
 use semio_framework_value::native_encoding::NativeEncodeContinuation;

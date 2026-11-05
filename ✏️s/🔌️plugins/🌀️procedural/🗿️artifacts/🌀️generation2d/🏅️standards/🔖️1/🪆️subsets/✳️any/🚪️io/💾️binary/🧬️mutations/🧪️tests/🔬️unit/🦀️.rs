@@ -9,7 +9,7 @@ use semio_s_artifact_procedural_2d_mut_widgets::delete_widget;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::OpText;
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
-use semio_framework_os_kernel::os_store::test_support;
+use semio_os_kernel::os_store::test_support;
 use store::os_store::store_schema::ArtifactCommand;
 
 //#region 🔖️OpTextTests
@@ -81,7 +81,7 @@ fn op_binary_round_trips_via_wrapper_fns() {
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_operation_applied() {
     let mut store = semio_s_artifact_procedural_2d_testkit::store_fixture::document_store(Generation2dSnapshot::default()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
     semio_s_artifact_procedural_2d_testkit::store_fixture::close(store);

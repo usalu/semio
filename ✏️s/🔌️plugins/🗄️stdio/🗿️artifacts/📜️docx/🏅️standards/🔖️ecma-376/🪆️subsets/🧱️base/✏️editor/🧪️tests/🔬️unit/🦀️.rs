@@ -31,7 +31,7 @@ fn formatting_arguments(address: &DocxXmlAddress, bold: bool, italic: bool, unde
 #[semio_framework_async_macros::async_test]
 async fn create_docx_editor_builds_a_definition_for_the_editor_role() {
     let def = create_docx_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, DOCX_EDITOR_DIALECT.into());
     assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
 }
@@ -45,7 +45,7 @@ fn initial_document_matches_the_neutral_empty_paragraph_snapshot_and_renders_one
     assert_eq!(targets[0].text, fixture["editableTarget"]["text"].as_str().unwrap());
     assert_eq!(targets[0].kind, semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxTextTargetKind::EmptyParagraph);
     assert_eq!(main::editable_pages(&snapshot).unwrap().len(), 1);
-    assert_eq!(main::render(&snapshot, semio_framework_plugin::UiPublicationRevision(23)).unwrap().children.len(), 1);
+    assert_eq!(main::render(&snapshot, semio_plugin::UiPublicationRevision(23)).unwrap().children.len(), 1);
 }
 
 #[test]
@@ -195,17 +195,17 @@ fn command_roundtrips_and_encoded_admission_counts_the_nested_address() {
 
 #[test]
 fn retained_work_refuses_an_unpaged_large_owner_without_publication() {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork};
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork};
 
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("before")]);
     let target = run(&snapshot);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/📬️preparation/🧪️tests/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
     let command = semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address: target.address, text: "x".repeat(fixture["refusedTextBytes"].as_u64().expect("refused text bytes") as usize) });
     let config = NoConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "docx-retained-text".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::testing::unbounded_grant() };
+    let hover = semio_plugin::app::InteractionHoverState::default();
+    let operation = semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "docx-retained-text".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::testing::unbounded_grant() };
     let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut work = DocxSetPageWork::default();
     assert!(work
@@ -233,7 +233,7 @@ fn canonical_preparation_route_is_mounted() {
 
 #[test]
 fn canonical_preparation_recognizes_and_encodes_every_addressed_xml_mutation() {
-    use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonTree};
+    use semio_plugin::plugin_app_close_prelude::store::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonTree};
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/📬️preparation/🧪️tests/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
@@ -304,8 +304,8 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     assert!(imported.xml_part(&address.part_path).expect("imported retained XML main part").document.materialization_owned_bytes().expect("retained XML owned bytes measure") > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
     let mutation = build_set_page_mutation(&imported, &address, after_text).expect("large retained DOCX mutation validates").expect("large retained DOCX mutation changes text");
 
-    let envelope = store::os_store::document_materialize::create_document_envelope(STDIO_DOCX_DOCUMENT_SCHEMA, "docx-retained-opc-lifecycle", imported, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("retained DOCX Store opens");
+    let envelope = store::os_store::document_materialize::create_document_envelope(STDIO_DOCX_DOCUMENT_SCHEMA, "docx-retained-opc-lifecycle", imported, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("retained DOCX Store opens");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<DocxSnapshot, DocxMutation>().expect("funded DOCX Store owners")).map_err(|(error, _)| error).expect("DOCX Store owners install");
     let factory = <DocxEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("registered DOCX routed preparation factory");
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_capacity_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_release_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_depth: 64 };
@@ -405,44 +405,44 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     }
     assert!(reopened_owners.uninstalled_owners_terminal_is_empty());
 
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<DocxSnapshot, DocxMutation>::new();
+    let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<DocxSnapshot, DocxMutation>::new();
     for _ in 0..maximum_turns {
-        let demand = semio_framework_plugin::ArtifactOwnedDisposer::retirement_demands(&disposer, &store, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("retained DOCX Store close demand");
-        let step = semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, quoted_grant(demand)).expect("retained DOCX Store closes");
-        if matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+        let demand = semio_plugin::ArtifactOwnedDisposer::retirement_demands(&disposer, &store, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("retained DOCX Store close demand");
+        let step = semio_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, quoted_grant(demand)).expect("retained DOCX Store closes");
+        if matches!(step, semio_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
-    assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
+    assert!(semio_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn registered_canonical_page_edit_publishes_once_and_undoes_redoes() {
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+    use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let original = snapshot_with_blocks(vec![DocxBlock::paragraph("before")]);
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
     let opened = app.snapshot().expect("opened DOCX fixture").clone();
     let original_address = run(&app.snapshot().unwrap()).address;
     let meta = artifact_app_laws::meta("local");
 
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(&original_address, "after")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(&original_address, "after")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
     assert_eq!(run(&app.snapshot().unwrap()).text, "after");
 
     let current_address = run(&app.snapshot().unwrap()).address;
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(&current_address, "after")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(&current_address, "after")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().unwrap(), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(run(&app.snapshot().unwrap()).text, "after");
 
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(&original_address, "refused")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(&original_address, "refused")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    assert!(semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
     assert_eq!(run(&app.snapshot().unwrap()).text, "after");
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
@@ -450,19 +450,19 @@ async fn registered_canonical_page_edit_publishes_once_and_undoes_redoes() {
 #[semio_framework_async_macros::async_test]
 async fn registered_run_formatting_action_saves_reopens_and_undoes_redoes() {
     use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_run_formatting;
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+    use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let original = snapshot_with_blocks(vec![DocxBlock::paragraph("format me")]);
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
     let opened = app.snapshot().expect("opened DOCX fixture").clone();
     let original_address = run(&app.snapshot().unwrap()).address;
     let meta = artifact_app_laws::meta("local");
 
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-run-formatting", Some(formatting_arguments(&original_address, true, true, false)), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-run-formatting", Some(formatting_arguments(&original_address, true, true, false)), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
     let formatted_address = run(&app.snapshot().unwrap()).address;
     assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &formatted_address).unwrap(), semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
@@ -471,16 +471,16 @@ async fn registered_run_formatting_action_saves_reopens_and_undoes_redoes() {
     let reopened_address = run(&reopened).address;
     assert_eq!(docx_run_formatting(&reopened, &reopened_address).unwrap(), semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().unwrap(), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     let redone_address = run(&app.snapshot().unwrap()).address;
     assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &redone_address).unwrap(), semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-run-formatting", Some(formatting_arguments(&original_address, false, false, false)), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-run-formatting", Some(formatting_arguments(&original_address, false, false, false)), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    assert!(semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
     assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &redone_address).unwrap(), semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", DocxEditor, || semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio", DocxEditor, || semio_plugin::App { definition: create_docx_editor(), examples: Vec::new() }, "../..");

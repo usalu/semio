@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeStoreyHorizontalLo
         record: "ChangedStoreyHorizontalLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Horizontal load H_Ed (fictitious) of the storey", "Geschoss: Horizontallast H_Ed (Ersatzlast) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Horizontal load H_Ed (fictitious) of the storey", "Geschoss: Horizontallast H_Ed (Ersatzlast) ändern")
     }
 }
 

@@ -1,6 +1,6 @@
 //! 📥️ The gateway-to-shell frame enum, the conversation text law and the encoded page writer.
 
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_value::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use super::wire;

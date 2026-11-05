@@ -1,0 +1,62 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "dependencyJson",
+      "inputJson",
+      "neuronId",
+      "nodeHash",
+      "operatorId",
+      "operatorVersion",
+      "resume",
+      "windowId",
+      "windowKindId",
+      "expected"
+    ],
+    "properties": {
+      "dependencyJson": {
+        "type": "string"
+      },
+      "inputJson": {
+        "type": "string"
+      },
+      "neuronId": {
+        "type": "string"
+      },
+      "nodeHash": {
+        "oneOf": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          }
+        ]
+      },
+      "operatorId": {
+        "type": "string"
+      },
+      "operatorVersion": {
+        "type": "string"
+      },
+      "resume": {
+        "type": "boolean"
+      },
+      "windowId": {
+        "type": "string"
+      },
+      "windowKindId": {
+        "type": "string"
+      },
+      "expected": {
+        "type": "string"
+      }
+    }
+  }
+}

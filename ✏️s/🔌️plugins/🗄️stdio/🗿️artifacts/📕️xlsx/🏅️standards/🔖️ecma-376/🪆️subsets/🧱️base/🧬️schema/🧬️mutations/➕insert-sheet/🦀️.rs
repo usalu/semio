@@ -40,8 +40,8 @@ impl InsertSheet {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSheet {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "sheet", kind: "insert-sheet", record: "InsertSheet" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert sheet", "Arbeitsblatt einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert sheet", "Arbeitsblatt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

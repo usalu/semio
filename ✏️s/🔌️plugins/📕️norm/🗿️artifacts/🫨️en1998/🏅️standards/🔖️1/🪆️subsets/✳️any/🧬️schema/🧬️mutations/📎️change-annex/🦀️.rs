@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAnnex where Op: pr
         record: "ChangeAnnex",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change national annex", "Nationalen Anhang ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change national annex", "Nationalen Anhang ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-annex".into()]

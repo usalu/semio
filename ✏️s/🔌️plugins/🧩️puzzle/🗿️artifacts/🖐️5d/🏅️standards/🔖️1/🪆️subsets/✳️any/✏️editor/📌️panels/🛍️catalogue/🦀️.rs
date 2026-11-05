@@ -10,22 +10,22 @@ use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::terminology::
 use semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::catalog::{catalog_kind_label, puzzle5d_inferred_kind_rows};
 use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::view::Puzzle5dScene;
 use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action_draggable;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action_draggable;
+use semio_plugin::ActionFactory;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
 
@@ -69,7 +69,7 @@ fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> Value {
     semio_framework_pack_json::object([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), Value::String(payload.to_string()))])
 }
 
-fn add_part_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn add_part_args(kind_id: &str) -> semio_plugin::UiAssemblyResult<UiValue> {
     let kind = UiText::try_from_str(kind_id).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue kind admission failed"))?;
     let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue action map admission failed"))?;
     args.push("partKind".into(), kind).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue action entry admission failed"))?;
@@ -77,7 +77,7 @@ fn add_part_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiVa
 }
 
 /// 🛍️ One catalogue row. `index` keeps the key unique even when a catalog repeats a kind id.
-fn kind_catalog_item(section_id: &str, entry: &(usize, &Value), add_action: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn kind_catalog_item(section_id: &str, entry: &(usize, &Value), add_action: Option<&str>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (index, entry) = (entry.0, entry.1);
     let actions = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID);
     let kind_id = entry.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "puzzle5d catalogue kind id is required"))?;
@@ -99,7 +99,7 @@ fn indexed(entries: &[Value]) -> Vec<(usize, &Value)> {
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
     let slice = |key: &str| match catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default() {
         entries if entries.is_empty() => puzzle5d_inferred_kind_rows(&envelope.document, key),

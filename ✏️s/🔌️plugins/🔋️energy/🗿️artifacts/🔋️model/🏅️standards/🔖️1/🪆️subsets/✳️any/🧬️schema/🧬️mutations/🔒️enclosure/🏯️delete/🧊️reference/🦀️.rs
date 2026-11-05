@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "thermal-enclosure", kind: "delete-thermal-enclosure", record: "DeletedThermalEnclosure" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete Thermal Enclosure {}", self.id.0), &format!("Zonenverbund {} löschen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete Thermal Enclosure {}", self.id.0), &format!("Zonenverbund {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

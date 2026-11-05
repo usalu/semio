@@ -7,7 +7,7 @@
 //! literal carry-over (see `📓️w4-sequence-report.md` `## openQuestions`).
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<A: crate::SequenceApplication>() -> StandardDeclaration<A> {
@@ -16,7 +16,7 @@ pub fn standard<A: crate::SequenceApplication>() -> StandardDeclaration<A> {
 
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -25,7 +25,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.sequence".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Sequence", "Sequenz"),
+        label: semio_ui_locale::LocalizedLabel::native("Sequence", "Sequenz"),
         source_format: "sequence.sequence".into(),
         component_kind: "sequence".into(),
         dimension: "graph".into(),
@@ -53,24 +53,24 @@ pub mod artifact_items_6 {
 /// `ArtifactCapability` rows above (kept per debt D1, deleted repo-wide only in W6); wiring them
 /// into this field too is real follow-up work, not required for the tree to register or for any
 /// law to hold (mirrors the stdio pilot's own documented deviation, `📓️w2-p-report.md`).
-pub fn artifact<A: SequenceApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: SequenceApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait SequenceApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::sequence::app::SequencePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::sequence::SequenceViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::sequence::app::SequencePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::sequence::SequenceViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> SequenceApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::sequence::app::SequencePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::sequence::SequenceViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::sequence::app::SequencePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::sequence::SequenceViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 

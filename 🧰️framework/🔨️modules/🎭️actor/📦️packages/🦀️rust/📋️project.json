@@ -144,7 +144,19 @@
         "semio": {
           "wasmPackageSourceV1": {
             "version": 1,
-            "sourceOwner": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust"
+            "sourceOwner": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+            "compileOutputs": [
+              {
+                "specifier": "@semio-tech/framework-actor-rs",
+                "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor.js",
+                "declarations": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor.d.ts"
+              },
+              {
+                "specifier": "@semio-tech/framework-actor-rs/framework_actor.js",
+                "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor.js",
+                "declarations": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor.d.ts"
+              }
+            ]
           }
         }
       }

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlatePlateHei
         record: "ChangedJointPlatePlateHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plate height h_p (along the bolt line) of the joint plate", "Anschlussblech: Blechhöhe h_p (entlang der Schraubenlinie) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plate height h_p (along the bolt line) of the joint plate", "Anschlussblech: Blechhöhe h_p (entlang der Schraubenlinie) ändern")
     }
 }
 

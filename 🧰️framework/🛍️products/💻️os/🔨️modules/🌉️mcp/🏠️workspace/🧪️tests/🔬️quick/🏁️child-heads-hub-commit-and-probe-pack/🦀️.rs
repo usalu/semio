@@ -10,7 +10,7 @@ fn a_composed_documents_child_heads_become_child_keyed_inference_dependencies() 
     ];
     let dependencies = child_head_dependencies(entries);
     assert_eq!(dependencies, vec![("child:content/flow-1".to_string(), vec![1, 2, 3]), ("child:content/flow-2".to_string(), vec![4])]);
-    assert!(dependencies.iter().all(|(key, _)| semio_framework_plugin::inference_child_dependency_parts(key).is_some()), "the guest parses every key back");
+    assert!(dependencies.iter().all(|(key, _)| semio_plugin::inference_child_dependency_parts(key).is_some()), "the guest parses every key back");
     assert!(child_head_dependencies(Vec::new()).is_empty(), "a document without children sends no dependencies");
 }
 
@@ -43,7 +43,7 @@ fn isolated_compile_worker_entry() {
     let (Some(engine), Some(out)) = (std::env::var_os(ISOLATED_COMPILE_TEST_ENGINE), std::env::var_os(ISOLATED_COMPILE_TEST_OUT)) else { return };
     let mut bytes = Vec::new();
     std::io::stdin().read_to_end(&mut bytes).expect("component on stdin");
-    let result = semio_framework_plugin_host::compile_component_isolated(&engine.to_string_lossy(), &bytes, Path::new(&out));
+    let result = semio_plugin_host::compile_component_isolated(&engine.to_string_lossy(), &bytes, Path::new(&out));
     if let Err(error) = &result {
         eprintln!("{error}");
     }
@@ -57,7 +57,7 @@ fn isolated_compile_worker_entry() {
 /// Measured 2026-09-26 on hub 7800: 1 of 3 agent commits answered SUCCEEDED while the hub head never moved.
 #[test]
 fn a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay() {
-    let head = semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1 { document_id: "doc".to_string(), head_edit_ordinal: 1, head_edit_id: "edit".to_string(), last_commit_seq: 1, chain_sha256: "0".repeat(64) };
+    let head = semio_os_kernel::os_directory::EditedArtifactFrontierV1 { document_id: "doc".to_string(), head_edit_ordinal: 1, head_edit_id: "edit".to_string(), last_commit_seq: 1, chain_sha256: "0".repeat(64) };
     let live = |pending: usize, acknowledged: bool| store::sync::ArtifactSyncStatus { persisted: true, pending_mutations: pending, remote: store::sync::RemoteState::Live { peer_count: 1 }, acknowledged_head: acknowledged.then(|| head.clone()), write_failure: None };
     let relay = HubRelay::default();
     relay.record(Some(live(0, true)), None);

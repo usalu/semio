@@ -136,9 +136,9 @@ pub fn flow_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.flow.flow", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.flow.flow",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" },
@@ -480,7 +480,7 @@ pub fn flow_genesis_content_pack(document: &FlowSnapshot, slot: &str, child_id: 
 /// refreshes, rendered graphs without the widgets `addWidget` had added and let every parent-lane edit re-point the
 /// coordinate at a child no store held (ticket 26/09/23, P8 `wp-p8.md` § flow). A coordinate whose child is not composed
 /// yet (a document parsed from text, before genesis) reads the scene genesis will compose it from.
-pub fn flow_composed_snapshot(snapshot: &FlowSnapshot, children: &semio_framework_plugin::ChildContentView) -> Result<FlowSnapshot, semio_framework_plugin::Fault> {
+pub fn flow_composed_snapshot(snapshot: &FlowSnapshot, children: &semio_plugin::ChildContentView) -> Result<FlowSnapshot, semio_plugin::Fault> {
     let child_id = &snapshot.content.child_id;
     let scene = match children.dialect("content", child_id) {
         Some(dialect) if dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == "flow" => {
@@ -489,14 +489,14 @@ pub fn flow_composed_snapshot(snapshot: &FlowSnapshot, children: &semio_framewor
             Arc::new(FlowWorkingScene { widgets, synapses, layout })
         }
         Some(dialect) => {
-            return Err(semio_framework_plugin::Fault::new(
-                semio_framework_plugin::FaultOrigin::App,
-                semio_framework_plugin::FaultCode::new("flow.content-dialect"),
+            return Err(semio_plugin::Fault::new(
+                semio_plugin::FaultOrigin::App,
+                semio_plugin::FaultCode::new("flow.content-dialect"),
                 format!("the flow content child \"{child_id}\" is {}@{}/{}, not s.stdio.semio@v1/flow", dialect.artifact_kind, dialect.standard, dialect.subset),
             ))
         }
         None => snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| {
-            semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.content-unavailable"), format!("the flow content child \"{child_id}\" is not composed"))
+            semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.content-unavailable"), format!("the flow content child \"{child_id}\" is not composed"))
         })?,
     };
     let mut content = snapshot.content.clone();

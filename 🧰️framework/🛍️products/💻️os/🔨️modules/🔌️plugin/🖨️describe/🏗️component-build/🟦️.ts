@@ -10,7 +10,7 @@ import { cargoTargetDirectory, devToolingEnv, resolveWorkspaceBin, runCmd } from
 import { runAdmittedCargoPackageTestsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { COMPONENT_TARGET, type ComponentProfileV1 } from "../🏷️component-receipt/🟦️.ts";
-export const CRATE_NAME = "semio-framework-plugin-describe";
+export const CRATE_NAME = "semio-plugin-describe";
 export const DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
 export const DESCRIPTOR_JSON_FILENAME = "🔣️.json";
 export const FRESH_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;

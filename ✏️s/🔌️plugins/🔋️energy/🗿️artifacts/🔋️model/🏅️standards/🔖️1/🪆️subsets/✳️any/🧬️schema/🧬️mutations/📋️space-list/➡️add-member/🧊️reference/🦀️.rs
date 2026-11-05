@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "space-list", kind: "add-space-list-member", record: "AddedSpaceListMember" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add space {} to space list {}", self.space_id.0, self.id.0), &format!("Raum {} zu Raumliste {} hinzufügen", self.space_id.0, self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add space {} to space list {}", self.space_id.0, self.id.0), &format!("Raum {} zu Raumliste {} hinzufügen", self.space_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

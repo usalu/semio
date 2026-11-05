@@ -12,7 +12,7 @@ use semio_framework_test_fixtures::fixture_text;
     }
     #[test]
     fn sqlite_snapshot_dxf_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-        use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_os_kernel::io::IoPayload;
         let mut snapshot=fixture();snapshot.schema="DXF 世界\0".repeat(16384);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{
             assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
@@ -45,17 +45,17 @@ use semio_framework_value::FromValue;
 
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_dxf_actual_declaration_preserves_complete_owned_model(){
-        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
+        use {semio_framework_artifact_reference::ArtifactDialect,semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
         crate::register_sqlite_test_declaration();
         let dialect=ArtifactDialect{artifact_kind:"s.stdio.dxf".into(),standard:"r12".into(),subset:"*".into()};let mut snapshot=fixture();snapshot.schema="complete-owned-DXF-schema".into();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut phases=Vec::new();
-        let file=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=sqlite_snapshot::SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<DxfSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::EncodeNative|Phase::DecodeNative)));
+        let file=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=sqlite_snapshot::SnapshotEncoding::Binary;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<DxfSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::EncodeNative|Phase::DecodeNative)));
     }
     async fn erased_snapshot(snapshot:&DxfSnapshot,encoding:sqlite_snapshot::SnapshotEncoding)->DxfSnapshot{
-        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::io_mechanism::io_route};
+        use {semio_framework_artifact_reference::ArtifactDialect,semio_os_kernel::io::IoPayload,semio_os_kernel::io::io_mechanism::io_route};
         use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};
         crate::register_sqlite_test_declaration();
         let dialect=ArtifactDialect{artifact_kind:"s.stdio.dxf".into(),standard:"r12".into(),subset:"*".into()};
-        let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();
+        let sqlite:ArtifactDialect=semio_os_kernel::io_schema::SQLITE_SNAPSHOT.into();
         let payload=match encoding{sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(snapshot.encode_pack()),sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(snapshot.print_dsl())};
         let export=io_route(&dialect,&sqlite,1).await.unwrap().value;
         let file=semio_s_artifact_stdio_contract::testing::io_run(&export,payload, Default::default(), &mut |_| true).await.unwrap().value;

@@ -32,8 +32,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "fix", entity: "pixel", kind: "pin-pixel", record: "Fixed" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Pin ({}, {}) to colour {}", self.x, self.y, self.color), &format!("({}, {}) auf Farbe {} fixieren", self.x, self.y, self.color))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Pin ({}, {}) to colour {}", self.x, self.y, self.color), &format!("({}, {}) auf Farbe {} fixieren", self.x, self.y, self.color))
     }
     fn target(&self) -> Vec<String> {
         vec![crate::schema::snapshot::pin_key(self.x, self.y)]

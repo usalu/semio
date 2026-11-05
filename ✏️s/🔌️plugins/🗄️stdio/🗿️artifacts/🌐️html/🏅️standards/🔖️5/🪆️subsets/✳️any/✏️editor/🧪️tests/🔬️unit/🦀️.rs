@@ -1,11 +1,11 @@
 use crate::standards::v5::subsets::any::schema::mutations::{splice_source, HtmlMutation};
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use crate::editor::html::{HTML_KIT_ACTION_ID, html_example_snapshot, html_command_from_action, html_emit};
 use crate::editor::html::*;
@@ -80,11 +80,11 @@ async fn the_editor_declares_the_example_pickers_verb() {
 /// `Migrated` classification and `OpBinary::TOOL_JOB_IDS` disagree — so constructing one is the proof.
 #[semio_framework_async_macros::async_test]
 async fn the_example_switch_joins_its_exact_retained_factory() {
-    use semio_framework_plugin::PluginApp;
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_html_editor());
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<HtmlEditor>>::with_registry(EditorApp::<HtmlEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
+    use semio_plugin::PluginApp;
+    let registry = semio_plugin::AppActionRegistry::from_definition(&create_html_editor());
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::VcsArtifactApp::<EditorApp<HtmlEditor>>::with_registry(EditorApp::<HtmlEditor>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
 
@@ -111,27 +111,27 @@ async fn the_shell_action_pair_resolves_into_the_typed_command() {
 //#endregion 🎬️ExampleSwitchLaws
 
 //#region 🪟️KitVerbLaws
-type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<HtmlEditor>>;
+type KitFixtureApp = semio_plugin::VcsArtifactApp<EditorApp<HtmlEditor>>;
 
 /// 🧪️ One registered fixture app holding `document`, loaded exactly as a host applies the example
 /// switch's `Effect::LoadDocument`.
-async fn kit_fixture_holding(document: &HtmlSnapshot) -> (KitFixtureApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope) {
-    use semio_framework_plugin::PluginApp;
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HtmlEditor>, _>(async { semio_framework_plugin::App { definition: create_html_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_HTML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
+async fn kit_fixture_holding(document: &HtmlSnapshot) -> (KitFixtureApp, semio_plugin::artifact_app_laws::OriginalFixtureScope) {
+    use semio_plugin::PluginApp;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<HtmlEditor>, _>(async { semio_plugin::App { definition: create_html_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_HTML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
     (app, scope)
 }
 
 /// 🕹️ Dispatches `action` with text-staged `args`, exactly as a rail sends it, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)], cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), Fault> {
-    use semio_framework_plugin::PluginApp;
-    let meta = semio_framework_plugin::artifact_app_laws::meta("local");
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)], cx: &mut semio_plugin::StepContext<'_>) -> Result<(), Fault> {
+    use semio_plugin::PluginApp;
+    let meta = semio_plugin::artifact_app_laws::meta("local");
     let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_plugin::Fault::from(format!("{failure:?}"))))?;
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// 🧾️ The change set JSON the editor sends: `(offset, delete, insert)` ranges of Unicode scalars of the source it started from.
@@ -151,7 +151,7 @@ fn parsed(source: &str) -> HtmlSnapshot {
 /// editor's exact retained factory as ONE undoable `splice-source` edit; one undo restores the committed document.
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory_and_undoes() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let base = parsed("<!DOCTYPE html>\n<html><head><title>T</title></head><body><p id=\"a\">Hello</p></body></html>");
     let (mut app, mut scope) = kit_fixture_holding(&base).await;
     let edits = app.edit_transactions().len();
@@ -163,11 +163,11 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory_and_
     let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
     let row = rows.iter().max_by_key(|row| row.seq).expect("the applied change set's row");
     assert_eq!(row.mutations.len(), 1, "one change set is one leaf: {:?}", row.mutations);
-    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Edit source");
-    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Quelltext bearbeiten");
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    assert_eq!(row.mutations[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Edit source");
+    assert_eq!(row.mutations[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Quelltext bearbeiten");
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_plugin::artifact_app_laws::meta("local").instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("html snapshot"), base, "one undo restores the committed document");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: a change set whose edited source is not well-formed HTML is refused loudly with `stdio.html.invalid-source`
@@ -181,7 +181,7 @@ async fn text_edit_refuses_source_that_is_not_html_and_keeps_the_document() {
     let fault = dispatch_settled(&mut app, "textEdit", &[("revision", &semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&base)), ("splices", &changes)], scope.cx()).await.expect_err("invalid source is refused");
     assert!(format!("{fault:?}").contains("stdio.html.invalid-source"), "{fault:?}");
     assert_eq!(app.snapshot().expect("html snapshot"), base);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 static SPLICE_SOURCE: &str = include_str!("../../../🧪️tests/🧫️fixtures/✂️splice-source/🔣️.json");
@@ -240,7 +240,7 @@ fn replacing_the_whole_source_is_refused_as_a_load() {
     assert_eq!(<HtmlEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &HtmlSnapshot::default()).err().expect("a load, not an edit").code.0, "snapshot-edit.unsupported-path");
 }
 //#endregion 🪟️DetailsLaws
-semio_framework_plugin::history_edit_acceptance_law!("stdio", HtmlEditor, || semio_framework_plugin::App { definition: create_html_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio", HtmlEditor, || semio_plugin::App { definition: create_html_editor(), examples: Vec::new() }, "../..");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_node() {

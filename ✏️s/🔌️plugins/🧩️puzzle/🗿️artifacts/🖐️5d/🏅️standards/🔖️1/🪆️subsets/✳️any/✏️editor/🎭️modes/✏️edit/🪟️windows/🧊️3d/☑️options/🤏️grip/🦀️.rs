@@ -11,8 +11,8 @@ use crate::editor::puzzle5d::PUZZLE5D_GRIP_DIRECTION_OUTWARDS;
 use crate::editor::puzzle5d::PUZZLE5D_GRIP_SHOW_ALWAYS;
 use crate::editor::puzzle5d::PUZZLE5D_GRIP_SHOW_SELECTED;
 use crate::editor::puzzle5d::PUZZLE5D_PLAY_CONTROLLER_ID;
-use semio_framework_plugin::MeasureSelectItem;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::MeasureSelectItem;
+use semio_plugin::WindowMeasure;
 
 /// 🤏️ `puzzle5d-play-world-grip-show` — Always (every part) or Selected (hovered/selected only).
 pub fn show_measure(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeasure {

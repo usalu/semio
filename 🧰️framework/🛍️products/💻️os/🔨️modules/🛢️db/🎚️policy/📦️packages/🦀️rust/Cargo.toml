@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-kernel-db-policy"
+name = "semio-os-kernel-db-policy"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,8 +23,8 @@ name = "db_policy"
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel-db-durability = { path = "../../../💾️durability/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
+semio-os-kernel-db-durability = { path = "../../../💾️durability/📦️packages/🦀️rust" }
+semio-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 
 [dev-dependencies]

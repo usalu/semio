@@ -6,8 +6,8 @@
     use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::{LAYOUT_PLAY_BODY_PREVIEW, LAYOUT_PLAY_WINDOW_PREVIEW};
     use crate::{LayoutCommand, LayoutPlayApp, create_layout_app};
     use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, render_registered_fixture_app, settle_registered_typed_operation, OriginalFixtureScope};
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, render_registered_fixture_app, settle_registered_typed_operation, OriginalFixtureScope};
+    use semio_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// 🪪️ The one live instance every fixture app binds. A registry-backed app refuses every typed
     /// command until it knows its instance (`interactive-job.live-instance`) — `meta("local")`
@@ -28,7 +28,7 @@
     impl LayoutApp {
         /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
         pub fn close_fixture(&mut self) {
-            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -61,7 +61,7 @@
         App { definition: create_layout_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("layout", LayoutPlayApp, layout_app_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("layout", LayoutPlayApp, layout_app_manifest_for_tests, "../..");
 
     pub async fn layout_app() -> LayoutApp {
         layout_app_with_registry().await
@@ -74,7 +74,7 @@
     /// registry-LESS `artifact_app_laws::new_app` fails construction outright with
     /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
     pub async fn layout_app_with_registry() -> LayoutApp {
-        let mut app = new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let mut app = new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(INSTANCE).await;
         LayoutApp(app, OriginalFixtureScope::admit())
     }
@@ -95,21 +95,21 @@
     pub fn windowed_view() -> ViewModel {
         ViewModel {
             window_instances: vec![
-                semio_framework_plugin::ViewWindowInstance { id: WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into() },
-                semio_framework_plugin::ViewWindowInstance { id: PREVIEW_WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_PREVIEW.into() },
+                semio_plugin::ViewWindowInstance { id: WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into() },
+                semio_plugin::ViewWindowInstance { id: PREVIEW_WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_PREVIEW.into() },
             ],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         }
     }
 
     /// 🎯️ `meta("local")` bound to {@link WINDOW}, exactly as `ShellHost` binds it.
-    pub fn windowed_meta() -> semio_framework_plugin::ActionMeta {
+    pub fn windowed_meta() -> semio_plugin::ActionMeta {
         window_meta(WINDOW)
     }
 
     /// 🎯️ `meta("local")` bound to one mounted window instance of {@link windowed_view}.
-    pub fn window_meta(window: &str) -> semio_framework_plugin::ActionMeta {
-        semio_framework_plugin::ActionMeta { view_state: windowed_view().for_window_instance(window), ..meta("local") }
+    pub fn window_meta(window: &str) -> semio_plugin::ActionMeta {
+        semio_plugin::ActionMeta { view_state: windowed_view().for_window_instance(window), ..meta("local") }
     }
 
     /// 🪟️ The view a body renders under: a window body inside its own window instance, as `ShellHost`
@@ -118,7 +118,7 @@
         let window = match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => WINDOW,
             LAYOUT_PLAY_BODY_PREVIEW => PREVIEW_WINDOW,
-            _ => return ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
+            _ => return ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native),
         };
         windowed_view().for_window_instance(window).expect("fixture window instance is mounted")
     }
@@ -132,8 +132,8 @@
     /// 🎯️ {@link dispatch} addressed to one mounted window instance.
     pub async fn dispatch_in(app: &mut LayoutApp, command: LayoutCommand, window: &str) -> InvocationResult {
         let verb = command.command_id().to_string();
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &window_meta(window), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
-        settle_registered_typed_operation(&mut app.0, INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} did not settle: {fault:?}"));
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &window_meta(window), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
+        settle_registered_typed_operation(&mut app.0, INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} did not settle: {fault:?}"));
         result
     }
 
@@ -145,7 +145,7 @@
     /// VIEW's locale, so a translation assertion that reuses the default view reads English text no
     /// matter which language it is asserting.
     pub async fn render_localized(app: &mut LayoutApp, body_key: &str, locale: &str) -> String {
-        let view = ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(locale).expect("declared fixture locale"), ..ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(locale).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
+        let view = ViewModel { locale: semio_ui_locale::Locale::from_language_tag(locale).expect("declared fixture locale"), ..ViewModel::new(semio_ui_locale::Locale::from_language_tag(locale).expect("declared fixture locale"), semio_ui_locale::Terminology::Native) };
         render_in(app, body_key, &view).await
     }
 
@@ -157,9 +157,9 @@
     /// binary pack inside `SurfaceProps.doc` (plus out-of-doc payload lanes), so the projected tree's
     /// JSON text contains none of the scene's own strings — a test that greps the projection for a
     /// layer id reads an empty field no matter what the window rendered.
-    pub async fn scene(app: &mut LayoutApp, body_key: &str) -> semio_framework_plugin::Canvas2dScene {
+    pub async fn scene(app: &mut LayoutApp, body_key: &str) -> semio_plugin::Canvas2dScene {
         let projection = render(app, body_key).await;
-        semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("window body carries an assembled canvas scene")
+        semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("window body carries an assembled canvas scene")
     }
 
     pub fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {

@@ -5,7 +5,7 @@ static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWit
 
 use semio_framework_test_typed_input_law as typed_input_law;
 
-use semio_framework_os_flow::mesh::MeshPackEncodingJob;
+use semio_os_flow::mesh::MeshPackEncodingJob;
 use protocol::MapDelta;
 use typed_input_law::typed_input_retirement_law;
 

@@ -123,7 +123,7 @@ pub struct Wfc2dGraphGesture {
 /// inline sliders and no variadic ports. A row whose target the document no longer holds (a wire already drawn, an
 /// adjacency already cut) leaves nothing.
 pub fn wfc2d_node_graph_edit(document: &Wfc2dSnapshot, operations_json: &str) -> Result<Wfc2dGraphGesture, Fault> {
-    let refuse = |reason: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
+    let refuse = |reason: String| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc2d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
     let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&format!("{{\"operations\":{operations_json}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
     let rows = node_graph_edit_rows(&args).map_err(refuse)?;
     let mut gesture = Wfc2dGraphGesture::default();
@@ -214,35 +214,35 @@ pub(super) fn wfc2d_load_document_effect(document: &Wfc2dSnapshot) -> semio_fram
 pub(super) fn require_slot(document: &Wfc2dSnapshot, id: &str) -> Result<(), Fault> {
     match document.slots.iter().any(|slot| slot.id == id) {
         true => Ok(()),
-        false => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.slot.unknown-slot"), format!("this document declares no slot '{id}'"))),
+        false => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc2d.slot.unknown-slot"), format!("this document declares no slot '{id}'"))),
     }
 }
 
 pub(super) fn require_tile(document: &Wfc2dSnapshot, id: &str) -> Result<(), Fault> {
     match document.tiles.iter().any(|tile| tile.id == id) {
         true => Ok(()),
-        false => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.tile.unknown-tile"), format!("this document declares no tile '{id}'"))),
+        false => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc2d.tile.unknown-tile"), format!("this document declares no tile '{id}'"))),
     }
 }
 
 pub(super) fn require_edge(document: &Wfc2dSnapshot, id: &str) -> Result<(), Fault> {
     match document.edges.iter().any(|edge| edge.id == id) {
         true => Ok(()),
-        false => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.edge.unknown-edge"), format!("this document declares no adjacency '{id}'"))),
+        false => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc2d.edge.unknown-edge"), format!("this document declares no adjacency '{id}'"))),
     }
 }
 
 pub(super) fn require_rule(document: &Wfc2dSnapshot, id: &str) -> Result<(), Fault> {
     match document.rules.iter().any(|rule| rule.id == id) {
         true => Ok(()),
-        false => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.rule.unknown-rule"), format!("this document declares no rule '{id}'"))),
+        false => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc2d.rule.unknown-rule"), format!("this document declares no rule '{id}'"))),
     }
 }
 
 pub(super) fn require_fresh(taken: bool, entity: &'static str, id: &str) -> Result<(), Fault> {
     match taken {
         false => Ok(()),
-        true => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.id.taken"), format!("this document already holds a {entity} '{id}'"))),
+        true => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc2d.id.taken"), format!("this document already holds a {entity} '{id}'"))),
     }
 }
 //#endregion 🛂️Guards

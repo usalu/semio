@@ -9,18 +9,18 @@ use crate::schema::{append_grid_count_glyph_instances, append_kind_scene_meshes,
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::ObjectKind;
-use semio_framework_plugin::app::WindowKit;
-use semio_framework_plugin::world3d_default_camera;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MeshView;
-use semio_framework_plugin::MeshWindowKit;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::app::WindowKit;
+use semio_plugin::world3d_default_camera;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MeshView;
+use semio_plugin::MeshWindowKit;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_GRID: &str = "sourcing-grid";

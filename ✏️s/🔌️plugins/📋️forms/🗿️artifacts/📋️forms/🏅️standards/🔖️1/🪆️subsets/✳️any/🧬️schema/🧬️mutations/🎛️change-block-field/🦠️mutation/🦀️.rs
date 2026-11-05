@@ -176,9 +176,9 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-field", kind: "change-block-field", record: "ChangedBlockField" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (en, de) = self.change.labels();
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change {en} of question \"{}\"", self.block_id), &format!("{de} der Frage \"{}\" ändern", self.block_id))
+        semio_ui_locale::LocalizedLabel::native(&format!("Change {en} of question \"{}\"", self.block_id), &format!("{de} der Frage \"{}\" ändern", self.block_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.block_id.clone()]

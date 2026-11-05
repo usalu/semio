@@ -1,6 +1,6 @@
 //! 🎞️ Complete media domain fields remain in their source slot until their original context funds publication.
-use semio_framework_plugin_decl_app::invalid;
-use semio_framework_plugin_decl_app::project_media_error;
+use semio_plugin_decl_app::invalid;
+use semio_plugin_decl_app::project_media_error;
 use semio_framework::MediaError;
 use semio_framework_job::{OriginalDomainProjection, OriginalDomainView as V, OriginalDomainFailure};
 use semio_framework_value::{ValueError, RetainedCloneProgress};
@@ -39,10 +39,10 @@ pub enum MediaOperationFailure{Domain(MediaOperationSource),Original(semio_frame
 impl From<MediaError> for MediaOperationFailure{fn from(source:MediaError)->Self{Self::Domain(source.into())}}
 impl From<semio_framework::Fault> for MediaOperationFailure{fn from(source:semio_framework::Fault)->Self{Self::Original(source.into())}}
 impl From<semio_framework_job::OriginalTurnFailure> for MediaOperationFailure{fn from(source:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(source)}}
-impl From<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> for MediaOperationFailure{fn from(source:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure)->Self{Self::Original(source.into())}}
+impl From<semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> for MediaOperationFailure{fn from(source:semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure)->Self{Self::Original(source.into())}}
 impl From<ValueError> for MediaOperationFailure{fn from(source:ValueError)->Self{Self::Original(source.into())}}
 
 impl From<semio_framework::ToolDispatchError> for MediaOperationFailure{fn from(source:semio_framework::ToolDispatchError)->Self{Self::Domain(MediaOperationSource::Dispatch(source))}}
 
 
-pub use semio_framework_plugin_decl_app::media_operation_refusal::*;
+pub use semio_plugin_decl_app::media_operation_refusal::*;

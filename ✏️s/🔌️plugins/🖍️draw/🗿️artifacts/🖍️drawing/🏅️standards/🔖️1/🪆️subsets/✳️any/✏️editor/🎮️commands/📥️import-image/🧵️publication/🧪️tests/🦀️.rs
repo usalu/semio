@@ -4,7 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{DrawingImageAsset, DrawingImageBody, DrawingLayerNode};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-#[allow(unused_imports)] use semio_framework_plugin::{AppOperationContext,InteractionWrite};
+#[allow(unused_imports)] use semio_plugin::{AppOperationContext,InteractionWrite};
 #[allow(unused_imports)] use semio_framework_value::{paged::{PagedUtf8,PagedUtf8AppendCursor},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},RetirementDemand,ValueError,ValueRefusalKind};
 #[allow(unused_imports)] use semio_framework_value::ErasedSnapshotRetirement as _;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::import_image::publication::*;

@@ -1,6 +1,6 @@
 //! 🧪️ Public config protocol laws checked against the language-neutral fixture and serde.
 
-use semio_framework_os_kernel::{apply_diff_cold, ColdMutation, Mutation, OpBinary, OpText};
+use semio_os_kernel::{apply_diff_cold, ColdMutation, Mutation, OpBinary, OpText};
 use semio_s_plugin_norm_results_config::schema::NormResultsWindowConfig;
 use semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation;
 
@@ -73,7 +73,7 @@ fn config_mutation_fixture_matches_serde_and_round_trips() {
 /// 🧾️ The committed `change-selected-check-index` wire witness IS the canonical Rust wire of its aggregate op.
 #[test]
 fn committed_wire_witness_is_the_canonical_wire() {
-    let witnessed: NormResultsWindowConfigMutation = semio_framework_os_kernel::os_store::test_support::assert_wire_witness(include_str!("../🧫️fixtures/🧬️mutations/☑️change-selected-check-index/🧾️wire-witness/🔣️.mutation.json"));
+    let witnessed: NormResultsWindowConfigMutation = semio_os_kernel::os_store::test_support::assert_wire_witness(include_str!("../🧫️fixtures/🧬️mutations/☑️change-selected-check-index/🧾️wire-witness/🔣️.mutation.json"));
     assert_eq!(<NormResultsWindowConfigMutation as Mutation<NormResultsWindowConfig>>::descriptor(&witnessed).semantic_kind, "change-selected-check-index");
     assert_wire_transition(&witnessed, &serde_json::json!(3));
 }

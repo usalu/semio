@@ -110,7 +110,7 @@ function fixture(row: Row) {
     put(entry, 'macro_rules! env { ("CARGO_MANIFEST_DIR") => { ' + JSON.stringify(join(directory, "shadow/deep")) + ' }; }\n#[path = "reader.rs"] mod reader;\npub fn run() { reader::read(); }\n');
   }
   if (row.condition === "parent-doc-comment") put(entry, '//! 🧭️ Crate root docs mention `!important` and a `#heading` in prose — neither is code.\n//!\n#[path = "reader.rs"] mod reader;\n');
-  if (row.condition === "parent-known-macro") put(entry, '#[path = "reader.rs"] mod reader;\nsemio_framework_plugin::plugin_exports!(plugin::plugin, plugin::TestApps);\n');
+  if (row.condition === "parent-known-macro") put(entry, '#[path = "reader.rs"] mod reader;\nsemio_plugin::plugin_exports!(plugin::plugin, plugin::TestApps);\n');
   if (row.condition === "parent-cfg-test-mod") {
     put(entry, '#[path = "reader.rs"] mod reader;\n#[cfg(test)]\n#[path = "tests_x.rs"]\nmod tests_x;\n');
     put("pkg/tests_x.rs", 'mod tests { #[test] fn it_renames() {} }\n');

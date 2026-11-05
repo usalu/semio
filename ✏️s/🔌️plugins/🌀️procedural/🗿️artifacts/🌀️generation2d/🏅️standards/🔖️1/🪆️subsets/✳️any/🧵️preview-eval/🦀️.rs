@@ -6,7 +6,7 @@
 //! framework-reserved actions. [`PreviewEvalRunJob`] owns the scheduling: each algorithm unit is ONE
 //! `flowEvalTick` hop addressed at a preview window, handed to the host through its [`ToolRunJobPort`],
 //! after which the job waits until the hop settles. The hop advances the retained [`FlowEvalSession`]
-//! its window kind evaluates ([`PreviewEvalTarget`]) and parks an [`semio_framework_plugin::ExtensionInvocation`]
+//! its window kind evaluates ([`PreviewEvalTarget`]) and parks an [`semio_plugin::ExtensionInvocation`]
 //! for a contributed operator; `flowEvalResolve` folds the answer and wakes the job. Every observed node
 //! transition becomes a trace record keyed by the node's entity id. Abort is host-driven by construction:
 //! the job's close quiesces the sessions. No kernel release hop exists, because generation2d requests no
@@ -18,18 +18,18 @@
 
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
 use semio_s_artifact_procedural_2d_model::host_with_session;
-use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
-use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
-use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
-use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::ExtensionInvocation;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ToolDefinition;
-use semio_framework_plugin::ToolRunJobPort;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::ViewModel;
+use semio_os_flow::{FlowEvalPublication, FlowEvalSession};
+use semio_os_infinite_directed_presentation::DagHostSnapshot;
+use semio_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin::Effect;
+use semio_plugin::ExtensionInvocation;
+use semio_plugin::Fault;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ToolDefinition;
+use semio_plugin::ToolRunJobPort;
+use semio_plugin::ToolRunView;
+use semio_plugin::ViewModel;
 use semio_framework_tool_run::{ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -92,13 +92,13 @@ pub type PreviewEvalWindow<'a> = (&'a str, &'static str, PreviewEvalTarget);
 
 /// 🏃️ The evaluation hop the run job hands the host, addressed to ONE preview window.
 pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: "flowEvalTick".into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: "flowEvalTick".into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
 }
 
 /// 🚧️ Whether an evaluation of `host_snapshot` may start or continue at all: an operator kind no contributed
 /// extension serves faults identically on every hop, and only `setContributions` can change that.
 pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
-    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_framework_os_flow::flow_operator_registry()).is_empty()
+    semio_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_os_flow::flow_operator_registry()).is_empty()
 }
 
 /// 🙏️ The one argument object every hop carries, on the redispatch and on the extension request alike.
@@ -132,7 +132,7 @@ pub fn owe_attached_previews(sessions: PreviewEvalSessions<'_>, link: &mut Previ
 /// 🩹️ What a LANDED GESTURE owes the attached previews, read off its own emit: artifact mutations moved
 /// the document every evaluation reads, so each attached window owes one fresh evaluation; a gesture
 /// that authored none owes a settled run nothing. Answers whether it owed.
-pub fn owe_attached_previews_for_mutations<M, C, D>(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
+pub fn owe_attached_previews_for_mutations<M, C, D>(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
     if emit.artifact_mutations.is_empty() {
         link.wake();
         return Ok(false);
@@ -144,7 +144,7 @@ pub fn owe_attached_previews_for_mutations<M, C, D>(sessions: PreviewEvalSession
 /// 🚦️ Owes every attached preview window an evaluation AND puts on `emit` whatever asks for it: a live,
 /// unsettled run is woken through its port, a surface with no such run carries the run start itself —
 /// the host polls `pending_effects` only on activity, so a debt nobody asks about is never paid.
-pub fn owe_attached_previews_carrying<M, C, D>(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+pub fn owe_attached_previews_carrying<M, C, D>(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     owe_attached_previews(sessions, link, windows, grant)?;
     let woken = link.port.is_some() && link.settled.is_none();
     if !windows.is_empty() && servable && !woken && link.requested.is_none() {
@@ -170,17 +170,17 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 }
 
 /// 📨️ The `evaluate` request one parked extension evaluation crosses to its plugin with, addressed back at the window that owes the answer.
-pub fn extension_invocation(pending: &semio_framework_artifact_flow_flow::neural::PendingExtensionEval, window_id: &str, window_kind_id: &str, retained_grant: &semio_framework_value::RetainedCloneGrant) -> ExtensionInvocation {
-    let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
-        ("retained".to_string(), semio_framework_value::ToValue::to_value(retained_grant)),
-        ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
-        ("inputJson".to_string(), semio_framework_value::DslValue::String(pending.input_json.clone())),
-        ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
-        ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
-        ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
-        ("extensionId".to_string(), semio_framework_value::DslValue::String(pending.extension_id.clone())),
-    ]));
-    ExtensionInvocation::new(pending.extension_id.clone(), "evaluate", request_json, "flowEvalResolve")
+pub fn extension_invocation(pending: semio_framework_artifact_flow_flow::neural::PendingExtensionEval, resume: bool, dependency_json: String, window_id: &str, window_kind_id: &str) -> ExtensionInvocation {
+    let origin=semio_os_flow::FlowInvocationOrigin{
+        window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,
+        extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:pending.node_hash,
+        input_json:pending.input_json,dependency_json,
+        operator_version:format!("registry:{};geometry:1;policy:1",semio_os_flow::flow_extension_registry_generation()),
+        outer_node_hash:None,preview_source:None,
+    };
+    let request_json=origin.request_json_cold(resume);
+    let semio_os_flow::FlowInvocationOrigin{extension_id,..}=origin;
+    ExtensionInvocation::new(extension_id,"evaluate",request_json,"flowEvalResolve")
 }
 
 /// 🧮️ ONE evaluation hop over `host_snapshot` into `session`, for the window it names. `retained_eval` is
@@ -191,7 +191,11 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semi
     let more = session.tick_cold(&mut host, None);
     let pending_extension_evals = host.take_pending_extension_evals();
     host.retire_cold()?;
-    let extension_invocations: Vec<ExtensionInvocation> = pending_extension_evals.iter().map(|pending| extension_invocation(pending, window_id, window_kind_id, &retained_grant)).collect();
+    let extension_invocations: Vec<ExtensionInvocation> = pending_extension_evals.into_iter().map(|pending| {
+        let resume=session.has_evaluation_progress(pending.node_hash);
+        let dependency=if resume{String::new()}else{semio_os_flow::flow_inference_dependency_json(host_snapshot,&pending.neuron_id)};
+        extension_invocation(pending,resume,dependency,window_id,window_kind_id)
+    }).collect();
     session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()), retained_grant)?;
     if !extension_invocations.is_empty() {
         session.note_window_extensions_in_flight(window_id, extension_invocations.len(), retained_grant)?;
@@ -215,8 +219,8 @@ pub fn settle_empty_tick(window_id: &str, session: &mut FlowEvalSession, grant: 
 /// 🗜️ Folds one `evaluate` answer into `session` and settles the window's outstanding answer. An
 /// answer that cannot fold (a faulted invocation, a cancelled envelope) gives the window up rather than
 /// parking the identical request again.
-pub fn resolve_eval(payload:&FlowEvalResolve,receiver:&mut semio_framework_os_flow::FlowEvaluationReplyReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-    let address=semio_framework_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};receiver.step(session,&address,cx)
+pub fn resolve_eval(payload:&FlowEvalResolve,receiver:&mut semio_os_flow::FlowEvaluationReplyReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let address=semio_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};receiver.step(session,&address,cx)
 }
 
 /// 🔢️ A digest of the text a target evaluates, recorded by the hop that evaluated it and compared by

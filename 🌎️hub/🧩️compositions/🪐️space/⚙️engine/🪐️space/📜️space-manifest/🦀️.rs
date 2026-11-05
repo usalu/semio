@@ -52,17 +52,17 @@ pub async fn create_space_app() -> App {
         .mutation("unbindParameterField", LocalizedLabel::native("Unbind Parameter Field", "Parameterfeld lösen")).await
         .action_with(ActionDefinition::bounded_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Mutation).with_category("transform")).await
         .mutation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen")).await
-        .action_audience("workflowEngagementSubmit", semio_framework_plugin::CapabilityAudience::Input).await
+        .action_audience("workflowEngagementSubmit", semio_plugin::CapabilityAudience::Input).await
         .mutation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen")).await
-        .action_audience("compiledDagEngagementSubmit", semio_framework_plugin::CapabilityAudience::Input).await
+        .action_audience("compiledDagEngagementSubmit", semio_plugin::CapabilityAudience::Input).await
         .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten")).await
         .action_with(ActionDefinition::new("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"), ActionKind::View, "panel-left")).await
         .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen"), ActionKind::View, "camera")).await
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Anwesenheits-Heartbeat")).await
         .action_with(ActionDefinition::new("workflowEngagementInput", LocalizedLabel::native("Workflow Engagement Input", "Workflow-Eingabe"), ActionKind::View, "hand")).await
-        .action_audience("workflowEngagementInput", semio_framework_plugin::CapabilityAudience::Input).await
+        .action_audience("workflowEngagementInput", semio_plugin::CapabilityAudience::Input).await
         .action_with(ActionDefinition::new("compiledDagEngagementInput", LocalizedLabel::native("Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"), ActionKind::View, "hand")).await
-        .action_audience("compiledDagEngagementInput", semio_framework_plugin::CapabilityAudience::Input).await
+        .action_audience("compiledDagEngagementInput", semio_plugin::CapabilityAudience::Input).await
         .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Shell, "panel-left")).await
         .action_with(ActionDefinition::new("exportMedia", LocalizedLabel::native("Export Media", "Medien exportieren"), ActionKind::Shell, "download")).await
         .action_with(ActionDefinition::new("importMedia", LocalizedLabel::native("Import Media", "Medien importieren"), ActionKind::Shell, "hard-drive")).await
@@ -202,9 +202,9 @@ pub async fn create_space_app() -> App {
         .action_describe("openSpace", LocalizedLabel::native("Opens the studio with the given id, navigating the shell to it.", "Öffnet das Studio mit der angegebenen Id und navigiert die Shell dorthin.")).await
         .action_describe("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigates the shell to the space with the given id.", "Navigiert die Shell zum Space mit der angegebenen Id.")).await
         .action_describe("goHome", LocalizedLabel::native("Navigates the shell back to the Home launcher.", "Navigiert die Shell zurück zum Home-Starter.")).await
-        .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input).await
-        .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome).await
-        .action_audience("presenceHeartbeat", semio_framework_plugin::CapabilityAudience::Chrome).await
+        .action_audience("nodeGraphEdit", semio_plugin::CapabilityAudience::Input).await
+        .action_audience("nodeGraphViewport", semio_plugin::CapabilityAudience::Chrome).await
+        .action_audience("presenceHeartbeat", semio_plugin::CapabilityAudience::Chrome).await
         .action_destructive("reorganizeWorkflow").await
         .keybinding("mod+s", "commitCheckpoint").await;
     let definition = builder.build_definition();

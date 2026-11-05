@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_lowpoly_lowpoly_commands::document::*;
@@ -6,7 +6,7 @@ use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutati
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use crate::context::{app, dispatch};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
@@ -24,13 +24,13 @@ async fn import_snapshot_json_replaces_the_whole_document() {
     replacement.objects[0].mesh_state=Some(mesh_json);
     let json = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(&replacement);
     let snapshot = default_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = LowpolyConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut scratch = LowpolyScratch::default();
     let emit = set_snapshot_json::handle(&set_snapshot_json::ImportSnapshotJson { json }, &doc, &cfg, &mut scratch).expect("handle");
-    let semio_framework_plugin::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importSnapshotJson must emit a LoadDocument effect") else {
+    let semio_plugin::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importSnapshotJson must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <LowpolySnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

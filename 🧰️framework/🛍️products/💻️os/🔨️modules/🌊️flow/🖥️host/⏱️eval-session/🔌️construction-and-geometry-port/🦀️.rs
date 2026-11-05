@@ -12,14 +12,14 @@ impl FlowEvalSession {
         self
     }
     /// 🔌️ Supplies one geometry authority that this owner retains and explicitly closes.
-    pub fn with_geometry_port(mut self, port: Box<dyn semio_framework_os_flow_geometry::GeometryPort>) -> Self {
+    pub fn with_geometry_port(mut self, port: Box<dyn semio_os_flow_geometry::GeometryPort>) -> Self {
         assert!(!self.closing, "closed session refuses a geometry authority");
         assert!(self.state.geometry_port.is_none(), "geometry authority is supplied once");
         self.state.geometry_port = Some(port);
         self
     }
     /// 🌐️ Reads the explicitly supplied geometry authority for this evaluation session.
-    pub fn geometry_port(&self) -> Option<&dyn semio_framework_os_flow_geometry::GeometryPort> { self.state.geometry_port.as_deref() }
+    pub fn geometry_port(&self) -> Option<&dyn semio_os_flow_geometry::GeometryPort> { self.state.geometry_port.as_deref() }
 
     pub fn new() -> Self {
         Self {

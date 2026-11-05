@@ -541,15 +541,15 @@ pub struct NativeAssetTransportLease {
     pub surface_token: Option<AdmittedSurfaceToken>,
     pub request_token: WorldAssetRequestToken,
     pub cancel: semio_framework_async::CancelToken,
-    pub cancellation: semio_framework_os_services::HttpBodyCancellationHandle,
-    pub cancellation_step: Option<semio_framework_os_services::HttpBodyCancellationStep>,
+    pub cancellation: semio_os_services::HttpBodyCancellationHandle,
+    pub cancellation_step: Option<semio_os_services::HttpBodyCancellationStep>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NativeAssetTransportCloseStep {
     Busy,
-    Pending(semio_framework_os_services::HttpBodyCancellationStep),
+    Pending(semio_os_services::HttpBodyCancellationStep),
     Terminal,
 }
 
@@ -646,11 +646,11 @@ pub struct RuntimeMailboxInner<R> {
     pub native_asset_fetching: AtomicBool,
     pub native_asset_handoff: Mutex<Option<NativeAssetHandoff>>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub native_asset_http: Arc<semio_framework_os_services::HttpPool>,
+    pub native_asset_http: Arc<semio_os_services::HttpPool>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub native_asset_https: Arc<semio_framework_os_services::HttpPool>,
+    pub native_asset_https: Arc<semio_os_services::HttpPool>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub native_asset_http_runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
+    pub native_asset_http_runtime: Arc<semio_os_services::TokioHostRuntime>,
     #[cfg(not(target_arch = "wasm32"))]
     pub native_asset_http_scope: semio_framework_async::ScopeHandle,
     #[cfg(not(target_arch = "wasm32"))]
@@ -900,4 +900,4 @@ pub enum PresenterInteractionStep {
 }
 //#endregion 📮️RuntimeMailbox
 
-pub use semio_framework_os_renderer_wgpu_host_base::RuntimeHostWaker;
+pub use semio_renderer_wgpu_host_base::RuntimeHostWaker;

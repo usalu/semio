@@ -3,10 +3,10 @@
 
 use crate::demo_space_projection;
 use semio_hub_space_operations::compiled_dag_wire_literal;
-use semio_framework_os::WorkflowSnapshot;
-use semio_framework_ui_locale::{LocalizedLabel};
-use semio_framework_plugin::{InteractionRef, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
-use semio_framework_ui_scene::TextEditorScene;
+use semio_os::WorkflowSnapshot;
+use semio_ui_locale::{LocalizedLabel};
+use semio_plugin::{InteractionRef, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
+use semio_ui_scene::TextEditorScene;
 
 //#region 🔖️Constants
 pub const S_PLAY_WINDOW_COMPILED_DAG: &str = "s-compiled-dag";
@@ -51,9 +51,9 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub async fn render(projection: &WorkflowSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub async fn render(projection: &WorkflowSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let wire = compiled_dag_wire_literal(projection).await;
-    semio_framework_plugin::scene_surface(S_PLAY_SURFACE_COMPILED_DAG, semio_framework_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(wire, Some("wire".into()), None))
+    semio_plugin::scene_surface(S_PLAY_SURFACE_COMPILED_DAG, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(wire, Some("wire".into()), None))
 }
 //#endregion 🔖️Render
 

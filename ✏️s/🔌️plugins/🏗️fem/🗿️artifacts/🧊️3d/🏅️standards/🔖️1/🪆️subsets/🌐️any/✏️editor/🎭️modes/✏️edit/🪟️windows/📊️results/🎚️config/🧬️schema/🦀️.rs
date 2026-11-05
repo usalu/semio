@@ -1,12 +1,12 @@
 //! 🧬️ FEM 3D results window-config schema.
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields, validate = "Self::validate_result_source", validate_controlled = "Self::validate_result_source_controlled")]
 #[dsl(layout = "lines")]
 #[artifact(id = "fem.3d.resultswindowconfig")]
 pub struct Fem3dResultsWindowConfig {
     #[dsl(block)]
-    pub camera: semio_framework_os_kernel::Viewport3dOrbit,
+    pub camera: semio_os_kernel::Viewport3dOrbit,
     pub result_source_id: Option<String>,
     pub result_mode: semio_s_fem_app_surface::ResultMode,
     pub result_mode_index: u32,
@@ -43,7 +43,7 @@ fn validate_source_mode(source: Option<&str>, mode: &semio_s_fem_app_surface::Re
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Fem3dResultsWindowConfigPatch {
     #[dsl(block)]
-    pub camera: Option<semio_framework_os_kernel::Viewport3dOrbit>,
+    pub camera: Option<semio_os_kernel::Viewport3dOrbit>,
     #[dsl(block)]
     pub result_source_id: Option<FemResultSourceChange>,
     pub result_mode: Option<semio_s_fem_app_surface::ResultMode>,

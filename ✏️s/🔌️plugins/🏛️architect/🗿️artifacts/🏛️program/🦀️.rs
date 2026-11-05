@@ -4,9 +4,9 @@
 //! Domain row types live under `🧬️schema/🗄️registers`; shared entity primitives under
 //! `🧬️schema/🧱️kernel`. The persisted snapshot type is `ProgramSnapshot`.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
@@ -21,8 +21,8 @@ use pack::snapshot::ArtifactDsl;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.architect.program")?)
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.schema.artifact")?, ArtifactCapabilityKind::schema())
@@ -77,12 +77,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         )
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::program_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::program_artifact_inference_descriptor()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<editor::architect::ArchitectPlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<editor::architect::ArchitectPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

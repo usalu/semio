@@ -1,7 +1,7 @@
 //! 🌐️ Shared 3D s-module: a half-edge mesh kernel, single-precision rigid-body algebra, inertia algebra and
 //! BVH-accelerated collision queries. The boundary-representation kernel lives in its own crates
 //! (`semio-framework-3d-brep-{representation,queries,operations,engine}`, wave E4 crate cut). Scene math (camera/frustum/picking) relocated to
-//! `semio-framework-ui`'s `kernel_3d_scene` mount (ticket
+//! `semio-ui`'s `kernel_3d_scene` mount (ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH) — it has zero
 //! artifact-document inputs (a camera and a screen rect, not a snapshot), so it stays renderer
 //! infrastructure rather than dissolving into an artifact, and this crate no longer mounts it.
@@ -13,7 +13,7 @@
 //! instead of reaching back across this crate for it — this crate had zero production consumers
 //! of those types left of its own (confirmed by repo-wide grep before the move).
 
-// 🧬️ `#[derive(ToValue, FromValue)]` alias. This crate has no `semio-framework-os-kernel` dependency, so every
+// 🧬️ `#[derive(ToValue, FromValue)]` alias. This crate has no `semio-os-kernel` dependency, so every
 // `#[value(...)]` container names the value crate itself via `#[value(crate = "::semio_framework_value")]`.
 extern crate semio_framework_value_derive as value_derive;
 

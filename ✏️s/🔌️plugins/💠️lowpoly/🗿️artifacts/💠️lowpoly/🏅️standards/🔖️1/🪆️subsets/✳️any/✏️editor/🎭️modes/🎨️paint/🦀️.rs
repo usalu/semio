@@ -3,11 +3,11 @@
 
 use crate::windows::model;
 use crate::editor::lowpoly::modes::paint::windows::uv;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_plugin::create_named_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::NamedLayout;
+use semio_plugin::create_default_layout;
+use semio_plugin::create_named_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::NamedLayout;
 
 pub const LOWPOLY_PLAY_MODE_PAINT: &str = "paint";
 pub const LOWPOLY_PLAY_LAYOUT_PAINT: &str = "lowpoly-paint";

@@ -193,11 +193,11 @@ fn sourced_options_are_the_keys_of_the_previewed_document() {
 /// snaps to the factor's multiples, and a `Snapshot` pointer reads the document the open session previews.
 #[semio_framework_async_macros::async_test]
 async fn snap_sources_resolve_from_the_grid_factor_and_the_previewed_document() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let schema = r#"{
         "$schema": "http://json-schema.org/draft-07/schema#",
         "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/test/snap-source/schema.json",
@@ -229,7 +229,7 @@ async fn snap_sources_resolve_from_the_grid_factor_and_the_previewed_document() 
         *snap_source = Some(semio_framework::SnapSource::Snapshot { pointer: "/count".into() });
     }
     editor.rows[0].input.schema = count;
-    app.time_travel_ref().resolve_time_travel_snaps(&mut panel, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    app.time_travel_ref().resolve_time_travel_snaps(&mut panel, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let resolved = &panel.editor.as_ref().expect("the draft editor").rows[0].input.schema;
     assert!(matches!(resolved, semio_framework::ArgSchema::Number { snaps, snap_source: None, .. } if *snaps == vec![0.0, 5.0, 10.0, 15.0, 20.0]), "the previewed document's count is the grid: {resolved:?}");
     verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;

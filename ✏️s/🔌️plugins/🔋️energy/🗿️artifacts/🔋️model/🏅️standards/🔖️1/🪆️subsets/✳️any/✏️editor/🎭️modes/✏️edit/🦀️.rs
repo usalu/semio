@@ -6,9 +6,9 @@
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_s_artifact_energy_model_editor_commands as editor_commands;
 extern crate semio_s_artifact_energy_model_editor_config as editor_config;
 extern crate semio_s_artifact_energy_model_editor_interaction as editor_interaction;
@@ -26,14 +26,14 @@ extern crate semio_s_plugin_energy_engine_geometry as geometry;
 
 
 use crate::windows::{model as model_window, simulation, structure, zones};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
-use semio_framework_plugin::WindowLayoutAxisNode;
-use semio_framework_plugin::WindowLayoutChild;
-use semio_framework_plugin::WindowLayoutRoot;
-use semio_framework_plugin::WindowLayoutStackNode;
-use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
+use semio_plugin::WindowLayoutAxisNode;
+use semio_plugin::WindowLayoutChild;
+use semio_plugin::WindowLayoutRoot;
+use semio_plugin::WindowLayoutStackNode;
+use semio_plugin::WindowLayoutWindowNode;
 
 pub const ENERGY_MODEL_EDIT_MODE_ID: &str = "edit";
 
@@ -44,7 +44,7 @@ pub const ENERGY_MODEL_EDIT_MODE_ID: &str = "edit";
 /// fire. They are declared app-level for exactly the reason `semio_s_artifact_energy_model_editor_commands::inspector_action_definitions` is: an
 /// action a window kind lists in its own `actions` is copied onto NO other window, so the chord is
 /// refused with `window kind … does not own action …` whenever another window holds focus.
-pub fn window_shared_action_definitions() -> Vec<semio_framework_plugin::ActionDefinition> {
+pub fn window_shared_action_definitions() -> Vec<semio_plugin::ActionDefinition> {
     vec![simulation::settings_action(), simulation::result_field_action(), simulation::run_period_action(), structure::create_surface_action(), zones::create_zone_action(), zones::rename_zone_action()]
 }
 //#endregion 🪟️SharedWindowActions

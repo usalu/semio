@@ -9,21 +9,21 @@ use crate::viewer::fem2d::modes::view::windows::model;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::FEM2D_DIALECT;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
-use semio_framework_plugin::app::Dialect;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::app::Dialect;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -67,8 +67,8 @@ impl ArtifactViewer for Fem2dViewer {
     /// 🌱️ A real, non-empty default scene: the artifact-side boot document (the bundled `fem2d`
     /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
     /// too — no editor import, this is `semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema`.
-    fn reference_birth()->Option<fn()->Result<Fem2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
-        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().map_err(|error|semio_framework_plugin::reference_birth_fault("fem2d bundled boot document",error))
+    fn reference_birth()->Option<fn()->Result<Fem2dSnapshot,semio_plugin::Fault>>{Some(||{
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().map_err(|error|semio_plugin::reference_birth_fault("fem2d bundled boot document",error))
     })}
 
     /// 👁️ Structurally read-only: the sole `Fem2dViewCommand::Noop` variant never carries a config
@@ -80,31 +80,31 @@ impl ArtifactViewer for Fem2dViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             model::BODY_KEY => model::render(doc.snapshot),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d viewer unknown-body label admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d viewer unknown-body label admission failed")),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_fem2d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_fem2d_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(FEM2D_DIALECT)
         .document(["semio", "fem", "fem2d"])
         .icon_id("fem-app")
-        .mode(view::FEM2D_VIEW_MODE_VIEW, semio_framework_ui_locale::LocalizedLabel::native("View", "Ansicht"), "eye")
+        .mode(view::FEM2D_VIEW_MODE_VIEW, semio_ui_locale::LocalizedLabel::native("View", "Ansicht"), "eye")
         .default_mode_id(view::FEM2D_VIEW_MODE_VIEW)
-        .window_kind(model::WINDOW_KIND_ID, semio_framework_ui_locale::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, "fem-model")
-        .default_layout(semio_framework_plugin::create_default_layout(&[model::WINDOW_KIND_ID.into()], "row", None, None))
+        .window_kind(model::WINDOW_KIND_ID, semio_ui_locale::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, "fem-model")
+        .default_layout(semio_plugin::create_default_layout(&[model::WINDOW_KIND_ID.into()], "row", None, None))
         .build_definition()
 }
 //#endregion 🔖️Manifest

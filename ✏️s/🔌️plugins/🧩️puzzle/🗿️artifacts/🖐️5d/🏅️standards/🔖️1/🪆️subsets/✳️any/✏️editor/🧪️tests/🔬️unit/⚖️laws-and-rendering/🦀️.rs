@@ -1,6 +1,6 @@
 //! ⚖️ Retained static laws, rendering, context menu, pack and operation tests of the puzzle 5d editor. See [`super`].
 use crate::editor::puzzle5d::catalog::puzzle5d_normalize_kind_weight_group;
-use semio_framework_test_fixtures::fixture_text;
+use semio_framework_test_fixtures::repo_text;
 
 use super::*;
 
@@ -21,31 +21,37 @@ fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
     assert!(!exact(&duplicate));
 }
 
-/// 📚️ The editor module's production source as the unsplit editor file held it: every mounted child first, then the editor file itself, so the `UnitTests` region marker still closes the production prefix.
+/// 📚️ Explicit current production owners observed by the editor contracts, with mounted root bodies before the root whose `UnitTests` marker closes the production prefix.
 pub(crate) fn editor_source() -> String {
     [
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🧩️entities/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🧭️view/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🗂️catalog/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🖌️session/📋️clipboard/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🖌️session/📌️paste/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🖌️session/📥️snapshot-import/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/👆️gestures/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/👆️gestures/🎛️selection-and-weights/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/👆️gestures/🩹️patches/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/👆️gestures/🔗️fastener-edits/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/👆️gestures/🧲️proximity-connect/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🧰️kit/➕️add-node-and-brush-part/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🧰️kit/🧱️board-events-and-fasteners/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🧰️kit/📚️example-and-brush-mesh/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/🦀️.rs"),
-        fixture_text!("../../🪆️subsets/✳️any/✏️editor/🦀️.rs"),
+        "🧩️entities/🦀️.rs",
+        "🧭️view/🦀️.rs",
+        "🗂️catalog/🦀️.rs",
+        "🕹️interaction/🦀️.rs",
+        "🖌️session/🦀️.rs",
+        "🖌️session/📋️clipboard/🦀️.rs",
+        "🖌️session/📌️paste/🦀️.rs",
+        "🖌️session/📥️snapshot-import/🦀️.rs",
+        "🧵️retained/🦀️.rs",
+        "👆️gestures/🦀️.rs",
+        "👆️gestures/🎛️selection-and-weights/🦀️.rs",
+        "👆️gestures/🩹️patches/🦀️.rs",
+        "👆️gestures/🔗️fastener-edits/🦀️.rs",
+        "👆️gestures/🧲️proximity-connect/🦀️.rs",
+        "🧰️kit/🦀️.rs",
+        "🧰️kit/➕️add-node-and-brush-part/🦀️.rs",
+        "🧰️kit/🧱️board-events-and-fasteners/🦀️.rs",
+        "🧰️kit/📚️example-and-brush-mesh/🦀️.rs",
+        "🧰️kit/💾️store-preparation/🦀️.rs",
+        "🍠️play-app/🦀️.rs",
+        "🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs",
+        "✍️artifact-editor/🦀️.rs",
+        "🚀️app-assembly/🦀️.rs",
+        "🦀️.rs",
     ]
-    .concat()
+    .into_iter()
+    .map(|path| repo_text!(format!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/{path}")))
+    .collect()
 }
 
 #[test]
@@ -148,7 +154,8 @@ fn window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_conf
     ] {
         assert!(!window_owner_routes_are_exact(&source.replace(marker, "route-removed")), "missing exact window-owner boundary was falsely accepted: {marker}");
     }
-    let leaked = source.replace("Puzzle5dConfigMutation::Snapshot { config: shared_after }", "Puzzle5dConfigMutation::SetCamera2d");
+    let leaked = source.replace("shared_before.mutations_to(&shared_after)", "Puzzle5dConfigMutation::SetCamera2d");
+    assert_ne!(leaked, source, "the hostile window leak must alter the current shared-config owner");
     assert!(!window_owner_routes_are_exact(&leaked), "hostile app-config window leak must fail closed");
 }
 
@@ -176,7 +183,7 @@ fn add_part_kind_hostile_static_law_rejects_old_brush_reducer_and_missing_cursor
 }
 
 fn kind_weight_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""setPartKindWeight" | "setGripKindWeight" => work!(|request| Puzzle5dKindWeightWork::new(tool_id))"#)
+    source.contains(r#""setPartKindWeight" | "setGripKindWeight" => owned!(Puzzle5dKindWeightWork, |_request, scope| Puzzle5dKindWeightWork::from_original_construction(tool_id, scope))"#)
         && source.contains("Puzzle5dKindWeightStage::Catalog")
         && source.contains("Puzzle5dKindWeightStage::InferParts")
         && source.contains("Puzzle5dKindWeightStage::InferGrips")
@@ -194,7 +201,7 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
     let source = source.as_str();
     assert!(kind_weight_route_is_cursorized(source));
     let direct = source.replace(
-        r#""setPartKindWeight" | "setGripKindWeight" => work!(|request| Puzzle5dKindWeightWork::new(tool_id))"#,
+        r#""setPartKindWeight" | "setGripKindWeight" => owned!(Puzzle5dKindWeightWork, |_request, scope| Puzzle5dKindWeightWork::from_original_construction(tool_id, scope))"#,
         r#""setPartKindWeight" | "setGripKindWeight" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
     );
     assert!(!kind_weight_route_is_cursorized(&direct));
@@ -223,7 +230,8 @@ fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfer
     ] {
         assert!(!engagement_submit_route_is_cursorized(&source.replace(marker, "route-removed")), "missing engagement submit marker was falsely accepted: {marker}");
     }
-    let leaked = source.replace("Puzzle5dConfigMutation::Snapshot { config: shared_after }", "Puzzle5dConfigMutation::SetEngagementInput");
+    let leaked = source.replace("shared_before.mutations_to(&shared_after)", "Puzzle5dConfigMutation::SetEngagementInput");
+    assert_ne!(leaked, source, "the hostile transient leak must alter the current shared-config owner");
     assert!(!engagement_submit_route_is_cursorized(&leaked));
 }
 
@@ -252,7 +260,7 @@ fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_bypasse
         r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
     );
     assert!(!selection_transforms_run_the_transform_tool(&direct), "hostile old-reducer replacement must fail closed");
-    for marker in ["Puzzle5dTransformStage::Read", "Puzzle5dTransformStage::Scan", "Puzzle5dRelocateScan::begin(document", "Puzzle5dTransformStage::Commit", "puzzle5d_transform_tool_commit(self.tool_id", "if puzzle5d_inspector_nudge(request.command.args()).is_some()"] {
+    for marker in ["Puzzle5dTransformStage::Read", "Puzzle5dTransformStage::Scan", "Puzzle5dRelocateScan::begin(document", "Puzzle5dTransformStage::Commit", "puzzle5d_transform_tool_commit(self.tool_id", "if puzzle5d_inspector_nudge(original.command.args()).is_some()"] {
         assert!(!selection_transforms_run_the_transform_tool(&source.replace(marker, "stage-removed")), "missing transform stage was falsely accepted: {marker}");
     }
 }
@@ -294,7 +302,7 @@ async fn context_menu_is_grouped_and_keeps_delete_selection_last() {
         window_instance_id: None,
         point: None,
     };
-    let menu = ::semio_framework_async::poll::resolve_ready(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
+    let menu = ::semio_framework_async::poll::resolve_ready(app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)));
     assert!(menu.len() <= 9, "top-level context menu should stay progressively disclosed: {menu:?}");
     let last = menu.last().expect("selection context menu should not be empty");
     let last_is_destructive_leaf = last.action.as_deref() == Some("deleteSelection") && last.destructive == Some(true);
@@ -310,7 +318,7 @@ async fn context_menu_is_grouped_and_keeps_delete_selection_last() {
 #[semio_framework_async_macros::async_test]
 async fn puzzle5d_play_projection_pack_round_trips() {
     let app = app();
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
 }
 //#endregion 🔖️Pack
 

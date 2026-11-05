@@ -1,6 +1,6 @@
 //! 🧷️ Native catalog queries borrow exact original slots under every funded continuation frontier.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_value::RetainedCloneGrant;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot,IfcEntity,IfcComplexType,IfcValue};
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:0,maximum_release_bytes:65536,maximum_depth:8}}

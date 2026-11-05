@@ -1,6 +1,6 @@
 //! 🔏️ Original aggregate edits retain their native typed canonical seal and independent frame custody.
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
-use semio_framework_os_spr::Edit;
+use semio_os_spr::Edit;
 use semio_framework_value::{ErasedSnapshotRetirement, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneSourceAdmission, RetainedCloneStep};
 use semio_framework_value::retirement::controlled::ControlledRetirement;

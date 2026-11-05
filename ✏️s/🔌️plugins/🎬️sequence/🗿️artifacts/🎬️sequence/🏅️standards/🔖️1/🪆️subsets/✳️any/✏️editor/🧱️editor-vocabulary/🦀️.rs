@@ -1,10 +1,10 @@
 //! 🧱️ Sequence editor core: ids and constants, the typed media I/O surface, camera conversions and the fault vocabulary.
 
-use semio_framework_plugin::{AppIo, ArtifactView, Emit, Fault, NoConfigMutation};
-use semio_framework_plugin::app::ChildEmitPreparation;
+use semio_plugin::{AppIo, ArtifactView, Emit, Fault, NoConfigMutation};
+use semio_plugin::app::ChildEmitPreparation;
 use neural_engine::ColdOwner;
-use semio_framework_os_infinite_directed_presentation::DagCamera;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_os_infinite_directed_presentation::DagCamera;
+use semio_ui_locale::LocalizedLabel;
 use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceCamera, SequenceHostSnapshot, SequenceSnapshot, SequenceWorkingScene};
 use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
@@ -23,10 +23,10 @@ pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
 /// `Drop` asserts that its app-owned bounded retirement authority detached every nested owner first,
 /// and nothing on this path ever mounts or retires it, so the envelope route traps the guest
 /// (`🧊️process3d` lost its whole editor to exactly this).
-pub fn reset_sequence_document_effect(document: &SequenceSnapshot) -> semio_framework_plugin::Effect {
+pub fn reset_sequence_document_effect(document: &SequenceSnapshot) -> semio_plugin::Effect {
     let pack = crate::standards::v1::subsets::any::io::snapshot_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(SEQUENCE_PLAY_APP_ID, SEQUENCE_DOCUMENT_SCHEMA));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+    semio_plugin::Effect::LoadDocument { pack, spr }
 }
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "steps" interaction domain — one
 /// granularity ("step"), `HierarchyProvider::Topology` from each step's own `SlotRef.owner`
@@ -41,50 +41,50 @@ pub const SEQUENCE_INTERACTION_GRANULARITY: &str = "step";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn sequence_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(SEQUENCE_PLAY_APP_ID).action(action, args)
+pub fn sequence_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(SEQUENCE_PLAY_APP_ID).action(action, args)
 }
 
 /// 🏷️ Admits one semantic label for Sequence panels.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub use semio_framework_plugin::ui_node_list;
+pub use semio_plugin::ui_node_list;
 use crate::mirror::viewer::sequence::modes::view::windows::main;
 
 //#endregion 🔖️Constants
@@ -114,7 +114,7 @@ pub fn sequence_io() -> AppIo {
 }
 
 /// 🧸️ Resolves the document's exact published content child through its captured member-store view.
-pub fn sequence_working_scene_from_children(snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceWorkingScene>, Fault> {
+pub fn sequence_working_scene_from_children(snapshot: &SequenceSnapshot, children: &semio_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceWorkingScene>, Fault> {
     let child_id = &snapshot.content.child_id;
     let dialect = children.dialect("content", child_id).ok_or_else(|| sequence_fault("sequence.content.dialect", "sequence-content-child-dialect-required"))?;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
@@ -126,7 +126,7 @@ pub fn sequence_working_scene_from_children(snapshot: &SequenceSnapshot, childre
 }
 
 /// 🎬️ Projects the published content child into the editor's plain execution snapshot.
-pub fn sequence_host_snapshot_from_children(snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceHostSnapshot>, Fault> {
+pub fn sequence_host_snapshot_from_children(snapshot: &SequenceSnapshot, children: &semio_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceHostSnapshot>, Fault> {
     let SequenceWorkingScene { steps, edges } = sequence_working_scene_from_children(snapshot, children)?.into_inner();
     Ok(ColdOwner::new(SequenceHostSnapshot { schema: snapshot.schema.clone(), steps, edges }))
 }
@@ -212,7 +212,7 @@ impl std::error::Error for SequenceCoreError {
 /// 🚧️ One named refusal of the sequence editor: `code` is a row of [`sequence_fault_notices`] (or a framework code), `detail`
 /// the English diagnostic the logs keep; the person reads the notice.
 pub fn sequence_fault(code: &'static str, detail: impl Into<String>) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, code, detail)
+    Fault::new(semio_plugin::FaultOrigin::App, code, detail)
 }
 
 /// 📢️ The app fault notices of the sequence editor (`code → {en, de}`): every refusal its retained steps, windows and

@@ -6,10 +6,10 @@
 // variant types). Never resolved by `+ Send` on the trait method or by making the method sync.
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -50,8 +50,8 @@ pub use semio_s_artifact_animate_presentation_tile_grid::{FigureTileDraftPatch};
 mod tests;
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.animate.presentation")?)
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.schema.artifact")?, ArtifactCapabilityKind::schema())
@@ -103,13 +103,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// (`"s.animate.presentation"`), NOT `definition()`'s legacy `ArtifactIdentity` root (`"s.presentation"`,
 /// kept unread by the new tree per debt D1). `localization: &[]` is a documented shortfall — the
 /// real en/de localized names still live on `definition()`'s kept capability rows.
-pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>
+pub fn artifact<PA>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::animate::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::animate::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<editor::animate::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<viewer::animate::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
 {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.animate.presentation").expect("canonical animate.presentation kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }

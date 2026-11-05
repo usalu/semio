@@ -3,17 +3,17 @@
 //! Ajv and derives with its own implementation, the branch time through JavaScript's `Date` as the third-party oracle.
 
 #[cfg(test)]
-use semio_framework_plugin_command::{AlternativeFact, history_alternative_views};
+use semio_plugin_command::{AlternativeFact, history_alternative_views};
 #[cfg(test)]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
 use std::future::Future;
 #[cfg(test)]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_ui_contract::*;
 use serde_json::{json, Value};
 
 const HISTORY_ALTERNATIVES_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️history-alternatives/🔣️.json");

@@ -27,7 +27,8 @@
         "network": {
           "offline": true
         },
-        "buildMode": "prototype"
+        "buildMode": "prototype",
+        "codeRoot": "/caller"
       },
       "accepted": true
     },
@@ -66,7 +67,8 @@
             "run",
             "example:build"
           ]
-        ]
+        ],
+        "codeRoot": "/repo"
       },
       "accepted": true
     },

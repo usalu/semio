@@ -17,7 +17,7 @@ use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::unsupported;
 use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
 use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, SnapshotEditEvent};
 

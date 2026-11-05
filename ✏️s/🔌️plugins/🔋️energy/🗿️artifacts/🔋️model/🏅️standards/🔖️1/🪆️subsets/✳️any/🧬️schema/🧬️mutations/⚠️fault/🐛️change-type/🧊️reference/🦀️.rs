@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fault", kind: "change-fault-type", record: "ChangedFaultType" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Fault Type of fault {}", self.id.0), &format!("Typ von Fehler {} ändern", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Fault Type of fault {}", self.id.0), &format!("Typ von Fehler {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

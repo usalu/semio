@@ -9,8 +9,8 @@ async fn graph_scene_has_lod_json() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.main", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
-    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&json).expect("node-graph scene");
+    let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.main", &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), cx).await.expect("render");
+    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&json).expect("node-graph scene");
     assert!(scene.lod_json.as_deref().is_some_and(|lod| lod.contains("automatic")), "lodJson lane: {:?}", scene.lod_json);
 
     app.close(cx);
@@ -27,11 +27,11 @@ async fn set_lod_mode_reflects_in_window_measures() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let view = ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: "trinity-jack-graph".into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![semio_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: "trinity-jack-graph".into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let addressed = view.for_window_instance("jack-graph-main").unwrap();
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("lod");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("lod");
     let receipt = settle(&mut app,cx).await;
-    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault));
+    assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault));
     let measures = app.window_measures(&view).await;
     assert!(measures["jack-graph-main"].iter().any(|measure| matches!(measure, WindowMeasure::Select { value, .. } if value == "compact")));
 
@@ -49,7 +49,7 @@ async fn catalogue_tree_renders() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.catalogue", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
+    let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.catalogue", &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), cx).await.expect("render");
     assert!(node.contains("trinity-jack-catalogue"));
 
     app.close(cx);
@@ -68,7 +68,7 @@ async fn inspection_panel_renders_the_selection_prompt() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id],cx).await;
-    let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.inspection", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
+    let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.inspection", &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), cx).await.expect("render");
     assert!(node.contains("trinity-inspector.empty"));
 
     app.close(cx);
@@ -85,7 +85,7 @@ async fn document_tree_de_locale_translates_labels() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let view = ViewModel { locale: semio_framework_ui_locale::Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { locale: semio_ui_locale::Locale::De, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.artifact", &view, cx).await.expect("render");
     assert!(node.contains("Stücke"));
 
@@ -103,10 +103,10 @@ async fn set_active_example_loads_the_example_with_its_preset_query() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("set active example");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("set active example");
     let receipt = settle(&mut app,cx).await;
     let loaded = result.requested_effects.iter().chain(receipt.effects.iter()).find_map(|effect| match effect {
-        semio_framework_plugin::Effect::LoadDocument { pack, .. } => Some(<jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("the loaded example decodes")),
+        semio_plugin::Effect::LoadDocument { pack, .. } => Some(<jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("the loaded example decodes")),
         _ => None,
     });
     let loaded = loaded.expect("setActiveExample must request the LoadDocument effect");
@@ -132,10 +132,10 @@ async fn delete_selection_removes_selected_node() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id],cx).await;
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::DeleteSelection, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("delete");
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::DeleteSelection, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("delete");
     let receipt = settle(&mut app,cx).await;
     assert!(result.mutations.is_empty(), "deleteSelection writes no parent leaf: {:?}", result.mutations);
-    assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Child), "deleteSelection must publish one content child edit: lanes {:?}", receipt.lanes);
+    assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Child), "deleteSelection must publish one content child edit: lanes {:?}", receipt.lanes);
     assert!(!live_scene(&app).await.nodes.iter().any(|node| node.id == node_id));
 
     app.close(cx);
@@ -154,18 +154,18 @@ async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0).await;
     let request = ContextMenuRequest {
-        menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-        surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        menu: semio_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+        surface: Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: "trinity.jack.play".into(),
             kind: "nodeGraph".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: node_id.clone(), label: None }],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec![node_id] }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: "node".into(), id: node_id.clone(), label: None }],
+            selection: vec![semio_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec![node_id] }],
             text: None,
         }),
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let menu = app.context_menu(&request, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");
@@ -185,7 +185,7 @@ async fn export_media_graph_out_matches_document_pack() {
     let mut original_context=original_caller.context();
     let cx=&mut original_context;
 
-    use semio_framework_plugin::PluginApp as _;
+    use semio_plugin::PluginApp as _;
     let mut app = new_app().await;
     let document_out = app.export_media("artifact:out",cx).await.expect("document:out export").expect("actual document media");
     let graph_out = app.export_media("graph:out",cx).await.expect("graph:out export").expect("actual graph media");
@@ -209,7 +209,7 @@ async fn jack_io_declares_graph_out_fan_out_port() {
     assert_eq!(io.artifact.id, "graph.trinity");
     let graph_out = io.ports.iter().find(|port| port.id == "graph:out").expect("graph:out declared");
     assert_eq!(graph_out.kind_id.as_deref(), Some("graph.trinity"));
-    assert_eq!(graph_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+    assert_eq!(graph_out.multiplicity, semio_plugin::PortMultiplicity::Many);
 
     let remaining_fuel=cx.fuel_remaining();
     drop(original_context);

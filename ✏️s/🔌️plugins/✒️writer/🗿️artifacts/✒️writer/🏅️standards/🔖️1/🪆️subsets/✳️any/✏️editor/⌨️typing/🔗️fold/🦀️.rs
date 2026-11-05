@@ -1,7 +1,7 @@
 //! 🪡️ Writer's original typing algebra moves whole edits and composes borrowed splice inputs boundedly.
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalCallerSourceLoan,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
-use semio_framework_plugin_decl_app::tool_contract::{OriginalTypingFoldPolicy,ArtifactOriginalTypingFoldFactory,ArtifactOriginalTypingFoldProducer};
+use semio_plugin_decl_app::tool_contract::{OriginalTypingFoldPolicy,ArtifactOriginalTypingFoldFactory,ArtifactOriginalTypingFoldProducer};
 use semio_framework_tool_typing_edit::OriginalTypingFold;
 use semio_framework_text_splice_native::{TextSpliceView,OriginalTextSpliceComposer,OriginalTextSpliceComposition};
 use semio_s_artifact_writer_writer_operations::{op::WriterMutation,schema::mutations::splice_text::SpliceText};
@@ -80,7 +80,7 @@ impl ArtifactOriginalTypingFoldProducer<WriterMutation> for WriterOriginalTyping
   self.validate(cx)?;self.validate_pair(previous,incoming)?;if self.closing{return Err(invalid().into())}if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"Writer original typing fold was cancelled").into())}if self.ready(){return Ok(true)}
   if self.caller.is_none(){*self.caller=cx.original_source_parent()?.admit_loan(cx)?;return Ok(false)}
   match self.phase{
-   0=>{if let Some((a,b))=views(previous,incoming){if self.composer.is_none(){OriginalTextSpliceComposer::admit(a,b,semio_framework_ui_scene_views::TEXT_SPLICE_CONTEXT_SCALARS,cx,&mut self.composer)?;}else{self.transition(1,cx)?;}}else{let replace=matches!((previous,incoming),([WriterMutation::EditText(_)],[WriterMutation::EditText(_)]));let d=fixed::<(OriginalTypingFold<WriterMutation>,u8)>();admit_original_construction(cx,&mut self.decision,demand(d),|_|{self.phase=3;Ok((if replace{OriginalTypingFold::ReplaceIncoming}else{OriginalTypingFold::Split},receipt(d)))})?;}},
+   0=>{if let Some((a,b))=views(previous,incoming){if self.composer.is_none(){OriginalTextSpliceComposer::admit(a,b,semio_ui_scene_views::TEXT_SPLICE_CONTEXT_SCALARS,cx,&mut self.composer)?;}else{self.transition(1,cx)?;}}else{let replace=matches!((previous,incoming),([WriterMutation::EditText(_)],[WriterMutation::EditText(_)]));let d=fixed::<(OriginalTypingFold<WriterMutation>,u8)>();admit_original_construction(cx,&mut self.decision,demand(d),|_|{self.phase=3;Ok((if replace{OriginalTypingFold::ReplaceIncoming}else{OriginalTypingFold::Split},receipt(d)))})?;}},
    1=>{if self.composition.is_some(){self.transition(2,cx)?;}else{let(a,b)=views(previous,incoming).ok_or_else(invalid)?;let composer=self.composer.as_mut().ok_or_else(invalid)?;if composer.ready(){composer.take_into(&mut self.composition,cx)?;}else{composer.advance(a,b,cx)?;}}},
    2=>{if self.composer.is_some(){self.close_composer(cx)?;}else{self.make_decision(cx)?;}},
    _=>return Err(invalid().into()),

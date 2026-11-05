@@ -1,6 +1,6 @@
 //! 🫴️ Static geometry exchange retains natural spans and every typed frontier under the original caller wallet.
 use super::*;
-use semio_framework_os_kernel::{NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner};
+use semio_os_kernel::{NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner};
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant, RetainedCloneProgress, RetireOwned, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 #[path = "native-gltf-export.rs"]

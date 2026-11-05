@@ -29,8 +29,8 @@ pub mod mutation {
     crate::resize_layer::inverse::inverse(self, base)
 }
 
-        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize layer {} to {}x{}", self.layer_id, self.new_width, self.new_height), &format!("Größe von Ebene {} auf {}×{} ändern", self.layer_id, self.new_width, self.new_height))
+        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+            semio_ui_locale::LocalizedLabel::native(&format!("Resize layer {} to {}x{}", self.layer_id, self.new_width, self.new_height), &format!("Größe von Ebene {} auf {}×{} ändern", self.layer_id, self.new_width, self.new_height))
         }
 
         fn target(&self) -> Vec<String> {

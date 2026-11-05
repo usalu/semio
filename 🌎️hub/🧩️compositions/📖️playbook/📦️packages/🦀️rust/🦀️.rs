@@ -13,7 +13,7 @@
 //!
 //! Playbook's document/operation domain (steps, blocks, generation forms, and their `dsl`/`pack`/
 //! `spr` derive impls) is owned by the FRAMEWORK kernel crate `playbook`
-//! (`semio-framework-os-kernel-playbook`, untouched by this migration) — the same domain `📋️forms`
+//! (`semio-os-kernel-playbook`, untouched by this migration) — the same domain `📋️forms`
 //! builds on. This plugin owns only its own document schema id, `ArtifactKindSpec`, `PlaybookConfig`/
 //! `PlaybookConfigMutation`/`PlaybookCommand`, and the `PlaybookPlayApp` `ArtifactApp` impl.
 

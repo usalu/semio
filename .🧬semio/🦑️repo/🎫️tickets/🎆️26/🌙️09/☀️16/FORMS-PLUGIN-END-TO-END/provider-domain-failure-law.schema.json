@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "geometryFailure"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "cancelled",
+          "deadlineExpired",
+          "retirementAuthorized",
+          "fuel",
+          "items",
+          "expectedAdmission",
+          "sameCaller"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "execution",
+              "retirement"
+            ]
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "deadlineExpired": {
+            "type": "boolean"
+          },
+          "retirementAuthorized": {
+            "type": "boolean"
+          },
+          "fuel": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedAdmission": {
+            "type": "boolean"
+          },
+          "sameCaller": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "geometryFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "work",
+        "receiptRefusal"
+      ],
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/valueFailure"
+        },
+        "work": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "retained",
+            "consumedUnits"
+          ],
+          "properties": {
+            "retained": {
+              "$ref": "#/$defs/progress"
+            },
+            "consumedUnits": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "receiptRefusal": {
+          "$ref": "#/$defs/valueFailure"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "valueFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "message",
+        "retained"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retained": {
+          "$ref": "#/$defs/progress"
+        }
+      }
+    }
+  }
+}

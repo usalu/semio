@@ -196,11 +196,6 @@ pub mod editor {
         pub mod questions {
             #[path = "../../../../../../✏️editor/❓️questions/📍️placement/🦀️.rs"]
             pub mod placement;
-            pub use semio_s_artifact_forms_forms_diff::editor::forms::questions::extensions;
-        }
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
         }
         pub use semio_s_artifact_forms_forms_tests::editor::forms::terminology;
         pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
@@ -217,3 +212,5 @@ pub mod host {
 #[path = "../../../../../../../../../../🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
 pub mod owned;
 }
+
+pub use semio_s_artifact_forms_forms_diff::question_extensions;

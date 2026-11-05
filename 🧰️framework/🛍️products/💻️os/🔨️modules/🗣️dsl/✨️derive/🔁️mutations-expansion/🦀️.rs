@@ -188,9 +188,9 @@ let mut timestamp_arms = Vec::new();
         }
         let expected_variant = variant_ident.to_string();
         let expected_kebab = to_kebab(&expected_variant);
-        let kind = quote! { <#payload_ty as ::semio_framework_os_command::MutationKind<#snapshot_ty, #aggregate_ty>> };
-        let leaf = quote! { <#payload_ty as ::semio_framework_os_command::MutationLeaf> };
-        let cold_kind = quote! { <#payload_ty as ::semio_framework_os_command::ColdMutationKind<#reference_ty, #aggregate_ty>> };
+        let kind = quote! { <#payload_ty as ::semio_os_command::MutationKind<#snapshot_ty, #aggregate_ty>> };
+        let leaf = quote! { <#payload_ty as ::semio_os_command::MutationLeaf> };
+        let cold_kind = quote! { <#payload_ty as ::semio_os_command::ColdMutationKind<#reference_ty, #aggregate_ty>> };
         diff_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::diff(payload, base) });
         inverse_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::inverse(payload, base) });
         cold_foreign_source_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::foreign_step_source(payload, base, index) });
@@ -212,10 +212,10 @@ let mut timestamp_arms = Vec::new();
         kind_consts.push(quote! { #kind::SEMANTICS });
         leaf_descriptors.push(quote! { #leaf::DESCRIPTOR });
         leaf_checks.push(quote! { const {
-            assert!(::semio_framework_os_command::str_eq(#kind::SEMANTICS.kind, #expected_kebab), "Mutations semantic kind must match its variant");
-            assert!(::semio_framework_os_command::is_approved_verb(#kind::SEMANTICS.verb), "Mutations requires an approved semantic verb");
-            assert!(::semio_framework_os_command::str_eq(#leaf::DESCRIPTOR.aggregate_variant, #expected_variant), "Mutations descriptor variant must match its wrapped leaf");
-            assert!(::semio_framework_os_command::str_eq(#leaf::DESCRIPTOR.semantic_kind, #kind::SEMANTICS.kind), "Mutations descriptor and semantic kind must agree");
+            assert!(::semio_os_command::str_eq(#kind::SEMANTICS.kind, #expected_kebab), "Mutations semantic kind must match its variant");
+            assert!(::semio_os_command::is_approved_verb(#kind::SEMANTICS.verb), "Mutations requires an approved semantic verb");
+            assert!(::semio_os_command::str_eq(#leaf::DESCRIPTOR.aggregate_variant, #expected_variant), "Mutations descriptor variant must match its wrapped leaf");
+            assert!(::semio_os_command::str_eq(#leaf::DESCRIPTOR.semantic_kind, #kind::SEMANTICS.kind), "Mutations descriptor and semantic kind must agree");
             let mut scope_index = 0;
             let mut matched = SCOPES.len();
             while scope_index < SCOPES.len() {
@@ -234,7 +234,7 @@ let mut timestamp_arms = Vec::new();
             }
         });
         register_calls.push(quote! {
-            ::semio_framework_os_command::MutationDescriptor::new(
+            ::semio_os_command::MutationDescriptor::new(
                 ::protocol::SchemaId(format!("{}#{}", #schema, #kind::SEMANTICS.kind)),
                 ::protocol::SchemaVersion(1),
                 state_class,
@@ -246,20 +246,20 @@ let mut timestamp_arms = Vec::new();
 
     let register_fn_ident = syn::Ident::new(&format!("register_{}_descriptors", to_kebab(&name.to_string()).replace('-', "_")), name.span());
     let cold_reference = quote! {
-        impl #impl_generics ::semio_framework_os_command::ColdMutation<#reference_ty> for #aggregate_ty #where_clause {
+        impl #impl_generics ::semio_os_command::ColdMutation<#reference_ty> for #aggregate_ty #where_clause {
             type ReferenceDiff = #reference_diff_ty;
-            fn diff(&self, base: &#reference_ty) -> ::semio_framework_os_command::MutationOutcome<Self::ReferenceDiff> {
-                let _ = <Self as ::semio_framework_os_command::Mutation<#snapshot_ty>>::DESCRIPTORS;
+            fn diff(&self, base: &#reference_ty) -> ::semio_os_command::MutationOutcome<Self::ReferenceDiff> {
+                let _ = <Self as ::semio_os_command::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#diff_arms),* }
             }
             fn inverse(&self, base: &#reference_ty) -> Result<Vec<Self>, ::semio_framework_value::ValueError> {
-                let outcome = <Self as ::semio_framework_os_command::ColdMutation<#reference_ty>>::diff(self, base);
+                let outcome = <Self as ::semio_os_command::ColdMutation<#reference_ty>>::diff(self, base);
                 if !outcome.admit_inverse::<#reference_ty>(|| {
-                    Ok(<Self as ::semio_framework_os_command::ColdMutation<#reference_ty>>::foreign_step_source(self, base, 0)?.is_some())
+                    Ok(<Self as ::semio_os_command::ColdMutation<#reference_ty>>::foreign_step_source(self, base, 0)?.is_some())
                 })? { return Ok(Vec::new()); }
                 match self { #(#inverse_arms),* }
             }
-            fn foreign_step_source<'a>(&'a self, base: &'a #reference_ty, index: usize) -> Result<Option<::semio_framework_os_command::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
+            fn foreign_step_source<'a>(&'a self, base: &'a #reference_ty, index: usize) -> Result<Option<::semio_os_command::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
                 match self { #(#cold_foreign_source_arms),* }
             }
         }
@@ -334,16 +334,16 @@ impl #impl_generics ::protocol::Mutation<#snapshot_ty> for #aggregate_ty #where_
             #retire_cold
         }
 
-        impl #impl_generics ::semio_framework_os_command::SemanticMutation<#snapshot_ty> for #aggregate_ty #where_clause {
-            fn kinds() -> &'static [::semio_framework_os_command::SemanticDescriptor] {
+        impl #impl_generics ::semio_os_command::SemanticMutation<#snapshot_ty> for #aggregate_ty #where_clause {
+            fn kinds() -> &'static [::semio_os_command::SemanticDescriptor] {
                 let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 &[#(#kind_consts),*]
             }
-            fn semantics(&self) -> &'static ::semio_framework_os_command::SemanticDescriptor {
+            fn semantics(&self) -> &'static ::semio_os_command::SemanticDescriptor {
                 let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#semantics_arms),* }
             }
-            fn label(&self) -> ::semio_framework_ui_locale::LocalizedLabel {
+            fn label(&self) -> ::semio_ui_locale::LocalizedLabel {
                 let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#label_arms),* }
             }
@@ -356,10 +356,10 @@ impl #impl_generics ::protocol::Mutation<#snapshot_ty> for #aggregate_ty #where_
         /// 🪪️ Registers the validated leaf roster during owner startup.
         pub fn #register_fn_ident #impl_generics (
             state_class: ::semio_framework_schema_state::StateClass,
-        ) -> ::core::result::Result<(), ::semio_framework_os_command::MutationDescriptorError> #where_clause {
+        ) -> ::core::result::Result<(), ::semio_os_command::MutationDescriptorError> #where_clause {
             let _ = <#aggregate_ty as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
             let descriptors = [#(#register_calls),*];
-            ::semio_framework_os_command::register_mutation_descriptors(descriptors)
+            ::semio_os_command::register_mutation_descriptors(descriptors)
         }
 
         #payload_law
@@ -401,15 +401,15 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty
         #[test]
         fn #test_ident() {
             let root = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#relative);
-            let (mut ops, _) = ::semio_framework_os_command::mutation_fixture_ops::<#name>(&root);
+            let (mut ops, _) = ::semio_os_command::mutation_fixture_ops::<#name>(&root);
             #demo_cases
             let count = ops.len();
-            let mut failures = ::semio_framework_os_command::mutation_input_schema_failures::<#snapshot_ty, #name>();
-            failures.extend(::semio_framework_os_command::mutation_descriptor_roster_failures::<#snapshot_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#workspace_relative), #descriptor_filename));
-            failures.extend(::semio_framework_os_command::mutation_label_failures::<#snapshot_ty, #name>(&ops));
-            failures.extend(::semio_framework_os_store_one_item::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
-            failures.extend(::semio_framework_os_command::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));
-            let (footprint_failures, cases) = ::semio_framework_os_command::fold::mutation_inverse_rows_failures::<#snapshot_ty, #reference_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
+            let mut failures = ::semio_os_command::mutation_input_schema_failures::<#snapshot_ty, #name>();
+            failures.extend(::semio_os_command::mutation_descriptor_roster_failures::<#snapshot_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#workspace_relative), #descriptor_filename));
+            failures.extend(::semio_os_command::mutation_label_failures::<#snapshot_ty, #name>(&ops));
+            failures.extend(::semio_os_store_one_item::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
+            failures.extend(::semio_os_command::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));
+            let (footprint_failures, cases) = ::semio_os_command::fold::mutation_inverse_rows_failures::<#snapshot_ty, #reference_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
             failures.extend(footprint_failures);
             assert!(failures.is_empty(), "{} breaches of the editable-payload and fold-footprint laws over {} {} operations and {} fixture cases: {:#?}", failures.len(), count, ::core::stringify!(#name), cases, failures);
         }

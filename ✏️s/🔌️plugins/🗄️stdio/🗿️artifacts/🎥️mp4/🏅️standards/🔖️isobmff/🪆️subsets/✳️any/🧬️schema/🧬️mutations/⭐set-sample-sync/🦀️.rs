@@ -17,8 +17,8 @@ pub struct SetSampleSync {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetSampleSync {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-sync", kind: "set-sample-sync", record: "SetSampleSync" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set sample sync", "Sync-Kennung des Samples setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set sample sync", "Sync-Kennung des Samples setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

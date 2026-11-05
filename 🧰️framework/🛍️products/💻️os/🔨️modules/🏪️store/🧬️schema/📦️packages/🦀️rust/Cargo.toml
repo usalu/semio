@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-space-schema"
+name = "semio-os-store-space-schema"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,34 +22,34 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
-semio-framework-os-store-cursor = { path = "../../../🧭️cursor/📦️packages/🦀️rust" }
-semio-framework-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
-semio-framework-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
+semio-os-store-cursor = { path = "../../../🧭️cursor/📦️packages/🦀️rust" }
+semio-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
+semio-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
-semio-framework-os-space-sqlite-cells = { path = "../../../../🪐️space/🪶️sqlite/📦️packages/🦀️rust" }
+semio-os-space-sqlite-cells = { path = "../../../../🪐️space/🪶️sqlite/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-command = { path = "../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-os-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }
+semio-os-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-command = { path = "../../../../📡️spr/🎮️command/📦️packages/🦀️rust", features = ["mutation-testing"] }
-semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust", features = ["protocol-laws"] }
-semio-framework-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
-semio-framework-os-store-canonical-json = { path = "../../../🧵️canonical-edit/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../../../📡️spr/🎮️command/📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust", features = ["protocol-laws"] }
+semio-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-os-store-canonical-json = { path = "../../../🧵️canonical-edit/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
-semio-framework-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }

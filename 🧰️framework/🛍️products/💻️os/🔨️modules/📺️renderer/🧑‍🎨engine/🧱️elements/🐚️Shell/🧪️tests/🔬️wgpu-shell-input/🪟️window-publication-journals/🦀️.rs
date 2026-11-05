@@ -46,26 +46,26 @@ fn paint_tree_pointer_document(shell: &mut ShellState, surface: &str, document: 
     paint_tree_pointer_documents(shell, &[(surface, document, body)])
 }
 
-fn table_pointer_record(id: u64, key: &str, scene: &semio_framework_ui_scene_views::TableScene) -> ui_contract::UiNodeRecord {
-    let surface = semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Table, scene).expect("bounded Table scene encodes");
+fn table_pointer_record(id: u64, key: &str, scene: &semio_ui_scene_views::TableScene) -> ui_contract::UiNodeRecord {
+    let surface = semio_ui_scene_surface::encode(ui_contract::SurfaceKind::Table, scene).expect("bounded Table scene encodes");
     tree_pointer_record(id, key, ui_contract::Component::Surface(surface), &[], None)
 }
 
-fn canvas_pointer_record(id: u64, key: &str, scene: &semio_framework_ui_scene_plane::Canvas2dScene) -> ui_contract::UiNodeRecord {
-    let surface = semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Canvas2d, scene).expect("bounded Canvas2d scene encodes");
+fn canvas_pointer_record(id: u64, key: &str, scene: &semio_ui_scene_plane::Canvas2dScene) -> ui_contract::UiNodeRecord {
+    let surface = semio_ui_scene_surface::encode(ui_contract::SurfaceKind::Canvas2d, scene).expect("bounded Canvas2d scene encodes");
     tree_pointer_record(id, key, ui_contract::Component::Surface(surface), &[], None)
 }
 
 fn runnable_window_body_fixture(_instance_id: u32, surface_id: &str, body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>, _refresh_effects: Option<&mut Vec<semio_framework::kernel::Effect>>) -> Result<UiDocumentLease, String> {
     for section in [semio_framework::UiRefreshSection::Catalogue, semio_framework::UiRefreshSection::Engagements, semio_framework::UiRefreshSection::Measures, semio_framework::UiRefreshSection::Tools] {
         if body_key == section.body_key() {
-            return Ok(semio_framework_os_renderer_wgpu_shell_windows::section_fixtures::section_document(&serde_json::json!({}), 1, section));
+            return Ok(semio_renderer_wgpu_shell_windows::section_fixtures::section_document(&serde_json::json!({}), 1, section));
         }
     }
-    let scene = semio_framework_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
+    let scene = semio_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
     let records = vec![world3d_pointer_record(1, "initial-world", &scene)];
     let identity = ui_contract::UiDocumentAssemblyIdentity { generation: 1, revision: ui_contract::UiRevision(1), root: Some(ui_contract::UiNodeId(1)), layout_epoch: 0 };
-    UiDocumentLease::try_publish(SurfaceId::try_from(surface_id).map_err(|_| "fixture surface exceeds the retained contract")?, identity, records).map_err(|error| semio_framework_os_renderer_wgpu_program_bridge::retained_publication_refusal(surface_id, error))
+    UiDocumentLease::try_publish(SurfaceId::try_from(surface_id).map_err(|_| "fixture surface exceeds the retained contract")?, identity, records).map_err(|error| semio_renderer_wgpu_program_bridge::retained_publication_refusal(surface_id, error))
 }
 
 std::thread_local! {
@@ -145,7 +145,7 @@ fn retire_scripted_window_publication_documents(shell: &mut ShellState) {
 
 #[test]
 fn required_window_body_refusal_holds_the_transfer_journal_then_recovers_once() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window publication fixture");
     let recovery = fixture["publicationOutcomes"]["recovery"].as_array().expect("recovery sequence");
     let mut shell = shell_with_scripted_window_publication(1);
@@ -175,7 +175,7 @@ fn required_window_body_refusal_holds_the_transfer_journal_then_recovers_once() 
 
 #[test]
 fn permanent_window_body_refusal_retires_the_journal_at_the_fixture_ceiling() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window publication fixture");
     let outcomes = &fixture["publicationOutcomes"];
     let retry_ceiling = outcomes["retryCeiling"].as_u64().expect("retry ceiling") as usize;
@@ -204,13 +204,13 @@ fn permanent_window_body_refusal_retires_the_journal_at_the_fixture_ceiling() {
 
 #[test]
 fn topology_journal_credit_refusal_is_returned_to_the_transfer_caller() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut shell = host_test_shell();
-    for _ in 0..semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY {
+    for _ in 0..semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY {
         shell.windows.reserve_window_topology_action(ActionDescriptor { controller_id: "fixture".into(), action: "occupied".into(), args: None }).expect("the occupied fixture journal publishes");
     }
     let error = shell.windows.reserve_window_topology_action(ActionDescriptor { controller_id: "test".into(), action: "noteShellCommand".into(), args: None }).expect_err("a full action queue returns its exact refusal");
-    assert_eq!(error, semio_framework_ui_action::BoundedActionFault::ItemCredits);
+    assert_eq!(error, semio_ui_action::BoundedActionFault::ItemCredits);
     assert!(shell.windows.window_topology_publications.is_empty(), "refusal precedes every topology owner");
     assert!(shell.settle.deferred_actions.is_empty());
 }
@@ -228,7 +228,7 @@ fn canvas_action_args(action: &ActionDescriptor) -> Value {
 }
 #[test]
 fn standalone_multi_app_variants_resolve_their_declared_app() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let corpus: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json")).unwrap();
     for row in corpus["catalog"]["playgrounds"].as_array().unwrap() {
         let plugin = row["pluginId"].as_str().unwrap();

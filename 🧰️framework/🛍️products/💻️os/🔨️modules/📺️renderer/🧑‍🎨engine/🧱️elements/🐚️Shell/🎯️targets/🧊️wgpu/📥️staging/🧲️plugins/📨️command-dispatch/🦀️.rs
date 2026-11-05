@@ -43,7 +43,7 @@ impl PluginState {
     pub async fn load_extension_record(&mut self, record: ShellExtensionStoreRecord) -> Result<(), String> {
         let index = self.project_extension_record(record.clone())?;
         let record_json = serde_json::to_string(&record).map_err(|error| error.to_string())?;
-        match semio_framework_os_renderer_wgpu_program_bridge::install_js_extension(&record_json, &record.extension_id, &record.version).await {
+        match semio_renderer_wgpu_program_bridge::install_js_extension(&record_json, &record.extension_id, &record.version).await {
             Ok(program) => {
                 let enabled = self.extensions[index].enabled;
                 self.plugins.retain(|entry| entry.plugin_id != record.extension_id);
@@ -90,7 +90,7 @@ impl PluginState {
     /// 🎯️ Browser twin of the native precondition — see that method's own doc.
     #[cfg(target_arch = "wasm32")]
     pub fn plugin_install_precondition(&self) -> Result<(), String> {
-        semio_framework_os_renderer_wgpu_program_bridge::js_plugin_install_door_available().then_some(()).ok_or_else(|| "this isolate installs no semioWgpuInstallPlugin door".to_string())
+        semio_renderer_wgpu_program_bridge::js_plugin_install_door_available().then_some(()).ok_or_else(|| "this isolate installs no semioWgpuInstallPlugin door".to_string())
     }
 
     /// 📦️ The one step that differs per target: hand back a `ProgramBridgeEntry` for `plugin_id`.
@@ -102,14 +102,14 @@ impl PluginState {
     pub async fn acquire_plugin_program(&mut self, plugin_id: &str) -> Result<ProgramBridgeEntry, String> {
         let modules_root = plugin_modules_root_of(&self.plugins).ok_or_else(|| "plugin modules root is unavailable".to_string())?;
         let plugin_filter = self.plugin_filter.clone();
-        let entries = semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&plugin_filter, &modules_root).await?;
+        let entries = semio_renderer_wgpu_program_bridge::load_wasm_plugins(&plugin_filter, &modules_root).await?;
         entries.into_iter().find(|entry| entry.plugin_id == plugin_id).ok_or_else(|| format!("native runtime manifest declares no module for {plugin_id}"))
     }
 
     /// 📦️ Browser twin of the native acquisition — see that method's own doc.
     #[cfg(target_arch = "wasm32")]
     pub async fn acquire_plugin_program(&mut self, plugin_id: &str) -> Result<ProgramBridgeEntry, String> {
-        semio_framework_os_renderer_wgpu_program_bridge::install_js_plugin(plugin_id).await
+        semio_renderer_wgpu_program_bridge::install_js_plugin(plugin_id).await
     }
 
     /// 🎬️ Makes `plugin_id` resident, the wgpu twin of React's `installPlugin`
@@ -182,7 +182,7 @@ impl PluginState {
         if let Some(install) = self.plugin_install.as_ref() {
             install.cancel.cancel_now();
             #[cfg(target_arch = "wasm32")]
-            semio_framework_os_renderer_wgpu_program_bridge::cancel_js_plugin_install(&install.plugin_id);
+            semio_renderer_wgpu_program_bridge::cancel_js_plugin_install(&install.plugin_id);
         }
     }
 
@@ -204,7 +204,7 @@ impl PluginState {
                 Err(error) => debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not install pinned {plugin_id}: {error}")),
             }
         }
-        let owner = semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind, semio_framework_os_renderer_wgpu_program_bridge::plugin_artifact_kind_activations())?;
+        let owner = semio_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind, semio_renderer_wgpu_program_bridge::plugin_artifact_kind_activations())?;
         if let Err(error) = self.install_plugin(owner).await {
             debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not install {owner}: {error}"));
             return None;

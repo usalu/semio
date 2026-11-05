@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfFy where Op: pro
         record: "ChangedCfFy",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Yield strength f_yb of the cold-formed member", "Kaltprofil: Basisstreckgrenze f_yb ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Yield strength f_yb of the cold-formed member", "Kaltprofil: Basisstreckgrenze f_yb ändern")
     }
 }
 

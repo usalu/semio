@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTieBeamSteelArea w
         record: "ChangedTieBeamYaw",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tie beam: Steel area", "Fundamentbalken: Stahlquerschnitt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tie beam: Steel area", "Fundamentbalken: Stahlquerschnitt ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

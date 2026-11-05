@@ -9,7 +9,7 @@ use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windo
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
 /// 🪑️ The utility that places components.
@@ -68,7 +68,7 @@ impl Browse for OpenFamily {
         }
         let mut emit = Emit::default();
         emit.effects.push(select_family(&self.family));
-        emit.effects.push(Effect::OpenWindow { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), kind: semio_framework::kernel::WindowKindId(semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::WINDOW_KIND_ID.to_string()), params: semio_framework_plugin::DslValue::Null });
+        emit.effects.push(Effect::OpenWindow { req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0), kind: semio_framework::kernel::WindowKindId(semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::WINDOW_KIND_ID.to_string()), params: semio_plugin::DslValue::Null });
         Ok(emit)
     }
 }

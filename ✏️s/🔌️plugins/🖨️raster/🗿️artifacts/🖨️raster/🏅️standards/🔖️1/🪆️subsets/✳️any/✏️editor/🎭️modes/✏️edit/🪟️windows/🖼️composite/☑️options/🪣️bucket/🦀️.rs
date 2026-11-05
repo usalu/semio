@@ -6,7 +6,7 @@ use crate::config::RasterConfig;
 use crate::modes::edit::windows::composite::options::brush::foreground_measure;
 use crate::raster_measure_action;
 use crate::terminology::RasterPlayLabels;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 //#region 🔖️Measure
 pub fn measure(config: &RasterConfig, labels: &RasterPlayLabels) -> WindowMeasure {

@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-media-box", kind: "set-page-media-box", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} media box", self.index), &format!("MediaBox von Seite {} setzen", self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set page {} media box", self.index), &format!("MediaBox von Seite {} setzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

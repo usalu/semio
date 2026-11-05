@@ -40,7 +40,7 @@ fn kinds_match_enum_and_catalog() {
 /// snapshot it started from, which is what makes each stamp mutation exactly invertible on its axis.
 #[test]
 fn stamping_out_of_a_class_and_back_is_the_identity() {
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
     let started = crate::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
     let mut state = started.clone();
     for mutation in stamp_conformance_class_mutations(true) {
@@ -56,7 +56,7 @@ fn stamping_out_of_a_class_and_back_is_the_identity() {
 /// ⚖️ Every transitional kind satisfies the inverse sum law on a document declaring the strict class.
 #[semio_framework_async_macros::async_test]
 async fn every_transitional_kind_satisfies_the_inverse_sum_law() {
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
     let mut base = crate::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
     for mutation in stamp_conformance_class_mutations(true) {
         apply_docx_transitional_mutation(&mut base, &mutation);

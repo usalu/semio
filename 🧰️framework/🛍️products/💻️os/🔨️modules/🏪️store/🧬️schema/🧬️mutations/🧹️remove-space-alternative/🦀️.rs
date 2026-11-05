@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Payload
 /// 🧹️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive (its sibling `serde_json` differential test). Production never serializes through serde.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_os_dsl::MutationLeaf)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -21,19 +21,19 @@ pub struct RemoveSpaceAlternative {
 //#endregion 🔖️Payload
 
 //#region ⚙️Semantics
-impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
-    const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "remove", entity: "space-alternative", kind: "remove-space-alternative", record: "RemovedSpaceAlternative" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove space alternative {}", self.alternative_id), &format!("Space-Alternative {} entfernen", self.alternative_id))
+impl semio_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
+    const SEMANTICS: semio_os_spr::SemanticDescriptor = semio_os_spr::SemanticDescriptor { verb: "remove", entity: "space-alternative", kind: "remove-space-alternative", record: "RemovedSpaceAlternative" };
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove space alternative {}", self.alternative_id), &format!("Space-Alternative {} entfernen", self.alternative_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["alternatives".into(), self.alternative_id.clone()]
     }
 }
 
-impl semio_framework_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
-    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_framework_os_spr::MutationOutcome<SpaceHistoryDiff> {
-        semio_framework_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::RemoveAlternative { alternative_id: self.alternative_id.clone() }))
+impl semio_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
+    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_os_spr::MutationOutcome<SpaceHistoryDiff> {
+        semio_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::RemoveAlternative { alternative_id: self.alternative_id.clone() }))
     }
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
         Ok(base.alternatives.iter().find(|value| value.id == self.alternative_id).map(|alternative| vec![

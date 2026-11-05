@@ -1,6 +1,6 @@
 #[test]
 fn cad_imported_geometry_catalog_birth_matches_original_system_allocations() {
-    use semio_framework_os_kernel::os_store::document_store_owners::MemberStoreProducer;
+    use semio_os_kernel::os_store::document_store_owners::MemberStoreProducer;
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     use semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer;
     use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation};

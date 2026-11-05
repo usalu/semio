@@ -7,7 +7,7 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::native_encoding::NativeEncodeProgress;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
 fn native_cells(schema:&str,count:usize,bytes:impl IntoIterator<Item=Result<u8,ValueError>>,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{native.scoped_stage(|native|{let total=count.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Binary row extent overflow"))?;native.begin_stage(total)?;let mut completed=0;let mut progress=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{let delta=event.completed.saturating_sub(completed);completed=event.completed;native.advance(delta).is_ok()};crate::standards::v_raw::subsets::any::io::sqlite::snapshot::native_cells(schema,count,bytes,&mut SqliteSnapshotControl::new(&mut progress,limits))})}
-pub(crate) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<BinarySnapshot,ValueError>{
+pub(crate) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<BinarySnapshot,ValueError>{
  use super::receiving::{Carrier,count,bind,body};
  let limits=control.limits();let length=match payload{store::io_schema::IoPayload::Binary(bytes)=>bytes.len(),store::io_schema::IoPayload::Text(text)=>text.len()};if length>limits.max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Binary native input exceeds file limit"))}
  let native_before=native_owner.native().owned_bytes();
@@ -28,7 +28,7 @@ fn forecast(snapshot:&BinarySnapshot,encoding:SnapshotEncoding,limits:store::sql
 }
 /// 📏️ Checks the exact borrowed raw/hex extent before any native ownership admission.
 pub(crate) fn preflight(snapshot:&BinarySnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{crate::standards::v_raw::subsets::any::io::sqlite::snapshot::semantic(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;forecast(snapshot,encoding,control.limits())}
-pub(crate) fn encode(snapshot:&BinarySnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+pub(crate) fn encode(snapshot:&BinarySnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
  use semio_framework_value::{RetainedCloneGrant,retained_clone::RetainedCloneProgress};
  use store::io_schema::IoPayload;
  const PREFIX:&str="semio stdio.binary.dsl v1\n";

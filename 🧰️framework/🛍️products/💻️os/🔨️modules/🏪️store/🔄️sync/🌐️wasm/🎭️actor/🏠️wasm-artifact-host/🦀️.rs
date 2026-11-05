@@ -30,19 +30,19 @@ impl ArtifactHost {
         &self.core
     }
 
-    pub fn set_local_hub_credential(&self, credential: Arc<semio_framework_os_directory_client::LocalHubCredential>) {
+    pub fn set_local_hub_credential(&self, credential: Arc<semio_os_directory_client::LocalHubCredential>) {
         self.core.set_local_hub_credential(credential);
     }
 
-    pub fn set_hub_socket_grant_source(&self, source: Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>) {
+    pub fn set_hub_socket_grant_source(&self, source: Arc<dyn semio_os_directory_client::HubSocketGrantSource>) {
         self.core.set_hub_socket_grant_source(source);
     }
 
-    pub fn set_document_execution_target_lease(&self, document_key: &ArtifactDocumentKey, surface: semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1) -> bool {
+    pub fn set_document_execution_target_lease(&self, document_key: &ArtifactDocumentKey, surface: semio_os_directory::DocumentExecutionTargetLeaseFieldsV1) -> bool {
         self.core.set_document_execution_target_lease(document_key, surface)
     }
 
-    pub fn set_document_seed(&self, document_key: &ArtifactDocumentKey, pair: semio_framework_os_directory::CanonicalCheckpointPairV1) -> bool {
+    pub fn set_document_seed(&self, document_key: &ArtifactDocumentKey, pair: semio_os_directory::CanonicalCheckpointPairV1) -> bool {
         self.core.set_document_seed(document_key, pair)
     }
 

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-plugin-host-wake"
+name = "semio-plugin-host-wake"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -34,7 +34,7 @@ semio-framework-actor = { workspace = true }
 # `AsyncEffectExecutor` derives `OperationContext`/`ScopeHandle`/`ChannelPolicy` (this crate's own
 # vocabulary is domain-neutral, zero tokio) and dispatches onto `HttpPool`/`StorageScheduler`/
 # `TimerWheel`/`ComputePool`/`EventRouter` (packet R2's tokio-backed services) — same dependency
-# shape `semio-framework-os-services` itself already establishes.
+# shape `semio-os-services` itself already establishes.
 # 🧵️ P1c (one-pool-worker-runtime): `"entrypoint"` is required (not merely `cfg(test)`) because
 # `🧵️shard/🧵️executor/🦀️.rs`'s `ShardExecutor::run` calls `semio_framework_async::block_on` from a
 # PRODUCTION `WorkerPool` job closure (a plain OS thread, no async executor already polling it) —
@@ -54,11 +54,11 @@ semio-framework-job = { workspace = true, features = ["testkit"] }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
 # plain dependency above for test builds only) brings in `semio-framework-async::testkit::
 # ManualRuntime`, this crate's own `#[cfg(test)]` double for `⚡️effects/🦀️.rs`'s tests —
-# same pattern `semio-framework-os-services`'s own Cargo.toml already establishes.
+# same pattern `semio-os-services`'s own Cargo.toml already establishes.
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
-semio-framework-plugin-interpreter = { workspace = true }
+semio-plugin-interpreter = { workspace = true }
 
 [[test]]
 name = "original_host_root"

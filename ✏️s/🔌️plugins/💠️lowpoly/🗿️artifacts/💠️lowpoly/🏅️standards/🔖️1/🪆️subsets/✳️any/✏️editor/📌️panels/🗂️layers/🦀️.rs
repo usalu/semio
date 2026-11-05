@@ -4,17 +4,17 @@ use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::Lowpoly
 use semio_s_artifact_lowpoly_lowpoly_view::{active_object, LowpolyView};
 use semio_s_artifact_lowpoly_lowpoly_kit::{lowpoly_action, ui_label, ui_value_map, ui_value_number};
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_BODY_LAYERS: &str = "lowpoly.play.layers";
@@ -33,7 +33,7 @@ pub fn definition() -> PanelTabDefinition {
 fn layer_row(index: usize, layer: &LowpolyPaintLayer) -> UiAssemblyResult<BuiltNode> {
     let args = ui_value_map([("layerIndex", ui_value_number(index as f64))])?;
     let mut node = tree_item_with_action(format!("lowpoly-layer:{index}"), layer.name.clone(), Some(format!("{} · {}", layer.opacity, layer.blend_mode)), lowpoly_action("setActivePaintLayer", Some(args))?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
         props.icon = Some(UiText::try_from_str("layers").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly layer icon admission failed"))?);
     }
     Ok(node)

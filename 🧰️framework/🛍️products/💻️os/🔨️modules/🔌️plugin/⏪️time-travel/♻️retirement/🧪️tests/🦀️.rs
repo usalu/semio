@@ -2,31 +2,31 @@
 use crate::MemberKey;
 use semio_framework::ArtifactDialect;
 use semio_framework::{ActionArgDef, ArgSchema, FaultFrom};
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::{DslValue, RetirementDemand};
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_time_travel::{TimeTravelBase, TimeTravelEvent, TimeTravelSession, TimeTravelStage, TimeTravelTarget};
 use crate::{TimeTravelEditor, TimeTravelLedger, TimeTravelMemberMetadata, TimeTravelOwners};
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 use crate::original_retirement::{permits, progress};
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
-use semio_framework_plugin_child::MemberPath;
-use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_child::MemberPath;
+use semio_plugin_instance_app::VcsArtifactApp;
 
 #[test]
 fn original_inactive_member_metadata_fields_retire_under_independent_grants(){

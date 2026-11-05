@@ -11,7 +11,7 @@ use crate::editor::bitmap::modes::edit::windows::input::WFC_BITMAP_WINDOW_INPUT;
 use crate::editor::bitmap::{BitmapEditor, BitmapEditorCommand};
 use crate::mutations::{paint_input_stroke, set_input_pixels, BitmapMutation, BitmapStrokePoint};
 use crate::{BitmapSnapshot, WFC_BITMAP_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+use semio_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 use semio_framework_tool_machine::{drive_chart_gesture, GestureHostEvent, GestureLedger, ToolStep};
 
 fn point(x: u32, y: u32) -> BitmapStrokePoint {
@@ -183,7 +183,7 @@ fn a_streamed_stroke_never_repeats_a_cell_across_ticks() {
 //#region 🧩️MountedApp
 struct BitmapApp {
     app: VcsArtifactApp<EditorApp<BitmapEditor>>,
-    scope: semio_framework_plugin::artifact_app_laws::OriginalFixtureScope,
+    scope: semio_plugin::artifact_app_laws::OriginalFixtureScope,
 }
 
 impl std::ops::Deref for BitmapApp {
@@ -215,23 +215,23 @@ fn manifest() -> App {
 }
 
 fn app() -> BitmapApp {
-    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<BitmapEditor>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = block_on(semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<BitmapEditor>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()));
     block_on(app.bind_instance_id(1));
     BitmapApp { app, scope }
 }
 
 fn input_meta() -> ActionMeta {
     let window_instances = vec![ViewWindowInstance { id: WFC_BITMAP_WINDOW_INPUT.into(), window_kind_id: WFC_BITMAP_WINDOW_INPUT.into() }];
-    let view = ViewModel { window_instances, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(WFC_BITMAP_WINDOW_INPUT).expect("the input window is in the roster");
-    ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") }
+    let view = ViewModel { window_instances, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }.for_window_instance(WFC_BITMAP_WINDOW_INPUT).expect("the input window is in the roster");
+    ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") }
 }
 
 fn settle<E: std::fmt::Debug>(app: &mut BitmapApp, result: Result<InvocationResult, E>) -> InvocationResult {
     let mut result = result.expect("the dispatch is admitted");
     for _ in 0..1_048_576 {
         while let Some(page) = app.take_typed_operation_result_page(1) {
-            assert!(page.lane != semio_framework_plugin::app::TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
+            assert!(page.lane != semio_plugin::app::TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("the page is acknowledged");
         }
         while let Some(completion) = block_on(app.take_typed_operation_completion()).expect("the completion is taken") {
@@ -247,8 +247,8 @@ fn settle<E: std::fmt::Debug>(app: &mut BitmapApp, result: Result<InvocationResu
         if !app.has_pending_typed_operations() {
             return result;
         }
-        PluginApp::maintenance_step(&mut app.app, app.scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
-        block_on(app.app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx())).expect("publication advances");
+        PluginApp::maintenance_step(&mut app.app, app.scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
+        block_on(app.app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx())).expect("publication advances");
     }
     panic!("the bitmap dispatch did not settle");
 }
@@ -256,7 +256,7 @@ fn settle<E: std::fmt::Debug>(app: &mut BitmapApp, result: Result<InvocationResu
 fn stroke(app: &mut BitmapApp, points: &[(u32, u32)], phase: Option<&str>) -> InvocationResult {
     let command = BitmapEditorCommand::PaintStroke { xs: points.iter().map(|point| point.0).collect(), ys: points.iter().map(|point| point.1).collect(), color: Some(1), phase: phase.map(str::to_string), reason: None };
     let meta = input_meta();
-    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
+    let result = block_on(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     settle(app, result)
 }
 
@@ -265,7 +265,7 @@ fn edit_rows(result: &InvocationResult) -> Vec<semio_framework::kernel::HistoryE
 }
 
 fn close(app: &mut BitmapApp) {
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.scope.cx()).expect("bitmap app paid close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.scope.cx()).expect("bitmap app paid close");
 }
 
 #[test]
@@ -278,8 +278,8 @@ fn one_mounted_stroke_is_one_edit_one_row_and_one_transaction() {
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.wfc.bitmap@1/*#editor#paint-stroke", "{transaction:?}");
     assert!(rows[0].op_lines.iter().all(|line| line.starts_with("paint-input-stroke")), "the op is the parametric leaf: {:?}", rows[0].op_lines);
-    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Paint stroke of 4 cells in colour 1");
-    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Strich mit 4 Zellen in Farbe 1 malen");
+    assert_eq!(rows[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Paint stroke of 4 cells in colour 1");
+    assert_eq!(rows[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "Strich mit 4 Zellen in Farbe 1 malen");
     assert_ne!(app.snapshot().expect("projection"), before, "the stroke landed");
     close(&mut app);
 }
@@ -298,7 +298,7 @@ fn a_mounted_streamed_stroke_commits_once_and_a_cancelled_one_leaves_zero_trace(
     assert!(edit_rows(&stroke(&mut app, &[(5, 5), (6, 6)], Some("stream"))).is_empty());
     let meta = input_meta();
     let abort = BitmapEditorCommand::PaintStroke { xs: Vec::new(), ys: Vec::new(), color: None, phase: Some("abort".into()), reason: Some("blur".into()) };
-    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &abort, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
+    let result = block_on(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &abort, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     assert!(edit_rows(&settle(&mut app, result)).is_empty(), "a cancel is no history");
     assert_eq!(app.snapshot().expect("projection"), committed, "a cancel leaves zero trace");
     close(&mut app);
@@ -319,9 +319,9 @@ fn two_mounted_strokes_are_two_transactions() {
 fn pointer(app: &mut BitmapApp, action: &str, args: serde_json::Value) -> InvocationResult {
     let mut args = args;
     args["surfaceId"] = serde_json::Value::from(format!("window:{WFC_BITMAP_WINDOW_INPUT}"));
-    let command = <BitmapEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some((semio_framework_value::DslValue::from(&args)).clone()), None).expect("the canvas verb bridges");
+    let command = <BitmapEditor as semio_plugin::ArtifactEditor>::command_from_action(action, Some((semio_framework_value::DslValue::from(&args)).clone()), None).expect("the canvas verb bridges");
     let meta = input_meta();
-    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
+    let result = block_on(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     settle(app, result)
 }
 
@@ -356,7 +356,7 @@ fn a_mounted_blur_ends_the_open_stroke_with_zero_trace() {
     assert!(edit_rows(&pointer(&mut app, "canvasPointerMove", serde_json::json!({ "worldSamples": [[1.5, 0.5], [2.5, 0.5]] }))).is_empty());
     let blur = semio_framework_value::DslValue::from(&serde_json::json!({ "windowId": WFC_BITMAP_WINDOW_INPUT, "kind": "blur" }));
     let meta = input_meta();
-    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app, semio_framework::HOST_EVENT_ACTION_ID, Some(blur), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close));
+    let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app, semio_framework::HOST_EVENT_ACTION_ID, Some(blur), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close));
     assert!(edit_rows(&settle(&mut app, result)).is_empty(), "a host fact is no history");
     assert!(edit_rows(&pointer(&mut app, "canvasPointerUp", serde_json::json!({ "worldX": 2.9, "worldY": 1.1, "cancelled": false }))).is_empty(), "the release finds no stroke");
     assert_eq!(app.snapshot().expect("projection"), before, "the blurred stroke left zero trace");
@@ -372,11 +372,11 @@ fn a_mounted_blur_ends_the_open_stroke_with_zero_trace() {
 fn a_stroke_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
-        let mut store = store::ArtifactStore::<BitmapSnapshot, BitmapMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA, "brush-time-travel", base(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-        store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<BitmapSnapshot, BitmapMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
+        let mut store = store::ArtifactStore::<BitmapSnapshot, BitmapMutation>::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA, "brush-time-travel", base(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        store.install_document_store_owners_exact(semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<BitmapSnapshot, BitmapMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         let log = [paint_input_stroke(vec![point(0, 0), point(3, 2)], 1), set_input_pixels(0, 0, 1, 1, ([0]).to_vec())];
         for mutation in &log {
-            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
+            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let edited = paint_input_stroke(vec![point(0, 0), point(3, 2)], 0);
@@ -394,9 +394,9 @@ fn a_stroke_edited_in_history_replays_its_downstream() {
             let _ = vcs::apply_mutation(&fresh, &mutation).map(|(applied_state, _)| { fresh = applied_state; });
         }
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
-        let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<BitmapSnapshot, BitmapMutation>();
+        let mut disposer = semio_plugin::bounded_document_store_disposer::<BitmapSnapshot, BitmapMutation>();
         for _ in 0..4_096 {
             if disposer.terminal_is_empty(&store) {
                 break;

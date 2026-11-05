@@ -171,3 +171,28 @@ fn member_owned_batch_child_depth_refusal_keeps_original_before_allocating_retir
     }
     assert!(batch.terminal_is_empty());
 }
+
+#[test]
+fn member_owned_batch_preserves_actual_delegate_work_and_denied_zero_work() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let values:Vec<i32>=serde_json::from_value(fixture["values"].clone()).unwrap();
+    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};
+    let(mut batch,_)=MemberStoreOwnedBatch::try_new(values,grant).unwrap_or_else(|_|panic!("genuine scalar batch"));
+    let mut observed_work=0;
+    for _ in 0..1024 {
+        if batch.terminal_is_empty(){break}
+        let demand=batch.next_demands(grant.maximum_copy_bytes).unwrap();
+        let denied=RetainedCloneGrant{maximum_items:0,..grant};
+        assert_eq!(batch.close_granted(denied).unwrap().progress(),RetainedCloneProgress::default());
+        assert_eq!(batch.last_turn_work(),fixture["work"]["denied"].as_u64().unwrap());
+        assert_eq!(batch.next_demands(grant.maximum_copy_bytes).unwrap(),demand);
+        let had_owner=batch.owner.as_ref().is_some_and(|owner|!owner.terminal_is_empty());
+        let result=batch.close_granted(grant);
+        let work=batch.last_turn_work();
+        if had_owner{assert_eq!(work,batch.owner.as_ref().unwrap().last_turn_work())}
+        else{assert_eq!(work,fixture["work"]["shellRelease"].as_u64().unwrap())}
+        assert!(result.unwrap().progress().fits(grant));observed_work+=work;
+    }
+    assert!(batch.terminal_is_empty()&&observed_work>0);
+    batch.close_granted(grant).unwrap();assert_eq!(batch.last_turn_work(),0);
+}

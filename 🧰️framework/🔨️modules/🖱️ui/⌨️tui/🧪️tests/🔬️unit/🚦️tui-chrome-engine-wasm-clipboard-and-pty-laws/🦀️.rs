@@ -40,7 +40,7 @@ fn paint_footer_renders_hints_then_status() {
 
 #[test]
 fn engine_mouse_move_does_not_steal_focus() {
-    use semio_framework_ui_tui_engine::Tui;
+    use semio_ui_tui_engine::Tui;
     let mut tui = Tui::new(Size { width: 20, height: 10 }, Theme::new(AppearanceName::Dark));
     let root = tui.scene.root();
     let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["a".to_string()])))));
@@ -58,7 +58,7 @@ fn engine_mouse_move_does_not_steal_focus() {
 
 #[test]
 fn tui_focus_next_and_prev_cycle_through_focusables() {
-    let mut tui = semio_framework_ui_tui_engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
+    let mut tui = semio_ui_tui_engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
     let root = tui.scene.root();
     let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["a".to_string()])))));
     let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["b".to_string()])))));
@@ -75,7 +75,7 @@ fn tui_focus_next_and_prev_cycle_through_focusables() {
 
 #[test]
 fn tui_dispatch_tab_and_backtab_move_focus() {
-    let mut tui = semio_framework_ui_tui_engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
+    let mut tui = semio_ui_tui_engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
     let root = tui.scene.root();
     let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["a".to_string()])))));
     let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["b".to_string()])))));
@@ -89,7 +89,7 @@ fn tui_dispatch_tab_and_backtab_move_focus() {
 
 #[test]
 fn tui_render_skips_repaint_when_nothing_dirty() {
-    let mut tui = semio_framework_ui_tui_engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
+    let mut tui = semio_ui_tui_engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
     let first = tui.render_full();
     assert!(!first.0.is_empty());
     let second = tui.render();
@@ -98,7 +98,7 @@ fn tui_render_skips_repaint_when_nothing_dirty() {
 
 #[test]
 fn tui_set_appearance_and_resize_force_full_redraw() {
-    let mut tui = semio_framework_ui_tui_engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
+    let mut tui = semio_ui_tui_engine::Tui::new(Size { width: 10, height: 3 }, Theme::new(AppearanceName::Dark));
     tui.render_full();
     tui.set_appearance(AppearanceName::Light);
     let patch = tui.render();
@@ -113,14 +113,14 @@ fn tui_set_appearance_and_resize_force_full_redraw() {
 //#region 🔖️WasmHost
 #[test]
 fn wasm_host_setup_and_teardown_match_ansi_sequences() {
-    let host = semio_framework_ui_tui_host::WasmHost::new(10, 5, true);
+    let host = semio_ui_tui_host::WasmHost::new(10, 5, true);
     assert_eq!(host.setup(), setup_sequence());
     assert_eq!(host.teardown(), teardown_sequence());
 }
 
 #[test]
 fn wasm_host_resize_updates_engine_size() {
-    let mut host = semio_framework_ui_tui_host::WasmHost::new(10, 5, true);
+    let mut host = semio_ui_tui_host::WasmHost::new(10, 5, true);
     host.render();
     host.resize(20, 8);
     let patch = host.render();
@@ -131,17 +131,17 @@ fn wasm_host_resize_updates_engine_size() {
 //#region 🔖️Clipboard
 #[test]
 fn osc52_copy_sequence_is_base64_payload() {
-    let seq = semio_framework_ui_tui_terminal::backend::osc52_copy_sequence("hi");
+    let seq = semio_ui_tui_terminal::backend::osc52_copy_sequence("hi");
     assert_eq!(seq.as_bytes()[0], 0x1b);
     assert!(seq.contains("]52;c;aGk="), "got {seq:?}");
     assert_eq!(*seq.as_bytes().last().unwrap(), 0x07);
-    let mut mem = semio_framework_ui_tui_terminal::backend::MemoryClipboard::default();
-    semio_framework_ui_tui_terminal::backend::Clipboard::enqueue_copy(&mut mem, "abc".to_string());
-    assert!(matches!(semio_framework_ui_tui_terminal::backend::Clipboard::poll(&mut mem), Some(semio_framework_ui_tui_terminal::backend::ClipboardResult::Copied)));
-    semio_framework_ui_tui_terminal::backend::Clipboard::enqueue_paste(&mut mem);
+    let mut mem = semio_ui_tui_terminal::backend::MemoryClipboard::default();
+    semio_ui_tui_terminal::backend::Clipboard::enqueue_copy(&mut mem, "abc".to_string());
+    assert!(matches!(semio_ui_tui_terminal::backend::Clipboard::poll(&mut mem), Some(semio_ui_tui_terminal::backend::ClipboardResult::Copied)));
+    semio_ui_tui_terminal::backend::Clipboard::enqueue_paste(&mut mem);
     assert!(matches!(
-        semio_framework_ui_tui_terminal::backend::Clipboard::poll(&mut mem),
-        Some(semio_framework_ui_tui_terminal::backend::ClipboardResult::Pasted(text)) if text == "abc"
+        semio_ui_tui_terminal::backend::Clipboard::poll(&mut mem),
+        Some(semio_ui_tui_terminal::backend::ClipboardResult::Pasted(text)) if text == "abc"
     ));
 }
 //#endregion 🔖️Clipboard
@@ -150,7 +150,7 @@ fn osc52_copy_sequence_is_base64_payload() {
 #[cfg(all(unix, feature = "native"))]
 #[test]
 fn pty_spawn_echo_hello() {
-    use semio_framework_ui_tui_terminal::pty::{Pty, PtySize};
+    use semio_ui_tui_terminal::pty::{Pty, PtySize};
     use std::time::{Duration, Instant};
 
     let mut pty = Pty::spawn("/bin/echo", &["hello"], &[], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn echo");
@@ -182,7 +182,7 @@ fn pty_spawn_echo_hello() {
 #[cfg(all(unix, feature = "native"))]
 #[test]
 fn pty_kill_terminates_child_process_group() {
-    use semio_framework_ui_tui_terminal::pty::{Pty, PtySize};
+    use semio_ui_tui_terminal::pty::{Pty, PtySize};
     use std::process as system_process;
     use std::time::{Duration, Instant};
 
@@ -210,7 +210,7 @@ fn pty_kill_terminates_child_process_group() {
 #[cfg(all(unix, feature = "native"))]
 #[test]
 fn pty_resize_ok() {
-    use semio_framework_ui_tui_terminal::pty::{Pty, PtySize};
+    use semio_ui_tui_terminal::pty::{Pty, PtySize};
 
     let mut pty = Pty::spawn("/bin/sleep", &["1"], &[], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn sleep");
     pty.resize(PtySize { cols: 100, rows: 40 }).expect("resize");

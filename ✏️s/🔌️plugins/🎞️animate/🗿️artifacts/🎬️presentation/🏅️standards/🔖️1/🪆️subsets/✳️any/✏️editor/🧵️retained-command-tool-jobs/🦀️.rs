@@ -104,10 +104,10 @@ pub(super) fn animate_presentation_retained_reduce(
     command: &PresentationCommand,
     snapshot: &PresentationSnapshot,
     config: &PresentationConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<AnimatePresentationPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<AnimatePresentationPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, NoDraftMutation>, Fault> {
     if !ANIMATE_PRESENTATION_RETAINED_TOOL_IDS.contains(&command.command_id()) || animate_presentation_retained_extent(command, snapshot, interaction).is_none() {
@@ -130,8 +130,8 @@ impl AnimatePresentationRetainedCommandJobFactory {
 }
 
 impl ToolJobFactory for AnimatePresentationRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<AnimatePresentationPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<AnimatePresentationPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<AnimatePresentationPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<AnimatePresentationPlayApp>>;
 
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
@@ -145,7 +145,7 @@ impl ToolJobFactory for AnimatePresentationRetainedCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         animate_presentation_retained_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: ANIMATE_PRESENTATION_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: ANIMATE_PRESENTATION_RETAINED_RAW_BYTES, checkpoint_resume: true);
 }
 
 impl ArtifactOwnedToolJobFactory for AnimatePresentationRetainedCommandJobFactory {

@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "graph", kind: "update-graph-algorithm", record: "UpdatedGraphAlgorithm" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set graph algorithm to \"{}\"", self.new_algorithm), &format!("Graphalgorithmus auf \"{}\" setzen", self.new_algorithm))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set graph algorithm to \"{}\"", self.new_algorithm), &format!("Graphalgorithmus auf \"{}\" setzen", self.new_algorithm))
     }
     fn target(&self) -> Vec<String> {
         vec!["graph".into(), "algorithm".into()]

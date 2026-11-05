@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_os_flow::neural::ColdRetire;
+use semio_os_flow::neural::ColdRetire;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_tool_run::ToolRunId;
 static PREVIEW_EVAL_RUN_FIXTURE_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/⏯️preview-eval-run.json"));
@@ -141,7 +141,7 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
             }
             link.settled = has_settled.then_some((1, 0));
             if live {
-                link.port = Some(semio_framework_plugin::ToolRunJobPort::default());
+                link.port = Some(semio_plugin::ToolRunJobPort::default());
             }
         };
 
@@ -163,7 +163,7 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
             link.requested = None;
         }
 
-        let mut emit = semio_framework_plugin::Emit::<u8>::default();
+        let mut emit = semio_plugin::Emit::<u8>::default();
         emit.artifact_mutations = vec![0_u8; mutations];
         let owes = owe_attached_previews_for_mutations(&mut session, &mut link, &windows, servable, &mut emit, tick_grant()).expect("the previews are owed");
         assert_eq!(owes, expected["owes"].as_bool().unwrap(), "{id}: a gesture owes the previews exactly when it moved the document");
@@ -190,7 +190,7 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         let mut spinning = FlowEvalSession::new();
         let mut spinning_link = PreviewEvalRunLink::default();
         stage(&mut spinning, &mut spinning_link);
-        let mut spinning_emit = semio_framework_plugin::Emit::<u8>::default();
+        let mut spinning_emit = semio_plugin::Emit::<u8>::default();
         spinning_emit.artifact_mutations = vec![0_u8; mutations];
         owe_attached_previews_for_mutations(&mut spinning, &mut spinning_link, &windows, servable, &mut spinning_emit, tick_grant()).expect("the previews are owed");
         let starts = spinning_emit.effects.len() + replay_pending_effects(&mut spinning, &mut spinning_link, &windows, polls, lag, servable, poll_start_view);
@@ -210,11 +210,11 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
 /// APPLIED document-edit stack, which every route moves.
 #[test]
 fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
-    use semio_framework_plugin::plugin_app_close_prelude::{ActionKind, CommandView, HistoryView};
+    use semio_plugin::plugin_app_close_prelude::{ActionKind, CommandView, HistoryView};
     let command = |seq: u64, applied: bool, edit: Option<&str>| CommandView {
         seq,
         action_id: "apply".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Update Widget", "Widget aktualisieren"),
+        label: semio_ui_locale::LocalizedLabel::native("Update Widget", "Widget aktualisieren"),
         kind: ActionKind::Mutation,
         timestamp: String::new(),
         edit_id: edit.map(str::to_string),
@@ -257,7 +257,7 @@ fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
     let mut gesturing = FlowEvalSession::new();
     let mut gesture_link = PreviewEvalRunLink::default();
     preview_eval_run_effects(&mut gesturing, &mut gesture_link, &windows, None, true, edited);
-    let mut emit = semio_framework_plugin::Emit::<u8>::default();
+    let mut emit = semio_plugin::Emit::<u8>::default();
     emit.artifact_mutations = vec![0_u8];
     owe_attached_previews_for_mutations(&mut gesturing, &mut gesture_link, &windows, true, &mut emit, tick_grant()).expect("the previews are owed");
     assert_eq!(emit.effects.len(), 1, "the gesture carries its own run start");
@@ -276,7 +276,7 @@ fn every_job_supersession_row_lets_only_the_owning_job_quiesce_the_session() {
         let id = text(&row["id"]);
         let mut link = PreviewEvalRunLink::default();
         link.job_run = row["linkRun"].as_u64();
-        link.port = Some(semio_framework_plugin::ToolRunJobPort::default());
+        link.port = Some(semio_plugin::ToolRunJobPort::default());
         link.settled = row["settled"].as_bool().unwrap().then_some((1, 0));
         let closing = row["closingRun"].as_u64().unwrap();
         let expected = &row["expected"];
@@ -327,7 +327,7 @@ fn bounded_cancel_replies_poll_the_same_capability_without_rearming_evaluation()
 
 #[test]
 fn inspector_evaluation_wire_uses_actual_neuron_identity_and_context_authority(){
- let law=fixture();let row=&law["evaluationWire"];for resume in [false,true]{let pending=semio_framework_artifact_flow_flow::neural::PendingExtensionEval{neuron_id:text(&row["neuronId"]).into(),extension_id:text(&row["extensionId"]).into(),operator_id:text(&row["operatorId"]).into(),input_json:text(&row["inputJson"]).into(),node_hash:row["nodeHash"].as_u64().unwrap()};let invocation=evaluate_invocation(pending,resume,text(&row["dependencyJson"]).into(),text(&row["windowId"]),text(&row["windowKindId"]));let actual:serde_json::Value=serde_json::from_str(&invocation.request_json).unwrap();let expected=serde_json::json!({"neuronId":row["neuronId"],"operatorId":row["operatorId"],"inputJson":if resume{""}else{text(&row["inputJson"])},"dependencyJson":row["dependencyJson"],"operatorVersion":format!("registry:{};geometry:1;policy:1",semio_framework_os_flow::flow_extension_registry_generation()),"nodeHash":row["nodeHash"],"resume":resume,"windowId":row["windowId"],"windowKindId":row["windowKindId"],"extensionId":row["extensionId"]});assert_eq!(actual,expected);assert_eq!(actual.as_object().unwrap().len(),row["requiredKeys"].as_array().unwrap().len());for field in row["authorityFieldsAbsent"].as_array().unwrap(){assert!(actual.get(field.as_str().unwrap()).is_none());}assert_eq!(invocation.extension_id,row["extensionId"]);assert_eq!(invocation.capability,"evaluate");assert_eq!(invocation.response_action,"flowEvalResolve");drop(invocation);}
+ let law=fixture();let row=&law["evaluationWire"];for resume in [false,true]{let pending=semio_framework_artifact_flow_flow::neural::PendingExtensionEval{neuron_id:text(&row["neuronId"]).into(),extension_id:text(&row["extensionId"]).into(),operator_id:text(&row["operatorId"]).into(),input_json:text(&row["inputJson"]).into(),node_hash:row["nodeHash"].as_u64().unwrap()};let invocation=evaluate_invocation(pending,resume,text(&row["dependencyJson"]).into(),text(&row["windowId"]),text(&row["windowKindId"]));let actual:serde_json::Value=serde_json::from_str(&invocation.request_json).unwrap();let expected=serde_json::json!({"neuronId":row["neuronId"],"operatorId":row["operatorId"],"inputJson":if resume{""}else{text(&row["inputJson"])},"dependencyJson":if resume{""}else{text(&row["dependencyJson"])},"operatorVersion":format!("registry:{};geometry:1;policy:1",semio_os_flow::flow_extension_registry_generation()),"nodeHash":row["nodeHash"],"resume":resume,"windowId":row["windowId"],"windowKindId":row["windowKindId"],"extensionId":row["extensionId"]});assert_eq!(actual,expected);assert_eq!(actual.as_object().unwrap().len(),row["requiredKeys"].as_array().unwrap().len());for field in row["authorityFieldsAbsent"].as_array().unwrap(){assert!(actual.get(field.as_str().unwrap()).is_none());}assert_eq!(invocation.extension_id,row["extensionId"]);assert_eq!(invocation.capability,"evaluate");assert_eq!(invocation.response_action,"flowEvalResolve");drop(invocation);}
 }
 
 #[test]

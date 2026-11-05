@@ -26,8 +26,8 @@ pub struct UpdatePageMargins {
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdatePageMargins where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_page_margins::UpdatePageMargins> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "page-margins", kind: "update-page-margins", record: "UpdatedPageMargins" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" margins", self.id), &format!("Ränder von Seite \"{}\" aktualisieren", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" margins", self.id), &format!("Ränder von Seite \"{}\" aktualisieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

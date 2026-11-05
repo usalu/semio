@@ -794,7 +794,7 @@ export class PresenceLeaseCheckScript extends BundleScript {
       const hubLaws: [string, string][] = [["semio-hub-presence-route-laws", "presence_lease_reconnect_rejects_old_live_refresh_and_close"], ["semio-hub-presence-route-laws", "presence_lease_expires_server_clocked_visibility_without_socket_close"], ["semio-hub-presence-route-laws", "presence_lease_enforces_shared_roster_bounds_and_actor_order"], ["semio-hub-presence-route-laws", "presence_lease_restart_is_empty_and_directory_presence_is_member_only"]];
       const hubGroups = hubLawGroups(hubLaws, ["--all-features"]);
       const groups =
-        phase === "native" ? [{ package: "semio-framework-os-kernel", target: { kind: "lib" as const, name: "semio_framework_os_kernel" }, laws: ["presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner"] }, ...hubGroups] : hubGroups;
+        phase === "native" ? [{ package: "semio-os-kernel", target: { kind: "lib" as const, name: "semio_os_kernel" }, laws: ["presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner"] }, ...hubGroups] : hubGroups;
       const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: phase === "native" ? this.repoRoot : this.root,...exactCargoStageEnvironments(),groups,progress(event) {
           console.log(`presence-lease-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});

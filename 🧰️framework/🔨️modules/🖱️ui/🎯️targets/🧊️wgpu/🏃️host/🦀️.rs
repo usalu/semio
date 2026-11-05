@@ -1,7 +1,7 @@
 // #region host
 //! 🪟️ winit window event bridge into pointer callbacks.
 
-use semio_framework_ui_wgpu_input::{KeyAction, PointerCallbacks, PointerModifiers};
+use semio_ui_wgpu_input::{KeyAction, PointerCallbacks, PointerModifiers};
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::keyboard::{Key, NamedKey};
 

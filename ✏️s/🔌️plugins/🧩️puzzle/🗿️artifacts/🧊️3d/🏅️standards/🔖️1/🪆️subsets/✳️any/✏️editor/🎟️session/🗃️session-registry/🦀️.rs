@@ -255,7 +255,7 @@ impl BrushSuggestionsOwner for Puzzle3dInstanceOperationOwner {
     }
 }
 
-impl semio_framework_plugin::ArtifactInstanceOperationOwner for Puzzle3dInstanceOperationOwner {
+impl semio_plugin::ArtifactInstanceOperationOwner for Puzzle3dInstanceOperationOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
@@ -267,18 +267,18 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Puzzle3dInstance
         self.retirement.demands(body)
     }
 
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(semio_framework_plugin::PluginLifecycleStep::Complete(Default::default()))
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
+        Ok(semio_plugin::PluginLifecycleStep::Complete(Default::default()))
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         if self.retirement.is_empty() && !self.brush_suggestions.is_empty() {
             self.retirement.stage(std::mem::take(&mut self.brush_suggestions));
         }
-        Ok(match self.retirement.close_step(cx).map_err(semio_framework_plugin::PluginLifecycleFailure::from)? {
-            InteractiveJobCloseStep::Pending { progress } => semio_framework_plugin::PluginLifecycleStep::Progress(progress),
-            InteractiveJobCloseStep::Complete { progress } => semio_framework_plugin::PluginLifecycleStep::Complete(progress),
-            InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginLifecycleStep::Blocked { reason: "puzzle3d instance owner close is blocked" },
+        Ok(match self.retirement.close_step(cx).map_err(semio_plugin::PluginLifecycleFailure::from)? {
+            InteractiveJobCloseStep::Pending { progress } => semio_plugin::PluginLifecycleStep::Progress(progress),
+            InteractiveJobCloseStep::Complete { progress } => semio_plugin::PluginLifecycleStep::Complete(progress),
+            InteractiveJobCloseStep::Blocked => semio_plugin::PluginLifecycleStep::Blocked { reason: "puzzle3d instance owner close is blocked" },
         })
     }
 

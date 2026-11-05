@@ -7,7 +7,7 @@ use super::*;
 pub(super) struct Generation3dBoundedCommandJobFactoryProofs;
 
 impl Generation3dBoundedCommandJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Generation3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#editor",
@@ -92,7 +92,7 @@ pub fn generation3d_contributions_contract() -> ToolExecutionContract {
 /// assembles into is process-wide, shared by every app of this component, which is exactly why one
 /// app owning this route is enough to give the whole plugin its operators.
 pub(super) struct Generation3dContributionsWork {
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
 }
 
@@ -106,7 +106,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         command: &Generation3dCommand,
         snapshot: &Generation3dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     ) -> Option<usize> {
         generation3d_bounded_extent(command, snapshot, interaction)
     }
@@ -177,11 +177,11 @@ impl semio_framework::ToolJobFactory for Generation3dContributionsJobFactory {
         generation3d_contributions_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_CONTRIBUTIONS_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_CONTRIBUTIONS_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dContributionsJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for Generation3dContributionsJobFactory {
     type Owner = EditorApp<Generation3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GENERATION3D_CONTRIBUTIONS_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
@@ -193,7 +193,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dContrib
 pub(super) struct Generation3dContributionsJobFactoryProofs;
 
 impl Generation3dContributionsJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Generation3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#editor",
@@ -208,7 +208,7 @@ impl Generation3dContributionsJobFactoryProofs {
 //#endregion 🔖️Generation3dPlayApp
 
 /// 🧾️ The bounded-command and contributions factories' first-step proofs, in registration order.
-pub(super) fn generation3d_bounded_contributions_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+pub(super) fn generation3d_bounded_contributions_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
     let mut proofs = Generation3dBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
     proofs.extend(Generation3dContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
     proofs

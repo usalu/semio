@@ -17,20 +17,20 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::infe
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ParameterKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_desc;
+use semio_plugin::tree_item_desc;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 use semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::overrides::{render_rows, rows};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::placed;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ComponentOverride;
-use semio_framework_plugin::{ui_node_list, PanelTreeBuilder, ViewModel};
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::{ui_node_list, PanelTreeBuilder, ViewModel};
+use semio_ui_locale::{Locale, Terminology};
 
 fn with(overrides: &[(&str, &str)]) -> ModelSnapshot {
     let mut snapshot = placed();
@@ -47,7 +47,7 @@ fn labels(locale: Locale) -> &'static BimLabels {
 fn text(snapshot: &ModelSnapshot, locale: Locale) -> String {
     let nodes = render_rows(snapshot, "bim-properties", "c-table", labels(locale));
     let node = PanelTreeBuilder::new("bim-properties").and_then(|builder| builder.section("bim-properties.overrides", None, true, ui_node_list(nodes)?)).and_then(PanelTreeBuilder::build).expect("the rows build");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 #[semio_framework_async_macros::async_test]

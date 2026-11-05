@@ -2,10 +2,10 @@
 //! script), the read-only counterpart of the editor's `edit` mode.
 
 use crate::viewer::procedure::modes::view::windows::{main, script};
-use semio_framework_plugin::create_stack_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_stack_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const IMPERATIVE_VIEW_MODE_VIEW: &str = "view";
 

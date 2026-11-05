@@ -2,7 +2,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3Snapshot,Ifc2x3EdmPreamble};
 use semio_s_artifact_stdio_contract::part21::{Part21Document,Part21Header,Part21Instance,Part21Value,Part21Decimal};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},*}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},*}};
 
 #[path="🔎️mvd/💰️diagnostics/🦀️.rs"]
 mod mvd_diagnostics;
@@ -71,12 +71,12 @@ fn visit_rows(snapshot:&Ifc2x3Snapshot,p:&mut RowWriter<'_,'_>)->Result<(),Value
 impl Ifc2x3Snapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut writer=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut writer)?;writer.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
 impl ArtifactSqliteSnapshotHost for Ifc2x3Snapshot{
     fn retire_sqlite_snapshot(self){native::close(self)}
-    fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
+    fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{(||->Result<semio_os_kernel::io_schema::IoOutcome<()>,ValueError>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.ifc"||dialect.standard!="2x3"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown owned IFC2x3 snapshot dialect"));}let root=db.table("ifc2x3_document")?.single_row()?;if root.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"IFC2x3 document identity differs from its projection"));}
-        Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics:Vec::new()})
-    })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error).and_then(|outcome|if dialect.subset==semio_framework_artifact_reference::SubsetId::ANY.0{Ok(outcome)}else{store::io::validate_registered_snapshot_subset(dialect,self,db,control)})}
+        Ok(semio_os_kernel::io_schema::IoOutcome{value:(),diagnostics:Vec::new()})
+    })().map_err(semio_os_kernel::io_schema::IoError::from_value_error).and_then(|outcome|if dialect.subset==semio_framework_artifact_reference::SubsetId::ANY.0{Ok(outcome)}else{store::io::validate_registered_snapshot_subset(dialect,self,db,control)})}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native_backing::preflight(self,control)}
     
     

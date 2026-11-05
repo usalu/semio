@@ -9,8 +9,8 @@
 use semio_framework::Fault;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::future::Future;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::NoConfigMutation;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_views::NoConfigMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin_decl_emission::{Emit, ToolCommandCatalog};
+use semio_plugin_decl_emission::{Emit, ToolCommandCatalog};
 include!("../../../../🧪️tests/🔬️app-app-commands/🦀️.rs");

@@ -1,5 +1,6 @@
 /** 🏗️ The build surface, dependency direction and canonical execution routes of the test script. */
 import { createIssuedResourceControlV1 } from "@semio-tech/process/routing";
+import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
@@ -14,6 +15,11 @@ import type { TestRouteContext } from "../🧭️route-context/🟦️.ts";
 
 /** 🧱️ Runs the build surface, native dependency, canonical JSON, mutation authority, direction and corpus routes; true when one matched. */
 export async function runBuildAndDirectionRoutes(context: TestRouteContext, segments: string[]): Promise<boolean> {
+  if (segments.length === 1 && segments[0] === "browser-readiness") {
+    await runRepositoryTestCommand(process.execPath,["test",join(context.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧪️tests/🟦️.test.ts")],{cwd:context.repoRoot,env:repoTestArtifactEnvironment(context.repoRoot,"browser-readiness"),budgetMs:15000,signal:context.invocation.control.signal});
+    return true;
+  }
+
   if (segments.length === 1 && segments[0] === "build-source-demand") {
     await runRepositoryTestCommand(process.execPath, ["test", join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts")], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "build-source-demand"), budgetMs: 300_000 });
     return true;
@@ -31,11 +37,13 @@ export async function runBuildAndDirectionRoutes(context: TestRouteContext, segm
     await runRepositoryTestCommand(process.execPath, ["test", source, join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📂️registry-source-roots/🟦️.ts")], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "owned-script-routes"), budgetMs: 120_000 });
     return true;
   }
+  if(segments[0]==="wasm-outputs"){if(segments.length!==1)throw Error("Expected test wasm-outputs");const {level}=resolveTestLevel([],"long"),env=repoTestArtifactEnvironment(context.repoRoot,"wasm-outputs");await runRepositoryTestCommand(process.execPath,[join(context.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"),"test","wasm-outputs"],{cwd:context.repoRoot,env,budgetMs:scriptInvocationBudget(context.invocation,TEST_LEVEL_BUDGET_MS[level]),signal:context.invocation.control.signal});return true;}
   if (segments[0] === "native-dependencies") {
     if (segments.length !== 1) throw new Error("Expected test native-dependencies");
+    const {level}=resolveTestLevel([],"quick");
     const env = repoTestArtifactEnvironment(context.repoRoot, "native-dependencies");
     mkdirSync(env.SEMIO_TEST_ARTIFACT_DIR!, { recursive: true });
-    await runRepositoryTestCommand(process.execPath, [join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"), "test", "native-dependencies"], { cwd: context.repoRoot, env });
+    await runRepositoryTestCommand(process.execPath, [join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"), "test", "native-dependencies"], { cwd: context.repoRoot, env, budgetMs:scriptInvocationBudget(context.invocation,TEST_LEVEL_BUDGET_MS[level]),signal:context.invocation.control.signal });
     await runRepositoryTestCommand(process.execPath, ["test", join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts")], { cwd: context.repoRoot, env, budgetMs: scriptInvocationBudget(context.invocation, 120_000), signal: context.invocation.control.signal });
     return true;
   }

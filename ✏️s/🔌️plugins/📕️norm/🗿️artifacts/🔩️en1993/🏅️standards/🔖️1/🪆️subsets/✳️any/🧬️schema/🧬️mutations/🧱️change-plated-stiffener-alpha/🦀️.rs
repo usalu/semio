@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedStiffenerAlp
         record: "ChangedPlatedStiffenerAlpha",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Column imperfection α (0.34 closed, 0.49 open) of the plated panel", "Plattenfeld: Imperfektion α (0,34 geschlossen, 0,49 offen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Column imperfection α (0.34 closed, 0.49 open) of the plated panel", "Plattenfeld: Imperfektion α (0,34 geschlossen, 0,49 offen) ändern")
     }
 }
 

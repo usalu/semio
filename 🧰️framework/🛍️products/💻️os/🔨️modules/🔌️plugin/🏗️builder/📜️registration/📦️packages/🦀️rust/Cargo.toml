@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-plugin-registration"
+name = "semio-plugin-registration"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

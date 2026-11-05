@@ -1,6 +1,6 @@
 //! 🧩️ Process metal machine catalog extension — contributes metal-shop machines to `process3d-play`.
 
-use semio_framework_plugin::ExtensionBundle;
+use semio_plugin::ExtensionBundle;
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MeasureRecipe, snapshot::StockQuantity, snapshot::WorkshopMachine};
 
 //#region 🔖️Catalog
@@ -157,13 +157,13 @@ const HOST_APP_ID: &str = "process3d-play";
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
 // plain sync fn). `.mode`/`.contributes_topic` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
-// bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request asking the SDK
+// bridged via `semio_os_kernel::io::resolve_ready` — see this packet's lease-request asking the SDK
 // owner to revert those two (plus `TopicContribution::new`) to sync directly, matching the sibling
 // reversion already applied to `ExtensionBundle::new`/`.extends`/`.depends_on` in that same impl block.
 pub fn bundle() -> ExtensionBundle {
     let catalog = MetalCatalog;
     let bundle = ExtensionBundle::new(EXTENSION_ID, "Process Metal Machines", env!("CARGO_PKG_VERSION")).extends("process").depends_on("process", semio_framework::tree_pin!());
-    let bundle = bundle.mode(semio_framework_plugin::ExecutionMode::Declarative);
+    let bundle = bundle.mode(semio_plugin::ExecutionMode::Declarative);
     bundle.contributes_topic(
         "process.machines",
         semio_framework_value::DslValue::object([

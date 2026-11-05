@@ -7,7 +7,7 @@ use protocol::{OpBinary, OpText};
 use semio_framework::kernel::ActorId;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 /// 🚪️ `io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
-/// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
+/// `semio-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
 /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
 /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
 use semio_framework_artifact_reference::ArtifactRef;

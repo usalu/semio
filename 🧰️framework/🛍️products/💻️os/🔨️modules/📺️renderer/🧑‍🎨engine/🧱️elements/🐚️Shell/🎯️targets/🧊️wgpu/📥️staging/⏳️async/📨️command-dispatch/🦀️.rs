@@ -24,5 +24,5 @@ pub fn directory_now_ms() -> u64 {
 /// answers every hop with `fetch`'s own timing, so `Date.now()` is the only shared reading.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn directory_now_ms() -> u64 {
-    semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().now_ms()
+    semio_renderer_wgpu_host_base::renderer_worker_pool().now_ms()
 }

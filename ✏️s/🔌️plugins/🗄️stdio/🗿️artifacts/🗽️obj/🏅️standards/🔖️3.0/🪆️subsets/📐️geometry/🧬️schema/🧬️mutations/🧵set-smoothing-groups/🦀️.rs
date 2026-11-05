@@ -21,8 +21,8 @@ pub struct SetSmoothingGroups {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetSmoothingGroups {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "smoothing-groups", kind: "set-smoothing-groups", record: "SetSmoothingGroups" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set smoothing groups", "Glättungsgruppen setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set smoothing groups", "Glättungsgruppen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

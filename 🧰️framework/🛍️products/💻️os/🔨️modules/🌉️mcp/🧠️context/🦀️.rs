@@ -9,13 +9,13 @@
 
 use std::sync::Arc;
 use crate::ui::{read_ui_resource, ui_resource_templates, ui_resources};
-use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
-use semio_framework_os_mcp_catalog::catalog::Catalog;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_shell_channel::context_resolve::{DEFAULT_MAX_TOKENS, truncate_to_budget};
-use semio_framework_os_mcp_tools_inference::inference::{inference_resources, read_inference_resource};
-use semio_framework_os_mcp_wire::protocol::{GatewayBackend, Resource, ResourceContent, ResourceRegistry, ResourceTemplate};
-use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+use semio_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_os_mcp_catalog::catalog::Catalog;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_shell_channel::context_resolve::{DEFAULT_MAX_TOKENS, truncate_to_budget};
+use semio_os_mcp_tools_inference::inference::{inference_resources, read_inference_resource};
+use semio_os_mcp_wire::protocol::{GatewayBackend, Resource, ResourceContent, ResourceRegistry, ResourceTemplate};
+use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 
 //#region 🔖️CapabilityResource
 

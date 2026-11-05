@@ -39,8 +39,8 @@ pub use semio_framework_onboarding as onboarding;
 pub const FRAMEWORK_RESERVED_CONTRIBUTIONS: [manifest::ReservedContribution; 2] = [semio_framework_time_travel_actions::RESERVED, semio_framework_tool_run_actions::RESERVED];
 //#endregion 🧩️ReservedFeatures
 
-pub use semio_framework_ui_declaration::IconName;
-pub use semio_framework_ui_locale::{Locale, Terminology};
+pub use semio_ui_declaration::IconName;
+pub use semio_ui_locale::{Locale, Terminology};
 pub use semio_framework_io_schema as io_schema;
 pub use semio_framework_io_sqlite_snapshot as sqlite_snapshot;
 pub use action_bus::{
@@ -113,7 +113,7 @@ pub use kernel::{
     // 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet A3-kernel-types: `RequestId`
     // is the completion-correlation id every `req`-carrying `Effect` variant now needs at its call
     // site — re-exported here so plugin call sites can name it as `semio_framework::RequestId` /
-    // `semio_framework_plugin::RequestId` without a separate import.
+    // `semio_plugin::RequestId` without a separate import.
     RequestId,
     Rights,
     SchemaId,

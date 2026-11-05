@@ -23,8 +23,8 @@ pub struct UpdatePageColumns {
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdatePageColumns where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_page_columns::UpdatePageColumns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "page-columns", kind: "update-page-columns", record: "UpdatedPageColumns" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" columns", self.id), &format!("Spalten von Seite \"{}\" aktualisieren", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" columns", self.id), &format!("Spalten von Seite \"{}\" aktualisieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

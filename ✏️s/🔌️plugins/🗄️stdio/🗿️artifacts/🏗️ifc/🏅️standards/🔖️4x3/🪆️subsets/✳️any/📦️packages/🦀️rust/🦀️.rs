@@ -1,6 +1,6 @@
 //! 🏗️ IFC4x3 ADD2 declarations and the artifact-owned editor, assembled from the express, schema, evaluator, machine, templates, mvd, step, exchange and fem crates.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_value_derive as value_derive;
 
 #[cfg(test)]

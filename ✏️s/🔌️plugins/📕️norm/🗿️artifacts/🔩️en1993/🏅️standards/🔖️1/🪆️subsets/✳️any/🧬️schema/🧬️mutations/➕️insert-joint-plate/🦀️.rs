@@ -10,7 +10,7 @@ pub struct InsertJointPlate { pub index: Option<usize>, pub joint_plate: JointPl
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertJointPlate where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_joint_plate::RemoveJointPlate> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "joint-plate", kind: "insert-joint-plate", record: "InsertedJointPlate" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert joint plate at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Anschlussblech an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert joint plate at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Anschlussblech an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

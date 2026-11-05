@@ -1,14 +1,14 @@
 //! 🚪️ The registered inference gateway retains one original caller and whole decoded request.
-use semio_framework_plugin_decl_registry::WireArtifactInferenceBudget;
+use semio_plugin_decl_registry::WireArtifactInferenceBudget;
 use crate::artifact_inference::artifact_inference_service;
-use semio_framework_plugin_decl_registry::WireArtifactInferenceCacheMode;
-use semio_framework_plugin_decl_registry::ArtifactInferenceExecution;
-use semio_framework_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION;
-use semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError;
-use semio_framework_plugin_decl_registry::ArtifactInferenceExecutionRequest;
-use semio_framework_plugin_plugin_program::WireArtifactInferenceRequest;
-use semio_framework_plugin_plugin_program::active_artifact_inferences;
-use semio_framework_plugin_plugin_program::cancelled_artifact_inferences;
+use semio_plugin_decl_registry::WireArtifactInferenceCacheMode;
+use semio_plugin_decl_registry::ArtifactInferenceExecution;
+use semio_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION;
+use semio_plugin_decl_registry::ArtifactInferenceExecutionError;
+use semio_plugin_decl_registry::ArtifactInferenceExecutionRequest;
+use semio_plugin_plugin_program::WireArtifactInferenceRequest;
+use semio_plugin_plugin_program::active_artifact_inferences;
+use semio_plugin_plugin_program::cancelled_artifact_inferences;
 use crate::artifact_inference::ArtifactInferenceGatewayFailure;
 use semio_framework_value::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement, NativeEncodeContinuation, NativeEncodeControl, RetirementDemand};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
@@ -191,7 +191,7 @@ impl ArtifactInferenceGateway{
   let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal:None};}
   if !self.matches(cx.operation().0,cx.generation().0,source){return ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal:Some(ArtifactInferenceGatewayFailure::Literal("original inference gateway retains another caller").into())};}
   let before_fuel=cx.fuel_remaining();let before=cx.retained_progress();self.normal_progress=Default::default();let (payload,receipt,mut refusal)=match self.advance(source,cx,context){Ok((payload,receipt))=>(payload,receipt,None),Err(error)=>{self.closing=true;let receipt=if self.normal_progress!=Default::default(){self.normal_progress}else{match &error{ArtifactInferenceGatewayFailure::Native(error)=>error.retained_progress(),_=>Default::default()}};(None,receipt,Some(crate::artifact_inference::ArtifactInferenceGatewayRefusal::from(error)))}};
-  let debit=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_unposted(receipt,before,cx.retained_progress()).and_then(|unposted|cx.consume_retained(unposted));if let Err(error)=debit{match &mut refusal{Some(original)=>{assert!(original.receipt_refusal.is_none());original.receipt_refusal=Some(error)},None=>refusal=Some(error.into())}}if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items.max(1) as u64)}ArtifactInferenceGatewayStep{payload,retained_progress:receipt,refusal}
+  let debit=semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(receipt,before,cx.retained_progress()).and_then(|unposted|cx.consume_retained(unposted));if let Err(error)=debit{match &mut refusal{Some(original)=>{assert!(original.receipt_refusal.is_none());original.receipt_refusal=Some(error)},None=>refusal=Some(error.into())}}if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items.max(1) as u64)}ArtifactInferenceGatewayStep{payload,retained_progress:receipt,refusal}
  }
 }
 #[doc(hidden)]
@@ -224,4 +224,4 @@ pub fn cancel_artifact_inference(cancellation_id: &str) -> Result<(), ArtifactIn
     Ok(())
 }
 
-pub use semio_framework_plugin_plugin_program::inference_gateway::*;
+pub use semio_plugin_plugin_program::inference_gateway::*;

@@ -17,8 +17,8 @@ pub struct SetEntityArg {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-arg", kind: "set-entity-arg", record: "SetEntityArg" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set entity arg", "Entitätsargument setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set entity arg", "Entitätsargument setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

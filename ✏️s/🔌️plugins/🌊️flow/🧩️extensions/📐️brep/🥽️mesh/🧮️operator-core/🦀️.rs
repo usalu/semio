@@ -38,29 +38,29 @@ use super::{LIMIT, add_progress, affine_matrix, analyze, component_pivot, compon
 
 pub enum MeshRetirement {
     Source(PolygonSourcePreparation),Modeling(MeshModelingJob),Tessellation(MeshTessellationJob),Output(MeshJobOutput),Transfer(semio_framework_3d::mesh::MeshTransfer),
-    Kernel(MeshKernelRetirement),Owned(Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>),Empty,
+    Kernel(MeshKernelRetirement),Session(SessionCapture),Fault(EvalError),Owned(Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>),Empty,
 }
 pub struct MeshKernelRetirement {
     pub payload:ControlledRetirement<(TessellationJob,Option<semio_framework_3d_brep_representation::contract::MeshTransfer>,String)>,
     pub session:SessionCapture,
 }
 impl MeshKernelRetirement {
-    pub fn new(session:Session,shape:GeometryHandle,job:TessellationJob,mesh:Option<semio_framework_3d_brep_representation::contract::MeshTransfer>)->Self {Self {payload:ControlledRetirement::new((job,mesh,shape.0)).unwrap_or_else(|_|panic!("original BRep mesh owner requires typed retirement")),session:session.capture()}}
+    pub fn new(session:Session,shape:GeometryHandle,job:TessellationJob,mesh:Option<semio_framework_3d_brep_representation::contract::MeshTransfer>)->Self {Self {payload:ControlledRetirement::new((job,mesh,shape.0)).unwrap_or_else(|_|panic!("original BRep mesh owner requires typed retirement")),session:SessionCapture::owned(session)}}
     pub fn terminal_is_empty(&self)->bool {self.payload.terminal_is_empty() && self.session.terminal_is_empty()}
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
         if !self.payload.terminal_is_empty() {return Ok(RetirementDemand {copy_bytes:self.payload.next_copy_byte_demand()?,capacity_bytes:self.payload.next_capacity_byte_demand(copy)?,release_bytes:self.payload.next_release_byte_demand()?,depth:self.payload.next_depth_demand()?});}
         Ok(RetirementDemand {copy_bytes:self.session.next_close_copy_byte_demand()?,capacity_bytes:self.session.next_close_capacity_byte_demand(copy)?,release_bytes:self.session.next_close_release_byte_demand()?,depth:self.session.next_close_depth_demand()?})
     }
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        if !self.payload.terminal_is_empty() {return self.payload.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        self.session.close_step(grant)
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome {
+        if !self.payload.terminal_is_empty(){let result=self.payload.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));return semio_framework_value::RetainedWorkOutcome{result,work:self.payload.last_turn_work()}}
+        self.session.close_original_step(grant)
     }
 }
 impl MeshRetirement {
-    pub fn terminal_is_empty(&self)->bool {match self {Self::Empty|Self::Owned(None)=>true,Self::Kernel(owner)=>owner.terminal_is_empty(),_=>false}}
+    pub fn terminal_is_empty(&self)->bool {match self {Self::Empty|Self::Owned(None)=>true,Self::Kernel(owner)=>owner.terminal_is_empty(),Self::Session(owner)=>owner.terminal_is_empty(),_=>false}}
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
         use semio_framework_value::retirement::owned_retirement_birth_bytes as birth;
-        let capacity=match self {Self::Source(_)=>birth::<PolygonSourcePreparation>(),Self::Modeling(job)=>job.retirement_birth_bytes(),Self::Tessellation(job)=>job.retirement_birth_bytes(),Self::Output(_)=>birth::<MeshJobOutput>(),Self::Transfer(_)=>birth::<semio_framework_3d::mesh::MeshTransfer>(),Self::Kernel(owner)=>return owner.demands(copy),Self::Owned(Some(owner))=>return semio_framework_value::factory_ticket_demands(owner,copy),Self::Owned(None)|Self::Empty=>return Ok(Default::default())};
+        let capacity=match self {Self::Source(_)=>birth::<PolygonSourcePreparation>(),Self::Modeling(job)=>job.retirement_birth_bytes(),Self::Tessellation(job)=>job.retirement_birth_bytes(),Self::Output(_)=>birth::<MeshJobOutput>(),Self::Transfer(_)=>birth::<semio_framework_3d::mesh::MeshTransfer>(),Self::Kernel(owner)=>return owner.demands(copy),Self::Session(owner)=>return Ok(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?}),Self::Fault(_)=>birth::<EvalError>(),Self::Owned(Some(owner))=>return semio_framework_value::factory_ticket_demands(owner,copy),Self::Owned(None)|Self::Empty=>return Ok(Default::default())};
         Ok(RetirementDemand {capacity_bytes:capacity,depth:1,..Default::default()})
     }
     pub fn step(&mut self,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError> {
@@ -69,12 +69,14 @@ impl MeshRetirement {
         if grant.maximum_items==0 {return Ok(RetainedCloneStep::Progress(Default::default()));}
         match std::mem::replace(self,Self::Empty) {
             Self::Source(source)=>match {let turn=admit_owned_retirement(source,grant);*work+=turn.work;turn.result} {Ok((owner,receipt))=>{*self=Self::Owned(Some(owner));Ok(RetainedCloneStep::Progress(receipt))},Err((error,source))=>{*self=Self::Source(source);Err(error)}},
-            Self::Modeling(job)=>match job.into_retirement(grant) {Ok((owner,receipt))=>{*self=Self::Owned(Some(owner));Ok(RetainedCloneStep::Progress(receipt))},Err((error,job))=>{*self=Self::Modeling(job);Err(error)}},
-            Self::Tessellation(job)=>match job.into_retirement(grant) {Ok((owner,receipt))=>{*self=Self::Owned(Some(owner));Ok(RetainedCloneStep::Progress(receipt))},Err((error,job))=>{*self=Self::Tessellation(job);Err(error)}},
+            Self::Modeling(job)=>match {let turn=job.into_original_retirement(grant);*work+=turn.work;turn.result} {Ok((owner,receipt))=>{*self=Self::Owned(Some(owner));Ok(RetainedCloneStep::Progress(receipt))},Err((error,job))=>{*self=Self::Modeling(job);Err(error)}},
+            Self::Tessellation(job)=>match {let turn=job.into_original_retirement(grant);*work+=turn.work;turn.result} {Ok((owner,receipt))=>{*self=Self::Owned(Some(owner));Ok(RetainedCloneStep::Progress(receipt))},Err((error,job))=>{*self=Self::Tessellation(job);Err(error)}},
             Self::Output(output)=>match {let turn=admit_owned_retirement(output,grant);*work+=turn.work;turn.result} {Ok((owner,receipt))=>{*self=Self::Owned(Some(owner));Ok(RetainedCloneStep::Progress(receipt))},Err((error,output))=>{*self=Self::Output(output);Err(error)}},
             Self::Transfer(transfer)=>match {let turn=admit_owned_retirement(transfer,grant);*work+=turn.work;turn.result} {Ok((owner,receipt))=>{*self=Self::Owned(Some(owner));Ok(RetainedCloneStep::Progress(receipt))},Err((error,transfer))=>{*self=Self::Transfer(transfer);Err(error)}},
             Self::Owned(mut owner)=>{let turn=semio_framework_value::close_factory_ticket(&mut owner,grant);*work+=turn.work;let result=turn.result;*self=Self::Owned(owner);result},
-            Self::Kernel(mut owner)=>{let result=owner.close_step(grant);*self=Self::Kernel(owner);result},
+            Self::Kernel(mut owner)=>{let turn=owner.close_step(grant);*work+=turn.work;*self=Self::Kernel(owner);turn.result},
+            Self::Session(mut owner)=>{let turn=owner.close_original_step(grant);*work+=turn.work;*self=Self::Session(owner);turn.result},
+            Self::Fault(error)=>{let turn=admit_owned_retirement(error,grant);*work+=turn.work;match turn.result{Ok((owner,p))=>{*self=Self::Owned(Some(owner));Ok(RetainedCloneStep::Progress(p))},Err((error,source))=>{*self=Self::Fault(source);Err(error)}}},
             Self::Empty=>Ok(RetainedCloneStep::Complete(Default::default())),
         }
     }
@@ -99,7 +101,7 @@ pub struct MeshOperatorJob {
 
 pub struct MeshPreparation {
     pub operation:&'static str,
-    pub session:Session,
+    pub session:Option<Session>,
     pub input:Option<Dictionary>,
     pub source:Option<PolygonSourcePreparation>,
     pub reconstruction:Option<MeshModelingJob>,
@@ -110,7 +112,7 @@ pub struct MeshPreparation {
 
 pub enum MeshJobOutput { Mesh(MeshOutputState), Analysis(MeshAnalysisState) }
 pub struct MeshImportState {
-    pub session: Session,
+    pub session: Option<Session>,
     pub tessellation: Option<MeshTessellationJob>,
     pub cursor: Option<semio_framework_3d_brep_engine::MeshImportCursor>,
     pub tolerance: f64,
@@ -319,7 +321,7 @@ impl MeshOperatorJob {
     pub fn preparation(operation:&'static str,session:Session,input:&Dictionary)->Result<Self,EvalError> {
         Self::source_text(operation,input)?;
         let progress=neural_engine::OperatorProgress {phase:"mesh-source-parse",units_done:0,units_total:1};
-        Ok(Self {job:None,brep_job:None,import:None,preparation:Some(MeshPreparation {operation,session,input:None,source:Some(PolygonSourcePreparation::new()),reconstruction:None,next:None,input_retirement:Default::default(),retire_input:false}),retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),work:0,fault:None,modeling_base:0,output:None,progress,cancelled:false})
+        Ok(Self {job:None,brep_job:None,import:None,preparation:Some(MeshPreparation {operation,session:Some(session),input:None,source:Some(PolygonSourcePreparation::new()),reconstruction:None,next:None,input_retirement:Default::default(),retire_input:false}),retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),work:0,fault:None,modeling_base:0,output:None,progress,cancelled:false})
     }
     pub fn source_text<'a>(operation:&str,input:&'a Dictionary)->Result<&'a str,EvalError> {if operation=="construct" {return input.get("data").and_then(Value::as_dictionary).and_then(|text|text.get("value")).and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("data must be text"));}let mesh=input.get("mesh").and_then(Value::as_dictionary).filter(|mesh|mesh.schema()==Some("mesh")).ok_or_else(||invalid("mesh requires a mesh"))?;mesh.get("data").and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("mesh data is missing"))}
     pub fn step_preparation(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
@@ -334,7 +336,7 @@ impl MeshOperatorJob {
                 state.retire_input=true;
                 if let Some(next)=&mut state.next {
                     next.cancel();
-                    let step=next.close_step(child)?;
+                    let turn=next.close_step(child);self.work+=turn.work;let step=turn.result?;
                     self.receipt=add_progress(self.receipt,step.progress());
                     if matches!(step,RetainedCloneStep::Complete(_)) {state.next=None;}
                     break;
@@ -375,7 +377,7 @@ impl MeshOperatorJob {
                 match modeling_slice(job,1) {
                     Ok(MeshModelingStep::Working(progress))=>self.progress.phase=progress.phase,
                     Ok(MeshModelingStep::Done(mesh))=>{
-                        state.next=Some(Box::new(if state.operation=="construct" {Self::output(mesh)?}else {Self::owned_plan(state.operation,state.session.clone(),state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?,mesh)?}));
+                        state.next=Some(Box::new(if state.operation=="construct" {Self::output(mesh)?}else {Self::owned_plan(state.operation,state.session.as_ref().ok_or_else(||invalid("original preparation session is absent"))?.clone(),state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?,mesh)?}));
                         self.retirement=Some(MeshRetirement::Modeling(state.reconstruction.take().unwrap()));
                         state.retire_input=true;
                     },
@@ -419,7 +421,7 @@ impl MeshOperatorJob {
             }
         }
         if !self.value_retirement.terminal_is_empty() {
-            let step=self.value_retirement.close_step(child)?;
+            let result=self.value_retirement.close_step(child);self.work+=self.value_retirement.last_turn_work();let step=result?;
             self.receipt=add_progress(self.receipt,step.progress());
             return Ok(neural_engine::OperatorJobStep::Working(self.progress));
         }
@@ -433,7 +435,7 @@ impl MeshOperatorJob {
         }
     }
     pub fn to_brep(session:Session,mesh:HalfedgeMesh,tolerance:f64)->Result<Self,EvalError> {
-        Ok(Self {job:None,brep_job:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),work:0,fault:None,import:Some(MeshImportState {session,tessellation:Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)),cursor:None,tolerance,source_retirement:None,transfer_retirement:None,fault:None}),modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:0,units_total:1,phase:"mesh-to-brep-tessellate"}})
+        Ok(Self {job:None,brep_job:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),work:0,fault:None,import:Some(MeshImportState {session:Some(session),tessellation:Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)),cursor:None,tolerance,source_retirement:None,transfer_retirement:None,fault:None}),modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:0,units_total:1,phase:"mesh-to-brep-tessellate"}})
     }
     pub fn step_import(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
         if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
@@ -467,11 +469,11 @@ impl MeshOperatorJob {
                 }
             } else {
                 let cursor=import.cursor.as_mut().expect("retained mesh-I/O cursor");
-                let result=import.session.step_mesh_import(cursor,1)?;
+                let result=import.session.as_ref().ok_or_else(||invalid("original import session is absent"))?.step_mesh_import(cursor,1)?;
                 self.progress.phase=cursor.progress().2;
                 if cursor.retirement_complete() {self.import=None;return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));}
                 if let Some(handle)=result {
-                    let value=import.session.with_kernel_read(|kernel|geometry_dict(kernel,&handle))?;
+                    let value=import.session.as_ref().ok_or_else(||invalid("original import session is absent"))?.with_kernel_read(|kernel|geometry_dict(kernel,&handle))?;
                     self.import=None;self.progress.units_done=self.progress.units_done.saturating_add(1);self.progress.units_total=self.progress.units_done;
                     return Ok(neural_engine::OperatorJobStep::Done(channel_output("geometry",value)));
                 }
@@ -551,29 +553,55 @@ impl MeshOperatorJob {
         }
         Ok(neural_engine::OperatorJobStep::Working(self.progress))
     }
-    pub fn close_demand(&self,copy:usize)->Result<RetirementDemand,ValueError> {
-        use semio_framework_value::retirement::owned_retirement_birth_bytes as birth;
-        let nested=|capacity:usize|->Result<RetirementDemand,ValueError> {Ok(RetirementDemand {capacity_bytes:capacity,depth:1,..Default::default()})};
-        let value=|owner:&neural_engine::ValueRetirement|->Result<RetirementDemand,ValueError> {Ok(RetirementDemand {copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};
-        if let Some(retirement)=&self.retirement {return retirement.demands(copy);}
-        if let Some(import)=&self.import {
-            if let Some(retirement)=import.source_retirement.as_ref().or(import.transfer_retirement.as_ref()) {return retirement.demands(copy);}
-            if let Some(job)=&import.tessellation {return nested(job.retirement_birth_bytes());}
+    fn close_original_event(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(empty))}
+        if !self.cancelled{self.cancel();self.work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+        if let Some(owner)=self.retirement.as_mut(){let result=owner.step(grant,&mut self.work);let step=result?;if owner.terminal_is_empty(){self.retirement=None}return Ok(RetainedCloneStep::Progress(step.progress()))}
+        if let Some(error)=self.fault.take(){self.retirement=Some(MeshRetirement::Fault(error));self.work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+        if let Some(state)=self.preparation.as_mut(){
+            if !state.input_retirement.terminal_is_empty(){let result=state.input_retirement.close_step(grant);self.work=state.input_retirement.last_turn_work();return result}
+            if let Some(input)=state.input.take(){let result=state.input_retirement.push_dictionary(input,grant);self.work=state.input_retirement.last_turn_work();return match result{Ok(p)=>Ok(RetainedCloneStep::Progress(p)),Err((error,input))=>{state.input=Some(input);Err(error)}}}
+            if let Some(next)=state.next.as_mut(){if !next.terminal_is_empty(){let turn=next.close_step(grant);self.work=turn.work;return turn.result}let bytes=std::mem::size_of::<MeshOperatorJob>();if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(empty))}drop(state.next.take());self.work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}))}
+            if let Some(source)=state.source.take(){self.retirement=Some(MeshRetirement::Source(source))}
+            else if let Some(job)=state.reconstruction.take(){self.retirement=Some(MeshRetirement::Modeling(job))}
+            else if let Some(session)=state.session.take(){self.retirement=Some(MeshRetirement::Session(SessionCapture::owned(session)))}
+            else{self.preparation=None}self.work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
         }
-        if let Some(state)=&self.preparation {
-            if state.retire_input && state.input.is_some() {return nested(neural_engine::ValueRetirement::domain_frame_birth_bytes());}
-            if !state.input_retirement.terminal_is_empty() {return value(&state.input_retirement);}
-            if state.source.is_some() {return nested(birth::<PolygonSourcePreparation>());}
-            if let Some(job)=&state.reconstruction {return nested(job.retirement_birth_bytes());}
-            if let Some(next)=&state.next {return next.close_demand(copy);}
-            if state.input.is_some() {return nested(neural_engine::ValueRetirement::domain_frame_birth_bytes());}
+        if let Some(import)=self.import.as_mut(){
+            if let Some(owner)=import.source_retirement.take().or_else(||import.transfer_retirement.take()){self.retirement=Some(owner)}
+            else if let Some(job)=import.tessellation.take(){self.retirement=Some(MeshRetirement::Tessellation(job))}
+            else if let Some(cursor)=import.cursor.as_mut(){if cursor.retirement_complete(){import.cursor=None;self.work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}let turn=import.session.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original import session is absent"))?.close_mesh_import_original(cursor,grant);self.work=turn.work;return turn.result}
+            else if let Some(error)=import.fault.take(){self.retirement=Some(MeshRetirement::Fault(error))}
+            else if let Some(session)=import.session.take(){self.retirement=Some(MeshRetirement::Session(SessionCapture::owned(session)))}
+            else{self.import=None}self.work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
         }
-        if let Some(job)=&self.job {return nested(job.retirement_birth_bytes());}
-        if self.brep_job.is_some() {return nested(std::mem::size_of::<MeshKernelRetirement>());}
-        if self.output.is_some() {return nested(birth::<MeshJobOutput>());}
-        if self.pending_output.is_some() {return nested(neural_engine::ValueRetirement::domain_frame_birth_bytes());}
-        if !self.value_retirement.terminal_is_empty() {return value(&self.value_retirement);}
-        Ok(Default::default())
+        if let Some(job)=self.job.take(){self.retirement=Some(MeshRetirement::Modeling(job))}
+        else if let Some((session,shape,job))=self.brep_job.take(){self.retirement=Some(MeshRetirement::Kernel(MeshKernelRetirement::new(session,shape,job,None)))}
+        else if let Some(output)=self.output.take(){self.retirement=Some(MeshRetirement::Output(output))}
+        else if !self.value_retirement.terminal_is_empty(){let result=self.value_retirement.close_step(grant);self.work=self.value_retirement.last_turn_work();return result}
+        else if let Some(output)=self.pending_output.take(){let result=self.value_retirement.push_dictionary(output,grant);self.work=self.value_retirement.last_turn_work();return match result{Ok(p)=>Ok(RetainedCloneStep::Progress(p)),Err((error,output))=>{self.pending_output=Some(output);Err(error)}}}
+        else{return Ok(RetainedCloneStep::Complete(empty))}self.work=1;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
+    }
+    pub fn close_demand(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        let metadata=RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()};
+        let value=|owner:&neural_engine::ValueRetirement|Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});
+        if !self.cancelled{return Ok(metadata)}
+        if let Some(owner)=self.retirement.as_ref(){return owner.demands(copy)}
+        if self.fault.is_some(){return Ok(metadata)}
+        if let Some(state)=self.preparation.as_ref(){
+            if !state.input_retirement.terminal_is_empty(){return value(&state.input_retirement)}
+            if state.input.is_some(){return Ok(metadata)}
+            if let Some(next)=state.next.as_ref(){return if next.terminal_is_empty(){Ok(RetirementDemand{release_bytes:std::mem::size_of::<MeshOperatorJob>(),depth:1,..Default::default()})}else{next.close_demand(copy)}}
+            return Ok(metadata)
+        }
+        if let Some(import)=self.import.as_ref(){
+            if import.source_retirement.is_some()||import.transfer_retirement.is_some()||import.tessellation.is_some(){return Ok(metadata)}
+            if let Some(cursor)=import.cursor.as_ref(){if cursor.retirement_complete(){return Ok(metadata)}let session=import.session.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original import session is absent"))?;return Ok(RetirementDemand{copy_bytes:session.next_mesh_import_copy_byte_demand(cursor)?,capacity_bytes:session.next_mesh_import_capacity_byte_demand(cursor,copy)?,release_bytes:session.next_mesh_import_release_byte_demand(cursor)?,depth:session.next_mesh_import_depth_demand(cursor)?})}
+            return Ok(metadata)
+        }
+        if self.job.is_some()||self.brep_job.is_some()||self.output.is_some(){return Ok(metadata)}
+        if !self.value_retirement.terminal_is_empty(){return value(&self.value_retirement)}
+        Ok(metadata)
     }
     pub fn terminal_is_empty(&self)->bool {
         self.job.is_none() && self.brep_job.is_none() && self.import.is_none() && self.preparation.is_none() && self.retirement.is_none() && self.pending_output.is_none() && self.output.is_none() && self.value_retirement.terminal_is_empty()
@@ -607,21 +635,8 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
     fn next_close_capacity_byte_demand(&self,maximum_copy_bytes:usize)->Result<usize,ValueError> {Ok(self.close_demand(maximum_copy_bytes)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demand(0)?.release_bytes)}
     fn next_close_depth_demand(&self)->Result<usize,ValueError> {Ok(self.close_demand(0)?.depth.max(usize::from(!self.terminal_is_empty())))}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        if self.terminal_is_empty() {return Ok(RetainedCloneStep::Complete(Default::default()));}
-        self.receipt=Default::default();
-        if !self.cancelled {self.cancel();}
-        let result=if self.preparation.is_some() {self.step_preparation(grant.maximum_items.max(1),grant)}
-            else if self.import.is_some() {self.step_import(grant.maximum_items.max(1),grant)}
-            else if self.fault.is_some() {self.close_failed(grant)}
-            else {self.close_cancelled(grant)};
-        let progress=self.receipt;
-        match result {
-            Ok(_) if self.terminal_is_empty() => Ok(RetainedCloneStep::Complete(progress)),
-            Ok(_) => Ok(RetainedCloneStep::Progress(progress)),
-            Err(_) if self.terminal_is_empty() => Ok(RetainedCloneStep::Complete(progress)),
-            Err(error) => Err(value_error(error)),
-        }
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+        self.receipt=Default::default();self.work=0;let result=self.close_original_event(grant);semio_framework_value::RetainedWorkOutcome{result,work:std::mem::take(&mut self.work)}
     }
     fn terminal_is_empty(&self)->bool {MeshOperatorJob::terminal_is_empty(self)}
     fn progress(&self) -> neural_engine::OperatorProgress { self.progress }
@@ -676,7 +691,7 @@ impl Operator for MeshOperation {
             Ok(progress)=>Ok((OperatorPlanAdmission::Job(Box::new(job)),RetainedCloneProgress {retained_capacity_bytes:progress.retained_capacity_bytes.saturating_add(std::mem::size_of::<MeshOperatorJob>()),..progress})),
             Err((error,input))=>{
                 job.cancel();
-                for _ in 0..4096 {if matches!(neural_engine::OperatorJob::close_step(&mut job,sync_grant()),Ok(RetainedCloneStep::Complete(_))|Err(_)) {break;}}
+                for _ in 0..4096 {if matches!(neural_engine::OperatorJob::close_step(&mut job,sync_grant()).result,Ok(RetainedCloneStep::Complete(_))|Err(_)) {break;}}
                 Err((error.into(),input))
             }
         }

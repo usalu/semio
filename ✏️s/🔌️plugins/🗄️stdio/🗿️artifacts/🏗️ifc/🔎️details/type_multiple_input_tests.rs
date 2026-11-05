@@ -6,14 +6,14 @@ fn multiple_contract() -> serde_json::Value {
 fn multiple_source(law: &serde_json::Value, name: &str) -> Arc<IfcSnapshot> {
     Arc::new(IfcSnapshot { entities: law["sources"][name]["entities"].as_array().unwrap().iter().map(|row| super::super::equal_arity_type_tests::entity(row, row["id"].as_str().unwrap().parse().unwrap())).collect(), ..Default::default() })
 }
-fn multiple_request(target: &str, rows: &serde_json::Value) -> semio_framework_plugin::action_staging::StagedFormRequest {
+fn multiple_request(target: &str, rows: &serde_json::Value) -> semio_plugin::action_staging::StagedFormRequest {
     let mut request = guidance_request();
     request.args = DslValue::Object(vec![("path".into(), DslValue::String("/entities/0".into())), ("value".into(), DslValue::Object(vec![("$ifcType".into(), DslValue::String(target.into())), ("$ifcInputs".into(), raw(rows))]))]);
     request
 }
 #[test]
 fn original_multiple_reference_guidance_keeps_all_fields_and_denies_each_published_axis() {
-    use semio_framework_plugin_decl_staged_form::StagedBodySource;
+    use semio_plugin_decl_staged_form::StagedBodySource;
     let law = multiple_contract();
     for row in law["cases"].as_array().unwrap() {
         let snapshot = multiple_source(&law, row["source"].as_str().unwrap());

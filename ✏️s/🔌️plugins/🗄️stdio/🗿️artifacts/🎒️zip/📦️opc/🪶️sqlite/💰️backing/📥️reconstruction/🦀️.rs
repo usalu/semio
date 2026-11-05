@@ -1,7 +1,7 @@
 //! 📥️ Actual OPC fields reconstruct through admitted identity and parent/ordinal indexes.
 use super::super::super::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode, OpcRelationshipOwners};
 use super::super::OpcSqliteTables;
-use semio_framework_os_kernel::sqlite_snapshot::{
+use semio_os_kernel::sqlite_snapshot::{
     artifact::{reconstruct_blob, reconstruct_text},
     transfer::reserve,
     SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase,

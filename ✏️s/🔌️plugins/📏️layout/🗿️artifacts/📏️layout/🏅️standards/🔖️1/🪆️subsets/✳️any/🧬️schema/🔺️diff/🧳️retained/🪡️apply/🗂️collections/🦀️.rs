@@ -1,7 +1,7 @@
 //! 🗂️ Production root collections share genuine sparse staging and original row movement.
 use crate::*;
 use semio_s_artifact_layout_layout_model::{snapshot::LayoutSnapshot,ParagraphStyle,CharacterStyle,ParentPage,Spread,Page,TextStory,ImageLink};
-use semio_framework_os_kernel::ApplyCapability;
+use semio_os_kernel::ApplyCapability;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use super::super::{collection::RetainedCollection,keyed_plan::PlanAdvance,setters::OwnedPatch};
 fn fixed()->RetirementDemand{RetirementDemand{copy_bytes:128,depth:1,..Default::default()}}

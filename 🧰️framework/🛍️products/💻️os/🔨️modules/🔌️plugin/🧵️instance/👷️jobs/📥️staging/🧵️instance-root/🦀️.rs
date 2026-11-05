@@ -1,24 +1,24 @@
 //! 📪️ Staged slice of the `instance-root` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
-use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_window_kits::AppActionRegistry;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use semio_framework_ui_runtime::{ComponentTree, TreeNode};
-use semio_framework_plugin_decl_emission::Emit;
+use semio_ui_runtime::{ComponentTree, TreeNode};
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use semio_framework_plugin_decl_views::{InteractionHoverState, InteractionView, PeerPresenceRoot};
+use semio_plugin_decl_views::{InteractionHoverState, InteractionView, PeerPresenceRoot};
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
-use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
+use semio_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
 use semio_framework_value::ValueError;
-use semio_framework_plugin_interaction::interaction_topology::{empty_draft_references, ui_tree_domain_topology};
-use semio_framework_ui_contract::*;
+use semio_plugin_interaction::interaction_topology::{empty_draft_references, ui_tree_domain_topology};
+use semio_ui_contract::*;
 
 pub(crate) fn original_render_posted_since(before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{
  let delta=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render recipient moved backwards"));
@@ -56,7 +56,7 @@ pub struct OriginalRenderInteractionStamp<'a> {
     pub interaction_hover: &'a InteractionHoverState,
     pub peer_presence: &'a PeerPresenceRoot,
     pub own_color: Option<u8>,
-    pub local_interaction_authority: &'a mut semio_framework_plugin_interaction::authority::LocalInteractionTopologyAuthority,
+    pub local_interaction_authority: &'a mut semio_plugin_interaction::authority::LocalInteractionTopologyAuthority,
     pub interaction_ui_topology: &'a mut HashMap<String, protocol::DomainTopology>,
     pub pending_presence: &'a mut Vec<PresenceUpdate>,
     pub presence_marked_keys: &'a mut BTreeMap<String, BTreeSet<String>>,
@@ -74,7 +74,7 @@ impl OriginalRenderInteractionStamp<'_> {
             entered: bool,
             domain: Option<UiText>,
         }
-        let mut stack: UiFixedList<Frame<'_>, { semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH }> = UiFixedList::default();
+        let mut stack: UiFixedList<Frame<'_>, { semio_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH }> = UiFixedList::default();
         let mut marked: BTreeSet<String> = BTreeSet::new();
         stack.try_push(Frame { node: &tree.root, next: 0, entered: false, domain: None }).map_err(|_| ui_assembly_error("interaction-walk.depth"))?;
         while let Some(mut frame) = stack.pop() {

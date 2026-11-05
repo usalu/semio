@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingPlanWidthM
         record: "ChangeBuildingPlanWidthM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plan width Lx", "Grundrissbreite Lx ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plan width Lx", "Grundrissbreite Lx ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-plan-width-m".into()]

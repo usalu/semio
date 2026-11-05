@@ -454,7 +454,7 @@ pub const JPG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.jpg";
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{STDIO_JPG_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
@@ -462,7 +462,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.jpg".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Jpg", "Jpg"),
+        label: semio_ui_locale::LocalizedLabel::native("Jpg", "Jpg"),
         source_format: STDIO_JPG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

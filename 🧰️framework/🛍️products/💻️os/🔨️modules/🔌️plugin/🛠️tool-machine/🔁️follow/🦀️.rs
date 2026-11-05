@@ -1,14 +1,14 @@
 //! 🔁️ The mounted continuous-tool follower consumes genuine immutable ledger rows and publishes one complete preview epoch.
 use super::*;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,OriginalConstructionDemand};
 use semio_framework_value::{RetainedOwnedProjection,SharedUtf8,ValueRefusalKind,RetirementDemand,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_value::retained_clone::original_slot::RetainedOriginalSlotKey;
 use semio_framework_tool_machine::{OriginalToolLedgerSource,ScrubState,GestureState,TypingState};
-use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
-use semio_framework_plugin_window_config_original::OriginalWindowPreviewEpoch;
-use semio_framework_plugin_tool_run_operations::{OriginalToolOverlayFold,OriginalToolLedgerWalk,paid,receive,close_paid};
+use semio_plugin_window_config::WindowConfigOwnerRegistry;
+use semio_plugin_window_config_original::OriginalWindowPreviewEpoch;
+use semio_plugin_tool_run_operations::{OriginalToolOverlayFold,OriginalToolLedgerWalk,paid,receive,close_paid};
 use std::mem::size_of;
 fn built_with<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|control|semio_framework_value::RetainedWorkOutcome{result:construct(control),work:1})}
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}

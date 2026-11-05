@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgeDeckEiNm2 wh
         record: "ChangeBridgeDeckEiNm2",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Transverse bending stiffness EI of the deck in N·m² (0 = rigid deck)", "Biegesteifigkeit EI des Überbaus quer in N·m² (0 = starrer Überbau) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Transverse bending stiffness EI of the deck in N·m² (0 = rigid deck)", "Biegesteifigkeit EI des Überbaus quer in N·m² (0 = starrer Überbau) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-deck-ei-nm2".into()]

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSheetActionMYK whe
         record: "ChangedSheetActionMYK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic bending moment M_y,k of the cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech: Charakteristisches Biegemoment M_y,k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic bending moment M_y,k of the cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech: Charakteristisches Biegemoment M_y,k ändern")
     }
 }
 

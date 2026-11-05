@@ -1,0 +1,33 @@
+//! 📏️ Initial origin and complete dispatch finish within the actual caller's original 200 opportunities.
+use neural_engine as neural;
+use semio_os_flow_host_session::invocation_publication::{FlowInvocationOriginWork,FlowInvocationDispatchWork};
+use semio_framework_artifact_flow_flow::{FlowHostSnapshot,Widget,SynapseSpec};
+use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,close_original_retained_step};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,FromValue};
+use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
+fn clock()->Option<u64>{Some(1000)}
+fn delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}}
+macro_rules! close_work{($work:ident,$caller:ident,$stock:ident,$decoder:ident,$calls:ident)=>{{
+ $work.begin_close();
+ while !$work.terminal_is_empty(){$calls+=1;assert!($calls<=200);$caller.turn_with_decoder($stock,&mut $decoder,|cx|cx.with_original_retirement(|cx|{
+  for _ in 0..512{if $work.terminal_is_empty()||cx.should_yield(){break}let demand=$work.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,demand,|grant|{let result=$work.close_step(grant);RetainedWorkOutcome{result,work:$work.last_turn_work()}})?;if step.progress()==Default::default(){break}}
+  Ok(())
+ })).unwrap()}
+}}}
+fn close_owned<T:RetireOwned>(source:T,caller:&mut OriginalJobFixtureCaller,stock:RetainedCloneGrant,decoder:&mut OriginalJobDecodeOwner,calls:&mut usize){let mut owner=ControlledRetirement::new(source).unwrap_or_else(|_|panic!("original profile field supports controlled retirement"));while !owner.terminal_is_empty(){*calls+=1;assert!(*calls<=200);caller.turn_with_decoder(stock,decoder,|cx|cx.with_original_retirement(|cx|{for _ in 0..512{if owner.terminal_is_empty()||cx.should_yield(){break}let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;if step.progress()==Default::default(){break}}Ok(())})).unwrap()}}
+#[test]
+fn original_origin_and_dispatch_fit_200_caller_turns_without_replenishment(){
+ let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();assert_eq!(policy["clockUs"].as_u64(),Some(1000));
+ let cases=semio_framework_pack_json::parse(include_str!("../📁️cases.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let row=&cases.as_array().unwrap()[1];
+ let sources=semio_framework_pack_json::parse(include_str!("../../../🌳️dependency-work/🧪️laws/📁️cases.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let scene=sources.as_array().unwrap().iter().find(|source|source.get("name").unwrap().as_str()==row.get("source").unwrap().as_str()).unwrap();
+ let mut source=FlowHostSnapshot::default();source.widgets=Vec::<Widget>::from_value(semio_framework_pack_json::to_dsl_value(scene.get("widgets").unwrap())).unwrap();source.synapses=Vec::<SynapseSpec>::from_value(semio_framework_pack_json::to_dsl_value(scene.get("synapses").unwrap())).unwrap();
+ let pending=row.get("pending").unwrap();let pending=neural::PendingExtensionEval{neuron_id:pending.get("neuronId").unwrap().as_str().unwrap().into(),extension_id:pending.get("extensionId").unwrap().as_str().unwrap().into(),operator_id:pending.get("operatorId").unwrap().as_str().unwrap().into(),node_hash:pending.get("nodeHash").unwrap().as_u64().unwrap(),input_json:pending.get("inputJson").unwrap().as_str().unwrap().into()};
+ let window=row.get("windowId").unwrap().as_str().unwrap();let kind=row.get("windowKindId").unwrap().as_str().unwrap();let registry_generation=row.get("registryGeneration").unwrap().as_u64().unwrap();
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(policy["operation"].as_u64().unwrap()),Generation(policy["generation"].as_u64().unwrap()),stock,clock,policy["deadlineUs"].as_u64().unwrap(),policy["fuel"].as_u64().unwrap());let mut decoder=OriginalJobDecodeOwner::empty();let mut calls=0;
+ let mut origin_work=FlowInvocationOriginWork::new(pending,registry_generation);let origin=loop{calls+=1;assert!(calls<=200);let output=caller.turn_with_decoder(stock,&mut decoder,|cx|{let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||origin_work.step(&source,window,kind,cx));let actual=delta(before,cx.retained_progress());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(actual.retained_capacity_bytes,actual.released_bytes));result}).unwrap();if let Some(origin)=output{break origin}};
+ assert_eq!(origin.dependency_json,scene.get("expected").unwrap().as_str().unwrap());close_work!(origin_work,caller,stock,decoder,calls);
+ let mut dispatch_work=FlowInvocationDispatchWork::new(false);let dispatch=loop{calls+=1;assert!(calls<=200);let output=caller.turn_with_decoder(stock,&mut decoder,|cx|{let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||dispatch_work.step(&origin,cx));let actual=delta(before,cx.retained_progress());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(actual.retained_capacity_bytes,actual.released_bytes));result}).unwrap();if let Some(dispatch)=output{break dispatch}};
+ assert_eq!(dispatch.request_json,origin.request_json_cold(false));dispatch_work.restore_output(dispatch);close_work!(dispatch_work,caller,stock,decoder,calls);close_owned(origin,&mut caller,stock,&mut decoder,&mut calls);close_owned(source,&mut caller,stock,&mut decoder,&mut calls);
+ while !decoder.terminal_is_empty(){calls+=1;assert!(calls<=200);caller.turn(stock,|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())})).unwrap()}
+ assert_eq!(caller.stock(),stock);assert!(caller.cumulative_receipt().fits(stock));assert!(policy["fuel"].as_u64().unwrap()-caller.fuel_remaining()<32000);caller.retire(stock);
+}

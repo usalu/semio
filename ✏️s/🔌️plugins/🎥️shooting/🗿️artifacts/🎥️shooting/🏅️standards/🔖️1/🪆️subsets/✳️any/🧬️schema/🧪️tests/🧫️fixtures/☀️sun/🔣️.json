@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "name": "enabled sun",
+      "enabled": true,
+      "intensity": 1.75,
+      "expected": 1.75
+    },
+    {
+      "name": "disabled sun",
+      "enabled": false,
+      "intensity": 1.75,
+      "expected": 0
+    },
+    {
+      "name": "zero sun",
+      "enabled": true,
+      "intensity": 0,
+      "expected": 0
+    }
+  ]
+}

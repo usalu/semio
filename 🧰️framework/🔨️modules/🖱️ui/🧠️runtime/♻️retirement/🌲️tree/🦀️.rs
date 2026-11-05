@@ -1,6 +1,6 @@
 //! 🌲️ Single retained runtime tree owner with concrete, non-overwriting source transfers.
 
-use semio_framework_ui_runtime_presentation::{ComponentTree, TreeNode, UiNativeResources};
+use semio_ui_runtime_presentation::{ComponentTree, TreeNode, UiNativeResources};
 
 #[derive(Default)]
 pub struct SurfaceTreeRetireCursor {

@@ -33,9 +33,9 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "vertex-positions", kind: "set-vertex-positions", record: "SetVertexPositionsDone" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let count = self.positions.len();
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Position {count} vertices of \"{}\"", self.object_id), &format!("{count} Eckpunkte von \"{}\" positionieren", self.object_id))
+        semio_ui_locale::LocalizedLabel::native(&format!("Position {count} vertices of \"{}\"", self.object_id), &format!("{count} Eckpunkte von \"{}\" positionieren", self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

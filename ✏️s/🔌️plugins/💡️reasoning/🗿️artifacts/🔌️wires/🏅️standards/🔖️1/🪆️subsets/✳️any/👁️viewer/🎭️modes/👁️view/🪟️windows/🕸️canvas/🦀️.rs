@@ -11,13 +11,13 @@
 use crate::schema::board_snapshot_camera;
 use crate::WiresComposed;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WIRES_VIEW_WINDOW_CANVAS: &str = "reasoning-wires-view-composite";
@@ -54,9 +54,9 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(composed: &WiresComposed) -> UiAssemblyResult<BuiltNode> {
     let (camera_x, camera_y, zoom) = board_snapshot_camera(&composed.board);
     let layers: Vec<Value> = crate::schema::wires_canvas_layers(&composed.board, &composed.identity_snapshot).iter().map(semio_framework_pack_json::from_dsl_value).collect();
-    semio_framework_plugin::scene_surface(
+    semio_plugin::scene_surface(
         WIRES_VIEW_CANVAS_SURFACE_ID,
-        semio_framework_ui_contract::SurfaceKind::Canvas2d,
+        semio_ui_contract::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: semio_framework_pack_json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

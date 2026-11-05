@@ -1,14 +1,14 @@
 //! 🪢️ The wasm32-wasip2 translation between the WIT reactor world and the kernel types.
 
-use semio_framework_plugin_reactor_core::ARMED_TIMERS;
+use semio_plugin_reactor_core::ARMED_TIMERS;
 use semio_framework::kernel::{ActorInstanceLifecycleReceipt, ActorUiPatchReceipt, Effect, Event, MessageEndpoint, TurnStatus, UiPatch};
 use std::cell::RefCell;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::{RequestOutcome, UiPatchOp};
-use semio_framework_plugin_reactor_surfaces::checkpoint;
-use semio_framework_plugin_reactor_surfaces as cold_pair;
-use semio_framework_plugin_reactor_turn as turn;
-use semio_framework_ui_contract as ui_contract;
+use semio_plugin_reactor_surfaces::checkpoint;
+use semio_plugin_reactor_surfaces as cold_pair;
+use semio_plugin_reactor_turn as turn;
+use semio_ui_contract as ui_contract;
 /// 🧭️ `reactor`/`jobs`/`checkpoint`/`describe` are the only interfaces `world actor` directly
 /// `export`s, so wit-bindgen only aliases THEIR top-level types under `exports::…`. `effects`/
 /// `events`/`ui`/`types` are merely `use`d by `reactor.wit` (design-abi.md §1/§4) — their own
@@ -17,14 +17,14 @@ use semio_framework_ui_contract as ui_contract;
 /// deliberately wrong `wit::OpenWindowEffect` import made `cargo check --target wasm32-wasip2`
 /// emit `help: consider importing … effects::OpenWindowEffect`
 /// (and the `events`/`ui` siblings the same way) — not guessed.
-use semio_framework_plugin_abi::wasip2::semio::framework::capabilities as wit_capabilities;
-use semio_framework_plugin_abi::wasip2::semio::framework::effects as wit_effects;
-use semio_framework_plugin_abi::wasip2::semio::framework::events as wit_events;
-use semio_framework_plugin_abi::wasip2::semio::framework::instance_lifetime as wit_lifetime;
-use semio_framework_plugin_abi::wasip2::semio::framework::types as wit_types;
-use semio_framework_plugin_abi::wasip2::semio::framework::ui as wit_ui;
+use semio_plugin_abi::wasip2::semio::framework::capabilities as wit_capabilities;
+use semio_plugin_abi::wasip2::semio::framework::effects as wit_effects;
+use semio_plugin_abi::wasip2::semio::framework::events as wit_events;
+use semio_plugin_abi::wasip2::semio::framework::instance_lifetime as wit_lifetime;
+use semio_plugin_abi::wasip2::semio::framework::types as wit_types;
+use semio_plugin_abi::wasip2::semio::framework::ui as wit_ui;
 
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     /// 📥️ The one command-ingress page staged for the next turn, and the one cold document-pair
     /// page beside it. Staged by their own exports and TAKEN by `poll`, never left behind.
     static STAGED_PAGES: RefCell<StagedTurnPages> = RefCell::new(StagedTurnPages { command: None, cold_pair: None });
@@ -45,7 +45,7 @@ fn staging_fault(reason: &'static str) -> semio_framework::Fault {
 
 /// 📥️ `reactor::stage-command-page` body — see the WIT for why the page is staged instead of
 /// riding `poll`'s parameter list.
-pub async fn stage_command_page(cursor: semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::CommandPageCursor, bytes: Vec<u8>) -> Result<(), semio_framework::Fault> {
+pub async fn stage_command_page(cursor: semio_plugin_abi::wasip2::exports::semio::framework::reactor::CommandPageCursor, bytes: Vec<u8>) -> Result<(), semio_framework::Fault> {
     let staged = wit_command_page_to_kernel(cursor, bytes)?;
     let staged = (staged.0, Box::new(staged.1));
     STAGED_PAGES.with(|pages| {
@@ -59,7 +59,7 @@ pub async fn stage_command_page(cursor: semio_framework_plugin_abi::wasip2::expo
 }
 
 /// 🧊️ `reactor::stage-cold-pair-page` body — the cold-pair twin of [`stage_command_page`].
-pub async fn stage_cold_pair_page(page: semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<(), semio_framework::Fault> {
+pub async fn stage_cold_pair_page(page: semio_plugin_abi::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<(), semio_framework::Fault> {
     let staged = Box::new(wit_cold_pair_page_to_kernel(page)?);
     STAGED_PAGES.with(|pages| {
         let mut pages = pages.try_borrow_mut().map_err(|_| staging_fault("turn page staging authority busy"))?;
@@ -74,13 +74,13 @@ pub async fn stage_cold_pair_page(page: semio_framework_plugin_abi::wasip2::expo
 /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
 /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
 /// module's `TurnResult`. The turn's pages come from [`STAGED_PAGES`], which this call empties.
-pub async fn poll<PA: semio_framework_plugin_reactor_app::PluginApp + 'static>(
-    runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
-    events: Vec<semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::Event>,
-    budget: semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::Budget,
-    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+pub async fn poll<PA: semio_plugin_reactor_app::PluginApp + 'static>(
+    runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
+    events: Vec<semio_plugin_abi::wasip2::exports::semio::framework::reactor::Event>,
+    budget: semio_plugin_abi::wasip2::exports::semio::framework::reactor::Budget,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx:&mut semio_framework_job::StepContext<'_>,
-) -> Result<semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework_job::OriginalTurnFailure> {
+) -> Result<semio_plugin_abi::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework_job::OriginalTurnFailure> {
     turn::note_turn_events(events.len(), wit_events_payload_bytes(&events));
     let mut kernel_event = None;
     for event in events {
@@ -97,8 +97,8 @@ pub async fn poll<PA: semio_framework_plugin_reactor_app::PluginApp + 'static>(
 /// field, which is all a turn can retain that scales with its input. Fixed-shape variants
 /// (`timer`, `wake`, `surface-resized`, …) contribute nothing by construction, so a turn reading
 /// `eventsBytes=0` genuinely carried no payload. Read by the per-turn guest memory trace.
-fn wit_events_payload_bytes(events: &[semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::Event]) -> usize {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn wit_events_payload_bytes(events: &[semio_plugin_abi::wasip2::exports::semio::framework::reactor::Event]) -> usize {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     let completion_bytes = |outcome: &wit_events::CompletionResult| match outcome {
         wit_events::CompletionResult::Ok(pack) | wit_events::CompletionResult::Fault(pack) => pack.len(),
     };
@@ -126,7 +126,7 @@ fn wit_events_payload_bytes(events: &[semio_framework_plugin_abi::wasip2::export
 /// `list<u8>` the guest owns and drops; the fixed page they are copied into is the authority the
 /// ingress assembler reads.
 fn wit_command_page_to_kernel(
-    cursor: semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::CommandPageCursor,
+    cursor: semio_plugin_abi::wasip2::exports::semio::framework::reactor::CommandPageCursor,
     bytes: Vec<u8>,
 ) -> Result<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage), semio_framework::Fault> {
     if bytes.len() > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES {
@@ -155,8 +155,8 @@ fn wit_command_page_to_kernel(
 }
 
 #[doc(hidden)]
-pub fn kernel_command_cursor_to_wit(cursor: &semio_framework::kernel::CommandPageCursor) -> semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::CommandPageCursor {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+pub fn kernel_command_cursor_to_wit(cursor: &semio_framework::kernel::CommandPageCursor) -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::CommandPageCursor {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     wit::CommandPageCursor {
         owner: cursor.owner,
         generation: cursor.generation,
@@ -173,14 +173,14 @@ pub fn kernel_command_cursor_to_wit(cursor: &semio_framework::kernel::CommandPag
 }
 
 /// 💤️ Canonical cursor payload for the scalar idle command-ingress record.
-fn idle_command_cursor_to_wit() -> semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::CommandPageCursor {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn idle_command_cursor_to_wit() -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::CommandPageCursor {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     wit::CommandPageCursor { owner: 0, generation: 0, command_index: 0, command_count: 0, instance: 0, seq: 0, kind: 0, page_index: 0, page_count: 0, item_count: 0, metadata: 0 }
 }
 
 /// 🔢️ Kernel command ingress → scalar WIT record, avoiding nested variant discriminants in async results.
-fn kernel_command_ingress_to_wit(status: semio_framework::kernel::CommandIngressStatus) -> semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::CommandIngressStatus {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn kernel_command_ingress_to_wit(status: semio_framework::kernel::CommandIngressStatus) -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::CommandIngressStatus {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     let (kind, cursor, fault) = match status {
         semio_framework::kernel::CommandIngressStatus::Idle => (0, idle_command_cursor_to_wit(), Vec::new()),
         semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor) => (1, kernel_command_cursor_to_wit(&cursor), Vec::new()),
@@ -196,7 +196,7 @@ fn wit_cold_sha256(bytes: Vec<u8>, field: &'static str) -> Result<[u8; 32], semi
     bytes.try_into().map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-hash-width"), field))
 }
 
-fn wit_cold_pair_page_to_kernel(page: semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<semio_framework::kernel::ColdDocumentPairPage, semio_framework::Fault> {
+fn wit_cold_pair_page_to_kernel(page: semio_plugin_abi::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<semio_framework::kernel::ColdDocumentPairPage, semio_framework::Fault> {
     let header = page.header;
     let frontier = header.baseline_frontier;
     Ok(semio_framework::kernel::ColdDocumentPairPage {
@@ -223,18 +223,18 @@ fn wit_cold_pair_page_to_kernel(page: semio_framework_plugin_abi::wasip2::export
     })
 }
 
-fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdDocumentPairFrontier) -> semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::ColdDocumentPairFrontier {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdDocumentPairFrontier) -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::ColdDocumentPairFrontier {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     wit::ColdDocumentPairFrontier { document_id: frontier.document_id, head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id, last_commit_seq: frontier.last_commit_seq, chain_sha256: frontier.chain_sha256.to_vec() }
 }
 
-fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdDocumentPairCursor) -> semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::ColdDocumentPairCursor {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdDocumentPairCursor) -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::ColdDocumentPairCursor {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     wit::ColdDocumentPairCursor { lifetime: kernel_lifetime_to_wit(cursor.lifetime), transfer_generation: cursor.transfer_generation, page_index: cursor.page_index, page_count: cursor.page_count }
 }
 
-fn kernel_cold_pair_ingress_to_wit(status: semio_framework::kernel::ColdPairIngressStatus) -> semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::ColdPairIngressStatus {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn kernel_cold_pair_ingress_to_wit(status: semio_framework::kernel::ColdPairIngressStatus) -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::ColdPairIngressStatus {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     match status {
         semio_framework::kernel::ColdPairIngressStatus::Idle => wit::ColdPairIngressStatus::Idle,
         semio_framework::kernel::ColdPairIngressStatus::PageAccepted(cursor) => wit::ColdPairIngressStatus::PageAccepted(kernel_cold_cursor_to_wit(cursor)),
@@ -303,8 +303,8 @@ pub fn kernel_lifecycle_receipt_to_wit(value: ActorInstanceLifecycleReceipt) -> 
 ///
 /// 🎬️ `wit-flip` (26/08/20): UI intents no longer masquerade as `app-command` — see kernel
 /// `Event::UiIntent`'s own doc.
-fn wit_event_to_kernel(event: semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::Event) -> Event {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::Event as W;
+fn wit_event_to_kernel(event: semio_plugin_abi::wasip2::exports::semio::framework::reactor::Event) -> Event {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor::Event as W;
     match event {
         W::InstanceOpen(payload) => Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: payload.activation_generation, instance_id: payload.instance, request_sequence: payload.request_sequence },
@@ -403,16 +403,16 @@ fn wit_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoi
 /// no STRUCTURAL wit change is needed to repoint what it carries: `wit-flip`'s doc comment there
 /// still names the OLD replication `PresencePeer` payload; this packet's report carries the exact
 /// (doc-comment-only, plus a field rename for clarity) WIT diff as a registrar lease-request.
-fn wit_retained_grant_to_kernel(grant:semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::RetainedGrant)->Result<semio_framework_value::RetainedCloneGrant,semio_framework::Fault>{let extent=|value|usize::try_from(value).map_err(|_|staging_fault("original policy wire extent exceeds native address space"));Ok(semio_framework_value::RetainedCloneGrant{maximum_items:extent(grant.maximum_items)?,maximum_copy_bytes:extent(grant.maximum_copy_bytes)?,maximum_capacity_bytes:extent(grant.maximum_capacity_bytes)?,maximum_release_bytes:extent(grant.maximum_release_bytes)?,maximum_depth:extent(grant.maximum_depth)?})}
-fn wit_retained_input_to_kernel(input:semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::RetainedTurnInput)->Result<semio_framework::kernel::RetainedTurnInput,semio_framework::Fault>{let extent=|value:u64|usize::try_from(value).map_err(|_|staging_fault("original retained wire extent exceeds native address space"));let grant=input.grant;let input=semio_framework::kernel::RetainedTurnInput{operation:input.operation,generation:input.generation,epoch:input.epoch,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:input.work.clock_binding,absolute_deadline_us:input.work.absolute_deadline_us,fuel:input.work.fuel},grant:semio_framework_value::RetainedCloneGrant{maximum_items:extent(grant.maximum_items)?,maximum_copy_bytes:extent(grant.maximum_copy_bytes)?,maximum_capacity_bytes:extent(grant.maximum_capacity_bytes)?,maximum_release_bytes:extent(grant.maximum_release_bytes)?,maximum_depth:extent(grant.maximum_depth)?}};input.validate().map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;Ok(input)}
-fn kernel_retained_grant_to_wit(grant:semio_framework_value::RetainedCloneGrant)->semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::RetainedGrant{use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;wit::RetainedGrant{maximum_items:grant.maximum_items as u64,maximum_copy_bytes:grant.maximum_copy_bytes as u64,maximum_capacity_bytes:grant.maximum_capacity_bytes as u64,maximum_release_bytes:grant.maximum_release_bytes as u64,maximum_depth:grant.maximum_depth as u64}}
-fn kernel_retained_receipt_to_wit(receipt:semio_framework::kernel::RetainedTurnReceipt)->semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::RetainedTurnReceipt{use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;wit::RetainedTurnReceipt{input:wit::RetainedTurnInput{operation:receipt.input.operation,generation:receipt.input.generation,epoch:receipt.input.epoch,work:wit::OriginalActorTurnWork{clock_binding:receipt.input.work.clock_binding,absolute_deadline_us:receipt.input.work.absolute_deadline_us,fuel:receipt.input.work.fuel},grant:kernel_retained_grant_to_wit(receipt.input.grant)},spent:wit::RetainedProgress{copied_items:receipt.spent.copied_items as u64,copied_bytes:receipt.spent.copied_bytes as u64,retained_capacity_bytes:receipt.spent.retained_capacity_bytes as u64,released_bytes:receipt.spent.released_bytes as u64},work_units_spent:receipt.work_units_spent,remaining:kernel_retained_grant_to_wit(receipt.remaining),remaining_fuel:receipt.remaining_fuel}}
+fn wit_retained_grant_to_kernel(grant:semio_plugin_abi::wasip2::exports::semio::framework::reactor::RetainedGrant)->Result<semio_framework_value::RetainedCloneGrant,semio_framework::Fault>{let extent=|value|usize::try_from(value).map_err(|_|staging_fault("original policy wire extent exceeds native address space"));Ok(semio_framework_value::RetainedCloneGrant{maximum_items:extent(grant.maximum_items)?,maximum_copy_bytes:extent(grant.maximum_copy_bytes)?,maximum_capacity_bytes:extent(grant.maximum_capacity_bytes)?,maximum_release_bytes:extent(grant.maximum_release_bytes)?,maximum_depth:extent(grant.maximum_depth)?})}
+fn wit_retained_input_to_kernel(input:semio_plugin_abi::wasip2::exports::semio::framework::reactor::RetainedTurnInput)->Result<semio_framework::kernel::RetainedTurnInput,semio_framework::Fault>{let extent=|value:u64|usize::try_from(value).map_err(|_|staging_fault("original retained wire extent exceeds native address space"));let grant=input.grant;let input=semio_framework::kernel::RetainedTurnInput{operation:input.operation,generation:input.generation,epoch:input.epoch,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:input.work.clock_binding,absolute_deadline_us:input.work.absolute_deadline_us,fuel:input.work.fuel},grant:semio_framework_value::RetainedCloneGrant{maximum_items:extent(grant.maximum_items)?,maximum_copy_bytes:extent(grant.maximum_copy_bytes)?,maximum_capacity_bytes:extent(grant.maximum_capacity_bytes)?,maximum_release_bytes:extent(grant.maximum_release_bytes)?,maximum_depth:extent(grant.maximum_depth)?}};input.validate().map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;Ok(input)}
+fn kernel_retained_grant_to_wit(grant:semio_framework_value::RetainedCloneGrant)->semio_plugin_abi::wasip2::exports::semio::framework::reactor::RetainedGrant{use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;wit::RetainedGrant{maximum_items:grant.maximum_items as u64,maximum_copy_bytes:grant.maximum_copy_bytes as u64,maximum_capacity_bytes:grant.maximum_capacity_bytes as u64,maximum_release_bytes:grant.maximum_release_bytes as u64,maximum_depth:grant.maximum_depth as u64}}
+fn kernel_retained_receipt_to_wit(receipt:semio_framework::kernel::RetainedTurnReceipt)->semio_plugin_abi::wasip2::exports::semio::framework::reactor::RetainedTurnReceipt{use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;wit::RetainedTurnReceipt{input:wit::RetainedTurnInput{operation:receipt.input.operation,generation:receipt.input.generation,epoch:receipt.input.epoch,work:wit::OriginalActorTurnWork{clock_binding:receipt.input.work.clock_binding,absolute_deadline_us:receipt.input.work.absolute_deadline_us,fuel:receipt.input.work.fuel},grant:kernel_retained_grant_to_wit(receipt.input.grant)},spent:wit::RetainedProgress{copied_items:receipt.spent.copied_items as u64,copied_bytes:receipt.spent.copied_bytes as u64,retained_capacity_bytes:receipt.spent.retained_capacity_bytes as u64,released_bytes:receipt.spent.released_bytes as u64},work_units_spent:receipt.work_units_spent,remaining:kernel_retained_grant_to_wit(receipt.remaining),remaining_fuel:receipt.remaining_fuel}}
 
 fn kernel_turn_result_to_wit(
     result: &semio_framework::kernel::TurnResult,
-    _budget: semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::Budget,
-) -> Result<semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+    _budget: semio_plugin_abi::wasip2::exports::semio::framework::reactor::Budget,
+) -> Result<semio_plugin_abi::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     Ok(wit::TurnResult {
         retained_receipt:kernel_retained_receipt_to_wit(result.retained_receipt),
         ui_patches: result.ui_patches.iter().map(kernel_ui_patch_to_wit).collect(),
@@ -436,13 +436,13 @@ fn kernel_turn_result_to_wit(
 /// 👥️ M2: pack-encodes a whole `ui_contract::PresenceUpdate` into the WIT `presence-update.update`
 /// field — same `pack_patch_field` helper every `patch-op` variant already uses, since a
 /// render-plane presence update is exactly as opaque to the WIT boundary as a patch op's payload.
-fn kernel_presence_update_to_wit(update: &ui_contract::PresenceUpdate) -> semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::PresenceUpdate {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn kernel_presence_update_to_wit(update: &ui_contract::PresenceUpdate) -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::PresenceUpdate {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     wit::PresenceUpdate { update: pack_patch_field(&update) }
 }
 
-fn kernel_ui_patch_to_wit(patch: &UiPatch) -> semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::UiPatch {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn kernel_ui_patch_to_wit(patch: &UiPatch) -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::UiPatch {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     let (instance, surface) = patch.surface.0.split_once(':').unwrap_or(("0", patch.surface.0.as_str()));
     wit::UiPatch {
         surface: wit_ui::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() },
@@ -507,8 +507,8 @@ fn kernel_patch_op_to_wit(op: &UiPatchOp) -> wit_ui::PatchOp {
 /// itself sync (R9: `kernel_effect_to_wit`'s only consumer is the WIT-fixed sync `world actor`
 /// boundary, no suspension point of its own) — `resolve_ready` is safe here because `world
 /// actor` imports no `host-async`, so this store call never has anything real to suspend on.
-fn kernel_effect_to_wit(effect: Effect) -> Result<semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::Effect, semio_framework::Fault> {
-    use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+fn kernel_effect_to_wit(effect: Effect) -> Result<semio_plugin_abi::wasip2::exports::semio::framework::reactor::Effect, semio_framework::Fault> {
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
         let value = serde_json::to_value(value).map_or(semio_framework_value::DslValue::Null, |json| semio_framework_value::DslValue::from(&json));
         store::pack_rt::encode_wire_value(&value)

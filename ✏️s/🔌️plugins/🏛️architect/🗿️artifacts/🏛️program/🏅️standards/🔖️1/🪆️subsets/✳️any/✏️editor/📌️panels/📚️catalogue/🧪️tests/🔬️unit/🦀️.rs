@@ -1,31 +1,31 @@
 use crate::editor::architect::catalog::REGISTER_IDS;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::BuiltNode;
+use semio_plugin::PanelGroup;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
 use crate::editor::architect::editor_vocabulary::ui_label;
 #[allow(unused_imports)]
 use crate::{editor::architect::editor_vocabulary::architect_action, editor::architect::editor_vocabulary::ui_value_map, editor::architect::editor_vocabulary::ui_value_text};
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiValue;
+use semio_plugin::UiValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use crate::editor::architect::panels::catalogue::{SHORTCUTS};
 use crate::editor::architect::panels::catalogue::*;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn unhosted() -> String {
     project_render(render(&TreeWindows::unhosted()))
@@ -33,7 +33,7 @@ fn unhosted() -> String {
 
 /// 🪟️ The catalogue body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     project_render(render(&TreeWindows::for_body(&view, ARCHITECT_BODY_CATALOGUE)))
 }
 
@@ -108,6 +108,6 @@ fn the_catalogue_tree_binds_no_domain_and_every_row_keeps_its_own_action() {
 }
 //#endregion 🪟️WindowLaws
 
-fn project_render(node: semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
+fn project_render(node: semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>) -> String {
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
 }

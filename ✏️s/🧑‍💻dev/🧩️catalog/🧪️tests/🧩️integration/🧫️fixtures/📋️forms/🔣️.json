@@ -1,0 +1,10 @@
+{
+  "variant": "forms",
+  "provider": "playbook-module-procedural",
+  "topic": "forms.questionKind",
+  "questionKinds": [
+    "buildingComponent",
+    "flow",
+    "procedural3d"
+  ]
+}

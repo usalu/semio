@@ -4,14 +4,14 @@ use dashboard_terminal::testing::{Body, Dashboard, Kind, Place};
 use dashboard_source_view::{EntryAction, Request};
 use semio_framework_filesystem_workspace::commands::{self, DocumentBuffer, HistoryAction, Message, Response};
 use semio_framework_filesystem_workspace::{Entry, Error, ErrorKind, Progress, Stage, Workspace};
-use semio_framework_ui_tui_core::event::{Event, Key, KeyEvent};
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_widgets::widget::{EditorState, WidgetState};
+use semio_ui_tui_core::event::{Event, Key, KeyEvent};
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_widgets::widget::{EditorState, WidgetState};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc};
 
-use semio_framework_ui_tui_core::{event::mods, geometry::Size, theme::Theme};
-use semio_framework_ui_tui_frame::scene::NodeContent;
+use semio_ui_tui_core::{event::mods, geometry::Size, theme::Theme};
+use semio_ui_tui_frame::scene::NodeContent;
 use std::time::{Duration, Instant};
 use ui_styling::appearance::AppearanceName;
 
@@ -177,7 +177,7 @@ fn source_document_caption_keeps_state_and_position_when_the_path_is_long() {
     let width = usize::from(tui.scene.rect(caption).width);
     let text = match &tui.scene.node(caption).content { NodeContent::Widget(WidgetState::Label(label)) => label.text.clone(), _ => panic!("caption label expected") };
     assert!(width > 0 && path.chars().count() > width, "the path must not fit: {width}");
-    assert!(usize::from(semio_framework_ui_tui_core::text::display_width(&text)) <= width, "{width}: {text}");
+    assert!(usize::from(semio_ui_tui_core::text::display_width(&text)) <= width, "{width}: {text}");
     assert!(text.starts_with('a') && text.contains('…') && text.ends_with(" · line 1 · column 1"), "{text}");
     std::fs::remove_dir_all(root).unwrap();
 }

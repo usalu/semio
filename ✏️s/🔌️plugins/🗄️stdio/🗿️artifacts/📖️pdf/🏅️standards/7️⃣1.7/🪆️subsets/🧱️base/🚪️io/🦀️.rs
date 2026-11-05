@@ -53,7 +53,7 @@ pub mod derived_construction {
     use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
     use crate::standards::v1_7::subsets::base::schema::mutations::{InsertPage, PdfMutation, SetInfo};
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
     /// 🏗️ Builds a `stdio.pdf.1.7` snapshot.

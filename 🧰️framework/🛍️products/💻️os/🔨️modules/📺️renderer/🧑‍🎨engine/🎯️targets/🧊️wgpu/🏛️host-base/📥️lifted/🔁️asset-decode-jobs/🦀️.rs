@@ -25,7 +25,7 @@ pub struct RendererIoHandle {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoHandle {
-    pub fn try_take(&mut self) -> Option<Result<semio_framework_os_services_native_io::NativeIoValue, String>> {
+    pub fn try_take(&mut self) -> Option<Result<semio_os_services_native_io::NativeIoValue, String>> {
         let result = renderer_io_with_node(self.slot, self.generation, |node| {
             let result = node.result.take()?;
             node.result_taken = true;
@@ -40,7 +40,7 @@ impl RendererIoHandle {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Future for RendererIoHandle {
-    type Output = Result<semio_framework_os_services_native_io::NativeIoValue, String>;
+    type Output = Result<semio_os_services_native_io::NativeIoValue, String>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         if let Some(result) = self.try_take() {
@@ -191,7 +191,7 @@ impl RendererIoCaller {
 #[cfg(not(target_arch = "wasm32"))]
 enum RendererIoReceipt {
     Yield,
-    Terminal(Option<Result<semio_framework_os_services_native_io::NativeIoValue, String>>),
+    Terminal(Option<Result<semio_os_services_native_io::NativeIoValue, String>>),
     Fault(&'static str),
 }
 
@@ -199,15 +199,15 @@ enum RendererIoReceipt {
 pub struct RendererIoNode {
     #[cfg(any(test, feature = "testkit"))]
     #[doc(hidden)]
-    pub job: Option<semio_framework_os_services_native_io::NativeIoJob>,
+    pub job: Option<semio_os_services_native_io::NativeIoJob>,
     #[cfg(not(any(test, feature = "testkit")))]
-    job: Option<semio_framework_os_services_native_io::NativeIoJob>,
+    job: Option<semio_os_services_native_io::NativeIoJob>,
     params: Option<semio_framework_job_worker_authority::BatchJobParams>,
     params_retirement: Option<semio_framework_async::CancelTokenRetirement>,
-    admission: semio_framework_job_worker::WorkerJobSessionAdmission<semio_framework_os_services_native_io::NativeIoJob, semio_framework_job_worker::WorkerJobSession<semio_framework_os_services_native_io::NativeIoJob>>,
-    session: Option<semio_framework_job_worker::WorkerJobSession<semio_framework_os_services_native_io::NativeIoJob>>,
+    admission: semio_framework_job_worker::WorkerJobSessionAdmission<semio_os_services_native_io::NativeIoJob, semio_framework_job_worker::WorkerJobSession<semio_os_services_native_io::NativeIoJob>>,
+    session: Option<semio_framework_job_worker::WorkerJobSession<semio_os_services_native_io::NativeIoJob>>,
     ticket: Option<semio_framework_job_worker::WorkerJobTicket>,
-    result: Option<Result<semio_framework_os_services_native_io::NativeIoValue, String>>,
+    result: Option<Result<semio_os_services_native_io::NativeIoValue, String>>,
     result_taken: bool,
     detached: bool,
     caller: RendererIoCaller,
@@ -216,8 +216,8 @@ pub struct RendererIoNode {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoNode {
-    fn new(generation: u64, request: semio_framework_os_services_native_io::NativeIoRequest) -> Self {
-        Self { job: Some(semio_framework_os_services_native_io::NativeIoJob::new(request)), params: None, params_retirement: None, admission: Default::default(), session: None, ticket: None, result: None, result_taken: false, detached: false, caller: RendererIoCaller::new(generation), waker: None }
+    fn new(generation: u64, request: semio_os_services_native_io::NativeIoRequest) -> Self {
+        Self { job: Some(semio_os_services_native_io::NativeIoJob::new(request)), params: None, params_retirement: None, admission: Default::default(), session: None, ticket: None, result: None, result_taken: false, detached: false, caller: RendererIoCaller::new(generation), waker: None }
     }
 
     fn wake(&mut self) {
@@ -379,7 +379,7 @@ impl RendererIoNode {
         }
     }
 
-    fn receive_outcome(&mut self, mut owner: semio_framework_job_worker::WorkerJobOutcome<semio_framework_os_services_native_io::NativeIoJob>) {
+    fn receive_outcome(&mut self, mut owner: semio_framework_job_worker::WorkerJobOutcome<semio_os_services_native_io::NativeIoJob>) {
         use semio_framework_job::{JobOutcomeDescriptor, JobOutcomeKind};
         let received = self.caller.turn(|cx| -> Result<RendererIoReceipt, semio_framework_job::OriginalTurnFailure> {
             let Some((issued, progress)) = owner.take_retained_step_receipt() else { return Ok(RendererIoReceipt::Fault("native I/O step returned no original receipt")) };
@@ -399,7 +399,7 @@ impl RendererIoNode {
             }
             Ok(match kind {
                 None | Some(JobOutcomeKind::Yield) => RendererIoReceipt::Yield,
-                Some(_) => RendererIoReceipt::Terminal(owner.job_mut().ok().and_then(semio_framework_os_services_native_io::NativeIoJob::take_result)),
+                Some(_) => RendererIoReceipt::Terminal(owner.job_mut().ok().and_then(semio_os_services_native_io::NativeIoJob::take_result)),
             })
         });
         match received {
@@ -589,7 +589,7 @@ pub fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn submit_renderer_io(request: semio_framework_os_services_native_io::NativeIoRequest) -> Result<RendererIoHandle, String> {
+pub fn submit_renderer_io(request: semio_os_services_native_io::NativeIoRequest) -> Result<RendererIoHandle, String> {
     let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
         if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return None;
@@ -631,7 +631,7 @@ pub fn close_renderer_io_payload(payload: &mut semio_framework_job_payload::Reta
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn run_renderer_io(request: semio_framework_os_services_native_io::NativeIoRequest) -> Result<semio_framework_os_services_native_io::NativeIoValue, String> {
+pub async fn run_renderer_io(request: semio_os_services_native_io::NativeIoRequest) -> Result<semio_os_services_native_io::NativeIoValue, String> {
     submit_renderer_io(request)?.await
 }
 

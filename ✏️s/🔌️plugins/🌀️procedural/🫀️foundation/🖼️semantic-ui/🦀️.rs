@@ -1,8 +1,8 @@
 //! 🖼️ Shared semantic UI builders for procedural generation surfaces.
 #![allow(clippy::result_large_err)]
 
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_ui_locale::{Locale, Terminology};
 
 fn ui_assembly_error(code: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new(code, "fixed UI admission failed")
@@ -41,9 +41,9 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -
 }
 
 /// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
-pub fn scene_surface<T: semio_framework_ui_declaration::ui::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+pub fn scene_surface<T: semio_ui_declaration::ui::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
     let id = id.into();
-    semio_framework_plugin::scene_surface(&id, kind, scene)
+    semio_plugin::scene_surface(&id, kind, scene)
 }
 
 /// ♿️ [`scene_surface`] plus the accessible name, description and liveness a canvas owes a reader.
@@ -58,7 +58,7 @@ pub fn scene_surface<T: semio_framework_ui_declaration::ui::SceneDoc>(id: impl I
 /// fail the whole refresh, and its full text is always reachable in the window's own outline.
 ///
 /// @see ../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs
-pub fn accessible_scene_surface<T: semio_framework_ui_declaration::ui::SceneDoc>(
+pub fn accessible_scene_surface<T: semio_ui_declaration::ui::SceneDoc>(
     id: impl Into<String>,
     kind: SurfaceKind,
     scene: &T,
@@ -128,7 +128,7 @@ fn generation_rename_field(factory: &ActionFactory, surface_prefix: &str, id: &s
 pub fn generation_tree(
     controller_id: &'static str,
     surface_prefix: &str,
-    generation: &semio_framework_os_playbook_contract::GenerationPlayState,
+    generation: &semio_os_playbook_contract::GenerationPlayState,
     selected_id: Option<&str>,
     locale: Locale,
     terminology: Terminology,
@@ -156,7 +156,7 @@ pub fn generation_tree(
         .to_string()
     };
     let factory = ActionFactory::new(controller_id);
-    let generation_row = |entry: &semio_framework_os_playbook_contract::FormGeneration| -> UiAssemblyResult<BuiltNode> {
+    let generation_row = |entry: &semio_os_playbook_contract::FormGeneration| -> UiAssemblyResult<BuiltNode> {
         let args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
         let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} {}", entry.values.len(), label("values"))), factory.action("selectGeneration", Some(args))?)?;
         if let Component::TreeItem(props) = &mut item.component {
@@ -212,8 +212,8 @@ pub struct GenerationFormLabels<'a> {
 
 /// 📝 Renders generation questions as semantic controls with typed change bindings.
 pub fn generation_form(
-    spec: &semio_framework_os_playbook_contract::PlaybookSpec,
-    values: &semio_framework_os_playbook_contract::PlaybookValues,
+    spec: &semio_os_playbook_contract::PlaybookSpec,
+    values: &semio_os_playbook_contract::PlaybookValues,
     controller_id: &'static str,
     action: &str,
     generation_id: &str,
@@ -228,10 +228,10 @@ pub fn generation_form(
             has_children = true;
         }
         for question in &step.blocks {
-            if !semio_framework_os_playbook_contract::is_block_visible(question, values) {
+            if !semio_os_playbook_contract::is_block_visible(question, values) {
                 continue;
             }
-            let value = values.get(&question.id).cloned().unwrap_or_else(|| semio_framework_os_playbook_contract::default_value_for_block(question));
+            let value = values.get(&question.id).cloned().unwrap_or_else(|| semio_os_playbook_contract::default_value_for_block(question));
             let field_id = format!("generate.form.{}", question.id);
             let args = || generation_control_args(generation_id, &question.id, None);
             let control = match question.kind.as_str() {

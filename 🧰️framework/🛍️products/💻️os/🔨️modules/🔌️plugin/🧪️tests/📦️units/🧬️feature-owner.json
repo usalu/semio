@@ -16,7 +16,7 @@
       "const": 1
     },
     "owner": {
-      "const": "semio-framework-plugin-declared-verdict"
+      "const": "semio-plugin-declared-verdict"
     },
     "original": {
       "type": "string"

@@ -64,8 +64,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "asset-extra-data", kind: "change-asset-extra-data", record: "ChangedAssetExtraData" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Asset Extra Data", "Zusatzdaten des Assets ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Asset Extra Data", "Zusatzdaten des Assets ändern")
     }
 
     fn target(&self) -> Vec<String> {

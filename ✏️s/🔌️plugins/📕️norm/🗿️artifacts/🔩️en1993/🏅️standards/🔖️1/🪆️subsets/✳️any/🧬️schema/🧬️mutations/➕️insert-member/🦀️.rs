@@ -10,7 +10,7 @@ pub struct InsertMember { pub index: Option<usize>, pub member: SteelMember }
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertMember where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_member::RemoveMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "member", kind: "insert-member", record: "InsertedMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert member at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Bauteil an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert member at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Bauteil an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

@@ -3,7 +3,7 @@
 //! the gesture composes into; the release commits it with the absolute splice rows that insert a missing operator as ONE
 //! `ToolTransaction`. Tools are never history; the yielded leaf is, so editing it re-derives the operator on any base.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_editor_selection::component_group;
@@ -24,8 +24,8 @@ use semio_s_artifact_procedural_3d_model::widget_id;
 use semio_framework_value::DslValue;
 use machine::Command;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, InteractionWrite};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, InteractionWrite};
+use semio_ui_locale::LocalizedLabel;
 pub use semio_framework_tool_machine::GesturePhase;
 use semio_framework_tool_machine::{drive_gesture, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 
@@ -270,7 +270,7 @@ impl machine::Host<gumball_tool::GumballTool> for GumballToolHost {
 /// (ONE net relative leaf) and the selection it transforms. The splice that inserts a missing operator is re-derived from
 /// the selection on the committed base at the release and for every preview, so the open transaction never holds a
 /// structural row.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
 pub struct GumballGesture {
     states: Vec<String>,
     verb: String,
@@ -388,11 +388,13 @@ pub struct GumballDispatch<'a> {
 
 /// 🗂️ Every window's open gumball gesture of one app instance, and a revision that moves whenever what the previews fold
 /// in changes (a gesture opens, ticks, commits or aborts).
-#[derive(Default)]
 pub struct GumballGestures {
-    open: std::collections::BTreeMap<String, GumballGesture>,
-    revision: u64,
+    open:std::mem::ManuallyDrop<Option<semio_framework_artifact_flow_flow::OrderedMap<GumballGesture>>>,
+    revision:u64,
+    retirement:semio_framework_value::retained_clone::RetainedCloneClose,
+    closing:bool,
 }
+impl Default for GumballGestures{fn default()->Self{Self{open:std::mem::ManuallyDrop::new(Some(Default::default())),revision:0,retirement:Default::default(),closing:false}}}
 
 /// 🧲️ The selection a gumball gesture carries onto the operators it transforms: the `graph` nodes and, for a
 /// mesh-component selection, the components re-addressed onto the component operator (`granularity`, ids). The commit
@@ -480,7 +482,7 @@ fn retire_rows(rows: Vec<Generation3dMutation>) {
 impl GumballGestures {
     /// 🔎️ Whether no window holds an open gesture.
     pub fn is_empty(&self) -> bool {
-        self.open.is_empty()
+        self.open.as_ref().is_none_or(|map|map.is_empty())
     }
 
     /// 🔢️ Moves whenever what the previews fold in changes.
@@ -490,7 +492,8 @@ impl GumballGestures {
 
     /// 🧯️ Host abort of `window`'s open gesture: its transaction vanishes with zero trace. Answers whether one was open.
     pub fn abort(&mut self, window: &str, _reason: ToolAbortReason) -> bool {
-        let dropped = self.open.remove(window).is_some();
+        if self.closing{return false}
+        let dropped=self.remove_gesture(window);
         if dropped {
             self.revision = self.revision.wrapping_add(1);
         }
@@ -502,7 +505,8 @@ impl GumballGestures {
     /// never history and never the interaction store.
     pub fn provisional(&self, host_snapshot: &FlowHostSnapshot) -> GumballPreview {
         let mut preview = GumballPreview::default();
-        for gesture in self.open.values() {
+        let Some(open)=self.open.as_ref()else{return preview};
+        for gesture in open.values() {
             let Some(motion) = gesture.leaf().and_then(GumballMotion::of_leaf) else { continue };
             let Ok((splice, targets, selection)) = gumball_splice(host_snapshot, &gesture.ids, motion.operation()) else { continue };
             preview.rows.extend(splice);
@@ -526,7 +530,7 @@ impl GumballGestures {
             return Ok(Emit::default());
         }
         let base_revision: String = request.base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
-        let ids = match self.open.get(request.window).filter(|gesture| gesture.continues(request.verb, request.phase, &base_revision)) {
+        let ids = match self.live().get(request.window).filter(|gesture| gesture.continues(request.verb, request.phase, &base_revision)) {
             Some(gesture) => gesture.ids.clone(),
             None => request.ids,
         };
@@ -538,7 +542,7 @@ impl GumballGestures {
             }
         };
         let tick = GumballTick { ids, record: GumballRecord { targets, motion: request.motion } };
-        let drive = match drive_gesture::<Generation3dGumballTool>(self.open.get(request.window), request.verb, request.phase, Some(tick), request.authoring_seed, &base_revision) {
+        let drive = match drive_gesture::<Generation3dGumballTool>(self.live().get(request.window), request.verb, request.phase, Some(tick), request.authoring_seed, &base_revision) {
             Ok(drive) => drive,
             Err(refusal) => {
                 retire_rows(splice);
@@ -547,9 +551,9 @@ impl GumballGestures {
         };
         if let Some(next) = drive.next {
             match next {
-                Some(gesture) => self.open.insert(request.window.to_string(), gesture),
-                None => self.open.remove(request.window),
-            };
+                Some(gesture)=>self.replace_gesture(request.window.to_string(),gesture),
+                None=>{self.remove_gesture(request.window);},
+            }
             self.revision = self.revision.wrapping_add(1);
         }
         Ok(match drive.committed {
@@ -580,7 +584,7 @@ pub fn gumball_ids(snapshot: &FlowHostSnapshot, explicit: &[String], components:
 
 /// 🕹️ ONE one-shot gumball transaction of `ids` — the entry a view without a retained instance (the marks-free handler)
 /// takes; a view without command authority publishes the rows plainly.
-pub fn gumball_once(verb: &'static str, ids: Vec<String>, motion: GumballMotion, doc: &semio_framework_plugin::ArtifactView<'_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+pub fn gumball_once(verb: &'static str, ids: Vec<String>, motion: GumballMotion, doc: &semio_plugin::ArtifactView<'_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     if ids.is_empty() {
         return Ok(Emit::default());
     }
@@ -599,7 +603,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
         Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()),
         _ => None,
     }).ok_or(GumballRefusal::MeshMissing)?;
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let infos = semio_os_flow::flow_neuron_kind_info_map();
     let source = infos.get(&kind).ok_or_else(|| GumballRefusal::KindUnavailable(kind.clone()))?;
     if !source.outputs.iter().any(|port| port.name == target.channel && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) {
         return Err(GumballRefusal::NotIndexedMesh);
@@ -751,7 +755,7 @@ pub fn ensure_gumball_node(editor: &mut GraphEditor<'_>, selected_id: &str, oper
     if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
     let selected_port = selected_id.split_once('@').map(|(_, channel)| channel.split('#').next().unwrap_or(channel));
     let selected_id = widget_id_from_instance_id(selected_id);
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let infos = semio_os_flow::flow_neuron_kind_info_map();
     let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, neuron_kind, .. } if id == selected_id => Some(neuron_kind.clone()), _ => None }).ok_or(GumballRefusal::NoShapeSource)?;
     let source_info = infos.get(&source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.clone()))?;
     let source_port = source_info.outputs.iter().find(|port| selected_port.is_none_or(|selected| port.name == selected) && port.value_types.iter().any(|kind| kind == "mesh" || kind == "geometry")).ok_or(GumballRefusal::NoShapeOutput)?;
@@ -780,6 +784,52 @@ pub fn ensure_gumball_node(editor: &mut GraphEditor<'_>, selected_id: &str, oper
 }
 
 /// 🔎️ Projects the live widget at the gumball IO boundary.
-pub fn gumball_widget_json(host: &semio_framework_os_flow::FlowHost, widget_id_str: &str) -> Option<DslValue> {
+pub fn gumball_widget_json(host: &semio_os_flow::FlowHost, widget_id_str: &str) -> Option<DslValue> {
     host.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == widget_id_str).map(semio_framework_value::ToValue::to_value)
 }
+impl GumballGestures{
+ fn live(&self)->&semio_framework_artifact_flow_flow::OrderedMap<GumballGesture>{self.open.as_ref().expect("live gesture map remains owned until explicit closure")}
+ fn live_mut(&mut self)->&mut semio_framework_artifact_flow_flow::OrderedMap<GumballGesture>{assert!(!self.closing,"closed gumball authority cannot mutate");self.open.as_mut().expect("live gesture map remains owned until explicit closure")}
+ fn replace_gesture(&mut self,window:String,gesture:GumballGesture){if let Some(old)=self.live_mut().insert(window,gesture){old.retire_cold()}}
+ fn remove_gesture(&mut self,window:&str)->bool{match self.live_mut().remove(window){None=>false,Some(removed)=>{if let Some(old)=removed.into_owned(){old.retire_cold()}true}}}
+ pub fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+  if !self.closing{return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+  if !self.retirement.is_empty(){return self.retirement.demands(copy)}
+  self.retirement.next_owner_demands::<semio_framework_artifact_flow_flow::OrderedMap<GumballGesture>>(self.open.is_some(),&None,copy)
+ }
+ pub fn close_original(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+  use semio_framework_value::{RetainedWorkOutcome,RetainedCloneStep,RetainedCloneProgress};
+  if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  let d=match self.retirement_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  if !self.closing{self.closing=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(grant)}
+  let turn=self.retirement.begin_granted(&mut self.open,grant);RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}
+ }
+ pub fn terminal_is_empty(&self)->bool{self.retirement.is_empty()&&self.open.as_ref().is_none_or(|map|map.is_empty())}
+ /// 🧊️ Standalone cold callers explicitly dispose their actual live gesture roots.
+ pub fn retire_cold(mut self){while !self.terminal_is_empty(){let d=self.retirement_demands(usize::MAX).expect("cold gesture retirement quote");let g=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};self.close_original(g).result.expect("cold gesture retirement") ;}}
+}
+impl GumballGesture{
+ fn retire_cold(self){for(_,leaf)in self.entries{leaf.retire_cold()}}
+}
+impl Drop for GumballGestures{fn drop(&mut self){assert!(self.terminal_is_empty(),"live gumball authority requires original map retirement");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.open)}}}}
+#[path="📥️source/🦀️.rs"]
+mod original_gesture_source;
+pub use original_gesture_source::{OriginalGumballRead,GumballPreviewRecord};
+
+#[path="📥️source/🎯️selection/🦀️.rs"]
+mod original_selection;
+pub use original_selection::{GumballSelectionWork,GumballSelectionTextWork,SelectionKind,SelectionRefusal};
+
+#[cfg(test)]
+#[path="../../../../../../../../../🫀️foundation/🌊️flow-source/🧪️caller/🦀️.rs"]
+mod retained_scratch_testing;
+
+#[path="📥️source/🪪️identity/🦀️.rs"]
+mod original_node_identity;
+pub use original_node_identity::{GumballOperation,GumballNodeIdentity,GumballNodeIdentityWork};
+
+#[path="📥️source/🌐️graph/🦀️.rs"]
+mod original_graph;
+pub use original_graph::{GumballGraphRead,GumballGraphIdentity};

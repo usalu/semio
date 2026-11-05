@@ -1,4 +1,4 @@
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use crate::schema::terrain_descriptor::TerrainDescriptorJson;
 #[allow(unused_imports)]
@@ -8,23 +8,23 @@ use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
 #[allow(unused_imports)]
 use crate::GisTerrainSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::scene_surface;
+use semio_plugin::scene_surface;
 #[allow(unused_imports)]
-use semio_framework_plugin::world3d_selection_json;
+use semio_plugin::world3d_selection_json;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_plugin::World3dScene;
+use semio_plugin::World3dScene;
 #[allow(unused_imports)]
 use semio_framework_surface::terrain::projection;
 #[allow(unused_imports)]

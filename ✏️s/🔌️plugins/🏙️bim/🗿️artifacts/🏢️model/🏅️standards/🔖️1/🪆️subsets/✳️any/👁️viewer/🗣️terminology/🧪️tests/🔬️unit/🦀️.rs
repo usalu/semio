@@ -1,6 +1,6 @@
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology::{BimViewerLabels, bim_viewer_labels};
-use semio_framework_plugin::ViewModel;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_plugin::ViewModel;
+use semio_ui_locale::{Locale, Terminology};
 
 fn labels(locale: Locale, terminology: Terminology) -> &'static BimViewerLabels {
     bim_viewer_labels(&ViewModel::new(locale, terminology))

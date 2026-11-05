@@ -1,5 +1,5 @@
 //! 🧵️ Thin runtime bridge to `pack::record::{encode_document, decode_document}`, resolved as
-//! `::semio_framework_os_kernel::os_pack::pack_rt::...` by `dsl_derive`'s generated `ArtifactPack` impl (app crates depend on
+//! `::semio_os_kernel::os_pack::pack_rt::...` by `dsl_derive`'s generated `ArtifactPack` impl (app crates depend on
 //! `vcs`, never on `pack` directly — same seam `::crate::os_dsl::RecordSpec`/`RecordValue` already use). Also
 //! hosts the schema-less `DslValue` bridge behind `impl ArtifactPack for DslValue` below.
 

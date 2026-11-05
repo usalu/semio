@@ -1,22 +1,22 @@
 //! ⛓️ Staged slice of the `dispatch` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 📨️ Borrowed snapshot and history reads of the mounted artifact instance.
-use semio_framework_plugin_command::{AlternativeFact,HistoryRowReads,history_alternative_views};
-use semio_framework_plugin_decl_views::history_view::{AlternativeView,CommandLogEntry,CommandView};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_command::{AlternativeFact,HistoryRowReads,history_alternative_views};
+use semio_plugin_decl_views::history_view::{AlternativeView,CommandLogEntry,CommandView};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
 use store::ReferenceSpaceMember as _;
 use semio_framework_value::DslValue;
 use semio_framework::{ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactVersion, Effect, Fault, FaultFrom, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult, KernelMutation, MutationId, SchemaId, UndoGroup, UndoPolicy};
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_emission::ActionMeta;
 use std::future::Future;
 use crate::stores_components::{InstanceStores, LocalInteraction};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
 impl<A: ArtifactApp> InstanceStores<A> {
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub async fn test_snapshot(&self) -> A::Snapshot {

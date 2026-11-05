@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAccelerogramDtS wh
         record: "ChangeAccelerogramDtS",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Sampling step", "Abtastschritt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Sampling step", "Abtastschritt ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-accelerogram-dt-s".into()]

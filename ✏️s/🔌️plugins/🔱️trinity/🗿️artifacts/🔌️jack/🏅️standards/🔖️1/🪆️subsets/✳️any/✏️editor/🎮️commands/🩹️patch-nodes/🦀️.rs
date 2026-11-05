@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use semio_s_artifact_trinity_jack_graph_query::JackGraphQuery;
 use crate::standards::v1::subsets::any::schema::content_read::JackContentRead;
 
@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::any::schema::content_read::JackContentRead;
 /// §20.15). Every request that cannot move the document is refused by name instead of answering an empty emit:
 /// `app.command.targets-required` when neither `nodeIds` nor a selection names a node, `mutation.target-missing`,
 /// `app.command.invalid-args`.
-pub fn patch_nodes<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(snapshot: &JackSnapshot, children: &semio_framework_plugin::app::ChildContentView, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
+pub fn patch_nodes<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(snapshot: &JackSnapshot, children: &semio_plugin::app::ChildContentView, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if field != "name" {
         return Err(invalid(format!("jack nodes have no patchable field '{field}' (only 'name')")));

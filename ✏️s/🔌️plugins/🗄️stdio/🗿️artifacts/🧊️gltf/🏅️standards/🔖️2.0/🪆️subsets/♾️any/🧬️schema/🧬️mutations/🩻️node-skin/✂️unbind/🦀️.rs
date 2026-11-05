@@ -62,8 +62,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "node-skin", kind: "unbind-node-skin", record: "UnboundNodeSkin" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Unbind Node Skin", "Bindung des Knoten-Skins aufheben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Unbind Node Skin", "Bindung des Knoten-Skins aufheben")
     }
 
     fn target(&self) -> Vec<String> {

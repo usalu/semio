@@ -9,7 +9,7 @@
 pub mod derived_composition {
     use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
     use crate::standards::energyplus::subsets::any::io::EpwAnalyzer;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") };
 
@@ -50,7 +50,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") }, store::bare_artifact_codec::<EpwSnapshot, crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(crate::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA))
+        semio_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") }, store::bare_artifact_codec::<EpwSnapshot, crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(crate::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -75,7 +75,7 @@ pub use semio_s_artifact_stdio_epw_snapshot::standards::energyplus::subsets::any
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::energyplus::subsets::any::io::EpwComposer as EpwRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use semio_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -98,7 +98,7 @@ pub mod derived_construction {
     use crate::standards::energyplus::subsets::any::schema::mutations::{EpwMutation};
 
     use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct EpwBuilderConstruction {
@@ -139,7 +139,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::energyplus::subsets::any::io;
     use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct EpwParts {
@@ -152,24 +152,24 @@ pub mod derived_analysis {
         type Parts = EpwParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if io::sniff_real_bytes(bytes) {
-                        return semio_framework_plugin::io::Confidence::High;
+                        return semio_plugin::io::Confidence::High;
                     }
                     let marker = STDIO_EPW_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
                     if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_EPW_DOCUMENT_SCHEMA) {
-                        semio_framework_plugin::io::Confidence::High
+                        semio_plugin::io::Confidence::High
                     } else {
-                        semio_framework_plugin::io::Confidence::Low
+                        semio_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -178,20 +178,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = EpwParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <EpwSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <EpwSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -203,7 +203,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec EpwBuilderFacets {
         construction: EpwBuilderConstruction,
         analysis: EpwAnalyzerAnalysis,
@@ -233,7 +233,7 @@ pub mod artifact_items_5 {
 use crate::{ARTIFACT_DEFINITION_CONSTRAINT};
 
 /// 🌦️ Validates EPW ownership and its unregistered MIME policy.
-pub fn validate_definition_schema(schema: &str) -> Result<(), semio_framework_plugin::PluginAssemblyError> {
+pub fn validate_definition_schema(schema: &str) -> Result<(), semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::validate_definition_constraint(schema, ARTIFACT_DEFINITION_CONSTRAINT)
 }
 }
@@ -244,7 +244,7 @@ pub mod artifact_items_6 {
 use crate::{validate_definition_schema};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA)?;
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
@@ -256,8 +256,8 @@ pub mod artifact_items_7 {
 use crate::{validate_definition_schema};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA).map_err(|error| semio_framework_plugin::ArtifactDefinitionError::new("epw.definition", error.to_string()))?;
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
+    validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA).map_err(|error| semio_plugin::ArtifactDefinitionError::new("epw.definition", error.to_string()))?;
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 }
@@ -268,22 +268,22 @@ pub mod artifact_items_9 {
 use crate::{definition};
 use crate::{formats};
 use crate::{STDIO_EPW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 pub use crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation;
 pub use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("epw", definition()?, declaration)
 }
 
 /// 🧾️ The runtime `epw` declares: its schema, format, inference descriptor, composers and document codec.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor()])
@@ -299,7 +299,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.epw".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Epw", "Epw"),
+        label: semio_ui_locale::LocalizedLabel::native("Epw", "Epw"),
         source_format: STDIO_EPW_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

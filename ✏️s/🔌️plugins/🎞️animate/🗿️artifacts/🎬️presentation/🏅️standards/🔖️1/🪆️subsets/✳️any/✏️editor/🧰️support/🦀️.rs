@@ -4,53 +4,53 @@ use crate::mutations::create_tile::CreateTile;
 use crate::standards::v1::subsets::any::io::text::snapshot::build_tile_morph_prompt;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 use std::collections::HashSet;
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_APP_ID: &str = "s.animate.presentation@1/*#editor";
 
 /// 🎯️ Binds catalogue actions to the canonical presentation editor.
-pub fn animate_presentation_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(PRESENTATION_PLAY_APP_ID).action(action, args)
+pub fn animate_presentation_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(PRESENTATION_PLAY_APP_ID).action(action, args)
 }
 
 /// 🌳️ The framework's one node-list admission — the panel-local copy is gone (ticket
 /// 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §8.3).
-pub use semio_framework_plugin::ui_node_list;
+pub use semio_plugin::ui_node_list;
 
 /// 🏷️ Admits a semantic presentation label.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| ui_capacity_error())
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| ui_capacity_error())
 }
 
 /// 📝️ Admits a fixed presentation UI string.
-pub fn ui_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::UiText> {
-    semio_framework_ui_contract::UiText::try_from_str(value.as_ref()).ok_or_else(ui_capacity_error)
+pub fn ui_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::UiText> {
+    semio_ui_contract::UiText::try_from_str(value.as_ref()).ok_or_else(ui_capacity_error)
 }
 
 /// 🧱️ Finalizes a presentation UI node with explicit identity.
-pub fn ui_node<B: semio_framework_ui_contract::HasBase + semio_framework_ui_contract::Buildable>(builder: B, id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn ui_node<B: semio_ui_contract::HasBase + semio_ui_contract::Buildable>(builder: B, id: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     builder.try_id(id).map_err(|_| ui_capacity_error())?.try_build().map_err(|_| ui_capacity_error())
 }
 
 /// 👶️ Admits a complete collection of presentation UI children.
-pub fn ui_children<B: semio_framework_ui_contract::HasChildren>(builder: B, children: impl IntoIterator<Item = semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<B> {
+pub fn ui_children<B: semio_ui_contract::HasChildren>(builder: B, children: impl IntoIterator<Item = semio_plugin::BuiltNode>) -> semio_plugin::UiAssemblyResult<B> {
     builder.try_children(children).map_err(|_| ui_capacity_error())
 }
 
 /// 🗺️ Admits structured presentation action arguments.
-pub fn ui_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(ui_capacity_error)?;
+pub fn ui_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(ui_capacity_error)?;
     for (key, value) in values {
         builder.push(key.to_string(), value).map_err(|_| ui_capacity_error())?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🚧️ Reports fixed-capacity UI admission failure.
-pub fn ui_capacity_error() -> semio_framework_plugin::PluginAssemblyError {
-    semio_framework_plugin::PluginAssemblyError::new("animate.ui.capacity", "presentation UI admission failed")
+pub fn ui_capacity_error() -> semio_plugin::PluginAssemblyError {
+    semio_plugin::PluginAssemblyError::new("animate.ui.capacity", "presentation UI admission failed")
 }
 //#endregion 🔖️Constants
 

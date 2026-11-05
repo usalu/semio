@@ -3,17 +3,17 @@
 use semio_framework_async::CancelToken;
 use semio_framework_async::OperationContext;
 use semio_framework_async::TraceId;
-use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::DocumentScope;
 use std::sync::Arc;
 use crate::root::GATEWAY_TOOL_NAMES;
-use semio_framework_os_mcp_capabilities::capability_declarations::{inference_approve_capability, inference_cancel_capability, inference_events_capability, inference_job_capabilities, inference_submit_capability};
-use semio_framework_os_mcp_catalog::catalog::ToolExposure;
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
-use semio_framework_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, SessionHandle};
-use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceJobBindingV1, HubInferenceSubjectV1, InferenceExecutionSiteV1, InferenceHubRequestV1, InferenceHubResponseV1, InferenceHubTransport, InferenceHubTransportErrorV1, InferenceJobHandlePayloadV1, InferenceRouteErrorV1, inference_operation_label, read_hub_inference_services, release_inference_operation, retain_inference_operation};
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy, PolicyEngine};
-use semio_framework_os_mcp_tools_inference::inference::{check_hub_job_subject, interrupt_inference_operation, resolve_inference_job_handle};
-use semio_framework_os_mcp_wire::protocol::is_valid_tool_name;
+use semio_os_mcp_capabilities::capability_declarations::{inference_approve_capability, inference_cancel_capability, inference_events_capability, inference_job_capabilities, inference_submit_capability};
+use semio_os_mcp_catalog::catalog::ToolExposure;
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, SessionHandle};
+use semio_os_mcp_inference_hub::hub_wire::{HubInferenceJobBindingV1, HubInferenceSubjectV1, InferenceExecutionSiteV1, InferenceHubRequestV1, InferenceHubResponseV1, InferenceHubTransport, InferenceHubTransportErrorV1, InferenceJobHandlePayloadV1, InferenceRouteErrorV1, inference_operation_label, read_hub_inference_services, release_inference_operation, retain_inference_operation};
+use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy, PolicyEngine};
+use semio_os_mcp_tools_inference::inference::{check_hub_job_subject, interrupt_inference_operation, resolve_inference_job_handle};
+use semio_os_mcp_wire::protocol::is_valid_tool_name;
 
 fn sample_job_id() -> String {
     "ab".repeat(16)

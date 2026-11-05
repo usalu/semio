@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberPrecamber wh
         record: "ChangedMemberPrecamber",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change pre-camber w_c of the member", "Bauteil: Überhöhung w_c ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change pre-camber w_c of the member", "Bauteil: Überhöhung w_c ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

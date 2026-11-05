@@ -1,8 +1,8 @@
 //! 🧪️ cursors tests (🔬️unit): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::{WORLD_INTERACTION_MARQUEE_POINT_CAPACITY, WorldInteractionObjectToken};
-use semio_framework_os_infinite_world_components::WORLD_COMPONENT_TARGET_BYTE_CAPACITY;
-use semio_framework_os_infinite_world_cursors::{WORLD_COMPONENT_MARQUEE_CAPACITY, WORLD_MARQUEE_RESULT_PAGE_CAPACITY, WORLD_MARQUEE_RESULT_PAGE_COUNT, WorldComponentTarget, WorldMarqueeGesture, WorldMarqueeResult, WorldMarqueeResultPages};
+use semio_os_infinite_world_model::{WORLD_INTERACTION_MARQUEE_POINT_CAPACITY, WorldInteractionObjectToken};
+use semio_os_infinite_world_components::WORLD_COMPONENT_TARGET_BYTE_CAPACITY;
+use semio_os_infinite_world_cursors::{WORLD_COMPONENT_MARQUEE_CAPACITY, WORLD_MARQUEE_RESULT_PAGE_CAPACITY, WORLD_MARQUEE_RESULT_PAGE_COUNT, WorldComponentTarget, WorldMarqueeGesture, WorldMarqueeResult, WorldMarqueeResultPages};
 use semio_framework_test_fixtures::fixture_text;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.

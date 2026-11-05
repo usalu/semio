@@ -70,7 +70,7 @@ self.animated = animated;
     pub fn layout(&mut self) {
         self.sync_chrome();
         let viewport = Rect::new(0, 0, self.size.width, self.size.height);
-        semio_framework_ui_tui_frame::layout::solve(&mut self.scene, viewport);
+        semio_ui_tui_frame::layout::solve(&mut self.scene, viewport);
         let overlay_root = self.scene.overlay_root();
         self.scene.node_raw_mut(overlay_root).rect = viewport;
         self.place_overlays();

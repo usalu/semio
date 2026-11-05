@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedRailLm71Udl
         record: "ChangedAssumedRailLm71Udl",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed lm71 distributed load", "Angesetzte LM71-Streckenlast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed lm71 distributed load", "Angesetzte LM71-Streckenlast ändern")
     }
 }
 

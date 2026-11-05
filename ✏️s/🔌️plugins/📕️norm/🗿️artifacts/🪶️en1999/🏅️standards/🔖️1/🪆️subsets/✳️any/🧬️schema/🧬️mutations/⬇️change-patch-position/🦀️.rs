@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangePatchPosition wher
         record: "ChangedPatchPosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Load position of the web patch load", "Stegeinzellast: Lastlage ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Load position of the web patch load", "Stegeinzellast: Lastlage ändern")
     }
 }
 

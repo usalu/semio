@@ -12,7 +12,7 @@
       "const": "Cargo.lock"
     },
     "name": {
-      "const": "semio-framework-plugin-child-group-wire-laws"
+      "const": "semio-plugin-child-group-wire-laws"
     },
     "dependencies": {
       "type": "array",

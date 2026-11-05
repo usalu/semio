@@ -1,15 +1,15 @@
 //! ✏️ Generation2d play app — the `edit` mode: the default two-window authoring layout (flow graph +
 //! preview).
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use crate::windows::flow;
 use crate::windows::preview;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::ToolRef;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::ToolRef;
+use semio_plugin::WindowLayout;
 
 pub const GENERATION2D_PLAY_MODE_EDIT: &str = "edit";
 

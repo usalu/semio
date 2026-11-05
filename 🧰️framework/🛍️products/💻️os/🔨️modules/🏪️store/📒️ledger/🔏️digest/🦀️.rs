@@ -1,13 +1,13 @@
 //! 🔏️ Revision hashing streams the original edit and its operation chains under the initialization grant.
-use semio_framework_os_spr::{Edit,Mutation};
+use semio_os_spr::{Edit,Mutation};
 #[cfg(test)]
-use semio_framework_os_spr::MutationId;
+use semio_os_spr::MutationId;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind,FromValue,ToValue};
 use std::mem::size_of;
 #[cfg(test)]
 use crate::CursorRevisionAccumulator;
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand)}
-use semio_framework_os_store_canonical_json::{ArtifactCanonicalRecordDigest,ArtifactCanonicalTreeSource};
+use semio_os_store_canonical_json::{ArtifactCanonicalRecordDigest,ArtifactCanonicalTreeSource};
 use semio_framework_hash::Sha256;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 
@@ -59,7 +59,7 @@ impl NativeEffectiveDigest{
  pub fn advance<P,M:Mutation<P>>(&mut self,edit:&Edit<M>,supersessions:&crate::lifted_replay::EffectiveSupersessions,original:[u8;32],grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   if self.result.is_some(){return Ok(Default::default())}let demand=RetirementDemand{copy_bytes:256+size_of::<Self>(),depth:1,..Default::default()};if !permits(grant,demand){return Ok(Default::default())}
   if self.row==edit.forwards.len()&&self.phase==0{if self.chain.is_none(){self.result=Some(original)}else{self.phase=2}return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})}
-  let byte=if self.phase==0{with_operation_identity::<P,M,_>(edit,self.row,|id|{let Some(value)=supersessions.get(id)else{return Ok(None)};let(kind,schema,payload)=match &value.replacement{semio_framework_os_spr::InputReplacement::Input{schema,payload}=>(b"input".as_slice(),schema.as_bytes(),payload.as_slice()),_=>(b"withdrawn".as_slice(),b"".as_slice(),b"".as_slice())};Ok(Some(framed_byte(b"supersession",&[id.as_bytes(),value.transition_id.as_bytes(),kind,schema,payload],self.offset)))})?}else if self.phase==1{Some(framed_byte(b"edit-supersessions",&[&self.chain.unwrap_or([0;32]),&(self.row as u64).to_be_bytes(),&self.one],self.offset))}else{Some(framed_byte(b"edit-superseded",&[&original,&self.chain.unwrap()],self.offset))};
+  let byte=if self.phase==0{with_operation_identity::<P,M,_>(edit,self.row,|id|{let Some(value)=supersessions.get(id)else{return Ok(None)};let(kind,schema,payload)=match &value.replacement{semio_os_spr::InputReplacement::Input{schema,payload}=>(b"input".as_slice(),schema.as_bytes(),payload.as_slice()),_=>(b"withdrawn".as_slice(),b"".as_slice(),b"".as_slice())};Ok(Some(framed_byte(b"supersession",&[id.as_bytes(),value.transition_id.as_bytes(),kind,schema,payload],self.offset)))})?}else if self.phase==1{Some(framed_byte(b"edit-supersessions",&[&self.chain.unwrap_or([0;32]),&(self.row as u64).to_be_bytes(),&self.one],self.offset))}else{Some(framed_byte(b"edit-superseded",&[&original,&self.chain.unwrap()],self.offset))};
   match byte{None=>self.row+=1,Some(Some(byte))=>{self.hash.update(&[byte]);self.offset+=1},Some(None)=>{let digest=self.hash.clone().finalize();self.hash=Sha256::new();self.offset=0;match self.phase{0=>{self.one=digest;self.phase=1},1=>{self.chain=Some(digest);self.row+=1;self.phase=0},_=>self.result=Some(digest)}}}
   Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})
  }
@@ -67,4 +67,4 @@ impl NativeEffectiveDigest{
 
 struct OriginalEditView<'a,M>{edit:&'a Edit<M>,inverse:&'a semio_framework_value_persistent::list::PagedList<M,{usize::MAX}>}
 impl<M:ArtifactCanonicalJsonTree> OriginalEditView<'_,M>{fn descend(&self,path:&[usize])->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{let inverse_ordinal=2+usize::from(self.edit.actor.is_some());let(mut node,rest):(&dyn ArtifactCanonicalJsonTree,&[usize])=if path.first()==Some(&inverse_ordinal){(self.inverse,&path[1..])}else{(self.edit,path)};for ordinal in rest{node=node.canonical_tree_child(*ordinal)?;}Ok(node)}}
-impl<M:ArtifactCanonicalJsonTree> semio_framework_os_store_canonical_json::ArtifactCanonicalJson for OriginalEditView<'_,M>{fn canonical_json_node(&self,path:&[usize])->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{self.descend(path)?.canonical_tree_node()}fn canonical_json_key(&self,path:&[usize],index:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{self.descend(path)?.canonical_tree_key(index)}}
+impl<M:ArtifactCanonicalJsonTree> semio_os_store_canonical_json::ArtifactCanonicalJson for OriginalEditView<'_,M>{fn canonical_json_node(&self,path:&[usize])->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{self.descend(path)?.canonical_tree_node()}fn canonical_json_key(&self,path:&[usize],index:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{self.descend(path)?.canonical_tree_key(index)}}

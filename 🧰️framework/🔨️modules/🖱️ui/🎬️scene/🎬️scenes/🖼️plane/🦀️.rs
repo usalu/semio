@@ -1,12 +1,12 @@
 //! 🖼️ The flat-surface scene payloads (canvas, paint, board, tiled map, ink canvas) with the canvas framing and snapshot lease.
 //!
-//! Carved out of the former `semio-framework-ui-scene` scenes module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
+//! Carved out of the former `semio-ui-scene` scenes module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 
 use protocol::value::{DslValue, FromValue, ToValue, ValueError};
-use semio_framework_ui_scene_doc::{
+use semio_ui_scene_doc::{
     deserialize_non_empty_interaction_domain_text, scene_lane_hash, scene_pack_wire, value_decode, value_decode_default, value_decode_option, value_push, value_push_if_nonempty, value_push_option, SceneDoc, SceneLanePayload, SceneLaneRef,
 };
-use semio_framework_ui_scene_pack::{from_bytes, to_bytes, PackError};
+use semio_ui_scene_pack::{from_bytes, to_bytes, PackError};
 use serde::{Deserialize, Serialize};
 #[path = "../../📷️framing/🦀️.rs"]
 mod framing;

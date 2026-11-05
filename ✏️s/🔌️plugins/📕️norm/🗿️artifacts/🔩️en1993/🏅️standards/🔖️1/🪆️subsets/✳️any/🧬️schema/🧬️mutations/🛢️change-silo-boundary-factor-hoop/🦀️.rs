@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloBoundaryFactor
         record: "ChangedSiloBoundaryFactorHoop",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Boundary factor C_θ (0 = none) of the silo shell", "Silo-Schale: Randfaktor C_θ (0 = keiner) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Boundary factor C_θ (0 = none) of the silo shell", "Silo-Schale: Randfaktor C_θ (0 = keiner) ändern")
     }
 }
 

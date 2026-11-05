@@ -101,7 +101,7 @@ fn install_slow_envelope_decode(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
     operation: u64,
     budget: usize,
-    steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>, cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle {
+    steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>, cx:&mut semio_framework_job::StepContext<'_>) -> semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle {
     let operation = semio_framework_job::OperationId(operation);
     let generation = semio_framework_job::Generation(app.stores.store.generation_now());
     let bundle = ComposedParentApp::<true>::build_envelope_decode_owner_bundle().expect("composed parent envelope decode bundle");
@@ -112,7 +112,7 @@ fn install_slow_envelope_decode(
 }
 
 /// 🧹️ Pumps the post-`Ready` worker close ladder (same work production loads run via [`VcsArtifactApp::advance_ready_envelope_decode_worker_owners`]).
-fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle, cx:&mut semio_framework_job::StepContext<'_>) {
+fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle, cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..32 {
         if app.artifact_envelope_decode_worker_owners_are_terminal(handle) {
             return;
@@ -125,15 +125,15 @@ fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp,
 
 /// 🚿️ Drives one live envelope decode to its terminal poll through the reactor-turn pump, so the
 /// app can close with every field lease returned.
-async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle, cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll {
-    let mut poll = semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Pending;
+async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle, cx:&mut semio_framework_job::StepContext<'_>) -> semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll {
+    let mut poll = semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Pending;
     for _ in 0..100_000 {
-        PluginApp::advance_typed_operation_publication(app, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one reactor turn drives the envelope decode worker");
+        PluginApp::advance_typed_operation_publication(app, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one reactor turn drives the envelope decode worker");
         poll = app.poll_artifact_envelope_decode(handle);
-        if matches!(poll, semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault | semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
+        if matches!(poll, semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault | semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
             return poll;
         }
-        if poll == semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
+        if poll == semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
             break;
         }
         let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
@@ -143,15 +143,15 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
         if let Err(source)=semio_framework_job_worker::pump_worker_job_retirements(8,cx){close_composition_refusal(source.into(),cx)}
         poll = app.poll_artifact_envelope_decode(handle);
-        if matches!(poll, semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault | semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
+        if matches!(poll, semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault | semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
             return poll;
         }
-        if poll == semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
+        if poll == semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
             break;
         }
         semio_framework_async::yield_once().await;
     }
-    if poll == semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
+    if poll == semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready {
         pump_envelope_decode_worker_close(app, handle, cx);
     }
     poll
@@ -163,19 +163,19 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
 async fn advance_artifact_envelope_load_reports_a_live_decode_as_pending_not_fault() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let steps = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let handle = install_slow_envelope_decode(&mut app, 811, 64, &steps, &mut cx);
-    assert_eq!(app.poll_artifact_envelope_decode(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Pending);
+    assert_eq!(app.poll_artifact_envelope_decode(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Pending);
     assert_eq!(
         app.advance_artifact_envelope_load(handle, &mut cx).expect("live decode advancement"),
-        semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Pending,
+        semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Pending,
         "an unfinished decode is pending, not a terminal fault"
     );
     assert_eq!(
         app.poll_artifact_store_replacement(handle),
-        semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault,
+        semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Fault,
         "no replacement job exists yet, which is exactly the reading that must not leak out of the load API"
     );
     drain_envelope_decode(&mut app, handle, &mut cx).await;
@@ -190,14 +190,14 @@ async fn advance_artifact_envelope_load_reports_a_live_decode_as_pending_not_fau
 /// cooperative-maintenance rotation, so a document load never advanced inside an interactive turn.
 #[semio_framework_async_macros::async_test]
 async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll() {
-    let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let steps = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let handle = install_slow_envelope_decode(&mut app, 812, 256, &steps, &mut cx);
     assert!(PluginApp::has_runnable_typed_operations(&app), "a live envelope decode is runnable reactor-turn work");
     drain_envelope_decode(&mut app, handle, &mut cx).await;
     let driven = steps.load(std::sync::atomic::Ordering::SeqCst);
-    assert_eq!(app.poll_artifact_envelope_decode(handle), semio_framework_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready, "the reactor-turn pump left the decode ready after {driven} steps");
+    assert_eq!(app.poll_artifact_envelope_decode(handle), semio_plugin_document_media::ArtifactEnvelopeDecodeOperationPoll::Ready, "the reactor-turn pump left the decode ready after {driven} steps");
     assert!(driven >= 256, "the reactor-turn pump drove only {driven} decode steps");
     assert!(!PluginApp::has_runnable_typed_operations(&app), "a retired decode is no longer runnable reactor-turn work");
     app.cancel_artifact_envelope_load(handle).expect("cancel envelope law decode before fixture close");

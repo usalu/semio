@@ -4,12 +4,39 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🎥️shooting/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🎥️shooting/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎥️shooting-route/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️contribution/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/**/*"
+      ],
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    }
+  },
+  "metadata": {
+    "semio": {
+      "runtimeSourceEntries": [
+        "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎥️shooting-route/🔬️unit/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️export/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️icon-transform/🟦️.ts",
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🛂️parsing/🟦️.ts",
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/☀️sun/🟦️.ts",
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/📷️shot-camera/🟦️.ts",
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts",
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts",
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts"
+      ]
     }
   }
 }

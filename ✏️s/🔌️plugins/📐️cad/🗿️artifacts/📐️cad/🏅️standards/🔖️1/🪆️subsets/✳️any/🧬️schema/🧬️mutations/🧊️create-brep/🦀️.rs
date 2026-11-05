@@ -20,7 +20,7 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "brep", kind: "create-brep", record: "CreatedBrep" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Create topology child", "Topologie-Kind erstellen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Create topology child", "Topologie-Kind erstellen") }
     fn target(&self) -> Vec<String> { vec![self.child_id.clone()] }
 }
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFastenedJointHeadT
         record: "ChangedFastenedJointHeadThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fastened joint: Sheet thickness t_1", "Befestigungsverbindung: Blechdicke t_1 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fastened joint: Sheet thickness t_1", "Befestigungsverbindung: Blechdicke t_1 ändern")
     }
 }
 

@@ -18,8 +18,8 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetT
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set theme to {:?}", self.theme_id), &format!("Design auf {:?} setzen", self.theme_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set theme to {:?}", self.theme_id), &format!("Design auf {:?} setzen", self.theme_id))
     }
 
     fn target(&self) -> Vec<String> {

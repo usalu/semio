@@ -16,8 +16,8 @@ pub struct SetGlobalColorTable {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "global-color-table", kind: "set-global-color-table", record: "SetGlobalColorTable" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

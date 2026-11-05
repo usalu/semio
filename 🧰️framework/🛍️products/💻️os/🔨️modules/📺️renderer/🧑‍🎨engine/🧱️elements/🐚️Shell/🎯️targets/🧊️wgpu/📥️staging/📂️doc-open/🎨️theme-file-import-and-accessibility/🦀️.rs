@@ -108,7 +108,7 @@ impl OpeningState {
             let task = format!("documentTransfer:{}", transfer.id);
             let progress = format!("{}/{}", transfer.delivered, transfer.total);
             children.push(settings_text_row(&format!("{} · {} · {} · {}", transfer.file, transfer.lane.label(is_de), transfer.owner, pick("Running", "Läuft"))));
-            children.push(UiNode::Progress(semio_framework_ui_declaration::ui::UiProgressNode {
+            children.push(UiNode::Progress(semio_ui_declaration::ui::UiProgressNode {
                 id: format!("os.task-manager.progress.{task}"),
                 completed: transfer.delivered as f64,
                 total: Some(transfer.total as f64),
@@ -120,7 +120,7 @@ impl OpeningState {
                 id: Some(format!("os.task-manager.cancel.{task}")),
                 icon_id: IconName::Square,
                 label: Label::data(if is_de { format!("{} abbrechen", transfer.file) } else { format!("Cancel {}", transfer.file) }),
-                action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "transfer": transfer.id }) },
+                action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "transfer": transfer.id }) },
                 style: None,
                 presence: UiPresence::default(),
                 menu: None,

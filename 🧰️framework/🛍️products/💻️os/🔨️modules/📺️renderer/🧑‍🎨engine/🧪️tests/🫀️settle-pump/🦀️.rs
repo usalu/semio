@@ -25,11 +25,11 @@ use serde_json::Value;
 const FIXTURE: &str = include_str!("../🧫️fixtures/🫀️settle-pump/🔣️.json");
 #[allow(non_snake_case)]
 fn SHELL_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::shell_source()
+    semio_renderer_wgpu_test_support::shell_source()
 }
 #[allow(non_snake_case)]
 fn RENDERER_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+    semio_renderer_wgpu_test_support::renderer_source()
 }
 
 fn fixture() -> Value {
@@ -52,7 +52,7 @@ fn the_frame_owes_a_settle_step_exactly_while_a_chain_is_live() {
     assert!(rows.len() >= 7, "the oracle carries every term of the predicate");
     for row in rows {
         let id = row["id"].as_str().expect("every row is named");
-        let answer = semio_framework_os_renderer_wgpu_shell_pointer::settle_pump_owes(
+        let answer = semio_renderer_wgpu_shell_pointer::settle_pump_owes(
             row["settling"].as_bool().expect("settling"),
             row["session"].as_bool().expect("session"),
             row["armedWork"].as_bool().expect("armedWork"),
@@ -69,11 +69,11 @@ fn a_producer_is_funded_while_it_advances_and_driven_to_a_terminal_state_when_it
     let fixture = fixture();
     let stall_steps = fixture["stallSteps"].as_u64().expect("the fixture declares the stall budget");
     let terminal_drives = fixture["terminalDrives"].as_u64().expect("the fixture declares the terminal-drive budget");
-    assert_eq!(stall_steps, u64::from(semio_framework_os_renderer_wgpu_shell_window_actions::SHELL_SETTLE_STALL_STEPS), "the oracle and the shell price the stall identically");
-    assert_eq!(terminal_drives, u64::from(semio_framework_os_renderer_wgpu_shell_window_actions::SHELL_SETTLE_TERMINAL_DRIVES), "the oracle and the shell price the terminal drives identically");
+    assert_eq!(stall_steps, u64::from(semio_renderer_wgpu_shell_window_actions::SHELL_SETTLE_STALL_STEPS), "the oracle and the shell price the stall identically");
+    assert_eq!(terminal_drives, u64::from(semio_renderer_wgpu_shell_window_actions::SHELL_SETTLE_TERMINAL_DRIVES), "the oracle and the shell price the terminal drives identically");
     for row in fixture["watchRows"].as_array().expect("the fixture declares its watch rows") {
         let id = row["id"].as_str().expect("every row is named");
-        let mut watch = semio_framework_os_renderer_wgpu_shell_surfaces::ShellSettleWatch::default();
+        let mut watch = semio_renderer_wgpu_shell_surfaces::ShellSettleWatch::default();
         let mut funds = 0u64;
         let mut terminals = 0u64;
         let mut stands = 0u64;
@@ -81,14 +81,14 @@ fn a_producer_is_funded_while_it_advances_and_driven_to_a_terminal_state_when_it
         let mut step = 0u64;
         for entry in row["statuses"].as_array().expect("every watch row publishes statuses") {
             let json = entry["json"].as_str().expect("every status entry carries one published statusJson");
-            let status = semio_framework_os_renderer_wgpu_shell_surfaces::world3d_compute_status(Some(json));
+            let status = semio_renderer_wgpu_shell_surfaces::world3d_compute_status(Some(json));
             assert!(status.computing, "{id}: every watched status says its producer is working");
             for _ in 0..entry["repeat"].as_u64().unwrap_or(1) {
                 step += 1;
-                match semio_framework_os_renderer_wgpu_shell_actions::settle_watch_verdict(&mut watch, &status) {
-                    semio_framework_os_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Fund => funds += 1,
-                    semio_framework_os_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Stand => stands += 1,
-                    semio_framework_os_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Terminal => {
+                match semio_renderer_wgpu_shell_actions::settle_watch_verdict(&mut watch, &status) {
+                    semio_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Fund => funds += 1,
+                    semio_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Stand => stands += 1,
+                    semio_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Terminal => {
                         terminals += 1;
                         first_terminal.get_or_insert(step);
                     }
@@ -108,7 +108,7 @@ fn a_frame_drains_its_input_actions_before_it_takes_a_settle_step() {
     let fixture = fixture();
     for row in fixture["frameRows"].as_array().expect("the fixture declares its frame rows") {
         let id = row["id"].as_str().expect("every row is named");
-        let mut caller = semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+        let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
         let mut actions = FrameActionOwners::default();
         for index in 0..row["actions"].as_u64().expect("actions") {
             let descriptor = ActionDescriptor { controller_id: "s.procedural.generation3d@1/*#editor".to_string(), action: format!("setNodeInput{index}"), args: None };
@@ -149,7 +149,7 @@ fn the_boot_arms_the_settle_lane_instead_of_converging_and_the_frame_loop_drives
     let settle_boot = SHELL_SOURCE().split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
     let settle_boot = &settle_boot[..["\n    async fn ", "\n    pub(crate) async fn "].iter().filter_map(|marker| settle_boot.find(marker)).min().unwrap_or(settle_boot.len())];
     assert!(!settle_boot.contains("self.flush_deferred_actions("), "settle_boot no longer converges the chain before the first paint");
-    assert!(RENDERER_SOURCE().contains("cursor.settle = semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut self.shell).settle_pump_pending();"), "the frame-finish boundary re-reads the settle predicate every frame");
+    assert!(RENDERER_SOURCE().contains("cursor.settle = semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut self.shell).settle_pump_pending();"), "the frame-finish boundary re-reads the settle predicate every frame");
     assert!(RENDERER_SOURCE().contains("PointerCtx::of(&mut interaction.shell).settle_pump_step().await"), "the frame's deferred owner is the ONE caller of the settle step");
 }
 

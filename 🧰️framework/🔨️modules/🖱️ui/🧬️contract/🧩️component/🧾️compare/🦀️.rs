@@ -1,7 +1,7 @@
 //! 🧬️ Canonical component compare traversal over actual fields.
 use crate::*;
-use semio_framework_ui_contract_values::{ui_compare_fields,ui_compare_scalar};
-use semio_framework_ui_contract_values::compare_protocol::*;
+use semio_ui_contract_values::{ui_compare_fields,ui_compare_scalar};
+use semio_ui_contract_values::compare_protocol::*;
 ui_compare_scalar!(ContainerRole,InputKind,SelectAppearance,ToggleAppearance,SliderAppearance,UiNumberScale,TreePresentation,TreeWindowRowExtent,RowActionPlacement);
 crate::ui_component_field_catalog!(ui_compare_fields);
 macro_rules! variants {

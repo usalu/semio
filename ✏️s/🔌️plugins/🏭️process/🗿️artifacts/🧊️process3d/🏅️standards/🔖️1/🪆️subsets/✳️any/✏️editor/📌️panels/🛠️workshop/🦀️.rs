@@ -9,18 +9,18 @@ use semio_s_artifact_process_process3d_kit::process3d_action;
 use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
 use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
 use semio_s_artifact_process_process3d_model::{snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::RowActionPlacement;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::RowActionPlacement;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_WORKSHOP: &str = "process.play.workshop";
@@ -41,12 +41,12 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn workshop_error(scope: &'static str) -> semio_framework_plugin::PluginAssemblyError {
-    semio_framework_plugin::PluginAssemblyError::new("ui.workshop", scope)
+fn workshop_error(scope: &'static str) -> semio_plugin::PluginAssemblyError {
+    semio_plugin::PluginAssemblyError::new("ui.workshop", scope)
 }
 
-fn ui_text(value: &str) -> UiAssemblyResult<semio_framework_plugin::UiText> {
-    semio_framework_plugin::UiText::try_from_str(value).ok_or_else(|| workshop_error("text"))
+fn ui_text(value: &str) -> UiAssemblyResult<semio_plugin::UiText> {
+    semio_plugin::UiText::try_from_str(value).ok_or_else(|| workshop_error("text"))
 }
 
 /// 🛠️ One installed-machine row: ONE target `{id}` and `removeWorkshopMachine` as its own menu row action naming only
@@ -55,10 +55,10 @@ fn ui_text(value: &str) -> UiAssemblyResult<semio_framework_plugin::UiText> {
 fn machine_row(machine: &WorkshopMachine, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
     let args = semio_s_artifact_process_process3d_kit::ui_value_map([("id", semio_s_artifact_process_process3d_kit::ui_value_text(&machine.id)?)])?;
     let target = row_target(semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
-    let mut row_actions = semio_framework_plugin::UiFixedList::default();
+    let mut row_actions = semio_plugin::UiFixedList::default();
     row_actions.try_push(row_action("trash", labels.remove_machine.as_str(), "removeWorkshopMachine", RowActionPlacement::Menu)?).map_err(|_| workshop_error("row-actions"))?;
     let mut item = tree_item(format!("machine:{}", machine.id), semio_s_artifact_process_process3d_kit::ui_label(&machine.label)?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(ui_text(&machine.icon_id)?);
         props.granularity = Some(ui_text(PROCESS3D_GRANULARITY_OBJECT)?);
         props.row_actions = row_actions;

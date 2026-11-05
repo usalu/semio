@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../.."
-name = "semio-framework-ui-contract"
+name = "semio-ui-contract"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,22 +24,22 @@ path = "../../🧪️tests/🛍️catalogue-carrier-map/🦀️.rs"
 [features]
 default = []
 # 🧬️ TypeScript mirror rendered from the contract's versioned owned schema metadata.
-typegen = ["dep:semio-framework-ui-contract-typegen"]
+typegen = ["dep:semio-ui-contract-typegen"]
 
 [dependencies]
-semio-framework-ui-contract-typegen = { path = "../../🧬️schema/🟦️projection/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-contract-text-edit = { path = "../../🪢️text-edit/📦️packages/🦀️rust" }
-semio-framework-ui-contract-builder = { path = "../../🏗️builder/📦️packages/🦀️rust" }
-semio-framework-ui-contract-operations = { path = "../../⚙️operations/📦️packages/🦀️rust" }
-semio-framework-ui-contract-components = { path = "../../🧩️component/📦️packages/🦀️rust" }
-semio-framework-ui-contract-presentation = { path = "../../🖼️presentation/📦️packages/🦀️rust" }
-semio-framework-ui-contract-actions = { path = "../../🎬️action/📦️packages/🦀️rust" }
-semio-framework-ui-contract-values = { path = "../../🌱️values/📦️packages/🦀️rust" }
-semio-framework-ui-contract-budget = { path = "../../📏️budget/📦️packages/🦀️rust" }
-semio-framework-ui-contract-text = { path = "../../🔤️text/📦️packages/🦀️rust" }
-semio-framework-ui-contract-identity = { path = "../../🆔️identity/📦️packages/🦀️rust" }
+semio-ui-contract-typegen = { path = "../../🧬️schema/🟦️projection/📦️packages/🦀️rust", optional = true }
+semio-ui-contract-text-edit = { path = "../../🪢️text-edit/📦️packages/🦀️rust" }
+semio-ui-contract-builder = { path = "../../🏗️builder/📦️packages/🦀️rust" }
+semio-ui-contract-operations = { path = "../../⚙️operations/📦️packages/🦀️rust" }
+semio-ui-contract-components = { path = "../../🧩️component/📦️packages/🦀️rust" }
+semio-ui-contract-presentation = { path = "../../🖼️presentation/📦️packages/🦀️rust" }
+semio-ui-contract-actions = { path = "../../🎬️action/📦️packages/🦀️rust" }
+semio-ui-contract-values = { path = "../../🌱️values/📦️packages/🦀️rust" }
+semio-ui-contract-budget = { path = "../../📏️budget/📦️packages/🦀️rust" }
+semio-ui-contract-text = { path = "../../🔤️text/📦️packages/🦀️rust" }
+semio-ui-contract-identity = { path = "../../🆔️identity/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
-ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 serde = { version = "1.0.219", features = ["derive"] }
 # 🧬️ Proc-macro for `#[derive(ToValue, FromValue)]` — leaf crate (syn/quote/proc-macro2 only).
 semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
@@ -50,5 +50,5 @@ semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-ui-contract-values = { path = "../../🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-contract-values = { path = "../../🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json = { version = "1.0.140" }

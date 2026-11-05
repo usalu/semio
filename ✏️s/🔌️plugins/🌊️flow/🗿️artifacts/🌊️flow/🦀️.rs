@@ -1,7 +1,7 @@
 //! 🌊️ Flow artifact — the document entity this plugin's apps edit.
 //!
 //! The persisted snapshot type is [`FlowSnapshot`] (this plugin). The framework crate
-//! `semio-framework-os-flow` still owns a separate `semio_framework_artifact_flow_flow::FlowHostSnapshot` used by `FlowHost` and by
+//! `semio-os-flow` still owns a separate `semio_framework_artifact_flow_flow::FlowHostSnapshot` used by `FlowHost` and by
 //! other plugins (e.g. procedural) that embed a flow graph; conversions live on `FlowSnapshot`.
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`flow→C:flow`, the canonical editor for
@@ -15,9 +15,9 @@
 
 extern crate semio_framework_schema as framework_schema;
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
@@ -46,8 +46,8 @@ pub use semio_s_artifact_flow_flow_editor::{artifact_kind};
 mod tests;
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.flow.flow")?)
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.flow.flow")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.flow.flow")?)?,
@@ -77,9 +77,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Flow")?)?)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::EditorApp;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::EditorApp;
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(schema::flow_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::flow_artifact_inference_descriptor()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())

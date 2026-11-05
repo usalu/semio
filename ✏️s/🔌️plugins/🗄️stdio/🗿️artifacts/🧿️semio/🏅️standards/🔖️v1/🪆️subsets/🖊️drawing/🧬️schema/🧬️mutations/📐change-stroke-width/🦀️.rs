@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stroke-width", kind: "change-stroke-width", record: "ChangedStrokeWidth" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change stroke width of style \"{}\"", self.style_name), &format!("Strichbreite von Stil \"{}\" ändern", self.style_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change stroke width of style \"{}\"", self.style_name), &format!("Strichbreite von Stil \"{}\" ändern", self.style_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.style_name.clone()]

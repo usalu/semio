@@ -10,7 +10,7 @@ pub struct ChangeFastenerLines { pub fastener_id: String, pub new_value: u32 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFastenerLines where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_fastener_lines::ChangeFastenerLines> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fastener-lines", kind: "change-fastener-lines", record: "ChangedFastenerLines" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change rows across the grain of fastener {}", self.fastener_id), &format!("Reihen quer zur Faser von Fastener {} ändern", self.fastener_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change rows across the grain of fastener {}", self.fastener_id), &format!("Reihen quer zur Faser von Fastener {} ändern", self.fastener_id)) }
     fn target(&self) -> Vec<String> { vec![self.fastener_id.clone()] }
 }
 

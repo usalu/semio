@@ -13,8 +13,8 @@ pub struct SetLodMode {
 impl protocol::MutationKind<RewritingWindowConfig, RewritingWindowConfigMutation> for SetLodMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "window-lod-mode", kind: "set-lod-mode", record: "SetLodMode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Window Lod Mode", "Detailstufenmodus des Fensters setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Window Lod Mode", "Detailstufenmodus des Fensters setzen")
     }
 
     fn target(&self) -> Vec<String> {

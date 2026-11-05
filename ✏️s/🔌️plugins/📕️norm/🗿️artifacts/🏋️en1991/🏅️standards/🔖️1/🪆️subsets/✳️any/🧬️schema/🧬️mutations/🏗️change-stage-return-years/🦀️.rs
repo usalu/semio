@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeStageReturnYears w
         record: "ChangedStageReturnYears",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change return period of the climatic actions of the construction stage", "Bauphase: Wiederkehrperiode der klimatischen Einwirkungen ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change return period of the climatic actions of the construction stage", "Bauphase: Wiederkehrperiode der klimatischen Einwirkungen ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

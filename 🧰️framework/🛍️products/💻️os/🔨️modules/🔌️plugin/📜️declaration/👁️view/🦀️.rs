@@ -1,6 +1,6 @@
 //! 👁️ The read views an app receives, its operation contexts and the empty state lanes.
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[doc(hidden)]
 #[path = "../🪆️child/🦀️.rs"]
 pub mod child_view;
@@ -29,38 +29,38 @@ use semio_framework::ActionKind;
 use semio_framework::ActionDefinition;
 use semio_framework::FaultCode;
 use semio_framework::FaultOrigin;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_window_config::WindowConfigSnapshot;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigSnapshot;
 use semio_framework::Fault;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use std::collections::BTreeMap;
 use pack::snapshot::ArtifactPack;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
 pub use crate::child_view::ChildContentView;
 use crate::history_view::HistoryView;
-use semio_framework_plugin_interaction::interaction_topology::empty_domain_hover;
-use semio_framework_plugin_interaction::interaction_topology::empty_domain_selection;
-use semio_framework_plugin_interaction::interaction_topology::leftover_selected_ids_of;
+use semio_plugin_interaction::interaction_topology::empty_domain_hover;
+use semio_plugin_interaction::interaction_topology::empty_domain_selection;
+use semio_plugin_interaction::interaction_topology::leftover_selected_ids_of;
 
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 
 use crate::tool_run_contract::ToolRunView;
 pub use crate::tool_run_contract::ToolRunPollView;
-use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::UiAssemblyResult;
 
 #[path = "🔭️artifact-view/🦀️.rs"]
 mod artifact_view;

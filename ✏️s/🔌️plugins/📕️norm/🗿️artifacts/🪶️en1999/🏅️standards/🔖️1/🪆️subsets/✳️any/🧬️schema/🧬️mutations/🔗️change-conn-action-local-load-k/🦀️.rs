@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnActionLocalLoa
         record: "ChangedConnActionLocalLoadK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic patch load F_k of the connection action", "Anschlusseinwirkung: Charakteristische Einzellast F_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic patch load F_k of the connection action", "Anschlusseinwirkung: Charakteristische Einzellast F_k ändern")
     }
 }
 

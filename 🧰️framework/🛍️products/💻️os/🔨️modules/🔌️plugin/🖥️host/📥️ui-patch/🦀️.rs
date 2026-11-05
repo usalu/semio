@@ -2,7 +2,7 @@
 
 use super::wit_ui;
 use semio_framework::kernel::{ActorUiPatchReceipt, UI_TURN_PATCHES_MAXIMUM, UiTurnPatches};
-use semio_framework_ui_contract::{self as ui, UiNodeBindings, UiNodeChildren, UiNodeId, UiPatch, UiPatchOp, UiPatchOps};
+use semio_ui_contract::{self as ui, UiNodeBindings, UiNodeChildren, UiNodeId, UiPatch, UiPatchOp, UiPatchOps};
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

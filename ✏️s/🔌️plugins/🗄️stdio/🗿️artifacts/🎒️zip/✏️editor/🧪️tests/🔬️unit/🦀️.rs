@@ -1,17 +1,17 @@
 use crate::schema::mutations::set_archive_comment;
 use crate::{ZipMutation, ZipSnapshot};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::Fault;
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::Fault;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use crate::editor::editing::{fault, draft};
 use crate::editor::editing::*;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{ColdMutation, Mutation, MutationDiff};
 use protocol::ColdMutationDiff;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
@@ -250,13 +250,13 @@ fn archive_edits_refuse_ambiguous_stale_and_colliding_names() {
 
 #[test]
 fn archive_primary_window_materializes_only_the_requested_slice() {
-    use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+    use semio_plugin::{TreeWindowRequest, ViewModel};
     let snapshot = ZipSnapshot { entries: (0..300).map(|index| crate::schema::snapshot::ZipEntry { name: format!("file-{index}.txt"), data: vec![], ..Default::default() }).collect(), ..Default::default() };
     let mounts = [
         (
             crate::editor::zip::base::modes::edit::windows::main::BODY_KEY,
             crate::editor::zip::base::modes::edit::windows::main::render
-                as fn(&ZipSnapshot, &TreeWindows<'_>, Locale, semio_framework_plugin::UiPublicationRevision) -> UiAssemblyResult<BuiltNode>,
+                as fn(&ZipSnapshot, &TreeWindows<'_>, Locale, semio_plugin::UiPublicationRevision) -> UiAssemblyResult<BuiltNode>,
         ),
         (crate::editor::zip::iso21320::modes::edit::windows::main::BODY_KEY, crate::editor::zip::iso21320::modes::edit::windows::main::render),
     ];
@@ -264,10 +264,10 @@ fn archive_primary_window_materializes_only_the_requested_slice() {
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: body_key.into(), node_key: "archive-fields".into(), open: Some(true), offset: 100, rows: 4 }],
             tree_viewport_rows: Some(4),
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
-        let node = render(&snapshot, &TreeWindows::for_body(&view, body_key), Locale::En, semio_framework_plugin::UiPublicationRevision(23)).unwrap();
-        let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+        let node = render(&snapshot, &TreeWindows::for_body(&view, body_key), Locale::En, semio_plugin::UiPublicationRevision(23)).unwrap();
+        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
         assert!(projection.contains("\"total\":301"));
         assert!(projection.contains("file-99.txt"));
         assert!(projection.contains("file-102.txt"));
@@ -276,26 +276,26 @@ fn archive_primary_window_materializes_only_the_requested_slice() {
     }
 }
 
-async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation = ZipMutation>>(definition: semio_framework_plugin::AppDefinition) {
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation = ZipMutation>>(definition: semio_plugin::AppDefinition) {
+    use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};
     let row = fixture();
     let original: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_plugin::App { definition, examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
     let name = row["rename"]["name"].as_str().unwrap();
     let value = row["rename"]["value"].as_str().unwrap();
     let arguments = semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String(entry_node_id(name))), ("value".into(), semio_framework_value::DslValue::String(value.into())), ("revision".into(), semio_framework_value::DslValue::String(text_revision(name)))]);
     let meta = artifact_app_laws::meta("local");
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-node", Some(arguments.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-node", Some(arguments.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
     let mut expected = original.clone();
     expected.entries[0].name = value.into();
     assert_eq!(app.snapshot().unwrap(), expected);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().unwrap(), original);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().unwrap(), expected);
     let saved = <ZipSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);
     assert_eq!(<ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&saved).unwrap(), expected);
@@ -305,20 +305,20 @@ async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation
 /// ⚖️ LAW (agent lane, ticket 26/09/23 G12 session 14c): an agent's archive rename without a `revision` is admitted against the
 /// addressed entry's own token — the same edit as with the token its draft binding carries, a stale token still refused —
 /// while the shell lane keeps refusing the omission.
-async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation = ZipMutation>>(definition: semio_framework_plugin::AppDefinition) {
-    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
-    let view = semio_framework_plugin::ViewModel {
-        window_instances: definition.window_kinds.iter().enumerate().map(|(index, window)| semio_framework_plugin::ViewWindowInstance { id: format!("agent-preview-{index}"), window_kind_id: window.id.clone() }).collect(),
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation = ZipMutation>>(definition: semio_plugin::AppDefinition) {
+    let mut original_caller=semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};
+    let view = semio_plugin::ViewModel {
+        window_instances: definition.window_kinds.iter().enumerate().map(|(index, window)| semio_plugin::ViewWindowInstance { id: format!("agent-preview-{index}"), window_kind_id: window.id.clone() }).collect(),
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let row = fixture();
     let original: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let registered = definition.clone();
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition: registered, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity,cx).await).unwrap();
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_plugin::App { definition: registered, examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity,cx).await).unwrap();
     let name = row["rename"]["name"].as_str().unwrap();
     let value = row["rename"]["value"].as_str().unwrap();
     let address = |revision: Option<String>| {
@@ -327,11 +327,11 @@ async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Muta
         )
     };
     assert_eq!(agent_target_revision(&original, &address(None)).unwrap(), Some(text_revision(name)), "the fill is the token the draft binding carries");
-    let omitted = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(None), &view, &mut identity,cx).await).expect("the agent lane admits an omitted revision");
-    let bound = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision(name))), &view, &mut identity,cx).await).expect("the draft binding's revision");
+    let omitted = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(None), &view, &mut identity,cx).await).expect("the agent lane admits an omitted revision");
+    let bound = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision(name))), &view, &mut identity,cx).await).expect("the draft binding's revision");
     assert!(omitted > 0 && omitted == bound, "omitted {omitted} vs bound {bound} document ops");
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision("stale"))), &view, &mut identity,cx).await).is_err(), "a stale token is refused on the agent lane too");
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-node", Some(address(None)), &artifact_app_laws::meta("local"), &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).is_err(), "the shell lane still requires the draft binding's revision");
+    assert!(semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision("stale"))), &view, &mut identity,cx).await).is_err(), "a stale token is refused on the agent lane too");
+    assert!(semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-node", Some(address(None)), &artifact_app_laws::meta("local"), &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).is_err(), "the shell lane still requires the draft binding's revision");
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(),cx);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
@@ -362,10 +362,10 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
     use protocol::OpBinary;
     use semio_framework_action_bus::{ActionBus, ToolFactoryKey};
     use semio_framework_job::{Generation, Operation, OperationId, RevisionId};
-    use semio_framework_plugin::app::{AppOperationContext, ArtifactOwnedToolJobContext, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ChildContentView, InteractionHoverState};
-    use semio_framework_plugin::app::ArtifactOwnedContextHandle;
-    use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
-    use semio_framework_plugin::{EditorApp, HistoryView};
+    use semio_plugin::app::{AppOperationContext, ArtifactOwnedToolJobContext, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ChildContentView, InteractionHoverState};
+    use semio_plugin::app::ArtifactOwnedContextHandle;
+    use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
+    use semio_plugin::{EditorApp, HistoryView};
     use semio_s_artifact_stdio_contract::editing::{BoundedNativeEditToolJobFactory, BoundedNativeEditingEditor};
     use semio_s_artifact_stdio_contract::testing::registered_job::{admit, close, snapshot_read, step, wire, Seen, Session};
     use std::sync::Arc;

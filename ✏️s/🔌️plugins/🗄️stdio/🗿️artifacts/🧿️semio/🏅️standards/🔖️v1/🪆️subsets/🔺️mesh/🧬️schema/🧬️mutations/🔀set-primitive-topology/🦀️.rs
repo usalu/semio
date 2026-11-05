@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "primitive", kind: "set-primitive-topology", record: "SetPrimitiveTopology" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set primitive \"{}\" topology in mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Topologie von Primitiv \"{}\" in Netz \"{}\" setzen", self.primitive_id, self.mesh_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set primitive \"{}\" topology in mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Topologie von Primitiv \"{}\" in Netz \"{}\" setzen", self.primitive_id, self.mesh_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.primitive_id.clone()]

@@ -2,11 +2,11 @@
 
 use crate::ui_image_loading::{apply_ui_image_bytes, current_ui_image_key, object_contain_rect, render_ui_image_step, resolve_ui_image, INLINE_SVG_PARSE_CALLS, UI_IMAGE_SIZES};
 use infinite_world::world::{WorldAssetMetadataId, WorldAssetRequestKind};
-use semio_framework_os_renderer_wgpu_asset_authority::{retire_cancelled_renderer_asset_step, return_renderer_asset, take_next_renderer_asset};
-use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
-use semio_framework_os_renderer_wgpu_scene_state::{PendingRasterUploadCursor, PendingRasterUploadStep};
-use semio_framework_ui_layout::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
+use semio_renderer_wgpu_asset_authority::{retire_cancelled_renderer_asset_step, return_renderer_asset, take_next_renderer_asset};
+use semio_renderer_wgpu_contracts::framework_widget_context;
+use semio_renderer_wgpu_scene_state::{PendingRasterUploadCursor, PendingRasterUploadStep};
+use semio_ui_layout::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
 
 //#region UiImageLoadingTests
 const TEST_SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="red"/></svg>"#;
@@ -44,11 +44,11 @@ fn resolve_ui_image_decodes_plain_utf8_svg_data_url() {
 fn inline_svg_saturation_rejects_before_parse_or_source_copy() {
     let mut reservations = Vec::with_capacity(256);
     for index in 0..256 {
-        let Ok(reservation) = semio_framework_ui_prepared_staging::PreparedRasterReservation::try_reserve(format!("svg-held-{index}")) else { break };
+        let Ok(reservation) = semio_ui_prepared_staging::PreparedRasterReservation::try_reserve(format!("svg-held-{index}")) else { break };
         reservations.push(reservation);
     }
     assert!(!reservations.is_empty(), "the fixed raster ledger admitted nothing at all — the saturation law would pass vacuously");
-    assert!(semio_framework_ui_prepared_staging::PreparedRasterReservation::try_reserve("svg-held-plus-one".to_string()).is_err(), "the ledger is saturated once it refuses one more");
+    assert!(semio_ui_prepared_staging::PreparedRasterReservation::try_reserve("svg-held-plus-one".to_string()).is_err(), "the ledger is saturated once it refuses one more");
     INLINE_SVG_PARSE_CALLS.with(|calls| calls.set(0));
     let src = format!("data:image/svg+xml,{TEST_SVG}");
     assert_eq!(resolve_ui_image("svg-saturated", &src), (None, None));
@@ -134,23 +134,23 @@ fn object_contain_rect_letterboxes_and_centers_narrower_content() {
 fn render_ui_image_step_paints_an_inline_data_url_instead_of_faulting() {
     use base64::Engine;
     let src = format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(tiny_png_bytes(3, 2, 1)));
-    let image = semio_framework_ui_declaration::ui::UiImageNode { id: "inline-data-image".into(), src, alt: None, presence: semio_framework_ui_layout::layout::UiPresence::default(), menu: None };
+    let image = semio_ui_declaration::ui::UiImageNode { id: "inline-data-image".into(), src, alt: None, presence: semio_ui_layout::layout::UiPresence::default(), menu: None };
     let bounds = Rect::new(0.0, 0.0, 80.0, 40.0);
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
-    let theme = semio_framework_ui_theme::Theme::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let theme = semio_ui_theme::Theme::default();
     let mut scroll = std::collections::HashMap::new();
     let mut collapsed = std::collections::HashMap::new();
     let mut selects = std::collections::HashMap::new();
-    let mut cursor = semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor::default();
+    let mut cursor = semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor::default();
     {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         for _ in 0..4096 {
             match render_ui_image_step(&image, bounds, &mut ctx, &mut cursor) {
-                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending => {}
-                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Complete => break,
-                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault => panic!("an inline data:image/png source must paint, not fault"),
+                semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending => {}
+                semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Complete => break,
+                semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault => panic!("an inline data:image/png source must paint, not fault"),
             }
         }
     }

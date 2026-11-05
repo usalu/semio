@@ -7,8 +7,8 @@ use crate::standards::v1::subsets::any::schema::{self};
 use crate::standards::v1::subsets::any::schema::rule::ParameterKind;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_ui_locale::Label;
+use semio_ui_contract::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 
 trait ParameterKindLabel {
     fn kind_label(&self) -> String;
@@ -24,9 +24,9 @@ impl ParameterKindLabel for schema::rule::ParameterSpec {
     }
 }
 
-pub fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let rhs = &state.rhs;
-    let mut children = semio_framework_plugin::UiFixedList::<semio_framework_plugin::BuiltNode>::default();
+    let mut children = semio_plugin::UiFixedList::<semio_plugin::BuiltNode>::default();
     for param in &rhs.parameters {
         let value = state.parameter_bindings.get(&param.name).cloned().unwrap_or_else(|| param.default.clone());
         let display = match value {
@@ -40,44 +40,44 @@ pub fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels) -> sem
             ParameterKind::Boolean | ParameterKind::String => InputKind::Text,
         };
         let input_id = format!("trinity-rewriting.param.{}.input", param.name);
-        let input_value = semio_framework_plugin::UiText::try_from_string(display).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter value admission failed"))?;
+        let input_value = semio_plugin::UiText::try_from_string(display).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter value admission failed"))?;
         let placeholder = crate::editor::rewriting::ui::ui_label(param.kind_label())?;
         let args = crate::editor::rewriting::ui::ui_value_map([("name", crate::editor::rewriting::ui::ui_value_text(&param.name)?)])?;
         let (action, args) = crate::editor::rewriting::ui::rewriting_action("setParameter", Some(args))?;
-        let commit = semio_framework_plugin::UiText::try_from_str("blur").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter commit admission failed"))?;
-        let input = semio_framework_ui_contract::input(input_kind)
+        let commit = semio_plugin::UiText::try_from_str("blur").ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter commit admission failed"))?;
+        let input = semio_ui_contract::input(input_kind)
             .value(input_value)
             .placeholder(placeholder)
             .commit(commit)
             .try_id(&input_id)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input id admission failed"))?;
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input id admission failed"))?;
         let input = match args {
             Some(args) => input.try_on_with(Trigger::Commit, action, args),
             None => input.try_on(Trigger::Commit, action),
         }
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input action admission failed"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input action admission failed"))?
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input admission failed"))?;
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input admission failed"))?;
         let field_id = format!("trinity-rewriting.param.{}", param.name);
-        let field = semio_framework_ui_contract::field(crate::editor::rewriting::ui::ui_label(&param.name)?)
+        let field = semio_ui_contract::field(crate::editor::rewriting::ui::ui_label(&param.name)?)
             .try_id(&field_id)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field id admission failed"))?
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field id admission failed"))?
             .try_child(input)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field child admission failed"))?
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field child admission failed"))?
             .try_build()
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field admission failed"))?;
-        children.try_push(field).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field list admission failed"))?;
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field admission failed"))?;
+        children.try_push(field).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field list admission failed"))?;
     }
     if children.is_empty() {
-        return semio_framework_plugin::built_text_node(Label::data("No parameters declared on RHS.")).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.parameters.empty", "the fixed empty-parameters label exceeds its UI bound"));
+        return semio_plugin::built_text_node(Label::data("No parameters declared on RHS.")).map_err(|_| semio_plugin::PluginAssemblyError::new("trinity.parameters.empty", "the fixed empty-parameters label exceeds its UI bound"));
     }
-    semio_framework_ui_contract::column()
+    semio_ui_contract::column()
         .try_id("trinity-rewriting.parameters")
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column id admission failed"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column id admission failed"))?
         .try_children(children)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column children admission failed"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column children admission failed"))?
         .try_label(labels.parameters.as_str())
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column label admission failed"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column label admission failed"))?
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column admission failed"))
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column admission failed"))
 }

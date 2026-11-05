@@ -126,7 +126,7 @@ impl FlowHost {
         self.take_history_fault().map_or(Ok(()), Err)
     }
 
-    /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as the concrete flow leaves its gesture site emitted — the standard `semio_framework_os_kernel::os_store::ArtifactStore`/`Mutation`/
+    /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as the concrete flow leaves its gesture site emitted — the standard `semio_os_kernel::os_store::ArtifactStore`/`Mutation`/
     /// `MutationDiff` mechanism (see `🔖️Mutations`) driving undo/redo here instead of the old
     /// hand-rolled `Vec<FlowHostSnapshot>` snapshot stack. An armed edit that emitted no leaf leaves no history row.
     fn flush_pending_change(&mut self) {

@@ -4,10 +4,10 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::{CollectionSnapshot,CollectionFolder,CollectionEntry,ArtifactBody,S_COLLECTION_SCHEMA};
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell}};
-use semio_framework_os_space_sqlite_cells as fields;
+use semio_os_space_sqlite_cells as fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
 pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_COLLECTION_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
 /// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.

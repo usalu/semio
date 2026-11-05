@@ -10,8 +10,8 @@
 //! German). Every prompt takes an optional `locale` argument; an unknown or absent locale resolves to
 //! English rather than failing, because a prompt is guidance, not policy.
 
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_wire::protocol::{ContentBlock, InMemoryPromptRegistry, Prompt, PromptArgument, PromptGetResult, PromptMessage};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_wire::protocol::{ContentBlock, InMemoryPromptRegistry, Prompt, PromptArgument, PromptGetResult, PromptMessage};
 
 //#region 🔖️Locale
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDynamicElementHeig
         record: "ChangedDynamicElementHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change height h of the dynamic element", "Schwingungsanfälliges Bauteil: Höhe h ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change height h of the dynamic element", "Schwingungsanfälliges Bauteil: Höhe h ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

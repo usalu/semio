@@ -14,8 +14,8 @@ pub struct SetBlock {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "block", kind: "set-block", record: "SetBlock" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set block", "Block setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set block", "Block setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

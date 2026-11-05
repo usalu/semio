@@ -1,6 +1,6 @@
 //! 🖼️ Canonical renderer-neutral presentation records and layout behavior.
-pub use semio_framework_ui_contract_values::*;
-pub use semio_framework_ui_contract_actions::*;
+pub use semio_ui_contract_values::*;
+pub use semio_ui_contract_actions::*;
 #[path="🔖️labels/🦀️.rs"]
 mod labels;
 pub use labels::*;

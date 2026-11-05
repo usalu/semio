@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointConcreteAreaA
         record: "ChangedJointConcreteAreaA1",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Distributed concrete area A_c1 of the joint", "Anschluss: Verteilungsfläche A_c1 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Distributed concrete area A_c1 of the joint", "Anschluss: Verteilungsfläche A_c1 ändern")
     }
 }
 

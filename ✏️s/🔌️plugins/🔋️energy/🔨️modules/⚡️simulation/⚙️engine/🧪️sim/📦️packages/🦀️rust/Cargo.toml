@@ -40,7 +40,7 @@ semio-s-plugin-energy-engine-site = { workspace = true }
 semio-s-plugin-energy-engine-sizing = { workspace = true }
 semio-s-plugin-energy-engine-units = { workspace = true }
 serde = { workspace = true }
-semio-framework-os-store-canonical-json = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust" }
+semio-os-store-canonical-json = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust" }
 
 
 [dev-dependencies]

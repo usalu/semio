@@ -31,7 +31,7 @@ pub trait InferredField<P>: Send + Sync + 'static {
     const FIELD_ID: &'static str;
     const SCHEMA_VERSION: u32;
 
-    /// 🗺️ Coarse tier-1 read-set — checked against a diff's [`semio_framework_os_command::DiffRegions::touches`]
+    /// 🗺️ Coarse tier-1 read-set — checked against a diff's [`semio_os_command::DiffRegions::touches`]
     /// before this field's plan is even walked.
     fn reads() -> &'static [&'static str];
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeObservedTraf
         record: "ChangedBridgeObservedTraffic",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Heavy vehicles per year N_obs of the bridge fatigue", "Brückenermüdung: Schwerfahrzeuge je Jahr N_obs ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Heavy vehicles per year N_obs of the bridge fatigue", "Brückenermüdung: Schwerfahrzeuge je Jahr N_obs ändern")
     }
 }
 

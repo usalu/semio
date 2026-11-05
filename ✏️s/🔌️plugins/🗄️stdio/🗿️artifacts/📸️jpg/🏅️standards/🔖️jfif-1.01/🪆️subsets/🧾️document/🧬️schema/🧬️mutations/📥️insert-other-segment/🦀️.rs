@@ -21,8 +21,8 @@ pub struct InsertOtherSegmentMutation {
 impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "other-segment", kind: "insert-other-segment", record: "InsertOtherSegment" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert other segment", "Sonstiges Segment einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert other segment", "Sonstiges Segment einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-other-segment".into()]

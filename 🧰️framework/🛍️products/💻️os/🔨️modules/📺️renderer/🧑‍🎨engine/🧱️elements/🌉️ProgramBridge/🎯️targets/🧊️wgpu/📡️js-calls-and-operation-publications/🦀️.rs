@@ -124,7 +124,7 @@ pub(super) mod browser_ephemeral {
     }
 }
 
-/// 🧬️ The browser's [`ComponentDocumentCodec`](semio_framework_os_kernel::os_store::codec_registry::ComponentDocumentCodec):
+/// 🧬️ The browser's [`ComponentDocumentCodec`](semio_os_kernel::os_store::codec_registry::ComponentDocumentCodec):
 /// the mounted program's jco component answering `world actor`'s `codec` interface through the JS
 /// bridge (`codecPackSchemaHash`/`codecPrintMirror`, `🐚️plugin-bridge/🟦️.ts`), on a live instance's shard
 /// actor — the twin of the native `OwnedComponentDocumentCodec` a wgpu shell registers in `create_app`. With it
@@ -133,7 +133,7 @@ pub(super) mod browser_ephemeral {
 #[cfg(target_arch = "wasm32")]
 pub(super) mod browser_component_codec {
     use super::{call_js, Array, JsCast, JsValue, Rc};
-    use semio_framework_os_kernel::os_store::{self, text_format::ArtifactTextFiles, codec_registry::ComponentDocumentCodec, codec_registry::ComponentDocumentCodecFuture, VcsError};
+    use semio_os_kernel::os_store::{self, text_format::ArtifactTextFiles, codec_registry::ComponentDocumentCodec, codec_registry::ComponentDocumentCodecFuture, VcsError};
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::sync::{Arc, OnceLock};
@@ -353,7 +353,7 @@ pub(super) async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, co
 }
 
 #[cfg(target_arch = "wasm32")]
-pub(super) async fn context_menu_js(handle: &Rc<JsValue>, instance_id: u32, request: &serde_json::Value) -> Result<Vec<semio_framework_ui_declaration::ui::ContextMenuItemSpec>, String> {
+pub(super) async fn context_menu_js(handle: &Rc<JsValue>, instance_id: u32, request: &serde_json::Value) -> Result<Vec<semio_ui_declaration::ui::ContextMenuItemSpec>, String> {
     let menu_fn = Reflect::get(handle.as_ref(), &JsValue::from_str("contextMenu")).ok().and_then(|v| v.dyn_into::<Function>().ok());
     let Some(menu_fn) = menu_fn else {
         return Ok(Vec::new());

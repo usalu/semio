@@ -3,8 +3,8 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[path="📏️encoding/🦀️.rs"]
 pub mod encoding;
-use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;
-use semio_framework_os_kernel::sqlite_snapshot::composition::{sqlite_schema_bytes, sqlite_schema_len, sqlite_schema_text};
+use semio_os_kernel::sqlite_snapshot::SnapshotEncoding;
+use semio_os_kernel::sqlite_snapshot::composition::{sqlite_schema_bytes, sqlite_schema_len, sqlite_schema_text};
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number;
@@ -28,22 +28,22 @@ use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::mleader_style;
 use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::constraints;
 
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl}};
 #[path="📏️encoding/🛬️admission/🦀️.rs"]
 pub mod native_admission;
 
 impl ArtifactSqliteSnapshotHost for DwgSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit_native_rows(self,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {construct_native_record(record,native,limits)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_native_rows(&snapshot,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,control)?;Ok(snapshot)}
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit_native_rows(self,semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {construct_native_record(record,native,limits)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_native_rows(&snapshot,semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,control)?;Ok(snapshot)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{encoding::preflight(self,control)}
 
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
-  control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{(|| -> Result<semio_os_kernel::io_schema::IoOutcome<()>,ValueError>{
+  control.checkpoint(semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
   if dialect.artifact_kind!="s.stdio.dwg"||!matches!(dialect.standard.as_str(),"ac1018"|"ac1024")||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned SQLite dialect must be an exact AC1018 or AC1024 full snapshot"));}
   let candidate=Self::reconstruct_sqlite_database(database,control)?;
   if candidate.project_sqlite_database(control)?!=self.project_sqlite_database(control)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned state differs from its semantic projection"));}
-  Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))
- })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
+  Ok(semio_os_kernel::io_schema::IoOutcome::clean(()))
+ })().map_err(semio_os_kernel::io_schema::IoError::from_value_error)}
  
  
  
@@ -73,10 +73,10 @@ fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnaps
   Ok(Self{schema:document.schema,version:document.version,maintenance_version:document.maintenance_version,codepage:document.codepage,drawing,header,classes:document.classes,dependencies:document.dependencies,summary:document.summary,application:document.application,template:document.template,auxiliary_header:document.auxiliary_header,revision_history:document.revision_history,preview:document.preview,application_history:document.application_history})
  }
 }
-pub fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,ValueError>{native_admission::root(record,native,limits)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
+pub fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,ValueError>{native_admission::root(record,native,limits)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
 #[cfg(test)]
-pub fn forecast_native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,ValueError>{native_admission::root(record,native,limits)}
-fn admit_native_rows(snapshot:&DwgSnapshot,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<usize,ValueError>{
+pub fn forecast_native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:semio_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,ValueError>{native_admission::root(record,native,limits)}
+fn admit_native_rows(snapshot:&DwgSnapshot,phase:semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<usize,ValueError>{
     let mut projection=number::Projection::admission(DwgSnapshot::SQLITE_SCHEMA,phase,control)?;
     document::project(&mut projection,snapshot)?;header::project(&mut projection,&snapshot.header)?;
     drawing::project(&mut projection,&snapshot.drawing,project_body)?;projection.finish_admission()

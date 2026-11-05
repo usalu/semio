@@ -1,7 +1,7 @@
 //! ⚡️ Action semantics, action and command definitions, framework action families and utilities.
 
 use semio_framework_tool_run::ToolRunDefinition;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -14,7 +14,7 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use semio_framework_ui_declaration::IconName;
+use semio_ui_declaration::IconName;
 use semio_framework_kernel_identity::CapabilityId;
 use semio_framework_kernel_ui::UiDirtyScope;
 use semio_framework_manifest_address::{PlatformKeybinding, UtilityRef};

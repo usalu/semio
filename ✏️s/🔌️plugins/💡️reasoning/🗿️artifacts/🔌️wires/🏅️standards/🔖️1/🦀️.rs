@@ -2,7 +2,7 @@
 //! (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §1/§2).
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 /// 🧬️ `mimes` is a documented synthesis, not a literal carry-over — no real MIME registration
@@ -18,8 +18,8 @@ pub fn standard<A: crate::WiresApplication>() -> StandardDeclaration<A> {
 //#region 🧩️ArtifactItems5
 pub mod artifact_items_5 {
 //#region 🔖️Declaration
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.reasoning.wires")?)
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.schema.artifact")?, ArtifactCapabilityKind::schema())
@@ -68,24 +68,24 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `definition()`'s `ArtifactCapability` rows above (kept, per debt D1) — wiring them into this
 /// field is real follow-up work, not required for this pass (mirrors `📓️w4-sequence-report.md`
 /// `## openQuestions` #2).
-pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+pub fn artifact<A: WiresApplication>() -> semio_plugin::app::declarations::ArtifactDeclaration<A> {
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.reasoning.wires").expect("canonical reasoning.wires kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait WiresApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::wires::ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::wires::WiresViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    semio_plugin::PluginApp
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::wires::ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::wires::WiresViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> WiresApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::wires::ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::wires::WiresViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    A: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<crate::editor::wires::ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<crate::viewer::wires::WiresViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 

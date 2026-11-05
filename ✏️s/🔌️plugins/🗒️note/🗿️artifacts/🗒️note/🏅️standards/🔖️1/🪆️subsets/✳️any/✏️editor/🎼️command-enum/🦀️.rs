@@ -13,9 +13,9 @@ use crate::editor::note::commands::{set_snap_enabled, set_snap_grid_spacing};
 use crate::editor::note::dispatch_ctx::NoteDispatchCtx;
 use crate::op::NoteMutation;
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `NotePlayApp::Command` — the SOLE dispatch surface for note's own behavior (B1 pure-trait
     /// migration, mirroring `shooting_protocol::ShootingCommand`). One variant per action id the pre-B1
     /// `NotePlayApp::handle_action` matched; combined `"x" | "y"` arms (e.g. the old
@@ -64,7 +64,7 @@ semio_framework_plugin::app_commands! {
 /// the snake_case `FromValue` payloads of `🎮️commands/*`, one arm per `NoteCommand` row.
 pub mod args_bridge {
     use super::NoteCommand;
-    use semio_framework_plugin::{DslValue, Fault, FaultCode, FaultOrigin};
+    use semio_plugin::{DslValue, Fault, FaultCode, FaultOrigin};
 
     fn snake(key: &str) -> String {
         let mut out = String::with_capacity(key.len() + 4);

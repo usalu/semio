@@ -93,10 +93,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "paint", entity: "input-stroke", kind: "paint-input-stroke", record: "PaintedInputStroke" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let cells = stroke_cells(&self.points).len();
         let (en, de) = if cells == 1 { ("1 cell".to_string(), "1 Zelle".to_string()) } else { (format!("{cells} cells"), format!("{cells} Zellen")) };
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Paint stroke of {en} in colour {}", self.color), &format!("Strich mit {de} in Farbe {} malen", self.color))
+        semio_ui_locale::LocalizedLabel::native(&format!("Paint stroke of {en} in colour {}", self.color), &format!("Strich mit {de} in Farbe {} malen", self.color))
     }
 }
 

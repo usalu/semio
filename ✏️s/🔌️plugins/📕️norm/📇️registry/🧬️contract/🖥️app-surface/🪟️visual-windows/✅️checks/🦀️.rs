@@ -366,7 +366,7 @@ fn check_row(check: &CheckResult, index: usize, state: &ChecksViewState, locale:
         builder = builder.granularity(ui_text(crate::viewport3d::picking::GRANULARITY_CHECK)?);
     } else if let Some(controller_id) = spec.controller_id {
         let args = action_args_map(vec![("index", UiValue::Number(index as f64))])?;
-        builder = builder.target(semio_framework_plugin::activation_target(norm_action(controller_id, "setSelectedCheckIndex", Some(args))?)?);
+        builder = builder.target(semio_plugin::activation_target(norm_action(controller_id, "setSelectedCheckIndex", Some(args))?)?);
     }
     if matches!(check.status, CheckStatus::Fail | CheckStatus::Warning) {
         let mut children: UiFixedList<_> = UiFixedList::default();

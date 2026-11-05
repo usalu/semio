@@ -48,7 +48,7 @@ impl FlowHost {
                 SynapseSpec { id: edge.id.clone(), from, to, from_port, to_port }
             })
             .collect();
-        self.host_snapshot.camera = CameraJson { x: self.dag.graph.host_snapshot.camera().x, y: self.dag.graph.host_snapshot.camera().y, zoom: self.dag.graph.host_snapshot.camera().zoom };
+        self.host_snapshot.camera = CameraJson { x: self.dag.graph.host_snapshot.camera.x, y: self.dag.graph.host_snapshot.camera.y, zoom: self.dag.graph.host_snapshot.camera.zoom };
     }
 
     pub(in super::super) fn build_dag_host_snapshot_v1(&self)->DagHostSnapshot{Self::raw_dag_snapshot(&self.host_snapshot,&self.kind_infos)}
@@ -56,10 +56,18 @@ impl FlowHost {
     /// 🪞️ Projects the same graph and resolved ports without constructing an evaluation or history owner.
     pub fn project_dag_snapshot(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>)->DagHostSnapshot{let mut graph=Self::raw_dag_snapshot(host_snapshot,kind_infos);for node in &mut graph.nodes{fit_node_size(node);}graph}
 
+    /// 🔍️ Frames original projected node bounds without an evaluation or history owner.
+    pub fn project_focus_selection_camera(source:&dyn FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,selected:&[String],width:u32,height:u32,pad:f64)->Option<CameraJson>{
+        let graph=Self::project_dag_snapshot(source,infos);let(mut min_x,mut min_y,mut max_x,mut max_y)=(f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY);
+        for node in graph.nodes.iter().filter(|node|selected.iter().any(|id|*id==node.id)){min_x=min_x.min(node.x-node.width*0.5);min_y=min_y.min(node.y-node.height*0.5);max_x=max_x.max(node.x+node.width*0.5);max_y=max_y.max(node.y+node.height*0.5);}
+        if !min_x.is_finite(){return None}let pad=pad.max(1.05);let zoom=((width.max(1)as f64)/((max_x-min_x).max(1.0)*pad)).min((height.max(1)as f64)/((max_y-min_y).max(1.0)*pad)).clamp(ui_styling::metrics::camera::ZOOM_MIN,ui_styling::metrics::camera::FLOW_ZOOM_MAX);
+        Some(CameraJson{x:(min_x+max_x)*0.5,y:(min_y+max_y)*0.5,zoom})
+    }
+
     pub(in super::super) fn raw_dag_snapshot(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>)->DagHostSnapshot{
         let mut seen = BTreeSet::new();
         let nodes: Vec<DagNodeSpec> =
-            host_snapshot.widgets().iter().enumerate().filter(|(_, widget)| seen.insert(widget_id_for(widget).to_string())).map(|(i, w)| widget_to_dag_node(w, i, host_snapshot.layout(), host_snapshot.synapses(), kind_infos, widget_node_size(w, host_snapshot.synapses(), kind_infos))).collect();
+            host_snapshot.widgets().iter().filter(|widget| seen.insert(widget_id_for(widget).to_string())).enumerate().map(|(i, w)| widget_to_dag_node(w, i, host_snapshot.layout(), host_snapshot.synapses(), kind_infos, widget_node_size(w, host_snapshot.synapses(), kind_infos))).collect();
         let existing: Vec<(String, String)> = host_snapshot.synapses().iter().map(|s| (s.from.clone(), s.to.clone())).collect();
         let edges: Vec<DagHostSnapshotEdge> = host_snapshot.synapses()
             .iter()
@@ -72,7 +80,7 @@ impl FlowHost {
                 Some(DagHostSnapshotEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, from_port), target: format!("{}@{}", syn.to, to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             })
             .collect();
-        DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_os_infinite_directed_presentation::DagCamera { x: host_snapshot.camera().x, y: host_snapshot.camera().y, zoom: host_snapshot.camera().zoom }, nodes, edges }
+        DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_os_infinite_directed_presentation::DagCamera { x: host_snapshot.camera().x, y: host_snapshot.camera().y, zoom: host_snapshot.camera().zoom }, nodes, edges }
     }
 
     /// 📝️ Borrows the canonical Flow graph to publish its exact compiled wire text.
@@ -254,7 +262,7 @@ impl FlowHost {
     pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FlowCoreError> {
         let mut accepted = |_| true;
         let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024, &mut accepted);
-        let overlay = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(|error| FlowCoreError::Json(error.into_message()))?;
+        let overlay = semio_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(|error| FlowCoreError::Json(error.into_message()))?;
         dag_set_canvas_palette(&mut self.dag.viewport, &mut self.dag.paint, &overlay);
         Ok(())
     }

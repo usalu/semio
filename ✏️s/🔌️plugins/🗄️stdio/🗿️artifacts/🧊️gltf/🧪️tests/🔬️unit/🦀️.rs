@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::{ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_plugin::{ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 
 #[semio_framework_async_macros::async_test]
 async fn all_canonical_leaf_services_are_independently_registered() {

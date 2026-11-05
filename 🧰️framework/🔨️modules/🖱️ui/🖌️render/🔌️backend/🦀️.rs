@@ -30,18 +30,18 @@
 //! crate's only backend impl and the correct default for headless tests, the conformance harness,
 //! and any target with no compiled-in real backend.
 //!
-//! The crate that *does* depend on all four backend crates — `semio-framework-ui-host` (packet
+//! The crate that *does* depend on all four backend crates — `semio-ui-host` (packet
 //! `ui-host`) — is where the real per-target alias belongs, following exactly this shape:
 //!
 //! ```text
 //! #[cfg(target_arch = "wasm32")]
-//! pub type ActiveBackend = semio_framework_ui_backend_webgpu::WebGpuBackend;
+//! pub type ActiveBackend = semio_ui_backend_webgpu::WebGpuBackend;
 //! #[cfg(target_os = "macos")]
-//! pub type ActiveBackend = semio_framework_ui_backend_metal::MetalBackend;
+//! pub type ActiveBackend = semio_ui_backend_metal::MetalBackend;
 //! #[cfg(target_os = "windows")]
-//! pub type ActiveBackend = semio_framework_ui_backend_d3d12::D3d12Backend;
+//! pub type ActiveBackend = semio_ui_backend_d3d12::D3d12Backend;
 //! #[cfg(all(unix, not(target_os = "macos")))]
-//! pub type ActiveBackend = semio_framework_ui_backend_vulkan::VulkanBackend;
+//! pub type ActiveBackend = semio_ui_backend_vulkan::VulkanBackend;
 //! ```
 //! Each backend crate's own context type is `pub` and implements [`GraphicsBackend`] directly —
 //! nothing about the trait or this file needs to change when that lands.
@@ -463,7 +463,7 @@ impl GraphicsBackend for NullBackend {
 //#region 🪪️ActiveBackend
 
 /// 🪪️ The concrete backend this build resolves to — see this file's top docstring for the full U3
-/// rationale and the exact pattern `semio-framework-ui-host` follows once the four backend crates
+/// rationale and the exact pattern `semio-ui-host` follows once the four backend crates
 /// exist. Always [`NullBackend`] in this crate, by construction: this crate depends on nothing that
 /// implements [`GraphicsBackend`] besides its own no-op.
 pub type ActiveBackend = NullBackend;

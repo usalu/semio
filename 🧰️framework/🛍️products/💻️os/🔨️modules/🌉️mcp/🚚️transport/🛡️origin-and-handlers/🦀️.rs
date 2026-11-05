@@ -1,6 +1,6 @@
 //! 🛡️ Origin and bearer admission plus the Axum differential oracle handlers.
 
-use semio_framework_os_mcp_wire::protocol::{
+use semio_os_mcp_wire::protocol::{
     JsonRpcId,
     JsonRpcRequest,
     JsonRpcResponse,

@@ -19,8 +19,8 @@ pub struct SetPresetDictionary {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPresetDictionary {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preset-dictionary", kind: "set-preset-dictionary", record: "SetPresetDictionary" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set preset dictionary", "Voreingestelltes Wörterbuch setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set preset dictionary", "Voreingestelltes Wörterbuch setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

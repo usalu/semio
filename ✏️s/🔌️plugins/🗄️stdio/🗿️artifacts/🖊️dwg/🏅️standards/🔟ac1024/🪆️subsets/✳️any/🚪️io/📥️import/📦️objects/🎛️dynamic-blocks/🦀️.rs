@@ -1,6 +1,6 @@
 //! 🎛️ `stdio.dwg` reader objects: the dynamic-block and associative-constraint object decoders.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "."]
 pub mod standards {

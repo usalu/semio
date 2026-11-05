@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTieBeamSpan where 
         record: "ChangedTieBeamYaw",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tie beam: Span", "Fundamentbalken: Spannweite ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tie beam: Span", "Fundamentbalken: Spannweite ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

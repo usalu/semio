@@ -13,8 +13,8 @@ pub struct RenameDocumentElement {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for RenameDocumentElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "document-element", kind: "rename-document-element", record: "RenameDocumentElement" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Rename document element", "Dokumentelement umbenennen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Rename document element", "Dokumentelement umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

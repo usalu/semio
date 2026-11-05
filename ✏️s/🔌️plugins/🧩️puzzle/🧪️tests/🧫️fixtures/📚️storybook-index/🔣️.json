@@ -1,0 +1,91 @@
+{
+  "cases": [
+    {
+      "name": "emoji story",
+      "title": "🧩️puzzle🩻️2d",
+      "story": "Overview Select",
+      "entries": {
+        "🧩️puzzle🩻️2d--overview-select": {
+          "type": "story",
+          "title": "🧩️puzzle🩻️2d",
+          "name": "Overview Select"
+        }
+      },
+      "expected": "🧩️puzzle🩻️2d--overview-select"
+    },
+    {
+      "name": "explicit id and docs",
+      "title": "🧩️puzzle🧊️3d",
+      "story": "Concrete Forest",
+      "entries": {
+        "docs": {
+          "type": "docs",
+          "title": "🧩️puzzle🧊️3d",
+          "name": "Concrete Forest"
+        },
+        "authored-id": {
+          "type": "story",
+          "title": "🧩️puzzle🧊️3d",
+          "name": "Concrete Forest"
+        }
+      },
+      "expected": "authored-id"
+    },
+    {
+      "name": "missing story",
+      "title": "🧩️puzzle🩻️2d",
+      "story": "Missing",
+      "entries": {},
+      "expected": null
+    },
+    {
+      "name": "ambiguous story",
+      "title": "🧩️puzzle🕐️5d",
+      "story": "Nakagin Capsule Tower",
+      "entries": {
+        "first": {
+          "type": "story",
+          "title": "🧩️puzzle🕐️5d",
+          "name": "Nakagin Capsule Tower"
+        },
+        "second": {
+          "type": "story",
+          "title": "🧩️puzzle🕐️5d",
+          "name": "Nakagin Capsule Tower"
+        }
+      },
+      "expected": null
+    },
+    {
+      "name": "same name other title",
+      "title": "♾️infinite/WasmCanvas",
+      "story": "Mock Session",
+      "entries": {
+        "old": {
+          "type": "story",
+          "title": "♾️infinite/GraphWasmCanvas",
+          "name": "Mock Session"
+        },
+        "actual": {
+          "type": "story",
+          "title": "♾️infinite/WasmCanvas",
+          "name": "Mock Session"
+        }
+      },
+      "expected": "actual"
+    },
+    {
+      "name": "other story same title",
+      "title": "🧩️puzzle🩻️2d",
+      "story": "Lasso Select",
+      "entries": {
+        "overview": {
+          "type": "story",
+          "title": "🧩️puzzle🩻️2d",
+          "name": "Overview Select"
+        }
+      },
+      "expected": null
+    }
+  ]
+}

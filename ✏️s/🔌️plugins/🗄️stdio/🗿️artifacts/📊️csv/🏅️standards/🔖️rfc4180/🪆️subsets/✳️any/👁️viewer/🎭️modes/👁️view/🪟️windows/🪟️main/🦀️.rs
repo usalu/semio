@@ -4,10 +4,10 @@
 //! variant, not the editable one).
 
 use crate::CsvSnapshot;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `CsvSnapshot -> BuiltNode` read: header row (if any) supplies column labels, every
 /// remaining record is one read-only row — no mutation, no selection state.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &CsvSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CsvSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (columns, data_rows): (Vec<String>, &[crate::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {

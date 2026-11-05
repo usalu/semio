@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionCableLength
         record: "ChangedTensionCableLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cable horizontal projection L of the tension component", "Zugglied: Seilhorizontalprojektion L ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cable horizontal projection L of the tension component", "Zugglied: Seilhorizontalprojektion L ändern")
     }
 }
 

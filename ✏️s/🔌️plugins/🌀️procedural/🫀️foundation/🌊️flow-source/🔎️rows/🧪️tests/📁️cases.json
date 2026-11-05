@@ -1,0 +1,77 @@
+[
+  {
+    "name": "First Duplicate Identity",
+    "rows": [
+      "🧱",
+      "a",
+      "é",
+      "a"
+    ],
+    "key": "a",
+    "expected": 1,
+    "expectedTurns": 2
+  },
+  {
+    "name": "UTF8 Byte Prefix",
+    "rows": [
+      "ê",
+      "é"
+    ],
+    "key": "é",
+    "expected": 1,
+    "expectedTurns": 2
+  },
+  {
+    "name": "Missing Identity",
+    "rows": [
+      "a",
+      "b"
+    ],
+    "key": "missing",
+    "expected": null,
+    "expectedTurns": 3
+  },
+  {
+    "name": "Empty Identity",
+    "rows": [
+      "x",
+      "",
+      ""
+    ],
+    "key": "",
+    "expected": 1,
+    "expectedTurns": 2
+  },
+  {
+    "name": "Unicode Spans Original Window Boundary",
+    "rows": [
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🧱bbbbbbbbbbbx",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🧱bbbbbbbbbbbb"
+    ],
+    "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🧱bbbbbbbbbbbb",
+    "expected": 1,
+    "expectedTurns": 4
+  },
+  {
+    "name": "Mismatch Begins Second Window",
+    "rows": [
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxxxxxxxxxxxxx",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected": 1,
+    "expectedTurns": 4
+  },
+  {
+    "name": "Original Seventy Seven Byte Ids",
+    "rows": [
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnx",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnny",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnz",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+    ],
+    "key": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+    "expected": 3,
+    "expectedTurns": 8
+  }
+]

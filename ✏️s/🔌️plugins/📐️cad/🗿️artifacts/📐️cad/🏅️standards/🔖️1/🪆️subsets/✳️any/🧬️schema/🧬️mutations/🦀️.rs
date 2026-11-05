@@ -20,9 +20,9 @@
 //! composed model child (`insert-element`, `remove-element`, `set-element`, `drag-elements`, `rotate-elements`,
 //! `scale-elements`; ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §20.15): no parent leaf reads a child.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[cfg(test)]

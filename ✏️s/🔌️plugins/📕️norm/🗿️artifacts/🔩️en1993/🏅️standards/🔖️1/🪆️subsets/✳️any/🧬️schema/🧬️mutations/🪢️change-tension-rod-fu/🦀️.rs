@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionRodFu where
         record: "ChangedTensionRodFu",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Rod tensile strength f_u of the tension component", "Zugglied: Stangenzugfestigkeit f_u ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Rod tensile strength f_u of the tension component", "Zugglied: Stangenzugfestigkeit f_u ändern")
     }
 }
 

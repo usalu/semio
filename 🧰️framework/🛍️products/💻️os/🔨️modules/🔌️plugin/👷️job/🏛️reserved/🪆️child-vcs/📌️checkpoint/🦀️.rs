@@ -1,6 +1,6 @@
 //! 📌️ A child checkpoint borrows the original authored metadata, skips clean history and captures one exact native pin in bounded turns.
 use super::*;
-use semio_framework_os_kernel::os_vcs::{Author,CompositionPin,io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds};
+use semio_os_kernel::os_vcs::{Author,CompositionPin,io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds};
 use semio_framework_artifact_reference::{ArtifactRef,ArtifactDialect};
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneOwner};
 /// 🧾️ The parent's original authored metadata remains a unique source throughout its child cascade.

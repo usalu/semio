@@ -21,7 +21,7 @@ async fn world_scene_stages_a_one_shot_fit_for_the_booted_example() {
     let definition = semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot();
     assert!(!definition.representations.is_empty(), "the booted example must carry the representation whose mesh this window frames");
     let node = render(&definition, &Block3dConfig::default(), "block3d-window-1", "select", None).expect("the booted example assembles its world surface");
-    let scene: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
+    let scene: World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
     for representation in &definition.representations {
         if let Some(url) = representation.mesh_url.as_deref() {
             assert!(scene.meshes_json.contains(url), "every representation's mesh must reach the scene — {url}");

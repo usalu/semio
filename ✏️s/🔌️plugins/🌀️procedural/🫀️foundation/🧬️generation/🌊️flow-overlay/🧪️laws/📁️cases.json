@@ -1,0 +1,299 @@
+[
+  {
+    "name": "all-native-fields",
+    "widgets": [
+      {
+        "kind": "inputSlider",
+        "id": "s",
+        "label": "S",
+        "value": 1,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "before"
+      },
+      {
+        "kind": "inputImage",
+        "id": "i",
+        "src": "old"
+      },
+      {
+        "kind": "variable",
+        "id": "v",
+        "name": "old",
+        "schema": "dictionary"
+      }
+    ],
+    "values": {
+      "s": 2.5,
+      "n": "β\n\"x\"",
+      "i": "data:image/png;bytes",
+      "v": "new"
+    },
+    "expected": [
+      {
+        "kind": "inputSlider",
+        "id": "s",
+        "label": "S",
+        "value": 2.5,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "β\n\"x\""
+      },
+      {
+        "kind": "inputImage",
+        "id": "i",
+        "src": "data:image/png;bytes"
+      },
+      {
+        "kind": "variable",
+        "id": "v",
+        "name": "new",
+        "schema": "dictionary"
+      }
+    ]
+  },
+  {
+    "name": "wrong-types-retain-original",
+    "widgets": [
+      {
+        "kind": "inputSlider",
+        "id": "s",
+        "label": "S",
+        "value": 1,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "before"
+      },
+      {
+        "kind": "inputImage",
+        "id": "i",
+        "src": "old"
+      },
+      {
+        "kind": "variable",
+        "id": "v",
+        "name": "old",
+        "schema": "dictionary"
+      }
+    ],
+    "values": {
+      "s": "2.5",
+      "n": 3,
+      "i": null,
+      "v": {
+        "name": "new"
+      }
+    },
+    "expected": [
+      {
+        "kind": "inputSlider",
+        "id": "s",
+        "label": "S",
+        "value": 1,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "before"
+      },
+      {
+        "kind": "inputImage",
+        "id": "i",
+        "src": "old"
+      },
+      {
+        "kind": "variable",
+        "id": "v",
+        "name": "old",
+        "schema": "dictionary"
+      }
+    ]
+  },
+  {
+    "name": "every-duplicate-widget",
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "same",
+        "text": "first"
+      },
+      {
+        "kind": "inputNote",
+        "id": "same",
+        "text": "second"
+      }
+    ],
+    "values": {
+      "same": "patched"
+    },
+    "expected": [
+      {
+        "kind": "inputNote",
+        "id": "same",
+        "text": "patched"
+      },
+      {
+        "kind": "inputNote",
+        "id": "same",
+        "text": "patched"
+      }
+    ]
+  },
+  {
+    "name": "unsupported-neuron-unchanged",
+    "widgets": [
+      {
+        "kind": "neuron",
+        "id": "n",
+        "neuronKind": "core.text",
+        "params": {
+          "value": "before"
+        },
+        "inputPorts": [],
+        "outputPorts": [
+          "value"
+        ],
+        "preview": true
+      }
+    ],
+    "values": {
+      "n": "new",
+      "unknown": 3
+    },
+    "expected": [
+      {
+        "kind": "neuron",
+        "id": "n",
+        "neuronKind": "core.text",
+        "params": {
+          "value": "before"
+        },
+        "inputPorts": [],
+        "outputPorts": [
+          "value"
+        ],
+        "preview": true
+      }
+    ]
+  },
+  {
+    "name": "empty-strings-are-values",
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "before"
+      },
+      {
+        "kind": "inputImage",
+        "id": "i",
+        "src": "old"
+      },
+      {
+        "kind": "variable",
+        "id": "v",
+        "name": "old",
+        "schema": "string"
+      }
+    ],
+    "values": {
+      "n": "",
+      "i": "",
+      "v": ""
+    },
+    "expected": [
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": ""
+      },
+      {
+        "kind": "inputImage",
+        "id": "i",
+        "src": ""
+      },
+      {
+        "kind": "variable",
+        "id": "v",
+        "name": "",
+        "schema": "string"
+      }
+    ]
+  },
+  {
+    "name": "missing-values-retain-original",
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "original"
+      }
+    ],
+    "values": {},
+    "expected": [
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "original"
+      }
+    ]
+  },
+  {
+    "name": "unmatched-key-retains-native-field",
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "before"
+      }
+    ],
+    "values": {
+      "other": "ignored"
+    },
+    "expected": [
+      {
+        "kind": "inputNote",
+        "id": "n",
+        "text": "before"
+      }
+    ]
+  },
+  {
+    "name": "unicode-widget-key",
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "节点-β",
+        "text": "before"
+      }
+    ],
+    "values": {
+      "节点-β": "新🧬"
+    },
+    "expected": [
+      {
+        "kind": "inputNote",
+        "id": "节点-β",
+        "text": "新🧬"
+      }
+    ]
+  }
+]

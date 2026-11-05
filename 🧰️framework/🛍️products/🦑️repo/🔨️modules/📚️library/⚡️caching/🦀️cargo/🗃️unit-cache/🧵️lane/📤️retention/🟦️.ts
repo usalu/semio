@@ -31,16 +31,16 @@ const insideV1=(parent:string,path:string):boolean=>{const part=relative(parent,
 /** 🛤️ Whether a build directory is the build directory of a lane of the pool under `cacheRoot` (`<cacheRoot>/<lanes>/<id>/<build>` with a valid lane identifier). Pure. */
 export function laneBuildDirectoryOwnedV1(cacheRoot:string,buildDirectory:string):boolean{
  const root=resolve(cacheRoot),build=resolve(buildDirectory),parts=relative(join(root,layout.lanes),build).split(sep);
- if(parts.length!==2||parts[1]!==layout.build)return false;
+ if(parts.length!==1)return false;
  try{return resolve(lanePathsV1(root,parts[0]!).build)===build;}catch{return false;}
 }
 
-/** 🪪️ Whether a recorded compiler origin belongs to the compiler store whose lanes live under `cacheRoot`: the shared build and target directories themselves, or the build directory of one of the store's lanes with a target directory that is the lane's own or lies inside its build directory (the recipe slot of an artifact build). Pure; a lookalike directory, a path with `..` or a lane of another cache root is never owned. */
+/** 🪪️ Whether a recorded compiler origin belongs to the compiler store whose lanes live under `cacheRoot`: the shared build and target directories themselves, or the build root of one of the store's lanes with a target directory in that lane's target namespace (the recipe slot of an artifact build). Pure; a lookalike directory, a path with `..` or a lane of another cache root is never owned. */
 export function compilerOriginOwnedV1(input:Readonly<{cacheRoot:string;shared:Readonly<{build:string;target:string}>;origin:Readonly<{buildDirectory:string;targetDirectory:string}>}>):boolean{
  const build=resolve(input.origin.buildDirectory),target=resolve(input.origin.targetDirectory);
  if(build===resolve(input.shared.build)&&target===resolve(input.shared.target))return true;
  if(!laneBuildDirectoryOwnedV1(input.cacheRoot,build))return false;
- return target===resolve(join(dirname(build),layout.target))||insideV1(build,target);
+ const expected=resolve(join(build,layout.target));return target===expected||insideV1(expected,target);
 }
 
 function digestV1(path:string):Readonly<{sha256:string;bytes:number}>{
@@ -127,9 +127,9 @@ export function retainRemovedLaneV1(paths:Readonly<{id:string;base:string;build:
 
 /** 🔗️ Runs `body` in a held lane, then publishes the lane's provenance (whether `body` succeeded or failed) and only then releases the lane, so no pass can trim a lane whose provenance is not yet in the shared ledger. A failing `body` keeps its own error (a failing retention joins it); after a successful `body` a failing retention is the error, because the caller would otherwise lose the provenance of a build that looked successful.
  * @see ./🟦️.ts */
-export async function withLaneRetentionV1<T>(input:Readonly<{lane:Readonly<{paths:Readonly<{id:string;build:string}>;release():void}>;shared:string;language:"en"|"de";report?:(line:string)=>void}>,body:()=>Promise<T>):Promise<T> {
+export async function withLaneRetentionV1<T>(input:Readonly<{lane:Readonly<{paths:Readonly<{id:string;base:string;build:string}>;release():void}>;shared:string;language:"en"|"de";report?:(line:string)=>void}>,body:()=>Promise<T>):Promise<T> {
  let value!:T,bodyFailed=false,bodyFailure:unknown,retentionFailed=false,retentionFailure:unknown;
- recordDestinationV1(dirname(input.lane.paths.build),input.shared);
+ recordDestinationV1(input.lane.paths.base,input.shared);
  try{value=await body();}catch(error){bodyFailed=true;bodyFailure=error;}
  try{retainLaneOutputsV1({lane:input.lane.paths.build,shared:input.shared,laneId:input.lane.paths.id,language:input.language,...input.report?{report:input.report}:{}});}
  catch(error){retentionFailed=true;retentionFailure=error;}

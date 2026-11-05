@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeAnchorActionSource
         record: "ChangedAnchorActionSource",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change source of the anchor action", "Dübeleinwirkung: Quelle ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change source of the anchor action", "Dübeleinwirkung: Quelle ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.anchor_id.clone(), self.action_id.clone()]

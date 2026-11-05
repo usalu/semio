@@ -1,13 +1,13 @@
 //! 🧰️ BIM editor kit: the UI admission helpers every taxonomy node shares, the id mint, and the window-config declaration macro.
 
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ActionId;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::DslValue;
-use semio_framework_ui_locale::Label;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ActionId;
+use semio_plugin::BuiltNode;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiValue;
+use semio_plugin::DslValue;
+use semio_ui_locale::Label;
 
 //#region 🔖️Constants
 pub const BIM_EDITOR_CONTROLLER_ID: &str = "s.bim.model@1/*#editor";
@@ -16,12 +16,12 @@ pub const BIM_EDITOR_CONTROLLER_ID: &str = "s.bim.model@1/*#editor";
 //#region 🔖️Actions
 /// 🎯️ An action descriptor addressed at this app: the one factory every panel, table and window chrome builds its actions with.
 pub fn bim_action(action: &str, args: Option<UiValue>) -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(BIM_EDITOR_CONTROLLER_ID).action(action, args)
+    semio_plugin::ActionFactory::new(BIM_EDITOR_CONTROLLER_ID).action(action, args)
 }
 
 /// 🎛️ Addresses host window chrome with its native action descriptor.
-pub fn bim_window_action(action: &str, args: Option<DslValue>) -> semio_framework_plugin::ActionDescriptor {
-    semio_framework_plugin::ActionDescriptor { controller_id: BIM_EDITOR_CONTROLLER_ID.into(), action: action.into(), args }
+pub fn bim_window_action(action: &str, args: Option<DslValue>) -> semio_plugin::ActionDescriptor {
+    semio_plugin::ActionDescriptor { controller_id: BIM_EDITOR_CONTROLLER_ID.into(), action: action.into(), args }
 }
 //#endregion 🔖️Actions
 
@@ -32,23 +32,23 @@ pub fn ui_capacity_error() -> PluginAssemblyError {
 }
 
 /// 🏷️ Admits localized text into the semantic UI contract.
-pub fn ui_label(value: &str) -> UiAssemblyResult<semio_framework_ui_contract::Label> {
+pub fn ui_label(value: &str) -> UiAssemblyResult<semio_ui_contract::Label> {
     value.try_into().map_err(|_| PluginAssemblyError::new("ui.label.capacity", "fixed UI label admission failed"))
 }
 
 /// 📝️ Admits a fixed UI string.
-pub fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_ui_contract::UiText> {
-    semio_framework_ui_contract::UiText::try_from_str(value.as_ref()).ok_or_else(ui_capacity_error)
+pub fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<semio_ui_contract::UiText> {
+    semio_ui_contract::UiText::try_from_str(value.as_ref()).ok_or_else(ui_capacity_error)
 }
 
 /// 🧱️ Admits one fixed UI text action value.
 pub fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 📚️ Admits one fixed UI list action value.
 pub fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
         builder.push(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
@@ -57,7 +57,7 @@ pub fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyRes
 
 /// 🗺️ Admits one ordered fixed UI map action value.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
         builder.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
@@ -67,8 +67,8 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -
 /// 🌳️ A tree row with an icon and a click action.
 pub fn tree_item_with_icon(id: impl AsRef<str>, label: Label, icon_id: &str, action: UiAssemblyResult<(ActionId, Option<UiValue>)>) -> UiAssemblyResult<BuiltNode> {
     let mut node = tree_item_with_action(id, label.as_str(), None, action?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-        props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon_id).ok_or_else(|| PluginAssemblyError::new("ui.tree-item.icon", "fixed tree-item icon admission failed"))?);
+    if let semio_plugin::Component::TreeItem(props) = &mut node.component {
+        props.icon = Some(semio_plugin::UiText::try_from_str(icon_id).ok_or_else(|| PluginAssemblyError::new("ui.tree-item.icon", "fixed tree-item icon admission failed"))?);
     }
     Ok(node)
 }
@@ -85,14 +85,14 @@ pub fn accessible(mut node: BuiltNode, name: &str, description: Option<&str>) ->
 
 //#region 🔖️Faults
 /// 🚫️ A refusal of this app with a stable code.
-pub fn fault(code: &'static str, message: impl Into<String>) -> semio_framework_plugin::Fault {
-    semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+pub fn fault(code: &'static str, message: impl Into<String>) -> semio_plugin::Fault {
+    semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message)
 }
 
 /// 🕹️ Requests the framework's own `interactionSelect` for `targets` (`(granularity, id)` pairs) in `domain`, merged as `merge`: selection is framework state, never a mutation.
-pub fn select_effect(domain: &str, targets: &[(String, String)], merge: &str) -> semio_framework_plugin::Effect {
+pub fn select_effect(domain: &str, targets: &[(String, String)], merge: &str) -> semio_plugin::Effect {
     let items = targets.iter().map(|(granularity, id)| DslValue::object([("granularity".to_string(), DslValue::String(granularity.clone())), ("id".to_string(), DslValue::String(id.clone()))])).collect();
-    semio_framework_plugin::Effect::ReplayShellCommand {
+    semio_plugin::Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
         args: Some(DslValue::object([
             ("domainId".to_string(), DslValue::String(domain.to_string())),
@@ -113,7 +113,7 @@ pub struct IdMint {
 }
 
 impl IdMint {
-    pub fn new(operation: Option<&semio_framework_plugin::AppOperationContext>) -> Self {
+    pub fn new(operation: Option<&semio_plugin::AppOperationContext>) -> Self {
         Self::seeded(operation.map_or("", |operation| operation.authoring_seed.as_str()))
     }
 
@@ -220,11 +220,11 @@ pub fn meta_record(utility: &str) -> DslValue {
 }
 
 /// 🖼️ Publishes the records as the window's canvas surface, framed on `bounds` until the author has navigated.
-pub fn canvas_surface(surface_id: &str, viewport: store::Viewport2d, framing: Option<semio_framework_plugin::Canvas2dFraming>, records: &[DslValue]) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(
+pub fn canvas_surface(surface_id: &str, viewport: store::Viewport2d, framing: Option<semio_plugin::Canvas2dFraming>, records: &[DslValue]) -> UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(
         surface_id,
-        semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &semio_framework_plugin::Canvas2dScene { framing, camera_x: viewport.x, camera_y: viewport.y, zoom: viewport.zoom, layers_json: semio_framework_pack_json::to_json_string(&records.to_vec()), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        semio_ui_contract::SurfaceKind::Canvas2d,
+        &semio_plugin::Canvas2dScene { framing, camera_x: viewport.x, camera_y: viewport.y, zoom: viewport.zoom, layers_json: semio_framework_pack_json::to_json_string(&records.to_vec()), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }
 //#endregion 🔖️CanvasRecords
@@ -243,7 +243,7 @@ macro_rules! window_config {
         type $Config:ident, $Diff:ident, $Mutation:ident, $Owner:ident;
         $( $(#[$attr:meta])* $field:ident : $ty:ty = $default:expr; )+
     ) => {
-        #[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+        #[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact)]
         #[canonical_json(owner = semio_framework_pack_json)]
         #[value(rename_all = "camelCase", deny_unknown_fields)]
         #[dsl(layout = "lines")]
@@ -260,7 +260,7 @@ macro_rules! window_config {
 
         crate::bim_window_config! { config: $Config, diff: $Diff, mutation: $Mutation, owner: $Owner, window: $window, schema: $schema, owner_path: $owner_path, display: $display, bytes: 4_096, fields: { $($field: $ty),+ } }
 
-        pub fn register(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+        pub fn register(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_plugin::Fault> {
             registry.register::<$Owner>()
         }
     };

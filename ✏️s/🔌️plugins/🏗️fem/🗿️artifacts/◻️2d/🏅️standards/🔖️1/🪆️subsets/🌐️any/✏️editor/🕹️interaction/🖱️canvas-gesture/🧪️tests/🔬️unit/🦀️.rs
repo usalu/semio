@@ -8,14 +8,14 @@ use crate::editor::fem2d::interaction::screen_2d;
 const WINDOW_KIND_ID: &str = "fem2d-model";
 /// 🧍️ The body key the addressed window refreshes under.
 const BODY_KEY: &str = "fem2d.play.model";
-use semio_framework_os_kernel::Viewport2d;
+use semio_os_kernel::Viewport2d;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::HistoryView;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::ViewWindowInstance;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::HistoryView;
+use semio_plugin::NoConfig;
+use semio_plugin::ViewModel;
+use semio_plugin::ViewWindowInstance;
 use pack::snapshot::ArtifactDsl;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
@@ -48,7 +48,7 @@ fn addressed(utility: &str) -> ViewModel {
         window_id: Some("w".into()),
         window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: WINDOW_KIND_ID.into() }],
         active_utility_id: Some(utility.into()),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 

@@ -1,6 +1,6 @@
 //! 🧯️ Native command failures lend every original typed cause through the domain projection boundary.
-use semio_framework_os_spr as protocol;
-use semio_framework_os_vcs::VcsError;
+use semio_os_spr as protocol;
+use semio_os_vcs::VcsError;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
 use semio_framework_job::{OriginalDomainFailure,OriginalDomainProjection,OriginalDomainView as View};
 #[derive(Debug,semio_framework_value::RetireOwned)]

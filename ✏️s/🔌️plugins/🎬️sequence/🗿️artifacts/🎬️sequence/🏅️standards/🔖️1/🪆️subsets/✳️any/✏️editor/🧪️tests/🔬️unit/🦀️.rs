@@ -1,15 +1,15 @@
 use semio_framework_test_fixtures::fixture_text;
 
 pub mod context {
-    use semio_framework_plugin::AppActionRegistry;
+    use semio_plugin::AppActionRegistry;
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
     use crate::SequenceHostSnapshot;
     use crate::editor::sequence::modes::edit::windows::{main, script};
     use crate::editor::sequence::editor_vocabulary::SEQUENCE_INTERACTION_STEPS;
     use crate::editor::sequence::retained::SequenceCommand;
     use crate::editor::sequence::app::{SequencePlayApp, create_sequence_app};
-    use semio_framework_plugin::artifact_app_laws::meta;
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_plugin::artifact_app_laws::meta;
+    use semio_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers};
     use pack::snapshot::ArtifactPack;
 
@@ -20,7 +20,7 @@ pub mod context {
     /// at the end of the test body instead of at its assertions.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the paid app close.
-    pub struct SequenceApp(pub(crate) VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>, pub(crate) semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct SequenceApp(pub(crate) VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>, pub(crate) semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for SequenceApp {
         type Target = VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>;
@@ -38,7 +38,7 @@ pub mod context {
     impl Drop for SequenceApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -82,17 +82,17 @@ pub mod context {
         App { definition: create_sequence_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, "../..");
-    semio_framework_plugin::composed_reload_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, "../..");
-    semio_framework_plugin::composed_child_history_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, [("nodeGraphEdit", r#"{"operations":[{"operation":"move","gestureId":"node-drag:1","nodeIds":["step-1"],"dx":25.0,"dy":5.0}]}"#)]);
+    semio_plugin::history_edit_acceptance_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, "../..");
+    semio_plugin::composed_reload_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, "../..");
+    semio_plugin::composed_child_history_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, [("nodeGraphEdit", r#"{"operations":[{"operation":"move","gestureId":"node-drag:1","nodeIds":["step-1"],"dx":25.0,"dy":5.0}]}"#)]);
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     /// 🪪️ MOUNTED: a registered app refuses every typed command whose `ActionMeta.instance_id` is not
     /// its bound live runtime instance (`interactive-job.live-instance`), and a freshly constructed
     /// wrapper has none — so the id `meta(..)` stamps is bound here, before the content child lands.
     pub async fn new_app_with_registry_wired() -> SequenceApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<SequencePlayApp>, SemioMembers>(sequence_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = semio_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<SequencePlayApp>, SemioMembers>(sequence_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(SEQUENCE_TEST_INSTANCE).await;
         let mut app = SequenceApp(app, scope);
         register_content_child(&mut app).await;
@@ -122,24 +122,24 @@ pub mod context {
     /// unaddressed dispatch — `sequence-window-view-required` / `sequence-script-window-view-required` —
     /// and `addressed(view, ..)` resolves `view.window_id` against an instance OF ITS OWN KIND, so the
     /// two lanes need two metas (flow's `flow_main_window_meta` is the sibling precedent).
-    fn window_meta(window_kind_id: &str) -> semio_framework_plugin::ActionMeta {
-        let window = semio_framework_plugin::ViewWindowInstance { id: format!("{window_kind_id}#1"), window_kind_id: window_kind_id.into() };
-        semio_framework_plugin::ActionMeta {
+    fn window_meta(window_kind_id: &str) -> semio_plugin::ActionMeta {
+        let window = semio_plugin::ViewWindowInstance { id: format!("{window_kind_id}#1"), window_kind_id: window_kind_id.into() };
+        semio_plugin::ActionMeta {
             view_state: Some(ViewModel {
                 window_id: Some(window.id.clone()),
                 active_window_kind_id: Some(window.window_kind_id.clone()),
                 window_instances: vec![window],
-                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
             }),
             ..meta("local")
         }
     }
 
-    pub fn main_window_meta() -> semio_framework_plugin::ActionMeta {
+    pub fn main_window_meta() -> semio_plugin::ActionMeta {
         window_meta(main::SEQUENCE_PLAY_WINDOW_MAIN)
     }
 
-    pub fn script_window_meta() -> semio_framework_plugin::ActionMeta {
+    pub fn script_window_meta() -> semio_plugin::ActionMeta {
         window_meta(script::SEQUENCE_PLAY_WINDOW_SCRIPT)
     }
 
@@ -157,21 +157,21 @@ pub mod context {
         dispatch_addressed(app, command, &script_window_meta()).await
     }
 
-    pub async fn dispatch_addressed(app: &mut SequenceApp, command: SequenceCommand, meta: &semio_framework_plugin::ActionMeta) -> InvocationResult {
-        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SEQUENCE_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+    pub async fn dispatch_addressed(app: &mut SequenceApp, command: SequenceCommand, meta: &semio_plugin::ActionMeta) -> InvocationResult {
+        let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SEQUENCE_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         result
     }
 
     pub async fn render(app: &mut SequenceApp, body_key: &str) -> String {
-        render_in(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
+        render_in(app, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await
     }
 
     /// 🪟️ [`render`] through one addressed window view — a window-transient surface (the script
     /// window's last run result) is only readable from the instance it was published at.
     pub async fn render_in(app: &mut SequenceApp, body_key: &str, view: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view, app.1.cx()).await.expect("render")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view, app.1.cx()).await.expect("render")
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
@@ -184,17 +184,17 @@ pub mod context {
     pub async fn select_steps(app: &mut SequenceApp, ids: &[&str]) {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "step", "id": id })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_framework_plugin::dsl_value!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" })), &meta("test"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_plugin::dsl_value!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" })), &meta("test"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)
             .await
             .expect("interactionSelect");
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect admission settles");
+        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect admission settles");
     }
 }
 
 use neural_engine::Value as NeuralValue;
-use semio_framework_plugin::{AppActionRegistry, DslValue, Media, MediaPayload};
-use semio_framework_os_infinite::board::schema::layout::DagLayoutOptions;
-use semio_framework_os_infinite_directed_presentation::{EdgeRouteStyle, PortShape};
+use semio_plugin::{AppActionRegistry, DslValue, Media, MediaPayload};
+use semio_os_infinite::board::schema::layout::DagLayoutOptions;
+use semio_os_infinite_directed_presentation::{EdgeRouteStyle, PortShape};
 use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceStep, SlotRef, StepParams};
 use crate::editor::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
 use crate::editor::sequence::modes::edit::windows::{compiled, main, script};
@@ -214,9 +214,9 @@ use crate::editor::sequence::host::SequenceHost;
 use crate::editor::sequence::app::{SequencePlayApp, create_sequence_app, sequence_context_menu_items};
 use crate::default_snapshot;
 use crate::editor_unit_tests::context::{live_host_snapshot, new_app, new_app_with_registry_wired};
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::PluginApp;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_plugin::PluginApp;
+use semio_ui_locale::Terminology;
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_steps() {
@@ -230,15 +230,15 @@ async fn default_snapshot_has_steps() {
 /// `undo_restores_fixture_after_add_widget` does for its own `content` child.
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
-    use semio_framework_plugin::artifact_app_laws::{meta, settle_history_verb};
+    use semio_plugin::artifact_app_laws::{meta, settle_history_verb};
     let mut app = new_app().await;
     let receiver = meta("local").instance_id;
     assert_eq!(live_host_snapshot(&app).await.steps.len(), 2);
     context::dispatch(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 })).await;
     assert_eq!(live_host_snapshot(&app).await.steps.len(), 3, "addStep must land one step in the content child");
-    settle_history_verb(&mut app.0, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "undo", receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(live_host_snapshot(&app).await.steps.len(), 2, "undo must retire the child-lane group");
-    settle_history_verb(&mut app.0, "redo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    settle_history_verb(&mut app.0, "redo", receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(live_host_snapshot(&app).await.steps.len(), 3, "redo must reapply the child-lane group");
 }
 
@@ -257,7 +257,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 /// The body is the helper's own, over this app's real `SemioMembers` pair.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+    use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     let mut instance_a = new_app_with_registry_wired().await;
     let mut instance_b = new_app_with_registry_wired().await;
     let (backbone_a, backbone_b) = store::os_store::backbone::MemoryBackbone::pair("mem://sequence-convergence", "mem://sequence-convergence").await;
@@ -265,18 +265,18 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = live_host_snapshot(&instance_a).await.steps.iter().map(|step| (step.id.clone(), step.x)).collect::<Vec<_>>();
     let receiver = meta("actor-a").instance_id;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }), &meta("actor-a"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }), &meta("actor-b"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut instance_b.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     let positions = |snapshot: &SequenceHostSnapshot| snapshot.steps.iter().map(|step| (step.id.clone(), step.x)).collect::<Vec<_>>();
     assert_eq!(positions(&*live_host_snapshot(&instance_a).await), positions(&*live_host_snapshot(&instance_b).await), "both instances must converge on the same snapshot");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
+    semio_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(positions(&*live_host_snapshot(&instance_a).await), positions(&*live_host_snapshot(&instance_b).await), "a replicated checkpoint keeps both instances converged");
     assert_ne!(positions(&*live_host_snapshot(&instance_a).await), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
     instance_a.detach_backbone().await.expect("a releases its backbone");
@@ -325,7 +325,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_stays_within_nine_rows_and_ends_with_destructive_delete() {
     let registry = AppActionRegistry::from_definition(&create_sequence_app());
-    let items = sequence_context_menu_items(&registry, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), None, &["step-1".to_string()]);
+    let items = sequence_context_menu_items(&registry, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), None, &["step-1".to_string()]);
     assert!(items.len() <= 9, "expected <= 9 top-level rows, got {} ({items:?})", items.len());
     let last = items.last().expect("at least one row");
     assert_eq!(last.id, "delete-selection");
@@ -347,10 +347,10 @@ async fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
     let mut app = new_app_with_registry_wired().await;
     let before = live_host_snapshot(&app).await.steps.len();
     let media = Media {
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() },
     };
-    app.0.import_media("steps:in", media, &semio_framework_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import steps:in");
+    app.0.import_media("steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import steps:in");
     let after = live_host_snapshot(&app).await;
     assert_eq!(after.steps.len(), before + 1);
     let imported = after.steps.last().expect("imported step");
@@ -362,10 +362,10 @@ async fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
 async fn import_media_steps_in_wraps_a_bare_scalar_payload() {
     let mut app = new_app_with_registry_wired().await;
     let media = Media {
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() },
     };
-    app.0.import_media("steps:in", media, &semio_framework_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import steps:in");
+    app.0.import_media("steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import steps:in");
     let after = live_host_snapshot(&app).await;
     let imported = after.steps.last().expect("imported step");
     assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
@@ -380,8 +380,8 @@ async fn import_media_steps_in_consumes_original_intrinsic_unicode_and_signed_sc
     let mut app=new_app_with_registry_wired().await;
     let before=live_host_snapshot(&app).await.steps.len();
     for value in [DslValue::Object(vec![("message".into(),DslValue::String(text.clone()))]),DslValue::Number(Number::Int(42))]{
-        let media=Media{media_type:semio_framework_plugin::MediaType{class:semio_framework_plugin::MediaClass::Computation,form:semio_framework_plugin::MediaForm::Any},payload:MediaPayload::Intrinsic{schema:"computation.value".into(),value}};
-        app.0.import_media("steps:in", media, &semio_framework_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("intrinsic steps import");
+        let media=Media{media_type:semio_plugin::MediaType{class:semio_plugin::MediaClass::Computation,form:semio_plugin::MediaForm::Any},payload:MediaPayload::Intrinsic{schema:"computation.value".into(),value}};
+        app.0.import_media("steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("intrinsic steps import");
     }
     let after=live_host_snapshot(&app).await;
     assert_eq!(after.steps.len(),before+2);
@@ -393,10 +393,10 @@ async fn import_media_steps_in_consumes_original_intrinsic_unicode_and_signed_sc
 async fn import_media_rejects_unknown_port() {
     let mut app = new_app_with_registry_wired().await;
     let media = Media {
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: "{}".into() },
     };
-    assert!(app.0.import_media("not-a-port", media, &semio_framework_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.is_err());
+    assert!(app.0.import_media("not-a-port", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.is_err());
 }
 //#endregion 🔖️PortTests
 

@@ -88,7 +88,7 @@ export function rustFamilyOwnershipActive(input:Readonly<{sources:ReadonlyMap<st
   const tokens=rustTokens(source),pairs=rustTokenPairs(tokens),facts=inspectRustBindingFacts(source,{checkCancellation}),enums=localEnumFacts(source,tokens,pairs,facts);
   const variantOnly=(token:RustToken,index:number):boolean=>enums.some(row=>row.variants.get(rustIdentifierSymbol(token)??"")===token.start||tokens[index-1]?.text==="::"&&localEnumVariant(enums,[rustIdentifierSymbol(tokens[index-2])??"",rustIdentifierSymbol(token)??""],token.start,facts,tokens,pairs));
   if(tokens.some((token,index)=>token.kind==="identifier"&&tokens[index-1]?.text!=="'"&&COMPUTE_FAMILY_SYMBOLS.some(name=>name===rustIdentifierSymbol(token))&&!variantOnly(token,index)))return true;
-  const roots=["semio_framework_2d","semio_framework_2d_compute","semio_framework_os_kernel","store",...[...(manifestsBySource.get(path)??[])].flatMap(aliases)];
+  const roots=["semio_framework_2d","semio_framework_2d_compute","semio_os_kernel","store",...[...(manifestsBySource.get(path)??[])].flatMap(aliases)];
   const familyRoute=(path:readonly string[]):boolean=>roots.includes(path[0]??"")&&(path.includes("Engine")||path[0]==="semio_framework_2d"&&path.includes("compute")&&tokens.some(token=>rustIdentifierSymbol(token)==="Engine"));
   if(facts.imports.some(fact=>familyRoute(fact.path))||facts.problems.some(problem=>problem.kind==="unproven-path-namespace"&&familyRoute(rustTokens(problem.path).filter(token=>token.kind==="identifier").map(token=>rustIdentifierSymbol(token)!))))return true;
   if(tokens.some((_,index)=>engineFamilyItem(tokens,pairs,index)))return true;
@@ -139,8 +139,8 @@ export function inspectRustFamilyOwnership(input:Readonly<{contract:RustFamilyOw
   if(tokens.some((_,index)=>engineFamilyItem(tokens,pairs,index)))typeNames.add(contract.traitName);
   const declarations=observed.declarations.filter(d=>names.has(d.name)||d.name===contract.traitName&&tokens.some((token,index)=>token.text==="trait"&&engineFamilyItem(tokens,pairs,index)));
   for(const declaration of declarations)if(from!==contract.declarationSource||declaration.modulePath.length>0||declaration.blockScope.length>0||contexts.some(c=>!canonical(c)))add("declaration-origin",from,"Owned family declaration outside canonical owner: "+declaration.name,contract.declarationSource);
-  const imports=observed.imports.filter(f=>f.path.some(name=>typeNames.has(name))||f.path.includes(contract.traitName)&&[contract.externName,"store","semio_framework_os_kernel"].includes(f.path[0]!)||f.path[0]===contract.externName&&f.path.slice(1).join("::")===contract.modulePath.join("::"));
-  const qualified=observed.problems.filter(p=>p.kind==="unproven-path-namespace"&&rustTokens(p.path).some(token=>typeNames.has(rustIdentifierSymbol(token)??"")||rustIdentifierSymbol(token)===contract.traitName&&[contract.externName,"store","semio_framework_os_kernel"].some(root=>p.path.startsWith(root+"::"))));
+  const imports=observed.imports.filter(f=>f.path.some(name=>typeNames.has(name))||f.path.includes(contract.traitName)&&[contract.externName,"store","semio_os_kernel"].includes(f.path[0]!)||f.path[0]===contract.externName&&f.path.slice(1).join("::")===contract.modulePath.join("::"));
+  const qualified=observed.problems.filter(p=>p.kind==="unproven-path-namespace"&&rustTokens(p.path).some(token=>typeNames.has(rustIdentifierSymbol(token)??"")||rustIdentifierSymbol(token)===contract.traitName&&[contract.externName,"store","semio_os_kernel"].some(root=>p.path.startsWith(root+"::"))));
   const byteCharacters=new Map<number,number>();
   let byte=0,character=0;for(const value of source){byteCharacters.set(byte,character);byte+=Buffer.byteLength(value);character+=value.length;}byteCharacters.set(byte,character);
   const scopeAt=(offset:number)=>lexicalScope(observed,tokens,pairs,offset);

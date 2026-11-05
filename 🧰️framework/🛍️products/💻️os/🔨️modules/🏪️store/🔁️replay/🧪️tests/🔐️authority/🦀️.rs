@@ -1,7 +1,7 @@
 //! 🔐️ Executable public raw replay authority laws share independent neutral witnesses.
 #![cfg(test)]
-use semio_framework_os_spr as protocol;
-use semio_framework_os_store_replay::{EditReplay,EffectiveSupersessions,ReplayEdits,ReplayMode};
+use semio_os_spr as protocol;
+use semio_os_store_replay::{EditReplay,EffectiveSupersessions,ReplayEdits,ReplayMode};
 use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,RetainedCloneGrant,ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::{cell::Cell,sync::Arc};
@@ -48,7 +48,7 @@ fn run_case(name:&str){
  CALLS.with(|calls|calls.set(0));
  let id=String::from("replay-authority-edit");
  let edits=Edits(protocol::Edit{id:id.clone(),actor:None,line:None,forwards:vec![SetCounter(row["nextCounter"].as_i64().unwrap())],inverse:Vec::new().into(),mutation_meta:Vec::new(),verb:None,sequence_number:0,started_at:String::from("2026-10-28T00:00:00Z"),finished_at:None});
- let mut order=semio_framework_os_vcs::HistoryPageStack::new();order.push(id);
+ let mut order=semio_os_vcs::HistoryPageStack::new();order.push(id);
  let baseline=row["state"]["counter"].as_i64().unwrap();
  let mut raw=EditReplay::new_counted(ReplayMode::Report,Arc::new(baseline),order,0,String::new(),EffectiveSupersessions::new(),1).unwrap();
  assert!(!row["producerInstalled"].as_bool().unwrap());assert!(raw.operation_preparation_factory.is_none());
@@ -57,7 +57,7 @@ fn run_case(name:&str){
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64};
   let mut callback=|_|true;let mut native=NativeDecodeControl::new_retained(&mut callback);native.admit_turn_capacity(grant.maximum_capacity_bytes).unwrap();
   let error=raw.step_granted(&edits,grant,&mut native,&mut||false).unwrap_err();
-  assert!(matches!(error,semio_framework_os_vcs::VcsError::InverseRefused(ref error)if error.kind==ValueRefusalKind::UnsupportedOwner));
+  assert!(matches!(error,semio_os_vcs::VcsError::InverseRefused(ref error)if error.kind==ValueRefusalKind::UnsupportedOwner));
   assert_eq!((Arc::as_ptr(raw.state.as_ref().unwrap()),raw.cursor,raw.operation,raw.progress(),raw.outcomes.len(),raw.committed.len(),raw.rebased_inverse.len()),before);
   assert_eq!(raw.take_native_receipt(),Default::default());assert_eq!(native.owned_bytes(),0);
   Some("UnsupportedOwner")

@@ -57,7 +57,7 @@ test("registered export refusal policies preserve distinct original frame admiss
 
 test("registered file dependency preserves original mounted close loan and complete causes",()=>{
  const source=readModuleTreeSource(new URL("../../../🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs",import.meta.url)),start=source.indexOf("/// 🎟️ Advances one genuine original owner under the complete caller grant."),end=source.indexOf("fn close_terminal_is_empty",start);expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);const boundary=source.slice(start,end);
- for(const name of["cx:&mut semio_framework_job::StepContext","loan:RetainedCloneGrant","semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure","original_lifecycle_step(cx,loan,demand","self.close_ladder_step(same,grant)"])expect(boundary).toContain(name);
+ for(const name of["cx:&mut semio_framework_job::StepContext","loan:RetainedCloneGrant","semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure","original_lifecycle_step(cx,loan,demand","self.close_ladder_step(same,grant)"])expect(boundary).toContain(name);
  expect(boundary).not.toContain("into_message()");expect(boundary).not.toContain("plugin_sdk_fault");
  const receiver=read("../../../🔌️plugin/🏇️mounted-owner/🦀️.rs");expect(receiver).toContain("advance_lifecycle");
 });

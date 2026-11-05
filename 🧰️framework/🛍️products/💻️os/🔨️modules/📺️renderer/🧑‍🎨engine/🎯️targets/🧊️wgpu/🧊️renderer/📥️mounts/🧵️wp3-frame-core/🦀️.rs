@@ -6,13 +6,13 @@
 #[path = "../../../../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod interpreter;
 
-pub(crate) use semio_framework_os_renderer_wgpu_runtime_mailbox::*;
+pub(crate) use semio_renderer_wgpu_runtime_mailbox::*;
 
-pub(crate) use semio_framework_os_renderer_wgpu_frame_presentation::*;
+pub(crate) use semio_renderer_wgpu_frame_presentation::*;
 
-pub(crate) use semio_framework_os_renderer_wgpu_app_runtime::*;
+pub(crate) use semio_renderer_wgpu_app_runtime::*;
 
-pub(crate) use semio_framework_os_renderer_wgpu_native_probe::*;
+pub(crate) use semio_renderer_wgpu_native_probe::*;
 
 //#region 🔖️AsyncBoundaryTests
 //#endregion 🔖️AsyncBoundaryTests
@@ -41,16 +41,16 @@ pub(crate) use semio_framework_os_renderer_wgpu_native_probe::*;
 // taking a descriptor built by `uiIntentToActionDescriptor` (`🛠️ShellHelpers/🟦️.tsx:2051`). Nothing
 // about wgpu's runtime semantics needed the fixture; what DID differ was the controller identity that
 // descriptor carried, and that is fixed at the source in `ui_wgpu`'s `UiIntentCommand::descriptor`.
-use semio_framework_os_renderer_wgpu_host_plumbing::{browser_original_output, deadlines, input_wire, render_snapshot, surface_lane};
+use semio_renderer_wgpu_host_plumbing::{browser_original_output, deadlines, input_wire, render_snapshot, surface_lane};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_host_plumbing::native_caller;
-pub(crate) use semio_framework_os_renderer_wgpu_host_winit::*;
+use semio_renderer_wgpu_host_plumbing::native_caller;
+pub(crate) use semio_renderer_wgpu_host_winit::*;
 // 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the `InteractiveJob` seam for the
 // slice of `AppRuntime::frame()` that genuinely is `Send`-safe today — see that file's own module
 // docstring for exactly what moves and, more importantly, what still cannot.
-pub(crate) use semio_framework_os_renderer_wgpu_frame_job::*;
+pub(crate) use semio_renderer_wgpu_frame_job::*;
 #[cfg(target_arch = "wasm32")]
-pub(crate) use semio_framework_os_renderer_wgpu_browser_worker::*;
+pub(crate) use semio_renderer_wgpu_browser_worker::*;
 //#endregion 🔖️OsHostDecomposition
 
 //#region 🧵️FrameCoreTestHosts
@@ -67,5 +67,5 @@ pub(crate) use semio_framework_os_renderer_wgpu_browser_worker::*;
 // 🧪️ Test hosts of the interpreter laws that name the monolith (scenes, engine canvas, the frame fixtures): the `ui-engine` crates are built with their `testkit` feature in this test unit, and the law files keep the namespace they were written against.
 
 //#endregion 🧷️InterpreterTestHosts
-pub(crate) use semio_framework_os_renderer_wgpu_frame_actions::*;
-pub(crate) use semio_framework_os_renderer_wgpu_frame_transaction::*;
+pub(crate) use semio_renderer_wgpu_frame_actions::*;
+pub(crate) use semio_renderer_wgpu_frame_transaction::*;

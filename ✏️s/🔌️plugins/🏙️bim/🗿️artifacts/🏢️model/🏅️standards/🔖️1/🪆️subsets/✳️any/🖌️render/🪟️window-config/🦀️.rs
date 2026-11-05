@@ -46,8 +46,8 @@ macro_rules! bim_window_config {
                 Some(Self::__dsl_spec())
             }
         }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $config {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $config {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -126,7 +126,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 
         pub struct $owner;
 
-        impl semio_framework_plugin::WindowConfigOwner for $owner {
+        impl semio_plugin::WindowConfigOwner for $owner {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -135,39 +135,39 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
             const MAXIMUM_PUBLICATION_BYTES: usize = $bytes;
             type State = $config;
             type Mutation = $mutation;
-            type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+            type Edit = semio_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
-                std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new())
+                std::sync::Arc::new(semio_plugin::app::WindowConfigApplyEdit::new())
             }
-            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
-            fn build_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
+            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+            fn build_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-                semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
+                semio_plugin::bounded_window_config_preparation_factory::<Self>()
             }
-            fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-                semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
+            fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+                semio_plugin::bounded_window_config_store_disposer::<Self>()
             }
         }
 
         /// 🎚️ The addressed window's retained configuration, or the default while it has never been written.
-        pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> $config {
+        pub fn current<C>(view: &semio_plugin::ConfigView<'_, C>) -> $config {
             view.window::<$owner>().cloned().unwrap_or_default()
         }
 
         /// 🎚️ The retained configuration inside a tool job's window-config snapshot, or the default (also for a snapshot of another window kind).
-        pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> $config {
+        pub fn from_snapshot(snapshot: Option<&semio_plugin::WindowConfigSnapshot>) -> $config {
             snapshot.filter(|snapshot| snapshot.window_kind_id() == $window).and_then(|snapshot| snapshot.get::<$owner>()).cloned().unwrap_or_default()
         }
 
         /// 🎚️ Binds `config` to the exact window instance the gesture came from; no window, a stale window or a foreign window kind is a refusal.
-        pub fn addressed(view: &semio_framework_plugin::ViewModel, config: $config) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-            let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("bim-window-required"))?;
-            let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("bim-window-stale"))?;
+        pub fn addressed(view: &semio_plugin::ViewModel, config: $config) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
+            let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("bim-window-required"))?;
+            let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_plugin::Fault::from("bim-window-stale"))?;
             if kind != $window {
-                return Err(semio_framework_plugin::Fault::from("bim-window-kind-mismatch"));
+                return Err(semio_plugin::Fault::from("bim-window-kind-mismatch"));
             }
-            Ok(semio_framework_plugin::WindowConfigMutation::of::<$owner>(id, $mutation::Replace(Replace { config })))
+            Ok(semio_plugin::WindowConfigMutation::of::<$owner>(id, $mutation::Replace(Replace { config })))
         }
     };
 }
@@ -177,7 +177,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 #[cfg(any(test, feature = "testkit"))]
 pub async fn assert_window_config_laws<S, D, M>(base: &S, mutation: &M)
 where
-    S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + std::fmt::Debug + PartialEq + 'static,
+    S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + std::fmt::Debug + PartialEq + 'static,
     D: protocol::MutationDiff<S> + 'static,
     M: protocol::Mutation<S, Diff = D> + protocol::OpText + protocol::OpBinary + Clone + std::fmt::Debug + PartialEq,
 {

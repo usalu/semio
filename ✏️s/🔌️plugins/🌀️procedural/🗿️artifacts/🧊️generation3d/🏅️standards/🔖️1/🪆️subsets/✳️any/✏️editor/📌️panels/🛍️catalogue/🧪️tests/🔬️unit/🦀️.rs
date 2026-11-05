@@ -21,7 +21,7 @@ fn every_catalogue_row_activates_the_exact_drag_descriptor() {
         let typed: serde_json::Value = serde_json::from_str(&payload.descriptor_json().expect("registered descriptor fits the command schema")).unwrap();
         assert_eq!(typed, descriptor);
         assert!(keys.insert(node.key.as_str().to_owned()), "catalogue row identity is unique");
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::app::built_to_component_tree(node)).expect("retire row");
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::app::built_to_component_tree(node)).expect("retire row");
     }
 }
 

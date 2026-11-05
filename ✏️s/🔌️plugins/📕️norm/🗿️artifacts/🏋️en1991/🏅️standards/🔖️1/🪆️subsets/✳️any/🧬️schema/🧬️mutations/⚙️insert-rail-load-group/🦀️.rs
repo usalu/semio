@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertRailLoadGroup wher
         record: "InsertedRailLoadGroup",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert rail load group {}", self.item.id), &format!("Eisenbahn-Lastgruppe {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert rail load group {}", self.item.id), &format!("Eisenbahn-Lastgruppe {} einfügen", self.item.id))
     }
 }
 

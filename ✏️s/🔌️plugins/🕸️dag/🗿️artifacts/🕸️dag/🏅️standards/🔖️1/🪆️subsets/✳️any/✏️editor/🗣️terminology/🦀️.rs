@@ -3,7 +3,7 @@
 //! that every locale combination is compile-checked in one place.
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the DAG app; one field per label makes every locale combination
     /// compile-checked. This app has no separate reuse-terminology concept, so the `reuse_*` cells
     /// repeat the `native_*` text verbatim.
@@ -35,18 +35,18 @@ semio_framework_ui_locale::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Reports whether the canonical shared view state selects German.
-pub fn is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> bool {
-    view_state.locale == semio_framework_ui_locale::Locale::De
+pub fn is_de_locale(view_state: &semio_plugin::ViewModel) -> bool {
+    view_state.locale == semio_ui_locale::Locale::De
 }
 
 /// 🗣️ Reads the compile-time-checked locale from the canonical shared view state.
-pub fn dag_locale(view_state: &semio_framework_plugin::ViewModel) -> semio_framework_ui_locale::Locale {
+pub fn dag_locale(view_state: &semio_plugin::ViewModel) -> semio_ui_locale::Locale {
     view_state.locale
 }
 
 /// 🗣️ Resolves the active label set from the canonical shared view state.
-pub fn dag_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static DagPlayLabels {
-    semio_framework_plugin::resolve_labels::<DagPlayLabels>(view_state)
+pub fn dag_play_labels(view_state: &semio_plugin::ViewModel) -> &'static DagPlayLabels {
+    semio_plugin::resolve_labels::<DagPlayLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

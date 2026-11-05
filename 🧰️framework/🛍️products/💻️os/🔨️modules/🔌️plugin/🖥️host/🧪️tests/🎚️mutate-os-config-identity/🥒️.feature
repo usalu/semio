@@ -10,7 +10,7 @@ Feature: Apply every typed identity mutation to its committed specification vect
   `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ Like its opening-preferences and merge-policy siblings, this case lives under `🔌️plugin/🖥️host`;
-  its Rust subject links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  its Rust subject links the owning crate `semio-os-config` directly, declared as a subject host package in
   `../../🔮️oracles/🔣️.json`.
 
   Two kinds close this vocabulary because `IdentitySetting` is `Option<Identity>` and nothing else:

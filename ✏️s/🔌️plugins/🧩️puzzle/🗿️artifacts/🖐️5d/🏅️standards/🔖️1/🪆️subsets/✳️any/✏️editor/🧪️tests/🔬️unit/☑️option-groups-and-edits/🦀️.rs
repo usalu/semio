@@ -232,7 +232,7 @@ fn artifact_lane_verbs_are_registered_migrated_retained_tools() {
     let source = editor_source();
     let source = source.as_str();
     let production = source.split_once("//#region 🧪️UnitTests").map(|(production, _)| production).expect("production prefix");
-    let proofs = production.split_once("semio_framework_plugin::bounded_first_step_tool_proofs!").and_then(|(_, rest)| rest.split_once("fn register_tool_job_factories")).map(|(proofs, _)| proofs).expect("proof block");
+    let proofs = production.split_once("semio_plugin::bounded_first_step_tool_proofs!").and_then(|(_, rest)| rest.split_once("fn register_tool_job_factories")).map(|(proofs, _)| proofs).expect("proof block");
     for (tool_id, lanes) in MIGRATED_ARTIFACT_LANE_VERBS {
         assert!(PUZZLE5D_RETAINED_TOOL_IDS.contains(tool_id), "{tool_id} must be a retained tool id");
         assert!(proofs.contains(&format!("\"{tool_id}\"")), "{tool_id} must carry a bounded first-step proof");
@@ -293,7 +293,7 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
     let work = Puzzle5dSetActiveExampleWork::default();
     for example_id in ["", "concrete-forest", "nakagin", "capsule-dream"] {
         let command = Puzzle5dCommand::from_action("setActiveExample", Some(semio_framework_pack_json::json!({ "exampleId": example_id })), None);
-        let extent = semio_framework_plugin::retained_command::ArtifactCommandWork::extent(&work, &command, &snapshot, &interaction, None);
+        let extent = semio_plugin::retained_command::ArtifactCommandWork::extent(&work, &command, &snapshot, &interaction, None);
         assert!(extent.is_some(), "setActiveExample {example_id} must declare an extent — `None` is the opaque capacity fault this slice replaced with a notice");
         assert!(extent.is_some_and(|extent| extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), "setActiveExample {example_id} must stay inside the fixed work ceiling");
     }

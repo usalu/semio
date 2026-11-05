@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangePrestressForce whe
         record: "ChangedPrestressForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tendon initial prestressing force p0", "Anfängliche Vorspannkraft P0 (Spannglied) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tendon initial prestressing force p0", "Anfängliche Vorspannkraft P0 (Spannglied) ändern")
     }
 }
 

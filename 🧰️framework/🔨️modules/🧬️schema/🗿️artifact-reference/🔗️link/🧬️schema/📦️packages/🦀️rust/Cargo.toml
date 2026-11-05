@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-store-link-schema"
+name = "semio-os-store-link-schema"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -27,7 +27,7 @@ semio-framework-value-native-owned = { path = "../../../../../../🌱️value/�
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { path = "../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-blob-identity = { path = "../../../../📦️blob/🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-blob-identity = { path = "../../../../📦️blob/🧬️schema/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde = { workspace = true }

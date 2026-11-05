@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeRingDepth where Op
         record: "ChangedRingDepth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ring depth of the ring stiffener", "Ringsteife: Ringhöhe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ring depth of the ring stiffener", "Ringsteife: Ringhöhe ändern")
     }
 }
 

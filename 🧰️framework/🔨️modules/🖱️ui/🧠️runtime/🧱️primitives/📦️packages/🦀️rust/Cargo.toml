@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-runtime-reconcile-primitives"
+name = "semio-ui-runtime-reconcile-primitives"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -26,8 +26,8 @@ testkit = []
 
 [dependencies]
 semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust" }
-ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-ui-runtime-presentation = { path = "../../../🖼️presentation/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-runtime-presentation = { path = "../../../🖼️presentation/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }

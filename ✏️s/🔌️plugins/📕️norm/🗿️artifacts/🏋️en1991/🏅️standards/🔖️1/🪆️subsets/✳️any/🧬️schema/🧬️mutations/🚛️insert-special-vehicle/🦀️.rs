@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertSpecialVehicle whe
         record: "InsertedSpecialVehicle",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert special vehicle {}", self.item.id), &format!("Sonderfahrzeug {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert special vehicle {}", self.item.id), &format!("Sonderfahrzeug {} einfügen", self.item.id))
     }
 }
 

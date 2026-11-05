@@ -24,9 +24,9 @@ semio-framework-action-bus = { path = "../../../../../../../../../../../../ðŸ§°ï
 semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-job = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-remodel-remodeling-cmd-ingest = { workspace = true }
 semio-s-artifact-remodel-remodeling-cmd-workflow = { workspace = true }

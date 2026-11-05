@@ -12,7 +12,7 @@ if (segments[0] === "forms-document-contract") {
     runCmd("bun", [`${context.repoRoot}/node_modules/typescript/bin/tsc`, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: context.repoRoot });
     if (segments[1] === "native") {
       const { runCargo } = await import("@semio-tech/framework/process/execution");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-forms-forms", "--lib", ...(segments[2] === "all" ? [] : ["forms_document_contract_"]), "--", "--nocapture"], context.repoRoot);
+      await runCargo(["test", "--manifest-path", "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/Cargo.toml", "-p", "semio-s-artifact-forms-forms-schema", "--lib", ...(segments[2] === "all" ? [] : ["forms_document_contract_"]), "--", "--nocapture"], context.repoRoot);
     }
     return;
   }

@@ -2,7 +2,7 @@
 
 use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
 use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload

@@ -1,9 +1,9 @@
 //! 📬️ Original publication donates its prepared history, causal suffix and transport intent together.
 use super::*;
-use semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
+use semio_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
 
 pub(super) fn advance_original_commit<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant)->Result<ArtifactStoreOneItemAdvance,VcsError>
-where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P>{
+where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
  if let Some(step)=original_message::prepare_original_outgoing(store,publication,body,grant)?{return Ok(step)}
  let stage=publication.stage.as_mut().expect("original commit retains its batch stage");
  let fail=|message:&'static str|VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message));
@@ -17,7 +17,7 @@ where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMuta
  let queue=store.wire.original_outbox.append_demands().map_err(VcsError::InverseRefused)?;
  let seed=protocol::MutationDag::original_seed_commit_demands();
  let diagnostic=if stage.diagnostics.row_count()==0{0}else{ArtifactStoreDiagnosticStage::transfer_copy_demand()};
- let copy=size_of::<Edit<M>>()+size_of::<BatchCommitMetadata>()+size_of::<semio_framework_os_store_ledger::ArtifactStorePendingReportRetirement>()+8*size_of::<usize>()+queue.copy_bytes+seed.copy_bytes+diagnostic;
+ let copy=size_of::<Edit<M>>()+size_of::<BatchCommitMetadata>()+size_of::<semio_os_store_ledger::ArtifactStorePendingReportRetirement>()+8*size_of::<usize>()+queue.copy_bytes+seed.copy_bytes+diagnostic;
  if grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<size_of::<Edit<M>>()||grant.maximum_depth<queue.depth.max(seed.depth).max(1){return Ok(ArtifactStoreOneItemAdvance::Blocked)}
  let lane_grant=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copy,..grant.retained_grant()};
  if let Some(owner)=publication.lane_insert.as_ref(){if !owner.commit_ready(&store.log.envelope.lanes,lane_grant).map_err(VcsError::InverseRefused)?{return Ok(ArtifactStoreOneItemAdvance::Blocked)}}
@@ -31,10 +31,10 @@ where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMuta
  let revision=metadata.revision.as_mut().unwrap();let mut tail=revision.applied.pop().expect("original commit prepared its appended revision");tail.ledger_key=Some(key);revision.applied.try_push(tail).unwrap_or_else(|_|panic!("original revision retains its just vacated tail slot"));
  std::mem::swap(&mut *store.log.applied_edit_ids,&mut metadata.applied);
  let cursor=store.log.envelope.cursor.as_mut().unwrap();std::mem::swap(&mut cursor.applied_edit_ids,&mut metadata.cursor);
- metadata.cursor_redo=Some(std::mem::replace(&mut cursor.redo_edit_ids,semio_framework_os_vcs::HistoryPageStack::empty()));
- metadata.log_redo=Some(std::mem::replace(&mut *store.log.redo_edit_ids,semio_framework_os_vcs::HistoryPageStack::empty()));
+ metadata.cursor_redo=Some(std::mem::replace(&mut cursor.redo_edit_ids,semio_os_vcs::HistoryPageStack::empty()));
+ metadata.log_redo=Some(std::mem::replace(&mut *store.log.redo_edit_ids,semio_os_vcs::HistoryPageStack::empty()));
  std::mem::swap(&mut *store.cursor.revision_accumulator,metadata.revision.as_mut().unwrap());
- stage.displaced_report=Some(semio_framework_os_store_ledger::ArtifactStorePendingReportRetirement::new(std::mem::take(&mut *store.replay.pending_report)));
+ stage.displaced_report=Some(semio_os_store_ledger::ArtifactStorePendingReportRetirement::new(std::mem::take(&mut *store.replay.pending_report)));
  let incoming=stage.post.take().unwrap();let old=std::mem::replace(&mut *store.live.current,incoming);
  let next=(std::mem::take(&mut stage.tail_edit_id),Arc::clone(&old));
  if let Some((identity,snapshot))=store.live.tail_undo_cache.replace(next){stage.tail_edit_id=identity;stage.post=Some(snapshot)}

@@ -35,7 +35,7 @@ use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_ro
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioTableSnapshot,
 /// SemioTableMutation>` payload struct declared in the corresponding triad leaf's
 /// `🦠️mutation/🦀️.rs`. This plugin crate reaches the derive through the `dsl` extern-crate
-/// alias `🦀️.rs` declares (`extern crate semio_framework_os_kernel as dsl;`), the same spelling
+/// alias `🦀️.rs` declares (`extern crate semio_os_kernel as dsl;`), the same spelling
 /// `🔤️text`'s already-compiling facet uses.
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]

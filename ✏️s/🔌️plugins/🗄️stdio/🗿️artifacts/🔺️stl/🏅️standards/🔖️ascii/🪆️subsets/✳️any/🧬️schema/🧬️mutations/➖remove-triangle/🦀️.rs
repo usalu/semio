@@ -14,8 +14,8 @@ pub struct RemoveTriangle {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for RemoveTriangle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "triangle", kind: "remove-triangle", record: "RemoveTriangle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove triangle", "Dreieck entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove triangle", "Dreieck entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

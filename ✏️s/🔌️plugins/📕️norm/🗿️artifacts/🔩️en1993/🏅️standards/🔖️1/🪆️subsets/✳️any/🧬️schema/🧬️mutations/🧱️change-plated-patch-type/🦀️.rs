@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedPatchType wh
         record: "ChangedPlatedPatchType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Patch load type (Figure 6.1) of the plated panel", "Plattenfeld: Lasteinleitungstyp (Bild 6.1) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Patch load type (Figure 6.1) of the plated panel", "Plattenfeld: Lasteinleitungstyp (Bild 6.1) ändern")
     }
 }
 

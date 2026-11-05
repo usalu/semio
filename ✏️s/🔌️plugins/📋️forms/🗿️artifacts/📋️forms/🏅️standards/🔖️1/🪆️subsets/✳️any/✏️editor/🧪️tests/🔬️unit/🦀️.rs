@@ -1,6 +1,6 @@
 use crate::{editor::forms::commands::add_question, editor::forms::commands::add_question_option, editor::forms::commands::add_step, editor::forms::commands::add_vector_field, editor::forms::commands::drop_question_kind, editor::forms::commands::export_snapshot, editor::forms::commands::move_question, editor::forms::commands::move_step, editor::forms::commands::patch_question_options, editor::forms::commands::patch_questions, editor::forms::commands::patch_step, editor::forms::commands::patch_vector_field, editor::forms::commands::remove_question, editor::forms::commands::remove_question_option, editor::forms::commands::remove_step, editor::forms::commands::remove_vector_field, editor::forms::commands::set_active_example, editor::forms::commands::set_contributions, editor::forms::commands::set_spec_json, editor::forms::commands::update_form};
 use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{next_step, previous_step, reset_try, set_try_value, set_try_value_step, set_try_values, submit};
-use crate::{editor::forms::config::FormsConfig, editor::forms::config::FormsConfigMutation};
+use crate::{forms_config::FormsConfig, forms_config::FormsConfigMutation};
 use crate::{editor::forms::modes::blueprint, editor::forms::modes::fill, editor::forms::modes::responses};
 use crate::{editor::forms::commands::export_responses, editor::forms::commands::discard_response};
 use crate::editor::forms::modes::blueprint::windows::builder;
@@ -8,23 +8,23 @@ use crate::editor::forms::terminology::forms_play_labels;
 use crate::{editor::forms::support, editor::forms::support::FORMS_INTERACTION_FIELDS, editor::forms::support::FORMS_INTERACTION_GRANULARITY_SECTION};
 use crate::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA};
 use semio_framework_pack_json::object;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::HierarchyProvider;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
 pub mod context {
     use crate::editor::forms::*;
 use crate::{editor::forms::commands::add_question, editor::forms::commands::add_question_option, editor::forms::commands::add_step, editor::forms::commands::add_vector_field, editor::forms::commands::drop_question_kind, editor::forms::commands::export_snapshot, editor::forms::commands::move_question, editor::forms::commands::move_step, editor::forms::commands::patch_question_options, editor::forms::commands::patch_questions, editor::forms::commands::patch_step, editor::forms::commands::patch_vector_field, editor::forms::commands::remove_question, editor::forms::commands::remove_question_option, editor::forms::commands::remove_step, editor::forms::commands::remove_vector_field, editor::forms::commands::set_active_example, editor::forms::commands::set_contributions, editor::forms::commands::set_spec_json, editor::forms::commands::update_form};
 use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{next_step, previous_step, reset_try, set_try_value, set_try_value_step, set_try_values, submit};
-use crate::{editor::forms::config::FormsConfig, editor::forms::config::FormsConfigMutation};
+use crate::{forms_config::FormsConfig, forms_config::FormsConfigMutation};
 use crate::{editor::forms::modes::blueprint, editor::forms::modes::fill, editor::forms::modes::responses};
 use crate::{editor::forms::commands::export_responses, editor::forms::commands::discard_response};
 use crate::editor::forms::modes::blueprint::windows::builder;
@@ -32,19 +32,19 @@ use crate::editor::forms::terminology::forms_play_labels;
 use crate::{editor::forms::support, editor::forms::support::FORMS_INTERACTION_FIELDS, editor::forms::support::FORMS_INTERACTION_GRANULARITY_SECTION};
 use crate::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA};
 use semio_framework_pack_json::object;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
-    use semio_framework_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::HierarchyProvider;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+    use semio_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
+    use semio_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
@@ -53,8 +53,8 @@ use semio_framework_plugin::MediaType;
     /// is refused with `interactive-job.live-instance` ("typed command … does not belong to the live
     /// instance").
     pub async fn forms_app() -> OwnedFormsApp {
-        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(forms_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(forms_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         OwnedFormsApp(app, scope)
     }
@@ -66,7 +66,7 @@ use semio_framework_plugin::MediaType;
     /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
     /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
-    pub struct OwnedFormsApp(pub FormsApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct OwnedFormsApp(pub FormsApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl OwnedFormsApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
@@ -104,7 +104,7 @@ use semio_framework_plugin::MediaType;
         App { definition: create_forms_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("forms", FormsPlayApp, forms_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("forms", FormsPlayApp, forms_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addQuestion` materializes host-side.
@@ -115,19 +115,19 @@ use semio_framework_plugin::MediaType;
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does, draining
     /// EVERY result page — on a mounted app `dispatch_typed` only QUEUES the operation, so a test
     /// reading `app.snapshot()` straight afterwards observes the pre-dispatch document.
-    pub async fn settle(app: &mut OwnedFormsApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation")
+    pub async fn settle(app: &mut OwnedFormsApp) -> semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+        semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation")
     }
 
     /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it
     /// was driven to its terminal-empty shallow shell, so every fixture that mounts an app must end here.
     pub fn close(app: &mut OwnedFormsApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
     
     pub async fn config(app: &FormsApp) -> FormsConfig {
         let files = app.config_pack().await.expect("config pack");
-        store::os_store::text_format::parse_document_pack::<FormsConfig, FormsConfigMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("config projection").snapshot
+        store::os_store::text_format::parse_document_pack::<FormsConfig, FormsConfigMutation>(&files.pack, &files.spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("config projection").snapshot
     }
     
     pub fn action_args(value: &serde_json::Value) -> semio_framework_value::DslValue {
@@ -135,7 +135,7 @@ use semio_framework_plugin::MediaType;
     }
     
     pub async fn dispatch(app: &mut OwnedFormsApp, command: FormsCommand) -> InvocationResult {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -144,13 +144,13 @@ use semio_framework_plugin::MediaType;
         let view = if body_key == FORMS_PLAY_BODY_TRY {
             ViewModel {
                 window_id: Some("forms-try-test".into()),
-                window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "forms-try-test".into(), window_kind_id: support::FORMS_PLAY_WINDOW_TRY.into() }],
-                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+                window_instances: vec![semio_plugin::ViewWindowInstance { id: "forms-try-test".into(), window_kind_id: support::FORMS_PLAY_WINDOW_TRY.into() }],
+                ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
             }
         } else {
-            ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
-        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view, app.1.cx()).await.expect("rendered component JSON")
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view, app.1.cx()).await.expect("rendered component JSON")
     }
     
     /// 🧩️ A host contribution registering `"buildingComponent"` as an extension question kind rendered
@@ -158,7 +158,7 @@ use semio_framework_plugin::MediaType;
     pub fn building_component_contributions() -> Vec<ProgramContributionEntry> {
         vec![ProgramContributionEntry {
             plugin_id: "forms-module-procedural".into(),
-            topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
+            topic_contribution: Some(semio_plugin::TopicContribution::new(
                 "forms.questionKind",
                 semio_framework_value::DslValue::object([
                     ("appId".to_string(), semio_framework_value::DslValue::String("forms-module-procedural".to_string())),
@@ -280,19 +280,25 @@ async fn command_ids_are_unique() {
 #[test]
 fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape, ToolJobFactory};
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
 
     assert_eq!(FormsCommand::TOOL_JOB_IDS, FORMS_RETAINED_TOOL_IDS);
     assert_eq!(<FormsPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), FORMS_RETAINED_TOOL_IDS.len());
-    assert_eq!(FormsBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), FORMS_RETAINED_TOOL_IDS.len());
+    assert_eq!(FormsBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len() + FormsPagedValueCommandJobFactory::PUBLICATION_CONTRACTS.len(), FORMS_RETAINED_TOOL_IDS.len());
     assert_eq!(forms_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(forms_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
     let factory = FormsBoundedCommandJobFactory::new("s.forms.forms@1/*#editor");
     let factory_ids: Vec<&str> = factory.keys().iter().map(|key| key.tool_id.as_str()).collect();
-    assert_eq!(factory_ids, FORMS_RETAINED_TOOL_IDS);
-    for (tool_id, contract) in FORMS_RETAINED_TOOL_IDS.iter().zip(FormsBoundedCommandJobFactory::PUBLICATION_CONTRACTS) {
-        assert_eq!(*tool_id, contract.tool_id);
+    assert_eq!(factory_ids, FORMS_STANDARD_TOOL_IDS);
+    let patch = FormsPagedValueCommandJobFactory::new("s.forms.forms@1/*#editor");
+    assert_eq!(patch.keys().iter().map(|key| key.tool_id.as_str()).collect::<Vec<_>>(), vec!["setTryValue", "patchQuestions"]);
+    assert_eq!(patch.execution_contract().max_raw_wire_bytes, 131_072);
+    assert_eq!(factory.execution_contract().max_raw_wire_bytes, 16_384);
+    let contracts = FormsBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().chain(FormsPagedValueCommandJobFactory::PUBLICATION_CONTRACTS);
+    for contract in contracts {
+        let tool_id = contract.tool_id;
+        assert!(FORMS_RETAINED_TOOL_IDS.contains(&tool_id));
         assert!(!contract.lanes.is_empty(), "tool {tool_id} must declare a publication lane");
         assert!(!contract.lanes.contains(&ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1, "HostOnly must be exclusive for tool {tool_id}");
     }
@@ -345,7 +351,7 @@ pub(crate) fn every_command() -> Vec<FormsCommand> {
         FormsCommand::UpdateForm(update_form::UpdateForm { title: "My Form".into() }),
         FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: Some("s1".into()) }),
         FormsCommand::RemoveQuestion(remove_question::RemoveQuestion { question_id: "q1".into() }),
-        FormsCommand::PatchQuestions(patch_questions::PatchQuestions { question_ids: vec!["q1".into(), "q2".into()], field: "required".into(), value_json: "true".into(), param_key: None }),
+        FormsCommand::PatchQuestions(patch_questions::PatchQuestions { question_ids: vec!["q1".into(), "q2".into()], field: "required".into(), value_json_chunks: vec!["true".into()], param_key: None }),
         FormsCommand::PatchQuestionOptions(patch_question_options::PatchQuestionOptions { question_ids: vec!["q1".into()], option_value: "a".into(), field: "label".into(), value_json: "\"Option A\"".into() }),
         FormsCommand::AddQuestionOption(add_question_option::AddQuestionOption { question_id: "q1".into(), label: "New option".into() }),
         FormsCommand::RemoveQuestionOption(remove_question_option::RemoveQuestionOption { question_id: "q1".into(), option_value: "a".into() }),
@@ -413,7 +419,7 @@ async fn fields_interaction_domain_is_declared_topology_and_transitive_on_the_bl
 async fn interaction_topology_walks_step_nesting_into_parent_links() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::building_component_spec();
     let config = FormsConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = FormsPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
@@ -430,7 +436,7 @@ async fn interaction_topology_walks_step_nesting_into_parent_links() {
 async fn interaction_topology_has_a_section_node_and_no_field_nodes_for_a_document_with_no_questions() {
     let document = crate::schema::empty_forms_snapshot();
     let config = FormsConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = FormsPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
@@ -467,18 +473,18 @@ async fn initial_document_starts_with_a_blank_editable_form() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_falls_back_without_contribution() {
-    for (locale, expected) in [(semio_framework_ui_locale::Locale::En, "Extension unavailable"), (semio_framework_ui_locale::Locale::De, "Erweiterung nicht verfügbar")] {
-        let view = semio_framework_plugin::ViewModel { locale, ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native) };
-        let node = render_extension_question(&building_component_question(), &Object::new(), &[], questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&view));
-        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
+    for (locale, expected) in [(semio_ui_locale::Locale::En, "Extension unavailable"), (semio_ui_locale::Locale::De, "Erweiterung nicht verfügbar")] {
+        let view = semio_plugin::ViewModel { locale, ..semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native) };
+        let node = render_extension_question(&building_component_question(), &Object::new(), &[], crate::question_extensions::ExtensionSurface::Try { window_id: "fill-1", window_kind_id: "forms-try" }, true, forms_play_labels(&view));
+        let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
         assert!(json.contains(expected));
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_emits_external_slot_when_contribution_registered() {
-    let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
+    let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), crate::question_extensions::ExtensionSurface::Try { window_id: "fill-1", window_kind_id: "forms-try" }, true, forms_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)));
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
 }
@@ -488,7 +494,7 @@ async fn extension_question_emits_external_slot_when_contribution_registered() {
 async fn extension_question_emits_external_slot_when_topic_contribution_registered() {
     let topic_only = vec![ProgramContributionEntry {
         plugin_id: "forms-module-procedural".into(),
-        topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
+        topic_contribution: Some(semio_plugin::TopicContribution::new(
             "forms.questionKind",
             semio_framework_value::DslValue::object([
                 ("appId".to_string(), semio_framework_value::DslValue::String("forms-module-procedural".to_string())),
@@ -500,8 +506,8 @@ async fn extension_question_emits_external_slot_when_topic_contribution_register
             ]),
         )),
     }];
-    let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
+    let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, crate::question_extensions::ExtensionSurface::Try { window_id: "fill-1", window_kind_id: "forms-try" }, true, forms_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)));
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
 }
@@ -511,7 +517,7 @@ async fn extension_question_emits_external_slot_when_topic_contribution_register
 async fn catalogue_kinds_includes_topic_contributed_kinds() {
     let contributions = vec![ProgramContributionEntry {
         plugin_id: "forms-module-procedural".into(),
-        topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
+        topic_contribution: Some(semio_plugin::TopicContribution::new(
             "forms.questionKind",
             semio_framework_value::DslValue::object([
                 ("appId".to_string(), semio_framework_value::DslValue::String("forms-module-procedural".to_string())),
@@ -523,7 +529,7 @@ async fn catalogue_kinds_includes_topic_contributed_kinds() {
             ]),
         )),
     }];
-    let kinds = catalogue_kinds(&contributions, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let kinds = catalogue_kinds(&contributions, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     assert!(kinds.iter().any(|(kind, label, _)| kind == "buildingComponent" && label == "Building Component"));
 }
 
@@ -538,9 +544,9 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 /// `interactive-job.catalog-authority` at construction before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits() {
-    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge_with_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, (usize, usize), _, _>(
+    semio_plugin::artifact_app_laws::assert_two_registered_instances_converge_with_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, (usize, usize), _, _>(
         "mem://forms-convergence",
-        || async { semio_framework_plugin::App { definition: create_forms_app(), examples: Vec::new() } },
+        || async { semio_plugin::App { definition: create_forms_app(), examples: Vec::new() } },
         FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }),
         FormsCommand::AddStep(add_step::AddStep {}),
         |app| {
@@ -548,7 +554,7 @@ async fn two_instances_converge_disjoint_edits() {
             let steps = forms_steps(&projection);
             (steps.len(), steps[0].blocks.len())
         },
-        semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),
+        semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(),
     )
     .await;
 }
@@ -559,7 +565,7 @@ async fn two_instances_converge_disjoint_edits() {
 async fn export_media_dictionary_out_returns_default_values() {
     let app = forms_app().await;
     let document = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = <FormsPlayApp as ArtifactEditor>::export_media("dictionary:out", &doc).expect("export dictionary:out");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
@@ -574,7 +580,7 @@ async fn export_media_dictionary_out_returns_default_values() {
 async fn export_media_document_out_round_trips_through_pack() {
     let app = forms_app().await;
     let document = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = <FormsPlayApp as ArtifactEditor>::export_media("artifact:out", &doc).expect("export document:out");
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
@@ -598,7 +604,7 @@ async fn forms_io_declares_dictionary_out_port() {
     let io = forms_io();
     assert_eq!(io.artifact_schema, FORMS_DOCUMENT_SCHEMA);
     let dictionary_out = io.ports.iter().find(|port| port.id == "dictionary:out").expect("dictionary:out declared");
-    assert_eq!(dictionary_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(dictionary_out.direction, semio_plugin::MediaPortDirection::Out);
     assert_eq!(dictionary_out.kind_id.as_deref(), Some("form.dictionary"));
     assert_eq!(dictionary_out.multiplicity, semio_framework::PortMultiplicity::Many);
     let all_ports = io.all_ports().await;
@@ -610,14 +616,88 @@ async fn forms_io_declares_dictionary_out_port() {
 /// 🌐️ Contributed field labels resolve from the same explicit axes as built-in fields.
 #[semio_framework_async_macros::async_test]
 async fn contributed_question_labels_follow_selected_axes() {
-    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../❓️questions/🧩️extensions/🧪️tests/🧫️fixtures/🔣️contribution.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧩️extensions/🧪️tests/🧫️fixtures/🔣️contribution.json")).unwrap();
     let payload = semio_framework_pack_json::from_json_str(&vectors["payload"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let contributions = vec![ProgramContributionEntry { plugin_id: "playbook-module-procedural".into(), topic_contribution: Some(semio_framework_plugin::TopicContribution::new("forms.questionKind", payload)) }];
+    let contributions = vec![ProgramContributionEntry { plugin_id: "playbook-module-procedural".into(), topic_contribution: Some(semio_plugin::TopicContribution::new("forms.questionKind", payload)) }];
     for case in vectors["cases"].as_array().unwrap() {
-        let view = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::parse(case["locale"].as_str().unwrap()).unwrap(), terminology: semio_framework_ui_locale::Terminology::parse(case["terminology"].as_str().unwrap()).unwrap(), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::parse(case["locale"].as_str().unwrap()).unwrap(), semio_framework_ui_locale::Terminology::parse(case["terminology"].as_str().unwrap()).unwrap()) };
+        let view = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::parse(case["locale"].as_str().unwrap()).unwrap(), terminology: semio_ui_locale::Terminology::parse(case["terminology"].as_str().unwrap()).unwrap(), ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::parse(case["locale"].as_str().unwrap()).unwrap(), semio_ui_locale::Terminology::parse(case["terminology"].as_str().unwrap()).unwrap()) };
         let expected = vectors["payload"]["label"][case["terminology"].as_str().unwrap()][case["locale"].as_str().unwrap()].as_str().unwrap();
         assert_eq!(expected, case["expected"].as_str().unwrap());
         let kinds = catalogue_kinds(&contributions, &view);
         assert_eq!(kinds.iter().find(|(kind, _, _)| kind == "buildingComponent").map(|(_, label, _)| label.as_str()), Some(expected));
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn extension_question_preserves_large_utf8_payload_in_bounded_ui_chunks() {
+    let mut question = building_component_question();
+    question.params = Some(semio_framework_value::DslValue::object([("program".into(), semio_framework_value::DslValue::String("Höhe 高さ 🌊".repeat(100)))]));
+    let surface = crate::question_extensions::ExtensionSurface::Try { window_id: "fill-utf8", window_kind_id: "forms-try" };
+    let view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let expected = crate::question_extensions::render_payload(&question, &Object::new(), support::FORMS_PLAY_APP_ID, surface, true).to_string();
+    assert!(expected.len() > semio_ui_contract::UI_TEXT_MAX_BYTES);
+    let node = render_extension_question(&question, &Object::new(), &building_component_contributions(), surface, true, forms_play_labels(&view)).unwrap();
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
+    let tree: serde_json::Value = serde_json::from_str(&json).unwrap();
+    for slot in tree["children"].as_array().unwrap() {
+        let chunks = slot["component"]["props"]["paramsJsonChunks"].as_array().unwrap();
+        assert!(chunks.len() > 1);
+        assert!(chunks.iter().all(|value| value.as_str().unwrap().len() <= semio_ui_contract::UI_TEXT_MAX_BYTES));
+        assert_eq!(chunks.iter().map(|value| value.as_str().unwrap()).collect::<String>(), expected);
+    }
+}
+
+#[test]
+fn paged_answer_factory_admits_exact_answer_and_baseline_wire_budgets() {
+    use semio_framework::ToolJobFactory;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎮️commands/🎯️set-try-value/🧪️tests/🧫️fixtures/🔣️target.json")).unwrap();
+    let contract = FormsPagedValueCommandJobFactory::new("s.forms.forms@1/*#editor").execution_contract();
+    for row in fixture["paged"].as_array().unwrap() {
+        let fragment = row["fragment"].as_str().unwrap();
+        let answer = serde_json::to_string(&fragment.repeat(row["answerRepeat"].as_u64().unwrap() as usize)).unwrap();
+        let baseline = serde_json::json!({"note":fragment.repeat(row["baselineRepeat"].as_u64().unwrap() as usize)}).to_string();
+        let answer = semio_ui_contract::UiValue::try_text_chunks(&answer,16_384).unwrap();
+        let baseline = semio_ui_contract::UiValue::try_text_chunks(&baseline,16_384).unwrap();
+        let args = serde_json::json!({"key":"q","paramKey":"note","windowId":"fill-window","windowKindId":"forms-try","valueJsonChunks":serde_json::to_value(&answer).unwrap(),"initialValueJsonChunks":serde_json::to_value(&baseline).unwrap()});
+        let raw = semio_framework_pack_json::parse(&args.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let value = crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl(&raw);
+        let FormsCommand::SetTryValue(payload) = FormsPlayApp::command_from_action("setTryValue",&mut Some(value),&mut None).unwrap() else { panic!("exact paged answer tool"); };
+        for chunk in payload.value_json_chunks.as_ref().unwrap().iter().chain(payload.initial_value_json_chunks.as_ref().unwrap()) {
+            assert!(chunk.len() <= 512);
+            assert!(chunk.chars().map(semio_framework::public_invocation_char_cost).sum::<usize>() <= semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
+        }
+        let wire = serde_json::json!({"action":"setTryValue","args":args}).to_string();
+        let mut escaped = String::new();
+        for character in wire.chars() {
+            if character.is_ascii() { escaped.push(character); }
+            else { for unit in character.encode_utf16(&mut [0;2]) { escaped.push_str(&format!("\\u{unit:04x}")); } }
+        }
+        assert!(escaped.len() > 16_384);
+        assert!(escaped.len() <= contract.max_raw_wire_bytes);
+        assert_eq!(contract.max_raw_wire_bytes,131_072);
+        assert_eq!(contract.max_decoded_items,640);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn paged_factory_admits_both_maximum_chunk_arrays_without_duplicate_routes() {
+    let mut answer = vec![String::new();256];
+    answer[255] = "null".into();
+    let mut baseline = vec![String::new();256];
+    baseline[255] = "{}".into();
+    assert_eq!(semio_ui_contract::UiValue::join_text_chunks(answer.iter().map(String::as_str),16_384).unwrap(),"null");
+    let mut excess = answer.clone();
+    excess.push(String::new());
+    assert!(semio_ui_contract::UiValue::join_text_chunks(excess.iter().map(String::as_str),16_384).is_err());
+    let input = serde_json::json!({"key":"q","windowId":"fill-padding","windowKindId":"forms-try","valueJsonChunks":answer,"initialValueJsonChunks":baseline});
+    let raw = semio_framework_pack_json::parse(&input.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let args = crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl(&raw);
+    let view = semio_plugin::ViewModel { window_id:Some("fill-padding".into()),window_instances:vec![semio_plugin::ViewWindowInstance{id:"fill-padding".into(),window_kind_id:support::FORMS_PLAY_WINDOW_TRY.into()}],..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native) };
+    let mut meta = semio_plugin::artifact_app_laws::meta("local");
+    meta.view_state = Some(view);
+    let mut app = forms_app().await;
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0,"setTryValue",Some(args),&meta,&mut semio_plugin::artifact_app_laws::fixture_identity(),app.1.cx(),semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("both maximum page arrays reach their exact registered factory");
+    let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0,meta.instance_id,semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT,&mut semio_plugin::artifact_app_laws::fixture_identity(),app.1.cx()).await.expect("paged factory completes initial staging");
+    assert!(receipt.effects.iter().any(|effect|matches!(effect,semio_framework::kernel::Effect::DispatchAction{action,..} if action==set_try_value::SET_TRY_VALUE_STEP_ACTION_ID)));
+    app.close();
 }

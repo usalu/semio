@@ -10,9 +10,9 @@ use crate::schema::inferences::{Grid2dInferenceCommit};
 
 use crate::schema::snapshot::{Grid2dSnapshot, WfcDirection2d};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, StepContext};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ToolDefinition;
-use semio_framework_plugin::ToolRunJobPort;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ToolDefinition;
+use semio_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunRebasePolicy, ToolRunReasonDefinition, ToolRunReconfigurePolicy, ToolRunSettingsReads,
     ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_START_ACTION_ID,
@@ -129,7 +129,7 @@ pub fn run_definition() -> ToolRunDefinition {
 }
 
 /// 🏃 The fill run of this document instance while it is not terminal.
-pub fn live_fill_run(tool_run: Option<&semio_framework_plugin::ToolRunView>) -> Option<&semio_framework_plugin::ToolRunView> {
+pub fn live_fill_run(tool_run: Option<&semio_plugin::ToolRunView>) -> Option<&semio_plugin::ToolRunView> {
     tool_run.filter(|run| run.tool_id == TOOL_ID && !run.state.is_terminal())
 }
 
@@ -137,7 +137,7 @@ pub fn live_fill_run(tool_run: Option<&semio_framework_plugin::ToolRunView>) -> 
 pub fn start_effect() -> semio_framework::kernel::Effect {
     let args = semio_framework::dsl_value!({ TOOL_RUN_ARG_TOOL_ID: TOOL_ID });
     semio_framework::kernel::Effect::DispatchAction {
-        req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
+        req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: TOOL_RUN_START_ACTION_ID.into(),
         args: Some(args),
         delay_ms: 0,
@@ -148,7 +148,7 @@ pub fn start_effect() -> semio_framework::kernel::Effect {
 pub fn commit_effect(commit: &Grid2dInferenceCommit) -> semio_framework::kernel::Effect {
     let args = semio_framework::dsl_value!({ "solveJson": semio_framework_pack_json::to_json_string(commit) });
     semio_framework::kernel::Effect::DispatchAction {
-        req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
+        req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: COMMIT_FILL_ACTION_ID.into(),
         args: Some(args),
         delay_ms: 0,

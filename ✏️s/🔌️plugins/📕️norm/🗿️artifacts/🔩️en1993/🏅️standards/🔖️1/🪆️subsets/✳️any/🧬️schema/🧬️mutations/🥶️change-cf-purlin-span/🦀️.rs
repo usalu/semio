@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfPurlinSpan where
         record: "ChangedCfPurlinSpan",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Purlin span L (0 = not a purlin) of the cold-formed member", "Kaltprofil: Pfettenspannweite L (0 = keine Pfette) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Purlin span L (0 = not a purlin) of the cold-formed member", "Kaltprofil: Pfettenspannweite L (0 = keine Pfette) ändern")
     }
 }
 

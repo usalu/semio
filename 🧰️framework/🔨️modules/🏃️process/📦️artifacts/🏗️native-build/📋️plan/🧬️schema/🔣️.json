@@ -160,6 +160,59 @@
           }
         }
       ]
+    },
+    "SourceDigestMismatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "expected",
+        "observed",
+        "missingRecord"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "expected": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "observed": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "missingRecord": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "missingRecord": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observed": {
+                "const": null
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

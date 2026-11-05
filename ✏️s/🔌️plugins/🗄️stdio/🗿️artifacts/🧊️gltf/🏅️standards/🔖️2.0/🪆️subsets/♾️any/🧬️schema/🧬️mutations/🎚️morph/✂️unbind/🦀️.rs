@@ -78,8 +78,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "morph-target-attribute", kind: "unbind-morph-target-attribute", record: "UnboundMorphTargetAttribute" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Unbind Morph Target Attribute", "Bindung des Morphzielattributs aufheben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Unbind Morph Target Attribute", "Bindung des Morphzielattributs aufheben")
     }
 
     fn target(&self) -> Vec<String> {

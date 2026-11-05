@@ -10,36 +10,36 @@
 //! The chunk folders that remain next to it are `cfg(test)` hosts of the tests that need the monolith fixtures; each reaches
 //! the shared imports through `use super::*;`.
 
-use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
-use semio_framework_os_config::io::text::mutations::{decode_ui_preferences_config_mutation_json};
+use semio_os_kernel::os_directory::io::text::directory_command_sha256;
+use semio_os_config::io::text::mutations::{decode_ui_preferences_config_mutation_json};
 #[path = "../../../🏛️ShellHost/🔀️surface-switch/📄️document/🦀️.rs"]
 mod document_surface_preparation;
 
-use semio_framework_ui_wgpu_layout::chrome::push_chrome_group_border;
+use semio_ui_wgpu_layout::chrome::push_chrome_group_border;
 // 🧾️ Un-gated with the shell-owned panel builders themselves: the Command dock, the five Settings
 // leaves, the Marketplace leaf, the tool leaves and the chat transcript are all production retained
 // panel bodies now, so the whole `UiNode` vocabulary they author has to compile on every target.
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_declaration::ui::UiButtonNode;
-use semio_framework_ui_declaration::ui::UiControlNode;
-use semio_framework_ui_declaration::ui::UiFieldNode;
-use semio_framework_ui_declaration::ui::UiInputNode;
-use semio_framework_ui_declaration::ui::UiNode;
-use semio_framework_ui_declaration::ui::UiNumberStepperNode;
-use semio_framework_ui_declaration::ui::UiPresence;
-use semio_framework_ui_declaration::ui::UiRingNode;
-use semio_framework_ui_declaration::ui::UiSectionNode;
-use semio_framework_ui_declaration::ui::UiSelectItem;
-use semio_framework_ui_declaration::ui::UiSelectNode;
-use semio_framework_ui_declaration::ui::UiSliderNode;
-use semio_framework_ui_declaration::ui::UiStackNode;
-use semio_framework_ui_declaration::ui::UiTextNode;
-use semio_framework_ui_declaration::ui::UiToggleNode;
-use semio_framework_ui_declaration::ui::UiTreeItemNode;
-use semio_framework_ui_declaration::ui::UiTreeNode;
-use semio_framework_ui_declaration::ui::UiTreeSectionNode;
-use semio_framework_ui_declaration::ui::UiTreeWindow;
-use semio_framework_ui_declaration::ui::UiTreeWindowRowExtent;
+use semio_ui_locale::Label;
+use semio_ui_declaration::ui::UiButtonNode;
+use semio_ui_declaration::ui::UiControlNode;
+use semio_ui_declaration::ui::UiFieldNode;
+use semio_ui_declaration::ui::UiInputNode;
+use semio_ui_declaration::ui::UiNode;
+use semio_ui_declaration::ui::UiNumberStepperNode;
+use semio_ui_declaration::ui::UiPresence;
+use semio_ui_declaration::ui::UiRingNode;
+use semio_ui_declaration::ui::UiSectionNode;
+use semio_ui_declaration::ui::UiSelectItem;
+use semio_ui_declaration::ui::UiSelectNode;
+use semio_ui_declaration::ui::UiSliderNode;
+use semio_ui_declaration::ui::UiStackNode;
+use semio_ui_declaration::ui::UiTextNode;
+use semio_ui_declaration::ui::UiToggleNode;
+use semio_ui_declaration::ui::UiTreeItemNode;
+use semio_ui_declaration::ui::UiTreeNode;
+use semio_ui_declaration::ui::UiTreeSectionNode;
+use semio_ui_declaration::ui::UiTreeWindow;
+use semio_ui_declaration::ui::UiTreeWindowRowExtent;
 
 use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette};
 use crate::hub_connection::{
@@ -59,27 +59,27 @@ use infinite_world::world::{
 use semio_framework::kernel::{UiDirtyScope, UiDirtySection};
 use semio_framework::IconName;
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel, ViewSessionIdentity};
-use semio_framework_ui_viewport::{
+use semio_ui_viewport::{
     Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant, Viewport3dAxonometricVariant,
     Viewport3dCurvilinearMapping, Viewport3dObliqueVariant, Viewport3dOrthographicView,
     Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec,
 };
-use semio_framework_os_config::opening_config::{
+use semio_os_config::opening_config::{
     apply_ui_preferences_config_mutation, mutations::{set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_named_layout, set_terminology, set_theme, UiPreferencesConfigMutation},
     UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme, UserNamedLayout, UI_PREFERENCES_CONFIG_SCHEMA,
 };
-use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
-use semio_framework_os_kernel::os_directory::schema::space_artifact_creation::{SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1};
+use semio_os_kernel::os_directory::identity::IdentityEnv;
+use semio_os_kernel::os_directory::schema::space_artifact_creation::{SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, DocumentLinkStatus, PersistenceBinding, RemoteState};
 use store_sync::{PresencePeer, PresenceWindowView};
 use ui_contract::UiFixedList;
 use ui_contract::{SurfaceId, UiDocumentLease, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
-use semio_framework_ui_wgpu_widget_kit::draw_text;
+use semio_ui_wgpu_widget_kit::draw_text;
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client, consumed as-is (never re-declared:
-// `semio_framework_os_kernel::os_directory` is the single source of truth both this shell and the
+// `semio_os_kernel::os_directory` is the single source of truth both this shell and the
 // hub's own Rust twin import).
 //
 // 🌐️ Target-neutral since ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1e: identity, the
@@ -92,7 +92,7 @@ use crate::directory_door::{ShellDirectoryClient, ShellDirectoryTransport};
 // the surface builder name the same constants rather than two copies of eighteen string literals.
 use crate::hub_connection::action as hub_action;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::{
+use semio_os_kernel::os_directory::{
     client::{CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError},
     identity::{claimed_local_hub_credential, restore_claimed, IdentityOutcome, IdentityStatus},
     schema::{
@@ -100,7 +100,7 @@ use semio_framework_os_kernel::os_directory::{
     },
     DirectoryStreamMessage,
 };
-use semio_framework_os_kernel::os_directory::{
+use semio_os_kernel::os_directory::{
     client::{DirectoryClient, DirectoryClientError, LocalHubCredential},
     identity::{actor_id, Identity},
     mint_directory_command_request_id, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1,
@@ -108,7 +108,7 @@ use semio_framework_os_kernel::os_directory::{
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
 // methods now carry an `OperationContext` (cancellation/deadline/trace), and the native transport
-// routes through `semio-framework-os-services`'s `HttpPool`/`ComputePool` over ONE shared
+// routes through `semio-os-services`'s `HttpPool`/`ComputePool` over ONE shared
 // `TokioHostRuntime` — `NativeDirectoryTransport::new()` (zero-arg) is gone, replaced by
 // `with_new_http_pool_now` fed the renderer's process-wide pool. No local executor or thread is
 // constructed for identity or directory work.
@@ -118,68 +118,68 @@ use semio_framework_async::{CancelToken, OperationContext, TraceId};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::{Lane, ScopeOwner, WorkerPool};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_services::{ComputePool, TokioHostRuntime};
-use semio_framework_ui_wgpu_layout::chrome::{chrome_item_bg, chrome_item_text};
-use semio_framework_ui_wgpu_paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
-use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState, PointerModifiers, TreeDragState, TreeDropPosition};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::{Level, Rgba, Theme};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_widget_kit::WidgetInteractionMaps;
-use semio_framework_ui_declaration::layout::{WindowLayout, WindowStackCorner};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_ui_declaration::utilities::UtilityNode;
-use semio_framework_ui_declaration::layout::WindowEngagement;
-use semio_framework_ui_declaration::layout::WindowMeasure;
-use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID;
-use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID;
+use semio_os_services::{ComputePool, TokioHostRuntime};
+use semio_ui_wgpu_layout::chrome::{chrome_item_bg, chrome_item_text};
+use semio_ui_wgpu_paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
+use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState, PointerModifiers, TreeDragState, TreeDropPosition};
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::{Level, Rgba, Theme};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_widget_kit::WidgetInteractionMaps;
+use semio_ui_declaration::layout::{WindowLayout, WindowStackCorner};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::Terminology;
+use semio_ui_declaration::utilities::UtilityNode;
+use semio_ui_declaration::layout::WindowEngagement;
+use semio_ui_declaration::layout::WindowMeasure;
+use semio_ui_declaration::layout::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_ui_declaration::layout::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_ui_declaration::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID;
+use semio_ui_declaration::layout::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_ui_declaration::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID;
 
 use semio_framework_value::{DslValue, FromValue, ToValue};
 #[cfg(not(target_arch = "wasm32"))]
 use protocol::os_directory::client::{DocumentHttpPortDeclarationV1, InstalledServiceContributionV1, InstalledServiceDriverV1, InstalledServiceTurnV1, InstalledServiceStatusV1, DOCUMENT_HTTP_PORT_TOPIC};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
 use serde_json::Value;
 
-pub use semio_framework_os_renderer_wgpu_contracts::{try_push_find_item, ActiveShellFindItems, ShellFindItem, ShellFindItemBinding, ShellFindItems, SHELL_FIND_ITEM_CAPACITY, SHELL_FIND_PAYLOAD_BYTES};
+pub use semio_renderer_wgpu_contracts::{try_push_find_item, ActiveShellFindItems, ShellFindItem, ShellFindItemBinding, ShellFindItems, SHELL_FIND_ITEM_CAPACITY, SHELL_FIND_PAYLOAD_BYTES};
 
 //#region 🧬️RendererWp4Components
-pub use semio_framework_os_renderer_wgpu_shell_chrome_state::*;
-pub use semio_framework_os_renderer_wgpu_shell_surfaces::*;
-pub use semio_framework_os_renderer_wgpu_shell_plugins::*;
-pub use semio_framework_os_renderer_wgpu_shell_history::*;
-pub use semio_framework_os_renderer_wgpu_shell_prefs::*;
-pub use semio_framework_os_renderer_wgpu_shell_directory::*;
-pub use semio_framework_os_renderer_wgpu_shell_sync::*;
-pub use semio_framework_os_renderer_wgpu_shell_docs::*;
-pub use semio_framework_os_renderer_wgpu_shell_doc_open::*;
-pub use semio_framework_os_renderer_wgpu_shell_windows::*;
-pub use semio_framework_os_renderer_wgpu_shell_dock::*;
-pub use semio_framework_os_renderer_wgpu_shell_input::*;
-pub use semio_framework_os_renderer_wgpu_shell_commands::*;
+pub use semio_renderer_wgpu_shell_chrome_state::*;
+pub use semio_renderer_wgpu_shell_surfaces::*;
+pub use semio_renderer_wgpu_shell_plugins::*;
+pub use semio_renderer_wgpu_shell_history::*;
+pub use semio_renderer_wgpu_shell_prefs::*;
+pub use semio_renderer_wgpu_shell_directory::*;
+pub use semio_renderer_wgpu_shell_sync::*;
+pub use semio_renderer_wgpu_shell_docs::*;
+pub use semio_renderer_wgpu_shell_doc_open::*;
+pub use semio_renderer_wgpu_shell_windows::*;
+pub use semio_renderer_wgpu_shell_dock::*;
+pub use semio_renderer_wgpu_shell_input::*;
+pub use semio_renderer_wgpu_shell_commands::*;
 //#endregion 🧬️RendererWp4Components
 
 //#region 📥️RendererWp4Staging
 // 🪓️ Step S0 of PLAN-RENDERER-WGPU-CRATES.md: the ShellState members and WP5-bound free items by crate, one module per (crate, chunk).
-pub use semio_framework_os_renderer_wgpu_shell_async::*;
-pub use semio_framework_os_renderer_wgpu_shell_state::*;
-pub use semio_framework_os_renderer_wgpu_shell_session::*;
-pub use semio_framework_os_renderer_wgpu_shell_window_actions::*;
-pub use semio_framework_os_renderer_wgpu_shell_actions::*;
-pub use semio_framework_os_renderer_wgpu_shell_pointer::*;
-pub use semio_framework_os_renderer_wgpu_shell_view_paint::*;
-pub use semio_framework_os_renderer_wgpu_shell_view_chrome::*;
-pub use semio_framework_os_renderer_wgpu_shell_view_overlays::*;
-pub use semio_framework_os_renderer_wgpu_shell_view_panels::*;
+pub use semio_renderer_wgpu_shell_async::*;
+pub use semio_renderer_wgpu_shell_state::*;
+pub use semio_renderer_wgpu_shell_session::*;
+pub use semio_renderer_wgpu_shell_window_actions::*;
+pub use semio_renderer_wgpu_shell_actions::*;
+pub use semio_renderer_wgpu_shell_pointer::*;
+pub use semio_renderer_wgpu_shell_view_paint::*;
+pub use semio_renderer_wgpu_shell_view_chrome::*;
+pub use semio_renderer_wgpu_shell_view_overlays::*;
+pub use semio_renderer_wgpu_shell_view_panels::*;
 #[cfg(target_arch = "wasm32")]
-pub(crate) use semio_framework_os_renderer_wgpu_host_base::host_io_call;
+pub(crate) use semio_renderer_wgpu_host_base::host_io_call;
 pub(crate) use shell_vocab::shell_chrome_string;
 //#endregion 📥️RendererWp4Staging
 

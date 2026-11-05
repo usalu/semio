@@ -15,7 +15,7 @@ async fn sqlite_snapshot_framework_space_builtin_creation_and_reload_publish_io_
         return;
     };
     let source = fixture();
-    let mut envelope = store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "sqlite-builtin", source.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "sqlite-builtin", source.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     if mode == "retained" { envelope.dialect = Some(dialect()); }
     let mut live = if mode == "retained" {
         let saved = store::os_store::text_format::print_document_pack(&envelope).await.unwrap();
@@ -51,9 +51,9 @@ async fn sqlite_snapshot_framework_space_builtin_creation_and_reload_publish_io_
         let envelope = if mode == "reload" {
         let saved = store::os_store::text_format::print_document_pack(&envelope).await.unwrap();
         envelope.retire_unadopted();
-        store::os_store::text_format::parse_document_pack::<SpaceSnapshot, SpaceMutation>(&saved.pack, &saved.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap().into_envelope()
+        store::os_store::text_format::parse_document_pack::<SpaceSnapshot, SpaceMutation>(&saved.pack, &saved.spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap().into_envelope()
         } else { envelope };
-        let mut live = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, store::os_spr::ActorId("actor:sqlite-retained-registration-fixture".into())).await.unwrap();
+        let mut live = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, store::os_spr::ActorId("actor:sqlite-retained-registration-fixture".into())).await.unwrap();
         live.install_document_store_owners_exact(store::test_support::plain_document_store_owners());
         live
     };
@@ -70,10 +70,10 @@ async fn sqlite_snapshot_framework_space_actual_typed_io_file_metadata_and_route
 #[test]fn sqlite_snapshot_framework_space_independent_surrogate_renumber_preserves_complete_logical_state(){let source=fixture();let codec=codec();let changed=oracle::renumber(&database(),f()["identityOffset"].as_i64().unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let native={let mut original_input=Some(changed.clone());with_original_encode(&native_caller_policy(),SqliteDatabaseLimits::default(),&mut |_|true,&mut |_|true,|_|{},|original_sql,original_owner|(codec.import)(S_SPACE_SCHEMA,&dialect(),&mut original_input,encoding,original_sql,original_owner))}.unwrap().value;assert_eq!(decode(native),source);}}
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use store::sqlite_snapshot::*;
-use semio_framework_os_space_testing_sqlite_oracle as oracle;
-use semio_framework_os_space_testing_sqlite_native_caller as native_caller;
+use semio_os_space_testing_sqlite_oracle as oracle;
+use semio_os_space_testing_sqlite_native_caller as native_caller;
 use native_caller::*;
 const SQL:&str=include_str!("../🗄️.sql");
 fn f()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
@@ -101,7 +101,7 @@ fn sqlite_snapshot_framework_space_native_input_retained_materialization_uses_sa
  }
 }
 
-use semio_framework_os_space_testing_sqlite_preflight as public_preflight;
+use semio_os_space_testing_sqlite_preflight as public_preflight;
 #[test]
 fn sqlite_snapshot_framework_space_public_borrowed_native_preflight_admits_actual_owner(){
  let facet:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📏️preflight/🔣️.json")).unwrap();

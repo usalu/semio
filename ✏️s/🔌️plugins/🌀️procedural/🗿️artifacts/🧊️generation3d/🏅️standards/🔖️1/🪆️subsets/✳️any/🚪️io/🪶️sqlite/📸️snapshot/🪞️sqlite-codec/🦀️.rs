@@ -2,11 +2,11 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::snapshot::Generation3dSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
 use semio_s_procedural_core_generation_sqlite as typed;
 impl ArtifactSqliteSnapshotHost for Generation3dSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{c.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;if Self::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation authored schema exceeds caller limit"))}decode_sqlite_native(payload,c,native_owner)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;if Self::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation authored schema exceeds caller limit"))}encode_sqlite_native(self,encoding,c,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{c.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;if Self::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation authored schema exceeds caller limit"))}decode_sqlite_native(payload,c,native_owner)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;if Self::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation authored schema exceeds caller limit"))}encode_sqlite_native(self,encoding,c,native_owner)}
  
  fn retire_sqlite_snapshot(self){self.retire_cold();}
  
@@ -23,7 +23,7 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
 use crate::dsl_mirror::Generation3dSnapshotDsl;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 
 struct Generation3dNative;
 
@@ -58,10 +58,10 @@ impl semio_s_procedural_core_generation_sqlite_native::GenerationNative for Gene
     }
 }
 
-pub fn encode_sqlite_native(document: &Generation3dSnapshot, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, semio_framework_value::ValueError> {
+pub fn encode_sqlite_native(document: &Generation3dSnapshot, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, semio_framework_value::ValueError> {
     semio_s_procedural_core_generation_sqlite_native::encode::<Generation3dNative>(document, encoding, control, native_owner)
 }
 
-pub fn decode_sqlite_native(payload: &store::io_schema::IoPayload, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Generation3dSnapshot, semio_framework_value::ValueError> {
+pub fn decode_sqlite_native(payload: &store::io_schema::IoPayload, control: &mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Generation3dSnapshot, semio_framework_value::ValueError> {
     semio_s_procedural_core_generation_sqlite_native::decode::<Generation3dNative>(payload, control, native_owner)
 }

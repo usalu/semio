@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertDynamicElement whe
         record: "InsertedDynamicElement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert dynamic element {}", self.item.id), &format!("Schwingungsanfälliges Bauteil {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert dynamic element {}", self.item.id), &format!("Schwingungsanfälliges Bauteil {} einfügen", self.item.id))
     }
 }
 

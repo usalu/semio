@@ -6,8 +6,8 @@
 //! sibling `editor` module (`policyViewerPurityBreaches`).
 
 use crate::{stock_of, CurationSnapshot};
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
+use semio_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
 
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TableWindowKit::KIND_ID;

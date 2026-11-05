@@ -201,7 +201,7 @@ fn paint_node_graph_selection_marquee(ctx: &mut FrameworkWidgetContext<'_>, inne
     }
     let lasso = method == "lasso";
     let global: Vec<[f32; 2]> = points.iter().map(|(x, y)| [inner.x + x, inner.y + y]).collect();
-    semio_framework_ui_draw_contract::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
+    semio_ui_draw_contract::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
 }
 
 /// 🖌️🧭️ The two paint-2d overlays React layers OVER its canvas: a live marquee
@@ -223,7 +223,7 @@ pub fn paint_paint2d_overlays(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiCo
         return;
     }
     if let Some((points, crossing, lasso)) = paint2d_marquee_overlay(&scene.host_id, &paint.active_utility) {
-        semio_framework_ui_draw_contract::paint_selection_marquee(ctx.draw, &theme, crossing, lasso, &points, true);
+        semio_ui_draw_contract::paint_selection_marquee(ctx.draw, &theme, crossing, lasso, &points, true);
     }
 }
 

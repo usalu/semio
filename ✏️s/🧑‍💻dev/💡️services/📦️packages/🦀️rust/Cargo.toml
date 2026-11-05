@@ -24,7 +24,7 @@ name = "semio-s-services-mcp"
 path = "../../🌉️mcp/⌨️entrypoint/🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel.workspace = true
-semio-framework-os-renderer-wgpu = { workspace = true }
-semio-framework-os-mcp = { workspace = true }
+semio-os-kernel.workspace = true
+semio-renderer-wgpu = { workspace = true }
+semio-os-mcp = { workspace = true }
 

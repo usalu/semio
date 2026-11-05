@@ -24,9 +24,9 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "register-row", kind: "delete-register-row", record: "DeletedRegisterRow" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let label = self.register.label();
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete {} \"{}\"", label.en, self.id.0), &format!("{} \"{}\" löschen", label.de, self.id.0))
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete {} \"{}\"", label.en, self.id.0), &format!("{} \"{}\" löschen", label.de, self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

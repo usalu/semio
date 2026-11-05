@@ -1,23 +1,23 @@
 //! 🧵️ Retained command routes: tool ids, publication contracts, the bounded extent and reducer, and the job factory.
 
 use super::*;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobFactory;
 use semio_s_artifact_raster_raster_editor_commands::RasterCommand;
 use crate::config::{RasterConfig, RasterConfigMutation};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoDraftMutation;
 
 //#region 🧵️RetainedCommands
 /// 🧵️ Document and session command routes; PNG download has a separate resumable host-only factory.
@@ -138,10 +138,10 @@ pub(super) fn raster_retained_reduce(
     command: &RasterCommand,
     snapshot: &RasterSnapshot,
     config: &RasterConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<RasterMutation, RasterConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
@@ -176,7 +176,7 @@ impl semio_framework::ToolJobFactory for RasterRetainedCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         raster_retained_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: RASTER_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: RASTER_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 

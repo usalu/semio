@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeAnchorInclinationD
         record: "ChangedAnchorInclinationDeg",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Inclination below horizontal θ of the anchor", "Anker: Neigung unter der Horizontalen θ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Inclination below horizontal θ of the anchor", "Anker: Neigung unter der Horizontalen θ ändern")
     }
 }
 

@@ -4,9 +4,9 @@ use super::*;
 use store::ReferenceSpaceMember as _;
 
 /// 🪪️ The authoring identity the headless probe documents issue to themselves for one command.
-fn probe_identity() -> semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'static> {
-    let observer: &'static mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'static> = Box::leak(Box::new(|_: semio_framework_value::native_encoding::NativeEncodeProgress| true));
-    semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("headless probe authoring identity admission")
+fn probe_identity() -> semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'static> {
+    let observer: &'static mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'static> = Box::leak(Box::new(|_: semio_framework_value::native_encoding::NativeEncodeProgress| true));
+    semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("headless probe authoring identity admission")
 }
 
 impl HeadlessWorkspace {
@@ -21,7 +21,7 @@ impl HeadlessWorkspace {
         let mut probe_store = match existing {
             Some(probe_store) => probe_store,
             None => {
-                let envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+                let envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
                 let mut probe_store = ProbeStore::new::<store::os_store::ArtifactSnapshotPublication>(envelope, store::ActorId(self.actor_label().into())).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
                 probe_store.install_document_store_owners_exact(probe_store_owners());
                 let document_key = self.origin.artifact_document_key(artifact_id);

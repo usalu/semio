@@ -18,10 +18,10 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-raster-raster-diff = { workspace = true }
@@ -29,4 +29,4 @@ semio-s-artifact-raster-raster-model = { workspace = true }
 semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }

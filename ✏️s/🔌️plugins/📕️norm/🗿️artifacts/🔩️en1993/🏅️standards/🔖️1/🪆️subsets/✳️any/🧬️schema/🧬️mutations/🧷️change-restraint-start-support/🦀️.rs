@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRestraintStartSupp
         record: "ChangedRestraintStartSupport",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Support at the start of the restraint", "Halterung: Lagerung am Anfang ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Support at the start of the restraint", "Halterung: Lagerung am Anfang ändern")
     }
 }
 

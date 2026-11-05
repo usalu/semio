@@ -8,7 +8,7 @@ use super::*;
 async fn undo_redo_round_trips_added_node_through_generic_helper() {
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot").nodes.len();
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     close(&mut app);
 }
 
@@ -16,15 +16,15 @@ async fn undo_redo_round_trips_added_node_through_generic_helper() {
 async fn undo_redo_round_trips_added_node_through_wrapper() {
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot").nodes.len();
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add node");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add node");
     settle(&mut app).await;
     assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before + 1);
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
-    let undo = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("undo commits its reserved job");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
+    let undo = semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("undo commits its reserved job");
     settle(&mut app).await;
     assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
     assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before);
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before + 1);
     close(&mut app);
 }
@@ -34,7 +34,7 @@ async fn coalesced_translate_drag_is_a_single_undo_step() {
     let mut app = new_app().await;
     let before = semio_framework_pack_json::to_json_string(&app.snapshot().expect("snapshot"));
     for _ in 0..3 {
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec!["object-box-1".into()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("translate tick");
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec!["object-box-1".into()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("translate tick");
         settle(&mut app).await;
     }
     let after = semio_framework_pack_json::to_json_string(&app.snapshot().expect("snapshot"));
@@ -54,33 +54,33 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     base.nodes = vec![CadNode { id: "node-a".into(), label: "A".into(), kind: "solid".into() }, CadNode { id: "node-b".into(), label: "B".into(), kind: "solid".into() }];
     let node_a = base.nodes[0].id.clone();
     let node_b = base.nodes[1].id.clone();
-    let base_envelope = store::os_store::document_materialize::create_document_envelope::<CadSnapshot, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let base_envelope = store::os_store::document_materialize::create_document_envelope::<CadSnapshot, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let base_files = store::os_store::text_format::print_document_pack(&base_envelope).await.expect("print document pack");
     base_envelope.retire_unadopted();
 
     let mut instance_a = new_app().await;
     let mut instance_b = new_app().await;
-    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_a.0, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("load a");
-    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_b.0, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("load b");
+    semio_plugin::artifact_app_laws::load_document(&mut instance_a.0, &base_files, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("load a");
+    semio_plugin::artifact_app_laws::load_document(&mut instance_b.0, &base_files, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("load b");
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://cad-convergence", "mem://cad-convergence").await;
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &CadCommand::RenameNode(rename_node::RenameNode { node_id: node_a.clone(), value: "Renamed By A".into() }), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a renames node a");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &CadCommand::RenameNode(rename_node::RenameNode { node_id: node_a.clone(), value: "Renamed By A".into() }), &meta("actor-a"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a renames node a");
     settle(&mut instance_a).await;
 
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &CadCommand::RenameNode(rename_node::RenameNode { node_id: node_b.clone(), value: "Renamed By B".into() }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b renames node b");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &CadCommand::RenameNode(rename_node::RenameNode { node_id: node_b.clone(), value: "Renamed By B".into() }), &meta("actor-b"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b renames node b");
     settle(&mut instance_b).await;
 
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     for (instance, actor) in [(&mut instance_a, "actor-a"), (&mut instance_b, "actor-b")] {
-        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "commitCheckpoint", None, &meta(actor), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("pump {actor}: {fault:?}"));
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance.0, admitted).await.unwrap_or_else(|fault| panic!("pump {actor} reserved job: {fault:?}"));
+        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "commitCheckpoint", None, &meta(actor), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("pump {actor}: {fault:?}"));
+        semio_plugin::app::settle_framework_reserved_admission(&mut instance.0, admitted).await.unwrap_or_else(|fault| panic!("pump {actor} reserved job: {fault:?}"));
         settle(instance).await;
     }
-    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's checkpoint");
-    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
+    instance_a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's checkpoint");
+    instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     settle(&mut instance_a).await;
     settle(&mut instance_b).await;
 
@@ -107,7 +107,7 @@ async fn ingest_operations_is_idempotent_for_cad() {
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://cad-doc", "mem://cad-doc").await;
     sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach");
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut sender.0, &CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("add node");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut sender.0, &CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("add node");
     settle(&mut sender).await;
 
     let mut envelopes = Vec::new();
@@ -121,8 +121,8 @@ async fn ingest_operations_is_idempotent_for_cad() {
 
     let mut receiver = new_app().await;
     let nodes_before = receiver.snapshot().expect("snapshot").nodes.len();
-    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
-    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
+    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
+    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
     assert_eq!(receiver.snapshot().expect("snapshot").nodes.len(), nodes_before + 1, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
     close(&mut sender);
@@ -133,7 +133,7 @@ async fn ingest_operations_is_idempotent_for_cad() {
 //#region 🪆️ObjectChildLane
 /// 🥽️ The `instances` lane the shape pane's world-3d surface publishes for the mounted app — the rendered transform.
 fn shape_instances_lane(app: &CadFixtureApp) -> String {
-    let node = edit::build_world_scene_for_pane(&live_view(app), CadPaneId::Shape, "cad.play.scene3d/shape", None, CadDislocateOptions::default(), semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("shape world scene");
+    let node = edit::build_world_scene_for_pane(&live_view(app), CadPaneId::Shape, "cad.play.scene3d/shape", None, CadDislocateOptions::default(), semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).expect("shape world scene");
     scene_lane(&node, "instances")
 }
 
@@ -147,7 +147,7 @@ async fn translate_selection_moves_the_object_and_the_rendered_instance() {
     let parent = app.snapshot().expect("snapshot");
     let store = format!("{}/{}", semio_s_artifact_cad_cad_model::snapshot::cad_pane_model_slot(CadPaneId::Shape), semio_s_artifact_cad_cad_model::snapshot::cad_pane_model(&parent, CadPaneId::Shape).expect("the demo document composes a shape child").child_id);
     let target = pane_objects(&app, CadPaneId::Shape).await.first().expect("the demo document holds shape objects").clone();
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec![target.id.clone()], dx: 1.5, dy: -2.25, dz: 0.5 }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("translate dispatch");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec![target.id.clone()], dx: 1.5, dy: -2.25, dz: 0.5 }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("translate dispatch");
     settle(&mut app).await;
     assert_eq!(app.snapshot().expect("snapshot"), parent, "a transform never moves the parent document or re-mints the pane's child handle");
     let moved = pane_objects(&app, CadPaneId::Shape).await.into_iter().find(|object| object.id == target.id).expect("the object survives the move");
@@ -161,7 +161,7 @@ async fn translate_selection_moves_the_object_and_the_rendered_instance() {
     assert_eq!(rows[0].mutations.len(), 1, "one relative leaf: {:?}", rows[0].mutations);
     assert_eq!(rows[0].mutations[0].store.as_deref(), Some(store.as_str()));
     assert!(rows[0].mutations[0].editable, "a drag's inputs are editable");
-    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 element by (1.5, -2.25, 0.5)");
+    assert_eq!(rows[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 1 element by (1.5, -2.25, 0.5)");
 
     let lane = shape_instances_lane(&app);
     let position = format!("\"position\":[{},{},{}]", moved.origin[0], moved.origin[1], moved.origin[2]);
@@ -174,7 +174,7 @@ async fn translate_selection_moves_the_object_and_the_rendered_instance() {
 async fn add_object_yields_a_new_rendered_instance() {
     let mut app = new_app().await;
     let before = pane_objects(&app, CadPaneId::Shape).await.len();
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &window_meta("cad-window-shape", shape::WINDOW_KIND_ID), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject dispatch");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &window_meta("cad-window-shape", shape::WINDOW_KIND_ID), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject dispatch");
     settle(&mut app).await;
     let objects = pane_objects(&app, CadPaneId::Shape).await;
     assert_eq!(objects.len(), before + 1, "the pane's model child holds one more object");
@@ -194,7 +194,7 @@ async fn catalogue_add_box_grows_only_the_shape_pane_with_one_row_and_undoes_and
         others_before.push(pane_objects(&app, pane).await);
     }
     let rows_before = member_rows(&mut app).await.len();
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &window_meta("cad-window-shape", shape::WINDOW_KIND_ID), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject dispatch");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &window_meta("cad-window-shape", shape::WINDOW_KIND_ID), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject dispatch");
     settle(&mut app).await;
     let shape_added = pane_objects(&app, CadPaneId::Shape).await;
     assert_eq!(shape_added.len(), shape_before.len() + 1, "the shape pane gains one object");
@@ -204,10 +204,10 @@ async fn catalogue_add_box_grows_only_the_shape_pane_with_one_row_and_undoes_and
         assert_eq!(&pane_objects(&app, pane).await, before, "{pane:?} never changes");
     }
     assert_eq!(member_rows(&mut app).await.len(), rows_before + 1, "one document row for the add");
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(pane_objects(&app, CadPaneId::Shape).await, shape_before, "undo removes the added object");
     assert!(!shape_instances_lane(&app).contains(created.id.as_str()), "undo removes the rendered instance");
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(pane_objects(&app, CadPaneId::Shape).await, shape_added, "redo restores the added object exactly");
     for (pane, before) in others.into_iter().zip(&others_before) {
         assert_eq!(&pane_objects(&app, pane).await, before, "{pane:?} never changes through undo and redo");
@@ -232,13 +232,13 @@ async fn object_gestures_undo_back_to_the_demo_document() {
     let count = gestures.len();
     for command in gestures {
         let before = pane_objects(&app, CadPaneId::Shape).await;
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("gesture dispatch");
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("gesture dispatch");
         settle(&mut app).await;
         assert_ne!(pane_objects(&app, CadPaneId::Shape).await, before, "every object gesture lands a real child edit");
     }
     assert_eq!(member_rows(&mut app).await.len(), count, "one row per gesture");
     for _ in 0..count {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
     let restored = pane_objects(&app, CadPaneId::Shape).await;
     assert_eq!(restored.len(), genesis.len(), "undo restores every object");
@@ -255,12 +255,12 @@ async fn object_gestures_undo_back_to_the_demo_document() {
 async fn an_inspector_edit_is_one_set_element_and_an_origin_delta_is_a_relative_drag() {
     let mut app = new_app().await;
     let target = pane_objects(&app, CadPaneId::Shape).await.first().expect("shape objects").clone();
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::PatchObject(patch_object::PatchObject { object_id: target.id.clone(), field: "label".into(), value: Some("Renamed".into()), delta: None }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("rename dispatch");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::PatchObject(patch_object::PatchObject { object_id: target.id.clone(), field: "label".into(), value: Some("Renamed".into()), delta: None }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("rename dispatch");
     settle(&mut app).await;
     let renamed = pane_objects(&app, CadPaneId::Shape).await.into_iter().find(|object| object.id == target.id).expect("the object survives");
     assert_eq!(CadObject { label: target.label.clone(), ..renamed.clone() }, target, "a rename changes the label and nothing else");
     assert_eq!(renamed.label, semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("Renamed"));
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::PatchObject(patch_object::PatchObject { object_id: target.id.clone(), field: "origin.x".into(), value: None, delta: Some(0.75) }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("origin delta dispatch");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::PatchObject(patch_object::PatchObject { object_id: target.id.clone(), field: "origin.x".into(), value: None, delta: Some(0.75) }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("origin delta dispatch");
     settle(&mut app).await;
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 2, "two edits are two rows: {rows:?}");

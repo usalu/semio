@@ -21,6 +21,6 @@ semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-mechanics = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 serde = { workspace = true }

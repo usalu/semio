@@ -1,3 +1,4 @@
+import workspaceImportSchema from "./🧬️schema/📦️workspace-import/🔣️.json" with { type: "json" };
 import { pathEmojiStatuteFindings } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🛣️path/🟦️.ts";
 import { leadingEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import { cargoWorkspaceDeclaresMemberV1 } from "../../🗂️workspaces/🦀️cargo/🟦️.ts";
@@ -12,6 +13,8 @@ import { tomlTableBody } from "../🪧️owner-markers/🟦️.ts";
 import { type SemanticProjectionAuthorityNode, projectionByteCompare } from "../🧱️path-projection-contracts/🟦️.ts";
 import { exactOwnerRegularFile } from "../✅️owned-file-approvals/🟦️.ts";
 
+const workspaceImportPattern = new RegExp(workspaceImportSchema.pattern, "u");
+
 /** 📏️ Validates explicit browser input authority without discovering or reading unrelated modules. */
 export function parseSemanticPackageBrowserProfile(input: unknown, genericEmojiIdentities: readonly string[]): SemanticPackageBrowserProfile {
   const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
@@ -23,7 +26,7 @@ export function parseSemanticPackageBrowserProfile(input: unknown, genericEmojiI
   if (!Array.isArray(input.sourceModulePaths) || input.sourceModulePaths.length < expected.length || input.sourceModulePaths.some((path, index, paths) => !exactOwnerPath(path) || !/\.(?:tsx?|m?js|json)$/u.test(path) || index > 0 && projectionByteCompare(paths[index - 1], path) >= 0)) throw new Error("WGPU browser module paths must be exact, nonopaque, unique and byte ordered");
   if (input.entries.some((entry) => !(input.sourceModulePaths as string[]).includes(input.ownerPath + "/" + entry.sourceRelativePath))) throw new Error("WGPU browser entry is not an exact declared current module");
   const specifiers = input.workspaceImports !== null && typeof input.workspaceImports === "object" && !Array.isArray(input.workspaceImports) ? Object.keys(input.workspaceImports) : [];
-  if (["@semio-tech/framework", "@semio-tech/framework-os", "@semio-tech/framework-replication"].some((root) => !specifiers.includes(root)) || specifiers.some((specifier, index) => !/^@semio-tech\/[a-z0-9-]+(?:\/[a-z0-9][a-z0-9.-]*)*$/u.test(specifier) || index > 0 && projectionByteCompare(specifiers[index - 1]!, specifier) >= 0)) throw new Error("WGPU browser workspace import identities drifted");
+  if (["@semio-tech/framework", "@semio-tech/framework-os", "@semio-tech/framework-replication"].some((root) => !specifiers.includes(root)) || specifiers.some((specifier, index) => !workspaceImportPattern.test(specifier) || index > 0 && projectionByteCompare(specifiers[index - 1]!, specifier) >= 0)) throw new Error("WGPU browser workspace import identities drifted");
   for (const binding of Object.values(input.workspaceImports as Record<string, unknown>)) if (!exact(binding, ["manifestPath", "entryPath"]) || !exactOwnerPath(binding.manifestPath) || basename(binding.manifestPath) !== "package.json" || !exactOwnerPath(binding.entryPath) || !input.sourceModulePaths.includes(binding.entryPath)) throw new Error("WGPU browser workspace import binding drifted");
   return input as unknown as SemanticPackageBrowserProfile;
 }
@@ -34,7 +37,7 @@ export function parseCanonicalWgpuPackageCatalog(bytes: string, digest: string, 
   const row = JSON.parse(bytes) as CanonicalWgpuPackageCatalog;
   const exact = (value: unknown, keys: readonly string[]): boolean => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
   if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "nodePackageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "https://json.schemas.assets.semio-tech.com/os/renderer/component.json#/$defs/RendererPackageCatalogV1" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust" || row.nodePackageRelativePath !== "📦️packages/🟦️typescript") throw new Error("Current WGPU package catalog identity drift");
-  if (!exact(row.identity, ["cargoPackageName", "nodePackageName", "projectName"]) || row.identity.cargoPackageName !== "semio-framework-os-renderer-wgpu" || row.identity.nodePackageName !== "@semio-tech/framework-renderer-wgpu" || row.identity.projectName !== row.identity.nodePackageName || !exact(row.entryPaths, ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"]) || Object.values(row.entryPaths).some((path) => !exactOwnerPath(path)) || row.entryPaths.cargoBuild !== "build.rs") throw new Error("Current WGPU package manifest authority drift");
+  if (!exact(row.identity, ["cargoPackageName", "nodePackageName", "projectName"]) || row.identity.cargoPackageName !== "semio-renderer-wgpu" || row.identity.nodePackageName !== "@semio-tech/framework-renderer-wgpu" || row.identity.projectName !== row.identity.nodePackageName || !exact(row.entryPaths, ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"]) || Object.values(row.entryPaths).some((path) => !exactOwnerPath(path)) || row.entryPaths.cargoBuild !== "build.rs") throw new Error("Current WGPU package manifest authority drift");
   const ids = ["build-adapter", "binary-adapter", "typescript-adapter", "renderer-registration"];
   if (!Array.isArray(row.artifacts) || row.artifacts.length !== ids.length || row.artifacts.some((artifact, index) => !exact(artifact, ["id", "relativePath", "targetRelativePath", "language", "role", "content"]) || artifact.id !== ids[index] || !exactOwnerPath(artifact.relativePath) || artifact.targetRelativePath !== null && !exactOwnerPath(artifact.targetRelativePath) || !["rust", "typescript"].includes(artifact.language) || !["declaration", "implementation"].includes(artifact.role) || typeof artifact.content !== "string" || classifyPackageSource(artifact.content, requiredPackageGlueGrammar(taxonomy, artifact.language)).role !== artifact.role) || new Set(row.artifacts.map((artifact) => artifact.relativePath)).size !== ids.length) throw new Error("Current WGPU package artifact authority drift");
   for (const artifact of row.artifacts) {

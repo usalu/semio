@@ -4,7 +4,7 @@ use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{stem, 
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::title_labels;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
+use semio_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{INFER_PREVIEW, NODES_PER_STEP};
 #[allow(unused_imports)]
@@ -24,9 +24,9 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::export_sheets::{SheetsJob, Advance, labels_of};
@@ -46,7 +46,7 @@ fn finished(job: &mut SheetsJob, snapshot: &ModelSnapshot) -> (Output, Vec<&'sta
 
 #[test]
 fn the_pdf_job_analyses_in_bounded_steps_then_writes_a_page_per_sheet_and_equals_the_one_shot_file() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let model = house_with_sheets();
     let mut job = SheetsJob::with_steps("pdf", None, None, Some(&instance), 3);
     let (output, stages) = finished(&mut job, &model);
@@ -62,7 +62,7 @@ fn the_pdf_job_analyses_in_bounded_steps_then_writes_a_page_per_sheet_and_equals
 
 #[test]
 fn the_svg_job_writes_the_first_sheet_or_the_one_it_names() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let model = house_with_sheets();
     let (first, _) = finished(&mut SheetsJob::new("svg", None, None, Some(&instance)), &model);
     assert_eq!((first.mime_type, first.encoding), ("image/svg+xml", None));
@@ -73,7 +73,7 @@ fn the_svg_job_writes_the_first_sheet_or_the_one_it_names() {
 
 #[test]
 fn a_pdf_of_one_named_sheet_has_one_page() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let model = house_with_sheets();
     let (output, _) = finished(&mut SheetsJob::new("pdf", Some("sh-elevations"), None, Some(&instance)), &model);
     let bytes = semio_framework_io_base64::base64_standard_decode(&output.data).expect("base64");
@@ -83,7 +83,7 @@ fn a_pdf_of_one_named_sheet_has_one_page() {
 
 #[test]
 fn the_headings_follow_the_language_of_the_command() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let model = house_with_sheets();
     let english = finished(&mut SheetsJob::new("svg", None, Some("en"), Some(&instance)), &model).0.data;
     let german = finished(&mut SheetsJob::new("svg", None, Some("de"), Some(&instance)), &model).0.data;
@@ -95,7 +95,7 @@ fn the_headings_follow_the_language_of_the_command() {
 
 #[test]
 fn an_unknown_format_an_unknown_sheet_and_a_model_without_sheets_are_refused() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let model = house_with_sheets();
     assert_eq!(SheetsJob::new("dwg", None, None, Some(&instance)).advance(&model).expect_err("a refusal").code.0.as_str(), "bim.export.format-unknown");
     assert_eq!(SheetsJob::new("pdf", Some("sh-gone"), None, Some(&instance)).advance(&model).expect_err("a refusal").code.0.as_str(), "bim.export.sheet-missing");
@@ -104,7 +104,7 @@ fn an_unknown_format_an_unknown_sheet_and_a_model_without_sheets_are_refused() {
 
 #[test]
 fn cancelling_drops_the_pages_and_the_fraction_grows_with_the_work() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let model = house_with_sheets();
     let mut job = SheetsJob::with_steps("pdf", None, None, Some(&instance), 3);
     let mut seen = vec![job.fraction(&model)];

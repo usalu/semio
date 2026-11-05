@@ -1,12 +1,12 @@
 use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::result_animation_tick::*;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::ViewModel;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation::SetResultAnimation;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation::TICK_ACTION;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
@@ -18,9 +18,9 @@ use crate::context::dispatch;
 use crate::context::fem3d_app;
 use crate::context::Fem3dApp;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::InvocationResult;
-use semio_framework_plugin::ViewWindowInstance;
+use semio_plugin::Effect;
+use semio_plugin::InvocationResult;
+use semio_plugin::ViewWindowInstance;
 
 const WINDOW: &str = "results-left";
 
@@ -35,12 +35,12 @@ fn tagged() -> SetResultAnimation {
 }
 
 fn results_view() -> ViewModel {
-    ViewModel { window_id: Some(WINDOW.into()), window_instances: vec![ViewWindowInstance { id: WINDOW.into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { window_id: Some(WINDOW.into()), window_instances: vec![ViewWindowInstance { id: WINDOW.into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// 🎚️ The transport the addressed results window ended up with, read back off its own config partition.
 async fn published(app: &mut Fem3dApp) -> FemResultsAnimation {
-    semio_framework_plugin::artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(app, &results_view()).await.expect("capture results window config").unwrap_or_default().animation
+    semio_plugin::artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(app, &results_view()).await.expect("capture results window config").unwrap_or_default().animation
 }
 
 /// 🫧️ The running clock of the addressed results window, read back off its own transient partition.
@@ -52,7 +52,7 @@ fn clock(app: &mut Fem3dApp) -> Option<FemPlaybackClock> {
 /// 🔁️ Drives the publication the dispatch opened all the way into the stores, the way the plugin
 /// host's own continuation does — a read before the settle would see the PREVIOUS frame.
 async fn settle(app: &mut Fem3dApp) -> Vec<Effect> {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
+    semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
 }
 
 /// 🔁️ How many playback re-arms one gesture asked the host for. Counted off BOTH the dispatch's own
@@ -168,12 +168,12 @@ async fn tagged_transport_gestures_rest_where_the_clock_runs() {
 /// 🎚️ One wire dispatch of `setResultAnimation` at the results window, `args` as the host sends them (a dragged slider
 /// adds its press's `gesture` and `commit`, a host cancel its `abort` reason); a cancel is settled by the runtime itself.
 async fn transport_wire(app: &mut Fem3dApp, args: serde_json::Value) {
-    use semio_framework_plugin::PluginApp as _;
+    use semio_plugin::PluginApp as _;
     let aborting = args.get("abort").is_some();
-    let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
+    let mut meta = semio_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(results_view());
-    let args = semio_framework_plugin::DslValue::from(&args);
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setResultAnimation", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
+    let args = semio_plugin::DslValue::from(&args);
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setResultAnimation", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
     if !aborting {
         settle(app).await;
     }
@@ -181,7 +181,7 @@ async fn transport_wire(app: &mut Fem3dApp, args: serde_json::Value) {
 
 /// 🧾️ The history rows that carry an applied edit.
 async fn history_rows(app: &mut Fem3dApp) -> usize {
-    use semio_framework_plugin::PluginApp as _;
+    use semio_plugin::PluginApp as _;
     app.history_snapshot().await.expect("history").upserts.iter().filter(|row| row.applied && !row.op_lines.is_empty()).count()
 }
 
@@ -191,7 +191,7 @@ async fn history_rows(app: &mut Fem3dApp) -> usize {
 #[semio_framework_async_macros::async_test]
 async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
     let doc = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
@@ -227,12 +227,12 @@ async fn result_animation_frames_never_touch_the_window_config_ledger() {
     let mut app = fem3d_app();
     play(&mut app, SetResultAnimation { phase: Some(0.0), playing: Some(true), speed: Some(0.25), loop_mode: Some("loop".into()), ..blank() }).await;
     let config_generation = app.window_config_generation(&results_view()).await.expect("config generation");
-    let frames = semio_framework_os_kernel::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY + 16;
+    let frames = semio_os_kernel::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY + 16;
     for frame in 0..frames {
         assert_eq!(tick(&mut app).await, 1, "frame {frame}: the clock keeps re-arming well past the ledger capacity");
     }
     assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), config_generation, "no frame amended the window config");
-    assert!(!semio_framework_plugin::PluginApp::maintenance_under_pressure(&*app), "no frame displaced a config-lane owner");
+    assert!(!semio_plugin::PluginApp::maintenance_under_pressure(&*app), "no frame displaced a config-lane owner");
     let running = clock(&mut app).expect("the clock runs");
     let expected = (frames as f64 * ANIMATION_TICK_SECONDS * 0.25).rem_euclid(1.0);
     assert!((running.phase - expected).abs() < 1e-6, "every one of the {frames} frames landed: phase {} vs {expected}", running.phase);

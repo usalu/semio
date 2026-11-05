@@ -17,9 +17,9 @@ pub fn decode_window_template_drag(data: &HashMap<String, String>) -> Option<Win
 pub struct ContextMenuSurfaceResolution {
     pub surface_id: String,
     pub kind: String,
-    pub hits: Vec<semio_framework_ui_declaration::ui::ContextMenuHit>,
-    pub selection: Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup>,
-    pub text: Option<semio_framework_ui_declaration::ui::ContextMenuTextContext>,
+    pub hits: Vec<semio_ui_declaration::ui::ContextMenuHit>,
+    pub selection: Vec<semio_ui_declaration::ui::ContextMenuSelectionGroup>,
+    pub text: Option<semio_ui_declaration::ui::ContextMenuTextContext>,
 }
 
 #[derive(Clone, Debug, Default)]

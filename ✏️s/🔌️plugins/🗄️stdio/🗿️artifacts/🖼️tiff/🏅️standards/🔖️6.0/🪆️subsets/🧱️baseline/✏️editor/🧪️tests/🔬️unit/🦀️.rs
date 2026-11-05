@@ -1,8 +1,8 @@
 use crate::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation;
 use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
 use crate::TIFF_BASELINE_DIALECT;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_contract::editing;
 use crate::editor::tiff_baseline::*;
@@ -52,4 +52,4 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
     }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::tiff_baseline::TiffBaselineEditor, || semio_framework_plugin::App { definition: crate::editor::tiff_baseline::create_tiff_baseline_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::tiff_baseline::TiffBaselineEditor, || semio_plugin::App { definition: crate::editor::tiff_baseline::create_tiff_baseline_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline");

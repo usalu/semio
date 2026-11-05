@@ -23,7 +23,6 @@
           "runs": "r",
           "temporary": "w",
           "target": "t",
-          "build": "b",
           "live": "v",
           "metadata": "lane.json",
           "size": "lane.size",

@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "object", kind: "scale-object", record: "ScaledObject" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale object to ({}, {}, {})", self.scale.x, self.scale.y, self.scale.z), &format!("Objekt auf ({}, {}, {}) skalieren", self.scale.x, self.scale.y, self.scale.z))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Scale object to ({}, {}, {})", self.scale.x, self.scale.y, self.scale.z), &format!("Objekt auf ({}, {}, {}) skalieren", self.scale.x, self.scale.y, self.scale.z))
     }
     fn target(&self) -> Vec<String> {
         vec!["transform".to_string()]

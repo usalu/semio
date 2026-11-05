@@ -1,0 +1,225 @@
+{
+  "cases": [
+    {
+      "name": "Empty Selection",
+      "ids": [],
+      "kind": "basic"
+    },
+    {
+      "name": "Plain Node Selection",
+      "ids": [
+        "a",
+        "node@mesh#0",
+        "a@mesh#0.vertex.bad"
+      ],
+      "kind": "basic"
+    },
+    {
+      "name": "Single Component",
+      "ids": [
+        "a@mesh#0.vertex.0"
+      ],
+      "kind": "components",
+      "components": [
+        0
+      ],
+      "selectionText": "[0]"
+    },
+    {
+      "name": "Sorted Unique Components",
+      "ids": [
+        "a@mesh#0.face.9",
+        "a@mesh#0.face.2",
+        "a@mesh#0.face.9",
+        "a@mesh#0.face.0"
+      ],
+      "kind": "components",
+      "components": [
+        0,
+        2,
+        9
+      ],
+      "selectionText": "[0,2,9]"
+    },
+    {
+      "name": "Maximum Component",
+      "ids": [
+        "a@mesh#4294967295.edge.4294967295"
+      ],
+      "kind": "components",
+      "components": [
+        4294967295
+      ],
+      "selectionText": "[4294967295]"
+    },
+    {
+      "name": "Unicode Source",
+      "ids": [
+        "🏠@網#0.face.7",
+        "🏠@網#0.face.2"
+      ],
+      "kind": "components",
+      "components": [
+        2,
+        7
+      ],
+      "selectionText": "[2,7]"
+    },
+    {
+      "name": "Leading Zero Is Basic",
+      "ids": [
+        "a@mesh#00.face.1",
+        "a@mesh#0.face.01"
+      ],
+      "kind": "basic"
+    },
+    {
+      "name": "Overflow Is Basic",
+      "ids": [
+        "a@mesh#4294967296.face.1",
+        "a@mesh#0.face.4294967296"
+      ],
+      "kind": "basic"
+    },
+    {
+      "name": "First Invalid",
+      "ids": [
+        "a",
+        "a@mesh#0.face.1"
+      ],
+      "kind": "refused",
+      "refusal": "first-invalid"
+    },
+    {
+      "name": "Later Invalid",
+      "ids": [
+        "a@mesh#0.face.1",
+        "a"
+      ],
+      "kind": "refused",
+      "refusal": "invalid-target"
+    },
+    {
+      "name": "Different Instance",
+      "ids": [
+        "a@mesh#0.face.1",
+        "b@mesh#0.face.2"
+      ],
+      "kind": "refused",
+      "refusal": "mixed-targets"
+    },
+    {
+      "name": "Different Granularity",
+      "ids": [
+        "a@mesh#0.face.1",
+        "a@mesh#0.edge.2"
+      ],
+      "kind": "refused",
+      "refusal": "mixed-targets"
+    },
+    {
+      "name": "Analytic Same Group",
+      "ids": [
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~1~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "a@shape#0.face.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~22~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "kind": "components",
+      "components": [
+        1,
+        2
+      ],
+      "selectionText": "[1,2]"
+    },
+    {
+      "name": "Analytic Duplicate Label",
+      "ids": [
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~1~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~1~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "kind": "components",
+      "components": [
+        2
+      ],
+      "selectionText": "[2]"
+    },
+    {
+      "name": "Analytic Conflicting Label",
+      "ids": [
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~1~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~2~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "kind": "refused",
+      "refusal": "conflicting-identity"
+    },
+    {
+      "name": "Analytic Missing Group",
+      "ids": [
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~1~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "a@shape#0.face.1"
+      ],
+      "kind": "refused",
+      "refusal": "mixed-targets"
+    },
+    {
+      "name": "Analytic Different Revision",
+      "ids": [
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~1~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "a@shape#0.face.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "kind": "refused",
+      "refusal": "mixed-targets"
+    },
+    {
+      "name": "Analytic Invalid Zero Label",
+      "ids": [
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~0~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "kind": "basic"
+    },
+    {
+      "name": "Analytic Maximum Label",
+      "ids": [
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "kind": "components",
+      "components": [
+        2
+      ],
+      "selectionText": "[2]"
+    },
+    {
+      "name": "Analytic Overflow Label",
+      "ids": [
+        "a@shape#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551616~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "kind": "basic"
+    },
+    {
+      "name": "Analytic Uppercase Hash",
+      "ids": [
+        "a@shape#0.face.2~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA~1~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "kind": "basic"
+    },
+    {
+      "name": "Embedded Dot Names",
+      "ids": [
+        "a.b@mesh.out#0.face.3"
+      ],
+      "kind": "components",
+      "components": [
+        3
+      ],
+      "selectionText": "[3]"
+    },
+    {
+      "name": "Repeated Delimiter",
+      "ids": [
+        "a@mesh@out#0.face.3",
+        "a#b@mesh#0.face.3",
+        "a@mesh#0.face.3~x~1~y~z"
+      ],
+      "kind": "basic"
+    }
+  ]
+}

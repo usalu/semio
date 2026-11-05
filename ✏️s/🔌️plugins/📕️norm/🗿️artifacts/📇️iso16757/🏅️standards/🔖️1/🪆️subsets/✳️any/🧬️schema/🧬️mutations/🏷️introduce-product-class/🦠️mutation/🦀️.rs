@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProductClass 
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "insert", entity: "productClass", kind: "introduce-product-class", record: "IntroducedProductClass" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(
             &format!("Introduce product class \"{}\"", self.product_class.id),
             &format!("Produktklasse \"{}\" einführen", self.product_class.id),
         )

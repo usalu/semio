@@ -4,13 +4,13 @@
     {
       "id": "explicit-package-library-and-dependency-identities",
       "locator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/Cargo.toml",
-      "source": "[package]\nname = 'semio-framework-replication'\nversion = '0.1.0'\n\n[lib]\nname = 'protocol'\npath = 'src/lib.rs'\ncrate-type = ['rlib', 'cdylib']\n\n[workspace.dependencies]\nderive = { package = 'semio-framework-os-kernel-dsl-derive', path = '../derive' }\n\n[dependencies]\n'kernel.alias' = { package = 'semio-framework-os-kernel', path = '../kernel', version = '0.1.0' }\nregistry_only = '1.0.0'\n\n[dev-dependencies]\ntest_support = { package = 'test-support', path = '../test-support' }\n\n[build-dependencies]\nbuild_support = { path = '../build-support' }\n\n[target.'cfg(unix)'.dependencies]\nunix_support = { package = 'unix-support', path = '../unix-support' }\n\n[target.'cfg(unix)'.dev-dependencies]\nunix_test = { path = '../unix-test' }\n\n[target.'cfg(unix)'.build-dependencies]\nunix_build = { path = '../unix-build' }\n",
+      "source": "[package]\nname = 'semio-framework-replication'\nversion = '0.1.0'\n\n[lib]\nname = 'protocol'\npath = 'src/lib.rs'\ncrate-type = ['rlib', 'cdylib']\n\n[workspace.dependencies]\nderive = { package = 'semio-os-kernel-dsl-derive', path = '../derive' }\n\n[dependencies]\n'kernel.alias' = { package = 'semio-os-kernel', path = '../kernel', version = '0.1.0' }\nregistry_only = '1.0.0'\n\n[dev-dependencies]\ntest_support = { package = 'test-support', path = '../test-support' }\n\n[build-dependencies]\nbuild_support = { path = '../build-support' }\n\n[target.'cfg(unix)'.dependencies]\nunix_support = { package = 'unix-support', path = '../unix-support' }\n\n[target.'cfg(unix)'.dev-dependencies]\nunix_test = { path = '../unix-test' }\n\n[target.'cfg(unix)'.build-dependencies]\nunix_build = { path = '../unix-build' }\n",
       "tomlOracle": {
         "package": { "name": "semio-framework-replication", "version": "0.1.0" },
         "lib": { "name": "protocol", "path": "src/lib.rs", "crate-type": ["rlib", "cdylib"] },
-        "workspace": { "dependencies": { "derive": { "package": "semio-framework-os-kernel-dsl-derive", "path": "../derive" } } },
+        "workspace": { "dependencies": { "derive": { "package": "semio-os-kernel-dsl-derive", "path": "../derive" } } },
         "dependencies": {
-          "kernel.alias": { "package": "semio-framework-os-kernel", "path": "../kernel", "version": "0.1.0" },
+          "kernel.alias": { "package": "semio-os-kernel", "path": "../kernel", "version": "0.1.0" },
           "registry_only": "1.0.0"
         },
         "dev-dependencies": { "test_support": { "package": "test-support", "path": "../test-support" } },
@@ -22,9 +22,9 @@
         "package": { "name": "semio-framework-replication", "version": "0.1.0" },
         "library": { "name": "protocol", "path": "src/lib.rs", "crateTypes": ["rlib", "cdylib"], "procMacro": false },
         "workspaceDeclared": true,
-        "workspaceDependencies": [{ "key": "derive", "packageOverride": "semio-framework-os-kernel-dsl-derive", "localPath": "../derive", "workspaceInherited": false, "source": "table", "unsupported": {}, "unapprovedReasons": [] }],
+        "workspaceDependencies": [{ "key": "derive", "packageOverride": "semio-os-kernel-dsl-derive", "localPath": "../derive", "workspaceInherited": false, "source": "table", "unsupported": {}, "unapprovedReasons": [] }],
         "dependencies": [
-          { "key": "kernel.alias", "packageOverride": "semio-framework-os-kernel", "localPath": "../kernel", "workspaceInherited": false, "source": "table", "version": "0.1.0", "unsupported": {}, "unapprovedReasons": ["version-constraint"] },
+          { "key": "kernel.alias", "packageOverride": "semio-os-kernel", "localPath": "../kernel", "workspaceInherited": false, "source": "table", "version": "0.1.0", "unsupported": {}, "unapprovedReasons": ["version-constraint"] },
           { "key": "registry_only", "workspaceInherited": false, "source": "version", "version": "1.0.0", "unsupported": {}, "unapprovedReasons": ["version-only"] },
           { "key": "unix_support", "packageOverride": "unix-support", "localPath": "../unix-support", "workspaceInherited": false, "targetCondition": "cfg(unix)", "source": "table", "unsupported": {}, "unapprovedReasons": [] }
         ],
@@ -68,12 +68,12 @@
     {
       "id": "virtual-workspace-dependency-authority",
       "locator": "🧰️framework/🛍️products/🦑️repo/Cargo.toml",
-      "source": "[workspace]\nmembers = ['member']\n\n[workspace.dependencies]\nprotocol = { package = 'semio-framework-os-kernel', path = '🔨️modules/💻️os/🔍️kernel' }\n",
-      "tomlOracle": { "workspace": { "members": ["member"], "dependencies": { "protocol": { "package": "semio-framework-os-kernel", "path": "🔨️modules/💻️os/🔍️kernel" } } } },
+      "source": "[workspace]\nmembers = ['member']\n\n[workspace.dependencies]\nprotocol = { package = 'semio-os-kernel', path = '🔨️modules/💻️os/🔍️kernel' }\n",
+      "tomlOracle": { "workspace": { "members": ["member"], "dependencies": { "protocol": { "package": "semio-os-kernel", "path": "🔨️modules/💻️os/🔍️kernel" } } } },
       "expected": {
         "locator": "🧰️framework/🛍️products/🦑️repo/Cargo.toml",
         "workspaceDeclared": true,
-        "workspaceDependencies": [{ "key": "protocol", "packageOverride": "semio-framework-os-kernel", "localPath": "🔨️modules/💻️os/🔍️kernel", "workspaceInherited": false, "source": "table", "unsupported": {}, "unapprovedReasons": [] }],
+        "workspaceDependencies": [{ "key": "protocol", "packageOverride": "semio-os-kernel", "localPath": "🔨️modules/💻️os/🔍️kernel", "workspaceInherited": false, "source": "table", "unsupported": {}, "unapprovedReasons": [] }],
         "dependencies": [],
         "developmentDependencies": [],
         "buildDependencies": []

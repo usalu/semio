@@ -1,10 +1,10 @@
 //! 📦️ The original mounted App box remains owned until its actual close ladder and physical release finish.
-use semio_framework_plugin_instance_app::VcsArtifactApp;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_os_kernel::{ReferenceSpaceMember,MemberFactory};
-use semio_framework_plugin_reactor_app::{PluginApp,PluginAppDelegate};
-use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep,PluginLifecycleFailure,original_lifecycle_step};
-use semio_framework_plugin_mounted_owner::{MountedOwnerPhaseV1,MountedOwnerTurnV1};
+use semio_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_os_kernel::{ReferenceSpaceMember,MemberFactory};
+use semio_plugin_reactor_app::{PluginApp,PluginAppDelegate};
+use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep,PluginLifecycleFailure,original_lifecycle_step};
+use semio_plugin_mounted_owner::{MountedOwnerPhaseV1,MountedOwnerTurnV1};
 use semio_framework_job::StepContext;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::mem::{ManuallyDrop,size_of};
@@ -35,6 +35,6 @@ impl<A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static> PluginAppD
  fn maintenance_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{self.original.as_deref_mut().map_or(Ok(PluginLifecycleStep::Complete(Default::default())),|original|PluginApp::maintenance_step(original,cx,loan))}
  fn mounted_owner_maintenance_phase(&self)->Result<MountedOwnerPhaseV1,semio_framework::Fault>{self.original.as_deref().map_or(Ok(MountedOwnerPhaseV1::Maintenance),PluginApp::mounted_owner_maintenance_phase)}
  fn mounted_owner_maintenance_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{self.original.as_deref_mut().map_or(Ok(PluginLifecycleStep::Complete(Default::default())),|original|PluginApp::mounted_owner_maintenance_step(original,turn))}
- fn mounted_owner_close_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{if self.custody_is_closed(){return Ok(PluginLifecycleStep::Complete(Default::default()))}let demand=PluginAppDelegate::close_retirement_demands(self,turn.grant().maximum_copy_bytes)?;if !semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,turn.grant()){return Ok(PluginLifecycleStep::Progress(Default::default()))}let original=self.original.as_deref_mut().ok_or_else(Self::closed)?;let first=PluginApp::mounted_owner_close_step(original,turn)?;if !matches!(first,PluginLifecycleStep::Complete(_)){return Ok(first)}let last=turn.advance_lifecycle(|cx,grant|self.release_frame(cx,grant))?;self.finish_step(first,last)}
+ fn mounted_owner_close_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{if self.custody_is_closed(){return Ok(PluginLifecycleStep::Complete(Default::default()))}let demand=PluginAppDelegate::close_retirement_demands(self,turn.grant().maximum_copy_bytes)?;if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,turn.grant()){return Ok(PluginLifecycleStep::Progress(Default::default()))}let original=self.original.as_deref_mut().ok_or_else(Self::closed)?;let first=PluginApp::mounted_owner_close_step(original,turn)?;if !matches!(first,PluginLifecycleStep::Complete(_)){return Ok(first)}let last=turn.advance_lifecycle(|cx,grant|self.release_frame(cx,grant))?;self.finish_step(first,last)}
 }
 impl<A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static> Drop for OriginalVcsApp<A,M>{fn drop(&mut self){assert!(std::thread::panicking()||self.custody_is_closed(),"original App recipient retains its actual allocation until paid physical closure")}}

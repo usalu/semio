@@ -1,5 +1,5 @@
 //! 🔽 Popup geometry and keyboard behavior independent of renderer execution.
-use semio_framework_ui_theme::{geometry::Rect, Theme};
+use semio_ui_theme::{geometry::Rect, Theme};
 
 //#region 🔖️Geometry
 /// 🔲️ `SelectContent`'s `sideOffset` default — the gap between trigger and popup (`🟦️.tsx:476`).
@@ -16,7 +16,7 @@ pub const SELECT_CONTENT_MIN_WIDTH: f32 = 128.0;
 /// `SelectItem` is `py-single … text-sm` (`🟦️.tsx:729`), never a `--size-*` control height, which is
 /// why this does NOT reuse `Theme::control_height` the way the pre-parity literal did.
 pub fn select_row_height(theme: &Theme) -> f32 {
-    semio_framework_ui_theme::metrics::line_height(theme.font_size_body) + theme.padding_standard * 2.0
+    semio_ui_theme::metrics::line_height(theme.font_size_body) + theme.padding_standard * 2.0
 }
 
 /// 🏔️ The popup's own height for `items` rows — rows plus the viewport's `p-single` inset
@@ -86,7 +86,7 @@ pub fn select_visible_rows(items: usize, theme: &Theme, painted_height: f32) -> 
 /// `SelectScrollUpButton`/`SelectScrollDownButton` are `py-single` with a `size-tiny` icon
 /// (`🟦️.tsx:790-795`, `:813-818`).
 pub fn select_scroll_button_height(theme: &Theme) -> f32 {
-    semio_framework_ui_theme::metrics::ICON_TINY + theme.padding_standard * 2.0
+    semio_ui_theme::metrics::ICON_TINY + theme.padding_standard * 2.0
 }
 
 /// 🪜️ The pixels one scroll-button press moves the viewport — React's `scrollSelectViewport`

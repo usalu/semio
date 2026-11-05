@@ -3,34 +3,34 @@
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
 extern crate infinite_canvas as infinite_world;
-use semio_framework_os_renderer_wgpu_shell_async::{chrome_now_ms, instant_now_ms};
-use semio_framework_os_renderer_wgpu_shell_chrome_state::{ChromeState, DOCK_SKELETON_VERSION, DockSkeleton, DockUiPanelState, DockUiState};
-use semio_framework_os_renderer_wgpu_shell_directory::DirectoryState;
-use semio_framework_os_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_SYNC_PANEL_TAB_ID, WORLD_PROJECTION_TEMPLATES};
-use semio_framework_os_renderer_wgpu_shell_history::{OS_SHELL_CONFIG_MAX_BYTES, OS_SHELL_CONFIG_STORAGE_KEY, empty_os_shell_config, raw_prefs_get, raw_prefs_set};
-use semio_framework_os_renderer_wgpu_shell_plugins::{PluginState, flatten_panel_tab_leaves};
-use semio_framework_os_renderer_wgpu_shell_prefs::{ActiveSession, ChromeGroupItem, DockTabNode, PrefsState, commit_ui_preferences_write, display_panel_body, labels, read_ui_preferences, replay_ui_preferences};
-use semio_framework_os_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState};
-use semio_framework_os_renderer_wgpu_shell_sync::{ShellSyncPill, ShellSyncRemote, SyncState};
-use semio_framework_os_renderer_wgpu_shell_windows::{PanelAnchor, WINDOW_PANE_CHIP_PARENT, WORLD_PROJECTION_PANE_PARENT, WindowIconOverride, WindowPaneChip, WindowState, WindowTitleOverride, world_projection_template, world_projection_template_selection_id};
+use semio_renderer_wgpu_shell_async::{chrome_now_ms, instant_now_ms};
+use semio_renderer_wgpu_shell_chrome_state::{ChromeState, DOCK_SKELETON_VERSION, DockSkeleton, DockUiPanelState, DockUiState};
+use semio_renderer_wgpu_shell_directory::DirectoryState;
+use semio_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_SYNC_PANEL_TAB_ID, WORLD_PROJECTION_TEMPLATES};
+use semio_renderer_wgpu_shell_history::{OS_SHELL_CONFIG_MAX_BYTES, OS_SHELL_CONFIG_STORAGE_KEY, empty_os_shell_config, raw_prefs_get, raw_prefs_set};
+use semio_renderer_wgpu_shell_plugins::{PluginState, flatten_panel_tab_leaves};
+use semio_renderer_wgpu_shell_prefs::{ActiveSession, ChromeGroupItem, DockTabNode, PrefsState, commit_ui_preferences_write, display_panel_body, labels, read_ui_preferences, replay_ui_preferences};
+use semio_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState};
+use semio_renderer_wgpu_shell_sync::{ShellSyncPill, ShellSyncRemote, SyncState};
+use semio_renderer_wgpu_shell_windows::{PanelAnchor, WINDOW_PANE_CHIP_PARENT, WORLD_PROJECTION_PANE_PARENT, WindowIconOverride, WindowPaneChip, WindowState, WindowTitleOverride, world_projection_template, world_projection_template_selection_id};
 use semio_framework::{AppDefinition, IconName};
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_os_config::opening_config::{UiPreferences, UserNamedLayout};
-use semio_framework_os_config::opening_config::mutations::{UiPreferencesConfigMutation, set_named_layout};
-use semio_framework_os_renderer_wgpu_dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockState, WindowSilhouette};
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_ui_locale::Label;
+use semio_os_config::opening_config::{UiPreferences, UserNamedLayout};
+use semio_os_config::opening_config::mutations::{UiPreferencesConfigMutation, set_named_layout};
+use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockState, WindowSilhouette};
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_ui_locale::Label;
 use semio_framework_value::{FromValue, ToValue};
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowLayout, WindowStackCorner};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::{HitKind, InputState};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, UiTreeWindowRowExtent};
-use semio_framework_ui_declaration::utilities::UtilityNode;
+use semio_ui_declaration::layout::{ActionDescriptor, WindowLayout, WindowStackCorner};
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::{HitKind, InputState};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, UiTreeWindowRowExtent};
+use semio_ui_declaration::utilities::UtilityNode;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🧬️component/🦀️.rs"]
 mod staged_dock__component;

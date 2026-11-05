@@ -9,7 +9,7 @@ pub struct FlowPlayApp;
 
 impl ArtifactEditor for FlowPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
@@ -30,8 +30,8 @@ impl ArtifactEditor for FlowPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = FlowPresence;
     type PresenceMutation = FlowPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = FlowCommand;
 
@@ -39,7 +39,7 @@ impl ArtifactEditor for FlowPlayApp {
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.child-projection"), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.child-projection"), error.to_string()))
     }
 
     fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
@@ -50,16 +50,16 @@ impl ArtifactEditor for FlowPlayApp {
         Some(crate::schema::retirement::store_owners(grant))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -70,19 +70,19 @@ impl ArtifactEditor for FlowPlayApp {
         Some(Arc::new(crate::editor::flow::presence::retirement::FlowPresenceRetirementFactory))
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(crate::editor::flow::presence::retirement::store_disposer())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<main::config::FlowMainWindowConfigOwner>()
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         main::transient::register(registry)
     }
 
@@ -95,28 +95,31 @@ impl ArtifactEditor for FlowPlayApp {
         }
     }
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = FlowDirectStoreJobFactoryProofs::proofs();
         proofs.extend(FlowHostEffectJobFactoryProofs::proofs());
+        proofs.extend(FlowEvaluationJobFactoryProofs::proofs());
         proofs.extend(FlowChildGroupJobFactoryProofs::proofs());
         proofs.extend(FlowGraphOperationJobFactoryProofs::proofs());
         proofs.extend(FlowContributionsJobFactoryProofs::proofs());
         proofs
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(FlowChildGroupJobFactory::new(&controller))?;
         registry.register(FlowHostEffectJobFactory::new(&controller))?;
+        registry.register(FlowEvaluationJobFactory::new(&controller))?;
         registry.register(FlowGraphOperationJobFactory::new(&controller))?;
         registry.register(FlowContributionsJobFactory::new(&controller))?;
         registry.register(FlowDirectStoreJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !FLOW_CHILD_GROUP_TOOL_IDS.contains(&original.tool_id.as_str())
             && !FLOW_HOST_ONLY_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !FLOW_EVALUATION_TOOL_IDS.contains(&original.tool_id.as_str())
             && !FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&original.tool_id.as_str())
             && !FLOW_DIRECT_STORE_TOOL_IDS.contains(&original.tool_id.as_str())
             && !FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())
@@ -124,48 +127,24 @@ impl ArtifactEditor for FlowPlayApp {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Flow command does not match its exact retained tool registration").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Flow command does not match its exact retained tool registration").into());
         }
+        if original.tool_id.as_str()!="flowEvalResolve"&&!FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())&&!original.instance_operation_owner.with_mut::<FlowInstanceOperationOwner,_>(|owner|owner.catalogue_ready())?{return Ok(false)}
         if FLOW_CHILD_GROUP_TOOL_IDS.contains(&original.tool_id.as_str())
             || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&original.tool_id.as_str())
             || FLOW_DIRECT_STORE_TOOL_IDS.contains(&original.tool_id.as_str())
             || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())
         {
-            let tool_id = original.command.command_id();
-            
-            
-            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, FlowCommand::command_id, if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
-                    FLOW_CONTRIBUTIONS_RAW_BYTES
-                } else if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
-                    FLOW_CHILD_GROUP_RAW_BYTES
-                } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
-                    FLOW_GRAPH_OPERATION_RAW_BYTES
-                } else {
-                    FLOW_DIRECT_STORE_RAW_BYTES
-                }, if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
-                    1
-                } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
-                    FLOW_GRAPH_OPERATION_CAPACITY.work_items()
-                } else {
-                    FLOW_STORE_MAX_MUTATION_ITEMS
-                }, false, |request| -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>>> { if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowContributionsWork::new(request.instance_operation_owner.clone()))
-            } else if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowChildGroupWork::new(tool_id, request.instance_operation_owner.clone()))
-            } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowGraphOperationWork::new(tool_id, request.instance_operation_owner.clone()))
-            } else {
-                Box::new(FlowDirectStoreWork::new(tool_id))
-            } });
+            return flow_build_retained_job(request,output,cx);
         }
-        flow_build_host_only_job(request, output, cx)
+        flow_build_host_job(request, output, cx)
     }
 
-    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
         Box::new(FlowInstanceOperationOwner::new())
     }
 
-    fn reference_birth()->Option<fn()->Result<FlowSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<FlowSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(FlowSnapshot::default())
     })}
 
@@ -194,6 +173,15 @@ impl ArtifactEditor for FlowPlayApp {
     /// `Generation2dPlayApp::command_from_action`, which is why that sibling's identical eval chain runs.
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
+        if action=="flowEvalResolve"{
+            let original=args.as_ref().ok_or_else(||Fault::from("flow-eval-resolve-original-args-required"))?;
+            if original.get("windowId").and_then(semio_framework_value::DslValue::as_str).is_none_or(str::is_empty){return Err(Fault::from("flow-eval-resolve-window-required"))}
+            let node_hash=original.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).ok_or_else(||Fault::from("flow-eval-resolve-node-hash-required"))?;
+            let Some(semio_framework_value::DslValue::Object(fields))=args.as_mut()else{return Err(Fault::from("flow-eval-resolve-object-required"))};
+            let window_id=match fields.iter_mut().find(|(key,_)|key=="windowId").map(|(_,value)|value){Some(semio_framework_value::DslValue::String(value))=>std::mem::take(value),_=>unreachable!("validated original Flow resolve window")};
+            let output=fields.iter_mut().find(|(key,_)|key=="output").and_then(|(_,value)|if matches!(value,semio_framework_value::DslValue::Null){None}else{Some(std::mem::replace(value,semio_framework_value::DslValue::Null))});
+            return Ok(FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve{window_id,node_hash,output}));
+        }
         let args = args.as_ref();
         let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
@@ -241,7 +229,7 @@ impl ArtifactEditor for FlowPlayApp {
             "focusSelection" => Ok(FlowCommand::FocusSelection(focus_selection::FocusSelection {})),
             "nodeGraphViewport" => Ok(FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport {
                 viewport: match args.get("viewport").cloned() {
-                    None => semio_framework_os_kernel::Viewport2d::default(),
+                    None => semio_os_kernel::Viewport2d::default(),
                     Some(value) => semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?,
                 },
             })),
@@ -269,11 +257,6 @@ impl ArtifactEditor for FlowPlayApp {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| FLOW_PLAY_WINDOW_MAIN.into()),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_else(|| FLOW_PLAY_WINDOW_MAIN.into()),
             })),
-            "flowEvalResolve" => Ok(FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
-                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| FLOW_PLAY_WINDOW_MAIN.into()),
-                node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
-                output_json: str_arg(&["outputJson"]),
-            })),
             "setContributions" => Ok(FlowCommand::SetContributions(set_contributions::SetContributions {
                 json: str_arg(&["json"]).unwrap_or_default(),
                 page: u64_arg(&["page"]).unwrap_or_default(),
@@ -295,7 +278,7 @@ impl ArtifactEditor for FlowPlayApp {
         doc: &ArtifactView<'_, FlowSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<FlowMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -304,7 +287,7 @@ impl ArtifactEditor for FlowPlayApp {
             || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&command.command_id())
             || FLOW_DIRECT_STORE_TOOL_IDS.contains(&command.command_id())
         {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained.legacy-dispatch"), "Flow retained routes execute only through their exact app-owned job factory"));
+            return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.retained.legacy-dispatch"), "Flow retained routes execute only through their exact app-owned job factory"));
         }
         let mut session = FlowEvalSession::new();
         let emitted = match command {
@@ -352,7 +335,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// `transient read registry is busy or exhausted` in ~3 s and the shell down with it, measured on
     /// :6016 (ticket 26/09/18 §5.3). Latches of windows that have left the roster are dropped here,
     /// because a detached window's latch can never be discharged by a hop.
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+    fn pending_effects(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: Option<&semio_plugin::ViewModel>) -> Vec<Effect> {
         let windows: Vec<(String, String)> = view
             .map(|view| view.window_instances.iter().filter(|window| window.window_kind_id == FLOW_PLAY_WINDOW_MAIN).map(|window| (window.id.clone(), window.window_kind_id.clone())).collect())
             .unwrap_or_default();
@@ -373,70 +356,73 @@ impl ArtifactEditor for FlowPlayApp {
             .unwrap_or_default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("flow.content-unavailable", fault.message))?;
-        let snapshot = &composed;
+    fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let config = main::config::current(cfg);
         let transient = main::transient::FlowWindowTransient::default();
         let labels = flow_play_labels(view_state);
-        let mut session = FlowEvalSession::new();
-        let rendered = match body_key {
-            FLOW_PLAY_BODY_MAIN => main::render(snapshot, &config, &mut session, &[]).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_COMPILED => compiled::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
-                .map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_GENERATE_FORM => form::render(snapshot, &config, &transient, labels).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(&config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        let render=|source:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,session:&mut FlowEvalSession| match body_key {
+            FLOW_PLAY_BODY_MAIN => main::render_source(source, &config, session, &[]).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_COMPILED => compiled::render_source(source, &config, session).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
+                .map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATE_FORM => form::render_source(source, &config, &transient, labels).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_ARTIFACT => document_panel::render_live(source, labels, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(&config, labels, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         };
-        session.retire_cold();
-        rendered
+        if let Some(instance)=doc.instance(){
+            return instance.with_original_mut::<FlowInstanceOperationOwner,_>(|owner|owner.with_scene_session(doc,|source,session|render(source,session)))
+                .map_err(|error|semio_plugin::PluginAssemblyError::new("flow.eval-session-owner",error.primary.message()))?
+                .flatten().unwrap_or_else(||Err(semio_plugin::PluginAssemblyError::new("flow.content-pending","Flow execution scene is still being prepared")));
+        }
+        let source=doc.snapshot.read_source().map_err(|error|semio_plugin::PluginAssemblyError::new("flow.source",error.into_message()))?;
+        let mut session=FlowEvalSession::new();let rendered=render(&source,&mut session);session.retire_cold();rendered
     }
 
     fn render_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, FlowSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree>=(||{
         let config = main::config::current(cfg);
         let transient = main::transient::current(transient);
         let (graph_selection, _) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
-        let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("flow.content-unavailable", fault.message))?;
+
         owner
-            .with_mut::<FlowInstanceOperationOwner, _>(|owner| {
-                owner.with_session(|session| match body_key {
-                    FLOW_PLAY_BODY_MAIN => main::render(&composed, &config, session, &graph_selection).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_COMPILED => compiled::render(&composed, &config, session).map(semio_framework_plugin::built_to_component_tree),
+            .with_original_mut::<FlowInstanceOperationOwner, _>(|owner| {
+                owner.with_scene_session(doc,|source,session| match body_key {
+                    FLOW_PLAY_BODY_MAIN => main::render_source(source, &config, session, &graph_selection).map(semio_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_COMPILED => compiled::render_source(source, &config, session).map(semio_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATIONS => {
-                        generations::render(&transient, view_state.locale, view_state.terminology, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
-                            .map(semio_framework_plugin::built_to_component_tree)
+                        generations::render(&transient, view_state.locale, view_state.terminology, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
+                            .map(semio_plugin::built_to_component_tree)
                     }
-                    FLOW_PLAY_BODY_GENERATE_FORM => form::render(&composed, &config, &transient, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_ARTIFACT => document_panel::render(&composed, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATE_FORM => form::render_source(source, &config, &transient, flow_play_labels(view_state)).map(semio_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_ARTIFACT => document_panel::render_live(source, flow_play_labels(view_state), &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_CATALOGUE => {
-                        catalogue_panel::render(&config, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree)
+                        catalogue_panel::render(&config, flow_play_labels(view_state), &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_plugin::built_to_component_tree)
                     }
-                    FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
-                    _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+                    FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(view_state), &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_plugin::built_to_component_tree),
+                    _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
                 })
             })
-            .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("flow.eval-session-owner", error.message))?
+            ?
+            .flatten().transpose().map_err(Into::into)
 
         })();
-        rendered.map(Some).map_err(Into::into)
+        rendered
         }
 
-    fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
         let is_main = view_state.window_instances.iter().any(|window| window.id == window_id && window.window_kind_id == FLOW_PLAY_WINDOW_MAIN);
         if !is_main {
@@ -446,10 +432,11 @@ impl ArtifactEditor for FlowPlayApp {
         HashMap::from([(window_id, main::window_measures(&config, flow_play_labels(view_state)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let config = main::config::current(cfg);
-        let Ok(composed) = crate::flow_composed_snapshot(doc.snapshot, &doc.children) else { return Vec::new() };
-        flow_context_menu_items(registry, &composed, &config, flow_play_labels(view_state), view_state, request.surface.as_ref())
+    fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let config=main::config::current(cfg);
+        let render=|source:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource|flow_context_menu_items(registry,source,&config,flow_play_labels(view_state),view_state,request.surface.as_ref());
+        if let Some(instance)=doc.instance(){return instance.with_original_mut::<FlowInstanceOperationOwner,_>(|owner|owner.with_scene_session(doc,|source,_|render(source))).ok().flatten().flatten().unwrap_or_default()}
+        doc.snapshot.read_source().map(|source|render(&source)).unwrap_or_default()
     }
 }
 //#endregion 🔖️FlowPlayApp

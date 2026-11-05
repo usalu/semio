@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-plugin-reactor-turn-limits"
+name = "semio-plugin-reactor-turn-limits"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,4 +23,4 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio_framework_ui_runtime = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
+semio_ui_runtime = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-ui-runtime" }

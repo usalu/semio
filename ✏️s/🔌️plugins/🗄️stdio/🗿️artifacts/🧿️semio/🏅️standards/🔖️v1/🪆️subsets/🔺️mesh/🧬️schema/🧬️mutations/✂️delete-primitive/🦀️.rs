@@ -17,8 +17,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "primitive", kind: "delete-primitive", record: "DeletedPrimitive" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete primitive \"{}\" from mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Primitiv \"{}\" aus Netz \"{}\" löschen", self.primitive_id, self.mesh_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete primitive \"{}\" from mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Primitiv \"{}\" aus Netz \"{}\" löschen", self.primitive_id, self.mesh_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.primitive_id.clone()]

@@ -223,7 +223,7 @@ pub fn exercise_relay_lifecycle_trace(trace_json: &str,wake_authority:GuestRelay
     let trace: GuestRelayLifecycleTrace = serde_json::from_str(trace_json).map_err(|error| format!("invalid relay lifecycle trace: {error}"))?;
     let projection = match (trace.id.as_str(), trace.machine.as_str(), trace.initial.as_str()) {
         ("replay-first-fault-wins", "replay", "CaptureKind") => {
-            let actual = semio_framework_plugin_host_shard::exercise_replay_lifecycle_trace(&trace.events)?;
+            let actual = semio_plugin_host_shard::exercise_replay_lifecycle_trace(&trace.events)?;
             GuestRelayLifecycleProjection { state: actual.state.to_string(), first_reason: actual.first_reason, cancel_admissions: 0, release_opportunities: actual.release_opportunities, caller_output: None }
         }
         ("relay-abandoned-blocked-wake", "relay", "Running") => exercise_abandoned_relay_lifecycle_trace(&trace,wake_authority.clone())?,

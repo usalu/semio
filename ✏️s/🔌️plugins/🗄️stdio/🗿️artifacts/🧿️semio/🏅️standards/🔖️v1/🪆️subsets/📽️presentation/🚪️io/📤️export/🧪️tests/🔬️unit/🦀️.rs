@@ -2,7 +2,7 @@
 
 use crate::serializers::artifacts::pptx::v_ecma_376::any::SemioPresentationToPptx;
 use semio_s_artifact_stdio_semio_presentation_import::deserializers::artifacts::pptx::v_ecma_376::any::SemioPresentationFromPptx;
-use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
+use semio_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
 /// 🔁️ W4 G6 fixture-backed round trip: pptx1 -(deserialize)-> semio1 -(serialize)-> pptx2
 /// -(deserialize)-> semio2, asserting semio1 == semio2 (masters/layouts/slide id/notes/Table

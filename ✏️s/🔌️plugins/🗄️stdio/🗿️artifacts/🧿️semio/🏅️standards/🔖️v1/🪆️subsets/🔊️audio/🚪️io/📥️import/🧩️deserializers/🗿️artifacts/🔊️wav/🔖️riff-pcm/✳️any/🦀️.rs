@@ -19,7 +19,7 @@ use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChanne
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA;
-use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::WavData;
 use semio_s_artifact_stdio_wav::WavSnapshot;
 

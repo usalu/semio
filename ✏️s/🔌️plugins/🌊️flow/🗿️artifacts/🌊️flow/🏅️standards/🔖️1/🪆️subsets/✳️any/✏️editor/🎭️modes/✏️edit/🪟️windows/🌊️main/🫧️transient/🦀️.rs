@@ -18,7 +18,7 @@ impl FlowWindowTransient {
 
 semio_framework_value::artifact_retire_struct!(FlowWindowTransient { generation_json, duplicate_widget_progress_json });
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: FlowWindowTransient,
     mutation: FlowWindowTransientMutation,
     diff: FlowWindowTransientDiff,
@@ -31,7 +31,7 @@ semio_framework_plugin::transient_root! {
     fields: { generation_json: String, duplicate_widget_progress_json: String },
 }
 
-semio_framework_plugin::window_transient_owners! {
+semio_plugin::window_transient_owners! {
     state: FlowWindowTransient,
     mutation: FlowWindowTransientMutation,
     windows: {

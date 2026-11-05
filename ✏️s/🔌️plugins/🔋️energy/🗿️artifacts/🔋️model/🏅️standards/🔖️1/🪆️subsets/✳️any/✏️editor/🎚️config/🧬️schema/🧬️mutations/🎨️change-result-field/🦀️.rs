@@ -27,8 +27,8 @@ impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for Ch
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "result-field", kind: "change-result-field", record: "ChangedResultField" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Colour surfaces by {}", self.field), &format!("Oberflächen nach {} einfärben", self.field))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Colour surfaces by {}", self.field), &format!("Oberflächen nach {} einfärben", self.field))
     }
     fn target(&self) -> Vec<String> {
         vec!["result-field".into()]

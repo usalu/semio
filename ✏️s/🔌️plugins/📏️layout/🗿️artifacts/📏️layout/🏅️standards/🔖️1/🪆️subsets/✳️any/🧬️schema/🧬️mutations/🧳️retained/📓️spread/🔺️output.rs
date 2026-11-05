@@ -2,7 +2,7 @@
 use crate::LayoutMutation;
 use semio_s_artifact_layout_layout_model::{Spread,snapshot::LayoutSnapshot};
 use semio_s_artifact_layout_layout_diff::*;
-use semio_framework_os_kernel::RetainedFieldPreparation;
+use semio_os_kernel::RetainedFieldPreparation;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use super::super::target::{LayoutTargetSource,LayoutTargetLookup};
 use std::mem::{ManuallyDrop,size_of};

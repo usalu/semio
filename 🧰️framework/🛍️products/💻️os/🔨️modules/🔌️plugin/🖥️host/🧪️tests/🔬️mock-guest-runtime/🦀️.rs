@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework::kernel::Budget;
 use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
-use semio_framework_plugin_guest_contract::TurnFault;
+use semio_plugin_guest_contract::TurnFault;
 
 async fn hash(byte: u8) -> PackageHash {
     PackageHash([byte; 32])
@@ -14,16 +14,16 @@ async fn hash(byte: u8) -> PackageHash {
 async fn scripted_turn_is_returned_exactly_once_fifo() {
     let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
     let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-    let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
+    let mut identity=semio_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
 
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: hash(1).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(42);
     let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("instantiate");
 
-    let mut first = MockGuestRuntime::idle_turn(semio_framework_plugin_host_operation::test_native_authority::original_retained_turn()).await;
+    let mut first = MockGuestRuntime::idle_turn(semio_plugin_host_operation::test_native_authority::original_retained_turn()).await;
     first.fuel_used = 7;
-    let mut second = MockGuestRuntime::idle_turn(semio_framework_plugin_host_operation::test_native_authority::original_retained_turn()).await;
+    let mut second = MockGuestRuntime::idle_turn(semio_plugin_host_operation::test_native_authority::original_retained_turn()).await;
     second.fuel_used = 9;
     runtime.script_turn(actor, first).await;
     runtime.script_turn(actor, second).await;
@@ -32,14 +32,14 @@ async fn scripted_turn_is_returned_exactly_once_fifo() {
     assert_eq!(got_first.fuel_used, 7);
     let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &mut [], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1), &mut identity)).expect("second scripted turn");
     assert_eq!(got_second.fuel_used, 9);
-    semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
+    semio_plugin_host_operation::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn() {
     let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
     let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-    let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
+    let mut identity=semio_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
 
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2).await }, &[]).await.expect("compile");
@@ -47,14 +47,14 @@ async fn exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn() {
     let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("instantiate");
     let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &mut [], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1), &mut identity)).expect_err("no script queued");
     assert!(matches!(error, TurnFault::Exhausted));
-    semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
+    semio_plugin_host_operation::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn scripted_fault_surfaces_as_trapped() {
     let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
     let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-    let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
+    let mut identity=semio_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
 
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("block".to_string()), hash: hash(3).await }, &[]).await.expect("compile");
@@ -63,14 +63,14 @@ async fn scripted_fault_surfaces_as_trapped() {
     runtime.script_fault(actor, "epoch deadline exceeded").await;
     let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &mut [], Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1), &mut identity)).expect_err("scripted fault");
     assert!(matches!(error, TurnFault::Trapped(message) if message == "epoch deadline exceeded"));
-    semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
+    semio_plugin_host_operation::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn checkpoint_then_restore_round_trips_through_a_fresh_instance() {
     let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
     let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-    let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
+    let mut identity=semio_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
 
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("puzzle".to_string()), hash: hash(4).await }, &[]).await.expect("compile");
@@ -82,7 +82,7 @@ async fn checkpoint_then_restore_round_trips_through_a_fresh_instance() {
     semio_framework_async::block_on(runtime.restore(&mut restored, &snapshot, &mut identity)).expect("restore");
     let GuestInstanceState::Mock(state) = &restored.state else { panic!("expected a Mock instance") };
     assert_eq!(state.checkpoint.as_deref(), Some(snapshot.as_slice()));
-    semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
+    semio_plugin_host_operation::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -100,7 +100,7 @@ async fn drop_instance_forgets_the_actors_script_queue() {
     let compiled = runtime.compile(&PackageRef { package: PackageId("layout".to_string()), hash: hash(5).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(13);
     let inst = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("instantiate");
-    runtime.script_turn(actor, MockGuestRuntime::idle_turn(semio_framework_plugin_host_operation::test_native_authority::original_retained_turn()).await).await;
+    runtime.script_turn(actor, MockGuestRuntime::idle_turn(semio_plugin_host_operation::test_native_authority::original_retained_turn()).await).await;
     runtime.drop_instance(inst).await;
     assert!(!runtime.has_script_queue(actor));
 }

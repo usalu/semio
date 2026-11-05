@@ -10,33 +10,33 @@ use super::*;
 /// `KeyDown` (so `c`/`x`/`v` clipboard chords reach `route_edit_key` instead of being literally
 /// inserted as text). A focused Select owns printable typeahead and the Space press as `KeyDown`;
 /// editable controls keep plain characters as `TextInput`.
-pub fn ui_event_from_key_action(action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, focused_select: bool) -> Option<semio_framework_ui_wgpu_events::UiEvent> {
-    let event_modifiers = semio_framework_ui_wgpu_events::EventModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta };
+pub fn ui_event_from_key_action(action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, focused_select: bool) -> Option<semio_ui_wgpu_events::UiEvent> {
+    let event_modifiers = semio_ui_wgpu_events::EventModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta };
     match action {
-        semio_framework_ui_wgpu_input::KeyAction::Char(ch) => {
+        semio_ui_wgpu_input::KeyAction::Char(ch) => {
             if modifiers.ctrl_or_meta() || focused_select {
-                Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: ch.clone(), modifiers: event_modifiers })
+                Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: ch.clone(), modifiers: event_modifiers })
             } else {
-                Some(semio_framework_ui_wgpu_events::UiEvent::TextInput { text: ch.clone() })
+                Some(semio_ui_wgpu_events::UiEvent::TextInput { text: ch.clone() })
             }
         }
-        semio_framework_ui_wgpu_input::KeyAction::Backspace => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Backspace".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::Delete => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Delete".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::Enter => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Enter".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::Escape => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Escape".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::ArrowLeft => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "ArrowLeft".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::ArrowRight => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "ArrowRight".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::ArrowUp => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "ArrowUp".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::ArrowDown => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "ArrowDown".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::Home => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Home".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::End => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "End".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::PageUp => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "PageUp".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::PageDown => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "PageDown".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::Function(number) => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: format!("F{number}"), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::Tab => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Tab".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::ContextMenu => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "ContextMenu".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::Space(true) if focused_select => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: " ".into(), modifiers: event_modifiers }),
-        semio_framework_ui_wgpu_input::KeyAction::Space(_) => None,
+        semio_ui_wgpu_input::KeyAction::Backspace => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "Backspace".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::Delete => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "Delete".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::Enter => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "Enter".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::Escape => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "Escape".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::ArrowLeft => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "ArrowLeft".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::ArrowRight => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "ArrowRight".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::ArrowUp => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "ArrowUp".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::ArrowDown => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "ArrowDown".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::Home => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "Home".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::End => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "End".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::PageUp => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "PageUp".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::PageDown => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "PageDown".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::Function(number) => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: format!("F{number}"), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::Tab => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "Tab".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::ContextMenu => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: "ContextMenu".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::Space(true) if focused_select => Some(semio_ui_wgpu_events::UiEvent::KeyDown { key: " ".into(), modifiers: event_modifiers }),
+        semio_ui_wgpu_input::KeyAction::Space(_) => None,
     }
 }
 
@@ -60,12 +60,12 @@ impl<'ctx> PointerCtx<'ctx> {
     }
 
     pub fn handle_pointer_cancel_for(&mut self, pointer_id: ui_render::PointerId, input: &mut InputState<ActionDescriptor>) {
-        let retained_cancelled = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(pointer_id);
+        let retained_cancelled = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(pointer_id);
         if let Some(window_id) = retained_cancelled.as_ref() {
-            semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_framework_ui_wgpu_events::UiEvent::PointerCancel, input);
+            semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_ui_wgpu_events::UiEvent::PointerCancel, input);
         }
         let (pointer_x, pointer_y) = (input.pointer_x, input.pointer_y);
-        let cancelled_scenes = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::cancel_scene_pointer(pointer_id, input);
+        let cancelled_scenes = semio_renderer_wgpu_ui_engine::retained_ui_engine::cancel_scene_pointer(pointer_id, input);
         let scene_cancelled = !cancelled_scenes.is_empty();
         let mut capture_lost: Vec<&str> = retained_cancelled.iter().map(String::as_str).chain(cancelled_scenes.iter().map(|cancelled| cancelled.window_id.as_str())).collect();
         capture_lost.sort_unstable();
@@ -77,20 +77,20 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         for cancelled in cancelled_scenes {
             match cancelled.kind {
-                semio_framework_ui_declaration::ui::SurfaceKind::World3d => {
+                semio_ui_declaration::ui::SurfaceKind::World3d => {
                     if let Some(state) = self.surfaces.world3d_states.get_mut(&cancelled.host_id) {
                         infinite_world::world::world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene);
                     }
                 }
-                semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph => {
-                    semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_cancel_into(&cancelled.host_id);
+                semio_ui_declaration::ui::SurfaceKind::NodeGraph => {
+                    semio_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_cancel_into(&cancelled.host_id);
                 }
-                semio_framework_ui_declaration::ui::SurfaceKind::Board2d => {
-                    semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_cancel_into(&cancelled.host_id, input);
+                semio_ui_declaration::ui::SurfaceKind::Board2d => {
+                    semio_renderer_wgpu_engine_board::board2d::board2d_pointer_cancel_into(&cancelled.host_id, input);
                 }
-                semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => {
+                semio_ui_declaration::ui::SurfaceKind::TiledMap => {
                     if let Some(surface) = self.surfaces.tiled_map_states.get(&cancelled.host_id).filter(|surface| surface.window_id == cancelled.window_id) {
-                        if let Err(fault) = semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_cancel_into(&cancelled.host_id, &surface.controller_id, surface.bounds, pointer_x, pointer_y, &mut *input) {
+                        if let Err(fault) = semio_renderer_wgpu_scene_feeds::tiled_map_pointer_cancel_into(&cancelled.host_id, &surface.controller_id, surface.bounds, pointer_x, pointer_y, &mut *input) {
                             input.record_action_fault(fault);
                         }
                     }
@@ -98,8 +98,8 @@ impl<'ctx> PointerCtx<'ctx> {
                 _ => {}
             }
         }
-        let canvas_cancelled = semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture_for(pointer_id, input);
-        let transfer_cancelled = semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer_for_pointer(pointer_id);
+        let canvas_cancelled = semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture_for(pointer_id, input);
+        let transfer_cancelled = semio_renderer_wgpu_scene_render::cancel_scene_list_transfer_for_pointer(pointer_id);
         let chrome_cancelled = self.input.chrome_pointer_owner == Some(pointer_id);
         if chrome_cancelled {
             self.input.chrome_pointer_owner = None;
@@ -171,7 +171,7 @@ impl<'ctx> PointerCtx<'ctx> {
         });
         if let Some(ref drag_data) = tree_drag_payload {
             let graph_surfaces = self.surfaces.node_graph_states.iter().map(|(id, surface)| (id.as_str(), surface.bounds)).collect::<Vec<_>>();
-            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_sync_flow_widget_ghost(x, y, drag_data, &graph_surfaces);
+            semio_renderer_wgpu_engine_graph::node_graph::node_graph_sync_flow_widget_ghost(x, y, drag_data, &graph_surfaces);
             drop(graph_surfaces);
             self.surfaces.sync_world3d_catalogue_drop_preview(x, y, drag_data);
         } else {
@@ -179,12 +179,12 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         let retained_drag_data = tree_drag_payload
             .is_none()
-            .then(|| semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions())
-            .and_then(|sessions| sessions.into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(semio_framework_os_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME)));
+            .then(|| semio_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions())
+            .and_then(|sessions| sessions.into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(semio_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME)));
         if let Some(drag_data) = tree_drag_payload.as_ref().or(retained_drag_data.as_ref()) {
             self.input.sync_canvas2d_catalogue_drag(x, y, drag_data, input);
         } else {
-            semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
+            semio_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
         }
         if let Some(drag) = &mut self.input.tree_drag {
             if let Some(hit) = input.hit_at(x, y) {

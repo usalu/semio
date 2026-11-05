@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::generation2d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_artifact_flow_flow::neural::{Atom, ColdRetire, Dictionary, Value as NeuralValue};
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 
 /// ⚖️ LAW: an `evaluate` extension answer carried back as `flowEvalResolve` seeds the addressed session's
 /// shared neural cache under the requested `nodeHash`, settles the window's outstanding answer and arms

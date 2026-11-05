@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLabTestDrainageHei
         record: "ChangedLabTestDrainageHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Drainage path h_dr of the laboratory test", "Laborversuch: Dränweg h_dr ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Drainage path h_dr of the laboratory test", "Laborversuch: Dränweg h_dr ändern")
     }
 }
 

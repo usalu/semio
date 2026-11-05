@@ -21,39 +21,39 @@ use crate::editor::wfc3d::transient::{Wfc3dTransient, Wfc3dTransientMutation};
 use crate::mutations::{change_seed, change_tile_media, change_tile_weight, connect_slots, create_rule, create_slot, create_tile, delete_rule, delete_slot, delete_tile, disconnect_slots, move_slot, pin_slot, resize_slot, unpin_slot};
 use crate::schema::snapshot::{canonical_edge_index, canonical_insertion_index, canonical_rule_index, canonical_slot_index, canonical_tile_index, GraphRule, Slot3d, SlotEdge, Tile, TileMedia3d};
 use crate::{Wfc3dMutation, Wfc3dSnapshot, WFC3D_DIALECT, WFC3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ToolRef;
-use semio_framework_plugin::ToolRunJob;
-use semio_framework_plugin::ToolRunJobRequest;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ToolRef;
+use semio_plugin::ToolRunJob;
+use semio_plugin::ToolRunJobRequest;
+use semio_plugin::ToolRunView;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
 use semio_framework_tool_machine::{node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_2d_compute::EngineHandles;
@@ -94,7 +94,7 @@ fn wfc3d_action(id: &'static str, en: &'static str, de: &'static str, kind: Acti
 /// inject `interactionSelect`/`interactionHover`/`clearSelection` onto every window kind — the
 /// shell drops an action no window kind declares, so without this domain every pointer move
 /// over the graph canvas was refused `undeclared-action`.
-pub fn create_wfc3d_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_wfc3d_editor() -> semio_plugin::AppDefinition {
     Editor::builder(WFC3D_DIALECT)
         .document(["semio", "wfc", "3d"])
         .artifact_kind(crate::artifact_kind())
@@ -193,8 +193,8 @@ pub fn create_wfc3d_editor() -> semio_framework_plugin::AppDefinition {
         .action_describe("create-rule", LocalizedLabel::native("Allows or forbids tile B next to tile A under a named relation; along each edge the solve only places tile pairs the rules allow.", "Erlaubt oder verbietet Kachel B neben Kachel A unter einer benannten Relation; entlang jeder Kante setzt der Löser nur erlaubte Kachelpaare."))
         .action_describe("delete-rule", LocalizedLabel::native("Removes one adjacency rule by id, withdrawing the permission or ban it stated.", "Entfernt eine Nachbarschaftsregel anhand ihrer Id und nimmt die Erlaubnis oder das Verbot zurück, das sie ausdrückte."))
         .action_describe("change-active-tile", LocalizedLabel::native("Arms the tile that a pin gesture in this window assigns; only the editor's view state changes, not the document.", "Wählt die Kachel, die eine Anheften-Geste in diesem Fenster zuweist; nur der Ansichtszustand des Editors ändert sich, nicht das Dokument."))
-        .action_audience("change-camera", semio_framework_plugin::CapabilityAudience::Chrome)
-        .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("change-camera", semio_plugin::CapabilityAudience::Chrome)
+        .action_audience("nodeGraphEdit", semio_plugin::CapabilityAudience::Input)
         .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -225,7 +225,7 @@ pub const WFC3D_DIALECT: Dialect = Dialect { artifact_kind: WFC3D_DOCUMENT_SCHEM
 //#region 🧩️ArtifactItems2
 pub mod artifact_items_2 {
 pub use crate::schema::snapshot::WFC3D_DOCUMENT_SCHEMA;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`. `dimension`/`media_*` follow the 3d/mesh family: the
@@ -233,7 +233,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.wfc3d".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D", "3D"),
+        label: semio_ui_locale::LocalizedLabel::native("3D", "3D"),
         source_format: WFC3D_DOCUMENT_SCHEMA.into(),
         component_kind: "wfc3d".into(),
         dimension: "3d".into(),

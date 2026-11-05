@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationPileHead
         record: "ChangeFoundationPileHeadShearN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Inertial head shear per pile from the superstructure", "Trägheitskraft am Pfahlkopf je Pfahl aus dem Tragwerk ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Inertial head shear per pile from the superstructure", "Trägheitskraft am Pfahlkopf je Pfahl aus dem Tragwerk ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-pile-head-shear-n".into()]

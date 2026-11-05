@@ -11,8 +11,8 @@ use semio_s_artifact_procedural_3d_mutations::generation_mutation_to_generation3
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, selected_generation};
-use semio_framework_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
-use semio_framework_plugin::Emit;
+use semio_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
+use semio_plugin::Emit;
 
 pub struct Generation3dGenerationCommandResult {
     pub emit: Emit<Generation3dMutation, Generation3dConfigMutation>,

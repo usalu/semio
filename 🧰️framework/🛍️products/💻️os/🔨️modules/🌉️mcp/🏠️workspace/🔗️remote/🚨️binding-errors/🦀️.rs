@@ -41,12 +41,12 @@ impl HubUnavailableCause {
     }
 
     /// 🔌️ A transport failure, keeping its own detail bounded to [`HUB_UNAVAILABLE_DETAIL_MAX_CHARS`].
-    pub fn transport(error: &semio_framework_os_kernel::os_directory::client::TransportError) -> Self {
-        if matches!(error, semio_framework_os_kernel::os_directory::client::TransportError::BudgetExhausted) {
+    pub fn transport(error: &semio_os_kernel::os_directory::client::TransportError) -> Self {
+        if matches!(error, semio_os_kernel::os_directory::client::TransportError::BudgetExhausted) {
             return Self::NetworkBudget;
         }
         let detail = match error {
-            semio_framework_os_kernel::os_directory::client::TransportError::Io(detail) => detail.clone(),
+            semio_os_kernel::os_directory::client::TransportError::Io(detail) => detail.clone(),
             other => other.to_string(),
         };
         Self::Transport { detail: detail.chars().take(HUB_UNAVAILABLE_DETAIL_MAX_CHARS).collect() }

@@ -19,12 +19,14 @@ path = "../../🦀️.rs"
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-3d-diff = { workspace = true }
 semio-s-artifact-puzzle-3d-model = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
+
+semio-framework = { workspace = true }

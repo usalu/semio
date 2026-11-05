@@ -2,7 +2,7 @@
 //! reaches for.
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the block-5d app; one field per label makes every locale×terminology combination compile-checked.
     pub struct Block5dLabels {
         window_board: native_en "Board", native_de "Board", reuse_en "Board", reuse_de "Board";
@@ -18,8 +18,8 @@ semio_framework_ui_locale::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from the shared view state.
-pub fn block5d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Block5dLabels {
-    semio_framework_plugin::resolve_labels::<Block5dLabels>(view_state)
+pub fn block5d_labels(view_state: &semio_plugin::ViewModel) -> &'static Block5dLabels {
+    semio_plugin::resolve_labels::<Block5dLabels>(view_state)
 }
 //#endregion 🔖️Labels
 

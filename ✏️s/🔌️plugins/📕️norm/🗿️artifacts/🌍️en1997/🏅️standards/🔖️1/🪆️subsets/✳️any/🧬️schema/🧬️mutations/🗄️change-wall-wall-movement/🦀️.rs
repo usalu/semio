@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWallWallMovement w
         record: "ChangedWallWallMovement",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change wall movement of the retaining wall", "Stützwand: Wandbewegung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change wall movement of the retaining wall", "Stützwand: Wandbewegung ändern")
     }
 }
 

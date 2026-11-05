@@ -1,6 +1,6 @@
 //! 🛡️ `os.config.merge-policy` schema: the authority-local policy setting and its sparse diff.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use protocol::{ColdDiffAlgebra, ColdMutationDiff, MutationDiff};
 use semio_framework_value_derive::{FromValue, ToValue};

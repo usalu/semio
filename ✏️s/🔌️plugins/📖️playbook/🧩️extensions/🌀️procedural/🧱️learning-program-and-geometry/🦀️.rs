@@ -1,7 +1,7 @@
 //! 🧱️ Learning program and geometry ownership of the procedural module: the authored program, the flow widget helpers and the geometry handle owner. See [`super`].
 
 use super::*;
-use semio_framework_ui_contract::text;
+use semio_ui_contract::text;
 
 //#region 🔖️Constants
 /// 🧱️ The authored hexagonal-column learning program consumed by this playbook module.
@@ -95,6 +95,7 @@ pub(super) fn bind_control(builder: impl Into<BuiltNode>, id: &str, label: &str,
     node.key = ui_text(id)?;
     node.accessibility.label = Some(ui_label(label)?);
     node.disabled = !payload.interactive;
+    if !payload.interactive { return Ok(node); }
     let action = UiActionId::try_v1(&payload.controller_id, command).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural module action admission failed"))?;
     ui_admit(node.bindings.try_push(ActionBinding { trigger, action, args: Some(args), capability: None }))?;
     Ok(node)
@@ -153,9 +154,13 @@ pub(super) fn apply_flow_params(host: &mut FlowHost, host_snapshot: &FlowHostSna
     let Some(object) = params.as_object() else {
         return;
     };
-    for (key, value) in object {
-        if let Some(number) = value.as_f64() {
-            host.set_slider_value(key, number);
+    for widget in &host_snapshot.widgets {
+        let Some(value) = object.get(widget_id(widget)) else { continue; };
+        match widget {
+            Widget::InputSlider { id, .. } => if let Some(number) = value.as_f64() { host.set_slider_value(id, number); },
+            Widget::InputNote { id, .. } => if let Some(text) = value.as_str() { host.set_note_text(id, text); },
+            Widget::InputImage { id, .. } => if let Some(src) = value.as_str() { host.set_image_src(id, src); },
+            _ => {}
         }
     }
     for widget in &host_snapshot.widgets {
@@ -172,7 +177,14 @@ pub(super) struct ModuleGeometryOwner {
     pub(super) session: SessionCapture,
     pub(super) registry: Option<SharedRegistry>,
     pub(super) registry_retirement: RegistryRetirement,
+    host_template: Option<FlowHost>,
+    host_template_close: flow::FlowHostCloseSlot,
     closing: bool,
+    pub(super) preview: Option<embedded_evaluation::PreviewCache>,
+    preview_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<embedded_evaluation::PreviewCache>>,
+    pub(super) active_preview_key: String,
+    pub(super) preview_phase: u8,
+    pub(super) preview_units: usize,
     pub(super) imported: Option<ModuleImportedGeometry>,
     stale: Vec<ModuleStaleGeometry>,
     retirement: ValueRetirement,
@@ -186,11 +198,19 @@ impl ModuleGeometryOwner {
     pub(super) fn new() -> Self {
         let session = Session::new();
         let mut registry = Registry::new();
+        semio_s_plugin_flow_primitive::register(&mut registry);
+        semio_s_plugin_flow_text::register(&mut registry);
+        semio_s_plugin_flow_list::register(&mut registry);
+        semio_s_plugin_flow_dictionary::register(&mut registry);
+        semio_s_plugin_flow_logic::register(&mut registry);
+        semio_s_plugin_flow_draw::register(&mut registry);
+        semio_s_plugin_flow_bim::register(&mut registry);
         semio_s_plugin_flow_math::register(&mut registry);
         semio_s_plugin_flow_brep::register(&mut registry, &session);
         registry.finalize();
         let (registry, registry_retirement) = SharedRegistry::new(registry);
-        Self { session: session.capture(), registry: Some(registry), registry_retirement, closing: false, imported: None, stale: Vec::new(), retirement: ValueRetirement::default() }
+        let host_template = FlowHost::from_host_snapshot(FlowHostSnapshot::default()).with_operator_registry(registry.clone());
+        Self { session: session.capture(), registry: Some(registry), registry_retirement, host_template: Some(host_template), host_template_close: Default::default(), closing: false, preview: None, preview_close: None, active_preview_key: String::new(), preview_phase: 0, preview_units: 0, imported: None, stale: Vec::new(), retirement: ValueRetirement::default() }
     }
 
     pub(super) fn retire_import_cache(&mut self) {
@@ -225,7 +245,10 @@ impl ModuleGeometryOwner {
 
     pub(super) fn host(&self, snapshot: FlowHostSnapshot) -> Result<FlowHost, Fault> {
         let registry = self.registry.as_ref().ok_or_else(|| Fault::from("playbook.module.procedural.geometry-closed"))?;
-        Ok(FlowHost::from_host_snapshot(snapshot).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY).with_operator_registry(registry.clone()).with_geometry_port(self.session.port()))
+        let template = self.host_template.as_ref().ok_or_else(|| Fault::from("playbook.module.procedural.geometry-closed"))?;
+        let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(snapshot, std::sync::Arc::new(neural_engine::NeuralCache::new()), template.kind_infos.clone());
+        host.operator_registry = Some(registry.clone());
+        Ok(host.with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY).with_geometry_port(self.session.port()))
     }
 }
 
@@ -233,46 +256,48 @@ impl ArtifactInstanceOperationOwner for ModuleGeometryOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        if !self.closing { return Ok(if self.stale.is_empty() { RetirementDemand::default() } else { self.stale_demand() }); }
-        if !self.stale.is_empty() { return Ok(self.stale_demand()); }
         if !self.retirement.terminal_is_empty() { return self.retirement_cursor_demand(body); }
+        if !self.stale.is_empty() { return Ok(self.stale_demand()); }
+        if !self.closing { return Ok(RetirementDemand::default()); }
+        if self.preview.is_some() || self.preview_close.is_some() { return embedded_evaluation::preview_close_demands(self.preview.is_some(), &self.preview_close, body); }
+        if self.host_template.is_some() { return Ok(flow::FlowHostCloseSlot::intake_demand()); }
+        if !self.host_template_close.terminal_is_empty() { return self.host_template_close.next_demand(body); }
         if !self.registry_retirement.terminal_is_empty() {
             return Ok(RetirementDemand { copy_bytes: self.registry_retirement.next_copy_byte_demand()?, capacity_bytes: self.registry_retirement.next_capacity_byte_demand(body)?, release_bytes: self.registry_retirement.next_release_byte_demand()?, depth: self.registry_retirement.next_depth_demand()? });
         }
         Ok(RetirementDemand { copy_bytes: self.session.next_close_copy_byte_demand()?, capacity_bytes: self.session.next_close_capacity_byte_demand(body)?, release_bytes: self.session.next_close_release_byte_demand()?, depth: self.session.next_close_depth_demand()? })
     }
 
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn maintenance_step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(Default::default())); }
+        if !self.retirement.terminal_is_empty() { return Ok(PluginLifecycleStep::Progress(self.retirement.close_step(grant)?.progress())); }
         if !self.stale.is_empty() { return Ok(PluginLifecycleStep::Progress(self.admit_stale(grant)?)); }
-        if self.retirement.terminal_is_empty() { return Ok(PluginLifecycleStep::Progress(Default::default())); }
-        let step = self.retirement.close_step(grant)?;
-        Ok(PluginLifecycleStep::Progress(step.progress()))
+        Ok(PluginLifecycleStep::Progress(Default::default()))
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(Default::default())); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         if !self.closing {
             self.closing = true;
             drop(self.registry.take());
             self.retire_import_cache();
+            self.stale.push(ModuleStaleGeometry::Text(std::mem::take(&mut self.active_preview_key)));
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
-        if !self.stale.is_empty() { return Ok(PluginLifecycleStep::Progress(self.admit_stale(grant)?)); }
-        if !self.retirement.terminal_is_empty() { return self.maintenance_step(cx,grant); }
-        let step = if !self.registry_retirement.terminal_is_empty() {
-            self.registry_retirement.close_step(grant)
-        } else {
-            self.session.close_step(grant)
+        if !self.retirement.terminal_is_empty() || !self.stale.is_empty() { return self.maintenance_step(cx, grant); }
+        if self.preview.is_some() || self.preview_close.is_some() {
+            return Ok(PluginLifecycleStep::Progress(embedded_evaluation::close_preview_cache(&mut self.preview, &mut self.preview_close, grant)?));
         }
-        .and_then(|step| semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty(), "original procedural geometry owner"))
-        ?;
+        if self.host_template.is_some() { return Ok(PluginLifecycleStep::Progress(self.host_template_close.retain(&mut self.host_template, grant)?)); }
+        if !self.host_template_close.terminal_is_empty() { return Ok(PluginLifecycleStep::Progress(self.host_template_close.close_step(grant)?.progress())); }
+        let step = if !self.registry_retirement.terminal_is_empty() { self.registry_retirement.close_step(grant) } else { self.session.close_step(grant) }
+            .and_then(|step| semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty(), "original procedural geometry owner"))?;
         Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty()))
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.registry.is_none() && self.imported.is_none() && self.stale.is_empty() && self.retirement.terminal_is_empty() && self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty()
+        self.registry.is_none() && self.host_template.is_none() && self.host_template_close.terminal_is_empty() && self.imported.is_none() && self.preview.is_none() && self.preview_close.is_none() && self.active_preview_key.is_empty() && self.stale.is_empty() && self.retirement.terminal_is_empty() && self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty()
     }
 }
 //#endregion 🔖️Preview

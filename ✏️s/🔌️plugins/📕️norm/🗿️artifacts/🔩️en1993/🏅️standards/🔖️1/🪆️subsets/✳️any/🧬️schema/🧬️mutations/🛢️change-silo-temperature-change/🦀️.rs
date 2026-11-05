@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloTemperatureCha
         record: "ChangedSiloTemperatureChange",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pipeline temperature change ΔT of the silo shell", "Silo-Schale: Rohrleitung Temperaturänderung ΔT ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pipeline temperature change ΔT of the silo shell", "Silo-Schale: Rohrleitung Temperaturänderung ΔT ändern")
     }
 }
 

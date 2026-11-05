@@ -10,8 +10,8 @@ pub struct InsertMember { pub index: Option<usize>, pub item: semio_s_artifact_n
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for InsertMember where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_member::RemoveMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "member", kind: "insert-member", record: "InsertedMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert member", "Bauteil einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert member", "Bauteil einfügen")
     }
 }
 

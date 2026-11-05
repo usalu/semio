@@ -1,5 +1,5 @@
 use crate::editor::pdf17vt::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, Editor};
+use semio_plugin::{ArtifactEditor, Editor};
 #[allow(unused_imports)]
 use crate::editor::pdf17vt::modes::edit;
 #[allow(unused_imports)]
@@ -11,7 +11,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
 #[allow(unused_imports)]
-use {semio_framework_plugin::built_to_component_tree, semio_framework_plugin::ArtifactView, semio_framework_plugin::ComponentTree, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::DraftView, semio_framework_plugin::Emit, semio_framework_plugin::Fault, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraft, semio_framework_plugin::NoDraftMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::built_to_component_tree, semio_plugin::ArtifactView, semio_plugin::ComponentTree, semio_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_plugin::DraftView, semio_plugin::Emit, semio_plugin::Fault, semio_plugin::NoConfig, semio_plugin::NoConfigMutation, semio_plugin::NoDraft, semio_plugin::NoDraftMutation, semio_plugin::NoPresence, semio_plugin::NoPresenceMutation, semio_plugin::NoTransient, semio_plugin::NoTransientMutation, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::editor::pdf17vt::*;
@@ -19,7 +19,7 @@ use crate::editor::pdf17vt::*;
 #[semio_framework_async_macros::async_test]
 async fn create_pdf17_vt_editor_builds_a_definition_for_the_editor_role() {
     let def = create_pdf17_vt_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, PDF17VT_DIALECT.into());
 }
 
@@ -51,4 +51,4 @@ async fn explicit_nonzero_page_payload_is_preserved() {
     assert!(matches!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17VtEditorCommand::SetPage { page: 3, item: 0, revision, text }) if revision == "0123456789abcdef" && text == "replacement"));
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio/Pdf17VtEditor", Pdf17VtEditor, || semio_framework_plugin::App { definition: create_pdf17_vt_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio/Pdf17VtEditor", Pdf17VtEditor, || semio_plugin::App { definition: create_pdf17_vt_editor(), examples: Vec::new() }, "../..");

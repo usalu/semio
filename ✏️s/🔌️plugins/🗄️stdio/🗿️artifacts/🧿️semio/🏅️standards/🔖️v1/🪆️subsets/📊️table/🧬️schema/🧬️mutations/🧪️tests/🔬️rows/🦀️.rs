@@ -1,6 +1,6 @@
 //! 🧪️ Fixture laws of the semio table row and cell mutations (insert, remove, reorder, edit-cell), over the mutation crate's public API.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../✏️edit-cell/🧪️tests/👥️rewrites/🦀️.rs"]
 mod tests_edit_cell_rewrites_the_population_cell_of_the_second_row;

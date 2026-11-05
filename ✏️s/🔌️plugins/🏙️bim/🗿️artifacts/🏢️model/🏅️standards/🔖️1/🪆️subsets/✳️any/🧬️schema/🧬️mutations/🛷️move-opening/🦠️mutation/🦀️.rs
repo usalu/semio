@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "opening", kind: "move-opening", record: "MoveOpening" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move opening \"{}\" to {} m", self.id, self.offset), &format!("Öffnung \"{}\" auf {} m verschieben", self.id, self.offset))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move opening \"{}\" to {} m", self.id, self.offset), &format!("Öffnung \"{}\" auf {} m verschieben", self.id, self.offset))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

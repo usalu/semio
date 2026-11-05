@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteEnSpectrumType
         record: "ChangeSiteEnSpectrumType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change EN spectrum type", "EN-Spektrumtyp ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change EN spectrum type", "EN-Spektrumtyp ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-en-spectrum-type".into()]

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeThermalAssumedRang
         record: "ChangedThermalAssumedRange",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed movement range of the bearings and joints of the thermal section", "Temperaturquerschnitt: Angenommener Bewegungsbereich der Lager und Fugen ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed movement range of the bearings and joints of the thermal section", "Temperaturquerschnitt: Angenommener Bewegungsbereich der Lager und Fugen ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

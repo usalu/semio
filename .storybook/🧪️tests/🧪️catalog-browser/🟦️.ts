@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../🎭️playwright/🟦️.ts";
 
 type PreviewWindow = typeof globalThis & {
   __STORYBOOK_PREVIEW__?: {

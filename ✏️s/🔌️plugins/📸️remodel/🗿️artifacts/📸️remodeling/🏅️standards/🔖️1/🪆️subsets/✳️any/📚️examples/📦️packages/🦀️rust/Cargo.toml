@@ -16,18 +16,18 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-s-artifact-remodel-remodeling-orbit-q1 = { workspace = true }
 semio-s-artifact-remodel-remodeling-orbit-q2 = { workspace = true }
 semio-s-artifact-remodel-remodeling-orbit-q3 = { workspace = true }
 semio-s-artifact-remodel-remodeling-orbit-q4 = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 
 [dev-dependencies]
 pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-value = { workspace = true }
 semio-s-artifact-remodel-remodeling-inferences = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }

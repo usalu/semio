@@ -1,8 +1,8 @@
 mod tests {
     use super::*;
     use crate::standards::v1_7::subsets::x::io::PdfXBuilderConstruction as PdfXBuilder;
-    use semio_framework_plugin::io::AnalyzeSource;
-    use semio_framework_plugin::ArtifactBuilder as _;
+    use semio_plugin::io::AnalyzeSource;
+    use semio_plugin::ArtifactBuilder as _;
 
     /// 🩹 A genuinely PDF/X-4-conforming raw fixture: the 1.7 writer (`encode_pdf`) deliberately
     /// does NOT re-emit `PdfSnapshot.objects` (see its own doc comment — asserted structurally,

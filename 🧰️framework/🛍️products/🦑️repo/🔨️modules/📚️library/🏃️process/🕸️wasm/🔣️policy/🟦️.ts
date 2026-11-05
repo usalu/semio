@@ -12,7 +12,7 @@ import {existsSync,readFileSync,realpathSync} from "node:fs";
 import {join,resolve,relative,dirname,basename} from "node:path";
 import {spawnSync} from "node:child_process";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
-import { requireWasmBindgenSourceLockV1, wasmBindgenVersion } from "../../../⚡️caching/🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
+import { requireWasmBindgenSourceLockV1, wasmBindgenVersion, wasmBindgenCargoCommandV1, wasmBindgenCommandMatchesV1 } from "../../../⚡️caching/🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import { cargoDirectories } from "../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 import {prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
@@ -26,20 +26,23 @@ import {buildWasmWebV1,type WasmPackWebBuildOptions,type WasmBuildPolicyV1} from
 import { runtimeSupportsV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import { runtimeWhichV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
-/** 📦️ Resolves the caller-selected pinned binding generator. */
-export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS.ProcessEnv = process.env): string {
-  const version = wasmBindgenVersion(readFileSync(join(repoRoot, "Cargo.lock"), "utf8"));
-  if (env.WASM_BINDGEN_VERSION && env.WASM_BINDGEN_VERSION !== version) throw new Error("WASM_BINDGEN_VERSION disagrees with Cargo.lock");
-  if (!env.SEMIO_WASM_BINDGEN_BIN && !runtimeSupportsV1("which")) throw new Error("wasm-bindgen resolution requires a runtime executable lookup.");
-  const pinned = join(repositoryCachePartitionRootV1(repoRoot, "rust"), "cargo", "home", "bin", process.platform === "win32" ? "wasm-bindgen.exe" : "wasm-bindgen"),
-    installed = existsSync(pinned) && spawnSync(pinned, ["--version"], { env, encoding: "utf8" }).stdout?.trim() === `wasm-bindgen ${version}`;
-  const command = env.SEMIO_WASM_BINDGEN_BIN
-    ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN)
-    : installed ? pinned : runtimeWhichV1("wasm-bindgen", { PATH: env.PATH });
-  if (!command) throw new Error("Run repo run workspace:deps-wasm to provision wasm-bindgen");
-  const probe = spawnSync(command, ["--version"], { env,encoding:"utf8" });
-  if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run repo run workspace:deps-wasm`);
-  return command;
+/** 🔌️ Observes only owned lock data, candidate executables and their finite native identity. */
+export interface WasmBindgenToolPortV1{
+ lock(workspace:string):string;prepared(workspace:string):string;exists(command:string):boolean;lookup(environment:Readonly<Record<string,string|undefined>>):string|null;probe(command:string,environment:Readonly<Record<string,string|undefined>>):Readonly<{status:number|null;stdout:string}>;
+}
+const WASM_BINDGEN_TOOL_PORT_V1:WasmBindgenToolPortV1={
+ lock:workspace=>readFileSync(join(workspace,"Cargo.lock"),"utf8"),
+ prepared:workspace=>wasmBindgenCargoCommandV1(join(repositoryCachePartitionRootV1(workspace,"rust"),"cargo","home")),
+ exists:existsSync,
+ lookup:environment=>runtimeSupportsV1("which")?runtimeWhichV1("wasm-bindgen",{PATH:environment.PATH}):null,
+ probe:(command,environment)=>{const result=spawnSync(command,["--version"],{env:environment,encoding:"utf8",timeout:10000});return{status:result.status,stdout:result.stdout??""};},
+};
+/** 📦️ Resolves the exact locked owned generator before an ambient executable. */
+export function resolveWasmBindgenBin(repoRoot=getWorkspaceRoot(),env:Readonly<Record<string,string|undefined>>=process.env,port:WasmBindgenToolPortV1=WASM_BINDGEN_TOOL_PORT_V1):string{
+ const version=wasmBindgenVersion(port.lock(repoRoot));if(env.WASM_BINDGEN_VERSION&&env.WASM_BINDGEN_VERSION!==version)throw Error("WASM_BINDGEN_VERSION disagrees with Cargo.lock");
+ const explicit=env.SEMIO_TOOL_WASM_BINDGEN,candidates=explicit?[resolve(repoRoot,explicit)]:[...(env.CARGO_HOME?[wasmBindgenCargoCommandV1(env.CARGO_HOME)]:[]),port.prepared(repoRoot),port.lookup(env)];
+ for(const command of new Set(candidates)){if(!command||!port.exists(command))continue;const observed=port.probe(command,env);if(observed.status===0&&wasmBindgenCommandMatchesV1(observed.stdout,version))return command;}
+ throw Error("wasm-bindgen "+version+" is required; run repo run workspace:deps-wasm");
 }
 
 /** 🏗️ Preserves the caller-selected browser compiler environment. */
@@ -48,10 +51,12 @@ export function wasmBuildEnvironment(repoRoot: string, env: NodeJS.ProcessEnv = 
 }
 
 /** 🧭️ Selects optimizer lookup while preserving the pinned generator. */
-export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: Readonly<Record<string,string|undefined>>): Record<string,string|undefined> {
   const optimizer = env.SEMIO_WASM_OPT_BIN ? resolve(repoRoot, env.SEMIO_WASM_OPT_BIN) : preparedBinaryen(repoRoot);
   if (optimizer && basename(optimizer) !== (process.platform === "win32" ? "wasm-opt.exe" : "wasm-opt")) throw new Error("SEMIO_WASM_OPT_BIN must name a wasm-opt executable");
-  const environment = { ...env, PATH: [dirname(bindgen), ...(optimizer ? [dirname(optimizer)] : []), env.PATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":") };
+  const inheritedPath=env.PATH??Object.entries(env).find(([key])=>key.toUpperCase()==="PATH")?.[1],environment:Record<string,string|undefined>={...env,SEMIO_TOOL_WASM_BINDGEN:bindgen};
+  for(const key of Object.keys(environment))if(key.toUpperCase()==="PATH")delete environment[key];
+  environment.PATH=[dirname(bindgen),...(optimizer?[dirname(optimizer)]:[]),inheritedPath].filter(Boolean).join(process.platform==="win32"?";":":");
   if (optimizer) {
     const selected = runtimeWhichV1("wasm-opt", { PATH: environment.PATH });
     if (!selected || realpathSync(selected) !== realpathSync(optimizer)) throw new Error("Selected wasm-opt is missing or shadowed by another tool");

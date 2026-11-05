@@ -1,10 +1,10 @@
 //! 🐚️ 🐚️ Layout play app commands command — `engagement-submit`.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{engagement_token_matches, ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{engagement_token_matches, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -28,7 +28,7 @@ pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, LayoutSnapshot
         None
     };
     Ok(action.map_or_else(Emit::default, |(action, args)| Emit {
-        effects: vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(116), action: action.into(), args, delay_ms: 0 }],
+        effects: vec![Effect::DispatchAction { req: semio_plugin::RequestId(116), action: action.into(), args, delay_ms: 0 }],
         ..Default::default()
     }))
 }

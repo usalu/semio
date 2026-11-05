@@ -3,7 +3,7 @@
 //! rows, in order, each in both locales, and reads every case to its title, text, paused flag and fault code.
 
 use super::*;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🧫️history-reprojection/🔣️.json");
 

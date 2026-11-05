@@ -83,7 +83,7 @@ struct RenameCommitArgument {
 /// 📇️ Every action id the app declares: each window kind's own roster plus the app-level
 /// `AppDefinition::actions` roster, which `semio_framework::window_kind_actions` offers to every window
 /// that does not claim the id itself (an app-scoped verb like `reorganize` lives there).
-fn declared_action_ids(definition: &semio_framework_plugin::AppDefinition) -> std::collections::BTreeSet<&str> {
+fn declared_action_ids(definition: &semio_plugin::AppDefinition) -> std::collections::BTreeSet<&str> {
     definition.window_kinds.iter().flat_map(|kind| kind.actions.iter()).chain(definition.actions.iter()).map(|action| action.id.as_str()).collect()
 }
 
@@ -205,7 +205,7 @@ fn the_rename_bridge_reads_every_spelling_the_commit_can_arrive_under() {
     let fixture = generate_interactions_fixture();
     for spelling in &fixture.rename_commit_argument.guest_reads {
         let args: semio_framework_value::DslValue = serde_json::json!({ "id": "generation-1", spelling.as_str(): "Balcony Study" }).into();
-        let command = <semio_s_artifact_procedural_3d_editor::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some((args).clone()), None).expect("renameGeneration bridges");
+        let command = <semio_s_artifact_procedural_3d_editor::Generation3dPlayApp as semio_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some((args).clone()), None).expect("renameGeneration bridges");
         let semio_s_artifact_procedural_3d_editor::Generation3dCommand::RenameGeneration(payload) = command else { panic!("renameGeneration must bridge to its own row") };
         assert_eq!(payload.name, "Balcony Study", "the guest must read the rename text under `{spelling}`");
     }

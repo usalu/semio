@@ -150,7 +150,7 @@ impl BitmapEditorCommand {
 /// an editor without this bridge has a complete, correctly classified, completely dead action roster.
 pub(super) mod args_bridge {
     use super::{BitmapEditorCommand, Fault};
-    use semio_framework_plugin::{FaultCode, FaultOrigin};
+    use semio_plugin::{FaultCode, FaultOrigin};
 
     fn field<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Option<&'a semio_framework_value::DslValue> {
         args?.get(key)

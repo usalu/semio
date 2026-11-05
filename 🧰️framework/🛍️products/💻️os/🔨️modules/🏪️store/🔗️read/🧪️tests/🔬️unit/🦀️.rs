@@ -1,6 +1,6 @@
 //! 🏛️ The Store's history ledger retirement returns original read sources and waits for live projection leases.
 use super::ArtifactStoreHistoryLedgerRetirement;
-use semio_framework_os_vcs::ArtifactHistoryLedger;
+use semio_os_vcs::ArtifactHistoryLedger;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactoryAuthority,FactoryRetirement,RetirementDemand,factory::OwnedValueRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedOwnedProjection};
 use std::sync::Arc;

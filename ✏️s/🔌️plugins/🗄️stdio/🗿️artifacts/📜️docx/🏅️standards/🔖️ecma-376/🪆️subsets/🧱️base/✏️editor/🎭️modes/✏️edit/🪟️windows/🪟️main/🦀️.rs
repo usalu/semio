@@ -7,12 +7,12 @@ use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxTextTargetKind;
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxXmlAddress;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
-use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
-use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::plugin_app_close_prelude::{Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionId, ActionKind, BuiltNode, PluginAssemblyError, TreeWindows, UiListBuilder, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
+use semio_plugin::plugin_app_close_prelude as ui;
+use semio_plugin::plugin_app_close_prelude::{Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::{ActionArgDef, ActionDefinition, ActionId, ActionKind, BuiltNode, PluginAssemblyError, TreeWindows, UiListBuilder, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
 pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
@@ -47,12 +47,12 @@ pub fn definition() -> WindowKindDefinition {
         ])
         .describe(LocalizedLabel::native("Sets direct bold, italic, and underline formatting when the run revision still matches.", "Setzt direkte Fett-, Kursiv- und Unterstreichungsformatierung, wenn die Textlaufrevision noch übereinstimmt."))
         .in_palette(false);
-    formatting.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+    formatting.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
     definition.actions.push(formatting);
     definition
 }
 
-fn address_value(address: &DocxXmlAddress) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn address_value(address: &DocxXmlAddress) -> semio_plugin::UiAssemblyResult<UiValue> {
     let mut path = UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.docx.address.path", "node path capacity"))?;
     for index in &address.node_path {
         path.push(UiValue::Number(*index as f64)).map_err(|_| PluginAssemblyError::new("stdio.docx.address.path", "node path capacity"))?;
@@ -66,13 +66,13 @@ fn address_value(address: &DocxXmlAddress) -> semio_framework_plugin::UiAssembly
     Ok(UiValue::Map(value.finish()))
 }
 
-fn address_arguments(address: &DocxXmlAddress) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn address_arguments(address: &DocxXmlAddress) -> semio_plugin::UiAssemblyResult<UiValue> {
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.docx.arguments", "argument map capacity"))?;
     arguments.try_insert("address".into(), address_value(address)?).map_err(|_| PluginAssemblyError::new("stdio.docx.arguments", "address argument capacity"))?;
     Ok(UiValue::Map(arguments.finish()))
 }
 
-fn formatting_arguments(address: &DocxXmlAddress, bold: bool, italic: bool, underline: bool) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+fn formatting_arguments(address: &DocxXmlAddress, bold: bool, italic: bool, underline: bool) -> semio_plugin::UiAssemblyResult<UiValue> {
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.docx.formatting.arguments", "formatting argument capacity"))?;
     arguments.try_insert("address".into(), address_value(address)?).map_err(|_| PluginAssemblyError::new("stdio.docx.formatting.arguments", "address argument capacity"))?;
     arguments.try_insert("bold".into(), UiValue::Bool(bold)).map_err(|_| PluginAssemblyError::new("stdio.docx.formatting.arguments", "bold argument capacity"))?;
@@ -87,7 +87,7 @@ struct RenderPage {
     formatting: Option<DocxRunFormatting>,
 }
 
-fn render_pages(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyResult<Vec<RenderPage>> {
+fn render_pages(document: &DocxSnapshot) -> semio_plugin::UiAssemblyResult<Vec<RenderPage>> {
     let mut pages = Vec::new();
     let block_count = docx_top_level_block_count(document).map_err(|error| PluginAssemblyError::new("stdio.docx.block-count", error.into_message()))?;
     for page_index in 0..block_count {
@@ -104,7 +104,7 @@ fn render_pages(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyRe
     Ok(pages)
 }
 
-pub fn editable_pages(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyResult<Vec<EditableDocumentPage>> {
+pub fn editable_pages(document: &DocxSnapshot) -> semio_plugin::UiAssemblyResult<Vec<EditableDocumentPage>> {
     Ok(render_pages(document)?.into_iter().map(|page| page.page).collect())
 }
 
@@ -128,7 +128,7 @@ fn direct_formatting_label(locale: Locale, en: &'static str, de: &'static str, s
     format!("{property} ({state})")
 }
 
-fn formatting_toolbar(address: &DocxXmlAddress, formatting: Option<DocxRunFormatting>, controller_id: &str, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<Option<BuiltNode>> {
+fn formatting_toolbar(address: &DocxXmlAddress, formatting: Option<DocxRunFormatting>, controller_id: &str, locale: Locale) -> semio_plugin::UiAssemblyResult<Option<BuiltNode>> {
     let Some(formatting) = formatting else { return Ok(None) };
     let action = ActionId::try_v1(controller_id, SET_RUN_FORMATTING_ACTION).ok_or_else(|| PluginAssemblyError::new("stdio.docx.formatting.action", "formatting action id exceeds the UI bound"))?;
     let bold = formatting.bold.unwrap_or(false);
@@ -159,8 +159,8 @@ pub fn render_windowed_for_controller(
     windows: &TreeWindows<'_>,
     locale: Locale,
     controller_id: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    publication_revision: semio_plugin::UiPublicationRevision,
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let pages = render_pages(document)?;
     let mut view_pages = Vec::with_capacity(pages.len());
     let mut accessories = Vec::with_capacity(pages.len());
@@ -174,11 +174,11 @@ pub fn render_windowed_for_controller(
     })
 }
 
-pub fn render(document: &DocxSnapshot, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &DocxSnapshot, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     render_windowed_for_controller(document, &TreeWindows::unhosted(), Locale::En, BASE_CONTROLLER_ID, publication_revision)
 }
 
-pub fn render_windowed(document: &DocxSnapshot, windows: &TreeWindows<'_>, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_windowed(document: &DocxSnapshot, windows: &TreeWindows<'_>, locale: Locale, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     render_windowed_for_controller(document, windows, locale, BASE_CONTROLLER_ID, publication_revision)
 }
 

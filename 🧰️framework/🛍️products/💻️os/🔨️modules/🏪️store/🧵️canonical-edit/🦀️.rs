@@ -1,9 +1,9 @@
 //! 🔏️ Store-owned canonical JSON traversal, byte accounting, and exact one-item sealing.
 
-use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemGrant};
+use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemGrant};
 use std::sync::Arc;
 use semio_framework_value::{DslValue, ErasedSnapshotRetirement, SnapshotRetirementFactory, ValueError};
-use semio_framework_os_spr::{Edit, HybridLogicalTimestamp, Mutation, MutationId, MutationMeta, UndoPolicy};
+use semio_os_spr::{Edit, HybridLogicalTimestamp, Mutation, MutationId, MutationMeta, UndoPolicy};
 use serde::Serialize;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_framework_value::{RetirementDemand, FactoryAuthority, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
@@ -115,8 +115,8 @@ enum CanonicalEditNode<'a, M> {
     Clock(&'a HybridLogicalTimestamp),
     Dependencies(&'a [MutationId]),
     Hash(&'a [u8; 32]),
-    Origin(&'a semio_framework_os_spr::MutationOrigin),
-    Target(&'a semio_framework_os_spr::ForeignTarget),
+    Origin(&'a semio_os_spr::MutationOrigin),
+    Target(&'a semio_os_spr::ForeignTarget),
     Scalar(ArtifactCanonicalJsonNode<'a>),
 }
 
@@ -159,9 +159,9 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
             }
             Self::Clock(_) => fields[..3].copy_from_slice(&[("actor", true), ("physical_ms", true), ("logical", true)]),
             Self::Origin(origin) => match origin {
-                semio_framework_os_spr::MutationOrigin::Owner => fields[0] = ("kind", true),
-                semio_framework_os_spr::MutationOrigin::Contributed { .. } => fields[..4].copy_from_slice(&[("kind", true), ("pluginId", true), ("mutationId", true), ("payloadHash", true)]),
-                semio_framework_os_spr::MutationOrigin::Transaction { .. } => fields[..2].copy_from_slice(&[("kind", true), ("initiator", true)]),
+                semio_os_spr::MutationOrigin::Owner => fields[0] = ("kind", true),
+                semio_os_spr::MutationOrigin::Contributed { .. } => fields[..4].copy_from_slice(&[("kind", true), ("pluginId", true), ("mutationId", true), ("payloadHash", true)]),
+                semio_os_spr::MutationOrigin::Transaction { .. } => fields[..2].copy_from_slice(&[("kind", true), ("initiator", true)]),
             },
             Self::Target(target) => fields[..3].copy_from_slice(&[("artifactId", true), ("artifactKind", true), ("dialect", target.dialect.is_some())]),
             _ => {}
@@ -215,15 +215,15 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
             Self::Dependencies(values) => Self::Scalar(N::String(&values.get(index).ok_or_else(invalid_path)?.0)),
             Self::Hash(value) => Self::Scalar(N::U64(u64::from(*value.get(index).ok_or_else(invalid_path)?))),
             Self::Origin(origin) => match origin {
-                semio_framework_os_spr::MutationOrigin::Owner if index == 0 => Self::Scalar(N::String("owner")),
-                semio_framework_os_spr::MutationOrigin::Contributed { plugin_id, mutation_id, payload_hash } => match index {
+                semio_os_spr::MutationOrigin::Owner if index == 0 => Self::Scalar(N::String("owner")),
+                semio_os_spr::MutationOrigin::Contributed { plugin_id, mutation_id, payload_hash } => match index {
                     0 => Self::Scalar(N::String("contributed")),
                     1 => Self::Scalar(N::String(plugin_id)),
                     2 => Self::Scalar(N::String(&mutation_id.0)),
                     3 => Self::Hash(&payload_hash.0),
                     _ => return Err(invalid_path()),
                 },
-                semio_framework_os_spr::MutationOrigin::Transaction { initiator } => match index {
+                semio_os_spr::MutationOrigin::Transaction { initiator } => match index {
                     0 => Self::Scalar(N::String("transaction")),
                     1 => Self::Target(initiator),
                     _ => return Err(invalid_path()),

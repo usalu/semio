@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeParamTolerance whe
         record: "ChangedParamTolerance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Tolerance against the section row (fillets) of the parametric section", "Parametrischer Querschnitt: Toleranz gegen den Querschnitt (Ausrundungen) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Tolerance against the section row (fillets) of the parametric section", "Parametrischer Querschnitt: Toleranz gegen den Querschnitt (Ausrundungen) ändern")
     }
 }
 

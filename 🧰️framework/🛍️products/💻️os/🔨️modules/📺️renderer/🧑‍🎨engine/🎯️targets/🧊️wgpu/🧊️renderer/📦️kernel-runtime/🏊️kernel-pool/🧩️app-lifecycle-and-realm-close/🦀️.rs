@@ -130,8 +130,8 @@ impl KernelPoolState {
         let compiled=match self.compile_serving_others(&owner,hash,component).await{Ok(compiled)=>compiled,Err(kind)=>return Err(owner.into_failure(kind).into())};
         let package_id=PackageId(plugin_id.to_owned());
         if !artifact_schema.is_empty() {
-            let codec = semio_framework_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema.to_owned()).map_err(|error| error.to_string())?;
-            semio_framework_os_kernel::os_store::codec_registry::register_component_document_codec(Arc::new(codec)).map_err(|error| error.to_string())?;
+            let codec = semio_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema.to_owned()).map_err(|error| error.to_string())?;
+            semio_os_kernel::os_store::codec_registry::register_component_document_codec(Arc::new(codec)).map_err(|error| error.to_string())?;
         }
         let instance_id = self.next_instance_id;
         self.next_instance_id += 1;
@@ -153,7 +153,7 @@ impl KernelPoolState {
             .map_err(|refusal| refusal.reason)?;
         self.replay_routes[replay_route_index] = Some(MountedReplayRouteSeed { actor, plugin: plugin_digest, package: hash.0, window: u64::from(instance_id), artifact: artifact_digest });
         self.instances.insert(instance_id, actor);
-        let assets = semio_framework_plugin_host::package_assets::package_assets_beside_module(&wasm_path).map_err(|message| format!("kernel: package assets of `{plugin_id}`: {message}"))?;
+        let assets = semio_plugin_host::package_assets::package_assets_beside_module(&wasm_path).map_err(|message| format!("kernel: package assets of `{plugin_id}`: {message}"))?;
         let open = Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(app_id.to_owned()),
@@ -164,7 +164,7 @@ impl KernelPoolState {
             quotas: QuotaSchema::default(),
         };
         let mut first_turn = Vec::with_capacity(2);
-        first_turn.extend(semio_framework_plugin_host::activation::activation_turn_event(&app_id));
+        first_turn.extend(semio_plugin_host::activation::activation_turn_event(&app_id));
         first_turn.push(open);
         self.run_turn(actor, instance_id, first_turn).await?;
         if let Some(modules_root) = wasm_path.parent().and_then(|dir| dir.parent()) {

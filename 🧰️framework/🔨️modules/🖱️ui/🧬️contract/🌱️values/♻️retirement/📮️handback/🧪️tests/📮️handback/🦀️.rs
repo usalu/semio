@@ -1,5 +1,5 @@
-use semio_framework_ui_contract_values::*;
-use semio_framework_ui_contract_values::testkit::*;
+use semio_ui_contract_values::*;
+use semio_ui_contract_values::testkit::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 use semio_framework_test_fixtures::fixture_text;
 

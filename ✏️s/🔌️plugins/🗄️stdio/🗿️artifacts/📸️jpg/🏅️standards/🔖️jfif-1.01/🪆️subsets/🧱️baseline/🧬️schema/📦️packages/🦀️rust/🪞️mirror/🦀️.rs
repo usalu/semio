@@ -151,6 +151,8 @@ pub mod standards {
 pub use semio_s_artifact_stdio_jpg_operations::examples;
 #[path = "."]
 pub mod editor {
+    #[path = "../../../../../🧾️document/✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-region/📜️declaration/🦀️.rs"]
+    pub mod paint_region_declaration;
     #[path = "."]
     pub mod jpg_any {
         #[path = "../../../../../🧾️document/✏️editor/🦀️.rs"]

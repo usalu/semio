@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeMemberLtbLength wh
         record: "ChangedMemberLtbLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Lateral-torsional buckling length L_LT of the member", "Bauteil: Kipplänge L_LT ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Lateral-torsional buckling length L_LT of the member", "Bauteil: Kipplänge L_LT ändern")
     }
 }
 

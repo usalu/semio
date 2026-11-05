@@ -2,7 +2,7 @@
 use crate::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_layout_layout_diff::{LayoutDiff,LayoutDataFieldsDelta,LayoutDataEntriesDelta,DataFieldsPresence,LayoutDataEntryRemoval,LayoutDataEntryInsertion,LayoutDataEntryRelocation};
-use semio_framework_os_kernel::RetainedFieldPreparation;
+use semio_os_kernel::RetainedFieldPreparation;
 use semio_framework_value_dictionary::QuestionDictionaryEntry;
 use semio_framework_value::{DslValue,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use super::plan::DataFieldsPlan;

@@ -1,6 +1,6 @@
 //! 📤️ Direct OPC package fields append into one enclosing admitted relational projection.
 use super::super::{mode, OpcPackage, OpcSqliteTables};
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{Cell, Projection};
+use semio_os_kernel::sqlite_snapshot::artifact::{Cell, Projection};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn ordinal(value: usize) -> Result<i64, ValueError> {
     i64::try_from(value).map_err(|_| ValueError::new(ValueRefusalKind::WorkLimit, "OPC ordinal exceeds SQLite integer width"))

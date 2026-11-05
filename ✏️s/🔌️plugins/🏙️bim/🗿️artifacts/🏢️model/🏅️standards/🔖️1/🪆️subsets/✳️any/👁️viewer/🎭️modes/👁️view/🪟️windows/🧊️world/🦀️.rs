@@ -7,7 +7,7 @@ use semio_s_artifact_bim_model_tests_5::render::world::{scene, WorldView};
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::{scene_surface, world3d_projection_measures, ActionDescriptor, BuiltNode, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_plugin::{scene_surface, world3d_projection_measures, ActionDescriptor, BuiltNode, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -53,13 +53,13 @@ pub struct Marks {
 /// 👁️ Pure `ModelSnapshot × ModelInference × window configuration × marks -> World3d surface`.
 pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerWorldWindowConfig, marks: &Marks) -> UiAssemblyResult<BuiltNode> {
     let view = WorldView { orbit: config.framed.then_some(&config.orbit), projection: &config.projection, hidden_storeys: &config.hidden_storeys, selected: &marks.selected, hovered: &marks.hovered };
-    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene(snapshot, &inference.element_solids, &view))
+    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene(snapshot, &inference.element_solids, &view))
 }
 //#endregion 🔖️Render
 
 //#region 🔖️Measures
 /// 🎚️ The window chrome: the projection preset tree and one visibility toggle per storey.
-pub fn measures(snapshot: &ModelSnapshot, config: &config::BimViewerWorldWindowConfig, labels: &BimViewerLabels, action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub fn measures(snapshot: &ModelSnapshot, config: &config::BimViewerWorldWindowConfig, labels: &BimViewerLabels, action: impl Fn(&str, Option<semio_plugin::DslValue>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let toggles = semio_s_artifact_bim_model_tests_5::render::storeys(snapshot)
         .into_iter()
         .map(|row| WindowMeasure::Toggle {
@@ -68,7 +68,7 @@ pub fn measures(snapshot: &ModelSnapshot, config: &config::BimViewerWorldWindowC
             label: Some(row.name),
             pressed: config.shows(&row.id),
             text: None,
-            on_change: action("setStoreyVisible", Some(semio_framework_plugin::DslValue::object([("storey".to_string(), semio_framework_plugin::DslValue::String(row.id))]))),
+            on_change: action("setStoreyVisible", Some(semio_plugin::DslValue::object([("storey".to_string(), semio_plugin::DslValue::String(row.id))]))),
         })
         .collect();
     vec![

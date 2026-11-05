@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "elements", kind: "place-elements", record: "PlaceElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Place {} element(s)", self.placements.len()), &format!("{} Element(e) platzieren", self.placements.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Place {} element(s)", self.placements.len()), &format!("{} Element(e) platzieren", self.placements.len()))
     }
     fn target(&self) -> Vec<String> {
         self.placements.keys().cloned().collect()

@@ -10,7 +10,7 @@ pub struct InsertConnection { pub index: usize, pub connection: TimberConnection
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertConnection where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_connection::RemoveConnection> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "connection", kind: "insert-connection", record: "InsertedConnection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert connection {} at #{}", self.connection.id, self.index), &format!("Verbindung {} an #{} einfügen", self.connection.id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert connection {} at #{}", self.connection.id, self.index), &format!("Verbindung {} an #{} einfügen", self.connection.id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.connection.id.clone()] }
 }
 

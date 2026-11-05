@@ -23,13 +23,13 @@ function commandRows(source: string): string[] {
   return [...source.matchAll(/^\s*"([^"]+)" as "[^"]+" =>/gm)].map((match) => match[1]!);
 }
 function manifestRows(source: string): Map<string, string> {
-  return new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
+  return new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
 }
 function publicationRows(source: string): string[] {
   return [...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes:/g)].map((match) => match[1]!);
 }
 function exactPublication(source: string, route: string, lanes: Lane[]): boolean {
-  const declared = lanes.map((lane) => `(?:semio_framework_plugin::)?ArtifactToolPublicationLane::${variant(lane)}`).join(",\\s*");
+  const declared = lanes.map((lane) => `(?:semio_plugin::)?ArtifactToolPublicationLane::${variant(lane)}`).join(",\\s*");
   return new RegExp(`ArtifactToolPublicationContract \\{ tool_id: "${route}", lanes: &\\[${declared}\\] \\}`).test(source);
 }
 function fixtureOracle(fixture: Fixture): boolean {
@@ -58,12 +58,12 @@ function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): bo
   const retainedContracts = retainedContractsStart >= 0 && retainedContractsEnd > retainedContractsStart ? retainedSource.slice(retainedContractsStart, retainedContractsEnd + 2) : "";
   const exactRetainedSource = fixture.owner === "FlowPlayApp"
     ? source.includes("impl semio_framework::ToolJobFactory for FlowHostEffectJobFactory")
-      && source.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFactory")
-      && source.includes("type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;")
+      && source.includes("impl semio_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFactory")
+      && source.includes("type Owner = semio_plugin::EditorApp<FlowPlayApp>;")
       && source.includes("registry.register(FlowHostEffectJobFactory::new(&controller))")
       && (!fixture.groups.some((group) => group.status === "migrated" && group.lanes.some((lane) => lane !== "host-only"))
         || source.includes("impl semio_framework::ToolJobFactory for FlowDirectStoreJobFactory")
-          && source.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobFactory")
+          && source.includes("impl semio_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobFactory")
           && source.includes("registry.register(FlowDirectStoreJobFactory::new(&controller))")
           && source.includes("fn build_artifact_store_one_item_preparation_factory()")
           && source.includes("authority.prepare_one_item(edit, Arc::new(post))")
@@ -81,7 +81,7 @@ function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): bo
       && exact(publicationRows(source), fixture.retainedRoutes)
       && fixture.groups.filter((group) => group.status === "migrated").every((group) => group.routes.every((route) => exactPublication(source, route, group.lanes)))
     : retainedSource.includes("impl semio_framework::ToolJobFactory for NoteCommandJobFactory")
-      && retainedSource.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for NoteCommandJobFactory")
+      && retainedSource.includes("impl semio_plugin::ArtifactOwnedToolJobFactory for NoteCommandJobFactory")
       && retainedSource.includes("type Owner = EditorApp<NotePlayApp>;")
       && retainedSource.includes("registry.register(NoteCommandJobFactory::new(&controller))")
       && source.includes("fn build_artifact_store_one_item_preparation_factory()")
@@ -93,11 +93,11 @@ function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): bo
     && fixture.groups.every((group) => group.routes.every((route) => pairs.get(route) === variant(group.status)))
     && (fixture.retainedRoutes.length === 0
       ? !source.includes("impl semio_framework::ToolJobFactory")
-        && !source.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory")
+        && !source.includes("impl semio_plugin::ArtifactOwnedToolJobFactory")
         && !source.includes("PUBLICATION_CONTRACTS")
         && publicationRows(source).length === 0
         && !source.includes("registry.register(")
-      : source.includes("semio_framework_plugin::bounded_first_step_tool_proofs!") && exactRetainedSource);
+      : source.includes("semio_plugin::bounded_first_step_tool_proofs!") && exactRetainedSource);
 }
 async function globalOracle(fixture: Fixture, source: string, pluginRoot: string): Promise<boolean> {
   if (fixture.owner === "FlowPlayApp") {
@@ -134,7 +134,7 @@ export async function runActionCohortAuditScript(context: Readonly<{ root: strin
     const pending = fixture.groups.find((group) => group.status === "batch-only-pending-rewrite")?.routes[0];
     const first = pending ?? fixture.groups.find((group) => group.status === "migrated")!.routes[0]!;
     const hostileActivation = source.replace(
-      new RegExp(`(\\.action_interactive_job\\("${first}",\\s*(?:semio_framework_plugin::)?InteractiveJobClassification::)${pending ? "BatchOnlyPendingRewrite" : "Migrated"}`),
+      new RegExp(`(\\.action_interactive_job\\("${first}",\\s*(?:semio_plugin::)?InteractiveJobClassification::)${pending ? "BatchOnlyPendingRewrite" : "Migrated"}`),
       `$1${pending ? "Migrated" : "BatchOnlyPendingRewrite"}`,
     );
     const forgedContract = `${source}\nArtifactToolPublicationContract { tool_id: "${first}", lanes: &[ArtifactToolPublicationLane::HostOnly] }`;

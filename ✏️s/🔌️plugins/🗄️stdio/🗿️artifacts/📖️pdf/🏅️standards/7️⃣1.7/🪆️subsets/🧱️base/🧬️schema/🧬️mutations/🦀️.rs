@@ -10,7 +10,7 @@
 use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfPage, PdfSnapshot};
 use semio_framework_value::{DslValue, FromValue, ToValue};
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_plugin::{Fault, FaultCode, FaultOrigin};
 use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector, SnapshotEditEvent};
 
 //#region 🔖️Leaves

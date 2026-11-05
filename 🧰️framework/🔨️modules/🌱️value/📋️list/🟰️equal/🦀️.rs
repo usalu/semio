@@ -1,5 +1,6 @@
 //! 🟰️ Borrowed scalar buffers compare only funded pages and retain no original payload.
-use crate::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits,RETAINED_CLONE_BULK_PAGE_BYTES}};
+use crate::{RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits,RETAINED_CLONE_BULK_PAGE_BYTES};
 use std::mem::size_of;
 
 /// 🔬️ Equality reads only the fixed inline representation and performs no allocation or borrowed-payload traversal.

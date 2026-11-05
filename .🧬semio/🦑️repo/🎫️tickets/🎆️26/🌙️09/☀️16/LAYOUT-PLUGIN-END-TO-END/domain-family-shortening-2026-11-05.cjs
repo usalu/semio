@@ -1,0 +1,18 @@
+const fs=require('fs');
+const t=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END";
+const eligible=p=>p&&!p.includes('AGENTS.md')&&!p.startsWith('.🧬semio/')&&!p.startsWith('.r/')&&!p.includes('/🗑️generated/')&&!(p.includes('path-envelope/')&&p.includes('fixtures/')&&p.endsWith('.json'));
+const list=n=>fs.readFileSync(t+'/🗑️generated/'+n,'utf8').split('\0').filter(eligible);
+const all=[...new Set([...list('current-tracked-namespace-files-2026-11-05.bin'),...list('domain-untracked-files-2026-11-05.bin')])];
+const manifestNames=[];
+for(const p of all.filter(p=>p.endsWith('/Cargo.toml')||p==='Cargo.toml')){if(!fs.existsSync(p))continue;const s=fs.readFileSync(p,'utf8');const block=s.match(/^\[package\]\s*\n([\s\S]*?)(?=^\[|$(?![\s\S]))/m);const name=block?.[1].match(/^name\s*=\s*"([^"]+)"/m)?.[1];if(name)manifestNames.push({manifest:p,name});}
+const mappings=manifestNames.filter(x=>/^semio-framework-(?:os(?:-|$)|ui(?:-|$)|plugin(?:-|$))/.test(x.name)&&!/^semio-framework-os-renderer(?:-|$)/.test(x.name)).map(x=>({manifest:x.manifest,old:x.name,new:x.name.replace(/^semio-framework-/,'semio-')}));
+const collisions=mappings.flatMap(m=>manifestNames.filter(x=>x.name===m.new&&x.manifest!==m.manifest).map(x=>({mapping:m,conflict:x})));
+for(const m of mappings)if(mappings.filter(x=>x.new===m.new).length>1)collisions.push({duplicate:m});
+if(collisions.length){fs.writeFileSync(t+'/domain-family-shortening-collisions-2026-11-05.md','# Namespace Collisions\n\n'+JSON.stringify(collisions,null,2));throw Error('Collisions '+collisions.length);}
+const pairs=mappings.flatMap(m=>[[m.old,m.new],[m.old.replaceAll('-','_'),m.new.replaceAll('-','_')]]).sort((a,b)=>b[0].length-a[0].length);
+const names=new Map(pairs);const pattern=new RegExp('(?:'+pairs.map(x=>x[0]).join('|')+')(?![A-Za-z0-9_-])','g');const transform=s=>s.replace(pattern,a=>names.get(a));
+const candidates=[...new Set([...list('domain-candidate-files-2026-11-05.bin'),...list('domain-untracked-files-2026-11-05.bin')])];
+const affected=[];
+for(const p of candidates){if(!fs.existsSync(p))continue;let st=fs.statSync(p);if(!st.isFile()||st.size>16*1024*1024)continue;const fd=fs.openSync(p,'r'),probe=Buffer.alloc(Math.min(st.size,4096));fs.readSync(fd,probe,0,probe.length,0);fs.closeSync(fd);if(probe.includes(0))continue;const s=fs.readFileSync(p,'utf8');if(transform(s)!==s)affected.push(p);}
+if(process.argv[2]==='apply'){const input=JSON.parse(fs.readFileSync(t+'/domain-family-shortening-input-2026-11-05.json','utf8'));const changed=[];for(const p of input.affectedFiles){const s=fs.readFileSync(p,'utf8'),next=transform(s);if(next!==s){fs.writeFileSync(p,next);changed.push(p);}}fs.writeFileSync(t+'/domain-family-shortening-changed-files-2026-11-05.md','# Domain Namespace Changed Files\n\n'+changed.map(p=>'- '+p).join('\n')+'\n');console.log(JSON.stringify({changed:changed.length,remaining:affected.length}));}
+else {const visited=new Set(JSON.parse(fs.readFileSync(t+'/conservative-browser-namespace-input-2026-11-05.json','utf8')).visited);const input={method:'Canonical whole OS excluding renderer, UI and plugin Rust family shortening; conservative source traversal selects path-envelope samples, not authoritative Cargo units',mappings,affectedFiles:affected,testPackages:mappings.filter(x=>visited.has(x.old)).map(x=>({manifest:x.manifest,name:x.new}))};fs.writeFileSync(t+'/domain-family-shortening-input-2026-11-05.json',JSON.stringify(input,null,2)+'\n');console.log(JSON.stringify({mappings:mappings.length,affected:affected.length,testPackages:input.testPackages.length,collisions:collisions.length}));}

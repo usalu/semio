@@ -1,11 +1,11 @@
 //! 🧰️ Catalog source discovery of the capabilities crate: Gateway capability declarations and the core catalog.
 
-use semio_framework_os_kernel::native_catalog::configured_native_catalog_v1;
+use semio_os_kernel::native_catalog::configured_native_catalog_v1;
 use std::path::Path;
 use crate::core_capabilities::core_tool_capabilities;
-use semio_framework_os_mcp_catalog::catalog::CatalogSource;
-use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::find_repo_root;
-use semio_framework_os_mcp_catalog::registry::RegistryDiscovery;
+use semio_os_mcp_catalog::catalog::CatalogSource;
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::find_repo_root;
+use semio_os_mcp_catalog::registry::RegistryDiscovery;
 
 //#region 🔖️DiscoverCatalogSource
 

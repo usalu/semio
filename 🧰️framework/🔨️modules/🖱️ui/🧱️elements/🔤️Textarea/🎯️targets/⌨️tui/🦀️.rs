@@ -1,11 +1,11 @@
 //! 📝️ Bounded multiline UTF8 editing, grapheme navigation and terminal painting.
 
-use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
-use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
-use semio_framework_ui_tui_core::text::{boundary_at_or_before, display_width, clusters as graphemes, next_boundary, previous_boundary};
-use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::{Pos, Rect};
+use semio_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
+use semio_ui_tui_core::text::{boundary_at_or_before, display_width, clusters as graphemes, next_boundary, previous_boundary};
+use semio_ui_tui_core::theme::{Role, Surface, Theme};
 
 const MAXIMUM_BYTES: usize = 1_048_576;
 const HISTORY_BYTES: usize = 16_777_216;

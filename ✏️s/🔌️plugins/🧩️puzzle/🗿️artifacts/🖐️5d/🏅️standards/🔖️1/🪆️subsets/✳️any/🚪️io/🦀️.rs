@@ -1,5 +1,4 @@
-//! 📨️ (called once from this file's own `io_registry::register()`), not per-leaf register().
-//! 🚪️ IO s.puzzle5d (1/✳️any) — registration now flows through 🎹️composer::register
+//! 🖐️5d Native artifact facets and canonical typed foreign-format routes.
 pub(crate) use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::io::puzzle5d_json;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
@@ -12,7 +11,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::Puzzle5dAnalyzer;
     use crate::Puzzle5dSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle5d", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -47,7 +46,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_TXT {
@@ -56,7 +55,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_ZIP {
@@ -65,7 +64,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
             }
@@ -76,90 +75,7 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-//#region 🚪️DerivedIoRegistry
-// 🚚️ Relocated verbatim from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-// `io_registry`/`ComposerEntry`/sniff/codec-dispatch belong to the artifact's own `🚪️io` node, never
-// to an engine facade. Internal calls are absolute crate paths, so they resolve identically here.
-pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::Puzzle5dBuilder as Puzzle5dAnyBuilder;
-    use crate::standards::v1::subsets::any::io::Puzzle5dComposer as Puzzle5dAnyComposer;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use std::sync::OnceLock;
 
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
-    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
-    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
-    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
-    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
-    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
-    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
-    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
-    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
-    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
-    const PUZZLE5D_DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle5d", standard: StandardId("1"), subset: SubsetId("*") };
-    const PUZZLE5D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::Puzzle5dSnapshot, ComposeError> {
-        if let Some(source) = sources.iter().find(|s| s.dialect == PUZZLE5D_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => Puzzle5dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => Puzzle5dAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-            };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "Puzzle5dComposer export: build() failed".into(), diagnostics });
-        }
-        if let Some(source) = sources.iter().find(|s| s.dialect == PUZZLE5D_JSON_BRIDGE_DIALECT) {
-            let bytes: Vec<u8> = match &source.payload {
-                IoPayload::Text(t) => t.as_bytes().to_vec(),
-                IoPayload::Binary(b) => b.clone(),
-            };
-            return crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
-        }
-        Err(ComposeError { message: "Puzzle5dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
-    }
-
-    const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-    fn compose_export_zip(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
-        })
-    }
-    const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
-        })
-    }
-    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
-        })
-    }
-    //#endregion 🔖️ExportEntries
-
-    pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    composer_entry_of::<Puzzle5dAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[PUZZLE5D_DIALECT], compose: compose_export_zip },
-                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PUZZLE5D_DIALECT], compose: compose_export_png },
-                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PUZZLE5D_DIALECT], compose: compose_export_json },
-                ]
-            })
-            .as_slice()
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
 
 //#region 🕸️BoardDrawing
 /// 🎲️ The assembly's 2D board as a node-link diagram: each visible part's `part_2d` circle or
@@ -211,7 +127,7 @@ pub mod derived_construction {
     use crate::Puzzle5dDiff;
     use crate::Puzzle5dMutation;
     use crate::Puzzle5dSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle5dBuilderConstruction {
@@ -261,7 +177,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::Puzzle5dSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle5dParts {
@@ -274,27 +190,27 @@ pub mod derived_analysis {
         type Parts = Puzzle5dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle5d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
+            semio_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Puzzle5dParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Puzzle5dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -306,7 +222,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec Puzzle5dBuilderFacets {
         construction: Puzzle5dBuilderConstruction,
         analysis: Puzzle5dAnalyzerAnalysis,
@@ -316,3 +232,6 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: Puzzle5dAnalyzer,
     composer: Puzzle5dComposer,
 );
+
+#[path="📇️routes/🦀️.rs"]
+pub mod routes;

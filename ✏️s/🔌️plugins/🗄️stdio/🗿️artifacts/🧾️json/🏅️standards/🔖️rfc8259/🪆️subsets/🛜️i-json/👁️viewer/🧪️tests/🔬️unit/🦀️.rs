@@ -1,12 +1,12 @@
 use crate::viewer::json_i_json::modes::view::windows::main;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::Viewer;
 use crate::viewer::json_i_json::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_json_i_json_viewer_builds_a_definition_for_the_viewer_role() {
     let def = create_json_i_json_viewer();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
+    assert_eq!(def.role, semio_plugin::AppRole::Viewer);
     assert_eq!(def.dialect, JSON_I_JSON_VIEWER_DIALECT.into());
 }
 

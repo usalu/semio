@@ -29,16 +29,16 @@ async fn translate_selection_persists_transform_into_flow_graph() {
 //#region 🛠️GumballTool
 /// 🧾️ Every applied history row that carries document operations, oldest first.
 async fn edit_rows(app: &mut context::Generation3dAppFixture) -> Vec<semio_framework::kernel::HistoryEntry> {
-    let mut rows: Vec<semio_framework::kernel::HistoryEntry> = semio_framework_plugin::PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
+    let mut rows: Vec<semio_framework::kernel::HistoryEntry> = semio_plugin::PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
     rows.sort_by_key(|entry| entry.seq);
     rows
 }
 
 /// 🎚️ One gumball tick exactly as the live `World3dHost` sends it (`phase` stream / commit / abort, the owning window).
 async fn tick(app: &mut context::Generation3dAppFixture, args: serde_json::Value) {
-    let action_meta = semio_framework_plugin::artifact_app_laws::meta("local");
+    let action_meta = semio_plugin::artifact_app_laws::meta("local");
     let args: semio_framework_value::DslValue = args.into();
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "translateSelection", Some(args.clone()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("translateSelection admitted");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "translateSelection", Some(args.clone()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("translateSelection admitted");
     context::settle(app).await;
 }
 
@@ -59,10 +59,10 @@ async fn a_gumball_drag_is_one_transaction_of_the_relative_leaf() {
     assert!(refs.iter().all(|transaction| transaction.id.starts_with("tx-") && transaction.tool == "s.procedural.generation3d@1/*#editor#translateSelection"), "{refs:?}");
     assert_ne!(refs[0].id, refs[1].id, "two drags are two transactions");
     assert!(rows[0].op_lines.last().is_some_and(|line| line.starts_with("drag-transforms")), "the first drag ends on its relative leaf: {:?}", rows[0].op_lines);
-    assert!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).starts_with("Drag 1 shape(s) by (1, 2, 3)"), "the declared intent leaf labels a first grab, never its splice (design §19.1)");
+    assert!(rows[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).starts_with("Drag 1 shape(s) by (1, 2, 3)"), "the declared intent leaf labels a first grab, never its splice (design §19.1)");
     assert!(rows[1].op_lines.iter().all(|line| line.starts_with("drag-transforms")), "a re-grab is the relative leaf alone: {:?}", rows[1].op_lines);
-    assert_eq!(rows[1].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 shape(s) by (0.5, 0, 0)");
-    assert_eq!(rows[1].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Form(en) um (0,5; 0; 0) ziehen");
+    assert_eq!(rows[1].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 1 shape(s) by (0.5, 0, 0)");
+    assert_eq!(rows[1].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "1 Form(en) um (0,5; 0; 0) ziehen");
     assert_eq!(crate::gumball_param_vector(&context::snapshot(&app).host_snapshot, "extrude__gumball_translate", "offset", [0.0; 3]), [1.5, 2.0, 3.0]);
 }
 
@@ -73,7 +73,7 @@ async fn a_streamed_gumball_drag_is_one_edit_and_an_abort_is_zero_trace() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
     let before = edit_rows(&mut app).await.len();
-    let rows_before = semio_framework_plugin::PluginApp::history_snapshot(&mut *app).await.expect("history").upserts.len();
+    let rows_before = semio_plugin::PluginApp::history_snapshot(&mut *app).await.expect("history").upserts.len();
     let committed = |app: &context::Generation3dAppFixture| crate::gumball_param_vector(&context::snapshot(app).host_snapshot, "extrude__gumball_translate", "offset", [0.0; 3]);
     for (dx, phase) in [(1.0, "stream"), (2.0, "stream"), (0.5, "commit")] {
         tick(&mut app, serde_json::json!({ "nodeIds": ["extrude"], "dx": dx, "dy": 0.0, "dz": 0.0, "phase": phase, "windowId": "preview-1" })).await;
@@ -88,7 +88,7 @@ async fn a_streamed_gumball_drag_is_one_edit_and_an_abort_is_zero_trace() {
     tick(&mut app, serde_json::json!({ "phase": "abort", "reason": "captureLost", "windowId": "preview-1" })).await;
     assert_eq!(committed(&*app), [3.5, 0.0, 0.0], "an aborted drag leaves zero trace");
     assert_eq!(edit_rows(&mut app).await.len() - before, 1, "and no row");
-    let rows_after = semio_framework_plugin::PluginApp::history_snapshot(&mut *app).await.expect("history").upserts.len();
+    let rows_after = semio_plugin::PluginApp::history_snapshot(&mut *app).await.expect("history").upserts.len();
     assert_eq!(rows_after - rows_before, 1, "a tick or an abort logs no session row of its own either");
 }
 /// 🎚️ One streamed (or released) gumball tick of `extrude` in window `preview-1`, as the live `World3dHost` sends it.
@@ -161,7 +161,7 @@ async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
             args["ids"] = serde_json::json!(["extrude"]);
             let args: semio_framework_value::DslValue = args.into();
             let action = dispatch["action"].as_str().expect("action");
-            semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{name}: {action} is admitted from the host's wire args: {fault:?}"));
+            semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{name}: {action} is admitted from the host's wire args: {fault:?}"));
             context::settle(&mut app).await;
         }
         let offset: Vec<f64> = case["guest"]["offset"].as_array().expect("offset").iter().map(|value| value.as_f64().expect("number")).collect();

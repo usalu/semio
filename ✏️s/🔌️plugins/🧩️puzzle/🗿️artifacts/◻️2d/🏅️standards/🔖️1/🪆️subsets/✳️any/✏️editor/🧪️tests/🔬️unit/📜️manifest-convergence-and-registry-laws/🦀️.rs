@@ -20,7 +20,7 @@ fn app_definition_has_three_lod_pane_window_kinds() {
 /// union at read time, so `WindowKindDefinition::actions` alone now holds only the window's own
 /// declarations (here: the framework-injected interaction verbs) and a law reading it sees none of
 /// the authored vocabulary.
-fn dispatchable_actions<'a>(definition: &'a semio_framework_plugin::AppDefinition, window: &'a semio_framework_plugin::WindowKindDefinition) -> Vec<&'a semio_framework_plugin::ActionDefinition> {
+fn dispatchable_actions<'a>(definition: &'a semio_plugin::AppDefinition, window: &'a semio_plugin::WindowKindDefinition) -> Vec<&'a semio_plugin::ActionDefinition> {
     semio_framework::window_kind_actions(definition, window)
 }
 
@@ -56,10 +56,10 @@ fn every_declared_action_resolves_to_a_command() {
                 id,
                 "undo" | "redo" | "commitCheckpoint" | "createAlternative" | "switchAlternative" | "checkoutCheckpoint" | "copy" | "cut" | "paste" | "revertToCommand" | "historyFilter" | "setHistoryCommandFilter" | "noteShellCommand" | "recordTutorial" | "interactionSelect" | "interactionHover" | "clearSelection" | "selectAll" | "setSelectionMode" | "setInteractionGranularity"
             ) || id == SET_ACTIVE_UTILITY_ACTION_ID
-                || id == semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID
-                || semio_framework_plugin::is_tool_run_action_id(id)
-                || semio_framework_plugin::is_time_travel_action_id(id)
-                || id == semio_framework_plugin::app::CANCEL_TYPED_OPERATION_ACTION_ID
+                || id == semio_plugin::SET_ACTIVE_TOOL_ACTION_ID
+                || semio_plugin::is_tool_run_action_id(id)
+                || semio_plugin::is_time_travel_action_id(id)
+                || id == semio_plugin::app::CANCEL_TYPED_OPERATION_ACTION_ID
                 || matches!(id, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::HOST_EVENT_ACTION_ID);
             if !reserved && Puzzle2dCommand::try_from_action(id, None, None).is_none() {
                 unresolved.push(id.to_string());
@@ -79,11 +79,11 @@ fn every_declared_action_resolves_to_a_command() {
 async fn settings_steppers_address_the_focused_pane_or_no_pane() {
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
-    let focused = semio_framework_plugin::ViewModel { focused_window_id: Some(crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID.into()), ..window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID) }.for_panel();
+    let focused = semio_plugin::ViewModel { focused_window_id: Some(crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID.into()), ..window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID) }.for_panel();
     let body = render_body_with_view(&mut app, settings::PUZZLE2D_PLAY_BODY_SETTINGS, &focused);
     assert!(body.contains("setFillCount"), "the settings body must carry the fill-count stepper: {}", &body[..body.len().min(300)]);
     assert!(body.contains(&format!("\"windowId\":\"{}\"", crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID)), "a stepper must address the focused pane: {}", &body[..body.len().min(600)]);
-    let unhosted = render_body_with_view(&mut app, settings::PUZZLE2D_PLAY_BODY_SETTINGS, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let unhosted = render_body_with_view(&mut app, settings::PUZZLE2D_PLAY_BODY_SETTINGS, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     close_app(&mut app);
     assert!(unhosted.contains("setFillCount") && !unhosted.contains("windowId"), "with no live pane the steppers must carry no windowId: {}", &unhosted[..unhosted.len().min(600)]);
 }
@@ -91,8 +91,8 @@ async fn settings_steppers_address_the_focused_pane_or_no_pane() {
 /// 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
 #[test]
 fn tool_registry_declares_fill_tool() {
-    use semio_framework_plugin::ToolRef;
-    use semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID;
+    use semio_plugin::ToolRef;
+    use semio_plugin::SET_ACTIVE_TOOL_ACTION_ID;
     let definition = create_puzzle2d_app();
     let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
     assert_eq!(tool_ids, vec![fill::TOOL_ID]);
@@ -148,8 +148,8 @@ async fn ingest_operations_is_idempotent() {
     let operations = envelopes;
 
     let mut receiver = app();
-    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
-    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
+    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
+    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
     assert_eq!(board_snapshot_nodes(&fixture_of(&receiver)).len(), 1, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
     close_app(&mut receiver);
@@ -198,10 +198,10 @@ async fn view_actions_emit_no_ops_through_the_registry() {
 /// combined) and the known `deleteSelection` destructive row stays last.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
-    use semio_framework_plugin::ContextMenuRequest;
-    use semio_framework_plugin::ContextMenuSelectionGroup;
-    use semio_framework_plugin::ContextMenuSurfaceTarget;
-    use semio_framework_plugin::UiMenuRef;
+    use semio_plugin::ContextMenuRequest;
+    use semio_plugin::ContextMenuSelectionGroup;
+    use semio_plugin::ContextMenuSurfaceTarget;
+    use semio_plugin::UiMenuRef;
 
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
@@ -212,7 +212,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = block_on(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
+    let menu = block_on(app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)));
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     assert_eq!(last.id, "deleteSelection", "the destructive row must stay last as a top-level leaf");

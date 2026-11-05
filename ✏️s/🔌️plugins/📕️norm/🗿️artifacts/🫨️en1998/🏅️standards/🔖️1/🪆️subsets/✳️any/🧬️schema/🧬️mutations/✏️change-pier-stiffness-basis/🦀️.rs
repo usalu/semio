@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangePierStiffnessBasis
         record: "ChangePierStiffnessBasis",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change pier: Stiffness basis (declared | computed)", "Pfeiler: Steifigkeitsbasis (declared | computed) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change pier: Stiffness basis (declared | computed)", "Pfeiler: Steifigkeitsbasis (declared | computed) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-pier-stiffness-basis".into()]

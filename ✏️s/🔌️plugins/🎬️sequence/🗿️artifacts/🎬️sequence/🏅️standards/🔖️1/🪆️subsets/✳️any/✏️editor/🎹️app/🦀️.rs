@@ -3,12 +3,12 @@
 use crate::editor::sequence::panels::catalogue as catalogue_panel;
 use crate::editor::sequence::panels::document as document_panel;
 use crate::editor::sequence::panels::inspection as inspection_panel;
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Media, MediaError, MediaPayload, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
+use semio_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Media, MediaError, MediaPayload, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 use std::collections::BTreeMap;
 use semio_framework_artifact_reference::Dialect;
 use semio_framework_2d_compute::EngineHandles;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_plugin::app::InteractionView;
+use semio_ui_locale::{Label, LocalizedLabel};
 use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceSnapshot, SequenceStep, SequenceWorkingScene, StepParams};
 use crate::mutations::SequenceMutation;
 use crate::editor::sequence::modes::edit::windows::script::transient::SequenceScriptWindowTransient;
@@ -43,8 +43,8 @@ pub struct SequencePlayApp;
 //#region 🧾️ProofCatalogs
 struct SequenceArtifactProofs;
 impl SequenceArtifactProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<SequencePlayApp>,
         owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
         artifact_schema: "sequence.sequence",
@@ -67,8 +67,8 @@ impl SequenceArtifactProofs {
 
 struct SequencePersistentProofs;
 impl SequencePersistentProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<SequencePlayApp>,
         owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
         artifact_schema: "sequence.sequence",
@@ -84,8 +84,8 @@ impl SequencePersistentProofs {
 
 struct SequenceConfigProofs;
 impl SequenceConfigProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<SequencePlayApp>,
         owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
         artifact_schema: "sequence.sequence",
@@ -101,8 +101,8 @@ impl SequenceConfigProofs {
 
 struct SequenceExampleProofs;
 impl SequenceExampleProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::EditorApp<SequencePlayApp>,
         owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
         artifact_schema: "sequence.sequence",
@@ -124,10 +124,10 @@ impl ArtifactEditor for SequencePlayApp {
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = SequenceCommand;
 
@@ -135,7 +135,7 @@ impl ArtifactEditor for SequencePlayApp {
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.child.projection"), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("sequence.child.projection"), error.to_string()))
     }
 
     /// 🔔️ The localized notices of the editor's own refusal codes (design §20.12).
@@ -152,18 +152,18 @@ impl ArtifactEditor for SequencePlayApp {
 }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<main::config::SequenceMainWindowConfigOwner>()
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         registry.register::<script::transient::SequenceScriptWindowTransientOwner>()
     }
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         SequenceArtifactProofs::bounded_first_step_tool_proofs()
             .into_iter()
             .chain(SequencePersistentProofs::bounded_first_step_tool_proofs())
@@ -172,7 +172,7 @@ impl ArtifactEditor for SequencePlayApp {
             .collect()
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(SequenceRetainedArtifactJobFactory::new(&controller))?;
         registry.register(SequencePersistentJobFactory::new(&controller))?;
@@ -184,22 +184,22 @@ impl ArtifactEditor for SequencePlayApp {
     /// reserved factory but never a concrete importer, so every inbound `steps:in` delivery is routed
     /// exclusively through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`);
     /// `copy`/`cut`/`paste` stay on the framework's own reserved factories.
-    fn build_reserved_tool_job(request: semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
+    fn build_reserved_tool_job(request: semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>) -> Result<Option<semio_plugin::ArtifactReservedToolJob>, Fault> {
         if request.tool_id.as_str() != SEQUENCE_IMPORT_TOOL_ID {
             return Ok(None);
         }
         if !request.raw_wire.is_empty() {
             return Err(sequence_fault("sequence.import-media.undecoded", "sequence import-media admits a decoded media value, never a wire payload"));
         }
-        let semio_framework_plugin::ArtifactReservedToolInput::Media { port, media } = &request.input else {
+        let semio_plugin::ArtifactReservedToolInput::Media { port, media } = &request.input else {
             return Err(sequence_fault("sequence.import-media.missing", "sequence import-media requires media input"));
         };
         let (port, media) = (port.clone(), media.clone());
-        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(SequenceImportJob::new(request, port, media))))
+        Ok(Some(semio_plugin::ArtifactReservedToolJob::new(SequenceImportJob::new(request, port, media))))
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let artifact_route = SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS.contains(&original.tool_id.as_str());
         let config_route = SEQUENCE_RETAINED_CONFIG_TOOL_IDS.contains(&original.tool_id.as_str());
         let persistent_route = SEQUENCE_PERSISTENT_TOOL_IDS.contains(&original.tool_id.as_str());
@@ -218,10 +218,10 @@ impl ArtifactEditor for SequencePlayApp {
             || (persistent_route && !persistent_admitted)
             || (example_route && !sequence_retained_example_command_admitted(&original.command))
         {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Sequence command does not match its exact retained route or payload envelope").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Sequence command does not match its exact retained route or payload envelope").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SequenceCommand::command_id, SEQUENCE_RETAINED_RAW_BYTES, if persistent_route {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SequenceCommand::command_id, SEQUENCE_RETAINED_RAW_BYTES, if persistent_route {
                 SEQUENCE_PERSISTENT_MAXIMUM_UNITS
             } else if artifact_route {
                 SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS
@@ -229,7 +229,7 @@ impl ArtifactEditor for SequencePlayApp {
                 SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS
             } else {
                 SEQUENCE_RETAINED_MAXIMUM_UNITS
-            }, false, |request| { let operation_context = semio_framework_plugin::AppOperationContext { retained: request.retained,
+            }, false, |request| { let operation_context = semio_plugin::AppOperationContext { retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,
@@ -237,17 +237,17 @@ impl ArtifactEditor for SequencePlayApp {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         }; if persistent_route {
-            (Box::new(SequencePersistentWork::new(tool_id, &operation_context)) as Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>>>)
+            (Box::new(SequencePersistentWork::new(tool_id, &operation_context)) as Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<SequencePlayApp>>>)
         } else if artifact_route {
-            (Box::new(SequenceRetainedArtifactWork::new(tool_id, &operation_context)) as Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>>>)
+            (Box::new(SequenceRetainedArtifactWork::new(tool_id, &operation_context)) as Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<SequencePlayApp>>>)
         } else if example_route {
-            (Box::new(SequenceRetainedExampleWork::new(tool_id, &operation_context)) as Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>>>)
+            (Box::new(SequenceRetainedExampleWork::new(tool_id, &operation_context)) as Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<SequencePlayApp>>>)
         } else {
-            (Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context)) as Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>>>)
+            (Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context)) as Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<SequencePlayApp>>>)
         } })
     }
 
-    fn reference_birth()->Option<fn()->Result<SequenceSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<SequenceSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::snapshot::schema::default_persisted_snapshot())
     })}
 
@@ -342,7 +342,7 @@ impl ArtifactEditor for SequencePlayApp {
         doc: &ArtifactView<'_, SequenceSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<SequenceMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -368,9 +368,9 @@ impl ArtifactEditor for SequencePlayApp {
 })())
 }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)
-            .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
+            .map_err(|error| semio_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
         let config = main::config::current(cfg);
         let transient = SequenceScriptWindowTransient::default();
         let labels = sequence_play_labels(view_state);
@@ -378,12 +378,12 @@ impl ArtifactEditor for SequencePlayApp {
             SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient),
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
-            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
-            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
+            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
+            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 
     /// 🕹️ `context_menu` carries no `InteractionView` (same gap as `render` above — see ticket
@@ -391,18 +391,18 @@ impl ArtifactEditor for SequencePlayApp {
     /// `sequence_context_menu_items` below always take the "nothing selected" branch here rather than
     /// reading a stale/wrong selection.
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, SequenceSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         _interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)
-            .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
+            .map_err(|error| semio_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
         let config = main::config::current(cfg);
         let transient = script::transient::current(transient);
         let labels = sequence_play_labels(view_state);
@@ -410,17 +410,17 @@ impl ArtifactEditor for SequencePlayApp {
             SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient),
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
-            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
-            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
+            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
+            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),
-        }.map(semio_framework_plugin::built_to_component_tree)
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),
+        }.map(semio_plugin::built_to_component_tree)
 
         })();
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         sequence_context_menu_items(registry, view_state, request.surface.as_ref(), &[])
     }
 }
@@ -433,9 +433,9 @@ impl ArtifactEditor for SequencePlayApp {
 /// itself. Factored out of `ArtifactApp::context_menu` (which carries no `InteractionView` — ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) so a test can exercise the selection-dependent
 /// rows directly with a real `selected` slice, matching `space`'s own precedent.
-pub fn sequence_context_menu_items(registry: &AppActionRegistry, view_state: &semio_framework_plugin::ViewModel, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
-    use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
-    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
+pub fn sequence_context_menu_items(registry: &AppActionRegistry, view_state: &semio_plugin::ViewModel, surface: Option<&semio_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
+    use semio_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+    let is_de = view_state.locale == semio_ui_locale::Locale::De;
 
     let (nodes, edges) = selection_domains_from_surface(surface, selected, &[]);
 
@@ -455,7 +455,7 @@ pub fn sequence_context_menu_items(registry: &AppActionRegistry, view_state: &se
         });
     }
 
-    menu.item(node_graph_delete_selection_spec(semio_framework_plugin::delete_selection().resolve(view_state.terminology, view_state.locale), view_state, &nodes, &edges, NodeGraphDeleteDispatch::Direct)).build()
+    menu.item(node_graph_delete_selection_spec(semio_plugin::delete_selection().resolve(view_state.terminology, view_state.locale), view_state, &nodes, &edges, NodeGraphDeleteDispatch::Direct)).build()
 }
 //#endregion 🔖️SequencePlayApp
 
@@ -480,7 +480,7 @@ pub fn create_sequence_app() -> AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"), ActionKind::Mutation).with_category("create"))
             .mutation("addStepToSlot", LocalizedLabel::native("Add Step To Slot", "Schritt zu Slot hinzufügen"))
             .mutation("addStepDropped", LocalizedLabel::native("Add Step Dropped", "Schritt per Ablegen hinzufügen"))
-            .action_audience("addStepDropped", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("addStepDropped", semio_plugin::CapabilityAudience::Input)
             .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
             .action_destructive("removeStep")
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
@@ -513,23 +513,23 @@ pub fn create_sequence_app() -> AppDefinition {
                     ActionArgOption::new("topBottom", LocalizedLabel::native("Top to Bottom", "Oben nach unten")),
                 ]).required(),
             ])
-            .action_interactive_job("addStep", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addStepToSlot", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addStepDropped", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeStep", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("moveStep", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("connectSteps", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("disconnectSteps", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setStepParams", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setStepCollapsed", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setOrientation", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("run", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("stop", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStep", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStepToSlot", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStepDropped", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeStep", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveStep", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("connectSteps", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("disconnectSteps", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStepParams", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStepCollapsed", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("reorganize", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphEdit", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setOrientation", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("run", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("stop", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setViewport", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_plugin::InteractiveJobClassification::Migrated)
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label())])
                     .required()
@@ -571,8 +571,8 @@ pub fn create_sequence_app() -> AppDefinition {
             .action_describe("setStepParams", LocalizedLabel::native("Replaces the parameters of one step with the given name-to-value map.", "Ersetzt die Parameter eines Schritts durch die angegebene Zuordnung von Namen zu Werten."))
             .action_describe("setStepCollapsed", LocalizedLabel::native("Collapses or expands one step on the canvas, hiding or showing its nested steps.", "Klappt einen Schritt auf der Fläche ein oder aus und verbirgt oder zeigt seine verschachtelten Schritte."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole sequence with the bundled demo sequence; any other example id changes nothing.", "Ersetzt die gesamte Sequenz durch die mitgelieferte Demo-Sequenz; jede andere Beispiel-Id ändert nichts."))
-            .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("setViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("nodeGraphEdit", semio_plugin::CapabilityAudience::Input)
+            .action_audience("setViewport", semio_plugin::CapabilityAudience::Chrome)
             .action_destructive("reorganize")
             .build_definition()
 }

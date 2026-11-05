@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentAnalysis
         record: "ChangeAssessmentAnalysisMethod",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Assessed element: Analysis method", "Bewertetes Bauteil: Berechnungsverfahren ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Assessed element: Analysis method", "Bewertetes Bauteil: Berechnungsverfahren ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-analysis-method".into()]

@@ -18,8 +18,8 @@ pub type SetScalarPayload = SetScalarMutation;
 impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetScalarMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "scalar", kind: "set-scalar", record: "SetScalar" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Scalar", "Skalar setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Scalar", "Skalar setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-scalar".to_string()]

@@ -4,15 +4,15 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::f64::consts::PI;
 // 🧬️ M2 fallout (terra-sdk-wire): `scene-surface` relocated `World3dScene`/
-// `world3d_default_selection_json` into `semio-framework-ui-scene`; `world3d_camera_json`/
+// `world3d_default_selection_json` into `semio-ui-scene`; `world3d_camera_json`/
 // `ActionDescriptor`/`MeasureSelectItem`/`WindowMeasure` were not part of that move and stay here.
-use semio_framework_ui_scene::world3d_default_selection_json;
-pub use semio_framework_ui_scene::{
+use semio_ui_scene::world3d_default_selection_json;
+pub use semio_ui_scene::{
     scene_lane_hash, SceneLanePayload, SceneLaneRef, World3dScene, World3dSceneLane, World3dAngle, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dDimension, World3dHighlight, World3dLeader, World3dLegendTick, World3dMarker, World3dMarkerShape, World3dModellingOptions, World3dPickGranularity, World3dPickTargets, World3dScalarDomain, World3dScalarField, World3dScalarLegend, World3dScalarRange, World3dSection, World3dSectionCap, World3dSubElementStyle, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
 };
-use semio_framework_ui_declaration::ui::world3d_camera_json;
-use semio_framework_ui_layout::layout::{ActionDescriptor, MeasureSelectItem, WindowMeasure};
-pub use semio_framework_plugin_window_kits::world3d_sun::{world3d_environment_json, world3d_scene, WorldSunConfig};
+use semio_ui_declaration::ui::world3d_camera_json;
+use semio_ui_layout::layout::{ActionDescriptor, MeasureSelectItem, WindowMeasure};
+pub use semio_plugin_window_kits::world3d_sun::{world3d_environment_json, world3d_scene, WorldSunConfig};
 /** 🌳️ Measure group with optional open state and no header slider fields. */
 fn measure_group_with_open(id: String, label: impl Into<String>, default_open: Option<bool>, children: Vec<WindowMeasure>) -> WindowMeasure {
     WindowMeasure::Group { id, label: label.into(), default_open, active_utility_id: None, value: None, min: None, max: None, step: None, ready: None, loading: None, waiting: None, on_change: None, children }

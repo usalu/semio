@@ -10,7 +10,7 @@ where
     Op: From<crate::standards::v1::subsets::any::schema::mutations::splice_text::SpliceText>,
 {
     Ok((|| {
-    let inverse = payload.splice().splice_into(&crate::writer_text(base), semio_framework_plugin::TEXT_SPLICE_CONTEXT_SCALARS).inverse;
+    let inverse = payload.splice().splice_into(&crate::writer_text(base), semio_plugin::TEXT_SPLICE_CONTEXT_SCALARS).inverse;
     vec![super::splice_text(inverse)]
 
     })())

@@ -5,19 +5,19 @@ use crate::editor::wfc2d::modes::edit;
 use crate::{editor::wfc2d::transient::Wfc2dTransient, editor::wfc2d::transient::Wfc2dTransientMutation};
 use crate::{mutations::delete_slot, mutations::disconnect_slots};
 use crate::{Wfc2dMutation, Wfc2dSnapshot, WFC_2D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::Effect;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
 use crate::editor::wfc2d::{create_wfc2d_editor, Wfc2dEditor, Wfc2dEditorCommand};
 use crate::editor::wfc2d::Wfc2dRetainedCommandJobFactory;
 use crate::editor::wfc2d::config::Wfc2dConfig;
 use crate::editor::wfc2d::modes::edit::windows::{graph, preview};
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 
-fn dispatch(command: &Wfc2dEditorCommand, document: &crate::Wfc2dSnapshot, config: &Wfc2dConfig) -> Result<semio_framework_plugin::Emit<crate::Wfc2dMutation, crate::editor::wfc2d::config::Wfc2dConfigMutation>, semio_framework_plugin::Fault> {
+fn dispatch(command: &Wfc2dEditorCommand, document: &crate::Wfc2dSnapshot, config: &Wfc2dConfig) -> Result<semio_plugin::Emit<crate::Wfc2dMutation, crate::editor::wfc2d::config::Wfc2dConfigMutation>, semio_plugin::Fault> {
     crate::editor::wfc2d::dispatch(command, document, config, "")
 }
 
@@ -121,9 +121,9 @@ fn the_host_render_path_paints_the_solved_assignment() {
     use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
     let document = crate::examples::two_room_corridor::document();
     let config = Wfc2dConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc = semio_framework_plugin::ArtifactView::new(&document, &history);
-    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let history = semio_plugin::HistoryView::empty();
+    let doc = semio_plugin::ArtifactView::new(&document, &history);
+    let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
 
     let solved = Wfc2dTransient {
         assignments: vec![
@@ -135,8 +135,8 @@ fn the_host_render_path_paints_the_solved_assignment() {
     };
     let empty = Wfc2dTransient::default();
 
-    let painted = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_framework_plugin::TransientView { snapshot: &solved, window: None }).expect("the host render path renders");
-    let unsolved = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_framework_plugin::TransientView { snapshot: &empty, window: None }).expect("the host render path renders unsolved too");
+    let painted = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_plugin::TransientView { snapshot: &solved, window: None }).expect("the host render path renders");
+    let unsolved = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_plugin::TransientView { snapshot: &empty, window: None }).expect("the host render path renders unsolved too");
     assert_ne!(format!("{painted:?}"), format!("{unsolved:?}"), "the transient lane never reached the preview window: a solved board rendered identically to an unsolved one");
 
     let solved_layers = preview::preview_layers_json(&document, &solved, None);
@@ -160,10 +160,10 @@ fn the_host_render_path_paints_bitmap_tiles_as_pixels() {
     assert!(!layers.contains("bitmap\",\"kind\":\"rect\""), "no bitmap tile may fall back to the outline placeholder here");
 
     let config = Wfc2dConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc = semio_framework_plugin::ArtifactView::new(&document, &history);
-    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
-    crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_framework_plugin::TransientView { snapshot: &transient, window: None }).expect("the raster board renders through the host path");
+    let history = semio_plugin::HistoryView::empty();
+    let doc = semio_plugin::ArtifactView::new(&document, &history);
+    let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
+    crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_plugin::TransientView { snapshot: &transient, window: None }).expect("the raster board renders through the host path");
 }
 
 //#region 🕹️GraphGestures
@@ -172,7 +172,7 @@ fn node_graph_rows_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"))).expect("the node-graph row fixture is JSON")
 }
 
-fn graph_edit(rows: serde_json::Value) -> Result<semio_framework_plugin::Emit<crate::Wfc2dMutation, crate::editor::wfc2d::config::Wfc2dConfigMutation>, semio_framework_plugin::Fault> {
+fn graph_edit(rows: serde_json::Value) -> Result<semio_plugin::Emit<crate::Wfc2dMutation, crate::editor::wfc2d::config::Wfc2dConfigMutation>, semio_plugin::Fault> {
     dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: rows.to_string() }, &crate::examples::two_room_corridor::document(), &Wfc2dConfig::default())
 }
 
@@ -321,14 +321,14 @@ fn the_example_picker_loads_a_document_instead_of_editing_one() {
 /// every one of its panes reached `data-shell-error` instead of `data-shell-ready`.
 #[test]
 fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let tools: std::collections::BTreeSet<&str> = crate::editor::wfc2d::WFC_2D_RETAINED_TOOL_IDS.iter().copied().collect();
     let publication: std::collections::BTreeSet<&str> = <Wfc2dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
     assert_eq!(publication, tools, "every owned tool declares exactly one publication-lane contract");
     for contract in <Wfc2dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
         assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
     }
-    let proofs: std::collections::BTreeSet<&str> = <Wfc2dEditor as semio_framework_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
+    let proofs: std::collections::BTreeSet<&str> = <Wfc2dEditor as semio_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
     assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }
 
@@ -366,4 +366,4 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_wfc2d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", Wfc2dEditor, || semio_framework_plugin::App { definition: create_wfc2d_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("wfc", Wfc2dEditor, || semio_plugin::App { definition: create_wfc2d_editor(), examples: Vec::new() }, "../..");

@@ -1,7 +1,7 @@
 //! 📦️ Original IFC Pack publication borrows graph payloads through funded canonical locators and one final wire owner.
 use super::{Frame, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA, pack_index::Index};
 use semio_framework_dsl_record::BorrowedDslRecord;
-use semio_framework_os_kernel::{NativeSnapshotEncodeOwner, OriginalPackWriting};
+use semio_os_kernel::{NativeSnapshotEncodeOwner, OriginalPackWriting};
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 use semio_framework_dsl_record::receiving::{NativeSnapshotFailure,receiving_turn};

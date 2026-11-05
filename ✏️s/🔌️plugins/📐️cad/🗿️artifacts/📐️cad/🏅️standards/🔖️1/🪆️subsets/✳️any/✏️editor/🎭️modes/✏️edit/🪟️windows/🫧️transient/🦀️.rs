@@ -4,7 +4,7 @@
 //! possible-select publish nothing durable and list no history row; only a commit lands, as one transform-tool transaction.
 
 
-extern crate semio_framework_os_kernel;
+extern crate semio_os_kernel;
 extern crate pack;
 
 /// 📐️ One CAD world window's engagement state — see the module doc and `🧬️schema/🔣️.json`.
@@ -26,7 +26,7 @@ impl Default for CadWorldWindowTransient {
 
 semio_framework_value::artifact_retire_struct!(CadWorldWindowTransient { engagement_input, engagement_step, engagement_pane, engagement_session_json, last_finalized_interaction_id });
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: CadWorldWindowTransient,
     mutation: CadWorldWindowTransientMutation,
     diff: CadWorldWindowTransientDiff,
@@ -39,7 +39,7 @@ semio_framework_plugin::transient_root! {
     fields: { engagement_input: String, engagement_step: String, engagement_pane: Option<String>, engagement_session_json: Option<String>, last_finalized_interaction_id: Option<String> },
 }
 
-semio_framework_plugin::window_transient_transfer! { state: CadWorldWindowTransient, mutation: CadWorldWindowTransientMutation }
+semio_plugin::window_transient_transfer! { state: CadWorldWindowTransient, mutation: CadWorldWindowTransientMutation }
 
 
 #[cfg(test)]

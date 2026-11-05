@@ -14,8 +14,8 @@ pub struct SetFloorElevation {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFloorElevation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "floor-elevation", kind: "set-floor-elevation", record: "SetFloorElevation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set floor elevation", "Geschosshöhenkote setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set floor elevation", "Geschosshöhenkote setzen")
     }
 
     fn target(&self) -> Vec<String> {

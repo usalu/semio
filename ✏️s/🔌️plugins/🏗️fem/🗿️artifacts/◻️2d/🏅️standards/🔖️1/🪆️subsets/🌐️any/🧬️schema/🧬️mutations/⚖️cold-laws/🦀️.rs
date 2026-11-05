@@ -1,5 +1,5 @@
 //! ⚖️ Reference-twin mutation laws: the cold forms of `vcs::apply_mutation` and the framework inverse-sum law, for mutations whose reference rows (`Fem2dSnapshotValue`) are plain data and need no fail-closed retirement.
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use protocol::{ColdDiffAlgebra, ColdMutation, ColdMutationDiff, MutationApplyError, MutationMessage};
 use semio_framework_value::ToValue;

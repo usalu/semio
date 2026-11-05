@@ -14,8 +14,8 @@ pub struct InsertLinetype {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertLinetype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "linetype", kind: "insert-linetype", record: "InsertLinetype" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert linetype", "Linientyp einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert linetype", "Linientyp einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

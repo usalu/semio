@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgePermanentGkN
         record: "ChangeBridgePermanentGkN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permanent action ΣG_k", "Ständige Einwirkung ΣG_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permanent action ΣG_k", "Ständige Einwirkung ΣG_k ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-permanent-gk-n".into()]

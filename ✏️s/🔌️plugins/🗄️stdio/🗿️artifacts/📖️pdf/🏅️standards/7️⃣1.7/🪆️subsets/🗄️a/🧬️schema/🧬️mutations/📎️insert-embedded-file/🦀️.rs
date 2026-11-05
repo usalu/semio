@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "embedded-file", kind: "insert-embedded-file", record: "Insert" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert embedded file \"{}\"", self.file_name), &format!("Eingebettete Datei \"{}\" einfügen", self.file_name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert embedded file \"{}\"", self.file_name), &format!("Eingebettete Datei \"{}\" einfügen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

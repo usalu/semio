@@ -14,8 +14,8 @@ pub struct AddElement {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for AddElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "element", kind: "add-element", record: "AddElement" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add element", "Element hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add element", "Element hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

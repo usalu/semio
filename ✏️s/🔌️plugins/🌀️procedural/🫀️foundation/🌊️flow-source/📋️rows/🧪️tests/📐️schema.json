@@ -1,0 +1,50 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "kind",
+      "index",
+      "rows",
+      "value",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "insert",
+          "replace",
+          "remove"
+        ]
+      },
+      "index": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "rows": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "value": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "expected": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

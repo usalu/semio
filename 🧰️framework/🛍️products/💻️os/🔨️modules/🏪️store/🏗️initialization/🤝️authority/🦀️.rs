@@ -1,7 +1,7 @@
 //! 🤝️ The domain-neutral seam between a retained store initializer and the job that drives it.
 
-use semio_framework_os_store_engine::lifted_store::ArtifactStore;
-use semio_framework_os_spr::Mutation;
+use semio_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_spr::Mutation;
 use semio_framework_value::{ToValue, FromValue};
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_value::{RetirementDemand, ValueError};
@@ -14,8 +14,8 @@ use semio_framework_value::{RetirementDemand, ValueError};
 /// only when its document initialization is more than a ledger replay.
 pub trait ArtifactStoreInitializationAuthority<P, M>: Send
 where
-    P: semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     /// ▶️ One bounded initializer turn under the job's retained wallet; `Ok(None)` means the turn could not afford an outcome.
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure>;

@@ -147,21 +147,21 @@ fn durable_json_carriers_preserve_numeric_kinds_and_reject_control_and_resource_
 #[test]
 fn durable_decision_rejects_deflate_expansion_before_document_body_allocation() {
     let decision = decision();
-    let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<DurableOwnedThreeMemberDecisionV1 as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).unwrap();
+    let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<DurableOwnedThreeMemberDecisionV1 as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1).unwrap();
     let mut expanded_record = decision.__dsl_to_record();
     expanded_record.fields.insert(u16::MAX, FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&vec![0u8; DURABLE_OWNED_GROUP_EVENT_MAX_BYTES + 1]).unwrap()));
     let mut expanded_options = PackEncodeOptions::default();
     expanded_options.chunk_threshold = u64::MAX;
     expanded_options.frame_size = u64::MAX;
     let expanded_inner = pack_rt::encode_document(&DurableOwnedThreeMemberDecisionV1::__dsl_spec(), &expanded_record, &expanded_options).unwrap();
-    let expanded = semio_framework_os_semio::wrap_binary(&envelope, &expanded_inner);
+    let expanded = semio_os_semio::wrap_binary(&envelope, &expanded_inner);
     assert!(expanded.len() <= DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     assert_eq!(DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&expanded), Err(DurableOwnedGroupDecisionError::EventTooLarge));
 
     let mut framed_options = PackEncodeOptions::default();
     framed_options.frame_size = 64;
     let framed_inner = pack_rt::encode_document(&DurableOwnedThreeMemberDecisionV1::__dsl_spec(), &decision.__dsl_to_record(), &framed_options).unwrap();
-    let framed = semio_framework_os_semio::wrap_binary(&envelope, &framed_inner);
+    let framed = semio_os_semio::wrap_binary(&envelope, &framed_inner);
     assert!(framed.len() <= DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     assert_eq!(DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&framed), Err(DurableOwnedGroupDecisionError::NonCanonical));
 }
@@ -184,7 +184,7 @@ fn durable_byte_carriers_preserve_octets_under_the_declared_ownership_ceiling() 
     let options = PackDecodeOptions {
         verification: PackVerificationLevel::Full,
         preserve_unknown: false,
-        limits: semio_framework_os_pack::PackLimits {
+        limits: semio_os_pack::PackLimits {
             max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
             max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
             max_symbols: 128,

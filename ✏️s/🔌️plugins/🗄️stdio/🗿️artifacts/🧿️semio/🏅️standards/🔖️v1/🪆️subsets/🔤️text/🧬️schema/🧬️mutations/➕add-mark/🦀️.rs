@@ -18,8 +18,8 @@ pub struct AddMark {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for AddMark {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "mark", kind: "add-mark", record: "AddedMarkToRun" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add mark to run #{} at #{}", self.run_index, self.index), &format!("Auszeichnung zu Textlauf #{} an #{} hinzufügen", self.run_index, self.index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add mark to run #{} at #{}", self.run_index, self.index), &format!("Auszeichnung zu Textlauf #{} an #{} hinzufügen", self.run_index, self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.run_index.to_string(), self.index.to_string()]

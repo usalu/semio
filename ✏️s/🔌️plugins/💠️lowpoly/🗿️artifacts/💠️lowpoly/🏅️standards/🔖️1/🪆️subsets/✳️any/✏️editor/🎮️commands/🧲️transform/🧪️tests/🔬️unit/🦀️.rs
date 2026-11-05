@@ -3,8 +3,8 @@
 //! leaves zero trace; two gestures are two transactions; and a gesture edited in history replays its downstream exactly
 //! like a fresh fold of the edited log.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_lowpoly_lowpoly_commands::transform::*;
@@ -15,11 +15,11 @@ use semio_s_artifact_lowpoly_lowpoly_mut_geometry::{move_selection::MoveSelectio
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_3d::mesh::VertexId;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use crate::context::{act, app, committed_edits, dispatch};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DOCUMENT_SCHEMA;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 /// 🧾️ The applied document rows of the session history, newest last.
 async fn edit_rows(app: &mut crate::context::LowpolyApp) -> Vec<semio_framework::kernel::HistoryEntry> {
@@ -40,8 +40,8 @@ async fn one_gumball_translate_is_one_edit_one_row_and_one_transaction() {
     let row = rows.last().expect("the gesture's row");
     let transaction = row.transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.lowpoly.lowpoly@1/*#editor#translateSelection", "the gumball tool authored it: {transaction:?}");
-    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), format!("Move \"{}\" by (0.5, 0, 0)", before.id));
-    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string(), format!("\"{}\" um (0,5; 0; 0) verschieben", before.id));
+    assert_eq!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string(), format!("Move \"{}\" by (0.5, 0, 0)", before.id));
+    assert_eq!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).to_string(), format!("\"{}\" um (0,5; 0; 0) verschieben", before.id));
     act(&mut a, "undo", serde_json::json!({})).await;
     assert_eq!(a.snapshot().expect("projection").objects[0].mesh, before.mesh, "one undo reverts the whole gesture");
 }
@@ -69,12 +69,12 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     let base = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let object_id = base.objects[0].id.clone();
-    let mut store = store::ArtifactStore::<LowpolySnapshot, LowpolyMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<LowpolySnapshot, LowpolyMutation>());
+    let mut store = store::ArtifactStore::<LowpolySnapshot, LowpolyMutation>::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    store.install_document_store_owners_exact(semio_plugin::bounded_document_store_owners::<LowpolySnapshot, LowpolyMutation>());
     let moved = |offset: [f32; 3]| LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), offset });
     let log = [moved([1.0, 0.0, 0.0]), LowpolyMutation::ScaleSelection(ScaleSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), pivot: [0.0; 3], factor: [2.0, 1.0, 1.0] }), LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: vec![0], offset: [0.0, 0.5, 0.0] })];
     for mutation in &log {
-        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = moved([0.0, 0.0, -2.0]);
@@ -88,9 +88,9 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let fresh = [edited, log[1].clone(), log[2].clone()].iter().fold(base.clone(), |state, mutation| protocol::apply_mutation(&state, mutation).expect("the edited log folds").0);
     assert_ne!(fresh, protocol::apply_mutation(&base, &log[0]).map(|(state, _)| state).expect("the original move applies"), "the edit changes the outcome");
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
-    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
-    let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<LowpolySnapshot, LowpolyMutation>();
+    let mut disposer = semio_plugin::bounded_document_store_disposer::<LowpolySnapshot, LowpolyMutation>();
     for _ in 0..4_096 {
         if disposer.terminal_is_empty(&store) {
             break;
@@ -106,7 +106,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
 /// ⏪️ One `historyEdit*` verb from the Model window; a refused verb fails the law.
 async fn history_edit(app: &mut crate::context::LowpolyApp, verb: &str, args: serde_json::Value) {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args), &crate::context::action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args), &crate::context::action_meta(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -117,7 +117,7 @@ async fn pump(app: &mut crate::context::LowpolyApp, done: impl Fn(Option<semio_f
         if done(stage) {
             return;
         }
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.0.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled");
@@ -158,7 +158,7 @@ async fn use_selection_retargets_a_vertex_move_onto_the_selected_vertices() {
 #[test]
 fn mesh_rows_name_the_references_of_their_granularity() {
     use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyPlayApp;
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     let kinds = |kind: &str| vec![kind.to_string()];
     let row = |object: &str, granularity: &str, id: u32| semio_s_artifact_lowpoly_lowpoly_view::document_target_row_id(object, granularity, id);
     assert_eq!(LowpolyPlayApp::selection_reference_id(&kinds("vertex"), &row("obj-1", "vertex", 12)), Some("12".to_string()));

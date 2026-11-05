@@ -1,9 +1,9 @@
 //! 🌱️ Canonical bounded UI values, collection arenas, serde and exact retirement.
 use serde::{Deserialize,Deserializer,Serialize,Serializer};
 use std::{fmt,mem::size_of,sync::{LazyLock,Mutex}};
-pub use semio_framework_ui_contract_budget::*;
-pub use semio_framework_ui_contract_text::{UiText,UiTextOriginalCopy,UI_TEXT_CLIP_MARK};
-pub use semio_framework_ui_contract_identity::{UiNodeId,UiRevision,SurfaceId};
+pub use semio_ui_contract_budget::*;
+pub use semio_ui_contract_text::{UiText,UiTextOriginalCopy,UI_TEXT_CLIP_MARK};
+pub use semio_ui_contract_identity::{UiNodeId,UiRevision,SurfaceId};
 pub const UI_VALUE_NONE:usize=usize::MAX;
 use semio_framework_value_persistent::list as fixed_list_storage;
 pub use fixed_list_storage::{PagedListAllocationError,PagedListError,PagedListProgress,PagedListRefusalKind};
@@ -123,3 +123,6 @@ pub mod testkit {
 
 #[path="🌱️original/🦀️.rs"]mod original;
 pub use original::{OriginalUiValueConversion,OriginalUiArgumentsMerge,OriginalUiArguments};
+
+#[path="🔤️text-chunks/🦀️.rs"]
+mod text_chunks;

@@ -28,14 +28,14 @@ fn raster_envelope_wire() -> Vec<u8> {
         ("conflicts".to_string(), semio_framework_pack_json::array([])),
     ]))
     .into_bytes();
-    let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-live-load", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     semio_s_artifact_raster_raster_model::close_raster_owner_cold(semio_s_artifact_raster_raster_host::raster_envelope_decode_owner_bundle().retire_envelope(envelope));
     wire
 }
 
 /// 🎟️ Reserves page/byte credits first, then feeds the wire as fixed-size pages and seals — the
 /// caller never holds a growable buffer and never sees the store the decode will publish into.
-fn admit_raster_envelope(app: &mut RasterAppFixture, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_raster_envelope(app: &mut RasterAppFixture, wire: &[u8]) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Raster live envelope ingress credits");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -50,11 +50,11 @@ fn admit_raster_envelope(app: &mut RasterAppFixture, wire: &[u8]) -> semio_frame
 
 /// 🔄️ Pumps the load one bounded maintenance turn at a time and polls after each — never inline,
 /// never unbounded.
-fn drive_raster_live_load(app: &mut RasterAppFixture, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_raster_live_load(app: &mut RasterAppFixture, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..100_000 {
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Raster live maintenance turn");
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Raster live maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Raster live load advancement");
-        if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+        if matches!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }
         std::thread::yield_now();
@@ -68,7 +68,7 @@ async fn raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_suc
     let base_generation = app.artifact_generation_now();
     let handle = admit_raster_envelope(&mut app, &raster_envelope_wire());
     assert_eq!(handle.generation, base_generation);
-    assert_eq!(drive_raster_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(drive_raster_live_load(&mut app, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("first exact Raster load acknowledgement"));
     assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate Raster load acknowledgement is a no-op"));
@@ -87,7 +87,7 @@ async fn raster_live_envelope_cancel_closes_retained_pages_without_publication()
     let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Raster first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Raster page admission failed: {}: {}", fault.code.0, fault.message));
     app.cancel_artifact_envelope_load(handle).expect("cancel exact Raster ingress");
-    assert_eq!(drive_raster_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+    assert_eq!(drive_raster_live_load(&mut app, handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.artifact_generation_now(), base_generation);
 }
 //#endregion 🔖️RetainedEnvelopeIngress
@@ -185,7 +185,7 @@ async fn raster_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn raster_labels_resolve_german_locale() {
     let mut app = app().await;
-    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
+    let view_state = semio_plugin::ViewModel { locale: semio_ui_locale::Locale::De, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native) };
     let layers_json = render_with_view(&mut app, document::RASTER_PLAY_BODY_LAYERS, &view_state).await;
     assert!(layers_json.contains("Pixel hinzufügen"));
     assert!(layers_json.contains("Gruppe hinzufügen"));
@@ -200,7 +200,7 @@ async fn raster_labels_resolve_german_locale() {
 async fn composite_scene_syncs_document_and_assets() {
     let mut app = semio_app().await;
     let json = render(&mut app, semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_BODY_COMPOSITE).await;
-    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::Paint2dScene>(&json).expect("paint-2d scene with its lanes");
+    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::Paint2dScene>(&json).expect("paint-2d scene with its lanes");
     assert!(json.contains("\"kind\":\"paint-2d\""), "{json}");
     assert_eq!(scene.view_mode, "composite");
     assert!(scene.document_sync_json.contains("\"layers\""), "the documentSync lane carries the layer forest: {}", scene.document_sync_json);

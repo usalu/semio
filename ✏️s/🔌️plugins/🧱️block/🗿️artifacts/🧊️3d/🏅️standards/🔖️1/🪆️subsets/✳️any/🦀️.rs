@@ -17,8 +17,8 @@ use semio_s_artifact_block_3d_schema as schema;
 use semio_s_artifact_block_3d_model::BLOCK3D_DIALECT;
 use semio_s_artifact_block_3d_editor as editor;
 use semio_s_artifact_block_3d_viewer as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {

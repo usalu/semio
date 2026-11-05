@@ -1,8 +1,8 @@
 //! 🔖️ v1 of `semio-s-artifact-sequence-sequence` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as dsl;
 
 pub use crate::snapshot::schema::SequenceSnapshot;
 pub use crate::snapshot::schema::default_host_snapshot;

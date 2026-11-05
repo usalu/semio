@@ -16,7 +16,7 @@
 //! Merge modes reuse `protocol::MergeMode` — the one wire vocabulary — instead of a bespoke
 //! `SpatialSelectionMode`.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_s_artifact_cad_cad_typology::{default_model_definition_id, is_shape_model_definition, load_typology, model_definition_selection_entity_kinds, model_definition_typology_ids, model_definition_uses_geometry_picking, resolve_typology_style, spatial_typology_toggle_label, ModelEntityKind, ResolvedTypologyStyle, PRIMITIVE_MODEL_ENTITY_KINDS};
 use semio_s_artifact_cad_cad_model::{geometry::CadEdge, geometry::CadEdgeCurve, geometry::CadFace, geometry::CadGeometry, geometry::CadObject, geometry::CadShell, geometry::CadSolid, geometry::CadVertex, geometry::CadWire};

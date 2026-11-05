@@ -6,7 +6,7 @@ pub mod dummy;
 pub mod job_close;
 #[path = "../🧬️mutation-fixtures-no-state/🦀️.rs"]
 pub mod no_state;
-pub extern crate semio_framework_plugin_surface_fixture as surface;
+pub extern crate semio_plugin_surface_fixture as surface;
 #[path = "../🧬️mutation-fixtures-transaction/🦀️.rs"]
 pub mod transaction;
 #[path = "../🧬️mutation-fixtures-wire/🦀️.rs"]

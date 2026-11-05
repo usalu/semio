@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for RemoveZone where Op: pr
         record: "RemovedZone",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove zone", "Zone entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove zone", "Zone entfernen")
     }
 }
 

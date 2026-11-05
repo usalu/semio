@@ -23,7 +23,7 @@ use store::sqlite_snapshot::artifact::FloatRow;
 use store::sqlite_snapshot::artifact::NativeEncodingBound;
 #[allow(unused_imports)]
 use std::{collections::BTreeMap, collections::BTreeSet};
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_0::subsets::any::io::sqlite::snapshot::*;
 
@@ -39,14 +39,14 @@ fn sqlite_snapshot_ply_declaration_count_patch_retains_unsigned_metadata(){
 }
 
 
-use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 
 fn fixture() -> PlySnapshot { semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_ply_actual_declaration_typed_and_erased_io_mount(){
  use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
- semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("PLY owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("PLY owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.ply".into(),standard:"1.0".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);let mut snapshot=fixture();snapshot.schema="actual registered PLY intermediate".into();snapshot.format=PlyFormat::BinaryBigEndian;snapshot.elements[0].count=u64::MAX;snapshot.elements[0].rows[0].values=vec![PlyValue::List(vec![PlyValue::Double(f64::from_bits(0xfff0000000001234)),PlyValue::Float(f32::from_bits(0xff800123))])];let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
  let export=io_route(&dialect,&sqlite,1).await.unwrap().value;let import=io_route(&sqlite,&dialect,1).await.unwrap().value;
  for encoding in[store::sqlite_snapshot::SnapshotEncoding::Binary,store::sqlite_snapshot::SnapshotEncoding::Text]{
@@ -136,7 +136,7 @@ fn sqlite_snapshot_exact_owned_coordinates_and_document_identity() {
     let mut wrong=database.clone();wrong.table_mut("ply_document").unwrap().rows[0].values[1]=SqliteValue::Text("different document".into());
     assert!(snapshot.validate_sqlite_snapshot_subset(&accepted,&wrong,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());
     assert!(snapshot.validate_sqlite_snapshot_subset(&accepted,&database,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());
-    assert!(<PlySnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
+    assert!(<PlySnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_ply_binary32_payloads_and_lists_survive_independent_sqlite() {
@@ -158,7 +158,7 @@ fn sqlite_snapshot_ply_binary32_payloads_and_lists_survive_independent_sqlite() 
 
 #[test]
 fn sqlite_snapshot_ply_native_encoding_preflight_admits_owned_model_and_refuses_budget_or_cancellation(){
- use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
+ use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let snapshot=PlySnapshot::default();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
@@ -170,7 +170,7 @@ fn sqlite_snapshot_ply_native_encoding_preflight_admits_owned_model_and_refuses_
 
 #[test]
 fn sqlite_snapshot_ply_native_encoding_preflight_bounds_escaped_text_and_cancels_borrowed_members(){
- use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
+ use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️encoding.json")).unwrap();
  let mut snapshot=PlySnapshot::default();snapshot.comments=vec!["\n\\\"".repeat(cases["largeTextBytes"].as_u64().unwrap() as usize)];snapshot.elements=vec![PlyElement{name:"x".into(),count:cases["workItems"].as_u64().unwrap(),properties:vec![PlyProperty::Scalar{name:"x".into(),kind:PlyScalarType::Double}],rows:vec![PlyRow{values:vec![PlyValue::Double(f64::from_bits(1))]};cases["workItems"].as_u64().unwrap() as usize]}];
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
@@ -184,7 +184,7 @@ fn sqlite_snapshot_ply_native_encoding_preflight_bounds_escaped_text_and_cancels
 fn sqlite_snapshot_ply_erased_binary_and_text_keep_owned_schema_exact_ieee_and_intermediate_state(){
  use store::sqlite_snapshot::SnapshotEncoding;
  let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️ieee754/🔣️.json")).unwrap();
- let coordinate=&cases["sqliteDialect"];let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:coordinate["artifactKind"].as_str().unwrap().into(),standard:coordinate["standard"].as_str().unwrap().into(),subset:coordinate["subset"].as_str().unwrap().into()};let codec=<PlySnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
+ let coordinate=&cases["sqliteDialect"];let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:coordinate["artifactKind"].as_str().unwrap().into(),standard:coordinate["standard"].as_str().unwrap().into(),subset:coordinate["subset"].as_str().unwrap().into()};let codec=<PlySnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
  for(index,word)in cases["binary64Bits"].as_array().unwrap().iter().enumerate(){let word=u64::from_str_radix(word.as_str().unwrap(),16).unwrap();let mut snapshot=fixture();snapshot.schema="owned PLY state".into();snapshot.elements[0].rows[0].values[0]=PlyValue::Double(f64::from_bits(word));snapshot.elements[0].rows[0].values[1]=PlyValue::Float(f32::from_bits(u32::from_str_radix(cases["binary32Bits"][index].as_str().unwrap(),16).unwrap()));
   let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
   for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema,&dialect,&mut Some(database.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(restored,database,"native erased snapshot must retain every owned field and IEEE word");}

@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "id": "one-original-leaf",
+      "values": [
+        7
+      ],
+      "expected": [
+        7
+      ],
+      "admitted": true
+    },
+    {
+      "id": "original-order",
+      "values": [
+        9,
+        2,
+        9,
+        1
+      ],
+      "expected": [
+        9,
+        2,
+        9,
+        1
+      ],
+      "admitted": true
+    },
+    {
+      "id": "empty-original-batch",
+      "values": [],
+      "expected": [],
+      "admitted": false
+    },
+    {
+      "id": "unsigned-boundary",
+      "values": [
+        0,
+        4294967295
+      ],
+      "expected": [
+        0,
+        4294967295
+      ],
+      "admitted": true
+    }
+  ]
+}

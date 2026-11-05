@@ -1,6 +1,6 @@
 //! 🧬️ remodeling artifact schema: the artifact facet, document ids and the artifact and snapshot format leaves.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 #[path = "."]

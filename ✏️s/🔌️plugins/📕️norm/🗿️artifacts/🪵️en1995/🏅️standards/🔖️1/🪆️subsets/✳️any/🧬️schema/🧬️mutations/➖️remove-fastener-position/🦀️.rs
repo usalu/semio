@@ -10,7 +10,7 @@ pub struct RemoveFastenerPosition { pub fastener_id: String, pub id: String }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for RemoveFastenerPosition where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::insert_fastener_position::InsertFastenerPosition> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "fastener-position", kind: "remove-fastener-position", record: "RemovedFastenerPosition" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove position {} from fastener {}", self.id, self.fastener_id), &format!("Lage {} aus Verbindungsmittelbild {} entfernen", self.id, self.fastener_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove position {} from fastener {}", self.id, self.fastener_id), &format!("Lage {} aus Verbindungsmittelbild {} entfernen", self.id, self.fastener_id)) }
     fn target(&self) -> Vec<String> { vec![self.fastener_id.clone(), self.id.clone()] }
 }
 

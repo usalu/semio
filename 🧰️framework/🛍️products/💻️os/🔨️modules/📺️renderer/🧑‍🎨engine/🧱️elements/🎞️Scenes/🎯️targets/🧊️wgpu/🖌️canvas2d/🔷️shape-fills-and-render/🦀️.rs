@@ -3,7 +3,7 @@
 use super::*;
 
 //#region Canvas2d
-fn push_shape_fill(draw: &mut semio_framework_ui_draw_contract::DrawList, rect: Rect, color: Rgba, is_circle: bool) {
+fn push_shape_fill(draw: &mut semio_ui_draw_contract::DrawList, rect: Rect, color: Rgba, is_circle: bool) {
     if is_circle {
         let cx = rect.x + rect.w * 0.5;
         let cy = rect.y + rect.h * 0.5;
@@ -14,7 +14,7 @@ fn push_shape_fill(draw: &mut semio_framework_ui_draw_contract::DrawList, rect: 
     }
 }
 
-fn push_circle_outline(draw: &mut semio_framework_ui_draw_contract::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32) {
+fn push_circle_outline(draw: &mut semio_ui_draw_contract::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32) {
     let points = canvas_circle_points(cx, cy, radius.max(0.5), CANVAS_CIRCLE_SEGMENTS);
     for i in 0..points.len() {
         let a = points[i];
@@ -23,7 +23,7 @@ fn push_circle_outline(draw: &mut semio_framework_ui_draw_contract::DrawList, cx
     }
 }
 
-fn push_shape_outline(draw: &mut semio_framework_ui_draw_contract::DrawList, rect: Rect, color: Rgba, width: f32, is_circle: bool, dash: Option<&[f64]>) {
+fn push_shape_outline(draw: &mut semio_ui_draw_contract::DrawList, rect: Rect, color: Rgba, width: f32, is_circle: bool, dash: Option<&[f64]>) {
     if is_circle {
         let cx = rect.x + rect.w * 0.5;
         let cy = rect.y + rect.h * 0.5;
@@ -41,7 +41,7 @@ fn push_shape_outline(draw: &mut semio_framework_ui_draw_contract::DrawList, rec
     }
 }
 
-pub fn push_linear_gradient_fill(draw: &mut semio_framework_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
+pub fn push_linear_gradient_fill(draw: &mut semio_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let (sx1, sy1) = viewport.world_to_screen((origin_x + fill.x1) as f32, (origin_y + fill.y1) as f32, inner);
     let (sx2, sy2) = viewport.world_to_screen((origin_x + fill.x2) as f32, (origin_y + fill.y2) as f32, inner);
     let dx = sx2 - sx1;
@@ -75,7 +75,7 @@ pub fn push_linear_gradient_fill(draw: &mut semio_framework_ui_draw_contract::Dr
     draw.pop_scissor();
 }
 
-pub fn push_radial_gradient_fill(draw: &mut semio_framework_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
+pub fn push_radial_gradient_fill(draw: &mut semio_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let (scx, scy) = viewport.world_to_screen((origin_x + fill.cx) as f32, (origin_y + fill.cy) as f32, inner);
     let sr = (fill.r as f32 * viewport.zoom).max(0.5);
     draw.push_scissor(clip);
@@ -90,7 +90,7 @@ pub fn push_radial_gradient_fill(draw: &mut semio_framework_ui_draw_contract::Dr
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per resolved paint/geometry input; grouping into a struct is a T2 restructure, out of scope")]
-pub fn render_canvas_shape_fill(draw: &mut semio_framework_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, shape_rect: Rect, layer: &CanvasLayer, opacity: f32, fallback_fill: Rgba, fallback_stroke: Rgba, backdrop: Rgba, is_circle: bool) {
+pub fn render_canvas_shape_fill(draw: &mut semio_ui_draw_contract::DrawList, viewport: &Viewport, inner: Rect, shape_rect: Rect, layer: &CanvasLayer, opacity: f32, fallback_fill: Rgba, fallback_stroke: Rgba, backdrop: Rgba, is_circle: bool) {
     let blend = layer.blend_mode.as_deref();
     match &layer.fill {
         Some(fill) if fill.kind.as_deref() == Some("linearGradient") && !fill.stops.is_empty() => {
@@ -191,7 +191,7 @@ pub fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fr
         draw_canvas_infinite_grid(ctx.draw, &viewport, inner, theme);
         order.vector();
         for page_index in 0..snapshot.page_count {
-            let _ = semio_framework_ui_declaration::ui::canvas2d_snapshot_with_page(snapshot, page_index, |page| {
+            let _ = semio_ui_declaration::ui::canvas2d_snapshot_with_page(snapshot, page_index, |page| {
                 for item in serde_json::Deserializer::from_slice(page.bytes()).into_iter::<Canvas2dPacketItem<'_>>().flatten() {
                     if item.kind == "line" {
                         render_canvas2d_packet_item(&item, &viewport, inner, ctx);
@@ -203,7 +203,7 @@ pub fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fr
                 }
             });
         }
-        semio_framework_os_renderer_wgpu_canvas2d_host::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
+        semio_renderer_wgpu_canvas2d_host::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
         order.close(ctx.draw);
         ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.host_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
         return;
@@ -305,7 +305,7 @@ pub fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fr
         order.quad(ctx.draw);
         draw_text(ctx, CANVAS_2D_EMPTY_LABEL, inner.x + inner.w * 0.5 - 36.0, inner.y + inner.h * 0.5, theme.font_size_small, theme.text_muted);
     }
-    semio_framework_os_renderer_wgpu_canvas2d_host::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
+    semio_renderer_wgpu_canvas2d_host::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
     order.close(ctx.draw);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.host_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
 }

@@ -6,11 +6,11 @@ use crate::editor::flow::host::host_from_snapshot;
 #[allow(unused_imports)]
 use crate::FlowMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, ExtensionInvocation, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, ExtensionInvocation, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::flow_eval_tick::*;

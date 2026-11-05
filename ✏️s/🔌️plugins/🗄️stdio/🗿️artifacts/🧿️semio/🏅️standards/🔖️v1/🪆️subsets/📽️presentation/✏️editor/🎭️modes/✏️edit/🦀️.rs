@@ -1,9 +1,9 @@
 //! ✏️ Semio Presentation editor — the `edit` mode: a single full-pane Main window.
 
 use crate::editor::modes::edit::windows::main;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::WindowLayout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::WindowLayout;
 
 pub const SEMIO_PRESENTATION_EDIT_MODE_ID: &str = "edit";
 

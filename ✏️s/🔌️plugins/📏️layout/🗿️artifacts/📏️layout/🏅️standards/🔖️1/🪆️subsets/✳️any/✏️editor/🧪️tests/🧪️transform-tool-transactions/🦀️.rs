@@ -6,7 +6,7 @@
 //! open transaction (previewed by that window, never history), and a cancelled gesture leaves zero trace. Time travel edits
 //! the yielded leaf's inputs (offset, pivot, targets) through the real `historyEdit*` verbs and replays the downstream.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[global_allocator]static ACTOR_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn actor_admission_turn<T>(cx:&mut semio_framework_job::StepContext<'_>,run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->T{
  let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run(cx));let after=cx.retained_progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));result.unwrap()
@@ -19,7 +19,7 @@ use semio_s_artifact_layout_layout_editor::{LayoutCommand, LayoutPlayApp, layout
 use semio_s_artifact_layout_layout_editor_commands::layout_select_action_args;
 use semio_s_artifact_layout_layout_editor::unit_tests::context::{layout_app_with_registry, scene, window_meta, LayoutApp, INSTANCE, WINDOW};
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::{artifact_app_laws, ArtifactEditor, DslValue, Fault, InvocationResult, PluginApp, INTERACTION_SELECT_ACTION_ID};
+use semio_plugin::{artifact_app_laws, ArtifactEditor, DslValue, Fault, InvocationResult, PluginApp, INTERACTION_SELECT_ACTION_ID};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_layout_layout_model::Frame;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
@@ -30,7 +30,7 @@ use serde_json::Value;
 /// composed results, local-interaction replies, completions and the history patch they carry — into `result`.
 async fn drain(app: &mut LayoutApp, result: &mut InvocationResult, fault: &mut Option<Fault>) -> Result<(), Fault> {
     while let Some(page) = app.0.take_typed_operation_result_page(INSTANCE) {
-        if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
+        if page.lane == semio_plugin::app::TypedOperationResultLane::Fault {
             fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
         }
         app.0.acknowledge_typed_operation_result(page.token)?;
@@ -76,28 +76,28 @@ async fn settle<E: std::fmt::Debug>(app: &mut LayoutApp, result: Result<Invocati
             assert!(fault.is_none(), "the operation faulted: {fault:?}");
             return result;
         }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("publication");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("publication");
         drain(app, &mut result, &mut fault).await.expect("drain");
     }
     panic!("the layout operation did not settle")
 }
 
 async fn run(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &window_meta(WINDOW), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &window_meta(WINDOW), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     settle(app, result).await
 }
 
 /// 🎟️ One framework verb through the borrowed action endpoint under the app's original caller, its pending turns driven to the admitted result.
 async fn act(app: &mut LayoutApp, action: &str, args: Option<DslValue>) -> Result<InvocationResult, semio_framework_job::OriginalTurnFailure> {
-    artifact_app_laws::dispatch_fixture_action(&mut app.0, action, args, &window_meta(WINDOW), &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await
+    artifact_app_laws::dispatch_fixture_action(&mut app.0, action, args, &window_meta(WINDOW), &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await
 }
 
 /// 🕰️ A framework-reserved verb (`undo`, `hostEvent`, …) from the Blueprint window.
 async fn reserved(app: &mut LayoutApp, action: &str, args: Option<Value>) -> InvocationResult {
     let args = args.map(|value| DslValue::from(&value));
     let admitted = act(app, action, args).await.unwrap_or_else(|fault| panic!("{action} is admitted: {fault:?}"));
-    let result = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await;
+    let result = semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await;
     settle(app, result).await
 }
 //#endregion 🔁️Settle
@@ -130,8 +130,8 @@ fn phase(phase: &str, reason: Option<&str>) -> LayoutCommand {
     LayoutCommand::TranslateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 0.0, dy: 0.0, phase: Some(phase.into()), reason: reason.map(str::to_string) })
 }
 
-fn label(entry: &HistoryEntry, locale: semio_framework_ui_locale::Locale) -> String {
-    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, locale).to_string()
+fn label(entry: &HistoryEntry, locale: semio_ui_locale::Locale) -> String {
+    entry.label.resolve(semio_ui_locale::Terminology::Native, locale).to_string()
 }
 
 /// 🧯️ Zero trace: no edit, no row, the document untouched and the window painting the document again.
@@ -163,8 +163,8 @@ async fn one_gumball_drag_is_one_edit_one_row_and_one_transaction() {
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.layout.layout@1/*#editor#translateSelection", "{transaction:?}");
     assert!(rows[0].op_lines.iter().any(|line| line.contains("DragFrames") && line.contains("frame-1") && line.contains("30")), "the op is the parametric leaf with the net offset: {:?}", rows[0].op_lines);
-    assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::En), "Drag 1 frame by (30, -6)");
-    assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::De), "1 Rahmen um (30; -6) ziehen");
+    assert_eq!(label(&rows[0], semio_ui_locale::Locale::En), "Drag 1 frame by (30, -6)");
+    assert_eq!(label(&rows[0], semio_ui_locale::Locale::De), "1 Rahmen um (30; -6) ziehen");
     assert_eq!(origin(&app, "frame-1"), (before.0 + 30.0, before.1 - 6.0));
     assert_eq!(painted(&mut app, "frame-1").await, (before.0 + 30.0, before.1 - 6.0), "the window paints the committed document");
     reserved(&mut app, "undo", None).await;
@@ -223,17 +223,17 @@ async fn one_shot_turns_and_scalings_are_one_transaction_each() {
     let rows = edit_rows(&turned);
     assert_eq!(rows.len(), 1);
     assert!(rows[0].transaction.as_ref().is_some_and(|transaction| transaction.tool.ends_with("#rotateSelection")));
-    assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::En), "Rotate 1 frame by 90°");
+    assert_eq!(label(&rows[0], semio_ui_locale::Locale::En), "Rotate 1 frame by 90°");
     let scaled = run(&mut app, LayoutCommand::ScaleSelection(semio_s_artifact_layout_layout_editor_commands::gumball::ScaleSelection { ids: vec!["frame-1".into()], sx: 2.0, sy: 2.0, phase: None, reason: None })).await;
     let rows = edit_rows(&scaled);
     assert_eq!(rows.len(), 1);
-    assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::De), "1 Rahmen um (2; 2) skalieren");
+    assert_eq!(label(&rows[0], semio_ui_locale::Locale::De), "1 Rahmen um (2; 2) skalieren");
     let before = app.0.snapshot().expect("the head before the multi-frame transforms");
     let pair = vec!["frame-1".to_string(), "frame-text-1".to_string()];
     let turned = run(&mut app, LayoutCommand::RotateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::RotateSelection { ids: pair.clone(), angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
-    assert_eq!(edit_rows(&turned).iter().map(|row| label(row, semio_framework_ui_locale::Locale::En)).collect::<Vec<_>>(), vec!["Rotate 2 frames by 90°".to_string()], "a two-frame turn is one row");
+    assert_eq!(edit_rows(&turned).iter().map(|row| label(row, semio_ui_locale::Locale::En)).collect::<Vec<_>>(), vec!["Rotate 2 frames by 90°".to_string()], "a two-frame turn is one row");
     let scaled = run(&mut app, LayoutCommand::ScaleSelection(semio_s_artifact_layout_layout_editor_commands::gumball::ScaleSelection { ids: pair, sx: 0.5, sy: 3.0, phase: None, reason: None })).await;
-    assert_eq!(edit_rows(&scaled).iter().map(|row| label(row, semio_framework_ui_locale::Locale::De)).collect::<Vec<_>>(), vec!["2 Rahmen um (0,5; 3) skalieren".to_string()], "a two-frame scaling is one row");
+    assert_eq!(edit_rows(&scaled).iter().map(|row| label(row, semio_ui_locale::Locale::De)).collect::<Vec<_>>(), vec!["2 Rahmen um (0,5; 3) skalieren".to_string()], "a two-frame scaling is one row");
     assert_ne!(app.0.snapshot().expect("the transformed head"), before);
     reserved(&mut app, "undo", None).await;
     reserved(&mut app, "undo", None).await;
@@ -251,7 +251,7 @@ async fn a_streamed_drag_of_two_frames_is_one_transaction() {
     run(&mut app, tick(4.0, "stream")).await;
     run(&mut app, tick(4.0, "stream")).await;
     let rows = edit_rows(&run(&mut app, tick(2.0, "commit")).await);
-    assert_eq!(rows.iter().map(|row| label(row, semio_framework_ui_locale::Locale::En)).collect::<Vec<_>>(), vec!["Drag 2 frames by (10, 3)".to_string()], "one gesture, one row, the net leaf");
+    assert_eq!(rows.iter().map(|row| label(row, semio_ui_locale::Locale::En)).collect::<Vec<_>>(), vec!["Drag 2 frames by (10, 3)".to_string()], "one gesture, one row, the net leaf");
     assert!(rows[0].transaction.is_some(), "the row is the gesture's transaction");
     assert_eq!((origin(&app, "frame-1"), origin(&app, "frame-text-1")), ((before.0 .0 + 10.0, before.0 .1 + 3.0), (before.1 .0 + 10.0, before.1 .1 + 3.0)));
     reserved(&mut app, "undo", None).await;
@@ -292,8 +292,8 @@ async fn mounted_original_follower_settles_and_closes_on_the_same_cancelled_sour
     assert_eq!((preview.0-before.0,preview.1-before.1),(row["preview"][0].as_f64().unwrap(),row["preview"][1].as_f64().unwrap()));
     let aborted = run(&mut app, phase("abort", Some("captureLost"))).await;
     assert_zero_trace(&mut app, &aborted, before, "original follower abort").await;
-    let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &stream(dx,dy), &window_meta(WINDOW), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-    let policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &stream(dx,dy), &window_meta(WINDOW), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+    let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items:1, ..policy.maintenance };
     let mut fault=None;
     for _ in 0..1_048_576 {
@@ -353,7 +353,7 @@ async fn pump(app: &mut LayoutApp, done: impl Fn(Option<semio_framework::kernel:
         if done(time_travel(app).await.map(|status| status.stage)) {
             return;
         }
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.0.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel(app).await);
@@ -433,7 +433,7 @@ async fn select(app: &mut LayoutApp, ids: &[&str]) {
     let ids: Vec<String> = ids.iter().map(|id| id.to_string()).collect();
     let args = layout_select_action_args(&ids, "replace");
     let admitted = act(app, INTERACTION_SELECT_ACTION_ID, Some(args)).await.unwrap_or_else(|fault| panic!("the selection is admitted: {fault:?}"));
-    let result = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await;
+    let result = semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await;
     settle(app, result).await;
 }
 
@@ -476,8 +476,8 @@ async fn a_drag_edited_onto_a_missing_frame_blocks_finalize_until_its_targets_ar
 /// left to the framework's generic chip.
 #[test]
 fn reference_chips_name_frames_by_kind_content_and_page() {
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::Terminology;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
     let document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let frame = ["frame".to_string()];
     let chip = |kinds: &[String], id: &str, locale| <LayoutPlayApp as ArtifactEditor>::entity_label(&document, kinds, id).map(|label| label.resolve(Terminology::Native, locale).to_string());
@@ -504,17 +504,17 @@ fn reference_chips_name_frames_by_kind_content_and_page() {
 /// 🧺️ The public original settlement retains partial lanes and restores commit order into the same funded backings.
 #[test]
 fn original_press_settlement_preserves_lane_backings_under_denial_commit_and_cancellation(){
-    use semio_framework_plugin_tool_run::tool_jobs_tool_machine::{OriginalPressSettlement,PressLeaf,ScrubTag};
+    use semio_plugin_tool_run::tool_jobs_tool_machine::{OriginalPressSettlement,PressLeaf,ScrubTag};
     use semio_framework_tool_machine::{ScrubLedger,ScrubPhase,OriginalScrubLedgerClose};
     use semio_framework_value::retirement::controlled::ControlledRetirement;
     use semio_framework_job::close_original_retained_step;
-    type A=semio_framework_plugin::EditorApp<LayoutPlayApp>;
-    type L=PressLeaf<LayoutMutation,semio_framework_plugin::NoConfigMutation>;
+    type A=semio_plugin::EditorApp<LayoutPlayApp>;
+    type L=PressLeaf<LayoutMutation,semio_plugin::NoConfigMutation>;
     let fixture:Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let row=&fixture["settlement"];
     for cancel in [false,true]{
         let mut caller=artifact_app_laws::OriginalFixtureScope::admit();
         let mut ledger=ScrubLedger::<L>::default();
-        let mut emit=semio_framework_plugin::Emit::<LayoutMutation,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoDraftMutation>::mutations(row["members"].as_array().unwrap().iter().map(|name|LayoutMutation::RenameLayout(semio_s_artifact_layout_layout_mutations_content::rename_layout::RenameLayout{new_name:name.as_str().unwrap().into()})).collect());
+        let mut emit=semio_plugin::Emit::<LayoutMutation,semio_plugin::NoConfigMutation,semio_plugin::NoDraftMutation>::mutations(row["members"].as_array().unwrap().iter().map(|name|LayoutMutation::RenameLayout(semio_s_artifact_layout_layout_mutations_content::rename_layout::RenameLayout{new_name:name.as_str().unwrap().into()})).collect());
         emit.child_emits.reserve_exact(2);emit.config_mutations.reserve_exact(2);emit.window_config_mutations.reserve_exact(2);
         let pointers=[emit.artifact_mutations.as_ptr()as usize,emit.child_emits.as_ptr()as usize,emit.config_mutations.as_ptr()as usize,emit.window_config_mutations.as_ptr()as usize];
         let mut tag=Some(ScrubTag{window:WINDOW.into(),tool:"s.layout.layout#renameLayout".into(),phase:ScrubPhase::Commit{gesture:"fixture-press".into()}});
@@ -548,7 +548,7 @@ fn original_press_settlement_preserves_lane_backings_under_denial_commit_and_can
 /// 🏷️ Original tag metadata keeps UTF-8 and its actual source loan through denial and partial cancellation.
 #[test]
 fn original_tool_tag_capture_preserves_exact_metadata_and_closes_partial_text(){
- use semio_framework_plugin_tool_run::tool_jobs_tool_machine::{OriginalToolTagCapture,OriginalToolTagSource,OriginalToolTagKind,OriginalToolWindow,ToolTag};
+ use semio_plugin_tool_run::tool_jobs_tool_machine::{OriginalToolTagCapture,OriginalToolTagSource,OriginalToolTagKind,OriginalToolWindow,ToolTag};
  use semio_framework_tool_machine::{ScrubPhase,ToolAbortReason};
  use semio_framework_job::close_original_retained_step;
  use semio_framework_value::retirement::controlled::ControlledRetirement;
@@ -563,7 +563,7 @@ fn original_tool_tag_capture_preserves_exact_metadata_and_closes_partial_text(){
   if cancel{caller.cx().original_source_parent().unwrap().cancellation().unwrap().cancel_now();assert!(caller.cx().is_cancelled());}
   else{for _ in 0..1_048_576{if owner.as_ref().unwrap().complete(){break}owner.as_mut().unwrap().advance(source,&mut tag,caller.cx()).unwrap();}assert!(owner.as_ref().unwrap().complete());let actual=match tag.as_ref().unwrap(){ToolTag::Scrub(value)=>{let phase=match value.phase{ScrubPhase::Tick{..}=>"tick",ScrubPhase::Commit{..}=>"commit",ScrubPhase::Abort{..}=>"abort"};serde_json::json!({"window":value.window,"tool":value.tool,"value":value.phase.gesture(),"kind":phase})},ToolTag::Typing(value)=>serde_json::json!({"window":value.window,"tool":value.tool,"value":value.buffer,"kind":"typing"})};let expected=serde_json::json!({"window":row["window"].as_str().unwrap_or(""),"tool":format!("{}#{}",source.app,source.action),"value":row["value"],"kind":row["kind"]});assert_eq!(actual,expected);println!("original-tool-tag={actual}");}
   for _ in 0..1_048_576{if owner.as_ref().unwrap().terminal_is_empty(){break}caller.cx().with_original_retirement(|same|owner.as_mut().unwrap().close_step(same)).unwrap();}assert!(owner.as_ref().unwrap().terminal_is_empty());let demand=owner.as_ref().unwrap().shell_close_demands();caller.cx().with_original_retirement(|same|close_original_retained_step(same,demand,|_|{owner.take();Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})).unwrap();
-  if !cancel{let mut returned=None;let operation=caller.cx().operation().0;assert!(!caller.cx().with_retained_loan(Default::default(),|same|semio_framework_plugin_scrub_host::OriginalToolTagRetirement::admit_owned(operation,&mut tag,same,&mut returned)).unwrap());assert!(tag.is_some());assert!(returned.is_none());assert!(semio_framework_plugin_scrub_host::OriginalToolTagRetirement::admit_owned(operation,&mut tag,caller.cx(),&mut returned).unwrap());assert!(tag.is_none());for _ in 0..1_048_576{if returned.as_ref().unwrap().terminal_is_empty(){break}caller.cx().with_original_retirement(|same|returned.as_mut().unwrap().close_step(same)).unwrap();}assert!(returned.as_ref().unwrap().terminal_is_empty());let demand=returned.as_ref().unwrap().shell_close_demands();caller.cx().with_original_retirement(|same|close_original_retained_step(same,demand,|_|{returned.take();Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})).unwrap();}
+  if !cancel{let mut returned=None;let operation=caller.cx().operation().0;assert!(!caller.cx().with_retained_loan(Default::default(),|same|semio_plugin_scrub_host::OriginalToolTagRetirement::admit_owned(operation,&mut tag,same,&mut returned)).unwrap());assert!(tag.is_some());assert!(returned.is_none());assert!(semio_plugin_scrub_host::OriginalToolTagRetirement::admit_owned(operation,&mut tag,caller.cx(),&mut returned).unwrap());assert!(tag.is_none());for _ in 0..1_048_576{if returned.as_ref().unwrap().terminal_is_empty(){break}caller.cx().with_original_retirement(|same|returned.as_mut().unwrap().close_step(same)).unwrap();}assert!(returned.as_ref().unwrap().terminal_is_empty());let demand=returned.as_ref().unwrap().shell_close_demands();caller.cx().with_original_retirement(|same|close_original_retained_step(same,demand,|_|{returned.take();Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})).unwrap();}
   let mut delivered=ControlledRetirement::retain(tag);for _ in 0..1_048_576{if delivered.terminal_is_empty(){break}let demand=delivered.next_demand(caller.cx().retained_grant().maximum_copy_bytes).unwrap();caller.cx().with_original_retirement(|same|close_original_retained_step(same,demand,|grant|delivered.step(grant))).unwrap();}assert!(delivered.terminal_is_empty());caller.retire();
  }}
 }
@@ -572,7 +572,7 @@ fn original_tool_tag_capture_preserves_exact_metadata_and_closes_partial_text(){
 #[test]
 fn original_metadata_copy_restores_after_expiry_without_renewing_clock_or_stock(){
  use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,close_original_retained_step};
- use semio_framework_plugin_decl_emission::{ActionMeta,OriginalActionMetaCopy};
+ use semio_plugin_decl_emission::{ActionMeta,OriginalActionMetaCopy};
  use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
  use semio_framework_value::retirement::controlled::ControlledRetirement;
  use std::sync::atomic::{AtomicU64,Ordering};
@@ -597,12 +597,12 @@ fn original_metadata_copy_restores_after_expiry_without_renewing_clock_or_stock(
 /// 🧶️ The genuine typing dispatcher retains one metadata owner until paid restoration or cancellation.
 #[test]
 fn original_typing_dispatch_retains_metadata_until_atomic_finish_or_cancel(){
- use semio_framework_plugin_instance_typed_ops::original_typing::OriginalTypingDispatch;
- use semio_framework_plugin_decl_emission::ActionMeta;
+ use semio_plugin_instance_typed_ops::original_typing::OriginalTypingDispatch;
+ use semio_plugin_decl_emission::ActionMeta;
  use semio_framework_tool_machine::TypingLedger;
  use semio_framework_job::close_original_retained_step;
  use semio_framework_value::retirement::controlled::ControlledRetirement;
- type A=semio_framework_plugin::EditorApp<LayoutPlayApp>;
+ type A=semio_plugin::EditorApp<LayoutPlayApp>;
  let fixture:Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let row=&fixture["typingMetadata"];
  for cancel in [false,true]{
   let mut caller=artifact_app_laws::OriginalFixtureScope::admit();let ledger=TypingLedger::<LayoutMutation>::default();let mut owner=OriginalTypingDispatch::<A>::default();
@@ -629,13 +629,13 @@ async fn direct_intent_typing_commit_requires_original_catalog_qualification(){
  let fixture:Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let law=&fixture["directIntentQualification"];
  for row in law["cases"].as_array().unwrap(){
   let mut app=layout_app_with_registry().await;let before=app.0.snapshot().unwrap();
-  let intent:semio_framework_ui_contract::UiIntent=serde_json::from_value(serde_json::json!({"surface":"qualification-law","revision":1,"node":1,"nodeKey":"typing-control","trigger":"commit","action":{"scope":law["scope"],"name":row["action"],"version":1},"seq":1})).unwrap();
+  let intent:semio_ui_contract::UiIntent=serde_json::from_value(serde_json::json!({"surface":"qualification-law","revision":1,"node":1,"nodeKey":"typing-control","trigger":"commit","action":{"scope":law["scope"],"name":row["action"],"version":1},"seq":1})).unwrap();
   let mut args=Some(DslValue::from(&serde_json::json!({"typing":law["typing"],"typingCommit":law["typingCommit"]})));let args_pointer=args.as_ref().unwrap()as*const _;let mut meta=Some(window_meta(WINDOW));let mut fault=None;let mut resolved=None;let mut rejected=false;
   let receipt=app.1.cx().retained_progress();let denied=app.1.cx().with_retained_loan(Default::default(),|same|semio_framework_async::poll::resolve_ready(app.0.handle_intent_frame(&intent,&mut args,&mut fault,&mut meta,&mut artifact_app_laws::fixture_identity(),same))).unwrap();assert!(denied.is_none());assert_eq!(app.1.cx().retained_progress(),receipt);assert_eq!(args.as_ref().unwrap()as*const _,args_pointer);
   for _ in 0..1_048_576{match app.0.handle_intent_frame(&intent,&mut args,&mut fault,&mut meta,&mut artifact_app_laws::fixture_identity(),app.1.cx()).await{Ok(Some(result))=>{resolved=Some(result);break},Ok(None)=>{},Err(_)=>{rejected=true;break}}}
   assert_eq!(rejected,!row["qualified"].as_bool().unwrap());assert_eq!(resolved.is_some(),row["qualified"].as_bool().unwrap());assert_eq!(app.0.snapshot().unwrap(),before);
   if let Some(result)=resolved{let result=settle(&mut app,Ok::<_,Fault>(result)).await;assert!(edit_rows(&result).is_empty());}
-  let policy=semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+  let policy=semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
   for _ in 0..1_048_576{if app.0.maintenance_source_terminal_is_empty(){break}app.1.cx().with_original_retirement(|same|app.0.maintenance_source_close_step(same,policy.close).map_err(|failure|failure.into())).unwrap();}assert!(app.0.maintenance_source_terminal_is_empty());
   println!("direct-intent-qualification={}",serde_json::json!({"action":row["action"],"qualified":!rejected,"suppressed":row["qualified"],"unchanged":app.0.snapshot().unwrap()==before,"closed":app.0.maintenance_source_terminal_is_empty()}));
   let mut sources=ControlledRetirement::retain((args,meta,fault));for _ in 0..1_048_576{if sources.terminal_is_empty(){break}let d=sources.next_demand(app.1.cx().retained_grant().maximum_copy_bytes).unwrap();app.1.cx().with_original_retirement(|same|close_original_retained_step(same,d,|g|sources.step(g))).unwrap();}assert!(sources.terminal_is_empty());app.close_fixture();
@@ -648,11 +648,11 @@ async fn direct_intent_cancelled_qualification_closes_before_typing_control(){
  use semio_framework_job::close_original_retained_step;
  use semio_framework_value::retirement::controlled::ControlledRetirement;
  let fixture:Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let law=&fixture["directIntentQualification"];let row=&law["cases"][1];let mut app=layout_app_with_registry().await;let before=app.0.snapshot().unwrap();
- let intent:semio_framework_ui_contract::UiIntent=serde_json::from_value(serde_json::json!({"surface":"qualification-law","revision":1,"node":1,"nodeKey":"typing-control","trigger":"commit","action":{"scope":law["scope"],"name":row["action"],"version":1},"seq":1})).unwrap();
+ let intent:semio_ui_contract::UiIntent=serde_json::from_value(serde_json::json!({"surface":"qualification-law","revision":1,"node":1,"nodeKey":"typing-control","trigger":"commit","action":{"scope":law["scope"],"name":row["action"],"version":1},"seq":1})).unwrap();
  let mut args=Some(DslValue::from(&serde_json::json!({"typing":law["typing"],"typingCommit":law["typingCommit"]})));let mut meta=Some(window_meta(WINDOW));let pointer=meta.as_ref().unwrap().actor.as_ptr();let mut fault=None;
  for _ in 0..3{assert!(app.0.handle_intent_frame(&intent,&mut args,&mut fault,&mut meta,&mut artifact_app_laws::fixture_identity(),app.1.cx()).await.unwrap().is_none());}
  assert!(!app.0.maintenance_source_terminal_is_empty());assert_eq!(meta.as_ref().unwrap().actor.as_ptr(),pointer);assert!(args.is_some());
- app.1.cx().original_source_parent().unwrap().cancellation().unwrap().cancel_now();let policy=semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+ app.1.cx().original_source_parent().unwrap().cancellation().unwrap().cancel_now();let policy=semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
  for _ in 0..1_048_576{if app.0.maintenance_source_terminal_is_empty(){break}app.1.cx().with_original_retirement(|same|app.0.maintenance_source_close_step(same,policy.close).map_err(|failure|failure.into())).unwrap();}assert!(app.0.maintenance_source_terminal_is_empty());assert_eq!(app.0.snapshot().unwrap(),before);assert_eq!(meta.as_ref().unwrap().actor.as_ptr(),pointer);
  println!("direct-intent-qualification-cancel={}",serde_json::json!({"unchanged":true,"metadataRetained":true,"argsRetained":args.is_some(),"closed":app.0.maintenance_source_terminal_is_empty()}));
  let mut sources=ControlledRetirement::retain((args,meta,fault));for _ in 0..1_048_576{if sources.terminal_is_empty(){break}let d=sources.next_demand(app.1.cx().retained_grant().maximum_copy_bytes).unwrap();app.1.cx().with_original_retirement(|same|close_original_retained_step(same,d,|g|sources.step(g))).unwrap();}assert!(sources.terminal_is_empty());app.1.cx().with_original_retirement(|same|artifact_app_laws::close_registered_fixture_app(&mut app.0,policy,same).map_err(|failure|failure.into())).unwrap();assert!(app.0.close_terminal_is_empty());
@@ -664,12 +664,12 @@ async fn direct_intent_qualified_action_rewrite_is_refused_without_control_effec
  use semio_framework_job::close_original_retained_step;
  use semio_framework_value::retirement::controlled::ControlledRetirement;
  let fixture:Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let law=&fixture["directIntentQualification"];let mut app=layout_app_with_registry().await;let before=app.0.snapshot().unwrap();
- let mut intent:semio_framework_ui_contract::UiIntent=serde_json::from_value(serde_json::json!({"surface":"qualification-law","revision":1,"node":1,"nodeKey":"typing-control","trigger":"commit","action":{"scope":law["scope"],"name":law["cases"][1]["action"],"version":1},"seq":1})).unwrap();
+ let mut intent:semio_ui_contract::UiIntent=serde_json::from_value(serde_json::json!({"surface":"qualification-law","revision":1,"node":1,"nodeKey":"typing-control","trigger":"commit","action":{"scope":law["scope"],"name":law["cases"][1]["action"],"version":1},"seq":1})).unwrap();
  let mut args=Some(DslValue::from(&serde_json::json!({"typing":law["typing"],"typingCommit":law["typingCommit"]})));let mut meta=Some(window_meta(WINDOW));let mut fault=None;
  for _ in 0..1_048_576{if meta.is_none(){break}assert!(app.0.handle_intent_frame(&intent,&mut args,&mut fault,&mut meta,&mut artifact_app_laws::fixture_identity(),app.1.cx()).await.unwrap().is_none());}
- assert!(meta.is_none(),"control must be pending after actual catalog qualification");let pointer=intent.action.name.as_str().as_ptr();let length=intent.action.name.as_str().len();intent.action.name=semio_framework_ui_contract::UiText::try_from_str(law["changedAction"].as_str().unwrap()).unwrap();assert_eq!(intent.action.name.as_str().as_ptr(),pointer);assert_eq!(intent.action.name.as_str().len(),length);
+ assert!(meta.is_none(),"control must be pending after actual catalog qualification");let pointer=intent.action.name.as_str().as_ptr();let length=intent.action.name.as_str().len();intent.action.name=semio_ui_contract::UiText::try_from_str(law["changedAction"].as_str().unwrap()).unwrap();assert_eq!(intent.action.name.as_str().as_ptr(),pointer);assert_eq!(intent.action.name.as_str().len(),length);
  let receipt=app.1.cx().retained_progress();assert!(app.0.handle_intent_frame(&intent,&mut args,&mut fault,&mut meta,&mut artifact_app_laws::fixture_identity(),app.1.cx()).await.is_err());assert_eq!(app.1.cx().retained_progress(),receipt);assert!(meta.is_none());assert_eq!(app.0.snapshot().unwrap(),before);
- app.1.cx().original_source_parent().unwrap().cancellation().unwrap().cancel_now();let policy=semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+ app.1.cx().original_source_parent().unwrap().cancellation().unwrap().cancel_now();let policy=semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
  for _ in 0..1_048_576{if app.0.maintenance_source_terminal_is_empty(){break}app.1.cx().with_original_retirement(|same|app.0.maintenance_source_close_step(same,policy.close).map_err(|failure|failure.into())).unwrap();}assert!(app.0.maintenance_source_terminal_is_empty());
  println!("direct-intent-qualification-rewrite={}",serde_json::json!({"samePointer":true,"sameLength":true,"refused":true,"unchanged":app.0.snapshot().unwrap()==before,"closed":app.0.maintenance_source_terminal_is_empty()}));
  let mut sources=ControlledRetirement::retain((args,meta,fault));for _ in 0..1_048_576{if sources.terminal_is_empty(){break}let d=sources.next_demand(app.1.cx().retained_grant().maximum_copy_bytes).unwrap();app.1.cx().with_original_retirement(|same|close_original_retained_step(same,d,|g|sources.step(g))).unwrap();}assert!(sources.terminal_is_empty());app.1.cx().with_original_retirement(|same|artifact_app_laws::close_registered_fixture_app(&mut app.0,policy,same).map_err(|failure|failure.into())).unwrap();assert!(app.0.close_terminal_is_empty());

@@ -1,5 +1,5 @@
 //! 🏭️ Owner-local production mutation inventory; all coordinates and descriptors belong to this artifact.
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use protocol::Mutation;
 use semio_framework_test_mutation_inventory::{inventory_for_command, replication_inventory_leaves, MutationInventoryContribution, MutationInventoryCoordinate, MutationInventoryError, MutationInventoryLeaf, MutationInventoryProgress};
 use std::io::Write;

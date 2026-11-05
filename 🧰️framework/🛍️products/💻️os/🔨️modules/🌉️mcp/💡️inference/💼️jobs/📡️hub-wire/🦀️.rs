@@ -1,11 +1,11 @@
 //! 📡️ Hub wire of the inference-hub crate: Inference job wire, hub inference client and bindings.
 
 use semio_framework_async::OperationContext;
-use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::DocumentScope;
 use std::sync::Arc;
 use crate::service::{call_remote_inference_v1, remote_inference_protocol_v1};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::opaque_json::{INFERENCE_RESPONSE_MAX_BYTES, dsl_json, dsl_json_optional};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::opaque_json::{INFERENCE_RESPONSE_MAX_BYTES, dsl_json, dsl_json_optional};
 
 //#region 🔖️Wire
 
@@ -372,13 +372,13 @@ pub trait InferenceHubTransport: Send + Sync {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct NativeInferenceHubTransport<R: semio_framework_async::HostAsyncRuntime> {
-    pub transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>,
-    pub credential: Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>,
+    pub transport: semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>,
+    pub credential: Arc<semio_os_kernel::os_directory::client::LocalHubCredential>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R: semio_framework_async::HostAsyncRuntime> NativeInferenceHubTransport<R> {
-    pub fn new(transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>, credential: Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>) -> Self {
+    pub fn new(transport: semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>, credential: Arc<semio_os_kernel::os_directory::client::LocalHubCredential>) -> Self {
         Self { transport, credential }
     }
 }
@@ -386,7 +386,7 @@ impl<R: semio_framework_async::HostAsyncRuntime> NativeInferenceHubTransport<R> 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R: semio_framework_async::HostAsyncRuntime + 'static> InferenceHubTransport for NativeInferenceHubTransport<R> {
     async fn request(&self, context: &OperationContext, request: &InferenceHubRequestV1) -> Result<InferenceHubResponseV1, InferenceHubTransportErrorV1> {
-        use semio_framework_os_kernel::os_directory::client::{HttpMethod, TransportError};
+        use semio_os_kernel::os_directory::client::{HttpMethod, TransportError};
         if self.credential.hub_origin().trim_end_matches('/') != request.hub_origin.trim_end_matches('/') {
             return Err(InferenceHubTransportErrorV1::InvalidRequest("inference request authority mismatch"));
         }
@@ -458,7 +458,7 @@ fn remote_payload(value:serde_json::Value)->Result<semio_framework_value::DslVal
 }
 
 fn remote_projection<T:serde::de::DeserializeOwned>(value:semio_framework_value::DslValue)->Result<T,InferenceRouteErrorV1> {
-    semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(&value,INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|if code==semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1::Bounds {InferenceRouteErrorV1::Bounds}else{InferenceRouteErrorV1::Invalid})?;
+    semio_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(&value,INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|if code==semio_os_kernel::os_directory::client::DocumentHttpPortCodeV1::Bounds {InferenceRouteErrorV1::Bounds}else{InferenceRouteErrorV1::Invalid})?;
     serde_json::from_str(&semio_framework_pack_json::to_json_string(&value)).map_err(|_|InferenceRouteErrorV1::Invalid)
 }
 

@@ -2,7 +2,7 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[cfg(test)]
 pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;

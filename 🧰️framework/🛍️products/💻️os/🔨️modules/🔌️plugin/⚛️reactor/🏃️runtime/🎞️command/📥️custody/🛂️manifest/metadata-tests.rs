@@ -28,7 +28,7 @@ pub fn original_manifest_metadata_retains_native_view_and_every_cancel_prefix(){
 
 #[doc(hidden)]
 pub fn original_manifest_surface_refresh_law(){
- use semio_framework_plugin_plugin_program::surface_context::{SurfaceContexts,OriginalSurfaceRefresh};
+ use semio_plugin_plugin_program::surface_context::{SurfaceContexts,OriginalSurfaceRefresh};
  let law:serde_json::Value=serde_json::from_str(include_str!("metadata.json")).unwrap();
  for cut in [0,1,8,32,128,1024,1000000]{
   let mut value=law["view"].clone();value["panelJson"]=serde_json::Value::String("α🙂".repeat(8197));let original=DslValue::from(&value);let mut bytes=store::pack_rt::encode_wire_value(&original);let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut metadata=None;let mut limits=store::os_pack::PackLimits::default();limits.max_total_alloc=1<<24;limits.max_depth=64;
@@ -53,7 +53,7 @@ pub fn original_manifest_surface_read_law(){surface_read_law(false)}
 #[doc(hidden)]
 pub fn original_manifest_binding_read_law(){surface_read_law(true)}
 fn surface_read_law(selected:bool){
- use semio_framework_plugin_plugin_program::surface_context::{SurfaceContexts,OriginalSurfaceViewCapture};
+ use semio_plugin_plugin_program::surface_context::{SurfaceContexts,OriginalSurfaceViewCapture};
  let read_law:serde_json::Value=serde_json::from_str(include_str!("binding-read.json")).unwrap();let surface=read_law["surface"].as_str().unwrap();
  let law:serde_json::Value=serde_json::from_str(include_str!("metadata.json")).unwrap();
  for cut in [0,1,8,32,128,1024,1000000]{

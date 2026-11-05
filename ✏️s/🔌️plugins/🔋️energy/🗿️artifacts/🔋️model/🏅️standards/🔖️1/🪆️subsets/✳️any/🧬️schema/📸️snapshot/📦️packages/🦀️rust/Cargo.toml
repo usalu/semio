@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-manifest-media = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust" }
-semio-framework-plugin-window-kits-rich = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust" }
+semio-plugin-window-kits-rich = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-scene = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
@@ -28,11 +28,11 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-snapshot-projection = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
@@ -53,8 +53,8 @@ semio-framework-replication = { path = "../../../../../../../../../../../../../�
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 
 [dev-dependencies.semio-framework-pack-record-preflight]
 path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/📦️packages/🦀️rust"

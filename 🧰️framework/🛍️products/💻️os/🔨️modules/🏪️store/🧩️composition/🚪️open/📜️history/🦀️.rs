@@ -9,7 +9,7 @@ pub mod dictionary;
 use super::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest};
 use semio_framework_value::{ValueError, RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_spr::format::retained::{RetainedSprDiagnostic, RetainedSprLimits, RetainedSprVerification, VerifiedSprSpan};
+use semio_os_spr::format::retained::{RetainedSprDiagnostic, RetainedSprLimits, RetainedSprVerification, VerifiedSprSpan};
 use semio_framework_job::StepContext;
 use std::mem::ManuallyDrop;
 
@@ -201,7 +201,7 @@ fn diagnostic(error: RetainedSprDiagnostic) -> MemberOpenDiagnostic {
 }
 
 fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    semio_framework_os_store_read::retirement_owner_close(request, grant).result
+    semio_os_store_read::retirement_owner_close(request, grant).result
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {
@@ -229,7 +229,7 @@ impl ErasedSnapshotRetirement for MemberHistoryVerification {
 impl MemberHistoryVerification {
     pub fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.scanner.is_some() || self.span.is_some() || self.pending.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        semio_framework_os_store_read::retirement_owner_demands(&self.request, body)
+        semio_os_store_read::retirement_owner_demands(&self.request, body)
     }
 }
 
@@ -253,7 +253,7 @@ impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
 impl VerifiedMemberHistoryInput {
     pub fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.span.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        semio_framework_os_store_read::retirement_owner_demands(&self.request, body)
+        semio_os_store_read::retirement_owner_demands(&self.request, body)
     }
 }
 

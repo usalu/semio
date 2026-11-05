@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberWallPoissonR
         record: "ChangeMemberWallPoissonRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Poisson's ratio ν of the wall material (the shear modulus follows as G = E / (2 (1 + ν)))", "Querdehnzahl ν des Wandbaustoffs (der Schubmodul folgt aus G = E / (2 (1 + ν))) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Poisson's ratio ν of the wall material (the shear modulus follows as G = E / (2 (1 + ν)))", "Querdehnzahl ν des Wandbaustoffs (der Schubmodul folgt aus G = E / (2 (1 + ν))) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-wall-poisson-ratio".into()]

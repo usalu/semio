@@ -1,8 +1,8 @@
 //! 🧩️ 🧩️ S Studio app command — `duplicate-app-instance`.
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting};
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️DuplicateAndPaste
 /// 🔁️ Shared body for `duplicate_app_instance` (sources = selection) and `paste_app_instance` (sources

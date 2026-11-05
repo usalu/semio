@@ -69,5 +69,5 @@ pub fn bitmap_artifact_schema_descriptor() -> ::semio_framework_schema_registry:
 /// `ArtifactComposition` dispatch it fed, are not used here at all: every io hop goes through the
 /// `io_mechanism` registry `🚪️io/🦀️.rs`'s `io()` returns, which is the one channel a subset
 /// declaration reads.
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<BitmapSnapshot, crate::BitmapMutation>;
+pub type Construction = semio_plugin::app::SnapshotBuilder<BitmapSnapshot, crate::BitmapMutation>;
 //#endregion 🏗️Construction

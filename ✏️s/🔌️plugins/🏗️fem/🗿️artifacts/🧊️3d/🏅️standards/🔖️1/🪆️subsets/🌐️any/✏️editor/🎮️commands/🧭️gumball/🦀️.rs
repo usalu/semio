@@ -14,17 +14,17 @@ use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::w
 use crate::editor::fem3d::Fem3dPlayApp;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::ViewModel;
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
@@ -60,10 +60,10 @@ pub fn gumball_step(
     reason: Option<&str>,
     snapshot: &Fem3dSnapshot,
     selected: &[String],
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<ArtifactCommandWorkStep<EditorApp<Fem3dPlayApp>>, Fault> {
-    let phase = GesturePhase::parse(phase, reason).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball.phase-unknown"), "unknown gumball phase or abort reason"))?;
+    let phase = GesturePhase::parse(phase, reason).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball.phase-unknown"), "unknown gumball phase or abort reason"))?;
     let targets = if ids.is_empty() { selected } else { ids };
     if targets.iter().any(|id| semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_id(id).is_none()) { return Err(Fault::from("fem3d.gumball.identity-refused")); }
     let tick = fem3d_gumball_tick(snapshot, targets, motion);
@@ -86,7 +86,7 @@ pub fn gumball_step(
 /// rest is ONE tool transaction; a streamed phase needs the retained route's transient.
 fn gumball_once(verb: &str, motion: Fem3dGumballMotion, ids: &[String], phase: Option<&str>, reason: Option<&str>, doc: &ArtifactView<'_, Fem3dSnapshot>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     if !matches!(GesturePhase::parse(phase, reason), Some(GesturePhase::Once | GesturePhase::Commit)) {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball.transient-context-required"), "a streamed gumball phase needs the retained route's transient"));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball.transient-context-required"), "a streamed gumball phase needs the retained route's transient"));
     }
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
     if ids.iter().any(|id| semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_id(id).is_none()) { return Err(Fault::from("fem3d.gumball.identity-refused")); }
@@ -175,16 +175,16 @@ pub mod set_transform_gumball_flag {
     }
 
     pub fn handle(_payload: &SetTransformGumballFlag, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
-        Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball-flag.window-context-required"), "the gumball flag toggle needs a window context"))
+        Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-context-required"), "the gumball flag toggle needs a window context"))
     }
 
     /// 🎚️ Toggles one handle flag of the addressed MODEL window's gumball — window config, so the
     /// choice survives a refresh and a split layout keeps one gumball per pane.
     pub fn handle_window(payload: &SetTransformGumballFlag, cfg: &ConfigView<'_, NoConfig>, view: &ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
-        let window_id = view.window_id.as_deref().ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball-flag.window-required"), "the gumball flag toggle names no window"))?;
-        let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball-flag.window-stale"), "the gumball flag toggle names a closed window"))?;
+        let window_id = view.window_id.as_deref().ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-required"), "the gumball flag toggle names no window"))?;
+        let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-stale"), "the gumball flag toggle names a closed window"))?;
         if kind != model_window::FEM3D_WINDOW_MODEL {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball-flag.window-kind"), "the transform gumball lives on the model window"));
+            return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.gumball-flag.window-kind"), "the transform gumball lives on the model window"));
         }
         let mut next = model_window::config::current(cfg);
         next.gumball.set_flag(&payload.flag, payload.pressed)?;

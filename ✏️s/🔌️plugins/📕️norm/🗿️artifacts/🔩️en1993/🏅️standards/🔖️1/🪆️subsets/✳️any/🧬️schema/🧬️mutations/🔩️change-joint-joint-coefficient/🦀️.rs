@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointJointCoeffici
         record: "ChangedJointJointCoefficient",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Joint coefficient β_j of the joint", "Anschluss: Fugenbeiwert β_j ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Joint coefficient β_j of the joint", "Anschluss: Fugenbeiwert β_j ändern")
     }
 }
 

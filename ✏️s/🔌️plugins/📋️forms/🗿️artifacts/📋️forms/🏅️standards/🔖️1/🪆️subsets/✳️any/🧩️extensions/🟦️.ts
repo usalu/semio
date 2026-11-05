@@ -1,0 +1,42 @@
+import type { LocalizedLabel, ShellLocale, ShellTerminology } from "@semio-tech/framework-manifest";
+import type { DslValue, FormQuestion } from "../🧬️schema/🧱️form-model/🟦️.ts";
+import{parseFormsValue}from"../🧬️schema/🌱️value/🟦️.ts";
+
+export type ExtensionSurface = { surface: "blueprint" } | { surface: "try"; windowId: string; windowKindId: "forms-try" } | { surface: "try" };
+
+export type ExtensionRenderPayload = ExtensionSurface & {
+  exampleId?: string;
+  params: DslValue;
+  authoredParams: DslValue;
+  questionId: string;
+  controllerId: string;
+  interactive: boolean;
+}
+
+/** 🎨️ Carries authored routing and exact answers without choosing a provider fixture. */
+export function extensionRenderPayload(question: FormQuestion, values: Readonly<Record<string, DslValue>>, controllerId: string, target: ExtensionSurface, interactive: boolean): ExtensionRenderPayload {
+  return {
+    ...(question.exampleId !== undefined ? { exampleId: question.exampleId } : {}),
+    params: parseFormsValue(Object.hasOwn(values, question.id) ? values[question.id]! : question.params ?? {kind:"object",members:[]}),
+    authoredParams: parseFormsValue(question.params ?? {kind:"object",members:[]}),
+    questionId: question.id,
+    controllerId,
+    ...target,
+    interactive,
+  };
+}
+
+export type QuestionKindContribution = {
+  appId: string;
+  questionKind: string;
+  label: LocalizedLabel;
+  iconId: string;
+  paramsBodyKey: string;
+  previewBodyKey: string;
+  defaultValueJson?: string;
+};
+
+/** 🌐️ Resolves contributed copy using the caller’s explicit language and terminology. */
+export function questionKindLabel(contribution: QuestionKindContribution, terminology: ShellTerminology, locale: ShellLocale): string {
+  return contribution.label[terminology][locale];
+}

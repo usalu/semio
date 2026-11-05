@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::WindowTransientOwner;
+use semio_plugin::WindowTransientOwner;
 
 /// ♻️ Retires one payload byte per turn with separately admitted constructor and whole release grants.
 fn retire(cursor: Box<dyn semio_framework_value::retirement::RetirementCursor>, maximum_turns: usize) {

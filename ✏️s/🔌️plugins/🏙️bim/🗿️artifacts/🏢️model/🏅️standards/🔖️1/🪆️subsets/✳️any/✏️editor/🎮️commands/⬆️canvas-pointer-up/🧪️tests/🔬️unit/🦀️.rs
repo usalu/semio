@@ -9,7 +9,7 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema:
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use crate::editor::bim::commands::canvas_pointer_up::*;
 use crate::editor::bim::fixture::support::{ctx, demo, run};
 

@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteNSpt where Op:
         record: "ChangeSiteNSpt",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Time-averaged SPT blow count N_SPT of the top 30 m (0 = not given)", "Zeitlich gemittelte SPT-Schlagzahl N_SPT der obersten 30 m (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Time-averaged SPT blow count N_SPT of the top 30 m (0 = not given)", "Zeitlich gemittelte SPT-Schlagzahl N_SPT der obersten 30 m (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-n-spt".into()]

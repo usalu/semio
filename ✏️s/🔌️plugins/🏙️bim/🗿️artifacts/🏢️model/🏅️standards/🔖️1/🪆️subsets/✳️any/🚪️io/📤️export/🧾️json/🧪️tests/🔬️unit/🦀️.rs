@@ -6,7 +6,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_json::schema::snapshot::JsonValue;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::Serializer;
+use semio_os_kernel::io::io_mechanism::Serializer;
 use semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::text::inferences::diagnostics::table_json;
 use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use protocol::Inference;

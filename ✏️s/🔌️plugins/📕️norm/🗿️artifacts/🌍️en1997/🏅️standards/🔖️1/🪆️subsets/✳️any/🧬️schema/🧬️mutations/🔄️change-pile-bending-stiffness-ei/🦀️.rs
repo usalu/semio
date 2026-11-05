@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileBendingStiffne
         record: "ChangedPileBendingStiffnessEi",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pile bending stiffness EI [N·m²] (0 = not given) of the pile", "Pfahl: Pfahl-Biegesteifigkeit EI [N·m²] (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pile bending stiffness EI [N·m²] (0 = not given) of the pile", "Pfahl: Pfahl-Biegesteifigkeit EI [N·m²] (0 = nicht angegeben) ändern")
     }
 }
 

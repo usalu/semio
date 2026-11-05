@@ -11,10 +11,10 @@ use crate::{editor::puzzle5d::commands::accept_suggestion, editor::puzzle5d::com
 use crate::{editor::puzzle5d::commands::import_snapshot, editor::puzzle5d::commands::open_add_part_dialog, editor::puzzle5d::commands::open_import_snapshot};
 use crate::{editor::puzzle5d::config::Puzzle5dConfigMutation, editor::puzzle5d::config::Puzzle5dRuntime};
 use crate::editor::puzzle5d::window as window_ownership;
-use semio_framework_plugin::{kernel::Effect, kernel::UiDirtyScope};
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
+use semio_plugin::{kernel::Effect, kernel::UiDirtyScope};
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
 use semio_framework_pack_json::Value;
 use crate::editor::puzzle5d::entities::{puzzle5d_editor_projection, PUZZLE5D_FILL_TOOL_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID};
 use crate::editor::puzzle5d::view::{puzzle5d_scene_active_utility, scene_from_projection};
@@ -31,10 +31,10 @@ pub fn puzzle5d_handle_action<A: Puzzle5dEditor>(
     window_id: Option<&str>,
     snapshot: &Puzzle5dPlaySnapshot,
     config: &Puzzle5dRuntime,
-    view_state: Option<&semio_framework_plugin::ViewModel>,
+    view_state: Option<&semio_plugin::ViewModel>,
     selection: &protocol::DomainSelection,
-    instance_owner: Option<&semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
-    tool_run: Option<&semio_framework_plugin::ToolRunView>,
+    instance_owner: Option<&semio_plugin::ArtifactInstanceOperationOwnerHandle>,
+    tool_run: Option<&semio_plugin::ToolRunView>,
 ) -> (Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, EphemeralEmit<EditorApp<A>>) {
     let projection = puzzle5d_editor_projection(snapshot);
     let shared_before = window_ownership::shared(config);

@@ -1,14 +1,14 @@
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind};
-use semio_framework_plugin_decl_views::{AppOperationContext, InteractionHoverState};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobContext;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletion;
-use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
-use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
-use semio_framework_plugin_decl_views::history_view::HistoryView;
+use semio_plugin_decl_views::{AppOperationContext, InteractionHoverState};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobContext;
+use semio_plugin_decl_app::tool_contract::ArtifactToolCompletion;
+use semio_plugin_decl_media::ArtifactDownloadOutput;
+use semio_plugin_decl_emission::Emit;
+use semio_plugin_decl_app::app_emission::EphemeralEmit;
+use semio_plugin_decl_views::history_view::HistoryView;
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::Fault;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
@@ -17,7 +17,7 @@ use std::sync::Arc;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_decl_app::ArtifactOwnedContextHandle;
+use semio_plugin_decl_app::ArtifactOwnedContextHandle;
 use std::mem::MaybeUninit;
 
 #[doc(hidden)]

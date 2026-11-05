@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::unsigned;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::word;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 fn op(v:DwgVisualStylePropertyOperation)->&'static str{match v{DwgVisualStylePropertyOperation::Inherit=>"inherit",DwgVisualStylePropertyOperation::Set=>"set",DwgVisualStylePropertyOperation::Disable=>"disable",DwgVisualStylePropertyOperation::Enable=>"enable"}}
 fn read_op(v:&str)->Result<DwgVisualStylePropertyOperation,ValueError>{match v{"inherit"=>Ok(DwgVisualStylePropertyOperation::Inherit),"set"=>Ok(DwgVisualStylePropertyOperation::Set),"disable"=>Ok(DwgVisualStylePropertyOperation::Disable),"enable"=>Ok(DwgVisualStylePropertyOperation::Enable),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG visual property operation is unknown"))}}

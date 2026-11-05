@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-render-interaction"
+name = "semio-ui-render-interaction"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,8 +22,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-render-packet = { path = "../../../📮️packet/📦️packages/🦀️rust" }
-ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-ui-render-packet = { path = "../../../📮️packet/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }

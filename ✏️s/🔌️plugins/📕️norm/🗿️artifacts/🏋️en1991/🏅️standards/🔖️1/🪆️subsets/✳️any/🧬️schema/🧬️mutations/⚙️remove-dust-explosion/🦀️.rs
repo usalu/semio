@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveDustExplosion wher
         record: "RemovedDustExplosion",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove dust explosion {}", self.id), &format!("Staubexplosion {} entfernen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove dust explosion {}", self.id), &format!("Staubexplosion {} entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

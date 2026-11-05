@@ -3,7 +3,7 @@ use semio_framework_job::StepContext;
 #[global_allocator]
 static FLOW_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_s_artifact_stdio_semio_flow::io::binary::snapshot::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot};
 use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers, SemioMembersOpen};

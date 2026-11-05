@@ -33,13 +33,13 @@ use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMeshSnapshot, Sem
 pub const UNIT_CUBE_JSON: &str = include_str!("../../../🧪️tests/🧫️fixtures/🚪️io/🧊️unit-cube/🔣️.json");
 
 /// 🧊️ The neutral prepared geometry fixture consumed by the artifact IO bridge.
-pub fn unit_cube_mesh_data() -> semio_framework_plugin::MeshData {
+pub fn unit_cube_mesh_data() -> semio_plugin::MeshData {
     let parsed: serde_json::Value = serde_json::from_str(UNIT_CUBE_JSON).expect("unit-cube fixture is valid json");
     let positions: Vec<f32> = parsed["positions"].as_array().expect("positions array").iter().map(|value| value.as_f64().expect("position number") as f32).collect();
     let indices: Vec<u32> = parsed["indices"].as_array().expect("indices array").iter().map(|value| value.as_u64().expect("index number") as u32).collect();
     assert_eq!(positions.len(), 24, "the committed unit cube has 8 vertices");
     assert_eq!(indices.len(), 36, "the committed unit cube has 12 triangles");
-    semio_framework_plugin::MeshData { positions, indices, ..Default::default() }
+    semio_plugin::MeshData { positions, indices, ..Default::default() }
 }
 
 /// 🔺️ The fixture as this repo's own typed mesh document — the export leaves' actual input.
@@ -149,7 +149,7 @@ pub fn assert_imported_polygon_is_unit_cube(format: &str, document: semio_s_arti
         assert_eq!(face.len(), 3, "the committed cube has triangle faces");
         face.iter().map(|index| index.as_u64().expect("vertex index") as u32).collect::<Vec<_>>()
     }).collect();
-    let prepared = semio_framework_plugin::MeshData { positions, indices, ..Default::default() };
+    let prepared = semio_plugin::MeshData { positions, indices, ..Default::default() };
     let mesh = mesh_bridge::semio_mesh_from_mesh_data(&prepared).expect("the planted geometry is exportable");
     assert_is_unit_cube(format, &project(&mesh));
     assert_oracle_agrees_on_unit_cube(format, &mesh);
@@ -236,7 +236,7 @@ fn committed_unit_cube_fixture_is_a_closed_unit_cube() {
 /// export — the whole point of the ticket.
 #[test]
 fn empty_preview_mesh_is_a_typed_error_not_an_empty_export() {
-    let error = semio_s_artifact_procedural_3d_mesh_bridge::semio_mesh_from_mesh_data(&semio_framework_plugin::MeshData::default()).expect_err("an empty preview must not convert");
+    let error = semio_s_artifact_procedural_3d_mesh_bridge::semio_mesh_from_mesh_data(&semio_plugin::MeshData::default()).expect_err("an empty preview must not convert");
     assert!(error.to_string().contains("prepared geometry has no positions"), "the error names the cause, got {error}");
 }
 //#endregion 🧪️FixtureLaws

@@ -8,17 +8,17 @@ struct VfsAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub depth: usize,
-    pub control: semio_framework_os_renderer_wgpu_scene_state::VfsAccessibilityControl,
+    pub control: semio_renderer_wgpu_scene_state::VfsAccessibilityControl,
 }
 
-fn collect_vfs_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<VfsAccessibilityEntry>) {
+fn collect_vfs_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<VfsAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_vfs_accessibility_controls(&scene.host_id).into_iter().map(|control| VfsAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), control }));
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::VirtualFileSystem && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_renderer_wgpu_scene_feeds::accepted_vfs_accessibility_controls(&scene.host_id).into_iter().map(|control| VfsAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), control }));
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -26,7 +26,7 @@ fn collect_vfs_accessibility_entries(tree: &semio_framework_ui_retained_tree::tr
     }
 }
 
-pub fn vfs_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Vec<VfsAccessibilityEntry> {
+pub fn vfs_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree) -> Vec<VfsAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_vfs_accessibility_entries(tree, root, 0, &mut entries);
@@ -34,7 +34,7 @@ pub fn vfs_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::
     entries
 }
 
-pub(super) fn append_vfs_accessibility_nodes(window_id: &str, tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+pub(super) fn append_vfs_accessibility_nodes(window_id: &str, tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     let focus = focused_vfs_control();
     for entry in vfs_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
@@ -84,14 +84,14 @@ struct BlockListAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub depth: usize,
-    pub control: semio_framework_os_renderer_wgpu_scene_state::BlockListAccessibilityControl,
+    pub control: semio_renderer_wgpu_scene_state::BlockListAccessibilityControl,
 }
 
-fn collect_block_list_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<BlockListAccessibilityEntry>) {
+fn collect_block_list_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<BlockListAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::BlockList && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_block_list_accessibility_controls(&scene.host_id).into_iter().map(|control| BlockListAccessibilityEntry {
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::BlockList && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_renderer_wgpu_scene_feeds::accepted_block_list_accessibility_controls(&scene.host_id).into_iter().map(|control| BlockListAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -99,7 +99,7 @@ fn collect_block_list_accessibility_entries(tree: &semio_framework_ui_retained_t
             }));
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -107,7 +107,7 @@ fn collect_block_list_accessibility_entries(tree: &semio_framework_ui_retained_t
     }
 }
 
-pub fn block_list_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Vec<BlockListAccessibilityEntry> {
+pub fn block_list_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree) -> Vec<BlockListAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_block_list_accessibility_entries(tree, root, 0, &mut entries);
@@ -115,7 +115,7 @@ pub fn block_list_accessibility_entries(tree: &semio_framework_ui_retained_tree:
     entries
 }
 
-pub(super) fn append_block_list_accessibility_nodes(tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+pub(super) fn append_block_list_accessibility_nodes(tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     for entry in block_list_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
             break;
@@ -163,14 +163,14 @@ struct EventFeedAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub depth: usize,
-    pub control: semio_framework_os_renderer_wgpu_scene_state::EventFeedAccessibilityControl,
+    pub control: semio_renderer_wgpu_scene_state::EventFeedAccessibilityControl,
 }
 
-fn collect_event_feed_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<EventFeedAccessibilityEntry>) {
+fn collect_event_feed_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<EventFeedAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::EventFeed && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_event_feed_accessibility_controls(&scene.host_id).into_iter().map(|control| EventFeedAccessibilityEntry {
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::EventFeed && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_renderer_wgpu_scene_feeds::accepted_event_feed_accessibility_controls(&scene.host_id).into_iter().map(|control| EventFeedAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -178,7 +178,7 @@ fn collect_event_feed_accessibility_entries(tree: &semio_framework_ui_retained_t
             }));
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -186,7 +186,7 @@ fn collect_event_feed_accessibility_entries(tree: &semio_framework_ui_retained_t
     }
 }
 
-pub fn event_feed_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Vec<EventFeedAccessibilityEntry> {
+pub fn event_feed_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree) -> Vec<EventFeedAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_event_feed_accessibility_entries(tree, root, 0, &mut entries);
@@ -194,14 +194,14 @@ pub fn event_feed_accessibility_entries(tree: &semio_framework_ui_retained_tree:
     entries
 }
 
-fn collect_world3d_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<(usize, semio_framework_os_renderer_wgpu_scene_state::World3dAccessibilityControl)>) {
+fn collect_world3d_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<(usize, semio_renderer_wgpu_scene_state::World3dAccessibilityControl)>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::World3d && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_world3d_accessibility_controls(&scene.host_id).into_iter().map(|control| (depth.saturating_add(1), control)));
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::World3d && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_renderer_wgpu_scene_feeds::accepted_world3d_accessibility_controls(&scene.host_id).into_iter().map(|control| (depth.saturating_add(1), control)));
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -211,7 +211,7 @@ fn collect_world3d_accessibility_entries(tree: &semio_framework_ui_retained_tree
 
 /// ♿️ Publishes the modelling overlays of every visible world surface (annotation list, scalar-field legend, mismatch status) as read-only nodes of the accessibility mirror;
 /// the mismatch status is a polite live region so a screen reader announces it.
-pub(super) fn append_world3d_accessibility_nodes(tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+pub(super) fn append_world3d_accessibility_nodes(tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_world3d_accessibility_entries(tree, root, 0, &mut entries);
@@ -259,7 +259,7 @@ pub(super) fn append_world3d_accessibility_nodes(tree: &semio_framework_ui_retai
     }
 }
 
-pub(super) fn append_event_feed_accessibility_nodes(tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+pub(super) fn append_event_feed_accessibility_nodes(tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     for entry in event_feed_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
             break;
@@ -308,14 +308,14 @@ struct GraphTimelineAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub depth: usize,
-    pub control: semio_framework_os_renderer_wgpu_scene_state::GraphTimelineAccessibilityControl,
+    pub control: semio_renderer_wgpu_scene_state::GraphTimelineAccessibilityControl,
 }
 
-fn collect_graph_timeline_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<GraphTimelineAccessibilityEntry>) {
+fn collect_graph_timeline_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, depth: usize, entries: &mut Vec<GraphTimelineAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
-            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_graph_timeline_accessibility_controls(&scene.host_id).into_iter().map(|control| GraphTimelineAccessibilityEntry {
+        if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::GraphTimeline && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_renderer_wgpu_scene_feeds::accepted_graph_timeline_accessibility_controls(&scene.host_id).into_iter().map(|control| GraphTimelineAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -323,7 +323,7 @@ fn collect_graph_timeline_accessibility_entries(tree: &semio_framework_ui_retain
             }));
         }
     }
-    if depth >= semio_framework_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+    if depth >= semio_ui_wgpu_hosting::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
         return;
     }
     for child in tree.children(node) {
@@ -331,7 +331,7 @@ fn collect_graph_timeline_accessibility_entries(tree: &semio_framework_ui_retain
     }
 }
 
-pub fn graph_timeline_accessibility_entries(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Vec<GraphTimelineAccessibilityEntry> {
+pub fn graph_timeline_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree) -> Vec<GraphTimelineAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_graph_timeline_accessibility_entries(tree, root, 0, &mut entries);
@@ -339,7 +339,7 @@ pub fn graph_timeline_accessibility_entries(tree: &semio_framework_ui_retained_t
     entries
 }
 
-pub(super) fn append_graph_timeline_accessibility_nodes(tree: &semio_framework_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+pub(super) fn append_graph_timeline_accessibility_nodes(tree: &semio_ui_retained_tree::tree::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     for entry in graph_timeline_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
             break;

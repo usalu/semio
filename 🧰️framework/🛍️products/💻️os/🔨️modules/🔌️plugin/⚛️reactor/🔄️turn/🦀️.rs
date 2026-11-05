@@ -1,32 +1,32 @@
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-use semio_framework_plugin_reactor_core::{ARMED_TIMERS, PRESENCE, ReactorClosePeers, SURFACE_RENDER_FAULT_CODE, admit_package_assets, advance_command_cursor, reconcile_step_opportunities, shell_fault_effect, terminal_command_ingress};
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+use semio_plugin_reactor_core::{ARMED_TIMERS, PRESENCE, ReactorClosePeers, SURFACE_RENDER_FAULT_CODE, admit_package_assets, advance_command_cursor, reconcile_step_opportunities, shell_fault_effect, terminal_command_ingress};
 use semio_framework::kernel::{ActorInstanceLifecycleReceipt, ActorUiPatchReceipt, Effect, Event, MessageEndpoint, TurnStatus, UiPatch};
-use semio_framework_plugin_reactor_surfaces::{COLD_PAIR_DOCUMENT_LOAD, COLD_PAIR_INGRESS, RESTORED_DOCUMENT_LOADS, checkpoint};
+use semio_plugin_reactor_surfaces::{COLD_PAIR_DOCUMENT_LOAD, COLD_PAIR_INGRESS, RESTORED_DOCUMENT_LOADS, checkpoint};
 use std::cell::{Cell, RefCell};
-use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
-use semio_framework_plugin_reactor_tasks::{INSTANCE_METADATA, JOB_RENDER_BINDINGS, REACTOR_EXECUTOR, REGISTRY, TASK_EXECUTOR, TASK_RESUMES};
-use semio_framework_plugin_reactor_patches::PATCHES;
-use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
-use semio_framework_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR, instance_lifetime};
+use semio_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
+use semio_plugin_reactor_tasks::{INSTANCE_METADATA, JOB_RENDER_BINDINGS, REACTOR_EXECUTOR, REGISTRY, TASK_EXECUTOR, TASK_RESUMES};
+use semio_plugin_reactor_patches::PATCHES;
+use semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
+use semio_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR, instance_lifetime};
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::RequestOutcome;
-use semio_framework_plugin_reactor_tasks::tasks_task_lane::{TaskResumeOutcome, cancel_instance_tasks_step};
-use semio_framework_plugin_reactor_tasks::tasks_extension_continuation::{append_extension_response_page, host};
-use semio_framework_plugin_reactor_surfaces as cold_pair;
-use semio_framework_plugin_reactor_patches as patches;
-use semio_framework_plugin_reactor_lifecycle as pending;
+use semio_plugin_reactor_tasks::tasks_task_lane::{TaskResumeOutcome, cancel_instance_tasks_step};
+use semio_plugin_reactor_tasks::tasks_extension_continuation::{append_extension_response_page, host};
+use semio_plugin_reactor_surfaces as cold_pair;
+use semio_plugin_reactor_patches as patches;
+use semio_plugin_reactor_lifecycle as pending;
 use crate as turn;
-use semio_framework_ui_contract as ui_contract;
-use semio_framework_plugin_actor_host::{executor, requests};
-use semio_framework_plugin_reactor_lifecycle::life_reactor_close::reactor_close_fault;
+use semio_ui_contract as ui_contract;
+use semio_plugin_actor_host::{executor, requests};
+use semio_plugin_reactor_lifecycle::life_reactor_close::reactor_close_fault;
 use crate::turn_close_step::step_reactor_close;
 #[doc(hidden)]
 #[path="📥️receiving/🦀️.rs"]
 pub mod original_receiving;
 pub(crate) fn original_receiving_sources_empty(key:instance_lifetime::NativeCloseKey)->bool{original_receiving::response_key_empty(key)&&original_receiving::intent_key_empty(key)&&original_receiving::forms::key_empty(key)}
 
-use semio_framework_plugin_extension::extension_invocation_failure::{ExtensionInvocationCause, RetainedExtensionFaultReply};
+use semio_plugin_extension::extension_invocation_failure::{ExtensionInvocationCause, RetainedExtensionFaultReply};
 
 #[path = "🔌️extension-invocation-and-command-ingress/🦀️.rs"]
 mod extension_invocation_and_command_ingress;
@@ -37,7 +37,7 @@ thread_local!{
     static RETAINED_EXTENSION_CURSOR:Cell<usize>=const{Cell::new(0)};
 }
 
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     static COMMAND_INGRESS: RefCell<[Option<RetainedCommandIngress>; 2]> = RefCell::new([None, None]);
 }
 
@@ -112,7 +112,7 @@ mod cold_pair_loads_and_process_pool;
 use cold_pair_loads_and_process_pool::*;
 
 #[cfg(target_arch = "wasm32")]
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     /// 🧵️ The one process worker pool, resolved once instead of once per turn.
     ///
     /// `process_worker_pool` re-reads `available_parallelism`, rebuilds a `WorkerPoolConfig` and
@@ -125,15 +125,15 @@ semio_framework_plugin_abi::component_persistent_local! {
     };
 }
 
-use semio_framework_plugin_reactor_turn_limits::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT, REACTOR_CLOSE_UNITS_PER_TURN, REACTOR_TURN_EXECUTOR_HOLD_MS, retire_until_complete, retire_while_progress, retire_while_progress_bounded, retire_while_progress_fallible};
+use semio_plugin_reactor_turn_limits::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT, REACTOR_CLOSE_UNITS_PER_TURN, REACTOR_TURN_EXECUTOR_HOLD_MS, retire_until_complete, retire_while_progress, retire_while_progress_bounded, retire_while_progress_fallible};
 
 #[path = "🩹️reconcile-drive-and-publication-receipts/🦀️.rs"]
 mod reconcile_drive_and_publication_receipts;
 pub use reconcile_drive_and_publication_receipts::*;
 
-semio_framework_plugin_abi::component_persistent_local!{static REFUSED_PUBLICATION:RefCell<Option<RefusedPublicationOwner>>=RefCell::new(None);}
+semio_plugin_abi::component_persistent_local!{static REFUSED_PUBLICATION:RefCell<Option<RefusedPublicationOwner>>=RefCell::new(None);}
 
-use semio_framework_plugin_reactor_lifecycle::{parse_surface_instance, with_state as with_pending_patches};
+use semio_plugin_reactor_lifecycle::{parse_surface_instance, with_state as with_pending_patches};
 
 #[path = "📬️task-resumes-and-wire-effects/🦀️.rs"]
 mod task_resumes_and_wire_effects;

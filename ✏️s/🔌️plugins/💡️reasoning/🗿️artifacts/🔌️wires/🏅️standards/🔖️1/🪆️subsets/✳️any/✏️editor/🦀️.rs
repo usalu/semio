@@ -14,38 +14,38 @@ use crate::WiresMutation;
 use crate::{WiresComposed, WiresSnapshot};
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework_tool_machine::node_drag_emit;
 use semio_s_artifact_stdio_semio_graph::schema::mutations::drag_nodes::DragNodes;
@@ -59,46 +59,46 @@ pub use inspection_panel::WIRES_PLAY_BODY_PROPERTIES;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn wires_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(WIRES_PLAY_APP_ID).action(action, args)
+pub fn wires_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(WIRES_PLAY_APP_ID).action(action, args)
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.label-capacity", "wires label exceeds its fixed capacity"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.label-capacity", "wires label exceeds its fixed capacity"))
 }
 
 /// 📝️ Admits text into an action payload.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "replace the
@@ -144,15 +144,15 @@ pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) 
 /// asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
 pub fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(112), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(wires_select_action_args(ids, granularity, merge)), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(112), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(wires_select_action_args(ids, granularity, merge)), delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
 
 //#region 🔖️Composed
 /// 🪆️ The composed document a render reads (§20.15): the parent with its live board child (the tool run's provisional child
 /// state while a reorganize run holds it); a missing child is an assembly error naming its fault code.
-pub fn wires_render_composed(doc: &ArtifactView<'_, WiresSnapshot>) -> semio_framework_plugin::UiAssemblyResult<WiresComposed> {
-    crate::wires_composed_from_children(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new(fault.code.0, fault.message))
+pub fn wires_render_composed(doc: &ArtifactView<'_, WiresSnapshot>) -> semio_plugin::UiAssemblyResult<WiresComposed> {
+    crate::wires_composed_from_children(doc.snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new(fault.code.0, fault.message))
 }
 
 /// 🔖️ The app fault notices of the wires editor (`code → {en, de}`), the layout run's included.
@@ -177,7 +177,7 @@ pub fn wires_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
 //#endregion 🔖️Composed
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `ReasoningWiresPlayApp::Command` — the SOLE dispatch surface for this app's behavior,
     /// assembled from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
@@ -274,11 +274,11 @@ fn wires_command_from_action(action: &str, args: Option<&semio_framework_value::
         "canvasPointerMove" => Ok(WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: number(&["x"]), y: number(&["y"]), samples: Vec::new() })),
         "canvasPointerUp" => Ok(WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: flag(&["cancelled"]) })),
         "nodeGraphViewport" => Ok(WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport {
-            viewport: semio_framework_os_kernel::Viewport2d { x: number(&["x"]), y: number(&["y"]), zoom: if lookup(&["zoom"]).is_some() { number(&["zoom"]) } else { 1.0 } },
+            viewport: semio_os_kernel::Viewport2d { x: number(&["x"]), y: number(&["y"]), zoom: if lookup(&["zoom"]).is_some() { number(&["zoom"]) } else { 1.0 } },
         })),
         other => Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("wires.action.unhandled"),
+            semio_plugin::FaultOrigin::App,
+            semio_plugin::FaultCode::new("wires.action.unhandled"),
             format!("action '{other}' is not one of this app's declared verbs (setActiveExample/addNode/addRelationship/deleteSelection/canvasPointer*/nodeGraphViewport)"),
         )),
     }
@@ -290,13 +290,13 @@ fn wires_retained_document_reduce(
     command: &WiresCommand,
     snapshot: &WiresSnapshot,
     config: &NoConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<WiresMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let children = context.map(|context| semio_framework_plugin::app::ChildContentView::clone(&context.children)).unwrap_or(semio_framework_plugin::app::ChildContentView::EMPTY);
+    let children = context.map(|context| semio_plugin::app::ChildContentView::clone(&context.children)).unwrap_or(semio_plugin::app::ChildContentView::EMPTY);
     let doc = ArtifactView::with_children(snapshot, history, children).bound_to_operation(operation.clone());
     match command {
         WiresCommand::DeleteSelection(payload) => delete_selection::apply_with_state(payload, &doc, interaction),
@@ -338,24 +338,24 @@ impl WiresWindowDragWork {
         Ok(self.node_ids.as_deref().unwrap_or_default())
     }
 
-    fn drag_mutation(window: &semio_framework_plugin::WindowTransientSnapshot, node_id: Option<String>, start_x: f64, start_y: f64, last_x: f64, last_y: f64, zoom: f64) -> semio_framework_plugin::WindowTransientMutation {
-        semio_framework_plugin::WindowTransientMutation::of::<window_transient::WiresCanvasTransientOwner>(window.window_id(), window_transient::SetDrag { node_id, start_x, start_y, last_x, last_y, zoom }.into())
+    fn drag_mutation(window: &semio_plugin::WindowTransientSnapshot, node_id: Option<String>, start_x: f64, start_y: f64, last_x: f64, last_y: f64, zoom: f64) -> semio_plugin::WindowTransientMutation {
+        semio_plugin::WindowTransientMutation::of::<window_transient::WiresCanvasTransientOwner>(window.window_id(), window_transient::SetDrag { node_id, start_x, start_y, last_x, last_y, zoom }.into())
     }
 
-    fn clear(window: &semio_framework_plugin::WindowTransientSnapshot) -> semio_framework_plugin::WindowTransientMutation {
+    fn clear(window: &semio_plugin::WindowTransientSnapshot) -> semio_plugin::WindowTransientMutation {
         Self::drag_mutation(window, None, 0.0, 0.0, 0.0, 0.0, 1.0)
     }
 
-    fn complete_down(&mut self, window: &semio_framework_plugin::WindowTransientSnapshot, node_id: Option<String>, x: f64, y: f64, zoom: f64) -> ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>> {
+    fn complete_down(&mut self, window: &semio_plugin::WindowTransientSnapshot, node_id: Option<String>, x: f64, y: f64, zoom: f64) -> ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>> {
         self.consumed = true;
         let effects = node_id.as_ref().map(|id| vec![wires_select_effect(std::slice::from_ref(id), WIRES_GRANULARITY_NODE, "replace")]).unwrap_or_default();
         let mutation = Self::drag_mutation(window, node_id, x, y, x, y, zoom);
-        ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit { effects, ..Default::default() }, ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] } }
+        ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit { effects, ..Default::default() }, ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] } }
     }
 
-    fn complete_clear(&mut self, window: &semio_framework_plugin::WindowTransientSnapshot) -> ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>> {
+    fn complete_clear(&mut self, window: &semio_plugin::WindowTransientSnapshot) -> ArtifactCommandWorkStep<EditorApp<ReasoningWiresPlayApp>> {
         self.consumed = true;
-        ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![Self::clear(window)] } }
+        ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![Self::clear(window)] } }
     }
 }
 
@@ -364,7 +364,7 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
         self.tool_id
     }
 
-    fn extent(&self, command: &WiresCommand, snapshot: &WiresSnapshot, interaction: &protocol::InteractionState, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &WiresCommand, snapshot: &WiresSnapshot, interaction: &protocol::InteractionState, context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>) -> Option<usize> {
         let context = context?;
         if matches!(command, WiresCommand::NodeGraphViewport(_)) {
             context.window_config.as_ref()?.get::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>()?;
@@ -424,7 +424,7 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                 self.consumed = true;
                 let [last_x, last_y] = payload.last_sample();
                 let gesture = Self::drag_mutation(window, Some(id.clone()), transient.drag_start_x, transient.drag_start_y, last_x, last_y, transient.drag_zoom);
-                Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![gesture] } })
+                Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![gesture] } })
             }
             WiresCommand::CanvasPointerUp(payload) => {
                 let window = input.context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("wires-drag-requires-window"))?;
@@ -455,12 +455,12 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                 let gesture = format!("{}:{id}", window.window_id());
                 Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
                     emit: wires_node_drag_emit(input.operation, input.snapshot, &gesture, &id, drag_x, drag_y),
-                    ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![Self::clear(window)] },
+                    ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![Self::clear(window)] },
                 })
             }
             WiresCommand::NodeGraphViewport(payload) => {
                 let window = input.context.and_then(|context| context.window_config.as_ref()).ok_or_else(|| Fault::from("wires-viewport-requires-window"))?;
-                let mutation = semio_framework_plugin::WindowConfigMutation::of::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>(
+                let mutation = semio_plugin::WindowConfigMutation::of::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>(
                     window.window_id(),
                     edit::windows::canvas::config::WiresCanvasWindowConfigMutation::SetCamera(edit::windows::canvas::config::SetCamera {
                         camera: edit::windows::canvas::config::WiresCanvasCamera { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom },
@@ -507,7 +507,7 @@ impl ToolJobFactory for WiresRetainedCommandJobFactory {
         wires_retained_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: WIRES_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: WIRES_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -531,10 +531,10 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = WiresCommand;
 
@@ -546,40 +546,40 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         registry.register::<window_transient::WiresCanvasTransientOwner>()
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<edit::windows::canvas::config::WiresCanvasWindowConfigOwner>()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<ReasoningWiresPlayApp>,
         owner_file: "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.reasoning.wires@1/*#editor",
@@ -595,20 +595,20 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         registry.register(WiresRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !WIRES_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Wires command does not match its exact retained tool registration").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Wires command does not match its exact retained tool registration").into());
         }
         if wires_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
             return Err(Fault::from("wires-command-payload-too-large"));
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, WiresCommand::command_id, WIRES_RETAINED_RAW_BYTES, WIRES_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match *request.command {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, WiresCommand::command_id, WIRES_RETAINED_RAW_BYTES, WIRES_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match *request.command {
             WiresCommand::SetActiveExample(_) | WiresCommand::AddNode(_) | WiresCommand::AddRelationship(_) | WiresCommand::DeleteSelection(_) => {
-                Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(request.command.command_id(), wires_retained_document_reduce, wires_retained_extent))
+                Box::new(semio_plugin::retained_command::BoundedArtifactCommandWork::new(request.command.command_id(), wires_retained_document_reduce, wires_retained_extent))
             }
             _ => Box::new(WiresWindowDragWork { tool_id: request.command.command_id(), node_ids: None, node_cursor: 0, visited: 0, consumed: false }),
         } })
@@ -616,8 +616,8 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 
     /// ⏯️ Builds the reorganize tool's layout run over the board child the run edits (`ToolRunDefinition.member`); resumed from
     /// the ledger's checkpoint and provisional child moves on a settings change.
-    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
-        if request.tool_id != reorganize::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {
+    fn build_tool_run_job(request: semio_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_plugin::ToolRunJob>, Fault> {
+        if request.tool_id != reorganize::TOOL_ID || request.purpose != semio_plugin::ToolRunJobPurpose::Run {
             return Ok(None);
         }
         let composed = crate::wires_composed_from_children(&request.snapshot, &request.children)?;
@@ -636,7 +636,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Result<WiresSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<WiresSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::empty_wires_snapshot())
     })}
 
@@ -660,7 +660,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         doc: &ArtifactView<'_, WiresSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WiresMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -680,34 +680,34 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let document = doc.snapshot;
-        let labels = semio_framework_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(view_state);
+        let labels = semio_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(view_state);
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => {
                 let window = edit::windows::canvas::config::current(cfg).cloned().unwrap_or_default();
                 let composed = wires_render_composed(doc)?;
                 edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &window)
             }
-            WIRES_PLAY_BODY_ARTIFACT => document_panel::render(&wires_render_composed(doc)?, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_ARTIFACT)),
-            WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_CATALOGUE)),
+            WIRES_PLAY_BODY_ARTIFACT => document_panel::render(&wires_render_composed(doc)?, labels, &semio_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_ARTIFACT)),
+            WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_CATALOGUE)),
             WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(&wires_render_composed(doc)?, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, WiresSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         _interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == WIRES_PLAY_BODY_COMPOSITE {
             let window = edit::windows::canvas::config::current(cfg).cloned().unwrap_or_default();
             let gesture = transient.window::<window_transient::WiresCanvasTransientOwner>().cloned().unwrap_or_default();
@@ -724,7 +724,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
                     }
                 }
             }
-            return edit::windows::canvas::render(&board, &fixture, &window).map(semio_framework_plugin::built_to_component_tree);
+            return edit::windows::canvas::render(&board, &fixture, &window).map(semio_plugin::built_to_component_tree);
         }
         Self::render(body_key, doc, cfg, view_state)
 
@@ -744,7 +744,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 /// silently lost. The subset's own `📚️examples/🎬️demo` facet is the documented replacement mechanism
 /// for the former; `metabolism_wires_example_snapshot()` itself still lives on and is exercised
 /// directly by this file's own tests below.
-pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_wires_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::WIRES_DIALECT)
         .document(["semio", "reasoning", "mindmap", "wires"])
         .artifact_kind(crate::artifact_kind())
@@ -757,28 +757,28 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .panel_tab_def(document_panel::definition())
         .panel_tab_def(catalogue_panel::definition())
         .panel_tab_def(inspection_panel::definition())
-        .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+        .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
         .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
-        .action_args("addNode", vec![semio_framework_plugin::ActionArgDef::text("kind", LocalizedLabel::native("Node Kind", "Knotenart"))])
+        .action_args("addNode", vec![semio_plugin::ActionArgDef::text("kind", LocalizedLabel::native("Node Kind", "Knotenart"))])
         .mutation("addRelationship", LocalizedLabel::native("Add Relationship", "Beziehung hinzufügen"))
         .action_args(
             "addRelationship",
             vec![
-                semio_framework_plugin::ActionArgDef::text("sourceId", LocalizedLabel::native("Source Node", "Quellknoten")),
-                semio_framework_plugin::ActionArgDef::text("targetId", LocalizedLabel::native("Target Node", "Zielknoten")),
-                semio_framework_plugin::ActionArgDef::text("kind", LocalizedLabel::native("Relationship Kind", "Beziehungsart")),
+                semio_plugin::ActionArgDef::text("sourceId", LocalizedLabel::native("Source Node", "Quellknoten")),
+                semio_plugin::ActionArgDef::text("targetId", LocalizedLabel::native("Target Node", "Zielknoten")),
+                semio_plugin::ActionArgDef::text("kind", LocalizedLabel::native("Relationship Kind", "Beziehungsart")),
             ],
         )
         .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
         .action_destructive("deleteSelection")
-        .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
-        .action_audience("canvasPointerMove", semio_framework_plugin::CapabilityAudience::Input)
-        .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
-        .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
-        .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::Mutation, "mouse-pointer"))
-        .action_audience("canvasPointerUp", semio_framework_plugin::CapabilityAudience::Input)
-        .action_with(semio_framework_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_framework_plugin::ActionKind::View, "camera"))
+        .action_with(semio_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_plugin::ActionKind::View, "mouse-pointer"))
+        .action_audience("canvasPointerMove", semio_plugin::CapabilityAudience::Input)
+        .action_with(semio_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_plugin::ActionKind::View, "mouse-pointer"))
+        .action_audience("canvasPointerDown", semio_plugin::CapabilityAudience::Input)
+        .action_with(semio_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_plugin::ActionKind::Mutation, "mouse-pointer"))
+        .action_audience("canvasPointerUp", semio_plugin::CapabilityAudience::Input)
+        .action_with(semio_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_plugin::ActionKind::View, "camera"))
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
@@ -804,7 +804,7 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .action_describe("addNode", LocalizedLabel::native("Adds a new node of the given kind (identity by default) to the reasoning board and selects it.", "Fügt dem Denkbrett einen neuen Knoten der angegebenen Art (standardmäßig Identität) hinzu und wählt ihn aus."))
         .action_describe("addRelationship", LocalizedLabel::native("Connects the node sourceId to the node targetId (or the first two selected nodes) with a new relationship edge of the given kind (owns by default) and selects it; unknown or missing nodes are refused by name.", "Verbindet den Knoten sourceId mit dem Knoten targetId (oder die ersten beiden ausgewählten Knoten) durch eine neue Beziehungskante der angegebenen Art (standardmäßig besitzt) und wählt sie aus; unbekannte oder fehlende Knoten werden namentlich abgelehnt."))
         .action_describe("deleteSelection", LocalizedLabel::native("Deletes every currently selected node and relationship from the reasoning board; with nothing selected it is refused.", "Löscht alle aktuell ausgewählten Knoten und Beziehungen vom Denkbrett; ohne Auswahl wird es abgelehnt."))
-        .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("nodeGraphViewport", semio_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -827,7 +827,7 @@ pub mod unit_tests;
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
 use crate::{MINDMAP_WIRES_SCHEMA};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -835,7 +835,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.wires".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Wires Graph", "Leitungsgraph"),
+        label: semio_ui_locale::LocalizedLabel::native("Wires Graph", "Leitungsgraph"),
         source_format: MINDMAP_WIRES_SCHEMA.into(),
         component_kind: "wires".into(),
         dimension: "graph".into(),

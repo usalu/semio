@@ -4,7 +4,7 @@ use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioRational;
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSample;
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStream;
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA;
-use semio_framework_plugin::ArtifactDeserializer;
+use semio_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn real_world_video() -> SemioVideoSnapshot {

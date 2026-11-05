@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
-use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode};
 use semio_s_artifact_stdio_xml::XmlSnapshot;
 

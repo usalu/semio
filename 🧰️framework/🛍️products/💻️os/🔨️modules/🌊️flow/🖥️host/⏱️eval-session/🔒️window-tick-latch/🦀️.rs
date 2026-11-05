@@ -1,26 +1,15 @@
 //! 🔒️ Window tick latch of the evaluation session: the latch demands, arming, owed ticks, extension bookkeeping, continuation admission and latch retirement. See [`super`].
 
 use super::*;
+pub use semio_os_flow_host_source::window_key::{FlowEvalWindowKey,FlowEvalWindowKeyWork,FlowEvalWindowKeyAdvance};
 
 //#region 🔒️TickLatch
 impl FlowEvalSession {
     /// 🪙️ Quotes the exact original latch arena without constructing a replacement row.
-    pub fn next_window_tick_latch_copy_byte_demand(&self,window_id:&str)->Result<usize,ValueError>{
-        let key=flow_eval_window_key(window_id);
-        if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_copy_byte_demand(&key)}
-    }
-    pub fn next_window_tick_latch_capacity_byte_demand(&self,window_id:&str,copy:usize)->Result<usize,ValueError>{
-        let key=flow_eval_window_key(window_id);
-        if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_capacity_byte_demand(&key,copy)}
-    }
-    pub fn next_window_tick_latch_release_byte_demand(&self,window_id:&str)->Result<usize,ValueError>{
-        let key=flow_eval_window_key(window_id);
-        if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_release_byte_demand(&key)}
-    }
-    pub fn next_window_tick_latch_depth_demand(&self,window_id:&str)->Result<usize,ValueError>{
-        let key=flow_eval_window_key(window_id);
-        if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_depth_demand(&key)}
-    }
+    pub fn next_window_tick_latch_copy_byte_demand(&self,window_id:&str)->Result<usize,ValueError>{self.next_window_tick_key_copy_byte_demand(FlowEvalWindowKey::cold(window_id))}
+    pub fn next_window_tick_latch_capacity_byte_demand(&self,window_id:&str,copy:usize)->Result<usize,ValueError>{self.next_window_tick_key_capacity_byte_demand(FlowEvalWindowKey::cold(window_id),copy)}
+    pub fn next_window_tick_latch_release_byte_demand(&self,window_id:&str)->Result<usize,ValueError>{self.next_window_tick_key_release_byte_demand(FlowEvalWindowKey::cold(window_id))}
+    pub fn next_window_tick_latch_depth_demand(&self,window_id:&str)->Result<usize,ValueError>{self.next_window_tick_key_depth_demand(FlowEvalWindowKey::cold(window_id))}
 
     /// 🪜️ Drives the staged latch backing admission to completion inside one grant, so the first arming source never mutates an unadmitted latch.
     pub fn admit_window_tick_latch(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
@@ -35,25 +24,12 @@ impl FlowEvalSession {
     }
 
     /// 🌱️ Admits original backing before placing the original Copy-keyed latch.
-    pub fn prepare_window_tick_latch(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,(ValueError,RetainedCloneProgress)>{
-        let key=flow_eval_window_key(window_id);
-        if self.state.window_tick_latches.contains_key(&key){return Ok(RetainedCloneStep::Complete(Default::default()))}
-        if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original latch preparation requires one admitted item"),Default::default()))}
-        if self.state.window_tick_latches.next_insert_capacity_byte_demand(&key,grant.maximum_copy_bytes).map_err(|error|(error,RetainedCloneProgress::default()))?>0{
-            return self.state.window_tick_latches.reserve_insert_step(&key,grant).map(RetainedCloneStep::Progress);
-        }
-        match self.state.window_tick_latches.insert_reserved(key,FlowEvalWindowTickLatch::default(),grant){
-            Ok((None,progress))=>Ok(RetainedCloneStep::Complete(progress)),
-            Ok((Some(_),_))=>unreachable!("original latch preparation cannot displace an occupied row"),
-            Err((error,_,_))=>Err((error,Default::default())),
-        }
-    }
+    pub fn prepare_window_tick_latch(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,(ValueError,RetainedCloneProgress)>{self.prepare_window_tick_latch_original(window_id,grant).result.map_err(|error|{let p=error.retained_progress();(error,p)})}
 
-    fn window_tick_latch_mut(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<&mut FlowEvalWindowTickLatch,ValueError>{
-        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original latch mutation requires one admitted item"))}
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original latch mutation requires source depth"))}
-        self.state.window_tick_latches.get_mut(&flow_eval_window_key(window_id)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original latch backing must be admitted before mutation"))
-    }
+    /// ⏱️ Carries the real page reservation or atomic Copy-row insertion work.
+    pub fn prepare_window_tick_latch_original(&mut self,window_id:&str,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.prepare_window_tick_key_original(FlowEvalWindowKey::cold(window_id),grant)}
+
+    fn window_tick_latch_mut(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<&mut FlowEvalWindowTickLatch,ValueError>{self.window_tick_key_latch_mut(FlowEvalWindowKey::cold(window_id),grant)}
 
     /// 🔒️ Arms `window_id`'s `flowEvalTick` if — and only if — nothing already owes one.
     ///
@@ -105,29 +81,16 @@ impl FlowEvalSession {
     /// free for whatever this tick's own outcome decides to arm next.
     /// 🛑 A tick that actually begins is work RESUMING, which is the one thing that retires the
     /// `cancelled` banner an explicit gesture raised — see [`FlowEvalSession::preview_cancelled`].
-    pub fn begin_window_tick(&mut self, window_id: &str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
-        if !self.preview_cancellation_terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original preview cancellation must finish before another tick"))}
-        self.window_tick_latch_mut(window_id,grant)?.armed=false;
-        self.state.preview_cancelled = false;
-        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
-    }
+    pub fn begin_window_tick(&mut self, window_id: &str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {self.begin_window_tick_key(FlowEvalWindowKey::cold(window_id),grant)}
 
     /// ⏳️ Records that `window_id`'s tick parked `count` extension invocations. Those answers own
     /// the continuation from here — the tick that parked them owes no re-arm.
-    pub fn note_window_extensions_in_flight(&mut self, window_id: &str, count: usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
-        let latch = self.window_tick_latch_mut(window_id,grant)?;
-        latch.in_flight = latch.in_flight.saturating_add(u32::try_from(count).unwrap_or(u32::MAX));
-        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
-    }
+    pub fn note_window_extensions_in_flight(&mut self, window_id: &str, count: usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {self.note_window_key_extensions_in_flight(FlowEvalWindowKey::cold(window_id),count,grant)}
 
     /// 📝️ Records what `window_id`'s tick reported: `unfinished` is the tick's own "there is more to
     /// compute". Only this makes a refresh poll able to answer [`FlowEvalSession::window_tick_owed`]
     /// without evaluating anything.
-    pub fn note_window_tick_outcome(&mut self, window_id: &str, unfinished: bool,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
-        let admitted=self.admit_window_tick_latch(window_id,grant)?;
-        self.window_tick_latch_mut(window_id,grant)?.unfinished=unfinished;
-        Ok(RetainedCloneProgress{copied_items:admitted.copied_items.saturating_add(1),copied_bytes:admitted.copied_bytes,retained_capacity_bytes:admitted.retained_capacity_bytes,released_bytes:admitted.released_bytes})
-    }
+    pub fn note_window_tick_outcome(&mut self, window_id: &str, unfinished: bool,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {let admitted=self.admit_window_tick_latch(window_id,grant)?;let own=self.note_window_tick_key_outcome(FlowEvalWindowKey::cold(window_id),unfinished,grant)?;own.checked_add(admitted)}
 
     /// 🚧️ Marks `window_id`'s chain as GIVEN UP: an extension answer this process cannot fold (a
     /// faulted `invokeExtension`, an answer that seeds no cache entry) is not slow work, and the
@@ -222,4 +185,52 @@ impl FlowEvalSession {
         }
     }
 }
+impl FlowEvalSession{
+    /// 🔑️ Uses the genuine bounded original window-key output.
+    pub fn next_window_tick_key_copy_byte_demand(&self,key:FlowEvalWindowKey)->Result<usize,ValueError>{Ok(semio_os_flow_host_source::window_latch::flow_window_latch_demands(&self.state.window_tick_latches,key,0)?.copy_bytes)}
+    /// 🔑️ Uses the genuine bounded original window-key output.
+    pub fn next_window_tick_key_capacity_byte_demand(&self,key:FlowEvalWindowKey,copy:usize)->Result<usize,ValueError>{Ok(semio_os_flow_host_source::window_latch::flow_window_latch_demands(&self.state.window_tick_latches,key,copy)?.capacity_bytes)}
+    /// 🔑️ Uses the genuine bounded original window-key output.
+    pub fn next_window_tick_key_release_byte_demand(&self,key:FlowEvalWindowKey)->Result<usize,ValueError>{Ok(semio_os_flow_host_source::window_latch::flow_window_latch_demands(&self.state.window_tick_latches,key,0)?.release_bytes)}
+    /// 🔑️ Uses the genuine bounded original window-key output.
+    pub fn next_window_tick_key_depth_demand(&self,key:FlowEvalWindowKey)->Result<usize,ValueError>{Ok(semio_os_flow_host_source::window_latch::flow_window_latch_demands(&self.state.window_tick_latches,key,0)?.depth)}
+    /// 🔑️ Uses the genuine bounded original window-key output.
+    pub fn prepare_window_tick_key_original(&mut self,key:FlowEvalWindowKey,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{semio_os_flow_host_source::window_latch::prepare_flow_window_latch(&mut self.state.window_tick_latches,key,grant)}
+    /// 🔑️ Uses the genuine bounded original window-key output.
+    fn window_tick_key_latch_mut(&mut self,key:FlowEvalWindowKey,grant:RetainedCloneGrant)->Result<&mut FlowEvalWindowTickLatch,ValueError>{
+        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original latch mutation requires one admitted item"))}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original latch mutation requires source depth"))}
+        self.state.window_tick_latches.get_mut(&key.fingerprint()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original latch backing must be admitted before mutation"))
+    }
+    /// 🔑️ Uses the genuine bounded original window-key output.
+    pub fn begin_window_tick_key(&mut self, key:FlowEvalWindowKey,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        if !self.preview_cancellation_terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original preview cancellation must finish before another tick"))}
+        self.window_tick_key_latch_mut(key,grant)?.armed=false;
+        self.state.preview_cancelled = false;
+        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+    }
+    /// 🔑️ Uses the genuine bounded original window-key output.
+    pub fn note_window_key_extensions_in_flight(&mut self, key:FlowEvalWindowKey, count: usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        let latch = self.window_tick_key_latch_mut(key,grant)?;
+        latch.in_flight = latch.in_flight.saturating_add(u32::try_from(count).unwrap_or(u32::MAX));
+        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+    }
+    /// 📝️ Records a pre-admitted original keyed latch without hashing the text again.
+    pub fn note_window_tick_key_outcome(&mut self, key:FlowEvalWindowKey, unfinished: bool,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        let admitted=RetainedCloneProgress::default();
+        self.window_tick_key_latch_mut(key,grant)?.unfinished=unfinished;
+        Ok(RetainedCloneProgress{copied_items:admitted.copied_items.saturating_add(1),copied_bytes:admitted.copied_bytes,retained_capacity_bytes:admitted.retained_capacity_bytes,released_bytes:admitted.released_bytes})
+    }
+}
+impl FlowEvalSession{
+ /// 📏️ Quotes the same fixed keyed window-publication record event.
+ pub fn window_evaluation_publication_demands()->RetirementDemand{semio_os_flow_host_source::window_latch::flow_window_publication_demands()}
+ /// 📤️ Commits the actual original invocation wave and its window status together.
+ pub fn publish_window_evaluation_key_original(&mut self,key:FlowEvalWindowKey,count:usize,unfinished:bool,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if self.closing||!self.preview_cancellation_terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original window evaluation waits for live session and cancellation closure")),work:0}}semio_os_flow_host_source::window_latch::publish_flow_window_evaluation(&mut self.state.window_tick_latches,&mut self.state.preview_cancelled,key,count,unfinished,grant)}
+}
 //#endregion 🔒️TickLatch
+
+impl FlowEvalSession{
+ /// ✅️ Settles the actual keyed reply token once and transfers only its genuine existing continuation.
+ pub fn settle_window_reply_key_original(&mut self,key:FlowEvalWindowKey,give_up:bool,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,RetainedCloneProgress)>{if self.closing||!self.preview_cancellation_terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original reply settlement waits for live session and cancellation closure")),work:0}}semio_os_flow_host_source::window_latch::settle_flow_window_reply(&mut self.state.window_tick_latches,key,give_up,g)}
+}

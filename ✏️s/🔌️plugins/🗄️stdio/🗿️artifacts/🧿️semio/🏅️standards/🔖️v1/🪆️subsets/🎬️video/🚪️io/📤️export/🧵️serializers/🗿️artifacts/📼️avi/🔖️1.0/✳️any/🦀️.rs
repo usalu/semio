@@ -11,7 +11,7 @@
 
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
 use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStreamKind;
-use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamFormat, AviStreamHeader};
 use semio_s_artifact_stdio_avi::AviSnapshot;
 

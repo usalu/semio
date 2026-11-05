@@ -17,8 +17,8 @@ pub struct ChangeManufacturerFile {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeManufacturerFile where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_manufacturer_file::ChangeManufacturerFile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "manufacturer-file", kind: "change-manufacturer-file", record: "ChangedManufacturerFile" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update manufacturer file header (manufacturer=\"{}\")", self.new_manufacturer_file.manufacturer), &format!("Herstellerdateikopf (Hersteller=\"{}\") aktualisieren", self.new_manufacturer_file.manufacturer))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update manufacturer file header (manufacturer=\"{}\")", self.new_manufacturer_file.manufacturer), &format!("Herstellerdateikopf (Hersteller=\"{}\") aktualisieren", self.new_manufacturer_file.manufacturer))
     }
 }
 

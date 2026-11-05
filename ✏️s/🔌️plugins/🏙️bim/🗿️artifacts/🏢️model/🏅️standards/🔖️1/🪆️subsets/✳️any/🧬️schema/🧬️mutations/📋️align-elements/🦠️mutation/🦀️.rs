@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "elements", kind: "align-elements", record: "AlignElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Align {} element(s) to {:?} = {} m", self.ids.len(), self.axis, self.target), &format!("{} Element(e) auf {:?} = {} m ausrichten", self.ids.len(), self.axis, self.target))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Align {} element(s) to {:?} = {} m", self.ids.len(), self.axis, self.target), &format!("{} Element(e) auf {:?} = {} m ausrichten", self.ids.len(), self.axis, self.target))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

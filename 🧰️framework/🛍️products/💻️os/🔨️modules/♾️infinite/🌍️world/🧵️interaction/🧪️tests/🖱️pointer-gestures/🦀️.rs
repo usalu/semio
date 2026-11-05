@@ -1,8 +1,8 @@
 //! 🧪️ interaction tests (🖱️pointer-gestures): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_components::World3dRelocateSession;
-use semio_framework_os_infinite_world_cursors::world_merge_wire_label;
-use semio_framework_os_infinite_world_interaction::{world3d_relocate_dispatch_args, world3d_relocate_drag_target, world_merge_code};
+use semio_os_infinite_world_components::World3dRelocateSession;
+use semio_os_infinite_world_cursors::world_merge_wire_label;
+use semio_os_infinite_world_interaction::{world3d_relocate_dispatch_args, world3d_relocate_drag_target, world_merge_code};
 use semio_framework::MergeMode;
 use semio_framework_test_fixtures::fixture_text;
 

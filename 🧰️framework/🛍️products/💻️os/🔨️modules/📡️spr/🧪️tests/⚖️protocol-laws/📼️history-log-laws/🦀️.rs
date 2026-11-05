@@ -219,7 +219,7 @@ pub async fn assert_compaction_identity(bytes: &[u8]) {
     let path = scratch_spr_path("compact").await;
     std::fs::write(&path, bytes).expect("write scratch .spr file for compaction test");
     let options = crate::CompactOptions { drop_ephemeral: true, keep_snapshots: crate::KeepSnapshots::All };
-    let token=semio_framework_async::CancelToken::root_now();let transport=semio_framework_os_pack_tools::control::admit_command_transport(limits.max_total_alloc,token.clone(),|_|{}).unwrap();let context=semio_framework_os_pack_tools::control::CommandContext::try_new(transport,limits.max_total_alloc,token,|_|{}).unwrap();
+    let token=semio_framework_async::CancelToken::root_now();let transport=semio_os_pack_tools::control::admit_command_transport(limits.max_total_alloc,token.clone(),|_|{}).unwrap();let context=semio_os_pack_tools::control::CommandContext::try_new(transport,limits.max_total_alloc,token,|_|{}).unwrap();
     crate::compact(&path, &options, &limits, &context).await.expect("crate::compact must succeed on an already-valid stream");
     let compacted = std::fs::read(&path);
     let _ = std::fs::remove_file(&path);

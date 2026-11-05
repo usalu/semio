@@ -40,7 +40,7 @@ impl ToolJobFactory for Generation3dViewFlowEvalJobFactory {
         generation3d_view_flow_eval_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -63,7 +63,7 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewFlowEvalJobFactory {
 pub(super) struct Generation3dViewFlowEvalJobFactoryProofs;
 
 impl Generation3dViewFlowEvalJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
@@ -85,7 +85,7 @@ fn generation3d_view_document_io_contract() -> ToolExecutionContract {
 /// camera and show mode as ephemeral presence after every command, and an export changes neither —
 /// publishing presence for it would tell every co-viewer something moved when nothing did.
 pub(super) struct Generation3dViewDocumentIoWork {
-    pub(super) instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
 }
 
@@ -99,7 +99,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocu
         command: &Generation3dViewCommand,
         snapshot: &Generation3dSnapshot,
         interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+        _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
     ) -> Option<usize> {
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
@@ -174,7 +174,7 @@ impl ToolJobFactory for Generation3dViewDocumentIoJobFactory {
         generation3d_view_document_io_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_DOCUMENT_IO_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_DOCUMENT_IO_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -190,7 +190,7 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewDocumentIoJobFactory {
 pub(super) struct Generation3dViewDocumentIoJobFactoryProofs;
 
 impl Generation3dViewDocumentIoJobFactoryProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
@@ -204,7 +204,7 @@ impl Generation3dViewDocumentIoJobFactoryProofs {
 //#endregion 📤️DocumentIoRoute
 
 /// 🧾️ The flow-evaluation and document-io factories' first-step proofs, in registration order.
-pub(super) fn generation3d_view_flow_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+pub(super) fn generation3d_view_flow_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
     let mut proofs = Generation3dViewFlowEvalJobFactoryProofs::bounded_first_step_tool_proofs();
     proofs.extend(Generation3dViewDocumentIoJobFactoryProofs::bounded_first_step_tool_proofs());
     proofs

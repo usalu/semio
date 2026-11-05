@@ -13,8 +13,8 @@ pub struct RemoveStyle {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "style", kind: "remove-style", record: "RemoveStyle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove style", "Formatvorlage entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove style", "Formatvorlage entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -6,8 +6,8 @@ use semio_s_artifact_cad_cad_modes::windows::config as window_config;
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_value::DslValue;
-use semio_framework_plugin::apply_world3d_sun_action;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::apply_world3d_sun_action;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ToggleSun

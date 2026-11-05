@@ -3,7 +3,7 @@ use crate::editor_domain::editor_laws::context::{app, dispatch_with_view, previe
 use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
-use semio_framework_os_flow::neural::{Atom, ColdRetire, Dictionary, Value};
+use semio_os_flow::neural::{Atom, ColdRetire, Dictionary, Value};
 
 /// ⏱️ `flowEvalTick` is a WINDOW-owned retained job: its `extent` resolves only against the
 /// addressed preview window's transient owner, so it must be dispatched through that window's own
@@ -54,7 +54,7 @@ fn contribution_gated_arming_fixture() -> ContributionGatedArmingFixture {
     let fixture: ContributionGatedArmingFixture = serde_json::from_str(contribution_gated_arming_fixture_json()).expect("contribution gated arming fixture");
     assert_eq!(fixture.format, "semio.generation3d.contribution-gated-arming");
     assert_eq!(fixture.version, 1);
-    assert_eq!(fixture.tick_step_budget, semio_framework_os_flow::FLOW_EVAL_TICK_STEP_BUDGET, "the fixture's widget counts only force a second tick while they exceed the REAL step budget");
+    assert_eq!(fixture.tick_step_budget, semio_os_flow::FLOW_EVAL_TICK_STEP_BUDGET, "the fixture's widget counts only force a second tick while they exceed the REAL step budget");
     fixture
 }
 
@@ -105,7 +105,7 @@ fn an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain() {
         .iter()
         .find(|kind| {
             let probe = single_kind_graph(kind, 1);
-            let served = semio_framework_os_flow::unserved_flow_operator_kinds(&probe, &semio_framework_os_flow::flow_operator_registry()).is_empty();
+            let served = semio_os_flow::unserved_flow_operator_kinds(&probe, &semio_os_flow::flow_operator_registry()).is_empty();
             probe.retire_cold();
             served
         })
@@ -114,11 +114,11 @@ fn an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain() {
     for case in &fixture.cases {
         let kind = if case.kind_source == "unservedKind" { fixture.unserved_kind.clone() } else { served_kind.clone() };
         let graph = single_kind_graph(&kind, case.widgets);
-        let unserved = semio_framework_os_flow::unserved_flow_operator_kinds(&graph, &semio_framework_os_flow::flow_operator_registry());
+        let unserved = semio_os_flow::unserved_flow_operator_kinds(&graph, &semio_os_flow::flow_operator_registry());
         assert_eq!(unserved.is_empty(), case.may_rearm, "{}: the registry's answer for {kind} disagrees with the fixture ({unserved:?})", case.id);
         assert_eq!(semio_s_artifact_procedural_3d_preview_eval::may_rearm(&graph), case.may_rearm, "{}: may_rearm disagrees with the fixture", case.id);
 
-        let mut session = semio_framework_os_flow::FlowEvalSession::new();
+        let mut session = semio_os_flow::FlowEvalSession::new();
         let outcome = semio_s_artifact_procedural_3d_preview_eval::evaluate_tick("procedural-preview-gate", semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, &graph, 0.1, &mut session, None, None);
         assert_eq!(session.pending(), case.unfinished_tick, "{}: the graph must be big enough that one tick cannot finish it", case.id);
         assert!(outcome.extension_invocations.is_empty(), "{}: an in-guest graph parks no extension work", case.id);
@@ -166,7 +166,7 @@ async fn a_later_set_contributions_owes_the_settled_run_a_restart() {
     let restarted = crate::editor_domain::editor_laws::context::drive_preview_run(&mut app, &flow_view, &carried).await;
     assert!(restarted.hops > 0 && restarted.state.as_deref() == Some("finalized"), "the restarted run evaluates again: {restarted:?}");
     println!("[STATS] setContributions carried {owed:?} across {} page(s); restart ran {} hops", pages.len(), restarted.hops);
-    semio_framework_os_flow::uninstall_flow_extension(crate::editor_domain::editor_laws::context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
+    semio_os_flow::uninstall_flow_extension(crate::editor_domain::editor_laws::context::CONTRIBUTIONS_WITNESS_EXTENSION_ID).expect("the witness leaves the process-wide registry as it found it");
 }
 //#endregion 🚧️ContributionGatedArming
 
@@ -196,6 +196,6 @@ async fn a_second_refresh_starts_no_second_run() {
     assert_eq!(receipt.run_actions.iter().filter(|action| *action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID).count(), 1, "one run start in the whole drive: {receipt:?}");
     assert_eq!(receipt.state.as_deref(), Some("finalized"));
     println!("[STATS] run start: first={first:?} hops={} answered={} refreshes={owed_per_refresh:?}", receipt.hops, receipt.answered);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🔒️RunStart

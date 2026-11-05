@@ -2,7 +2,7 @@
 
 use crate::standards::v1_4::subsets::base::schema::diff::PdfDiff;
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_plugin::{Fault, FaultCode, FaultOrigin};
 use semio_framework_value::{DslValue, FromValue};
 use semio_s_artifact_stdio_contract::editing::{Carried, EditRules, EntityRule, InsertRule, RemoveRule, Selector, SnapshotEditEvent};
 

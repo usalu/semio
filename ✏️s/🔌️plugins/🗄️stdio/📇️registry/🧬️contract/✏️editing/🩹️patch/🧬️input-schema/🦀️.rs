@@ -10,7 +10,7 @@ fn schema_document(id: &str) -> Option<Arc<DslValue>> {
     if let Some(document) = documents.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).get(id) {
         return Some(Arc::clone(document));
     }
-    let document = Arc::new(semio_framework_plugin::registered_input_schema_document(id)?);
+    let document = Arc::new(semio_plugin::registered_input_schema_document(id)?);
     documents.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).insert(id.to_string(), Arc::clone(&document));
     Some(document)
 }
@@ -204,7 +204,7 @@ pub fn snapshot_patch_input_schema(snapshot_schema: &str, patch: &SnapshotPatch)
     if let Some(known) = schemas.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).get(&text) {
         return *known;
     }
-    let interned = semio_framework_plugin::mutation_input_defs(&text, &semio_framework_plugin::registered_input_schema_document).is_ok().then(|| &*Box::leak(text.clone().into_boxed_str()));
+    let interned = semio_plugin::mutation_input_defs(&text, &semio_plugin::registered_input_schema_document).is_ok().then(|| &*Box::leak(text.clone().into_boxed_str()));
     schemas.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).insert(text, interned);
     interned
 }

@@ -1,7 +1,7 @@
 //! 📈️ EN 1997 play app — the diagrams window: earth pressure, CPT and SPT profiles, bearing capacity factors and load-settlement curves of the selected check's entity.
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use semio_s_artifact_norm_en1997_scene::diagrams;
 use semio_s_plugin_norm_app_surface::{render_diagrams, DiagramsWindowSpec};

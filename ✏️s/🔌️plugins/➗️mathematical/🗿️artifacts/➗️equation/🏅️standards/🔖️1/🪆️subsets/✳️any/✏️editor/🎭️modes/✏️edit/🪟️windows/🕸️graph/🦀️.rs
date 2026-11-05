@@ -2,14 +2,14 @@
 
 use crate::editor::equation::workflow_json;
 use crate::EquationGraph;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_os_kernel::Viewport2d;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_os_kernel::Viewport2d;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -47,7 +47,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(graph: &EquationGraph, camera: &EquationCamera) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = workflow_json(graph);
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
-    semio_framework_plugin::scene_surface(MATH_PLAY_BODY_GRAPH, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
+    semio_plugin::scene_surface(MATH_PLAY_BODY_GRAPH, semio_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgePierCrackedI
         record: "ChangeBridgePierCrackedInertiaRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cracked share I_eff / I_g of the gross pier inertia for the design displacement (required, 0 < share <= 1, zero leaves the piers without stiffness; EN 1998-2 2.3.6.1)", "Gerissener Anteil I_eff / I_g des Brutto-Trägheitsmoments der Pfeiler für die Bemessungsverschiebung (Pflichtangabe, 0 < Anteil <= 1, null lässt die Pfeiler ohne Steifigkeit; EN 1998-2 2.3.6.1) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cracked share I_eff / I_g of the gross pier inertia for the design displacement (required, 0 < share <= 1, zero leaves the piers without stiffness; EN 1998-2 2.3.6.1)", "Gerissener Anteil I_eff / I_g des Brutto-Trägheitsmoments der Pfeiler für die Bemessungsverschiebung (Pflichtangabe, 0 < Anteil <= 1, null lässt die Pfeiler ohne Steifigkeit; EN 1998-2 2.3.6.1) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-pier-cracked-inertia-ratio".into()]

@@ -2,7 +2,7 @@ use super::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_cad_import::deserializers::artifacts::dwg::v_ac1024::any::SemioCadFromDwg;
 use semio_s_artifact_stdio_semio_cad::schema::snapshot::{CadLayer, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactDeserializer;
+use semio_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn p(x: f64, y: f64) -> SemioPoint2 {

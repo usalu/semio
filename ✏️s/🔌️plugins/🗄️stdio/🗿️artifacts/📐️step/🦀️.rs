@@ -3,14 +3,14 @@
 #[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
 pub use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
@@ -21,13 +21,13 @@ use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::sch
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<semio_plugin::io::FormatDescriptor>, semio_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
@@ -49,7 +49,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 //#region 🔖️Declaration
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("step", definition()?, declaration)
 }
 
@@ -57,9 +57,9 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 /// [`io_registry::composers`] and whose `.subset_validators(...)` register each conformance class's snapshot validator, which the
 /// base subset's SQLite codec dispatches through `store::io::validate_registered_snapshot_subset`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(semio_s_artifact_stdio_step_base::standards::v_ap214::subsets::base::schema::step_artifact_schema_descriptor())
         .formats(formats)
         .inferences([semio_s_artifact_stdio_step_inferences::standards::v_ap214::subsets::base::schema::inferences::step_artifact_inference_descriptor()])
@@ -80,8 +80,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// doc for why this exists as one owned slice instead of six separate `register_subset_validator`
 /// calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn step_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+fn step_subset_validators() -> &'static [semio_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
             vec![
@@ -168,7 +168,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.step".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Step", "Step"),
+        label: semio_ui_locale::LocalizedLabel::native("Step", "Step"),
         source_format: STDIO_STEP_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -191,7 +191,7 @@ pub mod io_registry {
     use semio_s_artifact_stdio_step_cc4::standards::v_ap214::subsets::cc4::io::StepCc4Composer;
     use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5Composer;
     use semio_s_artifact_stdio_step_cc6::standards::v_ap214::subsets::cc6::io::StepCc6Composer;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
+    use {semio_plugin::composer_entry_of,semio_plugin::io::register_composer_entries,semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static COMPOSERS: OnceLock<Vec<ComposerEntry>> = OnceLock::new();

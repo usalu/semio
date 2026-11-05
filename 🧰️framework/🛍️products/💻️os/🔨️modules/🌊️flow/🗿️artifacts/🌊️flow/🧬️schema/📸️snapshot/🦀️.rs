@@ -8,7 +8,7 @@ use std::collections::HashSet;
 
 use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
-use semio_framework_os_infinite_directed_presentation::{normalize_node_display, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
+use semio_os_infinite_directed_presentation::{normalize_node_display, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -55,7 +55,7 @@ pub use slider_parameters_and_preview_content::{
     dag_preview_content_from_dict, preview_content_summary, sensible_slider_range,
     set_widget_slider_value, FLOW_SLIDER_MAX, FLOW_SLIDER_MIN, FLOW_SLIDER_STEP,
 };
-use slider_parameters_and_preview_content::resolve_input_slider_fields;
+pub use slider_parameters_and_preview_content::resolve_input_slider_fields;
 
 #[path = "🧩️widget-descriptors/🦀️.rs"]
 mod widget_descriptors;

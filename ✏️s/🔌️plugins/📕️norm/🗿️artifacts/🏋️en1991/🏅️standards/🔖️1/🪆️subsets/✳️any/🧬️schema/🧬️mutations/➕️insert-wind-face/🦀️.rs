@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertWindFace where Op:
         record: "InsertedWindFaces",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert wind-loaded face", "Windbeanspruchte Fläche einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert wind-loaded face", "Windbeanspruchte Fläche einfügen")
     }
 }
 

@@ -3,13 +3,13 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn select_window_options_expose_mesh_domain_granularity_and_mode_toggles() {
     let state = SelectState { granularity: "face".into(), mode: "multiple".into() };
-    let measure = measure(&LowpolyConfig::default(), semio_framework_plugin::resolve_labels::<LowpolyLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &state);
+    let measure = measure(&LowpolyConfig::default(), semio_plugin::resolve_labels::<LowpolyLabels>(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &state);
     let (active_utility_id, children) = match measure {
         WindowMeasure::Group { active_utility_id, children, .. } => (active_utility_id, children),
         other => panic!("expected Group, got {other:?}"),
     };
     assert_eq!(active_utility_id, None, "Select options must always surface in window options");
-    let toggles: Vec<(&str, &semio_framework_plugin::ActionDescriptor, bool)> = children
+    let toggles: Vec<(&str, &semio_plugin::ActionDescriptor, bool)> = children
         .iter()
         .filter_map(|measure| match measure {
             WindowMeasure::Toggle { id, on_change, pressed, .. } => Some((id.as_str(), on_change, *pressed)),

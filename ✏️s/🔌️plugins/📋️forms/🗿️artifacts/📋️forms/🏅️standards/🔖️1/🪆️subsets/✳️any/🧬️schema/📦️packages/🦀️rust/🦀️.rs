@@ -1,8 +1,8 @@
 //! 🧬️ schema of `semio-s-artifact-forms-forms` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
 pub use crate::schema::snapshot::FormsSnapshot;
@@ -76,17 +76,6 @@ pub mod editor {
                 #[path = "../../../✏️editor/❓️questions/🫥️visibility/🧪️tests/🔬️editing/🦀️.rs"]
                 pub mod tests;
             }
-            #[path = "."]
-            pub mod extensions {
-                pub use semio_s_artifact_forms_forms_diff::editor::forms::questions::extensions::*;
-                #[cfg(test)]
-                #[path = "../../../✏️editor/❓️questions/🧩️extensions/🧪️tests/🦀️.rs"]
-                pub mod tests;
-            }
-        }
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
         }
         pub use semio_s_artifact_forms_forms_tests::editor::forms::terminology;
         pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
@@ -99,3 +88,10 @@ pub mod editor {
         }
     }
 }
+
+pub use semio_s_artifact_forms_forms_diff::question_extensions;
+#[cfg(test)]
+#[path = "../../../🧩️extensions/🧪️tests/🦀️.rs"]
+mod question_extensions_tests;
+
+pub use semio_s_artifact_forms_forms_config::forms_config;

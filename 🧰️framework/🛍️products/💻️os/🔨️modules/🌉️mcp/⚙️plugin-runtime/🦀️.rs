@@ -1,6 +1,6 @@
 //! ⚙️ Plugin component activation and the plugin artifact channel.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[global_allocator]

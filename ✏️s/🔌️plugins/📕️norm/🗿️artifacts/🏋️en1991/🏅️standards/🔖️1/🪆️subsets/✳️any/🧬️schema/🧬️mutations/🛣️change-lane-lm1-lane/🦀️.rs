@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLaneLm1Lane where 
         record: "ChangedLaneLm1Lane",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change LM1 lane number of the bridge lane", "Brückenfahrstreifen: LM1-Fahrstreifennummer ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change LM1 lane number of the bridge lane", "Brückenfahrstreifen: LM1-Fahrstreifennummer ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

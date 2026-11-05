@@ -16,9 +16,9 @@ use crate::editor::puzzle2d::engine::{
     BoardHost, CubicBez, Point,
 };
 use crate::Puzzle2dSnapshot;
-use semio_framework_os_infinite_board_normal_focus::{wheel_screen, clear_external_link_preview, set_camera_silent, set_preselect_state_silent, set_selection_ids, set_selection_ids_silent};
-use semio_framework_os_infinite_board_normal_gestures::{defers_descriptor_sync_from_js, interaction_json, set_drop_preview_json, set_transform_flags, target_regions_json};
-use semio_framework_os_infinite_board_normal_scene::{handle_positions_json, overlay_paint_state_json};
+use semio_os_infinite_board_normal_focus::{wheel_screen, clear_external_link_preview, set_camera_silent, set_preselect_state_silent, set_selection_ids, set_selection_ids_silent};
+use semio_os_infinite_board_normal_gestures::{defers_descriptor_sync_from_js, interaction_json, set_drop_preview_json, set_transform_flags, target_regions_json};
+use semio_os_infinite_board_normal_scene::{handle_positions_json, overlay_paint_state_json};
 
 // #region 🔖️WasmHost
 use wasm_bindgen::prelude::*;
@@ -30,10 +30,10 @@ use semio_framework_async::browser::future_to_promise;
 use semio_framework_geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
 use std::cell::RefCell;
 use std::rc::Rc;
-use semio_framework_os_infinite::board_delete_selection;
-use semio_framework_os_infinite::board_set_camera;
-use semio_framework_os_infinite::board_set_grid_visible;
-use semio_framework_os_infinite::board_set_wheel_zoom_active;
+use semio_os_infinite::board_delete_selection;
+use semio_os_infinite::board_set_camera;
+use semio_os_infinite::board_set_grid_visible;
+use semio_os_infinite::board_set_wheel_zoom_active;
 
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]
 pub fn board_compute_edge_bezier(source_px: f64, source_py: f64, source_cx: f64, source_cy: f64, target_px: f64, target_py: f64, target_cx: f64, target_cy: f64) -> Vec<f64> {
@@ -70,11 +70,11 @@ pub fn board_redraw_layout_snapshot_json(snapshot_json:&str,options_json:&str,ma
  let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|value|value.as_bool().unwrap_or(false)).unwrap_or(false);
  let mut decode_progress=|p:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|report("decode",p.completed as u64);
  let mut encode_progress=|p:semio_framework_value::native_encoding::NativeEncodeProgress|report("encode",p.completed as u64);
- let mut layout_progress=|p:semio_framework_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);
+ let mut layout_progress=|p:semio_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);
  let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum_bytes as usize,&mut decode_progress);
  let mut encode=semio_framework_value::NativeEncodeControl::new(maximum_bytes as usize,&mut encode_progress);
- let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut layout_progress);
- semio_framework_os_infinite::board::io::text::layout::redraw_snapshot_json(snapshot_json,options_json,&mut decode,&mut work,&mut encode).map_err(|e|JsValue::from_str(&e.to_string()))
+ let mut work=semio_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut layout_progress);
+ semio_os_infinite::board::io::text::layout::redraw_snapshot_json(snapshot_json,options_json,&mut decode,&mut work,&mut encode).map_err(|e|JsValue::from_str(&e.to_string()))
 }
 
 /// 🔤️ Parses `.puzzle2d` DSL text (`Puzzle2dSnapshot`'s `dsl::DslArtifact` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` snapshot — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
@@ -197,7 +197,7 @@ impl BoardSession {
     pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
         let mut accepted=|_|true;
         let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);
-        let desc=semio_framework_os_infinite::board::io::text::visibility::decode_board_scene_json(json,&mut control).map_err(|error|JsValue::from_str(&error.to_string()))?;
+        let desc=semio_os_infinite::board::io::text::visibility::decode_board_scene_json(json,&mut control).map_err(|error|JsValue::from_str(&error.to_string()))?;
         self.state.borrow_mut().host.sync_descriptor(&desc).map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(())
     }
@@ -216,7 +216,7 @@ impl BoardSession {
     pub fn set_canvas_theme_json(&mut self, json: &str) {
         let mut accepted=|_|true;
         let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut accepted);
-        if let Ok(overlay)=semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json,&mut control){self.state.borrow_mut().host.style.set_canvas_palette(&overlay);}
+        if let Ok(overlay)=semio_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json,&mut control){self.state.borrow_mut().host.style.set_canvas_palette(&overlay);}
     }
 
     #[wasm_bindgen(js_name = clearIconVectorCache)]
@@ -228,7 +228,9 @@ impl BoardSession {
     pub fn load_board_snapshot_json(&mut self, json: &str) -> bool {
         let mut accepted=|_|true;
         let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);
-        semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut self.state.borrow_mut().host.scene, &mut self.state.borrow_mut().host.focus, &mut self.state.borrow_mut().host.style, &mut self.state.borrow_mut().host.outbox,json,&mut control)
+        let mut state = self.state.borrow_mut();
+        let host = &mut state.host;
+        semio_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox, json, &mut control)
     }
 
     #[wasm_bindgen(js_name = setCamera)]

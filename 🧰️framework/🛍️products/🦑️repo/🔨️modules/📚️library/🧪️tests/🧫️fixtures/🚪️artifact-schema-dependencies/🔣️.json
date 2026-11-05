@@ -34,7 +34,7 @@
       ]
     },
     {
-      "source": "use protocol::{OpText,OpBinary}; use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl;",
+      "source": "use protocol::{OpText,OpBinary}; use semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl;",
       "forbidden": [
         "OpBinary",
         "OpText",

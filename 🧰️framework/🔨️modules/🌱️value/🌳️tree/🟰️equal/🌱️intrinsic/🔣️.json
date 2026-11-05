@@ -1,0 +1,443 @@
+{
+  "version": 1,
+  "stock": {
+    "maximumItems": 32768,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 256
+  },
+  "bodyCopyBytes": 512,
+  "cases": [
+    {
+      "name": "Null",
+      "left": {
+        "type": "null"
+      },
+      "right": {
+        "type": "null"
+      },
+      "equal": true
+    },
+    {
+      "name": "Boolean",
+      "left": {
+        "type": "bool",
+        "value": true
+      },
+      "right": {
+        "type": "bool",
+        "value": false
+      },
+      "equal": false
+    },
+    {
+      "name": "Unsigned And Signed Integer",
+      "left": {
+        "type": "uint",
+        "value": "7"
+      },
+      "right": {
+        "type": "int",
+        "value": "7"
+      },
+      "equal": true
+    },
+    {
+      "name": "Maximum Unsigned And Negative",
+      "left": {
+        "type": "uint",
+        "value": "18446744073709551615"
+      },
+      "right": {
+        "type": "int",
+        "value": "-1"
+      },
+      "equal": false
+    },
+    {
+      "name": "Negative Integer",
+      "left": {
+        "type": "int",
+        "value": "-7"
+      },
+      "right": {
+        "type": "int",
+        "value": "-7"
+      },
+      "equal": true
+    },
+    {
+      "name": "Float And Integer",
+      "left": {
+        "type": "float",
+        "value": "401c000000000000"
+      },
+      "right": {
+        "type": "uint",
+        "value": "7"
+      },
+      "equal": false
+    },
+    {
+      "name": "Signed Zero",
+      "left": {
+        "type": "float",
+        "value": "0000000000000000"
+      },
+      "right": {
+        "type": "float",
+        "value": "8000000000000000"
+      },
+      "equal": false
+    },
+    {
+      "name": "Same NaN Payload",
+      "left": {
+        "type": "float",
+        "value": "7ff8000000000001"
+      },
+      "right": {
+        "type": "float",
+        "value": "7ff8000000000001"
+      },
+      "equal": true
+    },
+    {
+      "name": "Different NaN Payload",
+      "left": {
+        "type": "float",
+        "value": "7ff8000000000001"
+      },
+      "right": {
+        "type": "float",
+        "value": "7ff8000000000002"
+      },
+      "equal": false
+    },
+    {
+      "name": "Infinity",
+      "left": {
+        "type": "float",
+        "value": "7ff0000000000000"
+      },
+      "right": {
+        "type": "float",
+        "value": "7ff0000000000000"
+      },
+      "equal": true
+    },
+    {
+      "name": "Unicode Text",
+      "left": {
+        "type": "text",
+        "value": "Grüße 東京 🌍"
+      },
+      "right": {
+        "type": "text",
+        "value": "Grüße 東京 🌍"
+      },
+      "equal": true
+    },
+    {
+      "name": "Unicode Normalization Is Significant",
+      "left": {
+        "type": "text",
+        "value": "é"
+      },
+      "right": {
+        "type": "text",
+        "value": "é"
+      },
+      "equal": false
+    },
+    {
+      "name": "Long Text",
+      "left": {
+        "type": "text",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🌍bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "right": {
+        "type": "text",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🌍bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "equal": true
+    },
+    {
+      "name": "Long Text Difference",
+      "left": {
+        "type": "text",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🌍x"
+      },
+      "right": {
+        "type": "text",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🌍y"
+      },
+      "equal": false
+    },
+    {
+      "name": "Empty Bytes",
+      "left": {
+        "type": "bytes",
+        "value": []
+      },
+      "right": {
+        "type": "bytes",
+        "value": []
+      },
+      "equal": true
+    },
+    {
+      "name": "Bytes",
+      "left": {
+        "type": "bytes",
+        "value": [
+          0,
+          127,
+          255
+        ]
+      },
+      "right": {
+        "type": "bytes",
+        "value": [
+          0,
+          127,
+          255
+        ]
+      },
+      "equal": true
+    },
+    {
+      "name": "Bytes And Array",
+      "left": {
+        "type": "bytes",
+        "value": [
+          1
+        ]
+      },
+      "right": {
+        "type": "array",
+        "value": [
+          {
+            "type": "uint",
+            "value": "1"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Nested Array",
+      "left": {
+        "type": "array",
+        "value": [
+          {
+            "type": "text",
+            "value": "x"
+          },
+          {
+            "type": "object",
+            "value": [
+              [
+                "v",
+                {
+                  "type": "uint",
+                  "value": "7"
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "right": {
+        "type": "array",
+        "value": [
+          {
+            "type": "text",
+            "value": "x"
+          },
+          {
+            "type": "object",
+            "value": [
+              [
+                "v",
+                {
+                  "type": "int",
+                  "value": "7"
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "equal": true
+    },
+    {
+      "name": "Array Order",
+      "left": {
+        "type": "array",
+        "value": [
+          {
+            "type": "uint",
+            "value": "1"
+          },
+          {
+            "type": "uint",
+            "value": "2"
+          }
+        ]
+      },
+      "right": {
+        "type": "array",
+        "value": [
+          {
+            "type": "uint",
+            "value": "2"
+          },
+          {
+            "type": "uint",
+            "value": "1"
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Ordered Duplicate Object",
+      "left": {
+        "type": "object",
+        "value": [
+          [
+            "x",
+            {
+              "type": "uint",
+              "value": "1"
+            }
+          ],
+          [
+            "x",
+            {
+              "type": "uint",
+              "value": "2"
+            }
+          ]
+        ]
+      },
+      "right": {
+        "type": "object",
+        "value": [
+          [
+            "x",
+            {
+              "type": "int",
+              "value": "1"
+            }
+          ],
+          [
+            "x",
+            {
+              "type": "int",
+              "value": "2"
+            }
+          ]
+        ]
+      },
+      "equal": true
+    },
+    {
+      "name": "Object Order",
+      "left": {
+        "type": "object",
+        "value": [
+          [
+            "a",
+            {
+              "type": "uint",
+              "value": "1"
+            }
+          ],
+          [
+            "b",
+            {
+              "type": "uint",
+              "value": "2"
+            }
+          ]
+        ]
+      },
+      "right": {
+        "type": "object",
+        "value": [
+          [
+            "b",
+            {
+              "type": "uint",
+              "value": "2"
+            }
+          ],
+          [
+            "a",
+            {
+              "type": "uint",
+              "value": "1"
+            }
+          ]
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Duplicate Object Value",
+      "left": {
+        "type": "object",
+        "value": [
+          [
+            "x",
+            {
+              "type": "uint",
+              "value": "1"
+            }
+          ],
+          [
+            "x",
+            {
+              "type": "uint",
+              "value": "2"
+            }
+          ]
+        ]
+      },
+      "right": {
+        "type": "object",
+        "value": [
+          [
+            "x",
+            {
+              "type": "uint",
+              "value": "1"
+            }
+          ],
+          [
+            "x",
+            {
+              "type": "uint",
+              "value": "3"
+            }
+          ]
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Shape",
+      "left": {
+        "type": "null"
+      },
+      "right": {
+        "type": "text",
+        "value": ""
+      },
+      "equal": false
+    }
+  ]
+}

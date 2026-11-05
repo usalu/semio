@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationAreaM2 w
         record: "ChangeFoundationAreaM2",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Foundation area", "Gründungsfläche ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Foundation area", "Gründungsfläche ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-area-m2".into()]

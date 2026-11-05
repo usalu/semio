@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRotatingMachineFre
         record: "ChangedRotatingMachineFrequency",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change rotation frequency f of the rotating machine", "Rotierende Maschine: Drehfrequenz f ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change rotation frequency f of the rotating machine", "Rotierende Maschine: Drehfrequenz f ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

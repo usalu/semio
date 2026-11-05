@@ -18,7 +18,7 @@ async fn a_grants_budget_is_what_the_turn_actually_executes_under() {
     let instance = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("instantiate");
 
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
 
     let mut first_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
@@ -73,7 +73,7 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let instance = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("instantiate");
 
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
 
     let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
@@ -105,7 +105,7 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
 async fn an_actor_never_granted_authority_preserves_unissued_work() {
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = ActorId(73);
-    let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(LoopbackTransport::default()),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(LoopbackTransport::default()),semio_plugin_host_shard::test_identity_issuer()).await;
     assert!(shard.granted_budget(actor.0).is_none());
 }
 //#endregion 🔖️GrantBudgetExecution
@@ -122,7 +122,7 @@ async fn unregister_frame_drops_the_instance_exactly_like_the_direct_call() {
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("mock instantiate");
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     assert!(shard.is_registered(actor).await);
 
@@ -144,7 +144,7 @@ async fn register_frame_is_accepted_without_error_and_has_no_local_side_effect()
     let mut bytes = Vec::new();
     ShardFrame::Register { actor }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_plugin_host_shard::test_identity_issuer()).await;
     let driven = pump(&mut shard).await.expect("pump must not error on a Register frame");
     assert_eq!(driven, 1, "Register consumes one bounded authority opportunity without instantiating locally");
     assert!(!shard.is_registered(actor).await, "Register never instantiates locally — see its own doc");

@@ -1,16 +1,16 @@
 //! 🧬️ Generation2d play app — the `generate` mode: generations list + input form + output preview.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 use crate::windows::form;
 use crate::windows::generations;
 use crate::windows::preview;
-use semio_framework_plugin::create_default_layout;
-use semio_framework_plugin::create_named_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::NamedLayout;
-use semio_framework_plugin::ToolRef;
+use semio_plugin::create_default_layout;
+use semio_plugin::create_named_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::NamedLayout;
+use semio_plugin::ToolRef;
 
 pub const GENERATION2D_PLAY_MODE_GENERATE: &str = "generate";
 pub const GENERATION2D_PLAY_LAYOUT_GENERATE: &str = "generation2d-generate";

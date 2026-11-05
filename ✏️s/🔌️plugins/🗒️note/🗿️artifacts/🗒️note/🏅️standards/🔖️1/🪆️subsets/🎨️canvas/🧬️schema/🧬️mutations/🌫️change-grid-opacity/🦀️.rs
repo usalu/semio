@@ -31,7 +31,7 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-opacity", kind: "change-grid-opacity", record: "ChangedGridOpacity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         crate::schema::note_setting_label(("grid opacity", "Rasterdeckkraft"), self.new_opacity.map(|opacity| { let (en, de) = crate::schema::note_label_number(opacity * 100.0); (format!("{en}%"), format!("{de} %")) }))
     }
     fn target(&self) -> Vec<String> {

@@ -1,7 +1,7 @@
 //! 🧪️ The viewer surface — identity and read-only laws.
 
 use crate::viewer::wfc2d::{create_wfc2d_viewer, Wfc2dViewer};
-use semio_framework_plugin::ArtifactViewer;
+use semio_plugin::ArtifactViewer;
 
 #[test]
 fn viewer_binds_the_artifact_dialect() {

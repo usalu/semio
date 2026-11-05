@@ -2,8 +2,8 @@
 
 use semio_framework_test_fixtures::fixture_path;
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 
 #[path = "🧾️receipt/📦️group/📚️command/🪟️mounted/🦀️.rs"]
 pub mod command_mounted;

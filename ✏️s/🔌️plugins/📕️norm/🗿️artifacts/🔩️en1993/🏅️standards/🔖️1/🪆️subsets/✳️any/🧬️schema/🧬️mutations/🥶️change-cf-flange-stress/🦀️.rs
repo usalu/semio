@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfFlangeStress whe
         record: "ChangedCfFlangeStress",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flange compression stress σ_com,Ed of the cold-formed member", "Kaltprofil: Gurtdruckspannung σ_com,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flange compression stress σ_com,Ed of the cold-formed member", "Kaltprofil: Gurtdruckspannung σ_com,Ed ändern")
     }
 }
 

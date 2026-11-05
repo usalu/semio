@@ -16,7 +16,7 @@ impl Default for EquationCamera {
     }
 }
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -27,4 +27,4 @@ pub struct EquationGraphWindowConfig {
     pub camera: EquationCamera,
 }
 
-semio_framework_os_kernel::config_diff! { record: EquationGraphWindowConfig, diff: EquationGraphWindowConfigDiff, fields: { camera: EquationCamera } }
+semio_os_kernel::config_diff! { record: EquationGraphWindowConfig, diff: EquationGraphWindowConfigDiff, fields: { camera: EquationCamera } }

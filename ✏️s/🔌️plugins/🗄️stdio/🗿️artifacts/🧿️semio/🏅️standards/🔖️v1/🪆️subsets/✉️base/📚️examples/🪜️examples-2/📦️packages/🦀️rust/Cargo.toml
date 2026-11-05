@@ -16,8 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-locale = { workspace = true }
 
 [dev-dependencies]
 semio-s-artifact-stdio-semio-snapshot = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }

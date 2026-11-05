@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "locked": "0.2.129",
+  "stale": "0.2.126",
+  "paths": [
+    {
+      "platform": "darwin",
+      "home": "/owned/cargo",
+      "expected": "/owned/cargo/bin/wasm-bindgen"
+    },
+    {
+      "platform": "linux",
+      "home": "/owned/cargo",
+      "expected": "/owned/cargo/bin/wasm-bindgen"
+    },
+    {
+      "platform": "win32",
+      "home": "C:\\owned\\cargo",
+      "expected": "C:\\owned\\cargo\\bin\\wasm-bindgen.exe"
+    }
+  ],
+  "cases": [
+    {
+      "name": "owned match beats stale ambient",
+      "owned": "wasm-bindgen 0.2.129\n",
+      "ambient": "wasm-bindgen 0.2.126\n",
+      "expected": "owned"
+    },
+    {
+      "name": "matching ambient fallback",
+      "owned": "wasm-bindgen 0.2.126\n",
+      "ambient": "wasm-bindgen 0.2.129\n",
+      "expected": "ambient"
+    },
+    {
+      "name": "mismatches refuse",
+      "owned": "wasm-bindgen 0.2.126\n",
+      "ambient": "wasm-bindgen 0.2.126\n",
+      "expected": null
+    },
+    {
+      "name": "wrong explicit tool refuses despite prepared match",
+      "owned": "wasm-bindgen 0.2.129\n",
+      "ambient": "wasm-bindgen 0.2.126\n",
+      "explicit": true,
+      "expected": null
+    }
+  ],
+  "matches": [
+    {
+      "output": "wasm-bindgen 0.2.129\n",
+      "expected": true
+    },
+    {
+      "output": "wasm-bindgen 0.2.126\n",
+      "expected": false
+    },
+    {
+      "output": "different-tool 0.2.129",
+      "expected": false
+    },
+    {
+      "output": "wasm-bindgen 0.2.129 extra",
+      "expected": false
+    }
+  ],
+  "readiness": {
+    "locked": "0.2.126",
+    "cases": [
+      {
+        "name": "owned match avoids ambient probe",
+        "before": "wasm-bindgen 0.2.126",
+        "after": "wasm-bindgen 0.2.126",
+        "install": false,
+        "refused": false
+      },
+      {
+        "name": "installation publishes matching owned tool",
+        "before": "wasm-bindgen 0.2.100",
+        "after": "wasm-bindgen 0.2.126",
+        "install": true,
+        "refused": false
+      },
+      {
+        "name": "successful installer with stale binary cannot claim readiness",
+        "before": "wasm-bindgen 0.2.100",
+        "after": "wasm-bindgen 0.2.100",
+        "install": true,
+        "refused": true
+      },
+      {
+        "name": "explicit mismatched tool refuses without installation",
+        "before": "wasm-bindgen 0.2.100",
+        "after": "wasm-bindgen 0.2.100",
+        "explicit": true,
+        "install": false,
+        "refused": true
+      }
+    ]
+  }
+}

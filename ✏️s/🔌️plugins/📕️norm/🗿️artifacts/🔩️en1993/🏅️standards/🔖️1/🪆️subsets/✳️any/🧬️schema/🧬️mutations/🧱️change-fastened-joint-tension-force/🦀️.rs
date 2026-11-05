@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFastenedJointTensi
         record: "ChangedFastenedJointTensionForce",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fastened joint: Tension force F_t,Ed", "Befestigungsverbindung: Zugkraft F_t,Ed ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fastened joint: Tension force F_t,Ed", "Befestigungsverbindung: Zugkraft F_t,Ed ändern")
     }
 }
 

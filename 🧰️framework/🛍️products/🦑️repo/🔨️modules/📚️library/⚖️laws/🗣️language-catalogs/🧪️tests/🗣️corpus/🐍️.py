@@ -32,7 +32,7 @@ DEFAULTS = [
 ]
 PLACEHOLDER = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 TAGS = {"en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "zh"}
-SKIP = {"node_modules", "🧪️tests", "🧫️fixtures", ".git", "target", "dist", ".cache", "🗑️generated"}
+SKIP = {"node_modules", "🧪️tests", "🧫️fixtures", ".git", "target", "dist", ".cache", ".r", "🗑️generated"}
 OWN = "⚖️laws/🗣️language-catalogs/"
 ROOTS = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", "🧰️framework/🔨️modules/🏃️process"]
 SOURCE = re.compile(r"\.(?:ts|mts|mjs|cjs)$")

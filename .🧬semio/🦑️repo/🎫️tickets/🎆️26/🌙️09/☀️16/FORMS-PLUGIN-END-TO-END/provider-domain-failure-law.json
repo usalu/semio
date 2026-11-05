@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "phase": "execution",
+      "cancelled": false,
+      "deadlineExpired": false,
+      "retirementAuthorized": false,
+      "fuel": 8,
+      "items": 8,
+      "expectedAdmission": true,
+      "sameCaller": true
+    },
+    {
+      "phase": "execution",
+      "cancelled": true,
+      "deadlineExpired": false,
+      "retirementAuthorized": false,
+      "fuel": 8,
+      "items": 8,
+      "expectedAdmission": false,
+      "sameCaller": true
+    },
+    {
+      "phase": "execution",
+      "cancelled": false,
+      "deadlineExpired": true,
+      "retirementAuthorized": false,
+      "fuel": 8,
+      "items": 8,
+      "expectedAdmission": false,
+      "sameCaller": true
+    },
+    {
+      "phase": "retirement",
+      "cancelled": true,
+      "deadlineExpired": true,
+      "retirementAuthorized": true,
+      "fuel": 8,
+      "items": 8,
+      "expectedAdmission": true,
+      "sameCaller": true
+    },
+    {
+      "phase": "retirement",
+      "cancelled": true,
+      "deadlineExpired": true,
+      "retirementAuthorized": false,
+      "fuel": 8,
+      "items": 8,
+      "expectedAdmission": false,
+      "sameCaller": true
+    },
+    {
+      "phase": "retirement",
+      "cancelled": true,
+      "deadlineExpired": true,
+      "retirementAuthorized": true,
+      "fuel": 0,
+      "items": 8,
+      "expectedAdmission": false,
+      "sameCaller": true
+    },
+    {
+      "phase": "retirement",
+      "cancelled": true,
+      "deadlineExpired": true,
+      "retirementAuthorized": true,
+      "fuel": 8,
+      "items": 0,
+      "expectedAdmission": false,
+      "sameCaller": true
+    },
+    {
+      "phase": "retirement",
+      "cancelled": true,
+      "deadlineExpired": true,
+      "retirementAuthorized": true,
+      "fuel": 1,
+      "items": 8,
+      "sameCaller": true,
+      "expectedAdmission": false
+    },
+    {
+      "phase": "retirement",
+      "cancelled": true,
+      "deadlineExpired": true,
+      "retirementAuthorized": true,
+      "fuel": 8,
+      "items": 1,
+      "sameCaller": true,
+      "expectedAdmission": false
+    },
+    {
+      "phase": "retirement",
+      "cancelled": true,
+      "deadlineExpired": true,
+      "retirementAuthorized": true,
+      "fuel": 8,
+      "items": 8,
+      "sameCaller": false,
+      "expectedAdmission": false
+    }
+  ],
+  "geometryFailure": {
+    "primary": {
+      "kind": "invariantViolated",
+      "message": "original geometry refused",
+      "retained": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      }
+    },
+    "work": {
+      "retained": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      },
+      "consumedUnits": 3
+    },
+    "receiptRefusal": {
+      "kind": "ownershipLimit",
+      "message": "original receipt refused",
+      "retained": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    }
+  }
+}

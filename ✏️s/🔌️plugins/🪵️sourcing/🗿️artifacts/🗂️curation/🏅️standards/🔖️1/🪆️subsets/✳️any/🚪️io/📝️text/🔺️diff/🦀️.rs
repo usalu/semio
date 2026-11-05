@@ -7,7 +7,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 
-impl semio_framework_os_kernel::DiffText for crate::standards::v1::subsets::any::schema::diff::CurationDiff {
+impl semio_os_kernel::DiffText for crate::standards::v1::subsets::any::schema::diff::CurationDiff {
     fn print_diff(&self) -> String {
         semio_framework_pack_json::to_json_string(self)
     }

@@ -444,7 +444,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
     None
 }
 
-pub fn step_world3d_interaction(state: &mut World3dState, generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
+pub fn step_world3d_interaction(state: &mut World3dState, generation: u64, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
     let Some(mut authority) = state.authority.interaction_authority.take() else {
         return WorldInteractionAuthorityStep::Fault;
     };

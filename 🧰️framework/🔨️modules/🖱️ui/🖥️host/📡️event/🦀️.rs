@@ -237,7 +237,7 @@ pub struct PointerRegistry {
 // `#[cfg(not(target_arch = "wasm32"))]` gate; `TOUCH_TAG`/`FINGER_MASK`/`impl PointerRegistry` did not,
 // even though the `struct PointerRegistry` they all depend on IS gated (line ~39) and `winit` is a
 // native-only dependency (absent on wasm32 per this crate's own `Cargo.toml`). `cargo check -p
-// semio-framework-ui-host --target wasm32-unknown-unknown` failed with 5 errors (`E0433`/`E0425`, "cannot
+// semio-ui-host --target wasm32-unknown-unknown` failed with 5 errors (`E0433`/`E0425`, "cannot
 // find crate winit"/"item was configured out") before this fix — confirmed clean after. Each item below
 // now carries its own explicit gate rather than relying on one attribute silently applying to only the
 // single item immediately following it (the exact mistake that produced this defect).

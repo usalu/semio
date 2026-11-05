@@ -8,7 +8,7 @@ use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select a
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::Effect;
+use semio_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -38,13 +38,13 @@ pub struct Puzzle2dActionCtx<'a> {
     pub recorder: &'a mut Puzzle2dRecorder,
     pub artifact_mutations: &'a mut Vec<Puzzle2dMutation>,
     /// 🕹️ App-initiated selection writes riding alongside this action (`Emit::interaction_writes`).
-    pub interaction_writes: &'a mut Vec<semio_framework_plugin::InteractionWrite>,
+    pub interaction_writes: &'a mut Vec<semio_plugin::InteractionWrite>,
     pub ui_scope: &'a mut UiDirtyScope,
     /// 🗣️ The resolved locale×terminology label set an arm raises user-facing prose from — a refusal
     /// notice is a real sentence, never a fault code.
     pub labels: &'static crate::editor::puzzle2d::terminology::Puzzle2dLabels,
     /// 🪪️ Exact public command authority retained by framework continuations.
-    pub operation: Option<semio_framework_plugin::AppOperationContext>,
+    pub operation: Option<semio_plugin::AppOperationContext>,
     /// 🧬️ The typed document this action reads as its base — what the select tool yields against.
     pub base: &'a Puzzle2dPlaySnapshot,
     /// 🌱️ The admission's authoring seed every tool transaction this action commits is minted from; empty for
@@ -56,7 +56,7 @@ pub struct Puzzle2dActionCtx<'a> {
     /// 🛠️ The tool transaction this action committed — stamped on every op it publishes.
     pub transaction: &'a mut Option<protocol::TransactionRef>,
     /// 🖐️ The dispatching window's gesture slot: every tool of this action drives the window's ONE gesture through it.
-    pub gesture: &'a semio_framework_plugin::app::GestureSlot<Puzzle2dMutation>,
+    pub gesture: &'a semio_plugin::app::GestureSlot<Puzzle2dMutation>,
 }
 
 impl<'a> Puzzle2dActionCtx<'a> {
@@ -142,8 +142,8 @@ impl<'a> Puzzle2dActionCtx<'a> {
 }
 
 /// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d label admission failed"))
 }
 //#endregion 🔖️ActionContext
 
@@ -154,12 +154,12 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 /// destructive tail. `organize_context_menu` (applied automatically at the
 /// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
 /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
-pub async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, snapshot: &Value, selected: &[String], view_state: &semio_framework_plugin::ViewModel) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::selection_count_phrase;
-    use semio_framework_plugin::ContextMenuItemSpec;
-    use semio_framework_plugin::Menu;
-    use semio_framework_plugin::SelectionKind;
-    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
+pub async fn puzzle2d_context_menu_items(registry: &semio_plugin::AppActionRegistry, snapshot: &Value, selected: &[String], view_state: &semio_plugin::ViewModel) -> Vec<semio_plugin::ContextMenuItemSpec> {
+    use semio_plugin::selection_count_phrase;
+    use semio_plugin::ContextMenuItemSpec;
+    use semio_plugin::Menu;
+    use semio_plugin::SelectionKind;
+    let is_de = view_state.locale == semio_ui_locale::Locale::De;
     let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<semio_framework::DslValue>, destructive: bool, disabled: bool| ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),

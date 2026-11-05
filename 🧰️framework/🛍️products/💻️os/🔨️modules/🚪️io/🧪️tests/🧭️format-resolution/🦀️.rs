@@ -1,6 +1,6 @@
 //! 🧭️ Format resolution law driven by the language-agnostic `🧫️fixtures/🧭️format-resolution/🔣️.json` fixture.
 
-use semio_framework_os_io::{canonicalize_format_descriptor, pick_revision, RevisionSniff, resolve_format_in, FormatDescriptor, FormatQuery, FormatResolutionBasis, FormatResolutionError};
+use semio_os_io::{canonicalize_format_descriptor, pick_revision, RevisionSniff, resolve_format_in, FormatDescriptor, FormatQuery, FormatResolutionBasis, FormatResolutionError};
 use serde_json::Value;
 
 fn fixture() -> Value {

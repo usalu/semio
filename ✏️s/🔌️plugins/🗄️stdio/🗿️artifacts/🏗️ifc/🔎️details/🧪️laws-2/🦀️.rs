@@ -2,21 +2,21 @@
 #![cfg(test)]
 
 use semio_s_artifact_stdio_ifc_declarations::{IfcAttributeDeclaration, IfcCatalog, IfcTypeExpression};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::Fault;
+use semio_ui_locale::Locale;
 use semio_framework_value::{DslValue, FromValue, RetainedWorkOutcome, ToValue};
 use semio_s_artifact_stdio_contract::editing;
 use semio_s_artifact_stdio_contract::editing::{DslSnapshotDetailsProvider, SnapshotDetailItemCapabilities, SnapshotDetailPathSegment as P, SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailVariant, SnapshotDetailsProvider};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{ifc_arguments_identical, ifc_complex_identical, IfcComplexType, IfcEntity, IfcSnapshot, IfcTypedValue, IfcValue};
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::{edit_rules, IfcMutation};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{EditorApp, Emit};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::{EditorApp, Emit};
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
 use semio_s_artifact_stdio_ifc_details::*;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 type DetailsTestEditor = semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::editor::ifc4_any::Ifc4AnyEditor;
 fn details_test_command(event: semio_s_artifact_stdio_contract::editing::SnapshotEditEvent) -> semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::editor::ifc4_any::Ifc4AnyEditCommand {
     semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::editor::ifc4_any::Ifc4AnyEditCommand::EditSnapshot { event }
@@ -24,9 +24,9 @@ fn details_test_command(event: semio_s_artifact_stdio_contract::editing::Snapsho
 type Source = SnapshotSource;
 use protocol::ColdMutation;
 use semio_framework_job::StepContext;
-use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
-use semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead;
-use semio_framework_plugin::{AppOperationContext, HistoryView, NoConfig};
+use semio_plugin::plugin_app_close_prelude::OriginalWorkFixture;
+use semio_plugin::retained_command::ArtifactCommandSnapshotRead;
+use semio_plugin::{AppOperationContext, HistoryView, NoConfig};
 type Work = IfcDetailsWork<DetailsTestEditor, DetailsTestProfile>;
 
 #[path="../constituent_remap_tests.rs"]mod constituent_remap_tests;

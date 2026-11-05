@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "events",
+    "expectedTotal"
+  ],
+  "properties": {
+    "expectedTotal": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "events": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "admitted",
+          "delegateWork",
+          "expectedWork"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "delegateWork": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedWork": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -53,7 +53,7 @@ export class DocumentBrowserActorIdentityCheckScript extends BundleScript {
                 ].map((law) => `value::codec::tests::${law}`),
               },
               {
-                package: "semio-framework-os-kernel",
+                package: "semio-os-kernel",
                 target: { kind: "lib" },
                 laws: [
                   "os_directory::schema::tests::document_authority_json_integer_tokens_never_coerce",

@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveCharacteristicBasi
         verb: "remove", entity: "characteristic-basis", kind: "remove-characteristic-basis", record: "RemovedCharacteristicBasis",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove characteristic value basis", "Grundlage des charakteristischen Werts entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove characteristic value basis", "Grundlage des charakteristischen Werts entfernen")
     }
 }
 

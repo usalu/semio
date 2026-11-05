@@ -8,31 +8,31 @@ use super::*;
 /// ⌨️ The key token a captured chord writes for one key event — the inverse of
 /// [`key_event_matches_chord`]'s key arm, so a chord this renderer captures is one it can match again.
 /// `None` for a key no chord can name (a bare modifier never reaches here as a `KeyAction`).
-pub fn keybinding_capture_key_token(action: &semio_framework_ui_wgpu_input::KeyAction) -> Option<String> {
+pub fn keybinding_capture_key_token(action: &semio_ui_wgpu_input::KeyAction) -> Option<String> {
     Some(match action {
-        semio_framework_ui_wgpu_input::KeyAction::Char(key) => {
+        semio_ui_wgpu_input::KeyAction::Char(key) => {
             let key = key.trim().to_ascii_lowercase();
             if key.is_empty() {
                 return None;
             }
             key
         }
-        semio_framework_ui_wgpu_input::KeyAction::Enter => "enter".into(),
-        semio_framework_ui_wgpu_input::KeyAction::Escape => return None,
-        semio_framework_ui_wgpu_input::KeyAction::Backspace => "backspace".into(),
-        semio_framework_ui_wgpu_input::KeyAction::Delete => "delete".into(),
-        semio_framework_ui_wgpu_input::KeyAction::Tab => "tab".into(),
-        semio_framework_ui_wgpu_input::KeyAction::ArrowLeft => "arrowleft".into(),
-        semio_framework_ui_wgpu_input::KeyAction::ArrowRight => "arrowright".into(),
-        semio_framework_ui_wgpu_input::KeyAction::ArrowUp => "arrowup".into(),
-        semio_framework_ui_wgpu_input::KeyAction::ArrowDown => "arrowdown".into(),
-        semio_framework_ui_wgpu_input::KeyAction::Home => "home".into(),
-        semio_framework_ui_wgpu_input::KeyAction::End => "end".into(),
-        semio_framework_ui_wgpu_input::KeyAction::PageUp => "pageup".into(),
-        semio_framework_ui_wgpu_input::KeyAction::PageDown => "pagedown".into(),
-        semio_framework_ui_wgpu_input::KeyAction::Function(number) => format!("f{number}"),
-        semio_framework_ui_wgpu_input::KeyAction::Space(_) => "space".into(),
-        semio_framework_ui_wgpu_input::KeyAction::ContextMenu => "contextmenu".into(),
+        semio_ui_wgpu_input::KeyAction::Enter => "enter".into(),
+        semio_ui_wgpu_input::KeyAction::Escape => return None,
+        semio_ui_wgpu_input::KeyAction::Backspace => "backspace".into(),
+        semio_ui_wgpu_input::KeyAction::Delete => "delete".into(),
+        semio_ui_wgpu_input::KeyAction::Tab => "tab".into(),
+        semio_ui_wgpu_input::KeyAction::ArrowLeft => "arrowleft".into(),
+        semio_ui_wgpu_input::KeyAction::ArrowRight => "arrowright".into(),
+        semio_ui_wgpu_input::KeyAction::ArrowUp => "arrowup".into(),
+        semio_ui_wgpu_input::KeyAction::ArrowDown => "arrowdown".into(),
+        semio_ui_wgpu_input::KeyAction::Home => "home".into(),
+        semio_ui_wgpu_input::KeyAction::End => "end".into(),
+        semio_ui_wgpu_input::KeyAction::PageUp => "pageup".into(),
+        semio_ui_wgpu_input::KeyAction::PageDown => "pagedown".into(),
+        semio_ui_wgpu_input::KeyAction::Function(number) => format!("f{number}"),
+        semio_ui_wgpu_input::KeyAction::Space(_) => "space".into(),
+        semio_ui_wgpu_input::KeyAction::ContextMenu => "contextmenu".into(),
     })
 }
 
@@ -78,7 +78,7 @@ pub fn shell_keybinding_rows(overrides: &HashMap<String, String>) -> Vec<ShellKe
 impl ShellInputState {
     /// 🖱️ The cursor the active utility requests while the pointer is inside the active window silhouette — maps
     /// `UtilityDefinition.cursor` onto a {@link ui_wgpu::wgpu::SemioCursor} (P5). `None` when no utility/cursor applies.
-    pub fn utility_cursor_override(&self, x: f32, y: f32, docs: &DocumentState, windows: &WindowState) -> Option<semio_framework_ui_wgpu_hosting::cursor::SemioCursor> {
+    pub fn utility_cursor_override(&self, x: f32, y: f32, docs: &DocumentState, windows: &WindowState) -> Option<semio_ui_wgpu_hosting::cursor::SemioCursor> {
         let session = docs.session.as_ref()?;
         let window_id = windows.active_window_id.as_deref()?;
         let utility_id = windows.active_utility_for_window(window_id)?;

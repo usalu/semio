@@ -20,7 +20,7 @@
       "const": 1
     },
     "package": {
-      "const": "semio-framework-plugin-surface-fixture"
+      "const": "semio-plugin-surface-fixture"
     },
     "root": {
       "type": "string"

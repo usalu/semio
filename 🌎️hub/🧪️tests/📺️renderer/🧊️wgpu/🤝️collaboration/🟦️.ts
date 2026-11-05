@@ -3,11 +3,11 @@ import { devServePortV1, ensureDevServe } from "@semio-tech/framework-os-dev/loc
 import { join, resolve } from "node:path";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { hubProbeSignIn } from "@semio-tech/framework-os/modules/directory/testkit/client-probe";
-import { ensureParityPlaywrightBrowsersPath } from "@semio-tech/framework-os-dev/parity/execution";
+import {ensureRepositoryBrowserPathV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { HUB_COLLABORATION_CHECKS, HUB_COLLABORATION_KINDS, HubCollaborationBlocked, hubCollaborationHumans, type HubCollaborationJourneyV1, type HubCollaborationOptionsV1, type HubCollaborationReportV1 } from "./📋️contract/🟦️.ts";
 import { prepareDocument } from "./🧭️native-law-and-follow/🟦️.ts";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { JOURNEY_BODIES } from "./🎬️journeys/🟦️.ts";
 
 /** 🔌️ A free loopback port for a serve this run starts itself. */
@@ -68,7 +68,7 @@ export async function runHubCollaboration(options: HubCollaborationOptionsV1): P
       Object.assign(document, { spaceId: prepared.spaceId, documentId: prepared.documentId });
       report.measured.documentCreatedMs = prepared.createdMs;
     }
-    ensureParityPlaywrightBrowsersPath();
+    ensureRepositoryBrowserPathV1(options.repoRoot,process.env);
     const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan,WebGPU", "--ignore-gpu-blocklist", "--use-angle=metal"] });
     cleanups.push(() => browser.close());

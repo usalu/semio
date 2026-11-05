@@ -11,7 +11,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
+            "semio-ui-tui-terminal/native,semio-ui-tui-unit-laws/native"
           ],
           "level": "fundamental",
           "coverage": false
@@ -34,7 +34,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native",
+            "semio-ui-tui-terminal/native,semio-ui-tui-unit-laws/native",
             "--exact",
             "owned_law"
           ],
@@ -57,7 +57,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
+            "semio-ui-tui-terminal/native,semio-ui-tui-unit-laws/native"
           ],
           "level": "long",
           "coverage": false
@@ -78,7 +78,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
+            "semio-ui-tui-terminal/native,semio-ui-tui-unit-laws/native"
           ],
           "level": "exhaustive",
           "coverage": true
@@ -99,7 +99,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
+            "semio-ui-tui-terminal/native,semio-ui-tui-unit-laws/native"
           ],
           "level": "long",
           "coverage": false
@@ -184,12 +184,12 @@
           ],
           "budgetMs": 4242,
           "packages": [
-            "semio-framework-ui-tui-core",
-            "semio-framework-ui-tui-vt",
-            "semio-framework-ui-tui-terminal",
-            "semio-framework-ui-tui-widgets",
-            "semio-framework-ui-tui-frame",
-            "semio-framework-ui-tui-engine"
+            "semio-ui-tui-core",
+            "semio-ui-tui-vt",
+            "semio-ui-tui-terminal",
+            "semio-ui-tui-widgets",
+            "semio-ui-tui-frame",
+            "semio-ui-tui-engine"
           ]
         },
         {
@@ -198,11 +198,11 @@
             "--target",
             "wasm32-unknown-unknown",
             "--features",
-            "semio-framework-ui-tui-host/bindgen"
+            "semio-ui-tui-host/bindgen"
           ],
           "budgetMs": 4242,
           "packages": [
-            "semio-framework-ui-tui-host"
+            "semio-ui-tui-host"
           ]
         },
         {
@@ -213,8 +213,8 @@
           ],
           "budgetMs": 4242,
           "packages": [
-            "semio-framework-ui-wgpu-light",
-            "semio-framework-ui-wgpu-input"
+            "semio-ui-wgpu-light",
+            "semio-ui-wgpu-input"
           ]
         }
       ],
@@ -238,7 +238,7 @@
           ],
           "budgetMs": 4242,
           "packages": [
-            "semio-framework-ui-wgpu-engine"
+            "semio-ui-wgpu-engine"
           ]
         }
       ],

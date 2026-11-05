@@ -1,15 +1,15 @@
 //! 📥️ Items of `initialization_replay` that belong to `os-store-initialization-runtime` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🏗️initialization/🔁️replay/🦀️.rs`.
 use semio_framework_value::ArtifactOwnedValueRetirementFactory;
 use crate::lifted_store::ArtifactStoreInitializationRuntime;
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
-use semio_framework_os_spr::{Edit, Mutation, OpBinary};
+use semio_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_spr::{Edit, Mutation, OpBinary};
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
-use semio_framework_os_store_replay::fold_operation;
+use semio_os_store_replay::fold_operation;
 use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
 use semio_framework_value::RetainedCloneStep;
-use semio_framework_os_spr::ColdMutation;
+use semio_os_spr::ColdMutation;
 /// ▶️ What folding one forward of an applied edit onto the initialization runtime's current projection produced.
 pub enum ArtifactStoreInitializationNext<P> {
     /// 🏁️ The edit has no forward at that index.

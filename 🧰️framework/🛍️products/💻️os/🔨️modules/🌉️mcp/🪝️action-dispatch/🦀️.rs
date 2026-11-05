@@ -1,6 +1,6 @@
 //! 🪝️ The mutation protocol action adapter.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "../🔀️dispatch/🦀️.rs"]
 pub mod actions;

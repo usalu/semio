@@ -1,7 +1,7 @@
 //! ✏️ Idml editor — the `edit` mode: one full-pane Document window over the story runs.
 
-use semio_framework_plugin::{ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::{ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_ui_locale::LocalizedLabel;
 
 #[path = "🪟️windows/🪟️main/🦀️.rs"]
 pub mod main;

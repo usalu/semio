@@ -9,17 +9,17 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::HasBase;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_window_item;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TreeWindows;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::HasBase;
 
 //#region 🔖️Constants
 pub const ARCHITECT_VIEW_WINDOW_REGISTER: &str = "architect-view-register";
@@ -50,7 +50,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
     value.as_ref().try_into().map_err(|_| PluginAssemblyError::new("architect.viewer.label.capacity", "register label admission failed"))
 }
 
@@ -59,16 +59,16 @@ fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<
 /// 🪟️ One windowed `registers` section spans the whole roster and each register is a windowed group
 /// row over its three counts, so neither the number of registers nor the rows below one of them is
 /// bounded by the fixed-children cap the old section-per-register fan-out was.
-pub fn render(program: &ProgramSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let summary = status_summary(program);
     if summary.total_entities == 0 {
-        return semio_framework_plugin::built_text_node(Label::data("No entities in this program yet.")).map_err(|_| PluginAssemblyError::new("architect.viewer.label.capacity", "register placeholder admission failed"));
+        return semio_plugin::built_text_node(Label::data("No entities in this program yet.")).map_err(|_| PluginAssemblyError::new("architect.viewer.label.capacity", "register placeholder admission failed"));
     }
     let registers: Vec<_> = summary.by_register.iter().filter(|register| register.count > 0).collect();
     PanelTreeBuilder::new("architect-view-register")?
         .window_section(windows, "architect-view-register.registers", Some(ui_label("Registers")?), true, &registers, |register| {
             let id = format!("architect-view-register.{}", register.register);
-            let group = semio_framework_ui_contract::tree_item(ui_label(&register.register)?).try_id(&id).map_err(|_| PluginAssemblyError::new("architect.viewer.items.capacity", "register group admission failed"))?;
+            let group = semio_ui_contract::tree_item(ui_label(&register.register)?).try_id(&id).map_err(|_| PluginAssemblyError::new("architect.viewer.items.capacity", "register group admission failed"))?;
             let counts = [("total", "Total", register.count), ("draft", "Draft", register.draft_count), ("approved", "Approved", register.approved_count)];
             tree_window_item(windows, group, &id, true, &counts, |(key, label, count)| tree_item_desc(format!("{id}.{key}"), ui_label(format!("{label}: {count}"))?, None))
         })?

@@ -1,10 +1,10 @@
 use crate::editor::note::commands::nudge_selection::nudge;
 use crate::op::NoteMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit};
+use semio_plugin::{ArtifactView, ConfigView, Emit};
 #[allow(unused_imports)]
 use crate::editor::note::commands::nudge_selection::NUDGE_STEP;
 #[allow(unused_imports)]
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::note::commands::nudge_selection_up::*;
@@ -25,7 +25,7 @@ fn selected_document() -> (NoteSnapshot, String) {
     (NoteSnapshot { blocks: vec![block], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() }, id)
 }
 
-fn moved_bounds(document: &NoteSnapshot, selected: &str, emit: &semio_framework_plugin::Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>) -> (f64, f64) {
+fn moved_bounds(document: &NoteSnapshot, selected: &str, emit: &semio_plugin::Emit<crate::op::NoteMutation, semio_plugin::NoConfigMutation>) -> (f64, f64) {
     assert_eq!(emit.artifact_mutations.len(), 1, "a nudge emits exactly one move");
     let next = apply_note_mutation(document, &emit.artifact_mutations[0]).expect("apply nudge");
     let block = crate::schema::find_block(&next.blocks, selected).expect("nudged block");
@@ -39,22 +39,22 @@ fn dispatch_ctx(selected: &str) -> crate::editor::note::dispatch_ctx::NoteDispat
 
 #[semio_framework_async_macros::async_test]
 async fn nudge_direction_actions_move_selection_without_args() {
-    type Nudge = fn(&NoteSnapshot, &str) -> semio_framework_plugin::Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>;
+    type Nudge = fn(&NoteSnapshot, &str) -> semio_plugin::Emit<crate::op::NoteMutation, semio_plugin::NoConfigMutation>;
     let up: Nudge = |document, selected| {
-        let history = semio_framework_plugin::HistoryView::empty();
-        handle(&NudgeSelectionUp {}, &semio_framework_plugin::ArtifactView::new(document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut dispatch_ctx(selected)).expect("nudge up")
+        let history = semio_plugin::HistoryView::empty();
+        handle(&NudgeSelectionUp {}, &semio_plugin::ArtifactView::new(document, &history), &semio_plugin::ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None }, &mut dispatch_ctx(selected)).expect("nudge up")
     };
     let down: Nudge = |document, selected| {
-        let history = semio_framework_plugin::HistoryView::empty();
-        nudge_selection_down::handle(&nudge_selection_down::NudgeSelectionDown {}, &semio_framework_plugin::ArtifactView::new(document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut dispatch_ctx(selected)).expect("nudge down")
+        let history = semio_plugin::HistoryView::empty();
+        nudge_selection_down::handle(&nudge_selection_down::NudgeSelectionDown {}, &semio_plugin::ArtifactView::new(document, &history), &semio_plugin::ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None }, &mut dispatch_ctx(selected)).expect("nudge down")
     };
     let left: Nudge = |document, selected| {
-        let history = semio_framework_plugin::HistoryView::empty();
-        nudge_selection_left::handle(&nudge_selection_left::NudgeSelectionLeft {}, &semio_framework_plugin::ArtifactView::new(document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut dispatch_ctx(selected)).expect("nudge left")
+        let history = semio_plugin::HistoryView::empty();
+        nudge_selection_left::handle(&nudge_selection_left::NudgeSelectionLeft {}, &semio_plugin::ArtifactView::new(document, &history), &semio_plugin::ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None }, &mut dispatch_ctx(selected)).expect("nudge left")
     };
     let right: Nudge = |document, selected| {
-        let history = semio_framework_plugin::HistoryView::empty();
-        nudge_selection_right::handle(&nudge_selection_right::NudgeSelectionRight {}, &semio_framework_plugin::ArtifactView::new(document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut dispatch_ctx(selected)).expect("nudge right")
+        let history = semio_plugin::HistoryView::empty();
+        nudge_selection_right::handle(&nudge_selection_right::NudgeSelectionRight {}, &semio_plugin::ArtifactView::new(document, &history), &semio_plugin::ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None }, &mut dispatch_ctx(selected)).expect("nudge right")
     };
     for (nudge, expected, label) in [(up, (0.0, -1.0), "up"), (down, (0.0, 1.0), "down"), (left, (-1.0, 0.0), "left"), (right, (1.0, 0.0), "right")] {
         let (document, selected) = selected_document();
@@ -65,11 +65,11 @@ async fn nudge_direction_actions_move_selection_without_args() {
 #[semio_framework_async_macros::async_test]
 async fn nudge_fast_actions_use_ten_pixel_step() {
     let (document, selected) = selected_document();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let emit = nudge_selection_right_fast::handle(
         &nudge_selection_right_fast::NudgeSelectionRightFast {},
-        &semio_framework_plugin::ArtifactView::new(&document, &history),
-        &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None },
+        &semio_plugin::ArtifactView::new(&document, &history),
+        &semio_plugin::ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None },
         &mut dispatch_ctx(&selected),
     )
     .expect("nudge right fast");
@@ -79,8 +79,8 @@ async fn nudge_fast_actions_use_ten_pixel_step() {
 #[semio_framework_async_macros::async_test]
 async fn a_nudge_without_a_selection_emits_nothing() {
     let (document, _) = selected_document();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: NoteIdOwner::new("nudge-test", 2), view_state: None, window_transient: Default::default(), window_transient_owner: None };
-    let emit = handle(&NudgeSelectionUp {}, &semio_framework_plugin::ArtifactView::new(&document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut ctx).expect("nudge up");
+    let emit = handle(&NudgeSelectionUp {}, &semio_plugin::ArtifactView::new(&document, &history), &semio_plugin::ConfigView { snapshot: &semio_plugin::NoConfig::default(), window: None }, &mut ctx).expect("nudge up");
     assert!(emit.artifact_mutations.is_empty(), "an empty selection must not move anything");
 }

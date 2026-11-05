@@ -89,7 +89,7 @@ fn drive<F: std::future::Future>(future: F) -> F::Output {
         if let std::task::Poll::Ready(output) = future.as_mut().poll(&mut context) {
             return output;
         }
-        let advanced = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+        let advanced = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
         let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
         if advanced == 0 {
             std::thread::sleep(std::time::Duration::from_millis(1));
@@ -108,13 +108,13 @@ fn live_env(key: &str) -> String {
 #[cfg(not(target_arch = "wasm32"))]
 fn sign_in_live(shell: &mut ShellState, origin: &str, email: &str, password: &str) -> Option<String> {
     drive(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("the hub route opens");
-    hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin)]);
-    hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
+    hub_verb(shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin)]);
+    hub_verb(shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
     let mut first_refusal = None;
     for _ in 0..2 {
-        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", email)]);
-        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", password)]);
-        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_IN, &[]);
+        hub_verb(shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", email)]);
+        hub_verb(shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", password)]);
+        hub_verb(shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_IN, &[]);
         if shell.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn {
             break;
         }

@@ -87,7 +87,7 @@ pub(super) struct OwnedPending {
 #[derive(Debug, serde::Deserialize, FromValue)]
 pub(super) struct OwnedCheckpointMetadata {
     pub(super) pending: Option<OwnedPending>,
-    pub(super) original_receipt: Option<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
+    pub(super) original_receipt: Option<semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
     pub(super) guest_checkpoint: Option<Vec<u8>>,
     pub(super) context: i32,
     pub(super) next_resource: i32,
@@ -95,7 +95,7 @@ pub(super) struct OwnedCheckpointMetadata {
 }
 
 #[derive(serde::Serialize)]
-pub(super) struct OwnedCheckpointView<'a>{pub(super) pending:&'a Option<OwnedPending>,pub(super) original_receipt:&'a Option<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,pub(super) guest_checkpoint:&'a Option<Vec<u8>>,pub(super) context:i32,pub(super) next_resource:i32,pub(super) instance_id:u32}
+pub(super) struct OwnedCheckpointView<'a>{pub(super) pending:&'a Option<OwnedPending>,pub(super) original_receipt:&'a Option<semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,pub(super) guest_checkpoint:&'a Option<Vec<u8>>,pub(super) context:i32,pub(super) next_resource:i32,pub(super) instance_id:u32}
 
 /// 🏃️ One instance of an owned compiled guest: its interpreter state, the operation it has in flight, the original receipt
 /// that operation keeps, and what the guest printed.
@@ -103,12 +103,12 @@ pub struct OwnedGuestInstance {
     pub(super) original_job_clock:Option<(u64,fn()->Option<u64>)>,
     pub(super) artifact: Arc<OwnedSemioArtifact>,
     pub(super) actor: Option<OwnedSemioInstance>,
-    pub(super) original_core:std::mem::ManuallyDrop<Option<semio_framework_plugin_interpreter::CoreInstanceOpening>>,
+    pub(super) original_core:std::mem::ManuallyDrop<Option<semio_plugin_interpreter::CoreInstanceOpening>>,
     pub(super) original_source:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
     pub(super) original_startup_input:Option<semio_framework_actor::RetainedTurnInput>,
     pub(super) original_call:Option<original_call::OwnedOriginalCall>,
     pub(super) pending: Option<OwnedPending>,
-    pub(super) original_receipt: Option<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
+    pub(super) original_receipt: Option<semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
     /// ☠️ Set by the first guest trap. A trapped guest keeps whatever linear memory, shadow-stack
     /// pointer and allocator state the trap left behind, so every later call starts from a lower
     /// stack pointer and traps again 112 bytes further down — ticket 26/09/18 slice A1 read that
@@ -127,7 +127,7 @@ pub struct OwnedGuestInstance {
 impl Drop for OwnedGuestInstance{fn drop(&mut self){assert!(std::thread::panicking()||(self.original_core.is_none()&&self.original_source.is_none()),"Owned original instance reached Drop before its paid Core and source close")}}
 
 impl OwnedGuestInstance {
-    pub fn original_core_mut(&mut self)->Result<(&Arc<semio_framework_plugin_interpreter::CoreModule>,&mut semio_framework_plugin_interpreter::CoreInstanceOpening),semio_framework_value::ValueError>{let core=self.original_core.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Owned call requires its genuine paid original Core holder"))?;Ok((self.artifact.original_actor_module(),core))}
+    pub fn original_core_mut(&mut self)->Result<(&Arc<semio_plugin_interpreter::CoreModule>,&mut semio_plugin_interpreter::CoreInstanceOpening),semio_framework_value::ValueError>{let core=self.original_core.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Owned call requires its genuine paid original Core holder"))?;Ok((self.artifact.original_actor_module(),core))}
     /// 👁️ Borrows already funded original Core memory without copying or reopening its owner.
     pub fn original_memory(&self,index:u32)->Option<&[u8]>{self.original_core.as_ref()?.resources()?.memory(index)}
     pub fn original_startup_input(&self)->Option<semio_framework_actor::RetainedTurnInput>{self.original_startup_input}

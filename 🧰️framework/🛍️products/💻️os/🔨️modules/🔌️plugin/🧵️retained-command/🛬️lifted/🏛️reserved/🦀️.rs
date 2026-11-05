@@ -1,19 +1,19 @@
 //! 🏛️ Lift file: 1 item, about 20 lines, of `👷️job/🏛️reserved/🦀️.rs` that belong to crate `retained-command` (WP3).
 //!
 //! WP3 owns both crates: the framework reserved route capacity names `ArtifactRetainedWorkCapacity`, so it moves up from `job` to `retained-command`. Until `retained-command` is carved, the source module re-exports the item with `pub use`.
-use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
-use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
-use semio_framework_os_kernel::ArtifactStoreInitializationAuthority;
-use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
-use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use semio_os_kernel::ArtifactStoreInitializationAuthority;
+use semio_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
+use semio_ui_contract::{Buildable, HasBase, HasChildren};
+use semio_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 use crate as retained_command;
 use semio_framework::*;
 

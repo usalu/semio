@@ -4,8 +4,8 @@
 
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action;
-use semio_framework_plugin::world3d_sun_measures;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::world3d_sun_measures;
+use semio_plugin::WindowMeasure;
 
 /// 🌞️ The sun toggle plus its azimuth/elevation/intensity sliders.
 /// 🔗️ `world3d_sun_measures` is a framework helper still bound to `serde_json::Value` (framework

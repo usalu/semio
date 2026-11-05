@@ -30,8 +30,8 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLoc
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Forget the folder of \"{}\"", self.document_id), &format!("Ordner von \"{}\" vergessen", self.document_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Forget the folder of \"{}\"", self.document_id), &format!("Ordner von \"{}\" vergessen", self.document_id))
     }
 
     fn target(&self) -> Vec<String> {
@@ -39,7 +39,7 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLoc
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLocalFolder {
+impl semio_os_command::ColdMutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLocalFolder {
     fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFoldersDiff> {
         if !base.bindings.iter().any(|entry| entry.document_id == self.document_id) {
             return MutationOutcome::new(LocalFoldersDiff::default()).warning("mutation.no-op", format!("\"{}\" is not attached to a folder on this device.", self.document_id));

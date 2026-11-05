@@ -18,7 +18,7 @@ pub struct ChangeCombinationName {
 }
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeCombinationName where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeCombinationName> {
     const SEMANTICS:SemanticDescriptor=SemanticDescriptor{verb:"change",entity:"combination-name",kind:"change-combination-name",record:"ChangedCombinationName"};
-    fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native(&format!("Change combination name {}",self.id),&format!("Kombination {} ändern",self.id))}
+    fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native(&format!("Change combination name {}",self.id),&format!("Kombination {} ändern",self.id))}
     fn target(&self)->Vec<String>{vec![self.id.clone()]}
 }
 impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ChangeCombinationName where Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeCombinationName> {

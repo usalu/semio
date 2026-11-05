@@ -92,7 +92,7 @@ test("actual runtime mounted receivers require caller policy and typed schedulin
  expect(source.includes("instance.app.mounted_owner_maintenance_step(&mut turn)")).toBe(true);
  expect(source.includes("instance.app.mounted_owner_close_step(&mut turn)")).toBe(true);
  expect(source.includes("pub mounted_policy: MountedOwnerPolicyV1")).toBe(true);
- expect(source.includes("fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1")).toBe(true);
+ expect(source.includes("fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1")).toBe(true);
  expect(source.includes("runtime_lifecycle_grant")).toBe(false);
  expect(source.includes("cx.is_cancelled()")).toBe(true);expect(source.includes("cx.deadline_exceeded()")).toBe(true);
 });
@@ -178,7 +178,7 @@ test("runtime policy forwards original extension retirement currencies into the 
  expect(plugin.includes("pub fn extension_retirement_turn(cx:&mut semio_framework_job::StepContext<'_>) -> Result<(bool, PluginLifecycleStep), semio_framework_job::OriginalTurnFailure>")).toBe(true);
  expect(plugin.includes("Ok((more_work, step))")).toBe(true);
  expect(turn.includes("runtime.mounted_owner_policy().close")).toBe(true);
- expect(turn.includes("cx.with_retained_loan(extension_grant,|same|semio_framework_plugin_extension::extension_runtime_lift::extension_retirement_turn(same))?")).toBe(true);
+ expect(turn.includes("cx.with_retained_loan(extension_grant,|same|semio_plugin_extension::extension_runtime_lift::extension_retirement_turn(same))?")).toBe(true);
  expect(turn.includes("extension_retirement_turn(usize::from")).toBe(false);
 });
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangePierAxialLoadN whe
         record: "ChangePierAxialLoadN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change pier: Pier axial load N (compression positive)", "Pfeiler: Normalkraft des Pfeilers N (Druck positiv) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change pier: Pier axial load N (compression positive)", "Pfeiler: Normalkraft des Pfeilers N (Druck positiv) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-pier-axial-load-n".into()]

@@ -20,8 +20,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for AppendRunLog {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "append", entity: "run-log", kind: "append-run-log", record: "AppendedRunLog" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Append run log for {}", self.node_id), &format!("Laufprotokoll für {} anhängen", self.node_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Append run log for {}", self.node_id), &format!("Laufprotokoll für {} anhängen", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["logs".into(), self.node_id.clone()]

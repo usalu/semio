@@ -7,7 +7,7 @@ pub mod export_registers_csv {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+    use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "export-registers-csv")]
@@ -26,7 +26,7 @@ pub mod import_registers_csv {
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-registers-csv")]
@@ -52,7 +52,7 @@ pub mod import_registers_csv_request {
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+    use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
     /// 🪪️ This app's CSV file-open request id — distinct from its program picker (110) and every other plugin's.
     pub const ARCHITECT_IMPORT_CSV_REQUEST_ID: u64 = 132;
@@ -65,7 +65,7 @@ pub mod import_registers_csv_request {
     /// receives it whole as its `payload` (merge strategy `upsert`).
     pub fn handle(_payload: &ImportRegistersCsvRequest, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {
-            req: semio_framework_plugin::RequestId(ARCHITECT_IMPORT_CSV_REQUEST_ID),
+            req: semio_plugin::RequestId(ARCHITECT_IMPORT_CSV_REQUEST_ID),
             accept: ".csv,text/csv".into(),
             read_as: Some("text".into()),
             import_action: "importRegistersCsv".into(),
@@ -79,7 +79,7 @@ pub mod export_program {
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+    use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "export-program")]
@@ -97,7 +97,7 @@ pub mod import_program_request {
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+    use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-program-request")]
@@ -105,7 +105,7 @@ pub mod import_program_request {
 
     pub fn handle(_payload: &ImportProgramRequest, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {
-            req: semio_framework_plugin::RequestId(110),
+            req: semio_plugin::RequestId(110),
             accept: ".dsl,.architect.dsl,.spk,.ops,application/octet-stream,text/plain".into(),
             read_as: None,
             import_action: "importProgram".into(),
@@ -119,7 +119,7 @@ pub mod import_program {
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-program")]

@@ -1,7 +1,7 @@
 use crate::editor::animate::config::PresentationConfig;
 use crate::editor::animate::support::PresentationDispatchCtx;
 use crate::PresentationSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 #[allow(unused_imports)]
 use crate::editor::animate::config::PresentationConfigMutation;
 #[allow(unused_imports)]
@@ -13,7 +13,7 @@ use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 #[allow(unused_imports)]
 use crate::FigureTileSource;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Emit, Fault};
+use semio_plugin::{Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::animate::commands::set_source::*;
@@ -66,11 +66,11 @@ async fn set_frame_updates_source_frame() {
 /// on the emitted effect rather than through `app.snapshot()`.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_demo_emits_a_reset_effect() {
-    use semio_framework_plugin::Effect;
+    use semio_plugin::Effect;
     let mut app = presentation_app().await;
     dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
     let deck = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&deck, &history);
     let cfg_snapshot = PresentationConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
@@ -86,7 +86,7 @@ async fn set_active_example_demo_emits_a_reset_effect() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_unknown_id_is_a_no_op() {
     let deck = default_presentation_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&deck, &history);
     let cfg_snapshot = PresentationConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };

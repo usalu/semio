@@ -23,8 +23,8 @@ pub struct SetComment {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comment", kind: "set-comment", record: "SetComment" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set comment", "Kommentar setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set comment", "Kommentar setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

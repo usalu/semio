@@ -5,35 +5,35 @@
 //!
 //! Contract: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md`
 //! §2.7, §2.8, §3.3, §4.1 (layers 1 and 3). Domain-neutral types: `semio_framework_tool_run`.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
-use semio_framework_plugin_window_transient::{ui_assembly_error,ui_assembly_error_because,paged_text_carrier};
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJob;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunTraceKeys;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPort;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunView;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
+use semio_plugin_window_transient::{ui_assembly_error,ui_assembly_error_because,paged_text_carrier};
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
+use semio_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
+use semio_plugin_decl_views::tool_run_contract::ToolRunJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunTraceKeys;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunJobPort;
+use semio_plugin_decl_views::tool_run_contract::ToolRunView;
 
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ColdMutation, Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 use semio_framework_tool_run::{tool_run_format, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunRejection, ToolRunSlot, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_MEMBER_OPS_MAX, TOOL_RUN_PROVISIONAL_OPS_MAX, TOOL_RUN_REASON_PROVISIONAL_CAP, TOOL_RUN_REASON_TRACE_TRUNCATED, TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS};
 use store::ErasedSnapshotRetirement;
 use semio_framework_tool_run::{
@@ -42,8 +42,8 @@ use semio_framework_tool_run::{
     TOOL_RUN_ACTION_IDS, 
     
 };
-use semio_framework_plugin_tool_run_operations::tool_erased_retirement_demand;
-use semio_framework_ui_scene::{scene_lane_hash, Board2dScene, Board2dSceneLane, Canvas2dScene, Canvas2dSceneLane, SceneDoc, SceneLaneRef, World3dScene, World3dSceneLane};
+use semio_plugin_tool_run_operations::tool_erased_retirement_demand;
+use semio_ui_scene::{scene_lane_hash, Board2dScene, Board2dSceneLane, Canvas2dScene, Canvas2dSceneLane, SceneDoc, SceneLaneRef, World3dScene, World3dSceneLane};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
@@ -122,7 +122,7 @@ use panel_groups::*;
 #[path="♻️retirement/🧪️tests/🦀️.rs"]
 mod granted_ledger_retirement_tests;
 
-pub use semio_framework_plugin_job::lifted_job::*;
+pub use semio_plugin_job::lifted_job::*;
 
 #[path = "../🛠️tool-machine/🦀️.rs"]
 pub mod tool_jobs_tool_machine;

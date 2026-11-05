@@ -1,7 +1,7 @@
 //! 🔬️ io-registry of `semio-s-artifact-stdio-ply` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use schema::snapshot::PlySnapshot;
 pub use schema::diff::PlyDiff;

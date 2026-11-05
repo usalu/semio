@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerCohesionEffec
         record: "ChangedLayerCohesionEffective",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Effective cohesion c′ of the soil layer", "Bodenschicht: Effektive Kohäsion c′ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Effective cohesion c′ of the soil layer", "Bodenschicht: Effektive Kohäsion c′ ändern")
     }
 }
 

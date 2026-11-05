@@ -24,20 +24,20 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
     PluginApp::begin_document_archive_load(&mut target.0, 91, archive).expect("archive admission");
     let mut status = None;
     for _ in 0..200_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut target.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), target.1.cx()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut target.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), target.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(&mut target.0, 91).expect("archive acknowledgement");
             status = Some(polled);
             break;
         }
-        PluginApp::maintenance_step(&mut target.0, target.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
+        PluginApp::maintenance_step(&mut target.0, target.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
     }
     let status = status.expect("the archive load reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
     let loaded: Vec<String> = context::snapshot(&*target).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert_eq!(loaded, expected, "the fresh instance holds exactly the archived document");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut target.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, target.1.cx()).expect("original caller paid app close");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut source.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, source.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut target.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, target.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut source.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, source.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🚪️ArchiveImportDoor
 
@@ -48,12 +48,12 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
 /// producer plain-dropped the initial snapshot whose `host_snapshot.layout` is an `OrderedMap` (ticket 26/09/23 slice S19).
 #[semio_framework_async_macros::async_test]
 async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
-    let pair = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>("artifact-0123456789abcdef0123456789abcdef").await.expect("the genesis export produces a pair");
+    let pair = semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<Generation3dPlayApp>>("artifact-0123456789abcdef0123456789abcdef").await.expect("the genesis export produces a pair");
     assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "a genesis pair carries both a pack and an SPR");
-    let snapshot = semio_framework_plugin::artifact_pair_snapshot::<semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(&pair.pack, &pair.spr)
+    let snapshot = semio_plugin::artifact_pair_snapshot::<semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(&pair.pack, &pair.spr)
         .await
         .expect("the genesis pair parses back");
-    let initial = <Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
+    let initial = <Generation3dPlayApp as semio_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert_eq!(loaded, expected, "the genesis document is exactly the editor's initial document");
@@ -88,7 +88,7 @@ async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() 
     context::dispatch(&mut app, Generation3dCommand::ImportDocument(import_document::ImportDocument { name:"measurements.json".into(), payload, widget_id:None, channel:None, texture_id:None })).await;
     context::drain_flow_eval_ticks(&mut app).await;
     let rendered = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&rendered).unwrap();
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&rendered).unwrap();
     let evaluation: Value = serde_json::from_str(scene.eval_json.as_ref().unwrap()).unwrap();
     let status = scene.status_json.as_ref().unwrap();
     let committed = context::snapshot(&app);
@@ -98,8 +98,8 @@ async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() 
         let value = evaluation[id]["out"][id]["value"].as_f64().expect("the real query publishes its numeric result");
         assert!((value-row["value"].as_f64().unwrap()).abs()<1e-10,"{id}: {evaluation}");
         context::select_graph(&mut app,"node",&[id]).await;
-        for locale in [semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Locale::De] {
-            let view = semio_framework_plugin::ViewModel::new(locale,semio_framework_ui_locale::Terminology::Native);
+        for locale in [semio_ui_locale::Locale::En,semio_ui_locale::Locale::De] {
+            let view = semio_plugin::ViewModel::new(locale,semio_ui_locale::Terminology::Native);
             let rendered = context::render_with_view(&mut app,semio_s_artifact_procedural_3d_editor_panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION,&view).await;
             fn output<'a>(node:&'a Value,key:&str)->Option<&'a Value> { if node["key"]==key { return Some(node); } node["children"].as_array()?.iter().find_map(|child|output(child,key)) }
             let tree: Value = serde_json::from_str(&rendered).unwrap();
@@ -109,7 +109,7 @@ async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() 
             assert_eq!(context::snapshot(&app),committed,"{id}: reading the query preserves the document");
         }
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -148,14 +148,14 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     context::drain_flow_eval_ticks(&mut app).await;
     let before = context::snapshot(&app);
     let graph = context::render(&mut app,flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
-    let graph = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
+    let graph = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&graph).unwrap();
     assert_eq!(node_eval_status(graph.status_json.as_ref().unwrap(),source),"ok");
     let evaluation: Value = serde_json::from_str(graph.eval_json.as_ref().unwrap()).unwrap();
     let original = evaluation[consumer]["out"][consumer]["value"].as_f64().unwrap();
     let expected = publication["cases"].as_array().unwrap().iter().find(|row|row["output"]==consumer).unwrap()["value"].as_f64().unwrap();
     assert!((original-expected).abs()<1e-10,"the admitted source matches the independent box oracle");
     let preview = context::render(&mut app,edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
-    let world = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_ui_declaration::ui::World3dScene>(&preview).unwrap();
+    let world = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_ui_declaration::ui::World3dScene>(&preview).unwrap();
     let instances: Value = serde_json::from_str(&world.instances_json).unwrap();
     let meshes: Value = serde_json::from_str(&world.meshes_json).unwrap();
     let instance = instances.as_array().unwrap().iter().find(|instance|instance["id"].as_str().is_some_and(|id|id.starts_with(&format!("{source}@")))).expect("the evaluated source reaches the viewport");
@@ -203,25 +203,25 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     let run = context::drive_preview_run(&mut app,&view,&change.effects).await;
     assert!(run.answered>0,"the selected edit crosses the packaged inference route");
     let graph = context::render(&mut app,flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
-    let graph = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
+    let graph = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&graph).unwrap();
     for id in [selector,feature,consumer] { assert_eq!(node_eval_status(graph.status_json.as_ref().unwrap(),id),"ok","{id}: {:?}",graph.eval_json); }
     let evaluation: Value = serde_json::from_str(graph.eval_json.as_ref().unwrap()).unwrap();
     let edited = evaluation[consumer]["out"][consumer]["value"].as_f64().unwrap();
     assert!(edited.is_finite()&&edited>0.0&&edited<original,"the physical shell changes the downstream solid volume: {evaluation}");
     for verb in live["history"].as_array().unwrap() {
         let verb = verb.as_str().unwrap();
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, semio_plugin::artifact_app_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         let restored = context::snapshot(&app);
         assert_eq!(&restored,if verb=="undo" { &before } else { &committed });
         context::drain_flow_eval_ticks(&mut app).await;
         let graph = context::render(&mut app,flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
-        let graph = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
+        let graph = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::NodeGraphScene>(&graph).unwrap();
         assert_eq!(node_eval_status(graph.status_json.as_ref().unwrap(),consumer),"ok");
         let evaluation: Value = serde_json::from_str(graph.eval_json.as_ref().unwrap()).unwrap();
         let actual = evaluation[consumer]["out"][consumer]["value"].as_f64().unwrap();
         assert!((actual-if verb=="undo" { original } else { edited }).abs()<1e-10,"{verb}: evaluated geometry and consumer restore together");
         let preview = context::render(&mut app,edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
-        let world = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_ui_declaration::ui::World3dScene>(&preview).unwrap();
+        let world = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_ui_declaration::ui::World3dScene>(&preview).unwrap();
         let instances: Value = serde_json::from_str(&world.instances_json).unwrap();
         let meshes: Value = serde_json::from_str(&world.meshes_json).unwrap();
         assert_eq!(source_extent(&instances, &meshes), original_extent, "{verb}: actual viewport source extent restores through the original history");
@@ -229,5 +229,5 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
         assert_eq!(restored_row.author.as_deref(), Some(opened_actor.as_str()), "{verb}: original history retains the opening actor");
         assert_eq!(app.test_parent_store_mut().local_actor_id().0, opened_actor);
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

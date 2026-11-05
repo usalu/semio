@@ -5,8 +5,8 @@
 //! pass the schema-first fixture `🧫️fixtures/👕️canvas-presence` (`🧬️schema/👕️canvas-presence`).
 
 use replication::{canvas_peer_viewport_rect, canvas_point_to_screen, peer_overlay_path, peers_for_window, PeerOverlayKind, PresencePeer, PresenceViewKind, PresenceWindowView};
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_theme::geometry::Rect;
+use semio_ui_locale::Locale;
+use semio_ui_theme::geometry::Rect;
 
 /// 🪟️ The presence space every board window publishes and paints in — React's `space: "canvas"`.
 pub const CANVAS_PRESENCE_SPACE: &str = "canvas";

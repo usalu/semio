@@ -33,8 +33,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "asset", kind: "replace-asset-payload", record: "ReplacedAsset" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace asset \"{}\"", self.key), &format!("Asset \"{}\" ersetzen", self.key))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace asset \"{}\"", self.key), &format!("Asset \"{}\" ersetzen", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

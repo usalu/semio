@@ -111,7 +111,7 @@ fn retire_scene_target(target: &mut Option<crate::element_contracts::ScenePointe
     if retire_scene_text(&mut owner.host_id) || retire_scene_text(&mut owner.window_id) || retire_scene_text(&mut owner.surface_id) {
         return true;
     }
-    if let semio_framework_ui_retained_tree::tree::NodeKey::Explicit(key) = &mut owner.key {
+    if let semio_ui_retained_tree::tree::NodeKey::Explicit(key) = &mut owner.key {
         if retire_scene_text(key) {
             return true;
         }

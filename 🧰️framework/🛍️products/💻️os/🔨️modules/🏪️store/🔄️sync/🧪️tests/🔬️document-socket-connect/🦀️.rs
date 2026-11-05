@@ -3,7 +3,7 @@
 //! subprotocol offer and the kind-identity resolution both document actors (native and browser) dial by.
 
 use super::{commands_frames_within, document_pack_schema_hash, document_socket_authority_admits, document_socket_hello, document_socket_protocols, replica_hlc_seed, DocumentSocketBinding};
-use semio_framework_os_directory_client::DocumentSocketAuthorityV1;
+use semio_os_directory_client::DocumentSocketAuthorityV1;
 
 const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/document-socket-connect-v1/🔣️.json");
 
@@ -20,30 +20,30 @@ fn text<'a>(value: &'a serde_json::Value, overrides: &'a serde_json::Value, fiel
 }
 
 fn digest(value: &str) -> [u8; 32] {
-    semio_framework_os_directory_client::decode_lower_hex_32(value).expect("fixture digest")
+    semio_os_directory_client::decode_lower_hex_32(value).expect("fixture digest")
 }
 
-fn fixture_lease(schema: &str, pack_schema_hash: &str) -> semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1 {
-    semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1 {
+fn fixture_lease(schema: &str, pack_schema_hash: &str) -> semio_os_directory::DocumentExecutionTargetLeaseFieldsV1 {
+    semio_os_directory::DocumentExecutionTargetLeaseFieldsV1 {
         schema: "semio.os.document-execution-target-lease/v1".into(),
         version: 1,
-        scope: semio_framework_os_directory::DocumentScope::new("space-a", "shared-document"),
+        scope: semio_os_directory::DocumentScope::new("space-a", "shared-document"),
         descriptor_digest_v1: "11".repeat(32),
-        catalog: semio_framework_os_directory::DocumentOpenCatalogV1 { generation_id: "22".repeat(32) },
-        package: semio_framework_os_directory::DocumentOpenPackageV1 {
+        catalog: semio_os_directory::DocumentOpenCatalogV1 { generation_id: "22".repeat(32) },
+        package: semio_os_directory::DocumentOpenPackageV1 {
             plugin_id: "fixture-plugin".into(),
             package_id: "semio:fixture-plugin".into(),
             version: "1.0.0".into(),
             component_sha256: "33".repeat(32),
             component_blake3: "44".repeat(32),
             descriptor_byte_sha256: "55".repeat(32),
-            execution_protocol: semio_framework_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_framework_os_spr::CHANNEL_VERSION },
-            component_receipt: semio_framework_plugin_component_receipt::ComponentReceiptV1 {
-                schema: semio_framework_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+            execution_protocol: semio_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_os_spr::CHANNEL_VERSION },
+            component_receipt: semio_plugin_component_receipt::ComponentReceiptV1 {
+                schema: semio_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                 plugin_id: "fixture-plugin".into(),
                 package_id: "semio:fixture-plugin".into(),
-                profile: semio_framework_plugin_component_receipt::ComponentProfileV1::Release,
-                target: semio_framework_plugin_component_receipt::COMPONENT_TARGET.into(),
+                profile: semio_plugin_component_receipt::ComponentProfileV1::Release,
+                target: semio_plugin_component_receipt::COMPONENT_TARGET.into(),
                 wasm_sha256: "33".repeat(32),
                 wasm_bytes: 1024,
                 semantic_descriptor_sha256: "55".repeat(32),
@@ -52,26 +52,26 @@ fn fixture_lease(schema: &str, pack_schema_hash: &str) -> semio_framework_os_dir
                 provenance_sha256: "4".repeat(64),
             },
         },
-        component: semio_framework_os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
-        descriptor: semio_framework_os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
-        browser_actor: semio_framework_os_directory::schema::DocumentExecutionTargetBrowserActorV1::None,
-        artifact: semio_framework_os_directory::DocumentOpenArtifactV1 { kind: "fixture".into(), schema: schema.into(), pack_schema_hash: pack_schema_hash.into() },
-        parent_dialect: semio_framework_os_directory::DocumentOpenParentDialectV1 { artifact_kind: "fixture".into(), standard: "1".into(), subset: "*".into() },
-        surface: semio_framework_os_directory::DocumentOpenSurfaceV1 {
+        component: semio_os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
+        descriptor: semio_os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
+        browser_actor: semio_os_directory::schema::DocumentExecutionTargetBrowserActorV1::None,
+        artifact: semio_os_directory::DocumentOpenArtifactV1 { kind: "fixture".into(), schema: schema.into(), pack_schema_hash: pack_schema_hash.into() },
+        parent_dialect: semio_os_directory::DocumentOpenParentDialectV1 { artifact_kind: "fixture".into(), standard: "1".into(), subset: "*".into() },
+        surface: semio_os_directory::DocumentOpenSurfaceV1 {
             surface_id: "fixture.editor".into(),
             app_id: "fixture.app".into(),
             window_kind_id: "fixture.window".into(),
-            role: semio_framework_os_directory::DocumentOpenSurfaceRoleV1::Editor,
-            renderer_target: semio_framework_os_directory::DocumentOpenRendererTargetV1::Wgpu,
+            role: semio_os_directory::DocumentOpenSurfaceRoleV1::Editor,
+            renderer_target: semio_os_directory::DocumentOpenRendererTargetV1::Wgpu,
         },
-        grant: semio_framework_os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
-        checkpoint: semio_framework_os_directory::DocumentOpenCheckpointV1 {
+        grant: semio_os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
+        checkpoint: semio_os_directory::DocumentOpenCheckpointV1 {
             checkpoint_id: "77".repeat(32),
             descriptor_digest_v1: "11".repeat(32),
-            baseline_frontier: semio_framework_os_directory::ArtifactFrontier { document_id: "shared-document".into(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: semio_framework_os_directory::ArtifactHash::new([0; 32]) },
+            baseline_frontier: semio_os_directory::ArtifactFrontier { document_id: "shared-document".into(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: semio_os_directory::ArtifactHash::new([0; 32]) },
             aggregate_sha256: "88".repeat(32),
         },
-        revalidation: semio_framework_os_directory::DocumentOpenRevalidationV1 { directory_revision: 7, membership_generation: 7, session_generation: Some(3), share_generation: None },
+        revalidation: semio_os_directory::DocumentOpenRevalidationV1 { directory_revision: 7, membership_generation: 7, session_generation: Some(3), share_generation: None },
     }
 }
 
@@ -83,15 +83,15 @@ fn authority(base: &serde_json::Value, overrides: &serde_json::Value) -> Documen
         admitted_lease: None,
         hub_origin: field("hubOrigin"),
         expires_at_unix_ms: overrides.get("expiresAtUnixMs").or_else(|| base.get("expiresAtUnixMs")).and_then(serde_json::Value::as_u64).expect("authority deadline"),
-        scope: semio_framework_os_directory::DocumentScope::new(field("spaceId"), field("documentId")),
+        scope: semio_os_directory::DocumentScope::new(field("spaceId"), field("documentId")),
         descriptor_digest_v1: lease.descriptor_digest_v1,
         catalog: lease.catalog,
         package: lease.package,
         artifact: lease.artifact,
         parent_dialect: lease.parent_dialect,
         pack_schema_hash: digest(&field("packSchemaHash")),
-        surface: semio_framework_os_directory::DocumentOpenSurfaceV1 { surface_id: field("surfaceId"), ..lease.surface },
-        browser_actor: semio_framework_os_directory::DocumentOpenBrowserActorV1::None,
+        surface: semio_os_directory::DocumentOpenSurfaceV1 { surface_id: field("surfaceId"), ..lease.surface },
+        browser_actor: semio_os_directory::DocumentOpenBrowserActorV1::None,
         grant: lease.grant,
         checkpoint: lease.checkpoint,
         revalidation: lease.revalidation,
@@ -174,17 +174,17 @@ struct FixtureComponentCodec {
     pub pack_schema_hash: Option<[u8; 32]>,
 }
 
-impl semio_framework_os_store_codec_registry::ComponentDocumentCodec for FixtureComponentCodec {
+impl semio_os_store_codec_registry::ComponentDocumentCodec for FixtureComponentCodec {
     fn schema(&self) -> &str {
         &self.schema
     }
 
-    fn pack_schema_hash(&self) -> semio_framework_os_store_codec_registry::ComponentDocumentCodecFuture<'_, [u8; 32]> {
-        Box::pin(async move { self.pack_schema_hash.ok_or_else(|| semio_framework_os_vcs::VcsError::ValidationFailed("fixture component cannot answer".into())) })
+    fn pack_schema_hash(&self) -> semio_os_store_codec_registry::ComponentDocumentCodecFuture<'_, [u8; 32]> {
+        Box::pin(async move { self.pack_schema_hash.ok_or_else(|| semio_os_vcs::VcsError::ValidationFailed("fixture component cannot answer".into())) })
     }
 
-    fn print_mirror<'a>(&'a self, _pack: &'a [u8], _spr: &'a [u8]) -> semio_framework_os_store_codec_registry::ComponentDocumentCodecFuture<'a, semio_framework_os_store_text_io::text_format::ArtifactTextFiles> {
-        Box::pin(async move { Err(semio_framework_os_vcs::VcsError::Deserialize("fixture component prints no mirror".into())) })
+    fn print_mirror<'a>(&'a self, _pack: &'a [u8], _spr: &'a [u8]) -> semio_os_store_codec_registry::ComponentDocumentCodecFuture<'a, semio_os_store_text_io::text_format::ArtifactTextFiles> {
+        Box::pin(async move { Err(semio_os_vcs::VcsError::Deserialize("fixture component prints no mirror".into())) })
     }
 }
 
@@ -198,7 +198,7 @@ async fn a_mounted_component_codec_is_the_kind_identity_before_any_lease() {
     for case in fixture["componentIdentity"].as_array().expect("component identity cases") {
         let name = case["name"].as_str().expect("name");
         let component = &case["component"];
-        semio_framework_os_store_codec_registry::register_component_document_codec(std::sync::Arc::new(FixtureComponentCodec {
+        semio_os_store_codec_registry::register_component_document_codec(std::sync::Arc::new(FixtureComponentCodec {
             schema: component["schema"].as_str().expect("component schema").to_string(),
             pack_schema_hash: component["packSchemaHash"].as_str().map(digest),
         }))
@@ -213,7 +213,7 @@ async fn a_mounted_component_codec_is_the_kind_identity_before_any_lease() {
 #[test]
 fn the_hello_names_the_binding_and_its_resume_point() {
     let frame = document_socket_hello("block.2d", [7; 32], Some("resume".into()), None);
-    assert_eq!(frame, semio_framework_os_spr::ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "block.2d".into(), pack_schema_hash: [7; 32], resume_token: Some("resume".into()), frontier: None });
+    assert_eq!(frame, semio_os_spr::ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "block.2d".into(), pack_schema_hash: [7; 32], resume_token: Some("resume".into()), frontier: None });
 }
 
 /// 🧪️ Two replicas never share a clock seed (H4): two draws of platform entropy differ.
@@ -222,17 +222,17 @@ fn two_replicas_draw_distinct_clock_seeds() {
     assert_ne!(replica_hlc_seed().expect("entropy"), replica_hlc_seed().expect("entropy"));
 }
 
-fn sized_envelope(index: usize, payload_bytes: usize) -> semio_framework_os_spr::MutationEnvelope {
-    semio_framework_os_spr::MutationEnvelope {
-        mutation_id: semio_framework_os_spr::MutationId(format!("mutation-{index}")),
-        document_id: semio_framework_os_spr::ArtifactId("doc-a".into()),
-        actor: semio_framework_os_spr::ActorId("hub.v1.actor".into()),
+fn sized_envelope(index: usize, payload_bytes: usize) -> semio_os_spr::MutationEnvelope {
+    semio_os_spr::MutationEnvelope {
+        mutation_id: semio_os_spr::MutationId(format!("mutation-{index}")),
+        document_id: semio_os_spr::ArtifactId("doc-a".into()),
+        actor: semio_os_spr::ActorId("hub.v1.actor".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("block.2d".into()), payload: semio_framework_os_spr::CausalPayload::try_from_slice(&vec![7; payload_bytes]).unwrap() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("block.2d".into()), payload: semio_framework_os_spr::CausalPayload::try_from_slice(&[]).unwrap() },
-        timestamp: semio_framework_os_spr::HybridLogicalTimestamp::new(1, 1),
+        diff: semio_os_spr::ArtifactDiff { schema: semio_os_spr::SchemaId("block.2d".into()), payload: semio_os_spr::CausalPayload::try_from_slice(&vec![7; payload_bytes]).unwrap() },
+        inverse: semio_os_spr::InverseMutation { schema: semio_os_spr::SchemaId("block.2d".into()), payload: semio_os_spr::CausalPayload::try_from_slice(&[]).unwrap() },
+        timestamp: semio_os_spr::HybridLogicalTimestamp::new(1, 1),
         transaction: None, verb: None, line: None,
     }
 }

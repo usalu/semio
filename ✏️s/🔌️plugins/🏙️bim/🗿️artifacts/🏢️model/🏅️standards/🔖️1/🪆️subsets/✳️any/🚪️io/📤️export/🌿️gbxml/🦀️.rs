@@ -18,7 +18,7 @@ use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export
 use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry::{area as polygon_area, offset_in, rect_in, round9, turned, Frame, Rect, P3};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -712,7 +712,7 @@ pub struct ModelIntoGbxml;
 impl Serializer<ModelSnapshot> for ModelIntoGbxml {
     const INTO: Dialect = XML_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let (text, notes) = export_gbxml(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoGbxml: {message}"))))?;
         let diagnostics = notes
             .into_iter()

@@ -456,8 +456,8 @@ mod mounted_laws {
     fn authoritative_publication_token_fails_closed_on_operation_generation_and_base() {
         use semio_framework_job::{Generation, OperationId};
 
-        let token = semio_framework_plugin::DocumentStorePublicationToken::mint(OperationId(u64::MAX - 71), Generation(41), 9);
-        let live = |operation: u64, generation: u64, base: u64| semio_framework_plugin::DocumentStoreLivePublication::new(OperationId(operation), Generation(generation), base);
+        let token = semio_plugin::DocumentStorePublicationToken::mint(OperationId(u64::MAX - 71), Generation(41), 9);
+        let live = |operation: u64, generation: u64, base: u64| semio_plugin::DocumentStoreLivePublication::new(OperationId(operation), Generation(generation), base);
         assert!(token.validate_live(live(u64::MAX - 71, 41, 9)).is_ok());
         assert!(token.validate_live(live(u64::MAX - 70, 41, 9)).is_err(), "another operation is refused");
         assert!(token.validate_live(live(u64::MAX - 71, 42, 9)).is_err(), "a stale parent generation (ABA) is refused");

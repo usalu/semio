@@ -2,23 +2,23 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_job::StepContext;
 #[cfg(any(test, feature = "testing"))] use semio_framework_job::{InteractiveJobCloseStep};
-use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
-use semio_framework_plugin::app::InteractionHoverState;
-use semio_framework_plugin::retained_command::ArtifactCommandInputs;
-use semio_framework_plugin::retained_command::ArtifactCommandWork;
-use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::ArtifactApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::app::ArtifactOwnedToolJobContext;
+use semio_plugin::app::InteractionHoverState;
+use semio_plugin::retained_command::ArtifactCommandInputs;
+use semio_plugin::retained_command::ArtifactCommandWork;
+use semio_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_plugin::ArtifactApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::ViewModel;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 
@@ -73,7 +73,7 @@ pub type PuzzleCommandExtent<A> = fn(&<A as ArtifactApp>::Command, &<A as Artifa
 #[macro_export]
 macro_rules! puzzle_progress_step {
     ($stage:expr, $en:literal, $de:literal) => {
-        semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Progress { stage: $stage, preview: concat!("{\"en\":\"", $en, "\",\"de\":\"", $de, "\"}").as_bytes() }
+        semio_plugin::retained_command::ArtifactCommandWorkStep::Progress { stage: $stage, preview: concat!("{\"en\":\"", $en, "\",\"de\":\"", $de, "\"}").as_bytes() }
     };
 }
 
@@ -173,9 +173,9 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for NoopPuzzleCommandWork<A> {
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use super::*;
-    use semio_framework_plugin::app::ArtifactToolCompletion;
-    use semio_framework_plugin::AppOperationContext;
-    use semio_framework_plugin::HistoryView;
+    use semio_plugin::app::ArtifactToolCompletion;
+    use semio_plugin::AppOperationContext;
+    use semio_plugin::HistoryView;
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use semio_framework_value::retained_clone::RetainedCloneProgress;
 
@@ -186,7 +186,7 @@ pub mod testing {
         Pending { stage: &'static str, en: String, de: String },
         Progress { stage: &'static str, en: String, de: String },
         Complete(Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>),
-        Download(semio_framework_plugin::app::ArtifactDownloadOutput),
+        Download(semio_plugin::app::ArtifactDownloadOutput),
     }
 
     fn preview_languages(preview: &[u8]) -> (String, String) {
@@ -205,7 +205,7 @@ pub mod testing {
         let operation = AppOperationContext { app_instance_id: 1, parent_document_id: String::new(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], retained: fixture_stock(), authoring_seed: String::new() };
         original.turn(fixture_stock(), |cx| {
             let input = ArtifactCommandInputs { command, snapshot, snapshot_owner: None,
-                snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation),
+                snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation),
                 config, history: &history, interaction, hover, context, operation: &operation };
             let before = cx.retained_progress();
             let fuel = cx.fuel_remaining();

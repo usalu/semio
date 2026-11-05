@@ -1,8 +1,8 @@
 //! 🧫️ Individually authored Count relational provider under the same caller control.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::Snapshot;
-use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::os_pack as pack;
+use semio_os_kernel as store;
+use semio_os_kernel::os_pack as pack;
 use store::sqlite_snapshot::{*, artifact::{Cell, Projection}};
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;

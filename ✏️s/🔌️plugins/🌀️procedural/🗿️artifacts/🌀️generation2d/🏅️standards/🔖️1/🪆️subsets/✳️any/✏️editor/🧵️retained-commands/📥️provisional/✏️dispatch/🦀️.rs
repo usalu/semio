@@ -1,0 +1,31 @@
+//! ✏️ Original typed procedural mutation fields move once into their retained domain producer.
+use super::retained_native_provisional_fold::{NativeProvisionalFold,NativeProvisionalMutation};
+use super::retained_host_scratch::{HostScratchEdit,HostScratchWork,HostScratchDomain};
+use super::retained_generation_fold::{GenerationFoldInput,GenerationFoldWork};
+use super::Generation2dMutation;
+use semio_framework_job::OriginalSourceBinding;
+impl NativeProvisionalMutation for Generation2dMutation{
+ fn into_fold_original(self,original:OriginalSourceBinding)->Result<NativeProvisionalFold,Self>{
+  let host=|edit|Ok(NativeProvisionalFold::Host(HostScratchWork::new_original(edit,HostScratchDomain::Generation2d,original)));
+  let generation=|input|Ok(NativeProvisionalFold::Generation(GenerationFoldWork::new_original(input,original)));
+  match self{
+   Self::CreateWidget(v)=>host(HostScratchEdit::InsertWidget{index:v.index,widget:v.widget}),
+   Self::ReplaceWidget(v)=>host(HostScratchEdit::ReplaceWidget{widget:v.widget}),
+   Self::DeleteWidget(v)=>host(HostScratchEdit::RemoveWidget{id:v.id}),
+   Self::ConnectSynapse(v)=>host(HostScratchEdit::InsertSynapse{index:v.index,synapse:v.synapse}),
+   Self::ReplaceSynapse(v)=>host(HostScratchEdit::ReplaceSynapse{synapse:v.synapse}),
+   Self::DisconnectSynapse(v)=>host(HostScratchEdit::RemoveSynapse{id:v.id}),
+   Self::MoveWidget(v)=>host(HostScratchEdit::SetLayout{id:v.id,layout:v.layout}),
+   Self::ClearWidgetLayout(v)=>host(HostScratchEdit::RemoveLayout{id:v.id}),
+   Self::UpdateCamera(v)=>host(HostScratchEdit::SetCamera{camera:v.camera}),
+   Self::ChangeSchema(v)=>host(HostScratchEdit::SetSchema{schema:v.schema}),
+   Self::ChangeSliderValue(v)=>host(HostScratchEdit::SetSlider{id:v.id,value:v.value}),
+   Self::MoveNodes(v)=>host(HostScratchEdit::MoveNodes{ids:v.ids,dx:v.dx,dy:v.dy}),
+   Self::CreateGeneration(v)=>generation(GenerationFoldInput::Add{generation:v.generation,index:v.index}),
+   Self::DeleteGeneration(v)=>generation(GenerationFoldInput::Remove{id:v.id}),
+   Self::RenameGeneration(v)=>generation(GenerationFoldInput::Rename{id:v.id,name:v.name}),
+   Self::ChangeGenerationValue(v)=>generation(GenerationFoldInput::SetValue{id:v.id,key:v.question_id,value:v.value}),
+   Self::SelectGeneration(v)=>generation(GenerationFoldInput::Select{id:v.generation_id}),
+  }
+ }
+}

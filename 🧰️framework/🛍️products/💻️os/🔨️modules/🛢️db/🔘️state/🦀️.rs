@@ -21,7 +21,7 @@
 //! addressing (dedup/identity across snapshots) is the separate, deliberately blake3-based
 //! `ContentAddressed`/`PageStore` mechanism in the `📇️Pages` region below.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use db_ids::DbError;
 use std::rc::Rc;

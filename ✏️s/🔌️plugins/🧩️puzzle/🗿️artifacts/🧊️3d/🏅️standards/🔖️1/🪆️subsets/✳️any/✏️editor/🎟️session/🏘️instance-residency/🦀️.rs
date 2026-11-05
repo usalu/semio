@@ -283,7 +283,7 @@ impl Puzzle3dInstanceResidency {
 }
 
 use semio_s_artifact_puzzle_3d_editor_snapshot::VORTEX_MARKER_MESH_KIND;
-use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_plugin::world3d_meshes_json_from_kinds_and_urls;
 
 /// 🗄️ Cheap change key for everything the instance/mesh payloads (and the document tree) derive from.
 ///

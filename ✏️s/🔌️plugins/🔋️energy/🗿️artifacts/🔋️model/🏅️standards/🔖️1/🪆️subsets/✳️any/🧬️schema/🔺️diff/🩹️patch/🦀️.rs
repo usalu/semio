@@ -6,7 +6,7 @@
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_diff_splice as diff_splice;
 
 use crate::diff_splice::{Splice, SpliceFault};

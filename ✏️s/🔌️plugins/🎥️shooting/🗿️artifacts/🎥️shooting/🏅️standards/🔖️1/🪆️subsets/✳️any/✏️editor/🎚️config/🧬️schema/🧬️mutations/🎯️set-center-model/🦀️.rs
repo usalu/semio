@@ -14,8 +14,8 @@ pub struct SetCenterModel {
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetCenterModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "center-model", kind: "set-center-model", record: "SetCenterModel" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Center Model", "Modellzentrierung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Center Model", "Modellzentrierung setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["center_model".into()]

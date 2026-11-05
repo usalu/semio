@@ -1,0 +1,54 @@
+{
+  "law": "Original borrowed graph authoring advances only under its unchanged caller grant, preserves source and output custody through refusal or cancellation, and matches the canonical authoring leaves.",
+  "operations": [
+    "connect",
+    "selfConnect",
+    "disconnect",
+    "unknownDisconnect",
+    "remove",
+    "add",
+    "insertInput",
+    "insertOutput",
+    "reorganize"
+  ],
+  "profiles": [
+    {
+      "id": "denied",
+      "items": 0,
+      "copy": 0,
+      "capacity": 0,
+      "release": 0,
+      "depth": 0,
+      "expectedMutation": false
+    },
+    {
+      "id": "narrow",
+      "items": 1,
+      "copy": 4096,
+      "capacity": 65536,
+      "release": 65536,
+      "depth": 128,
+      "expectedMutation": true
+    },
+    {
+      "id": "fixture",
+      "items": 512,
+      "copy": 4096,
+      "capacity": 65536,
+      "release": 65536,
+      "depth": 128,
+      "expectedMutation": true
+    }
+  ],
+  "checks": [
+    "exactCanonicalLeaves",
+    "originalSourceUnchanged",
+    "foreignSourceRefusedBeforeWork",
+    "foreignRequestRefusedBeforeWork",
+    "foreignCallerRefusedBeforeWork",
+    "eachPhysicalReceiptFits",
+    "cancellationClosesEveryOwnedField",
+    "returnedOutcomeRestoresWithoutClone",
+    "domainFaultAndControlFaultRemainDistinct"
+  ]
+}

@@ -29,7 +29,7 @@ use std::cell::OnceCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Arc;
-use semio_framework_plugin::{kernel::ClipboardError, kernel::ClipboardFragment, kernel::PastePlacement};
+use semio_plugin::{kernel::ClipboardError, kernel::ClipboardFragment, kernel::PastePlacement};
 use crate::{editor::puzzle2d::recorder, editor::puzzle2d::snapshot};
 use crate::editor::puzzle2d::snapshot::{PUZZLE2D_CLIPBOARD_SCHEMA, PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_clipboard_media_type};
 
@@ -430,7 +430,7 @@ impl Puzzle2dRecorder {
     }
 
     /// 🌀️ Records the poses `nodes` (host records with `id`, `x`, `y`) put their nodes at.
-    pub fn place_nodes(&mut self,nodes:&[semio_framework_os_infinite::board::ports::directed::schema::snapshot::BoardNodeSnapshot]){for node in nodes{if let(Some(x),Some(y))=(node.x,node.y){if x.is_finite()&&y.is_finite(){self.record(kinds::move_node(node.id.clone().into(),x,y));}}}}
+    pub fn place_nodes(&mut self,nodes:&[semio_os_infinite::board::ports::directed::schema::snapshot::BoardNodeSnapshot]){for node in nodes{if let(Some(x),Some(y))=(node.x,node.y){if x.is_finite()&&y.is_finite(){self.record(kinds::move_node(node.id.clone().into(),x,y));}}}}
 
     /// 🧱️ Records ONE board-tool row (`regionCreate`, `regionResize`, `brushPlace`, `edgeCreate`, `edgeDelete`,
     /// `nodeDelete`) as the kinds it consists of. Answers whether `name` is a board-tool kind.

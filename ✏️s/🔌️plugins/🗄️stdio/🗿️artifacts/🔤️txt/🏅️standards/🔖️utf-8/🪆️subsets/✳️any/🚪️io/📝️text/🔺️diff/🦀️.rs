@@ -22,5 +22,5 @@ use protocol::os_spr::command::DiffAlgebra;
 use std::collections::HashSet;
 
 
-semio_framework_os_kernel::diff_text!(crate::standards::v_utf_8::subsets::any::schema::diff::TxtDiff);
+semio_os_kernel::diff_text!(crate::standards::v_utf_8::subsets::any::schema::diff::TxtDiff);
 }

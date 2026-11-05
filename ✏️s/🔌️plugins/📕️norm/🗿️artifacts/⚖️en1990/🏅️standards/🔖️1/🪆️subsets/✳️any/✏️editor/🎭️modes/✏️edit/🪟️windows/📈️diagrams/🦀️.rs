@@ -1,7 +1,7 @@
 //! 📈️ EN 1990 play app — the diagrams window: combination matrix, ψ chart, β–P_f, FORM design point, Annex D k_n and fatigue damage.
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use semio_s_artifact_norm_en1990_scene::diagrams;
 use semio_s_plugin_norm_app_surface::{render_diagrams, DiagramsWindowSpec};

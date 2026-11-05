@@ -29,7 +29,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     let mut emitted: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = Default::default();
     for (kind_id, body_key, _) in &windows {
         let projection = crate::app_fixture::render(&mut app, body_key).await;
-        emitted.insert(kind_id.clone(), semio_framework_plugin::ui_action_laws::emitted_action_ids(&projection));
+        emitted.insert(kind_id.clone(), semio_plugin::ui_action_laws::emitted_action_ids(&projection));
     }
     close(app);
     let window_scoped: std::collections::BTreeSet<String> = emitted.values().flatten().cloned().collect();
@@ -66,13 +66,13 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
     PluginApp::begin_document_archive_load(&mut target.0, 91, archive).expect("archive admission");
     let mut status = None;
     for _ in 0..200_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut target.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), target.1.cx()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut target.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), target.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(&mut target.0, 91).expect("archive acknowledgement");
             status = Some(polled);
             break;
         }
-        PluginApp::maintenance_step(&mut target.0, target.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
+        PluginApp::maintenance_step(&mut target.0, target.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
     }
     let status = status.expect("the archive load reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
@@ -90,12 +90,12 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
 /// producer plain-dropped the initial snapshot whose `host_snapshot.layout` is an `OrderedMap` (ticket 26/09/23 slice S19).
 #[semio_framework_async_macros::async_test]
 async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
-    let pair = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<Generation2dPlayApp>>("artifact-0123456789abcdef0123456789abcdef").await.expect("the genesis export produces a pair");
+    let pair = semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<Generation2dPlayApp>>("artifact-0123456789abcdef0123456789abcdef").await.expect("the genesis export produces a pair");
     assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "a genesis pair carries both a pack and an SPR");
-    let snapshot = semio_framework_plugin::artifact_pair_snapshot::<semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot, semio_s_artifact_procedural_2d_mutations::Generation2dMutation>(&pair.pack, &pair.spr)
+    let snapshot = semio_plugin::artifact_pair_snapshot::<semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot, semio_s_artifact_procedural_2d_mutations::Generation2dMutation>(&pair.pack, &pair.spr)
         .await
         .expect("the genesis pair parses back");
-    let initial = <Generation2dPlayApp as semio_framework_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
+    let initial = <Generation2dPlayApp as semio_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     assert_eq!(loaded, expected, "the genesis document is exactly the editor's initial document");

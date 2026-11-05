@@ -3,9 +3,9 @@
 #[global_allocator]
 static ORIGINAL_OWNER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_s_artifact_stdio_bmp::editor::bmp::BmpEditor;
 use semio_s_artifact_stdio_bmp::schema::mutations::replace_image::ReplaceImage;
 use semio_s_artifact_stdio_bmp::{apply_mutation, BmpMutation, BmpSnapshot};

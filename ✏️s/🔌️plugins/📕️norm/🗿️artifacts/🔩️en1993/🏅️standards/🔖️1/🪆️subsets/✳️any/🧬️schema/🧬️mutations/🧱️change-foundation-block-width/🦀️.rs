@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationBlockWid
         record: "ChangedFoundationBlockWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Block width b_2 of the foundation block", "Fundamentblock: Blockbreite b_2 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Block width b_2 of the foundation block", "Fundamentblock: Blockbreite b_2 ändern")
     }
 }
 

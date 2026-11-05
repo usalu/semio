@@ -10,7 +10,7 @@ pub struct RemoveCutout { pub index: usize }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for RemoveCutout where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::insert_cutout::InsertCutout> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "cutout", kind: "remove-cutout", record: "RemovedCutout" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove cutout #{}", self.index), &format!("Cutout #{} entfernen", self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove cutout #{}", self.index), &format!("Cutout #{} entfernen", self.index)) }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }
 

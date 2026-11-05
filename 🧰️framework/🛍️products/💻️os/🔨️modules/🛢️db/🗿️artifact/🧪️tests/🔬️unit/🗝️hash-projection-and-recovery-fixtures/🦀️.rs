@@ -94,8 +94,8 @@ impl pack::snapshot::ArtifactPack for HashProjection {
     }
 }
 
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for HashProjection {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for HashProjection {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -366,10 +366,10 @@ impl store::os_store::document_store_owners::MemberStoreProducer<HashProjection,
 
 async fn committed_recovery_hash_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<store::OwnerRef>) -> store::ArtifactStore<HashProjection, HashMutation> {
     use store::os_store::document_store_owners::MemberStoreProducer as _;
-    let mut envelope = store::os_store::document_materialize::create_document_envelope::<HashProjection, HashMutation>("db.hash/v1", id, HashProjection::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<HashProjection, HashMutation>("db.hash/v1", id, HashProjection::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("committed recovery fixture creates one exact Store");
+    let mut store = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("committed recovery fixture creates one exact Store");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_member_store_owners(&HashMemberStoreProducer).expect("actual cold fixture catalog source birth"));
     store
 }

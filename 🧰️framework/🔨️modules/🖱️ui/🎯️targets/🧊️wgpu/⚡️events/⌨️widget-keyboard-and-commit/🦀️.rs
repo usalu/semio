@@ -226,7 +226,7 @@ impl EventRouter {
             UiNode::Slider(slider) => {
                 let unit_width = slider.unit_label().map(|_| inline_suffix_width);
                 let track = slider_control_presentation(bounds, slider.axis_position(slider_live_value(node, slider)), 0.0, 1.0, unit_width, self.control_gap, self.flow.inline).slider.track_cell;
-                (None, track.contains(x, y).then(|| semio_framework_ui_wgpu_controls::slider::slider_node_pointer_value(slider, track, x, y)))
+                (None, track.contains(x, y).then(|| semio_ui_wgpu_controls::slider::slider_node_pointer_value(slider, track, x, y)))
             }
             UiNode::NumberStepper(stepper) => (number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border).filter(|sign| number_stepper_can_step(node, stepper, *sign)).map(|sign| sign * stepper.step), None),
             _ => (None, None),

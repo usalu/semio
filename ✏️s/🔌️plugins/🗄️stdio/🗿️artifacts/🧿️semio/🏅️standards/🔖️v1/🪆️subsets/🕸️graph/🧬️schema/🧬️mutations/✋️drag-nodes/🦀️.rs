@@ -22,7 +22,7 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "nodes", kind: "drag-nodes", record: "DraggedNodes" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let number = |value: f64| {
             let rounded = (value * 100.0).round() / 100.0;
             let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
@@ -35,7 +35,7 @@ where
             1 => ("1 node".to_string(), "1 Knoten".to_string()),
             count => (format!("{count} nodes"), format!("{count} Knoten")),
         };
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by ({dx_en}, {dy_en})"), &format!("{items_de} um ({dx_de}; {dy_de}) ziehen"))
+        semio_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by ({dx_en}, {dy_en})"), &format!("{items_de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.iter().map(|id| id.value.clone()).collect()

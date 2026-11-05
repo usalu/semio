@@ -16,8 +16,8 @@ pub struct RemoveMark {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for RemoveMark {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "mark", kind: "remove-mark", record: "RemovedMarkFromRun" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove mark #{} from run #{}", self.index, self.run_index), &format!("Auszeichnung #{} aus Textlauf #{} entfernen", self.index, self.run_index))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove mark #{} from run #{}", self.index, self.run_index), &format!("Auszeichnung #{} aus Textlauf #{} entfernen", self.index, self.run_index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.run_index.to_string(), self.index.to_string()]

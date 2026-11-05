@@ -1,0 +1,128 @@
+{
+  "base": {
+    "key": "answer",
+    "windowId": "left",
+    "windowKindId": "forms-try"
+  },
+  "cases": [
+    {
+      "name": "Key at Limit",
+      "field": "key",
+      "fragment": "k",
+      "repeat": 512,
+      "valid": true
+    },
+    {
+      "name": "Key over Limit",
+      "field": "key",
+      "fragment": "k",
+      "repeat": 513,
+      "valid": false
+    },
+    {
+      "name": "Unicode Key at Limit",
+      "field": "key",
+      "fragment": "雪",
+      "repeat": 170,
+      "valid": true
+    },
+    {
+      "name": "Unicode Key over Limit",
+      "field": "key",
+      "fragment": "雪",
+      "repeat": 171,
+      "valid": false
+    },
+    {
+      "name": "Empty Key",
+      "field": "key",
+      "fragment": "",
+      "repeat": 1,
+      "valid": false
+    },
+    {
+      "name": "Window at Limit",
+      "field": "windowId",
+      "fragment": "w",
+      "repeat": 512,
+      "valid": true
+    },
+    {
+      "name": "Window over Limit",
+      "field": "windowId",
+      "fragment": "w",
+      "repeat": 513,
+      "valid": false
+    },
+    {
+      "name": "Input at Limit",
+      "field": "inputId",
+      "fragment": "i",
+      "repeat": 512,
+      "valid": true
+    },
+    {
+      "name": "Input over Limit",
+      "field": "inputId",
+      "fragment": "i",
+      "repeat": 513,
+      "valid": false
+    },
+    {
+      "name": "Parameter at Limit",
+      "field": "paramKey",
+      "fragment": "p",
+      "repeat": 128,
+      "valid": true
+    },
+    {
+      "name": "Parameter over Limit",
+      "field": "paramKey",
+      "fragment": "p",
+      "repeat": 129,
+      "valid": false
+    },
+    {
+      "name": "Option at Limit",
+      "field": "optionValue",
+      "fragment": "o",
+      "repeat": 512,
+      "valid": true
+    },
+    {
+      "name": "Option over Limit",
+      "field": "optionValue",
+      "fragment": "o",
+      "repeat": 513,
+      "valid": false
+    },
+    {
+      "name": "Wrong Window Kind",
+      "field": "windowKindId",
+      "fragment": "forms-view-try",
+      "repeat": 1,
+      "valid": false
+    }
+  ],
+  "paged": [
+    {
+      "name": "Unicode Near-Bound Sources",
+      "fragment": "雪",
+      "answerRepeat": 5458,
+      "baselineRepeat": 5450
+    },
+    {
+      "name": "Escaped Near-Bound Sources",
+      "fragment": "\n",
+      "answerRepeat": 8190,
+      "baselineRepeat": 8186
+    }
+  ],
+  "maximumSourceBytes": 16384,
+  "maximumWireBytes": 131072,
+  "nullableFields": [
+    "inputId",
+    "paramKey",
+    "optionValue"
+  ]
+}

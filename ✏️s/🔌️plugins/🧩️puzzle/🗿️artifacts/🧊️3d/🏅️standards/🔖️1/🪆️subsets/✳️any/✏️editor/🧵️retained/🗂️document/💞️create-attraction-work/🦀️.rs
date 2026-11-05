@@ -91,18 +91,18 @@ impl Puzzle3dCreateAttractionWork {
         self.stage = stage;
     }
 
-    pub(super) fn complete<A: Puzzle3dEditor>(&mut self) -> semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>> {
+    pub(super) fn complete<A: Puzzle3dEditor>(&mut self) -> semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>> {
         self.stage = Puzzle3dCreateAttractionStage::Complete;
-        semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::default())
+        semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::default())
     }
 }
 
-impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dCreateAttractionWork {
+impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dCreateAttractionWork {
     fn tool_id(&self) -> &'static str {
         "createAttraction"
     }
 
-    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let document = snapshot.typed();
         let mut object_vortices = 0usize;
         for object in &document.objects {
@@ -113,15 +113,15 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         (items <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         semio_s_plugin_puzzle_retained::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let (attracting_id, attracted_id) = Self::ids(command);
         if attracting_id.is_empty() || attracted_id.is_empty() || attracting_id == attracted_id {
             return Ok(self.complete());
@@ -192,7 +192,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 );
                 let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
                 self.stage = Puzzle3dCreateAttractionStage::Complete;
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     artifact_mutations: vec![semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices(id, attracting.vortex_id, attracted.vortex_id, gap, shift, rise, rotation, turn, tilt, 0.0, 0.0, None)],
                     ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("createAttraction")),
                     ..Default::default()

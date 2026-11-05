@@ -3,7 +3,7 @@
 //! must be able to call `setField`/`insertItem`/`removeItem`/`applyRemedy`/`setSnapshot` (measured over MCP: optional
 //! text `path` → `INTERNAL "path must not be empty"` on all fifteen kinds; text `index` read as 0; `insertItem.value`
 //! undeclared). Ticket 26/09/23 slice S19.
-use semio_framework_plugin::{ActionArgDef, AppDefinition, ArgSchema};
+use semio_plugin::{ActionArgDef, AppDefinition, ArgSchema};
 
 fn argument<'a>(definition: &'a AppDefinition, action: &str, argument: &str) -> &'a ActionArgDef {
     let declared = definition.actions.iter().find(|candidate| candidate.id == action).unwrap_or_else(|| panic!("{} declares no {action}", definition.id));

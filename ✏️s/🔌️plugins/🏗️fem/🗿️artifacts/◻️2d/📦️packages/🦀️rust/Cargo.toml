@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-diff-document = { workspace = true }
@@ -24,8 +24,8 @@ semio-s-fem-node = { path = "../../../../⚙️engine/📍node/📦️packages/�
 semio-s-fem-material = { path = "../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 semio-framework-geometry = { path = "../../../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-s-artifact-fem-2d-editor = { workspace = true }
 semio-s-artifact-fem-2d-io = { workspace = true }
@@ -37,8 +37,8 @@ pack = { workspace = true }
 semio-framework-trace = { workspace = true }
 # 🔮 Test-only CSV ORACLE: the third-party `csv` reader parses the node table export.
 csv = "1"
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async = { workspace = true }
 
 semio-framework-async-macros = { workspace = true }

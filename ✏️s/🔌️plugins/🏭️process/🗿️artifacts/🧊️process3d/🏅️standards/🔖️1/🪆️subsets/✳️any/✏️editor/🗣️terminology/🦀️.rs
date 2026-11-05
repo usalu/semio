@@ -2,7 +2,7 @@
 //! node reaches for. Deliberately ONE block for the whole app (never split per window/panel).
 
 //#region 🔖️Labels
-semio_framework_ui_locale::app_labels! {
+semio_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 3D app; one field per label makes every locale combination compile-checked.
     pub struct Process3dLabels {
         stock: native_en "Stock", native_de "Rohteil", reuse_en "Stock", reuse_de "Rohteil";
@@ -53,8 +53,8 @@ semio_framework_ui_locale::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from the OS-owned view context.
-pub fn process3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Process3dLabels {
-    semio_framework_plugin::resolve_labels::<Process3dLabels>(view_state)
+pub fn process3d_labels(view_state: &semio_plugin::ViewModel) -> &'static Process3dLabels {
+    semio_plugin::resolve_labels::<Process3dLabels>(view_state)
 }
 
 /// 🎨️ The icon a process measure renders with, shared by the document panel's step tree and the
@@ -68,7 +68,7 @@ pub fn process3d_measure_icon(measure: &semio_s_artifact_process_process3d_model
 }
 
 /// 🗣️ The localized label a process measure's kind renders with, used by the inspector's step group title.
-pub fn process3d_measure_label(measure: &semio_s_artifact_process_process3d_model::snapshot::ProcessMeasure, labels: &Process3dLabels) -> semio_framework_ui_locale::LabelText {
+pub fn process3d_measure_label(measure: &semio_s_artifact_process_process3d_model::snapshot::ProcessMeasure, labels: &Process3dLabels) -> semio_ui_locale::LabelText {
     match measure {
         semio_s_artifact_process_process3d_model::snapshot::ProcessMeasure::Cut { .. } => labels.cut,
         semio_s_artifact_process_process3d_model::snapshot::ProcessMeasure::Drill { .. } => labels.drill,

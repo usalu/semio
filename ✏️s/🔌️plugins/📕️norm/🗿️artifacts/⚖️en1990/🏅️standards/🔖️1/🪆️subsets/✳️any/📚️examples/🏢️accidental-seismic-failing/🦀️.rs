@@ -1,7 +1,7 @@
 //! 📚️ Example `accidental-seismic-failing`.
 
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 use semio_s_artifact_norm_en1990_model::{ReliabilityClass, AccidentalAction, ImportanceClass, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
 
 pub const ID: &str = "accidental-seismic-failing";

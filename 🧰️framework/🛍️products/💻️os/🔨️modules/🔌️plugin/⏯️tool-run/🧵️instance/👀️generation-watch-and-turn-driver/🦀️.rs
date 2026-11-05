@@ -115,7 +115,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// ⏯️ One bounded driver turn (≤ `ToolRunDriver::turn_wall_us`): owed dirty scope, the generation watch of every
     /// run, retirement within the wall budget, then — while nothing retires — refold, job steps, finalize. The watch never
     /// waits behind retirement: a settings or base change reaches its run in the turn it becomes visible.
-    pub(crate) async fn drive_tool_run_turn(&mut self,cx:&mut semio_framework_job::StepContext<'_>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    pub(crate) async fn drive_tool_run_turn(&mut self,cx:&mut semio_framework_job::StepContext<'_>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
         let grant=cx.retained_grant();if cx.should_yield(){return Ok(())}
         if self.tool_runs.has_original_receipt(){return Ok(());}
         self.flush_tool_run_ui_dirty();

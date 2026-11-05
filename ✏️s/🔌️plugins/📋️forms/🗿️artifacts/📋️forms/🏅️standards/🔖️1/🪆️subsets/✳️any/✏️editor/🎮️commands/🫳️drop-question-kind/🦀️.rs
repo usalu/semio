@@ -1,9 +1,9 @@
 //! ❓️ ❓️ Forms play app commands command — `drop-question-kind`.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::schema::{create_form_id, locate_question};
 use crate::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use crate::editor::forms::questions::default_question_for_kind;

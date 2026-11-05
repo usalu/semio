@@ -11,13 +11,13 @@
 //! proves the printed text parses back to the very snapshot it came from.
 
 /// 📇️ Every bundled example, in the order the editor's example picker offers them.
-pub fn sources() -> Vec<semio_framework_plugin::ExampleSource> {
+pub fn sources() -> Vec<semio_plugin::ExampleSource> {
     vec![super::two_room_corridor::source(), super::wall_roof_facade_strip::source(), super::hex_ring::source(), super::terrain_ring::source()]
 }
 
 /// 📇️ The same roster as a `&'static` slice, for the subset declaration's `examples` field.
-pub fn example_source_slice() -> &'static [semio_framework_plugin::ExampleSource] {
-    static SOURCES: std::sync::OnceLock<Vec<semio_framework_plugin::ExampleSource>> = std::sync::OnceLock::new();
+pub fn example_source_slice() -> &'static [semio_plugin::ExampleSource] {
+    static SOURCES: std::sync::OnceLock<Vec<semio_plugin::ExampleSource>> = std::sync::OnceLock::new();
     SOURCES.get_or_init(sources).as_slice()
 }
 

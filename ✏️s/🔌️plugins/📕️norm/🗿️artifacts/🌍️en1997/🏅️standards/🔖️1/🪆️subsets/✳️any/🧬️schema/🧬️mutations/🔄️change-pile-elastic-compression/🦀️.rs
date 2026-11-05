@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileElasticCompres
         record: "ChangedPileElasticCompression",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Elastic compression s_e of the pile", "Pfahl: Elastische Zusammendrückung s_e ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Elastic compression s_e of the pile", "Pfahl: Elastische Zusammendrückung s_e ändern")
     }
 }
 

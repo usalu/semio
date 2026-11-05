@@ -1,7 +1,7 @@
 //! 🧪️ cursors tests (📇️surface-verbs): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_components::GumballHandle;
-use semio_framework_os_infinite_world_cursors::gumball_handle_action_id;
+use semio_os_infinite_world_components::GumballHandle;
+use semio_os_infinite_world_cursors::gumball_handle_action_id;
 use semio_framework_test_fixtures::fixture_text;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.

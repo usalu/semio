@@ -1,11 +1,11 @@
 //! 📚️ Standalone and grouped publication prepare the same original Store metadata frontier.
 use super::*;
-use semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
+use semio_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
 /// ⏳️ One exact metadata event completes before its prepared root can publish.
 pub enum BatchCommitMetadataStep{Blocked,Progress(RetainedCloneProgress),Ready}
 /// 🧮️ Clones only the selected original ledger/index entry into its admitted private destination.
-pub fn advance_batch_metadata<P,M>(store:&mut StoreParts<'_,P,M>,metadata:&mut BatchCommitMetadata,edit:&Edit<M>,digest:[u8;32],unit_flags:&mut Vec<(usize,bool)>,diagnostics:&mut semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,grant:ArtifactStoreOneItemGrant)->Result<BatchCommitMetadataStep,String>
-where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P>{
+pub fn advance_batch_metadata<P,M>(store:&mut StoreParts<'_,P,M>,metadata:&mut BatchCommitMetadata,edit:&Edit<M>,digest:[u8;32],unit_flags:&mut Vec<(usize,bool)>,diagnostics:&mut semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,grant:ArtifactStoreOneItemGrant)->Result<BatchCommitMetadataStep,String>
+where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
  if !grant.permits_one(){return Ok(BatchCommitMetadataStep::Blocked)}
  if metadata.edit_id_digest.is_none(){let id=&edit.id;let copy=id.len().checked_add(size_of::<Option<[u8;32]>>()).ok_or("commit metadata digest quote overflow")?;if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(BatchCommitMetadataStep::Blocked)}metadata.edit_id_digest=Some(CursorRevisionAccumulator::hash_record(b"edit-id",&[id.as_bytes()]));return Ok(BatchCommitMetadataStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))}
 
@@ -16,7 +16,7 @@ where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMuta
             if grant.maximum_capacity_bytes<metadata.demand{return Ok(BatchCommitMetadataStep::Blocked);}
             ownership.retained_capacity_bytes=metadata.demand;metadata.history=Some(reserve_edit_history_slot(store).map_err(|error|error.to_string())?);
         }else{
-            if metadata.revision.is_none(){let copy=size_of::<Option<CursorRevisionAccumulator>>()+32;if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(BatchCommitMetadataStep::Blocked)}metadata.revision=Some(CursorRevisionAccumulator{identity_digest:store.cursor.revision_accumulator.identity_digest,applied:semio_framework_os_vcs::HistoryPageStack::empty(),redo:semio_framework_os_vcs::HistoryPageStack::empty(),applied_tail_chains:None,mutation_positions:protocol::HistoryFoldIndex::new(),indexed_edits:protocol::HistoryFoldIndex::new(),unit_flags:protocol::HistoryFoldIndex::new()});return Ok(BatchCommitMetadataStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))}
+            if metadata.revision.is_none(){let copy=size_of::<Option<CursorRevisionAccumulator>>()+32;if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(BatchCommitMetadataStep::Blocked)}metadata.revision=Some(CursorRevisionAccumulator{identity_digest:store.cursor.revision_accumulator.identity_digest,applied:semio_os_vcs::HistoryPageStack::empty(),redo:semio_os_vcs::HistoryPageStack::empty(),applied_tail_chains:None,mutation_positions:protocol::HistoryFoldIndex::new(),indexed_edits:protocol::HistoryFoldIndex::new(),unit_flags:protocol::HistoryFoldIndex::new()});return Ok(BatchCommitMetadataStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))}
             if metadata.ordinal<store.log.applied_edit_ids.len(){
                 let source=&store.log.applied_edit_ids[metadata.ordinal];
                 ownership.copied_bytes=if metadata.phase<2{source.len()}else{size_of::<CursorRevisionRecord>()};

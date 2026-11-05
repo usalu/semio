@@ -1,7 +1,7 @@
 //! ✅️ EN 1992 play app — the checks window: every computed compliance check with utilisation bars, clause links and remedy chips.
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_plugin_norm_app_surface::{render_checks_with, ChecksViewState, ChecksWindowSpec};
 use semio_s_plugin_norm_compliance::CheckReport;
 

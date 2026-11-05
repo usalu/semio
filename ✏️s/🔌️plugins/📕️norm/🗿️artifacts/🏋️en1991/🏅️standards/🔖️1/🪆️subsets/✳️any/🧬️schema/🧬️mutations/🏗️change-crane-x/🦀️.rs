@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeCraneX where Op: p
         record: "ChangedCraneX",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change crane position on the runway", "Kranposition auf der Kranbahn ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change crane position on the runway", "Kranposition auf der Kranbahn ändern")
     }
 }
 

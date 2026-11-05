@@ -16,7 +16,7 @@ fn original_host_program_fault_retains_exact_typed_frame_cause_without_heap() {
 
 #[test]
 fn original_host_program_fault_resource_override_and_single_wire_preserve_original_authority_without_heap() {
-    use semio_framework_plugin_host::shard::{grant::ShardResourceBudget, ShardFrame};
+    use semio_plugin_host::shard::{grant::ShardResourceBudget, ShardFrame};
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let input = serde_json::from_value(law["input"].clone()).unwrap();
     let before = &law["dispatch"]["resourcesBefore"];

@@ -32,7 +32,7 @@ impl semio_framework::ToolJobFactory for Wfc3dInferenceJobFactory {
         semio_framework::ToolExecutionContract::resumable(16 << 20, MAX_WFC3D_TILES + MAX_WFC3D_SLOTS + MAX_WFC3D_RULES + MAX_WFC3D_EDGES, 4_096, MAX_WFC3D_OUTPUT_BYTES, 7_500, 1, 1)
     }
 
-    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Wfc3dInferenceJob::new(operation, payload));
+    semio_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Wfc3dInferenceJob::new(operation, payload));
 }
 
 /// 💡️ Descriptor for the `s.wfc.wfc3d.solve` inference — five handcrafted facet leaves.

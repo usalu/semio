@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue,ToValue};
 pub struct SetPageBackgroundDrawing {pub page_id:String,pub drawing:Option<LayoutDrawingMember>}
 impl<Op> MutationKind<LayoutSnapshot,Op> for SetPageBackgroundDrawing where Op:protocol::Mutation<LayoutSnapshot,Diff=LayoutDiff>+From<crate::set_page_background_drawing::SetPageBackgroundDrawing>{
  const SEMANTICS:SemanticDescriptor=SemanticDescriptor{verb:"set",entity:"page-background-drawing",kind:"set-page-background-drawing",record:"SetPageBackgroundDrawing"};
- fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native("Set page Drawing","Seitenzeichnung setzen")}
+ fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native("Set page Drawing","Seitenzeichnung setzen")}
  fn target(&self)->Vec<String>{vec![self.page_id.clone()]}
 }
 impl<Op> protocol::ColdMutationKind<LayoutSnapshot,Op> for SetPageBackgroundDrawing where Op:protocol::ColdMutation<LayoutSnapshot,ReferenceDiff=LayoutDiff>+protocol::Mutation<LayoutSnapshot,Diff=LayoutDiff>+From<crate::set_page_background_drawing::SetPageBackgroundDrawing>{

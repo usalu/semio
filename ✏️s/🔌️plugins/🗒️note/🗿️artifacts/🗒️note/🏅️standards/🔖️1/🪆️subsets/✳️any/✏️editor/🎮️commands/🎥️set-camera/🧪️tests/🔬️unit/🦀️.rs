@@ -3,7 +3,7 @@ use crate::op::NoteMutation;
 #[allow(unused_imports)]
 use semio_s_artifact_note_note_schema::NoteSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::note::commands::set_camera::*;
@@ -12,7 +12,7 @@ use crate::editor::note::unit_tests::context::{dispatch, note_app, render};
 use crate::editor::note::command_enum::NoteCommand;
 use crate::editor::note::NOTE_PLAY_BODY_COMPOSITE;
 use crate::NoteCamera;
-use semio_framework_plugin::artifact_app_laws;
+use semio_plugin::artifact_app_laws;
 
 /// 🎥️ The camera the composite surface actually carries. A projected tree no longer spells its scene
 /// as JSON text: since the retained wire went binary (ticket 26/09/15) `SurfaceProps.doc` is a byte
@@ -21,7 +21,7 @@ use semio_framework_plugin::artifact_app_laws;
 /// `…_isolate_and_reload_two_windows` law uses).
 async fn composite_camera(app: &mut crate::editor::note::unit_tests::context::NoteApp) -> NoteCamera {
     let projection = render(app, NOTE_PLAY_BODY_COMPOSITE).await;
-    let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::InkCanvasScene>(&projection).expect("composite ink-canvas scene");
+    let scene = artifact_app_laws::decode_fixture_scene::<semio_plugin::InkCanvasScene>(&projection).expect("composite ink-canvas scene");
     let document: serde_json::Value = serde_json::from_str(&scene.document_json).expect("composite scene documentJson");
     let camera = document.get("camera").cloned().unwrap_or(serde_json::Value::Null);
     NoteCamera {
@@ -61,13 +61,13 @@ async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_config() {
 /// the DOCUMENT store at all.
 #[semio_framework_async_macros::async_test]
 async fn camera_drag_never_creates_a_document_undo_step() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
 
     let mut app = note_app().await;
     for x in [1.0, 2.0, 3.0] {
         dispatch(&mut app, NoteCommand::SetCamera(SetCamera { camera: NoteCamera { x, y: 0.0, zoom: 1.0 } })).await;
     }
     assert_eq!(composite_camera(&mut app).await.x, 3.0);
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo (no-op: nothing on the document store to undo)");
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo (no-op: nothing on the document store to undo)");
     assert_eq!(composite_camera(&mut app).await.x, 3.0, "document undo has nothing to revert — the drag never touched the document");
 }

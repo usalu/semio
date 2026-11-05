@@ -1,6 +1,6 @@
 //! 🫴️ Original codec intermediates stay under the caller's admitted receiving frame.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
+use semio_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
 use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 use semio_framework_io_schema::{IoError, IoOutcome, IoPayload, IoResult};
 use semio_framework_io_sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding};

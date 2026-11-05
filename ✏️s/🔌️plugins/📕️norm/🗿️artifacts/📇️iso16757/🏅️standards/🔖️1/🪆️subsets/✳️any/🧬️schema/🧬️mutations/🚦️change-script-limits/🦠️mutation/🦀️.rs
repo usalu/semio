@@ -19,8 +19,8 @@ pub struct ChangeScriptLimits {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangeScriptLimits where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_script_limits::mutation::ChangeScriptLimits> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "script-limits", kind: "change-script-limits", record: "ChangedScriptLimits" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update script limits (max-steps={}, max-recursion={}, timeout-ms={})", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms), &format!("Skriptgrenzwerte (Max-Schritte={}, Max-Rekursion={}, Timeout-ms={}) aktualisieren", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update script limits (max-steps={}, max-recursion={}, timeout-ms={})", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms), &format!("Skriptgrenzwerte (Max-Schritte={}, Max-Rekursion={}, Timeout-ms={}) aktualisieren", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms))
     }
 }
 

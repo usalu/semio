@@ -8,9 +8,9 @@
 //! `impl protocol::SemanticMutation<Generation2dSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate self as semio_s_artifact_procedural_2d_mutations;
 
 //#region 📖️SemioGrammar
@@ -26,7 +26,7 @@ pub use semio_s_artifact_procedural_2d_mut_synapses::{connect_synapse, disconnec
 pub use semio_s_artifact_procedural_2d_mut_widgets::{change_slider_value, clear_widget_layout, create_widget, delete_widget, move_nodes, move_widget, replace_widget};
 use protocol::{ColdMutation, Mutation};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_os_flow::FlowHost;
+use semio_os_flow::FlowHost;
 #[cfg(test)]
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
@@ -34,7 +34,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_pack_json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Generation2dSnapshot, diff = Generation2dDiff, schema = "generation.2d", reference = Generation2dSnapshot, reference_diff = Generation2dDiff)]
 pub enum Generation2dMutation {
@@ -202,9 +203,9 @@ pub fn host_insert_port(host: &mut FlowHost, widget_id: &str, input: bool, index
 pub fn host_reorganize(host: &mut FlowHost, options_json: &str) -> Result<Vec<crate::Generation2dMutation>, String> {
     use semio_s_artifact_procedural_2d_mut_widgets::move_widget;
     let before: Vec<(String, semio_framework_artifact_flow_flow::WidgetLayout)> = host.host_snapshot.layout.iter().map(|(id, layout)| (id.clone(), layout.clone())).collect();
-    let options: semio_framework_os_infinite::board::schema::layout::DagLayoutOptions = semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let options: semio_os_infinite::board::schema::layout::DagLayoutOptions = semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut progress = |_| true;
-    let mut control = semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000, &mut progress);
+    let mut control = semio_os_infinite::board::schema::layout::LayoutControl::new(100_000_000, &mut progress);
     host.reorganize(&options, &mut control).map_err(|error| error.to_string())?;
     Ok(host
         .host_snapshot
@@ -228,3 +229,7 @@ pub mod text;
 
 #[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
 pub mod binary;
+
+#[cfg(test)]
+#[path="📥️provisional/🧪️tests/🦀️.rs"]
+mod provisional_wire_laws;

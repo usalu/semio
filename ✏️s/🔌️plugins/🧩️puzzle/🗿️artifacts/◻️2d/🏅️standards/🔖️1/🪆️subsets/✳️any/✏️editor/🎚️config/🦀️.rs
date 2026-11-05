@@ -274,8 +274,8 @@ impl pack::snapshot::ArtifactPack for Puzzle2dConfig {
         semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error))
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -543,7 +543,7 @@ impl protocol::OpBinary for Puzzle2dConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(Puzzle2dConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(Puzzle2dConfigMutation);
 
 impl protocol::OpText for Puzzle2dConfigMutation {
     fn print_op(&self) -> String {

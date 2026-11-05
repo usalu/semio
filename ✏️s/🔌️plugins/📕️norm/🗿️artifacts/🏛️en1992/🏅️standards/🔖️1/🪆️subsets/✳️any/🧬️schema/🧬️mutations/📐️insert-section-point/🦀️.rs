@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for InsertSectionPoint where
         record: "InsertedSectionPoint",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert section point {}", self.section_point.id), &format!("Querschnittspunkt {} einfügen", self.section_point.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert section point {}", self.section_point.id), &format!("Querschnittspunkt {} einfügen", self.section_point.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

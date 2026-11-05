@@ -1,7 +1,7 @@
 //! 🚪️ equation <- json. The exact `{graph, geometry, equation}` carrier rebuilds the snapshot with its derived handles.
 
 use crate::{equation_snapshot_from_host_snapshot, EquationCarrierSnapshot, EquationSnapshot};
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use crate::standards::v1::subsets::any::io::invalid_payload;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -14,7 +14,7 @@ pub struct JsonIntoEquation;
 impl Deserializer<EquationSnapshot> for JsonIntoEquation {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<EquationSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<EquationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(invalid_payload("JsonIntoEquation", "expected a binary json payload"));
         };

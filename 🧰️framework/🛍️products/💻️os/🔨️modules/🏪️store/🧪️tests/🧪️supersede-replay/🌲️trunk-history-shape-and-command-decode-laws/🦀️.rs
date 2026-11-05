@@ -31,10 +31,10 @@ async fn a_new_alternative_preserves_the_trunk_it_branched_from() {
     assert!(store.supersessions().is_empty(), "the edited alternative's scoped supersession stays on it");
     assert!(
         store.envelope().transitions.iter().all(|envelope| {
-            match semio_framework_os_spr::history_transition_from_envelope(envelope).expect("transition").expect("history") {
-                semio_framework_os_spr::HistoryTransition::Checkout { .. } => false,
-                semio_framework_os_spr::HistoryTransition::Branch { alternative_id, .. } => alternative_id != trunk,
-                semio_framework_os_spr::HistoryTransition::Commit(checkpoint) => checkpoint.line_id.as_deref() != Some(trunk.as_str()),
+            match semio_os_spr::history_transition_from_envelope(envelope).expect("transition").expect("history") {
+                semio_os_spr::HistoryTransition::Checkout { .. } => false,
+                semio_os_spr::HistoryTransition::Branch { alternative_id, .. } => alternative_id != trunk,
+                semio_os_spr::HistoryTransition::Commit(checkpoint) => checkpoint.line_id.as_deref() != Some(trunk.as_str()),
                 _ => true,
             }
         }),
@@ -63,11 +63,11 @@ async fn a_new_alternative_preserves_the_trunk_it_branched_from() {
     }
     assert_eq!(peer.0.content_revision(), other.0.content_revision(), "arrival order never changes a replica's identity");
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let mut reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(alternative_view(&reloaded), expected, ".spr keeps the trunk");
     assert_eq!(reloaded.snapshot_ref().n, Some(6));
     let text = print_document_text(store.envelope()).await.expect("text prints");
-    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("text parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("text parses").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(alternative_view(&mirrored), expected, ".ops keeps the trunk");
     assert_eq!(mirrored.snapshot_ref().n, Some(6));
     fixture_author(&mut reloaded, ArtifactCommand::SwitchAlternative { alternative_id: edited }).await.expect("a reloaded store switches to the edited alternative");
@@ -96,9 +96,9 @@ async fn a_viewer_head_round_trips_through_the_spr_pack() {
     assert_eq!(head, (Some(edited.clone()), Some(checkpoint.clone())), "the replica stands on the edited alternative at its checkpoint");
     assert_eq!(store.snapshot_ref().n, Some(15), "an explicit checkpoint hides the uncommitted edit after it");
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let log = semio_framework_os_spr::decode_history(&files.spr, &semio_framework_os_spr::DecodeOptions::default()).await.expect("spr decodes");
+    let log = semio_os_spr::decode_history(&files.spr, &semio_os_spr::DecodeOptions::default()).await.expect("spr decodes");
     assert_eq!((log.viewer_line.clone(), log.viewer_checkpoint.clone()), head, "the persisted log names the viewer head");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!((reloaded.envelope().active_alternative_id.clone(), reloaded.envelope().viewer_checkpoint_id.clone()), head, ".spr keeps the viewer head");
     assert_eq!((reloaded.snapshot_ref().n, reloaded.supersessions()), (Some(15), store.supersessions()), ".spr reloads the viewer's projection");
     test_support::assert_document_pack_round_trip(&store).await;
@@ -114,13 +114,13 @@ async fn a_viewer_head_round_trips_through_the_spr_pack() {
 /// document store admits all of them.
 #[semio_framework_async_macros::async_test]
 async fn a_config_store_holds_undo_and_redo_only() {
-    use semio_framework_os_spr::HistoryTransitionKind::Checkout; use semio_framework_os_spr::HistoryTransitionKind::Commit; use semio_framework_os_spr::HistoryTransitionKind::Supersede;
+    use semio_os_spr::HistoryTransitionKind::Checkout; use semio_os_spr::HistoryTransitionKind::Commit; use semio_os_spr::HistoryTransitionKind::Supersede;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧫️history-transition/🔣️.json")).expect("history transition fixture parses");
     let admitted = |shape: &str| -> Vec<String> {
         let row = fixture["shapes"].as_array().expect("shape rows").iter().find(|row| row["shape"] == shape).expect("a shape row");
         row["admits"].as_array().expect("admits").iter().map(|kind| kind.as_str().expect("kind").to_string()).collect()
     };
-    let mut config = ArtifactStore::new(create_config_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "config", DemoSnapshot { n: Some(0) }, None).await, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut config = ArtifactStore::new(create_config_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "config", DemoSnapshot { n: Some(0) }, None).await, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     apply(&mut config, vec![set(1)]).await;
     apply(&mut config, vec![add(2)]).await;
     let ids = operation_ids(&config);
@@ -140,11 +140,11 @@ async fn a_config_store_holds_undo_and_redo_only() {
         let kinds = command.history_transition_kinds();
         assert!(kinds.iter().any(|kind| !admitted("config").contains(&kind.name().to_string())), "{kinds:?}: the shape table excludes a kind");
         assert!(kinds.iter().all(|kind| admitted("document").contains(&kind.name().to_string())), "{kinds:?}: a document holds every kind");
-        assert_eq!(fixture_author(&mut config, command).await.err(), Some(VcsError::HistoryShape { shape: semio_framework_os_spr::HistoryShape::Config, kind }));
+        assert_eq!(fixture_author(&mut config, command).await.err(), Some(VcsError::HistoryShape { shape: semio_os_spr::HistoryShape::Config, kind }));
         assert_eq!(untouched(&config), before, "a refused command leaves the store untouched");
     }
     let remote = remote_supersession("config", &ids[0], draft(Some(set(9))), 0);
-    assert_eq!(config.ingest_remote(remote).await.err(), Some(VcsError::HistoryShape { shape: semio_framework_os_spr::HistoryShape::Config, kind: Supersede }));
+    assert_eq!(config.ingest_remote(remote).await.err(), Some(VcsError::HistoryShape { shape: semio_os_spr::HistoryShape::Config, kind: Supersede }));
     assert_eq!(untouched(&config), before, "a refused remote transition is never recorded");
     for command in [ArtifactCommand::<DemoMutation>::Undo, ArtifactCommand::Redo] {
         assert!(command.history_transition_kinds().iter().all(|kind| admitted("config").contains(&kind.name().to_string())));
@@ -204,11 +204,11 @@ impl FromValue for WitnessOp {
 }
 
 impl OpBinary for WitnessOp {
-    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_os_spr::ProtocolError> {
         self.0.encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_os_spr::ProtocolError> {
         DemoMutation::decode_op(bytes).map(Self::live)
     }
 }
@@ -225,9 +225,9 @@ impl OpText for WitnessOp {
 
 impl Mutation<DemoSnapshot> for WitnessOp {
     type Diff = <DemoMutation as Mutation<DemoSnapshot>>::Diff;
-    const DESCRIPTORS: &'static [semio_framework_os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
+    const DESCRIPTORS: &'static [semio_os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
 
-    fn descriptor(&self) -> &'static semio_framework_os_spr::MutationLeafDescriptor {
+    fn descriptor(&self) -> &'static semio_os_spr::MutationLeafDescriptor {
         self.0.descriptor()
     }
 
@@ -237,9 +237,9 @@ impl Mutation<DemoSnapshot> for WitnessOp {
     }
 }
 
-impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for WitnessOp {
+impl semio_os_spr::ColdMutation<DemoSnapshot> for WitnessOp {
     type ReferenceDiff = <DemoMutation as Mutation<DemoSnapshot>>::Diff;
-    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::ReferenceDiff> {
+    fn diff(&self, base: &DemoSnapshot) -> semio_os_spr::MutationOutcome<Self::ReferenceDiff> {
         self.0.diff(base)
     }
 
@@ -286,7 +286,7 @@ async fn a_refused_command_decode_retires_every_operation_it_decoded() {
         assert_eq!(WitnessOp::tally(), (start.0 + retired, start.1), "every decoded operation retired, none dropped");
     }
     let mut hostile = vec![COMMAND_BINARY_FORMAT, 0, 0];
-    semio_framework_os_pack::write_varint_u64(&mut hostile, u64::MAX >> 1);
+    semio_os_pack::write_varint_u64(&mut hostile, u64::MAX >> 1);
     assert!(matches!(decode(&hostile), Err(CommandDecodeError::Operation { index: 0, .. })));
     let one = print_command(&apply(vec![set(1)])).await.expect("prints");
     let op_line = one.lines().find(|line| line.starts_with("  ")).expect("an op line").to_string();

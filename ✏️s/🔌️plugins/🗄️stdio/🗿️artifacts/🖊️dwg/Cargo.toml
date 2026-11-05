@@ -77,10 +77,10 @@ path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️package
 [workspace.dependencies.semio-framework-mesh-engine]
 path = "../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin]
+[workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-schema]
@@ -128,7 +128,7 @@ path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️regi
 [workspace.dependencies.semio-framework-schema-state]
 path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui-locale]
+[workspace.dependencies.semio-ui-locale]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value]

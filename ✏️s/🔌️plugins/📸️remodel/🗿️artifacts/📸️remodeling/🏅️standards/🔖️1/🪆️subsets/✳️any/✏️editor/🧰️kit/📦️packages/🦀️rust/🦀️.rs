@@ -1,6 +1,6 @@
 //! 🧰️ remodeling editor kit: shared editor plumbing, window transient state and terminology.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "."]
 pub mod examples {

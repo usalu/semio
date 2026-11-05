@@ -34,7 +34,7 @@ pub fn validate_target(payload:&ChangeLayerMask,base:&RasterSnapshot,layer:&Rast
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerMask where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_mask::ChangeLayerMask> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer-mask", kind: "change-layer-mask", record: "ChangedLayerMask" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Change layer mask", "Ebenenmaske ändern") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Change layer mask", "Ebenenmaske ändern") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
 }
 

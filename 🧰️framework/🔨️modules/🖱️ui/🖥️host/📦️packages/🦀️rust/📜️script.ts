@@ -31,7 +31,7 @@ class TestScript extends BundleScript {
     }
     const { rest } = resolveTestLevel(segments);
     await runBudgetedTestCommand(process.execPath, ["../../🧪️tests/🌐️browser-host/🟨️.js"], { cwd: this.root, budgetMs: buildBudgetMs() });
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-host", "semio-framework-ui-host-tests"], cwd: this.root, extraArgs: ["--no-fail-fast", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-ui-host", "semio-ui-host-tests"], cwd: this.root, extraArgs: ["--no-fail-fast", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 

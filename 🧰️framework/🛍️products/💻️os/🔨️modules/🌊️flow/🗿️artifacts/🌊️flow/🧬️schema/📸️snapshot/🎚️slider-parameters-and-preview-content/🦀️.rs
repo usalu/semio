@@ -80,7 +80,8 @@ pub fn set_widget_slider_value(widget: &mut Widget, value: f64) -> bool {
 }
 //#endregion 🎚️ParameterValue
 
-pub(super) fn resolve_input_slider_fields(value: Option<f64>, min: Option<f64>, max: Option<f64>, step: Option<f64>) -> (f64, f64, f64, f64) {
+/// 🎚️ Resolves authored numeric fields using the snapshot's canonical slider range policy.
+pub fn resolve_input_slider_fields(value: Option<f64>, min: Option<f64>, max: Option<f64>, step: Option<f64>) -> (f64, f64, f64, f64) {
     if let (Some(value), Some(min), Some(max), Some(step)) = (value, min, max, step) {
         let (min, max) = if min <= max { (min, max) } else { (max, min) };
         return (value.clamp(min, max), min, max, step.max(1e-9));

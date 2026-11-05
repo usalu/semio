@@ -17,8 +17,8 @@ pub struct ReorderRows {
 impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for ReorderRows {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "rows", kind: "reorder-rows", record: "ReorderedRows" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move row #{} to #{}", self.from, self.to), &format!("Zeile #{} nach #{} verschieben", self.from, self.to))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move row #{} to #{}", self.from, self.to), &format!("Zeile #{} nach #{} verschieben", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.from.to_string()]

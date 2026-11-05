@@ -2,14 +2,14 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animatio
 use semio_s_fem_app_surface::FemResultsAnimation;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowConfigMutation;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowConfigMutation;
 use crate::context::close;
 use crate::context::dispatch;
 use crate::context::fem3d_app;
@@ -17,9 +17,9 @@ use crate::context::Fem3dApp;
 use semio_s_fem_app_surface::FemLoopMode;
 use semio_s_fem_app_surface::FemWaveform;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::InvocationResult;
-use semio_framework_plugin::ViewWindowInstance;
+use semio_plugin::Effect;
+use semio_plugin::InvocationResult;
+use semio_plugin::ViewWindowInstance;
 
 fn animation(command: SetResultAnimation) -> Fem3dCommand {
     Fem3dCommand::SetResultAnimation(command)
@@ -28,7 +28,7 @@ fn animation(command: SetResultAnimation) -> Fem3dCommand {
 /// 🔁️ Drives the publication the dispatch opened all the way into the window-config store, the way
 /// the plugin host's own continuation does — a read before the settle would see the PREVIOUS frame.
 async fn settle(app: &mut Fem3dApp) -> Vec<Effect> {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
+    semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
 }
 
 /// 🔁️ How many playback re-arms one gesture asked the host for. Counted off BOTH the dispatch's own
@@ -53,13 +53,13 @@ fn results_view() -> ViewModel {
     ViewModel {
         window_id: Some("results-left".into()),
         window_instances: vec![ViewWindowInstance { id: "results-left".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 
 /// 🎚️ The playback state the addressed results window ended up in, read back off its own partition.
 async fn published(app: &mut Fem3dApp) -> FemResultsAnimation {
-    semio_framework_plugin::artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(app, &results_view()).await.expect("capture results window config").unwrap_or_default().animation
+    semio_plugin::artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(app, &results_view()).await.expect("capture results window config").unwrap_or_default().animation
 }
 
 /// ▶️ LAW: pressing play arms EXACTLY one clock; pressing it again while it runs arms none — two
@@ -132,7 +132,7 @@ async fn set_result_animation_applies_one_named_field() {
 #[semio_framework_async_macros::async_test]
 async fn set_result_animation_honours_the_window_a_control_tagged() {
     let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
@@ -143,15 +143,15 @@ async fn set_result_animation_honours_the_window_a_control_tagged() {
             ViewWindowInstance { id: "results-right".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() },
             ViewWindowInstance { id: "model-left".into(), window_kind_id: semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL.into() },
         ],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let tagged = |window_id: &str| SetResultAnimation { playing: Some(true), window_id: Some(window_id.into()), ..blank() };
     let emit = handle_window(&tagged("results-right"), &doc, &cfg, &split).expect("a tagged control addresses its own pane");
-    assert_eq!(emit.window_config_mutations.iter().map(semio_framework_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-right"]);
+    assert_eq!(emit.window_config_mutations.iter().map(semio_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-right"]);
     let Effect::DispatchAction { args, .. } = emit.effects.first().expect("the tagged gesture arms its own clock") else { panic!("expected a dispatch-action re-arm") };
     assert_eq!(args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str), Some("results-right"));
     let untagged = handle_window(&SetResultAnimation { playing: Some(true), ..blank() }, &doc, &cfg, &split).expect("an untagged gesture falls back to the addressed window");
-    assert_eq!(untagged.window_config_mutations.iter().map(semio_framework_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-left"]);
+    assert_eq!(untagged.window_config_mutations.iter().map(semio_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-left"]);
     assert!(handle_window(&tagged("model-left"), &doc, &cfg, &split).is_err(), "a tag naming a model window is refused");
     assert!(handle_window(&tagged("results-gone"), &doc, &cfg, &split).is_err(), "a tag naming a closed window is refused");
 }

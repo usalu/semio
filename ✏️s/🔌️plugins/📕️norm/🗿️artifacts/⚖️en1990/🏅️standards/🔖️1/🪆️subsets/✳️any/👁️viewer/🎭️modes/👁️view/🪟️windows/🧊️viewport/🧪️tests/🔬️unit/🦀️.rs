@@ -1,5 +1,5 @@
 use crate::modes::view::windows::viewport::*;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 #[semio_framework_async_macros::async_test]

@@ -5,7 +5,7 @@ use crate::GeometryHost as NativeGeometryHost;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, OrderedMap, OrderedSet, SynapseSpec, Widget};
-use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
 use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use std::{rc::Rc,cell::RefCell,mem::ManuallyDrop};
@@ -99,8 +99,8 @@ fn the_registered_metadata_publishes_the_widget_step_contract_and_both_schemas_p
         assert_eq!(parsed["type"], "object");
     }
     assert!(contract.artifact_binding.is_some_and(|binding| binding.field == "document" && !binding.required));
-    semio_framework_plugin::register_artifact_inference_service(geometry_inference_service()).expect("the service registers without conflict");
-    assert!(semio_framework_plugin::artifact_inference_service("s.procedural.generation3d", "s.procedural.generation3d.inference").expect("registry reads").is_some());
+    semio_plugin::register_artifact_inference_service(geometry_inference_service()).expect("the service registers without conflict");
+    assert!(semio_plugin::artifact_inference_service("s.procedural.generation3d", "s.procedural.generation3d.inference").expect("registry reads").is_some());
 }
 
 #[test]

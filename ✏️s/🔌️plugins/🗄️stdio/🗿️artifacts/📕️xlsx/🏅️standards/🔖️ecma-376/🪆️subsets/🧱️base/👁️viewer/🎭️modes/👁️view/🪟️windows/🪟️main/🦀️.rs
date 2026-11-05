@@ -7,11 +7,11 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::base::render_xlsx_cell_value;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-use semio_framework_plugin::app::{editable_table_window_row_at, tree_window_item, tree_window_section, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::{BuiltNode, PluginAssemblyError, TreeWindows, UiLabel, UiText, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::app::{editable_table_window_row_at, tree_window_item, tree_window_section, TableWindowKit, WindowKit, WindowedEditableTableCell};
+use semio_plugin::plugin_app_close_prelude as ui;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::{BuiltNode, PluginAssemblyError, TreeWindows, UiLabel, UiText, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use std::collections::BTreeMap;
 
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -38,7 +38,7 @@ fn grid_extent(sheet: &XlsxSheet) -> (usize, usize) {
     (rows, columns)
 }
 
-fn render_sheet_grid(sheet: &XlsxSheet, shared_strings: &[String], sheet_ordinal: usize, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn render_sheet_grid(sheet: &XlsxSheet, shared_strings: &[String], sheet_ordinal: usize, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let cells: BTreeMap<(u32, u32), &XlsxCell> = sheet.cells.iter().map(|cell| ((cell.row, cell.col), cell)).collect();
     let (row_total, column_total) = grid_extent(sheet);
     let table_id = format!("xlsx-viewer-sheet-{sheet_ordinal}-grid");
@@ -70,7 +70,7 @@ fn render_sheet_grid(sheet: &XlsxSheet, shared_strings: &[String], sheet_ordinal
     )
 }
 
-pub fn render(document: &XlsxSnapshot, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &XlsxSnapshot, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let workbook = document.project_workbook().map_err(|error| PluginAssemblyError::new("xlsx.projection", error.to_string()))?;
     let ordinals: Vec<usize> = (0..workbook.sheets.len()).collect();
     tree_window_section(windows, "xlsx-viewer-sheets", ui::Label::default(), true, &ordinals, |ordinal| {

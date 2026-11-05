@@ -1,17 +1,17 @@
 //! 🌀️ Typed relational support for the identical owned procedural host and generation fields.
 #![allow(clippy::result_large_err)]
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_flow_contract::{FlowHostSnapshot,FlowUi,Widget,NodeChrome,CameraJson,neural::{Dictionary,Value as NeuralValue,Atom,Tree}};
-use semio_framework_os_playbook_contract::GenerationPlayRoot;
+use semio_os_flow_contract::{FlowHostSnapshot,FlowUi,Widget,NodeChrome,CameraJson,neural::{Dictionary,Value as NeuralValue,Atom,Tree}};
+use semio_os_playbook_contract::GenerationPlayRoot;
 use semio_framework_value::DslValue;
 use semio_framework_value::Number;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Projection;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::FloatColumn;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::insert_ieee754;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::insert_key_ieee754;
+use semio_os_kernel::sqlite_snapshot::SqliteDatabase;
+use semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
+use semio_os_kernel::sqlite_snapshot::artifact::Cell;
+use semio_os_kernel::sqlite_snapshot::artifact::Projection;
+use semio_os_kernel::sqlite_snapshot::artifact::FloatColumn;
+use semio_os_kernel::sqlite_snapshot::artifact::insert_ieee754;
+use semio_os_kernel::sqlite_snapshot::artifact::insert_key_ieee754;
 #[path="📤️projection/🦀️.rs"]mod projection;
 pub use projection::project;
 fn ordinal(n:usize)->Result<i64,ValueError>{i64::try_from(n).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"procedural ordinal overflow"))}

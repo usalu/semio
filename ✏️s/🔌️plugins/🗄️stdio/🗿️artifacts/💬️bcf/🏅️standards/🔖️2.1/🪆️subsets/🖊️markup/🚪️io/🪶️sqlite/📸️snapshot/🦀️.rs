@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v2_1::subsets::any::schema::snapshot::*;
 use std::collections::BTreeMap;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,FloatColumn,FloatRow,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteDatabaseLimits,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,FloatColumn,FloatRow,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteDatabaseLimits,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshotHost};
 
 pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
@@ -44,11 +44,11 @@ fn visit_rows(snapshot:&BcfSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueE
  }
 
 impl ArtifactSqliteSnapshotHost for BcfSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   admit_native(self,SqliteSnapshotPhase::EncodeNative,control)?;
   store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }

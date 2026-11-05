@@ -2,21 +2,21 @@
 
 use crate::editor::wav::edit_audio;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
-use semio_framework_plugin::app::{editable_table_window_row, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::ActionId;
-use semio_framework_plugin::Buildable;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::HasBase;
-use semio_framework_plugin::HasChildren;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::RowActionPlacement;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::Trigger;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_ui_contract::{self as ui, Label as UiLabel};
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::app::{editable_table_window_row, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
+use semio_plugin::ActionId;
+use semio_plugin::Buildable;
+use semio_plugin::BuiltNode;
+use semio_plugin::HasBase;
+use semio_plugin::HasChildren;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::RowActionPlacement;
+use semio_plugin::TreeWindows;
+use semio_plugin::Trigger;
+use semio_plugin::UiValue;
+use semio_plugin::WindowKindDefinition;
+use semio_ui_contract::{self as ui, Label as UiLabel};
+use semio_ui_locale::Locale;
+use semio_ui_locale::LocalizedLabel;
 
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
@@ -72,11 +72,11 @@ fn sample_text(data: &WavData, index: usize) -> Option<String> {
     }
 }
 
-pub fn action(name: &str) -> semio_framework_plugin::UiAssemblyResult<ActionId> {
+pub fn action(name: &str) -> semio_plugin::UiAssemblyResult<ActionId> {
     ActionId::try_v1(CONTROLLER_ID, name).ok_or_else(|| PluginAssemblyError::new("stdio.wav.action", format!("invalid action {name}")))
 }
 
-fn toolbar_button(id: &str, label: &str, action_id: &str, arguments: UiValue) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn toolbar_button(id: &str, label: &str, action_id: &str, arguments: UiValue) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     ui::button(UiLabel::try_from(label).map_err(|_| PluginAssemblyError::new("stdio.wav.toolbar-label", "toolbar label exceeds UI bound"))?)
         .try_id(id)
         .map_err(|_| PluginAssemblyError::new("stdio.wav.toolbar-id", "toolbar id exceeds UI bound"))?
@@ -86,7 +86,7 @@ fn toolbar_button(id: &str, label: &str, action_id: &str, arguments: UiValue) ->
         .map_err(|_| PluginAssemblyError::new("stdio.wav.toolbar-build", "toolbar build admission"))
 }
 
-fn toolbar(revision: &str, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn toolbar(revision: &str, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let append_frame = toolbar_button(
         "append-frame",
         match locale {
@@ -114,7 +114,7 @@ fn toolbar(revision: &str, locale: Locale) -> semio_framework_plugin::UiAssembly
         .map_err(|_| PluginAssemblyError::new("stdio.wav.toolbar", "toolbar build admission"))
 }
 
-fn format_table(document: &WavSnapshot, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn format_table(document: &WavSnapshot, revision: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let column = match locale {
         Locale::De => "Abtastrate (Hz)",
         Locale::En => "Sample rate (Hz)",
@@ -149,7 +149,7 @@ fn format_table(document: &WavSnapshot, revision: &str, publication_revision: se
     )
 }
 
-fn channel_table(channels: usize, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn channel_table(channels: usize, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let column = match locale {
         Locale::De => "Kanal",
         Locale::En => "Channel",
@@ -195,7 +195,7 @@ fn channel_table(channels: usize, revision: &str, locale: Locale, windows: &Tree
     )
 }
 
-fn frame_table(frames: usize, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn frame_table(frames: usize, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let column = match locale {
         Locale::De => "Frame",
         Locale::En => "Frame",
@@ -243,10 +243,10 @@ fn matrix_table(
     channels: usize,
     frames: usize,
     revision: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
+    publication_revision: semio_plugin::UiPublicationRevision,
     locale: Locale,
     windows: &TreeWindows<'_>,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let columns = (0..channels)
         .map(|channel| match locale {
             Locale::De => format!("Kanal {}", channel + 1),
@@ -275,7 +275,7 @@ fn matrix_table(
                     let arguments = semio_s_artifact_stdio_contract::window_kit_revisioned_cell_arguments(frame, channel, revision)?;
                     Ok(WindowedEditableTableCell::new(value, columns[channel].clone(), edit_audio::SET_SAMPLE_ACTION_ID, arguments).publication_revision(publication_revision))
                 })
-                .collect::<semio_framework_plugin::UiAssemblyResult<Vec<_>>>()?;
+                .collect::<semio_plugin::UiAssemblyResult<Vec<_>>>()?;
             let insert = row_action(
                 "plus",
                 match locale {
@@ -300,7 +300,7 @@ fn matrix_table(
     )
 }
 
-fn coordinate_table(document: &WavSnapshot, channels: usize, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn coordinate_table(document: &WavSnapshot, channels: usize, revision: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let columns = match locale {
         Locale::De => ["Frame", "Kanal", "Wert"],
         Locale::En => ["Frame", "Channel", "Value"],
@@ -341,7 +341,7 @@ fn coordinate_table(document: &WavSnapshot, channels: usize, revision: &str, pub
     )
 }
 
-fn raw_table(values: &[u8], locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn raw_table(values: &[u8], locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let columns = [match locale {
         Locale::De => "Rohe Bytes",
         Locale::En => "Raw bytes",
@@ -360,12 +360,12 @@ fn raw_table(values: &[u8], locale: Locale, windows: &TreeWindows<'_>) -> semio_
     )
 }
 
-pub fn render(document: &WavSnapshot, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &WavSnapshot, locale: Locale, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(document);
     render_revisioned(document, &revision, publication_revision, locale, &TreeWindows::unhosted())
 }
 
-pub fn render_revisioned(document: &WavSnapshot, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_revisioned(document: &WavSnapshot, revision: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut children = Vec::new();
     match &document.data {
         WavData::Raw(values) => children.push(raw_table(values, locale, windows)?),

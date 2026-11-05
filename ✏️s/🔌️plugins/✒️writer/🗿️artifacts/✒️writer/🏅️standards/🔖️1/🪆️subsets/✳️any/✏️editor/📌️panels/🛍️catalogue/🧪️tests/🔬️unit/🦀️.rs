@@ -1,4 +1,4 @@
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use crate::editor::writer::panels::catalogue::{WRITER_PLAY_BODY_CATALOGUE, definition};
 use crate::editor_unit_tests::context::{new_app, render as render_body};
 

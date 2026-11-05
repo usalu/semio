@@ -14,7 +14,7 @@ async fn render_lists_one_row_per_record_with_35_columns() {
     let mut document = EpwSnapshot::default();
     document.records.push(Default::default());
     let node = render(&document).expect("render");
-    let scene: semio_framework_ui_scene::TableScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the table scene with its lanes");
+    let scene: semio_ui_scene::TableScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the table scene with its lanes");
     let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
     assert_eq!(columns.len(), 35);
     assert_eq!(columns[0]["id"], serde_json::json!("0"));

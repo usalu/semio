@@ -5,43 +5,43 @@ const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_fram
 
 #[allow(non_snake_case)]
 fn LIBRARY_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+    semio_renderer_wgpu_test_support::renderer_source()
 }
 #[allow(non_snake_case)]
 fn BINARY_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs")
+    semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn MANIFEST_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml")
+    semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml")
 }
 #[allow(non_snake_case)]
 fn WINT_APP_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs")
+    semio_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn OS_HOST_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs")
+    semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn GPU_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs")
+    semio_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn DRAW_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_module_trees(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🦀️.rs"])
+    semio_renderer_wgpu_test_support::repo_module_trees(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🦀️.rs"])
 }
 #[allow(non_snake_case)]
 fn PREPARED_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs")
+    semio_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn ENGINE_CANVAS_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_texts(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🎬️canvas/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs"])
+    semio_renderer_wgpu_test_support::repo_texts(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🎬️canvas/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs"])
 }
 #[allow(non_snake_case)]
 fn DRAW_LAWS_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_texts(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/🧪️tests/🔬️unit/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🧪️tests/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🧪️tests/🔬️unit/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🧪️tests/🔬️unit/🦀️.rs"])
+    semio_renderer_wgpu_test_support::repo_texts(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/🧪️tests/🔬️unit/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🧪️tests/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🧪️tests/🔬️unit/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🧪️tests/🔬️unit/🦀️.rs"])
 }
 
 /// 🩺️ LAW: a frame build that ends because its PREPARATION refused must name the refusal. Nothing
@@ -51,7 +51,7 @@ fn DRAW_LAWS_SOURCE() -> &'static str {
 /// console for a whole packet (`📓️w7b-presenter-one-frame-per-boot.md` §1).
 #[test]
 fn a_refused_frame_preparation_names_its_fault_before_the_build_cancels() {
-    let frame_job = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+    let frame_job = semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
     let prepare_at = frame_job.find("ActiveFramePhase::Prepare(preparation) => {").expect("the prepare phase");
     let refused_at = prepare_at + frame_job[prepare_at..].find("StepOutcome::Cancelled | StepOutcome::Fault(_) =>").expect("the refused arm");
     let refused = &frame_job[refused_at..][..frame_job[refused_at..].find("ActiveFrameStep::Pending").expect("the refused arm ends on its own step")];

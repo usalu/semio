@@ -4787,7 +4787,7 @@
       ],
       "members": [
        {
-        "name": "semio-framework-ui-styling",
+        "name": "semio-ui-styling",
         "path": "."
        }
       ]

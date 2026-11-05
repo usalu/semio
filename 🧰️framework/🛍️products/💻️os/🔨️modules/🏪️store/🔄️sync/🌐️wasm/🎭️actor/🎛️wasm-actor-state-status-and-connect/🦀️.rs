@@ -14,9 +14,9 @@ const DOCUMENT_SOCKET_FRAMES_PER_TURN: usize = 32;
 /// ⏱️ The admission deadline, the native actor's own.
 const DOCUMENT_ADMISSION_TIMEOUT_MS: u64 = 5_000;
 
-type SharedCredential = Arc<RwLock<Option<Arc<semio_framework_os_directory_client::LocalHubCredential>>>>;
+type SharedCredential = Arc<RwLock<Option<Arc<semio_os_directory_client::LocalHubCredential>>>>;
 
-type SharedGrantSource = Arc<RwLock<Option<Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>>>>;
+type SharedGrantSource = Arc<RwLock<Option<Arc<dyn semio_os_directory_client::HubSocketGrantSource>>>>;
 
 pub(super) type SharedDialer = Arc<RwLock<Option<Arc<dyn DocumentSocketDialer>>>>;
 
@@ -26,8 +26,8 @@ pub(in super::super) struct WasmActorHub {
     pub credential: SharedCredential,
     pub socket_grant_source: SharedGrantSource,
     pub(in super::super) dialer: SharedDialer,
-    pub lease: Option<semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-    pub seed: Option<semio_framework_os_directory::CanonicalCheckpointPairV1>,
+    pub lease: Option<semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    pub seed: Option<semio_os_directory::CanonicalCheckpointPairV1>,
     pub cancel: semio_framework_async::CancelToken,
 }
 
@@ -95,7 +95,7 @@ pub(super) struct WasmActor {
     pub credential: SharedCredential,
     pub socket_grant_source: SharedGrantSource,
     pub(super) dialer: SharedDialer,
-    pub document_execution_target_lease: Option<semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    pub document_execution_target_lease: Option<semio_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
     pub operation_cancel: semio_framework_async::CancelToken,
     pub socket: Option<Box<dyn DocumentSocket>>,
     pub hello: Option<ClientFrame>,
@@ -174,7 +174,7 @@ impl WasmActor {
         self.set_remote_state(RemoteState::Connecting);
         let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: self.operation_cancel.child_now(), capability: None };
         let admission = source.admit_document_socket(&ctx, &space_id, &self.document_id, &expectation, &client_instance_id, DOCUMENT_ADMISSION_TIMEOUT_MS).await;
-        let semio_framework_os_directory_client::DocumentSocketAdmissionV1 { mut socket, authority } = match admission {
+        let semio_os_directory_client::DocumentSocketAdmissionV1 { mut socket, authority } = match admission {
             Ok(admission) => admission,
             Err(error) if document_admission_refuses_access(&error) => {
                 self.link_event(DocumentLinkEvent::Refused { now_ms: wall_ms() });

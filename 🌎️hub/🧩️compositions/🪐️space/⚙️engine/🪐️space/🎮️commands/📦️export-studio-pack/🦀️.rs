@@ -1,9 +1,9 @@
 //! 💾️ 💾️ S Studio app command — `export-studio-pack`.
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::host::export_os_space_pack;
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_os::host::export_os_space_pack;
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "export-studio-pack")]

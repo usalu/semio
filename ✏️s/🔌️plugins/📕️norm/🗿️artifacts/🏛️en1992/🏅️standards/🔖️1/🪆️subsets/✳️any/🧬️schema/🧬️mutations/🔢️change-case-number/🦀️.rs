@@ -10,7 +10,7 @@ pub struct ChangeCaseNumber { pub case_id: String, pub key: String, pub value: O
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeCaseNumber where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_case_number::ChangeCaseNumber> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "case-number", kind: "change-case-number", record: "ChangeCaseNumber" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set number input {1} of case {0}", self.case_id, self.key), &format!("Zahleneingabe {1} von Fall {0} setzen", self.case_id, self.key)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Set number input {1} of case {0}", self.case_id, self.key), &format!("Zahleneingabe {1} von Fall {0} setzen", self.case_id, self.key)) }
     fn target(&self) -> Vec<String> { vec![self.case_id.clone(), self.key.clone()] }
 }
 

@@ -90,8 +90,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "non-tiny-content", kind: "restore-non-tiny", record: "RestoredNonTinyContent" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Restore non-Tiny content", "Nicht-Tiny-Inhalte wiederherstellen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Restore non-Tiny content", "Nicht-Tiny-Inhalte wiederherstellen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -10,29 +10,29 @@ pub mod initialization_authority;
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
-use semio_framework_os_spr::{ActorId, Edit, Mutation, MutationId, OpBinary, OpText};
-use semio_framework_os_store_space_schema::ArtifactEnvelope;
+use semio_os_spr::{ActorId, Edit, Mutation, MutationId, OpBinary, OpText};
+use semio_os_store_space_schema::ArtifactEnvelope;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, FromValue, ToValue};
-use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_store_engine::lifted_store::ArtifactStore;
 use crate::initialization_authority::ArtifactStoreInitializationAuthority;
-use semio_framework_os_store_initialization_runtime::lifted_store::{ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationOwnerCatalog, ArtifactStoreInitializationRuntime};
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
-use semio_framework_os_store_engine_owners::DocumentStoreOwners;
+use semio_os_store_initialization_runtime::lifted_store::{ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationOwnerCatalog, ArtifactStoreInitializationRuntime};
+use semio_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_store_engine_owners::DocumentStoreOwners;
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
-use semio_framework_os_store_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands};
-use semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+use semio_os_store_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands};
+use semio_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 use semio_framework_job::{Generation, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OperationId, StepContext};
 use semio_framework_value::retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{controlled::ControlledRetirement, RetireOwned};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{size_of, size_of_val, ManuallyDrop};
 use std::sync::Arc;
-use semio_framework_os_store_engine_owners::producer::DocumentStoreOwnerProducer;
+use semio_os_store_engine_owners::producer::DocumentStoreOwnerProducer;
 use std::marker::PhantomData;
-pub use semio_framework_os_store_initialization_runtime::lifted_initialization_replay::{ArtifactStoreInitializationNext};
+pub use semio_os_store_initialization_runtime::lifted_initialization_replay::{ArtifactStoreInitializationNext};
 #[path="🧬️native/🦀️.rs"]
 mod native;
-use semio_framework_os_store_ledger::native_digest;
+use semio_os_store_ledger::native_digest;
 
 /// 📏️ The widest id or encoded operation one replay turn admits, the page every retained store initializer shares.
 pub const ARTIFACT_STORE_REPLAY_FIELD_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
@@ -90,8 +90,8 @@ fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> 
 /// 🔗️ [`ArtifactStoreInitializationRuntime`] · [`ArtifactStore::from_initialized_runtime_with_owners`]
 pub struct ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: RetireOwned + semio_framework_os_spr::StoreState,
-    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+    P: RetireOwned + semio_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     pub producer:PhantomData<fn()->C>,
@@ -129,8 +129,8 @@ where
 
 impl<P, M, C> ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: RetireOwned + semio_framework_os_spr::StoreState,
-    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+    P: RetireOwned + semio_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     /// 🌱️ Captures the completed `envelope` of a document of `schema` for the replay `operation` of `generation`, owned by `actor`.
@@ -431,7 +431,7 @@ where
         let (Some(envelope),Some(owners),Some(_))=(self.envelope.as_ref(),self.owners.as_ref(),self.actor.as_ref())else{self.fail("replay.genesis-owners-missing");return self.tick(cx)};
         let Some(factory)=owners.initial_snapshot_factory()else{self.fail("replay.initial-snapshot-factory-missing");return self.tick(cx)};
         let Some((registry,registry_progress))=self.registry_birth.take(grant).unwrap_or_else(|_|unreachable!("original registry is ready"))else{return Turn::Yield};
-        let actor=self.actor.take().unwrap();let catalog=self.catalog.take().expect("complete original catalog");let genesis=envelope.vcs.genesis.facts();*self.runtime=Some(ArtifactStoreInitializationRuntime::new_with_registry(&envelope.id,&envelope.schema,genesis.share_snapshot(),genesis.digest(),actor,catalog,semio_framework_value_snapshot_read::SnapshotReadLeaseRegistryOwner::from_original(registry),semio_framework_os_spr::MutationDag::empty()));self.factory=Some(factory);self.phase=Phase::SeedHistory{edit:0,lane:0,index:0};self.spend(cx,RetainedCloneProgress{copied_items:1,copied_bytes:copy.max(registry_progress.copied_bytes),..Default::default()});Turn::Yield
+        let actor=self.actor.take().unwrap();let catalog=self.catalog.take().expect("complete original catalog");let genesis=envelope.vcs.genesis.facts();*self.runtime=Some(ArtifactStoreInitializationRuntime::new_with_registry(&envelope.id,&envelope.schema,genesis.share_snapshot(),genesis.digest(),actor,catalog,semio_framework_value_snapshot_read::SnapshotReadLeaseRegistryOwner::from_original(registry),semio_os_spr::MutationDag::empty()));self.factory=Some(factory);self.phase=Phase::SeedHistory{edit:0,lane:0,index:0};self.spend(cx,RetainedCloneProgress{copied_items:1,copied_bytes:copy.max(registry_progress.copied_bytes),..Default::default()});Turn::Yield
     }
 
     fn seed_history(&mut self, cx: &mut StepContext<'_>, edit: usize, lane: u8, index: usize) -> Turn {
@@ -713,8 +713,8 @@ where
 
 impl<P, M, C> ArtifactStoreInitializationAuthority<P, M> for ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: RetireOwned + semio_framework_os_spr::StoreState,
-    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+    P: RetireOwned + semio_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> {
@@ -797,8 +797,8 @@ where
 
 impl<P, M, C> ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: RetireOwned + semio_framework_os_spr::StoreState,
-    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+    P: RetireOwned + semio_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     fn close_core_is_terminal(&self) -> bool {
@@ -822,8 +822,8 @@ where
 
 impl<P, M, C> Drop for ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: RetireOwned + semio_framework_os_spr::StoreState,
-    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+    P: RetireOwned + semio_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     fn drop(&mut self) {
@@ -840,7 +840,7 @@ static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::Requested
 #[path="🧬️replacement/🧪️tests/🦀️.rs"]
 pub(crate) mod replacement_tests;
 
-use semio_framework_os_store_replay::native_supersession;
+use semio_os_store_replay::native_supersession;
 #[cfg(test)]
 #[path="🧬️supersession/🧪️tests/🦀️.rs"]
 mod native_supersession_tests;

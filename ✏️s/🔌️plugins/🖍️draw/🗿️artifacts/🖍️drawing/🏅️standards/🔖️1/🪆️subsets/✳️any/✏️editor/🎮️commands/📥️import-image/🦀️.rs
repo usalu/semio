@@ -1,6 +1,6 @@
 //! 📥️ Encoded PNG and JPEG import enters the retained image-admission route.
 use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
-use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation,Effect,RequestId};
+use semio_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation,Effect,RequestId};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
@@ -15,7 +15,7 @@ pub fn request_at(parent:Option<String>,index:Option<usize>)->Emit<DrawingMutati
 pub fn source_mime(input:&ImportImage)->Option<&'static str>{if input.payload.starts_with("data:image/png;base64,"){Some("image/png")}else if input.payload.starts_with("data:image/jpeg;base64,"){Some("image/jpeg")}else{None}}
 pub fn validate(input:&ImportImage)->Result<(),Fault> {if source_mime(input).is_none()||input.payload.len()>MAX_SOURCE_BYTES||input.payload.len()<=source_mime(input).map_or(0,|mime|mime.len()+13)||input.name.as_ref().is_some_and(|name|name.len()>1024)||input.parent_id.as_ref().is_some_and(|parent|parent.is_empty()||parent.len()>1024) {return Err(Fault::from("Choose a PNG or JPEG image within the image import limits"));}Ok(())}
 #[cfg(any(test, feature = "testkit"))]
-pub fn publish(snapshot:&DrawingSnapshot,operation:&semio_framework_plugin::AppOperationContext,payload:&ImportImage,asset:DrawingImageAsset)->Result<Emit<DrawingMutation,NoConfigMutation>,Fault>{
+pub fn publish(snapshot:&DrawingSnapshot,operation:&semio_plugin::AppOperationContext,payload:&ImportImage,asset:DrawingImageAsset)->Result<Emit<DrawingMutation,NoConfigMutation>,Fault>{
  use semio_framework_value::retained_clone::RetainedCloneGrant;
  let mut job=publication::DrawingImagePublicationJob::new(asset,operation);
  let result=(||{while !job.ready(){let quote=job.work_demands(payload,operation,262144).map_err(|error|Fault::from(error.into_message()))?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth};job.advance(snapshot,payload,operation,grant).map_err(|error|Fault::from(error.into_message()))?;}let quote=job.work_demands(payload,operation,262144).unwrap();let(output,_)=job.take_result(payload,operation,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_depth:quote.depth,..Default::default()}).unwrap().unwrap();let mut emit=Emit::default();emit.artifact_mutations=output.mutations;emit.interaction_writes=output.selection;Ok(emit)})();

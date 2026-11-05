@@ -2,16 +2,16 @@
 
 use crate::editor::architect::editor_vocabulary::ui_label;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_plugin::ui_node_list;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_INSPECTION: &str = "architect.inspection";
@@ -36,7 +36,7 @@ pub fn definition() -> PanelTabDefinition {
 /// tell which entity is currently selected — it always shows the document-wide register summary
 /// now; the per-selected-entity typed inspector branches (element/stakeholder/adjacency/
 /// requirement/risk/generic, keyed off the deleted `cfg.selected_ids`) are gone with it.
-pub fn render(program: &ProgramSnapshot) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot) -> UiAssemblyResult<semio_plugin::BuiltNode> {
     let rows = ui_node_list([
         tree_item_desc("architect-inspection.summary.schema", ui_label("Schema")?, Some(program.schema.clone())),
         tree_item_desc("architect-inspection.summary.elements", ui_label("Elements")?, Some(program.elements.len().to_string())),

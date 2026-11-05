@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingNsResistan
         record: "ChangeBuildingNsResistanceN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Non-structural element anchorage resistance", "Verankerungswiderstand des nichttragenden Bauteils ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Non-structural element anchorage resistance", "Verankerungswiderstand des nichttragenden Bauteils ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-ns-resistance-n".into()]

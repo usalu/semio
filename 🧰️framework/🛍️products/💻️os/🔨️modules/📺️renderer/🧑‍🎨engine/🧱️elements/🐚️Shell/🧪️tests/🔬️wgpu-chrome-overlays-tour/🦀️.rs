@@ -13,8 +13,8 @@ fn chrome_state() -> ShellChromeBuildState {
 fn chrome_build_state_moves_across_threads_without_losing_state() {
     assert_shell_chrome_build_state_is_send();
     let mut chrome = chrome_state();
-    let mut focus_arena = semio_framework_ui_arena::Arena::<u8>::default();
-    chrome.content_focus.insert("main".to_string(), Some(RetainedContentFocus { node: focus_arena.insert(0), key: semio_framework_ui_retained_tree::tree::NodeKey::Explicit("tour-focus".into()), kind: RetainedNodeFocusKind::Button }));
+    let mut focus_arena = semio_ui_arena::Arena::<u8>::default();
+    chrome.content_focus.insert("main".to_string(), Some(RetainedContentFocus { node: focus_arena.insert(0), key: semio_ui_retained_tree::tree::NodeKey::Explicit("tour-focus".into()), kind: RetainedNodeFocusKind::Button }));
     chrome.register_tooltip("nav.help", "Help");
     chrome.preferences.theme_id = "mono".to_string();
     let chrome = std::thread::spawn(move || {
@@ -123,7 +123,7 @@ fn tooltip_ready_respects_hover_delay() {
 /// documented "no animation-clock scaffolding" gap) rather than leaving a stale tooltip painted.
 #[test]
 fn tooltip_closes_immediately_on_hover_out() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
@@ -167,7 +167,7 @@ fn dialog_stack_supports_nesting_close_order() {
 /// A click far in the top-left corner, well outside the centered ~360x168 box on an 800x600 viewport.
 #[test]
 fn dialog_scrim_click_dismisses_without_confirm_action() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
@@ -291,22 +291,22 @@ fn dialog_choices_fixture_lays_out_gates_and_dispatches_like_every_renderer() {
 /// seed context and its id, and Escape cancels with the declared cancel action; every dismissal closes the dialog.
 #[test]
 fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_cancels() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let (fixture, request) = dialog_choices_request(Locale::En);
     let draft = request.fields[0].draft.clone();
     shell.chrome.chrome_build.open_dialog(request);
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers::default();
     for _ in draft.chars() {
-        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
     }
     for _ in 0..3 {
-        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Tab, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Tab, &modifiers, &mut input);
     }
-    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Enter, &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Enter, &modifiers, &mut input);
     assert!(shell.chrome.chrome_build.dialog_open() && shell.settle.deferred_actions.is_empty(), "the gated submit takes no Enter");
-    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Tab, &PointerModifiers { shift: true, ..PointerModifiers::default() }, &mut input);
-    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Enter, &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Tab, &PointerModifiers { shift: true, ..PointerModifiers::default() }, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Enter, &modifiers, &mut input);
     assert!(!shell.chrome.chrome_build.dialog_open());
     let taken = shell.settle.deferred_actions.pop().expect("the choice dispatched");
     let cleared = fixture["cases"].as_array().expect("cases").iter().find(|case| case["case"] == "cleared").expect("cleared case");
@@ -314,7 +314,7 @@ fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_c
     assert_eq!(serde_json::to_value(taken.args.expect("args")).expect("args wire"), cleared["dispatches"][0]["args"]);
     let (_, request) = dialog_choices_request(Locale::En);
     shell.chrome.chrome_build.open_dialog(request);
-    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Escape, &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Escape, &modifiers, &mut input);
     assert!(!shell.chrome.chrome_build.dialog_open());
     assert_eq!(shell.settle.deferred_actions.pop().map(|event| event.action), Some("historyEditBack".to_string()));
 }
@@ -326,7 +326,7 @@ fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_c
 #[test]
 fn the_open_dialog_publishes_a_modal_accessibility_tree_with_gated_and_focused_controls() {
     for locale in [Locale::En, Locale::De] {
-        let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_framework_ui_locale::Terminology::Native);
+        let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_ui_locale::Terminology::Native);
         let (fixture, mut request) = dialog_choices_request(locale);
         let cleared = fixture["cases"].as_array().expect("cases").iter().find(|case| case["case"] == "cleared").expect("cleared case");
         stage_dialog_case(&mut request, cleared);
@@ -360,7 +360,7 @@ fn the_open_dialog_publishes_a_modal_accessibility_tree_with_gated_and_focused_c
 /// field, activating the gated submit does nothing, and activating the choice dispatches it and closes the dialog.
 #[test]
 fn the_dialog_accessibility_tree_is_operable_like_its_keyboard() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let (fixture, request) = dialog_choices_request(Locale::En);
     shell.chrome.chrome_build.open_dialog(request);
     let key = |suffix: &str| format!("shell.dialog.finalizeHistoryEdit.{suffix}");
@@ -392,7 +392,7 @@ fn color_and_vector_dialog() -> semio_framework::DialogDefinition {
 #[test]
 fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
     for (locale, opacity) in [(Locale::En, "Fill Opacity"), (Locale::De, "Füllung Deckkraft")] {
-        let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_framework_ui_locale::Terminology::Native);
+        let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_ui_locale::Terminology::Native);
         let seed = DslValue::from(serde_json::json!({ "fill": [1.0, 0.0, 0.0, 0.5] }));
         let request = ChromeDialogRequest::from_definition("test", &color_and_vector_dialog(), Some(seed), Terminology::Native, locale);
         assert_eq!(request.fields.iter().map(|field| field.label.as_str()).take(2).collect::<Vec<_>>(), [if locale == Locale::En { "Fill" } else { "Füllung" }, opacity]);
@@ -410,15 +410,15 @@ fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
         let mut input = InputState::<ActionDescriptor>::default();
         let modifiers = PointerModifiers::default();
         for _ in 0.."#ff000080".len() {
-            PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
+            PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
         }
-        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Char("#0f0".into()), &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Char("#0f0".into()), &modifiers, &mut input);
         let staged = |shell: &ShellState| shell.chrome.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("fill").map(dsl_value_as_json));
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.5])), "a typed hex without alpha keeps the opacity");
-        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Tab, &modifiers, &mut input);
-        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::ArrowRight, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Tab, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::ArrowRight, &modifiers, &mut input);
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.51])));
-        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Home, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Home, &modifiers, &mut input);
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.0])));
     }
 }
@@ -427,7 +427,7 @@ fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
 /// its bounds clamp a typed value, its detents are what the page keys jump to, and its arrows walk its step ladder.
 #[test]
 fn a_dialog_vector_axis_honours_bounds_precision_and_detents() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let seed = DslValue::from(serde_json::json!({ "turn": [0.25, 1.0] }));
     let request = ChromeDialogRequest::from_definition("test", &color_and_vector_dialog(), Some(seed), Terminology::Native, Locale::En);
     let axes: Vec<&str> = request.fields.iter().filter(|field| field.id == "turn").map(|field| field.draft.as_str()).collect();
@@ -439,15 +439,15 @@ fn a_dialog_vector_axis_honours_bounds_precision_and_detents() {
     shell.chrome.chrome_build.dialog_stack.last_mut().expect("dialog").focus_stop(ChromeDialogStop::Field(x));
     let staged = |shell: &ShellState| shell.chrome.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("turn").map(dsl_value_as_json));
     let mut walk = Vec::new();
-    for action in [semio_framework_ui_wgpu_input::KeyAction::PageUp, semio_framework_ui_wgpu_input::KeyAction::PageUp, semio_framework_ui_wgpu_input::KeyAction::ArrowDown, semio_framework_ui_wgpu_input::KeyAction::PageDown] {
+    for action in [semio_ui_wgpu_input::KeyAction::PageUp, semio_ui_wgpu_input::KeyAction::PageUp, semio_ui_wgpu_input::KeyAction::ArrowDown, semio_ui_wgpu_input::KeyAction::PageDown] {
         PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, &mut input);
         walk.push(staged(&shell).and_then(|tuple| tuple[0].as_f64()).unwrap_or(f64::NAN));
     }
     assert_eq!(walk, [1.5, 2.5, 2.4, 1.5], "detent, ten rungs of the precision's step, one rung, detent");
     for _ in 0..3 {
-        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
     }
-    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Char("9".into()), &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_ui_wgpu_input::KeyAction::Char("9".into()), &modifiers, &mut input);
     assert_eq!(staged(&shell).and_then(|tuple| tuple[0].as_f64()), Some(3.0), "a typed value is clamped to the vector's bounds");
 }
 
@@ -538,10 +538,10 @@ fn tour_advance_and_back_reset_completed_interactions() {
 /// Repeating zoom after it's already completed is a no-operation.
 #[test]
 fn chrome_tour_complete_interaction_respects_order_and_dedups() {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.chrome.chrome_build.start_introduction();
     let step = semio_framework::onboarding::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
-        .interact_ordered(vec![semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::zoom("main", semio_framework_ui_locale::LocalizedLabel::native("Zoom", "Zoomen"))), semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::pan("main", semio_framework_ui_locale::LocalizedLabel::native("Pan", "Verschieben")))]);
+        .interact_ordered(vec![semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::zoom("main", semio_ui_locale::LocalizedLabel::native("Zoom", "Zoomen"))), semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::pan("main", semio_ui_locale::LocalizedLabel::native("Pan", "Verschieben")))]);
     shell.docs.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Pan(id) if id == "main"), &mut shell.chrome);
     assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().unwrap().completed_interactions, Vec::<usize>::new());
     shell.docs.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Zoom(id) if id == "main"), &mut shell.chrome);
@@ -680,15 +680,15 @@ fn placement_explicit_side_is_honored_and_clamped_to_the_viewport() {
 #[test]
 fn utility_subtree_has_active_path_finds_a_pressed_toggle_at_the_top_level() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-    let nodes = vec![semio_framework_ui_layout::utilities::utility_toggle("a", "circle".into(), "A", true, action)];
+    let nodes = vec![semio_ui_layout::utilities::utility_toggle("a", "circle".into(), "A", true, action)];
     assert!(utility_subtree_has_active_path(&nodes));
 }
 
 #[test]
 fn utility_subtree_has_active_path_recurses_into_nested_collections() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-    let inner = vec![semio_framework_ui_layout::utilities::utility_toggle("b", "circle".into(), "B", true, action.clone())];
-    let nested = semio_framework_ui_layout::utilities::utility_collection("group-2", "circle".into(), "Group 2", vec![semio_framework_ui_layout::utilities::utility_collection("group-1", "circle".into(), "Group 1", inner)]);
+    let inner = vec![semio_ui_layout::utilities::utility_toggle("b", "circle".into(), "B", true, action.clone())];
+    let nested = semio_ui_layout::utilities::utility_collection("group-2", "circle".into(), "Group 2", vec![semio_ui_layout::utilities::utility_collection("group-1", "circle".into(), "Group 1", inner)]);
     assert!(utility_subtree_has_active_path(std::slice::from_ref(&nested)));
 }
 
@@ -696,7 +696,7 @@ fn utility_subtree_has_active_path_recurses_into_nested_collections() {
 fn utility_subtree_has_active_path_false_when_nothing_pressed() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
     let nodes =
-        vec![semio_framework_ui_layout::utilities::utility_toggle("a", "circle".into(), "A", false, action.clone()), semio_framework_ui_layout::utilities::utility_collection("group", "circle".into(), "Group", vec![semio_framework_ui_layout::utilities::utility_toggle("b", "circle".into(), "B", false, action)])];
+        vec![semio_ui_layout::utilities::utility_toggle("a", "circle".into(), "A", false, action.clone()), semio_ui_layout::utilities::utility_collection("group", "circle".into(), "Group", vec![semio_ui_layout::utilities::utility_toggle("b", "circle".into(), "B", false, action)])];
     assert!(!utility_subtree_has_active_path(&nodes));
 }
 
@@ -707,9 +707,9 @@ fn utility_subtree_has_active_path_false_when_nothing_pressed() {
 #[test]
 fn render_utility_nodes_recurses_at_least_two_levels_deep() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-    let leaf_toggle = semio_framework_ui_layout::utilities::utility_toggle("leaf", "circle".into(), "Leaf", false, action.clone());
-    let inner_collection = semio_framework_ui_layout::utilities::utility_collection("inner", "circle".into(), "Inner", vec![leaf_toggle]);
-    let outer_collection = semio_framework_ui_layout::utilities::utility_collection("outer", "circle".into(), "Outer", vec![inner_collection]);
+    let leaf_toggle = semio_ui_layout::utilities::utility_toggle("leaf", "circle".into(), "Leaf", false, action.clone());
+    let inner_collection = semio_ui_layout::utilities::utility_collection("inner", "circle".into(), "Inner", vec![leaf_toggle]);
+    let outer_collection = semio_ui_layout::utilities::utility_collection("outer", "circle".into(), "Outer", vec![inner_collection]);
     let utilities = vec![outer_collection];
 
     let mut collection_expanded = HashMap::new();
@@ -730,7 +730,7 @@ fn render_utility_nodes_recurses_at_least_two_levels_deep() {
 //#region GhostText
 #[test]
 fn engagement_completion_suffix_matches_label_prefix() {
-    let possibles = vec![semio_framework_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+    let possibles = vec![semio_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "x");
     assert_eq!(engagement_completion_suffix("bo", Some(&possibles)), "x");
 }
@@ -738,7 +738,7 @@ fn engagement_completion_suffix_matches_label_prefix() {
 /// 🔚️ Fully typed: no suffix left
 #[test]
 fn engagement_completion_suffix_empty_when_query_is_empty_or_unmatched() {
-    let possibles = vec![semio_framework_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+    let possibles = vec![semio_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("", Some(&possibles)), "");
     assert_eq!(engagement_completion_suffix("zz", Some(&possibles)), "");
     assert_eq!(engagement_completion_suffix("Box", Some(&possibles)), "");
@@ -747,14 +747,14 @@ fn engagement_completion_suffix_empty_when_query_is_empty_or_unmatched() {
 
 #[test]
 fn engagement_completion_suffix_picks_first_matching_possible_in_order() {
-    let possibles = vec![semio_framework_ui_layout::layout::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, semio_framework_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+    let possibles = vec![semio_ui_layout::layout::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, semio_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "at");
 }
 
 /// 🧪️ Char-boundary safety: a multi-byte label prefix-matched by a query must not panic on slicing.
 #[test]
 fn engagement_completion_suffix_is_multibyte_safe() {
-    let possibles = vec![semio_framework_ui_layout::layout::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
+    let possibles = vec![semio_ui_layout::layout::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("M", Some(&possibles)), "ünster");
 }
 

@@ -16,8 +16,8 @@ pub struct InsertVlr {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for InsertVlr {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vlr", kind: "insert-vlr", record: "InsertVlr" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert VLR", "VLR einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert VLR", "VLR einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

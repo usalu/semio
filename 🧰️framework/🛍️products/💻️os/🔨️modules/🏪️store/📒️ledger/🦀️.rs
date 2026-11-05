@@ -22,24 +22,24 @@ pub mod lifted_replay;
 pub mod lifted_snapshot_read;
 use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_spr::command::ArtifactMessageSource;
+use semio_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::DslValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
-use semio_framework_os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary};
+use semio_os_spr::{ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
+use semio_os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary};
 use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
-use semio_framework_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
-use semio_framework_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
+use semio_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
+use semio_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_os_vcs::VcsError;
-use semio_framework_os_vcs::{ArtifactHistoryKey, ArtifactHistoryLedger, ArtifactHistoryReservation, Identified};
-use semio_framework_os_pack::pack_rt;
-use semio_framework_os_store_envelope::{ArtifactEnvelope, ArtifactEnvelopeOwners};
+use semio_os_vcs::VcsError;
+use semio_os_vcs::{ArtifactHistoryKey, ArtifactHistoryLedger, ArtifactHistoryReservation, Identified};
+use semio_os_pack::pack_rt;
+use semio_os_store_envelope::{ArtifactEnvelope, ArtifactEnvelopeOwners};
 use crate::lifted_snapshot_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreStringRetirement};
 use crate::lifted_replay::{EffectiveSupersessions, edit_supersession_digest};
-use semio_framework_os_store_command::SupersedeInput;
+use semio_os_store_command::SupersedeInput;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_framework_value_retirement_owner::{retirement_owner_close, retirement_owner_demands};
 
@@ -61,8 +61,8 @@ impl CursorRevisionRecord {
 #[derive(Clone)]
 pub struct CursorRevisionAccumulator {
     pub identity_digest: [u8; 32],
-    pub applied: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
-    pub redo: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    pub applied: semio_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    pub redo: semio_os_vcs::HistoryPageStack<CursorRevisionRecord>,
     pub applied_tail_chains: Option<([u8; 32], EditDigestChains)>,
     pub mutation_positions: protocol::HistoryFoldIndex<MutationId, (usize, usize, [u8; 32])>,
     pub indexed_edits: protocol::HistoryFoldIndex<[u8; 32], (usize, usize)>,
@@ -152,7 +152,7 @@ impl CursorRevisionAccumulator {
 
     pub fn new<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, initial_digest: [u8; 32]) -> Self {
         let identity_digest = Self::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
-        Self { identity_digest, applied: semio_framework_os_vcs::HistoryPageStack::new(), redo: semio_framework_os_vcs::HistoryPageStack::new(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() }
+        Self { identity_digest, applied: semio_os_vcs::HistoryPageStack::new(), redo: semio_os_vcs::HistoryPageStack::new(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() }
     }
 
     /// 🥽️ What an edit's revision identity covers: its value without `sequenceNumber`. That member is where the edit stands
@@ -226,8 +226,8 @@ impl CursorRevisionAccumulator {
     /// the ids still match. Answers the position of a regrown tail record.
     #[allow(clippy::too_many_arguments)]
     fn reconcile_stack<P, Mutation: ToValue + self::Mutation<P>>(
-        records: &mut semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
-        ids: &semio_framework_os_vcs::HistoryPageStack<String>,
+        records: &mut semio_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+        ids: &semio_os_vcs::HistoryPageStack<String>,
         edits: &ArtifactHistoryLedger<Edit<Mutation>>,
         domain: &[u8],
         identity_digest: [u8; 32],
@@ -286,8 +286,8 @@ impl CursorRevisionAccumulator {
     /// the position of a regrown applied tail record.
     pub fn reconcile<P, Mutation: ToValue + self::Mutation<P>>(
         &mut self,
-        applied_ids: &semio_framework_os_vcs::HistoryPageStack<String>,
-        redo_ids: &semio_framework_os_vcs::HistoryPageStack<String>,
+        applied_ids: &semio_os_vcs::HistoryPageStack<String>,
+        redo_ids: &semio_os_vcs::HistoryPageStack<String>,
         edits: &ArtifactHistoryLedger<Edit<Mutation>>,
         supersessions: &EffectiveSupersessions,
         dirty: StackMirrorDirt,
@@ -307,11 +307,11 @@ impl CursorRevisionAccumulator {
         let digest = Self::hash_record(b"edit-id", &[edit.id.as_bytes()]);
         let mut from = self.indexed_edits.get(&digest).filter(|(known, _)| *known == position).map_or(0, |(_, count)| *count).min(edit.forwards.len());
         if from > 0 {
-            let first = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mu>(edit, 0).expect("indexed operation exists");
+            let first = semio_os_spr::mutation_id_for_edit_operation::<P, Mu>(edit, 0).expect("indexed operation exists");
             if self.mutation_positions.get(&first).is_none_or(|(known, _, _)| *known != position) { from = 0; }
         }
         for index in from..edit.forwards.len() {
-            let mutation = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mu>(edit, index).expect("indexed operation exists");
+            let mutation = semio_os_spr::mutation_id_for_edit_operation::<P, Mu>(edit, index).expect("indexed operation exists");
             self.mutation_positions.insert(mutation, (position, index, digest));
             if edit.forwards[index].may_emit_foreign_steps() && !self.unit_flags.contains_key(&(digest, index)) { self.unit_flags.insert((digest, index), false); }
         }
@@ -329,7 +329,7 @@ impl CursorRevisionAccumulator {
     }
 }
 
-pub use semio_framework_os_store_message_ledger::*;
+pub use semio_os_store_message_ledger::*;
 
 pub struct ArtifactStoreHistoryCommitReservation {
     pub history: ArtifactHistoryReservation,
@@ -343,11 +343,11 @@ pub struct PendingCommandReport {
     /// mid-history (`ingest_remote`/`resolve_conflict`), where "everything past `before`" no longer
     /// names only the newly-landed edits.
     pub(crate) edit_ids: Option<Vec<String>>,
-    pub messages: Vec<semio_framework_os_spr::EditMessages>,
+    pub messages: Vec<semio_os_spr::EditMessages>,
     pub worst: Option<semio_framework_diagnostic::Severity>,
     /// 📤️ Every event this command authored (edit operations, history transitions), in authoring
     /// order — announced outbound as one `BackboneMessage::Mutations` batch when the command ends.
-    pub(crate) outbound: Vec<semio_framework_os_spr::MutationEnvelope>,
+    pub(crate) outbound: Vec<semio_os_spr::MutationEnvelope>,
 }
 
 semio_framework_value::artifact_retire_struct!(PendingCommandReport{edit_ids,messages,worst,outbound});
@@ -357,7 +357,7 @@ pub mod original_replay_pending_report;
 
 impl PendingCommandReport {
     /// 📨️ Installs the diagnostic rows and worst level a prepared publication transferred, replacing nothing the command already authored.
-    pub fn install_prepared_messages(&mut self, messages: Vec<semio_framework_os_spr::EditMessages>, worst: Option<semio_framework_diagnostic::Severity>) {
+    pub fn install_prepared_messages(&mut self, messages: Vec<semio_os_spr::EditMessages>, worst: Option<semio_framework_diagnostic::Severity>) {
         self.messages = messages;
         self.worst = worst;
     }
@@ -383,25 +383,25 @@ impl PendingCommandReport {
     }
 
     /// 🛰️ Queues authored events, in authoring order, for the one announcement the command ends with.
-    pub fn author_outbound(&mut self, envelopes: impl IntoIterator<Item = semio_framework_os_spr::MutationEnvelope>) {
+    pub fn author_outbound(&mut self, envelopes: impl IntoIterator<Item = semio_os_spr::MutationEnvelope>) {
         self.outbound.extend(envelopes);
     }
 
     /// 📪️ Takes the queued events for announcement; the report keeps no backing.
-    pub fn take_outbound(&mut self) -> Vec<semio_framework_os_spr::MutationEnvelope> {
+    pub fn take_outbound(&mut self) -> Vec<semio_os_spr::MutationEnvelope> {
         std::mem::take(&mut self.outbound)
     }
 
     /// 🔄️ Replaces the receipt messages and the worst level with a replay's.
-    pub fn record_replay(&mut self, messages: Vec<semio_framework_os_spr::EditMessages>, worst: Option<semio_framework_diagnostic::Severity>) {
+    pub fn record_replay(&mut self, messages: Vec<semio_os_spr::EditMessages>, worst: Option<semio_framework_diagnostic::Severity>) {
         self.messages = messages;
         self.worst = worst;
     }
 
     /// ✍️ Appends one edit's messages to the receipt and raises the worst level by theirs.
-    pub fn record_edit_messages(&mut self, edit_id: String, messages: Vec<semio_framework_os_spr::MutationMessage>) {
-        self.worst = semio_framework_os_spr::worst_level(&messages).max(self.worst);
-        self.messages.push(semio_framework_os_spr::EditMessages { edit_id, messages });
+    pub fn record_edit_messages(&mut self, edit_id: String, messages: Vec<semio_os_spr::MutationMessage>) {
+        self.worst = semio_os_spr::worst_level(&messages).max(self.worst);
+        self.messages.push(semio_os_spr::EditMessages { edit_id, messages });
     }
 
     /// 🏷️ Declares exactly which edits the command landed, overriding the tail-diff guess.
@@ -417,24 +417,24 @@ impl PendingCommandReport {
     }
 
     /// 🧾️ Takes the receipt parts: the declared edit ids (`undeclared` answers when none were declared), the messages and the worst level.
-    pub fn take_receipt(&mut self, undeclared: impl FnOnce() -> Vec<String>) -> (Vec<String>, Vec<semio_framework_os_spr::EditMessages>, Option<semio_framework_diagnostic::Severity>) {
+    pub fn take_receipt(&mut self, undeclared: impl FnOnce() -> Vec<String>) -> (Vec<String>, Vec<semio_os_spr::EditMessages>, Option<semio_framework_diagnostic::Severity>) {
         let edit_ids = self.edit_ids.take().unwrap_or_else(undeclared);
         let (messages, worst) = self.take_messages_and_worst();
         (edit_ids, messages, worst)
     }
 
     /// 🗒️ Takes the receipt messages and the worst level, leaving any declared edit ids in place.
-    pub fn take_messages_and_worst(&mut self) -> (Vec<semio_framework_os_spr::EditMessages>, Option<semio_framework_diagnostic::Severity>) {
+    pub fn take_messages_and_worst(&mut self) -> (Vec<semio_os_spr::EditMessages>, Option<semio_framework_diagnostic::Severity>) {
         (std::mem::take(&mut self.messages), self.worst.take())
     }
 
     /// 🧱️ The report's resident vector backings, for the Store's whole-backing release demands.
-    pub fn resident_backings(&self) -> (&Vec<semio_framework_os_spr::EditMessages>, &Vec<semio_framework_os_spr::MutationEnvelope>, Option<&Vec<String>>) {
+    pub fn resident_backings(&self) -> (&Vec<semio_os_spr::EditMessages>, &Vec<semio_os_spr::MutationEnvelope>, Option<&Vec<String>>) {
         (&self.messages, &self.outbound, self.edit_ids.as_ref())
     }
 
     /// 🪣️ The report's resident vector backings, for the Store's whole-backing release steps.
-    pub fn resident_backings_mut(&mut self) -> (&mut Vec<semio_framework_os_spr::EditMessages>, &mut Vec<semio_framework_os_spr::MutationEnvelope>, Option<&mut Vec<String>>) {
+    pub fn resident_backings_mut(&mut self) -> (&mut Vec<semio_os_spr::EditMessages>, &mut Vec<semio_os_spr::MutationEnvelope>, Option<&mut Vec<String>>) {
         (&mut self.messages, &mut self.outbound, self.edit_ids.as_mut())
     }
 }
@@ -454,8 +454,8 @@ impl ArtifactStorePendingReportRetirement {
         else if !report.messages.is_empty() { size_of::<ArtifactStoreMessageLedgerRetirement>() }
         else if report.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty()) { size_of::<ArtifactStoreStringRetirement>() } else { 0 };
         if capacity_bytes != 0 { return Ok(RetirementDemand { capacity_bytes, depth: 2, ..Default::default() }); }
-        let release_bytes = if report.outbound.capacity() != 0 { std::alloc::Layout::array::<semio_framework_os_spr::MutationEnvelope>(report.outbound.capacity()) }
-        else if report.messages.capacity() != 0 { std::alloc::Layout::array::<semio_framework_os_spr::EditMessages>(report.messages.capacity()) }
+        let release_bytes = if report.outbound.capacity() != 0 { std::alloc::Layout::array::<semio_os_spr::MutationEnvelope>(report.outbound.capacity()) }
+        else if report.messages.capacity() != 0 { std::alloc::Layout::array::<semio_os_spr::EditMessages>(report.messages.capacity()) }
         else { std::alloc::Layout::array::<String>(report.edit_ids.as_ref().map_or(0, Vec::capacity)) }
         .map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "pending report original backing layout overflow"))?.size();
         Ok(RetirementDemand { release_bytes, depth: 1, ..Default::default() })
@@ -511,7 +511,7 @@ impl Drop for ArtifactStorePendingReportRetirement {
     }
 }
 
-pub async fn validate_composition_pins(pins: &[semio_framework_os_vcs::CompositionPin]) -> Result<(), VcsError> {
+pub async fn validate_composition_pins(pins: &[semio_os_vcs::CompositionPin]) -> Result<(), VcsError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut children = HashSet::new();
@@ -529,21 +529,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 }
 
 // 🎯️ W6 kernel unification: this crate's own `mutation_envelope_from_edit` (whole-edit-per-
-// envelope, JSON payload) is DELETED — `flush_outbound` now calls `semio_framework_os_spr::
-// mutation_envelope_from_edit` directly (one `semio_framework_os_spr::MutationEnvelope` per forward op,
+// envelope, JSON payload) is DELETED — `flush_outbound` now calls `semio_os_spr::
+// mutation_envelope_from_edit` directly (one `semio_os_spr::MutationEnvelope` per forward op,
 // `OpBinary`-encoded payloads — W5's frozen-contract signature). `hash_bytes`'s import above this
 // region stays needed elsewhere in this file (`replay_mutations`'s `payload_hash`, unaffected).
 
-/// 🧊️ The explicit cold codec materializes contiguous operation input to recover a single-op `Edit` from one causal wire envelope. `semio_framework_os_spr::causal::
+/// 🧊️ The explicit cold codec materializes contiguous operation input to recover a single-op `Edit` from one causal wire envelope. `semio_os_spr::causal::
 /// MutationEnvelope` carries exactly one op per envelope (W5's binary reshape) — the receiving-
-/// side half of the per-op fan-out `semio_framework_os_spr::mutation_envelope_from_edit` performs when sending
+/// side half of the per-op fan-out `semio_os_spr::mutation_envelope_from_edit` performs when sending
 /// (see `flush_outbound`). `sequence_number`/`started_at` are placeholders `ingest_envelope`
 /// overwrites (mirroring the local-edit convention: `self.edit_sequence += 1` then `now_iso()`).
-/// `undo_policy` defaults to `ExactBaseOnly` — not a lossy conversion: `semio_framework_os_spr::causal::
+/// `undo_policy` defaults to `ExactBaseOnly` — not a lossy conversion: `semio_os_spr::causal::
 /// MutationEnvelope` carries no undo_policy at all (only the local `Edit`/`MutationMeta` shape
 /// does), and a remote edit is always foreign, so this field is never consulted for it anyway
 /// (`edit_is_local` gates undo eligibility on authorship, not `undo_policy`).
-pub async fn edit_from_operation_envelope_cold<Mutation: OpBinary>(envelope: &semio_framework_os_spr::MutationEnvelope) -> Result<Edit<Mutation>, VcsError> {
+pub async fn edit_from_operation_envelope_cold<Mutation: OpBinary>(envelope: &semio_os_spr::MutationEnvelope) -> Result<Edit<Mutation>, VcsError> {
     let forward = Mutation::decode_op(&envelope.diff.payload.to_vec_owner()).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let inverse = if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![Mutation::decode_op(&envelope.inverse.payload.to_vec_owner()).map_err(|error| VcsError::Deserialize(error.to_string()))?] };
     Ok(Edit {
@@ -573,7 +573,7 @@ pub async fn edit_from_operation_envelope_cold<Mutation: OpBinary>(envelope: &se
     })
 }
 
-pub use semio_framework_os_store_projection::retire_replayed_projection;
+pub use semio_os_store_projection::retire_replayed_projection;
 
 /// 🧊️ The live intermediate of a history fold, which retires itself on EVERY exit path. A fold walks
 /// `base → mid₁ → … → head`; its loop body already retires the projection each step displaces, but an
@@ -588,7 +588,7 @@ pub use semio_framework_os_store_projection::retire_replayed_projection;
 /// return cannot silently miss it, and no technology has to override anything extra to be safe.
 pub struct ColdReplayProjection<P, Mutation>
 where
-    Mutation: semio_framework_os_spr::ColdMutation<P>,
+    Mutation: semio_os_spr::ColdMutation<P>,
 {
     pub projection: Option<P>,
     technology: PhantomData<fn() -> Mutation>,
@@ -596,7 +596,7 @@ where
 
 impl<P, Mutation> ColdReplayProjection<P, Mutation>
 where
-    Mutation: semio_framework_os_spr::ColdMutation<P>,
+    Mutation: semio_os_spr::ColdMutation<P>,
 {
     /// 🌱️ Takes ownership of a fold's base projection.
     pub fn new(projection: P) -> Self {
@@ -609,7 +609,7 @@ where
     /// ▶️ Installs the next projection and retires the one it displaces.
     pub fn advance(&mut self, next: P) {
         let displaced = self.projection.replace(next).expect("a live replay projection is present until it is handed out");
-        <Mutation::ReferenceDiff as semio_framework_os_spr::MutationDiff<P>>::retire_projection(displaced);
+        <Mutation::ReferenceDiff as semio_os_spr::MutationDiff<P>>::retire_projection(displaced);
     }
 
     /// 🎁️ Hands the finished projection to the caller, who owns its retirement from here on.
@@ -620,7 +620,7 @@ where
 
 impl<P, Mutation> std::ops::Deref for ColdReplayProjection<P, Mutation>
 where
-    Mutation: semio_framework_os_spr::ColdMutation<P>,
+    Mutation: semio_os_spr::ColdMutation<P>,
 {
     type Target = P;
     fn deref(&self) -> &P {
@@ -630,21 +630,21 @@ where
 
 impl<P, Mutation> Drop for ColdReplayProjection<P, Mutation>
 where
-    Mutation: semio_framework_os_spr::ColdMutation<P>,
+    Mutation: semio_os_spr::ColdMutation<P>,
 {
     fn drop(&mut self) {
         if let Some(projection) = self.projection.take() {
-            <Mutation::ReferenceDiff as semio_framework_os_spr::MutationDiff<P>>::retire_projection(projection);
+            <Mutation::ReferenceDiff as semio_os_spr::MutationDiff<P>>::retire_projection(projection);
         }
     }
 }
 
-pub use semio_framework_os_store_command::{retire_scratch_operations, retire_scratch_edits, retire_supersede_inputs};
+pub use semio_os_store_command::{retire_scratch_operations, retire_scratch_edits, retire_supersede_inputs};
 
 /// 🧮️ Folds an envelope's complete event log — its edits and its history transitions — into
-/// the history projection (`semio_framework_os_spr::fold_history`). Quarantined edits (every edit owning an
+/// the history projection (`semio_os_spr::fold_history`). Quarantined edits (every edit owning an
 /// operation of a quarantined conflict that was not accepted) stay inactive.
-pub fn fold_envelope_history<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<semio_framework_os_spr::HistoryFold, VcsError>
+pub fn fold_envelope_history<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<semio_os_spr::HistoryFold, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
@@ -654,38 +654,38 @@ where
 
 /// 👁 The head [`fold_history_for`] projects: this replica's alternative and explicit checkpoint.
 /// Absent alternative is the canonical trunk. `viewer_checkpoint_id` of `None` is that line's tip.
-pub fn envelope_viewer_head<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> semio_framework_os_spr::ViewerHead {
+pub fn envelope_viewer_head<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> semio_os_spr::ViewerHead {
     let document_id = ArtifactId(envelope.id.clone());
-    let trunk = semio_framework_os_spr::trunk_alternative_id(&document_id);
-    semio_framework_os_spr::ViewerHead { line_id: envelope.active_alternative_id.clone().filter(|line| line != &trunk).unwrap_or(trunk), checkpoint_id: envelope.viewer_checkpoint_id.clone() }
+    let trunk = semio_os_spr::trunk_alternative_id(&document_id);
+    semio_os_spr::ViewerHead { line_id: envelope.active_alternative_id.clone().filter(|line| line != &trunk).unwrap_or(trunk), checkpoint_id: envelope.viewer_checkpoint_id.clone() }
 }
 
 /// 🧮️ [`fold_envelope_history`] over the bare event log: `edits`, `transitions` and the
 /// `conflicts` whose quarantine withholds edits — for document shapes that hold the log without a
 /// full envelope.
-pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &(impl semio_framework_os_spr::HistoryTransitionEvents+?Sized), conflicts: &[semio_framework_os_spr::Conflict], head: &semio_framework_os_spr::ViewerHead) -> Result<semio_framework_os_spr::HistoryFold, VcsError>
+pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &(impl semio_os_spr::HistoryTransitionEvents+?Sized), conflicts: &[semio_os_spr::Conflict], head: &semio_os_spr::ViewerHead) -> Result<semio_os_spr::HistoryFold, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
     let mut folded = Vec::with_capacity(edits.len());
     let mut owners: HashMap<String, String> = HashMap::new();
     for edit in edits.iter().copied() {
-        let mutation_ids = semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
+        let mutation_ids = semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
         for mutation_id in &mutation_ids {
             owners.insert(mutation_id.0.clone(), edit.id.clone());
         }
-        folded.push(semio_framework_os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp: edit_timestamp(edit), mutation_ids, line: edit.line.clone() });
+        folded.push(semio_os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp: edit_timestamp(edit), mutation_ids, line: edit.line.clone() });
     }
     let mut excluded = HashSet::new();
     for conflict in conflicts {
-        if conflict.status == semio_framework_os_spr::ConflictStatus::Accepted {
+        if conflict.status == semio_os_spr::ConflictStatus::Accepted {
             continue;
         }
-        if let semio_framework_os_spr::ConflictKind::Quarantined { envelopes, .. } = &conflict.kind {
+        if let semio_os_spr::ConflictKind::Quarantined { envelopes, .. } = &conflict.kind {
             excluded.extend(envelopes.iter().filter_map(|quarantined| owners.get(&quarantined.mutation_id.0).cloned()));
         }
     }
-    semio_framework_os_spr::fold_history_for(&ArtifactId(document_id.to_string()), &folded, transitions, &excluded, head).map_err(|error| VcsError::ValidationFailed(error.to_string()))
+    semio_os_spr::fold_history_for(&ArtifactId(document_id.to_string()), &folded, transitions, &excluded, head).map_err(|error| VcsError::ValidationFailed(error.to_string()))
 }
 
 /// 🗣️ `<document schema>#<semantic kind>` of the leaf `operation` is — what `MutationMeta.semantic_kind` records.

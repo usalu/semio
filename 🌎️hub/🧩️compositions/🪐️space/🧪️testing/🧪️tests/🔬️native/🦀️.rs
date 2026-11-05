@@ -45,10 +45,10 @@ use semio_hub_space_app::SpaceCommand;
     use semio_hub_space_app::unit_tests::context::studio_emit;
     const FORMAT: &str = "test.space.fixture.source";
     const PROBE_KIND: &str = "test.space.fixture.document";
-    semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
+    semio_os_kernel::io::register_format_descriptors([semio_os_kernel::io::FormatDescriptor {
         kind_id: FORMAT.into(), short_id: FORMAT.into(), aliases: Vec::new(), mimes: vec!["application/vnd.semio.space-fixture-probe+json".into()], extensions: vec![".space-fixture-probe".into()], name: "Fixture source probe".into(), full_name: "Space fixture source probe".into(), neutral: true, dir_name: "fixture-probe".into(), is_binary: false,
     }]).await.unwrap();
-    semio_framework_os::workflow::register_os_media_export_handler_kind(PROBE_KIND, FORMAT, |document| {
+    semio_os::workflow::register_os_media_export_handler_kind(PROBE_KIND, FORMAT, |document| {
         let json = document.to_string();
         let independent: serde_json::Value = serde_json::from_str(&json).map_err(|error| error.to_string())?;
         match independent["schema"].as_str() {
@@ -56,7 +56,7 @@ use semio_hub_space_app::SpaceCommand;
             Some("writer.document") if independent["id"] == "jack" && independent["text"].as_str().is_some_and(|text| text.contains("MATCH (a:Piece)-[r:Connection]->(b:Piece)")) => {},
             _ => return Err("original admitted source fields did not reach the export handler".into()),
         }
-        Ok(semio_framework_os::OsMediaExportResult { data: json, mime_type: "application/vnd.semio.space-fixture-probe+json".into(), file_name: "fixture.space-fixture-probe".into(), encoding: None })
+        Ok(semio_os::OsMediaExportResult { data: json, mime_type: "application/vnd.semio.space-fixture-probe+json".into(), file_name: "fixture.space-fixture-probe".into(), encoding: None })
     });
     let mut projection = crate::demo_space_projection().await;
     for node in projection.graph.nodes.iter_mut().filter(|node| node.plugin_id == "draw" || node.plugin_id == "writer") {
@@ -65,7 +65,7 @@ use semio_hub_space_app::SpaceCommand;
     for node in projection.graph.nodes.iter().filter(|node| node.plugin_id == "draw" || node.plugin_id == "writer") {
         let export = studio_emit(&projection, &SpaceConfig::default(), &SpaceCommand::ExportMedia(ExportMedia { node_id: node.id.clone(), format: FORMAT.into(), document_json: document_for_app(&node.plugin_id, &node.app_id).unwrap() })).await.unwrap();
         let actual = export.effects.iter().find_map(|effect| match effect {
-            semio_framework_plugin::Effect::DownloadMediaExport { data, .. } => Some(data),
+            semio_plugin::Effect::DownloadMediaExport { data, .. } => Some(data),
             _ => None,
         }).expect("actual media effect");
         let actual: serde_json::Value = serde_json::from_str(actual).unwrap();

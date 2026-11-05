@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberConcreteGrad
         record: "ChangedMemberConcreteGradeId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change concrete strength class of the member", "Bauteil: Betonfestigkeitsklasse ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change concrete strength class of the member", "Bauteil: Betonfestigkeitsklasse ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

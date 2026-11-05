@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertFatigueModel where
         record: "InsertedFatigueModel",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert fatigue model {}", self.item.id), &format!("Ermüdungsmodell {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert fatigue model {}", self.item.id), &format!("Ermüdungsmodell {} einfügen", self.item.id))
     }
 }
 

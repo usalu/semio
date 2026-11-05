@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDynamicFirstFreque
         record: "ChangedDynamicFirstFrequency",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change first natural frequency n1 (0 = 46/h) of the dynamic element", "Schwingungsanfälliges Bauteil: Erste Eigenfrequenz n1 (0 = 46/h) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change first natural frequency n1 (0 = 46/h) of the dynamic element", "Schwingungsanfälliges Bauteil: Erste Eigenfrequenz n1 (0 = 46/h) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

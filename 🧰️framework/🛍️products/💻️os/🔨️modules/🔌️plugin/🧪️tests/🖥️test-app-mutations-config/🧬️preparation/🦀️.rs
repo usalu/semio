@@ -2,9 +2,9 @@
 use crate::test_app_mutation_fixture::config::TestConfig as State;
 use crate::test_app_mutation_fixture::config::mutations::TestConfigMutation as Mutation;
 use crate::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
-use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::snapshot_clone_preparation::RetainedEditCustody;
-use semio_framework_os_kernel::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
+use semio_os_kernel as store;
+use semio_os_kernel::snapshot_clone_preparation::RetainedEditCustody;
+use semio_os_kernel::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneRef, RetainedCloneProgress, RetainedCloneStep, RetainedCloneBirthDemand};

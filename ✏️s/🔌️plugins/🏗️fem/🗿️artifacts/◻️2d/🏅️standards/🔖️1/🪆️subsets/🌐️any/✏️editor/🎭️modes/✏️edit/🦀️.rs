@@ -6,11 +6,11 @@ pub const MODE_ID: &str = "edit";
 
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::ViewModel;
+use semio_os_kernel::Viewport2d;
+use semio_plugin::ConfigView;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::ViewModel;
 
 //#region 🔖️WindowCamera
 /// 🪟️ The kind id of the window one command is addressed to.
@@ -34,7 +34,7 @@ pub fn fem2d_addressed_body_key(view: &ViewModel, fault: &str) -> Result<&'stati
     match fem2d_addressed_window_kind(view, fault)? {
         model_window::WINDOW_KIND_ID => Ok(model_window::BODY_KEY),
         results_window::WINDOW_KIND_ID => Ok(results_window::BODY_KEY),
-        _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.canvas.window-kind"), format!("{fault}: the addressed window has the wrong kind"))),
+        _ => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("fem.canvas.window-kind"), format!("{fault}: the addressed window has the wrong kind"))),
     }
 }
 //#endregion 🔖️WindowCamera

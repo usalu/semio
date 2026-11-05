@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnBoltsBoltsPerR
         record: "ChangedConnBoltsBoltsPerRow",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bolts per row of the connection", "Anschluss: Schrauben je Reihe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bolts per row of the connection", "Anschluss: Schrauben je Reihe ändern")
     }
 }
 

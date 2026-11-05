@@ -14,7 +14,7 @@ use super::*;
 /// declarations only — matches that field's own doc: "library plugins with zero apps declare kinds
 /// here"); the first plugin to claim a kind wins. Nothing here consults per-app `artifact_kinds` —
 /// that is a different vocabulary (OS resource/media catalog kinds, see `register_artifact_descriptors`
-/// in `semio-framework-os`), not dialect ownership. Deliberately independent of the peer `PluginGraph`
+/// in `semio-os`), not dialect ownership. Deliberately independent of the peer `PluginGraph`
 /// region above (dependency-graph load-order/version validation) — this router only needs each
 /// manifest's OWN `dependencies` list for the contribution gate, not global load order.
 pub struct AppRouter {

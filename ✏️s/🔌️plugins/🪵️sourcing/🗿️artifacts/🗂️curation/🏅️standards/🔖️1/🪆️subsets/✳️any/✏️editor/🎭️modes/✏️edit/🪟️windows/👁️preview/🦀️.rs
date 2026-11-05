@@ -5,20 +5,20 @@ use crate::GeometryRecipe;
 use crate::ObjectKind;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::world3d_default_camera;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::WorldSunConfig;
-use semio_framework_plugin::World3dScene;
+use semio_plugin::scene_surface;
+use semio_plugin::world3d_default_camera;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_plugin::WorldSunConfig;
+use semio_plugin::World3dScene;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_PREVIEW: &str = "sourcing-preview";
@@ -87,7 +87,7 @@ fn preview_fit_json(kind: &ObjectKind) -> String {
 pub fn render(document: &CurationSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
     let stock = crate::stock_of(document);
     let Some(kind) = selected_ids.first().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
-        return semio_framework_plugin::built_text_node(Label::data(labels.no_selection.as_str())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sourcing preview placeholder admission failed"));
+        return semio_plugin::built_text_node(Label::data(labels.no_selection.as_str())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sourcing preview placeholder admission failed"));
     };
     let meshes_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![if box_parts(&kind.geometry).is_some() {
         unit_box_mesh_json()
@@ -99,7 +99,7 @@ pub fn render(document: &CurationSnapshot, selected_ids: &[String], labels: &Sou
     let instances_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(kind_instances_json(kind, [0.0, 0.0, 0.0], 1.0, false)));
     let sun = WorldSunConfig::default();
     let scene = World3dScene { fit_json: Some(preview_fit_json(kind)), ..world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &sun) };
-    scene_surface(SOURCING_CURATION_SURFACE_PREVIEW, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)
+    scene_surface(SOURCING_CURATION_SURFACE_PREVIEW, semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 

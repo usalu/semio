@@ -1,5 +1,5 @@
 //! 🔗️ Neutral durable link identity and canonical controlled record laws.
-use semio_framework_os_store_link_schema::{ArtifactLink,LinkPin};
+use semio_os_store_link_schema::{ArtifactLink,LinkPin};
 use semio_framework_value::{FromValue, ToValue, NativeEncodeControl};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::{DslField,FieldValue,Shape,NativeSchemaControl};

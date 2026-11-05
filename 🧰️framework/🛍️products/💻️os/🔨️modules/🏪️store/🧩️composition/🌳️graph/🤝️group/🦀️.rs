@@ -1,5 +1,5 @@
-use semio_framework_os_vcs::ArtifactGroupVisibility;
-use semio_framework_os_store_one_item::ArtifactStoreOneItemGrant;
+use semio_os_vcs::ArtifactGroupVisibility;
+use semio_os_store_one_item::ArtifactStoreOneItemGrant;
 use crate::CompositionGraph;
 use crate::owned_document_closure::OWNED_DOCUMENT_MAXIMUM_MEMBERS;
 use semio_framework_value::{ValueError, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};

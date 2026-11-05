@@ -43,13 +43,13 @@ fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::Re
 }
 
 pub struct ArtifactStoreMutationDagRetirement {
-    pub dag: std::mem::ManuallyDrop<Option<semio_framework_os_spr::MutationDag>>,
+    pub dag: std::mem::ManuallyDrop<Option<semio_os_spr::MutationDag>>,
     pub envelope: std::mem::ManuallyDrop<Option<ArtifactStoreConflictRetirement>>,
     pub identity: std::mem::ManuallyDrop<Option<ArtifactStoreStringRetirement>>,
 }
 
 impl ArtifactStoreMutationDagRetirement {
-    pub fn new(dag: semio_framework_os_spr::MutationDag) -> Self {
+    pub fn new(dag: semio_os_spr::MutationDag) -> Self {
         Self { dag: std::mem::ManuallyDrop::new(Some(dag)), envelope: std::mem::ManuallyDrop::new(None), identity: std::mem::ManuallyDrop::new(None) }
     }
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -72,8 +72,8 @@ impl ErasedSnapshotRetirement for ArtifactStoreMutationDagRetirement {
         let dag = self.dag.as_mut().unwrap();
         if let Some(owner) = dag.take_one_close_owner() {
             match owner {
-                semio_framework_os_spr::MutationDagCloseOwner::Envelope(envelope) => *self.envelope = Some(ArtifactStoreConflictRetirement::causal_envelope(envelope)),
-                semio_framework_os_spr::MutationDagCloseOwner::Identity(id) => *self.identity = Some(ArtifactStoreStringRetirement::new(id)),
+                semio_os_spr::MutationDagCloseOwner::Envelope(envelope) => *self.envelope = Some(ArtifactStoreConflictRetirement::causal_envelope(envelope)),
+                semio_os_spr::MutationDagCloseOwner::Identity(id) => *self.identity = Some(ArtifactStoreStringRetirement::new(id)),
             }
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
@@ -122,7 +122,7 @@ pub struct ArtifactStoreHistoryLedgerRetirement<T> {
     pub ledger: std::mem::ManuallyDrop<Option<ArtifactHistoryLedger<T>>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub pending: std::mem::ManuallyDrop<Option<T>>,
-    pub visibility: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<semio_framework_os_vcs::ArtifactGroupVisibility>>>,
+    pub visibility: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<semio_os_vcs::ArtifactGroupVisibility>>>,
     pub factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,
     pub closing_factory: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
 }

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberOmegaWd wher
         record: "ChangeMemberOmegaWd",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Confinement ratio ω_wd", "Umschnürungsgrad ω_wd ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Confinement ratio ω_wd", "Umschnürungsgrad ω_wd ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-omega-wd".into()]

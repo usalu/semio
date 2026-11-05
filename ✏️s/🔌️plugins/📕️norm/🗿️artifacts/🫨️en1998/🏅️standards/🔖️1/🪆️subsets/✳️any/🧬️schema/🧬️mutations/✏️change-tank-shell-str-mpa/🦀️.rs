@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTankShellStrMpa wh
         record: "ChangeTankShellStrMpa",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Design strength of the shell wall in hoop tension (0 = not given)", "Bemessungsfestigkeit der Schalenwand in Ringzug (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Design strength of the shell wall in hoop tension (0 = not given)", "Bemessungsfestigkeit der Schalenwand in Ringzug (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-tank-shell-str-mpa".into()]

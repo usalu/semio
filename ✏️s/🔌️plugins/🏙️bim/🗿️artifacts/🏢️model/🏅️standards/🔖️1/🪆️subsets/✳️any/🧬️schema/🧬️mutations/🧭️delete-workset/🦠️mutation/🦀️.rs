@@ -14,7 +14,7 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "workset", kind: "delete-workset", record: "DeleteWorkset" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Delete workset", "Löschen") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Delete workset", "Löschen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

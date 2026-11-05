@@ -1,9 +1,9 @@
 //! 🖱️ 🖱️ S Studio app command — `node-graph-viewport`.
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, CameraSetting, SpaceWindowCamera};
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_os_kernel::Viewport2d;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "node-graph-viewport")]

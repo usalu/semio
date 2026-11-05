@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeBridgeWheelLoad wh
         record: "ChangedBridgeWheelLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Wheel load Q_w of the bridge fatigue", "Brückenermüdung: Radlast Q_w ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Wheel load Q_w of the bridge fatigue", "Brückenermüdung: Radlast Q_w ändern")
     }
 }
 

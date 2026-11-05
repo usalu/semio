@@ -1,10 +1,10 @@
 //! 🧭️ Plugin registry rows, repo-root discovery, component paths and committed package descriptors.
 
-use semio_framework_os_kernel::native_catalog as component_artifacts;
+use semio_os_kernel::native_catalog as component_artifacts;
 use semio_framework_process_routing_workspace as workspace_identity;
 use std::path::Path;
 use std::path::PathBuf;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 
 /// 🏠️ Admits only a declared package workspace with regular build authority.
 pub fn is_repository_root(path: &Path) -> Result<bool, String> {
@@ -30,7 +30,7 @@ pub struct PluginRegistryEntry {
 
 /// 🧭️ Locates the repo root — identical algorithm to `🏃️run/🏗️bootstrap/🦀️.rs::find_repo_root` (walk up from
 /// this crate's own `CARGO_MANIFEST_DIR` for paired build and package workspace markers, `SEMIO_REPO_ROOT` override first) so a direct
-/// `cargo run -p semio-framework-os-mcp` from an arbitrary cwd still resolves correctly.
+/// `cargo run -p semio-os-mcp` from an arbitrary cwd still resolves correctly.
 pub fn find_repo_root() -> Result<PathBuf, GatewayError> {
     if let Ok(value) = std::env::var("SEMIO_REPO_ROOT") {
         let candidate = PathBuf::from(value);
@@ -84,11 +84,11 @@ pub fn resolve_plugin_wasm_path(repo_root: &Path, entry: &PluginRegistryEntry) -
 //#region 🔖️Descriptor
 
 /// 📖️ Reads `<owner_root>/🔣️.json` and decodes it as a real `semio_framework::PackageDescriptor`
-/// — the same JSON `semio-framework-plugin-describe` writes (packet E1/E2, `📓️status.md`'s
+/// — the same JSON `semio-plugin-describe` writes (packet E1/E2, `📓️status.md`'s
 /// "E2-builder-descriptor" entry) and the same type `🏃️run/🦀️.rs`'s own `WasmtimeNodeHost`
 /// doc comment names as the eventual manifest source, once wired. Reading the COMMITTED descriptor
 /// JSON directly (rather than instantiating the wasm to call `describe()` at runtime, the way
-/// `semio-framework-plugin-describe` does at BUILD time) is deliberate: `🏃️run`'s own
+/// `semio-plugin-describe` does at BUILD time) is deliberate: `🏃️run`'s own
 /// `load_runtime_recursive` is blocked precisely because no `describe()`-decoder is wired into that
 /// crate — this sidesteps that gap entirely for any plugin that (like `🗒️note`) already has a real
 /// committed descriptor, without needing a second wasmtime linkage inside the gateway just to read a

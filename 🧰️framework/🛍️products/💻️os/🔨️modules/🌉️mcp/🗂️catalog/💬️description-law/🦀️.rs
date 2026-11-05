@@ -48,7 +48,7 @@ pub struct DescribedVerb {
 }
 
 impl DescribedVerb {
-    fn from_declaration(id: String, label: &semio_framework_ui_locale::LocalizedLabel, description: Option<&semio_framework_ui_locale::LocalizedLabel>) -> Self {
+    fn from_declaration(id: String, label: &semio_ui_locale::LocalizedLabel, description: Option<&semio_ui_locale::LocalizedLabel>) -> Self {
         Self {
             id,
             title_en: label.resolve(Terminology::Native, Locale::En).to_string(),

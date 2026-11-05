@@ -15,8 +15,8 @@ pub struct SetBackgroundColorIndex {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetBackgroundColorIndex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "background-color-index", kind: "set-background-color-index", record: "SetBackgroundColorIndex" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set background color index", "Hintergrundfarbindex setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set background color index", "Hintergrundfarbindex setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

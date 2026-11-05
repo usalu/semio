@@ -1,7 +1,7 @@
 //! 🪟️ One private completed page becomes ordinary accessible controls without graph queries or model copies.
 use super::*;
 use semio_framework::action_staging::{StagedFormStatus,StagedFormBinding,StagedFormPageBinding,StagedFormBindingEdit};
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use std::mem::{ManuallyDrop,size_of};

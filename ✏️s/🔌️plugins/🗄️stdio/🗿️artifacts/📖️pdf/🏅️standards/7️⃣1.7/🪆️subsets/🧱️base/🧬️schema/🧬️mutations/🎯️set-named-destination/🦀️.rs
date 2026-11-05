@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "named-destination", kind: "set-named-destination", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set named destination {}", self.destination.name), &format!("Benanntes Ziel {} setzen", self.destination.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set named destination {}", self.destination.name), &format!("Benanntes Ziel {} setzen", self.destination.name))
     }
 
     fn target(&self) -> Vec<String> {

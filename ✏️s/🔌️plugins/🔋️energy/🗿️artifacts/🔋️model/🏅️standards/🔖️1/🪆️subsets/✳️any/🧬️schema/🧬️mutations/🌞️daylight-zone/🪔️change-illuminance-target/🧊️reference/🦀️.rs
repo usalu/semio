@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "daylight-zone", kind: "change-daylight-zone-illuminance-target", record: "ChangedDaylightZoneIlluminanceTarget" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change daylight zone {} illuminance target to {:?}", self.id.0, self.new_illuminance_target_lux), &format!("Soll-Beleuchtungsstärke von Tageslichtzone {} auf {:?} ändern", self.id.0, self.new_illuminance_target_lux))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change daylight zone {} illuminance target to {:?}", self.id.0, self.new_illuminance_target_lux), &format!("Soll-Beleuchtungsstärke von Tageslichtzone {} auf {:?} ändern", self.id.0, self.new_illuminance_target_lux))
     }
 
     fn target(&self) -> Vec<String> {

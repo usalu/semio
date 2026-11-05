@@ -1,7 +1,7 @@
 //! 📱️ Shell hooks: the domain-neutral seam through which a plugin chooses its layout from a device signal, sees the keyboard before the shell defaults, asks for a bottom sheet and names what a screen reader reads. Schema: `🧬️schema`. See [`super`].
 
 use super::*;
-use semio_framework_ui_contract::{AccessibilityProjectionNode, BuiltNode, Buildable, HasBase, HasChildren, Label, UiText};
+use semio_ui_contract::{AccessibilityProjectionNode, BuiltNode, Buildable, HasBase, HasChildren, Label, UiText};
 use std::sync::Arc;
 
 #[cfg(test)]
@@ -430,5 +430,5 @@ impl ShellHookDriver {
 /// 🪟️ The bottom sheet as a node of the UI tree: a container of role `sheet`, announced as a complementary landmark, around the given children; `None` when `id` or the label is refused by the tree's limits.
 pub fn bottom_sheet_node(sheet: &ShellBottomSheet, id: &str, children: Vec<BuiltNode>) -> Option<BuiltNode> {
     let label = Label(UiText::try_from_str(&sheet.label)?);
-    semio_framework_ui_contract::sheet(label).try_id(id).ok()?.try_children(children).ok()?.try_build().ok()
+    semio_ui_contract::sheet(label).try_id(id).ok()?.try_children(children).ok()?.try_build().ok()
 }

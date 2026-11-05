@@ -1,4 +1,4 @@
-use semio_framework_os_renderer_wgpu_native_runtime_modules as native;
+use semio_renderer_wgpu_native_runtime_modules as native;
 use sha2::{Digest, Sha256};
 use std::{fs, io::Read, path::Path};
 

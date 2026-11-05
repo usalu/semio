@@ -26,7 +26,7 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
     if close_retiring_focus_clipboard_one() {
         return true;
     }
-    if semio_framework_os_renderer_wgpu_scene_state::close_retired_scene_surface_one() {
+    if semio_renderer_wgpu_scene_state::close_retired_scene_surface_one() {
         return true;
     }
     let Some(owner) = UI_DOCUMENT_CLOSE_QUEUE.with(|cell| cell.borrow().owners.front().cloned()) else { return false };
@@ -50,10 +50,10 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
         let engine = cell.borrow();
         engine.surface_token(window_id) == Some(owner.token) && engine.surface_generation(window_id) == Some(owner.generation)
     });
-    if mounted && semio_framework_os_renderer_wgpu_scene_render::retire_canvas_window_step(window_id) {
+    if mounted && semio_renderer_wgpu_scene_render::retire_canvas_window_step(window_id) {
         return true;
     }
-    if !semio_framework_os_renderer_wgpu_scene_state::scene_surface_retirement_can_admit() {
+    if !semio_renderer_wgpu_scene_state::scene_surface_retirement_can_admit() {
         return true;
     }
     let (complete, retirement) = UI_ENGINE.with(|cell| {
@@ -166,7 +166,7 @@ fn candidate_scene_target_in(engine: &semio_framework_ui_wgpu_engine::Ui, window
 
 /// 🔒️ A replacement key, kind, document generation, or component mount cannot inherit a captured gesture.
 pub fn scene_pointer_target_is_live(target: &ScenePointerTarget) -> bool {
-    if ui_document_close_pending_for(&target.window_id) || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&target.host_id) {
+    if ui_document_close_pending_for(&target.window_id) || semio_renderer_wgpu_scene_state::scene_host_retiring(&target.host_id) {
         return false;
     }
     let retained = UI_ENGINE.with(|cell| {
@@ -239,10 +239,10 @@ pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, input: &mut semio_
         let owner = &owner.target;
         match owner.kind {
             semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => {
-                semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_pointer_cancel_into(&owner.host_id);
+                semio_renderer_wgpu_engine_text::text_editor::text_editor_pointer_cancel_into(&owner.host_id);
             }
             semio_framework_ui_declaration::ui::SurfaceKind::Paint2d => {
-                semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_pointer_cancel_into(&owner.host_id);
+                semio_renderer_wgpu_engine_board::paint2d::paint2d_pointer_cancel_into(&owner.host_id);
             }
             semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => {
                 let controller_id = UI_ENGINE.with(|cell| {
@@ -253,9 +253,9 @@ pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, input: &mut semio_
                     }
                 });
                 if let Some(controller_id) = controller_id {
-                    let _ = semio_framework_os_renderer_wgpu_scene_ink::ink_gesture_abort_into(&controller_id, &owner.surface_id, &owner.host_id, input);
+                    let _ = semio_renderer_wgpu_scene_ink::ink_gesture_abort_into(&controller_id, &owner.surface_id, &owner.host_id, input);
                 }
-                semio_framework_os_renderer_wgpu_scene_ink::ink_pointer_cancel_into(&owner.host_id);
+                semio_renderer_wgpu_scene_ink::ink_pointer_cancel_into(&owner.host_id);
             }
             _ => {}
         }
@@ -357,8 +357,8 @@ pub fn active_retained_drag_sessions() -> Vec<(String, f32, f32, std::collection
 }
 
 pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &std::collections::HashMap<String, String>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
-    if !drag_data.contains_key(semio_framework_os_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME) {
-        return semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
+    if !drag_data.contains_key(semio_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME) {
+        return semio_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
     }
     let mut types = drag_data.keys().cloned().collect::<Vec<_>>();
     types.sort();
@@ -371,7 +371,7 @@ pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &s
         let generation = engine.surface_generation(window_id)?;
         let tree = engine.tree(window_id)?;
         let UiNode::ComponentScene(scene) = &tree.node(hit.node)?.spec.0 else { return None };
-        Some(semio_framework_os_renderer_wgpu_scene_render::canvas_catalogue_drag_over_into(scene, hit.rect, window_id, generation, x, y, &types, input))
+        Some(semio_renderer_wgpu_scene_render::canvas_catalogue_drag_over_into(scene, hit.rect, window_id, generation, x, y, &types, input))
     });
     match outcome {
         Some(Ok(accepted)) => accepted,
@@ -380,14 +380,14 @@ pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &s
             false
         }
         None => {
-            semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
+            semio_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
             false
         }
     }
 }
 
 pub fn canvas_catalogue_drop(window_id: &str, x: f32, y: f32, drag_data: &std::collections::HashMap<String, String>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
-    let Some(raw_payload) = drag_data.get(semio_framework_os_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME) else {
+    let Some(raw_payload) = drag_data.get(semio_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME) else {
         return false;
     };
     let outcome = UI_ENGINE.with(|cell| {
@@ -399,7 +399,7 @@ pub fn canvas_catalogue_drop(window_id: &str, x: f32, y: f32, drag_data: &std::c
         let generation = engine.surface_generation(window_id)?;
         let tree = engine.tree(window_id)?;
         let UiNode::ComponentScene(scene) = &tree.node(hit.node)?.spec.0 else { return None };
-        Some(semio_framework_os_renderer_wgpu_scene_render::canvas_catalogue_drop_into(scene, hit.rect, window_id, generation, x, y, raw_payload, input))
+        Some(semio_renderer_wgpu_scene_render::canvas_catalogue_drop_into(scene, hit.rect, window_id, generation, x, y, raw_payload, input))
     });
     match outcome {
         Some(Ok(accepted)) => accepted,
@@ -408,7 +408,7 @@ pub fn canvas_catalogue_drop(window_id: &str, x: f32, y: f32, drag_data: &std::c
             false
         }
         None => {
-            semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
+            semio_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
             false
         }
     }

@@ -350,7 +350,7 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
 /// primitive meshes plus every `FemSolid`'s custom surface mesh, and every node/member/solid/support/
 /// load instance — shared by the model window and every results view (static/modal/buckling).
 pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> Result<(String, String), protocol::wire::ScopedIdentityError> {
-    let mut meshes = semio_framework_pack_json::parse(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string(), "cone".to_string()]), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
+    let mut meshes = semio_framework_pack_json::parse(&semio_plugin::world3d_meshes_json_from_kinds(&["box".to_string(), "cone".to_string()]), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
     let mut instances = fem3d_structural_instances(doc, displacements, deform_scale)?;
     let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress)?;
     meshes.extend(solid_meshes);

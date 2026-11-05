@@ -18,8 +18,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeSlabSpan where Op:
         verb: "change", entity: "slab-span", kind: "change-slab-span", record: "ChangedSlabSpan",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slab span", "Deckenspannweite ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slab span", "Deckenspannweite ändern")
     }
 }
 

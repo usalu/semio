@@ -7,40 +7,40 @@ use crate::editor::ifc2x3_sav::modes::edit;
 use crate::editor::ifc2x3_sav::modes::edit::windows::main;
 use crate::standards::v2x3::subsets::sav::schema::mutations::Ifc2x3Mutation;
 use crate::standards::v2x3::subsets::sav::schema::snapshot::Ifc2x3Snapshot;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
+use semio_plugin::EditorApp;
+use semio_plugin::InteractiveJobClassification;
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::edit_rules;
@@ -118,10 +118,10 @@ fn ifc2x3_sav_editor_retained_reduce(
     command: &Ifc2x3SavEditCommand,
     _snapshot: &Ifc2x3Snapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Ifc2x3SavEditor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Ifc2x3SavEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<Ifc2x3Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
@@ -150,7 +150,7 @@ impl ToolJobFactory for Ifc2x3SavEditorExampleFactory {
     fn payload_schema_id(&self) -> &str { IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500) }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
 }
 
 impl ArtifactOwnedToolJobFactory for Ifc2x3SavEditorExampleFactory {
@@ -166,7 +166,7 @@ pub struct Ifc2x3SavEditor;
 
 impl ArtifactEditor for Ifc2x3SavEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_stdio_ifc_2x3_base::examples::demo::source()]
     }
     type Snapshot = Ifc2x3Snapshot;
@@ -184,20 +184,20 @@ impl ArtifactEditor for Ifc2x3SavEditor {
     const DIALECT: Dialect = IFC2X3_SAV_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_SAV_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.ifc@2x3/sav", extension: ".ifc", media_type: "application/x-ifc", binary: false })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.ifc@2x3/sav", extension: ".ifc", media_type: "application/x-ifc", binary: false })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(snapshot).map_err(|detail| semio_framework_plugin::MediaError::Payload("artifact:native".into(), detail))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(snapshot).map_err(|detail| semio_plugin::MediaError::Payload("artifact:native".into(), detail))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3(bytes).map_err(|detail| semio_framework_plugin::MediaError::Payload("artifact:native".into(), detail))
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3(bytes).map_err(|detail| semio_plugin::MediaError::Payload("artifact:native".into(), detail))
     }
 
     /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
@@ -217,16 +217,16 @@ impl ArtifactEditor for Ifc2x3SavEditor {
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx); }
         if !IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if ifc2x3_sav_editor_command_id(&original.command) != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, ifc2x3_sav_editor_command_id, IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, ifc2x3_sav_editor_retained_reduce, ifc2x3_sav_editor_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, ifc2x3_sav_editor_command_id, IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, ifc2x3_sav_editor_retained_reduce, ifc2x3_sav_editor_retained_extent))
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_publication_authority!();
@@ -237,8 +237,8 @@ impl ArtifactEditor for Ifc2x3SavEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); ifc2x3_sav_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->Result<Ifc2x3Snapshot,semio_framework_plugin::Fault>>{Some(||{
-        <crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction::new()).map_err(|error|semio_framework_plugin::reference_birth_fault("valid authored IFC2x3 sav initial owner",format_args!("{error:?}")))
+    fn reference_birth()->Option<fn()->Result<Ifc2x3Snapshot,semio_plugin::Fault>>{Some(||{
+        <crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as semio_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction::new()).map_err(|error|semio_plugin::reference_birth_fault("valid authored IFC2x3 sav initial owner",format_args!("{error:?}")))
     })}
 
     fn handle(
@@ -246,7 +246,7 @@ impl ArtifactEditor for Ifc2x3SavEditor {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -260,27 +260,27 @@ impl ArtifactEditor for Ifc2x3SavEditor {
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        if body_key==inspector::BODY_KEY{return inspector::render(doc,_interaction,view_state,"s.stdio.ifc@2x3/sav#editor",true,cx).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);}
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        if body_key==inspector::BODY_KEY{return inspector::render(doc,_interaction,view_state,"s.stdio.ifc@2x3/sav#editor",true,cx).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);}
         if body_key == main::BODY_KEY {
-            return main::render_selected_in_context(doc.snapshot,cx,_interaction,inspector::DOMAIN,inspector::GRANULARITY).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+            return main::render_selected_in_context(doc.snapshot,cx,_interaction,inspector::DOMAIN,inspector::GRANULARITY).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details_provider_revisioned(&details::Ifc2x3DetailsProvider::new(doc.snapshot),semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?,view_state.locale,"s.stdio.ifc@2x3/sav#editor",&semio_framework_plugin::TreeWindows::for_body(view_state,editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details_provider_revisioned(&details::Ifc2x3DetailsProvider::new(doc.snapshot),semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?,view_state.locale,"s.stdio.ifc@2x3/sav#editor",&semio_plugin::TreeWindows::for_body(view_state,editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -288,8 +288,8 @@ impl ArtifactEditor for Ifc2x3SavEditor {
 
 
 impl editing::SnapshotEditingEditor for Ifc2x3SavEditor {
-    fn snapshot_edit_work_capacity()->semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity{inspector::edit_capacity()}
-    fn snapshot_edit_work(tool:&'static str)->Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>>{Box::new(details::Ifc2x3DetailsWork::<Self>::new(tool))}
+    fn snapshot_edit_work_capacity()->semio_plugin::retained_command::ArtifactRetainedWorkCapacity{inspector::edit_capacity()}
+    fn snapshot_edit_work(tool:&'static str)->Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<Self>>>{Box::new(details::Ifc2x3DetailsWork::<Self>::new(tool))}
     fn snapshot_edit_event_mut(command:&mut Self::Command)->Option<&mut editing::SnapshotEditEvent>{match command{Ifc2x3SavEditCommand::EditSnapshot{event}=>Some(event),_=>None}}
     fn snapshot_edit_event(command:&Self::Command)->Option<&editing::SnapshotEditEvent>{match command{Ifc2x3SavEditCommand::EditSnapshot{event}=>Some(event),_=>None}}
     fn snapshot_edit_is_admitted(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot)->bool{inspector::edit_is_admitted(event,snapshot)}
@@ -300,7 +300,7 @@ impl editing::SnapshotEditingEditor for Ifc2x3SavEditor {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_ifc2x3_sav_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_ifc2x3_sav_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(IFC2X3_SAV_DIALECT).document(["stdio", "ifc2x3"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::IFC2X3_SAV_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).window_kind_def(inspector::window_definition(true)).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_ifc_2x3_base::examples::demo::ID, semio_s_artifact_stdio_ifc_2x3_base::examples::demo::label())], semio_s_artifact_stdio_ifc_2x3_base::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)

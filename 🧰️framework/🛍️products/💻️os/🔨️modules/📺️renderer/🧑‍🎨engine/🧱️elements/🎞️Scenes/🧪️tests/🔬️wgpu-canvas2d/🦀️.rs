@@ -1,16 +1,16 @@
-use semio_framework_os_renderer_wgpu_contracts::{fixture_scene_pointer_target, framework_widget_context};
-use semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions;
-use semio_framework_os_renderer_wgpu_host_base::app_now_ms;
-use semio_framework_os_renderer_wgpu_scene_canvas2d::{CANVAS2D_SELECTION_GLOW, CANVAS2D_SELECTION_RING, CANVAS_2D_EMPTY_LABEL, apply_canvas_framing, render_canvas_2d};
-use semio_framework_os_renderer_wgpu_scene_render::{cancel_canvas_pointer_gesture_for, canvas_catalogue_drop_into, canvas_pointer_button_into, canvas_pointer_move_into, canvas_state_snapshot, canvas_wheel_into};
-use semio_framework_os_renderer_wgpu_scene_state::{CANVAS_CATALOGUE_HOVER, CANVAS_GESTURE, CanvasCatalogueHover, CanvasGestureSlots, SCENE_CAMERA_DISPATCH_CAPACITY, SCENE_CAMERA_DISPATCH_DEADLINES_MS, SCENE_CAMERA_DISPATCH_FAULT, SCENE_STATE, SCENE_SURFACE_RETIREMENT, SceneCameraDispatchCursor, SceneCameraDispatchStep, SceneModifiers, Viewport, camera_fixture_grant, camera_fixture_lease, clear_camera_fixture, close_retired_scene_surface_one, mount_scene_identity, mutate_scene_state, retire_scene_identity, scene_camera_action, scene_state, schedule_scene_camera_dispatch, sweep_expired_scene_camera_dispatches};
-use semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drop;
+use semio_renderer_wgpu_contracts::{fixture_scene_pointer_target, framework_widget_context};
+use semio_renderer_wgpu_frame_actions::collect_fixture_actions;
+use semio_renderer_wgpu_host_base::app_now_ms;
+use semio_renderer_wgpu_scene_canvas2d::{CANVAS2D_SELECTION_GLOW, CANVAS2D_SELECTION_RING, CANVAS_2D_EMPTY_LABEL, apply_canvas_framing, render_canvas_2d};
+use semio_renderer_wgpu_scene_render::{cancel_canvas_pointer_gesture_for, canvas_catalogue_drop_into, canvas_pointer_button_into, canvas_pointer_move_into, canvas_state_snapshot, canvas_wheel_into};
+use semio_renderer_wgpu_scene_state::{CANVAS_CATALOGUE_HOVER, CANVAS_GESTURE, CanvasCatalogueHover, CanvasGestureSlots, SCENE_CAMERA_DISPATCH_CAPACITY, SCENE_CAMERA_DISPATCH_DEADLINES_MS, SCENE_CAMERA_DISPATCH_FAULT, SCENE_STATE, SCENE_SURFACE_RETIREMENT, SceneCameraDispatchCursor, SceneCameraDispatchStep, SceneModifiers, Viewport, camera_fixture_grant, camera_fixture_lease, clear_camera_fixture, close_retired_scene_surface_one, mount_scene_identity, mutate_scene_state, retire_scene_identity, scene_camera_action, scene_state, schedule_scene_camera_dispatch, sweep_expired_scene_camera_dispatches};
+use semio_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drop;
 use serde_json::{Value, json};
 use std::collections::HashMap;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_ui_theme::Theme;
 
 #[test]
 fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_the_successor() {
@@ -89,7 +89,7 @@ fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
         pane_id: None,
         binding_id: None,
         presence: UiPresence::default(),
-        canvas_2d: Some(semio_framework_ui_scene_plane::Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
+        canvas_2d: Some(semio_ui_scene_plane::Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
         world_3d: None,
         node_graph: None,
         text_editor: None,
@@ -132,7 +132,7 @@ fn seed_catalogue_hover(scene: &UiComponentSceneNode) {
     });
 }
 
-fn catalogue_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+fn catalogue_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     collect_fixture_actions(input)
 }
 
@@ -146,7 +146,7 @@ fn catalogue_drop_publishes_one_terminal_leave_drop_slice_and_preserves_raw_payl
 
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["terminal"] != "nonCatalogue") {
         seed_catalogue_hover(&scene);
-        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+        let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         let point = &row["point"];
         let accepted = canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, point["x"].as_f64().unwrap() as f32, point["y"].as_f64().unwrap() as f32, row["rawPayload"].as_str().unwrap(), &mut input)
             .expect("terminal action batch admits");
@@ -169,13 +169,13 @@ fn catalogue_drop_refusal_keeps_hover_and_never_publishes_a_partial_pair() {
     let scene = canvas_scene("canvas-catalogue-refusal", "[]".into());
     let inner = Rect::new(0.0, 0.0, 320.0, 200.0);
     seed_catalogue_hover(&scene);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
-    for index in 0..semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    for index in 0..semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
         let action = format!("occupied-{index}");
-        let bytes = semio_framework_ui_action::checked_action_string_bytes(&["fixture", action.as_str()]).unwrap();
+        let bytes = semio_ui_action::checked_action_string_bytes(&["fixture", action.as_str()]).unwrap();
         input.reserve_action("fixture", &action, bytes).unwrap().publish().unwrap();
     }
-    assert_eq!(canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, 73.0, 41.0, "{\"kind\":\"rect\"}", &mut input), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits),);
+    assert_eq!(canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, 73.0, 41.0, "{\"kind\":\"rect\"}", &mut input), Err(semio_ui_action::BoundedActionFault::ItemCredits),);
     assert!(CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().is_some()), "refusal retains the terminal hover owner for a bounded retry");
     let first = input.take_action_step().unwrap().unwrap().into_descriptor().unwrap();
     assert_eq!(first.action, "occupied-0", "refusal leaves the pre-existing FIFO unchanged and publishes neither terminal member");
@@ -190,7 +190,7 @@ fn foreign_drop_is_inert_and_does_not_consume_the_catalogue_hover_owner() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let scene = canvas_scene("canvas-catalogue-foreign", "[]".into());
     seed_catalogue_hover(&scene);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let drag_data = std::collections::HashMap::from([("text/plain".to_string(), "foreign".to_string())]);
     assert!(!canvas_catalogue_drop("unpublished-window", 10.0, 10.0, &drag_data, &mut input));
     assert!(catalogue_actions(&mut input).is_empty());
@@ -206,9 +206,9 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let layers = json!([{ "kind": "rectangle", "id": "r1", "x": 10.0, "y": 10.0, "width": 40.0, "height": 20.0, "selected": true }]);
     let node = canvas_scene("s1", layers.to_string());
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -231,9 +231,9 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
 #[test]
 fn empty_layer_list_paints_the_react_empty_canvas_label() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -242,7 +242,7 @@ fn empty_layer_list_paints_the_react_empty_canvas_label() {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_canvas_2d(&canvas_scene("empty-canvas-label", "[]".to_string()), Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
-    let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).count();
+    let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == semio_ui_draw_contract::KIND_GLYPH).count();
     assert_eq!(glyphs, CANVAS_2D_EMPTY_LABEL.chars().count(), "an empty canvas paints exactly the label React paints, got {glyphs} glyphs");
 }
 
@@ -312,7 +312,7 @@ fn assert_canvas_pan_case(case_id: &str) {
     let end_x = row["end"]["x"].as_f64().unwrap() as f32;
     let end_y = row["end"]["y"].as_f64().unwrap() as f32;
     let button = row["button"].as_i64().unwrap() as i16;
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert!(canvas_pointer_button_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, start_x, start_y, true, button, SceneModifiers::default(), &mut input).unwrap());
     assert!(canvas_pointer_move_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, SceneModifiers::default(), &mut input).unwrap());
     assert!(canvas_pointer_button_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, false, button, SceneModifiers::default(), &mut input).unwrap());
@@ -356,7 +356,7 @@ fn canvas2d_middle_pan_cancellation_retires_locally_without_a_document_action() 
     let node = canvas_scene("canvas2d-middle-pan-cancel", "[]".to_string());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(17);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
 
     assert!(canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-middle-pan-window", 1, 40.0, 50.0, true, 1, SceneModifiers::default(), &mut input).unwrap());
@@ -374,7 +374,7 @@ fn foreign_pointer_cancel_preserves_the_canvas_gesture_owner() {
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let owner = ui_render::PointerId(77);
     let foreign = ui_render::PointerId(78);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
 
     assert!(canvas_pointer_button_into(&node, bounds, owner, "canvas2d-owner-window", 1, 40.0, 50.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
@@ -400,7 +400,7 @@ fn two_canvas_documents_keep_independent_pointer_gestures() {
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let first_pointer = ui_render::PointerId(77);
     let second_pointer = ui_render::PointerId(78);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
 
     assert!(canvas_pointer_button_into(&first, bounds, first_pointer, "canvas2d-first-window", 1, 40.0, 50.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
@@ -456,7 +456,7 @@ fn scene_camera_deadlines_saturate_before_ownership_and_close_cursor_restores_on
 fn canvas_framing_waits_for_measurement_and_preserves_navigation() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let mut scene = canvas_scene("framing-window", "[]".into());
-    scene.canvas_2d.as_mut().unwrap().framing = Some(semio_framework_ui_scene_plane::Canvas2dFraming { revision: 1, bounds: [-100.0, -50.0, 300.0, 150.0], padding: 40.0 });
+    scene.canvas_2d.as_mut().unwrap().framing = Some(semio_ui_scene_plane::Canvas2dFraming { revision: 1, bounds: [-100.0, -50.0, 300.0, 150.0], padding: 40.0 });
     assert!(!apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 0.0, 0.0)));
     assert!(apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 800.0, 600.0)));
     let fitted = scene_state(&scene.host_id).viewport;
@@ -482,7 +482,7 @@ fn gumball_scene(surface_id: &str, live: bool) -> UiComponentSceneNode {
     node
 }
 
-fn gumball_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<(String, Value)> {
+fn gumball_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<(String, Value)> {
     catalogue_actions(input).into_iter().map(|action| (action.action.clone(), Value::from(action.args.as_ref().expect("gumball args")))).collect()
 }
 
@@ -495,7 +495,7 @@ fn a_live_gumball_drag_streams_and_commits_through_the_canvas_seam() {
     let node = gumball_scene("canvas2d-gumball-live", true);
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(41);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
     assert!(canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 256.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
     assert!(canvas_pointer_move_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 270.0, 150.0, SceneModifiers::default(), &mut input).unwrap());
@@ -519,7 +519,7 @@ fn gumball_cancels_abort_live_gestures_and_non_live_gestures_release_one_one_sho
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(42);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
     let live = gumball_scene("canvas2d-gumball-cancel", true);
     assert!(canvas_pointer_button_into(&live, bounds, pointer, "canvas2d-gumball-cancel-window", 1, 256.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
@@ -546,8 +546,8 @@ fn the_armed_gumball_paints_and_any_other_utility_does_not() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let painted = |node: &UiComponentSceneNode| {
-        let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-        semio_framework_os_renderer_wgpu_canvas2d_host::paint(node, bounds, (0.0, 0.0, 1.0), &semio_framework_ui_theme::Theme::light(), &mut draw);
+        let mut draw = semio_ui_draw_contract::DrawList::default();
+        semio_renderer_wgpu_canvas2d_host::paint(node, bounds, (0.0, 0.0, 1.0), &semio_ui_theme::Theme::light(), &mut draw);
         draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.vector_vertices.len()).sum::<usize>()
     };
     assert!(painted(&gumball_scene("canvas2d-gumball-paint", true)) > 0, "the armed gumball paints its handles");
@@ -559,9 +559,9 @@ fn gumball_pivot_and_boundary_read_the_explicit_appearance_roles() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let node = gumball_scene("canvas2d-gumball-theme", true);
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
-    for theme in [semio_framework_ui_theme::Theme::light(), semio_framework_ui_theme::Theme::dark()] {
-        let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-        semio_framework_os_renderer_wgpu_canvas2d_host::paint(&node, bounds, (0.0, 0.0, 1.0), &theme, &mut draw);
+    for theme in [semio_ui_theme::Theme::light(), semio_ui_theme::Theme::dark()] {
+        let mut draw = semio_ui_draw_contract::DrawList::default();
+        semio_renderer_wgpu_canvas2d_host::paint(&node, bounds, (0.0, 0.0, 1.0), &theme, &mut draw);
         let colors = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter().map(|vertex| vertex.color)).collect::<Vec<_>>();
         for role in [theme.text, theme.text_muted] {
             assert!(colors.contains(&[role.r, role.g, role.b, role.a]), "the explicit appearance role must reach the actual pivot paint");
@@ -575,7 +575,7 @@ fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     json!([{ "kind": "move", "to": [x, y] }, { "kind": "line", "to": [x + width, y] }, { "kind": "line", "to": [x + width, y + height] }, { "kind": "line", "to": [x, y + height] }, { "kind": "close" }])
 }
 
-pub fn covers(triangle: &[semio_framework_ui_draw_contract::VectorVertex], point: [f32; 2]) -> bool {
+pub fn covers(triangle: &[semio_ui_draw_contract::VectorVertex], point: [f32; 2]) -> bool {
     let side = |a: [f32; 2], b: [f32; 2]| (b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0]);
     let (a, b, c) = (triangle[0].position, triangle[1].position, triangle[2].position);
     let (s1, s2, s3) = (side(a, b), side(b, c), side(c, a));
@@ -599,16 +599,16 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
     ]);
     let node = canvas_scene("canvas2d-scene-path", layers.to_string());
     mutate_scene_state("canvas2d-scene-path", |state| state.viewport = Viewport { x: 100.0, y: 75.0, zoom: 2.0 });
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::builtin();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
     {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_canvas_2d(&node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
-    let triangles = |color: [f64; 4]| -> Vec<(usize, Vec<semio_framework_ui_draw_contract::VectorVertex>)> {
+    let triangles = |color: [f64; 4]| -> Vec<(usize, Vec<semio_ui_draw_contract::VectorVertex>)> {
         let color = color.map(|channel| channel as f32);
         draw.layers.iter().enumerate().flat_map(|(index, layer)| layer.vector_vertices.chunks(3).filter(move |triangle| triangle[0].color == color).map(move |triangle| (index, triangle.to_vec()))).collect()
     };
@@ -616,7 +616,7 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
     assert!(!triangles(fill).iter().any(|(_, triangle)| covers(triangle, [30.0, 30.0])), "nothing of the frame paints outside it");
     assert!(!triangles(stroke).is_empty(), "the frame's stroke reaches the vector paint");
     let paper_layer = triangles(paper).iter().map(|(index, _)| *index).max().expect("the paper paints");
-    let glyph_layer = draw.layers.iter().position(|layer| layer.ui_instances.iter().any(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_AFFINE_GLYPH)).expect("the text run paints affine glyphs");
+    let glyph_layer = draw.layers.iter().position(|layer| layer.ui_instances.iter().any(|instance| instance.params[2] == semio_ui_draw_contract::KIND_AFFINE_GLYPH)).expect("the text run paints affine glyphs");
     assert!(glyph_layer > paper_layer, "the text run's glyphs follow the paper in a later draw layer ({glyph_layer} > {paper_layer})");
     assert!(draw.layers.iter().filter(|layer| !layer.vector_vertices.is_empty() || !layer.ui_instances.is_empty()).all(|layer| layer.scissor.is_some()), "every painted layer sits under the canvas scissor");
 }

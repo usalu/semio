@@ -14,8 +14,8 @@ pub struct SetParagraphStyle {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetParagraphStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "paragraph-style", kind: "set-paragraph-style", record: "SetParagraphStyle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set paragraph style", "Absatzformat setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set paragraph style", "Absatzformat setzen")
     }
 
     fn target(&self) -> Vec<String> {

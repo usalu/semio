@@ -3,7 +3,7 @@
 use super::*;
 
 /// 🔗️ Two registry-less store-only instances joined by an in-memory backbone on `channel`.
-pub async fn paired_apps<A: ArtifactApp + Default>(channel: &str, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (VcsArtifactApp<A>, VcsArtifactApp<A>) {
+pub async fn paired_apps<A: ArtifactApp + Default>(channel: &str, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (VcsArtifactApp<A>, VcsArtifactApp<A>) {
     let mut a = new_app::<A>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
     let mut b = new_app::<A>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel).await;
@@ -15,7 +15,7 @@ pub async fn paired_apps<A: ArtifactApp + Default>(channel: &str, mounted_policy
 /// 🧬️ Two explicitly registered fixture instances joined by an in-memory backbone, over the
 /// default (empty) member roster — the `NoMembers` spelling of
 /// [`paired_registered_apps_with_members`].
-pub async fn paired_registered_apps<A, Manifest, Build>(channel: &str, manifest: Build, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (VcsArtifactApp<A>, VcsArtifactApp<A>)
+pub async fn paired_registered_apps<A, Manifest, Build>(channel: &str, manifest: Build, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (VcsArtifactApp<A>, VcsArtifactApp<A>)
 where
     A: ArtifactApp + Default,
     Manifest: std::future::Future<Output = App>,
@@ -26,7 +26,7 @@ where
 
 /// 🧬️ [`paired_registered_apps`] over an explicit member roster `M` — see
 /// [`new_registered_app_with_members`] for why a composing app needs it.
-pub async fn paired_registered_apps_with_members<A, M, Manifest, Build>(channel: &str, manifest: Build, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (VcsArtifactApp<A, M>, VcsArtifactApp<A, M>)
+pub async fn paired_registered_apps_with_members<A, M, Manifest, Build>(channel: &str, manifest: Build, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (VcsArtifactApp<A, M>, VcsArtifactApp<A, M>)
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -52,13 +52,13 @@ where
 /// `undo did not revert to the expected snapshot` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 /// A non-retained app admits no spawn job and
 /// [`super::settle_framework_reserved_admission`] hands the same result straight back.
-pub async fn settle_history_verb<A, M>(app: &mut VcsArtifactApp<A, M>, action: &str, receiver: u32, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
+pub async fn settle_history_verb<A, M>(app: &mut VcsArtifactApp<A, M>, action: &str, receiver: u32, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
 where
     A: ArtifactApp,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let admitted = dispatch_fixture_action(app,action,None,&meta("local"),identity,cx,mounted_policy.close).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
-    semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
+    semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
     settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await.unwrap_or_else(|fault| panic!("history verb {action} publication: {fault:?}"));
 }
 
@@ -71,7 +71,7 @@ where
 /// receipt, so probing straight after it observes the pre-command document and the
 /// round trip passes or fails against the wrong state entirely. A non-retained app has
 /// nothing pending and settles in zero turns (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub async fn assert_undo_redo_round_trip<A, M, P>(app: &mut VcsArtifactApp<A, M>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, before: P, after: P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
+pub async fn assert_undo_redo_round_trip<A, M, P>(app: &mut VcsArtifactApp<A, M>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, before: P, after: P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
 where
     A::Command:semio_framework_value::ToValue,
     A: ArtifactApp,
@@ -128,14 +128,14 @@ pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default
     ];
     for action in definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)) {
         if skip.contains(&action.id.as_str())
-            || semio_framework_plugin_job::is_tool_run_action_id(&action.id)
-            || semio_framework_plugin_decl_app::is_time_travel_action_id(&action.id)
-            || action.id == semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID
+            || semio_plugin_job::is_tool_run_action_id(&action.id)
+            || semio_plugin_decl_app::is_time_travel_action_id(&action.id)
+            || action.id == semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID
             || action.id == semio_framework::HOST_EVENT_ACTION_ID
         {
             continue;
         }
-        if action.id == semio_framework_plugin_window_kits::text_kit::TextWindowKit::EDIT_ACTION_ID || matches!(action.id.as_str(), "set-cell" | "set-node") {
+        if action.id == semio_plugin_window_kits::text_kit::TextWindowKit::EDIT_ACTION_ID || matches!(action.id.as_str(), "set-cell" | "set-node") {
             continue;
         }
         let staged = declared_bridge_arguments(&action.args).unwrap_or_else(|error| panic!("action {} could not stage required arguments: {error}", action.id));
@@ -150,7 +150,7 @@ pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default
 /// it too — `probe` must agree after every exchange. The repeated two-instance-convergence test body
 /// (see `playbook-plugin`'s `two_instances_converge_disjoint_edits_via_backbone` for the original,
 /// app-specific version).
-pub async fn assert_two_instances_converge<A, P>(channel: &str, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+pub async fn assert_two_instances_converge<A, P>(channel: &str, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
     A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
@@ -172,7 +172,7 @@ where
 /// 🧬️ Registered twin of [`assert_two_instances_converge`]: every typed command is settled until its
 /// retained publication retires, so both edits really land before the replicas exchange events.
 /// The `NoMembers` spelling of [`assert_two_registered_instances_converge_with_members`].
-pub async fn assert_two_registered_instances_converge<A, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+pub async fn assert_two_registered_instances_converge<A, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
     A::Command: semio_framework_value::ToValue,
     A: ArtifactApp + Default,
@@ -185,7 +185,7 @@ where
 
 /// 🧬️ [`assert_two_registered_instances_converge`] over an explicit member roster `M` — see
 /// [`new_registered_app_with_members`] for why a composing app needs it.
-pub async fn assert_two_registered_instances_converge_with_members<A, M, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+pub async fn assert_two_registered_instances_converge_with_members<A, M, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
     A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
@@ -219,7 +219,7 @@ where
 /// 🔀️ Both replicas fold each other's events, `a` commits a checkpoint over everything it holds, `b`
 /// folds that commit — `probe` must agree after each exchange: edits and structural history alike
 /// converge by projection of the shared event log.
-async fn exchange_and_assert_convergence<A, M, P>(instance_a: &mut VcsArtifactApp<A, M>, instance_b: &mut VcsArtifactApp<A, M>, actor_a: &str, probe: &impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
+async fn exchange_and_assert_convergence<A, M, P>(instance_a: &mut VcsArtifactApp<A, M>, instance_b: &mut VcsArtifactApp<A, M>, actor_a: &str, probe: &impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
 where
     A: ArtifactApp,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -230,7 +230,7 @@ where
     assert_eq!(probe(instance_a), probe(instance_b), "both instances must converge on the same snapshot");
     let receiver = meta(actor_a).instance_id;
     let admitted = dispatch_fixture_action(instance_a,"commitCheckpoint",None,&meta(actor_a),identity,cx,mounted_policy.close).await.expect("a commits a checkpoint");
-    semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(instance_a, admitted, cx).await.expect("a's checkpoint commit settles");
+    semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(instance_a, admitted, cx).await.expect("a's checkpoint commit settles");
     settle_registered_typed_operation(instance_a, receiver, mounted_policy, identity,cx).await.expect("a's checkpoint publication settles");
     instance_b.tick_backbone(identity,cx).await.expect("b folds a's checkpoint");
     assert_eq!(probe(instance_a), probe(instance_b), "a replicated checkpoint keeps both instances converged");
@@ -248,7 +248,7 @@ where
 /// 🧪️ Applies `command` on a sender attached to a backbone, replays the resulting envelopes onto a
 /// fresh receiver twice, and asserts `probe` sees the same result both times — feeding the same operation
 /// twice must not double-apply.
-pub async fn assert_ingest_idempotent<A, P>(command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+pub async fn assert_ingest_idempotent<A, P>(command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
     A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
@@ -279,7 +279,7 @@ where
 
 /// 🧬️ Registered twin of [`assert_ingest_idempotent`] — the `NoMembers` spelling of
 /// [`assert_registered_ingest_idempotent_with_members`].
-pub async fn assert_registered_ingest_idempotent<A, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+pub async fn assert_registered_ingest_idempotent<A, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
     A::Command: semio_framework_value::ToValue,
     A: ArtifactApp + Default,
@@ -292,7 +292,7 @@ where
 
 /// 🧬️ [`assert_registered_ingest_idempotent`] over an explicit member roster `M` — see
 /// [`new_registered_app_with_members`] for why a composing app needs it.
-pub async fn assert_registered_ingest_idempotent_with_members<A, M, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
+pub async fn assert_registered_ingest_idempotent_with_members<A, M, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
     A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
@@ -338,7 +338,7 @@ where
 /// 🔀️ Dispatches `command` and asserts it produced a `TransactionProposalDraft` instead of
 /// applying anything (contract §5.1) — the guest-side half of "propose instead of apply".
 /// Returns the draft so a test can inspect `local_ops`/`foreign`.
-pub  async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin_job::TransactionProposalDraft where A::Command:semio_framework_value::ToValue {
+pub  async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> semio_plugin_job::TransactionProposalDraft where A::Command:semio_framework_value::ToValue {
     let generation_before = app.stores.store.generation();
     let edits_before = app.stores.store.envelope().vcs.edits.len();
     dispatch_original_fixture_command(app,&command,&meta("local"),mounted_policy,identity,cx).await.expect("dispatch a command whose mutations carry foreign steps");
@@ -352,7 +352,7 @@ pub  async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactA
 /// host: prepares `ops` under `txn_id`/`origin`, asserts the prepare was accepted,
 /// commits, and asserts exactly one resulting `Edit` whose `group_id` is `txn_id` and whose
 /// every `MutationMeta.origin` is `origin`. Returns the committed edit id.
-pub async fn assert_transaction_commits_as_one_edit<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, txn_id: &str, ops: Vec<A::Mutation>, origin: protocol::MutationOrigin, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> String {
+pub async fn assert_transaction_commits_as_one_edit<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, txn_id: &str, ops: Vec<A::Mutation>, origin: protocol::MutationOrigin, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> String {
     let edits_before = app.stores.store.envelope().vcs.edits.len();
     let mut prepared_ops: Vec<Vec<u8>> = Vec::with_capacity(ops.len());
     for op in ops.iter() {

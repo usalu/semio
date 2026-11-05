@@ -1,0 +1,25 @@
+dialect protocol
+protocol json.i-json.mutations
+version 1
+schema JsonIJsonMutation
+start record
+framing record
+header fixed 2
+field format u8
+field tag varint
+record set-top-level tag=1
+field payload bytes
+record upsert-member tag=2
+field payload bytes
+record remove-member tag=3
+field payload bytes
+record rename-member tag=4
+field payload bytes
+record set-safe-number tag=5
+field payload bytes
+record set-string tag=6
+field payload bytes
+record insert-array-element tag=7
+field payload bytes
+record remove-array-element tag=8
+field payload bytes

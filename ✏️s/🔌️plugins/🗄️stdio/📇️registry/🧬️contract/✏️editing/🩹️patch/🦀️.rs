@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_contract_editing::{
     array_index, decode_pointer, snapshot_from_edit_source, snapshot_schema_descriptor_for_dialect, validate_snapshot_schema_for_dialect, validate_value, values_equivalent, SnapshotEditError, SnapshotEditEvent, SNAPSHOT_EDIT_MAXIMUM_VALUE_NODES,
     SNAPSHOT_SCHEMA_VALIDATORS,
 };
-use semio_framework_os_kernel as kernel;
+use semio_os_kernel as kernel;
 use semio_framework_value_derive as value_derive;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
@@ -17,7 +17,7 @@ use kernel::OpBinary;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueEdit;
 use semio_framework_value::ValueShape;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 

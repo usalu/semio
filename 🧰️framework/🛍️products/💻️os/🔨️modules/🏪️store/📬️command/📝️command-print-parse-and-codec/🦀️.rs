@@ -257,7 +257,7 @@ pub fn write_command_transaction(out: &mut Vec<u8>, transaction: Option<&protoco
     }
 }
 
-pub fn read_command_transaction(reader: &mut semio_framework_os_pack::ByteReader<'_>, presence: u8) -> Result<Option<protocol::TransactionRef>, protocol::ProtocolError> {
+pub fn read_command_transaction(reader: &mut semio_os_pack::ByteReader<'_>, presence: u8) -> Result<Option<protocol::TransactionRef>, protocol::ProtocolError> {
     if presence & !0b10 != 0 {
         return Err(protocol::ProtocolError::Malformed { what: "command presence", offset: 0, detail: format!("presence bits {presence:#04b} are unassigned beyond the 0b10 transaction bit") });
     }
@@ -274,21 +274,21 @@ pub fn read_command_transaction(reader: &mut semio_framework_os_pack::ByteReader
 pub const COMMAND_BINARY_FORMAT: u8 = 1;
 
 pub fn write_command_str(out: &mut Vec<u8>, s: &str) {
-    semio_framework_os_pack::write_varint_u64(out, s.len() as u64);
+    semio_os_pack::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
 
-pub fn read_command_str(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<String, protocol::ProtocolError> {
+pub fn read_command_str(reader: &mut semio_os_pack::ByteReader<'_>) -> Result<String, protocol::ProtocolError> {
     let len = reader.read_varint_u64()?;
     let bytes = reader.read_bytes(len as usize)?;
     std::str::from_utf8(bytes).map(str::to_string).map_err(|error| protocol::ProtocolError::Malformed { what: "command string", offset: 0, detail: error.to_string() })
 }
 
 pub fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, mutations: &[Op]) -> Result<(), protocol::ProtocolError> {
-    semio_framework_os_pack::write_varint_u64(out, mutations.len() as u64);
+    semio_os_pack::write_varint_u64(out, mutations.len() as u64);
     for mutation in mutations {
         let bytes = mutation.encode_op()?;
-        semio_framework_os_pack::write_varint_u64(out, bytes.len() as u64);
+        semio_os_pack::write_varint_u64(out, bytes.len() as u64);
         out.extend_from_slice(&bytes);
     }
     Ok(())
@@ -296,7 +296,7 @@ pub fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, mutations: &[Op]) -> R
 
 /// 🪣️ Reads a command's operation list all-or-nothing: on any failure every operation decoded so far retires through its
 /// technology's cold disposal, so a refused list never drops a live operation.
-pub fn read_command_ops<P, Op: OpBinary + Mutation<P>>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<Vec<Op>, CommandDecodeError> {
+pub fn read_command_ops<P, Op: OpBinary + Mutation<P>>(reader: &mut semio_os_pack::ByteReader<'_>) -> Result<Vec<Op>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
     let mut mutations = Vec::with_capacity(count.min(reader.remaining() as u64) as usize);
     for index in 0..count as usize {
@@ -312,7 +312,7 @@ pub fn read_command_ops<P, Op: OpBinary + Mutation<P>>(reader: &mut semio_framew
 }
 
 /// 🔹️ One length-prefixed operation of a command.
-pub fn read_command_op<Op: OpBinary>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<Op, protocol::ProtocolError> {
+pub fn read_command_op<Op: OpBinary>(reader: &mut semio_os_pack::ByteReader<'_>) -> Result<Op, protocol::ProtocolError> {
     let len = reader.read_varint_u64()?;
     Op::decode_op(reader.read_bytes(len as usize)?)
 }

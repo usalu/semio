@@ -106,7 +106,7 @@ export function wgpuBrowserSelectionPlugin(variant: string | undefined): OwnedBu
 
 export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): OwnedBuildConfig {
   if (!["prototype", "release"].includes(options.profile)) throw new Error("Select a WGPU browser profile");
-  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu-component.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu-component_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.libraryRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(options.workspace, "products"), options.profile).fonts, FONT_ASSET]] as const) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
+  for (const [root, file] of [[options.compilerRoot, "semio-renderer-wgpu-component.js"], [options.compilerRoot, "semio-renderer-wgpu-component_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.libraryRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(options.workspace, "products"), options.profile).fonts, FONT_ASSET]] as const) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
   const mounts = wgpuBrowserMounts(options);
   return {
     root: options.root,

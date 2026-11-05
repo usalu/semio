@@ -1,6 +1,6 @@
     /// 👪️ Child genesis, wire and group owner: the revision change between preparation turns, private child genesis, nested owner retirement and the one retained async group owner.
 
-    use semio_framework_plugin_decl_emission::ChildEmit;
+    use semio_plugin_decl_emission::ChildEmit;
 #[test]
     fn document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root() {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();

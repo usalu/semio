@@ -1,11 +1,11 @@
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 #[allow(unused_imports)]
 use crate::op::NoteMutation;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::{Emit, Fault};
+use semio_plugin::{Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::note::commands::set_active_example::*;
@@ -17,15 +17,15 @@ use semio_framework::kernel::Effect;
 /// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
 /// itself, mirroring `fem2d`'s `set_active_example` test of the same `Effect::LoadDocument`
 /// reroute (whole-document replace is banned from the `Mutation` enum outright).
-fn empty_view() -> (NoteSnapshot, semio_framework_plugin::HistoryView) {
-    (empty_note_snapshot(), semio_framework_plugin::HistoryView::empty())
+fn empty_view() -> (NoteSnapshot, semio_plugin::HistoryView) {
+    (empty_note_snapshot(), semio_plugin::HistoryView::empty())
 }
 
 #[semio_framework_async_macros::async_test]
 async fn load_document_json_replaces_document() {
     let (snapshot, history) = empty_view();
     let doc = ArtifactView::new(&snapshot, &history);
-    let cfg_snapshot = semio_framework_plugin::NoConfig::default();
+    let cfg_snapshot = semio_plugin::NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("active-example-test", 0), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let emit = load_document_json::handle(&load_document_json::LoadDocumentJson { json: crate::standards::v1::subsets::any::io::text::snapshot::semio_example_json() }, &doc, &cfg, &mut ctx).expect("handle");
@@ -41,7 +41,7 @@ async fn load_document_json_replaces_document() {
 async fn set_active_example_loads_the_registered_demo_and_refuses_unknown_ids() {
     let (snapshot, history) = empty_view();
     let doc = ArtifactView::new(&snapshot, &history);
-    let cfg_snapshot = semio_framework_plugin::NoConfig::default();
+    let cfg_snapshot = semio_plugin::NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("active-example-test", 0), view_state: None, window_transient: Default::default(), window_transient_owner: None };
 

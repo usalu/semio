@@ -4,7 +4,7 @@
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::editor_vocabulary::FLOW_PLAY_APP_ID;
-use semio_framework_plugin::{ActionDescriptor, WindowMeasure};
+use semio_plugin::{ActionDescriptor, WindowMeasure};
 
 //#region 🔖️Measure
 /// 🎯️ An `ActionDescriptor` addressed at the flow play app for this measure's distance slider —

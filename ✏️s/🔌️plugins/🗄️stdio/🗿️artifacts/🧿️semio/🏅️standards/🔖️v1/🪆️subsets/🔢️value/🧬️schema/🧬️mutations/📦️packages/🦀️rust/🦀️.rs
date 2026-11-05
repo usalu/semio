@@ -1,9 +1,9 @@
 //! 🧬️ The semio value mutation vocabulary: every mutation with its diff and inverse, their text and binary codecs, and the member store owner.
 
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
 #[path = "."]

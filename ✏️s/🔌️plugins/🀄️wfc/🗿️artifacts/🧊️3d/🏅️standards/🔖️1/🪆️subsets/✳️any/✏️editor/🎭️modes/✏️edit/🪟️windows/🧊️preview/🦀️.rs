@@ -22,20 +22,20 @@
 
 use crate::editor::wfc3d::modes::edit::tools::fill::{self, Wfc3dFillTickPayload};
 use crate::editor::wfc3d::transient::{assigned_tile, Wfc3dTransient};
-use semio_framework_plugin::ToolRunView;
+use semio_plugin::ToolRunView;
 use crate::schema::snapshot::{Slot3d, Tile, TileMedia3d, Wfc3dSnapshot};
-use semio_framework_plugin::scene_surface;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::World3dScene;
-use semio_framework_plugin::world3d_camera_projection_json;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::WorldProjectionConfig;
-use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use semio_plugin::scene_surface;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_plugin::World3dScene;
+use semio_plugin::world3d_camera_projection_json;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::WorldProjectionConfig;
+use semio_ui_contract::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -263,7 +263,7 @@ pub fn camera_json(document: &Wfc3dSnapshot, zoom: f64) -> String {
     let (target, span) = framing_bounds(document);
     let projection = WorldProjectionConfig::default();
     let distance = (span * 2.2).max(1.4);
-    let (position, up) = semio_framework_plugin::world3d_projection_pose(&projection, target, distance);
+    let (position, up) = semio_plugin::world3d_projection_pose(&projection, target, distance);
     world3d_camera_projection_json(position, target, Some(up), if zoom > 0.0 { zoom } else { 1.0 }, &projection)
 }
 //#endregion 🔖️Camera

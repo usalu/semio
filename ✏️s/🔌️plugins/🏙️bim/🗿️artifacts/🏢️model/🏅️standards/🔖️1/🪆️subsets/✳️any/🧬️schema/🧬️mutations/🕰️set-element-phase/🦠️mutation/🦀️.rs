@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "element", kind: "set-element-phase", record: "SetElementPhase" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set element \"{}\" to phase {:?}", self.id, self.phase), &format!("Element \"{}\" in Phase {:?} setzen", self.id, self.phase))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set element \"{}\" to phase {:?}", self.id, self.phase), &format!("Element \"{}\" in Phase {:?} setzen", self.id, self.phase))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

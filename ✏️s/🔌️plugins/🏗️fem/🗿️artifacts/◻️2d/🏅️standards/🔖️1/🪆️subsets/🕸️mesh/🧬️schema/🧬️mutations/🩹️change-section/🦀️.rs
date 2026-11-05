@@ -21,8 +21,8 @@ pub struct ChangeSection {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeSection where Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeSection> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "section", kind: "change-section", record: "ChangedSection" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change section \"{}\"", self.id), &format!("Querschnitt \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change section \"{}\"", self.id), &format!("Querschnitt \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

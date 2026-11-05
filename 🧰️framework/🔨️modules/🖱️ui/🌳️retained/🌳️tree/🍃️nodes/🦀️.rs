@@ -3,8 +3,8 @@
 //! with parent/first-child/last-child/sibling links and dirty-flag propagation. The engine facade
 //! (a later milestone) holds `HashMap<window_id, UiTree>`.
 
-use semio_framework_ui_arena::{Arena, NodeId};
-use semio_framework_ui_declaration::ui::{UiNode, UiTreeItemNode, UiTreeSectionNode};
+use semio_ui_arena::{Arena, NodeId};
+use semio_ui_declaration::ui::{UiNode, UiTreeItemNode, UiTreeSectionNode};
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiNodeTable, UiRevision, UI_DOCUMENT_NODES};
 
 #[path = "🔖️retained-document-tree/🦀️.rs"]

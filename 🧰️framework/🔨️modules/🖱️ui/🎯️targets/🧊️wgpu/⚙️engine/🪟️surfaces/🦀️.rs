@@ -1,26 +1,26 @@
 //! 🪟️ Engine surfaces: windows, tooltips, retained paint walk, surface registry, document ingress and layout worker admission behind the `Ui` facade.
 
 use std::collections::VecDeque;
-use semio_framework_ui_arena::NodeId;
-use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
-use semio_framework_ui_declaration::ui::UiNode;
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_wgpu_events::{resolve_overlay_placement_side, CaretSource, EventRouter, OverlayAnchor, OverlayKind, TooltipStep};
-use semio_framework_ui_wgpu_layout::flex::LayoutJobStage;
-use semio_framework_ui_wgpu_mounted_layout::hit::{retained_hit_registration, retained_tree_chevron_registration, retained_tree_drag_handle_registration, RetainedHitRegistration};
-use semio_framework_ui_wgpu_input::HitKind;
-use semio_framework_ui_wgpu_layout::layout::TreeRowMetrics;
-use semio_framework_ui_wgpu_mounted_layout::{MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
-use semio_framework_ui_wgpu_paint::{paint_tooltip, tooltip_surface_size, RetainedInteractiveSyncCursor, RetainedNodePaintCursor};
-use semio_framework_ui_retained_tree::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileFault, UiRetiredComponentScene};
-use semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_retained_tree::tree::{NodeFlags, UiDocumentTree, UiDocumentTreeFault, UiTree};
+use semio_ui_arena::NodeId;
+use semio_ui_wgpu_layout::chrome::UiDriverDrag;
+use semio_ui_declaration::ui::UiNode;
+use semio_ui_draw_contract::DrawList;
+use semio_ui_wgpu_events::{resolve_overlay_placement_side, CaretSource, EventRouter, OverlayAnchor, OverlayKind, TooltipStep};
+use semio_ui_wgpu_layout::flex::LayoutJobStage;
+use semio_ui_wgpu_mounted_layout::hit::{retained_hit_registration, retained_tree_chevron_registration, retained_tree_drag_handle_registration, RetainedHitRegistration};
+use semio_ui_wgpu_input::HitKind;
+use semio_ui_wgpu_layout::layout::TreeRowMetrics;
+use semio_ui_wgpu_mounted_layout::{MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
+use semio_ui_wgpu_paint::{paint_tooltip, tooltip_surface_size, RetainedInteractiveSyncCursor, RetainedNodePaintCursor};
+use semio_ui_retained_tree::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileFault, UiRetiredComponentScene};
+use semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor;
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::Theme;
+use semio_ui_retained_tree::tree::{NodeFlags, UiDocumentTree, UiDocumentTreeFault, UiTree};
 use semio_framework_job::StepContext;
 use ui_contract::{SurfaceId, UiFixedList, UiNodeId, UI_DOCUMENT_NODES};
 use semio_framework_job_worker_authority::WorkerJobCloseStep;
-use semio_framework_ui_surface_identity::{UiSurfaceToken, UI_LAYOUT_SURFACE_SLOTS};
+use semio_ui_surface_identity::{UiSurfaceToken, UI_LAYOUT_SURFACE_SLOTS};
 
 #[path = "📍️window-and-tooltips/🦀️.rs"]
 mod window_and_tooltips;

@@ -4,19 +4,19 @@ use crate::FlowMutation;
 #[allow(unused_imports)]
 use flow::FlowEvalSession;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfig;
+use semio_plugin::NoConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfigMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::set_active_example::*;
 use crate::editor::flow::unit_tests::context::{dispatch, flow_app};
 use crate::editor::flow::FlowCommand;
 use crate::examples::demo;
-use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
-use semio_framework_plugin::Effect;
+use semio_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+use semio_plugin::Effect;
 use pack::snapshot::ArtifactPack;
 
 fn loaded<'a>(effects: impl Iterator<Item = &'a Effect>) -> Vec<FlowSnapshot> {
@@ -30,7 +30,7 @@ async fn set_active_example_demo_requests_one_load_of_the_published_demo_graph()
     let mut app = flow_app().await;
     let expected = demo::snapshot_from_text(demo::PRIMARY_TEXT).expect("demo parses");
     let result = dispatch(&mut app, FlowCommand::SetActiveExample(SetActiveExample { example_id: demo::ID.into() })).await;
-    let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained Flow command publication");
+    let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained Flow command publication");
     let documents = loaded(result.requested_effects.iter().chain(receipt.effects.iter()));
     assert_eq!(documents.len(), 1, "exactly one load-document effect");
     assert_eq!(documents[0].to_host_snapshot().widgets, expected.to_host_snapshot().widgets);
@@ -39,7 +39,7 @@ async fn set_active_example_demo_requests_one_load_of_the_published_demo_graph()
 /// 📚️ LAW: every example the editor ships loads through its own `setActiveExample` route as one load-document effect and no mutation row.
 #[test]
 fn every_shipped_example_loads_through_set_active_example() {
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     let examples = crate::editor::flow::FlowPlayApp::examples();
     assert!(!examples.is_empty(), "flow ships at least one example");
     for example in &examples {

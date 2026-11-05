@@ -7,7 +7,7 @@
   "tables": [
     {
       "guard": "ui::wgpu_engine",
-      "crate": "semio-framework-ui",
+      "crate": "semio-ui",
       "owner": "wgpu::engine::UiSurfaceRegistry",
       "capacityConstant": "UI_LAYOUT_SURFACE_SLOTS",
       "capacity": 64,

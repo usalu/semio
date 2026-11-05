@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "constant-schedule", kind: "change-constant-schedule-value", record: "ChangedConstantScheduleValue" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Constant Schedule Value of constant schedule {}", self.id.0), &format!("Wert von konstantem Zeitplan {} ändern", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Constant Schedule Value of constant schedule {}", self.id.0), &format!("Wert von konstantem Zeitplan {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

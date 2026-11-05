@@ -1,8 +1,8 @@
 //! 🎨️ Dirty surface render and reconcile phases of the reactor turn: renders every dirty surface under its reconcile reservation and drives the reconcile opportunities of the turn. See [`super`].
 
 use super::*;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 
 /// 🎨️ Renders each dirty surface of the turn under a reserved reconcile grant, defers a surface that was refused its reservation and records presence updates.
 ///
@@ -40,15 +40,15 @@ pub(super) async fn render_dirty_surfaces<PA: PluginApp>(runtime: &PluginRuntime
             continue;
         }
         let surface_key = surface.as_ref().to_owned();
-        let _ = semio_framework_plugin_window_kits_rich::tree_kit::take_arena_unbuilt_rows();
+        let _ = semio_plugin_window_kits_rich::tree_kit::take_arena_unbuilt_rows();
         let mounted = match native_close_key(runtime, instance) {
             Ok(key) => PATCHES.with(|patches| patches.reserve_mounted(surface, key)),
             Err(_) => Err(surface),
         };
         match mounted {
-            Ok(mut grant) => match semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(runtime, instance, &surface_key,&mut |source,cx|grant.commit_source(source,cx),cx).await {
+            Ok(mut grant) => match semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(runtime, instance, &surface_key,&mut |source,cx|grant.commit_source(source,cx),cx).await {
                 Ok(Some(presence)) => {
-                    let unbuilt = semio_framework_plugin_window_kits_rich::tree_kit::take_arena_unbuilt_rows();
+                    let unbuilt = semio_plugin_window_kits_rich::tree_kit::take_arena_unbuilt_rows();
                     ARENA_STARVED.with(|starved| starved.borrow_mut().note(instance, surface_key.as_str(), unbuilt));
                     for update in presence {
                         PRESENCE.with(|hub| {

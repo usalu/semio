@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../.."
-name = "semio-framework-ui-action"
+name = "semio-ui-action"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -21,8 +21,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-ui-layout = { path = "../../../📜️declaration/📐️layout/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-layout = { path = "../../../📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

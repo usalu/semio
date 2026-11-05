@@ -1,10 +1,10 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 🧩️ Semantic studio verification owner. */
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { activate, boot, clickRowAction, dialog, faultsSince, openSessions, pageWindowedTables, signIn, submitDialog, waitNamedRow, type Human, type Session } from "../👥️two-human/🔑️sessions/🟦️.ts";
 import { settleHome } from "../👥️two-human/🏠️space-creation-and-edits/🟦️.ts";
@@ -235,7 +235,7 @@ async function homeRowGone(page: Page, name: string, deadlineMs: number): Promis
 
 /** 🏠️ Runs the Home journey in one headless browser, closed at the end; the report is flushed after every step and the
  * signal ends the run before its next step. */
-export async function runHomeE2e(options: HomeE2eOptions): Promise<HomeE2eReport> {
+export async function runHomeE2e(repoRoot: string, options: HomeE2eOptions): Promise<HomeE2eReport> {
   const outDir = join(options.outDir, options.tag);
   mkdirSync(outDir, { recursive: true });
   const labels = HOME_E2E_LABELS[options.locale];
@@ -248,7 +248,7 @@ export async function runHomeE2e(options: HomeE2eOptions): Promise<HomeE2eReport
   const keptName = `Home E2E kept ${stamp}`;
   const keptFile = join(outDir, "kept.os");
   writeFileSync(keptFile, homeE2eStudioText(keptName));
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
   const [session] = (await openSessions(browser, [options.baseUrl], [options.human ?? { label: "local", email: "", password: "" }], options.locale === "de" ? "de-DE" : "en-US")) as [Session];
@@ -403,7 +403,7 @@ export async function runHomeE2eCli(repoRoot: string, defaultOutDir: string, seg
     mkdirSync(process.env.S_DATA_DIR, { recursive: true });
   }
   await withAcceptanceRecord(repoRoot, "home-e2e", () => withDevServe(repoRoot, "home-e2e", { serveUrl, ...(hubUrl === null ? {} : { hubUrl }), locale, signal: controller.signal, startedAt }, async (baseUrl) => {
-    const report = await runHomeE2e({ baseUrl, hubUrl, human: hubUrl === null ? null : { label: "user", email: email!, password: password! }, locale, tag, outDir, signal: controller.signal });
+    const report = await runHomeE2e(repoRoot, { baseUrl, hubUrl, human: hubUrl === null ? null : { label: "user", email: email!, password: password! }, locale, tag, outDir, signal: controller.signal });
     const passed = report.steps.filter((row) => row.pass).length;
     const total = report.steps.length;
     const failing = report.steps.filter((row) => !row.pass).map((row) => row.step);

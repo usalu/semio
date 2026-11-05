@@ -18,8 +18,8 @@ pub struct ChangeMemberBridgeDeltaSigmaS {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberBridgeDeltaSigmaS where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_member_bridge_delta_sigma_s::ChangeMemberBridgeDeltaSigmaS> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-bridge-delta-sigma-s", kind: "change-member-bridge-delta-sigma-s", record: "ChangedChangeMemberBridgeDeltaSigmaS" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Steel stress range Δσ_s (bridge) of member {}", self.member_id), &format!("Spannungsschwingbreite Δσ_s (Brücke) von Bauteil {} ändern", self.member_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Steel stress range Δσ_s (bridge) of member {}", self.member_id), &format!("Spannungsschwingbreite Δσ_s (Brücke) von Bauteil {} ändern", self.member_id))
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }

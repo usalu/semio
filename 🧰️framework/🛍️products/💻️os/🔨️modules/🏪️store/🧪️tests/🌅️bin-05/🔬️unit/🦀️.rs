@@ -16,7 +16,7 @@ macro_rules! with_fixture_identity {
             assert!(progress.owned_bytes <= FIXTURE_IDENTITY_CEILING);
             true
         };
-        let mut $identity = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(FIXTURE_IDENTITY_CEILING, &mut observer).expect("declared fixture identity authority");
+        let mut $identity = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(FIXTURE_IDENTITY_CEILING, &mut observer).expect("declared fixture identity authority");
         let result = $call;
         drop($identity.pause().expect("original cumulative fixture identity receipt"));
         result

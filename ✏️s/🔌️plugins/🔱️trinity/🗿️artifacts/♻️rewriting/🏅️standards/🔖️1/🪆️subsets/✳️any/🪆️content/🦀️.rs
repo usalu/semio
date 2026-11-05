@@ -3,8 +3,8 @@
 //! `s.stdio.semio@v1/graph` vocabulary — no parent leaf reads the child.
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_diagnostic::Severity;
-use semio_framework_plugin::app::{ChildContentView,ChildEmitPreparation};
-use semio_framework_plugin::{Emit, Fault};
+use semio_plugin::app::{ChildContentView,ChildEmitPreparation};
+use semio_plugin::{Emit, Fault};
 use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 use semio_s_artifact_trinity_jack_semio_content::SemioJackContentOwner;
@@ -60,8 +60,8 @@ pub fn admit(work: &mut SemioGraphSnapshot, leaf: &SemioGraphMutation) -> bool {
 }
 
 /// 📢️ The localized notices of rewriting's own refusal codes (design §20.12).
-pub fn rewriting_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn rewriting_fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+    use semio_ui_locale::LocalizedLabel;
     static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
         [
             ("trinity.rewriting.child-refused", LocalizedLabel::native("The example graph of this rule is not loaded as a Semio graph.", "Der Beispielgraph dieser Regel ist nicht als Semio-Graph geladen.")),

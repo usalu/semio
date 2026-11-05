@@ -1,11 +1,11 @@
 use semio_framework::{ActionKind, FaultFrom};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_plugin_decl_views::history_view::CommandLogEntry;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_plugin_decl_views::history_view::CommandLogEntry;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_plugin_decl_emission::Emit;
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, SpaceMember};
 use crate::mounted_child_group_receipt_group::MountedGroupPreparedChildEdits;

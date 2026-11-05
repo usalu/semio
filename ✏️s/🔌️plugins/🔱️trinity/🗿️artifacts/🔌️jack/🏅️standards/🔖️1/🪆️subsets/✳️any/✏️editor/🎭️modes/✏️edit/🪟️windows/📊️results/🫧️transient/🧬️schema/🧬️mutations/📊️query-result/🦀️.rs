@@ -16,8 +16,8 @@ pub struct ReplaceQueryResult {
 impl protocol::MutationKind<JackResultsWindowTransient, JackResultsWindowTransientMutation> for ReplaceQueryResult {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "results-window-query-output", kind: "replace-query-result", record: "ReplaceQueryResult" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace Results Window Query Output", "Abfrageausgabe des Ergebnisfensters ersetzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Replace Results Window Query Output", "Abfrageausgabe des Ergebnisfensters ersetzen")
     }
     fn target(&self) -> Vec<String> { vec!["query_execution_id".into(), "result".into(), "query_error".into()] }
 }

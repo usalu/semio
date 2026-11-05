@@ -50,7 +50,7 @@ pub fn expand_diff_text(input: TokenStream) -> TokenStream {
 
 #[doc(hidden)] pub fn diff_text_tokens(name: &Type) -> proc_macro2::TokenStream {
     quote! {
-        impl ::semio_framework_os_kernel::DiffText for #name {
+        impl ::semio_os_kernel::DiffText for #name {
             fn print_diff(&self) -> String {
                 ::semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), ::semio_framework_dsl_record::JoinMode::Inline)
             }
@@ -70,13 +70,13 @@ pub fn expand_diff_binary(input: TokenStream) -> TokenStream {
 
 #[doc(hidden)] pub fn diff_binary_tokens(name: &Type) -> proc_macro2::TokenStream {
     quote! {
-        impl ::semio_framework_os_kernel::DiffBinary for #name {
-            fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
-                ::semio_framework_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), &::semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)
+        impl ::semio_os_kernel::DiffBinary for #name {
+            fn encode_diff(&self) -> Result<Vec<u8>, ::semio_os_kernel::ProtocolError> {
+                ::semio_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), &::semio_os_kernel::os_store::PackEncodeOptions::default()).map_err(::semio_os_kernel::ProtocolError::from)
             }
-            fn decode_diff(bytes: &[u8]) -> Result<Self, ::semio_framework_os_kernel::ProtocolError> {
-                let (record, _report) = ::semio_framework_os_kernel::os_pack::pack_rt::decode_document(bytes, &Self::__dsl_spec(), &::semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)?;
-                Self::__dsl_from_record(&record).map_err(|error| ::semio_framework_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
+            fn decode_diff(bytes: &[u8]) -> Result<Self, ::semio_os_kernel::ProtocolError> {
+                let (record, _report) = ::semio_os_kernel::os_pack::pack_rt::decode_document(bytes, &Self::__dsl_spec(), &::semio_os_kernel::os_store::PackDecodeOptions::default()).map_err(::semio_os_kernel::ProtocolError::from)?;
+                Self::__dsl_from_record(&record).map_err(|error| ::semio_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
             }
         }
     }
@@ -133,15 +133,15 @@ pub fn expand_derive_composite_mutation(input: TokenStream) -> TokenStream {
     };
 
         let cold_reference = attrs.reference.map(|reference_ty| quote! {
-        impl ::semio_framework_os_kernel::ColdMutationKind<#reference_ty,#op_ty> for #name {
-            fn diff(&self,base:&#reference_ty)->::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::ColdMutation<#reference_ty>>::ReferenceDiff>{
-                ::semio_framework_os_kernel::os_spr::fold::fold_plan_diff(self,base)
+        impl ::semio_os_kernel::ColdMutationKind<#reference_ty,#op_ty> for #name {
+            fn diff(&self,base:&#reference_ty)->::semio_os_kernel::MutationOutcome<<#op_ty as ::semio_os_kernel::ColdMutation<#reference_ty>>::ReferenceDiff>{
+                ::semio_os_kernel::os_spr::fold::fold_plan_diff(self,base)
             }
             fn inverse(&self,base:&#reference_ty)->Result<Vec<#op_ty>,::semio_framework_value::ValueError>{
-                ::semio_framework_os_kernel::os_spr::fold::fold_plan_inverse::<#snapshot_ty,#reference_ty,#op_ty,Self>(self,base)
+                ::semio_os_kernel::os_spr::fold::fold_plan_inverse::<#snapshot_ty,#reference_ty,#op_ty,Self>(self,base)
             }
-            fn foreign_step_source<'a>(&'a self,base:&'a #reference_ty,index:usize)->Result<Option<::semio_framework_os_kernel::ForeignStepSource<'a>>,::semio_framework_value::ValueError>{
-                ::semio_framework_os_kernel::ColdCompositeMutationKind::foreign_step_source(self,base,index)
+            fn foreign_step_source<'a>(&'a self,base:&'a #reference_ty,index:usize)->Result<Option<::semio_os_kernel::ForeignStepSource<'a>>,::semio_framework_value::ValueError>{
+                ::semio_os_kernel::ColdCompositeMutationKind::foreign_step_source(self,base,index)
             }
         }
     });
@@ -150,26 +150,26 @@ let expected_kebab = to_kebab(&name.to_string());
     let assert_verb_message = format!("#[derive(CompositeMutation)]: {}'s CompositeMutationKind::SEMANTICS.verb must be one of protocol::APPROVED_VERBS", name);
 
     let expanded = quote! {
-        const _: () = assert!(::semio_framework_os_kernel::str_eq(<#name as ::semio_framework_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS.kind, #expected_kebab), #assert_kind_message);
-        const _: () = assert!(::semio_framework_os_kernel::is_approved_verb(<#name as ::semio_framework_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS.verb), #assert_verb_message);
+        const _: () = assert!(::semio_os_kernel::str_eq(<#name as ::semio_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS.kind, #expected_kebab), #assert_kind_message);
+        const _: () = assert!(::semio_os_kernel::is_approved_verb(<#name as ::semio_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS.verb), #assert_verb_message);
 
-        impl ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #op_ty> for #name {
-            const SEMANTICS: ::semio_framework_os_kernel::SemanticDescriptor = <#name as ::semio_framework_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
+        impl ::semio_os_kernel::MutationKind<#snapshot_ty, #op_ty> for #name {
+            const SEMANTICS: ::semio_os_kernel::SemanticDescriptor = <#name as ::semio_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
             
-            fn label(&self) -> ::semio_framework_ui_locale::LocalizedLabel {
-                ::semio_framework_os_kernel::CompositeMutationKind::label(self)
+            fn label(&self) -> ::semio_ui_locale::LocalizedLabel {
+                ::semio_os_kernel::CompositeMutationKind::label(self)
             }
-            fn timestamp(&self) -> Option<::semio_framework_os_kernel::HybridLogicalTimestamp> {
-                ::semio_framework_os_kernel::CompositeMutationKind::timestamp(self)
+            fn timestamp(&self) -> Option<::semio_os_kernel::HybridLogicalTimestamp> {
+                ::semio_os_kernel::CompositeMutationKind::timestamp(self)
             }
             fn target(&self) -> Vec<String> {
-                ::semio_framework_os_kernel::CompositeMutationKind::target(self)
+                ::semio_os_kernel::CompositeMutationKind::target(self)
             }
             fn may_emit_foreign_steps(&self) -> bool {
-                ::semio_framework_os_kernel::CompositeMutationKind::may_emit_foreign_steps(self)
+                ::semio_os_kernel::CompositeMutationKind::may_emit_foreign_steps(self)
             }
-            fn foreign_step_source<'a>(&'a self, base: &'a #snapshot_ty, index: usize) -> Result<Option<::semio_framework_os_kernel::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
-                ::semio_framework_os_kernel::CompositeMutationKind::foreign_step_source(self, base, index)
+            fn foreign_step_source<'a>(&'a self, base: &'a #snapshot_ty, index: usize) -> Result<Option<::semio_os_kernel::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
+                ::semio_os_kernel::CompositeMutationKind::foreign_step_source(self, base, index)
             }
         }
             #cold_reference

@@ -3,10 +3,10 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use {semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dSession, semio_s_artifact_puzzle_3d_editor_session::push_precompute_scene, semio_s_artifact_puzzle_3d_editor_session::scene_config, semio_s_artifact_puzzle_3d_editor_session::seed_one_precompute_mesh_fallback};
@@ -21,13 +21,13 @@ use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{ArtifactInstanceOperationOwnerHandle, EditorApp};
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID;
-use semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
+use semio_plugin::kernel::Effect;
+use semio_plugin::{ArtifactInstanceOperationOwnerHandle, EditorApp};
+use semio_plugin::Emit;
+use semio_plugin::SET_ACTIVE_TOOL_ACTION_ID;
+use semio_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
 use {semio_framework_pack_json::to_string, semio_framework_pack_json::Value};
-use semio_framework_plugin::app::EphemeralEmit;
+use semio_plugin::app::EphemeralEmit;
 use semio_s_artifact_puzzle_3d_editor_snapshot as snapshot;
 
 /// 📬️ Persisted and ephemeral effects produced by one Puzzle 3D action.
@@ -70,7 +70,7 @@ pub struct Puzzle3dActionPrologue {
 impl Puzzle3dActionPrologue {
     /// 🧾️ Half one: the transient scene, straight off the snapshot's typed authority, plus the typed base every
     /// concrete mutation of the action is built against.
-    pub fn scene_step(&mut self, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
+    pub fn scene_step(&mut self, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
         self.base = Some(snapshot.typed_arc());
         self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
@@ -80,7 +80,7 @@ impl Puzzle3dActionPrologue {
     /// actions never touch this half at all. RESUMABLE — exactly one owed collision-mesh fallback per
     /// call, then the engine scene build, then its push; answers whether another call is still owed, so a
     /// staged work spends one bounded turn on each instead of 15 ms on all of them at once.
-    pub fn sync_step(&mut self, session: &Puzzle3dSession, action: &str, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> bool {
+    pub fn sync_step(&mut self, session: &Puzzle3dSession, action: &str, config: &Puzzle3dRuntime, view_state: Option<&semio_plugin::ViewModel>, window_id: Option<&str>) -> bool {
         if !puzzle3d_action_uses_precompute(action) {
             return false;
         }
@@ -122,12 +122,12 @@ impl Puzzle3dActionPrologue {
         &mut self,
         session: &Puzzle3dSession,
         instance_owner: Option<&ArtifactInstanceOperationOwnerHandle>,
-        tool_run: Option<&semio_framework_plugin::ToolRunView>,
+        tool_run: Option<&semio_plugin::ToolRunView>,
         authoring_seed: &str,
         command: &Puzzle3dCommand,
         window_id: Option<&str>,
         config: &Puzzle3dRuntime,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         interaction: &Puzzle3dInteractionSnapshot,
     ) -> Puzzle3dActionEmission<A> {
         let action = command.action_id();
@@ -195,7 +195,7 @@ impl Puzzle3dActionPrologue {
 
     /// 🔄️ Re-materializes the carried scene's view-local halves against the configuration of the turn
     /// that is about to read them.
-    fn refreshed(&mut self, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> Option<&Puzzle3dScene> {
+    fn refreshed(&mut self, config: &Puzzle3dRuntime, view_state: Option<&semio_plugin::ViewModel>, window_id: Option<&str>) -> Option<&Puzzle3dScene> {
         let scene = self.scene.as_mut()?;
         scene.runtime = config.clone();
         scene.active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
@@ -223,11 +223,11 @@ impl Puzzle3dActionPrologue {
 /// for a file.
 pub fn puzzle3d_shell_only_emit<A: Puzzle3dEditor>(action: &str) -> Option<Puzzle3dActionEmission<A>> {
     match action {
-        "openAddObjectDialog" => Some((Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }), EphemeralEmit::default())),
+        "openAddObjectDialog" => Some((Emit::effect(Effect::OpenDialog { req: semio_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }), EphemeralEmit::default())),
         "openImportSnapshot" => Some((
             Emit {
                 effects: vec![Effect::RequestFileOpen {
-                    req: semio_framework_plugin::RequestId(121),
+                    req: semio_plugin::RequestId(121),
                     accept: "application/json,.json".into(),
                     read_as: Some("text".into()),
                     import_action: "importSnapshot".into(),
@@ -339,7 +339,7 @@ pub fn puzzle3d_handle_action<A: Puzzle3dEditor>(
     window_id: Option<&str>,
     snapshot: &Puzzle3dPlaySnapshot,
     config: &Puzzle3dRuntime,
-    view_state: Option<&semio_framework_plugin::ViewModel>,
+    view_state: Option<&semio_plugin::ViewModel>,
     interaction: &Puzzle3dInteractionSnapshot,
 ) -> Puzzle3dActionEmission<A> {
     let action = command.action_id();
@@ -358,8 +358,8 @@ pub fn puzzle3d_handle_action<A: Puzzle3dEditor>(
     prologue.dispatch_step(session, None, None, authoring_seed, command, window_id, config, view_state, interaction)
 }
 
-use semio_framework_plugin::InteractionVerb;
-use semio_framework_plugin::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_plugin::InteractionVerb;
+use semio_plugin::FRAMEWORK_HISTORY_BODY_KEY;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::puzzle3d_viewport_scope;
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 

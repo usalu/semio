@@ -14,7 +14,7 @@
 //! state machine unit-tested on the host target; this file is ONLY the WIT<->plain bridge.
 //!
 //! Own `wit-bindgen generate!` + own `Guest` impls + own `export!`, deliberately NOT a dependency on
-//! `semio-framework-plugin` — that SDK's `component` module (`🔌️plugin/🦀️.rs`) wires the
+//! `semio-plugin` — that SDK's `component` module (`🔌️plugin/🦀️.rs`) wires the
 //! SAME `world actor` for real production plugins via its declarative `Plugin::builder`/
 //! `plugin_exports!` app machinery (commands, windows, panels), which this synthetic actor has no
 //! use for. This file follows the SDK's *pattern* (generate!/Guest impls/export!, the "only types
@@ -31,7 +31,7 @@ pub mod profile;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub mod guest {
     //! 🧩️ WASI P2 component exports for `world actor` — see the module-level doc above for why this
-    //! crate does its own `generate!` instead of depending on `semio-framework-plugin`.
+    //! crate does its own `generate!` instead of depending on `semio-plugin`.
     use wit_bindgen::generate;
 
     generate!({

@@ -1,12 +1,12 @@
 //! 🪟️ 🧩️ Flow play app commands command — `add-widget`.
 
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::app::ChildEmitPreparation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::app::ChildEmitPreparation;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_flow::schema::mutations::{insert_node, SemioFlowMutation};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;

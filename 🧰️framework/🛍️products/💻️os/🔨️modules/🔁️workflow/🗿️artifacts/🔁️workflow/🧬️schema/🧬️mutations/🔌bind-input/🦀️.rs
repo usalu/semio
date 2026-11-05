@@ -17,8 +17,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "workflow", kind: "bind-input", record: "BoundWorkflowInput" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow input {}", self.binding.input_id), &format!("Arbeitsablaufeingabe {} binden", self.binding.input_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Bind workflow input {}", self.binding.input_id), &format!("Arbeitsablaufeingabe {} binden", self.binding.input_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["input-bindings".into(), self.binding.input_id.clone()]

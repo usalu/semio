@@ -1,6 +1,6 @@
 //! 🧪 Literal VCS factory identity, typed-codec parity and closed hostile projections.
 
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_hub_vcs::native_codecs::{native_codec_factory_receipts, NativeVcsCodecIdentityV1};
 
 fn hexadecimal(bytes: [u8; 32]) -> String {
@@ -43,7 +43,7 @@ async fn vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_
         assert!(std::ptr::fn_addr_eq(codec.edit_text_from_envelope, declared.edit_text_from_envelope));
         assert!(std::ptr::fn_addr_eq(codec.apply_ops_binary, declared.apply_ops_binary));
         let dialect: semio_framework::ArtifactDialect = semio_s_artifact_vcs_vcs::VCS_DIALECT.into();
-        let files = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_vcs_vcs::editor::vcs::VcsPlayApp>>(document_id).await.expect("package-owned VCS genesis");
+        let files = semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<semio_s_artifact_vcs_vcs::editor::vcs::VcsPlayApp>>(document_id).await.expect("package-owned VCS genesis");
         let parsed = store::os_store::text_format::parse_document_pack::<semio_s_artifact_vcs_vcs::VcsSnapshot, semio_s_artifact_vcs_vcs::VcsDemoMutation>(&files.pack, &files.spr).await.unwrap();
         let envelope = parsed.envelope.into_owners();
         assert_eq!(envelope.id, document_id);
@@ -59,7 +59,7 @@ async fn vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_
         for row in document_ids["cases"].as_array().unwrap().iter().filter(|row| row["accepted"] == false) {
             let hostile_id = row["documentId"].as_str().unwrap();
             assert!(
-                semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_vcs_vcs::editor::vcs::VcsPlayApp>>(hostile_id).await.is_err(),
+                semio_plugin::artifact_app_genesis_pair::<semio_plugin::EditorApp<semio_s_artifact_vcs_vcs::editor::vcs::VcsPlayApp>>(hostile_id).await.is_err(),
                 "VCS genesis admitted hostile document id {}",
                 row["id"]
             );

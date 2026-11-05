@@ -5,9 +5,9 @@
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
 use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
@@ -71,65 +71,65 @@ use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
-use semio_framework_os_flow::{FlowEvalSession, FlowHost};
+use semio_os_flow::{FlowEvalSession, FlowHost};
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.4): `ArtifactEditor`/`Editor`/`Dialect` are curated at
-// `semio_framework_plugin`'s crate root as of W0-F/W2-FIX — imported bare here, no `app::` prefix
+// `semio_plugin`'s crate root as of W0-F/W2-FIX — imported bare here, no `app::` prefix
 // needed (unlike the earlier cad pilot, written before that gap closed). `app::InteractionView` is a
 // separate, still-uncurated gap (unrelated to this ticket) — kept qualified.
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
+use semio_plugin::app::InteractionView;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::ExampleSource;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::ToolRunJob;
-use semio_framework_plugin::ToolRunJobPurpose;
-use semio_framework_plugin::ToolRunJobRequest;
-use semio_framework_plugin::TopologyNode;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Effect;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::ExampleSource;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_plugin::InteractiveJobClassification;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::ToolRunJob;
+use semio_plugin::ToolRunJobPurpose;
+use semio_plugin::ToolRunJobRequest;
+use semio_plugin::TopologyNode;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_procedural_3d_model::{GENERATION3D_EDITOR_APP_ID, generation3d_action};
@@ -191,14 +191,14 @@ impl Generation3dPlayApp {
     /// selection, creation/removal/generation methods fold into taxonomy groups, and
     /// `delete-selection` stays a direct destructive item last.
     fn context_menu_body(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         _cfg: &ConfigView<'_, Generation3dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         marks: &PreviewInteractionMarks,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
+        use semio_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let labels = generation3d_labels(view_state);
         let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
@@ -262,27 +262,27 @@ pub fn examples() -> Vec<ExampleSource> {
 /// this app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `create_generation3d_app` declares via `.artifact_kind(...)`; `params:in`/`geometry:out` are the
 /// workflow-specific ports beyond the implicit document in/out ports.
-pub async fn generation3d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo::from_artifact(
+pub async fn generation3d_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo::from_artifact(
         "generation.3d",
         MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
-        semio_framework_plugin::ArtifactPresentation { id: "3d.generation".into(), name: "3D Generation".into(), dimension: "3d".into(), component_kind: "generation3d".into() },
+        semio_plugin::ArtifactPresentation { id: "3d.generation".into(), name: "3D Generation".into(), dimension: "3d".into(), component_kind: "generation3d".into() },
     )
     .await
     .with_ports(vec![
-        semio_framework_plugin::MediaPortSpec {
+        semio_plugin::MediaPortSpec {
             id: "params:in".into(),
             label: "Parameters".into(),
-            direction: semio_framework_plugin::MediaPortDirection::In,
+            direction: semio_plugin::MediaPortDirection::In,
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: None,
             required: false,
             multiplicity: semio_framework::PortMultiplicity::One,
         },
-        semio_framework_plugin::MediaPortSpec {
+        semio_plugin::MediaPortSpec {
             id: "geometry:out".into(),
             label: "Geometry".into(),
-            direction: semio_framework_plugin::MediaPortDirection::Out,
+            direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
             kind_id: Some("3d.mesh".into()),
             required: false,
@@ -307,3 +307,130 @@ pub mod examples {
 }
 #[path = "🌉️wasm/🦀️.rs"]
 pub mod wasm;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🦀️.rs"]
+mod retained_flow_source;
+
+#[path="../../../../../../../🫀️foundation/🧬️generation/🌊️flow-overlay/🦀️.rs"]
+mod retained_flow_overlay;
+
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🧬️generation/🌊️flow-overlay/🧪️laws/🦀️.rs"]
+mod retained_flow_overlay_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📥️provisional/🦀️.rs"]
+mod retained_provisional_source;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📋️rows/🦀️.rs"]
+mod retained_scratch_rows;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📋️rows/🧪️tests/🦀️.rs"]
+mod retained_scratch_rows_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🔎️rows/🦀️.rs"]
+mod retained_scratch_scan;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🔎️rows/🧪️tests/🦀️.rs"]
+mod retained_scratch_scan_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/✏️host-scratch/🦀️.rs"]
+mod retained_host_scratch;
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🎟️driver/🦀️.rs"]
+mod retained_scratch_driver;
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📋️projection/🦀️.rs"]
+mod retained_projected_clone;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/✏️host-scratch/🧪️laws/🦀️.rs"]
+mod retained_host_scratch_laws;
+
+#[cfg(test)]
+fn host_scratch_test_domain()->retained_host_scratch::HostScratchDomain{retained_host_scratch::HostScratchDomain::Generation3d}
+
+#[cfg(test)]
+fn host_scratch_test_original(source:&semio_framework_artifact_flow_flow::FlowHostSnapshot,wire:&serde_json::Value)->semio_framework_artifact_flow_flow::FlowHostSnapshot{let mut snapshot=Generation3dSnapshot{host_snapshot:source.clone(),generation:Default::default()};let mutation:Generation3dMutation=semio_framework_pack_json::from_json_str(&wire.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let _=semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut snapshot,&mutation);mutation.retire_cold();let result=std::mem::take(&mut snapshot.host_snapshot);snapshot.retire_cold();result}
+
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📋️projection/🧪️laws/🦀️.rs"]
+mod retained_projected_clone_laws;
+
+#[path="🧵️retained-commands/📥️provisional/🎛️input/🧬️admit/🦀️.rs"]
+mod retained_typed_input_admission;
+
+#[cfg(test)]
+#[path="🧵️retained-commands/📥️provisional/🎛️input/🧬️admit/🧪️laws/🦀️.rs"]
+mod retained_typed_input_admission_laws;
+
+use semio_s_artifact_procedural_3d_model::{GenerationPlayState,FormGeneration};
+
+#[path="../../../../../../../🫀️foundation/🧬️generation/🧵️fold/🦀️.rs"]
+mod retained_generation_fold;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🧪️caller/🦀️.rs"]
+mod retained_scratch_testing;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🧬️generation/🧵️fold/🧪️tests.rs"]
+mod retained_generation_fold_laws;
+
+#[cfg(test)]
+fn generation_fold_test_original(source:&GenerationPlayState,wire:&serde_json::Value)->(GenerationPlayState,bool){let mut snapshot=Generation3dSnapshot{host_snapshot:Default::default(),generation:source.clone().into()};let mutation:Generation3dMutation=semio_framework_pack_json::from_json_str(&wire.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let accepted=semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut snapshot,&mutation).is_ok();mutation.retire_cold();let result=snapshot.generation.as_state().clone();snapshot.retire_cold();(result,accepted)}
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📥️provisional/✏️fold/🦀️.rs"]
+mod retained_native_provisional_fold;
+
+#[path="🧵️retained-commands/📥️provisional/✏️dispatch/🦀️.rs"]
+mod retained_provisional_dispatch;
+
+#[cfg(test)]
+type HostScratchFixtureMutation=Generation3dMutation;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📥️provisional/🔁️replay/🦀️.rs"]
+mod retained_provisional_replay;
+
+#[path="🧵️retained-commands/📥️provisional/🎛️input/💎️literal/🦀️.rs"]
+mod retained_typed_literal;
+
+#[path="🧵️retained-commands/📥️provisional/🎛️input/⚖️current/🦀️.rs"]
+mod retained_typed_current;
+
+#[cfg(test)]
+#[path="🧵️retained-commands/📥️provisional/🎛️input/⚖️current/🧪️laws/🦀️.rs"]
+mod retained_typed_current_laws;
+
+#[path="🧵️retained-commands/📥️provisional/🎛️input/🦀️.rs"]
+mod retained_typed_input;
+type NativeProvisionalAdditional=retained_typed_input::P3ProvisionalFold;
+
+#[cfg(test)]
+#[path="🧵️retained-commands/📥️provisional/🎛️input/🧪️laws/🦀️.rs"]
+mod retained_typed_input_laws;
+
+#[path="🧵️retained-commands/📥️provisional/🎛️input/📚️params/🔎️read/🦀️.rs"]
+mod retained_native_param_read;
+
+#[cfg(test)]
+#[path="🧵️retained-commands/📥️provisional/🎛️input/📚️params/🔎️read/🧪️laws/🦀️.rs"]
+mod retained_native_param_read_laws;
+
+#[path="🧵️retained-commands/📥️provisional/🎛️input/📚️params/✏️patch/🦀️.rs"]
+mod retained_native_param_patch;
+
+#[path="🧵️retained-commands/📥️provisional/🧭️transform/🦀️.rs"]
+mod retained_provisional_transform;
+
+#[cfg(test)]
+#[path="🧵️retained-commands/📥️provisional/🧭️transform/🧪️laws/🦀️.rs"]
+mod retained_provisional_transform_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🎬️scene/🦀️.rs"]
+mod retained_provisional_scene;
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🎬️scene/🧷️base.rs"]
+mod retained_scene_base;
+
+#[cfg(test)]
+type ProvisionalSceneTestApp=EditorApp<Generation3dPlayApp>;
+#[cfg(test)]
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/🎬️scene/🧪️.rs"]
+mod retained_provisional_scene_laws;
+
+#[path="../../../../../../../🫀️foundation/🌊️flow-source/📇️catalogue/🦀️.rs"]
+mod retained_catalogue_lifecycle;

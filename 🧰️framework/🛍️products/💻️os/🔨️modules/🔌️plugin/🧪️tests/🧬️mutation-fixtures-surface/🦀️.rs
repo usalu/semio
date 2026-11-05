@@ -33,7 +33,7 @@ use protocol::MutationDiff;
 use protocol::ColdMutationDiff;
 use {semio_framework::action_bus,semio_framework::ActionKind,semio_framework_artifact_reference::Dialect,semio_framework::Fault,semio_framework::FaultOrigin,semio_framework::IconName,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework::ToolExecutionContract,semio_framework::ToolFactoryKey,semio_framework::ToolJobFactory,semio_framework::ToolOperationSpec};
 use semio_framework_2d_compute::EngineHandles;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

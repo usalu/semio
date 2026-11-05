@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamActionXM where
         record: "ChangedBeamActionXM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change beam position of the point force along the span of the beam action", "Trägereinwirkung: Trägereinwirkung: Position der Einzellast entlang der Spannweite ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change beam position of the point force along the span of the beam action", "Trägereinwirkung: Trägereinwirkung: Position der Einzellast entlang der Spannweite ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.beam_id.clone(), self.id.clone()]

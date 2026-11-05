@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, DrawingImageAsset};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{layer_base, layer_base_mut, find_drawing_layer, find_drawing_layer_location};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-#[allow(unused_imports)] use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
+#[allow(unused_imports)] use semio_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
 #[allow(unused_imports)] use std::collections::{BTreeMap,BTreeSet};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::clipboard::*;
 use semio_s_artifact_draw_drawing_editor::clipboard_job as job;
@@ -112,7 +112,7 @@ fn drawing_clipboard_dependency_admission_replays_independent_graph_fixtures(){
 #[test]
 fn drawing_clipboard_maximum_body_roundtrips_shared_wire_envelope(){
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    for row in fixture["envelopeCases"].as_array().unwrap(){let scalar=row["scalar"].as_str().unwrap();let text=scalar.repeat(row["bodyBytes"].as_u64().unwrap()as usize/scalar.len());assert_eq!(text.len(),semio_framework_plugin::kernel::CLIPBOARD_TEXT_MAX_BYTES);let actual=semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::String(text.clone()));assert_eq!(actual,serde_json::to_string(&text).unwrap());assert!(actual.len()+1024<=semio_framework_plugin::kernel::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES);let roundtrip:String=serde_json::from_str(&actual).unwrap();assert_eq!(roundtrip,text);}
+    for row in fixture["envelopeCases"].as_array().unwrap(){let scalar=row["scalar"].as_str().unwrap();let text=scalar.repeat(row["bodyBytes"].as_u64().unwrap()as usize/scalar.len());assert_eq!(text.len(),semio_plugin::kernel::CLIPBOARD_TEXT_MAX_BYTES);let actual=semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::String(text.clone()));assert_eq!(actual,serde_json::to_string(&text).unwrap());assert!(actual.len()+1024<=semio_plugin::kernel::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES);let roundtrip:String=serde_json::from_str(&actual).unwrap();assert_eq!(roundtrip,text);}
 }
 
 fn admitted_paste(document:&DrawingSnapshot,packet:DrawingClipboard,placement:&PastePlacement,parent:Option<&str>)->Result<(Vec<DrawingMutation>,Vec<String>),ClipboardError>{let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_interaction::clipboard::paste(document,packet,placement,parent,&mut control)}

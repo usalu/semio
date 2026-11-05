@@ -1,7 +1,7 @@
 //! 🪪️ The transport authority: connection turns, retained job retry and generation custody.
 
 use semio_framework_async::{Job, Lane, WorkerPool, WorkerSubmitErrorKind};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use std::sync::{Arc, Condvar, Mutex, Weak};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use super::http_surface::HttpTerminalReason;

@@ -9,7 +9,7 @@ use store::{sqlite_snapshot::SqliteTable, sqlite_snapshot::SqliteRow, sqlite_sna
 #[allow(unused_imports)]
 use std::{collections::BTreeMap, collections::BTreeSet, collections::VecDeque};
 use semio_framework_test_original_snapshot_owners as original_owners;
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_value::Number;
 #[path="🧬️semantic/🦀️.rs"]
@@ -65,7 +65,7 @@ fn sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic
 #[test]
 fn sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_quota(){
  use store::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding};
- let codec=<WiresSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("Wires owning native pack must declare its actual SQLite capability");
+ let codec=<WiresSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("Wires owning native pack must declare its actual SQLite capability");
  let f:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let mut expected=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native_fixture(),<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);
  for _ in 0..f["deepLevels"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}

@@ -1,10 +1,10 @@
 //! 🧯️ The close witnesses and cursor admission of one store over its component bundle.
 
-use semio_framework_os_spr::{OpBinary, OpText};
-use semio_framework_os_store_engine_live::lifted_store::{StoreParts, StorePartsRef};
-use semio_framework_os_store_ledger::{ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, PendingCommandReport};
-use semio_framework_os_store_read::{ArtifactStoreCursorDisposerPhase, ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement, retire_document_envelope};
-use semio_framework_os_store_replay::{EffectiveSupersessions, PrefixSnapshot};
+use semio_os_spr::{OpBinary, OpText};
+use semio_os_store_engine_live::lifted_store::{StoreParts, StorePartsRef};
+use semio_os_store_ledger::{ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, PendingCommandReport};
+use semio_os_store_read::{ArtifactStoreCursorDisposerPhase, ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement, retire_document_envelope};
+use semio_os_store_replay::{EffectiveSupersessions, PrefixSnapshot};
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
@@ -15,8 +15,8 @@ use super::{StoreCloseAdmission, StoreCloseWitness};
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreCloseAdmission for StoreParts<'_, P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         self.wire.close_take_backbone_retirement(grant)
@@ -26,21 +26,21 @@ where
         let structural = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         match phase {
             ArtifactStoreCursorDisposerPhase::RuntimeOwners(0) => {
-                let original = std::mem::replace(&mut *self.log.applied_edit_ids, semio_framework_os_vcs::HistoryPageStack::empty());
+                let original = std::mem::replace(&mut *self.log.applied_edit_ids, semio_os_vcs::HistoryPageStack::empty());
                 match admit_artifact_retirement(original, grant, ArtifactStoreStringVectorRetirement::new) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, original)) => { *self.log.applied_edit_ids = original; Err(error) }
                 }
             }
             ArtifactStoreCursorDisposerPhase::RuntimeOwners(1) => {
-                let original = std::mem::replace(&mut *self.log.redo_edit_ids, semio_framework_os_vcs::HistoryPageStack::empty());
+                let original = std::mem::replace(&mut *self.log.redo_edit_ids, semio_os_vcs::HistoryPageStack::empty());
                 match admit_artifact_retirement(original, grant, ArtifactStoreStringVectorRetirement::new) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, original)) => { *self.log.redo_edit_ids = original; Err(error) }
                 }
             }
             ArtifactStoreCursorDisposerPhase::RuntimeOwners(2) => {
-                let original = std::mem::replace(&mut *self.cursor.revision_accumulator, CursorRevisionAccumulator { identity_digest: [0; 32], applied: semio_framework_os_vcs::HistoryPageStack::empty(), redo: semio_framework_os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() });
+                let original = std::mem::replace(&mut *self.cursor.revision_accumulator, CursorRevisionAccumulator { identity_digest: [0; 32], applied: semio_os_vcs::HistoryPageStack::empty(), redo: semio_os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() });
                 match admit_artifact_retirement(original, grant, ArtifactStoreRevisionAccumulatorRetirement::new) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, original)) => { *self.cursor.revision_accumulator = original; Err(error) }
@@ -123,7 +123,7 @@ where
             }
             ArtifactStoreCursorDisposerPhase::Backbone => self.close_take_backbone_retirement(grant),
             ArtifactStoreCursorDisposerPhase::Causal => {
-                let original = std::mem::replace(&mut *self.log.dag, semio_framework_os_spr::MutationDag::empty());
+                let original = std::mem::replace(&mut *self.log.dag, semio_os_spr::MutationDag::empty());
                 match admit_artifact_retirement(original, grant, ArtifactStoreMutationDagRetirement::new) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, original)) => { *self.log.dag = original; Err(error) }
@@ -147,8 +147,8 @@ where
 
 impl<P, Mutation> StoreCloseWitness for StorePartsRef<'_, P, Mutation>
 where
-    P: semio_framework_os_spr::StoreState,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_os_spr::StoreState,
+    Mutation: Clone + ToValue + FromValue + semio_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
         self.owners.snapshot_read_leases_terminal_is_empty()

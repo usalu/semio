@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileSettlingThickn
         record: "ChangedPileSettlingThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Settling ground thickness h₁ (0 = none) of the pile", "Pfahl: Setzende Bodenschicht h₁ (0 = keine) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Settling ground thickness h₁ (0 = none) of the pile", "Pfahl: Setzende Bodenschicht h₁ (0 = keine) ändern")
     }
 }
 

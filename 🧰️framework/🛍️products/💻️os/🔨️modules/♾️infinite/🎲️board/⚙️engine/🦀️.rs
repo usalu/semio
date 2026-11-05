@@ -1,8 +1,8 @@
 //! ⚙️ Board engine: the retained graph engine with camera, selection and hit testing, plus the directed port descriptors it exposes.
 //!
-//! Crate `semio-framework-os-infinite-board-engine`; a downward producer of the infinite board family.
+//! Crate `semio-os-infinite-board-engine`; a downward producer of the infinite board family.
 
-use semio_framework_os_infinite_board_schema::{apply_board_palette_overlay, apply_force_layout_resolved, apply_hierarchical_inner, board_visible_option, board_visible_or_true, BoardNodeShape, BoardPalette, BoardPaletteOverlay, BoardSnapshot, BoardVisibility, decode_redraw_options_json, field, ForceAdmission, ForceGraphLayoutOptions, HierarchicalTreeLayoutOptions, LayoutControl, LayoutError, LayoutIoError, NodeDescriptor, RedrawLayoutOptions, resolve_node_id_endpoint, Selection};
+use semio_os_infinite_board_schema::{apply_board_palette_overlay, apply_force_layout_resolved, apply_hierarchical_inner, board_visible_option, board_visible_or_true, BoardNodeShape, BoardPalette, BoardPaletteOverlay, BoardSnapshot, BoardVisibility, decode_redraw_options_json, field, ForceAdmission, ForceGraphLayoutOptions, HierarchicalTreeLayoutOptions, LayoutControl, LayoutError, LayoutIoError, NodeDescriptor, RedrawLayoutOptions, resolve_node_id_endpoint, Selection};
 use semio_framework_canvas::{Affine, Color, CubicBez, FillRule, OpaqueSceneRetirementStep, Point, RasterImage, Rect, Scene, Stroke, Vec2};
 use std::sync::Arc;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use graph::{Directed, Directedness, EdgeId, ElementSemantics, GraphEdge, Handle, HandleId, HandleRole, Node, NodeId, NodeShape, Normal, orient_endpoints, Ported, PortModel, Undirected};
 use semio_framework_value::{DslValue, FromValue as _, NativeEncodeControl, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use semio_framework_os_kernel::os_spr::causal::transition::HistoryFoldIndex;
+use semio_os_kernel::os_spr::causal::transition::HistoryFoldIndex;
 use semio_framework_pack_json::JsonMemberPolicy;
 use std::mem::ManuallyDrop;
 use semio_framework_graph_manifest::PropertyBag;
@@ -25,7 +25,7 @@ use semio_framework_canvas as canvas;
 use semio_framework_graph_drawing::routing::{compute_edge_bezier_outward, handle_exterior_cap_peak, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle};
 use geometry::{distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
 use semio_framework_graph_drawing::force;
-use semio_framework_os_infinite_directed_presentation::*;
+use semio_os_infinite_directed_presentation::*;
 
 #[path = "🧷️point-retirement-and-engine-aliases/🦀️.rs"]
 mod point_retirement_and_engine_aliases;

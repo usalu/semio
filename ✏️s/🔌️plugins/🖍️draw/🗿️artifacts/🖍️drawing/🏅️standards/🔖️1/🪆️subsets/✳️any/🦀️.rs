@@ -7,8 +7,8 @@ use semio_s_artifact_draw_drawing_examples::examples;
 use semio_s_artifact_draw_drawing_editor as editor;
 use semio_s_artifact_draw_drawing_viewer as viewer;
 use semio_s_artifact_draw_drawing_model::DRAWING_DIALECT;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFrameNodeX where O
         record: "ChangedFrameNodeX",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Coordinate x of the frame node", "Rahmenknoten: Koordinate x ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Coordinate x of the frame node", "Rahmenknoten: Koordinate x ändern")
     }
 }
 

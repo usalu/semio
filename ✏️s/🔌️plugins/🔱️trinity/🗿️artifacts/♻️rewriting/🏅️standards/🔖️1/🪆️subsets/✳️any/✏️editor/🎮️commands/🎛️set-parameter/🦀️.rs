@@ -5,8 +5,8 @@ use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::rule::ParameterKind;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::Emit;
+use semio_plugin::NoConfigMutation;
 
 /// 🎛️ One rule parameter's bound value, read by its declared kind, as ONE `change-parameter-binding {key, newValue}` — the
 /// field-parametric leaf history edits; a value the binding already holds, an unknown name's unparseable number or an empty

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerGammaPrime wh
         record: "ChangedLayerGammaPrime",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Buoyant unit weight γ′ of the soil layer", "Bodenschicht: Wichte unter Auftrieb γ′ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Buoyant unit weight γ′ of the soil layer", "Bodenschicht: Wichte unter Auftrieb γ′ ändern")
     }
 }
 

@@ -8,7 +8,7 @@ import {forwardCommandV1} from "../🚪️client/🟨️.mjs";
 
 /** 🚫 What the watcher and the state never look at: caches, VCS metadata, dependency trees and Bazel's convenience links. */
 export const RESIDENT_EXCLUDES_V1=Object.freeze({
- rooted:Object.freeze([".git",".cache",".🧬semio/🦑️repo/⚡️cache",".🧬semio/🦑️repo/🎫️tickets","bazel-out","bazel-bin","bazel-testlogs","bazel-semio"]),
+ rooted:Object.freeze([".git",".cache", ".r",".🧬semio/🦑️repo/⚡️cache",".🧬semio/🦑️repo/🎫️tickets","bazel-out","bazel-bin","bazel-testlogs","bazel-semio"]),
  names:Object.freeze(["node_modules","target","__pycache__",".venv"]),
 });
 /** 🚧 Directory the service touches to fence the event stream; never excluded. */

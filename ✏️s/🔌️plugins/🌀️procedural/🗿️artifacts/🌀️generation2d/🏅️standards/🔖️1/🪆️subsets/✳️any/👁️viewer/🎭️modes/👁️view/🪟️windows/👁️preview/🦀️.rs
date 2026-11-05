@@ -8,12 +8,12 @@
 
 use semio_s_artifact_procedural_2d_model::widget_id;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "generation2d-view-preview";
@@ -50,9 +50,9 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `Generation2dSnapshot -> BuiltNode` read: a fixed default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), one schematic box per widget at its stored layout
-/// position — no evaluated drawing-handle overlay (that needs a live `semio_framework_os_flow::FlowEvalSession`, an
+/// position — no evaluated drawing-handle overlay (that needs a live `semio_os_flow::FlowEvalSession`, an
 /// editor-dispatch-time concept a stateless viewer render never has access to).
-pub fn render(document: &Generation2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation2dSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.host_snapshot;
     let layers: Vec<semio_framework_value::DslValue> = fixture
         .widgets
@@ -74,7 +74,7 @@ pub fn render(document: &Generation2dSnapshot) -> semio_framework_plugin::UiAsse
     let _ = GENERATION2D_VIEW_CONTROLLER_ID;
     semio_s_procedural_core_semantic_ui::scene_surface(
         SURFACE_ID,
-        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
+        semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

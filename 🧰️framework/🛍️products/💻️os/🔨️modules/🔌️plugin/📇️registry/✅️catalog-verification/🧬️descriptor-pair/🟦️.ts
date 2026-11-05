@@ -1,13 +1,11 @@
-/** 🧬️ Descriptor pair of the catalog verification: the execution protocol and descriptor shape validation, the placeholder identity refusal, the descriptor pair decoding and the semantic and on disk descriptor pair verification. */
+/** 🧬️ Descriptor pair of the catalog verification: the execution protocol and descriptor shape validation, the placeholder identity refusal, the descriptor pair decoding and the semantic descriptor pair verification. */
 import { createHash } from "node:crypto";
-import { dirname, join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { APP_CHANNEL_VERSION, decodePackValue, encodePackValue, packValueToExactJson } from "../../../../../📦️packages/🟦️typescript/🟦️.ts";
-import type { PackValue } from "../../../../../📦️packages/🟦️typescript/🟦️.ts";
-import { CATALOG_ID, DESCRIPTOR_JSON_REL_PATH, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
-import { CATALOG_DESCRIPTOR_MAX_BYTES, CATALOG_DESCRIPTOR_PACK_FILENAME, CATALOG_DESCRIPTOR_TOP_LEVEL, CATALOG_MANIFEST_FIELDS, CATALOG_PACKAGE_ID, CATALOG_PLACEHOLDER_PLUGIN_IDS, CATALOG_PLACEHOLDER_VERSION, type CatalogDescriptorIdentity, type OwnerDescriptorPairV1, type StrictCatalogDescriptor } from "../🟦️.ts";
-import { boundedCatalogDiagnostic, isStrictJsonValue, normalizeCatalogDescriptorEnums, pathIsWithin, rejectDuplicateJsonObjectNames } from "../🛡️guards/🟦️.ts";
-import { readCatalogFile } from "../📥️artifact-io/🟦️.ts";
+import { APP_CHANNEL_VERSION } from "../../../../../../../🔨️modules/🧾️app-channel/🔢️request-sequence/🟦️.ts";
+import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "../../../../../../../🔨️modules/🎁️packs/🟦️.ts";
+import { CATALOG_ID } from "../../🔎️discovery/🧬️schema/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES, CATALOG_DESCRIPTOR_TOP_LEVEL, CATALOG_MANIFEST_FIELDS, CATALOG_PACKAGE_ID, CATALOG_PLACEHOLDER_PLUGIN_IDS, CATALOG_PLACEHOLDER_VERSION, type CatalogDescriptorIdentity, type OwnerDescriptorPairV1 } from "../🟦️.ts";
+import { boundedCatalogDiagnostic, isStrictJsonValue, normalizeCatalogDescriptorEnums, rejectDuplicateJsonObjectNames } from "../🛡️guards/🟦️.ts";
 
 //#region 🔖️CatalogCompleteness
 export function validateCatalogExecutionProtocol(pluginId: string, candidate: unknown): void {
@@ -55,7 +53,7 @@ export function rejectPlaceholderCatalogIdentity(pluginId: string, version: stri
 }
 
 /** 🧾️ Decodes and identifies one JSON/pack descriptor pair: both forms strict, the pack canonical, the forms equal. */
-function decodeDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Uint8Array): { record: Record<string, any>; packed: PackValue; entry: CatalogDescriptorIdentity; role: "plugin" | "extension"; host: string | undefined } {
+export function decodeDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Uint8Array): { record: Record<string, any>; packed: PackValue; entry: CatalogDescriptorIdentity; role: "plugin" | "extension"; host: string | undefined } {
   if (jsonBytes.byteLength === 0 || jsonBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES || packBytes.byteLength === 0 || packBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES) throw new Error("emitted descriptor forms exceed the fixed boundary");
   let descriptor: unknown;
   let packed: PackValue;
@@ -86,22 +84,4 @@ export function verifySemanticDescriptorPairBytesV1(jsonBytes: Uint8Array, packB
   return { pluginId: entry.pluginId, packageId: entry.packageId, role, version: String(record.manifest.version), execution: String(record.execution), extends: host, semanticSha256: createHash("sha256").update(packBytes).digest("hex"), descriptor: packed as Record<string, unknown> };
 }
 
-/** 🔐️ Strict-decodes and cross-checks one owner-root SEMANTIC JSON/pack `PackageDescriptor` pair against the discovered
- * component identity: strict equal forms, a canonical pack and no byte-identity binding. */
-export function validateCatalogDescriptorPair(entry: CompiledComponentOwnerV1, repoRoot: string): StrictCatalogDescriptor {
-  const jsonPath = resolve(repoRoot, entry.cratePath, ...DESCRIPTOR_JSON_REL_PATH);
-  const ownerRoot = dirname(jsonPath);
-  const packPath = join(ownerRoot, CATALOG_DESCRIPTOR_PACK_FILENAME);
-  if (!pathIsWithin(resolve(repoRoot), jsonPath) || !pathIsWithin(resolve(repoRoot), packPath)) throw new Error(`${entry.pluginId}: descriptor owner escapes the repository`);
-  const jsonBytes = readCatalogFile(jsonPath, repoRoot, CATALOG_DESCRIPTOR_MAX_BYTES);
-  const packBytes = readCatalogFile(packPath, repoRoot, CATALOG_DESCRIPTOR_MAX_BYTES);
-  let decoded: ReturnType<typeof decodeDescriptorPairBytesV1>;
-  try {
-    decoded = decodeDescriptorPairBytesV1(jsonBytes, packBytes);
-  } catch (error) {
-    throw new Error(`${entry.pluginId}: committed descriptor pair refused: ${boundedCatalogDiagnostic(error)}`);
-  }
-  validateSemanticCatalogDescriptorValue(entry, decoded.record);
-  return { entry, jsonPath, jsonBytes, packPath, packBytes, descriptor: decoded.packed as Record<string, unknown>, semanticSha256: createHash("sha256").update(packBytes).digest("hex") };
-}
 //#endregion 🔖️CatalogCompleteness

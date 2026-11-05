@@ -13,17 +13,17 @@ use crate::FormsSnapshot;
 use store::PackError;
 
 //#region 🔖️ArtifactPack
-impl semio_framework_os_kernel::os_store::ArtifactPack for FormsSnapshot {
+impl semio_os_kernel::os_store::ArtifactPack for FormsSnapshot {
     
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         self.validate().map_err(|detail| PackError::Refusal(store::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack", offset: 0, detail }))?;
         let inner = store::pack_rt::encode_document(&pack::record_spec(), &pack::record(self).map_err(PackError::from)?, options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as semio_os_kernel::os_store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+        if !envelope.matches_identity(<Self as semio_os_kernel::os_store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &pack::record_spec(), options)?;
@@ -35,8 +35,8 @@ impl semio_framework_os_kernel::os_store::ArtifactPack for FormsSnapshot {
         Some(pack::record_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for FormsSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for FormsSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
@@ -44,12 +44,12 @@ fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqlit
 
 /// 📦️ Encodes a `FormsSnapshot` to its binary pack form.
 pub fn encode(document: &FormsSnapshot) -> Vec<u8> {
-    semio_framework_os_kernel::os_store::ArtifactPack::encode_pack(document)
+    semio_os_kernel::os_store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `FormsSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<FormsSnapshot, PackError> {
-    <FormsSnapshot as semio_framework_os_kernel::os_store::ArtifactPack>::decode_pack(bytes)
+    <FormsSnapshot as semio_os_kernel::os_store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🔖️Store
@@ -79,9 +79,9 @@ pub fn decode(bytes: &[u8]) -> Result<FormsSnapshot, PackError> {
 pub mod pack;
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
-impl semio_framework_os_kernel::os_store::ArtifactNativeSnapshot for FormsSnapshot {
- fn decode_native_snapshot(payload:semio_framework_os_kernel::os_store::NativeSnapshotInput<'_>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(),pack::record_spec_producer(),|record,native|{let maximum=native.maximum_bytes();pack::reconstruct_record_controlled(record,native,maximum)},control)}
- fn encode_native_snapshot(&self,encoding:semio_framework_os_kernel::os_store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(),pack::record_spec_producer(),|native|pack::record_native_controlled(self,native),control)}
+impl semio_os_kernel::os_store::ArtifactNativeSnapshot for FormsSnapshot {
+ fn decode_native_snapshot(payload:semio_os_kernel::os_store::NativeSnapshotInput<'_>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as semio_os_kernel::os_store::ArtifactDsl>::envelope_id(),pack::record_spec_producer(),|record,native|{let maximum=native.maximum_bytes();pack::reconstruct_record_controlled(record,native,maximum)},control)}
+ fn encode_native_snapshot(&self,encoding:semio_os_kernel::os_store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as semio_os_kernel::os_store::ArtifactDsl>::envelope_id(),pack::record_spec_producer(),|native|pack::record_native_controlled(self,native),control)}
 }
 
 //#region 🧩️ArtifactItems
@@ -100,7 +100,7 @@ pub const FORMS_DOCUMENT_SCHEMA: &str = "forms.form";
 /// without ever importing through the sibling editor module. `artifact_kind` matches
 /// `#[artifact_schema(id = "s.forms.forms")]` on `FormsArtifact` (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`);
 /// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const FORMS_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.forms.forms", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const FORMS_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.forms.forms", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 //#endregion 🔖️Types
 }
 //#endregion 🧩️ArtifactItems

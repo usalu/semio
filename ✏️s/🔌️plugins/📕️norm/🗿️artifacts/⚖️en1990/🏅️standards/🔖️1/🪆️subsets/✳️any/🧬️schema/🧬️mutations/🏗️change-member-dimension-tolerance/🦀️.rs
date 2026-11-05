@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberDimensionTol
         record: "ChangedMemberDimensionTolerance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change dimension tolerance Δa of the member", "Bauteil: Maßtoleranz Δa ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change dimension tolerance Δa of the member", "Bauteil: Maßtoleranz Δa ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

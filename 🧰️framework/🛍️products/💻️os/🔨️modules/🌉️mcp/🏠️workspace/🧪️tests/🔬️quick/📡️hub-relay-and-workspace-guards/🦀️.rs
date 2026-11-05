@@ -96,7 +96,7 @@ fn a_terminal_link_answers_a_waiting_commit_at_once_with_the_refusal() {
 /// `plugin:note`, hub head 0).
 #[test]
 fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_live_document() {
-    use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
+    use semio_os_kernel::os_directory::DirectorySpaceRole;
     let binding = |blocked: &str| PluginArtifactBinding {
         schema: "s.note.note".to_string(),
         plugin_id: "note".to_string(),

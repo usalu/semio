@@ -9,10 +9,10 @@ mod tests;
 //#region 🔖️Declaration
 /// 🪪️ The artifact definition: identity, standard/profile, schema/inference/composer/grammar/codec capabilities and
 /// localizations.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.lowpoly.lowpoly.standard.v1", "standard", "1", &[], None),
         ("s.lowpoly.lowpoly.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.lowpoly.lowpoly.schema.artifact", "schema", "s.lowpoly.lowpoly", &[("schema", "s.lowpoly.lowpoly")], None),
@@ -51,13 +51,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 📜️ This artifact's declaration — mesh/DWG/stdio format handling flows entirely through `.composers(...)`.
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+pub fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::lowpoly_artifact_schema_descriptor())
         .inferences([semio_s_artifact_lowpoly_lowpoly_inferences::lowpoly_artifact_inference_descriptor()])
         .composers(semio_s_artifact_lowpoly_lowpoly_io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_lowpoly_lowpoly_editor::LowpolyPlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<semio_s_artifact_lowpoly_lowpoly_editor::LowpolyPlayApp>>()
         .try_build()
 }
 

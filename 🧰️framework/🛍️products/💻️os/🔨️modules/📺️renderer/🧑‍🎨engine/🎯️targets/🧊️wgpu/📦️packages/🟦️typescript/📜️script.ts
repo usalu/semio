@@ -26,6 +26,11 @@ import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️
 import { runtimeTypeEnvironmentV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 📇️ Verifies actual native publication and launch against the independent catalog selection oracle. */
+/** 🧪️ Runs the neutral owned browser compiler plan and independent profile parser laws. */
+class WasmCompilerTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-wasm-compiler");const left=this.invocation.control.remainingMilliseconds();if(left!==null&&left<1)throw Error("Original compiler test authority exhausted");await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🏗️compiler/🌐️wasm/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:scriptInvocationEnvironment(this.invocation,process.env),budgetMs:left===null?0:Math.floor(left),signal:this.invocation.control.signal});}
+}
+
 class NativeEntrypointCatalogTestScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("test-native-entrypoint-catalog accepts no arguments");
@@ -37,7 +42,7 @@ class NativeEntrypointCatalogTestScript extends BundleScript {
 
 const repoRoot = findWorkspaceRoot();
 const rustPackageRoot = resolve(import.meta.dirname, "../🦀️rust");
-const crateName = "semio-framework-os-renderer-wgpu";
+const crateName = "semio-renderer-wgpu";
 
 function assertRendererOutputOwnership(): number {
   const project = JSON.parse(readFileSync(join(import.meta.dirname, "📋️project.json"), "utf8"));
@@ -134,7 +139,7 @@ class OriginalBrowserOutputSourceScript extends BundleScript {
 }
 /** 🦀️ Runs the actual retained native output with its same finite caller and complete nonempty snapshot. */
 class OriginalBrowserOutputNativeScript extends OriginalBrowserOutputSourceScript {
- async run(args:string[]):Promise<void>{await super.run(args);await runAdmittedCargoPackageTestsV1(["semio-framework-os-renderer-wgpu-host-plumbing"],this.repoRoot,this.invocation,["--offline","--test","original_native_frame_caller","--","--nocapture"]);await runAdmittedCargoPackageTestsV1(["semio-framework-os-infinite"],this.repoRoot,this.invocation,["--offline","--test","original_world_resources","--","--nocapture"]);await runAdmittedCargoPackageTestsV1([crateName],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_browser_nonempty_output_same_media_system_denials_and_full_paid_close) | test(original_presented_params_same_source_native_cause_denials_and_full_paid_close) | test(original_presented_slot_exact_identity_system_denial_donation_and_full_paid_close) | test(original_presented_roster_nonempty_same_source_system_receipts_cancellation_and_full_paid_close)","--","--nocapture"]);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runAdmittedCargoPackageTestsV1(["semio-renderer-wgpu-host-plumbing"],this.repoRoot,this.invocation,["--offline","--test","original_native_frame_caller","--","--nocapture"]);await runAdmittedCargoPackageTestsV1(["semio-os-infinite"],this.repoRoot,this.invocation,["--offline","--test","original_world_resources","--","--nocapture"]);await runAdmittedCargoPackageTestsV1([crateName],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_browser_nonempty_output_same_media_system_denials_and_full_paid_close) | test(original_presented_params_same_source_native_cause_denials_and_full_paid_close) | test(original_presented_slot_exact_identity_system_denial_donation_and_full_paid_close) | test(original_presented_roster_nonempty_same_source_system_receipts_cancellation_and_full_paid_close)","--","--nocapture"]);}
 }
 
 /** 🦀️ Runs the existing budgeted Cargo tests without invoking browser tests. */
@@ -157,7 +162,7 @@ class NativeTestScript extends BundleScript {
  * fundamental 15 s or quick 30 s budget — it was killed mid-run at every invocation
  * (`[budget] cargo nextest run … exceeded 15000ms — killed`) and reported as a target failure with no
  * red test in it. Its two siblings (`@semio-tech/ui-rs:test-wgpu-engine`, 568 laws, and
- * `semio-framework-os-infinite:test-wgpu-world-terrain`, 199) fit the fundamental budget and keep it.
+ * `semio-os-infinite:test-wgpu-world-terrain`, 199) fit the fundamental budget and keep it.
  */
 class WgpuUnitTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -180,7 +185,7 @@ class MediaSlotContractTestScript extends BundleScript {
       "media_slot_identity_registry_requeries_none_and_rejects_retired_or_foreign_replies",
       "media_slot_tokens_survive_ui_generation_but_change_with_document_and_resource_authority",
     ].map((law) => `media_slots::tests::${law}`);
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "33554432" }, nativeEnv: { RUST_MIN_STACK: "134217728" }, groups: [{ package: "semio-framework-os-renderer-wgpu-media-slots", target: { kind: "lib" }, laws }], progress(event) { console.log(`media-slot-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "33554432" }, nativeEnv: { RUST_MIN_STACK: "134217728" }, groups: [{ package: "semio-renderer-wgpu-media-slots", target: { kind: "lib" }, laws }], progress(event) { console.log(`media-slot-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
     console.log(`media-slot-contract: ${receipts.reduce((count, receipt) => count + receipt.laws.length, 0)} exact native laws passed`);
   }
 }
@@ -515,6 +520,7 @@ const router = new ScriptRouter(import.meta.dirname)
   .register("test-socket-snapshot-sqlite",SocketSnapshotSqliteScript)
   .register("test-original-frame-source", OriginalFrameSourceScript)
   .register("test-original-io-invocation-native",OriginalIoInvocationNativeScript)
+  .register("test-wasm-compiler",WasmCompilerTestScript)
   .register("test-original-browser-output-source",OriginalBrowserOutputSourceScript)
   .register("test-original-browser-output-native",OriginalBrowserOutputNativeScript)
   .register("test-native", NativeTestScript)

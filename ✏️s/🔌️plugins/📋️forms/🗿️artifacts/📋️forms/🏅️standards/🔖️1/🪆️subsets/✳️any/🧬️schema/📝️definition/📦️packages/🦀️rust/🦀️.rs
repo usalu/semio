@@ -72,10 +72,5 @@ pub mod editor {
             #[path = "../../../../✏️editor/👥️presence/🧬️schema/🦀️.rs"]
             pub mod schema;
         }
-        #[path = "."]
-        pub mod config {
-            #[path = "../../../../✏️editor/🎚️config/🚪️io/🦀️.rs"]
-            pub mod io;
-        }
     }
 }

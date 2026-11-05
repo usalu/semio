@@ -27,4 +27,4 @@ dashboard_core = { path = "../../../../🧱️invocation-catalog/📦️packages
 dashboard_launch = { path = "../../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust", features = ["native"] }
+semio-ui-tui-terminal = { path = "../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust", features = ["native"] }

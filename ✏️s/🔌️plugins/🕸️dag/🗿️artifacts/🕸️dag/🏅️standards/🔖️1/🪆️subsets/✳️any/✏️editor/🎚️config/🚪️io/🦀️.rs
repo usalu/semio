@@ -10,8 +10,8 @@ pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
 
 //#region 🧩️ArtifactItems3
 pub mod artifact_items_3 {
-pub use semio_framework_os_infinite_directed_presentation::DagHostSnapshotEdge;
-pub use semio_framework_os_infinite_directed_presentation::{DagNodeSpec, IoPortSpec};
+pub use semio_os_infinite_directed_presentation::DagHostSnapshotEdge;
+pub use semio_os_infinite_directed_presentation::{DagNodeSpec, IoPortSpec};
 
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/graph` document — the dag's nodes and edges live in this
@@ -77,7 +77,7 @@ pub fn dag_graph_node(node: &DagNodeSpec) -> SemioGraphNode {
     let port = |port: &IoPortSpec, kind| SemioGraphPort { name: port.id.clone(), kind, category: String::new(), properties: Vec::new() };
     SemioGraphNode {
         id: SemioGraphNodeId::new(node.id.clone()),
-        kind: semio_framework_os_infinite_directed_presentation::dag_node_kind_tag(&node.kind).to_string(),
+        kind: semio_os_infinite_directed_presentation::dag_node_kind_tag(&node.kind).to_string(),
         label: node.name.clone(),
         position: SemioPoint2 { x: node.x, y: node.y },
         width: node.width,

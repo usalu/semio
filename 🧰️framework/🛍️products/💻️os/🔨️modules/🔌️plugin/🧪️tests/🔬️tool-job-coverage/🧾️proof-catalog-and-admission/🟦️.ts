@@ -61,7 +61,7 @@ impl ToolJobFactory for AppCommandJobFactory {
   fn create_job(&mut self, operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { job(operation, payload) }
 }
 impl ArtifactOwnedToolJobFactory for AppCommandJobFactory {
-  type Owner = semio_framework_plugin::EditorApp<Ownerownerrs>;
+  type Owner = semio_plugin::EditorApp<Ownerownerrs>;
   const TOOL_IDS: &'static [&'static str] = APP_COMMAND_TOOL_IDS;
 }
 impl ArtifactEditor for Ownerownerrs {
@@ -73,7 +73,7 @@ impl ArtifactEditor for Ownerownerrs {
   const directExecutableOwner = executableOwner
     .replaceAll("Ownerownerrs", "DirectOwner")
     .replaceAll("impl ArtifactEditor for DirectOwner", "impl ArtifactApp for DirectOwner")
-    .replaceAll("semio_framework_plugin::EditorApp<DirectOwner>", "DirectOwner");
+    .replaceAll("semio_plugin::EditorApp<DirectOwner>", "DirectOwner");
   if (evaluateToolJobSources({ "owner.rs": directExecutableOwner }).length !== 0)
     throw new Error("[verify interactivity tool-jobs] self-test direct ArtifactApp executable route was falsely rejected.");
   if (evaluateToolJobSources({ "owner.rs": directExecutableOwner.replace("type Owner = DirectOwner;", "type Owner = ForgedDirectOwner;") }).length === 0)

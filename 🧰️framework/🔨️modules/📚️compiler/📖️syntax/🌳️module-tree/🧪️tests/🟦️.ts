@@ -143,21 +143,21 @@ test("facades, hubs and roots of the renderer partition pull in the crates they 
   await Parser.init({ locateFile: () => resolve(dirname(fileURLToPath(import.meta.resolve("web-tree-sitter"))), "tree-sitter.wasm") });
   const parser = new Parser();
   parser.setLanguage(await Parser.Language.load(resolve(dirname(fileURLToPath(import.meta.resolve("tree-sitter-wasms/package.json"))), "out/tree-sitter-rust.wasm")));
-  const crate = (name: string) => `[package]\nname = "semio-framework-os-renderer-wgpu-${name}"\n`;
+  const crate = (name: string) => `[package]\nname = "semio-renderer-wgpu-${name}"\n`;
   const files = {
     "engine/🎯️targets/🧊️wgpu/🔧️alpha/📦️packages/🦀️rust/Cargo.toml": crate("alpha"),
-    "engine/🎯️targets/🧊️wgpu/🔧️alpha/🦀️.rs": '#[path = "../../../🧱️elements/A/🎯️targets/🧊️wgpu/🦀️.rs"]\npub mod member_a;\nextern crate semio_framework_os_renderer_wgpu_beta as beta;\n',
+    "engine/🎯️targets/🧊️wgpu/🔧️alpha/🦀️.rs": '#[path = "../../../🧱️elements/A/🎯️targets/🧊️wgpu/🦀️.rs"]\npub mod member_a;\nextern crate semio_renderer_wgpu_beta as beta;\n',
     "engine/🎯️targets/🧊️wgpu/🔨️beta/📦️packages/🦀️rust/Cargo.toml": crate("beta"),
     "engine/🎯️targets/🧊️wgpu/🔨️beta/🦀️.rs": '#[path = "../../../🧱️elements/B/🎯️targets/🧊️wgpu/🦀️.rs"]\npub mod member_b;\n',
-    "engine/🧱️elements/A/🎯️targets/🧊️wgpu/🦀️.rs": "use semio_framework_os_renderer_wgpu_beta::member_b;\n",
+    "engine/🧱️elements/A/🎯️targets/🧊️wgpu/🦀️.rs": "use semio_renderer_wgpu_beta::member_b;\n",
     "engine/🧱️elements/B/🎯️targets/🧊️wgpu/🦀️.rs": "pub fn member_b() {}\n",
-    "engine/🧱️elements/F/🎯️targets/🧊️wgpu/🦀️.rs": 'use semio_framework_os_renderer_wgpu_alpha::member_a;\npub use ::semio_framework_os_renderer_wgpu_beta::member_b as other;\nuse std::fmt;\nmod inline { use semio_framework_os_renderer_wgpu_alpha::x; }\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
+    "engine/🧱️elements/F/🎯️targets/🧊️wgpu/🦀️.rs": 'use semio_renderer_wgpu_alpha::member_a;\npub use ::semio_renderer_wgpu_beta::member_b as other;\nuse std::fmt;\nmod inline { use semio_renderer_wgpu_alpha::x; }\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
     "engine/🧱️elements/F/🎯️targets/🧊️wgpu/🧪️tests/🦀️.rs": "// tests\n",
   };
   const base = materialize("renderer-partition-crates", files), facade = join(base, "engine/🧱️elements/F/🎯️targets/🧊️wgpu/🦀️.rs");
   const rel = (list: readonly string[]) => list.map(file => file.slice(base.length + 1));
   const source = files["engine/🧱️elements/F/🎯️targets/🧊️wgpu/🦀️.rs"];
-  expect(module.inspectRustCrateReferences(source)).toEqual(["semio_framework_os_renderer_wgpu_alpha", "semio_framework_os_renderer_wgpu_beta", "std"]);
+  expect(module.inspectRustCrateReferences(source)).toEqual(["semio_renderer_wgpu_alpha", "semio_renderer_wgpu_beta", "std"]);
   const tree = parser.parse(source);
   try {
     const independent = tree.rootNode.children.flatMap(node => node.type === "use_declaration" ? [/(?:::)?([A-Za-z_][A-Za-z0-9_]*)/u.exec(node.childForFieldName("argument")!.text)![1]!] : []);

@@ -1,7 +1,7 @@
 //! 🔎️ Prepared surface partitions support fixed original reads without decode maps or repaint sorting.
 use super::{ResultField,SURFACE_ENERGY_BANDS,hex_to_rgb01};
 use semio_framework_tool_run::payload_stream::ToolRunPayloadView;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 
 /// 🧱️ The renderer borrows complete original bytes through one bounded read interface.
 pub trait EnergyResultSource{

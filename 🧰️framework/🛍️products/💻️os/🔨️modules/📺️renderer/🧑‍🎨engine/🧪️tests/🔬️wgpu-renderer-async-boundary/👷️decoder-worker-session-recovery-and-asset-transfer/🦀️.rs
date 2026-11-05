@@ -25,7 +25,7 @@ fn an_independent_decoder_job_recovers_its_response_from_an_unadmitted_session()
     }
     use semio_framework_job::*;
     use semio_framework_job_worker::{WORKER_JOB_SESSION_SLOTS, MountedWorkerJobSession};
-    use semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource;
+    use semio_plugin_ownership::reserved_job_session::RefusedWorkerSource;
     struct Occupied;
     impl InteractiveJob for Occupied {
         fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
@@ -147,7 +147,7 @@ fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes()
 #[test]
 fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
-    let bytes = semio_framework_os_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let bytes = semio_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let mut authority = WorldAssetIoAuthority::default();
     authority.reserve(1, 1, WorldAssetRequestKind::Glb, "catalogue-frame-isolation.glb", bytes.len()).unwrap();
     let mut owner = authority.take_next().unwrap();

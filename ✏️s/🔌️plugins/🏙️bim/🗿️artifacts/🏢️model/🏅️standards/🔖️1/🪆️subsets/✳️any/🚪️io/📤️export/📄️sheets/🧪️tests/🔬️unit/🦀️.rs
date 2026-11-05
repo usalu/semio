@@ -14,7 +14,7 @@ use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoRe
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred, labels, read_room, room, ROOM_DIR};

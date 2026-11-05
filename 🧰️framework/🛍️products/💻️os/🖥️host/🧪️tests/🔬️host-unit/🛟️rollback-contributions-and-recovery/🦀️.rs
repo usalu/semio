@@ -20,7 +20,7 @@
                 body_key: "composite".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
-                options: semio_framework_ui_declaration::layout::WindowOptions::default(),
+                options: semio_ui_declaration::layout::WindowOptions::default(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 interactions: Vec::new(),
@@ -70,7 +70,7 @@
             },
             artifact_uri: "program://draw".into(),
         });
-        let instance_id = host.create_instance("draw-play", "{}".into(), ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("instance");
+        let instance_id = host.create_instance("draw-play", "{}".into(), ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("instance");
         let generation_before = host.instance(instance_id).expect("instance").generation;
         let event = host.hot_swap_plugin(LoadedProgram {
             plugin_id: "draw".into(),

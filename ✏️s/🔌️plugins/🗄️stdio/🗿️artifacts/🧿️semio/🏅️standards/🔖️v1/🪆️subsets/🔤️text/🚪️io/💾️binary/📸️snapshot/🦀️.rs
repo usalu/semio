@@ -32,8 +32,8 @@ pub(crate) fn mark_kind_from_tag(tag: u8) -> Result<SemioTextMarkKind, String> {
 }
 
 semio_s_artifact_stdio_semio_base::semio_snapshot_record_pack!(SemioTextSnapshot);
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SemioTextSnapshot {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SemioTextSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())

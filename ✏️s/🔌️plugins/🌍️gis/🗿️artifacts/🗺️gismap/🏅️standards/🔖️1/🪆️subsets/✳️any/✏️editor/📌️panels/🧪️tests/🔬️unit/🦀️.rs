@@ -3,9 +3,9 @@
 mod artifact {
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use semio_s_artifact_gis_gismap_gis2d::{editor::gis2d::GIS2D_INTERACTION_DOMAIN, editor::gis2d::GIS2D_LAYER_GRANULARITY, editor::gis2d::GIS2D_PLAY_APP_ID, editor::gis2d::GIS_MAP_LAYER_IDS};
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::PanelTabKind;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::panels::artifact::*;
 use crate::unit_tests::context::{app, close, render as render_body};
 
@@ -28,15 +28,15 @@ async fn the_definition_binds_the_framework_document_tab_to_this_body() {
 
 //#region 🪟️WindowLaws
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels;
-use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, Component};
-use semio_framework_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID, TREE_WINDOW_DEFAULT_ROWS};
-use semio_framework_ui_contract::TreeWindow;
+use semio_plugin::plugin_app_close_prelude::{BuiltNode, Component};
+use semio_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID, TREE_WINDOW_DEFAULT_ROWS};
+use semio_ui_contract::TreeWindow;
 
 /// 🪟️ The layer roster is a compile-time array, so "oversized" here means oversized RELATIVE TO THE
 /// VIEWPORT: a host that measured room for `rows` rows must still be told the full extent of all
 /// [`GIS_MAP_LAYER_IDS`] and must still receive only what it asked for.
 fn viewport(rows: u32, requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 fn request(open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
@@ -44,11 +44,11 @@ fn request(open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
 }
 
 fn build(view: &ViewModel) -> BuiltNode {
-    render(&MapWindowConfig::default(), gis2d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, GIS2D_PLAY_BODY_ARTIFACT)).expect("gis2d document tree assembly")
+    render(&MapWindowConfig::default(), gis2d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, GIS2D_PLAY_BODY_ARTIFACT)).expect("gis2d document tree assembly")
 }
 
 fn projection(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("gis2d document tree projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("gis2d document tree projection")
 }
 
 fn layers_section(tree: &BuiltNode) -> &BuiltNode {
@@ -147,7 +147,7 @@ mod inspection {
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use semio_s_artifact_gis_gismap_gis2d::{editor::gis2d::Gis2dInteractionSnapshot, editor::gis2d::GIS2D_FEATURE_GRANULARITY, editor::gis2d::GIS_MAP_LAYER_IDS};
 use semio_s_artifact_gis_gismap_gis2d::{GisMapSnapshot, GIS_MAP_SCHEMA};
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::panels::inspection::*;
 use crate::unit_tests::context::{app, close, render as render_body};
 
@@ -168,10 +168,10 @@ async fn the_inspector_always_summarises_the_schema_and_visible_count() {
 async fn the_inspector_detail_section_follows_the_features_selection() {
     let document = semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::default_document();
     let cfg = MapWindowConfig::default();
-    let labels = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let json = |interaction: &Gis2dInteractionSnapshot| -> String {
-        let tree = semio_framework_plugin::built_to_component_tree(render(&document, &cfg, interaction, labels).expect("inspector"));
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")
+        let tree = semio_plugin::built_to_component_tree(render(&document, &cfg, interaction, labels).expect("inspector"));
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")
     };
 
     let empty = json(&Gis2dInteractionSnapshot::default());
@@ -197,10 +197,10 @@ async fn the_inspector_detail_section_follows_the_features_selection() {
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_summary_projects_each_document_collection_extent() {
     let cfg = MapWindowConfig::default();
-    let labels = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let json = |document: &GisMapSnapshot| -> String {
-        let tree = semio_framework_plugin::built_to_component_tree(render(document, &cfg, &Gis2dInteractionSnapshot::default(), labels).expect("inspector"));
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")
+        let tree = semio_plugin::built_to_component_tree(render(document, &cfg, &Gis2dInteractionSnapshot::default(), labels).expect("inspector"));
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")
     };
 
     let mut document = semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::default_document();

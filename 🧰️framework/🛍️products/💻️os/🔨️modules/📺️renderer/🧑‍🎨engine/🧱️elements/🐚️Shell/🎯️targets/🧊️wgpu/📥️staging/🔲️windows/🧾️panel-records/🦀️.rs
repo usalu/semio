@@ -129,12 +129,12 @@ impl PanelProjection<'_> {
     pub fn node(&mut self, node: &UiNode) -> Result<ui_contract::UiNodeId, String> {
         let presence = node.presence();
         let activity = match presence.status {
-            semio_framework_ui_declaration::ui::UiStatus::Loading => ui_contract::Activity::Loading,
-            semio_framework_ui_declaration::ui::UiStatus::Waiting => ui_contract::Activity::Waiting,
-            semio_framework_ui_declaration::ui::UiStatus::Finished => ui_contract::Activity::Finished,
-            semio_framework_ui_declaration::ui::UiStatus::Idle => ui_contract::Activity::Idle,
+            semio_ui_declaration::ui::UiStatus::Loading => ui_contract::Activity::Loading,
+            semio_ui_declaration::ui::UiStatus::Waiting => ui_contract::Activity::Waiting,
+            semio_ui_declaration::ui::UiStatus::Finished => ui_contract::Activity::Finished,
+            semio_ui_declaration::ui::UiStatus::Idle => ui_contract::Activity::Idle,
         };
-        let disabled = matches!(presence.state, semio_framework_ui_declaration::ui::UiState::Disabled);
+        let disabled = matches!(presence.state, semio_ui_declaration::ui::UiState::Disabled);
         match node {
             UiNode::Stack(stack) => {
                 let key = self.key(stack.id.as_deref());
@@ -479,7 +479,7 @@ impl PanelProjection<'_> {
             key,
             ui_contract::Component::TreeItem(props),
             Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None),
-            PanelRecord { children, disabled: matches!(item.presence.state, semio_framework_ui_declaration::ui::UiState::Disabled), ..PanelRecord::default() },
+            PanelRecord { children, disabled: matches!(item.presence.state, semio_ui_declaration::ui::UiState::Disabled), ..PanelRecord::default() },
         )
     }
 
@@ -501,8 +501,8 @@ impl PanelProjection<'_> {
             }
             let verb = UiText::try_from_str(&action.action.action).ok_or_else(|| format!("panel '{}' tree row '{}' verb exceeds the retained contract", self.surface_id, item.id))?;
             let placement = match action.placement() {
-                semio_framework_ui_declaration::ui::UiTreeActionPlacement::Row => ui_contract::RowActionPlacement::Row,
-                semio_framework_ui_declaration::ui::UiTreeActionPlacement::Menu => ui_contract::RowActionPlacement::Menu,
+                semio_ui_declaration::ui::UiTreeActionPlacement::Row => ui_contract::RowActionPlacement::Row,
+                semio_ui_declaration::ui::UiTreeActionPlacement::Menu => ui_contract::RowActionPlacement::Menu,
             };
             let row_action = ui_contract::RowAction { icon: UiText::clipped(action.icon_id.as_str()), label: action.label.as_ref().map(|label| measure_label(label.as_str())), verb, placement, disabled: action.disabled, reason: action.reason.as_ref().filter(|_| action.disabled).map(|reason| measure_label(reason.as_str())) };
             row_actions.try_push(row_action).map_err(|_| format!("panel '{}' tree row '{}' packs more row actions than one record admits", self.surface_id, item.id))?;
@@ -539,7 +539,7 @@ impl PanelProjection<'_> {
 /// order is written straight through — React reverses only to cancel its bottom-anchored `Tree`'s
 /// own per-level reversal (`reverseForUpPanel`), which this renderer's panel tree does not do.
 pub fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
-    use semio_framework_ui_declaration::ui::{UiControlNode, UiState, UiStatus};
+    use semio_ui_declaration::ui::{UiControlNode, UiState, UiStatus};
     let activity = |loading: Option<bool>, waiting: Option<bool>| {
         if loading.unwrap_or(false) {
             UiStatus::Loading
@@ -683,8 +683,8 @@ pub fn panel_ui_node_tag(node: &UiNode) -> &'static str {
 /// 🎛️ One [`UiControlNode`] as the [`UiNode`] it IS — the enum is a narrowed projection of the
 /// same variants, so a tree row's inline control projects through the one assembler every other node
 /// takes rather than a second, parallel arm table.
-pub fn control_ui_node(control: &semio_framework_ui_declaration::ui::UiControlNode) -> UiNode {
-    use semio_framework_ui_declaration::ui::UiControlNode;
+pub fn control_ui_node(control: &semio_ui_declaration::ui::UiControlNode) -> UiNode {
+    use semio_ui_declaration::ui::UiControlNode;
     match control.clone() {
         UiControlNode::Input(node) => UiNode::Input(node),
         UiControlNode::Select(node) => UiNode::Select(node),
@@ -715,40 +715,40 @@ pub struct PanelRecord {
     pub description: Option<ui_contract::Label>,
 }
 
-pub fn panel_component_scene_props(scene: &semio_framework_ui_declaration::ui::UiComponentSceneNode) -> Result<ui_contract::SurfaceProps, String> {
+pub fn panel_component_scene_props(scene: &semio_ui_declaration::ui::UiComponentSceneNode) -> Result<ui_contract::SurfaceProps, String> {
     let kind = match scene.component_kind {
-        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d => ui_contract::SurfaceKind::Canvas2d,
-        semio_framework_ui_declaration::ui::SurfaceKind::World3d => ui_contract::SurfaceKind::World3d,
-        semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph => ui_contract::SurfaceKind::NodeGraph,
-        semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => ui_contract::SurfaceKind::TextEditor,
-        semio_framework_ui_declaration::ui::SurfaceKind::Table => ui_contract::SurfaceKind::Table,
-        semio_framework_ui_declaration::ui::SurfaceKind::Paint2d => ui_contract::SurfaceKind::Paint2d,
-        semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem => ui_contract::SurfaceKind::VirtualFileSystem,
-        semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => ui_contract::SurfaceKind::TiledMap,
-        semio_framework_ui_declaration::ui::SurfaceKind::Board2d => ui_contract::SurfaceKind::Board2d,
-        semio_framework_ui_declaration::ui::SurfaceKind::IconRender => ui_contract::SurfaceKind::IconRender,
-        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => ui_contract::SurfaceKind::InkCanvas,
-        semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline => ui_contract::SurfaceKind::GraphTimeline,
-        semio_framework_ui_declaration::ui::SurfaceKind::BlockList => ui_contract::SurfaceKind::BlockList,
-        semio_framework_ui_declaration::ui::SurfaceKind::DiffView => ui_contract::SurfaceKind::DiffView,
-        semio_framework_ui_declaration::ui::SurfaceKind::EventFeed => ui_contract::SurfaceKind::EventFeed,
+        semio_ui_declaration::ui::SurfaceKind::Canvas2d => ui_contract::SurfaceKind::Canvas2d,
+        semio_ui_declaration::ui::SurfaceKind::World3d => ui_contract::SurfaceKind::World3d,
+        semio_ui_declaration::ui::SurfaceKind::NodeGraph => ui_contract::SurfaceKind::NodeGraph,
+        semio_ui_declaration::ui::SurfaceKind::TextEditor => ui_contract::SurfaceKind::TextEditor,
+        semio_ui_declaration::ui::SurfaceKind::Table => ui_contract::SurfaceKind::Table,
+        semio_ui_declaration::ui::SurfaceKind::Paint2d => ui_contract::SurfaceKind::Paint2d,
+        semio_ui_declaration::ui::SurfaceKind::VirtualFileSystem => ui_contract::SurfaceKind::VirtualFileSystem,
+        semio_ui_declaration::ui::SurfaceKind::TiledMap => ui_contract::SurfaceKind::TiledMap,
+        semio_ui_declaration::ui::SurfaceKind::Board2d => ui_contract::SurfaceKind::Board2d,
+        semio_ui_declaration::ui::SurfaceKind::IconRender => ui_contract::SurfaceKind::IconRender,
+        semio_ui_declaration::ui::SurfaceKind::InkCanvas => ui_contract::SurfaceKind::InkCanvas,
+        semio_ui_declaration::ui::SurfaceKind::GraphTimeline => ui_contract::SurfaceKind::GraphTimeline,
+        semio_ui_declaration::ui::SurfaceKind::BlockList => ui_contract::SurfaceKind::BlockList,
+        semio_ui_declaration::ui::SurfaceKind::DiffView => ui_contract::SurfaceKind::DiffView,
+        semio_ui_declaration::ui::SurfaceKind::EventFeed => ui_contract::SurfaceKind::EventFeed,
     };
     let encoded = match scene.component_kind {
-        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d => scene.canvas_2d.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::World3d => scene.world_3d.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph => scene.node_graph.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => scene.text_editor.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::Table => scene.table.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::Paint2d => scene.paint_2d.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem => scene.virtual_file_system.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => scene.tiled_map.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::Board2d => scene.board2d.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::IconRender => scene.icon_render.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => scene.ink_canvas.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline => scene.graph_timeline.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::BlockList => scene.block_list.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::DiffView => scene.diff_view.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
-        semio_framework_ui_declaration::ui::SurfaceKind::EventFeed => scene.event_feed.as_ref().map(|value| semio_framework_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::Canvas2d => scene.canvas_2d.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::World3d => scene.world_3d.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::NodeGraph => scene.node_graph.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::TextEditor => scene.text_editor.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::Table => scene.table.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::Paint2d => scene.paint_2d.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::VirtualFileSystem => scene.virtual_file_system.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::TiledMap => scene.tiled_map.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::Board2d => scene.board2d.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::IconRender => scene.icon_render.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::InkCanvas => scene.ink_canvas.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::GraphTimeline => scene.graph_timeline.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::BlockList => scene.block_list.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::DiffView => scene.diff_view.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
+        semio_ui_declaration::ui::SurfaceKind::EventFeed => scene.event_feed.as_ref().map(|value| semio_ui_declaration::ui::encode_surface_doc(kind, value)),
     };
     encoded
         .ok_or_else(|| format!("panel ComponentScene '{}' has no {:?} payload", scene.surface_id, scene.component_kind))?

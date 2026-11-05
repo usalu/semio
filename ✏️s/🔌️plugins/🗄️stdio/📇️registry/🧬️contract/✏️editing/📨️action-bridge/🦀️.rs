@@ -129,7 +129,7 @@ pub fn snapshot_edit_actions() -> Vec<ActionDefinition> {
 }
 
 /// 🧰 Adds the complete snapshot-edit action catalog to an artifact editor manifest.
-pub fn snapshot_edit_actions_with(builder: semio_framework_plugin::app::EditorBuilder) -> semio_framework_plugin::app::EditorBuilder {
+pub fn snapshot_edit_actions_with(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     snapshot_edit_actions().into_iter().fold(builder, |builder, action| {
         let id = action.id.clone();
         builder.action_with(action).action_interactive_job(id, InteractiveJobClassification::Migrated)

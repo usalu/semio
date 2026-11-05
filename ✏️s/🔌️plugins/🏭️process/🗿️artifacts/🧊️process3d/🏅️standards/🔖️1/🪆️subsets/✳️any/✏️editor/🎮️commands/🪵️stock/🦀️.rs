@@ -4,7 +4,7 @@ use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfig
 use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_s_artifact_process_process3d_model::{snapshot::process_working_scene_to_snapshot, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::WorkingSolid};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetStock

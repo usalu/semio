@@ -15,21 +15,21 @@ use framework_schema::ArtifactSchema;
 /// above (`"s.architect.program"`); `standard`/`subset` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
 /// `s.architect.program@1/*#editor` / `s.architect.program@1/*#viewer` (contract §1 grammar).
-pub const ARCHITECT_DIALECT: semio_framework_plugin::app::Dialect =
-    semio_framework_plugin::app::Dialect { artifact_kind: "s.architect.program", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const ARCHITECT_DIALECT: semio_plugin::app::Dialect =
+    semio_plugin::app::Dialect { artifact_kind: "s.architect.program", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 //#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.program`).
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "data.program".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Architect Program", "Raumprogramm"),
+        label: semio_ui_locale::LocalizedLabel::native("Architect Program", "Raumprogramm"),
         source_format: ARCHITECT_PROGRAM_SCHEMA.into(),
         component_kind: "architect".into(),
         dimension: "data".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Data, form: semio_plugin::MediaForm::Value },
         schema: ARCHITECT_PROGRAM_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
@@ -460,9 +460,9 @@ pub fn program_artifact_schema_descriptor() -> semio_framework_schema_registry::
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.architect.program", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.architect.program",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: "", proto: "" },

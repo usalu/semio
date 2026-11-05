@@ -2,10 +2,10 @@
 
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::{PanelTreeBuilder, TreeWindows};
-use semio_framework_ui_contract as ui;
+use semio_plugin::NoConfig;
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::{PanelTreeBuilder, TreeWindows};
+use semio_ui_contract as ui;
 
 //#region 🔖️Render
 /// 🕹️ One `"graph"`-domain pick row: keyed by the node's RAW document id (matching
@@ -13,21 +13,21 @@ use semio_framework_ui_contract as ui;
 /// the graph canvas land in the same selection) and marked with the domain's `"node"` granularity. The
 /// tree-level `.interaction_domain(...)` binding carries the dispatch, so the row binds no action and
 /// spends no `UiValue` arena.
-fn node_row(node: &semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Node) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn node_row(node: &semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Node) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let label = crate::editor::rewriting::ui::ui_label(if node.name.is_empty() { node.id.as_str() } else { node.name.as_str() })?;
-    let granularity = semio_framework_plugin::UiText::try_from_str("node").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("trinity.document.granularity", "the fixed pick granularity exceeds its UI bound"))?;
+    let granularity = semio_plugin::UiText::try_from_str("node").ok_or_else(|| semio_plugin::PluginAssemblyError::new("trinity.document.granularity", "the fixed pick granularity exceeds its UI bound"))?;
     let mut builder = ui::tree_item(label)
         .try_id(node.id.clone())
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node-id", "the node row id exceeds its UI bound"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("trinity.document.node-id", "the node row id exceeds its UI bound"))?
         .granularity(granularity);
     if !node.kind.is_empty() {
-        builder = builder.description(semio_framework_plugin::UiText::try_from_str(node.kind.as_str()).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node-kind", "the node kind exceeds its UI bound"))?);
+        builder = builder.description(semio_plugin::UiText::try_from_str(node.kind.as_str()).ok_or_else(|| semio_plugin::PluginAssemblyError::new("trinity.document.node-kind", "the node kind exceeds its UI bound"))?);
     }
-    builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node", "the node row exceeds its UI bound"))
+    builder.try_build().map_err(|_| semio_plugin::PluginAssemblyError::new("trinity.document.node", "the node row exceeds its UI bound"))
 }
 
-pub fn render(state: &RewritingSnapshot, _cfg: &NoConfig, labels: &TrinityRewritingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let nodes = state.working_graph.nodes().map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.graph.invalid",error.into_message()))?;
+pub fn render(state: &RewritingSnapshot, _cfg: &NoConfig, labels: &TrinityRewritingLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let nodes = state.working_graph.nodes().map_err(|error|semio_plugin::PluginAssemblyError::new("trinity.graph.invalid",error.into_message()))?;
     PanelTreeBuilder::new("trinity-document")?
         .window_section(windows, "trinity-document.nodes", Some(crate::editor::rewriting::ui::ui_label(labels.pieces.as_str())?), true, &nodes, node_row)?
         .interaction_domain(crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_CONTROLLER_ID, "graph")?

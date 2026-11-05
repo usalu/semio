@@ -104,7 +104,7 @@ fn board_granularity_classification_matches_the_react_table() {
 fn a_draft_reference_highlight_reaches_the_wgpu_board_engine() {
     let node = |id: &str, x: f64| json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
     let fixture = |x: f64| json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("left", -x), node("mid", x)], "edges": [] }).to_string();
-    let mut board = semio_framework_ui_scene_plane::Board2dScene::base(fixture(40.0), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
+    let mut board = semio_ui_scene_plane::Board2dScene::base(fixture(40.0), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
     board.highlighted_ids_json = json!(["mid", "left"]).to_string();
     let (mut host, mut cache) = (infinite_canvas::BoardHost::default(), BoardSyncCache::default());
     assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "the first scene syncs");
@@ -124,7 +124,7 @@ fn a_draft_reference_highlight_reaches_the_wgpu_board_engine() {
 #[test]
 fn the_scene_placement_naming_reaches_the_wgpu_board_engine() {
     let naming = r#"{"brushNodePrefix":"domain.brush.","brushEdgePrefix":"domain.brush.edge."}"#;
-    let mut board = semio_framework_ui_scene_plane::Board2dScene::base(json!({ "schema": "board.ports.directed.v1", "nodes": [], "edges": [] }).to_string(), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
+    let mut board = semio_ui_scene_plane::Board2dScene::base(json!({ "schema": "board.ports.directed.v1", "nodes": [], "edges": [] }).to_string(), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
     board.placement_naming = Some(naming.into());
     let (mut host, mut cache) = (infinite_canvas::BoardHost::default(), BoardSyncCache::default());
     sync_board_engine(&mut host, &mut cache, &board, 800, 600);
@@ -161,7 +161,7 @@ fn the_wgpu_rotate_ring_publishes_one_rotate_record() {
         })
         .expect("board host")
     };
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let (gx, gy) = ring(0.0);
     board2d_pointer_down_into(board_id, inner, gx, gy, 0, false, false, &mut input).expect("an idle board takes the press");
     assert_eq!(with_board_host(board_id, |__h| pointer_lane_is_direct(&__h.focus, &__h.gestures)), Some(true), "the press on the ring opens the direct lane");
@@ -208,9 +208,9 @@ fn install_click_board(board_id: &str) -> (f32, f32) {
 
 /// 🧾️ Every action the input holds, in publication order, as its name and — for `applyBoardEvents` — its row names, after
 /// the engine's own queued events took the frame pump's coalesced flush.
-fn published_board_actions(board_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<(String, Vec<String>)> {
+fn published_board_actions(board_id: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<(String, Vec<String>)> {
     while publish_board_event_step(board_id, "controller", input) == Ok(true) {}
-    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input)
+    semio_renderer_wgpu_frame_actions::collect_fixture_actions(input)
         .iter()
         .map(|action| {
             let rows = (action.action == "applyBoardEvents")
@@ -268,7 +268,7 @@ fn a_click_dispatched_in_one_input_drain_selects_the_node() {
     let board_id = "board-click-one-drain";
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     board2d_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the move onto the node is admitted");
     assert_eq!(with_board_host(board_id, |__h| __h.commit.pointer_authority_terminal_is_empty()), Some(false), "the move's hover commit is pending and unstepped");
     board2d_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press settles the pending commit, then presses");
@@ -292,7 +292,7 @@ fn a_double_click_dispatched_in_one_input_drain_keeps_the_authority() {
     let board_id = "board-double-click-one-drain";
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     for click in 0..2 {
         board2d_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).unwrap_or_else(|fault| panic!("press {click} is admitted: {fault:?}"));
         board2d_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).unwrap_or_else(|fault| panic!("release {click} is admitted: {fault:?}"));
@@ -311,7 +311,7 @@ fn a_wheel_after_a_move_in_one_input_drain_keeps_the_authority() {
     let board_id = "board-wheel-one-drain";
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     board2d_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the move onto the node is admitted");
     assert_eq!(with_board_host(board_id, |__h| __h.commit.pointer_authority_terminal_is_empty()), Some(false), "the move's hover commit is pending and unstepped");
     assert_eq!(board2d_wheel_into(board_id, "controller", inner, x, y, -12.0, &mut input), Ok(true), "the wheel settles the pending commit, then zooms");
@@ -369,7 +369,7 @@ fn a_hover_and_a_click_publish_one_board_batch_and_no_transient_row() {
     let board_id = "board-hover-click-delivery";
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(board2d_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(false), "a hover claims no action");
     settle_board_pointer_authority_into(board_id, &mut input).expect("the hover commit reaches its terminal");
     assert_eq!(with_board_host(board_id, |host| host.focus.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the hover is committed in the engine");
@@ -393,11 +393,11 @@ fn the_frame_pump_drops_the_transient_rows_a_press_queues() {
     let board_id = "board-frame-pump-delivery";
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     board2d_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press is admitted");
     assert_eq!(with_board_host(board_id, |host| host.focus.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the press hovers its node");
     assert_eq!(publish_board_event_step(board_id, "controller", &mut input), Ok(false), "the press's hover row is not a board batch");
-    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "nothing was dispatched");
+    assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "nothing was dispatched");
     assert_eq!(with_board_host(board_id, |host| host.outbox.peek_owned_event().is_none()), Some(true), "the engine's queue was drained");
     assert_eq!(ENGINE_SURFACES.with(|cell| cell.borrow().get(board_id).map(|entry| entry.board_pending_events.is_empty())), Some(true), "and the buffer holds no transient row");
     board2d_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the release is admitted");

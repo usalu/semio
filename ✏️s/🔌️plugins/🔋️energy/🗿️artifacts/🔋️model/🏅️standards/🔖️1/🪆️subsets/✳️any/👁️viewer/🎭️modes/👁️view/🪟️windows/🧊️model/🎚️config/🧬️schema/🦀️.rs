@@ -36,14 +36,14 @@ impl EnergyModelViewerCameraPose {
     /// 🎬️ The exact `World3dScene::camera_json` string this pose stands for. `up` is always world Z:
     /// energy geometry is z-up by convention (`crate::scene`'s module docstring).
     pub fn scene_camera_json(&self) -> String {
-        semio_framework_plugin::world3d_camera_json(self.position, self.target, 45.0)
+        semio_plugin::world3d_camera_json(self.position, self.target, 45.0)
     }
 }
 
 /// 🎚️ Persisted local state for ONE concrete `energy.model.3d` window: its camera, and nothing else.
 /// Per WINDOW, not per app — two open 3d windows orbit independently, which is exactly why this is a
 /// `WindowConfigOwner` state and not a field on `EnergyModelConfig`.
-#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::NativeReceive, Clone, Copy, Debug, Default, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::NativeReceive, Clone, Copy, Debug, Default, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]

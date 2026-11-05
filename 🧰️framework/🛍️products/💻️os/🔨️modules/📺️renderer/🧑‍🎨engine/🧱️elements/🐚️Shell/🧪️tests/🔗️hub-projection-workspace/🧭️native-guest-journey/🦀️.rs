@@ -33,9 +33,9 @@ fn native_guest_journey() -> NativeGuestJourney {
 fn native_guest_authored(journey: &NativeGuestJourney) -> ShellState {
     let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
     let variant = live_env("SEMIO_PLUGIN");
-    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    let plugins = drive(semio_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
     assert!(plugins.iter().any(|entry| entry.plugin_id == journey.plugin_id), "the staged runtime carries {}", journey.plugin_id);
-    let mut shell = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(plugins, variant, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let document_id = format!("native-guest-journey-{}", chrome_now_ms() as u64);
     let started = std::time::Instant::now();
     shell_command(
@@ -165,8 +165,8 @@ fn a_native_guest_open_keeps_the_frame_loop_painting_and_is_cancellable() {
     let journey = native_guest_journey();
     let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
     let variant = live_env("SEMIO_PLUGIN");
-    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
-    let mut shell = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let plugins = drive(semio_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    let mut shell = ShellState::new(plugins, variant, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let open = |shell: &mut ShellState, document_id: &str| {
         let started = std::time::Instant::now();
         shell_command(shell, "os.open-artifact", &[("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id), ("schema", journey.schema.as_str())]);

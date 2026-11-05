@@ -3,7 +3,7 @@ fn knife_selection_action_declares_point_controls_and_the_editor_owner() {
     use semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app;
     use semio_s_artifact_procedural_3d_editor::Generation3dBoundedCommandJobFactory;
     use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
-    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    use semio_plugin::ArtifactOwnedToolJobFactory;
     let definition = create_generation3d_app();
     for window in &definition.window_kinds {
         let action = window.actions.iter().find(|action| action.id == "knifeMeshSelection");
@@ -14,5 +14,5 @@ fn knife_selection_action_declares_point_controls_and_the_editor_owner() {
         }
     }
     let publication = Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == "knifeMeshSelection").unwrap();
-    assert_eq!(publication.lanes, [semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Interaction]);
+    assert_eq!(publication.lanes, [semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Interaction]);
 }

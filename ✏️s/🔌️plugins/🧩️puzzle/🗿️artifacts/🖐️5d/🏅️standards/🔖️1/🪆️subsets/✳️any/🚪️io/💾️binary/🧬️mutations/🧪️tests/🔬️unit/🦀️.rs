@@ -12,8 +12,8 @@ use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
     use store::os_store::store_schema::ArtifactCommand;
     use store::os_store::document_materialize::create_document_envelope;
 
-    let mut store = (puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
-    semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)], transaction: None }, &mut identity).await).expect("apply");
+    let mut store = (puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
+    semio_plugin::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)], transaction: None }, &mut identity).await).expect("apply");
     let projection = store.snapshot().expect("projection");
     assert_eq!(projection.parts.len(), 1);
     assert_eq!(projection.parts[0].id, "p1");

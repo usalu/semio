@@ -1,3 +1,4 @@
+import {browserLaunchOptionsV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 // #region 🧲️Header
 // 💻️ .storybook/🧪️tests/🧪️browser-runner/🟦️.ts
 // Specs: Run Playwright end-to-end coverage against the built workspace Storybook.
@@ -9,7 +10,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from "../🎭️playwright/🟦️.ts";
 
 import { playwrightTestTimeoutMs } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -24,23 +25,9 @@ function withTrailingSlash(url: string): string {
 const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${storybookPort}/`);
 
 export default defineConfig({
-  testDir: workspaceRoot,
+  testDir: resolve(dirname(fileURLToPath(import.meta.url)), "📚️suites"),
   outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ? resolve(workspaceRoot, process.env.PLAYWRIGHT_OUTPUT_DIR) : undefined,
-  testMatch: [
-    ".storybook/🧪️tests/🧪️catalog-browser/🟦️.ts",
-    ".storybook/🧪️tests/🧪️visual-layout/🟦️.ts",
-    "🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎞️storybook-deck/🟦️.ts",
-    "✏️s/🔌️plugins/📐️cad/🧪️tests/🎨️storybook-renderer/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-no-wasm/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-wasm/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/📚️storybook-plugins/🟦️.ts",
-    "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/◻️storybook-2d/🟦️.ts",
-    "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️storybook-spatial/🟦️.ts",
-    "✏️s/🧪️tests/🎭️storybook-end-to-end/🟦️.ts",
-    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎨️storybook/🟦️.ts",
-    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-new-stories/🟦️.ts",
-    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-uncovered-components/🟦️.ts",
-  ],
+  testMatch: ["🟦️.ts"],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -59,7 +46,7 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         launchOptions: {
           executablePath: process.env.STORYBOOK_CHROMIUM_PATH || undefined,
-          args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"],
+          args: browserLaunchOptionsV1().args,
         },
       },
     },

@@ -97,13 +97,13 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.semio-framework-job-payload]
     path = "../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-framework-os-infinite]
+    [workspace.dependencies.semio-os-infinite]
     path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-framework-os-kernel]
+    [workspace.dependencies.semio-os-kernel]
     path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-framework-plugin]
+    [workspace.dependencies.semio-plugin]
     path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-schema]
@@ -118,10 +118,10 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.semio-framework-trace]
     path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-framework-ui-contract]
+    [workspace.dependencies.semio-ui-contract]
     path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-framework-ui-scene]
+    [workspace.dependencies.semio-ui-scene]
     path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-value-derive]
@@ -212,7 +212,7 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 [workspace.dependencies.semio-s-artifact-stdio-semio-drawing-png-export]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin-ownership]
+[workspace.dependencies.semio-plugin-ownership]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-puzzle-2d-retained-panels]

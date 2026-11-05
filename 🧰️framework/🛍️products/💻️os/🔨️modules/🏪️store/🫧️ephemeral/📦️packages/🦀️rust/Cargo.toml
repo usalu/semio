@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-ephemeral"
+name = "semio-os-store-ephemeral"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -25,11 +25,11 @@ testkit = []
 
 [dependencies]
 semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
-semio-framework-os-store-read = { path = "../../../🔗️read/📦️packages/🦀️rust" }
+semio-os-store-read = { path = "../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
@@ -44,14 +44,14 @@ semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️mod
 serde_json = "1.0.140"
 
 serde = { version="1.0.219", features=["derive"] }
-dsl_derive = { path="../../../../🗣️dsl/✨️derive/📦️packages/🦀️rust", package="semio-framework-os-kernel-dsl-derive" }
+dsl_derive = { path="../../../../🗣️dsl/✨️derive/📦️packages/🦀️rust", package="semio-os-kernel-dsl-derive" }
 semio-framework-dsl-record-derive = { path="../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path="../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path="../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path="../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path="../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path="../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-os-command = { path="../../../../📡️spr/🎮️command/📦️packages/🦀️rust", features=["mutation-testing"] }
-semio-framework-os-spr = { path="../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-command = { path="../../../../📡️spr/🎮️command/📦️packages/🦀️rust", features=["mutation-testing"] }
+semio-os-spr = { path="../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }

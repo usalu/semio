@@ -3,8 +3,8 @@
 //! that first motivated this law died on exactly this turn (`plugin.reactor-turn-deadline` on
 //! `[handler/first-step]`), so the whole bootstrap cost is measured here, phase by phase, instead of
 //! inferred from a console.
-use semio_framework_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
+use semio_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
+use semio_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
 
 type WfcRuntime = PluginRuntime<semio_hub_wfc::WfcApps>;
 
@@ -42,9 +42,9 @@ fn now_us() -> u64 {
     semio_framework_job::default_now_us().expect("native microsecond clock")
 }
 
-async fn turn(runtime: &WfcRuntime, events: Vec<Event>) -> (semio_framework_plugin::kernel::TurnResult, u64) {
+async fn turn(runtime: &WfcRuntime, events: Vec<Event>) -> (semio_plugin::kernel::TurnResult, u64) {
     let started_us = now_us();
-    let result = semio_framework_plugin::reactor::poll_kernel(runtime, events, None, None, boot_budget()).await.expect("wfc lifecycle turn");
+    let result = semio_plugin::reactor::poll_kernel(runtime, events, None, None, boot_budget()).await.expect("wfc lifecycle turn");
     (result, now_us() - started_us)
 }
 
@@ -76,7 +76,7 @@ async fn every_wfc_editor_boot_fits_the_strict_lifecycle_turn_authority() {
         let install_us = now_us() - install_started_us;
 
         let describe_started_us = now_us();
-        let descriptor_bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
+        let descriptor_bytes = ::semio_framework_async::poll::resolve_ready(semio_plugin::describe::describe_plugin(&runtime));
         let describe_us = now_us() - describe_started_us;
 
         let (opened, open_us) = turn(&runtime, vec![boot_open(app_id, boot_instance)]).await;

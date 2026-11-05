@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-services-native-io"
+name = "semio-os-services-native-io"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
-semio-framework-os-services-native-paths = { workspace = true }
+semio-os-services-native-paths = { workspace = true }
 semio-framework-value-retained-clone = { path = "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 
 [dev-dependencies]

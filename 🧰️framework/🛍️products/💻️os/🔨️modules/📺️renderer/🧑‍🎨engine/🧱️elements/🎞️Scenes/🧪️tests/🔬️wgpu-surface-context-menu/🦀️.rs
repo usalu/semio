@@ -8,16 +8,16 @@
 //! `route`, `object`, `feature`). A drift in one of those strings is silent — the menu simply comes
 //! back empty — so it is pinned here rather than left to a live boot.
 
-use semio_framework_os_renderer_wgpu_engine_board::paint2d::{pick_target_hits, selection_domains};
-use semio_framework_os_renderer_wgpu_scene_tables::table_metrics;
-use semio_framework_os_renderer_wgpu_scene_text_vfs::vfs_metrics;
+use semio_renderer_wgpu_engine_board::paint2d::{pick_target_hits, selection_domains};
+use semio_renderer_wgpu_scene_tables::table_metrics;
+use semio_renderer_wgpu_scene_text_vfs::vfs_metrics;
 use serde_json::json;
 use super::{context_menu_surface_kind_id, scene_context_menu_target};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_scene_plane::{Canvas2dScene, InkCanvasScene};
-use semio_framework_ui_scene_views::{BlockListScene, DiffViewScene, EventFeedScene, GraphTimelineScene, TableScene, VirtualFileSystemScene};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_ui_theme::Theme;
+use semio_ui_scene_plane::{Canvas2dScene, InkCanvasScene};
+use semio_ui_scene_views::{BlockListScene, DiffViewScene, EventFeedScene, GraphTimelineScene, TableScene, VirtualFileSystemScene};
 
 pub fn scene(kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
@@ -60,8 +60,8 @@ fn table_reports_the_row_under_the_pointer_and_its_selection() {
     let theme = Theme::default();
     let metrics = table_metrics(SURFACE, 1, &theme);
     let target = scene_context_menu_target(&node, SURFACE, 10.0, metrics.body.y + metrics.row_h * 0.5);
-    assert_eq!(target.hits, vec![semio_framework_ui_layout::layout::ContextMenuHit { domain: "row".into(), id: "row-a".into(), label: None }]);
-    assert_eq!(target.selection, vec![semio_framework_ui_layout::layout::ContextMenuSelectionGroup { domain: "row".into(), ids: vec!["row-b".into()] }]);
+    assert_eq!(target.hits, vec![semio_ui_layout::layout::ContextMenuHit { domain: "row".into(), id: "row-a".into(), label: None }]);
+    assert_eq!(target.selection, vec![semio_ui_layout::layout::ContextMenuSelectionGroup { domain: "row".into(), ids: vec!["row-b".into()] }]);
     assert!(target.text.is_none());
 }
 
@@ -87,8 +87,8 @@ fn virtual_file_system_reports_the_visible_row_and_selected_rows() {
     let theme = Theme::default();
     let metrics = vfs_metrics(SURFACE, &theme);
     let target = scene_context_menu_target(&node, SURFACE, 10.0, metrics.body.y + metrics.row_h * 0.5);
-    assert_eq!(target.hits, vec![semio_framework_ui_layout::layout::ContextMenuHit { domain: "row".into(), id: "dir".into(), label: None }]);
-    assert_eq!(target.selection, vec![semio_framework_ui_layout::layout::ContextMenuSelectionGroup { domain: "row".into(), ids: vec!["leaf".into()] }]);
+    assert_eq!(target.hits, vec![semio_ui_layout::layout::ContextMenuHit { domain: "row".into(), id: "dir".into(), label: None }]);
+    assert_eq!(target.selection, vec![semio_ui_layout::layout::ContextMenuSelectionGroup { domain: "row".into(), ids: vec!["leaf".into()] }]);
 }
 
 /// 📜️ A feed row answers `{domain:"entry", id}` and NO selection — an `EventFeedScene` tracks none
@@ -100,7 +100,7 @@ fn event_feed_reports_the_entry_under_the_pointer_and_never_a_selection() {
     node.event_feed = Some(EventFeedScene { entries_json: entries, follow: None, activate_action: None, domain_id: None });
     let theme = Theme::default();
     let target = scene_context_menu_target(&node, SURFACE, 10.0, SURFACE.y + theme.control_height * 0.5);
-    assert_eq!(target.hits, vec![semio_framework_ui_layout::layout::ContextMenuHit { domain: "entry".into(), id: "e1".into(), label: None }]);
+    assert_eq!(target.hits, vec![semio_ui_layout::layout::ContextMenuHit { domain: "entry".into(), id: "e1".into(), label: None }]);
     assert!(target.selection.is_empty());
 }
 
@@ -142,7 +142,7 @@ fn ink_canvas_reports_blocks_under_the_pointer_topmost_first() {
     let target = scene_context_menu_target(&node, SURFACE, 20.0, 10.0);
     assert_eq!(target.hits.iter().map(|hit| hit.id.as_str()).collect::<Vec<_>>(), vec!["over", "under"]);
     assert_eq!(target.hits.iter().map(|hit| hit.domain.as_str()).collect::<Vec<_>>(), vec!["block", "block"]);
-    assert_eq!(target.selection, vec![semio_framework_ui_layout::layout::ContextMenuSelectionGroup { domain: "block".into(), ids: vec!["over".into()] }]);
+    assert_eq!(target.selection, vec![semio_ui_layout::layout::ContextMenuSelectionGroup { domain: "block".into(), ids: vec!["over".into()] }]);
 }
 
 /// 🖋️ A right-click INSIDE the painted selection keeps that selection — React only replaces it when
@@ -159,7 +159,7 @@ fn ink_canvas_keeps_the_painted_selection_when_the_hit_is_already_selected() {
     let mut node = scene(SurfaceKind::InkCanvas);
     node.ink_canvas = Some(ink);
     let target = scene_context_menu_target(&node, SURFACE, 20.0, 10.0);
-    assert_eq!(target.selection, vec![semio_framework_ui_layout::layout::ContextMenuSelectionGroup { domain: "block".into(), ids: vec!["over".into(), "other".into()] }]);
+    assert_eq!(target.selection, vec![semio_ui_layout::layout::ContextMenuSelectionGroup { domain: "block".into(), ids: vec!["over".into(), "other".into()] }]);
 }
 
 /// 🖋️ Empty canvas: no block under the pointer, and nothing selected — no groups at all.
@@ -217,7 +217,7 @@ fn node_graph_selection_domains_accept_both_wire_shapes() {
 #[test]
 fn pick_target_hits_carry_the_optional_label() {
     let hits = pick_target_hits(&json!([{ "domain": "node", "id": "n1", "label": "Node One" }, { "domain": "edge", "id": "e1" }]).to_string());
-    assert_eq!(hits[0], semio_framework_ui_layout::layout::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: Some("Node One".into()) });
-    assert_eq!(hits[1], semio_framework_ui_layout::layout::ContextMenuHit { domain: "edge".into(), id: "e1".into(), label: None });
+    assert_eq!(hits[0], semio_ui_layout::layout::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: Some("Node One".into()) });
+    assert_eq!(hits[1], semio_ui_layout::layout::ContextMenuHit { domain: "edge".into(), id: "e1".into(), label: None });
     assert!(pick_target_hits("null").is_empty());
 }

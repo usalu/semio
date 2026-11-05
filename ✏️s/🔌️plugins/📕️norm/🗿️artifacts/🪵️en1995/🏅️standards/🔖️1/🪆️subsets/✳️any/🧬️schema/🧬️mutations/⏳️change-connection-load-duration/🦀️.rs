@@ -11,7 +11,7 @@ pub struct ChangeConnectionLoadDuration { pub connection_id: String, pub action_
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeConnectionLoadDuration where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_connection_load_duration::ChangeConnectionLoadDuration> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-action-loadDuration", kind: "change-connection-load-duration", record: "ChangedConnectionLoadDuration" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Load-duration class of action {} on connection {}", self.action_id, self.connection_id), &format!("Klasse der Lasteinwirkungsdauer der Einwirkung {} an Verbindung {} ändern", self.action_id, self.connection_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Load-duration class of action {} on connection {}", self.action_id, self.connection_id), &format!("Klasse der Lasteinwirkungsdauer der Einwirkung {} an Verbindung {} ändern", self.action_id, self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone(), self.action_id.clone()] }
 }
 

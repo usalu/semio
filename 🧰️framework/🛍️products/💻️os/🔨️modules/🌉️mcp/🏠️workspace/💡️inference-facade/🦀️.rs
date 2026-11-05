@@ -1,18 +1,18 @@
 //! 💡️ The authenticated hub inference facade and history undo port of the headless workspace.
 
-use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::DocumentScope;
 use std::sync::Arc;
-use semio_framework_os_mcp_hub_remote::remote;
+use semio_os_mcp_hub_remote::remote;
 use crate::headless_workspace_state::HeadlessWorkspace;
-use semio_framework_os_mcp_foundation::clock::now_ms;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_hub_remote::remote::HubRemoteBinding;
-use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceApprovalReceiptV1, HubInferenceApprovalRequestV1, HubInferenceBaseBindingV1, HubInferenceEventPageV1, HubInferenceJobReceiptV1, HubInferenceServiceV1, HubInferenceSubjectV1, HubInferenceSubmitRequestV1, hub_inference_binding_required, inference_operation_label, release_inference_operation, retain_inference_operation};
-use semio_framework_os_mcp_inference_hub::service::remote_inference_protocol_v1;
-use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
-use semio_framework_os_mcp_port::channel_port::{HistoryUndoPort, HubInferenceApprovalUndoMemberV1};
+use semio_os_mcp_foundation::clock::now_ms;
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_hub_remote::remote::HubRemoteBinding;
+use semio_os_mcp_inference_hub::hub_wire::{HubInferenceApprovalReceiptV1, HubInferenceApprovalRequestV1, HubInferenceBaseBindingV1, HubInferenceEventPageV1, HubInferenceJobReceiptV1, HubInferenceServiceV1, HubInferenceSubjectV1, HubInferenceSubmitRequestV1, hub_inference_binding_required, inference_operation_label, release_inference_operation, retain_inference_operation};
+use semio_os_mcp_inference_hub::service::remote_inference_protocol_v1;
+use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_os_mcp_port::channel_port::{HistoryUndoPort, HubInferenceApprovalUndoMemberV1};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_hub_remote::remote::NativeHubBindingDriver;
+use semio_os_mcp_hub_remote::remote::NativeHubBindingDriver;
 
 //#region 💡️Inference
 
@@ -64,8 +64,8 @@ impl HeadlessWorkspace {
         for descriptor in self.discovery_descriptors()? {
             if descriptor.manifest.plugin_id!=protocol.owner {continue;}
             for topic in descriptor.manifest.topic_contributions {
-                if topic.topic!=semio_framework_os_kernel::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC {continue;}
-                if let Ok(declaration)=<semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1 as semio_framework_value::FromValue>::from_value(topic.payload) {
+                if topic.topic!=semio_os_kernel::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC {continue;}
+                if let Ok(declaration)=<semio_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1 as semio_framework_value::FromValue>::from_value(topic.payload) {
                     if declaration.service_id==protocol.service_id && declaration==expected {count+=1;}
                 }
             }

@@ -4,10 +4,10 @@
 
 use semio_framework_job_publication::RetainedJobPublication;
 use semio_framework_job_publication::JobPublicationKind;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_job::InteractiveJobCloseStep;
@@ -482,7 +482,7 @@ pub mod testing {
     }
 
     /// 🧾️ Takes every ownership receipt, progress page, composed result and local-interaction reply a publication turn left in the outboxes of `app`, the way the framework's registered settle does, so the next turn is not held back by an unread one.
-    pub fn drain_outboxes<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A) {
+    pub fn drain_outboxes<A: semio_plugin::PluginApp + ?Sized>(app: &mut A) {
         let _ = (app.take_constructor_receipt(), app.take_typed_operation_preparation_receipt(), app.take_typed_operation_retirement_receipt(), app.take_history_command_receipt(), app.take_tool_run_receipt());
         while app.take_typed_operation_ui_progress().is_some() {}
         while app.take_typed_operation_composed_result().is_some() {}
@@ -495,14 +495,14 @@ pub mod testing {
     }
 
     /// 🧹️ Maintenance borrows one exact quoted loan from the existing original fixture source.
-    pub fn maintain_items<A: semio_framework_plugin::PluginApp + ?Sized>(original: &mut OriginalFixture, app: &mut A, items: usize, body: usize) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    pub fn maintain_items<A: semio_plugin::PluginApp + ?Sized>(original: &mut OriginalFixture, app: &mut A, items: usize, body: usize) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         let demand = app.maintenance_retirement_demands(body)?;
         let grant = funded_turn(demand, items);
-        original.turn(grant, |cx| { let loan = cx.retained_grant(); app.maintenance_step(cx, loan).map_err(semio_framework_job::OriginalTurnFailure::from) }).map_err(semio_framework_plugin::PluginLifecycleFailure::from)
+        original.turn(grant, |cx| { let loan = cx.retained_grant(); app.maintenance_step(cx, loan).map_err(semio_framework_job::OriginalTurnFailure::from) }).map_err(semio_plugin::PluginLifecycleFailure::from)
     }
 
     /// 🧼️ A single maintenance unit consumes the same original source and clock.
-    pub fn maintain<A: semio_framework_plugin::PluginApp + ?Sized>(original: &mut OriginalFixture, app: &mut A, body: usize) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    pub fn maintain<A: semio_plugin::PluginApp + ?Sized>(original: &mut OriginalFixture, app: &mut A, body: usize) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         maintain_items(original, app, 1, body)
     }
 

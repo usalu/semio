@@ -15,8 +15,8 @@ pub struct RemoveEntityArg {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity-arg", kind: "remove-entity-arg", record: "RemoveEntityArg" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove entity arg", "Entitätsargument entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove entity arg", "Entitätsargument entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

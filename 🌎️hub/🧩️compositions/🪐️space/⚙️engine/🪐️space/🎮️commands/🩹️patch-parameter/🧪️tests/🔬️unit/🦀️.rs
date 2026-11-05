@@ -3,11 +3,11 @@
 use crate::demo_space_projection;
 use semio_hub_space_operations::parameter_entity_id;
 use semio_hub_space_app::unit_tests::context::apply_mutations;
-use semio_framework_plugin::HistoryView;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::HistoryView;
+use semio_plugin::{ArtifactView, ConfigView};
 use semio_hub_space_commands_authoring::patch_parameter::{PatchParameter, handle};
 use semio_hub_space_foundation::config::SpaceConfig;
-use semio_framework_os::WorkflowParameter;
+use semio_os::WorkflowParameter;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {

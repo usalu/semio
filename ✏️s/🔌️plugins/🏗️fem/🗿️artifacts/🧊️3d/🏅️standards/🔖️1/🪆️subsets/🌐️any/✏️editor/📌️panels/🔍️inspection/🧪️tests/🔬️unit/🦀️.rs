@@ -33,42 +33,42 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::ActionId;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::Trigger;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
-use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::plugin_app_close_prelude::HasChildren;
+use semio_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::tree_item;
+use semio_plugin::tree_item_desc;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::ActionId;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::Trigger;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_ui_contract as ui;
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels;
 use crate::context::dispatch;
 use crate::context::fem3d_app;
 use crate::context::render as render_body;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
-use semio_framework_plugin::ComponentTree;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::ComponentTree;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
+use semio_plugin::ViewModel;
 
 /// 🎬️ The bundled `demo` fixture — the only built-in document carrying solids, supports and both
 /// load cases, so every law over `n20_l1`/`sol1`/`s_00`/`l2` is stated over it.
@@ -99,11 +99,11 @@ fn selecting(doc: &Fem3dSnapshot, ids: &[&str]) -> Fem3dInteractionSnapshot {
 
 fn panel(doc: &Fem3dSnapshot, ids: &[&str], view_state: &ViewModel) -> String {
     let built = render(doc, &selecting(doc, ids), fem3d_labels(view_state), &TreeWindows::unhosted()).expect("fem3d inspector assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).expect("fem3d inspector projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).expect("fem3d inspector projection")
 }
 
 fn english(doc: &Fem3dSnapshot, ids: &[&str]) -> String {
-    panel(doc, ids, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    panel(doc, ids, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 /// 🔎️ The projected node carrying `key`, anywhere under the body.
@@ -248,7 +248,7 @@ async fn a_multi_selection_headers_the_count_and_inspects_the_first_3d() {
         let view = ViewModel::new(locale, Terminology::Native);
         let identity = row["identity"].as_str().unwrap();
         let built = selection_row(identity, fem3d_labels(&view)).unwrap();
-        let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).unwrap();
+        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).unwrap();
         let decoded: serde_json::Value = serde_json::from_str(&projection).unwrap();
         assert!(decoded.to_string().contains(row["expected"].as_str().unwrap()));
         assert_eq!(decoded["key"].as_str(), Some(format!("{ROOT}.selection.{identity}").as_str()));

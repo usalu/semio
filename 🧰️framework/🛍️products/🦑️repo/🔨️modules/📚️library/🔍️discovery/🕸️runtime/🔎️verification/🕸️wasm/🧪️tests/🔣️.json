@@ -1,0 +1,40 @@
+{
+  "package": "canvas",
+  "files": {
+    "raw.wasm": "raw unicode 🧬",
+    "bindgen": "binding tool",
+    "optimizer": "optimizer tool",
+    "b/canvas.js": "export const canvas = true;",
+    "b/canvas_bg.wasm": "bound wasm",
+    "b/snippets/pkg/a.js": "export const snippet = true;",
+    "o/canvas_bg.wasm": "optimized wasm"
+  },
+  "refusals": [
+    "stage-order",
+    "missing-stage",
+    "bindgen-arguments",
+    "optimizer-arguments",
+    "tool-bytes",
+    "raw-bytes",
+    "stage-bytes",
+    "mounted-bytes",
+    "missing-snippet",
+    "extra-output",
+    "wrong-profile",
+    "tool-version",
+    "optimizer-version",
+    "double-omission",
+    "unrecorded-stage-file"
+  ],
+  "profiles": [
+    "prototype",
+    "release"
+  ],
+  "physicalCases": [
+    "bad-owner",
+    "symlink",
+    "escape",
+    "cancel",
+    "coordinated-omission"
+  ]
+}

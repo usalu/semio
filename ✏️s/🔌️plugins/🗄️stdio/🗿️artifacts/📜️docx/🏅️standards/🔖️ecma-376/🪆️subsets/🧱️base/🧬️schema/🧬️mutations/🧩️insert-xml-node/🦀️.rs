@@ -14,8 +14,8 @@ pub struct InsertXmlNode {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertXmlNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "xml-node", kind: "insert-xml-node", record: "InsertXmlNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert XML node", "XML-Knoten einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert XML node", "XML-Knoten einfügen")
     }
 
     fn target(&self) -> Vec<String> {

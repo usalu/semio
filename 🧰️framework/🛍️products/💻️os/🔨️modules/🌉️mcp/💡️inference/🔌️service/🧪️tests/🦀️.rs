@@ -3,10 +3,10 @@
 use semio_framework_async::CancelToken;
 use semio_framework_async::OperationContext;
 use semio_framework_async::TraceId;
-use semio_framework_os_kernel::os_directory::DocumentScope;
-use semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1;
-use semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1;
-use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_os_kernel::os_directory::DocumentScope;
+use semio_os_kernel::os_directory::client::DocumentHttpPortCodeV1;
+use semio_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1;
+use semio_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;

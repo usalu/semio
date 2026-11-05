@@ -7,7 +7,7 @@
 fn fill_tool_wins_the_world_lane_over_a_select_window_utility() {
     let mut runtime = Puzzle3dRuntime::default();
     runtime.active_tool_id = Some(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.into());
-    let mut view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view.active_utility_id = Some("select".into());
     view.active_utility_by_window_id.insert("pane".into(), "select".into());
     assert!(puzzle3d_fill_tool_active(&runtime), "the Fill tab arms the mode tool, not a window utility");
@@ -377,7 +377,7 @@ async fn puzzle3d_vortex_joint_edit_redistributes_siblings_and_preserves_object_
 /// 🚫️ Zero object-kind weight disables every vortex slider under that kind — anything × 0 is 0.
 #[semio_framework_async_macros::async_test]
 async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
-    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("admitted host axis");
     let scene_snapshot = nakagin_scene_snapshot();
     let object_ids = puzzle3d_kind_ids(&scene_snapshot, "objects");
     assert!(!object_ids.is_empty(), "default scene_snapshot must expose object kinds");
@@ -419,7 +419,7 @@ async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
 #[semio_framework_async_macros::async_test]
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
     {
-    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("admitted host axis");
     let fill_scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.into() };
     let fill_measures = fill_tool::measures(&fill_scene, labels, None);
     let distribution_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution");

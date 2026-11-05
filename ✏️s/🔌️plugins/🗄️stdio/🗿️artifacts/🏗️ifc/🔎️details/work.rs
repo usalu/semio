@@ -1,7 +1,7 @@
 //! 🧵️ Original-source retained preparation for existing IFC entity arguments and type commands.
 use super::*;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{EditorApp, Emit};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::{EditorApp, Emit};
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
@@ -213,7 +213,7 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
         self.value_edit.started() || self.borrowed_preimage
     }
     #[cfg(test)]
-    pub fn borrowed_inverse_wire<'a>(&'a self, mutations: &'a [IfcMutation]) -> impl semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson + 'a {
+    pub fn borrowed_inverse_wire<'a>(&'a self, mutations: &'a [IfcMutation]) -> impl semio_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson + 'a {
         self.publication.inverse_wire(mutations)
     }
     #[cfg(test)]
@@ -404,7 +404,7 @@ where
         cx.consume_fuel(1);
         Ok(true)
     }
-    fn extent(&self, command: &E::Command, snapshot: &IfcSnapshot, _: &protocol::InteractionState, _: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>) -> Option<usize> {
+    fn extent(&self, command: &E::Command, snapshot: &IfcSnapshot, _: &protocol::InteractionState, _: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>) -> Option<usize> {
         let event = self.original_event.as_ref().or_else(|| E::snapshot_edit_event(command))?;
         match self.admitted { Some(false) => None, Some(true) => Some(E::snapshot_edit_work_capacity().work_items()), None => E::snapshot_edit_retained_extent(event, snapshot) }
     }
@@ -929,7 +929,7 @@ mod tests {
     fn publication_rows_match_the_neutral_boundary() {
         let fixture = semio_framework_pack_json::parse(include_str!("🧪️tests/publication.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let fixture = semio_framework_pack_json::to_dsl_value(&fixture);
-        let capacity = semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(fixture.get("capacity").unwrap().get("invertibleItems").unwrap().as_u64().unwrap() as usize);
+        let capacity = semio_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(fixture.get("capacity").unwrap().get("invertibleItems").unwrap().as_u64().unwrap() as usize);
         for case in fixture.get("cases").unwrap().as_array().unwrap() {
             let count = case.get("mutations").unwrap().as_u64().unwrap() as usize;
             let mutation = IfcMutation::SetEntityName(semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::set_entity_name::SetEntityName { id: 1, name: "IFCWALL".into() });

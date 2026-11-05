@@ -6,7 +6,7 @@ pub const ARTIFACT_ID:&str="kit.catalog";
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: ARTIFACT_ID.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Kit Catalog", "Bausatzkatalog"),
+        label: semio_ui_locale::LocalizedLabel::native("Kit Catalog", "Bausatzkatalog"),
         source_format: ARTIFACT_ID.into(),
         component_kind: "kit-catalog".into(),
         dimension: "3d".into(),

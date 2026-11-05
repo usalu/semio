@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-hub-stdio-catalog-projection = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-ifc = { workspace = true }

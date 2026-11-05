@@ -21,7 +21,7 @@ pub fn download_media_export(filename: &str, mime_type: &str, data: &str, encodi
         }
     };
     let (filename, mime_type) = (filename.to_string(), mime_type.to_string());
-    semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
+    semio_renderer_wgpu_host_base::spawn_app_task(async move {
         let length = bytes.len();
         match present_media_export_bytes(filename.clone(), mime_type, bytes).await {
             Ok(true) => debug_log(&format!("[TRACE] wgpu-shell download presented name={filename} bytes={length}")),
@@ -34,7 +34,7 @@ pub fn download_media_export(filename: &str, mime_type: &str, data: &str, encodi
 #[cfg(not(target_arch = "wasm32"))]
 pub fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
     let (filename, mime_type, data, encoding) = (filename.to_string(), mime_type.to_string(), data.to_string(), encoding.map(str::to_string));
-    ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, async move {
+    ShellPoolFuture::spawn(semio_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, async move {
         download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref()).await;
     });
 }
@@ -92,7 +92,7 @@ impl<'ctx> SessionCtx<'ctx> {
         let Some(transfer) = self.opening.import_transfers.remove(index) else { return false };
         let declares_abort = self.docs.session.as_ref().is_some_and(|session| session.app.actions.iter().any(|action| action.id == IMPORT_ABORT_ACTION_ID));
         if transfer.delivered > 0 && declares_abort {
-            self.settle.deferred_actions.push(ActionDescriptor { controller_id: transfer.controller_id.clone(), action: IMPORT_ABORT_ACTION_ID.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({}) });
+            self.settle.deferred_actions.push(ActionDescriptor { controller_id: transfer.controller_id.clone(), action: IMPORT_ABORT_ACTION_ID.into(), args: semio_renderer_wgpu_host_base::action_args_json!({}) });
         }
         let text = import_transfer_notice("import-cancelled", &transfer.first_file, self.prefs.active_locale());
         self.chrome.show_transient_notice(text, semio_framework::Severity::Info, Some("shell.documentTransfer.import-cancelled"));

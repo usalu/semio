@@ -7,7 +7,7 @@
   "tables": [
     {
       "guard": "renderer::scenes",
-      "crate": "semio-framework-os-renderer-wgpu",
+      "crate": "semio-renderer-wgpu",
       "owner": "scenes::AdmittedSurfaceMap<World3dState>",
       "capacityConstant": "SCENE_SURFACE_CAPACITY",
       "capacity": 256,
@@ -17,7 +17,7 @@
     },
     {
       "guard": "renderer::engine_canvas",
-      "crate": "semio-framework-os-renderer-wgpu",
+      "crate": "semio-renderer-wgpu",
       "owner": "engine_canvas::EngineSurfaceRegistry",
       "capacityConstant": "ENGINE_SURFACE_CAPACITY",
       "capacity": 256,
@@ -27,7 +27,7 @@
     },
     {
       "guard": "renderer::engine_canvas",
-      "crate": "semio-framework-os-renderer-wgpu",
+      "crate": "semio-renderer-wgpu",
       "owner": "engine_canvas::StagedEngineScenes",
       "capacityConstant": "ENGINE_CANVAS_FRAME_PACKET_CAPACITY",
       "capacity": 256,
@@ -37,7 +37,7 @@
     },
     {
       "guard": "renderer::engine_canvas",
-      "crate": "semio-framework-os-renderer-wgpu",
+      "crate": "semio-renderer-wgpu",
       "owner": "engine_canvas::EngineCanvasBuildContext",
       "capacityConstant": "ENGINE_CANVAS_FRAME_PACKET_CAPACITY",
       "capacity": 256,
@@ -47,7 +47,7 @@
     },
     {
       "guard": "renderer::kernel_runtime",
-      "crate": "semio-framework-os-renderer-wgpu",
+      "crate": "semio-renderer-wgpu",
       "owner": "kernel_runtime::RetainedSurfaceRegistry",
       "capacityConstant": "RETAINED_SURFACE_CAPACITY",
       "capacity": 64,
@@ -57,7 +57,7 @@
     },
     {
       "guard": "renderer::kernel_runtime",
-      "crate": "semio-framework-os-renderer-wgpu",
+      "crate": "semio-renderer-wgpu",
       "owner": "kernel_runtime::CommandDocumentRetirementRegistry",
       "capacityConstant": "COMMAND_DOCUMENT_RETIREMENT_CAPACITY",
       "capacity": 512,

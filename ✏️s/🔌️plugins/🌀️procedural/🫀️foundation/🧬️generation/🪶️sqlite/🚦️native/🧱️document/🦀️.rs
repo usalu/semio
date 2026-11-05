@@ -1,9 +1,9 @@
 //! 🧱️ Literal eight-field Generation native document codec with cumulative construction controls, generic over the artifact snapshot.
 use super::{GenerationNative,rows,values};
 use super::records::{DictEntryDsl,SynapseSpecDsl,ValueDsl,WidgetDsl,camera_from_dsl,camera_to_dsl,layout_to_dsl,synapse_from_dsl};
-use semio_framework_os_flow_contract::{FlowHostSnapshot,OrderedMap,Widget,WidgetLayout,neural::{Atom,ColdDictionaryBuilder,ColdOwner,ColdRetire,Dictionary,Value as NeuralValue}};
-use semio_framework_os_playbook_contract::{FormGeneration,GenerationPlayState};
-use semio_framework_os_kernel as store;
+use semio_os_flow_contract::{FlowHostSnapshot,OrderedMap,Widget,WidgetLayout,neural::{Atom,ColdDictionaryBuilder,ColdOwner,ColdRetire,Dictionary,Value as NeuralValue}};
+use semio_os_playbook_contract::{FormGeneration,GenerationPlayState};
+use semio_os_kernel as store;
 use semio_framework_value::{FromValue,ToValue,ValueError,ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::NativeEncodeControl;
@@ -34,8 +34,8 @@ fn widget_decode(v:WidgetDsl,c:&mut NativeDecodeControl<'_>)->Result<Widget,Valu
  WidgetDsl::Cluster{id,name,tree,flow}=>{let tree=<semio_framework_value::DslValue as FromValue>::guard_decoded(tree);let flow=<semio_framework_value::DslValue as FromValue>::guard_decoded(flow);let tree=ColdOwner::new(values::tree_decode(tree.get(),c)?);let flow=values::gui_decode(flow.get(),c)?;Widget::Cluster{id,name,tree:tree.into_inner(),flow}}
 })}
 fn pack_error(error:store::PackRefusal)->ValueError{error.into_value_error()}
-fn encode_record_native<K:GenerationNative>(encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,construct:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{let native_control=native_owner.native();
- use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
+fn encode_record_native<K:GenerationNative>(encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,construct:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{let native_control=native_owner.native();
+ use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let Some(prefix)=K::PACK_PREFIX.filter(|_|matches!(encoding,SnapshotEncoding::Binary))else{return store::encode_sqlite_snapshot_record_native(encoding,K::ENVELOPE_ID,K::spec_producer(),construct,control,native_owner)};
  let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;
  let body_limit=limits.max_file_bytes.checked_sub(prefix.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation file cannot contain its declared discriminator"))?;
@@ -57,8 +57,8 @@ fn encode_record_native<K:GenerationNative>(encoding:semio_framework_os_kernel::
     (result,native_control.owned_bytes().saturating_sub(native_before))
  })?
 }
-fn decode_record_native<K:GenerationNative>(construct:impl FnOnce(&semio_framework_dsl_record::RecordValue,&mut NativeDecodeControl<'_>)->Result<K::Snapshot,ValueError>,payload:&store::io_schema::IoPayload,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<K::Snapshot,ValueError>{
- use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+fn decode_record_native<K:GenerationNative>(construct:impl FnOnce(&semio_framework_dsl_record::RecordValue,&mut NativeDecodeControl<'_>)->Result<K::Snapshot,ValueError>,payload:&store::io_schema::IoPayload,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<K::Snapshot,ValueError>{
+ use semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
  let(store::io_schema::IoPayload::Binary(bytes),Some(prefix))=(payload,K::PACK_PREFIX)else{return store::decode_sqlite_snapshot_record_native(payload,K::ENVELOPE_ID,K::spec_producer(),|record,output,native,_body|{*output=Some(construct(record,native)?);Ok(())},control,native_owner)};
  let native_control=native_owner.native();
  let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,bytes.len())?;
@@ -75,7 +75,7 @@ fn decode_record_native<K:GenerationNative>(construct:impl FnOnce(&semio_framewo
     (result,native_control.owned_bytes().saturating_sub(native_before))
  })?
 }
-pub fn encode<K:GenerationNative>(document:&K::Snapshot,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+pub fn encode<K:GenerationNative>(document:&K::Snapshot,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
  let maximum=control.limits().max_rows;let maximum_bytes=control.limits().max_value_bytes;
  encode_record_native::<K>(encoding,|c|{
   rows::owned(K::host(document),K::state(document),maximum,maximum_bytes,c)?;
@@ -111,4 +111,4 @@ use semio_framework_dsl_record::FieldValue;
   })();result
  },control,native_owner)
 }
-pub fn decode<K:GenerationNative>(payload:&store::io_schema::IoPayload,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<K::Snapshot,ValueError>{let maximum=control.limits().max_rows;let maximum_bytes=control.limits().max_value_bytes;decode_record_native::<K>(|record,c|{rows::borrowed(record,maximum,maximum_bytes,c)?;let parsed=K::fields(record,c)?;let result=(||->Result<K::Snapshot,ValueError>{let mut host=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(FlowHostSnapshot{schema:parsed.schema,camera:camera_from_dsl(&parsed.camera),widgets:c.allocate_vec(parsed.widgets.len())?,synapses:c.allocate_vec(parsed.synapses.len())?,layout:OrderedMap::new()},|v|v.retire_cold());c.begin_stage(parsed.widgets.len())?;for w in parsed.widgets{host.as_mut().widgets.push(c.scoped_stage(|c|widget_decode(w,c))?);c.step()?;}c.begin_stage(parsed.synapses.len())?;for s in parsed.synapses{host.as_mut().synapses.push(synapse_from_dsl(s));c.step()?;}c.begin_stage(parsed.layout.len())?;for(k,v)in parsed.layout{values::insert(&mut host.as_mut().layout,k,WidgetLayout{x:v.x,y:v.y},c)?;c.step()?;}let mut generation=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(GenerationPlayState{selected_generation_id:parsed.selected_generation_id,preview_text:parsed.preview_text,generations:c.allocate_vec(parsed.generations.len())?},|v|semio_framework_os_playbook_contract::GenerationPlayRoot::from(v).retire_cold());c.begin_stage(parsed.generations.len())?;for g in parsed.generations{let values=c.scoped_stage(|c|values::playbook_decode(g.values,c))?;generation.as_mut().generations.push(FormGeneration{id:g.id,name:g.name,values});c.step()?;}Ok(K::assemble(host.take(),generation.take().into()))})();result},payload,control,native_owner)}
+pub fn decode<K:GenerationNative>(payload:&store::io_schema::IoPayload,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<K::Snapshot,ValueError>{let maximum=control.limits().max_rows;let maximum_bytes=control.limits().max_value_bytes;decode_record_native::<K>(|record,c|{rows::borrowed(record,maximum,maximum_bytes,c)?;let parsed=K::fields(record,c)?;let result=(||->Result<K::Snapshot,ValueError>{let mut host=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(FlowHostSnapshot{schema:parsed.schema,camera:camera_from_dsl(&parsed.camera),widgets:c.allocate_vec(parsed.widgets.len())?,synapses:c.allocate_vec(parsed.synapses.len())?,layout:OrderedMap::new()},|v|v.retire_cold());c.begin_stage(parsed.widgets.len())?;for w in parsed.widgets{host.as_mut().widgets.push(c.scoped_stage(|c|widget_decode(w,c))?);c.step()?;}c.begin_stage(parsed.synapses.len())?;for s in parsed.synapses{host.as_mut().synapses.push(synapse_from_dsl(s));c.step()?;}c.begin_stage(parsed.layout.len())?;for(k,v)in parsed.layout{values::insert(&mut host.as_mut().layout,k,WidgetLayout{x:v.x,y:v.y},c)?;c.step()?;}let mut generation=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(GenerationPlayState{selected_generation_id:parsed.selected_generation_id,preview_text:parsed.preview_text,generations:c.allocate_vec(parsed.generations.len())?},|v|semio_os_playbook_contract::GenerationPlayRoot::from(v).retire_cold());c.begin_stage(parsed.generations.len())?;for g in parsed.generations{let values=c.scoped_stage(|c|values::playbook_decode(g.values,c))?;generation.as_mut().generations.push(FormGeneration{id:g.id,name:g.name,values});c.step()?;}Ok(K::assemble(host.take(),generation.take().into()))})();result},payload,control,native_owner)}

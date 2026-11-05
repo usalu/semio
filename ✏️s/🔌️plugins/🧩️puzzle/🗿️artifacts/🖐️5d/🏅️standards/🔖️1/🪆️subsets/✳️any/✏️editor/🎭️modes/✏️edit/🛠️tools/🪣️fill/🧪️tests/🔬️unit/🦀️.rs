@@ -1,6 +1,6 @@
 use crate::editor::puzzle5d::terminology::{puzzle5d_fill_run_counters, puzzle5d_fill_run_reasons, puzzle5d_fill_run_stages, Puzzle5dLabels};
 use crate::editor::puzzle5d::view::Puzzle5dScene;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 use semio_framework_tool_run::{JobKindId, ToolRunRebasePolicy, ToolRunReconfigurePolicy};
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::modes::edit::options::brush::distribution_children;
@@ -9,13 +9,13 @@ use crate::editor::puzzle5d::terminology::puzzle5d_fill_run_unit;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDescriptor;
+use semio_plugin::ActionDescriptor;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolDefinition;
+use semio_plugin::ToolDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolRunView;
+use semio_plugin::ToolRunView;
 #[allow(unused_imports)]
 use semio_framework_tool_run::{ToolRunDefinition, ToolRunSettingsReads, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
 use crate::editor::puzzle5d::modes::edit::tools::fill::*;
@@ -27,7 +27,7 @@ use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::PUZZLE5D_D
 use semio_framework_tool_run::ToolRunTraceKind;
 
 fn labels() -> &'static Puzzle5dLabels {
-    puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("the host's own default axes are authored")
+    puzzle5d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("the host's own default axes are authored")
 }
 
 fn scene(document: crate::editor::puzzle5d::entities::Puzzle5dDocument, fill_count: u32) -> Puzzle5dScene {

@@ -67,8 +67,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "scene-root-node", kind: "unbind-scene-root-node", record: "UnboundSceneRootNode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Unbind Scene Root Node", "Bindung des Szenenwurzelknotens aufheben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Unbind Scene Root Node", "Bindung des Szenenwurzelknotens aufheben")
     }
 
     fn target(&self) -> Vec<String> {

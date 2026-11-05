@@ -9,16 +9,16 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::create_layer_by_kind;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;
 use semio_s_artifact_draw_drawing_transform::drag_path_points::mutation::{drag_path_points, DrawingPathPointTarget};
 use semio_s_artifact_draw_drawing_geometry::multiply;
@@ -29,8 +29,8 @@ use semio_framework_value::paged::PagedUtf8;
 use semio_framework_value_persistent::list::PagedList;
 use semio_s_artifact_draw_drawing_model::{DrawingImageAsset};
 use semio_s_artifact_draw_drawing_model::{layer_base, layer_base_mut, find_drawing_layer, find_drawing_layer_location};
-use semio_framework_plugin::{MediaType,MediaClass,MediaForm};
-use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
+use semio_plugin::{MediaType,MediaClass,MediaForm};
+use semio_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
 use semio_framework_value::paged::{Utf8Text};
 use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
 use semio_s_artifact_draw_drawing_editor_interaction::points;
@@ -46,7 +46,7 @@ use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;
 use semio_s_artifact_draw_drawing_model::{PathSegment};
 use semio_s_artifact_draw_drawing_geometry::editing::{PathPoint, path_point_hit};
 use machine::Command;
-use semio_framework_plugin::{kernel::Effect, AppOperationContext, RequestId, UiFixedList};
+use semio_plugin::{kernel::Effect, AppOperationContext, RequestId, UiFixedList};
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolYield};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
@@ -181,7 +181,7 @@ pub fn initialize_appearance(layer: &mut semio_s_artifact_draw_drawing_model::Dr
 }
 
 /// 🪪️ Admits a fresh identity at the explicit command IO boundary.
-pub fn prepare_identity(document:&DrawingSnapshot,kind:&str,operation:&semio_framework_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_s_artifact_draw_drawing_model::identity::DrawingIdentity,Fault>{
+pub fn prepare_identity(document:&DrawingSnapshot,kind:&str,operation:&semio_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_s_artifact_draw_drawing_model::identity::DrawingIdentity,Fault>{
  semio_s_artifact_draw_drawing_io::text::identity::creation::layer_identity(document,kind,operation,control).map_err(|error|Fault::from(error.to_string()))
 }
 

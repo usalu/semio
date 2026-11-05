@@ -1,5 +1,5 @@
 //! 📦️ Native typed pack load laws.
-pub use semio_framework_plugin_window_config::retained::typed_pack_load::*;
+pub use semio_plugin_window_config::retained::typed_pack_load::*;
 pub use super::*;
 #[path = "🛬️native/🦀️.rs"]
 pub mod native;

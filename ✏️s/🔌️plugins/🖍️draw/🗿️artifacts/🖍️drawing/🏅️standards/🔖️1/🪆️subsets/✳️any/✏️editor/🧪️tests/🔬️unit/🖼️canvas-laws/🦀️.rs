@@ -2,21 +2,21 @@
 
 use super::*;
 
-pub(super) fn canvas_scene_of_tree(tree: semio_framework_plugin::ComponentTree) -> semio_framework_plugin::Canvas2dScene {
+pub(super) fn canvas_scene_of_tree(tree: semio_plugin::ComponentTree) -> semio_plugin::Canvas2dScene {
     let decoded = match &tree.root.component {
-        semio_framework_plugin::Component::Surface(surface) => semio_framework_ui_scene::decode(surface).map_err(|_| "canvas payload"),
+        semio_plugin::Component::Surface(surface) => semio_ui_scene::decode(surface).map_err(|_| "canvas payload"),
         _ => Err("canvas surface"),
     };
     artifact_laws::project_and_retire_fixture_tree(tree).expect("retire canvas tree");
     decoded.expect("typed canvas")
 }
 
-pub(super) fn canvas_scene(projection: String) -> semio_framework_plugin::Canvas2dScene {
-    artifact_laws::decode_fixture_scene::<semio_framework_plugin::Canvas2dScene>(&projection).expect("typed canvas")
+pub(super) fn canvas_scene(projection: String) -> semio_plugin::Canvas2dScene {
+    artifact_laws::decode_fixture_scene::<semio_plugin::Canvas2dScene>(&projection).expect("typed canvas")
 }
 
 pub(super) async fn settle_drawing_geometry(app:&mut DrawingAppFixture,view:Option<&ViewModel>){
-    use semio_framework_plugin::reactor::jobs::{registry_driver::RegistryJobDriver,JobStep};
+    use semio_plugin::reactor::jobs::{registry_driver::RegistryJobDriver,JobStep};
     for effect in artifact_laws::fixture_pending_effects(&mut app.0,view).await.expect("registered Drawing pending effects"){match effect{
         Effect::CancelJob{job}=>{RegistryJobDriver::generous(job).cancel().expect("registered Drawing geometry cancels");},
         Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{let mut driver=RegistryJobDriver::generous(job);driver.start(&kind,input,None).expect("registered Drawing geometry admits");let mut complete=false;for _ in 0..100000{match driver.step().expect("registered Drawing geometry steps"){JobStep::Running(_)=>{},JobStep::Done(_)=>{complete=true;break;},JobStep::Failed(error)=>panic!("registered Drawing geometry failed: {}",String::from_utf8_lossy(&error))}}assert!(complete,"registered Drawing geometry must settle before its canvas witness");},
@@ -42,7 +42,7 @@ pub(super) fn last_layer_id(app: &DrawingAppFixture) -> String {
 async fn renders_canvas_scene_with_segments() {
     let mut app = drawing_app().await;
     let example_json = semio_drawing_example_json();
-    let node = rendered_drawing_canvas(&mut app, Some(example_json.as_str()), &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
+    let node = rendered_drawing_canvas(&mut app, Some(example_json.as_str()), &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("render");
     let scene = canvas_scene(node);
     let layers_json = scene.layers_json.as_str();
     assert!(layers_json.contains("segments"));
@@ -59,7 +59,7 @@ async fn renders_canvas_scene_with_segments() {
 #[semio_framework_async_macros::async_test]
 async fn default_document_exposes_artboard_dimensions_on_canvas() {
     let mut app = drawing_app().await;
-    let node = rendered_drawing_canvas(&mut app, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
+    let node = rendered_drawing_canvas(&mut app, None, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.expect("render");
     let scene = canvas_scene(node);
     let layers_json = scene.layers_json.as_str();
     assert!(layers_json.contains("1024 × 1024"), "blank documents show default artboard dimensions");
@@ -68,7 +68,7 @@ async fn default_document_exposes_artboard_dimensions_on_canvas() {
 #[semio_framework_async_macros::async_test]
 async fn layers_panel_lists_default_layer() {
     let mut app = drawing_app().await;
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_LAYERS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire semantic tree");
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_LAYERS, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire semantic tree");
     assert!(json.contains("drawing-play-layers.add.path"));
     assert!(json.contains("Layer 1"));
 }
@@ -76,7 +76,7 @@ async fn layers_panel_lists_default_layer() {
 #[semio_framework_async_macros::async_test]
 async fn catalogue_panel_lists_boolean_operations() {
     let mut app = drawing_app().await;
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_CATALOGUE, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire semantic tree");
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_CATALOGUE, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire semantic tree");
     assert!(json.contains("drawing-play-catalogue.path"));
     assert!(json.contains("Boolean union"));
 }
@@ -199,9 +199,9 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     assert_eq!(projection.layers.len(), before + 1, "the per-window map arms the rectangle utility: {:?}", receipt.lanes);
     assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")));
     assert!(receipt.effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { utility_id, .. } if utility_id == "selectDirect")), "the canvas returns to select-direct: {:?}", receipt.effects);
-    assert_eq!(drawing_active_utility(&ViewModel { active_utility_id: Some("pen".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }), "pen", "the flat field still resolves when no map entry addresses the window");
-    assert_eq!(drawing_active_utility(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), DRAWING_DEFAULT_UTILITY);
-    artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    assert_eq!(drawing_active_utility(&ViewModel { active_utility_id: Some("pen".into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }), "pen", "the flat field still resolves when no map entry addresses the window");
+    assert_eq!(drawing_active_utility(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), DRAWING_DEFAULT_UTILITY);
+    artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 📤️ `exportDocument` (palette default `pdf`) hands the host one `DownloadMediaExport` whose base64
@@ -222,5 +222,5 @@ async fn export_document_downloads_a_real_pdf_of_the_document() {
     let (_result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into(), ..Default::default() }), &meta).await;
     let [Effect::DownloadMediaExport { mime_type, data, encoding, .. }] = receipt.effects.as_slice() else { panic!("one SVG download required") };
     assert_eq!(mime_type,"image/svg+xml");assert_eq!(encoding.as_deref(),Some("base64"));assert!(base64_codec::base64_standard_decode(data).unwrap().starts_with(b"<svg"));
-    artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

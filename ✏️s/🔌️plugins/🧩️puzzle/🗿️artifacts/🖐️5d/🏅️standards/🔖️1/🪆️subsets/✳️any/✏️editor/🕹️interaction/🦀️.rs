@@ -5,16 +5,16 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::editor::puzzle5d::config::Puzzle5dConfigMutation;
 use semio_s_artifact_puzzle_3d_editor::Puzzle3dInstanceOperationOwner;
 use crate::{editor::puzzle5d::terminology::puzzle5d_labels, editor::puzzle5d::terminology::Puzzle5dLabels};
-use semio_framework_plugin::{kernel::ClipboardError, kernel::ClipboardFragment, kernel::Effect, kernel::PasteAnchor, kernel::PastePlacement, kernel::UiDirtyScope};
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_plugin::InteractionWrite;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::{kernel::ClipboardError, kernel::ClipboardFragment, kernel::Effect, kernel::PasteAnchor, kernel::PastePlacement, kernel::UiDirtyScope};
+use semio_plugin::Emit;
+use semio_plugin::InteractionTarget;
+use semio_plugin::InteractionWrite;
+use semio_ui_locale::Label;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::app::InteractionView;
 use semio_framework_value::FromValue;
 use semio_framework_pack_json::{parse, Value};
 use std::{collections::HashMap, collections::HashSet};
@@ -24,9 +24,9 @@ use crate::editor::puzzle5d::config::Puzzle5dConfig;
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
 
 //#region 🔖️CopyPaste
 /// 🧩️ The part id a `"part_id:grip_id"` full grip reference belongs to.
@@ -162,7 +162,7 @@ impl Puzzle5dContextSelection {
         }
     }
 
-    pub fn from_surface(surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Self {
+    pub fn from_surface(surface: Option<&semio_plugin::ContextMenuSurfaceTarget>) -> Self {
         let mut out = Self::default();
         let Some(surface) = surface else { return out };
         for group in &surface.selection {
@@ -223,13 +223,13 @@ pub fn puzzle5d_context_menu_items(
     envelope: &Puzzle5dScene,
     selection: &Puzzle5dContextSelection,
     labels: &Puzzle5dLabels,
-    view_state: &semio_framework_plugin::ViewModel,
-    registry: &semio_framework_plugin::AppActionRegistry,
-) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::selection_count_phrase;
-    use semio_framework_plugin::ContextMenuItemSpec;
-    use semio_framework_plugin::Menu;
-    use semio_framework_plugin::SelectionKind;
+    view_state: &semio_plugin::ViewModel,
+    registry: &semio_plugin::AppActionRegistry,
+) -> Vec<semio_plugin::ContextMenuItemSpec> {
+    use semio_plugin::selection_count_phrase;
+    use semio_plugin::ContextMenuItemSpec;
+    use semio_plugin::Menu;
+    use semio_plugin::SelectionKind;
     let bespoke = |id: &str, label: String, icon: &str, action: &str, args: Option<Value>, destructive: bool| ContextMenuItemSpec {
         id: id.into(),
         label: Some(label),
@@ -455,8 +455,8 @@ const PUZZLE5D_TOOL_JOB_IDS: [&str; PUZZLE5D_RETAINED_TOOL_IDS.len() + 2] = {
         ids[index] = PUZZLE5D_RETAINED_TOOL_IDS[index];
         index += 1;
     }
-    ids[index] = semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID;
-    ids[index + 1] = semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
+    ids[index] = semio_plugin::SET_ACTIVE_TOOL_ACTION_ID;
+    ids[index + 1] = semio_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
     ids
 };
 
@@ -483,7 +483,7 @@ pub struct Puzzle5dActionCtx<'a> {
     /// 📸️ The committed play snapshot the scene was materialized from (authored kind catalogs included).
     pub snapshot: &'a Puzzle5dPlaySnapshot,
     /// 🧠️ The document instance's retained operation owner (the brush suggestions link), when the route bound one.
-    pub instance_owner: Option<&'a semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    pub instance_owner: Option<&'a semio_plugin::ArtifactInstanceOperationOwnerHandle>,
     /// 🪟️ The window this action targets (already defaulted to the 3D window).
     pub window_id: &'a str,
     /// 🧭️ The registered kind of the exact target window.
@@ -494,16 +494,16 @@ pub struct Puzzle5dActionCtx<'a> {
     pub selection: &'a protocol::DomainSelection,
     /// 🌍️ The host's projected locale×terminology axes — the only source a notice may resolve its
     /// sentence from (`Puzzle5dActionCtx::notice`).
-    pub view_state: Option<&'a semio_framework_plugin::ViewModel>,
+    pub view_state: Option<&'a semio_plugin::ViewModel>,
     /// ⏯️ The instance's tool run as of command admission (`ArtifactOwnedToolJobContext::tool_run`) — the
     /// identity Escape's `toolRunAbort` is bound to while a fill run is live.
-    pub tool_run: Option<&'a semio_framework_plugin::ToolRunView>,
+    pub tool_run: Option<&'a semio_plugin::ToolRunView>,
     /// 🧯️ At most ONE bounded, localized transient notice this arm wants shown, plus whatever host
     /// effects it raised. An arm that REFUSES pushes a notice here instead of completing silently.
     pub effects: Vec<Effect>,
     /// 🕹️ App-initiated selection writes this arm wants applied once its own mutations land — the
     /// single sanctioned way a reducer selects what it just created, or widens/clears the selection
-    /// (`semio_framework_plugin::InteractionWrite`, applied by `VcsArtifactApp` through the same state
+    /// (`semio_plugin::InteractionWrite`, applied by `VcsArtifactApp` through the same state
     /// machine the reserved `interactionSelect` verb uses). Empty for every arm that does not move it.
     pub interaction_writes: Vec<InteractionWrite>,
     /// 🛑️ Set by an arm that must skip the whole epilogue (delta, effects, config snapshot) — the
@@ -648,7 +648,7 @@ pub const PUZZLE5D_LOCALIZATION_UNSUPPORTED: &str = "ui.localization.unsupported
 /// nothing tells the user WHY, instead of the bare `Emit::default()` every refusal path used to complete
 /// with. The scope is [`UiDirtyScope::None`]: a work that refused published nothing, so there is nothing to
 /// repaint — the notice itself travels on the effect lane, which the host applies before it consults scope.
-pub fn puzzle5d_notice_emit(view_state: Option<&semio_framework_plugin::ViewModel>, message: impl Fn(&Puzzle5dLabels) -> &'static str) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
+pub fn puzzle5d_notice_emit(view_state: Option<&semio_plugin::ViewModel>, message: impl Fn(&Puzzle5dLabels) -> &'static str) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
     let text = view_state.and_then(puzzle5d_labels).map_or_else(|| PUZZLE5D_LOCALIZATION_UNSUPPORTED.to_string(), |labels| message(labels).to_string());
     Emit { effects: vec![Effect::Notify { message: text }], ui_scope: UiDirtyScope::None, ..Default::default() }
 }
@@ -702,8 +702,8 @@ pub fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<
     }
 }
 /// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d label admission failed"))
 }
 //#endregion 🔖️ActionContext
 
@@ -792,7 +792,7 @@ pub const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
 /// 🧩️ The puzzle5d editor contract: every editor whose lanes are puzzle5d's play snapshot, mutation union, config,
 /// presence and command vocabulary. The action dispatch, the retained works and the tool run builders are written
 /// against it, so they sit below the one concrete editor that implements it.
-pub trait Puzzle5dEditor: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle5dPlaySnapshot, Mutation = Puzzle5dMutation, Config = crate::editor::puzzle5d::config::Puzzle5dConfig, ConfigMutation = Puzzle5dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = crate::editor::puzzle5d::presence::Puzzle5dPresence, PresenceMutation = crate::editor::puzzle5d::presence::Puzzle5dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = Puzzle5dCommand> {}
+pub trait Puzzle5dEditor: semio_plugin::ArtifactEditor<Snapshot = Puzzle5dPlaySnapshot, Mutation = Puzzle5dMutation, Config = crate::editor::puzzle5d::config::Puzzle5dConfig, ConfigMutation = Puzzle5dConfigMutation, Draft = semio_plugin::NoDraft, DraftMutation = semio_plugin::NoDraftMutation, Presence = crate::editor::puzzle5d::presence::Puzzle5dPresence, PresenceMutation = crate::editor::puzzle5d::presence::Puzzle5dPresenceMutation, Transient = semio_plugin::NoTransient, TransientMutation = semio_plugin::NoTransientMutation, Command = Puzzle5dCommand> {}
 
-impl<A> Puzzle5dEditor for A where A: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle5dPlaySnapshot, Mutation = Puzzle5dMutation, Config = crate::editor::puzzle5d::config::Puzzle5dConfig, ConfigMutation = Puzzle5dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = crate::editor::puzzle5d::presence::Puzzle5dPresence, PresenceMutation = crate::editor::puzzle5d::presence::Puzzle5dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = Puzzle5dCommand> {}
+impl<A> Puzzle5dEditor for A where A: semio_plugin::ArtifactEditor<Snapshot = Puzzle5dPlaySnapshot, Mutation = Puzzle5dMutation, Config = crate::editor::puzzle5d::config::Puzzle5dConfig, ConfigMutation = Puzzle5dConfigMutation, Draft = semio_plugin::NoDraft, DraftMutation = semio_plugin::NoDraftMutation, Presence = crate::editor::puzzle5d::presence::Puzzle5dPresence, PresenceMutation = crate::editor::puzzle5d::presence::Puzzle5dPresenceMutation, Transient = semio_plugin::NoTransient, TransientMutation = semio_plugin::NoTransientMutation, Command = Puzzle5dCommand> {}
 //#endregion 🧩️EditorContract

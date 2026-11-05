@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-s-artifact-procedural-2d-editor = { workspace = true }
 semio-s-artifact-procedural-2d-io = { workspace = true }
 semio-s-artifact-procedural-2d-model = { workspace = true }

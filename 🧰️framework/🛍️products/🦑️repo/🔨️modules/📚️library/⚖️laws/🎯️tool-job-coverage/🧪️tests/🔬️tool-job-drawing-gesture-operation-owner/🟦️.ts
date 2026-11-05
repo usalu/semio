@@ -7,7 +7,7 @@ struct DrawingGestureOperationOwner { base_revision: String }
 struct DrawingInstanceOperationOwner { operations: FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS> }
 struct DrawingGestureOperationJob;
 impl ToolJobFactory for DrawingGestureOperationJobFactory { type Job = DrawingGestureOperationJob; }
-impl ArtifactOwnedToolJobFactory for DrawingGestureOperationJobFactory { type Owner = semio_framework_plugin::EditorApp<DrawingPlayApp>; }
+impl ArtifactOwnedToolJobFactory for DrawingGestureOperationJobFactory { type Owner = semio_plugin::EditorApp<DrawingPlayApp>; }
 impl FixedOperationOwner for DrawingGestureOperationOwner {
   fn cancel(&mut self) {}
   fn terminal_is_empty(&self) -> bool { true }
@@ -46,7 +46,7 @@ fn mount() { MountedWorkerJobSession::try_new(); }
   if (!toolJobDrawingGestureOperationOwnerExact(editor, config, proto, framework)) throw new Error("[verify interactivity tool-jobs] valid Drawing transient operation owner was rejected.");
   const hostile = [
     [editor.replace("struct DrawingGestureOperationOwner", "struct DrawingGestureOwner"), config, proto, framework],
-    [editor.replace("type Owner = semio_framework_plugin::EditorApp<DrawingPlayApp>", "type Owner = WrongApp"), config, proto, framework],
+    [editor.replace("type Owner = semio_plugin::EditorApp<DrawingPlayApp>", "type Owner = WrongApp"), config, proto, framework],
     [editor.replace("if observed_revision != base_revision", "if active != key"), config, proto, framework],
     [editor.replace("owner.preview_projection(operation.canonical_base_revision, drawing_active_utility(view_state))", "DrawingGesturePreview::default()"), config, proto, framework],
     [editor.replace("Emit::commit_transaction(transaction, mutations)", "Emit::commit(mutations, description)"), config, proto, framework],

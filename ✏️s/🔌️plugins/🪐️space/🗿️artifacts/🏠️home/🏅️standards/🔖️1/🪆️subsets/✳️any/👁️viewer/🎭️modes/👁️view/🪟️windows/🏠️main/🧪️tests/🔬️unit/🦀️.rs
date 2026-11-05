@@ -1,23 +1,23 @@
 use semio_s_space_core::HomeTableLabels;
-use semio_framework_plugin::app::TreeWindows;
+use semio_plugin::app::TreeWindows;
 use crate::viewer::home::modes::view::windows::main::{render_rows};
 
 use crate::viewer::home::modes::view::windows::main::*;
 
-fn project(node: semio_framework_plugin::BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("Home viewer tree projection")
+fn project(node: semio_plugin::BuiltNode) -> String {
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("Home viewer tree projection")
 }
 
-fn host_view() -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel {
-        session_identity: Some(semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() }),
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+fn host_view() -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel {
+        session_identity: Some(semio_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() }),
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 
-fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&semio_framework_plugin::BuiltNode) -> R) -> R {
+fn observe<R>(node: semio_plugin::BuiltNode, inspect: impl FnOnce(&semio_plugin::BuiltNode) -> R) -> R {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| inspect(&node)));
-    let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(node);
+    let mut retirement = semio_ui_contract::BuiltTreeRetirement::new(node);
     while !retirement.terminal_is_empty() {
         let step = retirement.close_step(1, 4096).expect("Home viewer fixture tree remains valid");
         if !step.progressed {
@@ -62,7 +62,7 @@ async fn a_row_renders_without_the_actions_column() {
 async fn a_row_stamps_the_space_row_id() {
     observe(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_EN, &TreeWindows::unhosted()).expect("Home viewer row"), |root| {
         let row = root.children.iter().find(|node| node.key.as_str() == "space:sp-1").expect("Home viewer row id");
-        let semio_framework_ui_contract::Component::TableRow(props) = &row.component else { panic!("a viewer row is one TableRow record") };
+        let semio_ui_contract::Component::TableRow(props) = &row.component else { panic!("a viewer row is one TableRow record") };
         assert!(props.row_actions.is_empty() && row.bindings.is_empty(), "the viewer never carries a row action");
     });
 }

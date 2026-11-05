@@ -9,13 +9,13 @@
     "semanticOwnerRoot": "🧪️fixture/🧊️canonical-wgpu",
     "workspaceKind": "repository",
     "identity": {
-      "cargoPackageName": "semio-framework-os-renderer-wgpu",
+      "cargoPackageName": "semio-renderer-wgpu",
       "nodePackageName": "@fixture/wgpu",
       "projectName": "@fixture/wgpu"
     }
   },
   "facts": {
-    "cargoManifestContent": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+    "cargoManifestContent": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
     "nodeManifestContent": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./🟦️.ts\"}}",
     "projectManifestContent": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"repo ./📜️script.ts test\"}}}}"
   },
@@ -25,8 +25,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "description = \"\"\"\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀 é 🧑‍💻\n\"\"\"\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"\"\"\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀 é 🧑‍💻\n\"\"\"\n[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
         }
       ],
       "expected": true
@@ -36,8 +36,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "description = \"\"\"\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀 é 🧑‍💻\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n\"\"\"\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"\"\"\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀 é 🧑‍💻\n[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n\"\"\"\n"
         }
       ],
       "expected": false
@@ -47,8 +47,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "description = \"\"\"\n[lib]\nmetadata \"quoted\" words\n\"\"\"\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"\"\"\n[lib]\nmetadata \"quoted\" words\n\"\"\"\n[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
         }
       ],
       "expected": true
@@ -58,8 +58,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "description = '''\n[[bin]]\nmetadata \"quoted\" words\n'''\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = '''\n[[bin]]\nmetadata \"quoted\" words\n'''\n[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
         }
       ],
       "expected": true
@@ -69,8 +69,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "# \"\"\" and ''' are only a comment\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "# \"\"\" and ''' are only a comment\n[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
         }
       ],
       "expected": true
@@ -80,8 +80,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "description = \"ordinary \\\"quoted\\\" and [lib] token\"\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"ordinary \\\"quoted\\\" and [lib] token\"\n[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
         }
       ],
       "expected": true
@@ -91,8 +91,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "description = \"\"\"\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n\"\"\"\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"\"\"\n[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n\"\"\"\n"
         }
       ],
       "expected": false
@@ -102,8 +102,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "description = '''\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n'''\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = '''\n[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n'''\n"
         }
       ],
       "expected": false
@@ -113,8 +113,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "# [package]\n# name = \"semio-framework-os-renderer-wgpu\"\n# version = \"0.1.0\"\n# build = \"build.rs\"\n# \n# [package.metadata.semio]\n# role = \"framework\"\n# id = \"renderer-wgpu\"\n# \n# [lib]\n# path = \"🦀️lib.rs\"\n# crate-type = [\"cdylib\", \"rlib\"]\n# \n# [[bin]]\n# name = \"semio-wgpu-native\"\n# path = \"📦️bin.rs\"\n# required-features = [\"native-bin\"]\n# "
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "# [package]\n# name = \"semio-renderer-wgpu\"\n# version = \"0.1.0\"\n# build = \"build.rs\"\n# \n# [package.metadata.semio]\n# role = \"framework\"\n# id = \"renderer-wgpu\"\n# \n# [lib]\n# path = \"🦀️lib.rs\"\n# crate-type = [\"cdylib\", \"rlib\"]\n# \n# [[bin]]\n# name = \"semio-wgpu-native\"\n# path = \"📦️bin.rs\"\n# required-features = [\"native-bin\"]\n# "
         }
       ],
       "expected": false
@@ -124,8 +124,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
-          "newValue": "description = \"[package]\\nname = \\\"semio-framework-os-renderer-wgpu\\\"\\nversion = \\\"0.1.0\\\"\\nbuild = \\\"build.rs\\\"\\n\\n[package.metadata.semio]\\nrole = \\\"framework\\\"\\nid = \\\"renderer-wgpu\\\"\\n\\n[lib]\\npath = \\\"🦀️lib.rs\\\"\\ncrate-type = [\\\"cdylib\\\", \\\"rlib\\\"]\\n\\n[[bin]]\\nname = \\\"semio-wgpu-native\\\"\\npath = \\\"📦️bin.rs\\\"\\nrequired-features = [\\\"native-bin\\\"]\\n\"\n"
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"[package]\\nname = \\\"semio-renderer-wgpu\\\"\\nversion = \\\"0.1.0\\\"\\nbuild = \\\"build.rs\\\"\\n\\n[package.metadata.semio]\\nrole = \\\"framework\\\"\\nid = \\\"renderer-wgpu\\\"\\n\\n[lib]\\npath = \\\"🦀️lib.rs\\\"\\ncrate-type = [\\\"cdylib\\\", \\\"rlib\\\"]\\n\\n[[bin]]\\nname = \\\"semio-wgpu-native\\\"\\npath = \\\"📦️bin.rs\\\"\\nrequired-features = [\\\"native-bin\\\"]\\n\"\n"
         }
       ],
       "expected": false
@@ -135,7 +135,7 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "oldValue": "[package]\nname = \"semio-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
           "newValue": "\"[package]\" = \"name\"\n\"[package.metadata.semio]\" = \"role\"\n\"[lib]\" = \"path\"\n\"[[bin]]\" = \"native\"\n"
         }
       ],
@@ -206,7 +206,7 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "name = \"semio-framework-os-renderer-wgpu\"",
+          "oldValue": "name = \"semio-renderer-wgpu\"",
           "newValue": "name = \"foreign\""
         }
       ],
@@ -349,8 +349,8 @@
       "changes": [
         {
           "field": "cargoManifestContent",
-          "oldValue": "name = \"semio-framework-os-renderer-wgpu\"",
-          "newValue": "name = \"semio-framework-os-renderer-wgpu\"\nname = \"semio-framework-os-renderer-wgpu\""
+          "oldValue": "name = \"semio-renderer-wgpu\"",
+          "newValue": "name = \"semio-renderer-wgpu\"\nname = \"semio-renderer-wgpu\""
         }
       ],
       "expected": false

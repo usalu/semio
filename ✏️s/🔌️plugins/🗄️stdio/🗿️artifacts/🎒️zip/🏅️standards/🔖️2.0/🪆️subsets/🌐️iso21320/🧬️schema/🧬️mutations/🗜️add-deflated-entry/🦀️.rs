@@ -15,8 +15,8 @@ pub struct AddDeflatedEntry {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for AddDeflatedEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "deflated-entry", kind: "add-deflated-entry", record: "AddDeflatedEntry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add deflated entry", "Komprimierten Eintrag hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add deflated entry", "Komprimierten Eintrag hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

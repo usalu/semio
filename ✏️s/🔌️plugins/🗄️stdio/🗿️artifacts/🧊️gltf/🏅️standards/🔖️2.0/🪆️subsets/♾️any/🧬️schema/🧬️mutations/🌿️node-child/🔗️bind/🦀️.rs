@@ -76,8 +76,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "node-child", kind: "bind-node-child", record: "BoundNodeChild" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Bind Node Child", "Kindknoten binden")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Bind Node Child", "Kindknoten binden")
     }
 
     fn target(&self) -> Vec<String> {

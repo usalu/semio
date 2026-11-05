@@ -1,9 +1,9 @@
 //! 🪶️ Authored semantic SQLite and actual controlled native owner capability.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_raw::subsets::any::schema::snapshot::{BinarySnapshot};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError}};
 #[path="💰️backing/🦀️.rs"] mod backing;
-pub(crate)fn semantic(snapshot:&BinarySnapshot,control:&mut SqliteSnapshotControl<'_>,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase)->Result<(),ValueError>{backing::semantic(snapshot,control,phase)}
+pub(crate)fn semantic(snapshot:&BinarySnapshot,control:&mut SqliteSnapshotControl<'_>,phase:semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase)->Result<(),ValueError>{backing::semantic(snapshot,control,phase)}
 pub fn native_cells(schema:&str,count:usize,bytes:impl IntoIterator<Item=Result<u8,ValueError>>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{backing::native_cells(schema,count,bytes,control)}
 impl ArtifactSqliteSnapshotHost for BinarySnapshot{
  
@@ -14,8 +14,8 @@ impl ArtifactSqliteSnapshotHost for BinarySnapshot{
 
  
  
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_owner)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_owner)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native::preflight(self,encoding,control)}
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for BinarySnapshot {

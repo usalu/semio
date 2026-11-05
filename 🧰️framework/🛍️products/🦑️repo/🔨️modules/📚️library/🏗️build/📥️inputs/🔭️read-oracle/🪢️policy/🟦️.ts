@@ -17,7 +17,7 @@ export type ReadRoundV1 = {readonly exit: number; readonly tail: string; readonl
 export type ReadRunV1 = {readonly command: readonly string[]; readonly cwd: string; readonly env: Readonly<Record<string, string | undefined>>; readonly timeoutMs: number; readonly scratch: string; readonly round: number; readonly signal?: AbortSignal};
 
 /** 🌳️ The trees that hold no declared input: installed dependencies, version control, build output and the caches of the build system. */
-export const ambientTreesV1: readonly string[] = ["node_modules", ".cache", ".git", "target", ".🧬semio/🦑️repo/⚡️cache"];
+export const ambientTreesV1: readonly string[] = ["node_modules", ".cache", ".r", ".git", "target", ".🧬semio/🦑️repo/⚡️cache"];
 
 /** 🎚️ How the cover trades grants against refusals: `refusals: false` never refuses (a backend that can only allow, like Landlock), `refusalWeight` makes a refusal cheaper than a grant (below 1) so the cover grants big trees and refuses their exceptions, and `ignore` names the entries that are readable anyway (ambient trees, named files). */
 export type CoverOptionsV1 = {readonly refusals?: boolean; readonly refusalWeight?: number; readonly ignore?: (path: string) => boolean};

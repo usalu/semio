@@ -6,7 +6,7 @@
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::constants_and_io::gis2d_window_action;
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 use crate::tile_coordinates::gis_policy::gis_map_layer_weight_slider_ids_json;
 use semio_framework_surface::tiled_map::clamp_map_layer_weight;
 
@@ -41,7 +41,7 @@ pub fn measure(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> WindowMeasure
             ready: None,
             loading: None,
             disabled: None,
-            on_change: gis2d_window_action("setLayerStrokeScale", Some(semio_framework_plugin::dsl_value!({ "layerId": layer_id }))),
+            on_change: gis2d_window_action("setLayerStrokeScale", Some(semio_plugin::dsl_value!({ "layerId": layer_id }))),
             waiting: None,
         })
         .collect();

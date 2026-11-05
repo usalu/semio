@@ -278,7 +278,7 @@ fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection(
     SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("editing a mutation")));
     let _ = paint_retained_body(&mut shell, SURFACE, &document, Rect::new(0.0, 0.0, 420.0, 640.0));
     assert_eq!(shell.history.time_travel_focus, None, "the editor reached the screen and took the focus");
-    let nodes = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(SURFACE);
+    let nodes = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(SURFACE);
     let focused: Vec<_> = nodes.iter().filter(|node| node.focused).map(|node| (node.key.clone(), node.role.clone())).collect();
     assert_eq!(focused.len(), 1, "one focused node: {focused:?}");
     assert!(projected_key_is(&focused[0].0, "framework.history.editor.input.dx") && focused[0].1 == "spinbutton", "the stepper itself, not its row: {focused:?}");

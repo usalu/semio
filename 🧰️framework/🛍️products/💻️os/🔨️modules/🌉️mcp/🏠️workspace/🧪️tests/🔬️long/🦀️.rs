@@ -4,13 +4,13 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use crate::headless_workspace_state::HeadlessWorkspace;
 use crate::workspace::workspace_worker_pool;
-use semio_framework_os_mcp_capabilities::core_capabilities::build_catalog;
-use semio_framework_os_mcp_catalog::catalog::{Catalog, CatalogSource, compile};
-use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
-use semio_framework_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, MutationOrigin, PreparedOps};
-use semio_framework_os_mcp_probe_document::probe_document::{PROBE_SCHEMA, ProbeMutation, ProbeSnapshot, ProbeStore, close_probe_store_to_terminal, probe_store_owners};
+use semio_os_mcp_capabilities::core_capabilities::build_catalog;
+use semio_os_mcp_catalog::catalog::{Catalog, CatalogSource, compile};
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
+use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, MutationOrigin, PreparedOps};
+use semio_os_mcp_probe_document::probe_document::{PROBE_SCHEMA, ProbeMutation, ProbeSnapshot, ProbeStore, close_probe_store_to_terminal, probe_store_owners};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifactChannel;
+use semio_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifactChannel;
 
 /// 🔁 How long this test waits on one `ExternalChanged` poke before poking again. A SINGLE poke is
 /// not enough: `FolderEventLogStorage::read_archive` answering `Some` proves the archive key exists,
@@ -22,7 +22,7 @@ use semio_framework_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifa
 const EXTERNAL_CHANGE_REPOKE_INTERVAL: std::time::Duration = std::time::Duration::from_millis(250);
 
 fn empty_catalog() -> Arc<Catalog> {
-    Arc::new(compile(&CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
+    Arc::new(compile(&CatalogSource::default(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
 }
 
 /// 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): `subscribe`
@@ -95,7 +95,7 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
         })
         .await;
     let mut shell_events = shell_host.subscribe("shared-doc").await;
-    let shell_envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let shell_envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut shell_store = ProbeStore::new(shell_envelope).await.expect("shell store");
     shell_store.install_document_store_owners_exact(probe_store_owners());
     shell_store.attach_backbone(store::os_store::backbone::Backbones::Channel(shell_channels.channel_backbone)).await.expect("attach");

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAccelerogramScaleF
         record: "ChangeAccelerogramScaleFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Scale factor applied to every sample", "Skalierungsfaktor für alle Werte ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Scale factor applied to every sample", "Skalierungsfaktor für alle Werte ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-accelerogram-scale-factor".into()]

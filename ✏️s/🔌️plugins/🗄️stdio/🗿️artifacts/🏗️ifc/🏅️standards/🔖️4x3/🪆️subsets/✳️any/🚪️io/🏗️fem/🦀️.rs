@@ -6,10 +6,10 @@ static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_t
 use pack::snapshot::ArtifactPack;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_diagnostic::{Diagnostic, Severity, TextSpan};
-use semio_framework_plugin::io::{AnalyzeSource, ComposeError, ComposeSource, ComposerEntry, Composition, Confidence};
-use semio_framework_plugin::ArtifactComposer;
+use semio_plugin::io::{AnalyzeSource, ComposeError, ComposeSource, ComposerEntry, Composition, Confidence};
+use semio_plugin::ArtifactComposer;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::{geometry, snapshot::{IfcSnapshot, IfcValue}};
-use semio_framework_os_kernel::io::{io_mechanism::{self, ArchiveChildren, Deserializer, IoEntry, IoRunControl, Serializer}, io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult}};
+use semio_os_kernel::io::{io_mechanism::{self, ArchiveChildren, Deserializer, IoEntry, IoRunControl, Serializer}, io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult}};
 use pack::snapshot::{ArtifactNativeSnapshot, NativeSnapshotEncoding, NativeSnapshotInput};
 use std::sync::OnceLock;
 use semio_s_artifact_stdio_ifc4x3_exchange::{base_io_entries, bim, checkpoint, composition_error, error, graph, loss, original_pack, projection, ExchangeError, ExchangeProgress, GLTF_DIALECT};

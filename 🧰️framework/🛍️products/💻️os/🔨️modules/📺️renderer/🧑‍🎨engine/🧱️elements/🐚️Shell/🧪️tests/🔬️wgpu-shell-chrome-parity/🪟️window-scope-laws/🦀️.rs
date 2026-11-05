@@ -7,19 +7,19 @@ const WINDOW_SCOPE_FIXTURE: &str = include_str!("../../../../🏛️ShellHost/�
 /// 🪟️ Rebuilds a fixture layout node as the wgpu dock tree. The fixture is authored in the React
 /// shell's own layout vocabulary (`window` / `stack` + `activeId` / `row` / `column`), which is the
 /// point: ONE corpus, two renderers.
-fn window_scope_node(value: &Value) -> semio_framework_os_renderer_wgpu_dock::DockNode {
+fn window_scope_node(value: &Value) -> semio_renderer_wgpu_dock::DockNode {
     match value["kind"].as_str().expect("⌨️ fixture layout node kind") {
         "window" => {
             let id = value["id"].as_str().expect("⌨️ fixture window id").to_string();
-            semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new(id.clone())], active: id }
+            semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new(id.clone())], active: id }
         }
         "stack" => {
             let windows: Vec<DockStackTab> = value["children"].as_array().expect("⌨️ fixture stack children").iter().map(|child| DockStackTab::new(child["id"].as_str().expect("⌨️ fixture window id"))).collect();
             let active = value["activeId"].as_str().map(str::to_string).or_else(|| windows.first().map(|tab| tab.window_id.clone())).unwrap_or_default();
-            semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, active }
+            semio_renderer_wgpu_dock::DockNode::Stack { windows, active }
         }
-        "row" => semio_framework_os_renderer_wgpu_dock::DockNode::Row(value["children"].as_array().expect("⌨️ fixture row children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
-        "column" => semio_framework_os_renderer_wgpu_dock::DockNode::Column(value["children"].as_array().expect("⌨️ fixture column children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
+        "row" => semio_renderer_wgpu_dock::DockNode::Row(value["children"].as_array().expect("⌨️ fixture row children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
+        "column" => semio_renderer_wgpu_dock::DockNode::Column(value["children"].as_array().expect("⌨️ fixture column children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
         other => panic!("⌨️ unknown fixture layout node kind {other}"),
     }
 }
@@ -36,7 +36,7 @@ fn window_scope_app(fixture: &Value, app_id: &str) -> AppDefinition {
             id: kind["id"].as_str().expect("⌨️ fixture kind id").into(),
             label: LocalizedLabel::native(kind["id"].as_str().expect("⌨️ fixture kind id"), kind["id"].as_str().expect("⌨️ fixture kind id")),
             body_key: format!("{}.body", kind["id"].as_str().expect("⌨️ fixture kind id")),
-            surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+            surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
             icon_id: "app-window".into(),
             options: Default::default(),
             actions: kind["actionIds"]
@@ -122,7 +122,7 @@ fn accepted_window_icon_commands_are_instance_scoped_precede_projection_and_reti
                 Some(DockStackTab::instance_template(window_id, kind_id, template_id, WindowStackCorner::TopLeft))
             })
             .collect();
-        semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: tabs, active: window_ids[0].as_str().expect("🖼️ active window id").to_string() }
+        semio_renderer_wgpu_dock::DockNode::Stack { windows: tabs, active: window_ids[0].as_str().expect("🖼️ active window id").to_string() }
     };
     let full_root = layout(true);
     let mut shell = host_test_shell();
@@ -131,7 +131,7 @@ fn accepted_window_icon_commands_are_instance_scoped_precede_projection_and_reti
     let kind = session.app.window_kinds.first_mut();
     kind.id = kind_id.to_string();
     kind.icon_id = kind_icon_id.into();
-    session.app.default_layout = Some(WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&full_root) });
+    session.app.default_layout = Some(WindowLayout { root: semio_renderer_wgpu_dock::dock_node_to_layout_root(&full_root) });
     SessionCtx::of(&mut shell).sync_dock();
 
     let (_, initial_icons) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
@@ -152,11 +152,11 @@ fn accepted_window_icon_commands_are_instance_scoped_precede_projection_and_reti
         assert!(!shell.dock.apply_window_icon_host_command(rejected["windowId"].as_str().unwrap(), rejected["iconId"].as_str().unwrap(), &shell.docs, &mut shell.windows), "a missing instance or empty icon is refused");
     }
 
-    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&layout(false)) });
+    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: semio_renderer_wgpu_dock::dock_node_to_layout_root(&layout(false)) });
     SessionCtx::of(&mut shell).sync_dock();
     let retired_id = fixture["retireReuse"]["windowId"].as_str().expect("🖼️ retired id");
     assert!(!shell.windows.window_icon_overrides.contains_key(retired_id), "retirement erases the renderer-local owner");
-    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&full_root) });
+    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: semio_renderer_wgpu_dock::dock_node_to_layout_root(&full_root) });
     SessionCtx::of(&mut shell).sync_dock();
     let (_, reused) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
     assert_eq!(reused.get(retired_id).map(String::as_str), fixture["retireReuse"]["expectedReusedIconId"].as_str(), "an id reused by a successor starts from kind fallback");
@@ -168,16 +168,16 @@ fn dock_sync_seeds_the_authored_instance_and_publishes_its_projection_icons() {
     let rows = fixture["tabPresentation"].as_array().expect("🖼️ fixture tab-presentation rows");
     let top_template = rows[0]["templateId"].as_str().expect("🖼️ top template");
     let perspective_template = rows[1]["templateId"].as_str().expect("🖼️ perspective template");
-    let root = semio_framework_os_renderer_wgpu_dock::DockNode::Row(vec![
-        (semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-top", "main", Some(top_template.into()), WindowStackCorner::TopLeft)], active: "main-top".into() }, 1.0),
-        (semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-perspective", "main", Some(perspective_template.into()), WindowStackCorner::TopLeft)], active: "main-perspective".into() }, 2.0),
+    let root = semio_renderer_wgpu_dock::DockNode::Row(vec![
+        (semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-top", "main", Some(top_template.into()), WindowStackCorner::TopLeft)], active: "main-top".into() }, 1.0),
+        (semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-perspective", "main", Some(perspective_template.into()), WindowStackCorner::TopLeft)], active: "main-perspective".into() }, 2.0),
     ]);
     let mut shell = host_test_shell();
     shell.dock.layout_override = None;
     shell.windows.active_window_id = Some("main".into());
     let session = shell.docs.session.as_mut().expect("🖼️ test session");
     session.app.window_kinds.first_mut().icon_id = "puzzle".into();
-    session.app.default_layout = Some(WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&root) });
+    session.app.default_layout = Some(WindowLayout { root: semio_renderer_wgpu_dock::dock_node_to_layout_root(&root) });
 
     SessionCtx::of(&mut shell).sync_dock();
 

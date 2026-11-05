@@ -1,0 +1,26 @@
+{
+  "title": "Get Puzzle Artifacts Working End to End",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Get puzzle artifacts working end to end with maximum Sol fleet, test-first contracts and host integration. Main model gpt-6.1-sol high; execution medium; audits low.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2783"
+  },
+  "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS/RUNNING-OS/RUNNING-S/RUNNING-PLUGINS/RUNNING-PUZZLE",
+  "sessions": [
+    "2ad9883f-4de1-4f54-ab4f-56a52aec4a74"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-04 16:16:36",
+      "author": "",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Get puzzle artifacts working end to end with maximum Sol fleet, test-first contracts and host integration. Main model gpt-6.1-sol high; execution medium; audits low.",
+      "llm": "codex",
+      "effort": "high"
+    }
+  ]
+}

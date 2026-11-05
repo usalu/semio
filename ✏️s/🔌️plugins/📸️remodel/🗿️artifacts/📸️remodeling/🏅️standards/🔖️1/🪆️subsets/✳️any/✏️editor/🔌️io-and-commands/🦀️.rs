@@ -17,7 +17,7 @@ pub(super) const REMODELING_WORKFLOW_PHOTOS_STREAM_ID: &str = "workflow-photos";
 /// 🗄️ `export_formats`/`import_formats` are left empty, matching this same plugin's sibling
 /// `artifact_kind()` (`🗿️artifacts/📸️remodeling/🦀️.rs`), which already carries the real dialect
 /// ids on `ArtifactKindSpec::export_stdio_kinds`/`import_stdio_kinds` (`s.stdio.glb`/`obj`/`stl`/`ply`/
-/// `las`/`png`) instead of the deprecated enum this file used to import from `semio_framework_plugin` — see
+/// `las`/`png`) instead of the deprecated enum this file used to import from `semio_plugin` — see
 /// `26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT` W6. `AppIo` itself has no
 /// such additive string-id peer fields yet (unlike `ArtifactKindSpec`), so unlike that sibling, this
 /// list cannot be repopulated with real dialect ids without a framework-level `AppIo` change — out of
@@ -33,7 +33,7 @@ pub fn remodeling_io() -> AppIo {
         ports: vec![remodeling_photos_in_port(), remodeling_mesh_out_port()],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.remodeling".into(), name: "3D Remodeling".into(), dimension: "3d".into(), component_kind: "remodeling".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: "3d.remodeling".into(), name: "3D Remodeling".into(), dimension: "3d".into(), component_kind: "remodeling".into() },
     }
 }
 
@@ -68,7 +68,7 @@ pub fn remodeling_mesh_out_port() -> MediaPortSpec {
 //#endregion 🔖️Io
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `RemodelingPlayApp::Command` — the SOLE dispatch surface for remodeling's own behavior, assembled
     /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the

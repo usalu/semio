@@ -4,10 +4,10 @@
 //! actual "1.5", not the reader standard). Ticket
 //! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION.
 
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::ExampleSource;
 #[cfg(test)]
 use semio_framework_test_fixtures::repo_root;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "bachelor-thesis";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -27,7 +27,7 @@ pub const BACHELOR_THESIS_ASSET_SHA256: &str = "83ebe31253bfa881ab9478e9e79d1a77
 /// 🖼️ The thesis fixture as the host delivered it with the instance open. A host-less test reads the same repository file instead; any other caller without a delivery is a defect.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn document_bytes() -> &'static [u8] {
-    match semio_framework_plugin::reactor::package_asset(BACHELOR_THESIS_ASSET_NAME) {
+    match semio_plugin::reactor::package_asset(BACHELOR_THESIS_ASSET_NAME) {
         Some(bytes) => bytes,
         #[cfg(test)]
         None => repository_file(),

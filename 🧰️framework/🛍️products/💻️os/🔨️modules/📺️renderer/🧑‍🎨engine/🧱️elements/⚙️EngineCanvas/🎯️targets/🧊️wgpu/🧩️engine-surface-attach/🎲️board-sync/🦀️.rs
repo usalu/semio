@@ -11,7 +11,7 @@ use super::*;
 ///
 /// 🎯️ Argument order on the normal port is `(nodes, edges, handles)`; the owning app's own
 /// selectable-kind filter decides which granularity a pick may reach at all.
-pub fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyncCache, board: &semio_framework_ui_declaration::ui::Board2dScene, width: u32, height: u32) -> bool {
+pub fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyncCache, board: &semio_ui_declaration::ui::Board2dScene, width: u32, height: u32) -> bool {
     let mut changed = false;
     let size_key = format!("{width}x{height}");
     if cache.size_key.as_deref() != Some(size_key.as_str()) {
@@ -160,7 +160,7 @@ fn board2d_transform_flags_from_json(json: &str) -> (bool, bool) {
 /// ⏯️ Feeds a board's `toolRunTrace` lane into its resident trace layer, refreshes the placement footprints when the kind
 /// catalogs change and the verdict palette from `theme`, and remembers the window its cursor is echoed for. A malformed lane
 /// keeps the previous records.
-fn sync_board_tool_run_trace(entry: &mut EngineSurface, board: &semio_framework_ui_declaration::ui::Board2dScene, window_id: &str, theme: &Theme, catalogs_changed: bool) -> bool {
+fn sync_board_tool_run_trace(entry: &mut EngineSurface, board: &semio_ui_declaration::ui::Board2dScene, window_id: &str, theme: &Theme, catalogs_changed: bool) -> bool {
     let applied = entry.board_trace.apply_lane(board.tool_run_trace.as_deref()).is_ok_and(|applied| applied.pages > 0 || applied.cleared);
     if catalogs_changed || entry.board_trace_shapes.is_empty() {
         entry.board_trace_shapes = tool_run_trace::board2d_tool_run_trace_shapes(&board.glyph_catalogs_json);

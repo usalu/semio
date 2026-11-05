@@ -25,8 +25,8 @@ pub fn change_handle_handle_kind<Op: From<crate::change_handle_handle_kind::Chan
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeHandleHandleKind where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_handle_handle_kind::ChangeHandleHandleKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "handle", kind: "change-handle-handle-kind", record: "ChangedHandleHandleKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change handle \"{}\" handle kind to \"{}\"", self.id, self.new_handle_kind), &format!("Griffart von Griff \"{}\" auf \"{}\" ändern", self.id, self.new_handle_kind))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change handle \"{}\" handle kind to \"{}\"", self.id, self.new_handle_kind), &format!("Griffart von Griff \"{}\" auf \"{}\" ändern", self.id, self.new_handle_kind))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

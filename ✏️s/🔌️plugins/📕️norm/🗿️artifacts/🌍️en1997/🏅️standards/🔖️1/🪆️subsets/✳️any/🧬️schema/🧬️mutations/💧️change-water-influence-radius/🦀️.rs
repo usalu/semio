@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWaterInfluenceRadi
         record: "ChangedWaterInfluenceRadius",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Radius of influence R (0 = Sichardt) of the layer water", "Schichtwasser: Reichweite R (0 = Sichardt) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Radius of influence R (0 = Sichardt) of the layer water", "Schichtwasser: Reichweite R (0 = Sichardt) ändern")
     }
 }
 

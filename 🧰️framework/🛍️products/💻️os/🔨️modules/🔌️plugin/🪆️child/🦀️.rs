@@ -1,19 +1,19 @@
 //! 🪆️ Child members and child content: member keys and paths, the member registry, owned document ingress and child content views.
 use semio_framework_value::ErasedSnapshotRetirement as _;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use std::mem::ManuallyDrop;
-use semio_framework_plugin_decl_views::child_view::CHILD_CONTENT_SLOTS;
-use semio_framework_plugin_decl_views::child_view::MemberKey;
-use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
-use semio_framework_plugin_decl_views::child_view::ChildContentEntry;
-use semio_framework_plugin_decl_views::child_view::ChildContentPage;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_decl_views::child_view::ChildContentTake;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_plugin_decl_views::child_view::ChildContentOwners;
+use semio_plugin_decl_views::child_view::CHILD_CONTENT_SLOTS;
+use semio_plugin_decl_views::child_view::MemberKey;
+use semio_plugin_decl_views::child_view::MemberKeyRef;
+use semio_plugin_decl_views::child_view::ChildContentEntry;
+use semio_plugin_decl_views::child_view::ChildContentPage;
+use semio_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_views::child_view::ChildContentTake;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_plugin_decl_views::child_view::ChildContentOwners;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 /// 🚪️ `io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
-/// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
+/// `semio-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
 /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
 /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
 use semio_framework_artifact_reference::ArtifactRef;
@@ -26,12 +26,12 @@ use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_decl_emission::Emit;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 
 #[path = "🧭️member-keys-and-paths/🦀️.rs"]
 mod member_keys_and_paths;

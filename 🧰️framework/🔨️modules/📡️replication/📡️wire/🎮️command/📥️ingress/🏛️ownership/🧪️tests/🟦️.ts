@@ -163,7 +163,7 @@ test("schema-authored source witnesses admit private evolution and reject public
     if (row.id === "private-extension") changes.set(componentPath, component + "\nfn ownership_private_extension(value: usize) -> usize { value }\n");
     else if (row.id === "formatting") {
       for (const path of [componentPath, fixture.paths.entry, fixture.paths.neutralTests]) changes.set(path, readFileSync(join(root, path), "utf8").replaceAll("#[path =", "#[ path  =").replaceAll("#[test]", "#[ test ]").replaceAll("pub mod command_ingress;", "pub  mod\n command_ingress ;").replaceAll("mod unit_tests;", "mod\n unit_tests ;"));
-    } else if (row.id === "public-owner") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("semio_framework_replication_command_ingress", "semio_framework_os_hostile"));
+    } else if (row.id === "public-owner") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("semio_framework_replication_command_ingress", "semio_os_hostile"));
     else if (row.id === "public-type") changes.set(componentPath, component.replace("pub struct FixedCommandPage", "pub struct UnownedCommandPage"));
     else if (row.id === "constant") changes.set(componentPath, component.replace("usize = 4_096", "usize = 8_192"));
     else if (row.id === "missing-law") changes.set(fixture.paths.neutralTests, readFileSync(join(root, fixture.paths.neutralTests), "utf8").replace("fn " + fixture.laws[0] + "(", "fn absent_native_ownership_law("));

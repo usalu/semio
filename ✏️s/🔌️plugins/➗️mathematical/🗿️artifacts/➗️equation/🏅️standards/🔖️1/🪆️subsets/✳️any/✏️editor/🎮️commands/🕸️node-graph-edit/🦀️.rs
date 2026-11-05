@@ -7,7 +7,7 @@ use crate::op::EquationMutation;
 use crate::standards::v1::subsets::graph::schema::mutations::{connect_nodes::ConnectNodes, delete_node::DeleteNode, disconnect_nodes::DisconnectNodes, move_nodes::MoveNodes};
 use crate::{EquationEdge, EquationGraph, EquationSnapshot};
 use semio_framework_pack_json::Value as JsonValue;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_tool_machine::{node_drag_emit, NodeGraphEditRow};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 

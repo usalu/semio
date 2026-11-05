@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-services-tests"
+name = "semio-os-services-tests"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,8 +23,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-services = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-services-native-io = { path = "../../../../🚪️native-io/📦️packages/🦀️rust" }
+semio-os-services = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-services-native-io = { path = "../../../../🚪️native-io/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

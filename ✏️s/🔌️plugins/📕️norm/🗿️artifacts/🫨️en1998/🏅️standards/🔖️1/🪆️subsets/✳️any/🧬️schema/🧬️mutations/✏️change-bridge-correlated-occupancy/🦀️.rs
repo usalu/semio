@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgeCorrelatedOc
         record: "ChangeBridgeCorrelatedOccupancy",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Correlated occupancy (Table 4.2 φ)", "Korrelierte Nutzung (Tab. 4.2 φ) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Correlated occupancy (Table 4.2 φ)", "Korrelierte Nutzung (Tab. 4.2 φ) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bridge-correlated-occupancy".into()]

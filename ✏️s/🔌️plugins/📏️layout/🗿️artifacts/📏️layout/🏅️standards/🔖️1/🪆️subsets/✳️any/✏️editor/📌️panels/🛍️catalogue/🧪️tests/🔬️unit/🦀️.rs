@@ -38,7 +38,7 @@ fn catalogue_declares_the_neutral_kind_witness_and_drop_payload() {
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case| case["action"] == "canvasDrop" && case["kind"].is_string()) {
         let kind = case["kind"].as_str().unwrap();
         let item = catalogue_tree_item(kind, Label::data(kind), "square").expect("catalogue row");
-        let semio_framework_plugin::Component::TreeItem(props) = &item.component else { panic!("catalogue row component") };
+        let semio_plugin::Component::TreeItem(props) = &item.component else { panic!("catalogue row component") };
         let entries = props.drag_data.as_ref().expect("catalogue drag data").iter().map(|(mime, raw)| (mime.as_str(), raw.as_str())).collect::<Vec<_>>();
         let kind_mime = format!("{}{}", fixture["kindMimePrefix"].as_str().unwrap(), kind);
         assert_eq!(entries, vec![(fixture["mime"].as_str().unwrap(), case["args"]["dragData"].as_str().unwrap()), (kind_mime.as_str(), "")]);

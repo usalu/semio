@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../../.."
-name = "semio-framework-os-infinite-board-normal-focus"
+name = "semio-os-infinite-board-normal-focus"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-os-infinite-board-schema/testkit", "semio-framework-os-infinite-board-engine/testkit", "semio-framework-os-infinite-board-normal-model/testkit", "semio-framework-os-infinite-board-normal-scene/testkit"]
+testkit = ["semio-os-infinite-board-schema/testkit", "semio-os-infinite-board-engine/testkit", "semio-os-infinite-board-normal-model/testkit", "semio-os-infinite-board-normal-scene/testkit"]
 
 [dependencies]
 semio-framework-canvas = { path = "../../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
@@ -30,9 +30,9 @@ semio-framework-value-native-owned = { path = "../../../../../../../../../../../
 geometry = { path = "../../../../../../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph-manifest = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
 graph = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
-ui_styling = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+ui_styling = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 serde_json = "1.0.140"
-semio-framework-os-infinite-board-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
-semio-framework-os-infinite-board-normal-scene = { path = "../../../🖼️scene/📦️packages/🦀️rust" }
+semio-os-infinite-board-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-infinite-board-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
+semio-os-infinite-board-normal-scene = { path = "../../../🖼️scene/📦️packages/🦀️rust" }

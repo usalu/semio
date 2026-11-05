@@ -8,7 +8,7 @@
 //! `🏛️ShellHost/🟦️.tsx`'s theme mutators/`exportTheme`/`importTheme`, and
 //! `🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx`'s `SHELL_KEYBINDINGS`.
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::split_pane_shell;
+use semio_renderer_wgpu_fixtures::shell::split_pane_shell;
 use super::*;
 
 include!("🧰️theme-editor-fixtures/🦀️.rs");

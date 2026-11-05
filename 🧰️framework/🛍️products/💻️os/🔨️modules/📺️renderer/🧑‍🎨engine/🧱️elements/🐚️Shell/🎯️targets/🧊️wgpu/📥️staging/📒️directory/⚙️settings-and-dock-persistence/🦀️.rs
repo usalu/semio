@@ -11,7 +11,7 @@ impl DirectoryState {
     /// the conversation, so the feed is never behind the human's own typing. A blank draft, or a draft
     /// typed while no socket is open, queues nothing and KEEPS the text rather than swallowing it.
     pub fn send_agent_chat_draft(&mut self, chrome: &mut ChromeState) -> bool {
-        if !matches!(chrome.chrome_build.agent.status, semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeStatus::Open) {
+        if !matches!(chrome.chrome_build.agent.status, semio_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeStatus::Open) {
             return false;
         }
         let trimmed = self.agent_chat_draft.trim().to_string();
@@ -51,7 +51,7 @@ impl DirectoryState {
     pub fn build_agent_chat_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         let locale = prefs.active_locale();
-        let connected = matches!(chrome.chrome_build.agent.status, semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeStatus::Open);
+        let connected = matches!(chrome.chrome_build.agent.status, semio_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeStatus::Open);
         let mut children = Vec::new();
         let mut feed = Vec::new();
         if chrome.chrome_build.agent.conversation.is_empty() {
@@ -94,7 +94,7 @@ impl DirectoryState {
             on_submit: Some(ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None }),
             on_abort: None,
             on_repeat_last: None,
-            presence: UiPresence { state: if connected { semio_framework_ui_declaration::ui::UiState::Normal } else { semio_framework_ui_declaration::ui::UiState::Disabled }, ..UiPresence::default() },
+            presence: UiPresence { state: if connected { semio_ui_declaration::ui::UiState::Normal } else { semio_ui_declaration::ui::UiState::Disabled }, ..UiPresence::default() },
             menu: None,
             ..Default::default()
         }));
@@ -104,7 +104,7 @@ impl DirectoryState {
             label: Label::data(shell_chrome_string("chat.send", is_de)),
             action: ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None },
             style: None,
-            presence: UiPresence { state: if connected && !self.agent_chat_draft.trim().is_empty() { semio_framework_ui_declaration::ui::UiState::Normal } else { semio_framework_ui_declaration::ui::UiState::Disabled }, ..UiPresence::default() },
+            presence: UiPresence { state: if connected && !self.agent_chat_draft.trim().is_empty() { semio_ui_declaration::ui::UiState::Normal } else { semio_ui_declaration::ui::UiState::Disabled }, ..UiPresence::default() },
             menu: None,
         }));
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("framework.chat.panel".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })

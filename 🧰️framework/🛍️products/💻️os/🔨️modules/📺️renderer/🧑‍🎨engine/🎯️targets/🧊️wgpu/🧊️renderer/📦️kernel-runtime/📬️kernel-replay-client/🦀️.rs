@@ -91,7 +91,7 @@ impl KernelClient {
     /// 🐣️ Compiles `wasm_path` (once per content hash), activates `app_id` on it and opens its first
     /// instance. `artifact_schema` is the document schema the app edits, empty for an app that edits
     /// none: the mounted component becomes that kind's codec in this process
-    /// ([`semio_framework_os_kernel::os_store::codec_registry::register_component_document_codec`]).
+    /// ([`semio_os_kernel::os_store::codec_registry::register_component_document_codec`]).
     pub async fn create_app(&self, wasm_path: &std::path::Path, plugin_id: &str, app_id: &str, artifact_schema: &str) -> Result<u32, ProgramFault> {
         let owner=open_create_app_source(CreateAppBorrowed{path:wasm_path,plugin:plugin_id,app:app_id,schema:artifact_schema}).await.map_err(ProgramFault::from)?;
         match self.submit(KernelRequest::CreateApp { owner }).await {

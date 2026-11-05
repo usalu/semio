@@ -1,0 +1,161 @@
+{
+  "documentId": "forms-a",
+  "instanceId": 7,
+  "cases": [
+    {
+      "name": "Owned Document",
+      "identities": [
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        },
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        }
+      ],
+      "expectedArchive": true,
+      "expectedReads": 1
+    },
+    {
+      "name": "Wrong Document Before Read",
+      "identities": [
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-b"
+        },
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-b"
+        }
+      ],
+      "expectedArchive": false,
+      "expectedReads": 0
+    },
+    {
+      "name": "Document Changes During Read",
+      "identities": [
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        },
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-b"
+        }
+      ],
+      "expectedArchive": false,
+      "expectedReads": 1
+    },
+    {
+      "name": "Identity Has No Loaded Document",
+      "identities": [
+        {
+          "app_instance_id": 7,
+          "parent_document_id": null
+        },
+        {
+          "app_instance_id": 7,
+          "parent_document_id": null
+        }
+      ],
+      "expectedArchive": false,
+      "expectedReads": 0
+    },
+    {
+      "name": "Wrong Native Instance",
+      "identities": [
+        {
+          "app_instance_id": 8,
+          "parent_document_id": "forms-a"
+        },
+        {
+          "app_instance_id": 8,
+          "parent_document_id": "forms-a"
+        }
+      ],
+      "expectedArchive": false,
+      "expectedReads": 0
+    },
+    {
+      "name": "Missing Identity Capability",
+      "identities": [],
+      "missingIdentity": true,
+      "expectedArchive": false,
+      "expectedReads": 0
+    },
+    {
+      "name": "Session Replaced During Read",
+      "identities": [
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        },
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        }
+      ],
+      "replaceDuringRead": true,
+      "expectedArchive": false,
+      "expectedReads": 1
+    },
+    {
+      "name": "Duplicate Owner Instance",
+      "identities": [
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        },
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        }
+      ],
+      "duplicate": {
+        "samePlugin": true,
+        "documentId": "forms-b"
+      },
+      "expectedArchive": false,
+      "expectedReads": 0
+    },
+    {
+      "name": "Duplicate Owner Even With the Same Document",
+      "identities": [
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        },
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        }
+      ],
+      "duplicate": {
+        "samePlugin": true,
+        "documentId": "forms-a"
+      },
+      "expectedArchive": false,
+      "expectedReads": 0
+    },
+    {
+      "name": "Distinct Plugins Can Reuse Native Instance Numbers",
+      "identities": [
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        },
+        {
+          "app_instance_id": 7,
+          "parent_document_id": "forms-a"
+        }
+      ],
+      "duplicate": {
+        "samePlugin": false,
+        "documentId": "forms-b"
+      },
+      "expectedArchive": true,
+      "expectedReads": 1
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 
 use super::*;
-use semio_framework_ui_scene_plane::Board2dScene;
-use semio_framework_ui_scene_views::{TableScene, TextEditorScene, TEXT_EDITOR_BUFFER_LANE_KEY};
-use semio_framework_ui_scene_world3d::World3dScene;
-use semio_framework_ui_scene_doc::SceneDoc;
+use semio_ui_scene_plane::Board2dScene;
+use semio_ui_scene_views::{TableScene, TextEditorScene, TEXT_EDITOR_BUFFER_LANE_KEY};
+use semio_ui_scene_world3d::World3dScene;
+use semio_ui_scene_doc::SceneDoc;
 use serde_json::Value;
 
 #[test]

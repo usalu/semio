@@ -1,13 +1,13 @@
 //! 📂️ LAW: retained disclosure state removes descendants from every interactive frame lane.
 
 use super::*;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiPresence, UiSectionNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use semio_framework_ui_wgpu_events::{EventModifiers, PointerButton};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_hosting::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};
-use semio_framework_ui_declaration::IconName;
-use semio_framework_ui_locale::Label;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_declaration::ui::{UiButtonNode, UiPresence, UiSectionNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_ui_wgpu_events::{EventModifiers, PointerButton};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_hosting::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};
+use semio_ui_declaration::IconName;
+use semio_ui_locale::Label;
 use serde_json::Value;
 use semio_framework_test_fixtures::fixture_text;
 
@@ -142,7 +142,7 @@ fn upward_nested_disclosure() -> UiNode {
     UiNode::Stack(UiStackNode { id: Some("panel".into()), direction: "vertical".into(), gap: None, padding: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None, children: vec![tree] })
 }
 
-fn nested_rows(ui: &Ui) -> (&UiTree, semio_framework_ui_arena::NodeId, semio_framework_ui_arena::NodeId) {
+fn nested_rows(ui: &Ui) -> (&UiTree, semio_ui_arena::NodeId, semio_ui_arena::NodeId) {
     let window = ui.windows.get("fixture").expect("fixture window");
     let root = window.tree.root.expect("fixture root");
     let tree = window.tree.children(root).next().expect("tree node");
@@ -160,7 +160,7 @@ fn nested_child_height(ui: &Ui) -> f32 {
 #[test]
 fn closed_open_and_rapidly_reclosed_sections_publish_only_reachable_descendants() {
     let fixture = fixture();
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &disclosure(&fixture));
@@ -206,7 +206,7 @@ fn closed_open_and_rapidly_reclosed_sections_publish_only_reachable_descendants(
 
 #[test]
 fn upward_tree_frame_completes_after_empty_nested_and_terminal_cursors() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_tree());
@@ -226,7 +226,7 @@ fn upward_tree_frame_completes_after_empty_nested_and_terminal_cursors() {
 /// physical close retires that hit and collapses the mounted descendant back to zero height.
 #[test]
 fn upward_nested_disclosure_republishes_one_stable_header_and_retires_its_child() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_nested_disclosure());
@@ -266,7 +266,7 @@ fn upward_nested_disclosure_republishes_one_stable_header_and_retires_its_child(
 /// after one stable header row and a second physical gutter click retires both geometry and hit.
 #[test]
 fn downward_nested_disclosure_republishes_one_stable_header_and_retires_its_child() {
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_nested_disclosure());
@@ -328,7 +328,7 @@ fn a_nested_tree_item_opens_from_its_row_and_keeps_its_action() {
             interaction_domain: None,
         })],
     });
-    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut ui = Ui::new(semio_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &tree);
@@ -344,5 +344,5 @@ fn a_nested_tree_item_opens_from_its_row_and_keeps_its_action() {
     let released = ui.dispatch_event("fixture", UiEvent::PointerUp { x: label.x + label.w * 0.5, y: label.y + label.h * 0.5, button: PointerButton::Primary, modifiers: EventModifiers::default() });
     let (tree, branch, _) = nested_rows(&ui);
     assert_eq!(tree.disclosure_open(branch), Some(true), "clicking the row opens its children");
-    assert!(released.iter().any(|command| matches!(command, semio_framework_ui_wgpu_events::UiCommand::App { intent, .. } if intent.action_name() == "pickLayer")), "opening the row still fires its activation");
+    assert!(released.iter().any(|command| matches!(command, semio_ui_wgpu_events::UiCommand::App { intent, .. } if intent.action_name() == "pickLayer")), "opening the row still fires its activation");
 }

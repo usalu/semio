@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-run"
+name = "semio-os-run"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -17,7 +17,7 @@ workspace = true
 path = "./🦀️.rs"
 
 [[bin]]
-name = "semio-framework-os-run"
+name = "semio-os-run"
 path = "../../🏗️bootstrap/🦀️.rs"
 
 [dependencies]
@@ -36,9 +36,9 @@ semio-framework-artifact-workflow-workflow = { workspace = true }
 semio-framework-artifact-workflow-run = { workspace = true }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-actor = { workspace = true }
-semio-framework-os = { path = "../../../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-os = { path = "../../../../🖥️host/📦️packages/🦀️rust", package = "semio-os" }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
 framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -52,16 +52,16 @@ serde_json = "1.0.140"
 # own doc for why the canonical bridge, not an incidental external one, belongs in production code).
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-process-routing-workspace = { path = "../../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust" }
-semio-framework-plugin-host-shard = { path = "../../../🔌️plugin/🖥️host/🧵️shard/📦️packages/🦀️rust" }
+semio-plugin-host-shard = { path = "../../../🔌️plugin/🖥️host/🧵️shard/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
-semio-framework-os-config = { workspace = true }
-semio-framework-plugin-guest-contract = { workspace = true }
-semio-framework-plugin-interpreter-runtime = { workspace = true }
+semio-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-os-config = { workspace = true }
+semio-plugin-guest-contract = { workspace = true }
+semio-plugin-interpreter-runtime = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 # 🌀️ async-first rewrite (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet
 # terra-directory-and-run) — `AppChannelHost::exchange`/`SpaceRunner::run` are `async fn`; this

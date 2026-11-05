@@ -107,7 +107,7 @@ impl PreparedRenderJob {
         let items = if overlay { &layer.overlay_ui_instances } else { &layer.ui_instances };
         items.get(item).is_some_and(|instance| {
             let kind = instance.params[2];
-            kind == semio_framework_ui_draw_contract::KIND_LOADING_BORDER || kind == semio_framework_ui_draw_contract::KIND_WAITING_BORDER || kind == semio_framework_ui_draw_contract::KIND_INTRODUCING_BORDER
+            kind == semio_ui_draw_contract::KIND_LOADING_BORDER || kind == semio_ui_draw_contract::KIND_WAITING_BORDER || kind == semio_ui_draw_contract::KIND_INTRODUCING_BORDER
         })
     }
 

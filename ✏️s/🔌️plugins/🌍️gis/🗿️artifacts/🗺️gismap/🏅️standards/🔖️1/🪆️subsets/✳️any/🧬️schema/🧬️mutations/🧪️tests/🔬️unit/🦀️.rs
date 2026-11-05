@@ -107,20 +107,20 @@ async fn descriptor_round_trips_through_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_vcs_replays_operations() {
-    let mut store = GisMapStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("map store");
+    let mut store = GisMapStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("map store");
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("GIS store refused its exact owner catalog: {error}");
     }
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
-    use semio_framework_plugin::ArtifactOwnedDisposer;
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();
+    use semio_plugin::ArtifactOwnedDisposer;
+    let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();
     let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     for _ in 0..100_000 {
         let demand = disposer.retirement_demands(&store, page).expect("GIS document store quotes its close turn");
         let close = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes.max(page), maximum_depth: demand.depth.max(1) };
-        if matches!(disposer.close_step(&mut store, close).expect("GIS document store close step"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+        if matches!(disposer.close_step(&mut store, close).expect("GIS document store close step"), semio_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -160,6 +160,6 @@ async fn replace_route_data_missing_target_is_error() {
 async fn create_position_duplicate_id_fatal_never_applies() {
     let base = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
     let mutation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") });
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&::semio_os_kernel::ColdMutation::diff(&mutation, &base)).await;
 }
 //#endregion 🔖️OutcomeLaws

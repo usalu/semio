@@ -1,0 +1,66 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "base",
+    "cases"
+  ],
+  "properties": {
+    "base": {
+      "type": "object",
+      "required": [
+        "widgets",
+        "synapses",
+        "layout"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 21,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "mutation",
+          "before",
+          "expectedParams",
+          "applied"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "mutation": {
+            "type": "object",
+            "required": [
+              "mutation",
+              "targets"
+            ]
+          },
+          "before": {
+            "type": "object",
+            "properties": {
+              "params": {
+                "type": "object"
+              },
+              "append": {
+                "type": "array"
+              },
+              "synapses": {
+                "type": "array"
+              }
+            },
+            "additionalProperties": false
+          },
+          "expectedParams": {
+            "type": "object"
+          },
+          "applied": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

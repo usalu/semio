@@ -21,8 +21,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "ext-g-state", kind: "set-ext-g-state", record: "Set" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set ext-g-state {}", self.state.id), &format!("ExtGState {} setzen", self.state.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set ext-g-state {}", self.state.id), &format!("ExtGState {} setzen", self.state.id))
     }
 
     fn target(&self) -> Vec<String> {

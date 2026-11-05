@@ -1,13 +1,13 @@
 //! 🗂️ 🗂️ Flow play app commands command — `delete-selection`.
 
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
 use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit};
 use crate::editor::flow::editor_vocabulary::{flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -34,7 +34,7 @@ pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, _
     let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children)?;
     let mut edit = ContentEdit::new(flow_composed_content(&composed)?);
     if !edit.remove(&nodes, &edges) {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
     }
     Ok(flow_content_leaves_emit(&composed.content.child_id, edit.leaves))
 }

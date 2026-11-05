@@ -1,10 +1,10 @@
 //! 🗃️ Bounded bulk Try-value input for one exact Forms Try window lease.
 
 use crate::editor::forms::commands::set_try_value::{stage_command_input, start_bulk_window, ChunkAddressableJson, TryWindowCommandOutput};
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::forms_config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{FormsTryWindowLease, FormsTryWindowTransient};
 use crate::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -21,7 +21,7 @@ pub struct SetTryValues {
 
 pub fn start_window(
     payload: &SetTryValues,
-    operation: &semio_framework_plugin::AppOperationContext,
+    operation: &semio_plugin::AppOperationContext,
     transient: &FormsTryWindowTransient,
     lease: &FormsTryWindowLease,
 ) -> Result<TryWindowCommandOutput, Fault> {

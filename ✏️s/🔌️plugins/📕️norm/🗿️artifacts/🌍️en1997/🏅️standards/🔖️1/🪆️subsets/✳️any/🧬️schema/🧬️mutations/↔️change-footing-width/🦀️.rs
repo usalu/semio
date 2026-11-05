@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeFootingWidth where
         verb: "change", entity: "footing-width", kind: "change-footing-width", record: "ChangedFootingWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change footing width", "Fundamentbreite ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change footing width", "Fundamentbreite ändern")
     }
 }
 

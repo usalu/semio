@@ -1,6 +1,6 @@
 //! ⏯️ The framework surface of the tool run feature: the run vocabulary a tool or utility declares and the reserved tool run actions.
 
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework_manifest_actions::{ActionDefinition, ActionKind};
 use semio_framework_manifest_app_surface::{AppDefinition, ReservedContribution};
 use semio_framework_manifest_arg_schema::{ActionArgDef, ArgPresentation, ArgSchema};
@@ -96,9 +96,9 @@ use replication::HoverSpec;
 #[cfg(test)]
 use replication::SelectionSpec;
 #[cfg(test)]
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 #[cfg(test)]
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Terminology;
 #[cfg(test)]
 use semio_framework_value::FromValue;
 #[cfg(test)]

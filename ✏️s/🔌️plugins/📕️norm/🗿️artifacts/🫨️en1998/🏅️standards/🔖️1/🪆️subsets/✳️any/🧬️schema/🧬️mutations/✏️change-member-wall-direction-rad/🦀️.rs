@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberWallDirectio
         record: "ChangeMemberWallDirectionRad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Direction of the wall axis from the plan x axis (0 = along x, 90° = along y)", "Richtung der Wandachse zur Grundriss-x-Achse (0 = entlang x, 90° = entlang y) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Direction of the wall axis from the plan x axis (0 = along x, 90° = along y)", "Richtung der Wandachse zur Grundriss-x-Achse (0 = entlang x, 90° = entlang y) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-wall-direction-rad".into()]

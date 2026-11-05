@@ -6,25 +6,25 @@ use crate::schema::mutations::add_entry;
 use semio_s_artifact_stdio_zip_inferences::standards::v2_0::subsets::iso21320::schema::conformance::check_iso21320_conformance;
 use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use semio_framework_2d_compute::EngineHandles;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 
 //#region 🔖️Dialect
 /// 🎯️ This surface's dialect coordinate — `s.stdio.zip@2.0/iso21320`, verified against this
@@ -169,11 +169,11 @@ impl ArtifactEditor for ZipIso21320Editor {
                 let (node_id, value, revision) = crate::editor::editing::edit_arguments(args)?;
                 Ok(ZipEditorCommand::SetNode { node_id, value, revision })
             }
-            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.zip.unhandled-action"), format!("unknown zip editor action '{other}'"))),
+            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.zip.unhandled-action"), format!("unknown zip editor action '{other}'"))),
         })
     }
 
-    fn reference_birth()->Option<fn()->Result<ZipSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<ZipSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(ZipSnapshot::default())
     })}
 
@@ -182,8 +182,8 @@ impl ArtifactEditor for ZipIso21320Editor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -194,35 +194,35 @@ impl ArtifactEditor for ZipIso21320Editor {
         crate::editor::editing::edit_node(doc.snapshot, node_id, value, revision)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                main::render(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.zip@2.0/iso21320#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 
 impl semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor for ZipIso21320Editor {
     const NATIVE_TOOL_IDS: &'static [&'static str] = &["set-node"];
-    const NATIVE_PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] =
-        &[semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "set-node", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] }];
+    const NATIVE_PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] =
+        &[semio_plugin::ArtifactToolPublicationContract { tool_id: "set-node", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] }];
     const NATIVE_PAYLOAD_SCHEMA: &'static str = "s.stdio.zip.command.set-node.v1";
     const NATIVE_CHECKPOINT_RESUME: bool = true;
 
-    fn native_edit_work(_tool_id: &'static str) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> {
+    fn native_edit_work(_tool_id: &'static str) -> Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<Self>>> {
         Box::new(crate::editor::editing::retained::ArchiveTextWork::<Self>::new(|command| {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(ZipEditorCommand::SetNode { node_id, value, revision }) = command else {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.zip.command-mismatch"), "archive text editing received another command"));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.zip.command-mismatch"), "archive text editing received another command"));
             };
             Ok((node_id.as_str(), value.as_str(), revision.as_str()))
         }))
@@ -230,7 +230,7 @@ impl semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor for Zi
 
     fn native_edit_mutations(command: &Self::Command, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(ZipEditorCommand::SetNode { node_id, value, revision }) = command else {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.zip.command-mismatch"), "archive text editing received another command"));
+            return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.zip.command-mismatch"), "archive text editing received another command"));
         };
         crate::editor::editing::edit_node(snapshot, node_id, value, revision)
     }
@@ -264,7 +264,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for ZipIso2
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_zip_iso21320_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_zip_iso21320_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(ZIP_ISO21320_EDITOR_DIALECT)
         .document(["stdio", "zip", "iso21320"])
         .icon_id("archive")

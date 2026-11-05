@@ -4,15 +4,15 @@ use crate::editor::gis2d::modes::edit::windows::map::config::{layer_visible, Map
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use crate::editor::gis2d::{ui_label, Gis2dInteractionSnapshot, GIS2D_FEATURE_GRANULARITY, GIS_MAP_LAYER_IDS};
 use crate::{GisMapSnapshot, GIS_MAP_SCHEMA};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_plugin::ui_node_list;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";
@@ -38,7 +38,7 @@ pub fn definition() -> PanelTabDefinition {
 /// selection `ArtifactEditor::render_with_request_context` threads in (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); an empty domain renders the summary alone,
 /// which is exactly what the interaction-less `render` twin shows.
-pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gis2dInteractionSnapshot, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gis2dInteractionSnapshot, labels: &Gis2dPlayLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let visible_count = GIS_MAP_LAYER_IDS.iter().filter(|(id, _, _)| layer_visible(cfg, id)).count();
     let items = ui_node_list([
         tree_item_desc("gis2d-play-inspector.schema", ui_label(labels.schema.as_str())?, Some(GIS_MAP_SCHEMA.into())),

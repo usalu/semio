@@ -130,7 +130,7 @@ mod borrowed;
 /// 📦️ Reborrows original typed patch or imported element fields for bounded prestage receipts.
 pub fn prepared_operation_wire_source(mutation: &crate::schema::mutations::SemioModelMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
     use crate::schema::mutations::SemioModelMutation;
-    use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource;
+    use semio_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource;
     Some(match mutation {
         SemioModelMutation::InsertElement(_) => ArtifactPreparedOperationSource::Text { header: &[1, TAG_INSERT_ELEMENT], body: mutation },
         SemioModelMutation::RemoveElement(_) => ArtifactPreparedOperationSource::Text { header: &[1, TAG_REMOVE_ELEMENT], body: mutation },

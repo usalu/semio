@@ -1,8 +1,8 @@
 //! 📐️ Energy model mutation domain `fenestration-geometry`: `change-fenestration-height`, `change-fenestration-sill-height`, `change-fenestration-area`, `replace-fenestration-vertices`
 
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_diff as diff;
 extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_geometry as geometry;

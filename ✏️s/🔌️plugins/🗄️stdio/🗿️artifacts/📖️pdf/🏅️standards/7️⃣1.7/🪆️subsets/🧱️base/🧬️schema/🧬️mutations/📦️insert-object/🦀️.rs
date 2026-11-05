@@ -25,8 +25,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "object", kind: "insert-object", record: "Insert" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert object {} {}", self.id.num, self.id.gen), &format!("Objekt {} {} einfügen", self.id.num, self.id.gen))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert object {} {}", self.id.num, self.id.gen), &format!("Objekt {} {} einfügen", self.id.num, self.id.gen))
     }
 
     fn target(&self) -> Vec<String> {

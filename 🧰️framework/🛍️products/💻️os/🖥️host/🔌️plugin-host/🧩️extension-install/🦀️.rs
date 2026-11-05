@@ -12,7 +12,7 @@ use super::*;
 ///
 /// Deliberately the `.sxt`-shaped twin of `kernel::ExtensionDescriptor`
 /// (`🧰️framework/🔨️modules/🎠️kernel`, this ticket's other owned path) rather than a shared type:
-/// this crate has no mount of that file, and `semio-framework-os-kernel` must never depend on
+/// this crate has no mount of that file, and `semio-os-kernel` must never depend on
 /// `semio-framework` (the same dependency-edge-law reason `PackagePluginDependency`'s own
 /// docstring in `🧩️extension/🦀️.rs` gives for ITS wire-shape duplication) — so the two
 /// shapes are duplicated on purpose, exactly like that established precedent.

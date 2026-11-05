@@ -1,0 +1,32 @@
+{
+  "cases": [
+    "retained",
+    "unknownKind",
+    "missingInput",
+    "invalidInput",
+    "cardinalityViolation",
+    "heterogeneousList",
+    "cycleDetected",
+    "pendingExtension"
+  ],
+  "fields": {
+    "evaluation": [
+      "primary (canonical EvalError variant/value/retained)",
+      "retained",
+      "receiptRefusal?"
+    ],
+    "retained": [
+      "copiedItems",
+      "copiedBytes",
+      "retainedCapacityBytes",
+      "releasedBytes"
+    ]
+  },
+  "laws": [
+    "original payload pointers preserved",
+    "receipt refusal projected independently",
+    "original branch complete borrowed projection",
+    "no formatting or representation allocation",
+    "invalid ordinal refused"
+  ]
+}

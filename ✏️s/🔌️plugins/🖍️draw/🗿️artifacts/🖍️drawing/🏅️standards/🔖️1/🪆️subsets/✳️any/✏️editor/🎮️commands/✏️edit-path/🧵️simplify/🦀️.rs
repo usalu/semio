@@ -5,16 +5,16 @@ use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 #[cfg(test)] use semio_s_artifact_draw_drawing_editor_commands::edit_path;
 use semio_s_artifact_draw_drawing_geometry::editing::PathEdit;
 use semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyJob;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
+use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, ValueError};
 use semio_framework_value_persistent::list::PagedList;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
 use semio_framework::Fault;
-use semio_framework_plugin::component::Emit;
+use semio_plugin::component::Emit;
 use semio_framework_interaction as interaction;
-pub type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
+pub type App=semio_plugin::EditorApp<DrawingPlayApp>;
 #[derive(semio_framework_value::RetireOwned)]
 struct Workspace {source:PagedList<semio_s_artifact_draw_drawing_model::PathSegment,{usize::MAX}>,job:Option<PathSimplifyJob>}
 pub struct Work {workspace:Option<ControlledRetirement<Workspace>>,identity:Option<usize>,complete:bool,closing:bool}
@@ -25,7 +25,7 @@ impl ArtifactCommandWork<App> for Work {
     fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
     fn tool_id(&self)->&'static str {"editPath"}
     fn work_demands(&self,_input:&ArtifactCommandInputs<'_,App>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {Ok(semio_framework_value::RetirementDemand {copy_bytes:size_of::<Self>()+size_of::<semio_s_artifact_draw_drawing_model::PathSegment>(),depth:1,..Default::default()})}
-    fn extent(&self,command:&DrawingCommand,snapshot:&DrawingSnapshot,interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize> {
+    fn extent(&self,command:&DrawingCommand,snapshot:&DrawingSnapshot,interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize> {
         let DrawingCommand::EditPath(payload)=command else {return None};
         if let PathEdit::Simplify {tolerance}=payload.edit.as_ref() {if !tolerance.is_finite()||!(1e-6..=1e6).contains(tolerance) {return None;}}
         let DrawingLayerNode::Path(path)=semio_s_artifact_draw_drawing_model::find_drawing_layer(snapshot,&payload.layer_id)? else {return None};
@@ -96,23 +96,23 @@ impl ArtifactCommandWork<App> for Work {
 pub struct DrawingPathCommandJobFactory {keys:Vec<semio_framework::ToolFactoryKey>}
 impl DrawingPathCommandJobFactory {pub fn new(controller:&str)->Self {Self {keys:vec![semio_framework::ToolFactoryKey::new(controller,"editPath")]}}}
 impl semio_framework::ToolJobFactory for DrawingPathCommandJobFactory {
-    type Payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<App>;
-    type Job=semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<App>;
+    type Payload=semio_plugin::retained_command::ArtifactRetainedCommandPayload<App>;
+    type Job=semio_plugin::retained_command::ArtifactRetainedCommandJob<App>;
     fn keys(&self)->&[semio_framework::ToolFactoryKey] {&self.keys}
     fn payload_schema_id(&self)->&str {DRAWING_BOUNDED_PAYLOAD_SCHEMA}
     fn classification(&self)->semio_framework::InteractiveJobClassification {semio_framework::InteractiveJobClassification::Migrated}
     fn execution_contract(&self)->semio_framework::ToolExecutionContract {semio_framework::ToolExecutionContract::resumable(65536,4096,1,262144,7500,1,1)}
- semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:65536,checkpoint_resume:false);
+ semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:65536,checkpoint_resume:false);
 }
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingPathCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingPathCommandJobFactory {
     type Owner=App;
     const TOOL_IDS:&'static[&'static str]=DRAWING_PATH_TOOL_IDS;
     const DOCUMENT_SCHEMA:&'static str=DRAWING_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS:&'static[semio_framework_plugin::ArtifactToolPublicationContract]=DRAWING_PATH_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS:&'static[semio_plugin::ArtifactToolPublicationContract]=DRAWING_PATH_PUBLICATION_CONTRACTS;
 }
-pub fn build(request:&mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<App>>,output:&mut Option<semio_framework_plugin::ErasedToolJob>,cx:&mut semio_framework_plugin::__job::StepContext<'_>)->Result<bool,semio_framework_plugin::__job::OriginalTurnFailure>{
- let original=request.as_ref().ok_or_else(||semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated,"original Path editing request is absent"))?;
+pub fn build(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<App>>,output:&mut Option<semio_plugin::ErasedToolJob>,cx:&mut semio_plugin::__job::StepContext<'_>)->Result<bool,semio_plugin::__job::OriginalTurnFailure>{
+ let original=request.as_ref().ok_or_else(||semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"original Path editing request is absent"))?;
  let work=Work::new();
- if original.tool_id!="editPath"||work.extent(&original.command,&original.snapshot,&original.interaction_state,Some(&original.context))!=Some(1) {return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::OwnershipLimit,"Path editing exceeds its registered source capacity").into());}
- semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,65536,4096,false,|_|work)
+ if original.tool_id!="editPath"||work.extent(&original.command,&original.snapshot,&original.interaction_state,Some(&original.context))!=Some(1) {return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::OwnershipLimit,"Path editing exceeds its registered source capacity").into());}
+ semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,65536,4096,false,|_|work)
 }

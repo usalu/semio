@@ -16,8 +16,8 @@ pub struct ChangeSelectionSeries {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangeSelectionSeries where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_selection_series::mutation::ChangeSelectionSeries> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "selection-series", kind: "change-selection-series", record: "ChangedSelectionSeries" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&{
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&{
         match &self.new_series_id {
             Some(id) => format!("Change selection series to \"{id}\""),
             None => "Clear selection series".to_string(),

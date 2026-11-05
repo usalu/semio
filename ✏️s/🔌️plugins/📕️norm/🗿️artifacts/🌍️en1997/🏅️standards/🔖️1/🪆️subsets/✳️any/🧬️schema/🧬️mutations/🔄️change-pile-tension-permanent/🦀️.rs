@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileTensionPermane
         record: "ChangedPileTensionPermanent",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permanent tension G_k of the pile", "Pfahl: Ständige Zugkraft G_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permanent tension G_k of the pile", "Pfahl: Ständige Zugkraft G_k ändern")
     }
 }
 

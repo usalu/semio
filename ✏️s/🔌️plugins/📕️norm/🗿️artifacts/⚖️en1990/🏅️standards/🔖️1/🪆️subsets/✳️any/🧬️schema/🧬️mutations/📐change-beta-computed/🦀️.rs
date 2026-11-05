@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeBetaComputed where
         record: "ChangedBetaComputed",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change computed reliability index β", "Berechneten Zuverlässigkeitsindex β ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change computed reliability index β", "Berechneten Zuverlässigkeitsindex β ändern")
     }
 }
 

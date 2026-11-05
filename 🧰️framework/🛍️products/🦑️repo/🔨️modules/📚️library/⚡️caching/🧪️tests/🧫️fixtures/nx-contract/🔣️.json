@@ -462,7 +462,7 @@
       "project": "@semio-tech/framework-os-scale-fixture",
       "target": "build-wasm",
       "output": "{projectRoot}/dist/component",
-      "filename": "semio_framework_os_scale_fixture.wasm",
+      "filename": "semio_os_scale_fixture.wasm",
       "schemaInput": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/**/*.wit",
       "magic": [
         0,
@@ -537,7 +537,7 @@
     ]
   },
   "fontAssets": {
-    "project": "semio-framework-os-infinite",
+    "project": "semio-os-infinite",
     "toolProject": "semio-framework-canvas-font-assets",
     "tool": "build",
     "producer": "fonts",
@@ -568,7 +568,7 @@
       "dev",
       "release"
     ],
-    "fonts": "semio-framework-os-infinite:fonts"
+    "fonts": "semio-os-infinite:fonts"
   },
   "socketFrames": {
     "messages": [

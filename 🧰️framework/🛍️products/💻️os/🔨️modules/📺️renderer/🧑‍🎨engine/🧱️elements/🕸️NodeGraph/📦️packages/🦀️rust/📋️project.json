@@ -43,7 +43,16 @@
       "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
       "metadata": {
         "semio": {
-          "wasmPackageSourceV1": { "version": 1, "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust" }
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+            "compileOutputs": [
+              {
+                "specifier": "@semio-tech/framework-os-node-graph-rs/framework_os_node_graph.js",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/🕸️bindings/framework_os_node_graph.js"
+              }
+            ]
+          }
         }
       }
     }

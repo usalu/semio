@@ -48,7 +48,7 @@ describe("OS source topology", () => {
     const row = fixture.packageBoundary;
     expect(row.nodeRoot).not.toBe(row.cargoRoot);
     const cargo = TOML.parse(readFileSync(resolve(repoRoot, row.cargoRoot, "Cargo.toml"), "utf8")) as { readonly package?: { readonly name?: string } };
-    expect(cargo.package?.name).toBe("semio-framework-os-renderer-wgpu");
+    expect(cargo.package?.name).toBe("semio-renderer-wgpu");
     const node = JSON.parse(readFileSync(resolve(repoRoot, row.nodeRoot, row.nodeManifest), "utf8")) as { readonly name?: string; readonly exports?: Readonly<Record<string, string>> };
     const nx = JSON.parse(readFileSync(resolve(repoRoot, row.nodeRoot, row.nxManifest), "utf8")) as { readonly name?: string };
     expect(node.name).toBe(row.name);

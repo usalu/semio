@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-ui-contract-values-laws"
+name = "semio-ui-contract-values-laws"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Companion white-box laws of semio-framework-ui-contract-values"
+description = "Companion white-box laws of semio-ui-contract-values"
 
 [package.metadata.semio]
 role = "framework"
@@ -24,9 +24,9 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
-semio-framework-ui-contract-values = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-contract-values = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-ui-contract-budget = { path = "../../../../../📏️budget/📦️packages/🦀️rust" }
-semio-framework-ui-contract-text = { path = "../../../../../🔤️text/📦️packages/🦀️rust" }
+semio-ui-contract-budget = { path = "../../../../../📏️budget/📦️packages/🦀️rust" }
+semio-ui-contract-text = { path = "../../../../../🔤️text/📦️packages/🦀️rust" }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true

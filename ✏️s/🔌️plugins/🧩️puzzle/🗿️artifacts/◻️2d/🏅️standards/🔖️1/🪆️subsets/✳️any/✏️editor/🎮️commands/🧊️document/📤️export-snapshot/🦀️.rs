@@ -1,10 +1,10 @@
 //! 📤 Downloads the live snapshot as round-trippable JSON.
 
 use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
-use semio_framework_plugin::app::ArtifactDownloadOutput;
-use semio_framework_plugin::app::ArtifactOutputChunks;
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::Fault;
+use semio_plugin::app::ArtifactDownloadOutput;
+use semio_plugin::app::ArtifactOutputChunks;
+use semio_plugin::kernel::Effect;
+use semio_plugin::Fault;
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
 use semio_framework_pack_json::Value;
 

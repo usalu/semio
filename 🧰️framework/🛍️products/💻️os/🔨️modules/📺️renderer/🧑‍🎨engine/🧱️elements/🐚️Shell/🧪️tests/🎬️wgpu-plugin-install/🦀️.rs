@@ -24,11 +24,11 @@ fn every_declared_artifact_kind_names_one_owner() {
     kinds.dedup();
     assert_eq!(kinds.len(), before, "an artifact kind may be claimed by exactly one plugin");
     for (kind, plugin_id) in &table {
-        assert_eq!(semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner(kind, &table), Some(*plugin_id));
+        assert_eq!(semio_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner(kind, &table), Some(*plugin_id));
     }
-    assert_eq!(semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("no.such.kind", &table), None);
-    assert_eq!(semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("", &table), None);
-    assert_eq!(semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("test.beta", &[]), None);
+    assert_eq!(semio_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("no.such.kind", &table), None);
+    assert_eq!(semio_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("", &table), None);
+    assert_eq!(semio_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("test.beta", &[]), None);
 }
 
 /// 🧪️ The host plugin and one unrelated plugin both claim their own kinds, so a hub session can name
@@ -39,8 +39,8 @@ fn the_host_plugin_is_not_the_owner_of_every_kind() {
     let rows = activation_rows(&corpus);
     let owners: std::collections::BTreeSet<&str> = rows.iter().map(|(_, plugin_id)| *plugin_id).collect();
     assert!(owners.len() > 1, "more than one plugin must own artifact kinds");
-    assert_eq!(semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("test.beta", &rows), Some("foreign"));
-    assert_eq!(semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("typed.beta", &rows), Some("foreign"));
+    assert_eq!(semio_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("test.beta", &rows), Some("foreign"));
+    assert_eq!(semio_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner("typed.beta", &rows), Some("foreign"));
 }
 
 /// 🧪️ `install_plugin` is a no-op for a resident plugin and refuses — rather than panicking or
@@ -49,7 +49,7 @@ fn the_host_plugin_is_not_the_owner_of_every_kind() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn installing_without_a_resident_program_is_refused() {
-    let mut shell = ShellState::new(Vec::new(), "s".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), "s".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(shell.plugins.plugin_install.is_none());
     let outcome = semio_framework_async::block_on(shell.plugins.install_plugin("foreign"));
     assert_eq!(outcome, Err("plugin modules root is unavailable".to_string()));
@@ -62,7 +62,7 @@ fn installing_without_a_resident_program_is_refused() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn cancelling_clears_only_a_settled_install_record() {
-    let mut shell = ShellState::new(Vec::new(), "s".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), "s".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.plugins.cancel_plugin_install();
     assert!(shell.plugins.plugin_install.is_none());
     shell.plugins.plugin_install = Some(ShellPluginInstall { plugin_id: "foreign".into(), phase: ShellPluginInstallPhase::Failed("boom".into()), cancel: CancelToken::root_now() });
@@ -109,7 +109,7 @@ fn a_parsed_relay_kind_resolves_to_its_declared_owner() {
     let rows = activation_rows(&corpus);
     let args = &corpus["relay"];
     let target = open_artifact_relay_target("os.open-artifact", Some(&args)).expect("relay");
-    assert_eq!(semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner(&target.dialect.artifact_kind, &rows), corpus["relay"]["expectedOwner"].as_str());
+    assert_eq!(semio_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner(&target.dialect.artifact_kind, &rows), corpus["relay"]["expectedOwner"].as_str());
     let owners: std::collections::BTreeSet<&str> = rows.iter().map(|(_, plugin_id)| *plugin_id).collect();
     assert!(owners.len() > 1, "the relay must be able to name an owner other than whichever plugin hosts the shell");
 }

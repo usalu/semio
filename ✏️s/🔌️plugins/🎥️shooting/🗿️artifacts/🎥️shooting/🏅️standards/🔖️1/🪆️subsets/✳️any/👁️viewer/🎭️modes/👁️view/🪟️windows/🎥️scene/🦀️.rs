@@ -11,16 +11,16 @@ use crate::{active_shot, is_transparent_shooting_background};
 use crate::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::world3d_mesh_id_from_url;
-use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
-use semio_framework_plugin::world3d_scene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_plugin::World3dScene;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_plugin::world3d_scene;
+use semio_plugin::world3d_selection_json;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_plugin::World3dScene;
+use semio_plugin::WorldSunConfig;
 use std::collections::HashSet;
 
 fn vec3(v: [f64; 3]) -> Value {
@@ -150,13 +150,13 @@ fn shooting_frame_json(shot: &ShootingShot) -> String {
     json!({ "width": shot.width, "height": shot.height, "shape": shot.shape.as_str(), "badge": true }).to_string()
 }
 
-/// 👁️ Pure `ShootingSnapshot -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>` read: default camera (a viewer has no persisted per-session
+/// 👁️ Pure `ShootingSnapshot -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>` read: default camera (a viewer has no persisted per-session
 /// camera), real scene lighting/asset placement/active-shot frame straight off the document.
-pub fn render(snapshot: &ShootingSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let camera = ShootingCamera::default();
-    semio_framework_plugin::scene_surface(
+    semio_plugin::scene_surface(
         SURFACE_ID,
-        semio_framework_ui_contract::SurfaceKind::World3d,
+        semio_ui_contract::SurfaceKind::World3d,
         &World3dScene {
             environment_json: Some(shooting_environment_json(snapshot)),
             frame_json: active_shot(snapshot).map(shooting_frame_json),

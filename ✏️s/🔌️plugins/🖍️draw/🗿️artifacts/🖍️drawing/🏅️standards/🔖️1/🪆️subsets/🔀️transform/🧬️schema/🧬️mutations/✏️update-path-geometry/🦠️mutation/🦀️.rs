@@ -20,7 +20,7 @@ pub fn update_path_geometry<Op: From<UpdatePathGeometry>>(layer_id: semio_framew
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdatePathGeometry where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdatePathGeometry> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "path", kind: "update-path-geometry", record: "UpdatedPathGeometry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit path", "Pfad bearbeiten") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Edit path", "Pfad bearbeiten") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.to_string_owner()] }
 }
 

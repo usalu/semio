@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-flow-wasm"
+name = "semio-os-flow-wasm"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,16 +22,16 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-flow-wasm-domain = { path = "../../🧩️domain-adapter/📦️packages/🦀️rust" }
-semio-framework-os-flow-wasm-actions-a = { path = "../../🎬️actions-a/📦️packages/🦀️rust" }
-semio-framework-os-flow-wasm-actions-b = { path = "../../🎞️actions-b/📦️packages/🦀️rust" }
-semio-framework-os-flow-host-core = { path = "../../../🖥️host/🧱️flow-host-model/📦️packages/🦀️rust" }
-semio-framework-os-flow-vcs = { path = "../../../🌿️vcs/📦️packages/🦀️rust" }
-semio-framework-os-flow-drawing = { path = "../../../🖍️drawing/📦️packages/🦀️rust" }
+semio-os-flow-wasm-domain = { path = "../../🧩️domain-adapter/📦️packages/🦀️rust" }
+semio-os-flow-wasm-actions-a = { path = "../../🎬️actions-a/📦️packages/🦀️rust" }
+semio-os-flow-wasm-actions-b = { path = "../../🎞️actions-b/📦️packages/🦀️rust" }
+semio-os-flow-host-core = { path = "../../../🖥️host/🧱️flow-host-model/📦️packages/🦀️rust" }
+semio-os-flow-vcs = { path = "../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-flow-drawing = { path = "../../../🖍️drawing/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-os-infinite = { path = "../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-os-infinite = { path = "../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-abi = { path = "../../../../../../../🔨️modules/🌉️abi/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
@@ -39,14 +39,14 @@ semio-framework-replication = { workspace = true }
 serde_json = "1"
 
 [dev-dependencies]
-semio-framework-os-flow-host = { path = "../../../🖥️host/📦️packages/🦀️rust" }
+semio-os-flow-host = { path = "../../../🖥️host/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
 semio-framework-replication = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-ui_webgpu = { path = "../../../../../../../🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
+ui_webgpu = { path = "../../../../../../../🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-ui-backend-webgpu" }

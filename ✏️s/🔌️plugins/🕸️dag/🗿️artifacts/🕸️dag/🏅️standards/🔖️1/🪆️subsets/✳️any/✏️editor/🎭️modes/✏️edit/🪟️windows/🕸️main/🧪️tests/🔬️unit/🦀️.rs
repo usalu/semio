@@ -1,4 +1,4 @@
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 use crate::editor::dag::modes::edit::windows::main::*;
 use crate::editor::dag::unit_tests::context::{close, new_app, render as render_body};
 

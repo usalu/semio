@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-canonical-json"
+name = "semio-os-store-canonical-json"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,8 +22,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

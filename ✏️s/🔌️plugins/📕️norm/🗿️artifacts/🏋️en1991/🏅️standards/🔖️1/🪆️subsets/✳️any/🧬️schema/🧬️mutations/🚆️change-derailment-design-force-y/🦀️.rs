@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDerailmentDesignFo
         record: "ChangedDerailmentDesignForceY",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change design force F_dy across the track (entered) of the derailment case", "Entgleisungsfall: Bemessungskraft F_dy quer zum Gleis (eingegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change design force F_dy across the track (entered) of the derailment case", "Entgleisungsfall: Bemessungskraft F_dy quer zum Gleis (eingegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

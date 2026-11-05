@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-scene-plane"
+name = "semio-ui-scene-plane"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,11 +23,11 @@ path = "../../🦀️.rs"
 
 [dependencies]
 protocol = { path = "../../../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
-semio-framework-ui-scene-doc = { path = "../../../📜️doc/📦️packages/🦀️rust" }
-semio-framework-ui-scene-pack = { path = "../../../../📦️pack/📦️packages/🦀️rust" }
+semio-ui-scene-doc = { path = "../../../📜️doc/📦️packages/🦀️rust" }
+semio-ui-scene-pack = { path = "../../../../📦️pack/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 fnv = "1.0.7"
 serde_json = { version = "1.0.140" }
-ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

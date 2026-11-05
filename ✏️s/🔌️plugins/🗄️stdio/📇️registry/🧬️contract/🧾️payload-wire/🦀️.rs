@@ -1,7 +1,7 @@
 //! 🧾️ Wire helpers every stdio artifact shares: operation payload JSON, draft splices, ordered rows, the double-option decoder, Base64, semantic fingerprints and the serde operation codec.
 
 pub use semio_framework_diagnostic as diagnostic;
-pub use semio_framework_os_kernel as kernel;
+pub use semio_os_kernel as kernel;
 pub use semio_framework_value as value;
 
 use semio_framework_value::ToValue;
@@ -76,11 +76,11 @@ pub struct DraftSplice {
     pub insert: String,
 }
 
-fn splice_fault(code: &'static str, message: impl Into<String>) -> semio_framework_plugin::Fault {
-    semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+fn splice_fault(code: &'static str, message: impl Into<String>) -> semio_plugin::Fault {
+    semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message)
 }
 /// 📥️ Reads a change set from its JSON text (the same list `window_kit_splices_argument` reads from the staged arguments).
-pub fn draft_splices_from_json(text: &str) -> Result<Vec<DraftSplice>, semio_framework_plugin::Fault> {
+pub fn draft_splices_from_json(text: &str) -> Result<Vec<DraftSplice>, semio_plugin::Fault> {
     let parsed = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| splice_fault("stdio.window-kit.splices-json", format!("the change set is not JSON: {error}")))?;
     let semio_framework_value::DslValue::Array(rows) = semio_framework_pack_json::to_dsl_value(&parsed) else {
         return Err(splice_fault("stdio.window-kit.splices-shape", "the change set must be a list of ranges"));

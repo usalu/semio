@@ -2,7 +2,7 @@
 use super::super::{ChildContentView,ChildContentEntry,MemberKeyRef};
 use super::source::{ChildEditorCapability,ChildEditorCurrent,ChildEditorFields};
 use semio_framework::Fault;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use pack::snapshot::ArtifactPack;
 use store::os_store::{serialization::ArtifactStoreSnapshot,snapshot_read::SnapshotReadRef};
 pub struct ChildEditorRead<'a,S>{pub read:SnapshotReadRef<'a,S>,pub entry:&'a ChildContentEntry,pub parent_identity:usize,pub parent_artifact:&'a str,pub parent_revision:&'a[u8;32]}

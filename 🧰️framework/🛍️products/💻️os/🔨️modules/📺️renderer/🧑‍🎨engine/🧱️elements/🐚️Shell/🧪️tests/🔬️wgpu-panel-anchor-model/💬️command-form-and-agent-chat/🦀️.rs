@@ -62,7 +62,7 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
             .expect("header toolbar")
             .children
             .iter()
-            .any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, semio_framework_ui_layout::layout::UiState::Disabled)))
+            .any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, semio_ui_layout::layout::UiState::Disabled)))
     };
     assert!(disabled(&shell), "🎛️ unstaged required argument blocks Execute");
     shell.commands.staged_command_args.entry(key).or_default().insert(arg_id, value);
@@ -75,7 +75,7 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
 /// connected state and the composer is live.
 fn welcomed_shell() -> ShellState {
     let mut shell = fresh_state();
-    let welcome = semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::Welcome { bridge_version: semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::BRIDGE_VERSION, connection: "connection-1".into(), principal: "agent:local".into() };
+    let welcome = semio_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::Welcome { bridge_version: semio_renderer_wgpu_agent_elements::agent_bridge::BRIDGE_VERSION, connection: "connection-1".into(), principal: "agent:local".into() };
     shell.chrome.apply_agent_bridge_frame(&welcome.encode()).expect("a Welcome frame decodes");
     shell
 }
@@ -122,7 +122,7 @@ fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
     let mut shell = welcomed_shell();
     assert!(chat_entry_ids(&shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs)).is_empty(), "💬️ no bridge activity, no rows");
 
-    let call = semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), arguments: "{\"artifactId\":\"doc-1\"}".into() };
+    let call = semio_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), arguments: "{\"artifactId\":\"doc-1\"}".into() };
     shell.chrome.apply_agent_bridge_frame(&call.encode()).expect("an AgentToolCall frame decodes");
     let running = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert_eq!(chat_entry_ids(&running), vec!["framework.chat.entry.toolCall.inv_7".to_string()], "💬️ the tool call is one addressable row");
@@ -134,7 +134,7 @@ fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
     assert!(lines.contains(&"{\"artifactId\":\"doc-1\"}".to_string()), "💬️ and its real arguments: {lines:?}");
     assert!(panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &running).is_ok(), "💬️ the conversation projects as publishable panel records");
 
-    let result = semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolResult { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), ok: true, summary: "opened doc-1".into() };
+    let result = semio_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolResult { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), ok: true, summary: "opened doc-1".into() };
     shell.chrome.apply_agent_bridge_frame(&result.encode()).expect("an AgentToolResult frame decodes");
     let settled = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert_eq!(chat_entry_ids(&settled), vec!["framework.chat.entry.toolCall.inv_7".to_string()], "💬️ one row per invocation, never two");
@@ -153,7 +153,7 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
     let tool_name = fixture["invocation"]["toolName"].as_str().expect("tool name");
     let arguments = fixture["invocation"]["arguments"].as_str().expect("arguments");
     let mut shell = welcomed_shell();
-    shell.chrome.apply_agent_bridge_frame(&semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
+    shell.chrome.apply_agent_bridge_frame(&semio_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
     let control_id = format!("framework.chat.cancel.{invocation_id}");
     let action = chat_button_action(&shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs), &control_id).expect("a running call publishes its cancel control");
     assert_eq!(action.action, "cancelToolCall");
@@ -161,7 +161,7 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(action)).expect("framework owns cancellation");
     let frames = shell.chrome.take_agent_bridge_outbox();
     assert_eq!(frames.len(), 1);
-    assert_eq!(semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::decode(&frames[0]).expect("cancel frame"), semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::AgentCancel { invocation_id: invocation_id.into() });
+    assert_eq!(semio_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::decode(&frames[0]).expect("cancel frame"), semio_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::AgentCancel { invocation_id: invocation_id.into() });
     let cancelling = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert!(chat_button_action(&cancelling, &control_id).is_none(), "a cancelling row cannot send a duplicate control action");
     let mut cancelling_lines = Vec::new();
@@ -170,7 +170,7 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
 
     shell.chrome
         .apply_agent_bridge_frame(
-            &semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolResult {
+            &semio_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolResult {
                 invocation_id: invocation_id.into(),
                 tool_name: tool_name.into(),
                 ok: fixture["terminalResult"]["ok"].as_bool().expect("terminal ok"),
@@ -186,12 +186,12 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
     assert!(settled_lines.contains(&"Failed".to_string()) && settled_lines.iter().any(|line| line.contains("cancelled by user")), "the gateway result settles the row: {settled_lines:?}");
 
     let mut offline = welcomed_shell();
-    offline.chrome.apply_agent_bridge_frame(&semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
+    offline.chrome.apply_agent_bridge_frame(&semio_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
     offline.chrome.chrome_build.agent.note_socket_closed();
     let offline_action = chat_button_action(&offline.directory.build_agent_chat_ui(&offline.chrome, &offline.prefs), &control_id).expect("React leaves a running row's control mounted while its sender can refuse");
     semio_framework_async::block_on(ActionsCtx::of(&mut offline).dispatch_action(offline_action)).expect("framework owns cancellation");
     assert!(offline.chrome.take_agent_bridge_outbox().is_empty(), "a disconnected cancel changes and sends nothing");
-    assert!(matches!(&offline.chrome.chrome_build.agent.conversation[0], semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentConversationEntry::ToolCall { state: semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentToolCallState::Running, .. }));
+    assert!(matches!(&offline.chrome.chrome_build.agent.conversation[0], semio_renderer_wgpu_agent_elements::agent_bridge::AgentConversationEntry::ToolCall { state: semio_renderer_wgpu_agent_elements::agent_bridge::AgentToolCallState::Running, .. }));
 }
 
 /// 💬️ The composer: a turn typed here leaves as a real `ShellToGateway::AgentMessage` and is echoed
@@ -212,8 +212,8 @@ fn the_chat_composer_sends_one_agent_message_per_turn_and_keeps_an_unsendable_dr
     assert!(shell.directory.agent_chat_draft.is_empty(), "💬️ the draft clears on send");
     let outbox = shell.chrome.take_agent_bridge_outbox();
     assert_eq!(outbox.len(), 1, "💬️ exactly one frame per turn");
-    match semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::decode(&outbox[0]).expect("the outbox frame decodes") {
-        semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::AgentMessage { text, .. } => assert_eq!(text, "move it", "💬️ trimmed, React's own `trimmed`"),
+    match semio_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::decode(&outbox[0]).expect("the outbox frame decodes") {
+        semio_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::AgentMessage { text, .. } => assert_eq!(text, "move it", "💬️ trimmed, React's own `trimmed`"),
         other => panic!("💬️ expected an AgentMessage, got {other:?}"),
     }
     let panel = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);

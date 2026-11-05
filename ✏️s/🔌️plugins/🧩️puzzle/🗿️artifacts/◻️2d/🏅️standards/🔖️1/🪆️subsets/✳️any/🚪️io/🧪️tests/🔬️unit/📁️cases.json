@@ -1,0 +1,93 @@
+{
+  "snapshot": {
+    "schema": "board.ports.directed.v1",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "nodes": [
+      {
+        "id": "a",
+        "shape": "circle",
+        "x": 0,
+        "y": 0,
+        "radius": 20,
+        "text": "root"
+      },
+      {
+        "id": "b",
+        "shape": "rectangle",
+        "x": 120,
+        "y": 40,
+        "width": 60,
+        "height": 30
+      },
+      {
+        "id": "ghost",
+        "x": 500,
+        "y": 500,
+        "visible": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "e",
+        "source": "a",
+        "target": "b"
+      }
+    ],
+    "targetRegions": [
+      {
+        "id": "t",
+        "x": -40,
+        "y": -40,
+        "width": 240,
+        "height": 120,
+        "label": "goal",
+        "hidden": false,
+        "locked": false
+      }
+    ],
+    "meta": {}
+  },
+  "dwg": {
+    "standard": "AC1024",
+    "circles": [
+      {
+        "center": [
+          72.0,
+          72.0,
+          0.0
+        ],
+        "radius": 20.0
+      }
+    ],
+    "texts": [
+      {
+        "at": [
+          140.0,
+          48.0,
+          0.0
+        ],
+        "value": "goal"
+      },
+      {
+        "at": [
+          60.0,
+          76.0,
+          0.0
+        ],
+        "value": "root"
+      }
+    ]
+  },
+  "page": {
+    "pages": 1,
+    "paths": 4,
+    "labels": [
+      "goal",
+      "root"
+    ]
+  }
+}

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedSiloWallFri
         record: "ChangedAssumedSiloWallFriction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed silo wall friction", "Angenommene Silo-Wandreibung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed silo wall friction", "Angenommene Silo-Wandreibung ändern")
     }
 }
 

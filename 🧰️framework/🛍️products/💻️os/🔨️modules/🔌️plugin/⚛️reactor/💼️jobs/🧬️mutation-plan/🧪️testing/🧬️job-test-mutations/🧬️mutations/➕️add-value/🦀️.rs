@@ -17,8 +17,8 @@ impl protocol::MutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
 }
 
@@ -37,7 +37,7 @@ impl protocol::ColdMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
 impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = <Self as protocol::MutationKind<JobTestSnapshot, JobTestOp>>::SEMANTICS;
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<JobTestSnapshot, JobTestOp>>::label(self)
     }
 }

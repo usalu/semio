@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "tiles", kind: "delete-tiles", record: "DeletedTiles" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete {} tiles", self.ids.len()), &format!("{} Kacheln löschen", self.ids.len()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete {} tiles", self.ids.len()), &format!("{} Kacheln löschen", self.ids.len()))
     }
 
     fn target(&self) -> Vec<String> {

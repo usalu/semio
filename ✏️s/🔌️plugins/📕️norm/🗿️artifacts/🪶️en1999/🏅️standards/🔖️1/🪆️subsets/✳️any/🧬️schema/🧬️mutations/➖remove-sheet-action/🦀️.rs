@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for RemoveSheetAction where 
         record: "RemovedSheetAction",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove cold-formed sheet action", "Einwirkung auf kaltgeformtes Blech entfernen")
     }
 }
 

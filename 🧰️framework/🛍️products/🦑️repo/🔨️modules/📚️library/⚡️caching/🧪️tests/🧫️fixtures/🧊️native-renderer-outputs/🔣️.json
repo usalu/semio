@@ -1,7 +1,7 @@
 {
   "project": "@semio-tech/framework-renderer-wgpu",
   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
-  "crate": "semio-framework-os-renderer-wgpu",
+  "crate": "semio-renderer-wgpu",
   "binary": "semio-wgpu-native",
   "stdout": "native renderer artifact\n",
   "changedStdout": "changed native renderer artifact\n",

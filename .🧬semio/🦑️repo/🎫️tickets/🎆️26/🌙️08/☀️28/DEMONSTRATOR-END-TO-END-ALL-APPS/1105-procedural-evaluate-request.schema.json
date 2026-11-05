@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "required": [
+    "neuronId",
+    "operatorId",
+    "inputJson",
+    "dependencyJson",
+    "operatorVersion",
+    "windowId",
+    "windowKindId",
+    "extensionId",
+    "nodeHash",
+    "resume"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "neuronId": {
+      "type": "string"
+    },
+    "operatorId": {
+      "type": "string"
+    },
+    "inputJson": {
+      "type": "string"
+    },
+    "dependencyJson": {
+      "type": "string"
+    },
+    "operatorVersion": {
+      "type": "string"
+    },
+    "windowId": {
+      "type": "string"
+    },
+    "windowKindId": {
+      "type": "string"
+    },
+    "extensionId": {
+      "type": "string"
+    },
+    "nodeHash": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "resume": {
+      "type": "boolean"
+    }
+  }
+}

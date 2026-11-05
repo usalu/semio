@@ -14,14 +14,14 @@ pub struct Puzzle3dActionCtx<'a> {
     pub instance_owner: Option<&'a ArtifactInstanceOperationOwnerHandle>,
     /// ⏯️ The instance's tool run as of command admission (`ArtifactOwnedToolJobContext::tool_run`) — the
     /// identity a run action this arm dispatches targets. `None` on paths admitted without it.
-    pub tool_run: Option<&'a semio_framework_plugin::ToolRunView>,
+    pub tool_run: Option<&'a semio_plugin::ToolRunView>,
     pub scene: &'a mut Puzzle3dScene,
     /// 🪟️ The window instance this action targets (already defaulted to the main window).
     pub window_id: &'a str,
     /// 🎛️ The pre-action config snapshot, for the few arms that must read state the scene runtime's
     /// materialized copy does not carry.
     pub config: &'a Puzzle3dRuntime,
-    pub view_state: Option<&'a semio_framework_plugin::ViewModel>,
+    pub view_state: Option<&'a semio_plugin::ViewModel>,
     /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (current selection plus
     /// `"pointer"` hover — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). Retained
     /// selection-acting verbs (delete/duplicate/focus/rotate/scale/translate-selection,
@@ -32,7 +32,7 @@ pub struct Puzzle3dActionCtx<'a> {
     pub effects: &'a mut Vec<Effect>,
     /// 🕹️ App-initiated selection writes this arm wants applied once its own mutations land — the
     /// single sanctioned way a reducer selects what it just created or widened to
-    /// (`semio_framework_plugin::InteractionWrite`, applied by `VcsArtifactApp` through the same
+    /// (`semio_plugin::InteractionWrite`, applied by `VcsArtifactApp` through the same
     /// state machine the reserved `interactionSelect` verb uses). Empty for every arm that does not
     /// move the selection.
     pub interaction_writes: &'a mut Vec<InteractionWrite>,

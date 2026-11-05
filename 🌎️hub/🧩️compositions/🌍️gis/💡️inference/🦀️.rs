@@ -7,11 +7,11 @@
 use std::sync::Arc;
 
 use pack::snapshot::ArtifactPack;
-use semio_framework_os_kernel::Mutation;
-use semio_framework_os_kernel::os_spr::HybridLogicalTimestamp;
-use semio_framework_os_kernel::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
-use semio_framework_os_kernel::os_store::ArtifactStore;
-use semio_framework_plugin::{ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_os_kernel::Mutation;
+use semio_os_kernel::os_spr::HybridLogicalTimestamp;
+use semio_os_kernel::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use semio_os_kernel::os_store::ArtifactStore;
+use semio_plugin::{ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_hub_inference_binding::{ComposedMapCommitBindingV1, ComposedMapMemberStoresV1, ComposedMapUndoWorkV1, ComposedMapWorkV1, MapBindingRefusalV1, MapInferenceProposalBindingV1, MapInferenceRunV1, MapProposalEffectV1, MapRegionPreviewV1, MapUndoEffectV1};
 use semio_s_artifact_gis_gismap::mutations::GisMapMutation;
 use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::{GisMapCreateRegionGroupWorkV1, GisMapInference};
@@ -36,7 +36,7 @@ pub fn deterministic_map_inference(pack: &[u8], job_id: &str, budget: &WireArtif
     use semio_framework_value::FromValue;
     let payload = run_controlled(pack, job_id, budget, &mut |_| Ok(()))?;
     let snapshot = decode_gis_map(pack)?;
-    let inference = GisMapInference::from_value(semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(&payload).map_err(|_| MapBindingRefusalV1::Undecodable)?).map_err(|_| MapBindingRefusalV1::Undecodable)?;
+    let inference = GisMapInference::from_value(semio_os_kernel::os_pack::pack_rt::decode_wire_value(&payload).map_err(|_| MapBindingRefusalV1::Undecodable)?).map_err(|_| MapBindingRefusalV1::Undecodable)?;
     Ok((snapshot, inference))
 }
 
@@ -96,7 +96,7 @@ fn decode_inverses(payload: &[u8]) -> Result<Vec<GisMapMutation>, MapBindingRefu
 }
 
 fn rebuilt_original(current: &GisMapSnapshot, inverse: &GisMapMutation, original_job_id: &str) -> Result<GisMapCreateRegionGroupWorkV1, MapBindingRefusalV1> {
-    use semio_framework_os_kernel::Inference as _;
+    use semio_os_kernel::Inference as _;
     use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
     let mut before = current.clone();
     apply_gis_map_mutation(&mut before, inverse).map_err(|_| MapBindingRefusalV1::Inapplicable)?;
@@ -122,18 +122,18 @@ fn stamp(mutation_id: String, timestamp: HybridLogicalTimestamp) -> semio_s_arti
     semio_s_artifact_gis_gismap::editor::gis2d::GisMapOneItemStampV1 { mutation_id: protocol::MutationId(mutation_id), timestamp }
 }
 
-const PACK_PRODUCER: semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer = semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer;
+const PACK_PRODUCER: semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer = semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer;
 
-fn member_store<P, M>(schema: &str, id: &str, snapshot: P, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<semio_framework_os_kernel::os_store::OwnerRef>, actor: protocol::ActorId) -> Result<ArtifactStore<P, M>, MapBindingRefusalV1>
+fn member_store<P, M>(schema: &str, id: &str, snapshot: P, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<semio_os_kernel::os_store::OwnerRef>, actor: protocol::ActorId) -> Result<ArtifactStore<P, M>, MapBindingRefusalV1>
 where
     P: ArtifactPack + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Clone + Send + Sync + 'static,
-    M: Mutation<P> + protocol::ColdMutation<P> + semio_framework_os_kernel::OpBinary + semio_framework_os_kernel::OpText + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Clone + Send + Sync + 'static,
+    M: Mutation<P> + protocol::ColdMutation<P> + semio_os_kernel::OpBinary + semio_os_kernel::OpText + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Clone + Send + Sync + 'static,
 {
-    let mut envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope::<P, M>(schema, id, snapshot, None, &PACK_PRODUCER);
+    let mut envelope = semio_os_kernel::os_store::document_materialize::create_document_envelope::<P, M>(schema, id, snapshot, None, &PACK_PRODUCER);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let runtime = semio_framework_os_kernel::os_store::ArtifactStoreInitializationRuntime::new(id, schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), actor);
-    let owners = semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<P, M>().map_err(|_| MapBindingRefusalV1::Bounds)?;
+    let runtime = semio_os_kernel::os_store::ArtifactStoreInitializationRuntime::new(id, schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), actor);
+    let owners = semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<P, M>().map_err(|_| MapBindingRefusalV1::Bounds)?;
     Ok(ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, owners))
 }
 
@@ -144,12 +144,12 @@ fn parent_store(id: &str, snapshot: GisMapSnapshot, actor: protocol::ActorId) ->
 
 fn drawing_store(id: &str, parent: semio_framework_artifact_reference::ArtifactRef, snapshot: SemioDrawingSnapshot, actor: protocol::ActorId) -> Result<ArtifactStore<SemioDrawingSnapshot, SemioDrawingMutation>, MapBindingRefusalV1> {
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
-    member_store(semio_s_artifact_stdio_semio_drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA, id, snapshot, dialect, Some(semio_framework_os_kernel::os_store::OwnerRef { parent, slot: "drawing".into(), child_id: id.into() }), actor)
+    member_store(semio_s_artifact_stdio_semio_drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA, id, snapshot, dialect, Some(semio_os_kernel::os_store::OwnerRef { parent, slot: "drawing".into(), child_id: id.into() }), actor)
 }
 
 fn value_store(id: &str, parent: semio_framework_artifact_reference::ArtifactRef, snapshot: SemioValueSnapshot, actor: protocol::ActorId) -> Result<ArtifactStore<SemioValueSnapshot, SemioValueMutation>, MapBindingRefusalV1> {
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() };
-    member_store(semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, id, snapshot, dialect, Some(semio_framework_os_kernel::os_store::OwnerRef { parent, slot: "value".into(), child_id: id.into() }), actor)
+    member_store(semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, id, snapshot, dialect, Some(semio_os_kernel::os_store::OwnerRef { parent, slot: "value".into(), child_id: id.into() }), actor)
 }
 
 /// 🖼️ Decodes one canonical `CreateRegion` proposal into the exact bounded region it would create.
@@ -220,7 +220,7 @@ impl MapInferenceProposalBindingV1 for GisMapInferenceBindingV1 {
         use semio_framework_value::FromValue;
         let payload = run_controlled(pack, job_id, budget, checkpoint)?;
         let snapshot = decode_gis_map(pack)?;
-        let inference = GisMapInference::from_value(semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(&payload).map_err(|_| MapBindingRefusalV1::Undecodable)?).map_err(|_| MapBindingRefusalV1::Undecodable)?;
+        let inference = GisMapInference::from_value(semio_os_kernel::os_pack::pack_rt::decode_wire_value(&payload).map_err(|_| MapBindingRefusalV1::Undecodable)?).map_err(|_| MapBindingRefusalV1::Undecodable)?;
         let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| MapBindingRefusalV1::Composition)?;
         Ok(MapInferenceRunV1 { result: payload, proposal: json(&mutation) })
     }
@@ -281,7 +281,7 @@ impl ComposedMapCommitBindingV1 for GisMapInferenceBindingV1 {
     }
 
     fn approval_work(parent: &GisMapSnapshot, job_id: &str) -> Result<ComposedMapWorkV1<Self>, MapBindingRefusalV1> {
-        use semio_framework_os_kernel::Inference as _;
+        use semio_os_kernel::Inference as _;
         GisMapInference::infer(parent).map_err(|_| MapBindingRefusalV1::Composition)?.create_region_group_work(parent, job_id).map(composed_work).map_err(|_| MapBindingRefusalV1::Composition)
     }
 

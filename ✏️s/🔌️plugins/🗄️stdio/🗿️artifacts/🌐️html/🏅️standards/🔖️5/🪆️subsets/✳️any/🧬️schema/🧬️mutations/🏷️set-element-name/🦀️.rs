@@ -16,8 +16,8 @@ pub struct SetElementName {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetElementName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "element-name", kind: "set-element-name", record: "SetElementName" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set element name", "Elementname setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set element name", "Elementname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

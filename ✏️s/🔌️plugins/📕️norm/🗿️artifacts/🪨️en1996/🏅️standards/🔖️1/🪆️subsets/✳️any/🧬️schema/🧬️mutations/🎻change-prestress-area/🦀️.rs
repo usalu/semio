@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangePrestressArea wher
         record: "ChangedPrestressArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change tendon tendon area a_p", "Spannstahlfläche A_p (Spannglied) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change tendon tendon area a_p", "Spannstahlfläche A_p (Spannglied) ändern")
     }
 }
 

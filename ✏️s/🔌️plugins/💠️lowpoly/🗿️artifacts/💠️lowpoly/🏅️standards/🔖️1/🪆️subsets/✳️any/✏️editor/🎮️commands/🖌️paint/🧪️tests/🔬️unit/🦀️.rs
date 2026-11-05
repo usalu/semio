@@ -3,12 +3,12 @@
 //! row stamped with the paint tool's `TransactionRef` and labelled from the leaf; a host abort leaves zero trace; a
 //! click is a one-shot of one dab; the UV canvas strokes through the same tool; the eyedropper only samples.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use crate::context::{act, app, committed_edits, dispatch, LowpolyApp};
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 fn pixels(a: &LowpolyApp) -> Vec<u8> {
     a.snapshot().expect("projection").objects[0].paint_layers[0].materialized_pixels()
@@ -50,7 +50,7 @@ async fn a_paint_stroke_is_one_edit_of_one_stroke_leaf() {
     let row = last_row(&mut a).await;
     let transaction = row.transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert_eq!(transaction.tool, "s.lowpoly.lowpoly@1/*#editor#paint", "the paint tool authored it");
-    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), format!("Paint a stroke of 2 dabs on layer 0 of \"{object_id}\""));
+    assert_eq!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string(), format!("Paint a stroke of 2 dabs on layer 0 of \"{object_id}\""));
     act(&mut a, "undo", serde_json::json!({})).await;
     assert_eq!(pixels(&a), before, "undo restores the exact pre-stroke pixels");
     act(&mut a, "redo", serde_json::json!({})).await;
@@ -72,7 +72,7 @@ async fn an_aborted_stroke_leaves_zero_trace() {
     dispatch(&mut a, at(&object_id, 0.7, None)).await;
     assert_eq!(committed_edits(&mut a).await, edits_before + 1, "a click is one one-shot edit");
     let row = last_row(&mut a).await;
-    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), format!("Paint a stroke of 1 dab on layer 0 of \"{object_id}\""), "the aborted dabs never reach a later gesture");
+    assert_eq!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string(), format!("Paint a stroke of 1 dab on layer 0 of \"{object_id}\""), "the aborted dabs never reach a later gesture");
 }
 
 /// 🖼️ The UV canvas strokes through the same tool: a press opens the stroke, a move adds its samples, the release
@@ -89,7 +89,7 @@ async fn a_uv_canvas_stroke_is_one_edit_and_a_stray_move_is_nothing() {
     dispatch(&mut a, LowpolyCommand::CanvasPointerUp(semio_s_artifact_lowpoly_lowpoly_commands::paint::canvas_pointer_up::CanvasPointerUp { cancelled: Some(false) })).await;
     assert_eq!(committed_edits(&mut a).await, edits_before + 1, "the release commits one edit");
     let row = last_row(&mut a).await;
-    assert!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string().starts_with("Paint a stroke of 3 dabs"), "the press dab and both samples: {:?}", row.label);
+    assert!(row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string().starts_with("Paint a stroke of 3 dabs"), "the press dab and both samples: {:?}", row.label);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumBytes",
+    "unit",
+    "repeat",
+    "cases"
+  ],
+  "properties": {
+    "maximumBytes": {
+      "const": 32770
+    },
+    "unit": {
+      "const": "\""
+    },
+    "repeat": {
+      "const": 16384
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "suffix",
+          "encodedBytes",
+          "accepted"
+        ],
+        "properties": {
+          "suffix": {
+            "type": "string",
+            "enum": [
+              "",
+              "x"
+            ]
+          },
+          "encodedBytes": {
+            "type": "integer",
+            "enum": [
+              32770,
+              32771
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

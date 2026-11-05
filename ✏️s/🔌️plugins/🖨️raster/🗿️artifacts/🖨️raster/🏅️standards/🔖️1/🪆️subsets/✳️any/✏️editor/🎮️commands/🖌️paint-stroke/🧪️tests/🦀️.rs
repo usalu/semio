@@ -14,10 +14,10 @@ use semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::tran
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::{PaintStroke as PaintStrokeLeaf, RasterBrush, RasterSelectionSpan, RasterStrokePoint};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_plugin::{ArtifactView, ConfigView};
 use semio_s_artifact_raster_raster_editor::commands::paint_stroke::*;
 use semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection;
-use semio_framework_plugin::{AppOperationContext, HistoryView};
+use semio_plugin::{AppOperationContext, HistoryView};
 
 fn document(locked: bool, visible: bool) -> RasterSnapshot {
     let identity = r#"{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":0.0,"d":1.0}"#;

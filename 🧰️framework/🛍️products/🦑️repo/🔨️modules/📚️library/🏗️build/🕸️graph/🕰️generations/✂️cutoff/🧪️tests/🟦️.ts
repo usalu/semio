@@ -4,7 +4,7 @@ import Ajv2020 from"ajv";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import{createFactIndexV1,factConsumersV1,patchFactIndexV1,selectFactClassesV1,staleFactRowsV1,type GenerationRowV1}from"../../🟨️.mjs";
+import{canonicalJsonV1,createFactIndexV1,factConsumersV1,patchFactIndexV1,selectFactClassesV1,staleFactRowsV1,type GenerationRowV1}from"../../🟨️.mjs";
 import{CUTOFF_POLICY_V1,derivedOwnerNameV1,derivedRowIdsV1,derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,settleSuspectsV1,splitStaleConsumersV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"../🟨️.mjs";
 import{announceGenerationBuildV1,describeGenerationReasonV1,renderGenerationMessageV1,shapeComputeResultV1}from"../../🔌️load/🟨️.mjs";
 import schema from"../🧬️schema/🔣️.json";
@@ -170,4 +170,33 @@ test("shaping hands the derived facts of the inference to the store and keeps th
  expect(shaped.owners[0]!.rows).toContainEqual(head);
  const plain=shapeComputeResultV1({workspaceRoot:"/w",part:{...part,derived:undefined} as never,stubs:{}});
  expect("derived"in plain).toBe(false);
+});
+
+test("a retained complete answer is compared to the current generation row and refreshes its current support",async()=>{
+ const first:GenerationRowV1={kind:"derived",path:"q",fact:"answer"},next={...first,fact:"peer"},support=[raw("fresh")],memo=new Map();let calls=0;
+ const check=async(row:GenerationRowV1)=>{
+  const name=derivedOwnerNameV1(row),index=createFactIndexV1(new Map([["holder",[row]],[name,[row,raw("old")]]]));
+  return settleSuspectsV1({index,suspects:new Set([name]),memo,hold:async rows=>rows.every(read=>read.path==="fresh"),derive:async()=>{calls++;return{fact:"answer",rows:support};}});
+ };
+ const before=await check(first);expect(before.held.get(derivedOwnerNameV1(first))).toEqual([first,...support]);
+ const after=await check(next);expect(calls).toBe(1);expect(after.reused).toBe(1);
+ expect([...after.changed.values()]).toEqual([next]);expect(after.held.size).toBe(0);
+});
+
+for(const bound of fixture.memoBounds)test("complete answer retention bound: "+bound.id,async()=>{
+ const world=worlds.find(row=>row.id==="support stale, same answer: cutoff")!,{index}=indexOf(world),row=derivedRow(world,"q1"),name=derivedOwnerNameV1(row),key=canonicalJsonV1([row.kind,row.path]),memo=new Map<string,{fact:unknown;rows:GenerationRowV1[]}>();
+ const filler={fact:"filler",rows:[]},total=CUTOFF_POLICY_V1.maximumSuspects-(bound.fill==="below"?1:0);
+ for(let at=0;at<total-(bound.known?1:0);at++)memo.set("filler:"+at,filler);
+ if(bound.known)memo.set(key,{fact:"old",rows:[raw("stale")]});
+ let queries=0;
+ const settle=()=>settleSuspectsV1({index,suspects:new Set([name]),memo,hold:async rows=>rows.every(read=>read.path==="fresh"),derive:async()=>{queries++;return{fact:row.fact,rows:[raw("fresh")]};}});
+ for(let round=0;round<2;round++){
+  const result=await settle(),expected=model(world);
+  expect([...result.held.keys()]).toEqual(expected.held.map((question:string)=>derivedOwnerNameV1(derivedRow(world,question))));
+  expect(result.changed.size).toBe(expected.changed.length);
+  expect(derivedUpsertsV1([],result.held).get(name)).toEqual([row,raw("fresh")]);
+ }
+ expect(queries).toBe(bound.queries);expect(memo.has(key)).toBe(bound.cached);
+ expect(memo.size).toBe(CUTOFF_POLICY_V1.maximumSuspects);expect(memo.get("filler:0")).toBe(filler);
+ memo.clear();
 });

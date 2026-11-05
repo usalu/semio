@@ -17,12 +17,12 @@ use store::{os_store::test_support, os_store::store_schema::ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]
 async fn presentation_deck_materializes() {
-    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
             transaction: None,
-        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
+        }, &mut semio_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     assert_eq!(crate::presentation_working_scene(&store.snapshot().expect("projection")).1.len(), 1);
@@ -31,12 +31,12 @@ async fn presentation_deck_materializes() {
 //#region 🔖️DocumentTextTests
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_operation_applied() {
-    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
             transaction: None,
-        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
+        }, &mut semio_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     test_support::assert_document_text_round_trip(&store).await;

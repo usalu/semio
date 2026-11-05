@@ -284,7 +284,7 @@ member-manifests = [ "🔨️modules/**/📦️packages/🦀️rust/Cargo.toml",
   edition = "2021"
   rust-version = "1.95"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-pack-json]
@@ -303,7 +303,7 @@ path = "../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️ru
 [workspace.dependencies.semio-framework-dispatch-macros]
 path = "../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-pack]
+[workspace.dependencies.semio-os-pack]
 path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust"
 
 [workspace.dependencies.replication]

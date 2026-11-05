@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowGroupWithPrevio
         record: "ChangedRowGroupWithPrevious",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Group effect with the previous row (0/1) of the joint row", "Schraubenreihe: Gruppenwirkung mit voriger Reihe (0/1) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Group effect with the previous row (0/1) of the joint row", "Schraubenreihe: Gruppenwirkung mit voriger Reihe (0/1) ändern")
     }
 }
 

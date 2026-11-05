@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangePatchSubjectId whe
         record: "ChangedPatchSubjectId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Member or sheet of the web patch load", "Stegeinzellast: Bauteil oder Blech ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Member or sheet of the web patch load", "Stegeinzellast: Bauteil oder Blech ändern")
     }
 }
 

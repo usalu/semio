@@ -3,7 +3,7 @@
 //! `AdvanceRetained`, the same protocol every window body rides) and reassembles it with
 //! `UiDocumentLease::read_paged_text`. That reader's whole contract is: **the payload is the depth-first
 //! concatenation of every `Component::Text` leaf under the document's root**, which is what
-//! `semio_framework_plugin::app::paged_text_carrier` splits it into — a balanced
+//! `semio_plugin::app::paged_text_carrier` splits it into — a balanced
 //! `UI_BUILT_CHILDREN_MAX`-ary tree of `UI_TEXT_MAX_BYTES` leaves, because a real catalogue is
 //! ~100 KB against a 32 KiB fixed surface doc (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
 //!

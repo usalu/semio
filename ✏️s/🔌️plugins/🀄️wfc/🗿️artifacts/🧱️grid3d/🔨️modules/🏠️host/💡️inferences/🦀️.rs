@@ -38,18 +38,18 @@ pub const GRID3D_INFERENCE_REQUEST_SCHEMA: &str = r#"{
 
 /// 📜️ The whole published contract for `s.wfc.grid3d.solve`: request schema, result schema, the
 /// unit its bounded job counts, and the artifact binding that makes it callable at all.
-pub const GRID3D_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePayloadContract = semio_framework_plugin::ArtifactInferencePayloadContract {
+pub const GRID3D_INFERENCE_CONTRACT: semio_plugin::ArtifactInferencePayloadContract = semio_plugin::ArtifactInferencePayloadContract {
     payload_schema_id: GRID3D_INFERENCE_PAYLOAD_SCHEMA,
     input_schema: GRID3D_INFERENCE_REQUEST_SCHEMA,
     output_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"),
     progress_unit: "cells",
-    artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
+    artifact_binding: Some(semio_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
     commit: None,
 };
 
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.
-pub const fn grid3d_inference_metadata() -> semio_framework_plugin::ArtifactInferenceServiceMetadata {
-    semio_framework_plugin::ArtifactInferenceServiceMetadata {
+pub const fn grid3d_inference_metadata() -> semio_plugin::ArtifactInferenceServiceMetadata {
+    semio_plugin::ArtifactInferenceServiceMetadata {
         owner: "wfc",
         artifact_kind: "s.wfc.grid3d",
         artifact_schema: "s.wfc.grid3d",
@@ -73,7 +73,7 @@ pub struct Grid3dInferenceRequest {
     /// `inference_run` with `artifactId` never has to state a snapshot it could not type: the
     /// gateway binds the document here and the guest decodes it into its own snapshot below.
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub document: Option<semio_framework_plugin::ArtifactDocumentPayload>,
+    pub document: Option<semio_plugin::ArtifactDocumentPayload>,
     pub checkpoint: Option<Vec<u8>>,
 }
 
@@ -789,7 +789,7 @@ impl semio_framework::ToolJobFactory for Grid3dInferenceJobFactory {
         semio_framework::ToolExecutionContract::resumable(16 << 20, MAX_GRID3D_TILES + MAX_GRID3D_RULES + MAX_GRID3D_CELLS, 4_096, MAX_GRID3D_OUTPUT_BYTES, 7_500, 1, 1)
     }
 
-    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Grid3dInferenceJob::new(operation, payload));
+    semio_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Grid3dInferenceJob::new(operation, payload));
 }
 
 /// 💡️ Descriptor for the `s.wfc.grid3d` solve inference — five handcrafted facet leaves.

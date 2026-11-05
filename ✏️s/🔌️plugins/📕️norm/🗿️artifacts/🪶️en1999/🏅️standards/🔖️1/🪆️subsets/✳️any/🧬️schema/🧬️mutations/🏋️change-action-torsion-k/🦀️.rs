@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeActionTorsionK whe
         record: "ChangedActionTorsionK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic torque T_k of the member action", "Bauteileinwirkung: Charakteristisches Torsionsmoment T_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic torque T_k of the member action", "Bauteileinwirkung: Charakteristisches Torsionsmoment T_k ändern")
     }
 }
 

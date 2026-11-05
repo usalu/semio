@@ -16,9 +16,9 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-tool-run = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-s-artifact-remodel-remodeling-cmd-ingest = { workspace = true }
 semio-s-artifact-remodel-remodeling-editor-kit = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }

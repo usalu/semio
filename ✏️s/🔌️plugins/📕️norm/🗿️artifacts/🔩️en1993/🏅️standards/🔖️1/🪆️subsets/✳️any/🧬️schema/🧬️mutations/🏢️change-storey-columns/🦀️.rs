@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeStoreyColumns wher
         record: "ChangedStoreyColumns",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Columns m in the row of the storey", "Geschoss: Stützen m in der Reihe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Columns m in the row of the storey", "Geschoss: Stützen m in der Reihe ändern")
     }
 }
 

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeAnchorActionCatego
         record: "ChangedAnchorActionCategory",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change action category of the anchor action", "Dübeleinwirkung: Einwirkungskategorie ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change action category of the anchor action", "Dübeleinwirkung: Einwirkungskategorie ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.anchor_id.clone(), self.action_id.clone()]

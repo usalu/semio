@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSectionArea where 
         record: "ChangedSectionArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cross-sectional area A of the section", "Querschnitt: Querschnittsfläche A ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cross-sectional area A of the section", "Querschnitt: Querschnittsfläche A ändern")
     }
 }
 

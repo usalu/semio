@@ -34,7 +34,7 @@ pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: 
         }
         Wfc2dEditorCommand::SetActiveExample { example_id } => {
             let Some(next) = wfc2d_example_document(example_id) else {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.example.unknown"), format!("wfc 2d has no example '{example_id}'")));
+                return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc2d.example.unknown"), format!("wfc 2d has no example '{example_id}'")));
             };
             return Ok(Emit::effect(wfc2d_load_document_effect(&next)));
         }
@@ -74,7 +74,7 @@ pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: 
             require_slot(document, id)?;
             let tile = if tile_id.is_empty() { wfc2d_active_tile_id(config, document) } else { Some(tile_id.clone()) };
             let Some(tile) = tile else {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::Plugin, semio_framework_plugin::FaultCode::new("wfc2d.tile.unknown-pin"), "No tile is armed and the document declares none."));
+                return Err(Fault::new(semio_plugin::FaultOrigin::Plugin, semio_plugin::FaultCode::new("wfc2d.tile.unknown-pin"), "No tile is armed and the document declares none."));
             };
             require_tile(document, &tile)?;
             pin_slot(id.clone(), tile.clone())
@@ -119,22 +119,22 @@ pub fn render_body(
     document: &Wfc2dSnapshot,
     config: &Wfc2dConfig,
     transient: &Wfc2dTransient,
-    tool_run: Option<&semio_framework_plugin::ToolRunView>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    tool_run: Option<&semio_plugin::ToolRunView>,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     match body_key {
         graph::WFC_GRAPH_BODY => {
             let camera = graph::GraphCamera { x: config.camera_x, y: config.camera_y, zoom: config.camera_zoom };
-            graph::render(&Wfc2dGraphView(document), camera, &[]).map(semio_framework_plugin::built_to_component_tree)
+            graph::render(&Wfc2dGraphView(document), camera, &[]).map(semio_plugin::built_to_component_tree)
         }
-        preview::WFC_2D_PREVIEW_BODY => preview::render(document, transient, tool_run, config.camera_x, config.camera_y, config.camera_zoom).map(semio_framework_plugin::built_to_component_tree),
-        _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        preview::WFC_2D_PREVIEW_BODY => preview::render(document, transient, tool_run, config.camera_x, config.camera_y, config.camera_zoom).map(semio_plugin::built_to_component_tree),
+        _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
     }
 }
 
 impl ArtifactEditor for Wfc2dEditor {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
             [
             ("wfc2d.tile.unknown-tile", LocalizedLabel::native("This tile does not exist.", "Diese Kachel existiert nicht.")),
@@ -169,11 +169,11 @@ impl ArtifactEditor for Wfc2dEditor {
     /// refuses to teardown without them; this editor carries no presence at all, so the `No*` factories
     /// are its exact terminal.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     /// 🗃️ The bounded retirement catalog every store lane is released THROUGH: a store built without
@@ -185,26 +185,26 @@ impl ArtifactEditor for Wfc2dEditor {
     /// ♻️ The instance close ladder walks one owned store lane per stage and faults the whole close
     /// with `interactive-job.close-owned-disposer-missing` the moment a lane answers `None`, so an
     /// editor must declare how EVERY store it types is released, not only the ones it edits.
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
     /// 🫧️ `Wfc2dTransient` carries the solved assignment, so its lane needs the BOUNDED disposer that
     /// retires a real root, not the `NoTransient` shim.
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     /// 📬️ The document lane's one-item retained preparation. Without one, EVERY route declaring
@@ -223,18 +223,18 @@ impl ArtifactEditor for Wfc2dEditor {
     /// `ArtifactToolPublicationLane::Transient`, and the lane is refused as unsupported unless BOTH
     /// exist.
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
     fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
         fill::build_tool_run_job(request)
     }
 
-    fn reference_birth()->Option<fn()->Result<Wfc2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Wfc2dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::examples::two_room_corridor::document())
     })}
 
@@ -329,22 +329,22 @@ impl ArtifactEditor for Wfc2dEditor {
         registry.register(Wfc2dRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !WFC_2D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         let tool_id = wfc2d_command_id(&original.command);
         if tool_id != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC 2D command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC 2D command does not match its exact registered tool").into());
         }
         if wfc2d_retained_extent(&original.command, &original.snapshot).is_none() {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC 2D bounded route exceeded its declared work extent").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC 2D bounded route exceeded its declared work extent").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wfc2d_command_id, WFC_2D_RETAINED_RAW_BYTES, WFC_2D_RETAINED_WORK_ITEMS, false, |request| Wfc2dCommandWork::new(tool_id))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wfc2d_command_id, WFC_2D_RETAINED_RAW_BYTES, WFC_2D_RETAINED_WORK_ITEMS, false, |request| Wfc2dCommandWork::new(tool_id))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Wfc2dEditor>,
         owner_file: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.wfc.wfc2d@1/*#editor",
@@ -363,8 +363,8 @@ impl ArtifactEditor for Wfc2dEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation>, Fault> {
@@ -375,7 +375,7 @@ impl ArtifactEditor for Wfc2dEditor {
     /// transient lane at all, so this path can only paint what the DOCUMENT says (authored pins).
     /// Every host request goes through `render_with_request_context` below, which does carry the
     /// lane; this exists for callers that have no request context to offer.
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc2dTransient::default(), None)
     }
 
@@ -384,16 +384,16 @@ impl ArtifactEditor for Wfc2dEditor {
     /// `render_with_transient` below so a test can drive the same code without an `InteractionView`
     /// (whose fields are `pub(crate)` in the framework crate and cannot be built from here).
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        _view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         render_with_transient(body_key, doc, cfg, transient)
 
         })();
@@ -409,8 +409,8 @@ pub fn render_with_transient(
     body_key: &str,
     doc: &ArtifactView<'_, Wfc2dSnapshot>,
     cfg: &ConfigView<'_, Wfc2dConfig>,
-    transient: &semio_framework_plugin::TransientView<'_, Wfc2dTransient>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    transient: &semio_plugin::TransientView<'_, Wfc2dTransient>,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run())
 }
 //#endregion 🔖️Editor

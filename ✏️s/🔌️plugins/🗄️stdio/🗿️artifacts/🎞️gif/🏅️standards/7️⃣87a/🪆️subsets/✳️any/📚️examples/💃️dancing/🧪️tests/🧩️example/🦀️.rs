@@ -11,7 +11,7 @@ use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::standards::v89a::subsets::any::io::GifAnalyzer;
 use crate::standards::v89a::subsets::any::io::GifBuilderConstruction as GifBuilder;
 use protocol::Inference;
-use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder};
+use semio_plugin::{io::AnalyzeSource, ArtifactBuilder};
 use semio_framework_test_fixtures::fixture_path;
 
 static DANCING_GIF_BYTES: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(fixture_path!("../../../📚️examples/💃️dancing/🖼️assets/🧪️dancing/🖼️.gif")).expect("the committed fixture is readable").into_boxed_slice()));

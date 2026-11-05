@@ -10,7 +10,7 @@ pub struct ChangeCutoutMember { pub cutout_id: String, pub new_value: String }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeCutoutMember where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_cutout_member::ChangeCutoutMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cutout-member", kind: "change-cutout-member", record: "ChangedCutoutMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change member of cutout {}", self.cutout_id), &format!("Bauteil von Cutout {} ändern", self.cutout_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change member of cutout {}", self.cutout_id), &format!("Bauteil von Cutout {} ändern", self.cutout_id)) }
     fn target(&self) -> Vec<String> { vec![self.cutout_id.clone()] }
 }
 

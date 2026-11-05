@@ -16,8 +16,8 @@ pub struct SetText {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set text", "Text setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set text", "Text setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

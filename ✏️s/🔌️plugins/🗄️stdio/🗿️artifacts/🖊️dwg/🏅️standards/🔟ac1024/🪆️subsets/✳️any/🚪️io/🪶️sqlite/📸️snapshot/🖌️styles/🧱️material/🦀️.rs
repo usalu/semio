@@ -21,7 +21,7 @@ use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_integer;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R,Null as N};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R,Null as N};
 
 fn projection(v:DwgMaterialProjection)->&'static str{match v{DwgMaterialProjection::Inherit=>"inherit",DwgMaterialProjection::Planar=>"planar",DwgMaterialProjection::Box=>"box",DwgMaterialProjection::Cylinder=>"cylinder",DwgMaterialProjection::Sphere=>"sphere"}}
 fn tiling(v:DwgMaterialTiling)->&'static str{match v{DwgMaterialTiling::Inherit=>"inherit",DwgMaterialTiling::Tile=>"tile",DwgMaterialTiling::Crop=>"crop",DwgMaterialTiling::Clamp=>"clamp",DwgMaterialTiling::Mirror=>"mirror"}}

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroducePropertyDefin
 
         protocol::SemanticDescriptor { verb: "insert", entity: "propertyDefinition", kind: "introduce-property-definition", record: "IntroducedPropertyDefinition" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create property definition \"{}\"", self.property_definition.names.preferred.text), &format!("Eigenschaftsdefinition \"{}\" erstellen", self.property_definition.names.preferred.text))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create property definition \"{}\"", self.property_definition.names.preferred.text), &format!("Eigenschaftsdefinition \"{}\" erstellen", self.property_definition.names.preferred.text))
     }
     fn target(&self) -> Vec<String> {
         vec![self.property_definition.id.clone()]

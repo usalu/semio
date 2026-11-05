@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePileActionLoadCase
         record: "ChangedPileActionLoadCaseId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Load case of the pile action", "Pfahl-Einwirkung: Lastfall ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Load case of the pile action", "Pfahl-Einwirkung: Lastfall ändern")
     }
 }
 

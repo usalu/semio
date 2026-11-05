@@ -8,8 +8,8 @@ extern crate semio_framework_value_derive as value_derive;
 #[path = "../../🛂️manifest/🦀️.rs"]
 pub mod manifest;
 
-use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+use semio_plugin::io::FormatDescriptor;
+use semio_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
 use semio_s_artifact_stdio_contract::registry::ContributionRegistry;
 use semio_s_artifact_stdio_contract::{ArtifactContribution, NativeCodecFactory};
 pub use semio_s_artifact_stdio_contract::{ArtifactAssembly, CapabilityCounts, CapabilityLedger, NativeCodecFactoryReceipt};
@@ -70,7 +70,7 @@ fn native_codec_factories() -> Vec<NativeCodecFactory> {
 }
 
 /// 🧬 Lists only selected native runtime roots; definition-only artifacts are absent.
-pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKindSpec> {
+pub fn native_codec_artifact_kinds() -> Vec<semio_plugin::ArtifactKindSpec> {
     let mut kinds = Vec::new();
     for factory in native_codec_factories() {
         let kind = (factory.kind)();
@@ -146,7 +146,7 @@ pub fn validate_native_artifact_catalog_contributions(contributions: &[semio_fra
 }
 
 /// 🔎️ Requires every decoded kind to equal the complete artifact-owned native catalog.
-pub fn validate_native_codec_artifact_kinds(kinds: &[semio_framework_plugin::ArtifactKindSpec]) -> Result<(), PluginAssemblyError> {
+pub fn validate_native_codec_artifact_kinds(kinds: &[semio_plugin::ArtifactKindSpec]) -> Result<(), PluginAssemblyError> {
     let expected = native_codec_artifact_kinds();
     if kinds.len() != expected.len() {
         return Err(failure("decoded descriptor omits or adds native artifact kinds"));

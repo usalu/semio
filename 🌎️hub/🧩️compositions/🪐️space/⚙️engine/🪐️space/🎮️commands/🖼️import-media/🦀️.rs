@@ -2,8 +2,8 @@
 
 use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, PendingImportSetting};
 
-use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
+use semio_os::{WorkflowMutation, WorkflowSnapshot};
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-media")]
@@ -17,10 +17,10 @@ pub fn handle(payload: &ImportMedia, _doc: &ArtifactView<'_, WorkflowSnapshot>, 
         .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
         .map(|descriptor| descriptor.short_id)
         .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{}`", payload.format)))?;
-    let accept = semio_framework_os::media_accept_filter_kinds(&[format_kind.as_str()]).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?;
+    let accept = semio_os::media_accept_filter_kinds(&[format_kind.as_str()]).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?;
     Ok(Emit {
         config_mutations: vec![SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some(payload.node_id.clone()), format: Some(format_kind) })],
-        effects: vec![Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(122), accept, read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false, args: None }],
+        effects: vec![Effect::RequestFileOpen { req: semio_plugin::RequestId(122), accept, read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false, args: None }],
         ..Default::default()
     })
 }

@@ -8,7 +8,7 @@ use crate::mutations::resize_tile_crop::ResizeTileCrop;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::tile_grid::clamp_tile_crop;
 use crate::PresentationSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashSet;
 

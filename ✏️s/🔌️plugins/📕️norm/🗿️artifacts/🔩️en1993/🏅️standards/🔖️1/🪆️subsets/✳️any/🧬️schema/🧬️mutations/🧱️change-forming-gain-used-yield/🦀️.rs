@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFormingGainUsedYie
         record: "ChangedFormingGainUsedYield",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Forming gain: Yield strength used f_y,used", "Kaltverfestigung: Angesetzte Streckgrenze f_y,used ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Forming gain: Yield strength used f_y,used", "Kaltverfestigung: Angesetzte Streckgrenze f_y,used ändern")
     }
 }
 

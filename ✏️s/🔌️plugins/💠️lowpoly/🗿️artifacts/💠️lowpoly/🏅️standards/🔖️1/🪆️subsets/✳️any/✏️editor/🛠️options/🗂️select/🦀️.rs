@@ -11,9 +11,9 @@ use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
 use semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_window_action;
 use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
 use semio_s_artifact_lowpoly_lowpoly_view::{MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::app::InteractionView;
+use semio_ui_locale::LabelText;
+use semio_plugin::WindowMeasure;
 
 /// 🎯️ What the mesh domain currently selects with: the armed granularity and the selection mode.
 #[derive(Clone, Debug, PartialEq, Eq)]

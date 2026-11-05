@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "elements", kind: "array-elements", record: "ArrayElements" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Array {} element(s) {} times", self.ids.len(), self.pattern.count()), &format!("{} Element(e) {}-mal anordnen", self.ids.len(), self.pattern.count()))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Array {} element(s) {} times", self.ids.len(), self.pattern.count()), &format!("{} Element(e) {}-mal anordnen", self.ids.len(), self.pattern.count()))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

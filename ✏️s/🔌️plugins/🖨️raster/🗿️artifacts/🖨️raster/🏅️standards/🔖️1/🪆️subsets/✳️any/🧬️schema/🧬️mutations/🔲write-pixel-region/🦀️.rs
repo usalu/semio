@@ -77,8 +77,8 @@ pub fn inverse<Op: From<crate::write_pixel_region::WritePixelRegion>>(payload: &
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for WritePixelRegion where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "pixel-region", kind: "write-pixel-region", record: "WrittenPixelRegion" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Write {}×{} pixels at ({}, {}) on layer {}", self.width, self.height, self.x, self.y, self.layer_id), &format!("{}×{} Pixel bei ({}, {}) auf Ebene {} schreiben", self.width, self.height, self.x, self.y, self.layer_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Write {}×{} pixels at ({}, {}) on layer {}", self.width, self.height, self.x, self.y, self.layer_id), &format!("{}×{} Pixel bei ({}, {}) auf Ebene {} schreiben", self.width, self.height, self.x, self.y, self.layer_id))
     }
 
     fn target(&self) -> Vec<String> {

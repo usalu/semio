@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentShearFor
         record: "ChangeAssessmentShearForceDemandN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Shear force demand V_Ed of the brittle shear mechanism (0 = not given)", "Querkraftbeanspruchung V_Ed des spröden Schubmechanismus (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Shear force demand V_Ed of the brittle shear mechanism (0 = not given)", "Querkraftbeanspruchung V_Ed des spröden Schubmechanismus (0 = nicht angegeben) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-shear-force-demand-n".into()]

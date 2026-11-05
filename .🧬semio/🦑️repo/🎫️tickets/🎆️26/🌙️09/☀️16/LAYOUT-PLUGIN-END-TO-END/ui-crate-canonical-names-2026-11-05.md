@@ -1,0 +1,7 @@
+# Canonical UI Crate Name Schema
+
+Language-neutral15 positive/negative identifier rows were authored before the schema repair, with actual schema projection tested by independent Ajv and our validator. Cases cover base UI, current UI/OS/plugin/renderer/font, untouched framework family, foreign names, empty suffix, uppercase, underscore, slash, dot and whitespace. No executed preimplementation RED is claimed.
+
+`🧰️framework/🔨️modules/🖱️ui/🧬️schema/📦️crate-boundaries/🔣️.json` now uses canonical `^semio-[a-z0-9-]+$`, with closed identifier-case schema. Existing ownership/dependency assertions remain. Fixture and test live in adjacent UI tests. Exact schema is not registered in existing schema-catalog format hashes (zero matching path entries); no catalog hash or index was invented, and no schema ID changed.
+
+One declared normal gate: `repo --tool=bazel run @semio-tech/ui-rs:test-crate-boundaries:prototype --parallel=1 --output=stream`, session69596. Log `🗑️generated/ui-crate-canonical-names-2026-11-05.log`. At root direction session69596 was cancelled with SIGINT and exited130 to prioritize genuine graph proof98799. It had just admitted and reached graph verification (85439 facts,1/55 input closures), with no UI test dispatch. This is cancellation, neither a behavioral failure nor a pass. Root owns its fresh normal successor after graph proof. No432-manifest retest or duplicate gate launched.

@@ -1,21 +1,21 @@
 //! 🧻️ Staged slice of the `typed-operations` band of the mounted artifact instance: its `instance-docs` members (WP6 step S0 of the instance family).
 //!
 //! 🧾️ Typed operations of the mounted artifact instance: typed-operation publication, typed-command dispatch, configuration and the history panel.
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_command::command_admission::AdmittedToolCommand;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_command::command_admission::AdmittedToolCommand;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use crate::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_job::reserved_jobs::QualifiedToolProof;
-use semio_framework_ui_contract::*;
+use semio_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_job::reserved_jobs::QualifiedToolProof;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp> MediaTransfers<A> {
     pub fn require_tool_operation_authority(&self, admission: &AdmittedToolCommand) -> Result<(), Fault> {

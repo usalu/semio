@@ -4,7 +4,7 @@ use crate::op::NoteMutation;
 use crate::schema::mutations::{duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation};
 use crate::schema::{clone_block, find_block, offset_block_tree};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the clones used to also become the new
 /// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 /// framework's own injected `interactionSelect` handling, never by an app command's `Emit`.
-fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crate::schema::NoteIdOwner) -> Emit<NoteMutation, semio_framework_plugin::NoConfigMutation> {
+fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crate::schema::NoteIdOwner) -> Emit<NoteMutation, semio_plugin::NoConfigMutation> {
     let mut source_ids = Vec::new();
     let mut blocks = Vec::new();
     for source_id in ids {
@@ -41,7 +41,7 @@ pub struct DuplicateBlock {
     pub block_id: String,
 }
 
-pub fn handle(payload: &DuplicateBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &DuplicateBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_plugin::NoConfigMutation>, Fault> {
     if find_block(&doc.snapshot.blocks, &payload.block_id).is_none() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the note has no block {}", payload.block_id)));
     }

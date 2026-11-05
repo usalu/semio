@@ -11,11 +11,11 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 use std::time::Instant;
-use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
-use semio_framework_os_mcp_port::channel_port::{ActivationPhase, ActivationScope};
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_port::channel_port::{ActivationPhase, ActivationScope};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_plugin_runtime::compiled_components::{component_compile_workers_started, live_component_compile_workers, prepare_plugin_component, set_component_compile_worker};
+use semio_os_mcp_plugin_runtime::compiled_components::{component_compile_workers_started, live_component_compile_workers, prepare_plugin_component, set_component_compile_worker};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

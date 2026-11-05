@@ -9,7 +9,8 @@ use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️UpdateWidget
 /// 🔁 The widget's own id (via [`crate::widget_id`]) addresses the target
 /// — no separate `id` field, since `Widget` already carries its identity.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -37,8 +38,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "widget", kind: "update-widget", record: "UpdatedWidget" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update widget \"{}\"", semio_s_artifact_procedural_3d_model::widget_id(&self.widget)), &format!("Widget \"{}\" aktualisieren", semio_s_artifact_procedural_3d_model::widget_id(&self.widget)))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Update widget \"{}\"", semio_s_artifact_procedural_3d_model::widget_id(&self.widget)), &format!("Widget \"{}\" aktualisieren", semio_s_artifact_procedural_3d_model::widget_id(&self.widget)))
     }
 
     fn target(&self) -> Vec<String> {

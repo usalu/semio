@@ -15,8 +15,8 @@ pub struct SetInlines {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "inlines", kind: "set-inlines", record: "SetInlines" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set inlines", "Inline-Elemente setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set inlines", "Inline-Elemente setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

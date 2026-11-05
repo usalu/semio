@@ -32,8 +32,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-locked", kind: "change-block-locked", record: "ChangedBlockLocked" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change block \"{}\" locked to {}", self.id, self.new_locked), &format!("Sperre von Block \"{}\" auf {} ändern", self.id, self.new_locked))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change block \"{}\" locked to {}", self.id, self.new_locked), &format!("Sperre von Block \"{}\" auf {} ändern", self.id, self.new_locked))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

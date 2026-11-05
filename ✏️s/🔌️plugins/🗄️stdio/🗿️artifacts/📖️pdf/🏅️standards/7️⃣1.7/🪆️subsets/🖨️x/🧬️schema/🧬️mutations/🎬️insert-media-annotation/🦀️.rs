@@ -24,8 +24,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "media-annotation", kind: "insert-media-annotation", record: "Insert" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert {} media annotation", self.subtype), &format!("{} Medienanmerkung einfügen", self.subtype))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert {} media annotation", self.subtype), &format!("{} Medienanmerkung einfügen", self.subtype))
     }
 
     fn target(&self) -> Vec<String> {

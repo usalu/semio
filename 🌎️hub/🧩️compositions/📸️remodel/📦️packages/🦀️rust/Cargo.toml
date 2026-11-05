@@ -40,10 +40,10 @@ semio-s-artifact-stdio-stl = { workspace = true }
 # `➕️algebra-internals`'s own `lll_reduce`, now built on `number::VecG`/`number::Rational` directly.
 number = { path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework = { workspace = true }
-semio-framework-os = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os = { workspace = true }
+semio-plugin = { workspace = true }
 # 🧵️ The retained command factory names `semio_framework_job::Operation` in its `ToolJobFactory`
 # signatures, so the job crate has to be linked here the same way `🖨️raster` and `🌍️gis` link it.
 semio-framework-job = { workspace = true }
@@ -52,7 +52,7 @@ semio-framework-tool-run = { workspace = true }
 # 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY: `scene_surface`/`PanelTreeBuilder` speak the semantic
 # contract's own `SurfaceKind`/`BuiltNode`, a different type from the retained `ui_wgpu` spelling the SDK
 # root re-exports — the same explicit dependency `🧱️block` and `🌊️flow` carry for their window scenes.
-semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
@@ -64,7 +64,7 @@ base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️i
 semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 [dev-dependencies]
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🔬️ Test oracle only (never `[dependencies]`): validates that our own encoded/decoded PNG bytes
 # are readable by/match the reference decoder/encoder — see 🖼️images/🦀️.rs's test module.

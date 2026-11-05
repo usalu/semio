@@ -1,6 +1,6 @@
 //! 🔭️ Inference discovery, jobs and resources.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "../💡️inference/🦀️.rs"]
 pub mod inference;

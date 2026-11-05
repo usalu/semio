@@ -16,8 +16,8 @@ pub struct SetShapeText {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapeText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape-text", kind: "set-shape-text", record: "SetShapeText" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set shape text", "Text der Form setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set shape text", "Text der Form setzen")
     }
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.node.part_path.clone()).chain(self.address.node.node_path.iter().map(usize::to_string)).collect()

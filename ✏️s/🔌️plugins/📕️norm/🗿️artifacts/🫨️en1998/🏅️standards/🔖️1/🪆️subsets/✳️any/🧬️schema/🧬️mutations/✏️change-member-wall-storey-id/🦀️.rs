@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberWallStoreyId
         record: "ChangeMemberWallStoreyId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Storey of the wall (empty = every storey)", "Geschoss der Wand (leer = jedes Geschoss) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Storey of the wall (empty = every storey)", "Geschoss der Wand (leer = jedes Geschoss) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-member-wall-storey-id".into()]

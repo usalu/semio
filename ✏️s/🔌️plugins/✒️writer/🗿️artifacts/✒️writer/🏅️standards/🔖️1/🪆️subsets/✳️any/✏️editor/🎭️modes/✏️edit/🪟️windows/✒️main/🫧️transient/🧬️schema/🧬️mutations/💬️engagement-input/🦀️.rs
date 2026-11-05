@@ -11,8 +11,8 @@ pub struct SetEngagementInput {
 impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransientMutation> for SetEngagementInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-engagement-input", kind: "set-engagement-input", record: "SetEngagementInput" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Engagement Input", "Interaktionseingabe des Schreibfensters setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Writer Window Engagement Input", "Interaktionseingabe des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["engagement_input".into()]

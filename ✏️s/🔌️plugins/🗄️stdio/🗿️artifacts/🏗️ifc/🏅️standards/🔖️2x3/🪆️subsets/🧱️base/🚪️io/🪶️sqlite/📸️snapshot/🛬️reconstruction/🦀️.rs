@@ -1,7 +1,7 @@
 //! 🛬️ Paid IFC2x3 ownership follows independently authored semantic rows and ordered edges.
 use super::{identity,null,word,sort_paid,Ifc2x3Snapshot,Ifc2x3EdmPreamble,Part21Document,Part21Header,Part21Instance,Part21Value,Part21Decimal};
 use crate::standards::v2x3::subsets::base::io::sqlite::snapshot::native;
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::__rt::DecodedFieldOwner;
 use std::ops::Range;

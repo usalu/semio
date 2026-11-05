@@ -12,14 +12,14 @@ use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::view::Puzzle5dScene;
 
-use semio_framework_plugin::create_default_layout;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ModeDefinition;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementInput;
-use semio_framework_plugin::WindowEngagementStatus;
-use semio_framework_plugin::WindowLayout;
+use semio_plugin::create_default_layout;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ModeDefinition;
+use semio_plugin::ToolRunView;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementStatus;
+use semio_plugin::WindowLayout;
 
 pub const PUZZLE5D_PLAY_MODE_EDIT: &str = "edit";
 
@@ -47,7 +47,7 @@ fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> boo
 
 /// 🤝️ The engagement HUD for one window: the select/brush switcher lives in the framework utility bar
 /// (declared via `.utility` + each window's `utilities` binding) and fill in the mode's tool rail; the brush
-/// placement picker lives as a tagged [`semio_framework_plugin::WindowMeasure::Group`] in the dedicated
+/// placement picker lives as a tagged [`semio_plugin::WindowMeasure::Group`] in the dedicated
 /// "Utility Options" rail and the fill count in the tool options rail, so what is left here is a bare command
 /// input plus a status line. The placeholder is derived from
 /// [`crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS`], so an advertised verb

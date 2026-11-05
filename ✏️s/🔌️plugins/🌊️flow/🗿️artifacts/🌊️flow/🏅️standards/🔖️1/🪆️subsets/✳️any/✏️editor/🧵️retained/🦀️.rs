@@ -78,3 +78,23 @@ impl Retirement {
 //#region 🧪️Tests
 
 //#endregion 🧪️Tests
+
+#[path="✏️authoring/🦀️.rs"]
+mod authoring;
+pub(super) use authoring::FlowAuthoringCommandWork;
+
+#[path="📥️original/🦀️.rs"]
+mod original;
+pub(super) use original::FlowOriginalIntake;
+
+#[path="🧮️evaluation/🦀️.rs"]
+mod evaluation;
+pub(super) use evaluation::{FlowEvaluationCommandWork,FlowEvaluationPrepared,FlowEvaluationJobWork};
+
+#[path="➕️descriptor.rs"]
+mod descriptor;
+pub(super) use descriptor::FlowAddDescriptorWork;
+
+#[path="📬️resolve/🦀️.rs"]
+mod resolve;
+pub(crate) use resolve::FlowResolveJobWork;

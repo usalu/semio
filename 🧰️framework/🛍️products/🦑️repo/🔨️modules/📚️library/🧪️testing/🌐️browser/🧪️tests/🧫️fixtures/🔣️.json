@@ -1,0 +1,117 @@
+{
+  "arguments": [
+    "--use-angle=swiftshader",
+    "--enable-unsafe-swiftshader",
+    "--enable-unsafe-webgpu"
+  ],
+  "cases": [
+    {
+      "name": "complete Unix installation",
+      "paths": {
+        "chromium": "/owned/chromium/chrome",
+        "chromium-headless-shell": "/owned/headless/chrome"
+      },
+      "files": [
+        "/owned/chromium/chrome",
+        "/owned/headless/chrome"
+      ],
+      "ready": true,
+      "expectedExecutables": [
+        "chromium",
+        "chromium-headless-shell"
+      ],
+      "hostReady": true,
+      "errors": []
+    },
+    {
+      "name": "complete Windows installation",
+      "paths": {
+        "chromium": "C:/owned/chromium/chrome.exe",
+        "chromium-headless-shell": "C:/owned/headless/chrome.exe"
+      },
+      "files": [
+        "C:/owned/chromium/chrome.exe",
+        "C:/owned/headless/chrome.exe"
+      ],
+      "ready": true,
+      "expectedExecutables": [
+        "chromium",
+        "chromium-headless-shell"
+      ],
+      "hostReady": true,
+      "errors": []
+    },
+    {
+      "name": "Chromium directory without headless shell",
+      "paths": {
+        "chromium": "/owned/chromium/chrome",
+        "chromium-headless-shell": "/owned/headless/chrome"
+      },
+      "files": [
+        "/owned/chromium/chrome"
+      ],
+      "ready": false,
+      "expectedExecutables": [
+        "chromium",
+        "chromium-headless-shell"
+      ],
+      "hostReady": true,
+      "errors": [
+        "missing executable"
+      ]
+    },
+    {
+      "name": "installed revision has no matching executable",
+      "paths": {
+        "chromium": "/owned/current/chrome",
+        "chromium-headless-shell": "/owned/current/headless"
+      },
+      "files": [
+        "/owned/old/chrome",
+        "/owned/old/headless"
+      ],
+      "ready": false,
+      "expectedExecutables": [
+        "chromium"
+      ],
+      "hostReady": true,
+      "errors": [
+        "missing executable"
+      ]
+    },
+    {
+      "name": "complete executables without host libraries",
+      "paths": {
+        "chromium": "/owned/chromium/chrome",
+        "chromium-headless-shell": "/owned/headless/chrome"
+      },
+      "files": [
+        "/owned/chromium/chrome",
+        "/owned/headless/chrome"
+      ],
+      "ready": false,
+      "hostReady": false,
+      "expectedExecutables": [
+        "chromium"
+      ],
+      "errors": [
+        "missing host libraries"
+      ]
+    }
+  ],
+  "moduleSpecifier": "playwright",
+  "pathCases": [
+    {
+      "name": "default owned cache",
+      "existing": null
+    },
+    {
+      "name": "preserve explicit directory",
+      "existing": "/owned/browser"
+    },
+    {
+      "name": "preserve empty explicit control",
+      "existing": ""
+    }
+  ]
+}

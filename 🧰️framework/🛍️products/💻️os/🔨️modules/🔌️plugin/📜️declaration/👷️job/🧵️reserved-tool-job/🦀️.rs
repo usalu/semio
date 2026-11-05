@@ -90,4 +90,4 @@ pub use reserved_work::{ArtifactReservedWork,ArtifactReservedRequestJob,admit_re
 /// 📬️ Completed document mutations paired with their ephemeral output.
 pub(super) type ArtifactToolEmission<A> = (ArtifactMutationOutcome<<A as ArtifactApp>::Mutation, <A as ArtifactApp>::ConfigMutation, <A as ArtifactApp>::DraftMutation>, EphemeralEmit<A>);
 
-pub use semio_framework_plugin_original_job_ownership::{ArtifactReservedJob,ArtifactReservedToolJob,ArtifactReservedToolJobState};
+pub use semio_plugin_original_job_ownership::{ArtifactReservedJob,ArtifactReservedToolJob,ArtifactReservedToolJobState};

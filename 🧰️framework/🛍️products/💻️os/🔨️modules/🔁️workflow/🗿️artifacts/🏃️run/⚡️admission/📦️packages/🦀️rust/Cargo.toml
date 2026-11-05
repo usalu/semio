@@ -18,4 +18,4 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-artifact-workflow-run = { path = "../../../📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }

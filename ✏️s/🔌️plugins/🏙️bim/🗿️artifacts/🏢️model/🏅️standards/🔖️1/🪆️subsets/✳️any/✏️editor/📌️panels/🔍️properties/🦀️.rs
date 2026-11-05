@@ -13,20 +13,20 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_wit
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::ActionId;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiValue;
-use semio_framework_ui_contract as ui;
-use semio_framework_ui_locale::Label;
+use semio_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::tree_item_desc;
+use semio_plugin::ui_node_list;
+use semio_plugin::BuiltNode;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::ActionId;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiValue;
+use semio_ui_contract as ui;
+use semio_ui_locale::Label;
 
 #[path = "🏷️data/🦀️.rs"]
 pub mod data;

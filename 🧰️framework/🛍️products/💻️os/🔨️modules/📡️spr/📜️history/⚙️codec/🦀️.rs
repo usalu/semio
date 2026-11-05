@@ -1,5 +1,5 @@
 //! ⚙️ History text grammar and individual record payload codecs.
-pub use semio_framework_os_history_schema::*;
+pub use semio_os_history_schema::*;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_dsl_record::JoinMode;
@@ -8,7 +8,7 @@ use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_dsl_record::Shape;
-use semio_framework_os_pack::{ByteReader, ByteWriter, CodecId};
+use semio_os_pack::{ByteReader, ByteWriter, CodecId};
 use semio_framework_pack_source::{PackSink};
 use protocol::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
 use protocol::ProtocolError;

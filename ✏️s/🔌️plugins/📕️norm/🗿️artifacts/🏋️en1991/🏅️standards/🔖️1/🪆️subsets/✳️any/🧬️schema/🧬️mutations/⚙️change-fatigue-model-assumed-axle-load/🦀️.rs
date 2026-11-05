@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFatigueModelAssume
         record: "ChangedFatigueModelAssumedAxleLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change fatigue model: Assumed axle load", "Ermüdungsmodell: Angesetzte Achslast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change fatigue model: Assumed axle load", "Ermüdungsmodell: Angesetzte Achslast ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

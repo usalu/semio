@@ -1,0 +1,198 @@
+{
+  "settings": {
+    "readOnly": false,
+    "commit": "change",
+    "editControllerId": "forms-editor",
+    "editAction": "patchQuestions",
+    "editArgument": "value",
+    "editArguments": {
+      "questionIds": [
+        "flow-a"
+      ],
+      "field": "param",
+      "paramKey": "__flow"
+    },
+    "label": "Flow-Dokument"
+  },
+  "chunks": [
+    "{\"title\":\"ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱",
+    "ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱\",\"value\":7}"
+  ],
+  "source": "{\"title\":\"ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱ä🧱\",\"value\":7}",
+  "bytes": 742,
+  "scalarMaximumBytes": 512,
+  "invalid": [
+    {
+      "readOnly": false,
+      "commit": "explicit",
+      "editControllerId": "forms-editor",
+      "editAction": "patchQuestions",
+      "editArgument": "value",
+      "editArguments": {
+        "questionIds": [
+          "flow-a"
+        ],
+        "field": "param",
+        "paramKey": "__flow"
+      },
+      "label": "Flow-Dokument"
+    },
+    {
+      "readOnly": false,
+      "commit": "change",
+      "editControllerId": "",
+      "editAction": "patchQuestions",
+      "editArgument": "value",
+      "editArguments": {
+        "questionIds": [
+          "flow-a"
+        ],
+        "field": "param",
+        "paramKey": "__flow"
+      },
+      "label": "Flow-Dokument"
+    },
+    {
+      "readOnly": false,
+      "commit": "change",
+      "editControllerId": "forms-editor",
+      "editAction": "patchQuestions",
+      "editArgument": "value",
+      "editArguments": {
+        "questionIds": [
+          "flow-a"
+        ],
+        "field": "param",
+        "paramKey": "__flow"
+      },
+      "label": null
+    },
+    {
+      "readOnly": false,
+      "commit": "change",
+      "editControllerId": "forms-editor",
+      "editAction": "patchQuestions",
+      "editArgument": "value",
+      "editArguments": {
+        "questionIds": [
+          "flow-a"
+        ],
+        "field": "param",
+        "paramKey": "__flow"
+      },
+      "label": "Flow-Dokument",
+      "extra": true
+    },
+    {
+      "readOnly": false,
+      "commit": "change",
+      "editControllerId": "forms-editor",
+      "editAction": "patchQuestions",
+      "editArgument": "value",
+      "editArguments": {
+        "questionIds": [
+          "flow-a"
+        ],
+        "field": "param",
+        "paramKey": "__flow"
+      },
+      "label": "Flow-Dokument",
+      "editMaximumBytes": 0
+    },
+    {
+      "readOnly": false,
+      "commit": "change",
+      "editControllerId": "forms-editor",
+      "editAction": "patchQuestions",
+      "editArgument": "value",
+      "editArguments": {
+        "questionIds": [
+          "flow-a"
+        ],
+        "field": "param",
+        "paramKey": "__flow"
+      },
+      "label": "Flow-Dokument",
+      "editMaximumBytes": 65537
+    },
+    {
+      "readOnly": false,
+      "commit": "change",
+      "editControllerId": "forms-editor",
+      "editAction": "patchQuestions",
+      "editArgument": "value",
+      "editArguments": {
+        "questionIds": [
+          "flow-a"
+        ],
+        "field": "param",
+        "paramKey": "__flow"
+      },
+      "label": "Flow-Dokument",
+      "editMaximumBytes": 1.5
+    },
+    {
+      "readOnly": false,
+      "commit": "change",
+      "editControllerId": "forms-editor",
+      "editAction": "patchQuestions",
+      "editArgument": "value",
+      "editArguments": {
+        "questionIds": [
+          "flow-a"
+        ],
+        "field": "param",
+        "paramKey": "__flow"
+      },
+      "label": "Flow-Dokument",
+      "editMaximumBytes": "65536"
+    }
+  ],
+  "largeSources": [
+    {
+      "id": "escaped-unicode-graph",
+      "source": {
+        "prefix": "{\"schema\":\"flow.host_snapshot\",\"widgets\":[{\"kind\":\"inputNote\",\"id\":\"message\",\"label\":\"Message\",\"text\":\"",
+        "unit": "\\\\\\\"🧱\\n",
+        "repeat": 1621,
+        "suffix": "\"}],\"synapses\":[],\"layout\":{},\"camera\":{\"x\":0,\"y\":0,\"zoom\":1}}"
+      },
+      "rawBytes": 16375,
+      "encodedBytes": 24516,
+      "maximumBytes": 65536,
+      "sourceSha256": "e5ac7a81825d5e2e171f195f7ca077923ff51c4da6ae6e73b0cd70935a6b0e2b",
+      "encodedSha256": "be714619072ab6354cd57d20afa6c6d20c879d86423359bbe5aa4b830893eaec"
+    }
+  ],
+  "encodingBoundaries": {
+    "maximumBytes": 32770,
+    "unit": "\"",
+    "repeat": 16384,
+    "cases": [
+      {
+        "suffix": "",
+        "encodedBytes": 32770,
+        "accepted": true
+      },
+      {
+        "suffix": "x",
+        "encodedBytes": 32771,
+        "accepted": false
+      }
+    ]
+  },
+  "refusalLocales": [
+    {
+      "locale": "en",
+      "message": "This text is too long. Shorten it or discard this edit.",
+      "discard": "Discard draft",
+      "sourceLabel": "Flow Document"
+    },
+    {
+      "locale": "de",
+      "message": "Dieser Text ist zu lang. Kürze ihn oder verwirf diese Änderung.",
+      "discard": "Entwurf verwerfen",
+      "sourceLabel": "Flow-Dokument"
+    }
+  ]
+}

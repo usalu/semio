@@ -10,7 +10,7 @@ mod file_watcher;
 pub use component::*;
 pub use file_watcher::OwnedFileChangeWatcher;
 
-/// 🪝️ Test hook of the companion crate `semio-framework-os-services-tests`: the private host modules next to the owner's service hooks, public only behind the `testkit` feature.
+/// 🪝️ Test hook of the companion crate `semio-os-services-tests`: the private host modules next to the owner's service hooks, public only behind the `testkit` feature.
 #[cfg(feature = "testkit")]
 #[doc(hidden)]
 pub mod testkit {

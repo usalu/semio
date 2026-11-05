@@ -17,8 +17,8 @@ pub struct ChangeStudDiameterM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeStudDiameterM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_stud_diameter_m::ChangeStudDiameterM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stud-diameter-m", kind: "change-stud-diameter-m", record: "ChangedStudDiameterM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change shear stud: Shank diameter", "Kopfbolzendübel: Schaftdurchmesser ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change shear stud: Shank diameter", "Kopfbolzendübel: Schaftdurchmesser ändern")
     }
 }
 

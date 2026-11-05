@@ -4,7 +4,7 @@
 use crate::viewer::wfc3d::modes::view::windows::preview;
 use crate::{WFC3D_DIALECT, WFC3D_DOCUMENT_SCHEMA};
 use crate::viewer::wfc3d::*;
-use semio_framework_plugin::ArtifactViewer;
+use semio_plugin::ArtifactViewer;
 
 #[test]
 fn the_viewer_app_id_is_the_canonical_surface_id() {
@@ -19,7 +19,7 @@ fn the_viewer_declares_exactly_one_read_only_window() {
     assert_eq!(definition.window_kinds.len(), 1);
     assert_eq!(definition.window_kinds[0].id, preview::WFC_3D_VIEW_WINDOW);
     assert!(
-        definition.window_kinds[0].actions.iter().all(|action| action.kind != semio_framework_plugin::ActionKind::Mutation),
+        definition.window_kinds[0].actions.iter().all(|action| action.kind != semio_plugin::ActionKind::Mutation),
         "a viewer window declares no MUTATING action; the shell's own chrome verbs are injected by the builder and are not this surface's"
     );
 }

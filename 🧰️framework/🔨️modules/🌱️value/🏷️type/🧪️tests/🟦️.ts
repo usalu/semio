@@ -66,6 +66,6 @@ test("canonical neutral enums and package exports have one lower owner", () => {
   const neutral = read("🦀️.rs");
   expect(neutral).toContain("pub enum ValueType");
   expect(neutral).toContain("pub enum ValueKind");
-  expect(neutral).not.toMatch(/neural_engine|semio_framework_os|serde::/u);
+  expect(neutral).not.toMatch(/neural_engine|semio_os|serde::/u);
   expect(read("../📦️packages/🦀️rust/🦀️.rs")).toContain("pub use types::{ValueKind, ValueType}");
 });

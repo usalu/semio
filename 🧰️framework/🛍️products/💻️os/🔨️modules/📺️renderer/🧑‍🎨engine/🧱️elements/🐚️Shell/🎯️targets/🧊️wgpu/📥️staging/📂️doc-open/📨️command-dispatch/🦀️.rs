@@ -34,10 +34,10 @@ impl OpeningState {
         let surface_id = local_app.as_ref().map_or_else(|| semio_framework::manifest::surface_app_id(&target.dialect, target.role), |app| semio_framework::manifest::surface_app_id(&app.dialect, app.role));
         let label = local_app.map_or_else(|| target.app_id.clone().unwrap_or_else(|| target.artifact_ref.clone()), |app| app.label.resolve(prefs.active_terminology(), prefs.active_locale()).to_string());
         let local_shas: Vec<(String, Option<String>)> = plugins.plugins.iter().map(|program| (program.plugin_id.clone(), program.component_sha256.clone())).collect();
-        let intent = semio_framework_os_kernel::os_directory::DocumentOpenIntentV1 {
+        let intent = semio_os_kernel::os_directory::DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
             version: 1,
-            scope: semio_framework_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id.as_str()),
+            scope: semio_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id.as_str()),
             requested_surface_id: Some(surface_id),
             client_instance_id: format!("wgpu-shell-{}", directory.shell_session_id),
         };
@@ -47,12 +47,12 @@ impl OpeningState {
         let reported = resolve_step.clone();
         let expected_plugin = target.plugin_id.clone();
         let pending = ShellDetached::spawn(async move {
-            let store = semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore::for_user();
-            reported.store(document_open_resolve_step_code(semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep::Lease), std::sync::atomic::Ordering::Release);
+            let store = semio_os_kernel::os_directory::client::ExecutionTargetModuleStore::for_user();
+            reported.store(document_open_resolve_step_code(semio_os_kernel::os_directory::client::ExecutionTargetModuleStep::Lease), std::sync::atomic::Ordering::Release);
             let lease = client.document_execution_target_lease(&ctx, &intent).await.map_err(|error| format!("document execution target: {error}"))?;
             let plugin_id = lease.package.plugin_id.clone();
             if expected_plugin.as_ref().is_some_and(|expected| *expected != plugin_id) {
-                return Err(semio_framework_os_renderer_wgpu_program_bridge::ProgramFault::from(format!("the hub opens this document with {plugin_id}, not {}", expected_plugin.unwrap_or_default())));
+                return Err(semio_renderer_wgpu_program_bridge::ProgramFault::from(format!("the hub opens this document with {plugin_id}, not {}", expected_plugin.unwrap_or_default())));
             }
             let local_sha = local_shas.into_iter().find(|(local, _)| *local == plugin_id).and_then(|(_, sha)| sha);
             let resolved = client
@@ -61,10 +61,10 @@ impl OpeningState {
                 .map_err(|error| format!("document execution target: {error}"))?;
             let app_id = resolved.lease.surface.app_id.clone();
             let program = match resolved.files {
-                Some(files) => Some(semio_framework_os_renderer_wgpu_program_bridge::load_resolved_program(&plugin_id, &files.component, &files.descriptor, &resolved.lease.package.component_receipt).await?),
+                Some(files) => Some(semio_renderer_wgpu_program_bridge::load_resolved_program(&plugin_id, &files.component, &files.descriptor, &resolved.lease.package.component_receipt).await?),
                 None => None,
             };
-            Ok::<ShellDocumentOpenAnswer, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program, checkpoint: resolved.lease.checkpoint.clone() })
+            Ok::<ShellDocumentOpenAnswer, semio_renderer_wgpu_program_bridge::ProgramFault>(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program, checkpoint: resolved.lease.checkpoint.clone() })
         });
         let mut opening = ShellDocumentOpening::new(
             label,

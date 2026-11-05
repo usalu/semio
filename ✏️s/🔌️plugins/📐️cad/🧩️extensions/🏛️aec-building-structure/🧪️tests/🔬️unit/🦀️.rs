@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_structure_manifest() {
-    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let mut original_caller=semio_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
     let manifest = bundle().into_manifest_cold(&mut cx).unwrap();
     let topic_contribution = &manifest.topic_contributions[0];
     assert_eq!(topic_contribution.topic, "cad.computer");

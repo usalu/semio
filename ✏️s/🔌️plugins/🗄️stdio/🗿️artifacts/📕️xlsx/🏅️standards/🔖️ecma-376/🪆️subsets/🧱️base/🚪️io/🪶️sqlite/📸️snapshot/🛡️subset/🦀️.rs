@@ -5,7 +5,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-use semio_framework_os_kernel::{
+use semio_os_kernel::{
     sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase},
 };
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;

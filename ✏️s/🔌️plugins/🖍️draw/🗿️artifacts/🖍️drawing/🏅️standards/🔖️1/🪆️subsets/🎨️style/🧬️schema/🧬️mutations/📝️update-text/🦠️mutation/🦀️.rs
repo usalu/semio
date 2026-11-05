@@ -20,7 +20,7 @@ pub fn update_text<Op: From<UpdateText>>(layer_id: semio_framework_value::paged:
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdateText where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdateText> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "text", kind: "update-text", record: "UpdatedText" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit text", "Text bearbeiten") }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("Edit text", "Text bearbeiten") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.to_string_owner()] }
 }
 

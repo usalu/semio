@@ -922,7 +922,7 @@
           ],
           "properties": {
             "cargoPackageName": {
-              "const": "semio-framework-os-renderer-wgpu"
+              "const": "semio-renderer-wgpu"
             },
             "nodePackageName": {
               "const": "@semio-tech/framework-renderer-wgpu"

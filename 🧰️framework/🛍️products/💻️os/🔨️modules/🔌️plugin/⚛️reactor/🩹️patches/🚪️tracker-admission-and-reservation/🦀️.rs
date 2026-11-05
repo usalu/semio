@@ -135,7 +135,7 @@ impl PatchTracker {
         };
         let Some(output_index) = state.ready.iter().position(Option::is_none) else { return Err(refuse(&mut state, surface, "ready-full")) };
         let mut outputs = SurfaceReconcileOutputs::default();
-        let output_reservation = match outputs.try_reserve(generation, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES) {
+        let output_reservation = match outputs.try_reserve(generation, semio_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES) {
             Ok(Some(owner)) => owner,
             Ok(None) => return Err(refuse(&mut state, surface, "output-reservation-unavailable")),
             Err(fault) => {

@@ -33,7 +33,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_framework_os_kernel::apply_diff_cold;
+    use semio_os_kernel::apply_diff_cold;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio_flow::schema::mutations::{diff_semio_flow_mutation, inverse_semio_flow_mutation, SemioFlowMutation};
     use semio_s_artifact_stdio_semio_flow::io::text::mutations::decode_semio_flow_mutation_json;

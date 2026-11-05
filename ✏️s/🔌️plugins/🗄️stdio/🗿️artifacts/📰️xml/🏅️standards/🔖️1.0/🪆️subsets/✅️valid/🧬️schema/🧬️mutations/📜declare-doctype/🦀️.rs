@@ -14,8 +14,8 @@ pub struct DeclareDoctype {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "doctype", kind: "declare-doctype", record: "DeclareDoctype" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Declare doctype", "Dokumenttyp deklarieren")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Declare doctype", "Dokumenttyp deklarieren")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

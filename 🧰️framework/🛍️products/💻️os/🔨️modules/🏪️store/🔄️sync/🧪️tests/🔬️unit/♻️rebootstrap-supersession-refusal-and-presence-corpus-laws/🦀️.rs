@@ -25,7 +25,7 @@ async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline
     .await;
     let local = sample_operation_envelope("unacked-local", 5).await;
     actor.queue_test_outbox(vec![local.clone()]);
-    let control = semio_framework_os_spr::RebootstrapRequired { space_id: "space-reseed".into(), document_id: "demo".into(), checkpoint_id: [0x22; 32], descriptor_hash: [0x11; 32], baseline_frontier: baseline.clone() };
+    let control = semio_os_spr::RebootstrapRequired { space_id: "space-reseed".into(), document_id: "demo".into(), checkpoint_id: [0x22; 32], descriptor_hash: [0x11; 32], baseline_frontier: baseline.clone() };
     actor.inject_hub_frame(ServerFrame::RebootstrapRequired { control }).await;
     let mut asked = None;
     while let Ok(event) = event_rx.try_recv() {
@@ -36,7 +36,7 @@ async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline
     let asked = asked.expect("the actor asks its host for the pair instead of waiting for it inside a Welcome");
     assert_eq!((asked.scope.document_id.as_str(), asked.checkpoint_id.0, asked.baseline_frontier.head_edit_ordinal), ("demo", [0x22; 32], baseline.head_edit_ordinal));
     assert!(actor.bootstrap_test_state().8, "the actor waits for its host's reseed");
-    let baseline_frontier = semio_framework_os_directory::ArtifactFrontier { document_id: "demo".into(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: semio_framework_os_directory::ArtifactHash(baseline.chain_hash) };
+    let baseline_frontier = semio_os_directory::ArtifactFrontier { document_id: "demo".into(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: semio_os_directory::ArtifactHash(baseline.chain_hash) };
     let _ = actor.handle_test_cmd(ArtifactActorMsg::Reseed { pack: pair.pack.clone(), spr: pair.spr.clone(), baseline: baseline_frontier }).await;
     let mut replayed = Vec::new();
     while let Ok(event) = event_rx.try_recv() {
@@ -63,7 +63,7 @@ async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::test]
 async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
-    use semio_framework_os_store_backbone::Backbone;
+    use semio_os_store_backbone::Backbone;
     let (bootstrap, _) = demo_artifact_bootstrap(true).await;
     let baseline = bootstrap.baseline_frontier.clone();
     let (mut backbone, remote) = ChannelBackbone::pair("native-refused-supersede-test").await;
@@ -82,9 +82,9 @@ async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
     )
     .await;
     let operation = sample_operation_envelope("supersede-edit", 5).await;
-    let supersede = semio_framework_os_spr::TransitionSupersede { scope: None, inputs: vec![semio_framework_os_spr::SupersededInput { target: MutationId("ghost".into()), replacement: semio_framework_os_spr::InputReplacement::Withdrawn }] };
+    let supersede = semio_os_spr::TransitionSupersede { scope: None, inputs: vec![semio_os_spr::SupersededInput { target: MutationId("ghost".into()), replacement: semio_os_spr::InputReplacement::Withdrawn }] };
     let dependencies = supersede.targets();
-    let transition = semio_framework_os_spr::history_transition_envelope(&semio_framework_os_spr::HistoryTransition::Supersede(supersede), &ArtifactId("demo".into()), &ActorId("supersede-test".into()), dependencies, semio_framework_os_spr::HybridLogicalTimestamp::new(1, 9));
+    let transition = semio_os_spr::history_transition_envelope(&semio_os_spr::HistoryTransition::Supersede(supersede), &ArtifactId("demo".into()), &ActorId("supersede-test".into()), dependencies, semio_os_spr::HybridLogicalTimestamp::new(1, 9));
     actor.queue_test_outbox(vec![operation.clone(), transition.clone()]);
     let receipt = "hub.v1.ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
     let mut socket = connect(&mut actor, receipt).await;
@@ -98,7 +98,7 @@ async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
     let (mut rolled_back, mut retracted, mut outcome, mut refusal) = (Vec::new(), Vec::new(), None, None);
     while let Ok(event) = event_rx.try_recv() {
         match event {
-            ArtifactEvent::DocumentBackbone { message } => match semio_framework_os_store_backbone::decode_hot_backbone_message_exact(&message).expect("canonical backbone message") {
+            ArtifactEvent::DocumentBackbone { message } => match semio_os_store_backbone::decode_hot_backbone_message_exact(&message).expect("canonical backbone message") {
                 BackboneMessage::Mutations { envelopes } => rolled_back.extend(decode_envelopes(&envelopes).expect("rollback batch").into_iter().map(|envelope| envelope.mutation_id.0)),
                 BackboneMessage::Retract { mutation_ids } => retracted.extend(mutation_ids),
                 other => panic!("unexpected document backbone message {other:?}"),
@@ -132,8 +132,8 @@ async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
     let (document, schema) = ("presence-1", "s.test.root/1/*");
     let mut archives: std::collections::HashMap<&str, Vec<u8>> = std::collections::HashMap::new();
     for name in ["a", "b"] {
-        let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: name.as_bytes().to_vec(), parent_spr: semio_framework_os_store_text_io::text_format::empty_document_spr(document, schema).await, members: Vec::new() };
-        archives.insert(name, semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode the archive"));
+        let archive = semio_os_spr::DocumentArchivePack { parent_pack: name.as_bytes().to_vec(), parent_spr: semio_os_store_text_io::text_format::empty_document_spr(document, schema).await, members: Vec::new() };
+        archives.insert(name, semio_os_spr::encode_document_archive_bytes(&archive).expect("encode the archive"));
     }
     let content = |value: &serde_json::Value| value.as_str().filter(|content| *content != "absent").map(|content| archives[content].clone());
     let mut staged = 0;
@@ -152,7 +152,7 @@ async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
         if !stageable {
             continue;
         }
-        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let dir = semio_os_store_test_support::tempdir().expect("tempdir");
         let other_writer = FolderEventLogStorage::new(dir.path().to_path_buf());
         if let Some(archive) = content(&case["bootstrap"]) {
             other_writer.write_archive(document, schema, &archive).await.expect("the folder holds an archive at the open");
@@ -207,13 +207,13 @@ async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
 async fn the_folder_write_acknowledgment_corpus_matches_the_native_actor() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💾️folder-write-acknowledgment/🔣️.json")).expect("the corpus parses");
     let (document, schema) = ("acknowledgment-1", "s.test.root/1/*");
-    let archive_of = |pack: &[u8], spr: Vec<u8>| semio_framework_os_spr::encode_document_archive_bytes(&semio_framework_os_spr::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr, members: Vec::new() }).expect("encode the archive");
-    let spr = semio_framework_os_store_text_io::text_format::empty_document_spr(document, schema).await;
+    let archive_of = |pack: &[u8], spr: Vec<u8>| semio_os_spr::encode_document_archive_bytes(&semio_os_spr::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr, members: Vec::new() }).expect("encode the archive");
+    let spr = semio_os_store_text_io::text_format::empty_document_spr(document, schema).await;
     let bytes = archive_of(b"a", spr.clone());
     let external = archive_of(b"external", spr);
     for case in corpus["native"].as_array().expect("native cases") {
         let name = case["name"].as_str().expect("a case name");
-        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let dir = semio_os_store_test_support::tempdir().expect("tempdir");
         let path = match case["binding"].as_str().expect("a binding") {
             "eventLog" => dir.path().to_path_buf(),
             "unregisteredPackCodec" => dir.path().join(format!("{document}.unregistered")),

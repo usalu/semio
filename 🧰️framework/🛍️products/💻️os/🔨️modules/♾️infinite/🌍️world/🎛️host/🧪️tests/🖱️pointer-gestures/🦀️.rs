@@ -1,15 +1,15 @@
 //! 🧪️ host tests (🖱️pointer-gestures): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::{WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY, world_mesh_ownership_grant, WorldCatalogueDropPreviewRecord, WorldInteractionObjectKind, WorldInteractionStep};
-use semio_framework_os_infinite_world_components::World3dRelocateSession;
-use semio_framework_os_infinite_world_cursors::{render_pick_viewport, resolved_domain_id, selection_method_wire_str, WorldMarqueeGesture, WorldMarqueePublishJob, WorldMarqueeResult, WorldMarqueeResultPages, WorldRayPickCursor, WorldRayPickPurpose};
+use semio_os_infinite_world_model::{WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY, world_mesh_ownership_grant, WorldCatalogueDropPreviewRecord, WorldInteractionObjectKind, WorldInteractionStep};
+use semio_os_infinite_world_components::World3dRelocateSession;
+use semio_os_infinite_world_cursors::{render_pick_viewport, resolved_domain_id, selection_method_wire_str, WorldMarqueeGesture, WorldMarqueePublishJob, WorldMarqueeResult, WorldMarqueeResultPages, WorldRayPickCursor, WorldRayPickPurpose};
 use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_os_infinite_world_scene::TerrainMeshOracleData;
-use semio_framework_os_infinite_world_bridge::{world3d_scene_instance_interactions_are_bounded, World3dDynamicRetirement, World3dSceneInstanceEntry};
-use semio_framework_os_infinite_world_interaction::{INTERACTION_TARGETS_EMPTY, plan_world3d_camera_settle, plan_world3d_wheel, publish_world3d_plan_step, store_mesh, world3d_begin_relocate_drag, world3d_cancel_relocate_drag, world3d_end_relocate_drag, world3d_relocate_active, world3d_relocate_mode, world_merge_code};
-use semio_framework_os_infinite_world_host::World3dState;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_os_infinite_world_scene::TerrainMeshOracleData;
+use semio_os_infinite_world_bridge::{world3d_scene_instance_interactions_are_bounded, World3dDynamicRetirement, World3dSceneInstanceEntry};
+use semio_os_infinite_world_interaction::{INTERACTION_TARGETS_EMPTY, plan_world3d_camera_settle, plan_world3d_wheel, publish_world3d_plan_step, store_mesh, world3d_begin_relocate_drag, world3d_cancel_relocate_drag, world3d_end_relocate_drag, world3d_relocate_active, world3d_relocate_mode, world_merge_code};
+use semio_os_infinite_world_host::World3dState;
+use semio_ui_declaration::layout::ActionDescriptor;
 use ui_scene::math::{Instance3d, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, SceneDraw3d, Vec3};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework::SelectionMethod;
@@ -25,7 +25,7 @@ fn read_joined(paths: &[&str]) -> &'static str {
     Box::leak(joined.into_boxed_str())
 }
 
-pub(crate) fn take_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub(crate) fn take_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));
@@ -214,7 +214,7 @@ fn publish_pick(state: &mut World3dState, mut cursor: WorldRayPickCursor) -> Opt
         assert!(turns < 256, "bounded pick terminates");
     }
     let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 1).expect("live pick")?;
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 1, &mut input, context)).expect("bounded publication") != WorldInteractionStep::Complete {
         turns += 1;
@@ -332,7 +332,7 @@ fn a_marquee_release_replaces_with_the_deduplicated_topology_targets() {
     }
     let gesture_state = WorldMarqueeGesture::new(3, 1, [0.0, 0.0]);
     let mut job = WorldMarqueePublishJob::new(2, gesture_state, results, false, false);
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while with_world_step_context(1, |context| job.step(&state.session, &state.interaction, 2, &mut input, context)).expect("bounded marquee publication") != WorldInteractionStep::Complete {
         turns += 1;
@@ -355,7 +355,7 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
     let case = gesture("orbit-completes-into-one-setcamera");
     let mut state = fixture_state();
     let mut plan = plan_world3d_wheel(&state.session, &state.camera, 1, 200.0).expect("bounded wheel plan");
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 1, &mut input, context)).expect("bounded publication") != WorldInteractionStep::Complete {
         turns += 1;
@@ -395,7 +395,7 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
 fn an_empty_marquee_page_reserves_the_bytes_of_its_own_empty_array() {
     let state = fixture_state();
     let job = WorldMarqueePublishJob::new(2, WorldMarqueeGesture::new(state.session.interaction_revision, 1, [0.0, 0.0]), WorldMarqueeResultPages::default(), false, false);
-    let base = semio_framework_ui_action::checked_action_string_bytes(&[state.session.controller_id.as_str(), "interactionSelect", "domainId", resolved_domain_id(&state.session), "targets", "merge", job.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])
+    let base = semio_ui_action::checked_action_string_bytes(&[state.session.controller_id.as_str(), "interactionSelect", "domainId", resolved_domain_id(&state.session), "targets", "merge", job.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])
         .expect("base action bytes");
     let credit = job.page_credit(&state.session, &state.interaction, 0).expect("empty page credit");
     assert_eq!(credit - base, INTERACTION_TARGETS_EMPTY.len(), "an empty page reserves exactly the `[]` it writes");

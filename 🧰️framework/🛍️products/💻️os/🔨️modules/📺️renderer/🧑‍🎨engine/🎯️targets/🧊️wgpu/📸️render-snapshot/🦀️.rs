@@ -4,7 +4,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use ui_render::{CursorRequest, ImeDirective};
-use semio_framework_ui_wgpu_hosting::cursor::SemioCursor;
+use semio_ui_wgpu_hosting::cursor::SemioCursor;
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::{RetireOwned,arc_custody::SharedControlledRetirement}};
 use std::mem::ManuallyDrop;

@@ -1,8 +1,8 @@
 //! 🎛️ IFC2x3 TC1 details over its own exact Part21 snapshot and mutation authority.
 
-extern crate semio_framework_os_kernel as protocol;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Locale;
+extern crate semio_os_kernel as protocol;
+use semio_plugin::Fault;
+use semio_ui_locale::Locale;
 use semio_framework_value::{DslValue,FromValue,ToValue};
 use semio_s_artifact_stdio_contract::{part21::{Part21Value as V,Part21Instance,Part21Decimal},editing::{self,DslSnapshotDetailsProvider,SnapshotDetailsProvider,SnapshotDetailPathSegment as P,SnapshotDetailValue,SnapshotDetailPresentation,SnapshotDetailItemCapabilities,SnapshotDetailVariant,SnapshotEditEvent}};
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::{snapshot::Ifc2x3Snapshot,catalog::{self,IfcTypeExpression as Expr,IfcAttributeDeclaration as Attr}};

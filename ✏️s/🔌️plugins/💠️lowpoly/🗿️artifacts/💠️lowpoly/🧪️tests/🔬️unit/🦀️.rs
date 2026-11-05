@@ -1,5 +1,5 @@
 use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json;
-use semio_framework_os_kernel::Patchable;
+use semio_os_kernel::Patchable;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::{mesh_child_handle, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySelectionTargets, LowpolySnapshot, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 use semio_s_artifact_lowpoly_lowpoly_model::LowpolyArtifact;
 

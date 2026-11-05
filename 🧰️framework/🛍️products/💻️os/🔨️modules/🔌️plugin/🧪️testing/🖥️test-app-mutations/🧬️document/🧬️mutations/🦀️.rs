@@ -62,7 +62,7 @@ pub mod tests;
 
 impl TestMutation{
     /// 🎒️ Captures this original variant in caller-retained canonical scratch.
-    pub fn retained_pack_operation(&self)->semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{
-        semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(self)
+    pub fn retained_pack_operation(&self)->semio_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{
+        semio_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(self)
     }
 }

@@ -1,15 +1,15 @@
 //! 🧪️ model tests (🔬️unit): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::{World3dBuildContext, WORLD_DYNAMIC_DRAW_INSTANCE_CAPACITY, WORLD_DYNAMIC_ID_BYTE_CAPACITY, WORLD_INTERACTION_BYTE_CAPACITY, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_INTENT_CAPACITY, WORLD_INTERACTION_ITEM_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, world_pick_keys_match, WORLD_PICK_TARGET_CAPACITY, WORLD_PICK_TARGET_POINT_CAPACITY, world_pick_targets_from_json, world_scene_raster_pool, WorldCursorWakeAuthority, WorldCursorWakeFault, WorldDrawRegistry, WorldDynamicEntry, WorldDynamicFault, WorldDynamicRegistry, WorldFlatAction, WorldFlatActionKind, WorldInteractionIntent, WorldInteractionIntentQueue, WorldInteractionObjectKind, WorldInteractionObjectRegistry, WorldInteractionObjectSlot, WorldInteractionPhase, WorldInteractionPlan, WorldOpaqueOwner, WorldOpaqueQuarantine};
+use semio_os_infinite_world_model::{World3dBuildContext, WORLD_DYNAMIC_DRAW_INSTANCE_CAPACITY, WORLD_DYNAMIC_ID_BYTE_CAPACITY, WORLD_INTERACTION_BYTE_CAPACITY, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_INTENT_CAPACITY, WORLD_INTERACTION_ITEM_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, world_pick_keys_match, WORLD_PICK_TARGET_CAPACITY, WORLD_PICK_TARGET_POINT_CAPACITY, world_pick_targets_from_json, world_scene_raster_pool, WorldCursorWakeAuthority, WorldCursorWakeFault, WorldDrawRegistry, WorldDynamicEntry, WorldDynamicFault, WorldDynamicRegistry, WorldFlatAction, WorldFlatActionKind, WorldInteractionIntent, WorldInteractionIntentQueue, WorldInteractionObjectKind, WorldInteractionObjectRegistry, WorldInteractionObjectSlot, WorldInteractionPhase, WorldInteractionPlan, WorldOpaqueOwner, WorldOpaqueQuarantine};
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeMap;
 use ui_scene::math::{Camera3d, Instance3d, Mat4, SceneDraw3d};
-use semio_framework_ui_prepared::PreparedRenderUpload;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
+use semio_ui_prepared::PreparedRenderUpload;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(test)] use semio_framework_ui_draw_contract::gizmo;
-#[cfg(test)] use semio_framework_ui_raster_owner::SceneRasterMeshSeal;
+#[cfg(test)] use semio_ui_draw_contract::gizmo;
+#[cfg(test)] use semio_ui_raster_owner::SceneRasterMeshSeal;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
 
@@ -62,7 +62,7 @@ fn test_scene_raster_lease(width: u32, height: u32, profile: SceneRasterProfile,
     let descriptor = SceneRasterDescriptor { width, height, source_digest: [revision, revision.rotate_left(17)], source_revision: revision, profile, mesh };
     let pool = world_scene_raster_pool();
     let mut writer = None;
-    for _ in 0..=semio_framework_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
+    for _ in 0..=semio_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
         match pool.begin(descriptor, revision, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }) {
             SceneRasterBegin::Writer(candidate) => {
                 writer = Some(candidate);
@@ -314,7 +314,7 @@ fn an_appended_world_scene_raster_keeps_its_exact_pool_lease() {
     let lease = test_scene_raster_lease(1, 1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None, 1);
     let identity = lease.identity();
     resources.ensure_world_plane_texture("plan", lease);
-    let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
+    let mut input = semio_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert!(matches!(input.uploads.get(0), Some(PreparedRenderUpload::SceneRaster { lease, .. }) if lease.identity() == identity));
     for _ in 0..4096 {
@@ -325,11 +325,11 @@ fn an_appended_world_scene_raster_keeps_its_exact_pool_lease() {
     }
     assert!(input.terminal_is_empty());
 
-    let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("second prepared input admitted");
+    let mut input = semio_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("second prepared input admitted");
     let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
     resources.ensure_world_plane_texture("plan", test_scene_raster_lease(1, 1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None, 1));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
-    let mut job = semio_framework_ui_prepared::PreparedRenderJob::try_new(input).ok().expect("prepared job admitted");
+    let mut job = semio_ui_prepared::PreparedRenderJob::try_new(input).ok().expect("prepared job admitted");
     let mut preview = 0;
     let mut receipt = semio_framework_value::retained_clone::RetainedCloneProgress::default();
     let descriptor = {
@@ -544,7 +544,7 @@ fn the_scene_pass_is_published_behind_the_residency_filter() {
 #[test]
 fn scalar_attribute_slot_retirement_keeps_original_backing_until_mesh_owner_close(){
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
-    use semio_framework_os_kernel::os_spr::causal::transition::HistoryFoldIndex;
+    use semio_os_kernel::os_spr::causal::transition::HistoryFoldIndex;
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();
     let reference:Vec<(String,String)>=serde_json::from_value(law["input"].clone()).unwrap();

@@ -5,7 +5,7 @@ pub mod sqlite_snapshot_operations;
 #[path = "📥️lifted/🚪️io/🦀️.rs"]
 pub mod lifted_composer_registry;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
+use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_diagnostic::Diagnostic;
@@ -94,7 +94,7 @@ macro_rules! io_sniff_thunk {
 }
 
 pub use crate::lifted_composer_registry::{ArtifactAssemblyRegistryError, ArtifactAssemblyRegistryPlan, commit_artifact_assembly_registry_plan, publish_native_snapshot, register_native_document_codec, register_native_snapshot_codec};
-pub use semio_framework_os_store_codec_registry::composer_registry::{AsyncComposeFn, ComposeError, ComposeFuture, ComposedArtifact, ComposerEntry, Confidence, ErasedComposeSource, FORMAT_CATALOG, FormatDescriptor, FormatDescriptorIndexes, FormatRegistryConflict, FormatRegistryError, IO_REGISTRY, IoDirection, IoKey, IoRegistryConflict, IoRegistryRegistrationError, IoRegistryUnavailable, SUBSET_VALIDATOR_REGISTRY, SnapshotSubsetValidation, SubsetValidator, SubsetValidatorEntry, SubsetValidatorRegistryConflict, SubsetValidatorRegistryError, bindings, canonicalize_format_descriptor, composer_entries_by_key, format_catalog, format_descriptor_keys, format_mimes, formats_csv, index_format_descriptors, io_registry, same_composer_entry, same_subset_validator_entry, sqlite_snapshot_format_descriptor, subset_validator_registry, validate_composer_entries, validate_format_descriptors, validate_subset_validators};
+pub use semio_os_store_codec_registry::composer_registry::{AsyncComposeFn, ComposeError, ComposeFuture, ComposedArtifact, ComposerEntry, Confidence, ErasedComposeSource, FORMAT_CATALOG, FormatDescriptor, FormatDescriptorIndexes, FormatRegistryConflict, FormatRegistryError, IO_REGISTRY, IoDirection, IoKey, IoRegistryConflict, IoRegistryRegistrationError, IoRegistryUnavailable, SUBSET_VALIDATOR_REGISTRY, SnapshotSubsetValidation, SubsetValidator, SubsetValidatorEntry, SubsetValidatorRegistryConflict, SubsetValidatorRegistryError, bindings, canonicalize_format_descriptor, composer_entries_by_key, format_catalog, format_descriptor_keys, format_mimes, formats_csv, index_format_descriptors, io_registry, same_composer_entry, same_subset_validator_entry, sqlite_snapshot_format_descriptor, subset_validator_registry, validate_composer_entries, validate_format_descriptors, validate_subset_validators};
 pub use semio_framework_io_schema::IoPayload;
 
 pub use bindings::{ArtifactCodecBinding, ArtifactCodecBindingChannel, ArtifactCodecBindingError, artifact_codec_bindings, preflight_artifact_codec_bindings, preflight_artifact_codec_bindings_in_assembly};
@@ -154,4 +154,4 @@ pub mod text;
 
 /// ⏱️ Original caller authority for physical route execution.
 pub use semio_framework_io_control as control;
-pub use semio_framework_os_store_codec_registry::lifted_io::{Analysis, IoFidelityClass, IoResolveError, WireComposeSource, WireComposedArtifact, dialects_for, io_keys_for, register_composer_entry_refs, register_composer_entry_refs_in_assembly, resolve};
+pub use semio_os_store_codec_registry::lifted_io::{Analysis, IoFidelityClass, IoResolveError, WireComposeSource, WireComposedArtifact, dialects_for, io_keys_for, register_composer_entry_refs, register_composer_entry_refs_in_assembly, resolve};

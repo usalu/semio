@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-config-tests-1"
+name = "semio-os-config-tests-1"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,17 +23,17 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-config = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-config = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 schemars = "0.8.22"
 semio-framework = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 
 [dev-dependencies]
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

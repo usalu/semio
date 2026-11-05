@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-os-flow-host-read"
+name = "semio-os-flow-host-read"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,21 +22,27 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-flow-host-core = { path = "../../../../🧱️flow-host-model/📦️packages/🦀️rust" }
-semio-framework-os-flow-host-source = { path = "../../../📦️packages/🦀️rust" }
-semio-framework-os-flow-operators = { path = "../../../../../🗃️operators/📦️packages/🦀️rust" }
+semio-os-flow-host-core = { path = "../../../../🧱️flow-host-model/📦️packages/🦀️rust" }
+semio-os-flow-host-source = { path = "../../../📦️packages/🦀️rust" }
+semio-os-flow-operators = { path = "../../../../../🗃️operators/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-storage = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-replication = { workspace = true }
-neural_engine = { path = "../../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 
 [dev-dependencies]
+semio-os-flow-operators = { path = "../../../../../🗃️operators/📦️packages/🦀️rust", features = ["protocol-laws"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
 semio-framework-replication = { workspace = true }
 serde_json = "1"
+
+[features]
+testkit = []

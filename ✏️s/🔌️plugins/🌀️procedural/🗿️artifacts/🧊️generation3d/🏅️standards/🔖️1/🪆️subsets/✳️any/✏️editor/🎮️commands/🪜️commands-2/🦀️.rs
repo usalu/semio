@@ -1,6 +1,6 @@
 //! 🪜️ Generation3d editor commands: the command payloads not split into their own crates, and the mesh-selection edits (part 2).
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[path = "../✅️flow-eval-resolve/🦀️.rs"]
 pub mod flow_eval_resolve;

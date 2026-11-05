@@ -15,7 +15,7 @@ fn mode(name: &str) -> IfcValueReceiveMode {
 }
 
 fn receive(input: DslValue, mode: IfcValueReceiveMode, cancel_at: Option<usize>, refused: bool) -> (Option<IfcValue>, usize) {
-    let mut caller = semio_framework_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     let policy = editing::fixture_mounted_owner_policy();

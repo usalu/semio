@@ -56,8 +56,8 @@ impl ActorStatus {
 /// process" trio, unchanged by the P1c one-pool-worker-runtime refactor EXCEPT for what `Native`
 /// itself now means. A shard was never "a thread" as an identity here — `ShardTable` (below) only
 /// ever pinned an [`ActorId`] to a [`ShardId`], a bookkeeping integer; this crate's own purity rule
-/// means it never spawned anything. What changed in the HOST crates (`semio-framework-plugin-host`'s
-/// `ShardExecutor`, `semio-framework-os`'s `NativeKernelRuntime`) is that `Native` no longer implies
+/// means it never spawned anything. What changed in the HOST crates (`semio-plugin-host`'s
+/// `ShardExecutor`, `semio-os`'s `NativeKernelRuntime`) is that `Native` no longer implies
 /// "and therefore gets one dedicated OS thread" — a `Native` shard is now a logical affinity unit
 /// (its actors' `wasmtime::Store`s are pinned to it so guest instance state stays coherent) whose
 /// turns are submitted as jobs onto one process-wide `semio_framework_async::WorkerPool`, mutually

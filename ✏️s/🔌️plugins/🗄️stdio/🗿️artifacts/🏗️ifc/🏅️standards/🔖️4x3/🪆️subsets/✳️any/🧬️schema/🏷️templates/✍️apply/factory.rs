@@ -3,16 +3,16 @@ use super::*;
 #[cfg(test)]
 #[path = "chooser-tests.rs"]
 mod chooser_tests;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::{
     AppOperationContext, ArtifactBoundedFirstStepProof, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
     InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
 };
 
 pub const PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: APPLY_TEMPLATE_ACTION, lanes: &[ArtifactToolPublicationLane::Artifact] }];
-pub fn action() -> semio_framework_plugin::ActionDefinition {
-    use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionKind};
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn action() -> semio_plugin::ActionDefinition {
+    use semio_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionKind};
+    use semio_ui_locale::LocalizedLabel;
     ActionDefinition::bounded_catalog(APPLY_TEMPLATE_ACTION, LocalizedLabel::native("Apply Released Template", "Veröffentlichtes Template anwenden"), ActionKind::Mutation).with_args(vec![
         ActionArgDef::select("template", LocalizedLabel::native("Template", "Template"), crate::templates::ifc4x3_template_catalog().templates.iter().map(|template| ActionArgOption::new(template.name, LocalizedLabel::data(template.name))).collect()).required(),
         ActionArgDef::text("target", LocalizedLabel::native("Target Entity", "Zielelement")).required(),

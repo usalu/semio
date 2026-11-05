@@ -3,7 +3,7 @@ use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::entities::{Puzzle5dDocument, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_INTERACTION_DOMAIN};
 use crate::editor::puzzle5d::view::{puzzle5d_gumball_active, Puzzle5dInteractionSnapshot, Puzzle5dScene};
-use semio_framework_plugin::{World3dScene, WindowMeasure};
+use semio_plugin::{World3dScene, WindowMeasure};
 use semio_framework_pack_json::{json, Value};
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::modes::edit;
@@ -22,9 +22,9 @@ use crate::editor::puzzle5d::view::{puzzle5d_scene_mode, puzzle5d_transform_hand
 #[allow(unused_imports)]
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 #[allow(unused_imports)]
-use semio_framework_plugin::{world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+use semio_plugin::{world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 #[allow(unused_imports)]
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 use crate::editor::puzzle5d::modes::edit::windows::world3d::{world_fasteners_json};
 
 use crate::editor::puzzle5d::modes::edit::windows::world3d::*;
@@ -257,7 +257,7 @@ fn every_world_instance_names_a_mesh_this_scene_publishes() {
 fn the_world_scene_stages_a_one_shot_fit_for_its_document() {
     let scene = scene_with(part_selection(), Puzzle5dRuntime::default(), "select");
     let node = render(&scene, crate::editor::puzzle5d::terminology::puzzle5d_native_en_labels(), None, &[], None).expect("the world surface assembles");
-    let built: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
+    let built: World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
     let fit = built.fit_json.as_deref().expect("the world window must publish a fit lane");
     assert!(fit.contains("\"enabled\":true"), "the fit lane must be enabled, else the authored camera is the only framing: {fit}");
     assert!(fit.contains(&format!("\"revision\":{}", world_fit_revision(&scene.document))), "the lane must carry this document's own identity revision: {fit}");
@@ -291,7 +291,7 @@ fn the_fit_revision_tracks_document_identity_not_part_edits() {
 fn the_world_scene_binds_the_shared_vortex_domain() {
     let scene = scene_with(part_selection(), Puzzle5dRuntime::default(), "select");
     let node = render(&scene, &Puzzle5dLabels::NATIVE_EN, None, &[], None).expect("the world surface assembles");
-    let built: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
+    let built: World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
     assert_eq!(built.domain_id.as_deref(), Some(PUZZLE5D_INTERACTION_DOMAIN));
     assert_eq!(built.domain_granularity_id.as_deref(), Some(PUZZLE5D_GRANULARITY_PART));
     assert!(built.lod_json.as_deref().is_some_and(|lod| lod.contains("\"showLodGrid\"")), "the pane's grid/LOD options reach the host");

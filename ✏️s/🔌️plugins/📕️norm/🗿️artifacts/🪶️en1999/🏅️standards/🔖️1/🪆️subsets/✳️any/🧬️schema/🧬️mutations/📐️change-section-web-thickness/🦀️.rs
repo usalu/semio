@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeSectionWebThicknes
         record: "ChangedSectionWebThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Web (wall) thickness t_w of the section", "Querschnitt: Steg- bzw. Wanddicke t_w ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Web (wall) thickness t_w of the section", "Querschnitt: Steg- bzw. Wanddicke t_w ändern")
     }
 }
 

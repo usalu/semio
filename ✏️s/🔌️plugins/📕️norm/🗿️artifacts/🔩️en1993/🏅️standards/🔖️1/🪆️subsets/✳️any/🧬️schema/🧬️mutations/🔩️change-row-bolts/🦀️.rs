@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowBolts where Op:
         record: "ChangedRowBolts",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bolts in the row of the joint row", "Schraubenreihe: Schrauben in der Reihe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bolts in the row of the joint row", "Schraubenreihe: Schrauben in der Reihe ändern")
     }
 }
 

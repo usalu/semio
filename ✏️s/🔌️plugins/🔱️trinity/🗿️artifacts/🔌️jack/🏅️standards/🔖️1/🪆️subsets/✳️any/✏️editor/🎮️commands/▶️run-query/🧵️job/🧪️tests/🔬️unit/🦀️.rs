@@ -1,4 +1,4 @@
-use semio_framework_plugin::retained_command::ArtifactCommandWork;
+use semio_plugin::retained_command::ArtifactCommandWork;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::mutations::set_query;
 #[allow(unused_imports)]
@@ -12,13 +12,13 @@ use crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA;
 #[allow(unused_imports)]
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 #[allow(unused_imports)]
-use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
+use semio_plugin::app::ArtifactOwnedToolJobContext;
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
 use semio_framework_job::InteractiveJobCloseStep;
 #[allow(unused_imports)]
-use semio_framework_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
 #[allow(unused_imports)]
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 #[allow(unused_imports)]
@@ -28,7 +28,7 @@ use semio_s_artifact_trinity_jack_graph_query::JackGraphQuery;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::content_read::JackContentRead;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::ChildEmitPreparation;
+use semio_plugin::app::ChildEmitPreparation;
 use crate::editor::jack::commands::query::job::{Owner, QUERY_CHECKPOINT_BYTES, QUERY_REPLAY_MAXIMUM_STEPS, JackQueryWork};
 use crate::editor::jack::commands::query::job::*;
 

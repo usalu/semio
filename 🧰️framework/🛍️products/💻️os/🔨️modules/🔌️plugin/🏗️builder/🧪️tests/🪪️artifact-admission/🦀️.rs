@@ -5,9 +5,9 @@
 //! candidate instead of asserting an absolute emptiness that its sibling's success would break.
 
 use crate::declarations_fixture_tests::fixture;
-use semio_framework_plugin_identity::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
-use semio_framework_plugin_decl_registry::ArtifactDeclaration;
-use semio_framework_plugin_builder::PluginBuilder;
+use semio_plugin_identity::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
+use semio_plugin_decl_registry::ArtifactDeclaration;
+use semio_plugin_builder::PluginBuilder;
 use semio_framework_artifact_reference::ArtifactKindId;
 use semio_framework_test_fixtures::fixture_text;
 
@@ -37,8 +37,8 @@ async fn publication_witness() -> Vec<bool> {
         witness.push(semio_framework_schema_registry::artifact_schema_descriptor_registered(id));
         witness.push(store::os_store::codec_registry::document_codec(codec).await.expect("registry available").is_some());
     }
-    witness.push(semio_framework_os_kernel::io::io_mechanism::io_entries().iter().any(|row| row.from.artifact_kind == "s.testkit.w1c-fixture" || row.into.artifact_kind == "s.testkit.w1c-fixture"));
-    witness.push(semio_framework_os_kernel::io::format_descriptor("s.testkit.w1c-fixture@1").expect("registry available").is_some());
+    witness.push(semio_os_kernel::io::io_mechanism::io_entries().iter().any(|row| row.from.artifact_kind == "s.testkit.w1c-fixture" || row.into.artifact_kind == "s.testkit.w1c-fixture"));
+    witness.push(semio_os_kernel::io::format_descriptor("s.testkit.w1c-fixture@1").expect("registry available").is_some());
     witness
 }
 
@@ -86,7 +86,7 @@ fn strict_artifact_identity_matches_independent_neutral_fixture() {
     let rows = fixture["cases"].as_array().expect("cases");
     assert_eq!(rows.len(), 15);
     for row in rows {
-        let result = semio_framework_plugin_identity::preflight_artifact_identity(row["plugin"].as_str().unwrap(), row["kind"].as_str().unwrap());
+        let result = semio_plugin_identity::preflight_artifact_identity(row["plugin"].as_str().unwrap(), row["kind"].as_str().unwrap());
         assert_eq!(result.err().map(|error| error.code).unwrap_or_else(|| "accepted".into()), row["code"].as_str().unwrap(), "{}", row["id"]);
     }
 }

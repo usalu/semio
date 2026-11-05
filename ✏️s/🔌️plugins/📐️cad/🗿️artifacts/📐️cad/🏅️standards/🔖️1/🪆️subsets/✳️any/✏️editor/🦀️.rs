@@ -5,9 +5,9 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[path = "🌉️wasm/🦀️.rs"]
@@ -45,59 +45,59 @@ use {semio_s_artifact_stdio_semio_model::schema::mutations::remove_element::Remo
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::tree_item as framework_tree_item;
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::world3d_camera_projection_json;
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionDescriptor;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ChildContentView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::Menu;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::tree_item as framework_tree_item;
+use semio_plugin::tree_item_with_action;
+use semio_plugin::world3d_camera_projection_json;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionDescriptor;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ChildContentView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
+use semio_plugin::DraftView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::Menu;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WorldSunConfig;
 use semio_framework_3d_brep_engine::{Brep, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
-// in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
+// in `semio_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
 // — only reachable through the `app` submodule they're actually declared in. Not fixable here
 // (`🧰️framework/**` is outside this packet's lease); flagged for W1-A in the migration report.
-use semio_framework_plugin::app::{ArtifactEditor, Dialect, Editor};
+use semio_plugin::app::{ArtifactEditor, Dialect, Editor};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🌉️ Test harness only — `protocol::json` (the `pack::json` re-export) carries its own first-party
 // `json!` macro (`Value`-producing, same object/array literal syntax as `serde_json::json!`) and
@@ -111,7 +111,7 @@ use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Commands
 
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `CadPlayApp::Command` — the SOLE dispatch surface for cad's own behavior, decomposed into
     /// one `🎮️commands/<group>/<command>` payload module per row. Row order IS the binary variant
     /// ordinal and the two literals are two different vocabularies (camelCase manifest action id,
@@ -212,7 +212,7 @@ impl CadPlayApp {
     }
 
     /// 🖼️ The one render implementation both trait entry points share.
-    fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         semio_s_artifact_cad_cad_inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
         let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction).with_axes(view_state.terminology, view_state.locale);
         let labels = cad_labels(view_state);
@@ -226,16 +226,16 @@ impl CadPlayApp {
         let active_utility = view_state.active_utility_id.as_deref();
         let options = view.runtime.dislocate_options(window_kind_id);
         match body_key {
-            shape::BODY_KEY => shape::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            building::BODY_KEY => building::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            energy::BODY_KEY => energy::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels, &TreeWindows::for_body(view_state, document::CAD_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
-            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels, &TreeWindows::for_body(view_state, catalogue::CAD_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
+            shape::BODY_KEY => shape::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_plugin::built_to_component_tree),
+            building::BODY_KEY => building::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_plugin::built_to_component_tree),
+            energy::BODY_KEY => energy::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_plugin::built_to_component_tree),
+            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_plugin::built_to_component_tree),
+            document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels, &TreeWindows::for_body(view_state, document::CAD_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
+            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels, &TreeWindows::for_body(view_state, catalogue::CAD_PLAY_BODY_CATALOGUE)).map(semio_plugin::built_to_component_tree),
             inspection::CAD_PLAY_BODY_PROPERTIES => {
-                inspection::build_properties_panel(&view, labels, active_utility, &TreeWindows::for_body(view_state, inspection::CAD_PLAY_BODY_PROPERTIES)).map(semio_framework_plugin::built_to_component_tree)
+                inspection::build_properties_panel(&view, labels, active_utility, &TreeWindows::for_body(view_state, inspection::CAD_PLAY_BODY_PROPERTIES)).map(semio_plugin::built_to_component_tree)
             }
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

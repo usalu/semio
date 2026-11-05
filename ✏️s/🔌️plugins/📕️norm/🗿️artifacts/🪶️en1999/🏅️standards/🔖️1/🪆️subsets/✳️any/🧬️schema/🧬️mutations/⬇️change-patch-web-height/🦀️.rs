@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangePatchWebHeight whe
         record: "ChangedPatchWebHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Web height h_w (0 = section) of the web patch load", "Stegeinzellast: Steghöhe h_w (0 = Querschnitt) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Web height h_w (0 = section) of the web patch load", "Stegeinzellast: Steghöhe h_w (0 = Querschnitt) ändern")
     }
 }
 

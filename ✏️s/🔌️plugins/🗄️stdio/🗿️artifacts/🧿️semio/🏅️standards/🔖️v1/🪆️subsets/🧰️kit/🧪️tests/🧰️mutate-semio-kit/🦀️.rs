@@ -18,7 +18,7 @@
 //! shape the platform has: `objects`/`models` are repeated owned CHILD pools, `properties` is a
 //! single owned child SLOT, `representations` is a LINK pool whose entries carry a `LinkPin`, and
 //! `designs` nests pieces and connections inside a record. All of those live behind this crate's
-//! PRIVATE `extern crate semio_framework_os_kernel as store;`, unnameable from a test host, which is
+//! PRIVATE `extern crate semio_os_kernel as store;`, unnameable from a test host, which is
 //! why every handle here is DESERIALIZED through this subset's own
 //! `decode_kit_snapshot_json`/`decode_kit_mutation_json` rather than constructed.
 
@@ -61,7 +61,7 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_framework_os_kernel::apply_diff_cold;
+    use semio_os_kernel::apply_diff_cold;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio_kit::schema::mutations::{diff_semio_kit_mutation, inverse_semio_kit_mutation, SemioKitMutation};
     use semio_s_artifact_stdio_semio_kit::io::text::mutations::decode_kit_mutation_json;

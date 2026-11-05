@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberPunchColumnW
         record: "ChangedMemberPunchColumnWidth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change column width c₁ of the member", "Bauteil: Stützenbreite c₁ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change column width c₁ of the member", "Bauteil: Stützenbreite c₁ ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

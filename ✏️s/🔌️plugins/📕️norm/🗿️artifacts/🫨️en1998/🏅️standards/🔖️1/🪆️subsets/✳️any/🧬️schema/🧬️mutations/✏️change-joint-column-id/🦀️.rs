@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeJointColumnId wher
         record: "ChangeJointColumnId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Column member row of the building framing into the joint", "Stützen-Bauteilzeile des Gebäudes, die in den Knoten einläuft ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Column member row of the building framing into the joint", "Stützen-Bauteilzeile des Gebäudes, die in den Knoten einläuft ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-joint-column-id".into()]

@@ -11,7 +11,7 @@
 //! went with it — the live lists are `artifact_kind()`'s own fields in the artifact root.
 //!
 //! `derived_composition` below STAYS and is now native-only: it is the `ArtifactComposition` facet
-//! `semio_framework_plugin::derive_artifact_facets!` binds in the sibling `🧬️schema/🦀️.rs`, and every
+//! `semio_plugin::derive_artifact_facets!` binds in the sibling `🧬️schema/🦀️.rs`, and every
 //! foreign-format branch it used to carry now lives in a typed leaf instead.
 //!
 //! Format coverage — IDENTICAL in `◻️2d` and `🧊️3d` (full decision table in the ticket's
@@ -32,7 +32,7 @@
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::Fem3dAnalyzer;
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem3d", standard: StandardId("1"), subset: SubsetId("*") };
 
@@ -78,19 +78,19 @@ pub use derived_composition::*;
 /// the seven typed foreign entries. `pilot_languages()` indices are fixed by that function's own
 /// literal `vec![document, op, diff, pack, spr]` order, the same role→slot mapping `🗒️note`'s
 /// `io()` uses.
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     use crate::standards::v1::subsets::any::io::FEM3D_DIALECT;
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA;
-    use semio_framework_os_kernel::io::io_mechanism::deserializer_entry;
-    use semio_framework_os_kernel::io::io_mechanism::serializer_entry;
-    use semio_framework_os_kernel::io::io_mechanism::IoEntry;
-    use semio_framework_plugin::app::declarations::IoDeclaration;
-    use semio_framework_plugin::app::declarations::LanguagePair;
-    use semio_framework_plugin::app::declarations::NativeCodecs;
+    use semio_os_kernel::io::io_mechanism::deserializer_entry;
+    use semio_os_kernel::io::io_mechanism::serializer_entry;
+    use semio_os_kernel::io::io_mechanism::IoEntry;
+    use semio_plugin::app::declarations::IoDeclaration;
+    use semio_plugin::app::declarations::LanguagePair;
+    use semio_plugin::app::declarations::NativeCodecs;
     use std::sync::OnceLock;
 
     /// 🎹️ One vtable row per typed leaf — the single place this subset advertises what it can and
@@ -137,7 +137,7 @@ pub mod derived_construction {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     /// 🏗️ The builder accumulates the explicit authoring rows and receives them into persistent ownership once, when the snapshot is built.
     #[derive(Clone, Debug, Default)]
@@ -187,7 +187,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Fem3dParts {
@@ -200,27 +200,27 @@ pub mod derived_analysis {
         type Parts = Fem3dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem3d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
+            semio_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Fem3dParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Fem3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot.to_reference()),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Fem3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot.to_reference()),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -232,7 +232,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec Fem3dBuilderFacets {
         construction: Fem3dBuilderConstruction,
         analysis: Fem3dAnalyzerAnalysis,
@@ -253,20 +253,20 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 /// `FEM3D_DIALECT` in this subset's own `🚪️io/🦀️.rs` (an older, unrelated 2-part io/composer
 /// dialect — different file, different scope, no collision). Lives at the ARTIFACT root so a viewer
 /// file can read it without ever importing through the sibling editor module.
-pub const FEM3D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const FEM3D_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.fem.fem3d", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 /// 🪪️ The fem 3D model document kind — the id `fem3d_io`'s `ArtifactPresentation` already names (`3d.fem`),
 /// with the ONE schema the hub's codec rows, document-open targets and genesis key on (`FEM_3D_SCHEMA`). Declared
 /// beside [`computation_artifact_kind`], which stays the results kind `results:out` pins itself to.
-pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn document_artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "3d.fem".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("FEM 3D Model", "FEM-3D-Modell"),
+        label: semio_ui_locale::LocalizedLabel::native("FEM 3D Model", "FEM-3D-Modell"),
         source_format: FEM_3D_SCHEMA.into(),
         component_kind: "fem3d".into(),
         dimension: "3d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::ThreeD, form: semio_plugin::MediaForm::Any },
         schema: FEM_3D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
@@ -280,15 +280,15 @@ pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::fem3d_results_out_port`) and produced by
 /// `semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
 /// `create_fem3d_app`'s inline `.artifact_kind(...)` call so the app's manifest can reference it by name.
-pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn computation_artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "computation.fem3d".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("FEM 3D Results", "FEM-3D-Ergebnisse"),
+        label: semio_ui_locale::LocalizedLabel::native("FEM 3D Results", "FEM-3D-Ergebnisse"),
         source_format: "computation.fem3d".into(),
         component_kind: "fem3d-results".into(),
         dimension: "computation".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Value },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Value },
         schema: "computation.fem3d".into(),
         export_formats: vec![],
         import_formats: vec![],

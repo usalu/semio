@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFloorAssumedPartit
         record: "ChangedFloorAssumedPartitions",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed partition load of the floor area", "Geschossfläche: Angenommene Trennwandlast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed partition load of the floor area", "Geschossfläche: Angenommene Trennwandlast ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

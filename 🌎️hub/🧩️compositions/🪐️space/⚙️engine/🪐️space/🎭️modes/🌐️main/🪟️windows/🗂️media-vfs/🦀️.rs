@@ -2,10 +2,10 @@
 //! Navigates the workflow's media/collection tree; currently root-only (see `engine::flatten_media_vfs_rows`'s doc).
 
 use semio_hub_space_foundation::terminology::SStudioLabels;
-use semio_framework_os::{WorkflowSnapshot, OS_WORKFLOW_VFS_ROOT_ID};
-use semio_framework_ui_locale::{LocalizedLabel};
-use semio_framework_plugin::{resolve_labels, SurfaceKind, ViewModel, WindowKindDefinition};
-use semio_framework_ui_scene::VirtualFileSystemScene;
+use semio_os::{WorkflowSnapshot, OS_WORKFLOW_VFS_ROOT_ID};
+use semio_ui_locale::{LocalizedLabel};
+use semio_plugin::{resolve_labels, SurfaceKind, ViewModel, WindowKindDefinition};
+use semio_ui_scene::VirtualFileSystemScene;
 
 //#region 🔖️Constants
 pub const S_PLAY_WINDOW_MEDIA_VFS: &str = "s-media-vfs";
@@ -36,7 +36,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let labels = resolve_labels::<SStudioLabels>(view_state);
     let mut rows = vec![semio_framework_pack_json::object([
         ("id".to_string(), semio_framework_pack_json::Value::from(OS_WORKFLOW_VFS_ROOT_ID)),
@@ -54,9 +54,9 @@ pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> se
         ("fileNodeKinds".to_string(), semio_framework_pack_json::object([("root".to_string(), semio_framework_pack_json::object([("id".to_string(), semio_framework_pack_json::Value::from("root")), ("name".to_string(), semio_framework_pack_json::Value::from("Workflow")), ("descriptors".to_string(), semio_framework_pack_json::array([]))]))])),
         ("descriptorColumnIds".to_string(), semio_framework_pack_json::array([])),
     ]);
-    semio_framework_plugin::scene_surface(
+    semio_plugin::scene_surface(
         S_PLAY_SURFACE_MEDIA_VFS,
-        semio_framework_ui_contract::SurfaceKind::VirtualFileSystem,
+        semio_ui_contract::SurfaceKind::VirtualFileSystem,
         &VirtualFileSystemScene {
             schema_json: schema.to_string(),
             rows_json: semio_framework_pack_json::Value::Array(rows).to_string(),

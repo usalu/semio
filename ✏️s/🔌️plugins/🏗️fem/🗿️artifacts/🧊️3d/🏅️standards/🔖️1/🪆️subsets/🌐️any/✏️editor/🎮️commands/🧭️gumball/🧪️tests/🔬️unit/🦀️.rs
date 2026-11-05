@@ -7,17 +7,17 @@ use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::w
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::ViewModel;
+use semio_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::ViewModel;
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
@@ -34,7 +34,7 @@ use crate::context::view;
 use crate::context::Fem3dApp;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::HistoryView;
+use semio_plugin::HistoryView;
 fn demo() -> Fem3dSnapshot {
     semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
@@ -50,7 +50,7 @@ fn node_position(app: &Fem3dApp, id: &str) -> [f64; 3] {
 }
 
 fn english(row: &HistoryEntry) -> String {
-    row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
+    row.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En).to_string()
 }
 
 /// 🧭️ The unmounted route commits a one-shot as the relative `move-selection` leaf — never a per-step amend — refreshes
@@ -154,7 +154,7 @@ async fn gumball_flags_are_model_window_config() {
     let results_view = view(results_window::FEM3D_WINDOW_RESULTS);
     assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: None }, &cfg, &results_view).is_err());
     assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "mirror".into(), pressed: None }, &cfg, &model_view).is_err());
-    assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: None }, &cfg, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).is_err());
+    assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: None }, &cfg, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).is_err());
     let mut app = fem3d_demo_app().await;
     dispatch(&mut app, Fem3dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: Some(false) })).await;
     close(&mut app);
@@ -179,7 +179,7 @@ async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
             args["ids"] = serde_json::json!(["n20_l1"]);
             let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&args.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire args parse");
             let action = dispatch["action"].as_str().expect("action");
-            let command = <EditorApp<Fem3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action(action, Some((args).clone()), None).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
+            let command = <EditorApp<Fem3dPlayApp> as semio_plugin::ArtifactApp>::command_from_action(action, Some((args).clone()), None).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
             edits += dispatch_rows(&mut app, command).await.len();
         }
         let after = node_position(&app, "n20_l1");

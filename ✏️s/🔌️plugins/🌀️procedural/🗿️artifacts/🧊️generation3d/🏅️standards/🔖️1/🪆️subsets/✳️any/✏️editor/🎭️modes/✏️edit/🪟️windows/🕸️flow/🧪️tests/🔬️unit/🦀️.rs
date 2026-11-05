@@ -1,14 +1,14 @@
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::*;
 use crate::app_fixture::app_with_registry;
 use crate::app_fixture::render_body;
-#[cfg(test)] use semio_framework_plugin::component::TreeWindows;
+#[cfg(test)] use semio_plugin::component::TreeWindows;
 
 const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json");
 
 #[test]
 fn flow_graph_node_status_is_localized() {
-    let english = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let german = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) });
+    let english = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let german = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_plugin::ViewModel { locale: semio_ui_locale::Locale::De, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native) });
     for (tag, en, de) in [("queued", "Queued", "In Warteschlange"), ("computing", "Computing", "Berechnen"), ("error", "Error", "Fehler"), ("blocked", "Blocked", "Blockiert"), ("ok", "Evaluated", "Ausgewertet")] {
         let status = format!(r#"{{"height":{{"status":"{tag}"}}}}"#);
         assert_eq!(node_status_label(Some(&status), "height", english), Some(en), "{tag}");
@@ -38,12 +38,12 @@ const GRAPH_OUTLINE_LAW: &str = include_str!("../🧫️fixtures/🔬️unit/�
 
 fn law_outline_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(GRAPH_OUTLINE_LAW).expect("graph outline law json");
-    let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
+    let fixture = semio_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
     let (nodes, edges) = with_host(&fixture, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot)).unwrap();
-    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("outline builds");
     fixture.retire_cold();
-    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(outline)).expect("outline projects");
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(outline)).expect("outline projects");
     serde_json::from_str(&projection).expect("outline projection json")
 }
 
@@ -102,14 +102,14 @@ fn flow_graph_rows_pick_through_the_tree_domain_and_hover_on_their_own() {
     let root = projection["bindings"].as_array().cloned().unwrap_or_default();
     let select = root.iter().find(|binding| binding["trigger"] == "activate").expect("the tree root's interactionSelect binding");
     assert_eq!(root.iter().filter(|binding| binding["trigger"] == "activate").count(), 1, "exactly one tree-level interactionSelect: {projection}");
-    assert!(select["action"].to_string().contains(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID), "{select}");
+    assert!(select["action"].to_string().contains(semio_plugin::INTERACTION_SELECT_ACTION_ID), "{select}");
     assert!(select["args"].to_string().contains(GENERATION_3D_INTERACTION_DOMAIN), "{select}");
     let row = projection["children"][0]["children"][0].clone();
     assert_eq!(row["component"]["granularity"].as_str(), Some("node"), "{row}");
     let bindings = row["bindings"].as_array().cloned().unwrap_or_default();
     assert!(!bindings.iter().any(|binding| binding["trigger"] == "activate"), "a pick row carries no per-row activate binding: {row}");
     let hover = bindings.iter().find(|binding| binding["trigger"] == "hoverPreview").expect("hoverPreview binding");
-    assert!(hover["action"].to_string().contains(semio_framework_plugin::INTERACTION_HOVER_ACTION_ID), "{hover}");
+    assert!(hover["action"].to_string().contains(semio_plugin::INTERACTION_HOVER_ACTION_ID), "{hover}");
     let hover_args = hover["args"].to_string();
     assert!(hover_args.contains(GENERATION_3D_INTERACTION_CHANNEL), "{hover_args}");
     assert!(hover_args.contains(row["key"].as_str().unwrap_or_default()), "{hover_args}");

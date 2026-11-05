@@ -5,7 +5,7 @@ use semio_framework_job::StepContext;
 
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
-impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dForceLayoutWork {
+impl<A: Puzzle2dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dForceLayoutWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -16,7 +16,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
     /// repulsion/spring chunks, and the epilogue emits one mutation pass. Handles are counted here
     /// too, so a document that would trip `PUZZLE2D_FORCE_MAX_HANDLES` mid-run is refused at
     /// preflight instead.
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         if command.action_id() != self.tool_id || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) {
             return None;
         }
@@ -43,15 +43,15 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
     /// 🍰️ Each call drains one chunk of the current stage and yields a progress boundary, so the
     /// number of `step()` calls matches [`Puzzle2dForceLayoutWork::extent`] instead of running one
     /// force evaluation per checkpoint.
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-force-nodes-missing"))?;
         let edges = snapshot.value().get("edges").and_then(Value::as_array);
         let iterations = puzzle2d_force_iterations(nodes.len(), edges.map_or(0, Vec::len));
@@ -133,7 +133,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
                     if self.emit_one() {
                         let mutations = std::mem::take(&mut self.mutations);
-                        return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
+                        return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
                     }
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-emit", "Preparing layout mutation", "Layout-Mutation wird vorbereitet"))
@@ -305,7 +305,7 @@ impl Puzzle2dRedrawHandlesWork {
         if self.shapes.len() >= PUZZLE2D_REDRAW_MAX_NODES {
             return Err(Fault::from("puzzle2d-redraw-node-capacity"));
         }
-        let visible = semio_framework_os_infinite::board::board_visible_or_true(&semio_framework_os_infinite::board::BoardVisibility {hidden:object.get("hidden").and_then(|v|v.as_bool()),visible:object.get("visible").and_then(|v|v.as_bool()),locked:object.get("locked").and_then(|v|v.as_bool())});
+        let visible = semio_os_infinite::board::board_visible_or_true(&semio_os_infinite::board::BoardVisibility {hidden:object.get("hidden").and_then(|v|v.as_bool()),visible:object.get("visible").and_then(|v|v.as_bool()),locked:object.get("locked").and_then(|v|v.as_bool())});
         self.shapes.push(visible.then(|| Self::shape(object)).flatten());
         if !visible {
             self.node_cursor += 1;
@@ -326,7 +326,7 @@ impl Puzzle2dRedrawHandlesWork {
         let index = self.handle_cursor;
         self.handle_cursor += 1;
         let Some(handle_object) = handle.as_object() else { return Ok(()) };
-        if !semio_framework_os_infinite::board::board_visible_or_true(&semio_framework_os_infinite::board::BoardVisibility {hidden:handle_object.get("hidden").and_then(|v|v.as_bool()),visible:handle_object.get("visible").and_then(|v|v.as_bool()),locked:handle_object.get("locked").and_then(|v|v.as_bool())}) {
+        if !semio_os_infinite::board::board_visible_or_true(&semio_os_infinite::board::BoardVisibility {hidden:handle_object.get("hidden").and_then(|v|v.as_bool()),visible:handle_object.get("visible").and_then(|v|v.as_bool()),locked:handle_object.get("locked").and_then(|v|v.as_bool())}) {
             return Ok(());
         }
         let Some(handle_id) = handle_object.get("id").and_then(Value::as_str) else { return Ok(()) };
@@ -345,10 +345,10 @@ impl Puzzle2dRedrawHandlesWork {
         };
         self.edge_cursor += 1;
         let Some(object) = edge.as_object() else { return Ok(()) };
-        if !semio_framework_os_infinite::board::board_visible_or_true(&semio_framework_os_infinite::board::BoardVisibility {hidden:object.get("hidden").and_then(|v|v.as_bool()),visible:object.get("visible").and_then(|v|v.as_bool()),locked:object.get("locked").and_then(|v|v.as_bool())}) {
+        if !semio_os_infinite::board::board_visible_or_true(&semio_os_infinite::board::BoardVisibility {hidden:object.get("hidden").and_then(|v|v.as_bool()),visible:object.get("visible").and_then(|v|v.as_bool()),locked:object.get("locked").and_then(|v|v.as_bool())}) {
             return Ok(());
         }
-        let Some((source, target)) = semio_framework_os_infinite::board::board_edge_handle_ids(object.get("source").and_then(|v|v.as_str()),object.get("target").and_then(|v|v.as_str())) else { return Ok(()) };
+        let Some((source, target)) = semio_os_infinite::board::board_edge_handle_ids(object.get("source").and_then(|v|v.as_str()),object.get("target").and_then(|v|v.as_str())) else { return Ok(()) };
         let (Some(&source_location), Some(&target_location)) = (self.handle_locations.get(source), self.handle_locations.get(target)) else {
             return Ok(());
         };
@@ -402,14 +402,14 @@ impl Puzzle2dRedrawHandlesWork {
     }
 }
 
-impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dRedrawHandlesWork {
+impl<A: Puzzle2dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dRedrawHandlesWork {
     fn tool_id(&self) -> &'static str {
         "redrawHandles"
     }
 
     /// 📐️ One index chunk per [`PUZZLE2D_REDRAW_UNITS_PER_STEP`] node-or-handle records, one chunk
     /// per that many edges, one chunk per that many published handles, plus one stage handover each.
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         if command.action_id() != "redrawHandles" || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) {
             return None;
         }
@@ -429,15 +429,15 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items.max(1))
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-redraw-nodes-missing"))?;
         match self.stage {
             Puzzle2dRedrawStage::Nodes | Puzzle2dRedrawStage::Handles => {
@@ -464,7 +464,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 for _ in 0..PUZZLE2D_REDRAW_UNITS_PER_STEP {
                     if self.publish_handle_one(nodes)? {
                         let mutations = std::mem::take(&mut self.mutations);
-                        return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
+                        return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
                     }
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-redraw-emit", "Publishing handle angle", "Anschlusswinkel wird veröffentlicht"))

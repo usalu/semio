@@ -1,0 +1,316 @@
+{
+  "namespace": "semio-font-{family}-{subset}-{style}",
+  "maximumPackageCharacters": 45,
+  "mapping": [
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-share-tech-mono-latin-regular",
+      "proposed": "semio-font-share-tech-mono-latin-regular",
+      "oldRust": "semio_framework_font_share_tech_mono_latin_regular",
+      "proposedRust": "semio_font_share_tech_mono_latin_regular",
+      "oldCharacters": 50,
+      "proposedCharacters": 40
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-regions-regular",
+      "proposed": "semio-font-noto-emoji-regions-regular",
+      "oldRust": "semio_framework_font_noto_emoji_regions_regular",
+      "proposedRust": "semio_font_noto_emoji_regions_regular",
+      "oldCharacters": 47,
+      "proposedCharacters": 37
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-nature-regular",
+      "proposed": "semio-font-noto-emoji-nature-regular",
+      "oldRust": "semio_framework_font_noto_emoji_nature_regular",
+      "proposedRust": "semio_font_noto_emoji_nature_regular",
+      "oldCharacters": 46,
+      "proposedCharacters": 36
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-food-regular",
+      "proposed": "semio-font-noto-emoji-food-regular",
+      "oldRust": "semio_framework_font_noto_emoji_food_regular",
+      "proposedRust": "semio_font_noto_emoji_food_regular",
+      "oldCharacters": 44,
+      "proposedCharacters": 34
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-activities-regular",
+      "proposed": "semio-font-noto-emoji-activities-regular",
+      "oldRust": "semio_framework_font_noto_emoji_activities_regular",
+      "proposedRust": "semio_font_noto_emoji_activities_regular",
+      "oldCharacters": 50,
+      "proposedCharacters": 40
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-joined-forms-regular",
+      "proposed": "semio-font-noto-emoji-joined-forms-regular",
+      "oldRust": "semio_framework_font_noto_emoji_joined_forms_regular",
+      "proposedRust": "semio_font_noto_emoji_joined_forms_regular",
+      "oldCharacters": 52,
+      "proposedCharacters": 42
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-symbols-regular",
+      "proposed": "semio-font-noto-emoji-symbols-regular",
+      "oldRust": "semio_framework_font_noto_emoji_symbols_regular",
+      "proposedRust": "semio_font_noto_emoji_symbols_regular",
+      "oldCharacters": 47,
+      "proposedCharacters": 37
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-faces-regular",
+      "proposed": "semio-font-noto-emoji-faces-regular",
+      "oldRust": "semio_framework_font_noto_emoji_faces_regular",
+      "proposedRust": "semio_font_noto_emoji_faces_regular",
+      "oldCharacters": 45,
+      "proposedCharacters": 35
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-flags-regular",
+      "proposed": "semio-font-noto-emoji-flags-regular",
+      "oldRust": "semio_framework_font_noto_emoji_flags_regular",
+      "proposedRust": "semio_font_noto_emoji_flags_regular",
+      "oldCharacters": 45,
+      "proposedCharacters": 35
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-people-regular",
+      "proposed": "semio-font-noto-emoji-people-regular",
+      "oldRust": "semio_framework_font_noto_emoji_people_regular",
+      "proposedRust": "semio_font_noto_emoji_people_regular",
+      "oldCharacters": 46,
+      "proposedCharacters": 36
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-objects-regular",
+      "proposed": "semio-font-noto-emoji-objects-regular",
+      "oldRust": "semio_framework_font_noto_emoji_objects_regular",
+      "proposedRust": "semio_font_noto_emoji_objects_regular",
+      "oldCharacters": 47,
+      "proposedCharacters": 37
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-travel-regular",
+      "proposed": "semio-font-noto-emoji-travel-regular",
+      "oldRust": "semio_framework_font_noto_emoji_travel_regular",
+      "proposedRust": "semio_font_noto_emoji_travel_regular",
+      "oldCharacters": 46,
+      "proposedCharacters": 36
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-noto-emoji-supplement-regular",
+      "proposed": "semio-font-noto-emoji-supplement-regular",
+      "oldRust": "semio_framework_font_noto_emoji_supplement_regular",
+      "proposedRust": "semio_font_noto_emoji_supplement_regular",
+      "oldCharacters": 50,
+      "proposedCharacters": 40
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-anta-latin-ext-regular",
+      "proposed": "semio-font-anta-latin-ext-regular",
+      "oldRust": "semio_framework_font_anta_latin_ext_regular",
+      "proposedRust": "semio_font_anta_latin_ext_regular",
+      "oldCharacters": 43,
+      "proposedCharacters": 33
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-anta-latin-regular",
+      "proposed": "semio-font-anta-latin-regular",
+      "oldRust": "semio_framework_font_anta_latin_regular",
+      "proposedRust": "semio_font_anta_latin_regular",
+      "oldCharacters": 39,
+      "proposedCharacters": 29
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-anta-symbols-regular",
+      "proposed": "semio-font-anta-symbols-regular",
+      "oldRust": "semio_framework_font_anta_symbols_regular",
+      "proposedRust": "semio_font_anta_symbols_regular",
+      "oldCharacters": 41,
+      "proposedCharacters": 31
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-anta-math-regular",
+      "proposed": "semio-font-anta-math-regular",
+      "oldRust": "semio_framework_font_anta_math_regular",
+      "proposedRust": "semio_font_anta_math_regular",
+      "oldCharacters": 38,
+      "proposedCharacters": 28
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-kelly-slab-latin-ext-regular",
+      "proposed": "semio-font-kelly-slab-latin-ext-regular",
+      "oldRust": "semio_framework_font_kelly_slab_latin_ext_regular",
+      "proposedRust": "semio_font_kelly_slab_latin_ext_regular",
+      "oldCharacters": 49,
+      "proposedCharacters": 39
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-kelly-slab-latin-regular",
+      "proposed": "semio-font-kelly-slab-latin-regular",
+      "oldRust": "semio_framework_font_kelly_slab_latin_regular",
+      "proposedRust": "semio_font_kelly_slab_latin_regular",
+      "oldCharacters": 45,
+      "proposedCharacters": 35
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-font-kelly-slab-cyrillic-regular",
+      "proposed": "semio-font-kelly-slab-cyrillic-regular",
+      "oldRust": "semio_framework_font_kelly_slab_cyrillic_regular",
+      "proposedRust": "semio_font_kelly_slab_cyrillic_regular",
+      "oldCharacters": 48,
+      "proposedCharacters": 38
+    }
+  ],
+  "otherFontPackages": [
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-s-artifact-stdio-pdf-fonts",
+      "proposed": "semio-s-artifact-stdio-pdf-fonts"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-2d-text-font-catalog",
+      "proposed": "semio-framework-2d-text-font-catalog"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-2d-text-font",
+      "proposed": "semio-framework-2d-text-font"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-2d-text-font-testing",
+      "proposed": "semio-framework-2d-text-font-testing"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-2d-text-font-run",
+      "proposed": "semio-framework-2d-text-font-run"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-2d-text-font-shape-unicode",
+      "proposed": "semio-framework-2d-text-font-shape-unicode"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-2d-text-font-shape",
+      "proposed": "semio-framework-2d-text-font-shape"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml",
+      "old": "semio-framework-canvas-font-assets",
+      "proposed": "semio-framework-canvas-font-assets"
+    }
+  ],
+  "affectedFiles": [
+    "Cargo.lock",
+    "✏️s/Cargo.lock",
+    "✏️s/🔌️plugins/🀄️wfc/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.lock",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.lock",
+    "✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.lock",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock",
+    "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.lock",
+    "✏️s/🔌️plugins/🎬️sequence/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock",
+    "✏️s/🔌️plugins/💡️reasoning/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.lock",
+    "✏️s/🔌️plugins/📋️forms/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.lock",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock",
+    "✏️s/🔌️plugins/📖️playbook/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.lock",
+    "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock",
+    "✏️s/🔌️plugins/🔱️trinity/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock",
+    "✏️s/🔌️plugins/🕸️dag/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.lock",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.lock",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock",
+    "✏️s/🔌️plugins/🪐️space/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.lock",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock",
+    "✏️s/🧑‍💻dev/🌊️flow/Cargo.lock",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock",
+    "✏️s/🧑‍💻dev/💡️services/Cargo.lock",
+    "✏️s/🧑‍💻dev/📐️cad/Cargo.lock",
+    "✏️s/🧑‍💻dev/🧩️composition/Cargo.lock",
+    "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock",
+    "🌎️hub/Cargo.lock",
+    "🧰️framework/Cargo.lock",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🦀️.rs",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧪️tests/🧫️fixtures/📦️specimens.json",
+    "🧰️framework/🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖱️ui/🔤️typography/🧩️component/🔠️text-faces-and-kerning/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🔤️typography/🧩️component/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/📦️packages/🦀️rust/Cargo.toml"
+  ]
+}

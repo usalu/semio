@@ -1,8 +1,8 @@
 use semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io as io_root;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
-use semio_framework_plugin::{ ArtifactSerializer};
+use semio_plugin::{ ArtifactSerializer};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
 use semio_s_artifact_stdio_stl::standards::v_ascii::engine::encode_stl_ascii;
@@ -18,7 +18,7 @@ pub struct RemodelingIntoStl;
 impl Serializer<RemodelingSnapshot> for RemodelingIntoStl {
     const INTO: Dialect = STL_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→stl: nothing to export: {reason}"))))?;
         let stl = ::semio_framework_async::poll::resolve_ready(SemioMeshToStl::serialize(&semio)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→stl: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Text(encode_stl_ascii(&stl))))

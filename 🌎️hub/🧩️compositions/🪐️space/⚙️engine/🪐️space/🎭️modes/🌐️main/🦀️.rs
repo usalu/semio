@@ -1,8 +1,8 @@
 //! 🎭️ S Studio app — "main" mode definition (constitutional: ui/Mode). The only mode: Workflow +
 //! Media VFS + Compiled DAG windows, laid out side by side.
 
-use semio_framework_ui_locale::{LocalizedLabel};
-use semio_framework_plugin::{ModeDefinition};
+use semio_ui_locale::{LocalizedLabel};
+use semio_plugin::{ModeDefinition};
 
 //#region 🔖️Manifest
 pub async fn definition() -> ModeDefinition {

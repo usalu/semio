@@ -27,7 +27,7 @@ pub enum ShellSyncPill {
 }
 
 //#endregion 🚦️SyncPill
-pub use semio_framework_os_renderer_wgpu_contracts::ShellHubRemoteV1;
+pub use semio_renderer_wgpu_contracts::ShellHubRemoteV1;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -65,7 +65,7 @@ pub fn shell_hub_connection_summary_v1(projection: &ShellHubProjectionV1) -> She
             ShellHubRemoteV1::Backoff { .. } => HubDocumentRemote::Backoff,
         })
         .collect::<Vec<_>>();
-    let state = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_connection_summary(&statuses, projection.session, projection.link).state;
+    let state = semio_renderer_wgpu_hub_workspace::hub_connection::hub_connection_summary(&statuses, projection.session, projection.link).state;
     let peer_count = match state {
         HubConnectionState::Live { peer_count } => peer_count,
         _ => 0,
@@ -109,20 +109,20 @@ pub struct ShellHubCheckInV1 {
     pub space_id: String,
     pub document_id: String,
     pub request_id: String,
-    pub head: Option<semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1>,
+    pub head: Option<semio_os_kernel::os_directory::EditedArtifactFrontierV1>,
     pub quiescent_by_ms: u64,
     pub deadline_at_ms: u64,
     pub next_poll_at_ms: u64,
     pub submitted: bool,
     pub cancel_requested: bool,
     pub cancel_sent: bool,
-    pub status: Option<semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1>,
+    pub status: Option<semio_os_kernel::os_directory::DocumentCheckInStatusV1>,
 }
 
 /// 📌️ One sentence for a hub Check In status (the React twin is `checkinStatusText`).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn hub_check_in_status_text(status: &semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1, is_de: bool) -> String {
-    use semio_framework_os_kernel::os_directory::{DocumentCheckInPhaseV1 as Phase, DocumentCheckInRefusalV1 as Refusal};
+pub fn hub_check_in_status_text(status: &semio_os_kernel::os_directory::DocumentCheckInStatusV1, is_de: bool) -> String {
+    use semio_os_kernel::os_directory::{DocumentCheckInPhaseV1 as Phase, DocumentCheckInRefusalV1 as Refusal};
     let key = match (status.phase, status.refusal) {
         (Phase::Ready, _) => "checkIn.ready",
         (Phase::Cancelled, _) => "checkIn.cancelled",

@@ -1,12 +1,12 @@
 /// 🧊️ Shared support of the Generation3d app law targets: projection reads, gumball readers, run-time fixtures, the serial lock and the flow operators.
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 use semio_s_artifact_procedural_generation3d::*;
-use semio_framework_plugin::*;
-use semio_framework_os_flow::*;
+use semio_plugin::*;
+use semio_os_flow::*;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, FlowGraphStep, Widget};
-use semio_framework_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
+use semio_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
 use serde_json::Value;
 #[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 

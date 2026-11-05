@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "id": "capture",
+      "program": "/owned/program.ts",
+      "operation": "capture-program",
+      "accepted": true
+    },
+    {
+      "id": "resolve",
+      "program": "/owned/program.ts",
+      "operation": "resolve-program",
+      "accepted": true
+    },
+    {
+      "id": "undeclared-operation",
+      "program": "/owned/program.ts",
+      "operation": "arbitrary",
+      "accepted": false
+    },
+    {
+      "id": "relative-program",
+      "program": "relative.ts",
+      "operation": "capture-program",
+      "accepted": false
+    }
+  ]
+}

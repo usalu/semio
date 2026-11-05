@@ -134,7 +134,8 @@
       "toolId": "addShot",
       "lanes": [
         "Artifact",
-        "Config"
+        "Config",
+        "Presence"
       ]
     },
     {
@@ -178,13 +179,15 @@
     {
       "toolId": "setCamera",
       "lanes": [
-        "Config"
+        "Config",
+        "Presence"
       ]
     },
     {
       "toolId": "loadSavedCamera",
       "lanes": [
-        "Config"
+        "Config",
+        "Presence"
       ]
     },
     {
@@ -196,7 +199,8 @@
     {
       "toolId": "setShotSelection",
       "lanes": [
-        "Config"
+        "Config",
+        "Presence"
       ]
     },
     {

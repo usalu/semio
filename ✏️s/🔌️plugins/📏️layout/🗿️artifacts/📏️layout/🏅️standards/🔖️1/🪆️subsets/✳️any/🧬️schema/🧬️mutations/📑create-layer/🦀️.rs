@@ -27,11 +27,11 @@ pub struct CreateLayer {
 impl<Op> MutationKind<LayoutSnapshot, Op> for CreateLayer where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_layer::CreateLayer> + From<crate::update_layer::UpdateLayer> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         if self.remove {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.name), &format!("Ebene \"{}\" löschen", self.name))
+            semio_ui_locale::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.name), &format!("Ebene \"{}\" löschen", self.name))
         } else {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Add layer \"{}\"", self.name), &format!("Ebene \"{}\" hinzufügen", self.name))
+            semio_ui_locale::LocalizedLabel::native(&format!("Add layer \"{}\"", self.name), &format!("Ebene \"{}\" hinzufügen", self.name))
         }
     }
     fn target(&self) -> Vec<String> { vec![self.page_id.clone()] }

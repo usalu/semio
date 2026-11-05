@@ -7,7 +7,7 @@ use super::views_and_document_open::valid_document_open_text;
 //#region 🪪️ExecutionTargetLease
 /// 🧯️ Exact maximum accepted bytes for one verified execution-target component: the shipped `release` cap, because only
 /// shipped bytes execute and every shipped component's receipt is held to it.
-pub const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES: u64 = semio_framework_plugin_component_receipt::SHIPPED_COMPONENT_MAX_BYTES;
+pub const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES: u64 = semio_plugin_component_receipt::SHIPPED_COMPONENT_MAX_BYTES;
 
 /// 🧯️ Exact maximum accepted bytes for one verified raw package descriptor.
 pub const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;
@@ -83,7 +83,7 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
             || !valid_document_open_hash(&self.package.component_blake3)
             || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
             || !self.package.receipt_binds()
-            || self.package.execution_protocol.app_channel_version != semio_framework_os_channel::CHANNEL_VERSION
+            || self.package.execution_protocol.app_channel_version != semio_os_channel::CHANNEL_VERSION
             || !valid_document_open_hash(&self.artifact.pack_schema_hash)
             || !valid_document_open_hash(&self.component.sha256)
             || !valid_document_open_hash(&self.component.blake3)

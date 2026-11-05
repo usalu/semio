@@ -20,8 +20,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "column", kind: "set-column-tilt", record: "SetColumnTilt" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the tilt of column \"{}\"", self.id), &format!("Neigung von Stütze \"{}\" setzen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set the tilt of column \"{}\"", self.id), &format!("Neigung von Stütze \"{}\" setzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

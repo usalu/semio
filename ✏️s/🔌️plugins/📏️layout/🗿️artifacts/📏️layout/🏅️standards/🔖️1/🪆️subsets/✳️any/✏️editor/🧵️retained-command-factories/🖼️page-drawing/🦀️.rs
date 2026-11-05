@@ -3,12 +3,12 @@ use super::*;
 use semio_framework_value::{ValueError,RetirementDemand,RetainedCloneProgress,retained_clone::RetainedCloneSource,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_s_artifact_layout_layout_editor_commands::patch_page::{PatchPage,drawing::source::OriginalPageDrawingSource};
 
-use semio_framework_plugin::app::{vector_read::OriginalChildMemberLookup,MemberKeyRef};
+use semio_plugin::app::{child_read::OriginalChildMemberLookup,MemberKeyRef};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_editor::child_editor::{DRAWING_CHILD_VECTOR_READ,DRAWING_CHILD_SET_ARTBOARD};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-use semio_framework_plugin::app::vector_read::command::{OriginalChildEditorCommandCursor,OriginalChildEditorCommandAuthority};
-use semio_framework_plugin::ChildEmitPreparation;
+use semio_plugin::app::child_read::command::{OriginalChildEditorCommandCursor,OriginalChildEditorCommandAuthority};
+use semio_plugin::ChildEmitPreparation;
 fn invalid_page(message:&'static str)->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message)}
 fn add_demand(a:RetirementDemand,b:RetirementDemand)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:a.copy_bytes.checked_add(b.copy_bytes).ok_or_else(||invalid_page("Drawing command copy quote overflow"))?,capacity_bytes:a.capacity_bytes.checked_add(b.capacity_bytes).ok_or_else(||invalid_page("Drawing command capacity quote overflow"))?,release_bytes:a.release_bytes.checked_add(b.release_bytes).ok_or_else(||invalid_page("Drawing command release quote overflow"))?,depth:a.depth.max(b.depth)})}
 
@@ -47,7 +47,7 @@ impl PageDrawingWork{
   let Some(qualifier)=owners.qualifier.as_ref()else{return Ok(OriginalChildEditorCommandCursor::birth_demand())};let quote=if self.qualified{qualifier.take_authority_demand()?}else{qualifier.next_demand()?};add_demand(owners.lookup.as_ref().unwrap().demand::<DrawingSnapshot>(),quote)
  }
 
- pub fn prepare(&mut self,input:&semio_framework_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<LayoutPlayApp>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+ pub fn prepare(&mut self,input:&semio_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<LayoutPlayApp>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   if self.owners.original().and_then(|owners|owners.drawing.as_ref()).is_some_and(OriginalPageDrawingSource::ready){return Ok(true)}
   if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(self.read_demand(cx.retained_grant().maximum_copy_bytes)?){return Ok(false)}
   let owners=self.owners.original_mut().ok_or_else(||invalid_page("Drawing command is closing"))?;
@@ -68,14 +68,14 @@ impl PageDrawingWork{
   if cx.retained_grant().maximum_items<4{return Ok(false)}
   let context=input.context.ok_or_else(||invalid_page("Original Drawing command context is absent"))?;let parent=source.original_parent()?;
   let member=semio_s_artifact_layout_layout_model::drawing_member_at(parent.get(),source.source())?.ok_or_else(||invalid_page("Original Drawing member reference disappeared"))?;
-  let read=DRAWING_CHILD_VECTOR_READ.read_original(parent,&context.children,MemberKeyRef::root("pages",&member.handle.child_id),input.operation,owners.lookup.as_mut().unwrap(),cx.retained_grant());
+  let read=DRAWING_CHILD_VECTOR_READ.native.read_original(parent,&context.children,MemberKeyRef::root("pages",&member.handle.child_id),input.operation,owners.lookup.as_mut().unwrap(),cx.retained_grant());
   let read=match read{Ok(read)=>read,Err(error)=>{cx.consume_retained(error.retained_progress())?;return Err(error.into())}};cx.consume_retained(read.progress)?;cx.consume_fuel(1);
   let Some(read)=read.read else{return Ok(false)};
   let result=source.advance_original(input.snapshot,Some(&read),cx.retained_grant());cx.consume_retained(source.last_receipt())?;cx.consume_fuel(1);result.map_err(Into::into)
  }
 
 
- pub fn step(&mut self,input:&semio_framework_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<LayoutPlayApp>>,cx:&mut StepContext<'_>)->Result<Option<Emit<LayoutMutation,NoConfigMutation>>,semio_framework_job::OriginalTurnFailure>{
+ pub fn step(&mut self,input:&semio_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<LayoutPlayApp>>,cx:&mut StepContext<'_>)->Result<Option<Emit<LayoutMutation,NoConfigMutation>>,semio_framework_job::OriginalTurnFailure>{
   if !self.prepare(input,cx)?{return Ok(None)}let demand=self.demand(cx.retained_grant().maximum_copy_bytes)?;if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(demand){return Ok(None)}
   let owners=self.owners.original_mut().ok_or_else(||invalid_page("Original page Drawing work is closing"))?;
   if owners.output.is_some(){cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(owners.output.take())}
@@ -85,8 +85,15 @@ impl PageDrawingWork{
   if owners.authority.is_some(){cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;let command=owners.command.as_ref().unwrap().try_borrow()?;let artboard=semio_s_artifact_layout_layout_editor_commands::patch_page::drawing::artboard::from_original(command,source)?;owners.mutation=Some(semio_s_artifact_draw_drawing_mutations::set_artboard::<DrawingMutation>(Some(artboard)));cx.consume_fuel(1);return Ok(None)}
   if owners.qualifier.is_none(){let(qualifier,p)=OriginalChildEditorCommandCursor::admit(cx.retained_grant())?;owners.qualifier=Some(qualifier);cx.consume_retained(p)?;cx.consume_fuel(1);return Ok(None)}
   if cx.retained_grant().maximum_items<2{return Ok(None)}let context=input.context.ok_or_else(||invalid_page("Original child command context disappeared"))?;let parent=source.original_parent()?;let member=semio_s_artifact_layout_layout_model::drawing_member_at(parent.get(),source.source())?.ok_or_else(||invalid_page("Original member reference disappeared"))?;
-  let read=DRAWING_CHILD_VECTOR_READ.read_original(parent,&context.children,MemberKeyRef::root("pages",&member.handle.child_id),input.operation,owners.lookup.as_mut().unwrap(),cx.retained_grant());let read=match read{Ok(read)=>read,Err(error)=>{cx.consume_retained(error.retained_progress())?;return Err(error.into())}};cx.consume_retained(read.progress)?;cx.consume_fuel(1);let Some(read)=read.read else{return Ok(None)};
-  let qualifier=owners.qualifier.as_mut().unwrap();if self.qualified{match source.take_command_authority(qualifier,&read,cx.retained_grant()){Ok(Some((authority,p)))=>{owners.authority=Some(authority);cx.consume_retained(p)?},Ok(None)=>{},Err(error)=>{cx.consume_retained(error.retained_progress())?;return Err(error.into())}}}else{let command=owners.command.as_ref().unwrap().try_borrow()?;match DRAWING_CHILD_SET_ARTBOARD.qualify_original(parent,command,source.read_qualification()?,&read,qualifier,cx.retained_grant()){Ok(step)=>{cx.consume_retained(step.progress)?;self.qualified=step.stamp.is_some()},Err(error)=>{cx.consume_retained(error.retained_progress())?;return Err(error.into())}}}cx.consume_fuel(1);Ok(None)
+  let read=DRAWING_CHILD_VECTOR_READ.native.read_original(parent,&context.children,MemberKeyRef::root("pages",&member.handle.child_id),input.operation,owners.lookup.as_mut().unwrap(),cx.retained_grant());let read=match read{Ok(read)=>read,Err(error)=>{cx.consume_retained(error.retained_progress())?;return Err(error.into())}};cx.consume_retained(read.progress)?;cx.consume_fuel(1);let Some(read)=read.read else{return Ok(None)};
+  let qualifier=owners.qualifier.as_mut().unwrap();
+  if self.qualified{
+   let turn=source.take_command_authority(qualifier,&read,cx.retained_grant());cx.consume_fuel(turn.work);
+   match turn.result{Ok(step)=>{if let Some(authority)=step.authority{owners.authority=Some(authority)}cx.consume_retained(step.progress)?},Err(error)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}
+  }else{
+   let command=owners.command.as_ref().unwrap().try_borrow()?;let result=DRAWING_CHILD_SET_ARTBOARD.qualify_original(parent,command,source.read_qualification()?,&read,qualifier,cx.retained_grant());cx.consume_fuel(qualifier.last_turn_work());
+   match result{Ok(step)=>{cx.consume_retained(step.progress)?;self.qualified=step.stamp.is_some()},Err(error)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}
+  }Ok(None)
  }
 
  pub fn begin_close(&mut self){self.closing=true}

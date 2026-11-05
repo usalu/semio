@@ -2,39 +2,39 @@
 //!
 //! 🧊️ Framework-reserved routes: the history, clipboard and shared host routes and their commit units.
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::{ActionMeta, Emit};
+use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, FrameworkReservedCommit, FrameworkReservedCommitPermit, FrameworkReservedCommitStage, HISTORY_ACTION_IDS, PendingFrameworkReserved, encode_framework_reserved_job_input};
+use semio_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, FrameworkReservedCommit, FrameworkReservedCommitPermit, FrameworkReservedCommitStage, HISTORY_ACTION_IDS, PendingFrameworkReserved, encode_framework_reserved_job_input};
 use semio_framework::kernel::{ClipboardFragment, Effect, FRAMEWORK_RESERVED_JOB_KIND, InvocationResult, UiDirtyScope};
 use crate::command_bundle::CommandCtx;
 use semio_framework_value::DslValue;
-use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-use semio_framework_plugin_retained_command::reserved_route_capacity_lift::FRAMEWORK_RESERVED_ROUTE_CAPACITY;
+use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_plugin_retained_command::reserved_route_capacity_lift::FRAMEWORK_RESERVED_ROUTE_CAPACITY;
 use std::future::Future;
 use std::collections::HashSet;
-use semio_framework_plugin_decl_views::history_view::{HistoryCommandFilter, InverseAction, ShellHistoryReplay};
+use semio_plugin_decl_views::history_view::{HistoryCommandFilter, InverseAction, ShellHistoryReplay};
 
 enum FrameworkHistoryRouteOutcome{Complete(InvocationResult),Pins{changed:bool}}
-use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
-use semio_framework_plugin_decl_views::child_view::MemberKey;
+use semio_plugin_decl_views::child_view::MemberKey;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework::onboarding::RECORD_TUTORIAL_ACTION_ID;
-use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
-use semio_framework_plugin_job::TypedOperationCompletionWitness;
-use semio_framework_plugin_retained_command::typed_operation::bounded_json_items;
-use semio_framework_plugin_instance_dispatch::dispatch_emit;
-use semio_framework_plugin_instance_render::render_history_view::history_command;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_ui_contract::*;
+use semio_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_plugin_job::TypedOperationCompletionWitness;
+use semio_plugin_retained_command::typed_operation::bounded_json_items;
+use semio_plugin_instance_dispatch::dispatch_emit;
+use semio_plugin_instance_render::render_history_view::history_command;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_ui_contract::*;
 use crate::commands_instance_root::catalogue_snapshot_from_document;
 use crate::commands_instance_root::note_shell_command_label;
-use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
+use semio_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     /// 🧮️ One reserved gesture's work, in the STAGED EDIT ROWS every other capacity in the
@@ -153,7 +153,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let publication = commit.permit.lease.publication_claim.clone();
         let mut progress = commit.permit.identity_progress;
         let mut observer = |next: semio_framework_value::native_encoding::NativeEncodeProgress| { progress = next; !token.is_cancelled_now() && !publication.is_cancelled() };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
         let result = match self.run_framework_reserved_commit_unit_admitted(commit, &mut identity,cx).await {
             Ok(output) => self.child_composition.follow_derivable_children(&mut *self.stores, &mut identity).await.map(|_| output).map_err(Into::into),
             Err(fault) => Err(fault),
@@ -164,7 +164,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         result
     }
 
-    async fn run_framework_reserved_commit_unit_admitted(&mut self, commit: &mut FrameworkReservedCommit<A::Snapshot,A::Mutation>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+    async fn run_framework_reserved_commit_unit_admitted(&mut self, commit: &mut FrameworkReservedCommit<A::Snapshot,A::Mutation>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         if commit.permit.is_cancelled().await{
             match &mut commit.stage{FrameworkReservedCommitStage::Revert{closing,..}|FrameworkReservedCommitStage::Repin{closing,..}=>*closing=true,_=>return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),format!("framework route '{}' was cancelled between commit units",commit.action)).into())}
         }
@@ -267,7 +267,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let Some(replay) = self.history.shell_redo.pop() else {
                 return Ok(None);
             };
-            semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] chrome history action=redo seq={}", replay.seq));
+            semio_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] chrome history action=redo seq={}", replay.seq));
             self.history.shell_undone.remove(&replay.seq);
             self.history.history_dirty_sequences.insert(replay.seq);
             self.tools.record_command(&mut *self.history, action, ActionKind::History, None, None, Vec::new(), None);
@@ -293,7 +293,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let seq = entry.seq;
         let inverse = entry.inverse.clone().expect("chrome undo target has inverse");
         let redo = InverseAction { action_id: entry.action_id.clone(), args: None };
-        semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] chrome history action=undo seq={seq} inverse={}", inverse.action_id));
+        semio_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] chrome history action=undo seq={seq} inverse={}", inverse.action_id));
         self.history.shell_undone.insert(seq);
         self.history.shell_redo.push(ShellHistoryReplay { seq, redo });
         self.history.history_dirty_sequences.insert(seq);
@@ -301,8 +301,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         Ok(Some(ToolOperations::<A>::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], vec![history_changed_event().await], UiDirtyScope::Full).await))
     }
 
-    async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, defer_receipt:bool, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<FrameworkHistoryRouteOutcome, Fault> {
-        semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] history route action={action}"));
+    async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, defer_receipt:bool, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<FrameworkHistoryRouteOutcome, Fault> {
+        semio_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] history route action={action}"));
         if permit.lease.is_cancelled().await {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
         }
@@ -346,7 +346,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// ⏪️ Resolves a `revertToCommand` target. A document or configuration edit answers the lane and
     /// edit id [`Self::framework_revert_unit`] walks back one undo per commit unit; every other target
     /// answers its complete result.
-    async fn begin_framework_revert_route(&mut self, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Result<InvocationResult, String>, Fault> {
+    async fn begin_framework_revert_route(&mut self, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Result<InvocationResult, String>, Fault> {
         let action = REVERT_TO_COMMAND_ACTION_ID;
         self.as_render().refresh_cache().await?;
         let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(DslValue::as_f64).map(|seq| seq as u64);
@@ -366,7 +366,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         Ok(Err(edit_id))
     }
 
-    async fn commit_framework_shared_host_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    async fn commit_framework_shared_host_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         self.stores.validate_framework_reserved_commit(X::reserved_action_refusal(&*self.time_travel, &*self.tool_runs, action), action, permit).await?;
         if INTERACTION_ACTION_IDS.contains(&action) {
             return self.as_render().dispatch_interaction_action(action, args, meta, permit, identity).await;
@@ -401,7 +401,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). B1:
     /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard/interaction) —
     /// an app's own behavior is dispatched exclusively through `dispatch_typed_command` now.
-    pub(super) async fn dispatch_catalogue_example(&mut self, action: &str, body: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    pub(super) async fn dispatch_catalogue_example(&mut self, action: &str, body: &str, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         let snapshot = catalogue_snapshot_from_document::<A::Snapshot>(body)?;
         let pack = snapshot.encode_pack();
         let spr = store::os_store::text_format::empty_document_spr("", A::DOCUMENT_SCHEMA).await;

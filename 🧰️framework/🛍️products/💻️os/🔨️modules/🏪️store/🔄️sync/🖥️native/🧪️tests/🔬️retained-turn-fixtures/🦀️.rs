@@ -311,27 +311,27 @@ pub mod retained_turn_fixtures {
         assert_eq!(generation, runner.generation);
     }
 
-    fn fixture_execution_target_lease(surface_id: &str) -> semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1 {
-        semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1 {
+    fn fixture_execution_target_lease(surface_id: &str) -> semio_os_directory::DocumentExecutionTargetLeaseFieldsV1 {
+        semio_os_directory::DocumentExecutionTargetLeaseFieldsV1 {
             schema: "semio.os.document-execution-target-lease/v1".into(),
             version: 1,
-            scope: semio_framework_os_directory::DocumentScope::new("space-a", "shared-document"),
+            scope: semio_os_directory::DocumentScope::new("space-a", "shared-document"),
             descriptor_digest_v1: "11".repeat(32),
-            catalog: semio_framework_os_directory::DocumentOpenCatalogV1 { generation_id: "22".repeat(32) },
-            package: semio_framework_os_directory::DocumentOpenPackageV1 {
+            catalog: semio_os_directory::DocumentOpenCatalogV1 { generation_id: "22".repeat(32) },
+            package: semio_os_directory::DocumentOpenPackageV1 {
                 plugin_id: "fixture-plugin".into(),
                 package_id: "semio:fixture-plugin".into(),
                 version: "1.0.0".into(),
                 component_sha256: "33".repeat(32),
                 component_blake3: "44".repeat(32),
                 descriptor_byte_sha256: "55".repeat(32),
-                execution_protocol: semio_framework_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_framework_os_spr::CHANNEL_VERSION },
-                component_receipt: semio_framework_plugin_component_receipt::ComponentReceiptV1 {
-                    schema: semio_framework_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+                execution_protocol: semio_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_os_spr::CHANNEL_VERSION },
+                component_receipt: semio_plugin_component_receipt::ComponentReceiptV1 {
+                    schema: semio_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                     plugin_id: "fixture-plugin".into(),
                     package_id: "semio:fixture-plugin".into(),
-                    profile: semio_framework_plugin_component_receipt::ComponentProfileV1::Release,
-                    target: semio_framework_plugin_component_receipt::COMPONENT_TARGET.into(),
+                    profile: semio_plugin_component_receipt::ComponentProfileV1::Release,
+                    target: semio_plugin_component_receipt::COMPONENT_TARGET.into(),
                     wasm_sha256: "33".repeat(32),
                     wasm_bytes: 1024,
                     semantic_descriptor_sha256: "55".repeat(32),
@@ -340,26 +340,26 @@ pub mod retained_turn_fixtures {
                     provenance_sha256: "4".repeat(64),
                 },
             },
-            component: semio_framework_os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
-            descriptor: semio_framework_os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
-            browser_actor: semio_framework_os_directory::schema::DocumentExecutionTargetBrowserActorV1::None,
-            artifact: semio_framework_os_directory::DocumentOpenArtifactV1 { kind: "fixture".into(), schema: "fixture/v1".into(), pack_schema_hash: "66".repeat(32) },
-            parent_dialect: semio_framework_os_directory::DocumentOpenParentDialectV1 { artifact_kind: "fixture".into(), standard: "1".into(), subset: "*".into() },
-            surface: semio_framework_os_directory::DocumentOpenSurfaceV1 {
+            component: semio_os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
+            descriptor: semio_os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
+            browser_actor: semio_os_directory::schema::DocumentExecutionTargetBrowserActorV1::None,
+            artifact: semio_os_directory::DocumentOpenArtifactV1 { kind: "fixture".into(), schema: "fixture/v1".into(), pack_schema_hash: "66".repeat(32) },
+            parent_dialect: semio_os_directory::DocumentOpenParentDialectV1 { artifact_kind: "fixture".into(), standard: "1".into(), subset: "*".into() },
+            surface: semio_os_directory::DocumentOpenSurfaceV1 {
                 surface_id: surface_id.into(),
                 app_id: "fixture.app".into(),
                 window_kind_id: "fixture.window".into(),
-                role: semio_framework_os_directory::DocumentOpenSurfaceRoleV1::Editor,
-                renderer_target: semio_framework_os_directory::DocumentOpenRendererTargetV1::Wgpu,
+                role: semio_os_directory::DocumentOpenSurfaceRoleV1::Editor,
+                renderer_target: semio_os_directory::DocumentOpenRendererTargetV1::Wgpu,
             },
-            grant: semio_framework_os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
-            checkpoint: semio_framework_os_directory::DocumentOpenCheckpointV1 {
+            grant: semio_os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
+            checkpoint: semio_os_directory::DocumentOpenCheckpointV1 {
                 checkpoint_id: "77".repeat(32),
                 descriptor_digest_v1: "11".repeat(32),
-                baseline_frontier: semio_framework_os_directory::ArtifactFrontier { document_id: "shared-document".into(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: semio_framework_os_directory::ArtifactHash::new([0; 32]) },
+                baseline_frontier: semio_os_directory::ArtifactFrontier { document_id: "shared-document".into(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: semio_os_directory::ArtifactHash::new([0; 32]) },
                 aggregate_sha256: "88".repeat(32),
             },
-            revalidation: semio_framework_os_directory::DocumentOpenRevalidationV1 { directory_revision: 7, membership_generation: 7, session_generation: Some(3), share_generation: None },
+            revalidation: semio_os_directory::DocumentOpenRevalidationV1 { directory_revision: 7, membership_generation: 7, session_generation: Some(3), share_generation: None },
         }
     }
 

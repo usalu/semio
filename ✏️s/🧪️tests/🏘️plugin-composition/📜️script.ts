@@ -14,5 +14,12 @@ class CompositionTestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", CompositionTestScript);
+/** 🛍️ Runs the mounted Layout transport contracts through the renderer owner. */
+class LayoutCatalogueTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await runVitest(this.root, ["🛍️layout-canvas-catalogue/🟦️.ts"], "./🎚️renderer-contract/🟦️.ts");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", CompositionTestScript).register("test-layout-catalogue", LayoutCatalogueTestScript);
 await receiveScriptProcessInvocation(process.env, (original) => runScriptMain(router, { invocation: original }));

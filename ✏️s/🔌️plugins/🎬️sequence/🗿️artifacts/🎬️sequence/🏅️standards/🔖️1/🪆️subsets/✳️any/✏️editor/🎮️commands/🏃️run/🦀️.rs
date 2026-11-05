@@ -1,11 +1,11 @@
 //! 🏃️ Sequence play app commands — run the compiled path and clear the last run result.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::sequence::host::{host_from_host_snapshot, retire_run_result_cold};
 use crate::editor::sequence::editor_vocabulary::sequence_host_snapshot_from_children;
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Run

@@ -4,7 +4,7 @@
     /// (`ARC-CONTEXT-3` → `-4` …) exactly when the identity's input set changes, which is what
     /// invalidates the literal — so the tag is joined here first and a drift fails on the clause
     /// that names its cause instead of on a bare number.
-    use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
+    use semio_plugin_decl_app::app_emission::EphemeralEmit;
 #[test]
     fn app_owned_request_context_identity_matches_language_neutral_oracle_and_rejects_every_root_drift() {
         let fixture: Value = serde_json::from_str(include_str!("../../../🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json")).expect("request context fixture");
@@ -105,24 +105,24 @@
     /// `BatchOnlyPendingRewrite`. The migrated registry is not an option here: an app declaring migrated
     /// verbs and supplying no proof row cannot be CONSTRUCTED at all (`interactive-job.catalog-incomplete`),
     /// which is the same fail-closed join from the other side.
-    async fn unproved_contract_app(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp<false, TEST_APP_TOOLS_NONE>> {
+    async fn unproved_contract_app(mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp<false, TEST_APP_TOOLS_NONE>> {
         VcsArtifactApp::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await.expect("the reference snapshot births")
     }
 
     #[test]
     fn shared_framework_job_is_cancellable_resumable_and_boundedly_closeable() {
-        let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
+        let policy=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
         let mut before=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(7),policy.preparation,||Some(0),u64::MAX,4096);
         before.cancel().cancel_now();
         let mut cancelled_before=FrameworkSetSelectionModeJob::new(vec![1;8193],1);
-        assert!(matches!(before.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut cancelled_before,cx))).unwrap(),semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled));
+        assert!(matches!(before.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut cancelled_before,cx))).unwrap(),semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled));
         semio_framework_job::InteractiveJob::begin_close(&mut cancelled_before);drive_job_close(&mut cancelled_before,&mut before);before.retire(policy.close);
 
         let mut after=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(7),policy.preparation,||Some(0),u64::MAX,4096);
         let mut cancelled_after=FrameworkSetSelectionModeJob::new(vec![1;8193],1);
-        assert!(matches!(after.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut cancelled_after,cx))).unwrap(),semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_)));
+        assert!(matches!(after.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut cancelled_after,cx))).unwrap(),semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_)));
         after.cancel().cancel_now();
-        assert!(matches!(after.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut cancelled_after,cx))).unwrap(),semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled));
+        assert!(matches!(after.turn(policy.maintenance,|cx|Ok(semio_plugin_testing_laws::artifact_app_laws::fixture_step(&mut cancelled_after,cx))).unwrap(),semio_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled));
         semio_framework_job::InteractiveJob::begin_close(&mut cancelled_after);drive_job_close(&mut cancelled_after,&mut after);after.retire(policy.close);
 
         let operation=semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(),semio_framework_job::RevisionId(11),semio_framework_job::Generation(3),29);
@@ -157,7 +157,7 @@
 
     #[test]
     fn retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement() {
-        semio_framework_plugin_retained_command::test_raw_allocation_close::<TestApp>();
+        semio_plugin_retained_command::test_raw_allocation_close::<TestApp>();
     }
 
     #[semio_framework_async_macros::async_test]

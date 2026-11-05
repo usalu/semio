@@ -76,7 +76,7 @@ fn retained_map_record(id: u64, key: &str, scene: &TiledMapScene) -> ui_contract
     let mut record = ui_contract::UiNodeRecord {
         id: ui_contract::UiNodeId(id),
         key: ui_contract::UiText::try_from_str(key).expect("bounded map node key"),
-        component: ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TiledMap, scene).expect("bounded Map scene encodes")),
+        component: ui_contract::Component::Surface(semio_ui_scene_surface::encode(ui_contract::SurfaceKind::TiledMap, scene).expect("bounded Map scene encodes")),
         layout: Default::default(),
         style: Default::default(),
         activity: Default::default(),
@@ -131,8 +131,8 @@ fn retained_map_row_record(id: u64, children: &[u64]) -> ui_contract::UiNodeReco
     record
 }
 
-fn map_fixture_owner(window_id: &str, surface_id: &str) -> semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget {
-    semio_framework_os_renderer_wgpu_contracts::fixture_scene_pointer_target(window_id, surface_id, "map.fixture")
+fn map_fixture_owner(window_id: &str, surface_id: &str) -> semio_renderer_wgpu_contracts::ScenePointerTarget {
+    semio_renderer_wgpu_contracts::fixture_scene_pointer_target(window_id, surface_id, "map.fixture")
 }
 
 fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_id: &str, bounds: Rect) -> InputState<ActionDescriptor> {
@@ -143,14 +143,14 @@ fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
-    let mut world3d_states = semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceMap::default();
+    let mut world3d_states = semio_renderer_wgpu_contracts::AdmittedSurfaceMap::default();
     let mut world_resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    let mut cursor = semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::UiDocumentFrameCursor::default();
+    let mut cursor = semio_renderer_wgpu_ui_engine::retained_document_consumer::UiDocumentFrameCursor::default();
     let complete = (0..(1 << 20)).any(|_| {
-        let mut ctx = semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
-        let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface_id };
-        let done = caller.turn(|cx|semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::render_ui_document_step(&mut cursor, document, bounds, &mut ctx, surface_id, "map.lifecycle.fixture", semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
-        semio_framework_os_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
+        let mut ctx = semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
+        let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface_id };
+        let done = caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_document_consumer::render_ui_document_step(&mut cursor, document, bounds, &mut ctx, surface_id, "map.lifecycle.fixture", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+        semio_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
         assert!(done || !cursor.terminal_is_fault(), "Map lifecycle document faulted in phase {}", cursor.phase_name());
         done
     });
@@ -163,13 +163,13 @@ fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_
 
 fn publish_retained_map_fixture(document: &ui_contract::UiDocumentLease, window_id: &str, bounds: Rect, witness: u64) -> InputState<ActionDescriptor> {
     let mut input = paint_retained_map_document(document, window_id, bounds);
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_accessibility_visible_document(window_id);
-    semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::register_clipped_retained_hit_targets(window_id, bounds, &mut input);
-    assert!(semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::seal_presented_input_candidate(witness));
-    assert!(semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::acknowledge_presented_input(witness));
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::note_accessibility_visible_document(window_id);
+    semio_renderer_wgpu_ui_engine::retained_ui_engine::register_clipped_retained_hit_targets(window_id, bounds, &mut input);
+    assert!(semio_renderer_wgpu_ui_engine_dump::chrome_ledger::seal_presented_input_candidate(witness));
+    assert!(semio_renderer_wgpu_ui_engine_dump::chrome_ledger::acknowledge_presented_input(witness));
     input.publish_hits();
-    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
+    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
     input
 }
 

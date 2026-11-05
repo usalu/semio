@@ -116,7 +116,8 @@ pub trait OperatorJob: Send {
     fn next_close_capacity_byte_demand(&self,maximum_copy_bytes:usize)->Result<usize,ValueError>;
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>;
     fn next_close_depth_demand(&self)->Result<usize,ValueError>;
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+    /// 🧾️ Returns the actual child work even when its original close refuses.
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome;
     fn terminal_is_empty(&self)->bool;
 
 }
@@ -155,7 +156,7 @@ pub trait Operator: Send + Sync {
 }
 // #region 🔖️Cardinality
 /// 🔢️ Channel multiplicity: exactly one, optional, or homogeneous list collections.
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetainedClone)]
 pub enum Cardinality {
     #[default]
     ExactlyOne,
@@ -268,7 +269,7 @@ impl FromValue for Cardinality {
 // #endregion 🔖️Cardinality
 
 /// ➕️ Variadic input or output slot specification. `serde` is TEST-ONLY — see `Dictionary`'s docstring.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct VariadicSpec {
@@ -297,7 +298,7 @@ impl FromValue for VariadicSpec {
 
 /// 🔌️ Declared operator channel with required/provided operator capabilities. `serde` is TEST-ONLY
 /// — see `Dictionary`'s docstring; `default: Option<Value>` fans in `Value` transitively.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct ChannelSpec {
@@ -481,7 +482,7 @@ pub fn channel_output(name: &str, payload: Dictionary) -> Dictionary {
 
 /// 📇️ Catalogue metadata for an operator. `serde` is TEST-ONLY — see `Dictionary`'s docstring;
 /// `inputs`/`outputs: Vec<ChannelSpec>` fan in `Value` transitively.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct OperatorInfo {
@@ -538,3 +539,6 @@ impl FromValue for OperatorInfo {
     }
 }
 // #endregion 🔖️OperatorRecord
+
+#[path="⚠️failure/🦀️.rs"]
+mod original_failure;

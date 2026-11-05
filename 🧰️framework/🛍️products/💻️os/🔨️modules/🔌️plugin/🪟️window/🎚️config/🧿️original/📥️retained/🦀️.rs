@@ -1,7 +1,7 @@
 //! 📥️ Retained load laws.
-pub use semio_framework_plugin_window_config::retained::*;
+pub use semio_plugin_window_config::retained::*;
 pub use super::*;
-use semio_framework_plugin_window_config::{WindowConfigPartition};
+use semio_plugin_window_config::{WindowConfigPartition};
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 #[path = "📦️typed-pack-load/🦀️.rs"]

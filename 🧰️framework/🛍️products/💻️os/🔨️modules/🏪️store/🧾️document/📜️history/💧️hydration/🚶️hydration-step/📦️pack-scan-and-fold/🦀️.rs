@@ -4,8 +4,8 @@ use super::*;
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🔍 Scans the retained pack for the next record.
     pub(super) fn step_scan_pack(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
@@ -16,7 +16,7 @@ where
             cx.consume_fuel(1);
             return PersistedDocumentHydrationStep::Pending(self.progress());
         }
-        let scanned = remaining.min(semio_framework_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));
+        let scanned = remaining.min(semio_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));
         if scanned == 0 {
             return PersistedDocumentHydrationStep::Pending(self.progress());
         }
@@ -57,8 +57,8 @@ where
         if history.doc_id != expected.artifact_id || history.schema != *schema || !dialect_matches || history_owner.as_ref() != self.owner.as_ref() {
             return self.reject(MemberOpenDiagnostic::Identity);
         }
-        if semio_framework_os_io::publish_native_snapshot::<P>().is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
-        *self.fold_job = Some(semio_framework_os_spr::HistoryLog::fold_job(history.clone(), semio_framework_os_spr::HistoryShape::Document));
+        if semio_os_io::publish_native_snapshot::<P>().is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
+        *self.fold_job = Some(semio_os_spr::HistoryLog::fold_job(history.clone(), semio_os_spr::HistoryShape::Document));
         self.phase = Phase::Fold;
         cx.consume_fuel(1);
         PersistedDocumentHydrationStep::Pending(self.progress())
@@ -74,18 +74,18 @@ where
         let result = job.step(fold_grant, body, &mut || cx.should_yield());
         self.fold_completed = job.completed();
         match result {
-            Ok(semio_framework_os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(fold_grant) => {
-                if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+            Ok(semio_os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(fold_grant) => {
+                if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
             }
-            Ok(semio_framework_os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), progress }) => {
+            Ok(semio_os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), progress }) => {
                 *self.replay_ids = Some(replay_order);
                 *self.fold = Some(fold);
                 *self.normalized_transitions = Some(transitions.into());
                 *self.normalized_conflicts = Some(conflicts);
                 if !progress.fits(fold_grant) || !self.fold_job.as_ref().is_some_and(ErasedSnapshotRetirement::terminal_is_empty) { return self.reject(MemberOpenDiagnostic::Replay); }
-                if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 self.fold_job.take();
-                *self.initialization_catalog = Some(semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::empty());
+                *self.initialization_catalog = Some(semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::empty());
                 self.phase = Phase::AdmitInitializationCatalog;
             }
             _ => return self.reject(MemberOpenDiagnostic::Replay),
@@ -100,24 +100,24 @@ where
         let progress = match catalog.admit_next(child) { Ok(progress) => progress, Err(_) => return self.reject(MemberOpenDiagnostic::Initialization) };
         if !progress.fits(child) { return self.reject(MemberOpenDiagnostic::Initialization); }
         let ready = catalog.admission_is_complete();
-        if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+        if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
         if ready { self.phase = Phase::BindGenesis; }
         PersistedDocumentHydrationStep::Pending(self.progress())
     }
 
     /// 🌱 Binds the genesis snapshot.
     pub(super) fn step_bind_genesis(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
-        if let Some(rows)=self.normalized_transitions.as_mut(){if !rows.is_empty(){let Some(ledger)=self.transition_ledger.as_mut()else{return self.reject(MemberOpenDiagnostic::Initialization)};let p=match ledger.admit_deque_front(rows,grant){Ok(p)=>p,Err(_)=>return self.reject(MemberOpenDiagnostic::Initialization)};if let Err(d)=semio_framework_os_store_member_open::record_member_step(cx,p){return self.reject(d)}return PersistedDocumentHydrationStep::Pending(self.progress())}match semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.normalized_transitions,&mut self.active,grant).result {Ok(step)=>{if let Err(d)=semio_framework_os_store_member_open::record_member_step(cx,step.progress()){return self.reject(d)}},Err(_)=>return self.reject(MemberOpenDiagnostic::Initialization)}return PersistedDocumentHydrationStep::Pending(self.progress())}
-        if !self.initialization_catalog.as_ref().is_some_and(semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::admission_is_complete) { return self.reject(MemberOpenDiagnostic::Initialization); }
+        if let Some(rows)=self.normalized_transitions.as_mut(){if !rows.is_empty(){let Some(ledger)=self.transition_ledger.as_mut()else{return self.reject(MemberOpenDiagnostic::Initialization)};let p=match ledger.admit_deque_front(rows,grant){Ok(p)=>p,Err(_)=>return self.reject(MemberOpenDiagnostic::Initialization)};if let Err(d)=semio_os_store_member_open::record_member_step(cx,p){return self.reject(d)}return PersistedDocumentHydrationStep::Pending(self.progress())}match semio_os_store_read::artifact_retirement_admit_owned(&mut self.normalized_transitions,&mut self.active,grant).result {Ok(step)=>{if let Err(d)=semio_os_store_member_open::record_member_step(cx,step.progress()){return self.reject(d)}},Err(_)=>return self.reject(MemberOpenDiagnostic::Initialization)}return PersistedDocumentHydrationStep::Pending(self.progress())}
+        if !self.initialization_catalog.as_ref().is_some_and(semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::admission_is_complete) { return self.reject(MemberOpenDiagnostic::Initialization); }
         let child = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
-        let birth = match semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::<P>::verified_pack_birth_demand() { Ok(birth) => birth, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
+        let birth = match semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::<P>::verified_pack_birth_demand() { Ok(birth) => birth, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
         if birth.admit(child).is_err() { return PersistedDocumentHydrationStep::Pending(self.progress()); }
         let history = std::sync::Arc::get_mut(self.history.as_mut().expect("decoded history remains retained")).expect("fold aliases close before genesis binding");
         let fold = self.fold.as_mut().expect("derived history remains retained");
         let initial = self.initial.take().expect("typed initial snapshot remains retained");
         let initial_digest = self.pack_digest.unwrap_or_else(|| *self.pack_hasher.finalize().as_bytes());
         let pack = self.pack.take().expect("stored genesis Pack remains retained");
-        let (genesis, progress) = match semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::admit_verified_pack(initial, pack, initial_digest, child) {
+        let (genesis, progress) = match semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::admit_verified_pack(initial, pack, initial_digest, child) {
             Ok(admitted) => admitted,
             Err((_, initial, pack)) => { *self.initial = Some(initial); *self.pack = Some(pack); return self.reject(MemberOpenDiagnostic::Initialization); }
         };
@@ -133,7 +133,7 @@ where
         let supersessions = std::mem::take(&mut fold.supersessions);
         envelope.conflicts = self.normalized_conflicts.take().expect("normalized conflict owners remain retained");
         let current = envelope.vcs.genesis.facts().share_snapshot();
-        let mut runtime = ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, current, initial_digest, semio_framework_os_spr::ActorId(std::mem::take(&mut self.actor.0)), self.initialization_catalog.take().expect("fully admitted initialization catalog remains original"));
+        let mut runtime = ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, current, initial_digest, semio_os_spr::ActorId(std::mem::take(&mut self.actor.0)), self.initialization_catalog.take().expect("fully admitted initialization catalog remains original"));
         let installed = runtime.set_supersessions(supersessions);
         *self.runtime = Some(runtime);
         *self.envelope = Some(envelope);
@@ -143,7 +143,7 @@ where
         self.phase = Phase::AdmitEnvelope;
         self.operation_index = 0;
         if !progress.fits(child) { return self.reject(MemberOpenDiagnostic::Initialization); }
-        if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+        if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
         PersistedDocumentHydrationStep::Pending(self.progress())
     }
 }

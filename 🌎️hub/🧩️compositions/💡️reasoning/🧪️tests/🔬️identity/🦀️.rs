@@ -8,7 +8,7 @@ fn identity_fixture() -> serde_json::Value {
 
 /// 🏗️ The whole guest assembly, named — `plugin()` runs `try_build`'s own `semio:<plugin_id>`
 /// package-identity preflight plus every artifact-declaration preflight.
-fn assembled_plugin() -> semio_framework_plugin::Plugin<super::ReasoningApps> {
+fn assembled_plugin() -> semio_plugin::Plugin<super::ReasoningApps> {
     match super::plugin() {
         Ok(plugin) => plugin,
         Err(error) => panic!("plugin assembly rejected: {error:?}"),

@@ -10,7 +10,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
         for _ in 0..MAINTENANCE_STAGES {
             app.maintenance.maintenance_stage = stage;
             match app_maintenance_turn(app,cx) {
-                Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { .. }) => return,
+                Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { .. }) => return,
                 Ok(_) => {}
                 Err(fault) => panic!("{what}: bounded maintenance faulted: {fault:?}"),
             }
@@ -20,15 +20,15 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
 
     #[semio_framework_async_macros::async_test]
     async fn segmented_download_remains_addressable_until_terminal_none_is_observed() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let chunks = ArtifactOutputChunks::new(4);
@@ -90,11 +90,11 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
     /// 🚚️ Drives one command to its terminal ingress status through the real `poll_kernel`: page 0 on the
     /// first turn, then plain turns while the guest steps the owner it retained, until it answers
     /// `CommandComplete` or `Fault`. Returns whether it completed and the turns it took.
-    async fn drive_one_command(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, page: (semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage),cx:&mut semio_framework_job::StepContext<'_>) -> (bool, usize) {
+    async fn drive_one_command(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, page: (semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage),cx:&mut semio_framework_job::StepContext<'_>) -> (bool, usize) {
         let mut carried = Some(page);
         let mut turns = 0;
         loop {
-            let result = semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut None, carried.take(), None, command_page_authority_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            let result = semio_plugin_reactor_turn::poll_kernel(runtime, &mut None, carried.take(), None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns),
@@ -116,10 +116,10 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
     /// process-wide difference weighs every concurrent law in the binary as this command's own.
     #[semio_framework_async_macros::async_test]
     async fn a_long_command_stream_never_pins_the_retained_ingress_authority() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original ingress fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original ingress fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
-        let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-        semio_framework_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
+        let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_021;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-authority".into())]).await.lifecycle_receipt.expect("Captured receipt");
         let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
@@ -127,7 +127,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
         for _ in 0..32 {
             reactor_native_lifecycle_poll(&runtime, Vec::new()).await;
         }
-        assert_eq!(semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "a settled reactor holds no ingress owner");
+        assert_eq!(semio_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "a settled reactor holds no ingress owner");
         let mut warmed = 0;
         let mut settled = 0;
         let mut faulted = 0;
@@ -141,7 +141,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
             if !completed {
                 faulted += 1;
             }
-            let occupancy = semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy();
+            let occupancy = semio_plugin_reactor_turn::retained_command_ingress_occupancy();
             peak_occupancy = peak_occupancy.max(occupancy);
             assert_eq!(occupancy, 0, "command {index} left an owner in the retained ingress authority — every later command queues behind it");
             if warmed == 0 && index + 1 == INGRESS_COMMANDS / 4 {

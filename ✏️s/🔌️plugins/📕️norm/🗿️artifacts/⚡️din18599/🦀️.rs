@@ -2,11 +2,11 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -30,8 +30,8 @@ pub type BalancingInputs = Din18599Snapshot;
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    package_descriptor().map_err(|error| semio_framework_plugin::ArtifactDefinitionError::new("artifact.package-schema", error.to_string()))?;
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    package_descriptor().map_err(|error| semio_plugin::ArtifactDefinitionError::new("artifact.package-schema", error.to_string()))?;
     use semio_s_artifact_norm_contract::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
     const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.din18599" }];
     const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.din18599.inference" }];
@@ -57,13 +57,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     semio_s_artifact_norm_contract::definition::assemble_definition("s.norm.din18599", CAPABILITIES)
 }
 
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio_plugin::ArtifactDeclaration, semio_plugin::ArtifactDefinitionError> {
+    semio_plugin::ArtifactDeclaration::builder(definition)
         .schema(semio_s_artifact_norm_din18599_schema::din18599_artifact_schema_descriptor())
         .inferences([semio_s_artifact_norm_din18599_inferences::din18599_artifact_inference_descriptor()])
         .composers(semio_s_artifact_norm_din18599_io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_norm_din18599_editor::Din18599PlayApp>>()
+        .document_codec::<semio_plugin::EditorApp<semio_s_artifact_norm_din18599_editor::Din18599PlayApp>>()
         .try_build()
 }
 

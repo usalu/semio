@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedFlangeFy whe
         record: "ChangedPlatedFlangeFy",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Flange yield strength f_yf of the plated panel", "Plattenfeld: Gurtstreckgrenze f_yf ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Flange yield strength f_yf of the plated panel", "Plattenfeld: Gurtstreckgrenze f_yf ändern")
     }
 }
 

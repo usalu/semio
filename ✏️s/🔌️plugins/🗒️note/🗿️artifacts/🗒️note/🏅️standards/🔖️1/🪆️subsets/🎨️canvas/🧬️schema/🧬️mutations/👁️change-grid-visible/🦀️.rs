@@ -31,10 +31,10 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-visible", kind: "change-grid-visible", record: "ChangedGridVisible" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match self.new_visible {
-            Some(true) => semio_framework_ui_locale::LocalizedLabel::native("Show grid", "Raster einblenden"),
-            Some(false) => semio_framework_ui_locale::LocalizedLabel::native("Hide grid", "Raster ausblenden"),
+            Some(true) => semio_ui_locale::LocalizedLabel::native("Show grid", "Raster einblenden"),
+            Some(false) => semio_ui_locale::LocalizedLabel::native("Hide grid", "Raster ausblenden"),
             None => crate::schema::note_setting_label(("grid visibility", "Rastersichtbarkeit"), None),
         }
     }

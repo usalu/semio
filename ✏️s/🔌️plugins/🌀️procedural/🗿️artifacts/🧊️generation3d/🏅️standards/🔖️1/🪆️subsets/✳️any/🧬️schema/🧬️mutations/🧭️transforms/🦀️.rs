@@ -1,6 +1,6 @@
 //! 🧭️ Generation3d transform mutation leaves: drag, rotate and scale transforms. Every leaf is generic over the dispatch enum.
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberPunchingMome
         record: "ChangedMemberPunchingMomentC1",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change unbalanced column moment M_Ed,1 (eccentricity along c₁) of the member", "Bauteil: Stützenmoment M_Ed,1 (Ausmitte entlang c₁) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change unbalanced column moment M_Ed,1 (eccentricity along c₁) of the member", "Bauteil: Stützenmoment M_Ed,1 (Ausmitte entlang c₁) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

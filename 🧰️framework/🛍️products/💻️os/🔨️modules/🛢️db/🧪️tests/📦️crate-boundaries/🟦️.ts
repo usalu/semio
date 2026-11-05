@@ -17,7 +17,7 @@ const cfgs = {
 const closure = (entry: string, cfg: string[]) => readRustSourceClosureV1([resolve(db, entry)], workspace, cfg, async path => await readFile(path).catch(error => error.code === "ENOENT" ? null : Promise.reject(error)));
 const owners = (JSON.parse(readFileSync(resolve(workspace, "📋️build-owners.json"), "utf8")) as { owners: { name: string; root: string; manifest: string }[] }).owners;
 const members = (Bun.TOML.parse(readFileSync(resolve(workspace, "Cargo.toml"), "utf8")) as unknown as { workspace: { members: string[] } }).workspace.members;
-const dbRel = db.slice(workspace.length + 1).replaceAll("\\", "/"), facade = "semio-framework-os-kernel-db";
+const dbRel = db.slice(workspace.length + 1).replaceAll("\\", "/"), facade = "semio-os-kernel-db";
 
 test("language-neutral ownership corpus validates with the independent schema oracle", () => {
   const validate = new Ajv().compile(JSON.parse(read("🧬️schema/📦️crate-boundaries/🔣️.json")));

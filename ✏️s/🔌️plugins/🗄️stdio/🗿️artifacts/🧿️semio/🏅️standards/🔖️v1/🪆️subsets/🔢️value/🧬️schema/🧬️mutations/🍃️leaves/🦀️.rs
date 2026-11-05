@@ -1,7 +1,7 @@
 //! 🍃️ The seven semio value mutation leaves with their diffs and inverses, generic over the dispatching aggregate, held below the aggregate crate so it stays inside the source gate.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_value_derive as value_derive;
 
 #[path = "../🧭️path-vocabulary/🦀️.rs"]

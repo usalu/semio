@@ -43,12 +43,36 @@ impl<T> OriginalActorContext<T>{
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.input.is_some(){return Err(refusal("original actor input still requires its semantic owner"))}if !self.decoder.terminal_is_empty(){return self.decoder.retirement_demands(body)}if let Some(source)=self.source.as_ref(){if !source.terminal_is_empty(){return source.retirement_demands()}return Ok(RetirementDemand{depth:1,..Default::default()})}if let Some(payload)=self.payload.as_ref(){if !payload.terminal_is_empty(){return Ok(payload.retirement_demands())}return Ok(RetirementDemand{depth:1,..Default::default()})}if self.cancel.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}if let Some(cancel)=self.cancel_close.as_ref(){if !cancel.terminal_is_empty(){return cancel.retirement_demands()}return Ok(RetirementDemand{depth:1,..Default::default()})}Ok(RetirementDemand{depth:usize::from(self.identity.is_some()),..Default::default()})}
  /// ♻️ Each original authority closes before its separate inline removal turn.
  pub fn close_step(&mut self,retained:RetainedTurnInput,policy:RetainedCloneGrant)->Result<RetainedCloneStep,OriginalActorContextError>{Self::validate_policy(retained,policy).map_err(OriginalActorContextError::Refused)?;let result=self.close_inner(retained,policy);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let debit=self.record_physical(progress);match(result,debit){(result,Ok(()))=>result,(Ok(_),Err(error))=>Err(OriginalActorContextError::Refused(error.with_retained_progress(progress))),(Err(OriginalActorContextError::Refused(primary)|OriginalActorContextError::Cancellation(CancelTokenRetirementError::Refused(primary))),Err(receipt))=>{let mut failure=OriginalTurnFailure::from(primary);failure.receipt_refusal=Some(receipt);Err(OriginalActorContextError::Original(failure))},(Err(OriginalActorContextError::Original(mut failure)),Err(receipt))=>{failure.context_refusal=Some(receipt);Err(OriginalActorContextError::Original(failure))},(Err(original),Err(_))=>Err(original)}}
- fn close_inner(&mut self,retained:RetainedTurnInput,policy:RetainedCloneGrant)->Result<RetainedCloneStep,OriginalActorContextError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}self.validate(retained).map_err(OriginalActorContextError::Refused)?;let demand=self.retirement_demands(policy.maximum_copy_bytes).map_err(OriginalActorContextError::Refused)?;let grant=policy;if retained.work.fuel==0||!Self::permits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}self.begin(retained).map_err(OriginalActorContextError::Refused)?;self.work_units_spent=1;self.closing=true;if !self.decoder.terminal_is_empty(){return self.decoder.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(OriginalActorContextError::Refused)}if let Some(source)=self.source.as_mut(){if !source.terminal_is_empty(){return source.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(OriginalActorContextError::Refused)}drop(self.source.take());return Ok(metadata(false))}if let Some(payload)=self.payload.as_mut(){if !payload.terminal_is_empty(){return payload.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(OriginalActorContextError::Refused)}drop(self.payload.take());return Ok(metadata(false))}if let Some(cancel)=self.cancel.take(){*self.cancel_close=Some(CancelTokenRetirement::from_token(cancel));return Ok(metadata(false))}if let Some(cancel)=self.cancel_close.as_mut(){if !cancel.terminal_is_empty(){return cancel.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(OriginalActorContextError::Cancellation)}drop(self.cancel_close.take());return Ok(metadata(false))}self.identity=None;Ok(metadata(true))}
+ fn close_inner(&mut self,retained:RetainedTurnInput,policy:RetainedCloneGrant)->Result<RetainedCloneStep,OriginalActorContextError>{
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  self.validate(retained).map_err(OriginalActorContextError::Refused)?;
+  let demand=self.retirement_demands(policy.maximum_copy_bytes).map_err(OriginalActorContextError::Refused)?;
+  let grant=RetainedCloneGrant{maximum_items:policy.maximum_items.min(usize::try_from(retained.work.fuel).unwrap_or(usize::MAX)).min(1),..policy};
+  if retained.work.fuel==0||!Self::permits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  self.begin(retained).map_err(OriginalActorContextError::Refused)?;
+  if !self.decoder.terminal_is_empty(){let turn=self.decoder.close_step(grant);self.record_close_work(turn.work);return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(OriginalActorContextError::Refused)}
+  if let Some(source)=self.source.as_mut(){
+   if !source.terminal_is_empty(){let turn=source.close_step(grant);self.record_close_work(turn.work);return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(OriginalActorContextError::Refused)}
+   self.record_close_work(1);drop(self.source.take());return Ok(metadata(false))
+  }
+  if let Some(payload)=self.payload.as_mut(){
+   if !payload.terminal_is_empty(){let turn=payload.close_step(grant);self.record_close_work(turn.work);return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(OriginalActorContextError::Refused)}
+   self.record_close_work(1);drop(self.payload.take());return Ok(metadata(false))
+  }
+  if let Some(cancel)=self.cancel.take(){self.record_close_work(1);*self.cancel_close=Some(CancelTokenRetirement::from_token(cancel));return Ok(metadata(false))}
+  if let Some(cancel)=self.cancel_close.as_mut(){
+   if !cancel.terminal_is_empty(){let turn=cancel.close_step(grant);self.record_close_work(turn.work);return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(OriginalActorContextError::Cancellation)}
+   self.record_close_work(1);drop(self.cancel_close.take());return Ok(metadata(false))
+  }
+  self.record_close_work(1);self.identity=None;Ok(metadata(true))
+ }
+ fn record_close_work(&mut self,work:u64){self.work_units_spent=u128::from(work);if work!=0{self.closing=true}}
+
 }
 fn subset(a:RetainedCloneGrant,b:RetainedCloneGrant)->bool{a.maximum_items<=b.maximum_items&&a.maximum_copy_bytes<=b.maximum_copy_bytes&&a.maximum_capacity_bytes<=b.maximum_capacity_bytes&&a.maximum_release_bytes<=b.maximum_release_bytes&&a.maximum_depth<=b.maximum_depth}
 fn metadata(complete:bool)->RetainedCloneStep{let progress=RetainedCloneProgress{copied_items:1,..Default::default()};if complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}}
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
-impl<T> Drop for OriginalActorContext<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original actor context reached Drop before paid authority retirement");}}
+impl<T> Drop for OriginalActorContext<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"original actor context reached Drop before paid authority retirement");}}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
@@ -85,7 +109,7 @@ impl OriginalActorContextSlot{
  pub fn terminal_is_empty(&self)->bool{self.context.is_none()&&self.binding.is_none()}
  pub fn original_loans_are_returned(&self)->bool{self.context.as_ref().is_none_or(OriginalActorContext::original_loans_are_returned)}
 }
-impl Drop for OriginalActorContextSlot{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original guest context slot reached Drop before funded context closure");}}
+impl Drop for OriginalActorContextSlot{fn drop(&mut self){assert!(self.terminal_is_empty(),"original guest context slot reached Drop before funded context closure");}}
 
 /// 🎫️ Carries the exact original empty admission receipt without transporting refusal prose.
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]

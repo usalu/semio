@@ -20,8 +20,8 @@ pub struct RemoveTexcoord {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveTexcoord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "texcoord", kind: "remove-texcoord", record: "RemoveTexcoord" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove texcoord", "Texturkoordinate entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove texcoord", "Texturkoordinate entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

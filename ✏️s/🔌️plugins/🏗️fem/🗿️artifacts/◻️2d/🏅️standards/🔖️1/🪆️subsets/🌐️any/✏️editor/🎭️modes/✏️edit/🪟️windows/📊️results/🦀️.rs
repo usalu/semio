@@ -29,12 +29,12 @@ use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::scre
 use semio_s_fem_model::ElementResult;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_os_kernel::Viewport2d;
+use semio_os_kernel::Viewport2d;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::built_text_node;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::Label;
+use semio_plugin::built_text_node;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::Label;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -177,7 +177,7 @@ thread_local! {
 }
 
 /// 🪪️ The cache key of one render, or `None` for a render outside any admitted operation.
-pub fn results_cache_key(operation: Option<semio_framework_plugin::AppRenderOperationContext>) -> Option<ResultsCacheKey> {
+pub fn results_cache_key(operation: Option<semio_plugin::AppRenderOperationContext>) -> Option<ResultsCacheKey> {
     operation.map(|operation| (operation.app_instance_id, operation.canonical_base_revision))
 }
 
@@ -263,12 +263,12 @@ pub fn render(
     camera: &Viewport2d,
     window: &config::Fem2dResultsWindowConfig,
     interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
-    operation: Option<semio_framework_plugin::AppRenderOperationContext>,
+    operation: Option<semio_plugin::AppRenderOperationContext>,
     window_instance_id: Option<&str>,
-    authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>,
+    authority: Option<semio_plugin::WindowConfigAuthorityIdentity>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let animation = &window.animation;
     if let Some(operation) = operation {
         return render_mounted(doc, display, camera, interaction, animation, operation, window_instance_id, authority, active_utility, labels);
@@ -287,12 +287,12 @@ fn render_mounted(
     camera: &Viewport2d,
     interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &semio_s_fem_app_surface::FemResultsAnimation,
-    operation: semio_framework_plugin::AppRenderOperationContext,
+    operation: semio_plugin::AppRenderOperationContext,
     window_instance_id: Option<&str>,
-    authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>,
+    authority: Option<semio_plugin::WindowConfigAuthorityIdentity>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (family, index) = match display.mode { DisplayMode::Static => (semio_s_fem_app_surface::ResultMode::Static, 0), DisplayMode::Modal(index) => (semio_s_fem_app_surface::ResultMode::Modal, index), DisplayMode::Buckling(index) => (semio_s_fem_app_surface::ResultMode::Buckling, index) };
     let layers = semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_fields(operation, authority, |visual| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
@@ -333,8 +333,8 @@ fn playback_caption_layer(animation: &semio_s_fem_app_surface::FemResultsAnimati
     })
 }
 
-fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    built_text_node(label).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d results placeholder admission failed"))
+fn placeholder(label: Label) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    built_text_node(label).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d results placeholder admission failed"))
 }
 
 const REACTION_LABEL_SIZE: f64 = 10.0;
@@ -400,7 +400,7 @@ fn render_static(
     window_instance_id: Option<&str>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let amplitude = animation.amplitude();
     let scene = with_static_results(doc, key, |results| {
         let case_id = source_id.map(str::to_string).or_else(|| doc.load_cases.first().and_then(|case| semio_s_fem_analyses_model::encode_result_source_parts("loadCase", &case.id).ok()));
@@ -548,7 +548,7 @@ fn render_modal(
     window_instance_id: Option<&str>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let scale = mode_shape_scale(doc, animation.amplitude());
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
@@ -584,11 +584,11 @@ fn render_buckling(
     window_instance_id: Option<&str>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
-) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let source = source_id.map(semio_s_fem_analyses_model::decode_result_source_identity).transpose().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("fem2d.result-source", "invalid buckling result source identity"))?;
+) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    let source = source_id.map(semio_s_fem_analyses_model::decode_result_source_identity).transpose().map_err(|_| semio_plugin::PluginAssemblyError::new("fem2d.result-source", "invalid buckling result source identity"))?;
     let case_id = match source {
         Some(semio_s_fem_analyses_model::ResultSource::LoadCase(id)) => Some(id),
-        Some(semio_s_fem_analyses_model::ResultSource::Combination(_)) => return Err(semio_framework_plugin::PluginAssemblyError::new("fem2d.buckling-source", "combination buckling requires an admitted prestress source")),
+        Some(semio_s_fem_analyses_model::ResultSource::Combination(_)) => return Err(semio_plugin::PluginAssemblyError::new("fem2d.buckling-source", "combination buckling requires an admitted prestress source")),
         None => doc.load_cases.first().map(|case| case.id.clone()),
     };
     let Some(case_id) = case_id else {
@@ -617,7 +617,7 @@ fn render_buckling(
 
 /// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
 /// the panel itself has no window context.
-pub fn results_window_instance_id(view_state: &semio_framework_plugin::ViewModel) -> Option<String> {
+pub fn results_window_instance_id(view_state: &semio_plugin::ViewModel) -> Option<String> {
     let is_results = |id: &str| view_state.window_instances.iter().any(|window| window.id == id && window.window_kind_id == WINDOW_KIND_ID);
     view_state
         .window_id

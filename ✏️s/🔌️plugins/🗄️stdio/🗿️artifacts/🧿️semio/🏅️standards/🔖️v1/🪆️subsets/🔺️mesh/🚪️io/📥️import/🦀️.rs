@@ -3,7 +3,7 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
     #[path = "."]
     pub mod deserializers {
@@ -86,7 +86,7 @@ extern crate semio_framework_os_kernel as store;
 
 use semio_s_artifact_stdio_semio_mesh::io::SemioMeshFormat;
 use semio_s_artifact_stdio_semio_base::SemioConversion;
-use semio_framework_plugin::{deserializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
+use semio_plugin::{deserializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
 
 /// 🧾️ This direction's composer rows, built once.
 pub fn entries() -> &'static [ComposerEntry] {
@@ -111,7 +111,7 @@ fn register() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_mesh(bytes: &[u8], format: SemioMeshFormat) -> Result<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot, String> {
     use {crate::deserializers::artifacts::dwg::v_ac1024::any::SemioMeshFromDwg, crate::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf, crate::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas, crate::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj, crate::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly, crate::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl};
-    use semio_framework_plugin::{ ArtifactDeserializer};
+    use semio_plugin::{ ArtifactDeserializer};
     let text = || std::str::from_utf8(bytes).map_err(|e| e.to_string());
     match format {
         SemioMeshFormat::Stl => ::semio_framework_async::poll::resolve_ready(SemioMeshFromStl::deserialize(&semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::io::decode_stl_auto(bytes)?)).map_err(|e| e.to_string()),

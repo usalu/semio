@@ -29,7 +29,7 @@ impl EquationRetainedCommandWork {
         }
     }
 
-    pub(super) fn progress<A: semio_framework_plugin::ArtifactApp>(&mut self, bytes: &[u8], stage: &'static str) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+    pub(super) fn progress<A: semio_plugin::ArtifactApp>(&mut self, bytes: &[u8], stage: &'static str) -> Result<ArtifactCommandWorkStep<A>, Fault> {
         self.observe(bytes);
         self.cursor = self.cursor.checked_add(1).ok_or_else(|| Fault::from("equation-work-cursor-overflow"))?;
         if self.cursor > self.extent {
@@ -85,7 +85,7 @@ impl EquationRetainedCommandWork {
         Ok(())
     }
 
-    fn finish(&mut self, command: &EquationCommand, source: &EquationSnapshot, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>, operation: &AppOperationContext) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
+    fn finish(&mut self, command: &EquationCommand, source: &EquationSnapshot, context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>, operation: &AppOperationContext) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
         Ok(match command {
             EquationCommand::SetActiveExample(_) => return Err(Fault::from("equation-set-active-example-is-not-a-phased-command")),
             EquationCommand::SetAlgorithm(_) | EquationCommand::SetDirected(_) | EquationCommand::AddNode(_) => Emit::mutations(std::mem::take(&mut self.leaves)),
@@ -184,7 +184,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         self.operation_identity ^ (self.extent as u64).rotate_left(17)
     }
 
-    fn extent(&self, command: &EquationCommand, snapshot: &EquationSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &EquationCommand, snapshot: &EquationSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>) -> Option<usize> {
         let extent = equation_command_extent(command, snapshot)?;
         (extent == self.extent).then_some(extent)
     }
@@ -193,9 +193,9 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
     /// framework measures [`Self::extent`] once in its preflight phase, so a turn never re-derives it:
     /// doing so cloned the whole working scene and re-parsed the edit JSON on every per-item turn,
     /// which made each microturn cost O(document) and the operation quadratic.
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation } = *input;
         if self.cursor > self.extent {
             return Err(Fault::from("equation-command-extent-overflow"));
         }
@@ -429,7 +429,7 @@ impl semio_framework::ToolJobFactory for EquationCommandJobFactory {
         equation_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: EQUATION_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: EQUATION_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
 }
 

@@ -15,9 +15,9 @@
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
-use semio_framework_os_flow::neural::Registry;
+use semio_os_flow::neural::Registry;
 use semio_framework_job::{allocate_operation_id, CancelToken, Generation, StepBudget, StepContext};
-use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension, FlowExtensionSpec, FlowHost, FlowHostRetirement};
+use semio_os_flow::{flow_neuron_kind_info_map, install_flow_extension, FlowExtensionSpec, FlowHost, FlowHostRetirement};
 use semio_s_artifact_procedural_3d_io_text::snapshot::parse_dsl;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use serde::Deserialize;

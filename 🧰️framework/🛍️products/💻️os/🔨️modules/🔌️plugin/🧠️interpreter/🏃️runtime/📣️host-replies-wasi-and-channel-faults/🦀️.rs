@@ -1,7 +1,7 @@
 //! 📣️ Host replies, wasi and channel faults: the wasi clock and entropy answers, the owned host reply, the guest memory helpers, the channel admission and result decoding and the turn and core faults. See [`super`].
 
 use super::*;
-use semio_framework_plugin_guest_contract::GUEST_DIAGNOSTICS_CAPACITY_BYTES;
+use semio_plugin_guest_contract::GUEST_DIAGNOSTICS_CAPACITY_BYTES;
 
 //#region 🧠️OwnedRuntime
 pub(super) fn owned_wasi_nanoseconds(duration: std::time::Duration) -> Result<u64, PluginHostError> {
@@ -26,7 +26,7 @@ fn owned_wasi_wall_clock() -> Result<[u8; 16], PluginHostError> {
 
 /// 🎲️ One platform-entropy word for `wasi:random` — a guest Store's replica identity comes from it.
 fn owned_wasi_entropy() -> Result<u64, PluginHostError> {
-    semio_framework_os_kernel::os_identity::entropy_u64().map_err(|error| PluginHostError::Plugin(format!("owned WASI random: {error}")))
+    semio_os_kernel::os_identity::entropy_u64().map_err(|error| PluginHostError::Plugin(format!("owned WASI random: {error}")))
 }
 
 pub(super) fn reply_owned_host<'loan,'source>(state: &mut OwnedGuestInstance, call: &HostCall, receiver: Option<&'loan mut (dyn OriginalOperationReceiving+'source)>) -> Result<Vec<Value>, PluginHostError> {
@@ -172,13 +172,13 @@ const OWNED_CHANNEL_VERSION_FUEL: u64 = 1_000_000;
 const OWNED_CHANNEL_VERSION_DEADLINE_MS: u32 = 5_000;
 
 /// 🔖️ Reads a fresh owned instance's `semio_owned_channel_version_v1` once and admits it through the one kernel admission
-/// ([`semio_framework_os_kernel::admit_guest_channel_version`]) before the instance serves anything — an actor turn or a codec call —
+/// ([`semio_os_kernel::admit_guest_channel_version`]) before the instance serves anything — an actor turn or a codec call —
 /// so a guest of another channel is refused as `PluginHostError::Refused` (`plugin.channel-mismatch`).
 pub(super) fn admit_owned_channel(state: &mut OwnedGuestInstance) -> Result<(), TurnFault> {
     begin_owned_operation(state, OwnedOperation::ChannelVersion, None)?;
     let invocation = resume_owned_operation(state, OwnedOperation::ChannelVersion, OWNED_CHANNEL_VERSION_FUEL, u64::from(OWNED_CHANNEL_VERSION_DEADLINE_MS)*1000)?;
     let guest: u32 = serde_json::from_slice(&invocation.output).map_err(|error| PluginHostError::Json(error.to_string()))?;
-    semio_framework_os_kernel::admit_guest_channel_version(guest, semio_framework_os_kernel::CHANNEL_VERSION).map_err(|fault| PluginHostError::Refused(Box::new(fault)))?;
+    semio_os_kernel::admit_guest_channel_version(guest, semio_os_kernel::CHANNEL_VERSION).map_err(|fault| PluginHostError::Refused(Box::new(fault)))?;
     Ok(())
 }
 

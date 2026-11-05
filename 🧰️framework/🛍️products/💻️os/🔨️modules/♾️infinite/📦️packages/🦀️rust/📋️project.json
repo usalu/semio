@@ -1,5 +1,5 @@
 {
-  "name": "semio-framework-os-infinite",
+  "name": "semio-os-infinite",
   "projectType": "library",
   "tags": [
     "language:cargo"

@@ -1,7 +1,7 @@
 //! 🧪️ components tests (🔬️unit): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_model::{world_mesh_ownership_grant, world_scene_raster_pool};
-use semio_framework_os_infinite_world_components::{WorldMeshBuffers, WorldMeshInput, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
+use semio_os_infinite_world_model::{world_mesh_ownership_grant, world_scene_raster_pool};
+use semio_os_infinite_world_components::{WorldMeshBuffers, WorldMeshInput, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
 use semio_framework_test_fixtures::fixture_text;
 use ui_scene::math::{mesh3d_begin_close, mesh3d_close_step, Mesh3dField, Mesh3dLease};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};

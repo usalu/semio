@@ -17,7 +17,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-dsl-record = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
@@ -27,4 +27,4 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

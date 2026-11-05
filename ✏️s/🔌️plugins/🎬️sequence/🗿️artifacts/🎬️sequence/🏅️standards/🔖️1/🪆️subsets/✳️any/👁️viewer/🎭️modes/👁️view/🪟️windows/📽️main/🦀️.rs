@@ -8,16 +8,16 @@
 //! type) provides, since a viewer never needs to lay anything out interactively.
 
 use crate::{SequenceStep, SequenceWorkingScene};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::NodeGraphEdgeRecord;
-use semio_framework_plugin::NodeGraphNodeRecord;
-use semio_framework_plugin::NodeGraphScene;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_os_kernel::Viewport2d;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::NodeGraphEdgeRecord;
+use semio_plugin::NodeGraphNodeRecord;
+use semio_plugin::NodeGraphScene;
+use semio_plugin::SurfaceKind;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_os_kernel::Viewport2d;
 
 //#region 🔖️Constants
 pub const SEQUENCE_VIEW_WINDOW_MAIN: &str = "sequence-view-main";
@@ -78,7 +78,7 @@ pub fn render(scene: &SequenceWorkingScene) -> UiAssemblyResult<BuiltNode> {
     let edges: Vec<NodeGraphEdgeRecord> =
         scene.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.from.clone(), source_port_id: String::new(), target_node_id: edge.to.clone(), target_port_id: String::new(), label: None }).collect();
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
-    semio_framework_plugin::scene_surface(SEQUENCE_VIEW_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
+    semio_plugin::scene_surface(SEQUENCE_VIEW_SURFACE_MAIN, semio_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 

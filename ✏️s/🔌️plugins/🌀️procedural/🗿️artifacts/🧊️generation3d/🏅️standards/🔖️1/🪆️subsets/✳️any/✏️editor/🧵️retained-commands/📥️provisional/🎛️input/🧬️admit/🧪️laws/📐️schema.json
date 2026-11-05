@@ -1,0 +1,24 @@
+{
+  "type": "array",
+  "minItems": 16,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "input",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "input": {
+        "type": "object"
+      },
+      "expected": {
+        "type": "boolean"
+      }
+    }
+  }
+}

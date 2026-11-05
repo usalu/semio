@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-cursor"
+name = "semio-os-store-cursor"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -21,13 +21,13 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["dep:serde", "semio-framework-os-vcs/testkit"]
+testkit = ["dep:serde", "semio-os-vcs/testkit"]
 
 [dependencies]
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 
 [dev-dependencies]
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust", features = ["testkit"] }
 serde = { version = "1.0.219", features = ["derive"] }

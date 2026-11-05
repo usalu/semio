@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertRetainingWall wher
         verb: "insert", entity: "retaining-wall", kind: "insert-retaining-wall", record: "InsertedRetainingWall",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert retaining wall", "Stützwand einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert retaining wall", "Stützwand einfügen")
     }
 }
 

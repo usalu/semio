@@ -29,7 +29,7 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderSpaceGeometry;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
+use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
 type Bound<'c,'p>=NativeEncodingBound<'c,'p>;
 fn text(value:&str,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(64)?;b.repeated(value.len(),6)}
 fn optional_text(value:&Option<String>,b:&mut Bound<'_,'_>)->Result<(),ValueError>{if let Some(value)=value{text(value,b)?;}Ok(())}

@@ -19,8 +19,8 @@
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use semio_framework_job::{allocate_operation_id, CancelToken, Generation, StepBudget, StepContext};
-use semio_framework_os_flow::neural::{ColdRetire as _, Registry};
-use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension, merge_unanswered_eval_entries, preview_tessellate_node_hash, FlowEvalSession, FlowExtensionSpec, FlowHost, FlowHostRetirement, PreviewTessellateOutcome};
+use semio_os_flow::neural::{ColdRetire as _, Registry};
+use semio_os_flow::{flow_neuron_kind_info_map, install_flow_extension, merge_unanswered_eval_entries, preview_tessellate_node_hash, FlowEvalSession, FlowExtensionSpec, FlowHost, FlowHostRetirement, PreviewTessellateOutcome};
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor::preview_payload;
 use semio_s_artifact_procedural_3d_editor::PreviewInteractionMarks;
@@ -337,7 +337,7 @@ fn a_superseded_solid_handle_keeps_the_converged_mesh_until_the_new_pack_lands()
     let old_handle = handle_of(&converged, "extrude", "solid").expect("baseline solid handle");
     let tolerance = preview_eval::preview_tolerance("coarse");
     let mesh = geometry_session().tessellate_geometry(&old_handle, tolerance).expect("baseline tessellates");
-    let pack = semio_framework_os_flow::mesh::encode_base64(&semio_framework_os_flow::mesh::encode_mesh_pack(&mesh).expect("pack"));
+    let pack = semio_os_flow::mesh::encode_base64(&semio_os_flow::mesh::encode_mesh_pack(&mesh).expect("pack"));
     let node_hash = preview_tessellate_node_hash(&old_handle, tolerance.to_bits());
     assert!(session.note_pending_tessellate(node_hash, old_handle.clone()));
     let envelope = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":1,"meshPack":"{pack}"}}"#);
@@ -362,7 +362,7 @@ fn a_superseded_solid_handle_keeps_the_converged_mesh_until_the_new_pack_lands()
         .count();
     assert!(mesh_ids >= 1, "the payload must still carry a solid mesh while the new handle tessellates");
     let new_pack = geometry_session().tessellate_geometry(&new_handle, tolerance).expect("edited solid tessellates");
-    let pack = semio_framework_os_flow::mesh::encode_base64(&semio_framework_os_flow::mesh::encode_mesh_pack(&new_pack).expect("pack"));
+    let pack = semio_os_flow::mesh::encode_base64(&semio_os_flow::mesh::encode_mesh_pack(&new_pack).expect("pack"));
     let node_hash = preview_tessellate_node_hash(&new_handle, tolerance.to_bits());
     assert!(session.note_pending_tessellate(node_hash, new_handle.clone()));
     let envelope = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":1,"meshPack":"{pack}"}}"#);
@@ -370,7 +370,7 @@ fn a_superseded_solid_handle_keeps_the_converged_mesh_until_the_new_pack_lands()
     assert!(preview_eval::session_preview_mesh(&new_handle, &session).is_some(), "the new handle's pack must be on the session");
     assert!(matches!(
         preview_eval::preview_eval_publication_for(&mut session, &host.host_snapshot, Some(&painted)),
-        semio_framework_os_flow::FlowEvalPublication::Changed(_)
+        semio_os_flow::FlowEvalPublication::Changed(_)
     ), "a landed pack must republish even when the evaluation text is unchanged");
     session.retire_cold();
     retire_host(host);

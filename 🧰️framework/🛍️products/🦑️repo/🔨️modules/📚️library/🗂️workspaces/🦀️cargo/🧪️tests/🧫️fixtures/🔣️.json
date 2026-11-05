@@ -282,11 +282,11 @@
   },
   "policyPackages": [
     {
-      "name": "semio-framework-ui",
+      "name": "semio-ui",
       "workspace": "🧰️framework"
     },
     {
-      "name": "semio-framework-os-renderer-wgpu",
+      "name": "semio-renderer-wgpu",
       "workspace": "."
     }
   ],

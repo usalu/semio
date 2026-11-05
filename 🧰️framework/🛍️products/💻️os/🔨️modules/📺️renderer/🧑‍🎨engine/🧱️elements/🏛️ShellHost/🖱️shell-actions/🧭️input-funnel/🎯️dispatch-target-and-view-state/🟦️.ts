@@ -24,13 +24,21 @@ import type { ShellCoreAfterShellUriAndDocuments } from "../../../🗄️shell-u
  * the host app has no window by that name. This is the "panel actions dispatch in the ACTIVE
  * window" rule, stated once for every route below instead of per call site.
  */
-export function resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWindowIdRef, spawnedIdsRef, session, action }: Pick<ShellCoreAfterShellUriAndDocuments, "hostMode" | "panel" | "loadedPlugins" | "activeWindowIdRef" | "spawnedIdsRef"> & {
+export function resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWindowIdRef, spawnedIdsRef, contributorInstancesRef, session, action }: Pick<ShellCoreAfterShellUriAndDocuments, "hostMode" | "panel" | "loadedPlugins" | "activeWindowIdRef" | "spawnedIdsRef" | "contributorInstancesRef"> & {
   readonly session: ActiveSession;
   readonly action: ShellInputActionV1;
 }) {
   /** 🪟️ Which spawned instance this dispatch belongs to — `null` for the session's own app. It
    * decides BOTH the target instance and the host↔guest window-id translation below. */
   let targetSpawnedId: string | null = null;
+  const targetContributor = [...contributorInstancesRef.current.values()].find(entry => entry.dispatchControllerId === action.controllerId && entry.instanceId !== undefined && entry.viewState !== undefined);
+  const contributorApp = targetContributor === undefined ? undefined : loadedPlugins.find(entry => entry.handle.pluginId === targetContributor.pluginId)?.manifest.apps.find(app => app.id === targetContributor.appId);
+  if (targetContributor && contributorApp) return {
+    targetSession: { pluginId: targetContributor.pluginId, instanceId: targetContributor.instanceId!, app: contributorApp, viewState: targetContributor.viewState! },
+    hostWindowId: inputActionWindowV1(action, activeWindowIdRef.current) ?? undefined,
+    targetSpawnedId,
+    targetContributor,
+  };
   let targetSession =
     hostMode && action.controllerId !== session.app.controllerId
       ? (() => {
@@ -59,7 +67,7 @@ export function resolveDispatchTarget({ hostMode, panel, loadedPlugins, activeWi
       }
     }
   }
-  return { targetSession, hostWindowId, targetSpawnedId };
+  return { targetSession, hostWindowId, targetSpawnedId, targetContributor: undefined };
 }
 
 /** ⏪️ Sends an undo to the mounted remote history owner when the undo route is remote. */

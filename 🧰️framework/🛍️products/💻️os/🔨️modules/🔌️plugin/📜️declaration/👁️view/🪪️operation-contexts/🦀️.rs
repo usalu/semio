@@ -33,7 +33,7 @@ pub struct AppRenderOperationContext {
     pub base_revision: semio_framework_job::RevisionId,
     pub generation: semio_framework_job::Generation,
     pub canonical_base_revision: [u8; 32],
-    pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
+    pub mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,
 }
 
 /// 🧾️ Original mounted snapshot preparation readiness and its actual retained effects.
@@ -47,7 +47,7 @@ impl MountedSnapshotReadPreparation {
     /// 📏️ Intersects mounted policy with the original caller's unspent physical and CPU authority.
     pub fn grant(policy: RetainedCloneGrant, cx: &semio_framework_job::StepContext<'_>) -> Option<RetainedCloneGrant> {
         if cx.is_cancelled() || cx.should_yield() { return None; }
-        let mut grant = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy, cx.retained_grant());
+        let mut grant = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy, cx.retained_grant());
         grant.maximum_items = grant.maximum_items.min(cx.fuel_remaining().try_into().unwrap_or(usize::MAX));
         Some(grant)
     }

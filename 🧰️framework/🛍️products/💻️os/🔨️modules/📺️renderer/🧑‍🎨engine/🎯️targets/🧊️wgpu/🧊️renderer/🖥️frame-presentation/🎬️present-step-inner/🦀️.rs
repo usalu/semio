@@ -146,7 +146,7 @@ impl AppPresenter {
                 let expected = self.presentation_authority.admitted();
                 #[cfg(not(target_arch = "wasm32"))]
                 {
-                    let token = semio_framework_ui_prepared::UiPresentToken::mint_for_current_thread();
+                    let token = semio_ui_prepared::UiPresentToken::mint_for_current_thread();
                     if let Err(error) = self.gpu.begin_prepared(&token, &self.gate, packet, expected.scene_revision, expected.input_generation) {
                         cursor.phase = AppPresentPhase::Aborted;
                         return Err(format!("prepared frame admission: {error}"));
@@ -183,14 +183,14 @@ impl AppPresenter {
                 let witness = cursor.raster_witness.ok_or_else(|| "raster operation witness was missing during ownership publication".to_string())?;
                 cursor.raster_keep_steps = cursor.raster_keep_steps.saturating_add(1);
                 match packet.raster_keep_step(&mut cursor.raster_keep) {
-                    semio_framework_ui_prepared::PreparedRasterKeepStepV1::Pending => {}
-                    semio_framework_ui_prepared::PreparedRasterKeepStepV1::Key(key) => {
+                    semio_ui_prepared::PreparedRasterKeepStepV1::Pending => {}
+                    semio_ui_prepared::PreparedRasterKeepStepV1::Key(key) => {
                         if let Err(error) = self.gpu.publish_raster_ownership(witness, key) {
                             cursor.phase = AppPresentPhase::Aborted;
                             return Err(error);
                         }
                     }
-                    semio_framework_ui_prepared::PreparedRasterKeepStepV1::Complete => {
+                    semio_ui_prepared::PreparedRasterKeepStepV1::Complete => {
                         if let Err(error) = self.gpu.seal_raster_ownership(witness) {
                             cursor.phase = AppPresentPhase::Aborted;
                             return Err(error);
@@ -269,15 +269,15 @@ impl AppPresenter {
                 let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::AwaitingRuntime) };
                 let AppInteractionState { shell, input, .. } = interaction;
                 match shell.input.progress_presented_input_candidate(input, input_candidate) {
-                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
-                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Pending { advanced } => {
+                    semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
+                    semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Pending { advanced } => {
                         cursor.input_wait = AppPresentInputWait::SceneIntent;
                         if advanced {
                             cursor.input_progress = cursor.input_progress.saturating_add(1);
                         }
                         return Ok(AppPresentStep::Pending);
                     }
-                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale => {
+                    semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale => {
                         drop(runtime);
                         cursor.frame.packet = self.gate.abort_pending();
                         cursor.witness = None;
@@ -413,21 +413,21 @@ impl AppPresenter {
                 }
                 let AppInteractionState { shell, input, .. } = interaction;
                 match shell.input.progress_presented_input_candidate(input, input_candidate) {
-                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
-                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Pending { advanced } => {
+                    semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
+                    semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Pending { advanced } => {
                         cursor.input_wait = AppPresentInputWait::SceneIntent;
                         if advanced {
                             cursor.input_progress = cursor.input_progress.saturating_add(1);
                         }
                         return Ok(AppPresentStep::Pending);
                     }
-                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale => {
+                    semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale => {
                         cursor.frame.packet = self.gate.abort_pending();
                         cursor.phase = AppPresentPhase::Aborted;
                         return Err("prepared frame input authority was stale before acknowledgement".to_string());
                     }
                 }
-                if !semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut shell).acknowledge_presented_input(input, input_candidate) {
+                if !semio_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut shell).acknowledge_presented_input(input, input_candidate) {
                     return Ok(AppPresentStep::Pending);
                 }
                 cursor.has_animated_primitives = packet.has_animated_primitives();

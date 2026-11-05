@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_process_process3d_panels::workshop::*;
@@ -8,17 +8,17 @@ use semio_s_artifact_process_process3d_kit::process3d_action;
 use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
 use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
 use semio_s_artifact_process_process3d_model::{snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
-use semio_framework_plugin::row_action;
-use semio_framework_plugin::row_target;
-use semio_framework_plugin::tree_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::RowActionPlacement;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::row_action;
+use semio_plugin::row_target;
+use semio_plugin::tree_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::RowActionPlacement;
+use semio_plugin::UiAssemblyResult;
 use semio_s_artifact_process_process3d_commands::{workshop::add_workshop_machine, workshop::remove_workshop_machine};
 use semio_s_artifact_process_process3d_panels::catalogue;
 use semio_s_artifact_process_process3d_editor::Process3dCommand;
@@ -125,7 +125,7 @@ async fn workshop_machine_parameter_edit_sizes_the_capability_measure() {
 }
 
 //#region 🪟️WindowLaws
-use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 /// 🔎️ `(total, offset, row keys)` of one container, read off a projected body.
 fn container_of(json: &str, key: &str) -> (u64, u64, Vec<String>) {
@@ -159,13 +159,13 @@ fn oversized_workshop() -> semio_s_artifact_process_process3d_model::snapshot::P
 
 /// 🚚️ Reads through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`.
 fn project(fixture: &semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot, windows: &TreeWindows<'_>) -> String {
-    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let node = render(fixture, "[]", labels, windows).expect("workshop renders");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("workshop projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("workshop projection")
 }
 
 fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
-    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_WORKSHOP.into(), node_key: node_key.into(), open, offset, rows }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_WORKSHOP.into(), node_key: node_key.into(), open, offset, rows }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW (a): the installed-machines section stamps its whole extent, materialises at most its

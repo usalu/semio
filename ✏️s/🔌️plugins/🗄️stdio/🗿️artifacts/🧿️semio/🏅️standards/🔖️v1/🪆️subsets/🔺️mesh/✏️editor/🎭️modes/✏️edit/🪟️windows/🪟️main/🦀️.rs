@@ -5,7 +5,7 @@
 //! root's `handle()` responsibility.
 
 use crate::schema::snapshot::SemioMeshSnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -56,7 +56,7 @@ fn world_instances_json(document: &SemioMeshSnapshot) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioMeshSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &SemioMeshSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(vec![semio_framework_pack_json::object([
         ("id".to_string(), semio_framework_pack_json::Value::from(SEMIO_MESH_EDIT_FALLBACK_MESH_KIND)),
         ("data".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&mesh_from_kind(SEMIO_MESH_EDIT_FALLBACK_MESH_KIND)))),

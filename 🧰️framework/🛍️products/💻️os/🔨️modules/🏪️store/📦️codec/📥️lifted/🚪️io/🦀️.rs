@@ -196,7 +196,7 @@ pub trait SubsetValidator {
 
 //#region 🔖️ErasedRegistry
 //#region 🔖️SubsetValidator
-/// 🧩️ Type-erased `semio_framework_ui_contract_validation::validate_snapshot`; it refuses a snapshot of any other type.
+/// 🧩️ Type-erased `semio_ui_contract_validation::validate_snapshot`; it refuses a snapshot of any other type.
 pub type SnapshotSubsetValidation = fn(&dyn std::any::Any, &semio_framework_io_sqlite_snapshot::SqliteDatabase, &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework_io_schema::IoResult<()>;
 
 /// 🧾️ Type-erased subset-validator vtable row -- the registry stores this, mirroring how

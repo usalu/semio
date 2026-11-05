@@ -16,8 +16,8 @@ pub struct SetEntryData {
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetEntryData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entry-data", kind: "set-entry-data", record: "SetEntryData" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set entry data", "Daten des Eintrags setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set entry data", "Daten des Eintrags setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

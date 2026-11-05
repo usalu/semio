@@ -1,7 +1,7 @@
 //! 🚪️ sequence <- md. Reads the canonical JSON carrier fixture from its code block.
 
 use crate::{SequenceHostSnapshot, SequenceSnapshot};
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -15,7 +15,7 @@ pub struct MdIntoSequence;
 impl Deserializer<SequenceSnapshot> for MdIntoSequence {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<SequenceSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<SequenceSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "MdIntoSequence: expected a binary md payload".to_string())));
         };

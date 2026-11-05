@@ -1,7 +1,7 @@
 //! 📖️ Story style-run edits move original rows after every ordered positional prefix is admitted.
 use crate::{LayoutStoriesDelta,LayoutStoriesModification,TextStyleRunsDelta};
 use semio_s_artifact_layout_layout_model::{TextStory,TextStyleRun};
-use semio_framework_os_kernel::ApplyCapability;
+use semio_os_kernel::ApplyCapability;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use super::{final_list::{FinalList,VacantRow},super::{positional_chain::PositionalChain,borrowed_lists::BorrowedPositionalChain,keyed_plan::{Origin,PlanAdvance}}};
 use std::mem::size_of;

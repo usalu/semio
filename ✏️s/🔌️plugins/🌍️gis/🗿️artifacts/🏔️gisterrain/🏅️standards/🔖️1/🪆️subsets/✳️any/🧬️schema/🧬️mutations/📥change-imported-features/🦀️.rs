@@ -27,8 +27,8 @@ pub struct ChangeImportedFeatures {
 impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeImportedFeatures {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "imported-features", kind: "change-imported-features", record: "ChangedImportedFeatures" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change imported terrain features", "Importierte Geländemerkmale ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change imported terrain features", "Importierte Geländemerkmale ändern")
     }
 }
 

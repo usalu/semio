@@ -31,8 +31,8 @@ impl protocol::MutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
 
     fn target(&self) -> Vec<String> {
@@ -60,7 +60,7 @@ impl protocol::CompositeMutationKind<WireTestSnapshot, WireTestMutation> for Add
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<WireTestSnapshot, WireTestMutation>>::label(self)
     }
 

@@ -2,28 +2,28 @@
 //!
 //! ⏪️ The mounted instance's time-travel turns (history editing sessions, replay and supersession) and the
 //! [`TimeTravelExtension`] that registers them with the instance through [`InstanceExtension`].
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 use store::Mutation;
-use semio_framework_os_kernel::OpBinary;
-use semio_framework_plugin_time_travel::SupersedeRole;
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
-use semio_framework_os_kernel as vcs;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_os_kernel::OpBinary;
+use semio_plugin_time_travel::SupersedeRole;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
+use semio_os_kernel as vcs;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use protocol::OpText;
 use crate::history_components::CommandHistory;
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_time_travel::*;
-use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_reactor_app::PluginApp;
+use semio_ui_contract::*;
+use semio_plugin_time_travel::*;
+use semio_os_kernel::{MemberFactory, SpaceMember};
 
 impl<A: ArtifactApp> CommandHistory<A> {
     /// 📚️ Rebuilds the supersede ledger when the store's transitions changed.

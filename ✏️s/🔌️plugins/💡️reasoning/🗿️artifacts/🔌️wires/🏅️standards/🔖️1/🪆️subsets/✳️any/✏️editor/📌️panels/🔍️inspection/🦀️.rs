@@ -5,17 +5,17 @@ use crate::schema::{board_snapshot_nodes};
 use crate::standards::v1::subsets::any::io::text::snapshot::{board_snapshot_json_string};
 use crate::MINDMAP_WIRES_SCHEMA;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::ui_node_list;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_BODY_PROPERTIES: &str = "reasoning.wires.properties";
@@ -52,11 +52,11 @@ pub fn render(composed: &crate::WiresComposed, labels: &crate::editor::wires::te
         format!("{}: {}", labels.board_nodes.as_str(), board_snapshot_nodes(board).len()),
     ];
     let nodes = ui_node_list(rows.iter().enumerate().map(|(index, row)| {
-        semio_framework_ui_contract::text(crate::editor::wires::ui_label(row)?)
+        semio_ui_contract::text(crate::editor::wires::ui_label(row)?)
             .try_id(format!("wires-inspection.summary-{index}"))
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary id admission failed"))?
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary id admission failed"))?
             .try_build()
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary text admission failed"))
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary text admission failed"))
     }))?;
     namespace.section("wires-inspection.summary", None, true, nodes)?.build()
 }

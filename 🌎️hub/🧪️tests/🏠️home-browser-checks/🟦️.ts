@@ -156,12 +156,12 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   for (const forbidden of fixture.spaceGuest.forbiddenPackages) {
     if (new RegExp(`(?:^|\\s)${forbidden} v`, "mu").test(guestTree.stdout)) throw new Error(`directory Home Space guest graph retained forbidden package ${forbidden}`);
   }
-  if (guestTree.stdout.includes(`semio-framework-os-kernel feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error(`directory Home Space guest graph retained native kernel feature ${fixture.spaceGuest.nativeFeature}`);
+  if (guestTree.stdout.includes(`semio-os-kernel feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error(`directory Home Space guest graph retained native kernel feature ${fixture.spaceGuest.nativeFeature}`);
   const rustc = runProbe("rustc", ["-vV"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
   const hostTarget = rustc.status === 0 ? rustc.stdout.match(/^host: (.+)$/mu)?.[1] : undefined;
   if (!hostTarget) throw new Error(`directory Home Space native target oracle failed: ${rustc.stderr}`);
-  const nativeTree = runProbe("cargo", ["tree", "--manifest-path", join(repoRoot, "🌎️hub/Cargo.toml"), "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-framework-os-kernel"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
-  if (nativeTree.status !== 0 || !nativeTree.stdout.includes(`semio-framework-os-kernel feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error("directory Home Space native graph lost the kernel sync transport");
+  const nativeTree = runProbe("cargo", ["tree", "--manifest-path", join(repoRoot, "🌎️hub/Cargo.toml"), "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-os-kernel"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
+  if (nativeTree.status !== 0 || !nativeTree.stdout.includes(`semio-os-kernel feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error("directory Home Space native graph lost the kernel sync transport");
   const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   const owner = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx"), "utf8");
   const shell = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));

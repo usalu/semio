@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::producer::custody::ArtifactRetainedCommandCustody;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand;
+use semio_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand;
 
 //#region 🧳️Payload
 /// 🧳️ Owned command roots and completion authority admitted into a retained payload.
@@ -35,9 +35,9 @@ pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
     pub maximum_work_items: usize,
     pub admission_refusal:Option<ArtifactRetainedAdmissionRefusal>,
     pub work: Box<dyn ArtifactCommandWork<A>>,
-    pub(crate) producer_window_config:Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
-    pub(crate) producer_instance_operation_owner:Option<semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
-    pub(crate) producer_output_chunks:Option<semio_framework_plugin_decl_media::ArtifactOutputChunks>,
+    pub(crate) producer_window_config:Option<semio_plugin_window_config::WindowConfigSnapshot>,
+    pub(crate) producer_instance_operation_owner:Option<semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
+    pub(crate) producer_output_chunks:Option<semio_plugin_decl_media::ArtifactOutputChunks>,
     pub(crate) producer_controller_id:Option<String>,
     pub(crate) producer_tool_id:Option<String>,
     pub(crate) producer_payload_schema_id:Option<String>,
@@ -73,9 +73,9 @@ pub(super) enum ArtifactCommandPublication {
 }
 
 pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
-    pub(super) producer_window_config:Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
-    pub(super) producer_instance_operation_owner:Option<semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
-    pub(super) producer_output_chunks:Option<semio_framework_plugin_decl_app::tool_contract::ArtifactOutputChunks>,
+    pub(super) producer_window_config:Option<semio_plugin_window_config::WindowConfigSnapshot>,
+    pub(super) producer_instance_operation_owner:Option<semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
+    pub(super) producer_output_chunks:Option<semio_plugin_decl_app::tool_contract::ArtifactOutputChunks>,
     pub(super) producer_controller_id:Option<String>,
     pub(super) producer_tool_id:Option<String>,
     pub(super) producer_payload_schema_id:Option<String>,
@@ -83,6 +83,7 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     pub(super) original_command_admitted:bool,
     pub command: Option<ArtifactRetainedCommandCustody<A::Command>>,
     pub(super) command_received:bool,
+    pub(super) context_received:bool,
     pub snapshot: Option<Arc<A::Snapshot>>,
     pub snapshot_read: std::cell::RefCell<Option<store::os_store::snapshot_read::SnapshotRead<A::Snapshot>>>,
     pub config: Option<Arc<A::Config>>,
@@ -143,7 +144,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         for input in[&mut self.checkpoint_input,&mut self.raw_input]{if let Some(owner)=input.as_mut(){if owner.terminal_is_empty(){input.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Ok(match owner.close_step(grant)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}}
         if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return Err(error.into())}}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
         if let Some(owner)=self.download_retirement.as_mut(){if owner.terminal_is_empty(){self.download_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(owner.step(grant))}
-        if let Some(emit)=self.emit.as_mut(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return match emit.close_child_one(child)?{Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)|semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{..}|semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput{..})=>Ok(InteractiveJobCloseStep::Blocked),None=>Err(Self::unadmitted_input().into())}}
+        if let Some(emit)=self.emit.as_mut(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let outcome=emit.close_child_original(child);cx.consume_fuel(outcome.work);return match outcome.result?{Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)|semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{..}|semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput{..})=>Ok(InteractiveJobCloseStep::Blocked),None=>Err(Self::unadmitted_input().into())}}
         if self.ephemeral.is_some(){return Err(Self::unadmitted_input().into())}
         if let Some(work)=self.work.as_mut(){if !work.terminal_is_empty(){return Ok(match work.close_step(cx)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}let bytes=work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?;self.work.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
         if self.input_retirement.is_some(){return Self::controlled_close_step(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.input_retirement,grant).result)}
@@ -241,7 +242,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             source_binding:None,
             original_command_admitted,
             command: Some(payload.command),
-            command_received:false,
+            command_received:false,context_received:false,
             snapshot: Some(payload.snapshot),
             snapshot_read: std::cell::RefCell::new(Some(payload.snapshot_read)),
             config: Some(payload.config),
@@ -561,6 +562,13 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                     if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
                     self.command_received=true;return Ok(None)
                 }
+                if !self.context_received{
+                    if !self.source_binding.is_some_and(|source|source.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original context receiving requires its initiating physical source").into())}
+                    let work=self.work.as_mut().ok_or_else(Self::unadmitted_input)?;let before=cx.retained_progress();let fuel=cx.fuel_remaining();
+                    if let Some(context)=self.context.as_ref(){if !work.receive_original_context(context,cx)?{return Ok(None)}}
+                    if cx.retained_progress()==before&&!Self::metadata(cx)?{return Ok(None)}if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
+                    self.context_received=true;return Ok(None)
+                }
                 {let work=self.work.as_mut().ok_or_else(Self::unadmitted_input)?;let before=cx.retained_progress();if !work.receive_original_output_chunks(&mut self.producer_output_chunks,cx)?{return Ok(None)}if cx.retained_progress()!=before{return Ok(None)}}
                 let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut()) else { return Err(Self::unadmitted_input().into()); };
                 let before = cx.retained_progress();
@@ -596,13 +604,13 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
             ArtifactRetainedCommandPhase::Publish => {
                 cx.set_stage("retained-command-publish");
                 if let Some(emit) = self.emit.as_mut() {
-                    let step = emit.prepare_child_one(cx.retained_grant());
+                    let outcome=emit.prepare_child_original(cx.retained_grant());cx.consume_fuel(outcome.work);let step=outcome.result;
                     let progress = match &step { Ok(step) => step.progress(), Err(fault) => fault.retained_progress() };
                     cx.consume_retained(progress)?;
                     match step {
-                        Ok(semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Ready(progress)) if progress == RetainedCloneProgress::default() => {}
-                        Ok(semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Ready(_) | semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Pending(_)) => { cx.consume_fuel(1); return Ok(None); }
-                        Ok(semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => { self.reducer_fault(fault); return Ok(None); }
+                        Ok(semio_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Ready(progress)) if progress == RetainedCloneProgress::default() => {}
+                        Ok(semio_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Ready(_) | semio_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Pending(_)) => { return Ok(None); }
+                        Ok(semio_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => { self.reducer_fault(fault); return Ok(None); }
                     }
                 }
                 if !Self::metadata(cx)? { return Ok(None); }
@@ -669,12 +677,12 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
         if !self.source_binding.is_some_and(|source|source.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained command source binding changed before retirement").into())}
         if !self.closing{return Ok(InteractiveJobCloseStep::Blocked)}
         let grant=cx.retained_grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;
-        let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{
+        let step=semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{
             let step=self.close_one_original(same,loan)?;
-            let step=match step{InteractiveJobCloseStep::Pending{progress}=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),InteractiveJobCloseStep::Blocked=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original retained command awaits child custody"},InteractiveJobCloseStep::Complete{progress}=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)};
+            let step=match step{InteractiveJobCloseStep::Pending{progress}=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),InteractiveJobCloseStep::Blocked=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original retained command awaits child custody"},InteractiveJobCloseStep::Complete{progress}=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)};
             Ok((step,self.terminal_is_empty()))
         })?;
-        Ok(match step{semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)=>InteractiveJobCloseStep::Pending{progress},semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)=>InteractiveJobCloseStep::Complete{progress},semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{..}|semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput{..}=>InteractiveJobCloseStep::Blocked})
+        Ok(match step{semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)=>InteractiveJobCloseStep::Pending{progress},semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)=>InteractiveJobCloseStep::Complete{progress},semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{..}|semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput{..}=>InteractiveJobCloseStep::Blocked})
     }
 
     fn terminal_is_empty(&self) -> bool {

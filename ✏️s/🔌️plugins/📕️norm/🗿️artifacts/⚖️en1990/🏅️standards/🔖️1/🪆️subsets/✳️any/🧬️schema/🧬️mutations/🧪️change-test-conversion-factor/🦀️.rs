@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeTestConversionFact
         record: "ChangedTestConversionFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change conversion factor η_d of the test series", "Versuchsreihe: Umrechnungsfaktor η_d ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change conversion factor η_d of the test series", "Versuchsreihe: Umrechnungsfaktor η_d ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

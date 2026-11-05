@@ -11,6 +11,6 @@ impl store::SnapshotRetirementFactory<FlowPresence> for FlowPresenceRetirementFa
  fn retirement_birth_bytes(&self,_source:&Arc<FlowPresence>)->usize{semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<FlowPresence>()}
  fn retire(&self,source:Arc<FlowPresence>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowPresence>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(source,grant,true)}
 }
-pub fn store_disposer()->Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<FlowPresence,FlowPresenceMutation>>>{Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(Arc::new(FlowPresence::default()),|value|value.preview_off_node_ids.is_empty()).expect("default Flow presence has no dynamic identifier owner"))}
+pub fn store_disposer()->Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<FlowPresence,FlowPresenceMutation>>>{Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(Arc::new(FlowPresence::default()),|value|value.preview_off_node_ids.is_empty()).expect("default Flow presence has no dynamic identifier owner"))}
 
 

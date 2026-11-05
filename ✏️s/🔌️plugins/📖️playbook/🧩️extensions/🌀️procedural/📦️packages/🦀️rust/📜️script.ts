@@ -5,7 +5,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../../🧰️fram
 import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📦️ Extension package router: `repo ./📜️script.ts <test|package>`. */
 import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { packageAdmittedExtensionComponentV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import { packageAdmittedExtensionComponentV1 } from "@semio-tech/process/extension-package";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runGeometryContractScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";

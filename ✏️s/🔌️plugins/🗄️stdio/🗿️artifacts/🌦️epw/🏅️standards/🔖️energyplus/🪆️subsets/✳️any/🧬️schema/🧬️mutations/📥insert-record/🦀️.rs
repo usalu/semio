@@ -15,8 +15,8 @@ pub struct InsertRecord {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for InsertRecord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "record", kind: "insert-record", record: "InsertRecord" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert record", "Datensatz einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert record", "Datensatz einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

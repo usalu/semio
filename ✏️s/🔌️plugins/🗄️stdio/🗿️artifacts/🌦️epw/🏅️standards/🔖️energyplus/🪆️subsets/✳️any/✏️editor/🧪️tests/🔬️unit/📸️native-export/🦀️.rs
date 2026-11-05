@@ -1,9 +1,9 @@
 //! 📸️ The EPW editor exports its original native snapshot with exact byte parity and funded cancellation.
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,Operation,OperationId,Generation,RevisionId,JobOutcomeBorrow,JobOutcomeKind};
-use semio_framework_plugin::{ArtifactMediaExportJobRequest,ArtifactReservedJob,EditorApp};
-use semio_framework_plugin::app::{ArtifactOutputChunks,ArtifactMediaExportCredit,ArtifactMediaExportCompletion};
-use semio_framework_plugin::native_snapshot_export::{NativeSnapshotPackExportJob,SNAPSHOT_PACK_PORT,SNAPSHOT_PACK_TOOL,SNAPSHOT_PACK_MIME};
+use semio_plugin::{ArtifactMediaExportJobRequest,ArtifactReservedJob,EditorApp};
+use semio_plugin::app::{ArtifactOutputChunks,ArtifactMediaExportCredit,ArtifactMediaExportCompletion};
+use semio_plugin::native_snapshot_export::{NativeSnapshotPackExportJob,SNAPSHOT_PACK_PORT,SNAPSHOT_PACK_TOOL,SNAPSHOT_PACK_MIME};
 use semio_framework_value::{RetainedCloneGrant,retirement::{OwnedValueRetirementFactory,controlled::ControlledRetirement},ToValue};
 use semio_framework_pack::snapshot::ArtifactPack;
 use std::sync::Arc;
@@ -19,7 +19,7 @@ fn original<R>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDeco
 fn original_epw_native_snapshot_export_matches_pack_and_json_and_closes_cancelled_sources(){
  for cancelled in [false,true]{
   let operation=Operation::new(OperationId(if cancelled{97002}else{97001}),RevisionId(7),Generation(3),11);let mut caller=OriginalJobFixtureCaller::admit(operation.operation,operation.generation,stock(),clock,u64::MAX,4_000_000);let mut decoder=OriginalJobDecodeOwner::empty();let source=Arc::new(<EpwEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"));let expected=source.encode_pack().unwrap();let expected_json=serde_json::to_value(source.to_value()).unwrap();
-  let factory:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<EpwSnapshot>>=Arc::new(OwnedValueRetirementFactory::<EpwSnapshot>::default());let mut supplier=semio_framework_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource::empty();
+  let factory:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<EpwSnapshot>>=Arc::new(OwnedValueRetirementFactory::<EpwSnapshot>::default());let mut supplier=semio_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource::empty();
   for _ in 0..16{if supplier.ready(){break}caller.turn(turn(),|cx|supplier.admit_step(&factory,||Arc::clone(&source),cx)).unwrap();}assert!(supplier.ready());let(mut snapshot,mut lease,mut retention)=(None,None,None);caller.turn(turn(),|cx|supplier.handoff(&mut snapshot,&mut lease,&mut retention,cx)).unwrap();assert!(supplier.terminal_is_empty());
   let completion=ArtifactMediaExportCompletion::new();let credit=ArtifactMediaExportCredit::new(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES);let chunks=ArtifactOutputChunks::new(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES);let mut request=Some(ArtifactMediaExportJobRequest::<EditorApp<EpwEditor>>{source_identity:(operation.operation,operation.generation),retained:turn(),operation,tool_id:SNAPSHOT_PACK_TOOL.into(),parent_document_id:"original-weather".into(),canonical_base_revision:[7;32],snapshot:snapshot.take().unwrap(),snapshot_close:lease.take().unwrap(),port:SNAPSHOT_PACK_PORT.into(),output_credit:credit.clone(),output_chunks:chunks.clone(),completion:completion.clone()});let mut body:Option<Box<dyn ArtifactReservedJob+Send>>=None;
   let denied=RetainedCloneGrant{maximum_items:0,..turn()};assert!(!original(&mut caller,&mut decoder,denied,|cx|NativeSnapshotPackExportJob::<EditorApp<EpwEditor>>::admit_original(&mut request,&mut body,cx)));assert!(request.is_some()&&body.is_none());

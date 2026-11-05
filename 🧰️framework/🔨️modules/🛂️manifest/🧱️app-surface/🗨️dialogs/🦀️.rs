@@ -65,19 +65,19 @@ pub struct DialogChoice {
     pub requires: Vec<String>,
     #[serde(default, skip_serializing_if = "is_neutral_tone")]
     #[value(default, skip_serializing_if = "is_neutral_tone")]
-    pub tone: semio_framework_ui_contract::Tone,
+    pub tone: semio_ui_contract::Tone,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[value(default, skip_serializing_if = "std::ops::Not::not")]
     pub destructive: bool,
 }
 
-fn is_neutral_tone(tone: &semio_framework_ui_contract::Tone) -> bool {
-    *tone == semio_framework_ui_contract::Tone::Neutral
+fn is_neutral_tone(tone: &semio_ui_contract::Tone) -> bool {
+    *tone == semio_ui_contract::Tone::Neutral
 }
 
 impl DialogChoice {
     pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, action: ActionRef) -> Self {
-        Self { id: id.into(), label: label.into(), description: None, action, requires: Vec::new(), tone: semio_framework_ui_contract::Tone::Neutral, destructive: false }
+        Self { id: id.into(), label: label.into(), description: None, action, requires: Vec::new(), tone: semio_ui_contract::Tone::Neutral, destructive: false }
     }
 
     /// 🔗️ The staged args this choice consumes: it is enabled once they resolve and sends only them.
@@ -109,7 +109,7 @@ impl DialogChoice {
     }
 
     /// 🎨️ The button's colour role.
-    pub fn tone(mut self, tone: semio_framework_ui_contract::Tone) -> Self {
+    pub fn tone(mut self, tone: semio_ui_contract::Tone) -> Self {
         self.tone = tone;
         self
     }

@@ -12,7 +12,7 @@ pub struct ComponentSurfaceCloseToken(u64);
 pub struct ComponentSurfaceCloseRequest {
     pub token: ComponentSurfaceCloseToken,
     pub owner: crate::element_contracts::ScenePointerTarget,
-    pub engine_token: Option<semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken>,
+    pub engine_token: Option<semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -55,8 +55,8 @@ pub fn with_component_surface_close_bridge<R>(f: impl FnOnce(&mut ComponentSurfa
 
 pub fn request_component_surface_close(
     owner: crate::element_contracts::ScenePointerTarget,
-    engine_token: Option<semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken>,
-) -> Result<ComponentSurfaceCloseToken, (crate::element_contracts::ScenePointerTarget, Option<semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken>)> {
+    engine_token: Option<semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken>,
+) -> Result<ComponentSurfaceCloseToken, (crate::element_contracts::ScenePointerTarget, Option<semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken>)> {
     with_component_surface_close_bridge(|bridge| {
         if bridge.request.is_some() {
             return Err((owner, engine_token));

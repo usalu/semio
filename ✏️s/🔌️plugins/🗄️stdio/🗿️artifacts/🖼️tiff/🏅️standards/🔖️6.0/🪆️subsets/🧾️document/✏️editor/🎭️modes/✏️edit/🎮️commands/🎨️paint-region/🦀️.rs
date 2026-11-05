@@ -2,18 +2,18 @@
 
 use super::{TiffAnyEditCommand, TiffAnyEditor};
 use crate::editor::tiff_any::config::selected_ifd;
-use crate::schema::mutations::paint_region::samples::{tiff_revision,validate_tiff_region_paint,TiffRegion,TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS};
+use crate::schema::mutations::paint_region::samples::{tiff_revision,validate_tiff_region_paint,TiffRegion};
 use crate::schema::mutations::{PaintRegionMutation, TiffMutation};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
+use semio_plugin::{EditorApp, Emit, Fault, FaultCode, FaultOrigin};
 
-pub const ACTION_ID: &str = "paint-region";
+#[path = "📜️declaration/🦀️.rs"]
+mod declaration;
+pub use declaration::{action, ACTION_ID, MAXIMUM_INTERACTIVE_ROWS};
 pub const TOOL_IDS: &[&str] = &[ACTION_ID];
 pub const PAYLOAD_SCHEMA: &str = "s.stdio.tiff.command.paint-region.v1";
 pub const MAXIMUM_RAW_BYTES: usize = 8_192;
-pub const MAXIMUM_INTERACTIVE_ROWS: u32 = TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS;
 pub const CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(1);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
@@ -72,30 +72,6 @@ impl PaintRegionCommand {
     }
 }
 
-fn integer_arg(id: &'static str, en: &'static str, de: &'static str, minimum: f64, maximum: f64, default: u32) -> ActionArgDef {
-    let mut argument = ActionArgDef::number(id, LocalizedLabel::native(en, de)).required().default_value(&default);
-    if let ArgSchema::Number { min, max, step, integer, .. } = &mut argument.schema {
-        *min = Some(minimum);
-        *max = Some(maximum);
-        *step = Some(1.0);
-        *integer = true;
-    }
-    argument
-}
-
-pub fn action() -> ActionDefinition {
-    ActionDefinition::bounded_catalog(ACTION_ID, LocalizedLabel::native("Paint Tiled Region", "Kachelbereich malen"), ActionKind::Mutation).with_args(vec![
-        integer_arg("x", "Left (x)", "Links (x)", 0.0, u32::MAX as f64, 0),
-        integer_arg("y", "Top (y)", "Oben (y)", 0.0, u32::MAX as f64, 0),
-        integer_arg("width", "Width", "Breite", 1.0, u32::MAX as f64, 1),
-        integer_arg("height", "Height", "Höhe", 1.0, f64::from(MAXIMUM_INTERACTIVE_ROWS), 1),
-        integer_arg("red", "Red", "Rot", 0.0, 255.0, 0),
-        integer_arg("green", "Green", "Grün", 0.0, 255.0, 0),
-        integer_arg("blue", "Blue", "Blau", 0.0, 255.0, 0),
-        integer_arg("alpha", "Alpha", "Alpha", 0.0, 255.0, 255),
-    ])
-}
-
 fn validate(command: PaintRegionCommand, snapshot: &crate::TiffSnapshot, ifd_index: usize) -> Result<String, Fault> {
     validate_tiff_region_paint(snapshot, ifd_index, command.region(), command.color()).map_err(|error| fault("stdio.tiff.paint-region.invalid-snapshot", error))?;
     Ok(tiff_revision(snapshot))
@@ -116,7 +92,7 @@ impl PaintRegionWork {
 impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
     fn tool_id(&self) -> &'static str { ACTION_ID }
 
-    fn extent(&self, command: &TiffAnyEditCommand, snapshot: &crate::TiffSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffAnyEditor>>>) -> Option<usize> {
+    fn extent(&self, command: &TiffAnyEditCommand, snapshot: &crate::TiffSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffAnyEditor>>>) -> Option<usize> {
         let TiffAnyEditCommand::PaintRegion(command) = command else { return None };
         if snapshot.ifds.is_empty() || command.width == 0 || command.height == 0 { return None; }
         CAPACITY.rows_for_items(1)

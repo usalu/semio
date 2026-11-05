@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeDesignWorkingLifeY
         record: "ChangedDesignWorkingLifeYears",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change design working life", "Geplante Nutzungsdauer ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change design working life", "Geplante Nutzungsdauer ändern")
     }
 }
 

@@ -21,7 +21,7 @@ semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-async = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-analysis-check = { workspace = true }
@@ -60,7 +60,7 @@ semio-s-artifact-procedural-3d-geometry-compute = { workspace = true, features =
 parry3d = "0.17"
 semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }

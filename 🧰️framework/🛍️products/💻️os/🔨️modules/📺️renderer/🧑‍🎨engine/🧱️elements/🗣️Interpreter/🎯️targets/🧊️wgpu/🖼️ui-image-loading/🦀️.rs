@@ -5,10 +5,10 @@
 use crate::element_contracts::{FrameworkWidgetContext, RasterUploadRefusal, WorkerCell};
 use crate::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_wgpu_widget_kit::{WidgetContext, WidgetInteractionMaps};
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
+use semio_ui_wgpu_widget_kit::{WidgetContext, WidgetInteractionMaps};
 
 //#region UiImageLoading
 static UI_IMAGE_FETCH_MISS: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
@@ -73,7 +73,7 @@ fn queue_ui_image_url_fetch(id: &str, url: &str) {
         return;
     }
     let kind = WorldAssetMetadataId::try_from_str(id).map(|id| WorldAssetRequestKind::UiImage { id });
-    let result = kind.and_then(|kind| semio_framework_os_renderer_wgpu_asset_authority::reserve_renderer_asset_request(kind, url).map(|_| ()));
+    let result = kind.and_then(|kind| semio_renderer_wgpu_asset_authority::reserve_renderer_asset_request(kind, url).map(|_| ()));
     if let Err(fault) = result {
         UI_IMAGE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault));
     }
@@ -297,38 +297,38 @@ pub fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) -> Rect
 
 const RETAINED_UI_IMAGE_SOURCE_BYTES: usize = 4 * 1024 * 1024;
 
-pub fn render_ui_image_step(image: &semio_framework_ui_declaration::ui::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
+pub fn render_ui_image_step(image: &semio_ui_declaration::ui::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor) -> semio_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     match cursor.phase() {
         0 => {
             if image.id.len() > 256 {
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             if cursor.byte() < image.id.len() {
                 if cursor.advance_byte().is_err() {
-                    return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                    return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
                 }
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
             }
             if cursor.advance_phase().is_err() {
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
+            semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         1 => {
             let src = image.src.trim();
             if src.len() > RETAINED_UI_IMAGE_SOURCE_BYTES {
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             if cursor.byte() < src.len() {
                 if cursor.advance_byte().is_err() {
-                    return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                    return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
                 }
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
             }
             if cursor.advance_phase().is_err() {
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
+            semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         2 => {
             let src = image.src.trim();
@@ -338,15 +338,15 @@ pub fn render_ui_image_step(image: &semio_framework_ui_declaration::ui::UiImageN
                 queue_ui_image_url_fetch(&image.id, src);
             }
             if cursor.advance_phase().is_err() {
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
+            semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         3 => {
             let key = UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(&image.id).filter(|key| key.len() <= 256).cloned());
             let Some(key) = key else { return cursor.finish() };
             if ctx.draw.try_reserve_retained_items(1).is_err() {
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             let natural_size = UI_IMAGE_SIZES.with(|cell| cell.borrow().get(&image.id).copied());
             let target = match natural_size.filter(|(width, height)| *width > 0 && *height > 0) {
@@ -355,12 +355,12 @@ pub fn render_ui_image_step(image: &semio_framework_ui_declaration::ui::UiImageN
             };
             ctx.draw.push_raster_quad(&key, [target.x, target.y, target.w, target.h], [0.0, 0.0, 1.0, 1.0], 1.0);
             if cursor.advance_item().is_err() || cursor.advance_phase().is_err() {
-                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
+            semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         _ => cursor.finish(),
     }
 }
 
-pub use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
+pub use semio_renderer_wgpu_contracts::framework_widget_context;

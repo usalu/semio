@@ -44,8 +44,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ReorderNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "nodes", kind: "reorder-nodes", record: "ReorderedNodes" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Reorder nodes", "Knoten umordnen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Reorder nodes", "Knoten umordnen")
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into()]

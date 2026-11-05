@@ -2,9 +2,9 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
@@ -16,7 +16,7 @@ pub type LayoutStore = store::ArtifactStore<semio_s_artifact_layout_layout_model
 /// read but never mutated, undone or closed. The editor app installs the same catalog through
 /// the framework's bounded default owners; every standalone store goes through here instead.
 pub async fn new_layout_store(envelope: LayoutEnvelope, actor: protocol::ActorId) -> Result<OwnedLayoutStore, store::VcsError> {
-    let mut store = LayoutStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
+    let mut store = LayoutStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot, LayoutMutation>().expect("layout document store owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("layout document store refused its exact owner catalog: {error}");

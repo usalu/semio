@@ -9,7 +9,7 @@ type AppAuthority = { owner: string; toolIdsConstant: string; source: string; ro
 type Fixture = { schema: string; apps: AppAuthority[] };
 const ANCHORS = [
   "ToolExecutionContract::bounded_first_step",
-  "semio_framework_plugin::bounded_first_step_tool_proofs!",
+  "semio_plugin::bounded_first_step_tool_proofs!",
   "factory_type:",
   "build_artifact_store_one_item_preparation_factory",
   "register_tool_job_factories",

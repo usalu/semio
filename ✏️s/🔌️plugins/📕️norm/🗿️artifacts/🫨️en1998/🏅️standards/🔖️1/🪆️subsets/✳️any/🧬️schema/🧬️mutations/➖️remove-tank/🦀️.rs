@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for RemoveTank where Op: pro
         record: "RemoveTank",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove tank", "Tank entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove tank", "Tank entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

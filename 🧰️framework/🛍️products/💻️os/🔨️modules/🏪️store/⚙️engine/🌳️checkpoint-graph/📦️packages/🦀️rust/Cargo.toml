@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-store-engine-checkpoint-graph"
+name = "semio-os-store-engine-checkpoint-graph"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,9 +22,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../../🧱️store-components/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-live = { path = "../../../🎞️live/📦️packages/🦀️rust" }
-semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-engine-core = { path = "../../../🧱️store-components/📦️packages/🦀️rust" }
+semio-os-store-engine-live = { path = "../../../🎞️live/📦️packages/🦀️rust" }
+semio-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

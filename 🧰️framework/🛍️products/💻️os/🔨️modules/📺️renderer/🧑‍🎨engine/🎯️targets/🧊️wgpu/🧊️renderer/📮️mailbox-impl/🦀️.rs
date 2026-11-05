@@ -137,7 +137,7 @@ impl RuntimeMailbox<AppRuntime> {
         let owner = queue.interaction_owner_outstanding();
         #[cfg(not(target_arch = "wasm32"))]
         let owner = owner || !self.0.original_recovery.try_lock().is_ok_and(|owner| owner.is_none()) || runtime.pending_frame_maintenance_refusal.is_some() || self.0.frame_maintenance_executions.state.load(Ordering::Acquire) != 0 || self.0.frame_deferred_executions.state.load(Ordering::Acquire) != 0;
-        if owner { PresenterInteractionStep::Waiting { site: runtime.checkout.site().unwrap_or("unknown"), request: semio_framework_os_renderer_wgpu_host_base::host_io_request_trace_label() } } else { PresenterInteractionStep::Abandoned }
+        if owner { PresenterInteractionStep::Waiting { site: runtime.checkout.site().unwrap_or("unknown"), request: semio_renderer_wgpu_host_base::host_io_request_trace_label() } } else { PresenterInteractionStep::Abandoned }
     }
 
     /// 🤝️ Restores the actual interaction in place while its remaining cursor stays in the same bounded queue.

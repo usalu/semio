@@ -8,7 +8,7 @@ pub(super) async fn arm_load_config<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::LoadConfig { seq, pack, spr } = command else { unreachable!("arm_load_config is dispatched only for its own command") };
     let applied = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
@@ -27,7 +27,7 @@ pub(super) async fn arm_read_config<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ReadConfig { seq } = command else { unreachable!("arm_read_config is dispatched only for its own command") };
     let read = with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
@@ -46,7 +46,7 @@ pub(super) async fn arm_load_window_config<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::LoadWindowConfig { seq, entry } = command else { unreachable!("arm_load_window_config is dispatched only for its own command") };
     if !entry.window_id.is_empty()||!entry.window_kind_id.is_empty()||!entry.envelope_pack.is_empty(){return Err(plugin_internal_fault("original native Window input remains before completed command dispatch").into())}
     frames.push(protocol::AppFrame::Done { in_reply_to: seq });
@@ -59,7 +59,7 @@ pub(super) async fn arm_read_window_configs<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: protocol::AppCommand,
-) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ReadWindowConfigs { seq } = command else { unreachable!("arm_read_window_configs is dispatched only for its own command") };
     let read = with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
@@ -69,7 +69,7 @@ pub(super) async fn arm_read_window_configs<PA: PluginApp>(
         Ok(packs) => {
             let mut entries = Vec::with_capacity(packs.len());
             for pack in packs {
-                entries.push(protocol::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack: match pack.source {semio_framework_plugin_window_config::WindowConfigPackSource::Pair(files)=>store::os_store::serialization::encode_document_pack_bytes(&files.pack,&files.spr).await,semio_framework_plugin_window_config::WindowConfigPackSource::Framed(bytes)=>bytes} });
+                entries.push(protocol::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack: match pack.source {semio_plugin_window_config::WindowConfigPackSource::Pair(files)=>store::os_store::serialization::encode_document_pack_bytes(&files.pack,&files.spr).await,semio_plugin_window_config::WindowConfigPackSource::Framed(bytes)=>bytes} });
             }
             frames.push(protocol::AppFrame::WindowConfigs { in_reply_to: seq, entries });
         }

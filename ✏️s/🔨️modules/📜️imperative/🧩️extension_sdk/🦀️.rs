@@ -95,9 +95,9 @@ impl ImperativeEvaluationResources {
     }
 }
 
-impl semio_framework_plugin::ExtensionResourceOwner for ImperativeEvaluationResources {
-    fn invoke(&mut self, _capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::ExtensionInvokeStep, semio_framework::Fault> {
-        use semio_framework_plugin::ExtensionInvokeStep;
+impl semio_plugin::ExtensionResourceOwner for ImperativeEvaluationResources {
+    fn invoke(&mut self, _capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::ExtensionInvokeStep, semio_framework::Fault> {
+        use semio_plugin::ExtensionInvokeStep;
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         let refused = |error: ValueError| ExtensionInvokeStep { payload: None, retained_progress: RetainedCloneProgress::default(), refusal: Some(error.into()) };
         let grant = cx.retained_grant();
@@ -125,8 +125,8 @@ impl semio_framework_plugin::ExtensionResourceOwner for ImperativeEvaluationReso
         self.closing = true;
     }
 
-    fn close_step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
-        Ok(semio_framework_plugin::PluginLifecycleStep::Complete(Default::default()))
+    fn close_step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        Ok(semio_plugin::PluginLifecycleStep::Complete(Default::default()))
     }
 
     fn terminal_is_empty(&self) -> bool {

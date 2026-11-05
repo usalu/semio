@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeActionQKLine where
         record: "ChangedActionQKLine",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change variable line load q_k of the member action", "Bauteileinwirkung: Veränderliche Streckenlast q_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change variable line load q_k of the member action", "Bauteileinwirkung: Veränderliche Streckenlast q_k ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.action_id.clone()]

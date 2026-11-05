@@ -1,12 +1,12 @@
 //! 🧬️ FEM 2D model window-config schema.
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "fem.2d.modelwindowconfig")]
 pub struct Fem2dModelWindowConfig {
     #[dsl(block)]
-    pub camera: semio_framework_os_kernel::Viewport2d,
+    pub camera: semio_os_kernel::Viewport2d,
 }
 
 /// 🩹 Owned-field patch of [`Fem2dModelWindowConfig`]: exactly the fields an update sets. It is both the update payload and the sparse diff.
@@ -15,7 +15,7 @@ pub struct Fem2dModelWindowConfig {
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Fem2dModelWindowConfigPatch {
     #[dsl(block)]
-    pub camera: Option<semio_framework_os_kernel::Viewport2d>,
+    pub camera: Option<semio_os_kernel::Viewport2d>,
 }
 
 impl Fem2dModelWindowConfigPatch {

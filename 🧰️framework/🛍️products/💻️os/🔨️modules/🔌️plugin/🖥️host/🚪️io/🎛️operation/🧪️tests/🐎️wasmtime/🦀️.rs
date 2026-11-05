@@ -1,7 +1,7 @@
 //! 🐎️ Real synchronous canonical guest imports suspend until the original borrowed caller replies.
 use super::{wasmtime as bridge,slot::OperationSlot,EntityIdentityAuthority,OriginalOperationReceiver};
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_plugin_host_engine::wasm;
+use semio_plugin_host_engine::wasm;
 use wasm::{Config,Engine,Store,component::{Component,Linker}};
 struct State{slot:OperationSlot}
 impl bridge::OperationHostStore for State{fn operation_slot(&mut self)->&mut OperationSlot{&mut self.slot}fn operation_log(&mut self,_:String,_:String){}fn operation_now_ms(&mut self)->i64{0}fn operation_clock_us(&mut self,_:u64)->Option<u64>{None}fn operation_trace_span(&mut self,_:String){}}
@@ -60,7 +60,7 @@ fn actual_receiving_protocol_refusals_remain_typed_borrowed_values() {
    let mut observe=|_|true;let mut port=|_:semio_framework_value::native_encoding::NativeEncodeAllocation|Ok(());let mut identity=EntityIdentityAuthority::new_forwarded(fixture["reservation"]["ceiling"].as_u64().unwrap()as usize,&mut observe,&mut port).unwrap();let mut receiver=OriginalOperationReceiver::new(&mut identity);
    let result=store.run_concurrent(async|accessor|bridge::receive(accessor,&mut receiver,async{let(value,)=begin.call_concurrent(accessor,()).await?;assert!(value.is_ok());Ok::<_,wasm::Error>(())}).await).await.unwrap();
    let bridge::ReceiveError::Refused(error)=result.unwrap_err() else { panic!("receiving refusal changed its domain") };
-   let storage=if matches!(&error.message,std::borrow::Cow::Borrowed(_)){"borrowed"}else{"owned"};let oracle=serde_json::json!({"stage":row["stage"],"code":semio_framework_plugin_guest_contract::operation_authority::refusal_code(error.kind),"messageStorage":storage});assert_eq!(&oracle,row);assert_eq!(error.kind,ValueRefusalKind::InvariantViolated);
+   let storage=if matches!(&error.message,std::borrow::Cow::Borrowed(_)){"borrowed"}else{"owned"};let oracle=serde_json::json!({"stage":row["stage"],"code":semio_plugin_guest_contract::operation_authority::refusal_code(error.kind),"messageStorage":storage});assert_eq!(&oracle,row);assert_eq!(error.kind,ValueRefusalKind::InvariantViolated);
    if occupied{store.data_mut().slot.disarm(1);}else{store.data_mut().slot.arm().unwrap();store.data_mut().slot.disarm(1);}
    drop(receiver);assert_eq!(identity.pause_forwarded().unwrap().owned_bytes(),0);
   }

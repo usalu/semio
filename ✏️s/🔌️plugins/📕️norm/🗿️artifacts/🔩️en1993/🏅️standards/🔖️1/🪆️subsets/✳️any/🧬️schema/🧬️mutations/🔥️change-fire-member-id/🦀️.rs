@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFireMemberId where
         record: "ChangedFireMemberId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change member id of the fire exposure", "Brandbeanspruchung: Bauteilkennung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change member id of the fire exposure", "Brandbeanspruchung: Bauteilkennung ändern")
     }
 }
 

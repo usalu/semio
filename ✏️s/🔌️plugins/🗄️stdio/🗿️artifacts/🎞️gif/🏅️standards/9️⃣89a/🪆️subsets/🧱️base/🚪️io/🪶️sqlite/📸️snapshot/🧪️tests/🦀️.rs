@@ -1,17 +1,17 @@
-use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+use semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::standards::v89a::subsets::any::schema::snapshot::*;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+use semio_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::artifact::ordered_row_refs, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteRow};
+use semio_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::artifact::ordered_row_refs, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteRow};
 #[allow(unused_imports)]
 use std::{collections::BTreeMap, collections::BTreeSet};
 use crate::standards::v89a::subsets::any::io::sqlite::snapshot::{invalid, disposal};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v89a::subsets::any::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 
 fn fixture() -> GifSnapshot { semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }
 
@@ -24,13 +24,13 @@ fn sqlite_snapshot_gif89_independent_dimensions_and_index_sequence(){
 
 #[test]
 fn sqlite_snapshot_gif89_controlled_output_reaches_literal_string_interior(){
- use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
+ use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🪶️sqlite/🚦️control.json")).unwrap();
  let mut snapshot=fixture();snapshot.schema="世界\0".repeat(plan["largeTextBytes"].as_u64().unwrap() as usize);
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let payload=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).unwrap();
   assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GifSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap(),snapshot);
-  let mut reached=false;let mut callback=|event:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=65536&&event.completed<event.total{reached=true;false}else{true}};
+  let mut reached=false;let mut callback=|event:semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=65536&&event.completed<event.total{reached=true;false}else{true}};
   assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut callback, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).is_err());assert!(reached);
   assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits{max_value_bytes:128,..SqliteDatabaseLimits::default()}, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).is_err());
  }
@@ -44,12 +44,12 @@ fn sqlite_snapshot_gif89_large_plain_text_cancel_precedes_owned_copy(){
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_gif89_owned_io_retains_animation_and_extensions_without_wire_normalization(){
- use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
- use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
+ use {semio_framework_artifact_reference::ArtifactDialect,semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
+ use semio_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  crate::register_sqlite_test_declaration();
  let dialect:ArtifactDialect=crate::GIF_89A_DIALECT.into();let mut snapshot=fixture();snapshot.schema="GIF89 vollständiger Snapshot 世界".into();let mut phases=Vec::new();
- let bytes=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
- assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<GifSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value,snapshot);
+ let bytes=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
+ assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<GifSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value,snapshot);
  assert!(!phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));
  let database=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(database.table("semio_snapshot").unwrap().rows[0].text(2).unwrap(),"89a");
 }
@@ -77,20 +77,20 @@ fn sqlite_snapshot_gif89_independent_frame_text_and_application_edits() {
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_gif89_actual_erased_declaration_preserves_owned_state(){
- use store::{os_store::serialization::ArtifactSqliteSnapshotHost,snapshot::ArtifactDsl};use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding};
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,snapshot::ArtifactDsl};use {semio_framework_artifact_reference::ArtifactDialect,semio_os_kernel::sqlite_snapshot::SnapshotEncoding};
  crate::register_sqlite_test_declaration();let codec=store::os_store::codec_registry::document_codec(crate::STDIO_GIF89A_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.unwrap();let dialect:ArtifactDialect=crate::GIF_89A_DIALECT.into();let mut snapshot=fixture();snapshot.schema="owned GIF89 世界\0".into();snapshot.width=u32::MAX;
  let mut intermediate=snapshot.clone();intermediate.frames[0].width=0;intermediate.frames[0].height=u32::MAX;intermediate.frames[0].indices=vec![0,255,1];for snapshot in [snapshot,GifSnapshot{schema:"empty palette".into(),width:u32::MAX,gct:Some(GifColorTable::default()),..GifSnapshot::default()},intermediate]{let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (provider.import)(&codec.schema,&dialect,&mut Some(expected.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(restored,expected);}}
 }
 #[test]
 fn sqlite_snapshot_gif89_controlled_owned_record_decoder(){
- use store::{os_store::serialization::ArtifactSqliteSnapshotHost,snapshot::ArtifactDsl};use semio_framework_os_kernel::io_schema::IoPayload;
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,snapshot::ArtifactDsl};use semio_os_kernel::io_schema::IoPayload;
  let mut snapshot=fixture();snapshot.schema="controlled GIF89 世界\0".into();let record=snapshot.__dsl_to_record();let spec=GifSnapshot::__dsl_spec();let body=semio_framework_dsl_record::print(&record,&spec,semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<GifSnapshot as ArtifactDsl>::envelope_id(),store::semio_format::Component::Dsl,1).unwrap();let payload=IoPayload::Text(store::semio_format::wrap_text(&envelope,&body));
  assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GifSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap(),snapshot);assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GifSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default()), native_owner)).is_err());
 }
 
 #[test]
 fn sqlite_snapshot_gif89_native_controls_reach_interior_owned_construction(){
- use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_framework_os_kernel::{io_schema::IoPayload,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase}};
+ use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_os_kernel::{io_schema::IoPayload,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase}};
  let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🪶️sqlite/🚦️control.json")).unwrap();let count=cases["nativeItems"].as_u64().unwrap() as usize;let mut snapshot=fixture();snapshot.frames=vec![snapshot.frames[0].clone();count];
  for payload in [IoPayload::Text(snapshot.print_dsl()),IoPayload::Binary(snapshot.encode_pack())]{
   assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GifSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap(),snapshot);
@@ -103,6 +103,6 @@ fn sqlite_snapshot_gif89_native_controls_reach_interior_owned_construction(){
 #[test]
 fn sqlite_snapshot_gif89_declared_record_grammar_covers_neutral_full_model(){
  use pack::snapshot::ArtifactDsl;
- let grammar=semio_framework_dsl::parse_grammar(include_str!("../../../📝️text/📸️snapshot/📖️.grammar.semio")).unwrap();let recognizer=semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");let mut snapshot=fixture();snapshot.schema="schema 世界\0".into();
+ let grammar=semio_framework_dsl::parse_grammar(include_str!("../../../📝️text/📸️snapshot/📖️.grammar.semio")).unwrap();let recognizer=semio_framework_dsl::Recognizer::compile(&grammar, &semio_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");let mut snapshot=fixture();snapshot.schema="schema 世界\0".into();
  for snapshot in [snapshot,GifSnapshot{schema:"empty optional palette".into(),gct:Some(GifColorTable::default()),..GifSnapshot::default()}]{let text=snapshot.print_dsl();let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();assert!(recognizer.recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap(),"full neutral model grammar did not recognize its owned record");assert_eq!(GifSnapshot::parse_dsl(&text).unwrap(),snapshot);}
 }

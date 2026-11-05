@@ -37,11 +37,11 @@ pub fn decode_sqlite_snapshot_record_native<T:semio_framework_value::retirement:
             let (spec,record,output)=intermediate.as_mut().unwrap();let spec=spec.as_ref().unwrap();
             *record=Some(match payload {
                 semio_framework_io_schema::IoPayload::Binary(bytes) => {
-                    let body = semio_framework_os_semio::unwrap_binary_controlled(bytes, envelope_id, semio_framework_os_semio::Component::Pack, 1, native)?;
-                    pack::record::decode_document_controlled(body, &spec, &pack::record::DecodeOptions::default(), native).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?.0
+                    let body = semio_os_semio::unwrap_binary_controlled(bytes, envelope_id, semio_os_semio::Component::Pack, 1, native)?;
+                    pack::record::decode_document_controlled(body, &spec, &pack::record::DecodeOptions::default(), native).map_err(semio_os_pack::PackRefusal::into_value_error)?.0
                 }
                 semio_framework_io_schema::IoPayload::Text(text) => {
-                    let body = semio_framework_os_semio::split_text_preamble_controlled(text, envelope_id, semio_framework_os_semio::Component::Dsl, 1, native).map_err(semio_framework_os_semio::SemioError::into_value_error)?;
+                    let body = semio_os_semio::split_text_preamble_controlled(text, envelope_id, semio_os_semio::Component::Dsl, 1, native).map_err(semio_os_semio::SemioError::into_value_error)?;
                     semio_framework_dsl_record::parse_exact_controlled(body, &spec, &ParseOptions { limits: Limits { max_bytes: limits.max_file_bytes, ..Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document }, native)
                         .map_err(|error| ValueError::new(error.kind, error.message))?
                 }

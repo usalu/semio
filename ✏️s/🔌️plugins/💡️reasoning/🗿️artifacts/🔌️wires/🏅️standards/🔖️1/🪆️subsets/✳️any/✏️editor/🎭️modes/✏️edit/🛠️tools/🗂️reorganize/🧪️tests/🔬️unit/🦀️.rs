@@ -1,7 +1,7 @@
 use crate::SemioGraphMutation;
 use semio_s_artifact_stdio_semio_graph::schema::mutations::move_node::MoveNode;
 use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity, LayoutRunConfig};
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_tool_run::{JobKindId, ToolRunDefinition};
 use crate::editor::wires::modes::edit::tools::reorganize::*;
 use crate::editor::wires::unit_tests::context::{close, metabolism_app, OwnedWiresApp};
@@ -10,8 +10,8 @@ use crate::schema::{board_snapshot_nodes, node_position};
 use semio_framework_graph_layout_run::testing::{layout_run_close, layout_run_drive, layout_run_fdg_layout, layout_run_hop_distances, layout_run_normalized_stress, LayoutRunOracleParameters};
 use semio_framework_graph_layout_run::{LayoutRunJob, LayoutRunReason, LayoutRunStop};
 use semio_framework_job::INTERACTIVE_LANE_FUEL;
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::{ArtifactEditor, DslValue, PluginApp};
+use semio_plugin::artifact_app_laws::meta;
+use semio_plugin::{ArtifactEditor, DslValue, PluginApp};
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunVerdict, TOOL_RUN_ACTION_IDS};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -188,7 +188,7 @@ fn reorganize_step_stays_below_the_interactive_ceiling_on_the_metabolism_example
 
 fn tool_run_action(app: &mut OwnedWiresApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
     let args = DslValue::Object(entries.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect());
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &OwnedWiresApp) -> Option<&'static str> {
@@ -201,10 +201,10 @@ fn pump_until(app: &mut OwnedWiresApp, what: &str, done: impl Fn(&OwnedWiresApp)
         if done(app) {
             return;
         }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
-            assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+            assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
         }
         let _ = app.take_typed_operation_effect();
@@ -246,7 +246,7 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
     assert_eq!(after.len(), before.len());
     assert!(after.iter().all(|(id, position)| before.get(id) != Some(position)), "every metabolism node moved: {before:?} → {after:?}");
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
+    ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
     assert_eq!(node_positions(&app), before, "one undo restores every committed position");
     close(app);
 }
@@ -280,8 +280,8 @@ fn debug_reorganize_undo_settles() {
         if !app.has_pending_typed_operations() {
             break;
         }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("[DEBUG] maintenance");
-        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("[DEBUG] advance");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("[DEBUG] maintenance");
+        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("[DEBUG] advance");
         if let Some(page) = app.take_typed_operation_result_page(1) {
             app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
         }
@@ -289,13 +289,13 @@ fn debug_reorganize_undo_settles() {
         }
         let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("[DEBUG] completion");
     }
-    let admitted = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close));
+    let admitted = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close));
     for turn in 0..4000 {
         if !app.has_pending_typed_operations() {
             break;
         }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("[DEBUG] maintenance");
-        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("[DEBUG] advance");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("[DEBUG] maintenance");
+        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("[DEBUG] advance");
         while let Some(page) = app.take_typed_operation_result_page(1) {
             app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
         }

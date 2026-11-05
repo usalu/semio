@@ -21,7 +21,7 @@ fn register_fixture_hits(fixture: &Value, input: &mut InputState<ActionDescripto
 #[test]
 fn tab_walks_the_chrome_ring_and_enter_presses_the_focused_control() {
     let fixture = fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::default();
     register_fixture_hits(&fixture, &mut input);
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
@@ -30,9 +30,9 @@ fn tab_walks_the_chrome_ring_and_enter_presses_the_focused_control() {
     assert_eq!(ring, published, "the ring is the chrome's focusable controls in publication order");
     for step in fixture["steps"].as_array().unwrap() {
         let (action, shift) = match step["key"].as_str().unwrap() {
-            "tab" => (semio_framework_ui_wgpu_input::KeyAction::Tab, false),
-            "shift+tab" => (semio_framework_ui_wgpu_input::KeyAction::Tab, true),
-            _ => (semio_framework_ui_wgpu_input::KeyAction::Enter, false),
+            "tab" => (semio_ui_wgpu_input::KeyAction::Tab, false),
+            "shift+tab" => (semio_ui_wgpu_input::KeyAction::Tab, true),
+            _ => (semio_ui_wgpu_input::KeyAction::Enter, false),
         };
         let modifiers = PointerModifiers { shift, ..PointerModifiers::default() };
         semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(action, &modifiers, &mut input)).expect("keyboard step");
@@ -52,7 +52,7 @@ fn tab_walks_the_chrome_ring_and_enter_presses_the_focused_control() {
 #[test]
 fn the_focus_ring_surrounds_the_focused_controls_hit_rect() {
     let fixture = fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::default();
     register_fixture_hits(&fixture, &mut input);
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
@@ -68,7 +68,7 @@ fn the_focus_ring_surrounds_the_focused_controls_hit_rect() {
 #[test]
 fn a_painted_navbar_hands_the_platform_a_named_tree() {
     let theme = Theme::light();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.chrome.screen_w = 1440.0;
     SessionCtx::of(&mut shell).sync_dock_tabs();
     for (id, label) in [("fixture.leading.first", "First"), ("fixture.leading.second", "Second"), ("fixture.leading.third", "Third")] {
@@ -83,9 +83,9 @@ fn a_painted_navbar_hands_the_platform_a_named_tree() {
     assert!(walked < 16_384 && shell.chrome.error.is_none(), "the navbar walk completes: {:?}", shell.chrome.error);
     let painted = input.staged_hits().iter().filter(|hit| hit.control_id.is_some()).count();
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
-    let publication = semio_framework_os_renderer_wgpu_native_platform::native_accessibility::published_native_accessibility();
-    let chrome = publication.windows.iter().find(|window| window.window_id == semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID).expect("the chrome is announced to the platform");
-    let census = semio_framework_os_renderer_wgpu_native_platform::native_accessibility::native_accessibility_census(&publication);
+    let publication = semio_renderer_wgpu_native_platform::native_accessibility::published_native_accessibility();
+    let chrome = publication.windows.iter().find(|window| window.window_id == semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID).expect("the chrome is announced to the platform");
+    let census = semio_renderer_wgpu_native_platform::native_accessibility::native_accessibility_census(&publication);
     eprintln!("native accessibility census: painted controls {painted}, chrome nodes {}, {census:?}", chrome.nodes.len());
     let announced: Vec<&str> = chrome.nodes.iter().map(|node| node.key.as_str()).collect();
     for tab in ["fixture.leading.first", "fixture.leading.second", "fixture.leading.third"] {

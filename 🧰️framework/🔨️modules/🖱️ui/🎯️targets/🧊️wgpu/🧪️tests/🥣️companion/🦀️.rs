@@ -2,23 +2,23 @@
 
 #![cfg(test)]
 
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_theme::GlassStyle;
+use semio_ui_draw_contract::DrawList;
+use semio_ui_theme::GlassStyle;
 use ui_scene::math::Instance3d;
 use ui_scene::math::Mat4;
 use ui_scene::math::Mesh3dField;
 use ui_scene::math::Mesh3dSchema;
-use semio_framework_ui_prepared::PreparedRenderInput;
-use semio_framework_ui_prepared::PreparedRenderJob;
+use semio_ui_prepared::PreparedRenderInput;
+use semio_ui_prepared::PreparedRenderJob;
 use ui_scene::math::ProceduralGrid3d;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Rgba;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Rgba;
 use ui_scene::math::SceneDraw3d;
 use ui_scene::math::SceneMaterialDraw3d;
 use ui_scene::math::SceneMaterialKind3d;
 use ui_scene::math::ScenePass3d;
-use semio_framework_ui_wgpu_hosting::cursor;
-use semio_framework_ui_draw_contract as draw_types;
+use semio_ui_wgpu_hosting::cursor;
+use semio_ui_draw_contract as draw_types;
 use ui_scene::math as kernel_3d_scene;
 use ui_scene::math::mesh3d_allocate_capacity_byte_demand;
 use ui_scene::math::mesh3d_allocate_step;
@@ -32,8 +32,8 @@ use ui_scene::math::mesh3d_terminal_is_empty;
 use ui_scene::math::mesh3d_write_edge;
 use ui_scene::math::mesh3d_write_u32;
 use ui_scene::math::mesh3d_write_vec3;
-use semio_framework_ui_wgpu_paint as paint;
-use semio_framework_ui_theme as theme;
+use semio_ui_wgpu_paint as paint;
+use semio_ui_theme as theme;
 
 #[path = "../../../../🧪️tests/🔬️targets-wgpu-text-renderer/🦀️.rs"]
 mod text_renderer_tests;

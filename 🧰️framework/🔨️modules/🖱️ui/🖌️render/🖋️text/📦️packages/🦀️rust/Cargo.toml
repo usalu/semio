@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-render-text"
+name = "semio-ui-render-text"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-render-packet = { path = "../../../📮️packet/📦️packages/🦀️rust" }
+semio-ui-render-packet = { path = "../../../📮️packet/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 # 🖋️ CPU-side text only: shaping/fallback (parley) and glyph rasterization into our own atlas (swash).
 # The GPU copy of that atlas belongs to whichever backend is active — this crate never touches a device.

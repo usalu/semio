@@ -34,13 +34,13 @@
         }
 
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-            Some(semio_framework_plugin_ownership::transient_publication::bounded_transient_root_retirement_factory::<Self::Transient>())
+            Some(semio_plugin_ownership::transient_publication::bounded_transient_root_retirement_factory::<Self::Transient>())
         }
 
 
 
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<PublicationPresence>())
+            Some(semio_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<PublicationPresence>())
         }
 
         /// 📨️ Records every host event on this test thread; a blur answers the lane-less `noopMutation`, so a law sees
@@ -89,7 +89,7 @@
         type Command = TestCommand;
 
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<PublicationPresence>())
+            Some(semio_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<PublicationPresence>())
         }
 
 
@@ -108,11 +108,11 @@
         }
 
         fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-            Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<PublicationPresence, PublicationPresenceMutation>())
+            Some(semio_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<PublicationPresence, PublicationPresenceMutation>())
         }
 
         fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(semio_framework_plugin_ownership::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default())))
+            Some(semio_plugin_ownership::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default())))
         }
 
         fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework::Fault>>{Some(||{
@@ -183,20 +183,20 @@
                     .expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
                 return Ok(ComponentTree::new(root));
             }
-            built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={}", doc.snapshot.count)))
+            built_text_to_component_tree(semio_ui_locale::Label::data(format!("count={}", doc.snapshot.count)))
         }
 
         /// 🪟️ One group per live window instance — the reserved `measures` section surface's own payload.
-        async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<semio_framework_ui_layout::layout::WindowMeasure>> {
-            view_state.window_instances.iter().map(|window| (window.id.clone(), vec![semio_framework_ui_layout::layout::WindowMeasure::measure_group(format!("{}-measure", window.id), format!("{} measures", window.window_kind_id), Vec::new())])).collect()
+        async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<semio_ui_layout::layout::WindowMeasure>> {
+            view_state.window_instances.iter().map(|window| (window.id.clone(), vec![semio_ui_layout::layout::WindowMeasure::measure_group(format!("{}-measure", window.id), format!("{} measures", window.window_kind_id), Vec::new())])).collect()
         }
 
         /// 🛠️ One group for the active tool — the reserved `tools` section surface's own payload.
-        async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<semio_framework_ui_layout::layout::WindowMeasure>> {
-            view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![semio_framework_ui_layout::layout::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
+        async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<semio_ui_layout::layout::WindowMeasure>> {
+            view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![semio_ui_layout::layout::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
         }
 
-        fn build_reserved_tool_job(request: semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        fn build_reserved_tool_job(request: semio_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
             if !matches!(request.tool_id.as_str(), "copy" | "cut" | "paste") {
                 return Ok(None);
             }

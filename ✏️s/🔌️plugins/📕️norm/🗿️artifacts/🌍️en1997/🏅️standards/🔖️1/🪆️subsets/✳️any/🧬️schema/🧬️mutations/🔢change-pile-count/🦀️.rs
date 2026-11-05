@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileCount where Op
         verb: "change", entity: "pile-count", kind: "change-pile-count", record: "ChangedPileCount",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change number of piles", "Pfahlanzahl ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change number of piles", "Pfahlanzahl ändern")
     }
 }
 

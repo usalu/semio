@@ -2,7 +2,7 @@
 
 use super::scene::{LoadKind, LocalizedCopy, Vec3};
 use super::*;
-use semio_framework_plugin::{World3dColorRamp, World3dText};
+use semio_plugin::{World3dColorRamp, World3dText};
 
 macro_rules! config_choices {
     ($($item:item)*) => {$(
@@ -76,10 +76,10 @@ pub enum Lang {
 
 impl Lang {
     /// 🗣️ The language of a session locale, matched exhaustively.
-    pub fn of(locale: semio_framework_ui_locale::Locale) -> Self {
+    pub fn of(locale: semio_ui_locale::Locale) -> Self {
         match locale {
-            semio_framework_ui_locale::Locale::En => Self::En,
-            semio_framework_ui_locale::Locale::De => Self::De,
+            semio_ui_locale::Locale::En => Self::En,
+            semio_ui_locale::Locale::De => Self::De,
         }
     }
 }

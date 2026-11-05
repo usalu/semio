@@ -24,7 +24,7 @@ use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::word;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 fn ortho(v:DwgOrthographicView)->&'static str{match v{DwgOrthographicView::None=>"none",DwgOrthographicView::Top=>"top",DwgOrthographicView::Bottom=>"bottom",DwgOrthographicView::Front=>"front",DwgOrthographicView::Back=>"back",DwgOrthographicView::Left=>"left",DwgOrthographicView::Right=>"right"}}
 pub fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgLayout)->Result<(),ValueError>{

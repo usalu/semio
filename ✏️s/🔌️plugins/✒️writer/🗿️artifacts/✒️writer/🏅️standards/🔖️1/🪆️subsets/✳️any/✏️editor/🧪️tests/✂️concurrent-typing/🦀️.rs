@@ -7,13 +7,13 @@ use crate::editor::writer::commands::{set_text, text_splice};
 use crate::editor_unit_tests::context::main_window_view;
 use crate::editor::writer::{WriterCommand, WriterPlayApp};
 use crate::writer_text;
-use semio_framework_plugin::app::settle_framework_reserved_admission;
-use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, paired_registered_apps_with_members, settle_registered_typed_operation};
-use semio_framework_plugin::{ActionMeta, EditorApp, PluginApp, VcsArtifactApp};
+use semio_plugin::app::settle_framework_reserved_admission;
+use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, paired_registered_apps_with_members, settle_registered_typed_operation};
+use semio_plugin::{ActionMeta, EditorApp, PluginApp, VcsArtifactApp};
 
 /// 🔄️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
-struct Replica(pub VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+struct Replica(pub VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
 impl std::ops::Deref for Replica {
     type Target = VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
@@ -51,12 +51,12 @@ async fn type_run(replica: &mut Replica, author: &mut Author, run: &str) {
     for char in run.chars() {
         let chars: Vec<char> = author.view.chars().collect();
         let next: String = chars[..author.caret].iter().copied().chain(std::iter::once(char)).chain(chars[author.caret..].iter().copied()).collect();
-        let splice = semio_framework_plugin::TextSplice::from_edit(&author.view, &next, semio_framework_plugin::TEXT_SPLICE_CONTEXT_SCALARS).expect("a keystroke changes the text");
+        let splice = semio_plugin::TextSplice::from_edit(&author.view, &next, semio_plugin::TEXT_SPLICE_CONTEXT_SCALARS).expect("a keystroke changes the text");
         author.seq += 1;
         let caret_bytes = next.chars().take(author.caret + 1).map(char::len_utf8).sum();
         let command = WriterCommand::TextSplice(text_splice::TextSplice { start: splice.start, deleted: splice.deleted, insert: splice.insert, before: splice.before, after: splice.after, seq: author.seq, anchor: caret_bytes, caret: caret_bytes });
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut replica.0, &command, &author_meta(author.actor), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), replica.1.cx()).await.expect("the keystroke applies");
-        settle_registered_typed_operation(&mut replica.0, meta(author.actor).instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), replica.1.cx()).await.expect("the keystroke publishes");
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut replica.0, &command, &author_meta(author.actor), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), replica.1.cx()).await.expect("the keystroke applies");
+        settle_registered_typed_operation(&mut replica.0, meta(author.actor).instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), replica.1.cx()).await.expect("the keystroke publishes");
         author.view = next;
         author.caret += 1;
     }
@@ -64,9 +64,9 @@ async fn type_run(replica: &mut Replica, author: &mut Author, run: &str) {
 
 /// 🔀️ Both replicas fold each other's events and must agree.
 async fn exchange(a: &mut Replica, b: &mut Replica) -> String {
-    a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a folds b's events");
-    b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), b.1.cx()).await.expect("b folds a's events");
-    a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a folds b's rebased events");
+    a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a folds b's events");
+    b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), b.1.cx()).await.expect("b folds a's events");
+    a.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a folds b's rebased events");
     let (left, right) = (text_of(a), text_of(b));
     assert_eq!(left, right, "both replicas must fold the same text");
     left
@@ -74,10 +74,10 @@ async fn exchange(a: &mut Replica, b: &mut Replica) -> String {
 
 #[semio_framework_async_macros::async_test]
 async fn two_authors_typing_at_once_keep_both_runs_and_undo_only_their_own() {
-    let (a, b) = paired_registered_apps_with_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _>("mem://writer-concurrent-typing", || async { semio_framework_plugin::App { definition: crate::editor::writer::create_writer_app(), examples: Vec::new() } }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-    let (mut a, mut b) = (Replica(a, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit()), Replica(b, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit()));
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut a.0, &WriterCommand::SetText(set_text::SetText { text: "Doc: \nend".into() }), &author_meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a seeds the text");
-    settle_registered_typed_operation(&mut a.0, meta("actor-a").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("the seed publishes");
+    let (a, b) = paired_registered_apps_with_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _>("mem://writer-concurrent-typing", || async { semio_plugin::App { definition: crate::editor::writer::create_writer_app(), examples: Vec::new() } }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
+    let (mut a, mut b) = (Replica(a, semio_plugin::artifact_app_laws::OriginalFixtureScope::admit()), Replica(b, semio_plugin::artifact_app_laws::OriginalFixtureScope::admit()));
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut a.0, &WriterCommand::SetText(set_text::SetText { text: "Doc: \nend".into() }), &author_meta("actor-a"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a seeds the text");
+    settle_registered_typed_operation(&mut a.0, meta("actor-a").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("the seed publishes");
     assert_eq!(exchange(&mut a, &mut b).await, "Doc: \nend");
     let mut alice = Author { actor: "actor-a", view: "Doc: \nend".into(), caret: 5, seq: 0 };
     let mut bob = Author { actor: "actor-b", view: "Doc: \nend".into(), caret: 5, seq: 0 };
@@ -94,13 +94,13 @@ async fn two_authors_typing_at_once_keep_both_runs_and_undo_only_their_own() {
     type_run(&mut b, &mut bob, "B").await;
     let different_points = exchange(&mut a, &mut b).await;
     assert!(different_points.starts_with('B') && different_points.contains("Aend"), "runs at different points land where their authors put them: {different_points:?}");
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut a.0, "undo", None, &author_meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a's undo is admitted");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut a.0, "undo", None, &author_meta("actor-a"), &mut semio_plugin::artifact_app_laws::fixture_identity(), a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a's undo is admitted");
     settle_framework_reserved_admission(&mut a.0, admitted).await.expect("a's undo commits");
-    settle_registered_typed_operation(&mut a.0, meta("actor-a").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a's undo publishes");
+    settle_registered_typed_operation(&mut a.0, meta("actor-a").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a's undo publishes");
     let undone = exchange(&mut a, &mut b).await;
     assert!(!undone.contains("Aend") && undone.starts_with('B') && undone.contains("beta"), "a's undo removes only a's own run on both replicas: {undone:?}");
     a.detach_backbone().await.expect("a releases its backbone");
     b.detach_backbone().await.expect("b releases its backbone");
-    close_registered_fixture_app(&mut a.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, a.1.cx()).expect("original caller paid app close");
-    close_registered_fixture_app(&mut b.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, b.1.cx()).expect("original caller paid app close");
+    close_registered_fixture_app(&mut a.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, a.1.cx()).expect("original caller paid app close");
+    close_registered_fixture_app(&mut b.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, b.1.cx()).expect("original caller paid app close");
 }

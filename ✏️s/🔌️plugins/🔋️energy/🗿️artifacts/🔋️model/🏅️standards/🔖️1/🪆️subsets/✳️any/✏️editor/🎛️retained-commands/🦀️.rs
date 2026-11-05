@@ -35,8 +35,8 @@ pub(super) fn energy_model_reduce(
     _config: &EnergyModelConfig,
     history: &HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EnergyModelEditor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EnergyModelEditor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation, NoDraftMutation>, Fault> {
     if let Some(camera) = camera_emit(command, _context.and_then(|context| context.view_state.as_deref())) {
@@ -55,7 +55,7 @@ impl EnergyModelCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ToolJobFactory for EnergyModelCommandJobFactory {
+impl semio_plugin::ToolJobFactory for EnergyModelCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<EnergyModelEditor>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<EnergyModelEditor>>;
 
@@ -75,11 +75,11 @@ impl semio_framework_plugin::ToolJobFactory for EnergyModelCommandJobFactory {
         energy_model_contract()
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for EnergyModelCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for EnergyModelCommandJobFactory {
     type Owner = EditorApp<EnergyModelEditor>;
     const TOOL_IDS: &'static [&'static str] = ENERGY_MODEL_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;

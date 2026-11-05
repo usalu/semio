@@ -26,21 +26,21 @@ pub use protocol::ids;
 pub use protocol::scalar;
 pub use protocol::wire;
 
-pub use semio_framework_os_channel as channel;
+pub use semio_os_channel as channel;
 
 // 🎞️ The os authoring half of the command layer (inference, semantics, diff kit, descriptor registry, composite planner).
 // It re-exports `protocol::mutation`'s contract from its own file, so `os_spr::command::Mutation` and friends still resolve here.
-pub use semio_framework_os_command as command;
+pub use semio_os_command as command;
 
 // 🧮️ Composite-plan folding and the fold-footprint law, kept apart from the command layer's leaf-facing kit.
-pub use semio_framework_os_command::fold;
+pub use semio_os_command::fold;
 
 pub use self::crypto::*;
 pub use self::dictionary::*;
 pub use self::ids::*;
 pub use self::wire::*;
 
-pub use semio_framework_os_history as history;
+pub use semio_os_history as history;
 
 #[path = "🔌️io/🦀️.rs"]
 pub mod io;

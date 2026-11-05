@@ -1,27 +1,27 @@
 //! 📥️ Items of `store` that belong to `os-store-initialization-runtime` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🦀️.rs`.
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
+use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId};
-use semio_framework_os_spr::{Edit, Mutation, OpBinary};
+use semio_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId};
+use semio_os_spr::{Edit, Mutation, OpBinary};
 use std::collections::HashMap;
 use std::sync::Arc;
-use semio_framework_os_store_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use semio_framework_os_store_read::{ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement};
+use semio_os_store_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
+use semio_os_store_read::{ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
-use semio_framework_os_vcs::{ArtifactHistoryKey, ArtifactHistoryLedger};
-use semio_framework_os_store_space_schema::{ArtifactCursor, ArtifactEnvelopeOwners};
+use semio_os_vcs::{ArtifactHistoryKey, ArtifactHistoryLedger};
+use semio_os_store_space_schema::{ArtifactCursor, ArtifactEnvelopeOwners};
 //#region 🔖️EphemeralLanes
 
-use semio_framework_os_store_ephemeral::*;
+use semio_os_store_ephemeral::*;
 use pack::snapshot::ArtifactPack;
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
+use semio_os_store_text_io::ArtifactStoreSnapshot;
 use crate::lifted_document_materialize::fresh_replica_clock;
-use semio_framework_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES, ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES, CursorRevisionAccumulator, CursorRevisionRecord};
-use semio_framework_os_store_replay::{EffectiveOperation, EffectiveSupersessions, effective_operation, fold_operation};
+use semio_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES, ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES, CursorRevisionAccumulator, CursorRevisionRecord};
+use semio_os_store_replay::{EffectiveOperation, EffectiveSupersessions, effective_operation, fold_operation};
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistryOwner;
 //#region 🔖️Authority
 //#region 🔖️EphemeralLanes
@@ -34,7 +34,7 @@ use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistryOwner;
 //#region 🔖️ArtifactStore
 /// 🌱️ The identity digest of a document's genesis every load path names its content revision from — a whole load, a retained
 /// initializer of any app — so one history reloaded either way names one revision (design §3.7).
-pub fn artifact_initial_digest<P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot>(initial: &P) -> [u8; 32] {
+pub fn artifact_initial_digest<P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot>(initial: &P) -> [u8; 32] {
     artifact_initial_digest_of_pack(&initial.encode_pack())
 }
 
@@ -149,27 +149,27 @@ pub enum ArtifactStoreInitializationForward<P> {
 /// Every mutating method advances one already-admitted history or reference owner; final store
 /// construction only moves these prepared authorities into their from-birth terminal shells.
 pub struct ArtifactStoreInitializationOwnerCatalog {
-    pub applied_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
-    pub redo_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
-    pub cursor_applied_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
-    pub cursor_redo_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
-    pub applied_revision: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
-    pub redo_revision: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    pub applied_edit_ids: semio_os_vcs::HistoryPageStack<String>,
+    pub redo_edit_ids: semio_os_vcs::HistoryPageStack<String>,
+    pub cursor_applied_edit_ids: semio_os_vcs::HistoryPageStack<String>,
+    pub cursor_redo_edit_ids: semio_os_vcs::HistoryPageStack<String>,
+    pub applied_revision: semio_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    pub redo_revision: semio_os_vcs::HistoryPageStack<CursorRevisionRecord>,
 }
 
 impl ArtifactStoreInitializationOwnerCatalog {
-    pub fn retain_id_capacity(ids: Vec<String>) -> semio_framework_os_vcs::HistoryPageStack<String> {
+    pub fn retain_id_capacity(ids: Vec<String>) -> semio_os_vcs::HistoryPageStack<String> {
         ids.into()
     }
 
     pub fn try_new() -> Result<Self, &'static str> {
         Ok(Self {
-            applied_edit_ids: semio_framework_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store applied owner catalog allocation failed")?,
-            redo_edit_ids: semio_framework_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store redo owner catalog allocation failed")?,
-            cursor_applied_edit_ids: semio_framework_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store cursor-applied owner catalog allocation failed")?,
-            cursor_redo_edit_ids: semio_framework_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store cursor-redo owner catalog allocation failed")?,
-            applied_revision: semio_framework_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store applied revision catalog allocation failed")?,
-            redo_revision: semio_framework_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store redo revision catalog allocation failed")?,
+            applied_edit_ids: semio_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store applied owner catalog allocation failed")?,
+            redo_edit_ids: semio_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store redo owner catalog allocation failed")?,
+            cursor_applied_edit_ids: semio_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store cursor-applied owner catalog allocation failed")?,
+            cursor_redo_edit_ids: semio_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store cursor-redo owner catalog allocation failed")?,
+            applied_revision: semio_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store applied revision catalog allocation failed")?,
+            redo_revision: semio_os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store redo revision catalog allocation failed")?,
         })
     }
 
@@ -192,13 +192,13 @@ impl ArtifactStoreInitializationOwnerCatalog {
 pub struct ArtifactStoreInitializationRuntime<P> {
     pub read_registry: std::mem::ManuallyDrop<SnapshotReadLeaseRegistryOwner>,
     pub current: std::mem::ManuallyDrop<Option<Arc<P>>>,
-    pub applied_edit_ids: std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>,
-    pub redo_edit_ids: std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>,
-    pub cursor_applied_edit_ids: std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>,
-    pub cursor_redo_edit_ids: std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>,
+    pub applied_edit_ids: std::mem::ManuallyDrop<semio_os_vcs::HistoryPageStack<String>>,
+    pub redo_edit_ids: std::mem::ManuallyDrop<semio_os_vcs::HistoryPageStack<String>>,
+    pub cursor_applied_edit_ids: std::mem::ManuallyDrop<semio_os_vcs::HistoryPageStack<String>>,
+    pub cursor_redo_edit_ids: std::mem::ManuallyDrop<semio_os_vcs::HistoryPageStack<String>>,
     pub current_checkpoint_id: std::mem::ManuallyDrop<Option<String>>,
     pub local_actor_id: std::mem::ManuallyDrop<ActorId>,
-    pub dag: std::mem::ManuallyDrop<Option<semio_framework_os_spr::MutationDag>>,
+    pub dag: std::mem::ManuallyDrop<Option<semio_os_spr::MutationDag>>,
     pub edit_sequence: i32,
     pub clock: HybridLogicalTimestamp,
     pub initial_digest: [u8; 32],
@@ -208,7 +208,7 @@ pub struct ArtifactStoreInitializationRuntime<P> {
     pub(crate) close_phase: u8,
     pub commit_stage:u8,
     pub commit_operation:usize,
-    pub commit_source:Option<(usize,semio_framework_os_vcs::ArtifactHistoryKey,[u8;32],bool)>,
+    pub commit_source:Option<(usize,semio_os_vcs::ArtifactHistoryKey,[u8;32],bool)>,
     taken: bool,
 }
 
@@ -219,10 +219,10 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     pub fn new_with_owner_catalog(artifact_id: &str, schema: &str, current: Arc<P>, initial_digest: [u8; 32], actor: ActorId, catalog: ArtifactStoreInitializationOwnerCatalog) -> Self {
-        Self::new_with_registry(artifact_id, schema, current,initial_digest, actor, catalog, SnapshotReadLeaseRegistryOwner::new(),semio_framework_os_spr::MutationDag::new()) }
+        Self::new_with_registry(artifact_id, schema, current,initial_digest, actor, catalog, SnapshotReadLeaseRegistryOwner::new(),semio_os_spr::MutationDag::new()) }
 
     /// 🧷️ Moves the admitted current, catalog and exact original read registry into one initializer.
-    pub fn new_with_registry(artifact_id:&str,schema:&str,current:Arc<P>,initial_digest:[u8;32],actor:ActorId,catalog:ArtifactStoreInitializationOwnerCatalog,registry:SnapshotReadLeaseRegistryOwner,dag:semio_framework_os_spr::MutationDag)->Self{
+    pub fn new_with_registry(artifact_id:&str,schema:&str,current:Arc<P>,initial_digest:[u8;32],actor:ActorId,catalog:ArtifactStoreInitializationOwnerCatalog,registry:SnapshotReadLeaseRegistryOwner,dag:semio_os_spr::MutationDag)->Self{
         let ArtifactStoreInitializationOwnerCatalog{applied_edit_ids,redo_edit_ids,cursor_applied_edit_ids,cursor_redo_edit_ids,applied_revision,redo_revision}=catalog;
         let identity_digest=CursorRevisionAccumulator::hash_record(b"initial",&[artifact_id.as_bytes(),schema.as_bytes(),&initial_digest]);
         Self{read_registry:std::mem::ManuallyDrop::new(registry),current:std::mem::ManuallyDrop::new(Some(current)),applied_edit_ids:std::mem::ManuallyDrop::new(applied_edit_ids),redo_edit_ids:std::mem::ManuallyDrop::new(redo_edit_ids),cursor_applied_edit_ids:std::mem::ManuallyDrop::new(cursor_applied_edit_ids),cursor_redo_edit_ids:std::mem::ManuallyDrop::new(cursor_redo_edit_ids),current_checkpoint_id:std::mem::ManuallyDrop::new(None),local_actor_id:std::mem::ManuallyDrop::new(actor),dag:std::mem::ManuallyDrop::new(Some(dag)),edit_sequence:0,clock:fresh_replica_clock(),initial_digest,revision:std::mem::ManuallyDrop::new(CursorRevisionAccumulator{identity_digest,applied:applied_revision,redo:redo_revision,applied_tail_chains:None,mutation_positions:protocol::HistoryFoldIndex::new(),indexed_edits:protocol::HistoryFoldIndex::new(),unit_flags:protocol::HistoryFoldIndex::new()}),close_active:std::mem::ManuallyDrop::new(None),supersessions:std::mem::ManuallyDrop::new(EffectiveSupersessions::new()),close_phase:0,commit_stage:0,commit_operation:0,commit_source:None,taken:false}
@@ -306,10 +306,10 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
                 return Err("artifact store history transitions are not in (hlc, id) order".into());
             }
         }
-        let Some(semio_framework_os_spr::HistoryTransition::Supersede(supersede)) = semio_framework_os_spr::history_transition_from_envelope(event).map_err(|error| error.to_string())? else {
+        let Some(semio_os_spr::HistoryTransition::Supersede(supersede)) = semio_os_spr::history_transition_from_envelope(event).map_err(|error| error.to_string())? else {
             return Ok(true);
         };
-        let trunk = semio_framework_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
+        let trunk = semio_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
         let line = envelope.active_alternative_id.as_deref().filter(|line| *line != trunk.as_str()).unwrap_or(trunk.as_str());
         if supersede.scope.as_deref().is_some_and(|scope| scope != line) {
             return Ok(true);
@@ -326,7 +326,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     pub fn effective_forward<'a, Mutation>(&self, edit: &'a Edit<Mutation>, index: usize, schema: &str) -> Option<EffectiveOperation<'a, P, Mutation>>
     where
         P: Clone,
-        Mutation: self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
+        Mutation: self::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary,
     {
         let original = edit.forwards.get(index)?;
         let mutation_id = edit.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| original.mutation_id().cloned()).unwrap_or_else(|| MutationId(format!("{}#{index}", edit.id)));
@@ -340,11 +340,11 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     pub fn fold_forward<Mutation>(&mut self, edit: &Edit<Mutation>, index: usize, schema: &str, maximum_bytes: usize) -> Result<ArtifactStoreInitializationForward<P>, &'static str>
     where
         P: Clone,
-        Mutation: self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
+        Mutation: self::Mutation<P> + semio_os_spr::ColdMutation<P> + OpBinary,
     {
         if let Some(original) = edit.forwards.get(index).filter(|op| op.may_emit_foreign_steps()) {
             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
-            self.revision.unit_flags.insert((digest, index), <Mutation as semio_framework_os_spr::ColdMutation<P>>::foreign_step_source(original,self.current.as_deref().ok_or("artifact store initialization lost its current projection")?, 0).map_err(|_| "artifact store original foreign source refused")?.is_some());
+            self.revision.unit_flags.insert((digest, index), <Mutation as semio_os_spr::ColdMutation<P>>::foreign_step_source(original,self.current.as_deref().ok_or("artifact store initialization lost its current projection")?, 0).map_err(|_| "artifact store original foreign source refused")?.is_some());
         }
         let Some(effective) = self.effective_forward(edit, index, schema) else { return Ok(ArtifactStoreInitializationForward::Exhausted) };
         let Some(operation) = effective.operation() else { return Ok(ArtifactStoreInitializationForward::Folded { displaced: None, fuel: 1 }) };
@@ -357,7 +357,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         Ok(ArtifactStoreInitializationForward::Folded { displaced: next.map(|next| std::mem::replace(current, next)), fuel })
     }
 
-    fn push_revision_record(records: &mut semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>, identity_digest: [u8; 32], domain: &[u8], id: &str, edit_digest: [u8; 32], ledger_key: ArtifactHistoryKey) -> Result<(), String> {
+    fn push_revision_record(records: &mut semio_os_vcs::HistoryPageStack<CursorRevisionRecord>, identity_digest: [u8; 32], domain: &[u8], id: &str, edit_digest: [u8; 32], ledger_key: ArtifactHistoryKey) -> Result<(), String> {
         if !records.admits_one() {
             return Err("artifact store revision ledger is saturated".into());
         }
@@ -462,7 +462,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
             }
             1 => {
                 if self.applied_edit_ids.capacity() != 0 {
-                    let original = std::mem::replace(&mut *self.applied_edit_ids, semio_framework_os_vcs::HistoryPageStack::empty());
+                    let original = std::mem::replace(&mut *self.applied_edit_ids, semio_os_vcs::HistoryPageStack::empty());
                     match admit_artifact_retirement(original, child, ArtifactStoreStringVectorRetirement::new) {
                         Ok((owner, receipt)) => { *self.close_active = Some(owner); self.close_phase = 2; return Ok(RetainedCloneStep::Progress(receipt)); }
                         Err((error, original)) => { *self.applied_edit_ids = original; return Err(error); }
@@ -471,7 +471,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
             }
             2 => {
                 if self.redo_edit_ids.capacity() != 0 {
-                    let original = std::mem::replace(&mut *self.redo_edit_ids, semio_framework_os_vcs::HistoryPageStack::empty());
+                    let original = std::mem::replace(&mut *self.redo_edit_ids, semio_os_vcs::HistoryPageStack::empty());
                     match admit_artifact_retirement(original, child, ArtifactStoreStringVectorRetirement::new) {
                         Ok((owner, receipt)) => { *self.close_active = Some(owner); self.close_phase = 3; return Ok(RetainedCloneStep::Progress(receipt)); }
                         Err((error, original)) => { *self.redo_edit_ids = original; return Err(error); }
@@ -480,7 +480,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
             }
             3 => {
                 if self.cursor_applied_edit_ids.capacity() != 0 {
-                    let original = std::mem::replace(&mut *self.cursor_applied_edit_ids, semio_framework_os_vcs::HistoryPageStack::empty());
+                    let original = std::mem::replace(&mut *self.cursor_applied_edit_ids, semio_os_vcs::HistoryPageStack::empty());
                     match admit_artifact_retirement(original, child, ArtifactStoreStringVectorRetirement::new) {
                         Ok((owner, receipt)) => { *self.close_active = Some(owner); self.close_phase = 4; return Ok(RetainedCloneStep::Progress(receipt)); }
                         Err((error, original)) => { *self.cursor_applied_edit_ids = original; return Err(error); }
@@ -489,7 +489,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
             }
             4 => {
                 if self.cursor_redo_edit_ids.capacity() != 0 {
-                    let original = std::mem::replace(&mut *self.cursor_redo_edit_ids, semio_framework_os_vcs::HistoryPageStack::empty());
+                    let original = std::mem::replace(&mut *self.cursor_redo_edit_ids, semio_os_vcs::HistoryPageStack::empty());
                     match admit_artifact_retirement(original, child, ArtifactStoreStringVectorRetirement::new) {
                         Ok((owner, receipt)) => { *self.close_active = Some(owner); self.close_phase = 5; return Ok(RetainedCloneStep::Progress(receipt)); }
                         Err((error, original)) => { *self.cursor_redo_edit_ids = original; return Err(error); }
@@ -529,7 +529,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
                 }
             }
             9 => {
-                let vacant = CursorRevisionAccumulator { identity_digest: [0; 32], applied: semio_framework_os_vcs::HistoryPageStack::empty(), redo: semio_framework_os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
+                let vacant = CursorRevisionAccumulator { identity_digest: [0; 32], applied: semio_os_vcs::HistoryPageStack::empty(), redo: semio_os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
                 let original = std::mem::replace(&mut *self.revision, vacant);
                 match admit_artifact_retirement(original, child, ArtifactStoreRevisionAccumulatorRetirement::new) {
                     Ok((owner, receipt)) => { *self.close_active = Some(owner); self.close_phase = 10; return Ok(RetainedCloneStep::Progress(receipt)); }
@@ -549,7 +549,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     #[allow(clippy::type_complexity)]
     pub fn into_parts(
         mut self,
-    ) -> (Arc<P>, semio_framework_os_vcs::HistoryPageStack<String>, semio_framework_os_vcs::HistoryPageStack<String>, ArtifactCursor, ActorId, semio_framework_os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions, SnapshotReadLeaseRegistryOwner) {
+    ) -> (Arc<P>, semio_os_vcs::HistoryPageStack<String>, semio_os_vcs::HistoryPageStack<String>, ArtifactCursor, ActorId, semio_os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions, SnapshotReadLeaseRegistryOwner) {
         assert!(self.close_phase == 0 && self.close_active.is_none(), "a closing initialization runtime cannot be adopted");
         let current = self.current.take().expect("validated initialization owns its current snapshot");
         let applied = unsafe { std::mem::ManuallyDrop::take(&mut self.applied_edit_ids) };
@@ -578,13 +578,13 @@ impl<P> Drop for ArtifactStoreInitializationRuntime<P> {
 /// in recorded order) while they fit and stay in recorded order, and the dropped rest is summarized by one
 /// `mutation.cascade` info at the operation of the first dropped message. A worst message too large on its own keeps
 /// its code with its text cut to fit. Answers whether anything was cut.
-pub fn bound_edit_messages(edit_id: &str, messages: &mut Vec<semio_framework_os_spr::MutationMessage>) -> bool {
-    let size = |message: &semio_framework_os_spr::MutationMessage| message.target.iter().fold(ARTIFACT_EDIT_MESSAGE_OWNER_BYTES.saturating_add(message.code.0.len()).saturating_add(message.message.len()), |bytes, segment| bytes.saturating_add(ARTIFACT_EDIT_MESSAGE_TARGET_BYTES).saturating_add(segment.len()));
+pub fn bound_edit_messages(edit_id: &str, messages: &mut Vec<semio_os_spr::MutationMessage>) -> bool {
+    let size = |message: &semio_os_spr::MutationMessage| message.target.iter().fold(ARTIFACT_EDIT_MESSAGE_OWNER_BYTES.saturating_add(message.code.0.len()).saturating_add(message.message.len()), |bytes, segment| bytes.saturating_add(ARTIFACT_EDIT_MESSAGE_TARGET_BYTES).saturating_add(segment.len()));
     if messages.iter().fold(edit_id.len(), |bytes, message| bytes.saturating_add(size(message))) <= ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES {
         return false;
     }
     let summary = |dropped: usize, op_index: Option<u32>| {
-        let mut summary = semio_framework_os_spr::MutationMessage::info("mutation.cascade", format!("{dropped} more messages"));
+        let mut summary = semio_os_spr::MutationMessage::info("mutation.cascade", format!("{dropped} more messages"));
         summary.op_index = op_index;
         summary
     };

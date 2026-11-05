@@ -437,7 +437,7 @@ test("hydration fold outputs retain original custody before receipt refusal", as
   const h = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
   const foldStep = phaseBody(h, "step_fold"), ready = foldStep.slice(foldStep.indexOf("HistoryFoldJobStep::Ready { value: (fold"));
   expect(ready.indexOf("*self.fold = Some(fold)")).toBeLessThan(ready.indexOf("if !progress.fits(fold_grant)"));
-  expect(h).toContain("pending_target: ManuallyDrop<Option<semio_framework_os_spr::HistoryTransition>>");
+  expect(h).toContain("pending_target: ManuallyDrop<Option<semio_os_spr::HistoryTransition>>");
   const target = phaseBody(h, "step_decode_target") + phaseBody(h, "step_target_inputs");
   expect(target.indexOf("*self.pending_target = Some(target)")).toBeLessThan(target.indexOf("if !progress.fits(decode_grant)"));
   expect(target).toContain("artifact_retirement_admit_owned(&mut self.pending_target");

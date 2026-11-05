@@ -12,5 +12,5 @@ use crate::BmpSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationApplyResult, MutationDiff};
 
-semio_framework_os_kernel::diff_binary!(crate::standards::v_v3::subsets::any::schema::diff::BmpDiff);
+semio_os_kernel::diff_binary!(crate::standards::v_v3::subsets::any::schema::diff::BmpDiff);
 }

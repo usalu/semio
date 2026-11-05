@@ -4,7 +4,7 @@ use crate::editor::sourcing::modes::edit::windows::grid::SOURCING_CURATION_WINDO
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧮️ How the 3D grid expands each curated row's count into world instances.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.sourcing.curation.gridwindowconfig", extension = "sourcinggridwindowcfg")]
@@ -58,8 +58,8 @@ impl pack::snapshot::ArtifactPack for GridWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GridWindowConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GridWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -189,7 +189,7 @@ impl protocol::OpBinary for GridWindowConfigMutation {
 
 pub struct GridWindowConfigOwner;
 
-impl semio_framework_plugin::WindowConfigOwner for GridWindowConfigOwner {
+impl semio_plugin::WindowConfigOwner for GridWindowConfigOwner {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -203,22 +203,22 @@ impl semio_framework_plugin::WindowConfigOwner for GridWindowConfigOwner {
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
         std::sync::Arc::new(store::snapshot_clone_preparation::ConfigApplyEdit::new())
     }
-    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
-    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
+    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
+        semio_plugin::bounded_window_config_preparation_factory::<Self>()
     }
-    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_disposer_birth::<Self>() }
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-        semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
+    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_plugin::bounded_window_config_store_disposer_birth::<Self>() }
+    fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+        semio_plugin::bounded_window_config_store_disposer::<Self>()
     }
 }
 
-pub fn register(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<GridWindowConfigOwner>()
 }
 
-pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> GridWindowConfig {
+pub fn from_snapshot(snapshot: Option<&semio_plugin::WindowConfigSnapshot>) -> GridWindowConfig {
     snapshot
         .filter(|snapshot| snapshot.window_kind_id() == SOURCING_CURATION_WINDOW_GRID)
         .and_then(|snapshot| snapshot.get::<GridWindowConfigOwner>())
@@ -226,22 +226,22 @@ pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnaps
         .unwrap_or_default()
 }
 
-pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> GridWindowConfig {
+pub fn current<C>(view: &semio_plugin::ConfigView<'_, C>) -> GridWindowConfig {
     from_snapshot(view.window)
 }
 
-pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: GridWindowConfigMutation) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("sourcing-grid-window-required"))?;
+pub fn addressed(view: &semio_plugin::ViewModel, mutation: GridWindowConfigMutation) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("sourcing-grid-window-required"))?;
     let kind = view
         .window_instances
         .iter()
         .find(|window| window.id == id)
         .map(|window| window.window_kind_id.as_str())
-        .ok_or_else(|| semio_framework_plugin::Fault::from("sourcing-grid-window-stale"))?;
+        .ok_or_else(|| semio_plugin::Fault::from("sourcing-grid-window-stale"))?;
     if kind != SOURCING_CURATION_WINDOW_GRID {
-        return Err(semio_framework_plugin::Fault::from("sourcing-grid-window-kind-required"));
+        return Err(semio_plugin::Fault::from("sourcing-grid-window-kind-required"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<GridWindowConfigOwner>(id, mutation))
+    Ok(semio_plugin::WindowConfigMutation::of::<GridWindowConfigOwner>(id, mutation))
 }
 
 #[cfg(test)]
@@ -271,8 +271,8 @@ mod law_tests {
 fn bounded_store_disposer_birth_matches_layout() {
     type Owner = GridWindowConfigOwner;
     let law: serde_json::Value = serde_json::from_str(include_str!("disposer-birth.json")).expect("neutral disposer birth law");
-    let demand = <Owner as semio_framework_plugin::WindowConfigOwner>::store_disposer_birth().expect("explicit bounded disposer birth");
-    let disposer = <Owner as semio_framework_plugin::WindowConfigOwner>::build_store_disposer();
+    let demand = <Owner as semio_plugin::WindowConfigOwner>::store_disposer_birth().expect("explicit bounded disposer birth");
+    let disposer = <Owner as semio_plugin::WindowConfigOwner>::build_store_disposer();
     assert_eq!(demand.capacity_bytes, std::alloc::Layout::for_value(disposer.as_ref()).size());
     assert_eq!(demand.depth, law["depth"].as_u64().unwrap() as usize);
     assert_eq!(demand.copy_bytes, law["copyBytes"].as_u64().unwrap() as usize);

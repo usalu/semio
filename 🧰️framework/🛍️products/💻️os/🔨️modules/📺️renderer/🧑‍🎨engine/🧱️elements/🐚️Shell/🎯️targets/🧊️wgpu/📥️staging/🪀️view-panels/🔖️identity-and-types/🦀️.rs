@@ -6,20 +6,20 @@ use super::*;
 
 //#region 🔖️IdentityPure
 /// 👥️ Projects only Hub-normalized peers for the shell's currently attached surface.
-pub fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<semio_framework_ui_wgpu_light::presence_bar::PresencePeerRow> {
+pub fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<semio_ui_wgpu_light::presence_bar::PresencePeerRow> {
     if attached_surface != Some(target_surface) {
         return Vec::new();
     }
     peers
         .iter()
         .filter(|peer| peer.surface.as_deref() == Some(target_surface))
-        .map(|peer| semio_framework_ui_wgpu_light::presence_bar::PresencePeerRow {
+        .map(|peer| semio_ui_wgpu_light::presence_bar::PresencePeerRow {
             actor: peer.actor.clone(),
             user_id: peer.user_id.clone(),
             label: peer.label.clone().unwrap_or_else(|| peer.actor.clone()),
             role: match peer.role.as_deref() {
-                Some("author") | Some("owner") | Some("member") => Some(semio_framework_ui_wgpu_light::presence_bar::PresenceRole::Author),
-                Some("spectator") | Some("viewer") => Some(semio_framework_ui_wgpu_light::presence_bar::PresenceRole::Spectator),
+                Some("author") | Some("owner") | Some("member") => Some(semio_ui_wgpu_light::presence_bar::PresenceRole::Author),
+                Some("spectator") | Some("viewer") => Some(semio_ui_wgpu_light::presence_bar::PresenceRole::Spectator),
                 _ => None,
             },
             connected_at_ms: Some(peer.connected_at_ms),

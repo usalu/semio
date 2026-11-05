@@ -4,7 +4,7 @@
 //! path, so this hop is `IoFidelity::Lossy`.
 
 use semio_s_artifact_note_note_schema::NoteSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::encode_dwg;
@@ -17,9 +17,9 @@ pub struct NoteIntoDwg;
 impl Serializer<NoteSnapshot> for NoteIntoDwg {
     const INTO: Dialect = DWG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let (svg, _w, _h) = crate::standards::v1::subsets::any::io::note_document_to_svg(from).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("NoteIntoDwg: svg bridge: {error}"))))?;
-        let raw = semio_framework_os::svg_to_polylines(&svg)
+        let raw = semio_os::svg_to_polylines(&svg)
             .and_then(|paths| semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::polylines_to_dwg_bytes(paths.iter().map(|path| (path.layer.as_str(), path.vertices.as_slice(), path.closed))))
             .map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("NoteIntoDwg: svg_to_dwg: {error}"))))?;
         let drawing = decode_dwg(&raw).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("NoteIntoDwg: decode: {error}"))))?;

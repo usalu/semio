@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeConcentratedPositi
         record: "ChangedConcentratedPosition",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change load position", "Lastlage ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change load position", "Lastlage ändern")
     }
 }
 

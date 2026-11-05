@@ -3,8 +3,8 @@
 use crate::standards::v1::subsets::any::schema::language_service;
 use crate::editor::jack::transient::JackEditorSelection;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use semio_framework_plugin::{scene_surface, text_identifier_occurrences_json, BuiltNode, TextEditorScene, UiAssemblyResult};
-use semio_framework_ui_contract::SurfaceKind;
+use semio_plugin::{scene_surface, text_identifier_occurrences_json, BuiltNode, TextEditorScene, UiAssemblyResult};
+use semio_ui_contract::SurfaceKind;
 
 pub fn render(surface_id: &str, _controller_id: &str, snapshot: &JackSnapshot, graph: &crate::standards::v1::subsets::any::schema::memory::Graph, selection: Option<&JackEditorSelection>) -> UiAssemblyResult<BuiltNode> {
     let query = &snapshot.query;

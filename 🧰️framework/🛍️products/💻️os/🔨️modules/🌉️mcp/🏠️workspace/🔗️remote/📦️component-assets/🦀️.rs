@@ -1,9 +1,9 @@
 //! 📦️ Hub component assets: transfer phases, the stream fault ladder and the asset fetcher.
 
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
-use semio_framework_os_kernel::os_directory::DocumentOpenIntentV1;
-use semio_framework_os_kernel::os_directory::client::{DirectoryClientError, LocalHubCredential};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_kernel::os_directory::DocumentOpenIntentV1;
+use semio_os_kernel::os_directory::client::{DirectoryClientError, LocalHubCredential};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use std::sync::{Arc, Mutex};
 use super::binding_helpers::map_client_error;
 use super::binding_limits::{
@@ -80,26 +80,26 @@ enum ComponentStreamFault {
 /// plugin is therefore bound by bandwidth alone and reports its bytes as it goes.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct HubComponentAssets {
-    pub runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
-    pub(crate) transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>,
+    pub runtime: Arc<semio_os_services::TokioHostRuntime>,
+    pub(crate) transport: semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_os_services::TokioHostRuntime>,
     pub credential: Arc<LocalHubCredential>,
-    pub store: semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore,
+    pub store: semio_os_kernel::os_directory::client::ExecutionTargetModuleStore,
     serial: Mutex<()>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl HubComponentAssets {
     /// 🚰️ Component assets of `credential`'s hub kept in `store`, streamed over a fresh pool on `runtime`.
-    pub fn new(runtime: Arc<semio_framework_os_services::TokioHostRuntime>, credential: Arc<LocalHubCredential>, store: semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore) -> Self {
+    pub fn new(runtime: Arc<semio_os_services::TokioHostRuntime>, credential: Arc<LocalHubCredential>, store: semio_os_kernel::os_directory::client::ExecutionTargetModuleStore) -> Self {
         let scope = runtime.open_scope_now(semio_framework_async::ScopeOwner::Service("mcp-execution-target-assets"), None);
-        let compute = Arc::new(semio_framework_os_services::ComputePool::with_pool(HUB_COMPONENT_STREAMS, runtime.worker_pool().clone()));
-        let transport = semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport::with_new_http_pool_now(
+        let compute = Arc::new(semio_os_services::ComputePool::with_pool(HUB_COMPONENT_STREAMS, runtime.worker_pool().clone()));
+        let transport = semio_os_kernel::os_directory::client::native::NativeDirectoryTransport::with_new_http_pool_now(
             runtime.clone(),
             scope,
             compute,
             HUB_COMPONENT_ASSET_BYTES_PER_MINUTE,
             HUB_COMPONENT_STREAMS,
-            semio_framework_actor::PackageId("semio-framework-os-mcp.execution-target-assets".to_string()),
+            semio_framework_actor::PackageId("semio-os-mcp.execution-target-assets".to_string()),
             semio_framework_actor::ActorId(0x4d43_5003),
         );
         Self { runtime, transport, credential, store, serial: Mutex::new(()) }
@@ -109,7 +109,7 @@ impl HubComponentAssets {
     /// hub (`429`) is a wait for the time it names, an interrupted stream or a hub shortage is asked again up to
     /// [`HUB_COMPONENT_STREAM_ATTEMPTS`] times, and bytes off the lease are refused and never kept. `report` hears every
     /// phase and every chunk; `cancel` ends the transfer between chunks.
-    pub fn component(&self, intent: &DocumentOpenIntentV1, expected: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetComponentV1, cancel: &semio_framework_async::CancelToken, mut report: impl FnMut(&HubComponentTransfer)) -> Result<Vec<u8>, GatewayError> {
+    pub fn component(&self, intent: &DocumentOpenIntentV1, expected: &semio_os_kernel::os_directory::DocumentExecutionTargetComponentV1, cancel: &semio_framework_async::CancelToken, mut report: impl FnMut(&HubComponentTransfer)) -> Result<Vec<u8>, GatewayError> {
         if let Some(bytes) = self.store.component(expected) {
             return Ok(bytes);
         }
@@ -159,8 +159,8 @@ impl HubComponentAssets {
     }
 
     /// 🌊️ One component stream from the hub, read whole and verified against the lease.
-    fn stream_once(&self, intent: &DocumentOpenIntentV1, expected: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetComponentV1, cancel: &semio_framework_async::CancelToken, report: &mut impl FnMut(&HubComponentTransfer)) -> Result<Vec<u8>, ComponentStreamFault> {
-        use semio_framework_os_kernel::os_directory::client::TransportError;
+    fn stream_once(&self, intent: &DocumentOpenIntentV1, expected: &semio_os_kernel::os_directory::DocumentExecutionTargetComponentV1, cancel: &semio_framework_async::CancelToken, report: &mut impl FnMut(&HubComponentTransfer)) -> Result<Vec<u8>, ComponentStreamFault> {
+        use semio_os_kernel::os_directory::client::TransportError;
         let gateway = |error: DirectoryClientError| binding_error_to_gateway(map_client_error(error));
         let operation_now = self.runtime.block_on(self.runtime.now_ms());
         let stream_ms = HUB_COMPONENT_STREAM_ALLOWANCE_MS.saturating_add(expected.byte_length.saturating_mul(1_000) / HUB_COMPONENT_STREAM_FLOOR_BYTES_PER_SECOND);
@@ -220,7 +220,7 @@ impl HubComponentAssets {
         if bytes.len() as u64 != expected.byte_length {
             return Err(ComponentStreamFault::Transient(gateway(DirectoryClientError::Transport(TransportError::Io(format!("component stream ended after {} of {} bytes", bytes.len(), expected.byte_length))))));
         }
-        semio_framework_os_kernel::os_directory::client::verify_execution_target_bytes("component", &expected.sha256, expected.byte_length, &bytes)
+        semio_os_kernel::os_directory::client::verify_execution_target_bytes("component", &expected.sha256, expected.byte_length, &bytes)
             .map_err(|_| ComponentStreamFault::Final(GatewayError::new(GatewayErrorCode::PreconditionFailed, "hub execution-target component does not hash to the SHA-256 its own lease declared")))?;
         Ok(bytes)
     }

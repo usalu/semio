@@ -298,10 +298,10 @@ fn a_multi_line_draft_commits_whole_and_shows_the_carets_line() {
     router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "two".into() });
     let edit = tree.node(field).and_then(|node| node.state.edit.clone()).expect("an open draft");
     assert_eq!((edit.text.as_str(), edit.caret), ("one\ntwo", 7));
-    assert_eq!(semio_framework_ui_wgpu_paint::text_line_view(&edit.text, Some(edit.caret)), ("two", 3), "the caret's line and its place in it");
-    assert_eq!(semio_framework_ui_wgpu_paint::text_line_view(&edit.text, Some(2)), ("one", 2));
-    assert_eq!(semio_framework_ui_wgpu_paint::text_line_view(&edit.text, None), ("one", 0), "without a caret the first line");
-    assert_eq!(semio_framework_ui_wgpu_paint::text_line_view("", Some(0)), ("", 0));
+    assert_eq!(semio_ui_wgpu_paint::text_line_view(&edit.text, Some(edit.caret)), ("two", 3), "the caret's line and its place in it");
+    assert_eq!(semio_ui_wgpu_paint::text_line_view(&edit.text, Some(2)), ("one", 2));
+    assert_eq!(semio_ui_wgpu_paint::text_line_view(&edit.text, None), ("one", 0), "without a caret the first line");
+    assert_eq!(semio_ui_wgpu_paint::text_line_view("", Some(0)), ("", 0));
     let blurred = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 90.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(dispatched_values(&blurred), vec![DslValue::Object(vec![("value".into(), DslValue::String("one\ntwo".into()))])], "leaving the field commits every line");
 }

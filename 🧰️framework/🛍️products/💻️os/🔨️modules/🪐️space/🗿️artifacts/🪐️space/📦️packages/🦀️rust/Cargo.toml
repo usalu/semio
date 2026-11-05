@@ -30,19 +30,19 @@ semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/�
 semio-framework-dsl = { path = "../../../../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }
-semio-framework-os-space-sqlite-cells = { path = "../../../../🪶️sqlite/📦️packages/🦀️rust" }
+semio-os-space-sqlite-cells = { path = "../../../../🪶️sqlite/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["mutation-testing"] }
 serde_json = { workspace = true }
 semio-framework-test-typed-input-law = { path = "../../../../../../../../🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust" }
-semio-framework-os-space-testing-sqlite-preflight = { path = "../../../../🧪️tests/🪶️sqlite/📏️preflight/📦️packages/🦀️rust" }
-semio-framework-os-space-testing-sqlite-oracle = { path = "../../../../🧪️tests/🪶️sqlite/🔬️oracle/📦️packages/🦀️rust" }
-semio-framework-os-space-testing-sqlite-native-caller = { path = "../../../../🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }
+semio-os-space-testing-sqlite-preflight = { path = "../../../../🧪️tests/🪶️sqlite/📏️preflight/📦️packages/🦀️rust" }
+semio-os-space-testing-sqlite-oracle = { path = "../../../../🧪️tests/🪶️sqlite/🔬️oracle/📦️packages/🦀️rust" }
+semio-os-space-testing-sqlite-native-caller = { path = "../../../../🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }

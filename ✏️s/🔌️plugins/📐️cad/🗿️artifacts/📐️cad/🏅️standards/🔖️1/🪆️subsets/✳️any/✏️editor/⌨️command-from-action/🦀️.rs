@@ -6,7 +6,7 @@ use super::*;
 /// 🙈️ A reference set-verb (`setReferenceHidden{hidden}`, `setReferenceLocked{locked}`) sets exactly the boolean its
 /// arguments carry — the row target's explicit next state — so a missing value is refused, never defaulted into a flip.
 fn cad_flag_value_required(action: &str, flag: &str) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("cad.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets"))
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("cad.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets"))
 }
 
 /// 🌉️ Converts the host shell's declared action id and JSON arguments into cad's closed typed

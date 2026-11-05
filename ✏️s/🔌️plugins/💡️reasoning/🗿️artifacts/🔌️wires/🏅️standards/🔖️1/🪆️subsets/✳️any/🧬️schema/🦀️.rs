@@ -78,7 +78,7 @@ pub fn wires_artifact_schema_descriptor() -> semio_framework_schema_registry::Ar
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️Construction
-/// 🏗️ Hand-rolled `ArtifactBuilder` — the generic `semio_framework_plugin::app::SnapshotBuilder<S, M>`
+/// 🏗️ Hand-rolled `ArtifactBuilder` — the generic `semio_plugin::app::SnapshotBuilder<S, M>`
 /// (ticket `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM`, `📓️w4-sequence-report.md`'s
 /// zero-boilerplate replacement) does NOT fit here: its `ArtifactBuilder` impl requires `S: Default`,
 /// and `WiresSnapshot` deliberately has none — `content` is a composed `ArtifactChild` that needs a
@@ -519,12 +519,12 @@ pub fn wires_composed(snapshot: &WiresSnapshot, content: &SemioGraphSnapshot) ->
 }
 
 /// 🔖️ A composed read that found no exact board child: named and localized through `ReasoningWiresPlayApp::fault_notices`.
-pub fn wires_content_fault(code: &'static str, message: String) -> semio_framework_plugin::Fault {
-    semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
+pub fn wires_content_fault(code: &'static str, message: String) -> semio_plugin::Fault {
+    semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message)
 }
 
 /// 🧸️ The board content `snapshot` names, read through its live composed children (exact `s.stdio.semio@v1/graph` dialect).
-pub fn wires_content<'a>(snapshot: &WiresSnapshot, children: &'a semio_framework_plugin::app::ChildContentView) -> Result<impl std::ops::Deref<Target = SemioGraphSnapshot> + 'a, semio_framework_plugin::Fault> {
+pub fn wires_content<'a>(snapshot: &WiresSnapshot, children: &'a semio_plugin::app::ChildContentView) -> Result<impl std::ops::Deref<Target = SemioGraphSnapshot> + 'a, semio_plugin::Fault> {
     let child_id = &snapshot.content.child_id;
     let dialect = children.dialect(WIRES_CONTENT_SLOT, child_id).ok_or_else(|| wires_content_fault("wires.content.unavailable", format!("the wires board child \"{child_id}\" is not composed")))?;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {
@@ -534,17 +534,17 @@ pub fn wires_content<'a>(snapshot: &WiresSnapshot, children: &'a semio_framework
 }
 
 /// 🪆️ [`wires_composed`] over the board content `children` holds for `snapshot`.
-pub fn wires_composed_from_children(snapshot: &WiresSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<WiresComposed, semio_framework_plugin::Fault> {
+pub fn wires_composed_from_children(snapshot: &WiresSnapshot, children: &semio_plugin::app::ChildContentView) -> Result<WiresComposed, semio_plugin::Fault> {
     let content = wires_content(snapshot, children)?;
     Ok(wires_composed(snapshot, &*content))
 }
 
 /// 🌱️ Publishes graph leaves as ONE edit of the exact composed board child; no leaf is the empty emission.
-pub fn wires_child_emit<C, D>(snapshot: &WiresSnapshot, leaves: Vec<SemioGraphMutation>) -> semio_framework_plugin::Emit<WiresMutation, C, D> {
+pub fn wires_child_emit<C, D>(snapshot: &WiresSnapshot, leaves: Vec<SemioGraphMutation>) -> semio_plugin::Emit<WiresMutation, C, D> {
     if leaves.is_empty() {
-        return semio_framework_plugin::Emit::default();
+        return semio_plugin::Emit::default();
     }
-    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot, _>(WIRES_CONTENT_SLOT, &snapshot.content.child_id, leaves)]), ..semio_framework_plugin::Emit::default() }
+    semio_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot, _>(WIRES_CONTENT_SLOT, &snapshot.content.child_id, leaves)]), ..semio_plugin::Emit::default() }
 }
 //#endregion 🔖️Composed
 }

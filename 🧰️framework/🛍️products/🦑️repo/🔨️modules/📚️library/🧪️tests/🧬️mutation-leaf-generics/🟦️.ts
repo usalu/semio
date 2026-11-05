@@ -73,7 +73,7 @@ const files: Record<string, string> = {
   "📦️packages/🦀️rust/📜️script.ts": 'await runArtifactRustPackageMain(import.meta.dir, "demo-mut",{snapshotSqliteTests:[]});\n',
   "🦀️.rs": [
     "//! 🧪️ Demo mutation artifact root.",
-    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_os_kernel as protocol;",
     "#[path = \".\"]",
     "pub mod schema {",
     "    #[path = \"🧬️schema/🦀️.rs\"]",

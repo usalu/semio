@@ -26,8 +26,8 @@ pub mod mutation {
     crate::change_layer_visible::inverse::inverse(self, base)
 }
 
-        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-            semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer {} visible to {}", self.layer_id, self.new_visible), &format!("Sichtbarkeit von Ebene {} auf {} setzen", self.layer_id, self.new_visible))
+        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+            semio_ui_locale::LocalizedLabel::native(&format!("Set layer {} visible to {}", self.layer_id, self.new_visible), &format!("Sichtbarkeit von Ebene {} auf {} setzen", self.layer_id, self.new_visible))
         }
 
         fn target(&self) -> Vec<String> {

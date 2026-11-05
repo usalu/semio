@@ -34,9 +34,9 @@ extern crate semio_s_artifact_energy_model_mutations as mutations;
 use crate::model::{EntityId, Material, OutsideBoundary, SurfaceClass, Zone};
 use crate::schedule::ScheduleId;
 use crate::mutations::EnergyModelMutation;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
 
 /// 🚧️ The interzone partner an `OutsideBoundary` carries — the boundary mutation names the tag
 /// through `OutsideBoundaryKind` and the partner through this separate optional id, because

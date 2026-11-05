@@ -1,10 +1,10 @@
 use crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
 use crate::{standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
 use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::InteractiveJobClassification;
 use semio_s_artifact_stdio_contract::editing;
 use crate::editor::wav::{WavDetailsProvider};
 use crate::editor::wav::*;
@@ -158,8 +158,8 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert!(matches!(mutation, WavMutation::PatchData(_)));
     assert!(<WavMutation as protocol::OpBinary>::encode_op(mutation).expect("patch encodes").len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
 
-    let envelope = store::os_store::document_materialize::create_document_envelope(STDIO_WAV_DOCUMENT_SCHEMA, "wav-large-sample-publication", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("WAV store opens");
+    let envelope = store::os_store::document_materialize::create_document_envelope(STDIO_WAV_DOCUMENT_SCHEMA, "wav-large-sample-publication", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("WAV store opens");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<WavSnapshot, WavMutation>().expect("funded WAV owners")).map_err(|(error, _)| error).expect("WAV owners install");
     let factory = <WavEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("WAV retained factory");
     let generation = store.generation_now();
@@ -215,11 +215,11 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert!(publication.terminal_is_empty());
     drop(publication);
 
-    semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut identity).await).expect("patch undo");
+    semio_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut identity).await).expect("patch undo");
     let WavData::Raw(samples) = &store.snapshot_ref().data else { panic!("raw samples retained after undo") };
     assert_eq!(samples.len(), sample_count);
     assert_eq!(samples[edit_index], 7);
-    semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Redo, &mut identity).await).expect("patch redo");
+    semio_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Redo, &mut identity).await).expect("patch redo");
     let WavData::Raw(samples) = &store.snapshot_ref().data else { panic!("raw samples retained after redo") };
     assert_eq!(samples.len(), sample_count);
     assert_eq!(samples[edit_index], 9);
@@ -260,33 +260,33 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     drain_publication(&mut metadata_publication);
     assert!(metadata_publication.terminal_is_empty());
     drop(metadata_publication);
-    semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut identity).await).expect("metadata undo");
+    semio_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut identity).await).expect("metadata undo");
     assert_eq!(store.snapshot_ref().fmt.sample_rate, 44_100);
-    semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Redo, &mut identity).await).expect("metadata redo");
+    semio_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Redo, &mut identity).await).expect("metadata redo");
     assert_eq!(store.snapshot_ref().fmt.sample_rate, 48_000);
     let native = crate::standards::riff_pcm::subsets::any::io::encode_wav(store.snapshot_ref());
     let reopened = crate::standards::riff_pcm::subsets::any::io::decode_wav(&native).expect("edited native WAV reopens");
     assert_eq!(reopened.fmt.sample_rate, 48_000);
     assert_eq!(crate::standards::riff_pcm::subsets::any::io::encode_wav(&reopened), native, "native WAV bytes stabilize after reopen");
 
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<WavSnapshot, WavMutation>::new();
+    let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<WavSnapshot, WavMutation>::new();
     for _ in 0..100_000 {
-        let demand = semio_framework_plugin::ArtifactOwnedDisposer::retirement_demands(&disposer, &store, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("WAV store close demand");
+        let demand = semio_plugin::ArtifactOwnedDisposer::retirement_demands(&disposer, &store, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("WAV store close demand");
         let funded = quoted_grant(demand);
-        let step = semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, funded).expect("WAV store closes");
-        if matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+        let step = semio_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, funded).expect("WAV store closes");
+        if matches!(step, semio_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
-    assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
+    assert!(semio_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::wav::WavEditor, || semio_framework_plugin::App { definition: crate::editor::wav::create_wav_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::wav::WavEditor, || semio_plugin::App { definition: crate::editor::wav::create_wav_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {
-    use semio_framework_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
-    use semio_framework_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
+    use semio_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
+    use semio_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
     let source = crate::standards::riff_pcm::subsets::any::io::try_encode_wav(&WavSnapshot {
         fmt: crate::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt { channels: 1, sample_rate: 8_000, byte_rate: 16_000, block_align: 2, bits_per_sample: 16, ..Default::default() },
         data: WavData::Pcm16(vec![0, 1_024, -1_024, 0]),
@@ -307,42 +307,42 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source,
     };
     let initial = <WavEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_framework_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
     app.consume_media(NATURAL_FILE_PORT, artifact, scope.cx()).await.expect("registered natural import");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("natural import publishes");
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("natural import publishes");
     let opened = app.snapshot().expect("opened snapshot").clone();
     let refused = match app.consume_media(NATURAL_FILE_PORT, outside, scope.cx()).await {
         Err(_) => true,
-        Ok(_) => semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err(),
+        Ok(_) => semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err(),
     };
     assert!(refused);
     assert_eq!(app.snapshot().expect("refused WAV preserves the owner"), opened);
-    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| semio_framework_plugin::artifact_app_laws::produce_fixture_media(&mut app, NATURAL_FILE_PORT, native_owner, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).await.expect("registered natural save");
+    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| semio_plugin::artifact_app_laws::produce_fixture_media(&mut app, NATURAL_FILE_PORT, native_owner, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).await.expect("registered natural save");
     assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
     assert_eq!(saved.descriptor.kind_id.as_deref(), Some(codec.format_kind));
     let oracle = semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::oracle_identity_round_trip(&saved.data).expect("riff independently reopens and writes the WAV export");
     let observed = semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation(&saved.data).expect("project WAV export");
     let expected = semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation(&oracle).expect("project independent WAV output");
     assert_eq!(observed, expected);
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut reopened = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_framework_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut reopened = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved, scope.cx()).await.expect("fresh owner imports exported bytes");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("fresh owner import publishes");
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("fresh owner import publishes");
     let reopened_snapshot = reopened.snapshot().expect("reopened snapshot").clone();
     assert_eq!(reopened_snapshot, opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("source undo snapshot"), initial);
     assert_eq!(reopened.snapshot().expect("reopened snapshot remains isolated"), reopened_snapshot);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("source redo snapshot"), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(reopened.snapshot().expect("reopened undo snapshot"), initial);
     assert_eq!(app.snapshot().expect("source remains isolated"), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(reopened.snapshot().expect("reopened redo snapshot"), reopened_snapshot);
     artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");

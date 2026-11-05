@@ -8,10 +8,10 @@
 //! own corpus) and this element's `🛑️surface-controls/🔣️.json` (also answered by the TypeScript
 //! `world3dComputeStatusV1` twin). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
-use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe};
+use semio_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe};
 use super::*;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ExampleDefinition,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
-use semio_framework_ui_layout::layout::WindowLayout;
+use semio_ui_layout::layout::WindowLayout;
 
 include!("📚️fixtures-and-parity-builders/🦀️.rs");
 

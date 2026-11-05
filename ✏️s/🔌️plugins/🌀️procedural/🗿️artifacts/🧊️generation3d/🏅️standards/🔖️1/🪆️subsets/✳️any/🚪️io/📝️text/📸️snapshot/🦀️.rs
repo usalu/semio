@@ -97,9 +97,9 @@ use semio_s_artifact_procedural_3d_model::*;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::widget_id;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
-use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snapshot as apply_generation_values_to_host_snapshot_json;
+use semio_os_flow::forms_bridge::apply_generation_values_to_host_snapshot as apply_generation_values_to_host_snapshot_json;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
+use semio_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
 use semio_framework_value_derive::{FromValue, ToValue};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use semio_framework_artifact_flow_flow::CameraJson;
@@ -127,7 +127,7 @@ pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &se
     let patched = apply_generation_values_to_host_snapshot_json(&snapshot_json, &generation_values_to_pack_object(values));
     let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| host_snapshot.clone());
     let mut host = FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
-    host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
+    host.set_neuron_kind_info_map(semio_os_flow::flow_neuron_kind_info_map());
     let evaluated = host.evaluate().unwrap_or_default();
     if host.retire_cold().is_err() {
         return String::new();

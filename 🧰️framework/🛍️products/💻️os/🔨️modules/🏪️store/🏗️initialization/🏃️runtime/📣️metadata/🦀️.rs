@@ -1,8 +1,8 @@
 //! 📣️ Original cursor catalogs and indexes admit each backing page and authored identity separately.
 use crate::lifted_store::ArtifactStoreInitializationRuntime;
-use semio_framework_os_spr::{Edit,Mutation,MutationId};
-use semio_framework_os_vcs::ArtifactHistoryKey;
-use semio_framework_os_store_ledger::{CursorRevisionAccumulator,CursorRevisionRecord};
+use semio_os_spr::{Edit,Mutation,MutationId};
+use semio_os_vcs::ArtifactHistoryKey;
+use semio_os_store_ledger::{CursorRevisionAccumulator,CursorRevisionRecord};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress};
 use std::mem::size_of;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"cursor commit requires its original edit, ledger key and digest")}

@@ -5,8 +5,8 @@
 //! document. It still round-trips through a real `ArtifactStore` (with a real `backwards`), so every
 //! edit is VCS'd exactly like document content.
 #![allow(clippy::result_large_err)]
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// [`Generation2dConfigMutation`]. Selection/hover moved to the framework's own `graph` interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see
 /// `create_generation2d_app`'s `.interaction(...)` declaration.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact(extension = "generation2dcfg")]
 #[artifact(id = "procedural.generation2dcfg")]
@@ -70,8 +70,8 @@ impl pack::snapshot::ArtifactPack for Generation2dConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation2dConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation2dConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -171,7 +171,7 @@ impl protocol::OpBinary for Generation2dConfigMutation {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(Generation2dConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(Generation2dConfigMutation);
 
 //#endregion 🔖️OpCodec
 

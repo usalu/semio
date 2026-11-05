@@ -10,7 +10,7 @@ pub struct RemoveConnectionAction { pub connection_id: String, pub index: usize 
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for RemoveConnectionAction where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::insert_connection_action::InsertConnectionAction> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "connection-action", kind: "remove-connection-action", record: "RemovedConnectionAction" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove action #{} from connection {}", self.index, self.connection_id), &format!("Einwirkung #{} aus Verbindung {} entfernen", self.index, self.connection_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove action #{} from connection {}", self.index, self.connection_id), &format!("Einwirkung #{} aus Verbindung {} entfernen", self.index, self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone(), self.index.to_string()] }
 }
 

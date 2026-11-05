@@ -25,8 +25,8 @@ pub fn change_representation_mesh_url<Op: From<crate::change_representation_mesh
 impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeRepresentationMeshUrl where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_representation_mesh_url::ChangeRepresentationMeshUrl> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-mesh-url", record: "ChangedRepresentationMeshUrl" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change representation \"{}\" mesh URL", self.id), &format!("Netz-URL von Repräsentation \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change representation \"{}\" mesh URL", self.id), &format!("Netz-URL von Repräsentation \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

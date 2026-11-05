@@ -10,9 +10,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -28,32 +28,32 @@ use crate::modes::edit::windows::{board, world};
 use crate::panels::{document as document_panel, inspection as inspection_panel};
 use crate::terminology::block5d_labels;
 use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode};
-use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::app::{Dialect, InteractionView};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
 use semio_framework_pack_json::Value;
 use std::collections::BTreeMap;
 use semio_framework_2d_compute::EngineHandles;
@@ -72,55 +72,55 @@ use semio_s_plugin_block_catalog::ARTIFACT_ID;
 
 /// 🎯️ One action binding addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
-pub fn block5d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(BLOCK5D_PLAY_APP_ID).action(action, args)
+pub fn block5d_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(BLOCK5D_PLAY_APP_ID).action(action, args)
 }
 
 /// 🏷️ Admits one fixed UI contract label — the type every contract node builder takes, distinct from
 /// the SDK's retained authoring `Label`.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref())
+        .map(semio_plugin::UiValue::Text)
+        .ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new()
+        .ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
         builder
             .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new()
+        .ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
         builder
             .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 //#endregion 🔖️Constants
@@ -129,26 +129,26 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// 🔌️ `Block5dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
 /// (`Kit×Type`, matching the `"5d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle5d_catalog_fragment` a real caller (see `export_media` below).
-pub fn block5d_io() -> semio_framework_plugin::AppIo {
-    let io = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::AppIo::from_artifact(
+pub fn block5d_io() -> semio_plugin::AppIo {
+    let io = ::semio_framework_async::poll::resolve_ready(semio_plugin::AppIo::from_artifact(
         BLOCK_5D_SCHEMA,
         MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-        semio_framework_plugin::ArtifactPresentation { id: "5d.block".into(), name: "Part Kind".into(), dimension: "5d".into(), component_kind: "block5d".into() },
+        semio_plugin::ArtifactPresentation { id: "5d.block".into(), name: "Part Kind".into(), dimension: "5d".into(), component_kind: "block5d".into() },
     ));
-    ::semio_framework_async::poll::resolve_ready(io.with_ports(vec![semio_framework_plugin::MediaPortSpec {
+    ::semio_framework_async::poll::resolve_ready(io.with_ports(vec![semio_plugin::MediaPortSpec {
         id: "catalog:out".into(),
         label: "Kit Catalog".into(),
-        direction: semio_framework_plugin::MediaPortDirection::Out,
+        direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         kind_id: Some("kit.catalog".into()),
         required: false,
-        multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+        multiplicity: semio_plugin::PortMultiplicity::Many,
     }]))
 }
 //#endregion 🔖️Io
 
 //#region 🔖️Commands
-semio_framework_plugin::app_commands! {
+semio_plugin::app_commands! {
     /// 🎯️ `Block5dPlayApp::Command` — the SOLE dispatch surface for block5d's own behavior, covering
     /// every action `create_block5d_app` declares. Row order is the binary variant ordinal: appending
     /// is safe, reordering is a wire-format break. Every id/key pair here is IDENTICAL (the pre-migration
@@ -194,10 +194,10 @@ fn block5d_retained_reduce(
     command: &Block5dCommand,
     snapshot: &Block5dSnapshot,
     config: &Block5dConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block5dPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block5dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Block5dMutation, Block5dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
@@ -221,7 +221,7 @@ impl semio_framework::ToolJobFactory for Block5dRetainedCommandJobFactory {
     fn payload_schema_id(&self) -> &str { BLOCK5D_RETAINED_PAYLOAD_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(BLOCK5D_RETAINED_RAW_BYTES, 4_096, 1, 262_144, 7_500) }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BLOCK5D_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BLOCK5D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -348,8 +348,8 @@ impl ArtifactEditor for Block5dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = crate::presence::Block5dPresence;
     type PresenceMutation = crate::presence::Block5dPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = Block5dCommand;
 
@@ -360,42 +360,42 @@ impl ArtifactEditor for Block5dPlayApp {
     /// durable gesture faults with `batched fold lacks exact snapshot or mutation retirement
     /// authority`, which the host only ever reports afterwards as a sticky
     /// `plugin.internal.prior-outcome` on the live-cleanup pump.
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(Box::new(
-            semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
+            semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
                 .expect("default Block5d presence is the exact empty terminal"),
         ))
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Block5dStorePreparationFactory))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Block5dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.block.block5d@1/*#editor",
@@ -411,16 +411,16 @@ impl ArtifactEditor for Block5dPlayApp {
         registry.register(Block5dRetainedCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !BLOCK5D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id || block5d_retained_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "block5d-retained-command-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "block5d-retained-command-tool-mismatch").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Block5dCommand::command_id, BLOCK5D_RETAINED_RAW_BYTES, BLOCK5D_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, block5d_retained_reduce, block5d_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Block5dCommand::command_id, BLOCK5D_RETAINED_RAW_BYTES, BLOCK5D_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, block5d_retained_reduce, block5d_retained_extent))
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -431,11 +431,11 @@ impl ArtifactEditor for Block5dPlayApp {
     /// `setActiveExample` parses), so the board window shows a part kind and the World3d window a
     /// `mesh_url` instead of the all-`Default` empty part kind — see
     /// `crate::standards::v1::subsets::any::io::text::snapshot::default_block5d_snapshot`.
-    fn reference_birth()->Option<fn()->Result<Block5dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Block5dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_block_5d_io::text::snapshot::default_block5d_snapshot())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(block5d_io())
     }
 
@@ -470,7 +470,7 @@ impl ArtifactEditor for Block5dPlayApp {
         command: &Block5dCommand,
         doc: &ArtifactView<'_, Block5dSnapshot>,
         cfg: &ConfigView<'_, Block5dConfig>,
-        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
@@ -498,17 +498,17 @@ impl ArtifactEditor for Block5dPlayApp {
 })())
 }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let labels = block5d_labels(view_state);
         let node = match body_key {
             board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels)?,
             world::BLOCK5D_BODY_WORLD => world::render(doc.snapshot, labels)?,
-            document_panel::BLOCK5D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::BLOCK5D_BODY_ARTIFACT))?,
-            inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BLOCK5D_BODY_INSPECTOR))?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d unknown-body label admission failed"))?,
+            document_panel::BLOCK5D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, document_panel::BLOCK5D_BODY_ARTIFACT))?,
+            inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::BLOCK5D_BODY_INSPECTOR))?,
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d unknown-body label admission failed"))?,
         };
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
     }
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s first real caller — wraps the block-5d document's
@@ -542,7 +542,7 @@ impl ArtifactEditor for Block5dPlayApp {
 /// the subset's own `📚️examples/🎬️{hexagonal-cut-concrete-forest-left,nakagin-capsule}` facet
 /// (untouched, already wired in `🦀️.rs`'s Examples region) is the modern, role-agnostic
 /// replacement surface for app-level example registration.
-pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_block5d_app() -> semio_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_block_5d_model::BLOCK5D_DIALECT)
             .document(["semio", "block", "5d"])
             .artifact_kind(artifact_kind())
@@ -574,7 +574,7 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("addGrip", LocalizedLabel::native("Add Grip", "Griff hinzufügen"))
             .mutation("removeGrip", LocalizedLabel::native("Remove Grip", "Griff entfernen"))
             .action_destructive("removeGrip")
-            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+            .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .action_interactive_job("patchPartKind", InteractiveJobClassification::Migrated)

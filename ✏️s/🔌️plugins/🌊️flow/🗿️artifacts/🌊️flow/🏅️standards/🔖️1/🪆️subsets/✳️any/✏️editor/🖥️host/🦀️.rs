@@ -5,9 +5,9 @@ use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_artifact_flow_flow::CameraJson;
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
-use semio_framework_plugin::app::ChildEmitPreparation;
-use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+use semio_os_infinite_directed_presentation::DagDrawLod;
+use semio_plugin::app::ChildEmitPreparation;
+use semio_plugin::{Emit, Fault, NoConfigMutation};
 use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
@@ -83,20 +83,8 @@ pub fn host_from_snapshot(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig
 /// shape every render, probe and evaluation step that only needs a host for the length of a call must
 /// use. A `FlowHost` owns a `FlowHostSnapshot` whose `layout: OrderedMap<WidgetLayout>` aborts the
 /// guest on a bare drop, so a host is closed, never dropped (the twin of `FlowHost::with_host_snapshot`).
-pub fn with_host_from_snapshot<R>(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, body: impl FnOnce(&mut FlowHost) -> R) -> Result<R, semio_framework_value::ValueError> {
-    let mut host = host_from_snapshot(snapshot, config, session);
-    let result = body(&mut host);
-    host.retire_cold()?;
-    Ok(result)
-}
-
-/// 📸️ Runs `body` against the live host projection of `snapshot`, then retires that projection — a
-/// `FlowHostSnapshot` owns an `OrderedMap` layout root and widget payloads that refuse a bare drop.
-pub fn with_live_host_snapshot<R>(snapshot: &FlowSnapshot, body: impl FnOnce(&semio_framework_artifact_flow_flow::FlowHostSnapshot) -> R) -> R {
-    let live = snapshot.to_host_snapshot();
-    let result = body(&live);
-    live.retire_cold();
-    result
+pub fn with_host_from_snapshot<R>(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, body: impl FnOnce(&mut FlowHost) -> R) -> flow::FlowHostScopeOutcome<R> {
+    host_from_snapshot(snapshot,config,session).with_cold(body)
 }
 
 /// 🪆️ The content child `composed` names, as the exact scene its working-scene owner carries.
@@ -142,15 +130,16 @@ pub fn focus_selection_camera(snapshot: &FlowSnapshot, config: &FlowMainWindowCo
     if selected_node_ids.is_empty() {
         return Ok(None);
     }
-    with_host_from_snapshot(snapshot, config, session, |host| {
-        host.set_viewport(1280, 800, 1.0);
-        host.set_selection(selected_node_ids);
-        host.focus_selection_camera(1.2)
-    }).map_err(value_fault)
+    let source=snapshot.read_source().map_err(value_fault)?;
+    Ok(FlowHost::project_focus_selection_camera(&source,&flow::flow_neuron_kind_info_map(),selected_node_ids,1280,800,1.2))
 }
 //#endregion 🔖️Selection
 
 //#region 🧯️Faults
 /// 🧯️ Surfaces a retained-ownership refusal as an app fault carrying its message.
-pub fn value_fault(error: semio_framework_value::ValueError) -> Fault { Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()) }
+pub fn value_fault(error: semio_framework_value::ValueError) -> Fault { Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.retained"), error.into_message()) }
 //#endregion 🧯️Faults
+
+#[path="../🪆️composed-source/🦀️.rs"]
+pub mod composed_source;
+pub use composed_source::{FlowComposedSourceWork,FlowComposedRead,FlowComposedScene};

@@ -1,7 +1,7 @@
 use crate::editor::{build_set_page_mutation, create_idml_editor, IdmlEditor, IDML_EDITOR_DIALECT};
 use crate::viewer::{create_idml_viewer, IDML_VIEWER_DIALECT};
-use semio_framework_plugin::app::DocumentWindowKit;
-use semio_framework_plugin::{AppRole, ArtifactEditor};
+use semio_plugin::app::DocumentWindowKit;
+use semio_plugin::{AppRole, ArtifactEditor};
 use semio_s_artifact_stdio_idml_story::story_pages;
 use semio_s_artifact_stdio_idml::{IdmlMutation, IdmlSnapshot};
 

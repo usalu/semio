@@ -3,8 +3,8 @@ use super::*;
 use semio_framework::sqlite_snapshot::{SqliteDatabaseLimits,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SnapshotEncoding};
 use {semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_value::ValueRefusalKind;
-use semio_framework_plugin_guest_contract::{GuestCallCancellation, TurnFault, sqlite_wire};
-use semio_framework_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedRuntime};
+use semio_plugin_guest_contract::{GuestCallCancellation, TurnFault, sqlite_wire};
+use semio_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedRuntime};
 use std::path::PathBuf;
 const CORPUS:&str=include_str!("../../🧫️fixtures/🪶️workspace-lease/🔣️.json");
 fn snapshot_request()->sqlite_wire::SnapshotInput{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).expect("original neutral caller native and SQL policy")}
@@ -18,18 +18,18 @@ fn independent_file(bytes:&[u8],count:i32,encoding:&str){
 }
 async fn export_file(runtime:&OwnedRuntime,compiled:&OwnedCompiledGuest,dialect:&str,encoding:&str,payload:&[u8])->sqlite_wire::SnapshotFile{
  let request=snapshot_request();let grant=request.native.native().unwrap();
- let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut observe,&mut original_recipient);
+ let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=semio_plugin_host_operation::test_native_authority::original(&mut observe,&mut original_recipient);
 
  let output=match runtime.codec_sqlite_export(compiled,dialect,encoding,payload,SqliteDatabaseLimits::default(),codec_budget(),|_,_|{},&GuestCallCancellation::default(),grant,&mut identity).await.expect("compiled SQLite export"){
   sqlite_wire::SnapshotFileResult::Done(file)=>file,sqlite_wire::SnapshotFileResult::Rejected(error)=>panic!("valid complete Count refused: {:?}",error),sqlite_wire::SnapshotFileResult::Pending(owner)=>panic!("complete Count still owns snapshot ticket {}",owner.ticket)
  };
- semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
+ semio_plugin_host_operation::test_native_authority::close(&mut identity);
  output
 }
 #[semio_framework_async_macros::async_test]
 async fn count_component_full_i32_both_native_encodings_use_real_wasm_and_independent_sqlite(){
  let request=snapshot_request();let grant=request.native.native().unwrap();
- let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut observe,&mut original_recipient);
+ let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=semio_plugin_host_operation::test_native_authority::original(&mut observe,&mut original_recipient);
 
  let component=std::fs::read(fixture_component()).expect("required staged real component");let runtime=OwnedRuntime::new(semio_framework_job::default_now_us);
  let compiled=runtime.compile_component(&component).expect("actual component compile");
@@ -51,12 +51,12 @@ async fn count_component_full_i32_both_native_encodings_use_real_wasm_and_indepe
   let binary_file=export_file(&runtime,&compiled,dialect,"binary",&binary.bytes).await;independent_file(&binary_file.bytes,count,"binary");
   let sqlite_wire::SnapshotPayloadResult::Done(binary_again)=runtime.codec_sqlite_import(&compiled,dialect,&binary_file.bytes,SqliteDatabaseLimits::default(),codec_budget(),|_,_|{},&GuestCallCancellation::default(),grant,&mut identity).await.expect("compiled binary roundtrip")else{panic!("valid binary file refused")};assert_eq!(binary_again,binary);
  }
- semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
+ semio_plugin_host_operation::test_native_authority::close(&mut identity);
 }
 #[semio_framework_async_macros::async_test]
 async fn count_component_cancellation_occurs_during_real_export_and_import_interpretation(){
  let request=snapshot_request();let grant=request.native.native().unwrap();
- let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut observe,&mut original_recipient);
+ let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=semio_plugin_host_operation::test_native_authority::original(&mut observe,&mut original_recipient);
 
  let component=std::fs::read(fixture_component()).unwrap();let runtime=OwnedRuntime::new(semio_framework_job::default_now_us);let compiled=runtime.compile_component(&component).unwrap();
  let fixture=corpus();let dialect=fixture["owner"].as_str().unwrap();let input=b"{\"count\":2147483647}";
@@ -66,17 +66,17 @@ async fn count_component_cancellation_occurs_during_real_export_and_import_inter
   let result=if import{runtime.codec_sqlite_import(&compiled,dialect,&file.bytes,SqliteDatabaseLimits::default(),codec_budget(),|_,_|{observed+=1;cancel.cancel()},&cancel,grant,&mut identity).await.map(|_|())}else{runtime.codec_sqlite_export(&compiled,dialect,"text",input,SqliteDatabaseLimits::default(),codec_budget(),|_,_|{observed+=1;cancel.cancel()},&cancel,grant,&mut identity).await.map(|_|())};
   assert!(observed>0);assert!(matches!(result,Err(TurnFault::Cancelled)));assert!(cancel.is_cancelled());
  }
- semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
+ semio_plugin_host_operation::test_native_authority::close(&mut identity);
 }
 fn refusal_file(dialect:&ArtifactDialect)->Vec<u8>{
  let mut database=SqliteDatabase::from_schema("CREATE TABLE fixture_refusal (id INTEGER PRIMARY KEY, value INTEGER NOT NULL);").unwrap();database.table_mut("fixture_refusal").unwrap().rows.push(SqliteRow{rowid:1,values:vec![SqliteValue::Integer(1),SqliteValue::Integer(0)]});
- semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database,dialect,SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+ semio_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database,dialect,SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
  semio_framework::sqlite_snapshot::export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap()
 }
 #[semio_framework_async_macros::async_test]
 async fn count_component_selected_compiled_refusal_owners_preserve_all_eight_causes_and_full_nul_diagnostics(){
  let request=snapshot_request();let grant=request.native.native().unwrap();
- let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut observe,&mut original_recipient);
+ let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=semio_plugin_host_operation::test_native_authority::original(&mut observe,&mut original_recipient);
 
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
@@ -89,5 +89,5 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
   let sqlite_wire::SnapshotPayloadResult::Rejected(import)=runtime.codec_sqlite_import(&compiled,coordinate,&file,SqliteDatabaseLimits::default(),codec_budget(),|_,_|{},&GuestCallCancellation::default(),grant,&mut identity).await.expect("selected compiled provider import")else{panic!("explicit fault owner imported")};
   for rejection in [export,import]{assert_eq!(rejection.kind,kind);let error=rejection.into_io_error().expect("packed guest diagnostics");assert_eq!(error.cause.kind,kind);assert_eq!(error.cause.message,fixture["message"].as_str().unwrap());assert_eq!(error.diagnostics,vec![diagnostic.clone()]);}
  }
- semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
+ semio_plugin_host_operation::test_native_authority::close(&mut identity);
 }

@@ -19,12 +19,12 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-job = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-plugin-decl-app = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-plugin-decl-app = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-framework-tool-typing-edit = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
 semio-framework-text-splice-native = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🧬️native/📦️packages/🦀️rust" }
 semio-s-artifact-writer-writer-operations = { path = "../../../../../🧬️schema/⚙️operations/📦️packages/🦀️rust" }
 
-semio-framework-ui-scene-views = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
+semio-ui-scene-views = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

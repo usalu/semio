@@ -2,7 +2,7 @@
 
 use super::testkit::{admit_mesh, allocate_mesh, close_mesh, mesh_test_attempt, mesh_test_attempt_controlled, observe_retirement_allocations, ownership_test_grant, paged_mesh_fixture, test_box_mesh, LegacyMeshOracleData, ObservedAllocator};
 use super::*;
-use semio_framework_ui_scene_algebra::vec3_new_m;
+use semio_ui_scene_algebra::vec3_new_m;
 use std::collections::{BTreeMap, BTreeSet};
 
 fn abort_mesh(token:Mesh3dWriteToken)->Result<bool,Mesh3dFault> {let demand=mesh_test_attempt(||mesh3d_abort_demands(token,MESH3D_PAGE_BYTES))?;let grant=ownership_test_grant(MESH3D_PAGE_BYTES,demand.capacity_bytes,demand.release_bytes,demand.depth);let step=mesh_test_attempt(||mesh3d_abort_step(token,grant))?;assert!(step.progress.fits(grant));Ok(step.complete)}

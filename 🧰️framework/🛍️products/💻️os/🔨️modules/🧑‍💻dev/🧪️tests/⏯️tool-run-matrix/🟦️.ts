@@ -1,3 +1,4 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** ⏯️ The tool-run column of the program matrix: every program that declares a tool, inside ONE served `s`, as a user drives it.
  *
  * Per program (`🧑‍💻dev/🧫️fixtures/⏯️tool-run-matrix.json`, each with its tool, its declared `mutating` flag and the example a run
@@ -20,8 +21,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { awaitBeacon, click, clickUncovered, dismissIntroduction, readShell, seatLocale, withDevServe, witness } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
@@ -289,10 +289,10 @@ async function runRow(browser: Browser, program: ToolProgram, options: ToolRunMa
 
 /** ⏯️ Runs every selected program's two runs, one fresh browser context per program; the report is rewritten after every row
  * and the signal ends the run after the current program. */
-export async function runToolRunMatrix(options: ToolRunMatrixOptions): Promise<{ rows: ToolRunRow[]; cancelled: boolean; fatal?: string }> {
+export async function runToolRunMatrix(repoRoot: string, options: ToolRunMatrixOptions): Promise<{ rows: ToolRunRow[]; cancelled: boolean; fatal?: string }> {
   mkdirSync(options.outDir, { recursive: true });
   const programs = readToolPrograms().filter((program) => options.only.length === 0 || options.only.some((entry) => `${program.pluginId}/${program.appId}`.includes(entry)));
-  ensureParityPlaywrightBrowsersPath();
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--enable-unsafe-webgpu", "--ignore-gpu-blocklist"] });
   const report = { baseUrl: options.baseUrl, tag: options.tag, locale: options.locale, started: new Date().toISOString(), finished: null as string | null, rows: [] as ToolRunRow[], cancelled: false };
@@ -338,7 +338,7 @@ export async function runToolRunMatrixCli(repoRoot: string, defaultOutDir: strin
   const startedAt = new Date();
   await withAcceptanceRecord(repoRoot, "tool-run-matrix", () => withDevServe(repoRoot, "tool-run-matrix", { serveUrl, locale, signal: controller.signal, startedAt }, async (baseUrl) => {
     const outDir = join(resolve(flagValue(segments, "--out") ?? defaultOutDir), tag);
-    const report = await runToolRunMatrix({ baseUrl, tag, locale, only: (flagValue(segments, "--only") ?? "").split(",").filter(Boolean), pause: !segments.includes("--no-pause"), runMs: Number(flagValue(segments, "--run-ms") ?? 120_000), outDir, signal: controller.signal });
+    const report = await runToolRunMatrix(repoRoot, { baseUrl, tag, locale, only: (flagValue(segments, "--only") ?? "").split(",").filter(Boolean), pause: !segments.includes("--no-pause"), runMs: Number(flagValue(segments, "--run-ms") ?? 120_000), outDir, signal: controller.signal });
     const passed = report.rows.filter((row) => row.pass).length;
     const total = report.rows.length;
     const failing = report.rows.filter((row) => !row.pass).map((row) => `${row.key}: ${row.verdict}${row.b.aborted === false ? " / abort" : ""}`);

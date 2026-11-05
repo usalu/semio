@@ -435,7 +435,7 @@ export class ExecutionTargetLeaseCheckScript extends BundleScript {
     const laws = [
       { target: ["-p", "semio-hub-trusted-catalog-laws", "--lib"], suffix: "selected_execution_target_assets_are_generation_and_digest_bound" },
       { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body" },
-      { target: ["-p", "semio-framework-os-kernel", "--lib"], suffix: "execution_target_lease_compares_every_plan_and_verified_byte_field" },
+      { target: ["-p", "semio-os-kernel", "--lib"], suffix: "execution_target_lease_compares_every_plan_and_verified_byte_field" },
     ].map((law) => ({ ...law, name: exactLaw(law.target, law.suffix) }));
     console.log(`execution-target-lease-laws: qualification=default-feature-subset exact=${laws.length} laws=${laws.map((law) => law.name).join(",")}`);
     for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", ...law.target, law.name, "--", "--exact", "--test-threads=1"], this.root, env);

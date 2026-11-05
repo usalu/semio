@@ -1,0 +1,8 @@
+{
+  "pane": "forms",
+  "components": ["forms", "playbook", "playbook-module-procedural"],
+  "activation": "@semio-tech/framework-os-dev:activate-forms-react-prototype",
+  "prepare": "prepare-forms-e2e",
+  "serve": "serve-forms-e2e",
+  "test": "test-e2e-forms"
+}

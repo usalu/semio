@@ -1,7 +1,7 @@
 use crate::editor::shooting::modes::edit::windows::scene::options;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::{parse, Value};
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use crate::editor::shooting::config::ShootingConfig;
 #[allow(unused_imports)]
@@ -11,33 +11,33 @@ use crate::is_transparent_shooting_background;
 #[allow(unused_imports)]
 use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 #[allow(unused_imports)]
-use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_mesh_id_from_url;
 #[allow(unused_imports)]
-use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_plugin::world3d_meshes_json_from_kinds_and_urls;
 #[allow(unused_imports)]
-use semio_framework_plugin::world3d_scene;
+use semio_plugin::world3d_scene;
 #[allow(unused_imports)]
-use semio_framework_plugin::world3d_selection_json;
+use semio_plugin::world3d_selection_json;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagement;
+use semio_plugin::WindowEngagement;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementInput;
+use semio_plugin::WindowEngagementInput;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementPossible;
+use semio_plugin::WindowEngagementPossible;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowEngagementStatus;
+use semio_plugin::WindowEngagementStatus;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
-use semio_framework_plugin::World3dScene;
+use semio_plugin::World3dScene;
 #[allow(unused_imports)]
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::WorldSunConfig;
 #[allow(unused_imports)]
 use std::collections::HashSet;
 use crate::editor::shooting::modes::edit::windows::scene::*;

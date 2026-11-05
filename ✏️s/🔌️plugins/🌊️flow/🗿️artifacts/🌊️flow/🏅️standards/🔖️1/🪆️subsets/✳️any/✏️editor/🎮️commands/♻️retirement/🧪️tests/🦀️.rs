@@ -1,8 +1,8 @@
 use crate::{FlowSnapshot, FlowWorkingScene};
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_plugin::Effect;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 use std::sync::Arc;
@@ -13,7 +13,7 @@ use crate::editor::flow::commands::{add_widget, connect_media_ports, context_men
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::{compiled, main};
 #[allow(unused_imports)]
@@ -45,75 +45,75 @@ use semio_framework_artifact_flow_flow::CameraJson;
 #[allow(unused_imports)]
 use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
 #[allow(unused_imports)]
-use semio_framework_os_infinite_directed_presentation::DagDrawLod;
+use semio_os_infinite_directed_presentation::DagDrawLod;
 #[allow(unused_imports)]
-use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
+use semio_plugin::app::{ChildEmitPreparation, InteractionView};
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgDef;
+use semio_plugin::ActionArgDef;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionArgOption;
+use semio_plugin::ActionArgOption;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionDefinition;
+use semio_plugin::ActionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionKind;
+use semio_plugin::ActionKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppActionRegistry;
+use semio_plugin::AppActionRegistry;
 #[allow(unused_imports)]
-use semio_framework_plugin::AppDefinition;
+use semio_plugin::AppDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use semio_framework_plugin::ArtifactView;
+use semio_plugin::ArtifactView;
 #[allow(unused_imports)]
-use semio_framework_plugin::CommandDefinition;
+use semio_plugin::CommandDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ConfigView;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ContextMenuRequest;
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
-use semio_framework_plugin::DomainTopology;
+use semio_plugin::DomainTopology;
 #[allow(unused_imports)]
-use semio_framework_plugin::DraftView;
+use semio_plugin::DraftView;
 #[allow(unused_imports)]
-use semio_framework_plugin::Editor;
+use semio_plugin::Editor;
 #[allow(unused_imports)]
-use semio_framework_plugin::GranularityDefinition;
+use semio_plugin::GranularityDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::HierarchyProvider;
+use semio_plugin::HierarchyProvider;
 #[allow(unused_imports)]
-use semio_framework_plugin::HoverSpec;
+use semio_plugin::HoverSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionDefinition;
+use semio_plugin::InteractionDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionTopology;
+use semio_plugin::InteractionTopology;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraft;
+use semio_plugin::NoDraft;
 #[allow(unused_imports)]
-use semio_framework_plugin::NoDraftMutation;
+use semio_plugin::NoDraftMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMethod;
+use semio_plugin::SelectionMethod;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionMode;
+use semio_plugin::SelectionMode;
 #[allow(unused_imports)]
-use semio_framework_plugin::SelectionSpec;
+use semio_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_plugin::TopologyNode;
+use semio_plugin::TopologyNode;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use serde_json::json;
 #[allow(unused_imports)]
@@ -166,13 +166,13 @@ fn original_flow_snapshot_preserves_local_scene_and_full_system_receipts(){
 
 #[test]
 fn original_flow_completion_rejection_admits_whole_source_and_exact_system_receipts(){
- type Source=semio_framework_plugin::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+ type Source=semio_plugin::ArtifactToolCompletionRejection<semio_plugin::EditorApp<FlowPlayApp>>;
  let corpus:Value=serde_json::from_str(fixture_text!("../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/♻️retirement/🚫️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for copy in corpus["copies"].as_array().unwrap().iter().map(|copy|copy.as_u64().unwrap()as usize){for row in corpus["receivingCases"].as_array().unwrap(){
   let(source,born,free)=observe(||{
    let fault=||{let mut fault=Fault::new(semio_framework_diagnostic::FaultOrigin::App,"original-completion-rejection",row["message"].as_str().unwrap());fault.scope.module=Some(row["scope"].as_str().unwrap().into());fault.params=Some(Box::new(semio_framework_diagnostic::FaultParams(vec![("original".into(),row["parameter"].as_str().unwrap().into())])));fault};
-   let emit=if row["outcome"]=="fault"{Err(fault())}else{Ok(Emit{effects:vec![Effect::DispatchAction{req:semio_framework_plugin::RequestId(107),action:"flowEvalTick".into(),args:None,delay_ms:0}],extension_invocations:vec![semio_framework_plugin::ExtensionInvocation::new(row["extension"].as_str().unwrap(),"evaluate",row["input"].as_str().unwrap(),"flowEvalResolve")],..Default::default()})};
-   Source{emit,ephemeral:semio_framework_plugin::EphemeralEmit::default(),fault:fault()}
+   let emit=if row["outcome"]=="fault"{Err(fault())}else{Ok(Emit{effects:vec![Effect::DispatchAction{req:semio_plugin::RequestId(107),action:"flowEvalTick".into(),args:None,delay_ms:0}],extension_invocations:vec![semio_plugin::ExtensionInvocation::new(row["extension"].as_str().unwrap(),"evaluate",row["input"].as_str().unwrap(),"flowEvalResolve")],..Default::default()})};
+   Source{emit,ephemeral:semio_plugin::EphemeralEmit::default(),fault:fault()}
   });let original=born-free;
   let pointer=source.fault.message.as_ptr();let capacity=semio_framework_value::retirement::owned_retirement_birth_bytes::<Source>();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:1};
   let((error,source),born,free)=observe(||semio_framework_value::retirement::admit_owned_retirement(source,RetainedCloneGrant{maximum_items:0,..grant}).result.err().unwrap());assert_eq!((born,free),(0,0));assert_eq!(source.fault.message.as_ptr(),pointer);assert_eq!(error.retained_progress(),Default::default());assert_eq!(observe(||drop(error)),((),0,0));

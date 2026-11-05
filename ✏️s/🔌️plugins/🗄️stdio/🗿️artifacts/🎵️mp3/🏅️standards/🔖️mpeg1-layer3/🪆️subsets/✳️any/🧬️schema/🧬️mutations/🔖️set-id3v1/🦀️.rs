@@ -13,8 +13,8 @@ pub struct SetId3v1 {
 impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetId3v1 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "id3v1", kind: "set-id3v1", record: "SetId3v1" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set ID3v1", "ID3v1-Tag setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set ID3v1", "ID3v1-Tag setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

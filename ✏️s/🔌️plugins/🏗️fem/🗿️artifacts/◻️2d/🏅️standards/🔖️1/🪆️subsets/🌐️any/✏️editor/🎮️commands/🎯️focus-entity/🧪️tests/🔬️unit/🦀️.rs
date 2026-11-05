@@ -1,9 +1,9 @@
 use super::*;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
-use semio_framework_plugin::HistoryView;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::ViewWindowInstance;
+use semio_plugin::HistoryView;
+use semio_plugin::ViewModel;
+use semio_plugin::ViewWindowInstance;
 use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
@@ -11,7 +11,7 @@ fn demo() -> Fem2dSnapshot {
 }
 
 fn addressed(kind: &str) -> ViewModel {
-    ViewModel { window_id: Some("w".into()), window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { window_id: Some("w".into()), window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 fn focus(doc: &Fem2dSnapshot, kind: &str, id: &str) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
@@ -49,6 +49,6 @@ async fn focus_entity_refuses_an_unknown_entity_and_an_unaddressed_window() {
     let view = ArtifactView::new(&doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    assert!(handle_window(&FocusEntity { id: "ridge".into() }, &view, &cfg, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).is_err());
+    assert!(handle_window(&FocusEntity { id: "ridge".into() }, &view, &cfg, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).is_err());
     assert!(handle(&FocusEntity { id: "ridge".into() }, &view, &cfg).is_err(), "the doc-scoped route always refuses");
 }

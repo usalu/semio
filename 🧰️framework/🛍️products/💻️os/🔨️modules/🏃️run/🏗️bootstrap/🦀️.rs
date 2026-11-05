@@ -1,5 +1,5 @@
 //! 🕸️ CLI: `repo ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param k=v]*
-//! [--policy <laissez-faire|normal|vigilant>]` shells out to `cargo run -p semio-framework-os-run
+//! [--policy <laissez-faire|normal|vigilant>]` shells out to `cargo run -p semio-os-run
 //! --release -- <same args>`. This binary owns argv
 //! parsing and studio-bundle plumbing only — all the actual dirty/clean and execution logic lives in
 //! the library. Non-destructive (W5 Lane A): every invocation produces/updates a `RunArtifact` under
@@ -13,7 +13,7 @@
 // so cargo never got far enough to check this file — see the lib's own W1 fix history).
 extern crate semio_framework as store;
 extern crate semio_framework_artifact_workflow_workflow as workflow;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 use semio_framework_process_routing_workspace as workspace_identity;
 
@@ -22,7 +22,7 @@ fn is_repository_root(path: &Path) -> Result<bool, String> {
     workspace_identity::is_workspace_root(path, |source| semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| matches!(value.get("workspaces"), Some(semio_framework_pack_json::Value::Array(_) | semio_framework_pack_json::Value::Object(_)))).map_err(|error| error.to_string()))
 }
 
-use semio_framework_os_run::{plan, register_builtin_converters, MediaCache, NodeDocumentLoadProgress, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
+use semio_os_run::{plan, register_builtin_converters, MediaCache, NodeDocumentLoadProgress, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -65,7 +65,7 @@ use protocol::native_catalog::{configured_native_catalog_v1,plugin_component_dir
 
 /// 🧭️ Locates the repo root: `SEMIO_REPO_ROOT` (already plumbed by `📜️script.ts`'s `os run` region)
 /// when present and valid, else walks up from this crate's own compiled-in `CARGO_MANIFEST_DIR`
-/// looking for paired build and package workspace markers — so a direct `cargo run -p semio-framework-os-run` (bypassing the script,
+/// looking for paired build and package workspace markers — so a direct `cargo run -p semio-os-run` (bypassing the script,
 /// from an arbitrary working directory) still resolves correctly.
 fn find_repo_root() -> Result<PathBuf, String> {
     if let Ok(value) = std::env::var("SEMIO_REPO_ROOT") {
@@ -146,7 +146,7 @@ struct Args {
     only_node: Option<String>,
     /// 🎛️ `--param <parameter_id>=<value>` (repeatable) — resolved into `semio_framework_artifact_workflow_run::RunParameterValue`s
     /// applied as a config-fingerprint overlay on bound node configs before dirty-checking (see
-    /// `semio_framework_os_run::node_parameter_overlay_bytes`'s doc for why this affects the
+    /// `semio_os_run::node_parameter_overlay_bytes`'s doc for why this affects the
     /// fingerprint rather than the raw config bytes this crate sends to the app).
     params: Vec<(String, String)>,
     /// ⚖️ `--policy <laissez-faire|normal|vigilant>` — this run's local/authority `MergePolicy`
@@ -221,8 +221,8 @@ fn main() {
 /// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
-    let envelope = protocol::os_store::document_materialize::create_document_envelope::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>(semio_framework_artifact_workflow_run::S_RUN_SCHEMA, RUN_ID, semio_framework_artifact_workflow_run::empty_run_document().await, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut document_store = protocol::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::os_spr::ActorId(protocol::os_spr::LOCAL_ACTOR_ID.into())).await.map_err(|error| error.to_string())?;
+    let envelope = protocol::os_store::document_materialize::create_document_envelope::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>(semio_framework_artifact_workflow_run::S_RUN_SCHEMA, RUN_ID, semio_framework_artifact_workflow_run::empty_run_document().await, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut document_store = protocol::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::os_spr::ActorId(protocol::os_spr::LOCAL_ACTOR_ID.into())).await.map_err(|error| error.to_string())?;
     protocol::install_unscheduled_catalog(&mut document_store, protocol::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>()).map_err(|error| error.to_string())?;
     let applied = async {
         if !sink.mutations.is_empty() {
@@ -246,7 +246,7 @@ async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn
 /// MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): drives `run_async`'s whole
 /// body — not just `SpaceRunner::run` any more — because `WasmtimeNodeHost::new` (and `open`, called
 /// deep inside `SpaceRunner::run`) are now `async fn` themselves, building/driving the real
-/// `NativeKernelRuntime` (`semio-framework-os`'s `🎠️activation/🦀️.rs`) instead of the old ad hoc actor-id
+/// `NativeKernelRuntime` (`semio-os`'s `🎠️activation/🦀️.rs`) instead of the old ad hoc actor-id
 /// minting. Uses `semio_framework_async::block_on` — the canonical bridge — rather than
 /// `semio_framework_async::block_on` (what this file used before this packet): a single genuine
 /// thread-root bridge should be the one this repo ships, not an incidental external crate; this
@@ -260,7 +260,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     register_builtin_converters();
     let bundle = SpaceBundle::open(&args.bundle);
     let (space_pack, space_spr) = bundle.read_space_document()?;
-    let parsed: protocol::os_store::text_format::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = protocol::os_store::text_format::parse_document_pack(&space_pack, &space_spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.to_string())?;
+    let parsed: protocol::os_store::text_format::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = protocol::os_store::text_format::parse_document_pack(&space_pack, &space_spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.to_string())?;
     let snapshot = parsed.snapshot;
 
     let mut graph = snapshot.graph.clone();
@@ -283,7 +283,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         if run_pack.is_empty() {
             BTreeMap::new()
         } else {
-            let parsed: protocol::os_store::text_format::ParsedDocumentText<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation> = protocol::os_store::text_format::parse_document_pack(&run_pack, &run_spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.to_string())?;
+            let parsed: protocol::os_store::text_format::ParsedDocumentText<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation> = protocol::os_store::text_format::parse_document_pack(&run_pack, &run_spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.to_string())?;
             parsed.snapshot.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
         }
     };
@@ -301,12 +301,12 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let plugin_paths = resolve_plugin_paths(&repo_root, relevant_plugin_ids.into_iter())?;
     let descriptor_paths = resolve_descriptor_paths(&repo_root)?;
     let blob_store = Arc::new(bundle.blob_store());
-    let identity_policy:semio_framework_plugin_host_shard::identity::ShardIdentityPolicy=serde_json::from_str(include_str!("../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).map_err(|error|error.to_string())?;
+    let identity_policy:semio_plugin_host_shard::identity::ShardIdentityPolicy=serde_json::from_str(include_str!("../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).map_err(|error|error.to_string())?;
     let original_cancel=semio_framework_async::CancelToken::root_now();
     let identity_cancel=original_cancel.clone();
     let direct_cancel=original_cancel.clone();
-    let identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=identity_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
-    let direct_identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=direct_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
+    let identity=semio_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=identity_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
+    let direct_identity=semio_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=direct_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
     let host_driver_policy = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(&args.host_driver_policy)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
     let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity,host_driver_policy,semio_framework_job::default_now_us,original_cancel.clone(),direct_identity).await?;
     let mut runner = SpaceRunner::new(host, blob_store, args.policy,original_cancel).with_document_load_progress(document_load_reporter());

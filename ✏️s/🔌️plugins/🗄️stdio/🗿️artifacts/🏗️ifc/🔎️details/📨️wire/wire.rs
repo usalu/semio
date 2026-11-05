@@ -1,7 +1,7 @@
 //! 🧵️ Borrowed forward and inverse Store wire admission advances the original native codec.
 use super::*;
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText as Text, ArtifactCanonicalJsonTree as Tree};
-use semio_framework_plugin::plugin_app_close_prelude::store;
+use semio_plugin::plugin_app_close_prelude::store;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
@@ -239,7 +239,7 @@ impl IfcPublication {
         }
     }
 
-    pub fn advance(&mut self, mutations: &[IfcMutation], capacity: semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub fn advance(&mut self, mutations: &[IfcMutation], capacity: semio_plugin::retained_command::ArtifactRetainedWorkCapacity, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if self.mutation_source.is_some_and(|source| source != (mutations.as_ptr() as usize, mutations.len())) {
             return Err(refusal("IFC original mutation source changed during retained publication").into());
         }
@@ -272,7 +272,7 @@ impl IfcPublication {
         Ok(false)
     }
 
-    fn advance_one(&mut self, mutations: &[IfcMutation], capacity: semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    fn advance_one(&mut self, mutations: &[IfcMutation], capacity: semio_plugin::retained_command::ArtifactRetainedWorkCapacity, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() {
             return Err(ValueError::literal(ValueRefusalKind::Canceled, "IFC publication validation cancelled").into());
         }
@@ -464,7 +464,7 @@ mod preimage_tests {
         for case in fixture["cases"].as_array().unwrap() {
             let parsed = semio_framework_pack_json::parse(&case["mutations"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let mutations = Vec::<IfcMutation>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).unwrap();
-            let mut caller = semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture::with_identity(semio_framework_job::OperationId(891), semio_framework_job::Generation(1));
+            let mut caller = semio_plugin::plugin_app_close_prelude::OriginalWorkFixture::with_identity(semio_framework_job::OperationId(891), semio_framework_job::Generation(1));
             let mut cursor = IfcPublication::default();
             let mut refused = false;
             for _ in 0..10_000 {
@@ -473,7 +473,7 @@ mod preimage_tests {
                 }
                 let demand = cursor.demands().unwrap();
                 let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-                match caller.work_turn(grant, 1, |cx| cursor.advance(&mutations, semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx)) {
+                match caller.work_turn(grant, 1, |cx| cursor.advance(&mutations, semio_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(32), cx)) {
                     Err(error) => {
                         assert!(error.primary.message().contains("requires progressive preimages"), "unexpected preflight refusal: {error:?}");
                         refused = true;

@@ -29,8 +29,8 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocum
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Stop keeping \"{}\" on this device", self.document_id), &format!("\"{}\" nicht mehr auf diesem Gerät behalten", self.document_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Stop keeping \"{}\" on this device", self.document_id), &format!("\"{}\" nicht mehr auf diesem Gerät behalten", self.document_id))
     }
 
     fn target(&self) -> Vec<String> {
@@ -38,7 +38,7 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocum
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocument {
+impl semio_os_command::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocument {
     fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
         if !base.documents.iter().any(|entry| entry.document_id == self.document_id) {
             return MutationOutcome::new(LocalCatalogDiff::default()).warning("mutation.no-op", format!("\"{}\" is not listed in the local catalog.", self.document_id));

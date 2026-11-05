@@ -1,6 +1,6 @@
 //! 📥️ Items of `replay` that belong to `os-store-ledger` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🔁️replay/🦀️.rs`.
-use semio_framework_os_spr::MutationId;
-use semio_framework_os_spr::{Edit, Mutation};
+use semio_os_spr::MutationId;
+use semio_os_spr::{Edit, Mutation};
 use crate::CursorRevisionAccumulator;
 /// 🪞️ The effective supersession of every superseded operation ([`protocol::HistoryFold::supersessions`]): the
 /// replacement input every fold site reads in place of the recorded forward, which is never modified.
@@ -24,7 +24,7 @@ where
         return None;
     }
     let mut digest = None;
-    for (index, mutation_id) in semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().enumerate() {
+    for (index, mutation_id) in semio_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().enumerate() {
         if let Some(supersession) = supersessions.get(mutation_id) {
             digest = Some(CursorRevisionAccumulator::hash_record(b"edit-supersessions", &[&digest.unwrap_or([0; 32]), &(index as u64).to_be_bytes(), &supersession_digest(mutation_id, supersession)]));
         }

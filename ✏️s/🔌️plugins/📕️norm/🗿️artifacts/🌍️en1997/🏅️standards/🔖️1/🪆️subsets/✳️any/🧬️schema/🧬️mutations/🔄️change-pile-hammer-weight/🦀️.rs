@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileHammerWeight w
         record: "ChangedPileHammerWeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Hammer weight W (0 = none) of the pile", "Pfahl: Bärgewicht W (0 = keines) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Hammer weight W (0 = none) of the pile", "Pfahl: Bärgewicht W (0 = keines) ändern")
     }
 }
 

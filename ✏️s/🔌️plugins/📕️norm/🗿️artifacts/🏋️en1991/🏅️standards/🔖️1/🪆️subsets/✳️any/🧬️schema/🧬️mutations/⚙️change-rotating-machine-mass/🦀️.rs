@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeRotatingMachineMas
         record: "ChangedRotatingMachineMass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change rotating (unbalanced) mass m of the rotating machine", "Rotierende Maschine: Rotierende (unwuchtige) Masse m ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change rotating (unbalanced) mass m of the rotating machine", "Rotierende Maschine: Rotierende (unwuchtige) Masse m ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

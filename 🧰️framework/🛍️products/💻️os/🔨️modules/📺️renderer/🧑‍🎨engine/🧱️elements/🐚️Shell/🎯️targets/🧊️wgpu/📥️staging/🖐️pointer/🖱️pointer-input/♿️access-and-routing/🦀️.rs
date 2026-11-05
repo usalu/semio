@@ -5,15 +5,15 @@ use super::*;
 //#region ShellInput
 impl<'ctx> PointerCtx<'ctx> {
     pub async fn handle_accessibility_event(&mut self, target: &ui_render::AccessibilityTarget, event: &ui_render::AccessibilityEvent, input: &mut InputState<ActionDescriptor>) -> Result<bool, String> {
-        if target.window_id != semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID {
+        if target.window_id != semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID {
             let event = match event {
-                ui_render::AccessibilityEvent::Focus => semio_framework_ui_wgpu_events::AccessibilityUiEvent::Focus,
-                ui_render::AccessibilityEvent::Blur => semio_framework_ui_wgpu_events::AccessibilityUiEvent::Blur,
-                ui_render::AccessibilityEvent::Activate => semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate,
-                ui_render::AccessibilityEvent::Value(value) => semio_framework_ui_wgpu_events::AccessibilityUiEvent::Value(value.clone()),
+                ui_render::AccessibilityEvent::Focus => semio_ui_wgpu_events::AccessibilityUiEvent::Focus,
+                ui_render::AccessibilityEvent::Blur => semio_ui_wgpu_events::AccessibilityUiEvent::Blur,
+                ui_render::AccessibilityEvent::Activate => semio_ui_wgpu_events::AccessibilityUiEvent::Activate,
+                ui_render::AccessibilityEvent::Value(value) => semio_ui_wgpu_events::AccessibilityUiEvent::Value(value.clone()),
             };
-            let focused = matches!(event, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Focus);
-            let Some(commands) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_accessibility_event(&target.window_id, target.window_generation, target.node_id, &target.node_key, event, input) else { return Ok(false) };
+            let focused = matches!(event, semio_ui_wgpu_events::AccessibilityUiEvent::Focus);
+            let Some(commands) = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_accessibility_event(&target.window_id, target.window_generation, target.node_id, &target.node_key, event, input) else { return Ok(false) };
             self.chrome.chrome_build.note_content_focus_commands(&commands);
             if focused && !self.as_session().retained_surface_is_panel(&target.window_id) {
                 let owner = window_pane_owner(&target.window_id).unwrap_or(&target.window_id).to_string();
@@ -189,7 +189,7 @@ impl<'ctx> PointerCtx<'ctx> {
                     let base = target.node_key.trim_end_matches(".input");
                     if let Some(meta) = self.input.widget_maps.stepper_metas.get(base).cloned() {
                         if let Ok(value) = value.parse::<f64>() {
-                            self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
+                            self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: semio_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
                         }
                         return Ok(true);
                     }
@@ -287,7 +287,7 @@ pub fn pointer_hit_owner(hit: Option<&HitTarget<ActionDescriptor>>) -> PointerHi
 /// [`Self::pointer_press_belongs_to_shell_chrome`], and React's `setPointerCapture` on a resize
 /// handle. The dock's structural drags travel across whatever the pointer sweeps over, so the
 /// engine surfaces under it must not also receive those moves.
-pub fn drag_captures_pointer(drag: &semio_framework_ui_wgpu_input::DragState) -> bool {
+pub fn drag_captures_pointer(drag: &semio_ui_wgpu_input::DragState) -> bool {
     drag.active && matches!(drag.kind, Some(HitKind::DockSplit | HitKind::DockJoinCorner | HitKind::PanelResize | HitKind::PanelTab))
 }
 //#endregion ShellInput
@@ -363,11 +363,11 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if retained_router_owns_pointer(kind) {
             let event = if down {
-                semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: x - body.x, y: y - body.y, button: retained_pointer_button(button), modifiers: retained_event_modifiers(input) }
+                semio_ui_wgpu_events::UiEvent::PointerDown { x: x - body.x, y: y - body.y, button: retained_pointer_button(button), modifiers: retained_event_modifiers(input) }
             } else {
-                semio_framework_ui_wgpu_events::UiEvent::PointerUp { x: x - body.x, y: y - body.y, button: retained_pointer_button(button), modifiers: retained_event_modifiers(input) }
+                semio_ui_wgpu_events::UiEvent::PointerUp { x: x - body.x, y: y - body.y, button: retained_pointer_button(button), modifiers: retained_event_modifiers(input) }
             };
-            let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_presented_ui_pointer_event(window_id, pointer_id, event, input);
+            let commands = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_presented_ui_pointer_event(window_id, pointer_id, event, input);
             self.chrome.chrome_build.note_content_focus_commands(&commands);
         } else if !down {
             if let Some(mut action) = action {

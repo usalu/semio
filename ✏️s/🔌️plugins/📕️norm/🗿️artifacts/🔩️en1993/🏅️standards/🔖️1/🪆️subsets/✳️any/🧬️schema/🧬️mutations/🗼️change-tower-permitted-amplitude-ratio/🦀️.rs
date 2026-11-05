@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerPermittedAmpl
         record: "ChangedTowerPermittedAmplitudeRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Permitted y_max/b of the tower leg", "Turmstiel: Zulässige Amplitude y_max/b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Permitted y_max/b of the tower leg", "Turmstiel: Zulässige Amplitude y_max/b ändern")
     }
 }
 

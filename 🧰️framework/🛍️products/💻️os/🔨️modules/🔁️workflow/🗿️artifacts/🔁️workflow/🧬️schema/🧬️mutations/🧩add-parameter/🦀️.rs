@@ -18,8 +18,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddParameter
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "workflow", kind: "add-parameter", record: "AddedWorkflowParameter" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add workflow parameter {}", workflow_parameter_entity_id(&self.parameter)), &format!("Arbeitsablaufparameter {} hinzufügen", workflow_parameter_entity_id(&self.parameter)))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add workflow parameter {}", workflow_parameter_entity_id(&self.parameter)), &format!("Arbeitsablaufparameter {} hinzufügen", workflow_parameter_entity_id(&self.parameter)))
     }
     fn target(&self) -> Vec<String> {
         vec!["parameters".into(), workflow_parameter_entity_id(&self.parameter).into()]

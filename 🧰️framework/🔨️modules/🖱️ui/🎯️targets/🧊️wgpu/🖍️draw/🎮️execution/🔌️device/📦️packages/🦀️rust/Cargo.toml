@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-ui-wgpu-device"
+name = "semio-ui-wgpu-device"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -26,7 +26,7 @@ default = []
 canvas-raster = ["dep:semio-framework-canvas-scene"]
 
 [dependencies]
-semio-framework-ui-render-device = { path = "../../../../../../../🖌️render/🔌️device/📦️packages/🦀️rust" }
+semio-ui-render-device = { path = "../../../../../../../🖌️render/🔌️device/📦️packages/🦀️rust" }
 semio-framework-canvas-scene = { path = "../../../../../../../../🖼️canvas/🎬️scene/📦️packages/🦀️rust", optional = true }
 wgpu = { version = "29.0.4", default-features = false, features = ["std", "wgsl"] }
 

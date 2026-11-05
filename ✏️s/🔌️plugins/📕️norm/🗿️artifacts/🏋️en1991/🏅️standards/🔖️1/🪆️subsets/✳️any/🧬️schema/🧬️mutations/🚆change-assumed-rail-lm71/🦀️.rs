@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeAssumedRailLm71 wh
         record: "ChangedAssumedRailLm71",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change assumed lm71 axle load", "Angesetzte LM71-Achslast ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change assumed lm71 axle load", "Angesetzte LM71-Achslast ändern")
     }
 }
 

@@ -131,9 +131,9 @@ pub(super) fn field_input(
     object_id: &str,
     field: &InspectorField,
     controller_id: &str,
-    publication_revision: semio_framework_plugin::UiPublicationRevision,
+    publication_revision: semio_plugin::UiPublicationRevision,
     locale: Locale,
-) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     let label = match locale {
         Locale::De => field.label_de,
         Locale::En => field.label_en,

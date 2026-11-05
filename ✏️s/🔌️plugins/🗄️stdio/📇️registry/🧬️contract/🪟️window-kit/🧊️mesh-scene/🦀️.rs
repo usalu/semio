@@ -1,7 +1,7 @@
 //! 🧊️ The shared real-geometry scene of the stdio mesh and point-cloud editors and viewers: the document's own triangles and points on the
 //! framework mesh window kit, framed on their bounds. Nothing is fabricated: an empty document renders an empty scene.
 
-use semio_framework_plugin::{mesh_from_indexed_with_face_groups, mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, UiAssemblyResult, WindowKit};
+use semio_plugin::{mesh_from_indexed_with_face_groups, mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, UiAssemblyResult, WindowKit};
 
 pub const MESH_SCENE_MAXIMUM_MARKERS: usize = 4096;
 const DOCUMENT_MESH_ID: &str = "document";

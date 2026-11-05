@@ -1,24 +1,24 @@
 //! 🧱️ Inference_quick of the tools-inference crate: Inference discovery, jobs and resources.
 
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use std::sync::Arc;
 use crate::inference::{DeclaredInference, InferenceLookup, declared_inferences_for_artifact, declared_inferences_for_workspace, execution_not_wired_error, inference_job_payload, inference_original_retained, inference_original_turn, inference_resources, lookup_inference, read_inference_resource, register_inference_job_tools, register_inference_tools, validate_inference_request};
-use semio_framework_os_mcp_capabilities::capability_declarations::inference_capabilities;
-use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, CatalogSource, ToolExposure, compile};
-use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
-use semio_framework_os_mcp_foundation::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
-use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
-use semio_framework_os_mcp_port::channel_port::AppCommand;
-use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
-use semio_framework_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
-use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
-use semio_framework_os_mcp_wire::protocol::{CallToolResult, InMemoryToolRegistry, ToolRegistry, is_valid_tool_name};
-use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+use semio_os_mcp_capabilities::capability_declarations::inference_capabilities;
+use semio_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, CatalogSource, ToolExposure, compile};
+use semio_os_mcp_dispatch::actions::ActionAdapter;
+use semio_os_mcp_foundation::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
+use semio_os_mcp_port::channel_port::AppCommand;
+use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
+use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_os_mcp_wire::protocol::{CallToolResult, InMemoryToolRegistry, ToolRegistry, is_valid_tool_name};
+use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 #[cfg(test)]
-use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
+use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

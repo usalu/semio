@@ -1,0 +1,177 @@
+{
+  "id": "new",
+  "info": {
+    "id": "fixture.echo",
+    "extension": "fixture",
+    "name": "Fixture Echo",
+    "abbreviation": "Echo",
+    "icon": "",
+    "summary": "",
+    "inputs": [
+      {
+        "code": "M",
+        "abbreviation": "Msg",
+        "name": "msg",
+        "fullName": "Message",
+        "default": "雪"
+      },
+      {
+        "code": "C",
+        "abbreviation": "Cnt",
+        "name": "count",
+        "fullName": "Count",
+        "default": {
+          "schema": "number",
+          "value": 3
+        }
+      }
+    ],
+    "outputs": [],
+    "variadicInput": {
+      "min": 2,
+      "max": 4
+    },
+    "variadicOutput": {
+      "min": 1,
+      "max": 3
+    },
+    "group": []
+  },
+  "cases": [
+    {
+      "descriptor": {
+        "kind": "neuron",
+        "neuronKind": "fixture.echo"
+      },
+      "expected": {
+        "kind": "neuron",
+        "id": "new",
+        "neuronKind": "fixture.echo",
+        "params": {
+          "msg": "雪",
+          "count": {
+            "schema": "number",
+            "value": 3
+          }
+        },
+        "inputPorts": [
+          "0",
+          "1"
+        ],
+        "outputPorts": [
+          "0"
+        ],
+        "preview": true
+      }
+    },
+    {
+      "descriptor": {
+        "kind": "inputSlider",
+        "label": "Height",
+        "value": 2.5,
+        "min": -5,
+        "max": 5,
+        "step": 0.25
+      },
+      "expected": {
+        "kind": "inputSlider",
+        "id": "new",
+        "label": "Height",
+        "value": 2.5,
+        "min": -5,
+        "max": 5,
+        "step": 0.25
+      }
+    },
+    {
+      "descriptor": {
+        "kind": "inputNote",
+        "text": "Line\n雪"
+      },
+      "expected": {
+        "kind": "inputNote",
+        "id": "new",
+        "text": "Line\n雪"
+      }
+    },
+    {
+      "descriptor": {
+        "kind": "inputImage"
+      },
+      "expected": {
+        "kind": "inputImage",
+        "id": "new",
+        "src": ""
+      }
+    },
+    {
+      "descriptor": {
+        "kind": "outputPreview"
+      },
+      "expected": {
+        "kind": "outputPreview",
+        "id": "new",
+        "preview": {},
+        "expanded": []
+      }
+    },
+    {
+      "descriptor": {
+        "kind": "outputAction",
+        "action": ""
+      },
+      "expected": {
+        "kind": "outputAction",
+        "id": "new",
+        "action": "log"
+      }
+    },
+    {
+      "descriptor": {
+        "kind": "outputExport",
+        "format": ""
+      },
+      "expected": {
+        "kind": "outputExport",
+        "id": "new",
+        "format": "svg"
+      }
+    },
+    {
+      "descriptor": {
+        "kind": "variable",
+        "name": "  ",
+        "schema": " "
+      },
+      "expected": {
+        "kind": "variable",
+        "id": "new",
+        "name": "value",
+        "schema": "dictionary"
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "items": 1,
+      "copy": 4096,
+      "capacity": 65536,
+      "release": 65536,
+      "depth": 128
+    },
+    {
+      "items": 512,
+      "copy": 4096,
+      "capacity": 65536,
+      "release": 65536,
+      "depth": 128
+    }
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    7,
+    17,
+    50
+  ]
+}

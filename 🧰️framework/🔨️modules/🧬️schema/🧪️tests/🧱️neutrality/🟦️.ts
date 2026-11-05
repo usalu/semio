@@ -177,7 +177,7 @@ test("actual state source retains all four wire and kebab spellings without reti
 test("real main schema manifest and source have no product provider", () => {
   const manifest = TOML.parse(read(corpus.ownership.schemaManifest));
   expect(Object.keys(manifest.dependencies ?? {})).not.toContain(corpus.providers.forbidden);
-  expect(read(corpus.ownership.schemaComponent)).not.toContain("semio_framework_os_kernel");
+  expect(read(corpus.ownership.schemaComponent)).not.toContain("semio_os_kernel");
 });
 
 test("composition has one lower compile provider and no surviving OS mount", () => {

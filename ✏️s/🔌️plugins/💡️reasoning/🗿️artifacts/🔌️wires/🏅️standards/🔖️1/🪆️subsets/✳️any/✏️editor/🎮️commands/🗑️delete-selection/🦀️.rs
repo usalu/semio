@@ -3,8 +3,8 @@
 
 use crate::schema::{board_edge, board_node};
 use crate::{GraphEdgeId, GraphNodeId, SemioGraphMutation, WiresMutation, WiresSnapshot};
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use {semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode};
 

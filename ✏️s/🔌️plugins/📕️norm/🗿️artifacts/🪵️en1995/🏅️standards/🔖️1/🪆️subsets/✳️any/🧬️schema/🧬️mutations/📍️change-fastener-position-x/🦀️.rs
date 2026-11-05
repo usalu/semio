@@ -10,7 +10,7 @@ pub struct ChangeFastenerPositionX { pub fastener_id: String, pub position_id: S
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFastenerPositionX where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_fastener_position_x::ChangeFastenerPositionX> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fastener-position-x", kind: "change-fastener-position-x", record: "ChangedFastenerPositionX" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change position x along the member of position {} of fastener {}", self.position_id, self.fastener_id), &format!("Lage x entlang des Bauteils von Lage {} an Verbindungsmittelbild {} ändern", self.position_id, self.fastener_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change position x along the member of position {} of fastener {}", self.position_id, self.fastener_id), &format!("Lage x entlang des Bauteils von Lage {} an Verbindungsmittelbild {} ändern", self.position_id, self.fastener_id)) }
     fn target(&self) -> Vec<String> { vec![self.fastener_id.clone(), self.position_id.clone()] }
 }
 

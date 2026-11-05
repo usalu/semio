@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeActionTK where Op:
         record: "ChangedActionTK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change characteristic torsional moment T_k of the member action", "Bauteileinwirkung: Charakteristisches Torsionsmoment T_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change characteristic torsional moment T_k of the member action", "Bauteileinwirkung: Charakteristisches Torsionsmoment T_k ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone(), self.action_id.clone()]

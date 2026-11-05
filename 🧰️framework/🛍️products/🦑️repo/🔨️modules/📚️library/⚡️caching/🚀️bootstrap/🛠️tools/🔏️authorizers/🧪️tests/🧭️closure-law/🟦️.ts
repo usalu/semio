@@ -52,7 +52,7 @@ test("the command closures contain no site the capture would refuse",async()=>{
 
 /** 🎥️ A data companion row the capture derives anyway is redundant and fails. */
 test("declared data companions are not derivable",()=>{
- for(const row of schema.$defs.RuntimeDataCompanions.const){const owner=readFileSync(join(root,row.owner),"utf8"),base=dirname(row.owner);for(const path of row.paths){const relative=posixRelative(base,path),literal=new RegExp("([\"'`])"+(relative.startsWith(".")?relative:"./"+relative).replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")+"\\1","u").test(owner);expect(path.startsWith(base+"/\u{1F9EC}\uFE0Fschema/")||literal,"derivable companion "+path).toBe(false);}}
+ for(const row of schema.$defs.RuntimeDataCompanions.const){const owner=readFileSync(join(root,row.owner),"utf8"),base=dirname(row.owner);for(const path of row.paths){const relative=posixRelative(base,path),literal=new RegExp("([\"'`])"+(relative.startsWith(".")?relative:"./"+relative).replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")+"\\1","u").test(owner);expect(path.endsWith(".json")&&(path.startsWith(base+"/\u{1F9EC}\uFE0Fschema/")||literal),"derivable JSON companion "+path).toBe(false);}}
 });
 
 /** 🏠️ Declared roots exist, enter every closure through their owner, and the derived package markers match the installed packages. */

@@ -7,10 +7,10 @@
 use protocol::{ColdMutation, Mutation};
 
 use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
-use semio_framework_os_kernel::os_directory::DirectoryIndexedDocumentViewV1;
+use semio_os_kernel::os_directory::DirectoryIndexedDocumentViewV1;
 
 //#region 🔖️Member
-/// 🧑️ One space member, projected from `semio_framework_os::os_directory::MemberView` into the
+/// 🧑️ One space member, projected from `semio_os::os_directory::MemberView` into the
 /// space app's own local view-state vocabulary (`role` kept as the wire string `"author"`/
 /// `"spectator"` rather than re-importing the directory crate's enum into render code).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -132,8 +132,8 @@ impl pack::snapshot::ArtifactPack for SpaceIndexConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SpaceIndexConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SpaceIndexConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -455,7 +455,7 @@ impl protocol::OpBinary for SpaceIndexConfigMutation {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_framework_os_kernel::original_ordinal_operation_receiving!(SpaceIndexConfigMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(SpaceIndexConfigMutation);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️ConfigMutation
 

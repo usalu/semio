@@ -1,0 +1,25 @@
+# Activation Current Source Audit
+
+Read-only inspection across the six exact source/fixture files in activation-freshness.md, their source-freshness and receipt owners, and retained focused output. No tests, builds, heavy graph query, execution duplication or peer source edit was performed. Environment date is2026-11-05 Europe/Berlin.
+
+## Production Verdict
+
+No new actionable production defect was confirmed in this correction. ActivationScript no longer has a source-marker-only warm return. Every healthy selected component passes through collectActivationArtifactsV1. Support includes the preview2 vendor tree, shard tree and leased font bytes; module identity streams artifactFiles for each selected module directory. Entries are sorted and framed by normalized name and size before hashing their actual bytes. The resulting artifactSha256 is SHA-256 of supportDigest plus moduleDigest; it is deliberately not the raw Wasm digest.
+
+The collector then calls writeStagedSourceFreshness on the selected component owner root derived from the catalog cratePath, with the existing module-directory fallback only for a missing catalog row. The unchanged source helper performs a bounded20,000-entry owner walk, skips declared outputs/symlinks, asynchronously reads sources with32-file concurrency and creates a source-content aggregate. It does not use the old marker as identity input or scan the repository root. This observes current sources and current staged bytes separately; the owning preparation/materialization producer must still establish their provenance correspondence.
+
+nextActivationReceipt still compares both artifactSha256 and sourceContentSha256; exact unchanged content retains rebuiltAt, changed content advances it even under clock rollback. publishActivationReceipt compares canonical receipt bytes and avoids rewriting an unchanged receipt. Source-content hashes continue to feed freshness reporting; artifact hashes continue to feed receipt observation and extension packageHash. No hash domain was conflated by the extraction.
+
+Module and support reads use createReadStream with AbortSignal and for-await iteration. Cancellation is checked before each file/component and before publication; source hash cancellation is passed to the existing bounded helper. Stream cancellation is handled by the system stream signal/iterator machinery. ActivationScript owns SIGINT/SIGTERM listeners and removes them in finally. Per-file source marker writes and receipt temporary files retain existing finally cleanup. Extension installation remains under the repository artifact/scratch/destination interfaces.
+
+The new helper signature uses only owned ActivationArtifact and structural component fields plus system ReadonlyMap/AbortSignal/Promise types. It adds no external runtime dependency or package export. The six source/fixture absolute paths measure110–127UTF-16 units at this checkout; all are below256. Existing activation source-state path construction independently reserves64units for temporary names.
+
+## Actual Verification And Integration Gap
+
+Retained activation-freshness-test.log contains the actual passing new current-content case and terminal57pass/0fail/650expect counts,1044ms. This independently confirms the report accurately quotes focused behavioral execution; no new execution was done by this audit. The new case changes module, support and source content, checks an unchanged receipt, receipt readback and pre-aborted cancellation. Existing tests cover asynchronous bounded source hashing and live cancellation.
+
+The moved-symbol extractor includes both activationFilesDigest and collectActivationArtifactsV1 from the new private identity module. The synthetic generated script supplies createHash/createReadStream/statSync and writeStagedSourceFreshness needed by those moved functions. The extraction itself therefore retains their immediate dependencies.
+
+The broader live-activation fixture has concrete pre-existing integration mismatches beyond those moved functions: synthetic BundleScript supplies root only while current commands require repoRoot/invocation and issued session/catalog/font controls; its cancel branch still invokes publishActivatedExtension using the older six-argument call rather than the current workspace/invocation-prefixed signature. Its production-extracted command also references dependencies not supplied by the synthetic script. These are source-level fixture defects already identified by the owner, not an observed new production failure. The actual activation-live-test.log terminates0pass/0fail/0tests; it proves no installation behavior. The owner was notified to preserve this distinction.
+
+Real declared activation must still demonstrate current producer source identity, canonical staged Wasm/materialization evidence, installation packageHash and unchanged-install preservation under normal issued authority. React/native owners retain that acceptance sequence. No successful extension installation, raw Wasm freshness or end-to-end proof is claimed here.

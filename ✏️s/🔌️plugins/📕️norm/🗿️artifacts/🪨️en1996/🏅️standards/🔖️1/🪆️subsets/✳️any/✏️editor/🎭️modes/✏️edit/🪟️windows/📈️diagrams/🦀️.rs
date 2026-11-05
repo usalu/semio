@@ -1,7 +1,7 @@
 //! 📈️ EN 1996 play app — the diagrams window: eccentricity, Φ, N_Ed against N_Rd, slenderness, f_k, shear, lateral α and capacity, fire thickness and M–N diagrams of the selected check's wall.
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 use semio_s_artifact_norm_en1996_scene::diagrams;
 use semio_s_plugin_norm_app_surface::{render_diagrams, DiagramsWindowSpec};

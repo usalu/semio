@@ -11,7 +11,7 @@ where
     Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteSupport> + From<crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport>,
 {
 const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "support", kind: "delete-support", record: "DeleteSupport" };
-fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("delete support", "Löschen Auflager") }
+fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native("delete support", "Löschen Auflager") }
 fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

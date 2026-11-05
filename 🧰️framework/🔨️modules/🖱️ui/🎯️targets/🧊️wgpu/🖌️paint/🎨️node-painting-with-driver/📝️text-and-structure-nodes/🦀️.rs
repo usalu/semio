@@ -4,7 +4,7 @@ use super::*;
 
 /// 🪜️ Paints one step of a text node: the weighted body or emphasized run.
 pub(super) fn paint_text_node_step(
-    text: &semio_framework_ui_declaration::ui::UiTextNode,
+    text: &semio_ui_declaration::ui::UiTextNode,
     atlas: &mut FontAtlas,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
@@ -16,7 +16,7 @@ pub(super) fn paint_text_node_step(
         let emphasize = text.emphasize.unwrap_or(false);
         let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
         let color = theme.text;
-        let weight = semio_framework_ui_text::TextWeight::of(emphasize);
+        let weight = semio_ui_text::TextWeight::of(emphasize);
         match retained_text_node_step_weighted(text.value.as_str(), bounds, size, color, weight, atlas, draw, cursor) {
             RetainedNodePaintStep::Complete => {
                 cursor.advance(1);
@@ -32,7 +32,7 @@ pub(super) fn paint_text_node_step(
 /// 🗃 Paints one step of a stack node: its chrome frame and tree item decoration.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_stack_node_step(
-    stack: &semio_framework_ui_declaration::ui::UiStackNode,
+    stack: &semio_ui_declaration::ui::UiStackNode,
     tree: &UiTree,
     id: NodeId,
     draw: &mut DrawList,
@@ -83,7 +83,7 @@ pub(super) fn paint_separator_node_step(
 
 /// 🔑 Paints one step of a key value node: the key and its value cell.
 pub(super) fn paint_key_value_node_step(
-    key_value: &semio_framework_ui_declaration::ui::UiKeyValueNode,
+    key_value: &semio_ui_declaration::ui::UiKeyValueNode,
     atlas: &mut FontAtlas,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
@@ -128,7 +128,7 @@ pub(super) fn paint_key_value_node_step(
 /// 🏷 Paints one step of a field node: label, required marker and help text.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_field_node_step(
-    field: &semio_framework_ui_declaration::ui::UiFieldNode,
+    field: &semio_ui_declaration::ui::UiFieldNode,
     tree: &UiTree,
     id: NodeId,
     atlas: &mut FontAtlas,
@@ -140,20 +140,20 @@ pub(super) fn paint_field_node_step(
 ) -> RetainedNodePaintStep {
     let metrics = field_paint_metrics(tree, id, field, bounds, theme, atlas);
     let value = match cursor.phase {
-        0 => metrics.label.map(|band| (field.label.as_str(), chrome_band_rect(bounds, band), semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE, theme.text, semio_framework_ui_text::TextWeight::Semibold, RetainedTextFlow::Clip)),
+        0 => metrics.label.map(|band| (field.label.as_str(), chrome_band_rect(bounds, band), semio_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE, theme.text, semio_ui_text::TextWeight::Semibold, RetainedTextFlow::Clip)),
         1 if field.required.unwrap_or(false) => metrics.label.map(|band| {
-            let label_width = atlas.measure_text(field.label.as_str(), semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE).0;
+            let label_width = atlas.measure_text(field.label.as_str(), semio_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE).0;
             let mut rect = chrome_band_rect(bounds, band);
             rect.x += label_width + theme.gap_standard * 0.5;
             rect.w = (rect.w - label_width - theme.gap_standard * 0.5).max(0.0);
-            ("*", rect, semio_framework_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE, theme.error, semio_framework_ui_text::TextWeight::Semibold, RetainedTextFlow::Clip)
+            ("*", rect, semio_ui_wgpu_layout::flex::FIELD_LABEL_FONT_SIZE, theme.error, semio_ui_text::TextWeight::Semibold, RetainedTextFlow::Clip)
         }),
         2 => field
             .description
             .as_deref()
             .zip(metrics.description)
-            .map(|(value, band)| (value, chrome_band_rect(bounds, band), semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE, theme.text_muted, semio_framework_ui_text::TextWeight::Regular, RetainedTextFlow::Wrap)),
-        3 => field.error.as_deref().zip(metrics.error).map(|(value, band)| (value, chrome_band_rect(bounds, band), semio_framework_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE, theme.error, semio_framework_ui_text::TextWeight::Regular, RetainedTextFlow::Wrap)),
+            .map(|(value, band)| (value, chrome_band_rect(bounds, band), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE, theme.text_muted, semio_ui_text::TextWeight::Regular, RetainedTextFlow::Wrap)),
+        3 => field.error.as_deref().zip(metrics.error).map(|(value, band)| (value, chrome_band_rect(bounds, band), semio_ui_wgpu_layout::flex::FIELD_DETAIL_FONT_SIZE, theme.error, semio_ui_text::TextWeight::Regular, RetainedTextFlow::Wrap)),
         _ => None,
     };
     if let Some((value, rect, size, color, weight, flow)) = value {
@@ -176,7 +176,7 @@ pub(super) fn paint_field_node_step(
 /// 📑 Paints one step of a section node: the header band and title.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_section_node_step(
-    section: &semio_framework_ui_declaration::ui::UiSectionNode,
+    section: &semio_ui_declaration::ui::UiSectionNode,
     tree: &UiTree,
     id: NodeId,
     atlas: &mut FontAtlas,
@@ -192,7 +192,7 @@ pub(super) fn paint_section_node_step(
             cursor.advance(1);
             return RetainedNodePaintStep::Pending;
         };
-        match retained_text_node_step_weighted(label.as_str(), chrome_band_rect(bounds, title), semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE, theme.text, semio_framework_ui_text::TextWeight::Semibold, atlas, draw, cursor) {
+        match retained_text_node_step_weighted(label.as_str(), chrome_band_rect(bounds, title), semio_ui_wgpu_layout::flex::SECTION_TITLE_FONT_SIZE, theme.text, semio_ui_text::TextWeight::Semibold, atlas, draw, cursor) {
             RetainedNodePaintStep::Complete => {
                 cursor.advance(1);
                 RetainedNodePaintStep::Pending
@@ -207,7 +207,7 @@ pub(super) fn paint_section_node_step(
 /// 🧱 Paints one step of a group node: the group frame and title.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_group_node_step(
-    group: &semio_framework_ui_declaration::ui::UiGroupNode,
+    group: &semio_ui_declaration::ui::UiGroupNode,
     atlas: &mut FontAtlas,
     icons: Option<&IconAtlas>,
     draw: &mut DrawList,

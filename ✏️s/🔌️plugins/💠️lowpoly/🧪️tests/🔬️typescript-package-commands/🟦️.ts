@@ -51,7 +51,7 @@ export function runTestScript(context: Readonly<{ root: string; repoRoot: string
   for (const route of fixture.routes) {
     reject(registered.some((row) => row.toolId === route.toolId && row.classification === variant(route.classification)), `Lowpoly source classification drift: ${route.toolId}`);
     if (route.classification === "migrated") {
-      const lanes = route.lanes.map((lane) => `semio_framework_plugin::ArtifactToolPublicationLane::${variant(lane)}`).join(", ");
+      const lanes = route.lanes.map((lane) => `semio_plugin::ArtifactToolPublicationLane::${variant(lane)}`).join(", ");
       reject(sourceCollapsed.includes(`ArtifactToolPublicationContract { tool_id: "${route.toolId}", lanes: &[${lanes}] }`.replace(/\s+/g, " ")), `Lowpoly publication lane drift: ${route.toolId}`);
       reject(source.includes(`"${route.toolId}" => ToolExecutionContract::resumable`), `Lowpoly proof drift: ${route.toolId}`);
     }

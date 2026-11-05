@@ -242,7 +242,7 @@ fn every_board_tool_row_is_recorded_as_its_kinds() {
 fn laid_out_poses_are_recorded_as_node_moves_and_unmoved_nodes_state_nothing() {
     let base = typed(&board());
     let mut recorder = Puzzle2dRecorder::from_typed(base.clone());
-    let node=|id:&str,x,y|semio_framework_os_infinite::board::ports::directed::schema::snapshot::BoardNodeSnapshot{id:id.into(),x:Some(x),y:Some(y),..Default::default()};recorder.place_nodes(&[node("a",0.0,0.0),node("b",101.0,2.0),node("ghost",1.0,1.0)]);
+    let node=|id:&str,x,y|semio_os_infinite::board::ports::directed::schema::snapshot::BoardNodeSnapshot{id:id.into(),x:Some(x),y:Some(y),..Default::default()};recorder.place_nodes(&[node("a",0.0,0.0),node("b",101.0,2.0),node("ghost",1.0,1.0)]);
     let rows = assert_round_trip(&base, recorder);
     assert!(matches!(rows.as_slice(), [Puzzle2dMutation::MoveNode(row)] if row.id.eq_str("b") && row.new_x == 101.0 && row.new_y == 2.0), "{rows:?}");
 }

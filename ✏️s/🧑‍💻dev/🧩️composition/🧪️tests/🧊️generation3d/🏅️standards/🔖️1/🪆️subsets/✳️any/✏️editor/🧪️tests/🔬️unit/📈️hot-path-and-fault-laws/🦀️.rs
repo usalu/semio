@@ -13,27 +13,27 @@ struct BootBudget {
     worst_turn_us: u64,
     total_turn_us: u64,
     round_trips: usize,
-    ledger: semio_framework_os_flow::FlowEvalPublicationLedger,
-    steps: semio_framework_os_flow::FlowEvalStepLedger,
+    ledger: semio_os_flow::FlowEvalPublicationLedger,
+    steps: semio_os_flow::FlowEvalStepLedger,
     meshes: usize,
 }
 
 /// 🧊️ Meshes the preview window currently paints.
-async fn rendered_preview_mesh_count(app: &mut context::Generation3dAppFixture, view: &semio_framework_plugin::ViewModel) -> usize {
+async fn rendered_preview_mesh_count(app: &mut context::Generation3dAppFixture, view: &semio_plugin::ViewModel) -> usize {
     let preview = context::render_with_view(app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, view).await;
-    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("preview body decodes as an assembled world-3d scene");
+    let world: semio_ui_declaration::ui::World3dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("preview body decodes as an assembled world-3d scene");
     serde_json::from_str::<serde_json::Value>(&world.meshes_json).ok().and_then(|value| value.as_array().map(Vec::len)).unwrap_or_default()
 }
 
 /// 📈️ Drives the boot sequence's `previewEval` run one hop at a time, timing ONLY the guest hop — the extension
 /// capability runs in its own actor under its own budget, so folding it into the turn measurement
 /// would measure the brep kernel, not the reactor.
-async fn measure_hex_column_boot(app: &mut context::Generation3dAppFixture, view: &semio_framework_plugin::ViewModel) -> BootBudget {
+async fn measure_hex_column_boot(app: &mut context::Generation3dAppFixture, view: &semio_plugin::ViewModel) -> BootBudget {
     semio_framework_job::set_runtime_diagnostics(true);
-    semio_framework_os_flow::reset_flow_eval_publication_ledger();
-    semio_framework_os_flow::reset_flow_eval_step_ledger();
-    let mut budget = BootBudget { turns: 0, turns_to_first_mesh: None, worst_turn_us: 0, total_turn_us: 0, round_trips: 0, ledger: semio_framework_os_flow::FlowEvalPublicationLedger::default(), steps: semio_framework_os_flow::FlowEvalStepLedger::default(), meshes: 0 };
-    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+    semio_os_flow::reset_flow_eval_publication_ledger();
+    semio_os_flow::reset_flow_eval_step_ledger();
+    let mut budget = BootBudget { turns: 0, turns_to_first_mesh: None, worst_turn_us: 0, total_turn_us: 0, round_trips: 0, ledger: semio_os_flow::FlowEvalPublicationLedger::default(), steps: semio_os_flow::FlowEvalStepLedger::default(), meshes: 0 };
+    let action_meta = semio_plugin::ActionMeta { view_state: Some(view.clone()), ..semio_plugin::artifact_app_laws::meta("local") };
     let mut owed = app.pending_effects(Some(view)).await;
     for _ in 0..100_000 {
         if app.has_pending_typed_operations() {
@@ -53,8 +53,8 @@ async fn measure_hex_column_boot(app: &mut context::Generation3dAppFixture, view
             continue;
         }
         for (action, args) in dispatches {
-            if semio_framework_plugin::is_tool_run_action_id(&action) {
-                semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, &action, args.clone(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the run's framework action");
+            if semio_plugin::is_tool_run_action_id(&action) {
+                semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, &action, args.clone(), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the run's framework action");
                 continue;
             }
             let started = semio_framework_job::default_now_us().expect("a native monotonic microsecond clock");
@@ -77,8 +77,8 @@ async fn measure_hex_column_boot(app: &mut context::Generation3dAppFixture, view
             }
         }
     }
-    budget.ledger = semio_framework_os_flow::flow_eval_publication_ledger();
-    budget.steps = semio_framework_os_flow::flow_eval_step_ledger();
+    budget.ledger = semio_os_flow::flow_eval_publication_ledger();
+    budget.steps = semio_os_flow::flow_eval_step_ledger();
     semio_framework_job::set_runtime_diagnostics(false);
     if budget.meshes == 0 {
         budget.meshes = rendered_preview_mesh_count(app, view).await;
@@ -154,16 +154,16 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
         budget.steps.steps
     );
     assert!(
-        semio_framework_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US < semio_framework_job::INTERACTIVE_STEP_CEILING_US,
+        semio_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US < semio_framework_job::INTERACTIVE_STEP_CEILING_US,
         "the dag walk must yield strictly before the interactive contract expires, leaving the rest of the turn its own room: {}us against {}us",
-        semio_framework_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US,
+        semio_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US,
         semio_framework_job::INTERACTIVE_STEP_CEILING_US
     );
     assert!(
-        semio_framework_os_flow::flow_eval_tick_budget(None).deadline.is_some(),
+        semio_os_flow::flow_eval_tick_budget(None).deadline.is_some(),
         "a target with an installed monotonic clock must run the dag walk under a wall-clock deadline — a node count alone cannot preempt one slow operator"
     );
-    assert_eq!(semio_framework_os_flow::flow_eval_tick_budget(None).dispatches, semio_framework_os_flow::FLOW_EVAL_TICK_STEP_BUDGET, "the wall-clock deadline is added to the node budget, never instead of it");
+    assert_eq!(semio_os_flow::flow_eval_tick_budget(None).dispatches, semio_os_flow::FLOW_EVAL_TICK_STEP_BUDGET, "the wall-clock deadline is added to the node budget, never instead of it");
 }
 //#endregion 📈️HotPathBudget
 
@@ -203,7 +203,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     assert_eq!(windows.len(), 5, "generation3d declares five window kinds");
     let mut emitted: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = windows.iter().map(|(id, ..)| (id.clone(), std::collections::BTreeSet::new())).collect();
     let config = Generation3dConfig::default();
-    let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let view_state = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     for example_id in examples().into_iter().map(|source| source.id().to_string()) {
         let mut snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         crate::publication_authority::seed_law_generations(&mut snapshot.generation);
@@ -211,19 +211,19 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
             let session = FlowEvalSession::new();
             let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session, None).expect("render");
             context::retire_flow_eval_session(session);
-            let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render json");
-            emitted.get_mut(kind_id).expect("window bucket").extend(semio_framework_plugin::ui_action_laws::emitted_action_ids(&projection));
+            let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render json");
+            emitted.get_mut(kind_id).expect("window bucket").extend(semio_plugin::ui_action_laws::emitted_action_ids(&projection));
         }
         snapshot.retire_cold();
     }
     let mut app = app().await;
-    let view = semio_framework_plugin::ViewModel {
-        window_instances: windows.iter().map(|(id, ..)| semio_framework_plugin::ViewWindowInstance { id: id.clone(), window_kind_id: id.clone() }).collect(),
-        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    let view = semio_plugin::ViewModel {
+        window_instances: windows.iter().map(|(id, ..)| semio_plugin::ViewWindowInstance { id: id.clone(), window_kind_id: id.clone() }).collect(),
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     for (kind_id, entries) in app.window_measures(&view).await {
         if let Some(bucket) = emitted.get_mut(&kind_id) {
-            bucket.extend(semio_framework_plugin::ui_action_laws::measure_action_ids(&entries));
+            bucket.extend(semio_plugin::ui_action_laws::measure_action_ids(&entries));
         }
     }
     drop(app);
@@ -254,7 +254,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
 async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it() {
     let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/💥️extension-evaluate-fault.json")).expect("the evaluate-fault fixture parses");
     let extension_id = fixture["extensionId"].as_str().expect("extensionId").to_string();
-    let address = || Ok::<String, semio_framework_os_flow::FlowExtensionAddressMiss>(extension_id.clone());
+    let address = || Ok::<String, semio_os_flow::FlowExtensionAddressMiss>(extension_id.clone());
     let mut owner = Generation3dInstanceOperationOwner::new();
     let observed = owner
         .with_session_waking(|session| {
@@ -292,7 +292,7 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
         })
         .expect("the retained evaluation-session owner lends its session");
     assert!(context::close_instance_operation_owner(&mut owner), "the projection's own session owner must reach its terminal close");
-    assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner), "the projection's own session owner must close terminal-empty");
+    assert!(semio_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner), "the projection's own session owner must close terminal-empty");
 
     let (rows, cleared) = observed;
     for (name, phase, publishes_fault, status) in rows {
@@ -336,8 +336,8 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
 /// `importDocumentRequest` still announces the picker it opens.
 #[test]
 fn staged_argument_actions_declare_no_trailing_ellipsis() {
-    use semio_framework_ui_locale::Locale;
-    use semio_framework_ui_locale::Terminology;
+    use semio_ui_locale::Locale;
+    use semio_ui_locale::Terminology;
     let surfaces = [("editor", create_generation3d_app()), ("viewer", semio_s_artifact_procedural_3d_viewer::create_generation3d_viewer())];
     let mut checked = 0usize;
     for (surface, definition) in surfaces {

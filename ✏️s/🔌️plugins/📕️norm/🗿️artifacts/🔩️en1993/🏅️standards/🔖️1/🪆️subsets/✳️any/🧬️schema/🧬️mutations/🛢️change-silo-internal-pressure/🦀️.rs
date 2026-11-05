@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloInternalPressu
         record: "ChangedSiloInternalPressure",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pipeline internal pressure p of the silo shell", "Silo-Schale: Rohrleitung Innendruck p ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pipeline internal pressure p of the silo shell", "Silo-Schale: Rohrleitung Innendruck p ändern")
     }
 }
 

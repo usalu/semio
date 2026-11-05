@@ -10,7 +10,7 @@ pub struct ChangeMemberActionVK { pub member_id: String, pub action_id: String, 
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberActionVK where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_action_vk::ChangeMemberActionVK> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-action-vKN", kind: "change-member-action-vk", record: "ChangedMemberActionVK" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Characteristic shear V_k of action {} on member {}", self.action_id, self.member_id), &format!("Charakteristische Querkraft V_k der Einwirkung {} an Bauteil {} ändern", self.action_id, self.member_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Characteristic shear V_k of action {} on member {}", self.action_id, self.member_id), &format!("Charakteristische Querkraft V_k der Einwirkung {} an Bauteil {} ändern", self.action_id, self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone(), self.action_id.clone()] }
 }
 

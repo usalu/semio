@@ -129,7 +129,7 @@ impl<'a> std::ops::Deref for IssuedShardRetainedRecipient<'a>{type Target=semio_
 
 impl std::ops::DerefMut for IssuedShardRetainedRecipient<'_>{fn deref_mut(&mut self)->&mut Self::Target{&mut self.original}}
 
-impl semio_framework_os_services::ComputeRetainedRecipient for IssuedShardRetainedRecipient<'_> {
+impl semio_os_services::ComputeRetainedRecipient for IssuedShardRetainedRecipient<'_> {
     fn remaining_grant(&self) -> Result<semio_framework_value::RetainedCloneGrant, semio_framework_value::ValueError> { self.original.remaining_grant() }
     fn record_progress(&mut self, progress: semio_framework_value::RetainedCloneProgress) -> Result<(), semio_framework_value::ValueError> { self.original.record_progress(progress) }
 }

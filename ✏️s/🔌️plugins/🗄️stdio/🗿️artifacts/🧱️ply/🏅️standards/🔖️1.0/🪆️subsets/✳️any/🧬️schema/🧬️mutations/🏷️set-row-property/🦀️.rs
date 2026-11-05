@@ -17,8 +17,8 @@ pub struct SetRowProperty {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetRowProperty {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "row-property", kind: "set-row-property", record: "SetRowProperty" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set row property", "Zeileneigenschaft setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set row property", "Zeileneigenschaft setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

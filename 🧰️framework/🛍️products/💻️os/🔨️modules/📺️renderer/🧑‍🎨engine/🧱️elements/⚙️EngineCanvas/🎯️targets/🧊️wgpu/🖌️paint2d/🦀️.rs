@@ -3,16 +3,16 @@
 //! Paint2d layer pick, the context menu targets, the marquee and the pointer button, move and wheel handlers.
 
 use super::board2d::with_board_host;
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_camera_from_json;
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{NodeGraphEngine, ENGINE_SURFACES};
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::engine_camera_from_json;
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::{NodeGraphEngine, ENGINE_SURFACES};
 use crate::element_contracts::WorkerCell;
 use semio_framework_canvas as canvas;
 use semio_framework_surface::paint::RasterHost;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_declaration::ui::UiComponentSceneNode;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::UiComponentSceneNode;
 
 //#region Paint2d
 /** 🕹️ Raster's framework-owned layer interaction domain and its one granularity — the same pair
@@ -53,14 +53,14 @@ pub fn paint2d_pick_layer(surface_id: &str, sx: f64, sy: f64) -> Option<String> 
 /// carries — the wgpu twin of each React host's `JSON.parse(session.pickTargetsAtScreenJson(sx, sy))
 /// .map(target => ({ domain, id, label }))`. Order is the host's own most-general-last order, which
 /// is what React sends and what a plugin's `hits[0]` reads as "the thing under the pointer".
-pub fn pick_target_hits(json: &str) -> Vec<semio_framework_ui_declaration::ui::ContextMenuHit> {
+pub fn pick_target_hits(json: &str) -> Vec<semio_ui_declaration::ui::ContextMenuHit> {
     serde_json::from_str::<Vec<Value>>(json)
         .unwrap_or_default()
         .into_iter()
         .filter_map(|target| {
             let domain = target.get("domain").and_then(Value::as_str)?.to_string();
             let id = target.get("id").and_then(Value::as_str)?.to_string();
-            Some(semio_framework_ui_declaration::ui::ContextMenuHit { domain, id, label: target.get("label").and_then(Value::as_str).map(str::to_owned) })
+            Some(semio_ui_declaration::ui::ContextMenuHit { domain, id, label: target.get("label").and_then(Value::as_str).map(str::to_owned) })
         })
         .collect()
 }
@@ -82,7 +82,7 @@ pub fn selection_domains(json: &str) -> (Vec<String>, Vec<String>, Vec<String>) 
 /// 🕸️ One node-graph right-click's surface target: the pick targets under the point plus the live
 /// selection split into React's `node`/`edge`/`handle` groups — port of `NodeGraph`'s own
 /// `onContextMenu` (`🧱️elements/🕸️NodeGraph/🟦️.tsx:3509`, `selectionGroupsFromDomains`).
-pub fn node_graph_context_menu_target(surface_id: &str, sx: f64, sy: f64) -> (Vec<semio_framework_ui_declaration::ui::ContextMenuHit>, Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup>) {
+pub fn node_graph_context_menu_target(surface_id: &str, sx: f64, sy: f64) -> (Vec<semio_ui_declaration::ui::ContextMenuHit>, Vec<semio_ui_declaration::ui::ContextMenuSelectionGroup>) {
     ENGINE_SURFACES
         .with(|cell| {
             let map = cell.borrow();
@@ -95,7 +95,7 @@ pub fn node_graph_context_menu_target(surface_id: &str, sx: f64, sy: f64) -> (Ve
             let mut selection = Vec::new();
             for (domain, ids) in [("node", nodes), ("edge", edges), ("handle", handles)] {
                 if !ids.is_empty() {
-                    selection.push(semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: domain.into(), ids });
+                    selection.push(semio_ui_declaration::ui::ContextMenuSelectionGroup { domain: domain.into(), ids });
                 }
             }
             Some((pick_target_hits(&picks), selection))
@@ -106,23 +106,23 @@ pub fn node_graph_context_menu_target(surface_id: &str, sx: f64, sy: f64) -> (Ve
 /// 🖥️ One board-2d right-click's surface target: every canvas pick target under the point, plus the
 /// scene's own selection as the `node` group — port of `Board2dHost`'s `onContextMenu`
 /// (`🧱️elements/🖥️Board2dHost/🟦️.tsx:1355`).
-pub fn board2d_context_menu_target(surface_id: &str, selection_json: &str, sx: f64, sy: f64) -> (Vec<semio_framework_ui_declaration::ui::ContextMenuHit>, Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup>) {
+pub fn board2d_context_menu_target(surface_id: &str, selection_json: &str, sx: f64, sy: f64) -> (Vec<semio_ui_declaration::ui::ContextMenuHit>, Vec<semio_ui_declaration::ui::ContextMenuSelectionGroup>) {
     let hits = with_board_host(surface_id, |host| pick_target_hits(&host.pick_targets_at_screen_json(sx, sy))).unwrap_or_default();
     let ids: Vec<String> = serde_json::from_str(selection_json).unwrap_or_default();
-    let selection = if ids.is_empty() { Vec::new() } else { vec![semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "node".into(), ids }] };
+    let selection = if ids.is_empty() { Vec::new() } else { vec![semio_ui_declaration::ui::ContextMenuSelectionGroup { domain: "node".into(), ids }] };
     (hits, selection)
 }
 
 /// 🖌️ One paint-2d right-click's surface target: the raster host's pick targets, fresh at the click
 /// point (raster keeps no cached hover), plus the scene's selection as the `layer` group — port of
 /// `Paint2dHost`'s `onContextMenu` (`🧱️elements/🖌️Paint2dHost/🟦️.tsx:540`).
-pub fn paint2d_context_menu_target(surface_id: &str, selection_json: &str, sx: f64, sy: f64) -> (Vec<semio_framework_ui_declaration::ui::ContextMenuHit>, Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup>) {
+pub fn paint2d_context_menu_target(surface_id: &str, selection_json: &str, sx: f64, sy: f64) -> (Vec<semio_ui_declaration::ui::ContextMenuHit>, Vec<semio_ui_declaration::ui::ContextMenuSelectionGroup>) {
     let hits = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         map.get(surface_id).and_then(|entry| entry.raster_host.as_ref()).map(|host| pick_target_hits(&host.pick_targets_at_screen_json(sx, sy))).unwrap_or_default()
     });
     let ids: Vec<String> = serde_json::from_str(selection_json).unwrap_or_default();
-    let selection = if ids.is_empty() { Vec::new() } else { vec![semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "layer".into(), ids }] };
+    let selection = if ids.is_empty() { Vec::new() } else { vec![semio_ui_declaration::ui::ContextMenuSelectionGroup { domain: "layer".into(), ids }] };
     (hits, selection)
 }
 
@@ -131,7 +131,7 @@ pub fn paint2d_context_menu_target(surface_id: &str, selection_json: &str, sx: f
 /// completions are offered) — port of `TextEditor`'s `onContextMenu`
 /// (`🧱️elements/✏️TextEditor/🟦️.tsx:479`). `selection` stays empty: the editor reports its text state
 /// through `text`, never as selection groups.
-pub fn text_editor_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> (Vec<semio_framework_ui_declaration::ui::ContextMenuHit>, Option<semio_framework_ui_declaration::ui::ContextMenuTextContext>) {
+pub fn text_editor_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> (Vec<semio_ui_declaration::ui::ContextMenuHit>, Option<semio_ui_declaration::ui::ContextMenuTextContext>) {
     let sx = f64::from(x - inner.x);
     let sy = f64::from(y - inner.y);
     ENGINE_SURFACES
@@ -139,7 +139,7 @@ pub fn text_editor_context_menu_target(scene: &UiComponentSceneNode, inner: Rect
             let map = cell.borrow();
             let host = map.get(&scene.host_id)?.editor.as_ref()?;
             let editor = scene.text_editor.as_ref();
-            let text = semio_framework_ui_declaration::ui::ContextMenuTextContext {
+            let text = semio_ui_declaration::ui::ContextMenuTextContext {
                 caret: host.caret(),
                 has_selection: host.anchor() != host.caret(),
                 word: None,
@@ -158,8 +158,8 @@ fn interaction_targets_json(granularity: &str, ids: &[String]) -> String {
     serde_json::to_string(&ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
 }
 
-pub(super) fn write_interaction_hover(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, domain_id: &str, targets: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "interactionHover", "domainId", domain_id, "channel", "pointer", "targets", targets])?;
+pub(super) fn write_interaction_hover(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, domain_id: &str, targets: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, "interactionHover", "domainId", domain_id, "channel", "pointer", "targets", targets])?;
     batch.action(controller_id, "interactionHover", bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("domainId"), domain_id)?;
@@ -169,8 +169,8 @@ pub(super) fn write_interaction_hover(batch: &mut semio_framework_ui_action::Bou
     })
 }
 
-fn write_interaction_select(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, domain_id: &str, targets: &str, merge: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "interactionSelect", "domainId", domain_id, "targets", targets, "merge", merge, "method", "pick"])?;
+fn write_interaction_select(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, domain_id: &str, targets: &str, merge: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, "interactionSelect", "domainId", domain_id, "targets", targets, "merge", merge, "method", "pick"])?;
     batch.action(controller_id, "interactionSelect", bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("domainId"), domain_id)?;
@@ -181,9 +181,9 @@ fn write_interaction_select(batch: &mut semio_framework_ui_action::BoundedAction
     })
 }
 
-fn write_surface_camera(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, camera: (f64, f64, f64)) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+fn write_surface_camera(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, camera: (f64, f64, f64)) -> Result<(), semio_ui_action::BoundedActionFault> {
     let controller_id = scene.controller_id.as_str();
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
     batch.action(controller_id, "setCamera", bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("surfaceId"), &scene.surface_id)?;
@@ -383,8 +383,8 @@ pub fn paint2d_pointer_button_into(
     button: i16,
     shift: bool,
     ctrl_or_meta: bool,
-    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
-) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(paint) = scene.paint_2d.as_ref() else {
         return Ok(false);
     };
@@ -432,7 +432,7 @@ pub fn paint2d_pointer_button_into(
             let hits: Vec<String> = with_raster_host_mut(&scene.host_id, |host| host.marquee_hits_json(&query).ok()).flatten().and_then(|json| serde_json::from_str::<Vec<String>>(&json).ok()).unwrap_or_default();
             let ids = paint2d_merge_ids(merge, &paint2d_selection(scene), &hits);
             let targets = interaction_targets_json(PAINT2D_LAYER_GRANULARITY, &ids);
-            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "domainId", PAINT2D_INTERACTION_DOMAIN, "targets", &targets, "merge", merge, "method", "pick"])?;
+            let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "domainId", PAINT2D_INTERACTION_DOMAIN, "targets", &targets, "merge", merge, "method", "pick"])?;
             let mut batch = input.reserve_actions(1, bytes)?;
             write_interaction_select(&mut batch, &scene.controller_id, PAINT2D_INTERACTION_DOMAIN, &targets, merge)?;
             batch.publish()?;
@@ -444,7 +444,7 @@ pub fn paint2d_pointer_button_into(
         };
         let ids = paint2d_merge_ids(merge, &paint2d_selection(scene), std::slice::from_ref(&hit));
         let targets = interaction_targets_json(PAINT2D_LAYER_GRANULARITY, &ids);
-        let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "domainId", PAINT2D_INTERACTION_DOMAIN, "targets", &targets, "merge", merge, "method", "pick"])?;
+        let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "domainId", PAINT2D_INTERACTION_DOMAIN, "targets", &targets, "merge", merge, "method", "pick"])?;
         let mut batch = input.reserve_actions(1, bytes)?;
         write_interaction_select(&mut batch, &scene.controller_id, PAINT2D_INTERACTION_DOMAIN, &targets, merge)?;
         batch.publish()?;
@@ -466,7 +466,7 @@ pub fn paint2d_pointer_button_into(
     if flush_paint2d_edit(scene, input)? || down {
         return Ok(true);
     }
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
     let mut batch = input.reserve_actions(1, bytes)?;
     write_surface_camera(&mut batch, scene, camera)?;
     batch.publish()?;
@@ -476,7 +476,7 @@ pub fn paint2d_pointer_button_into(
 /** 🖌️ Publishes the raster host's pending paint-2d edit, if any, and takes it: `true` when one was published.
  *
  * @see [`write_paint2d_edit`] */
-fn flush_paint2d_edit(scene: &UiComponentSceneNode, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+fn flush_paint2d_edit(scene: &UiComponentSceneNode, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(edit) = with_raster_host_mut(&scene.host_id, |host| host.paint_edit().cloned()).flatten() else {
         return Ok(false);
     };
@@ -491,7 +491,7 @@ fn flush_paint2d_edit(scene: &UiComponentSceneNode, input: &mut semio_framework_
  * reads brush, colour, tolerance, target and selection from its session.
  *
  * @see `🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx` — `pick`/`up`/`move` */
-fn write_paint2d_edit(scene: &UiComponentSceneNode, edit: &semio_framework_surface::paint::PaintEditCommand, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+fn write_paint2d_edit(scene: &UiComponentSceneNode, edit: &semio_framework_surface::paint::PaintEditCommand, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
     let fill = edit.action() == "fillRegion";
     let (click, stroke) = (["x", "y"], ["tool", edit.tool, "xs", "ys"]);
     let mut fields = vec![scene.controller_id.as_str(), edit.action(), "surfaceId", scene.surface_id.as_str(), "layerId", edit.layer_id.as_str()];
@@ -499,7 +499,7 @@ fn write_paint2d_edit(scene: &UiComponentSceneNode, edit: &semio_framework_surfa
     fields.extend(edit.phase.into_iter().flat_map(|phase| ["phase", phase]));
     fields.extend(edit.reason.into_iter().flat_map(|reason| ["reason", reason]));
     fields.extend(edit.gesture.iter().flat_map(|gesture| ["gesture", gesture.as_str()]));
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&fields)?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&fields)?;
     let mut batch = input.reserve_actions(1, bytes)?;
     batch.action(&scene.controller_id, edit.action(), bytes, |builder| {
         builder.begin_object(None)?;
@@ -542,7 +542,7 @@ fn write_paint2d_edit(scene: &UiComponentSceneNode, edit: &semio_framework_surfa
 ///
 /// 🖱️ The armed gesture becomes a marquee once the pointer clears the threshold, and the lasso
 /// accumulates its path — `onPointerMove`'s marquee branch (`🖌️Paint2dHost/🟦️.tsx:466-475`).
-pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(paint) = scene.paint_2d.as_ref() else {
         return Ok(false);
     };
@@ -560,7 +560,7 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
             return Ok(false);
         };
         let camera = (cx - f64::from(x - last_x) / zoom, cy - f64::from(y - last_y) / zoom, zoom);
-        let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+        let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
         let mut batch = input.reserve_actions(1, bytes)?;
         write_surface_camera(&mut batch, scene, camera)?;
         batch.publish()?;
@@ -588,7 +588,7 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
             return Ok(false);
         }
         let targets = interaction_targets_json(PAINT2D_LAYER_GRANULARITY, hit.as_slice());
-        let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionHover", "domainId", PAINT2D_INTERACTION_DOMAIN, "channel", "pointer", "targets", &targets])?;
+        let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionHover", "domainId", PAINT2D_INTERACTION_DOMAIN, "channel", "pointer", "targets", &targets])?;
         let mut batch = input.reserve_actions(1, bytes)?;
         write_interaction_hover(&mut batch, &scene.controller_id, PAINT2D_INTERACTION_DOMAIN, &targets)?;
         batch.publish()?;
@@ -605,7 +605,7 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
     if engine_camera_from_json(&paint.camera_json) == Some(camera) {
         return Ok(streamed);
     }
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
     let mut batch = input.reserve_actions(1, bytes)?;
     write_surface_camera(&mut batch, scene, camera)?;
     batch.publish()?;
@@ -622,7 +622,7 @@ pub fn paint2d_pointer_cancel_into(surface_id: &str) -> bool {
  * republished, matching React's `onWheel`.
  *
  * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `onWheel` */
-pub fn paint2d_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+pub fn paint2d_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(paint) = scene.paint_2d.as_ref() else {
         return Ok(false);
     };
@@ -645,7 +645,7 @@ pub fn paint2d_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: 
     let Some(camera) = camera else {
         return Ok(false);
     };
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
     let mut batch = input.reserve_actions(1, bytes)?;
     write_surface_camera(&mut batch, scene, camera)?;
     batch.publish()?;

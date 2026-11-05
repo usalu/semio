@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneWheelEccentri
         record: "ChangedCraneWheelEccentricity",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Wheel eccentricity e of the crane runway", "Kranbahn: Radlastausmitte e ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Wheel eccentricity e of the crane runway", "Kranbahn: Radlastausmitte e ändern")
     }
 }
 

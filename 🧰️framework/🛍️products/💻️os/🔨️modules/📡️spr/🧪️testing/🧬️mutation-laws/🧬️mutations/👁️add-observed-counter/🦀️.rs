@@ -1,7 +1,7 @@
 //! 👁️ Deliberately nondeterministic command retaining shared, nonserialized observation state.
 
 use super::super::{CounterDiff, CounterMutation};
-use semio_framework_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
+use semio_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -19,14 +19,14 @@ impl PartialEq for AddObservedCounter{fn eq(&self,other:&Self)->bool{std::sync::
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddObservedCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "observed-counter", kind: "add-observed-counter", record: "AddedObservedCounter" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add observed counter", "Beobachteten Zähler hinzufügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Add observed counter", "Beobachteten Zähler hinzufügen")
     }
 
 
 }
 
-impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddObservedCounter {
+impl semio_os_spr::ColdMutationKind<i64, CounterMutation> for AddObservedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         let count = self.calls.fetch_add(1,std::sync::atomic::Ordering::Relaxed);
         MutationOutcome::new(CounterDiff::delta(count))

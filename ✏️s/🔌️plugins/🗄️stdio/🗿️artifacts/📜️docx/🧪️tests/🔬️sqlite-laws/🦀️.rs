@@ -1,6 +1,6 @@
 //! 🧪️ The docx SQLite snapshot laws, as an integration target over the artifact's public API.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod snapshot_tests;

@@ -1,6 +1,6 @@
 //! 🫴️ Original source-owned STEP receiving retains lexer, graph and reference frontiers without joined text or cold parsing.
 use super::{IfcSnapshot, IfcValue, MAX_DEPTH, MAX_RECORD_BYTES, MAX_SOURCE_BYTES, TxtSnapshot};
-use semio_framework_os_kernel::{NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner};
+use semio_os_kernel::{NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner};
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant, RetainedCloneProgress, RetireOwned, ValueError, ValueRefusalKind};
 use std::{cell::Cell, mem::size_of};
 #[path = "native-step-lex.rs"]

@@ -1,6 +1,6 @@
 //! 📌️ Process3d editor panels: catalogue, artifact, inspection and workshop.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 //#region 🧩️Modules
 #[path = "🛍️catalogue/🦀️.rs"]

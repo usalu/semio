@@ -5,13 +5,13 @@ use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
 use semio_s_artifact_procedural_2d_io_text::snapshot::scene_layers_from_drawing_handle;
 use semio_s_artifact_procedural_2d_io_text::snapshot::collect_drawing_handles_from_eval;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Canvas2dScene;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::BuiltNode;
+use semio_plugin::Canvas2dScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -47,7 +47,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
 /// visible widget.
-pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, window_config: &config::Generation2dEditPreviewWindowConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, window_config: &config::Generation2dEditPreviewWindowConfig, session: &FlowEvalSession) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.host_snapshot;
     let eval_json = session.eval_json();
     let prefix = "generation2d-preview";
@@ -83,7 +83,7 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
     let _ = GENERATION2D_PLAY_APP_ID;
     semio_s_procedural_core_semantic_ui::scene_surface(
         GENERATION2D_PLAY_SURFACE_PREVIEW,
-        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
+        semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: window_config.viewport.x, camera_y: window_config.viewport.y, zoom: window_config.viewport.zoom, layers_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

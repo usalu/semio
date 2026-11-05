@@ -1,6 +1,6 @@
-use semio_framework_os_spr::ColdMutationKind;
+use semio_os_spr::ColdMutationKind;
 use super::*;
-use semio_framework_os_spr::SemanticMutation;
+use semio_os_spr::SemanticMutation;
 
 #[test]
 fn aggregate_roster_is_structural_and_exact() {
@@ -31,8 +31,8 @@ fn checkpoint(parent: Option<&str>, avatar: Option<&str>) -> crate::space_histor
         id: "cp".into(),
         parent_id: parent.map(Into::into),
         message: "m\"\u{e9}".into(),
-        authors: vec![semio_framework_os_vcs::Author { id: "a".into(), name: "A".into(), avatar: avatar.map(Into::into) }],
-        timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 },
+        authors: vec![semio_os_vcs::Author { id: "a".into(), name: "A".into(), avatar: avatar.map(Into::into) }],
+        timestamp: semio_os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 },
         members: vec![SpaceMemberPin { document_id: "d".into(), checkpoint_id: "c".into(), alternative_id: String::new() }],
     }
 }
@@ -54,14 +54,14 @@ fn every_leaf_shape_has_a_canonical_tree_equal_to_its_value_document_parsed_by_a
     ] {
         let printed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&mutation)).expect("the printed mutation is JSON");
         assert_eq!(walk(&mutation), printed, "{mutation:?}");
-        let source = semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactCanonicalTreeSource::view(&mutation);
+        let source = semio_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactCanonicalTreeSource::view(&mutation);
         assert_eq!(indexed(source, &mut Vec::new()), printed, "the indexed wire is the same canonical tree");
-        assert!(semio_framework_os_store_canonical_json::ArtifactCanonicalJson::canonical_json_node(source, &[usize::MAX]).is_err());
-        assert!(semio_framework_os_store_canonical_json::ArtifactCanonicalJson::canonical_json_key(source, &[0], 9).is_err());
+        assert!(semio_os_store_canonical_json::ArtifactCanonicalJson::canonical_json_node(source, &[usize::MAX]).is_err());
+        assert!(semio_os_store_canonical_json::ArtifactCanonicalJson::canonical_json_key(source, &[0], 9).is_err());
     }
 }
 
-fn indexed(source: &impl semio_framework_os_store_canonical_json::ArtifactCanonicalJson, path: &mut Vec<usize>) -> serde_json::Value {
+fn indexed(source: &impl semio_os_store_canonical_json::ArtifactCanonicalJson, path: &mut Vec<usize>) -> serde_json::Value {
     use semio_framework_pack_json::{ArtifactCanonicalJsonNode as N, ArtifactCanonicalJsonText as T};
     match source.canonical_json_node(path).expect("indexed canonical node") {
         N::Null => serde_json::Value::Null,
@@ -81,7 +81,7 @@ fn indexed(source: &impl semio_framework_os_store_canonical_json::ArtifactCanoni
 
 #[test]
 fn the_space_history_wire_borrows_the_canonical_mutation_tree() {
-    let wire = semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactOperationWire::<SpaceHistoryMutation>::semantic::<SpaceHistorySnapshot>();
+    let wire = semio_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactOperationWire::<SpaceHistoryMutation>::semantic::<SpaceHistorySnapshot>();
     let mutation = SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: "alt".into() });
-    assert!(matches!(wire.source(&mutation), Some(semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactPreparedOperationSource::CanonicalJson { .. })));
+    assert!(matches!(wire.source(&mutation), Some(semio_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactPreparedOperationSource::CanonicalJson { .. })));
 }

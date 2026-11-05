@@ -4,7 +4,7 @@ use semio_s_artifact_layout_layout_model::{snapshot,validation,Frame,LayoutRect,
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_layout_layout_model::validation::{graph::*,retained::LayoutValidationCursor};
 use semio_s_artifact_layout_layout_model::drawing_member::source::reference::LAYOUT_DRAWING_REFERENCE_LENDER;
-use semio_framework_plugin::app::vector_read::ChildVectorReferenceLenderV1;
+use semio_plugin::app::child_read::ChildReadReferenceLenderV1;
 use semio_framework_value::{RetirementDemand,retained_clone::RetainedCloneGrant};
 #[path="../🧳️retained/🧪️tests.rs"]
 mod retained;

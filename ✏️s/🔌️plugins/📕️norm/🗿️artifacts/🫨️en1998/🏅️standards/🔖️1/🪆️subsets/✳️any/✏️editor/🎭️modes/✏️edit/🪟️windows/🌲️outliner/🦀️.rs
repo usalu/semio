@@ -1,7 +1,7 @@
 //! 🌲️ EN 1998 play app — the outliner window: every entity collection and supporting table with status glyph and a select action that the checks, properties, model and diagrams windows follow.
 
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1998_scene::ENTITY_KINDS;
 use semio_s_plugin_norm_app_surface::{render_outliner_document, NormSelection, OutlinedCollection, OutlinerContext};
 use semio_s_plugin_norm_compliance::CheckReport;

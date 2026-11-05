@@ -18,7 +18,7 @@ use crate::puzzle_job::JobTurn;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, StepBudget, StepContext};
 use semio_framework_job_payload::{RetainedJobPayload};
 #[allow(unused_imports)]
-use semio_framework_plugin::{Fault, ToolRunJob};
+use semio_plugin::{Fault, ToolRunJob};
 #[allow(unused_imports)]
 use semio_framework_tool_run::TOOL_RUN_TRACE_PAGE_OPS_MAX;
 #[allow(unused_imports)]

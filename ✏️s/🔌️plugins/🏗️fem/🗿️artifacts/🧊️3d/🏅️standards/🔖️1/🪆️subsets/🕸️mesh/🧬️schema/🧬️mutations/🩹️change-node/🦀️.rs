@@ -21,8 +21,8 @@ pub struct ChangeNode {
 
 impl<Op> MutationKind<Fem3dSnapshot, Op> for ChangeNode where Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeNode> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "node", kind: "change-node", record: "ChangedNode" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node \"{}\"", self.id), &format!("Knoten \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change node \"{}\"", self.id), &format!("Knoten \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

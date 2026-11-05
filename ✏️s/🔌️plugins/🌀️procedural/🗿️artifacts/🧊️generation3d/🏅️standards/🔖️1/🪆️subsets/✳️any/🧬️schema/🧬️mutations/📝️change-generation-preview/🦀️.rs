@@ -7,7 +7,8 @@ use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️ChangeGenerationPreview
 /// 📝️ Sets the document preview text to `text`, or clears it when it is `None`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[value(native_owned = "semio_framework_value_native_owned")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -21,10 +22,10 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "preview", kind: "change-generation-preview", record: "ChangedGenerationPreview" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         match &self.text {
-            Some(_) => semio_framework_ui_locale::LocalizedLabel::native("Change the generation preview", "Generierungsvorschau ändern"),
-            None => semio_framework_ui_locale::LocalizedLabel::native("Clear the generation preview", "Generierungsvorschau löschen"),
+            Some(_) => semio_ui_locale::LocalizedLabel::native("Change the generation preview", "Generierungsvorschau ändern"),
+            None => semio_ui_locale::LocalizedLabel::native("Clear the generation preview", "Generierungsvorschau löschen"),
         }
     }
 }

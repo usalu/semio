@@ -10,7 +10,7 @@ pub struct RemoveCase { pub id: String }
 impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveCase where Op: protocol::Mutation<En1997Snapshot, Diff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::insert_case::InsertCase> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "case", kind: "remove-case", record: "RemovedCase" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove catalogue case {}", self.id), &format!("Katalogfall {} entfernen", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Remove catalogue case {}", self.id), &format!("Katalogfall {} entfernen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

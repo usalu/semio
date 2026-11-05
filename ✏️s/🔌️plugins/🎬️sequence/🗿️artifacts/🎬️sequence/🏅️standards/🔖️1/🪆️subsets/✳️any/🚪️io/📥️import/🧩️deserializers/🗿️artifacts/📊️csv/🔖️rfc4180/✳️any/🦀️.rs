@@ -9,7 +9,7 @@
 //! decodes the foreign `CsvSnapshot` first, as the coordinate (`CSV_DIALECT`) requires.
 
 use crate::{SequenceHostSnapshot, SequenceSnapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
-use semio_framework_os_kernel::io::io_mechanism::Deserializer;
+use semio_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -22,7 +22,7 @@ pub struct CsvIntoSequence;
 impl Deserializer<SequenceSnapshot> for CsvIntoSequence {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<SequenceSnapshot> {
+    async fn deserialize(payload: &IoPayload, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<SequenceSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "CsvIntoSequence: expected a binary csv payload".to_string())));
         };

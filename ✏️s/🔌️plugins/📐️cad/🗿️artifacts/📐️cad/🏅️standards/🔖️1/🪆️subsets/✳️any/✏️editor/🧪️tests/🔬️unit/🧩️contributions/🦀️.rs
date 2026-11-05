@@ -112,7 +112,7 @@ async fn the_shipped_cad_computer_pack_is_admitted_by_the_retained_config_envelo
     assert!(accepted.iter().all(|pack| pack.computers_json.contains("modelDefinitionIds")), "each module's own computer roster survives verbatim");
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    assert!(render_direct(&app, shape::BODY_KEY, &doc, &config, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).is_ok(), "the shape panel still assembles with the whole pack installed");
+    assert!(render_direct(&app, shape::BODY_KEY, &doc, &config, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).is_ok(), "the shape panel still assembles with the whole pack installed");
 }
 
 /// 🧩️ The pack the DEMONSTRATOR's koordinator pane actually receives: the demonstrator consumes
@@ -167,7 +167,7 @@ async fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_
     let wire = semio_framework_pack_json::to_json_string(&("setContributions", semio_framework_value::DslValue::object([("json".to_string(), semio_framework_value::DslValue::String(pack.clone()))])));
     println!("[STATS] cad demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
     assert!(pack.len() > CAD_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope — that is why the app declares its own contributions wire");
-    assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
+    assert!(wire.len() <= semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
     assert!(pack.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES, "the real pack ({} B) must fit the retained config lane", pack.len());
     let mutation = CadConfigMutation::SetContributions(SetContributionsEdit { json: pack.clone() });
     assert!(admit_cad_config_mutation(&mutation).is_ok());

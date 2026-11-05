@@ -17,8 +17,8 @@ pub struct InsertAlternateContent {
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for InsertAlternateContent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "alternate-content", kind: "insert-alternate-content", record: "InsertAlternateContent" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert alternate content", "Alternativen Inhalt einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert alternate content", "Alternativen Inhalt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

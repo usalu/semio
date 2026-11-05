@@ -15,8 +15,8 @@ pub struct SetTriangleVertices {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleVertices {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "triangle-vertices", kind: "set-triangle-vertices", record: "SetTriangleVertices" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set triangle vertices", "Eckpunkte des Dreiecks setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set triangle vertices", "Eckpunkte des Dreiecks setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

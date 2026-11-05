@@ -1,11 +1,20 @@
 //! 🧪️ Genuine typed-field nulls and comparisons preserve original source custody and one finite bank.
 use super::*;
-use crate::retained_clone::RetainedCloneSource;
+use semio_framework_value_clone_source::RetainedCloneSource;
 use semio_framework_value_testing_allocator::{observe_retirement_allocations as observe,refuse_one_allocation_on_this_thread as refuse};
 type Pair=(String,String);
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn debit(bank:&mut RetainedCloneGrant,work:u64,p:RetainedCloneProgress,heap:(usize,usize),totals:&mut(usize,usize)){assert!(work<=bank.maximum_items as u64);assert!(p.fits(*bank));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));bank.maximum_items-=work as usize;bank.maximum_copy_bytes-=p.copied_bytes;bank.maximum_capacity_bytes-=p.retained_capacity_bytes;bank.maximum_release_bytes-=p.released_bytes;totals.0+=heap.0;totals.1+=heap.1;}
-fn source(value:Pair,bank:&mut RetainedCloneGrant,totals:&mut(usize,usize))->RetainedCloneSource<Pair>{let d=RetainedCloneSource::<Pair>::owned_constructor_demand::<()>();let g=grant(RetirementDemand{copy_bytes:RetainedCloneSource::<Pair>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()});let(turn,h)=observe(||RetainedCloneSource::admit_owned(value,(),g));let work=turn.work;let(source,p)=turn.result.map_err(|(error,..)|error).unwrap();debit(bank,work,p,h,totals);source}
+fn source(value:Pair,bank:&mut RetainedCloneGrant,totals:&mut(usize,usize))->RetainedCloneSource<Pair>{
+ let mut admission=RetainedCloneSource::<Pair>::admission_owned(value,());let mut output=None;
+ for _ in 0..64{
+  let ready=admission.phase()=="ready";let d=if ready{RetirementDemand{depth:1,..Default::default()}}else{admission.next_demand().unwrap()};let g=grant(d);
+  assert!(g.maximum_items<=bank.maximum_items&&g.maximum_copy_bytes<=bank.maximum_copy_bytes&&g.maximum_capacity_bytes<=bank.maximum_capacity_bytes&&g.maximum_release_bytes<=bank.maximum_release_bytes&&g.maximum_depth<=bank.maximum_depth);
+  let(turn,h)=observe(||if ready{admission.take_output(&mut output,g)}else{admission.advance(g)});let work=turn.work;debit(bank,work,turn.result.unwrap().progress(),h,totals);
+  if output.is_some(){break}
+ }
+ assert!(admission.terminal_is_empty());output.unwrap()
+}
 fn close(source:&mut RetainedCloneSource<Pair>,bank:&mut RetainedCloneGrant,totals:&mut(usize,usize),limit:u64){for _ in 0..limit{if source.terminal_is_empty(){break}let g=grant(source.next_close_demand(4096).unwrap());let(turn,h)=observe(||source.close_step(g));let work=turn.work;debit(bank,work,turn.result.unwrap().progress(),h,totals);}assert!(source.terminal_is_empty());}
 #[test]
 fn typed_record_actual_null_retry_comparison_and_close_preserve_original_bank(){

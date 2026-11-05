@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionPinPlateFy 
         record: "ChangedTensionPinPlateFy",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Pin plate yield strength f_y of the tension component", "Zugglied: Laschenstreckgrenze f_y ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Pin plate yield strength f_y of the tension component", "Zugglied: Laschenstreckgrenze f_y ändern")
     }
 }
 

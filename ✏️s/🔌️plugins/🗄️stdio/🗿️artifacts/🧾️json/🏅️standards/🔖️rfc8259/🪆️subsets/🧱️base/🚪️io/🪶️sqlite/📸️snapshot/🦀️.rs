@@ -2,7 +2,7 @@
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use std::collections::{BTreeMap, BTreeSet};
 
 enum Parent<'a> { Root, Member(i64, usize, &'a str), Element(i64, usize) }
@@ -31,7 +31,7 @@ fn measure(snapshot: &JsonSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
     Ok(rows)
 }
 
-use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 #[path="🫴️receiving/🦀️.rs"]
 mod receiving;
 impl ArtifactSqliteSnapshotHost for JsonSnapshot {
@@ -40,21 +40,21 @@ impl ArtifactSqliteSnapshotHost for JsonSnapshot {
     fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_decoding(self,dialect,database,control,owner)}
     fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_encoding(self,dialect,database,control,owner)}
 
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::encode(self,encoding,control,native_owner)}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::encode(self,encoding,control,native_owner)}
     fn retire_sqlite_snapshot(self) { crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::retire(self); }
-    fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
+    fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::preflight(self, control)
     }
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
-        use semio_framework_os_kernel::io_schema::IoError;
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{
+        use semio_os_kernel::io_schema::IoError;
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.json"||dialect.standard!="rfc8259"{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"JSON owned snapshot dialect differs from RFC8259")));}
         let row=database.table("json_document").map_err(IoError::from_value_error)?.single_row().map_err(IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(IoError::from_value_error)?!=self.schema{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"JSON owned document identity differs from semantic projection")));}
         let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"i-json"=>crate::standards::v_rfc8259::subsets::i_json::schema::conformance::check_i_json_conformance_controlled(self,control).map_err(IoError::from_value_error)?,"geojson"=>crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance_controlled(self,control).map_err(IoError::from_value_error)?,_=>return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"JSON named subset has no owned semantic validator")))};
-        Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
+        Ok(semio_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
-    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
+    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
         crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::decode(payload,control,native_control)
     }
 

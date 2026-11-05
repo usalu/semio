@@ -2,7 +2,7 @@
 use protocol::{SelectionMethod};
 #[cfg(test)]
 use protocol::{DomainHover, DomainSelection};
-use semio_framework_ui_viewport::Viewport2d;
+use semio_ui_viewport::Viewport2d;
 use serde::{Deserialize,Serialize};
 #[cfg(test)]
 use semio_framework_value::ToValue;

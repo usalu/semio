@@ -34,7 +34,7 @@ fn extension_capacity(extension:&std::borrow::Cow<'static,str>)->usize{match ext
 
 //#region 📂️Schema
 
-pub use semio_framework_os_services_native_paths::{NativePathSet,NativeModifiedSet,NativePathInput,NATIVE_IO_PATH_CAPACITY};
+pub use semio_os_services_native_paths::{NativePathSet,NativeModifiedSet,NativePathInput,NATIVE_IO_PATH_CAPACITY};
 #[path="📋️rows/advance.rs"]
 mod native_row_work;
 

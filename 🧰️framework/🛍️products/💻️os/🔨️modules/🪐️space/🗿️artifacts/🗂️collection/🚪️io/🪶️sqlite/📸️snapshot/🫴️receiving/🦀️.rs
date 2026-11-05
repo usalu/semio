@@ -1,5 +1,5 @@
 //! 🗂️ Original Collection receiving retains every partial entity and boxed native body.
-use semio_framework_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
+use semio_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
 use super::{CollectionSnapshot,CollectionFolder,CollectionEntry,ArtifactBody,store};
 use store::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::receiving::{Port,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,validate_schema_sql,check_database}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};

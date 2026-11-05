@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeAirtightnessN50 w
         record: "ChangedAirtightnessN50",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change air change rate n50", "Luftwechselrate n50 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change air change rate n50", "Luftwechselrate n50 ändern")
     }
 }
 

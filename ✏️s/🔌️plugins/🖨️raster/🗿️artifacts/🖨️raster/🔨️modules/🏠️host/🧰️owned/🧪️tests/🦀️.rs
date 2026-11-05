@@ -8,7 +8,7 @@ use semio_s_artifact_raster_raster_mutations_layers::rename_layer;
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
 use semio_s_artifact_raster_raster_model::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_framework_job::{JobOutcomeBorrow, OperationId};
-use semio_framework_plugin::{ArtifactOwnedDisposer, ArtifactStoreInitializationAuthority};
+use semio_plugin::{ArtifactOwnedDisposer, ArtifactStoreInitializationAuthority};
 
 static RASTER_INITIALIZER_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
@@ -34,7 +34,7 @@ fn raster_initializer(envelope: store::os_store::store_schema::ArtifactEnvelope<
 }
 
 fn empty_raster_initializer(operation: OperationId, generation: semio_framework_job::Generation) -> RasterStoreInitializationAuthority {
-    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     raster_initializer(envelope, operation, generation)
 }
 
@@ -79,7 +79,7 @@ fn close_authority(authority: &mut RasterStoreInitializationAuthority) {
 }
 
 fn close_raster_candidate(mut candidate: store::ArtifactStore<RasterSnapshot, RasterMutation>) {
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<RasterSnapshot, RasterMutation>::new();
+    let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<RasterSnapshot, RasterMutation>::new();
     for _ in 0..200_000 {
         if disposer.terminal_is_empty(&candidate) {
             drop(disposer);
@@ -226,7 +226,7 @@ fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_pa
             .expect("mounted-shaped source admits its second fixed map page");
     }
     retire_raster_value_cold(empty);
-    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut authority = raster_initializer(envelope, operation, generation);
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
@@ -307,7 +307,7 @@ fn raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic() {
 fn raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal() {
     let operation = OperationId(707);
     let generation = semio_framework_job::Generation(39);
-    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut authority = raster_initializer(envelope, operation, generation);
     assert_eq!(drive_raster_initializer(&mut authority, operation, generation, 4_096), Terminal::Complete);
     assert!(authority.candidate.is_some());

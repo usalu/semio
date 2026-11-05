@@ -7,8 +7,8 @@ fn dsl_asset_parses_and_round_trips() {
     let text = fixture_text!("../../../../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio");
     assert!(text.len() > 64, "dsl fixture must carry real payload");
     let projection = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
 }
 
 #[test]

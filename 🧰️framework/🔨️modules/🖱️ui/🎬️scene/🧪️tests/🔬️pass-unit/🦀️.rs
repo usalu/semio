@@ -1,8 +1,8 @@
 //! 🪟️ Unit proofs of frustum culling over the scene draw descriptors.
 
 use super::*;
-use semio_framework_ui_scene_camera::testkit::concrete_forest_camera;
-use semio_framework_ui_scene_camera::Camera3d;
+use semio_ui_scene_camera::testkit::concrete_forest_camera;
+use semio_ui_scene_camera::Camera3d;
 
 #[test]
 fn frustum_contains_origin_box() {

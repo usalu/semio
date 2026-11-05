@@ -1,4 +1,4 @@
-//! 🧪️ Companion white-box laws of `semio-framework-ui-prepared`.
+//! 🧪️ Companion white-box laws of `semio-ui-prepared`.
 
 #![cfg(test)]
 #![allow(unused_imports, unused_qualifications)]

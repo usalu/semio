@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeCategoryLocationX 
         record: "ChangedCategoryLocationX",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Location x along the member of the fatigue detail site", "Ermüdungsdetail-Stelle: Lage x am Bauteil ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Location x along the member of the fatigue detail site", "Ermüdungsdetail-Stelle: Lage x am Bauteil ändern")
     }
 }
 

@@ -37,7 +37,7 @@ use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use swash::zeno::Format as SwashFormat;
 use swash::FontRef as SwashFontRef;
 
-use semio_framework_ui_render_packet::{AtlasId, ResourceRegistry};
+use semio_ui_render_packet::{AtlasId, ResourceRegistry};
 
 #[path = "🔤️font-roles-and-files/🦀️.rs"]
 mod font_roles_and_files;

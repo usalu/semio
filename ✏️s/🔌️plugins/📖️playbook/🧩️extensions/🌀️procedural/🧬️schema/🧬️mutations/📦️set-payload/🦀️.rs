@@ -14,8 +14,8 @@ pub struct SetPayload {
 impl protocol::MutationKind<ModuleRenderPayload, ModulePayloadMutation> for SetPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "payload", kind: "set-payload", record: "SetPayload" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Payload", "Nutzlast setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Payload", "Nutzlast setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["payload".into()]
@@ -27,6 +27,7 @@ impl protocol::ColdMutationKind<ModuleRenderPayload, ModulePayloadMutation> for 
         protocol::MutationOutcome::new(ModulePayloadDiff {
             example_id: (base.example_id != self.payload.example_id).then(|| self.payload.example_id.clone()),
             params: (base.params != self.payload.params).then(|| self.payload.params.clone()),
+            authored_params: (base.authored_params != self.payload.authored_params).then(|| self.payload.authored_params.clone()),
             question_id: (base.question_id != self.payload.question_id).then(|| self.payload.question_id.clone()),
             controller_id: (base.controller_id != self.payload.controller_id).then(|| self.payload.controller_id.clone()),
             surface: (base.surface != self.payload.surface).then(|| self.payload.surface.clone()),

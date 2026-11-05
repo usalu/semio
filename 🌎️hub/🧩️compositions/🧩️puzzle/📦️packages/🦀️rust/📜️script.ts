@@ -32,9 +32,12 @@ class TestScript extends BundleScript {
 }
 //#endregion 🔖️FixtureLint
 
+import {GuestIoScript} from "../../🧪️tests/🧩️guest-io/🟦️.ts";
+
 const router = new ScriptRouter(import.meta.dir)
   .register("wasm", WasmScript)
   .register("test", TestScript)
+  .register("test-guest-io", GuestIoScript)
   .register("canonical-architecture", CanonicalArchitectureScript)
   .register("fixtures", FixturesScript);
 

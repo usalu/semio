@@ -26,7 +26,7 @@ fn slider_pointer_mapping_is_confined_to_the_shared_track_cell() {
             if case["inline"] == "rtl" { FlowInline::Rtl } else { FlowInline::Ltr },
             1.0,
             0.0,
-            semio_framework_ui_theme::Theme::default().gap_standard,
+            semio_ui_theme::Theme::default().gap_standard,
         );
         match pointer["emits"].as_f64() {
             Some(expected) => assert!((fired.and_then(|fired| fired.input).and_then(|value| value.as_f64()).unwrap() - expected).abs() < 0.000_001, "{}", pointer["case"]),

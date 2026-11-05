@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeRowLever where Op:
         record: "ChangedRowLever",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Lever arm h_r to the compression centre of the joint row", "Schraubenreihe: Hebelarm h_r zum Druckpunkt ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Lever arm h_r to the compression centre of the joint row", "Schraubenreihe: Hebelarm h_r zum Druckpunkt ändern")
     }
 }
 

@@ -16,7 +16,7 @@ pub struct CameraPose {
 
 impl CameraPose {
     pub fn json(&self) -> String {
-        semio_framework_plugin::world3d_camera_json(self.position, self.target, self.fov)
+        semio_plugin::world3d_camera_json(self.position, self.target, self.fov)
     }
 }
 

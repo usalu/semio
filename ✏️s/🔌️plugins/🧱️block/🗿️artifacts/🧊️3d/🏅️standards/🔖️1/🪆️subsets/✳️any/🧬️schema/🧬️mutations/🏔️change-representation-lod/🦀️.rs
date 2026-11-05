@@ -25,8 +25,8 @@ pub fn change_representation_lod<Op: From<crate::change_representation_lod::Chan
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeRepresentationLod where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_representation_lod::ChangeRepresentationLod> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-lod", record: "ChangedRepresentationLod" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change representation \"{}\" LOD", self.id), &format!("Detailstufe von Repräsentation \"{}\" ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change representation \"{}\" LOD", self.id), &format!("Detailstufe von Repräsentation \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

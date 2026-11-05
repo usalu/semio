@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "classification-system", kind: "create-classification-system", record: "CreateClassificationSystem" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create classification system \"{}\"", self.system.name), &format!("Klassifikationssystem \"{}\" anlegen", self.system.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create classification system \"{}\"", self.system.name), &format!("Klassifikationssystem \"{}\" anlegen", self.system.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

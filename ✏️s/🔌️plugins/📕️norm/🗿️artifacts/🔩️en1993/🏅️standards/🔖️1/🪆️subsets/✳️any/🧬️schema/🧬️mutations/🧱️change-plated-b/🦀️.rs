@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedB where Op: 
         record: "ChangedPlatedB",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Panel width b of the plated panel", "Plattenfeld: Feldbreite b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Panel width b of the plated panel", "Plattenfeld: Feldbreite b ändern")
     }
 }
 

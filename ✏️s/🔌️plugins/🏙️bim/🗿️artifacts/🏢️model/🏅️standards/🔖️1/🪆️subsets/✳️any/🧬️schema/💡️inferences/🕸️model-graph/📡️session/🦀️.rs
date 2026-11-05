@@ -60,7 +60,7 @@ type Delta = FieldDelta<ModelNode, ModelValue>;
 /// 🧷️ One resumable update of a session: the engine update (the held node values with their dependency links, moved into the run while it walks the plan, carrying every node the diff and its parents did not move) and the counters of what it
 /// computed. It borrows nothing, so a job can hold it across steps.
 pub struct SessionRun {
-    pub(crate) instance_access:semio_framework_plugin::ArtifactInferenceSessionAccess<ModelInferenceSession>,
+    pub(crate) instance_access:semio_plugin::ArtifactInferenceSessionAccess<ModelInferenceSession>,
     touches: Touches,
     update: Option<Update>,
     cancelled: bool,

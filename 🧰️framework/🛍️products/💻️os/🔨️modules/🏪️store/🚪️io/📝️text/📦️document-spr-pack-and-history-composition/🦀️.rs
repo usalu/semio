@@ -9,8 +9,8 @@ use super::*;
 /// `parse_document_spr(pack, &empty_document_spr(id, schema))` recovers exactly `P::decode_pack(pack)`
 /// as both the initial and live snapshot, with zero edits.
 pub async fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
-    let log = semio_framework_os_spr::HistoryLog { doc_id: doc_id.to_string(), schema: schema.to_string(), ..semio_framework_os_spr::HistoryLog::default() };
-    semio_framework_os_spr::encode_history(&log, &semio_framework_os_spr::EncodeOptions::default()).await.expect("encoding an edit-free HistoryLog is infallible")
+    let log = semio_os_spr::HistoryLog { doc_id: doc_id.to_string(), schema: schema.to_string(), ..semio_os_spr::HistoryLog::default() };
+    semio_os_spr::encode_history(&log, &semio_os_spr::EncodeOptions::default()).await.expect("encoding an edit-free HistoryLog is infallible")
 }
 
 /// 🪪️ Re-stamps an app-built document `.spr` with the identity of the live document it is
@@ -20,13 +20,13 @@ pub async fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
 pub async fn stamp_document_spr_identity(spr: &[u8], doc_id: &str, schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, owner: Option<&OwnerRef>) -> Result<Vec<u8>, VcsError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-    let mut log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let mut log = semio_os_spr::decode_history(spr, &semio_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     log.doc_id = doc_id.to_string();
     log.schema = schema.to_string();
     log.composition =
-        Some(semio_framework_os_spr::HistoryComposition { owner: owner.map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone())), dialect: Some((dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone())) });
-    let options = semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..semio_framework_os_spr::EncodeOptions::default() };
-    semio_framework_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
+        Some(semio_os_spr::HistoryComposition { owner: owner.map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone())), dialect: Some((dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone())) });
+    let options = semio_os_spr::EncodeOptions { write_backwards_section: true, ..semio_os_spr::EncodeOptions::default() };
+    semio_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
 /// 🌱️ A brand-new owned member's full envelope pack — `initial_pack` plus an edit-free `.spr`
@@ -50,12 +50,12 @@ pub async fn genesis_member_envelope_pack(schema: &str, expected: &semio_framewo
 /// (`SprWriter::resume` + a seeded `DictBuilder`/`edit_ordinals`) is a follow-up optimization, not
 /// required for correctness (this function's asymptotics match the JSON-envelope full rewrite it
 /// replaces).
-pub async fn append_history_events_to_spr(spr: &[u8], edits: &[semio_framework_os_spr::HistoryEdit], transitions: &[semio_framework_os_spr::HistoryTransitionRecord]) -> Result<Vec<u8>, VcsError> {
-    let mut log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+pub async fn append_history_events_to_spr(spr: &[u8], edits: &[semio_os_spr::HistoryEdit], transitions: &[semio_os_spr::HistoryTransitionRecord]) -> Result<Vec<u8>, VcsError> {
+    let mut log = semio_os_spr::decode_history(spr, &semio_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     log.edits.extend(edits.iter().cloned());
     log.transitions.extend(transitions.iter().cloned());
-    let options = semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..semio_framework_os_spr::EncodeOptions::default() };
-    semio_framework_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
+    let options = semio_os_spr::EncodeOptions { write_backwards_section: true, ..semio_os_spr::EncodeOptions::default() };
+    semio_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
 /// 🧩️ Projects an envelope's composition facts (`owner`, `dialect`) into the durable
@@ -64,7 +64,7 @@ pub async fn append_history_events_to_spr(spr: &[u8], edits: &[semio_framework_o
 /// single byte from this record existing. `ArtifactRef`s cross the boundary as their `to_uri()`
 /// wire string, the same "own the codec at this edge" convention `CompositionPin`/`ArtifactChild`
 /// already use rather than coupling `ArtifactRef` into the protocol crate.
-pub async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Option<semio_framework_os_spr::HistoryComposition> {
+pub async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Option<semio_os_spr::HistoryComposition> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let owner = envelope.owner.as_ref().map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone()));
@@ -72,13 +72,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     if owner.is_none() && dialect.is_none() {
         return None;
     }
-    Some(semio_framework_os_spr::HistoryComposition { owner, dialect })
+    Some(semio_os_spr::HistoryComposition { owner, dialect })
 }
 
 /// 🧩️ Inverse of `history_composition_from_envelope`: malformed ownership rejects the
 /// authoritative history rather than being silently discarded. Checkpoint pins are not part of the
 /// overlay — they are facts of `Repin` transitions, folded like every other history fact.
-pub async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &semio_framework_os_spr::HistoryComposition) -> Result<(), VcsError> {
+pub async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &semio_os_spr::HistoryComposition) -> Result<(), VcsError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     envelope.owner = match &composition.owner {
@@ -112,7 +112,7 @@ where
             validate_persisted_message(message, Some(operation_count)).await?;
         }
     }
-    let mut edits = semio_framework_os_spr::history::HistoryEdits::empty();
+    let mut edits = semio_os_spr::history::HistoryEdits::empty();
     for edit in envelope.vcs.edits.iter().filter(|edit| envelope.holds_committed_edit(&edit.id)) {
         edits.push(history_edit_from_edit::<Mutation>(edit, message_ledger.get(edit.id.as_str()).copied().unwrap_or(&[]), envelope.lanes.get(&edit.id).copied()).await?);
     }
@@ -120,18 +120,18 @@ where
     for conflict in &envelope.conflicts {
         conflicts.push(history_conflict_from_conflict(conflict).await);
     }
-    let log = semio_framework_os_spr::HistoryLog {
+    let log = semio_os_spr::HistoryLog {
         doc_id: envelope.id.clone(),
         schema: envelope.schema.clone(),
         edits,
-        transitions: envelope.transitions.iter().map(semio_framework_os_spr::HistoryTransitionRecord::from_envelope).collect(),
+        transitions: envelope.transitions.iter().map(semio_os_spr::HistoryTransitionRecord::from_envelope).collect(),
         composition: history_composition_from_envelope(envelope).await,
         conflicts,
-        viewer_line: envelope.active_alternative_id.clone().filter(|line| line != &semio_framework_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()))),
+        viewer_line: envelope.active_alternative_id.clone().filter(|line| line != &semio_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()))),
         viewer_checkpoint: envelope.viewer_checkpoint_id.clone(),
     };
-    let options = semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..semio_framework_os_spr::EncodeOptions::default() };
-    semio_framework_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
+    let options = semio_os_spr::EncodeOptions { write_backwards_section: true, ..semio_os_spr::EncodeOptions::default() };
+    semio_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
 /// 🎯️ Inverse of [`print_document_spr`]: rebuilds an envelope's event log — `edits` (with
@@ -141,9 +141,9 @@ where
 pub async fn parse_document_spr<P, Mutation>(pack: &[u8], spr: &[u8], producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_os_spr::ColdMutation<P> + 'static,
 {
-    let log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
+    let log = semio_os_spr::decode_history(spr, &semio_os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
     parse_decoded_document_spr(pack, log, producer).await
 }
 
@@ -154,14 +154,14 @@ where
 /// with a layout entry died in `OrderedMap<WidgetLayout>::drop`
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `ColdReplayProjection` now retires it on every early
 /// `?` above as well, which the explicit call below never covered.
-pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: semio_framework_os_spr::HistoryLog, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: semio_os_spr::HistoryLog, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
-    Mutation: OpText + OpBinary + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + 'static,
+    Mutation: OpText + OpBinary + super::Mutation<P> + semio_os_spr::ColdMutation<P> + 'static,
 {
     let initial_snapshot = producer.decode_genesis_pack(pack).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
 
-    async fn decode_op<P, Mutation: OpText + OpBinary + super::Mutation<P>>(payload: &semio_framework_os_spr::OpPayload) -> Result<Mutation, TextError> {
+    async fn decode_op<P, Mutation: OpText + OpBinary + super::Mutation<P>>(payload: &semio_os_spr::OpPayload) -> Result<Mutation, TextError> {
         match (&payload.binary, &payload.text) {
             (Some(bytes), _) => Mutation::decode_op(bytes).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1))),
             (None, Some(text)) => Mutation::parse_op(text),
@@ -169,7 +169,7 @@ where
         }
     }
 
-    async fn decode_ops<P, Mutation: OpText + OpBinary + super::Mutation<P>>(payloads: &[semio_framework_os_spr::OpPayload]) -> Result<Vec<Mutation>, TextError> {
+    async fn decode_ops<P, Mutation: OpText + OpBinary + super::Mutation<P>>(payloads: &[semio_os_spr::OpPayload]) -> Result<Vec<Mutation>, TextError> {
         let mut out = Vec::with_capacity(payloads.len());
         for payload in payloads {
             out.push(decode_op::<P, Mutation>(payload).await?);
@@ -207,7 +207,7 @@ where
             .collect::<Result<Vec<_>, String>>()
             .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(1, 1)))?;
         if !durable_messages.is_empty() {
-            edit_messages.push(semio_framework_os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
+            edit_messages.push(semio_os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
         }
         let mut edit = Edit {
             id: history_edit.id,
@@ -230,7 +230,7 @@ where
         conflicts.push(conflict_from_history_conflict(conflict).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(1, 1)))?);
     }
     let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
-    let mut transitions: Vec<semio_framework_os_spr::MutationEnvelope> = log.transitions.iter().map(|record| record.to_envelope(&log.doc_id)).collect();
+    let mut transitions: Vec<semio_os_spr::MutationEnvelope> = log.transitions.iter().map(|record| record.to_envelope(&log.doc_id)).collect();
     transitions.sort_by(|left, right| (left.timestamp.cmp_key(), left.mutation_id.0.as_str()).cmp(&(right.timestamp.cmp_key(), right.mutation_id.0.as_str())));
     let mut envelope = ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
         schema: log.schema,
@@ -246,11 +246,11 @@ where
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
         transitions:ArtifactHistoryLedger::try_from_preflighted(transitions).map_err(|_|TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history transition capacity exceeded".to_string(),TextSpan::at(1,1)))?,
-        history_shape: semio_framework_os_spr::HistoryShape::Document,
+        history_shape: semio_os_spr::HistoryShape::Document,
         open_transaction: None,
         viewer_checkpoint_id: None,
     });
-    let trunk = semio_framework_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
+    let trunk = semio_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
     envelope.active_alternative_id = log.viewer_line.clone().filter(|line| line != &trunk);
     envelope.viewer_checkpoint_id = log.viewer_checkpoint.clone();
     let composed = match &log.composition {

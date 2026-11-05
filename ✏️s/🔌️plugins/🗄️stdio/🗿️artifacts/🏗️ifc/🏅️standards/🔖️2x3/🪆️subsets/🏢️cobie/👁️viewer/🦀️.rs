@@ -9,23 +9,23 @@ use crate::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3Mutation;
 use crate::standards::v2x3::subsets::cobie::schema::snapshot::Ifc2x3Snapshot;
 use crate::viewer::ifc2x3_cobie::modes::view;
 use crate::viewer::ifc2x3_cobie::modes::view::windows::main;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::ArtifactView;
+use semio_plugin::ArtifactViewer;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ViewEmit;
-use semio_framework_plugin::Viewer;
+use semio_plugin::ViewEmit;
+use semio_plugin::Viewer;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Dialect
@@ -73,8 +73,8 @@ impl ArtifactViewer for Ifc2x3CobieViewer {
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_COBIE_DOCUMENT_SCHEMA;
     fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(inspector::topology(doc.snapshot))}
 
-    fn reference_birth()->Option<fn()->Result<Ifc2x3Snapshot,semio_framework_plugin::Fault>>{Some(||{
-        <crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction::new()).map_err(|error|semio_framework_plugin::reference_birth_fault("valid authored IFC2x3 cobie initial owner",format_args!("{error:?}")))
+    fn reference_birth()->Option<fn()->Result<Ifc2x3Snapshot,semio_plugin::Fault>>{Some(||{
+        <crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction as semio_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction::new()).map_err(|error|semio_plugin::reference_birth_fault("valid authored IFC2x3 cobie initial owner",format_args!("{error:?}")))
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
@@ -83,33 +83,33 @@ impl ArtifactViewer for Ifc2x3CobieViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        if body_key==inspector::BODY_KEY{return inspector::render(doc,_interaction,view_state,"s.stdio.ifc@2x3/cobie#viewer",false,cx).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);}
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        if body_key==inspector::BODY_KEY{return inspector::render(doc,_interaction,view_state,"s.stdio.ifc@2x3/cobie#viewer",false,cx).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);}
         if body_key == main::BODY_KEY {
-            return main::render_selected_in_context(doc.snapshot,cx,_interaction,inspector::DOMAIN,inspector::GRANULARITY).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+            return main::render_selected_in_context(doc.snapshot,cx,_interaction,inspector::DOMAIN,inspector::GRANULARITY).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -117,7 +117,7 @@ impl ArtifactViewer for Ifc2x3CobieViewer {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_ifc2x3_cobie_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_ifc2x3_cobie_viewer() -> semio_plugin::AppDefinition {
     let mut definition=Viewer::builder(IFC2X3_COBIE_DIALECT).document(["stdio", "ifc2x3"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::IFC2X3_COBIE_VIEW_MODE_ID).window_kind_def(main::definition()).window_kind_def(inspector::window_definition(false)).default_layout(view::layout()).build_definition();
     inspector::install_interaction(&mut definition);definition
 }

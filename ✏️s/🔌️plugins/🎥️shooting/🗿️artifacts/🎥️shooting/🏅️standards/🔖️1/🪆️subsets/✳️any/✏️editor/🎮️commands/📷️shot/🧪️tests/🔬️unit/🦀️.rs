@@ -25,7 +25,7 @@ use semio_framework_pack_json::json;
 #[allow(unused_imports)]
 use semio_framework_pack_json::Value;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::shooting::commands::shot::*;

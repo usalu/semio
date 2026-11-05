@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeActionQKLine where
         record: "ChangedActionQKLine",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Variable line load q_k of the member action", "Bauteileinwirkung: Veränderliche Streckenlast q_k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Variable line load q_k of the member action", "Bauteileinwirkung: Veränderliche Streckenlast q_k ändern")
     }
 }
 

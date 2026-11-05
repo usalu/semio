@@ -20,8 +20,8 @@ impl pack::snapshot::ArtifactPack for State{
  fn record_spec_producer()->Option<store::RecordSpecProducer>{Some(Self::__artifact_record_spec_producer())}
  fn borrowed_record_spec_producer()->Option<store::BorrowedRecordSpecProducer>{Some(Self::__artifact_borrowed_record_spec_producer())}
 }
-impl semio_framework_os_store_codec_registry::native_snapshot::OriginalArtifactPackReceiving for State{
- type Receiving=semio_framework_os_store_codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+impl semio_os_store_codec_registry::native_snapshot::OriginalArtifactPackReceiving for State{
+ type Receiving=semio_os_store_codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
  fn original_pack_birth_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self::Receiving>(),depth:1,..Default::default()}}
  fn admit_original_pack(source:&[u8],limits:protocol::PackLimits,native:&semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<(Self::Receiving,RetainedCloneProgress)>,ValueError>{Self::Receiving::admit(source,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),limits,native,grant)}
 }
@@ -52,7 +52,7 @@ impl protocol::OpText for Mutation{
  fn print_op(&self)->String{let(_,record)=<Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);let spec=<Self as semio_framework_dsl_record::DslVariants>::variants()[0].1;semio_framework_dsl_record::print(&record,&(spec.ordinary)(),semio_framework_dsl_record::JoinMode::Inline)}
 }
 impl WindowConfigApplyMutation<State> for Mutation{fn exchange(self,post:&mut State)->Result<Self,(ValueError,Self)>{let Self::Zoom{zoom}=self;Ok(Self::Zoom{zoom:std::mem::replace(&mut post.zoom,zoom)})}fn admissible(&self)->bool{let Self::Zoom{zoom}=self;zoom.is_finite()&&*zoom>0.0}}
-impl semio_framework_os_store_operation_wire::ArtifactOperationTargets for Mutation{
+impl semio_os_store_operation_wire::ArtifactOperationTargets for Mutation{
  fn len(&self)->usize{1}
  fn segment_len(&self,index:usize)->Result<usize,ValueError>{if index==0{Ok(4)}else{Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Window target ordinal is absent"))}}
  fn read_segment(&self,index:usize,offset:usize,output:&mut[u8])->Result<usize,ValueError>{if index!=0||offset>4{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Window target ordinal is absent"))}let source=&b"zoom"[offset..];let count=source.len().min(output.len());output[..count].copy_from_slice(&source[..count]);Ok(count)}
@@ -62,8 +62,8 @@ impl WindowConfigOwner for Owner{
  const WINDOW_KIND_ID:&'static str="genesis-camera";const SCHEMA:&'static str="test.window.genesis";const MAXIMUM_PUBLICATION_BYTES:usize=4096;
  type State=State;type Mutation=Mutation;type Edit=WindowConfigApplyEdit<State,Mutation>;const MAXIMUM_PREPARATION_DEPTH:usize=64;
  fn native_pair_demands()->Result<RetirementDemand,ValueError>{Ok(window_config_native_pair_demands::<Self::State>())}
- fn admit_native_pair(pack:&[u8],spr:&[u8],pack_limits:protocol::PackLimits,history_limits:semio_framework_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,output:&mut Option<Box<dyn WindowConfigNativePairReceiving<Self::State>>>)->Result<RetainedCloneProgress,semio_framework_os_store_codec_registry::native_snapshot::OriginalArtifactPairFailure>{admit_window_config_native_pair::<Self::State>(pack,spr,pack_limits,history_limits,native,grant,output)}
- fn native_operation_wire()->semio_framework_os_store_operation_wire::ArtifactOperationWire<Self::Mutation>{semio_framework_os_store_operation_wire::original_edit::with_original_edit_message(semio_framework_os_store_operation_wire::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)))}
+ fn admit_native_pair(pack:&[u8],spr:&[u8],pack_limits:protocol::PackLimits,history_limits:semio_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,output:&mut Option<Box<dyn WindowConfigNativePairReceiving<Self::State>>>)->Result<RetainedCloneProgress,semio_os_store_codec_registry::native_snapshot::OriginalArtifactPairFailure>{admit_window_config_native_pair::<Self::State>(pack,spr,pack_limits,history_limits,native,grant,output)}
+ fn native_operation_wire()->semio_os_store_operation_wire::ArtifactOperationWire<Self::Mutation>{semio_os_store_operation_wire::original_edit::with_original_edit_message(semio_os_store_operation_wire::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)))}
  fn initial_state_demands()->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<State>(),depth:1,..Default::default()})}
  fn initial_state(grant:RetainedCloneGrant)->Result<(State,RetainedCloneProgress),ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Window initial fixed state transfer was not funded"))}Ok((State::default(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
  fn initial_state_pack_source(state:&State)->Result<(&dyn FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),ValueError>{Ok((state,State::RECORD))}

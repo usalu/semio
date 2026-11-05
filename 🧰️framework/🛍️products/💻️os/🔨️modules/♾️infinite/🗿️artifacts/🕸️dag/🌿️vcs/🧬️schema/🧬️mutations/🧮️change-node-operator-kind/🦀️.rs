@@ -15,8 +15,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeOperatorKind
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-operator-kind", kind: "change-node-operator-kind", record: "ChangedNodeOperatorKind" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node operator kind {}", self.id), &format!("Knotenoperatorart {} ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change node operator kind {}", self.id), &format!("Knotenoperatorart {} ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.id.clone()]

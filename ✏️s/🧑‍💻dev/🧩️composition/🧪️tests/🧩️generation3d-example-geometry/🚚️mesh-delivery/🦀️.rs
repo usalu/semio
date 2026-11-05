@@ -58,7 +58,7 @@ fn editor_selection_ids(
     eval_json: &str,
     host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
     config: &semio_s_artifact_procedural_3d_editor_config::Generation3dConfig,
-    session: &semio_framework_os_flow::FlowEvalSession,
+    session: &semio_os_flow::FlowEvalSession,
     selected: &[String],
 ) -> Vec<String> {
     let marks = semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: Default::default(), selected: selected.iter().cloned().collect() };
@@ -71,7 +71,7 @@ fn viewer_selection_ids(
     eval_json: &str,
     host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
     config: &semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig,
-    session: &semio_framework_os_flow::FlowEvalSession,
+    session: &semio_os_flow::FlowEvalSession,
     selected: &[String],
 ) -> Vec<String> {
     let marks = semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview::Generation3dViewMarks { hovered: Default::default(), selected: selected.iter().cloned().collect() };
@@ -87,7 +87,7 @@ fn selection_json_ids(selection_json: &str) -> Vec<String> {
 
 /// 🧹️ Retires a `FlowEvalSession`, which rejects a live drop — the same `begin_close` + granted
 /// `close_step` loop production's `FlowInstanceOperationOwner::maintenance_step` runs.
-fn retire_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
+fn retire_eval_session(mut session: semio_os_flow::FlowEvalSession) {
     session.begin_close();
     for _ in 0..1_000_000 {
         let copy = session.next_close_copy_byte_demand().expect("the evaluation session quotes its next close copy").max(65_536);
@@ -102,7 +102,7 @@ fn retire_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
 }
 
 /// 🧩️ Resolves every painted geometry channel through the supplied Session's retained broker.
-fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_framework_os_flow::FlowEvalSession) {
+fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_os_flow::FlowEvalSession) {
     use semio_s_artifact_procedural_3d_preview_eval::pending_preview_tessellate_handles;
     use semio_s_artifact_procedural_3d_preview_eval::preview_tolerance;
     use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_BUDGET;
@@ -110,12 +110,12 @@ fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_fl
     let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preview evaluation parses");
     let tolerance = preview_tolerance(lod_mode);
     for handle in pending_preview_tessellate_handles(&eval, graph, session) {
-        let hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
+        let hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
         for _ in 0..4096 {
             if !session.note_pending_tessellate(hash, handle.clone()) { break; }
             let chunk = session.next_tessellate_chunk(hash) as usize;
             let envelope = geometry_session().tessellate_step_envelope_json(&handle, tolerance, PREVIEW_TESSELLATE_STEP_BUDGET as usize, PREVIEW_TESSELLATE_STEP_WALL_MICROS, chunk);
-            if !matches!(session.resolve_preview_tessellate(hash, &envelope), semio_framework_os_flow::PreviewTessellateOutcome::Working) { break; }
+            if !matches!(session.resolve_preview_tessellate(hash, &envelope), semio_os_flow::PreviewTessellateOutcome::Working) { break; }
         }
         assert!(session.preview_mesh_pack(&handle).is_some(), "painted handle {handle} must resolve through its owning Session");
     }
@@ -139,8 +139,8 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
     let tolerance = preview_tolerance(lod_mode);
     geometry_session().evict_mesh_cache_for_handle(&handle);
     geometry_session().cancel_all_tessellations();
-    let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
-    let mut session = semio_framework_os_flow::FlowEvalSession::new().with_geometry_port(geometry_session().port());
+    let node_hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
+    let mut session = semio_os_flow::FlowEvalSession::new().with_geometry_port(geometry_session().port());
     let mut round_trips = 0usize;
     let mut chunks = 0u32;
     let mut phase = String::new();
@@ -157,9 +157,9 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
         let parsed: serde_json::Value = serde_json::from_str(&envelope).expect("envelope json");
         phase = parsed.get("phase").and_then(serde_json::Value::as_str).unwrap_or_default().to_string();
         chunks = chunks.max(parsed.get("chunks").and_then(serde_json::Value::as_u64).unwrap_or_default() as u32);
-        assert!(envelope.len() <= semio_framework_os_flow::mesh::tessellate_envelope_maximum_bytes(), "{}: a {} B envelope exceeds the declared transfer unit", fixture.example, envelope.len());
+        assert!(envelope.len() <= semio_os_flow::mesh::tessellate_envelope_maximum_bytes(), "{}: a {} B envelope exceeds the declared transfer unit", fixture.example, envelope.len());
         match session.resolve_preview_tessellate(node_hash, &envelope) {
-            semio_framework_os_flow::PreviewTessellateOutcome::Working => continue,
+            semio_os_flow::PreviewTessellateOutcome::Working => continue,
             _ => break,
         }
     }

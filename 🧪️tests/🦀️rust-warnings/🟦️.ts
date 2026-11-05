@@ -10,7 +10,7 @@ export function rustWarningScopeChecks(root: string, rustWarningTargetScope: (ro
   for (const row of fixture.cases) {
     const scope = rustWarningTargetScope(root, row.target);
     for (const pkg of row.requiredPackages) if (!scope.packages.includes(pkg)) throw new Error(`[verify rust-warnings] ${row.target} misses ${pkg}.`);
-    for (const [actual, expected] of [[scope.scopeArgs, row.scopeArgs], [scope.targetArgs, row.targetArgs], [scope.packageArgs["semio-framework-os-renderer-wgpu"] ?? [], row.rendererFeatures]]) {
+    for (const [actual, expected] of [[scope.scopeArgs, row.scopeArgs], [scope.targetArgs, row.targetArgs], [scope.packageArgs["semio-renderer-wgpu"] ?? [], row.rendererFeatures]]) {
       if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`[verify rust-warnings] target arguments differ for ${row.target}.`);
     }
     if (new Set(scope.packages).size !== scope.packages.length) throw new Error(`[verify rust-warnings] duplicate package in ${row.target}.`);

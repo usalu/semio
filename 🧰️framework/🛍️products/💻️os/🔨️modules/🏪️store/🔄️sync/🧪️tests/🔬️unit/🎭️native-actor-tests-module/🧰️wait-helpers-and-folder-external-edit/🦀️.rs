@@ -1,8 +1,8 @@
     // 🧰️ Wait helpers and folder external edit: the demo envelope, the bounded waits for predicates and events and the folder external edit that delivers remote operations.
 
 //#region 🧪️Actor
-    async fn demo_envelope(document_id: &str) -> semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
-        create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
+    async fn demo_envelope(document_id: &str) -> semio_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
+        create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
     }
 
     async fn wait_until<Fut>(label: &str, mut predicate: impl FnMut() -> Fut)
@@ -85,13 +85,13 @@
     async fn folder_external_edit_delivers_remote_operations() {
     const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         ensure_demo_codec_registered().await;
-        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let dir = semio_os_store_test_support::tempdir().expect("tempdir");
         let host = ArtifactHost::new(test_pool());
         let channels = host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
         let mut events = host.subscribe("doc-a").await;
-        let mut store = semio_framework_os_store_test_support::plain_test_store(demo_envelope("doc-a").await).await;
+        let mut store = semio_os_store_test_support::plain_test_store(demo_envelope("doc-a").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
 
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply");
@@ -100,7 +100,7 @@
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         let mut archive = wait_until_value("persisted edit on disk", || async {
             let bytes = storage.read_archive("doc-a").await.expect("read archive")?;
-            let archive = semio_framework_os_spr::decode_document_archive_bytes(&bytes).await.ok()?;
+            let archive = semio_os_spr::decode_document_archive_bytes(&bytes).await.ok()?;
             if spr_op_ids(&archive.parent_spr).await.ok()?.is_empty() {
                 None
             } else {
@@ -109,17 +109,17 @@
         })
         .await;
 
-        let external_edit = semio_framework_os_spr::HistoryEdit { line: None,
+        let external_edit = semio_os_spr::HistoryEdit { line: None,
             id: "external-1".into(),
             actor: Some("peer".into()),
             started_at: "0".into(),
             finished_at: None, verb: None,
-            ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
-            inverse: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
+            ops: vec![semio_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
+            inverse: vec![semio_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
             meta: None, lane: None,
         };
-        archive.parent_spr = semio_framework_os_store_text_io::text_format::append_history_events_to_spr(&archive.parent_spr, &[external_edit], &[]).await.expect("append external edit");
-        let bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode externally changed archive");
+        archive.parent_spr = semio_os_store_text_io::text_format::append_history_events_to_spr(&archive.parent_spr, &[external_edit], &[]).await.expect("append external edit");
+        let bytes = semio_os_spr::encode_document_archive_bytes(&archive).expect("encode externally changed archive");
         storage.write_archive("doc-a", "demo/v1", &bytes).await.expect("out-of-band archive write");
 
         channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
@@ -137,6 +137,6 @@
         assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
         assert_eq!(store.snapshot().expect("snapshot").n, 42);
         host.close("doc-a");
-        semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+        semio_os_store_test_support::close_plain_test_store(&mut store);
     }
 //#endregion 🧪️Actor

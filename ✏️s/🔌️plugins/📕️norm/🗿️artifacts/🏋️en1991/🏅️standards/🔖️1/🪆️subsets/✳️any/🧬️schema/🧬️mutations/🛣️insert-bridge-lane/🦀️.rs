@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertBridgeLane where O
         record: "InsertedBridgeLanes",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert bridge lane {}", self.item.id), &format!("Brückenfahrstreifen {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert bridge lane {}", self.item.id), &format!("Brückenfahrstreifen {} einfügen", self.item.id))
     }
 }
 

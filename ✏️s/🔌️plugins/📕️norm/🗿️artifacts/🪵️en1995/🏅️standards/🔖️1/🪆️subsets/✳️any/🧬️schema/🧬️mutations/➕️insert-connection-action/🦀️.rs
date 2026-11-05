@@ -10,7 +10,7 @@ pub struct InsertConnectionAction { pub connection_id: String, pub index: usize,
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for InsertConnectionAction where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::remove_connection_action::RemoveConnectionAction> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "connection-action", kind: "insert-connection-action", record: "InsertedConnectionAction" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert action {} into connection {} at #{}", self.action.id, self.connection_id, self.index), &format!("Einwirkung {} in Verbindung {} an #{} einfügen", self.action.id, self.connection_id, self.index)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert action {} into connection {} at #{}", self.action.id, self.connection_id, self.index), &format!("Einwirkung {} in Verbindung {} an #{} einfügen", self.action.id, self.connection_id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone(), self.action.id.clone()] }
 }
 

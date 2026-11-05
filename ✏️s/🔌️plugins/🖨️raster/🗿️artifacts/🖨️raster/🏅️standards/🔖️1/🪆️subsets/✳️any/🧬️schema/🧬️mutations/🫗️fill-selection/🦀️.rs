@@ -98,7 +98,7 @@ pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for FillSelection where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::fill_selection::FillSelection> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "selection", kind: "fill-selection", record: "FilledSelection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let layer = &self.layer_id;
         let (en, de) = match (self.target.as_str(), self.selection.is_some()) {
             ("mask", true) => (format!("Fill the selection of the mask of layer {layer}"), format!("Auswahl der Maske von Ebene {layer} füllen")),
@@ -106,7 +106,7 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for FillSelection where Op: 
             (_, true) => (format!("Fill the selection on layer {layer}"), format!("Auswahl auf Ebene {layer} füllen")),
             _ => (format!("Fill layer {layer}"), format!("Ebene {layer} füllen")),
         };
-        semio_framework_ui_locale::LocalizedLabel::native(&en, &de)
+        semio_ui_locale::LocalizedLabel::native(&en, &de)
     }
 
     fn target(&self) -> Vec<String> {

@@ -6,7 +6,7 @@
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
-pub use semio_framework_os_channel::*;
+pub use semio_os_channel::*;
 use protocol::wire::command_ingress::{FixedCommandPage, CommandPageSet, PagedCommand, COMMAND_PAGE_MAXIMUM_BYTES, INVOCATION_RESULT_PACK_MAXIMUM_BYTES};
 
 #[path = "../🔬️unit/🦀️.rs"]
@@ -14,8 +14,8 @@ mod tests;
 
 #[path = "../../📦️archive/🛬️decode/🧪️tests"]
 pub mod archive_decoding {
-    pub use semio_framework_os_channel::archive_decoding::*;
-    use semio_framework_os_channel::archive_schema::*;
+    pub use semio_os_channel::archive_decoding::*;
+    use semio_os_channel::archive_schema::*;
     use semio_framework_value::{RetainedCloneGrant, ValueError, ValueRefusalKind};
     use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     use semio_framework_value::retained_clone::RetainedCloneProgress;

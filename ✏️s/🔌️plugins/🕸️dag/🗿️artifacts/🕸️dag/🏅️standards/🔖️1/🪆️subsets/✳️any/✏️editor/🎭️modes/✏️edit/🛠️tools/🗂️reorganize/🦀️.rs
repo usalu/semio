@@ -10,14 +10,14 @@ use crate::{DagScene, SemioGraphMutation};
 use infinite_canvas::board::schema::layout::{DagLayoutOptions};
 use infinite_board_port_directed_dag::{DagHost};
 use semio_framework_artifact_infinite_dag::{dag_host_snapshot_from_document, DAG_DOCUMENT_SCHEMA};
-use semio_framework_os_infinite_directed_presentation::{DagHostSnapshot};
+use semio_os_infinite_directed_presentation::{DagHostSnapshot};
 
 
 use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity, layout_run_job, layout_run_overlay_positions, LayoutRunConfig, LayoutRunEdge, LayoutRunEncodeError, LayoutRunGraph, LayoutRunNode, LayoutRunOpEncoder, LayoutRunPoint, LayoutRunResume, LayoutRunSpringLaw};
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::ToolDefinition;
-use semio_framework_plugin::ToolRunJob;
+use semio_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::ToolDefinition;
+use semio_plugin::ToolRunJob;
 use semio_framework_tool_run::{JobKindId, ToolRunIdentity};
 use std::collections::{BTreeSet, HashMap};
 

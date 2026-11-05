@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointPlateGauge wh
         record: "ChangedJointPlateGauge",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Gauge p_2 of the joint plate", "Anschlussblech: Lochabstand quer p_2 ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Gauge p_2 of the joint plate", "Anschlussblech: Lochabstand quer p_2 ändern")
     }
 }
 

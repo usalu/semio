@@ -10,7 +10,7 @@ pub struct ChangeFastenerEdgeDistance { pub fastener_id: String, pub new_value: 
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFastenerEdgeDistance where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_fastener_edge_distance::ChangeFastenerEdgeDistance> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fastener-edge-distance", kind: "change-fastener-edge-distance", record: "ChangedFastenerEdgeDistance" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change edge distance a₄ of fastener {}", self.fastener_id), &format!("Randabstand a₄ von Fastener {} ändern", self.fastener_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change edge distance a₄ of fastener {}", self.fastener_id), &format!("Randabstand a₄ von Fastener {} ändern", self.fastener_id)) }
     fn target(&self) -> Vec<String> { vec![self.fastener_id.clone()] }
 }
 

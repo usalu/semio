@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeFootbridgeAssumedS
         record: "ChangedFootbridgeAssumedServiceAxle",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change footbridge: Assumed service vehicle axle load (0 = none)", "Fußgängerbrücke: Angesetzte Dienstfahrzeug-Achslast (0 = keine) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change footbridge: Assumed service vehicle axle load (0 = none)", "Fußgängerbrücke: Angesetzte Dienstfahrzeug-Achslast (0 = keine) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

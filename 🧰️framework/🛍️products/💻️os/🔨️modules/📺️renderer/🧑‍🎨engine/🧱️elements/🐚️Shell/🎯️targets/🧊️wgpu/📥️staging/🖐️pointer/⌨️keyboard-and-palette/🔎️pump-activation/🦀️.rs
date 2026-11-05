@@ -111,11 +111,11 @@ impl<'ctx> PointerCtx<'ctx> {
         };
         if let Some(value) = self.input.widget_maps.slider_live_values.get(id).copied() {
             if let Some(meta) = self.input.widget_maps.slider_metas.get(id).cloned() {
-                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: semio_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
             }
         } else if let Some(value) = self.input.widget_maps.ring_live_values.get(id).copied() {
             if let Some(meta) = self.input.widget_maps.ring_metas.get(id).cloned() {
-                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: semio_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
             }
         }
         Ok(())
@@ -137,7 +137,7 @@ impl<'ctx> PointerCtx<'ctx> {
             let base = id.trim_end_matches(".input");
             if let Some(meta) = self.input.widget_maps.stepper_metas.get(base).cloned() {
                 let parsed = input.text_view().parse::<f64>().unwrap_or(meta.value);
-                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": parsed }) }).await?;
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: semio_renderer_wgpu_host_base::action_args_json!({ "value": parsed }) }).await?;
                 input.blur_input();
                 return Ok(());
             }
@@ -158,25 +158,25 @@ impl<'ctx> PointerCtx<'ctx> {
             return Ok(());
         };
         if self.input.finish_canvas2d_catalogue_drop(x, y, &drag.drag_data, input) {
-            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
+            semio_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
             self.surfaces.clear_world3d_catalogue_drop_previews();
             return Ok(());
         }
         let surfaces = self.surfaces.node_graph_states.iter().map(|(id, surface)| (id.as_str(), surface.bounds, surface.controller_id.as_str())).collect::<Vec<_>>();
-        if let Some(action) = semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_flow_widget_drop_action(x, y, &drag.drag_data, &surfaces) {
-            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
+        if let Some(action) = semio_renderer_wgpu_engine_graph::node_graph::node_graph_flow_widget_drop_action(x, y, &drag.drag_data, &surfaces) {
+            semio_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
             self.surfaces.clear_world3d_catalogue_drop_previews();
             self.as_actions().dispatch_action(action).await?;
             return Ok(());
         }
         if let Some(action) = self.surfaces.world3d_catalogue_drop_action(x, y, &drag.drag_data) {
-            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
+            semio_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
             self.surfaces.clear_world3d_catalogue_drop_previews();
             self.as_actions().dispatch_action(action).await?;
             return Ok(());
         }
-        if let Some(action) = semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_catalogue_drop_action(x, y, &drag.drag_data, &surfaces) {
-            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
+        if let Some(action) = semio_renderer_wgpu_engine_graph::node_graph::node_graph_catalogue_drop_action(x, y, &drag.drag_data, &surfaces) {
+            semio_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
             self.surfaces.clear_world3d_catalogue_drop_previews();
             self.as_actions().dispatch_action(action).await?;
             return Ok(());
@@ -184,13 +184,13 @@ impl<'ctx> PointerCtx<'ctx> {
         if let Some(target) = drag.drop_target_id.as_deref().filter(|target| *target != drag.source_id) {
             let window = input.hit_at(x, y).and_then(|hit| self.input.retained_hit_window(hit)).map(|(window, _)| window);
             if let Some(window) = window {
-                let dropped = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::apply_tree_row_drop(&window, target, &drag.drag_data, input).map_err(|_| format!("tree row drop on '{target}' was refused by the action queue"))?;
+                let dropped = semio_renderer_wgpu_ui_engine::retained_ui_engine::apply_tree_row_drop(&window, target, &drag.drag_data, input).map_err(|_| format!("tree row drop on '{target}' was refused by the action queue"))?;
                 if dropped {
                     self.settle.owe_settle();
                 }
             }
         }
-        semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
+        semio_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
         self.surfaces.clear_world3d_catalogue_drop_previews();
         Ok(())
     }
@@ -230,7 +230,7 @@ impl<'ctx> PointerCtx<'ctx> {
         } else if let Some(action) = &item.action {
             if let Some(window_kind_id) = action.strip_prefix("window:") {
                 let controller_id = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
-                let args = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowKindId": window_kind_id });
+                let args = semio_renderer_wgpu_host_base::action_args_json!({ "windowKindId": window_kind_id });
                 self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: semio_framework::FOCUS_WINDOW_ACTION_ID.into(), args }).await?;
             } else if let Some(rest) = action.strip_prefix("action-panel:") {
                 if let Some((window_id, action_id)) = rest.split_once(':') {
@@ -275,7 +275,7 @@ impl<'ctx> PointerCtx<'ctx> {
             self.as_actions().dispatch_action(ActionDescriptor {
                 controller_id,
                 action: "setMediaNodeSelection".into(),
-                args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({
+                args: semio_renderer_wgpu_host_base::action_args_json!({
                     "surfaceId": item.surface_id,
                     "nodeIds": [item.node_id],
                 }),
@@ -365,7 +365,7 @@ impl<'ctx> PointerCtx<'ctx> {
         if self.docs.session.as_ref().and_then(|session| session.view_state.active_tool_id.as_deref()) == Some(tool_id.as_str()) {
             return Ok(());
         }
-        self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "toolId": tool_id }) }).await
+        self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "toolId": tool_id }) }).await
     }
 
     /// ⌨️ Applies the shell verbs that need the async funnel — the other half of the same table.

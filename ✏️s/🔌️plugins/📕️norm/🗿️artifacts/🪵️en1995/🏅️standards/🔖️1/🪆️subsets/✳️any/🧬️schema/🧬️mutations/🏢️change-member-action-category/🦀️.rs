@@ -11,7 +11,7 @@ pub struct ChangeMemberActionCategory { pub member_id: String, pub action_id: St
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberActionCategory where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_action_category::ChangeMemberActionCategory> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-action-category", kind: "change-member-action-category", record: "ChangedMemberActionCategory" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Imposed load category of action {} on member {}", self.action_id, self.member_id), &format!("Nutzlastkategorie der Einwirkung {} an Bauteil {} ändern", self.action_id, self.member_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Imposed load category of action {} on member {}", self.action_id, self.member_id), &format!("Nutzlastkategorie der Einwirkung {} an Bauteil {} ändern", self.action_id, self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone(), self.action_id.clone()] }
 }
 

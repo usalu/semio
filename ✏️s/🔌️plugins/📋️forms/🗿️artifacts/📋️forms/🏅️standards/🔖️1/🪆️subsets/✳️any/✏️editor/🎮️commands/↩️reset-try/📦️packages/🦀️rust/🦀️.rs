@@ -1,6 +1,6 @@
 //! ▶️ The try-wizard commands of `semio-s-artifact-forms-forms`: stepping, submitting and the staged try values, read through the same `crate::` namespace the other commands use.
 
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as dsl;
 
 pub use crate::schema::snapshot::FormsSnapshot;
 pub mod mutations {
@@ -47,10 +47,6 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod forms {
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
-        }
         pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
         #[path = "."]
         pub mod commands {
@@ -81,3 +77,5 @@ pub mod editor {
         }
     }
 }
+
+pub use semio_s_artifact_forms_forms_config::forms_config;

@@ -15,7 +15,7 @@ use semio_framework_test_fixtures::fixture_text;
 struct BudgetRegistry(flow_extension_sdk::ExtensionEvaluationResources);
 impl BudgetRegistry {fn new(session:&Session)->Self {Self(flow_extension_sdk::ExtensionEvaluationResources::new(module_registry(session)))}}
 impl std::ops::Deref for BudgetRegistry {type Target=neural_engine::SharedRegistry;fn deref(&self)->&Self::Target {self.0.registry()}}
-impl Drop for BudgetRegistry {fn drop(&mut self){use semio_framework_plugin::ExtensionResourceOwner;self.0.begin_close();while !self.0.terminal_is_empty(){self.0.close_step(4096,65536).unwrap();}}}
+impl Drop for BudgetRegistry {fn drop(&mut self){use semio_plugin::ExtensionResourceOwner;self.0.begin_close();while !self.0.terminal_is_empty(){self.0.close_step(4096,65536).unwrap();}}}
 
 static EVALUATE_BUDGET_FIXTURE_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json"));
 

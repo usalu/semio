@@ -52,7 +52,7 @@ async fn a_refused_local_transition_retracts_and_the_author_converges_with_the_h
     assert_eq!((author.generation(), author.0.content_revision(), log_ids(&author)), (generation, accepted.0, log_ids(&hub)), "a known, unknown or foreign name retracts nothing");
     let (spr, retracted) = retract_history_transitions_from_spr(&refused_log.spr, &refused).await.expect("the persisted log retracts");
     assert_eq!(retracted, authored, "the persisted log retracts the same closure");
-    let persisted = |bytes: Vec<u8>| async move { semio_framework_os_spr::decode_history(&bytes, &semio_framework_os_spr::DecodeOptions::default()).await.expect("log decodes").transitions.into_iter().map(|record| record.id).collect::<Vec<_>>() };
+    let persisted = |bytes: Vec<u8>| async move { semio_os_spr::decode_history(&bytes, &semio_os_spr::DecodeOptions::default()).await.expect("log decodes").transitions.into_iter().map(|record| record.id).collect::<Vec<_>>() };
     assert_eq!(persisted(spr).await, persisted(before_refusal.spr).await);
 }
 //#endregion 🧪️RetractionLaws
@@ -83,7 +83,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     loop {
         let mut work = 0;
         let grant=fixture_planning_policy();
-        let step = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(preview.as_mut().unwrap(), grant, control, &mut || { work += 1; true })).unwrap();
+        let step = semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(preview.as_mut().unwrap(), grant, control, &mut || { work += 1; true })).unwrap();
         assert!(work <= law["maximumWorkPerStep"].as_u64().unwrap() as usize);
         assert_eq!(hot_path_census::take().digested, 0, "trusted prefixes need no history digest scan");
         assert_eq!(store.snapshot_ref().n, head);
@@ -106,7 +106,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     loop {
         let mut work = 0;
         let grant=fixture_planning_policy();
-        let step = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_report_replay(replay.as_mut().unwrap(), grant, control, &mut || { work += 1; true })).unwrap();
+        let step = semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_report_replay(replay.as_mut().unwrap(), grant, control, &mut || { work += 1; true })).unwrap();
         assert!(work <= 1);
         assert_eq!(store.snapshot_ref().n, head);
         slices += 1;
@@ -153,7 +153,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
         let mut cancelled = Some(store.begin_derived_history_preview(target.clone(), accepted.clone()).unwrap());
         for _ in 0..stop.as_u64().unwrap() {
             let grant=fixture_planning_policy();
-            if matches!(semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(cancelled.as_mut().unwrap(), grant, control, &mut || true)).unwrap(), ReplayStep::Finished(_)) { break; }
+            if matches!(semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(cancelled.as_mut().unwrap(), grant, control, &mut || true)).unwrap(), ReplayStep::Finished(_)) { break; }
         }
         let grant=physical_test_close_grant();
         let(mut retirement,birth)=store.retire_derived_history_preview(&mut cancelled,grant).unwrap().unwrap();assert!(birth.fits(grant));
@@ -174,7 +174,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
         let mut cancelled = Some(store.begin_derived_report_replay(accepted.clone(), Some(target.clone())).unwrap());
         for _ in 0..stop.as_u64().unwrap() {
             let grant=fixture_planning_policy();
-            if matches!(semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_report_replay(cancelled.as_mut().unwrap(), grant, control, &mut || true)).unwrap(), ReplayStep::Finished(_)) { break; }
+            if matches!(semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_report_replay(cancelled.as_mut().unwrap(), grant, control, &mut || true)).unwrap(), ReplayStep::Finished(_)) { break; }
         }
         let grant=physical_test_close_grant();
         let(mut retirement,birth)=store.retire_derived_report_replay(&mut cancelled,grant).unwrap().unwrap();assert!(birth.fits(grant));
@@ -197,7 +197,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     let mut stale = store.begin_derived_history_preview(target, accepted).unwrap();
     apply(&mut store, vec![add(1)]).await;
     let grant=fixture_planning_policy();
-    assert!(semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(&mut stale, grant, control, &mut || true)).is_err());
+    assert!(semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(&mut stale, grant, control, &mut || true)).is_err());
     let tail = operation_ids(&store).last().unwrap().clone();
     assert_eq!(store.mutation_position(&tail).unwrap(), (2, 0));
     fixture_author(&mut store, ArtifactCommand::Undo).await.unwrap();

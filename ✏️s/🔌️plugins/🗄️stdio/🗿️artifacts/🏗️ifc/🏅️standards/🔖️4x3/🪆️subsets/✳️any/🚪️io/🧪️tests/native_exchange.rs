@@ -48,7 +48,7 @@ fn actual_composer_entries_read_only_their_declared_source_dialects() {
 
 #[test]
 fn erased_composers_publish_target_owned_native_packs_in_both_directions() {
-    use semio_framework_plugin::io::{ErasedComposeSource,IoPayload};
+    use semio_plugin::io::{ErasedComposeSource,IoPayload};
     let source=crate::io::parse_ifc4x3_step(include_str!("triangulated.ifc")).unwrap();
     let export=&entries()[0];
     let target=semio_framework_async::poll::resolve_ready((export.compose)(&[ErasedComposeSource {dialect:crate::io::IFC4X3_DIALECT,payload:IoPayload::Binary(source.encode_pack())}])).unwrap();

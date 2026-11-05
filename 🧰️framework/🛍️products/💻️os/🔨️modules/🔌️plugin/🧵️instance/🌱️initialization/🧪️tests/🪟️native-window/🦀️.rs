@@ -1,23 +1,23 @@
 //! 🪟️ A genuine scalar native App uses the existing Window State, operation receiver and semantic factory.
-use semio_framework_os_kernel as store;
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as pack;
-use semio_framework_os_kernel as dsl;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::*;
-use semio_framework_plugin_window_config::*;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_os_kernel as store;
+use semio_os_kernel as protocol;
+use semio_os_kernel as pack;
+use semio_os_kernel as dsl;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_views::*;
+use semio_plugin_window_config::*;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use std::{sync::Arc,mem::size_of};
 #[path="../../../../🪟️window/🎚️config/🗄️store-owners/🌱️initialization/🎟️birth/🧪️tests/🧸️fixture/🦀️.rs"]mod scalar;
 pub(crate) use scalar::{State,Mutation,Owner};
-semio_framework_os_kernel::original_ordinal_operation_receiving!(Mutation);
+semio_os_kernel::original_ordinal_operation_receiving!(Mutation);
 impl semio_framework_schema_composition::ArtifactCompositionFields for State{fn visit_child_refs<'a,V:semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self,_:&mut V)->Result<(),V::Error>{Ok(())}}
 impl store::SemanticMutation<State> for Mutation{
  fn kinds()->&'static[store::SemanticDescriptor]{&[store::SemanticDescriptor{verb:"set",entity:"zoom",kind:"set-zoom",record:"Zoom"}]}
  fn semantics(&self)->&'static store::SemanticDescriptor{&Self::kinds()[0]}
- fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native("Set Zoom","Zoom setzen")}
+ fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native("Set Zoom","Zoom setzen")}
  fn target(&self)->Vec<String>{Vec::new()}
 }
 /// 🏭️ Three scalar lanes retain the Window owner's actual native semantic catalog.
@@ -34,7 +34,7 @@ impl<const CONFIG:bool> OriginalFixedStoreInitial for ScalarGenesis<CONFIG>{type
  fn initial_state_demands()->Result<RetirementDemand,ValueError>{Owner::initial_state_demands()}
  fn initial_state(grant:RetainedCloneGrant)->Result<(State,RetainedCloneProgress),ValueError>{Owner::initial_state(grant)}
 }
-pub(crate) use semio_framework_plugin_interaction::original_genesis::InteractionGenesis;
+pub(crate) use semio_plugin_interaction::original_genesis::InteractionGenesis;
 /// 🧪️ This App's document, config and draft use the original native scalar vocabulary without a cold mutation capability.
 #[derive(Default,semio_framework_value::RetireOwned)]
 pub(crate) struct NativeWindowApp;
@@ -43,8 +43,8 @@ impl ArtifactApp for NativeWindowApp{
  const APP_ID:&'static str="test.window.genesis@1/*#native-run";const DOCUMENT_SCHEMA:&'static str=Owner::SCHEMA;
  type Snapshot=State;type Mutation=Mutation;type Config=State;type ConfigMutation=Mutation;type Draft=State;type DraftMutation=Mutation;type Presence=NoPresence;type PresenceMutation=NoPresenceMutation;type Transient=NoTransient;type TransientMutation=NoTransientMutation;type Command=NoConfigMutation;
  
- async fn handle(command:&Self::Command,_:&ArtifactView<'_,State>,_:&ConfigView<'_,State>,_:&InteractionView<'_>,_:Option<&semio_framework::ViewModel>,_:&DraftView<'_,State>,_:&semio_framework_2d_compute::EngineHandles)->semio_framework_plugin_decl_emission::ArtifactMutationOutcome<Mutation,Mutation,Mutation>{match *command{}}
- async fn render(_:&str,_:&ArtifactView<'_,State>,_:&ConfigView<'_,State>,_:&semio_framework::ViewModel)->semio_framework_plugin_interaction::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree>{Err(semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError::new("native-window-fixture","fixture declares its borrowed scalar through its original ToolRun presentation"))}
+ async fn handle(command:&Self::Command,_:&ArtifactView<'_,State>,_:&ConfigView<'_,State>,_:&InteractionView<'_>,_:Option<&semio_framework::ViewModel>,_:&DraftView<'_,State>,_:&semio_framework_2d_compute::EngineHandles)->semio_plugin_decl_emission::ArtifactMutationOutcome<Mutation,Mutation,Mutation>{match *command{}}
+ async fn render(_:&str,_:&ArtifactView<'_,State>,_:&ConfigView<'_,State>,_:&semio_framework::ViewModel)->semio_plugin_interaction::UiAssemblyResult<semio_ui_runtime::ComponentTree>{Err(semio_plugin_ownership::sdk_fault::PluginAssemblyError::new("native-window-fixture","fixture declares its borrowed scalar through its original ToolRun presentation"))}
  fn document_store_owners_source_demands()->Result<RetirementDemand,ValueError>{<WindowConfigInitializationOwners<Owner> as store::os_store::document_store_owners::DocumentStoreOwnerProducer<State,Mutation>>::source_demands()}
  fn build_document_store_owners(grant:RetainedCloneGrant)->Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<State,Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<State,Mutation>>>{Some(Owner::build_store_owners(grant))}
  fn build_artifact_store_one_item_preparation_factory()->Option<Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<State,Mutation>>>{Some(Owner::build_one_item_preparation_factory())}

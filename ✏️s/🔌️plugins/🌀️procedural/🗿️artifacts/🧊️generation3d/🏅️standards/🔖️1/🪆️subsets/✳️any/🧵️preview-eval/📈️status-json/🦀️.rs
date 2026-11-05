@@ -97,26 +97,26 @@ pub fn preview_progress_status_json(session: Option<&FlowEvalSession>, run: Opti
 /// the unaddressable branch is provable without mutating the process-global contribution table (a
 /// test that uninstalls and reinstalls it poisons the flow catalogue's cache lock and leaves the
 /// neural registry unretired for every later test in the binary).
-pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> String {
+pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, address: Result<String, semio_os_flow::FlowExtensionAddressMiss>) -> String {
     let status = session.map(FlowEvalSession::preview_tessellate_status).unwrap_or_default();
     let eval_status = session.map(FlowEvalSession::preview_eval_status).unwrap_or_default();
     let chain = session.map(FlowEvalSession::preview_chain_status).unwrap_or_default();
     let phase = if address.is_err() {
-        semio_framework_os_flow::PreviewTessellatePhase::Faulted
+        semio_os_flow::PreviewTessellatePhase::Faulted
     } else if session.is_some_and(FlowEvalSession::preview_cancelled) {
-        semio_framework_os_flow::PreviewTessellatePhase::Cancelled
+        semio_os_flow::PreviewTessellatePhase::Cancelled
     } else {
         status.phase
     };
     let abortable = run.filter(|run| preview_eval_run_is_abortable(run) && address.is_ok() && !chain.settled());
-    let show_eval_phase = eval_status.in_flight > 0 && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle);
-    let show_chain_phase = !show_eval_phase && chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle);
+    let show_eval_phase = eval_status.in_flight > 0 && status.in_flight == 0 && matches!(phase, semio_os_flow::PreviewTessellatePhase::Idle);
+    let show_chain_phase = !show_eval_phase && chain.working && status.in_flight == 0 && matches!(phase, semio_os_flow::PreviewTessellatePhase::Idle);
     let (phase_tag, english, german) = if show_eval_phase {
         let (english, german) = eval_status.phase.labels();
         (eval_status.phase.tag(), english, german)
     } else if show_chain_phase {
-        let (english, german) = semio_framework_os_flow::PreviewEvalPhase::Computing.labels();
-        (semio_framework_os_flow::PreviewEvalPhase::Computing.tag(), english, german)
+        let (english, german) = semio_os_flow::PreviewEvalPhase::Computing.labels();
+        (semio_os_flow::PreviewEvalPhase::Computing.tag(), english, german)
     } else {
         let (english, german) = phase.labels();
         (phase.tag(), english, german)
@@ -125,7 +125,7 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     label.insert("en", semio_framework_pack_json::Value::String(english.to_string()));
     label.insert("de", semio_framework_pack_json::Value::String(german.to_string()));
     let mut progress = semio_framework_pack_json::Object::new();
-    let chain_progress = chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle) && (chain.nodes_total > 0 || eval_status.in_flight == 0);
+    let chain_progress = chain.working && status.in_flight == 0 && matches!(phase, semio_os_flow::PreviewTessellatePhase::Idle) && (chain.nodes_total > 0 || eval_status.in_flight == 0);
     let (units_done, units_total) = if chain_progress {let(done,total)=chain.units();(u64::from(done),u64::from(total))} else { (status.units_done, status.units_total) };
     progress.insert("unitsDone", semio_framework_pack_json::Value::from(u64::from(units_done)));
     progress.insert("unitsTotal", semio_framework_pack_json::Value::from(u64::from(units_total)));
@@ -162,17 +162,17 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
         message.insert("en", semio_framework_pack_json::Value::String(english));
         message.insert("de", semio_framework_pack_json::Value::String(german));
         let mut fault = semio_framework_pack_json::Object::new();
-        fault.insert("code", semio_framework_pack_json::Value::String(semio_framework_os_flow::ExtensionEvaluateFault::CODE.to_string()));
+        fault.insert("code", semio_framework_pack_json::Value::String(semio_os_flow::ExtensionEvaluateFault::CODE.to_string()));
         fault.insert("extensionId", semio_framework_pack_json::Value::String(evaluate_fault.extension_id.clone()));
         fault.insert("capability", semio_framework_pack_json::Value::String(evaluate_fault.capability.clone()));
         fault.insert("faultCode", semio_framework_pack_json::Value::String(evaluate_fault.code.clone()));
         fault.insert("faultMessage", semio_framework_pack_json::Value::String(evaluate_fault.message.clone()));
         fault.insert("message", semio_framework_pack_json::Value::Object(message));
-        let (faulted_en, faulted_de) = semio_framework_os_flow::PreviewTessellatePhase::Faulted.labels();
+        let (faulted_en, faulted_de) = semio_os_flow::PreviewTessellatePhase::Faulted.labels();
         let mut faulted_label = semio_framework_pack_json::Object::new();
         faulted_label.insert("en", semio_framework_pack_json::Value::String(faulted_en.to_string()));
         faulted_label.insert("de", semio_framework_pack_json::Value::String(faulted_de.to_string()));
-        object.insert("phase", semio_framework_pack_json::Value::String(semio_framework_os_flow::PreviewTessellatePhase::Faulted.tag().to_string()));
+        object.insert("phase", semio_framework_pack_json::Value::String(semio_os_flow::PreviewTessellatePhase::Faulted.tag().to_string()));
         object.insert("phaseLabel", semio_framework_pack_json::Value::Object(faulted_label));
         object.insert("fault", semio_framework_pack_json::Value::Object(fault));
     } else if let Err(miss) = address {
@@ -181,7 +181,7 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
         message.insert("en", semio_framework_pack_json::Value::String(english));
         message.insert("de", semio_framework_pack_json::Value::String(german));
         let mut fault = semio_framework_pack_json::Object::new();
-        fault.insert("code", semio_framework_pack_json::Value::String(semio_framework_os_flow::FlowExtensionAddressMiss::CODE.to_string()));
+        fault.insert("code", semio_framework_pack_json::Value::String(semio_os_flow::FlowExtensionAddressMiss::CODE.to_string()));
         fault.insert("extensionId", semio_framework_pack_json::Value::String(miss.extension_id));
         fault.insert("message", semio_framework_pack_json::Value::Object(message));
         fault.insert(

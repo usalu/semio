@@ -87,7 +87,7 @@ impl TrustedCatalogLoader {
         context: &OperationContext<'_>,
     ) -> Result<(VerifiedTrustedCatalog, ArtifactAssemblyRegistryPlan), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
-        let guest_runtime = Arc::new(semio_framework_plugin_interpreter_runtime::OwnedRuntime::new());
+        let guest_runtime = Arc::new(semio_plugin_interpreter_runtime::OwnedRuntime::new());
         let residency = GuestResidencyLedgerV1::new(TRUSTED_CATALOG_GUEST_RESIDENCY);
         let progress = Arc::clone(progress);
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;

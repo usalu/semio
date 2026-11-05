@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeDynamicMassPerLeng
         record: "ChangedDynamicMassPerLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change equivalent mass per length m_e of the dynamic element", "Schwingungsanfälliges Bauteil: Äquivalente Masse je Länge m_e ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change equivalent mass per length m_e of the dynamic element", "Schwingungsanfälliges Bauteil: Äquivalente Masse je Länge m_e ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

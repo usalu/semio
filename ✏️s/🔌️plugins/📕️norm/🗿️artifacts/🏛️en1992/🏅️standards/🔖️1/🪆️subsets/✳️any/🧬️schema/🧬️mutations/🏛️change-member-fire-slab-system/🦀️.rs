@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberFireSlabSyst
         record: "ChangedMemberFireSlabSystem",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slab system of the member", "Bauteil: Deckensystem ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slab system of the member", "Bauteil: Deckensystem ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.member_id.clone()]

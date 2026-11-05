@@ -1,12 +1,12 @@
 //! 📃️ Canonical flat semantic documents, exact resident custody, assembly and paged patches.
-pub use semio_framework_ui_contract_values::*;
-pub use semio_framework_ui_contract_actions::*;
-pub use semio_framework_ui_contract_presentation::*;
-pub use semio_framework_ui_contract_components::*;
-pub use semio_framework_ui_contract_operations::*;
-pub use semio_framework_ui_contract_builder::*;
-pub use semio_framework_ui_contract_text_edit::*;
-pub use semio_framework_ui_contract_identity::*;
+pub use semio_ui_contract_values::*;
+pub use semio_ui_contract_actions::*;
+pub use semio_ui_contract_presentation::*;
+pub use semio_ui_contract_components::*;
+pub use semio_ui_contract_operations::*;
+pub use semio_ui_contract_builder::*;
+pub use semio_ui_contract_text_edit::*;
+pub use semio_ui_contract_identity::*;
 #[path="📃️document/🦀️.rs"]
 mod document;
 pub use document::*;

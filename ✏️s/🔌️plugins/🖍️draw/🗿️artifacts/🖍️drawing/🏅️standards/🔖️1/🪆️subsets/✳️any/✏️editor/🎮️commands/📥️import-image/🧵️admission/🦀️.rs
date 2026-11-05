@@ -4,15 +4,15 @@ use semio_s_artifact_draw_drawing_editor_commands::import_image;
 use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
 use semio_s_artifact_draw_drawing_io::image::DrawingImageAdmissionJob;
 use semio_s_artifact_draw_drawing_editor_commands::import_image::publication::DrawingImagePublicationJob;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
+use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
 use semio_framework::Fault;
-use semio_framework_plugin::component::Emit;
-use semio_framework_plugin::component::NoConfigMutation;
-pub type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
+use semio_plugin::component::Emit;
+use semio_plugin::component::NoConfigMutation;
+pub type App=semio_plugin::EditorApp<DrawingPlayApp>;
 /// 🪙️ Whether the step wallet still funds one whole work turn quoted as `demand`.
 fn can_enter(grant:RetainedCloneGrant,demand:semio_framework_value::RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 #[derive(semio_framework_value::RetireOwned)]
@@ -21,7 +21,7 @@ pub struct Work {workspace:Option<ControlledRetirement<Workspace>>,identity:Opti
 impl Work {pub fn new()->Self {Self {workspace:None,identity:None,complete:false,closing:false}}}
 impl ArtifactCommandWork<App> for Work {
  fn tool_id(&self)->&'static str {"importImage"}
- fn extent(&self,command:&DrawingCommand,snapshot:&DrawingSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize> {
+ fn extent(&self,command:&DrawingCommand,snapshot:&DrawingSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize> {
   let DrawingCommand::ImportImage(payload)=command else{return None};
   (!self.complete&&import_image::validate(payload).is_ok()&&snapshot.layers.len()+snapshot.assets.len()<=4096).then_some(1)
  }
@@ -76,23 +76,23 @@ impl ArtifactCommandWork<App> for Work {
 pub struct DrawingImageCommandJobFactory {keys:Vec<semio_framework::ToolFactoryKey>}
 impl DrawingImageCommandJobFactory {pub fn new(controller:&str)->Self {Self {keys:vec![semio_framework::ToolFactoryKey::new(controller,"importImage")]}}}
 impl semio_framework::ToolJobFactory for DrawingImageCommandJobFactory {
-    type Payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<App>;
-    type Job=semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<App>;
+    type Payload=semio_plugin::retained_command::ArtifactRetainedCommandPayload<App>;
+    type Job=semio_plugin::retained_command::ArtifactRetainedCommandJob<App>;
     fn keys(&self)->&[semio_framework::ToolFactoryKey] {&self.keys}
     fn payload_schema_id(&self)->&str {DRAWING_BOUNDED_PAYLOAD_SCHEMA}
     fn classification(&self)->semio_framework::InteractiveJobClassification {semio_framework::InteractiveJobClassification::Migrated}
     fn execution_contract(&self)->semio_framework::ToolExecutionContract {semio_framework::ToolExecutionContract::resumable(DRAWING_IMAGE_RAW_BYTES,4096,1,262144,7500,1,1).with_retained_work(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128})}
- semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:DRAWING_IMAGE_RAW_BYTES,checkpoint_resume:false);
+ semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:DRAWING_IMAGE_RAW_BYTES,checkpoint_resume:false);
 }
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingImageCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingImageCommandJobFactory {
     type Owner=App;
     const TOOL_IDS:&'static[&'static str]=DRAWING_IMAGE_TOOL_IDS;
     const DOCUMENT_SCHEMA:&'static str=DRAWING_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS:&'static[semio_framework_plugin::ArtifactToolPublicationContract]=DRAWING_IMAGE_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS:&'static[semio_plugin::ArtifactToolPublicationContract]=DRAWING_IMAGE_PUBLICATION_CONTRACTS;
 }
-pub fn build(request:&mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<App>>,output:&mut Option<semio_framework_plugin::ErasedToolJob>,cx:&mut semio_framework_plugin::__job::StepContext<'_>)->Result<bool,semio_framework_plugin::__job::OriginalTurnFailure>{
- let original=request.as_ref().ok_or_else(||semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated,"original Image import request is absent"))?;
+pub fn build(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<App>>,output:&mut Option<semio_plugin::ErasedToolJob>,cx:&mut semio_plugin::__job::StepContext<'_>)->Result<bool,semio_plugin::__job::OriginalTurnFailure>{
+ let original=request.as_ref().ok_or_else(||semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"original Image import request is absent"))?;
  let work=Work::new();
- if original.tool_id!="importImage"||work.extent(&original.command,&original.snapshot,&original.interaction_state,Some(&original.context))!=Some(1) {return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::OwnershipLimit,"Image import exceeds its registered source capacity").into());}
- semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,DRAWING_IMAGE_RAW_BYTES,4096,false,|_|work)
+ if original.tool_id!="importImage"||work.extent(&original.command,&original.snapshot,&original.interaction_state,Some(&original.context))!=Some(1) {return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::OwnershipLimit,"Image import exceeds its registered source capacity").into());}
+ semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,DRAWING_IMAGE_RAW_BYTES,4096,false,|_|work)
 }

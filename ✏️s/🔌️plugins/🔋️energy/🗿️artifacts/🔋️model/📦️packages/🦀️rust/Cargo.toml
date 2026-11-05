@@ -18,9 +18,9 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-inferences = { workspace = true }
 semio-s-artifact-energy-model-io = { workspace = true }
@@ -34,10 +34,10 @@ semio-framework-value = { workspace = true }
 semio-s-plugin-energy-engine-sim = { workspace = true, features = ["testing"] }
 pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 csv = "1"
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-model = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }

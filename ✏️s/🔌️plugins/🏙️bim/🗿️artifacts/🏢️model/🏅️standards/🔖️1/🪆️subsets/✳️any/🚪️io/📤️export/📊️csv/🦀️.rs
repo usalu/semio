@@ -11,7 +11,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 
 
 /// 🪪️ The RFC 4180 dialect this leaf writes.
@@ -123,7 +123,7 @@ pub struct ModelIntoCsv;
 impl Serializer<ModelSnapshot> for ModelIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let report = crate::standards::v1::subsets::any::io::with_inferred("ModelIntoCsv", from, |inferred| report_csv(from, inferred))?;
         Ok(IoOutcome::clean(IoPayload::Text(report)))
     }

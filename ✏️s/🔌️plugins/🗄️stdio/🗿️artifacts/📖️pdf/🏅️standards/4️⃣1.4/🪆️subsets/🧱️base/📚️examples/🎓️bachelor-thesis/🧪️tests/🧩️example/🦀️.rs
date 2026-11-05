@@ -34,7 +34,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfSnapshot
 use crate::standards::v1_7::subsets::base::io::PdfBuilderConstruction as PdfBuilder;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{DiffBinary,DiffCodec,DiffText, Inference, ColdMutation, Mutation, MutationDiff, OpBinary};
-use semio_framework_plugin::ArtifactBuilder;
+use semio_plugin::ArtifactBuilder;
 use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

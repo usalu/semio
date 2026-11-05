@@ -708,7 +708,7 @@ export type ExecutionClass = "interactive" | "background" | "job";"####,
  * 🚦 How an extension actor runs relative to its host plugin — `📓️design-abi.md` §5. Default
  * `Isolated`: a same-process sandboxed actor, no publisher trust assumed. `Linked` additionally
  * requires the same publisher as the host plugin (enforced at link time, feature-gated to avoid
- * the `semio-framework-os-flow` ↔ extension-crate cycle); `Exclusive` gets a dedicated actor
+ * the `semio-os-flow` ↔ extension-crate cycle); `Exclusive` gets a dedicated actor
  * (e.g. flow/brep tessellation); `Cold` runs as a bounded job, not a resident actor.
  */
 export type ExecutionMode = "declarative" | "linked" | "isolated" | "exclusive" | "cold";"####,

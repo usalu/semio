@@ -1,6 +1,6 @@
 #[cfg(test)]
-fn queue_surface_action(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
-    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id])?;
+fn queue_surface_action(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id])?;
     let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -16,26 +16,26 @@ fn queue_surface_action(input: &mut semio_framework_ui_wgpu_input::InputState<Ac
 #[cfg(test)]
 #[test]
 fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_only() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     #[allow(non_snake_case)]
     fn SCENES_SOURCE() -> &'static str {
-        semio_framework_os_renderer_wgpu_test_support::scenes_source()
+        semio_renderer_wgpu_test_support::scenes_source()
     }
     #[allow(non_snake_case)]
     fn INTERPRETER_SOURCE() -> &'static str {
-        semio_framework_os_renderer_wgpu_test_support::interpreter_source()
+        semio_renderer_wgpu_test_support::interpreter_source()
     }
     #[allow(non_snake_case)]
     fn ENGINE_CANVAS_SOURCE() -> &'static str {
-        semio_framework_os_renderer_wgpu_test_support::engine_canvas_source()
+        semio_renderer_wgpu_test_support::engine_canvas_source()
     }
     #[allow(non_snake_case)]
     fn ENGINE_CANVAS_STANDALONE() -> &'static str {
-        semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧊️wgpu-standalone/🦀️.rs")
+        semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧊️wgpu-standalone/🦀️.rs")
     }
     #[allow(non_snake_case)]
     fn STANDALONE_SOURCE() -> &'static str {
-        semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🧪️tests/🧊️wgpu-standalone/🦀️.rs")
+        semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🧪️tests/🧊️wgpu-standalone/🦀️.rs")
     }
     assert!(!SCENES_SOURCE().contains(concat!("queue_", "event(")));
     assert!(!INTERPRETER_SOURCE().contains(concat!("queue_", "event(")));
@@ -78,7 +78,7 @@ fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_o
 #[cfg(test)]
 #[test]
 fn ink_event_pages_preserve_order_and_fail_before_exceeding_fixed_storage() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut pages = InkEventJsonPages::default();
     pages.push(&json!({ "operation": "first", "value": "quoted\\\"" })).unwrap();
     pages.push(&json!({ "operation": "second" })).unwrap();
@@ -89,14 +89,14 @@ fn ink_event_pages_preserve_order_and_fail_before_exceeding_fixed_storage() {
 
     let mut saturated = InkEventJsonPages::default();
     let oversized = json!({ "value": "x".repeat(INK_EVENT_JSON_BYTE_CAPACITY) });
-    assert_eq!(saturated.push(&oversized), Err(semio_framework_ui_action::BoundedActionFault::ByteCredits));
+    assert_eq!(saturated.push(&oversized), Err(semio_ui_action::BoundedActionFault::ByteCredits));
     assert_eq!(saturated.items, 0);
 }
 
 #[cfg(test)]
 #[test]
 fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut pages = InkRawPages::default();
     pages.push("{\"id\":\"first\"}").unwrap();
     pages.push("{\"id\":\"second\"}").unwrap();
@@ -107,7 +107,7 @@ fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
     assert!(!pages.pop_front());
 
     let mut saturated = InkRawPages::default();
-    assert_eq!(saturated.push(&"x".repeat(INK_INTERACTION_DOCUMENT_BYTE_CAPACITY + 1)), Err(semio_framework_ui_action::BoundedActionFault::ByteCredits));
+    assert_eq!(saturated.push(&"x".repeat(INK_INTERACTION_DOCUMENT_BYTE_CAPACITY + 1)), Err(semio_ui_action::BoundedActionFault::ByteCredits));
     assert_eq!(saturated.len, 0);
     assert_eq!(saturated.byte_len, 0);
 }
@@ -115,7 +115,7 @@ fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
 #[cfg(test)]
 #[test]
 fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let source = json!({
         "blocks": [{
             "id": "group",
@@ -166,13 +166,13 @@ fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
 #[cfg(test)]
 #[test]
 fn ink_nested_value_admission_rejects_hostile_depth() {
-    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut value = Value::Null;
-    for _ in 0..=semio_framework_ui_action::ACTION_DEPTH_CAPACITY {
+    for _ in 0..=semio_ui_action::ACTION_DEPTH_CAPACITY {
         value = Value::Array(vec![value]);
     }
     let mut nodes = 0usize;
-    assert_eq!(validate_ink_value(&value, 0, &mut nodes), Err(semio_framework_ui_action::BoundedActionFault::DepthCredits));
+    assert_eq!(validate_ink_value(&value, 0, &mut nodes), Err(semio_ui_action::BoundedActionFault::DepthCredits));
 }
 
 #[cfg(test)]
@@ -292,7 +292,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     schedule_scene_camera_dispatch(&scene.host_id, &scene.surface_id);
                 }
                 SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
-                    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
+                    let (sx, sy) = semio_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
                     let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
                     mutate_scene_state(&scene.surface_id, |state| {
                         if distance >= MAP_MARQUEE_THRESHOLD_PX {
@@ -821,21 +821,21 @@ fn ink_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f
 
 #[cfg(test)]
 pub fn tiled_map_pointer_down(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, selection_method: &str) -> Vec<ActionDescriptor> {
-    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if button == 0 {
         mutate_scene_state(surface_id, |state| {
-            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_string(), merge_mode: semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_marquee_mode(shift, ctrl_or_meta).to_string() } });
+            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_string(), merge_mode: semio_renderer_wgpu_engine_board::tiled_map::map_marquee_mode(shift, ctrl_or_meta).to_string() } });
             state.map_marquee_points = vec![(sx as f32, sy as f32)];
             state.map_marquee_active = false;
         });
         return Vec::new();
     }
     if button == 1 {
-        semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, 1));
+        semio_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, 1));
         mutate_scene_state(surface_id, |state| {
             state.drag = Some(SceneDrag { mode: SceneDragMode::MapPan });
         });
-        return semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
+        return semio_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
     }
     let _ = controller_id;
     Vec::new()
@@ -843,14 +843,14 @@ pub fn tiled_map_pointer_down(surface_id: &str, controller_id: &str, inner: Rect
 
 #[cfg(test)]
 pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, down: bool) -> Vec<ActionDescriptor> {
-    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if down {
         let state = scene_state(surface_id);
         if let Some(drag) = &state.drag {
             match &drag.mode {
                 SceneDragMode::MapPan => {
-                    semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy));
-                    return semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
+                    semio_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy));
+                    return semio_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
                 }
                 SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
                     let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
@@ -874,8 +874,8 @@ pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect
         }
         return Vec::new();
     }
-    let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
-    let hover = semio_framework_os_renderer_wgpu_engine_board::tiled_map::parse_map_hover(&hit_json);
+    let hit_json = semio_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+    let hover = semio_renderer_wgpu_engine_board::tiled_map::parse_map_hover(&hit_json);
     let hover_json = if hover.is_null() { "null".into() } else { hover.to_string() };
     let prior = scene_state(surface_id).map_last_hover_json;
     if prior.as_deref() == Some(hover_json.as_str()) {
@@ -884,12 +884,12 @@ pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect
     mutate_scene_state(surface_id, |state| {
         state.map_last_hover_json = Some(hover_json.clone());
     });
-    vec![engine_canvas::map_action(controller_id, semio_framework_ui_declaration::ui::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover }))]
+    vec![engine_canvas::map_action(controller_id, semio_ui_declaration::ui::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover }))]
 }
 
 #[cfg(test)]
 pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
-    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     let state = scene_state(surface_id);
     let Some(drag) = state.drag.clone() else {
         return Vec::new();
@@ -897,8 +897,8 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
     let mut actions = Vec::new();
     match drag.mode {
         SceneDragMode::MapPan => {
-            semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy));
-            actions.extend(semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default());
+            semio_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy));
+            actions.extend(semio_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default());
         }
         SceneDragMode::MapMarquee { start_x, start_y, method, merge_mode } => {
             let distance = ((sx as f32 - start_x).powi(2) + (sy as f32 - start_y).powi(2)).sqrt();
@@ -909,11 +909,11 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                 } else {
                     points = vec![(start_x, start_y), (sx as f32, sy as f32)];
                 }
-                let crossing = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_marquee_crossing(&method, start_x, sx as f32);
-                let ids = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| query_map_feature_hits(host, &method, &points, crossing)).unwrap_or_default();
+                let crossing = semio_renderer_wgpu_engine_board::tiled_map::map_marquee_crossing(&method, start_x, sx as f32);
+                let ids = semio_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| query_map_feature_hits(host, &method, &points, crossing)).unwrap_or_default();
                 actions.push(engine_canvas::map_action(
                     controller_id,
-                    semio_framework_ui_declaration::ui::tiled_map_actions::SET_FEATURE_SELECTION,
+                    semio_ui_declaration::ui::tiled_map_actions::SET_FEATURE_SELECTION,
                     json!({
                         "surfaceId": surface_id,
                         "ids": ids,
@@ -921,12 +921,12 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                     }),
                 ));
             } else if distance < MAP_MARQUEE_THRESHOLD_PX {
-                let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+                let hit_json = semio_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
                 let hit: Value = serde_json::from_str(&hit_json).unwrap_or(Value::Null);
                 if let Some(id) = hit.get("id").and_then(|value| value.as_str()) {
                     actions.push(engine_canvas::map_action(
                         controller_id,
-                        semio_framework_ui_declaration::ui::tiled_map_actions::SET_FEATURE_SELECTION,
+                        semio_ui_declaration::ui::tiled_map_actions::SET_FEATURE_SELECTION,
                         json!({
                             "surfaceId": surface_id,
                             "ids": [id],
@@ -970,7 +970,7 @@ pub fn board2d_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32,
 #[test]
 fn actual_camera_identity_directory_fits_the_original_bootstrap_policy() {
     let grant = camera_fixture_grant();
-    let (copy, birth) = semio_framework_os_renderer_camera::DirectoryOwner::<Option<SceneCameraOwnerMetadata>>::transfer_demands();
+    let (copy, birth) = semio_renderer_camera::DirectoryOwner::<Option<SceneCameraOwnerMetadata>>::transfer_demands();
     assert!(copy + std::mem::size_of::<Option<&'static str>>() <= grant.maximum_copy_bytes);
     assert!(birth <= grant.maximum_capacity_bytes);
     assert!(birth <= grant.maximum_release_bytes);

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-inference"
+name = "semio-os-inference"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -30,7 +30,7 @@ semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/�
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
-semio-framework-os-command = { path = "../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-os-command = { path = "../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }
 
 [dev-dependencies]

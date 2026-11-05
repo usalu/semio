@@ -46,7 +46,7 @@ impl WindowConfigCommandLoad{
    if !load.terminal_is_empty(){if let Err(failure)=registry.close_retained_load_context(load,cx){if self.failure.is_none(){*self.failure=Some(failure)}else{*self.close_failure=Some(failure)}}return Ok(false)}
    let copied=size_of::<WindowConfigPackLoad>();retired(cx,semio_framework_value::RetirementDemand{copy_bytes:copied,depth:1,..Default::default()},|_|{self.load.take();Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})?;return Ok(false)
   }
-  if self.pack.is_some()||self.pack_close.is_some(){let demand=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.pack,&self.pack_close,cx.retained_grant().maximum_copy_bytes)?;retired(cx,demand,|grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.pack,&mut self.pack_close,grant))?;return Ok(false)}
+  if self.pack.is_some()||self.pack_close.is_some(){let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.pack,&self.pack_close,cx.retained_grant().maximum_copy_bytes)?;retired(cx,demand,|grant|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.pack,&mut self.pack_close,grant))?;return Ok(false)}
   let copied=size_of::<Option<OriginalSourceBinding>>()+size_of::<bool>()+size_of::<Option<OriginalTurnFailure>>();
   retired(cx,semio_framework_value::RetirementDemand{copy_bytes:copied,depth:1,..Default::default()},|_|{self.source=None;self.done=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})?;
   if !self.done{return Ok(false)}if let Some(failure)=self.failure.take(){return Err(failure)}Ok(true)

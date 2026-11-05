@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointBoltClass whe
         record: "ChangedJointBoltClass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bolt property class of the joint", "Anschluss: Festigkeitsklasse der Schrauben ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bolt property class of the joint", "Anschluss: Festigkeitsklasse der Schrauben ändern")
     }
 }
 

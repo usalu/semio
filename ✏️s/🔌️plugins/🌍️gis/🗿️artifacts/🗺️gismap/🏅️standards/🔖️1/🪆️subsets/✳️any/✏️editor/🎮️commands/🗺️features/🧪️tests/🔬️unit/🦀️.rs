@@ -7,7 +7,7 @@ use semio_s_artifact_gis_gismap_gis2d::{mutations::create_position, mutations::c
 #[allow(unused_imports)]
 use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::gis_map_document_from_descriptor_json;
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)]
@@ -96,7 +96,7 @@ async fn add_feature_appends_a_position_and_undo_redo_round_trips() {
     let mut app = app().await;
     let before = collection_witness(&app.snapshot().expect("projection"), "positions");
     let after = (before.0 + 1, Some("position-1".to_string()));
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Gis2dCommand::AddFeature(add_feature::AddFeature { collection: "positions".into(), label: "Depot".into(), lon: 7.5, lat: 51.0, span: 0.01 }), |app| collection_witness(&app.snapshot().expect("projection"), "positions"), before, after, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    semio_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Gis2dCommand::AddFeature(add_feature::AddFeature { collection: "positions".into(), label: "Depot".into(), lon: 7.5, lat: 51.0, span: 0.01 }), |app| collection_witness(&app.snapshot().expect("projection"), "positions"), before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
     let document = app.snapshot().expect("projection");
     let minted = document.positions.last().expect("minted position");
@@ -190,7 +190,7 @@ async fn delete_feature_undo_redo_round_trips() {
     let target = document.positions.first().expect("position").id.clone();
     let before = document.positions.len();
     drop(document);
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Gis2dCommand::DeleteFeature(delete_feature::DeleteFeature { collection: "positions".into(), feature_id: target }), |app| app.snapshot().expect("projection").positions.len(), before, before - 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    semio_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Gis2dCommand::DeleteFeature(delete_feature::DeleteFeature { collection: "positions".into(), feature_id: target }), |app| app.snapshot().expect("projection").positions.len(), before, before - 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
     close(&mut app);
 }

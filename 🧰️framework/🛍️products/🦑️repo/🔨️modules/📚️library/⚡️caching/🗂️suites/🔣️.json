@@ -1816,7 +1816,8 @@
     "native-dependencies",
     "workspace-ownership",
     "sdk-material",
-    "daemon-output-observation"
+    "daemon-output-observation",
+    "wasm-outputs"
   ],
   "helpers": []
 }

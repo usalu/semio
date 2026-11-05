@@ -13,7 +13,7 @@ use semio_s_artifact_cad_cad_kit::{axis3_index, create_object_entry, delete_obje
 use semio_s_artifact_cad_cad_modes::windows::config::cad_pane_from_view;
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🪟️ The pane a document-mutating object gesture lands in: the addressed window instance when the

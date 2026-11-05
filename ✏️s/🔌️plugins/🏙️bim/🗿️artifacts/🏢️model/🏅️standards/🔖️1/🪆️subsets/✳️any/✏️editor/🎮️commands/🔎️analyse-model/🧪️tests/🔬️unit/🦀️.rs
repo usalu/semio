@@ -10,9 +10,9 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema:
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::analyse_model::{handle, AnalyseModel};
@@ -21,7 +21,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 
 #[semio_framework_async_macros::async_test]
 async fn the_command_settles_the_session_and_changes_nothing_else() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = demo();
     let mut context = ctx(&[]);
     context.gestures = Some(instance.clone());
@@ -33,7 +33,7 @@ async fn the_command_settles_the_session_and_changes_nothing_else() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_analysis_is_stepped_with_progress_and_a_cancel_keeps_what_it_finished() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = demo();
     let mut cancelled = Analysis::new(Some(&instance), 2);
     let first = cancelled.advance(&snapshot).expect("a step");

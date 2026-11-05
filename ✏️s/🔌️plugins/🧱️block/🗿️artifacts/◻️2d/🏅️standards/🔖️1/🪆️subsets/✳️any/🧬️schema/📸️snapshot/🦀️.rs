@@ -2,9 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -90,11 +90,11 @@ impl Default for Block2dSnapshot {
 pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
 
-use semio_framework_plugin::ArtifactKindSpec;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::OsMediaCapability;
+use semio_plugin::ArtifactKindSpec;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
+use semio_plugin::OsMediaCapability;
 
 pub const BLOCK_2D_SCHEMA: &str = "block.2d";
 
@@ -169,7 +169,7 @@ pub const BLOCK2D_DIALECT: semio_framework_artifact_reference::Dialect = semio_f
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.block".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Node Kind", "Knotentyp"),
+        label: semio_ui_locale::LocalizedLabel::native("Node Kind", "Knotentyp"),
         source_format: BLOCK_2D_SCHEMA.into(),
         component_kind: "block2d".into(),
         dimension: "2d".into(),

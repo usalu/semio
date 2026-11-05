@@ -3,8 +3,8 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text, ui_capacity_error};
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
-use semio_framework_plugin::{BuiltNode, PanelTreeBuilder, PanelTabDefinition, PanelTabKind, PanelGroup, TreeWindows, UiAssemblyResult, Buildable, HasChildren};
-use semio_framework_ui_locale::Label;
+use semio_plugin::{BuiltNode, PanelTreeBuilder, PanelTabDefinition, PanelTabKind, PanelGroup, TreeWindows, UiAssemblyResult, Buildable, HasChildren};
+use semio_ui_locale::Label;
 use std::collections::BTreeMap;
 pub const BODY_KEY: &str = "bim.edit.options";
 /// 🪪️ The unique id of this panel tab, a child of the framework inspection tab.
@@ -20,11 +20,11 @@ fn entity(snapshot: &ModelSnapshot, kind: &str, id: &str, description: &str) -> 
 }
 /// 🧭️ Groups, options and worksets are selectable authored records; properties edits their parameters.
 pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let adds = semio_framework_plugin::ui_node_list([create("option-group", "", labels.kind_option_group.as_str()), create("workset", "", labels.kind_workset.as_str())])?;
+    let adds = semio_plugin::ui_node_list([create("option-group", "", labels.kind_option_group.as_str()), create("workset", "", labels.kind_workset.as_str())])?;
     let mut builder = PanelTreeBuilder::new("bim.options")?.section("bim.options.add", Some(ui_label(labels.panel_options.as_str())?), true, adds)?;
     for (id, group) in &snapshot.option_groups {
         let options: Vec<_> = snapshot.design_options.iter().filter(|(_, option)| option.group == *id).collect();
-        builder = builder.section(format!("bim.options.group.{id}"), Some(ui_label(&group.name)?), true, semio_framework_plugin::ui_node_list([entity(snapshot, "option-group", id, ""), create("design-option", id, labels.kind_design_option.as_str())])?)?;
+        builder = builder.section(format!("bim.options.group.{id}"), Some(ui_label(&group.name)?), true, semio_plugin::ui_node_list([entity(snapshot, "option-group", id, ""), create("design-option", id, labels.kind_design_option.as_str())])?)?;
         builder = builder.window_section(windows, &format!("bim.options.choices.{id}"), None, false, &options, |(id, option)| entity(snapshot, "design-option", id, if option.primary { labels.field_primary_option.as_str() } else { "" }))?;
     }
     let worksets: Vec<_> = snapshot.worksets.iter().collect();
@@ -46,5 +46,5 @@ pub fn with_switcher(snapshot: &ModelSnapshot, inference: &ModelInference, selec
         let shown = visibility.get(*id).copied().unwrap_or(workset.default_visible);
         view_row(format!("bim.options.visibility.{id}"), &format!("{} · {}", workset.name, if shown { labels.option_hide.as_str() } else { labels.option_visible.as_str() }), &format!("workset:{id}"), if shown { "false" } else { "true" })
     })?;
-    semio_framework_ui_contract::column().try_child(builder.build()?).map_err(|_| ui_capacity_error())?.try_child(body).map_err(|_| ui_capacity_error())?.try_build().map_err(|_| ui_capacity_error())
+    semio_ui_contract::column().try_child(builder.build()?).map_err(|_| ui_capacity_error())?.try_child(body).map_err(|_| ui_capacity_error())?.try_build().map_err(|_| ui_capacity_error())
 }

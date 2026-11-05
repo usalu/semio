@@ -445,7 +445,7 @@ async fn deterministic_logical_round_trip() {
     use crate::schema::mutations::{add_entry, set_archive_comment};
     use crate::{ZipDiff, ZipMutation};
     use protocol::{DiffAlgebra, DiffBinary,DiffCodec,DiffText, MutationDiff, OpBinary, OpText};
-    use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
+    use semio_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
     let entry = ZipEntry { name: "readme.md".into(), data: b"# hello\nsome content here to compress".to_vec(), ..Default::default() };
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![entry], comment: "archive comment".into(), ..Default::default() };

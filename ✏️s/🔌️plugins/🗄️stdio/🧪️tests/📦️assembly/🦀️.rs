@@ -1,6 +1,6 @@
 use semio_s_artifact_stdio_contract::{ArtifactAssembly, ArtifactContribution};
 use semio_s_artifact_stdio_contract::registry::ContributionRegistry;
-use semio_framework_plugin::{ArtifactDefinition, PluginAssemblyError};
+use semio_plugin::{ArtifactDefinition, PluginAssemblyError};
 use semio_s_plugin_stdio::{AssemblyOwner, AssemblyPlan};
 const ALPHA: &str = include_str!("../../📇️registry/🧬️contract/🧪️tests/🧫️fixtures/📇️contributions/alpha.json");
 const BRAVO: &str = include_str!("../../📇️registry/🧬️contract/🧪️tests/🧫️fixtures/📇️contributions/bravo.json");
@@ -38,7 +38,7 @@ fn selected_assembly_remains_exact_after_owner_removal() {
         let oracle = row["remaining"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>();
         assert_eq!(actual, oracle);
         assert!(plan.receipts().is_empty());
-        let builder = semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Authored Assembly").version("0.1.0").package_id("semio:stdio");
+        let builder = semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("Authored Assembly").version("0.1.0").package_id("semio:stdio");
         let plugin = plan.apply(builder).try_library().unwrap();
         assert_eq!(plugin.artifact_definitions().len(), oracle.len());
     }

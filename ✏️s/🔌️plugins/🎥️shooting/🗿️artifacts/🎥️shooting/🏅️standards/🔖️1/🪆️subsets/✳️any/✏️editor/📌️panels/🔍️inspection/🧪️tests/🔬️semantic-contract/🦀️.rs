@@ -1,50 +1,50 @@
 use crate::editor::shooting::config::ShootingConfig;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 #[allow(unused_imports)]
 use crate::editor::shooting::terminology::ShootingLabels;
 #[allow(unused_imports)]
 use crate::{editor::shooting::ui_helpers_and_io::shooting_action, editor::shooting::ui_helpers_and_io::ui_capacity_error, editor::shooting::ui_helpers_and_io::ui_label, editor::shooting::ui_helpers_and_io::ui_text, editor::shooting::ui_helpers_and_io::ui_value_list, editor::shooting::ui_helpers_and_io::ui_value_map, editor::shooting::ui_helpers_and_io::ui_value_text};
 #[allow(unused_imports)]
-use semio_framework_plugin::ui_node_list;
+use semio_plugin::ui_node_list;
 #[allow(unused_imports)]
 use crate::{ShootingShot, ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 #[allow(unused_imports)]
-use semio_framework_plugin::{plugin_app_close_prelude::Buildable, plugin_app_close_prelude::HasBase, plugin_app_close_prelude::HasChildren, plugin_app_close_prelude::InputKind, plugin_app_close_prelude::Trigger};
+use semio_plugin::{plugin_app_close_prelude::Buildable, plugin_app_close_prelude::HasBase, plugin_app_close_prelude::HasChildren, plugin_app_close_prelude::InputKind, plugin_app_close_prelude::Trigger};
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item;
+use semio_plugin::tree_item;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_desc;
+use semio_plugin::tree_item_desc;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 #[allow(unused_imports)]
-use semio_framework_ui_contract::input;
+use semio_ui_contract::input;
 use crate::editor::shooting::panels::inspection::*;
 
 fn project(node: BuiltNode) -> serde_json::Value {
-    let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire inspected semantic tree");
+    let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("retire inspected semantic tree");
     serde_json::from_str(&text).expect("independent semantic JSON oracle")
 }
 
-fn view_state(locale: &str) -> semio_framework_plugin::ViewModel {
+fn view_state(locale: &str) -> semio_plugin::ViewModel {
     let locale = match locale {
-        "en" => semio_framework_ui_locale::Locale::En,
-        "de" => semio_framework_ui_locale::Locale::De,
+        "en" => semio_ui_locale::Locale::En,
+        "de" => semio_ui_locale::Locale::De,
         value => panic!("unexpected fixture locale {value}"),
     };
-    semio_framework_plugin::ViewModel { locale, ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native) }
+    semio_plugin::ViewModel { locale, ..semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native) }
 }
 
 #[test]
@@ -68,14 +68,14 @@ fn shooting_semantic_panels_match_the_json_oracle() {
         }
     }
     for node in [crate::editor::shooting::modes::edit::windows::scene::render(&snapshot, &cfg, "select").expect("editor scene"), crate::viewer::shooting::modes::view::windows::scene::render(&snapshot).expect("viewer scene")] {
-        let scene: semio_framework_plugin::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assembled scene");
+        let scene: semio_plugin::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assembled scene");
         let frame: serde_json::Value = serde_json::from_str(scene.frame_json.as_deref().expect("active frame")).expect("independent frame oracle");
         assert_eq!(frame, vectors["frame"]);
         project(node);
     }
     let node = crate::editor::shooting::modes::edit::windows::icon::render(&snapshot, &cfg).expect("icon scene");
-    let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("icon surface") };
-    let scene: semio_framework_plugin::IconRenderScene = semio_framework_ui_scene::decode(props).expect("packed icon");
+    let semio_plugin::Component::Surface(props) = &node.component else { panic!("icon surface") };
+    let scene: semio_plugin::IconRenderScene = semio_ui_scene::decode(props).expect("packed icon");
     let request: serde_json::Value = serde_json::from_str(&scene.request_json).expect("independent icon request oracle");
     assert_eq!(request["assetUrl"], vectors["iconAssetUrl"]);
     project(node);

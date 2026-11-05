@@ -1,6 +1,6 @@
 //! 🧪️ Kind fixture laws of `connect-synapse`, `disconnect-synapse`, `replace-synapse`: each committed scenario applied, inverted and diffed through the mutation union.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 #[path = "../../✂️disconnect/🧪️tests/✂️severs/🦀️.rs"]
 mod disconnect_severs_link_ab_leaving_both_notes;

@@ -88,7 +88,7 @@ impl ChromeState {
 
     /// 🌉️ The agent bridge consumer this shell drives — a transport hands it one socket message at a
     /// time and drains [`crate::agent_bridge::AgentBridgeState::take_outbox_encoded`] afterwards.
-    pub fn apply_agent_bridge_frame(&mut self, bytes: &[u8]) -> Result<(), semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::BridgeFrameFault> {
+    pub fn apply_agent_bridge_frame(&mut self, bytes: &[u8]) -> Result<(), semio_renderer_wgpu_agent_elements::agent_bridge::BridgeFrameFault> {
         let now = chrome_now_ms();
         self.chrome_build.agent.apply_encoded_frame(bytes, now)
     }
@@ -99,8 +99,8 @@ impl ChromeState {
     }
 
     /// 🚦️ Live agent status/presence — what the chat panel header's indicator paints.
-    pub fn agent_presence_tone(&self) -> semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AgentPresenceTone {
-        semio_framework_os_renderer_wgpu_agent_elements::agent_presence::agent_presence_tone(self.chrome_build.agent.status, &self.chrome_build.agent.presence)
+    pub fn agent_presence_tone(&self) -> semio_renderer_wgpu_agent_elements::agent_presence::AgentPresenceTone {
+        semio_renderer_wgpu_agent_elements::agent_presence::agent_presence_tone(self.chrome_build.agent.status, &self.chrome_build.agent.presence)
     }
 }
 
@@ -471,9 +471,9 @@ impl ChromeDialogRequest {
     /// `🧫️number-controls` for every renderer): arrows walk the step ladder and never snap (`large` — a `Shift`
     /// chord — walks ten rungs), PageUp/PageDown jump to the adjacent detent (ten rungs without one), Home/End go
     /// to the ends. `false` for a key a slider does not take.
-    pub fn slide(&mut self, index: usize, action: &semio_framework_ui_wgpu_input::KeyAction, large: bool) -> bool {
+    pub fn slide(&mut self, index: usize, action: &semio_ui_wgpu_input::KeyAction, large: bool) -> bool {
         use ui_contract::SliderKey;
-        use semio_framework_ui_wgpu_input::KeyAction;
+        use semio_ui_wgpu_input::KeyAction;
         let (Some(ChromeDialogFieldKind::Slider { min, max, step, precision, snaps, .. }), Some(value)) = (self.fields.get(index).map(|field| field.kind.clone()), self.slider_value(index)) else { return false };
         let key = match action {
             KeyAction::ArrowLeft | KeyAction::ArrowDown => SliderKey::Decrement,

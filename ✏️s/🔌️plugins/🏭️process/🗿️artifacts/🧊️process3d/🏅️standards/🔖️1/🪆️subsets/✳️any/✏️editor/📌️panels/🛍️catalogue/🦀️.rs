@@ -6,15 +6,15 @@ use semio_s_artifact_process_process3d_kit::process3d_action;
 use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
 use semio_s_artifact_process_process3d_inferences::{validate_capability, validation_reason, ValidationContext};
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkingSolid, snapshot::WorkshopMachine};
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::tree_item_desc;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::TreeWindows;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_CATALOGUE: &str = "process.play.catalogue";
@@ -50,7 +50,7 @@ fn capability_entries<'a>(machines: impl IntoIterator<Item = &'a WorkshopMachine
 
 /// 🔧 One capability row: an `addStep` binding when the current stock satisfies the capability's
 /// rules, otherwise a non-clickable row carrying the failure as its reason.
-fn capability_row(machine: &WorkshopMachine, capability: &Capability, ctx: &ValidationContext) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn capability_row(machine: &WorkshopMachine, capability: &Capability, ctx: &ValidationContext) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let failures = validate_capability(capability, ctx);
     let id = format!("process3d-catalogue.{}.{}", machine.id, capability.id);
     let label = format!("{} — {}", machine.label, capability.label);
@@ -59,8 +59,8 @@ fn capability_row(machine: &WorkshopMachine, capability: &Capability, ctx: &Vali
         return iconed_tree_item_with_action(id, &label, &capability.icon_id, process3d_action("addStep", Some(args)));
     }
     let mut item = tree_item_desc(id, semio_s_artifact_process_process3d_kit::ui_label(&label)?, Some(validation_reason(&failures)))?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
-        props.icon = Some(semio_framework_plugin::UiText::try_from_str(&capability.icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.icon", "fixed capability icon admission failed"))?);
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
+        props.icon = Some(semio_plugin::UiText::try_from_str(&capability.icon_id).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.icon", "fixed capability icon admission failed"))?);
     }
     Ok(item)
 }
@@ -90,7 +90,7 @@ fn stock_validation_context(solid: &WorkingSolid) -> ValidationContext {
 /// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
 /// reason) any capability the current stock doesn't satisfy — real dimensions via
 /// `stock_validation_context`.
-pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let ctx = stock_validation_context(&snapshot.stock_payload.solid);
     let mut builder = PanelTreeBuilder::new("process3d-play-catalogue")?;
     let mut workshop_machines: Vec<&WorkshopMachine> = Vec::new();

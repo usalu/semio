@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneLoadFactor wh
         record: "ChangedCraneLoadFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Load factor γ_Q of the crane runway", "Kranbahn: Lastbeiwert γ_Q ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Load factor γ_Q of the crane runway", "Kranbahn: Lastbeiwert γ_Q ändern")
     }
 }
 

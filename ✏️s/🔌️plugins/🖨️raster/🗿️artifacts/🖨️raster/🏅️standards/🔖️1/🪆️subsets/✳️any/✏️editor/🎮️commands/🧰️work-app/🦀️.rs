@@ -5,7 +5,7 @@ use crate::config::{RasterConfig, RasterConfigMutation};
 use crate::RasterCommand;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
-use semio_framework_plugin::{ArtifactApp, NoDraftMutation};
+use semio_plugin::{ArtifactApp, NoDraftMutation};
 
 /// 🧰️ Any artifact app that dispatches the closed raster command channel over the raster document, mutation and session config.
 pub trait RasterWorkApp: ArtifactApp<Command = RasterCommand, Snapshot = RasterSnapshot, Mutation = RasterMutation, Config = RasterConfig, ConfigMutation = RasterConfigMutation, DraftMutation = NoDraftMutation> {}

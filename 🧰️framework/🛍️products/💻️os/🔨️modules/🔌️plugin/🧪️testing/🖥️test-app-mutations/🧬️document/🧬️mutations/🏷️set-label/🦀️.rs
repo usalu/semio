@@ -18,12 +18,12 @@ impl MutationKind<TestSnapshot, TestMutation> for SetLabel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "label", kind: "set-label", record: "SetLabel" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set label to {}", self.value), &format!("Beschriftung auf {} setzen", self.value))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set label to {}", self.value), &format!("Beschriftung auf {} setzen", self.value))
     }
 }
 
-impl semio_framework_os_command::ColdMutationKind<TestSnapshot, TestMutation> for SetLabel {
+impl semio_os_command::ColdMutationKind<TestSnapshot, TestMutation> for SetLabel {
     fn diff(&self, base: &TestSnapshot) -> MutationOutcome<TestDiff> {
         let outcome = MutationOutcome::new(TestDiff { count: None, label: Some(self.value.clone()), slot: None });
         match base.label == self.value {
@@ -57,9 +57,9 @@ impl SetLabelSource{
     pub fn allocated_bytes(&self)->usize{self.value.allocated_bytes()}
     pub fn value_view(&self)->Result<semio_framework_value_paged_text::paged_text::TextReadView<'_>,semio_framework_value::ValueError>{self.value.read_view()}
     /// 🎒️ Borrows this exact original authored owner and the actual mutation ordinal metadata.
-    pub fn retained_pack_operation(&self)->semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(self)}
+    pub fn retained_pack_operation(&self)->semio_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{semio_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(self)}
     /// 🏷️ Streams the same original semantic source through the authored locale producer.
-    pub fn label_into(&self,_terminology:semio_framework_ui_locale::Terminology,locale:semio_framework_ui_locale::Locale,output:&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),semio_framework_value::ValueError>{let text=self.value_view()?;match locale{semio_framework_ui_locale::Locale::En=>semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("Set label to {text}")),semio_framework_ui_locale::Locale::De=>semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("Beschriftung auf {text} setzen"))}}
+    pub fn label_into(&self,_terminology:semio_ui_locale::Terminology,locale:semio_ui_locale::Locale,output:&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),semio_framework_value::ValueError>{let text=self.value_view()?;match locale{semio_ui_locale::Locale::En=>semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("Set label to {text}")),semio_ui_locale::Locale::De=>semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("Beschriftung auf {text} setzen"))}}
 }
 impl semio_framework_dsl_record::BorrowedDslVariants for SetLabelSource{
     const VARIANTS:&'static[(&'static str,fn()->semio_framework_dsl_record::BorrowedRecordSpec)]=<TestMutation as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS;
@@ -80,10 +80,10 @@ impl semio_framework_value::ErasedSnapshotRetirement for SetLabelSource{
 
 impl SetLabel{
     /// 🏷️ Streams this authored mutation's original native label into its bound retained text owner.
-    pub fn label_into(&self,_terminology:semio_framework_ui_locale::Terminology,locale:semio_framework_ui_locale::Locale,output:&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),semio_framework_value::ValueError>{
+    pub fn label_into(&self,_terminology:semio_ui_locale::Terminology,locale:semio_ui_locale::Locale,output:&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),semio_framework_value::ValueError>{
         match locale{
-            semio_framework_ui_locale::Locale::En=>semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("Set label to {}",self.value)),
-            semio_framework_ui_locale::Locale::De=>semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("Beschriftung auf {} setzen",self.value)),
+            semio_ui_locale::Locale::En=>semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("Set label to {}",self.value)),
+            semio_ui_locale::Locale::De=>semio_framework_value_paged_text::paged_text::write_encoding_format(output,format_args!("Beschriftung auf {} setzen",self.value)),
         }
     }
 }

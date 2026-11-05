@@ -4,7 +4,7 @@
 /// machine running the test happens to have in its `semio.os.config` document. Every assertion
 /// below explicitly sets the state it exercises afterward, so the outcome never depends on that.
 fn fresh_state() -> ShellState {
-    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
 }
 
 /// 🎯️ The same neutral owner vectors address each retained spawned document and action.
@@ -16,7 +16,7 @@ fn spawned_documents_and_actions_keep_their_exact_owning_session() {
         app.id = owner["appId"].as_str().unwrap().into();
         app.controller_id = owner["controllerId"].as_str().unwrap().into();
         let id = owner["windowId"].as_str().unwrap().to_string();
-        let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        let mut view_state = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
         view_state.window_id = Some(id.clone());
         view_state.focused_window_id = Some(id.clone());
         view_state.window_instances = vec![semio_framework::ViewWindowInstance { id, window_kind_id: "main".into() }];
@@ -83,7 +83,7 @@ fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriag
     let base: SpacePanelState = serde_json::from_value(fixture["base"].clone()).expect("fixture base");
     let encoded = panel_json(&base).expect("strict panel JSON");
     assert!(encoded.starts_with('{'));
-    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view.panel_json = Some(encoded.clone());
     assert_eq!(panel_state_from_view(&view).expect("strict decode"), Some(base.clone()));
     view.panel_json = Some(serde_json::json!({ "activePanelTab": "s-play-catalogue", "spawnedApps": [], "programs": [] }).to_string());
@@ -100,7 +100,7 @@ fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriag
 fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_and_home_projection() {
     let mut shell = host_test_shell();
     let before = panel_state_from_view(&shell.docs.session.as_ref().unwrap().view_state).unwrap().unwrap();
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "s-play-inspector" }) }))
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "tabId": "s-play-inspector" }) }))
         .expect("configured leaf is host-owned");
     let after = panel_state_from_view(&shell.docs.session.as_ref().unwrap().view_state).unwrap().unwrap();
     assert_eq!(after.active_panel_tab, "s-play-inspector");
@@ -111,27 +111,27 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
 
     let accepted_json = shell.docs.session.as_ref().unwrap().view_state.panel_json.clone();
     let container_error =
-        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
     assert_eq!(container_error, "host-panel.tab-is-not-configured-leaf");
     assert_eq!(shell.docs.session.as_ref().unwrap().view_state.panel_json, accepted_json);
-    let stale_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "missing" }) })).unwrap_err();
+    let stale_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "tabId": "missing" }) })).unwrap_err();
     assert_eq!(stale_error, "host-panel.tab-is-not-configured-leaf");
     let missing_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: None })).unwrap_err();
     assert_eq!(missing_error, "host-panel.invalid-tab-id");
 
-    let guest_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "s-play-inspector" }) }))
+    let guest_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "tabId": "s-play-inspector" }) }))
         .expect_err("unclaimed controller reaches the missing guest fixture");
     assert!(!guest_error.starts_with("host-panel."), "unclaimed route must expose the actual missing guest failure: {guest_error}");
 
     let (home, _) = host_test_apps();
     let home_panel = SpacePanelState { active_panel_tab: "s-play-catalogue".into(), spawned_apps: after.spawned_apps.clone(), active_spawned_id: after.active_spawned_id.clone() };
-    let mut home_view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut home_view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     home_view.active_mode_id = Some(home.default_mode_id.clone());
     home_view.active_window_kind_id = Some(home.window_kinds.first().id.clone());
     home_view.panel_json = Some(panel_json(&home_panel).unwrap());
     shell.directory.directory_home = Some(DirectoryHomeProjection::new("space".into(), 88, home.clone(), home_view.clone()).expect("directory home projection"));
     shell.docs.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 88, app: home, view_state: home_view });
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "home-library" }) }))
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "tabId": "home-library" }) }))
         .expect("active host session owns its configured leaf");
     let restored = shell.directory.directory_home.as_ref().unwrap().active_session();
     let restored_panel = panel_state_from_view(&restored.view_state).unwrap().unwrap();

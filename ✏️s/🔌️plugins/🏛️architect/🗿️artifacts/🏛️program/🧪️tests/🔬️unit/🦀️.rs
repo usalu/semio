@@ -69,8 +69,8 @@ fn program_document_contract_json_text_pack_and_projection() {
 
     let artifact = crate::standards::v1::subsets::any::schema::ProgramArtifact::from_snapshot(snapshot.clone());
     assert_eq!(artifact.to_snapshot(), snapshot, "artifact/snapshot projection must preserve every document field");
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
-    semio_framework_os_kernel::os_store::test_support::assert_pack_round_trip(&snapshot);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    semio_os_kernel::os_store::test_support::assert_pack_round_trip(&snapshot);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -96,20 +96,20 @@ async fn composed_register_rows_belong_to_each_exact_child() {
 // #region 🔖️DslArtifact
 #[semio_framework_async_macros::async_test]
 async fn empty_plugin_dsl_round_trips() {
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty_plugin());
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty_plugin());
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty_plugin());
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty_plugin());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn sample_plugin_dsl_round_trips() {
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&sample_plugin());
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&sample_plugin());
 }
 
 #[test]
 // 🪲️ Blocked on a confirmed upstream `pack` crate bug, NOT an architect defect: table
 // rows (`#[dsl(table)] Vec<Stakeholder>` etc.) decode via `pack::value`'s self-describing
 fn sample_plugin_dsl_pack_equivalence() {
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&sample_plugin());
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&sample_plugin());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -142,7 +142,7 @@ async fn architect_example_text_parses_to_sample_plugin_and_round_trips() {
     assert_eq!(parsed.adjacencies[0].kind, expected.adjacencies[0].kind);
     assert_eq!(parsed.audit_events.len(), expected.audit_events.len());
     assert_eq!(parsed.audit_events[0].timestamp, expected.audit_events[0].timestamp);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&parsed);
-    semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&parsed);
+    semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&parsed);
+    semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&parsed);
 }
 // #endregion 🔖️DslArtifact

@@ -8,28 +8,28 @@ fn color_text(color:[f64;4])->UiAssemblyResult<String>{let mut accepted=|_|true;
 fn dash_text(samples:Option<&semio_framework_value_persistent::list::PagedList<f64,{usize::MAX}>>)->UiAssemblyResult<String>{let mut values=[0.0;64];let length=samples.map_or(0,|samples|samples.len());if length>64{return Err(error());}if let Some(samples)=samples{for(index,sample)in samples.iter().enumerate(){values[index]=*sample;}}let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(128,&mut accepted);semio_s_artifact_draw_drawing_io::text::dash::encode_dash_text(Some(&values[..length]),&mut control).map_err(|_|error())}
 use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, PathSegment};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
-use semio_framework_plugin::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_ui_contract as ui;
+use semio_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Label;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_ui_contract as ui;
 
 pub const DRAWING_PLAY_BODY_PROPERTIES: &str = "drawing.play.properties";
 pub const ROOT: &str = "drawing-inspector";
 
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
-        kind: PanelTabKind::App(semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
+        kind: PanelTabKind::App(semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native("Inspection", "Inspektion"),
         group: PanelGroup::Details,
         body_key: Some(DRAWING_PLAY_BODY_PROPERTIES.into()),
@@ -185,14 +185,14 @@ pub fn node_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, segm
         if let Some(other) = join_target {
             let edit = ui_value_map([("kind",ui_value_text("join")?),("index",ui_value_number(index as f64)),("other",ui_value_number(other as f64))])?;
             let args = ui_value_map([("edit",edit),("layerId",ui_value_text(layer_id)?)])?;
-            let button = semio_framework_plugin::tree_item_with_action(format!("{id}.join"),ui::Label(text(labels.join_contour.as_str())?),None,drawing_play_action("editPath",Some(args))?)?;
+            let button = semio_plugin::tree_item_with_action(format!("{id}.join"),ui::Label(text(labels.join_contour.as_str())?),None,drawing_play_action("editPath",Some(args))?)?;
             row = row.try_child(button).map_err(|_| error())?;
         }
         if !matches!(segment, PathSegment::Close) {
             for (mode,label) in [("corner",labels.node_corner),("smooth",labels.node_smooth),("symmetric",labels.node_symmetric)] {
                 let edit=ui_value_map([("kind",ui_value_text("node")?),("index",ui_value_number(index as f64)),("mode",ui_value_text(mode)?)])?;
                 let args=ui_value_map([("edit",edit),("layerId",ui_value_text(layer_id)?)])?;
-                row=row.try_child(semio_framework_plugin::tree_item_with_action(format!("{id}.mode.{mode}"),ui::Label(text(label.as_str())?),None,drawing_play_action("editPath",Some(args))?)?).map_err(|_|error())?;
+                row=row.try_child(semio_plugin::tree_item_with_action(format!("{id}.mode.{mode}"),ui::Label(text(label.as_str())?),None,drawing_play_action("editPath",Some(args))?)?).map_err(|_|error())?;
             }
         }
         let mut actions = vec![("open", labels.open_contour), ("close", labels.close_contour)];
@@ -204,7 +204,7 @@ pub fn node_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, segm
             if kind != "reverse" { fields.push(("index", ui_value_number(index as f64))); }
             if kind == "split" { fields.push(("t", ui_value_number(0.5))); }
             let args = ui_value_map([("edit", ui_value_map(fields)?), ("layerId", ui_value_text(layer_id)?)])?;
-            let button = semio_framework_plugin::tree_item_with_action(format!("{id}.{kind}"), ui::Label(text(label.as_str())?), None, drawing_play_action("editPath", Some(args))?)?;
+            let button = semio_plugin::tree_item_with_action(format!("{id}.{kind}"), ui::Label(text(label.as_str())?), None, drawing_play_action("editPath", Some(args))?)?;
             row = row.try_child(button).map_err(|_| error())?;
         }
         if !matches!(segment, PathSegment::Move { .. } | PathSegment::Close) {
@@ -212,7 +212,7 @@ pub fn node_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, segm
                 if matches!((segment,target),(PathSegment::Line { .. },"line") | (PathSegment::Cubic { .. },"cubic")) { continue; }
                 let edit = ui_value_map([("kind",ui_value_text("convert")?),("index",ui_value_number(index as f64)),("target",ui_value_text(target)?)])?;
                 let args = ui_value_map([("edit",edit),("layerId",ui_value_text(layer_id)?)])?;
-                let button = semio_framework_plugin::tree_item_with_action(format!("{id}.convert.{target}"),ui::Label(text(label.as_str())?),None,drawing_play_action("editPath",Some(args))?)?;
+                let button = semio_plugin::tree_item_with_action(format!("{id}.convert.{target}"),ui::Label(text(label.as_str())?),None,drawing_play_action("editPath",Some(args))?)?;
                 row = row.try_child(button).map_err(|_| error())?;
             }
         }
@@ -234,7 +234,7 @@ fn polygon_row(layer_id:&(impl std::fmt::Display+?Sized),index:usize,point:[f64;
     row.try_build().map_err(|_|error())
 }
 
-fn fill_input(layer_id: &(impl std::fmt::Display + ?Sized), id: &str, label: LabelText, kind: InputKind, value: &str, edit: semio_framework_plugin::UiValue, disabled: bool) -> UiAssemblyResult<BuiltNode> {
+fn fill_input(layer_id: &(impl std::fmt::Display + ?Sized), id: &str, label: LabelText, kind: InputKind, value: &str, edit: semio_plugin::UiValue, disabled: bool) -> UiAssemblyResult<BuiltNode> {
     let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",edit)])?;
     let (action,args) = drawing_play_action("editFill",Some(args))?;
     let mut input = ui::input(kind).value(text(value)?).disabled(disabled).commit(text("blur")?)
@@ -272,7 +272,7 @@ pub fn fill_controls(layer_id: &(impl std::fmt::Display + ?Sized), fill: Option<
         if !disabled && !stops.is_empty() && stops.len() < 64 {
             let offset = (1..stops.len()).max_by(|a,b| (stops[*a].offset-stops[*a-1].offset).total_cmp(&(stops[*b].offset-stops[*b-1].offset))).map_or(0.5,|index| (stops[index-1].offset+stops[index].offset)/2.0);
             let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",ui_value_map([("kind",ui_value_text("addStop")?),("offset",ui_value_number(offset))])?)])?;
-            row = row.try_child(semio_framework_plugin::tree_item_with_action("drawing-inspector.fill.add",ui::Label(text(labels.add_stop.as_str())?),None,drawing_play_action("editFill",Some(args))?)?).map_err(|_| error())?;
+            row = row.try_child(semio_plugin::tree_item_with_action("drawing-inspector.fill.add",ui::Label(text(labels.add_stop.as_str())?),None,drawing_play_action("editFill",Some(args))?)?).map_err(|_| error())?;
         }
     }
     row.try_build().map_err(|_| error())
@@ -295,14 +295,14 @@ pub fn stop_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, stop
     }
     if removable && !disabled {
         let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",ui_value_map([("kind",ui_value_text("removeStop")?),("index",ui_value_number(index as f64))])?)])?;
-        row = row.try_child(semio_framework_plugin::tree_item_with_action(format!("{id}.remove"),ui::Label(text(labels.remove_stop.as_str())?),None,drawing_play_action("editFill",Some(args))?)?).map_err(|_| error())?;
+        row = row.try_child(semio_plugin::tree_item_with_action(format!("{id}.remove"),ui::Label(text(labels.remove_stop.as_str())?),None,drawing_play_action("editFill",Some(args))?)?).map_err(|_| error())?;
     }
     row.try_build().map_err(|_| error())
 }
 
 pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let selected = selected_drawing_layers(document, ids);
-    let Some(first) = selected.first() else { return semio_framework_plugin::built_text_node(Label::data(labels.select_hint.as_str())).map_err(|_| error()) };
+    let Some(first) = selected.first() else { return semio_plugin::built_text_node(Label::data(labels.select_hint.as_str())).map_err(|_| error()) };
     let all_fields = selected.iter().map(|layer|fields(layer,labels)).collect::<UiAssemblyResult<Vec<_>>>()?;
     let rows = fields(first, labels)?.into_iter().filter(|field| all_fields.iter().all(|fields| fields.iter().any(|other| other.key == field.key))).collect::<Vec<_>>();
     let eligibility=selection_actions::SelectionActionEligibility::from_selection(document,&selected,ids);
@@ -315,7 +315,7 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
         field_row(document, field, &selected, mixed, labels)
     })?.window_section(windows, "drawing-inspector.arrange", Some(ui::Label(text(labels.arrange.as_str())?)), true, &actions, |(operation, label)| {
         let args = ui_value_map([("operation", ui_value_text(operation)?)])?;
-        semio_framework_plugin::tree_item_with_action(format!("{ROOT}.{operation}"), ui::Label(text(label.as_str())?), None, drawing_play_action("editSelection", Some(args))?)
+        semio_plugin::tree_item_with_action(format!("{ROOT}.{operation}"), ui::Label(text(label.as_str())?), None, drawing_play_action("editSelection", Some(args))?)
     })?;
     if selected.len() == 1 {
         let base = layer_base(first);

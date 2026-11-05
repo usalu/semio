@@ -25,8 +25,8 @@ pub fn move_camera2d<Op: From<crate::move_camera2d::MoveCamera2d>>(new_x: f64, n
 impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for MoveCamera2d where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::move_camera2d::MoveCamera2d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "camera2d", kind: "move-camera2d", record: "MovedCamera2d" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move camera to ({}, {})", self.new_x, self.new_y), &format!("Kamera nach ({}, {}) verschieben", self.new_x, self.new_y))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Move camera to ({}, {})", self.new_x, self.new_y), &format!("Kamera nach ({}, {}) verschieben", self.new_x, self.new_y))
     }
 }
 

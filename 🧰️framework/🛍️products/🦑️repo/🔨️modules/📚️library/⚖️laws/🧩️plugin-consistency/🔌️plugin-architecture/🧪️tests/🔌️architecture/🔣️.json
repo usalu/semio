@@ -32,7 +32,7 @@
      "name = \"probe\"",
      "",
      "[dependencies]",
-     "semio-framework-plugin = { path = \"../../../../🧰️framework/plugin\" }"
+     "semio-plugin = { path = \"../../../../🧰️framework/plugin\" }"
     ],
     "✏️s/🔌️plugins/🔭️probe/🗿️artifacts/🔸️kind/⚙️engine/🦀️.rs": [
      "pub fn run() -> u8 { 1 }"
@@ -401,7 +401,7 @@
     "✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/⚙️engine/🦀️.rs": [
      "pub fn init() {",
      "    register_app_io(spec);",
-     "    use semio_framework_os::host;",
+     "    use semio_os::host;",
      "    register_language(\"x\"); // register_app_io(commented)",
      "}"
     ],
@@ -409,8 +409,8 @@
      "fn a() { register_mesh_exporter(x); }",
      "let s = \"register_app_io\";",
      "// register_app_io(x)",
-     "use semio_framework_os::Foo;",
-     "fn b() { register_app_io(x); let _ = semio_framework_os::y; }"
+     "use semio_os::Foo;",
+     "fn b() { register_app_io(x); let _ = semio_os::y; }"
     ],
     "✏️s/🔌️plugins/🔭️reg/🗿️artifacts/🔸️kind/🦀️.rs": [
      "pub fn plugin() -> Plugin {",
@@ -482,10 +482,10 @@
      "",
      "[dependencies]",
      "serde = { version = \"1\" }",
-     "semio-framework-plugin = { path = \"../../../../🧰️framework/plugin\" }",
+     "semio-plugin = { path = \"../../../../🧰️framework/plugin\" }",
      "semio-framework-fem = { path = \"../../../../🧰️framework/fem\" }",
      "renamed = { path = \"../../../../🧰️framework/3d\", package = \"semio-framework-3d\" }",
-     "semio-framework-os = { path = \"../../../../🧰️framework/os\" }",
+     "semio-os = { path = \"../../../../🧰️framework/os\" }",
      "serde_json = { path = \"../../../../🧰️framework/json\" }",
      "local = { path = \"../local\" }",
      "",
@@ -508,7 +508,7 @@
      7
     ],
     [
-     "plugin-dependency-allowlist-✏️s/🔌️plugins/🔭️dep/📦️packages/🦀️rust/Cargo.toml-semio-framework-os",
+     "plugin-dependency-allowlist-✏️s/🔌️plugins/🔭️dep/📦️packages/🦀️rust/Cargo.toml-semio-os",
      "taxonomy/plugin-dependency-os-host",
      "medium",
      9

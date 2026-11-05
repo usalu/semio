@@ -1,6 +1,6 @@
 //! 🧷️ Shared artifact references and their history pin authority.
 
-use semio_framework_os_store_blob_identity::BlobRef;
+use semio_os_store_blob_identity::BlobRef;
 use semio_framework_value::{FromValue,ToValue};
 
 /// 🔗️ An independent-lifecycle reference to another artifact: a PIN (so it can be frozen to

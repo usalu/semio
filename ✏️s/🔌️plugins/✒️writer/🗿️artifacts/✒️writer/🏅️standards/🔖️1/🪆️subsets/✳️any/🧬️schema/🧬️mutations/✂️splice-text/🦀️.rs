@@ -2,7 +2,7 @@
 use crate::WriterDiff;
 use crate::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use semio_framework_plugin::TextSplice;
+use semio_plugin::TextSplice;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -52,13 +52,13 @@ where
 
     /// 🏷️ What the run typed, quoted (at most [`SPLICE_LABEL_EXCERPT_SCALARS`] scalars, a line break as `↵`): "Type “…”",
     /// "Delete “…”" or "Replace “…” with “…”" — a typing run's history row reads its own text.
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         let (deleted, insert) = (splice_label_excerpt(&self.deleted), splice_label_excerpt(&self.insert));
         match (deleted.is_empty(), insert.is_empty()) {
-            (true, false) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Type “{insert}”"), &format!("„{insert}“ tippen")),
-            (false, true) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete “{deleted}”"), &format!("„{deleted}“ löschen")),
-            (false, false) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace “{deleted}” with “{insert}”"), &format!("„{deleted}“ durch „{insert}“ ersetzen")),
-            (true, true) => semio_framework_ui_locale::LocalizedLabel::native("Edit a text range", "Textbereich bearbeiten"),
+            (true, false) => semio_ui_locale::LocalizedLabel::native(&format!("Type “{insert}”"), &format!("„{insert}“ tippen")),
+            (false, true) => semio_ui_locale::LocalizedLabel::native(&format!("Delete “{deleted}”"), &format!("„{deleted}“ löschen")),
+            (false, false) => semio_ui_locale::LocalizedLabel::native(&format!("Replace “{deleted}” with “{insert}”"), &format!("„{deleted}“ durch „{insert}“ ersetzen")),
+            (true, true) => semio_ui_locale::LocalizedLabel::native("Edit a text range", "Textbereich bearbeiten"),
         }
     }
 }

@@ -18,8 +18,8 @@ pub struct ChangeMemberRelativeHumidity {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberRelativeHumidity where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_member_relative_humidity::ChangeMemberRelativeHumidity> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-relative-humidity", kind: "change-member-relative-humidity", record: "ChangedChangeMemberRelativeHumidity" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Relative humidity RH of member {}", self.member_id), &format!("Relative Luftfeuchte RH von Bauteil {} ändern", self.member_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change Relative humidity RH of member {}", self.member_id), &format!("Relative Luftfeuchte RH von Bauteil {} ändern", self.member_id))
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }

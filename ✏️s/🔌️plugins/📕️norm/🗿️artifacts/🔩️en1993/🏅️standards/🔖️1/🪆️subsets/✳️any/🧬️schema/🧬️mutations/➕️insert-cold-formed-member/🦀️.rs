@@ -10,7 +10,7 @@ pub struct InsertColdFormedMember { pub index: Option<usize>, pub cold_formed_me
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertColdFormedMember where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_cold_formed_member::RemoveColdFormedMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "cold-formed-member", kind: "insert-cold-formed-member", record: "InsertedColdFormedMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert cold-formed member at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Kaltprofil-Bauteil an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Insert cold-formed member at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Kaltprofil-Bauteil an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

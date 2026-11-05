@@ -3,8 +3,8 @@
 
 use crate::editor::puzzle2d::testkit::*;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes};
-use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::InvocationResult;
+use semio_plugin::kernel::Effect;
+use semio_plugin::InvocationResult;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
 

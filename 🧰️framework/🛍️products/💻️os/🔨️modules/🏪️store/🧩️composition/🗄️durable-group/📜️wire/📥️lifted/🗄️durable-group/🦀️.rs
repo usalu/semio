@@ -1,17 +1,17 @@
 //! 📥️ Items of `durable_group` that belong to `os-store-durable-group-wire` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧩️composition/🗄️durable-group/🦀️.rs`.
 #[path = "../../../🧵️planning/🦀️.rs"]
 pub mod planning;
-use semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage;
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage;
+use semio_os_store_ledger::CursorRevisionAccumulator;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use semio_framework_value::FromValue as ValueFromValue;
 use semio_framework_value::ToValue as ValueToValue;
-use semio_framework_os_spr::{Edit, HybridLogicalTimestamp};
-use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
-use semio_framework_os_store_envelope::owner::OwnerRef;
-use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel};
+use semio_os_spr::{Edit, HybridLogicalTimestamp};
+use semio_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
+use semio_os_store_envelope::owner::OwnerRef;
+use semio_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel};
 use semio_framework_diagnostic::TextError;
-use semio_framework_os_pack::pack_rt;
+use semio_os_pack::pack_rt;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
 use std::mem::size_of;

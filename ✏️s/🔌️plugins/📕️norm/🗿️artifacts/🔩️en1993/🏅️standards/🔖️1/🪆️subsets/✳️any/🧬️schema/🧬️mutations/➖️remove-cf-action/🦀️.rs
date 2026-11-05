@@ -16,8 +16,8 @@ pub struct RemoveCfAction {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for RemoveCfAction where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::insert_cf_action::InsertCfAction> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "cf-action", kind: "remove-cf-action", record: "RemovedCfAction" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove cold-formed action #{} of {}", self.index, self.id), &format!("Kaltprofil-Einwirkung #{} von {} entfernen", self.index, self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Remove cold-formed action #{} of {}", self.index, self.id), &format!("Kaltprofil-Einwirkung #{} von {} entfernen", self.index, self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone(), self.index.to_string()] }
 }

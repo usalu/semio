@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfLipLength where 
         record: "ChangedCfLipLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Edge fold length c_p (0 = unstiffened) of the cold-formed member", "Kaltprofil: Randlippe c_p (0 = unausgesteift) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Edge fold length c_p (0 = unstiffened) of the cold-formed member", "Kaltprofil: Randlippe c_p (0 = unausgesteift) ändern")
     }
 }
 

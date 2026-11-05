@@ -4,8 +4,8 @@
 pub struct ArtifactRevision {
     pub artifact_id: String,
     pub schema: String,
-    pub applied_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
-    pub redo_edit_ids: semio_framework_os_vcs::HistoryPageStack<String>,
+    pub applied_edit_ids: semio_os_vcs::HistoryPageStack<String>,
+    pub redo_edit_ids: semio_os_vcs::HistoryPageStack<String>,
     pub checkpoint_id: Option<String>,
 }
 

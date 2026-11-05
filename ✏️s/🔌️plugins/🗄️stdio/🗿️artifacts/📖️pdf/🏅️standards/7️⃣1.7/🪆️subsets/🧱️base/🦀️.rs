@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
     use crate::standards::v1_7::subsets::base::PdfAnalyzer;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -44,7 +44,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 pub mod derived_analysis {
     use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.pdf.1.7` parts.
@@ -64,17 +64,17 @@ pub mod derived_analysis {
 
         /// 🔍️ Real sniff (requirement #9): inspects `%PDF-` magic + version probe via
         /// `engine::sniff_pdf`, does not discard its argument.
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Binary(bytes) => match crate::standards::v1_7::subsets::base::io::import::sniff_pdf(bytes) {
-                    Some(_version) => semio_framework_plugin::io::Confidence::High,
-                    None => semio_framework_plugin::io::Confidence::Low,
+                    Some(_version) => semio_plugin::io::Confidence::High,
+                    None => semio_plugin::io::Confidence::Low,
                 },
                 AnalyzeSource::Text(text) => {
-                    if crate::standards::v1_7::subsets::base::io::import::sniff_pdf(text.as_bytes()).is_some() { return semio_framework_plugin::io::Confidence::High; }
+                    if crate::standards::v1_7::subsets::base::io::import::sniff_pdf(text.as_bytes()).is_some() { return semio_plugin::io::Confidence::High; }
                     match store::semio_format::split_text_preamble(text) {
-                        Ok((envelope, _)) if envelope.matches_identity("stdio.pdf.1.7", store::semio_format::Component::Dsl, 1) => semio_framework_plugin::io::Confidence::High,
-                        _ => semio_framework_plugin::io::Confidence::Low,
+                        Ok((envelope, _)) if envelope.matches_identity("stdio.pdf.1.7", store::semio_format::Component::Dsl, 1) => semio_plugin::io::Confidence::High,
+                        _ => semio_plugin::io::Confidence::Low,
                     }
                 }
             }
@@ -83,7 +83,7 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = PdfParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.as_bytes().starts_with(b"%PDF-") {
@@ -93,7 +93,7 @@ pub mod derived_analysis {
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                         }
                     },
@@ -104,7 +104,7 @@ pub mod derived_analysis {
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                         }
                     },
@@ -116,7 +116,7 @@ pub mod derived_analysis {
     //#endregion 🔖️Analyzer
 }
 pub use derived_analysis::*;
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec PdfBuilderFacets {
         construction: crate::standards::v1_7::subsets::base::io::PdfBuilderConstruction,
         analysis: PdfAnalyzerAnalysis,

@@ -1,6 +1,6 @@
 //! 🧳️ Artifact, ui, context resource and prompt tools.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[path = "../🗿️artifact/🦀️.rs"]
 pub mod artifact;

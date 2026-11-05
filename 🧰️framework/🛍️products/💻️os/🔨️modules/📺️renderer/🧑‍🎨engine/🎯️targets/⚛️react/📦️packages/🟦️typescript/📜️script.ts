@@ -77,6 +77,14 @@ class AgentBridgeCheckScript extends BundleScript {
   }
 }
 
+/** 🔏️ Proves document archive ownership against neutral fixtures and an independent SQLite oracle. */
+class DocumentArchiveOwnershipCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("document-archive-ownership-check accepts no arguments");
+    runCmd(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🔸️open-document/🔏️archive-owner/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
+  }
+}
+
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await typecheckAdmittedProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "tsconfig.json", owner: "renderer-react:typescript", args: segments, timeoutMs: 120_000 });
@@ -304,6 +312,7 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("viewport-presence-check", ViewportPresenceCheckScript)
   .register("lint", LintScript)
   .register("typecheck", TypecheckScript)
+  .register("document-archive-ownership-check", DocumentArchiveOwnershipCheckScript)
   .register("causal-input-publication-check", CausalInputPublicationCheckScript)
   .register("row-action-admission-check", RowActionAdmissionCheckScript)
   .register("tutorial-interaction-check", TutorialInteractionCheckScript)

@@ -5,10 +5,10 @@ use semio_framework_2d_compute::EngineHandles;
 use crate::editor::sourcing::editor_vocabulary::{SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_ROWS_DOMAIN, reset_document_effect, sourcing_curation_io};
 
 /// 🪵️ Declares the owned sourcing module projection before payload production.
-static SOURCING_ORIGINAL_HOST_CONTRIBUTIONS: semio_framework_plugin::OriginalHostConfigurationDeclaration<SourcingCurationConfigMutation> = semio_framework_plugin::OriginalHostConfigurationDeclaration {
+static SOURCING_ORIGINAL_HOST_CONTRIBUTIONS: semio_plugin::OriginalHostConfigurationDeclaration<SourcingCurationConfigMutation> = semio_plugin::OriginalHostConfigurationDeclaration {
     maximum_input_bytes: crate::standards::v1::subsets::any::schema::domain::SOURCING_JSON_MAX_BYTES,
     maximum_output_bytes: SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES,
-    projection: semio_framework_plugin::OriginalHostConfigurationProjection::Contributions(semio_framework_plugin::OriginalContributionProjection {
+    projection: semio_plugin::OriginalHostConfigurationProjection::Contributions(semio_plugin::OriginalContributionProjection {
         maximum_depth: crate::standards::v1::subsets::any::schema::domain::SOURCING_JSON_MAX_DEPTH,
         maximum_items: crate::standards::v1::subsets::any::schema::domain::SOURCING_JSON_MAX_ITEMS,
         maximum_string_bytes: crate::standards::v1::subsets::any::schema::domain::SOURCING_JSON_MAX_STRING_BYTES,
@@ -33,8 +33,8 @@ impl ArtifactEditor for SourcingCurationApp {
     type DraftMutation = NoDraftMutation;
     type Presence = SourcingCurationPresence;
     type PresenceMutation = SourcingCurationPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = SourcingCurationCommand;
 
@@ -60,7 +60,7 @@ impl ArtifactEditor for SourcingCurationApp {
 })())
 }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<SourcingCurationApp>,
         owner_file: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.sourcing.curation@1/*#editor",
@@ -86,7 +86,7 @@ impl ArtifactEditor for SourcingCurationApp {
         }
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         grid_config::register(registry)
     }
 
@@ -95,28 +95,28 @@ impl ArtifactEditor for SourcingCurationApp {
         registry.register(SourcingCurationBoundedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let bounded = SOURCING_CURATION_BOUNDED_TOOL_IDS.contains(&original.tool_id.as_str());
         if !bounded {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "sourcing-curation-command-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "sourcing-curation-command-tool-mismatch").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SourcingCurationCommand::command_id, sourcing_curation_retained_raw_bytes(tool_id), SOURCING_CURATION_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, sourcing_curation_retained_reduce, sourcing_curation_bounded_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SourcingCurationCommand::command_id, sourcing_curation_retained_raw_bytes(tool_id), SOURCING_CURATION_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, sourcing_curation_retained_reduce, sourcing_curation_bounded_extent))
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<CurationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<CurationSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(sourcing_curation_io())
     }
 
@@ -168,7 +168,7 @@ impl ArtifactEditor for SourcingCurationApp {
         sourcing_curation_command_from_action(action, args)
     }
 
-    fn original_host_configuration(action: &str) -> Option<&'static semio_framework_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
+    fn original_host_configuration(action: &str) -> Option<&'static semio_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
         (action == "setContributions").then_some(&SOURCING_ORIGINAL_HOST_CONTRIBUTIONS)
     }
 
@@ -178,7 +178,7 @@ impl ArtifactEditor for SourcingCurationApp {
         doc: &ArtifactView<'_, CurationSnapshot>,
         cfg: &ConfigView<'_, SourcingCurationConfig>,
         _interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, Self::DraftMutation>, Fault> {
@@ -186,41 +186,41 @@ impl ArtifactEditor for SourcingCurationApp {
         sourcing_curation_finish_emit(command, emit, cfg.window, view_state)
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let grid_cfg = grid_config::current(cfg);
         HashMap::from([(grid::SOURCING_CURATION_WINDOW_GRID.into(), grid::window_measures(&grid_cfg, sourcing_curation_labels(view_state)))])
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         let labels = sourcing_curation_labels(view_state);
         let grid_window = grid_config::current(cfg);
         match body_key {
-            pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
-            curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
-            preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, &[], labels).map(semio_framework_plugin::built_to_component_tree),
-            grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data("")),
+            pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels).map(semio_plugin::built_to_component_tree),
+            curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels).map(semio_plugin::built_to_component_tree),
+            preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, &[], labels).map(semio_plugin::built_to_component_tree),
+            grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data("")),
         }
     }
 
     /// 🕹️ The Preview window follows the framework-owned `rows` selection a table row or grid pick makes;
     /// every other body renders exactly as [`Self::render`].
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, CurationSnapshot>,
         cfg: &ConfigView<'_, SourcingCurationConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == preview::SOURCING_CURATION_BODY_PREVIEW {
             let selected_ids = interaction.selection(SOURCING_ROWS_DOMAIN).ids.clone();
-            return preview::render(doc.snapshot, &selected_ids, sourcing_curation_labels(view_state)).map(semio_framework_plugin::built_to_component_tree);
+            return preview::render(doc.snapshot, &selected_ids, sourcing_curation_labels(view_state)).map(semio_plugin::built_to_component_tree);
         }
         Self::render(body_key, doc, cfg, view_state)
 

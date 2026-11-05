@@ -1,7 +1,7 @@
 cargo-features = ["trim-paths"]
 
 [package]
-name = "semio-framework-plugin-mounted-owner"
+name = "semio-plugin-mounted-owner"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.95"

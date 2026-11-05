@@ -44,7 +44,7 @@ impl DurableOwnedGroupJournalSinkV1 for FakeJournalSink {
 }
 
 impl DurableOwnedGroupJournalCommitV1 for FakeJournalCommit {
-    fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String> {
+    fn advance(&mut self, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String> {
         if !grant.permits_one() {
             return Ok(DurableOwnedGroupJournalAdvanceV1::Pending);
         }
@@ -186,18 +186,18 @@ fn map_assembly(
     let drawing_admission = map_member_admission(&drawing, 2, 11, stale_role == Some(DRAWING_ROLE));
     let value_admission = map_member_admission(&value, 3, 13, stale_role == Some(VALUE_ROLE));
     let factories = std::array::from_fn(|_| Arc::new(DemoOneItemPreparationFactory::admissible()));
-    let parent_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[0].clone();
-    let drawing_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[1].clone();
-    let value_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[2].clone();
+    let parent_factory: Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[0].clone();
+    let drawing_factory: Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[1].clone();
+    let value_factory: Arc<dyn semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[2].clone();
     (DurableOwnedThreeStoreMapAssemblyV1::new(parent, drawing, value, parent_admission, drawing_admission, value_admission, parent_factory, drawing_factory, value_factory, Box::new(FakeJournalSink { resolution, state })), factories)
 }
 
 fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
-        let mut receiving_fixture=semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
+        let mut receiving_fixture=semio_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
 let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["assemblyDiagnosticTransfer"]["sameTurnPreparationGrantReuse"],false);let mut handoff=false;let mut denied_mount=false;
     for _ in 0..4_000_000 {
-        if !denied_mount&&assembly.phase==DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding&&assembly.prepared.as_ref().is_some_and(|prepared|prepared.binding_step==14){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,semio_framework_os_store_one_item::ArtifactStoreOneItemGrant{maximum_capacity_bytes:0,..grant},receiving)));assert_eq!(result.unwrap(),DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(assembly.parent.is_some()&&assembly.drawing.is_some()&&assembly.value.is_some()&&assembly.prepared.is_some());denied_mount=true;}
+        if !denied_mount&&assembly.phase==DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding&&assembly.prepared.as_ref().is_some_and(|prepared|prepared.binding_step==14){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,semio_os_store_one_item::ArtifactStoreOneItemGrant{maximum_capacity_bytes:0,..grant},receiving)));assert_eq!(result.unwrap(),DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(assembly.parent.is_some()&&assembly.drawing.is_some()&&assembly.value.is_some()&&assembly.prepared.is_some());denied_mount=true;}
         let binding=assembly.phase==DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,grant,receiving)));
         match result.expect("fixed-three assembly turn") {
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted => {assert!(handoff&&denied_mount,"valid assembly exposes separate funded source and mount handoffs");return;},
@@ -210,7 +210,7 @@ let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
 }
 
 fn drain_assembly_rejection(assembly: &mut DemoMapAssembly) -> DurableOwnedThreeStoreMapAssemblyOwnersV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation> {
-        let mut receiving_fixture=semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
+        let mut receiving_fixture=semio_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
 let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     for _ in 0..65_536 {
         match receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,grant,receiving)).expect("rejected fixed-three assembly cleanup turn") {

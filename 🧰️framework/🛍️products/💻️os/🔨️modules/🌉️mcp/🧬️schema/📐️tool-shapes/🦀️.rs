@@ -1,7 +1,7 @@
 //! 📐️ Tool shapes of the wire crate: JSON-RPC and MCP wire types, registries, the backend port and the notification lane.
 
 use schemars::schema_for;
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
 
 //#region 🔖️McpSchemaShape
 

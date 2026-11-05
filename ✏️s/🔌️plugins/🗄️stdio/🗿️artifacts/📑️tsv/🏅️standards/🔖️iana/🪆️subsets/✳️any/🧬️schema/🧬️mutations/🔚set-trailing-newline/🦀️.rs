@@ -14,8 +14,8 @@ pub struct SetTrailingNewline {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetTrailingNewline {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "trailing-newline", kind: "set-trailing-newline", record: "SetTrailingNewline" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set trailing newline", "Abschließenden Zeilenumbruch setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set trailing newline", "Abschließenden Zeilenumbruch setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

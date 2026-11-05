@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "headless": true,
+        "arguments": [
+          "--use-angle=swiftshader",
+          "--enable-unsafe-swiftshader",
+          "--enable-unsafe-webgpu"
+        ],
+        "executables": [
+          "chromium",
+          "chromium-headless-shell"
+        ],
+        "moduleSpecifier": "playwright"
+      }
+    }
+  }
+}

@@ -3,9 +3,9 @@
 //! Domain step/block/expr types live in the shared `playbook` kernel crate and are re-exported here under
 //! forms' historical names. `FormsSnapshot` is defined in `📸️snapshot/🧬️schema` and re-exported here.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
@@ -193,23 +193,6 @@ pub use semio_s_artifact_forms_forms_definition::editor::forms::demo_session;
 
         pub use semio_s_artifact_forms_forms_definition::editor::forms::presence;
 
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
-pub mod io {
-    pub use semio_s_artifact_forms_forms_definition::editor::forms::config::io::*;
-    pub mod binary {
-        pub use semio_s_artifact_forms_forms_tests::editor::forms::config::io::binary::*;
-        pub use semio_s_artifact_forms_forms_config::editor::forms::config::io::binary::mutations;
-    }
-    pub mod text {
-        pub use semio_s_artifact_forms_forms_tests::editor::forms::config::io::text::*;
-        pub use semio_s_artifact_forms_forms_config::editor::forms::config::io::text::mutations;
-    }
-}
-
-            pub use semio_s_artifact_forms_forms_tests::editor::forms::config::schema;
-        }
 
         pub use semio_s_artifact_forms_forms_tests::editor::forms::terminology;
 
@@ -254,28 +237,9 @@ pub mod io {
     }
 }
 
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod forms {
-        pub use semio_s_artifact_forms_forms_tests_2::viewer::forms::*;
+pub use semio_s_artifact_forms_forms_viewer::viewer;
 
-        pub use semio_s_artifact_forms_forms_tests::viewer::forms::presence;
-        pub use semio_s_artifact_forms_forms_tests::viewer::forms::config;
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                pub use semio_s_artifact_forms_forms_tests_2::viewer::forms::modes::view::*;
-
-                pub use semio_s_artifact_forms_forms_tests_2::viewer::forms::modes::view::windows;
-            }
-        }
-    }
-}
-
-pub use semio_s_artifact_forms_forms_tests_2::{forms_child_restore_projection};
+pub use semio_s_artifact_forms_forms_snapshot::forms_child_restore_projection;
 
 pub use semio_s_artifact_forms_forms_tests_3::host;
 
@@ -285,3 +249,7 @@ mod hoisted_tests_0;
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod hoisted_snapshot_1;
+
+pub use semio_s_artifact_forms_forms_diff::question_extensions;
+
+pub use semio_s_artifact_forms_forms_config::forms_config;

@@ -2,8 +2,8 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::io::exp
 use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
-use semio_framework_plugin::Effect;
+use semio_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
+use semio_plugin::Effect;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 #[allow(unused_imports)]
@@ -21,9 +21,9 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 #[allow(unused_imports)]
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{ExportJob, Output, Advance, stem, encode, FORMATS, handle, ExportModel};
@@ -73,7 +73,7 @@ async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_for_
     let snapshot = demo();
     let inferred = fresh(&snapshot);
     for format in FORMATS {
-        let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+        let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
         let mut job = ExportJob::with_steps(format, Some(&instance), 3);
         let (output, stages) = finished(&mut job, &snapshot);
         assert_eq!(output, encode(format, &snapshot, &inferred).expect("the file"), "{format}: the stepped job writes the one-shot file");
@@ -86,7 +86,7 @@ async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_for_
 
 #[semio_framework_async_macros::async_test]
 async fn the_progress_of_a_job_never_decreases() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = demo();
     let mut job = ExportJob::with_steps("csv", Some(&instance), 2);
     let mut seen = vec![job.fraction()];
@@ -103,7 +103,7 @@ async fn the_progress_of_a_job_never_decreases() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_job_keeps_the_finished_nodes_and_the_next_job_finishes_the_rest() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = demo();
     let mut cancelled = ExportJob::with_steps("ifc2x3", Some(&instance), 2);
     cancelled.advance(&snapshot).expect("opens");
@@ -121,7 +121,7 @@ async fn a_cancelled_job_keeps_the_finished_nodes_and_the_next_job_finishes_the_
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_format_is_a_refusal_before_any_work() {
-    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = demo();
     let mut job = ExportJob::new("dwg", Some(&instance));
     assert_eq!(job.advance(&snapshot).expect_err("refused").code.0, "bim.export.format-unknown");

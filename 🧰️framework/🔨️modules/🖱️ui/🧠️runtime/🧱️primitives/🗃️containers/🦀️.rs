@@ -2,7 +2,7 @@
 
 #[cfg(any(test, feature = "testkit"))]
 use std::collections::HashSet;
-use semio_framework_ui_runtime_presentation::{ComponentTree, TreeNode};
+use semio_ui_runtime_presentation::{ComponentTree, TreeNode};
 
 //#region 🔖️Identity
 

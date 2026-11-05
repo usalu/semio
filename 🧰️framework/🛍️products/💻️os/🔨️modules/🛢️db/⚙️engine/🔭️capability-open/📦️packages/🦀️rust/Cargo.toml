@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-kernel-db-engine-capability-open"
+name = "semio-os-kernel-db-engine-capability-open"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,22 +23,22 @@ name = "db_engine_capability_open"
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-os-kernel-db-io-core/testkit", "semio-framework-os-kernel-db-storage/testkit"]
+testkit = ["semio-os-kernel-db-io-core/testkit", "semio-os-kernel-db-storage/testkit"]
 
 [dependencies]
-semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-storage = { path = "../../../../🗄️storage/📦️packages/🦀️rust" }
+semio-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
+semio-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
+semio-os-kernel-db-storage = { path = "../../../../🗄️storage/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️catalog-codec/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-kernel-db-io-driver = { path = "../../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-kernel-db-storage = { path = "../../../../🗄️storage/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-kernel-db-storage-memory = { path = "../../../../🗄️storage/🗃️memory/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
+semio-os-kernel-db-engine-base = { path = "../../../🧱️catalog-codec/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel-db-io-driver = { path = "../../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel-db-storage = { path = "../../../../🗄️storage/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel-db-storage-memory = { path = "../../../../🗄️storage/🗃️memory/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

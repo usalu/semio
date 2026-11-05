@@ -16,8 +16,8 @@ pub struct SetRevisionHistory {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetRevisionHistory {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "revision-history", kind: "set-revision-history", record: "SetRevisionHistory" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set revision history", "Revisionsverlauf setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set revision history", "Revisionsverlauf setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

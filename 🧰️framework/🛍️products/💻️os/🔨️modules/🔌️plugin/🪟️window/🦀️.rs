@@ -1,25 +1,25 @@
 //! 🪟️ Surface tree assembly: built node to runtime tree transfer, paged text carriers, scene surfaces and window kind definitions.
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as pack;
 use semio_framework::{ActionDefinition, WindowKindDefinition};
-use semio_framework_ui_contract::BuiltNode;
+use semio_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-/// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
+/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
 /// `ActionDescriptor` have no drop-in replacement of the same name — see
 /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
 /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
 /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
-use semio_framework_ui_contract::*;
-use semio_framework_ui_runtime::{ComponentTree, TreeNode};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_layout::layout::WindowOptions;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_ui_contract::*;
+use semio_ui_runtime::{ComponentTree, TreeNode};
+use semio_ui_locale::LocalizedLabel;
+use semio_ui_layout::layout::WindowOptions;
+use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
 
 
 
@@ -136,15 +136,15 @@ pub fn section_component_tree(section: semio_framework::UiRefreshSection, payloa
 /// this produced before lanes existed. A scene that does declare them (`World3dScene`) is bounded
 /// by its number of carrier pages instead of by `UI_FIXED_BYTES` — which is what a 57 281-byte
 /// Nakagin world needs, since the 32 KiB `UiFixedBytes` doc cannot page and refused it outright.
-pub fn scene_surface<T: semio_framework_ui_scene::SceneDoc>(id: &str, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+pub fn scene_surface<T: semio_ui_scene::SceneDoc>(id: &str, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
     let (spine, lanes) = scene.split_lanes();
-    let props = semio_framework_ui_scene::encode(kind, &spine).map_err(|error| ui_assembly_error_because("scene-surface.encode", error))?;
+    let props = semio_ui_scene::encode(kind, &spine).map_err(|error| ui_assembly_error_because("scene-surface.encode", error))?;
     let carriers = lanes.iter().map(|lane| paged_text_carrier(lane.key, &lane.payload)).collect::<UiAssemblyResult<Vec<BuiltNode>>>()?;
     surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_children(carriers).map_err(|_| ui_assembly_error("scene-surface.lanes"))?.try_build().map_err(|_| ui_assembly_error("scene-surface.build"))
 }
 
 /// 🏷️ Builds one semantic text node from the SDK's retained non-node label type.
-pub fn built_text_node(label: semio_framework_ui_locale::Label) -> Result<BuiltNode, semio_framework_ui_locale::Label> {
+pub fn built_text_node(label: semio_ui_locale::Label) -> Result<BuiltNode, semio_ui_locale::Label> {
     let value = label.to_string();
     let Ok(value) = Label::try_from(value) else { return Err(label) };
     text(value).try_build().map_err(|_| label)
@@ -152,11 +152,11 @@ pub fn built_text_node(label: semio_framework_ui_locale::Label) -> Result<BuiltN
 
 /// 🧩️ Admits a dynamic text root into the fixed-capacity UI tree and preserves admission
 /// failure at the plugin assembly boundary.
-pub fn built_text_to_component_tree(label: semio_framework_ui_locale::Label) -> UiAssemblyResult<ComponentTree> {
+pub fn built_text_to_component_tree(label: semio_ui_locale::Label) -> UiAssemblyResult<ComponentTree> {
     built_text_node(label).map(built_to_component_tree).map_err(|_| ui_assembly_error("built-text-root"))
 }
 
-pub use semio_framework_plugin_interaction::{ui_assembly_error, UiAssemblyResult};
+pub use semio_plugin_interaction::{ui_assembly_error, UiAssemblyResult};
 
 /// 🩺️ [[ui_assembly_error]] with the refusing cause preserved. `SurfaceEncodeError` already
 /// distinguishes a pack failure from a payload-capacity overflow from a schema overflow, and
@@ -188,7 +188,7 @@ include!("../🧪️tests/🔬️app-tree-convert/🦀️.rs");
 /// briefly overlap, not as a compatibility layer.
 // 🚫️async: E1 pure total mapping consumed by sync struct-literal call sites — see R9.
 #[doc(hidden)]
-pub fn contract_surface_kind(kind: semio_framework_ui_declaration::ui::SurfaceKind) -> SurfaceKind {
+pub fn contract_surface_kind(kind: semio_ui_declaration::ui::SurfaceKind) -> SurfaceKind {
     let name = serde_json::to_string(&kind).unwrap_or_default();
     serde_json::from_str(&name).unwrap_or(SurfaceKind::Canvas2d)
 }
@@ -196,9 +196,9 @@ pub fn contract_surface_kind(kind: semio_framework_ui_declaration::ui::SurfaceKi
 /// 🔀️ The inverse of contract_surface_kind, for descriptor paths still speaking the old enum.
 // 🚫️async: E1 pure total mapping — see R9.
 #[doc(hidden)]
-pub fn legacy_surface_kind(kind: SurfaceKind) -> semio_framework_ui_declaration::ui::SurfaceKind {
+pub fn legacy_surface_kind(kind: SurfaceKind) -> semio_ui_declaration::ui::SurfaceKind {
     let name = serde_json::to_string(&kind).unwrap_or_default();
-    serde_json::from_str(&name).unwrap_or(semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d)
+    serde_json::from_str(&name).unwrap_or(semio_ui_declaration::ui::SurfaceKind::Canvas2d)
 }
 
 // 🪟️ The seven framework window kits (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
@@ -233,7 +233,7 @@ pub fn window_kind_definition(id: &'static str, en: &'static str, de: &'static s
 }
 
 #[doc(hidden)]
-pub use semio_framework_os_kernel as __kernel;
+pub use semio_os_kernel as __kernel;
 #[doc(hidden)]
 pub use semio_framework_pack_json as __pack_json;
 #[path = "🎛️engagement/🦀️.rs"]

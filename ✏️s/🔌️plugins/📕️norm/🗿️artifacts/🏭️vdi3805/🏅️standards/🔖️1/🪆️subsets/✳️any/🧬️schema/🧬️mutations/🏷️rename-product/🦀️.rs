@@ -18,8 +18,8 @@ pub struct RenameProduct {
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RenameProduct where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::rename_product::RenameProduct> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "product", kind: "rename-product", record: "RenamedProduct" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename product \"{}\" to \"{}\"", self.id, semio_s_artifact_norm_vdi3805_model::text_in(&self.new_title, "en")), &format!("Produkt \"{}\" in \"{}\" umbenennen", self.id, semio_s_artifact_norm_vdi3805_model::text_in(&self.new_title, "en")))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename product \"{}\" to \"{}\"", self.id, semio_s_artifact_norm_vdi3805_model::text_in(&self.new_title, "en")), &format!("Produkt \"{}\" in \"{}\" umbenennen", self.id, semio_s_artifact_norm_vdi3805_model::text_in(&self.new_title, "en")))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

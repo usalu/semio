@@ -70,12 +70,12 @@ pub fn apply_world3d_projection_mode(session_state: &mut WorldSessionState, came
 pub fn world3d_projection_orientation(camera_state: &WorldCameraState) -> ui_scene::math::WorldProjectionOrientation {
     match camera_state.projection_spec.orientation {
         Viewport3dProjectionOrientation::Cardinal { view } => ui_scene::math::WorldProjectionOrientation::Cardinal(match view {
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Plan | semio_framework_ui_viewport::Viewport3dOrthographicView::Top => ui_scene::math::WorldCardinalView::Top,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Bottom => ui_scene::math::WorldCardinalView::Bottom,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Front => ui_scene::math::WorldCardinalView::Front,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Back => ui_scene::math::WorldCardinalView::Back,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Left => ui_scene::math::WorldCardinalView::Left,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Right => ui_scene::math::WorldCardinalView::Right,
+            semio_ui_viewport::Viewport3dOrthographicView::Plan | semio_ui_viewport::Viewport3dOrthographicView::Top => ui_scene::math::WorldCardinalView::Top,
+            semio_ui_viewport::Viewport3dOrthographicView::Bottom => ui_scene::math::WorldCardinalView::Bottom,
+            semio_ui_viewport::Viewport3dOrthographicView::Front => ui_scene::math::WorldCardinalView::Front,
+            semio_ui_viewport::Viewport3dOrthographicView::Back => ui_scene::math::WorldCardinalView::Back,
+            semio_ui_viewport::Viewport3dOrthographicView::Left => ui_scene::math::WorldCardinalView::Left,
+            semio_ui_viewport::Viewport3dOrthographicView::Right => ui_scene::math::WorldCardinalView::Right,
         }),
         _ => ui_scene::math::WorldProjectionOrientation::Free,
     }

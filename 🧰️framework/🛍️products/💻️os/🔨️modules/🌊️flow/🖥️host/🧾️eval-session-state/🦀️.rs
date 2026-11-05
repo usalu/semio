@@ -90,30 +90,17 @@ pub enum NodeEvalStatus {
 /// evaluation is done" and from "this evaluation gave up" — PER WINDOW, because generate-mode
 /// previews evaluate a patched fixture of their own and finish on their own schedule
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct FlowEvalWindowTickLatch {
-    pub armed: bool,
-    pub in_flight: u32,
-    pub owed: bool,
-    pub unfinished: bool,
-}
-
-semio_framework_value::artifact_retire_leaf!(FlowEvalWindowTickLatch);
+pub use semio_os_flow_host_source::window_latch::FlowEvalWindowTickLatch;
 
 /// 🔑️ The latch key for one preview window instance id. Hashed rather than retained: the latch map
 /// must cost nothing to retire, and a window id is the caller's string, never the session's.
-pub fn flow_eval_window_key(window_id: &str) -> u64 {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    window_id.hash(&mut hasher);
-    hasher.finish()
-}
+pub fn flow_eval_window_key(window_id:&str)->u64{semio_os_flow_host_source::window_key::FlowEvalWindowKey::cold(window_id).fingerprint()}
 
 /// 🧵️ In-process evaluation session: neural cache, incremental baseline, eval output, and status — one per app instance, never serialized.
 #[doc(hidden)]
 pub struct FlowEvalSessionState {
-    pub(super) retiring_geometry_port: Option<semio_framework_os_flow_geometry::GeometryPortRetirement>,
-    pub geometry_port: Option<Box<dyn semio_framework_os_flow_geometry::GeometryPort>>,
+    pub(super) retiring_geometry_port: Option<semio_os_flow_geometry::GeometryPortRetirement>,
+    pub geometry_port: Option<Box<dyn semio_os_flow_geometry::GeometryPort>>,
     pub(super) operator_registry: Option<neural::SharedRegistry>,
     pub(super) neural_cache: Option<Arc<NeuralCache>>,
     pub(super) previous_snapshot: Option<Arc<TreeSnapshot>>,
@@ -486,6 +473,7 @@ pub fn retire_invocation_reply_cold(source:String){retire_session_collection_col
 #[derive(Default)]
 pub(super) struct SessionRetirement {
     pub progress:RetainedCloneProgress,
+    pub work:u64,
     pub(super) root: Option<ControlledRetirement<SessionCollectionOwner>>,
     pub(super) owners: RetirementQueue,
 }
@@ -504,21 +492,23 @@ impl SessionRetirement {
         if grant.maximum_capacity_bytes<demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"session mutation requires its original retained frame capacity"))}
         Ok(())
     }
-    pub fn admit(&mut self,value:SessionCollectionOwner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,SessionCollectionOwner)>{
-        if self.root.is_some(){return self.owners.admit_owned(value,grant).result}
-        if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"session handoff requires an admitted item"),value))}
-        if grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"session handoff requires admitted depth"),value))}
-        match ControlledRetirement::new(value){Ok(owner)=>{self.root=Some(owner);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})},Err(error)=>Err(error)}
+    pub fn admit_original(&mut self,value:SessionCollectionOwner,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,(ValueError,SessionCollectionOwner)>{
+        if self.root.is_some(){return self.owners.admit_owned(value,grant)}
+        if grant.maximum_items==0{return semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::WorkLimit,"session handoff requires an admitted item"),value)),work:0}}
+        if grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::DepthLimit,"session handoff requires admitted depth"),value)),work:0}}
+        let result=match ControlledRetirement::new(value){Ok(owner)=>{self.root=Some(owner);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})},Err(error)=>Err(error)};semio_framework_value::RetainedWorkOutcome{result,work:1}
     }
+    pub fn admit(&mut self,value:SessionCollectionOwner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,SessionCollectionOwner)>{self.admit_original(value,grant).result}
+
     pub(super) fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if let Some(owner)=self.root.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
         Ok(RetirementDemand{copy_bytes:self.owners.next_copy_byte_demand()?,capacity_bytes:self.owners.next_capacity_byte_demand(copy)?,release_bytes:self.owners.next_release_byte_demand()?,depth:self.owners.next_depth_demand()?})
     }
     pub(super) fn step_progress(&self)->RetainedCloneProgress{self.progress}
     pub(super) fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        self.progress=Default::default();
-        let Some(owner)=self.root.as_mut()else{let result=self.owners.step(grant).result;self.progress=self.owners.step_progress();return result};
-        let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;
+        self.progress=Default::default();self.work=0;
+        let Some(owner)=self.root.as_mut()else{let turn=self.owners.step(grant);self.work=turn.work;self.progress=self.owners.step_progress();return turn.result};
+        let result=owner.step(grant);self.progress=owner.step_progress();self.work=owner.last_turn_work();let step=result?;
         let progress=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Flow session original root")?.progress();
         if owner.terminal_is_empty(){self.root=None;}
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Repeated UTF-8 Source Recipe",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "prefix",
+    "unit",
+    "repeat",
+    "suffix"
+  ],
+  "properties": {
+    "prefix": {
+      "type": "string",
+      "maxLength": 2048
+    },
+    "unit": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "repeat": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 32768
+    },
+    "suffix": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

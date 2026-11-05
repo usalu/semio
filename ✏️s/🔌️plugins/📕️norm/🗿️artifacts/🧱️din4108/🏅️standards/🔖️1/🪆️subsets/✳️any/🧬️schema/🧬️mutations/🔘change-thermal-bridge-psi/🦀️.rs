@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeThermalBridgePsi 
         record: "ChangedThermalBridgePsi",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change linear thermal transmittance ψ", "Längenbezogenen Wärmedurchgangskoeffizienten ψ ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change linear thermal transmittance ψ", "Längenbezogenen Wärmedurchgangskoeffizienten ψ ändern")
     }
 }
 

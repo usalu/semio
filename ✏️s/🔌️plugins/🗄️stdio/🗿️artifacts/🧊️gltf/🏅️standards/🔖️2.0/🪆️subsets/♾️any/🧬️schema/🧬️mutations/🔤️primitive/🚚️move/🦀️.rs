@@ -74,8 +74,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "primitive-attribute", kind: "move-primitive-attribute", record: "MovedPrimitiveAttribute" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Move Primitive Attribute", "Primitivattribut verschieben")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Move Primitive Attribute", "Primitivattribut verschieben")
     }
 
     fn target(&self) -> Vec<String> {

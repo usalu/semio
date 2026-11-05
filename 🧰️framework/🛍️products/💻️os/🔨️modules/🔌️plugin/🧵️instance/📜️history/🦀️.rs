@@ -1,8 +1,8 @@
 //! 📜️ Instance components of the plugin SDK: command history, host events and transactions.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
 
 #[path = "📥️staging/⏪️time-travel/🦀️.rs"]
 pub mod history_time_travel;

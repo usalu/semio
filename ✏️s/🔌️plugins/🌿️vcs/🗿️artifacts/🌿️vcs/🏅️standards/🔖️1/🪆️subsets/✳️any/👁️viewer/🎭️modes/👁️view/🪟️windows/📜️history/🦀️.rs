@@ -8,8 +8,8 @@
 //! sibling editor module (`policyViewerPurityBreaches` forbids it outright).
 
 use crate::VcsSnapshot;
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, HistoryView, UiAssemblyResult, WindowKindDefinition};
+use semio_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_plugin::{BuiltNode, HistoryView, UiAssemblyResult, WindowKindDefinition};
 use std::collections::HashMap;
 
 //#region 🔖️Constants

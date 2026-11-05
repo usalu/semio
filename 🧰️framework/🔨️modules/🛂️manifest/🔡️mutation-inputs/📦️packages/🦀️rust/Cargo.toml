@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 semio-framework-manifest-arg-schema = { path = "../../../🧮️arg-schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-retirement-queue = { path = "../../../../🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
 

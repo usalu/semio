@@ -9,8 +9,8 @@
 //! reference to their shape below is a plain-JSON (or `Packed*`) snapshot the app fills in, never the
 //! library type itself.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 
 
@@ -22,10 +22,10 @@ extern crate semio_framework_os_kernel as store;
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g3): `⚙️engine` was removed from the taxonomy
 /// and `declaration()` describes the artifact, not engine behaviour, so its home is the artifact
 /// root alongside `artifact_kind()`.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::ArtifactDefinitionError> {
+    use semio_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+    let rows: &[semio_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.remodel.remodeling.standard.v1", "standard", "1", &[], None),
         ("s.remodel.remodeling.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.remodel.remodeling.schema.artifact", "schema", "s.remodel.remodeling", &[("schema", "s.remodel.remodeling")], None),
@@ -69,13 +69,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// surviving native row has no field on this tree because `io()`'s typed `IoEntry` slice replaced
 /// that channel. `localization: &[]` is a documented shortfall (debt D1): the real en/de names
 /// ("Remodeling"/"Umbau") still live on `definition()`'s kept `ArtifactCapability` rows.
-pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>
+pub fn artifact<PA>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling::RemodelingViewer>>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingPlayApp>>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling::RemodelingViewer>>>,
 {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use semio_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.remodel.remodeling").expect("canonical remodeling kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }

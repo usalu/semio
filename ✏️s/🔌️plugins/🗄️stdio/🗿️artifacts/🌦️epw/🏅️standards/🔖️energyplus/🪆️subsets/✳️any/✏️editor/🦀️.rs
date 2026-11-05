@@ -13,23 +13,23 @@ use crate::editor::epw::modes::edit::windows::main;
 use crate::standards::energyplus::subsets::any::schema::mutations::{set_record_field};
 
 use crate::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
 use semio_framework_2d_compute::EngineHandles;
@@ -154,7 +154,7 @@ impl ArtifactEditor for EpwEditor {
             "set-cell" => {
                 let column_index = semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")? as usize;
                 let column = main::EPW_TABLE_COLUMNS.get(column_index).ok_or_else(|| {
-                    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.column-range"), format!("EPW column index {column_index} is outside the {} editable fields", main::EPW_TABLE_COLUMNS.len()))
+                    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.epw.column-range"), format!("EPW column index {column_index} is outside the {} editable fields", main::EPW_TABLE_COLUMNS.len()))
                 })?;
                 Ok(EpwEditorCommand::SetCell {
                     row: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "row")?,
@@ -163,25 +163,25 @@ impl ArtifactEditor for EpwEditor {
                     value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")?,
                 })
             }
-            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.unhandled-action"), format!("unknown epw editor action '{other}'"))),
+            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.epw.unhandled-action"), format!("unknown epw editor action '{other}'"))),
         })
     }
 
-    fn reference_birth()->Option<fn()->Result<EpwSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<EpwSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot())
     })}
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.epw@energyplus", extension: ".epw", media_type: "text/plain", binary: false })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.epw@energyplus", extension: ".epw", media_type: "text/plain", binary: false })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
         Ok(semio_s_artifact_stdio_epw_snapshot::standards::energyplus::subsets::any::io::natural::encode_epw(snapshot).into_bytes())
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
         use semio_s_artifact_stdio_epw_snapshot::standards::energyplus::subsets::any::io::natural::{decode_epw, EpwDecodeError};
-        let refuse = |error: EpwDecodeError| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string());
+        let refuse = |error: EpwDecodeError| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string());
         let text = std::str::from_utf8(bytes).map_err(|error| refuse(EpwDecodeError::not_utf8(&error.to_string())))?;
         decode_epw(text).map_err(refuse)
     }
@@ -192,8 +192,8 @@ impl ArtifactEditor for EpwEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -204,23 +204,23 @@ impl ArtifactEditor for EpwEditor {
         epw_set_cell_emit(doc.snapshot, *row, column, revision, value)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.epw@energyplus/*#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
-            .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 
 pub(crate) fn epw_row_revision(record: &crate::standards::energyplus::subsets::any::schema::snapshot::EpwRecord) -> String {
-    semio_framework_plugin::app::DocumentWindowKit::text_revision(&semio_s_artifact_stdio_contract::editing::snapshot_edit_source(record))
+    semio_plugin::app::DocumentWindowKit::text_revision(&semio_s_artifact_stdio_contract::editing::snapshot_edit_source(record))
 }
 
 /// 🔐️ The token an agent's omitted `set-cell` revision is admitted against: the addressed record's row token, as its rendered
@@ -230,7 +230,7 @@ fn epw_agent_target_revision(snapshot: &EpwSnapshot, args: &semio_framework_valu
     let record = snapshot
         .records
         .get(row as usize)
-        .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.row-range"), format!("EPW row {row} is outside the {} available records", snapshot.records.len())))?;
+        .ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.epw.row-range"), format!("EPW row {row} is outside the {} available records", snapshot.records.len())))?;
     Ok(Some(epw_row_revision(record)))
 }
 
@@ -238,13 +238,13 @@ pub fn epw_set_cell_emit(snapshot: &EpwSnapshot, row: u32, column: &str, revisio
     let field_index = main::EPW_TABLE_COLUMNS
         .iter()
         .position(|candidate| candidate == &column)
-        .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.column-range"), format!("EPW column '{column}' is not an editable record field")))?;
+        .ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.epw.column-range"), format!("EPW column '{column}' is not an editable record field")))?;
     let record = snapshot
         .records
         .get(row as usize)
-        .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.row-range"), format!("EPW row {row} is outside the {} available records", snapshot.records.len())))?;
+        .ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.epw.row-range"), format!("EPW row {row} is outside the {} available records", snapshot.records.len())))?;
     if epw_row_revision(record) != revision {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.row-conflict"), format!("EPW row {row} changed before this cell draft was applied")));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.epw.row-conflict"), format!("EPW row {row} changed before this cell draft was applied")));
     }
     Ok(Emit { artifact_mutations: vec![EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: row as usize, field_index, value: value.to_string() })], ..Default::default() })
 }
@@ -264,7 +264,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for EpwEdit
         let semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path, value } = event else { return Ok(None) };
         let segments: Vec<&str> = path.split('/').skip(1).collect();
         let ["records", row, column] = segments.as_slice() else { return Ok(None) };
-        let fail = |message: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.record-edit"), message);
+        let fail = |message: String| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.epw.record-edit"), message);
         let row = row.parse::<usize>().map_err(|error| fail(error.to_string()))?;
         snapshot.records.get(row).ok_or_else(|| fail(format!("EPW row {row} is outside the {} available records", snapshot.records.len())))?;
         let field_index = main::EPW_TABLE_COLUMNS.iter().position(|candidate| candidate == column).ok_or_else(|| fail(format!("EPW column '{column}' is not an editable record field")))?;
@@ -280,8 +280,8 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     reduce: |command, snapshot| {
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(EpwEditorCommand::SetCell { row, column, revision, value }) = command else {
             return Err(Fault::new(
-                semio_framework_plugin::FaultOrigin::App,
-                semio_framework_plugin::FaultCode::new("stdio.epw.command-mismatch"),
+                semio_plugin::FaultOrigin::App,
+                semio_plugin::FaultCode::new("stdio.epw.command-mismatch"),
                 "EPW cell editing received another command",
             ));
         };
@@ -292,7 +292,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_epw_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_epw_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(EPW_EDITOR_DIALECT)
         .document(["stdio", "epw"])
         .icon_id("cloud-sun")

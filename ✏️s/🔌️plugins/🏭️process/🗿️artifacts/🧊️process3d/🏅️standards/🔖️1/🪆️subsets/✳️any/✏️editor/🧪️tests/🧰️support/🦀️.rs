@@ -15,54 +15,54 @@ use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::C
 use semio_framework::kernel::Effect;
 use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::AppDefinition;
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactKindSpec;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::CommandDefinition;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::AppDefinition;
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactKindSpec;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactView;
+use semio_plugin::CommandDefinition;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::Menu;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::OsMediaCapability;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::UtilityCategory;
-use semio_framework_plugin::UtilityDefinition;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::Menu;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::OsMediaCapability;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::UtilityCategory;
+use semio_plugin::UtilityDefinition;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
@@ -78,8 +78,8 @@ use stock::set_stock;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
 use world::{world_face_drag_end, world_pointer_down};
-use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, dispatch_fixture_action, meta, new_app_with_registry_and_members, render_registered_fixture_app, OriginalFixtureScope};
-use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+use semio_plugin::artifact_app_laws::{close_registered_fixture_app, dispatch_fixture_action, meta, new_app_with_registry_and_members, render_registered_fixture_app, OriginalFixtureScope};
+use semio_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
 /// ✏️ `Process3dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
 /// `ArtifactApp` — `EditorApp<Process3dPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -103,7 +103,7 @@ pub struct Process3dApp(pub Process3dRawApp, pub OriginalFixtureScope);
 impl Process3dApp {
     /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
     pub fn close_fixture(&mut self) {
-        close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+        close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
     }
 }
 
@@ -132,11 +132,11 @@ impl Drop for Process3dApp {
 /// examples }` shape `artifact_app_laws::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`
 /// still expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
 /// packet's lease).
-pub fn process3d_app_manifest_for_tests() -> semio_framework_plugin::App {
-    semio_framework_plugin::App { definition: create_process3d_app(), examples: Vec::new() }
+pub fn process3d_app_manifest_for_tests() -> semio_plugin::App {
+    semio_plugin::App { definition: create_process3d_app(), examples: Vec::new() }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("process", Process3dPlayApp, process3d_app_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("process", Process3dPlayApp, process3d_app_manifest_for_tests, "../..");
 
 /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
 
@@ -238,7 +238,7 @@ pub fn app() -> Process3dApp {
 /// bumps the generation and the decode comes back `Fault` instead of `Ready`.
 pub fn unseeded_app_with_registry() -> Process3dApp {
     let scope = OriginalFixtureScope::admit();
-    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()));
     ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
     Process3dApp(app, scope)
 }
@@ -246,7 +246,7 @@ pub fn unseeded_app_with_registry() -> Process3dApp {
 /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
 pub fn app_with_registry() -> Process3dApp {
     let scope = OriginalFixtureScope::admit();
-    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()));
     ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
     let mut app = Process3dApp(app, scope);
     seed_domain_catalog_contributions(&mut app);
@@ -268,15 +268,15 @@ pub fn dispatch_with_utility(app: &mut Process3dApp, command: Process3dCommand, 
 /// drains for. The settled receipt's effects are folded into the answer, since either surface may
 /// be the one carrying a `LoadDocument`; its `lanes` are the observable proof that a command wrote
 /// a store (`InvocationResult.mutations` is empty by construction on this path).
-pub fn settled_dispatch(app: &mut Process3dApp, command: Process3dCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+pub fn settled_dispatch(app: &mut Process3dApp, command: Process3dCommand) -> (InvocationResult, semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
     settled_dispatch_with_utility(app, command, PROCESS3D_DEFAULT_UTILITY)
 }
 
-pub fn settled_dispatch_with_utility(app: &mut Process3dApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-    let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+pub fn settled_dispatch_with_utility(app: &mut Process3dApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+    let mut view_state = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view_state.active_utility_id = Some(active_utility_id.into());
     let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-    let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("dispatch");
+    let mut result = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("dispatch");
     let receipt = settle(app);
     result.requested_effects.extend(receipt.effects.iter().cloned());
     (result, receipt)
@@ -288,9 +288,9 @@ pub fn action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> 
 
 /// 🏁️ The settling action bridge — same reason as [`settled_dispatch`]: the host verb's retained
 /// operation publishes after the call answers.
-pub fn settled_action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-    let admitted = ::semio_framework_async::poll::resolve_ready(dispatch_fixture_action(&mut app.0, action, args.cloned(), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("action dispatch");
-    let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx())).expect("settle the framework-reserved admission");
+pub fn settled_action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+    let admitted = ::semio_framework_async::poll::resolve_ready(dispatch_fixture_action(&mut app.0, action, args.cloned(), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("action dispatch");
+    let mut result = ::semio_framework_async::poll::resolve_ready(semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx())).expect("settle the framework-reserved admission");
     let receipt = settle(app);
     result.requested_effects.extend(receipt.effects.iter().cloned());
     (result, receipt)
@@ -298,21 +298,21 @@ pub fn settled_action(app: &mut Process3dApp, action: &str, args: Option<&DslVal
 
 /// 🏁️ Drives every pending typed operation of the bound instance to its publication, the way the
 /// plugin host's continuation does.
-pub fn settle(app: &mut Process3dApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("settle the typed operation")
+pub fn settle(app: &mut Process3dApp) -> semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+    ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("settle the typed operation")
 }
 
 /// 🧾️ Whether a settled publication reached the DOCUMENT lane — the mounted app's observable
 /// "this command wrote an in-history mutation".
-pub fn published_a_document_mutation(receipt: &semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) -> bool {
-    receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact)
+pub fn published_a_document_mutation(receipt: &semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt) -> bool {
+    receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact)
 }
 
 /// 🧩️ A `BuiltNode` carries retained page children, so the rendered tree is projected through the
 /// fixture transport rather than serialized directly — a bare `serde_json::to_string(&tree.root)`
 /// now fails with `BuiltChildren requires retained page transport`.
 pub fn render(app: &mut Process3dApp, body_key: &str) -> String {
-    render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    render_with_view(app, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 /// 🪟️ Renders one body against a host view state — the seam every tree-window law drives, since
@@ -329,8 +329,8 @@ pub fn render_with_view(app: &mut Process3dApp, body_key: &str, view_state: &Vie
 pub fn main_window_view() -> ViewModel {
     ViewModel {
         window_id: Some(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into() }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into() }],
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     }
 }
 

@@ -1,0 +1,189 @@
+[
+  {
+    "name": "Mixed Host And Generation Original Order",
+    "base": {
+      "hostSnapshot": {
+        "schema": "flow.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "original"
+          }
+        ],
+        "synapses": [],
+        "layout": {
+          "n": {
+            "x": 1,
+            "y": 2
+          }
+        }
+      },
+      "generation": {
+        "generations": []
+      }
+    },
+    "mutations": [
+      {
+        "ChangeSchema": {
+          "schema": "replayed"
+        }
+      },
+      {
+        "UpdateCamera": {
+          "camera": {
+            "x": 1,
+            "y": 2,
+            "zoom": 3
+          }
+        }
+      },
+      {
+        "CreateGeneration": {
+          "generation": {
+            "id": "g",
+            "name": "original",
+            "values": {}
+          },
+          "index": 0
+        }
+      },
+      {
+        "RenameGeneration": {
+          "id": "g",
+          "name": "renamed"
+        }
+      },
+      {
+        "ChangeGenerationValue": {
+          "id": "g",
+          "questionId": "q",
+          "value": 7
+        }
+      },
+      {
+        "SelectGeneration": {
+          "generationId": null
+        }
+      }
+    ],
+    "expected": {
+      "hostSnapshot": {
+        "schema": "replayed",
+        "camera": {
+          "x": 1,
+          "y": 2,
+          "zoom": 3
+        },
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "original"
+          }
+        ],
+        "synapses": [],
+        "layout": {
+          "n": {
+            "x": 1,
+            "y": 2
+          }
+        }
+      },
+      "generation": {
+        "generations": [
+          {
+            "id": "g",
+            "name": "renamed",
+            "values": {
+              "q": 7
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Unknown And Rejected Leaves Preserve Their Original Scope",
+    "base": {
+      "hostSnapshot": {
+        "schema": "flow.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "original"
+          }
+        ],
+        "synapses": [],
+        "layout": {
+          "n": {
+            "x": 1,
+            "y": 2
+          }
+        }
+      },
+      "generation": {
+        "generations": []
+      }
+    },
+    "mutations": [
+      {
+        "CreateWidget": {
+          "index": 0,
+          "widget": {
+            "kind": "inputNote",
+            "id": "n",
+            "text": "duplicate"
+          }
+        }
+      },
+      {
+        "Unsupported": {
+          "raw": "retained"
+        }
+      },
+      {
+        "DeleteGeneration": {
+          "id": "missing"
+        }
+      },
+      {
+        "DeleteWidget": {
+          "id": "n"
+        }
+      }
+    ],
+    "expected": {
+      "hostSnapshot": {
+        "schema": "flow.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "widgets": [],
+        "synapses": [],
+        "layout": {
+          "n": {
+            "x": 1,
+            "y": 2
+          }
+        }
+      },
+      "generation": {
+        "generations": []
+      }
+    }
+  }
+]

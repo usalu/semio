@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use super::number::Projection;
 use super::reader::{full_unsigned,high,low,ordinal,signed_integer,signed_word,unsigned,Reader};
 use super::xrecord::require_null;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R,Null as N};
+use semio_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R,Null as N};
 
 pub fn project_expression(projection:&mut Projection<'_,'_>,id:i64,value:&DwgEvaluationExpression)->Result<(),ValueError>{
  let(kind,double,text,integer,handle,short)=match &value.value{

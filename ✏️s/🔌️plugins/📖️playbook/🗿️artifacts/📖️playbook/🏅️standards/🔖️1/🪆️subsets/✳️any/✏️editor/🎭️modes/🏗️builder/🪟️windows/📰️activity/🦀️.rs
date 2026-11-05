@@ -2,11 +2,11 @@
 
 use crate::PlaybookSpec;
 use semio_framework_value::ToValue;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_scene::EventFeedScene;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
+use semio_ui_scene::EventFeedScene;
 
 pub const PLAYBOOK_PLAY_WINDOW_ACTIVITY: &str = "playbook-activity";
 pub const PLAYBOOK_PLAY_BODY_ACTIVITY: &str = "playbook.play.activity";
@@ -52,8 +52,8 @@ pub fn scene(spec: &PlaybookSpec) -> EventFeedScene {
     EventFeedScene { entries_json: semio_framework_pack_json::to_json_string(&entries), follow: Some(false), activate_action: None, domain_id: None }
 }
 
-pub fn render(spec: &PlaybookSpec) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_ACTIVITY, semio_framework_ui_contract::SurfaceKind::EventFeed, &scene(spec))
+pub fn render(spec: &PlaybookSpec) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_ACTIVITY, semio_ui_contract::SurfaceKind::EventFeed, &scene(spec))
 }
 
 #[cfg(test)]

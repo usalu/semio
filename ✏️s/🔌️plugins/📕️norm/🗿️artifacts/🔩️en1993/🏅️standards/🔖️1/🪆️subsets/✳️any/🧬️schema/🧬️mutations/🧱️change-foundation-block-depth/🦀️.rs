@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationBlockDep
         record: "ChangedFoundationBlockDepth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Block depth h (load spread height) of the foundation block", "Fundamentblock: Blockhöhe h (Lastausbreitungshöhe) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Block depth h (load spread height) of the foundation block", "Fundamentblock: Blockhöhe h (Lastausbreitungshöhe) ändern")
     }
 }
 

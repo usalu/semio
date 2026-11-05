@@ -10,7 +10,7 @@ pub struct ChangeBracingKind { pub bracing_id: String, pub new_value: semio_s_ar
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeBracingKind where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_bracing_kind::ChangeBracingKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "bracing-kind", kind: "change-bracing-kind", record: "ChangedBracingKind" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change kind of bracing {}", self.bracing_id), &format!("Art von Bracing {} ändern", self.bracing_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change kind of bracing {}", self.bracing_id), &format!("Art von Bracing {} ändern", self.bracing_id)) }
     fn target(&self) -> Vec<String> { vec![self.bracing_id.clone()] }
 }
 

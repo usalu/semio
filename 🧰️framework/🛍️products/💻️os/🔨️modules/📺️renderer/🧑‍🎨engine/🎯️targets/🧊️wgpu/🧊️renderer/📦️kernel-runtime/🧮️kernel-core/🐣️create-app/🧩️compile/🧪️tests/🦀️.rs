@@ -3,7 +3,7 @@ use super::*;
 use super::super::{Node,Fields};
 use crate::native_caller::{NativeFrameCaller,NativeFrameRootPolicyV1};
 use semio_framework_job::{OperationId,Generation,OriginalContiguousJobBytes,OriginalJobBytesReturnRegistry};
-use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
+use semio_plugin_interpreter_runtime::OwnedRuntime;
 fn clock()->Option<u64>{Some(1)}
 fn wake_return(){}
 static RETURNS:OriginalJobBytesReturnRegistry<64>=OriginalJobBytesReturnRegistry::with_return_wake(wake_return);

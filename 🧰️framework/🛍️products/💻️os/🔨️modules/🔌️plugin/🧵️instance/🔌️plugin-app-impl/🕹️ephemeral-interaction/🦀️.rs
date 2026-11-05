@@ -24,7 +24,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             topology_revision,
         };
         self.interaction.local_interaction_query =
-            Some(semio_framework_plugin_interaction::live::LocalInteractionLiveQuery::new(request_id, query_generation, identity, self.stores.store.snapshot_read().ok(), self.stores.config_store.snapshot_read().ok(), self.stores.interaction_store.snapshot_read().ok()));
+            Some(semio_plugin_interaction::live::LocalInteractionLiveQuery::new(request_id, query_generation, identity, self.stores.store.snapshot_read().ok(), self.stores.config_store.snapshot_read().ok(), self.stores.interaction_store.snapshot_read().ok()));
         self.interaction.local_interaction_emitted_bytes = 0;
         self.interaction.local_interaction_retired_bytes = 0;
         None

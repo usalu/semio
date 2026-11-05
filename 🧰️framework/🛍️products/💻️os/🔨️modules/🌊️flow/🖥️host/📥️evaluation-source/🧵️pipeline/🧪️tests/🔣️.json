@@ -1,0 +1,73 @@
+{
+  "schema": "flow.original-evaluation-pipeline.v1",
+  "cases": [
+    {
+      "name": "Converged Empty Wave",
+      "remaining": [],
+      "pending": [],
+      "unfinished": false
+    },
+    {
+      "name": "Unfinished Without Parked Extension",
+      "remaining": [
+        "a"
+      ],
+      "pending": [],
+      "unfinished": true
+    },
+    {
+      "name": "One Parked Unicode Extension",
+      "remaining": [
+        "部屋"
+      ],
+      "pending": [
+        {
+          "neuronId": "部屋",
+          "extensionId": "flow-extension-math",
+          "operatorId": "math.add",
+          "nodeHash": 17,
+          "inputJson": "{\"n\":\"雪🌳️\"}"
+        }
+      ],
+      "unfinished": true
+    },
+    {
+      "name": "Ordered Parked Wave",
+      "remaining": [
+        "second",
+        "first"
+      ],
+      "pending": [
+        {
+          "neuronId": "second",
+          "extensionId": "flow-extension-brep",
+          "operatorId": "brep.box",
+          "nodeHash": 19,
+          "inputJson": "{}"
+        },
+        {
+          "neuronId": "first",
+          "extensionId": "flow-extension-math",
+          "operatorId": "math.add",
+          "nodeHash": 23,
+          "inputJson": "{\"value\":2}"
+        }
+      ],
+      "unfinished": true
+    },
+    {
+      "name": "Pending Wave Is Independent of Remaining",
+      "remaining": [],
+      "pending": [
+        {
+          "neuronId": "late",
+          "extensionId": "extension-原",
+          "operatorId": "原",
+          "nodeHash": 0,
+          "inputJson": "{}"
+        }
+      ],
+      "unfinished": false
+    }
+  ]
+}

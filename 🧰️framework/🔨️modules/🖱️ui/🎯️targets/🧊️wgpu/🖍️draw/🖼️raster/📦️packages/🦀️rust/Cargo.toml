@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-ui-wgpu-raster"
+name = "semio-ui-wgpu-raster"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -26,18 +26,18 @@ default = []
 testkit = []
 
 [dependencies]
-semio-framework-ui-wgpu-device = { path = "../../../🎮️execution/🔌️device/📦️packages/🦀️rust" }
-semio-framework-ui-draw-contract = { path = "../../../🏷️types/📦️packages/🦀️rust" }
-semio-framework-ui-prepared = { path = "../../../../🎟️prepared/📦️packages/🦀️rust" }
-semio-framework-ui-raster-owner = { path = "../../../../../../🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
-semio-framework-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
-semio-framework-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
-semio-framework-ui-scene-pass = { path = "../../../../../../🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
-semio-framework-ui-scene-camera = { path = "../../../../../../🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
-semio-framework-ui-scene-algebra = { path = "../../../../../../🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust" }
+semio-ui-wgpu-device = { path = "../../../🎮️execution/🔌️device/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../🏷️types/📦️packages/🦀️rust" }
+semio-ui-prepared = { path = "../../../../🎟️prepared/📦️packages/🦀️rust" }
+semio-ui-raster-owner = { path = "../../../../../../🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
+semio-ui-scene-pass = { path = "../../../../../../🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
+semio-ui-scene-camera = { path = "../../../../../../🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
+semio-ui-scene-algebra = { path = "../../../../../../🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-pixels = { path = "../../../../../../../🔲️pixels/📦️packages/🦀️rust" }
-semio-framework-ui-render-prepared-shaders = { path = "../../../🎨️shaders/📦️packages/🦀️rust" }
+semio-ui-render-prepared-shaders = { path = "../../../🎨️shaders/📦️packages/🦀️rust" }
 bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"] }
 
 [dev-dependencies]

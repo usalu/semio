@@ -1,0 +1,21 @@
+import {pathToFileURL} from "node:url";
+import {resolve} from "node:path";
+import {readFileSync} from "node:fs";
+import Ajv from "ajv";
+const base="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/";
+const load=path=>import(pathToFileURL(resolve(base+path)).href);
+const {parseBuildInvocationV1,resolveBuildInvocationV1}=await load("🏗️build/🧭️invocation/🟦️.ts");
+const {canonicalArchitectureEnvironment}=await load("⚡️caching/🦀️cargo/🌿️environment/🟦️.ts");
+const {validateJsonSchemaSubset}=await import(pathToFileURL(resolve("🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts")).href);
+const schema=JSON.parse(readFileSync(base+"🏗️build/🧬️schema/📥️caller.json","utf8"));
+const policy=JSON.parse(readFileSync(base+"⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json","utf8"));
+const root=process.cwd(),args=["dependencies","sync","--all"],selected=parseBuildInvocationV1(args,process.env),resolved=resolveBuildInvocationV1(root,selected.args,process.env);
+const environment={...process.env,...resolved.env},canonical=canonicalArchitectureEnvironment(root,environment);
+const capabilities={tool:selected.tool,workspaceRoot:resolve(root),codeRoot:resolve(root),arguments:["repo",...selected.args],selection:["repo",...selected.args],buildMode:environment.SEMIO_BUILD_MODE??"prototype",native:{artifactDirectory:canonical.CARGO_TARGET_DIR,transport:policy.transport,child:policy.child,network:{offline:(canonical.CARGO_NET_OFFLINE??"false")==="true"}},launches:[["repo",...selected.args]]};
+const validate=new Ajv({allErrors:true}).compile(schema);
+console.log(JSON.stringify({capabilities,own:validateJsonSchemaSubset(schema,capabilities),ajv:validate(capabilities),ajvErrors:validate.errors},null,2));
+
+const {createNativeBuildCallerCapabilitiesV1}=await load("🏗️build/📥️caller/🟦️.ts");
+const actual=createNativeBuildCallerCapabilitiesV1(root,selected.args,selected.tool,environment);
+if(JSON.stringify(actual)!==JSON.stringify(capabilities))throw Error("Actual caller constructor differs from independent schema candidate");
+console.log("[DEBUG] actual current native caller constructor matches independent valid schema candidate");

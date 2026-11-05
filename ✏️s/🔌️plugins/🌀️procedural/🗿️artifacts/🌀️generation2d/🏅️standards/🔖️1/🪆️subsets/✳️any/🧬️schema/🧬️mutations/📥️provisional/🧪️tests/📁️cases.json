@@ -1,0 +1,327 @@
+[
+  {
+    "name": "CreateWidget",
+    "wire": {
+      "CreateWidget": {
+        "index": 0,
+        "widget": {
+          "kind": "inputNote",
+          "id": "n",
+          "text": "Grüße🧱"
+        }
+      }
+    },
+    "expected": {
+      "CreateWidget": {
+        "index": 0,
+        "widget": {
+          "kind": "inputNote",
+          "id": "n",
+          "text": "Grüße🧱"
+        }
+      }
+    }
+  },
+  {
+    "name": "ReplaceWidget",
+    "wire": {
+      "ReplaceWidget": {
+        "widget": {
+          "kind": "inputNote",
+          "id": "n",
+          "text": "next"
+        }
+      }
+    },
+    "expected": {
+      "ReplaceWidget": {
+        "widget": {
+          "kind": "inputNote",
+          "id": "n",
+          "text": "next"
+        }
+      }
+    }
+  },
+  {
+    "name": "DeleteWidget",
+    "wire": {
+      "DeleteWidget": {
+        "id": "n"
+      }
+    },
+    "expected": {
+      "DeleteWidget": {
+        "id": "n"
+      }
+    }
+  },
+  {
+    "name": "ConnectSynapse",
+    "wire": {
+      "ConnectSynapse": {
+        "index": 0,
+        "synapse": {
+          "id": "w",
+          "from": "a",
+          "to": "b",
+          "fromPort": "out",
+          "toPort": "in"
+        }
+      }
+    },
+    "expected": {
+      "ConnectSynapse": {
+        "index": 0,
+        "synapse": {
+          "id": "w",
+          "from": "a",
+          "to": "b",
+          "fromPort": "out",
+          "toPort": "in"
+        }
+      }
+    }
+  },
+  {
+    "name": "ReplaceSynapse",
+    "wire": {
+      "ReplaceSynapse": {
+        "synapse": {
+          "id": "w",
+          "from": "b",
+          "to": "c",
+          "fromPort": "out",
+          "toPort": "in"
+        }
+      }
+    },
+    "expected": {
+      "ReplaceSynapse": {
+        "synapse": {
+          "id": "w",
+          "from": "b",
+          "to": "c",
+          "fromPort": "out",
+          "toPort": "in"
+        }
+      }
+    }
+  },
+  {
+    "name": "DisconnectSynapse",
+    "wire": {
+      "DisconnectSynapse": {
+        "id": "w"
+      }
+    },
+    "expected": {
+      "DisconnectSynapse": {
+        "id": "w"
+      }
+    }
+  },
+  {
+    "name": "MoveWidget",
+    "wire": {
+      "MoveWidget": {
+        "id": "n",
+        "layout": {
+          "x": 3,
+          "y": -2
+        }
+      }
+    },
+    "expected": {
+      "MoveWidget": {
+        "id": "n",
+        "layout": {
+          "x": 3,
+          "y": -2
+        }
+      }
+    }
+  },
+  {
+    "name": "ClearWidgetLayout",
+    "wire": {
+      "ClearWidgetLayout": {
+        "id": "n"
+      }
+    },
+    "expected": {
+      "ClearWidgetLayout": {
+        "id": "n"
+      }
+    }
+  },
+  {
+    "name": "UpdateCamera",
+    "wire": {
+      "UpdateCamera": {
+        "camera": {
+          "x": 4,
+          "y": 5,
+          "zoom": 2
+        }
+      }
+    },
+    "expected": {
+      "UpdateCamera": {
+        "camera": {
+          "x": 4,
+          "y": 5,
+          "zoom": 2
+        }
+      }
+    }
+  },
+  {
+    "name": "ChangeSchema",
+    "wire": {
+      "ChangeSchema": {
+        "schema": "flow"
+      }
+    },
+    "expected": {
+      "ChangeSchema": {
+        "schema": "flow"
+      }
+    }
+  },
+  {
+    "name": "CreateGeneration",
+    "wire": {
+      "CreateGeneration": {
+        "generation": {
+          "id": "g",
+          "name": "One",
+          "values": {
+            "n": "x"
+          }
+        },
+        "index": 0
+      }
+    },
+    "expected": {
+      "CreateGeneration": {
+        "generation": {
+          "id": "g",
+          "name": "One",
+          "values": {
+            "n": "x"
+          }
+        },
+        "index": 0
+      }
+    }
+  },
+  {
+    "name": "DeleteGeneration",
+    "wire": {
+      "DeleteGeneration": {
+        "id": "g"
+      }
+    },
+    "expected": {
+      "DeleteGeneration": {
+        "id": "g"
+      }
+    }
+  },
+  {
+    "name": "RenameGeneration",
+    "wire": {
+      "RenameGeneration": {
+        "id": "g",
+        "name": "Zwei"
+      }
+    },
+    "expected": {
+      "RenameGeneration": {
+        "id": "g",
+        "name": "Zwei"
+      }
+    }
+  },
+  {
+    "name": "ChangeGenerationValue",
+    "wire": {
+      "ChangeGenerationValue": {
+        "id": "g",
+        "questionId": "n",
+        "value": {
+          "nested": [
+            1,
+            true,
+            null
+          ]
+        }
+      }
+    },
+    "expected": {
+      "ChangeGenerationValue": {
+        "id": "g",
+        "questionId": "n",
+        "value": {
+          "nested": [
+            1,
+            true,
+            null
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "ChangeSliderValue",
+    "wire": {
+      "ChangeSliderValue": {
+        "id": "n",
+        "value": 4.5
+      }
+    },
+    "expected": {
+      "ChangeSliderValue": {
+        "id": "n",
+        "value": 4.5
+      }
+    }
+  },
+  {
+    "name": "MoveNodes",
+    "wire": {
+      "MoveNodes": {
+        "ids": [
+          "n",
+          "m"
+        ],
+        "dx": 2,
+        "dy": 3
+      }
+    },
+    "expected": {
+      "MoveNodes": {
+        "ids": [
+          "n",
+          "m"
+        ],
+        "dx": 2,
+        "dy": 3
+      }
+    }
+  },
+  {
+    "name": "SelectGeneration",
+    "wire": {
+      "SelectGeneration": {
+        "generationId": "g"
+      }
+    },
+    "expected": {
+      "SelectGeneration": {
+        "generationId": "g"
+      }
+    }
+  }
+]

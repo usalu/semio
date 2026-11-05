@@ -229,7 +229,7 @@ pub fn flow_operator_catalogue_json() -> String {
 pub struct FlowAppCatalogue {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub operators: Vec<semio_framework_ui_declaration::ui::NodeGraphOperatorRecord>,
+    pub operators: Vec<semio_ui_declaration::ui::NodeGraphOperatorRecord>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub sections: Vec<CatalogueSection>,
@@ -272,14 +272,14 @@ pub fn flow_app_catalogue_json() -> String {
 pub const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
 
 /// 🌊️ Mirrors a neural engine `VariadicSpec` onto the `ui_wgpu` `NodeGraphScene` wire record.
-fn variadic_spec_to_node_graph_record(spec: &neural::VariadicSpec) -> semio_framework_ui_declaration::ui::NodeGraphOperatorVariadicRecord {
-    semio_framework_ui_declaration::ui::NodeGraphOperatorVariadicRecord { slot_key: spec.slot_key.clone(), min: spec.min, max: spec.max }
+fn variadic_spec_to_node_graph_record(spec: &neural::VariadicSpec) -> semio_ui_declaration::ui::NodeGraphOperatorVariadicRecord {
+    semio_ui_declaration::ui::NodeGraphOperatorVariadicRecord { slot_key: spec.slot_key.clone(), min: spec.min, max: spec.max }
 }
 
 /// 🌊️ Mirrors a neural engine `ChannelSpec` onto the `ui_wgpu` `NodeGraphScene` wire record —
 /// `cardinality` rides as its already-serialized symbol string.
-fn channel_spec_to_node_graph_record(spec: &ChannelSpec) -> semio_framework_ui_declaration::ui::NodeGraphOperatorChannelRecord {
-    semio_framework_ui_declaration::ui::NodeGraphOperatorChannelRecord {
+fn channel_spec_to_node_graph_record(spec: &ChannelSpec) -> semio_ui_declaration::ui::NodeGraphOperatorChannelRecord {
+    semio_ui_declaration::ui::NodeGraphOperatorChannelRecord {
         code: spec.code.clone(),
         abbreviation: spec.abbreviation.clone(),
         name: spec.name.clone(),
@@ -294,8 +294,8 @@ fn channel_spec_to_node_graph_record(spec: &ChannelSpec) -> semio_framework_ui_d
 }
 
 /// 🌊️ Mirrors a neural engine `OperatorInfo` catalogue entry onto the `ui_wgpu` `NodeGraphScene` wire record.
-fn operator_info_to_node_graph_record(info: &OperatorInfo) -> semio_framework_ui_declaration::ui::NodeGraphOperatorRecord {
-    semio_framework_ui_declaration::ui::NodeGraphOperatorRecord {
+fn operator_info_to_node_graph_record(info: &OperatorInfo) -> semio_ui_declaration::ui::NodeGraphOperatorRecord {
+    semio_ui_declaration::ui::NodeGraphOperatorRecord {
         id: info.id.clone(),
         extension: info.extension.clone(),
         name: info.name.clone(),
@@ -311,17 +311,17 @@ fn operator_info_to_node_graph_record(info: &OperatorInfo) -> semio_framework_ui
 }
 
 /// 🌊️ Typed operator catalogue (module-grouped) for `NodeGraphScene.operators` seeding.
-pub fn flow_operator_catalogue_records() -> Vec<semio_framework_ui_declaration::ui::NodeGraphOperatorRecord> {
+pub fn flow_operator_catalogue_records() -> Vec<semio_ui_declaration::ui::NodeGraphOperatorRecord> {
     flow_extension_registry().operator_infos().map(operator_info_to_node_graph_record).collect()
 }
 
 /// 🌊️ Inverse of `variadic_spec_to_node_graph_record`.
-fn node_graph_record_to_variadic_spec(record: &semio_framework_ui_declaration::ui::NodeGraphOperatorVariadicRecord) -> neural::VariadicSpec {
+fn node_graph_record_to_variadic_spec(record: &semio_ui_declaration::ui::NodeGraphOperatorVariadicRecord) -> neural::VariadicSpec {
     neural::VariadicSpec { slot_key: record.slot_key.clone(), min: record.min, max: record.max }
 }
 
 /// 🌊️ Inverse of `channel_spec_to_node_graph_record`.
-fn node_graph_record_to_channel_spec(record: &semio_framework_ui_declaration::ui::NodeGraphOperatorChannelRecord) -> ChannelSpec {
+fn node_graph_record_to_channel_spec(record: &semio_ui_declaration::ui::NodeGraphOperatorChannelRecord) -> ChannelSpec {
     ChannelSpec {
         code: record.code.clone(),
         abbreviation: record.abbreviation.clone(),
@@ -337,7 +337,7 @@ fn node_graph_record_to_channel_spec(record: &semio_framework_ui_declaration::ui
 }
 
 /// 🌊️ Inverse of `operator_info_to_node_graph_record` — feeds `FlowHost::set_neuron_kind_infos`.
-pub fn node_graph_operator_record_to_operator_info(record: &semio_framework_ui_declaration::ui::NodeGraphOperatorRecord) -> OperatorInfo {
+pub fn node_graph_operator_record_to_operator_info(record: &semio_ui_declaration::ui::NodeGraphOperatorRecord) -> OperatorInfo {
     OperatorInfo {
         id: record.id.clone(),
         extension: record.extension.clone(),

@@ -4,7 +4,7 @@ use semio_framework_pack_json as json;
 use neural_engine::Value as NeuralValue;
 use std::collections::{BTreeMap, VecDeque};
 use neural_engine::{Dictionary, RegistryRetirement, SharedRegistry, ValueRetirement};
-use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+use semio_plugin::{Emit, Fault, NoConfigMutation};
 use imperative_engine::{Executor, Path, RunResult, Step, imperative_module_registry};
 use semio_framework_tool_machine::{NodeDragEmit, NodeGraphEditRow, node_drag_emit};
 use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceSnapshot, SequenceStep, SequenceWorkingScene};
@@ -24,10 +24,10 @@ use crate::editor::sequence::app::SequencePlayApp;
 //#region 🧵️PersistentRemainingRoutes
 pub const SEQUENCE_PERSISTENT_MAXIMUM_UNITS: usize = 66_049;
 pub const SEQUENCE_PERSISTENT_TOOL_IDS: &[&str] = &["reorganize", "nodeGraphEdit", "run"];
-const SEQUENCE_PERSISTENT_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "run", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
+const SEQUENCE_PERSISTENT_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Child] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "run", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
 ];
 
 enum SequencePersistentAdvance {
@@ -773,7 +773,7 @@ pub struct SequencePersistentWork {
     pub closing: bool,
 }
 impl SequencePersistentWork {
-    pub fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
+    pub fn new(tool_id: &'static str, operation: &semio_plugin::AppOperationContext) -> Self {
         let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
         let identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
         Self {
@@ -789,8 +789,8 @@ impl SequencePersistentWork {
     }
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequencePersistentWork {
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<SequencePlayApp>> for SequencePersistentWork {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -807,19 +807,19 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         _command: &SequenceCommand,
         snapshot: &SequenceSnapshot,
         _interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+        context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<SequencePlayApp>>>,
     ) -> Option<usize> {
         let scene = sequence_working_scene_from_children(snapshot, context?.children.as_ref()).ok()?;
         (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS).then_some(SEQUENCE_PERSISTENT_MAXIMUM_UNITS)
     }
     fn step(
         &mut self,
-        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
+        input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<SequencePlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<semio_plugin::EditorApp<SequencePlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation, snapshot_read: _ } = *input;
-        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation, snapshot_read: _ } = *input;
+        use semio_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.progress >= SEQUENCE_PERSISTENT_MAXIMUM_UNITS || command.command_id() != self.tool_id {
             return Err(sequence_fault("sequence.editor.capacity", "sequence-persistent-progress-capacity"));
         }
@@ -865,7 +865,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
                 self.completed = true;
                 Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
                     emit: Emit::default(),
-                    ephemeral: semio_framework_plugin::EphemeralEmit {
+                    ephemeral: semio_plugin::EphemeralEmit {
                         presence: Vec::new(),
                         transient: Vec::new(),
                         window_transient: vec![script::transient::addressed(view, transient)?],
@@ -942,8 +942,8 @@ impl SequencePersistentJobFactory {
     }
 }
 impl semio_framework::ToolJobFactory for SequencePersistentJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<SequencePlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<SequencePlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<semio_plugin::EditorApp<SequencePlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<semio_plugin::EditorApp<SequencePlayApp>>;
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
     }
@@ -956,12 +956,12 @@ impl semio_framework::ToolJobFactory for SequencePersistentJobFactory {
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
         semio_framework::ToolExecutionContract::resumable(SEQUENCE_RETAINED_RAW_BYTES, SEQUENCE_PERSISTENT_MAXIMUM_UNITS, 1, SEQUENCE_STORE_MAXIMUM_BYTES, 7_500, 1, 1)
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SEQUENCE_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SEQUENCE_RETAINED_RAW_BYTES, checkpoint_resume: true);
 }
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequencePersistentJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<SequencePlayApp>;
+impl semio_plugin::ArtifactOwnedToolJobFactory for SequencePersistentJobFactory {
+    type Owner = semio_plugin::EditorApp<SequencePlayApp>;
     const TOOL_IDS: &'static [&'static str] = SEQUENCE_PERSISTENT_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = SEQUENCE_PERSISTENT_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = SEQUENCE_PERSISTENT_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️PersistentRemainingRoutes

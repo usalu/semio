@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeJointBoltGripLengt
         record: "ChangedJointBoltGripLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bolt grip length L_b of the joint", "Anschluss: Klemmlänge L_b ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bolt grip length L_b of the joint", "Anschluss: Klemmlänge L_b ändern")
     }
 }
 

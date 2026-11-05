@@ -31,7 +31,7 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-spacing", kind: "change-grid-spacing", record: "ChangedGridSpacing" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         crate::schema::note_setting_label(("grid spacing", "Rasterabstand"), self.new_spacing.map(crate::schema::note_label_number))
     }
     fn target(&self) -> Vec<String> {

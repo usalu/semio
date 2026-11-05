@@ -119,6 +119,63 @@
           "maximum": 9007199254740991
         }
       }
+    },
+    "OutputEncoding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "program",
+        "programTruncated",
+        "stream",
+        "phase",
+        "streamBytes",
+        "observedBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "output-encoding"
+        },
+        "program": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "programTruncated": {
+          "type": "boolean"
+        },
+        "stream": {
+          "enum": [
+            "stdout",
+            "stderr"
+          ]
+        },
+        "phase": {
+          "enum": [
+            "chunk",
+            "final"
+          ]
+        },
+        "streamBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "observedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "EncodingProtocol": {
+      "const": {
+        "marker": "[owned-capture-encoding]",
+        "maximumCharacters": 2048
+      }
     }
   }
 }

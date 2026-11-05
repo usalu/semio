@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCraneMaxWheelLoad 
         record: "ChangedCraneMaxWheelLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Maximum wheel load Q_r,max of the crane runway", "Kranbahn: Maximale Radlast Q_r,max ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Maximum wheel load Q_r,max of the crane runway", "Kranbahn: Maximale Radlast Q_r,max ändern")
     }
 }
 

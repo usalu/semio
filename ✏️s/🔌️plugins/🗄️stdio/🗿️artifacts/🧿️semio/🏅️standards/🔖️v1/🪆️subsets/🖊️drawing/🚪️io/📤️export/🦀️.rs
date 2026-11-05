@@ -3,7 +3,7 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 #[cfg(test)]
 #[path = "🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🧪️tests/🔬️unit/🦀️.rs"]
@@ -76,7 +76,7 @@ mod png_raster_oracle;
 
 use semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat;
 use semio_s_artifact_stdio_semio_base::SemioConversion;
-use semio_framework_plugin::{serializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
+use semio_plugin::{serializer_entry_of, io::{register_composer_entries, ComposerEntry}, app::{ArtifactDeclarationBuilder, DeclarationReady}};
 
 /// 🧾️ This direction's composer rows, built once.
 pub fn entries() -> &'static [ComposerEntry] {
@@ -101,7 +101,7 @@ fn register() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_drawing(drawing: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, format: SemioDrawingFormat) -> Result<Vec<u8>, String> {
     use {crate::serializers::artifacts::dwg::v_ac1024::any::SemioDrawingToDwg, crate::serializers::artifacts::dxf::v_r12::any::SemioDrawingToDxf, crate::serializers::artifacts::pdf::v1_7::any::drawing_to_pdf, semio_s_artifact_stdio_semio_drawing_png_export::SemioDrawingToPng, crate::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg};
-    use semio_framework_plugin::{ ArtifactSerializer};
+    use semio_plugin::{ ArtifactSerializer};
     match format {
         SemioDrawingFormat::Svg => ::semio_framework_async::poll::resolve_ready(SemioDrawingToSvg::serialize(drawing)).map_err(|e| e.to_string())?.export_utf8(),
         SemioDrawingFormat::Dxf => Ok(semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::print_dxf_document(&::semio_framework_async::poll::resolve_ready(SemioDrawingToDxf::serialize(drawing)).map_err(|e| e.to_string())?).into_bytes()),

@@ -8,7 +8,7 @@ use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_measure_action;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::FEM3D_PLAY_CONTROLLER_ID;
 use semio_framework_pack_json::json;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 pub const UTILITY_ID: &str = FEM3D_UTILITY_TRANSFORM;
 

@@ -5,10 +5,10 @@
 //! `HEX_PREVIEW_CAP_BYTES`-capped display as the sibling authoring surface.
 
 use crate::BinarySnapshot;
-use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::app::{TextView, TextWindowKit, WindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `BinarySnapshot -> BuiltNode` read: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
 /// lowercase hex, always `read_only: true`, plus a trailing `#`-prefixed byte-count comment.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BinarySnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BinarySnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let total = document.bytes.len();
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();

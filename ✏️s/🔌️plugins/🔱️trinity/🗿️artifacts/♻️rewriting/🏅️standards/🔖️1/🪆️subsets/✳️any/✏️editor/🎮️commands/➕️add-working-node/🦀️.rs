@@ -7,8 +7,8 @@
 use crate::standards::v1::subsets::any::content::{read, working_child_emit};
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_framework_plugin::app::ChildContentView;
-use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+use semio_plugin::app::ChildContentView;
+use semio_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use {semio_s_artifact_stdio_semio_graph::schema::mutations::create_node::CreateNode, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;

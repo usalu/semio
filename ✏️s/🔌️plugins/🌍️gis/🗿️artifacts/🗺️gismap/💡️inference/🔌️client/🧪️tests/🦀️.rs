@@ -1,10 +1,10 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::FromValue;
-use semio_framework_os_kernel::os_directory::schema::DocumentScope;
+use semio_os_kernel::os_directory::schema::DocumentScope;
 use crate::{inference_schema::GisMapReconciledJobV1, inference_schema::GisMapInferenceApprovalRequestV1};
 use semio_framework_job::reconcile::JobReconcileResultV1;
-use semio_framework_os_kernel::{os_directory::client::DirectoryClient, os_directory::client::DocumentHttpPortCodeV1};
-use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_os_kernel::{os_directory::client::DirectoryClient, os_directory::client::DocumentHttpPortCodeV1};
+use semio_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
 use semio_framework_async::OperationContext;
 #[allow(unused_imports)]
 use semio_framework_value::{DslValue, ToValue};
@@ -13,9 +13,9 @@ use crate::{inference_schema::GisMapApprovalUndoReceiptV1, inference_schema::Gis
 #[allow(unused_imports)]
 use semio_framework_job::{reconcile::JobReconcileRequestV1, reconcile::parse_job_reconcile_result_v1};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::{os_directory::client::DocumentHttpOperationV1, os_directory::client::DocumentHttpPortDeclarationV1, os_directory::client::DOCUMENT_HTTP_PORT_TOPIC};
+use semio_os_kernel::{os_directory::client::DocumentHttpOperationV1, os_directory::client::DocumentHttpPortDeclarationV1, os_directory::client::DOCUMENT_HTTP_PORT_TOPIC};
 use crate::inference_client::*;
-use semio_framework_os_kernel::os_directory::client::{DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
+use semio_os_kernel::os_directory::client::{DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]

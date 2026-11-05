@@ -1,8 +1,8 @@
 //! 📷️ Copies only the original fixed camera fields and admits its inverse Box and row separately.
 use super::{RetainedLoadCameraConfig as State, RetainedLoadCameraConfigMutation as Mutation};
-use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::snapshot_clone_preparation::RetainedEditCustody;
-use semio_framework_os_kernel::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
+use semio_os_kernel as store;
+use semio_os_kernel::snapshot_clone_preparation::RetainedEditCustody;
+use semio_os_kernel::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedCloneBirthDemand, ScalarCursor};
 use std::mem::size_of;

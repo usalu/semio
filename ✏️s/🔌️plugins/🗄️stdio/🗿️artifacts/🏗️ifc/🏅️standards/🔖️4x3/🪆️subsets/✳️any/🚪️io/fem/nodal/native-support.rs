@@ -1,6 +1,6 @@
 //! 🧪️ Actual native nodal test support uses original caller-owned Pack routes.
 use super::*;
-use semio_framework_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner};
+use semio_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner};
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, RetainedCloneGrant, RetireOwned, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
@@ -76,7 +76,7 @@ pub(super) fn payload(value: &Fem3dSnapshotValue) -> IoPayload {
     let mut native = NativeEncodeControl::new(256 * 1024 * 1024, &mut observe);
     native.install_retirement_recipient(&mut recipient).unwrap();
     let result = {
-        let mut original = semio_framework_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, wallet());
+        let mut original = semio_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, wallet());
         source.encode_exchange_pack(&mut original)
     };
     for _ in 0..1_000_000 {
@@ -124,7 +124,7 @@ pub(super) fn export(value: &Fem3dSnapshotValue, grant: RetainedCloneGrant, stop
     (result, events.get())
 }
 pub(super) fn graph_payload(graph:&IfcSnapshot)->IoPayload{
- let mut observe=|_|true;let mut recipient=NativeEncodeRetirementRecipient::new();let mut native=NativeEncodeControl::new(256*1024*1024,&mut observe);native.install_retirement_recipient(&mut recipient).unwrap();let result={let mut original=semio_framework_os_kernel::NativeSnapshotEncodeOwner::new(&mut native,wallet());graph.encode_exchange_pack(&mut original)};for _ in 0..1_000_000{if !native.has_retirement_owner(){break;}native.close_retirement_recipient(wallet()).unwrap();}assert!(!native.has_retirement_owner());IoPayload::Binary(result.unwrap())
+ let mut observe=|_|true;let mut recipient=NativeEncodeRetirementRecipient::new();let mut native=NativeEncodeControl::new(256*1024*1024,&mut observe);native.install_retirement_recipient(&mut recipient).unwrap();let result={let mut original=semio_os_kernel::NativeSnapshotEncodeOwner::new(&mut native,wallet());graph.encode_exchange_pack(&mut original)};for _ in 0..1_000_000{if !native.has_retirement_owner(){break;}native.close_retirement_recipient(wallet()).unwrap();}assert!(!native.has_retirement_owner());IoPayload::Binary(result.unwrap())
 }
 pub(super) fn import(graph: &IfcSnapshot, grant: RetainedCloneGrant, stop: usize) -> (Result<Fem3dSnapshot, ValueRefusalKind>, usize) {
     let input=graph_payload(graph);

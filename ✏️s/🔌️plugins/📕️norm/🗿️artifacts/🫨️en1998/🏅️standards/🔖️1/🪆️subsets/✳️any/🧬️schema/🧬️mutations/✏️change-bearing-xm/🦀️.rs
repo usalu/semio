@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBearingXM where Op
         record: "ChangeBearingXM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Position along the deck axis of an abutment bearing (piers carry their own position)", "Lage entlang der Brückenachse eines Widerlagerlagers (Pfeiler tragen ihre eigene Lage) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Position along the deck axis of an abutment bearing (piers carry their own position)", "Lage entlang der Brückenachse eines Widerlagerlagers (Pfeiler tragen ihre eigene Lage) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-bearing-xm".into()]

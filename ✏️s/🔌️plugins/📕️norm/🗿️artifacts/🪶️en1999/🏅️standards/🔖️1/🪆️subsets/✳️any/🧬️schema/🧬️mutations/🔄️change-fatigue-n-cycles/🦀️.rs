@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeFatigueNCycles whe
         record: "ChangedFatigueNCycles",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Number of cycles n_i of the fatigue detail", "Ermüdungsdetail: Lastspielzahl n_i ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Number of cycles n_i of the fatigue detail", "Ermüdungsdetail: Lastspielzahl n_i ändern")
     }
 }
 

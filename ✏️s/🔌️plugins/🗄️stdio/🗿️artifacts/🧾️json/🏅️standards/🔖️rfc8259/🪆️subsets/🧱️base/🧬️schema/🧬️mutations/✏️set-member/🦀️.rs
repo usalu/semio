@@ -33,8 +33,8 @@ fn replaced_row(existing: &JsonValue, new: &JsonValue) -> Option<JsonValueDiff> 
 impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "member", kind: "set-member", record: "SetMember" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Member", "Eigenschaft setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Member", "Eigenschaft setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-member".to_string()]

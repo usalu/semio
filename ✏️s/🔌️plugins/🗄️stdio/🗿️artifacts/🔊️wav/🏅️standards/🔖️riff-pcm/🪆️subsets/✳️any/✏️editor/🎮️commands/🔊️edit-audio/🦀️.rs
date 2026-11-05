@@ -5,17 +5,17 @@ use crate::standards::riff_pcm::subsets::any::schema::mutations::{patch_data,set
 
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavFmt, WavSnapshot};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::ArgSchema;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::ArgSchema;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use semio_ui_locale::LocalizedLabel;
 use semio_s_artifact_stdio_contract::editing::RetainedBytesCopy;
 
 pub const SET_SAMPLE_ACTION_ID: &str = "set-cell";
@@ -401,7 +401,7 @@ pub fn extra_actions() -> Vec<ActionDefinition> {
             .in_palette(false),
     ]
     .map(|mut action| {
-        action.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+        action.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
         action
     })
     .into()
@@ -433,7 +433,7 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
         self.tool_id.unwrap_or(SET_SAMPLE_ACTION_ID)
     }
 
-    fn extent(&self, command: &WavEditCommand, snapshot: &WavSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WavEditor>>>) -> Option<usize> {
+    fn extent(&self, command: &WavEditCommand, snapshot: &WavSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WavEditor>>>) -> Option<usize> {
         let WavEditCommand::EditAudio(command) = command else { return None };
         let plan = AudioPlan::new(command, snapshot).ok()?;
         CAPACITY.rows_for_items(plan.items)
@@ -617,19 +617,19 @@ mod tests {
 
     #[test]
     fn retained_channel_edit_reports_localized_progress_refuses_stale_and_retires_incrementally() {
-        use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+        use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 
         let mut fmt = WavFmt::default();
         fmt.channels = 2;
         fmt.block_align = 4;
         fmt.byte_rate = fmt.sample_rate * u32::from(fmt.block_align);
         let snapshot = WavSnapshot { fmt, data: WavData::Pcm16(vec![7; 40_000]), ..WavSnapshot::default() };
-        let config = semio_framework_plugin::NoConfig::default();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let config = semio_plugin::NoConfig::default();
+        let history = semio_plugin::HistoryView::empty();
         let interaction = protocol::InteractionState::default();
-        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        let hover = semio_plugin::app::InteractionHoverState::default();
         let operation =
-            semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-audio-retained".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::testing::unbounded_grant() };
+            semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-audio-retained".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::testing::unbounded_grant() };
         let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision);
         let command = WavEditCommand::EditAudio(EditAudio::InsertChannel { channel: 1, revision });
         let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
@@ -764,16 +764,16 @@ mod tests {
 
     #[test]
     fn large_format_extension_is_copied_in_pages_and_cancelled_with_exact_grants() {
-        use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+        use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 
         assert!(PATCH_PAYLOAD_BYTES + 17 <= u16::MAX as usize);
         let extension = (0..PATCH_PAYLOAD_BYTES + 17).map(|index| (index % 251) as u8).collect::<Vec<_>>();
         let snapshot = WavSnapshot { fmt: WavFmt { ext: Some(extension.clone()), ..WavFmt::default() }, data: WavData::Pcm16(vec![1, 2]), ..WavSnapshot::default() };
-        let config = semio_framework_plugin::NoConfig::default();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let config = semio_plugin::NoConfig::default();
+        let history = semio_plugin::HistoryView::empty();
         let interaction = protocol::InteractionState::default();
-        let hover = semio_framework_plugin::app::InteractionHoverState::default();
-        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-format-copy".into(), operation_id: 2, generation: 3, canonical_base_revision: [6; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
+        let hover = semio_plugin::app::InteractionHoverState::default();
+        let operation = semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-format-copy".into(), operation_id: 2, generation: 3, canonical_base_revision: [6; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
         let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision);
         let command = WavEditCommand::EditAudio(EditAudio::SetSampleRate { revision, value: "22050".into() });
         let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };

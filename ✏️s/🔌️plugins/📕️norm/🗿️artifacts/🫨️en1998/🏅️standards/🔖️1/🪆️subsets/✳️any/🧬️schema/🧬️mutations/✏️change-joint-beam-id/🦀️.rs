@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeJointBeamId where 
         record: "ChangeJointBeamId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Beam member row of the building framing into the joint", "Riegel-Bauteilzeile des Gebäudes, die in den Knoten einläuft ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Beam member row of the building framing into the joint", "Riegel-Bauteilzeile des Gebäudes, die in den Knoten einläuft ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-joint-beam-id".into()]

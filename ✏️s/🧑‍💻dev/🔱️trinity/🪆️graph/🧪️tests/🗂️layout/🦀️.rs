@@ -15,8 +15,8 @@ use jack::editor::jack::{create_trinity_jack_app, TrinityJackPlayApp};
 use semio_framework_graph_layout_run::testing::{layout_run_close, layout_run_drive, layout_run_fdg_layout, layout_run_hop_distances, layout_run_normalized_stress, LayoutRunOracleParameters};
 use semio_framework_graph_layout_run::{LayoutRunJob, LayoutRunReason};
 use semio_framework_job::INTERACTIVE_LANE_FUEL;
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::{App, ArtifactEditor, DslValue, EditorApp, PluginApp, VcsArtifactApp};
+use semio_plugin::artifact_app_laws::meta;
+use semio_plugin::{App, ArtifactEditor, DslValue, EditorApp, PluginApp, VcsArtifactApp};
 use semio_framework_tool_run::{ToolRunId, ToolRunVerdict, TOOL_RUN_ACTION_IDS};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -197,7 +197,7 @@ fn reorganize_step_stays_below_the_interactive_ceiling_on_the_nakagin_example() 
 
 fn tool_run_action(app: &mut JackApp, action: &str, entries: &[(&str, DslValue)],cx:&mut semio_framework_job::StepContext<'_>) -> DslValue {
     let args = DslValue::Object(entries.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect());
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app,action,Some(args),&meta("local"),&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app,action,Some(args),&meta("local"),&mut semio_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &JackApp) -> Option<&'static str> {
@@ -211,9 +211,9 @@ fn pump_until(app: &mut JackApp, what: &str, done: impl Fn(&JackApp) -> bool,cx:
             return;
         }
         PluginApp::maintenance_step(app,cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().maintenance).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(),cx)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
-            assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+            assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
         }
         let _ = app.take_typed_operation_effect();
@@ -229,7 +229,7 @@ fn history_len(app: &mut JackApp) -> usize {
 }
 
 fn nakagin_app() -> JackApp {
-    let mut app = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()),jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),&mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    let mut app = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()),jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),&mut semio_plugin::artifact_app_laws::fixture_identity()));
     ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
     app
 }
@@ -246,7 +246,7 @@ fn run_arguments() -> [(&'static str, DslValue); 2] {
 /// them as one history entry, and one undo restores every committed position.
 #[test]
 fn reorganize_start_complete_finalize_is_one_undo_entry() {
-    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("original closed layout caller");
+    let mut original_caller=semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("original closed layout caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let law = &fixture()["lifecycle"];
     let mut app = nakagin_app();
@@ -263,16 +263,16 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
     assert_eq!(after.keys().collect::<Vec<_>>(), before.keys().collect::<Vec<_>>());
     assert_ne!(after, before, "finalize published the laid out positions");
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx));
+    ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(),cx));
     assert_eq!(node_positions(&app), before, "one undo restores every committed position");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),cx).expect("original paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),cx).expect("original paid app close");
     let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original paid caller close");
 }
 
 /// 🛑️ Abort after provisional moves exist leaves the document pack byte-identical and the history untouched.
 #[test]
 fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
-    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("original closed layout caller");
+    let mut original_caller=semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("original closed layout caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let law = &fixture()["lifecycle"];
     let mut app = nakagin_app();
@@ -288,6 +288,6 @@ fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");
     assert_eq!(node_positions(&app), positions, "abort leaves the content child untouched");
     assert_eq!(history_len(&mut app), history);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),cx).expect("original paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),cx).expect("original paid app close");
     let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original paid caller close");
 }

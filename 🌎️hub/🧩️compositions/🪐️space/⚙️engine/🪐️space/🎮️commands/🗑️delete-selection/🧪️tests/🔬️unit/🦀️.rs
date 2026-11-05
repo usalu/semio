@@ -3,7 +3,7 @@
 use semio_hub_space_app::SpaceCommand;
 use semio_hub_space_commands_authoring::spawn_app;
 use semio_hub_space_app::unit_tests::context::{app_with_registry, dispatch, seed_draw_plugin, test_surface_id};
-use semio_framework_plugin::{INTERACTION_SELECT_ACTION_ID, InteractionTarget, PluginApp, artifact_app_laws::meta};
+use semio_plugin::{INTERACTION_SELECT_ACTION_ID, InteractionTarget, PluginApp, artifact_app_laws::meta};
 use semio_hub_space_commands_authoring::delete_selection::DeleteSelection;
 
 /// 🕹️ End-to-end proof the `graph` domain's live selection actually drives `deleteSelection` —
@@ -16,7 +16,7 @@ async fn delete_selection_removes_the_live_selected_node() {
     let mut app = app_with_registry().await;
     let receiver = meta("local").instance_id;
     dispatch(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 10.0, y: 10.0 })).await;
-    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("spawnApp publication");
+    let _ = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("spawnApp publication");
     let before = app.snapshot().expect("snapshot");
     let node_id = before.graph.nodes.first().expect("spawned node").id.clone();
     let targets = semio_framework_pack_json::to_json_string(&vec![InteractionTarget { granularity: "instance".into(), id: node_id.clone() }]);
@@ -27,10 +27,10 @@ async fn delete_selection_removes_the_live_selected_node() {
         ("method".to_string(), semio_framework::DslValue::String("pick".into())),
     ]);
     let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interactionSelect");
-    let _ = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("interactionSelect admission");
+    let _ = semio_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("interactionSelect admission");
     dispatch(&mut app, SpaceCommand::DeleteSelection(DeleteSelection {})).await;
-    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("deleteSelection publication");
+    let _ = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("deleteSelection publication");
     let after = app.snapshot().expect("snapshot");
     assert!(!after.graph.nodes.iter().any(|node| node.id == node_id), "selected node must be deleted");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

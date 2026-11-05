@@ -922,3 +922,10 @@ pub use captured_snapshot_source::CapturedSnapshotSource;
 
 #[path="👥️duplicate/🦀️.rs"]
 mod original_duplicate;
+#[path="📋️field-clone/🦀️.rs"]
+pub mod field_clone;
+pub use field_clone::SnapshotReadFieldClone;
+
+#[cfg(test)]
+#[path="📋️field-clone/🧪️laws/🦀️.rs"]
+mod snapshot_field_clone_laws;

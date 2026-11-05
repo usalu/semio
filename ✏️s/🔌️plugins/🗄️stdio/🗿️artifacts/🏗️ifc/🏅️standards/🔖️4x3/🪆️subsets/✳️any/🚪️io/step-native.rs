@@ -1,6 +1,6 @@
 //! 🔌 Natural STEP export retains the original IFC source and UTF-8 publication authority.
 use super::{write_ifc4x3_step_pack, IfcSnapshot, TXT_DIALECT};
-use semio_framework_os_kernel::io::{io_mechanism::{ArchiveChildren, IoRunControl, Serializer}, io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult}};
+use semio_os_kernel::io::{io_mechanism::{ArchiveChildren, IoRunControl, Serializer}, io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult}};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 

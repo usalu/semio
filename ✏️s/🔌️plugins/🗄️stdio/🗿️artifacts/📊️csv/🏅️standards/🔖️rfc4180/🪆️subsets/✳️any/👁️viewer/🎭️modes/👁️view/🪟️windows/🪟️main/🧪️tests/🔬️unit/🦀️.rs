@@ -16,7 +16,7 @@ async fn render_splits_header_from_data_rows() {
         records: vec![crate::CsvRecord { fields: vec![crate::CsvField { value: "name".into(), quoted: false }] }, crate::CsvRecord { fields: vec![crate::CsvField { value: "ada".into(), quoted: false }] }],
     };
     let node = render(&document).expect("render");
-    let scene: semio_framework_ui_scene::TableScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the table scene with its lanes");
+    let scene: semio_ui_scene::TableScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the table scene with its lanes");
     let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
     assert_eq!(columns, vec![serde_json::json!({ "id": "0", "label": "name" })]);
     let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");

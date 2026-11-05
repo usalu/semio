@@ -5,7 +5,7 @@ use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 //#region 🔖️Constants
 pub const PUZZLE3D_LOD_SLIDER_MIN: f64 = 0.0;

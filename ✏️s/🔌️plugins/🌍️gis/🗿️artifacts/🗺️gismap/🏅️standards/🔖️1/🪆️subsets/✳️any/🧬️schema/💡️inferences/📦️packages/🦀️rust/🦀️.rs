@@ -2,9 +2,9 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 
 pub use crate::schema::snapshot::GisMapSnapshot;
 pub use crate::schema::feature::MapFeature;

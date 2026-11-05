@@ -1,7 +1,7 @@
 //! 🏗️ Native analytical output receives each graph frontier through the unchanged original snapshot wallet.
 use super::fem_owned::{axis, copy, invalid, unsupported, vector, work};
 use super::*;
-use semio_framework_os_kernel::NativeSnapshotDecodeOwner as Owner;
+use semio_os_kernel::NativeSnapshotDecodeOwner as Owner;
 use semio_framework_value::{RetireOwned, ValueError};
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::{
     snapshot::{Fem3dSnapshot, FemIdentityIndex, FemIdentityKind},

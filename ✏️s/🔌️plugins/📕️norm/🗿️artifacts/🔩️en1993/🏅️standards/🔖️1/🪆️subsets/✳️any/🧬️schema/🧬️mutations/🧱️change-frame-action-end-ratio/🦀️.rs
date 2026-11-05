@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFrameActionEndRati
         record: "ChangedFrameActionEndRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change frame action: End along bar", "Rahmeneinwirkung: Ende am Stab ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change frame action: End along bar", "Rahmeneinwirkung: Ende am Stab ändern")
     }
 }
 

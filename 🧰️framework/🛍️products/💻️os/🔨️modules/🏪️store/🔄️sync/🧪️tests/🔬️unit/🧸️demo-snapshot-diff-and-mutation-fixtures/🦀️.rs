@@ -4,14 +4,14 @@
 // extension (this crate never compiled with `--features sync` before this packet, so the
 // mismatch was never exercised at runtime). `extension_suffix` is the id's LAST segment, so
 // `"demo.demo"` keeps `__DSL_EXTENSION` == "demo", unchanged from the old bare-extension form.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_dsl::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_os_dsl::DslArtifact, semio_framework_value::RetireOwned)]
 #[artifact(id = "demo.demo")]
 pub(super) struct DemoSnapshot {
     n: i32,
 }
 
 
-impl semio_framework_os_store_text_io::ArtifactSqliteSnapshotHost for DemoSnapshot {
+impl semio_os_store_text_io::ArtifactSqliteSnapshotHost for DemoSnapshot {
     
     
     
@@ -43,7 +43,7 @@ impl ArtifactDsl for DemoSnapshot {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match semio_framework_os_semio::split_text_preamble(text) {
+        let body = match semio_os_semio::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -52,8 +52,8 @@ impl ArtifactDsl for DemoSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Dsl, 1).expect("valid envelope_id");
-        semio_framework_os_semio::wrap_text(&envelope, &body)
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Dsl, 1).expect("valid envelope_id");
+        semio_os_semio::wrap_text(&envelope, &body)
     }
 }
 
@@ -63,26 +63,26 @@ impl ArtifactPack for DemoSnapshot {
 
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(semio_framework_os_semio::wrap_binary(&envelope, &inner))
+        let envelope = semio_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
+        Ok(semio_os_semio::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+        let (envelope, inner) = semio_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_os_semio::Component::Pack, 1) {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(semio_framework_os_store_text_io::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(semio_os_store_text_io::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
-impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DemoSnapshot {
-    fn reference_snapshot_codec()->Option<semio_framework_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_framework_os_store_text_io::reference_snapshot_codec::<Self>())}
+impl semio_os_store_text_io::ArtifactStoreSnapshot for DemoSnapshot {
+    fn reference_snapshot_codec()->Option<semio_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_os_store_text_io::reference_snapshot_codec::<Self>())}
 
-fn sqlite_snapshot_codec() -> Option<semio_framework_os_store_text_io::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec())
+fn sqlite_snapshot_codec() -> Option<semio_os_store_text_io::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as semio_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -91,14 +91,14 @@ pub(crate) struct DemoDiff {
     n: Option<i32>,
 }
 
-impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
+impl semio_os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
     
     fn is_empty(&self) -> bool {
         self.n.is_none()
     }
 }
 
-impl semio_framework_os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
+impl semio_os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
     fn inverse(&self, base: &DemoSnapshot) -> Self {
         Self { n: self.n.map(|_| base.n) }
     }
@@ -106,14 +106,14 @@ impl semio_framework_os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
 
 impl MutationDiff<DemoSnapshot> for DemoDiff {}
 
-impl semio_framework_os_spr::ColdMutationDiff<DemoSnapshot> for DemoDiff {
+impl semio_os_spr::ColdMutationDiff<DemoSnapshot> for DemoDiff {
     fn absorb(&mut self, other: Self) {
         if other.n.is_some() {
             self.n = other.n;
         }
     }
 
-    fn apply(&self, snapshot: &mut DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+    fn apply(&self, snapshot: &mut DemoSnapshot, _capability: semio_os_spr::ApplyCapability) -> semio_os_spr::MutationApplyResult<()> {
         if let Some(value) = self.n { snapshot.n = value; }
         Ok(())
     }
@@ -149,31 +149,31 @@ impl OpText for DemoMutation {
 }
 
 impl OpBinary for DemoMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_os_spr::ProtocolError> {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
-        let body = semio_framework_os_pack::record::encode_record_body(&(spec_fn.ordinary)(), &record, &PackEncodeOptions::default()).map_err(|e| semio_framework_os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
+        let body = semio_os_pack::record::encode_record_body(&(spec_fn.ordinary)(), &record, &PackEncodeOptions::default()).map_err(|e| semio_os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
         let mut out = Vec::with_capacity(2 + body.len());
         out.push(pack_rt::OP_BINARY_FORMAT);
         out.push(idx as u8);
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
-        let mut reader = semio_framework_os_pack::ByteReader::new(bytes);
-        let format = reader.read_u8().map_err(|e| semio_framework_os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_os_spr::ProtocolError> {
+        let mut reader = semio_os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8().map_err(|e| semio_os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
         if format != pack_rt::OP_BINARY_FORMAT {
-            return Err(semio_framework_os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op binary format: {format}") });
+            return Err(semio_os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op binary format: {format}") });
         }
-        let ordinal = reader.read_u8().map_err(|e| semio_framework_os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
+        let ordinal = reader.read_u8().map_err(|e| semio_os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| semio_framework_os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: format!("op ordinal {ordinal} out of range for {}", variants.len()) })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| semio_os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: format!("op ordinal {ordinal} out of range for {}", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
-        let (record, _report) = semio_framework_os_pack::record::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(semio_framework_os_spr::ProtocolError::from)?;
+        let (record, _report) = semio_os_pack::record::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(semio_os_spr::ProtocolError::from)?;
         let offset = reader.position() as u64;
-        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| semio_framework_os_spr::ProtocolError::Malformed { what: "op record", offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| semio_os_spr::ProtocolError::Malformed { what: "op record", offset, detail: error.to_string() })
     }
 }
 
@@ -211,10 +211,10 @@ impl Mutation<DemoSnapshot> for DemoMutation {
     }
 }
 
-impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for DemoMutation {
+impl semio_os_spr::ColdMutation<DemoSnapshot> for DemoMutation {
     type ReferenceDiff = DemoDiff;
-fn diff(&self, _snapshot: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
-        semio_framework_os_spr::MutationOutcome::new(match self {
+fn diff(&self, _snapshot: &DemoSnapshot) -> semio_os_spr::MutationOutcome<DemoDiff> {
+        semio_os_spr::MutationOutcome::new(match self {
             DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
         })
     }
@@ -246,13 +246,13 @@ fn bootstrap_frontier(document_id: &str, ordinal: u64, edit_id: &str, commit: u6
 
 async fn demo_artifact_bootstrap(inline: bool) -> (ArtifactBootstrap, ArtifactBootstrapPair) {
     ensure_demo_codec_registered().await;
-    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 7 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 7 }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let files = print_document_pack(&envelope).await.expect("print bootstrap pair");
     drop(envelope.into_owners());
     let pair = ArtifactBootstrapPair { pack: files.pack, spr: files.spr };
-    let pack_schema_hash = semio_framework_os_store_codec_registry::document_codec("demo/v1").await.expect("codec lookup").expect("demo codec").pack_schema_hash;
+    let pack_schema_hash = semio_os_store_codec_registry::document_codec("demo/v1").await.expect("codec lookup").expect("demo codec").pack_schema_hash;
     let bootstrap = ArtifactBootstrap {
-        format_version: semio_framework_os_spr::ARTIFACT_BOOTSTRAP_FORMAT_VERSION,
+        format_version: semio_os_spr::ARTIFACT_BOOTSTRAP_FORMAT_VERSION,
         descriptor_hash: [0x11; 32],
         artifact_schema: "demo/v1".into(),
         artifact_kind: "demo".into(),
@@ -263,7 +263,7 @@ async fn demo_artifact_bootstrap(inline: bool) -> (ArtifactBootstrap, ArtifactBo
         pack_length: pair.pack.len() as u64,
         spr_length: pair.spr.len() as u64,
         chunk_count: if inline { 0 } else { 3 },
-        aggregate_hash: semio_framework_os_spr::artifact_bootstrap_aggregate_hash(&pair.pack, &pair.spr),
+        aggregate_hash: semio_os_spr::artifact_bootstrap_aggregate_hash(&pair.pack, &pair.spr),
         required_tail_frontier: bootstrap_frontier("demo", 9, "edit-9", 4, 0x44),
         inline: inline.then(|| pair.clone()),
     };

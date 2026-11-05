@@ -7,26 +7,26 @@
 
 use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction::ui_label, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dScene, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Component, NumberStepperProps, Trigger};
-use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Component, NumberStepperProps, Trigger};
+use semio_plugin::plugin_app_close_prelude::Buildable;
 
 
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
-use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+use semio_plugin::plugin_app_close_prelude::HasBase;
+use semio_plugin::plugin_app_close_prelude::HasChildren;
 
 
-use semio_framework_plugin::ui_node_list;
-use semio_framework_plugin::ActionFactory;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiMapBuilder;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::UiValue;
-use semio_framework_ui_contract as ui;
+use semio_plugin::ui_node_list;
+use semio_plugin::ActionFactory;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiMapBuilder;
+use semio_plugin::UiText;
+use semio_plugin::UiValue;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const PANEL_TAB_ID: &str = "puzzle2d.panel.settings";
@@ -51,7 +51,7 @@ fn window_args(window_id: Option<&str>) -> UiAssemblyResult<Option<UiValue>> {
 
 /// 🪟️ The pane an app-level panel addresses: the render's own window, else the focused pane, else the
 /// first live instance — `None` when the host mounts no pane at all.
-pub fn panel_window_id(view_state: &semio_framework_plugin::ViewModel) -> Option<&str> {
+pub fn panel_window_id(view_state: &semio_plugin::ViewModel) -> Option<&str> {
     view_state
         .window_id
         .as_deref()

@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1996Snapshot, Op> for ChangeImposedCategory wh
         verb: "change", entity: "imposed-category", kind: "change-imposed-category", record: "ChangedImposedCategory",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change imposed load category", "Nutzlastkategorie ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change imposed load category", "Nutzlastkategorie ändern")
     }
 }
 

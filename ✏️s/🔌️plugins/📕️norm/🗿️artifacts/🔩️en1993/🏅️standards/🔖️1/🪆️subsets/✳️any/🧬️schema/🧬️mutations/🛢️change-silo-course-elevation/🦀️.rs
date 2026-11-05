@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloCourseElevatio
         record: "ChangedSiloCourseElevation",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Course height above the base h of the silo shell", "Silo-Schale: Schusshöhe über dem Boden h ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Course height above the base h of the silo shell", "Silo-Schale: Schusshöhe über dem Boden h ändern")
     }
 }
 

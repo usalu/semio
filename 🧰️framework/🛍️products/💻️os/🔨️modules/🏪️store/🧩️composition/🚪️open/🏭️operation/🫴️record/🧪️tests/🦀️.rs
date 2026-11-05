@@ -1,16 +1,16 @@
 //! 🧪️ Actual Drawing opens from the original framed member pages and retires every partial native owner.
 use super::*;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_os_store_owned_schema_decode::{OwnedSchemaDecodePages,OwnedSchemaDecodeCredits,OwnedSchemaDecodePage};
+use semio_os_store_owned_schema_decode::{OwnedSchemaDecodePages,OwnedSchemaDecodeCredits,OwnedSchemaDecodePage};
 use semio_framework_job::{OriginalJobDecodeOwner,OperationId,Generation,StepBudget,root_cancel_token};
 use semio_framework_value_testing_allocator::observe_retirement_allocations;
 use pack::snapshot::ArtifactPack;
 fn policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:256}}
 fn request(bytes:&[u8])->MemberOpenRequest{
  let mut frame=Vec::new();let mut n=bytes.len();loop{let b=(n&127)as u8;n>>=7;frame.push(b|if n==0{0}else{128});if n==0{break}}frame.extend_from_slice(bytes);frame.push(0);
- let mut pages=OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits{maximum_pages:frame.len().div_ceil(semio_framework_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES),maximum_bytes:frame.len()}).unwrap();for page in frame.chunks(semio_framework_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES){pages.admit_page(OwnedSchemaDecodePage::try_from_slice(page).unwrap()).unwrap()}pages.seal().unwrap();
+ let mut pages=OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits{maximum_pages:frame.len().div_ceil(semio_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES),maximum_bytes:frame.len()}).unwrap();for page in frame.chunks(semio_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES){pages.admit_page(OwnedSchemaDecodePage::try_from_slice(page).unwrap()).unwrap()}pages.seal().unwrap();
  let expected=semio_framework_artifact_reference::ArtifactRef{artifact_id:"drawing-original".into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.draw.drawing".into(),standard:"1".into(),subset:"*".into()}};
- MemberOpenRequest::new(OperationId(91),Generation(7),1000,expected,None,pages,semio_framework_os_spr::ActorId("author".into())).admit(1).unwrap_or_else(|_|panic!("original Drawing request"))
+ MemberOpenRequest::new(OperationId(91),Generation(7),1000,expected,None,pages,semio_os_spr::ActorId("author".into())).admit(1).unwrap_or_else(|_|panic!("original Drawing request"))
 }
 fn close<T:RetireOwned>(value:T){let mut c=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("typed Drawing law close"));for _ in 0..100000{if c.terminal_is_empty(){return}c.step(policy()).unwrap();}panic!("typed Drawing closure stalled")}
 #[test]

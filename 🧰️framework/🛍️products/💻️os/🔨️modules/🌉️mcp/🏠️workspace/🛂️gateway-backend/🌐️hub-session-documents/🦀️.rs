@@ -149,7 +149,7 @@ impl HeadlessWorkspace {
     /// value — see [`register_guest_document_codec`] for why registering the hub's number would
     /// delete the check that reads it back.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn register_hub_document_codec(&self, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1) -> Result<(), GatewayError> {
+    pub(crate) fn register_hub_document_codec(&self, lease: &semio_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1) -> Result<(), GatewayError> {
         let Some(PluginComponentSource::Hub(components)) = self.plugin_components() else {
             return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "a hub workspace with no authorized component source cannot resolve a document kind's codec").retryable());
         };
@@ -165,7 +165,7 @@ impl HeadlessWorkspace {
     /// `Handle::try_current()` there, once, and every later turn of this actor is polled under
     /// the handle it captured. Entering after the open would be entering nothing.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn open_hub_document_actor(&self, artifact_id: &str, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, relay: Arc<HubRelay>) -> (Option<store::sync::ArtifactMailboxSender>, Option<String>) {
+    pub(crate) fn open_hub_document_actor(&self, artifact_id: &str, lease: &semio_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, relay: Arc<HubRelay>) -> (Option<store::sync::ArtifactMailboxSender>, Option<String>) {
         let schema = lease.artifact.schema.clone();
         match ::semio_framework_async::poll::resolve_ready(store::os_store::codec_registry::document_codec(&schema)) {
             Ok(Some(_)) => {}

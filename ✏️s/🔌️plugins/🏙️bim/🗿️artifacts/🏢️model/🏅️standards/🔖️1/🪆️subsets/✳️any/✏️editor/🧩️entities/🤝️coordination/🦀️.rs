@@ -12,7 +12,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ElementClass, ElementSelector, IssuePriority, IssueStatus, Phase, RuleKind, RuleScope, RuleSeverity};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::coordination_values::RULE_KINDS;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::plugin_app_close_prelude::InputKind;
 use semio_s_artifact_bim_model_mut_any_118::standards::v1::subsets::any::schema::mutations::delete_clash_set;
 use semio_s_artifact_bim_model_mut_any_120::standards::v1::subsets::any::schema::mutations::delete_issue;
 use semio_s_artifact_bim_model_mut_any_121::standards::v1::subsets::any::schema::mutations::delete_issue_comment;

@@ -5,7 +5,7 @@ use super::*;
 /// 🖼 Paints one step of an image node: the decoded raster, the host raster or the placeholder chrome.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_image_node_step(
-    image: &semio_framework_ui_declaration::ui::UiImageNode,
+    image: &semio_ui_declaration::ui::UiImageNode,
     atlas: &mut FontAtlas,
     has_scene_host: bool,
     draw: &mut DrawList,
@@ -55,7 +55,7 @@ pub(super) fn paint_image_node_step(
 /// 🎬 Paints one step of a component scene node: the scene host placeholder.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_component_scene_node_step(
-    scene: &semio_framework_ui_declaration::ui::UiComponentSceneNode,
+    scene: &semio_ui_declaration::ui::UiComponentSceneNode,
     atlas: &mut FontAtlas,
     has_scene_host: bool,
     draw: &mut DrawList,
@@ -89,7 +89,7 @@ pub(super) fn paint_component_scene_node_step(
 
 /// 🔌 Paints one step of an external slot node: the slot placeholder chrome.
 pub(super) fn paint_external_slot_node_step(
-    slot: &semio_framework_ui_declaration::ui::UiExternalSlotNode,
+    slot: &semio_ui_declaration::ui::UiExternalSlotNode,
     atlas: &mut FontAtlas,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,

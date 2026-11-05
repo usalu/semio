@@ -1,6 +1,6 @@
 //! 📤️ The shell-to-gateway frame enum and its hand-rolled codec.
 
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_value::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use super::wire;

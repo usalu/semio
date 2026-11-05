@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-ui-host-tests"
+name = "semio-ui-host-tests"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,14 +24,14 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-ui-host = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-host = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 
 [dev-dependencies]
 semio-framework-abi = { path = "../../../../../../🌉️abi/📦️packages/🦀️rust" }
-ui_render = { path = "../../../../../🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_render = { path = "../../../../../🖌️render/📦️packages/🦀️rust", package = "semio-ui-render" }
 serde_json = { workspace = true }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
-ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../⏳️async/📦️packages/🦀️rust" }
 semio-framework-job-payload = { workspace = true }

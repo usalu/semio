@@ -19,8 +19,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "component-override", kind: "set-component-override", record: "SetComponentOverride" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Override parameter \"{}\" of component \"{}\"", self.name, self.component), &format!("Parameter \"{}\" der Komponente \"{}\" überschreiben", self.name, self.component))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Override parameter \"{}\" of component \"{}\"", self.name, self.component), &format!("Parameter \"{}\" der Komponente \"{}\" überschreiben", self.name, self.component))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{}.{}", self.component, self.name)]

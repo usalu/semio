@@ -1,21 +1,21 @@
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
-import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, registryCatalogInputView, declaredComponentKind, discoverCatalogPackages, declaredComponentDeploymentDirectoryV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { type AreaState } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
+import { type DiscoveredPackage, declaredComponentKind } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
+import { type RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { discoverCatalogPackages } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
+import { declaredComponentDeploymentDirectoryV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION, StaleChannelDescriptorError } from "../🧬️schema/🟦️.ts";
 import { closeProjectedPluginV1 } from "../📖️catalog-view/🟦️.ts";
 
 
 
-import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1, type DeployedRegistryEntryV1, type PluginBuildTargetV1 } from "./🧬️schema/🟦️.ts";
+import { CATALOG_ID, COMPONENT_PACKAGE_ID, parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1, type DeployedRegistryEntryV1, type PluginBuildTargetV1 } from "./🧬️schema/🟦️.ts";
 export type { ComponentSourceOwnerV1, CompiledComponentOwnerV1, DeployedRegistryEntryV1, PluginBuildTargetV1, PluginHostMetadata } from "./🧬️schema/🟦️.ts";
 
 export const COMPONENT_MANIFEST_MAX_BYTES = 64 * 1024;
-
-export const CATALOG_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-export const COMPONENT_PACKAGE_ID = /^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 
 /** 🧭️ Parses the one exact canonical component package identity without prefix inference. */
@@ -141,7 +141,7 @@ export function findPluginCargoFiles(root: string, packages?: readonly Discovere
 }
 
 
-/** 🔣️ Where a crate's static descriptor (`semio-framework-plugin-describe`'s output) lives, relative
+/** 🔣️ Where a crate's static descriptor (`semio-plugin-describe`'s output) lives, relative
  * to its own Cargo.toml directory: two levels up (out of `📦️packages/🦀️rust`) into the crate's OWNER
  * root — sibling of the tracked `🛂️manifest.json`, with NO further `🤖️generated/` segment.
  *

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for InsertSeismicSlope where
         record: "InsertSeismicSlope",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert slope", "Böschung einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert slope", "Böschung einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-seismic-slope".into()]

@@ -14,7 +14,7 @@ export type PolicySourceDirectoryResult = Readonly<{ state: "directory"; entries
 
 export type PolicySourceTextResult = Readonly<{ state: "file"; text: string }> | Readonly<{ state: "missing" | "unreadable" | "symlink" | "not-file"; text: "" }>;
 
-export const POLICY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".cache", ".storybook", "storybook-static"]);
+export const POLICY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".cache", ".r", ".storybook", "storybook-static"]);
 
 export const POLICY_SOURCE_OPERATIONS: PolicySourceOperations = {
   lstat: (path) => {

@@ -1,11 +1,11 @@
 //! 🏭️ A normal puzzle3d action reaches its typed command through the framework-declared producer: the plugin declares none, yet an action and its undo run end to end on the mounted app.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
-use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, dispatch_fixture_action, fixture_identity, fixture_mounted_policy, meta, new_app_with_registry, settle_history_verb, settle_registered_typed_operation, OriginalFixtureScope};
-use semio_framework_plugin::{App, ArtifactApp, ArtifactEditor, EditorApp, PluginApp, VcsArtifactApp};
+use semio_plugin::artifact_app_laws::{close_registered_fixture_app, dispatch_fixture_action, fixture_identity, fixture_mounted_policy, meta, new_app_with_registry, settle_history_verb, settle_registered_typed_operation, OriginalFixtureScope};
+use semio_plugin::{App, ArtifactApp, ArtifactEditor, EditorApp, PluginApp, VcsArtifactApp};
 use semio_s_artifact_puzzle_3d_editor::{create_puzzle3d_app, Puzzle3dPlayApp};
 
 type Puzzle3dMounted = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
@@ -15,8 +15,8 @@ type Puzzle3dMounted = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
 static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 /// 🪟️ The puzzle3d window commands require the host's per-window view state, exactly as the browser host supplies it.
-fn window_view() -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel { window_id: Some("puzzle3d-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "puzzle3d-main".into(), window_kind_id: "puzzle3d-main".into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+fn window_view() -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel { window_id: Some("puzzle3d-main".into()), window_instances: vec![semio_plugin::ViewWindowInstance { id: "puzzle3d-main".into(), window_kind_id: "puzzle3d-main".into() }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 macro_rules! window_meta {
@@ -29,7 +29,7 @@ macro_rules! window_meta {
 
 /// 🏗️ The registered, instance-bound app, boxed because the raw app is tens of KiB.
 async fn mounted(scope: &mut OriginalFixtureScope) -> Box<Puzzle3dMounted> {
-    let mut app = Box::new(new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(|| App { definition: create_puzzle3d_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), fixture_mounted_policy(), &mut fixture_identity()).await);
+    let mut app = Box::new(new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(|| App { definition: create_puzzle3d_app(), examples: Vec::new() }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), fixture_mounted_policy(), &mut fixture_identity()).await);
     app.bind_instance_id(1).await;
     let _ = scope;
     app
@@ -61,7 +61,7 @@ async fn target_volume_action_and_undo_reach_the_command_through_the_framework_d
 /// 🔬️ Diagnostic ledger of the settlement loop: how many turns, how much fuel and retained work one addTargetVolume settlement really costs, and whether any progress is made per turn.
 #[semio_framework_async_macros::async_test]
 async fn settlement_work_ledger_is_finite_and_progresses() {
-    use semio_framework_plugin::__job::testkit::renew_payload_page_grant;
+    use semio_plugin::__job::testkit::renew_payload_page_grant;
     let mut scope = OriginalFixtureScope::admit();
     let mut app = mounted(&mut scope).await;
     let action_meta = window_meta!("local");
@@ -84,7 +84,7 @@ async fn settlement_work_ledger_is_finite_and_progresses() {
             note = format!("maint:{:?}", app.maintenance_step(cx, policy.maintenance).map(|_| ()).map_err(|error| format!("{error:?}")));
         }
         if let Err(error) = app.advance_typed_operation_publication(&mut fixture_identity(), cx).await { note.push_str(&format!(" pub:{error:?}")); }
-        semio_framework_plugin::artifact_app_laws::retain_original_ownership_receipts(&mut *app, policy, &mut receipts).expect("receipts");
+        semio_plugin::artifact_app_laws::retain_original_ownership_receipts(&mut *app, policy, &mut receipts).expect("receipts");
         let mut page_log = Vec::new();
         for _ in 0..16 {
             let (answer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.take_typed_operation_result_page(action_meta.instance_id, policy.preparation));

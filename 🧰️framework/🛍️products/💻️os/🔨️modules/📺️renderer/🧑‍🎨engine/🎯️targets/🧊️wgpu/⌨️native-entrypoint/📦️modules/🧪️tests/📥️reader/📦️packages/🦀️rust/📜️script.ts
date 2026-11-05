@@ -7,7 +7,7 @@ import { buildAdmittedCargoArtifactsV1 } from "../../../../../../../../../../../
 class BuildScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw new Error("Native reader build accepts no arguments");const control=createIssuedResourceControlV1(this.invocation,"native:reader-build",0);
-  await buildAdmittedCargoArtifactsV1(join(this.root,"Cargo.toml"),["-p","semio-framework-os-native-runtime-reader","--bin","semio-native-runtime-reader"],this.repoRoot,{invocation:this.invocation,producer:"artifact",control,consume:verifyCapturedCargoArtifactsV1,environment:process.env});
+  await buildAdmittedCargoArtifactsV1(join(this.root,"Cargo.toml"),["-p","semio-os-native-runtime-reader","--bin","semio-native-runtime-reader"],this.repoRoot,{invocation:this.invocation,producer:"artifact",control,consume:verifyCapturedCargoArtifactsV1,environment:process.env});
  }
 }
 if(import.meta.main)await receiveScriptProcessInvocation(process.env,original=>runScriptMain(new ScriptRouter(import.meta.dir).register("build",BuildScript),{invocation:original}));

@@ -2,7 +2,7 @@
 use super::{admitted,refusal,refusal_code};
 use crate::{sqlite_wire,Fault};
 use crate::component::wasip2::semio::framework::pure;
-use semio_framework_os_kernel::io::io_mechanism::{IoNativeDirection,IoRunControl};
+use semio_os_kernel::io::io_mechanism::{IoNativeDirection,IoRunControl};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeForwardedDecodeControl, native_decoding::allocation::NativeForwardedDecodeReceipt, native_decoding::NativeDecodeRetirementRecipient};
 use semio_framework_value::native_encoding::{NativeEncodeControl,NativeForwardedEncodeControl,allocation::NativeForwardedEncodeReceipt,NativeEncodeRetirementRecipient,NativeEncodeAllocation};

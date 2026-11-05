@@ -26,7 +26,7 @@ semio-framework-kernel-ui = { path = "../../../../🎠️kernel/🖼️ui/📦�
 semio-framework-manifest-address = { path = "../../../🧭️address/📦️packages/🦀️rust" }
 semio-framework-manifest-arg-schema = { path = "../../../🧮️arg-schema/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
-semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
-semio-framework-ui-declaration = { path = "../../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }

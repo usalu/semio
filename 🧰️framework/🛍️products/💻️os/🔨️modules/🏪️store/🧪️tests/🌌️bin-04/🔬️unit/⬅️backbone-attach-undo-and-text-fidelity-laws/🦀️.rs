@@ -18,8 +18,8 @@ async fn attach_folds_a_pushed_event_log() {
 #[semio_framework_async_macros::async_test]
 async fn channel_backbone_round_trips_between_store_and_actor() {
     let (channel, remote) = ChannelBackbone::pair("chan").await;
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     store.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
     let attach_flush = drain_channel_for_test(&remote).expect("drain attach");
     assert!(matches!(attach_flush.as_slice(), [BackboneMessage::Genesis { .. }]), "attach announces the genesis of an event-free document and nothing else: {attach_flush:?}");
@@ -50,8 +50,8 @@ async fn channel_backbone_remote_pops_one_exact_owner_in_fifo_order_and_preserve
 #[semio_framework_async_macros::async_test]
 async fn pump_acks_ingested_operations() {
     let (channel, remote) = ChannelBackbone::pair("chan").await;
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     store.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
     let _ = drain_channel_for_test(&remote).expect("drain attach snapshot");
 
@@ -67,8 +67,8 @@ async fn pump_acks_ingested_operations() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_base_only_undo_refuses_a_foreign_tail() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await }).await.expect("ingest foreign");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "foreign edit sits at the tail");
@@ -80,8 +80,8 @@ async fn exact_base_only_undo_refuses_a_foreign_tail() {
 
 #[semio_framework_async_macros::async_test]
 async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply");
     let local_edit_id = store.applied_edit_ids()[0].clone();
     let foreign = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await;
@@ -104,7 +104,7 @@ async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
 /// reinstates this author's entry from the shared redo stack.
 #[semio_framework_async_macros::async_test]
 async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local a1");
     let local_a1 = store.applied_edit_ids()[0].clone();
     let author = store.local_actor_id().0.clone();
@@ -119,8 +119,8 @@ async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&local_a2));
 
     let files = print_document_pack(store.envelope()).await.expect("print pack");
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse pack");
-    let mut reloaded = ArtifactStore::new_with_actor(parsed.envelope, ActorId(author), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse pack");
+    let mut reloaded = ArtifactStore::new_with_actor(parsed.envelope, ActorId(author), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.applied_edit_ids(), &[local_a1.clone(), foreign_id.clone()], "reload preserves selective undo projection");
     assert_eq!(reloaded.redo_edit_ids(), std::slice::from_ref(&local_a2), "durable collaborative redo stack survives reload");
     test_support::dispatch_test_command(&mut reloaded, ArtifactCommand::Redo).await.expect("redo after reload reinstates the local edit");
@@ -130,8 +130,8 @@ async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
 
 #[semio_framework_async_macros::async_test]
 async fn compensating_undo_dispatches_semantic_command() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let undo_apply = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 0 })], transaction: None };
     test_support::dispatch_test_command(&mut store, ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).await.expect("compensating undo");
@@ -140,8 +140,8 @@ async fn compensating_undo_dispatches_semantic_command() {
 
 #[semio_framework_async_macros::async_test]
 async fn edit_mutations_exposes_the_latest_edit() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert!(store.edit_mutations().is_none(), "no edits yet");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let (forwards, inverse, meta) = store.edit_mutations().expect("edit operations");
@@ -154,9 +154,9 @@ async fn edit_mutations_exposes_the_latest_edit() {
 /// and the commit the edit carries every forward, inverse and metadata row, and one undo reverts the whole gesture.
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_transaction_grows_one_edit_over_many_ticks() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let transaction = semio_framework_os_spr::TransactionRef { id: "tx-00000000000000d1".into(), tool: "s.demo@1/*#editor#drag".into() };
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let transaction = semio_os_spr::TransactionRef { id: "tx-00000000000000d1".into(), tool: "s.demo@1/*#editor#drag".into() };
     for n in 1..=50 {
         test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
     }
@@ -174,9 +174,9 @@ async fn a_streamed_transaction_grows_one_edit_over_many_ticks() {
 /// store loaded from the same envelope derives from scratch, and every tick still moves the revision.
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_edit_revision_is_its_own_from_scratch_digest() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let transaction = semio_framework_os_spr::TransactionRef { id: "tx-00000000000000d2".into(), tool: "s.demo@1/*#editor#type".into() };
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let transaction = semio_os_spr::TransactionRef { id: "tx-00000000000000d2".into(), tool: "s.demo@1/*#editor#type".into() };
     let mut revisions = std::collections::HashSet::new();
     for n in 1..=256 {
         test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
@@ -185,7 +185,7 @@ async fn a_streamed_edit_revision_is_its_own_from_scratch_digest() {
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitTransaction { transaction_id: transaction.id.clone() }).await.expect("commit");
     assert_eq!(store.envelope().vcs.edits.len(), 1, "the run is one edit");
     let files = print_document_pack(store.envelope()).await.expect("owned document encode");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("owned document decode").envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("owned document decode").envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.content_revision_now(), store.content_revision_now(), "the incrementally extended revision equals the from-scratch one");
 }
 
@@ -303,8 +303,8 @@ async fn demo_op_binary_rejects_unknown_format_and_ordinal() {
 
 #[semio_framework_async_macros::async_test]
 async fn print_edit_lines_emits_one_indented_line_per_forward_op() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     let edit = store.envelope().vcs.edits.last().expect("edit");
     let printed = print_edit_lines(edit).await.expect("print edit lines");
@@ -314,8 +314,8 @@ async fn print_edit_lines_emits_one_indented_line_per_forward_op() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_after_apply_and_checkpoint() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
     test_support::assert_document_text_round_trip(&store).await;
@@ -325,6 +325,6 @@ async fn document_text_round_trips_after_apply_and_checkpoint() {
 #[semio_framework_async_macros::async_test]
 async fn parse_document_text_rejects_invalid_op_line_with_span() {
     let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nedit e1 sequence=1 started=\"1\" line=[]\n  not-an-op\n".to_string() };
-    let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_err();
+    let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_err();
     assert_eq!(error.span.line, 3);
 }

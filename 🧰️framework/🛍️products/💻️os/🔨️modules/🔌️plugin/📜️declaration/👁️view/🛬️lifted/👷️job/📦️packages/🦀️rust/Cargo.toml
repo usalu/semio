@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-framework-plugin-decl-tool-contract"
+name = "semio-plugin-decl-tool-contract"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -21,8 +21,8 @@ semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-persistent = { path = "../../../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
-semio-framework-plugin-mounted-owner = { path = "../../../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
-semio-framework-plugin-ownership = { path = "../../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-mounted-owner = { path = "../../../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

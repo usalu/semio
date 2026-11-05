@@ -31,7 +31,7 @@ fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinitio
                     id: (*id).into(),
                     label: LocalizedLabel::data(*id),
                     body_key: format!("{id}.body"),
-                    surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+                    surface_kind: semio_ui_declaration::ui::SurfaceKind::Canvas2d,
                     icon_id: "app-window".into(),
                     options: WindowOptions::default(),
                     actions: vec![],

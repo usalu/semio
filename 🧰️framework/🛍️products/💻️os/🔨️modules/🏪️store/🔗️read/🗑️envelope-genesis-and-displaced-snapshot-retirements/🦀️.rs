@@ -13,14 +13,14 @@ pub struct ArtifactEnvelopeMetadata {
     pub owner: Option<OwnerRef>,
     pub lanes: protocol::HistoryFoldIndex<String, HistoryLane>,
     pub viewer_checkpoint_id: Option<String>,
-    pub conflicts: Vec<semio_framework_os_spr::Conflict>,
-    pub transitions: ArtifactHistoryLedger<semio_framework_os_spr::MutationEnvelope>,
+    pub conflicts: Vec<semio_os_spr::Conflict>,
+    pub transitions: ArtifactHistoryLedger<semio_os_spr::MutationEnvelope>,
     pub open_transaction: Option<OpenToolTransaction>,
 }
 
 pub struct ArtifactStoreEnvelopeRetirement<P, Mutation> {
     pub vcs: std::mem::ManuallyDrop<Option<ArtifactStoreVcsRetirement<P, Mutation>>>,
-    pub messages: std::mem::ManuallyDrop<Option<semio_framework_os_store_message_ledger::ArtifactEditMessageLedger>>,
+    pub messages: std::mem::ManuallyDrop<Option<semio_os_store_message_ledger::ArtifactEditMessageLedger>>,
     pub metadata: std::mem::ManuallyDrop<Option<ArtifactEnvelopeMetadata>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }

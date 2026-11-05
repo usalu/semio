@@ -18,5 +18,5 @@ async fn render_emits_one_draft_per_text_bearing_shape() {
             shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("a")], position: Default::default() }, PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("b")], position: Default::default() }],
         }],
     });
-    assert_eq!(render(&document, semio_framework_plugin::UiPublicationRevision(23)).expect("render").children.len(), 2);
+    assert_eq!(render(&document, semio_plugin::UiPublicationRevision(23)).expect("render").children.len(), 2);
 }

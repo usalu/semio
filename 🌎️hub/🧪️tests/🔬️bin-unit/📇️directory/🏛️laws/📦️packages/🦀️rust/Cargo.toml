@@ -42,7 +42,7 @@ semio-hub-state = { workspace = true, features = ["testkit"] }
 semio-hub-testing = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
-directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["durable-group-testing"] }
 serde_json = { workspace = true }
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }

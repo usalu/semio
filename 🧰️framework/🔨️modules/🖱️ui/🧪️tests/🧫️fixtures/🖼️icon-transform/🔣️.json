@@ -1,0 +1,222 @@
+{
+  "cases": [
+    {
+      "id": "translation-nonuniform-scale",
+      "transform": {
+        "position": [
+          10,
+          -4,
+          3
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          2,
+          3,
+          4
+        ]
+      },
+      "localPoints": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          -1,
+          -2,
+          -3
+        ]
+      ],
+      "worldPoints": [
+        [
+          12,
+          2,
+          15
+        ],
+        [
+          8,
+          -10,
+          -9
+        ]
+      ],
+      "localBounds": {
+        "minimum": [
+          -1,
+          -1,
+          -1
+        ],
+        "maximum": [
+          1,
+          1,
+          1
+        ]
+      },
+      "worldBounds": {
+        "minimum": [
+          8,
+          -7,
+          -1
+        ],
+        "maximum": [
+          12,
+          -1,
+          7
+        ]
+      }
+    },
+    {
+      "id": "quaternion-turn-after-scale",
+      "transform": {
+        "position": [
+          3,
+          5,
+          7
+        ],
+        "rotation": [
+          0,
+          0,
+          0.7071067811865476,
+          0.7071067811865476
+        ],
+        "scale": [
+          2,
+          3,
+          4
+        ]
+      },
+      "localPoints": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "worldPoints": [
+        [
+          3,
+          7,
+          7
+        ],
+        [
+          0,
+          5,
+          7
+        ],
+        [
+          3,
+          5,
+          11
+        ]
+      ],
+      "localBounds": {
+        "minimum": [
+          -1,
+          -1,
+          -1
+        ],
+        "maximum": [
+          1,
+          1,
+          1
+        ]
+      },
+      "worldBounds": {
+        "minimum": [
+          0,
+          3,
+          3
+        ],
+        "maximum": [
+          6,
+          7,
+          11
+        ]
+      }
+    },
+    {
+      "id": "reflection-rotation",
+      "transform": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "rotation": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          -2,
+          3,
+          4
+        ]
+      },
+      "localPoints": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          -1,
+          -2,
+          -3
+        ]
+      ],
+      "worldPoints": [
+        [
+          -1,
+          -4,
+          -9
+        ],
+        [
+          3,
+          8,
+          15
+        ]
+      ],
+      "localBounds": {
+        "minimum": [
+          -1,
+          -1,
+          -1
+        ],
+        "maximum": [
+          1,
+          1,
+          1
+        ]
+      },
+      "worldBounds": {
+        "minimum": [
+          -1,
+          -1,
+          -1
+        ],
+        "maximum": [
+          3,
+          5,
+          7
+        ]
+      }
+    }
+  ],
+  "tolerance": 1e-10
+}

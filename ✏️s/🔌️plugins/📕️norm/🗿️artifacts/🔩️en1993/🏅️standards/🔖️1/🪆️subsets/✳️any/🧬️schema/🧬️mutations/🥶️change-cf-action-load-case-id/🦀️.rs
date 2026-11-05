@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfActionLoadCaseId
         record: "ChangedCfActionLoadCaseId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Load case of the cold-formed action", "Kaltprofil-Einwirkung: Lastfall ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Load case of the cold-formed action", "Kaltprofil-Einwirkung: Lastfall ändern")
     }
 }
 

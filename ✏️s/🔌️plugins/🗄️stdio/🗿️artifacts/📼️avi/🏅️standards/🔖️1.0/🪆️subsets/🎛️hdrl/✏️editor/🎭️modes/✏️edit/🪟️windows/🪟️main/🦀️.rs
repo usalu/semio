@@ -2,11 +2,11 @@
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 use crate::standards::v1_0::subsets::any::schema::inferences::duration::compute_avi_duration;
-use semio_framework_plugin::app::{MediaKind, MediaResource, MediaTrim, MediaTrimUnit, MediaView, MediaWindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowKit;
+use semio_plugin::app::{MediaKind, MediaResource, MediaTrim, MediaTrimUnit, MediaView, MediaWindowKit};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::Locale;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowKit;
 
 pub const WINDOW_KIND_ID: &str = MediaWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MediaWindowKit::KIND_ID;
@@ -39,7 +39,7 @@ pub fn trim(snapshot: &AviSnapshot, revision: Option<String>) -> Option<MediaTri
 
 /// 🎬️ Renders [`view`] through the media window kit.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &AviSnapshot, locale: Locale, resource: Option<MediaResource>, revision: Option<String>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &AviSnapshot, locale: Locale, resource: Option<MediaResource>, revision: Option<String>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     MediaWindowKit::render(&view(snapshot, locale, resource, revision))
 }
 

@@ -68,8 +68,8 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
             use crate::editor::gis2d::commands::example::set_active_example;
             use crate::editor::gis2d::commands::view::{fit_world, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
             use crate::editor::gis2d::{create_gis2d_app, Gis2dCommand, Gis2dPlayApp};
-            type Gis2dApp = semio_framework_plugin::VcsArtifactApp<EditorApp<Gis2dPlayApp>, SemioMembers>;
-            use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowMeasure};
+            type Gis2dApp = semio_plugin::VcsArtifactApp<EditorApp<Gis2dPlayApp>, SemioMembers>;
+            use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowMeasure};
             use semio_s_artifact_stdio_semio::SemioMembers;
 
             async fn dispatch(
@@ -77,14 +77,14 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 command: Gis2dCommand,
                 view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<usize, String> {
                 let command_id = command.command_id();
-                let meta = ActionMeta { instance_id: 86, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) };
-                semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{command_id}: {error:?}"))?;
-                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{command_id}: {error:?}"))?;
-                Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
+                let meta = ActionMeta { instance_id: 86, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) };
+                semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                Ok(receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::WindowConfig).count())
             }
 
-            async fn render(app: &mut Gis2dApp, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::TiledMapScene, String> {
-                let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, crate::editor::gis2d::modes::edit::windows::map::GIS2D_PLAY_BODY_COMPOSITE, view, cx).await.map_err(|error| format!("{error:?}"))?;
+            async fn render(app: &mut Gis2dApp, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::TiledMapScene, String> {
+                let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, crate::editor::gis2d::modes::edit::windows::map::GIS2D_PLAY_BODY_COMPOSITE, view, cx).await.map_err(|error| format!("{error:?}"))?;
                 artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
             }
 
@@ -92,7 +92,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 app.window_measures(view).await.remove(view.window_id.as_deref().unwrap_or_default()).unwrap_or_default()
             }
 
-            fn same_window_config(left: &semio_framework_plugin::TiledMapScene, right: &semio_framework_plugin::TiledMapScene) -> bool {
+            fn same_window_config(left: &semio_plugin::TiledMapScene, right: &semio_plugin::TiledMapScene) -> bool {
                 let same_json = |left: &str, right: &str| {
                     serde_json::from_str::<serde_json::Value>(left).ok() == serde_json::from_str::<serde_json::Value>(right).ok()
                 };
@@ -133,11 +133,11 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 ViewWindowInstance { id: "gis-map-right".into(), window_kind_id: MapWindowConfigOwner::WINDOW_KIND_ID.into() },
                 ViewWindowInstance { id: "gis-map-other".into(), window_kind_id: "other-window".into() },
             ];
-            let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+            let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
             let left = view.for_window_instance("gis-map-left").unwrap();
             let right = view.for_window_instance("gis-map-right").unwrap();
-            let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+            let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
             app.bind_instance_id(86).await;
             let outcome: Result<(), String> = async {
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -198,7 +198,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 }
                 if app.snapshot().map_err(|error| format!("{error:?}"))?.positions.is_empty() { return Err("GIS Map reuse example did not restore document positions".into()); }
                 if render(&mut app, &left, scope.cx()).await?.camera_json == camera_before_example { return Err("GIS Map example camera was not captured by its caller window".into()); }
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(87).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_payloads = reopened
@@ -218,7 +218,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                     .ok_or_else(|| "GIS Map reopened right config is absent".to_string())?;
                 let reopened_left = render(&mut *reopened, &left, scope.cx()).await?;
                 let reopened_right = render(&mut *reopened, &right, scope.cx()).await?;
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 if reopened_payloads != persisted_payloads
                     || reopened_left_config != persisted_left
                     || reopened_right_config != persisted_right
@@ -227,14 +227,14 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 {
                     return Err("GIS Map persisted exact-window config changed during reopen".into());
                 }
-                let stale = ViewModel { window_id: Some("gis-map-missing".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+                let stale = ViewModel { window_id: Some("gis-map-missing".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
                 if addressed(&stale, MapWindowConfigMutation::SetCamera(map_config_mutations::SetCamera { camera_json: "{}".into() })).is_ok() { return Err("GIS Map accepted stale window identity".into()); }
                 let wrong = view.for_window_instance("gis-map-other").unwrap();
                 if addressed(&wrong, MapWindowConfigMutation::SetCamera(map_config_mutations::SetCamera { camera_json: "{}".into() })).is_ok() { return Err("GIS Map accepted the wrong concrete window kind".into()); }
                 Ok(())
             }.await;
             if let Err(error) = &outcome { eprintln!("[TRACE] GIS Map exact-window runtime failure before close: {error}"); }
-            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
             outcome.expect("GIS Map exact-window runtime law");
         }))
         .expect("spawn GIS Map window ownership law")

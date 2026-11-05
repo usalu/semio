@@ -1,6 +1,6 @@
 //! 🚚️ Typed list commit moves original row owners through pre-admitted headers.
 use super::keyed_plan::Origin;
-use semio_framework_os_kernel::ApplyCapability;
+use semio_os_kernel::ApplyCapability;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{size_of,ManuallyDrop};
 /// 📤 An authored insertion transfers its actual typed row without cloning its children.

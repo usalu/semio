@@ -7,13 +7,13 @@ use super::*;
 
 //#region 📬️OneItemPublicationLaws
 //#region 🧩️RetainedMemberPublicationLaws
-semio_framework_os_kernel::space_members! {
-    native_producer:&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+semio_os_kernel::space_members! {
+    native_producer:&semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
     history_limits:protocol::codec::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum RetainedTestMembers, RetainedTestMembersOpen {
-        First("s.test.member", "v1", "first", "demo/v1") => (DemoSnapshot, DemoMutation, semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<DemoMutation>, semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()),
-        Second("s.test.member", "v1", "second", "demo/v1") => (DemoSnapshot, DemoMutation, semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<DemoMutation>, semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()),
+        First("s.test.member", "v1", "first", "demo/v1") => (DemoSnapshot, DemoMutation, semio_os_store_testing_doubles::DemoMemberStoreProducer<DemoMutation>, semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()),
+        Second("s.test.member", "v1", "second", "demo/v1") => (DemoSnapshot, DemoMutation, semio_os_store_testing_doubles::DemoMemberStoreProducer<DemoMutation>, semio_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()),
     }
 }
 
@@ -33,14 +33,14 @@ async fn member_factory_closed_dialect_matches_neutral_admission_corpus() {
         let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect };
         MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
         let result = if row["operation"] == "create" {
-            RetainedTestMembers::create(&expected.artifact_id, &expected.dialect, &seed.encode_pack(), ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await
+            RetainedTestMembers::create(&expected.artifact_id, &expected.dialect, &seed.encode_pack(), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await
         } else {
-            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(row["persisted"]["schema"].as_str().unwrap(), "child-1", seed.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(row["persisted"]["schema"].as_str().unwrap(), "child-1", seed.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
             envelope.dialect = serde_json::from_value(row["persisted"]["dialect"].clone()).unwrap();
             let files = print_document_pack(&envelope).await.unwrap();
             let packed = encode_document_pack_bytes(&files.pack, &files.spr).await;
             close_member_dialect_envelope(envelope);
-            RetainedTestMembers::open(&expected, None, &packed, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await
+            RetainedTestMembers::open(&expected, None, &packed, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await
         };
         assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), usize::from(row["accepted"].as_bool().unwrap()), "{}: rejected identity must not hydrate a typed snapshot", row["id"]);
         assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}: {:?}", row["id"], result.as_ref().err());
@@ -62,7 +62,7 @@ async fn member_factory_closed_dialect_matches_neutral_admission_corpus() {
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
     for bytes in [&[][..], &[1][..], &[0xff, 0xff][..]] {
         MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
-        assert!(RetainedTestMembers::open(&expected, None, bytes, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.is_err());
+        assert!(RetainedTestMembers::open(&expected, None, bytes, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.is_err());
         assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), 0);
     }
 }
@@ -75,7 +75,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
     let owner = OwnerRef { parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect::parse_coordinate("s.test.parent@v1/*").unwrap() }, slot: "content".into(), child_id: "child-1".into() };
     for row in fixture["identityCases"].as_array().unwrap() {
-        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["persistedId"].as_str().unwrap(), DemoSnapshot { n: Some(7) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["persistedId"].as_str().unwrap(), DemoSnapshot { n: Some(7) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(expected.dialect.clone());
         if !row["persistedOwner"].is_null() {
             let persisted = &row["persistedOwner"];
@@ -90,7 +90,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         close_member_dialect_envelope(envelope);
         let expected_owner = row["expectedOwned"].as_bool().unwrap().then_some(&owner);
         MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
-        let result = RetainedTestMembers::open(&expected, expected_owner, &packed, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await;
+        let result = RetainedTestMembers::open(&expected, expected_owner, &packed, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await;
         assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), usize::from(row["accepted"].as_bool().unwrap()), "{}: rejected owner must not hydrate a typed snapshot", row["id"]);
         assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}: {:?}", row["id"], result.as_ref().err());
         if let Ok(mut member) = result {
@@ -107,8 +107,8 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let fixture = member_publication_fixture();
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize, ..one_item_test_policy() };
-    let mut first = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "first", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
-    let mut second = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "second", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut first = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "first", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut second = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "second", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     first.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     second.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let mut members = [RetainedTestMembers::First(Box::new(first.into_inner())), RetainedTestMembers::Second(Box::new(second.into_inner()))];
@@ -157,7 +157,7 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
         assert!(publication.acknowledge());
         assert!(!publication.acknowledge());
         close_erased_member_publication(&mut *publication, grant);
-        let concrete = member.as_any_mut().await.downcast_mut::<semio_framework_os_store_engine::lifted_store::ArtifactStore<DemoSnapshot, DemoMutation>>().unwrap();
+        let concrete = member.as_any_mut().await.downcast_mut::<semio_os_store_engine::lifted_store::ArtifactStore<DemoSnapshot, DemoMutation>>().unwrap();
         assert_eq!(concrete.snapshot().unwrap().n, Some(oracle));
         assert_eq!(oracle as i64, row["expected"].as_i64().unwrap());
         assert_eq!(SpaceMember::tail_group_id(concrete).await.as_deref(), fixture["groupId"].as_str());

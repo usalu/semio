@@ -6,7 +6,7 @@ fn fixture_hydration_grant()->RetainedCloneGrant {RetainedCloneGrant{maximum_ite
 
 fn fixture_demo_owners()->DocumentStoreOwners<DemoSnapshot,DemoMutation> {
     let grant=fixture_hydration_grant();
-    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(grant));
+    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(grant));
     let(owners,receipt)=match result{Ok(admitted)=>admitted,Err(refusal)=>panic!("declared original fixture catalog refused: {:?}",refusal.error)};
     assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));complete_test_catalog(Ok::<_,DocumentStoreOwnersAdmissionError<DemoSnapshot,DemoMutation>>((owners,receipt)))
 }
@@ -14,7 +14,7 @@ fn fixture_demo_owners()->DocumentStoreOwners<DemoSnapshot,DemoMutation> {
 pub(super) async fn fixture_author<P, M>(store: &mut ArtifactStore<P, M>, command: ArtifactCommand<M>) -> Result<CommandReceipt, VcsError>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
-    M: semio_framework_os_spr::ColdMutation<P> + Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    M: semio_os_spr::ColdMutation<P> + Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let mut observed = 0;
     let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -22,7 +22,7 @@ where
         observed = progress.owned_bytes;
         true
     };
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(FIXTURE_IDENTITY_BYTE_CEILING, &mut observer).expect("declared fixture identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(FIXTURE_IDENTITY_BYTE_CEILING, &mut observer).expect("declared fixture identity authority");
     let result = store.dispatch(command, &mut identity).await;
     drop(identity.pause().expect("original cumulative fixture identity receipt"));
     drop(observer);
@@ -33,10 +33,10 @@ fn fixture_planning_policy()->RetainedCloneGrant { RetainedCloneGrant { maximum_
 
 /// 🎟️ Finalizes the original replay through the fixture caller's existing identity authority.
 async fn fixture_finalize<P,M>(store:&mut ArtifactStore<P,M>,finished:EditReplayResult<P,M>,finalization:HistoryFinalization)->Result<CommandReceipt,VcsError>
-where P:Clone+ToValue+FromValue+ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+semio_framework_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static {
+where P:Clone+ToValue+FromValue+ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+semio_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static {
     let mut observed=0;
     let mut observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=FIXTURE_IDENTITY_BYTE_CEILING);observed=progress.owned_bytes;true};
-    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(FIXTURE_IDENTITY_BYTE_CEILING,&mut observer).expect("original fixture finalization identity authority");
+    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(FIXTURE_IDENTITY_BYTE_CEILING,&mut observer).expect("original fixture finalization identity authority");
     let result=store.commit_finished_replay(finished,finalization,&mut identity).await;
     drop(identity.pause().expect("original fixture finalization cumulative identity receipt"));drop(observer);
     result
@@ -46,7 +46,7 @@ fn fixture_retirement_policy(maximum_items:usize,maximum_release_bytes:usize)->R
 
 //#region 🧰️Harness
 async fn demo_store(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await
 }
 
 async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, mutations: Vec<DemoMutation>) {

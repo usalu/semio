@@ -4,9 +4,9 @@ use crate::editor::flow::host::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, ExtensionInvocation, Fault};
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, ExtensionInvocation, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
@@ -18,7 +18,7 @@ pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 /// as in generation2d's `🧵️preview-eval` (`PREVIEW_EVAL_HOP_REQUEST`). Three call sites used to mint
 /// three different ids (105/106/107) for one chain, which correlated nothing and only hid that the
 /// hop was unaddressed.
-const FLOW_EVAL_HOP_REQUEST: u64 = 107;
+pub(crate) const FLOW_EVAL_HOP_REQUEST: u64 = 107;
 
 /// 🪟️ The one argument object every hop carries, on the redispatch and on the extension request
 /// alike — `reactor::extension_response_args` echoes an invocation request's own fields onto the
@@ -34,7 +34,7 @@ pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_val
 /// window. An `Effect::DispatchAction` carries no window of its own — the shell redispatches it
 /// under whichever window is current — so the address rides on the payload.
 pub fn eval_tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(FLOW_EVAL_HOP_REQUEST), action: FLOW_EVAL_TICK_ACTION.into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_plugin::RequestId(FLOW_EVAL_HOP_REQUEST), action: FLOW_EVAL_TICK_ACTION.into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
 }
 
 /// 🚧️ Whether an evaluation of `host_snapshot` may start or continue at all: an operator kind no
@@ -92,7 +92,7 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
         let hash=pending.node_hash;
         if session.invocation_origin_cold(window_id,hash).is_none(){
             let dependency_json=dependencies.remove(&pending.neuron_id).expect("initial invocation owns its original dependency source");
-            session.retain_invocation_origin_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOriginLease::from_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOrigin{window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:hash,input_json:pending.input_json,dependency_json,operator_version:format!("registry:{};geometry:1;policy:1",flow::flow_extension_registry_generation()),outer_node_hash:None,preview_source:None}));
+            session.retain_invocation_origin_cold(semio_os_flow_host_session::invocation_publication::FlowInvocationOriginLease::from_cold(semio_os_flow_host_session::invocation_publication::FlowInvocationOrigin{window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:hash,input_json:pending.input_json,dependency_json,operator_version:format!("registry:{};geometry:1;policy:1",flow::flow_extension_registry_generation()),outer_node_hash:None,preview_source:None}));
         }
         let origin=session.invocation_origin_cold(window_id,hash).expect("invocation source is retained before dispatch");
         extension_invocations.push(ExtensionInvocation::new(origin.extension_id.clone(),"evaluate",origin.request_json_cold(resume),"flowEvalResolve"));

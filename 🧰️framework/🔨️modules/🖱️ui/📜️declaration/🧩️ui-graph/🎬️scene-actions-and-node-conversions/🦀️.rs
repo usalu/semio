@@ -4,7 +4,7 @@ use super::*;
 
 // #region ui
 //#region 🔖️UiNode
-// 🎬️ `NodeGraphScene::base` and `TextEditorScene::base` moved into `semio-framework-ui-scene`
+// 🎬️ `NodeGraphScene::base` and `TextEditorScene::base` moved into `semio-ui-scene`
 // itself (inherent impls on a foreign type are an orphan-rule error, not just a style choice —
 // see R9/E116). `json_view`/`code_input` stay here as free functions: both embed a `ui_wgpu`-only
 // `ActionDescriptor` into `settings_json` via `serde_json`, so they legitimately belong on this

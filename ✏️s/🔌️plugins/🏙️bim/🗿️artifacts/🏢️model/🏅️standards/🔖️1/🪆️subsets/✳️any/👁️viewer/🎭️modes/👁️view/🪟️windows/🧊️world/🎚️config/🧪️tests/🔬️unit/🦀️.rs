@@ -1,6 +1,6 @@
-use semio_framework_plugin::WorldProjectionConfig;
+use semio_plugin::WorldProjectionConfig;
 #[allow(unused_imports)]
-use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
+use semio_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::viewer::bim::modes::view::windows::world::config::*;

@@ -1,7 +1,7 @@
 //! 🔬️ The probe artifact document: JSON and SQLite snapshot codecs.
 
-extern crate semio_framework_os_kernel as pack;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as pack;
+extern crate semio_os_kernel as store;
 
 #[path = "../🏠️workspace/🔬️probe-document/🦀️.rs"]
 pub mod probe_document;

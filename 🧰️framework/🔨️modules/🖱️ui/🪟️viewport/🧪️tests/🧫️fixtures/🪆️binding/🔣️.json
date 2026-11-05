@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "owner": "semio-framework-ui-viewport",
+  "owner": "semio-ui-viewport",
   "entry": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🦀️.rs",
   "manifest": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml",
   "binding": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🪆️binding/🦀️.rs",

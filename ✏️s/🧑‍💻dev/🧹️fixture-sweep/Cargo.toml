@@ -40,7 +40,7 @@ path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐�
 [workspace.dependencies.semio-framework-artifact-workflow-workflow]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-kernel]
+[workspace.dependencies.semio-os-kernel]
 path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-animate-presentation]

@@ -1,6 +1,6 @@
 //! 🧭️ IFC4x3 profile for shared catalog-aware details controls.
 use crate::catalog::{IfcAttributeDeclaration, IfcCatalog, IfcTypeExpression};
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use semio_s_artifact_stdio_contract::editing::{SnapshotDetailPathSegment as P, SnapshotDetailPresentation, SnapshotDetailVariant};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
 use semio_s_artifact_stdio_ifc_details as shared;
@@ -88,7 +88,7 @@ pub fn details_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing
 pub fn details_edit_special(
     event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent,
     snapshot: &semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot,
-) -> Result<Option<Vec<semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation>>, semio_framework_plugin::Fault> {
+) -> Result<Option<Vec<semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation>>, semio_plugin::Fault> {
     shared::details_edit_special::<Ifc4x3DetailsProfile>(event, snapshot)
 }
 #[cfg(test)]
@@ -96,11 +96,11 @@ pub(crate) use shared::{encode_global_id, fresh_global_id, next_entity_id};
 #[cfg(test)]
 pub(crate) use shared::IfcDetailsWork;
 
-pub fn details_work_capacity() -> semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity {
+pub fn details_work_capacity() -> semio_plugin::retained_command::ArtifactRetainedWorkCapacity {
     shared::details_work_capacity::<Ifc4x3DetailsProfile>()
 }
 pub fn details_edit_retained_path_is_admitted(event:&semio_s_artifact_stdio_contract::editing::SnapshotEditEvent,snapshot:&IfcSnapshot)->bool {shared::details_edit_retained_path_is_admitted::<Ifc4x3DetailsProfile>(event,snapshot)}
-pub fn details_edit_work<E>(tool: &'static str) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<E>>>
+pub fn details_edit_work<E>(tool: &'static str) -> Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<E>>>
 where
     E: semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor<
             Snapshot = semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot,
@@ -113,7 +113,7 @@ pub fn details_edit_special_controlled(
     event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent,
     snapshot: &semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot,
     tick: &mut dyn FnMut() -> Result<(), String>,
-) -> Result<Option<Vec<semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation>>, semio_framework_plugin::Fault> {
+) -> Result<Option<Vec<semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation>>, semio_plugin::Fault> {
     shared::details_edit_special_controlled::<Ifc4x3DetailsProfile>(event, snapshot, tick)
 }
 

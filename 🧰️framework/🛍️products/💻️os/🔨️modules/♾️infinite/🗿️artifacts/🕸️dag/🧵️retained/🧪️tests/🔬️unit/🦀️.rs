@@ -2,9 +2,9 @@
 use super::*;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress}};
 use crate::sqlite_snapshot_tests::property_allocation::heap;
-use semio_framework_os_infinite_directed_presentation::DagNodeKind;
-use semio_framework_os_infinite_directed_presentation::IoPortSpec;
-use semio_framework_os_infinite_directed_presentation::EdgeRouteStyle;
+use semio_os_infinite_directed_presentation::DagNodeKind;
+use semio_os_infinite_directed_presentation::IoPortSpec;
+use semio_os_infinite_directed_presentation::EdgeRouteStyle;
 
 fn close(owner:Box<dyn ErasedSnapshotRetirement>,copy:usize,born:usize,original:usize){
  let mut slot=Some(owner);let mut allocated=born;let mut released=0;
@@ -68,7 +68,7 @@ fn mutation(index:u64)->DagMutation{
 
 fn every_kind_snapshot()->DagSnapshot{
  use semio_framework_graph_manifest::{PropertyBag,PropertyValue};
- use semio_framework_os_infinite_directed_presentation::{DagExpandedPaths,DagMedia,DagMediaKind,DagPreviewContent,DagHostSnapshotEdge,DagNodeSpec};
+ use semio_os_infinite_directed_presentation::{DagExpandedPaths,DagMedia,DagMediaKind,DagPreviewContent,DagHostSnapshotEdge,DagNodeSpec};
  use semio_framework_value::DslValue;
  let port=|id:&str|IoPortSpec{id:id.into(),label:id.into(),default:Some(DslValue::Array(vec![DslValue::Bool(true),DslValue::String("x".into())])),value:Some(DslValue::Number(semio_framework_value::Number::Float(1.5))),cardinality:"*".into(),visible:false,..IoPortSpec::simple(id,id)};
  let bag=PropertyBag::from([("alpha".to_owned(),PropertyValue::Array(vec![PropertyValue::Null,PropertyValue::Bool(false),PropertyValue::Number(2.5),PropertyValue::String("s".into())])),("beta".to_owned(),PropertyValue::Object(PropertyBag::from([("inner".to_owned(),PropertyValue::String("v".into()))])))]);
@@ -99,7 +99,7 @@ fn dag_member_receives_every_node_kind_natively_from_its_original_text_record(){
  let mut pages=OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits{maximum_pages:frame.len().div_ceil(OWNED_SCHEMA_DECODE_PAGE_BYTES),maximum_bytes:frame.len()}).unwrap();
  for page in frame.chunks(OWNED_SCHEMA_DECODE_PAGE_BYTES){pages.admit_page(OwnedSchemaDecodePage::try_from_slice(page).unwrap()).unwrap();}pages.seal().unwrap();
  let document=semio_framework_artifact_reference::ArtifactRef{artifact_id:"dag-original".into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"dag.dag".into(),standard:"1".into(),subset:"*".into()}};
- let request=MemberOpenRequest::new(OperationId(91),Generation(7),1000,document,None,pages,semio_framework_os_spr::ActorId("author".into())).admit(1).unwrap_or_else(|_|panic!("original DAG request"));
+ let request=MemberOpenRequest::new(OperationId(91),Generation(7),1000,document,None,pages,semio_os_spr::ActorId("author".into())).admit(1).unwrap_or_else(|_|panic!("original DAG request"));
  let grant=Grant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:256};
  let mut open=OriginalRecordMemberSnapshotOpen::<DagSnapshot>::begin(request).unwrap_or_else(|_|panic!("original DAG open"));
  let cancel=root_cancel_token();let mut native=OriginalJobDecodeOwner::empty();let mut sequence=0;let mut ready=false;

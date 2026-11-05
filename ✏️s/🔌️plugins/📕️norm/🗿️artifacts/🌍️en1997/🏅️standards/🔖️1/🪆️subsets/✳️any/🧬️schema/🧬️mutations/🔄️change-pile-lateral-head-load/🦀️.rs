@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileLateralHeadLoa
         record: "ChangedPileLateralHeadLoad",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Lateral head load H of the pile", "Pfahl: Horizontale Kopflast H ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Lateral head load H of the pile", "Pfahl: Horizontale Kopflast H ändern")
     }
 }
 

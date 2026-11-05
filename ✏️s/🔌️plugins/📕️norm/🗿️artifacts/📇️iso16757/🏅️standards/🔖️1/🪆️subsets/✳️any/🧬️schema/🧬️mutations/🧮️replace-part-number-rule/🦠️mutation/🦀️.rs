@@ -18,8 +18,8 @@ pub struct ReplacePartNumberRule {
 impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ReplacePartNumberRule where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::replace_part_number_rule::mutation::ReplacePartNumberRule> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "part-number-rule", kind: "replace-part-number-rule", record: "ReplacedPartNumberRule" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace part-number rule", "Artikelnummer-Regel ersetzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Replace part-number rule", "Artikelnummer-Regel ersetzen")
     }
 }
 

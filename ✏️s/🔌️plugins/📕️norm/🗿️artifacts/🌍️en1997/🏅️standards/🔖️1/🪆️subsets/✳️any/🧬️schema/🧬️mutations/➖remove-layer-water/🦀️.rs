@@ -19,8 +19,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemoveLayerWater where O
         verb: "remove", entity: "layer-water", kind: "remove-layer-water", record: "RemovedLayerWater",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove layer water regime", "Wasserverhältnis der Schicht entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove layer water regime", "Wasserverhältnis der Schicht entfernen")
     }
 }
 

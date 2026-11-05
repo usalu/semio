@@ -1,7 +1,7 @@
 use crate::snapshot::*;
 use semio_s_artifact_procedural_2d_io_text::snapshot as generation2d_dsl;
 use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_os_kernel::os_store::test_support;
+use semio_os_kernel::os_store::test_support;
 
 #[test]
 fn dsl_pack_equivalence_empty_projection() {

@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "wall", kind: "set-wall-base-offset", record: "SetWallBaseOffset" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set wall base offset to {} m", self.base_offset), &format!("Wandfußversatz auf {} m setzen", self.base_offset))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set wall base offset to {} m", self.base_offset), &format!("Wandfußversatz auf {} m setzen", self.base_offset))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -20,8 +20,8 @@ async fn history_lane_defaults_to_document() {
 /// back at its own HLC position in the applied order.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc1");
     let doc1_id = store.applied_edit_ids()[0].clone();
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 100 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction1");
@@ -62,8 +62,8 @@ async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
 /// cursor moved, proving the two lanes' redo stacks are independent, not one shared position.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction");
     let doc_id = store.applied_edit_ids()[0].clone();
@@ -88,8 +88,8 @@ async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane
 /// The explicit lane-scoped API can still walk them.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lane() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction1");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction2");
     assert_eq!(store.applied_edit_ids().len(), 2);
@@ -107,8 +107,8 @@ async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lan
 /// owned pack+SPR round trip, and a reloaded store's default undo still skips them.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_interaction_entries_survive_owned_document_round_trip() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc");
     let doc_id = store.applied_edit_ids()[0].clone();
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 42 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction");
@@ -116,10 +116,10 @@ async fn history_lane_interaction_entries_survive_owned_document_round_trip() {
     assert_eq!(store.envelope().lanes.get(&interaction_id), Some(&HistoryLane::Interaction));
 
     let files = print_document_pack(store.envelope()).await.expect("owned document encode");
-    let reloaded_envelope = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("owned document decode").envelope;
+    let reloaded_envelope = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("owned document decode").envelope;
     assert_eq!(reloaded_envelope.lanes.get(&interaction_id), Some(&HistoryLane::Interaction), "lane tag must survive the owned document round trip");
 
-    let mut reloaded = ArtifactStore::new(reloaded_envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut reloaded = ArtifactStore::new(reloaded_envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "reload seeds applied_edit_ids from the persisted cursor, same as any other edit");
     test_support::dispatch_test_command(&mut reloaded, ArtifactCommand::Undo).await.expect("undo on the reloaded store still skips the interaction edit");
     assert_eq!(reloaded.applied_edit_ids(), std::slice::from_ref(&interaction_id), "the document edit was removed; the interaction edit is the only one left applied");
@@ -183,8 +183,8 @@ async fn transient_store_default_seeds_local_state_and_generation() {
 //#region 🔖️ImmutableOperationRoots
 #[semio_framework_async_macros::async_test]
 async fn artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let generation = store.generation_now();
     let before = store.snapshot_root();
     let same = store.snapshot_root();
@@ -227,17 +227,17 @@ fn publish_original_interaction(store: &mut ArtifactStore<DemoSnapshot, DemoMuta
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_store_apply_updates_hover_and_bumps_generation_on_original_publication(){
- let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction",DemoSnapshot{n:Some(0)},None,&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();let before=store.generation();publish_original_interaction(&mut store,7);assert_eq!(store.snapshot().unwrap().n,Some(7));assert_eq!(store.generation(),before+1);assert_eq!(store.envelope().lanes.get(&store.applied_edit_ids()[0]),Some(&HistoryLane::Interaction));
+ let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction",DemoSnapshot{n:Some(0)},None,&semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();let before=store.generation();publish_original_interaction(&mut store,7);assert_eq!(store.snapshot().unwrap().n,Some(7));assert_eq!(store.generation(),before+1);assert_eq!(store.envelope().lanes.get(&store.applied_edit_ids()[0]),Some(&HistoryLane::Interaction));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_store_reset_discards_hover_and_bumps_generation_on_original_publication(){
- let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction-clear",DemoSnapshot{n:Some(0)},None,&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();let before=store.generation();publish_original_interaction(&mut store,3);publish_original_interaction(&mut store,0);assert_eq!(store.snapshot().unwrap().n,Some(0));assert_eq!(store.generation(),before+2);assert_eq!(store.applied_edit_ids().len(),2);
+ let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction-clear",DemoSnapshot{n:Some(0)},None,&semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();let before=store.generation();publish_original_interaction(&mut store,3);publish_original_interaction(&mut store,0);assert_eq!(store.snapshot().unwrap().n,Some(0));assert_eq!(store.generation(),before+2);assert_eq!(store.applied_edit_ids().len(),2);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_store_default_seeds_from_hover_default_on_original_publication(){
- let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction-default",DemoSnapshot::default(),None,&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();assert_eq!(store.snapshot().unwrap().n,Some(0));assert_eq!(store.generation(),0);
+ let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction-default",DemoSnapshot::default(),None,&semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();assert_eq!(store.snapshot().unwrap().n,Some(0));assert_eq!(store.generation(),0);
 }
 
 #[test]
@@ -255,7 +255,7 @@ fn original_side_lane_comparison_uses_granted_utf8_chunks(){
 async fn apply_batch_publication_keeps_denied_inputs_and_binds_one_exact_issuer(){
  let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
  let g=physical_test_close_grant();
- let genesis=&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer;
+ let genesis=&semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer;
  let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","native-command",DemoSnapshot{n:Some(0)},None,genesis)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();
  let mut foreign=ArtifactStore::bare(create_document_envelope("demo/v1","native-command",DemoSnapshot{n:Some(0)},None,genesis)).await;foreign.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));foreign.closes_on_drop();
  let operation=semio_framework_job::allocate_operation_id();let generation=store.generation();let revision=store.content_revision_now();

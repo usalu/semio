@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeFoundationBearingN
         record: "ChangeFoundationBearingNMaxN",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Ultimate vertical bearing force N_max under central load", "Vertikale Grenztragkraft N_max unter zentrischer Last ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Ultimate vertical bearing force N_max under central load", "Vertikale Grenztragkraft N_max unter zentrischer Last ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-foundation-bearing-n-max-n".into()]

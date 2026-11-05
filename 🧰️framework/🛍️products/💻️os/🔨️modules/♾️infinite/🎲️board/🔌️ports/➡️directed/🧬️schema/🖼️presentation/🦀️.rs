@@ -643,7 +643,7 @@ pub fn advance_select_option(node: &mut DagNodeSpec) -> Option<String> {
 
 semio_framework_value::artifact_retire_leaf!(DagDrawLod);
 
-impl semio_framework_os_kernel::os_spr::Identified<String> for DagNodeSpec {
+impl semio_os_kernel::os_spr::Identified<String> for DagNodeSpec {
  fn id(&self)->&String {&self.id}
 }
 
@@ -752,7 +752,7 @@ pub fn dag_host_snapshot_to_wire_literal(host_snapshot: &DagHostSnapshot) -> Str
     wire_literal_from_dag(&nodes, &edges)
 }
 
-impl semio_framework_os_kernel::os_spr::Identified<String> for DagHostSnapshotEdge {
+impl semio_os_kernel::os_spr::Identified<String> for DagHostSnapshotEdge {
  fn id(&self)->&String {&self.id}
 }
 

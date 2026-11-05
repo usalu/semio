@@ -2,8 +2,8 @@
 
 pub use pack;
 pub use semio_framework_diagnostic as diagnostic;
-pub use semio_framework_os_kernel as kernel;
-pub use semio_framework_ui_locale as locale;
+pub use semio_os_kernel as kernel;
+pub use semio_ui_locale as locale;
 pub use semio_framework_value as value;
 
 pub use semio_s_artifact_stdio_contract_assembly::{

@@ -3,7 +3,7 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use semio_framework_os_renderer_wgpu_shell_chrome_state::theme_geometry;
+use semio_renderer_wgpu_shell_chrome_state::theme_geometry;
 
 //#region 🎨️ThemeEditorPanel
 /// 🎨️ The eight editable sections React's `buildSettingsThemeTree` carries beside its selector
@@ -131,7 +131,7 @@ impl ShellInputState {
                     label: Label::data(shell_chrome_string(label, is_de)),
                     action: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args },
                     style: None,
-                    presence: UiPresence { state: if disabled { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
+                    presence: UiPresence { state: if disabled { semio_ui_declaration::ui::UiState::Disabled } else { semio_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                     menu: None,
                 }),
             )
@@ -141,7 +141,7 @@ impl ShellInputState {
         selector.push(button("framework.settings.theme.export", "settings.theme.export", IconName::Export, "exportTheme", None, false));
         selector.push(button("framework.settings.theme.import", "settings.theme.import", IconName::Import, "importTheme", None, false));
         if active_id.starts_with("custom.") {
-            selector.push(button("framework.settings.theme.delete", "settings.theme.delete", IconName::Trash2, "deleteThemeId", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": active_id }), false));
+            selector.push(button("framework.settings.theme.delete", "settings.theme.delete", IconName::Trash2, "deleteThemeId", semio_renderer_wgpu_host_base::action_args_json!({ "value": active_id }), false));
         }
         let visible = self.theme_visible_rows();
         let select_open = self.theme_section_open("framework.settings.theme.select", true);
@@ -158,9 +158,9 @@ impl ShellInputState {
         let leaf_rows = |suffix: &str| -> Vec<UiTreeItemNode> {
             let id = format!("framework.settings.theme.{suffix}");
             match suffix {
-                "colors" => document.colors.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeColor", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
+                "colors" => document.colors.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeColor", semio_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
                 "spacing" => document.spacing.iter().map(|(key, value)| {
-                    let mut item = theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeSpacing", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }));
+                    let mut item = theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeSpacing", semio_renderer_wgpu_host_base::action_args_json!({ "key": key }));
                     if key == "compact" {
                         let ui = &theme_geometry::contract()["properties"]["compact"]["x-semio-ui"];
                         let locale = if is_de { "de" } else { "en" };
@@ -171,10 +171,10 @@ impl ShellInputState {
                     }
                     item
                 }).collect(),
-                "fonts" => document.font_stacks.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeFontStack", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
-                "strokes" => document.strokes.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeStroke", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
-                "radii" => document.radii.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeRadius", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
-                "opacities" => document.opacities.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeOpacity", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
+                "fonts" => document.font_stacks.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeFontStack", semio_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
+                "strokes" => document.strokes.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeStroke", semio_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
+                "radii" => document.radii.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeRadius", semio_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
+                "opacities" => document.opacities.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeOpacity", semio_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
                 _ => Vec::new(),
             }
         };
@@ -198,7 +198,7 @@ impl ShellInputState {
                 *cursor += 1;
                 let group_open = self.theme_item_open(&section_id);
                 let rows = entries.iter().map(|(key, value)| {
-                    let mut item = theme_editor_input_item(&format!("{section_id}.{key}"), key, &value.as_text(), "setThemeMetric", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "section": section, "key": key }));
+                    let mut item = theme_editor_input_item(&format!("{section_id}.{key}"), key, &value.as_text(), "setThemeMetric", semio_renderer_wgpu_host_base::action_args_json!({ "section": section, "key": key }));
                     let guidance = if section == "dom" && key == "rootRemPx" { Some("positiveRoot") }
                         else if theme_geometry::bindings()["bindings"].as_array().is_some_and(|bindings| bindings.iter().any(|binding| binding["section"].as_str() == Some(section.as_str()) && binding["key"].as_str() == Some(key.as_str()))) { Some("nonnegativeScalar") }
                         else { None };
@@ -235,13 +235,13 @@ impl ShellInputState {
                         let mut rows = Vec::new();
                         for (paint, reference) in document.appearances.get(appearance).and_then(|entries| entries.get(*group)).into_iter().flatten() {
                             let (hex, alpha) = theme_paint_editor_values(&document.colors, reference);
-                            rows.push(theme_editor_input_item(&format!("{group_id}.{paint}"), paint, &hex, "setThemeAppearancePaint", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "hex" })));
+                            rows.push(theme_editor_input_item(&format!("{group_id}.{paint}"), paint, &hex, "setThemeAppearancePaint", semio_renderer_wgpu_host_base::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "hex" })));
                             rows.push(theme_editor_input_item(
                                 &format!("{group_id}.{paint}.alpha"),
                                 paint,
                                 &format!("{alpha:.2}"),
                                 "setThemeAppearancePaint",
-                                semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "alpha" }),
+                                semio_renderer_wgpu_host_base::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "alpha" }),
                             ));
                         }
                         let total = rows.len();
@@ -308,7 +308,7 @@ pub fn with_chrome_control_names<R>(f: impl FnOnce(&mut BTreeMap<String, ChromeC
 }
 
 #[cfg(not(any(target_arch = "wasm32", any(test, feature = "testkit"))))]
-pub static CHROME_CONTROL_NAMES: semio_framework_os_renderer_wgpu_contracts::WorkerCell<BTreeMap<String, ChromeControlPresentation>> = semio_framework_os_renderer_wgpu_contracts::WorkerCell::new(Default::default);
+pub static CHROME_CONTROL_NAMES: semio_renderer_wgpu_contracts::WorkerCell<BTreeMap<String, ChromeControlPresentation>> = semio_renderer_wgpu_contracts::WorkerCell::new(Default::default);
 
 /// ♿️ Semantic properties captured beside the chrome label during its paint walk.
 pub struct ChromeControlPresentation {

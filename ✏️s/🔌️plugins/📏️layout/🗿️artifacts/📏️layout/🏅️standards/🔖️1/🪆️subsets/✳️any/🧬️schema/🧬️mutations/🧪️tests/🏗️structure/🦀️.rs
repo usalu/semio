@@ -1,5 +1,8 @@
 use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
-use super::*;
+extern crate semio_os_kernel as protocol;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use protocol::{DiffAlgebra, Mutation, OpBinary, OpText};
 
 #[test]

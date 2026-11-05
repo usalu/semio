@@ -17,8 +17,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "workflow", kind: "add-input", record: "AddedWorkflowInput" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add workflow input {}", self.input.id), &format!("Arbeitsablaufeingabe {} hinzufügen", self.input.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add workflow input {}", self.input.id), &format!("Arbeitsablaufeingabe {} hinzufügen", self.input.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["inputs".into(), self.input.id.clone()]

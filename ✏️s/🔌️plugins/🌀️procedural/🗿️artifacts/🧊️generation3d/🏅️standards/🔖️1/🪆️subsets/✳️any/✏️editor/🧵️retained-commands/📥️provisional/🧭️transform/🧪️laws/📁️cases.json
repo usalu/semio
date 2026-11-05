@@ -1,0 +1,665 @@
+{
+  "base": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "widgets": [
+      {
+        "kind": "neuron",
+        "id": "t",
+        "neuronKind": "brep.xform.translate",
+        "params": {
+          "offset": {
+            "$schema": "vector",
+            "x": 1.0,
+            "y": 2.0,
+            "z": 3.0
+          },
+          "other": "retained"
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      },
+      {
+        "kind": "neuron",
+        "id": "tc",
+        "neuronKind": "brep.mesh.translateComponents",
+        "params": {
+          "offset": {
+            "x": 2.0,
+            "y": true
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      },
+      {
+        "kind": "neuron",
+        "id": "r",
+        "neuronKind": "brep.xform.rotate",
+        "params": {
+          "axis": {
+            "$schema": "vector",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "angle": {
+            "$schema": "number",
+            "value": 0.0
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      },
+      {
+        "kind": "neuron",
+        "id": "s",
+        "neuronKind": "brep.xform.scale",
+        "params": {
+          "factor": {
+            "$schema": "vector",
+            "x": 1.0,
+            "y": 2.0,
+            "z": 3.0
+          },
+          "center": {
+            "$schema": "point",
+            "x": 9.0,
+            "y": 8.0,
+            "z": 7.0
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": true
+      },
+      {
+        "kind": "inputNote",
+        "id": "m",
+        "text": "mismatch"
+      }
+    ],
+    "synapses": [],
+    "layout": {}
+  },
+  "cases": [
+    {
+      "name": "Translate Original Native Vector",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "t"
+        ],
+        "dx": 1.0,
+        "dy": -2.0,
+        "dz": 0.5
+      },
+      "before": {},
+      "expectedParams": {
+        "t": {
+          "offset": {
+            "$schema": "vector",
+            "x": 2.0,
+            "y": 0.0,
+            "z": 3.5
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Translate Strict Per Lane Defaults",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "tc"
+        ],
+        "dx": 1.0,
+        "dy": 1.0,
+        "dz": 1.0
+      },
+      "before": {},
+      "expectedParams": {
+        "tc": {
+          "offset": {
+            "$schema": "vector",
+            "x": 3.0,
+            "y": 1.0,
+            "z": 1.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Translate Valid Subset Only",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "missing",
+          "m",
+          "t"
+        ],
+        "dx": 1.0,
+        "dy": 0.0,
+        "dz": 0.0
+      },
+      "before": {},
+      "expectedParams": {
+        "t": {
+          "offset": {
+            "$schema": "vector",
+            "x": 2.0,
+            "y": 2.0,
+            "z": 3.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "No Matching Translate Remains Original",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "m",
+          "missing"
+        ],
+        "dx": 1.0,
+        "dy": 0.0,
+        "dz": 0.0
+      },
+      "before": {},
+      "expectedParams": {},
+      "applied": false
+    },
+    {
+      "name": "Identity Translate Remains Original",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "t"
+        ],
+        "dx": 0.0,
+        "dy": 0.0,
+        "dz": 0.0
+      },
+      "before": {},
+      "expectedParams": {},
+      "applied": false
+    },
+    {
+      "name": "Duplicate Target Invariant Preserves Original",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "t",
+          "t"
+        ],
+        "dx": 1.0,
+        "dy": 0.0,
+        "dz": 0.0
+      },
+      "before": {},
+      "expectedParams": {},
+      "applied": false
+    },
+    {
+      "name": "Empty Target Invariant Preserves Original",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [],
+        "dx": 1.0,
+        "dy": 0.0,
+        "dz": 0.0
+      },
+      "before": {},
+      "expectedParams": {},
+      "applied": false
+    },
+    {
+      "name": "World Axis Rotation Uses Original Composition",
+      "mutation": {
+        "mutation": "rotateTransforms",
+        "targets": [
+          "r"
+        ],
+        "ax": 0.0,
+        "ay": 1.0,
+        "az": 0.0,
+        "angle": 1.5707963267948966
+      },
+      "before": {},
+      "expectedParams": {
+        "r": {
+          "axis": {
+            "$schema": "vector",
+            "x": 0.0,
+            "y": 1.0,
+            "z": 0.0
+          },
+          "angle": {
+            "$schema": "number",
+            "value": 1.5707963267948966
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Identity Rotation Remains Original",
+      "mutation": {
+        "mutation": "rotateTransforms",
+        "targets": [
+          "r"
+        ],
+        "ax": 0.0,
+        "ay": 0.0,
+        "az": 1.0,
+        "angle": 0.0
+      },
+      "before": {},
+      "expectedParams": {},
+      "applied": false
+    },
+    {
+      "name": "Zero Rotation Axis Preserves Original",
+      "mutation": {
+        "mutation": "rotateTransforms",
+        "targets": [
+          "r"
+        ],
+        "ax": 0.0,
+        "ay": 0.0,
+        "az": 0.0,
+        "angle": 1.0
+      },
+      "before": {},
+      "expectedParams": {},
+      "applied": false
+    },
+    {
+      "name": "Scale Factors And Origin Center",
+      "mutation": {
+        "mutation": "scaleTransforms",
+        "targets": [
+          "s"
+        ],
+        "sx": 2.0,
+        "sy": 3.0,
+        "sz": 4.0
+      },
+      "before": {},
+      "expectedParams": {
+        "s": {
+          "factor": {
+            "$schema": "vector",
+            "x": 2.0,
+            "y": 6.0,
+            "z": 12.0
+          },
+          "center": {
+            "$schema": "point",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Negative Current Scale Is Preserved By Composition",
+      "mutation": {
+        "mutation": "scaleTransforms",
+        "targets": [
+          "s"
+        ],
+        "sx": 2.0,
+        "sy": 2.0,
+        "sz": 2.0
+      },
+      "before": {
+        "params": {
+          "s": {
+            "factor": {
+              "$schema": "vector",
+              "x": -2.0,
+              "y": 3.0,
+              "z": -4.0
+            },
+            "center": {
+              "$schema": "point",
+              "x": 9.0,
+              "y": 8.0,
+              "z": 7.0
+            }
+          }
+        }
+      },
+      "expectedParams": {
+        "s": {
+          "factor": {
+            "$schema": "vector",
+            "x": -4.0,
+            "y": 6.0,
+            "z": -8.0
+          },
+          "center": {
+            "$schema": "point",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Identity Scale Retains Nonzero Center",
+      "mutation": {
+        "mutation": "scaleTransforms",
+        "targets": [
+          "s"
+        ],
+        "sx": 1.0,
+        "sy": 1.0,
+        "sz": 1.0
+      },
+      "before": {},
+      "expectedParams": {},
+      "applied": false
+    },
+    {
+      "name": "Zero Input Scale Preserves Original",
+      "mutation": {
+        "mutation": "scaleTransforms",
+        "targets": [
+          "s"
+        ],
+        "sx": 0.0,
+        "sy": 1.0,
+        "sz": 1.0
+      },
+      "before": {},
+      "expectedParams": {},
+      "applied": false
+    },
+    {
+      "name": "Scale Valid Subset Only",
+      "mutation": {
+        "mutation": "scaleTransforms",
+        "targets": [
+          "missing",
+          "s",
+          "m"
+        ],
+        "sx": 2.0,
+        "sy": 2.0,
+        "sz": 2.0
+      },
+      "before": {},
+      "expectedParams": {
+        "s": {
+          "factor": {
+            "$schema": "vector",
+            "x": 2.0,
+            "y": 4.0,
+            "z": 6.0
+          },
+          "center": {
+            "$schema": "point",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Transform Ignores Literal Wired Admission",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "t"
+        ],
+        "dx": 1.0,
+        "dy": 1.0,
+        "dz": 1.0
+      },
+      "before": {
+        "synapses": [
+          {
+            "id": "w",
+            "from": "missing",
+            "fromPort": "out",
+            "to": "t",
+            "toPort": "offset"
+          }
+        ]
+      },
+      "expectedParams": {
+        "t": {
+          "offset": {
+            "$schema": "vector",
+            "x": 2.0,
+            "y": 3.0,
+            "z": 4.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Nonfinite Computed Translate Skips Only Its Target",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "huge",
+          "t"
+        ],
+        "dx": 1e+308,
+        "dy": 0.0,
+        "dz": 0.0
+      },
+      "before": {
+        "append": [
+          {
+            "kind": "neuron",
+            "id": "huge",
+            "neuronKind": "brep.xform.translate",
+            "params": {
+              "offset": {
+                "$schema": "vector",
+                "x": 1e+308,
+                "y": 1.0,
+                "z": 1.0
+              }
+            },
+            "inputPorts": [],
+            "outputPorts": [],
+            "preview": true
+          }
+        ]
+      },
+      "expectedParams": {
+        "t": {
+          "offset": {
+            "$schema": "vector",
+            "x": 1e+308,
+            "y": 2.0,
+            "z": 3.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Underflow Scale Skips Only Its Target",
+      "mutation": {
+        "mutation": "scaleTransforms",
+        "targets": [
+          "tiny",
+          "s"
+        ],
+        "sx": 0.5,
+        "sy": 0.5,
+        "sz": 0.5
+      },
+      "before": {
+        "append": [
+          {
+            "kind": "neuron",
+            "id": "tiny",
+            "neuronKind": "brep.xform.scale",
+            "params": {
+              "factor": {
+                "$schema": "vector",
+                "x": 5e-324,
+                "y": 1.0,
+                "z": 1.0
+              }
+            },
+            "inputPorts": [],
+            "outputPorts": [],
+            "preview": true
+          }
+        ]
+      },
+      "expectedParams": {
+        "s": {
+          "factor": {
+            "$schema": "vector",
+            "x": 0.5,
+            "y": 1.0,
+            "z": 1.5
+          },
+          "center": {
+            "$schema": "point",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Rotation Valid Subset Only",
+      "mutation": {
+        "mutation": "rotateTransforms",
+        "targets": [
+          "m",
+          "r",
+          "missing"
+        ],
+        "ax": 1.0,
+        "ay": 0.0,
+        "az": 0.0,
+        "angle": 0.5
+      },
+      "before": {},
+      "expectedParams": {
+        "r": {
+          "axis": {
+            "$schema": "vector",
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "angle": {
+            "$schema": "number",
+            "value": 0.5
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Scale Rejects Boolean Number Coercion",
+      "mutation": {
+        "mutation": "scaleTransforms",
+        "targets": [
+          "s"
+        ],
+        "sx": 2.0,
+        "sy": 2.0,
+        "sz": 2.0
+      },
+      "before": {
+        "params": {
+          "s": {
+            "factor": {
+              "x": true,
+              "y": 2.0,
+              "z": 3.0
+            }
+          }
+        }
+      },
+      "expectedParams": {
+        "s": {
+          "factor": {
+            "$schema": "vector",
+            "x": 2.0,
+            "y": 4.0,
+            "z": 6.0
+          },
+          "center": {
+            "$schema": "point",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "applied": true
+    },
+    {
+      "name": "Rotation Reads Original Partial Axis And Typed Angle Defaults",
+      "mutation": {
+        "mutation": "rotateTransforms",
+        "targets": [
+          "r"
+        ],
+        "ax": 0.0,
+        "ay": 1.0,
+        "az": 0.0,
+        "angle": 0.5
+      },
+      "before": {
+        "params": {
+          "r": {
+            "axis": {
+              "y": true
+            },
+            "angle": 3.0
+          }
+        }
+      },
+      "expectedParams": {
+        "r": {
+          "axis": {
+            "$schema": "vector",
+            "x": 0.0,
+            "y": 1.0,
+            "z": 0.0
+          },
+          "angle": {
+            "$schema": "number",
+            "value": 0.5
+          }
+        }
+      },
+      "applied": true
+    }
+  ]
+}

@@ -2,9 +2,9 @@
 //!
 //! Allocation receipts are checked against the allocator witness, so call it from test binaries that install `semio_framework_trace::HeapWitness`.
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
-use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
-use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
-use semio_framework_os_store_command::HistoryLane;
+use semio_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
+use semio_os_store_command::HistoryLane;
 use semio_framework_value_snapshot_read::{SnapshotRead, SnapshotReadRegistryHandle};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::factory::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
@@ -37,7 +37,7 @@ where
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(snapshot);
     let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("law registry admission"));
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0; 32], 0, 1, semio_framework_os_spr::HybridLogicalTimestamp::new(1, 0), "law-actor".into(), None, None, None));
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0; 32], 0, 1, semio_os_spr::HybridLogicalTimestamp::new(1, 0), "law-actor".into(), None, None, None));
     let request = ArtifactStoreOneItemPreparationRequest {
         operation: semio_framework_job::OperationId(1),
         generation: semio_framework_job::Generation(1),

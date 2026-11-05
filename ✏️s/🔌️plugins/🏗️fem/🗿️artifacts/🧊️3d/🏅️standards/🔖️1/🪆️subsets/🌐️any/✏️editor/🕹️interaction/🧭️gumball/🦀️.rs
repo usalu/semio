@@ -343,7 +343,7 @@ pub fn fem3d_gumball_active(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
 /// windows while the results window re-solves it, and the release commits it as ONE edit.
 pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, transform_armed: bool, config: &Fem3dGumballConfig) -> String {
     let hovered = interaction.hovered_ids.first().map(String::as_str);
-    let mut value: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&semio_framework_plugin::world3d_selection_json_with_granularity("rectangle", &interaction.selected_ids, hovered, Some(FEM3D_GRANULARITY_NODE)), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::json!({}));
+    let mut value: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&semio_plugin::world3d_selection_json_with_granularity("rectangle", &interaction.selected_ids, hovered, Some(FEM3D_GRANULARITY_NODE)), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("selectionMode", semio_framework_pack_json::json!("object"));
         object.insert("targets", semio_framework_pack_json::json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
@@ -408,14 +408,14 @@ impl Default for Fem3dGumballConfig {
 
 impl Fem3dGumballConfig {
     /// 🎚️ Sets, or with `pressed = None` toggles, one named handle flag; an unknown flag is refused.
-    pub fn set_flag(&mut self, flag: &str, pressed: Option<bool>) -> Result<(), semio_framework_plugin::Fault> {
+    pub fn set_flag(&mut self, flag: &str, pressed: Option<bool>) -> Result<(), semio_plugin::Fault> {
         let slot = match flag {
             "move" | "moveAxes" => &mut self.move_axes,
             "movePlanes" => &mut self.move_planes,
             "rotate" => &mut self.rotate,
             "scaleAxes" => &mut self.scale_axes,
             "scaleUniform" => &mut self.scale_uniform,
-            other => return Err(semio_framework_plugin::Fault::from(format!("fem3d.gumball-flag.unknown: '{other}' is not a gumball handle flag"))),
+            other => return Err(semio_plugin::Fault::from(format!("fem3d.gumball-flag.unknown: '{other}' is not a gumball handle flag"))),
         };
         *slot = pressed.unwrap_or(!*slot);
         Ok(())

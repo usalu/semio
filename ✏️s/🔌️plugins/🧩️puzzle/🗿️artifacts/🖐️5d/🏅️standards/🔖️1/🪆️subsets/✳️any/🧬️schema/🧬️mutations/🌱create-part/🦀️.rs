@@ -36,8 +36,8 @@ where
 
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create part \"{}\"", self.part.id), &format!("Bauteil \"{}\" erstellen", self.part.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create part \"{}\"", self.part.id), &format!("Bauteil \"{}\" erstellen", self.part.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.part.id.clone()]

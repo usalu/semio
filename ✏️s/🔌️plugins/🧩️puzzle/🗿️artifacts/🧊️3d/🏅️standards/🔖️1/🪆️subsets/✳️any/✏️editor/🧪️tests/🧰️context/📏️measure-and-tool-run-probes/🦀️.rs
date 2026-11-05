@@ -64,7 +64,7 @@ pub async fn tool_run_action(app: &mut Puzzle3dApp, action: &str, args: Value) -
     app.ensure_window(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let action_meta = ActionMeta { view_state: Some(app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)), ..app.meta("local") };
     let (raw, cx) = app.parts();
-    let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(semio_framework_pack_json::to_dsl_value(&args)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+    let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(semio_framework_pack_json::to_dsl_value(&args)), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     semio_framework_pack_json::from_dsl_value(&result.output)
 }
 
@@ -171,11 +171,11 @@ pub async fn rendered_object_count(app: &mut Puzzle3dApp) -> usize {
 /// CLIENT-supplied `request.surface.selection` now (selection is framework-owned, no live config
 /// field to derive it from) — the test-side replacement for the deleted `contextMenuAt` command's
 /// "select then open the menu" round trip.
-pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::ContextMenuRequest;
-    use semio_framework_plugin::ContextMenuSelectionGroup;
-    use semio_framework_plugin::ContextMenuSurfaceTarget;
-    use semio_framework_plugin::UiMenuRef;
+pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Vec<semio_plugin::ContextMenuItemSpec> {
+    use semio_plugin::ContextMenuRequest;
+    use semio_plugin::ContextMenuSelectionGroup;
+    use semio_plugin::ContextMenuSurfaceTarget;
+    use semio_plugin::UiMenuRef;
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget { surface_id: "world3d".into(), kind: "world3d".into(), hits: Vec::new(), selection: vec![ContextMenuSelectionGroup { domain: granularity.into(), ids: vec![id.to_string()] }], text: None }),
@@ -189,11 +189,11 @@ pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str
 /// 🎯️ The menu a right-click on an UNSELECTED entity opens: the surface carries a `hits` entry and an
 /// empty `selection`, exactly what `World3dHost` sends when `resolveWorldContextMenuTarget` resolves a
 /// pointer target the document has not selected.
-pub async fn context_menu_for_hit(app: &mut Puzzle3dApp, domain: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::ContextMenuHit;
-    use semio_framework_plugin::ContextMenuRequest;
-    use semio_framework_plugin::ContextMenuSurfaceTarget;
-    use semio_framework_plugin::UiMenuRef;
+pub async fn context_menu_for_hit(app: &mut Puzzle3dApp, domain: &str, id: &str) -> Vec<semio_plugin::ContextMenuItemSpec> {
+    use semio_plugin::ContextMenuHit;
+    use semio_plugin::ContextMenuRequest;
+    use semio_plugin::ContextMenuSurfaceTarget;
+    use semio_plugin::UiMenuRef;
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget {
@@ -253,7 +253,7 @@ pub fn object_origin_x(app: &Puzzle3dApp, object_id: &str) -> f64 {
         .expect("origin.x")
 }
 
-pub fn dispatchable_actions(definition: &semio_framework_plugin::AppDefinition) -> Vec<&ActionDefinition> {
+pub fn dispatchable_actions(definition: &semio_plugin::AppDefinition) -> Vec<&ActionDefinition> {
     let mut seen = std::collections::BTreeSet::new();
     definition
         .window_kinds

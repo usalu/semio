@@ -2,32 +2,32 @@
 //!
 //! ⏯️ The mounted instance's tool-run turns (ledger driving, tick folding and finalize publication) and the
 //! [`ToolRunExtension`] that registers them with the instance through [`InstanceExtension`].
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_tool_run::ToolRunEntry;
-use semio_framework_plugin_tool_run::ToolRunJobHandle;
-use semio_framework_plugin_tool_run::ToolRunJobSlot;
-use semio_framework_os_kernel as protocol;
-use semio_framework_os_kernel as store;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_tool_run::ToolRunEntry;
+use semio_plugin_tool_run::ToolRunJobHandle;
+use semio_plugin_tool_run::ToolRunJobSlot;
+use semio_os_kernel as protocol;
+use semio_os_kernel as store;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::Mutation;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_instance_children::children_components::ChildComposition;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_children::children_components::ChildComposition;
+use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_framework::Fault;
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_ui_locale::LocalizedLabel;
 use crate::jobs_components::ToolOperations;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_tool_run::*;
+use semio_ui_contract::*;
+use semio_plugin_tool_run::*;
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::tool_run_contract::ToolRunJobRequest;
-use semio_framework_os_kernel::{MemberFactory, ReferenceSpaceMember};
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
+use semio_plugin_decl_app::tool_run_contract::ToolRunJobRequest;
+use semio_os_kernel::{MemberFactory, ReferenceSpaceMember};
+use semio_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
 
 impl<A: ArtifactApp> ToolOperations<A> {
     /// 🧵️ Builds the run's job for `purpose`: the app's retargetable job when it builds one, else its plain job.
@@ -49,7 +49,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             provisional: &entry.provisional,
             instance_owner: self.instance_operation_owner.clone(),
             port: entry.port.clone(),
-            host: self.live_runtime_instance_id.map(semio_framework_plugin_reactor_tasks::tasks_extension_continuation::host_for_instance),
+            host: self.live_runtime_instance_id.map(semio_plugin_reactor_tasks::tasks_extension_continuation::host_for_instance),
             trace_keys: entry.trace_keys.clone(),
             entity_marks: &entry.entity_marks,
             children: ChildContentView::clone(&child_composition.child_content_root),

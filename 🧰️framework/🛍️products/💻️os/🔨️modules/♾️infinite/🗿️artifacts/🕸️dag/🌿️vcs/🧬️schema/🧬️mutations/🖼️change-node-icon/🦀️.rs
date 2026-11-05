@@ -15,8 +15,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeIcon {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-icon", kind: "change-node-icon", record: "ChangedNodeIcon" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node icon {}", self.id), &format!("Knotensymbol {} ändern", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change node icon {}", self.id), &format!("Knotensymbol {} ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.id.clone()]

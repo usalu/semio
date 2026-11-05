@@ -30,8 +30,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "tile-media", kind: "change-tile-media", record: "ChangedTileMedia" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change media of tile \"{}\"", self.tile_id), &format!("Medien von Kachel \"{}\" ändern", self.tile_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change media of tile \"{}\"", self.tile_id), &format!("Medien von Kachel \"{}\" ändern", self.tile_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.tile_id.clone()]

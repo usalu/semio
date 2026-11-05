@@ -134,7 +134,7 @@
     }
 
     fn mount_fill_session(original: &mut OriginalFixture, job: BoardFillJob, config: BatchDriveConfig) -> FillSession {
-        let mut pending = original.turn(FILL_TEST_GRANT, |cx| Ok(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job, (cx.operation(), cx.generation())))).expect("same original pending source");
+        let mut pending = original.turn(FILL_TEST_GRANT, |cx| Ok(semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job, (cx.operation(), cx.generation())))).expect("same original pending source");
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             if let Some(session) = original.turn(FILL_TEST_GRANT, |cx| pending.admit_pending(config, cx)).expect("same original mounted admission") {
                 assert!(pending.terminal_is_empty());

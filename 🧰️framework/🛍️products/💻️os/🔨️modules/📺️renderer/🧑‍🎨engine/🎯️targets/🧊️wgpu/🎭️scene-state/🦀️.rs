@@ -5,18 +5,18 @@
 //! host and the chrome ledger, and the list, chrome label, accessibility cell and text editor ui kit the scene leaves share.
 
 extern crate infinite_canvas as infinite_world;
-extern crate semio_framework_os_renderer_wgpu_canvas2d_paint as canvas2d_paint;
-extern crate semio_framework_os_renderer_wgpu_contracts as element_contracts;
-extern crate semio_framework_os_renderer_wgpu_host_base as host_base;
-pub use semio_framework_os_renderer_wgpu_host_base::action_args_json;
-use semio_framework_os_renderer_camera as camera_storage;
-use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken;
+extern crate semio_renderer_wgpu_canvas2d_paint as canvas2d_paint;
+extern crate semio_renderer_wgpu_contracts as element_contracts;
+extern crate semio_renderer_wgpu_host_base as host_base;
+pub use semio_renderer_wgpu_host_base::action_args_json;
+use semio_renderer_camera as camera_storage;
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken;
 use crate::element_contracts::WorkerCell;
 use crate::element_contracts::{AdmittedSurfaceCloseOwner, AdmittedSurfaceEntry, AdmittedSurfaceFault, AdmittedSurfaceMap, AdmittedSurfaceRejected, AdmittedSurfaceToken, SCENE_SURFACE_CAPACITY, SCENE_SURFACE_ID_BYTE_CAPACITY};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_native_platform::{native_host_temporal_formatter, NativeHostTemporalFormatter};
+use semio_renderer_wgpu_native_platform::{native_host_temporal_formatter, NativeHostTemporalFormatter};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_thread_isolation::{ISOLATED, isolated_cell};
+use semio_renderer_wgpu_thread_isolation::{ISOLATED, isolated_cell};
 use crate::element_contracts::FrameworkWidgetContext;
 use crate::element_contracts::RasterUploadRefusal;
 use semio_framework::interaction::gesture::GestureRecognizer;
@@ -31,22 +31,22 @@ use std::sync::Arc;
 use std::sync::Mutex;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::OnceLock;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Rgba;
-use semio_framework_ui_wgpu_widget_kit::draw_text;
-use semio_framework_ui_text::TextFace;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_prepared::PreparedRasterProducer;
-use semio_framework_ui_prepared::PreparedRasterRejected;
-use semio_framework_ui_prepared::PreparedRasterReservation;
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_ui_declaration::ui::UiComponentSceneNode;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Rgba;
+use semio_ui_wgpu_widget_kit::draw_text;
+use semio_ui_text::TextFace;
+use semio_ui_theme::Theme;
+use semio_ui_wgpu_layout::chrome::UiDriverDrag;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_prepared::PreparedRasterProducer;
+use semio_ui_prepared::PreparedRasterRejected;
+use semio_ui_prepared::PreparedRasterReservation;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_declaration::ui::UiComponentSceneNode;
 
 //#region SceneRuntime
 /// 🧵️ Native scene state shared by the shared-pool workers; under `cfg(test)`, or in a target that enables the `isolated` feature of
-/// `semio_framework_os_renderer_wgpu_thread_isolation`, each test thread owns its own, so no law meets another law's scenes.
+/// `semio_renderer_wgpu_thread_isolation`, each test thread owns its own, so no law meets another law's scenes.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct SceneCell<T>(OnceLock<Mutex<RefCell<T>>>);
 
@@ -258,7 +258,7 @@ pub fn retire_scene_identity(owner: &crate::element_contracts::ScenePointerTarge
     if !scene_surface_retirement_can_admit() {
         return false;
     }
-    if owner.kind == semio_framework_ui_declaration::ui::SurfaceKind::TiledMap {
+    if owner.kind == semio_ui_declaration::ui::SurfaceKind::TiledMap {
         #[cfg(test)]
         let before = SCENE_STATE.with(|cell| {
             cell.borrow()
@@ -269,7 +269,7 @@ pub fn retire_scene_identity(owner: &crate::element_contracts::ScenePointerTarge
         #[cfg(test)]
         eprintln!("[TRACE] scene retirement map host={} before={before:?} exact-interaction={_interaction}", owner.host_id);
     }
-    if owner.kind == semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d {
+    if owner.kind == semio_ui_declaration::ui::SurfaceKind::Canvas2d {
         request_canvas_pointer_gesture_cancel_for_host(&owner.host_id);
     }
     let retired = SCENE_STATE.with(|cell| {

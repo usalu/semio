@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationAnchorDi
         record: "ChangedFoundationAnchorDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Anchor diameter d of the foundation block", "Fundamentblock: Ankerdurchmesser d ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Anchor diameter d of the foundation block", "Fundamentblock: Ankerdurchmesser d ändern")
     }
 }
 

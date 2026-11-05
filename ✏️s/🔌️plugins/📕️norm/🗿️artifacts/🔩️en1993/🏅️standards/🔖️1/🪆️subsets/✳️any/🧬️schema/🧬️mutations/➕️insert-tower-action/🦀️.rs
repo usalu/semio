@@ -17,8 +17,8 @@ pub struct InsertTowerAction {
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertTowerAction where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::remove_tower_action::RemoveTowerAction> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "tower-action", kind: "insert-tower-action", record: "InsertedTowerAction" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert tower leg action into {}", self.id), &format!("Turmstiel-Einwirkung in {} einfügen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert tower leg action into {}", self.id), &format!("Turmstiel-Einwirkung in {} einfügen", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone(), self.element.id.clone()] }
 }

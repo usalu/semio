@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/forms/try-value-target",
+  "title": "Try Value Target",
+  "type": "object",
+  "required": [
+    "key",
+    "windowId",
+    "windowKindId"
+  ],
+  "properties": {
+    "key": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "windowId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "windowKindId": {
+      "const": "forms-try"
+    },
+    "inputId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "paramKey": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "optionValue": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 512
+    }
+  },
+  "additionalProperties": true
+}

@@ -21,8 +21,8 @@ pub struct SetPlaybackClock {
 impl protocol::MutationKind<FemResultsWindowTransient, FemResultsWindowTransientMutation> for SetPlaybackClock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "results-window-playback-clock", kind: "set-playback-clock", record: "SetPlaybackClock" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Results Window Playback Clock", "Wiedergabeuhr des Ergebnisfensters setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Results Window Playback Clock", "Wiedergabeuhr des Ergebnisfensters setzen")
     }
 
     fn target(&self) -> Vec<String> {

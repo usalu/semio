@@ -3,20 +3,20 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_job::StepContext;
 use std::mem::ManuallyDrop;
-use semio_framework_os_store_member_open::MemberOpenDiagnostic;
-use semio_framework_os_store_member_open::MemberOpenRequest;
+use semio_os_store_member_open::MemberOpenDiagnostic;
+use semio_os_store_member_open::MemberOpenRequest;
 pub struct MemberStoreOpenRetained<P, M>
 where
     P: super::ToValue,
     M: super::ToValue + super::FromValue + super::Mutation<P>,
 {
     pub request: ManuallyDrop<Option<MemberOpenRequest>>,
-    pub owners: ManuallyDrop<Option<semio_framework_os_store_engine_owners::DocumentStoreOwners<P, M>>>,
-    pub history: ManuallyDrop<Option<semio_framework_os_spr::HistoryLog>>,
+    pub owners: ManuallyDrop<Option<semio_os_store_engine_owners::DocumentStoreOwners<P, M>>>,
+    pub history: ManuallyDrop<Option<semio_os_spr::HistoryLog>>,
     pub initial: ManuallyDrop<Option<P>>,
-    pub pending_edit: ManuallyDrop<Option<semio_framework_os_spr::Edit<M>>>,
-    pub envelope: ManuallyDrop<Option<semio_framework_os_store_space_schema::ArtifactEnvelopeOwners<P, M>>>,
-    pub runtime: ManuallyDrop<Option<semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime<P>>>,
+    pub pending_edit: ManuallyDrop<Option<semio_os_spr::Edit<M>>>,
+    pub envelope: ManuallyDrop<Option<semio_os_store_space_schema::ArtifactEnvelopeOwners<P, M>>>,
+    pub runtime: ManuallyDrop<Option<semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime<P>>>,
     pub active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub diagnostic: Option<MemberOpenDiagnostic>,
     pub terminal: bool,
@@ -27,7 +27,7 @@ where
     P: super::ToValue + Send + Sync + 'static,
     M: super::ToValue + super::FromValue + super::Mutation<P> + Send + 'static,
 {
-    pub fn new(request: MemberOpenRequest, owners: semio_framework_os_store_engine_owners::DocumentStoreOwners<P, M>) -> Self {
+    pub fn new(request: MemberOpenRequest, owners: semio_os_store_engine_owners::DocumentStoreOwners<P, M>) -> Self {
         Self {
             request: ManuallyDrop::new(Some(request)),
             owners: ManuallyDrop::new(Some(owners)),
@@ -42,7 +42,7 @@ where
         }
     }
 
-    pub fn stage_history(&mut self, history: semio_framework_os_spr::HistoryLog) -> Result<(), semio_framework_os_spr::HistoryLog> {
+    pub fn stage_history(&mut self, history: semio_os_spr::HistoryLog) -> Result<(), semio_os_spr::HistoryLog> {
         if self.diagnostic.is_some() || self.terminal || self.history.is_some() || self.initial.is_some() || self.envelope.is_some() {
             return Err(history);
         }
@@ -58,7 +58,7 @@ where
         Ok(())
     }
 
-    pub fn stage_edit(&mut self, edit: semio_framework_os_spr::Edit<M>) -> Result<(), semio_framework_os_spr::Edit<M>> {
+    pub fn stage_edit(&mut self, edit: semio_os_spr::Edit<M>) -> Result<(), semio_os_spr::Edit<M>> {
         if self.diagnostic.is_some() || self.terminal || self.pending_edit.is_some() {
             return Err(edit);
         }
@@ -66,7 +66,7 @@ where
         Ok(())
     }
 
-    pub fn stage_envelope(&mut self, envelope: semio_framework_os_store_space_schema::ArtifactEnvelopeOwners<P, M>) -> Result<(), semio_framework_os_store_space_schema::ArtifactEnvelopeOwners<P, M>> {
+    pub fn stage_envelope(&mut self, envelope: semio_os_store_space_schema::ArtifactEnvelopeOwners<P, M>) -> Result<(), semio_os_store_space_schema::ArtifactEnvelopeOwners<P, M>> {
         if self.diagnostic.is_some() || self.terminal || self.envelope.is_some() || self.initial.is_some() {
             return Err(envelope);
         }
@@ -74,7 +74,7 @@ where
         Ok(())
     }
 
-    pub fn stage_runtime(&mut self, runtime: semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime<P>) -> Result<(), semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime<P>> {
+    pub fn stage_runtime(&mut self, runtime: semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime<P>) -> Result<(), semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime<P>> {
         if self.diagnostic.is_some() || self.terminal || self.runtime.is_some() || self.envelope.is_none() {
             return Err(runtime);
         }
@@ -114,12 +114,12 @@ where
     pub fn retirement_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
         let nested = |mut demand: RetirementDemand| { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "member-open owner depth overflow"))?; Ok(demand) };
-        if let Some(active) = self.active.as_ref() { return semio_framework_os_store_read::artifact_retirement_box_demands(active, copy); }
+        if let Some(active) = self.active.as_ref() { return semio_os_store_read::artifact_retirement_box_demands(active, copy); }
         if let Some(runtime) = self.runtime.as_ref() { return nested(RetirementDemand { copy_bytes: runtime.next_close_copy_byte_demand()?, capacity_bytes: runtime.next_close_capacity_byte_demand(copy)?, release_bytes: runtime.next_close_release_byte_demand()?, depth: runtime.next_close_depth_demand()? }); }
-        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
-        if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<semio_framework_os_store_read::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
+        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
+        if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<semio_os_store_read::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
         if let Some(initial) = self.initial.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.owners.as_ref().expect("member-open retains its initial factory").initial_snapshot_retirement.retirement_birth_bytes(initial), depth: 2, ..Default::default() }); }
-        if self.history.is_some() { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<semio_framework_os_spr::HistoryLog>(), depth: 2, ..Default::default() }); }
+        if self.history.is_some() { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<semio_os_spr::HistoryLog>(), depth: 2, ..Default::default() }); }
         if let Some(request) = self.request.as_ref() { return nested(RetirementDemand { copy_bytes: request.next_copy_byte_demand()?, capacity_bytes: request.next_capacity_byte_demand(copy)?, release_bytes: request.next_release_byte_demand()?, depth: request.next_depth_demand()? }); }
         self.owners.as_ref().map_or(Ok(Default::default()), |owners| nested(owners.uninstalled_owners_demands(copy)?))
     }
@@ -141,7 +141,7 @@ where
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "member-open exceeds admitted original owner depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.reject(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         let owners = self.owners.as_ref().expect("member-open retains original catalog");
         if let Some(runtime) = self.runtime.as_mut() {
@@ -152,13 +152,13 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(edit) = self.pending_edit.take() {
-            return match semio_framework_value::retirement::frame::admit_retirement_frame(edit, child, |edit| semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement::new(edit, owners.mutation_retirement.clone())) {
+            return match semio_framework_value::retirement::frame::admit_retirement_frame(edit, child, |edit| semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement::new(edit, owners.mutation_retirement.clone())) {
                 Ok((owner, progress)) => { *self.active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, edit)) => { *self.pending_edit = Some(edit); Err(error) }
             };
         }
         if let Some(envelope) = self.envelope.take() {
-            return match semio_framework_value::retirement::frame::admit_retirement_frame(envelope, child, |envelope| semio_framework_os_store_read::ArtifactStoreEnvelopeRetirement::new(semio_framework_os_store_space_schema::ArtifactEnvelope::from_owners(envelope), owners.initial_snapshot_retirement.clone(), owners.mutation_retirement.clone())) {
+            return match semio_framework_value::retirement::frame::admit_retirement_frame(envelope, child, |envelope| semio_os_store_read::ArtifactStoreEnvelopeRetirement::new(semio_os_store_space_schema::ArtifactEnvelope::from_owners(envelope), owners.initial_snapshot_retirement.clone(), owners.mutation_retirement.clone())) {
                 Ok((owner, progress)) => { *self.active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, envelope)) => { *self.envelope = Some(envelope); Err(error) }
             };

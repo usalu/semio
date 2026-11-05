@@ -28,8 +28,8 @@ where
     Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_region::ReplaceRegion>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "region", kind: "replace-region", record: "ReplacedRegion" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace region \"{}\"", self.id), &format!("Bereich \"{}\" ersetzen", self.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace region \"{}\"", self.id), &format!("Bereich \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

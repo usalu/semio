@@ -25,8 +25,8 @@ pub fn delete_layer<Op: From<DeleteLayer>>(layer_id: semio_framework_value::page
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for DeleteLayer where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::create_layer::mutation::CreateLayer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "layer", kind: "delete-layer", record: "DeletedLayer" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" löschen", self.layer_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" löschen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.to_string_owner()]

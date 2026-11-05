@@ -1,0 +1,3 @@
+import{startVitest}from"vitest/node";import{resolve,join}from"node:path";
+const root=resolve("🌎️hub/🧩️compositions/🗄️stdio/📇️publication");
+const context=await startVitest("test",[],{root,config:join(root,"🧪️tests/🎚️config/🟦️.ts"),...(process.argv.includes("--all")?{}:{testNamePattern:"binds every committed codec row"}),watch:false,cache:false,configLoader:"native",maxWorkers:1,cacheDir:join(import.meta.dirname,"🗑️generated/1104-stdio-cache")});if(!context)process.exitCode=1;else{process.exitCode=context.state.getCountOfFailedTests()>0||context.state.getUnhandledErrors().length>0?1:0;await context.close()}

@@ -17,7 +17,7 @@ use super::*;
 pub struct CommandReceipt {
     pub edit_ids: Vec<String>,
     pub generation: u64,
-    pub messages: Vec<semio_framework_os_spr::EditMessages>,
+    pub messages: Vec<semio_os_spr::EditMessages>,
     pub worst: Option<semio_framework_diagnostic::Severity>,
 }
 
@@ -49,7 +49,7 @@ impl<'a, P, Mutation> ArtifactEnvelopeView<'a, P, Mutation> {
     pub async fn edit_messages(&self) -> &ArtifactEditMessageLedger {
         &self.envelope.edit_messages
     }
-    pub async fn conflicts(&self) -> &[semio_framework_os_spr::Conflict] {
+    pub async fn conflicts(&self) -> &[semio_os_spr::Conflict] {
         &self.envelope.conflicts
     }
     pub async fn inner(&self) -> &'a ArtifactEnvelope<P, Mutation> {
@@ -101,7 +101,7 @@ semio_framework_value::artifact_retire_struct!(HistoryColumn { checkpoint_id, ti
 /// 🌿️ The branched alternatives of `envelope`: every listed alternative but the trunk, whose checkpoints are the main line
 /// the history view draws on lane 0.
 pub fn branched_alternatives<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> impl Iterator<Item = &Alternative> {
-    let trunk = semio_framework_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
+    let trunk = semio_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
     envelope.vcs.alternatives.iter().filter(move |alternative| alternative.id != trunk)
 }
 

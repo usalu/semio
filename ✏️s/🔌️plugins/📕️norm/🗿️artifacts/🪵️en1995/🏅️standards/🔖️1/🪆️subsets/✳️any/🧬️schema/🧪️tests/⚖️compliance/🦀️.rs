@@ -686,7 +686,7 @@ fn duplicate_member_and_connection_ids_fail_with_one_of() {
 fn reference_table_k_mod_cell_equals_evaluated_modification_factor() {
     use semio_s_plugin_norm_app_surface::CatalogueCell;
     use semio_s_artifact_norm_en1995_editor::panels::catalogue::reference_tables;
-    use semio_framework_ui_locale::Locale;
+    use semio_ui_locale::Locale;
     let snap = En1995Snapshot::compliant_building_beam();
     let km_table = reference_tables(Locale::En).into_iter().find(|t| t.id == "k-mod").expect("k-mod table");
     let sc1 = km_table.rows.iter().find(|r| r.id == "sc1").expect("sc1");

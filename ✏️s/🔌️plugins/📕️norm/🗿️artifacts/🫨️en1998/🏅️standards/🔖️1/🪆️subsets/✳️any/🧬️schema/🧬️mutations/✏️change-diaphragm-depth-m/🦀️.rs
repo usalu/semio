@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmDepthM wh
         record: "ChangeDiaphragmDepthM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Depth D perpendicular to the action (0 = building plan extent across the action)", "Tiefe D quer zur Einwirkung (0 = Grundrissabmessung quer zur Einwirkung) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Depth D perpendicular to the action (0 = building plan extent across the action)", "Tiefe D quer zur Einwirkung (0 = Grundrissabmessung quer zur Einwirkung) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-depth-m".into()]

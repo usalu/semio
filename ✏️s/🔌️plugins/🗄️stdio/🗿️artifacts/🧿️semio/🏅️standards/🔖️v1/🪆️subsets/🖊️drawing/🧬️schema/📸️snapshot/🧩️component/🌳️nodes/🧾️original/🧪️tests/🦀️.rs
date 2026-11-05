@@ -1,6 +1,6 @@
 //! 🌳️ Original Drawing typed prefixes survive malformed input and cancellation until physically funded close.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_value::{DslValue,FromValue,ToValue,ErasedSnapshotRetirement,RetirementDemand,ValueRefusalKind};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeRetirementRecipient};

@@ -17,8 +17,8 @@ pub struct SetTrackDimensions {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackDimensions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "track-dimensions", kind: "set-track-dimensions", record: "SetTrackDimensions" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set track dimensions", "Abmessungen der Spur setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set track dimensions", "Abmessungen der Spur setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

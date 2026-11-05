@@ -1,38 +1,38 @@
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::Puzzle2dScene;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::TreeWindows;
+use semio_plugin::BuiltNode;
+use semio_plugin::TreeWindows;
 use semio_framework_pack_json::{json, Value};
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::{snapshot::inferred_kind_entries, snapshot::kind_catalog_entries, interaction::ui_label, snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_with_action;
+use semio_plugin::tree_item_with_action;
 #[allow(unused_imports)]
-use semio_framework_plugin::tree_item_with_action_draggable;
+use semio_plugin::tree_item_with_action_draggable;
 #[allow(unused_imports)]
-use semio_framework_plugin::ActionFactory;
+use semio_plugin::ActionFactory;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelGroup;
+use semio_plugin::PanelGroup;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTabKind;
+use semio_plugin::PanelTabKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::PanelTreeBuilder;
+use semio_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::PluginAssemblyError;
+use semio_plugin::PluginAssemblyError;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiMapBuilder;
+use semio_plugin::UiMapBuilder;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiText;
+use semio_plugin::UiText;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiValue;
+use semio_plugin::UiValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use crate::editor::puzzle2d::panels::catalogue::*;
 
 //#region 🪟️WindowLaws
@@ -43,19 +43,19 @@ const SCALE_KINDS: usize = 200;
 
 fn drain_retired_ui_owners() {
     for _ in 0..RETIREMENT_DRAIN_STEPS {
-        if semio_framework_ui_contract::close_built_node_page_one() {
+        if semio_ui_contract::close_built_node_page_one() {
             break;
         }
     }
     for _ in 0..RETIREMENT_DRAIN_STEPS {
-        if semio_framework_ui_contract::close_ui_value_page_one() {
+        if semio_ui_contract::close_ui_value_page_one() {
             break;
         }
     }
 }
 
 fn labels() -> &'static Puzzle2dLabels {
-    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
+    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
 /// 🏗️ A synthetic snapshot whose `meta.kindCatalogs.nodes` carries `kinds` rows.
@@ -69,10 +69,10 @@ fn scaled_scene(kinds: usize) -> Puzzle2dScene {
     }
 }
 
-fn window_of(node: &BuiltNode) -> Option<semio_framework_ui_contract::TreeWindow> {
+fn window_of(node: &BuiltNode) -> Option<semio_ui_contract::TreeWindow> {
     match &node.component {
-        semio_framework_ui_contract::Component::TreeSection(props) => props.window,
-        semio_framework_ui_contract::Component::TreeItem(props) => props.window,
+        semio_ui_contract::Component::TreeSection(props) => props.window,
+        semio_ui_contract::Component::TreeItem(props) => props.window,
         _ => None,
     }
 }
@@ -80,15 +80,15 @@ fn window_of(node: &BuiltNode) -> Option<semio_framework_ui_contract::TreeWindow
 /// 🧾️ The body as JSON. A built tree's children travel as retained pages, so the projection helper —
 /// not `serde_json` on the root — is what walks and retires them.
 fn body_json(tree: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).expect("retire the rendered body")
 }
 
 fn child_of<'a>(node: &'a BuiltNode, key: &str) -> &'a BuiltNode {
     node.children.iter().find(|child| child.key.as_str() == key).unwrap_or_else(|| panic!("container {key} must exist"))
 }
 
-fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_framework_plugin::TreeWindowRequest {
-    semio_framework_plugin::TreeWindowRequest { body_key: PUZZLE2D_PLAY_BODY_CATALOGUE.into(), node_key: node_key.into(), open, offset, rows }
+fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_plugin::TreeWindowRequest {
+    semio_plugin::TreeWindowRequest { body_key: PUZZLE2D_PLAY_BODY_CATALOGUE.into(), node_key: node_key.into(), open, offset, rows }
 }
 
 /// 🪟️ (a)+(b) An oversized catalogue stamps every section's full extent, materialises no more than
@@ -102,7 +102,7 @@ fn the_catalogue_stamps_every_section_and_never_pages() {
     let nodes = child_of(&tree, NODES_SECTION);
     assert_eq!(window_of(nodes).expect("the nodes section must stamp its window").total as usize, SCALE_KINDS);
     assert!(!nodes.children.is_empty(), "the open nodes section must materialise its first window");
-    assert!(nodes.children.len() <= semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX);
+    assert!(nodes.children.len() <= semio_ui_contract::UI_BUILT_CHILDREN_MAX);
     for section in [HANDLES_SECTION, EDGES_SECTION] {
         let container = child_of(&tree, section);
         assert_eq!(container.children.len(), 1, "an empty section shows exactly its placeholder row");
@@ -116,7 +116,7 @@ fn the_catalogue_stamps_every_section_and_never_pages() {
 /// 🎯️ The verb a row activates — its ONE target's activation.
 fn activation_of(row: &BuiltNode) -> Option<String> {
     match &row.component {
-        semio_framework_ui_contract::Component::TreeItem(props) => props.target.as_ref().and_then(|target| target.activation.as_ref()).map(|activation| activation.as_str().to_string()),
+        semio_ui_contract::Component::TreeItem(props) => props.target.as_ref().and_then(|target| target.activation.as_ref()).map(|activation| activation.as_str().to_string()),
         _ => None,
     }
 }
@@ -128,7 +128,7 @@ fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
     let (offset, rows) = (40u32, 9u32);
-    let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(NODES_SECTION, Some(true), offset, rows)], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = semio_plugin::ViewModel { tree_windows: vec![request(NODES_SECTION, Some(true), offset, rows)], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_CATALOGUE);
     let tree = render(&scene, labels(), &windows).expect("a windowed catalogue must be admitted");
     let nodes = child_of(&tree, NODES_SECTION);

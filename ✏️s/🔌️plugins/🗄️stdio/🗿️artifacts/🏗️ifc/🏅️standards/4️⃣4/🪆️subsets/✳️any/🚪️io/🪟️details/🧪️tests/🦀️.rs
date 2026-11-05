@@ -1,6 +1,6 @@
 use super::*;
 use super::shared::IfcDetailsProfile;
-use semio_framework_ui_locale::Locale;
+use semio_ui_locale::Locale;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{self,SnapshotDetailPathSegment as P,SnapshotDetailsProvider};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity,IfcSnapshot,IfcValue};

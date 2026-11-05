@@ -14,8 +14,8 @@ pub struct SetSolidName {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetSolidName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "solid-name", kind: "set-solid-name", record: "SetSolidName" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set solid name", "Körpername setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set solid name", "Körpername setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,9 +1,9 @@
 //! 🧩️ document-behavior-tests of `semio-s-artifact-dag-dag` — a path-preserving carve of the artifact root mounts.
 
 extern crate infinite_canvas as infinite_board_port_directed_dag;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use crate::standards::v1::subsets::any::schema::mutations::DagMutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
@@ -11,9 +11,9 @@ pub use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutatio
 pub use crate::snapshot::schema::default_snapshot;
 pub use crate::snapshot::schema::empty_snapshot;
 #[cfg(test)]
-pub use semio_framework_os_infinite_directed_presentation::DagNodeKind;
+pub use semio_os_infinite_directed_presentation::DagNodeKind;
 #[cfg(test)]
-pub use semio_framework_os_infinite_directed_presentation::DagHostSnapshotEdge;
+pub use semio_os_infinite_directed_presentation::DagHostSnapshotEdge;
 #[cfg(test)]
 pub use crate::standards::v1::subsets::any::schema::diff::DagDiff;
 pub mod schema {

@@ -59,9 +59,9 @@ fn ghost_widget_label_overlay_matches_placed_at_micro() {
     host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
     let ghost = host.dag.pointer.ghost_node().expect("ghost");
     assert_eq!(host.draw_lod_label(), "micro");
-    assert_eq!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.node_label(), semio_framework_os_infinite_directed_presentation::DagNodeLabel::Name);
-    assert!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.shows_port_labels());
-    assert!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.shows_handles());
+    assert_eq!(semio_os_infinite_directed_presentation::DagDrawLod::Micro.node_label(), semio_os_infinite_directed_presentation::DagNodeLabel::Name);
+    assert!(semio_os_infinite_directed_presentation::DagDrawLod::Micro.shows_port_labels());
+    assert!(semio_os_infinite_directed_presentation::DagDrawLod::Micro.shows_handles());
     let ghost_overlay_rows = label_overlay_rows_for_node_spec(&host.dag.viewport, &host.dag.graph, &host.dag.paint, ghost, true);
     assert_eq!(ghost_overlay_rows.len(), 3);
     let overlay: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
@@ -153,7 +153,7 @@ fn channel_hover_and_selection_round_trip_at_detail_lod() {
     assert_eq!(hovered.widget_id, "add");
     assert_eq!(hovered.port, "a");
     assert_eq!(hovered.direction, DagChannelDirection::In);
-    host.set_selected_channels(&[semio_framework_os_infinite::board::schema::dag_input::DagChannelRef { widget_id: "add".into(), port: "a".into(), direction: semio_framework_os_infinite::board::schema::dag_input::DagChannelDirection::In }]);
+    host.set_selected_channels(&[semio_os_infinite::board::schema::dag_input::DagChannelRef { widget_id: "add".into(), port: "a".into(), direction: semio_os_infinite::board::schema::dag_input::DagChannelDirection::In }]);
     let selected = host.selected_channels();
     assert_eq!(selected.len(), 1);
     assert_eq!(selected[0].widget_id, "add");

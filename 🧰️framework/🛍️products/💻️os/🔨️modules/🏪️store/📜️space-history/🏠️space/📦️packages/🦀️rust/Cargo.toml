@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-store-space"
+name = "semio-os-store-space"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,26 +22,26 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
-semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
-semio-framework-os-store-codec-factory = { path = "../../../../📦️codec/🏭️factory/📦️packages/🦀️rust" }
-semio-framework-os-store-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
-semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
-semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
-semio-framework-os-store-space-history = { path = "../../../📦️packages/🦀️rust" }
-semio-framework-os-store-space-member = { path = "../../../../🧩️composition/👥️space-member/📦️packages/🦀️rust" }
-semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-os-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
+semio-os-store-codec-factory = { path = "../../../../📦️codec/🏭️factory/📦️packages/🦀️rust" }
+semio-os-store-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
+semio-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-os-store-space-history = { path = "../../../📦️packages/🦀️rust" }
+semio-os-store-space-member = { path = "../../../../🧩️composition/👥️space-member/📦️packages/🦀️rust" }
+semio-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }
-semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust"}
-semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }
+semio-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust"}
+semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
-semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }

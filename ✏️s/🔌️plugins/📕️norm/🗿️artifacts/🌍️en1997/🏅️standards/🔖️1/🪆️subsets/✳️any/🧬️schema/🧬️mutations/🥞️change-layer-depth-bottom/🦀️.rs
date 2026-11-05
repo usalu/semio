@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeLayerDepthBottom w
         record: "ChangedLayerDepthBottom",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Depth of layer bottom of the soil layer", "Bodenschicht: Tiefe der Schichtunterkante ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Depth of layer bottom of the soil layer", "Bodenschicht: Tiefe der Schichtunterkante ändern")
     }
 }
 

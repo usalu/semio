@@ -4,7 +4,7 @@
 use crate::editor::writer::modes::edit::windows::main::config::WriterMainWindowConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::editor::writer::editor_vocabulary::writer_action;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 
 //#region 🔖️Measure
 pub fn measure(config: &WriterMainWindowConfig, labels: &WriterPlayLabels) -> WindowMeasure {

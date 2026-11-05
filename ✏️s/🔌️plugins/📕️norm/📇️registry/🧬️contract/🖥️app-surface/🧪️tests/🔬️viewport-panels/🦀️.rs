@@ -103,8 +103,8 @@ fn vertex_field(id: &str, unit: QuantityKind, values: Vec<f64>) -> ScalarField {
 #[test]
 fn window_definitions_bind_surface_domain_and_actions() {
     use crate::{viewport_window_definition, diagram_window_definition, visual_window_id};
-    use semio_framework_plugin::{SurfaceKind, WindowKindDefinition};
-    use semio_framework_ui_locale::LocalizedLabel;
+    use semio_plugin::{SurfaceKind, WindowKindDefinition};
+    use semio_ui_locale::LocalizedLabel;
     let viewport: WindowKindDefinition = viewport_window_definition("en1993", LocalizedLabel::native("Model", "Modell"), "body-viewport", "box");
     assert_eq!(viewport.id, visual_window_id("en1993", "viewport"));
     assert_eq!(viewport.id, "norm-en1993-viewport");
@@ -124,7 +124,7 @@ fn window_definitions_bind_surface_domain_and_actions() {
 #[test]
 fn layouts_are_desktop_first_then_mobile_then_tablet() {
     use crate::visual_layout;
-    use semio_framework_plugin::{WindowLayoutChild, WindowLayoutRoot};
+    use semio_plugin::{WindowLayoutChild, WindowLayoutRoot};
     let WindowLayoutRoot::Axis(desktop) = visual_layout("en1993", DeviceClass::Desktop).root else { panic!("row") };
     assert_eq!((desktop.kind.as_str(), desktop.children.len()), ("row", 3));
     assert!(matches!(&desktop.children[1], WindowLayoutChild::Stack(s) if s.children[0].window_kind_id == "norm-en1993-viewport"));
@@ -138,7 +138,7 @@ fn layouts_are_desktop_first_then_mobile_then_tablet() {
 #[test]
 fn interaction_domain_is_generated_from_entity_kinds() {
     use crate::{interaction_domain_id, viewport_interaction_definition};
-    use semio_framework_ui_locale::LocalizedLabel;
+    use semio_ui_locale::LocalizedLabel;
     let def = viewport_interaction_definition("en1993", LocalizedLabel::native("Structure", "Tragwerk"), &[EntityKind::Member, EntityKind::Fastener]);
     assert_eq!(def.id, interaction_domain_id("en1993"));
     assert_eq!(def.granularities.iter().map(|g| g.id.as_str()).collect::<Vec<_>>(), vec!["member", "fastener", "check", "loadCase"]);
@@ -151,9 +151,9 @@ fn the_toolbar_lists_fields_tracks_and_the_readout_in_both_languages() {
     scene.tracks = vec![fire_track()];
     let view = ViewportView { playback: PlaybackState { track: Some("fire".into()), value: 1800.0, ..PlaybackState::default() }, ..ViewportView::default() };
     let text = |locale| format!("{:?}", render_toolbar(&scene, &view, locale, "s.norm.test@1/*#editor").expect("toolbar").expect("some"));
-    assert!(text(semio_framework_ui_locale::Locale::En).contains("Fire duration: 30 min"));
-    assert!(text(semio_framework_ui_locale::Locale::De).contains("Branddauer: 30 min"));
-    assert!(render_toolbar(&scene_of(vec![]), &ViewportView::default(), semio_framework_ui_locale::Locale::En, "s.norm.test@1/*#editor").expect("toolbar").is_none());
+    assert!(text(semio_ui_locale::Locale::En).contains("Fire duration: 30 min"));
+    assert!(text(semio_ui_locale::Locale::De).contains("Branddauer: 30 min"));
+    assert!(render_toolbar(&scene_of(vec![]), &ViewportView::default(), semio_ui_locale::Locale::En, "s.norm.test@1/*#editor").expect("toolbar").is_none());
 }
 
 #[test]
@@ -161,7 +161,7 @@ fn a_viewport_action_changes_the_rendered_state() {
     use crate::{view_event, NormTransient, VIEW_ACTION_FIELD, VIEW_ACTION_SEEK, VIEW_ACTION_TOGGLE, VIEW_ACTION_TRACK};
     let mut scene = scene_of(vec![field_beam("b1", vec![vertex_field("temp@0", QuantityKind::Temperature, vec![20.0, 20.0]), vertex_field("stress", QuantityKind::Stress, vec![1.0, 2.0])], "temp@0")]);
     scene.tracks = vec![fire_track()];
-    let toolbar = |view: &ViewportView| format!("{:?}", render_toolbar(&scene, &view.resolved(&scene), semio_framework_ui_locale::Locale::En, "s.norm.test@1/*#editor").expect("toolbar").expect("some"));
+    let toolbar = |view: &ViewportView| format!("{:?}", render_toolbar(&scene, &view.resolved(&scene), semio_ui_locale::Locale::En, "s.norm.test@1/*#editor").expect("toolbar").expect("some"));
     let fold = |events: &[(&str, Option<&str>, Option<f64>)]| events.iter().filter_map(|(a, t, n)| view_event(a, *t, *n)).fold(NormTransient::default(), NormTransient::apply).view;
     let rest = ViewportView::default();
     assert!(!toolbar(&rest).contains("Fire duration: "));
@@ -185,8 +185,8 @@ fn a_viewport_action_changes_the_rendered_state() {
 
 fn panel_json(controller: &'static str, lanes: crate::lane_overlays::LaneOverlays) -> String {
     let view = crate::toolbar::ViewportView { lanes, ..Default::default() };
-    let node = crate::toolbar::render_viewport_panel("norm.x.viewport", &scene_of(Vec::new()), &view, &[], "norm.x", controller, semio_framework_ui_locale::Locale::En).expect("panel");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the panel")
+    let node = crate::toolbar::render_viewport_panel("norm.x.viewport", &scene_of(Vec::new()), &view, &[], "norm.x", controller, semio_ui_locale::Locale::En).expect("panel");
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the panel")
 }
 
 #[test]
@@ -256,7 +256,7 @@ fn a_lane_check_frames_the_camera_on_the_selected_entities_and_a_free_lane_keeps
 fn the_keyboard_help_lists_every_shortcut_in_english_and_german() {
     use crate::accessibility::focus_order::{chord_text, shortcuts};
     let help = |locale, mac| format!("{:?}", crate::toolbar::render_shortcut_help(locale, mac).expect("help"));
-    let (en, de) = (help(semio_framework_ui_locale::Locale::En, false), help(semio_framework_ui_locale::Locale::De, false));
+    let (en, de) = (help(semio_ui_locale::Locale::En, false), help(semio_ui_locale::Locale::De, false));
     for shortcut in shortcuts() {
         assert!(en.contains(&shortcut.label.en) && de.contains(&shortcut.label.de), "{:?}", shortcut.action);
         assert!(en.contains(&chord_text(shortcut.chord, false)));
@@ -267,7 +267,7 @@ fn the_keyboard_help_lists_every_shortcut_in_english_and_german() {
     for label in ["Nächster Nachweis", "Vorheriger Nachweis", "Nächster maßgebender Nachweis", "Vorheriger maßgebender Nachweis", "Nächste Kombination", "Vorherige Kombination"] {
         assert!(de.contains(label), "{label}");
     }
-    assert!(help(semio_framework_ui_locale::Locale::En, true).contains("⌥G"));
+    assert!(help(semio_ui_locale::Locale::En, true).contains("⌥G"));
     let panel = panel_json("s.norm.test@1/*#editor", crate::lane_overlays::LaneOverlays::default());
     assert!(panel.contains("norm-viewport-help"));
 }
@@ -288,13 +288,13 @@ fn grip(id: &str, rest: f64, limits: (f64, f64), increment: f64) -> Handle {
 
 const EDITOR_CONTROLLER: &str = "s.norm.en1993@1/*#editor";
 
-fn touch_json(view: &ViewportView, device: Option<DeviceClass>, locale: semio_framework_ui_locale::Locale) -> Option<String> {
-    crate::toolbar::render_touch_controls(view, device, "norm.x", locale, EDITOR_CONTROLLER).expect("touch controls").map(|node| semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the touch controls"))
+fn touch_json(view: &ViewportView, device: Option<DeviceClass>, locale: semio_ui_locale::Locale) -> Option<String> {
+    crate::toolbar::render_touch_controls(view, device, "norm.x", locale, EDITOR_CONTROLLER).expect("touch controls").map(|node| semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the touch controls"))
 }
 
 #[test]
 fn the_nudge_buttons_of_a_tap_to_nudge_device_commit_one_schema_step_in_one_set_fields() {
-    use semio_framework_ui_locale::Locale;
+    use semio_ui_locale::Locale;
     let view = ViewportView { lanes: LaneOverlays { handles: vec![grip("b1/x", 1.0, (-5.0, 5.0), 0.5)], ..Default::default() }, ..Default::default() };
     let phone = touch_json(&view, Some(DeviceClass::Mobile), Locale::En).expect("a phone offers nudge buttons");
     for needle in ["norm-viewport.nudge.b1/x.minus", "norm-viewport.nudge.b1/x.plus", "setFields", "commit", "1.5", "0.5", "Position", "Handles"] {
@@ -320,11 +320,11 @@ fn the_nudge_buttons_of_a_tap_to_nudge_device_commit_one_schema_step_in_one_set_
 
 #[test]
 fn the_edit_menu_is_part_of_the_viewport_panel_while_the_view_lane_holds_it_open_and_only_for_a_live_editor() {
-    use semio_framework_ui_locale::Locale;
+    use semio_ui_locale::Locale;
     let panel = |menu: bool, controller: &'static str, locale: Locale| {
         let view = ViewportView { lane: crate::ViewLane { menu, ..Default::default() }, ..Default::default() };
         let node = render_viewport_panel("norm.menu-law.viewport", &scene_of(Vec::new()), &view, &[], "norm.menu-law", controller, locale).expect("panel");
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the panel")
+        semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the panel")
     };
     let open = panel(true, EDITOR_CONTROLLER, Locale::En);
     for needle in ["norm-touch-menu", "Select all", "Focus check", "Close menu", "viewportTouchMenu", "touch"] {

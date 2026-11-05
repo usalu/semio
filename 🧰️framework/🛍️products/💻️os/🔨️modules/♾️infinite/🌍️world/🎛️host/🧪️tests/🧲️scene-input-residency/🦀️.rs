@@ -1,15 +1,15 @@
 //! 🧪️ host tests (🧲️scene-input-residency): compiled against the `testkit` surface of the world crates.
 
-use semio_framework_os_infinite_world_components::World3dRelocateSession;
-use semio_framework_os_infinite_world_scene::{reserve_world3d_asset_request, retire_cancelled_world3d_asset_step, return_world3d_asset, take_next_world3d_asset, world3d_asset_cancellation_requested, WorldAssetRequestKind};
-use semio_framework_os_infinite_world_bridge::sync_world3d_scene_document_lanes;
-use semio_framework_os_infinite_world_interaction::{apply_reference_image_bytes, world3d_catalogue_drop_origin, world3d_end_relocate_drag, world3d_update_catalogue_drop_preview, world3d_update_relocate_drag};
-use semio_framework_os_infinite_world_host::World3dState;
+use semio_os_infinite_world_components::World3dRelocateSession;
+use semio_os_infinite_world_scene::{reserve_world3d_asset_request, retire_cancelled_world3d_asset_step, return_world3d_asset, take_next_world3d_asset, world3d_asset_cancellation_requested, WorldAssetRequestKind};
+use semio_os_infinite_world_bridge::sync_world3d_scene_document_lanes;
+use semio_os_infinite_world_interaction::{apply_reference_image_bytes, world3d_catalogue_drop_origin, world3d_end_relocate_drag, world3d_update_catalogue_drop_preview, world3d_update_relocate_drag};
+use semio_os_infinite_world_host::World3dState;
 use semio_framework_test_fixtures::fixture_text;
 use ui_scene::math::{Camera3d, CameraProjection3d, OrbitController, Vec3};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Rgba;
-use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Rgba;
+use semio_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -37,8 +37,8 @@ fn point(value: &serde_json::Value) -> [f64; 3] {
     [values[0].as_f64().expect("x"), values[1].as_f64().expect("y"), values[2].as_f64().expect("z")]
 }
 
-fn scene(references: serde_json::Value) -> semio_framework_ui_declaration::ui::World3dScene {
-    let mut scene = semio_framework_ui_declaration::ui::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+fn scene(references: serde_json::Value) -> semio_ui_declaration::ui::World3dScene {
+    let mut scene = semio_ui_declaration::ui::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
     scene.references_json = Some(references.to_string());
     scene
 }
@@ -79,7 +79,7 @@ fn pointer_relocate_and_catalogue_drop_honor_the_document_snap_boolean() {
         projection: CameraProjection3d::Orthographic,
         zoom: 20.0,
     });
-    state.camera.projection_spec = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
+    state.camera.projection_spec = semio_ui_viewport::Viewport3dProjectionSpec { mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top } };
     state.scene.lod.grid_factor = factor;
     let (x, y) = pointer_for(&state, target);
 

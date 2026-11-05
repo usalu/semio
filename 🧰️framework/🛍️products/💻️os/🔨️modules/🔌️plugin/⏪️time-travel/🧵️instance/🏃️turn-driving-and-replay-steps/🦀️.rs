@@ -1,7 +1,7 @@
 //! 🏃️ Turn driving and replay steps of the instance time-travel turns: the per-turn driver, the original review children and discard command, the patch preparation and the replay step. See [`super`].
 
 use super::*;
-use semio_framework_plugin_child::ChildContentRetirement;
+use semio_plugin_child::ChildContentRetirement;
 use semio_framework::Fault;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
@@ -9,7 +9,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// replay slice, one authoring slice and one deferred-reprojection slice, all against ONE wall deadline taken when the
     /// turn begins on the ledger's turn clock (audit W2A-3) — a slow operation ends the turn, never an operation count; a
     /// session change prepares the history patch that rides the next unsolicited UI progress frame.
-    pub(crate) async fn drive_time_travel_turn(&mut self, grant: RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub(crate) async fn drive_time_travel_turn(&mut self, grant: RetainedCloneGrant, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if grant.maximum_items==0{return Ok(());}
         if let TimeTravelStoreOutput::OriginalProgress(progress)=self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources{grant},Some(cx)).await?{if progress!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,progress));return Ok(())}}
         if self.time_travel.finalize_outcome.is_some(){self.drive_time_travel_finalize_outcome(cx)?;return Ok(())}
@@ -71,7 +71,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 if time_travel.closing{cursor.begin_close()}
                 if cursor.is_validating(){return cursor.validate(&time_travel.session,grant).map(|step|Some(step.progress()))}
                 if cursor.prepared_stage().is_some(){
-                    let receipt=match time_travel.member.as_mut(){None=>time_travel.document.publish_discard(store,cursor,&mut time_travel.session,&mut time_travel.editor,grant)?,Some(member)=>{let entry=children.member(member.key.borrowed()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"Discard original member is absent"))?;let owners=member.owners.as_deref_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Discard original member owners are absent"))?;entry.member.visit_member(semio_framework_plugin_time_travel::discard_decision::DiscardMemberPublication{owners,cursor,session:&mut time_travel.session,editor:&mut time_travel.editor,review_children:&mut member.review_children,children:&mut member.children,retirements:child_content_retirements,child_generation:child_content_generation,view_copy_bytes:size_of::<TimeTravelReviewChildren>()+size_of::<ChildContentRetirement>()+size_of::<u64>(),grant})?}};
+                    let receipt=match time_travel.member.as_mut(){None=>time_travel.document.publish_discard(store,cursor,&mut time_travel.session,&mut time_travel.editor,grant)?,Some(member)=>{let entry=children.member(member.key.borrowed()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"Discard original member is absent"))?;let owners=member.owners.as_deref_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Discard original member owners are absent"))?;entry.member.visit_member(semio_plugin_time_travel::discard_decision::DiscardMemberPublication{owners,cursor,session:&mut time_travel.session,editor:&mut time_travel.editor,review_children:&mut member.review_children,children:&mut member.children,retirements:child_content_retirements,child_generation:child_content_generation,view_copy_bytes:size_of::<TimeTravelReviewChildren>()+size_of::<ChildContentRetirement>()+size_of::<u64>(),grant})?}};
                     if time_travel.session.stage!=TimeTravelStage::Editing{time_travel.ui_dirty=true;time_travel.document_dirty=true;time_travel.patch_due=true}return Ok(Some(receipt))
                 }
                 if grant.maximum_depth<time_travel.command_retirements.len()+1{return Ok(Some(Default::default()))}
@@ -109,7 +109,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// ⏭️ Steps the replay of the store the session edits until the turn deadline: progress ticks refresh the history body
     /// at most every [`TIME_TRAVEL_PROGRESS_REFRESH_MS`]; completion hands the report to the session and swaps the
     /// preview to the replayed head; a store refusal faults the replay.
-    async fn step_time_travel_replay(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    async fn step_time_travel_replay(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let generation = self.time_travel.session.generation;
         let stepped = match self.time_travel_run(TimeTravelStoreCommand::StepReplay { deadline_us, clock: self.time_travel.turn_clock,grant },Some(cx)).await? {
             TimeTravelStoreOutput::Stepped(stepped) => stepped,
@@ -140,7 +140,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
 impl<'ctx,A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static,X:InstanceExtension> TimeTravelCtx<'ctx,A,M,X>{
  /// 🧾️ Session completion retains the original accepted payloads in paid retirement before publishing its empty local state.
- fn drive_time_travel_finalize_outcome(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+ fn drive_time_travel_finalize_outcome(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
   use semio_framework_value::retirement::controlled::ControlledRetirement;
   use semio_framework_time_travel::TimeTravelSession;
   let Some(outcome)=self.time_travel.finalize_outcome else{return Ok(())};if self.time_travel.authoring_finalization{let d=RetirementDemand{copy_bytes:size_of::<TimeTravelCommit>()+size_of::<bool>(),depth:1,..Default::default()};let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{self.time_travel.finalize_outcome=None;self.time_travel.authoring_finalization=false;semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}})?;if done.is_some(){self.history.cache=None;self.note_time_travel_changed(matches!(outcome,TimeTravelCommit::Finalized{..}),true);}return Ok(())}let success=matches!(outcome,TimeTravelCommit::Finalized{..});let code=match outcome{TimeTravelCommit::Stale=>TimeTravelRefusal::Stale.code(),TimeTravelCommit::Blocked=>TimeTravelRefusal::Blocked.code(),_=>TIME_TRAVEL_COMMIT_FAILED_CODE};

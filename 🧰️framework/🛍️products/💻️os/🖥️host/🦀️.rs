@@ -10,10 +10,10 @@ pub mod backbone;
 #[path = "🧾️media-export-simple/🦀️.rs"]
 pub mod media_export_simple;
 
-pub use semio_framework_os_host_instance as instance;
-pub use semio_framework_os_host_media_raster as media_export_raster;
-pub use semio_framework_os_host_registry as registry;
-pub use semio_framework_os_host_workflow as workflow;
+pub use semio_os_host_instance as instance;
+pub use semio_os_host_media_raster as media_export_raster;
+pub use semio_os_host_registry as registry;
+pub use semio_os_host_workflow as workflow;
 
 pub use crate::space::*;
 pub use crate::workflow::{

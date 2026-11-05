@@ -1,9 +1,9 @@
-use semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
+use semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
 use crate::{PatchTracker, has_work};
-use semio_framework_ui_contract as ui_contract;
+use semio_ui_contract as ui_contract;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 #[doc(hidden)]
-use semio_framework_plugin_testing_caller::OriginalFixtureCaller;
+use semio_plugin_testing_caller::OriginalFixtureCaller;
 
 #[cfg_attr(test,test)]
 pub fn pending_mounted_render_survives_denied_original_retry_without_heap_or_lost_schedule(){

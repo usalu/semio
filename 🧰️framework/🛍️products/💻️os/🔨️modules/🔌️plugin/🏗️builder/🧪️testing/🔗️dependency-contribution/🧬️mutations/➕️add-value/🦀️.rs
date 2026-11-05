@@ -20,8 +20,8 @@ impl protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp> for AddVal
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]
@@ -46,7 +46,7 @@ impl protocol::ColdMutationKind<DependencyTestSnapshot, DependencyTestOp> for Ad
 impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = <Self as protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp>>::SEMANTICS;
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(self)
     }
     fn target(&self) -> Vec<String> {

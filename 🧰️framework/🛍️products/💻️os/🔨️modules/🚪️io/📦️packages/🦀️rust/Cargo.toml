@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-io"
+name = "semio-os-io"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -30,11 +30,11 @@ name = "owned_serializer_rejections"
 path = "../../📤️serialization/📦️owned/🧪️tests/🦀️.rs"
 
 [dependencies]
-semio-framework-os-channel = { path = "../../../📡️spr/🧵️channel/📦️packages/🦀️rust" }
-semio-framework-os-store-codec-registry = { path = "../../../🏪️store/📦️codec/📦️packages/🦀️rust" }
-semio-framework-os-store-read = { path = "../../../🏪️store/🔗️read/📦️packages/🦀️rust" }
-semio-framework-os-store-space-history = { path = "../../../🏪️store/📜️space-history/📦️packages/🦀️rust" }
-semio-framework-os-store-text-io = { path = "../../../🏪️store/🚪️io/📦️packages/🦀️rust" }
+semio-os-channel = { path = "../../../📡️spr/🧵️channel/📦️packages/🦀️rust" }
+semio-os-store-codec-registry = { path = "../../../🏪️store/📦️codec/📦️packages/🦀️rust" }
+semio-os-store-read = { path = "../../../🏪️store/🔗️read/📦️packages/🦀️rust" }
+semio-os-store-space-history = { path = "../../../🏪️store/📜️space-history/📦️packages/🦀️rust" }
+semio-os-store-text-io = { path = "../../../🏪️store/🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
@@ -45,7 +45,7 @@ semio-framework-job = { workspace = true }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
-semio-framework-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+semio-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }

@@ -37,7 +37,7 @@ mod tests;
 
 //#region 🧩️ArtifactItems
 pub mod artifact_items {
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
 
@@ -46,11 +46,11 @@ pub const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
 /// placement doc — `artifact_kind` matches this subset's `#[artifact_schema(id = "s.space.space")]`,
 /// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Canonical
 /// surface id: `s.space.space@1/*#editor` / `s.space.space@1/*#viewer` (contract §1 grammar).
-pub const SPACE_INDEX_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.space.space", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const SPACE_INDEX_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.space.space", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 /// 📇️ The `os.space-index` topic row through which this plugin names the artifact-index document the os shell opens for a hub space, so the framework never names this plugin's dialect or document schema.
-pub fn space_index_topic_contribution() -> semio_framework_plugin::TopicContribution {
-    semio_framework_plugin::SpaceIndexContribution { dialect: SPACE_INDEX_DIALECT.into(), document_schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string() }.into_topic_contribution()
+pub fn space_index_topic_contribution() -> semio_plugin::TopicContribution {
+    semio_plugin::SpaceIndexContribution { dialect: SPACE_INDEX_DIALECT.into(), document_schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string() }.into_topic_contribution()
 }
 //#endregion 🔖️Dialect
 
@@ -59,7 +59,7 @@ pub fn space_index_topic_contribution() -> semio_framework_plugin::TopicContribu
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "space.sspace".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Space Artifacts", "Space-Artefakte"),
+        label: semio_ui_locale::LocalizedLabel::native("Space Artifacts", "Space-Artefakte"),
         source_format: S_SPACE_INDEX_DOCUMENT_SCHEMA.into(),
         component_kind: "space-index".into(),
         dimension: "data".into(),

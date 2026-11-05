@@ -22,7 +22,7 @@ fn enum_source(law: &serde_json::Value, name: &str) -> Arc<IfcSnapshot> {
         ..Default::default()
     })
 }
-fn enum_request(row: &serde_json::Value, complete: bool) -> semio_framework_plugin::action_staging::StagedFormRequest {
+fn enum_request(row: &serde_json::Value, complete: bool) -> semio_plugin::action_staging::StagedFormRequest {
     let mut request = guidance_request();
     let rows = if complete {
         serde_json::Value::Array(row["required"].as_array().unwrap().iter().map(|item| serde_json::json!({"index":item["index"].as_u64().unwrap().to_string(),"value":row["args"][item["index"].as_u64().unwrap()as usize]})).collect())
@@ -35,7 +35,7 @@ fn enum_request(row: &serde_json::Value, complete: bool) -> semio_framework_plug
 }
 #[test]
 fn original_enum_type_guidance_keeps_declared_options_bounded_and_supplied_values_editable() {
-    use semio_framework_plugin_decl_staged_form::StagedBodySource;
+    use semio_plugin_decl_staged_form::StagedBodySource;
     let law = enum_contract();
     for row in law["cases"].as_array().unwrap() {
         for complete in [false, true] {
@@ -79,7 +79,7 @@ fn original_enum_type_guidance_keeps_declared_options_bounded_and_supplied_value
             assert!(page.controls() >= required.len() && page.controls() <= required.len() + 2);
             for (index, field) in required.iter().enumerate() {
                 let control = page.control(index).unwrap();
-                let semio_framework_plugin_decl_staged_form::StagedScalarKind::Choice { value, choices } = control.scalar.kind else { panic!("declared choice") };
+                let semio_plugin_decl_staged_form::StagedScalarKind::Choice { value, choices } = control.scalar.kind else { panic!("declared choice") };
                 assert!(choices.len() <= 32);
                 if complete {
                     assert_eq!(value, row["args"][field["index"].as_u64().unwrap() as usize]["value"].as_str().unwrap());
@@ -208,7 +208,7 @@ fn original_enum_guidance_cancels_and_retires_every_option_page_and_binding_pref
 
 #[test]
 fn original_enum_guidance_genuine_second_window_has_every_remaining_member_and_paid_close() {
-    use semio_framework_plugin_decl_staged_form::{StagedBodyBinding, StagedBodySource, StagedScalarKind};
+    use semio_plugin_decl_staged_form::{StagedBodyBinding, StagedBodySource, StagedScalarKind};
     let law = enum_contract();
     for row in law["cases"].as_array().unwrap().iter().filter(|row| row["required"][0]["members"].as_array().unwrap().len() > 32) {
         let snapshot = enum_source(&law, row["source"].as_str().unwrap());
@@ -314,7 +314,7 @@ fn enum_field_mut<'a>(value: &'a mut DslValue, key: &str) -> &'a mut DslValue {
 
 #[test]
 fn original_enum_guidance_retains_multibyte_raw_sibling_when_an_earlier_choice_builds_sorted_rows() {
-    use semio_framework_plugin_decl_staged_form::{StagedBodyBinding, StagedBodySource};
+    use semio_plugin_decl_staged_form::{StagedBodyBinding, StagedBodySource};
     let law = enum_contract();
     let row = &law["cases"][1];
     let snapshot = enum_source(&law, "logical");
@@ -335,7 +335,7 @@ fn original_enum_guidance_retains_multibyte_raw_sibling_when_an_earlier_choice_b
     let page = output.as_ref().unwrap();
     assert!(!page.status().ready);
     let Some(StagedBodyBinding::Action(binding)) = page.control(0).unwrap().binding else { panic!("typed field binding") };
-    let semio_framework_plugin::action_staging::StagedFormBindingEdit::Fixed { edit: semio_framework_plugin::action_staging::StagedFormEdit::Set { value: DslValue::Array(rows), .. } } = &binding.edits[0] else { panic!("sorted rows") };
+    let semio_plugin::action_staging::StagedFormBindingEdit::Fixed { edit: semio_plugin::action_staging::StagedFormEdit::Set { value: DslValue::Array(rows), .. } } = &binding.edits[0] else { panic!("sorted rows") };
     assert_eq!(rows[0].get("index").unwrap().as_str(), Some("3"));
     assert_eq!(rows[1].get("index").unwrap().as_str(), Some("4"));
     assert_eq!(rows[1].get("value").unwrap().get("value").unwrap().as_str(), law["draftSibling"]["text"].as_str());

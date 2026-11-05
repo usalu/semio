@@ -1,11 +1,11 @@
-use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
+use semio_renderer_wgpu_contracts::framework_widget_context;
 use std::collections::HashMap;
 use super::{DIFF_GUTTER_COLUMN_W, DiffLineOperation, diff_lines, diff_view_metrics, render_diff_view};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::{Rgba, Theme};
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
-use semio_framework_ui_text::TextFace;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::{Rgba, Theme};
+use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_ui_text::TextFace;
 
 #[test]
 fn neutral_diff_fixture_matches_the_native_operation_sequence() {
@@ -98,7 +98,7 @@ fn neutral_presentation_fixture_drives_mono_geometry_color_and_pre_wrap() {
 
     let text = fixture["preWrap"]["text"].as_str().unwrap();
     let narrow = diff_view_metrics(Rect::new(0.0, 0.0, fixture["preWrap"]["hostWidth"].as_f64().unwrap() as f32, 160.0), &theme);
-    let mut atlas = semio_framework_ui_text::FontAtlas::shaped_default();
+    let mut atlas = semio_ui_text::FontAtlas::shaped_default();
     let lines = atlas.pre_wrap_lines(TextFace::Mono, text, narrow.unified_text_width, theme.font_size_small).into_iter().map(|range| &text[range]).collect::<Vec<_>>();
     let expected = fixture["preWrap"]["expectedLines"].as_array().unwrap().iter().map(|line| line.as_str().unwrap()).collect::<Vec<_>>();
     assert_eq!(lines, expected);
@@ -109,7 +109,7 @@ fn neutral_presentation_fixture_drives_mono_geometry_color_and_pre_wrap() {
 /// 🧰️ Renders a `render_diff_view` scene in `mode` and returns the `DrawList` so paint-level
 /// assertions (glyph tint, absence of row-background fills) can inspect it directly, same
 /// technique as `render_entry_tests::Fixture`.
-fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (semio_framework_ui_draw_contract::DrawList, Theme) {
+fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (semio_ui_draw_contract::DrawList, Theme) {
     let scene = UiComponentSceneNode {
         host_id: "diff-paint-test".into(),
         surface_id: "diff-paint-test".into(),
@@ -130,14 +130,14 @@ fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (semio_framewor
         icon_render: None,
         ink_canvas: None,
         graph_timeline: None,
-        diff_view: Some(semio_framework_ui_scene_views::DiffViewScene { before: before.into(), after: after.into(), language: None, mode: mode.map(str::to_string), domain_id: None }),
+        diff_view: Some(semio_ui_scene_views::DiffViewScene { before: before.into(), after: after.into(), language: None, mode: mode.map(str::to_string), domain_id: None }),
         event_feed: None,
         block_list: None,
         menu: None,
     };
-    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-    let mut atlas = semio_framework_ui_text::FontAtlas::shaped_default();
-    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let mut draw = semio_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_ui_text::FontAtlas::shaped_default();
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -149,7 +149,7 @@ fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (semio_framewor
     (draw, theme)
 }
 
-fn glyph_colors(draw: &semio_framework_ui_draw_contract::DrawList) -> Vec<Rgba> {
+fn glyph_colors(draw: &semio_ui_draw_contract::DrawList) -> Vec<Rgba> {
     draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| Rgba::new(instance.color[0], instance.color[1], instance.color[2], instance.color[3])).collect()
 }
 
@@ -157,7 +157,7 @@ fn glyph_colors(draw: &semio_framework_ui_draw_contract::DrawList) -> Vec<Rgba> 
 /// painted after it. React's gutter is muted (`text-muted-foreground`) while the line text keeps its
 /// own tint, so a palette-wide "no muted anywhere" assertion cannot tell the two apart — every
 /// brightness law below scopes itself to the text band by x.
-fn glyph_colors_split_at_gutter(draw: &semio_framework_ui_draw_contract::DrawList, gutter_right_x: f32) -> (Vec<Rgba>, Vec<Rgba>) {
+fn glyph_colors_split_at_gutter(draw: &semio_ui_draw_contract::DrawList, gutter_right_x: f32) -> (Vec<Rgba>, Vec<Rgba>) {
     let mut gutter = Vec::new();
     let mut text = Vec::new();
     for instance in draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()) {

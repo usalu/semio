@@ -27,8 +27,8 @@ where
     Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "section", kind: "create-section", record: "CreatedSection" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create section \"{}\"", self.section.id), &format!("Querschnitt \"{}\" erstellen", self.section.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create section \"{}\"", self.section.id), &format!("Querschnitt \"{}\" erstellen", self.section.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.section.id.clone()]

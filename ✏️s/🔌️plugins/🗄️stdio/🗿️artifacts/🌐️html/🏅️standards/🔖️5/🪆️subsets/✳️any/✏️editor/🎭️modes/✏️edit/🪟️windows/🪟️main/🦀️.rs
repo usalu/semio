@@ -3,11 +3,11 @@
 
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::write_html_document;
-use semio_framework_plugin::app::{TextEditView, TextWindowKit};
-use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowKit;
-use semio_framework_ui_locale::Locale;
+use semio_plugin::app::{TextEditView, TextWindowKit};
+use semio_plugin::BuiltNode;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowKit;
+use semio_ui_locale::Locale;
 
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
@@ -20,7 +20,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 📝️ The editable text buffer is natural HTML source, edited as the kit's explicit draft (markup: edited locally, ONE
 /// `textEdit` on Apply carrying the change set the editor made); `parse_dsl` accepts the same source directly.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &HtmlSnapshot, locale: Locale, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &HtmlSnapshot, locale: Locale, revision: &str, publication_revision: semio_plugin::UiPublicationRevision) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     TextWindowKit::render_editable_by_splices(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: write_html_document(snapshot), language: Some("html".into()), revision: Some(revision.into()), publication_revision }, locale)
 }
 

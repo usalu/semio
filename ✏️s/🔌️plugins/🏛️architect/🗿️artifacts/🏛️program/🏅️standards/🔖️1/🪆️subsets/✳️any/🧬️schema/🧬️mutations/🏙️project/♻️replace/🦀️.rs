@@ -23,8 +23,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "project", kind: "replace-project", record: "ReplacedProject" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace project definition \"{}\"", self.new_project.code), &format!("Projektdefinition \"{}\" ersetzen", self.new_project.code))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace project definition \"{}\"", self.new_project.code), &format!("Projektdefinition \"{}\" ersetzen", self.new_project.code))
     }
 }
 

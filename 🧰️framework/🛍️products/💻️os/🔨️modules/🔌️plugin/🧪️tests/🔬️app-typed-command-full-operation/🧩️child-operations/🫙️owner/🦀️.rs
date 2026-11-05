@@ -2,11 +2,11 @@
 use semio_framework_value_paged_text::paged_text::{PagedText, TextReadSource};
 use super::paged_encoder::{ChildTextView,PagedChildGroup,PagedChildGroups,PagedChildLabels,nested_grant,grant_funds,deeper,quote,handoff,yielded,settle,pop_demand,release_demand,release_page};
 use super::reader::{ChildGroupDecodeVisitor,ChildGroupText};
-use semio_framework_os_kernel::{os_pack::{PackRefusal,codec::ByteSpan},os_spr::operation_bytes::OwnedOperationBytes};
+use semio_os_kernel::{os_pack::{PackRefusal,codec::ByteSpan},os_spr::operation_bytes::OwnedOperationBytes};
 use semio_framework_value::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value_persistent::list::PagedList;
-use semio_framework_ui_locale::{Terminology,Locale};
+use semio_ui_locale::{Terminology,Locale};
 const CAPACITY:usize=isize::MAX as usize;
 
 /// 🪆️ Quotes the actual child and one enclosing depth without granting its demand.
@@ -146,10 +146,10 @@ impl ErasedSnapshotRetirement for PagedChildDecodeOwner{
 }
 
 /// 🫴️ The caller recipient retains parse and canonical scaffolds on both success and refusal.
-pub fn decode_paged_groups_span(source:ByteSpan<'_>,options:&semio_framework_os_kernel::os_pack::codec::PackDecodeOptions,canonical:&semio_framework_os_kernel::os_pack::codec::PackEncodeOptions,decoding:&mut NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<PagedList<PagedChildOwner,CAPACITY>,semio_framework_os_kernel::os_spr::ProtocolError>{
+pub fn decode_paged_groups_span(source:ByteSpan<'_>,options:&semio_os_kernel::os_pack::codec::PackDecodeOptions,canonical:&semio_os_kernel::os_pack::codec::PackEncodeOptions,decoding:&mut NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<PagedList<PagedChildOwner,CAPACITY>,semio_os_kernel::os_spr::ProtocolError>{
     decoding.scoped_maximum(usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX),|decoding|decoding.with_retirement_owner(std::mem::size_of::<PagedChildDecodeOwner>(),|decoding|{
         let mut owner=Box::new(PagedChildDecodeOwner::empty());
-        let result=super::reader::visit_groups_span(source,options,decoding,owner.as_mut()).and_then(|()|{let mut comparison=semio_framework_os_kernel::os_spr::operation_bytes::OperationByteComparison::new(source);super::paged_encoder::encode_paged_groups_into(&owner.groups,canonical,&mut comparison,&mut owner.symbols,encoding)?;comparison.finish()?;Ok(std::mem::replace(&mut owner.groups,PagedList::empty()))});
+        let result=super::reader::visit_groups_span(source,options,decoding,owner.as_mut()).and_then(|()|{let mut comparison=semio_os_kernel::os_spr::operation_bytes::OperationByteComparison::new(source);super::paged_encoder::encode_paged_groups_into(&owner.groups,canonical,&mut comparison,&mut owner.symbols,encoding)?;comparison.finish()?;Ok(std::mem::replace(&mut owner.groups,PagedList::empty()))});
         (result,Some(owner as Box<dyn ErasedSnapshotRetirement>))
     })).map_err(Into::into)
 }
@@ -168,7 +168,7 @@ impl ChildLabelOwner{
 }
 impl PagedChildOwner{
     pub fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListReturnProgress,ValueError>{
-        use semio_framework_os_kernel::os_spr::operation_bytes::OperationByteReturnStep;
+        use semio_os_kernel::os_spr::operation_bytes::OperationByteReturnStep;
         use semio_framework_value_persistent::list::PagedListReturnProgress;
         if maximum_items==0||maximum_bytes==0{return Ok(PagedListReturnProgress::default())}
         if let Some(schema)=self.pending_schema.as_mut(){if !schema.terminal_is_empty(){return schema.return_one(parent,1)}self.pending_schema.take();self.pending_schema_is_retired=false;return Ok(PagedListReturnProgress{progressed:true,returned_allocation_bytes:0})}
@@ -197,13 +197,13 @@ impl ChildLabelOwner{
 }
 impl PagedChildOwner{
     pub fn view(&self)->Result<PagedChildGroup<'_>,ValueError>{Ok(PagedChildGroup{owner:self.metadata[0].view()?,slot:self.metadata[1].view()?,child_id:self.metadata[2].view()?,schema:self.metadata[3].view()?,operations:&self.operations,labels:&self.labels})}
-    pub fn read_metadata_from_encoding_source(&mut self,field:ChildGroupText,source:&impl TextReadSource,options:&semio_framework_os_kernel::os_pack::codec::PackEncodeOptions,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{if source.byte_len()as u64>options.limits.max_segment_len{return Err(invalid("child metadata exceeds full caller segment policy").into())}let index=match field{ChildGroupText::Owner=>0,ChildGroupText::Slot=>1,ChildGroupText::ChildId=>2,ChildGroupText::Schema=>3};semio_framework_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(options,control,|control|self.metadata[index].read_from_encoding_source(source,control).map_err(Into::into))}
+    pub fn read_metadata_from_encoding_source(&mut self,field:ChildGroupText,source:&impl TextReadSource,options:&semio_os_kernel::os_pack::codec::PackEncodeOptions,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{if source.byte_len()as u64>options.limits.max_segment_len{return Err(invalid("child metadata exceeds full caller segment policy").into())}let index=match field{ChildGroupText::Owner=>0,ChildGroupText::Slot=>1,ChildGroupText::ChildId=>2,ChildGroupText::Schema=>3};semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(options,control,|control|self.metadata[index].read_from_encoding_source(source,control).map_err(Into::into))}
     fn begin_owned_operation(&mut self,maximum_payload_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{
         if self.partial_source.is_some()||self.partial_label.is_some()||self.pending_schema.is_some(){return Err(invalid("child producer retains an earlier partial operation, label or schema").into())}
         self.partial_source=Some(OwnedOperationBytes::try_new(maximum_payload_bytes,control.maximum_bytes()).map_err(|fault|ValueError::new(fault.kind,fault.reason))?);self.partial_label=Some(ChildLabelOwner::empty());Ok(())
     }
-    pub fn produce_owned_operation<'a>(&'a mut self,maximum_payload_bytes:usize,options:&'a semio_framework_os_kernel::os_pack::codec::PackEncodeOptions,control:&mut semio_framework_value::NativeEncodeControl<'_>,encode:impl FnOnce(&semio_framework_os_kernel::os_pack::codec::PackEncodeOptions,&mut dyn semio_framework_os_kernel::os_spr::operation_bytes::OperationByteOutput,&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),semio_framework_os_kernel::os_spr::ProtocolError>)->Result<ChildOperationSourceReceipt<'a>,semio_framework_os_kernel::os_spr::ProtocolError>{
-        semio_framework_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(options,control,|control|{self.begin_owned_operation(maximum_payload_bytes,control)?;let mut limited=semio_framework_os_kernel::os_spr::operation_bytes::OperationByteLimitedOutput::new(self.partial_source.as_mut().unwrap(),options.limits.max_file_len);encode(options,&mut limited,control)})?;Ok(ChildOperationSourceReceipt{owner:self,options})
+    pub fn produce_owned_operation<'a>(&'a mut self,maximum_payload_bytes:usize,options:&'a semio_os_kernel::os_pack::codec::PackEncodeOptions,control:&mut semio_framework_value::NativeEncodeControl<'_>,encode:impl FnOnce(&semio_os_kernel::os_pack::codec::PackEncodeOptions,&mut dyn semio_os_kernel::os_spr::operation_bytes::OperationByteOutput,&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),semio_os_kernel::os_spr::ProtocolError>)->Result<ChildOperationSourceReceipt<'a>,semio_os_kernel::os_spr::ProtocolError>{
+        semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(options,control,|control|{self.begin_owned_operation(maximum_payload_bytes,control)?;let mut limited=semio_os_kernel::os_spr::operation_bytes::OperationByteLimitedOutput::new(self.partial_source.as_mut().unwrap(),options.limits.max_file_len);encode(options,&mut limited,control)})?;Ok(ChildOperationSourceReceipt{owner:self,options})
     }
     fn commit_owned_operation(&mut self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{
         if self.partial_source.is_none()||self.partial_label.is_none(){return Err(invalid("child producer lacks its complete operation and semantic label").into())}
@@ -216,11 +216,11 @@ impl PagedChildOwner{
     }
 }
 /// 🧾 A linear borrow is issued only after the real direct encoder accepts its entire source.
-pub struct ChildOperationSourceReceipt<'a>{owner:&'a mut PagedChildOwner,options:&'a semio_framework_os_kernel::os_pack::codec::PackEncodeOptions}
+pub struct ChildOperationSourceReceipt<'a>{owner:&'a mut PagedChildOwner,options:&'a semio_os_kernel::os_pack::codec::PackEncodeOptions}
 impl ChildOperationSourceReceipt<'_>{
-    pub fn read_first_schema_from_source(&mut self,source:&impl TextReadSource,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{if source.byte_len()as u64>self.options.limits.max_segment_len{return Err(invalid("first child schema exceeds full caller segment policy").into())}if !self.owner.operations.is_empty()||self.owner.pending_schema.is_some(){return Err(invalid("child first schema requires the original empty accepted prefix").into())}self.owner.pending_schema=Some(Text::empty());semio_framework_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.pending_schema.as_mut().unwrap().read_from_encoding_source(source,control).map_err(Into::into))}
-    pub fn read_label_from_source(&mut self,terminology:Terminology,locale:Locale,source:&impl TextReadSource,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{if source.byte_len()as u64>self.options.limits.max_segment_len{return Err(invalid("child label exceeds full caller segment policy").into())}semio_framework_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.partial_label.as_mut().ok_or_else(||invalid("child producer lacks its actual partial semantic label"))?.read_from_encoding_source(terminology,locale,source,control))}
-    pub fn commit(self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{semio_framework_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.commit_owned_operation(control))}
+    pub fn read_first_schema_from_source(&mut self,source:&impl TextReadSource,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{if source.byte_len()as u64>self.options.limits.max_segment_len{return Err(invalid("first child schema exceeds full caller segment policy").into())}if !self.owner.operations.is_empty()||self.owner.pending_schema.is_some(){return Err(invalid("child first schema requires the original empty accepted prefix").into())}self.owner.pending_schema=Some(Text::empty());semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.pending_schema.as_mut().unwrap().read_from_encoding_source(source,control).map_err(Into::into))}
+    pub fn read_label_from_source(&mut self,terminology:Terminology,locale:Locale,source:&impl TextReadSource,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{if source.byte_len()as u64>self.options.limits.max_segment_len{return Err(invalid("child label exceeds full caller segment policy").into())}semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.partial_label.as_mut().ok_or_else(||invalid("child producer lacks its actual partial semantic label"))?.read_from_encoding_source(terminology,locale,source,control))}
+    pub fn commit(self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.commit_owned_operation(control))}
 }
 
 impl PagedChildOwner{
@@ -238,6 +238,6 @@ impl ChildOperationSourceReceipt<'_>{
     /// 🏷️ The authored producer writes into the retained locale cell under the same full caller policy.
     pub fn produce_label(&mut self,terminology:Terminology,locale:Locale,control:&mut semio_framework_value::NativeEncodeControl<'_>,producer:impl FnOnce(&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),ValueError>)->Result<(),PackRefusal>{
         let maximum=self.options.limits.max_segment_len.min(usize::MAX as u64)as usize;
-        semio_framework_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.partial_label.as_mut().ok_or_else(||invalid("child label producer lacks its retained cell owner"))?.cell_mut(terminology,locale).encode_label_with(maximum,control,producer).map_err(Into::into))
+        semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.partial_label.as_mut().ok_or_else(||invalid("child label producer lacks its retained cell owner"))?.cell_mut(terminology,locale).encode_label_with(maximum,control,producer).map_err(Into::into))
     }
 }

@@ -11,14 +11,14 @@ use crate::{standards::v1::subsets::any::schema::tile_grid::parse_grid_engagemen
 #[allow(unused_imports)]
 use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
 #[allow(unused_imports)]
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::animate::commands::engagement_submit::*;
 use crate::editor::animate::commands::engagement_input;
 use crate::editor::animate::unit_tests::context::{dispatch, presentation_app};
 use crate::editor::animate::PresentationCommand;
-use semio_framework_plugin::Effect;
+use semio_plugin::Effect;
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
@@ -30,7 +30,7 @@ async fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_add_clear_and_copy_keywords() {
-    use semio_framework_plugin::artifact_app_laws::meta;
+    use semio_plugin::artifact_app_laws::meta;
     let mut app = presentation_app().await;
     dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "add".into() })).await;
     assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 1);
@@ -45,7 +45,7 @@ async fn engagement_submit_add_clear_and_copy_keywords() {
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_unrecognized_input_is_a_no_op() {
-    use semio_framework_plugin::artifact_app_laws::meta;
+    use semio_plugin::artifact_app_laws::meta;
     let mut app = presentation_app().await;
     let result = crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "gibberish".into() })).await;
     assert!(result.mutations.is_empty());

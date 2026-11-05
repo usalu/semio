@@ -31,7 +31,7 @@
 //! this stays a *simulation* rather than a real cluster operation).
 #![allow(async_fn_in_trait)]
 #![cfg(not(target_arch = "wasm32"))]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 use std::collections::HashMap;
 use std::path::Path;

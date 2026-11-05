@@ -4,7 +4,7 @@
 
 use crate::*;
 use crate::accessibility::focus_order::{shortcut_action_id, Region, ShortcutAction};
-use semio_framework_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuItemSpec;
 use semio_framework_value::DslValue;
 
 /// 🌳️ The hit domain the shell gives a row of any tree; twin of the framework constant `CONTEXT_MENU_TREE_HIT_DOMAIN`.
@@ -22,7 +22,7 @@ pub struct MenuProbe {
 }
 
 /// 🎯️ The probe of a framework context-menu request: the hits of the surface and the ids of every selection group.
-pub fn request_probe(request: &semio_framework_plugin::ContextMenuRequest) -> MenuProbe {
+pub fn request_probe(request: &semio_plugin::ContextMenuRequest) -> MenuProbe {
     let window = request.window_instance_id.clone().unwrap_or_default();
     let Some(surface) = request.surface.as_ref() else { return MenuProbe { window, ..MenuProbe::default() } };
     MenuProbe { hits: surface.hits.iter().map(|hit| (hit.domain.clone(), hit.id.clone())).collect(), selected: surface.selection.iter().flat_map(|group| group.ids.iter().cloned()).collect(), window }

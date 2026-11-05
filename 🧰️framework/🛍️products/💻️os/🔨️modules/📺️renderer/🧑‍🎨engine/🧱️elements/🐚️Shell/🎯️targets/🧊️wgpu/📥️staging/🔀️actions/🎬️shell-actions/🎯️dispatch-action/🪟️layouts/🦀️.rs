@@ -47,7 +47,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         let Some(row_id) = action.args.as_ref().and_then(|args| args.get(semio_framework::FOCUS_ROW_CONTROL_ARG_ROW)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string) else {
             return Err(format!("{} needs the argument {}", semio_framework::FOCUS_ROW_CONTROL_ACTION_ID, semio_framework::FOCUS_ROW_CONTROL_ARG_ROW));
         };
-        let row = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_row_controls(&row_id);
+        let row = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_row_controls(&row_id);
         let chosen = row.as_ref().and_then(|row| {
             let controls: Vec<semio_framework::RowControl<'_>> = row.controls.iter().map(|control| semio_framework::RowControl { id: control.key.as_str(), kind: control.kind.as_str(), disabled: control.disabled }).collect();
             let key = semio_framework::plan_row_control_focus(&controls)?;

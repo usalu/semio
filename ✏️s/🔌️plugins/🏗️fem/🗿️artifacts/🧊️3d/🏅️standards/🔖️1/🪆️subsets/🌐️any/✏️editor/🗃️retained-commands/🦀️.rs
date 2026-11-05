@@ -171,10 +171,10 @@ fn fem3d_retained_reduce(
     command: &Fem3dCommand,
     snapshot: &Fem3dSnapshot,
     config: &NoConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem3dMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
@@ -204,7 +204,7 @@ impl ArtifactCommandWork<EditorApp<Fem3dPlayApp>> for Fem3dCommandWork {
         self.tool_id
     }
 
-    fn extent(&self, command: &Fem3dCommand, snapshot: &Fem3dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &Fem3dCommand, snapshot: &Fem3dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>) -> Option<usize> {
         fem3d_retained_extent(command, snapshot, interaction)
     }
 
@@ -264,8 +264,8 @@ impl Fem3dRetainedCommandJobFactory {
 }
 
 impl ToolJobFactory for Fem3dRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Fem3dPlayApp>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Fem3dPlayApp>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Fem3dPlayApp>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Fem3dPlayApp>>;
 
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
@@ -283,7 +283,7 @@ impl ToolJobFactory for Fem3dRetainedCommandJobFactory {
         fem3d_retained_contract()
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: FEM3D_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: FEM3D_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
     
 }

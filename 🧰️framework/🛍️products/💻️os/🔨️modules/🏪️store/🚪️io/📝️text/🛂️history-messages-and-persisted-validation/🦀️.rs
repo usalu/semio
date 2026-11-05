@@ -28,19 +28,19 @@ pub fn protocol_undo_policy_from_ordinal(ordinal: u8) -> UndoPolicy {
 }
 
 // 🚫️async: E1 pure field-copy, consumed only through `Iterator::map` fn-item arguments — see R9.
-pub fn history_message_from_mutation_message(message: &semio_framework_os_spr::MutationMessage) -> semio_framework_os_spr::history::HistoryMessage {
-    semio_framework_os_spr::history::HistoryMessage { level: message.level.as_u8(), code: message.code.0.clone(), message: message.message.clone(), target: message.target.clone(), op_index: message.op_index }
+pub fn history_message_from_mutation_message(message: &semio_os_spr::MutationMessage) -> semio_os_spr::history::HistoryMessage {
+    semio_os_spr::history::HistoryMessage { level: message.level.as_u8(), code: message.code.0.clone(), message: message.message.clone(), target: message.target.clone(), op_index: message.op_index }
 }
 
 // 🚫️async: E1 pure field-copy, consumed only through `Iterator::map` fn-item arguments — see R9.
-pub fn mutation_message_from_history_message(message: semio_framework_os_spr::history::HistoryMessage) -> Result<semio_framework_os_spr::MutationMessage, String> {
+pub fn mutation_message_from_history_message(message: semio_os_spr::history::HistoryMessage) -> Result<semio_os_spr::MutationMessage, String> {
     let level = semio_framework_diagnostic::Severity::from_u8(message.level).ok_or_else(|| format!("unknown mutation message severity {}", message.level))?;
-    Ok(semio_framework_os_spr::MutationMessage { level, code: semio_framework_diagnostic::FaultCode(message.code), message: message.message, target: message.target, op_index: message.op_index })
+    Ok(semio_os_spr::MutationMessage { level, code: semio_framework_diagnostic::FaultCode(message.code), message: message.message, target: message.target, op_index: message.op_index })
 }
 
 // 🚫️async: E1 pure field-copy, consumed only through `Iterator::map` fn-item arguments — see R9.
-pub fn history_op_meta_from_operation_meta(meta: &MutationMeta, messages: impl IntoIterator<Item = semio_framework_os_spr::history::HistoryMessage>) -> semio_framework_os_spr::HistoryOpMeta {
-    semio_framework_os_spr::HistoryOpMeta {
+pub fn history_op_meta_from_operation_meta(meta: &MutationMeta, messages: impl IntoIterator<Item = semio_os_spr::history::HistoryMessage>) -> semio_os_spr::HistoryOpMeta {
+    semio_os_spr::HistoryOpMeta {
         op_id: meta.mutation_id.as_ref().map(|id| id.0.clone()),
         dependencies: meta.dependencies.iter().map(|id| id.0.clone()).collect(),
         base_version: meta.base_version,
@@ -57,7 +57,7 @@ pub fn history_op_meta_from_operation_meta(meta: &MutationMeta, messages: impl I
 
 // 🚫️async: E1 pure field-copy, consumed by `mutation_meta_from_history_op_meta`'s own caller
 // (§) without `.await` — see R9.
-pub fn mutation_meta_from_history_op_meta(meta: semio_framework_os_spr::HistoryOpMeta) -> Result<(MutationMeta, Vec<semio_framework_os_spr::MutationMessage>), String> {
+pub fn mutation_meta_from_history_op_meta(meta: semio_os_spr::HistoryOpMeta) -> Result<(MutationMeta, Vec<semio_os_spr::MutationMessage>), String> {
     let (actor, physical_ms, logical) = meta.hlt.ok_or_else(|| "history operation metadata has no hybrid-clock timestamp".to_string())?;
     let physical_ms = u64::try_from(physical_ms).map_err(|_| "history operation metadata has a negative hybrid-clock physical time".to_string())?;
     if meta.op_id.as_ref().is_none_or(|id| id.trim().is_empty()) {
@@ -72,7 +72,7 @@ pub fn mutation_meta_from_history_op_meta(meta: semio_framework_os_spr::HistoryO
             author_id: meta.author_id.map(ActorId),
             timestamp: HybridLogicalTimestamp { actor, physical_ms, logical },
             undo_policy: protocol_undo_policy_from_ordinal(meta.undo_policy),
-            payload_hash: meta.payload_hash.map(semio_framework_os_spr::PayloadHash),
+            payload_hash: meta.payload_hash.map(semio_os_spr::PayloadHash),
             semantic_kind: None,
             label: None,
             group_id: meta.group_id,
@@ -89,7 +89,7 @@ pub async fn expected_mutation_message_level(code: &str) -> Option<semio_framewo
     protocol::outcome_code_level(code)
 }
 
-pub async fn validate_persisted_message(message: &semio_framework_os_spr::MutationMessage, operation_count: Option<usize>) -> Result<(), VcsError> {
+pub async fn validate_persisted_message(message: &semio_os_spr::MutationMessage, operation_count: Option<usize>) -> Result<(), VcsError> {
     let Some(expected_level) = expected_mutation_message_level(&message.code.0).await else {
         return Err(VcsError::ValidationFailed(format!("history carries unknown mutation message code {}", message.code.0)));
     };
@@ -111,8 +111,8 @@ pub async fn stable_mutation_ids_for_edit<Mutation>(edit: &Edit<Mutation>) -> Re
     edit.mutation_meta.iter().map(|meta| meta.mutation_id.clone().filter(|id| !id.0.trim().is_empty()).ok_or_else(|| VcsError::ValidationFailed(format!("edit {} has an operation without a stable identity", edit.id)))).collect()
 }
 
-pub async fn conflict_messages_for_edits<Mutation>(edits: &[&Edit<Mutation>], replayed: &[semio_framework_os_spr::EditMessages]) -> Result<Vec<semio_framework_os_spr::MutationMessage>, VcsError> {
-    let replayed_by_edit: HashMap<&str, &semio_framework_os_spr::EditMessages> = replayed.iter().map(|entry| (entry.edit_id.as_str(), entry)).collect();
+pub async fn conflict_messages_for_edits<Mutation>(edits: &[&Edit<Mutation>], replayed: &[semio_os_spr::EditMessages]) -> Result<Vec<semio_os_spr::MutationMessage>, VcsError> {
+    let replayed_by_edit: HashMap<&str, &semio_os_spr::EditMessages> = replayed.iter().map(|entry| (entry.edit_id.as_str(), entry)).collect();
     if replayed_by_edit.len() != replayed.len() {
         return Err(VcsError::ValidationFailed("conflict messages repeat an edit owner".to_string()));
     }
@@ -157,7 +157,7 @@ pub async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelo
             return Err(VcsError::ValidationFailed(format!("conflict {} has malformed actor identities", conflict.id.0)));
         }
         let (mutation_ids, operation_count) = match &conflict.kind {
-            semio_framework_os_spr::ConflictKind::Quarantined { envelopes } => {
+            semio_os_spr::ConflictKind::Quarantined { envelopes } => {
                 if envelopes.is_empty() {
                     return Err(VcsError::ValidationFailed(format!("quarantined conflict {} has no mutation envelopes", conflict.id.0)));
                 }
@@ -188,7 +188,7 @@ pub async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelo
                 }
                 (mutation_ids, envelopes.len())
             }
-            semio_framework_os_spr::ConflictKind::Degraded { edit_ids } => {
+            semio_os_spr::ConflictKind::Degraded { edit_ids } => {
                 if edit_ids.is_empty() {
                     return Err(VcsError::ValidationFailed(format!("degraded conflict {} has no edit references", conflict.id.0)));
                 }
@@ -217,7 +217,7 @@ pub async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelo
         for message in &conflict.messages {
             validate_persisted_message(message, Some(operation_count)).await?;
         }
-        if conflict.id != semio_framework_os_spr::ConflictId::new(&conflict.kind, &ArtifactId(envelope.id.clone()), &mutation_ids, &conflict.timestamp).await {
+        if conflict.id != semio_os_spr::ConflictId::new(&conflict.kind, &ArtifactId(envelope.id.clone()), &mutation_ids, &conflict.timestamp).await {
             return Err(VcsError::ValidationFailed(format!("conflict {} does not match its content-addressed identity", conflict.id.0)));
         }
     }
@@ -358,11 +358,11 @@ where
 /// with `write_backwards_section: true`. Unlike the `.ops` text mirror (forwards-only, see
 /// `print_ops_log`'s doc), this is the AUTHORITATIVE persisted form: `parse_document_spr` recovers
 /// inverse/meta byte-for-byte instead of recomputing them via replay.
-pub async fn history_op_payloads<'a, Mutation: OpBinary + 'a>(mutations: impl IntoIterator<Item = &'a Mutation>) -> Result<Vec<semio_framework_os_spr::OpPayload>, VcsError> {
+pub async fn history_op_payloads<'a, Mutation: OpBinary + 'a>(mutations: impl IntoIterator<Item = &'a Mutation>) -> Result<Vec<semio_os_spr::OpPayload>, VcsError> {
     let mut payloads = Vec::new();
     for op in mutations {
         let binary = op.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?;
-        payloads.push(semio_framework_os_spr::OpPayload { text: None, binary: Some(binary) });
+        payloads.push(semio_os_spr::OpPayload { text: None, binary: Some(binary) });
     }
     Ok(payloads)
 }
@@ -372,11 +372,11 @@ pub async fn history_op_payloads<'a, Mutation: OpBinary + 'a>(mutations: impl In
 /// forward op) is treated as ABSENT, not as `Some(vec![])` — `encode_edit` requires
 /// `metas.len() == ops.len()` when meta is present at all, and an empty-but-`Some` vec
 /// would spuriously fail that check for a non-empty `ops`.
-pub async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messages: &[semio_framework_os_spr::MutationMessage], lane: Option<HistoryLane>) -> Result<semio_framework_os_spr::HistoryEdit, VcsError> {
+pub async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messages: &[semio_os_spr::MutationMessage], lane: Option<HistoryLane>) -> Result<semio_os_spr::HistoryEdit, VcsError> {
     if messages.iter().any(|message| message.op_index.is_none_or(|index| index as usize >= edit.forwards.len())) {
         return Err(VcsError::ValidationFailed(format!("edit {} carries a message without a valid operation index", edit.id)));
     }
-    Ok(semio_framework_os_spr::HistoryEdit {
+    Ok(semio_os_spr::HistoryEdit {
         id: edit.id.clone(),
         actor: edit.actor.clone(),
         started_at: edit.started_at.clone(),
@@ -403,26 +403,26 @@ pub async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, m
 
 /// 🌀️ `encode_envelope` is async (📡️replication, out of this packet's scope); `map`'s
 /// closure is sync (R10 shape 1), so it's hoisted into an explicit loop.
-pub async fn history_conflict_from_conflict(conflict: &semio_framework_os_spr::Conflict) -> semio_framework_os_spr::history::HistoryConflict {
+pub async fn history_conflict_from_conflict(conflict: &semio_os_spr::Conflict) -> semio_os_spr::history::HistoryConflict {
     let (kind, edit_ids, envelopes) = match &conflict.kind {
-        semio_framework_os_spr::ConflictKind::Quarantined { envelopes, .. } => {
+        semio_os_spr::ConflictKind::Quarantined { envelopes, .. } => {
             let mut encoded = Vec::with_capacity(envelopes.len());
             for envelope in envelopes {
                 let mut bytes = Vec::new();
-                semio_framework_os_spr::encode_envelope(envelope, &mut bytes);
+                semio_os_spr::encode_envelope(envelope, &mut bytes);
                 encoded.push(bytes);
             }
             (0, Vec::new(), encoded)
         }
-        semio_framework_os_spr::ConflictKind::Degraded { edit_ids } => (1, edit_ids.clone(), Vec::new()),
+        semio_os_spr::ConflictKind::Degraded { edit_ids } => (1, edit_ids.clone(), Vec::new()),
     };
-    semio_framework_os_spr::history::HistoryConflict {
+    semio_os_spr::history::HistoryConflict {
         id: conflict.id.0.clone(),
         kind,
         status: match conflict.status {
-            semio_framework_os_spr::ConflictStatus::Open => 0,
-            semio_framework_os_spr::ConflictStatus::Accepted => 1,
-            semio_framework_os_spr::ConflictStatus::Discarded => 2,
+            semio_os_spr::ConflictStatus::Open => 0,
+            semio_os_spr::ConflictStatus::Accepted => 1,
+            semio_os_spr::ConflictStatus::Discarded => 2,
         },
         actors: conflict.actors.iter().map(|actor| actor.0.clone()).collect(),
         hlt: (conflict.timestamp.actor, conflict.timestamp.physical_ms, conflict.timestamp.logical),
@@ -432,31 +432,31 @@ pub async fn history_conflict_from_conflict(conflict: &semio_framework_os_spr::C
     }
 }
 
-pub fn conflict_from_history_conflict(conflict: semio_framework_os_spr::history::HistoryConflict) -> Result<semio_framework_os_spr::Conflict, String> {
+pub fn conflict_from_history_conflict(conflict: semio_os_spr::history::HistoryConflict) -> Result<semio_os_spr::Conflict, String> {
     let kind = match conflict.kind {
         0 => {
             let mut envelopes = Vec::with_capacity(conflict.envelopes.len());
             for bytes in conflict.envelopes {
                 let mut position = 0;
-                let envelope = semio_framework_os_spr::decode_envelope(&bytes, &mut position).map_err(|error| error.to_string())?;
+                let envelope = semio_os_spr::decode_envelope(&bytes, &mut position).map_err(|error| error.to_string())?;
                 if position != bytes.len() {
                     return Err("quarantined conflict envelope has trailing bytes".into());
                 }
                 envelopes.push(envelope);
             }
-            semio_framework_os_spr::ConflictKind::Quarantined { envelopes }
+            semio_os_spr::ConflictKind::Quarantined { envelopes }
         }
-        1 => semio_framework_os_spr::ConflictKind::Degraded { edit_ids: conflict.edit_ids },
+        1 => semio_os_spr::ConflictKind::Degraded { edit_ids: conflict.edit_ids },
         value => return Err(format!("unknown conflict kind {value}")),
     };
     let status = match conflict.status {
-        0 => semio_framework_os_spr::ConflictStatus::Open,
-        1 => semio_framework_os_spr::ConflictStatus::Accepted,
-        2 => semio_framework_os_spr::ConflictStatus::Discarded,
+        0 => semio_os_spr::ConflictStatus::Open,
+        1 => semio_os_spr::ConflictStatus::Accepted,
+        2 => semio_os_spr::ConflictStatus::Discarded,
         value => return Err(format!("unknown conflict status {value}")),
     };
-    Ok(semio_framework_os_spr::Conflict {
-        id: semio_framework_os_spr::ConflictId(conflict.id),
+    Ok(semio_os_spr::Conflict {
+        id: semio_os_spr::ConflictId(conflict.id),
         kind,
         status,
         messages: conflict.messages.into_iter().map(mutation_message_from_history_message).collect::<Result<Vec<_>, _>>()?,

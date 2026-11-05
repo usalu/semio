@@ -18,9 +18,9 @@ const owner=resolve(import.meta.dir,"../.."),root=resolve(owner,"../../.."),old=
 test("canvas definitions have a General owner independent of Infinite",()=>{
  const source=readFileSync(resolve(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8"),primary=tomlTable(source),oracle=parse(source);
  expect(primary).toEqual(oracle);expect((primary.package as {name:string}).name).toBe("semio-framework-canvas");
- expect(source.includes("semio-framework-os-")).toBe(false);expect(source.includes("artifact-infinite-dag")).toBe(false);
+ expect(source.includes("semio-os-")).toBe(false);expect(source.includes("artifact-infinite-dag")).toBe(false);
  expect(existsSync(resolve(owner,"🦀️.rs"))).toBe(true);expect(existsSync(resolve(old,"🦀️.rs"))).toBe(false);
- for(const [module,package_] of [["✍️editor","📦️packages/🦀️rust"],["🗺️surface","🎨️paint/📦️packages/🦀️rust"]]){const consumer=readFileSync(resolve(root,"🧰️framework/🔨️modules",module,package_,"Cargo.toml"),"utf8");expect(consumer.includes('package = "semio-framework-canvas"')).toBe(true);expect(consumer.includes('semio-framework-os-infinite')).toBe(false);}
+ for(const [module,package_] of [["✍️editor","📦️packages/🦀️rust"],["🗺️surface","🎨️paint/📦️packages/🦀️rust"]]){const consumer=readFileSync(resolve(root,"🧰️framework/🔨️modules",module,package_,"Cargo.toml"),"utf8");expect(consumer.includes('package = "semio-framework-canvas"')).toBe(true);expect(consumer.includes('semio-os-infinite')).toBe(false);}
 });
 test("the original draw list corpus follows the variable production command contract",()=>{
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);

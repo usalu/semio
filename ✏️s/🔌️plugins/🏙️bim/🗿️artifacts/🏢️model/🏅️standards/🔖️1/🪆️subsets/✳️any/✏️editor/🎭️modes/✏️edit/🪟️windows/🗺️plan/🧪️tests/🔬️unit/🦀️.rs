@@ -16,15 +16,15 @@ use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
-use semio_framework_plugin::DslValue;
+use semio_plugin::DslValue;
 #[allow(unused_imports)]
-use semio_framework_plugin::InteractionRef;
+use semio_plugin::InteractionRef;
 #[allow(unused_imports)]
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::{active_storey, active_view, records, render, pick, pixel_to_model};
 

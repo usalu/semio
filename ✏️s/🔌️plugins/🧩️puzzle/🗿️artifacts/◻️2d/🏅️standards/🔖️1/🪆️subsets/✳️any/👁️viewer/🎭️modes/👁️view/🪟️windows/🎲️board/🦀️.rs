@@ -8,13 +8,13 @@
 //! editor's own board host makes for its canvas, not a new simplification introduced here.
 
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::Puzzle2dSnapshot};
-use semio_framework_plugin::mesh_from_kind;
-use semio_framework_plugin::world3d_camera_json;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::MeshView;
-use semio_framework_plugin::MeshWindowKit;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowKit;
+use semio_plugin::mesh_from_kind;
+use semio_plugin::world3d_camera_json;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::MeshView;
+use semio_plugin::MeshWindowKit;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowKit;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -86,7 +86,7 @@ fn world_meshes_json() -> String {
 
 /// 👁️ Pure `Puzzle2dSnapshot -> UiNode` read: default overhead camera, no selection/utility/engagement
 /// overlay, real node positions/shapes read straight off the document.
-pub fn render(document: &Puzzle2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::BuiltNode> {
+pub fn render(document: &Puzzle2dSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::plugin_app_close_prelude::BuiltNode> {
     let view = MeshView {
         camera_json: world3d_camera_json(PUZZLE2D_VIEW_DEFAULT_CAMERA_POSITION, PUZZLE2D_VIEW_DEFAULT_CAMERA_TARGET, PUZZLE2D_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json: world_meshes_json(),

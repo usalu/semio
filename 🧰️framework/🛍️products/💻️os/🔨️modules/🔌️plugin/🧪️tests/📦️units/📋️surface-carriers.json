@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "package": "semio-framework-plugin-surface-carrier-laws",
+  "package": "semio-plugin-surface-carrier-laws",
   "original": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
   "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/🦀️.rs",
   "beforeSha256": "1a6e4b02e3e35be9621489b34636cb86e03d978f5401fd09604b8ba5f06b0b31",
@@ -3436,11 +3436,11 @@
   "dependencies": [
     "semio-framework",
     "semio-framework-async-macros",
-    "semio-framework-plugin-testing-laws",
-    "semio-framework-plugin-window-transient",
+    "semio-plugin-testing-laws",
+    "semio-plugin-window-transient",
     "semio-framework-trace",
-    "semio-framework-ui-contract",
-    "semio-framework-ui-scene",
+    "semio-ui-contract",
+    "semio-ui-scene",
     "serde_json"
   ]
 }

@@ -18,8 +18,8 @@ async fn inspection_shows_prompt_when_nothing_selected() {
 async fn inspection_shows_selected_step_kind() {
     let app = new_app().await;
     let fixture = live_host_snapshot(&app).await;
-    let labels = sequence_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = sequence_play_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let node = render(&fixture, &["step-1".to_string()], labels).expect("inspector");
-    let node = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire inspector");
+    let node = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("retire inspector");
     assert!(serde_json::to_string(&node).unwrap().contains("state.set"));
 }

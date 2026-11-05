@@ -2,26 +2,26 @@
 //!
 //! ⏯️ The mounted instance's tool-run turns (ledger driving, tick folding and finalize publication) and the
 //! [`ToolRunExtension`] that registers them with the instance through [`InstanceExtension`].
-use semio_framework_plugin_tool_run::ToolRunMemberFold;
-use semio_framework_plugin_tool_run::ToolRunMemberGeneration;
-use semio_framework_plugin_tool_run::ToolRunMemberRun;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_tool_run::ToolRunMemberFold;
+use semio_plugin_tool_run::ToolRunMemberGeneration;
+use semio_plugin_tool_run::ToolRunMemberRun;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::Mutation;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use crate::children_components::ChildComposition;
-use semio_framework_plugin_child::ChildContentRetirement;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_child::ChildContentRetirement;
+use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 use std::future::Future;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_tool_run::*;
-use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
-use semio_framework_os_kernel::{MemberFactory, ReferenceSpaceMember};
+use semio_ui_contract::*;
+use semio_plugin_tool_run::*;
+use semio_plugin_decl_views::child_view::MemberKeyRef;
+use semio_os_kernel::{MemberFactory, ReferenceSpaceMember};
 use semio_framework_value::RetainedCloneGrant;
 
 impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {

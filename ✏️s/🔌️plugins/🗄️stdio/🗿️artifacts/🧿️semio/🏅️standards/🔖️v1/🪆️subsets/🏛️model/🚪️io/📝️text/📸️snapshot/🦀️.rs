@@ -373,7 +373,7 @@ impl pack::snapshot::ArtifactDsl for SemioModelSnapshot {
 }
 
 /// 🚪️ The four codec entry points above, reachable from OUTSIDE this crate. `store` is a private
-/// `extern crate semio_framework_os_kernel as store` alias in `🦀️.rs`, so an external caller —
+/// `extern crate semio_os_kernel as store` alias in `🦀️.rs`, so an external caller —
 /// an owner-root test adapter is exactly that — can neither bring `pack::snapshot::ArtifactDsl`/
 /// `pack::snapshot::ArtifactPack` into scope nor name `store::TextError`/`store::PackError` in a signature.
 /// These four wrappers carry the error across as a plain `String` so the subset's own text and

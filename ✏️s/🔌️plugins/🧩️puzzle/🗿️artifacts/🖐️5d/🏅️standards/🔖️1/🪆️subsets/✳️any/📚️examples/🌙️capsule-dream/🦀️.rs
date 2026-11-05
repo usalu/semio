@@ -2,8 +2,8 @@
 
 use std::sync::LazyLock;
 
-use semio_framework_plugin::ExampleSource;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::ExampleSource;
+use semio_ui_locale::LocalizedLabel;
 
 /// 🏷️ Stable example id for the navbar picker / `setActiveExample`.
 pub const ID: &str = "capsule-dream";
@@ -34,7 +34,7 @@ pub fn dsl_bytes_digest() -> (&'static str, u64, &'static str) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn dsl_bytes() -> &'static [u8] {
     let (name, ..) = dsl_bytes_digest();
-    match semio_framework_plugin::reactor::package_asset(name) {
+    match semio_plugin::reactor::package_asset(name) {
         Some(bytes) => bytes,
         #[cfg(test)]
         None => repository_file(name),

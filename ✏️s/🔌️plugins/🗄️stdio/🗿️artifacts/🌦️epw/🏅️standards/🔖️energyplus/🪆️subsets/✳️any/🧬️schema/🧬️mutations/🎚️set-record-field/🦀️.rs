@@ -16,8 +16,8 @@ pub struct SetRecordField {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "record-field", kind: "set-record-field", record: "SetRecordField" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set record field", "Datensatzfeld setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set record field", "Datensatzfeld setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

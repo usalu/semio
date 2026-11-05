@@ -10,7 +10,7 @@ use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::read_records;
 use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::{number_text, schedule_csv, diagnostics_records, diagnostics_csv, report_csv};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;

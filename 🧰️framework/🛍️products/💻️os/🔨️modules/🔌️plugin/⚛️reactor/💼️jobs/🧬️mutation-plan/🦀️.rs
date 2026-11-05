@@ -36,7 +36,7 @@ fn decode_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 // 🚫️async: E4 phase slot — see `decode_phase`; `wire_artifact_mutation_plan` is the unchunked
 // native call this state action declares `WORK_UNITS_EXECUTE` for.
 fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    crate::settle_in_step("job.mutation-plan", semio_framework_plugin_plugin_program::wire_artifact_mutation_plan(input))
+    crate::settle_in_step("job.mutation-plan", semio_plugin_plugin_program::wire_artifact_mutation_plan(input))
 }
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactMutationPlanRequest` and reports its
@@ -44,7 +44,7 @@ fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 #[doc(hidden)]
 pub async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let value = store::pack_rt::decode_wire_value(input).map_err(|error| crate::fault("job.mutation-plan.decode", format!("invalid {} input: {error}", crate::JOB_KIND_MUTATION_PLAN)))?;
-    let request: semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest = semio_framework_value::FromValue::from_value(value).map_err(|error| crate::fault("job.mutation-plan.decode", error.to_string()))?;
+    let request: semio_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest = semio_framework_value::FromValue::from_value(value).map_err(|error| crate::fault("job.mutation-plan.decode", error.to_string()))?;
     Ok(semio_framework_pack_json::to_json_string(&(request.artifact_kind, request.mutation_id)).into_bytes())
 }
 

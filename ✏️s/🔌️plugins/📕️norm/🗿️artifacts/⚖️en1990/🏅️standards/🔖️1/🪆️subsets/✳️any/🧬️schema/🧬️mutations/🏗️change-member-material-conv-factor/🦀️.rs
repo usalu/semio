@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeMemberMaterialConv
         record: "ChangedMemberMaterialConvFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change conversion factor η (0 = 1.0) of the member", "Bauteil: Umrechnungsfaktor η (0 = 1,0) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change conversion factor η (0 = 1.0) of the member", "Bauteil: Umrechnungsfaktor η (0 = 1,0) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

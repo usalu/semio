@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertLayer where Op: pr
         verb: "insert", entity: "layer", kind: "insert-layer", record: "InsertedLayer",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert soil layer", "Bodenschicht einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert soil layer", "Bodenschicht einfügen")
     }
 }
 

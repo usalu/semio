@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
-use semio_framework_ui_render_packet::ResourceOp;
+use semio_ui_render_packet::ResourceOp;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 

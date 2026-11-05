@@ -12,7 +12,7 @@ use semio_s_artifact_process_process3d_mutations::{insert_step_mutations, remove
 use semio_s_artifact_process_process3d_model::{next_step_id, process3d_cursor_after_insert, process3d_cursor_after_remove};
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_s_artifact_process_process3d_model::{snapshot::MeasureKind, snapshot::Process3dSnapshot, snapshot::ProcessStep, snapshot::StepOrigin};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️AddStep

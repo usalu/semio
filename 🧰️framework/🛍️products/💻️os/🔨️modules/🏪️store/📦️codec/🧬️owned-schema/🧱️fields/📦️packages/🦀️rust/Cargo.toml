@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-os-store-owned-schema-fields"
+name = "semio-os-store-owned-schema-fields"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,11 +22,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-spr = { path = "../../../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-ledger = { path = "../../../../../📒️ledger/📦️packages/🦀️rust" }
-semio-framework-os-store-read = { path = "../../../../../🔗️read/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-ledger = { path = "../../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-os-store-read = { path = "../../../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-framework-os-vcs = { path = "../../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-json-retained-schema = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust"}
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

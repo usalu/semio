@@ -1,7 +1,7 @@
 #![cfg(test)]
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 use semio_s_artifact_layout_layout_editor::unit_tests::context;
 use semio_s_artifact_layout_layout_editor_panels::document::LAYOUT_PLAY_BODY_ARTIFACT;
@@ -13,9 +13,9 @@ use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::previe
 use semio_s_artifact_layout_layout_editor::{LayoutCommand, LayoutPlayApp, create_layout_app};
 use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
 use semio_s_artifact_layout_layout_editor::unit_tests::context::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point};
-use semio_framework_plugin::artifact_app_laws;
-use semio_framework_plugin::PluginApp;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, DslValue, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType};
+use semio_plugin::artifact_app_laws;
+use semio_plugin::PluginApp;
+use semio_plugin::{ArtifactEditor, ArtifactView, DslValue, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 
 //#region 🔖️CommandSurface
@@ -142,12 +142,12 @@ pub fn every_command() -> Vec<LayoutCommand> {
 use semio_s_artifact_layout_layout_editor_panels::focus_preflight_issue::FocusPreflightIssue;
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
 use semio_s_artifact_layout_layout_editor::unit_tests::context::LayoutApp;
-use semio_framework_plugin::{ActionMeta, INTERACTION_SELECT_ACTION_ID, ViewModel, ViewWindowInstance, WindowConfigOwner};
+use semio_plugin::{ActionMeta, INTERACTION_SELECT_ACTION_ID, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-async fn context_menu_json(app: &mut LayoutApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> String {
-    use semio_framework_plugin::{ContextMenuRequest, PluginApp, UiMenuRef};
+async fn context_menu_json(app: &mut LayoutApp, surface: Option<semio_plugin::ContextMenuSurfaceTarget>) -> String {
+    use semio_plugin::{ContextMenuRequest, PluginApp, UiMenuRef};
     let request = ContextMenuRequest { menu: UiMenuRef { id: "layout".into(), args: None }, surface, window_instance_id: None, point: None };
-    serde_json::to_string(&app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await).unwrap_or_default()
+    serde_json::to_string(&app.context_menu(&request, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await).unwrap_or_default()
 }
 
 /// ⚖️ LAW: an empty blueprint canvas offers creation verbs and never delete-selection.
@@ -156,7 +156,7 @@ async fn context_menu_on_empty_canvas_offers_create_verbs_not_delete() {
     let mut app = layout_app_with_registry().await;
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
@@ -178,11 +178,11 @@ async fn context_menu_on_frame_selection_offers_delete_last() {
     let frame_id = app.snapshot().expect("projection").pages[0].frames.first().map(|frame| frame.id().to_string()).unwrap_or_else(|| "frame-1".into());
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
+            selection: vec![semio_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
             text: None,
         }),
     )
@@ -199,10 +199,10 @@ async fn context_menu_on_page_row_offers_set_active_page() {
     let page_id = app.snapshot().expect("projection").pages.first().map(|page| page.id.clone()).unwrap_or_else(|| "page-1".into());
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_panels::document::LAYOUT_PLAY_BODY_ARTIFACT.into(),
             kind: "tree".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: format!("layout-document.page.{page_id}"), label: None }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: "row".into(), id: format!("layout-document.page.{page_id}"), label: None }],
             selection: vec![],
             text: None,
         }),
@@ -219,7 +219,7 @@ async fn context_menu_on_preview_surface_is_read_only() {
     let mut app = layout_app_with_registry().await;
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::LAYOUT_PLAY_SURFACE_PREVIEW.into(),
             kind: "canvas2d".into(),
             hits: vec![],
@@ -242,11 +242,11 @@ async fn context_menu_on_multi_frame_selection_offers_plural_delete() {
     assert_eq!(frames.len(), 2, "demo document must expose two frames on page 1");
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: frames }],
+            selection: vec![semio_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: frames }],
             text: None,
         }),
     )
@@ -263,10 +263,10 @@ async fn context_menu_on_link_row_offers_select_linked_frames() {
     let link_id = app.snapshot().expect("projection").links.first().map(|link| link.id.clone()).expect("demo link");
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_panels::document::LAYOUT_PLAY_BODY_ARTIFACT.into(),
             kind: "tree".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: format!("layout-document.link.{link_id}"), label: None }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: "row".into(), id: format!("layout-document.link.{link_id}"), label: None }],
             selection: vec![],
             text: None,
         }),
@@ -282,15 +282,15 @@ async fn context_menu_on_link_row_offers_select_linked_frames() {
 async fn context_menu_on_preflight_row_offers_focus_issue() {
     let mut app = layout_app_with_registry().await;
     let snapshot = app.snapshot().expect("projection");
-    let labels = layout_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = layout_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let issue = run_layout_preflight(&snapshot, &labels).into_iter().next().expect("demo document must surface at least one preflight issue");
     let row_id = format!("layout-preflight.{}.{}", issue.code, issue.object_id.clone().unwrap_or_else(|| issue.message.clone()));
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_panels::preflight::LAYOUT_PLAY_BODY_PREFLIGHT.into(),
             kind: "tree".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: row_id, label: None }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: "row".into(), id: row_id, label: None }],
             selection: vec![],
             text: None,
         }),
@@ -308,10 +308,10 @@ async fn context_menu_on_frame_hit_without_selection_offers_select() {
     let frame_id = "frame-1".to_string();
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), id: frame_id.clone(), label: None }],
+            hits: vec![semio_plugin::ContextMenuHit { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), id: frame_id.clone(), label: None }],
             selection: vec![],
             text: None,
         }),
@@ -329,11 +329,11 @@ async fn context_menu_on_text_frame_selection_offers_same_kind_create() {
     let frame_id = "frame-text-1".to_string();
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
+            selection: vec![semio_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
             text: None,
         }),
     )
@@ -348,14 +348,14 @@ async fn context_menu_on_text_frame_selection_offers_same_kind_create() {
 async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
     let mut app = layout_app_with_registry().await;
     let frame_id = app.snapshot().expect("projection").pages[0].frames.first().expect("frame").id().to_string();
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
     app.bind_instance_id(meta.instance_id).await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some(frame_id.clone()), page_id: Some("page-1".into()) }), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("select frame");
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("focus settles");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some(frame_id.clone()), page_id: Some("page-1".into()) }), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("select frame");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("focus settles");
     let menu = context_menu_json(
         &mut app,
-        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+        Some(semio_plugin::ContextMenuSurfaceTarget {
             surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
@@ -482,7 +482,7 @@ async fn window_kind_actions_scope_authoring_to_blueprint_only() {
     let definition = create_layout_app();
     let resolve = |window_id: &str| -> Vec<String> {
         let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
-        semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
+        semio_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
     };
     let blueprint_actions = resolve(LAYOUT_PLAY_WINDOW_BLUEPRINT);
     let preview_actions = resolve(LAYOUT_PLAY_WINDOW_PREVIEW);
@@ -514,10 +514,10 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 async fn window_engagements_cover_both_windows() {
     let mut app = layout_app().await;
     for window_id in [LAYOUT_PLAY_WINDOW_BLUEPRINT, LAYOUT_PLAY_WINDOW_PREVIEW] {
-        let view = semio_framework_plugin::ViewModel {
+        let view = semio_plugin::ViewModel {
             window_id: Some(window_id.into()),
-            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_id.into() }],
-            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            window_instances: vec![semio_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_id.into() }],
+            ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         let engagements = app.window_engagements(&view).await;
         let engagement = engagements.get(window_id).unwrap_or_else(|| panic!("{window_id} engagement"));
@@ -550,7 +550,7 @@ async fn registry_backed_pointer_move_is_view_only() {
 async fn direct_layout_out_reducer_is_fail_closed_for_runtime_job_interception() {
     let app = layout_app().await;
     let document = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     assert!(matches!(LayoutPlayApp::export_media("layout:out", &doc), Err(MediaError::NotImplemented)));
 }
@@ -559,7 +559,7 @@ async fn direct_layout_out_reducer_is_fail_closed_for_runtime_job_interception()
 async fn export_media_document_out_round_trips_through_pack() {
     let app = layout_app().await;
     let document = app.snapshot().expect("projection");
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = LayoutPlayApp::export_media("artifact:out", &doc).expect("export document:out");
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
@@ -591,11 +591,11 @@ async fn layout_io_declares_fields_in_and_layout_out_ports() {
     assert_eq!(io.artifact_schema, "layout.layout");
     assert_eq!(io.artifact.id, "2d.layout");
     let fields_in = io.ports.iter().find(|port| port.id == "fields:in").expect("fields:in declared");
-    assert_eq!(fields_in.direction, semio_framework_plugin::MediaPortDirection::In);
+    assert_eq!(fields_in.direction, semio_plugin::MediaPortDirection::In);
     assert_eq!(fields_in.kind_id.as_deref(), Some("form.dictionary"));
     assert_eq!(fields_in.multiplicity, semio_framework::PortMultiplicity::One);
     let layout_out = io.ports.iter().find(|port| port.id == "layout:out").expect("layout:out declared");
-    assert_eq!(layout_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+    assert_eq!(layout_out.direction, semio_plugin::MediaPortDirection::Out);
     assert_eq!(layout_out.kind_id.as_deref(), Some("2d.layout"));
     assert_eq!(layout_out.multiplicity, semio_framework::PortMultiplicity::Many);
     let all_ports = io.all_ports().await;
@@ -629,11 +629,11 @@ fn canvas_catalogue_actions_consume_the_neutral_renderer_envelope() {
 async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_window() {
     use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
     use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutBlueprintWindowTransientOwner;
-    use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance, WindowConfigOwner};
+    use semio_plugin::{ActionMeta, ViewModel, ViewWindowInstance, WindowConfigOwner};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/🔣️.json")).unwrap();
     let view = ViewModel {
         window_instances: ["catalogue-left", "catalogue-right"].map(|id| ViewWindowInstance { id: id.into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }).into(),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let left = view.for_window_instance("catalogue-left").unwrap();
     let right = view.for_window_instance("catalogue-right").unwrap();
@@ -647,8 +647,8 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
                 let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["action"] == action && case["kind"] == kind).unwrap();
                 let args: DslValue = case["args"].clone().into();
                 let command = LayoutPlayApp::command_from_action(action, &mut Some((args).clone()), &mut None).map_err(|error| error.message)?;
-                semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+                semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+                artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 let transient = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("addressed transient missing")?;
                 let preview = &transient.get::<LayoutBlueprintWindowTransientOwner>().ok_or("blueprint transient missing")?.drop_preview;
                 if action == "canvasDragOver" {
@@ -680,7 +680,7 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
 mod package_fonts {
     use semio_s_artifact_layout_layout_editor::LayoutPlayApp;
     use semio_s_artifact_layout_layout_engine::scene::{layout_engine_and_views::LayoutEngine, text_fonts::text_font_asset_declarations};
-    use semio_framework_plugin::reactor::{admit_package_assets_for_testing, package_asset};
+    use semio_plugin::reactor::{admit_package_assets_for_testing, package_asset};
 
     fn catalog() -> std::path::PathBuf {
         let relative = std::path::Path::new(semio_s_artifact_layout_layout_engine::scene::text_fonts::TEXT_FONT_ASSET_ROOT);
@@ -711,7 +711,7 @@ fn interchange_shell_actions_decode_the_selected_page_and_document_payloads(){
 
 #[semio_framework_async_macros::async_test]
 async fn nested_preflight_action_selects_and_switches_its_addressed_window_page() {
-    use semio_framework_plugin::ArtifactEditor;
+    use semio_plugin::ArtifactEditor;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔀️args-bridge/🧪️fixture.json")).unwrap();
     let case = &fixture["cases"][0];
     let mut args = Some(semio_framework_pack_json::from_json_str::<DslValue>(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
@@ -720,7 +720,7 @@ async fn nested_preflight_action_selects_and_switches_its_addressed_window_page(
     dispatch(&mut app, command).await;
     let selection = app.interaction_state().await;
     assert_eq!(selection.selection.get(semio_s_artifact_layout_layout_editor_commands::LAYOUT_INTERACTION_ELEMENTS).unwrap().ids, vec![case["expected"]["objectId"].as_str().unwrap().to_string()]);
-    let projection = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, LAYOUT_PLAY_BODY_INSPECTION, &context::windowed_view().for_window_instance(context::WINDOW).unwrap(), app.1.cx()).await.unwrap();
+    let projection = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, LAYOUT_PLAY_BODY_INSPECTION, &context::windowed_view().for_window_instance(context::WINDOW).unwrap(), app.1.cx()).await.unwrap();
     assert!(projection.contains(&format!("\"description\":\"{}\"", case["expected"]["pageId"].as_str().unwrap())), "the focused page must be the addressed window inspector summary: {projection}");
 }
 
@@ -728,9 +728,9 @@ async fn nested_preflight_action_selects_and_switches_its_addressed_window_page(
 fn read_only_context_keeps_actual_media_identity_and_denies_entity_authoring() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧪️tests/🧫️fixtures/🪪️entity-id/🔣️.json")).unwrap();
     for row in fixture["readOnly"].as_array().unwrap() {
-        let operation=semio_framework_plugin::__job::Operation::new(semio_framework_plugin::__job::OperationId(row["operationId"].as_u64().unwrap()),semio_framework_plugin::__job::RevisionId(17),semio_framework_plugin::__job::Generation(row["generation"].as_u64().unwrap()),19);
+        let operation=semio_plugin::__job::Operation::new(semio_plugin::__job::OperationId(row["operationId"].as_u64().unwrap()),semio_plugin::__job::RevisionId(17),semio_plugin::__job::Generation(row["generation"].as_u64().unwrap()),19);
         let retained=semio_framework_value::RetainedCloneGrant{maximum_items:3,maximum_copy_bytes:71,maximum_capacity_bytes:83,maximum_release_bytes:97,maximum_depth:5};
-        let context=semio_framework_plugin::AppOperationContext::for_read_only(row["appInstanceId"].as_u64().unwrap()as u32,row["documentId"].as_str().unwrap().into(),operation,[row["canonicalRevisionByte"].as_u64().unwrap()as u8;32],retained);
+        let context=semio_plugin::AppOperationContext::for_read_only(row["appInstanceId"].as_u64().unwrap()as u32,row["documentId"].as_str().unwrap().into(),operation,[row["canonicalRevisionByte"].as_u64().unwrap()as u8;32],retained);
         assert_eq!(context.app_instance_id,row["appInstanceId"].as_u64().unwrap()as u32);
         assert_eq!(context.parent_document_id,row["documentId"].as_str().unwrap());
         assert_eq!((context.operation_id,context.generation),(operation.operation.0,operation.generation.0));
@@ -742,13 +742,13 @@ fn read_only_context_keeps_actual_media_identity_and_denies_entity_authoring() {
 
 #[semio_framework_async_macros::async_test]
 async fn original_media_export_handoff_preserves_snapshot_and_closes_completed_or_cancelled_custody() {
-    use semio_framework_plugin::artifact_app_laws::{submit_fixture_media_export,poll_fixture_media_export,fixture_close_grant};
-    use semio_framework_plugin::ArtifactMediaExportPoll;
+    use semio_plugin::artifact_app_laws::{submit_fixture_media_export,poll_fixture_media_export,fixture_close_grant};
+    use semio_plugin::ArtifactMediaExportPoll;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎥️media-export-job-and-factories/🧪️fixture.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let mut app=layout_app().await;
         let before=app.snapshot().expect("original projection");
-        let close=fixture_close_grant(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        let close=fixture_close_grant(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
         let handle=submit_fixture_media_export(&mut app.0,fixture["port"].as_str().unwrap(),app.1.cx(),close).await.expect("real media request admission");
         let cancelled=row["cancel"].as_bool().unwrap();
         if cancelled{app.0.cancel_media_export(&handle).await.expect("cancel actual media handle")}
@@ -768,8 +768,8 @@ async fn original_media_export_handoff_preserves_snapshot_and_closes_completed_o
 }
 
 store::space_members! {
-    native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
-    history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    native_producer:&::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+    history_limits:semio_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum MediaDrawingMembers, MediaDrawingMembersOpen {
         Drawing("s.draw.drawing", "1", "*", "drawing.document") => (semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot, semio_s_artifact_draw_drawing_mutations::DrawingMutation, semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer, semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer),
@@ -778,13 +778,13 @@ store::space_members! {
 
 #[semio_framework_async_macros::async_test]
 async fn original_media_projection_reads_the_genuinely_registered_drawing_child() {
-    use semio_framework_plugin::{App,EditorApp};
-    use semio_framework_plugin::artifact_app_laws::{new_app_with_registry_and_members,OriginalFixtureScope,fixture_close_grant,submit_fixture_media_export,poll_fixture_media_export,close_registered_fixture_app};
+    use semio_plugin::{App,EditorApp};
+    use semio_plugin::artifact_app_laws::{new_app_with_registry_and_members,OriginalFixtureScope,fixture_close_grant,submit_fixture_media_export,poll_fixture_media_export,close_registered_fixture_app};
     use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
     use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
     fn manifest()->App{App{definition:create_layout_app(),examples:Vec::new()}}
     for cancel_after_output in [false,true]{
-    let policy=semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    let policy=semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
     let mut identity=artifact_app_laws::fixture_identity();
     let mut app=new_app_with_registry_and_members::<EditorApp<LayoutPlayApp>,MediaDrawingMembers>(manifest,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),policy,&mut identity).await;
     app.bind_instance_id(context::INSTANCE).await;
@@ -803,7 +803,7 @@ async fn original_media_projection_reads_the_genuinely_registered_drawing_child(
     assert_eq!(child_id,child_law["childId"].as_str().unwrap());app.register_child(child_law["slot"].as_str().unwrap().to_string(),child_id.clone(),dialect,MediaDrawingMembers::Drawing(Box::new(child)),&mut identity).await.unwrap_or_else(|_|panic!("real parent reference admits its actual child"));
     let before=app.snapshot().unwrap();let close=fixture_close_grant(policy);
     let handle=submit_fixture_media_export(&mut app,"layout:out",caller.cx(),close).await.unwrap();let mut complete=false;let mut cancellation_bytes=None;
-    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){match poll_fixture_media_export(&mut app,&handle,caller.cx(),close).await.unwrap(){semio_framework_plugin::ArtifactMediaExportPoll::Running{..}=>{if cancel_after_output&&cancellation_bytes.is_none(){let bytes=app.media.media_exports.get(handle.operation_id.0).map_or(0,|active|active.output_credit.bytes());if bytes>=child_law["cancelAfterOutputBytes"].as_u64().unwrap()as usize{cancellation_bytes=Some(bytes);app.cancel_media_export(&handle).await.unwrap()}}},semio_framework_plugin::ArtifactMediaExportPoll::Cancelled=>{assert!(cancel_after_output);let bytes=cancellation_bytes.expect("cancel only after actual child export output was credited");println!("[media-child-cancel] {}",serde_json::json!({"childId":child_id,"creditedBytes":bytes,"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},semio_framework_plugin::ArtifactMediaExportPoll::Complete(result)=>{assert!(!cancel_after_output,"cancellation cut must occur after actual child source use and before completion");let media=result.into_batch_media().unwrap();let MediaPayload::Structured{json,..}=media.payload else{panic!("actual projection JSON")};let value:serde_json::Value=serde_json::from_str(&json).unwrap();assert_eq!(value["source"]["documentId"],handle.parent_document_id);assert!(value["svg"].as_str().unwrap().contains(child_law["expectedSvgCommand"].as_str().unwrap()),"genuine child quadratic marker must survive composition");println!("[media-child] {}",serde_json::json!({"childId":child_id,"documentId":handle.parent_document_id,"projection":value,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},other=>panic!("actual Drawing media unexpectedly terminated: {other:?}")}}
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){match poll_fixture_media_export(&mut app,&handle,caller.cx(),close).await.unwrap(){semio_plugin::ArtifactMediaExportPoll::Running{..}=>{if cancel_after_output&&cancellation_bytes.is_none(){let bytes=app.media.media_exports.get(handle.operation_id.0).map_or(0,|active|active.output_credit.bytes());if bytes>=child_law["cancelAfterOutputBytes"].as_u64().unwrap()as usize{cancellation_bytes=Some(bytes);app.cancel_media_export(&handle).await.unwrap()}}},semio_plugin::ArtifactMediaExportPoll::Cancelled=>{assert!(cancel_after_output);let bytes=cancellation_bytes.expect("cancel only after actual child export output was credited");println!("[media-child-cancel] {}",serde_json::json!({"childId":child_id,"creditedBytes":bytes,"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},semio_plugin::ArtifactMediaExportPoll::Complete(result)=>{assert!(!cancel_after_output,"cancellation cut must occur after actual child source use and before completion");let media=result.into_batch_media().unwrap();let MediaPayload::Structured{json,..}=media.payload else{panic!("actual projection JSON")};let value:serde_json::Value=serde_json::from_str(&json).unwrap();assert_eq!(value["source"]["documentId"],handle.parent_document_id);assert!(value["svg"].as_str().unwrap().contains(child_law["expectedSvgCommand"].as_str().unwrap()),"genuine child quadratic marker must survive composition");println!("[media-child] {}",serde_json::json!({"childId":child_id,"documentId":handle.parent_document_id,"projection":value,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},other=>panic!("actual Drawing media unexpectedly terminated: {other:?}")}}
     assert!(complete);assert_eq!(app.snapshot().unwrap(),before);
     close_registered_fixture_app(&mut app,policy,caller.cx()).unwrap();caller.retire();
     }

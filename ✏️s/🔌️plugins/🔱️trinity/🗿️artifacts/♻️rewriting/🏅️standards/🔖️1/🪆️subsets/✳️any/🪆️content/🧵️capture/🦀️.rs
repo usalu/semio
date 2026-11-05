@@ -1,8 +1,8 @@
 //! 🧵️ Unmounted paid parent factory binds the exact host child read after complete field construction.
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use store::ArtifactChildRead;
-use semio_framework_plugin::ChildContentView;
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
+use semio_plugin::ChildContentView;
+use semio_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_value::{DecodedValue, NativeEncodeControl, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::{SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};

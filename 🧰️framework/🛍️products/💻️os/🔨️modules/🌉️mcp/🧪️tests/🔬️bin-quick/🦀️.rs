@@ -2,8 +2,8 @@
 
 use crate::entrypoint::{parse_http_args, parse_stdio_args, protected_credential_environment_name};
 use crate::root::HubOptions;
-use semio_framework_os_mcp_foundation::agent_credential::AgentCredentialSource;
-use semio_framework_os_mcp_port::policy::AutoApprovePolicy;
+use semio_os_mcp_foundation::agent_credential::AgentCredentialSource;
+use semio_os_mcp_port::policy::AutoApprovePolicy;
 
 #[test]
 fn authenticated_hub_workspace_cli_contains_no_hub_credential_carrier() {

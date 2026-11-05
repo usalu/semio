@@ -1,11 +1,11 @@
 //! 🌐️ Requires an explicit language event before rendering an unresolved dashboard.
-use semio_framework_ui_tui_core::event::{mods,Event,Key,MouseButton,MouseKind};
-use semio_framework_ui_tui_core::geometry::Size;
-use semio_framework_ui_tui_core::theme::Theme;
-use semio_framework_ui_tui_frame::layout::{Constraint,Dimension};
-use semio_framework_ui_tui_frame::scene::{Node,NodeContent};
-use semio_framework_ui_tui_engine::Tui;
-use semio_framework_ui_tui_terminal::backend::{TerminalBackend};
+use semio_ui_tui_core::event::{mods,Event,Key,MouseButton,MouseKind};
+use semio_ui_tui_core::geometry::Size;
+use semio_ui_tui_core::theme::Theme;
+use semio_ui_tui_frame::layout::{Constraint,Dimension};
+use semio_ui_tui_frame::scene::{Node,NodeContent};
+use semio_ui_tui_engine::Tui;
+use semio_ui_tui_terminal::backend::{TerminalBackend};
 use ui_locale::Locale;
 use std::path::Path;
 #[derive(Default)]

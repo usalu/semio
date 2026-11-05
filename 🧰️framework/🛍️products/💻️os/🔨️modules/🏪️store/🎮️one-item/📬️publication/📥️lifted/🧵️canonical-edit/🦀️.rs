@@ -2,21 +2,21 @@
 
 use std::sync::Arc;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, FromValue, SnapshotRetirementFactory, ToValue, ValueError};
-use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
-use semio_framework_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
+use semio_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
 use crate::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
-use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_os_store_ledger::CursorRevisionAccumulator;
 use serde::{Deserialize, Serialize};
-use semio_framework_os_spr::Edit;
+use semio_os_spr::Edit;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_framework_value::{RetirementDemand, FactoryAuthority, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
 use crate::native_source::{ArtifactStoreCanonicalOwner, ArtifactStoreCanonicalSource};
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
-use semio_framework_os_store_canonical_json::ARTIFACT_CANONICAL_JSON_CHUNK_BYTES;
-use semio_framework_os_store_canonical_json::CANONICAL_EDIT_MAXIMUM_BYTES;
-use semio_framework_os_store_canonical_json::CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES;
+use semio_os_store_canonical_json::ARTIFACT_CANONICAL_JSON_CHUNK_BYTES;
+use semio_os_store_canonical_json::CANONICAL_EDIT_MAXIMUM_BYTES;
+use semio_os_store_canonical_json::CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES;
 //#region 🔣️ByteEncoder
 
 
@@ -170,7 +170,7 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
         self.prepared.as_ref()
     }
     /// 📥️ Installs the already funded ready diagnostic owner before exposing the sealed candidate witness.
-    pub fn record_prepared_outcome_messages(&mut self, messages: semio_framework_os_spr::command::MutationMessagePublication) {
+    pub fn record_prepared_outcome_messages(&mut self, messages: semio_os_spr::command::MutationMessagePublication) {
         self.prepared.as_mut().expect("ready diagnostic handoff requires a sealed candidate").record_outcome_messages(messages);
     }
     pub fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, M>> {

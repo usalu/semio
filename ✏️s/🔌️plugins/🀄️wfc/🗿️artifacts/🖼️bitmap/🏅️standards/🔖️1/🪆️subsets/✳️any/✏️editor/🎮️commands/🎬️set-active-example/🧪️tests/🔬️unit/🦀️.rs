@@ -3,9 +3,9 @@
 
 use crate::schema::snapshot::BitmapSnapshot;
 use crate::BitmapMutation;
-use semio_framework_plugin::{ArtifactView, Emit};
+use semio_plugin::{ArtifactView, Emit};
 use crate::editor::bitmap::commands::set_active_example::*;
-use semio_framework_plugin::HistoryView;
+use semio_plugin::HistoryView;
 
 fn answer(current: &BitmapSnapshot, example_id: &str) -> Emit<BitmapMutation> {
     handle(&SetActiveExample { example_id: example_id.into() }, &ArtifactView::new(current, &HistoryView::empty())).expect("the handler never faults")

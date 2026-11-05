@@ -40,8 +40,8 @@ fn declared_verb_fingerprint<'a>(parts: impl IntoIterator<Item = &'a [u8]>) -> u
 /// 🚪️ Infrastructure refusals (the verb never reached its handler) versus a handler's own refusal.
 /// `interactive-job.app-owned-output` is the code a retained job's fault page carries when the
 /// handler's own `Fault` crossed the publication boundary, so it is the handler's refusal.
-fn declared_verb_refusal(failure:impl Into<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>)->DeclaredVerbOutcome{
-    let failure=failure.into();let(code,detail)=match &failure.primary{semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault)=>(fault.code.0.clone(),fault.message.clone()),semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Value(error)=>("interactive-job.owner-refused".to_string(),format!("{error:?}")),semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Domain(domain)=>(domain.code().to_owned(),domain.message().to_owned()),semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Receiving(original)=>("interactive-job.receiving-refused".to_owned(),original.message().to_owned())};
+fn declared_verb_refusal(failure:impl Into<semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>)->DeclaredVerbOutcome{
+    let failure=failure.into();let(code,detail)=match &failure.primary{semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault)=>(fault.code.0.clone(),fault.message.clone()),semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Value(error)=>("interactive-job.owner-refused".to_string(),format!("{error:?}")),semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Domain(domain)=>(domain.code().to_owned(),domain.message().to_owned()),semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Receiving(original)=>("interactive-job.receiving-refused".to_owned(),original.message().to_owned())};
     if(code.starts_with("interactive-job.")&&code!="interactive-job.app-owned-output")||code=="app.command.unsupported"{DeclaredVerbOutcome::Unreachable{code,detail,failure:Some(failure)}}else{DeclaredVerbOutcome::Refused{code,detail,failure:Some(failure)}}
 }
 
@@ -72,7 +72,7 @@ fn declared_verb_boot_args(action: &semio_framework::ActionDefinition, staged: s
 
 /// 🧫️ The per-probe fixture: the registered app, bound as instance 1, booted with the app's own
 /// example when it declares one.
-async fn declared_verb_fixture_app<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> VcsArtifactApp<A, M>
+async fn declared_verb_fixture_app<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> VcsArtifactApp<A, M>
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -134,7 +134,7 @@ where
 }
 
 /// 🎯️ Dispatches one declared verb exactly as the shell does and reads back what it did.
-async fn declared_verb_dispatch<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, verb: &str, args: &semio_framework::DslValue, view: &semio_framework::ViewModel, body_key: &str, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> DeclaredVerbOutcome
+async fn declared_verb_dispatch<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, verb: &str, args: &semio_framework::DslValue, view: &semio_framework::ViewModel, body_key: &str, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> DeclaredVerbOutcome
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -220,7 +220,7 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
 
 /// 🔭️ Observes the stationary rendered tree of `body_key` in place: the same bounded render loop as [`render_registered_fixture_app`], handing the built root to `observe` while the app keeps owning the tree.
 #[doc(hidden)]
-pub async fn observe_registered_fixture_app<A,M,R>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>,observe:impl FnOnce(&semio_framework_ui_contract::BuiltNode)->R)->Result<R,semio_framework_job::OriginalTurnFailure>
+pub async fn observe_registered_fixture_app<A,M,R>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>,observe:impl FnOnce(&semio_ui_contract::BuiltNode)->R)->Result<R,semio_framework_job::OriginalTurnFailure>
 where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
@@ -234,7 +234,7 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
 }
 
 /// 🫴️ Deferred addressed fixture dispatch keeps its actual input slots and initiating context over every step.
-pub async fn dispatch_addressed_fixture_on_original<PA:semio_framework_plugin_reactor_app::PluginApp>(app:&mut PA,address:&semio_framework::manifest::ActionAddress,args:&mut Option<semio_framework_value::DslValue>,fault:&mut Option<semio_framework::Fault>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+pub async fn dispatch_addressed_fixture_on_original<PA:semio_plugin_reactor_app::PluginApp>(app:&mut PA,address:&semio_framework::manifest::ActionAddress,args:&mut Option<semio_framework_value::DslValue>,fault:&mut Option<semio_framework::Fault>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::InvocationResult,semio_framework_job::OriginalTurnFailure>{
     let maximum_turns=OriginalFixtureCaller::maximum_turns();let mut original_meta=Some(meta.clone());
     for _ in 0..maximum_turns{
         if cx.should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original addressed fixture exhausted its initiating work").into())}
@@ -257,7 +257,7 @@ where A:ArtifactApp,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'sta
 /// 🤖️ Previews `verb` with `args` exactly as the MCP gateway's `action_prepare` does — the agent lane's typed command
 /// frame, addressed to the caller's declared window instance with explicit language and terminology — and answers how many document ops
 /// the preview would commit (ticket 26/09/23, G12 session 14c).
-pub async fn agent_preview<A, M>(app: &mut VcsArtifactApp<A, M>, definition: &semio_framework::AppDefinition, verb: &str, args: &semio_framework::DslValue, view: &semio_framework::ViewModel, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<usize, semio_framework_job::OriginalTurnFailure>
+pub async fn agent_preview<A, M>(app: &mut VcsArtifactApp<A, M>, definition: &semio_framework::AppDefinition, verb: &str, args: &semio_framework::DslValue, view: &semio_framework::ViewModel, _identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<usize, semio_framework_job::OriginalTurnFailure>
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -287,7 +287,7 @@ where
 /// 🤖️ Dispatches one declared verb exactly as an agent does — the owner-qualified invocation the
 /// MCP gateway sends as a typed command frame (`dispatch_command_frame`, its `action_prepare`
 /// phase) — and reads back what that phase reports it would do.
-async fn declared_verb_agent_dispatch<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, verb: &str, args: &semio_framework::DslValue, window_kind_id: &str, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> DeclaredVerbOutcome
+async fn declared_verb_agent_dispatch<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, verb: &str, args: &semio_framework::DslValue, window_kind_id: &str, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> DeclaredVerbOutcome
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -312,7 +312,7 @@ where
         },
         arguments,
     };
-    let view = semio_framework::ViewModel { active_mode_id: Some(definition.default_mode_id.clone()), active_window_kind_id: Some(window_kind_id.to_string()), window_id: Some("declared-verb-agent".to_string()), window_instances: vec![semio_framework::ViewWindowInstance { id: "declared-verb-agent".to_string(), window_kind_id: window_kind_id.to_string() }], ..semio_framework::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = semio_framework::ViewModel { active_mode_id: Some(definition.default_mode_id.clone()), active_window_kind_id: Some(window_kind_id.to_string()), window_id: Some("declared-verb-agent".to_string()), window_instances: vec![semio_framework::ViewWindowInstance { id: "declared-verb-agent".to_string(), window_kind_id: window_kind_id.to_string() }], ..semio_framework::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let action_meta = ActionMeta { view_state: Some(view), ..meta("agent") };
     let outcome = match preview_fixture_on_original(&mut app,&invocation,&action_meta,cx).await {
         Err(fault) => declared_verb_refusal(fault),
@@ -340,7 +340,7 @@ where
 /// language-agnostic `🧫️fixtures/⚖️declared-verb-examples.json` of a surface whose verbs need
 /// document ids to act — then with two distinct values per perturbable declared argument. Every
 /// probe runs on a fresh registered app.
-pub async fn probe_declared_verbs<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
+pub async fn probe_declared_verbs<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -353,7 +353,7 @@ where
 /// and once through the agent lane at the address the capability catalog publishes — without argument
 /// perturbation, so a surface whose boot is expensive pins what an agent gets for the verbs it names.
 /// [`declared_verb_agent_divergences`] over the answer lists the named verbs whose two lanes disagree.
-pub async fn probe_agent_lane<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, verbs: &[&str], mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
+pub async fn probe_agent_lane<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, verbs: &[&str], mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -365,7 +365,7 @@ where
 }
 
 /// 🧪️ [`probe_declared_verbs`] over every declared verb, or — `only` — the agent-lane probe over the named verbs.
-async fn probe_declared_verbs_where<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, only: Option<&[&str]>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
+async fn probe_declared_verbs_where<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, only: Option<&[&str]>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
@@ -378,7 +378,7 @@ where
         active_window_kind_id: Some(definition.window_kinds[index].id.clone()),
         window_id: Some(instances[index].id.clone()),
         window_instances: instances.clone(),
-        ..semio_framework::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..semio_framework::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let examples: serde_json::Value = examples.map(|text| serde_json::from_str(text).expect("declared-verb examples are JSON")).unwrap_or(serde_json::Value::Null);
     let staged_of = |action: &semio_framework::ActionDefinition| {
@@ -391,7 +391,7 @@ where
     let mut order: Vec<(semio_framework::ActionDefinition, Vec<usize>)> = Vec::new();
     for (index, window) in definition.window_kinds.iter().enumerate() {
         for action in window_kind_actions(&definition, window) {
-            if semio_framework_plugin_job::reserved_jobs::is_framework_reserved_action_id(&action.id) || matches!(action.id.as_str(), semio_framework::SET_ACTIVE_TOOL_ACTION_ID | semio_framework::SET_ACTIVE_UTILITY_ACTION_ID) {
+            if semio_plugin_job::reserved_jobs::is_framework_reserved_action_id(&action.id) || matches!(action.id.as_str(), semio_framework::SET_ACTIVE_TOOL_ACTION_ID | semio_framework::SET_ACTIVE_UTILITY_ACTION_ID) {
                 continue;
             }
             match order.iter_mut().find(|(known, _)| known.id == action.id) {
@@ -451,7 +451,7 @@ where
 /// [`probe_declared_verbs`], with the surface's optional example arguments). Answers the probes, so a
 /// caller pins their count and the outcome of the verbs its examples make act — a surface that stops
 /// declaring its verbs or whose examples stop acting cannot turn the law vacuous.
-pub async fn assert_declared_verbs_honour_their_declarations<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
+pub async fn assert_declared_verbs_honour_their_declarations<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<DeclaredVerbProbe>
 where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,

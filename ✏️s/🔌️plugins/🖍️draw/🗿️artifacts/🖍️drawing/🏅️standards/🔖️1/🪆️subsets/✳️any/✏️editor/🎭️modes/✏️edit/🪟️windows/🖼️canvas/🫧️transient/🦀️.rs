@@ -13,7 +13,7 @@ pub struct DrawingCanvasWindowTransient {
 
 semio_framework_value::artifact_retire_struct!(DrawingCanvasWindowTransient { engagement_input, trace_pointer_generation, trace_pointer_completed_work, trace_pointer_pending_work });
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: DrawingCanvasWindowTransient,
     mutation: DrawingCanvasWindowTransientMutation,
     diff: DrawingCanvasWindowTransientDiff,
@@ -26,7 +26,7 @@ semio_framework_plugin::transient_root! {
     fields: { engagement_input: String, trace_pointer_generation: u64, trace_pointer_completed_work: u64, trace_pointer_pending_work: u64 },
 }
 
-semio_framework_plugin::window_transient_owners! {
+semio_plugin::window_transient_owners! {
     state: DrawingCanvasWindowTransient,
     mutation: DrawingCanvasWindowTransientMutation,
     windows: {

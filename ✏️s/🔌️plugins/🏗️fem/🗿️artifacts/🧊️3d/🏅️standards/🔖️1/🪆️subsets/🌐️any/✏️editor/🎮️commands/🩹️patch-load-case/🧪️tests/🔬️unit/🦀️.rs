@@ -2,12 +2,12 @@ use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use crate::context::dispatch;
@@ -16,7 +16,7 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 #[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchLoadCase) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(snapshot, &history);
     let config = NoConfig::default();
     handle(&payload, &doc, &ConfigView { snapshot: &config, window: None })

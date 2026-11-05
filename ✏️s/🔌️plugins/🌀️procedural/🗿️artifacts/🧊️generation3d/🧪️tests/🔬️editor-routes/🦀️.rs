@@ -1,8 +1,8 @@
 //! 🧪️ Editor route laws: the retained command, flow-eval, document-io and contributions routes, their work capacity and the fold contract, driven through the composed app.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 #[path = "../🔬️app-fixture/🦀️.rs"]
 mod app_fixture;

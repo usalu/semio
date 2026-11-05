@@ -125,7 +125,7 @@ impl Puzzle2dInteractionSnapshot {
     }
 
     /// 🕹️ The retained-reducer twin over the raw `InteractionState`/hover map a retained job is handed.
-    pub fn from_state(state: &protocol::InteractionState, hover: &semio_framework_plugin::app::InteractionHoverState) -> Self {
+    pub fn from_state(state: &protocol::InteractionState, hover: &semio_plugin::app::InteractionHoverState) -> Self {
         let selection = state.selection.get(PUZZLE2D_INTERACTION_DOMAIN);
         let hovered = hover.get(PUZZLE2D_INTERACTION_DOMAIN).filter(|hover| hover.channel == PUZZLE2D_HOVER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
         let leftover_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
@@ -183,18 +183,18 @@ pub fn puzzle2d_selection_targets(snapshot: &Value, ids: &[String]) -> Vec<Inter
 }
 
 /// 🕹️ The one selection write every 2d reducer expresses "select exactly these" through.
-pub fn puzzle2d_selection_write(snapshot: &Value, ids: &[String]) -> semio_framework_plugin::InteractionWrite {
-    semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(snapshot, ids), merge: MergeMode::Replace }
+pub fn puzzle2d_selection_write(snapshot: &Value, ids: &[String]) -> semio_plugin::InteractionWrite {
+    semio_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(snapshot, ids), merge: MergeMode::Replace }
 }
 
 /// 🕹️ Empties the live selection: a SUBTRACTIVE write of exactly the ids that are selected (a `Replace`
 /// with no targets selects nothing and therefore changes nothing). `snapshot` is the document BEFORE the
 /// deletion, so a just-deleted id still classifies to its granularity.
-pub fn puzzle2d_clear_selection_write(snapshot: &Value, selected: &[String]) -> Option<semio_framework_plugin::InteractionWrite> {
+pub fn puzzle2d_clear_selection_write(snapshot: &Value, selected: &[String]) -> Option<semio_plugin::InteractionWrite> {
     if selected.is_empty() {
         return None;
     }
-    Some(semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(snapshot, selected), merge: MergeMode::Subtractive })
+    Some(semio_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(snapshot, selected), merge: MergeMode::Subtractive })
 }
 
 /// 🧷️ Writes `member` under `key` of a JSON object `Value`; any other `Value` is left untouched.
@@ -260,7 +260,7 @@ pub fn puzzle2d_interaction_definition() -> InteractionDefinition {
 }
 
 /// 🧰️ Resolves the canonical host-owned utility for the current window.
-pub fn puzzle2d_active_utility(view_state: Option<&semio_framework_plugin::ViewModel>) -> &str {
+pub fn puzzle2d_active_utility(view_state: Option<&semio_plugin::ViewModel>) -> &str {
     view_state.and_then(|view| view.active_utility_id.as_deref()).filter(|utility| !utility.is_empty()).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID)
 }
 

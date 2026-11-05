@@ -1,10 +1,10 @@
 //! 📦️ Worker-owned render preparation and UI-authorized presentation contract.
 
-use semio_framework_ui_draw_contract::{DrawLayer, DrawList, ScissorRect};
+use semio_ui_draw_contract::{DrawLayer, DrawList, ScissorRect};
 use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
 use semio_framework_job_payload::{JobPayloadStream, RetainedPayloadBuilder};
 use std::mem::size_of;
-use semio_framework_ui_prepared_staging::retirement::*;
+use semio_ui_prepared_staging::retirement::*;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicPtr, AtomicU64, AtomicU8, AtomicUsize, Ordering};
 use std::sync::Mutex;
@@ -70,12 +70,12 @@ pub use presentation_gate::{
 #[cfg(all(target_arch="wasm32",not(target_env="p2")))]
 pub use presentation_gate::OffscreenPresentToken;
 
-pub use semio_framework_ui_prepared_staging::*;
+pub use semio_ui_prepared_staging::*;
 
 //#endregion 📦️Packet
 
 #[cfg(test)]
-extern crate self as semio_framework_ui_prepared;
+extern crate self as semio_ui_prepared;
 #[cfg(any(test,feature="testkit"))]
 #[path="🧪️testing/🦀️.rs"]
 pub mod testing;

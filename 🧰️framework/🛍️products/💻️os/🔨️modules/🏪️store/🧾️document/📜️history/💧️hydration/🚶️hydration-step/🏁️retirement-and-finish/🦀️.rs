@@ -4,13 +4,13 @@ use super::*;
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    M: semio_framework_os_spr::StoreMutationFor<P>,
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
 {
     /// 🧹 Retires the history runtime.
     pub(super) fn step_retire_history(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         macro_rules! retire {
-            ($field:ident) => { if self.$field.is_some() { let step = semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }); return self.admitted_step(step.result, cx); } };
+            ($field:ident) => { if self.$field.is_some() { let step = semio_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }); return self.admitted_step(step.result, cx); } };
         }
         retire!(history);
         retire!(mutation_lookup);
@@ -25,7 +25,7 @@ where
     /// 🗑 Retires the pack.
     pub(super) fn step_retire_pack(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         if self.pack.is_some() {
-            let step = semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.pack, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant });
+            let step = semio_os_store_read::artifact_retirement_admit_owned(&mut self.pack, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant });
             return self.admitted_step(step.result, cx);
         }
         self.phase = if self.target == PersistedDocumentHydrationTarget::Envelope { Phase::CloseEnvelopeRuntime } else { Phase::Finish };
@@ -62,7 +62,7 @@ where
                 self.terminal = true;
                 return PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Envelope(envelope));
             }
-            RetainedCloneStep::Progress(progress) => if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); },
+            RetainedCloneStep::Progress(progress) => if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); },
         }
         PersistedDocumentHydrationStep::Pending(self.progress())
     }

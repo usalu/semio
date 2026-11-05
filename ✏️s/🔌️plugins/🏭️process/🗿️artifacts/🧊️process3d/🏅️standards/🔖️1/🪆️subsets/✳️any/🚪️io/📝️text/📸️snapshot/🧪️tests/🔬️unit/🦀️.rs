@@ -1,4 +1,4 @@
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::*;
 use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 

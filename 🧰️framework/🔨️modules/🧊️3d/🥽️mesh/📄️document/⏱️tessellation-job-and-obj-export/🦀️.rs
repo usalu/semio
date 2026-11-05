@@ -70,8 +70,10 @@ impl MeshTessellationJob {
     /// 🧹️ Transfers the existing tessellation payload to its shared typed retirement authority.
     pub fn retirement_birth_bytes(&self)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Self>()}
     pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)> {
-        semio_framework_value::retirement::admit_owned_retirement(self,grant).result
+        self.into_original_retirement(grant).result
     }
+    /// 🧾️ Preserves the original tessellation admission result and actual work together.
+    pub fn into_original_retirement(self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{semio_framework_value::retirement::admit_owned_retirement(self,grant)}
     pub fn source(&self) -> &HalfedgeMesh { &self.mesh }
     pub fn take_source(&mut self)->HalfedgeMesh { std::mem::replace(&mut self.mesh,HalfedgeMesh::empty()) }
     pub fn progress(&self) -> MeshModelingProgress { MeshModelingProgress { units_done: self.done, units_total: self.done.saturating_add(self.mesh.face_count().saturating_sub(self.face)), phase: if self.face==self.mesh.face_count() {"tessellate-attributes"} else {"tessellate"} } }

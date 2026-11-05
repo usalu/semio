@@ -17,59 +17,59 @@ use crate::standards::v1::subsets::any::schema::model::{LayoutPoint, REWRITE_RUL
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::{PropertyBag};
 #[cfg(test)] use semio_framework_graph_manifest::{PropertyValue};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionArgOption;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::AppActionRegistry;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::ContextMenuItemSpec;
-use semio_framework_plugin::ContextMenuRequest;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
+use semio_plugin::ActionKind;
+use semio_plugin::AppActionRegistry;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::ContextMenuItemSpec;
+use semio_plugin::ContextMenuRequest;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DomainTopology;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::GranularityDefinition;
-use semio_framework_plugin::HierarchyProvider;
-use semio_framework_plugin::HoverSpec;
-use semio_framework_plugin::InteractionDefinition;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::InteractionTopology;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::SelectionMethod;
-use semio_framework_plugin::SelectionMode;
-use semio_framework_plugin::SelectionSpec;
-use semio_framework_plugin::TopologyNode;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
-use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{EditorApp, NoConfig, NoConfigMutation};
+use semio_plugin::DomainTopology;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::GranularityDefinition;
+use semio_plugin::HierarchyProvider;
+use semio_plugin::HoverSpec;
+use semio_plugin::InteractionDefinition;
+use semio_plugin::InteractionRef;
+use semio_plugin::InteractionTopology;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::MergeMode;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::PanelGroup;
+use semio_plugin::SelectionMethod;
+use semio_plugin::SelectionMode;
+use semio_plugin::SelectionSpec;
+use semio_plugin::TopologyNode;
+use semio_plugin::WindowMeasure;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_os_kernel::Viewport2d;
+use semio_plugin::{EditorApp, NoConfig, NoConfigMutation};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-// 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
+// 🩹️ `InteractionView` is not re-exported at `semio_plugin`'s crate root (unlike
 // `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
 // (itself `pub mod`). Flagged as a likely framework oversight, not fixed here (framework file).
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
+use semio_plugin::app::InteractionView;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::{BTreeMap, HashMap};
 use semio_framework_2d_compute::EngineHandles;
 use store::{snapshot::ArtifactPack};
@@ -88,33 +88,33 @@ use crate::editor::rewriting::ui::*;
 /// `trinity.rewrite.rule` document) plus a graph in/out pair: `graph:in` loads an incoming
 /// `trinity.graph` as this rule's `working_graph` working graph, and `graph:out` re-emits the
 /// rule-applied result graph.
-pub fn rewriting_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn rewriting_io() -> semio_plugin::AppIo {
+    semio_plugin::AppIo {
         artifact_schema: REWRITE_RULE_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
         ports: vec![
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "graph:in".into(),
                 label: "Graph".into(),
-                direction: semio_framework_plugin::MediaPortDirection::In,
+                direction: semio_plugin::MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
                 kind_id: Some("graph.trinity".into()),
                 required: false,
-                multiplicity: semio_framework_plugin::PortMultiplicity::One,
+                multiplicity: semio_plugin::PortMultiplicity::One,
             },
-            semio_framework_plugin::MediaPortSpec {
+            semio_plugin::MediaPortSpec {
                 id: "graph:out".into(),
                 label: "Graph".into(),
-                direction: semio_framework_plugin::MediaPortDirection::Out,
+                direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
                 kind_id: Some("graph.trinity".into()),
                 required: false,
-                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+                multiplicity: semio_plugin::PortMultiplicity::Many,
             },
         ],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::standards::v1::subsets::any::schema::model::artifact_kind().id, name: "Trinity Rewrite Rule".into(), dimension: "graph".into(), component_kind: "trinity".into() },
+        artifact: semio_plugin::ArtifactPresentation { id: crate::standards::v1::subsets::any::schema::model::artifact_kind().id, name: "Trinity Rewrite Rule".into(), dimension: "graph".into(), component_kind: "trinity".into() },
     }
 }
 //#endregion 🔖️Io

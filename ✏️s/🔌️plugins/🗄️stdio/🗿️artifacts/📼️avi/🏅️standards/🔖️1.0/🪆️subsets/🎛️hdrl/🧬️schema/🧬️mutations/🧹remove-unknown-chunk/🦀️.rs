@@ -13,8 +13,8 @@ pub struct RemoveUnknownChunk {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for RemoveUnknownChunk {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "unknown-chunk", kind: "remove-unknown-chunk", record: "RemoveUnknownChunk" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Remove unknown chunk", "Unbekannten Chunk entfernen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Remove unknown chunk", "Unbekannten Chunk entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

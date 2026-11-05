@@ -41,7 +41,7 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
         checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
         cancelled: false,
     };
-    let page = semio_framework_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
+    let page = semio_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
     let production = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: page, maximum_capacity_bytes: page, maximum_release_bytes: page, maximum_depth: 8 };
     preparation.cancel();
     assert!(matches!(preparation.advance(production).expect("cancelled step"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked));

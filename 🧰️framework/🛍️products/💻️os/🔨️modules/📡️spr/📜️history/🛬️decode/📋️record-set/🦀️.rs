@@ -1,7 +1,7 @@
 //! 📋️ Original retained History record decoders and receiving owners.
-pub use semio_framework_os_history_schema::*;
-pub use semio_framework_os_history_codec::*;
-pub use semio_framework_os_history_identity as identity;
+pub use semio_os_history_schema::*;
+pub use semio_os_history_codec::*;
+pub use semio_os_history_identity as identity;
 #[path="../📋️records/🦀️.rs"]
 mod retained_history_records;
 pub use retained_history_records::{RetainedHistoryRecords,RetainedHistoryRecordsStep};
@@ -39,7 +39,7 @@ pub use retained_history_conflict::{RetainedHistoryConflictDecode,RetainedHistor
 mod retained_history_transition_validation;
 pub use retained_history_transition_validation::{RetainedHistoryTransitionPayloadValidation,RetainedHistoryTransitionPayloadValidationReceipt,RetainedHistoryTransitionPayloadValidationStep};
 
-/// 🪝️ Test hook of the companion crate `semio-framework-os-history-record-decode-tests`: the private decoder modules, public only behind the `testkit` feature.
+/// 🪝️ Test hook of the companion crate `semio-os-history-record-decode-tests`: the private decoder modules, public only behind the `testkit` feature.
 #[cfg(feature = "testkit")]
 #[doc(hidden)]
 pub mod testkit {

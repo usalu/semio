@@ -1,3 +1,4 @@
+import {browserExecutableProbeV1} from "../../../🧪️testing/🌐️browser/🟦️.ts";
 import {linuxHostLibcV1} from "../../../🎛️commands/🔧️setup/🟦️.ts";
 import {createHash} from "node:crypto";
 import {chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync} from "node:fs";
@@ -75,7 +76,12 @@ export function systemToolContextV1(root: string, control: ResourceLeaseControl,
       }
     }
     const browsers = environment.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(root, "tools", "ms-playwright"), directory = join(browsers, "chromium-" + pin);
-    return existsSync(directory) ? {found: pin, location: directory} : {found: null, location: null};
+    try {
+      const registry=join(dirname(resolveSiblingPackageV1(root,"playwright-core","playwright")),"lib/coreBundle.js");
+      await captureOwnedCommandV1(process.execPath,["--eval",browserExecutableProbeV1(registry)],root,{control,signal,env:{...scriptResourceProcessEnvironmentV1(control,environment),PLAYWRIGHT_BROWSERS_PATH:browsers},output:{maximumBytes:65536,maximumLines:256}});
+      return {found:pin,location:directory};
+    } catch {signal.throwIfAborted();return {found:null,location:null};}
+
   };
   return Object.freeze({
     root, toolsRoot, platform: process.platform, environment, home: homedir(),

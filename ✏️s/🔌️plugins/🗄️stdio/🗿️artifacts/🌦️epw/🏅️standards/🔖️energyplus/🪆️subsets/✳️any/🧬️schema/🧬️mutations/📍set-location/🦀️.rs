@@ -14,8 +14,8 @@ pub struct SetLocation {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetLocation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "location", kind: "set-location", record: "SetLocation" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set location", "Standort setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set location", "Standort setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

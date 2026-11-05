@@ -297,10 +297,9 @@ export function unfoundedWithheldOwnersV1(index,owners,separator=sep){
  * 🛠️ Creates the generation store over `root`: readers never take a lease; a builder publishes the next immutable generation with one compare-and-swap of the pointer under an exclusive hold that covers one small read and one rename.
  * `holds(rows, signal)` answers whether every observation row still holds; `membership(previous, signal)` answers `{digest, frontier, changes}` against the previous frontier (`changes` is meaningful only with a previous frontier); `compute(spec, signal)` refreshes exactly the dirty owners.
  */
-export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,derive,resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification}){
+export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,derive,answers=new Map(),resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification}){
  if(typeof root!=="string"||!root||typeof holds!=="function"||!resources?.facts)throw fail("Generation store root, fact check and facts resource required");
  const stats={holdCalls:0,rowsChecked:0,computed:0,published:0,casConflicts:0,merged:0,mergeConflicts:0,publishHeldMs:[],indexLoads:0,fragmentReads:0,indexViews:0};
- const answered=new Map();
  const at=(directory,digest,extension)=>join(root,directory,digest+extension),pointerPath=join(root,P.pointer),indexCache=new Map();
  const manifestPath=digest=>at(P.manifests,digest,".json"),fragmentPath=digest=>at(P.fragments,digest,".json.br"),indexPath=digest=>at(P.indexes,digest,".facts.br"),frontierPath=digest=>at(P.frontiers,digest,".json.br");
  const hold=async(rows,signal)=>{stats.holdCalls++;stats.rowsChecked+=rows.length;return holds(rows,signal);};
@@ -390,7 +389,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const unfounded=unfoundedWithheldOwnersV1(index,manifest.owners);for(const name of unfounded)dirty.add(name);
   const scope=only?new Set(skipEnvironment?only:[...only,P.envOwner]):undefined,selection=selectFactClassesV1(index,scope?scopeWithDerivedV1(index,scope):undefined);
   const{stale}=await staleFactRowsV1(index,verifiableRowIdsV1(index,selection.ids),hold,{signal,progress});
-  const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await settleSuspectsV1({index,suspects,derive,signal,progress,memo:answered,hold}),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
+  const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await settleSuspectsV1({index,suspects,derive,signal,progress,memo:answers,hold}),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
   for(const name of direct){if(name===P.envOwner)envStale=true;else if(manifest.owners[name])dirty.add(name);}
   for(const holders of changedHolders.values())for(const name of holders)if(manifest.owners[name])dirty.add(name);
   for(const change of changes){

@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-testing-paint-policy"
+name = "semio-ui-testing-paint-policy"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

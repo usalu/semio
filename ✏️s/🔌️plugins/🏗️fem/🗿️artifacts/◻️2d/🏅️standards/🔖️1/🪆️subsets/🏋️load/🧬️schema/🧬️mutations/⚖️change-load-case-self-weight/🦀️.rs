@@ -25,8 +25,8 @@ where
     Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-self-weight", record: "ChangedLoadCaseSelfWeight" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set case \"{}\" self-weight to {}", self.case_id, self.new_self_weight), &format!("Eigengewicht von Lastfall \"{}\" auf {} setzen", self.case_id, self.new_self_weight))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Set case \"{}\" self-weight to {}", self.case_id, self.new_self_weight), &format!("Eigengewicht von Lastfall \"{}\" auf {} setzen", self.case_id, self.new_self_weight))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]

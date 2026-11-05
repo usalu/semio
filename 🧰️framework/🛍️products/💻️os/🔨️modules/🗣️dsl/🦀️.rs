@@ -184,8 +184,8 @@ pub mod protocol_record {
 pub mod original_receiving;
 pub mod variants_binary {
     use super::{protocol_record, DslVariants};
-    use semio_framework_os_pack::record::{decode_record_body_exact, encode_record_body, DecodeOptions, EncodeOptions};
-    use semio_framework_os_pack::{write_varint_u64, ByteReader};
+    use semio_os_pack::record::{decode_record_body_exact, encode_record_body, DecodeOptions, EncodeOptions};
+    use semio_os_pack::{write_varint_u64, ByteReader};
     use protocol::ProtocolError;
 
     pub const OP_BINARY_FORMAT: u8 = 1;
@@ -204,50 +204,50 @@ pub mod variants_binary {
         Ok(out)
     }
 
-fn encode_with_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(operation:&mut semio_framework_os_pack::record::BorrowedProjectedPackOperation<T>,tag_of:impl Fn(&str,usize)->Result<u64,ProtocolError>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
+fn encode_with_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(operation:&mut semio_os_pack::record::BorrowedProjectedPackOperation<T>,tag_of:impl Fn(&str,usize)->Result<u64,ProtocolError>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
  protocol::io::binary::operation_bytes::with_operation_encode_policy(options,control,|control|{
   let mut limited=protocol::io::binary::operation_bytes::OperationByteLimitedOutput::new(output,options.limits.max_file_len);let output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput=&mut limited;
-  control.checkpoint().map_err(semio_framework_os_pack::PackRefusal::from)?;let(keyword,ordinal)=operation.variant_identity()?;let tag=tag_of(keyword,ordinal)?;
+  control.checkpoint().map_err(semio_os_pack::PackRefusal::from)?;let(keyword,ordinal)=operation.variant_identity()?;let tag=tag_of(keyword,ordinal)?;
   output.write_bytes(&[OP_BINARY_FORMAT],control)?;let mut remaining=tag;let mut bytes=[0;10];let mut length=0;
   loop{bytes[length]=(remaining as u8)&127;remaining>>=7;if remaining!=0{bytes[length]|=128;}length+=1;if remaining==0{break;}}
   output.write_bytes(&bytes[..length],control)?;operation.write_body(options,output,control)?;Ok(())
  })
 }
 /// 🏷️ Emits the declared protocol tag from the caller's original retained operation capsule.
-pub fn encode_tagged_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(protocol:&str,operation:&mut semio_framework_os_pack::record::BorrowedProjectedPackOperation<T>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
+pub fn encode_tagged_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(protocol:&str,operation:&mut semio_os_pack::record::BorrowedProjectedPackOperation<T>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
  encode_with_into(operation,|keyword,_|protocol_record::records(protocol).find(|(kind,_)|*kind==keyword).map(|(_,tag)|tag).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("📡️.protocol.semio declares no record for '{keyword}'")}),options,output,control)
 }
 /// 🎞️ Emits the exact ordinal header and same-source canonical body while retaining all scratch.
-pub fn encode_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(operation:&mut semio_framework_os_pack::record::BorrowedProjectedPackOperation<T>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
+pub fn encode_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(operation:&mut semio_os_pack::record::BorrowedProjectedPackOperation<T>,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>{
  encode_with_into(operation,|_,ordinal|u64::try_from(ordinal).map_err(|_|ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} exceeds the u64 wire range")}),options,output,control)
 }
     /// 📥️ Holds the actual decoded variant and canonical scratch until caller settlement.
-    pub type RetainedDecodedOperation<T:DslVariants> = semio_framework_os_pack::record::BorrowedProjectedPackOperation<semio_framework_os_pack::record::OwnedVariantPackSource<T>>;
+    pub type RetainedDecodedOperation<T:DslVariants> = semio_os_pack::record::BorrowedProjectedPackOperation<semio_os_pack::record::OwnedVariantPackSource<T>>;
 
-    fn decode_with_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:semio_framework_os_pack::ByteSpan<'_>,index_of:impl Fn(u64,&[(String,super::RecordSpecProducer)])->Result<usize,ProtocolError>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>,reencode:impl FnOnce(&mut RetainedDecodedOperation<T>,&EncodeOptions,&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>)->Result<(),ProtocolError>{
-        if retained.is_some(){return Err(semio_framework_os_pack::PackRefusal::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical decoded operation owner is not empty")).into())}
-        decoding.checkpoint().map_err(semio_framework_os_pack::PackRefusal::from)?;
-        if source.len()as u64>options.limits.max_file_len{return Err(semio_framework_os_pack::PackRefusal::LimitExceeded{kind:semio_framework_value::ValueRefusalKind::OwnershipLimit,limit:"operation source byte length"}.into());}
+    fn decode_with_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:semio_os_pack::ByteSpan<'_>,index_of:impl Fn(u64,&[(String,super::RecordSpecProducer)])->Result<usize,ProtocolError>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>,reencode:impl FnOnce(&mut RetainedDecodedOperation<T>,&EncodeOptions,&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>)->Result<(),ProtocolError>{
+        if retained.is_some(){return Err(semio_os_pack::PackRefusal::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical decoded operation owner is not empty")).into())}
+        decoding.checkpoint().map_err(semio_os_pack::PackRefusal::from)?;
+        if source.len()as u64>options.limits.max_file_len{return Err(semio_os_pack::PackRefusal::LimitExceeded{kind:semio_framework_value::ValueRefusalKind::OwnershipLimit,limit:"operation source byte length"}.into());}
         let mut reader=ByteReader::from_span(source);
         let format=reader.read_u8()?;
         if format!=OP_BINARY_FORMAT{return Err(ProtocolError::Malformed{what:"op format",offset:0,detail:format!("unsupported op format {format}")});}
         let tag=reader.read_varint_u64()?;
-        let variants=T::variants_controlled(decoding).map_err(semio_framework_os_pack::PackRefusal::from)?;
+        let variants=T::variants_controlled(decoding).map_err(semio_os_pack::PackRefusal::from)?;
         let index=index_of(tag,&variants)?;
         let(keyword,producer)=&variants[index];
-        let spec=producer.decode(decoding).map_err(semio_framework_os_pack::PackRefusal::from)?;
+        let spec=producer.decode(decoding).map_err(semio_os_pack::PackRefusal::from)?;
         let body=reader.read_span(reader.remaining())?;
-        let record=semio_framework_os_pack::record::decode_record_body_span_exact_controlled(body,&spec,options,decoding)?;
-        let decoded=T::from_named_record_controlled(keyword,&record,decoding).map_err(semio_framework_os_pack::PackRefusal::from)?;
+        let record=semio_os_pack::record::decode_record_body_span_exact_controlled(body,&spec,options,decoding)?;
+        let decoded=T::from_named_record_controlled(keyword,&record,decoding).map_err(semio_os_pack::PackRefusal::from)?;
         let mut comparison=protocol::io::binary::operation_bytes::OperationByteComparison::new(source);
-        *retained=Some(semio_framework_os_pack::record::BorrowedProjectedPackOperation::from_owned_variant(decoded));
+        *retained=Some(semio_os_pack::record::BorrowedProjectedPackOperation::from_owned_variant(decoded));
         reencode(retained.as_mut().unwrap(),canonical_options,&mut comparison,encoding)?;
         comparison.finish()?;
         Ok(())
     }
 
     /// 🧾️ Decodes the same admitted source and compares its complete canonical tagged wire without a second byte owner.
-    pub fn decode_tagged_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(protocol:&str,source:semio_framework_os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
+    pub fn decode_tagged_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(protocol:&str,source:semio_os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
         decode_with_span(source,|tag,variants|{
             let kind=protocol_record::kind(protocol,tag).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("📡️.protocol.semio declares no record with tag {tag}")})?;
             variants.iter().position(|(keyword,_)|keyword==kind).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("record '{kind}' names no variant")})
@@ -255,7 +255,7 @@ pub fn encode_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjec
     }
 
     /// 🎞️ Decodes a borrowed operation and checks exact ordinal canonical bytes with caller controls.
-    pub fn decode_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:semio_framework_os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
+    pub fn decode_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:semio_os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
         decode_with_span(source,|ordinal,variants|{
             let index=usize::try_from(ordinal).map_err(|_|ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} exceeds the native index range")})?;
             if index<variants.len(){Ok(index)}else{Err(ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} out of range for {} declared variants",variants.len())})}
@@ -327,9 +327,9 @@ pub mod tagged_value_binary {
     use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-    use semio_framework_os_pack::{write_varint_u64, ByteReader};
+    use semio_os_pack::{write_varint_u64, ByteReader};
     use protocol::ProtocolError;
-    use semio_framework_os_pack::pack_rt::{decode_wire_value, encode_wire_value};
+    use semio_os_pack::pack_rt::{decode_wire_value, encode_wire_value};
 
     pub const OP_BINARY_FORMAT: u8 = 1;
 
@@ -433,7 +433,7 @@ use semio_framework_value::ToValue;
 /// travels and the protocol file stays the only source of tags. Used where the `ToValue` tree is lossy.
 pub mod tagged_text_binary {
     use super::protocol_record;
-    use semio_framework_os_pack::{write_varint_u64, ByteReader};
+    use semio_os_pack::{write_varint_u64, ByteReader};
     use protocol::ProtocolError;
 
     pub const OP_BINARY_FORMAT: u8 = 1;
@@ -470,17 +470,17 @@ pub mod tagged_text_binary {
 /// prefer protocol registrations.
 // 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn language_for_semio_content(bytes: &[u8]) -> Option<LanguageSpec> {
-    let envelope = semio_framework_os_semio::sniff(bytes).ok()?;
+    let envelope = semio_os_semio::sniff(bytes).ok()?;
     let base = envelope.envelope_id();
     let plugin = envelope.plugin.as_str();
     let artifact = envelope.artifact.as_str();
     match envelope.component {
-        semio_framework_os_semio::Component::Dsl => language(&base).or_else(|| language_for_extension(artifact)).or_else(|| language_for_extension(plugin)),
-        semio_framework_os_semio::Component::Op => language_for_suffix_candidates(&base, plugin, artifact, "op").or_else(|| {
+        semio_os_semio::Component::Dsl => language(&base).or_else(|| language_for_extension(artifact)).or_else(|| language_for_extension(plugin)),
+        semio_os_semio::Component::Op => language_for_suffix_candidates(&base, plugin, artifact, "op").or_else(|| {
             language_for_role_extension(LanguageRole::Ops, artifact)
         }),
-        semio_framework_os_semio::Component::Pack => language_for_suffix_candidates(&base, plugin, artifact, "pack").or_else(|| language(&base).filter(|s| s.protocol.is_some())),
-        semio_framework_os_semio::Component::Spr => language_for_suffix_candidates(&base, plugin, artifact, "spr"),
+        semio_os_semio::Component::Pack => language_for_suffix_candidates(&base, plugin, artifact, "pack").or_else(|| language(&base).filter(|s| s.protocol.is_some())),
+        semio_os_semio::Component::Spr => language_for_suffix_candidates(&base, plugin, artifact, "spr"),
         _ => None,
     }
 }

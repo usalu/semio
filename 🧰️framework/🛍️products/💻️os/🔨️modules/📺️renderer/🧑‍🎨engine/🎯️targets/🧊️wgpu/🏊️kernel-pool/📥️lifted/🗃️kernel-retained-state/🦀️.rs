@@ -58,7 +58,7 @@ pub struct KernelPoolState {
     /// ⚖️ True while a request runs in another actor's slice gap ([`Self::yield_slice`]): a gap never nests.
     pub interleaving: bool,
     /// 🧩️ The components compiled most recently, newest first, by content hash ([`Self::compile_serving_others`]).
-    pub compiled_components: Vec<(PackageHash, semio_framework_plugin_host::CompiledHandle)>,
+    pub compiled_components: Vec<(PackageHash, semio_plugin_host::CompiledHandle)>,
 }
 //#endregion 🔖️KernelPoolState
 //#endregion 🎠️KernelRuntime

@@ -569,9 +569,9 @@ class InverseAdmissionScript extends BundleScript {
     testInverseAdmission();
     if (!segments.includes("--native")) return;
     const deriveManifest = resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml");
-    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 600_000 }, manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml"), "semio-framework-os-kernel-dsl-derive": deriveManifest }, cwd: this.repoRoot, groups: [
+    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 600_000 }, manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml"), "semio-os-kernel-dsl-derive": deriveManifest }, cwd: this.repoRoot, groups: [
       { package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, cargoArgs: ["--locked"], laws: ["mutation::inverse_admission_tests::inverse_admission_follows_portable_outcomes_and_retires_each_diff"] },
-      { package: "semio-framework-os-kernel-dsl-derive", target: { kind: "lib", name: "dsl_derive" }, cargoArgs: ["--locked"], laws: ["mandatory_mutations_tests::expanded_aggregate_matches_neutral_contract_and_syn_ast"] },
+      { package: "semio-os-kernel-dsl-derive", target: { kind: "lib", name: "dsl_derive" }, cargoArgs: ["--locked"], laws: ["mandatory_mutations_tests::expanded_aggregate_matches_neutral_contract_and_syn_ast"] },
     ] });
     assert.deepEqual(receipts.map(receipt => receipt.assertions), [1, 1]);
   }

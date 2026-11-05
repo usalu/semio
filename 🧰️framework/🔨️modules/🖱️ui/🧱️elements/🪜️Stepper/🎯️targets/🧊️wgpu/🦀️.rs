@@ -11,14 +11,14 @@
 //! top-level engine mods `widgets` itself also depends on.
 //! Not to be confused with the `Steps` element (a progress-indicator, unrelated concept).
 
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_input::{HitKind, HitTarget};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_input::{HitKind, HitTarget};
 use crate::input_element::render_input;
-use semio_framework_ui_retained_tree::tree::NodeFlags;
-use semio_framework_ui_wgpu_widget_kit::{register_input_meta, StepperMeta, WidgetContext};
-use semio_framework_ui_wgpu_layout::chrome::{push_control_border, push_icon, ICON_TINY};
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_theme::Theme;
+use semio_ui_retained_tree::tree::NodeFlags;
+use semio_ui_wgpu_widget_kit::{register_input_meta, StepperMeta, WidgetContext};
+use semio_ui_wgpu_layout::chrome::{push_control_border, push_icon, ICON_TINY};
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_theme::Theme;
 
 /// 🎯️ A stepper value as every wgpu surface prints it: its display value (`stored × display_factor`) at its precision when
 /// it has one (the contract's `format_ui_number_fixed`, React's `toFixed` twin), otherwise twelve significant digits.
@@ -28,7 +28,7 @@ pub fn stepper_value_text(value: f64, precision: Option<u16>, display_factor: Op
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
 pub fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, uniform: bool, on_absolute: Option<E>, on_delta: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
-    let segments @ [minus, center, plus] = semio_framework_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ctx.theme.stroke_hairline);
+    let segments @ [minus, center, plus] = semio_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ctx.theme.stroke_hairline);
     ctx.draw.push_scissor(bounds);
     let flags = if ctx.input.focused_id.as_deref() == Some(&format!("{id}.input")) { NodeFlags::FOCUSED } else { NodeFlags::empty() };
     push_stepper_chrome(ctx.draw, bounds, segments, ui_contract::FlowInline::Ltr, flags, None, ctx.theme);
@@ -39,7 +39,7 @@ pub fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, uniform:
     }
     push_stepper_icon(ctx.draw, ctx.icons, "minus", minus, ui_contract::FlowInline::Ltr, ctx.theme);
     let text = if uniform { ui_contract::format_ui_number(value) } else { String::new() };
-    let placeholder = (!uniform).then_some(semio_framework_ui_declaration::ui::UI_INSPECTOR_MIXED_PLACEHOLDER);
+    let placeholder = (!uniform).then_some(semio_ui_declaration::ui::UI_INSPECTOR_MIXED_PLACEHOLDER);
     let input_id = format!("{id}.input");
     register_input_meta(ctx, &input_id, "number", &text, None, (None, None, Some(step), None), on_absolute.clone());
     render_input(&input_id, &text, placeholder, center, true, ctx);

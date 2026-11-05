@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeSiloFabricationCla
         record: "ChangedSiloFabricationClass",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Fabrication tolerance class of the silo shell", "Silo-Schale: Fertigungstoleranzklasse ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Fabrication tolerance class of the silo shell", "Silo-Schale: Fertigungstoleranzklasse ändern")
     }
 }
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeSpecialVehicleY wh
         record: "ChangedSpecialVehicleY",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change vehicle axis across the carriageway of the special vehicle", "Sonderfahrzeug: Fahrzeugachse quer zur Fahrbahn ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change vehicle axis across the carriageway of the special vehicle", "Sonderfahrzeug: Fahrzeugachse quer zur Fahrbahn ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -14,8 +14,8 @@ pub struct SetShowMode {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetShowMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "show-mode", kind: "set-show-mode", record: "SetShowMode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Show Mode", "Anzeigemodus setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Show Mode", "Anzeigemodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

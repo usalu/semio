@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "door-type", kind: "create-door-type", record: "CreateDoorType" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create door type \"{}\"", self.door_type.name), &format!("Türtyp \"{}\" anlegen", self.door_type.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create door type \"{}\"", self.door_type.name), &format!("Türtyp \"{}\" anlegen", self.door_type.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

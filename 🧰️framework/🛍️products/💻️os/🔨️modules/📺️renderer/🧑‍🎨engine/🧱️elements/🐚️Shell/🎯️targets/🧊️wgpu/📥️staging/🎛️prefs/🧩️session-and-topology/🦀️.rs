@@ -43,7 +43,7 @@ impl PrefsState {
     /// 🌌️ TEMP(Wave 3): replace with workflow_palette() once the shell palette wiring lands. Reads
     /// `program.manifest.apps` directly (one `SpaceProgramEntry` per app) — `PluginManifest.workflows`/
     /// `WorkflowDefinition` were deleted in Wave 0 (WP-0.1); the real palette derivation moves to
-    /// `semio-framework-os`'s `registry::workflow_palette()` (`AppIo`-driven) once the browser shell wires
+    /// `semio-os`'s `registry::workflow_palette()` (`AppIo`-driven) once the browser shell wires
     /// it in. `yields` is empty here (no registry lookup at this layer) — matches every other Wave-1
     /// `WorkflowNode.yields` derivation until Wave 2 populates apps' declared output ports.
     pub fn build_space_workflows(&self, plugins: &PluginState) -> Vec<SpaceProgramEntry> {
@@ -77,7 +77,7 @@ impl PrefsState {
     /// left no trace at all, which is why a blank body read as "nothing happened". `debug_log` is
     /// this type's ONE trace sink for exactly that reason; no diagnostic in this file may use
     /// `eprintln!` except `debug_log`'s own native arm.
-    pub fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, chrome: &mut ChromeState, plugins: &mut PluginState) {
+    pub fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, refusal: semio_renderer_wgpu_program_bridge::ProgramFault, chrome: &mut ChromeState, plugins: &mut PluginState) {
         #[cfg(not(target_arch = "wasm32"))]
         let (frame,kernel,actor_call)=(refusal.frame,refusal.kernel,refusal.actor_call);
         #[cfg(not(target_arch = "wasm32"))]
@@ -149,7 +149,7 @@ impl PrefsState {
     /// ⚠️ `visited`, not `clear()`: a scoped pass re-renders only what its `UiDirtyScope` named, and
     /// clearing the whole set would silently dismiss the fault card of every surface it never looked
     /// at — a broken body that repairs itself the moment an unrelated window settles.
-    pub fn settle_surface_faults(&mut self, faults: Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)>, visited: &[String], chrome: &mut ChromeState, plugins: &mut PluginState) {
+    pub fn settle_surface_faults(&mut self, faults: Vec<(String, String, semio_renderer_wgpu_program_bridge::ProgramFault)>, visited: &[String], chrome: &mut ChromeState, plugins: &mut PluginState) {
         plugins.surface_faults.retain(|fault| !visited.contains(&fault.surface_id));
         for (surface_id, body_key, detail) in faults {
             self.record_surface_fault(&surface_id, &body_key, detail, chrome, plugins);

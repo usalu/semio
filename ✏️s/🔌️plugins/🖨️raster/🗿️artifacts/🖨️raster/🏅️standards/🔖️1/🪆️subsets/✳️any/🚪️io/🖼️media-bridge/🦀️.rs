@@ -19,7 +19,7 @@ use semio_s_artifact_stdio_svg::SvgSnapshot;
 use semio_framework_pixels::compositing::layers::{RasterStackContent, RasterStackInput, RasterStackJob, RasterStackLayer, RasterStackMask, RasterStackTransform};
 use semio_framework_pixels::{editing::validate_extent, RasterImage};
 use std::{collections::BTreeMap, sync::Arc};
-use {semio_framework_os_kernel::io::io_compose_via, semio_framework_os_kernel::io::io_dispatch, semio_framework_artifact_reference::Dialect, semio_framework_os_kernel::io::ErasedComposeSource, semio_framework_os_kernel::io::IoDirection, semio_framework_os_kernel::io::IoKey, semio_framework_os_kernel::io::IoPayload, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+use {semio_os_kernel::io::io_compose_via, semio_os_kernel::io::io_dispatch, semio_framework_artifact_reference::Dialect, semio_os_kernel::io::ErasedComposeSource, semio_os_kernel::io::IoDirection, semio_os_kernel::io::IoKey, semio_os_kernel::io::IoPayload, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 
 /// 🌉️ The single funnel-through "add real content" primitive: converts the real bytes into the
 /// composed child's own real content (`SemioImageSnapshot`, via the real `🚪️io` png↔semio/image

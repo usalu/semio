@@ -5,7 +5,7 @@
 /// Nakagin's 180 objects admit it far inside the fixed work cap.
 #[test]
 fn world_relocate_extent_fits_within_cap_for_nakagin() {
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
@@ -23,11 +23,11 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
 
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "25b0dba0-8f81-423a-94a1-b911a6031010", "position": [-8.84, -2.8499999999999996, 7.7] })), None).expect("worldRelocate command decodes");
     let mut work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
     let mut stages = Vec::new();
@@ -58,11 +58,11 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
 
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "25b0dba0-8f81-423a-94a1-b911a6031010", "position": [-8.84, -2.8499999999999996, 7.7] })), None).expect("worldRelocate command decodes");
     let mut work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
     let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("a relocate always fits the fixed bounded work envelope");
@@ -89,7 +89,7 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
 /// actual vortices instead of assuming every object carries the worst-case vortex count.
 #[test]
 fn create_attraction_extent_fits_within_cap_for_nakagin() {
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "nonexistent-a", "attracted": "nonexistent-b" })), None).expect("createAttraction command decodes");
@@ -112,11 +112,11 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
 
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let command =
         Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "25b0dba0-8f81-423a-94a1-b911a6031010:link", "attracted": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d0" })), None).expect("createAttraction command decodes");
     let mut work = Puzzle3dCreateAttractionWork::default();
@@ -154,7 +154,7 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
 fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
     let mut original = semio_s_plugin_puzzle_retained::testing::OriginalFixture::new(
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", None, None).expect("acceptSuggestion command decodes");
@@ -176,15 +176,15 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
 
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", Some(json!({ "fullId": "25b0dba0-8f81-423a-94a1-b911a6031010:link" })), None).expect("acceptSuggestion command decodes");
     let work = original.construct(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope));
     let kind = snapshot.typed().meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.objects.first()).expect("nakagin catalogues object kinds").id.clone();
-    let owner = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default()));
+    let owner = semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default()));
     owner
         .with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| {
             let preview = semio_s_artifact_puzzle_3d_model::BrushPreviewState { target_vortex_full_id: "25b0dba0-8f81-423a-94a1-b911a6031010:link".into(), object_kind_id: kind, source_vortex_index: 0, mesh_url: "/nakagin/capsule.glb".into(), origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
@@ -224,7 +224,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
 /// `step()` per object, matching the `Vortices` stage's real per-object "owner advance" call.
 #[test]
 fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex" })), None).expect("patchInspector command decodes");
@@ -254,11 +254,11 @@ fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
 
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex", "field": "hidden", "value": true, "ids": ["25b0dba0-8f81-423a-94a1-b911a6031010:link"] })), None).expect("patchInspector command decodes");
     let mut work = original.construct(Puzzle3dPatchInspectorWork::original_birth_demands().unwrap(), |scope| Puzzle3dPatchInspectorWork::from_original_construction(scope));
     let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
@@ -297,11 +297,11 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
 
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
-    use semio_framework_plugin::retained_command::ArtifactCommandWork;
+    use semio_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = original.construct(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope));
     let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");

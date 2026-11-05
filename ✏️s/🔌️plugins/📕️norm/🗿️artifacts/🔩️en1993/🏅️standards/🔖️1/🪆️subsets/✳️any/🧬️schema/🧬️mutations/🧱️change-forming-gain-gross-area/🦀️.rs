@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFormingGainGrossAr
         record: "ChangedFormingGainGrossArea",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change forming gain: Gross area A_g", "Kaltverfestigung: Bruttoquerschnitt A_g ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change forming gain: Gross area A_g", "Kaltverfestigung: Bruttoquerschnitt A_g ändern")
     }
 }
 

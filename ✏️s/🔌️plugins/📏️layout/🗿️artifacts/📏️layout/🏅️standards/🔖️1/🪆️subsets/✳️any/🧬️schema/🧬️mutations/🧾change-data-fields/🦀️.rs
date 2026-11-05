@@ -19,8 +19,8 @@ pub struct ChangeDataFields {
 impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeDataFields where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_data_fields::ChangeDataFields> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "data-fields", kind: "change-data-fields", record: "ChangedDataFields" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change data fields", "Datenfelder ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change data fields", "Datenfelder ändern")
     }
 }
 

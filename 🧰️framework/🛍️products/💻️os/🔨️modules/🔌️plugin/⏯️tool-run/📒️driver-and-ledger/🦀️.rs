@@ -6,9 +6,9 @@ mod original_entry_retirement;
 use original_entry_retirement::ToolRunEntryRetirement;
 use semio_framework::kernel::UiDirtyScope;
 use std::collections::BTreeSet;
-use semio_framework_os_kernel::os_store::ArtifactStore;
+use semio_os_kernel::os_store::ArtifactStore;
 use semio_framework::Fault;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_views::child_view::ChildContentView;
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 //#region 🔖️Ledger
@@ -104,7 +104,7 @@ impl<A: ArtifactApp> Default for ToolRunLedger<A> {
 impl<A: ArtifactApp> ToolRunLedger<A> {
     /// 📐️ Reports real retained owner layouts for mounted construction regressions.
     #[cfg(any(test,feature="artifact-app-testing"))]
-    pub fn original_owner_layout()->[(&'static str,usize);11]{[("ledger",size_of::<Self>()),("entry",size_of::<ToolRunEntry<A>>()),("entry_retirement",size_of::<ToolRunEntryRetirement<A>>()),("operations",size_of::<semio_framework_plugin_tool_run_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>>()),("native",size_of::<crate::original_native_tick::OriginalToolRunNativeState>()),("finalize",size_of::<ToolRunFinalize<A>>()),("driver",size_of::<ToolRunDriver>()),("presentation",size_of::<semio_framework_tool_run_presentation::slot::ToolRunPresentationSlot>()),("presentation_update",size_of::<semio_framework_tool_run_presentation::update::ToolRunPresentationUpdate>()),("presentation_seed",size_of::<semio_framework_tool_run_presentation::seed::ToolRunPresentationSeed>()),("tick_cursor",size_of::<semio_framework_tool_run_tick_wire::tick_receive::ToolRunTickNativeCursor>())]}
+    pub fn original_owner_layout()->[(&'static str,usize);11]{[("ledger",size_of::<Self>()),("entry",size_of::<ToolRunEntry<A>>()),("entry_retirement",size_of::<ToolRunEntryRetirement<A>>()),("operations",size_of::<semio_plugin_tool_run_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>>()),("native",size_of::<crate::original_native_tick::OriginalToolRunNativeState>()),("finalize",size_of::<ToolRunFinalize<A>>()),("driver",size_of::<ToolRunDriver>()),("presentation",size_of::<semio_framework_tool_run_presentation::slot::ToolRunPresentationSlot>()),("presentation_update",size_of::<semio_framework_tool_run_presentation::update::ToolRunPresentationUpdate>()),("presentation_seed",size_of::<semio_framework_tool_run_presentation::seed::ToolRunPresentationSeed>()),("tick_cursor",size_of::<semio_framework_tool_run_tick_wire::tick_receive::ToolRunTickNativeCursor>())]}
 
     /// 🎟️ A retained original receipt stops the next publication callback until transport collects it.
     pub fn has_original_receipt(&self)->bool{self.original_receipt.is_some()}
@@ -153,7 +153,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.window_index(window_id).or_else(|| self.primary_index()).map(|index| self.entries[index].view())
     }
 
-    pub fn poll_view_for(&self,window_id:Option<&str>)->Option<semio_framework_plugin_decl_views::tool_run_contract::ToolRunPollView<'_>>{self.window_index(window_id).or_else(||self.primary_index()).map(|index|{let entry=&self.entries[index];semio_framework_plugin_decl_views::tool_run_contract::ToolRunPollView{tool_id:&entry.tool_id,identity:entry.identity,state:entry.slot.state}})}
+    pub fn poll_view_for(&self,window_id:Option<&str>)->Option<semio_plugin_decl_views::tool_run_contract::ToolRunPollView<'_>>{self.window_index(window_id).or_else(||self.primary_index()).map(|index|{let entry=&self.entries[index];semio_plugin_decl_views::tool_run_contract::ToolRunPollView{tool_id:&entry.tool_id,identity:entry.identity,state:entry.slot.state}})}
 
     fn window_index(&self, window_id: Option<&str>) -> Option<usize> {
         let window_id = window_id?;

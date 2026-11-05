@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertRoofSurface where 
         record: "InsertedRoofSurfaces",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert roof surface {}", self.item.id), &format!("Dachfläche {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert roof surface {}", self.item.id), &format!("Dachfläche {} einfügen", self.item.id))
     }
 }
 

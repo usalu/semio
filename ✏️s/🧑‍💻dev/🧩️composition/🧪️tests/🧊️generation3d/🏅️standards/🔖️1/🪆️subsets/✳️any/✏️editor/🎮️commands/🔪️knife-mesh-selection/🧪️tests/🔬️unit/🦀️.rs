@@ -77,6 +77,6 @@ async fn knife_selection_undo_redo_restores_the_graph_and_analysis_connection() 
     };
     let before = probe(&app);
     let after = (before.0 + 1, "extrude__knifeCut".into());
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Generation3dCommand::KnifeMeshSelection(payload()), probe, before, after, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Generation3dCommand::KnifeMeshSelection(payload()), probe, before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

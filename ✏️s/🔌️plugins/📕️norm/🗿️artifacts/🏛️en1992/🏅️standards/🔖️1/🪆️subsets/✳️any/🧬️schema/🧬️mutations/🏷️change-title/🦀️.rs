@@ -17,8 +17,8 @@ pub struct ChangeTitle {
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeTitle where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_title::ChangeTitle> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "title", kind: "change-title", record: "ChangedTitle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change report title to {}", self.new_title), &format!("Berichtstitel auf {} ändern", self.new_title))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change report title to {}", self.new_title), &format!("Berichtstitel auf {} ändern", self.new_title))
     }
 }
 

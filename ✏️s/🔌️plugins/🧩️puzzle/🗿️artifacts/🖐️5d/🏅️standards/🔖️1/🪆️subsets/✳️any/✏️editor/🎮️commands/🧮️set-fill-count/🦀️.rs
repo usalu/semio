@@ -8,7 +8,7 @@ use semio_framework::kernel::Effect;
 /// one lane a live run's declared settings watch instead of being written behind the driver's back.
 pub fn request(count: u32) -> Effect {
     Effect::DispatchAction {
-        req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
+        req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: "setFillCount".into(),
         args: Some(semio_framework::dsl_value!({ "value": count })),
         delay_ms: 0,

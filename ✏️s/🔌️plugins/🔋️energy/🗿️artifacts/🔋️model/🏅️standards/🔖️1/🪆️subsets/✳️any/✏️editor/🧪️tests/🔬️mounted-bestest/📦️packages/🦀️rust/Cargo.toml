@@ -18,9 +18,9 @@ path = "../../🦀️.rs"
 [dependencies]
 pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-ui-locale = { workspace = true }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-ui-locale = { workspace = true }
 semio-s-artifact-energy-model-editor = { workspace = true }
 semio-s-artifact-energy-model-editor-commands = { workspace = true }
 semio-s-artifact-energy-model-mutations = { workspace = true }

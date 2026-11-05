@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "artifacts": [
+    {
+      "native": "s.puzzle.puzzle2d@1/*",
+      "imports": [
+        "s.stdio.json@rfc8259/*",
+        "s.stdio.txt@utf-8/*"
+      ],
+      "exports": [
+        "s.stdio.dwg@ac1024/*",
+        "s.stdio.dxf@r12/*",
+        "s.stdio.json@rfc8259/*",
+        "s.stdio.pdf@1.4/*",
+        "s.stdio.png@1.2/*",
+        "s.stdio.svg@1.1/*",
+        "s.stdio.txt@utf-8/*"
+      ],
+      "payloadKinds": {
+        "s.stdio.dwg@ac1024/*": "binary",
+        "s.stdio.dxf@r12/*": "text",
+        "s.stdio.json@rfc8259/*": "text",
+        "s.stdio.pdf@1.4/*": "binary",
+        "s.stdio.png@1.2/*": "binary",
+        "s.stdio.svg@1.1/*": "text",
+        "s.stdio.txt@utf-8/*": "text"
+      }
+    },
+    {
+      "native": "s.puzzle.puzzle3d@1/*",
+      "imports": [
+        "s.stdio.json@rfc8259/*",
+        "s.stdio.txt@utf-8/*"
+      ],
+      "exports": [
+        "s.stdio.json@rfc8259/*",
+        "s.stdio.txt@utf-8/*"
+      ],
+      "payloadKinds": {
+        "s.stdio.json@rfc8259/*": "text",
+        "s.stdio.txt@utf-8/*": "text"
+      }
+    },
+    {
+      "native": "s.puzzle.puzzle5d@1/*",
+      "imports": [
+        "s.stdio.json@rfc8259/*",
+        "s.stdio.txt@utf-8/*",
+        "s.stdio.zip@2.0/*"
+      ],
+      "exports": [
+        "s.stdio.json@rfc8259/*",
+        "s.stdio.png@1.2/*",
+        "s.stdio.txt@utf-8/*",
+        "s.stdio.zip@2.0/*"
+      ],
+      "payloadKinds": {
+        "s.stdio.json@rfc8259/*": "text",
+        "s.stdio.png@1.2/*": "binary",
+        "s.stdio.txt@utf-8/*": "text",
+        "s.stdio.zip@2.0/*": "binary"
+      }
+    }
+  ]
+}

@@ -17,7 +17,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-s-fem-sparse = { path = "../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/📦️packages/🦀️rust" }
-semio-framework-ui-scene = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+semio-ui-scene = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-editor-session-catalog = { path = "../../🪪️session-constants-and-owner-catalog/📦️packages/🦀️rust" }
 semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
@@ -27,8 +27,8 @@ semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-s-fem-payload-turns = { path = "../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/📮️payload-turns/📦️packages/🦀️rust" }
 semio-framework-job-payload = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-registry = { workspace = true }
 semio-s-artifact-fem-2d-editor-model-window = { workspace = true }

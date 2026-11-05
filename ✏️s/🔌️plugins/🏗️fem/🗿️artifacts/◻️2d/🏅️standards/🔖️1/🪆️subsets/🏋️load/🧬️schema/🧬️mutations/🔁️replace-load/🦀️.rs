@@ -32,8 +32,8 @@ where
     Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "load", kind: "replace-load", record: "ReplacedLoad" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace load \"{}\" in case \"{}\"", self.load_id, self.case_id), &format!("Last \"{}\" in Lastfall \"{}\" ersetzen", self.load_id, self.case_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace load \"{}\" in case \"{}\"", self.load_id, self.case_id), &format!("Last \"{}\" in Lastfall \"{}\" ersetzen", self.load_id, self.case_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone(), self.load_id.clone()]

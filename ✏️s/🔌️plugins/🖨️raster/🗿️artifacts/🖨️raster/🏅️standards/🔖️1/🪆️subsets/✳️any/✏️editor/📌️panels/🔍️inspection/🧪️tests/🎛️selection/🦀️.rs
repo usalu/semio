@@ -93,7 +93,7 @@ fn inspector_projects_selected_properties_and_foreground_in_both_languages() {
                 *mask = case.get("mask").map(|value| semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
             }
             let node = render(&document, &RasterConfig::default(), &ids, labels).unwrap();
-            let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+            let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
             let projection: serde_json::Value = serde_json::from_str(&text).unwrap();
             let mut pending = vec![&projection];
             while let Some(node) = pending.pop() {
@@ -153,7 +153,7 @@ fn inspector_adjustment_parameters_are_localized_bounded_commit_controls() {
     let id=layer_node_id(&layer).to_owned();document.layers.push(layer);
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         let tree=render(&document,&RasterConfig::default(),&[id.clone()],labels).unwrap();
-        let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+        let text=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
         let projection:serde_json::Value=serde_json::from_str(&text).unwrap();let mut pending=vec![&projection];let mut controls=0;
         while let Some(node)=pending.pop() {
             if ["raster-inspector.brightness.input","raster-inspector.contrast.input"].contains(&node["key"].as_str().unwrap_or("")) {
@@ -176,7 +176,7 @@ fn inspector_offers_localized_merge_only_for_supported_sibling_selection() {
             let tree=render(&document,&RasterConfig::default(),&ids,labels).unwrap();
             let mut pending=vec![&tree];let mut disabled=None;
             while let Some(node)=pending.pop() {if node.key.as_str()=="raster-inspector.merge-down" {disabled=Some(node.disabled);}pending.extend(node.children.iter());}
-            let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            let text=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
             assert_eq!(text.contains("mergeDown"),ids.len()==1);
             if ids.len()==1 {
                 assert!(text.contains(fixture["labels"][locale].as_str().unwrap()));assert!(text.contains(fixture["hints"][locale].as_str().unwrap()));
@@ -207,7 +207,7 @@ fn inspector_protection_controls_follow_the_neutral_capabilities() {
                 if let Some(enabled)=enabled {assert_eq!(node.disabled,!enabled,"{} {key}",case["id"]);}
                 pending.extend(node.children.iter());
             }
-            let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            let text=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
             assert!(lock_found);assert!(text.contains(labels.locked.as_str()));
         }
     }
@@ -231,7 +231,7 @@ fn inspector_layer_actions_are_localized_and_protection_aware() {
                 }
                 assert!(found,"{key}");
             }
-            let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            let text=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
             let projection:serde_json::Value=serde_json::from_str(&text).unwrap();let mut pending=vec![&projection];
             while let Some(node)=pending.pop() {
                 for action in fixture["layerActions"].as_array().unwrap() {if node["key"]==format!("raster-inspector.{}",action["key"].as_str().unwrap()) {assert_eq!(node["component"]["target"]["activation"],action["command"]);assert_eq!(node["component"]["target"]["args"]["layerId"],id);assert!(node.to_string().contains(action["labels"][locale].as_str().unwrap()));}}
@@ -239,7 +239,7 @@ fn inspector_layer_actions_are_localized_and_protection_aware() {
             }
         }
         for ids in [vec![],vec!["outside".into(),"editable-pixel".into()]] {
-            let tree=render(&document,&RasterConfig::default(),&ids,labels).unwrap();let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();assert!(!text.contains("duplicateLayer"));assert!(!text.contains("deleteLayer"));
+            let tree=render(&document,&RasterConfig::default(),&ids,labels).unwrap();let text=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();assert!(!text.contains("duplicateLayer"));assert!(!text.contains("deleteLayer"));
         }
     }
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
@@ -252,7 +252,7 @@ fn inspector_layer_transform_controls_use_localized_commit_bindings(){
         let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();document.layers.push(semio_s_artifact_raster_raster_model::create_layer_of_kind(kind));let id=layer_node_id(&document.layers[0]).to_owned();
         for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
             let tree=render(&document,&RasterConfig::default(),&[id.clone()],labels).unwrap();
-            let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            let text=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
             let projection:serde_json::Value=serde_json::from_str(&text).unwrap();let mut pending=vec![&projection];let mut found=0;
             while let Some(node)=pending.pop(){
                 for row in fixture["controls"].as_array().unwrap(){let field=row["field"].as_str().unwrap();if node["key"]==format!("raster-inspector.{field}.input"){

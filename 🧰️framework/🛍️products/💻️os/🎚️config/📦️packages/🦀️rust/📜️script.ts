@@ -14,13 +14,13 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-config"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-os-config"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargo(["check", "-p", "semio-framework-os-config", ...segments], this.repoRoot);
+    await runCargo(["check", "-p", "semio-os-config", ...segments], this.repoRoot);
   }
 }
 

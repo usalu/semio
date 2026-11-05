@@ -243,20 +243,20 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
 /// surface (`✏️editor`/`👁️viewer`) under this artifact's `✳️any` subset shares — lives at the
 /// ARTIFACT level (not under either surface) specifically so `👁️viewer/🦀️.rs` can read it
 /// without ever importing through the sibling editor module.
-pub const LOWPOLY_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.lowpoly.lowpoly", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const LOWPOLY_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.lowpoly.lowpoly", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 //#endregion 🔖️Dialect
 //#region 🔖️ArtifactKind
 /// 🧱️ The two artifact kinds this plugin contributes — lifted out of the old ui crate's manifest
 /// builder chain so the app's `🔖️Manifest` region can stitch it in as a single passthrough.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "3d.lowpoly".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D Lowpoly", "3D-Lowpoly"),
+        label: semio_ui_locale::LocalizedLabel::native("3D Lowpoly", "3D-Lowpoly"),
         source_format: "lowpoly.fixture".into(),
         component_kind: "lowpoly".into(),
         dimension: "3d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::ThreeD, form: semio_plugin::MediaForm::Mesh },
         schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
@@ -275,8 +275,8 @@ pub fn snapshot_leaves() -> semio_framework_schema_registry::FacetLeaves {
         ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.lowpoly.lowpoly", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto" },
     ]);
     #[cfg(target_arch = "wasm32")]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
-    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" }
 }

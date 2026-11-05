@@ -86,8 +86,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "primitive-extra-data", kind: "change-primitive-extra-data", record: "ChangedPrimitiveExtraData" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Primitive Extra Data", "Zusatzdaten des Primitivs ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Primitive Extra Data", "Zusatzdaten des Primitivs ändern")
     }
 
     fn target(&self) -> Vec<String> {

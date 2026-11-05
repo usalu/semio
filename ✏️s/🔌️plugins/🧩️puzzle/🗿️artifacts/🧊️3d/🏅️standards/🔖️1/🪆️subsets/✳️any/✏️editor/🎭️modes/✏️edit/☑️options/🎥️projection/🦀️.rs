@@ -5,8 +5,8 @@
 
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action;
-use semio_framework_plugin::world3d_projection_measures;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::world3d_projection_measures;
+use semio_plugin::WindowMeasure;
 
 /// 🧭️ The projection select + its parameter sliders for the materialized window's camera.
 /// 🔗️ `world3d_projection_measures` is a framework helper still bound to `serde_json::Value`

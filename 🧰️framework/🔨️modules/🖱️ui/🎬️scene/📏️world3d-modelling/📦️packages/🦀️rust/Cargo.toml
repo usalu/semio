@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-ui-scene-modelling"
+name = "semio-ui-scene-modelling"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -29,8 +29,8 @@ serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 semio-framework-geometry = { path = "../../../../../📐️geometry/📦️packages/🦀️rust" }
-semio-framework-ui-scene-algebra = { path = "../../../📐️math/🧮️algebra/📦️packages/🦀️rust" }
-semio-framework-ui-scene-camera = { path = "../../../📐️math/🎥️camera/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-scene-mesh = { path = "../../../📐️math/🕸️mesh/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-viewport = { path = "../../../../🪟️viewport/📦️packages/🦀️rust" }
+semio-ui-scene-algebra = { path = "../../../📐️math/🧮️algebra/📦️packages/🦀️rust" }
+semio-ui-scene-camera = { path = "../../../📐️math/🎥️camera/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-scene-mesh = { path = "../../../📐️math/🕸️mesh/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-viewport = { path = "../../../../🪟️viewport/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140" }

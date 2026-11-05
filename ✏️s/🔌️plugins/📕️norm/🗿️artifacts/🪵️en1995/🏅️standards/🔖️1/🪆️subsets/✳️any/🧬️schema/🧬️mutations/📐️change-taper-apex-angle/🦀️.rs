@@ -10,7 +10,7 @@ pub struct ChangeTaperApexAngle { pub taper_id: String, pub new_value: f64 }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeTaperApexAngle where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_taper_apex_angle::ChangeTaperApexAngle> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "taper-apex-angle", kind: "change-taper-apex-angle", record: "ChangedTaperApexAngle" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change roof pitch at the apex α_ap of taper {}", self.taper_id), &format!("Dachneigung im First α_ap von Taper {} ändern", self.taper_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change roof pitch at the apex α_ap of taper {}", self.taper_id), &format!("Dachneigung im First α_ap von Taper {} ändern", self.taper_id)) }
     fn target(&self) -> Vec<String> { vec![self.taper_id.clone()] }
 }
 

@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTensionPartialFact
         record: "ChangedTensionPartialFactor",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Cable partial factor γ_R (0 = none) of the tension component", "Zugglied: Teilsicherheitsbeiwert Seil γ_R (0 = keiner) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Cable partial factor γ_R (0 = none) of the tension component", "Zugglied: Teilsicherheitsbeiwert Seil γ_R (0 = keiner) ändern")
     }
 }
 

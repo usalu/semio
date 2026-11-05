@@ -1,8 +1,8 @@
 //! 🧪️ Layout document, Drawing custody, inference and representation laws through public model owners.
 #![cfg(test)]
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_pack as pack;
 use semio_s_artifact_layout_layout_model::*;

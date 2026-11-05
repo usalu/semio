@@ -25,7 +25,7 @@ use super::*;
 /// `target_mutation`/`base_version`/`dependencies`/`undo_policy` (a deliberately simpler shape
 /// than the old kernel-local one), so those are gone, not defaulted.
 pub async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelope> {
-    if semio_framework_os_spr::is_history_transition(envelope) {
+    if semio_os_spr::is_history_transition(envelope) {
         return None;
     }
     let undo_id = MutationId(format!("{}~undo", envelope.mutation_id.0));
@@ -36,8 +36,8 @@ pub async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEn
         dependencies: vec![envelope.mutation_id.clone()],
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
+        diff: semio_os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
+        inverse: semio_os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
         transaction: None, verb: None, line: None,
     })
@@ -53,7 +53,7 @@ pub const HISTORY_TRANSITION_REFUSED_CODE: &str = "history.transition-refused";
 /// refused transition, so the runtime can say which history step the hub did not take (ticket 26/09/30
 /// NON-DESTRUCTIVE-HISTORY-EDITING).
 pub fn transition_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
-    let transitions: Vec<String> = refused.iter().filter(|envelope| semio_framework_os_spr::is_history_transition(envelope)).map(|envelope| envelope.mutation_id.0.clone()).collect();
+    let transitions: Vec<String> = refused.iter().filter(|envelope| semio_os_spr::is_history_transition(envelope)).map(|envelope| envelope.mutation_id.0.clone()).collect();
     (!transitions.is_empty()).then(|| MutationMessage {
         level: semio_framework_diagnostic::Severity::Error,
         code: semio_framework_diagnostic::FaultCode::new(HISTORY_TRANSITION_REFUSED_CODE),
@@ -67,12 +67,12 @@ pub fn transition_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<
 /// opaquely (`crate::os_spr::encode_presence_peer` — `protocol_wire` has no dependency on
 /// this crate's `PresencePeer` type, so the frame only ever moves the pre-encoded bytes).
 pub async fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
-    semio_framework_os_spr::encode_presence_peer(peer).await
+    semio_os_spr::encode_presence_peer(peer).await
 }
 
 /// 📡️ The inverse of {@link presence_to_bytes}, for `ServerFrame::Presence`'s peer roster.
 pub async fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
-    semio_framework_os_spr::decode_presence_peer(bytes).await.ok()
+    semio_os_spr::decode_presence_peer(bytes).await.ok()
 }
 
 // 🎯️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
@@ -114,9 +114,9 @@ pub async fn actor_seed(actor: &str) -> u64 {
 /// crosses the wire exactly as the author folded it, so every replica orders it — and resolves the last
 /// supersession of an operation — by the same key (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING).
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn next_timestamp(seed: u64, counter: &mut u64) -> semio_framework_os_spr::HybridLogicalTimestamp {
+pub async fn next_timestamp(seed: u64, counter: &mut u64) -> semio_os_spr::HybridLogicalTimestamp {
     *counter = counter.wrapping_add(1);
-    semio_framework_os_spr::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms().await, logical: *counter }
+    semio_os_spr::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms().await, logical: *counter }
 }
 //#endregion 🔖️WireBridge
 
@@ -126,8 +126,8 @@ pub async fn next_timestamp(seed: u64, counter: &mut u64) -> semio_framework_os_
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: pack::snapshot::ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: pack::snapshot::ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     pub store: ArtifactStore<P, Mutation>,
     pub cmd_tx: Option<ArtifactMailboxSender>,
@@ -137,8 +137,8 @@ where
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: pack::snapshot::ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
-    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+    P: pack::snapshot::ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }
@@ -195,11 +195,11 @@ where
 
     /// 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
-    pub async fn receive(&mut self, envelope: MutationEnvelope, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), SyncError> {
-        self.store.dispatch(semio_framework_os_store_space_schema::ArtifactCommand::IngestRemote { envelope }, identity).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
+    pub async fn receive(&mut self, envelope: MutationEnvelope, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), SyncError> {
+        self.store.dispatch(semio_os_store_space_schema::ArtifactCommand::IngestRemote { envelope }, identity).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
-    pub async fn reconcile_branch(&mut self, _alternative_name: &str, _message: Option<String>, _authors: Vec<semio_framework_os_vcs::Author>) -> Result<String, SyncError> {
+    pub async fn reconcile_branch(&mut self, _alternative_name: &str, _message: Option<String>, _authors: Vec<semio_os_vcs::Author>) -> Result<String, SyncError> {
         Err(SyncError::Vcs("branch reconciliation requires the retained envelope candidate job; synchronous whole-envelope duplication is forbidden".into()))
     }
 }

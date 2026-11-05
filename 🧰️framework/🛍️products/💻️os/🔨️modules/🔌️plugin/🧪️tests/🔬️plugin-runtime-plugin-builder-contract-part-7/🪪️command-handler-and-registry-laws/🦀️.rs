@@ -34,16 +34,16 @@
 
     #[semio_framework_async_macros::async_test]
     async fn registry_less_construction_rejects_before_the_reducer() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
-        let mounted_policy=semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
-        let error = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::BadView, &meta(), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect_err("an empty registry must fail closed");
+        let error = semio_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::BadView, &meta(), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect_err("an empty registry must fail closed");
         assert_eq!(error.primary_fault().expect("a diagnostic fault").code.0, "interactive-job.unknown-key");
         assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default());
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
@@ -96,8 +96,8 @@
         for verb in InteractionVerb::ALL {
             assert_eq!(InteractionVerb::of_action(verb.action_id()), Some(verb), "{verb:?}");
         }
-        assert_eq!(InteractionVerb::ALL.len(), semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS.len());
-        for action in semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS {
+        assert_eq!(InteractionVerb::ALL.len(), semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS.len());
+        for action in semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS {
             assert!(InteractionVerb::of_action(action).is_some(), "{action} is intercepted but names no verb");
         }
         assert_eq!(InteractionVerb::of_action("undo"), None);
@@ -116,10 +116,10 @@
         let started = |operation: &str| store::pack_rt::encode_wire_value(&semio_framework_value::DslValue::Object(vec![("operationId".into(), semio_framework_value::DslValue::String(operation.into())), ("generation".into(), semio_framework_value::DslValue::String("7".into()))]));
         let invocation = |in_reply_to: u64, output: Vec<u8>| protocol::AppFrame::Invocation { in_reply_to, output, diagnostics: Vec::new(), ui_scope: Vec::new(), history_patch: Vec::new(), messages: Vec::new(), mutations: Vec::new(), inverse_group: Vec::new() };
         let view = semio_framework_value::DslValue::Object(vec![("interactionView".into(), semio_framework_value::DslValue::Object(vec![("selectedIds".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("item-1".into())]))]))]);
-        let leftover = semio_framework_plugin_job::TypedOperationLeftover { operation: 42, view };
+        let leftover = semio_plugin_job::TypedOperationLeftover { operation: 42, view };
         let mut frames = vec![protocol::AppFrame::Done { in_reply_to: 1 }, invocation(2, started("41")), invocation(0, started("42")), invocation(3, started("42"))];
         let untouched: Vec<Vec<u8>> = frames.iter().take(3).map(|frame| ::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(frame))).collect();
-        assert!(semio_framework_plugin_runtime_ops::ops_typed_operations::merge_typed_operation_leftover_into_reply(&mut frames, &leftover), "the reply that started operation 42 receives the leftover");
+        assert!(semio_plugin_runtime_ops::ops_typed_operations::merge_typed_operation_leftover_into_reply(&mut frames, &leftover), "the reply that started operation 42 receives the leftover");
         for (index, before) in untouched.iter().enumerate() {
             assert_eq!(&::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(&frames[index])), before, "frame {index} answers no fold and stays byte-identical");
         }
@@ -130,5 +130,5 @@
         let ids = merged.get("interactionView").and_then(|view| view.get("selectedIds")).and_then(semio_framework_value::DslValue::as_array).expect("interactionView joins the witness");
         assert_eq!(ids.iter().filter_map(semio_framework_value::DslValue::as_str).collect::<Vec<_>>(), vec!["item-1"]);
         let mut none = vec![invocation(4, started("40"))];
-        assert!(!semio_framework_plugin_runtime_ops::ops_typed_operations::merge_typed_operation_leftover_into_reply(&mut none, &leftover), "no reply of this exchange started the folding operation");
+        assert!(!semio_plugin_runtime_ops::ops_typed_operations::merge_typed_operation_leftover_into_reply(&mut none, &leftover), "no reply of this exchange started the folding operation");
     }

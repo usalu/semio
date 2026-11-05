@@ -31,7 +31,7 @@ fn native_surface_capture_precedes_worker_device_preparation() {
     assert_factory(ui_gpu::platform::NativeSurfaceCapture::prepare);
     let _: fn(Arc<ui_gpu::platform::NativeWindow>) -> Result<ui_gpu::platform::NativeSurfaceCapture, String> = ui_gpu::platform::NativeSurfaceCapture::capture;
     let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🪟️surface/🔣️.json")).expect("surface contract");
-    let source = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+    let source = semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     let resumed = &source[source.find("fn resumed(").expect("window callback")..];
     let mut phases = vec![(resumed.find("event_loop.create_window(").expect("create window"), "window"), (resumed.find("ui_gpu::platform::NativeSurfaceCapture::capture(").expect("capture surface"), "surface"), (resumed.find("crate::spawn_app_task(").expect("delegate device preparation"), "worker")];
     phases.sort_by_key(|row| row.0);
@@ -94,7 +94,7 @@ fn native_component_reader_admits_local_dev_artifacts_above_catalog_network_boun
     use std::io::Write;
     let _owner=RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error|error.into_inner());let _source=crate::original_native_source_test_guard();
     let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("component input contract");
-    assert_eq!(semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,contract["networkComponentMaxBytes"].as_u64().expect("network bound"));
+    assert_eq!(semio_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,contract["networkComponentMaxBytes"].as_u64().expect("network bound"));
     let root=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     std::fs::create_dir_all(&root).expect("test output root");
     let path=root.join(format!("local-component-pages-{}.json",std::process::id()));
@@ -121,7 +121,7 @@ fn native_component_reader_admits_local_dev_artifacts_above_catalog_network_boun
     std::fs::File::create(&path).expect("oversized local input").set_len(maximum+1).expect("bounded sparse input");
     crate::native_entrypoint::drive_native_entrypoint(async{
         let refusal=kernel_runtime::read_native_component(&path).await.expect_err("maximum plus one local byte must be refused");
-        assert_eq!(refusal.kind,crate::RendererSourceIoFailureKind::Extent(semio_framework_os_services_native_io::NativeIoStreamRefusal{length:maximum+1,maximum_bytes:maximum}));
+        assert_eq!(refusal.kind,crate::RendererSourceIoFailureKind::Extent(semio_os_services_native_io::NativeIoStreamRefusal{length:maximum+1,maximum_bytes:maximum}));
         drop(refusal);
     });
     std::fs::remove_file(path).expect("remove test output");
@@ -142,7 +142,7 @@ fn native_smoke_without_a_selected_application_returns_failure() {
     std::fs::write(root.join("descriptor.json"),serde_json::to_vec(&descriptor).expect("oracle descriptor bytes")).expect("descriptor input");
     std::fs::write(root.join("component.wasm"),[0,97,115,109,13,0,1,0]).expect("empty component input");
     std::fs::write(root.join("🔣️runtime.json"),serde_json::to_vec(&fixture["runtime"]).expect("runtime bytes")).expect("runtime input");
-    let actual=crate::native_entrypoint::drive_native_entrypoint(run_smoke_with_axes("empty-smoke",root.clone(),Vec::new(),(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native)));
+    let actual=crate::native_entrypoint::drive_native_entrypoint(run_smoke_with_axes("empty-smoke",root.clone(),Vec::new(),(semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native)));
     assert_eq!(actual,fixture["exitCode"].as_i64().expect("smoke status") as i32);
     std::fs::remove_dir_all(root).expect("remove test runtime");
 }

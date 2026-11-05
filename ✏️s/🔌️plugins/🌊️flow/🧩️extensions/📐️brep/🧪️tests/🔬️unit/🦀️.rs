@@ -402,7 +402,7 @@ async fn topology_widget_exposes_every_shape_kind_and_exact_labels() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_bundle_extends_flow_and_evaluates_box() {
-    use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle};
+    use semio_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle};
 
     let _serial = test_serial().await;
     reset_test_kernel().await;
@@ -418,7 +418,7 @@ async fn extension_bundle_extends_flow_and_evaluates_box() {
     assert_eq!(envelope.get("done").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
     let out = semio_framework_pack_json::parse(envelope.get("outputJson").and_then(semio_framework_pack_json::Value::as_str).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(out.get("solid").and_then(|value| value.get("$schema")).and_then(semio_framework_pack_json::Value::as_str), Some("geometry"));
-    semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
+    semio_plugin::plugin_runtime::extension_dispose_cold().unwrap();
 }
 
 fn number_value(dict: &Dictionary) -> f64 {

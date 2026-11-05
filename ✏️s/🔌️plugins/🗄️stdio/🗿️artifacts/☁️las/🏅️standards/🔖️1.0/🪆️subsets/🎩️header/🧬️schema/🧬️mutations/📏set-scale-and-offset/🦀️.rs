@@ -23,8 +23,8 @@ pub struct SetScaleAndOffset {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetScaleAndOffset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "scale-and-offset", kind: "set-scale-and-offset", record: "SetScaleAndOffset" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set scale and offset", "Maßstab und Versatz setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set scale and offset", "Maßstab und Versatz setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

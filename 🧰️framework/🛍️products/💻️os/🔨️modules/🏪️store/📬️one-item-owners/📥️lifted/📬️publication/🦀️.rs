@@ -1,32 +1,32 @@
 //! 📥️ Items of `one_item_publication` that belong to `os-store-one-item-batch` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🎮️one-item/📬️publication/🦀️.rs`.
-use semio_framework_os_store_one_item_publication::batch_digest::{ArtifactStoreBatchDigest,ArtifactStoreBatchMessage};
+use semio_os_store_one_item_publication::batch_digest::{ArtifactStoreBatchDigest,ArtifactStoreBatchMessage};
 use crate::lifted_member_group as member_group;
-use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
+use semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::HybridLogicalTimestamp;
-use semio_framework_os_spr::{Edit, Mutation, MutationMeta};
+use semio_os_spr::HybridLogicalTimestamp;
+use semio_os_spr::{Edit, Mutation, MutationMeta};
 use std::sync::Arc;
 use semio_framework_value_snapshot_read::{SnapshotRead, artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use semio_framework_os_store_ledger::lifted_snapshot_read::ArtifactStoreDisplacedOwnerReservation;
+use semio_os_store_ledger::lifted_snapshot_read::ArtifactStoreDisplacedOwnerReservation;
 use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_os_store_ledger::ArtifactStoreHistoryCommitReservation;
-use semio_framework_os_store_one_item_publication::prepared_retirement::ArtifactStorePreparedRetirement;
-use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactPreparedOperationSource;
-use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant};
-use semio_framework_os_store_command::HistoryLane;
-use semio_framework_os_store_one_item::LaneItemReceipt;
+use semio_os_store_ledger::ArtifactStoreHistoryCommitReservation;
+use semio_os_store_one_item_publication::prepared_retirement::ArtifactStorePreparedRetirement;
+use semio_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactPreparedOperationSource;
+use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant};
+use semio_os_store_command::HistoryLane;
+use semio_os_store_one_item::LaneItemReceipt;
 /// 🔄 Persistent store-side operation phases. Publication and ACK are distinct turns; close
 /// remains observable until the domain owner proves exact terminal emptiness.
-use semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase;
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPrepared;
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest;
-use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparation;
-use semio_framework_os_store_one_item_publication::ArtifactStoreBatchSource;
-pub use semio_framework_os_store_one_item_publication::lifted_publication::{MemberStoreOneItemWire, MemberStoreOneItemWirePreparationFactory, MemberStoreOneItemWireRequest};
+use semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemPrepared;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest;
+use semio_os_store_one_item_publication::ArtifactStoreOneItemPreparation;
+use semio_os_store_one_item_publication::ArtifactStoreBatchSource;
+pub use semio_os_store_one_item_publication::lifted_publication::{MemberStoreOneItemWire, MemberStoreOneItemWirePreparationFactory, MemberStoreOneItemWireRequest};
 
 
 
@@ -165,7 +165,7 @@ impl<Mutation> ArtifactStoreBatchAdmissionRejected<Mutation> {
 /// is ONE undo step. It carries its own retirement authority: a cancelled batch retires the staged
 /// forwards, inverses, metadata and post root one owner per bounded turn.
 pub struct ArtifactStoreBatchStage<P, Mutation> {
-    pub diagnostics: semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,
+    pub diagnostics: semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,
     pub diagnostic_row: usize,
     pub handoff_ids: [Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>; 2],
     pub handoff_cursors: [Option<semio_framework_value::paged::PagedUtf8AppendCursor>; 2],
@@ -175,12 +175,12 @@ pub struct ArtifactStoreBatchStage<P, Mutation> {
     pub digest_owner: Option<Box<dyn ArtifactStoreBatchDigest<Mutation>>>,
     pub digest_complete: bool,
     pub commit_metadata:Option<member_group::BatchCommitMetadata>,
-    pub displaced_report:Option<semio_framework_os_store_ledger::ArtifactStorePendingReportRetirement>,
+    pub displaced_report:Option<semio_os_store_ledger::ArtifactStorePendingReportRetirement>,
     pub message_owner: Option<Box<dyn ArtifactStoreBatchMessage<Mutation>>>,
-    pub message: Option<semio_framework_os_store_one_item_publication::batch_digest::OriginalCausalMessageBytes>,
+    pub message: Option<semio_os_store_one_item_publication::batch_digest::OriginalCausalMessageBytes>,
     pub message_complete: bool,
     pub observed_position: Option<usize>,
-    pub observed_source: Option<semio_framework_os_vcs::ArtifactHistoryKey>,
+    pub observed_source: Option<semio_os_vcs::ArtifactHistoryKey>,
     pub observed_complete: bool,
     pub seed_owner: Option<protocol::causal::original_seeds::OriginalMutationDagSeeds>,
     pub seed_pending: Option<protocol::MutationId>,
@@ -221,7 +221,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
         if self.handoff_ids.iter().any(Option::is_some) { return Ok(RetirementDemand { copy_bytes: size_of_val(&self.handoff_ids), capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<(Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>)>(), depth: 2, ..Default::default() }); }
         if let Some(owner) = self.retiring.as_ref() { return nested(artifact_retirement_box_demands(owner, body)?); }
         if self.message_owner.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Box<dyn ArtifactStoreBatchMessage<Mutation>>>(),depth:1,..Default::default()});}
-        if self.message.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_os_store_one_item_publication::batch_digest::OriginalCausalMessageBytes>(),depth:2,..Default::default()});}
+        if self.message.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_os_store_one_item_publication::batch_digest::OriginalCausalMessageBytes>(),depth:2,..Default::default()});}
         if self.digest_owner.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Box<dyn ArtifactStoreBatchDigest<Mutation>>>(), depth: 1, ..Default::default() }); }
         if self.folding.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Box<ArtifactStorePreparedRetirement<P, Mutation>>>(), depth: 1, ..Default::default() }); }
         if self.edit.is_some() { return Ok(RetirementDemand { copy_bytes:size_of::<Edit<Mutation>>(), release_bytes: size_of::<Edit<Mutation>>(), depth: 1, ..Default::default() }); }
@@ -398,7 +398,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     }
 
     /// 🏷️ The id of the action or command this gesture publishes for, stamped on the gesture's new edit (an amend keeps
-    /// the verb of the edit it extends). See [`semio_framework_os_spr::command::Edit::verb`].
+    /// the verb of the edit it extends). See [`semio_os_spr::command::Edit::verb`].
     pub fn set_verb(&mut self, verb: Option<String>) {
         self.verb = verb.filter(|value| !value.is_empty());
     }
@@ -449,7 +449,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
             }
         }
         let copy=size_of::<ArtifactStoreOneItemPrepared<P,Mutation>>()+size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>();
-        let message=if stage.diagnostics.row_count()!=0{size_of::<semio_framework_os_spr::command::MutationMessagePublication>()}else{0};
+        let message=if stage.diagnostics.row_count()!=0{size_of::<semio_os_spr::command::MutationMessagePublication>()}else{0};
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy+message||stage.local_actor.is_none()||self.authority.is_none()||stage.diagnostics.row_count()!=0&&!stage.diagnostics.joined_transfer_ready(){return blocked();}
         let messages=if stage.diagnostics.row_count()!=0{Some(stage.diagnostics.take_joined(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copy,..grant}).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"joined original diagnostics refused admitted handoff"))?)}else{None};
         let actor=stage.local_actor.take().unwrap();

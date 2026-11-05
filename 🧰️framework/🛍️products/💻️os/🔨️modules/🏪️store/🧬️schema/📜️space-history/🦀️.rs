@@ -5,10 +5,10 @@
 #[cfg(test)] use serde::{Deserialize, Serialize};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_os_spr::HybridLogicalTimestamp;
-use semio_framework_os_spr::{DiffRegions, Mutation, MutationDiff, TouchedPaths};
-use semio_framework_os_vcs::Author;
-use semio_framework_os_vcs::Identified;
+use semio_os_spr::HybridLogicalTimestamp;
+use semio_os_spr::{DiffRegions, Mutation, MutationDiff, TouchedPaths};
+use semio_os_vcs::Author;
+use semio_os_vcs::Identified;
 
 /// 📌️ One member document's position at the moment a `SpaceCheckpoint` was recorded.
 /// 🔮️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
@@ -134,44 +134,44 @@ impl SpaceHistoryStep {
         }
     }
 
-    fn step_into(&self, next: &mut SpaceHistorySnapshot) -> semio_framework_os_spr::MutationApplyResult<()> {
+    fn step_into(&self, next: &mut SpaceHistorySnapshot) -> semio_os_spr::MutationApplyResult<()> {
         match self {
             Self::AddCheckpoint { checkpoint, index } => {
                 if next.checkpoints.iter().any(|existing| existing.id == checkpoint.id) {
-                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("checkpoint {} already exists", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
+                    return Err(semio_os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("checkpoint {} already exists", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
                 }
                 let at = index.map_or(Some(next.checkpoints.len()), |index| usize::try_from(index).ok().filter(|at| *at <= next.checkpoints.len()));
                 let Some(at) = at else {
-                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.invalid-add-index", format!("checkpoint {} is inserted past the end", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
+                    return Err(semio_os_spr::MutationApplyError::new("mutation.apply.invalid-add-index", format!("checkpoint {} is inserted past the end", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
                 };
                 next.checkpoints.insert(at, checkpoint.clone());
             }
             Self::RemoveCheckpoint { checkpoint_id, index } => {
                 let Some(at) = next.checkpoints.iter().position(|checkpoint| checkpoint.id == *checkpoint_id) else {
-                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("checkpoint {checkpoint_id} does not exist")).at(["checkpoints", checkpoint_id.as_str()]));
+                    return Err(semio_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("checkpoint {checkpoint_id} does not exist")).at(["checkpoints", checkpoint_id.as_str()]));
                 };
                 if u64::try_from(at) != Ok(*index) {
-                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.order-mismatch", format!("checkpoint {checkpoint_id} is not at index {index}")).at(["checkpoints", checkpoint_id.as_str()]));
+                    return Err(semio_os_spr::MutationApplyError::new("mutation.apply.order-mismatch", format!("checkpoint {checkpoint_id} is not at index {index}")).at(["checkpoints", checkpoint_id.as_str()]));
                 }
                 next.checkpoints.remove(at);
             }
             Self::AddAlternative(alternative) => {
                 if next.alternatives.iter().any(|existing| existing.id == alternative.id) {
-                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("alternative {} already exists", alternative.id)).at(["alternatives", alternative.id.as_str()]));
+                    return Err(semio_os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("alternative {} already exists", alternative.id)).at(["alternatives", alternative.id.as_str()]));
                 }
                 let position = next.alternatives.partition_point(|existing| existing.id < alternative.id);
                 next.alternatives.insert(position, alternative.clone());
             }
             Self::RemoveAlternative { alternative_id } => {
                 if !next.alternatives.iter().any(|alternative| alternative.id == *alternative_id) {
-                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("alternative {alternative_id} does not exist")).at(["alternatives", alternative_id.as_str()]));
+                    return Err(semio_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("alternative {alternative_id} does not exist")).at(["alternatives", alternative_id.as_str()]));
                 }
                 next.alternatives.retain(|alternative| alternative.id != *alternative_id);
             }
             Self::SetActive { alternative_id } => {
                 if let Some(alternative_id) = alternative_id {
                     if !next.alternatives.iter().any(|alternative| alternative.id == *alternative_id) {
-                        return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("active alternative {alternative_id} does not exist")).at(["activeAlternativeId"]));
+                        return Err(semio_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("active alternative {alternative_id} does not exist")).at(["activeAlternativeId"]));
                     }
                 }
                 next.active_alternative_id = alternative_id.clone();
@@ -181,13 +181,13 @@ impl SpaceHistoryStep {
     }
 }
 
-impl semio_framework_os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
+impl semio_os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
     fn is_empty(&self) -> bool {
         self.steps.is_empty()
     }
 }
 
-impl semio_framework_os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
+impl semio_os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Self {
         let rows: Vec<Vec<SpaceHistoryStep>> = self.steps.iter().enumerate().map(|(index, step)| step.undo_rows(base, &self.steps[..index])).collect();
         Self { steps: rows.into_iter().rev().flatten().collect() }
@@ -196,9 +196,9 @@ impl semio_framework_os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHist
 
 impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {}
 
-impl semio_framework_os_spr::ColdMutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
-    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
-        let mut prepared = semio_framework_os_spr::PreparedField::new(snapshot.clone(), <Self as MutationDiff<SpaceHistorySnapshot>>::retire_projection, capability);
+impl semio_os_spr::ColdMutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
+    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, capability: semio_os_spr::ApplyCapability) -> semio_os_spr::MutationApplyResult<()> {
+        let mut prepared = semio_os_spr::PreparedField::new(snapshot.clone(), <Self as MutationDiff<SpaceHistorySnapshot>>::retire_projection, capability);
         let mut next = prepared.value_mut();
         for step in &self.steps {
             step.step_into(&mut next)?;

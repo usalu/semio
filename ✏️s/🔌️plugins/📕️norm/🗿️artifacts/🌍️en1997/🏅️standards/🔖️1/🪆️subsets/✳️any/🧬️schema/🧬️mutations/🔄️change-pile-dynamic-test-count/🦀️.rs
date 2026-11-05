@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangePileDynamicTestCou
         record: "ChangedPileDynamicTestCount",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Dynamic tests n (0 = none) of the pile", "Pfahl: Dynamische Pfahltests n (0 = keine) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Dynamic tests n (0 = none) of the pile", "Pfahl: Dynamische Pfahltests n (0 = keine) ändern")
     }
 }
 

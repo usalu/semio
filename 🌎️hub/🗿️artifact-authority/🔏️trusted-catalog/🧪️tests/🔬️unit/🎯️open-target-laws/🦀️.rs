@@ -147,7 +147,7 @@ fn local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_eve
 /// other editor surface must open at least one kind through the one rule (coordinator decision, session 12).
 const EDITORS_WITHOUT_A_DOCUMENT: [(&str, &str); 3] = [
     ("s.space.home@1/*#editor", "the launcher: its snapshot holds only the catalog generation it lists (`SHomeSnapshot { schema, catalog_generation }`), never user content"),
-    ("s.space.studio@1/*#editor", "the `s` shell's studio: it edits the running shell's OS-owned workflow (`semio_framework_os::WorkflowSnapshot`) and has no artifact kind of its own"),
+    ("s.space.studio@1/*#editor", "the `s` shell's studio: it edits the running shell's OS-owned workflow (`semio_os::WorkflowSnapshot`) and has no artifact kind of its own"),
     ("s.playbook.procedural@1/*#editor", "a `playbook.blockKind` module: its snapshot is the host playbook block's render payload (foreign document codec), never a document of its own"),
 ];
 

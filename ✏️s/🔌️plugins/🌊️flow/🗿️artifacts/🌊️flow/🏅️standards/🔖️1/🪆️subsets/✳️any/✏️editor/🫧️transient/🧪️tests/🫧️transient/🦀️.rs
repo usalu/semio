@@ -1,11 +1,11 @@
 //! 🫧️ Neutral lifecycle trace for the actual Flow empty-transient owner adapter.
 
-use semio_framework_plugin::{ArtifactApp, ArtifactOwnedDisposer, EditorApp, PluginLifecycleStep};
+use semio_plugin::{ArtifactApp, ArtifactOwnedDisposer, EditorApp, PluginLifecycleStep};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::RetainedCloneGrant;
 use std::sync::Arc;
 
-type Store = store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>;
+type Store = store::TransientStore<semio_plugin::NoTransient, semio_plugin::NoTransientMutation>;
 
 fn quoted_grant(disposer: &dyn ArtifactOwnedDisposer<Store>, owner: &Store, items: usize) -> RetainedCloneGrant {
     let demand = disposer.retirement_demands(owner, 64).expect("empty transient closure quotes its next turn");
@@ -50,7 +50,7 @@ async fn flow_empty_transient_close_matches_neutral_trace_and_exact_owner() {
     }
     assert!(foreign_disposer.terminal_is_empty(&foreign));
     let terminal_generation = owner.generation_now();
-    owner.reset(semio_framework_plugin::NoTransient::default()).await;
+    owner.reset(semio_plugin::NoTransient::default()).await;
     assert_eq!(owner.generation_now(), terminal_generation.wrapping_add(1));
     let reset_grant = quoted_grant(disposer.as_ref(), &owner, 1);
     assert_eq!(disposer.close_step(&mut owner, reset_grant).is_err(), fixture["rejectResetOwner"].as_bool().unwrap());

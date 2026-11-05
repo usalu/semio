@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "component-override", kind: "remove-component-override", record: "RemoveComponentOverride" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reset parameter \"{}\" of component \"{}\"", self.name, self.component), &format!("Parameter \"{}\" der Komponente \"{}\" zurücksetzen", self.name, self.component))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Reset parameter \"{}\" of component \"{}\"", self.name, self.component), &format!("Parameter \"{}\" der Komponente \"{}\" zurücksetzen", self.name, self.component))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{}.{}", self.component, self.name)]

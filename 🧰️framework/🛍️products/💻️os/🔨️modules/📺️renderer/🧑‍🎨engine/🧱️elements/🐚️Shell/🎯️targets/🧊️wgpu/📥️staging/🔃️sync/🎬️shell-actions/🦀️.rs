@@ -114,7 +114,7 @@ impl SyncState {
     //#endregion 🔖️CheckIn
     /// 🪢️ Hands the document's actor the canonical pair its guest was seeded from; nothing for a document bound to
     /// no hub.
-    pub fn install_document_seed(&self, prepared: &ShellPreparedDocumentOpen, pair: Option<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1>) -> Result<(), String> {
+    pub fn install_document_seed(&self, prepared: &ShellPreparedDocumentOpen, pair: Option<semio_os_kernel::os_directory::CanonicalCheckpointPairV1>) -> Result<(), String> {
         let (Some(pair), Some(seed)) = (pair, prepared.seed.as_ref()) else { return Ok(()) };
         if !self.document_host.set_document_seed(&ArtifactDocumentKey::hub(seed.scope.space_id.clone(), seed.scope.document_id.clone()), pair) {
             return Err("the canonical checkpoint pair could not be handed to the document actor".into());

@@ -81,9 +81,9 @@ pub fn validate_artifact_bootstrap_identity(bootstrap: &ArtifactBootstrap, docum
 }
 
 /// 📌️ The hub's frontier in the Check In head grammar; `None` for a genesis (never edited) frontier.
-pub fn acknowledged_edited_head(frontier: &RuntimeFrontierSummary) -> Option<semio_framework_os_directory::EditedArtifactFrontierV1> {
+pub fn acknowledged_edited_head(frontier: &RuntimeFrontierSummary) -> Option<semio_os_directory::EditedArtifactFrontierV1> {
     let chain_sha256: String = frontier.chain_hash.iter().map(|byte| format!("{byte:02x}")).collect();
-    let head = semio_framework_os_directory::EditedArtifactFrontierV1 { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_sha256 };
+    let head = semio_os_directory::EditedArtifactFrontierV1 { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_sha256 };
     head.validate().then_some(head)
 }
 

@@ -2,18 +2,18 @@
 
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::editor::note::support::ui_label;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiFixedList;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use semio_framework_ui_contract::{Buildable, HasBase};
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiFixedList;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_contract::{Buildable, HasBase};
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_BODY_CATALOGUE: &str = "note.play.catalogue";
@@ -35,7 +35,7 @@ pub fn definition() -> PanelTabDefinition {
 pub fn render(labels: &NotePlayLabels) -> UiAssemblyResult<BuiltNode> {
     let mut children = UiFixedList::default();
     for (index, label) in [labels.catalogue_text, labels.catalogue_image, labels.catalogue_table, labels.catalogue_math, labels.catalogue_ink, labels.catalogue_group].into_iter().enumerate() {
-        let child = semio_framework_ui_contract::text(ui_label(label.as_str())?)
+        let child = semio_ui_contract::text(ui_label(label.as_str())?)
             .try_id(format!("note-catalogue.kind.{index}"))
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note catalogue key admission failed"))?
             .try_build()

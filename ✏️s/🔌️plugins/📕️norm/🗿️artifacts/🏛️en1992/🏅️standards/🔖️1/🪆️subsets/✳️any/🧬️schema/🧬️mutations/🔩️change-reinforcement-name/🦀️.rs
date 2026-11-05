@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeReinforcementName 
         record: "ChangedReinforcementName",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change name of the reinforcement grade", "Betonstahlsorte: Name ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change name of the reinforcement grade", "Betonstahlsorte: Name ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.grade_id.clone()]

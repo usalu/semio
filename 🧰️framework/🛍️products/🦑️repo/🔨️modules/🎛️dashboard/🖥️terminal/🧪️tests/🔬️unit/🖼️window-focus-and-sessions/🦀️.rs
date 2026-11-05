@@ -253,9 +253,9 @@ fn a_terminal_without_unicode_gets_ascii_status_glyphs() {
   dashboard.apply_capabilities(&mut tui, false);
   dashboard.update_session(&mut tui, session("a", label("test", "quiz", ""), SessionStatus::Exited, Some(0)));
   assert_eq!(statuses(&dashboard, &mut tui, 0)[1], Some(Status::Success));
-  assert_eq!(tui.theme.glyphs, semio_framework_ui_tui_core::theme::GlyphSet::Ascii);
+  assert_eq!(tui.theme.glyphs, semio_ui_tui_core::theme::GlyphSet::Ascii);
   assert_eq!(Status::Success.glyph(tui.theme.glyphs, 0), "+");
-  assert_eq!(tui.width_mode(), semio_framework_ui_tui_core::text::WidthMode::Scalar);
+  assert_eq!(tui.width_mode(), semio_ui_tui_core::text::WidthMode::Scalar);
 }
 
 #[test]

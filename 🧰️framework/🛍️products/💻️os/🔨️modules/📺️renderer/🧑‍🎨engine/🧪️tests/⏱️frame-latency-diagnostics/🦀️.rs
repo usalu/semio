@@ -99,8 +99,8 @@ fn disabled_timer_does_not_read_the_clock_or_initialize_diagnostics() {
 
 #[test]
 fn transaction_and_presenter_state_machines_cover_every_phase_stage() {
-        use semio_framework_os_renderer_wgpu_frame_presentation::AppPresentPhase as Present;
-use semio_framework_os_renderer_wgpu_frame_transaction::FrameTransactionStage as Transaction;
+        use semio_renderer_wgpu_frame_presentation::AppPresentPhase as Present;
+use semio_renderer_wgpu_frame_transaction::FrameTransactionStage as Transaction;
     assert_eq!(Transaction::DrainProjectionDeltas.latency_stage(), FrameLatencyStage::TransactionDrainProjectionDeltas);
     assert_eq!(Transaction::RouteIntents.latency_stage(), FrameLatencyStage::TransactionRouteIntents);
     assert_eq!(Transaction::FlushEffects.latency_stage(), FrameLatencyStage::TransactionFlushEffects);

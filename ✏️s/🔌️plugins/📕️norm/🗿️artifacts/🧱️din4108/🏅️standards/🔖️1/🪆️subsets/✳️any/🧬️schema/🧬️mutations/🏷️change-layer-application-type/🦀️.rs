@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeLayerApplicationT
         record: "ChangedLayerApplicationType",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change insulation application type", "Anwendungstyp der Wärmedämmung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change insulation application type", "Anwendungstyp der Wärmedämmung ändern")
     }
 }
 

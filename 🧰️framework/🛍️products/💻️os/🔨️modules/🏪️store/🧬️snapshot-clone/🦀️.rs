@@ -1,14 +1,14 @@
 //! 🧩 Bounded retained-clone publication preparation.
 
-use semio_framework_os_spr::{ActorId, Edit, MutationId, MutationMeta, UndoPolicy};
-use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
-use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
+use semio_os_spr::{ActorId, Edit, MutationId, MutationMeta, UndoPolicy};
+use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_os_store_canonical_json::ArtifactCanonicalJson;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
-use semio_framework_os_store_one_item_publication::batch_digest::{ArtifactStoreBatchDigest, admit_artifact_batch_digest};
+use semio_os_store_one_item_publication::batch_digest::{ArtifactStoreBatchDigest, admit_artifact_batch_digest};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
-use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared};
-use semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
-use semio_framework_os_store_command::HistoryLane;
+use semio_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared};
+use semio_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
+use semio_os_store_command::HistoryLane;
 use semio_framework_value_snapshot_read::SnapshotRead;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneSourceAdmission, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_close};
 use semio_framework_value::{ValueError, ValueRefusalKind, retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::SharedControlledRetirement}, FactoryAuthority};

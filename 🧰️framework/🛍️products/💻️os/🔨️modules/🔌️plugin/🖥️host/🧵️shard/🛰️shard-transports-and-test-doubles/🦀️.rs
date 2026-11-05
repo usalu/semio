@@ -37,8 +37,8 @@ impl ShardTransport for SharedThreadTransport {
 /// recording for the ~50 remaining families since some of them will hit this exact wall.
 pub enum ShardTransports {
     SharedThread(SharedThreadTransport),
-    Process(semio_framework_plugin_host_process_transport::ProcessTransport),
-    Stdio(semio_framework_plugin_host_process_transport::StdioTransport),
+    Process(semio_plugin_host_process_transport::ProcessTransport),
+    Stdio(semio_plugin_host_process_transport::StdioTransport),
     #[cfg(any(test, feature = "testkit"))]
     Loopback(LoopbackTransport),
 }
@@ -91,14 +91,14 @@ impl From<SharedThreadTransport> for ShardTransports {
     }
 }
 
-impl From<semio_framework_plugin_host_process_transport::ProcessTransport> for ShardTransports {
-    fn from(t: semio_framework_plugin_host_process_transport::ProcessTransport) -> Self {
+impl From<semio_plugin_host_process_transport::ProcessTransport> for ShardTransports {
+    fn from(t: semio_plugin_host_process_transport::ProcessTransport) -> Self {
         Self::Process(t)
     }
 }
 
-impl From<semio_framework_plugin_host_process_transport::StdioTransport> for ShardTransports {
-    fn from(t: semio_framework_plugin_host_process_transport::StdioTransport) -> Self {
+impl From<semio_plugin_host_process_transport::StdioTransport> for ShardTransports {
+    fn from(t: semio_plugin_host_process_transport::StdioTransport) -> Self {
         Self::Stdio(t)
     }
 }

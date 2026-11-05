@@ -30,8 +30,8 @@ pub fn replace_layer_stroke<Op: From<ReplaceLayerStroke>>(layer_id: semio_framew
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for ReplaceLayerStroke where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<ReplaceLayerStroke> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "layer", kind: "replace-layer-stroke", record: "ReplacedLayerStroke" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace layer \"{}\" stroke", self.layer_id), &format!("Kontur von Ebene \"{}\" ersetzen", self.layer_id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Replace layer \"{}\" stroke", self.layer_id), &format!("Kontur von Ebene \"{}\" ersetzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.to_string_owner()]

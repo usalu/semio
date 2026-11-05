@@ -14,8 +14,8 @@ pub struct SetLodMode {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetLodMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "lod-mode", kind: "set-lod-mode", record: "SetLodMode" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Lod Mode", "Detailstufenmodus setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Lod Mode", "Detailstufenmodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

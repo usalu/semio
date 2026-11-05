@@ -1,0 +1,132 @@
+{
+  "cases": [
+    {
+      "name": "exact",
+      "stored": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "query": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "matches": true
+    },
+    {
+      "name": "different-instance",
+      "stored": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "query": {
+        "instance": 4,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "matches": false
+    },
+    {
+      "name": "different-parent-version",
+      "stored": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "query": {
+        "instance": 3,
+        "revision": "ab",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "matches": false
+    },
+    {
+      "name": "different-provisional-epoch",
+      "stored": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "query": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 10,
+        "root": "child-a"
+      },
+      "matches": false
+    },
+    {
+      "name": "different-child-owner-equal-content",
+      "stored": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "query": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-b"
+      },
+      "matches": false
+    },
+    {
+      "name": "same-root-new-header",
+      "stored": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "query": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 9,
+        "root": "child-a"
+      },
+      "matches": true
+    },
+    {
+      "name": "local",
+      "stored": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 0,
+        "root": null
+      },
+      "query": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 0,
+        "root": null
+      },
+      "matches": true
+    },
+    {
+      "name": "child-added",
+      "stored": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 0,
+        "root": null
+      },
+      "query": {
+        "instance": 3,
+        "revision": "aa",
+        "generation": 0,
+        "root": "child-a"
+      },
+      "matches": false
+    }
+  ]
+}

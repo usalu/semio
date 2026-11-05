@@ -1,0 +1,212 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "base",
+    "cases"
+  ],
+  "properties": {
+    "base": {
+      "type": "object",
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 21,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "domains",
+          "edit",
+          "expected",
+          "applied"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "domains": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "2d",
+                "3d"
+              ]
+            }
+          },
+          "edit": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "InsertWidget"
+                ],
+                "properties": {
+                  "InsertWidget": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/create-widget/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ReplaceWidget"
+                ],
+                "properties": {
+                  "ReplaceWidget": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/replace-widget/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "RemoveWidget"
+                ],
+                "properties": {
+                  "RemoveWidget": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/delete-widget/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "InsertSynapse"
+                ],
+                "properties": {
+                  "InsertSynapse": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/connect-synapse/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ReplaceSynapse"
+                ],
+                "properties": {
+                  "ReplaceSynapse": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/replace-synapse/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "RemoveSynapse"
+                ],
+                "properties": {
+                  "RemoveSynapse": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/disconnect-synapse/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "SetLayout"
+                ],
+                "properties": {
+                  "SetLayout": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/move-widget/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "RemoveLayout"
+                ],
+                "properties": {
+                  "RemoveLayout": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/clear-widget-layout/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "SetCamera"
+                ],
+                "properties": {
+                  "SetCamera": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/update-camera/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "SetSchema"
+                ],
+                "properties": {
+                  "SetSchema": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/change-schema/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "SetSlider"
+                ],
+                "properties": {
+                  "SetSlider": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/change-slider-value/schema.json"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "MoveNodes"
+                ],
+                "properties": {
+                  "MoveNodes": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/move-nodes/schema.json"
+                  }
+                }
+              }
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "schema": {},
+              "camera": {},
+              "widgets": {},
+              "synapses": {},
+              "layout": {}
+            }
+          },
+          "applied": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::{CurationSnapshot, SortDirection, TableSort};
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation, SetSortEdit};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

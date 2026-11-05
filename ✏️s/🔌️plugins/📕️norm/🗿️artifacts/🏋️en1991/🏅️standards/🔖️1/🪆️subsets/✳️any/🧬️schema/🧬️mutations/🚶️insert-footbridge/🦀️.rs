@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertFootbridge where O
         record: "InsertedFootbridge",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert footbridge {}", self.item.id), &format!("Fußgängerbrücke {} einfügen", self.item.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Insert footbridge {}", self.item.id), &format!("Fußgängerbrücke {} einfügen", self.item.id))
     }
 }
 

@@ -1,13 +1,13 @@
 //! 🎬️ Request-owned Icon World scene construction and prepared-packet publication.
 use semio_framework_job::{InteractiveJob, StepContext, JobOutcomeDescriptor, JobOutcomeKind, OriginalTurnFailure};
 use std::collections::HashMap;
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::InputState;
-use semio_framework_ui_prepared::{PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderPacket};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_draw_contract::DrawList;
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::InputState;
+use semio_ui_prepared::{PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderPacket};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Theme;
 
 use infinite_world::world::{
     begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, publish_world3d_asset_mesh, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_scene_bridge, step_world3d_snapshot, world3d_cursor_work_pending,
@@ -128,7 +128,7 @@ impl IconExportPreparedScene {
 
 pub struct IconExportScenePreparation {
     phase: Phase,
-    scene: semio_framework_ui_declaration::ui::UiComponentSceneNode,
+    scene: semio_ui_declaration::ui::UiComponentSceneNode,
     state: Option<World3dState>,
     resources: World3dBuildContext,
     input: Option<PreparedRenderInput>,
@@ -181,7 +181,7 @@ impl IconExportScenePreparation {
             }
         };
         let asset_url = crate::mesh_assets::mesh_asset_transport_url(&request.asset_url);
-        let mesh_id = semio_framework_plugin::world3d_mesh_id_from_url(&asset_url);
+        let mesh_id = semio_plugin::world3d_mesh_id_from_url(&asset_url);
         let surface_id = "icon-export-surface".to_string();
         let controller_id = "icon-export-controller".to_string();
         let mut state = World3dState::request_owned(surface_id.clone(), controller_id.clone(), revision);

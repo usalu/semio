@@ -18,38 +18,38 @@ fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() 
     let closed_view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key: node_key.clone(), open: Some(false), offset: 0, rows: expected_values.len() as u32 }],
         tree_viewport_rows: Some(16),
-        ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native)
     };
-    let closed = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.collection-tree-shape#editor", &TreeWindows::for_body(&closed_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("closed collection render");
+    let closed = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.collection-tree-shape#editor", &TreeWindows::for_body(&closed_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("closed collection render");
     let closed_records = find_key(&closed, &records_id).expect("closed records item");
-    let semio_framework_ui_contract::Component::TreeItem(closed_props) = &closed_records.component else { panic!("collection must render as a tree item") };
+    let semio_ui_contract::Component::TreeItem(closed_props) = &closed_records.component else { panic!("collection must render as a tree item") };
     assert_eq!(closed_props.default_open, Some(true));
     assert_eq!(closed_props.window.as_ref().map(|window| window.total), Some(expected_values.len() as u32));
-    assert!(!closed_records.children.iter().any(|child| matches!(child.component, semio_framework_ui_contract::Component::TreeItem(_))), "closed host state must not materialize entry rows");
+    assert!(!closed_records.children.iter().any(|child| matches!(child.component, semio_ui_contract::Component::TreeItem(_))), "closed host state must not materialize entry rows");
 
     let open_view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 0, rows: expected_values.len() as u32 }],
         tree_viewport_rows: Some(16),
-        ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native)
     };
-    let open = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.collection-tree-shape#editor", &TreeWindows::for_body(&open_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("open collection render");
+    let open = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.collection-tree-shape#editor", &TreeWindows::for_body(&open_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("open collection render");
     let records = find_key(&open, &records_id).expect("open records item");
-    let semio_framework_ui_contract::Component::TreeItem(props) = &records.component else { panic!("collection must remain a tree item") };
+    let semio_ui_contract::Component::TreeItem(props) = &records.component else { panic!("collection must remain a tree item") };
     let window = props.window.as_ref().expect("collection tree item window");
     assert_eq!((window.total, window.offset), (expected_values.len() as u32, 0));
     assert_eq!(props.default_open, Some(true));
     assert!(contains_key(records, &format!("{records_id}-add-template")), "typed creation remains independently actionable");
-    assert!(!records.children.iter().any(|child| matches!(child.component, semio_framework_ui_contract::Component::TreeSection(_))), "tree sections may only be direct tree-root children");
+    assert!(!records.children.iter().any(|child| matches!(child.component, semio_ui_contract::Component::TreeSection(_))), "tree sections may only be direct tree-root children");
     for (index, expected) in expected_values.iter().enumerate() {
         let child_path = [SnapshotDetailPathSegment::Key(collection_key.into()), SnapshotDetailPathSegment::Index(index)];
         let child_id = path_id(&child_path);
         let child = records.children.iter().find(|child| child.key.as_str() == child_id).expect("materialized entry must be a direct descendant");
-        assert!(matches!(child.component, semio_framework_ui_contract::Component::TreeItem(_)));
+        assert!(matches!(child.component, semio_ui_contract::Component::TreeItem(_)));
         let value_id = path_id(&[SnapshotDetailPathSegment::Key(collection_key.into()), SnapshotDetailPathSegment::Index(index), SnapshotDetailPathSegment::Key("value".into())]);
         let value = find_key(child, &value_id).expect("entry value remains reachable");
-        assert!(matches!(value.component, semio_framework_ui_contract::Component::TreeItem(_)));
+        assert!(matches!(value.component, semio_ui_contract::Component::TreeItem(_)));
         let editor = find_key(value, &format!("{value_id}-text")).expect("entry value remains editable");
-        let semio_framework_ui_contract::Component::Input(editor_props) = &editor.component else { panic!("entry value text input") };
+        let semio_ui_contract::Component::Input(editor_props) = &editor.component else { panic!("entry value text input") };
         assert_eq!(editor_props.value.as_str(), expected.as_str().expect("expected value"));
         assert!(editor_props.draft_target.as_ref().is_some_and(|target| target.as_str().contains(SET_SNAPSHOT_VALUE_ACTION_ID)));
     }
@@ -59,13 +59,13 @@ fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() 
         .map(|(index, _)| {
             let entry_id = path_id(&[SnapshotDetailPathSegment::Key(collection_key.into()), SnapshotDetailPathSegment::Index(index)]);
             let entry = find_key(records, &entry_id).expect("projected entry");
-            let semio_framework_ui_contract::Component::TreeItem(entry_props) = &entry.component else { panic!("projected entry tree item") };
+            let semio_ui_contract::Component::TreeItem(entry_props) = &entry.component else { panic!("projected entry tree item") };
             let value_id = path_id(&[SnapshotDetailPathSegment::Key(collection_key.into()), SnapshotDetailPathSegment::Index(index), SnapshotDetailPathSegment::Key("value".into())]);
             let value = find_key(entry, &value_id).expect("projected value");
-            let semio_framework_ui_contract::Component::TreeItem(value_props) = &value.component else { panic!("projected value tree item") };
+            let semio_ui_contract::Component::TreeItem(value_props) = &value.component else { panic!("projected value tree item") };
             let input = find_key(value, &format!("{value_id}-text")).expect("projected value input");
-            let semio_framework_ui_contract::Component::Input(input_props) = &input.component else { panic!("projected value input component") };
-            let action = input.bindings.iter().find(|binding| binding.trigger == semio_framework_ui_contract::Trigger::Commit).map(|binding| binding.action.name.as_str());
+            let semio_ui_contract::Component::Input(input_props) = &input.component else { panic!("projected value input component") };
+            let action = input.bindings.iter().find(|binding| binding.trigger == semio_ui_contract::Trigger::Commit).map(|binding| binding.action.name.as_str());
             serde_json::json!({
                 "key": entry.key.as_str(),
                 "label": entry_props.label.0.as_str(),
@@ -107,10 +107,10 @@ fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection()
     let closed_view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key: [ROOT_SECTION_ID, &format!("{folded_collection_id}-children")].join(TREE_WINDOW_PATH_SEPARATOR), open: Some(false), offset: 0, rows: 16 }],
         tree_viewport_rows: Some(16),
-        ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native)
     };
     for _ in 0..fixture["repeatCount"].as_u64().unwrap() {
-        let tree = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.table-details#editor", &TreeWindows::for_body(&closed_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("details first paint");
+        let tree = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.table-details#editor", &TreeWindows::for_body(&closed_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("details first paint");
         for key in fixture["firstPaintFields"].as_array().unwrap() {
             assert!(contains_key(&tree, &path_id(&[SnapshotDetailPathSegment::Key(key.as_str().unwrap().into())])), "field {key} must remain reachable");
         }
@@ -140,10 +140,10 @@ fn nested_collection_honours_an_explicit_second_page_without_counting_controls_a
     let view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 100, rows: 3 }],
         tree_viewport_rows: Some(4),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let windows = TreeWindows::for_body(&view, SNAPSHOT_DETAILS_BODY_KEY);
-    let node = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "s.stdio.png@test/*#editor", &windows).expect("nested details page");
+    let node = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "s.stdio.png@test/*#editor", &windows).expect("nested details page");
     for index in 100..103 {
         let path = [SnapshotDetailPathSegment::Key("pixels".into()), SnapshotDetailPathSegment::Index(index)];
         assert!(contains_key(&node, &path_id(&path)), "requested logical row {index} is reachable");
@@ -225,10 +225,10 @@ fn derived_schema_controls_render_only_the_requested_pages() {
             },
         ],
         tree_viewport_rows: Some(128),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let windows = TreeWindows::for_body(&view, SNAPSHOT_DETAILS_BODY_KEY);
-    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.derived-controls#editor", &windows).expect("windowed derived controls");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.derived-controls#editor", &windows).expect("windowed derived controls");
     for index in 100..103 {
         assert!(contains_key(&rendered, &format!("{ROOT_PATH_ID}-variant-{index}")));
     }
@@ -261,12 +261,12 @@ fn numeric_controls_preserve_json_number_kinds_through_the_action_parser() {
         }
     }
     for (number, expected) in [(Number::Float(1.0), DslValue::Number(Number::Float(1.0))), (Number::UInt(u64::MAX), DslValue::Number(Number::UInt(u64::MAX))), (Number::Int(i64::MIN), DslValue::Number(Number::Int(i64::MIN)))] {
-        let rendered = render_snapshot_details_provider_revisioned(&Numeric(number), semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.number#editor", &TreeWindows::unhosted()).expect("number details");
+        let rendered = render_snapshot_details_provider_revisioned(&Numeric(number), semio_ui_contract::UiPublicationRevision(1), Locale::En, "test.number#editor", &TreeWindows::unhosted()).expect("number details");
         let input = find_key(&rendered, &format!("{ROOT_PATH_ID}-number")).expect("number input");
-        let semio_framework_ui_contract::Component::Input(props) = &input.component else { panic!("number editor must remain an exact JSON text input") };
-        assert_eq!(props.kind, semio_framework_ui_contract::InputKind::Text);
+        let semio_ui_contract::Component::Input(props) = &input.component else { panic!("number editor must remain an exact JSON text input") };
+        assert_eq!(props.kind, semio_ui_contract::InputKind::Text);
         assert!(props.draft_target.as_ref().is_some_and(|target| target.as_str().contains(SET_SNAPSHOT_VALUE_ACTION_ID)));
-        let binding = input.bindings.iter().find(|binding| binding.trigger == semio_framework_ui_contract::Trigger::Commit).expect("commit binding");
+        let binding = input.bindings.iter().find(|binding| binding.trigger == semio_ui_contract::Trigger::Commit).expect("commit binding");
         let Some(UiValue::Map(arguments)) = &binding.args else { panic!("static arguments") };
         assert!(arguments.iter().any(|(key, value)| key.as_str() == "valueEncoding" && matches!(value, UiValue::Text(value) if value.as_str() == "json")));
         let args = DslValue::Object(vec![("path".into(), DslValue::String(String::new())), ("value".into(), DslValue::String(props.value.as_str().into())), ("valueEncoding".into(), DslValue::String("json".into()))]);

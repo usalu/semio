@@ -1,13 +1,13 @@
 //! 🧰️ Widget kit: the immediate-mode context, interaction maps, widget node model and text drawing every control renders through.
 
-use semio_framework_ui_declaration::ui::UiTreeWindow;
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState};
-use semio_framework_ui_text::{FontAtlas, TextFace};
-use semio_framework_ui_theme::{Rgba, Theme};
-use semio_framework_ui_declaration::IconName;
-use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
+use semio_ui_declaration::ui::UiTreeWindow;
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_input::{HitKind, HitTarget, InputState};
+use semio_ui_text::{FontAtlas, TextFace};
+use semio_ui_theme::{Rgba, Theme};
+use semio_ui_declaration::IconName;
+use semio_ui_declaration::ui::UiTreeActionPlacement;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -125,7 +125,7 @@ impl<E> WidgetInteractionMaps<E> {
             return false;
         }
         if delta.is_finite() && delta != 0.0 {
-            let entry = offsets.entry(semio_framework_ui_select_behavior::select_scroll_key(&scope.owner)).or_insert(0.0);
+            let entry = offsets.entry(semio_ui_select_behavior::select_scroll_key(&scope.owner)).or_insert(0.0);
             *entry = (*entry + delta).clamp(0.0, scope.max_scroll);
         }
         true
@@ -381,8 +381,8 @@ impl<E> WidgetNode<E> {
     /// from `input::retained_scene_hit` — the ONE derivation the retained hit registry uses, so a
     /// scene painted through this kit and the same scene painted through the retained ladder answer
     /// the identical hit contract (`World3d` its own kind, node-graph/board `\u{2026}.pane`, map `\u{2026}.map`).
-    pub fn component_scene(scene: &semio_framework_ui_declaration::ui::UiComponentSceneNode) -> Self {
-        let (hit_kind, hit_control_id) = semio_framework_ui_wgpu_mounted_layout::hit::retained_scene_hit(scene);
+    pub fn component_scene(scene: &semio_ui_declaration::ui::UiComponentSceneNode) -> Self {
+        let (hit_kind, hit_control_id) = semio_ui_wgpu_mounted_layout::hit::retained_scene_hit(scene);
         WidgetNode::ComponentScene { surface_id: scene.surface_id.clone(), hit_kind, hit_control_id }
     }
 }
@@ -444,14 +444,14 @@ pub fn draw_text_wrapped<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, 
 /// hanging trailing spaces trimmed because they paint no ink. It used to `split_whitespace`, which
 /// collapsed interior runs of spaces and knew nothing of hyphens or ideographs.
 pub fn wrap_text(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -> Vec<String> {
-    atlas.wrap_lines(text, max_width, size).into_iter().map(|line| text[line].trim_end_matches(semio_framework_ui_text::is_wrap_space).to_string()).collect()
+    atlas.wrap_lines(text, max_width, size).into_iter().map(|line| text[line].trim_end_matches(semio_ui_text::is_wrap_space).to_string()).collect()
 }
 
 /// 🅰️ [`draw_text_on`] at a chosen weight. A [`crate::wgpu::text::TextWeight::Semibold`] run is
 /// struck twice, the second time offset by `text::faux_bold_offset`, because no bold Latin face
 /// ships. The advances are unchanged, so the run occupies exactly the regular face's line box — which
 /// is why this is a weight swap and not the SIZE swap the `Text` node used to make.
-pub fn draw_text_weighted(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba, weight: semio_framework_ui_text::TextWeight) {
+pub fn draw_text_weighted(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba, weight: semio_ui_text::TextWeight) {
     draw_text_on(draw, atlas, text, x, y, size, color);
     if let Some(offset) = weight.synthetic_offset(size) {
         draw_text_on(draw, atlas, text, x + offset, y, size, color);
@@ -545,11 +545,11 @@ plumbing (`update_world_orbit_view_gizmo_hover`, which owns `&mut World3dState`)
 /// needs `WidgetContext`, which bundles the font/icon atlases. The placement/tip-geometry/
 /// hit-test math it calls into lives target-neutral in `draw_types::gizmo`.
 pub mod gizmo {
-    use semio_framework_ui_draw_contract::gizmo::{orbit_view_gizmo_head_radius, orbit_view_gizmo_placement, orbit_view_gizmo_tips};
+    use semio_ui_draw_contract::gizmo::{orbit_view_gizmo_head_radius, orbit_view_gizmo_placement, orbit_view_gizmo_tips};
     use crate::WidgetContext;
     use ui_scene::math::Camera3d;
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::Rgba;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::Rgba;
 
     /// 🪐️ Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`).
     pub fn paint_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect, hovered_tip: Option<usize>) {

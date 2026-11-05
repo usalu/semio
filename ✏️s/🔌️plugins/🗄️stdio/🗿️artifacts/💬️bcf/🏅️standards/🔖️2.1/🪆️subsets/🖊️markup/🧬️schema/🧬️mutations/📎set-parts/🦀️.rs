@@ -13,8 +13,8 @@ pub struct SetParts {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetParts {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "parts", kind: "set-parts", record: "SetParts" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set package parts", "Paketdateien setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set package parts", "Paketdateien setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

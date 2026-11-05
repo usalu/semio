@@ -1,3 +1,4 @@
+import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 💤️ The idle budget of the served `s` React shell: every spawnable program, left alone, paints nothing, and a long session
  * with many windows does not grow.
  *
@@ -20,8 +21,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, CDPSession, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 import { awaitBeacon, dismissIntroduction, keyOf, kindOf, roleOf, windowIds, type MatrixProgram } from "../🧮️program-matrix/🟦️.ts";
 
@@ -127,10 +127,10 @@ function withDeadline<T>(work: Promise<T>, ms: number, label: string): Promise<T
 }
 
 /** 🚀️ Boots a fresh shell, up to three attempts, each bounded. */
-async function bootShellBounded(baseUrl: string, headed: boolean): Promise<Shell> {
+async function bootShellBounded(repoRoot: string, baseUrl: string, headed: boolean): Promise<Shell> {
   let failure: unknown = null;
   for (let attempt = 1; attempt <= 3; attempt++) {
-    const booting = bootShell(baseUrl, headed);
+    const booting = bootShell(repoRoot, baseUrl, headed);
     try {
       return await withDeadline(booting, IDLE_BOOT_DEADLINE_MS, `shell boot attempt ${attempt}`);
     } catch (error) {
@@ -141,8 +141,8 @@ async function bootShellBounded(baseUrl: string, headed: boolean): Promise<Shell
   throw failure instanceof Error ? failure : new Error(String(failure));
 }
 
-async function bootShell(baseUrl: string, headed: boolean): Promise<Shell> {
-  ensureParityPlaywrightBrowsersPath();
+async function bootShell(repoRoot: string, baseUrl: string, headed: boolean): Promise<Shell> {
+  ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: !headed, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -250,9 +250,9 @@ const IDLE_BOOT_DEADLINE_MS = 360_000;
 const within = (reading: IdleReading | null): boolean => reading !== null && reading.framesPerSec < IDLE_BUDGET_V1.framesPerSec && reading.rafPerSec < IDLE_BUDGET_V1.rafPerSec && reading.drawsPerSec < IDLE_BUDGET_V1.drawsPerSec;
 
 /** 💤️ Runs the idle census over every program of `roles` (optionally narrowed by `only` = plugin ids or plugin/kind keys). */
-export async function runIdleCensus(options: Readonly<{ baseUrl: string; roles: readonly string[]; only: readonly string[]; done: ReadonlySet<string>; seconds: number; headed: boolean; signal: AbortSignal; onRow: (row: IdleRow) => void }>): Promise<readonly IdleRow[]> {
+export async function runIdleCensus(repoRoot: string, options: Readonly<{ baseUrl: string; roles: readonly string[]; only: readonly string[]; done: ReadonlySet<string>; seconds: number; headed: boolean; signal: AbortSignal; onRow: (row: IdleRow) => void }>): Promise<readonly IdleRow[]> {
   const rows: IdleRow[] = [];
-  let shell = await bootShellBounded(options.baseUrl, options.headed);
+  let shell = await bootShellBounded(repoRoot, options.baseUrl, options.headed);
   const abort = (): void => void shell.browser.close().catch(() => undefined);
   options.signal.addEventListener("abort", abort, { once: true });
   try {
@@ -284,7 +284,7 @@ export async function runIdleCensus(options: Readonly<{ baseUrl: string; roles: 
       const healthy = row.open !== null && (await withDeadline(windowIds(shell.page), 30_000, "health probe").then(() => true, () => false));
       if (!healthy) {
         await withDeadline(shell.browser.close(), 30_000, "browser close").catch(() => undefined);
-        shell = await bootShellBounded(options.baseUrl, options.headed);
+        shell = await bootShellBounded(repoRoot, options.baseUrl, options.headed);
         continue;
       }
       const remaining = (await withDeadline(windowIds(shell.page), 30_000, "window census").catch(() => [] as string[])).filter((windowId) => windowId !== "s-home-main");
@@ -318,8 +318,8 @@ export function slopePerMinute(minutes: readonly number[], values: readonly numb
 }
 
 /** 🫧️ Opens the first `windows` editors and samples memory and idle frames every minute for `minutes`. */
-export async function runMemorySoak(options: Readonly<{ baseUrl: string; minutes: number; windows: number; only: readonly string[]; headed: boolean; signal: AbortSignal; onSample: (sample: SoakSample) => void }>): Promise<{ readonly opened: readonly string[]; readonly samples: readonly SoakSample[] }> {
-  const shell = await bootShellBounded(options.baseUrl, options.headed);
+export async function runMemorySoak(repoRoot: string, options: Readonly<{ baseUrl: string; minutes: number; windows: number; only: readonly string[]; headed: boolean; signal: AbortSignal; onSample: (sample: SoakSample) => void }>): Promise<{ readonly opened: readonly string[]; readonly samples: readonly SoakSample[] }> {
+  const shell = await bootShellBounded(repoRoot, options.baseUrl, options.headed);
   const abort = (): void => void shell.browser.close().catch(() => undefined);
   options.signal.addEventListener("abort", abort, { once: true });
   try {
@@ -403,7 +403,7 @@ export async function runIdleBudgetCli(repoRoot: string, defaultOutDir: string, 
       const windows = Number(flagValue(segments, "--windows") ?? 10);
       const samples: SoakSample[] = [];
       const reportPath = join(outDir, "soak.json");
-      const result = await runMemorySoak({ baseUrl, minutes: soakMinutes, windows, only, headed, signal: controller.signal, onSample: (sample) => {
+      const result = await runMemorySoak(repoRoot, { baseUrl, minutes: soakMinutes, windows, only, headed, signal: controller.signal, onSample: (sample) => {
         samples.push(sample);
         writeFileSync(reportPath, `${JSON.stringify({ baseUrl, samples }, null, 1)}\n`);
         console.log(`[memory-soak] minute ${sample.minute}: heap ${sample.jsHeapMB} MB, workers ${sample.workersHeapMB} MB, nodes ${sample.nodes}, listeners ${sample.listeners}, frames/s ${sample.idle.framesPerSec}`);
@@ -428,7 +428,7 @@ export async function runIdleBudgetCli(repoRoot: string, defaultOutDir: string, 
     const roles = (flagValue(segments, "--roles") ?? "editor,viewer").split(",").filter(Boolean);
     const reportPath = join(outDir, "idle.json");
     const rows: IdleRow[] = segments.includes("--resume") && existsSync(reportPath) ? ((JSON.parse(readFileSync(reportPath, "utf8")) as { rows: IdleRow[] }).rows.filter((row) => row.open !== null)) : [];
-    await runIdleCensus({ baseUrl, roles, only, done: new Set(rows.map((row) => `${row.key}#${row.role}`)), seconds: Number(flagValue(segments, "--seconds") ?? 10), headed, signal: controller.signal, onRow: (row) => {
+    await runIdleCensus(repoRoot, { baseUrl, roles, only, done: new Set(rows.map((row) => `${row.key}#${row.role}`)), seconds: Number(flagValue(segments, "--seconds") ?? 10), headed, signal: controller.signal, onRow: (row) => {
       rows.push(row);
       writeFileSync(reportPath, `${JSON.stringify({ baseUrl, roles, rows }, null, 1)}\n`);
       console.log(`[idle-budget] ${row.pass ? "PASS" : "FAIL"} ${row.key}#${row.role} frames/s ${row.open?.framesPerSec ?? "-"} rAF/s ${row.open?.rafPerSec ?? "-"} draws/s ${row.open?.drawsPerSec ?? "-"} busy ${row.open?.mainBusyPct ?? "-"} %${row.detail ? ` — ${row.detail.slice(0, 200)}` : ""}`);

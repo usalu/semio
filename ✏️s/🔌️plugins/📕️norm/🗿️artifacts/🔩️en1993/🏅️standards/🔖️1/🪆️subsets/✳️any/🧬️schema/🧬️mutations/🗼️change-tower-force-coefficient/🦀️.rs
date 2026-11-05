@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeTowerForceCoeffici
         record: "ChangedTowerForceCoefficient",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Force coefficient c_f of the tower leg", "Turmstiel: Kraftbeiwert c_f ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Force coefficient c_f of the tower leg", "Turmstiel: Kraftbeiwert c_f ändern")
     }
 }
 

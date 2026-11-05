@@ -10,7 +10,7 @@ pub struct ChangeCaseLabelEn { pub case_id: String, pub new_value: String }
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeCaseLabelEn where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_case_label_en::ChangeCaseLabelEn> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "case-labelEn", kind: "change-case-label-en", record: "ChangedCaseLabelEn" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Label (EN) of case {}", self.case_id), &format!("Bezeichnung (EN) von Fall {} ändern", self.case_id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Change Label (EN) of case {}", self.case_id), &format!("Bezeichnung (EN) von Fall {} ändern", self.case_id)) }
     fn target(&self) -> Vec<String> { vec![self.case_id.clone()] }
 }
 

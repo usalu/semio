@@ -42,8 +42,8 @@ impl SetTrailingNewlineMutation {
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetTrailingNewlineMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "trailing-newline", kind: "set-trailing-newline", record: "SetTrailingNewline" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Trailing Newline", "Abschließenden Zeilenumbruch setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Trailing Newline", "Abschließenden Zeilenumbruch setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-trailing-newline".to_string()]

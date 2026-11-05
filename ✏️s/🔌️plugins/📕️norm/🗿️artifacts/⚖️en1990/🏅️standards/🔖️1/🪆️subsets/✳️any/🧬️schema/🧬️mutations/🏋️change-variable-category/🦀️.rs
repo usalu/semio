@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeVariableCategory w
         record: "ChangedVariableCategory",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change action category of the variable action", "Veränderliche Einwirkung: Einwirkungskategorie ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change action category of the variable action", "Veränderliche Einwirkung: Einwirkungskategorie ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

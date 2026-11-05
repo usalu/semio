@@ -1,5 +1,5 @@
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
-use semio_framework_plugin::SurfaceKind;
+use semio_plugin::SurfaceKind;
 #[allow(unused_imports)]
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::Gis2dPlayLabels;
 #[allow(unused_imports)]
@@ -7,23 +7,23 @@ use semio_s_artifact_gis_gismap_gis2d::{editor::gis2d::constants_and_io::Gis2dIn
 #[allow(unused_imports)]
 use semio_s_artifact_gis_gismap_gis2d::tile_coordinates::gis_policy::gis_map_scene_descriptor_json;
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+use semio_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 #[allow(unused_imports)]
-use semio_framework_plugin::scene_surface;
+use semio_plugin::scene_surface;
 #[allow(unused_imports)]
-use semio_framework_plugin::BuiltNode;
+use semio_plugin::BuiltNode;
 #[allow(unused_imports)]
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
-use semio_framework_plugin::TiledMapScene;
+use semio_plugin::TiledMapScene;
 #[allow(unused_imports)]
-use semio_framework_plugin::UiAssemblyResult;
+use semio_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowKindDefinition;
+use semio_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::WindowOptions;
 #[allow(unused_imports)]
 use semio_framework_surface::tiled_map::clamp_map_layer_weight;
 #[allow(unused_imports)]
@@ -33,15 +33,15 @@ use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels;
 use crate::unit_tests::context::{app, close, main_window_measures, render as render_body, render_tiled_map_scene, Gis2dTestApp};
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::{GIS2D_FEATURE_GRANULARITY, GIS2D_INTERACTION_DOMAIN};
 use semio_s_artifact_gis_gismap_gis2d::GisMapSnapshot;
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
+use semio_plugin::artifact_app_laws::meta;
+use semio_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
 
 /// 🕹️ Dispatches one framework-injected interaction verb against the `"features"` domain with the
 /// exact wire payload `TiledMapHost` sends (`emitFeatureSelection`/the hover effect), then settles
 /// the reserved job it spawns so the next render reads the published interaction state.
 async fn interact(app: &mut Gis2dTestApp, action: &str, args: serde_json::Value) {
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(semio_framework_value::DslValue::from(&args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{action} admission: {error:?}"));
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.unwrap_or_else(|error| panic!("{action} settles its reserved job: {error:?}"));
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(semio_framework_value::DslValue::from(&args)), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{action} admission: {error:?}"));
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.unwrap_or_else(|error| panic!("{action} settles its reserved job: {error:?}"));
 }
 
 fn feature_targets(ids: &[&str]) -> String {
@@ -105,7 +105,7 @@ async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
 async fn the_window_collects_every_option_node_exactly_once() {
     let config = MapWindowConfig::default();
     let document = GisMapSnapshot::default();
-    let measures = window_measures(&document, &config, gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
+    let measures = window_measures(&document, &config, gis2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)));
     assert_eq!(measures.len(), 5, "3 selects + the layers and layer-weights groups");
     let mut app = app().await;
     assert_eq!(main_window_measures(&mut app).await.len(), measures.len(), "the app routes the same set under the window id");

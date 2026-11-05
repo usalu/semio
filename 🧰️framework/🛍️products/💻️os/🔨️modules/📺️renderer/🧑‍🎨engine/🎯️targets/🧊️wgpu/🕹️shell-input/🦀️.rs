@@ -3,27 +3,27 @@
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate.
 
 extern crate infinite_canvas as infinite_world;
-use semio_framework_os_renderer_wgpu_shell_async::{chrome_now_ms, debug_log};
-use semio_framework_os_renderer_wgpu_shell_chrome_state::{ChromeDialogFieldKind, ChromeDialogRequest, ChromeDialogStop, ChromeState, ThemeDocument, appearance_id, format_keybinding_shortcut, shell_shortcut_table, theme_geometry};
-use semio_framework_os_renderer_wgpu_shell_dock::{ShellDockState, retained_event_modifiers};
-use semio_framework_os_renderer_wgpu_shell_docs::{COMPOSE_WINDOW_TEMPLATE_MIME, DocumentState, WindowTemplateDragPayload, custom_theme_document_from};
-use semio_framework_os_renderer_wgpu_shell_history::{HistoryState, TimeTravelFocus};
-use semio_framework_os_renderer_wgpu_shell_prefs::{PrefsState, dsl_value_as_json, settings_section, settings_text_row, theme_paint_editor_values};
-use semio_framework_os_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState};
-use semio_framework_os_renderer_wgpu_shell_windows::{PanelAnchor, WindowState};
+use semio_renderer_wgpu_shell_async::{chrome_now_ms, debug_log};
+use semio_renderer_wgpu_shell_chrome_state::{ChromeDialogFieldKind, ChromeDialogRequest, ChromeDialogStop, ChromeState, ThemeDocument, appearance_id, format_keybinding_shortcut, shell_shortcut_table, theme_geometry};
+use semio_renderer_wgpu_shell_dock::{ShellDockState, retained_event_modifiers};
+use semio_renderer_wgpu_shell_docs::{COMPOSE_WINDOW_TEMPLATE_MIME, DocumentState, WindowTemplateDragPayload, custom_theme_document_from};
+use semio_renderer_wgpu_shell_history::{HistoryState, TimeTravelFocus};
+use semio_renderer_wgpu_shell_prefs::{PrefsState, dsl_value_as_json, settings_section, settings_text_row, theme_paint_editor_values};
+use semio_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState};
+use semio_renderer_wgpu_shell_windows::{PanelAnchor, WindowState};
 use semio_framework::IconName;
-use semio_framework_os_renderer_wgpu_dock::{DockDragKind, DockDragPayload, WindowSilhouette};
-use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_ui_locale::Label;
+use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, WindowSilhouette};
+use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
+use semio_ui_locale::Label;
 use semio_framework_value::{DslValue, FromValue};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowStackCorner};
-use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, PointerModifiers, TreeDragState};
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_theme::{Rgba, Theme};
-use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
-use semio_framework_ui_wgpu_widget_kit::WidgetInteractionMaps;
+use semio_ui_declaration::layout::{ActionDescriptor, WindowStackCorner};
+use semio_ui_wgpu_input::{HitKind, HitTarget, InputState, PointerModifiers, TreeDragState};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::{Rgba, Theme};
+use semio_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
+use semio_ui_wgpu_widget_kit::WidgetInteractionMaps;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🧬️component/🦀️.rs"]
 mod staged_input__component;

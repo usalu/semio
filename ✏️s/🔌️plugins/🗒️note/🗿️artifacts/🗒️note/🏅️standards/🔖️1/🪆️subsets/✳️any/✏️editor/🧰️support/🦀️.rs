@@ -1,8 +1,8 @@
 //! 🧰️ Note editor support — the action factory, UI admission, interaction domain constants and topology every taxonomy node shares.
 
 use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ActionDefinition, ActionDescriptor, ActionKind, DomainTopology, DslValue, TopologyNode, UtilityCategory, UtilityDefinition};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin::{ActionDefinition, ActionDescriptor, ActionKind, DomainTopology, DslValue, TopologyNode, UtilityCategory, UtilityDefinition};
+use semio_ui_locale::LocalizedLabel;
 
 /// 👁️✏️ C2 §2.1: the hand-written app id is retired — the canonical surface id
 /// (`s.note.note@1/*#editor`) is now derived from `NotePlayApp::DIALECT`/`ROLE` via `surface_app_id`.
@@ -43,7 +43,7 @@ pub fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, ca
 /// window instance (`active_utility_by_window_id`) and mirrors only the shell's ACTIVE window into the flat
 /// `active_utility_id`, so a pane that is not the active window read `None` and ran every pencil drag as a
 /// `selectDirect` pick (ticket 26/09/17/NOTE-PLUGIN-END-TO-END; draw's `drawing_active_utility` precedent).
-pub fn note_active_utility(view: &semio_framework_plugin::ViewModel) -> &str {
+pub fn note_active_utility(view: &semio_plugin::ViewModel) -> &str {
     view.window_id
         .as_deref()
         .and_then(|window| view.active_utility_by_window_id.get(window))
@@ -82,6 +82,6 @@ pub fn note_blocks_topology(document: &NoteSnapshot) -> DomainTopology {
 }
 
 /// 🏷️ Admits Note display text into a bounded semantic label.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note label admission failed"))
 }

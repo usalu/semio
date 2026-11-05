@@ -43,16 +43,16 @@ fn widget_input_mesh_source_preserves_connected_owner_and_inverse() {
 
 /// 📇️ Supplies typed input metadata for this document-editing law without a geometry evaluator.
 fn input_metadata() {
-    fn install(registry: &mut semio_framework_os_flow::neural::Registry) {
-        use semio_framework_os_flow::neural::{ChannelSpec, OperatorInfo};
+    fn install(registry: &mut semio_os_flow::neural::Registry) {
+        use semio_os_flow::neural::{ChannelSpec, OperatorInfo};
         registry.register_operator(OperatorInfo { id: "brep.mesh.box".into(), extension: "widget-input-law".into(), name: "Box".into(), inputs: vec![ChannelSpec::number_default("width", 1.0, &[] as &[&str])], ..Default::default() }, Vec::new(), &[]);
     }
-    semio_framework_os_flow::install_flow_extension(semio_framework_os_flow::FlowExtensionSpec { id: "widget-input-law".into(), name: "Widget Input Law".into(), version: "1".into(), install }).expect("typed input metadata admission");
+    semio_os_flow::install_flow_extension(semio_os_flow::FlowExtensionSpec { id: "widget-input-law".into(), name: "Widget Input Law".into(), version: "1".into(), install }).expect("typed input metadata admission");
 }
 
 #[test]
 fn widget_input_language_neutral_collection_cases() {
-    use semio_framework_os_flow::neural::Cardinality;
+    use semio_os_flow::neural::Cardinality;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["collections"].as_array().unwrap() {
         let types: Vec<String> = serde_json::from_value(entry["types"].clone()).unwrap();
@@ -99,18 +99,18 @@ fn widget_input_plane_edit_is_one_absolute_history_leaf_with_full_inverse(){
 fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
     use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
 
-    use semio_framework_os_flow::{FlowHost, FlowExtensionSpec};
+    use semio_os_flow::{FlowHost, FlowExtensionSpec};
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
-    fn install(registry: &mut semio_framework_os_flow::neural::Registry) {
-        use semio_framework_os_flow::neural::{Cardinality, ChannelSpec, OperatorInfo};
+    fn install(registry: &mut semio_os_flow::neural::Registry) {
+        use semio_os_flow::neural::{Cardinality, ChannelSpec, OperatorInfo};
         for kind in ["number", "text", "boolean", "point", "vector"] {
             registry.register_operator(OperatorInfo { id: format!("collection-input-law.{kind}"), extension: "collection-input-law".into(), name: kind.into(), inputs: vec![ChannelSpec::named("items", "Items", "items", "Items").with_value_types(&["list"]).with_item_types(&[kind]).with_cardinality(Cardinality::ZeroOrMore)], ..Default::default() }, Vec::new(), &[]);
         }
     }
-    semio_framework_os_flow::install_flow_extension(FlowExtensionSpec { id: "collection-input-law".into(), name: "Collection Input Law".into(), version: "1".into(), install }).unwrap();
+    semio_os_flow::install_flow_extension(FlowExtensionSpec { id: "collection-input-law".into(), name: "Collection Input Law".into(), version: "1".into(), install }).unwrap();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["collections"].as_array().unwrap().iter().filter(|entry| entry.get("expected").is_some() && entry["cardinality"] == "*") {
-        let mut host = FlowHost::default().with_operator_registry(semio_framework_os_flow::flow_operator_registry());
+        let mut host = FlowHost::default().with_operator_registry(semio_os_flow::flow_operator_registry());
         let kind = entry["types"][0].as_str().unwrap();
         let shape = host.add_widget(&serde_json::json!({"kind":"neuron","id":"shape","neuronKind":format!("collection-input-law.{kind}")}).to_string(), 0.0, 0.0).unwrap();
         if !entry["current"].is_null() { host.set_neuron_params(&shape, &serde_json::json!({"items":entry["current"]}).to_string()).unwrap(); }
@@ -181,10 +181,10 @@ fn widget_input_explicit_widget_facets_use_one_existing_widget_leaf() {
 /// any document mutation.
 #[test]
 fn widget_input_is_one_typed_leaf_and_rejects_connected_ports() {
-    use semio_framework_os_flow::FlowHost;
+    use semio_os_flow::FlowHost;
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     input_metadata();
-    let mut host = FlowHost::default().with_operator_registry(semio_framework_os_flow::flow_operator_registry());
+    let mut host = FlowHost::default().with_operator_registry(semio_os_flow::flow_operator_registry());
     let source = host.add_widget(r#"{"kind":"inputSlider","id":"width","label":"Width"}"#, 0.0, 0.0).unwrap();
     let shape = host.add_widget(r#"{"kind":"neuron","id":"shape","neuronKind":"brep.mesh.box"}"#, 200.0, 0.0).unwrap();
     let note = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 200.0).unwrap();

@@ -4,8 +4,8 @@
 use crate::editor::animate as editor;
 use crate::standards::v1::subsets::any::{io, schema};
 use crate::viewer::animate as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
+use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
@@ -20,9 +20,9 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 
 pub fn subset<PA>() -> SubsetDeclaration<PA>
 where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
+    PA: semio_plugin::PluginApp
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<editor::AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_plugin::VcsArtifactApp<semio_plugin::ViewerApp<viewer::AnimatePresentationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>,
 {
     SubsetDeclaration {
         dialect: crate::ANIMATE_DIALECT,

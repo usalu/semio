@@ -4,7 +4,7 @@
 fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessibility_selected_tail() {
     let fixture = accessibility_fixture();
     let contract = &fixture["settingsTabStrip"];
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     let tabs = contract["tabs"].as_array().expect("Settings tabs").iter().enumerate().map(|(order, tab)| DockTabNode::leaf(tab["id"].as_str().unwrap(), tab["label"].as_str().unwrap(), "settings", order as i32)).collect::<Vec<_>>();
     shell.dock.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, tabs));
@@ -35,7 +35,7 @@ fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessi
     let tail_id = contract["tailIds"][1].as_str().unwrap();
     let tail = semantic.iter().find(|node| node.key == tail_id).expect("semantic tail tab");
     let target =
-        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: tail.node_id, node_key: tail.key.clone() };
+        ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: tail.node_id, node_key: tail.key.clone() };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("tail tab activation"));
     assert_eq!(shell.dock.anchor_state(anchor).active_tab(), Some(tail_id));
 
@@ -80,7 +80,7 @@ fn mobile_panel_buttons_publish_their_painted_names_and_pressed_state_once() {
 /// beside any bound control's own text — and appending it twice is not a thing that can happen.
 #[test]
 fn a_bound_chrome_control_carries_its_chord_inline_exactly_once() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let badged = shell.chrome.chrome_control_label("playground.navbar.roles.editor", "Editor");
     assert!(badged.starts_with("Editor "), "⌨️ the badge follows the label, as React's `ms-auto` span does");
     assert_eq!(shell.chrome.chrome_control_label("playground.navbar.roles.editor", &badged), badged, "⌨️ idempotent: a builder that already badged its own label is left alone");
@@ -91,7 +91,7 @@ fn a_bound_chrome_control_carries_its_chord_inline_exactly_once() {
 /// framework-universal history aliases stay in the shell tail.
 #[test]
 fn the_flagged_keybinding_rows_match_reacts_registry() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let fullscreen = shell.docs.build_os_commands(&shell.chrome).into_iter().find(|command| command.id == "os.toggleFullscreen").expect("fullscreen OS command");
     assert!(fullscreen.keybindings.iter().any(|binding| binding.chord == "control+meta+f" && binding.platform == Some(semio_framework::manifest::Platform::MacOs)));
     assert_eq!(fullscreen.keybindings.iter().filter(|binding| binding.chord == "f11").count(), 2);
@@ -108,14 +108,14 @@ fn the_flagged_keybinding_rows_match_reacts_registry() {
                 other => key = other,
             }
         }
-        let action = semio_framework_ui_wgpu_input::KeyAction::Char(key.to_string());
+        let action = semio_ui_wgpu_input::KeyAction::Char(key.to_string());
         assert_eq!(shell_edit_verb_for(&action, &modifiers), Some(expected), "⌨️ {chord} is React's framework-universal history tail");
     }
 }
 
 #[test]
 fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪟️dock-accessible-names/🔣️.json")).expect("dock names fixture");
     for locale in fixture["locales"].as_array().expect("locales") {
         for layout in ["split", "maximized", "stacked"] {
@@ -127,8 +127,8 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
             shell.chrome.screen_w = 1280.0;
             shell.chrome.screen_h = 720.0;
             if stacked {
-                shell.dock.dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Stack {
-                    windows: shell.dock.dock.window_instances().into_iter().map(|(id, kind)| semio_framework_os_renderer_wgpu_dock::DockStackTab::instance(id, kind, semio_framework_ui_layout::layout::WindowStackCorner::TopLeft)).collect(),
+                shell.dock.dock.root = semio_renderer_wgpu_dock::DockNode::Stack {
+                    windows: shell.dock.dock.window_instances().into_iter().map(|(id, kind)| semio_renderer_wgpu_dock::DockStackTab::instance(id, kind, semio_ui_layout::layout::WindowStackCorner::TopLeft)).collect(),
                     active: stacked_active.into(),
                 };
             }
@@ -192,8 +192,8 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
 
 #[test]
 fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
-    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let theme = Theme::light();
     let mut input = InputState::<ActionDescriptor>::default();
     with_chrome_control_names(|names| names.clear());

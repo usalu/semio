@@ -25,7 +25,7 @@ pub struct UpdateLink {
 impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateLink where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_link::UpdateLink> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "link", kind: "update-link", record: "UpdatedLink" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update link \"{}\"", self.id), &format!("Verknüpfung \"{}\" aktualisieren", self.id)) }
+    fn label(&self) -> semio_ui_locale::LocalizedLabel { semio_ui_locale::LocalizedLabel::native(&format!("Update link \"{}\"", self.id), &format!("Verknüpfung \"{}\" aktualisieren", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

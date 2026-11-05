@@ -10,7 +10,7 @@
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::op::PlaybookMutation;
 use crate::PlaybookSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload

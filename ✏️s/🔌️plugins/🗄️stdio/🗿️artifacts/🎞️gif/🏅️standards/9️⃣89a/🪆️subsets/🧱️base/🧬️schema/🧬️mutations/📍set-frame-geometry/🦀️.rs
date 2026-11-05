@@ -19,8 +19,8 @@ pub struct SetFrameGeometry {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameGeometry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-geometry", kind: "set-frame-geometry", record: "SetFrameGeometry" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set frame geometry", "Geometrie des Einzelbilds setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set frame geometry", "Geometrie des Einzelbilds setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

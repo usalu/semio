@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeFireThetaA where O
         record: "ChangedFireThetaA",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Aluminium temperature θ_al of the fire scenario", "Brandszenario: Aluminiumtemperatur θ_al ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Aluminium temperature θ_al of the fire scenario", "Brandszenario: Aluminiumtemperatur θ_al ändern")
     }
 }
 

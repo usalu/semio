@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-ui-prepared-staging"
+name = "semio-ui-prepared-staging"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,8 +24,8 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
-semio-framework-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
-semio-framework-ui-raster-owner = { path = "../../../../../../🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
+semio-ui-raster-owner = { path = "../../../../../../🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
 

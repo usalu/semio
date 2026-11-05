@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedCorrugationD
         record: "ChangedPlatedCorrugationDepth",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Corrugated web: corrugation depth d of the plated panel", "Plattenfeld: Trapezstegblech: Wellentiefe d ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Corrugated web: corrugation depth d of the plated panel", "Plattenfeld: Trapezstegblech: Wellentiefe d ändern")
     }
 }
 

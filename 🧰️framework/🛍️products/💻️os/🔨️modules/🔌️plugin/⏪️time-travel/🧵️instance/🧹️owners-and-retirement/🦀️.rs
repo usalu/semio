@@ -4,7 +4,7 @@ use super::*;
 use semio_framework::Fault;
 use semio_framework::FaultOrigin;
 use semio_framework::FaultCode;
-use semio_framework_plugin_child::ChildContentRetirement;
+use semio_plugin_child::ChildContentRetirement;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value_retirement::retirement::controlled::ControlledRetirement;
 
@@ -95,9 +95,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if let Some(step)=self.time_travel.retire_step(grant)?{return Ok(Some(step))}self.member_subject_retirement_step(grant)
     }
 
-    pub fn time_travel_close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.time_travel_close_step_with_context(grant,None)}
-    pub fn time_travel_close_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.time_travel_close_step_with_context(grant,Some(cx))}
-    fn time_travel_close_step_with_context(&mut self,grant:RetainedCloneGrant,mut cx:Option<&mut semio_framework_job::StepContext<'_>>)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn time_travel_close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.time_travel_close_step_with_context(grant,None)}
+    pub fn time_travel_close_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.time_travel_close_step_with_context(grant,Some(cx))}
+    fn time_travel_close_step_with_context(&mut self,grant:RetainedCloneGrant,mut cx:Option<&mut semio_framework_job::StepContext<'_>>)->Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.time_travel.has_command_receipt(){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if !self.time_travel.closing{

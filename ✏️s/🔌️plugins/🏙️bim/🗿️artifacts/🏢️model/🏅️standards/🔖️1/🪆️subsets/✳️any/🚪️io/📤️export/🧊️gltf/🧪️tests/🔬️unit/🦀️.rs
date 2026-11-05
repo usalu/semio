@@ -2,7 +2,7 @@ use semio_framework::io_schema::IoPayload;
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]
@@ -14,7 +14,7 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export
 use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::{house, read, third_party, HOUSE_DIR};
 use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::io;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
+use semio_os_kernel::io::io_mechanism::IoEntryDirection;
 
 #[test]
 fn the_declaration_lists_the_gltf_export_between_the_bim_and_the_gltf_dialect() {

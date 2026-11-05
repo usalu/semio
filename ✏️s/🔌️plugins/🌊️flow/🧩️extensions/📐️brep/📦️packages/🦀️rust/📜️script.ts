@@ -7,7 +7,7 @@ import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️p
 import { brepExtensionRetirementOracle, geometryInferenceOracle, channelIdentityOracle } from "../../🧪️tests/🔬️extension-guest-standalone/🟦️.ts";
 import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { runBun } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { packageAdmittedExtensionComponentV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import { packageAdmittedExtensionComponentV1 } from "@semio-tech/process/extension-package";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runCanonicalArchitectureScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";

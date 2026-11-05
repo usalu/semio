@@ -15,7 +15,7 @@
     "semio-framework-artifact-space-collection",
     "semio-framework-artifact-space-space",
     "semio-framework-artifact-workflow-workflow",
-    "semio-framework-os-kernel",
+    "semio-os-kernel",
     "semio-s-artifact-animate-presentation",
     "semio-s-artifact-block-2d",
     "semio-s-artifact-block-3d",
@@ -86,7 +86,7 @@
     "missing-kernel-mount"
   ],
   "rendererBoundary": {
-    "package": "semio-framework-os-renderer-wgpu",
+    "package": "semio-renderer-wgpu",
     "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
     "implementationEdges": 0,
     "puzzleGuestEdges": 0

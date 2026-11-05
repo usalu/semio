@@ -9,7 +9,7 @@ static EXTENSIONS_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_frame
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
-pub use semio_framework_os_flow_operators::extensions::schema::*;
+pub use semio_os_flow_operators::extensions::schema::*;
 
 #[path = "🔎️inference-dependency-and-evaluate-json/🦀️.rs"]
 mod inference_dependency_and_evaluate_json;

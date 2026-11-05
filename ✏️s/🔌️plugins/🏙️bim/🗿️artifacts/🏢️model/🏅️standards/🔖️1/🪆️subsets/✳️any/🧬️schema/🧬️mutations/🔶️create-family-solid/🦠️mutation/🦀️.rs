@@ -18,8 +18,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "family-solid", kind: "create-family-solid", record: "CreateFamilySolid" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create family solid \"{}\"", self.solid.name), &format!("Familienkörper \"{}\" anlegen", self.solid.name))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create family solid \"{}\"", self.solid.name), &format!("Familienkörper \"{}\" anlegen", self.solid.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"Original Neural Close Work Forwarding","type":"array","minItems":6,"items":{"type":"object","additionalProperties":false,"required":["name","children","expected"],"properties":{"name":{"type":"string"},"children":{"type":"array","items":{"type":"integer","minimum":0}},"expected":{"type":"integer","minimum":0}}}}

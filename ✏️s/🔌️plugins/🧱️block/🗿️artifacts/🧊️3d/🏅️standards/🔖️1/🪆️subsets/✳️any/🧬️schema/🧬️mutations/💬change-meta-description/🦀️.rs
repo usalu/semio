@@ -24,8 +24,8 @@ pub fn change_meta_description<Op: From<crate::change_meta_description::ChangeMe
 impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeMetaDescription where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_meta_description::ChangeMetaDescription> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "meta", kind: "change-meta-description", record: "ChangedMetaDescription" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change meta description", "Metabeschreibung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change meta description", "Metabeschreibung ändern")
     }
 }
 

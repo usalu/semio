@@ -4,8 +4,8 @@ use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use crate::session::{BRIDGE_BROADCAST_MAX_RECIPIENTS, BRIDGE_OUTBOX_MAX_BYTES, BRIDGE_OUTBOX_MAX_ITEMS, BRIDGE_OUTBOX_MAX_PAGES, BRIDGE_OUTBOX_PAGE_BYTES, BridgeBroadcastCompletion, BridgeBroadcastCursor, BridgeBroadcastStep, BridgeEncodedFrame, BridgeHandle, BridgeOutbox, BridgeRecipientState, ShellConnectionId};
-use semio_framework_os_mcp_bridge_codec::bridge::{ApprovalDecision, BRIDGE_INBOUND_MAX_FIELD_BYTES, BRIDGE_INBOUND_PAGE_BYTES, BRIDGE_VERSION, BridgeFlags, BridgeInstanceRef, GatewayToShell, ShellDecodeFault, ShellDecodeStep, ShellKind, ShellMaterializeStep, ShellToGateway, ShellToGatewayDecodeCursor, ShellToGatewayMaterializeCursor, bridge_wire_field_len};
-use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_os_mcp_bridge_codec::bridge::{ApprovalDecision, BRIDGE_INBOUND_MAX_FIELD_BYTES, BRIDGE_INBOUND_PAGE_BYTES, BRIDGE_VERSION, BridgeFlags, BridgeInstanceRef, GatewayToShell, ShellDecodeFault, ShellDecodeStep, ShellKind, ShellMaterializeStep, ShellToGateway, ShellToGatewayDecodeCursor, ShellToGatewayMaterializeCursor, bridge_wire_field_len};
+use semio_os_mcp_foundation::errors::GatewayErrorCode;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

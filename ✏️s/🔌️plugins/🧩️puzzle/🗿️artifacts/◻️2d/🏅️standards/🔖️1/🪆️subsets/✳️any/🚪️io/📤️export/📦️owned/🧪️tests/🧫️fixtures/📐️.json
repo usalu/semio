@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Puzzle Owned JSON Acceptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "route",
+    "material",
+    "limits",
+    "execution",
+    "operationSource",
+    "progress",
+    "cancel",
+    "format",
+    "afterCancel"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "route": {
+      "const": {
+        "from": {
+          "artifactKind": "s.puzzle.puzzle2d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "into": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        }
+      }
+    },
+    "material": {
+      "const": {
+        "nodes": 1024,
+        "columns": 32,
+        "spacing": 128,
+        "idPrefix": "export-node-"
+      }
+    },
+    "limits": {
+      "const": {
+        "requestBytes": 2097152,
+        "resultBytes": 2097152,
+        "nativeValueAllowanceBytes": 4194304,
+        "vmBytes": 16777216,
+        "scaffoldingBytes": 2097152,
+        "pageBytes": 16384,
+        "progressBytes": 512
+      }
+    },
+    "execution": {
+      "const": {
+        "maximumTurns": 10000,
+        "maximumMilliseconds": 120000,
+        "userVisibleTurns": 2000
+      }
+    },
+    "operationSource": {
+      "const": {
+        "maximumItems": 64000,
+        "maximumCopyBytes": 50331648,
+        "maximumCapacityBytes": 73400320,
+        "maximumReleaseBytes": 73400320,
+        "maximumDepth": 4096
+      }
+    },
+    "progress": {
+      "const": {
+        "carrier": "preview",
+        "phase": "encode",
+        "completedBytesMinimum": 1,
+        "strictlyBeforeTotal": true
+      }
+    },
+    "cancel": {
+      "const": {
+        "code": "canceled",
+        "origin": "framework",
+        "severity": "error",
+        "retryable": false,
+        "outputForbidden": true,
+        "paidSourceClosure": true,
+        "observation": "paidCleanupTypedFault"
+      }
+    },
+    "format": {
+      "const": {
+        "pretty": true,
+        "indent": 2,
+        "exactLeafBytes": true,
+        "allAuthoredWords": true,
+        "completeRelationalSpecimen": true,
+        "emptyTargetRegionsOmitted": true
+      }
+    },
+    "afterCancel": {
+      "const": {
+        "command": "createNode",
+        "id": "AfterExportCancel",
+        "undo": true,
+        "redo": true
+      }
+    }
+  },
+  "$defs": {
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "completedBytes"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "measure",
+            "allocate",
+            "encode",
+            "sourceClose",
+            "handoff",
+            "complete",
+            "closing"
+          ]
+        },
+        "completedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -51,18 +51,18 @@ pub(super) const EMOJI_BUCKET_FAMILIES:[&str;12]=["Noto Emoji Regions","Noto Emo
 pub(super) const EMOJI_BUCKET_STACK:&str="\"Noto Emoji Regions\",\"Noto Emoji Flags\",\"Noto Emoji Symbols\",\"Noto Emoji Objects\",\"Noto Emoji Activities\",\"Noto Emoji Travel\",\"Noto Emoji Food\",\"Noto Emoji Nature\",\"Noto Emoji People\",\"Noto Emoji Faces\",\"Noto Emoji Joined Forms\",\"Noto Emoji Supplement\"";
 
 pub static NOTO_EMOJI_BUCKETS:[&[u8];12]=[
- semio_framework_font_noto_emoji_regions_regular::OUTLINE,
- semio_framework_font_noto_emoji_flags_regular::OUTLINE,
- semio_framework_font_noto_emoji_symbols_regular::OUTLINE,
- semio_framework_font_noto_emoji_objects_regular::OUTLINE,
- semio_framework_font_noto_emoji_activities_regular::OUTLINE,
- semio_framework_font_noto_emoji_travel_regular::OUTLINE,
- semio_framework_font_noto_emoji_food_regular::OUTLINE,
- semio_framework_font_noto_emoji_nature_regular::OUTLINE,
- semio_framework_font_noto_emoji_people_regular::OUTLINE,
- semio_framework_font_noto_emoji_faces_regular::OUTLINE,
- semio_framework_font_noto_emoji_joined_forms_regular::OUTLINE,
- semio_framework_font_noto_emoji_supplement_regular::OUTLINE,
+ semio_font_noto_emoji_regions_regular::OUTLINE,
+ semio_font_noto_emoji_flags_regular::OUTLINE,
+ semio_font_noto_emoji_symbols_regular::OUTLINE,
+ semio_font_noto_emoji_objects_regular::OUTLINE,
+ semio_font_noto_emoji_activities_regular::OUTLINE,
+ semio_font_noto_emoji_travel_regular::OUTLINE,
+ semio_font_noto_emoji_food_regular::OUTLINE,
+ semio_font_noto_emoji_nature_regular::OUTLINE,
+ semio_font_noto_emoji_people_regular::OUTLINE,
+ semio_font_noto_emoji_faces_regular::OUTLINE,
+ semio_font_noto_emoji_joined_forms_regular::OUTLINE,
+ semio_font_noto_emoji_supplement_regular::OUTLINE,
 ];
 
 /// 📏️ One scalar's advance per logical pixel of font size, straight from the face's own units (`hmtx` / unitsPerEm) — the ONE

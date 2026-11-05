@@ -106,12 +106,12 @@ export async function runDeletionProofScript(context: Readonly<{ root: string; r
   await runRepositoryCommand(context.invocation,"cargo",["check", "--offline", ...checkedPackages.flatMap((name) => ["-p", name]), "--lib"],workspaceRoot,"stdio-deletion-proof",{version:1,maximumElapsedMilliseconds:0,output:null},{env});
   const probeRoot = join(workspaceRoot, "🧪️sqlite-required");
   mkdirSync(probeRoot);
-  writeFileSync(join(probeRoot, "Cargo.toml"), '[package]\nname = "semio-stdio-sql-required-probe"\nversion = "0.1.0"\nedition = "2021"\n[lib]\npath = "🦀️.rs"\n[dependencies]\nsemio-framework-os-kernel.workspace = true\nsemio-framework-pack.workspace = true\n');
+  writeFileSync(join(probeRoot, "Cargo.toml"), '[package]\nname = "semio-stdio-sql-required-probe"\nversion = "0.1.0"\nedition = "2021"\n[lib]\npath = "🦀️.rs"\n[dependencies]\nsemio-os-kernel.workspace = true\nsemio-framework-pack.workspace = true\n');
   writeFileSync(join(probeRoot, "🦀️.rs"), `use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use semio_framework_os_kernel::{artifact_codec, os_store::serialization::{ArtifactCodec,ArtifactStoreSnapshot}, ToValue, FromValue, OpText, OpBinary, Mutation,ArtifactCanonicalJsonTree};
+use semio_os_kernel::{artifact_codec, os_store::serialization::{ArtifactCodec,ArtifactStoreSnapshot}, ToValue, FromValue, OpText, OpBinary, Mutation,ArtifactCanonicalJsonTree};
 pub fn required<P, M>(schema: &str) -> ArtifactCodec
-where P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ArtifactStoreSnapshot + semio_framework_os_kernel::__value::retirement::RetireOwned + Send + Sync + 'static,
-M: Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_os_kernel::__value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static {
+where P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ArtifactStoreSnapshot + semio_os_kernel::__value::retirement::RetireOwned + Send + Sync + 'static,
+M: Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_os_kernel::__value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static {
   artifact_codec::<P, M>(schema)
 }
 `);

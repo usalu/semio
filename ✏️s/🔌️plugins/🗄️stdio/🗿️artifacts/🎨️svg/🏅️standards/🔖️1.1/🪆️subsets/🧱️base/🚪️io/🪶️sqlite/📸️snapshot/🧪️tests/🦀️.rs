@@ -1,14 +1,14 @@
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use crate::{schema::snapshot::SvgDocument, schema::snapshot::SvgNode};
-use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl};
-use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+use semio_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl};
+use semio_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_xml::{standards::v1_0::subsets::base::io::sqlite::snapshot::project_xml_document, standards::v1_0::subsets::base::io::sqlite::snapshot::reconstruct_xml_document, standards::v1_0::subsets::base::io::sqlite::snapshot::XmlSqliteTables};
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_1::subsets::base::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 
@@ -30,15 +30,15 @@ fn native_unicode_snapshot() -> SvgSnapshot {
     let f = native_control_fixture();
     SvgSnapshot { schema: f["literalSchema"].as_str().unwrap().into(), doc: SvgDocument { root: Some(SvgNode::Element { name: "svg".into(), attrs: vec![], children: vec![SvgNode::Text { text: f["text"].as_str().unwrap().repeat(f["repeat"].as_u64().unwrap() as usize) }] }), ..SvgDocument::default() } }
 }
-fn native_payload(snapshot: &SvgSnapshot, encoding: SnapshotEncoding) -> semio_framework_os_kernel::io_schema::IoPayload {
-    match encoding { SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(snapshot)), SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(snapshot)) }
+fn native_payload(snapshot: &SvgSnapshot, encoding: SnapshotEncoding) -> semio_os_kernel::io_schema::IoPayload {
+    match encoding { SnapshotEncoding::Binary => semio_os_kernel::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(snapshot)), SnapshotEncoding::Text => semio_os_kernel::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(snapshot)) }
 }
 
 #[test]
 fn sqlite_snapshot_svg_native_long_unicode_carriers_and_interior_cancellation() {
     let snapshot = native_unicode_snapshot(); let f = native_control_fixture();
     let at = f["cancelAtBytes"].as_u64().unwrap() as usize;
-    let codec = <SvgSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("actual SVG owner capability");
+    let codec = <SvgSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("actual SVG owner capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = native_payload(&snapshot, encoding);
@@ -61,17 +61,17 @@ fn sqlite_snapshot_svg_native_long_unicode_carriers_and_interior_cancellation() 
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_svg_native_limits_and_literal_typed_file_io() {
-    use semio_framework_os_kernel::io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot};
+    use semio_os_kernel::io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot};
     let snapshot = native_unicode_snapshot(); let f = native_control_fixture();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
-    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("SVG owned SQLite controls").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
-    let codec = <SvgSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
+    semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("SVG owned SQLite controls").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+    let codec = <SvgSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     let wide = SvgSnapshot { schema: snapshot.schema.clone(), doc: SvgDocument { root: Some(SvgNode::Element { name: "svg".into(), attrs: vec![], children: (0..f["wideChildren"].as_u64().unwrap()).map(|_| SvgNode::Element { name: "g".into(), attrs: vec![], children: vec![] }).collect() }), ..SvgDocument::default() } };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let bytes = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
-        assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<SvgSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value, snapshot);
+        let bytes = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
+        assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<SvgSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value, snapshot);
         let payload = native_payload(&snapshot, encoding);
-        let limits = SqliteDatabaseLimits { max_file_bytes: match &payload { semio_framework_os_kernel::io_schema::IoPayload::Text(text) => text.len(), semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => bytes.len() } - 1, ..SqliteDatabaseLimits::default() };
+        let limits = SqliteDatabaseLimits { max_file_bytes: match &payload { semio_os_kernel::io_schema::IoPayload::Text(text) => text.len(), semio_os_kernel::io_schema::IoPayload::Binary(bytes) => bytes.len() } - 1, ..SqliteDatabaseLimits::default() };
         assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)("SVG file admission", &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).is_err());
         let limits = SqliteDatabaseLimits { max_value_bytes: f["maxValueBytes"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() };
         assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)("SVG owned input", &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).is_err());
@@ -87,7 +87,7 @@ fn project(snapshot: &SvgSnapshot) -> SqliteDatabase { snapshot.to_sqlite_databa
 fn restore(database: &SqliteDatabase) -> Result<SvgSnapshot, semio_framework_value::ValueError> { SvgSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())) }
 
 #[semio_framework_async_macros::async_test]
-async fn sqlite_snapshot_svg_exact_declared_tiny_basic_owned_io(){use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("SVG SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();for(subset,valid,blocked)in [("tiny","tinyText","tinyBlockedText"),("basic","basicText","basicBlockedText")]{let f=fixture();let dialect=ArtifactDialect{artifact_kind:"s.stdio.svg".into(),standard:"1.1".into(),subset:subset.into()};let mut snapshot=SvgSnapshot::import_utf8(f[valid].as_str().unwrap().as_bytes()).unwrap();snapshot.schema="owned 世界".into();let mut phases=Vec::new();let bytes=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Text;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |p|{phases.push(p.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<SvgSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value,snapshot);assert!(!phases.iter().any(|p|matches!(p,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));let invalid=SvgSnapshot::import_utf8(f[blocked].as_str().unwrap().as_bytes()).unwrap();assert!(async{let original_file_dialect=&dialect;let original_file_input=&invalid;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());}}
+async fn sqlite_snapshot_svg_exact_declared_tiny_basic_owned_io(){use {semio_framework_artifact_reference::ArtifactDialect,semio_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};semio_plugin::PluginBuilder::<_, semio_plugin::app::NoPluginApp>::new("stdio").label("SVG SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();for(subset,valid,blocked)in [("tiny","tinyText","tinyBlockedText"),("basic","basicText","basicBlockedText")]{let f=fixture();let dialect=ArtifactDialect{artifact_kind:"s.stdio.svg".into(),standard:"1.1".into(),subset:subset.into()};let mut snapshot=SvgSnapshot::import_utf8(f[valid].as_str().unwrap().as_bytes()).unwrap();snapshot.schema="owned 世界".into();let mut phases=Vec::new();let bytes=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=SnapshotEncoding::Text;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |p|{phases.push(p.phase);true};semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_os_kernel::io::testing::with_snapshot_file_encoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<SvgSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value,snapshot);assert!(!phases.iter().any(|p|matches!(p,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));let invalid=SvgSnapshot::import_utf8(f[blocked].as_str().unwrap().as_bytes()).unwrap();assert!(async{let original_file_dialect=&dialect;let original_file_input=&invalid;let original_file_encoding=SnapshotEncoding::Binary;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_os_kernel::io::testing::with_snapshot_file_decoding(semio_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.is_err());}}
 
 #[test]
 fn sqlite_snapshot_svg_domain_names_and_all_native_document_fields_roundtrip() {
@@ -132,7 +132,7 @@ fn sqlite_snapshot_svg_independent_geometry_queries_and_edits_preserve_native_st
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_svg_tiny_and_basic_io_validators_recheck_reconstructed_entities() {
-    use semio_framework_plugin::{io::IoPayload, Severity, io::SubsetValidator};
+    use semio_plugin::{io::IoPayload, Severity, io::SubsetValidator};
     use crate::standards::v1_1::subsets::{tiny::io::SvgTinyValidator, basic::io::SvgBasicValidator};
     for (key, tiny) in [("tinyText", true), ("basicText", false)] {
         let source = SvgSnapshot::import_utf8(fixture()[key].as_str().unwrap().as_bytes()).unwrap(); let restored = restore(&project(&source)).unwrap(); assert_eq!(restored, source);
@@ -151,11 +151,11 @@ fn sqlite_snapshot_svg_owned_tiny_basic_guard_matches_all_existing_conformance_r
 fn sqlite_snapshot_svg_erased_native_preflight_admission_and_limits() {
     let snapshot = snapshot();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
-    let codec = <SvgSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
+    let codec = <SvgSnapshot as ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let actual = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("svg preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
-        let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)) };
+        let expected = match encoding { SnapshotEncoding::Text => semio_os_kernel::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_os_kernel::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)) };
         assert_eq!(actual, expected);
     }
     let large = SvgSnapshot { schema: "stdio.svg".into(), doc: SvgDocument { root: Some(SvgNode::Element { name: "svg".into(), attrs: Vec::new(), children: vec![SvgNode::Text { text: "x".repeat(100000) }] }), ..SvgDocument::default() } };

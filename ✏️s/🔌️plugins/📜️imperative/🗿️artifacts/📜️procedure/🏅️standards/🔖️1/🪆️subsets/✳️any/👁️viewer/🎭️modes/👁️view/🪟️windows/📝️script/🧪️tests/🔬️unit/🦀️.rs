@@ -11,10 +11,10 @@ async fn definition_declares_a_text_window() {
 async fn render_compiles_the_demo_program_into_read_only_text() {
     let scene = crate::examples::demo::scene();
     let node = render(&scene).expect("viewer script");
-    let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("text surface") };
-    let scene: semio_framework_plugin::TextEditorScene = semio_framework_ui_scene::decode(props).expect("packed text");
+    let semio_plugin::Component::Surface(props) = &node.component else { panic!("text surface") };
+    let scene: semio_plugin::TextEditorScene = semio_ui_scene::decode(props).expect("packed text");
     assert!(scene.buffer.contains("log.print") || scene.buffer.contains("state.set"), "compiled text should mention a default step kind: {}", scene.buffer);
     let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("text settings")).expect("independent settings oracle");
     assert_eq!(settings["readOnly"], true);
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire text");
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("retire text");
 }

@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeShellActionMYK whe
         record: "ChangedShellActionMYK",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Characteristic bending moment M_y,k of the shell action", "Schaleneinwirkung: Charakteristisches Biegemoment M_y,k ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Characteristic bending moment M_y,k of the shell action", "Schaleneinwirkung: Charakteristisches Biegemoment M_y,k ändern")
     }
 }
 

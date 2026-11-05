@@ -53,7 +53,19 @@
         "semio": {
           "wasmPackageSourceV1": {
             "version": 1,
-            "sourceOwner": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust"
+            "sourceOwner": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+            "compileOutputs": [
+              {
+                "specifier": "@semio-tech/framework-editor-rs",
+                "path": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js",
+                "declarations": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.d.ts"
+              },
+              {
+                "specifier": "@semio-tech/framework-editor-rs/pkg/framework_editor.js",
+                "path": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js",
+                "declarations": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.d.ts"
+              }
+            ]
           }
         }
       }

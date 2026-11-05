@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangePlatedStiffenerThi
         record: "ChangedPlatedStiffenerThickness",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Stiffener web or leg thickness t_s of the plated panel", "Plattenfeld: Stegdicke bzw. Schenkeldicke t_s der Steife ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Stiffener web or leg thickness t_s of the plated panel", "Plattenfeld: Stegdicke bzw. Schenkeldicke t_s der Steife ändern")
     }
 }
 

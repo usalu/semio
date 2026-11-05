@@ -2,15 +2,15 @@
 
 use crate::editor::architect::editor_vocabulary::ui_label;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-use semio_framework_plugin::tree_item_desc;
-use semio_framework_plugin::ui_node_list;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::ViewModel;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::tree_item_desc;
+use semio_plugin::ui_node_list;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::SurfaceKind;
+use semio_plugin::TreeWindows;
+use semio_plugin::ViewModel;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -44,18 +44,18 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn localized(view: &ViewModel, en: impl AsRef<str>, de: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+fn localized(view: &ViewModel, en: impl AsRef<str>, de: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_ui_contract::Label> {
     let label = LocalizedLabel::native(en.as_ref(), de.as_ref());
     ui_label(label.resolve(view.terminology, view.locale))
 }
 
-pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectReportWindowConfig, view: &ViewModel, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectReportWindowConfig, view: &ViewModel, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let Some(selected_report_id) = cfg.selected_report_id.as_ref() else {
-        return crate::editor::architect::editor_vocabulary::ui_node(semio_framework_ui_contract::text(localized(view, "Generate a report in this window.", "Erstellen Sie in diesem Fenster einen Bericht.")?), "architect-report.empty");
+        return crate::editor::architect::editor_vocabulary::ui_node(semio_ui_contract::text(localized(view, "Generate a report in this window.", "Erstellen Sie in diesem Fenster einen Bericht.")?), "architect-report.empty");
     };
     let Some(report) = program.reports.iter().find(|report| report.header.id == *selected_report_id) else {
         return crate::editor::architect::editor_vocabulary::ui_node(
-            semio_framework_ui_contract::text(localized(
+            semio_ui_contract::text(localized(
                 view,
                 format!("The selected report '{selected_report_id}' is unavailable."),
                 format!("Der ausgewählte Bericht '{selected_report_id}' ist nicht verfügbar."),

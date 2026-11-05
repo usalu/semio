@@ -2,7 +2,7 @@
 //! once on blur or Enter (`Trigger::Commit`), never per keystroke; number fields are continuous controls whose press the
 //! framework scrub machine commits as ONE edit of the absolute `change-parameter` leaf.
 //!
-//! 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20) port: rebuilt on the `semio_framework_ui_
+//! 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20) port: rebuilt on the `semio_ui_
 //! contract` builder DSL (`BuiltNode`), replacing the old `ui_wgpu::wgpu::UiNode` struct literals —
 //! mirrors the pattern already landed on `🗿️artifacts/🏠️home/…/🏠️main/🦀️.rs` and
 //! `🗿️artifacts/🪐️space/…/🏠️main/🦀️.rs` (`fixed_text`/`fixed_label` admission helpers, `try_id`/
@@ -19,18 +19,18 @@ use semio_hub_space_operations::parameter_entity_id;
 use semio_hub_space_foundation::terminology::SStudioLabels;
 use crate::{ui_value_map, ui_value_text};
 use semio_hub_space_foundation::S_PLAY_PARAMETERS_TAB_ID;
-use semio_framework_os::{WorkflowParameter, WorkflowSnapshot};
-use semio_framework_plugin::{
+use semio_os::{WorkflowParameter, WorkflowSnapshot};
+use semio_plugin::{
     tree_window_item, ui_node_list, ActionId, BuiltNode, Buildable, HasBase, HasChildren, IconName, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
-use semio_framework_ui_contract::{InputKind, Label, Trigger};
+use semio_ui_contract::{InputKind, Label, Trigger};
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(S_PLAY_PARAMETERS_TAB_ID.into()),
-        label: semio_framework_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"),
+        label: semio_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"),
         group: PanelGroup::Workbench,
         body_key: Some(semio_hub_space_foundation::S_PLAY_PARAMETERS_BODY_KEY.into()),
         children: Vec::new(),
@@ -65,7 +65,7 @@ fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels
     match parameter {
         WorkflowParameter::Numeric { id, value, step, .. } => {
             let action = patch_parameter_action([("parameterId", ui_value_text(id.as_str())?), ("field", ui_value_text("value")?)])?;
-            let builder = semio_framework_ui_contract::input(InputKind::Number)
+            let builder = semio_ui_contract::input(InputKind::Number)
                 .value(fixed_text(&value.to_string(), "ui.parameters.value-text")?)
                 .step(step.unwrap_or(1.0))
                 .try_id(format!("s-play-parameters.{id}.value"))
@@ -74,7 +74,7 @@ fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels
         }
         WorkflowParameter::Categorical { id, value, options, .. } => {
             let action = patch_parameter_action([("parameterId", ui_value_text(id.as_str())?), ("field", ui_value_text("value")?)])?;
-            let mut builder = semio_framework_ui_contract::select(fixed_text(value, "ui.parameters.select-value")?)
+            let mut builder = semio_ui_contract::select(fixed_text(value, "ui.parameters.select-value")?)
                 .try_id(format!("s-play-parameters.{id}.value"))
                 .map_err(|_| PluginAssemblyError::new("ui.parameters.value-id", "value select id admission failed"))?;
             for option in options {
@@ -86,7 +86,7 @@ fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels
         }
         WorkflowParameter::Toggle { id, value, .. } => {
             let action = patch_parameter_action([("parameterId", ui_value_text(id.as_str())?), ("field", ui_value_text("value")?)])?;
-            let builder = semio_framework_ui_contract::toggle(*value)
+            let builder = semio_ui_contract::toggle(*value)
                 .icon(fixed_text(IconName::ToggleLeft.as_str(), "ui.parameters.toggle-icon")?)
                 .text(fixed_label(if *value { labels.toggle_on.as_str() } else { labels.toggle_off.as_str() }, "ui.parameters.toggle-text")?)
                 .try_id(format!("s-play-parameters.{id}.value"))
@@ -95,7 +95,7 @@ fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels
         }
         WorkflowParameter::Text { id, value, .. } => {
             let action = patch_parameter_action([("parameterId", ui_value_text(id.as_str())?), ("field", ui_value_text("value")?)])?;
-            let builder = semio_framework_ui_contract::input(InputKind::Text)
+            let builder = semio_ui_contract::input(InputKind::Text)
                 .value(fixed_text(value, "ui.parameters.value-text")?)
                 .commit(fixed_text("blur", "ui.parameters.value-commit")?)
                 .try_id(format!("s-play-parameters.{id}.value"))
@@ -108,7 +108,7 @@ fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels
 /// 🎛️ One tree row whose single non-`treeItem` child is its inline control — the row shape the host's
 /// `treeItemToTreeData` mounts through `TreeDataItem.control` (the History panel's own idiom).
 fn control_row(id: &str, label: Label, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_ui_contract::tree_item(label)
+    semio_ui_contract::tree_item(label)
         .try_id(id)
         .map_err(|_| PluginAssemblyError::new("ui.parameters.row-id", "parameter row id admission failed"))?
         .try_child(control)
@@ -147,7 +147,7 @@ fn parameter_fields<'a>(parameter: &'a WorkflowParameter, labels: &'a SStudioLab
 
 fn numeric_constraint_row(id: &str, label: &str, field: &'static str, value: f64, step: f64) -> UiAssemblyResult<BuiltNode> {
     let action = patch_parameter_action([("parameterId", ui_value_text(id)?), ("field", ui_value_text(field)?)])?;
-    let control = semio_framework_ui_contract::input(InputKind::Number)
+    let control = semio_ui_contract::input(InputKind::Number)
         .value(fixed_text(&value.to_string(), "ui.parameters.constraint-text")?)
         .step(step)
         .try_id(format!("s-play-parameters.{id}.{field}.stepper"))
@@ -158,7 +158,7 @@ fn numeric_constraint_row(id: &str, label: &str, field: &'static str, value: f64
 
 fn option_remove_row(id: &str, option: &str, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNode> {
     let action = patch_parameter_action([("parameterId", ui_value_text(id)?), ("field", ui_value_text("removeOption")?), ("value", ui_value_text(option)?)])?;
-    let remove_button = semio_framework_ui_contract::button(fixed_label(labels.remove.as_str(), "ui.parameters.option-remove-label")?)
+    let remove_button = semio_ui_contract::button(fixed_label(labels.remove.as_str(), "ui.parameters.option-remove-label")?)
         .icon(fixed_text(IconName::Trash2.as_str(), "ui.parameters.option-remove-icon")?)
         .try_id(format!("s-play-parameters.{id}.option.{option}.remove"))
         .map_err(|_| PluginAssemblyError::new("ui.parameters.option-remove-id", "option remove button id admission failed"))?;
@@ -168,7 +168,7 @@ fn option_remove_row(id: &str, option: &str, labels: &SStudioLabels) -> UiAssemb
 
 fn add_option_row(id: &str, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNode> {
     let add_action = patch_parameter_action([("parameterId", ui_value_text(id)?), ("field", ui_value_text("addOption")?)])?;
-    let add_input = semio_framework_ui_contract::input(InputKind::Text)
+    let add_input = semio_ui_contract::input(InputKind::Text)
         .placeholder(fixed_label(labels.new_option_placeholder.as_str(), "ui.parameters.add-option-placeholder")?)
         .commit(fixed_text("blur", "ui.parameters.add-option-commit")?)
         .try_id(format!("s-play-parameters.{id}.add-option.input"))
@@ -179,7 +179,7 @@ fn add_option_row(id: &str, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNod
 
 fn remove_parameter_row(id: &str, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNode> {
     let remove_action = crate::s_play_action("removeParameter", Some(ui_value_map([("parameterId", ui_value_text(id)?)])?))?;
-    let remove_button = semio_framework_ui_contract::button(fixed_label(labels.remove.as_str(), "ui.parameters.remove-label")?)
+    let remove_button = semio_ui_contract::button(fixed_label(labels.remove.as_str(), "ui.parameters.remove-label")?)
         .icon(fixed_text(IconName::Trash2.as_str(), "ui.parameters.remove-icon")?)
         .try_id(format!("s-play-parameters.{id}.remove"))
         .map_err(|_| PluginAssemblyError::new("ui.parameters.remove-id", "remove button id admission failed"))?;
@@ -192,7 +192,7 @@ fn parameter_name_row(parameter: &WorkflowParameter, id: &str, labels: &SStudioL
         WorkflowParameter::Numeric { name, .. } | WorkflowParameter::Categorical { name, .. } | WorkflowParameter::Toggle { name, .. } | WorkflowParameter::Text { name, .. } => name.as_str(),
     };
     let name_action = patch_parameter_action([("parameterId", ui_value_text(id)?), ("field", ui_value_text("name")?)])?;
-    let name_input = semio_framework_ui_contract::input(InputKind::Text)
+    let name_input = semio_ui_contract::input(InputKind::Text)
         .value(fixed_text(name, "ui.parameters.name-text")?)
         .commit(fixed_text("blur", "ui.parameters.name-commit")?)
         .try_id(format!("s-play-parameters.{id}.name.input"))
@@ -232,7 +232,7 @@ pub const S_PLAY_PARAMETERS_LIST_KEY: &str = "s-play-parameters.list";
 /// and hard-failed past the 32nd child) is gone.
 pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let add_action = crate::s_play_action("addParameter", Some(ui_value_map([("type", ui_value_text("numeric")?)])?))?;
-    let add_button = semio_framework_ui_contract::button(fixed_label(labels.add_parameter.as_str(), "ui.parameters.add-label")?)
+    let add_button = semio_ui_contract::button(fixed_label(labels.add_parameter.as_str(), "ui.parameters.add-label")?)
         .icon(fixed_text(IconName::Plus.as_str(), "ui.parameters.add-icon")?)
         .try_id("s-play-parameters.add")
         .map_err(|_| PluginAssemblyError::new("ui.parameters.add-id", "add button id admission failed"))?;
@@ -248,7 +248,7 @@ pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels, windows: &T
                 WorkflowParameter::Numeric { name, .. } | WorkflowParameter::Categorical { name, .. } | WorkflowParameter::Toggle { name, .. } | WorkflowParameter::Text { name, .. } => name.as_str(),
             };
             let node_key = format!("s-play-parameters.{id}");
-            let item = semio_framework_ui_contract::tree_item(fixed_label(name, "ui.parameters.parameter-label")?)
+            let item = semio_ui_contract::tree_item(fixed_label(name, "ui.parameters.parameter-label")?)
                 .try_id(&node_key)
                 .map_err(|_| PluginAssemblyError::new("ui.parameters.parameter-id", "parameter row id admission failed"))?;
             let fields = parameter_fields(parameter, labels);

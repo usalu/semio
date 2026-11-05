@@ -22,4 +22,4 @@ semio-framework-value = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-ui-scene = { path = "../../../../📦️packages/🦀️rust" }
+semio-ui-scene = { path = "../../../../📦️packages/🦀️rust" }

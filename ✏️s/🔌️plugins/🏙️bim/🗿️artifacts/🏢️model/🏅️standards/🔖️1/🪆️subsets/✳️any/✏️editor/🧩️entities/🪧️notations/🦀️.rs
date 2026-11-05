@@ -11,7 +11,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{AnnotationStyle, Dimension, Leader, ModelSnapshot, Tag, TextNote};
 use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_plugin::plugin_app_close_prelude::InputKind;
 use semio_s_artifact_bim_model_mut_any_94::standards::v1::subsets::any::schema::mutations::delete_annotation_style;
 use semio_s_artifact_bim_model_mut_any_95::standards::v1::subsets::any::schema::mutations::delete_dimension;
 use semio_s_artifact_bim_model_mut_any_98::standards::v1::subsets::any::schema::mutations::delete_leader;

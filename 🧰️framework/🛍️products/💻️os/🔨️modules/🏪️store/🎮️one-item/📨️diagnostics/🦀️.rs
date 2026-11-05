@@ -1,15 +1,15 @@
 //! 📨️ Prepares original history diagnostics and independent command-report ownership before publication.
 use super::*;
-use semio_framework_os_spr::command::{MutationMessageLedgerRetirement, MutationMessagePublication, MutationMessagePublicationBatch, MutationMessagePublicationJoin};
+use semio_os_spr::command::{MutationMessageLedgerRetirement, MutationMessagePublication, MutationMessagePublicationBatch, MutationMessagePublicationJoin};
 use semio_framework_value::{RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use semio_framework_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES};
+use semio_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES};
 use std::mem::{ManuallyDrop, size_of};
 
-pub struct ArtifactStoreDiagnosticRecord { entry:semio_framework_os_spr::EditMessages,bytes:usize }
+pub struct ArtifactStoreDiagnosticRecord { entry:semio_os_spr::EditMessages,bytes:usize }
 impl ArtifactStoreDiagnosticRecord {
-    pub fn entry(&self)->&semio_framework_os_spr::EditMessages { &self.entry }
+    pub fn entry(&self)->&semio_os_spr::EditMessages { &self.entry }
     pub fn bytes(&self)->usize { self.bytes }
-    pub fn into_entry(self)->semio_framework_os_spr::EditMessages { self.entry }
+    pub fn into_entry(self)->semio_os_spr::EditMessages { self.entry }
 }
 
 pub struct ArtifactStoreDiagnosticStage {
@@ -19,14 +19,14 @@ pub struct ArtifactStoreDiagnosticStage {
     ready: Option<MutationMessagePublication>,
     original: Option<MutationMessageLedgerRetirement>,
     report: Option<MutationMessageLedgerRetirement>,
-    records_retirement: Option<semio_framework_os_spr::command::EditMessageLedgerRetirement>,
-    prefix: Option<semio_framework_os_spr::command::MutationMessageBorrowedPublication>,
+    records_retirement: Option<semio_os_spr::command::EditMessageLedgerRetirement>,
+    prefix: Option<semio_os_spr::command::MutationMessageBorrowedPublication>,
     prefix_ready: Option<MutationMessagePublication>,
     prefix_done: bool,
     pub displaced: Option<Box<MutationMessageLedgerRetirement>>,
     bytes: usize,
     measure_target: Option<usize>,
-    records: ManuallyDrop<Vec<semio_framework_os_spr::EditMessages>>,
+    records: ManuallyDrop<Vec<semio_os_spr::EditMessages>>,
     identity: [String; 2],
     severity_index: usize,
     worst: Option<semio_framework_diagnostic::Severity>,
@@ -40,7 +40,7 @@ impl ArtifactStoreDiagnosticStage {
     pub fn from_publication(owner: Option<MutationMessagePublication>) -> Self { let mut stage = Self::default(); if let Some(owner) = owner { stage.rows = owner.original_messages().len(); stage.ready = Some(owner); stage.phase = 1; stage.prefix_done = true; } stage }
     pub fn prepared(&self) -> bool { self.phase == 10 && !self.closing }
     pub fn row_count(&self) -> usize { self.rows }
-    pub fn transfer_copy_demand()->usize { size_of::<semio_framework_os_spr::EditMessages>()+size_of::<usize>()+size_of::<Vec<semio_framework_os_spr::EditMessages>>()+size_of::<Option<semio_framework_diagnostic::Severity>>() }
+    pub fn transfer_copy_demand()->usize { size_of::<semio_os_spr::EditMessages>()+size_of::<usize>()+size_of::<Vec<semio_os_spr::EditMessages>>()+size_of::<Option<semio_framework_diagnostic::Severity>>() }
     pub fn measured_bytes(&self, identity: &str) -> Result<usize, ValueError> { self.bytes.checked_add(identity.len()).ok_or_else(|| diagnostic_fault("diagnostic entry byte extent overflow")) }
     pub fn joined(&self) -> bool { self.phase >= 1 }
     pub fn joined_transfer_ready(&self) -> bool { self.phase==1 && !self.closing && self.ready.as_ref().is_some_and(MutationMessagePublication::ready) }
@@ -58,7 +58,7 @@ impl ArtifactStoreDiagnosticStage {
         Ok(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..idle })
     }
 
-    pub fn prepare_prefix(&mut self, source: Option<&[semio_framework_os_spr::MutationMessage]>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn prepare_prefix(&mut self, source: Option<&[semio_os_spr::MutationMessage]>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.prefix_done { return Ok(RetainedCloneStep::Complete(idle)); }
         if self.closing || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(idle)); }
@@ -74,7 +74,7 @@ impl ArtifactStoreDiagnosticStage {
             if owner.ready() { let Some((ready, receipt)) = owner.take(grant) else { return Ok(RetainedCloneStep::Progress(idle)); }; self.prefix_ready = Some(ready); return Ok(RetainedCloneStep::Progress(receipt)); }
             return owner.advance(source, grant);
         }
-        let copy = size_of::<semio_framework_os_spr::command::MutationMessageBorrowedPublication>();
+        let copy = size_of::<semio_os_spr::command::MutationMessageBorrowedPublication>();
         if grant.maximum_copy_bytes < copy { return Ok(RetainedCloneStep::Progress(idle)); }
         self.prefix = Some(Default::default());
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..idle }))
@@ -150,13 +150,13 @@ impl ArtifactStoreDiagnosticStage {
                 receipt = step.progress();
             }
             8 => {
-                let capacity = size_of::<semio_framework_os_spr::EditMessages>();
+                let capacity = size_of::<semio_os_spr::EditMessages>();
                 if grant.maximum_capacity_bytes < capacity { return Ok(RetainedCloneStep::Progress(idle)); }
                 self.records.try_reserve_exact(1).map_err(|_| diagnostic_fault("diagnostic command record allocation failed"))?;
                 receipt.retained_capacity_bytes = self.records.capacity() * capacity; self.phase = 9;
             }
             9 => {
-                let copy = size_of::<semio_framework_os_spr::EditMessages>();
+                let copy = size_of::<semio_os_spr::EditMessages>();
                 if grant.maximum_copy_bytes < copy { return Ok(RetainedCloneStep::Progress(idle)); }
                 let Some((record, progress)) = self.report.as_mut().ok_or_else(|| diagnostic_fault("diagnostic report original is absent"))?.take_edit_messages_controlled(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - copy, ..grant })? else { return Ok(RetainedCloneStep::Progress(idle)); };
                 self.records.push(record); self.report = None; receipt = RetainedCloneProgress { copied_bytes: progress.copied_bytes + copy, ..progress }; self.phase = 10;
@@ -166,10 +166,10 @@ impl ArtifactStoreDiagnosticStage {
         Ok(if self.prepared() { RetainedCloneStep::Complete(receipt) } else { RetainedCloneStep::Progress(receipt) })
     }
 
-    pub fn original_messages(&self) -> &[semio_framework_os_spr::MutationMessage] { self.original.as_ref().map_or_else(|| self.ready.as_ref().map_or(&[], MutationMessagePublication::original_messages), MutationMessageLedgerRetirement::retained_messages) }
+    pub fn original_messages(&self) -> &[semio_os_spr::MutationMessage] { self.original.as_ref().map_or_else(|| self.ready.as_ref().map_or(&[], MutationMessagePublication::original_messages), MutationMessageLedgerRetirement::retained_messages) }
 
-    pub fn take(&mut self, grant: RetainedCloneGrant) -> Result<Option<(ArtifactStoreDiagnosticRecord, Vec<semio_framework_os_spr::EditMessages>, Option<semio_framework_diagnostic::Severity>, RetainedCloneProgress)>, ValueError> {
-        let frame = size_of::<usize>()+size_of::<Vec<semio_framework_os_spr::EditMessages>>() + size_of::<Option<semio_framework_diagnostic::Severity>>();
+    pub fn take(&mut self, grant: RetainedCloneGrant) -> Result<Option<(ArtifactStoreDiagnosticRecord, Vec<semio_os_spr::EditMessages>, Option<semio_framework_diagnostic::Severity>, RetainedCloneProgress)>, ValueError> {
+        let frame = size_of::<usize>()+size_of::<Vec<semio_os_spr::EditMessages>>() + size_of::<Option<semio_framework_diagnostic::Severity>>();
         if !self.prepared() || grant.maximum_copy_bytes < frame { return Ok(None); }
         let bytes=self.measured_bytes(&self.records.first().ok_or_else(||diagnostic_fault("diagnostic report context is absent"))?.edit_id)?;
         let Some((original, receipt)) = self.original.as_mut().ok_or_else(|| diagnostic_fault("diagnostic durable original is absent"))?.take_edit_messages_controlled(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - frame, ..grant })? else { return Ok(None); };
@@ -187,13 +187,13 @@ impl ArtifactStoreDiagnosticStage {
         };
         if let Some(owner) = self.displaced.as_ref() { if owner.terminal_is_empty() { return Ok(RetirementDemand { release_bytes: size_of::<MutationMessageLedgerRetirement>(), depth: 1, ..Default::default() }); } return nested(owner.as_ref(), size_of::<MutationMessageLedgerRetirement>()); }
         if let Some(owner) = self.batch.as_ref() { return nested(owner, size_of::<MutationMessagePublicationBatch>()); }
-        if let Some(owner) = self.prefix.as_ref() { return nested(owner, size_of::<semio_framework_os_spr::command::MutationMessageBorrowedPublication>()); }
+        if let Some(owner) = self.prefix.as_ref() { return nested(owner, size_of::<semio_os_spr::command::MutationMessageBorrowedPublication>()); }
         if let Some(owner) = self.prefix_ready.as_ref() { return nested(owner, size_of::<MutationMessagePublication>()); }
         if let Some(owner) = self.join.as_ref() { return nested(owner, size_of::<MutationMessagePublicationJoin>()); }
         if let Some(owner) = self.ready.as_ref() { return nested(owner, size_of::<MutationMessagePublication>()); }
         if let Some(owner) = self.original.as_ref().or(self.report.as_ref()) { return nested(owner, size_of::<MutationMessageLedgerRetirement>()); }
-        if let Some(owner) = self.records_retirement.as_ref() { return nested(owner, size_of::<semio_framework_os_spr::command::EditMessageLedgerRetirement>()); }
-        if self.records.capacity() != 0 { return Ok(RetirementDemand { copy_bytes: size_of::<semio_framework_os_spr::command::EditMessageLedgerRetirement>(), depth: 1, ..Default::default() }); }
+        if let Some(owner) = self.records_retirement.as_ref() { return nested(owner, size_of::<semio_os_spr::command::EditMessageLedgerRetirement>()); }
+        if self.records.capacity() != 0 { return Ok(RetirementDemand { copy_bytes: size_of::<semio_os_spr::command::EditMessageLedgerRetirement>(), depth: 1, ..Default::default() }); }
         Ok(RetirementDemand { release_bytes: self.identity.iter().find(|value| value.capacity() != 0).map_or(0, String::capacity), depth: 1, ..Default::default() })
     }
 
@@ -219,7 +219,7 @@ impl ArtifactStoreDiagnosticStage {
         close_owner!(self.original);
         close_owner!(self.report);
         close_owner!(self.records_retirement);
-        if self.records.capacity() != 0 { self.records_retirement = Some(semio_framework_os_spr::command::EditMessageLedgerRetirement::new(std::mem::take(&mut *self.records))); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..idle })); }
+        if self.records.capacity() != 0 { self.records_retirement = Some(semio_os_spr::command::EditMessageLedgerRetirement::new(std::mem::take(&mut *self.records))); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..idle })); }
         if let Some(value) = self.identity.iter_mut().find(|value| value.capacity() != 0) { drop(std::mem::take(value)); }
         let receipt = RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..idle };
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(receipt) } else { RetainedCloneStep::Progress(receipt) })

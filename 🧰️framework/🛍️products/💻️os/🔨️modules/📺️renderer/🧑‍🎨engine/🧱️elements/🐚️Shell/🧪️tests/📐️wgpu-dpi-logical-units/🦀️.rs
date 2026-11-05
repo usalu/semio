@@ -16,7 +16,7 @@
 //! `AppInteractionState::resize` does, and the assertions compare production chrome functions.
 
 use super::*;
-use semio_framework_os_renderer_wgpu_dock::DockNode;
+use semio_renderer_wgpu_dock::DockNode;
 use ui_host::WindowMetrics;
 use ui_render::PhysicalSize;
 
@@ -63,7 +63,7 @@ struct ChromeGeometry {
 fn chrome_geometry(scale_factor: f32) -> ChromeGeometry {
     let metrics = metrics_for(scale_factor);
     let (logical_width, logical_height) = metrics.logical_size();
-    let mut shell = ShellState::new(vec![], "dpi-law".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(vec![], "dpi-law".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.chrome.screen_w = logical_width.max(1.0);
     shell.chrome.screen_h = logical_height.max(1.0);
 

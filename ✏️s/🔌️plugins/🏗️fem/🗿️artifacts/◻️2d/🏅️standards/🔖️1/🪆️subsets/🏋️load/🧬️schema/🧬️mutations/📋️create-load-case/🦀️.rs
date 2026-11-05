@@ -28,8 +28,8 @@ where
     Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "load-case", kind: "create-load-case", record: "CreatedLoadCase" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create load case \"{}\"", self.load_case.id), &format!("Lastfall \"{}\" erstellen", self.load_case.id))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Create load case \"{}\"", self.load_case.id), &format!("Lastfall \"{}\" erstellen", self.load_case.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.load_case.id.clone()]

@@ -1,4 +1,4 @@
-use semio_framework_ui_scene::GraphTimelineScene;
+use semio_ui_scene::GraphTimelineScene;
 use semio_s_artifact_vcs_vcs_editor::editor::vcs::modes::edit::windows::history::*;
 use crate::unit_tests::context::{app, render as render_body};
 
@@ -11,7 +11,7 @@ async fn renders_history_scene() {
     let json = render_body(&mut instance, VCS_PLAY_BODY_HISTORY).await;
     assert!(json.contains("graph-timeline"), "missing graph-timeline surface kind: {json}");
     assert!(!json.contains("\"table\""), "history must not fall back to a generic table: {json}");
-    let scene: GraphTimelineScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("packed graph-timeline scene");
+    let scene: GraphTimelineScene = semio_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("packed graph-timeline scene");
     let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("history columns json");
     assert!(!columns.is_empty(), "the seeded history renders at least one checkpoint column");
     assert!(columns.iter().all(|column| column.get("lane").and_then(serde_json::Value::as_u64).is_some()), "every history column carries its swimlane: {}", scene.columns_json);

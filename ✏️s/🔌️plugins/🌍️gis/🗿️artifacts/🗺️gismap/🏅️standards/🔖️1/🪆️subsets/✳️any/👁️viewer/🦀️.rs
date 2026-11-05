@@ -9,8 +9,8 @@ use crate::viewer::gismap::modes::view;
 use crate::viewer::gismap::modes::view::windows::map;
 use crate::{GisMapSnapshot, GISMAP_DIALECT, GIS_MAP_SCHEMA};
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use {semio_framework_plugin::AppOperationContext,semio_framework_plugin::ArtifactOwnedToolJobRequest,semio_framework_plugin::ArtifactToolFactoryRegistry,semio_framework_plugin::ArtifactToolPublicationContract,semio_framework_plugin::ArtifactToolPublicationLane,semio_framework_plugin::ArtifactView,semio_framework_plugin::ArtifactViewer,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::Emit,semio_framework_plugin::Fault,semio_framework_plugin::FaultCode,semio_framework_plugin::FaultOrigin,semio_framework_plugin::HistoryView,semio_framework_plugin::InteractiveJobClassification,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoDraftMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_plugin::ToolExecutionContract,semio_framework_plugin::ToolFactoryKey,semio_framework_plugin::ToolJobFactoryError,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer,semio_framework_plugin::ViewerApp};
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use {semio_plugin::AppOperationContext,semio_plugin::ArtifactOwnedToolJobRequest,semio_plugin::ArtifactToolFactoryRegistry,semio_plugin::ArtifactToolPublicationContract,semio_plugin::ArtifactToolPublicationLane,semio_plugin::ArtifactView,semio_plugin::ArtifactViewer,semio_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_plugin::Emit,semio_plugin::Fault,semio_plugin::FaultCode,semio_plugin::FaultOrigin,semio_plugin::HistoryView,semio_plugin::InteractiveJobClassification,semio_plugin::NoConfig,semio_plugin::NoConfigMutation,semio_plugin::NoDraftMutation,semio_plugin::NoPresence,semio_plugin::NoPresenceMutation,semio_plugin::NoTransient,semio_plugin::NoTransientMutation,semio_plugin::ToolExecutionContract,semio_plugin::ToolFactoryKey,semio_plugin::ToolJobFactoryError,semio_plugin::ViewEmit,semio_plugin::Viewer,semio_plugin::ViewerApp};
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🏷️ActionIds
@@ -81,7 +81,7 @@ impl protocol::OpBinary for GisMapViewCommand {
 /// 🔒️ The emitted `Emit` carries `window_config_mutations` and NOTHING else — no artifact mutation, no
 /// config mutation, no effect — the runtime half of the read-only guarantee whose compile-time half
 /// is `ViewEmit`.
-pub fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_plugin::ViewModel>) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let GisMapViewCommand::SetCamera { camera } = command;
     let view = view_state.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("gis.map.viewer.window-required"), "a camera change requires a concrete map window"))?;
     if camera.is_empty() {
@@ -142,8 +142,8 @@ fn gis_map_view_reduce(
     _config: &NoConfig,
     _history: &HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<GisMapViewer>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<GisMapViewer>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     camera_emit(command, context.and_then(|context| context.view_state.as_deref()))
@@ -159,7 +159,7 @@ impl GisMapViewCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ToolJobFactory for GisMapViewCommandJobFactory {
+impl semio_plugin::ToolJobFactory for GisMapViewCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<ViewerApp<GisMapViewer>>;
     type Job = ArtifactRetainedCommandJob<ViewerApp<GisMapViewer>>;
 
@@ -175,10 +175,10 @@ impl semio_framework_plugin::ToolJobFactory for GisMapViewCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         gis_map_view_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GIS_MAP_VIEW_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GIS_MAP_VIEW_RAW_BYTES, checkpoint_resume: false);
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for GisMapViewCommandJobFactory {
+impl semio_plugin::ArtifactOwnedToolJobFactory for GisMapViewCommandJobFactory {
     type Owner = ViewerApp<GisMapViewer>;
     const TOOL_IDS: &'static [&'static str] = GIS_MAP_VIEW_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
@@ -209,10 +209,10 @@ impl ArtifactViewer for GisMapViewer {
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn reference_birth()->Option<fn()->Result<GisMapSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<GisMapSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(default_document())
     })}
 
@@ -245,8 +245,8 @@ impl ArtifactViewer for GisMapViewer {
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Err(Fault::new(FaultOrigin::App, FaultCode::new("gis.map.viewer.retained-route-required"), "a viewer camera is a window-config write, which ViewEmit cannot carry — it must reach the retained reducer"))
@@ -255,7 +255,7 @@ impl ArtifactViewer for GisMapViewer {
     /// 🧭️ The map window's own retained camera — one bounded window-config store, keyed by window
     /// INSTANCE, so two open read-only panes never share a camera. Authored under `👁️viewer`, never
     /// imported from the editor's twin.
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<map::config::GisMapViewerWindowConfigOwner>()
     }
 
@@ -264,19 +264,19 @@ impl ArtifactViewer for GisMapViewer {
         registry.register(GisMapViewCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !GIS_MAP_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.action_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the gis map view command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the gis map view command does not match its exact registered tool").into());
         }
         let tool_id = original.command.action_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, GisMapViewCommand::action_id, GIS_MAP_VIEW_RAW_BYTES, GIS_MAP_VIEW_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis_map_view_reduce, gis_map_view_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, GisMapViewCommand::action_id, GIS_MAP_VIEW_RAW_BYTES, GIS_MAP_VIEW_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis_map_view_reduce, gis_map_view_extent))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: ViewerApp<GisMapViewer>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.gis.gismap@1/*#viewer",
@@ -287,17 +287,17 @@ impl ArtifactViewer for GisMapViewer {
         tools: ["setCamera"]
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            map::BODY_KEY => map::render(doc.snapshot, map::config::current(cfg)).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            map::BODY_KEY => map::render(doc.snapshot, map::config::current(cfg)).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_gismap_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_gismap_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(GISMAP_DIALECT).document(["semio", "gis", "2d"]).icon_id("gis2d").mode_def(view::definition()).default_mode_id(view::GIS_MAP_VIEW_MODE_VIEW).window_kind_def(map::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

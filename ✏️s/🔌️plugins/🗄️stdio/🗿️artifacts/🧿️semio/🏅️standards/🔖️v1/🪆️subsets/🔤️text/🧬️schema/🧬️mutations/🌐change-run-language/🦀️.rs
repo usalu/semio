@@ -15,8 +15,8 @@ pub struct ChangeRunLanguage {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ChangeRunLanguage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "run-language", kind: "change-run-language", record: "ChangedRunLanguage" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change run #{} language to {}", self.index, self.new_language), &format!("Sprache von Textlauf #{} auf {} ändern", self.index, self.new_language))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Change run #{} language to {}", self.index, self.new_language), &format!("Sprache von Textlauf #{} auf {} ändern", self.index, self.new_language))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

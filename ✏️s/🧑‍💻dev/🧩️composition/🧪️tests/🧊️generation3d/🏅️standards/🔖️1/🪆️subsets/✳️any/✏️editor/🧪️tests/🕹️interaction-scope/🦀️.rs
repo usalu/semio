@@ -17,7 +17,7 @@
 use super::*;
 use crate::editor_domain::editor_laws::serial_execution;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::InteractionVerb;
+use semio_plugin::InteractionVerb;
 use semio_framework_test_fixtures::repo_text;
 
 //#region 🕹️Fixture
@@ -61,7 +61,7 @@ fn interaction_scope_fixture() -> InteractionScopeFixture {
     fixture
 }
 
-fn role_definition(role: &str) -> semio_framework_plugin::AppDefinition {
+fn role_definition(role: &str) -> semio_plugin::AppDefinition {
     match role {
         "editor" => create_generation3d_app(),
         "viewer" => semio_s_artifact_procedural_3d_viewer::create_generation3d_viewer(),
@@ -69,10 +69,10 @@ fn role_definition(role: &str) -> semio_framework_plugin::AppDefinition {
     }
 }
 
-fn declared_scope(definition: &semio_framework_plugin::AppDefinition, verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
-    let windows = semio_framework_plugin::interaction_window_bodies_by_domain(definition);
-    let panels = semio_framework_plugin::panel_leaf_body_keys(definition);
-    semio_framework_plugin::interaction_declared_refresh_scope(verb, domains, &windows, &panels)
+fn declared_scope(definition: &semio_plugin::AppDefinition, verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
+    let windows = semio_plugin::interaction_window_bodies_by_domain(definition);
+    let panels = semio_plugin::panel_leaf_body_keys(definition);
+    semio_plugin::interaction_declared_refresh_scope(verb, domains, &windows, &panels)
 }
 
 fn scope_parts(scope: &UiDirtyScope) -> (Vec<String>, Vec<String>, bool) {
@@ -118,7 +118,7 @@ fn the_fixture_rosters_are_the_declared_surfaces() {
         let definition = role_definition(&role.id);
         let windows: Vec<String> = definition.window_kinds.iter().map(|window| window.body_key.clone()).collect();
         assert_eq!(windows, role.declared_window_bodies, "role {} declared window bodies", role.id);
-        assert_eq!(semio_framework_plugin::panel_leaf_body_keys(&definition), role.declared_panel_bodies, "role {} declared panel bodies", role.id);
+        assert_eq!(semio_plugin::panel_leaf_body_keys(&definition), role.declared_panel_bodies, "role {} declared panel bodies", role.id);
     }
 }
 

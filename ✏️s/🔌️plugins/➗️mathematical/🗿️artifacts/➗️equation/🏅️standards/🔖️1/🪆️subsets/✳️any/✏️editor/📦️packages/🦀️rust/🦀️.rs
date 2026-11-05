@@ -1,9 +1,9 @@
 //! ✏️ editor of `semio-s-artifact-mathematical-equation` — a path-preserving carve of the artifact root mounts.
 
 extern crate semio_framework_number as number;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 
 pub use crate::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
 #[cfg(test)]

@@ -17,12 +17,12 @@ pub struct NodeGraphSyncCache {
     pub status_json: Option<String>,
     pub eval_json: Option<String>,
     pub lod_json: Option<String>,
-    pub viewport: Option<semio_framework_os_kernel::Viewport2d>,
+    pub viewport: Option<semio_os_kernel::Viewport2d>,
     pub viewport_pixels: Option<(u32, u32)>,
     pub operator_ids: Option<Vec<String>>,
     pub hover: Option<(String, String)>,
     pub scene_pack: Option<Vec<u8>>,
-    pub interaction_domain: Option<Arc<semio_framework_ui_declaration::ui::NodeGraphInteractionDomain>>,
+    pub interaction_domain: Option<Arc<semio_ui_declaration::ui::NodeGraphInteractionDomain>>,
 }
 
 pub struct EngineSurface {
@@ -37,7 +37,7 @@ pub struct EngineSurface {
     pub board_pending_events: infinite_canvas::BoardEventQueue,
     pub board_retiring_events: Option<infinite_canvas::BoardEventQueue>,
     pub board_pointer_inside: bool,
-    pub board_pointer_claim: Option<semio_framework_ui_action::BoundedActionClaim>,
+    pub board_pointer_claim: Option<semio_ui_action::BoundedActionClaim>,
     pub board_pointer_controller_id: Option<String>,
     /// 🐁️ The hover target last published on this board's `interactionHover` lane — outer `None` is
     /// "never published", `Some(None)` the explicit clear. React's `createCoalescingActionDispatcher`
@@ -286,7 +286,7 @@ impl EngineSurfaceRegistry {
         true
     }
 
-    pub fn close_step(&mut self, token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    pub fn close_step(&mut self, token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
         let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
             return false;
         };

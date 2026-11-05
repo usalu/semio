@@ -46,8 +46,8 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
   const groups: { package: string; target: LawTarget; cargoArgs: string[]; laws: string[] }[] = lawGroups.map((group) => ({ package: group.package, target: group.target, cargoArgs: ["--locked"], laws: [...group.laws] }));
   const manifestPaths: Record<string, string> = Object.fromEntries(lawGroups.map((group) => [group.package, group.manifest ? resolve(context.repoRoot, group.manifest) : manifest]));
   if (segments[1] === "numerical") {
-    manifestPaths["semio-framework-ui-scene"] = resolve(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/Cargo.toml");
-    groups.push({ package: "semio-framework-ui-scene", target: { kind: "lib", name: "semio_framework_ui_scene" }, cargoArgs: ["--locked"], laws: ["canvas2d_snapshot::value_round_trip_tests::canvas2d_page_policy_matches_schema_and_retires_exactly_one_page"] });
+    manifestPaths["semio-ui-scene"] = resolve(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/Cargo.toml");
+    groups.push({ package: "semio-ui-scene", target: { kind: "lib", name: "semio_ui_scene" }, cargoArgs: ["--locked"], laws: ["canvas2d_snapshot::value_round_trip_tests::canvas2d_page_policy_matches_schema_and_retires_exactly_one_page"] });
   }
   const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(context.invocation,"exact-cargo:caller",0),invocation: context.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: policy.buildBudgetMs },manifestPaths,cwd: context.repoRoot,groups});
   assert.equal(receipts.length, groups.length);

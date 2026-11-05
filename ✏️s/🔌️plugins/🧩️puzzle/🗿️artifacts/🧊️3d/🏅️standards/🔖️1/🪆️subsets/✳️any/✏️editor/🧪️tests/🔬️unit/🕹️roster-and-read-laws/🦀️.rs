@@ -13,7 +13,7 @@
 /// 🪪️ Every DECLARATION of one action id across the manifest — the app-level roster plus every window
 /// kind's own roster. A verb declared once app-wide and resolved into N windows is still exactly one
 /// declaration, which is what the bijection laws mean by "exactly one manifest declaration".
-fn action_declarations<'a>(definition: &'a semio_framework_plugin::AppDefinition, id: &str) -> Vec<&'a ActionDefinition> {
+fn action_declarations<'a>(definition: &'a semio_plugin::AppDefinition, id: &str) -> Vec<&'a ActionDefinition> {
     definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).filter(|action| action.id == id).collect()
 }
 //#endregion 🕹️ActionRoster
@@ -43,7 +43,7 @@ async fn read_local_interaction(app: &mut Puzzle3dApp, request_id: u64) -> Vec<u
 /// shell renders on every turn while it waits for its surfaces — so a read must terminate while the
 /// app is also doing its ordinary per-turn work, not only on an otherwise idle instance.
 async fn read_local_interaction_while_rendering(app: &mut Puzzle3dApp, request_id: u64, render: bool) -> Vec<u8> {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     assert!(app.begin_local_interaction_query(request_id, request_id).is_none(), "a live instance must admit local interaction read {request_id}");
     let (mut capture, mut started, mut closed) = (Vec::new(), false, false);
     let mut awaiting_ack: Option<protocol::LocalInteractionQueryToken> = None;
@@ -60,7 +60,7 @@ async fn read_local_interaction_while_rendering(app: &mut Puzzle3dApp, request_i
         }
         app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("the live-cleanup clock keeps ticking during a read");
         let (raw, cx) = app.parts();
-        raw.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one local interaction publication unit");
+        raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one local interaction publication unit");
         let mut frames = Vec::new();
         app.publish_local_interaction_query_reply(&mut frames, LOCAL_INTERACTION_READ_FRAMES);
         for frame in &frames {
@@ -148,7 +148,7 @@ async fn local_interaction_read_of_a_selected_document_terminates() {
 /// host does every actor turn, then one plain `maintenance_step` must not fault.
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_query_return_does_not_fault_the_next_maintenance_step() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let mut app = app().await;
     read_local_interaction(&mut app, 1).await;
     app.measure_maintenance_step(1, 4096).expect("maintenance step after a returned snapshot read lease must not fault");
@@ -179,14 +179,14 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
         let mut app = app().await;
         let action_meta = app.meta("local");
         let (raw, cx) = app.parts();
-        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, "setActiveExample", Some(semio_framework_pack_json::to_dsl_value(&json!({ "exampleId": example }))), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample mints its retained whole-document operation");
+        semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, "setActiveExample", Some(semio_framework_pack_json::to_dsl_value(&json!({ "exampleId": example }))), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample mints its retained whole-document operation");
         for _ in 0..MAINTENANCE_BUDGET_TURNS {
             if !app.has_pending_typed_operations() {
                 break;
             }
             measured_host_turn(&mut app).await;
         }
-        for _ in 0..MAINTENANCE_UNIT_SWEEPS * semio_framework_plugin::MAINTENANCE_STAGES as usize {
+        for _ in 0..MAINTENANCE_UNIT_SWEEPS * semio_plugin::MAINTENANCE_STAGES as usize {
             app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("a live-cleanup maintenance unit never faults");
         }
         assert!(app.maintenance.units() > 0, "{example}: the law drove no maintenance unit");
@@ -200,9 +200,9 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
 async fn measured_host_turn(app: &mut Puzzle3dApp) {
     app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("a live-cleanup maintenance unit never faults");
     let (raw, cx) = app.parts();
-    raw.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
+    raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     let instance_id = app.instance_id;
-    if let Some(page) = app.take_typed_operation_result_page(instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
+    if let Some(page) = app.take_typed_operation_result_page(instance_id, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
         assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
     }
     drop(app.take_typed_operation_effect());

@@ -1,7 +1,7 @@
 //! ✒️ Writer-owned strings and fixed persisted document handle use two handcrafted entities.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::WriterSnapshot;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound,Reconstruction}}};
+use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound,Reconstruction}}};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 #[path="🛂️native/🦀️.rs"]pub mod native;
@@ -9,8 +9,8 @@ fn document_cells(value:&WriterSnapshot)->[Cell<'_>;5]{[Cell::Text(&value.schema
 fn child_cells(value:&WriterSnapshot)->[Cell<'_>;6]{let child=&value.document;[Cell::Integer(1),Cell::Text(&child.child_id),Cell::Text(&child.target.artifact_id),Cell::Text(&child.target.dialect.artifact_kind),Cell::Text(&child.target.dialect.standard),Cell::Text(&child.target.dialect.subset)]}
 
 impl ArtifactSqliteSnapshotHost for WriterSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
  
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   let mut bound=NativeEncodingBound::new(control)?;bound.add(8192)?;
@@ -19,11 +19,11 @@ impl ArtifactSqliteSnapshotHost for WriterSnapshot{
  }
  
  
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
-  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;
-  if dialect.artifact_kind!="s.writer.writer"||dialect.standard!="1"||dialect.subset!="*"{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(invalid("Writer does not own this semantic subset")))}
-  if Self::from_sqlite_database(database,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?!=*self{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(invalid("Writer document identity disagrees with its snapshot")))}
-  Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{
+  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_os_kernel::io_schema::IoError::from_value_error)?;
+  if dialect.artifact_kind!="s.writer.writer"||dialect.standard!="1"||dialect.subset!="*"{return Err(semio_os_kernel::io_schema::IoError::from_value_error(invalid("Writer does not own this semantic subset")))}
+  if Self::from_sqlite_database(database,control).map_err(semio_os_kernel::io_schema::IoError::from_value_error)?!=*self{return Err(semio_os_kernel::io_schema::IoError::from_value_error(invalid("Writer document identity disagrees with its snapshot")))}
+  Ok(semio_os_kernel::io_schema::IoOutcome::clean(()))
  }
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for WriterSnapshot {

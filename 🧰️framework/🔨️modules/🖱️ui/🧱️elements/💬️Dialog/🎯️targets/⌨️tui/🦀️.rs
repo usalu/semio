@@ -3,12 +3,12 @@
 //! module of `crate::tui::widget`; the engine owns placement, focus trapping and dismissal
 //! (see `crate::tui::engine::Tui::open_dialog`).
 
-use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
-use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
-use semio_framework_ui_tui_core::text::{display_width, truncate_to};
-use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
-use semio_framework_ui_tui_core::signal::WidgetSignal;
+use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_ui_tui_core::text::{display_width, truncate_to};
+use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::signal::WidgetSignal;
 
 const DIALOG_MAX_WIDTH: u16 = 64;
 const DIALOG_MIN_WIDTH: u16 = 20;

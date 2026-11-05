@@ -408,7 +408,7 @@ fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
 
 #[test]
 fn actual_flow_genesis_producer_preserves_original_stored_pack_and_owner_identity(){
- use ::semio_framework_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
+ use ::semio_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
  let producer=crate::io::binary::snapshot::FlowSnapshotPackProducer;
  let born=AdmittedArtifactGenesis::born(base(),&producer).unwrap();
  assert_eq!(third_party_json(born.facts().snapshot()),cases()["hostSnapshot"]);

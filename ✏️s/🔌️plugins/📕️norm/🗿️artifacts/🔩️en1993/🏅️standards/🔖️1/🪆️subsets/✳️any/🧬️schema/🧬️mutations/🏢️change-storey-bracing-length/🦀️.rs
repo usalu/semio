@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeStoreyBracingLengt
         record: "ChangedStoreyBracingLength",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Bracing length L of the storey", "Geschoss: Aussteifungslänge L ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Bracing length L of the storey", "Geschoss: Aussteifungslänge L ändern")
     }
 }
 

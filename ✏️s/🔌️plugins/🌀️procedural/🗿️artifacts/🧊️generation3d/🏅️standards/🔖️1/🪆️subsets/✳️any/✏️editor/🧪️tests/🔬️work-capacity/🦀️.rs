@@ -1,6 +1,6 @@
 use semio_s_artifact_procedural_3d_editor::*;
 #[cfg(test)] use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
-#[cfg(test)] use semio_framework_plugin::component::ArtifactEditor;
+#[cfg(test)] use semio_plugin::component::ArtifactEditor;
 
 #[test]
 fn generation3d_declares_one_work_capacity_for_extent_footprint_and_preflight() {
@@ -25,7 +25,7 @@ async fn every_bounded_retained_route_answers_an_admissible_extent() {
     let read = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"));
     let interaction = protocol::InteractionState::default();
     let capacity = GENERATION3D_RETAINED_CAPACITY;
-    let instance_owner = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());
+    let instance_owner = semio_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());
     for tool_id in GENERATION3D_RETAINED_TOOL_IDS.iter().chain(GENERATION3D_FLOW_EVAL_TOOL_IDS).copied() {
         if tool_id == "flowEvalTick" {
             continue;

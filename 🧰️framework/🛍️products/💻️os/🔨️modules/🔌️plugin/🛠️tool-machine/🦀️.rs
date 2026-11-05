@@ -24,34 +24,34 @@
 //! provisional leaves; every committed transaction is published stamped with its `TransactionRef`. Domain-neutral machines:
 //! `semio_framework_tool_machine` (`ScrubMachine`, `TypingMachine`, `ChartGesture`).
 
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use std::collections::BTreeMap;
-use semio_framework_plugin_window_config::WindowConfigSnapshot;
-use semio_framework_plugin_decl_emission::{ChildEmit, Emit, HostEvent};
+use semio_plugin_window_config::WindowConfigSnapshot;
+use semio_plugin_decl_emission::{ChildEmit, Emit, HostEvent};
 use semio_framework_value::{DslValue, ValueError};
 use semio_framework::{Fault, FaultFrom};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework::kernel::{HybridLogicalTimestamp, InvocationResult};
 use store::{ColdMutation, Mutation, MutationDiff};
-use semio_framework_plugin_decl_views::{NoConfig, NoConfigMutation};
+use semio_plugin_decl_views::{NoConfig, NoConfigMutation};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use serde_json::Value;
-use semio_framework_plugin_window_config::WindowConfigMutation;
+use semio_plugin_window_config::WindowConfigMutation;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_ui_contract::*;
 use semio_framework_value_original_aliases::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_tool_machine::{GestureHostEvent, GestureLedger, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingLedger};
 use std::sync::Arc;

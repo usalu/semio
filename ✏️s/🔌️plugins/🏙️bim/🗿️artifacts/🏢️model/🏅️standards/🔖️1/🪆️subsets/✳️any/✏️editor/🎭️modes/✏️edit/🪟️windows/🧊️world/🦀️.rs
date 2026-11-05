@@ -17,11 +17,11 @@ use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::infere
 use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowOptions;
+use semio_plugin::DslValue;
+use semio_plugin::InteractionRef;
+use semio_plugin::SurfaceKind;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "bim-edit-world";
@@ -123,7 +123,7 @@ pub fn framing_camera(solids: &[(&String, &ElementSolid)]) -> store::Viewport3dO
 }
 
 /// ✂️ The section plane of the window: it removes everything beyond `offset` on `axis`, capped so the cut reads solid.
-pub fn section_options(config: &config::BimWorldWindowConfig) -> Option<semio_framework_plugin::World3dModellingOptions> {
+pub fn section_options(config: &config::BimWorldWindowConfig) -> Option<semio_plugin::World3dModellingOptions> {
     if !config.section_enabled {
         return None;
     }
@@ -132,7 +132,7 @@ pub fn section_options(config: &config::BimWorldWindowConfig) -> Option<semio_fr
         "y" => ([0.0, config.section_offset, 0.0], [0.0, 1.0, 0.0]),
         _ => ([0.0, 0.0, config.section_offset], [0.0, 0.0, 1.0]),
     };
-    Some(semio_framework_plugin::World3dModellingOptions { section: Some(semio_framework_plugin::World3dSection::new(origin, normal).capped(semio_framework_plugin::World3dTone::Neutral)), ..Default::default() })
+    Some(semio_plugin::World3dModellingOptions { section: Some(semio_plugin::World3dSection::new(origin, normal).capped(semio_plugin::World3dTone::Neutral)), ..Default::default() })
 }
 
 /// 🫧️ How far above the storey floor the marks of a gesture float in the 3D window, in metres.
@@ -170,12 +170,12 @@ pub fn preview_items(snapshot: &ModelSnapshot, inference: &ModelInference, confi
 }
 
 /// 🎬️ The world scene of the model: camera, meshes, instances, selection and the interaction domain the host dispatches picks into.
-pub fn scene(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_framework_plugin::World3dScene {
+pub fn scene(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_plugin::World3dScene {
     scene_over(snapshot, inference, config, selection, hover, revision, &Preview::default())
 }
 
 /// 🎬️ [`scene`] with the marks of the gesture in progress painted over the model as the scene's engagement preview.
-pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::World3dScene {
+pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_plugin::World3dScene {
     let solids = visible_solids(inference, config);
     let mut meshes: Vec<DslValue> = solids.iter().map(|(id, solid)| mesh_entry(id, snapshot, solid)).collect();
     let mut instances: Vec<DslValue> = solids.iter().map(|(id, solid)| instance_entry(id, snapshot, solid, selection.contains(id), hover.contains(id))).collect();
@@ -190,14 +190,14 @@ pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: 
         instances.extend(overlay.instances.iter().cloned());
     }
     let camera = if config.framed { config.camera } else { framing_camera(&solids) };
-    let camera_json = semio_framework_plugin::world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &config.projection);
+    let camera_json = semio_plugin::world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &config.projection);
     let selected_ids: Vec<String> = selection.to_vec();
-    let mut scene = semio_framework_plugin::world3d_scene(
+    let mut scene = semio_plugin::world3d_scene(
         camera_json,
         semio_framework_pack_json::to_json_string(&meshes),
         semio_framework_pack_json::to_json_string(&instances),
-        semio_framework_plugin::world3d_selection_json("rectangle", &selected_ids, hover.first().map(String::as_str)),
-        &semio_framework_plugin::WorldSunConfig::default(),
+        semio_plugin::world3d_selection_json("rectangle", &selected_ids, hover.first().map(String::as_str)),
+        &semio_plugin::WorldSunConfig::default(),
     );
     scene.domain_id = Some(BIM_ELEMENT_DOMAIN.into());
     scene.domain_granularity_id = solids.first().and_then(|(id, _)| kind_holding(snapshot, id)).map(|row| row.kind.to_string());
@@ -213,13 +213,13 @@ pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: 
 }
 
 /// 🧊️ Renders the world window.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     render_over(snapshot, inference, config, selection, hover, revision, &Preview::default())
 }
 
 /// 🧊️ [`render`] with the marks of the gesture in progress painted over the model.
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene_over(snapshot, inference, config, selection, hover, revision, preview))
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene_over(snapshot, inference, config, selection, hover, revision, preview))
 }
 //#endregion 🔖️Scene
 

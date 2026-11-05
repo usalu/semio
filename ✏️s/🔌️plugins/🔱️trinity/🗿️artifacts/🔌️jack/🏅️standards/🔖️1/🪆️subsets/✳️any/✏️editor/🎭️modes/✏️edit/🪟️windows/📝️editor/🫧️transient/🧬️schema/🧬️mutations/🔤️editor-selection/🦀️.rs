@@ -14,8 +14,8 @@ pub struct SetEditorSelection {
 impl protocol::MutationKind<JackEditorWindowTransient, JackEditorWindowTransientMutation> for SetEditorSelection {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "editor-window-selection", kind: "set-editor-selection", record: "SetEditorSelection" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Editor Window Selection", "Auswahl im Editorfenster setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Editor Window Selection", "Auswahl im Editorfenster setzen")
     }
 
     fn target(&self) -> Vec<String> {

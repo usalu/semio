@@ -58,7 +58,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                     _ => {
                         if !self.chrome.chrome_build.dialog_open() {
                             note_chrome_control_name(control_id, Some(label.as_str()));
-                            let event = ActionDescriptor { controller_id: "framework.sync".into(), action: action.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "documentId": offer.document_id.clone() }) };
+                            let event = ActionDescriptor { controller_id: "framework.sync".into(), action: action.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "documentId": offer.document_id.clone() }) };
                             input.register_hit(HitTarget { rect, event: Some(event), control_id: Some(control_id.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
                         }
                     }

@@ -17,10 +17,64 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PNG } from "pngjs";
+import Ajv2020 from "ajv/dist/2020.js";
 import generation3dWorkflow from "./🧫️fixtures/🧊️generation3d/🔣️.json";
+import formsWorkflow from "./🧫️fixtures/📋️forms/🔣️.json";
+import formsWorkflowSchema from "./🧫️fixtures/📋️forms/🧬️schema/🔣️.json";
+import cancellationWorkflow from "./🧫️fixtures/📋️forms/🌐️cancellation.json";
+import cancellationWorkflowSchema from "./🧫️fixtures/📋️forms/🌐️cancellation.schema.json";
 
 import { expect, test, type Page } from "../../🔨️modules/🧪️e2e/📦️release/🎭️fixture/🟦️.ts";
 // #endregion 🔌️Adapters
+
+const validateFormsWorkflow = new Ajv2020({ strict: true }).compile(formsWorkflowSchema);
+if (!validateFormsWorkflow(formsWorkflow)) throw new Error(`Invalid Forms browser scenario: ${JSON.stringify(validateFormsWorkflow.errors)}`);
+const validateCancellationWorkflow = new Ajv2020({ strict: true }).compile(cancellationWorkflowSchema);
+if (!validateCancellationWorkflow(cancellationWorkflow)) throw new Error(`Invalid Forms cancellation scenario: ${JSON.stringify(validateCancellationWorkflow.errors)}`);
+
+/** ⌨️ Replaces an editor value through the attached real session and waits for its authored echo. */
+async function replaceEditorText(page: Page, editor: ReturnType<Page["locator"]>, value: string): Promise<void> {
+  await expect(editor.locator("..")).toHaveAttribute("data-text-editor-ready", "true");
+  await editor.focus();
+  await editor.press("ControlOrMeta+A");
+  if (value.length === 0) await editor.press("Backspace");
+  else await page.keyboard.insertText(value);
+  await expect(editor).toHaveValue(value);
+}
+
+/** 📝️ Authors a real catalogue question and edits its complete paged source through the visible control. */
+async function authorFormsFlow(page: Page, scope: ReturnType<Page["locator"]>, kind: string, source: string, label: string): Promise<string> {
+  const builder = scope.locator("[data-surface-id=\"forms.play.blueprint\"]");
+  await builder.locator("[data-block-id=\"name\"] button[aria-pressed]").click();
+  const cards = builder.locator("[data-block-id]"), before = await cards.evaluateAll(elements => elements.map(element => element.getAttribute("data-block-id")));
+  await builder.locator(`[data-block-kind="${kind}"]`).click();
+  await expect(cards).toHaveCount(before.length + 1);
+  const id = (await cards.evaluateAll(elements => elements.map(element => element.getAttribute("data-block-id")))).find(id => !before.includes(id))!;
+  await builder.locator(`[data-block-id="${id}"] button[aria-pressed]`).click();
+  const document = scope.getByRole("textbox", { name: label, exact: true });
+  await expect(document.locator("..")).toHaveAttribute("data-text-editor-ready", "true");
+  await document.focus();
+  await document.press("ControlOrMeta+A");
+  await page.keyboard.insertText(source);
+  await expect(document).toHaveValue(source);
+  return id;
+}
+
+
+/** 📏️ Measures retained public mesh coordinates independently of provider parameters or progress state. */
+async function worldMeshHeights(scope: ReturnType<Page["locator"]>): Promise<number[]> {
+  const encoded = await scope.locator("[data-meshes-json]").first().getAttribute("data-meshes-json");
+  if (encoded === null) return [];
+  const heights = (JSON.parse(encoded) as { data: string }[]).map(mesh => {
+    const { positions } = JSON.parse(mesh.data) as { positions: number[] };
+    expect(positions.length).toBeGreaterThan(0);
+    expect(positions.length % 3).toBe(0);
+    expect(positions.every(Number.isFinite)).toBe(true);
+    const z = positions.filter((_value, index) => index % 3 === 2);
+    return Math.round((Math.max(...z) - Math.min(...z)) * 100_000) / 100_000;
+  });
+  return [...new Set(heights)].sort((a, b) => a - b);
+}
 
 /** 🖼️ Compares the same interior pixel coordinates using the independent PNG decoder. */
 function changedInteriorPixels(before:Buffer,after:Buffer):number{
@@ -435,6 +489,335 @@ test.describe("semio-tech play", () => {
     errors.stop();expect(errors.pageErrors).toEqual([]);expect(errors.consoleErrors).toEqual([]);expect(errors.refusedInputs).toEqual([]);expect(errors.resourceErrors).toEqual([]);
   });
 
+  });
+
+  for (const language of formsWorkflow.locales) test.describe(`forms ${language.browser}`, () => {
+    test.use({ locale: language.browser });
+
+    test("authoring", async ({ page }) => {
+      test.setTimeout(TEST_TIMEOUT_MS);
+      const errors = collectErrors(page), pane = playPanes().find(pane => pane.variant === formsWorkflow.pane)!;
+      await page.goto(`./#${pane.variant}`);
+      expect(await waitForPaneShellOutcome(page, pane.variant)).toBe("ready");
+      await dismissPaneIntroduction(page, pane);
+      const scope = page.locator(`[data-layered-pane="${pane.variant}"]`);
+      const builder = scope.locator('[data-surface-id="forms.play.blueprint"]');
+      const original = builder.locator('[data-block-id="name"]');
+      await expect(original).toBeVisible();
+      await original.locator('button[aria-pressed]').click();
+      const label = scope.locator(`[data-ui-node-key="${formsWorkflow.controls.questionLabel}"]`);
+      await expect(label).toBeVisible();
+      await label.fill(formsWorkflow.questionLabel);
+      await label.press("Enter");
+      await expect(original).toContainText(formsWorkflow.questionLabel);
+      const title = scope.locator(`[data-ui-node-key="${formsWorkflow.controls.title}"]`);
+      await expect(title).toHaveAttribute("aria-label", language.title);
+      await title.fill(formsWorkflow.title);
+      await title.press("Enter");
+      const cards = builder.locator('[data-block-id]'), before = await cards.count();
+      const originalIds = await cards.evaluateAll(elements => elements.map(element => element.getAttribute("data-block-id")));
+      await builder.locator(`[data-block-kind="${formsWorkflow.addedKind}"]`).click();
+      await expect(cards).toHaveCount(before + 1);
+      const addedId = (await cards.evaluateAll(elements => elements.map(element => element.getAttribute("data-block-id")))).find(id => !originalIds.includes(id));
+      expect(addedId).toBeTruthy();
+      const added = builder.locator(`[data-block-id="${addedId}"]`);
+      await added.getByRole("button", { name: /^(Delete|Löschen):/ }).click();
+      await expect(cards).toHaveCount(before);
+      for (const step of roleContract.steps) {
+        await scope.locator(`[id="${step.controlId}"]`).click();
+        await waitForSurfaceSettlement(page, pane);
+        await dismissPaneIntroduction(page, pane);
+        if (step.role === "viewer") {
+          await expect(scope.getByRole("slider", { name: formsWorkflow.extension.label, exact: true })).toBeDisabled();
+          const run = scope.getByRole("button", { name: language.run, exact: true });
+          await expect(run).toBeEnabled();
+          await run.click();
+          await expect.poll(async () => {
+            const meshes = await scope.locator("[data-meshes-json]").first().getAttribute("data-meshes-json");
+            return meshes === null ? 0 : (JSON.parse(meshes) as unknown[]).length;
+          }).toBeGreaterThan(0);
+        }
+      }
+      await expect(title).toHaveValue(formsWorkflow.title);
+      await expect(builder.locator('[data-block-id="name"]')).toContainText(formsWorkflow.questionLabel);
+      await expect(builder.locator(`[data-block-id="${addedId}"]`)).toHaveCount(0);
+      errors.stop();
+      expect(errors.pageErrors).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.refusedInputs).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
+    });
+
+    test("source refusal", async ({ page }) => {
+      test.setTimeout(TEST_TIMEOUT_MS);
+      const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "../../../..", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/📄️value-source/🔣️.json"), "utf8")) as { encodingBoundaries: { unit: string; repeat: number }; refusalLocales: { locale: string; message: string; discard: string }[] };
+      const labels = fixture.refusalLocales.find(row => row.locale === language.browser.slice(0, 2))!;
+      const accepted = fixture.encodingBoundaries.unit.repeat(fixture.encodingBoundaries.repeat), refused = accepted + "x";
+      const flow = JSON.parse(readFileSync(join(import.meta.dirname, "../../../..", formsWorkflow.flowFixture), "utf8")), source = JSON.stringify(flow.snapshot);
+      const errors = collectErrors(page), pane = playPanes().find(pane => pane.variant === formsWorkflow.pane)!;
+      await page.goto(`./#${pane.variant}`);
+      expect(await waitForPaneShellOutcome(page, pane.variant)).toBe("ready");
+      await dismissPaneIntroduction(page, pane);
+      const scope = page.locator(`[data-layered-pane="${pane.variant}"]`), id = await authorFormsFlow(page, scope, formsWorkflow.flowKind, source, language.flowDocument);
+      const editor = scope.getByRole("textbox", { name: language.flowDocument, exact: true }), host = editor.locator('xpath=ancestor::*[contains(@class,"semio-text-editor-host")][1]');
+      await replaceEditorText(page, editor, refused);
+      await expect(host.getByRole("alert")).toHaveText(labels.message);
+      await expect(editor).toHaveAttribute("aria-invalid", "true");
+      await expect(editor).toHaveValue(refused);
+      await replaceEditorText(page, editor, accepted);
+      await expect(host.getByRole("alert")).toHaveCount(0);
+      await expect(editor).toHaveValue(accepted);
+      const builder = scope.locator('[data-surface-id="forms.play.blueprint"]');
+      await builder.locator('[data-block-id="name"] button[aria-pressed]').click();
+      await builder.locator(`[data-block-id="${id}"] button[aria-pressed]`).click();
+      await expect(editor.locator("..")).toHaveAttribute("data-text-editor-ready", "true");
+      await expect(editor).toHaveValue(accepted);
+      await replaceEditorText(page, editor, source);
+      await expect(scope.locator(`[data-ui-node-key="forms-try.${id}"]`).getByRole("slider", { name: "Amount", exact: true })).toHaveAttribute("aria-valuenow", "2");
+      await replaceEditorText(page, editor, refused);
+      await expect(host.getByRole("alert")).toHaveText(labels.message);
+      await host.getByRole("button", { name: labels.discard, exact: true }).click();
+      await expect(editor).toHaveValue(source);
+      await expect(host.getByRole("alert")).toHaveCount(0);
+      errors.stop();
+      expect(errors.pageErrors).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.refusedInputs).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
+    });
+
+    test("long answer", async ({ page }) => {
+      test.setTimeout(TEST_TIMEOUT_MS);
+      const fixtureRoot = join(import.meta.dirname, "../../../..", "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/🧫️fixtures");
+      const fixture = JSON.parse(readFileSync(join(fixtureRoot, "📝️answer.json"), "utf8")) as { answer: { unit: string; repeat: number; bytes: number; sha256: string }; kinds: string[] };
+      const schema = JSON.parse(readFileSync(join(fixtureRoot, "📝️answer.schema.json"), "utf8"));
+      expect(new Ajv2020({ strict: true }).validate(schema, fixture)).toBe(true);
+      const answer = fixture.answer.unit.repeat(fixture.answer.repeat);
+      expect(Buffer.byteLength(answer)).toBe(fixture.answer.bytes);
+      expect(answer).toBe("ä🧱".repeat(800));
+      expect(Buffer.byteLength(answer)).toBeGreaterThan(4096);
+      const errors = collectErrors(page), pane = playPanes().find(pane => pane.variant === formsWorkflow.pane)!;
+      await page.goto(`./#${pane.variant}`);
+      expect(await waitForPaneShellOutcome(page, pane.variant)).toBe("ready");
+      await dismissPaneIntroduction(page, pane);
+      const scope = page.locator(`[data-layered-pane="${pane.variant}"]`), builder = scope.locator("[data-surface-id=\"forms.play.blueprint\"]");
+      const ids: string[] = [];
+      for (const kind of fixture.kinds) {
+        await builder.locator("[data-block-id=\"name\"] button[aria-pressed]").click();
+        const cards = builder.locator("[data-block-id]"), before = await cards.evaluateAll(elements => elements.map(element => element.getAttribute("data-block-id")));
+        await builder.locator(`[data-block-kind="${kind}"]`).click();
+        await expect(cards).toHaveCount(before.length + 1);
+        const id = (await cards.evaluateAll(elements => elements.map(element => element.getAttribute("data-block-id")))).find(id => !before.includes(id))!;
+        ids.push(id);
+        const input = scope.locator(`[data-ui-node-key="forms-try.${id}.input"]`).getByRole("textbox");
+        await replaceEditorText(page, input, answer);
+        await builder.locator("[data-block-id=\"name\"] button[aria-pressed]").click();
+        await expect(input).toHaveValue(answer);
+      }
+      await scope.locator(`[data-ui-node-key="${formsWorkflow.controls.next}"]`).click();
+      await scope.locator(`[data-ui-node-key="${formsWorkflow.controls.submit}"]`).click();
+      await expect(scope.locator(`[data-ui-node-key="${formsWorkflow.controls.submitted}"]`)).toHaveText(language.submitted);
+      await scope.locator("[id=\"playground.navbar.modes.responses\"]").click();
+      for (const id of ids) {
+        const saved = scope.locator(`[data-ui-node-key="${id}.answer"]`).getByRole("textbox");
+        await expect(saved.locator("..")).toHaveAttribute("data-text-editor-ready", "true");
+        await expect(saved).toHaveValue(answer);
+        await expect(saved).toHaveJSProperty("readOnly", true);
+        await expect(saved).not.toBeEditable();
+      }
+      errors.stop();
+      expect(errors.pageErrors).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.refusedInputs).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
+    });
+
+    test("flow isolation", async ({ page }) => {
+      test.setTimeout(TEST_TIMEOUT_MS);
+      const errors = collectErrors(page), pane = playPanes().find(pane => pane.variant === formsWorkflow.pane)!;
+      const flow = JSON.parse(readFileSync(join(import.meta.dirname, "../../../..", formsWorkflow.flowFixture), "utf8")) as { snapshot: { widgets: { id: string; value?: number; text?: string }[] }; parameters: { amount: number; message: string } };
+      const source = JSON.stringify(flow.snapshot, null, 2);
+      expect(Buffer.byteLength(source)).toBeGreaterThan(600);
+      const initial = flow.snapshot.widgets.find(widget => widget.id === "amount")!.value!;
+      await page.goto(`./#${pane.variant}`);
+      expect(await waitForPaneShellOutcome(page, pane.variant)).toBe("ready");
+      await dismissPaneIntroduction(page, pane);
+      const scope = page.locator(`[data-layered-pane="${pane.variant}"]`), builder = scope.locator('[data-surface-id="forms.play.blueprint"]');
+      const ids: string[] = [];
+      for (const value of [flow.parameters.amount, initial]) {
+        await builder.locator('[data-block-id="name"] button[aria-pressed]').click();
+        const before = await builder.locator('[data-block-id]').evaluateAll(elements => elements.map(element => element.getAttribute("data-block-id")));
+        await builder.locator(`[data-block-kind="${formsWorkflow.flowKind}"]`).click();
+        await expect(builder.locator('[data-block-id]')).toHaveCount(before.length + 1);
+        const id = (await builder.locator('[data-block-id]').evaluateAll(elements => elements.map(element => element.getAttribute("data-block-id")))).find(id => !before.includes(id))!;
+        expect(id).toBeTruthy();
+        ids.push(id);
+        await builder.locator(`[data-block-id="${id}"] button[aria-pressed]`).click();
+        const document = scope.getByRole("textbox", { name: language.flowDocument, exact: true });
+        await expect(document.locator("..")).toHaveAttribute("data-text-editor-ready", "true");
+        await expect(document).toBeEditable();
+        await document.focus();
+        await document.press("ControlOrMeta+A");
+        await page.keyboard.insertText(source);
+        await expect(document).toHaveValue(source);
+        const field = scope.locator(`[data-ui-node-key="forms-try.${id}"]`), amount = field.getByRole("slider", { name: "Amount", exact: true });
+        await expect(amount).toHaveAttribute("aria-valuenow", String(initial));
+        await amount.focus();
+        for (let current = initial; current < value; current++) {
+          await amount.press("ArrowRight");
+          await expect(amount).toHaveAttribute("aria-valuenow", String(current + 1));
+        }
+        await expect(amount).toHaveAttribute("aria-valuenow", String(value));
+        const message = field.getByRole("textbox", { name: "Message", exact: true });
+        await expect(message.locator("..")).toHaveAttribute("data-text-editor-ready", "true");
+        await expect(message).toHaveValue(flow.snapshot.widgets.find(widget => widget.id === "message")!.text!);
+        if (value === flow.parameters.amount) {
+          await message.focus();
+          await message.press("ControlOrMeta+A");
+          await page.keyboard.insertText(flow.parameters.message);
+          await expect(message).toHaveValue(flow.parameters.message);
+        }
+        await field.getByRole("button", { name: language.run, exact: true }).click();
+        const output = field.locator('[data-ui-node-key="embedded-flow.output.answer"]');
+        await expect(output).toContainText("answer");
+        await expect(output.getByText(String(value), { exact: true })).toBeVisible();
+      }
+      await expect(scope.locator(`[data-ui-node-key="forms-try.${ids[0]}"]`).getByRole("textbox", { name: "Message", exact: true })).toHaveValue(flow.parameters.message);
+      expect(new Set(ids).size).toBe(2);
+      await expect(scope.locator(`[data-ui-node-key="forms-try.${ids[0]}"] [data-ui-node-key="embedded-flow.output.answer"]`).getByText(String(flow.parameters.amount), { exact: true })).toBeVisible();
+      await expect(scope.locator(`[data-ui-node-key="forms-try.${ids[1]}"] [data-ui-node-key="embedded-flow.output.answer"]`).getByText(String(initial), { exact: true })).toBeVisible();
+      errors.stop();
+      expect(errors.pageErrors).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.refusedInputs).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
+    });
+
+    test("windows", async ({ page }) => {
+      test.setTimeout(TEST_TIMEOUT_MS);
+      const errors = collectErrors(page), pane = playPanes().find(pane => pane.variant === formsWorkflow.pane)!;
+      const flow = JSON.parse(readFileSync(join(import.meta.dirname, "../../../..", formsWorkflow.flowFixture), "utf8"));
+      await page.goto(`./#${pane.variant}`);
+      expect(await waitForPaneShellOutcome(page, pane.variant)).toBe("ready");
+      await dismissPaneIntroduction(page, pane);
+      const scope = page.locator(`[data-layered-pane="${pane.variant}"]`);
+      const id = await authorFormsFlow(page, scope, formsWorkflow.flowKind, JSON.stringify(flow.snapshot), language.flowDocument);
+      const fieldKey = `forms-try.${id}`, initialField = scope.locator(`[data-ui-node-key="${fieldKey}"]`);
+      const firstId = await initialField.locator("xpath=ancestor::*[@data-slot=\"window\"][1]").getAttribute("id");
+      expect(firstId).toBeTruthy();
+      const first = scope.locator(`[data-slot="window"][id="${firstId}"]`), firstField = first.locator(`[data-ui-node-key="${fieldKey}"]`);
+      const firstSlider = firstField.getByRole("slider", { name: "Amount", exact: true });
+      await firstSlider.focus();
+      for (let value = 3; value <= 7; value++) { await firstSlider.press("ArrowRight"); await expect(firstSlider).toHaveAttribute("aria-valuenow", String(value)); }
+      await firstField.getByRole("button", { name: language.run, exact: true }).click();
+      await expect(firstField.locator("[data-ui-node-key=\"embedded-flow.output.answer\"]").getByText("7", { exact: true })).toBeVisible();
+      const ids = cancellationWorkflow.windowUi;
+      await scope.locator(`[id="${ids.tab}"]`).click();
+      await scope.locator(`[id="${ids.group}"]`).click();
+      const template = scope.locator(`[id="${ids.template}"]`);
+      await expect(template).toHaveAttribute("draggable", "true");
+      const box = await first.boundingBox();
+      expect(box).not.toBeNull();
+      await template.dragTo(first, { targetPosition: { x: box!.width - 3, y: box!.height / 2 } });
+      await expect(scope.locator(`[data-slot="window"]:has([data-ui-node-key="${fieldKey}"])`)).toHaveCount(2);
+      const second = scope.locator(`[data-slot="window"]:not([id="${firstId}"]):has([data-ui-node-key="${fieldKey}"])`), secondField = second.locator(`[data-ui-node-key="${fieldKey}"]`);
+      const secondSlider = secondField.getByRole("slider", { name: "Amount", exact: true });
+      await expect(secondSlider).toHaveAttribute("aria-valuenow", "2");
+      await secondSlider.focus();
+      for (let value = 3; value <= 4; value++) { await secondSlider.press("ArrowRight"); await expect(secondSlider).toHaveAttribute("aria-valuenow", String(value)); }
+      await secondField.getByRole("button", { name: language.run, exact: true }).click();
+      await expect(secondField.locator("[data-ui-node-key=\"embedded-flow.output.answer\"]").getByText("4", { exact: true })).toBeVisible();
+      await expect(firstSlider).toHaveAttribute("aria-valuenow", "7");
+      await expect(firstField.locator("[data-ui-node-key=\"embedded-flow.output.answer\"]").getByText("7", { exact: true })).toBeVisible();
+      errors.stop();
+      expect(errors.pageErrors).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.refusedInputs).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
+    });
+
+    test("cancel", async ({ page }) => {
+      test.setTimeout(TEST_TIMEOUT_MS);
+      const errors = collectErrors(page), pane = playPanes().find(pane => pane.variant === formsWorkflow.pane)!;
+      const source = JSON.stringify(cancellationWorkflow.snapshot), labels = cancellationWorkflow.locales[language.browser as keyof typeof cancellationWorkflow.locales];
+      expect(Buffer.byteLength(source)).toBeLessThanOrEqual(16_384);
+      await page.goto(`./#${pane.variant}`);
+      expect(await waitForPaneShellOutcome(page, pane.variant)).toBe("ready");
+      await dismissPaneIntroduction(page, pane);
+      const scope = page.locator(`[data-layered-pane="${pane.variant}"]`);
+      const id = await authorFormsFlow(page, scope, cancellationWorkflow.questionKind, source, language.flowDocument);
+      const field = scope.locator(`[data-ui-node-key="forms-try.${id}"]`), run = field.getByRole("button", { name: language.run, exact: true }), cancel = field.getByRole("button", { name: labels.cancel, exact: true });
+      await expect(cancel).toBeDisabled();
+      await run.click();
+      await expect(run).toBeDisabled();
+      await expect(cancel).toBeEnabled();
+      await cancel.click();
+      await expect(field.locator("[data-ui-node-key=\"embedded-flow.status\"]")).toContainText(labels.stopped);
+      await expect(run).toBeEnabled();
+      await expect(cancel).toBeDisabled();
+      await run.click();
+      const heights = cancellationWorkflow.snapshot.widgets.filter(widget => widget.id.endsWith("-height")).map(widget => Number("value" in widget ? widget.value : NaN)).sort((a, b) => a - b);
+      expect(heights).toHaveLength(4);
+      await expect.poll(() => worldMeshHeights(field), { timeout: 60_000 }).toEqual(heights);
+      await expect(run).toBeEnabled();
+      errors.stop();
+      expect(errors.pageErrors).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.refusedInputs).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
+    });
+
+    test("submission", async ({ page }) => {
+      test.setTimeout(TEST_TIMEOUT_MS);
+      const errors = collectErrors(page), pane = playPanes().find(pane => pane.variant === formsWorkflow.pane)!;
+      await page.goto(`./#${pane.variant}`);
+      expect(await waitForPaneShellOutcome(page, pane.variant)).toBe("ready");
+      await dismissPaneIntroduction(page, pane);
+      const scope = page.locator(`[data-layered-pane="${pane.variant}"]`);
+      const control = (key: string) => scope.locator(`[data-ui-node-key="${key}"]`);
+      const name = control(formsWorkflow.controls.name).getByRole("textbox"), next = control(formsWorkflow.controls.next);
+      await expect(name).toBeVisible();
+      await replaceEditorText(page, name, "");
+      await expect(next).toBeDisabled();
+      await replaceEditorText(page, name, formsWorkflow.answer);
+      await expect(next).toHaveAccessibleName(language.next);
+      await expect(next).toBeEnabled();
+      await next.click();
+      const height = scope.getByRole("slider", { name: formsWorkflow.extension.label, exact: true });
+      await expect(height).toHaveAttribute("aria-valuenow", String(formsWorkflow.extension.initial));
+      await scope.getByRole("button", { name: language.run, exact: true }).click();
+      await expect.poll(() => worldMeshHeights(scope), { timeout: 60_000 }).toEqual([formsWorkflow.extension.initial]);
+      const initialGeometry = await scope.locator("[data-meshes-json]").first().getAttribute("data-meshes-json");
+      await height.focus();
+      await height.press(formsWorkflow.extension.key);
+      await expect(height).toHaveAttribute("aria-valuenow", String(formsWorkflow.extension.changed));
+      await scope.getByRole("button", { name: language.run, exact: true }).click();
+      await expect.poll(() => worldMeshHeights(scope), { timeout: 60_000 }).toEqual([formsWorkflow.extension.changed]);
+      await expect(scope.locator("[data-meshes-json]").first()).not.toHaveAttribute("data-meshes-json", initialGeometry!);
+      const submit = control(formsWorkflow.controls.submit);
+      await expect(submit).toHaveAccessibleName(language.submit);
+      await expect(submit).toBeEnabled();
+      await submit.click();
+      await expect(control(formsWorkflow.controls.submitted)).toHaveText(language.submitted);
+      await control(formsWorkflow.controls.respondAgain).click();
+      await expect(name).toHaveValue("Column A");
+      await scope.locator('[id="playground.navbar.modes.responses"]').click();
+      const responses = control("forms-responses.items");
+      await expect(responses).toContainText(`${language.responses} (1)`);
+      await expect(responses).toContainText(formsWorkflow.answer);
+      await expect(responses).toContainText(String(formsWorkflow.extension.changed));
+      await scope.locator('[id="playground.navbar.modes.blueprint"]').click();
+      await expect(name).toBeVisible();
+      await scope.locator('[id="playground.navbar.modes.responses"]').click();
+      await expect(responses).toContainText(`${language.responses} (1)`);
+      await expect(responses).toContainText(formsWorkflow.answer);
+      await expect(responses).toContainText(String(formsWorkflow.extension.changed));
+      errors.stop();
+      expect(errors.pageErrors).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.refusedInputs).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
+    });
   });
 
   test.describe("language", () => {

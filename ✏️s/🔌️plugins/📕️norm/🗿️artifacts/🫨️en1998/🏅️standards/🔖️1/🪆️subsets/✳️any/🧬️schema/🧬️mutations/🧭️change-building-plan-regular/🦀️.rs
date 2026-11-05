@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingPlanRegula
         record: "ChangeBuildingPlanRegular",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change regularity in plan", "Regelmäßigkeit im Grundriss ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change regularity in plan", "Regelmäßigkeit im Grundriss ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-plan-regular".into()]

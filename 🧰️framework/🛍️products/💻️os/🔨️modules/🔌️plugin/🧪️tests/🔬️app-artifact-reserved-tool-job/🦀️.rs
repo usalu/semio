@@ -18,7 +18,7 @@ mod artifact_reserved_tool_job_tests {
         }
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-            semio_framework_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
+            semio_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
         }
 
         fn begin_close(&mut self) {}
@@ -49,7 +49,7 @@ mod artifact_reserved_tool_job_tests {
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
         use semio_framework_job::InteractiveJob;
         use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-        let mut caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original reserved fixture caller");let mut cx=caller.context();let recipient=cx.original_recipient_identity();
+        let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original reserved fixture caller");let mut cx=caller.context();let recipient=cx.original_recipient_identity();
         let frame=std::mem::size_of::<TerminalJob>();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4096,maximum_depth:1,..Default::default()};
         assert!(frame<=grant.maximum_release_bytes);

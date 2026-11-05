@@ -21,8 +21,8 @@ pub struct SetContentType {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetContentType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "content-type", kind: "set-content-type", record: "SetContentType" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set content type", "Inhaltstyp setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set content type", "Inhaltstyp setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["opc".to_string(), "contentTypes".to_string(), if self.is_override { "overrides" } else { "defaults" }.to_string(), self.name.clone()]

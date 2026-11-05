@@ -6,7 +6,7 @@ pub mod derived_construction {
     use semio_s_artifact_raster_raster_diff::RasterDiff;
     use semio_s_artifact_raster_raster_mutations::RasterMutation;
     use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
+    use semio_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct RasterBuilderConstruction {
@@ -56,7 +56,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct RasterParts {
@@ -69,27 +69,27 @@ pub mod derived_analysis {
         type Parts = RasterParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.raster.raster", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
+            semio_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = RasterParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
+            let mut confidence = semio_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <RasterSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <RasterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
+                            confidence = semio_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -101,7 +101,7 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
+semio_plugin::derive_artifact_facets!(
     pub spec RasterBuilderFacets {
         construction: RasterBuilderConstruction,
         analysis: RasterAnalyzerAnalysis,
@@ -136,15 +136,15 @@ pub fn raster_asset(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -
 /// typed reason instead of a bare "no route" (block's `📓️w3-io.md` §2 records the same rule).
 /// `export_formats`/`import_formats` stay empty: they are the pre-stdio format-enum peer that
 /// 🗒️note, 🧱️block and every stdio artifact also leave empty.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
+    semio_plugin::ArtifactKindSpec {
         id: "2d.raster".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D Raster", "2D-Rasterbild"),
+        label: semio_ui_locale::LocalizedLabel::native("2D Raster", "2D-Rasterbild"),
         source_format: "raster.document".into(),
         component_kind: "raster".into(),
         dimension: "2d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
+        media_capability: semio_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::TwoD, form: semio_plugin::MediaForm::Raster },
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],

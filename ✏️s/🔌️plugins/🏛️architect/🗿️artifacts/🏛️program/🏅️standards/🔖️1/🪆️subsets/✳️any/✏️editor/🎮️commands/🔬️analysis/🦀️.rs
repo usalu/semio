@@ -7,7 +7,7 @@ pub mod run_validation {
     use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterRow;
     use crate::standards::v1::subsets::any::schema::inferences::validate_plugin;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use semio_framework_value_derive::{FromValue, ToValue};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -30,7 +30,7 @@ pub mod run_analysis {
     use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::run_analysis;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
     use semio_framework_value_derive::{FromValue, ToValue};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -61,7 +61,7 @@ pub mod run_report {
     use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::build_report;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, ViewModel};
+    use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, ViewModel};
     use semio_framework_value_derive::{FromValue, ToValue};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

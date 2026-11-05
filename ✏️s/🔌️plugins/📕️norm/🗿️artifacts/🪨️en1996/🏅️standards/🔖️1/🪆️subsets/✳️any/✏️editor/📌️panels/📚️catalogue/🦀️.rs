@@ -5,11 +5,11 @@ use semio_s_artifact_norm_en1996_schema::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_artifact_norm_en1996_schema::checks::masonry::{f_vlt_mpa, fire_min_thickness_m, fk_factors, psi0_imposed};
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
 use semio_s_artifact_norm_en1996_model::{MasonryClass, MortarType, UnitGroup, UnitMaterial};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1996.play.catalogue";
@@ -196,10 +196,10 @@ fn f_vk_de_cap_table() -> CatalogueTable {
 }
 
 //#region 🔖️Render
-pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(examples: Vec<semio_plugin::ExampleSource>, locale: semio_ui_locale::Locale, controller_id: &'static str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut tables = reference_tables();
     tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1996", &<semio_s_artifact_norm_en1996_schema::checks::masonry::En1996Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

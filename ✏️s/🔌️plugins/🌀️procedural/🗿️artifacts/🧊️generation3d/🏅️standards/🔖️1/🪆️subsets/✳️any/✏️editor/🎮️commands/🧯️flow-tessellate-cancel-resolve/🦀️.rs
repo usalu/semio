@@ -6,15 +6,15 @@ use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 pub use semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve;
 
 
 
 /// 🧯️ Folds the geometry extension's `evaluateCancel` / `tessellateCancel` answer. It carries a
 /// retirement COUNT and nothing the evaluation needs, so this command exists for two reasons a silent
-/// drop could not serve: an [`semio_framework_plugin::ExtensionInvocation`] must name an app-owned
+/// drop could not serve: an [`semio_plugin::ExtensionInvocation`] must name an app-owned
 /// response action (an unknown id surfaces as a dispatch fault frame), and the release's own round
 /// trip has to leave the window's latch exactly as quiescent as the closed run left it — which is why
 /// this is NOT folded through `flowTessellateResolve`, whose settle would count a hop answer.

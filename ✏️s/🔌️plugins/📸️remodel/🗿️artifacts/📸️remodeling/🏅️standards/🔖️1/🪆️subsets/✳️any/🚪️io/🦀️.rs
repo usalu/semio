@@ -35,8 +35,8 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
-use {semio_framework_os_kernel::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::{ArtifactSerializer, MeshData};
+use {semio_os_kernel::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_os_kernel::io::ErasedComposeSource,semio_os_kernel::io::IoDirection,semio_os_kernel::io::IoKey,semio_os_kernel::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_plugin::{ArtifactSerializer, MeshData};
 use semio_s_artifact_stdio_las::standards::v1_0::engine as las_engine;
 use semio_s_artifact_stdio_ply::standards::v1_0::engine as ply_engine;
 use semio_s_artifact_stdio_png::PngSnapshot;
@@ -133,9 +133,9 @@ pub fn remodeling_png_asset(scene: &RemodelingSnapshot) -> Result<ImageAsset, St
 /// 🖼️ `remodeling_png_asset` in the OS media-export envelope the editor's export command speaks.
 /// Takes the typed scene: `RemodelingSnapshot` left the serde type graph with `store::os_store::artifact_child::ArtifactChild`
 /// (W9), so a `serde_json::Value` document is no longer a carrier this crate can decode.
-pub fn remodeling_png_export(scene: &RemodelingSnapshot) -> Result<semio_framework_os::OsMediaExportResult, String> {
+pub fn remodeling_png_export(scene: &RemodelingSnapshot) -> Result<semio_os::OsMediaExportResult, String> {
     let asset = remodeling_png_asset(scene)?;
-    Ok(semio_framework_os::OsMediaExportResult { data: asset.data, mime_type: "image/png".into(), file_name: "remodeling-export.png".into(), encoding: Some("base64".into()) })
+    Ok(semio_os::OsMediaExportResult { data: asset.data, mime_type: "image/png".into(), file_name: "remodeling-export.png".into(), encoding: Some("base64".into()) })
 }
 //#endregion 🔖️Exporters
 

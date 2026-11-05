@@ -16,8 +16,8 @@ pub struct SetCell {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "cell", kind: "set-cell", record: "SetCell" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set cell", "Zelle setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set cell", "Zelle setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

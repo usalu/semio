@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeCfGrossResistance 
         record: "ChangedCfGrossResistance",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Gross cross-section resistance of the cold-formed member", "Kaltprofil: Widerstand des Bruttoquerschnitts ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Gross cross-section resistance of the cold-formed member", "Kaltprofil: Widerstand des Bruttoquerschnitts ändern")
     }
 }
 

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingJointGapM 
         record: "ChangeBuildingJointGapM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Seismic joint gap to the next building (0 = none)", "Erdbebenfuge zum nächsten Gebäude (0 = keine) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Seismic joint gap to the next building (0 = none)", "Erdbebenfuge zum nächsten Gebäude (0 = keine) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-joint-gap-m".into()]

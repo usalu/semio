@@ -2,11 +2,11 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 
 pub use crate::schema::snapshot::CurationSnapshot;

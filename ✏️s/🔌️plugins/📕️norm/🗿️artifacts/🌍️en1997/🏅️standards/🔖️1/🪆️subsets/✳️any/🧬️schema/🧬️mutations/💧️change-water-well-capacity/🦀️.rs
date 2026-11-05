@@ -22,8 +22,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeWaterWellCapacity 
         record: "ChangedWaterWellCapacity",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Well capacity of the layer water", "Schichtwasser: Brunnenleistung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Well capacity of the layer water", "Schichtwasser: Brunnenleistung ändern")
     }
 }
 

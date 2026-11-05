@@ -1,21 +1,21 @@
 //! 🧲️ The native hub binding driver and its authorized directory dial.
 
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
-use semio_framework_os_kernel::os_directory::{DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope};
-use semio_framework_os_kernel::os_directory::client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential};
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_hub_pair::pair;
-use semio_framework_os_mcp_hub_pair::binding_errors::{HubBindingError, HubUnavailableCause};
-use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairMountError, CanonicalPairMountIdentity};
-use semio_framework_os_mcp_wire::notify::publish_call_progress;
+use semio_os_kernel::os_directory::{DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope};
+use semio_os_kernel::os_directory::client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_hub_pair::pair;
+use semio_os_mcp_hub_pair::binding_errors::{HubBindingError, HubUnavailableCause};
+use semio_os_mcp_hub_pair::pair::{CanonicalPairMountError, CanonicalPairMountIdentity};
+use semio_os_mcp_wire::notify::publish_call_progress;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairMount, NativeCanonicalPairTransport};
+use semio_os_mcp_hub_pair::pair::{CanonicalPairMount, NativeCanonicalPairTransport};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_inference_hub::hub_wire::NativeInferenceHubTransport;
+use semio_os_mcp_inference_hub::hub_wire::NativeInferenceHubTransport;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_wire::notify::active_request_cancel_requested;
+use semio_os_mcp_wire::notify::active_request_cancel_requested;
 use super::authorized_views::AuthorizedDescriptorSnapshot;
 use super::binding_helpers::{map_client_error, settle_progress_message, validate_hub_origin};
 use super::binding_limits::{
@@ -39,13 +39,13 @@ use super::component_assets::HubComponentAssets;
 pub struct NativeHubBindingDriver {
     pub cancel: semio_framework_async::CancelToken,
     pub(super) thread: Option<std::thread::JoinHandle<()>>,
-    pub runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
-    pair_transport: Arc<NativeCanonicalPairTransport<semio_framework_os_services::TokioHostRuntime>>,
-    pub(super) inference_transport: Arc<NativeInferenceHubTransport<semio_framework_os_services::TokioHostRuntime>>,
+    pub runtime: Arc<semio_os_services::TokioHostRuntime>,
+    pair_transport: Arc<NativeCanonicalPairTransport<semio_os_services::TokioHostRuntime>>,
+    pub(super) inference_transport: Arc<NativeInferenceHubTransport<semio_os_services::TokioHostRuntime>>,
     /// 🪪️ The SAME authenticated client the binding refreshes through, held for the per-document execution-target lease.
-    pub client: Arc<DirectoryClient<semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>>>,
+    pub client: Arc<DirectoryClient<semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_os_services::TokioHostRuntime>>>,
     /// 💰️ The same transport, read for its byte budget: a transfer the budget cannot admit waits for the refill turn.
-    pub(super) budget: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>,
+    pub(super) budget: semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_os_services::TokioHostRuntime>,
     /// 🧩️ The execution-target components, fetched on demand as static assets. The catalog refresh pulls manifest and
     /// descriptor for every selected document; a component is pulled only when an open or an action needs its plugin — it
     /// is tens of megabytes per package and a session that never dispatches an action must not pay for it.
@@ -58,7 +58,7 @@ pub struct NativeHubBindingDriver {
 #[cfg(not(target_arch = "wasm32"))]
 fn budgeted_refresh_step<T>(
     binding: &HubRemoteBinding,
-    budget: &semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>,
+    budget: &semio_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_os_services::TokioHostRuntime>,
     cancel: &semio_framework_async::CancelToken,
     mut step: impl FnMut() -> Result<T, HubBindingError>,
 ) -> Result<T, HubBindingError> {
@@ -82,8 +82,8 @@ impl NativeHubBindingDriver {
     pub fn connect(credential: Arc<LocalHubCredential>, base_url: &str, space_id: &str) -> Result<(Arc<HubRemoteBinding>, Self, Arc<dyn HubSocketGrantSource>), GatewayError> {
         use semio_framework_actor::{ActorId, PackageId};
         use semio_framework_async::{HostAsyncRuntime, ProcessKind, ScopeOwner, TraceId, WorkerPoolConfig};
-        use semio_framework_os_kernel::os_directory::client::{native::NativeDirectoryTransport, DirectoryStreamTurn};
-        use semio_framework_os_services::{ComputePool, TokioHostRuntime};
+        use semio_os_kernel::os_directory::client::{native::NativeDirectoryTransport, DirectoryStreamTurn};
+        use semio_os_services::{ComputePool, TokioHostRuntime};
 
         validate_hub_origin(base_url, space_id)?;
         if base_url.trim_end_matches('/') != credential.hub_origin().trim_end_matches('/') {
@@ -98,12 +98,12 @@ impl NativeHubBindingDriver {
             runtime.clone(),
             scope,
             compute,
-            semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES + 16 * 1024 * 1024,
+            semio_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES + 16 * 1024 * 1024,
             2,
-            PackageId("semio-framework-os-mcp".to_string()),
+            PackageId("semio-os-mcp".to_string()),
             ActorId(0x4d43_5001),
         );
-        let assets = HubComponentAssets::new(runtime.clone(), credential.clone(), semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore::for_user());
+        let assets = HubComponentAssets::new(runtime.clone(), credential.clone(), semio_os_kernel::os_directory::client::ExecutionTargetModuleStore::for_user());
         let pair_transport = Arc::new(NativeCanonicalPairTransport::new(transport.clone(), credential.clone()));
         let inference_transport = Arc::new(NativeInferenceHubTransport::new(transport.clone(), credential.clone()));
         let budget = transport.clone();
@@ -196,7 +196,7 @@ impl NativeHubBindingDriver {
                                     Err(_) => {
                                         match stream.complete_dial(
                                             operation_now,
-                                            Err(semio_framework_os_kernel::os_directory::client::TransportError::Io("authenticated authority refresh failed before directory dial".to_string())),
+                                            Err(semio_os_kernel::os_directory::client::TransportError::Io("authenticated authority refresh failed before directory dial".to_string())),
                                         ) {
                                             DirectoryStreamTurn::Closed | DirectoryStreamTurn::Revoked(_) => break,
                                             DirectoryStreamTurn::ReconnectAt(_) | DirectoryStreamTurn::Idle => {}
@@ -227,7 +227,7 @@ impl NativeHubBindingDriver {
                                 }
                                 Err(error) => {
                                     thread_binding.note_stream_fault(&directory_dial_refusal(&error).message);
-                                    match stream.complete_dial(operation_now, Err(semio_framework_os_kernel::os_directory::client::TransportError::Io(error.to_string()))) {
+                                    match stream.complete_dial(operation_now, Err(semio_os_kernel::os_directory::client::TransportError::Io(error.to_string()))) {
                                         DirectoryStreamTurn::Closed | DirectoryStreamTurn::Revoked(_) => break,
                                         DirectoryStreamTurn::ReconnectAt(_) | DirectoryStreamTurn::Idle => {}
                                         DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::DialScoped { .. } | DirectoryStreamTurn::Message(_) => break,
@@ -283,7 +283,7 @@ impl NativeHubBindingDriver {
     /// This is the leg of the browser shell's own attach chain a native client never had: `open-plan` →
     /// `execution-target/{manifest, component, descriptor}`; it comes from the per-user store when that holds the bytes, else
     /// from the hub as a static asset ([`HubComponentAssets`]), and the calling tool hears the transfer as progress.
-    pub fn fetch_execution_target_component(&self, plugin_id: &str, scope: &DocumentScope, expected: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetComponentV1) -> Result<Vec<u8>, GatewayError> {
+    pub fn fetch_execution_target_component(&self, plugin_id: &str, scope: &DocumentScope, expected: &semio_os_kernel::os_directory::DocumentExecutionTargetComponentV1) -> Result<Vec<u8>, GatewayError> {
         let intent = DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
             version: 1,
@@ -329,7 +329,7 @@ impl NativeHubBindingDriver {
             self.await_transfer_budget(HUB_EXECUTION_TARGET_LEASE_BUDGET_BYTES)?;
             let (ctx, _) = self.operation_context(&self.cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
             match self.runtime.block_on(self.client.document_execution_target_manifest(&ctx, &intent)) {
-                Err(DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::BudgetExhausted)) => {}
+                Err(DirectoryClientError::Transport(semio_os_kernel::os_directory::client::TransportError::BudgetExhausted)) => {}
                 outcome => break outcome.map_err(|error| binding_error_to_gateway(map_client_error(error)))?,
             }
         };
@@ -350,7 +350,7 @@ impl NativeHubBindingDriver {
                 cancel.cancel_now();
             }
             let progress = HubBindingProgress { phase: HubBindingPhase::AwaitingNetworkBudget, completed: usize::try_from(remaining).unwrap_or(usize::MAX), total: usize::try_from(needed).unwrap_or(usize::MAX) };
-            let refill = std::time::Duration::from_millis(semio_framework_os_services::HTTP_BUCKET_REFILL_INTERVAL_MS).as_secs_f64();
+            let refill = std::time::Duration::from_millis(semio_os_services::HTTP_BUCKET_REFILL_INTERVAL_MS).as_secs_f64();
             publish_call_progress((started.elapsed().as_secs_f64() / refill).min(0.99), &settle_progress_message(&progress));
         })
         .map_err(binding_error_to_gateway)
@@ -426,13 +426,13 @@ pub(super) fn wall_now_ms() -> i64 {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn complete_authorized_directory_dial<T: DirectoryTransport + Clone>(
-    stream: &mut semio_framework_os_kernel::os_directory::client::DirectoryStream<T>,
+    stream: &mut semio_os_kernel::os_directory::client::DirectoryStream<T>,
     binding: &HubRemoteBinding,
     ctx: &OperationContext,
     expected_authority_generation: u64,
     operation_now_ms: u64,
     connection: T::Ws,
-) -> semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn<T> {
+) -> semio_os_kernel::os_directory::client::DirectoryStreamTurn<T> {
     if ctx.cancel.is_cancelled_now()
         || expected_authority_generation == 0
         || binding.authority_generation.load(Ordering::SeqCst) != expected_authority_generation

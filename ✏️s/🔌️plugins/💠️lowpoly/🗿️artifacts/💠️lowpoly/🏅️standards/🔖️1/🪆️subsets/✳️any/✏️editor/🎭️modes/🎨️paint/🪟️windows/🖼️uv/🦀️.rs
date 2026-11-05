@@ -7,7 +7,7 @@ use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::Lowpoly
 use semio_s_artifact_lowpoly_lowpoly_view::LowpolyView;
 use crate::lowpoly_window_measures;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_PAINT_TEXTURE_SIZE;
-use semio_framework_plugin::{scene_surface, Canvas2dScene, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_plugin::{scene_surface, Canvas2dScene, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
         id: LOWPOLY_PLAY_WINDOW_UV.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("UV", "UV"),
+        label: semio_ui_locale::LocalizedLabel::native("UV", "UV"),
         body_key: LOWPOLY_PLAY_BODY_UV.into(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "layout-grid".into(),
@@ -99,12 +99,12 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
     semio_framework_pack_json::to_json_string(&layers)
 }
 
-pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     match loaded {
         Some(loaded) => {
-            scene_surface(LOWPOLY_PLAY_SURFACE_UV, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+            scene_surface(LOWPOLY_PLAY_SURFACE_UV, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
         }
-        None => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Failed to load UV canvas")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly uv window failed-load text admission failed")),
+        None => semio_plugin::built_text_node(semio_ui_locale::Label::data("Failed to load UV canvas")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly uv window failed-load text admission failed")),
     }
 }
 //#endregion 🔖️Scene

@@ -8,8 +8,8 @@ where
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "shading-surface", kind: "delete-shading-surface", record: "DeletedShadingSurface" };
 
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete shading surface {}", self.id.0), &format!("Verschattungsfläche {} löschen", self.id.0))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Delete shading surface {}", self.id.0), &format!("Verschattungsfläche {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

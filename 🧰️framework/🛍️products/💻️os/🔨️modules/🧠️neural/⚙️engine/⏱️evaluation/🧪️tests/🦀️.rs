@@ -8,7 +8,7 @@ impl OriginalCaller{
 }
 impl Drop for OriginalCaller{fn drop(&mut self){if let Some(caller)=self.inner.take(){caller.retire(STOCK);}}}
 
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_os_kernel_neural_engine_model::testkit::observe_ownership(operation)}
 
 #[derive(semio_framework_value::RetireOwned)]
 struct FinishedChannels(EvalChannels);
@@ -42,7 +42,7 @@ fn original_budgeted_eval_state_preserves_complete_source_roster_and_closes_with
 }
 
 #[global_allocator]
-static OBSERVED_SYSTEM:semio_framework_os_kernel_neural_engine_model::testkit::ObservedSystem=semio_framework_os_kernel_neural_engine_model::testkit::ObservedSystem;
+static OBSERVED_SYSTEM:semio_os_kernel_neural_engine_model::testkit::ObservedSystem=semio_os_kernel_neural_engine_model::testkit::ObservedSystem;
 
 //#region 🧠️CacheRetirement
 fn cache_grant(owner:&crate::NeuralCacheRetirement,copy:usize)->RetainedCloneGrant {

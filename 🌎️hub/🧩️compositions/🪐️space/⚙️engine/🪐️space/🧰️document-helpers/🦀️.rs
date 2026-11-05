@@ -3,41 +3,41 @@
 use super::*;
 
 //#region 🔖️DocumentHelpers
-pub(crate) fn s_play_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(S_PLAY_CONTROLLER_ID).action(action, args)
+pub(crate) fn s_play_action(action: &str, args: Option<semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<(semio_plugin::ActionId, Option<semio_plugin::UiValue>)> {
+    semio_plugin::ActionFactory::new(S_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    semio_plugin::UiText::try_from_str(value.as_ref()).map(semio_plugin::UiValue::Text).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
 }
 
 /// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
+pub fn ui_value_number(value: impl Into<f64>) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Number(value.into())
 }
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_plugin::UiValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiListBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(semio_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_plugin::UiValue)>) -> semio_plugin::UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
@@ -76,15 +76,15 @@ pub(crate) async fn presence_peers_json(_app: &SpaceApp, _config: &SpaceConfig) 
 
 /// 🖱️ On-demand space workflow context menu from hit-test and selection snapshot.
 pub(super) async fn space_workflow_context_menu_items(
-    registry: &semio_framework_plugin::AppActionRegistry,
+    registry: &semio_plugin::AppActionRegistry,
     labels: &SStudioLabels,
-    axes: &semio_framework_plugin::ViewModel,
-    surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>,
+    axes: &semio_plugin::ViewModel,
+    surface: Option<&semio_plugin::ContextMenuSurfaceTarget>,
     selected_node_ids: &[String],
-) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, selection_domains_from_surface, ContextMenuItemSpec, Menu};
+) -> Vec<semio_plugin::ContextMenuItemSpec> {
+    use semio_plugin::{selection_count_phrase, selection_domains_from_surface, ContextMenuItemSpec, Menu};
 
-    let hits: &[semio_framework_plugin::ContextMenuHit] = surface.map_or(&[], |target| target.hits.as_slice());
+    let hits: &[semio_plugin::ContextMenuHit] = surface.map_or(&[], |target| target.hits.as_slice());
     let (nodes, _) = selection_domains_from_surface(surface, selected_node_ids, &[]);
     let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
     let mut menu = Menu::of(registry, axes);
@@ -114,7 +114,7 @@ pub(super) async fn space_workflow_context_menu_items(
                 })
                 ;
         }
-        let phrase = selection_count_phrase(axes.locale, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), semio_framework_plugin::SelectionKind::Node)]);
+        let phrase = selection_count_phrase(axes.locale, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), semio_plugin::SelectionKind::Node)]);
         let remove_label = phrase.map_or_else(|| labels.context_remove.as_str().to_string(), |phrase| format!("{} ({phrase})", labels.context_remove.as_str()));
         let args = hit_node.map(|node_id| DslValue::object([("nodeId".to_string(), DslValue::String(node_id.into()))]));
         menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), args, destructive: Some(true), ..Default::default() });

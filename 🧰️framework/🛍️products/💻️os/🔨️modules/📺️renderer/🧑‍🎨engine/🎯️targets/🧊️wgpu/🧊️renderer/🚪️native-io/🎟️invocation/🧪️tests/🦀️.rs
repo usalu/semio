@@ -1,8 +1,8 @@
 //! 🧪️ The defining inline Node retains real source custody, semantic descriptors and actual returned page backing.
 use super::{OriginalRendererFixture,renderer_law_stock,WorldAssetResponsePage};
-use semio_framework_os_renderer_wgpu_host_plumbing::native_io::{RendererOriginalIoNode,RendererOriginalIoStep};
+use semio_renderer_wgpu_host_plumbing::native_io::{RendererOriginalIoNode,RendererOriginalIoStep};
 use semio_framework_job::{OriginalJobPageReturnRegistry,InteractiveJobCloseStep};
-use semio_framework_os_services_native_io::{NativeIoRequest, NativeIoResultStatus};
+use semio_os_services_native_io::{NativeIoRequest, NativeIoResultStatus};
 
 static RETURNS:OriginalJobPageReturnRegistry<3>=OriginalJobPageReturnRegistry::new();
 static STREAM_RETURNS:OriginalJobPageReturnRegistry<1>=OriginalJobPageReturnRegistry::new();

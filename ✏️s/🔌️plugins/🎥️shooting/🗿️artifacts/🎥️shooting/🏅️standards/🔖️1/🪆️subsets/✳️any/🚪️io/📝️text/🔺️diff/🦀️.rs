@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type ShootingDiffText = String;
 
-impl semio_framework_os_kernel::DiffText for crate::standards::v1::subsets::any::schema::diff::ShootingDiff {
+impl semio_os_kernel::DiffText for crate::standards::v1::subsets::any::schema::diff::ShootingDiff {
     fn print_diff(&self) -> String {
         semio_framework_pack_json::to_json_string(self)
     }

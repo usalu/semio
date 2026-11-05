@@ -21,22 +21,22 @@ use crate::editor::puzzle5d::terminology::puzzle5d_localized;
 use crate::editor::puzzle5d::entities::{part_scale_json, puzzle5d_grip_full_id, resolve_grip_world_position, resolve_part_mesh_url, world_grip_direction, target_volume_scale_json, world_grip_position, Puzzle5dDocument, Puzzle5dPart, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_TARGET_VOLUME_COLOR};
 use crate::editor::puzzle5d::view::{puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, Puzzle5dInteractionSnapshot, Puzzle5dScene};
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
-use semio_framework_plugin::world3d_camera_projection_json;
-use semio_framework_plugin::world3d_chunking_json;
-use semio_framework_plugin::world3d_environment_json;
-use semio_framework_plugin::world3d_fit_json;
-use semio_framework_plugin::world3d_mesh_id_from_url;
-use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
-use semio_framework_plugin::World3dScene;
-use semio_framework_plugin::world3d_selection_json;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::ToolRunView;
-use semio_framework_plugin::WindowEngagement;
-use semio_framework_plugin::WindowEngagementSlot;
-use semio_framework_plugin::WindowKindDefinition;
-use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_contract::BuiltNode;
+use semio_plugin::world3d_camera_projection_json;
+use semio_plugin::world3d_chunking_json;
+use semio_plugin::world3d_environment_json;
+use semio_plugin::world3d_fit_json;
+use semio_plugin::world3d_mesh_id_from_url;
+use semio_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_plugin::World3dScene;
+use semio_plugin::world3d_selection_json;
+use semio_plugin::SurfaceKind;
+use semio_plugin::ToolRunView;
+use semio_plugin::WindowEngagement;
+use semio_plugin::WindowEngagementSlot;
+use semio_plugin::WindowKindDefinition;
+use semio_plugin::WindowMeasure;
+use semio_plugin::WindowOptions;
+use semio_ui_contract::BuiltNode;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
 
@@ -72,7 +72,7 @@ pub fn definition() -> WindowKindDefinition {
             utilities::volume_brush::UTILITY_ID.into(),
             utilities::world_relocate::UTILITY_ID.into(),
         ],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)],
+        interactions: vec![semio_plugin::InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -404,7 +404,7 @@ pub fn world_target_volumes_json(document: &Puzzle5dDocument) -> String {
 //#endregion 🔖️SceneJson
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>, mesh_lane: &[String], suggestions: Option<&BrushSuggestionsFound>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>, mesh_lane: &[String], suggestions: Option<&BrushSuggestionsFound>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut scene = World3dScene::base(camera3d_json(&envelope.runtime.camera3d), world_meshes_json(mesh_lane), world_instances_json(&envelope.document, &envelope.interaction, tool_run), world_selection_json_ex(envelope));
     scene.vortices_json = Some(world_grips_json(&envelope.document, &envelope.runtime, &envelope.interaction, &envelope.active_utility));
     scene.attractions_json = Some(world_fasteners_json(&envelope.document));
@@ -416,7 +416,7 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Optio
     scene.target_volumes_json = Some(world_target_volumes_json(&envelope.document));
     scene.domain_id = Some(PUZZLE5D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(PUZZLE5D_GRANULARITY_PART.into());
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 

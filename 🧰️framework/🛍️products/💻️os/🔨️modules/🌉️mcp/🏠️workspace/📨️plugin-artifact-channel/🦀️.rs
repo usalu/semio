@@ -1,9 +1,9 @@
 //! 📨️ The plugin artifact channel: pending exchanges, budgets and the channel implementation.
 
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_plugin_host::GuestRuntime as _;
+use semio_plugin_host::GuestRuntime as _;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_plugin_host::GuestRuntimes;
+use semio_plugin_host::GuestRuntimes;
 #[cfg(not(target_arch = "wasm32"))]
 use std::collections::HashMap;
 #[cfg(not(target_arch = "wasm32"))]
@@ -17,13 +17,13 @@ use crate::compiled_components::{ComponentBytes, scoped_compiled_component, shar
 #[cfg(not(target_arch = "wasm32"))]
 use crate::guest_document_codec::DOCUMENT_BACKBONE_BINDING_GENERATION;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{PluginRegistryEntry, find_repo_root, resolve_plugin_wasm_path};
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{PluginRegistryEntry, find_repo_root, resolve_plugin_wasm_path};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_foundation::errors::GatewayError;
+use semio_os_mcp_foundation::errors::GatewayError;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, ActivationPhase, ActivationScope, Fault, InferCommand, PreparedOps};
+use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, ActivationPhase, ActivationScope, Fault, InferCommand, PreparedOps};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_mcp_schema::schema::{ARTIFACT_INFERENCE_WIRE_VERSION, ArtifactInferenceBudgetV1, ArtifactInferenceCacheModeV1, ArtifactInferenceRequestV1, ArtifactInferenceResultV1};
+use semio_os_mcp_schema::schema::{ARTIFACT_INFERENCE_WIRE_VERSION, ArtifactInferenceBudgetV1, ArtifactInferenceCacheModeV1, ArtifactInferenceRequestV1, ArtifactInferenceResultV1};
 
 #[path = "🧱️channel-record/🦀️.rs"]
 mod channel_record;

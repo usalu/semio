@@ -11,7 +11,7 @@ use crate::editor::wfc3d::modes::edit::windows::graph::WFC_GRAPH_WINDOW;
 use crate::editor::wfc3d::{Wfc3dEditor, Wfc3dEditorCommand, WFC_3D_GRAPH_UNIT};
 use crate::mutations::{drag_slots, resize_slot};
 use crate::{Wfc3dSnapshot, WFC3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+use semio_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
 fn base() -> Wfc3dSnapshot {
     crate::examples::two_room_corridor::snapshot()
@@ -61,15 +61,15 @@ fn a_seedless_view_publishes_the_leaves_plainly() {
 #[test]
 fn the_leaf_labels_the_row_in_english_and_german() {
     let label = <crate::Wfc3dMutation as protocol::SemanticMutation<Wfc3dSnapshot>>::label(&drag_slots(vec!["room-a".into(), "room-b".into()], 1.5, -0.25, 2.0));
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 slots by (1.5, -0.25, 2)");
-    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Slots um (1,5; -0,25; 2) ziehen");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 2 slots by (1.5, -0.25, 2)");
+    assert_eq!(label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "2 Slots um (1,5; -0,25; 2) ziehen");
 }
 //#endregion 🛠️Tool
 
 //#region 🧩️MountedApp
 struct Wfc3dApp {
     app: VcsArtifactApp<EditorApp<Wfc3dEditor>>,
-    scope: semio_framework_plugin::artifact_app_laws::OriginalFixtureScope,
+    scope: semio_plugin::artifact_app_laws::OriginalFixtureScope,
 }
 
 impl std::ops::Deref for Wfc3dApp {
@@ -101,23 +101,23 @@ fn manifest() -> App {
 }
 
 fn app() -> Wfc3dApp {
-    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Wfc3dEditor>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = block_on(semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Wfc3dEditor>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()));
     block_on(app.bind_instance_id(1));
     Wfc3dApp { app, scope }
 }
 
 fn graph_meta() -> ActionMeta {
     let window_instances = vec![ViewWindowInstance { id: WFC_GRAPH_WINDOW.into(), window_kind_id: WFC_GRAPH_WINDOW.into() }];
-    let view = ViewModel { window_instances, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(WFC_GRAPH_WINDOW).expect("the graph window is in the roster");
-    ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") }
+    let view = ViewModel { window_instances, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }.for_window_instance(WFC_GRAPH_WINDOW).expect("the graph window is in the roster");
+    ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") }
 }
 
 fn settle<E: std::fmt::Debug>(app: &mut Wfc3dApp, result: Result<InvocationResult, E>) -> InvocationResult {
     let mut result = result.expect("the dispatch is admitted");
     for _ in 0..1_048_576 {
         while let Some(page) = app.take_typed_operation_result_page(1) {
-            assert!(page.lane != semio_framework_plugin::app::TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
+            assert!(page.lane != semio_plugin::app::TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("the page is acknowledged");
         }
         while let Some(completion) = block_on(app.take_typed_operation_completion()).expect("the completion is taken") {
@@ -133,8 +133,8 @@ fn settle<E: std::fmt::Debug>(app: &mut Wfc3dApp, result: Result<InvocationResul
         if !app.has_pending_typed_operations() {
             return result;
         }
-        PluginApp::maintenance_step(&mut app.app, app.scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
-        block_on(app.app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx())).expect("publication advances");
+        PluginApp::maintenance_step(&mut app.app, app.scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
+        block_on(app.app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx())).expect("publication advances");
     }
     panic!("the wfc3d dispatch did not settle");
 }
@@ -142,7 +142,7 @@ fn settle<E: std::fmt::Debug>(app: &mut Wfc3dApp, result: Result<InvocationResul
 fn drag(app: &mut Wfc3dApp, gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> InvocationResult {
     let row = record(gesture, node_ids, dx * WFC_3D_GRAPH_UNIT, dy * WFC_3D_GRAPH_UNIT).to_row();
     let command = Wfc3dEditorCommand::NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![row])) };
-    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &graph_meta(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
+    let result = block_on(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &graph_meta(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     settle(app, result)
 }
 
@@ -151,7 +151,7 @@ fn edit_rows(result: &InvocationResult) -> Vec<semio_framework::kernel::HistoryE
 }
 
 fn close(app: &mut Wfc3dApp) {
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.scope.cx()).expect("wfc3d app paid close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.scope.cx()).expect("wfc3d app paid close");
 }
 
 #[test]
@@ -163,8 +163,8 @@ fn one_mounted_drag_is_one_edit_one_row_and_one_transaction() {
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.wfc.wfc3d@1/*#editor#nodeGraphEdit", "{transaction:?}");
     assert!(rows[0].op_lines.iter().all(|line| line.starts_with("drag-slots")), "the op is the relative leaf: {:?}", rows[0].op_lines);
-    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 slot by (1, 0, 0)");
-    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Slot um (1; 0; 0) ziehen");
+    assert_eq!(rows[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En), "Drag 1 slot by (1, 0, 0)");
+    assert_eq!(rows[0].label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De), "1 Slot um (1; 0; 0) ziehen");
     let after = app.snapshot().expect("projection");
     let moved = |snapshot: &Wfc3dSnapshot| snapshot.slots.iter().find(|slot| slot.id == "room-a").map(|slot| slot.x).expect("room-a");
     assert_eq!(moved(&after), moved(&before) + 1.0, "the drag landed in document units");
@@ -193,11 +193,11 @@ fn a_mounted_release_that_moves_nothing_and_two_drags_keep_their_shape() {
 fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
-        let mut store = store::ArtifactStore::<Wfc3dSnapshot, crate::Wfc3dMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<Wfc3dSnapshot, crate::Wfc3dMutation>(WFC3D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-        store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Wfc3dSnapshot, crate::Wfc3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
+        let mut store = store::ArtifactStore::<Wfc3dSnapshot, crate::Wfc3dMutation>::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<Wfc3dSnapshot, crate::Wfc3dMutation>(WFC3D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        store.install_document_store_owners_exact(semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Wfc3dSnapshot, crate::Wfc3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         let log = [drag_slots(vec!["room-a".into()], 1.0, 0.0, 0.0), drag_slots(vec!["room-a".into(), "room-b".into()], 0.0, 2.0, 1.0), resize_slot("room-a".into(), 3.0, 1.5, 2.0)];
         for mutation in &log {
-            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
+            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let edited = drag_slots(vec!["room-a".into()], 3.0, -1.0, 0.5);
@@ -215,9 +215,9 @@ fn a_drag_edited_in_history_replays_its_downstream() {
             vcs::apply_mutation(&fresh, &mutation).map(|(applied_state, _)| { fresh = applied_state; }).expect("the edited log folds");
         }
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
-        let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<Wfc3dSnapshot, crate::Wfc3dMutation>();
+        let mut disposer = semio_plugin::bounded_document_store_disposer::<Wfc3dSnapshot, crate::Wfc3dMutation>();
         for _ in 0..4_096 {
             if disposer.terminal_is_empty(&store) {
                 break;

@@ -8,6 +8,12 @@ import type { TestRouteContext } from "../🧭️route-context/🟦️.ts";
 
 /** 🛣️ Runs the generator, runtime, artifact, Cargo, build discovery, Nx inference and ownership routes; true when one matched. */
 export async function runRuntimeAndPathRoutes(context: TestRouteContext, segments: string[]): Promise<boolean> {
+  if (segments[0] === "private-native-birth") {
+    if (segments.length !== 1) throw new Error("Expected test private-native-birth");
+    const { createIssuedResourceControlV1 } = await import("@semio-tech/process/routing"), { withRepositoryTestArtifactsV1 } = await import("@semio-tech/repo-test/storage"), { testPrivateNativeBirthV1 } = await import("../../../🧪️testing/🌱️genuine-birth/🧫️private-workspace/🧪️tests/🚪️owner/🟦️.ts");
+    await withRepositoryTestArtifactsV1(context.repoRoot, context.invocation, createIssuedResourceControlV1(context.invocation, "repo:private-native-birth", 0), phase => testPrivateNativeBirthV1(context.repoRoot, context.invocation, phase));
+    return true;
+  }
   if (segments.length === 1 && segments[0] === "generator-preview-receiving") {
     await runRepositoryTestCommand(process.execPath, ["test", join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts"), "--test-name-pattern", "requires every owned generator|admits only explicit same-project preview|rejects missing, external, and non-canonical generator preview|bounds explicit preview resources|the actual empty General publisher|routes native generator previews|accepts the canonical language-neutral manifest|rejects noncanonical, noisy, unsafe, duplicate, and malformed manifests"], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "generator-preview-receiving"), budgetMs: 300_000 });
     return true;
@@ -16,6 +22,7 @@ export async function runRuntimeAndPathRoutes(context: TestRouteContext, segment
     await runRepositoryTestCommand(process.execPath, ["test", join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🟦️.ts")], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "selected-runtime-actor-port"), budgetMs: 120_000 });
     return true;
   }
+  if(segments.length===1&&segments[0]==="runtime-wasm-custody"){await runRepositoryTestCommand(process.execPath,["test",join(context.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🕸️wasm/🧪️tests/🟦️.ts")],{cwd:context.repoRoot,env:repoTestArtifactEnvironment(context.repoRoot,"runtime-wasm-custody"),budgetMs:30000});return true;}
   if (segments.length === 1 && segments[0] === "runtime-fixture-graph") {
     await runRepositoryTestCommand(process.execPath, ["test", join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts")], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "runtime-fixture-graph"), budgetMs: 120_000 });
     return true;

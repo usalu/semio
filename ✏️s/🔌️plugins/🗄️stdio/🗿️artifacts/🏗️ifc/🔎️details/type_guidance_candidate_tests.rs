@@ -3,14 +3,14 @@ use super::*;
 #[test]
 fn original_guided_candidate_reuses_actual_roster_witness_rules_and_request_handback(){
     use super::super::{source_loan::SourceLoan,type_guidance_candidate::GuidedCandidate};
-    use semio_framework_plugin::action_staging::{StagedFormRequest,StagedFormToken};
+    use semio_plugin::action_staging::{StagedFormRequest,StagedFormToken};
     if DetailsTestProfile::catalog().schema!="IFC4X3_ADD2"{return;}
     let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/type-number-binary-input.json")).unwrap();
     for row in law["cases"].as_array().unwrap(){
         let snapshot=super::type_number_binary_input_tests::snapshot(&law,row["source"].as_str().unwrap());let mut caller=OriginalWorkFixture::new();let mut loan=Some(SourceLoan::default());
         for _ in 0..8{if caller.turn(grant(),|cx|loan.as_mut().unwrap().advance(&snapshot,snapshot.as_ref(),[0;32],cx)).unwrap(){break;}}
         let mut candidate=Some(GuidedCandidate::<DetailsTestProfile>::default());
-        let mut donor=Some(StagedFormRequest{token:StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:"native-type-source".into(),generation:"1".into(),revision:"0".repeat(64)},args:super::type_input_tests::raw(&serde_json::json!({"path":"/entities/0","value":{"$ifcType":row["target"],"$ifcInputs":[{"index":row["index"].as_u64().unwrap().to_string(),"value":row["value"]}]}})),locale:semio_framework_ui_locale::Locale::En,page:None});
+        let mut donor=Some(StagedFormRequest{token:StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:"native-type-source".into(),generation:"1".into(),revision:"0".repeat(64)},args:super::type_input_tests::raw(&serde_json::json!({"path":"/entities/0","value":{"$ifcType":row["target"],"$ifcInputs":[{"index":row["index"].as_u64().unwrap().to_string(),"value":row["value"]}]}})),locale:semio_ui_locale::Locale::En,page:None});
         let original=donor.as_ref().unwrap().token.action.as_ptr();let expected=donor.as_ref().unwrap().args.clone();let mut complete=false;
         for _ in 0..1000000{
             let source=loan.as_ref().unwrap().source().unwrap();let demand=candidate.as_ref().unwrap().demands(source,&snapshot,4096).unwrap();

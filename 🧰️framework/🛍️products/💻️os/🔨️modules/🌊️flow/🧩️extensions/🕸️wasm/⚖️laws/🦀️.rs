@@ -7,7 +7,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[global_allocator]
 static EXTENSIONS_LAWS_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
-pub use semio_framework_os_flow_extensions::*;
+pub use semio_os_flow_extensions::*;
 
 #[cfg(test)] use neural_engine::{ColdOwner, Dictionary, Registry};
 #[cfg(test)] use semio_framework_value::DslValue;
@@ -15,7 +15,7 @@ pub use semio_framework_os_flow_extensions::*;
 #[cfg(test)] use semio_framework_value::retirement::RetireOwned;
 #[cfg(test)] use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(test)] use std::collections::BTreeMap;
-#[cfg(test)] use semio_framework_os_flow_extensions::external_completion::EvaluationExternalCompletion;
+#[cfg(test)] use semio_os_flow_extensions::external_completion::EvaluationExternalCompletion;
 
 /// 🧾️ Reads one file below the extension node at test time instead of compiling it into the suite; the text lives for the whole test process.
 #[cfg(test)]

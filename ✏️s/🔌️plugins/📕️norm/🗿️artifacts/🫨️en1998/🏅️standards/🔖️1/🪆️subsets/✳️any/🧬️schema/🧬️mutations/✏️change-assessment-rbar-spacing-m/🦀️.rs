@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentRbarSpac
         record: "ChangeAssessmentRbarSpacingM",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Spacing b_i of the restrained bars", "Abstand b_i der gehaltenen Längsstäbe ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Spacing b_i of the restrained bars", "Abstand b_i der gehaltenen Längsstäbe ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-rbar-spacing-m".into()]

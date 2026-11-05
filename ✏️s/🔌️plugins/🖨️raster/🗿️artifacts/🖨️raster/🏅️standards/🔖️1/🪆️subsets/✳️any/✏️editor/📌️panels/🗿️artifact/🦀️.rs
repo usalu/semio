@@ -12,23 +12,23 @@ use semio_s_artifact_raster_raster_model::layer_name;
 use semio_s_artifact_raster_raster_model::{layer_visible, layer_protection, layer_node_id};
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
-use semio_framework_plugin::{Buildable, HasBase};
-use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::tree_window_item;
-use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LabelText;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::PanelGroup;
-use semio_framework_plugin::PanelTabDefinition;
-use semio_framework_plugin::PanelTabKind;
-use semio_framework_plugin::PanelTreeBuilder;
-use semio_framework_plugin::PluginAssemblyError;
-use semio_framework_plugin::TreeWindows;
-use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::UiText;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
-use semio_framework_ui_contract as ui;
+use semio_plugin::{Buildable, HasBase};
+use semio_plugin::tree_item_with_action;
+use semio_plugin::tree_window_item;
+use semio_plugin::BuiltNode;
+use semio_ui_locale::LabelText;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::PanelGroup;
+use semio_plugin::PanelTabDefinition;
+use semio_plugin::PanelTabKind;
+use semio_plugin::PanelTreeBuilder;
+use semio_plugin::PluginAssemblyError;
+use semio_plugin::TreeWindows;
+use semio_plugin::UiAssemblyResult;
+use semio_plugin::UiText;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_BODY_LAYERS: &str = "raster.play.layers";
@@ -72,7 +72,7 @@ fn layers_rows<'a>(document: &'a RasterDocument, labels: &RasterPlayLabels) -> V
 fn add_row(kind: &str, label: LabelText, icon: &str) -> UiAssemblyResult<BuiltNode> {
     let args = ui_value_map([("kind", ui_value_text(kind)?)])?;
     let mut item = tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.{kind}"), ui_label(label.as_str())?, None, raster_action("addLayer", Some(args))?)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(row_text(icon, "raster add-layer icon admission failed")?);
     }
     Ok(item)

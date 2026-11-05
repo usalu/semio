@@ -1,13 +1,13 @@
 use crate::editor::puzzle2d::terminology::{puzzle2d_localized, Puzzle2dLabels};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::precompute::fill::{FillRunCounter, FillRunReason, FillRunStage};
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::snapshot::{puzzle2d_action, Puzzle2dScene};
 #[allow(unused_imports)]
-use semio_framework_plugin::ToolDefinition;
+use semio_plugin::ToolDefinition;
 #[allow(unused_imports)]
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefinition, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind};
 use crate::editor::puzzle2d::modes::edit::tools::fill::*;
@@ -19,8 +19,8 @@ use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 use crate::editor::puzzle2d::testkit::*;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 use semio_framework_pack_json::Value;
 
 fn fill_children(runtime: Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
@@ -32,7 +32,7 @@ fn fill_children(runtime: Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Vec<W
 /// 🛠️ Fill's count entry is a tool measure keyed by the fill tool id, not a window utility-options group.
 #[test]
 fn fill_count_entry_is_a_tool_measure() {
-    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = puzzle2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let host = puzzle_board_host();
     let fill_scene = scene(empty_board_snapshot(), Puzzle2dPlayRuntime { fill_count: 3, ..Puzzle2dPlayRuntime::default() }, overview::utilities::select::UTILITY_ID);
     assert!(matches!(&measures(&fill_scene, labels), WindowMeasure::Group { id, active_utility_id: None, .. } if id == "puzzle2d-tool-options-fill"));
@@ -44,7 +44,7 @@ fn fill_count_entry_is_a_tool_measure() {
 /// plugin-local progress, cancel or retry control beside it.
 #[test]
 fn fill_count_is_the_only_unbounded_measure_and_defaults_to_one_hundred() {
-    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = puzzle2d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let children = fill_children(Puzzle2dPlayRuntime { fill_count: 5_000, ..Puzzle2dPlayRuntime::default() }, labels);
     let [WindowMeasure::Number { id, value, min, max, step, ready, loading, waiting, .. }, WindowMeasure::Group { id: nodes, .. }, WindowMeasure::Group { id: handles, .. }] = children.as_slice() else { panic!("the count leads the fill measures, followed by the two distribution groups: {children:?}") };
     assert!(nodes.ends_with("-suggestion-distribution-nodes") && handles.ends_with("-suggestion-distribution-handles"), "the distribution groups are the brush's own: {nodes} {handles}");

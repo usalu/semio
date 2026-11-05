@@ -1,5 +1,5 @@
 {
-  "name": "semio-framework-os-infinite-directed-presentation",
+  "name": "semio-os-infinite-directed-presentation",
   "projectType": "library",
   "namedInputs": {
     "reads": [

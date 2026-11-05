@@ -5,7 +5,7 @@
 //! which used to share the old `📡️protocol` crate with this codec — is an EDITOR-surface concern, not
 //! an artifact one: it now lives in the subset's `✏️editor/🦀️.rs`, assembled from the
 //! `🎮️commands/*` payload
-//! modules by `semio_framework_plugin::app_commands!`.
+//! modules by `semio_plugin::app_commands!`.
 
 use crate::op::WriterMutation;
 #[cfg(test)] use crate::schema;

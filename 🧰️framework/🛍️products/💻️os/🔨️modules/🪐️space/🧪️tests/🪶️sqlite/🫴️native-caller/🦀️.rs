@@ -1,5 +1,5 @@
 //! 🫴️ Actual original native caller for the Semio SQLite snapshot suites: independent body and close grants drive every erased conversion.
-use semio_framework_os_kernel::{self as store, sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl}};
+use semio_os_kernel::{self as store, sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl}};
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 

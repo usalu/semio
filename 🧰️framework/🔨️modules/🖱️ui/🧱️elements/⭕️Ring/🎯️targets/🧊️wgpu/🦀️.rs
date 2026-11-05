@@ -8,9 +8,9 @@
 //! `crate::wgpu::widgets::{...}` reaches the sibling items this needs (`RingMeta`, `WidgetContext`);
 //! `crate::wgpu::geometry`/`crate::wgpu::input` are the other top-level engine mods `widgets` itself also depends on.
 
-use semio_framework_ui_theme::geometry::Rect;
-use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
-use semio_framework_ui_wgpu_widget_kit::{RingMeta, WidgetContext};
+use semio_ui_theme::geometry::Rect;
+use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
+use semio_ui_wgpu_widget_kit::{RingMeta, WidgetContext};
 
 pub fn render_ring<E: Clone>(id: &str, t: f64, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let cx = bounds.x + bounds.w * 0.5;

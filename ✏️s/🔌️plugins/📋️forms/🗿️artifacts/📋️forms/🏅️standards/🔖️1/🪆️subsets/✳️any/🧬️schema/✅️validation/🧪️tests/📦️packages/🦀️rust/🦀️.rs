@@ -1,7 +1,7 @@
 //! 🧪️ tests of `semio-s-artifact-forms-forms` — a path-preserving carve of the artifact root mounts.
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
 
 #[cfg(test)]
@@ -55,26 +55,6 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod forms {
-        #[path = "."]
-        pub mod config {
-            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
-            #[path = "."]
-            pub mod io {
-                pub use semio_s_artifact_forms_forms_config::editor::forms::config::io::*;
-                #[path = "../../../../../✏️editor/🎚️config/🚪️io/💾️binary/🦀️.rs"]
-                pub mod binary;
-                #[path = "../../../../../✏️editor/🎚️config/🚪️io/📝️text/🦀️.rs"]
-                pub mod text;
-            }
-            #[cfg(test)]
-            #[path = "../../../../../✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs"]
-            pub mod tests;
-            #[cfg(test)]
-            #[path = "../../../../../✏️editor/🎚️config/🧪️tests/🔬️contract-vectors/🦀️.rs"]
-            pub mod contract_vectors;
-            #[path = "../../../../../✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
         #[path = "../../../../../✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;
         #[path = "../../../../../✏️editor/🧰️support/🦀️.rs"]
@@ -122,10 +102,14 @@ pub mod viewer {
             #[path = "../../../../../👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
             pub mod schema;
         }
-        #[path = "."]
-        pub mod config {
-            #[path = "../../../../../👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
     }
 }
+
+pub use semio_s_artifact_forms_forms_config::forms_config;
+
+#[cfg(test)]
+#[path = "../../../../../🎚️config/🧪️tests/🔬️unit/🦀️.rs"]
+mod forms_config_tests;
+#[cfg(test)]
+#[path = "../../../../../🎚️config/🧪️tests/🔬️contract-vectors/🦀️.rs"]
+mod forms_config_contract_vectors;

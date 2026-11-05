@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for InsertPier where Op: pro
         record: "InsertPier",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Insert pier", "Pfeiler einfügen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Insert pier", "Pfeiler einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-pier".into()]

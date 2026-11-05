@@ -1,6 +1,6 @@
 //! 📐️ Selection scaling action.
 
-use semio_framework_plugin::ActionRef;
+use semio_plugin::ActionRef;
 
 /// 📐️ Returns the window-local selection scaling action reference.
 pub fn reference() -> ActionRef {

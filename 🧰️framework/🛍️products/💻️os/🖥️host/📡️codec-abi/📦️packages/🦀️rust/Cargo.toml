@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-os-host-codec-abi"
+name = "semio-os-host-codec-abi"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -23,4 +23,4 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }

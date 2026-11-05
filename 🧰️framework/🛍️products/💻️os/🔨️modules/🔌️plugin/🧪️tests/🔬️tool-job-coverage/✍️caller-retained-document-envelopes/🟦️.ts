@@ -5,7 +5,7 @@ import { toolJobWriterEnvelopeCallerRetainedExact, toolJobJackEnvelopeCallerReta
 export function writerEnvelopeCallerRetainedChecks() {
   const retainedWriterInitializer = [
     "struct WriterStoreInitializationAuthority",
-    "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority",
+    "impl semio_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority",
     "WriterStoreInitializationPhase::ValidateEdit { index }",
     "self.edit_index.admit(&envelope.vcs.edits, index,",
     "WriterStoreInitializationPhase::SeedHistory",
@@ -83,7 +83,7 @@ export function jackEnvelopeCallerRetainedChecks({ retainedWriterWasm, retainedW
     "OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>",
     "struct JackSnapshotCloneAuthority",
     "struct JackStoreInitializationAuthority",
-    "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority",
+    "impl semio_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority",
     "JackStoreInitializationPhase::ValidateEdit { index }",
     "self.edit_index.admit(&envelope.vcs.edits, index,",
     "JackStoreInitializationPhase::SeedHistory",
@@ -199,7 +199,7 @@ export function gisMapEnvelopeCallerRetainedChecks({ retainedWriterWasm, retaine
     "OwnedSchemaHexAuthority<GIS_MAP_OWNED_FIELD_BYTES>",
     "struct GisMapSnapshotCloneAuthority",
     "struct GisMapStoreInitializationAuthority",
-    "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot, GisMapMutation> for GisMapStoreInitializationAuthority",
+    "impl semio_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot, GisMapMutation> for GisMapStoreInitializationAuthority",
     "GisMapStoreInitializationPhase::ValidateEdit { index }",
     "self.edit_index.admit(&envelope.vcs.edits, index,",
     "GisMapStoreInitializationPhase::SeedHistory",

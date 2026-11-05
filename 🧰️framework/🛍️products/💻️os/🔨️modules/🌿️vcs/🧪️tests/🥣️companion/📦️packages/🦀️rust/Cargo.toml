@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-vcs-tests"
+name = "semio-os-vcs-tests"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -34,7 +34,7 @@ semio-framework-artifact-reference = { path = "../../../../../../../../🔨️mo
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
-semio-framework-os-vcs = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-vcs = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

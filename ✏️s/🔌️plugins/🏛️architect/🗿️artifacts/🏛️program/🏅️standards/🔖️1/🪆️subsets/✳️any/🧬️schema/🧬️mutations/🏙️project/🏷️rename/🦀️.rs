@@ -22,8 +22,8 @@ where
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "project", kind: "rename-project", record: "RenamedProject" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename project to \"{}\"", self.new_code), &format!("Projekt in \"{}\" umbenennen", self.new_code))
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native(&format!("Rename project to \"{}\"", self.new_code), &format!("Projekt in \"{}\" umbenennen", self.new_code))
     }
 }
 

@@ -3,8 +3,8 @@
 //! @see 🏪️store `NativeSnapshotEncodeOwner` — the owner every SQLite snapshot encoder receives.
 //! @see 🪶️sqlite-snapshot `SqliteSnapshotControl::run_as_original_caller` — the SQL half of the same funding rule.
 
-use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
-use semio_framework_os_kernel::NativeSnapshotEncodeOwner;
+use semio_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
+use semio_os_kernel::NativeSnapshotEncodeOwner;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, ValueError};
 

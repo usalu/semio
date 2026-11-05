@@ -2,14 +2,14 @@
 
 use semio_framework_value::RetainedCloneStep;
 use std::sync::Arc;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_window_transient::window_transient::{ErasedWindowTransientPublication, TypedWindowTransientStoreOwner, WindowTransientAuthority, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot, WindowTransientStore};
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_window_transient::window_transient::{ErasedWindowTransientPublication, TypedWindowTransientStoreOwner, WindowTransientAuthority, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot, WindowTransientStore};
 use semio_framework::{Fault, ViewModel};
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
-use semio_framework_plugin_window_config_registry::{WindowRegistry, fits};
-use semio_framework_os_kernel as store;
-use semio_framework_plugin_ownership::transient_publication::transient_store_disposer;
+use semio_plugin_window_config_registry::{WindowRegistry, fits};
+use semio_os_kernel as store;
+use semio_plugin_ownership::transient_publication::transient_store_disposer;
 
 fn original_transient_grant() -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 } }
 
@@ -76,18 +76,18 @@ fn retained_window_input_preserves_owner_generation() {
             snapshot: owner.current_read_erased().unwrap(),
         };
         assert_eq!(snapshot.generation(), row["generation"].as_u64().unwrap());
-        let digest = semio_framework_plugin_job::test_window_transient_context_identity(Some(&snapshot));
+        let digest = semio_plugin_job::test_window_transient_context_identity(Some(&snapshot));
         let duplicate=snapshot.try_duplicate().unwrap();
-        assert_eq!(digest, semio_framework_plugin_job::test_window_transient_context_identity(Some(&duplicate)));
+        assert_eq!(digest, semio_plugin_job::test_window_transient_context_identity(Some(&duplicate)));
         crate::window_mutation_tests::tests::close_with(duplicate,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
-        assert_ne!(digest, semio_framework_plugin_job::test_window_transient_context_identity(None));
+        assert_ne!(digest, semio_plugin_job::test_window_transient_context_identity(None));
         digests.insert(digest);
         identities.insert((snapshot.window_id().to_owned(), snapshot.window_kind_id().to_owned(), snapshot.generation(), snapshot.document_generation()));
         crate::window_mutation_tests::tests::close_with(snapshot,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
     }
     assert_eq!(identities.len(), fixture["expectedUniqueOwners"].as_u64().unwrap() as usize);
     assert_eq!(digests.len(), identities.len());
-    let mut disposer = transient_store_disposer::<_, semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation>(ReplacementWindow::build_owners().state_retirement);
+    let mut disposer = transient_store_disposer::<_, semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation>(ReplacementWindow::build_owners().state_retirement);
     for _ in 0..128 {
         if matches!(disposer.close_step(&mut owner, original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
             break;
@@ -101,11 +101,11 @@ struct ReplacementWindow;
 impl WindowTransientOwner for ReplacementWindow {
     fn owners_birth_demands()->RetirementDemand{transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
     const WINDOW_KIND_ID: &'static str = "canvas";
-    type State = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
-    type Mutation = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
+    type State = semio_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
+    type Mutation = semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
 
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        semio_framework_plugin_testing_fixtures_publication::window_transient_owners::owners()
+        semio_plugin_testing_fixtures_publication::window_transient_owners::owners()
     }
 }
 
@@ -118,9 +118,9 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
     let view = |id: &str| ViewModel {
         window_id: Some(id.into()),
         window_instances: ["canvas-left", "canvas-right"].map(|id| semio_framework::ViewWindowInstance { id: id.into(), window_kind_id: "canvas".into() }).into(),
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
-    let mutation = |id: &str, revision| WindowTransientMutation::of::<ReplacementWindow>(id, semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient { revision }.into());
+    let mutation = |id: &str, revision| WindowTransientMutation::of::<ReplacementWindow>(id, semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient { revision }.into());
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
     for (id, revision) in expected["before"].as_object().unwrap() {
         let authority = old.capture(Some(&view(id))).unwrap().unwrap();
@@ -264,9 +264,9 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
     let view = ViewModel {
         window_id: Some("canvas-left".into()),
         window_instances: vec![semio_framework::ViewWindowInstance { id: "canvas-left".into(), window_kind_id: "canvas".into() }],
-        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
-    let mutation = |revision| WindowTransientMutation::of::<ReplacementWindow>("canvas-left", semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient { revision }.into());
+    let mutation = |revision| WindowTransientMutation::of::<ReplacementWindow>("canvas-left", semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient { revision }.into());
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
     let publish = |registry: &mut WindowTransientOwnerRegistry, authority: &WindowTransientAuthority, revision: u64| {
         let mut publication = registry.begin(semio_framework_job::OperationId(1), authority, mutation(revision)).unwrap();
@@ -287,7 +287,7 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
     let captured = registry.capture(Some(&view)).unwrap().unwrap();
     publish(&mut registry, &captured, expected["firstRevision"].as_u64().unwrap());
     let rejected=registry.begin(semio_framework_job::OperationId(2),&captured,mutation(expected["staleRevision"].as_u64().unwrap())).err().unwrap(); assert!(!expected["staleBeginAccepted"].as_bool().unwrap()); crate::window_mutation_tests::tests::close_original(rejected.mutation);
-    let captured_generation=captured.generation; let mut live=captured; for _ in 0..1024 {let demand=registry.refresh_demands(&live,4096).unwrap();if matches!(registry.refresh(&mut live,quoted(demand,1)).unwrap(),semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(_)){break;}} assert_ne!(live.generation,captured_generation);
+    let captured_generation=captured.generation; let mut live=captured; for _ in 0..1024 {let demand=registry.refresh_demands(&live,4096).unwrap();if matches!(registry.refresh(&mut live,quoted(demand,1)).unwrap(),semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(_)){break;}} assert_ne!(live.generation,captured_generation);
     assert!(expected["refreshedBeginAccepted"].as_bool().unwrap());
     publish(&mut registry, &live, expected["liveRevision"].as_u64().unwrap());
     crate::window_mutation_tests::tests::close_with(live,||{let demand=registry.maintenance_demands(4096).unwrap();registry.maintenance_step(quoted(demand,1)).unwrap();});

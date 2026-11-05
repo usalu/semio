@@ -2,11 +2,11 @@
 
 use semio_framework::manifest;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::Terminology;
+use semio_ui_locale::Locale;
+use semio_ui_locale::Terminology;
 #[cfg(any(test, feature = "testkit"))]
 use crate::source_builders;
-use semio_framework_os_mcp_catalog::catalog::{CapabilityKind, CapabilityOwner, CatalogError, DescribedVerb, DescriptionFinding, DescriptionProblem, compile, description_findings, description_problems, ui_dialog_open_capability};
+use semio_os_mcp_catalog::catalog::{CapabilityKind, CapabilityOwner, CatalogError, DescribedVerb, DescriptionFinding, DescriptionProblem, compile, description_findings, description_problems, ui_dialog_open_capability};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
 

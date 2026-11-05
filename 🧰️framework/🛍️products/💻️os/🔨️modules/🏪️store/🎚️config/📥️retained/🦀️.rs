@@ -1,14 +1,14 @@
 //! 📥️ Bounded hydration of an exact persisted config history into a fresh config store.
 
-use semio_framework_os_store_space_schema::ArtifactEnvelope;
-use semio_framework_os_store_engine::lifted_store::ArtifactStore;
-use semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime;
-use semio_framework_os_store_engine_owners::DocumentStoreOwners;
-use semio_framework_os_spr::{Edit, Mutation};
+use semio_os_store_space_schema::ArtifactEnvelope;
+use semio_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationRuntime;
+use semio_os_store_engine_owners::DocumentStoreOwners;
+use semio_os_spr::{Edit, Mutation};
 use semio_framework_value::{ErasedSnapshotRetirement, FromValue, ToValue};
-use semio_framework_os_store_text_io::text_format::mutation_meta_from_history_op_meta;
-use semio_framework_os_spr::io::binary::OpBinary;
-use semio_framework_os_spr::io::text::OpText;
+use semio_os_store_text_io::text_format::mutation_meta_from_history_op_meta;
+use semio_os_spr::io::binary::OpBinary;
+use semio_os_spr::io::text::OpText;
 use std::mem::ManuallyDrop;
 use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 

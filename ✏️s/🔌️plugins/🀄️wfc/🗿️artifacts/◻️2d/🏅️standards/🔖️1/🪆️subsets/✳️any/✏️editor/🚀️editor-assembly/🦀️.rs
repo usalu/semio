@@ -33,7 +33,7 @@ fn wfc2d_example_arg() -> Vec<ActionArgDef> {
 /// 🕹️ Declaring ONE interaction domain is what injects the framework's own
 /// `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll` verbs. Without it the
 /// NodeGraph canvas' every node click is dropped as `undeclared-action`.
-pub fn create_wfc2d_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_wfc2d_editor() -> semio_plugin::AppDefinition {
     Editor::builder(WFC_2D_DIALECT)
         .document(["semio", "wfc", "2d"])
         .artifact_kind(crate::artifact_kind())
@@ -110,8 +110,8 @@ pub fn create_wfc2d_editor() -> semio_framework_plugin::AppDefinition {
         .action_describe("create-rule", LocalizedLabel::native("Allows or forbids tile B next to tile A under a named relation; along each edge the solve only places tile pairs the rules allow.", "Erlaubt oder verbietet Kachel B neben Kachel A unter einer benannten Relation; entlang jeder Kante setzt der Löser nur erlaubte Kachelpaare."))
         .action_describe("delete-rule", LocalizedLabel::native("Removes one adjacency rule by id, withdrawing the permission or ban it stated.", "Entfernt eine Nachbarschaftsregel anhand ihrer Id und nimmt die Erlaubnis oder das Verbot zurück, das sie ausdrückte."))
         .action_describe("change-active-tile", LocalizedLabel::native("Arms the tile that a pin gesture in this window assigns; only the editor's view state changes, not the document.", "Wählt die Kachel, die eine Anheften-Geste in diesem Fenster zuweist; nur der Ansichtszustand des Editors ändert sich, nicht das Dokument."))
-        .action_audience("change-camera", semio_framework_plugin::CapabilityAudience::Chrome)
-        .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("change-camera", semio_plugin::CapabilityAudience::Chrome)
+        .action_audience("nodeGraphEdit", semio_plugin::CapabilityAudience::Input)
         .build_definition()
 }
 //#endregion 🔖️Manifest

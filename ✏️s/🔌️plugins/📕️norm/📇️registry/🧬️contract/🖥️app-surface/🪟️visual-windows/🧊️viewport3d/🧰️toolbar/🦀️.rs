@@ -204,7 +204,7 @@ pub fn render_touch_controls(view: &ViewportView, device: Option<crate::viewport
     if !view.lane.menu && nudges.is_empty() {
         return Ok(None);
     }
-    let mut tree = PanelTreeBuilder::new(VIEWPORT_TOUCH_ID)?.presentation(semio_framework_ui_contract::TreePresentation::Touch);
+    let mut tree = PanelTreeBuilder::new(VIEWPORT_TOUCH_ID)?.presentation(semio_ui_contract::TreePresentation::Touch);
     if view.lane.menu {
         let context = crate::host_context();
         let entries = crate::touch_menu(context.ids.len(), context.clip_json.is_some(), crate::host_focus());

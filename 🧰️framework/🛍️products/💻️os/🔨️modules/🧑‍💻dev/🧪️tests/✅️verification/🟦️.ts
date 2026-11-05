@@ -94,7 +94,7 @@ class VerifyScript extends BundleScript {
     if (segments[0] === "catalog") {
       const outIndex = segments.indexOf("--out");
       const outDir = outIndex >= 0 && segments[outIndex + 1] ? resolve(segments[outIndex + 1]!) : join(repoRoot, CATALOG_SMOKE_DEFAULT_OUT_REL);
-      const report = await runCatalogSmokeVerify(studioUrl, { outDir, timeoutMs, perProgramMs: Number(process.env.S_CATALOG_SMOKE_PROGRAM_MS ?? 30_000) });
+      const report = await runCatalogSmokeVerify(repoRoot, studioUrl, { outDir, timeoutMs, perProgramMs: Number(process.env.S_CATALOG_SMOKE_PROGRAM_MS ?? 30_000) });
       const exit = catalogSmokeExitCode(report);
       if (exit !== 0) throw new Error(`catalog smoke failed: ${report.boot.failure ?? "shell booted"}; ${report.totals.pass} rendered, ${report.totals.fail} did not, ${report.failedPlugins.length} plugin(s) in a failed install status`);
       console.log(`s catalog smoke passed (${report.totals.pass} programs, ${studioUrl})`);

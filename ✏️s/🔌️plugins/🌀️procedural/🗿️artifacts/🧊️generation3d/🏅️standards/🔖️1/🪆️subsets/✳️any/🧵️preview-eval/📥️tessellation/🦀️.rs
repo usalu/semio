@@ -1,6 +1,6 @@
 //! 📥️ Original command custody, canonical receiving and ledger closure share one initiating context.
 use super::*;
-use semio_framework_os_flow::{FlowPreviewCompletedReceiver,FlowPreviewCompletedIntakeSource,FlowPreviewCompletedAddress,FlowPreviewLedgerFold};
+use semio_os_flow::{FlowPreviewCompletedReceiver,FlowPreviewCompletedIntakeSource,FlowPreviewCompletedAddress,FlowPreviewLedgerFold};
 use semio_framework_job::{OriginalTurnFailure,InteractiveJobCloseStep};
 use semio_framework_value::{DslValue,RetirementDemand,ValueError,ValueRefusalKind};
 /// 🧵️ The actual Editor and Viewer command work own the exact moved reply until cache commit or full close.
@@ -19,7 +19,7 @@ impl PreviewTessellateReceive{
  pub fn demands(&self,payload:&FlowTessellateResolve,session:&FlowEvalSession,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(receiver)=self.receiver.as_ref().filter(|receiver|!receiver.terminal_is_empty()){return session.next_preview_tessellate_demands(receiver,copy)}
   if let Some(ledger)=self.ledger.as_ref(){return ledger.next_demands(session,&payload.window_id,copy)}
-  if !self.folded{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<u64>()+std::mem::size_of::<semio_framework_os_flow::PreviewTessellateProgress>(),depth:1,..Default::default()})}self.scope.demands(copy)
+  if !self.folded{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<u64>()+std::mem::size_of::<semio_os_flow::PreviewTessellateProgress>(),depth:1,..Default::default()})}self.scope.demands(copy)
  }
  pub fn step(&mut self,payload:&FlowTessellateResolve,session:&mut FlowEvalSession,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.folded{return Ok(true)}if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original preview receiving is closing").into())}
@@ -72,7 +72,7 @@ impl PreviewScopeCopy{
 impl Drop for PreviewScopeCopy{fn drop(&mut self){assert!(self.terminal_is_empty(),"original preview publication requires paid full close");}}
 
 /// 🧠️ The actual evaluation command owns its donated reply through Dictionary/cache receiving and addressed publication.
-pub struct PreviewEvalReceive{receiver:Option<semio_framework_os_flow::FlowEvaluationReplyReceiver>,scope:PreviewScopeCopy,folded:bool,closing:bool}
+pub struct PreviewEvalReceive{receiver:Option<semio_os_flow::FlowEvaluationReplyReceiver>,scope:PreviewScopeCopy,folded:bool,closing:bool}
 impl PreviewEvalReceive{
  pub fn new()->Self{Self{receiver:None,scope:PreviewScopeCopy::new(),folded:false,closing:false}}
  pub fn configure_scope(&mut self,windows:[Option<&'static str>;2],panels:[Option<&'static str>;2]){self.scope.keys=[windows[0],windows[1],panels[0],panels[1]];}
@@ -81,13 +81,13 @@ impl PreviewEvalReceive{
   if self.receiver.is_some(){return Ok(true)}let g=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||g.maximum_items==0||g.maximum_depth==0{return Ok(false)}
   if let Some(fault)=payload.fault.take(){cx.consume_fuel(1);let original=OriginalTurnFailure::from(super::window_addressing::echoed_fault(fault));let receipt_refusal=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).err();return Err(OriginalTurnFailure{receipt_refusal,..original})}
   if !payload.input_valid{cx.consume_fuel(1);return Err(OriginalTurnFailure::debit_original(ValueError::literal(ValueRefusalKind::InvalidValue,"original reply routing input is malformed").with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}),cx))}
-  self.scope.origin=Some((cx.operation().0,cx.generation().0));let output=std::mem::replace(&mut payload.output,DslValue::Null);match semio_framework_os_flow::FlowEvaluationReplyReceiver::new(output,cx){Ok(receiver)=>{self.receiver=Some(receiver);Ok(true)},Err((failure,source))=>{match source{semio_framework_os_flow::FlowEvaluationReplyIntakeSource::Value(output)=>payload.output=output,semio_framework_os_flow::FlowEvaluationReplyIntakeSource::Receiver(receiver)=>self.receiver=Some(receiver)}Err(failure)}}
+  self.scope.origin=Some((cx.operation().0,cx.generation().0));let output=std::mem::replace(&mut payload.output,DslValue::Null);match semio_os_flow::FlowEvaluationReplyReceiver::new(output,cx){Ok(receiver)=>{self.receiver=Some(receiver);Ok(true)},Err((failure,source))=>{match source{semio_os_flow::FlowEvaluationReplyIntakeSource::Value(output)=>payload.output=output,semio_os_flow::FlowEvaluationReplyIntakeSource::Receiver(receiver)=>self.receiver=Some(receiver)}Err(failure)}}
  }
  pub fn demands(&self,payload:&FlowEvalResolve,session:&FlowEvalSession,body:usize)->Result<RetirementDemand,ValueError>{if let Some(receiver)=self.receiver.as_ref(){return receiver.next_demands(session,body,&payload.window_id)}self.scope.demands(body)}
- pub fn step(&mut self,payload:&FlowEvalResolve,session:&mut FlowEvalSession,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.folded{return Ok(true)}let receiver=self.receiver.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original evaluation reply was not donated"))?;let address=semio_framework_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};if receiver.step(session,&address,cx)?{self.receiver=None;self.folded=true;}Ok(self.folded)}
+ pub fn step(&mut self,payload:&FlowEvalResolve,session:&mut FlowEvalSession,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.folded{return Ok(true)}let receiver=self.receiver.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original evaluation reply was not donated"))?;let address=semio_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};if receiver.step(session,&address,cx)?{self.receiver=None;self.folded=true;}Ok(self.folded)}
  pub fn publish_scope(&mut self,cx:&mut StepContext<'_>)->Result<Option<semio_framework::kernel::UiDirtyScope>,OriginalTurnFailure>{self.scope.step(cx)}
  pub fn begin_close(&mut self){self.closing=true;if let Some(receiver)=self.receiver.as_mut(){receiver.begin_close()}self.scope.begin_close()}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(receiver)=self.receiver.as_ref(){return receiver.next_close_demands(body)}self.scope.close_demands(body)}
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{self.begin_close();if let Some(receiver)=self.receiver.as_mut(){let step=receiver.close_step(cx)?;if receiver.terminal_is_empty(){self.receiver=None;}return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}self.scope.close_step(cx)}
- pub fn terminal_is_empty(&self)->bool{self.receiver.as_ref().is_none_or(semio_framework_os_flow::FlowEvaluationReplyReceiver::terminal_is_empty)&&self.scope.terminal_is_empty()}
+ pub fn terminal_is_empty(&self)->bool{self.receiver.as_ref().is_none_or(semio_os_flow::FlowEvaluationReplyReceiver::terminal_is_empty)&&self.scope.terminal_is_empty()}
 }

@@ -5,78 +5,78 @@
 #[macro_export]
 macro_rules! norm_exact_store_ownership {
     (live) => {
-        fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-            Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+        fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+            Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
         }
 
-        fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-            Some(semio_framework_plugin::no_config_store_disposer())
+        fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+            Some(semio_plugin::no_config_store_disposer())
         }
 
-        fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-            Some(semio_framework_plugin::no_draft_store_disposer())
+        fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+            Some(semio_plugin::no_draft_store_disposer())
         }
 
-        fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-            Some(semio_framework_plugin::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
+        fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+            Some(semio_plugin::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
         }
 
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
+            Some(semio_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
         }
 
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
+            Some(semio_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
         }
 
         fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
-            Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Presence, Self::PresenceMutation>())
+            Some(semio_plugin::bounded_transient_preparation_factory::<Self::Presence, Self::PresenceMutation>())
         }
 
-        fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
+        fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+            Some(semio_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
         }
 
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-            Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+            Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
         }
 
         fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-            Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+            Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
         }
     };
     () => {
 
-        fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-            Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+        fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+            Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
         }
 
-        fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-            Some(semio_framework_plugin::no_config_store_disposer())
+        fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+            Some(semio_plugin::no_config_store_disposer())
         }
 
-        fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-            Some(semio_framework_plugin::no_draft_store_disposer())
+        fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+            Some(semio_plugin::no_draft_store_disposer())
         }
 
-        fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-            Some(semio_framework_plugin::no_presence_store_disposer())
+        fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+            Some(semio_plugin::no_presence_store_disposer())
         }
 
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+            Some(semio_plugin::no_presence_local_root_retirement_factory())
         }
 
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+            Some(semio_plugin::no_presence_peer_retirement_factory())
         }
 
-        fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(semio_framework_plugin::no_transient_store_disposer())
+        fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+            Some(semio_plugin::no_transient_store_disposer())
         }
 
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-            Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+            Some(semio_plugin::no_transient_local_root_retirement_factory())
         }
     };
 }
@@ -90,54 +90,54 @@ macro_rules! norm_exact_store_ownership {
 macro_rules! norm_exact_viewer_store_ownership {
     (lanes) => {
 
-        fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-            Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+        fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+            Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
         }
 
-        fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-            Some(semio_framework_plugin::no_config_store_disposer())
+        fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+            Some(semio_plugin::no_config_store_disposer())
         }
 
-        fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-            Some(semio_framework_plugin::no_presence_store_disposer())
+        fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+            Some(semio_plugin::no_presence_store_disposer())
         }
 
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+            Some(semio_plugin::no_presence_peer_retirement_factory())
         }
 
-        fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
+        fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+            Some(semio_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
         }
 
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-            Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+            Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
         }
 
         fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-            Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+            Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
         }
     };
     () => {
 
-        fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-            Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+        fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+            Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
         }
 
-        fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-            Some(semio_framework_plugin::no_config_store_disposer())
+        fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+            Some(semio_plugin::no_config_store_disposer())
         }
 
-        fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-            Some(semio_framework_plugin::no_presence_store_disposer())
+        fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+            Some(semio_plugin::no_presence_store_disposer())
         }
 
-        fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(semio_framework_plugin::no_transient_store_disposer())
+        fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+            Some(semio_plugin::no_transient_store_disposer())
         }
 
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+            Some(semio_plugin::no_presence_peer_retirement_factory())
         }
     };
 }

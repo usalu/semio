@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangePierMomentRdNm whe
         record: "ChangePierMomentRdNm",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change Plastic hinge moment resistance M_Rd at the pier base", "Plastisches Gelenkmoment M_Rd am Pfeilerfuß ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change Plastic hinge moment resistance M_Rd at the pier base", "Plastisches Gelenkmoment M_Rd am Pfeilerfuß ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-pier-moment-rd-nm".into()]

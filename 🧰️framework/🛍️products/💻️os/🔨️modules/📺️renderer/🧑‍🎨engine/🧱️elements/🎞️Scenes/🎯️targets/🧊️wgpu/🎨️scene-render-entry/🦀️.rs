@@ -49,20 +49,20 @@ pub fn scene_context_menu_target(scene: &UiComponentSceneNode, bounds: Rect, x: 
         SurfaceKind::InkCanvas => ink_canvas_context_menu_target(scene, bounds, x, y),
         SurfaceKind::Paint2d => {
             let selection_json = scene.paint_2d.as_ref().map(|paint| paint.selection_json.clone()).unwrap_or_else(|| "[]".into());
-            let (hits, selection) = semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_context_menu_target(&scene.host_id, &selection_json, f64::from(x - bounds.x), f64::from(y - bounds.y));
+            let (hits, selection) = semio_renderer_wgpu_engine_board::paint2d::paint2d_context_menu_target(&scene.host_id, &selection_json, f64::from(x - bounds.x), f64::from(y - bounds.y));
             SceneContextMenuTarget { hits, selection, text: None }
         }
         SurfaceKind::Board2d => {
             let selection_json = scene.board2d.as_ref().map(|board| board.selection_json.clone()).unwrap_or_else(|| "[]".into());
-            let (hits, selection) = semio_framework_os_renderer_wgpu_engine_board::paint2d::board2d_context_menu_target(&scene.host_id, &selection_json, f64::from(x - bounds.x), f64::from(y - bounds.y));
+            let (hits, selection) = semio_renderer_wgpu_engine_board::paint2d::board2d_context_menu_target(&scene.host_id, &selection_json, f64::from(x - bounds.x), f64::from(y - bounds.y));
             SceneContextMenuTarget { hits, selection, text: None }
         }
         SurfaceKind::NodeGraph => {
-            let (hits, selection) = semio_framework_os_renderer_wgpu_engine_board::paint2d::node_graph_context_menu_target(&scene.host_id, f64::from(x - bounds.x), f64::from(y - bounds.y));
+            let (hits, selection) = semio_renderer_wgpu_engine_board::paint2d::node_graph_context_menu_target(&scene.host_id, f64::from(x - bounds.x), f64::from(y - bounds.y));
             SceneContextMenuTarget { hits, selection, text: None }
         }
         SurfaceKind::TextEditor => {
-            let (hits, text) = semio_framework_os_renderer_wgpu_engine_board::paint2d::text_editor_context_menu_target(scene, bounds, x, y);
+            let (hits, text) = semio_renderer_wgpu_engine_board::paint2d::text_editor_context_menu_target(scene, bounds, x, y);
             SceneContextMenuTarget { hits, selection: Vec::new(), text }
         }
         SurfaceKind::TiledMap => {
@@ -299,10 +299,10 @@ pub fn render_component_scene_step(
             semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         4 => {
-            if !semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::sync_engine_scene(scene, hosts.window_id, bounds, ctx.theme) {
+            if !semio_renderer_wgpu_engine_attach::engine_surface_attach::sync_engine_scene(scene, hosts.window_id, bounds, ctx.theme) {
                 return cursor.finish();
             }
-            let Some(token) = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_token(&scene.host_id) else {
+            let Some(token) = semio_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_token(&scene.host_id) else {
                 return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             };
             if !bind_scene_engine_token(&scene.host_id, token) {
@@ -327,7 +327,7 @@ pub fn render_component_scene_step(
             if !progress.done {
                 return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
             }
-            if !semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::stage_engine_scene_paint(scene, bounds, engine_surface_clear(scene.component_kind, ctx.theme)) {
+            if !semio_renderer_wgpu_engine_attach::engine_surface_attach::stage_engine_scene_paint(scene, bounds, engine_surface_clear(scene.component_kind, ctx.theme)) {
                 return cursor.finish();
             }
             if cursor.advance_phase().is_err() {
@@ -336,7 +336,7 @@ pub fn render_component_scene_step(
             semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         6 => {
-            let Some(key) = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(&scene.host_id) else {
+            let Some(key) = semio_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(&scene.host_id) else {
                 return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             };
             if ctx.draw.try_reserve_retained_items(1).is_err() {
@@ -351,7 +351,7 @@ pub fn render_component_scene_step(
         7 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
                 ctx.draw.push_scissor(bounds);
-                semio_framework_os_renderer_wgpu_engine_graph::node_graph::paint_node_graph_labels(ctx, scene, bounds);
+                semio_renderer_wgpu_engine_graph::node_graph::paint_node_graph_labels(ctx, scene, bounds);
                 ctx.draw.pop_scissor();
             } else if !matches!(scene.component_kind, SurfaceKind::TextEditor | SurfaceKind::Paint2d) {
                 return cursor.finish();
@@ -363,7 +363,7 @@ pub fn render_component_scene_step(
         }
         8 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
-                semio_framework_os_renderer_wgpu_engine_graph::node_graph::paint_node_graph_overlays(ctx, scene, bounds);
+                semio_renderer_wgpu_engine_graph::node_graph::paint_node_graph_overlays(ctx, scene, bounds);
             }
             if scene.component_kind == SurfaceKind::Paint2d {
                 ctx.draw.push_scissor(bounds);
@@ -560,10 +560,10 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
         &scene.host_id,
         infinite_world::world::world3d_modelling_accessibility(&state.session, &state.overlay, scene).into_iter().map(|entry| World3dAccessibilityControl { key: entry.key, role: entry.role, label: entry.label, depth: entry.depth, polite: entry.polite }).collect(),
     );
-    semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::register_engine_surface(scene, hosts.window_id, bounds, semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created, None);
+    semio_renderer_wgpu_engine_attach::engine_surface_attach::register_engine_surface(scene, hosts.window_id, bounds, semio_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created, None);
     world3d_surface_debug_log(scene, bounds, ctx, state);
     if semio_framework_trace::runtime_diagnostics_enabled() {
-        semio_framework_os_renderer_wgpu_scene_state::note_world3d_live_camera(&scene.host_id, infinite_world::world::world3d_live_camera_json(&state.session, &state.camera, &state.selection, &state.scene));
+        semio_renderer_wgpu_scene_state::note_world3d_live_camera(&scene.host_id, infinite_world::world::world3d_live_camera_json(&state.session, &state.camera, &state.selection, &state.scene));
     }
     cursor.finish()
 }

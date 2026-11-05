@@ -1,10 +1,10 @@
 //! 🧱️ Schema_quick of the inference-hub crate: Inference job wire, hub inference client and bindings.
 
 use crate::hub_wire::HubInferenceApprovalRequestV1;
-use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_framework_os_mcp_foundation::reports::{ContextSummary, InvocationReport, InvocationStatus, JobState, JobStatus, PreparedActionReport, RevisionStamp, SearchHit};
-use semio_framework_os_mcp_schema::schema::{SCHEMA_MIRROR_ID, SCHEMA_MIRROR_JSON, compile_validator, hub_inference_approval_request_schema, register_scope_exports, schema_mirror_document, schemas, scope_export_ids, tool_output_schema, validate};
-use semio_framework_os_mcp_wire::tool_shapes::{SCHEMA_BOOLEAN_KEYWORDS, admit_tool_errors, convert_draft07_to_2020_12, normalize_boolean_subschemas};
+use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_os_mcp_foundation::reports::{ContextSummary, InvocationReport, InvocationStatus, JobState, JobStatus, PreparedActionReport, RevisionStamp, SearchHit};
+use semio_os_mcp_schema::schema::{SCHEMA_MIRROR_ID, SCHEMA_MIRROR_JSON, compile_validator, hub_inference_approval_request_schema, register_scope_exports, schema_mirror_document, schemas, scope_export_ids, tool_output_schema, validate};
+use semio_os_mcp_wire::tool_shapes::{SCHEMA_BOOLEAN_KEYWORDS, admit_tool_errors, convert_draft07_to_2020_12, normalize_boolean_subschemas};
 
 fn has_bare_boolean(value: &serde_json::Value) -> bool {
     match value {
